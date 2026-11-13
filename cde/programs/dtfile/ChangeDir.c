@@ -110,16 +110,16 @@ static char * CHANGEDIRECTORY = "ChangeDirectory";
 static DialogResource resources[] =
 {
    { "string_path", XmRXmString, sizeof(XmString),
-     XtOffset(ChangeDirDataPtr, string_path), NULL, _DtXmStringToString },
+     XtOffset(ChangeDirDataPtr, string_path), nullptr, _DtXmStringToString },
 
    { "historyList", XmRXmStringTable, sizeof(XmStringTable),
-      XtOffset(ChangeDirDataPtr, history_list), NULL, _DtXmStringTableToString },
+      XtOffset(ChangeDirDataPtr, history_list), nullptr, _DtXmStringTableToString },
 
    { "visibleCount", XmRInt, sizeof(int),
       XtOffset(ChangeDirDataPtr, visible_count), (XtPointer) 8, _DtIntToString },
 
    { "listCount", XmRInt, sizeof(int),
-      XtOffset(ChangeDirDataPtr, list_count), NULL, _DtIntToString },
+      XtOffset(ChangeDirDataPtr, list_count), nullptr, _DtIntToString },
 };
 
 
@@ -424,8 +424,8 @@ GetValues(
    change_dir_data = (ChangeDirData *) XtMalloc (sizeof (ChangeDirData));
 
    change_dir_data->displayed = True;
-   change_dir_data->host_name = NULL;
-   change_dir_data->file_mgr_rec = NULL;
+   change_dir_data->host_name = nullptr;
+   change_dir_data->file_mgr_rec = nullptr;
 
    n = 0;
    XtSetArg (args[n], XmNx, &change_dir_data->x);		n++;
@@ -446,7 +446,7 @@ GetValues(
 
    for (n = 0; n < change_dir_data->list_count; n++)
       change_dir_data->history_list[n] = XmStringCopy (history_list[n]);
-   change_dir_data->history_list[n] = NULL;
+   change_dir_data->history_list[n] = nullptr;
 
    if(change_dir_data->string_path)
       XmStringFree (change_dir_data->string_path);
@@ -479,7 +479,7 @@ GetDefaultValues( void )
    change_dir_data->y = 0;
    change_dir_data->height = 0;
    change_dir_data->width = 0;
-   change_dir_data->string_path = NULL;
+   change_dir_data->string_path = nullptr;
 
 /*
    This will cause users_home_dir to be displayed in
@@ -491,11 +491,11 @@ GetDefaultValues( void )
    else
       change_dir_data->string_path = NULL;
 */
-   change_dir_data->history_list = NULL;
+   change_dir_data->history_list = nullptr;
    change_dir_data->visible_count = 8;
    change_dir_data->list_count = 0;
-   change_dir_data->host_name = NULL;
-   change_dir_data->file_mgr_rec = NULL;
+   change_dir_data->host_name = nullptr;
+   change_dir_data->file_mgr_rec = nullptr;
 
 
    return ((XtPointer) change_dir_data);
@@ -528,7 +528,7 @@ GetResourceValues(
                        CHANGEDIRECTORY, (char *) change_dir_data,
                        resources, changeDirClass->resource_count);
 
-   change_dir_data->host_name = NULL;
+   change_dir_data->host_name = nullptr;
 
 
    /*  If the history list is Non-Null, realloc the pointer array  */
@@ -542,7 +542,7 @@ GetResourceValues(
       for (i = 0; i < change_dir_data->list_count; i++)
          new_table[i] = change_dir_data->history_list[i];
 
-      new_table[change_dir_data->list_count] = NULL;
+      new_table[change_dir_data->list_count] = nullptr;
 
 /******************
   THIS WILL BE A MEMORY HOLE WHEN MOTIF FIXES THE XMSTRINGTABLE
@@ -590,7 +590,7 @@ SetValues(
       change_dir_data->string_path =
         XmStringCreateLocalized( file_mgr_data->current_directory);
    else
-      change_dir_data->string_path = NULL;
+      change_dir_data->string_path = nullptr;
 
    XtSetArg (args[0], XmNlistItemCount, change_dir_data->list_count);
    XtSetArg (args[1], XmNlistVisibleItemCount, change_dir_data->visible_count);
@@ -725,7 +725,7 @@ TryToChangeDir(
   char * title;
   char * msg;
   Boolean rc = True;
-  char *restricted = NULL;
+  char *restricted = nullptr;
 
   new_directory = XtNewString(incoming_string);
 
@@ -742,9 +742,9 @@ TryToChangeDir(
      msg = XtNewString(tmpStr);
 
      if(isFromDialog)
-       _DtMessage(selection_box, title, msg, NULL, HelpRequestCB);
+       _DtMessage(selection_box, title, msg, nullptr, HelpRequestCB);
      else
-       _DtMessage(file_mgr_rec->current_directory_text, title, msg, NULL,
+       _DtMessage(file_mgr_rec->current_directory_text, title, msg, nullptr,
                   HelpRequestCB);
 
      XtFree(title);
@@ -762,7 +762,7 @@ TryToChangeDir(
       {
         restricted = ttpath;
         XtFree(path);
-        path = NULL;
+        path = nullptr;
       }
    }
 
@@ -787,10 +787,10 @@ TryToChangeDir(
        sprintf(msg, GETMESSAGE(30, 1, "Cannot read from %s"), new_directory);
 
        if(isFromDialog)
-         _DtMessage(selection_box, title, msg, NULL, HelpRequestCB);
+         _DtMessage(selection_box, title, msg, nullptr, HelpRequestCB);
        else
          _DtMessage(file_mgr_rec->current_directory_text, title,
-                    msg, NULL, HelpRequestCB);
+                    msg, nullptr, HelpRequestCB);
 
        XtFree(title);
        XtFree(msg);
@@ -891,10 +891,10 @@ TryToChangeDir(
      }
 
      if (isFromDialog)
-       _DtMessage(selection_box, title, message_buf, NULL, HelpRequestCB);
+       _DtMessage(selection_box, title, message_buf, nullptr, HelpRequestCB);
      else
        _DtMessage(file_mgr_rec->current_directory_text, title, message_buf,
-                  NULL, HelpRequestCB);
+                  nullptr, HelpRequestCB);
 
      XtFree(title);
      XtFree(message_buf);
@@ -933,7 +933,7 @@ OkCallback(
    FileMgrRec * file_mgr_rec;
    FileMgrData * file_mgr_data;
    char *strValue;
-   char *value = NULL;
+   char *value = nullptr;
    int result;
    char message_buf[MAX_PATH + 100];
    char * tmpStr;
@@ -954,14 +954,14 @@ OkCallback(
                                         XmFONTLIST_DEFAULT_TAG,
                                         XmCHARSET_TEXT, XmCHARSET_TEXT);
 
-   if ( value == NULL)
+   if ( value == nullptr)
    {
        tmpStr = GetSharedMessage(CHANGE_DIR_ERROR_TITLE);
       title = XtNewString(tmpStr);
       tmpStr = (char *) GETMESSAGE(2, 11, "Cannot get the new folder name.");
       msg = XtNewString(tmpStr);
 
-      _DtMessage(selection_box, title, message_buf, NULL, HelpRequestCB);
+      _DtMessage(selection_box, title, message_buf, nullptr, HelpRequestCB);
 
       XtFree(title);
       XtFree(msg);
@@ -980,7 +980,7 @@ OkCallback(
    {
       TryToChangeDir(True, (char *)strValue, file_mgr_data,
                      file_mgr_rec, change_dir_data, selection_box,
-                     apply_data->callback, apply_data->client_data, NULL);
+                     apply_data->callback, apply_data->client_data, nullptr);
    }
 
    XtFree(value);
@@ -1007,7 +1007,7 @@ CheckRestrictedDir (
    char *tmpBuffer, *title, *msg;
 
    /*  If not in restricte mode, everything is ok.  */
-   if (file_mgr_data->restricted_directory == NULL && !restrictMode)
+   if (file_mgr_data->restricted_directory == nullptr && !restrictMode)
      return 0;
 
    /* get real file name */
@@ -1056,7 +1056,7 @@ CheckRestrictedDir (
        msg = XtNewString(tmpBuffer);
 
        _DtMessage(file_mgr_rec->current_directory_text, title, msg,
-                  NULL, HelpRequestCB);
+                  nullptr, HelpRequestCB);
 
        XtFree(title);
        XtFree(msg);
@@ -1104,7 +1104,7 @@ ChangeToNewDir (
    if (change_dir_rec)
       selection_box = change_dir_rec->change_dir;
    else
-      selection_box = NULL;
+      selection_box = nullptr;
 
    value = (char *)XmTextFieldGetString(text_field);
 
@@ -1131,7 +1131,7 @@ ChangeToNewDir (
    if (rc == 0)
    {
      if( TryToChangeDir(False, value, file_mgr_data, file_mgr_rec,
-                        change_dir_data, selection_box, NULL, NULL,
+                        change_dir_data, selection_box, nullptr, nullptr,
                         GoToNewDir) )
        /* de-activate the text widget */
        UnpostTextPath( file_mgr_data );
@@ -1186,10 +1186,10 @@ DropOnChangeView (
          if (change_dir_rec)
             selection_box = change_dir_rec->change_dir;
          else
-            selection_box = NULL;
+            selection_box = nullptr;
 
          TryToChangeDir(False, full_path_name, file_mgr_data, file_mgr_rec,
-                        change_dir_data, selection_box, NULL, NULL,
+                        change_dir_data, selection_box, nullptr, nullptr,
                         GoToNewDir);
       }
       XtFree(full_path_name);
@@ -1210,10 +1210,10 @@ GoToNewDir(
    XmString xm_dir_name;
 
    /* Clear out any selected portion of the old CWD string */
-   if (file_mgr_data->cd_select != NULL)
+   if (file_mgr_data->cd_select != nullptr)
    {
       XtFree(file_mgr_data->cd_select);
-      file_mgr_data->cd_select = NULL;
+      file_mgr_data->cd_select = nullptr;
    }
 
    /* Update the internal copy of the dialog history list */
@@ -1241,7 +1241,7 @@ GoToNewDir(
                    sizeof(XmStringTable) * (change_dir_data->list_count + 1));
          change_dir_data->history_list[change_dir_data->list_count - 1] =
                 xm_dir_name;
-         change_dir_data->history_list[change_dir_data->list_count] = NULL;
+         change_dir_data->history_list[change_dir_data->list_count] = nullptr;
       }
 
       /* Update view to display the new directory */
@@ -1300,9 +1300,9 @@ TextChange(
       /* get whats in the text widget */
       homeDir = homeDirBackup = XmTextFieldGetString(text);
 
-      if(selection != NULL)
+      if(selection != nullptr)
       {
-         if(callback_data->event == NULL)
+         if(callback_data->event == nullptr)
             XmTextFieldClearSelection(text, CurrentTime);
          else
             XmTextFieldClearSelection(text, callback_data->event->xkey.time);
@@ -1339,7 +1339,7 @@ TextChange(
 
          if(callback_data->newInsert < maxlength)
          {
-            if(callback_data->event == NULL)
+            if(callback_data->event == nullptr)
                _XmTextFieldSetDestination((Widget)text,
                             (Position)callback_data->currInsert, CurrentTime);
             else
@@ -1380,7 +1380,7 @@ ChangeDirectoryToParent(
    if (change_dir_rec)
       selection_box = change_dir_rec->change_dir;
    else
-      selection_box = NULL;
+      selection_box = nullptr;
 
    /* check if user attempts to go outside restricted directory */
    rc = CheckRestrictedDir (file_mgr_rec, file_mgr_data, &directory, True);
@@ -1390,7 +1390,7 @@ ChangeDirectoryToParent(
    if (rc == 0)
    {
       TryToChangeDir(False, directory, file_mgr_data, file_mgr_rec,
-                     change_dir_data, selection_box, NULL, NULL,
+                     change_dir_data, selection_box, nullptr, nullptr,
                      GoToNewDir);
    }
 

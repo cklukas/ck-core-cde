@@ -167,7 +167,7 @@ objxm_get_resource_for_when(
     AB_WHEN	when
 )
 {
-    STRING    res= NULL;
+    STRING    res= nullptr;
 
     /********** GET "DEFAULT" RESOURCE NAME *********/
 
@@ -385,7 +385,7 @@ objxm_get_resource_for_builtin_action(
 )
 {
     ABObj	compObj = obj_get_root(obj);
-    STRING	resource = NULL;
+    STRING	resource = nullptr;
 
     switch (builtin_action)
     {
@@ -423,7 +423,7 @@ objxm_get_resource_for_builtin_action(
 ABObj
 objxm_comp_get_source_for_when(ABObj subObj, AB_WHEN when)
 {
-    ABObj	source = NULL;
+    ABObj	source = nullptr;
     ABObj	compObj = obj_get_root(subObj);
 
     switch (when)
@@ -463,7 +463,7 @@ ABObj
 objxm_comp_get_target_for_builtin_action(ABObj subObj, AB_BUILTIN_ACTION action)
 {
     ABObj	compObj = obj_get_root(subObj);
-    ABObj	actualTarget = NULL;
+    ABObj	actualTarget = nullptr;
     BOOL	useObjectObj = FALSE;
 
     /*
@@ -505,7 +505,7 @@ objxm_comp_get_target_for_builtin_action(ABObj subObj, AB_BUILTIN_ACTION action)
     break;
     }
 
-    if (actualTarget == NULL)
+    if (actualTarget == nullptr)
     {
 	if (useObjectObj)
         {
@@ -532,7 +532,7 @@ objxm_comp_get_target_for_builtin_action(ABObj subObj, AB_BUILTIN_ACTION action)
 static STRING
 get_resource_for_set_label(ABObj compObj, ABObj obj)
 {
-    STRING	resource = NULL;
+    STRING	resource = nullptr;
 
 	assert(!ObjWClassIsArrowButton(obj));	/* not supported */
 	if (ObjWClassIsShell(obj))
@@ -562,7 +562,7 @@ get_resource_for_set_label(ABObj compObj, ABObj obj)
 static STRING
 get_resource_for_set_text(ABObj compObj, ABObj obj)
 {
-    STRING	resource = NULL;
+    STRING	resource = nullptr;
     compObj = compObj;	/* avoid warning */
 
 	if (ObjWClassIsSpinBox(obj))
@@ -581,7 +581,7 @@ get_resource_for_set_text(ABObj compObj, ABObj obj)
 static STRING
 get_resource_for_set_value(ABObj compObj, ABObj obj)
 {
-    STRING	resource = NULL;
+    STRING	resource = nullptr;
     compObj = compObj;	/* avoid warning */
 
 	if (ObjWClassIsScale(obj))

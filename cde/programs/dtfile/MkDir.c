@@ -152,7 +152,7 @@ RunFileCommand(
 
    _DtEnvControl(DT_ENV_RESTORE_PRE_DT);
    (void) execl (command_path, command_name, argument1, argument2,
-                 argument3, (char *)NULL);
+                 argument3, (char *)nullptr);
     
    DBGFORK(("%s:  child exiting\n", pname));
 

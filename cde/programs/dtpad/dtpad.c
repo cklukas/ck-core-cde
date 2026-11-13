@@ -132,7 +132,7 @@ MbStrchr(
 	numBytes = mbtowc(&curChar, &str[i], mbCurMax);
 	if(curChar == targetChar) return &str[i];
     }
-    return (char *)NULL;
+    return (char *)nullptr;
 }
 
 /************************************************************************ 
@@ -162,7 +162,7 @@ MbStrchri(
         }
     }
 	*in = -1;
-    return (char *)NULL;
+    return (char *)nullptr;
 }    
 
 /************************************************************************
@@ -182,7 +182,7 @@ MbStrrchr(
 
     tmpChar = (char)ch;
     mbtowc(&targetChar, &tmpChar, mbCurMax);
-    for(i = 0, numBytes = 0, lastChar = (char *)NULL, byteLen = strlen(str);
+    for(i = 0, numBytes = 0, lastChar = (char *)nullptr, byteLen = strlen(str);
           i < byteLen; i += numBytes)
     {
 	numBytes = mbtowc(&curChar, &str[i], mbCurMax);
@@ -204,7 +204,7 @@ MbBasename(
 
     lastSlash = MbStrrchr(str, '/');
 
-    if(lastSlash != (char *)NULL)
+    if(lastSlash != (char *)nullptr)
 	return lastSlash + 1;
     else
 	return str;
@@ -936,7 +936,7 @@ CreateOptionsMenu(
     XmStringFree(tmpStr);
 
     /* -----> create "Dropped Files" submenu */
-    WidgList[count++] = XmCreateSeparatorGadget(options_pane, "optionsSep", NULL, 0);
+    WidgList[count++] = XmCreateSeparatorGadget(options_pane, "optionsSep", nullptr, 0);
 
     ac = 0;
     XtSetArg(al[ac], XmNradioBehavior, True); ac++;
@@ -1012,7 +1012,7 @@ CreateOptionsMenu(
 void
 CreateMenuBar( Editor *pPad )
 { 
-    pPad->menu_bar = XmCreateMenuBar (pPad->mainWindow, "bar", NULL, 0);
+    pPad->menu_bar = XmCreateMenuBar (pPad->mainWindow, "bar", nullptr, 0);
     XtAddCallback(pPad->menu_bar, XmNhelpCallback, 
 		  HelpMenubarCB, pPad);
 
@@ -1090,7 +1090,7 @@ FindOrCreatePad(
 
     /* -----> Reuse unused entries (corresponding to closed editor windows)
      *        before creating new ones. */
-    for (pPad = pPadList; pPad != (Editor *)NULL; pPad = pPad->pNextPad){
+    for (pPad = pPadList; pPad != (Editor *)nullptr; pPad = pPad->pNextPad){
 	if (pPad->inUse == False) {
 	    pPad->inUse = True;
 	    foundPad = True;
@@ -1167,7 +1167,7 @@ SetWorkSpaceHints(
         char *workspaces )
 {
   char * ptr;
-  Atom * workspace_atoms = NULL;
+  Atom * workspace_atoms = nullptr;
   int num_workspaces=0;
 
   if (workspaces)
@@ -1176,7 +1176,7 @@ SetWorkSpaceHints(
     {
       ptr = MbStrchr (workspaces, ' ');
 
-      if (ptr != NULL) *ptr = 0;
+      if (ptr != nullptr) *ptr = 0;
 
       workspace_atoms = (Atom *) XtRealloc ((char *)workspace_atoms,
                         sizeof (Atom) * (num_workspaces + 1));
@@ -1185,18 +1185,18 @@ SetWorkSpaceHints(
 
       num_workspaces++;
 
-      if (ptr != NULL)
+      if (ptr != nullptr)
       {
         *ptr = ' ';
         workspaces = ptr + 1;
       }
-    } while (ptr != NULL);
+    } while (ptr != nullptr);
 
     DtWsmSetWorkspacesOccupied(XtDisplay(shell), XtWindow (shell), 
 			workspace_atoms, num_workspaces);
 
     XtFree ((char *) workspace_atoms);
-    workspace_atoms = NULL;
+    workspace_atoms = nullptr;
   }
   else
   {
@@ -1263,19 +1263,19 @@ CreatePopupMenu( Editor *pPad )
     char *mnemonic;
     int i = 0;
 
-    pPad->popup = XmCreatePopupMenu(pPad->editor, "popupMenu", NULL, 0);
+    pPad->popup = XmCreatePopupMenu(pPad->editor, "popupMenu", nullptr, 0);
     XtAddEventHandler(parent, ButtonPressMask, False, PopupHandler,
                                                         (XtPointer)popupMenu);
 
     /* Create text editor title */
     popupBtns[i] =
-            (Widget)XmCreateLabelGadget(pPad->popup, "popupTitle", NULL, 0);
+            (Widget)XmCreateLabelGadget(pPad->popup, "popupTitle", nullptr, 0);
 
 
     /* Create title separators */
-    popupBtns[i++] = XmCreateSeparatorGadget(pPad->popup, "sep2", NULL, 0);
+    popupBtns[i++] = XmCreateSeparatorGadget(pPad->popup, "sep2", nullptr, 0);
 
-    fileMenu = XmCreatePulldownMenu (pPad->popup, "fileMenu", NULL, 0);
+    fileMenu = XmCreatePulldownMenu (pPad->popup, "fileMenu", nullptr, 0);
 
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 16, "File")));
     mnemonic = strdup(((char *)GETMESSAGE(11, 15, "F")));
@@ -1306,14 +1306,14 @@ CreatePopupMenu( Editor *pPad )
                                                         (XtPointer)INSERT_DATA);
     CreateButton(fileMenu, "Save As...", 'A', DisplayFsbCb, (XtPointer)SAVE_DATA
 );
-    CreateButton(fileMenu, "New", 'N', ResetEditorCb, NULL);
+    CreateButton(fileMenu, "New", 'N', ResetEditorCb, nullptr);
 
-    editMenu = XmCreatePulldownMenu (popupMenu, "editMenu", NULL, 0);
+    editMenu = XmCreatePulldownMenu (popupMenu, "editMenu", nullptr, 0);
     CreateCascade(popupMenu, "Edit", 'E', editMenu);
     CreateButton(editMenu, "Undo", 'U', UndoCb, (XtPointer)LOAD_DATA);
-    ad.cutPopupButton = CreateButton(editMenu, "Cut", 't', CutCb, NULL);
-    ad.copyPopupButton = CreateButton(editMenu, "Copy", 'C', CopyCb, NULL);
-    CreateButton(editMenu, "Paste", 'P', PasteCb, NULL);
+    ad.cutPopupButton = CreateButton(editMenu, "Cut", 't', CutCb, nullptr);
+    ad.copyPopupButton = CreateButton(editMenu, "Copy", 'C', CopyCb, nullptr);
+    CreateButton(editMenu, "Paste", 'P', PasteCb, nullptr);
 
     CreateButton(popupMenu, "Find/Change...", 'F', FindCb, (XtPointer)ad.editor)
 ;

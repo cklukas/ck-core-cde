@@ -135,7 +135,7 @@ appt_to_form(ToDo *t, CSA_entry_handle a) {
 				    t->cal->general->version,
 				    CSA_ENTRY_ATTR_STATUS_I,
 				    CSA_ENTRY_ATTR_ORGANIZER_I,
-				    NULL);
+				    nullptr);
 	stat = query_appt_struct(t->cal->cal_handle, a, appt);
 	backend_err_msg(t->frame, t->cal->view->current_calendar, stat,
 			((Props_pu *)t->cal->properties_pu)->xm_error_pixmap);
@@ -199,11 +199,11 @@ t_build_expand(ToDo *t) {
 		XmNtopWidget, 		t->separator1,
 		XmNleftAttachment, 	XmATTACH_FORM,
 		XmNleftOffset, 		5,
-		NULL);
+		nullptr);
 	XtVaGetValues(t->rfp.rfp_form_mgr,
 		XmNchildren,            &children,
 		XmNnumChildren,         &n,
-		NULL);
+		nullptr);
 
 	/* We don't want to manage the privacy widgets */
 	for (i = 0; i < n; i++) {
@@ -236,7 +236,7 @@ t_build_expand(ToDo *t) {
 	XtVaSetValues( curr,
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, t->reminders.alarm_label,
-			NULL );
+			nullptr );
 	XtVaSetValues(t->reminders.bfpm_form_mgr,
 		XmNtopAttachment, 	XmATTACH_OPPOSITE_WIDGET,
 		XmNtopWidget, 		t->rfp.rfp_form_mgr,
@@ -244,14 +244,14 @@ t_build_expand(ToDo *t) {
 		XmNrightOffset, 	5,
 		XmNleftAttachment, 	XmATTACH_WIDGET,
 		XmNleftWidget, 		t->rfp.rfp_form_mgr,
-		NULL);
+		nullptr);
 
 	XtManageChildren(widgets, 6);
 }
 
 static void
 clear_view_changes(ToDo *t){
-	TodoView		*step, *last = NULL;
+	TodoView		*step, *last = nullptr;
 
 	step = t->view_list;
 
@@ -290,7 +290,7 @@ write_view_changes(ToDo *t){
 	    				    t->cal->general->version,
 					    CSA_ENTRY_ATTR_STATUS_I, 
 					    CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I,
-					    NULL);
+					    nullptr);
 		appt->repeat_type->value->item.sint32_value = 
 						CSA_X_DT_REPEAT_ONETIME;
 	}
@@ -299,7 +299,7 @@ write_view_changes(ToDo *t){
 	    				    t->cal->general->version,
 					    CSA_ENTRY_ATTR_STATUS_I, 
 					    CSA_ENTRY_ATTR_RECURRENCE_RULE_I, 
-					    NULL); 
+					    nullptr); 
 		appt->recurrence_rule->value->item.string_value = 
 						strdup("D1 #1");
 	}
@@ -320,7 +320,7 @@ write_view_changes(ToDo *t){
 			stat = csa_update_entry_attributes(c->cal_handle, 
 					step->appt, scope, 
 					CSA_FALSE, appt->count, 
-					appt->attrs, &updated_a, NULL);
+					appt->attrs, &updated_a, nullptr);
 			backend_err_msg(t->view_frame, 
 					c->view->current_calendar, stat,
 					p->xm_error_pixmap);
@@ -333,7 +333,7 @@ write_view_changes(ToDo *t){
 			if (stat != CSA_SUCCESS)
 				XtVaSetValues(step->view_item_toggle,
 					XmNset, !toggle_state,
-					NULL);
+					nullptr);
 			step->modified = False;
 		}
 		step = step->next;
@@ -371,7 +371,7 @@ flush_view_changes(ToDo *t){
 			BUTTON_IDENT, 2, ident2,
 			BUTTON_IDENT, 3, ident3,
 			DIALOG_IMAGE, pu->xm_warning_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident3);
 		XtFree(ident2);
 		XtFree(ident1);
@@ -457,7 +457,7 @@ t_view_filter_proc(Widget w, XtPointer client_data, XtPointer cbs) {
 	if (!t)
 		return; 
 
-	XtVaGetValues(w, XmNuserData, &op, NULL);
+	XtVaGetValues(w, XmNuserData, &op, nullptr);
 
 	if (op == t->view_filter)
 		return;
@@ -486,7 +486,7 @@ create_filter_menu(Widget parent, XtCallbackProc cb_func, XtPointer data) {
 	option2 = XmStringCreateLocalized(CATGETS(calendar->DT_catd, 1, 783, "Pending"));
 	option3 = XmStringCreateLocalized(CATGETS(calendar->DT_catd, 1, 784, "Completed"));
 
-	menu = XmCreatePulldownMenu(parent, "_pulldown", NULL, 0);
+	menu = XmCreatePulldownMenu(parent, "_pulldown", nullptr, 0);
 
 	XtSetArg(args[ac], XmNsubMenuId, menu); ac++;
 
@@ -496,7 +496,7 @@ create_filter_menu(Widget parent, XtCallbackProc cb_func, XtPointer data) {
                        xmPushButtonGadgetClass, menu,
                        XmNlabelString, option1,
                        XmNuserData, VIEW_ALL,
-                       NULL);
+                       nullptr);
 
 	XtAddCallback(menuitem, XmNactivateCallback, cb_func, data);
 
@@ -504,7 +504,7 @@ create_filter_menu(Widget parent, XtCallbackProc cb_func, XtPointer data) {
                        xmPushButtonGadgetClass, menu,
                        XmNlabelString, option2,
                        XmNuserData, VIEW_PENDING,
-                       NULL);
+                       nullptr);
 
 	XtAddCallback(menuitem, XmNactivateCallback, cb_func, data);
 
@@ -512,7 +512,7 @@ create_filter_menu(Widget parent, XtCallbackProc cb_func, XtPointer data) {
                        xmPushButtonGadgetClass, menu,
                        XmNlabelString, option3,
                        XmNuserData, VIEW_COMPLETED,
-                       NULL);
+                       nullptr);
 
 	XtAddCallback(menuitem, XmNactivateCallback, cb_func, data);
 
@@ -549,7 +549,7 @@ t_build_view_popup(ToDo *t) {
 		XmNallowShellResize, True,
 		XmNmappedWhenManaged, False,
 		XmNautoUnmanage, False,
-		NULL);
+		nullptr);
 	XtFree(title);
 	setup_quit_handler(t->view_frame, t_view_quit_handler, (caddr_t)t);
 
@@ -557,7 +557,7 @@ t_build_view_popup(ToDo *t) {
       			xmFormWidgetClass, t->view_frame,
       			XmNfractionBase, 4,
 			XmNautoUnmanage, False,
-      			NULL);
+      			nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 655, "OK"));
 
@@ -572,7 +572,7 @@ t_build_view_popup(ToDo *t) {
       				XmNrightPosition, 1,
       				XmNbottomAttachment, XmATTACH_FORM,
 				XmNbottomOffset,         5,
-      				NULL);
+      				nullptr);
 
 	XmStringFree(xmstr);
 
@@ -591,7 +591,7 @@ t_build_view_popup(ToDo *t) {
       				XmNrightPosition, 2,
       				XmNbottomAttachment, XmATTACH_FORM,
 				XmNbottomOffset,         5,
-      				NULL);
+      				nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(t->view_apply_button, XmNactivateCallback, t_view_apply_cb, t);
@@ -607,7 +607,7 @@ t_build_view_popup(ToDo *t) {
       				XmNrightPosition, 3,
       				XmNbottomAttachment, XmATTACH_FORM,
 				XmNbottomOffset,         5,
-      				NULL);
+      				nullptr);
 
 	XmStringFree(xmstr);
 
@@ -625,7 +625,7 @@ t_build_view_popup(ToDo *t) {
       				XmNrightOffset, 10,
       				XmNbottomAttachment, XmATTACH_FORM,
 				XmNbottomOffset,         5,
-      				NULL);
+      				nullptr);
 	XmStringFree(xmstr);
 
 
@@ -637,7 +637,7 @@ t_build_view_popup(ToDo *t) {
                 XmNbottomAttachment,   	XmATTACH_WIDGET,
                 XmNbottomWidget,        t->view_ok_button,
 		XmNbottomOffset,	5,
-                NULL);
+                nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 789, "To Do Type:"));
 	label= XtVaCreateWidget("type_label",
@@ -647,7 +647,7 @@ t_build_view_popup(ToDo *t) {
 		XmNleftOffset, 		5,
 		XmNtopOffset, 		8,
 		XmNlabelString, 	xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 
@@ -660,7 +660,7 @@ t_build_view_popup(ToDo *t) {
 		XmNleftWidget, 		label,
 		XmNtopOffset, 		3,
 		XmNleftOffset, 		5,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 790, "context"));
 	t->view_list_label= XtVaCreateWidget("type_label",
@@ -671,7 +671,7 @@ t_build_view_popup(ToDo *t) {
 		XmNleftOffset, 		5,
 		XmNtopOffset, 		5,
 		XmNlabelString, 	xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 	t->view_sw_mgr = XtVaCreateWidget("view_sw_mgr",
@@ -691,10 +691,10 @@ t_build_view_popup(ToDo *t) {
 		XmNbottomAttachment, 	XmATTACH_WIDGET,
 		XmNbottomWidget, 	separator,
 		XmNbottomOffset,	5,
-		NULL);
+		nullptr);
 	t->view_form_mgr = XtVaCreateWidget("view_form_mgr",
 		xmFormWidgetClass, t->view_sw_mgr,
-		NULL);
+		nullptr);
 
         XtAddCallback(t->view_help_button, XmNactivateCallback,
                 help_cb, TODO_LIST_HELP_BUTTON);
@@ -706,7 +706,7 @@ t_build_view_popup(ToDo *t) {
 	XtManageChild(t->view_form_mgr); 
 	XtManageChild(t->view_form);
 
-	t->view_list = NULL;
+	t->view_list = nullptr;
 	t->view_filter = VIEW_ALL;
 	t->todo_view_is_up = False;
 	t->view_list_modified = False;
@@ -736,7 +736,7 @@ t_expand_ui_proc(Widget w, XtPointer client_data, XtPointer data) {
 	   it seems to work.  Do *not* remove these calls to 
 	   XtSetSensitive(), of the synlib tests will stop working. */
 
-	XtVaGetValues(t->todo_list_sw, XmNwidth, &width, NULL);
+	XtVaGetValues(t->todo_list_sw, XmNwidth, &width, nullptr);
 	if (expand_state_closed) {
 		Widget	children[2];
 
@@ -751,13 +751,13 @@ t_expand_ui_proc(Widget w, XtPointer client_data, XtPointer data) {
 		xmstr = XmStringCreateLocalized(CATGETS(t->cal->DT_catd, 1, 625,
 							"Less"));
 		XtVaSetValues(t->expand_ui_button, XmNlabelString, xmstr,
-			      NULL);
+			      nullptr);
 		XmStringFree(xmstr);
 
-		XtVaGetValues(t->rfp.rfp_form_mgr, XmNheight, &h1, NULL);
-		XtVaGetValues(t->reminders.bfpm_form_mgr, XmNheight, &h2, NULL);
+		XtVaGetValues(t->rfp.rfp_form_mgr, XmNheight, &h1, nullptr);
+		XtVaGetValues(t->reminders.bfpm_form_mgr, XmNheight, &h2, nullptr);
 		h = ( h1 > h2 ) ? h1 : h2;
-                XtVaSetValues(t->separator1, XmNbottomOffset, h + 10, NULL);
+                XtVaSetValues(t->separator1, XmNbottomOffset, h + 10, nullptr);
 
 		children[0] = t->rfp.rfp_form_mgr;
 		children[1] = t->reminders.bfpm_form_mgr;
@@ -774,14 +774,14 @@ t_expand_ui_proc(Widget w, XtPointer client_data, XtPointer data) {
 		xmstr = XmStringCreateLocalized(CATGETS(t->cal->DT_catd, 1, 626,
 							"More"));
 		XtVaSetValues(t->expand_ui_button, XmNlabelString, xmstr,
-			      NULL);
+			      nullptr);
 		XmStringFree(xmstr);
 		XtUnmanageChild(t->rfp.rfp_form_mgr);
 		XtUnmanageChild(t->reminders.bfpm_form_mgr);
-		XtVaSetValues(t->separator1, XmNbottomOffset, 0, NULL);
+		XtVaSetValues(t->separator1, XmNbottomOffset, 0, nullptr);
 		expand_state_closed = True;
 	}
-	XtVaSetValues(t->todo_list_sw, XmNwidth, width, NULL);
+	XtVaSetValues(t->todo_list_sw, XmNwidth, width, nullptr);
 	XtSetSensitive(t->rfp.rfp_form_mgr, True);
 }
 
@@ -831,7 +831,7 @@ t_form_to_appt(ToDo *t) {
 	                        CSA_ENTRY_ATTR_FLASHING_REMINDER_I,
 	                        CSA_ENTRY_ATTR_MAIL_REMINDER_I,
 	                        CSA_ENTRY_ATTR_POPUP_REMINDER_I,
-				NULL);
+				nullptr);
 	else
 		appt = allocate_appt_struct(appt_write, t->cal->general->version, 
 				CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER_I,
@@ -853,7 +853,7 @@ t_form_to_appt(ToDo *t) {
 	                        CSA_ENTRY_ATTR_MAIL_REMINDER_I,
 	                        CSA_ENTRY_ATTR_POPUP_REMINDER_I,
 	                        CSA_ENTRY_ATTR_RECURRENCE_RULE_I,
-				NULL);
+				nullptr);
 
 	/* We have a special case in the "todo" department here.  The 
 	   dialog only has the concept of a start time.  The backing 
@@ -887,12 +887,12 @@ t_form_to_appt(ToDo *t) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
 		XtFree(str);
-		return(NULL);
+		return(nullptr);
 	}
 	XtFree(str);
 
@@ -914,7 +914,7 @@ t_form_to_appt(ToDo *t) {
 
 	if (!all_ok) {
 		free_appt_struct(&appt);
-		return(NULL);
+		return(nullptr);
 	}
 
 	/* for todo appointments, we want to make sure that any reminder 
@@ -924,17 +924,17 @@ t_form_to_appt(ToDo *t) {
 
 	if (appt->beep->name) {
 		free(appt->beep->name);
-		appt->beep->name = NULL;
+		appt->beep->name = nullptr;
 	}
 
 	if (appt->flash->name) {
 		free(appt->flash->name);
-		appt->flash->name = NULL;
+		appt->flash->name = nullptr;
 	}
 
 	if (appt->popup->name) {
 		free(appt->popup->name);
-		appt->popup->name = NULL;
+		appt->popup->name = nullptr;
 	}
 
 	t->completed_val = XmToggleButtonGadgetGetState(t->completed_toggle);
@@ -964,7 +964,7 @@ t_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 	Calendar	*c = t->cal;
 
 	_DtTurnOnHourGlass(t->frame);
-	if ((appt = t_form_to_appt(t)) == NULL) {
+	if ((appt = t_form_to_appt(t)) == nullptr) {
 		_DtTurnOffHourGlass(t->frame);
 		return;
 	}
@@ -972,7 +972,7 @@ t_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 	/* the gui does not support specifying the sequence end date */
 	if (appt->sequence_end_date && appt->sequence_end_date->name) {
 		free(appt->sequence_end_date->name);
-		appt->sequence_end_date->name = NULL;
+		appt->sequence_end_date->name = nullptr;
 	}
 	/*
 	**  First, get the value on the repeat menu
@@ -996,7 +996,7 @@ t_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 				BUTTON_IDENT, 1, ident1,
 				BUTTON_IDENT, 4, ident4,
 				DIALOG_IMAGE, p->xm_question_pixmap,
-				NULL);
+				nullptr);
 		XtFree(ident4);
 		XtFree(ident1);
 		XtFree(text);
@@ -1023,7 +1023,7 @@ t_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 		break;
 	}
 
-	stat = csa_add_entry(t->cal->cal_handle, appt->count, appt->attrs, &new_a, NULL);
+	stat = csa_add_entry(t->cal->cal_handle, appt->count, appt->attrs, &new_a, nullptr);
 	backend_err_msg(t->frame, t->cal->view->current_calendar, stat,
 			p->xm_error_pixmap);
 	free_appt_struct(&appt);
@@ -1044,7 +1044,7 @@ t_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 
 static void
 t_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
-	int			*item_list = NULL, item_cnt = 0;
+	int			*item_list = nullptr, item_cnt = 0;
 	ToDo			*t = (ToDo *)client_data;
         Calendar 		*c = t->cal;
 	Props_pu		*p = (Props_pu *)t->cal->properties_pu;
@@ -1065,7 +1065,7 @@ t_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -1083,7 +1083,7 @@ t_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -1097,7 +1097,7 @@ t_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 	appt = allocate_appt_struct(appt_read, 
 				    	c->general->version,
 					CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I, 
-					NULL);
+					nullptr);
 	stat = query_appt_struct(c->cal_handle, entry, appt);
 	backend_err_msg(t->frame, c->view->current_calendar, stat,
 			p->xm_error_pixmap);
@@ -1126,7 +1126,7 @@ t_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 				BUTTON_IDENT, 3, ident3,
 				BUTTON_IDENT, 4, ident4,
 				DIALOG_IMAGE, p->xm_question_pixmap,
-				NULL);
+				nullptr);
 		  XtFree(ident4);
 		  XtFree(ident3);
 		  XtFree(ident2);
@@ -1148,7 +1148,7 @@ t_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 				BUTTON_IDENT, 1, ident1,
                                 BUTTON_IDENT, 4, ident4,
                                 DIALOG_IMAGE, p->xm_question_pixmap,
-                                NULL);
+                                nullptr);
 		XtFree(ident4);
 		XtFree(ident1);
 		XtFree(text);
@@ -1172,7 +1172,7 @@ t_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 		break;
 	}
 
-	stat = csa_delete_entry(t->cal->cal_handle, entry, scope, NULL);
+	stat = csa_delete_entry(t->cal->cal_handle, entry, scope, nullptr);
 	backend_err_msg(t->frame, t->cal->view->current_calendar, stat,
 			p->xm_error_pixmap);	
 
@@ -1210,7 +1210,7 @@ t_execute_change(ToDo *t, CSA_entry_handle old_a, Dtcm_appointment *new_a,
 				    CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER_I,
 				    CSA_ENTRY_ATTR_START_DATE_I,
 				    CSA_ENTRY_ATTR_RECURRENCE_RULE_I,
-				    NULL);
+				    nullptr);
 	stat = query_appt_struct(c->cal_handle, old_a, appt);
 	backend_err_msg(t->frame, c->view->current_calendar, stat,
 			p->xm_error_pixmap);
@@ -1235,7 +1235,7 @@ t_execute_change(ToDo *t, CSA_entry_handle old_a, Dtcm_appointment *new_a,
 				BUTTON_IDENT, 1, ident1,
                                 BUTTON_IDENT, 4, ident4,
                                 DIALOG_IMAGE, p->xm_question_pixmap,
-                                NULL);
+                                nullptr);
 		XtFree(ident4);
 		XtFree(ident1);
 		XtFree(text);
@@ -1261,7 +1261,7 @@ t_execute_change(ToDo *t, CSA_entry_handle old_a, Dtcm_appointment *new_a,
 				BUTTON_IDENT : BUTTON_INSENSITIVE),
 					4, ident4,
 			DIALOG_IMAGE, p->xm_question_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident4);
 		XtFree(ident3);
 		XtFree(ident2);
@@ -1294,7 +1294,7 @@ t_execute_change(ToDo *t, CSA_entry_handle old_a, Dtcm_appointment *new_a,
 	if (new_a->type) {
                 if (new_a->type->name){
                         free(new_a->type->name);
-                        new_a->type->name = NULL;
+                        new_a->type->name = nullptr;
                 }
         }
 
@@ -1313,19 +1313,19 @@ t_execute_change(ToDo *t, CSA_entry_handle old_a, Dtcm_appointment *new_a,
 				free(new_a->sequence_end_date->value->\
 					item.date_time_value);
 			free(new_a->sequence_end_date->value);
-			new_a->sequence_end_date->value = NULL;
+			new_a->sequence_end_date->value = nullptr;
 		}
 	} else {
 		if (new_a->sequence_end_date && new_a->sequence_end_date->name)
 		{
 			free (new_a->sequence_end_date->name);
-			new_a->sequence_end_date->name = NULL;
+			new_a->sequence_end_date->name = nullptr;
 		}
 	}
 
 	free_appt_struct(&appt);
 
-	stat = csa_update_entry_attributes(c->cal_handle, old_a, scope, CSA_FALSE, new_a->count, new_a->attrs, &updated_a, NULL);
+	stat = csa_update_entry_attributes(c->cal_handle, old_a, scope, CSA_FALSE, new_a->count, new_a->attrs, &updated_a, nullptr);
 	backend_err_msg(t->frame, c->view->current_calendar, stat,
 			p->xm_error_pixmap);
 	if (stat != CSA_SUCCESS)
@@ -1361,7 +1361,7 @@ t_view_change_proc(Widget w, XtPointer cdata, XtPointer cbs) {
 
 static void
 t_change_proc(Widget w, XtPointer client_data, XtPointer data) {
-	int			*item_list = NULL, item_cnt = 0;
+	int			*item_list = nullptr, item_cnt = 0;
 	ToDo			*t = (ToDo *)client_data;
         Calendar 		*c = t->cal;
 	Props_pu		*p = (Props_pu *)t->cal->properties_pu;
@@ -1380,7 +1380,7 @@ t_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -1398,7 +1398,7 @@ t_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -1408,7 +1408,7 @@ t_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 	}
 	XtFree((XtPointer)item_list);
 
-	if ((new_a = t_form_to_appt(t)) != NULL) {
+	if ((new_a = t_form_to_appt(t)) != nullptr) {
 		t_execute_change(t, old_a, new_a, t->frame);
 		free_appt_struct(&new_a);
 	}
@@ -1471,7 +1471,7 @@ FormApptDragMotionHandler(
 				XmNy, &source_y,
 				XmNheight, &source_height,
 				XmNwidth, &source_width,
-				NULL);
+				nullptr);
 
 		if ((event->xmotion.x < source_x) ||
 		    (event->xmotion.y < source_y) ||
@@ -1550,7 +1550,7 @@ t_make_todo(Calendar *c)
 		XmNdeleteResponse, 	XmDO_NOTHING,
 		XmNallowShellResize, 	True,
 		XmNmappedWhenManaged, 	False,
-		NULL);
+		nullptr);
 	set_todo_title(t, c->view->current_calendar);
 	setup_quit_handler(t->frame, t_quit_handler, (caddr_t)t);
 
@@ -1558,7 +1558,7 @@ t_make_todo(Calendar *c)
 		xmFormWidgetClass, 	t->frame,
 		XmNautoUnmanage, 	False,
 		XmNfractionBase, 	15,
-		NULL);
+		nullptr);
 
 	/*
 	**  Build the stuff in the upper portion of the form
@@ -1570,10 +1570,10 @@ t_make_todo(Calendar *c)
 		XmNtopAttachment, 	XmATTACH_FORM,
 		XmNtopOffset, 		5,
 		XmNlabelString, 	xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
-	XtVaGetValues(t->list_label, XmNheight, &label_height, NULL);
+	XtVaGetValues(t->list_label, XmNheight, &label_height, nullptr);
 
 	t->message_text = XtVaCreateWidget("message",
                 xmLabelGadgetClass,     t->base_form_mgr,
@@ -1587,7 +1587,7 @@ t_make_todo(Calendar *c)
 		XmNleftOffset,          2,
 		XmNrightAttachment,     XmATTACH_FORM,
 		XmNrightOffset,         2,
-		NULL);
+		nullptr);
 
 	/*
 	**  Create insert, delete, change, and clear buttons
@@ -1602,7 +1602,7 @@ t_make_todo(Calendar *c)
 		XmNrightAttachment, 	XmATTACH_POSITION,
 		XmNrightPosition, 	3,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XtAddCallback(t->insert_button, XmNactivateCallback, t_insert_proc, t);
 	XmStringFree(xmstr);
 
@@ -1617,7 +1617,7 @@ t_make_todo(Calendar *c)
 		XmNrightPosition, 	5,
 		XmNlabelString, 	xmstr,
 		XmNsensitive, 		False,
-                NULL);
+                nullptr);
 	XtAddCallback(t->change_button, XmNactivateCallback, t_change_proc, t);
 	XmStringFree(xmstr);
  
@@ -1632,7 +1632,7 @@ t_make_todo(Calendar *c)
 		XmNrightPosition, 	7,
 		XmNlabelString, 	xmstr,
 		XmNsensitive, 	False,
-                NULL);
+                nullptr);
 	XtAddCallback(t->delete_button, XmNactivateCallback, t_delete_proc, t);
 	XmStringFree(xmstr);
 
@@ -1646,7 +1646,7 @@ t_make_todo(Calendar *c)
 		XmNrightAttachment, 	XmATTACH_POSITION,
 		XmNrightPosition, 	9,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XtAddCallback(t->clear_button, XmNactivateCallback, t_clear_proc, t);
 	XmStringFree(xmstr);
 
@@ -1660,7 +1660,7 @@ t_make_todo(Calendar *c)
 		XmNrightAttachment, 	XmATTACH_POSITION,
 		XmNrightPosition, 	11,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XtAddCallback(t->close_button, XmNactivateCallback, t_close_proc, t);
 	XmStringFree(xmstr);
 
@@ -1674,7 +1674,7 @@ t_make_todo(Calendar *c)
 		XmNrightAttachment, 	XmATTACH_POSITION,
 		XmNrightPosition, 	13,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(t->help_button, XmNactivateCallback,
 		help_cb, TODO_EDITOR_HELP_BUTTON);
@@ -1691,7 +1691,7 @@ t_make_todo(Calendar *c)
 		XmNleftOffset, 		5,
 		XmNrightAttachment, 	XmATTACH_FORM,
 		XmNrightOffset, 	5,
-		NULL);
+		nullptr);
 
 	t->separator1 = XtVaCreateWidget("separator1",
 		xmSeparatorGadgetClass, t->base_form_mgr,
@@ -1701,7 +1701,7 @@ t_make_todo(Calendar *c)
 		XmNrightOffset, 	5,
 		XmNbottomAttachment, 	XmATTACH_WIDGET,
 		XmNbottomWidget, 	t->separator2,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 626, "More"));
         t->expand_ui_button = XtVaCreateWidget("expando",
@@ -1713,7 +1713,7 @@ t_make_todo(Calendar *c)
 		XmNbottomWidget, 	t->separator1,
 		XmNbottomOffset, 	3,
 		XmNnavigationType, 	XmTAB_GROUP,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(t->expand_ui_button, 
 			XmNactivateCallback, t_expand_ui_proc, t);
@@ -1732,14 +1732,14 @@ t_make_todo(Calendar *c)
 				CATGETS(c->DT_catd, 1, 590, "Due Date:"));
 	XtVaSetValues(t->dssw.date_label,
 		XmNlabelString, xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 	xmstr = XmStringCreateLocalized(
 				CATGETS(c->DT_catd, 1, 798, "Time Due:"));
 	XtVaSetValues(t->dssw.start_label,
 		XmNlabelString, xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 	_i18n_WidestWidget( 3, &curr, &max_left_label_width, t->dssw.date_label,
@@ -1753,10 +1753,10 @@ t_make_todo(Calendar *c)
 	_toText = max_left_label_width + 2 * 5;
 	XtVaSetValues( t->dssw.date_label,
 			XmNleftOffset, _toLabel,
-			NULL );
+			nullptr );
 	XtVaSetValues( t->dssw.date_text,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	/*
 	 * t->dssw.start_label, t->dssw.start_text, t->dssw.start.menu,
 	 * t->dssw.start_ampm_rc_mgr
@@ -1770,16 +1770,16 @@ t_make_todo(Calendar *c)
         _toRC = _toMenu + widest + 5;
 	XtVaSetValues( t->dssw.start_label,
 			XmNleftOffset, _toLabel,
-			NULL );
+			nullptr );
 	XtVaSetValues( t->dssw.start_text,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	XtVaSetValues( t->dssw.start_menu,
 			XmNleftOffset, _toMenu,
-			NULL );
+			nullptr );
 	XtVaSetValues( t->dssw.start_ampm_rc_mgr,
 			XmNleftOffset, _toRC,
-			NULL );
+			nullptr );
 
 	_i18n_HighestWidget( 4, &prev, &highest, t->dssw.start_label,
 	t->dssw.start_text, t->dssw.start_menu, t->dssw.start_ampm_rc_mgr );
@@ -1790,7 +1790,7 @@ t_make_todo(Calendar *c)
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNleftOffset, _toLabel,
-			NULL );	
+			nullptr );	
 
 	/*
 	 * Add a drag source icon inside the dssw, lower right
@@ -1806,7 +1806,7 @@ t_make_todo(Calendar *c)
 		XmNbottomAttachment, 	XmATTACH_FORM,
 		XmNrightAttachment, 	XmATTACH_FORM,
 		XmNtraversalOn, 	False,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 	XtVaSetValues( t->dssw.what_scrollwindow,
@@ -1815,14 +1815,14 @@ t_make_todo(Calendar *c)
 			XmNleftOffset, _toText,
 			XmNrightAttachment, XmATTACH_WIDGET,
 			XmNrightWidget, t->drag_source,
-			NULL );	
+			nullptr );	
 
         XtAddEventHandler(XtParent(t->drag_source), Button1MotionMask, False,
                 FormApptDragMotionHandler, (XtPointer) c);
 	
         XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(c->frame)), 
                 "enableBtn1Transfer",   &btn1_transfer, 
-                NULL); 
+                nullptr); 
 
         /* btn1_transfer is a tri-state variable - see 1195846 */ 
 	if ((Boolean)btn1_transfer != True)
@@ -1833,7 +1833,7 @@ t_make_todo(Calendar *c)
 
 
 
-	XtVaSetValues(t->drag_source, XmNpixmap, p->drag_icon_xbm, NULL);
+	XtVaSetValues(t->drag_source, XmNpixmap, p->drag_icon_xbm, nullptr);
 
 	xmstr = XmStringCreateLocalized(
 				CATGETS(c->DT_catd, 1, 784, "Completed"));
@@ -1843,14 +1843,14 @@ t_make_todo(Calendar *c)
 		XmNlabelString, 	xmstr,
                 XmNbottomAttachment,    XmATTACH_FORM,
 		XmNnavigationType, 	XmTAB_GROUP,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
         _toText = max_left_label_width + 2 * 5 - 4;
 	XtVaSetValues( t->completed_toggle,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 
 	_i18n_HighestWidget( 2, &prev, &highest, t->dssw.what_label,
 				t->dssw.what_scrollwindow );
@@ -1858,7 +1858,7 @@ t_make_todo(Calendar *c)
 			XmNbottomAttachment, XmATTACH_WIDGET,
 			XmNbottomWidget, t->completed_toggle,
 			XmNbottomOffset, 10,
-			NULL );
+			nullptr );
 
 	XtVaSetValues(t->dssw.dssw_form_mgr,
                 XmNtopAttachment, 	XmATTACH_FORM,
@@ -1868,12 +1868,12 @@ t_make_todo(Calendar *c)
 		XmNbottomAttachment, 	XmATTACH_WIDGET,
                 XmNbottomWidget, 	t->expand_ui_button,
                 XmNbottomOffset, 	3,
-		NULL);
+		nullptr);
 
         XtVaGetValues(t->dssw.dssw_form_mgr,
                 XmNchildren,            &children,
                 XmNnumChildren,         &n,
-                NULL);
+                nullptr);
 
         /* We don't want to manage some of the widgets */
 	for (i = 0; i < n; i++) {
@@ -1920,7 +1920,7 @@ t_make_todo(Calendar *c)
 		XmNleftOffset, 		10,
 		XmNbottomAttachment, 	XmATTACH_OPPOSITE_WIDGET,
 		XmNbottomWidget, 	t->dssw.dssw_form_mgr,
-                NULL);
+                nullptr);
 
 	XtManageChild(t->todo_list);
 	XtAddCallback(t->todo_list,
@@ -1929,21 +1929,21 @@ t_make_todo(Calendar *c)
 	XtVaSetValues(t->list_label,
 		XmNleftAttachment, 	XmATTACH_OPPOSITE_WIDGET,
 		XmNleftWidget, 		t->todo_list_sw,
-		NULL);
+		nullptr);
 
         /* set default button */
         XtVaSetValues(t->base_form_mgr, 
 		XmNdefaultButton, 	t->insert_button, 
-		NULL);
+		nullptr);
 
         XtVaSetValues(t->base_form_mgr, 
 		XmNcancelButton, 	t->close_button, 
-		NULL);
+		nullptr);
 
         XmProcessTraversal(t->dssw.what_text, XmTRAVERSE_CURRENT);
         XtVaSetValues(t->base_form_mgr, 
 		XmNinitialFocus, 	t->dssw.what_text, 
-		NULL);
+		nullptr);
 
 	ManageChildren(t->base_form_mgr);
 	XtManageChild(t->base_form_mgr);
@@ -1952,7 +1952,7 @@ t_make_todo(Calendar *c)
 	reminders_init(&t->reminders, c, t->base_form_mgr);
 
 	t->todo_count = 0;
-	t->todo_head = NULL;
+	t->todo_head = nullptr;
 	t->todo_is_up = False;
 	t->initialX = -1;
         t->initialY = -1;
@@ -1975,7 +1975,7 @@ add_to_todo_list(CSA_entry_handle entry, ToDo *t) {
 	appt = allocate_appt_struct(appt_read, 
 				    	t->cal->general->version,
 					CSA_ENTRY_ATTR_SUMMARY_I, 
-					NULL);
+					nullptr);
 	stat = query_appt_struct(t->cal->cal_handle, entry, appt);
 	backend_err_msg(t->frame, t->cal->view->current_calendar, stat,
 			((Props_pu *)t->cal->properties_pu)->xm_error_pixmap);
@@ -2030,7 +2030,7 @@ add_all_todo(ToDo *t) {
 		|| (strcasecmp(date, "tomorrow") == 0)
 		|| (strcasecmp(date, "yesterday") == 0))
 		sprintf(date_str, "12:00 am");
-	if ((tick = cm_getdate(date_str, NULL)) <= 0)
+	if ((tick = cm_getdate(date_str, nullptr)) <= 0)
 		return;
 	build_todo_list(t, tick, dayGlance, &entry_list, &count, VIEW_ALL);
 
@@ -2085,7 +2085,7 @@ set_list_title(ToDo *t) {
 	if (t->view_frame) {
 		xmstr = XmStringCreateLocalized(buffer);
 		XtVaSetValues(t->view_list_label, XmNlabelString, xmstr,
-			NULL);
+			nullptr);
 		XmStringFree(xmstr);
 	}
 
@@ -2136,12 +2136,12 @@ build_todo_list(ToDo *t, Tick date, Glance glance, CSA_entry_handle **a, CSA_uin
 
 	setup_range(&range_attrs, &ops, &range_count, start, stop,
 		    CSA_TYPE_TODO, state, use_state, t->cal->general->version);
-        stat = csa_list_entries(t->cal->cal_handle, range_count, range_attrs, ops, count, a, NULL);
+        stat = csa_list_entries(t->cal->cal_handle, range_count, range_attrs, ops, count, a, nullptr);
 
 	backend_err_msg(t->frame, t->cal->view->current_calendar, stat,
 			((Props_pu *)t->cal->properties_pu)->xm_error_pixmap);
 	if (stat != CSA_SUCCESS) {
-		*a = NULL;
+		*a = nullptr;
 		*count = 0;
 	}
 	free_range(&range_attrs, &ops, range_count);
@@ -2156,7 +2156,7 @@ build_todo_view(ToDo *t, Glance glance, Boolean redisplay) {
 	Lines			*lines;
 	Props			*p = (Props *)t->cal->properties;
 	XmString		str;
-	TodoView		*step, *last = NULL;
+	TodoView		*step, *last = nullptr;
 	CSA_entry_handle	*entry_list;
 	CSA_return_code		stat;
 	OrderingType		o = get_int_prop(p, CP_DATEORDERING);
@@ -2197,7 +2197,7 @@ build_todo_view(ToDo *t, Glance glance, Boolean redisplay) {
 				    CSA_ENTRY_ATTR_START_DATE_I,
 				    CSA_ENTRY_ATTR_SUMMARY_I,
 				    CSA_ENTRY_ATTR_STATUS_I,
-				    NULL);
+				    nullptr);
 
 	/*
 	**  We're going to re-use the list of widgets we may have built
@@ -2218,7 +2218,7 @@ build_todo_view(ToDo *t, Glance glance, Boolean redisplay) {
 			step->view_item_number = XtVaCreateManagedWidget("cnt",
 				xmLabelGadgetClass, t->view_form_mgr,
 				XmNlabelString, str,
-				NULL);
+				nullptr);
 			XmStringFree(str);
 
 			step->view_item_toggle = XtVaCreateManagedWidget(str1,
@@ -2230,11 +2230,11 @@ build_todo_view(ToDo *t, Glance glance, Boolean redisplay) {
 				XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
 				XmNtopWidget, step->view_item_number,
 				XmNtopOffset, -3,
-				NULL);
+				nullptr);
 			XtAddCallback(step->view_item_toggle,
 				XmNvalueChangedCallback, t_view_change_proc, t);
 
-			step->next = NULL;
+			step->next = nullptr;
 			step->appt = 0;
 			if (last) {
 				XtVaSetValues(step->view_item_number,
@@ -2244,7 +2244,7 @@ build_todo_view(ToDo *t, Glance glance, Boolean redisplay) {
 					XmNleftAttachment,
 						XmATTACH_OPPOSITE_WIDGET,
 					XmNleftWidget, last->view_item_number,
-					NULL);
+					nullptr);
 				last->next = step;
 			} else
 				t->view_list = step;
@@ -2283,7 +2283,7 @@ build_todo_view(ToDo *t, Glance glance, Boolean redisplay) {
 				XmNset, (appt->state->value->item.sint32_value ==
 					CSA_STATUS_COMPLETED) ?
 						True : False,
-				NULL);
+				nullptr);
 
 			XmStringFree(str);
 			free(buf);
@@ -2327,7 +2327,7 @@ extern void
 todo_clean_up(ToDo *t) {
 	if (t->todo_head && t->todo_count > 0)
 		csa_free((CSA_buffer) t->todo_head);
-	t->todo_head = NULL;
+	t->todo_head = nullptr;
 	t->todo_count = 0;
 }
 
@@ -2371,7 +2371,7 @@ set_todo_title(ToDo *t, char *name) {
 	if (t->frame) {
 		sprintf(buf, "%s - %s", CATGETS(c->DT_catd, 1, 591, "Calendar : To Do Editor"), name);
 		XtVaSetValues(t->frame, XmNtitle, buf,
-			NULL);
+			nullptr);
 	}
 }
 
@@ -2395,7 +2395,7 @@ show_todo(Calendar *c) {
         	XmProcessTraversal(t->dssw.what_text, XmTRAVERSE_CURRENT);
         	XtVaSetValues(t->base_form_mgr, 
 			XmNinitialFocus, t->dssw.what_text, 
-			NULL);
+			nullptr);
 	}
 
 	XtPopup(t->frame, XtGrabNone);
@@ -2425,8 +2425,8 @@ show_todo_view(Calendar *c, todo_view_op view_filter) {
 	}
 
 
-        XtVaSetValues(t->view_form, XmNdefaultButton, t->view_apply_button, NULL);
-        XtVaSetValues(t->view_form, XmNcancelButton, t->view_cancel_button, NULL);
+        XtVaSetValues(t->view_form, XmNdefaultButton, t->view_apply_button, nullptr);
+        XtVaSetValues(t->view_form, XmNcancelButton, t->view_cancel_button, nullptr);
 
 
 	build_todo_view(t, c->view->glance, False);
@@ -2434,7 +2434,7 @@ show_todo_view(Calendar *c, todo_view_op view_filter) {
 		ds_position_popup(c->frame, t->view_frame,
 				  DS_POPUP_LOR);
 	XtVaSetValues(t->view_frame, XmNmappedWhenManaged, True,
-		NULL);
+		nullptr);
 	XtPopup(t->view_frame, XtGrabNone);
 	XtManageChild(t->view_form);
 	t->todo_view_is_up = True;
@@ -2462,7 +2462,7 @@ todo_insert(Dtcm_appointment *appt, CSA_entry_handle *new_a, Calendar *c) {
 	/* the gui does not support specifying the sequence end date */
 	if (appt->sequence_end_date && appt->sequence_end_date->name) {
 		free(appt->sequence_end_date->name);
-		appt->sequence_end_date->name = NULL;
+		appt->sequence_end_date->name = nullptr;
 	}
         if ((appt->repeat_type->value) &&
            (appt->repeat_type->value->item.sint32_value != CSA_X_DT_REPEAT_ONETIME))
@@ -2479,7 +2479,7 @@ todo_insert(Dtcm_appointment *appt, CSA_entry_handle *new_a, Calendar *c) {
 				BUTTON_IDENT, 1, ident1,
 				BUTTON_IDENT, 4, ident4,
 				DIALOG_IMAGE, p->xm_question_pixmap,
-				NULL);
+				nullptr);
 		XtFree(ident4);
 		XtFree(ident4);
 		XtFree(text);
@@ -2506,7 +2506,7 @@ todo_insert(Dtcm_appointment *appt, CSA_entry_handle *new_a, Calendar *c) {
 		break;
 	}
 
-	stat = csa_add_entry(c->cal_handle, appt->count, appt->attrs, new_a, NULL);
+	stat = csa_add_entry(c->cal_handle, appt->count, appt->attrs, new_a, nullptr);
 	backend_err_msg(c->frame, c->view->current_calendar, stat,
 			p->xm_error_pixmap);
 

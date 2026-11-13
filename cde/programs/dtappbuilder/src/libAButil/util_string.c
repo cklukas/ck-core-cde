@@ -176,26 +176,26 @@ util_strip_white_space(
     STRING	string
 )
 {
-    STRING	newString = NULL,
-		index = NULL;
+    STRING	newString = nullptr,
+		index = nullptr;
     
     index = string;
     /* Strip off any beginning blanks */
-    while ((index != NULL) && isspace(*index))
+    while ((index != nullptr) && isspace(*index))
     {
 	index++;
     }
 
-    if (index != NULL)
+    if (index != nullptr)
     {
 	newString = strdup(index);
  	index = newString;
-	while ((index != NULL) && !(isspace(*index)))
+	while ((index != nullptr) && !(isspace(*index)))
 	{
 	    index++;
 	}
 	/* Strip off any ending blanks */
-	if (index != NULL)
+	if (index != nullptr)
 	    *index = '\0';
     }
     return (newString);

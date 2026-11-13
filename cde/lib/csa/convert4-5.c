@@ -67,24 +67,24 @@ _DtCm_accessentry4_to_cmsaccesslist(
 	CSA_return_code	stat = CSA_SUCCESS;
 	cms_access_entry *to, *head, *prev;
 
-	head = prev = NULL;
-	while (a4 != NULL) {
+	head = prev = nullptr;
+	while (a4 != nullptr) {
 		if ((to = (cms_access_entry *)calloc(1,
-		    sizeof(cms_access_entry))) == NULL) {
+		    sizeof(cms_access_entry))) == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
-		if (a4->who && (to->user = strdup(a4->who)) == NULL) {
+		if (a4->who && (to->user = strdup(a4->who)) == nullptr) {
 			free(to);
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
 		to->rights = accesstype4_to_accessright(a4->access_type);
-		to->next = NULL;
+		to->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = to;
 		else
 			prev->next = to;
@@ -96,7 +96,7 @@ _DtCm_accessentry4_to_cmsaccesslist(
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_cms_access_entry(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*alist = head;
@@ -118,14 +118,14 @@ _DtCm_appt4_to_attrs(
 	int		index, ntimes;
 	char		*ptr1, *ptr2;
 
-	if (a4 == NULL || num_attrs < _DtCM_DEFINED_ENTRY_ATTR_SIZE)
+	if (a4 == nullptr || num_attrs < _DtCM_DEFINED_ENTRY_ATTR_SIZE)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* exception info is not converted since it's not used
 	 * and we don't have an attribute for it yet
 	 */
 
-	while (stat == CSA_SUCCESS && reminders != NULL) {
+	while (stat == CSA_SUCCESS && reminders != nullptr) {
 		if ((index =
 		    _DtCm_old_reminder_name_to_index(reminders->attr)) >= 0) {
 			if ((stat = _DtCmAttr4ToReminderValue(reminders,
@@ -141,12 +141,12 @@ _DtCm_appt4_to_attrs(
 	 */
 	if (a4->appt_id.key > 0) {
 		ptr1 = strchr(calname, '@');
-		ptr2 = (ptr1 ? strchr(ptr1, '.') : NULL);
+		ptr2 = (ptr1 ? strchr(ptr1, '.') : nullptr);
 
 		if (ptr1) {
 			snprintf(buf, sizeof buf, "%ld:%s%s%s", a4->appt_id.key, calname,
-				(ptr2 == NULL ? "." : ""),
-				(ptr2 == NULL ? _DtCmGetLocalDomain(ptr1+1) :
+				(ptr2 == nullptr ? "." : ""),
+				(ptr2 == nullptr ? _DtCmGetLocalDomain(ptr1+1) :
 				""));
 		} else {
 			snprintf(buf, sizeof buf, "%ld:%s@%s", a4->appt_id.key, calname,
@@ -383,10 +383,10 @@ _DtCmAttr4ToReminderValue(
 		rval.reminder_data.data = (unsigned char *)remval->clientdata;
 	} else {
 		rval.reminder_data.size = 0;
-		rval.reminder_data.data = NULL;
+		rval.reminder_data.data = nullptr;
 	}
 
-	rval.snooze_time = NULL;
+	rval.snooze_time = nullptr;
 	rval.repeat_count = 0;
 
 	return (_DtCm_set_reminder_attrval(&rval, attrval));
@@ -435,7 +435,7 @@ _RepeatInfoToRule(Appt_4 *a4, cms_attribute_value **attrval)
 	uint	duration;
 
 	if (a4->period.period == single_4 || a4->period.period == otherPeriod_4)	{
-		*attrval = NULL;
+		*attrval = nullptr;
 		return (CSA_SUCCESS);
 	}
 

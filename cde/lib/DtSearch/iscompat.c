@@ -88,18 +88,18 @@ char           *ptr;
 int             fuzzy_v, fuzzy_r, his_v, his_r, my_v, my_r;
 _Xstrtokparams	strtok_buf;
 
-    if (callers_version == NULL)
+    if (callers_version == nullptr)
 	return false(1);
     if (*callers_version == '\0')
 	return false(2);
     strncpy (safebuf, callers_version, sizeof(safebuf));
     safebuf[sizeof(safebuf) - 1] = 0;
-    if ((ptr = _XStrtok (safebuf, ".", strtok_buf)) == NULL)
+    if ((ptr = _XStrtok (safebuf, ".", strtok_buf)) == nullptr)
 	return false(3);
     if ((his_v = atoi (ptr)) == 0)
 	if (*ptr != '0')
 	    return false(4);
-    if ((ptr = _XStrtok (NULL, ".", strtok_buf)) == NULL)
+    if ((ptr = _XStrtok (nullptr, ".", strtok_buf)) == nullptr)
 	return false(5);
     if ((his_r = atoi (ptr)) == 0)
 	if (*ptr != '0')
@@ -107,12 +107,12 @@ _Xstrtokparams	strtok_buf;
 
     strncpy (safebuf, VERSCONST, sizeof(safebuf));
     safebuf[sizeof(safebuf) - 1] = 0;
-    if ((ptr = _XStrtok (safebuf, ".", strtok_buf)) == NULL)
+    if ((ptr = _XStrtok (safebuf, ".", strtok_buf)) == nullptr)
 	return false(7);
     if ((my_v = atoi (ptr)) == 0)
 	if (*ptr != '0')
 	    return false(8);
-    if ((ptr = _XStrtok (NULL, ".", strtok_buf)) == NULL)
+    if ((ptr = _XStrtok (nullptr, ".", strtok_buf)) == nullptr)
 	return false(9);
     if ((my_r = atoi (ptr)) == 0)
 	if (*ptr != '0')
@@ -120,12 +120,12 @@ _Xstrtokparams	strtok_buf;
 
     strncpy (safebuf, AUSAPI_VERSION, sizeof(safebuf));
     safebuf[sizeof(safebuf) - 1] = 0;
-    if ((ptr = _XStrtok (safebuf, ".", strtok_buf)) == NULL)
+    if ((ptr = _XStrtok (safebuf, ".", strtok_buf)) == nullptr)
 	return false(11);
     if ((fuzzy_v = atoi (ptr)) == 0)
 	if (*ptr != '0')
 	    return false(12);
-    if ((ptr = _XStrtok (NULL, ".", strtok_buf)) == NULL)
+    if ((ptr = _XStrtok (nullptr, ".", strtok_buf)) == nullptr)
 	return false(13);
     if ((fuzzy_r = atoi (ptr)) == 0)
 	if (*ptr != '0')

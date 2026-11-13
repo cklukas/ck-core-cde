@@ -73,15 +73,15 @@ static	_DtHelpFontHints	DefaultFontAttrs =
 	"C",
 	"ISO-8859-1",
 	10, 0,				/* pointsz, setsize */
-	  NULL,					/* color            */
-	  NULL, NULL, NULL, NULL,		/* xlfd strings     */
-	  NULL, NULL, NULL, NULL,		/* MS-Win strings   */
+	  nullptr,					/* color            */
+	  nullptr, nullptr, nullptr, nullptr,		/* xlfd strings     */
+	  nullptr, nullptr, nullptr, nullptr,		/* MS-Win strings   */
 	_DtHelpFontStyleSanSerif,
 	_DtHelpFontSpacingProp  ,
 	_DtHelpFontWeightMedium ,
 	_DtHelpFontSlantRoman   ,
 	_DtHelpFontSpecialNone  ,
-	NULL
+	nullptr
   };
 
 /******************************************************************************
@@ -92,10 +92,10 @@ static	_DtHelpFontHints	DefaultFontAttrs =
 static int
 HintDuplicate(char **string)
 {
-    if (NULL != *string)
+    if (nullptr != *string)
       {
 	*string = strdup(*string);
-	if (NULL == *string)
+	if (nullptr == *string)
 	    return -1;
       }
 
@@ -140,39 +140,39 @@ _DtHelpFreeFontHints (_DtHelpFontHints *font_hints )
     /*
      * do the language and charset
      */
-    if (NULL != font_hints->language)
+    if (nullptr != font_hints->language)
         free(font_hints->language);
-    if (NULL != font_hints->char_set)
+    if (nullptr != font_hints->char_set)
         free(font_hints->char_set);
 
     /*
      * do the color
      */
-    if (NULL != font_hints->color)
+    if (nullptr != font_hints->color)
         free(font_hints->color);
 
     /*
      * do the xlfd fonts
      */
-    if (NULL != font_hints->xlfd)
+    if (nullptr != font_hints->xlfd)
         free(font_hints->xlfd);
-    if (NULL != font_hints->xlfdb)
+    if (nullptr != font_hints->xlfdb)
         free(font_hints->xlfdb);
-    if (NULL != font_hints->xlfdi)
+    if (nullptr != font_hints->xlfdi)
         free(font_hints->xlfdi);
-    if (NULL != font_hints->xlfdib)
+    if (nullptr != font_hints->xlfdib)
         free(font_hints->xlfdib);
 
     /*
      * do the ms-windows fonts
      */
-    if (NULL != font_hints->typenam)
+    if (nullptr != font_hints->typenam)
         free(font_hints->typenam);
-    if (NULL != font_hints->typenamb)
+    if (nullptr != font_hints->typenamb)
         free(font_hints->typenamb);
-    if (NULL != font_hints->typenami)
+    if (nullptr != font_hints->typenami)
         free(font_hints->typenami);
-    if (NULL != font_hints->typenamib)
+    if (nullptr != font_hints->typenamib)
         free(font_hints->typenamib);
 }
 

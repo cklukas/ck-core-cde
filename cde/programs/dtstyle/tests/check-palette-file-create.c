@@ -204,7 +204,7 @@ int main(int argc, char **argv)
     /* (c) mkstemps fails: no name, no file, nothing left allocated. */
     before = ck_count(ck_dir);
     ck_mk_fail = 1;
-    assert(CK_CREATE(ck_dir) == NULL);
+    assert(CK_CREATE(ck_dir) == nullptr);
     ck_mk_fail = 0;
     assert(ck_xtmalloc_live == 0);
     assert(ck_count(ck_dir) == before);

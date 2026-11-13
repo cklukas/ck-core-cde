@@ -75,23 +75,23 @@
 ABObj
 obj_scoped_find_by_name(ABObj searchFirstObj, STRING objName)
 {
-    ABObj	obj= NULL;
-    char	*dotPtr= NULL;
-    char	*moduleNamePtr= NULL;
+    ABObj	obj= nullptr;
+    char	*dotPtr= nullptr;
+    char	*moduleNamePtr= nullptr;
     char	*objNamePtr= objName;
-    char	*moduleNameEndPtr = NULL;
+    char	*moduleNameEndPtr = nullptr;
     int		moduleNameEndChar = -1;
     char	nameBuf[1024];
     /* printf("obj_scoped_find_by_name(%s[%s])\n",
 	obj_get_safe_name(searchFirstObj, nameBuf, 1024), 
 	util_strsafe(objName)); */
 
-    if ((dotPtr= strchr(objName, '.')) != NULL)
+    if ((dotPtr= strchr(objName, '.')) != nullptr)
     {
 	moduleNamePtr= objName;
 	objNamePtr= dotPtr+1;
     }
-    else if ((dotPtr= strstr(objName, "::")) != NULL)
+    else if ((dotPtr= strstr(objName, "::")) != nullptr)
     {
 	moduleNamePtr= objName;
 	objNamePtr= dotPtr+2;
@@ -100,7 +100,7 @@ obj_scoped_find_by_name(ABObj searchFirstObj, STRING objName)
     /*
      *  Remove white space on either side of the separator
      */
-    if (dotPtr != NULL)
+    if (dotPtr != nullptr)
     {
         /* put a 0 at the end of the module name */
 	for (moduleNameEndPtr = dotPtr-1;
@@ -123,7 +123,7 @@ obj_scoped_find_by_name(ABObj searchFirstObj, STRING objName)
     /*
      * We now have the module and object name, so find the object.
      */
-    if (moduleNamePtr == NULL)
+    if (moduleNamePtr == nullptr)
     {
 	/*
 	 * This is a simple name
@@ -133,10 +133,10 @@ obj_scoped_find_by_name(ABObj searchFirstObj, STRING objName)
 	/*
 	 * It doesn't exist in the scoping object, so look at the module
 	 */
-	if ((obj == NULL) && (!obj_is_module(searchFirstObj)))
+	if ((obj == nullptr) && (!obj_is_module(searchFirstObj)))
 	{
 	    ABObj module = obj_get_module(searchFirstObj);
-	    if (module != NULL)
+	    if (module != nullptr)
 	    {
 		obj = obj_find_by_name(module, objNamePtr);
 	    }
@@ -148,13 +148,13 @@ obj_scoped_find_by_name(ABObj searchFirstObj, STRING objName)
 	 * Module name has been specified
 	 */
 	ABObj	objProject= obj_get_project(searchFirstObj);
-	ABObj	objModule= NULL;
+	ABObj	objModule= nullptr;
 	
-	if (objProject != NULL)
+	if (objProject != nullptr)
 	{
 	    objModule = obj_find_module_by_name(objProject, moduleNamePtr);
 	}
-	if (objModule != NULL)
+	if (objModule != nullptr)
 	{
 	    obj= obj_find_by_name(objModule, objNamePtr);
 	}
@@ -162,7 +162,7 @@ obj_scoped_find_by_name(ABObj searchFirstObj, STRING objName)
 
 epilogue:
     /* replace the 0 we inserted with the char that was there */
-    if (moduleNameEndPtr != NULL)
+    if (moduleNameEndPtr != nullptr)
     {
 	*moduleNameEndPtr= moduleNameEndChar;
     }

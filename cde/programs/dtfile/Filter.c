@@ -230,7 +230,7 @@ static DialogClass filterClassRec =
    WriteResourceValues,
    FreeValues,
    _DtGenericMapWindow,
-   NULL,
+   nullptr,
 };
 
 DialogClass * filterClass = (DialogClass *) &filterClassRec;
@@ -307,7 +307,7 @@ Create(
    filterTranslationTable = XtParseTranslationTable(
                                resolvedFilterTranslationString );
    XtFree( resolvedFilterTranslationString );
-    resolvedFilterTranslationString  = NULL;
+    resolvedFilterTranslationString  = nullptr;
    XtOverrideTranslations(form, filterTranslationTable);
 
    hiddenPulldown = XmCreatePulldownMenu(form, "hiddenPD", args, 0);
@@ -594,7 +594,7 @@ Create(
    filter_rec->unselect_all = unselectAll;
    filter_rec->label = labelPt2;
    filter_rec->cancel = 0x0;
-   filter_rec->previous_filter_data = NULL;
+   filter_rec->previous_filter_data = nullptr;
 
    filter_rec->ok = ok;
    filter_rec->apply = apply;
@@ -711,7 +711,7 @@ GetValues(
   {
     
     filter_data = filter_rec->previous_filter_data;
-    filter_rec->previous_filter_data = NULL;
+    filter_rec->previous_filter_data = nullptr;
   }
   else
   {
@@ -765,7 +765,7 @@ GetDefaultValues( void )
    filter_data->show_hidden = False;
    filter_data->filetypesFilteredCount = 3;
    filter_data->filetypesFiltered = XtNewString(DEFAULT_FILTER);
-   filter_data->user_data = NULL;
+   filter_data->user_data = nullptr;
    filter_data->count = ReadInFiletypes(filter_data);
 
    return ((XtPointer) filter_data);
@@ -792,7 +792,7 @@ GetResourceValues(
    /*  Allocate and get the resources for file filter dialog data.  */
 
    filter_data = (FilterData *) XtMalloc (sizeof (FilterData));
-   filter_data->user_data = NULL;
+   filter_data->user_data = nullptr;
 
    _DtDialogGetResources (data_base, name_list, FILE_FILTER, (char *)filter_data,
                        resources, filterClass->resource_count);
@@ -903,7 +903,7 @@ SetValues(
 
       if (ptr = (char *)DtDtsDataTypeToAttributeValue(user_data->filetype,
                                                       FM_TYPE_LABEL,
-                                                      NULL))
+                                                      nullptr))
       {
          icon_label = XmStringCreateLocalized(ptr);
          DtDtsFreeAttributeValue(ptr);
@@ -914,8 +914,8 @@ SetValues(
       }
 
       pixmapData = _DtRetrievePixmapData(user_data->filetype,
-                                         NULL,
-                                         NULL,
+                                         nullptr,
+                                         nullptr,
                                          filter_rec->file_window,
                                          LARGE);
 
@@ -995,7 +995,7 @@ SetValues(
             XtSetValues(icon_widget, args, n);
          }
          XtAddCallback(icon_widget, XmNhelpCallback,
-                       HelpRequestCB, NULL);
+                       HelpRequestCB, nullptr);
       }
       XtAddCallback (icon_widget, XmNcallback, NewFileTypeSelected,
                                                     (XtPointer)filter_rec);
@@ -1232,14 +1232,14 @@ OkCallback(
    DialogData * dialog_data;
    Widget close = filter_rec->close;
 
-   if(RecheckFlag(NULL,w))
+   if(RecheckFlag(nullptr,w))
      return;
-   else if(RecheckFlag(NULL,close))
+   else if(RecheckFlag(nullptr,close))
      return;
 
    ApplyCallback(w, client_data, call_data);
    dialog_data = _DtGetInstanceData ((XtPointer)filter_rec);
-   ResetFlag(NULL,close);
+   ResetFlag(nullptr,close);
    XtCallCallbacks(filter_rec->close, XmNactivateCallback,
                                                  (XtPointer)dialog_data);
 }
@@ -1292,7 +1292,7 @@ ApplyCallback(
       XtSetArg (args[0], XmNuserData, new_filter_data->user_data[i + count]);
       XtSetValues(mgr->composite.children[i], args, 1);
    }
-   (*(((FilterApply *)client_data)->callback)) (w, ((FilterApply *)client_data)->client_data, NULL);
+   (*(((FilterApply *)client_data)->callback)) (w, ((FilterApply *)client_data)->client_data, nullptr);
 }
 
 
@@ -1331,10 +1331,10 @@ GetFilterValues(
    else
       filter_data->match_flag = False;
 
-   filter_data->filetypesFiltered = NULL;
+   filter_data->filetypesFiltered = nullptr;
    filter_data->filetypesFilteredCount = 0;
    dialog_data = _DtGetInstanceData ((XtPointer)filter_rec);
-   if(dialog_data != NULL)
+   if(dialog_data != nullptr)
    {
       old_filter_data = (FilterData *) dialog_data->data;
       filter_data->count = old_filter_data->count;
@@ -1357,7 +1357,7 @@ GetFilterValues(
             (filter_data->user_data[i]->selected == False && 
                                                 !filter_data->match_flag))
          {
-           if(filter_data->filetypesFiltered == NULL)
+           if(filter_data->filetypesFiltered == nullptr)
            {
               filter_data->filetypesFiltered =
                 XtNewString(filter_data->user_data[i]->filetype);
@@ -1451,7 +1451,7 @@ ReadInFiletypes(
          XtFree((char *)filter_data->user_data[i]);
       }
       XtFree((char *)filter_data->user_data);
-      filter_data->user_data = NULL;
+      filter_data->user_data = nullptr;
       filter_data->count = 0;
    }
 
@@ -1647,7 +1647,7 @@ SelectAllFilter(
   FilterRec * filterRec;
 
   sscanf( params[0], "%p", (void **) &filterRec );
-  SelectAllFileTypes( w, (XtPointer)filterRec, NULL );
+  SelectAllFileTypes( w, (XtPointer)filterRec, nullptr );
   return ;
 }
 
@@ -1661,6 +1661,6 @@ DeselectAllFilter(
   FilterRec * filterRec;
 
   sscanf( params[0], "%p", (void **) &filterRec );
-  UnselectAllFileTypes( w, (XtPointer)filterRec, NULL );
+  UnselectAllFileTypes( w, (XtPointer)filterRec, nullptr );
   return ;
 }

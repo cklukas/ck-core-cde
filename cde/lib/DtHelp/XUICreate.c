@@ -100,7 +100,7 @@ static	_DtCvVirtualInfo DefVirtFunctions =
 	_DtHelpDAGetStrWidth,		/* _DtCvUnit (*_DtCvGetElemWidth)()  */
 	_DtHelpDAGetFontMetrics,	/* void (*_DtCvGetFontMetrics)() */
 	_DtHelpDABuildSelection,	/* void (*_DtCvBuildSelection)() */
-	NULL,				/* _DtCvStatus (*_DtCvFilterExecCmd)()*/
+	nullptr,				/* _DtCvStatus (*_DtCvFilterExecCmd)()*/
   };
 
 /********    End Private Variables  ********/
@@ -202,12 +202,12 @@ static String	    DrawnBTransTable = "\
     c       <Key>osfEndLine:   NextLink(3)\
 ";
 
-static	XtTranslations	DrawnBTrans = NULL;
+static	XtTranslations	DrawnBTrans = nullptr;
 
 static unsigned short
 DetectHelpMediaResolution(Display *display)
 {
-    if (display == NULL)
+    if (display == nullptr)
         return 100;
 
     int screen = DefaultScreen(display);
@@ -436,8 +436,8 @@ HelpCreateDA(
 
     Atom xa_ave_width;
 
-    XFontStruct *tmpFont = NULL;
-    XtPointer	 default_font = NULL;
+    XFontStruct *tmpFont = nullptr;
+    XtPointer	 default_font = nullptr;
     XRectangle   rectangle[1];
 
     XmFontContext	fontContext;
@@ -451,7 +451,7 @@ HelpCreateDA(
      * get the resources
      */
     XtGetSubresources(parent, &DA_args, name, "XmDrawnButton",
-		    Resources, XtNumber(Resources), NULL, 0);
+		    Resources, XtNumber(Resources), nullptr, 0);
 
     if (rows <= 0)
 	rows = 1;
@@ -487,13 +487,13 @@ HelpCreateDA(
     pDAS->marginHeight  = DA_args.marginHeight;
     pDAS->searchColor   = DA_args.search_color;
     pDAS->depth		= 0;
-    pDAS->spc_chars     = NULL;
+    pDAS->spc_chars     = nullptr;
     pDAS->scr_timer_id  = 0;
     pDAS->def_pix       = 0;
-    pDAS->context       = NULL;
+    pDAS->context       = nullptr;
     pDAS->vertIsMapped  = False;
     pDAS->horzIsMapped  = False;
-    pDAS->lst_topic     = NULL;
+    pDAS->lst_topic     = nullptr;
     pDAS->nextNonVisible = 0;
     pDAS->media_resolution = media_resolution;
     pDAS->honor_size = honor_size;
@@ -507,8 +507,8 @@ HelpCreateDA(
      * locale dependant information
      */
     pDAS->nl_to_space      = 1;
-    pDAS->cant_begin_chars = NULL;
-    pDAS->cant_end_chars   = NULL;
+    pDAS->cant_begin_chars = nullptr;
+    pDAS->cant_end_chars   = nullptr;
     if (1 < MB_CUR_MAX)
 	_DtHelpLoadMultiInfo (&(pDAS->cant_begin_chars),
 				&(pDAS->cant_end_chars), &(pDAS->nl_to_space));
@@ -524,8 +524,8 @@ HelpCreateDA(
     /*
      * zero out other callback fields
      */
-    pDAS->vScrollNotify = NULL ;
-    pDAS->armCallback = NULL ;
+    pDAS->vScrollNotify = nullptr ;
+    pDAS->armCallback = nullptr ;
 
     /*
      * create the atoms needed
@@ -536,11 +536,11 @@ HelpCreateDA(
      * Malloc for the default font.
      */
     (void) XmeRenderTableGetDefaultFont(DA_args.userFont, &tmpFont);
-    if (default_list != NULL &&
+    if (default_list != nullptr &&
 		XmFontListInitFontContext (&fontContext, default_list))
       {
 	fontEntry = XmFontListNextEntry (fontContext);
-	if (fontEntry != NULL)
+	if (fontEntry != nullptr)
 	    default_font = XmFontListEntryGetFont (fontEntry, &fontType);
 
 	XmFontListFreeFontContext (fontContext);
@@ -557,7 +557,7 @@ HelpCreateDA(
      */
     __DtHelpFontMetrics (pDAS->font_info, __DtHelpDefaultFontIndexGet(pDAS),
 			&maxFontAscent, &maxFontDescent, &maxFontCharWidth,
-			NULL, NULL);
+			nullptr, nullptr);
 
     pDAS->leading    = DA_args.leading;
     pDAS->fontAscent = maxFontAscent;
@@ -612,7 +612,7 @@ HelpCreateDA(
     XtGetValues(form, args, n);
 
     /* Create the vertical scrollbar. */
-    pDAS->vertScrollWid = NULL;
+    pDAS->vertScrollWid = nullptr;
     if (vert_flag != _DtHelpNONE)
       {
 	if (vert_flag == _DtHelpSTATIC)
@@ -669,7 +669,7 @@ HelpCreateDA(
       }
 
     /* Create the horizontal scrollbar. */
-    pDAS->horzScrollWid = NULL;
+    pDAS->horzScrollWid = nullptr;
     if (horz_flag != _DtHelpNONE)
       {
 	if (horz_flag == _DtHelpSTATIC)
@@ -785,14 +785,14 @@ HelpCreateDA(
      * parse the translations.
      */
     _DtHelpProcessLock();
-    if (DrawnBTrans == NULL)
+    if (DrawnBTrans == nullptr)
         DrawnBTrans = XtParseTranslationTable(DrawnBTransTable);
 
      /*
      * override the translations
     XtSetArg(args[n], XmNtranslations	   , DrawnBTrans);		++n;
      */
-    if (DrawnBTrans != NULL)
+    if (DrawnBTrans != nullptr)
 	XtOverrideTranslations(pDAS->dispWid, DrawnBTrans);
     _DtHelpProcessUnlock();
   
@@ -891,7 +891,7 @@ HelpCreateDA(
     /*
      * get the scrollbar widths.
      */
-    if (NULL != pDAS->horzScrollWid)
+    if (nullptr != pDAS->horzScrollWid)
       {
 	n = 0;
 	XtSetArg(args[n], XmNheight      , &hBarHeight); n++;
@@ -900,7 +900,7 @@ HelpCreateDA(
 	XtGetValues(pDAS->horzScrollWid, args, n);
       }
 
-    if (NULL != pDAS->vertScrollWid)
+    if (nullptr != pDAS->vertScrollWid)
       {
 	n = 0;
 	XtSetArg(args[n], XmNwidth       , &vBarWidth);             n++;
@@ -948,7 +948,7 @@ HelpCreateDA(
     /*
      * set the scroll bar values
      */
-    if (pDAS->vertScrollWid != NULL)
+    if (pDAS->vertScrollWid != nullptr)
       {
         n = 0;
         XtSetArg(args[n], XmNmaximum           , pDAS->dispUseHeight);	++n;
@@ -997,17 +997,17 @@ HelpCreateDA(
     /*
      * get the colormap and the visual
      */
-    if (!XtIsShell(parent) && XtParent(parent) != NULL)
+    if (!XtIsShell(parent) && XtParent(parent) != nullptr)
 	parent = XtParent(parent);
 
-    pDAS->visual = NULL;
+    pDAS->visual = nullptr;
 
     n = 0;
     XtSetArg (args[n], XmNcolormap, &(pDAS->colormap)); n++;
     XtSetArg (args[n], XmNvisual  , &(pDAS->visual  )); n++;
     XtGetValues (parent, args, n);
 
-    if (pDAS->visual == NULL)
+    if (pDAS->visual == nullptr)
 	pDAS->visual = XDefaultVisualOfScreen(XtScreen(pDAS->dispWid));
 
     /*

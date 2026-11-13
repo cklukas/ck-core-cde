@@ -75,28 +75,28 @@ void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
   static char *use_bm_filter = "*.m.bm";
   static char *use_pm_filter = "*.m.pm";
   char *search_path;
-  char *filter_field_title = NULL;
+  char *filter_field_title = nullptr;
   int use_filter_field = False;
   char *file_filter;
 
   char **directories_list = GetIconSearchPathList();
   int numberOfTopButtons = 0;
-  XtCallbackProc top_button_one_cb = NULL;
-  XtCallbackProc top_button_two_cb = NULL;
-  XtCallbackProc top_button_three_cb = NULL;
-  char *top_button_one_label = NULL;
-  char *top_button_two_label = NULL;
-  char *top_button_three_label = NULL;
+  XtCallbackProc top_button_one_cb = nullptr;
+  XtCallbackProc top_button_two_cb = nullptr;
+  XtCallbackProc top_button_three_cb = nullptr;
+  char *top_button_one_label = nullptr;
+  char *top_button_two_label = nullptr;
+  char *top_button_three_label = nullptr;
   int use_icon_name_field = True;
   int numberOfBottomButtons = 3;
   XtCallbackProc bottom_button_one_cb = load_icons;
-  XtCallbackProc bottom_button_two_cb = NULL;
-  XtCallbackProc bottom_button_three_cb = NULL;
-  XtCallbackProc bottom_button_four_cb = NULL;
-  char *bottom_button_one_label = NULL;   /* use default */
-  char *bottom_button_two_label = NULL;   /* use default */
-  char *bottom_button_three_label = NULL; /* use default */
-  char *bottom_button_four_label = NULL;  /* use default */
+  XtCallbackProc bottom_button_two_cb = nullptr;
+  XtCallbackProc bottom_button_three_cb = nullptr;
+  XtCallbackProc bottom_button_four_cb = nullptr;
+  char *bottom_button_one_label = nullptr;   /* use default */
+  char *bottom_button_two_label = nullptr;   /* use default */
+  char *bottom_button_three_label = nullptr; /* use default */
+  char *bottom_button_four_label = nullptr;  /* use default */
 
   char *name_field_title;
   char *container_title;
@@ -116,7 +116,7 @@ void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
   printf("activate Find Set button; client_data = %p\n", cdata); /* debug */
 #endif
 
-  XtVaGetValues (COLOR_MONO_OPTION, XmNset, &use_bm, NULL);
+  XtVaGetValues (COLOR_MONO_OPTION, XmNset, &use_bm, nullptr);
 
   if (use_bm) file_filter = use_bm_filter;
   else file_filter = use_pm_filter;
@@ -157,7 +157,7 @@ void activateCB_open_FindSet (Widget find_set_button, XtPointer cdata,
   XtFree(container_title);
   XtFree(directory_title);
   XtFree(dialog_title);
-  XtVaSetValues (IconSelector, XmNuserData, cdata, NULL);
+  XtVaSetValues (IconSelector, XmNuserData, cdata, nullptr);
   UxPopupInterface (IconSelector, no_grab);
   return;
 }
@@ -211,7 +211,7 @@ void activateCB_edit_icon (Widget wid, XtPointer client_data,
      widSelectedIcon = (Widget)get_selected_filetype_icon();
      widEditSource = AddFiletype;
   }
-  XtVaGetValues (widSelectedIcon, XmNimageName, &pszIconToEdit, NULL);
+  XtVaGetValues (widSelectedIcon, XmNimageName, &pszIconToEdit, nullptr);
 
   /***************************************************************/
   /* Call routine to send tooltalk message to start icon editor. */
@@ -222,7 +222,7 @@ void activateCB_edit_icon (Widget wid, XtPointer client_data,
 }
 
 /* We use this so we can reuse an open help dialog window. */
-static Widget  mainHelpDialog = NULL;
+static Widget  mainHelpDialog = nullptr;
 
 /******************************************************************************/
 /*                                                                            */
@@ -238,7 +238,7 @@ void closeCB_mainHelpDialog(Widget wid, XtPointer client_data,
                            XtPointer call_data)
 {
   XtDestroyWidget(wid);
-  mainHelpDialog = NULL;
+  mainHelpDialog = nullptr;
 }
 
 /******************************************************************************/
@@ -323,7 +323,7 @@ void DisplayHelpDialog(Widget wid, XtPointer client_data, XtPointer cbs)
   */
   parent = GetTrueToplevel(wid);
   TurnOnHourGlassAllWindows();
-  if ( mainHelpDialog == NULL ) {
+  if ( mainHelpDialog == nullptr ) {
       mainHelpDialog = DtCreateHelpDialog(parent, "mainHelpDialog", args, i);
       XtAddCallback(mainHelpDialog, DtNcloseCallback,
                 closeCB_mainHelpDialog,

@@ -791,11 +791,11 @@ _DtCms_marked_4_cancellation(Appt_4 *a, int i)
 {
 	Except_4 *p;
 
-	if (a==NULL)
+	if (a==nullptr)
 		return(0);
 
 	p = a->exception;	/* in descending order for faster access */
-	while (p!=NULL) {
+	while (p!=nullptr) {
 		if (i > p->ordinal)
 			break;
 		if (i == p->ordinal)
@@ -1065,14 +1065,14 @@ ldom(Tick t /* find dow(0-6) that last dom falls on */ )
 extern boolean_t
 _DtCmsInExceptionList(cms_entry *eptr, time_t tick)
 {
-	CSA_date_time_entry	*dt = NULL;
+	CSA_date_time_entry	*dt = nullptr;
 	time_t			time;
 
 	if (eptr->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value)
 		dt = eptr->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value->\
 			item.date_time_list_value;
 
-	for (; dt != NULL; dt = dt->next) {
+	for (; dt != nullptr; dt = dt->next) {
 		if (_csa_iso8601_to_tick(dt->date_time, &time))
 			continue;
 

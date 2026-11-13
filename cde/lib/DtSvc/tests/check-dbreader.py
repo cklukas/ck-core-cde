@@ -100,7 +100,7 @@ with tempfile.TemporaryDirectory(prefix="dbreader-", dir=os.environ.get("TMPDIR"
     (work / "dbreader-types.h").write_text(types)
     (work / "dbreader-functions.h").write_text(functions)
     binary = work / "dbreader-test"
-    build = subprocess.run(cc + ["-std=gnu99", "-D_DEFAULT_SOURCE", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
+    build = subprocess.run(cc + ["-std=gnu23", "-D_DEFAULT_SOURCE", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
                                  "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined",
                                  "-w", "-I", str(work),
                                  str(here / "dbreader-test.c"), "-o", str(binary)],

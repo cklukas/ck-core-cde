@@ -141,7 +141,7 @@ get_browser_for_win(
     Widget	draw_area;
     
     if (!project || !w)
-	return (NULL);
+	return (nullptr);
     
     cur_browser = (ABBrowser)project->info.project.browsers;
 
@@ -164,7 +164,7 @@ aob_is_browser_win(
     Window	w
 )
 {
-    return(get_browser_for_win(project, w) != NULL);
+    return(get_browser_for_win(project, w) != nullptr);
 }
 
 AB_OBJ	*
@@ -179,10 +179,10 @@ aob_get_object_from_xy(
     VNode	found_node;
     
     if (!project || !w)
-	return (NULL);
+	return (nullptr);
     
     cur_browser = get_browser_for_win(project, w);
-    if (cur_browser != NULL)
+    if (cur_browser != nullptr)
     {
 	found_node = vwr_locate_node(cur_browser->module, x, y);
 
@@ -191,7 +191,7 @@ aob_get_object_from_xy(
 	    return((AB_OBJ *)found_node->obj_data);
 	}
     }
-    return (NULL);
+    return (nullptr);
 }
 
 /*
@@ -207,16 +207,16 @@ aob_find_bnode
 )
 {
     ViewerNode		*bnodes, 
-			*found = NULL;
+			*found = nullptr;
     ViewerMethods	*m;
 
     if (!v || !obj)  
-	return (NULL);
+	return (nullptr);
 
     m = v->methods;
 
     if (!m)
-	return (NULL);
+	return (nullptr);
 
     bnodes = (*m->get_viewer_data)(obj);
 
@@ -233,7 +233,7 @@ aob_project_from_browser(
     Viewer	*b
 )
 {
-    return (b ? (AB_OBJ *)b->obj_data : NULL);
+    return (b ? (AB_OBJ *)b->obj_data : nullptr);
 }
 
 /*
@@ -244,7 +244,7 @@ aob_browser_properties(
     Viewer	*b
 )
 {
-    return (b ? (BrowserProperties *)b->properties : NULL);
+    return (b ? (BrowserProperties *)b->properties : nullptr);
 }
 
 /*
@@ -279,7 +279,7 @@ aob_ui_from_browser
     Viewer	*b
 )
 {
-    return (b ? (BrowserUiObjects *)b->ui_handle : NULL);
+    return (b ? (BrowserUiObjects *)b->ui_handle : nullptr);
 }
 
 /*
@@ -294,11 +294,11 @@ aob_ui_shell
     BrowserUiObjects	*ui;
     
     if (!b)
-	return (NULL);
+	return (nullptr);
 
     ui = aob_ui_from_browser(b);
 
-    return(ui ? ui->shell : NULL);
+    return(ui ? ui->shell : nullptr);
 }
 
 /*
@@ -313,7 +313,7 @@ brws_draw_area
     VMethods		m;
     
     if (!b)
-	return (NULL);
+	return (nullptr);
 
     m = b->methods;
 
@@ -329,7 +329,7 @@ aob_bnode_elements(
 )
 {
     if (!bnode)
-	return (NULL);
+	return (nullptr);
 
     return ((ViewerNodeElm *)bnode->elements);
 }
@@ -638,7 +638,7 @@ r_deselect_all_nodes
 {
     VMethods	m;
     VNode	child;
-    VNode	*selected_nodes = NULL;
+    VNode	*selected_nodes = nullptr;
     int		i, num_child, num_selected = 0;
 
     if (!tree)
@@ -676,11 +676,11 @@ brws_set_module_name
 {
     BrowserUiObjects *ui;
     DtbBrwsMainwindowInfo	instance;
-    AB_OBJ	*module_obj = NULL;
+    AB_OBJ	*module_obj = nullptr;
     Widget	shell,
 		project_label;
     XmString	xmlabel;
-    char	*module_name = NULL;
+    char	*module_name = nullptr;
     char	title[300];
 
     if (!b)
@@ -693,7 +693,7 @@ brws_set_module_name
 
     if (module_obj)
     {
-	if (obj_get_file(module_obj) != NULL)
+	if (obj_get_file(module_obj) != nullptr)
 	{
 	    char	*fullpath, *filename;
 
@@ -726,13 +726,13 @@ brws_set_module_name
         sprintf(title, "Module Browser");
     }
 
-    XtVaSetValues(shell, XtNtitle, title, NULL);
+    XtVaSetValues(shell, XtNtitle, title, nullptr);
 
     ui = aob_ui_from_browser(b);
     instance = (DtbBrwsMainwindowInfo)ui->ip;
     project_label = instance->module_name;
 
-    XtVaSetValues(project_label, XmNlabelString, xmlabel, NULL);
+    XtVaSetValues(project_label, XmNlabelString, xmlabel, nullptr);
 
     XmStringFree(xmlabel);
 
@@ -815,7 +815,7 @@ brws_update_node(
 )
 {
     Vwr		v;
-    VNode	update_nodes = NULL;
+    VNode	update_nodes = nullptr;
     VMethods	*m;
 
     if (!obj)
@@ -856,21 +856,21 @@ brws_get_browser_for_obj(
     ABObj	obj
 )
 {
-    ABObj	module = NULL,
-		proj = NULL;
-    ABBrowser	cur_b = NULL,
-		b_list = NULL;
+    ABObj	module = nullptr,
+		proj = nullptr;
+    ABBrowser	cur_b = nullptr,
+		b_list = nullptr;
     ABObj	project = proj_get_project();
 
     if (obj)
     {
         module = obj_get_module(obj);
         proj = obj_get_project(obj);
-        b_list = proj ? (ABBrowser)proj->info.project.browsers : NULL;
+        b_list = proj ? (ABBrowser)proj->info.project.browsers : nullptr;
     }
     else
     {
-        b_list = project ? (ABBrowser)project->info.project.browsers : NULL;
+        b_list = project ? (ABBrowser)project->info.project.browsers : nullptr;
     }
 
     for (cur_b = b_list; cur_b; cur_b = cur_b->next)
@@ -908,18 +908,18 @@ brws_get_browser_shell_for_obj(
     ABObj	obj
 )
 {
-    ABObj	module = NULL,
-		proj = NULL;
-    ABBrowser	cur_b = NULL,
-		b_list = NULL;
+    ABObj	module = nullptr,
+		proj = nullptr;
+    ABBrowser	cur_b = nullptr,
+		b_list = nullptr;
     ABObj	project = proj_get_project();
 
     if (!obj)
-	return NULL;
+	return nullptr;
     
     module = obj_get_module(obj);
     proj = obj_get_project(obj);
-    b_list = proj ? (ABBrowser)proj->info.project.browsers : NULL;
+    b_list = proj ? (ABBrowser)proj->info.project.browsers : nullptr;
 
     for (cur_b = b_list; cur_b; cur_b = cur_b->next)
     {
@@ -929,7 +929,7 @@ brws_get_browser_shell_for_obj(
     }
 
     if (!cur_b)
-	return NULL;
+	return nullptr;
     
     return(aob_ui_shell(cur_b->module));
 }
@@ -1276,14 +1276,14 @@ draw_area_snap (
     Vwr		v
 )
 {
-    Widget		clipwindow = NULL,
-    			draw_area = NULL;
+    Widget		clipwindow = nullptr,
+    			draw_area = nullptr;
     Dimension		cw_width = 0,
 			cw_height = 0,
     			da_borderWidth = 0,
 			da_width = 0,
 			da_height = 0;
-    BrowserProps	props = NULL;
+    BrowserProps	props = nullptr;
     Arg			arg[4];
     int			num_args = 0;
 
@@ -1312,12 +1312,12 @@ draw_area_snap (
     XtVaGetValues(clipwindow, 
 		XmNwidth, &cw_width, 
 		XmNheight, &cw_height, 
-		NULL);
+		nullptr);
     XtVaGetValues(draw_area, 
 		XmNborderWidth, &da_borderWidth, 
 		XmNwidth, &da_width, 
 		XmNheight, &da_height, 
-		NULL);
+		nullptr);
 
     if ((Dimension)cw_width > props->min_width)
     {
@@ -1395,8 +1395,8 @@ brwsP_collapse_selected(
     ABBrowser	ab
 )
 {
-    Vwr		v = NULL;
-    VNode	*selected_nodes = NULL;
+    Vwr		v = nullptr;
+    VNode	*selected_nodes = nullptr;
     VMethods	m;
     int		num_selected = 0,
 		i;
@@ -1458,8 +1458,8 @@ brwsP_expand_selected(
     ABBrowser	ab
 )
 {
-    Vwr		v = NULL;
-    VNode	*selected_nodes = NULL;
+    Vwr		v = nullptr;
+    VNode	*selected_nodes = nullptr;
     VMethods	m;
     int		num_selected = 0,
 		i;
@@ -1520,8 +1520,8 @@ brwsP_expand_collapsed(
     ABBrowser	ab
 )
 {
-    Vwr		v = NULL;
-    VNode	*collapsed_nodes = NULL;
+    Vwr		v = nullptr;
+    VNode	*collapsed_nodes = nullptr;
     VMethods	m;
     int		num_collapsed = 0,
 		i;
@@ -1647,8 +1647,8 @@ brws_center_on_obj(
     ABObj	obj
 )
 {
-    Vwr			top_level_view = NULL;
-    Vwr			detailed_view = NULL;
+    Vwr			top_level_view = nullptr;
+    Vwr			detailed_view = nullptr;
 
     if (!ab || !obj)
 	return;
@@ -1702,7 +1702,7 @@ brws_center_on_obj(
 	     * ancestor of the centered object/node
 	     */
 	    for (trav_open(&trav, module, AB_TRAV_CHILDREN); 
-		(top_level_obj = trav_next(&trav)) != NULL; )  {
+		(top_level_obj = trav_next(&trav)) != nullptr; )  {
 		
 		if (obj_is_descendant_of(obj, top_level_obj) ||
 		   (obj == top_level_obj))
@@ -1767,7 +1767,7 @@ brws_center_on_obj(
 			XmNhorizontalScrollBar, &horiz_sb,
 			XmNwidth, &scroll_width,
 			XmNheight, &scroll_height,
-			NULL);
+			nullptr);
 
 	/*
 	 * If the scrolled area is smaller than the node, use the
@@ -1799,7 +1799,7 @@ brws_center_on_obj(
 	    XtVaGetValues(vert_sb, 
 		XmNminimum, &vert_min, 
 		XmNmaximum, &vert_max, 
-		NULL);
+		nullptr);
 	    XmScrollBarGetValues(vert_sb, &value, &size, &increment, &page);
 
 	    /*
@@ -1843,7 +1843,7 @@ brws_center_on_obj(
 	    XtVaGetValues(horiz_sb, 
 		XmNminimum, &horiz_min, 
 		XmNmaximum, &horiz_max, 
-		NULL);
+		nullptr);
 	    XmScrollBarGetValues(horiz_sb, &value, &size, &increment, &page);
 
 	    /*

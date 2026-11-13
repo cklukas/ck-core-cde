@@ -70,7 +70,7 @@ static char *ck_mktemp(char *t)
 static FILE *ck_fdopen(int fd, const char *mode)
 {
     ++fdopen_calls;
-    if (fail_fdopen) { errno = ENOMEM; return NULL; }
+    if (fail_fdopen) { errno = ENOMEM; return nullptr; }
     return fdopen(fd, mode);
 }
 
@@ -144,7 +144,7 @@ static int dir_entries(const char *dir)
 static void reset(void)
 {
     fail_mkstemp = fail_fdopen = 0;
-    ck_victim = NULL;
+    ck_victim = nullptr;
     mkstemp_calls = mktemp_calls = fdopen_calls = tmp_fopen_calls = 0;
     tmp_mode_ok = 1;
     memset(seen_names, 0, sizeof seen_names);

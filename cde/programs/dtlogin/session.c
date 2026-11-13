@@ -108,7 +108,7 @@ int ApplyFontPathMods(struct display *d, Display *dpy); // fontpath.c
 
 #ifdef SIA
 
-static  SIAENTITY *siaHandle = NULL;
+static  SIAENTITY *siaHandle = nullptr;
 static Boolean        dt_in_sia_ses_authent = False;
 
 static struct sia_greeter_info {
@@ -228,7 +228,7 @@ void freeEnv (char **env); // util.c
 static int			clientPid;
 static struct greet_info	greet;
 static struct verify_info	verify;
-static char			*defaultLanguage = NULL;
+static char			*defaultLanguage = nullptr;
 
 #ifdef __KERBEROS
   static char krb_ticket_string[MAXPATHLEN];
@@ -333,9 +333,9 @@ AwaitChild( int pid, unsigned seconds, int notice, waitType *status )
 
     if (seconds)
 	alarm (0);
-    sigaction (SIGALRM, &oldAlarm, NULL);
-    sigaction (SIGCHLD, &oldChild, NULL);
-    sigprocmask (SIG_SETMASK, &previous, NULL);
+    sigaction (SIGALRM, &oldAlarm, nullptr);
+    sigaction (SIGCHLD, &oldChild, nullptr);
+    sigprocmask (SIG_SETMASK, &previous, nullptr);
     return result;
 }
 
@@ -364,7 +364,7 @@ WaitForInput( int fd )
 	}
 	FD_ZERO (&readable);
 	FD_SET (fd, &readable);
-	result = pselect (fd + 1, &readable, NULL, NULL, NULL, &previous);
+	result = pselect (fd + 1, &readable, nullptr, nullptr, nullptr, &previous);
 	if (result > 0) {
 	    result = 1;
 	    break;
@@ -374,7 +374,7 @@ WaitForInput( int fd )
 	    break;
 	}
     }
-    sigprocmask (SIG_SETMASK, &previous, NULL);
+    sigprocmask (SIG_SETMASK, &previous, nullptr);
     return result;
 }
 
@@ -420,10 +420,10 @@ SessionPingFailed( struct display *d )
 
 #   ifdef PAM 
 	    PamAccounting( verify.argv[0], d->name, d->utmpId, user, 
-			   ttyLine, clientPid, ACCOUNTING, NULL);
+			   ttyLine, clientPid, ACCOUNTING, nullptr);
 #   else
 	    solaris_accounting( verify.argv[0], d->name, d->utmpId, user, 
-				ttyLine, clientPid, ACCOUNTING, NULL);
+				ttyLine, clientPid, ACCOUNTING, nullptr);
 #   endif
 
 #   ifdef sun
@@ -481,9 +481,9 @@ static int
 WaitForSession( struct display *d )
 {
     for (;;) {
-	switch (AwaitChild (clientPid, d->pingInterval * 60, TRUE, NULL)) {
+	switch (AwaitChild (clientPid, d->pingInterval * 60, TRUE, nullptr)) {
 	case 0:
-	    if (!PingServer (d, (Display *) NULL))
+	    if (!PingServer (d, (Display *) nullptr))
 		SessionPingFailed (d);
 	    break;
 	case -1:
@@ -510,8 +510,8 @@ ManageSession( struct display *d )
     /***********************************/
     /** remember the default language **/
     /***********************************/
-    if (defaultLanguage == NULL) {
-	if ( (d->language != NULL) && (strlen(d->language) > 0) ) {
+    if (defaultLanguage == nullptr) {
+	if ( (d->language != nullptr) && (strlen(d->language) > 0) ) {
 	    defaultLanguage = strdup(d->language);
 	} else {
 	    defaultLanguage = "C";
@@ -520,7 +520,7 @@ ManageSession( struct display *d )
 
 #ifdef BYPASSLOGIN
     d->bypassLogin = 0;
-    if ((BypassUsername = BypassLogin(d->name)) != NULL) {
+    if ((BypassUsername = BypassLogin(d->name)) != nullptr) {
 	d->bypassLogin = 1;
 	Debug("Login bypassed, running as %s\n",BypassUsername);
 	greet.name = BypassUsername;
@@ -566,9 +566,9 @@ ManageSession( struct display *d )
 	*/
      
 
-	greet.name = greet.string = NULL;
+	greet.name = greet.string = nullptr;
 
-	while (greet.name == NULL) {
+	while (greet.name == nullptr) {
 	    SetHourGlassCursor(dpy, root);
 	    LoadXloginResources (d);
 	    SetupDisplay(d);
@@ -654,7 +654,7 @@ ManageSession( struct display *d )
 #endif
 
     clientPid = 0;
-    CatchSignal (SIGTERM, NoteSignal, NULL);
+    CatchSignal (SIGTERM, NoteSignal, nullptr);
 
     /*
      * Start the clients, changing uid/groups
@@ -738,10 +738,10 @@ ManageSession( struct display *d )
 
 #   ifdef PAM
 	PamAccounting( verify.argv[0], d->name, d->utmpId, user, 
-		       ttyLine, clientPid, ACCOUNTING, NULL);
+		       ttyLine, clientPid, ACCOUNTING, nullptr);
 #   else
 	solaris_accounting( verify.argv[0], d->name, d->utmpId, user, 
-			    ttyLine, clientPid, ACCOUNTING, NULL);
+			    ttyLine, clientPid, ACCOUNTING, nullptr);
 #   endif
 
 #   ifdef sun
@@ -766,7 +766,7 @@ ManageSession( struct display *d )
 static int
 RunXrdb( struct display *d, const char *authority, const char *file )
 {
-    char	**args = NULL;
+    char	**args = nullptr;
     pid_t	pid;
     int		status;
 
@@ -801,7 +801,7 @@ int
 LoadXloginResources( struct display *d )
 {
     char	*authority="";
-    char        *resources = NULL;
+    char        *resources = nullptr;
     char	*p;
     char	tmpname[32];
     int		fd;
@@ -809,7 +809,7 @@ LoadXloginResources( struct display *d )
 
     if (d->resources && d->resources[0]) { 
         resources = _ExpandLang(d->resources, d->language);
-        if (resources == NULL)
+        if (resources == nullptr)
             return(-1);
         if (access (resources, R_OK) != 0) {
             /** fallback to the C locale for resources **/
@@ -817,7 +817,7 @@ LoadXloginResources( struct display *d )
             Debug("\t %s.  Falling back to C.\n", strerror(errno));
             free(resources);
             resources = _ExpandLang(d->resources, "C");
-            if (resources == NULL)
+            if (resources == nullptr)
                 return(-1);
             if (access (resources, R_OK) != 0) {
                 /** can't find a resource file, so bail **/
@@ -836,7 +836,7 @@ LoadXloginResources( struct display *d )
 	Debug("LoadXloginResources - loading resource db from %s\n", resources);
 	if (XresourceDB)
 	    XrmDestroyDatabase(XresourceDB);
-	if((XresourceDB = XrmGetFileDatabase(resources)) == NULL)
+	if((XresourceDB = XrmGetFileDatabase(resources)) == nullptr)
           Debug("LoadXloginResources - Loading resource db from %s failed\n",
 		resources);
 
@@ -899,10 +899,10 @@ LoadAltDtsResources(struct display *d)
     char        Altdtres[MAXPATHLEN];
     int         i = 0;
     int		j = 0;
-    char        *resources = NULL;
+    char        *resources = nullptr;
     int         file_count = 0;
     int         num_allocated = 0;
-    char        **file_list = NULL;
+    char        **file_list = nullptr;
     int         list_incr = 10;
 
     if ( XrmGetResource(XresourceDB,
@@ -910,7 +910,7 @@ LoadAltDtsResources(struct display *d)
                    &rmtype, &rmvalue ) ) {
 		snprintf(tempbuf, sizeof(tempbuf), "%s", rmvalue.addr);
 		{
-		    long wanted = strtol(tempbuf, NULL, 10);
+		    long wanted = strtol(tempbuf, nullptr, 10);
 
 		    i = wanted < 0 ? 0 : wanted > MAX_ALT_DESKTOPS ? MAX_ALT_DESKTOPS : (int) wanted;
 		}
@@ -922,7 +922,7 @@ LoadAltDtsResources(struct display *d)
     for(j = 0; j < 2 ; ++j)
     {
         resources = _ExpandLang(dirname[j], d->language);
-        if (resources == NULL)
+        if (resources == nullptr)
             continue;
         if (access (resources, R_OK) != 0)
 	{
@@ -930,10 +930,10 @@ LoadAltDtsResources(struct display *d)
             Debug("\t %s.  Falling back to C.\n", strerror(errno));
 
 	    free (resources);
-	    resources = NULL;
+	    resources = nullptr;
 
             resources = _ExpandLang(dirname[j], "C");
-            if (resources == NULL)
+            if (resources == nullptr)
                 continue;
             if (access (resources, R_OK) != 0)
 	    {
@@ -949,7 +949,7 @@ LoadAltDtsResources(struct display *d)
 	}
 
 	free (resources);
-	resources = NULL;
+	resources = nullptr;
     }
 
 
@@ -964,9 +964,9 @@ LoadAltDtsResources(struct display *d)
 
     for(j = 0; j < 2 ; ++j) {
 
-        if((dirp = opendir(dirname[j])) != NULL) {
+        if((dirp = opendir(dirname[j])) != nullptr) {
 
-            while((dp = readdir(dirp)) != NULL) {
+            while((dp = readdir(dirp)) != nullptr) {
 
                 if ((strcmp(dp->d_name, DOT)    != 0) &&
                     (strcmp(dp->d_name, DOTDOT) != 0)) {
@@ -983,12 +983,12 @@ LoadAltDtsResources(struct display *d)
                     if (file_count + 1 > num_allocated) {
                         char **grown = realloc (file_list,
                                          (num_allocated + list_incr) * sizeof(char *));
-                        if (grown == NULL)
+                        if (grown == nullptr)
                             break;
                         file_list = grown;
                         num_allocated += list_incr;
                     }
-                    if ((file_list[file_count] = strdup (res_file)) == NULL)
+                    if ((file_list[file_count] = strdup (res_file)) == nullptr)
                         break;
                     file_count++;
                 }
@@ -1106,16 +1106,16 @@ _ExpandLang(
    int          tmp_len;
    int          i = 0;
 
-   if (string == NULL)
-      return (NULL);
+   if (string == nullptr)
+      return (nullptr);
 
    /*
     * Count the number of expansions that will occur.
     */
 
 
-   for (n = 0, pch = string ; pch != NULL ; ) {
-      if ((pch = strchr (pch, '%')) != NULL) {
+   for (n = 0, pch = string ; pch != nullptr ; ) {
+      if ((pch = strchr (pch, '%')) != nullptr) {
          n++;
          pch++;
       }
@@ -1143,8 +1143,8 @@ _ExpandLang(
     */
    tmp_len = strlen (string) + (n * lang_len) + n + 1;
    tmp = (char *) malloc (tmp_len);
-   if (tmp == NULL)
-      return (NULL);
+   if (tmp == nullptr)
+      return (nullptr);
    for (i = 0; i < tmp_len; tmp[i] = '\0', i++);
 
    pch = string;
@@ -1152,7 +1152,7 @@ _ExpandLang(
    while (*pch != '\0') {
       trail = pch;
 
-      if ((pch = strchr (trail, '%')) == NULL) {
+      if ((pch = strchr (trail, '%')) == nullptr) {
          /*
           * A '%' was not found.
           */
@@ -1468,10 +1468,10 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 
 #   ifdef PAM
 	    PamAccounting(verify->argv[0], d->name, d->utmpId, user, 
-			  ttyLine, getpid(), USER_PROCESS, NULL);
+			  ttyLine, getpid(), USER_PROCESS, nullptr);
 #   else
 	    solaris_accounting(verify->argv[0], d->name, d->utmpId, user, 
-			       ttyLine, getpid(), USER_PROCESS, NULL);
+			       ttyLine, getpid(), USER_PROCESS, nullptr);
 #   endif
 	}
 #endif
@@ -1504,7 +1504,7 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
          * audit classes, user limits, and umask.
 	 * RK 09.13.93
          */
-        if (setpcred(user, NULL) == -1)
+        if (setpcred(user, nullptr) == -1)
         {
             Debug("Can't set User's Credentials (user=%s)\n",user);
             return (0);
@@ -1527,7 +1527,7 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
           * global 'newenv'.
           */
           #define SESSION_PENV (PENV_INIT | PENV_ARGV | PENV_NOEXEC)
-          if (setpenv(user, SESSION_PENV, verify->userEnviron, NULL) != 0)
+          if (setpenv(user, SESSION_PENV, verify->userEnviron, nullptr) != 0)
           {
               Debug("Can't set process environment (user=%s)\n",user);
               return(0);
@@ -1682,7 +1682,7 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 		else if(!failsafe) {
 			strcpy(lastsessfile,home); 			/* save user's last session */
 			strcat(lastsessfile,LAST_SESSION_FILE);
-                	if((lastsession = fopen(lastsessfile,"w")) == NULL)
+                	if((lastsession = fopen(lastsessfile,"w")) == nullptr)
                         	Debug("Unable to open file for writing: %s\n",lastsessfile);
                 	else{
                    		fputs(verify->argv[0],lastsession);
@@ -1724,7 +1724,7 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 	 * specify a font for the multi-byte languages...
 	 */
 	    
-	font = NULL;
+	font = nullptr;
 
 
 
@@ -1735,7 +1735,7 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 #endif
 	failsafeArgv[i++] = "-ls";
 
-	if (font != NULL) {
+	if (font != nullptr) {
 	    failsafeArgv[i++] = "-fn";
 	    failsafeArgv[i++] = font;
 	}
@@ -1783,7 +1783,7 @@ AbortClient( int pid )
 	    }
 	}
 	/* the request that led here must not cut the wait short */
-	if (AwaitChild (pid, ABORT_WAIT, FALSE, NULL) != 0)
+	if (AwaitChild (pid, ABORT_WAIT, FALSE, nullptr) != 0)
 	    break;
 	sig = SIGKILL;
     }
@@ -1810,7 +1810,7 @@ RunScript( struct verify_info *verify, char *file, int interruptible )
 	case 0:
 	    CleanUpChild ();
 	    args[0] = file;
-	    args[1] = NULL;
+	    args[1] = nullptr;
 	    execute (args, verify->systemEnviron);
 	    LogError(ReadCatalog(
 		MC_LOG_SET,MC_LOG_NO_EXE,MC_DEF_LOG_NO_EXE),args[0]);
@@ -1883,7 +1883,7 @@ execute(char **argv, char **environ )
 	f = fopen (argv[0], "r");
 	if (!f)
 	    return 0;
-	if (fgets (program, sizeof (program) - 1, f) == NULL)
+	if (fgets (program, sizeof (program) - 1, f) == nullptr)
  	{
 	    fclose (f);
 	    return 0;
@@ -2003,8 +2003,8 @@ RunGreeter( struct display *d, struct greet_info *greet,
 
     int argc = 1;
     char *argv[] = { "dtlogin", 0 };
-    char *hostName = NULL;
-    char *loginName = NULL;
+    char *hostName = nullptr;
+    char *loginName = nullptr;
     int siaStatus = -1;
 
     /*
@@ -2015,7 +2015,7 @@ RunGreeter( struct display *d, struct greet_info *greet,
       hostName = d->name;
 
     siaStatus = sia_ses_init(&siaHandle, argc, argv, hostName, 
-                              loginName, d->name, 1, NULL);
+                              loginName, d->name, 1, nullptr);
     if (siaStatus != SIASUCCESS)
       {
       Debug("sia_ses_init failure status %d\n", siaStatus);
@@ -2026,13 +2026,13 @@ RunGreeter( struct display *d, struct greet_info *greet,
 
     greeterPid = 0;
     {
-	CatchSignal(SIGTERM, NoteSignal, NULL);
+	CatchSignal(SIGTERM, NoteSignal, nullptr);
 
 	/*
 	 * dtlogin passes HUP's down to the children: a request to restart
 	 * the display ends the greeter.
 	 */
-        CatchSignal(SIGHUP, NoteSignal, NULL);
+        CatchSignal(SIGHUP, NoteSignal, nullptr);
 
 	/*
 	 *  set up communication pipes...
@@ -2097,12 +2097,12 @@ RunGreeter( struct display *d, struct greet_info *greet,
 		    LogError(ReadCatalog(
 			MC_LOG_SET,MC_LOG_IMPROP_AUTH,MC_DEF_LOG_IMPROP_AUTH),
 			d->verifyName);
-		    d->verifyName = NULL;
+		    d->verifyName = nullptr;
 		}
 	    }
 #endif
 	    		
-            if((path = getenv("NLSPATH")) != NULL)
+            if((path = getenv("NLSPATH")) != nullptr)
                 env = setEnv(env, "NLSPATH", path);
 
 	    
@@ -2133,7 +2133,7 @@ RunGreeter( struct display *d, struct greet_info *greet,
 #endif /* ENABLE_DYNAMIC_LANGLIST */
 
             {
-		char *language = NULL;
+		char *language = nullptr;
 
 #if defined (ENABLE_DYNAMIC_LANGLIST)
                 language = d->language;
@@ -2143,11 +2143,11 @@ RunGreeter( struct display *d, struct greet_info *greet,
 		  env = setLang(d, env, language);
 	    }
 
-            if((path = getenv("XKEYSYMDB")) != NULL)
+            if((path = getenv("XKEYSYMDB")) != nullptr)
                 env = setEnv(env, "XKEYSYMDB", path);
 
 #ifdef sun
-            if((path = getenv("OPENWINHOME")) != NULL)
+            if((path = getenv("OPENWINHOME")) != nullptr)
                 env = setEnv(env, "OPENWINHOME", path);
 #endif
 
@@ -2243,7 +2243,7 @@ RunGreeter( struct display *d, struct greet_info *greet,
                     {
                     Debug ("RunGreeter: before sia_ses_authent\n");
                     dt_in_sia_ses_authent = True;
-                    siaStatus = sia_ses_authent(SiaManageGreeter, NULL, 
+                    siaStatus = sia_ses_authent(SiaManageGreeter, nullptr, 
                                                 siaHandle);
                     dt_in_sia_ses_authent = False;
                     Debug ("RunGreeter: after sia_ses_authent status = %d\n",
@@ -2285,9 +2285,9 @@ RunGreeter( struct display *d, struct greet_info *greet,
                     {
                     Debug("RunGreeter: sia_ses_launch failure\n");
                     /* establish & launch failures do a release */
-                    siaHandle = NULL;
+                    siaHandle = nullptr;
                     siaStatus = sia_ses_init(&siaHandle, argc, argv, hostName, 
-                                                loginName, d->name, 1, NULL);
+                                                loginName, d->name, 1, nullptr);
                     if (siaStatus != SIASUCCESS)
                         {
                         Debug("sia_ses_init failure status %d\n", siaStatus);
@@ -2393,7 +2393,7 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	    case NOTIFY_LAST_DT:
 	    case NOTIFY_ALT_DTS:
 
-	       if (NULL == greet->name) return;
+	       if (nullptr == greet->name) return;
 
                /*
                 *  greet->name, greet->password set in ManageGreeter().
@@ -2502,8 +2502,8 @@ ResponseString(
   char *base = (char *)phdr;
 
   if (offset < sizeof(*phdr) || offset >= phdr->length ||
-      memchr(base + offset, '\0', phdr->length - offset) == NULL)
-    return(NULL);
+      memchr(base + offset, '\0', phdr->length - offset) == nullptr)
+    return(nullptr);
 
   return(base + offset);
 }
@@ -2537,7 +2537,7 @@ WaitForGreeter(
 
   for (;;)
   {
-    if (!AskGreeter(NULL, (char *)r, REQUEST_LIM_MAXLEN))
+    if (!AskGreeter(nullptr, (char *)r, REQUEST_LIM_MAXLEN))
     {
       change->gone = TRUE;
       return(FALSE);
@@ -2577,7 +2577,7 @@ AskUser(
 {
   RequestChallenge *r = (RequestChallenge *)change->state->request;
   ResponseChallenge *a = (ResponseChallenge *)change->state->response;
-  char *text, *answer = NULL;
+  char *text, *answer = nullptr;
 
   r->hdr.opcode = REQUEST_OP_CHALLENGE;
   r->hdr.reserved = 0;
@@ -2591,8 +2591,8 @@ AskUser(
 
   if (WaitForGreeter(change, REQUEST_OP_CHALLENGE))
   {
-    if ((text = ResponseString(change->state->response, a->offResponse)) != NULL &&
-        (answer = strdup(text)) != NULL)
+    if ((text = ResponseString(change->state->response, a->offResponse)) != nullptr &&
+        (answer = strdup(text)) != nullptr)
       Debug("Password change: answer received\n");
   }
 
@@ -2633,12 +2633,12 @@ PasswordConversation(
   struct pam_response *answers;
   int k;
 
-  if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG || msg == NULL ||
-      response == NULL)
+  if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG || msg == nullptr ||
+      response == nullptr)
     return(PAM_CONV_ERR);
 
   answers = calloc(num_msg, sizeof(struct pam_response));
-  if (answers == NULL)
+  if (answers == nullptr)
     return(PAM_BUF_ERR);
 
   for (k = 0; k < num_msg; k++)
@@ -2649,7 +2649,7 @@ PasswordConversation(
       case PAM_PROMPT_ECHO_ON:
         answers[k].resp = AskUser(change, msg[k]->msg,
                                   msg[k]->msg_style == PAM_PROMPT_ECHO_ON);
-        if (answers[k].resp == NULL)
+        if (answers[k].resp == nullptr)
           goto failed;
         break;
 
@@ -2670,7 +2670,7 @@ PasswordConversation(
 failed:
   for (k = 0; k < num_msg; k++)
   {
-    if (answers[k].resp != NULL)
+    if (answers[k].resp != nullptr)
     {
       memset(answers[k].resp, 0, strlen(answers[k].resp));
       free(answers[k].resp);
@@ -2718,7 +2718,7 @@ ChangeExpiredPassword(
   {
     memset(greet->password, 0, strlen(greet->password));
     free(greet->password);
-    greet->password = NULL;
+    greet->password = nullptr;
   }
   state->id = GREET_STATE_ERRORMESSAGE;
 }
@@ -2797,7 +2797,7 @@ ManageGreeter( struct display *d, struct greet_info *greet,
 
   if (state->waitForResponse)
   {
-    if (!AskGreeter(NULL, (char *)state->response, REQUEST_LIM_MAXLEN))
+    if (!AskGreeter(nullptr, (char *)state->response, REQUEST_LIM_MAXLEN))
     {
      /*
       * Dtgreet has terminated. 
@@ -2872,9 +2872,9 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         state->request = (RequestHeader *)calloc(1, REQUEST_LIM_MAXLEN);
         state->response= (ResponseHeader *)calloc(1, REQUEST_LIM_MAXLEN);
         state->authenticated = FALSE;
-        state->msg = NULL;
+        state->msg = nullptr;
 
-        if (state->request == NULL || state->response == NULL)
+        if (state->request == nullptr || state->response == nullptr)
           state->id = GREET_STATE_EXIT;
         else
           state->id = GREET_STATE_USERNAME;
@@ -2890,7 +2890,7 @@ ManageGreeter( struct display *d, struct greet_info *greet,
 
         Debug("GREET_STATE_USERNAME\n");
 
-        Authenticate(d, NULL, NULL, NULL);
+        Authenticate(d, nullptr, nullptr, nullptr);
 
         SETMC(msg, LOGIN_LABEL);
 
@@ -2919,11 +2919,11 @@ ManageGreeter( struct display *d, struct greet_info *greet,
 
         if (greet->name)
         {
-          free(greet->name); greet->name = NULL;
+          free(greet->name); greet->name = nullptr;
         }
         if (greet->password)
         {
-          free(greet->password); greet->password = NULL;
+          free(greet->password); greet->password = nullptr;
         }
 
         TellGreeter((RequestHeader *)r);
@@ -2944,7 +2944,7 @@ ManageGreeter( struct display *d, struct greet_info *greet,
 
         if (greet->password)
         {
-          free(greet->password); greet->password = NULL;
+          free(greet->password); greet->password = nullptr;
         }
 
         SETMC(msg, PASSWD_LABEL);
@@ -2980,17 +2980,17 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         {
           char *text = ResponseString(state->response, r->offResponse);
 
-          if (text == NULL)
+          if (text == nullptr)
             text = "";
 
-          if (greet->name == NULL)
+          if (greet->name == nullptr)
           {
             greet->name = strdup(text);
-            if (greet->name == NULL || strlen(greet->name) == 0)
+            if (greet->name == nullptr || strlen(greet->name) == 0)
             {
               if (greet->name)
               {
-                free(greet->name); greet->name = NULL;
+                free(greet->name); greet->name = nullptr;
               }
               state->id = GREET_STATE_USERNAME;
               break;
@@ -2999,7 +2999,7 @@ ManageGreeter( struct display *d, struct greet_info *greet,
           else 
           { 
             greet->password = strdup(text);
-            if (greet->password == NULL)
+            if (greet->password == nullptr)
             {
               state->id = GREET_STATE_USERNAME;
               break;
@@ -3010,7 +3010,7 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         if (state->msg)
         {
           free(state->msg);
-          state->msg = NULL;
+          state->msg = nullptr;
         }
 
        /*
@@ -3055,11 +3055,11 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         {
           if (greet->name)
           {
-            free(greet->name); greet->name = NULL;
+            free(greet->name); greet->name = nullptr;
           }
           if (greet->password)
           {
-            free(greet->password); greet->password = NULL;
+            free(greet->password); greet->password = nullptr;
           }
         }
 
@@ -3415,7 +3415,7 @@ session_execve(
   int rc;
   char *user = getEnv (envp, "LOGNAME");
  
-  if (user == NULL)
+  if (user == nullptr)
   {
     rc = execve(path, argv, envp);
   }
@@ -3567,7 +3567,7 @@ static int SiaManageGreeter(
                       if (res_ptr[0])
                           prompt[i].result = (unsigned char *)1;
                       else
-                          prompt[i].result = NULL;
+                          prompt[i].result = nullptr;
                       }
                   else
                       {

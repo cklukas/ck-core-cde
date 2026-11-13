@@ -59,7 +59,7 @@ static XimsBool	init_action_env(void)
 	    return False;
 	}
 	DtDbLoad();	/* Load the filetype/action databases */
-	DtDbReloadNotify(DbReloadProc, NULL);
+	DtDbReloadNotify(DbReloadProc, nullptr);
 
 	actionEnabled = True;
     }
@@ -159,7 +159,7 @@ int	invoke_action(char *action, char *host)
     DPR(("invoke_action(%s): host=%s\n", action, host));
 
     if (!action || !*action)	return ErrInternal;
-    if (host && !*host)	host = NULL;
+    if (host && !*host)	host = nullptr;
 
     setErrFunc(action);
 
@@ -170,8 +170,8 @@ int	invoke_action(char *action, char *host)
 #endif
 
     /* Invoke the specified action */
-    actionId = DtActionInvoke(TopW, action, NULL, 0,
-		NULL, host, NULL, False, action_cb, NULL);
+    actionId = DtActionInvoke(TopW, action, nullptr, 0,
+		nullptr, host, nullptr, False, action_cb, nullptr);
 
     DPR(("invoke_action(%s): actionId=%d\n", actionId));
 

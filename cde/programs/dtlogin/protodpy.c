@@ -114,14 +114,14 @@ NewProtoDisplay( struct sockaddr *address, int addrlen,
     TimeoutProtoDisplays (date);
     pdpy = (struct protoDisplay *) malloc (sizeof *pdpy);
     if (!pdpy)
-	return NULL;
+	return nullptr;
     /* authentication data and key are filled in only by the XDM handshake */
     memset((char *) pdpy, 0, sizeof *pdpy);
     pdpy->address = (struct sockaddr *) malloc (addrlen);
     if (!pdpy->address)
     {
 	free ((char *) pdpy);
-	return NULL;
+	return nullptr;
     }
     pdpy->addrlen = addrlen;
     memmove((char *)pdpy->address, (char *)address, addrlen);
@@ -132,11 +132,11 @@ NewProtoDisplay( struct sockaddr *address, int addrlen,
     {
 	free ((char *) pdpy->address);
 	free ((char *) pdpy);
-	return NULL;
+	return nullptr;
     }
     pdpy->sessionID = sessionID;
-    pdpy->fileAuthorization = (Xauth *) NULL;
-    pdpy->xdmcpAuthorization = (Xauth *) NULL;
+    pdpy->fileAuthorization = (Xauth *) nullptr;
+    pdpy->xdmcpAuthorization = (Xauth *) nullptr;
     pdpy->next = protoDisplays;
     protoDisplays = pdpy;
     return pdpy;

@@ -127,7 +127,7 @@ _GetWorkspacesOccupied(
     unsigned long leftover;
     int rcode;
 
-    *ppaWs = NULL;
+    *ppaWs = nullptr;
     if ((rcode=XGetWindowProperty(display,window,
 			 property,0L, (long)BUFSIZ,
 			 False,property,

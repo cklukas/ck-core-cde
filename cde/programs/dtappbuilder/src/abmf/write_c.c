@@ -163,8 +163,8 @@ abmfP_write_c_func_decl(
      */
     num_params= 0;
     va_start_params();
-    while (   (va_arg(params, STRING) != NULL) 
-	   && (va_arg(params, STRING) != NULL))
+    while (   (va_arg(params, STRING) != nullptr) 
+	   && (va_arg(params, STRING) != nullptr))
     {
 	++num_params;
     }
@@ -175,11 +175,11 @@ abmfP_write_c_func_decl(
     {
 	abio_puts(file, "static ");
     }
-    if (return_type != NULL)
+    if (return_type != nullptr)
     {
 	abio_puts(file, return_type);
     }
-    if (func_name != NULL)
+    if (func_name != nullptr)
     {
 	abio_printf(file, " %s(", func_name);
     }
@@ -187,8 +187,8 @@ abmfP_write_c_func_decl(
     if ((genCodeInfo->prototype_funcs) && (num_params > 0))
     {
 	BOOL	paramsDone = FALSE;
-	STRING	curParamType =  NULL;
-	STRING	curParamName = NULL;
+	STRING	curParamType =  nullptr;
+	STRING	curParamName = nullptr;
 
 	num_params_written= 0;
 	if (list_params)
@@ -200,11 +200,11 @@ abmfP_write_c_func_decl(
         while (!paramsDone)
         {
 	    curParamType = va_arg(params, STRING);
-	    if (curParamType != NULL)
+	    if (curParamType != nullptr)
 	    {
 	        curParamName = va_arg(params, STRING);
 	    }
-	    if ((curParamType == NULL) || (curParamName == NULL))
+	    if ((curParamType == nullptr) || (curParamName == nullptr))
 	    {
 		paramsDone = TRUE;
 		continue;
@@ -257,13 +257,13 @@ abmfP_write_c_func_begin(
     {
 	abio_puts(file, "static ");
     }
-    if (return_type != NULL)
+    if (return_type != nullptr)
     {
 	abio_puts(file, return_type);
 	abio_puts(file, " ");
     }
     abio_puts(file, "\n");
-    if (func_name != NULL)
+    if (func_name != nullptr)
     {
 	abio_puts(file, func_name);
 	abio_puts(file, "(");
@@ -290,7 +290,7 @@ abmfP_write_c_func_end(
 )
 {
     File	file= genCodeInfo->code_file;
-    if (return_value != NULL)
+    if (return_value != nullptr)
     {
 	abio_printf(file, "return %s;\n", return_value);
     }
@@ -363,8 +363,8 @@ write_func_def_params(
     int		num_params= 0;
     BOOL	list_params= FALSE;
     int		i= 0;
-    STRING	curParamType = NULL;
-    STRING	curParamName = NULL;
+    STRING	curParamType = nullptr;
+    STRING	curParamName = nullptr;
     BOOL	paramsDone = FALSE;
 
     va_start_params();
@@ -374,8 +374,8 @@ write_func_def_params(
      */
     num_params = 0;
     va_start_params();
-    while (   (va_arg(params, STRING) != NULL) 
-	   && (va_arg(params, STRING) != NULL))
+    while (   (va_arg(params, STRING) != nullptr) 
+	   && (va_arg(params, STRING) != nullptr))
     {
 	++num_params;
     }
@@ -394,11 +394,11 @@ write_func_def_params(
 	while (!paramsDone)
 	{
 	    curParamType = va_arg(params, STRING);
-	    if (curParamType != NULL)
+	    if (curParamType != nullptr)
 	    {
 		curParamName = va_arg(params, STRING);
 	    }
-	    if ((curParamType == NULL) || (curParamName == NULL))
+	    if ((curParamType == nullptr) || (curParamName == nullptr))
 	    {
 		paramsDone = TRUE;
 		continue;
@@ -438,11 +438,11 @@ write_func_def_params(
 	while (!paramsDone)
 	{
 	    curParamType = va_arg(params, STRING);
-	    if (curParamType != NULL)
+	    if (curParamType != nullptr)
 	    {
 		curParamName = va_arg(params, STRING);
 	    }
-	    if ((curParamType == NULL) || (curParamName == NULL))
+	    if ((curParamType == nullptr) || (curParamName == nullptr))
 	    {
 		paramsDone = TRUE;
 		continue;
@@ -480,7 +480,7 @@ abmfP_write_xm_callback_decl(
 		    abmfP_str_widget, abmfP_widget_var_name,
 		    abmfP_str_xtpointer, abmfP_client_data_var_name,
 		    abmfP_str_xtpointer, abmfP_call_data_var_name,
-		    NULL
+		    nullptr
 		);
 }
 
@@ -502,7 +502,7 @@ abmfP_write_xm_callback_begin(
 		    abmfP_str_widget, abmfP_widget_var_name,
 		    abmfP_str_xtpointer, abmfP_client_data_var_name,
 		    abmfP_str_xtpointer, abmfP_call_data_var_name,
-		    NULL
+		    nullptr
 		);
 }
 
@@ -520,7 +520,7 @@ abmfP_write_tooltalk_callback_decl(
                     func_name,
                     abmfP_str_tt_msg, abmfP_tt_msg_var_name,
                     abmfP_str_voidpointer, abmfP_call_data_var_name,
-                    NULL
+                    nullptr
                 );
 }
 
@@ -540,7 +540,7 @@ abmfP_write_session_save_callback_decl(
                     abmfP_str_string, abmfP_ss_session_file_var_name,
                     abmfP_str_argvpointer, "argv",
                     abmfP_str_intpointer, "argc",
-                    NULL
+                    nullptr
                 );
 }
 
@@ -558,7 +558,7 @@ abmfP_write_session_restore_callback_decl(
                     func_name,
                     abmfP_str_widget, abmfP_widget_var_name,
                     abmfP_str_string, abmfP_ss_session_file_var_name,
-                    NULL
+                    nullptr
                 );
 }
 
@@ -576,7 +576,7 @@ abmfP_write_tooltalk_callback_begin(
                     func_name,
                     abmfP_str_tt_msg, abmfP_tt_msg_var_name,
                     abmfP_str_voidpointer, abmfP_call_data_var_name,
-                    NULL
+                    nullptr
                 );
 }
 
@@ -596,7 +596,7 @@ abmfP_write_clear_proc_decl(
 	    abmfP_get_clear_proc_name(obj),	    /* function name */
 	    abmfP_get_c_struct_ptr_type_name(obj),  /* Argument type */
 	    abmfP_instance_ptr_var_name,	    /* Argument name */
-	    NULL
+	    nullptr
 	   );
 }
 
@@ -621,8 +621,8 @@ abmfP_write_create_proc_begin_or_decl(
 
     for (num_params = 0; num_params < MAX_CREATE_PARAMS; ++num_params)
     {
-	param_types[num_params] = NULL;
-	param_names[num_params] = NULL;
+	param_types[num_params] = nullptr;
+	param_names[num_params] = nullptr;
     }
 
     /*
@@ -709,18 +709,18 @@ abmfP_write_create_proc_begin_or_decl(
 	for (i = 0; i < num_submenu_params; ++i)
 	{
 	    strlist_add_str(submenu_param_type_list,
-			abmfP_get_cp_submenu_param_type_name(obj, i), NULL);
+			abmfP_get_cp_submenu_param_type_name(obj, i), nullptr);
 	    strlist_add_str(submenu_param_list,
-			abmfP_get_cp_submenu_param_name(obj, i), NULL);
+			abmfP_get_cp_submenu_param_name(obj, i), nullptr);
 	}
 
 	num_strings = strlist_get_num_strs(submenu_param_list);
 	for (i = 0; (i < num_strings) && (num_params < MAX_CREATE_PARAMS); ++i)
 	{
 	    param_types[num_params] = 
-		strlist_get_str(submenu_param_type_list, i, NULL);
+		strlist_get_str(submenu_param_type_list, i, nullptr);
 	    param_names[num_params] = 
-		strlist_get_str(submenu_param_list, i, NULL);
+		strlist_get_str(submenu_param_list, i, nullptr);
 	    ++num_params;
 	}
     }
@@ -747,7 +747,7 @@ abmfP_write_create_proc_begin_or_decl(
 	        param_types[7],	param_names[7],
 	        param_types[8],	param_names[8],
 	        param_types[9],	param_names[9],
-		NULL
+		nullptr
 	       );
     }
     else
@@ -767,7 +767,7 @@ abmfP_write_create_proc_begin_or_decl(
 	        param_types[7],	param_names[7],
 	        param_types[8],	param_names[8],
 	        param_types[9],	param_names[9],
-		NULL
+		nullptr
 	       );
     }
 
@@ -775,9 +775,9 @@ abmfP_write_create_proc_begin_or_decl(
     {
     for (i= first_widget_return_param; i < MAX_CREATE_PARAMS; ++i)
     {
-	if (param_names[i] != NULL)
+	if (param_names[i] != nullptr)
 	{
-	    util_free(param_names[i]); param_names[i] = NULL;
+	    util_free(param_names[i]); param_names[i] = nullptr;
 	}
     }
     }
@@ -823,7 +823,7 @@ abmfP_write_clear_proc_begin(
 	    abmfP_get_clear_proc_name(obj),	   /* function name */
 	    abmfP_get_c_struct_ptr_type_name(obj), /* Argument type */
 	    abmfP_instance_ptr_var_name, 	   /* Argument name */
-	    NULL
+	    nullptr
 	   );
 }
 
@@ -843,7 +843,7 @@ abmfP_write_init_proc_decl(
             abmfP_get_init_proc_name(obj),      /* function name */
             "DtbMessageData",			/* Argument type */
 	    abmfP_instance_ptr_var_name,	/* Argument name */
-            NULL
+            nullptr
 	   );   
     }
     else if (obj_is_window(obj))
@@ -856,7 +856,7 @@ abmfP_write_init_proc_decl(
 	    abmfP_get_c_struct_ptr_type_name(obj), /* Argument type */
 	    abmfP_instance_ptr_var_name,	   /* Argument name */
 	    abmfP_str_widget,	"parent",	   /* Argument type */
-	    NULL				   /* Argument name */
+	    nullptr				   /* Argument name */
 	   );
     }
     return 0;
@@ -877,7 +877,7 @@ abmfP_write_init_proc_begin(
             abmfP_get_init_proc_name(obj),   /* function name */
             "DtbMessageData",                /* Argument type */
             abmfP_instance_ptr_var_name,     /* Argument name */
-            NULL 
+            nullptr 
            );
     }
     else
@@ -891,7 +891,7 @@ abmfP_write_init_proc_begin(
 	    abmfP_instance_ptr_var_name,	   /* Argument name */
 	    abmfP_str_widget,			   /* Argument type */
 	    "parent",				   /* Argument name */
-	    NULL
+	    nullptr
 	   );
     }
 }
@@ -909,14 +909,14 @@ abmfP_write_file_header(
 )
 {
     File	codeFile = genCodeInfo->code_file;
-    STRING	comment = NULL;
+    STRING	comment = nullptr;
 
     abio_printf(codeFile, 
         "/*\n"
 	" * File: %s\n",
 	    fileName);
     
-    if (description != NULL)
+    if (description != nullptr)
     {
 	abio_printf(codeFile, "%s\n", description);
     }
@@ -926,7 +926,7 @@ abmfP_write_file_header(
 	gennedBy, gennedFrom);
     abio_puts(codeFile, " *\n");
 
-    comment = NULL;
+    comment = nullptr;
     switch (modifyType)
     {
 	case ABMF_MODIFY_NOT:
@@ -946,7 +946,7 @@ abmfP_write_file_header(
 	break;
     }
 
-    if (comment != NULL)
+    if (comment != nullptr)
     {
 	abio_puts(codeFile, comment);
     }
@@ -993,5 +993,5 @@ abmfP_write_msg_clear_proc_decl(
             abmfP_get_msg_clear_proc_name(module), /* function name */
             "DtbMessageData",  		   	   /* Argument type */
             abmfP_instance_ptr_var_name,           /* Argument name */
-            NULL);   
+            nullptr);   
 }

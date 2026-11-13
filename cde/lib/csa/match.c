@@ -102,12 +102,12 @@ _DtCmHashCriteria(
 	time_t	tstart1, tstart2, tend1, tend2;
 	time_t	tick;
 	char	*name;
-	cms_attribute_value	*val, *hval = NULL;
+	cms_attribute_value	*val, *hval = nullptr;
 	boolean_t keep;
 
 	*hnum = 0;
-	*hattrs = NULL;
-	*hops = NULL;
+	*hattrs = nullptr;
+	*hops = nullptr;
 	*no_match = B_FALSE;
 
 	/*
@@ -127,8 +127,8 @@ _DtCmHashCriteria(
 		val = (csaattrs ? ((cms_attribute_value *)csaattrs[i].value) :
 			cmsattrs[i].value);
 
-		if (index == CSA_ENTRY_ATTR_START_DATE_I && val == NULL) {
-			if (ops == NULL || ops[i] == CSA_MATCH_EQUAL_TO) {
+		if (index == CSA_ENTRY_ATTR_START_DATE_I && val == nullptr) {
+			if (ops == nullptr || ops[i] == CSA_MATCH_EQUAL_TO) {
 				*no_match = B_TRUE;
 				return (CSA_SUCCESS);
 			} else if (ops && (ops[i] == CSA_MATCH_ANY ||
@@ -149,7 +149,7 @@ _DtCmHashCriteria(
 			    &tick))
 				return (CSA_E_INVALID_DATE_TIME);
 
-			if (ops == NULL || ops[i] == CSA_MATCH_EQUAL_TO) {
+			if (ops == nullptr || ops[i] == CSA_MATCH_EQUAL_TO) {
 				tstart1 = tick - 1;
 				tstart2 = tick + 1;
 			} else switch (ops[i]) {
@@ -186,7 +186,7 @@ _DtCmHashCriteria(
 			    &tick))
 				return (CSA_E_INVALID_DATE_TIME);
 
-			if (ops == NULL || ops[i] == CSA_MATCH_EQUAL_TO) {
+			if (ops == nullptr || ops[i] == CSA_MATCH_EQUAL_TO) {
 				tend1 = tick - 1;
 				tend2 = tick + 1;
 			} else switch (ops[i]) {
@@ -233,15 +233,15 @@ _DtCmHashCriteria(
 		}
 
 		if (keep == B_TRUE) {
-                        void *savedHattrs = NULL;
-			if (*hattrs == NULL) {
+                        void *savedHattrs = nullptr;
+			if (*hattrs == nullptr) {
 				if ((*hattrs = (cms_attribute *)calloc(1,
 				    sizeof(cms_attribute)*(num_attrs-i)+
-				    sizeof(char *))) == NULL)
+				    sizeof(char *))) == nullptr)
 					return (CSA_E_INSUFFICIENT_MEMORY);
 				if ((hval = (cms_attribute_value *)calloc(1,
 				    sizeof(cms_attribute_value)*(num_attrs-i)))
-				    == NULL) {
+				    == nullptr) {
 					free(*hattrs);
 					return (CSA_E_INSUFFICIENT_MEMORY);
 				} else {
@@ -251,7 +251,7 @@ _DtCmHashCriteria(
 						((char *)(*hattrs)+sizeof(char*));
 				}
 				if (ops && (*hops = (CSA_enum *)calloc(1,
-				    sizeof(CSA_enum)*(num_attrs-i))) == NULL) {
+				    sizeof(CSA_enum)*(num_attrs-i))) == nullptr) {
 					free(hval);
 					free(savedHattrs);
 					return (CSA_E_INSUFFICIENT_MEMORY);
@@ -275,7 +275,7 @@ _DtCmHashCriteria(
 					(*hattrs)[j].value->item.sint32_value =
 						val->item.sint32_value;
 			}
-			if (ops != NULL)
+			if (ops != nullptr)
 				(*hops)[j] = ops[i];
 			j++;
 		}
@@ -284,8 +284,8 @@ _DtCmHashCriteria(
 	if (j == 0) {
 		if (*hattrs) _DtCmFreeHashedArrays(*hnum, *hattrs, *hops);
 		*hnum = 0;
-		*hattrs = NULL;
-		*hops = NULL;
+		*hattrs = nullptr;
+		*hops = nullptr;
 	} else {
 		*hnum = j;
 	}
@@ -348,15 +348,15 @@ _DtCm_match_appts(
 	cms_attribute	*attrs,
 	CSA_enum	*ops)
 {
-	Appt_4	*head = NULL;
-	Appt_4	*freelist = NULL;
+	Appt_4	*head = nullptr;
+	Appt_4	*freelist = nullptr;
 	Appt_4	*last, *nptr;
 	time_t	endtick;
 
 	if (id == 0 && num_attrs == 0 && no_end_time_range)
 		return (appts);
 
-	while (appts != NULL) {
+	while (appts != nullptr) {
 		nptr = appts->next;
 
 		endtick = appts->appt_id.tick + appts->duration;
@@ -372,9 +372,9 @@ _DtCm_match_appts(
 			freelist = appts;
 		} else {
 			/* match */
-			appts->next = NULL;
+			appts->next = nullptr;
 
-			if (head == NULL) {
+			if (head == nullptr) {
 				head = appts;
 				last = appts;
 			} else {
@@ -412,18 +412,18 @@ _DtCm_match_one_appt(
 extern Reminder_4 *
 _DtCm_match_reminders(Reminder_4 *rems, uint num_names, char **names)
 {
-	Reminder_4 *head = NULL;
-	Reminder_4 *freelist = NULL;
+	Reminder_4 *head = nullptr;
+	Reminder_4 *freelist = nullptr;
 	Reminder_4 *nptr;
 	
-	if (rems == NULL)
-		return (NULL);
+	if (rems == nullptr)
+		return (nullptr);
 
-	if (names == NULL || num_names == 0) {
+	if (names == nullptr || num_names == 0) {
 		return (rems);
 	}
 
-	while (rems != NULL) {
+	while (rems != nullptr) {
 		nptr = rems->next;
 
 		if (match_names(rems->attr.attr, num_names, names) == B_TRUE) {
@@ -455,7 +455,7 @@ _DtCm_check_operator(
 	for (i = 0; i < size; i++) {
 
 		if ((name = csaattrs ? csaattrs[i].name : cmsattrs[i].name.name)
-		    == NULL)
+		    == nullptr)
 			continue;
 
 		val = (csaattrs ? ((cms_attribute_value *)csaattrs[i].value) :
@@ -474,7 +474,7 @@ _DtCm_check_operator(
 			return (CSA_E_UNSUPPORTED_ENUM);
 
 		/* all other test depends on ops being not NULL */
-		if (ops == NULL)
+		if (ops == nullptr)
 			continue;
 
 		/* unknown operator */
@@ -486,7 +486,7 @@ _DtCm_check_operator(
 		 * CSA_MATCH_EQUAL_TO, CSA_MATCH_NOT_EQUAL_TO
 		 * is specified, must specify a value
 		 */
-		if (val == NULL && (ops[i] != CSA_MATCH_ANY &&
+		if (val == nullptr && (ops[i] != CSA_MATCH_ANY &&
 		    ops[i] != CSA_MATCH_EQUAL_TO &&
 		    ops[i] != CSA_MATCH_NOT_EQUAL_TO))
 			return (CSA_E_INVALID_ENUM);
@@ -549,8 +549,8 @@ _DtCm_match_time_attribute(
 			return (B_FALSE);
 	}
 
-	return (_DtCm_match_sint32_attribute((val1 ? &tval1 : NULL),
-		(val2 ? &tval2 : NULL), op));
+	return (_DtCm_match_sint32_attribute((val1 ? &tval1 : nullptr),
+		(val2 ? &tval2 : nullptr), op));
 }
 
 extern boolean_t
@@ -579,8 +579,8 @@ _DtCm_match_time_duration_attribute(
 			return (B_FALSE);
 	}
 
-	return (_DtCm_match_sint32_attribute((val1 ? &tval1 : NULL),
-		(val2 ? &tval2 : NULL), op));
+	return (_DtCm_match_sint32_attribute((val1 ? &tval1 : nullptr),
+		(val2 ? &tval2 : nullptr), op));
 }
 
 extern boolean_t
@@ -594,14 +594,14 @@ _DtCm_match_sint32_attribute(
 
 	switch (op) {
 	case CSA_MATCH_ANY:
-		if (val1 != NULL)
+		if (val1 != nullptr)
 			return (B_TRUE);
 		else
 			return (B_FALSE);
 
 	case CSA_MATCH_EQUAL_TO:
-		if (val2 == NULL) {
-			if (val1 == NULL)
+		if (val2 == nullptr) {
+			if (val1 == nullptr)
 				return (B_TRUE);
 			else
 				return (B_FALSE);
@@ -614,8 +614,8 @@ _DtCm_match_sint32_attribute(
 		}
 
 	case CSA_MATCH_NOT_EQUAL_TO:
-		if (val2 == NULL) {
-			if (val1 != NULL)
+		if (val2 == nullptr) {
+			if (val1 != nullptr)
 				return (B_TRUE);
 			else
 				return (B_FALSE);
@@ -628,7 +628,7 @@ _DtCm_match_sint32_attribute(
 		}
 
 	case CSA_MATCH_LESS_THAN:
-		if (val1 == NULL)
+		if (val1 == nullptr)
 			return (B_FALSE);
 		else if (val2 && val1->item.sint32_value < val2->item.sint32_value)
 			return (B_TRUE);
@@ -636,7 +636,7 @@ _DtCm_match_sint32_attribute(
 			return (B_FALSE);
 
 	case CSA_MATCH_LESS_THAN_OR_EQUAL_TO:
-		if (val1 == NULL)
+		if (val1 == nullptr)
 			return (B_FALSE);
 		else if (val2 && val1->item.sint32_value <= val2->item.sint32_value)
 			return (B_TRUE);
@@ -644,7 +644,7 @@ _DtCm_match_sint32_attribute(
 			return (B_FALSE);
 
 	case CSA_MATCH_GREATER_THAN:
-		if (val1 == NULL)
+		if (val1 == nullptr)
 			return (B_FALSE);
 		else if (val2 && val1->item.sint32_value > val2->item.sint32_value)
 			return (B_TRUE);
@@ -652,7 +652,7 @@ _DtCm_match_sint32_attribute(
 			return (B_FALSE);
 
 	case CSA_MATCH_GREATER_THAN_OR_EQUAL_TO:
-		if (val1 == NULL)
+		if (val1 == nullptr)
 			return (B_FALSE);
 		else if (val2 && val1->item.sint32_value >= val2->item.sint32_value)
 			return (B_TRUE);
@@ -676,14 +676,14 @@ _DtCm_match_uint32_attribute(
 
 	switch (op) {
 	case CSA_MATCH_ANY:
-		if (val1 != NULL)
+		if (val1 != nullptr)
 			return (B_TRUE);
 		else
 			return (B_FALSE);
 
 	case CSA_MATCH_EQUAL_TO:
-		if (val2 == NULL) {
-			if (val1 == NULL)
+		if (val2 == nullptr) {
+			if (val1 == nullptr)
 				return (B_TRUE);
 			else
 				return (B_FALSE);
@@ -696,8 +696,8 @@ _DtCm_match_uint32_attribute(
 		}
 
 	case CSA_MATCH_NOT_EQUAL_TO:
-		if (val2 == NULL) {
-			if (val1 != NULL)
+		if (val2 == nullptr) {
+			if (val1 != nullptr)
 				return (B_TRUE);
 			else
 				return (B_FALSE);
@@ -710,7 +710,7 @@ _DtCm_match_uint32_attribute(
 		}
 
 	case CSA_MATCH_LESS_THAN:
-		if (val1 == NULL)
+		if (val1 == nullptr)
 			return (B_FALSE);
 		else if (val2 && val1->item.uint32_value < val2->item.uint32_value)
 			return (B_TRUE);
@@ -718,7 +718,7 @@ _DtCm_match_uint32_attribute(
 			return (B_FALSE);
 
 	case CSA_MATCH_LESS_THAN_OR_EQUAL_TO:
-		if (val1 == NULL)
+		if (val1 == nullptr)
 			return (B_FALSE);
 		else if (val2 && val1->item.uint32_value <= val2->item.uint32_value)
 			return (B_TRUE);
@@ -726,7 +726,7 @@ _DtCm_match_uint32_attribute(
 			return (B_FALSE);
 
 	case CSA_MATCH_GREATER_THAN:
-		if (val1 == NULL)
+		if (val1 == nullptr)
 			return (B_FALSE);
 		else if (val2 && val1->item.uint32_value > val2->item.uint32_value)
 			return (B_TRUE);
@@ -734,7 +734,7 @@ _DtCm_match_uint32_attribute(
 			return (B_FALSE);
 
 	case CSA_MATCH_GREATER_THAN_OR_EQUAL_TO:
-		if (val1 == NULL)
+		if (val1 == nullptr)
 			return (B_FALSE);
 		else if (val2 && val1->item.uint32_value >= val2->item.uint32_value)
 			return (B_TRUE);
@@ -763,8 +763,8 @@ _DtCm_match_string_attribute(
 	if (val1 && val2 && val1->type != val2->type)
 		return (B_FALSE);
 
-	if (val1 == NULL) {
-		if ((op == CSA_MATCH_EQUAL_TO && val2 == NULL) ||
+	if (val1 == nullptr) {
+		if ((op == CSA_MATCH_EQUAL_TO && val2 == nullptr) ||
 		    (op == CSA_MATCH_NOT_EQUAL_TO && val2))
 			return (B_TRUE);
 		else
@@ -776,7 +776,7 @@ _DtCm_match_string_attribute(
 		return (B_TRUE);	/* since val1 != NULL */
 
 	case CSA_MATCH_EQUAL_TO:
-		if (val2 == NULL) {
+		if (val2 == nullptr) {
 			return (B_FALSE); /* since val1 != NULL */
 		} else {
 			return (is_same_string(val1->item.string_value,
@@ -784,7 +784,7 @@ _DtCm_match_string_attribute(
 		}
 
 	case CSA_MATCH_NOT_EQUAL_TO:
-		if (val2 == NULL) {
+		if (val2 == nullptr) {
 			return (B_TRUE); /* since val1 != NULL */
 		} else {
 			return (!is_same_string(val1->item.string_value,
@@ -820,18 +820,18 @@ _DtCm_match_reminder_attribute(
 
 	switch (op) {
 	case CSA_MATCH_ANY:
-		if (val1 != NULL)
+		if (val1 != nullptr)
 			return (B_TRUE);
 		else
 			return (B_FALSE);
 
 	case CSA_MATCH_EQUAL_TO:
-		if (val2 == NULL || val2->item.reminder_value == NULL) {
-			if (val1 == NULL || val1->item.reminder_value == NULL)
+		if (val2 == nullptr || val2->item.reminder_value == nullptr) {
+			if (val1 == nullptr || val1->item.reminder_value == nullptr)
 				return (B_TRUE);
 			else
 				return (B_FALSE);
-		} else if (val1 == NULL || val1->item.reminder_value == NULL) {
+		} else if (val1 == nullptr || val1->item.reminder_value == nullptr) {
 			return (B_FALSE);
 		} else {
 			r1 = val1->item.reminder_value;
@@ -902,7 +902,7 @@ match_this_attribute(Appt_4 *appt, cms_attribute attr, CSA_enum op)
 	cms_attribute_value	oldattr;
 	cms_attribute_value	matchattr;
 
-	if (attr.name.name == NULL || attr.value == NULL)
+	if (attr.name.name == nullptr || attr.value == nullptr)
 		return (B_FALSE);
 
 	if ((attr.name.num > 0 &&
@@ -949,7 +949,7 @@ match_this_attribute(Appt_4 *appt, cms_attribute attr, CSA_enum op)
 				return (B_FALSE);
 		} else if (op == CSA_MATCH_ANY) {
 			return (B_TRUE);
-		} else if (op == CSA_MATCH_NOT_EQUAL_TO && attr.value == NULL) {
+		} else if (op == CSA_MATCH_NOT_EQUAL_TO && attr.value == nullptr) {
 			if (appt->duration == 0)
 				return (B_FALSE);
 			else
@@ -1058,7 +1058,7 @@ match_this_attribute(Appt_4 *appt, cms_attribute attr, CSA_enum op)
 		}
 
 		return (_DtCm_match_sint32_attribute(&oldattr,
-			(attr.value ? &matchattr : NULL), op));
+			(attr.value ? &matchattr : nullptr), op));
 	defalut:
 		return (B_FALSE);
 	}
@@ -1068,14 +1068,14 @@ static Attribute_4 *
 get_appt_reminder(Attribute_4 *attr4, char *oldattr)
 {
 
-	while (attr4 != NULL) {
+	while (attr4 != nullptr) {
 		if (attr4->attr && !strcmp(attr4->attr, oldattr))
 			return (attr4);
 		else
 			attr4 = attr4->next;
 	}
 
-	return (NULL);
+	return (nullptr);
 }
 
 static boolean_t
@@ -1084,7 +1084,7 @@ match_names(char *oldattr, uint num_names, char **names)
 	int	i;
 	char	*attrname;
 
-	if (oldattr == NULL)
+	if (oldattr == nullptr)
 		return (B_FALSE);
 
 	attrname = _DtCm_old_reminder_name_to_name(oldattr);
@@ -1108,8 +1108,8 @@ match_old_reminder_attribute(
 	CSA_reminder	rem;	
 	char		ltstring[BUFSIZ];
 
-	if (rem4 != NULL) {
-		rem.snooze_time = NULL;
+	if (rem4 != nullptr) {
+		rem.snooze_time = nullptr;
 		rem.repeat_count = 0;
 		rem.reminder_data.size = (rem4->clientdata ?
 						strlen(rem4->clientdata) : 0);
@@ -1123,7 +1123,7 @@ match_old_reminder_attribute(
 		oldattr.item.reminder_value = &rem;
 	}
 
-	return (_DtCm_match_reminder_attribute((rem4 ? &oldattr : NULL),
+	return (_DtCm_match_reminder_attribute((rem4 ? &oldattr : nullptr),
 		val, op));
 }
 
@@ -1131,8 +1131,8 @@ static boolean_t
 is_same_string(char *str1, char *str2)
 {
 	/* val2 is a NULL string */
-	if (str2 == NULL || *str2 == 0) {
-		if (str1 == NULL || *str1 == 0)
+	if (str2 == nullptr || *str2 == 0) {
+		if (str1 == nullptr || *str1 == 0)
 			return (B_TRUE);
 		else
 			return (B_FALSE);
@@ -1149,10 +1149,10 @@ contain_substr(char *str1, char *str2)
 {
 	int	i, len;
 
-	if (str2 == NULL || *str2 == '\0')
+	if (str2 == nullptr || *str2 == '\0')
 		return (B_TRUE);
 
-	if (str1 == NULL || *str1 == '\0') {
+	if (str1 == nullptr || *str1 == '\0') {
 		return (B_FALSE);
 	} else {
 		len = strlen(str2);
@@ -1169,8 +1169,8 @@ static boolean_t
 is_same_opaque_data(CSA_opaque_data *d1, CSA_opaque_data *d2)
 {
 	/* val2 is a NULL string */
-	if (d2 == NULL || d2->size == 0) {
-		if (d1 == NULL || d1->size == 0)
+	if (d2 == nullptr || d2->size == 0) {
+		if (d1 == nullptr || d1->size == 0)
 			return (B_TRUE);
 		else
 			return (B_FALSE);

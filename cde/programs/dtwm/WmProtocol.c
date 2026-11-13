@@ -70,11 +70,11 @@ static void wmq_bump_xids(void);
 /*
  * Global Variables:
  */
-Atom *xa_WM_QUERY = NULL;
+Atom *xa_WM_QUERY = nullptr;
 Atom xa_WM_POINTER_WINDOW;
 Atom xa_WM_CLIENT_WINDOW;
 Atom xa_WM_ALL_CLIENTS;
-XID *pXids = NULL;
+XID *pXids = nullptr;
 int numXids = -1;
 int curXids = 0;
 
@@ -552,7 +552,7 @@ void DeleteClientWmTimers (ClientData *pCD)
     WmTimer *pRemoveTimer;
 
 
-    pPrevTimer = NULL;
+    pPrevTimer = nullptr;
     pWmTimer = wmGD.wmTimers;
     while (pWmTimer)
     {
@@ -612,7 +612,7 @@ void TimeoutProc (XtPointer client_data, XtIntervalId *id)
      * Find out if the timer still needs to be serviced.
      */
 
-    pPrevTimer = NULL;
+    pPrevTimer = nullptr;
     pWmTimer = wmGD.wmTimers;
     while (pWmTimer)
     {
@@ -648,7 +648,7 @@ void TimeoutProc (XtPointer client_data, XtIntervalId *id)
 		    (wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_POINTER) &&
 		    (pWmTimer->timerCD == GetClientUnderPointer(&sameScreen)))
 		{
-		    Do_Raise (pWmTimer->timerCD, (ClientListEntry *)NULL, STACK_NORMAL);
+		    Do_Raise (pWmTimer->timerCD, (ClientListEntry *)nullptr, STACK_NORMAL);
 		}
 		break;
 	    }
@@ -793,7 +793,7 @@ wmq_convert_all_clients (
     int *pFormat_return
     )
 {
-    WmScreenData *pSD = NULL;
+    WmScreenData *pSD = nullptr;
     ClientListEntry *pEntry;
     ClientData *pCD;
 

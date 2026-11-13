@@ -61,7 +61,7 @@ static ABObj	find_ancestor_next_sibling(ABObj obj, ABObj searchRoot);
 ABObj
 travP_obj_parent(ABObj obj, ABTraversal trav)
 {
-    ABObj	parent= NULL;
+    ABObj	parent= nullptr;
 
     switch (travP_get_qualifier(trav))
     {
@@ -84,7 +84,7 @@ travP_obj_parent(ABObj obj, ABTraversal trav)
 ABObj
 travP_obj_first_child(ABObj obj, ABTraversal trav)
 {
-    ABObj	child= NULL;
+    ABObj	child= nullptr;
 
     switch (travP_get_qualifier(trav))
     {
@@ -107,7 +107,7 @@ travP_obj_first_child(ABObj obj, ABTraversal trav)
 ABObj 
 travP_obj_next_sibling(ABObj obj, ABTraversal trav)
 {
-    ABObj	sib= NULL;
+    ABObj	sib= nullptr;
 
     switch (travP_get_qualifier(trav))
     {
@@ -136,7 +136,7 @@ travP_obj_next_sibling(ABObj obj, ABTraversal trav)
 ABObj
 travP_obj_prev_sibling(ABObj obj, ABTraversal trav)
 {
-    ABObj	sib= NULL;
+    ABObj	sib= nullptr;
 
     switch (travP_get_qualifier(trav))
     {
@@ -166,12 +166,12 @@ travP_obj_salient_parent(ABObj obj, ABTraversal trav)
 {
     ABObj	parent= obj;
 
-    if (parent->part_of != NULL)
+    if (parent->part_of != nullptr)
     {
 	parent= parent->part_of;
     }
     parent= parent->parent;
-    if ((parent != NULL) && (parent->part_of != NULL))
+    if ((parent != nullptr) && (parent->part_of != nullptr))
     {
 	parent= parent->part_of;
     }
@@ -179,17 +179,17 @@ travP_obj_salient_parent(ABObj obj, ABTraversal trav)
     /*
      * Be sure to stay inside traversal bounds
      */
-    if (parent != NULL)
+    if (parent != nullptr)
     {
-	ABObj	ancestor= NULL;
+	ABObj	ancestor= nullptr;
 	for (ancestor= obj->parent; 
-	    (ancestor != NULL) && (ancestor != parent); 
+	    (ancestor != nullptr) && (ancestor != parent); 
 	    ancestor= ancestor->parent)
 	{
 	    if (ancestor == trav->rootObj)
 	    {
 		/* parent is above the traversal root. */
-		parent= NULL;
+		parent= nullptr;
 		break;
 	    }
 	}
@@ -202,7 +202,7 @@ travP_obj_salient_parent(ABObj obj, ABTraversal trav)
 static ABObj
 travP_obj_salient_first_child(ABObj obj, ABTraversal trav)
 {
-    ABObj	child= NULL;
+    ABObj	child= nullptr;
     trav= trav;
 
     if (obj_is_sub(obj) || obj_is_root(obj))
@@ -224,7 +224,7 @@ static ABObj
 find_first_non_subobj_child(ABObj obj, ABObj compRoot)
 {
     AB_TRAVERSAL	trav;
-    ABObj		child= NULL;
+    ABObj		child= nullptr;
 
     /*
      * Mondo recursion!! - we're going to recurse back into ourselves,
@@ -233,7 +233,7 @@ find_first_non_subobj_child(ABObj obj, ABObj compRoot)
      * Thought you could. :-)
      */
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-	(child= trav_next(&trav)) != NULL; )
+	(child= trav_next(&trav)) != nullptr; )
     {
 	if (obj_get_root(child) != compRoot)
 	{
@@ -247,7 +247,7 @@ find_first_non_subobj_child(ABObj obj, ABObj compRoot)
 	    /* this child is still part of the composite. */
 	    /* look at its children */
 	    child= find_first_non_subobj_child(child, compRoot);
-	    if (child != NULL)
+	    if (child != nullptr)
 	    {
 		/* 
 		 * found it!!
@@ -264,19 +264,19 @@ find_first_non_subobj_child(ABObj obj, ABObj compRoot)
 static ABObj
 travP_obj_salient_prev_sibling(ABObj obj, ABTraversal trav)
 {
-    ABObj	curObj= NULL;
-    ABObj	compRoot= NULL;
+    ABObj	curObj= nullptr;
+    ABObj	compRoot= nullptr;
     BOOL	firstTime= TRUE;
 
     curObj= obj;
     compRoot= obj_get_root(curObj->parent);
-    while (   (curObj != NULL)
+    while (   (curObj != nullptr)
 	   && ((!obj_is_salient(curObj)) || (firstTime)) )
     {
 	firstTime= FALSE;
 	if (obj_is_root(curObj))
 	{
-	    if (curObj->prev_sibling != NULL)
+	    if (curObj->prev_sibling != nullptr)
 	    {
 		curObj= curObj->prev_sibling;
 	    }
@@ -287,13 +287,13 @@ travP_obj_salient_prev_sibling(ABObj obj, ABTraversal trav)
 	}
 	else
 	{
-	    if (curObj->first_child != NULL)
+	    if (curObj->first_child != nullptr)
 	    {
 		curObj= curObj->first_child;
 	    }
 	    else
 	    {
-		if (curObj->prev_sibling != NULL)
+		if (curObj->prev_sibling != nullptr)
 		{
 		    curObj= curObj->prev_sibling;
 		}
@@ -312,10 +312,10 @@ travP_obj_salient_prev_sibling(ABObj obj, ABTraversal trav)
 static ABObj 
 travP_obj_salient_next_sibling(ABObj obj, ABTraversal trav)
 {
-    ABObj	curObj= NULL;
-    ABObj	compRoot= NULL;
+    ABObj	curObj= nullptr;
+    ABObj	compRoot= nullptr;
     BOOL	firstTime= TRUE;
-    ABObj	searchTop = NULL;
+    ABObj	searchTop = nullptr;
 
     curObj= obj;
     compRoot= obj_get_root(curObj->parent);
@@ -329,7 +329,7 @@ travP_obj_salient_next_sibling(ABObj obj, ABTraversal trav)
         :
 	    compRoot);
 
-    while (   (curObj != NULL)
+    while (   (curObj != nullptr)
 	   && ((!obj_is_salient(curObj)) || (firstTime)) )
     {
 	firstTime= FALSE;
@@ -337,13 +337,13 @@ travP_obj_salient_next_sibling(ABObj obj, ABTraversal trav)
 	/* don't go past traversal root */
 	if (curObj == trav->rootObj)
 	{
-	    curObj = NULL;
+	    curObj = nullptr;
 	    break;
 	}
 
 	if (obj_is_root(curObj))
 	{
-	    if (curObj->next_sibling != NULL)
+	    if (curObj->next_sibling != nullptr)
 	    {
 		curObj= curObj->next_sibling;
 	    }
@@ -354,13 +354,13 @@ travP_obj_salient_next_sibling(ABObj obj, ABTraversal trav)
 	}
 	else
 	{
-	    if (curObj->first_child != NULL)
+	    if (curObj->first_child != nullptr)
 	    {
 		curObj= curObj->first_child;
 	    }
 	    else
 	    {
-		if (curObj->next_sibling != NULL)
+		if (curObj->next_sibling != nullptr)
 		{
 		    curObj= curObj->next_sibling;
 		}
@@ -392,14 +392,14 @@ travP_obj_salient_next_sibling(ABObj obj, ABTraversal trav)
 static ABObj
 find_ancestor_prev_sibling(ABObj obj, ABObj searchRoot)
 {
-    ABObj	newObj= NULL;
-    ABObj	ancestor= NULL;
+    ABObj	newObj= nullptr;
+    ABObj	ancestor= nullptr;
 
     for (ancestor= obj->parent;
-	(ancestor != NULL) && (ancestor != searchRoot);
+	(ancestor != nullptr) && (ancestor != searchRoot);
 	ancestor= ancestor->parent)
     {
-	if (ancestor->prev_sibling != NULL)
+	if (ancestor->prev_sibling != nullptr)
 	{
 	    newObj= ancestor->prev_sibling;
 	    break;
@@ -417,14 +417,14 @@ find_ancestor_prev_sibling(ABObj obj, ABObj searchRoot)
 static ABObj
 find_ancestor_next_sibling(ABObj obj, ABObj searchRoot)
 {
-    ABObj	newObj= NULL;
+    ABObj	newObj= nullptr;
     ABObj	ancestor;
 
     for (ancestor= obj->parent; 
-	(ancestor != NULL) && (ancestor != searchRoot);
+	(ancestor != nullptr) && (ancestor != searchRoot);
 	ancestor= ancestor->parent)
     {
-	if (ancestor->next_sibling != NULL)
+	if (ancestor->next_sibling != nullptr)
 	{
 	    newObj= ancestor->next_sibling;
 	    break;

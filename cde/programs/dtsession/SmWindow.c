@@ -112,14 +112,14 @@ GetTopLevelWindowInfo(
         Window window )
 {
     unsigned int i;
-    Window parent,root,*children = NULL;
+    Window parent,root,*children = nullptr;
     WindowInfo retInfo;
     Atom actualType;
     int actualFormat;
     unsigned long nitems;
     unsigned long leftover;
     unsigned int nchildren;
-    WM_STATE *wmState = NULL;
+    WM_STATE *wmState = nullptr;
     XWindowAttributes windowAttr;
 
     if ((XGetWindowAttributes(smGD.display, window,&windowAttr)) == 0)

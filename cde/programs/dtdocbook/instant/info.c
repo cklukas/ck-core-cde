@@ -86,7 +86,7 @@ print_summ(
     char *hfmt="%-18.18s %4s %5s %4s %4s %s\n";
     char *fmt ="%-18.18s %4d %5d %4d %4d %s\n";
 
-    if (e == NULL) {
+    if (e == nullptr) {
 	fprintf(outfp, hfmt, "Element", "Att", "Data", "Chd", "Dep", "Parent");
 	return;
     }
@@ -111,7 +111,7 @@ PrintElemSummary(
     Element_t	*e
 )
 {
-    print_summ(NULL, NULL);
+    print_summ(nullptr, nullptr);
     DescendTree(e, print_summ, 0, 0, 0);
 }
 

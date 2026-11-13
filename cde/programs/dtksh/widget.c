@@ -57,7 +57,7 @@
 
 #define WIDGETALLOC		16	/* Will realloc the widget array in this increment */
 
-wtab_t **W = NULL;
+wtab_t **W = nullptr;
 int NumW = 0;
 int MaxW = 0;
 int Wtab_free = 0;	/* A count of how many table entries have been freed */
@@ -112,20 +112,20 @@ init_widgets( void )
         char * errmsg;
         char * errhdr;
 
-	if (C[0].class != NULL)
+	if (C[0].class != nullptr)
 		return;
 
 	toolkit_init_widgets();
 
         Wclasses = widget_dictionary(&class_keys);
 
-	for (i = 0; C[i].cname != NULL; i++) {
-                if (dtinstall(Wclasses, &C[i]) == NULL)
+	for (i = 0; C[i].cname != nullptr; i++) {
+                if (dtinstall(Wclasses, &C[i]) == nullptr)
                 {
                          errhdr = strdup(GetSharedMsg(DTKSH_ERROR));
                          errmsg = strdup(GETMESSAGE(
                                  "Internal hash table failure during widget class initialization; exiting"));
-                         printerr(errhdr, errmsg, NULL);
+                         printerr(errhdr, errmsg, nullptr);
                          free(errhdr);
                          free(errmsg);
 			 exit(1);
@@ -150,7 +150,7 @@ init_widgets( void )
 classtab_t *
 dtksh_lookup_class(const char *name)
 {
-        return Wclasses ? dtmatch(Wclasses, name) : NULL;
+        return Wclasses ? dtmatch(Wclasses, name) : nullptr;
 }
 
 /*
@@ -177,13 +177,13 @@ str_to_class(
    if (s[0] == 'W' && strspn(&s[1], str_0123456789) == strlen(&s[1])) 
    {
       wtab_t *w = str_to_wtab(arg0, s);
-      if (w != NULL)
+      if (w != nullptr)
          return(w->wclass);
    }
 
-   if ((ret = dtksh_lookup_class(s)) != NULL)
+   if ((ret = dtksh_lookup_class(s)) != nullptr)
    {
-      if (ret->res == NULL) 
+      if (ret->res == nullptr) 
       {
          XtResourceList resources;
          Cardinal numresources;
@@ -207,12 +207,12 @@ str_to_class(
          XtGetResourceList(ret->class, &resources, &numresources);
          for (i = 0; i < numresources; i++) 
          {
-            if (dtinstall(ret->res, &resources[i]) == NULL)
+            if (dtinstall(ret->res, &resources[i]) == nullptr)
             {
                errhdr = strdup(GetSharedMsg(DTKSH_ERROR));
                errmsg=strdup(GetSharedMsg( DT_HASHING_FAILURE));
                printerrf(errhdr, errmsg, resources[i].resource_name,
-                         ret->cname, NULL, NULL, NULL, NULL, NULL, NULL);
+                         ret->cname, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
                free(errhdr);
                free(errmsg);
             } 
@@ -243,13 +243,13 @@ str_to_class(
             {
                for (j = 0; j < blockArray[i]->num_resources; j++)
                {
-                  if (dtinstall(ret->res, &blockArray[i]->resources[j]) == NULL)
+                  if (dtinstall(ret->res, &blockArray[i]->resources[j]) == nullptr)
                   {
                      errhdr = strdup(GetSharedMsg(DTKSH_ERROR));
                      errmsg=strdup(GetSharedMsg( DT_HASHING_FAILURE));
                      printerrf(errhdr, errmsg, 
                                blockArray[i]->resources[j].resource_name,
-                               ret->cname, NULL, NULL, NULL, NULL, NULL, NULL);
+                               ret->cname, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
                      free(errhdr);
                      free(errmsg);
                   } 
@@ -272,17 +272,17 @@ str_to_class(
 	  * Get constraint resources, if there are any
           */
          XtGetConstraintResourceList(ret->class, &resources, &numresources);
-         if (resources != NULL) 
+         if (resources != nullptr) 
          {
             ret->con = widget_dictionary(&resource_keys);
             for (i = 0; i < numresources; i++) 
             {
-               if (dtinstall(ret->con, &resources[i]) == NULL)
+               if (dtinstall(ret->con, &resources[i]) == nullptr)
                {
                   errhdr =strdup(GetSharedMsg(DTKSH_ERROR));
                   errmsg=strdup(GetSharedMsg(DT_HASHING_FAILURE));
                   printerrf(errhdr, errmsg, resources[i].resource_name,
-                            ret->cname, NULL, NULL, NULL, NULL, NULL, NULL);
+                            ret->cname, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
                   free(errhdr);
                   free(errmsg);
                } 
@@ -291,16 +291,16 @@ str_to_class(
                            ret->confix);
          } 
          else 
-            ret->con = NULL;
+            ret->con = nullptr;
       }
       return(ret);
    }
 
    errmsg = strdup(GETMESSAGE(
                    "Could not find a widget class named '%s'"));
-   printerrf(arg0, errmsg, s, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+   printerrf(arg0, errmsg, s, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
    free(errmsg);
-   return(NULL);
+   return(nullptr);
 }
 
 Widget
@@ -313,16 +313,16 @@ DtkshNameToWidget(
         char * errhdr;
         char * errmsg;
 
-	if (s == NULL || *s == '\0')
-		return(NULL);
+	if (s == nullptr || *s == '\0')
+		return(nullptr);
 
-	if (W == NULL || W[0] == NULL) {
+	if (W == nullptr || W[0] == nullptr) {
 		errhdr = strdup(GetSharedMsg(DT_WARNING));
                 errmsg = strdup(GetSharedMsg(DT_TK_NOT_INIT));
-		printerr(errhdr, errmsg, NULL);
+		printerr(errhdr, errmsg, nullptr);
                 free(errhdr);
                 free(errmsg);
-		return(NULL);
+		return(nullptr);
 	}
 	len = strlen(W[0]->wname);
 	if (strncmp(s, W[0]->wname, len) == 0) {
@@ -331,7 +331,7 @@ DtkshNameToWidget(
 		if (s[len] == '.')
 			return(XtNameToWidget(Toplevel, &s[len+1]));
 	}
-	return(NULL);
+	return(nullptr);
 }
 
 /*
@@ -351,24 +351,24 @@ str_to_wtab(
 	int index, len;
         char * errmsg;
 
-	if (v == NULL || strcmp(v, "NULL") == 0)
-		return(NULL);
+	if (v == nullptr || strcmp(v, "NULL") == 0)
+		return(nullptr);
 
 	if (v[0] != 'W' || (len = strlen(v)) < 2 ||
 		strspn(&v[1], str_0123456789) != len-1) {
 		Widget wid;
 
-		if ((wid = DtkshNameToWidget(v)) == NULL) {
+		if ((wid = DtkshNameToWidget(v)) == nullptr) {
 			if (arg0)
                         {
                                 errmsg = strdup(GETMESSAGE(
                                   "The identifier '%s' is not a valid widget handle"));
 				printerrf(arg0, errmsg, v,
-                                          NULL, NULL, NULL, NULL, NULL,
-                                          NULL, NULL);
+                                          nullptr, nullptr, nullptr, nullptr, nullptr,
+                                          nullptr, nullptr);
                                 free(errmsg);
                         }
-			return(NULL);
+			return(nullptr);
 		}
 
 		return(widget_to_wtab(wid));
@@ -378,21 +378,21 @@ str_to_wtab(
 		if (arg0)
                 {
                         errmsg = strdup(GetSharedMsg(DT_BAD_WIDGET_HANDLE));
-			printerrf(arg0, errmsg, v, NULL,
-                                  NULL, NULL, NULL, NULL, NULL, NULL);
+			printerrf(arg0, errmsg, v, nullptr,
+                                  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
                         free(errmsg);
                 }
-		return(NULL);
+		return(nullptr);
 	}
-	if (W[index]->type == TAB_EMPTY && W[index]->w == NULL) {
+	if (W[index]->type == TAB_EMPTY && W[index]->w == nullptr) {
 		if (arg0)
                 {
                         errmsg = strdup(GetSharedMsg(DT_BAD_WIDGET_HANDLE));
-			printerrf(arg0, errmsg, v, NULL, NULL,
-                                  NULL, NULL, NULL, NULL, NULL);
+			printerrf(arg0, errmsg, v, nullptr, nullptr,
+                                  nullptr, nullptr, nullptr, nullptr, nullptr);
                         free(errmsg);
                 }
-		return(NULL);
+		return(nullptr);
 	}
 	return(W[index]);
 }
@@ -407,7 +407,7 @@ handle_to_widget(
 	if (w)
 		return(w->w);
 	else
-		return(NULL);
+		return(nullptr);
 }
 
 /*
@@ -425,8 +425,8 @@ widget_to_wtab(
 	int i;
         char * errmsg;
 
-	if (w == NULL)
-		return(NULL);
+	if (w == nullptr)
+		return(nullptr);
 	for (i = 0; i < NumW; i++) {
 		if ((W[i]->type != TAB_EMPTY) && (W[i]->w == w))
 			return(W[i]);
@@ -446,39 +446,39 @@ widget_to_wtab(
 		WidgetClass wclass;	/* class record */
 		classtab_t *class;	/* widget's class */
 
-		if ((pwtab = widget_to_wtab(XtParent(w))) == NULL) {
+		if ((pwtab = widget_to_wtab(XtParent(w))) == nullptr) {
                         errmsg = strdup(GetSharedMsg(DT_NO_PARENT));
-			printerr("widget_to_wtab", errmsg, NULL);
+			printerr("widget_to_wtab", errmsg, nullptr);
                         free(errmsg);
-			return(NULL);
+			return(nullptr);
 		}
 		wclass = XtClass(w);
 		/*
 		 * Again, we have to go linear searching for this
 		 * right now.
 		 */
-		class = NULL;
-		for (i = 0; C[i].cname != NULL; i++) {
+		class = nullptr;
+		for (i = 0; C[i].cname != nullptr; i++) {
 			if (C[i].class == wclass) {
 				class = &C[i];
 				break;
 			}
 		}
-		if (class == NULL) {
+		if (class == nullptr) {
                         errmsg = strdup(GETMESSAGE(
                               "Unable to find the widget class"));
-			printerr("widget_to_wtab", errmsg, NULL);
+			printerr("widget_to_wtab", errmsg, nullptr);
                         free(errmsg);
-			return(NULL);
+			return(nullptr);
 		}
 		/*
 		 * If this class has not been initialized, we
 		 * better force it to be set up by calling
 		 * str_to_class();
 		 */
-		if (class->res == NULL)
+		if (class->res == nullptr)
 			str_to_class("widget_to_wtab", class->cname);
-		return(set_up_w(w, pwtab, NULL, NULL, class));
+		return(set_up_w(w, pwtab, nullptr, nullptr, class));
 	}
 }
 
@@ -539,16 +539,16 @@ fixupresources(
 	XtResource *resource;
 	int i;
 
-	if (fixups == NULL)
+	if (fixups == nullptr)
 		return;
 
-        for (i = 0; fixups[i].name != NULL; i++) {
+        for (i = 0; fixups[i].name != nullptr; i++) {
                 resource = (XtResource *)dtmatch(res, fixups[i].name);
                 /*
                  * We could be either adding a new resource or
                  * modifying an old one.
                  */
-                if (resource == NULL)
+                if (resource == nullptr)
                         resource = (XtResource *)XtMalloc(sizeof(XtResource));
                 /*
                  * The only fields dtksh uses are the name, class, type and
@@ -582,8 +582,8 @@ fsym(
    int i = 0;
    void * addr;
 
-   if (liblist == NULL)
-      return (NULL);
+   if (liblist == nullptr)
+      return (nullptr);
    while (liblist[i].dll)
    {
       if (addr = dlsym(liblist[i].dll, str))
@@ -611,17 +611,17 @@ do_DtLoadWidget(
    {
       errmsg = strdup(GETMESSAGE(
                "Usage: DtLoadWidget widgetClassName widgetClassRecordName"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((address = (void *)fsym(argv[2], -1)) == NULL) 
+   if ((address = (void *)fsym(argv[2], -1)) == nullptr) 
    {
       errmsg = strdup(GETMESSAGE(
                     "Unable to locate a widget class record named '%s'"));
       printerrf(argv[0], errmsg,
-                argv[2], NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                argv[2], nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    } 
@@ -631,13 +631,13 @@ do_DtLoadWidget(
       memset(classtab, '\0', sizeof(classtab_t));
       classtab->cname = (char *)strdup(argv[1]);
       classtab->class = ((WidgetClass *)address)[0];
-      if (dtinstall(Wclasses, classtab) == NULL)
+      if (dtinstall(Wclasses, classtab) == nullptr)
       {
          errhdr = strdup(GetSharedMsg(DTKSH_ERROR));
          errmsg= strdup(GETMESSAGE(
             "Internal hash table failure during initialization of widget class '%s'"));
          printerrf(errhdr, errmsg, classtab->cname,
-                   NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                   nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
          free(errhdr);
          free(errmsg);
          return(1);
@@ -670,10 +670,10 @@ _pr_resource(
         char * errmsg;
         char * errmsg2;
 
-	if (c->res == NULL)
+	if (c->res == nullptr)
 		str_to_class("DtWidgetInfo", c->cname);
 
-	if (Show_constraint && c->con == NULL)	/* No constraint resources */
+	if (Show_constraint && c->con == nullptr)	/* No constraint resources */
 		return;
 
 	errmsg = strdup(GETMESSAGE("\n%sRESOURCES FOR %s%s%s:\n"));
@@ -687,13 +687,13 @@ _pr_resource(
         free(errmsg2);
 
         Dt_t *primary = Show_constraint ? c->con : c->res;
-        Dt_t *parent = NULL;
+        Dt_t *parent = nullptr;
         if (!Show_constraint && w && w->parent && XtIsConstraint(w->parent->w))
                 parent = w->parent->wclass->con;
 
         /* Merge the two name-ordered lists, retaining both entries on a tie. */
-        XtResource *a = primary ? dtfirst(primary) : NULL;
-        XtResource *b = parent ? dtfirst(parent) : NULL;
+        XtResource *a = primary ? dtfirst(primary) : nullptr;
+        XtResource *b = parent ? dtfirst(parent) : nullptr;
         while (a || b) {
                 if (!b || (a && strcmp(a->resource_name, b->resource_name) <= 0)) {
                         _pr_resource_list(a);
@@ -740,13 +740,13 @@ pr_widinfo(
 	char namebuf[256];
 	char *name;
 	char statbuf[8];
-        static char * errmsg = NULL;
-        static char * realizedStr = NULL;
-        static char * managedStr = NULL;
-        static char * sensitiveStr = NULL;
+        static char * errmsg = nullptr;
+        static char * realizedStr = nullptr;
+        static char * managedStr = nullptr;
+        static char * sensitiveStr = nullptr;
         char * realized, * managed, * sensitive;
 
-        if (errmsg == NULL)
+        if (errmsg == nullptr)
         {
 	   errmsg = strdup(GETMESSAGE("%-15s %-6s %-6s %-18s %-6s %s\n"));
 	   realizedStr = strdup(GETMESSAGE("R"));
@@ -801,9 +801,9 @@ do_DtWidgetInfo(
 	int errs = 0;
         char * errmsg;
 
-	if (C[0].class == NULL) {
+	if (C[0].class == nullptr) {
                 errmsg = strdup(GetSharedMsg(DT_TK_NOT_INIT));
-		printerr(argv[0], errmsg, NULL);
+		printerr(argv[0], errmsg, nullptr);
                 free(errmsg);
 		return(1);
 	}
@@ -818,7 +818,7 @@ do_DtWidgetInfo(
 			}
 		} else {
 			for (i = 1; i < argc; i++) {
-				if ((w = str_to_wtab(argv[0], argv[i])) != NULL)
+				if ((w = str_to_wtab(argv[0], argv[i])) != nullptr)
 					pr_widinfo(w);
 			}
 		}
@@ -828,18 +828,18 @@ do_DtWidgetInfo(
 			/* print all the resources in each widget or class */
 			if (argc == 2) {
                                 for (c = dtfirst(Wclasses); c; c = dtnext(Wclasses, c))
-                                        _pr_resource(c, NULL);
+                                        _pr_resource(c, nullptr);
 				return(0);
 			} else {
 				for (i = 2; i < argc; i++) {
-					if ((c = str_to_class(argv[0], argv[i])) != NULL) {
-						if (Show_constraint && c->con == NULL)
+					if ((c = str_to_class(argv[0], argv[i])) != nullptr) {
+						if (Show_constraint && c->con == nullptr)
 							return(0);
 
-						if (!Show_constraint && c-> res == NULL)
+						if (!Show_constraint && c-> res == nullptr)
 							return(0);
 
-						w = str_to_wtab(NULL, argv[i]);
+						w = str_to_wtab(nullptr, argv[i]);
 						_pr_resource(c, w);
 					}
 				}
@@ -855,7 +855,7 @@ do_DtWidgetInfo(
                                         _pr_class(c);
 			} else {
 				for (i = 2; i < argc; i++) {
-					if ((c = str_to_class(argv[0], argv[i])) != NULL)
+					if ((c = str_to_class(argv[0], argv[i])) != nullptr)
 						_pr_class(c);
 				}
 			}
@@ -870,7 +870,7 @@ do_DtWidgetInfo(
 				}
 			} else {
 				for (i = 2; i < argc; i++) {
-					if ((w = str_to_wtab(argv[0], argv[i])) == NULL) {
+					if ((w = str_to_wtab(argv[0], argv[i])) == nullptr) {
 						errs++;
 						continue;
 					}
@@ -879,12 +879,12 @@ do_DtWidgetInfo(
 			}
 		} else {
                         errmsg = strdup(GetSharedMsg(DT_UNKNOWN_OPTION));
-			printerrf(argv[0], errmsg, argv[1], NULL,
-                                  NULL, NULL, NULL, NULL, NULL, NULL);
+			printerrf(argv[0], errmsg, argv[1], nullptr,
+                                  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
                         free(errmsg);
 
                         errmsg = strdup(GETMESSAGE("\nUsage:\tDtWidgetInfo [widgetHandle]\n\tDtWidgetInfo -r <widgetHandle|className>\n\tDtWidgetInfo -R <widgetHandle|className>\n\tDtWidgetInfo -c [className]\n\tDtWidgetInfo -h [widgetHandle]"));
-		        printerr(str_nill, errmsg, NULL);
+		        printerr(str_nill, errmsg, nullptr);
                         free(errmsg);
 			return(255);
 		}

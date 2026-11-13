@@ -47,7 +47,7 @@ void addent(void)
         warning1("Redefining %s: entity defined in BUILD", entity->name) ;
         entity->type = M_GENERAL ;
         entity->wheredef = FALSE ;
-        entity->content = NULL ;
+        entity->content = nullptr ;
         return ;
         }
       else
@@ -60,12 +60,12 @@ void addent(void)
     lastent = entity ;
     entity->type = M_GENERAL ;
     entity->wheredef = FALSE ;
-    entity->content = NULL ;
+    entity->content = nullptr ;
     entity->name =
       (M_WCHAR *) m_malloc(w_strlen(name) + 1, "entity name") ;
     entity->index = ++m_entcnt ;
     entity->codeindex = M_NULLVAL ;
-    entity->next = NULL ;
+    entity->next = nullptr ;
     w_strcpy(entity->name, name) ;
     return ;
     }

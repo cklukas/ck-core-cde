@@ -256,8 +256,8 @@ prop_item_editor_init(
     pis->item_state_pcs = state_pcs;
     pis->item_menuname_pms = menuname_pms;
     pis->changebar = changebar;
-    pis->current_item = NULL;
-    pis->clipboard_item = NULL;
+    pis->current_item = nullptr;
+    pis->clipboard_item = nullptr;
     pis->current_obj_ptr = current_obj_ptr;
 
     propP_changebar_init(changebar, list);
@@ -265,12 +265,12 @@ prop_item_editor_init(
     XtVaSetValues(pis->item_list,
 		XmNselectionPolicy, 	XmBROWSE_SELECT,
     		XmNautomaticSelection,	TRUE,
-		NULL);
+		nullptr);
 
     XtVaSetValues(XtParent(pis->item_list),
                 XmNrightAttachment,     XmATTACH_FORM,
                 XmNrightOffset,         100,
-		NULL);
+		nullptr);
 
     XtAddCallback(pis->item_list, XmNbrowseSelectionCallback, 
 			select_itemCB, (XtPointer)pis);
@@ -281,22 +281,22 @@ prop_item_editor_init(
     XtVaSetValues(pis->item_label_pfs->label, 
                 XmNuserData, (XtArgVal)label_graphic_hint,
                 XmNrecomputeSize, False,
-                NULL);
+                nullptr);
 
     /* Set Up Add Button */
-    XtVaSetValues(add_button, XmNuserData, (XtArgVal)INSERT_AFTER, NULL);
+    XtVaSetValues(add_button, XmNuserData, (XtArgVal)INSERT_AFTER, nullptr);
     XtAddCallback(add_button, XmNactivateCallback, add_itemCB, (XtPointer)pis);
 
     /* Set Up Edit MenuButton */
     for(i = 0; i < add_count; i++)
     {
-	XtVaSetValues(add_item[i], XmNuserData, add_enum[i], NULL);
+	XtVaSetValues(add_item[i], XmNuserData, add_enum[i], nullptr);
 	XtAddCallback(add_item[i], XmNactivateCallback,
 		add_itemCB, (XtPointer)pis);
     }
     for(i=0; i < edit_count; i++) 
     { 
-        XtVaSetValues(edit_item[i], XmNuserData, edit_enum[i], NULL);
+        XtVaSetValues(edit_item[i], XmNuserData, edit_enum[i], nullptr);
         XtAddCallback(edit_item[i], XmNactivateCallback, 
                 edit_itemCB, (XtPointer)pis); 
     }
@@ -342,12 +342,12 @@ prop_item_editor_load(
 	activate_item_settings(pis, True);
 
     	for (trav_open(&trav, pobj, AB_TRAV_ITEMS_FOR_OBJ), i = 0;
-            (iobj = trav_next(&trav)) != NULL; i++)
+            (iobj = trav_next(&trav)) != nullptr; i++)
     	{
             /* Make a copy of the item's obj, so changes can
              * be made to it without affecting the real item obj
              */
-            iobj_list[i] = obj_create(iobj->type, NULL);
+            iobj_list[i] = obj_create(iobj->type, nullptr);
             copy_item_fields(iobj, iobj_list[i]);
 
 	    /* Keep track of Copy's real Item object 
@@ -359,7 +359,7 @@ prop_item_editor_load(
             ui_list_add_item(pis->item_list, list_ident, 0);
     	}
     	trav_close(&trav);
-    	XtVaSetValues(pis->item_list, XmNuserData, iobj_list, NULL);
+    	XtVaSetValues(pis->item_list, XmNuserData, iobj_list, nullptr);
     	XmListSelectPos(pis->item_list, 1, TRUE);
     }
     else /* No Items to load */
@@ -379,18 +379,18 @@ prop_item_editor_clear(
     XtVaGetValues(pis->item_list,
                 XmNuserData,  &iobj_list,
                 XmNitemCount, &num_items,
-                NULL);
+                nullptr);
 
     if (num_items > 0) /* Clear List & Array of Item copies...*/ 
     {
     	for (i=0; i < num_items; i++)
 	{
-	    PointerToRealItem(iobj_list[i]) = NULL;
+	    PointerToRealItem(iobj_list[i]) = nullptr;
             obj_destroy(iobj_list[i]);
 	}
 
         util_free(iobj_list);
-	XtVaSetValues(pis->item_list, XmNuserData, (XtArgVal)NULL, NULL);
+	XtVaSetValues(pis->item_list, XmNuserData, (XtArgVal)NULL, nullptr);
         XmListDeleteAllItems(pis->item_list);
     }
 
@@ -421,13 +421,13 @@ prop_item_editor_clear(
     if (HasHelpState(pis->item_type))
 	prop_checkbox_set_value(pis->item_state_pcs, HELP_ITEM_KEY, False, False);
 
-    pis->current_item = NULL;
+    pis->current_item = nullptr;
 
-    if (pis->clipboard_item != NULL)
+    if (pis->clipboard_item != nullptr)
     {
-	PointerToRealItem(pis->clipboard_item) = NULL;
+	PointerToRealItem(pis->clipboard_item) = nullptr;
     	obj_destroy(pis->clipboard_item);
-    	pis->clipboard_item = NULL;
+    	pis->clipboard_item = nullptr;
     }
 
 }
@@ -445,9 +445,9 @@ prop_item_editor_apply(
     AB_TRAVERSAL trav;
     ABObj       *iobj_list;
     ABObj       pobj, oobj, iobj;
-    Widget	*real_widget = NULL;
-    int		*real_pos = NULL;
-    ABObj	*real_iobj = NULL;
+    Widget	*real_widget = nullptr;
+    int		*real_pos = nullptr;
+    ABObj	*real_iobj = nullptr;
     BOOL	item_transfer = False;
     Widget	parent;
     STRING      item_name;
@@ -458,13 +458,13 @@ prop_item_editor_apply(
     int		del_count = 0;
     int         i, j;
 
-    if ((current_obj = *(pis->current_obj_ptr)) == NULL)
+    if ((current_obj = *(pis->current_obj_ptr)) == nullptr)
 	return;
 
     XtVaGetValues(pis->item_list,
                 XmNuserData,    &iobj_list,
                 XmNitemCount,   &new_num_items,
-                NULL);
+                nullptr);
 
     pobj = objxm_comp_get_subobj(current_obj, AB_CFG_PARENT_OBJ);
     oobj = objxm_comp_get_subobj(current_obj, AB_CFG_OBJECT_OBJ);
@@ -507,7 +507,7 @@ prop_item_editor_apply(
 	    /* Detach widget from item-object */
 	    real_widget[i] = objxm_get_widget(real_iobj[i]);
 	    abobjP_disable_build_actions(real_iobj[i], real_widget[i]);
-	    objxm_set_widget(real_iobj[i], NULL);
+	    objxm_set_widget(real_iobj[i], nullptr);
 	    objxm_free_obj_and_actions(real_widget[i]);
 	}
 	else if (real_pos)
@@ -521,25 +521,25 @@ prop_item_editor_apply(
 
     for (i=0; i < new_num_items; i++)
     {
-	iobj = NULL;
+	iobj = nullptr;
 	item_transfer = False;
 
-	if (PointerToRealItem(iobj_list[i]) != NULL)
+	if (PointerToRealItem(iobj_list[i]) != nullptr)
 	{
 	    /* Find real item object which corresponds to Copy */
-	    for (j=0; iobj == NULL && j < num_items; j++)
+	    for (j=0; iobj == nullptr && j < num_items; j++)
 	    	if (PointerToRealItem(iobj_list[i]) == real_iobj[j])
 	    	{
 	    	    iobj = real_iobj[j];
-		    real_iobj[j] = NULL; /* Consume */
+		    real_iobj[j] = nullptr; /* Consume */
 		    if (j != i)
 			item_transfer = True;
 	        }
 	}
 
-	if (iobj == NULL) /* none found ->We have a New object here! */
+	if (iobj == nullptr) /* none found ->We have a New object here! */
 	{
-            iobj = obj_create(AB_TYPE_ITEM, NULL);
+            iobj = obj_create(AB_TYPE_ITEM, nullptr);
             iobj->info.item.type = pis->item_type;
             PointerToRealItem(iobj_list[i]) = iobj; 
 	    item_transfer = True;
@@ -597,7 +597,7 @@ prop_item_editor_apply(
 		    objxm_comp_set_ui_args(iobj, OBJXM_CONFIG_BUILD, True);
 		    obj_set_flag(iobj, AttrChangedFlag);
 		}
-	        real_widget[i] = NULL; /* Consume */
+	        real_widget[i] = nullptr; /* Consume */
 	    }
 	    else if (real_pos) /* Items are not actually widgets */
 	    {
@@ -638,10 +638,10 @@ prop_item_editor_apply(
 
     for (i=0; i < num_items; i++) 
     {
-	if (real_iobj && real_iobj[i] != NULL)
+	if (real_iobj && real_iobj[i] != nullptr)
 	    obj_destroy(real_iobj[i]);
 
-	if (real_widget && real_widget[i] != NULL)
+	if (real_widget && real_widget[i] != nullptr)
 	    XtDestroyWidget(real_widget[i]);
 	else if (real_pos && real_pos[i] != 0)
  	{
@@ -680,7 +680,7 @@ prop_item_change(
 )  
 {  
     ABObj	 current_obj;
-    STRING	 newlabel = NULL, basename = NULL, graphic_path;
+    STRING	 newlabel = nullptr, basename = nullptr, graphic_path;
     BOOL	 label_type_chg = False;
     AB_LABEL_TYPE new_label_type;
     XmString	 xmitem;
@@ -689,7 +689,7 @@ prop_item_change(
     int		 num_items;
     int		 next_pos;
 
-    if ((current_obj = *(pis->current_obj_ptr)) == NULL)
+    if ((current_obj = *(pis->current_obj_ptr)) == nullptr)
         return;
 
     if (pis->current_item)
@@ -697,7 +697,7 @@ prop_item_change(
     	XtVaGetValues(pis->item_list,
                 XmNuserData,    &iobj_list,
                 XmNitemCount,   &num_items,
-                NULL);
+                nullptr);
 	current_item_pos = get_current_item_pos(pis);
 
 	if (current_item_pos == 0)
@@ -751,7 +751,7 @@ prop_item_change(
             {
             	menuname = ui_field_get_string(pis->item_menuname_pms->field);
             	obj_set_menu_name(pis->current_item,
-                	(util_strcmp(menuname, "") == 0? NULL : menuname));
+                	(util_strcmp(menuname, "") == 0? nullptr : menuname));
             	util_free(menuname);
             }
 	}
@@ -764,7 +764,7 @@ prop_item_change(
 	     	 * require a string for identification in the itemlist as well
 	     	 * as to base the item name
 	     	 */
-		newlabel = NULL;
+		newlabel = nullptr;
 	    	obj_set_line_style(pis->current_item,
                         (AB_LINE_TYPE)prop_options_get_value(pis->item_line_style_pos));
 	    	prop_field_set_value(pis->item_label_pfs, "", False);
@@ -837,9 +837,9 @@ prop_item_edit(
 	    /* NOTE: Don't copy PointerToRealItem for a "Copy" */
             break;
         case AB_EDIT_PASTE:
-            if (pis->clipboard_item != NULL)
+            if (pis->clipboard_item != nullptr)
             {
-                iobj_copy = obj_create(pis->clipboard_item->type, NULL);
+                iobj_copy = obj_create(pis->clipboard_item->type, nullptr);
                 copy_item_fields(pis->clipboard_item, iobj_copy);
 		PointerToRealItem(iobj_copy) = PointerToRealItem(pis->clipboard_item);
 
@@ -848,7 +848,7 @@ prop_item_edit(
                     ui_list_select_pos(pis->item_list, new_item_pos, True);
 		else
 		{
-		    PointerToRealItem(iobj_copy) = NULL;
+		    PointerToRealItem(iobj_copy) = nullptr;
 		    obj_destroy(iobj_copy);
 		    util_dprintf(3, "prop_item_edit: could not add new item to List\n");
 		}
@@ -868,7 +868,7 @@ prop_item_get_namebase(
     ABObj	iobj
 )
 {
-    STRING	namebase = NULL;
+    STRING	namebase = nullptr;
     static char namebuf[ITEM_NAME_MAX];
     STRING      starts, graphic_path;
 
@@ -909,7 +909,7 @@ prop_item_insert(
     XtVaGetValues(pis->item_list,
                 XmNitemCount, &num_items,
                 XmNuserData,  &iobj_list,
-                NULL);
+                nullptr);
 
     select_pos = ui_list_get_selected_pos(pis->item_list);
     if (select_pos != -1)
@@ -954,7 +954,7 @@ prop_item_insert(
         else
             new_iobj_list[i] = iobj_list[j++];
     }
-    XtVaSetValues(pis->item_list, XmNuserData, new_iobj_list, NULL);
+    XtVaSetValues(pis->item_list, XmNuserData, new_iobj_list, nullptr);
 
     util_free(iobj_list);
 
@@ -975,7 +975,7 @@ copy_item_fields(
     ABObj	iobj_copy
 )
 {
-    if (iobj != NULL && iobj_copy != NULL)
+    if (iobj != nullptr && iobj_copy != nullptr)
     {
     	obj_set_subtype(iobj_copy, obj_get_subtype(iobj));
     	obj_set_name(iobj_copy, obj_get_name(iobj));
@@ -1009,13 +1009,13 @@ copy_item_to_clipboard(
 
     old_selection = *item_clipboard;
 
-    new_selection = obj_create(iobj->type, NULL);
+    new_selection = obj_create(iobj->type, nullptr);
     copy_item_fields(iobj, new_selection); 
     *item_clipboard = new_selection;
 
-    if (old_selection != NULL)
+    if (old_selection != nullptr)
     {
-	PointerToRealItem(old_selection) = NULL;
+	PointerToRealItem(old_selection) = nullptr;
 	obj_destroy(old_selection);
     }
 
@@ -1028,7 +1028,7 @@ delete_selected_item(
 {
     ABObj	current_obj;
     ABObj	*iobj_list;
-    ABObj	*new_iobj_list = NULL;
+    ABObj	*new_iobj_list = nullptr;
     int		num_items;
     int		select_pos;
     int		i, j;
@@ -1037,17 +1037,17 @@ delete_selected_item(
  
     XtVaGetValues(pis->item_list,
                 XmNuserData,    &iobj_list,
-                NULL);
+                nullptr);
 
     select_pos = ui_list_get_selected_pos(pis->item_list);
  
     if (select_pos != -1)
     {
-      	XtVaGetValues(pis->item_list, XmNitemCount, &num_items, NULL);
+      	XtVaGetValues(pis->item_list, XmNitemCount, &num_items, nullptr);
 	if (num_items > 1)
 	{
             new_iobj_list = (ABObj *)util_malloc((num_items - 1) * sizeof(ABObj));
-	    if (new_iobj_list == NULL)
+	    if (new_iobj_list == nullptr)
 	    {
 		util_dprintf(1, "delete_selected_item: malloc failed\n");
 		return False;
@@ -1072,13 +1072,13 @@ delete_selected_item(
 			obj_set_is_initially_selected(iobj_list[0], True);
 		}
 
-		PointerToRealItem(iobj_list[i]) = NULL;
+		PointerToRealItem(iobj_list[i]) = nullptr;
 		obj_destroy(iobj_list[i]);
 	    }
 	    else
             	new_iobj_list[j++] = iobj_list[i];
     	}
-    	XtVaSetValues(pis->item_list, XmNuserData, new_iobj_list, NULL);
+    	XtVaSetValues(pis->item_list, XmNuserData, new_iobj_list, nullptr);
 
         XmListDeletePos(pis->item_list, select_pos);
 	if (num_items > 1)
@@ -1108,7 +1108,7 @@ get_current_item_pos(
     XtVaGetValues(pis->item_list,
                 XmNuserData,    &iobj_list,
                 XmNitemCount,   &num_items,
-                NULL);
+                nullptr);
 
     for(i=0; i < num_items; i++)
         if (iobj_list[i] == pis->current_item)
@@ -1132,14 +1132,14 @@ get_selected_item_copy(
     select_pos = ui_list_get_selected_pos(list);
     XtVaGetValues(list,
                 XmNuserData,    &iobj_list,
-                NULL);
+                nullptr);
 
     if (select_pos != -1)
     {
         *ppos = select_pos;
         return(iobj_list[(*ppos - 1)]);
     }
-    return NULL;
+    return nullptr;
 
 }
 
@@ -1151,7 +1151,7 @@ get_graphic_namebase(
     static char namebase_buf[ITEM_NAME_MAX];
 
     if (util_strempty(graphic_path))
-        return NULL;
+        return nullptr;
 
     util_get_file_name_from_path(graphic_path, namebase_buf, ITEM_NAME_MAX);
     strcat(namebase_buf, "_graphic");
@@ -1188,10 +1188,10 @@ init_new_item(
     ABObj new_iobj;
     STRING newlabel;
 
-    if ((current_obj = *(pis->current_obj_ptr)) == NULL)
-        return NULL;
+    if ((current_obj = *(pis->current_obj_ptr)) == nullptr)
+        return nullptr;
 
-    new_iobj = obj_create(AB_TYPE_ITEM, NULL);
+    new_iobj = obj_create(AB_TYPE_ITEM, nullptr);
     obj_set_subtype(new_iobj, pis->item_type);
 
     new_iobj->label_type = AB_LABEL_STRING;
@@ -1227,9 +1227,9 @@ load_item(
 )
 {
     AB_LABEL_TYPE	label_type = AB_LABEL_STRING;
-    STRING 		label = NULL;
+    STRING 		label = nullptr;
 
-    if (iobj != NULL && !obj_is_item(iobj))
+    if (iobj != nullptr && !obj_is_item(iobj))
 	return;
 
     /* Load Item Label Type */
@@ -1284,7 +1284,7 @@ activate_item_settings(
     BOOL		active
 )
 {
-    Widget	graphic_hint = NULL;
+    Widget	graphic_hint = nullptr;
 
     ui_set_active(pis->item_label_pfs->label, active);
     if (!active)
@@ -1300,7 +1300,7 @@ activate_item_settings(
 
 	XtVaGetValues(pis->item_label_pfs->label,
 		XmNuserData,	&graphic_hint,
-		NULL);
+		nullptr);
 	if (graphic_hint)
 	    ui_set_active(graphic_hint, active);
     }
@@ -1311,7 +1311,7 @@ activate_item_settings(
         ui_set_active(pis->item_line_style_pos->optionbox, active);
     }
 
-    if (pis->item_state_pcs != NULL)
+    if (pis->item_state_pcs != nullptr)
     {
 	if (pis->item_state_pcs->label)
 	    ui_set_active(pis->item_state_pcs->label, active);
@@ -1363,7 +1363,7 @@ setup_item_label_setting(
 
     XtVaSetValues(pis->item_label_pfs->field, 
 		XmNcursorPositionVisible, no_sep_label,
-		NULL);
+		nullptr);
 
     activate_menu_item_settings(pis, no_sep_label);
 }
@@ -1382,7 +1382,7 @@ verify_and_set_item_selected(
     XtVaGetValues(pis->item_list,
                 XmNuserData,  &iobj_list,
                 XmNitemCount, &num_items,
-                NULL);
+                nullptr);
 
     current_obj = *(pis->current_obj_ptr);
 
@@ -1434,7 +1434,7 @@ edit_itemCB(
     int			current_item_pos = 0;
     AB_EDIT_TYPE 	etype;
 
-    XtVaGetValues(widget, XmNuserData, &etype, NULL);
+    XtVaGetValues(widget, XmNuserData, &etype, nullptr);
 
     if (etype == EDIT_CHANGE)
     {
@@ -1475,10 +1475,10 @@ add_itemCB(
     INSERT_TYPE  itype;
     int		 new_item_pos;
 
-    if (*(pis->current_obj_ptr) == NULL)
+    if (*(pis->current_obj_ptr) == nullptr)
 	return;
 
-    XtVaGetValues(widget, XmNuserData, &itype, NULL);
+    XtVaGetValues(widget, XmNuserData, &itype, nullptr);
 
     iobj_copy = init_new_item(pis);
     new_item_pos = prop_item_insert(pis, itype, iobj_copy);
@@ -1492,7 +1492,7 @@ add_itemCB(
     }
     else /* Error in adding item to list */
     {
-	PointerToRealItem(iobj_copy) = NULL;
+	PointerToRealItem(iobj_copy) = nullptr;
 	obj_destroy(iobj_copy);
 	util_dprintf(3, "add_itemCB: could not add new item to List\n");
     }
@@ -1514,7 +1514,7 @@ select_itemCB(
 
     iobj_copy = get_selected_item_copy(pis->item_list, &pos);
 
-    if (pis->current_item != NULL &&
+    if (pis->current_item != nullptr &&
 	pis->current_item != iobj_copy)
     {
         /* Need to Save previous item's edits... */
@@ -1540,20 +1540,20 @@ set_edit_menu_stateCB(
     XtArgVal	item_key;
     int			i;
 
-    listitem_exists = (pis->current_item != NULL);
-    clipboard_full = (pis->clipboard_item != NULL);
+    listitem_exists = (pis->current_item != nullptr);
+    clipboard_full = (pis->clipboard_item != nullptr);
 
     XtVaGetValues(pis->item_menu,
 		XmNnumChildren,	&num_menu_items,
 		XmNchildren,	&menu_items,
-		NULL);
+		nullptr);
 
     /* Loop through the Edit menuitems, setting their sensitivity 
      * according to the state of the Item editor
      */
     for (i = 0; i < num_menu_items; i++)
     {
-	XtVaGetValues(menu_items[i], XmNuserData, &item_key, NULL);
+	XtVaGetValues(menu_items[i], XmNuserData, &item_key, nullptr);
 
 	switch(item_key)
   	{
@@ -1585,9 +1585,9 @@ prop_item_labeltypeCB(
     AB_LABEL_TYPE                value = AB_LABEL_UNDEF;
     PropItemsSetting    	 pis = (PropItemsSetting)clientdata;
 
-    XtVaGetValues(item, XmNuserData, &value, NULL);
+    XtVaGetValues(item, XmNuserData, &value, nullptr);
 
-    setup_item_label_setting(pis, (AB_LABEL_TYPE)value, NULL, AB_LINE_UNDEF);
+    setup_item_label_setting(pis, (AB_LABEL_TYPE)value, nullptr, AB_LINE_UNDEF);
 
     if (value != AB_LABEL_SEPARATOR)
 	ui_field_select_string(pis->item_label_pfs->field, True);

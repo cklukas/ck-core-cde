@@ -148,7 +148,7 @@ char    *palette)
     }
     else 
     {
-	palettePath = NULL;
+	palettePath = nullptr;
     }
 
     /*  Get Dtstyle.paletteDirectories value */
@@ -163,11 +163,11 @@ char    *palette)
     }
     else 
     {
-        path = NULL;
+        path = nullptr;
     }
 
     /* Look for palette in paletteDirectories */
-    if (path != NULL)
+    if (path != nullptr)
     {
         /* Loop through paletteDirectories looking in each directory
          * till we find the palette file. Take first occurrence.
@@ -210,7 +210,7 @@ char    *palette)
     /* Look for palette in $HOME/.dt/palettes */
     /* If there is a duplicate, take it */
 
-    if ((home=getenv(HOME)) == NULL)
+    if ((home=getenv(HOME)) == nullptr)
       home="";
     path = (char *) SRV_REALLOC (path, 
         strlen(home) + strlen(USER_PALETTE_DIR) + 1);
@@ -268,7 +268,7 @@ char *directory)
     struct dirent *file_descpt;
 
     /* Open the directory */
-    if( (dirp = opendir(directory)) == NULL)
+    if( (dirp = opendir(directory)) == nullptr)
     {
        return(False);
     }
@@ -278,7 +278,7 @@ char *directory)
     }
 
     /* cycle through the files in the directory until found a match */
-    while( file_descpt != NULL)
+    while( file_descpt != nullptr)
     {
         /* check for a palette filename match */
         if (strcmp(palette, file_descpt->d_name) == 0)
@@ -331,7 +331,7 @@ ReadPaletteFile(
    { /* open failed */
         printf("error opening %s\n",fullPath);
         SRV_FREE(fullPath);
-        return((struct _palette *) NULL);
+        return((struct _palette *) nullptr);
    }
       
    /*
@@ -347,11 +347,11 @@ ReadPaletteFile(
 	*/
        tmpStr = (char *)SRV_MALLOC(strlen(MSG2) + strlen(fullPath) + 3);
        sprintf(tmpStr,"%s%s.\n", MSG2, palettePath); 
-       _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, NULL, tmpStr, NULL); 
+       _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, nullptr, tmpStr, nullptr); 
        SRV_FREE(tmpStr);
        SRV_FREE(fullPath);
        close(fd);
-       return((struct _palette *) NULL);
+       return((struct _palette *) nullptr);
    }
    else 
    { /* read suceeded */
@@ -366,11 +366,11 @@ ReadPaletteFile(
       new_palette->name = (char *)SRV_MALLOC(strlen(tmpPalette) + 1);
       strcpy(new_palette->name, (char *) tmpPalette);
 
-      new_palette->converted = NULL;
+      new_palette->converted = nullptr;
       new_palette->converted_len = 0L;
 
       /* set the next pointer to NULL*/
-      new_palette->next = NULL;
+      new_palette->next = nullptr;
 
       if (ParsePaletteInfo(dpy, screen_number, buf, nbytes, new_palette) == -1)
       {
@@ -379,14 +379,14 @@ ReadPaletteFile(
          tmpStr2 = (char *)SRV_MALLOC(strlen(MSG3)+1);
          sprintf(tmpStr2,"%s", MSG3); 
          sprintf(tmpStr,"%s%s%s", tmpStr2, palettePath, MSG3a); 
-         _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, NULL, tmpStr, NULL); 
+         _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, nullptr, tmpStr, nullptr); 
          SRV_FREE(tmpStr);
          SRV_FREE(tmpStr2);
          error_value = 1;
          unlink(palettePath);
          SRV_FREE(fullPath);
          close(fd);
-         return((struct _palette *) NULL);
+         return((struct _palette *) nullptr);
       }
    }
 
@@ -420,7 +420,7 @@ ParsePaletteInfo(
    int             result;
    XColor          tmp_color;
    int             buf_count;
-   static XmColorProc   calcRGB = NULL;
+   static XmColorProc   calcRGB = nullptr;
 
    num_of_colors = new_palette->num_of_colors = 0;
 
@@ -463,7 +463,7 @@ ParsePaletteInfo(
 ** Now lets generate all the colors which go along with this bg i.e. ts,
 ** fg, bs, and sc.
 */
-      if (calcRGB == NULL) calcRGB = XmGetColorCalculation();
+      if (calcRGB == nullptr) calcRGB = XmGetColorCalculation();
       (*calcRGB)(&tmp_color,
                                 &(new_palette->color[num_of_colors].fg),
                                 &(new_palette->color[num_of_colors].sc),

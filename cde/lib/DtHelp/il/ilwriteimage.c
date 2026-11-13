@@ -229,7 +229,7 @@ ilPtr                   pCompData;
         ilImageDes      tempDes;
         tempDes = *pImage->i.pDes;
         tempDes.compression = IL_UNCOMPRESSED;      /* ilConvert() error otherwise */
-        if (!ilConvert (pipe, &tempDes, (ilImageFormat *)NULL, 0, (ilPtr)NULL))
+        if (!ilConvert (pipe, &tempDes, (ilImageFormat *)nullptr, 0, (ilPtr)NULL))
             return FALSE;
         des.compression = IL_UNCOMPRESSED;          /* force recompress below */
         }
@@ -249,7 +249,7 @@ ilPtr                   pCompData;
     stripHeight = (pImage->pStripOffsets) ? pImage->stripHeight : 0;
     if (!ilCompress (pipe, pImage->des.compression, pCompData, stripHeight, 0))
         return FALSE;
-    ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)NULL, (ilImageFormat *)NULL);                    
+    ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);                    
 
         /*  If image does not yet have a strip height, set it to pipe's strip height */
     if (!stripHeight)
@@ -262,14 +262,14 @@ ilPtr                   pCompData;
     srcData.constantStrip = FALSE;
     srcData.minBufferHeight = 0;
     pPriv = (ilImagePrivPtr)ilAddPipeElement(pipe, IL_CONSUMER, sizeof(ilImagePrivRec), 0,
-         &srcData, (ilDstElementData *)NULL, ilWriteImageInit, ilWriteCompressedCleanup, 
+         &srcData, (ilDstElementData *)nullptr, ilWriteImageInit, ilWriteCompressedCleanup, 
          ilWriteImageDestroy, ilWriteCompressedExecute, 0);
     if (!pPriv)
         return FALSE;
 
     pPriv->pImage = pImage;
     pPriv->pPalette = (pImage->des.type == IL_PALETTE) ? info.pPalette : 
-                                                         (unsigned short *)NULL;
+                                                         (unsigned short *)nullptr;
 
         /*  NOTE: assumes JPEG pCompData!  Point to pipe comp data if raw JPEG */
     if ((pImage->des.compression == IL_JPEG) 
@@ -349,7 +349,7 @@ ilSrcElementData        srcData;
             If producerObject is the given image, error: cant read/write same image.
         */                          
     if (ilGetPipeInfo (pipe, FALSE, &info, 
-                      (ilImageDes *)NULL, (ilImageFormat *)NULL) != IL_PIPE_FORMING) {
+                      (ilImageDes *)nullptr, (ilImageFormat *)nullptr) != IL_PIPE_FORMING) {
         if (!context->error)
             ilDeclarePipeInvalid (pipe, IL_ERROR_PIPE_STATE);
         return FALSE;
@@ -366,9 +366,9 @@ ilSrcElementData        srcData;
         return ilWriteCompressedImage (pipe, image);        /* EXIT */
 
         /*  Convert des and/or format if not same as the images format; exit if error. */
-    if (!ilConvert (pipe, pImage->i.pDes, pImage->i.pFormat, 0, NULL))
+    if (!ilConvert (pipe, pImage->i.pDes, pImage->i.pFormat, 0, nullptr))
         return FALSE;
-    ilGetPipeInfo (pipe, TRUE, &info, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+    ilGetPipeInfo (pipe, TRUE, &info, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
 
         /*  Add a consumer element which writes to the given image.
             If writing a palette image, supply an Init() function to copy the palette.
@@ -378,7 +378,7 @@ ilSrcElementData        srcData;
     srcData.constantStrip = FALSE;
     srcData.minBufferHeight = 0;
     pPriv = (ilImagePrivPtr)ilAddPipeElement (pipe, IL_CONSUMER, sizeof (ilImagePrivRec), 
-        0, &srcData, (ilDstElementData *)NULL, ilWriteImageInit, IL_NPF, 
+        0, &srcData, (ilDstElementData *)nullptr, ilWriteImageInit, IL_NPF, 
         ilWriteImageDestroy, ilWriteImageExecute, 0);
     if (!pPriv)
         return FALSE;
@@ -388,7 +388,7 @@ ilSrcElementData        srcData;
         */
     pPriv->pImage = pImage;
     pPriv->pPalette = (pImage->des.type == IL_PALETTE) ? info.pPalette : 
-                                                         (unsigned short *)NULL;
+                                                         (unsigned short *)nullptr;
     pImage->o.refCount++;               /* see ilWriteImageDestroy() */
 
     context->error = IL_OK;

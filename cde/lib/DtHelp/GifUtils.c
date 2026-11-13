@@ -466,10 +466,10 @@ ReadImage(byte **inbuf, int len, int height, unsigned char cmap[3][MAXCOLORMAPSI
 #endif
         while (LWZReadByte(inbuf, FALSE, c, g) >= 0)
             ;
-        return NULL;
+        return nullptr;
     }
 
-    if ((image = _gif_allocarray(len, height, sizeof(pixel))) == NULL)
+    if ((image = _gif_allocarray(len, height, sizeof(pixel))) == nullptr)
         _gif_error("couldn't alloc space for image", 0 );
 
 #ifdef DEBUG
@@ -553,7 +553,7 @@ enum _DtGrLoadStatus InitGifObject (
     go->total_colors = (int) pow (go->colors_per_pixel, 3);
     go->f_color_map_constructed = 0;
     go->f_total_greys = 2;
-    go->f_ximage    = NULL;
+    go->f_ximage    = nullptr;
     go->f_dpy       = dpy;
     go->f_drawable  = drawable;
     go->f_screen    = XScreenNumberOfScreen(screen);
@@ -880,7 +880,7 @@ create_raw_image( byte *inbuf, unsigned int buflen, int *width, int *height, int
     /*  XXXSWM -- hack */
     if (buflen < 13) {
 	fprintf (stderr, "Not GIF Data, buffer too small\n");
-	return NULL;
+	return nullptr;
     }
 
     buf = (unsigned char *)inbuf;
@@ -888,7 +888,7 @@ create_raw_image( byte *inbuf, unsigned int buflen, int *width, int *height, int
 
     if (strncmp((const char *)buf,"GIF",3) != 0) {
         fprintf( stderr, "GifObject: not GIF data\n" );
-        return NULL;
+        return nullptr;
     }
 
     strncpy(version, (const char *)(buf + 3), 3);
@@ -896,7 +896,7 @@ create_raw_image( byte *inbuf, unsigned int buflen, int *width, int *height, int
 
     if ((strcmp(version, "87a") != 0) && (strcmp(version, "89a") != 0)) {
         fprintf (stderr, "bad version number, not '87a' or '89a'\n" );
-	return NULL;
+	return nullptr;
     }
 
     buf = (unsigned char *)inbuf;
@@ -912,7 +912,7 @@ create_raw_image( byte *inbuf, unsigned int buflen, int *width, int *height, int
     if (BitSet(buf[4], LOCALCOLORMAP)) {    /* Global Colormap */
         if (ReadColorMap(&inbuf,g.GifScreen.BitPixel,g.GifScreen.ColorMap)) {
             fprintf (stderr, "error reading global colormap\n" );
-	    return NULL;
+	    return nullptr;
 	}
     }
 
@@ -926,12 +926,12 @@ create_raw_image( byte *inbuf, unsigned int buflen, int *width, int *height, int
 #endif
     }
 
-    image = NULL;
+    image = nullptr;
 
     for (;;) {
 	if (inbuf - start_of_buf >= buflen) {
 	    fprintf (stderr, "Premature EOF in GIF data\n");
-	    return NULL;
+	    return nullptr;
 	}
         c = inbuf[0];
         inbuf++;
@@ -946,7 +946,7 @@ create_raw_image( byte *inbuf, unsigned int buflen, int *width, int *height, int
         if (c == '!') {     /* Extension */
 	    if (inbuf - start_of_buf >= buflen) {
 		fprintf  (stderr, "Premature EOF in GIF data\n");
-		return NULL;
+		return nullptr;
 	    }
             c = inbuf[0];
             inbuf++;
@@ -1199,7 +1199,7 @@ else
 		     scaledWidth,scaledHeight);
 
   XDestroyImage(g->f_ximage);
-  g->f_ximage = NULL;
+  g->f_ximage = nullptr;
   
   return(pm);
 }

@@ -60,8 +60,8 @@ extern int SPC_Initialized;
 
 /* Variables representing the local machine (initialized only once) */
 
-static struct hostent *official_hp = NULL;
-XeString official_hostname = NULL;
+static struct hostent *official_hp = nullptr;
+XeString official_hostname = nullptr;
 
 /*
  * my_gethost will return a copy of the data returned by gethostbyname
@@ -77,7 +77,7 @@ static struct hostent *my_gethost(XeString hostname)
   _Xgethostbynameparams	host_buf;
 
   host_def = _XGethostbyname(hostname, host_buf);
-  if (host_def == NULL)
+  if (host_def == nullptr)
     return(FALSE);
   
   copy=(struct hostent *)XeMalloc(sizeof(struct hostent));
@@ -163,7 +163,7 @@ Boolean SPC_Init_Local_Host_Info(void)
     official_hp = SPC_Lookup_Host(official_hostname);
 
   _DtSvcProcessUnlock();
-  return(official_hp != NULL);
+  return(official_hp != nullptr);
 }
 
 /*
@@ -220,7 +220,7 @@ SPC_Connection_Ptr SPC_Open_Connection(XeString hostname)
     }
     else {
       SPC_Close_Connection(connection);
-      connection=NULL;
+      connection=nullptr;
     }
   }
       
@@ -252,10 +252,10 @@ SPC_Connection_Ptr SPC_Open_Connection(XeString hostname)
     return(SPC_ERROR);
   }
 
-  seqno=SPC_Write_Protocol_Request(connection, NULL, ENVIRON_RESET);
+  seqno=SPC_Write_Protocol_Request(connection, nullptr, ENVIRON_RESET);
   _DtSvcProcessLock();
   tmp_errorno = XeSPCErrorNumber;
-  if(SPC_Waitfor_Reply(connection, NULL, seqno) == SPC_ERROR) {
+  if(SPC_Waitfor_Reply(connection, nullptr, seqno) == SPC_ERROR) {
     SPC_Close_Connection(connection);
     /*
      * XeSPCErrorNumber could have been changed but want to
@@ -274,8 +274,8 @@ SPC_Connection_Ptr SPC_Open_Connection(XeString hostname)
   /* specific and VERY non-portable.				  */
 
   if (connection->protocol_version >= 2) {
-      seqno=SPC_Write_Protocol_Request(connection, NULL, RESET_TERMIOS);
-      if(SPC_Waitfor_Reply(connection, NULL, seqno) == SPC_ERROR) {
+      seqno=SPC_Write_Protocol_Request(connection, nullptr, RESET_TERMIOS);
+      if(SPC_Waitfor_Reply(connection, nullptr, seqno) == SPC_ERROR) {
 	  SPC_Close_Connection(connection);
           XeFree(canonical_hostname);
 	  return(SPC_ERROR);
@@ -406,7 +406,7 @@ SPC_Connection_Ptr SPC_Standalone_Daemon(SPC_Connection_Ptr conn)
 #if defined(__aix)
   if (setsockopt(conn->sid, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))==ERROR) {
 #else
-  if (setsockopt(conn->sid, SOL_SOCKET, SO_REUSEADDR, NULL, 0)==ERROR) {
+  if (setsockopt(conn->sid, SOL_SOCKET, SO_REUSEADDR, nullptr, 0)==ERROR) {
 #endif
     SPC_Error(SPC_Bad_Reuse);
     return(SPC_ERROR);
@@ -460,7 +460,7 @@ SPC_Connection_Ptr SPC_Standalone_Daemon(SPC_Connection_Ptr conn)
     strncpy(conn->hostname, conn->remote->h_name, MAXHOSTNAMELEN);
 
 #ifdef DEBUG
-    pid = NULL;
+    pid = nullptr;
 #else    
     /* Fork a process to handle I/O from/to client */
     pid = fork();
@@ -508,7 +508,7 @@ SPC_Connection_Ptr SPC_Start_Daemon(int standalone)
   /* Get ourselves a connection structure.  We don't know the name
      of the remote client yet, so use the null string as hostname */
 
-  if((connection=SPC_Make_Connection(NULL))==SPC_ERROR)
+  if((connection=SPC_Make_Connection(nullptr))==SPC_ERROR)
     return(SPC_ERROR);
   connection->local=official_hp;
   if(standalone) {

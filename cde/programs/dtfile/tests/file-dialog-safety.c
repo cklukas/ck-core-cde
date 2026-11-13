@@ -25,7 +25,7 @@ ResolveLocalPathName(char *host, char *path, char *file, char *home,
    (void)home;
    ++resolver_calls;
    *status = 0;
-   return resolved_value == NULL ? NULL : strdup(resolved_value);
+   return resolved_value == nullptr ? nullptr : strdup(resolved_value);
 }
 
 #include "file-dialog-production.inc"
@@ -69,8 +69,8 @@ run_case(const char *name)
    }
    else if (strcmp(name, "join-null") == 0)
    {
-      CHECK(!FileDialogBuildPath(path, sizeof(path), NULL, "b"));
-      CHECK(!FileDialogBuildPath(path, sizeof(path), "a", NULL));
+      CHECK(!FileDialogBuildPath(path, sizeof(path), nullptr, "b"));
+      CHECK(!FileDialogBuildPath(path, sizeof(path), "a", nullptr));
    }
    else if (strcmp(name, "target-relative") == 0)
    {
@@ -95,7 +95,7 @@ run_case(const char *name)
    }
    else if (strcmp(name, "target-resolve-error") == 0)
    {
-      resolved_value = NULL;
+      resolved_value = nullptr;
       CHECK(!GetToPath(path, sizeof(path), "item", "host", "/dir"));
       CHECK(resolver_calls == 1);
    }
@@ -181,8 +181,8 @@ run_case(const char *name)
    }
    else if (strcmp(name, "workspace-join-null") == 0)
    {
-      CHECK(!FileOpBuildPath(path, sizeof(path), NULL, "item"));
-      CHECK(!FileOpBuildPath(NULL, sizeof(path), "/dir", "item"));
+      CHECK(!FileOpBuildPath(path, sizeof(path), nullptr, "item"));
+      CHECK(!FileOpBuildPath(nullptr, sizeof(path), "/dir", "item"));
       CHECK(strcmp(path, "unchanged") == 0);
    }
    else if (strcmp(name, "workspace-parent-exact") == 0)
@@ -196,8 +196,8 @@ run_case(const char *name)
    else if (strcmp(name, "workspace-parent-short") == 0)
       CHECK(!IsInParentDir("/one/two", "/one"));
    else if (strcmp(name, "workspace-parent-null") == 0)
-      CHECK(!IsInParentDir(NULL, "/one/two") &&
-            !IsInParentDir("/one", NULL));
+      CHECK(!IsInParentDir(nullptr, "/one/two") &&
+            !IsInParentDir("/one", nullptr));
    else
       return 2;
 

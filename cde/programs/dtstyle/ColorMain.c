@@ -289,25 +289,25 @@ static Widget           gParent;
  *   copy of the system palette description file for the 
  *   current locale in xrm form
  */
-XrmDatabase sys_pl_DB = NULL;
+XrmDatabase sys_pl_DB = nullptr;
 
 /*
  *   copy of the admin palette description file for the 
  *   current locale in xrm form
  */
-XrmDatabase adm_pl_DB = NULL;
+XrmDatabase adm_pl_DB = nullptr;
 
 /*
  *   final combination of the admin & system dta bases 
  */
-XrmDatabase pl_DB = NULL;
+XrmDatabase pl_DB = nullptr;
 
 /*
  *   copy of the palette description file from the user's home 
  *   directory. This database is locale independent and will always
  *   be loaded.
  */
-XrmDatabase hm_pl_DB = NULL;
+XrmDatabase hm_pl_DB = nullptr;
 
 
 void 
@@ -320,7 +320,7 @@ loadDatabase(void)
   /* load the palette description data base for the given locale*/
   /* from that locale's description file from the system location */
 
-  lang = setlocale (LC_CTYPE,NULL);
+  lang = setlocale (LC_CTYPE,nullptr);
 
   pl_desc = (char *)XtMalloc(strlen("/usr/dt/palettes/desc.") + strlen(lang) + 1);
   strcpy (pl_desc,"/usr/dt/palettes/desc.");
@@ -394,7 +394,7 @@ Customize(
        return;
     }
 
-    if (style.colorDialog == NULL || style.count < 12)
+    if (style.colorDialog == nullptr || style.count < 12)
     {
         _DtTurnOnHourGlass(shell);
 
@@ -630,22 +630,22 @@ InitializePaletteList(
     }
     else {
       loop_palette = pHeadPalette;
-      loop_palette2 = NULL;
-      while(loop_palette != NULL)
+      loop_palette2 = nullptr;
+      while(loop_palette != nullptr)
 	if(strcmp(loop_palette->name, "Black") == 0) {
 	  loop_palette2 = loop_palette;
-	  loop_palette = NULL;
+	  loop_palette = nullptr;
 	}
 	else
 	  loop_palette = loop_palette->next;
       loop_palette = pHeadPalette;
-      if(loop_palette2 == NULL)
+      if(loop_palette2 == nullptr)
 	loop_palette2 = pHeadPalette;
     }
   }
-  while( loop_palette != NULL)
+  while( loop_palette != nullptr)
     {
-      if (pl_DB !=NULL)
+      if (pl_DB !=nullptr)
 	{
 	  name_str = (char *) XtMalloc(strlen("palettes.") + 
 				       strlen(loop_palette->name) +
@@ -684,7 +684,7 @@ InitializePaletteList(
       
       /* if the item is the same as the default name provided by the
 	 color Server, save it */
-      if(!save.restoreFlag || defaultName_restore == NULL) {
+      if(!save.restoreFlag || defaultName_restore == nullptr) {
 	if (!(strcmp(loop_palette->name, defaultName)))
 	  loop_palette2 = loop_palette;
       }
@@ -705,10 +705,10 @@ InitializePaletteList(
    **  palette returned by the color server doesn't match make it the head
    **  palette.
    */
-  pOldPalette = NULL;
+  pOldPalette = nullptr;
   
   /* the default name is the name to be selected */
-  if (loop_palette2->name == NULL)
+  if (loop_palette2->name == nullptr)
     string = CMPSTR("");
   else
     string = CMPSTR(loop_palette2->desc);
@@ -823,13 +823,13 @@ selectPaletteCB(
     white = WhitePixelOfScreen(style.screen);
     black = BlackPixelOfScreen(style.screen);
 
-    if (((edit.DialogShell == NULL) || (!XtIsManaged(edit.DialogShell))) &&
+    if (((edit.DialogShell == nullptr) || (!XtIsManaged(edit.DialogShell))) &&
                                       selected_position != cb->item_position)
     {
 	selected_position = cb->item_position;
 
 	tmp_palette = pHeadPalette;
-	while( tmp_palette != NULL &&
+	while( tmp_palette != nullptr &&
 	       tmp_palette->item_position != selected_position ) {
 	     tmp_palette = tmp_palette->next;
 	}
@@ -982,7 +982,7 @@ selectColorCB(
     /* else .. second button press, remove the time out */
     XtRemoveTimeOut(timeID);
 
-    if ((edit.DialogShell == NULL) || (!XtIsManaged(edit.DialogShell)))
+    if ((edit.DialogShell == nullptr) || (!XtIsManaged(edit.DialogShell)))
     {
 		Pixel bg_pixel;
 
@@ -1007,7 +1007,7 @@ selectColorCB(
         ColorEditor(style.colorDialog,color_set);
 
 		if(!style.dynamicColor)	/* need to update pixels */
-			XtAddCallback(edit.DialogShell, XmNcallback, colorEditorCB, NULL);
+			XtAddCallback(edit.DialogShell, XmNcallback, colorEditorCB, nullptr);
     }
 }
 
@@ -1025,7 +1025,7 @@ static void colorEditorCB(Widget w, XtPointer client_data, XtPointer call_data)
 		first = False;
 	}
 	allocNewColors();
-	XtRemoveCallback(edit.DialogShell, XmNcallback, colorEditorCB, NULL);
+	XtRemoveCallback(edit.DialogShell, XmNcallback, colorEditorCB, nullptr);
 }
 
 /*
@@ -1047,7 +1047,7 @@ timeoutCB(
 
     i = (intptr_t) client_data;
 
-    if ((edit.DialogShell == NULL) || (!XtIsManaged(edit.DialogShell)))
+    if ((edit.DialogShell == nullptr) || (!XtIsManaged(edit.DialogShell)))
     {
         /* make the new selected button have a border color */
 		n=0;
@@ -1079,7 +1079,7 @@ addPaletteCB(
     XmString         string;
     XmString         string1;
 
-    if (addDialog == NULL)
+    if (addDialog == nullptr)
     {
         n = 0;
 
@@ -1158,7 +1158,7 @@ CreatePaletteFile(
   if (fd == -1)
     {
       XtFree(path);
-      return NULL;
+      return nullptr;
     }
   close(fd);
 
@@ -1214,7 +1214,7 @@ addOkCB(
   
   /* first search through palette descriptions and make sure the name to */
   /* add is not already in the list and go to the end of the palette list */
-  for(tmpPalette = pHeadPalette; tmpPalette->next != NULL;
+  for(tmpPalette = pHeadPalette; tmpPalette->next != nullptr;
       tmpPalette = tmpPalette->next)
     {
       if((strcmp(tmpPalette->desc, name) == 0)) {
@@ -1236,7 +1236,7 @@ addOkCB(
   
   /* set the previous last palatte to this new one, it is now the last one*/
   tmpPalette->next = newPalette;
-  newPalette->next = NULL;
+  newPalette->next = nullptr;
   
   /* malloc space for the new palette desc */
   newPalette->desc = (char *)XtMalloc(strlen(name) + 1);
@@ -1252,14 +1252,14 @@ addOkCB(
   
   /* makeup a new name for the palette and create its file */
   newPalette->name = CreatePaletteFile(newPalette->directory);
-  if (newPalette->name == NULL)
+  if (newPalette->name == nullptr)
     {
-      _DtSimpleErrnoError(progName, DtWarning, NULL,
+      _DtSimpleErrnoError(progName, DtWarning, nullptr,
 			  (char *)GETMESSAGE(16, 20, "Could not open %s."),
 			  newPalette->directory);
 
       /*  remove palette from list */
-      tmpPalette->next = NULL;
+      tmpPalette->next = nullptr;
       XtFree(newPalette->directory);
       XtFree(newPalette->desc);
       XtFree((char *)newPalette);
@@ -1312,7 +1312,7 @@ addOkCB(
       XtFree(name);
       
       /*  remove palette from list */
-      tmpPalette->next = NULL;
+      tmpPalette->next = nullptr;
       XtFree ((char *)newPalette);
       
       return;
@@ -1427,7 +1427,7 @@ modifyColorCB(
     ColorEditor(style.colorDialog,color_set);
 
 	if(!style.dynamicColor)	/* need to update pixels */
-		XtAddCallback(edit.DialogShell, XmNcallback, colorEditorCB, NULL);
+		XtAddCallback(edit.DialogShell, XmNcallback, colorEditorCB, nullptr);
 }
 
 
@@ -1449,7 +1449,7 @@ dialogBoxCB(
   switch (cb->button_position)
     {
     case OK_BUTTON:
-      if ((edit.DialogShell != NULL) && (XtIsManaged(edit.DialogShell)))
+      if ((edit.DialogShell != nullptr) && (XtIsManaged(edit.DialogShell)))
 	XtUnmanageChild(edit.DialogShell);
       
       XtUnmanageChild(style.colorDialog);
@@ -1457,22 +1457,22 @@ dialogBoxCB(
       break;
       
     case CANCEL_BUTTON:
-      if ((edit.DialogShell != NULL) && (XtIsManaged(edit.DialogShell)))
+      if ((edit.DialogShell != nullptr) && (XtIsManaged(edit.DialogShell)))
 	XtUnmanageChild(edit.DialogShell);
       
-      if ((addDialog != NULL) && (XtIsManaged(addDialog)))
+      if ((addDialog != nullptr) && (XtIsManaged(addDialog)))
 	XtCallCallbacks(addDialog, XmNcancelCallback, (XtPointer)NULL);
       
-      if ((deleteDialog != NULL) && (XtIsManaged(deleteDialog)))
+      if ((deleteDialog != nullptr) && (XtIsManaged(deleteDialog)))
 	XtCallCallbacks(deleteDialog, XmNcancelCallback, (XtPointer)NULL);
       
-      if ((colorUseDialog != NULL) && (XtIsManaged(colorUseDialog)))
+      if ((colorUseDialog != nullptr) && (XtIsManaged(colorUseDialog)))
 	XtCallCallbacks(colorUseDialog, XmNcallback, (XtPointer)NULL);
       
       XtUnmanageChild(style.colorDialog);
       
       tmp_palette = pHeadPalette;
-      for(tmp_palette = pHeadPalette; tmp_palette != NULL; tmp_palette = tmp_palette->next)
+      for(tmp_palette = pHeadPalette; tmp_palette != nullptr; tmp_palette = tmp_palette->next)
 	if(!(strcmp(tmp_palette->name, defaultName)))
 	  {
 	    match = TRUE;
@@ -1531,12 +1531,12 @@ deletePaletteCB(
 
     tmp_palette = pHeadPalette;
 
-    while( tmp_palette != NULL
+    while( tmp_palette != nullptr
            && tmp_palette->item_position != selected_position ) {
 	 tmp_palette = tmp_palette->next;
     }
     
-    if (deleteDialog == NULL)
+    if (deleteDialog == nullptr)
     {
 	n=0;
         XtSetArg(args[n], XmNokLabelString, CMPSTR((String) _DtOkString)); n++;
@@ -1549,7 +1549,7 @@ deletePaletteCB(
                                               "deleteDialog", args, n);
         XtAddCallback(deleteDialog, XmNmapCallback, CenterMsgCB,
                       style.colorDialog);
-	XtAddCallback(deleteDialog, XmNcancelCallback, deleteCancelCB, NULL);
+	XtAddCallback(deleteDialog, XmNcancelCallback, deleteCancelCB, nullptr);
 	XtAddCallback(deleteDialog, XmNokCallback, deleteOkCB, 
                       (XtPointer)(paletteList));
         XtAddCallback(deleteDialog, XmNhelpCallback,
@@ -1625,7 +1625,7 @@ resourcesCB(
     Widget           pictLabel;
     Widget           colorUseRC;
 
-    if (colorUseDialog == NULL)
+    if (colorUseDialog == nullptr)
     {
         n = 0;
 
@@ -1640,8 +1640,8 @@ resourcesCB(
         XtSetArg (args[n], XmNdefaultPosition, False);  n++;
         colorUseDialog = __DtCreateDialogBoxDialog(parent, "colorUseDialog", 
                           args, n);
-        XtAddCallback(colorUseDialog, XmNcallback, colorUseExitCB, NULL);
-        XtAddCallback(colorUseDialog, XmNmapCallback, _DtmapCB_colorUse, NULL);
+        XtAddCallback(colorUseDialog, XmNcallback, colorUseExitCB, nullptr);
+        XtAddCallback(colorUseDialog, XmNmapCallback, _DtmapCB_colorUse, nullptr);
         XtAddCallback(colorUseDialog, XmNhelpCallback,
             HelpRequestCB, (XtPointer)HELP_COLOR_USE_DIALOG);
 
@@ -1901,7 +1901,7 @@ activateCBexitColor(
 {
   DtDialogBoxCallbackStruct CancelBut;
 
-  if(style.colorDialog != NULL && XtIsManaged(style.colorDialog)) {
+  if(style.colorDialog != nullptr && XtIsManaged(style.colorDialog)) {
      CancelBut.button_position = CANCEL_BUTTON;
      XtCallCallbacks(style.colorDialog, XmNcallback, &CancelBut);
   }
@@ -1920,7 +1920,7 @@ _DtmapCB(
     if (!save.restoreFlag)
         putDialog ((Widget)client_data, XtParent(w));
 
-    XtRemoveCallback(style.colorDialog, XmNmapCallback, _DtmapCB, NULL);
+    XtRemoveCallback(style.colorDialog, XmNmapCallback, _DtmapCB, nullptr);
 }
 
 static void 
@@ -1989,7 +1989,7 @@ _DtmapCB_colorUse(
         colorDialog.origColorUse = DEFAULT_COLOR;
     } 
 
-    XtRemoveCallback(colorUseDialog, XmNmapCallback, _DtmapCB_colorUse, NULL);
+    XtRemoveCallback(colorUseDialog, XmNmapCallback, _DtmapCB_colorUse, nullptr);
 }
 
 /************************************************************************
@@ -2014,7 +2014,7 @@ DeletePaletteFromLinkList(
 
 
     selected_palette = pHeadPalette;
-    while( selected_palette != NULL
+    while( selected_palette != nullptr
            && selected_palette->item_position != selected_position ) {
 	 selected_palette = selected_palette->next;
     }
@@ -2044,7 +2044,7 @@ DeletePaletteFromLinkList(
 
        /* what is CurrentPalette now? prev or next item?
            special case empty list or NULL entry */
-       if (tmp_palette->next != NULL)
+       if (tmp_palette->next != nullptr)
            pCurrentPalette = tmp_palette->next;
        else
            pCurrentPalette = tmp_palette;
@@ -2052,7 +2052,7 @@ DeletePaletteFromLinkList(
 
     /* decrement item_positions values in remaining palette entries */
     tmp2_palette = tmp_palette;
-    while ((tmp2_palette = tmp2_palette->next) != NULL)
+    while ((tmp2_palette = tmp2_palette->next) != nullptr)
     {
         tmp2_palette->item_position--;
     }
@@ -2111,11 +2111,11 @@ void
 SaveOrgPalette( void )
 {
    int i;
-   palette  *tmp_palette = NULL, *tmp2_palette = NULL;
+   palette  *tmp_palette = nullptr, *tmp2_palette = nullptr;
 
    if(save.restoreFlag && defaultName_restore[0] != 0) {
       tmp_palette = pHeadPalette;
-      while(tmp_palette->next != NULL )
+      while(tmp_palette->next != nullptr )
          if(strcmp(tmp_palette->name, defaultName))
          {
             tmp_palette = tmp_palette->next;
@@ -2129,7 +2129,7 @@ SaveOrgPalette( void )
          pCurrentPalette = tmp_palette;
       }
       else
-         tmp_palette = NULL;
+         tmp_palette = nullptr;
    }
 
    OrgPalette.item_position = pCurrentPalette->item_position;
@@ -2183,7 +2183,7 @@ SaveOrgPalette( void )
    }
 
    if(save.restoreFlag && defaultName_restore[0] != 0) 
-      if(tmp_palette != NULL)
+      if(tmp_palette != nullptr)
          pCurrentPalette = tmp2_palette;
 
 }
@@ -2197,11 +2197,11 @@ RestoreOrgPalette( void )
    XColor      colors[XmCO_MAX_NUM_COLORS * 5];
 
    tmp_palette = pHeadPalette;
-   while ( tmp_palette != NULL &&
+   while ( tmp_palette != nullptr &&
            tmp_palette->item_position != OrgPalette.item_position )
       tmp_palette = tmp_palette->next;
 
-   if ( tmp_palette != NULL &&
+   if ( tmp_palette != nullptr &&
 	tmp_palette->item_position == OrgPalette.item_position)
    {
       pCurrentPalette = tmp_palette;
@@ -2346,7 +2346,7 @@ show_selection(
     int      dynamic_color;
 
     style.colorSrv = True;
-    if(value != NULL)
+    if(value != nullptr)
     {
        if((intptr_t) client_data == GET_TYPE_MONITOR)
        {
@@ -2452,7 +2452,7 @@ saveColor(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.colorDialog != NULL) 
+    if (style.colorDialog != nullptr) 
     {
 	if (XtIsManaged(style.colorDialog))
 	  sprintf(bufr, "*paletteDlg.ismapped: True\n");
@@ -2505,7 +2505,7 @@ SameName(
    int n=0;
    Arg args[10];
 
-   if (colorDialog.dlg == NULL) {
+   if (colorDialog.dlg == nullptr) {
      tmpStr = (char *)XtMalloc(strlen(STR1) + strlen(name) + 1);
      sprintf(tmpStr, STR1, name);
      XtSetArg(args[n], XmNmessageString, CMPSTR(tmpStr)); n++;
@@ -2675,7 +2675,7 @@ CreateDialogBoxD(
     XtSetArg (save.posArgs[save.poscnt], XmNbuttonLabelStrings, button_string);  save.poscnt++;
     XtSetArg (save.posArgs[save.poscnt], XmNdefaultPosition, False); save.poscnt++;
     style.colorDialog = __DtCreateDialogBoxDialog(parent,PALETTEDLG, save.posArgs, save.poscnt);
-    XtAddCallback(style.colorDialog, XmNcallback, dialogBoxCB, NULL);
+    XtAddCallback(style.colorDialog, XmNcallback, dialogBoxCB, nullptr);
     XtAddCallback(style.colorDialog, XmNmapCallback, _DtmapCB, parent);
     XtAddCallback(style.colorDialog, XmNhelpCallback,
             HelpRequestCB, (XtPointer)HELP_COLOR_DIALOG);
@@ -2710,7 +2710,7 @@ AddToDialogBox( void )
     
     /* Add save session property to the main window */
     XmAddWMProtocolCallback(XtParent(style.colorDialog), 
-                           XA_WM_DELETE_WINDOW, activateCBexitColor, NULL);
+                           XA_WM_DELETE_WINDOW, activateCBexitColor, nullptr);
 
 /*
 **  Create a main form for color dialog
@@ -2778,7 +2778,7 @@ CreateTopColor2( void )
     XtSetArg (args[n], XmNvisibleItemCount, 6); n++;
     paletteList = XmCreateScrolledList(colorDialog.palettesForm,"paletteList",args,n);
     XtAddCallback(paletteList, XmNbrowseSelectionCallback,
-                                              selectPaletteCB, NULL);
+                                              selectPaletteCB, nullptr);
 
     n=0;
     XtSetArg (args[n], XmNtopAttachment, XmATTACH_FORM);  n++;
@@ -2802,7 +2802,7 @@ CreateBottomColor( void )
     Widget           addDeleteForm;
     Widget           resourcesPB;
 
-    colorDialog.dlg = NULL;
+    colorDialog.dlg = nullptr;
 
     if(style.count > 10)
        return;

@@ -239,7 +239,7 @@ main (int argc, char **argv)
     int         missing_count;
     XFontSetExtents *extents;
 
-    XtSetLanguageProc( NULL, NULL, NULL );
+    XtSetLanguageProc( nullptr, nullptr, nullptr );
 
     /*
      * Initialization
@@ -254,8 +254,8 @@ main (int argc, char **argv)
      */
     progName = argv[0];
     /* fontArg = DEFAULT_FONT; */
-    bgArg = NULL;
-    fgArg = NULL;
+    bgArg = nullptr;
+    fgArg = nullptr;
     timeArg = DEFAULT_TIME;
     numFiles = 0;
     sizeFileArg = 0;
@@ -266,10 +266,10 @@ main (int argc, char **argv)
     XtToolkitInitialize();
     appcontext = XtCreateApplicationContext();
 
-    dpy = XtOpenDisplay (appcontext, NULL, argv[0], DTHELLO_CLASS_NAME, 
+    dpy = XtOpenDisplay (appcontext, nullptr, argv[0], DTHELLO_CLASS_NAME, 
 			 optTable, noptTable, (int *)(&argc), argv);
 
-    if (dpy == NULL) 
+    if (dpy == nullptr) 
     {
 	setlocale(LC_ALL, "");
 	fprintf(stderr, (char *) 
@@ -322,7 +322,7 @@ main (int argc, char **argv)
 
     /* assign the x_offset to the value set in the resource list if given by the user */
     /* RK 11.06.93								      */
-    if( xoffsetArg != NULL)
+    if( xoffsetArg != nullptr)
 	x_offset = atoi(xoffsetArg);
     if (x_offset < 0)
     {
@@ -460,23 +460,23 @@ main (int argc, char **argv)
      * Load the font.
      */
     if ((fontset = XCreateFontSet(dpy, fontArg, &missing_clist, &missing_count,
-                                  &def_str)) == NULL)
+                                  &def_str)) == nullptr)
     {
 	fprintf(stderr, (char *) 
 	    GETMESSAGE (4, 6, "%1$s: display %2$s doesn't know font %3$s\n"),
 		argv[0], DisplayString(dpy), fontArg);
 
         if ((fontset = XCreateFontSet(dpy, DEFAULT_FONT, &missing_clist,
-                                        &missing_count, &def_str)) == NULL)
+                                        &missing_count, &def_str)) == nullptr)
         {
             fprintf(stderr, (char *)
             GETMESSAGE (4, 6, "%1$s: display %2$s doesn't know font %3$s\n"),
                     argv[0], DisplayString(dpy), DEFAULT_FONT);
         }
   
-        if ((NULL == fontset) &&
+        if ((nullptr == fontset) &&
             (fontset = XCreateFontSet(dpy, FIXED_FONT, &missing_clist,
-                                      &missing_count, &def_str)) == NULL)
+                                      &missing_count, &def_str)) == nullptr)
 	{
 	    fprintf(stderr, (char *)
 	    GETMESSAGE (4, 6, "%1$s: display %2$s doesn't know font %3$s\n"),

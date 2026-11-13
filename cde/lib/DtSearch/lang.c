@@ -186,7 +186,7 @@ static char	*lang_fnames[] = {
 			"deu",		/*  5 */
 			"jpn",		/*  6 */
 			"jpn",		/*  7  ('jpn2' same files as 'jpn' */
-			NULL
+			nullptr
 		};
 
 
@@ -241,7 +241,7 @@ static int	search_wordtree (WORDTREE *wordtree, char *wordstring)
 	fprintf (aa_stderr, PROGNAME"196 search wordtree for '%s':\n",
 	    wordstring);
     /* MAIN SEARCH LOOP: binary tree search */
-    for (node = wordtree;  node != NULL;  ) {
+    for (node = wordtree;  node != nullptr;  ) {
 	if ((direction = strcmp (wordstring, node->word)) == 0) {
 	    if (debugging_search_wordtree)
 		fprintf (aa_stderr, "  HIT!\n");
@@ -302,7 +302,7 @@ static int euro_readchar (READCFP cofunction, void *cofunction_arg, char *outp,
 
     if (*pwc >= 0 && *pwc <= 0x7F) goto done;
 
-    *(outp + len++) = cofunction (NULL);
+    *(outp + len++) = cofunction (nullptr);
 
     if (mbtowc (pwc, outp, MB_CUR_MAX) >= 0) goto done;
 
@@ -311,7 +311,7 @@ static int euro_readchar (READCFP cofunction, void *cofunction_arg, char *outp,
     for (;;) {
 	if (len >= MB_CUR_MAX) break;
 
-	*(outp + len++) = cofunction (NULL);
+	*(outp + len++) = cofunction (nullptr);
 
 	if (mblen (outp, MB_CUR_MAX) >= 0) break;
     }
@@ -373,8 +373,8 @@ char	*teskey_parser (PARG *parg)
 {
     static READCFP	cofunction;
     static void		*cofunction_arg;
-    static DBLK		*dblk =		NULL;
-    static char		*outbuf =	NULL;
+    static DBLK		*dblk =		nullptr;
+    static char		*outbuf =	nullptr;
     static size_t	outbufsz =	0;
     static char		*endmaxword;	/* end largest possible output word */
     static char		*outp;		/* next loc in outbuf */
@@ -398,7 +398,7 @@ char	*teskey_parser (PARG *parg)
 	offsetp = parg->offsetp;
 	is_hiliting = (parg->flags & PA_HILITING);
 	add_msgs = (parg->flags & PA_MSGS);
-	if (charmap == NULL) {
+	if (charmap == nullptr) {
 	    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_lang, 4,
 		"%s dblk not initialized.\n"),
 		PROGNAME"801");
@@ -424,7 +424,7 @@ char	*teskey_parser (PARG *parg)
 	    if (outbuf)
 		free (outbuf);
 	    outbufsz = maxwordsz + 8;
-	    outbuf = austext_malloc (outbufsz + 8, PROGNAME"807", NULL);
+	    outbuf = austext_malloc (outbufsz + 8, PROGNAME"807", nullptr);
 	}
 	endmaxword = outbuf + maxwordsz;
 	if (debugging_teskey)
@@ -446,7 +446,7 @@ READ_ANOTHER_WORD:
 	if (!wc) break;
 
 	readcount += len;
-	cofunction_arg = NULL;
+	cofunction_arg = nullptr;
 
 	/*------------- BETW_WORDS State ------------
 	 * Reader is between word tokens.
@@ -475,7 +475,7 @@ READ_ANOTHER_WORD:
 	     * Otherwise discard just like non_concord.
 	     */
 	    outp += len;
-	    opt_len = euro_readchar (cofunction, NULL, outp, &wc);
+	    opt_len = euro_readchar (cofunction, nullptr, outp, &wc);
 
 	    if (wc) readcount += opt_len;
 
@@ -517,7 +517,7 @@ READ_ANOTHER_WORD:
 			    PROGNAME"449", maxwordsz,
 			    parg->string, dblk->label);
 			DtSearchAddMessage (msgbuf);
-			return NULL;
+			return nullptr;
 		    }
 		    outbuf[0] = 0;
 		    outp = outbuf;
@@ -530,7 +530,7 @@ READ_ANOTHER_WORD:
 	    }
 	    /* Must be opt_concord... */
 	    outp += len;
-	    opt_len = euro_readchar (cofunction, NULL, outp, &wc);
+	    opt_len = euro_readchar (cofunction, nullptr, outp, &wc);
 
 	    if (wc) readcount += opt_len;
 
@@ -590,7 +590,7 @@ READ_ANOTHER_WORD:
 		PROGNAME"506", parg->string, dblk->label);
 	    DtSearchAddMessage (msgbuf);
 	}
-	return NULL;
+	return nullptr;
     }
 
     wordlen = strlen (outbuf);
@@ -608,7 +608,7 @@ READ_ANOTHER_WORD:
     /*--------- INCLUDE LIST ----------
      * Search before testing for stoplist or minimum word length.
      */
-    if (dblk->inclist != NULL) {
+    if (dblk->inclist != nullptr) {
 	if (search_wordtree (dblk->inclist, outbuf)) {
 	    if (debugging_teskey)
 		fprintf (aa_stderr, ", (INCLUDE LIST)");
@@ -627,13 +627,13 @@ READ_ANOTHER_WORD:
 		"minimum word size of database '%s'.") ,
 		PROGNAME"543", parg->string, dblk->label);
 	    DtSearchAddMessage (msgbuf);
-	    return NULL;
+	    return nullptr;
 	}
 	goto READ_ANOTHER_WORD;
     }
 
     /*----------- STOP LIST -------------*/
-    if (dblk->stoplist != NULL) {
+    if (dblk->stoplist != nullptr) {
 	if (search_wordtree (dblk->stoplist, outbuf)) {
 	    if (debugging_teskey)
 		fprintf (aa_stderr, ", (STOP LIST)\n");
@@ -643,7 +643,7 @@ READ_ANOTHER_WORD:
 		    "%s The word '%s' is not indexed in database '%s'.") ,
 		    PROGNAME"558", parg->string, dblk->label);
 		DtSearchAddMessage (msgbuf);
-		return NULL;
+		return nullptr;
 	    }
 	    goto READ_ANOTHER_WORD;
 	}
@@ -726,7 +726,7 @@ int	load_wordtree (
 	    "load_wordtree: db=%s fname='%s'\n",
 	    NULLORSTR(dblk->name), NULLORSTR(fname));
 
-    if ((fileid = fopen (fname, "rt")) == NULL) {
+    if ((fileid = fopen (fname, "rt")) == nullptr) {
 	/* Not being able to find the file is not an error.
 	 * We indicate that with the return code.
 	 * But any other error (like permissions) is fatal.
@@ -747,7 +747,7 @@ int	load_wordtree (
 
     /*--------- Main Read Loop ----------*/
     errcount = 0;
-    while (fgets (readbuf, sizeof(readbuf), fileid) != NULL) {
+    while (fgets (readbuf, sizeof(readbuf), fileid) != nullptr) {
 	linecount++;
 	/*
 	 * Ignore comment lines beginning with punctuation char.
@@ -756,7 +756,7 @@ int	load_wordtree (
 	 */
 	if (strchr (COMMENT_CHARS, readbuf[0]))
 	    continue;
-	if ((token = _XStrtok(readbuf, " \t\n", strtok_buf)) == NULL)
+	if ((token = _XStrtok(readbuf, " \t\n", strtok_buf)) == nullptr)
 	    continue;
 	dblk->lstrupr (token, dblk);
 
@@ -781,16 +781,16 @@ int	load_wordtree (
 	    continue;
 	i = strlen (token);
 	new = austext_malloc (sizeof(WORDTREE) + i + 4,
-	    PROGNAME"104", NULL);
-	new->llink = NULL;
-	new->rlink = NULL;
+	    PROGNAME"104", nullptr);
+	new->llink = nullptr;
+	new->rlink = nullptr;
 	new->len = i;
 	new->word = (void *) (new + 1);
 	strcpy (new->word, token);
 
 	/* Descend binary tree and insert in correct alphabetical place */
 	is_duplicate = FALSE;
-	for (this_link = treetop;  *this_link != NULL;  ) {
+	for (this_link = treetop;  *this_link != nullptr;  ) {
 	    i = strcmp (new->word, (*this_link)->word);
 
 	    /* test for duplicate word */
@@ -859,16 +859,16 @@ int	load_wordtree (
 static void	free_wordtree (WORDTREE ** wordtree_head)
 {
     WORDTREE        *next;
-    WORDTREE        *prev = NULL;
+    WORDTREE        *prev = nullptr;
     WORDTREE        *pres = *wordtree_head;
 
-    if (*wordtree_head == NULL)
+    if (*wordtree_head == nullptr)
 	return;
 
 DESCEND_LEFT:
     pres->word = (void *) 0;	/* preorder visit:  TAG = 0 */
     next = pres->llink;
-    if (next != NULL) {
+    if (next != nullptr) {
 	pres->llink = prev;
 	prev = pres;
 	pres = next;
@@ -876,7 +876,7 @@ DESCEND_LEFT:
     }
 DESCEND_RIGHT:
      next = pres->rlink;
-    if (next != NULL) {
+    if (next != nullptr) {
 	pres->word = (void *) 1;	/* TAG = 1 */
 	pres->rlink = prev;
 	prev = pres;
@@ -885,8 +885,8 @@ DESCEND_RIGHT:
     }
 POSTORDER_VISIT:
     free (pres);
-    if (prev == NULL) {	/* end of algorithm? */
-	*wordtree_head = NULL;
+    if (prev == nullptr) {	/* end of algorithm? */
+	*wordtree_head = nullptr;
 	return;
     }
     if (prev->word == (void *) 0) {	/* go up left leg */
@@ -920,11 +920,11 @@ POSTORDER_VISIT:
 static int	load_include_list (DBLK *dblk, DBLK *dblist)
 {
     int		i;
-    int		filename_was_null = (dblk->fname_inc == NULL);
+    int		filename_was_null = (dblk->fname_inc == nullptr);
     DBLK	*db;
     char	sprintbuf [512];
 
-    dblk->inclist = NULL;	/* just to be sure */
+    dblk->inclist = nullptr;	/* just to be sure */
     
     if (debugging_loadlang)
         fprintf (aa_stderr,
@@ -938,16 +938,16 @@ static int	load_include_list (DBLK *dblk, DBLK *dblist)
     if (filename_was_null) {
 	if (dblk->name[0] == 0) {
 	    dblk->fname_inc = "";
-	    dblk->inclist = NULL;
+	    dblk->inclist = nullptr;
 	    if (debugging_loadlang)
 	        fprintf (aa_stderr, PROGNAME"1339 "
 		    "No inclist because neither fname nor dbname provided.\n");
 	    return TRUE;
 	}
-	if (dblk->path == NULL)
+	if (dblk->path == nullptr)
 	    dblk->path = strdup("");
 	dblk->fname_inc = austext_malloc (strlen(dblk->path) + 36,
-	     PROGNAME"1187", NULL);
+	     PROGNAME"1187", nullptr);
 	strcpy (dblk->fname_inc, dblk->path);
 	ensure_end_slash (dblk->fname_inc);
 	strcat (dblk->fname_inc, dblk->name);
@@ -962,8 +962,8 @@ static int	load_include_list (DBLK *dblk, DBLK *dblist)
      * been loaded into a previous dblk in a list.
      * Code works just fine if dblist == NULL.
      */
-    for (db = dblist;  db != NULL;  db = db->link) {
-	if (db == dblk || db->fname_inc == NULL)
+    for (db = dblist;  db != nullptr;  db = db->link) {
+	if (db == dblk || db->fname_inc == nullptr)
 	    continue;
 	if (strcmp (db->fname_inc, dblk->fname_inc) == 0) {
 	    dblk->inclist = db->inclist;
@@ -987,7 +987,7 @@ static int	load_include_list (DBLK *dblk, DBLK *dblist)
 	case 1:
 	    if (filename_was_null) {
 		dblk->fname_inc = "";
-		dblk->inclist = NULL;
+		dblk->inclist = nullptr;
 		return TRUE;
 	    }
 	    else {
@@ -1024,7 +1024,7 @@ static int	load_stop_list (DBLK *dblk, DBLK *dblist)
     char	sprintbuf [_POSIX_PATH_MAX + 512];
     struct stat	statbuf;
 
-    dblk->stoplist = NULL;	/* just to be sure */
+    dblk->stoplist = nullptr;	/* just to be sure */
     
     if (debugging_loadlang)
         fprintf (aa_stderr,
@@ -1037,11 +1037,11 @@ static int	load_stop_list (DBLK *dblk, DBLK *dblist)
      * And if that doesn't work, generate one based on
      * dblk's path, language, and default extension.
      */
-    if (dblk->fname_stp == NULL) {
-	if (dblk->path == NULL)
+    if (dblk->fname_stp == nullptr) {
+	if (dblk->path == nullptr)
 	    dblk->path = strdup("");
 	dblk->fname_stp = austext_malloc (strlen(dblk->path) + 36,
-	     PROGNAME"919", NULL);
+	     PROGNAME"919", nullptr);
 
 	strcpy (dblk->fname_stp, dblk->path);
 	ensure_end_slash (dblk->fname_stp);
@@ -1065,8 +1065,8 @@ static int	load_stop_list (DBLK *dblk, DBLK *dblist)
      * been loaded into a previous dblk in a list.
      * Code works just fine if dblist == NULL.
      */
-    for (db = dblist;  db != NULL;  db = db->link) {
-	if (db == dblk || db->fname_stp == NULL)
+    for (db = dblist;  db != nullptr;  db = db->link) {
+	if (db == dblk || db->fname_stp == nullptr)
 	    continue;
 	if (strcmp (db->fname_stp, dblk->fname_stp) == 0) {
 	    dblk->stoplist = db->stoplist;
@@ -1106,11 +1106,11 @@ static void	free_paice_rules (PRULE ***rules_table_ptr)
     PRULE	*p, **linkp;
     PRULE	**rules_table;
 
-    if (*rules_table_ptr == NULL)
+    if (*rules_table_ptr == nullptr)
 	return;
     rules_table = *rules_table_ptr;
     for (i=0; i<256; i++) {
-	if (rules_table[i] == NULL)
+	if (rules_table[i] == nullptr)
 	    continue;
 	p = rules_table[i];
 	while (p) {
@@ -1123,7 +1123,7 @@ static void	free_paice_rules (PRULE ***rules_table_ptr)
 	}
     }
     free (rules_table);
-    *rules_table_ptr = NULL;
+    *rules_table_ptr = nullptr;
     return;
 } /* free_paice_rules() */
 
@@ -1163,8 +1163,8 @@ static int      load_paice_suffixes (DBLK *dblk, DBLK *dblist)
     wchar_t	wc;
     _Xstrtokparams	strtok_buf;
 
-    dblk->stem_extra = NULL;	/* just to be sure */
-    rules_table = NULL;
+    dblk->stem_extra = nullptr;	/* just to be sure */
+    rules_table = nullptr;
 
     if (debugging_loadlang)
         fprintf (aa_stderr,
@@ -1177,11 +1177,11 @@ static int      load_paice_suffixes (DBLK *dblk, DBLK *dblist)
      * And if that doesn't work, generate one based on
      * dblk's path, language, and default extension.
      */
-    if (dblk->fname_sfx == NULL) {
-	if (dblk->path == NULL)
+    if (dblk->fname_sfx == nullptr) {
+	if (dblk->path == nullptr)
 	    dblk->path = strdup("");
 	dblk->fname_sfx = austext_malloc (strlen(dblk->path) + 36,
-	     PROGNAME"1113", NULL);
+	     PROGNAME"1113", nullptr);
 
 	strcpy (dblk->fname_sfx, dblk->path);
 	ensure_end_slash (dblk->fname_sfx);
@@ -1206,8 +1206,8 @@ static int      load_paice_suffixes (DBLK *dblk, DBLK *dblist)
      * but flag it so it won't be freed at unload_language/REINIT.
      * Code works just fine if dblist == NULL.
      */
-    for (db = dblist;  db != NULL;  db = db->link) {
-	if (db == dblk || db->fname_sfx == NULL)
+    for (db = dblist;  db != nullptr;  db = db->link) {
+	if (db == dblk || db->fname_sfx == nullptr)
 	    continue;
 	if (strcmp (db->fname_sfx, dblk->fname_sfx) == 0) {
 	    dblk->stem_extra = db->stem_extra;
@@ -1221,12 +1221,12 @@ static int      load_paice_suffixes (DBLK *dblk, DBLK *dblist)
     }
 
     fp = fopen (dblk->fname_sfx, "rt");
-    if (fp == NULL) {
+    if (fp == nullptr) {
 	sprintf (msgbuf,
 	    CATGETS(dtsearch_catd, MS_misc, 362, "%s: %s: %s."),
 	    PROGNAME"181", dblk->fname_sfx, strerror(errno));
 	DtSearchAddMessage (msgbuf);
-	dblk->fname_sfx = NULL;
+	dblk->fname_sfx = nullptr;
 	return FALSE;
     }
 
@@ -1242,7 +1242,7 @@ static int      load_paice_suffixes (DBLK *dblk, DBLK *dblist)
     errcount =	0;
 
     /*------- Main Read Loop -------*/
-    while (fgets (readbuf, sizeof(readbuf), fp) != NULL) {
+    while (fgets (readbuf, sizeof(readbuf), fp) != nullptr) {
 	lineno++;
 
 	/* Ignore comment lines */
@@ -1254,7 +1254,7 @@ static int      load_paice_suffixes (DBLK *dblk, DBLK *dblist)
 	 * If the first token is all numeric, ignore line
 	 * (for compatibility with older versions of file).
 	 */
-	if ((suffix = (UCHAR *)_XStrtok(readbuf, SFX_DELIMS, strtok_buf)) == NULL)
+	if ((suffix = (UCHAR *)_XStrtok(readbuf, SFX_DELIMS, strtok_buf)) == nullptr)
 	    continue;
 
 	for (cptr = suffix;  cptr;  cptr++) {
@@ -1266,7 +1266,7 @@ static int      load_paice_suffixes (DBLK *dblk, DBLK *dblist)
 	    continue;
 
 	/* OPTIONAL TOKEN #2: if next token '*', set 'intact' flag */
-	if ((token = (UCHAR *)_XStrtok(NULL, SFX_DELIMS, strtok_buf)) == NULL) {
+	if ((token = (UCHAR *)_XStrtok(nullptr, SFX_DELIMS, strtok_buf)) == nullptr) {
 BAD_RULE:
 	    sprintf (msgbuf,  CATGETS(dtsearch_catd, MS_lang, 51,
 		"%s %s, Line %d: Invalid Paice Rule for suffix '%s'.") ,
@@ -1279,7 +1279,7 @@ BAD_RULE:
 	if (token[0] == '*') {
 	    must_be_intact = TRUE;
 	    /* Read next token... */
-	    if ((token = (UCHAR *)_XStrtok(NULL, SFX_DELIMS, strtok_buf)) == NULL)
+	    if ((token = (UCHAR *)_XStrtok(nullptr, SFX_DELIMS, strtok_buf)) == nullptr)
 		goto BAD_RULE;
 	}
 
@@ -1289,13 +1289,13 @@ BAD_RULE:
 	/* OPTIONAL TOKEN #4: if next token is NOT a continue
          * symbol ('>' or '$'), then it's an append string.
 	 */
-	apndstr = NULL;
-	if ((token = (UCHAR *)_XStrtok(NULL, SFX_DELIMS, strtok_buf)) == NULL)
+	apndstr = nullptr;
+	if ((token = (UCHAR *)_XStrtok(nullptr, SFX_DELIMS, strtok_buf)) == nullptr)
 	    goto BAD_RULE;
 	if (token[0] != '$'  &&  token[0] != '>') {
 	    apndstr = token;
 	    /* Read next token... */
-	    if ((token = (UCHAR *)_XStrtok(NULL, SFX_DELIMS, strtok_buf)) == NULL)
+	    if ((token = (UCHAR *)_XStrtok(nullptr, SFX_DELIMS, strtok_buf)) == nullptr)
 		goto BAD_RULE;
 	}
 
@@ -1320,7 +1320,7 @@ BAD_RULE:
 	 */
 	if (errcount)
 	    continue;
-	prule = austext_malloc (sizeof(PRULE), PROGNAME"1252", NULL);
+	prule = austext_malloc (sizeof(PRULE), PROGNAME"1252", nullptr);
 	memset (prule, 0, sizeof(PRULE));
 	prule->suffix =		(UCHAR *) strdup ((char*)suffix);
 	prule->suflen =		strlen ((char*)suffix);
@@ -1328,7 +1328,7 @@ BAD_RULE:
 	prule->remove_count =	remove_count;
 	prule->is_last_rule =	is_last_rule;
 	if (apndstr) {
-	    len = mbstowcs (NULL, (char *)apndstr, 0);
+	    len = mbstowcs (nullptr, (char *)apndstr, 0);
 	    if (len != -1) {
 		prule->apndstr =	(UCHAR *) strdup ((char*)apndstr);
 		prule->aplen =		len;
@@ -1479,12 +1479,12 @@ static char	*paice_stemmer (char *wordin, DBLK *dblk)
     int		len;
     PRULE	*rule, **rules_table;
 
-    if (wordin == NULL)
+    if (wordin == nullptr)
 	return "";
     if (*wordin == 0)
 	return "";
 
-    if ((rules_table = (PRULE **)dblk->stem_extra) == NULL) {
+    if ((rules_table = (PRULE **)dblk->stem_extra) == nullptr) {
 	fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_lang, 31,
 	    "%s Stemmer suffixes file never loaded.\n"),
 	    PROGNAME"310");
@@ -1509,7 +1509,7 @@ static char	*paice_stemmer (char *wordin, DBLK *dblk)
     for (;;) { /*-------- Main Stemming Loop ---------*/
 
 	paicelen = strlen (paicebuf);
-	paicewcsl = mbstowcs (NULL, paicebuf, 0);
+	paicewcsl = mbstowcs (nullptr, paicebuf, 0);
 	len = euro_mbtowc (&finalwc, paicebuf + paicelen - 1, paicebuf);
 
 	if (debugging_paice) {
@@ -1520,7 +1520,7 @@ static char	*paice_stemmer (char *wordin, DBLK *dblk)
 	}
 
 	/* Look for a matching rule */
-	if ((rule = rules_table [finalwc]) == NULL) {
+	if ((rule = rules_table [finalwc]) == nullptr) {
 	    if (debugging_paice)
 		fputs ("  list is null, stop.\n", aa_stderr);
 	    break;
@@ -1530,7 +1530,7 @@ static char	*paice_stemmer (char *wordin, DBLK *dblk)
 		break;
 	    rule = rule->link;
 	}
-	if (rule == NULL) {
+	if (rule == nullptr) {
 	    if (debugging_paice)
 		fwprintf (aa_stderr,
 		    L"  rules list '%lc' is exhausted, stop.\n", finalwc);
@@ -1550,7 +1550,7 @@ static char	*paice_stemmer (char *wordin, DBLK *dblk)
 	if (rule->aplen)
 	    strcat (paicebuf, (char*)rule->apndstr);
 	paicelen = strlen (paicebuf);
-	paicewcsl = mbstowcs (NULL, paicebuf, 0);
+	paicewcsl = mbstowcs (nullptr, paicebuf, 0);
 	word_is_intact = FALSE;	 /* we've removed at least 1 suffix */
 	if (debugging_paice)
 	    fprintf (aa_stderr, "--> '%s'", paicebuf);
@@ -1589,7 +1589,7 @@ static char	*paice_stemmer (char *wordin, DBLK *dblk)
  */
 char	*null_stemmer (char *word, DBLK *dblk)
 {
-    if (word == NULL)
+    if (word == nullptr)
 	return "";
     if (*word == '\0')
 	return "";
@@ -1734,23 +1734,23 @@ void	unload_language (DBLK *dblk)
 	case DtSrLaFRA:
 	case DtSrLaITA:
 	case DtSrLaDEU:
-	    dblk->charmap = NULL;
+	    dblk->charmap = nullptr;
 	    if ((dblk->lang_flags & LF_DUP_STP) == 0)
 		free_wordtree (&dblk->stoplist);
 	    else {
-		dblk->stoplist = NULL;
+		dblk->stoplist = nullptr;
 		dblk->lang_flags &= ~LF_DUP_STP;
 	    }
 	    if ((dblk->lang_flags & LF_DUP_INC) == 0)
 	        free_wordtree (&dblk->inclist);
 	    else {
-		dblk->inclist = NULL;
+		dblk->inclist = nullptr;
 		dblk->lang_flags &= ~LF_DUP_INC;
 	    }
 	    if ((dblk->lang_flags & LF_DUP_SFX) == 0)
 	        free_paice_rules ((PRULE***)&dblk->stem_extra);
 	    else {
-		dblk->stem_extra = NULL;
+		dblk->stem_extra = nullptr;
 		dblk->lang_flags &= ~LF_DUP_SFX;
 	    }
 	    break;

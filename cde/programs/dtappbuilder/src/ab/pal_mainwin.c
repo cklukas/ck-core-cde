@@ -139,10 +139,10 @@ PalItemInfo mainwin_palitem_rec = {
 
     /* type             */  AB_TYPE_BASE_WINDOW,
     /* name             */  "Main Window",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  mainwin_initialize,
     /* is_a_test        */  obj_is_base_win,
     /* prop_initialize  */  mainwin_prop_init,
@@ -183,7 +183,7 @@ mainwin_initialize(
      * "Primary" MainWindow (root window), then set this
      * one to be it
      */
-    if (obj_get_root_window(project) == NULL)
+    if (obj_get_root_window(project) == nullptr)
 	obj_set_root_window(project, obj);
 
     return OK;
@@ -238,12 +238,12 @@ mainwin_prop_init(
     if (dtb_mainwin_prop_dialog_initialize(cgen, parent) == 0)
     {
         pms->prop_sheet = cgen->attrs_ctrlpanel;
-        pms->current_obj = NULL;
+        pms->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pms->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -257,7 +257,7 @@ mainwin_prop_init(
 	}
         /* Alternate Editor Buttons */
         prop_editors_panel_init(type, ab_mainwin_palitem,
-            NULL, cgen->conn_button, cgen->helptxt_button);
+            nullptr, cgen->conn_button, cgen->helptxt_button);
 
         /*
           * Prop Sheet Settings....
@@ -322,7 +322,7 @@ mainwin_prop_init(
 
         /* Geometry */
         prop_geomfield_init(&(pms->geometry), cgen->geom_label,
-		NULL, NULL, NULL, NULL,
+		nullptr, nullptr, nullptr, nullptr,
                 cgen->width_field_label, cgen->width_field,
                 cgen->height_field_label, cgen->height_field,
                 cgen->geom_cb);
@@ -354,7 +354,7 @@ mainwin_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 
@@ -375,7 +375,7 @@ mainwin_prop_clear(
 {
     PropMainwinSettingsRec	*pms = &(prop_mainwin_settings_rec[type]);
 
-    if (pms->current_obj == NULL)
+    if (pms->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -417,7 +417,7 @@ mainwin_prop_clear(
     prop_colorfield_set_value(&(pms->bg_color), "", False);
     prop_colorfield_set_value(&(pms->fg_color), "", False);
 
-    pms->current_obj = NULL;
+    pms->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -435,9 +435,9 @@ mainwin_prop_load(
     ABObj		   	area;
     BOOL			load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pms->current_obj != NULL)
+        if (pms->current_obj != nullptr)
             obj = pms->current_obj;
         else
             return ERROR;
@@ -472,15 +472,15 @@ mainwin_prop_load(
 	/* Load Window Areas */
 	area = objxm_comp_mainwin_get_area(obj, AB_CONT_MENU_BAR);
 	prop_checkbox_set_value(&(pms->areas), AB_CONT_MENU_BAR,
-	area != NULL, False);
+	area != nullptr, False);
 
 	area = objxm_comp_mainwin_get_area(obj, AB_CONT_TOOL_BAR);
 	prop_checkbox_set_value(&(pms->areas), AB_CONT_TOOL_BAR,
-		area != NULL, False);
+		area != nullptr, False);
 
 	area = objxm_comp_mainwin_get_area(obj, AB_CONT_FOOTER);
 	prop_checkbox_set_value(&(pms->areas), AB_CONT_FOOTER,
-		area != NULL, False);
+		area != nullptr, False);
 
 	/* Load Size Policy */
 	prop_radiobox_set_value(&(pms->size_policy),
@@ -563,30 +563,30 @@ mainwin_prop_apply(
 	area = objxm_comp_mainwin_get_area(pms->current_obj, AB_CONT_MENU_BAR);
 	area_set = prop_checkbox_get_value(&(pms->areas), AB_CONT_MENU_BAR);
 
-	if (area != NULL && !area_set) /* Remove Menubar */
+	if (area != nullptr && !area_set) /* Remove Menubar */
 	    mainwin_remove_area(pms->current_obj, area);
 
-	else if (area == NULL && area_set) /* Add Menubar */
+	else if (area == nullptr && area_set) /* Add Menubar */
 	    mainwin_create_area(pms->current_obj, AB_CONT_MENU_BAR);
 
         /* Toolbar */
         area = objxm_comp_mainwin_get_area(pms->current_obj, AB_CONT_TOOL_BAR);
         area_set = prop_checkbox_get_value(&(pms->areas), AB_CONT_TOOL_BAR);
 
-        if (area != NULL && !area_set) /* Remove Toolbar */
+        if (area != nullptr && !area_set) /* Remove Toolbar */
             mainwin_remove_area(pms->current_obj, area);
 
-        else if (area == NULL && area_set) /* Add Toolbar */
+        else if (area == nullptr && area_set) /* Add Toolbar */
             mainwin_create_area(pms->current_obj, AB_CONT_TOOL_BAR);
 
         /* Footer */
         area = objxm_comp_mainwin_get_area(pms->current_obj, AB_CONT_FOOTER);
         area_set = prop_checkbox_get_value(&(pms->areas), AB_CONT_FOOTER);
 
-        if (area != NULL && !area_set) /* Remove Footer */
+        if (area != nullptr && !area_set) /* Remove Footer */
             mainwin_remove_area(pms->current_obj, area);
 
-        else if (area == NULL && area_set) /* Add Footer */
+        else if (area == nullptr && area_set) /* Add Footer */
             mainwin_create_area(pms->current_obj, AB_CONT_FOOTER);
     }
     if (prop_changed(pms->size_policy.changebar))
@@ -674,7 +674,7 @@ verify_props(
 
         area = objxm_comp_mainwin_get_area(pms->current_obj, AB_CONT_MENU_BAR);
         area_set = prop_checkbox_get_value(&(pms->areas), AB_CONT_MENU_BAR);
-        if (area != NULL && !area_set) /* Remove Menubar */
+        if (area != nullptr && !area_set) /* Remove Menubar */
         {
 	    pobj = objxm_comp_get_subobj(area, AB_CFG_PARENT_OBJ);
 
@@ -685,7 +685,7 @@ verify_props(
 			&dtb_mainwin_remove_mbar_msg);
                 answer = dtb_show_modal_message(pms->areas.checkbox,
 				&dtb_mainwin_remove_mbar_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                 if (answer == DTB_ANSWER_CANCEL)
                     return False;
 	    }
@@ -693,7 +693,7 @@ verify_props(
 
         area = objxm_comp_mainwin_get_area(pms->current_obj, AB_CONT_TOOL_BAR);
         area_set = prop_checkbox_get_value(&(pms->areas), AB_CONT_TOOL_BAR);
-        if (area != NULL && !area_set) /* Remove Toolbar */
+        if (area != nullptr && !area_set) /* Remove Toolbar */
         {
             pobj = objxm_comp_get_subobj(area, AB_CFG_PARENT_OBJ);
 
@@ -704,7 +704,7 @@ verify_props(
 			&dtb_mainwin_remove_tbar_msg);
                 answer = dtb_show_modal_message(pms->areas.checkbox,
 				&dtb_mainwin_remove_tbar_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                 if (answer == DTB_ANSWER_CANCEL)
                     return False;
 	    }
@@ -712,7 +712,7 @@ verify_props(
 
         area = objxm_comp_mainwin_get_area(pms->current_obj, AB_CONT_FOOTER);
         area_set = prop_checkbox_get_value(&(pms->areas), AB_CONT_FOOTER);
-        if (area != NULL && !area_set) /* Remove Footer */
+        if (area != nullptr && !area_set) /* Remove Footer */
         {
             pobj = objxm_comp_get_subobj(area, AB_CFG_PARENT_OBJ);
 
@@ -723,7 +723,7 @@ verify_props(
 			&dtb_mainwin_remove_footer_msg);
                 answer = dtb_show_modal_message(pms->areas.checkbox,
 				&dtb_mainwin_remove_footer_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                 if (answer == DTB_ANSWER_CANCEL)
                     return False;
 	    }
@@ -810,7 +810,7 @@ mainwin_create_area(
 	 */
 	XtVaGetValues(objxm_get_widget(workobj),
 		XmNheight,	&height,
-		NULL);
+		nullptr);
     }
     abobj_show_tree(area, True);
 
@@ -818,7 +818,7 @@ mainwin_create_area(
     if (area_type == AB_CONT_FOOTER)
 	XtVaSetValues(objxm_get_widget(workobj),
 		XmNheight,	height,
-		NULL);
+		nullptr);
 
     abobj_set_save_needed(obj_get_module(obj), True);
 

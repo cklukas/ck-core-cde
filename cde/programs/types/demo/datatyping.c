@@ -61,7 +61,7 @@ startup(int argc, char **argv)
 	Arg             args[5];
 	DtDirPaths	*dirPaths;
 
-	toplevel = XtInitialize(argv[0], "Dtdatatyping", NULL, 0,
+	toplevel = XtInitialize(argv[0], "Dtdatatyping", nullptr, 0,
 		(int *) &argc, argv);
 
 	XtSetArg(args[0], XmNallowShellResize, True);

@@ -113,10 +113,10 @@ abobj_calculate_new_layout(
     Dimension   p_width, p_height;
     long	gridpos;
 
-    if ((attachments = obj->attachments) == NULL)
+    if ((attachments = obj->attachments) == nullptr)
         return -1;
 
-    if (obj->ui_handle == NULL)
+    if (obj->ui_handle == nullptr)
     {
 	if (util_get_verbosity() > 0)
 	    fprintf(stderr,"abobj_calculate_new_layout: %s: NULL widget\n", obj_get_name(obj));
@@ -128,13 +128,13 @@ abobj_calculate_new_layout(
 			XmNy,		&y,
                         XmNwidth,       &width,
                         XmNheight,      &height,
-			NULL);
+			nullptr);
 
     parent = obj_get_parent(obj);
     XtVaGetValues((Widget)parent->ui_handle,
                         XmNwidth,       &p_width,
                         XmNheight,      &p_height,
-                        NULL);
+                        nullptr);
 
     switch(attachments->west.type)
     {
@@ -277,19 +277,19 @@ clear_layout(
 {
     obj_set_attachment(obj, AB_CP_NORTH, 
 				    AB_ATTACH_POINT,
-				    NULL, 
+				    nullptr, 
 				    obj_get_y(obj));
     obj_set_attachment(obj, AB_CP_WEST, 
 				    AB_ATTACH_POINT,
-				    NULL, 
+				    nullptr, 
 				    obj_get_x(obj));
     obj_set_attachment(obj, AB_CP_SOUTH, 
 				    AB_ATTACH_NONE,
-				    NULL, 
+				    nullptr, 
 				    0);
     obj_set_attachment(obj, AB_CP_EAST, 
 				    AB_ATTACH_NONE,
-				    NULL, 
+				    nullptr, 
 				    0);
 }
 
@@ -317,21 +317,21 @@ abobj_clear_layout(
 
 	for (trav_open(&trav, pos_obj, AB_TRAV_SALIENT_CHILDREN |
 			AB_TRAV_MOD_SAFE);
-	    (child = trav_next(&trav)) != NULL; )
+	    (child = trav_next(&trav)) != nullptr; )
 	{
 	    /* Configure the tree to have just basic attachments */
 	    attach.type = AB_ATTACH_POINT;
-	    attach.value = (void *)NULL;
+	    attach.value = (void *)nullptr;
 	    attach.offset = abobj_get_y(child);
 	    abobj_set_attachment(child, AB_CP_NORTH, &attach);
 
 	    attach.type = AB_ATTACH_POINT;
-	    attach.value = (void *)NULL;
+	    attach.value = (void *)nullptr;
 	    attach.offset = abobj_get_x(child);
 	    abobj_set_attachment(child, AB_CP_WEST, &attach);
 
 	    attach.type = AB_ATTACH_NONE;
-	    attach.value = (void *)NULL;
+	    attach.value = (void *)nullptr;
 	    attach.offset = 0;
 	    abobj_set_attachment(child, AB_CP_SOUTH, &attach);
 
@@ -351,17 +351,17 @@ abobj_clear_layout(
     else
     {
 	attach.type = AB_ATTACH_POINT;
-	attach.value = (void *)NULL;
+	attach.value = (void *)nullptr;
 	attach.offset = abobj_get_y(pos_obj);
 	abobj_set_attachment(pos_obj, AB_CP_NORTH, &attach);
 
 	attach.type = AB_ATTACH_POINT;
-	attach.value = (void *)NULL;
+	attach.value = (void *)nullptr;
 	attach.offset = abobj_get_x(pos_obj);
 	abobj_set_attachment(pos_obj, AB_CP_WEST, &attach);
 
 	attach.type = AB_ATTACH_NONE;
-	attach.value = (void *)NULL;
+	attach.value = (void *)nullptr;
 	attach.offset = 0;
 	abobj_set_attachment(pos_obj, AB_CP_SOUTH, &attach);
 

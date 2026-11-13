@@ -188,7 +188,7 @@ ttalk_mode_changedCB(
     util_dprintf(2,"ttalk_mode_changed()\n");
     if (calldata->set)
     {
-	XtVaGetValues(widget, XmNuserData, &on, NULL);
+	XtVaGetValues(widget, XmNuserData, &on, nullptr);
 
 	ui_set_active(tt_msg_setting, on? TRUE : FALSE);
 	ui_set_active(XtParent(tt_msg_list), on? TRUE : FALSE);
@@ -210,7 +210,7 @@ ttalk_rcv_changedCB(
 
     if (calldata->set)
     {
-        XtVaGetValues(widget, XmNuserData, &all, NULL);
+        XtVaGetValues(widget, XmNuserData, &all, nullptr);
 
 	if (all)
 	    for(i = 0; i < XtNumber(message_strs); i++)

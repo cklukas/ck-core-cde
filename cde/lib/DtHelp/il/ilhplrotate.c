@@ -260,9 +260,9 @@ DATA_OUT_PTR buf;
 
 
        if(convert) {
-            if (!ilConvert(pipe, &imdes, &imformat, 0, NULL))
+            if (!ilConvert(pipe, &imdes, &imformat, 0, nullptr))
                 return FALSE;
-            ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+            ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
        }
          
 
@@ -275,7 +275,7 @@ DATA_OUT_PTR buf;
  * also, code rotates ccw, but we want to rotate clockwise.
  */
        if (!ilRotate90(pipe, (degrees+89)/90)) return FALSE;
-       ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+       ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
        degrees = 90 - (degrees % 90);
 
 /* check if 90 deg rotations is sufficient */
@@ -289,8 +289,8 @@ DATA_OUT_PTR buf;
           &out_w, &out_h);
 
        dstdata.producerObject = (ilObject) NULL;
-       dstdata.pDes           = (ilImageDes *) NULL;
-       dstdata.pFormat        = (ilImageFormat *) NULL;
+       dstdata.pDes           = (ilImageDes *) nullptr;
+       dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.pPalette       = info.pPalette;
 
        dstdata.width          = out_w;
@@ -303,7 +303,7 @@ DATA_OUT_PTR buf;
 
        pPriv = (ilRotatePrivptr) ilAddPipeElement (pipe, IL_FILTER, 
                    sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, 
-                   (ilSrcElementData *) NULL, &dstdata, ilRotateInit2,
+                   (ilSrcElementData *) nullptr, &dstdata, ilRotateInit2,
                    ilRotateCleanup, IL_NPF, ilRotateExecute, 0);
 
        if(!pPriv)

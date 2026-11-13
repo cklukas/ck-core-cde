@@ -77,14 +77,14 @@ int
 main (int argc, char *argv[])
 {
     PARAMETERS	params;
-    ABObj	newProject= NULL;
+    ABObj	newProject= nullptr;
     AB_TRAVERSAL	trav;
-    ABObj	file= NULL;
+    ABObj	file= nullptr;
     int		iRC = 0;		/* return code */
-    STRING	errmsg = NULL;
-    ABObj	module = NULL;
+    STRING	errmsg = nullptr;
+    ABObj	module = nullptr;
     AB_TRAVERSAL	moduleTrav;
-    ABObjList		fileObjList = NULL;
+    ABObjList		fileObjList = nullptr;
     
     util_init(&argc, &argv);
     parse_args(argc, argv, &params);
@@ -92,20 +92,20 @@ main (int argc, char *argv[])
     util_set_verbosity(params.verbosity);
     if (params.import)
     {
-	newProject= obj_create(AB_TYPE_PROJECT, NULL);
+	newProject= obj_create(AB_TYPE_PROJECT, nullptr);
 	obj_set_name(newProject, "untitled");
-	bil_load_file(params.fileName, NULL, newProject, &fileObjList);
+	bil_load_file(params.fileName, nullptr, newProject, &fileObjList);
     }
     else
     {
-        newProject= bil_load_file(params.fileName, NULL, NULL, &fileObjList);
-        if (newProject != NULL)
+        newProject= bil_load_file(params.fileName, nullptr, nullptr, &fileObjList);
+        if (newProject != nullptr)
         {
             for (trav_open(&trav, newProject, AB_TRAV_FILES);
-	        (file= trav_next(&trav)) != NULL; )
+	        (file= trav_next(&trav)) != nullptr; )
             {
 	        bil_load_file(
-		    obj_get_name(file), (FILE*)NULL, newProject, &fileObjList);
+		    obj_get_name(file), (FILE*)nullptr, newProject, &fileObjList);
 	        obj_set_flag(file, BeingDestroyedFlag);
             }
 	    trav_close(&trav);
@@ -156,13 +156,13 @@ main (int argc, char *argv[])
 	    if (iRC >= 0)
 	    {
 	        for (trav_open(&moduleTrav, newProject, AB_TRAV_MODULES);
-		    (module = trav_next(&moduleTrav)) != NULL; )
+		    (module = trav_next(&moduleTrav)) != nullptr; )
 	        {
 	    	    if (obj_get_file(module))
 	    	    {
 		        unlink(obj_get_file(module));
 	    	    }
-		    iRC = bil_save_tree(module, NULL, BIL_SAVE_FILE_PER_MODULE);
+		    iRC = bil_save_tree(module, nullptr, BIL_SAVE_FILE_PER_MODULE);
 		}
 	    }
 	    trav_close(&moduleTrav);
@@ -189,7 +189,7 @@ usage(STRING msg)
 "-x = save encapsulated\n"
 );
 
-    if (msg != NULL)
+    if (msg != nullptr)
     {
 	fprintf(stderr, "\n%s\n", msg);
     }
@@ -210,7 +210,7 @@ parse_args(int argc, char *argv[], PARAMETERS *params)
 	usage("No filename specified");
     }
 
-    params->fileName= NULL;
+    params->fileName= nullptr;
     params->verbosity= 3;
     params->dump_tree = FALSE;
     params->import= FALSE;
@@ -246,7 +246,7 @@ parse_args(int argc, char *argv[], PARAMETERS *params)
 			break;
 
 			case 'h':
-			    usage(NULL);
+			    usage(nullptr);
 			    break;
 
 			case 'i':	/* import */

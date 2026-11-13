@@ -132,10 +132,10 @@ PalItemInfo textf_palitem_rec = {
 
     /* type             */  AB_TYPE_TEXT_FIELD,
     /* name             */  "Text Field",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  textf_initialize,
     /* is_a_test        */  obj_is_text_field,
     /* prop_initialize  */  textf_prop_init,
@@ -170,8 +170,8 @@ textf_initialize(
     obj_set_num_columns(obj, 8);
     obj_set_max_length(obj, 80);
 
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 
@@ -226,12 +226,12 @@ textf_prop_init(
     if (dtb_textf_prop_dialog_initialize(cgen, parent) == 0)
     {
         pts->prop_sheet = cgen->attrs_ctrlpanel;
-        pts->current_obj = NULL;
+        pts->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pts->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -310,14 +310,14 @@ textf_prop_init(
 	prop_geomfield_init(&(pts->pos), cgen->pos_label,
 			    cgen->x_field_label, cgen->x_field,
 			    cgen->y_field_label, cgen->y_field,
-			    NULL, NULL, NULL, NULL,
+			    nullptr, nullptr, nullptr, nullptr,
 			    cgen->pos_cb);
 
 	/* Width */
         prop_geomfield_init(&(pts->size), cgen->width_opmenu_label,
-			    NULL, NULL, NULL, NULL,
+			    nullptr, nullptr, nullptr, nullptr,
                             cgen->w_field_label, cgen->w_field,
-                            NULL, NULL,
+                            nullptr, nullptr,
                             cgen->width_cb);
 
 	n = 0;
@@ -357,7 +357,7 @@ textf_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-	return NULL;
+	return nullptr;
 
 }
 
@@ -380,7 +380,7 @@ textf_prop_clear(
 {
     PropTextfSettingsRec	*pts = &(prop_textf_settings_rec[type]);
 
-    if (pts->current_obj == NULL)
+    if (pts->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -423,7 +423,7 @@ textf_prop_clear(
     prop_colorfield_set_value(&(pts->bg_color), "", False);
     prop_colorfield_set_value(&(pts->fg_color), "", False);
 
-    pts->current_obj = NULL;
+    pts->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -442,9 +442,9 @@ textf_prop_load(
     int				width;
     BOOL			load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pts->current_obj != NULL)
+        if (pts->current_obj != nullptr)
             obj = pts->current_obj;
         else
             return ERROR;
@@ -465,7 +465,7 @@ textf_prop_load(
 	prop_options_set_value(&(pts->label_pos), (XtPointer)obj_get_label_position(obj), False);
 
 	/* Load Label */
-	prop_setup_label_field(&(pts->label), NULL,
+	prop_setup_label_field(&(pts->label), nullptr,
 				obj->label_type, obj_get_label(obj), AB_LINE_UNDEF);
 	/* Load Operation */
 	prop_radiobox_set_value(&(pts->op),

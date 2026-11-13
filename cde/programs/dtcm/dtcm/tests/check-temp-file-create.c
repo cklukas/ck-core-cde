@@ -73,7 +73,7 @@ static FILE *ck_fdopen(int fd, const char *mode)
 {
     if (ck_fdopen_fail) {
         errno = ENOMEM;
-        return NULL;
+        return nullptr;
     }
     return fdopen(fd, mode);
 }
@@ -342,7 +342,7 @@ int main(int argc, char **argv)
     ck_reset();
     ck_plant();
     before = ck_count();
-    assert(ck_load(&de, (unsigned char *)DATA_TEXT, (int)strlen(DATA_TEXT), NULL) == 1);
+    assert(ck_load(&de, (unsigned char *)DATA_TEXT, (int)strlen(DATA_TEXT), nullptr) == 1);
     ck_victim_intact();
     assert(strcmp(ck_use_name, "./cmAAAAAA") != 0);
     ck_used_file_ok(DATA_TEXT);
@@ -351,29 +351,29 @@ int main(int argc, char **argv)
 
     /* (a) with no link planted: first name, created 0600, removed after. */
     ck_reset();
-    assert(ck_load(&de, (unsigned char *)DATA_TEXT, (int)strlen(DATA_TEXT), NULL) == 1);
+    assert(ck_load(&de, (unsigned char *)DATA_TEXT, (int)strlen(DATA_TEXT), nullptr) == 1);
     assert(strcmp(ck_use_name, "./cmAAAAAA") == 0);
     ck_used_file_ok(DATA_TEXT);
     assert(ck_count() == 0);
 
     /* A message with a file name does not touch temp files. */
     ck_reset();
-    assert(ck_load(&de, NULL, 0, "somefile") == 1);
+    assert(ck_load(&de, nullptr, 0, "somefile") == 1);
     assert(ck_mk_calls == 0 && ck_use_calls == 1 && strcmp(ck_use_name, "somefile") == 0);
     free(de.file);
-    de.file = NULL;
+    de.file = nullptr;
 
     /* (c) mkstemp fails: the request fails, nothing is parsed or left. */
     ck_reset();
     ck_mk_fail = 1;
-    assert(ck_load(&de, (unsigned char *)DATA_TEXT, (int)strlen(DATA_TEXT), NULL) == 0);
+    assert(ck_load(&de, (unsigned char *)DATA_TEXT, (int)strlen(DATA_TEXT), nullptr) == 0);
     assert(ck_fail_calls == 1 && ck_use_calls == 0 && ck_count() == 0);
 
     /* (c) fdopen fails: same, and the descriptor and file are given up. */
     ck_reset();
     fd0 = ck_next_fd();
     ck_fdopen_fail = 1;
-    assert(ck_load(&de, (unsigned char *)DATA_TEXT, (int)strlen(DATA_TEXT), NULL) == 0);
+    assert(ck_load(&de, (unsigned char *)DATA_TEXT, (int)strlen(DATA_TEXT), nullptr) == 0);
     assert(ck_fail_calls == 1 && ck_use_calls == 0 && ck_count() == 0);
     assert(ck_next_fd() == fd0);
 
@@ -387,7 +387,7 @@ int main(int argc, char **argv)
     ck_used_file_ok(DATA_TEXT);
     assert(ck_count() == before);
     free(de.file);
-    de.file = NULL;
+    de.file = nullptr;
     ck_unplant();
 
     ck_reset();

@@ -229,19 +229,19 @@ extern boolean_t
 cal_convert_cmrc(Props *p) {
 	char		*c_ptr, fn[MAXPATHLEN], *val;
 	Props_op	op;
-	Resource	*cm_rdb = NULL;
+	Resource	*cm_rdb = nullptr;
 
 	if (!p->rdb)
 		return B_FALSE;
 	if (get_resource(p->rdb, (char *)CLASS_NAME, (char *)APP_NAME,
-		(char *)UPGRADED, NULL))
+		(char *)UPGRADED, nullptr))
 		return B_TRUE;
 
 	/*
 	**  If we're here, the Upgraded resource hasn't been set, so read
 	**  the old .cm.rc file then write it to .desksetdefaults.
 	*/
-	if (getenv("HOME") != NULL)
+	if (getenv("HOME") != nullptr)
 		sprintf(fn, "%s%s", getenv("HOME"), RC_FILENAME);
 	else
 		return B_TRUE;
@@ -251,7 +251,7 @@ cal_convert_cmrc(Props *p) {
 
 	for (op = CP_BEGOP + 1; op < CP_ENDOP; op++) {
 		if (!(val = get_resource(cm_rdb, (char *)CLASS_NAME,
-			(char *)APP_NAME, (char *)property_names[op], NULL)))
+			(char *)APP_NAME, (char *)property_names[op], nullptr)))
 			continue;
 
 		set_resource(&p->rdb, (char *)CLASS_NAME, (char *)APP_NAME,
@@ -289,7 +289,7 @@ get_char_prop_default(Props_op op) {
 		val = cm_def_printer();
 		break;
 	case CP_PRINTDIRNAME:
-		if (getenv("HOME") != NULL)
+		if (getenv("HOME") != nullptr)
 			val = (char *)cm_strdup(getenv("HOME"));
 		else
 			val = (char *)cm_strdup("/");
@@ -356,12 +356,12 @@ read_props(Props *p) {
 	char		*resource, buf[MAXPATHLEN];
 	char		*home, *ow_home, *x_env, *ds_def;
 	Props_op	op;
-	Resource	*other_rdb = NULL;
-	Props_entry	*entry_ptr, *last = NULL;
+	Resource	*other_rdb = nullptr;
+	Props_entry	*entry_ptr, *last = nullptr;
 
 	init_props();
 
-	if (getenv("HOME") != NULL)
+	if (getenv("HOME") != nullptr)
 		home = getenv("HOME");
 	else
 		home = "/";
@@ -372,7 +372,7 @@ read_props(Props *p) {
 
 	if (p->rdb)
 		free_resources(p->rdb);
-	p->rdb = NULL;
+	p->rdb = nullptr;
 	if (ds_def)
 		sprintf(buf, "%s", ds_def);
 	else
@@ -403,15 +403,15 @@ read_props(Props *p) {
 			last->next = entry_ptr;
 		else
 			p->p_list = entry_ptr;
-		entry_ptr->next = NULL;
+		entry_ptr->next = nullptr;
 		last = entry_ptr;
 
                 resource = (char *)get_resource(p->rdb, (char *)CLASS_NAME,
-			(char *)APP_NAME, entry_ptr->property_name, NULL);
+			(char *)APP_NAME, entry_ptr->property_name, nullptr);
 		if (!resource || *resource == '\0')
                 	resource = (char *)get_resource(other_rdb,
 				(char *)CLASS_NAME, (char *)APP_NAME,
-				entry_ptr->property_name, NULL);
+				entry_ptr->property_name, nullptr);
 		if (!resource || *resource == '\0')
 			entry_ptr->property_value = get_char_prop_default(op);
 		else
@@ -438,7 +438,7 @@ save_props(Props *p)
 	if (ds_def)
 		snprintf(buf, MAXPATHLEN, "%s", ds_def);
 	else
-		if (getenv("HOME") != NULL)
+		if (getenv("HOME") != nullptr)
                     snprintf(buf, MAXPATHLEN, "%s%s",
                              getenv("HOME"), DS_FILENAME);
 		else

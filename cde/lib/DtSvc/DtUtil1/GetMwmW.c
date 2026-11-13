@@ -110,7 +110,7 @@ _GetMwmWindow(
     int actualFormat;
     unsigned long nitems;
     unsigned long leftover;
-    PropMotifWmInfo *pWmInfo = NULL;
+    PropMotifWmInfo *pWmInfo = nullptr;
     int rcode;
     Window wroot, wparent, *pchildren;
     unsigned int nchildren;

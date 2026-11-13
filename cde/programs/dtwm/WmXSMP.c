@@ -213,19 +213,19 @@ smDieCallback(Widget w, XtPointer clientData, XtPointer callData)
 static void
 buildDBFileName(char fileNameBuf[MAXPATHLEN], Boolean doingSave)
 {
-    char *savePath = (char *)NULL;
+    char *savePath = (char *)nullptr;
 
     fileNameBuf[0] = '\0';
     if (doingSave)
     {
-	char *saveFile = (char *)NULL;
+	char *saveFile = (char *)nullptr;
 	char *ptr;
 
 	if (DtSessionSavePath(wmGD.topLevelW, &savePath, &saveFile))
 	{
 	    XtFree(saveFile);
 
-	    if ((ptr = strrchr(savePath, '/')) != (char *)NULL)
+	    if ((ptr = strrchr(savePath, '/')) != (char *)nullptr)
 		*ptr = '\0';
 
 	    if (strlen(savePath) + strlen(dtwmFileName) + 2 < MAXPATHLEN)
@@ -262,22 +262,22 @@ getClientWorkspaces(ClientData *pCD)
     /* Easy but slow way to do this would be to use XGetAtomName(). */
     /* To avoid XServer round trips (and to weed out invalid WS names) */
     /* we look through workspaces attached to this screen for ID matches. */
-    char *cwsP = NULL, *tmpP, *wsNameP;
+    char *cwsP = nullptr, *tmpP, *wsNameP;
     int pLen = 0;
     int i;
 
     for (i = 0; i < pCD->numInhabited; i++)
     {
 	if ((pWS = GetWorkspaceData(pSD, pCD->pWsList[i].wsID))
-	    != (WmWorkspaceData *)NULL)
+	    != (WmWorkspaceData *)nullptr)
 	{
 	    wsNameP = pWS->name;
 	    if (pLen == 0)
 	    {
 		pLen = strlen(wsNameP) + 1;  /* 1 for null termination */
 		if ((cwsP = (char *)XtMalloc(pLen * sizeof(char)))
-		    == (char *)NULL)
-		    return (char *)NULL;
+		    == (char *)nullptr)
+		    return (char *)nullptr;
 
 		strcpy(cwsP, wsNameP);
 	    }
@@ -285,10 +285,10 @@ getClientWorkspaces(ClientData *pCD)
 	    {
 		pLen += strlen(wsNameP) + 1;  /* 1 for space */
 		if ((tmpP = (char *)XtRealloc(cwsP, pLen * sizeof(char)))
-		    == (char *)NULL)
+		    == (char *)nullptr)
 		{
 		    XtFree((char *)cwsP);
-		    return (char *)NULL;
+		    return (char *)nullptr;
 		}
 		cwsP = tmpP;
 		strcat(cwsP, " ");
@@ -303,9 +303,9 @@ getClientWorkspaces(ClientData *pCD)
 static char *
 getClientInstantTitle(ClientData *pCD)
 {
-    if (!pCD->instantTitle) return NULL;
+    if (!pCD->instantTitle) return nullptr;
 
-    return _XmStringUngenerate(pCD->instantTitle, NULL, XmCHARSET_TEXT,
+    return _XmStringUngenerate(pCD->instantTitle, nullptr, XmCHARSET_TEXT,
 			       XmCHARSET_TEXT);
 }
 
@@ -315,9 +315,9 @@ addClientToList(ClientData ***cdList, int *nClients, ClientData *pCD)
     ClientData **newPtr = (ClientData **)
 	XtRealloc((char *)*cdList, (*nClients + 1) * sizeof(ClientData *));
 
-    if (newPtr == (ClientData **)NULL)
+    if (newPtr == (ClientData **)nullptr)
     {
-	if (*cdList != (ClientData **)NULL)
+	if (*cdList != (ClientData **)nullptr)
 	    XtFree((char *)*cdList);
 	return False;
     }
@@ -363,7 +363,7 @@ getClientResource(char *clientID, char *fmtStr)
 		       &resourceType, &resourceValue))
 	return (char *)resourceValue.addr;
 
-    return (char *)NULL;
+    return (char *)nullptr;
 }
 
 /*
@@ -376,7 +376,7 @@ getXSMPResource(ClientData *pCD, int resourceFlag, char *fmtStr)
     if (RESTORE_RESOURCE(pCD, resourceFlag))
 	return getClientResource(pCD->smClientID, fmtStr);
 
-    return (char *)NULL;
+    return (char *)nullptr;
 }
 
 /*
@@ -392,14 +392,14 @@ findXSMPClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 	    char *resourcePtr;
 
 	    if ((resourcePtr = getXSMPResource(pCD, WMSAVE_X, xPositionStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientX = atoi(resourcePtr);
 		pCD->clientFlags |= SM_X;
 	    }
 
 	    if ((resourcePtr = getXSMPResource(pCD, WMSAVE_Y, yPositionStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientY = atoi(resourcePtr);
 		pCD->clientFlags |= SM_Y;
@@ -407,7 +407,7 @@ findXSMPClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 
 	    if ((resourcePtr = getXSMPResource(pCD, WMSAVE_WIDTH,
 					       widthSizeStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientWidth = atoi(resourcePtr);
 		pCD->clientFlags |= SM_WIDTH;
@@ -415,7 +415,7 @@ findXSMPClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 
 	    if ((resourcePtr = getXSMPResource(pCD, WMSAVE_HEIGHT,
 					       heightSizeStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientHeight = atoi(resourcePtr);
 		pCD->clientFlags |= SM_HEIGHT;
@@ -423,7 +423,7 @@ findXSMPClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 
 	    if ((resourcePtr = getXSMPResource(pCD, WMSAVE_STATE,
 					       initialStateStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientState =
 		    (strcmp(resourcePtr, normalStateStr) == 0) ?
@@ -431,17 +431,17 @@ findXSMPClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 		pCD->clientFlags |= SM_CLIENT_STATE;
 	    }
 
-	    if ((workSpaceNamesP != (char **)NULL) &&
+	    if ((workSpaceNamesP != (char **)nullptr) &&
 		((resourcePtr = getXSMPResource(pCD, WMSAVE_WORKSPACES,
 						workspacesStr))
-		 != (char *)NULL))
+		 != (char *)nullptr))
 	    {
 		*workSpaceNamesP = XtNewString(resourcePtr);
 	    }
 
 	    if ((resourcePtr = getXSMPResource(pCD, WMSAVE_INSTANT_TITLE,
 					       instantTitleStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->instantTitle = XmStringCreateLocalized(resourcePtr);
 	    }
@@ -489,9 +489,9 @@ getProxyClientInfo(ClientData *pCD, ProxyClientInfo *proxyClientInfo)
     /* Since WM_CLIENT_MACHINE is optional, don't fail if not found. */
     if (XGetWMClientMachine(wmGD.display, pCD->client, &textProperty))
 	proxyClientInfo->wmClientMachine = (char *)textProperty.value;
-    else proxyClientInfo->wmClientMachine = (char *)NULL;
+    else proxyClientInfo->wmClientMachine = (char *)nullptr;
 
-    proxyClientInfo->clientID = (char *)NULL;
+    proxyClientInfo->clientID = (char *)nullptr;
 
     return True;
 }
@@ -519,7 +519,7 @@ fillClientIDProc(XrmDatabase *clientDB, XrmBindingList bindingList,
     *pClientIDList = realloc(*pClientIDList, nList * sizeof(char *));
     clientIDList = i + *pClientIDList;
     clientIDList[0] = clientID;
-    clientIDList[1] = NULL;
+    clientIDList[1] = nullptr;
 
     return FALSE;
 }
@@ -532,10 +532,10 @@ cmpProxyClient(char *clientID, ProxyClientInfo *proxyClientInfo)
     char *wmClientMachine;
 
     if (((wmCommand =
-	  getClientResource(clientID, wmCommandStr)) == (char *)NULL) ||
+	  getClientResource(clientID, wmCommandStr)) == (char *)nullptr) ||
 	(strcmp(wmCommand, proxyClientInfo->wmCommand) != 0) ||
 	((clientScreen =
-	  getClientResource(clientID, screenStr)) == (char *)NULL) ||
+	  getClientResource(clientID, screenStr)) == (char *)nullptr) ||
 	(atoi(clientScreen) != proxyClientInfo->screen))
 	return FALSE;
 
@@ -543,7 +543,7 @@ cmpProxyClient(char *clientID, ProxyClientInfo *proxyClientInfo)
     /* or if it is set in both and it's the same, we've got a match! */
     if (!proxyClientInfo->wmClientMachine ||
 	((wmClientMachine =
-	  getClientResource(clientID, wmClientMachineStr)) == (char *)NULL) ||
+	  getClientResource(clientID, wmClientMachineStr)) == (char *)nullptr) ||
 	(strcmp(proxyClientInfo->wmClientMachine, wmClientMachine) == 0))
 	return TRUE;
 
@@ -555,8 +555,8 @@ findProxyClientID(ClientData *pCD)
 {
     ProxyClientInfo proxyClientInfo;
     int i;
-    char *clientID = NULL;
-    char **clientIDList = NULL;
+    char *clientID = nullptr;
+    char **clientIDList = nullptr;
     static XrmName proxyName[2] = {NULLQUARK, NULLQUARK};
     static XrmClass proxyClass[2] = {NULLQUARK, NULLQUARK};
 
@@ -604,13 +604,13 @@ findProxyClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
     {
 	char *proxyClientID;
 
-	if ((proxyClientID = findProxyClientID(pCD)) != (char *)NULL)
+	if ((proxyClientID = findProxyClientID(pCD)) != (char *)nullptr)
 	{
 	    char *resourcePtr;
 
 	    if ((resourcePtr =
 		 getClientResource(proxyClientID, xPositionStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientX = atoi(resourcePtr);
 		pCD->clientFlags |= SM_X;
@@ -618,7 +618,7 @@ findProxyClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 
 	    if ((resourcePtr =
 		 getClientResource(proxyClientID, yPositionStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientY = atoi(resourcePtr);
 		pCD->clientFlags |= SM_Y;
@@ -626,7 +626,7 @@ findProxyClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 
 	    if ((resourcePtr =
 		 getClientResource(proxyClientID, widthSizeStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientWidth = atoi(resourcePtr);
 		pCD->clientFlags |= SM_WIDTH;
@@ -634,7 +634,7 @@ findProxyClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 
 	    if ((resourcePtr =
 		 getClientResource(proxyClientID, heightSizeStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientHeight = atoi(resourcePtr);
 		pCD->clientFlags |= SM_HEIGHT;
@@ -642,7 +642,7 @@ findProxyClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 
 	    if ((resourcePtr =
 		 getClientResource(proxyClientID, initialStateStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->clientState =
 		    (strcmp(resourcePtr, normalStateStr) == 0) ?
@@ -650,17 +650,17 @@ findProxyClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 		pCD->clientFlags |= SM_CLIENT_STATE;
 	    }
 
-	    if ((workSpaceNamesP != (char **)NULL) &&
+	    if ((workSpaceNamesP != (char **)nullptr) &&
 		((resourcePtr =
 		  getClientResource(proxyClientID, workspacesStr))
-		 != (char *)NULL))
+		 != (char *)nullptr))
 	    {
 		*workSpaceNamesP = XtNewString(resourcePtr);
 	    }
 
 	    if ((resourcePtr =
 		 getClientResource(proxyClientID, instantTitleStr))
-		!= (char *)NULL)
+		!= (char *)nullptr)
 	    {
 		pCD->instantTitle = XmStringCreateLocalized(resourcePtr);
 	    }
@@ -724,7 +724,7 @@ saveXSMPClient(FILE *fp, ClientData *pCD)
 	for (i = 0; i < pCD->numInhabited; i++)
 	{
 	    if ((pWS = GetWorkspaceData(pSD, pCD->pWsList[i].wsID))
-		!= (WmWorkspaceData *)NULL)
+		!= (WmWorkspaceData *)nullptr)
 	    {
 		if (SAVE_RESOURCE(pCD, WMSAVE_ICON_X))
 		{
@@ -768,7 +768,7 @@ saveXSMPClient(FILE *fp, ClientData *pCD)
     {
 	char *clientWorkspaces = getClientWorkspaces(pCD);
 
-	if (clientWorkspaces != (char *)NULL)
+	if (clientWorkspaces != (char *)nullptr)
 	{
 	    fprintf(fp, workspacesStr, clientID);
 	    fprintf(fp, strArg, clientWorkspaces);
@@ -818,7 +818,7 @@ saveProxyClient(FILE *fp, ClientData *pCD, int clientIDNum)
     fprintf(fp, strArg, proxyClientInfo.wmCommand);
     free(proxyClientInfo.wmCommand);
 
-    if (proxyClientInfo.wmClientMachine != (char *)NULL)
+    if (proxyClientInfo.wmClientMachine != (char *)nullptr)
     {
 	fprintf(fp, wmClientMachineStr, clientID);
 	fprintf(fp, strArg, proxyClientInfo.wmClientMachine);
@@ -842,7 +842,7 @@ saveProxyClient(FILE *fp, ClientData *pCD, int clientIDNum)
 	for (i = 0; i < pCD->numInhabited; i++)
 	{
 	    if ((pWS = GetWorkspaceData(pSD, pCD->pWsList[i].wsID))
-		!= (WmWorkspaceData *)NULL)
+		!= (WmWorkspaceData *)nullptr)
 	    {
 		fprintf(fp, iconXPosStr, clientID, pWS->name);
 		fprintf(fp, intArg, pCD->pWsList[i].iconX);
@@ -866,7 +866,7 @@ saveProxyClient(FILE *fp, ClientData *pCD, int clientIDNum)
 	    normalStateStr : iconicStateStr);
 
     clientWorkspaces = getClientWorkspaces(pCD);
-    if (clientWorkspaces != (char *)NULL)
+    if (clientWorkspaces != (char *)nullptr)
     {
 	fprintf(fp, workspacesStr, clientID);
 	fprintf(fp, strArg, clientWorkspaces);
@@ -918,7 +918,7 @@ ResignFromSM(void)
     {
 	XtVaSetValues(wmGD.topLevelW,
 		      XtNjoinSession, False,
-		      NULL);
+		      nullptr);
     }
 }
 
@@ -963,12 +963,12 @@ SaveClientResourceDB(void)
     /* Iterate through client list, saving */
     /* appropriate resources for each. */
     buildDBFileName(dbFileName, True);
-    if ((fp = fopen(dbFileName, "w")) == (FILE *)NULL)
+    if ((fp = fopen(dbFileName, "w")) == (FILE *)nullptr)
 	return (XrmDatabase)NULL;
 
     XtVaGetValues(wmGD.topLevelW,
 		  XtNsessionID, &mySessionID,
-		  NULL);
+		  nullptr);
     fprintf(fp, dbHeader, dtwmFileName, "dtwm Version XSMP1.0",
 	    (mySessionID != (String)NULL) ? mySessionID : "");
 
@@ -977,7 +977,7 @@ SaveClientResourceDB(void)
 	pSD = &(wmGD.Screens[scr]);
 
 	for (pCL = pSD->clientList;
-	     pCL != (ClientListEntry *)NULL;
+	     pCL != (ClientListEntry *)nullptr;
 	     pCL = pCL->nextSibling)
 	{
 	    /* Each client may be in list twice: normal & icon */
@@ -1025,13 +1025,13 @@ GetSmClientIdClientList(ClientData ***clients, int *nClients)
     ClientListEntry *pCL;
 
     *nClients = 0;
-    *clients = (ClientData **)NULL;
+    *clients = (ClientData **)nullptr;
     for (scr = 0; scr < wmGD.numScreens; scr++)
     {
 	pSD = &(wmGD.Screens[scr]);
 
 	for (pCL = pSD->clientList;
-	     pCL != (ClientListEntry *)NULL;
+	     pCL != (ClientListEntry *)nullptr;
 	     pCL = pCL->nextSibling)
 	{
 	    /* Each client may be in list twice: normal & icon */
@@ -1079,12 +1079,12 @@ LoadClientIconPositions(ClientData *pCD)
 	for (i = 0; i < pCD->numInhabited; i++)
 	{
 	    if ((pWS = GetWorkspaceData(pSD, pCD->pWsList[i].wsID))
-		!= (WmWorkspaceData *)NULL)
+		!= (WmWorkspaceData *)nullptr)
 	    {
 		sprintf(resourceBuf, iconXPosStr, "%s", pWS->name);
 		if ((resourcePtr =
 		     getXSMPResource(pCD, WMSAVE_ICON_X, resourceBuf))
-		    != (char *)NULL)
+		    != (char *)nullptr)
 		{
 		    pCD->pWsList[i].iconX = atoi(resourcePtr);
 		    pCD->clientFlags |= SM_ICON_X;
@@ -1093,7 +1093,7 @@ LoadClientIconPositions(ClientData *pCD)
 		sprintf(resourceBuf, iconYPosStr, "%s", pWS->name);
 		if ((resourcePtr =
 		     getXSMPResource(pCD, WMSAVE_ICON_Y, resourceBuf))
-		    != (char *)NULL)
+		    != (char *)nullptr)
 		{
 		    pCD->pWsList[i].iconY = atoi(resourcePtr);
 		    pCD->clientFlags |= SM_ICON_Y;
@@ -1108,17 +1108,17 @@ LoadClientIconPositions(ClientData *pCD)
     {
 	char *proxyClientID;
 
-	if ((proxyClientID = findProxyClientID(pCD)) != (char *)NULL)
+	if ((proxyClientID = findProxyClientID(pCD)) != (char *)nullptr)
 	{
 	    for (i = 0; i < pCD->numInhabited; i++)
 	    {
 		if ((pWS = GetWorkspaceData(pSD, pCD->pWsList[i].wsID))
-		    != (WmWorkspaceData *)NULL)
+		    != (WmWorkspaceData *)nullptr)
 		{
 		    sprintf(resourceBuf, iconXPosStr, "%s", pWS->name);
 		    if ((resourcePtr =
 			 getClientResource(proxyClientID, resourceBuf))
-			!= (char *)NULL)
+			!= (char *)nullptr)
 		    {
 			pCD->pWsList[i].iconX = atoi(resourcePtr);
 			pCD->clientFlags |= SM_ICON_X;
@@ -1127,7 +1127,7 @@ LoadClientIconPositions(ClientData *pCD)
 		    sprintf(resourceBuf, iconYPosStr, "%s", pWS->name);
 		    if ((resourcePtr =
 			 getClientResource(proxyClientID, resourceBuf))
-			!= (char *)NULL)
+			!= (char *)nullptr)
 		    {
 			pCD->pWsList[i].iconY = atoi(resourcePtr);
 			pCD->clientFlags |= SM_ICON_Y;

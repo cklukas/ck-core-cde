@@ -93,7 +93,7 @@ _DtCmsInsertAppt(_DtCmsCalendar *cal, Appt_4 *appt4)
 	time_t		current_time;
 	Attr_4		p_attr;
 
-	if (cal == NULL || appt4 == NULL)
+	if (cal == nullptr || appt4 == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* assign key if this is a new appointment */
@@ -110,13 +110,13 @@ _DtCmsInsertAppt(_DtCmsCalendar *cal, Appt_4 *appt4)
 				(caddr_t)&(appt4->appt_id));
 	else
 		rb_stat = hc_insert (REPT_LIST(cal), (caddr_t)appt4,
-				(caddr_t)&(appt4->appt_id), NULL, NULL);
+				(caddr_t)&(appt4->appt_id), nullptr, nullptr);
 
 	if (rb_stat == rb_ok) {
 		/* Add the qualified reminder attrs to the reminder queue */
 		current_time = time(0);
 		p_attr = appt4->attr;
-		while (p_attr != NULL)
+		while (p_attr != nullptr)
 		{
 			time_t	tick;
 			Rm_que	*p_reminder;
@@ -124,7 +124,7 @@ _DtCmsInsertAppt(_DtCmsCalendar *cal, Appt_4 *appt4)
 			tick = appt4->appt_id.tick - atol(p_attr->value);
 			p_reminder = build_reminder (current_time, appt4,
 							p_attr, tick, 1);
-			if (p_reminder != NULL)
+			if (p_reminder != nullptr)
 				_DtCmsAddReminderV4(&cal->rm_queue, p_reminder);
 			p_attr = p_attr->next;
 		}
@@ -155,14 +155,14 @@ _DtCmsDeleteAppt(
 	 * Before we delete an event from the single appointment tree, we
 	 * need to check if the initiator is the author of the appointment.
 	 */
-	if ((user != NULL) && (p_appt = (Appt_4 *)rb_lookup(APPT_TREE(cal),
-	    (caddr_t)p_key)) != NULL) {
+	if ((user != nullptr) && (p_appt = (Appt_4 *)rb_lookup(APPT_TREE(cal),
+	    (caddr_t)p_key)) != nullptr) {
 		if (!(access & (access_delete_4|CSA_OWNER_RIGHTS)) &&
 		    !_DtCmIsSameUser(user, p_appt->author))
 			return (CSA_E_NO_AUTHORITY);
 	}
 
-	if ((p_node = rb_delete (APPT_TREE(cal), (caddr_t)p_key)) != NULL) {
+	if ((p_node = rb_delete (APPT_TREE(cal), (caddr_t)p_key)) != nullptr) {
 		p_appt = (Appt_4*)p_node->data;
 		_DtCmsObsoleteReminderV4(&cal->rm_queue, p_appt, 0, B_FALSE);
 		free (p_node);
@@ -172,7 +172,7 @@ _DtCmsDeleteAppt(
 				APPT_KEY(p_appt),
 				ctime(&(p_appt->appt_id.tick)));
 		}
-		if (appt_r != NULL)
+		if (appt_r != nullptr)
 			*appt_r = p_appt;
 		else
 			_DtCm_free_appt4(p_appt);
@@ -183,10 +183,10 @@ _DtCmsDeleteAppt(
 	p_lnode = (List_node *)hc_lookup_node(REPT_LIST(cal),
 			(caddr_t)p_key);
 
-	if (p_lnode != NULL) {
+	if (p_lnode != nullptr) {
 		p_appt = (Appt_4 *)p_lnode->data;
 
-		if (user != NULL &&
+		if (user != nullptr &&
 		    !(access & (access_delete_4|CSA_OWNER_RIGHTS)) &&
 		    !_DtCmIsSameUser(user, p_appt->author))
 			return (CSA_E_NO_AUTHORITY);
@@ -200,7 +200,7 @@ _DtCmsDeleteAppt(
 				APPT_KEY(p_appt),
 				ctime(&(p_appt->appt_id.tick)));
 		}
-		if (appt_r != NULL)
+		if (appt_r != nullptr)
 			*appt_r = p_appt;
 		else
 			_DtCm_free_appt4(p_appt);
@@ -257,7 +257,7 @@ _DtCmsDeleteApptInstancesAndLog(
 	struct stat	info;
 
 	p_lnode = (List_node *)hc_lookup_node (REPT_LIST(cal), (caddr_t)key);
-	if (p_lnode == NULL)
+	if (p_lnode == nullptr)
 		return (CSA_X_DT_E_ENTRY_NOT_FOUND);
 
 	p_appt = (Appt_4*)p_lnode->data;
@@ -289,7 +289,7 @@ _DtCmsDeleteApptInstancesAndLog(
 	/* calculate the ntimes value for the part
 	 * of the sequence that start from the ordinal to the end
 	 */
-	if (remain != NULL)
+	if (remain != nullptr)
 		*remain = _DtCms_get_new_ntimes_v4(p_appt->period, key->tick,
 				(ninstance - ordinal + 1));
 
@@ -297,7 +297,7 @@ _DtCmsDeleteApptInstancesAndLog(
 	 * make a copy of the original appointment,
 	 * in case we need a rollback
 	 */
-	if ((oldcopy = _DtCm_copy_one_appt4(p_appt)) == NULL) {
+	if ((oldcopy = _DtCm_copy_one_appt4(p_appt)) == nullptr) {
 		stat = CSA_E_INSUFFICIENT_MEMORY;
 		goto delete_cleanup;
 	}
@@ -318,7 +318,7 @@ _DtCmsDeleteApptInstancesAndLog(
 			p_appt->ntimes = 0;
 			if (p_appt->exception) {
 				_DtCm_free_excpt4(p_appt->exception);
-				p_appt->exception = NULL;
+				p_appt->exception = nullptr;
 			}
 			stat = _DtCmsRbToCsaStat(rb_insert(cal->tree,
 				(caddr_t)p_appt, (caddr_t)&(p_appt->appt_id)));
@@ -363,7 +363,7 @@ _DtCmsDeleteApptInstancesAndLog(
 			p_appt->period = oldcopy->period;
 			_DtCm_free_excpt4(p_appt->exception);
 			p_appt->exception = oldcopy->exception;
-			oldcopy->exception = NULL;
+			oldcopy->exception = nullptr;
 			goto delete_cleanup;
 		}
 
@@ -381,14 +381,14 @@ _DtCmsDeleteApptInstancesAndLog(
 			 */
 			current_time = time(0);
 			p_attr = p_appt->attr;
-			while (p_attr != NULL) {
+			while (p_attr != nullptr) {
 				time_t	tick;
 				Rm_que	*p_reminder;
 
 				tick = p_appt->appt_id.tick-atol(p_attr->value);
 				p_reminder = build_reminder(current_time,
 						p_appt, p_attr, tick, 1);
-				if (p_reminder != NULL)
+				if (p_reminder != nullptr)
 					_DtCmsAddReminderV4(&cal->rm_queue,
 						p_reminder);
 				p_attr = p_attr->next;
@@ -428,7 +428,7 @@ _DtCmsChangeAll(
 	Appt_4		**oldappt)
 {
 	CSA_return_code	stat = CSA_SUCCESS;
-	Appt_4	*olda, *newcopy = NULL;
+	Appt_4	*olda, *newcopy = nullptr;
 	int	ordinal;
 	int	file_size;
 
@@ -490,7 +490,7 @@ _DtCmsChangeAll(
 	_DtCms_adjust_appt_startdate(newa);
 
 	/* make copy of new appointment */
-	if ((newcopy = _DtCm_copy_one_appt4(newa)) == NULL) {
+	if ((newcopy = _DtCm_copy_one_appt4(newa)) == nullptr) {
 		stat = CSA_E_INSUFFICIENT_MEMORY;
 		goto change_all_cleanup;
 	}
@@ -500,7 +500,7 @@ _DtCmsChangeAll(
 
 	/* keep the original author */
 	free(newcopy->author);
-	if ((newcopy->author = strdup(olda->author)) == NULL) {
+	if ((newcopy->author = strdup(olda->author)) == nullptr) {
 		stat = CSA_E_INSUFFICIENT_MEMORY;
 		goto change_all_cleanup;
 	}
@@ -536,7 +536,7 @@ _DtCmsChangeSome(
 	Appt_4		**oldappt)
 {
 	CSA_return_code	stat;
-	Appt_4		*olda, *newcopy = NULL;
+	Appt_4		*olda, *newcopy = nullptr;
 	List_node 	*lnode;
 	Exception_4 	*newexcept;
 	int		file_size;
@@ -572,7 +572,7 @@ _DtCmsChangeSome(
 		    olda->ntimes == newa->ntimes) { 
 
 			newcopy->ntimes = remain;
-			if (olda->exception != NULL) {
+			if (olda->exception != nullptr) {
 				_DtCm_free_excpt4(newcopy->exception);
 				if ((stat = _DtCmsTruncateElist(olda, remain,
 				    &newcopy->exception)) != CSA_SUCCESS) {
@@ -584,7 +584,7 @@ _DtCmsChangeSome(
 
 	/* keep the original author */
 	free(newcopy->author);
-	if ((newcopy->author = strdup(olda->author)) == NULL) {
+	if ((newcopy->author = strdup(olda->author)) == nullptr) {
 		stat = CSA_E_INSUFFICIENT_MEMORY;
 		goto change_some_cleanup;
 	}
@@ -625,7 +625,7 @@ _DtCmsInsertApptAndLog(_DtCmsCalendar *cal, Appt_4 *appt)
 		if ((stat = v4_transact_log(cal->calendar, appt,
 		    _DtCmsLogAdd)) != CSA_SUCCESS) {
 
-			(void)_DtCmsDeleteAppt(cal, NULL, 0, &appt->appt_id,
+			(void)_DtCmsDeleteAppt(cal, nullptr, 0, &appt->appt_id,
 				&appt);
 		}
 	}
@@ -676,9 +676,9 @@ extern CSA_return_code
 v4_transact_log(char *calendar, Appt_4 *a, _DtCmsLogOps op)
 {
 	CSA_return_code	stat;
-	char	*log=NULL;
+	char	*log=nullptr;
 
-	if ((log = _DtCmsGetLogFN(calendar)) == NULL)
+	if ((log = _DtCmsGetLogFN(calendar)) == nullptr)
 		 return (CSA_E_INSUFFICIENT_MEMORY);
 	else {
 		stat = _DtCmsAppendAppt4ByFN(log, a, op);
@@ -705,8 +705,8 @@ _DtCmsLookupRangeV4(
 {
 	CSA_return_code	stat = CSA_SUCCESS;
 	Period_4	period;
-	Appt_4		*appt_result = NULL;
-	Abb_Appt_4	*abbr_result = NULL;
+	Appt_4		*appt_result = nullptr;
+	Abb_Appt_4	*abbr_result = nullptr;
 	void		*result_slot;
 	int		tmp_tick, endtick;
 	Id_4		lo_key;
@@ -745,7 +745,7 @@ _DtCmsLookupRangeV4(
 		add_list_func = _AddToLinkedAbbrAppts;
 	result_slot = appt_r ? (void *)&appt_result : (void *)&abbr_result;
 
-	while (p_range != NULL)
+	while (p_range != nullptr)
 	{
 		lo_key.key = MAXINT;
 		lo_key.tick = p_range->key1;
@@ -779,14 +779,14 @@ _DtCmsLookupRangeV4(
 
 			if ((stat = (*add_list_func)(p_appt, user,
 			    access, result_slot)) != CSA_SUCCESS) {
-				if (appt_result != NULL || abbr_result != NULL) {
+				if (appt_result != nullptr || abbr_result != nullptr) {
 					if (appt_r)
 						_DtCm_free_appt4(appt_result);
 					else
 						_DtCm_free_abbrev_appt4(
 							abbr_result);
-					appt_result = NULL;
-					abbr_result = NULL;
+					appt_result = nullptr;
+					abbr_result = nullptr;
 				}
 				break;
 			}
@@ -797,7 +797,7 @@ _DtCmsLookupRangeV4(
 
 		/* Get a range of events from repeating appointment list */
 		p_lnode = REPT_LIST(cal)->root;
-		while (p_lnode != NULL)
+		while (p_lnode != nullptr)
 		{
 			lo_tick = p_range->key1;
 			hi_tick = p_range->key2;
@@ -866,16 +866,16 @@ _DtCmsLookupRangeV4(
 				APPT_TICK(p_appt) = tmp_tick;
 
 				if (stat != CSA_SUCCESS) {
-					if (appt_result != NULL ||
-					    abbr_result != NULL) {
+					if (appt_result != nullptr ||
+					    abbr_result != nullptr) {
 						if (appt_r)
 						    _DtCm_free_appt4(
 							appt_result);
 						else
 						    _DtCm_free_abbrev_appt4(
 							abbr_result);
-						appt_result = NULL;
-						abbr_result = NULL;
+						appt_result = nullptr;
+						abbr_result = nullptr;
 					}
 					break;
 				}
@@ -966,7 +966,7 @@ _DtCmsLookupKeyrangeV4(
 
 	/* Search from repeating appointments first for optimization */
 	p_lnode = hc_lookup_node (REPT_LIST(cal), (caddr_t)&lo_key);
-	if (p_lnode != NULL) {
+	if (p_lnode != nullptr) {
 		p_appt = (Appt_4*)p_lnode->data;
 		if ((match_func && !match_func(p_appt, num_attrs, attrs, ops))
 		    || _GetAccessLevel(user, access, p_appt) == private_4)
@@ -1089,7 +1089,7 @@ _AddToLinkedAppts(
 		return (CSA_SUCCESS);
 	}
 
-	if (copy == NULL)
+	if (copy == nullptr)
 		return(CSA_E_INSUFFICIENT_MEMORY);
 	else {
 		*appt_r = _AddApptInOrder(*appt_r, copy);
@@ -1118,7 +1118,7 @@ _AddToLinkedAbbrAppts(
 		return (CSA_SUCCESS);
 	}
 
-	if (copy == NULL)
+	if (copy == nullptr)
 		return(CSA_E_INSUFFICIENT_MEMORY);
 	else {
 		*abbr_r = _AddAbbApptInOrder(*abbr_r, copy);
@@ -1151,12 +1151,12 @@ _AddApptInOrder(Appt_4 *head, Appt_4 *aptr)
 
 	while (aptr) {
 		p_next = aptr->next;
-		aptr->next = NULL;
+		aptr->next = nullptr;
 
 		/* Add the item to the linked list in ascending order */
-		p_prev = NULL;
+		p_prev = nullptr;
 		p_appt = head;
-		while (p_appt != NULL)
+		while (p_appt != nullptr)
 		{
 			if (APPT_TICK(aptr) <= APPT_TICK(p_appt))
 				break;
@@ -1164,7 +1164,7 @@ _AddApptInOrder(Appt_4 *head, Appt_4 *aptr)
 			p_appt = p_appt->next;
 		}
 
-		if (p_prev == NULL)
+		if (p_prev == nullptr)
 		{
 			aptr->next = p_appt;
 			head = aptr;
@@ -1186,12 +1186,12 @@ _AddAbbApptInOrder(Abb_Appt_4 *head, Abb_Appt_4 *aptr)
 
 	while (aptr) {
 		p_next = aptr->next;
-		aptr->next = NULL;
+		aptr->next = nullptr;
 
 		/* Add the item to the linked list in ascending order */
-		p_prev = NULL;
+		p_prev = nullptr;
 		p_appt = head;
-		while (p_appt != NULL)
+		while (p_appt != nullptr)
 		{
 			if (APPT_TICK(aptr) <= APPT_TICK(p_appt))
 				break;
@@ -1199,7 +1199,7 @@ _AddAbbApptInOrder(Abb_Appt_4 *head, Abb_Appt_4 *aptr)
 			p_appt = p_appt->next;
 		}
 
-		if (p_prev == NULL)
+		if (p_prev == nullptr)
 		{
 			aptr->next = p_appt;
 			head = aptr;
@@ -1222,10 +1222,10 @@ _DtCmsSetV4AccessListAndLog(_DtCmsCalendar *cal, Access_Entry_4 *alist)
 	int	file_size;
 
 	/* update access list for old format calendar */
-	if ((name = _DtCmsTarget2Name(cal->calendar)) == NULL)
+	if ((name = _DtCmsTarget2Name(cal->calendar)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if ((log = _DtCmsGetLogFN(name)) == NULL) {
+	if ((log = _DtCmsGetLogFN(name)) == nullptr) {
 		free(name);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
@@ -1272,15 +1272,15 @@ _DtCmsGetV4Reminders(
 	_DtCmsEntryId	**ids_r)
 {
 	Rm_que		*p_node, *p_prev, *p_next, *p_new;
-	Reminder_4	*rptr, *v4rem = NULL;
-	_DtCmsEntryId	*idptr, *ids = NULL;
+	Reminder_4	*rptr, *v4rem = nullptr;
+	_DtCmsEntryId	*idptr, *ids = nullptr;
 
-	if (rem_r == NULL) return (CSA_E_INVALID_PARAMETER);
+	if (rem_r == nullptr) return (CSA_E_INVALID_PARAMETER);
 
 	/* do lookup in old format calendar */
-	p_prev = NULL;
+	p_prev = nullptr;
 	p_node = cal->rm_queue;
-	while (p_node != NULL)
+	while (p_node != nullptr)
 	{
 		/* It is still a future reminder. */
 		if (tick < p_node->remind_at)
@@ -1296,7 +1296,7 @@ _DtCmsGetV4Reminders(
 			p_new = build_reminder(tick+1, p_node->appt,
 					p_node->attr, p_node->remind_at,
 					p_node->remind_ord);
-			if (p_new != NULL)
+			if (p_new != nullptr)
 			{
 				_DtCmsAddReminderV4(&cal->rm_queue, p_new);
 				if (p_new->next == p_next)
@@ -1312,7 +1312,7 @@ _DtCmsGetV4Reminders(
 	 * always >= the given key.
 	 */
 	p_node = cal->rm_queue;
-	if (p_node != NULL)
+	if (p_node != nullptr)
 	{
 		tick = p_node->remind_at;
 		do
@@ -1328,7 +1328,7 @@ _DtCmsGetV4Reminders(
 				ids = idptr;
 			}
 			p_node = p_node->next;
-		} while ((p_node != NULL) && (p_node->remind_at == tick));
+		} while ((p_node != nullptr) && (p_node->remind_at == tick));
 	}
 
 	*rem_r = v4rem;
@@ -1341,7 +1341,7 @@ _DtCmsFreeEntryIds(_DtCmsEntryId *ids)
 {
 	_DtCmsEntryId *ptr;
 
-	while (ids != NULL) {
+	while (ids != nullptr) {
 		ptr = ids->next;
 		free(ids);
 		ids = ptr;
@@ -1352,21 +1352,21 @@ extern CSA_return_code
 _DtCmsTruncateElist(Appt_4 *parent_p, int remain, Except_4 **excpt)
 {
         int except_no, ntimes_diff;
-        Except_4 *e, *p, *last_e = NULL, *head = NULL;
+        Except_4 *e, *p, *last_e = nullptr, *head = nullptr;
 
 	ntimes_diff = _DtCms_get_ninstance_v4(parent_p) - remain;
 	p = parent_p->exception;
-	while(p != NULL) {
+	while(p != nullptr) {
 		if ((except_no = (p->ordinal - ntimes_diff)) > 0 && 
 			except_no <= remain) {
 			if ((e = (Except_4*)calloc(1, sizeof(Except_4)))
-			    == NULL) {
+			    == nullptr) {
 				_DtCm_free_excpt4(head);
 				return (CSA_E_INSUFFICIENT_MEMORY);
 			}
 			e->ordinal = except_no;
-			e->next = NULL;
-			if (last_e != NULL) 
+			e->next = nullptr;
+			if (last_e != nullptr) 
 				last_e->next = e;
 			else
 				head = e;
@@ -1389,14 +1389,14 @@ _DtCmsSetV4AccessListInCal(_DtCmsCalendar *cal, Access_Entry_4 *e)
 	_DtCm_free_access_list4(GET_W_ACCESS (cal));
 	_DtCm_free_access_list4(GET_D_ACCESS (cal));
 	_DtCm_free_access_list4(GET_X_ACCESS (cal));
-	SET_R_ACCESS(cal, NULL);
-	SET_W_ACCESS(cal, NULL);
-	SET_D_ACCESS(cal, NULL);
-	SET_X_ACCESS(cal, NULL);
+	SET_R_ACCESS(cal, nullptr);
+	SET_W_ACCESS(cal, nullptr);
+	SET_D_ACCESS(cal, nullptr);
+	SET_X_ACCESS(cal, nullptr);
 	_DtCm_free_access_list4(cal->alist);
 
 	/* Split the access list to 3 differnt operation lists */
-	while (e != NULL)
+	while (e != nullptr)
 	{
 		if (e->access_type & access_read_4) {
 			q = _DtCm_make_access_entry4(e->who, e->access_type);
@@ -1437,12 +1437,12 @@ append_exception_list(Appt_4 *p_appt, int ordinal)
 	Exception_4 p_prev;
 	Exception_4 p_ex;
 
-	if ((p_excpt = (Exception_4)calloc(1, sizeof(*p_excpt))) == NULL)
-		return (NULL);
+	if ((p_excpt = (Exception_4)calloc(1, sizeof(*p_excpt))) == nullptr)
+		return (nullptr);
 	p_excpt->ordinal = ordinal;
-	p_prev = NULL;
+	p_prev = nullptr;
 	p_ex = p_appt->exception;
-	while (p_ex != NULL)
+	while (p_ex != nullptr)
 	{
 		/* Exception list is in descending order for faster access */
 		if (ordinal > p_ex->ordinal)
@@ -1450,7 +1450,7 @@ append_exception_list(Appt_4 *p_appt, int ordinal)
 		p_prev = p_ex;
 		p_ex = p_ex->next;
 	}
-	if (p_prev == NULL)
+	if (p_prev == nullptr)
 	{
 		p_excpt->next = p_appt->exception;
 		p_appt->exception = p_excpt;
@@ -1476,7 +1476,7 @@ trunc_exception_list(Appt_4 *p_appt, int ordinal)
 	p_ex = p_appt->exception;
 
 	/* Exception list is in descending order for faster access */
-	while ((p_ex != NULL) && (p_ex->ordinal > ordinal))
+	while ((p_ex != nullptr) && (p_ex->ordinal > ordinal))
 	{
 		p_next = p_ex->next;
 		free(p_ex);
@@ -1493,7 +1493,7 @@ num_exception(Appt_4 *p_appt)
 
 	ntimes = 0;
 	p = p_appt->exception;
-	while (p != NULL)
+	while (p != nullptr)
 	{
 		ntimes++;
 		p = p->next;

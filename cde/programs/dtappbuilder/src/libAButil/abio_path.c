@@ -281,10 +281,10 @@ expand_path(char *nm, char *buf)
 	char  *trimchars = "\n \t";
 
 	/* Strip off leading & trailing whitespace and cr */
-	while (strchr(trimchars, *nm) != NULL)
+	while (strchr(trimchars, *nm) != nullptr)
 		nm++;
 	s = nm + (q = strlen(nm)) - 1;
-	while (q-- && strchr(trimchars, *s) != NULL)
+	while (q-- && strchr(trimchars, *s) != nullptr)
 		*s = '\0';
 
 	s = nm;
@@ -383,8 +383,8 @@ abio_get_bil_version(
     long                int_version_minor;
     long                first_char;
     float               version = 0.0;
-    char		*tok = NULL;
-    char		*s1 = NULL;
+    char		*tok = nullptr;
+    char		*s1 = nullptr;
  
     rewind(fp);
     *pLinesRead = 0;
@@ -442,7 +442,7 @@ abio_get_bil_version(
 	/* Need to free space allocated by strdup() above */
         if (s1) { 
 	    free(s1);  
-	    s1 = NULL;
+	    s1 = nullptr;
 	}
     }
     if (s1) free(s1);
@@ -455,10 +455,10 @@ util_create_tmp_file(
     char	*data
 )
 {
-    FILE	*tmpFile = NULL;
+    FILE	*tmpFile = nullptr;
 
     tmpFile = tmpfile();
-    if (tmpFile != NULL)
+    if (tmpFile != nullptr)
     {
 	fputs(data, tmpFile);
 	rewind(tmpFile);

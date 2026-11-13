@@ -85,7 +85,7 @@ typedef struct _WindowData {
 static XtAppContext appContext;
 static nl_catd msgCatalog;
 static Widget appShell;
-static WindowData *windowList = NULL;
+static WindowData *windowList = nullptr;
 static XContext wdContext;
 static Atom WM_DELETE_WINDOW;
 static Atom WM_SAVE_YOURSELF;
@@ -142,13 +142,13 @@ static void DrawPoint(Widget, int, int);
 static char* AppendString(char*,char*);
 
 static XtCallbackRec DropTransferCbList[] = {
-	{ DropTransferCb, NULL},
-	{ NULL, NULL}
+	{ DropTransferCb, nullptr},
+	{ nullptr, nullptr}
 };
 
 static XrmOptionDescRec optionTable[] = {
-    {"-print",    ".printMode",   XrmoptionIsArg, NULL},
-    {"-server",   ".serverMode",  XrmoptionIsArg, NULL},
+    {"-print",    ".printMode",   XrmoptionIsArg, nullptr},
+    {"-server",   ".serverMode",  XrmoptionIsArg, nullptr},
 };
 
 typedef struct {
@@ -158,9 +158,9 @@ typedef struct {
 
 static XtResource appResources[] = {
     { "printMode", "PrintMode", XtRString, sizeof(String),
-	XtOffsetOf(appResourceRec, printMode), XtRString, NULL },
+	XtOffsetOf(appResourceRec, printMode), XtRString, nullptr },
     { "serverMode", "ServerMode", XtRString, sizeof(String),
-	XtOffsetOf(appResourceRec, serverMode), XtRString, NULL },
+	XtOffsetOf(appResourceRec, serverMode), XtRString, nullptr },
 };
 
 main(int argc, char **argv)
@@ -171,22 +171,22 @@ main(int argc, char **argv)
 
     argv0 = argv[0];
     programName = strrchr(argv[0], '/');
-    if (programName == NULL)
+    if (programName == nullptr)
 	programName = argv[0];
     else
 	++programName;
 
-    XtSetLanguageProc(NULL, NULL, NULL);
+    XtSetLanguageProc(nullptr, nullptr, nullptr);
 
     appShell = XtAppInitialize(&appContext, ApplicationClass,
 			       optionTable, XtNumber(optionTable),
-			       &argc, argv, NULL, NULL, 0);
+			       &argc, argv, nullptr, nullptr, 0);
 
     msgCatalog = CATOPEN(MessageCatalog, NL_CAT_LOCALE);
 
     XtGetApplicationResources(appShell, &argvals,
 			      appResources, XtNumber(appResources),
-			      NULL, 0);
+			      nullptr, 0);
 
     wdContext = XUniqueContext();
 
@@ -199,7 +199,7 @@ main(int argc, char **argv)
     separatorString = CATGETS(msgCatalog, 1, 5, " - ");
     untitledString = CATGETS(msgCatalog, 1, 6, "(untitled)");
 
-    if (argvals.printMode != NULL) {
+    if (argvals.printMode != nullptr) {
 	/* Load up each file and print it, then exit */
 	WindowData *wd = NewData();
 	for (i = 1; i < argc; ++i) {
@@ -230,7 +230,7 @@ main(int argc, char **argv)
     }
 
     ttrc = ttmedia_ptype_declare(ToolTalkPType, 0, HandleTtMedia,
-				 NULL, True);
+				 nullptr, True);
     if (tt_is_err(ttrc)) {
 	errfmt = CATGETS(msgCatalog, 1, 8, "ttmedia_ptype_declare failed:\n%s");
         statmsg = tt_status_message(status);
@@ -241,7 +241,7 @@ main(int argc, char **argv)
 	XtFree(errmsg);
     }
 
-    ttpat = ttdt_session_join(NULL, NULL, NULL, NULL, True,
+    ttpat = ttdt_session_join(nullptr, nullptr, nullptr, nullptr, True,
 			      TTDT_SESSION_NO_REQUESTS);
     if ((ttrc = tt_ptr_error(ttpat)) != TT_OK) {
 	errfmt = CATGETS(msgCatalog, 1, 9, "ttdt_session_join failed:\n%s");
@@ -254,16 +254,16 @@ main(int argc, char **argv)
     }
 
     XtAppAddInput(appContext, ttfd, (XtPointer)XtInputReadMask,
-		  tttk_Xt_input_handler, NULL);
+		  tttk_Xt_input_handler, nullptr);
 
-    if (argvals.serverMode != NULL) {
+    if (argvals.serverMode != nullptr) {
 	/*
 	 * We're in server mode.  Thus do nothing until requested to do so
 	 * through ToolTalk.
 	 */
     } else if (argc < 2) {
 	/* No files given, so put up an untitled window. */
-	(void) NewWindow(LOAD_EMPTY, NULL, 0);
+	(void) NewWindow(LOAD_EMPTY, nullptr, 0);
     } else {
 	/* Load each file into its own window. */
 	for (i = 1; i < argc; ++i)
@@ -336,23 +336,23 @@ NewWindow(LoadType loadtype, char *name_or_buf, int len)
 
     /* Set window manager title and icon */
 
-    XtVaGetValues(mainWindow, XmNforeground, &fg, XmNbackground, &bg, NULL);
+    XtVaGetValues(mainWindow, XmNforeground, &fg, XmNbackground, &bg, nullptr);
     iconPixmap = XmGetPixmap(XtScreen(toplevel), IconPixmap, fg, bg);
     iconMask = XmGetPixmapByDepth(XtScreen(toplevel), IconMask, 1, 0, 1);
     XtVaSetValues(toplevel,
 		XmNiconName, appnameString,
 		XmNiconPixmap, iconPixmap,
 		XmNiconMask, iconMask,
-		NULL);
+		nullptr);
 
     /* Create the GUI */
 
-    menuBar = XmCreateMenuBar(mainWindow, "menuBar", NULL, 0);
+    menuBar = XmCreateMenuBar(mainWindow, "menuBar", nullptr, 0);
     XtManageChild(menuBar);
 
     /* File menu */
 
-    pd = XmCreatePulldownMenu(menuBar, "fileMenu", NULL, 0);
+    pd = XmCreatePulldownMenu(menuBar, "fileMenu", nullptr, 0);
 
     labelString = XmStringCreateLocalized(CATGETS(msgCatalog, 2, 1, "File"));
     n = 0;
@@ -369,7 +369,7 @@ NewWindow(LoadType loadtype, char *name_or_buf, int len)
     XtSetArg(args[n], XmNmnemonic, 'N'); n++;
     pb = XmCreatePushButton(pd, "newButton", args, n);
     XtManageChild(pb);
-    XtAddCallback(pb, XmNactivateCallback, NewCb, NULL);
+    XtAddCallback(pb, XmNactivateCallback, NewCb, nullptr);
     XmStringFree(labelString);
 
     labelString = XmStringCreateLocalized(CATGETS(msgCatalog, 2, 2, "Open..."));
@@ -420,7 +420,7 @@ NewWindow(LoadType loadtype, char *name_or_buf, int len)
 
     /* Help menu */
 
-    pd = XmCreatePulldownMenu(menuBar, "helpMenu", NULL, 0);
+    pd = XmCreatePulldownMenu(menuBar, "helpMenu", nullptr, 0);
 
     labelString = XmStringCreateLocalized(CATGETS(msgCatalog, 2, 7, "Help"));
     n = 0;
@@ -431,7 +431,7 @@ NewWindow(LoadType loadtype, char *name_or_buf, int len)
     XtManageChild(cb);
     XmStringFree(labelString);
 
-    XtVaSetValues(menuBar, XmNmenuHelpWidget, cb, NULL);
+    XtVaSetValues(menuBar, XmNmenuHelpWidget, cb, nullptr);
 
     labelString = XmStringCreateLocalized(CATGETS(msgCatalog,2,8, "Overview..."));
     n = 0;
@@ -439,7 +439,7 @@ NewWindow(LoadType loadtype, char *name_or_buf, int len)
     XtSetArg(args[n], XmNmnemonic, 'O'); n++;
     pb = XmCreatePushButton(pd, "helpButton", args, n);
     XtManageChild(pb);
-    XtAddCallback(pb, XmNactivateCallback, HelpCb, NULL);
+    XtAddCallback(pb, XmNactivateCallback, HelpCb, nullptr);
     XmStringFree(labelString);
 
     /* Drawing work area */
@@ -465,12 +465,12 @@ NewWindow(LoadType loadtype, char *name_or_buf, int len)
     XtSetArg(args[n], XmNtranslations, drawingTranslations); n++;
     drawingArea = XmCreateDrawingArea(frame2, "drawingArea", args, n);
     XtManageChild(drawingArea);
-    XtAddCallback(drawingArea, XmNexposeCallback, ExposeCb, NULL);
-    XtAddCallback(drawingArea, XmNinputCallback, InputCb, NULL);
+    XtAddCallback(drawingArea, XmNexposeCallback, ExposeCb, nullptr);
+    XtAddCallback(drawingArea, XmNinputCallback, InputCb, nullptr);
 
     DtDndDropRegister(drawingArea,
 		      DtDND_FILENAME_TRANSFER | DtDND_BUFFER_TRANSFER,
-		      XmDROP_COPY, DropTransferCbList, NULL, 0);
+		      XmDROP_COPY, DropTransferCbList, nullptr, 0);
 
     XmAddWMProtocolCallback(toplevel, WM_DELETE_WINDOW, ExitCb, (XtPointer)wd);
     XmAddWMProtocolCallback(toplevel, WM_SAVE_YOURSELF, SaveSessionCb,
@@ -483,7 +483,7 @@ NewWindow(LoadType loadtype, char *name_or_buf, int len)
 
     switch (loadtype) {
     case LOAD_EMPTY:
-	SetTitle(toplevel, NULL);
+	SetTitle(toplevel, nullptr);
 	return True;
     case LOAD_FILE:
         return LoadFile(wd, name_or_buf);
@@ -500,9 +500,9 @@ NewWindow(LoadType loadtype, char *name_or_buf, int len)
 
 static void HelpCb(Widget w, XtPointer cd, XtPointer cb)
 {
-    static Widget helpDialog = NULL;
+    static Widget helpDialog = nullptr;
 
-    if (helpDialog == NULL) {
+    if (helpDialog == nullptr) {
 	char *title;
 	Arg args[10];
 	int n;
@@ -514,12 +514,12 @@ static void HelpCb(Widget w, XtPointer cd, XtPointer cb)
 	helpDialog = DtCreateHelpDialog(appShell, "helpDialog", args, n);
 
 	title = CATGETS(msgCatalog, 1, 4, "Template Help");
-	XtVaSetValues(XtParent(helpDialog), XmNtitle, title, NULL);
+	XtVaSetValues(XtParent(helpDialog), XmNtitle, title, nullptr);
     } else {
 	XtVaSetValues(helpDialog,
 		      DtNhelpVolume, HelpVolume,
 		      DtNlocationId, HelpTopic,
-		      NULL);
+		      nullptr);
     }
     XtManageChild(helpDialog);
 }
@@ -544,7 +544,7 @@ static void ClearCb(Widget w, XtPointer cd, XtPointer cb)
  */
 static void NewCb(Widget w, XtPointer cd, XtPointer cb)
 {
-    (void) NewWindow(LOAD_EMPTY, NULL, 0);
+    (void) NewWindow(LOAD_EMPTY, nullptr, 0);
 }
 
 
@@ -556,7 +556,7 @@ static void OpenCb(Widget w, XtPointer cd, XtPointer cb)
 {
     WindowData *wd = (WindowData *)cd;
 
-    if (wd->openDialog == NULL) {
+    if (wd->openDialog == nullptr) {
 	XmString pattern;
 	XmString dialogTitle;
 	Arg args[20];
@@ -588,8 +588,8 @@ static void OpenOkCb(Widget w, XtPointer cd, XtPointer cb)
 	(XmFileSelectionBoxCallbackStruct *) cb;
     Widget drawingArea = XtNameToWidget(wd->shell, "*drawingArea");
 
-    fileName = XmStringUnparse(fsbcs->value, NULL, XmCHARSET_TEXT,
-                               XmCHARSET_TEXT, NULL, 0, XmOUTPUT_ALL);
+    fileName = XmStringUnparse(fsbcs->value, nullptr, XmCHARSET_TEXT,
+                               XmCHARSET_TEXT, nullptr, 0, XmOUTPUT_ALL);
     (void) LoadFile(wd, fileName);
     XtFree(fileName);
 
@@ -605,7 +605,7 @@ static void SaveCb(Widget w, XtPointer cd, XtPointer cb)
 {
     WindowData *wd = (WindowData *)cd;
 
-    if (wd->saveDialog == NULL) {
+    if (wd->saveDialog == nullptr) {
 	XmString pattern;
 	XmString dialogTitle;
 	Arg args[20];
@@ -657,7 +657,7 @@ static void SaveOkCb(Widget w, XtPointer cd, XtPointer cb)
 	fileName = AppendString(fileName, Suffix);
     }
 
-    if ((fp = fopen(fileName, "w")) != NULL) {
+    if ((fp = fopen(fileName, "w")) != nullptr) {
 	fputs(FileSignature, fp);
 	for (i=0; i < wd->npoints; i++)
 	    fprintf(fp, "%d %d\n", wd->points[i].x, wd->points[i].y);
@@ -704,7 +704,7 @@ static void ExposeCb(Widget w, XtPointer cd, XtPointer cb)
     WindowData *wd;
     int i;
 
-    if (dcb->event != NULL && dcb->event->xexpose.count > 0) return;
+    if (dcb->event != nullptr && dcb->event->xexpose.count > 0) return;
 
     wd = FindData(w);
 
@@ -742,7 +742,7 @@ static void ExitCb(Widget w, XtPointer cd, XtPointer cb)
 {
     WindowData *wd = (WindowData *)cd;
     DestroyData(wd);
-    if (windowList == NULL)
+    if (windowList == nullptr)
 	ReallyExit(0);
 }
 
@@ -760,16 +760,16 @@ static void SaveSessionCb(Widget w, XtPointer cd, XtPointer cb)
     Widget first;
 
     /* count the number of windows bound to files */
-    for (wd = windowList; wd != NULL; wd = wd->next) {
-	if (wd->name != NULL)
+    for (wd = windowList; wd != nullptr; wd = wd->next) {
+	if (wd->name != nullptr)
 	    ++argcount;
     }
 
     command = (char **)XtMalloc(argcount*sizeof(char*));
     command[0] = argv0;
     i = 1;
-    for (wd = windowList; wd != NULL; wd = wd->next) {
-	if (wd->name != NULL)
+    for (wd = windowList; wd != nullptr; wd = wd->next) {
+	if (wd->name != nullptr)
 	    command[i++] = wd->name;
     }
 
@@ -777,7 +777,7 @@ static void SaveSessionCb(Widget w, XtPointer cd, XtPointer cb)
 	XSetCommand(XtDisplay(first), XtWindow(first), command, i);
     if (w != first)
 	XChangeProperty(XtDisplay(w), XtWindow(w), XA_WM_COMMAND, XA_STRING, 8,
-			PropModeReplace, NULL, 0);
+			PropModeReplace, nullptr, 0);
     XtFree((char *)command);
 }
 
@@ -817,7 +817,7 @@ static void DropTransferCb(Widget drawingArea, XtPointer cd, XtPointer cb)
     case DtDND_BUFFER_TRANSFER:
 	bufPtr   = dcb->dropData->data.buffers[0].bp;
 	bufLen   = dcb->dropData->data.buffers[0].size;
-	dataType = DtDtsBufferToDataType(bufPtr, bufLen, NULL);
+	dataType = DtDtsBufferToDataType(bufPtr, bufLen, nullptr);
 	if (strcmp(dataType, DataType) != 0) {
 	    DtDtsFreeDataType(dataType);
 	    return;
@@ -844,17 +844,17 @@ SetTitle(Widget w, char *name)
     char buf[1000];
     char *p;
 
-    if (name == NULL) {
+    if (name == nullptr) {
 	p = untitledString;
     } else {
 	p = strrchr(name, '/');
-	if (p == NULL)
+	if (p == nullptr)
 	    p = name;
 	else
 	    p++;
     }
     sprintf(buf, "%s%s%s", appnameString, separatorString, p);
-    XtVaSetValues(w, XtNtitle, buf, NULL);
+    XtVaSetValues(w, XtNtitle, buf, nullptr);
 }
 
 
@@ -870,11 +870,11 @@ NewData(void)
     wd = XtNew(WindowData);
     wd->npoints = 0;
     wd->nalloc = 0;
-    wd->points = NULL;
-    wd->shell = NULL;
-    wd->openDialog = NULL;
-    wd->saveDialog = NULL;
-    wd->name = NULL;
+    wd->points = nullptr;
+    wd->shell = nullptr;
+    wd->openDialog = nullptr;
+    wd->saveDialog = nullptr;
+    wd->name = nullptr;
 
     /* push it onto the front of the global list */
     wd->next = windowList;
@@ -904,7 +904,7 @@ AssocData(WindowData *wd, Widget w)
 static WindowData *
 FindData(Widget w)
 {
-    WindowData *wd = NULL;
+    WindowData *wd = nullptr;
 
     while (! XtIsShell(w))
 	w = XtParent(w);
@@ -923,17 +923,17 @@ DestroyData(WindowData *wd)
 
     FreeData(wd);
 
-    if (wd->shell != NULL)
+    if (wd->shell != nullptr)
 	XtDestroyWidget(wd->shell);
-    if (wd->openDialog != NULL)
+    if (wd->openDialog != nullptr)
 	XtDestroyWidget(wd->openDialog);
-    if (wd->saveDialog != NULL)
+    if (wd->saveDialog != nullptr)
 	XtDestroyWidget(wd->saveDialog);
 
     /* remove from the global list */
 
     p = &windowList;
-    while (*p != NULL) {
+    while (*p != nullptr) {
 	if (*p == wd) {
 	    *p = wd->next;
 	    break;
@@ -954,10 +954,10 @@ static Boolean LoadFile(WindowData *wd, char *fileName)
     int np, i, x, y;
     char sig[100];
 
-    if ((fp = fopen(fileName, "r")) == NULL)
+    if ((fp = fopen(fileName, "r")) == nullptr)
 	return False;
 
-    if (fgets(sig, sizeof(sig), fp) == NULL) {
+    if (fgets(sig, sizeof(sig), fp) == nullptr) {
 	fclose(fp);
 	return False;
     }
@@ -971,7 +971,7 @@ static Boolean LoadFile(WindowData *wd, char *fileName)
     while (fscanf(fp, "%d %d", &x, &y) != EOF)
 	AddPoint(wd, x, y);
     fclose(fp);
-    if (wd->shell != NULL)
+    if (wd->shell != nullptr)
 	SetTitle(wd->shell, fileName);
     wd->name = XtNewString(fileName);
     return True;
@@ -1002,8 +1002,8 @@ static Boolean LoadBuffer(WindowData *wd, void *buf, int len)
 	AddPoint(wd, x, y);
 	bufp += l;
     }
-    if (wd->shell != NULL)
-	SetTitle(wd->shell, NULL);
+    if (wd->shell != nullptr)
+	SetTitle(wd->shell, nullptr);
     return True;
 }
 
@@ -1023,12 +1023,12 @@ HandleTtMedia(
     char *opstr = tt_message_op(msg);
 
     if (strcmp(opstr, "Edit") == 0) {
-	if (file != NULL) {
+	if (file != nullptr) {
 	    if (NewWindow(LOAD_FILE, file, 0))
 		tt_message_reply(msg);
 	    else
 		tttk_message_fail(msg, TT_ERR_OP, "open failed", False);
-	} else if (contents != NULL && len > 0) {
+	} else if (contents != nullptr && len > 0) {
 	    if (NewWindow(LOAD_BUFFER, (char *)contents, len))
 		tt_message_reply(msg);
 	    else
@@ -1084,12 +1084,12 @@ static void FreeData(WindowData *wd)
 {
     XtFree((char *)wd->points);
     XtFree(wd->name);
-    wd->points = NULL;
-    wd->name = NULL;
+    wd->points = nullptr;
+    wd->name = nullptr;
     wd->npoints = 0;
     wd->nalloc = 0;
-    if (wd->shell != NULL)
-	SetTitle(wd->shell, NULL);
+    if (wd->shell != nullptr)
+	SetTitle(wd->shell, nullptr);
 }
 
 
@@ -1131,7 +1131,7 @@ static void DrawPoint(Widget w, int x, int y)
 	XGCValues gcv;
 	unsigned long gcm;
 
-	XtVaGetValues(w, XmNforeground, &fg, XmNbackground, &bg, NULL);
+	XtVaGetValues(w, XmNforeground, &fg, XmNbackground, &bg, nullptr);
 	pixmap = XmGetPixmapByDepth(XtScreen(w), "template-brush.bm", 1, 0, 1);
 	if (pixmap == XmUNSPECIFIED_PIXMAP) {
 	    XtAppWarning(appContext, "template:template-brush.bm not installed!");

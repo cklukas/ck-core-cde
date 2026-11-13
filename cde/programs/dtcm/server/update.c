@@ -121,19 +121,19 @@ _DtCmsUpdateEntry(
 {
 	CSA_return_code	stat;
 	cms_entry	*olde, *newe;
-	List_node	*lnode = NULL;
+	List_node	*lnode = nullptr;
 	int		file_size;
 
 	/* get the entry from the tree */
-	if ((olde = (cms_entry *)rb_lookup(cal->tree, (caddr_t)key)) == NULL) {
+	if ((olde = (cms_entry *)rb_lookup(cal->tree, (caddr_t)key)) == nullptr) {
 		/* find entry in the repeating entry list */
-		if ((lnode = hc_lookup_node(cal->list, (caddr_t)key)) == NULL)
+		if ((lnode = hc_lookup_node(cal->list, (caddr_t)key)) == nullptr)
 			return (CSA_X_DT_E_ENTRY_NOT_FOUND);
 		else
 			olde = (cms_entry *)lnode->data;
 	}
 
-	if (olde == NULL)
+	if (olde == nullptr)
 		return (CSA_X_DT_E_ENTRY_NOT_FOUND);
 
 	/* check access rights */
@@ -156,7 +156,7 @@ _DtCmsUpdateEntry(
 	_csa_iso8601_to_tick(newe->attrs[CSA_ENTRY_ATTR_START_DATE_I].value->\
 		item.date_time_value, &newe->key.time);
 
-	if (lnode != NULL && (stat = _AdjustStartEndTimeForUpdateEntry(
+	if (lnode != nullptr && (stat = _AdjustStartEndTimeForUpdateEntry(
 	    lnode, newe, key, num_attrs, attrs)) != CSA_SUCCESS) {
 		_DtCm_free_cms_entry(newe);
 		return (stat);
@@ -182,7 +182,7 @@ _DtCmsUpdateEntry(
 	}
 
 	/* remove old entry */
-	if ((stat = _DtCmsDeleteEntryAndLog(cal, NULL, 0, key, &olde))
+	if ((stat = _DtCmsDeleteEntryAndLog(cal, nullptr, 0, key, &olde))
 	    != CSA_SUCCESS){
 		_DtCm_free_cms_entry(newe);
 		return (stat);
@@ -224,8 +224,8 @@ _DtCmsUpdateInstances(
 	cms_entry	**newentry)
 {
 	CSA_return_code	stat;
-	cms_entry	*olde, *newe = NULL, *updatedold;
-	List_node	*lnode = NULL;
+	cms_entry	*olde, *newe = nullptr, *updatedold;
+	List_node	*lnode = nullptr;
 	int		file_size;
 	int		i, remain, rulei;
 	cms_attribute_value *oaptr, *naptr;
@@ -260,20 +260,20 @@ _DtCmsUpdateInstances(
 
 	if (scope == CSA_SCOPE_ONE) {
 		if (rulei == -1) {
-			_DtCmUpdateSint32AttrVal(NULL, &newe->attrs\
+			_DtCmUpdateSint32AttrVal(nullptr, &newe->attrs\
 				[CSA_ENTRY_ATTR_NUMBER_RECURRENCES_I].value);
-			_DtCmUpdateStringAttrVal(NULL, &newe->attrs\
+			_DtCmUpdateStringAttrVal(nullptr, &newe->attrs\
 				[CSA_ENTRY_ATTR_RECURRENCE_RULE_I].value);
-			_DtCmUpdateSint32AttrVal(NULL, &newe->attrs\
+			_DtCmUpdateSint32AttrVal(nullptr, &newe->attrs\
 				[CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I].value);
-			_DtCmUpdateSint32AttrVal(NULL, &newe->attrs\
+			_DtCmUpdateSint32AttrVal(nullptr, &newe->attrs\
 				[CSA_X_DT_ENTRY_ATTR_REPEAT_TIMES_I].value);
-			_DtCmUpdateSint32AttrVal(NULL, &newe->attrs\
+			_DtCmUpdateSint32AttrVal(nullptr, &newe->attrs\
 				[CSA_X_DT_ENTRY_ATTR_REPEAT_INTERVAL_I].value);
-			_DtCmUpdateSint32AttrVal(NULL, &newe->attrs\
+			_DtCmUpdateSint32AttrVal(nullptr, &newe->attrs\
 				[CSA_X_DT_ENTRY_ATTR_REPEAT_OCCURRENCE_NUM_I].\
 				value);
-			_DtCmUpdateStringAttrVal(NULL, &newe->attrs\
+			_DtCmUpdateStringAttrVal(nullptr, &newe->attrs\
 				[CSA_X_DT_ENTRY_ATTR_SEQUENCE_END_DATE_I].value);
 		}
 	} else {
@@ -297,7 +297,7 @@ _DtCmsUpdateInstances(
 			oaptr = olde->attrs\
 				[CSA_ENTRY_ATTR_NUMBER_RECURRENCES_I].value;
 
-			naptr = (updatedold == NULL) ? NULL :
+			naptr = (updatedold == nullptr) ? nullptr :
 				updatedold->attrs[\
 				CSA_ENTRY_ATTR_NUMBER_RECURRENCES_I].\
 				value;
@@ -347,7 +347,7 @@ _DtCmsUpdateInstances(
 
 _cleanup:
 	_DtCmsTruncateFile(cal->calendar, file_size);
-	if (updatedold == NULL)
+	if (updatedold == nullptr)
 		_DtCmsInsertEntry(cal, olde);
 	else {
 		_DtCm_free_cms_entry(updatedold);
@@ -371,7 +371,7 @@ _cleanup:
 static boolean_t
 _SameRecurrenceRule(cms_attribute_value *newval, cms_attribute_value *oldval)
 {
-	if (newval == NULL || newval->item.string_value == NULL)
+	if (newval == nullptr || newval->item.string_value == nullptr)
 		return (B_FALSE);
 
 	if (strcmp(newval->item.string_value, oldval->item.string_value))
@@ -492,15 +492,15 @@ _AdjustExceptionDates(cms_entry *entry, time_t delta)
 	time_t			tick;
 	CSA_date_time_list	dt, head;
 
-	if (entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value == NULL ||
+	if (entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value == nullptr ||
 	    entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value->item.\
-	    date_time_list_value == NULL)
+	    date_time_list_value == nullptr)
 		return;
 
 	head = entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value->item.\
 		date_time_list_value;
 
-	for (dt = head; dt != NULL; dt = dt->next) {
+	for (dt = head; dt != nullptr; dt = dt->next) {
 		_csa_iso8601_to_tick(dt->date_time, &tick);
 		tick += delta;
 		_csa_tick_to_iso8601(tick, dt->date_time);
@@ -547,7 +547,7 @@ _AdjustStartEndTimeForUpdateEntry(
 		_csa_iso8601_to_tick(endaptr->item.date_time_value, &endtime);
 
 	if (key->time != olde->key.time &&
-	    (newaptr == NULL || newaptr->item.string_value == NULL ||
+	    (newaptr == nullptr || newaptr->item.string_value == nullptr ||
 	    RulesMatch(oldaptr->item.string_value, newaptr->item.string_value)
 	    == B_FALSE)) {
 		return (CSA_E_INVALID_ATTRIBUTE_VALUE);
@@ -573,7 +573,7 @@ _AdjustStartEndTimeForUpdateEntry(
 			/* parse the rule */
 			_DtCm_rule_buf = newaptr->item.string_value;
 			_DtCm_rule_parser();
-			if ((newre = _DtCm_repeat_info) == NULL)
+			if ((newre = _DtCm_repeat_info) == nullptr)
 				return (CSA_E_INVALID_RULE);
 
 			/* get new start date */

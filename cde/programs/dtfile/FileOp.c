@@ -252,19 +252,19 @@ FileOpStartError(Widget parent, int error)
    snprintf(message, sizeof(message),
             GETMESSAGE(42, 38, "The file operation could not start: %s"),
             strerror(error));
-   _DtMessage(parent == NULL ? toplevel : parent,
+   _DtMessage(parent == nullptr ? toplevel : parent,
               GETMESSAGE(42, 37, "File operation could not start"),
-              message, NULL, HelpRequestCB);
+              message, nullptr, HelpRequestCB);
 }
 
 void
 FileOpProtocolError(Widget parent)
 {
-   _DtMessage(parent == NULL ? toplevel : parent,
+   _DtMessage(parent == nullptr ? toplevel : parent,
               GETMESSAGE(42, 39, "File operation response error"),
               GETMESSAGE(42, 40,
                  "The background file operation returned an incomplete or invalid response."),
-              NULL, HelpRequestCB);
+              nullptr, HelpRequestCB);
 }
 
 int
@@ -285,7 +285,7 @@ static void
 FileOpAbortStart(FileOpCBData *cb_data)
 {
    int i;
-   if (cb_data == NULL) return;
+   if (cb_data == nullptr) return;
    DirectoryAbortModify(cb_data->host, cb_data->directory);
    for (i = 0; i < cb_data->file_count; ++i)
    {
@@ -309,7 +309,7 @@ FileOpAbortStart(FileOpCBData *cb_data)
 static void
 ChangeIconAbortStart(ChangeIconCBData *cb_data)
 {
-   if (cb_data == NULL) return;
+   if (cb_data == nullptr) return;
    XtFree(cb_data->host_name);
    XtFree(cb_data->directory_name);
    XtFree(cb_data->old_name);
@@ -320,7 +320,7 @@ ChangeIconAbortStart(ChangeIconCBData *cb_data)
 static void
 MakeFileAbortStart(MakeFileCBData *cb_data)
 {
-   if (cb_data == NULL) return;
+   if (cb_data == nullptr) return;
    XtFree(cb_data->to_host);
    XtFree(cb_data->to_dir);
    XtFree(cb_data->to_file);
@@ -349,7 +349,7 @@ PipeRead(
    int n = 0;
    ssize_t rc;
 
-   if (fd < 0 || len < 0 || (buf == NULL && len != 0))
+   if (fd < 0 || len < 0 || (buf == nullptr && len != 0))
    {
       errno = EINVAL;
       return -1;
@@ -390,7 +390,7 @@ PipeWriteString(
 	int fd,
 	char *s)
 {
-   size_t length = s == NULL ? 0 : strlen(s);
+   size_t length = s == nullptr ? 0 : strlen(s);
    short encoded_length;
    if (length > SHRT_MAX) { errno = EOVERFLOW; return -1; }
    encoded_length = (short)length;
@@ -407,8 +407,8 @@ PipeReadStringField(int fd, char **value)
    short len;
    char *s;
 
-   if (value == NULL) { errno = EINVAL; return -1; }
-   *value = NULL;
+   if (value == nullptr) { errno = EINVAL; return -1; }
+   *value = nullptr;
 
    /* get the length */
    if (PipeReadExact(fd, &len, sizeof(len)) != 0) return -1;
@@ -441,7 +441,7 @@ PipeReadString(
 	int fd)
 {
    char *value;
-   return PipeReadStringField(fd, &value) == 0 ? value : NULL;
+   return PipeReadStringField(fd, &value) == 0 ? value : nullptr;
 }
 
 
@@ -630,11 +630,11 @@ SendModifyMsg(
 
       dir_path = ResolveLocalPathName(updates[i].host,
                                       updates[i].directory,
-                                      NULL,
+                                      nullptr,
                                       home_host_name,
                                       &tt_status);
 
-      if (tt_status == TT_OK && dir_path != NULL &&
+      if (tt_status == TT_OK && dir_path != nullptr &&
           stat(dir_path, &stat_buf) == 0)
          modify_time = stat_buf.st_mtime;
       XtFree(dir_path);
@@ -680,15 +680,15 @@ FileOpPathJoin(const char *directory, const char *leaf)
 {
    size_t directory_length, leaf_length, separator;
    char *path;
-   if (directory == NULL || leaf == NULL || leaf[0] == 0 || strchr(leaf, '/') != NULL)
-   { errno = EINVAL; return NULL; }
+   if (directory == nullptr || leaf == nullptr || leaf[0] == 0 || strchr(leaf, '/') != nullptr)
+   { errno = EINVAL; return nullptr; }
    directory_length = strlen(directory);
    leaf_length = strlen(leaf);
    separator = directory_length != 0 && directory[directory_length - 1] == '/' ? 0 : 1;
    if (directory_length > SIZE_MAX - leaf_length - separator - 1)
-   { errno = ENAMETOOLONG; return NULL; }
+   { errno = ENAMETOOLONG; return nullptr; }
    path = XtMalloc(directory_length + leaf_length + separator + 1);
-   if (path == NULL) return NULL;
+   if (path == nullptr) return nullptr;
    memcpy(path, directory, directory_length);
    if (separator != 0) path[directory_length++] = '/';
    memcpy(path + directory_length, leaf, leaf_length + 1);
@@ -701,12 +701,12 @@ FileOpParentPath(const char *path)
    const char *slash;
    size_t length;
    char *parent;
-   if (path == NULL || path[0] != '/') { errno = EINVAL; return NULL; }
+   if (path == nullptr || path[0] != '/') { errno = EINVAL; return nullptr; }
    slash = strrchr(path, '/');
-   if (slash == NULL) { errno = EINVAL; return NULL; }
+   if (slash == nullptr) { errno = EINVAL; return nullptr; }
    length = slash == path ? 1 : (size_t)(slash - path);
    parent = XtMalloc(length + 1);
-   if (parent == NULL) return NULL;
+   if (parent == nullptr) return nullptr;
    memcpy(parent, path, length);
    parent[length] = 0;
    return parent;
@@ -716,7 +716,7 @@ static char *
 FileOpDecisionPath(const char *target, const char *leaf)
 {
    char *parent = FileOpParentPath(target), *path;
-   if (parent == NULL) return NULL;
+   if (parent == nullptr) return nullptr;
    path = FileOpPathJoin(parent, leaf);
    XtFree(parent);
    return path;
@@ -729,34 +729,34 @@ FileOpUniquePath(const char *target)
    unsigned int sequence;
    char *candidate;
    struct stat ignored;
-   if (target == NULL) { errno = EINVAL; return NULL; }
+   if (target == nullptr) { errno = EINVAL; return nullptr; }
    length = strlen(target);
    for (sequence = 1; sequence != UINT_MAX; ++sequence)
    {
-      int suffix = snprintf(NULL, 0, "_%u", sequence);
+      int suffix = snprintf(nullptr, 0, "_%u", sequence);
       if (suffix < 0 || length > SIZE_MAX - (size_t)suffix - 1)
-      { errno = ENAMETOOLONG; return NULL; }
+      { errno = ENAMETOOLONG; return nullptr; }
       candidate = XtMalloc(length + (size_t)suffix + 1);
-      if (candidate == NULL) return NULL;
+      if (candidate == nullptr) return nullptr;
       memcpy(candidate, target, length);
       (void)snprintf(candidate + length, (size_t)suffix + 1, "_%u", sequence);
       if (lstat(candidate, &ignored) != 0)
       {
          if (errno == ENOENT) return candidate;
          XtFree(candidate);
-         return NULL;
+         return nullptr;
       }
       XtFree(candidate);
    }
    errno = EOVERFLOW;
-   return NULL;
+   return nullptr;
 }
 
 static int
 FileOpObservationMatches(const char *target, const struct stat *identity)
 {
    struct stat current;
-   return target != NULL && identity != NULL && lstat(target, &current) == 0 &&
+   return target != nullptr && identity != nullptr && lstat(target, &current) == 0 &&
           current.st_dev == identity->st_dev && current.st_ino == identity->st_ino &&
           (current.st_mode & S_IFMT) == (identity->st_mode & S_IFMT) &&
           current.st_size == identity->st_size &&
@@ -793,7 +793,7 @@ FileOpHandleConflicts(int pipe_s2m, int pipe_m2s, char *target_dir,
                       struct stat *sameTargetIdentity, Boolean *first_op)
 {
    DtfileConflictBatch batch = {0};
-   DtfileConflictDecision *decisions = NULL;
+   DtfileConflictDecision *decisions = nullptr;
    DtfileConflictOperation operation = FileOpConflictOperation(mode);
    pid_t owner = getppid();
    short message = PIPEMSG_CONFLICT_BATCH;
@@ -807,8 +807,8 @@ FileOpHandleConflicts(int pipe_s2m, int pipe_m2s, char *target_dir,
    for (row = 0; row < (size_t)sameCount; ++row)
    {
       int index = sameIndex[row];
-      const char *leaf = to_file == NULL ? updates[index].file : to_file;
-      char *source = NULL, *target;
+      const char *leaf = to_file == nullptr ? updates[index].file : to_file;
+      char *source = nullptr, *target;
       Tt_status status = TT_OK;
 
       if (mode != MAKE_BUFFER)
@@ -817,15 +817,15 @@ FileOpHandleConflicts(int pipe_s2m, int pipe_m2s, char *target_dir,
                                        updates[index].directory,
                                        updates[index].file,
                                        home_host_name, &status);
-         if (status != TT_OK || source == NULL) goto row_failed;
+         if (status != TT_OK || source == nullptr) goto row_failed;
       }
       target = FileOpPathJoin(target_dir, leaf);
-      if (target == NULL) { XtFree(source); goto row_failed; }
+      if (target == nullptr) { XtFree(source); goto row_failed; }
       if (updates[index].app_man_dir)
          target = _DtResolveAppManPath(target, updates[index].app_man_dir);
-      if (target == NULL) { XtFree(source); goto row_failed; }
+      if (target == nullptr) { XtFree(source); goto row_failed; }
       if (DtfileConflictSetItem(&batch, row, (uint32_t)index, sameFlags[row],
-                                source, source == NULL ? 0 : strlen(source),
+                                source, source == nullptr ? 0 : strlen(source),
                                 target, strlen(target)) != 0)
       {
          XtFree(source); XtFree(target); goto row_failed;
@@ -853,7 +853,7 @@ row_failed:
       DtfileConflictItem *item = &batch.items[row];
       DtfileConflictDecision *decision = &decisions[row];
       int index = (int)item->request_index;
-      char *destination = NULL, *saved_existing = NULL;
+      char *destination = nullptr, *saved_existing = nullptr;
       const char *leaf;
       Boolean success = False;
       Boolean discard_saved = False;
@@ -876,7 +876,7 @@ row_failed:
          destination = FileOpDecisionPath(item->target, decision->name);
       else
          destination = XtNewString(item->target);
-      if (destination == NULL)
+      if (destination == nullptr)
       {
          FileOpRememberFailure(&failed, errno);
          continue;
@@ -900,7 +900,7 @@ row_failed:
       {
          saved_existing = FileOpUniquePath(item->target);
          discard_saved = True;
-         if (saved_existing == NULL ||
+         if (saved_existing == nullptr ||
              !FileManip((Widget)(intptr_t)pipe_s2m, MOVE_FILE, item->target,
                         saved_existing, False, FileOpError, True, desktop_type))
          {
@@ -912,7 +912,7 @@ row_failed:
       {
          struct stat occupied;
          saved_existing = FileOpDecisionPath(item->target, decision->name);
-         if (saved_existing == NULL || lstat(saved_existing, &occupied) == 0 || errno != ENOENT ||
+         if (saved_existing == nullptr || lstat(saved_existing, &occupied) == 0 || errno != ENOENT ||
              !FileManip((Widget)(intptr_t)pipe_s2m, MOVE_FILE, item->target,
                         saved_existing, False, FileOpError, True, desktop_type))
          {
@@ -922,7 +922,7 @@ row_failed:
       }
 
       leaf = strrchr(destination, '/');
-      leaf = leaf == NULL ? destination : leaf + 1;
+      leaf = leaf == nullptr ? destination : leaf + 1;
       if (SendModifyMsg(pipe_s2m, mode, *first_op, target_dir, updates, index,
                         (char *)leaf) != 0)
       {
@@ -946,7 +946,7 @@ row_failed:
       if (!success)
       {
          FileOpRememberFailure(&failed, errno);
-         if (saved_existing != NULL)
+         if (saved_existing != nullptr)
          {
             if (!FileManip((Widget)(intptr_t)pipe_s2m, MOVE_FILE,
                            saved_existing, item->target, False,
@@ -994,7 +994,7 @@ FileMoveCopyProcess(
         int mode,
         DesktopRec *desktopWindow)
 {
-   char * target_dir, * from = NULL, * to;
+   char * target_dir, * from = nullptr, * to;
    int i, rc;
    Boolean return_val = False;
    Boolean operationFailed = False;
@@ -1004,21 +1004,21 @@ FileMoveCopyProcess(
    struct stat stat_buf, from_stat_buf;
    int sameCount = 0;
    int errorCount = 0;
-   int *sameIndex = NULL;
-   unsigned int *sameFlags = NULL;
-   struct stat *sameSourceIdentity = NULL, *sameTargetIdentity = NULL;
+   int *sameIndex = nullptr;
+   unsigned int *sameFlags = nullptr;
+   struct stat *sameSourceIdentity = nullptr, *sameTargetIdentity = nullptr;
    Boolean first_op = True;
    Tt_status tt_status;
-   String permissionErrors = NULL;
+   String permissionErrors = nullptr;
    Boolean targetChecked = FALSE;
    Boolean targetError   = FALSE;
    Boolean CopyError=FALSE,MoveError1=FALSE,MoveError2=FALSE;
-   char  *CopyString=NULL,*MoveString1=NULL,*MoveString2=NULL;
+   char  *CopyString=nullptr,*MoveString1=nullptr,*MoveString2=nullptr;
    Boolean Same = FALSE;
 
    /*  Get the fully qualified destination path.  */
-   target_dir = (char *)ResolveLocalPathName(host, directory, NULL, home_host_name, &tt_status);
-   if (TT_OK != tt_status || target_dir == NULL)
+   target_dir = (char *)ResolveLocalPathName(host, directory, nullptr, home_host_name, &tt_status);
+   if (TT_OK != tt_status || target_dir == nullptr)
    {
      char msg1[2*MAX_PATH];
 #ifdef sun
@@ -1028,7 +1028,7 @@ FileMoveCopyProcess(
      sprintf (msg1, GetSharedMessage(CANNOT_CONNECT_ERROR_2),
               directory, host, host);
 #endif
-     PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
+     PipeWriteErrmsg(pipe_s2m, -1, msg1, nullptr);
      rc = -1;
      (void)FileOpWriteTaggedInt(pipe_s2m, PIPEMSG_DONE, rc);
      return rc;
@@ -1049,7 +1049,7 @@ FileMoveCopyProcess(
                                     updates[i].file,
                                     home_host_name,
                                     &tt_status);
-        if (from == NULL)
+        if (from == nullptr)
         {
           char msg1[2*MAX_PATH];
 
@@ -1060,14 +1060,14 @@ FileMoveCopyProcess(
           sprintf (msg1, GetSharedMessage(CANNOT_CONNECT_ERROR_2),
                    updates[i].directory, updates[i].host, updates[i].host);
 #endif
-          PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
+          PipeWriteErrmsg(pipe_s2m, -1, msg1, nullptr);
           errorCount++;
           continue;
         }
 
         /* do some extra error checking if a target filename is specified */
         /*   this is meant for the case of a menu-initiated operation     */
-        if (to_file != NULL)
+        if (to_file != nullptr)
         {
           /* Verify that the target directory already exists */
           if ( (stat(target_dir, &stat_buf) != 0) ||
@@ -1156,7 +1156,7 @@ FileMoveCopyProcess(
            continue;
         }
 
-      if (to_file == NULL)
+      if (to_file == nullptr)
       {
          if (strcmp(target_dir, "/") == 0)
          {
@@ -1229,7 +1229,7 @@ FileMoveCopyProcess(
          {
             CopyError = TRUE;
             errorCount++;
-            if(CopyString == NULL)
+            if(CopyString == nullptr)
               CopyString = XtNewString(from);
 	    else
 	    {
@@ -1247,7 +1247,7 @@ FileMoveCopyProcess(
          if (targetChecked || CheckAccess(target_dir,W_OK) == -1)
          {
             MoveError1 = TRUE;
-            if(MoveString1 == NULL)
+            if(MoveString1 == nullptr)
                MoveString1 = XtNewString(from);
             else
             {
@@ -1262,7 +1262,7 @@ FileMoveCopyProcess(
          if (CheckAccess(_DtPName(from),W_OK) == -1)
          {
             MoveError2 = TRUE;
-            if(MoveString2 == NULL)
+            if(MoveString2 == nullptr)
               MoveString2 = XtNewString(from);
             else
             {
@@ -1301,7 +1301,7 @@ FileMoveCopyProcess(
           XtFree(target_file);
           continue;
         }
-         if (sameIndex == NULL)
+         if (sameIndex == nullptr)
          {
             sameIndex       = (int *)XtMalloc(file_count*sizeof(int));
             sameFlags = (unsigned int *)XtCalloc(file_count, sizeof(unsigned int));
@@ -1357,7 +1357,7 @@ FileMoveCopyProcess(
       } /* endif targetfile already exists */
       }
 
-      if ((isContainer = (to_file == NULL)))
+      if ((isContainer = (to_file == nullptr)))
          to = target_dir;
       else
          to = target_file;
@@ -1414,9 +1414,9 @@ FileMoveCopyProcess(
           "Cannot copy the following objects to folder \"%s\"\n\n%s\n\nThe most likely cause is that you do not have\nwrite permission for the target folder");
       DisplayErrorMessage(pipe_s2m,errMsg,CopyString,target_dir);
       CopyError = FALSE;
-      permissionErrors = NULL;
+      permissionErrors = nullptr;
       XtFree(CopyString);
-      CopyString = NULL;
+      CopyString = nullptr;
    }
    if(MoveError1 == TRUE)
    {
@@ -1425,9 +1425,9 @@ FileMoveCopyProcess(
           "Cannot move the following objects to folder \"%s\"\n\n%s\n\nThe most likely cause is that you do not have\nwrite permission for the target folder");
       DisplayErrorMessage(pipe_s2m,errMsg,MoveString1,target_dir);
       MoveError1 = FALSE;
-      permissionErrors = NULL;
+      permissionErrors = nullptr;
       XtFree(MoveString1);
-      MoveString2 = NULL;
+      MoveString2 = nullptr;
    }
    if(MoveError2 == TRUE)
    {
@@ -1436,16 +1436,16 @@ FileMoveCopyProcess(
           "Cannot move the following objects to folder \"%s\"\n\n%s\n\nThe most likely cause is that you do not have\npermission to move source object");
       DisplayErrorMessage(pipe_s2m,errMsg,MoveString2,target_dir);
       MoveError2 = FALSE;
-      permissionErrors = NULL;
+      permissionErrors = nullptr;
       XtFree(MoveString2);
-      MoveString2 = NULL;
+      MoveString2 = nullptr;
    }
 
 
    /* If there were any permissions errors, show the error message */
-   if (permissionErrors != NULL)
+   if (permissionErrors != nullptr)
    {
-      PipeWriteErrmsg(pipe_s2m, -1, permissionErrors, NULL);
+      PipeWriteErrmsg(pipe_s2m, -1, permissionErrors, nullptr);
       XtFree(permissionErrors);
    }
 
@@ -1476,7 +1476,7 @@ FileMoveCopyProcess(
       rc = -1;
 
    XtFree ((char *) target_dir);
-   target_dir = NULL;
+   target_dir = nullptr;
 
    return rc;
 }
@@ -1507,8 +1507,8 @@ FileMoveCopyProcessDesktop(
    Tt_status tt_status;
 
    /*  Get the fully qualified destination path.  */
-   to = ResolveLocalPathName(host, directory, NULL, home_host_name, &tt_status);
-   if (TT_OK != tt_status || to == NULL)
+   to = ResolveLocalPathName(host, directory, nullptr, home_host_name, &tt_status);
+   if (TT_OK != tt_status || to == nullptr)
    {
      char msg1[2*MAX_PATH];
 #ifdef sun
@@ -1518,7 +1518,7 @@ FileMoveCopyProcessDesktop(
      sprintf (msg1, GetSharedMessage(CANNOT_CONNECT_ERROR_2),
               directory, host, host);
 #endif
-     PipeWriteErrmsg(pipe_s2m, -1, msg1, NULL);
+     PipeWriteErrmsg(pipe_s2m, -1, msg1, nullptr);
      rc = -1;
      (void)FileOpWriteTaggedInt(pipe_s2m, PIPEMSG_DONE, rc);
      return rc;
@@ -1536,7 +1536,7 @@ FileMoveCopyProcessDesktop(
                                      updates[i].file,
                                      home_host_name,
                                      &tt_status);
-         if (from == NULL)
+         if (from == nullptr)
          {
             char msg[2*MAX_PATH];
 
@@ -1547,7 +1547,7 @@ FileMoveCopyProcessDesktop(
             sprintf (msg, GetSharedMessage(CANNOT_CONNECT_ERROR_2),
                        updates[i].directory, updates[i].host, updates[i].host);
 #endif
-            PipeWriteErrmsg(pipe_s2m, -1, msg, NULL);
+            PipeWriteErrmsg(pipe_s2m, -1, msg, nullptr);
             operationFailed = True;
             continue;
          }
@@ -1556,9 +1556,9 @@ FileMoveCopyProcessDesktop(
             char msg[2*MAX_PATH];
 
             sprintf(msg,GETMESSAGE(11,16, "A folder cannot be moved into itself.\n%s"),to);
-            PipeWriteErrmsg(pipe_s2m, -1, msg, NULL);
+            PipeWriteErrmsg(pipe_s2m, -1, msg, nullptr);
             XtFree ((char *) from);
-             from = NULL;
+             from = nullptr;
             operationFailed = True;
             continue;
          }
@@ -1604,7 +1604,7 @@ FileMoveCopyProcessDesktop(
         return_val = FileManip((Widget) (intptr_t) pipe_s2m, mode, from, to, TRUE,
                                FileOpError, True, DESKTOP);
         XtFree (from);
-        from = NULL;
+        from = nullptr;
       }
       if (!return_val)
          operationFailed = True;
@@ -1630,7 +1630,7 @@ FileOpBuildPath(
   size_t file_length;
   size_t separator_length;
 
-  if (path == NULL || path_size == 0 || directory == NULL || file == NULL)
+  if (path == nullptr || path_size == 0 || directory == nullptr || file == nullptr)
     return False;
 
   directory_length = strlen(directory);
@@ -1709,7 +1709,7 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
                          char * iconPdir )
 {
   DesktopRec *desktopWin;
-  char *dirp = NULL;
+  char *dirp = nullptr;
   int i;
   char fileName[MAX_PATH];
 
@@ -1740,7 +1740,7 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
       if (target_length > SIZE_MAX - suffix_length - 1)
         continue;
       dirp = XtMalloc(target_length + suffix_length + 1);
-      if (dirp == NULL)
+      if (dirp == nullptr)
         continue;
       memcpy(dirp, targetDir, target_length);
       memcpy(dirp + target_length, tptr + index, suffix_length + 1);
@@ -1761,7 +1761,7 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
       if(file_mgr_data)
          fmd = file_mgr_data;
       FreeFileData( file_view_data->file_data, True );
-      file_view_data->file_data = NULL;
+      file_view_data->file_data = nullptr;
 
       XtFree( desktopWin->dir_linked_to );
       desktopWin->dir_linked_to = XtNewString( dirp );
@@ -1769,10 +1769,10 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
 
       if(fmd)
       {
-        char *new_restricted_directory = fmd->restricted_directory == NULL ?
-          NULL : XtNewString(fmd->restricted_directory);
-        char *new_help_volume = fmd->helpVol == NULL ?
-          NULL : XtNewString(fmd->helpVol);
+        char *new_restricted_directory = fmd->restricted_directory == nullptr ?
+          nullptr : XtNewString(fmd->restricted_directory);
+        char *new_help_volume = fmd->helpVol == nullptr ?
+          nullptr : XtNewString(fmd->helpVol);
 
         XtFree(desktopWin->restricted_directory);
         desktopWin->restricted_directory = new_restricted_directory;
@@ -1787,7 +1787,7 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
 
       full_dir_name = ResolveLocalPathName(desktopWin->host,
                                            dirp,
-                                           NULL,
+                                           nullptr,
                                            home_host_name,
                                            &tt_status);
       if( TT_OK == tt_status )
@@ -1804,15 +1804,15 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
         else
           IsToolBox = False;
 
-        entry = strcmp(desktopWin->file_name, ".") == 0 ? NULL :
+        entry = strcmp(desktopWin->file_name, ".") == 0 ? nullptr :
                                                            desktopWin->file_name;
         n = ReadFileData2(&file_data2, full_dir_name, entry, IsToolBox);
-        file_view_data->file_data = n < 0 ? NULL :
+        file_view_data->file_data = n < 0 ? nullptr :
                                              FileData2toFileData(&file_data2, &n);
-        if (file_view_data->file_data == NULL)
+        if (file_view_data->file_data == nullptr)
           file_view_data->file_data = ReadFileData(full_dir_name, entry);
         XtFree(full_dir_name);
-        full_dir_name = NULL;
+        full_dir_name = nullptr;
       }
 
       directory_set = (DirectorySet *)file_view_data->directory_set;
@@ -1821,7 +1821,7 @@ ChangeWorkspaceIconLink( FileMgrData *fmd,
 
       SaveDesktopInfo(NORMAL_RESTORE);
       XtFree(dirp);
-      dirp = NULL;
+      dirp = nullptr;
     }
   }
 }
@@ -1847,16 +1847,16 @@ FileOpConflictInput(FileOpCBData *cb_data)
       }
       _DtMessage(toplevel, GETMESSAGE(42, 17, "File operation response"),
                  GETMESSAGE(42, 29, "The conflict request was incomplete. The pending items were cancelled."),
-                 NULL, HelpRequestCB);
+                 nullptr, HelpRequestCB);
       DtfileConflictReaderFree(cb_data->conflict_reader);
-      cb_data->conflict_reader = NULL;
+      cb_data->conflict_reader = nullptr;
       DtfileConflictBatchFree(&batch);
       return;
    }
 
    DtfileConflictReaderFree(cb_data->conflict_reader);
-   cb_data->conflict_reader = NULL;
-   parent = cb_data->file_mgr_rec != NULL ? cb_data->file_mgr_rec->shell : toplevel;
+   cb_data->conflict_reader = nullptr;
+   parent = cb_data->file_mgr_rec != nullptr ? cb_data->file_mgr_rec->shell : toplevel;
    reply_fd = cb_data->pipe_m2s;
    cb_data->pipe_m2s = -1; /* The dialog now owns and closes this endpoint. */
    cb_data->conflict_dialog = DtfileConflictDialogCreate(parent, &batch, reply_fd);
@@ -1876,12 +1876,12 @@ FileOpPipeCB(
    FileOpCBData *cb_data = (FileOpCBData *)client_data;
    short pipe_msg;
    int i, n, rc;
-   char *title, *err_msg = NULL, *err_arg = NULL;
-   char *target_file = NULL;
+   char *title, *err_msg = nullptr, *err_arg = nullptr;
+   char *target_file = nullptr;
    long modify_time;
    Boolean done;
 
-   if (cb_data->conflict_reader != NULL)
+   if (cb_data->conflict_reader != nullptr)
    {
       FileOpConflictInput(cb_data);
       return;
@@ -1902,7 +1902,7 @@ FileOpPipeCB(
       case PIPEMSG_FILEOP_ERROR:
          if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0) goto malformed;
          if (PipeReadStringField(*fd, &err_msg) != 0 ||
-             PipeReadStringField(*fd, &err_arg) != 0 || err_msg == NULL)
+             PipeReadStringField(*fd, &err_arg) != 0 || err_msg == nullptr)
             goto malformed;
          if (cb_data->desktop)
             FileOperationError(cb_data->file_view_data->widget,
@@ -1930,12 +1930,12 @@ FileOpPipeCB(
          break;
 
       case PIPEMSG_CONFIRM:
-         if (PipeReadStringField(*fd, &err_msg) != 0 || err_msg == NULL)
+         if (PipeReadStringField(*fd, &err_msg) != 0 || err_msg == nullptr)
             goto malformed;
          title = XtNewString(GETMESSAGE(9,11, "File Manager - Move/Copy/Link Warning"));
          filop_confirm_fd = cb_data->pipe_m2s;
-         _DtMessageDialog(toplevel, title, err_msg, NULL, TRUE,
-                          moveCopyLinkCancel, moveCopyLinkOK, NULL,
+         _DtMessageDialog(toplevel, title, err_msg, nullptr, TRUE,
+                          moveCopyLinkCancel, moveCopyLinkOK, nullptr,
                           HelpRequestCB, False, QUESTION_DIALOG);
          XtFree(err_msg);
          XtFree(title);
@@ -1943,7 +1943,7 @@ FileOpPipeCB(
 
       case PIPEMSG_CONFLICT_BATCH:
          cb_data->conflict_reader = DtfileConflictReaderNew();
-         if (cb_data->conflict_reader == NULL)
+         if (cb_data->conflict_reader == nullptr)
          {
             if (cb_data->pipe_m2s >= 0)
             {
@@ -1953,7 +1953,7 @@ FileOpPipeCB(
             }
             _DtMessage(toplevel, GETMESSAGE(42, 17, "File operation response"),
                        GETMESSAGE(42, 32, "Not enough memory to review the conflicts. The pending items were cancelled."),
-                       NULL, HelpRequestCB);
+                       nullptr, HelpRequestCB);
             break;
          }
          FileOpConflictInput(cb_data);
@@ -1985,7 +1985,7 @@ FileOpPipeCB(
          if (FileOpReadIndex(*fd, cb_data, &i) != 0 ||
              PipeReadExact(*fd, &modify_time, sizeof(modify_time)) != 0)
             goto malformed;
-         if (PipeReadStringField(*fd, &target_file) != 0 || target_file == NULL)
+         if (PipeReadStringField(*fd, &target_file) != 0 || target_file == nullptr)
             goto malformed;
          DPRINTF (("PIPEMSG_FILE_MODIFIED %s\n", target_file));
 
@@ -2005,7 +2005,7 @@ FileOpPipeCB(
                                   cb_data->updates[i].file);
          }
          cb_data->updates[i].operationStatus = True;
-	 XtFree(target_file); target_file = NULL;
+	 XtFree(target_file); target_file = nullptr;
          break;
 
       case PIPEMSG_DONE:
@@ -2024,8 +2024,8 @@ malformed:
    XtFree(err_msg);
    XtFree(err_arg);
    XtFree(target_file);
-   err_msg = err_arg = target_file = NULL;
-   FileOpProtocolError(cb_data->file_mgr_rec == NULL ? toplevel :
+   err_msg = err_arg = target_file = nullptr;
+   FileOpProtocolError(cb_data->file_mgr_rec == nullptr ? toplevel :
                        cb_data->file_mgr_rec->shell);
    rc = -1;
    done = True;
@@ -2040,16 +2040,16 @@ decoded:
       DPRINTF(("FileOpPipeCB: done, rc %d\n", rc));
 
       /* close the pipe and cancel the callback */
-      if (cb_data->conflict_dialog != NULL)
+      if (cb_data->conflict_dialog != nullptr)
       {
          DtfileConflictDialogFinish(cb_data->conflict_dialog);
-         cb_data->conflict_dialog = NULL;
+         cb_data->conflict_dialog = nullptr;
       }
       DtfileConflictReaderFree(cb_data->conflict_reader);
-      cb_data->conflict_reader = NULL;
+      cb_data->conflict_reader = nullptr;
       if (cb_data->pipe_m2s >= 0) close(cb_data->pipe_m2s);
       if (cb_data->pipe_s2m >= 0) close(cb_data->pipe_s2m);
-      if (id != NULL)
+      if (id != nullptr)
          XtRemoveInput(*id);
       else
          *fd = (rc == 0)? 0: -1;
@@ -2076,7 +2076,7 @@ decoded:
           RepositionIcons(cb_data->file_mgr_data, file_set,actual_count,
              G_dropx, G_dropy, True);
           XtFree((char *)file_set);
-          file_set = NULL;
+          file_set = nullptr;
         }
       }
 
@@ -2092,7 +2092,7 @@ decoded:
             one object and we do it in case of Drag/Drop, but not
             for Select.MoveTo/CopyTo ... */
 
-         if(!i && cb_data->callback_data == NULL)
+         if(!i && cb_data->callback_data == nullptr)
          {
            FileMgrData *fmd;
 
@@ -2157,7 +2157,7 @@ decoded:
 	       /* If it is workspace drag and drop and the move operation
 		  is not because of  Select.MoveTo menu option  */
 
-	       if(initiating_view == NULL && cb_data->callback_data == NULL)
+	       if(initiating_view == nullptr && cb_data->callback_data == nullptr)
 	       {
 		 if (FileOpBuildPath(fileName, sizeof(fileName),
 		                         cb_data->directory,
@@ -2212,9 +2212,9 @@ _FileMoveCopy(
    FileOpCBData *cb_data;
    DirUpdate *updates;
    int i, j;
-   char *ptr = NULL;
-   char *source_dir = NULL;
-   char *source_file = NULL;
+   char *ptr = nullptr;
+   char *source_dir = nullptr;
+   char *source_file = nullptr;
    int pipe_m2s[2] = {-1, -1};
    int pipe_s2m[2] = {-1, -1};
    int pid;
@@ -2224,16 +2224,16 @@ _FileMoveCopy(
    Boolean operation_done;
    int rc;
 
-   if (host == NULL || directory == NULL || file_set == NULL ||
+   if (host == nullptr || directory == nullptr || file_set == nullptr ||
        file_count <= 0 || (size_t)file_count > SIZE_MAX / sizeof(DirUpdate) ||
-       (buffer_set == NULL && host_set == NULL))
+       (buffer_set == nullptr && host_set == nullptr))
    {
       errno = EINVAL;
       FileOpStartError(toplevel, errno);
       return False;
    }
    for (i = 0; i < file_count; ++i)
-      if (file_set[i] == NULL || (buffer_set == NULL && host_set[i] == NULL))
+      if (file_set[i] == nullptr || (buffer_set == nullptr && host_set[i] == nullptr))
       {
          errno = EINVAL;
          FileOpStartError(toplevel, errno);
@@ -2242,7 +2242,7 @@ _FileMoveCopy(
 
    /*  Determine the type of operation: move, copy, or link */
    /*  or creating buffers                                  */
-   if (buffer_set != NULL)
+   if (buffer_set != nullptr)
    {
      mode = MAKE_BUFFER;
    }
@@ -2259,17 +2259,17 @@ _FileMoveCopy(
 
    /* set up the callback data structure */
    cb_data = XtNew(FileOpCBData);
-   cb_data->desktop = (desktopWindow != NULL);
+   cb_data->desktop = (desktopWindow != nullptr);
    if (cb_data->desktop)
    {
-      cb_data->file_mgr_data = NULL;
-      cb_data->file_mgr_rec = NULL;
+      cb_data->file_mgr_data = nullptr;
+      cb_data->file_mgr_rec = nullptr;
       cb_data->file_view_data = (FileViewData *)data;
       cb_data->desktopWindow = desktopWindow;
    }
    else
    {
-      if(data != NULL)
+      if(data != nullptr)
       {
          cb_data->file_mgr_data = (FileMgrData *)data;
          cb_data->file_mgr_rec =
@@ -2277,11 +2277,11 @@ _FileMoveCopy(
       }
       else
       {
-         cb_data->file_mgr_data = NULL;
-         cb_data->file_mgr_rec = NULL;
+         cb_data->file_mgr_data = nullptr;
+         cb_data->file_mgr_rec = nullptr;
       }
-      cb_data->file_view_data = NULL;
-      cb_data->desktopWindow = NULL;
+      cb_data->file_view_data = nullptr;
+      cb_data->desktopWindow = nullptr;
    }
    cb_data->mode = mode;
    cb_data->host = XtNewString(host);
@@ -2290,8 +2290,8 @@ _FileMoveCopy(
    cb_data->callback_data = callback_data;
    cb_data->pipe_m2s = -1;
    cb_data->pipe_s2m = -1;
-   cb_data->conflict_reader = NULL;
-   cb_data->conflict_dialog = NULL;
+   cb_data->conflict_reader = nullptr;
+   cb_data->conflict_dialog = nullptr;
    cb_data->status = 0;
 
 
@@ -2319,9 +2319,9 @@ _FileMoveCopy(
         /* set unused updates fields to NOOP values */
         updates[i].time_sent = FALSE;
         updates[i].first_index = 0;
-        updates[i].host = NULL;
-        updates[i].directory = NULL;
-        updates[i].app_man_dir = NULL;
+        updates[i].host = nullptr;
+        updates[i].directory = nullptr;
+        updates[i].app_man_dir = nullptr;
       }
     }
     else
@@ -2332,7 +2332,7 @@ _FileMoveCopy(
       {
         /* get the name of the source directory */
         ptr = strrchr(file_set[i], '/');
-	if (NULL != ptr)
+	if (nullptr != ptr)
 	{
             if (ptr == file_set[i])
               source_dir = "/";
@@ -2365,10 +2365,10 @@ _FileMoveCopy(
         {  /* not yet in the list */
           updates[i].host = XtNewString(host_set[i]);
           updates[i].directory = XtNewString(source_dir);
-          updates[i].app_man_dir = NULL;
+          updates[i].app_man_dir = nullptr;
           if (!desktopWindow)
           {
-             if(data != NULL)
+             if(data != nullptr)
              {
                 if (((FileMgrData *)data)->toolbox)
                    updates[i].app_man_dir =
@@ -2385,7 +2385,7 @@ _FileMoveCopy(
         updates[i].operationStatus = False;
         updates[i].file = XtNewString(source_file);
 
-        if (NULL != ptr) *ptr = '/';
+        if (nullptr != ptr) *ptr = '/';
       }/* end for loop */
     } /* endif */
 
@@ -2427,13 +2427,13 @@ _FileMoveCopy(
       DtfileProcessClose(&pipe_m2s[1]);  /* won't write to pipe_m2s */
       DtfileProcessClose(&pipe_s2m[0]);  /* won't read from pipe_s2m */
 
-      if (desktopWindow != NULL)
+      if (desktopWindow != nullptr)
          rc = FileMoveCopyProcessDesktop(pipe_s2m[1], pipe_m2s[0],
                                          directory, host, updates, file_count,
                                          mode, desktopWindow);
       else
          rc = FileMoveCopyProcess(pipe_s2m[1], pipe_m2s[0], to_file, directory,
-                                  host, updates, file_count, mode, NULL);
+                                  host, updates, file_count, mode, nullptr);
 
       DBGFORK(("%s:  child exiting\n", pname));
       _exit(rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
@@ -2461,14 +2461,14 @@ _FileMoveCopy(
    fd = pipe_s2m[0];
 
    /* compute until what time we want to wait */
-   gettimeofday(&select_end, NULL);
+   gettimeofday(&select_end, nullptr);
    select_end.tv_sec += FILE_MOVE_COPY_WAIT_TIME;
 
    operation_done = False;
    for (;;)
    {
       /* determine how much time is left */
-      gettimeofday(&now, NULL);
+      gettimeofday(&now, nullptr);
       select_timeout.tv_sec = select_end.tv_sec - now.tv_sec;
       select_timeout.tv_usec = select_end.tv_usec - now.tv_usec;
       if (select_timeout.tv_usec < 0)
@@ -2489,7 +2489,7 @@ _FileMoveCopy(
 
       /* do the select */
       FD_SET(fd, &select_fds);
-      rc = select(fd + 1, &select_fds, NULL, NULL, &select_timeout);
+      rc = select(fd + 1, &select_fds, nullptr, nullptr, &select_timeout);
       if (rc < 0 && errno != EINTR)
       {
          perror("select failed in FileMoveCopy");
@@ -2501,7 +2501,7 @@ _FileMoveCopy(
       else if (rc == 1)
       {
          /* call FileOpPipeCB to read & process the data from the pipe */
-         FileOpPipeCB((XtPointer)cb_data, &fd, NULL);
+         FileOpPipeCB((XtPointer)cb_data, &fd, nullptr);
          DPRINTF(("FileMoveCopy: FileOpPipeCB -> fd = %d\n", fd));
 
          /*
@@ -2539,7 +2539,7 @@ FileMoveCopy(
         XtPointer callback_data)
 {
    return _FileMoveCopy( (XtPointer)file_mgr_data, to_file, directory, host,
-                         host_set, file_set, NULL, file_count, modifiers, NULL,
+                         host_set, file_set, nullptr, file_count, modifiers, nullptr,
                          finish_callback, callback_data);
 }
 
@@ -2557,12 +2557,12 @@ FileMoveCopyDesktop(
       XtPointer callback_data)
 {
   return _FileMoveCopy ((XtPointer)file_view_data,
-                        NULL,
+                        nullptr,
                         directory,
                         home_host_name,
                         host_set,
                         file_set,
-                        NULL,
+                        nullptr,
                         file_count,
                         modifiers,
                         desktopWindow,
@@ -2624,7 +2624,7 @@ ChangeIconNameProcess(
 
    /* send a modified message back through the pipe */
    modify_time = 0;
-   dir_path = ResolveLocalPathName(host_name, directory_name, NULL, home_host_name, &tt_status);
+   dir_path = ResolveLocalPathName(host_name, directory_name, nullptr, home_host_name, &tt_status);
    if( TT_OK != tt_status )
    {
       DPRINTF(("ChadengeIconNameProcess: sending exist error\n"));
@@ -2687,14 +2687,14 @@ ChangeIconPipeCB(
 
    Widget msg_widget;
    DirectorySet *directory_set;
-   FileMgrData *file_mgr_data = NULL;
-   FileMgrRec *file_mgr_rec = NULL;
+   FileMgrData *file_mgr_data = nullptr;
+   FileMgrRec *file_mgr_rec = nullptr;
    short pipe_msg;
    int i, j, n;
    int rc = -1;
-   char *title, *err_msg = NULL, *err_arg = NULL;
+   char *title, *err_msg = nullptr, *err_arg = nullptr;
    long modify_time;
-   char *full_name = NULL;
+   char *full_name = nullptr;
    char *tmpStr;
    XmString label;
    Arg args[3];
@@ -2748,7 +2748,7 @@ ChangeIconPipeCB(
       else
          err_msg = XtNewString(GETMESSAGE(9,9, "A file with this name already exists.\nPlease choose a different name."));
 
-      _DtMessage (msg_widget, title, err_msg, NULL, HelpRequestCB);
+      _DtMessage (msg_widget, title, err_msg, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree(err_msg);
    }
@@ -2758,7 +2758,7 @@ ChangeIconPipeCB(
       /* the rename failed */
       if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0) goto malformed;
       if (PipeReadStringField(*fd, &err_msg) != 0 ||
-          PipeReadStringField(*fd, &err_arg) != 0 || err_msg == NULL)
+          PipeReadStringField(*fd, &err_arg) != 0 || err_msg == nullptr)
          goto malformed;
       FileOperationError(msg_widget, err_msg, err_arg);
       XtFree(err_msg);
@@ -2772,7 +2772,7 @@ ChangeIconPipeCB(
       if (rc == 0)
       {
          /* the rename was successful */
-         if (PipeReadStringField(*fd, &full_name) != 0 || full_name == NULL)
+         if (PipeReadStringField(*fd, &full_name) != 0 || full_name == nullptr)
             goto malformed;
 
          /* All went well, destroy the text field */
@@ -2783,12 +2783,12 @@ ChangeIconPipeCB(
          if (cb_data->desktop)
          {
             XmProcessTraversal(desktopWindow->iconGadget, XmTRAVERSE_CURRENT);
-            desktopWindow->text = NULL;
+            desktopWindow->text = nullptr;
             /* we'll catch this icon label in the loop after the else */
          }
          else
          {
-            file_mgr_data->renaming = NULL;
+            file_mgr_data->renaming = nullptr;
 
             label = XmStringCreateLocalized(cb_data->new_name);
             XtSetArg(args[0], XmNstring, label);
@@ -2872,7 +2872,7 @@ ChangeIconPipeCB(
          }
 
          XtFree(full_name);
-         full_name = NULL;
+         full_name = nullptr;
       }
    }
    else
@@ -2949,12 +2949,12 @@ _ChangeIconName (
 
 
    /* new name must be a simple name, no path */
-   msg = NULL;
-   if (DtStrchr (new_name, '/') != NULL)
+   msg = nullptr;
+   if (DtStrchr (new_name, '/') != nullptr)
       msg = XtNewString(GetSharedMessage(LOCAL_RENAME_ONLY_ERROR));
 #ifdef _CHECK_FOR_SPACES
-   else if (DtStrchr (new_name, ' ') != NULL ||
-            DtStrchr (new_name, '\t') != NULL)
+   else if (DtStrchr (new_name, ' ') != nullptr ||
+            DtStrchr (new_name, '\t') != nullptr)
    {
       msg = XtNewString(GetSharedMessage(NO_SPACES_ALLOWED_ERROR));
    }
@@ -2978,7 +2978,7 @@ _ChangeIconName (
             (FileMgrRec *)file_mgr_data->file_mgr_rec;
          file_mgr_rec->menuStates |= RENAME;
          UnpostTextField( file_mgr_data );
-         file_mgr_data->renaming = NULL;
+         file_mgr_data->renaming = nullptr;
       }
       return;
    }
@@ -2992,10 +2992,10 @@ _ChangeIconName (
    }
 
 
-   if (msg != NULL)
+   if (msg != nullptr)
    {
       title = XtNewString(GetSharedMessage(FILE_RENAME_ERROR_TITLE));
-      _DtMessage (XtParent (w), title, msg, NULL, HelpRequestCB);
+      _DtMessage (XtParent (w), title, msg, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree(msg);
       XtFree (new_name);
@@ -3003,7 +3003,7 @@ _ChangeIconName (
    }
 
    /* Check to see if the file has a representitive on the Desktop.  */
-   if (desktopWindow == NULL)
+   if (desktopWindow == nullptr)
    {
       for (i = 0; i < desktop_data->numIconsUsed; i++)
       {
@@ -3020,7 +3020,7 @@ _ChangeIconName (
       }
    }
 
-   if (desktopWindow != NULL)
+   if (desktopWindow != nullptr)
    {
       /*
        * There is a representation of this file on the desktop:
@@ -3037,7 +3037,7 @@ _ChangeIconName (
             else
               tmpStr = GETMESSAGE(9,90, "Name Conflict.\nThis object is out on the Workspace back drop.\nAnother object on the back drop already has the name you\nare trying to enter.\nPlease choose a different name.");
             msg = XtNewString(tmpStr);
-            _DtMessage(XtParent (w), title, msg, NULL, HelpRequestCB);
+            _DtMessage(XtParent (w), title, msg, nullptr, HelpRequestCB);
             XtFree(title);
             XtFree(msg);
             XtFree(new_name);
@@ -3070,7 +3070,7 @@ _ChangeIconName (
    {
        int saved = errno;
        DirectoryAbortModify(host_name, directory_name);
-       FileOpStartError(w == NULL ? toplevel : XtParent(w), saved);
+       FileOpStartError(w == nullptr ? toplevel : XtParent(w), saved);
        ChangeIconAbortStart(cb_data);
        errno = saved;
        return;
@@ -3083,7 +3083,7 @@ _ChangeIconName (
        int saved = errno;
        DtfileProcessClosePipe(pipe_fd);
        DirectoryAbortModify(host_name, directory_name);
-       FileOpStartError(w == NULL ? toplevel : XtParent(w), saved);
+       FileOpStartError(w == nullptr ? toplevel : XtParent(w), saved);
        ChangeIconAbortStart(cb_data);
        fprintf(stderr,
 		"%s: fork failed, ppid %d, pid %d: error %d=%s\n",
@@ -3215,7 +3215,7 @@ ChangeIconName (
          }
       return;
       }
-   _ChangeIconName (w, False, file_mgr_data->renaming, NULL,
+   _ChangeIconName (w, False, file_mgr_data->renaming, nullptr,
                     file_mgr_data->host, directory_set->name);
 }
 
@@ -3268,10 +3268,10 @@ GetTarget(
    size_t name_length;
    size_t join_length;
 
-   if (from_host == NULL || from_dir == NULL || new_name == NULL ||
-       to_host == NULL || to_host_size == 0 ||
-       to_dir == NULL || to_dir_size == 0 ||
-       to_file == NULL || to_file_size == 0)
+   if (from_host == nullptr || from_dir == nullptr || new_name == nullptr ||
+       to_host == nullptr || to_host_size == 0 ||
+       to_dir == nullptr || to_dir_size == 0 ||
+       to_file == nullptr || to_file_size == 0)
    {
       errno = EINVAL;
       return False;
@@ -3305,7 +3305,7 @@ GetTarget(
    }
 
    separator = strrchr(path, '/');
-   if (separator == NULL || separator[1] == '\0')
+   if (separator == nullptr || separator[1] == '\0')
    {
       errno = EINVAL;
       return False;
@@ -3356,7 +3356,7 @@ MakeFileProcess(
 
    /* get the full name of the file/dir to be created */
    to = ResolveLocalPathName(to_host, to_dir, to_file, home_host_name, &tt_status);
-   if (to == NULL)
+   if (to == nullptr)
       rc = EINVAL;
 
    /* check if a file/dir with the same name already exists */
@@ -3368,8 +3368,8 @@ MakeFileProcess(
    {
       /* send a modified message back through the pipe */
       modify_time = 0;
-      dir_path = ResolveLocalPathName(to_host, to_dir, NULL, home_host_name, &tt_status);
-      if (tt_status == TT_OK && dir_path != NULL &&
+      dir_path = ResolveLocalPathName(to_host, to_dir, nullptr, home_host_name, &tt_status);
+      if (tt_status == TT_OK && dir_path != nullptr &&
           stat(dir_path, &stat_buf) == 0)
          modify_time = stat_buf.st_mtime;
       XtFree(dir_path);
@@ -3427,7 +3427,7 @@ MakeFilePipeCB(
    short pipe_msg;
    int n;
    long modify_time;
-   char *full_name = NULL;
+   char *full_name = nullptr;
    int rc = -1, paths_transferred = 0;
 
    /* read the msg from the pipe */
@@ -3453,7 +3453,7 @@ MakeFilePipeCB(
    {
       if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0) goto malformed;
       if (PipeReadStringField(*fd, &full_name) != 0 ||
-          (rc == 0 && full_name == NULL))
+          (rc == 0 && full_name == nullptr))
          goto malformed;
    }
    else
@@ -3466,7 +3466,7 @@ MakeFilePipeCB(
 
 malformed:
    XtFree(full_name);
-   full_name = NULL;
+   full_name = nullptr;
    rc = -1;
    FileOpProtocolError(toplevel);
 
@@ -3484,7 +3484,7 @@ finish:
    /* Store away the newly created file so we later on we can
       scroll to it.
    */
-   if (cb_data->callback_data != NULL)
+   if (cb_data->callback_data != nullptr)
    {
      MakeFileDoneData * data = (MakeFileDoneData *)cb_data->callback_data;
      DialogCallbackStruct * call_struct = data->call_struct;
@@ -3633,9 +3633,9 @@ MakeFilesFromBuffers(
                      FileOpFinishProc finish_callback,
                      XtPointer callback_data)
 {
-  return _FileMoveCopy ((XtPointer)file_mgr_data, NULL, directory, host,
+  return _FileMoveCopy ((XtPointer)file_mgr_data, nullptr, directory, host,
                         host_set, file_set, buffer_set, num_of_buffers,
-                        0, NULL, finish_callback, callback_data);
+                        0, nullptr, finish_callback, callback_data);
 }
 
 
@@ -3651,7 +3651,7 @@ MakeFilesFromBuffersDT(
                      FileOpFinishProc finish_callback,
                      XtPointer callback_data)
 {
-  return _FileMoveCopy ((XtPointer)file_view_data, NULL, directory,
+  return _FileMoveCopy ((XtPointer)file_view_data, nullptr, directory,
                         home_host_name,
                         host_set, file_set, buffer_set, num_of_buffers,
                         0, desktopWindow, finish_callback, callback_data);
@@ -3682,7 +3682,7 @@ CreateFileFromBuffer(int    pipe_s2m,
   size_t offset = 0;
 
   /* Validate the signed external length before inspecting or writing data. */
-  if (size < 0 || (size > 0 && buffer == NULL))
+  if (size < 0 || (size > 0 && buffer == nullptr))
   {
     savedError = EINVAL;
     rc = -1;
@@ -3740,7 +3740,7 @@ CreateFileFromBuffer(int    pipe_s2m,
 	  break;
        default :
 	  err_msg = XtNewString(strerror(savedError));
-	  err_arg = NULL;
+	  err_arg = nullptr;
 
 	  DPRINTF (("CreateBufferFromFile: %s\n", err_msg));
     } /* endswitch */
@@ -3772,13 +3772,13 @@ DisplayDuplicateOpError(
     int index)
 
 {
-  char *msgptr = NULL,*err_msg = NULL,*title = NULL,*tchar;
+  char *msgptr = nullptr,*err_msg = nullptr,*title = nullptr,*tchar;
   Widget dialogwidget;
 
   if (cb_data->mode == MOVE_FILE)
   {
-    if(cb_data->callback_data == NULL)
-      if(initiating_view == NULL)
+    if(cb_data->callback_data == nullptr)
+      if(initiating_view == nullptr)
         return;
       else
       {
@@ -3797,7 +3797,7 @@ DisplayDuplicateOpError(
     tchar = XtNewString(GETMESSAGE(9,72,"Copy"));
     sprintf(title,"%s %s",tchar,GETMESSAGE(9,94,"Error"));
     XtFree(tchar);
-    if(cb_data->callback_data == NULL)
+    if(cb_data->callback_data == nullptr)
     {
         if(cb_data->file_mgr_data && cb_data->file_mgr_data->toolbox)
         {
@@ -3819,7 +3819,7 @@ DisplayDuplicateOpError(
     tchar = XtNewString(GETMESSAGE(9,74,"Link"));
     sprintf(title,"%s %s",tchar,GETMESSAGE(9,94,"Error"));
     XtFree(tchar);
-    if(cb_data->callback_data == NULL)
+    if(cb_data->callback_data == nullptr)
     {
       err_msg = GETMESSAGE(11,137,"Cannot link object %s onto itself");
     }
@@ -3842,7 +3842,7 @@ DisplayDuplicateOpError(
     dialogwidget  = ((RenameDoneData *)(cb_data->callback_data))->w;
   else
     dialogwidget  = toplevel;
-  _DtMessage (dialogwidget,title, msgptr, NULL, HelpRequestCB);
+  _DtMessage (dialogwidget,title, msgptr, nullptr, HelpRequestCB);
   XtFree(msgptr);
   XtFree(title);
 }
@@ -3867,7 +3867,7 @@ appendErrorMessage(String message, String new, String arg)
 {
    String newMessage;
 
-   if (arg == NULL)
+   if (arg == nullptr)
       newMessage = XtNewString(new);
    else
    {
@@ -3875,7 +3875,7 @@ appendErrorMessage(String message, String new, String arg)
       sprintf(newMessage,new,arg);
    }
 
-   if (message == NULL)
+   if (message == nullptr)
    {
       message = XtRealloc(message, (strlen(newMessage) + 2));
       *message = '\0';
@@ -3903,7 +3903,7 @@ DisplayErrorMessage(
 
   localstr = (char *) XtMalloc(strlen(errMsg)+strlen(from)+strlen(tdir) + 10 );
   sprintf(localstr,errMsg,tdir,from);
-  PipeWriteErrmsg(pipe_s2m, -1, localstr, NULL);
+  PipeWriteErrmsg(pipe_s2m, -1, localstr, nullptr);
   XtFree(localstr);
 }
 static Boolean
@@ -3914,7 +3914,7 @@ IsInParentDir(
    size_t source_length;
    size_t dest_length;
 
-   if (source_path == NULL || dest_path == NULL || source_path[0] == '\0')
+   if (source_path == nullptr || dest_path == nullptr || source_path[0] == '\0')
      return False;
    source_length = strlen(source_path);
    dest_length = strlen(dest_path);

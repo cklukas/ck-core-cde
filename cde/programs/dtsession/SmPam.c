@@ -52,10 +52,10 @@ char *
 SmPamUserName(void)
 {
     struct passwd *entry;
-    char *name = NULL;
+    char *name = nullptr;
 
     entry = getpwuid(getuid());
-    if (entry != NULL && entry->pw_name != NULL && entry->pw_name[0] != '\0')
+    if (entry != nullptr && entry->pw_name != nullptr && entry->pw_name[0] != '\0')
     {
         name = strdup(entry->pw_name);
     }
@@ -117,14 +117,14 @@ Converse(
     struct pam_response *answers;
     int i;
 
-    if (count <= 0 || count > PAM_MAX_NUM_MSG || messages == NULL ||
-        responses == NULL || password == NULL)
+    if (count <= 0 || count > PAM_MAX_NUM_MSG || messages == nullptr ||
+        responses == nullptr || password == nullptr)
     {
         return PAM_CONV_ERR;
     }
 
     answers = calloc(count, sizeof(*answers));
-    if (answers == NULL)
+    if (answers == nullptr)
     {
         return PAM_CONV_ERR;
     }
@@ -135,7 +135,7 @@ Converse(
         {
             case PAM_PROMPT_ECHO_OFF:
                 answers[i].resp = strdup(password);
-                if (answers[i].resp == NULL)
+                if (answers[i].resp == nullptr)
                 {
                     goto failed;
                 }
@@ -156,7 +156,7 @@ Converse(
 failed:
     for (i = 0; i < count; i++)
     {
-        if (answers[i].resp != NULL)
+        if (answers[i].resp != nullptr)
         {
             WipeString(answers[i].resp);
             free(answers[i].resp);
@@ -177,7 +177,7 @@ SmPamLockStatus(void)
     }
 
     name = SmPamUserName();
-    if (name == NULL)
+    if (name == nullptr)
     {
         return SM_PAM_NO_ACCOUNT;
     }
@@ -197,18 +197,18 @@ SmPamCheckPassword(
         const char *password )
 {
     struct pam_conv conversation;
-    pam_handle_t *handle = NULL;
+    pam_handle_t *handle = nullptr;
     Boolean accepted = False;
     char *name;
     int status;
 
-    if (password == NULL)
+    if (password == nullptr)
     {
         return False;
     }
 
     name = SmPamUserName();
-    if (name == NULL)
+    if (name == nullptr)
     {
         return False;
     }
@@ -255,7 +255,7 @@ SmPamLockStatus(void)
 const char *
 SmPamServiceFile(void)
 {
-    return NULL;
+    return nullptr;
 }
 
 Boolean

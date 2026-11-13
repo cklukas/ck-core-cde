@@ -14,7 +14,7 @@ int main(void)
     assert(_DtCvChar(text,0,5)==0);
     assert(_DtCvChar(text,0,6)==(wchar_t)-1);
     assert(_DtCvChar(text,0,-1)==(wchar_t)-1);
-    assert(_DtCvChar(NULL,0,0)==(wchar_t)-1);
+    assert(_DtCvChar(nullptr,0,0)==(wchar_t)-1);
     assert(_DtCvChar("\xff" "A",0,0)==(wchar_t)-1);
     assert(_DtCvChar("\xff" "A",0,1)==L'A');
     assert(_DtCvChar("\xe2\x82",0,1)==(wchar_t)-1);
@@ -28,8 +28,8 @@ int main(void)
     assert(out.value[0]=='\0' && out.guard=='G');
     assert(_DtCvCopyFirstChar("\xff",out.value,sizeof(out.value))==0);
     assert(_DtCvCopyFirstChar("\xe2\x82",out.value,sizeof(out.value))==0);
-    assert(_DtCvCopyFirstChar(NULL,out.value,sizeof(out.value))==0);
-    assert(_DtCvCopyFirstChar("A",NULL,0)==0);
+    assert(_DtCvCopyFirstChar(nullptr,out.value,sizeof(out.value))==0);
+    assert(_DtCvCopyFirstChar("A",nullptr,0)==0);
     assert(_DtCvCopyFirstChar("",out.value,sizeof(out.value))==0);
     assert(_DtCvCopyFirstChar("AB",out.value,sizeof(out.value))==1);
     assert(strcmp(out.value,"A")==0);

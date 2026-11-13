@@ -74,7 +74,7 @@ static ABTypedArg	MergeTypedArgLists(ABTypedArg args1, int num_args1,
 int
 obj_set_arg(ABObj obj, AB_ARG_TYPE type, STRING name, void *value)
 {
-	ABArgList	merged_list= NULL;
+	ABArgList	merged_list= nullptr;
 	int 		nargs= 0;
 	ABArg		oldarg;
 	AB_ARG		newarg;
@@ -91,7 +91,7 @@ obj_set_arg(ABObj obj, AB_ARG_TYPE type, STRING name, void *value)
 		ABSetArg(&newarg, type, istr_create(name), value);
 	}
 
-	if ((oldarg= obj_get_arg(obj, name)) != NULL)
+	if ((oldarg= obj_get_arg(obj, name)) != nullptr)
 	{
 		/* replace existing arg */
 		*oldarg= newarg;
@@ -123,7 +123,7 @@ int
 obj_set_arg_if_new(ABObj obj, AB_ARG_TYPE type, STRING name, void *value)
 {
 	ABArg	old_arg= obj_get_arg(obj, name);
-	if (old_arg != NULL)
+	if (old_arg != nullptr)
 	{
 		return 1;
 	}
@@ -162,7 +162,7 @@ obj_set_typed_arg(
 )
 {
 	AB_TYPED_ARG	newarg;
-	ABTypedArg	merged_list= NULL;
+	ABTypedArg	merged_list= nullptr;
 	int		nargs= 0;
 
 	ABSetTypedArg(&newarg, type, istr_create(name),
@@ -170,7 +170,7 @@ obj_set_typed_arg(
 
 	if ((nargs= obj_get_num_args(obj)) == 0)
 	{			/* first time ever */
-		merged_list= MergeTypedArgLists(&newarg, 1, NULL, 0);
+		merged_list= MergeTypedArgLists(&newarg, 1, nullptr, 0);
 		obj->typed_args = merged_list;
 	}
 	else
@@ -199,7 +199,7 @@ obj_set_typed_arg_if_new(
 )
 {
 	ABTypedArg	old_targ= obj_get_typed_arg(obj, name);
-	if (old_targ != NULL)
+	if (old_targ != nullptr)
 	{
 		return -1;
 	}
@@ -217,8 +217,8 @@ obj_get_typed_arg(ABObj obj, char *name)
 {
 	int		num_args;
 	int		i;
-	ABTypedArg	arg_list= NULL;
-	ABTypedArg		arg= NULL;
+	ABTypedArg	arg_list= nullptr;
+	ABTypedArg		arg= nullptr;
 	ISTRING			iname= istr_get_existing(name);
 
 	if ((num_args= obj_get_num_args(obj)) > 0)
@@ -249,7 +249,7 @@ obj_get_arg(ABObj obj, char *name)
 	int	num_args;
 	int	i;
 	ABArg	arg_list;
-	ABArg		arg= NULL;
+	ABArg		arg= nullptr;
 	ISTRING		iname= istr_get_existing(name);
 
 	if ((num_args= obj_get_num_args(obj)) > 0)
@@ -329,7 +329,7 @@ obj_remove_arg(ABObj obj, STRING name)
 	int 		nargs;
 	ISTRING			iname= istr_get_existing(name);
 
-	if ((obj == NULL) || (obj->args == NULL) )
+	if ((obj == nullptr) || (obj->args == nullptr) )
 	{
 		return 0;
 	}
@@ -415,7 +415,7 @@ obj_get_num_args(ABObj obj)
 	ABArgList args= obj->args;
 	int n = 0;
 
-        for ( ; (args != (ABArgList)NULL) && (args->name != NULL);
+        for ( ; (args != (ABArgList)NULL) && (args->name != nullptr);
              args++, n++)
 		;
 
@@ -432,7 +432,7 @@ obj_get_num_typed_args(ABObj obj)
 	ABTypedArg args = obj->typed_args;
 	int n = 0;
 
-        for ( ; (args != NULL) && (args->name != NULL); args++, n++)
+        for ( ; (args != nullptr) && (args->name != nullptr); args++, n++)
 	{
 	}
 

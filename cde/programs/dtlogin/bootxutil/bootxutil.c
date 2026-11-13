@@ -67,7 +67,7 @@ const struct _options {
 } options[] = {
   {"-dpyinfo",         MODE_DPYINFO},
   {"-cursorarrow",     MODE_ARROW},
-  { NULL,              MODE_UNKNOWN}};
+  { nullptr,              MODE_UNKNOWN}};
 
 /*
  * usage()
@@ -113,7 +113,7 @@ arrow(Display *display, int screen_num)
   * Create cursor
   */
   cursor = XCreateFontCursor(display, CURSOR_ARROW);
-  if (cursor == NULL) exit (1);
+  if (cursor == nullptr) exit (1);
   
  /*
   * Display cursor on root window
@@ -159,9 +159,9 @@ main(int argc, char *argv[])
  /*
   * Open display connection using DISPLAY env value
   */
-  if ((display = XOpenDisplay(NULL)) == NULL) {
+  if ((display = XOpenDisplay(nullptr)) == nullptr) {
     fprintf(stderr, "%s: cannot connect to display '%s'\n", 
-            argv[0], XDisplayName(NULL));
+            argv[0], XDisplayName(nullptr));
     exit(1);
   }
 

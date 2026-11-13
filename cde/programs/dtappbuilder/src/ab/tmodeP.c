@@ -107,7 +107,7 @@ tmodeP_obj_destroy_data(
     if (tmodeP_obj_has_data(obj))
 	util_free(tmodeP_obj_data(obj));
 
-    tmodeP_obj_data(obj) = NULL;
+    tmodeP_obj_data(obj) = nullptr;
     return OK;
 }
 
@@ -132,7 +132,7 @@ tmodeP_obj_construct_data(
 /*
  * Window List
  */
-static ABObjList wlist = NULL;		     /* windows in the project      */
+static ABObjList wlist = nullptr;		     /* windows in the project      */
 
 /* Create the window list. (and populate it)                                */
 int
@@ -146,7 +146,7 @@ tmodeP_window_list_create(
     if (wlist)
 	tmodeP_list_destroy(wlist);
 
-    if ((wlist = tmodeP_list_create()) == NULL)
+    if ((wlist = tmodeP_list_create()) == nullptr)
 	return ERROR;
     
     if (tmodeP_window_list_construct(project) != OK)
@@ -173,9 +173,9 @@ tmodeP_window_list_construct(
 
     /* populate the list */
     for (trav_open(&trav, project, AB_TRAV_WINDOWS);
-	 (obj = trav_next(&trav)) != NULL; )
+	 (obj = trav_next(&trav)) != nullptr; )
     {
-	status = objlist_add_obj(wlist, obj, NULL);
+	status = objlist_add_obj(wlist, obj, nullptr);
 	if (status == 0)
 	{
 	    tmodeP_obj_construct_flags(obj);
@@ -202,7 +202,7 @@ tmodeP_window_list_destruct(
 )
 {
     int     i;
-    ABObj obj = NULL;
+    ABObj obj = nullptr;
     
     if (!wlist)
 	return ERROR;
@@ -210,7 +210,7 @@ tmodeP_window_list_destruct(
     /* trav the list of windows, destroying test data */
     for (i=0; i < objlist_get_num_objs(wlist); i++)
     {
-	obj = objlist_get_obj(wlist, i, NULL);
+	obj = objlist_get_obj(wlist, i, nullptr);
 	
 	if (!obj)
 	{
@@ -250,7 +250,7 @@ tmodeP_window_list_destroy(
     
     /* destroy the list */
     tmodeP_list_destroy(wlist);
-    wlist = NULL;
+    wlist = nullptr;
     
     return OK;
 }
@@ -264,7 +264,7 @@ tmodeP_window_list_iterate(
 )
 {
     int    i;
-    ABObj  obj = NULL;
+    ABObj  obj = nullptr;
     
     if (!wlist)
 	return;
@@ -287,7 +287,7 @@ tmodeP_window_list_add_handler(
 {
     int    i;
     Widget w;
-    ABObj  obj = NULL;
+    ABObj  obj = nullptr;
     
     if (!wlist)
 	return ERROR;
@@ -295,7 +295,7 @@ tmodeP_window_list_add_handler(
     /* trav the list of windows */
     for (i=0; i < objlist_get_num_objs(wlist); i++)
     {
-	obj = objlist_get_obj(wlist, i, NULL);
+	obj = objlist_get_obj(wlist, i, nullptr);
 	
 	if (!obj)
 	{
@@ -339,7 +339,7 @@ tmodeP_window_list_remove_handler(
 {
     int    i;
     Widget w;
-    ABObj  obj = NULL;
+    ABObj  obj = nullptr;
     
     if (!wlist)			/* can't remove the handlers from a */
 	return OK;		/* non-existant list, but it's not an error */
@@ -347,7 +347,7 @@ tmodeP_window_list_remove_handler(
     /* trav the list of windows */
     for (i=0; i < objlist_get_num_objs(wlist); i++)
     {
-	obj = objlist_get_obj(wlist, i, NULL);
+	obj = objlist_get_obj(wlist, i, nullptr);
 	
 	if (!obj)
 	{
@@ -393,10 +393,10 @@ tmodeP_list_create(
     void
 )
 {
-    ABObjList list = NULL;
+    ABObjList list = nullptr;
     
-    if ((list = objlist_create()) == NULL)
-	return NULL;
+    if ((list = objlist_create()) == nullptr)
+	return nullptr;
 
     objlist_set_sort_order(list, OBJLIST_SORT_BEST);
     

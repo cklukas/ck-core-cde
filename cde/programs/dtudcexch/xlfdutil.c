@@ -97,7 +97,7 @@ GetXLFDInfomations()
 	/* initialize */
 	getmask		= 0 ;
 	SelectedOffset	= 0 ;
-	fullPathName	= NULL ;
+	fullPathName	= nullptr ;
 	FalxInitDataBuff( &KeyBuff ) ;
 
 	/* get UDC informations */
@@ -151,10 +151,10 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 	    case 0 :	/* XLFD		*/
 		/* set key data         */
 		for( i=1; i<BUTTONITEMS; i++ ){
-		    if( (str = XmTextGetString( slctBText[i] )) == NULL ){
+		    if( (str = XmTextGetString( slctBText[i] )) == nullptr ){
 			exit(-1) ;
 		    }
-		    if( *str == ' ' || *str == NULL )	continue ;
+		    if( *str == ' ' || *str == nullptr )	continue ;
 		    if( SetKeyBuff( i, str ) ){
 			exit(-1) ;
 		    }
@@ -167,7 +167,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 	    case 1 :	/* code area	*/
 		tmp_cnt = CodeList->num ;
 		tmp_dlist = (char **)malloc( sizeof(char *) * tmp_cnt ) ;
-		if( tmp_dlist == NULL ) 	return(-1) ;
+		if( tmp_dlist == nullptr ) 	return(-1) ;
 		for( i=0; i<tmp_cnt; i++ ){
 		    sp = string ;
 		    rlen = sprintf( sp, "CS:%d ", (CodeList->dlist[i]->fontset) ) ;
@@ -178,7 +178,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 				 CodeList->dlist[i]->alist[j]->udc_end   ) ;
 			sp += rlen ;
 		    }
-		    if( (tmp_dlist[i] = strdup( string )) == NULL ){
+		    if( (tmp_dlist[i] = strdup( string )) == nullptr ){
 			return(-1) ;
 		    }
 		}
@@ -187,7 +187,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 		tmp_cnt  = StyleList->num ;
 		tmp_dlist = (char **)malloc( sizeof(char *) * tmp_cnt ) ;
 		for( i=0; i<tmp_cnt; i++ ){
-		    if( (tmp_dlist[i] = strdup( StyleList->list[i] )) == NULL ){
+		    if( (tmp_dlist[i] = strdup( StyleList->list[i] )) == nullptr ){
 			return(-1) ;
 		    }
 		}
@@ -197,7 +197,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 		tmp_dlist = (char **)malloc( sizeof(char *) * tmp_cnt ) ;
 		for( i=0; i<tmp_cnt; i++ ){
 		    sprintf( string, "%d ", SizeList->list[i] ) ;
-		    if( (tmp_dlist[i] = strdup( string )) == NULL ){
+		    if( (tmp_dlist[i] = strdup( string )) == nullptr ){
 			return(-1) ;
 		    }
 		}
@@ -205,7 +205,7 @@ GetItemsToDisplay( int num, int *itemcnt, XmString **xms_list )
 	    default :	/* error	*/
 		return(-1) ;
 	}
-	if( (xms = (XmString *)calloc( tmp_cnt, sizeof(XmString) )) == NULL ){
+	if( (xms = (XmString *)calloc( tmp_cnt, sizeof(XmString) )) == nullptr ){
 	    return( -1 ) ;
 	}
 
@@ -255,11 +255,11 @@ skipSpace( char *str, int skipcnt )
 	char	*sp ;
 	int	len ;
 
-	if( *str == NULL )	return( NULL ) ;
+	if( *str == nullptr )	return( nullptr ) ;
 	len = strlen( str ) ;
 	sp = str ;
 	for( i=0,spacecnt=0; i<len-1; i++, sp++ ) {
-	    if( *sp == NULL )	return( NULL ) ;
+	    if( *sp == nullptr )	return( nullptr ) ;
 	    if( *sp == ' ' )	spacecnt++ ;
 	    if( spacecnt == skipcnt )	break ;
 	}
@@ -284,32 +284,32 @@ SetKeyBuff( int num, char *str )
 		break ;
 	    case 1 :		/* code area	*/
 		getmask |= FAL_FONT_MASK_CODE_SET ;
-		if( KeyBuff.FileData.list != NULL ){
+		if( KeyBuff.FileData.list != nullptr ){
 		    free( KeyBuff.FileData.list ) ;
 		}
-		KeyBuff.FileData.list	= NULL ;
-		tmp_list		= NULL ;
+		KeyBuff.FileData.list	= nullptr ;
+		tmp_list		= nullptr ;
 
 		sp = str ;
 		if( sscanf( sp, "CS:%d ", &cdset ) != 1 ){
 			return(-1) ;
 		}
-		if( (sp = skipSpace( sp, 1 )) == NULL )	return( -1 ) ;
+		if( (sp = skipSpace( sp, 1 )) == nullptr )	return( -1 ) ;
 		num = 0 ;
 		KeyBuff.FontData.cd_set = cdset ;
 		while( sscanf( sp, "%x %c %x ", &start, &hyp, &end ) == 3 ){
 		    if( hyp != '-' )	break ;
-		    if( tmp_list == NULL ){
+		    if( tmp_list == nullptr ){
 			tmp_list = (FalxUdcArea *)malloc( sizeof(FalxUdcArea) ) ;
 		    }else{
 			tmp_list = (FalxUdcArea *)realloc( KeyBuff.FileData.list,
 					 sizeof(FalxUdcArea) * (num+1) ) ;
 		    }
-		    if( tmp_list == NULL )	return(-1) ;
+		    if( tmp_list == nullptr )	return(-1) ;
 		    tmp_list[num].udc_start = (int)start ;
 		    tmp_list[num].udc_end   = (int)end   ;
 		    num ++ ;
-		    if( (sp = skipSpace( sp, 3 )) == NULL )	break  ;
+		    if( (sp = skipSpace( sp, 3 )) == nullptr )	break  ;
 		}
 		if( num == 0 )	return(-1) ;
 		KeyBuff.FileData.code_area_num	= num ;

@@ -139,8 +139,8 @@ ilCropCompPrivPtr       pPriv;
             /*  Add a "no dst" filter to crop only if some strips would be skipped */
         if ((topStrip > 0) || (bottomStrip < ((pInfo->height - 1) / stripHeight))) {
             dstData.producerObject = (ilObject)NULL;
-            dstData.pDes = (ilImageDes *)NULL;
-            dstData.pFormat = (ilImageFormat *)NULL;
+            dstData.pDes = (ilImageDes *)nullptr;
+            dstData.pFormat = (ilImageFormat *)nullptr;
             dstData.width = pInfo->width;           /* width is not cropped */
             topLine = topStrip * stripHeight;       /* first line output from filter */
             dstData.height = (bottomStrip + 1) * stripHeight - topLine;
@@ -150,8 +150,8 @@ ilCropCompPrivPtr       pPriv;
             dstData.pCompData = pInfo->pCompData;
 
             pPriv = (ilCropCompPrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
-                sizeof (ilCropCompPrivRec), IL_ADD_PIPE_NO_DST, (ilSrcElementData *)NULL,
-                &dstData, ilCropCompInit, IL_NPF, IL_NPF, ilCropCompExecute, NULL,  0);
+                sizeof (ilCropCompPrivRec), IL_ADD_PIPE_NO_DST, (ilSrcElementData *)nullptr,
+                &dstData, ilCropCompInit, IL_NPF, IL_NPF, ilCropCompExecute, nullptr,  0);
             if (!pPriv)
                 return FALSE;
             pPriv->topStrip = topStrip;
@@ -165,7 +165,7 @@ ilCropCompPrivPtr       pPriv;
         /*  Decompress the pipe image and call ilCrop() recursively to crop the bits
             that remain after this code has (possibly) skipped unnecessary strips.
         */
-    ilGetPipeInfo (pipe, TRUE, (ilPipeInfo *)NULL, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+    ilGetPipeInfo (pipe, TRUE, (ilPipeInfo *)nullptr, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
     return ilCrop (pipe, &rect);
 }
 
@@ -442,7 +442,7 @@ ilBool ilCrop (
 {
 unsigned int            state;
 ilPipeInfo              info;
-ilCropPrivptr  pPriv = NULL;
+ilCropPrivptr  pPriv = nullptr;
 ilDstElementData        dstdata;
 ilImageDes              imdes;
 ilImageFormat           imformat;
@@ -531,12 +531,12 @@ ilRect                  Srcrect, Dstrect;
        }
 
 
-       if(convert && !ilConvert(pipe, &imdes, &imformat, 0, NULL))
+       if(convert && !ilConvert(pipe, &imdes, &imformat, 0, nullptr))
            return FALSE;
 
        dstdata.producerObject = (ilObject) NULL;
-       dstdata.pDes           = (ilImageDes *) NULL;
-       dstdata.pFormat        = (ilImageFormat *) NULL;
+       dstdata.pDes           = (ilImageDes *) nullptr;
+       dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.width          = Dstrect.width;
        dstdata.height         = Dstrect.height;
 
@@ -547,17 +547,17 @@ ilRect                  Srcrect, Dstrect;
 
        switch (imdes.nSamplesPerPixel) {
             case 3:
-                            pPriv = (ilCropPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilCropPriv), 0, (ilSrcElementData *) NULL,
-                                                                     &dstdata, ilCropInit, IL_NPF, IL_NPF, ilCrop3ByteExecute, NULL, 0);
+                            pPriv = (ilCropPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilCropPriv), 0, (ilSrcElementData *) nullptr,
+                                                                     &dstdata, ilCropInit, IL_NPF, IL_NPF, ilCrop3ByteExecute, nullptr, 0);
                      break;
 
             case 1:  
                      if(bitonal) 
-                            pPriv = (ilCropPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilCropPriv), 0, (ilSrcElementData *) NULL,
-                                                                     &dstdata, ilCropInit, IL_NPF, IL_NPF, ilCropBitonalExecute, NULL, 0);
+                            pPriv = (ilCropPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilCropPriv), 0, (ilSrcElementData *) nullptr,
+                                                                     &dstdata, ilCropInit, IL_NPF, IL_NPF, ilCropBitonalExecute, nullptr, 0);
                      else 
-                            pPriv = (ilCropPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilCropPriv), 0, (ilSrcElementData *) NULL,
-                                                                     &dstdata, ilCropInit, IL_NPF, IL_NPF, ilCropByteExecute, NULL, 0);
+                            pPriv = (ilCropPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilCropPriv), 0, (ilSrcElementData *) nullptr,
+                                                                     &dstdata, ilCropInit, IL_NPF, IL_NPF, ilCropByteExecute, nullptr, 0);
        }
 
        if(!pPriv)

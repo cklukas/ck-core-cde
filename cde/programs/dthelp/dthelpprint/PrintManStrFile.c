@@ -89,7 +89,7 @@ int _DtHPrPrintStringData(
    int status;
    int retval;
 
-    if ( NULL == options->stringData )
+    if ( nullptr == options->stringData )
     {
          fprintf(stderr, _DTGETMESSAGE(PMSET,1,
                             "%s: Error: helpType is string, "
@@ -101,7 +101,7 @@ int _DtHPrPrintStringData(
 
    /* Alloc max shell command line len */
    printCommand = malloc(MAX_COMMAND_LENGTH*sizeof(char));
-   if (printCommand == NULL)
+   if (printCommand == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PMSET,5,
                             "%s: Error: memory allocation failed\n"),
@@ -149,7 +149,7 @@ int _DtHPrPrintDynamicStringData(
    int status;
    int retval;
 
-    if ( NULL == options->stringData )
+    if ( nullptr == options->stringData )
     {
          fprintf(stderr, _DTGETMESSAGE(PMSET,2,
                             "%s: Error: helpType is dynamic string, "
@@ -161,7 +161,7 @@ int _DtHPrPrintDynamicStringData(
 
    /* Alloc max shell command line len */
    printCommand = malloc(MAX_COMMAND_LENGTH*sizeof(char));
-   if (printCommand == NULL)
+   if (printCommand == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PMSET,5,
                             "%s: Error: memory allocation failed\n"),
@@ -207,7 +207,7 @@ int _DtHPrPrintManPage(
    int status;
    int retval;
 
-    if ( NULL == options->manPage )
+    if ( nullptr == options->manPage )
     {
          fprintf(stderr, _DTGETMESSAGE(PMSET,3,
                             "%s: Error: helpType is man page, "
@@ -219,7 +219,7 @@ int _DtHPrPrintManPage(
 
    /* Alloc max shell command line len */
    printCommand = malloc(MAX_COMMAND_LENGTH);
-   if (printCommand == NULL)
+   if (printCommand == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PMSET,5,
          
@@ -264,7 +264,7 @@ int _DtHPrPrintHelpFile(
    int status;
    int retval;
 
-    if ( NULL == options->helpFile )
+    if ( nullptr == options->helpFile )
     {
          fprintf(stderr, _DTGETMESSAGE(PMSET,4,
                             "%s: Error: helpType is file, "
@@ -276,7 +276,7 @@ int _DtHPrPrintHelpFile(
 
    /* Alloc max shell command line len */
    printCommand = malloc(MAX_COMMAND_LENGTH*sizeof(char));
-   if (printCommand == NULL)
+   if (printCommand == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PMSET,5,
                             "%s: Error: memory allocation failed\n"),

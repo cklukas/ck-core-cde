@@ -47,7 +47,7 @@
  * Note: index zero is not used
  */
 char *_CSA_calendar_attribute_names[] = {
-	NULL,
+	nullptr,
 	"-//XAPIA/CSA/CALATTR//NONSGML Access List//EN",
 	"-//XAPIA/CSA/CALATTR//NONSGML Calendar Name//EN",
 	"-//XAPIA/CSA/CALATTR//NONSGML Calendar Owner//EN",
@@ -71,7 +71,7 @@ char *_CSA_calendar_attribute_names[] = {
  * Note: index zero is not used
  */
 char *_CSA_entry_attribute_names[] = {
-	NULL,
+	nullptr,
 	"-//XAPIA/CSA/ENTRYATTR//NONSGML Attendee List//EN",
 	"-//XAPIA/CSA/ENTRYATTR//NONSGML Audio Reminder//EN",
 	"-//XAPIA/CSA/ENTRYATTR//NONSGML Classification//EN",
@@ -309,7 +309,7 @@ _DtCm_check_cal_csa_attributes(
 	cms_attribute	*hattrs;
 	uint		realnum;
 
-	if ((stat = hash_cal_attrs(num_attrs, attrs, NULL, &hnum, &hattrs,
+	if ((stat = hash_cal_attrs(num_attrs, attrs, nullptr, &hnum, &hattrs,
 	    &realnum)) != CSA_SUCCESS)
 		return (stat);
 
@@ -319,7 +319,7 @@ _DtCm_check_cal_csa_attributes(
 	}
 
 	stat = _DtCm_check_hashed_cal_attributes(fvers, hnum, hattrs,
-		NULL, cname, checkreadonly, firsttime, B_TRUE);
+		nullptr, cname, checkreadonly, firsttime, B_TRUE);
 
 	free(hattrs);
 
@@ -342,7 +342,7 @@ _DtCm_check_cal_cms_attributes(
 	cms_attribute	*hattrs;
 	uint		realnum;
 
-	if ((stat = hash_cal_attrs(num_attrs, NULL, attrs, &hnum, &hattrs,
+	if ((stat = hash_cal_attrs(num_attrs, nullptr, attrs, &hnum, &hattrs,
 	    &realnum)) != CSA_SUCCESS)
 		return (stat);
 
@@ -372,7 +372,7 @@ _DtCm_check_entry_attributes(
 	cms_attribute	*hattrs;
 	uint		realnum;
 
-	if ((stat = hash_entry_attrs(num_attrs, attrs, NULL, &hnum, &hattrs,
+	if ((stat = hash_entry_attrs(num_attrs, attrs, nullptr, &hnum, &hattrs,
 	    &realnum)) != CSA_SUCCESS)
 		return (stat);
 
@@ -402,7 +402,7 @@ _DtCm_check_entry_cms_attributes(
 	cms_attribute	*hattrs;
 	uint		realnum;
 
-	if ((stat = hash_entry_attrs(num_attrs, NULL, attrs, &hnum, &hattrs,
+	if ((stat = hash_entry_attrs(num_attrs, nullptr, attrs, &hnum, &hattrs,
 	    &realnum)) != CSA_SUCCESS)
 		return (stat);
 
@@ -438,21 +438,21 @@ _DtCm_copy_cms_attributes(
 	CSA_return_code stat = CSA_SUCCESS;
 	cms_attribute	*attrs;
 
-	if (dstsize == NULL || dstattrs == NULL)
+	if (dstsize == nullptr || dstattrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	*dstsize = 0;
-	*dstattrs = NULL;
+	*dstattrs = nullptr;
 
 	if (srcsize == 0)
 		return (CSA_SUCCESS);
 
-	if ((attrs = calloc(1, sizeof(cms_attribute) * (srcsize + 1))) == NULL)
+	if ((attrs = calloc(1, sizeof(cms_attribute) * (srcsize + 1))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* firstr element is not used */
 	for (i = 1, j = 1; i <= srcsize; i++) {
-		if (srcattrs[i].name.name != NULL) {
+		if (srcattrs[i].name.name != nullptr) {
 			if ((stat = _DtCm_copy_cms_attribute(&attrs[j],
 			    &srcattrs[i], B_TRUE)) != CSA_SUCCESS)
 				break;
@@ -485,11 +485,11 @@ _DtCm_free_cms_attributes(uint size, cms_attribute *attrs)
 	for (i = 0; i < size; i++) {
 		if (attrs[i].name.name) {
 			free(attrs[i].name.name);
-			attrs[i].name.name = NULL;
+			attrs[i].name.name = nullptr;
 
 			if (attrs[i].value) {
 				_DtCm_free_cms_attribute_value(attrs[i].value);
-				attrs[i].value = NULL;
+				attrs[i].value = nullptr;
 			}
 		}
 	}
@@ -507,11 +507,11 @@ _DtCm_free_attributes(uint size, CSA_attribute * attrs)
 	for (i = 0; i < size; i++) {
 		if (attrs[i].name) {
 			free(attrs[i].name);
-			attrs[i].name = NULL;
+			attrs[i].name = nullptr;
 
 			if (attrs[i].value) {
 				_DtCm_free_attribute_value(attrs[i].value);
-				attrs[i].value = NULL;
+				attrs[i].value = nullptr;
 			}
 		}
 	}
@@ -529,7 +529,7 @@ _DtCm_free_cms_attribute_values(uint size, cms_attribute *attrs)
 	for (i = 1; i <= size; i++) {
 		if (attrs[i].value) {
 			_DtCm_free_cms_attribute_value(attrs[i].value);
-			attrs[i].value = NULL;
+			attrs[i].value = nullptr;
 		}
 	}
 }
@@ -545,7 +545,7 @@ _DtCm_free_attribute_values(uint size, CSA_attribute * attrs)
 	for (i = 0; i < size; i++) {
 		if (attrs[i].value) {
 			_DtCm_free_attribute_value(attrs[i].value);
-			attrs[i].value = NULL;
+			attrs[i].value = nullptr;
 		}
 	}
 }
@@ -629,12 +629,12 @@ _DtCm_copy_cms_attribute(
 	CSA_return_code	stat = CSA_SUCCESS;
 	char		*name;
 
-	if (to == NULL)
+	if (to == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* copy the attribute name */
 	if (copyname) {
-		if ((name = strdup(from->name.name)) == NULL)
+		if ((name = strdup(from->name.name)) == nullptr)
 			return(CSA_E_INSUFFICIENT_MEMORY);
 	}
 
@@ -656,15 +656,15 @@ _DtCm_copy_cms_attr_val(cms_attribute_value *from, cms_attribute_value **to)
 	CSA_return_code	stat = CSA_SUCCESS;
 	cms_attribute_value	*val;
 
-	if (to == NULL)
+	if (to == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* copy the attribute value */
-	if (from == NULL)
-		val = NULL;
+	if (from == nullptr)
+		val = nullptr;
 	else {
 		if ((val = (cms_attribute_value *)calloc(1,
-		    sizeof(cms_attribute_value))) == NULL)
+		    sizeof(cms_attribute_value))) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
 		switch (from->type) {
@@ -686,12 +686,12 @@ _DtCm_copy_cms_attr_val(cms_attribute_value *from, cms_attribute_value **to)
 					strdup(from->item.string_value);
 			else
 				val->item.string_value = calloc(1, 1);
-			if (val->item.string_value == NULL)
+			if (val->item.string_value == nullptr)
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 
 		case CSA_VALUE_REMINDER:
-			if (from->item.reminder_value == NULL)
+			if (from->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_copy_reminder(
@@ -705,7 +705,7 @@ _DtCm_copy_cms_attr_val(cms_attribute_value *from, cms_attribute_value **to)
 			if (from->item.access_list_value &&
 			    (val->item.access_list_value =
 			    _DtCm_copy_cms_access_list(
-			    from->item.access_list_value)) == NULL) {
+			    from->item.access_list_value)) == nullptr) {
 
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 			}
@@ -714,7 +714,7 @@ _DtCm_copy_cms_attr_val(cms_attribute_value *from, cms_attribute_value **to)
 			if (from->item.date_time_list_value &&
 			    (val->item.date_time_list_value =
 			    _DtCm_copy_date_time_list(
-		    	    from->item.date_time_list_value)) == NULL) {
+		    	    from->item.date_time_list_value)) == nullptr) {
 
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 			}
@@ -754,7 +754,7 @@ _DtCm_cms2csa_attribute(cms_attribute from, CSA_attribute *to)
 	char			*name;
 	CSA_attribute_value	*val;
 
-	if ((name = strdup(from.name.name)) == NULL)
+	if ((name = strdup(from.name.name)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if ((stat = _DtCm_cms2csa_attrval(from.value, &val)) == CSA_SUCCESS) {
@@ -772,15 +772,15 @@ _DtCm_cms2csa_attrval(cms_attribute_value *from, CSA_attribute_value **to)
 	CSA_return_code	stat = CSA_SUCCESS;
 	CSA_attribute_value	*val;
 
-	if (to == NULL)
+	if (to == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* copy the attribute value */
-	if (from == NULL)
-		val = NULL;
+	if (from == nullptr)
+		val = nullptr;
 	else {
 		if ((val = (CSA_attribute_value *)calloc(1,
-		    sizeof(CSA_attribute_value))) == NULL)
+		    sizeof(CSA_attribute_value))) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
 		switch (from->type) {
@@ -801,12 +801,12 @@ _DtCm_cms2csa_attrval(cms_attribute_value *from, CSA_attribute_value **to)
 					strdup(from->item.string_value);
 			else
 				val->item.string_value = calloc(1, 1);
-			if (val->item.string_value == NULL)
+			if (val->item.string_value == nullptr)
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 
 		case CSA_VALUE_REMINDER:
-			if (from->item.reminder_value == NULL)
+			if (from->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_copy_reminder(
@@ -814,7 +814,7 @@ _DtCm_cms2csa_attrval(cms_attribute_value *from, CSA_attribute_value **to)
 					&val->item.reminder_value);
 			break;
 		case CSA_VALUE_CALENDAR_USER:
-			if (from->item.calendar_user_value == NULL)
+			if (from->item.calendar_user_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = convert_cms_user_to_csa_user(
@@ -833,7 +833,7 @@ _DtCm_cms2csa_attrval(cms_attribute_value *from, CSA_attribute_value **to)
 			if (from->item.date_time_list_value &&
 			    (val->item.date_time_list_value =
 			    _DtCm_copy_date_time_list(
-			    from->item.date_time_list_value)) == NULL) {
+			    from->item.date_time_list_value)) == nullptr) {
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 			}
 			break;
@@ -843,7 +843,7 @@ _DtCm_cms2csa_attrval(cms_attribute_value *from, CSA_attribute_value **to)
 					from->item.opaque_data_value,
 					&val->item.opaque_data_value);
 			} else
-				val->item.opaque_data_value = NULL;
+				val->item.opaque_data_value = nullptr;
 			break;
 		default:
 			stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
@@ -866,7 +866,7 @@ _DtCm_cms2csa_attrval(cms_attribute_value *from, CSA_attribute_value **to)
 extern void
 _DtCm_free_cms_attribute_value(cms_attribute_value *val)
 {
-	if (val == NULL)
+	if (val == nullptr)
 		return;
 
 	switch (val->type) {
@@ -904,7 +904,7 @@ _DtCm_free_cms_attribute_value(cms_attribute_value *val)
 extern void
 _DtCm_free_attribute_value(CSA_attribute_value *val)
 {
-	if (val == NULL)
+	if (val == nullptr)
 		return;
 
 	switch (val->type) {
@@ -953,7 +953,7 @@ _DtCm_set_uint32_attrval(uint numval, cms_attribute_value **attrval)
 	cms_attribute_value	*val;
 
 	if ((val = (cms_attribute_value *)malloc(sizeof(cms_attribute_value)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
@@ -971,7 +971,7 @@ _DtCm_set_sint32_attrval(int numval, cms_attribute_value **attrval)
 	cms_attribute_value	*val;
 
 	if ((val = (cms_attribute_value *)malloc(sizeof(cms_attribute_value)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
@@ -997,15 +997,15 @@ _DtCm_set_string_attrval(
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((val = (cms_attribute_value *)malloc(sizeof(cms_attribute_value)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	val->type = type;
 
-	if (strval == NULL) {
-		val->item.string_value = NULL;
-	} else if ((val->item.string_value = strdup(strval)) == NULL) {
+	if (strval == nullptr) {
+		val->item.string_value = nullptr;
+	} else if ((val->item.string_value = strdup(strval)) == nullptr) {
 		free(val);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
@@ -1022,19 +1022,19 @@ _DtCm_set_user_attrval(
 {
 	cms_attribute_value	*val;
 
-	if (user == NULL) {
-		*attrval = NULL;
+	if (user == nullptr) {
+		*attrval = nullptr;
 		return (CSA_SUCCESS);
 	}
 
 	if ((val = (cms_attribute_value *)malloc(sizeof(cms_attribute_value)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	val->type = CSA_VALUE_CALENDAR_USER;
 
-	if ((val->item.calendar_user_value = strdup(user)) == NULL) {
+	if ((val->item.calendar_user_value = strdup(user)) == nullptr) {
 		free(val);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
@@ -1050,11 +1050,11 @@ _DtCm_set_reminder_attrval(CSA_reminder *remval, cms_attribute_value **attrval)
 	cms_attribute_value *val;
 	CSA_return_code stat;
 
-	if (remval == NULL)
+	if (remval == nullptr)
 		return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 
 	if ((val = (cms_attribute_value *)malloc(sizeof(cms_attribute_value)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
@@ -1081,15 +1081,15 @@ _DtCm_set_csa_access_attrval(
 	CSA_return_code stat = CSA_SUCCESS;
 
 	if ((val = (CSA_attribute_value *)malloc(sizeof(CSA_attribute_value)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	val->type = CSA_VALUE_ACCESS_LIST;
 
-	if (aval == NULL) {
+	if (aval == nullptr) {
 
-		val->item.access_list_value = NULL;
+		val->item.access_list_value = nullptr;
 
 	} else {
 	
@@ -1112,11 +1112,11 @@ _DtCm_set_opaque_attrval(CSA_opaque_data *data, cms_attribute_value **attrval)
 	CSA_return_code stat;
 	cms_attribute_value	*val;
 
-	if (data == NULL)
+	if (data == nullptr)
 		return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 
 	if ((val = (cms_attribute_value *)malloc(sizeof(cms_attribute_value)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
@@ -1139,7 +1139,7 @@ _DtCm_set_csa_uint32_attrval(uint numval, CSA_attribute_value **attrval)
 	CSA_attribute_value	*val;
 
 	if ((val = (CSA_attribute_value *)malloc(sizeof(CSA_attribute_value)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
@@ -1165,15 +1165,15 @@ _DtCm_set_csa_string_attrval(
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((val = (CSA_attribute_value *)malloc(sizeof(CSA_attribute_value)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	val->type = type;
 
-	if (strval == NULL) {
-		val->item.string_value = NULL;
-	} else if ((val->item.string_value = strdup(strval)) == NULL) {
+	if (strval == nullptr) {
+		val->item.string_value = nullptr;
+	} else if ((val->item.string_value = strdup(strval)) == nullptr) {
 		free(val);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
@@ -1188,7 +1188,7 @@ _DtCm_free_csa_access_list(CSA_access_list alist)
 {
 	CSA_access_list nptr;
 
-	while (alist != NULL) {
+	while (alist != nullptr) {
 		nptr = alist->next;
 
 		if (alist->user) {
@@ -1212,7 +1212,7 @@ _DtCm_free_date_time_list(CSA_date_time_list list)
 {
 	CSA_date_time_entry *nptr;
 
-	while (list != NULL) {
+	while (list != nullptr) {
 		nptr = list->next;
 
 		if (list->date_time) {
@@ -1230,7 +1230,7 @@ _DtCm_free_cms_access_entry(cms_access_entry *list)
 {
 	cms_access_entry *nptr;
 
-	while (list != NULL) {
+	while (list != nullptr) {
 		nptr = list->next;
 
 		if (list->user) {
@@ -1249,24 +1249,24 @@ _DtCm_copy_cms_access_list(cms_access_entry *alist)
 	cms_access_entry	*l, *head, *prev;
 	boolean_t	cleanup = B_FALSE;
 
-	prev = head = NULL;
-	while (alist != NULL) {
+	prev = head = nullptr;
+	while (alist != nullptr) {
 		if ((l = (cms_access_entry *)calloc(1, sizeof(cms_access_entry)))
-		    == NULL) {
+		    == nullptr) {
 			cleanup = B_TRUE;
 			break;
 		}
 
-		if ((l->user = strdup(alist->user)) == NULL) {
+		if ((l->user = strdup(alist->user)) == nullptr) {
 			free(l);
 			cleanup = B_TRUE;
 			break;
 		}
 
 		l->rights = alist->rights;
-		l->next = NULL;
+		l->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = l;
 		else
 			prev->next = l;
@@ -1277,7 +1277,7 @@ _DtCm_copy_cms_access_list(cms_access_entry *alist)
 
 	if (cleanup == B_TRUE) {
 		_DtCm_free_cms_access_entry(head);
-		head = NULL;
+		head = nullptr;
 	}
 	return(head);
 }
@@ -1290,22 +1290,22 @@ _DtCm_cms2csa_access_list(
 	CSA_return_code stat = CSA_SUCCESS;
 	CSA_access_rights *to, *head, *prev;
 
-	head = prev = NULL;
-	while (cmslist != NULL) {
+	head = prev = nullptr;
+	while (cmslist != nullptr) {
 		if ((to = (CSA_access_rights *)calloc(1,
-		    sizeof(CSA_access_rights))) == NULL) {
+		    sizeof(CSA_access_rights))) == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
 		if ((to->user = (CSA_calendar_user *)calloc(1,
-		    sizeof(CSA_calendar_user))) == NULL) {
+		    sizeof(CSA_calendar_user))) == nullptr) {
 			free(to);
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
-		if ((to->user->user_name = strdup(cmslist->user)) == NULL) {
+		if ((to->user->user_name = strdup(cmslist->user)) == nullptr) {
 			free(to->user);
 			free(to);
 			stat = CSA_E_INSUFFICIENT_MEMORY;
@@ -1313,9 +1313,9 @@ _DtCm_cms2csa_access_list(
 		}
 
 		to->rights = cmslist->rights;
-		to->next = NULL;
+		to->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = to;
 		else
 			prev->next = to;
@@ -1327,7 +1327,7 @@ _DtCm_cms2csa_access_list(
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_csa_access_list(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*csalist = head;
@@ -1342,17 +1342,17 @@ _DtCm_csa2cms_access_list(
 	CSA_return_code stat = CSA_SUCCESS;
 	cms_access_entry *to, *head, *prev;
 
-	head = prev = NULL;
-	while (csalist != NULL) {
+	head = prev = nullptr;
+	while (csalist != nullptr) {
 		if ((to = (cms_access_entry *)calloc(1,
-		    sizeof(cms_access_entry))) == NULL) {
+		    sizeof(cms_access_entry))) == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
 		if (csalist->user->user_name) {
 			if ((to->user = strdup(csalist->user->user_name))
-			    == NULL) {
+			    == nullptr) {
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 				free(to);
 				break;
@@ -1364,9 +1364,9 @@ _DtCm_csa2cms_access_list(
 		}
 
 		to->rights = csalist->rights;
-		to->next = NULL;
+		to->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = to;
 		else
 			prev->next = to;
@@ -1378,7 +1378,7 @@ _DtCm_csa2cms_access_list(
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_cms_access_entry(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*cmslist = head;
@@ -1391,23 +1391,23 @@ _DtCm_copy_date_time_list(CSA_date_time_list dlist)
 	CSA_date_time_entry	*l, *head, *prev;
 	boolean_t	cleanup = B_FALSE;
 
-	prev = head = NULL;
-	while (dlist != NULL) {
+	prev = head = nullptr;
+	while (dlist != nullptr) {
 		if ((l = (CSA_date_time_entry *)calloc(1,
-		    sizeof(CSA_date_time_entry))) == NULL) {
+		    sizeof(CSA_date_time_entry))) == nullptr) {
 			cleanup = B_TRUE;
 			break;
 		}
 
-		if ((l->date_time = strdup(dlist->date_time)) == NULL) {
+		if ((l->date_time = strdup(dlist->date_time)) == nullptr) {
 			free(l);
 			cleanup = B_TRUE;
 			break;
 		}
 
-		l->next = NULL;
+		l->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = l;
 		else
 			prev->next = l;
@@ -1418,7 +1418,7 @@ _DtCm_copy_date_time_list(CSA_date_time_list dlist)
 
 	if (cleanup == B_TRUE) {
 		_DtCm_free_date_time_list(head);
-		head = NULL;
+		head = nullptr;
 	}
 	return(head);
 }
@@ -1428,11 +1428,11 @@ _DtCm_copy_reminder(CSA_reminder *from, CSA_reminder **to)
 {
 	CSA_reminder *newval;
 
-	if ((newval = (CSA_reminder *)calloc(1, sizeof(CSA_reminder))) == NULL)
+	if ((newval = (CSA_reminder *)calloc(1, sizeof(CSA_reminder))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if (from->lead_time) {
-		if ((newval->lead_time = strdup(from->lead_time)) == NULL) {
+		if ((newval->lead_time = strdup(from->lead_time)) == nullptr) {
 			free(newval);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
@@ -1446,7 +1446,7 @@ _DtCm_copy_reminder(CSA_reminder *from, CSA_reminder **to)
 	else
 		newval->snooze_time = calloc(1, 1);
 
-	if (newval->snooze_time == NULL) {
+	if (newval->snooze_time == nullptr) {
 		_DtCm_free_reminder(newval);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
@@ -1456,7 +1456,7 @@ _DtCm_copy_reminder(CSA_reminder *from, CSA_reminder **to)
 	if (from->reminder_data.size > 0) {
 		newval->reminder_data.size = from->reminder_data.size;
 		if ((newval->reminder_data.data = malloc(
-		    newval->reminder_data.size)) == NULL) {
+		    newval->reminder_data.size)) == nullptr) {
 			_DtCm_free_reminder(newval);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
@@ -1471,7 +1471,7 @@ _DtCm_copy_reminder(CSA_reminder *from, CSA_reminder **to)
 extern void
 _DtCm_free_reminder(CSA_reminder *val)
 {
-	if (val == NULL) return;
+	if (val == nullptr) return;
 
 	if (val->lead_time)
 		free(val->lead_time);
@@ -1491,20 +1491,20 @@ _DtCm_copy_opaque_data(CSA_opaque_data *from, CSA_opaque_data **to)
 	CSA_opaque_data	*val;
 
 	if ((val = (CSA_opaque_data *)calloc(1, sizeof(CSA_opaque_data)))
-	    == NULL) {
+	    == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	if (from->size > 0) {
 		val->size = from->size;
-		if ((val->data = malloc(from->size)) == NULL) {
+		if ((val->data = malloc(from->size)) == nullptr) {
 			free(val);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
 		memcpy(val->data, from->data, from->size);
 	} else {
 		val->size = 0;
-		val->data = NULL;
+		val->data = nullptr;
 	}
 
 	*to = val;
@@ -1515,7 +1515,7 @@ _DtCm_copy_opaque_data(CSA_opaque_data *from, CSA_opaque_data **to)
 extern void
 _DtCm_free_opaque_data(CSA_opaque_data *val)
 {
-	if (val == NULL) return;
+	if (val == nullptr) return;
 
 	if (val->data)
 		free(val->data);
@@ -1562,10 +1562,10 @@ check_predefined_attrs(
 
 	for (i = 0; i < num_attrs; i++) {
 
-		if (attrs[i].name.name == NULL)
+		if (attrs[i].name.name == nullptr)
 			continue;
 
-		if (tbl == NULL)
+		if (tbl == nullptr)
 			index = i;
 		else
 			index = _DtCm_get_index_from_table(tbl,
@@ -1636,7 +1636,7 @@ check_predefined_attrs(
 			case CSA_VALUE_REMINDER:
 				rptr = (CSA_reminder *)
 					attrs[i].value->item.sint32_value;
-				if (rptr == NULL || rptr->lead_time == NULL ||
+				if (rptr == nullptr || rptr->lead_time == nullptr ||
 				    _csa_iso8601_to_duration(rptr->lead_time,
 							     &tick))
 					return (CSA_E_INVALID_ATTRIBUTE_VALUE);
@@ -1656,11 +1656,11 @@ convert_cms_user_to_csa_user(char *from, CSA_calendar_user **to)
 	CSA_calendar_user *newval;
 
 	if ((newval = (CSA_calendar_user *)calloc(1,
-	    sizeof(CSA_calendar_user))) == NULL)
+	    sizeof(CSA_calendar_user))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if (from) {
-		if ((newval->user_name = strdup(from)) == NULL) {
+		if ((newval->user_name = strdup(from)) == nullptr) {
 			free(newval);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
@@ -1686,12 +1686,12 @@ hash_entry_attrs(
 
 	if ((nattrs = (cms_attribute *)calloc(1,
 	    sizeof(cms_attribute)*(num_attrs+_DtCM_DEFINED_ENTRY_ATTR_SIZE+1)))
-	    == NULL)
+	    == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 0, j = _DtCM_DEFINED_ENTRY_ATTR_SIZE + 1; i < num_attrs; i++) {
 		name = (csaattrs ? csaattrs[i].name : cmsattrs[i].name.name);
-		if (name == NULL)
+		if (name == nullptr)
 			continue;
 		else {
 			count++;
@@ -1740,12 +1740,12 @@ hash_cal_attrs(
 
 	if ((nattrs = (cms_attribute *)calloc(1,
 	    sizeof(cms_attribute)*(num_attrs+_DtCM_DEFINED_CAL_ATTR_SIZE+1)))
-	    == NULL)
+	    == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 0, j = _DtCM_DEFINED_CAL_ATTR_SIZE + 1; i < num_attrs; i++) {
 		name = (csaattrs ? csaattrs[i].name : cmsattrs[i].name.name);
-		if (name == NULL)
+		if (name == nullptr)
 			continue;
 		else {
 			count++;
@@ -1790,16 +1790,16 @@ _DtCm_check_hashed_cal_attributes(
 	CSA_return_code stat;
 	CSA_attribute_value	*csaval;
 	cms_attribute_value	*cmsval;
-	char			*nattr = NULL; /* calendar name */
-	char			*oattr = NULL; /* calendar owner */
-	char			*cattr = NULL; /* character set */
-	char			*tattr = NULL; /* time zone */
+	char			*nattr = nullptr; /* calendar name */
+	char			*oattr = nullptr; /* calendar owner */
+	char			*cattr = nullptr; /* character set */
+	char			*tattr = nullptr; /* time zone */
 
 	if (firsttime) {
 		if (attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].name.name) {
-			if (attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].value == NULL
+			if (attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].value == nullptr
 			    || attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].value->\
-			    item.calendar_user_value == NULL)
+			    item.calendar_user_value == nullptr)
 				return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 
 			if (csatype) {
@@ -1808,26 +1808,26 @@ _DtCm_check_hashed_cal_attributes(
 				stat = _CheckCalendarOwner(owner, csaval->type,
 				    (csaval && csaval->item.calendar_user_value?
 				    csaval->item.calendar_user_value->user_name:
-				    NULL));
+				    nullptr));
 			} else {
 				cmsval = attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].\
 					value;
 				stat = _CheckCalendarOwner(owner, cmsval->type,
 					cmsval ?
-					cmsval->item.calendar_user_value:NULL);
+					cmsval->item.calendar_user_value:nullptr);
 			}
 
 			if (stat != CSA_SUCCESS)
 				return (stat);
 
 			oattr = attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].name.name;
-			attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].name.name = NULL;
+			attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].name.name = nullptr;
 		}
 
 		if (attrs[CSA_CAL_ATTR_CALENDAR_NAME_I].name.name) {
-			if (attrs[CSA_CAL_ATTR_CALENDAR_NAME_I].value == NULL ||
+			if (attrs[CSA_CAL_ATTR_CALENDAR_NAME_I].value == nullptr ||
 			    attrs[CSA_CAL_ATTR_CALENDAR_NAME_I].value->\
-			    item.string_value == NULL) {
+			    item.string_value == nullptr) {
 				if (oattr)
 					attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].\
 						name.name = oattr;
@@ -1844,22 +1844,22 @@ _DtCm_check_hashed_cal_attributes(
 			}
 
 			nattr = attrs[CSA_CAL_ATTR_CALENDAR_NAME_I].name.name;
-			attrs[CSA_CAL_ATTR_CALENDAR_NAME_I].name.name = NULL;
+			attrs[CSA_CAL_ATTR_CALENDAR_NAME_I].name.name = nullptr;
 		}
 
 		if (attrs[CSA_CAL_ATTR_CHARACTER_SET_I].name.name) {
 			cattr = attrs[CSA_CAL_ATTR_CHARACTER_SET_I].name.name;
-			attrs[CSA_CAL_ATTR_CHARACTER_SET_I].name.name = NULL;
+			attrs[CSA_CAL_ATTR_CHARACTER_SET_I].name.name = nullptr;
 		}
 
 		if (attrs[CSA_CAL_ATTR_TIME_ZONE_I].name.name) {
 			tattr = attrs[CSA_CAL_ATTR_TIME_ZONE_I].name.name;
-			attrs[CSA_CAL_ATTR_TIME_ZONE_I].name.name = NULL;
+			attrs[CSA_CAL_ATTR_TIME_ZONE_I].name.name = nullptr;
 		}
 	}
 
 	stat = check_predefined_attrs(fvers, num_attrs+1, attrs,
-		checkreadonly, NULL, _DtCM_DEFINED_CAL_ATTR_SIZE,
+		checkreadonly, nullptr, _DtCM_DEFINED_CAL_ATTR_SIZE,
 		_CSA_cal_attr_info);
 
 	if (oattr)
@@ -1887,7 +1887,7 @@ _DtCm_check_hashed_entry_attributes(
 	CSA_return_code stat;
 
 	if ((stat = check_predefined_attrs(fvers, num_attrs+1, attrs,
-	    (utype == 0 ? B_FALSE : B_TRUE), NULL,
+	    (utype == 0 ? B_FALSE : B_TRUE), nullptr,
 	    _DtCM_DEFINED_ENTRY_ATTR_SIZE, _CSA_entry_attr_info))
 	    != CSA_SUCCESS) {
 
@@ -1897,8 +1897,8 @@ _DtCm_check_hashed_entry_attributes(
 	if (utype == CSA_CB_ENTRY_ADDED) {
 
 		/* make sure the minimum set of attribute is specified */
-		if (attrs[CSA_ENTRY_ATTR_START_DATE_I].value == NULL ||
-		    attrs[CSA_ENTRY_ATTR_TYPE_I].value == NULL)
+		if (attrs[CSA_ENTRY_ATTR_START_DATE_I].value == nullptr ||
+		    attrs[CSA_ENTRY_ATTR_TYPE_I].value == nullptr)
 			return (CSA_E_INVALID_PARAMETER);
 
 	} else if (utype == CSA_CB_ENTRY_UPDATED) {
@@ -1918,9 +1918,9 @@ _CheckNameAtHost(char *owner, char *value)
 	int		res;
 
 	/* check name part first */
-	if (owner == NULL) {
+	if (owner == nullptr) {
 		/* get user name of user running the application */
-		if ((owner = _DtCmGetUserName()) == NULL)
+		if ((owner = _DtCmGetUserName()) == nullptr)
 			return (CSA_E_FAILURE);
 	}
 
@@ -1934,7 +1934,7 @@ _CheckNameAtHost(char *owner, char *value)
 		return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 
 	/* check host too if it's specified */
-	if (ptr == NULL)
+	if (ptr == nullptr)
 		return (CSA_SUCCESS);
 
 	ptr++;
@@ -1950,7 +1950,7 @@ _CheckNameAtHost(char *owner, char *value)
 static CSA_return_code
 _CheckCalendarOwner(char *owner, int type, char *user)
 {
-	if (type != CSA_VALUE_CALENDAR_USER || user == NULL)
+	if (type != CSA_VALUE_CALENDAR_USER || user == nullptr)
 		return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 
 	/* make sure user is the same as the one running the application */
@@ -1990,7 +1990,7 @@ _CheckCalendarName(char *owner, char *cname, cms_attribute_value *val)
 	if (isuser == B_TRUE) {
 		/* the name comes from the network, so it has no length limit */
 		len = strlen(val->item.string_value) + (ptr ? strlen(ptr) : 0);
-		if ((user = malloc(len + 1)) == NULL)
+		if ((user = malloc(len + 1)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		snprintf(user, len + 1, "%s%s", val->item.string_value,
 			(ptr ? ptr : ""));
@@ -2000,7 +2000,7 @@ _CheckCalendarName(char *owner, char *cname, cms_attribute_value *val)
 	}
 
 	/* check the host part */
-	if (ptr == NULL)
+	if (ptr == nullptr)
 		return (CSA_SUCCESS);
 	else
 		ptr++;

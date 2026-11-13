@@ -440,7 +440,7 @@ ilSrcElementData            srcData;
         dstData.stripHeight *= 2;
         }
     dstData.constantStrip = pInfo->constantStrip;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
 
     pPriv = (ilDitherYCbCrPrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
             sizeof(ilDitherYCbCrPrivRec), 0, &srcData, &dstData, IL_NPF, IL_NPF, IL_NPF, 

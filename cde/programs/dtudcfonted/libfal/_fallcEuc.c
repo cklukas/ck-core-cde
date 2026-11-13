@@ -659,7 +659,7 @@ wc_codeset(XLCd lcd, wchar_t wch)
 	if ( widech == (*codesets)->wc_encoding )
 	    return *codesets;
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -691,7 +691,7 @@ create_conv(XLCd lcd, XlcConvMethods methods)
     XlcConv conv;
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
-    if (conv == NULL)
+    if (conv == nullptr)
 	return (XlcConv) NULL;
 
     conv->methods = methods;
@@ -974,7 +974,7 @@ euc_wcstocts(
 
 /* Initial State: */
     ct_state.GL_charset = ctdptr[0]; /* Codeset 0 */
-    ct_state.GR_charset = NULL;
+    ct_state.GR_charset = nullptr;
 
     if (*from_left > *to_left)
 	*from_left = *to_left;
@@ -1219,7 +1219,7 @@ euc_mbstocts(
 
 /* Initial State: */
     ct_state.GL_charset = ctdptr[Ascii];
-    ct_state.GR_charset = NULL;
+    ct_state.GR_charset = nullptr;
 
 
     if (*from_left > *to_left)
@@ -1319,17 +1319,17 @@ enum { MBSTOCS, WCSTOCS, MBTOCS, CSTOMBS, CSTOWCS, MBSTOWCS, WCSTOMBS,
        CTSTOWCS, CTSTOMBS, WCSTOCTS, MBSTOCTS };
 
 static XlcConvMethodsRec conv_methods[] = {
-    {close_converter, euc_mbstocs,  NULL },
-    {close_converter, euc_wcstocs,  NULL },
-    {close_converter, euc_mbtocs,   NULL },
-    {close_converter, euc_cstombs,  NULL },
-    {close_converter, euc_cstowcs,  NULL },
-    {close_converter, euc_mbstowcs, NULL },
-    {close_converter, euc_wcstombs, NULL },
-    {close_converter, euc_ctstowcs, NULL },
-    {close_converter, euc_ctstombs, NULL },
-    {close_converter, euc_wcstocts, NULL },
-    {close_converter, euc_mbstocts, NULL },
+    {close_converter, euc_mbstocs,  nullptr },
+    {close_converter, euc_wcstocs,  nullptr },
+    {close_converter, euc_mbtocs,   nullptr },
+    {close_converter, euc_cstombs,  nullptr },
+    {close_converter, euc_cstowcs,  nullptr },
+    {close_converter, euc_mbstowcs, nullptr },
+    {close_converter, euc_wcstombs, nullptr },
+    {close_converter, euc_ctstowcs, nullptr },
+    {close_converter, euc_ctstombs, nullptr },
+    {close_converter, euc_wcstocts, nullptr },
+    {close_converter, euc_mbstocts, nullptr },
 };
 
 
@@ -1405,7 +1405,7 @@ _fallcEucLoader(char *name)
     XLCd lcd;
 
     lcd = _fallcCreateLC(name, _fallcGenericMethods);
-    if (lcd == NULL)
+    if (lcd == nullptr)
 	return lcd;
 
 

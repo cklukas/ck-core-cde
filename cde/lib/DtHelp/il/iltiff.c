@@ -228,7 +228,7 @@ ilBool         bigEndian;
                 (pFileTag->length * _ilTagTypeItemSizes [pFileTag->type] + 3)) & ~3;
             *ppTag++ = (ilFileTag *)pFileTag;
             }
-        else *ppTag++ = (ilFileTag *)NULL;
+        else *ppTag++ = (ilFileTag *)nullptr;
         }
 
         /*  If no tags found; exit, else allocate "mallocSize" bytes, and for each found
@@ -508,7 +508,7 @@ int                         i, tagIndex, nBits, resolutionUnit, fillOrder = 0;
 unsigned long               group3CompData;
 unsigned long               group4CompData;
 ilFileTag         *pTag;
-ilYCbCrInfo                *pYCbCr = NULL;     /* null if not YCbCr ; else -> des...YCbCr */
+ilYCbCrInfo                *pYCbCr = nullptr;     /* null if not YCbCr ; else -> des...YCbCr */
 
         /*  Init/zero des and format in *pFileImage.
         */
@@ -721,7 +721,7 @@ ilYCbCrInfo                *pYCbCr = NULL;     /* null if not YCbCr ; else -> de
                           3 samples: RGB; else error.
                 */
           case PHOTOMETRIC_INTERPRETATION:
-            pYCbCr = (ilYCbCrInfo *)NULL;       /* unless a YCbCr image */
+            pYCbCr = (ilYCbCrInfo *)nullptr;       /* unless a YCbCr image */
             if (!present) {
                 if (pFileImage->p.des.nSamplesPerPixel == 1) {
                     if (pFileImage->p.format.nBitsPerSample[0] == 1) {

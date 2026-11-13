@@ -247,12 +247,12 @@ struct include {
 /************************************************/
 char            abstracter[100];
 int             abstract =		GENERATE;
-struct key_id  *abstract_table =	NULL;
+struct key_id  *abstract_table =	nullptr;
 /***nl_catd		dtsearch_catd = (nl_catd) -1;***/
 int             bad_parm =		FALSE;
 int             bad_profile =		FALSE;
 int             bot_defined =		FALSE;
-struct date_id *date_table =		NULL;
+struct date_id *date_table =		nullptr;
 int             date_pos_defined =	FALSE;
 static char    *del_string =		" +=,\t\n";
 /****static char    *del_string = " +-=,\t\n";**allow neg nums***/
@@ -261,22 +261,22 @@ char            dicname[10] =		{0};
 char            dicpath[_POSIX_PATH_MAX] =	{0};
 int             discard =		TRUE;
 int             discard_record =	FALSE;
-struct finclude *finclude_tab =		NULL;
-struct field_id *field_table =		NULL;
-struct include *i_i_t =			NULL;
+struct finclude *finclude_tab =		nullptr;
+struct field_id *field_table =		nullptr;
+struct include *i_i_t =			nullptr;
 int             imagemode =		INCLUDE;
 int             imageflag =		INCLUDE;
-struct include *include_tab =		NULL;
+struct include *include_tab =		nullptr;
 char           *infile;
-static FILE    *instream =		NULL;
+static FILE    *instream =		nullptr;
 static long	key_count =		0;
-struct key_id  *key_table =		NULL;
+struct key_id  *key_table =		nullptr;
 int             key_defined =		FALSE;
 int             key_pos_defined =	FALSE;
 char            key_char;
 char            key_value[80];
 static char    *line_mode =		"CTHULHU TOCOMA ZYYXY UTOPIA";
-struct line_id *line_table =		NULL;
+struct line_id *line_table =		nullptr;
 time_t          now;
 char            now_str[24];
 struct tm       nowtm;
@@ -286,10 +286,10 @@ int             outcount =		0;
 char            outmode[8] =		"w";
 int             outmode_specified =	FALSE;
 char           *outfile;
-static FILE    *outstream =		NULL;
+static FILE    *outstream =		nullptr;
 char           *profile;
 static long	rec_count =		0L;	/* for err msgs */
-struct rec     *record_head =		NULL;
+struct rec     *record_head =		nullptr;
 struct tm       rectm;
 int             screen_width =		79;
 static int      shutdown_now =		FALSE;
@@ -314,7 +314,7 @@ int             validate_id (char *s)
 {
     int             i;
 
-    if (s==NULL)
+    if (s==nullptr)
 	return FALSE;
     if (!isalpha (s[0])) {
 	return FALSE;
@@ -337,7 +337,7 @@ void            open_outfile (void)
     int             i;
 
     if (!outmode_specified)
-	if ((temp = fopen (outfile, "r")) != NULL) {
+	if ((temp = fopen (outfile, "r")) != nullptr) {
 	    fclose (temp);
 	    printf ( CATGETS(dtsearch_catd, MS_chandel, 3,
 		"Output file '%s' already exists.\n") ,
@@ -356,7 +356,7 @@ void            open_outfile (void)
     if (!strcmp (outfile, "-"))
 	outstream = stdout;
     else {
-	if ((outstream = fopen (outfile, outmode)) == NULL) {
+	if ((outstream = fopen (outfile, outmode)) == nullptr) {
 	    printf ( CATGETS(dtsearch_catd, MS_chandel, 7,
 		"Unable to open output file '%s'.\n") , outfile);
 	    exit (FILE_ERROR);
@@ -433,14 +433,14 @@ char           *my_strtok (char *s1, const char *s2)
     if (strcmp (s2, "\"") == 0) {	/* parsing for a string */
 	if (*sbegin == '\0') {
 	    ssave = "";
-	    return NULL;
+	    return nullptr;
 	}
 	while (*sbegin != '"' && *sbegin != '\0') {/*-- look for first " --*/
 	    sbegin++;
 	}
 	if (*sbegin == '\0') {
 	    ssave = "";
-	    return NULL;
+	    return nullptr;
 	}
 	sbegin++;		/*-- skip past "      --*/
 	i = 0;
@@ -449,7 +449,7 @@ char           *my_strtok (char *s1, const char *s2)
 		sbegin++;
 	    if (*sbegin == '\0') {	/*-- end of line  --*/
 		ssave = "";
-		return NULL;
+		return nullptr;
 	    }
 	    stringbuf[i++] = (*sbegin);
 	    sbegin++;
@@ -466,7 +466,7 @@ char           *my_strtok (char *s1, const char *s2)
 	sbegin += strspn (sbegin, s2);
 	if (*sbegin == '\0') {
 	    ssave = "";
-	    return NULL;
+	    return nullptr;
 	}			/* if */
 	send = strpbrk (sbegin, s2);
 	if (*send != '\0')
@@ -497,7 +497,7 @@ int             token (char *s)
 {
     int             i;
 
-    if (s == NULL)
+    if (s == nullptr)
         return UNKNOWN;
 
     /*-- make token all lowercase --*/
@@ -561,34 +561,34 @@ void            process_profile (void)
     int             line_num = 0;
     int             i;
     char           *tok;
-    struct line_id *line_current      = NULL;
-    struct field_id *field_current    = NULL;
+    struct line_id *line_current      = nullptr;
+    struct field_id *field_current    = nullptr;
     struct key_id  *key_current;
     struct date_id *date_current;
-    struct key_id  *abstract_current  = NULL;
-    struct finclude *finclude_current = NULL;
-    struct include *include_current   = NULL;
-    struct include *i_i_current       = NULL;
+    struct key_id  *abstract_current  = nullptr;
+    struct finclude *finclude_current = nullptr;
+    struct include *include_current   = nullptr;
+    struct include *i_i_current       = nullptr;
     int             found;
     int             tok_type;
 
     /*-- open file --*/
-    if ((prof = fopen (profile, "r")) == NULL) {
+    if ((prof = fopen (profile, "r")) == nullptr) {
 	printf ( CATGETS(dtsearch_catd, MS_chandel, 11,
 		"\nError - unable to open profile file '%s'.\n") , profile);
 	exit (FILE_ERROR);
     }
     /*-- Get next line --*/
     do {
-	char *ret = NULL;
+	char *ret = nullptr;
 	ret = fgets (prof_line, 200, prof);
 	line_num++;
-	if (ret == NULL || feof (prof) )
+	if (ret == nullptr || feof (prof) )
 	    break;
 	if (prof_line[0] == '#' || is_blank (prof_line))
 	    continue;
 	tok = my_strtok (prof_line, del_string);
-	if (tok == NULL)
+	if (tok == nullptr)
 	    continue;	/* ignore blank line */
 	tok_type = token (tok);
 	switch (tok_type) {
@@ -598,31 +598,31 @@ void            process_profile (void)
 
 	    case LINE:
 		/*-- build node --*/
-		if (line_table == NULL) {
+		if (line_table == nullptr) {
 		    line_table = (struct line_id *) malloc (
 			sizeof (struct line_id));
 		    line_current = line_table;
-		    line_table->next = NULL;
+		    line_table->next = nullptr;
 		    line_table->comp = (struct line_comp *) malloc (
 			sizeof (struct line_comp));
 		    line_table->head = line_table->comp;
-		    line_table->comp->next = NULL;
+		    line_table->comp->next = nullptr;
 		}
 		/* if */
 		else {
 		    line_current->next = (struct line_id *) malloc (
 			sizeof (struct line_id));
 		    line_current = line_current->next;
-		    line_current->next = NULL;
+		    line_current->next = nullptr;
 		    line_current->comp = (struct line_comp *) malloc (
 			sizeof (struct line_comp));
 		    line_current->head = line_current->comp;
-		    line_current->comp->next = NULL;
+		    line_current->comp->next = nullptr;
 		}		/* else */
 		line_current->image_action = NONE;
 		line_current->word_action = NONE;
 		line_current->text_action = NONE;
-		line_current->line = NULL;
+		line_current->line = nullptr;
 		line_current->name[0] = 0;
 		/*-- get identifier --*/
 		tok = my_strtok ('\0', del_string);
@@ -689,7 +689,7 @@ void            process_profile (void)
 		    line_current->comp->next = (struct line_comp *) malloc (
 			sizeof (struct line_comp));
 		    line_current->comp = line_current->comp->next;
-		    line_current->comp->next = NULL;
+		    line_current->comp->next = nullptr;
 		    /*-- check # and store --*/
 		    if (!strcmp (tok, "*"))
 			line_current->comp->column_number = ANY;
@@ -728,17 +728,17 @@ void            process_profile (void)
 
 	    case CONSTANT:
 	    case FIELD:
-		if (field_table == NULL) {
+		if (field_table == nullptr) {
 		    field_table = (struct field_id *)
 			malloc (sizeof (struct field_id));
 		    field_current = field_table;
-		    field_table->next = NULL;
+		    field_table->next = nullptr;
 		}
 		else {
 		    field_current->next = (struct field_id *) malloc (
 			sizeof (struct field_id));
 		    field_current = field_current->next;
-		    field_current->next = NULL;
+		    field_current->next = nullptr;
 		}
 		memset (field_current, 0, sizeof(struct field_id));
 		field_current->word_action = NONE;
@@ -763,7 +763,7 @@ void            process_profile (void)
 		}
 		if (field_current->constant) {
 		    /*-- get constant value --*/
-		    tok = my_strtok (NULL, "\"");
+		    tok = my_strtok (nullptr, "\"");
 		    if (!tok) {
 			printf ( CATGETS(dtsearch_catd, MS_chandel, 93,
 			    "Error line %d - '%s' string not "
@@ -846,7 +846,7 @@ void            process_profile (void)
 		    bad_profile = TRUE;
 		}
 		tok = my_strtok ('\0', del_string);
-		if (tok == NULL)
+		if (tok == nullptr)
 		    goto BAD_DELIM_VAL;
 		/* convert tok to lowercase */
 		for (i = 0; i < strlen (tok); i++)
@@ -870,7 +870,7 @@ BAD_DELIM_VAL:
 	    case TFIELDEXCLUDE:
 		tok = my_strtok ('\0', del_string);
 		if (validate_id (tok)) {
-		    if (finclude_tab == NULL) {
+		    if (finclude_tab == nullptr) {
 			finclude_tab = (struct finclude *) malloc (
 			    sizeof (struct finclude));
 			finclude_current = finclude_tab;
@@ -879,7 +879,7 @@ BAD_DELIM_VAL:
 			    sizeof (struct finclude));
 			finclude_current = finclude_current->next;
 		    }
-		    finclude_current->next = NULL;
+		    finclude_current->next = nullptr;
 		    strcpy (finclude_current->field_id, tok);
 		    finclude_current->value = EXCLUDE;
 		}
@@ -895,10 +895,10 @@ BAD_DELIM_VAL:
 	    case TFIELDINCLUDE:
 		tok = my_strtok ('\0', del_string);
 		if (validate_id (tok)) {
-		    if (finclude_tab == NULL) {
+		    if (finclude_tab == nullptr) {
 			finclude_tab = (struct finclude *) malloc (
 			    sizeof (struct finclude));
-			finclude_tab->next = NULL;
+			finclude_tab->next = nullptr;
 			finclude_current = finclude_tab;
 		    }
 		    /* if valid */
@@ -906,7 +906,7 @@ BAD_DELIM_VAL:
 			finclude_current->next = (struct finclude *) malloc (
 			    sizeof (struct finclude));
 			finclude_current = finclude_current->next;
-			finclude_current->next = NULL;
+			finclude_current->next = nullptr;
 		    }		/* else valid */
 		    strcpy (finclude_current->field_id, tok);
 		    finclude_current->value = INCLUDE;
@@ -923,10 +923,10 @@ BAD_DELIM_VAL:
 	    case TEXTEXCLUDE:
 		tok = my_strtok ('\0', del_string);
 		if (validate_id (tok)) {
-		    if (include_tab == NULL) {
+		    if (include_tab == nullptr) {
 			include_tab = (struct include *) malloc (
 				sizeof (struct include));
-			include_tab->next = NULL;
+			include_tab->next = nullptr;
 			include_current = include_tab;
 		    }
 		    /* if valid */
@@ -934,11 +934,11 @@ BAD_DELIM_VAL:
 			include_current->next = (struct include *) malloc (
 			    sizeof (struct include));
 			include_current = include_current->next;
-			include_current->next = NULL;
+			include_current->next = nullptr;
 		    }		/* else in valid */
 		    strcpy (include_current->line_id, tok);
 		    tok = my_strtok ('\0', del_string);
-		    if (tok == NULL)
+		    if (tok == nullptr)
 			include_current->value = EXCLUDE;
 		    else {
 			if (validate_id (tok)) {
@@ -946,7 +946,7 @@ BAD_DELIM_VAL:
 			    include_current->next = (struct include *) malloc (
 				sizeof (struct include));
 			    include_current = include_current->next;
-			    include_current->next = NULL;
+			    include_current->next = nullptr;
 			    strcpy (include_current->line_id, tok);
 			    include_current->value = DEFAULT;
 			}
@@ -971,10 +971,10 @@ BAD_DELIM_VAL:
 	    case IMAGEEXCLUDE:
 		tok = my_strtok ('\0', del_string);
 		if (validate_id (tok)) {
-		    if (i_i_t == NULL) {
+		    if (i_i_t == nullptr) {
 			i_i_t = (struct include *) malloc (
 				sizeof (struct include));
-			i_i_t->next = NULL;
+			i_i_t->next = nullptr;
 			i_i_current = i_i_t;
 		    }
 		    /* if in valid */
@@ -982,11 +982,11 @@ BAD_DELIM_VAL:
 			i_i_current->next = (struct include *) malloc (
 			    sizeof (struct include));
 			i_i_current = i_i_current->next;
-			i_i_current->next = NULL;
+			i_i_current->next = nullptr;
 		    }		/* else in valid */
 		    strcpy (i_i_current->line_id, tok);
 		    tok = my_strtok ('\0', del_string);
-		    if (tok == NULL)
+		    if (tok == nullptr)
 			i_i_current->value = EXCLUDE;
 		    else {
 			if (validate_id (tok)) {
@@ -994,7 +994,7 @@ BAD_DELIM_VAL:
 			    i_i_current->next = (struct include *) malloc (
 				sizeof (struct include));
 			    i_i_current = i_i_current->next;
-			    i_i_current->next = NULL;
+			    i_i_current->next = nullptr;
 			    strcpy (i_i_current->line_id, tok);
 			    i_i_current->value = DEFAULT;
 			}
@@ -1019,10 +1019,10 @@ BAD_DELIM_VAL:
 	    case IMAGEINCLUDE:
 		tok = my_strtok ('\0', del_string);
 		if (validate_id (tok)) {
-		    if (i_i_t == NULL) {
+		    if (i_i_t == nullptr) {
 			i_i_t = (struct include *) malloc (
 				sizeof (struct include));
-			i_i_t->next = NULL;
+			i_i_t->next = nullptr;
 			i_i_current = i_i_t;
 		    }
 		    /* if in valid */
@@ -1030,11 +1030,11 @@ BAD_DELIM_VAL:
 			i_i_current->next = (struct include *) malloc (
 			    sizeof (struct include));
 			i_i_current = i_i_current->next;
-			i_i_current->next = NULL;
+			i_i_current->next = nullptr;
 		    }		/* else in valid */
 		    strcpy (i_i_current->line_id, tok);
 		    tok = my_strtok ('\0', del_string);
-		    if (tok == NULL)
+		    if (tok == nullptr)
 			i_i_current->value = INCLUDE;
 		    else {
 			if (validate_id (tok)) {
@@ -1042,7 +1042,7 @@ BAD_DELIM_VAL:
 			    i_i_current->next = (struct include *) malloc (
 				sizeof (struct include));
 			    i_i_current = i_i_current->next;
-			    i_i_current->next = NULL;
+			    i_i_current->next = nullptr;
 			    strcpy (i_i_current->line_id, tok);
 			    i_i_current->value = DEFAULT;
 			}
@@ -1067,10 +1067,10 @@ BAD_DELIM_VAL:
 	    case TEXTINCLUDE:
 		tok = my_strtok ('\0', del_string);
 		if (validate_id (tok)) {
-		    if (include_tab == NULL) {
+		    if (include_tab == nullptr) {
 			include_tab = (struct include *) malloc (
 				sizeof (struct include));
-			include_tab->next = NULL;
+			include_tab->next = nullptr;
 			include_current = include_tab;
 		    }
 		    /* if in valid */
@@ -1078,11 +1078,11 @@ BAD_DELIM_VAL:
 			include_current->next = (struct include *) malloc (
 			    sizeof (struct include));
 			include_current = include_current->next;
-			include_current->next = NULL;
+			include_current->next = nullptr;
 		    }		/* else in valid */
 		    strcpy (include_current->line_id, tok);
 		    tok = my_strtok ('\0', del_string);
-		    if (tok == NULL)
+		    if (tok == nullptr)
 			include_current->value = INCLUDE;
 		    else {
 			if (validate_id (tok)) {
@@ -1090,7 +1090,7 @@ BAD_DELIM_VAL:
 			    include_current->next = (struct include *) malloc (
 				sizeof (struct include));
 			    include_current = include_current->next;
-			    include_current->next = NULL;
+			    include_current->next = nullptr;
 			    strcpy (include_current->line_id, tok);
 			    include_current->value = DEFAULT;
 			}
@@ -1114,7 +1114,7 @@ BAD_DELIM_VAL:
 
 	    case IMAGE:
 		tok = my_strtok ('\0', del_string);
-		if (tok == NULL)
+		if (tok == nullptr)
 		    goto BAD_IMAGE;
 		for (i = 0; i < strlen (tok); i++)
 		    tok[i] = tolower (tok[i]);
@@ -1135,7 +1135,7 @@ BAD_IMAGE:
 
 	    case TEXT:
 		tok = my_strtok ('\0', del_string);
-		if (tok == NULL)
+		if (tok == nullptr)
 		    goto BAD_TEXT;
 		for (i = 0; i < strlen (tok); i++)
 		    tok[i] = tolower (tok[i]);
@@ -1182,7 +1182,7 @@ BAD_TEXT:
 		date_table = (struct date_id *) malloc
 			(sizeof (struct date_id));
 		date_current = date_table;
-		date_current->next = NULL;
+		date_current->next = nullptr;
 		tok = my_strtok ('\0', del_string);
 		/* validate_id() just does syntax chk on name string */
 		if (validate_id (tok))
@@ -1204,11 +1204,11 @@ BAD_TEXT:
 		}
 
 		tok = my_strtok ('\0', del_string);
-		while (tok != NULL) {
+		while (tok != nullptr) {
 		    date_current->next = (struct date_id *) malloc
 			(sizeof (struct date_id));
 		    date_current = date_current->next;
-		    date_current->next = NULL;
+		    date_current->next = nullptr;
 		    if (validate_id (tok))
 			strcpy (date_current->field_id, tok);
 		    else {
@@ -1232,7 +1232,7 @@ BAD_TEXT:
 			line_num);
 		key_table = (struct key_id *) malloc (sizeof (struct key_id));
 		key_current = key_table;
-		key_current->next = NULL;
+		key_current->next = nullptr;
 		tok = my_strtok ('\0', del_string);
 		if (validate_id (tok)) {
 		    if (is_time (tok)) {
@@ -1254,11 +1254,11 @@ BAD_TEXT:
 		    break;
 		}
 		tok = my_strtok ('\0', del_string);
-		while (tok != NULL) {
+		while (tok != nullptr) {
 		    key_current->next = (struct key_id *) malloc (
 			sizeof (struct key_id));
 		    key_current = key_current->next;
-		    key_current->next = NULL;
+		    key_current->next = nullptr;
 		    if (validate_id (tok))
 			strcpy (key_current->field_id, tok);
 		    else {
@@ -1275,7 +1275,7 @@ BAD_TEXT:
 
 	    case DISCARD:
 		tok = my_strtok ('\0', del_string);
-		if (tok == NULL)
+		if (tok == nullptr)
 		    goto BAD_DISCARD;
 		for (i = 0; i < strlen (tok); i++)
 		    tok[i] = toupper (tok[i]);
@@ -1294,7 +1294,7 @@ BAD_DISCARD:
 
 	    case DELBLANKLINES:
 		tok = my_strtok ('\0', del_string);
-		if (tok == NULL)
+		if (tok == nullptr)
 		    goto BAD_DELBLANKLINES;
 		for (i = 0; i < strlen (tok); i++)
 		    tok[i] = toupper (tok[i]);
@@ -1320,14 +1320,14 @@ BAD_DELBLANKLINES:
 			break;
 		    case USER:
 			tok = my_strtok ('\0', del_string);
-			if (tok == NULL)
+			if (tok == nullptr)
 			    goto BAD_ABSTR;
 			strcpy (abstracter, tok);
 			break;
 		    case FIELDS:
 			tok = my_strtok ('\0', del_string);
-			while (tok != NULL) {
-			    if (abstract_table == NULL) {
+			while (tok != nullptr) {
+			    if (abstract_table == nullptr) {
 				abstract_table = (struct key_id *) malloc
 				    (sizeof (struct key_id));
 				abstract_current = abstract_table;
@@ -1338,7 +1338,7 @@ BAD_DELBLANKLINES:
 				abstract_current = abstract_current->next;
 			    }
 			    strcpy (abstract_current->field_id, tok);
-			    abstract_current->next = NULL;
+			    abstract_current->next = nullptr;
 			    tok = my_strtok ('\0', del_string);
 			}
 			break;
@@ -1386,14 +1386,14 @@ BAD_ABSTR:
     if (bad_profile)
 	return;
 
-    top_rec = NULL;
+    top_rec = nullptr;
     line_current = line_table;
-    while (line_current != NULL) {
+    while (line_current != nullptr) {
 	if (strcmp (line_current->name, top_rec_name) == 0)
 	    top_rec = line_current;
 	line_current = line_current->next;
     }
-    if (top_rec_name[0] != 0 && top_rec == NULL) {
+    if (top_rec_name[0] != 0 && top_rec == nullptr) {
 	printf ( CATGETS(dtsearch_catd, MS_chandel, 52,
 		"Error - delimiter defined as '%s' was never found.\n") ,
 	    top_rec_name);
@@ -1407,10 +1407,10 @@ BAD_ABSTR:
 	bad_profile = TRUE;
     }
     field_current = field_table;
-    while (field_current != NULL) {
+    while (field_current != nullptr) {
 	found = FALSE;
 	line_current = line_table;
-	while (line_current != NULL) {
+	while (line_current != nullptr) {
 	    if (!strcmp (field_current->line_id, line_current->name)) {
 		found = TRUE;
 		field_current->line = line_current;
@@ -1426,11 +1426,11 @@ BAD_ABSTR:
 	field_current = field_current->next;
     }
     finclude_current = finclude_tab;
-    while (finclude_current != NULL) {
+    while (finclude_current != nullptr) {
 	/* find field, and set text_value */
 	field_current = field_table;
 	found = FALSE;
-	while (field_current != NULL) {
+	while (field_current != nullptr) {
 	    if (!strcmp (field_current->name, finclude_current->field_id)) {
 		field_current->text_action = finclude_current->value;
 		found = TRUE;
@@ -1447,11 +1447,11 @@ BAD_ABSTR:
 	finclude_current = finclude_current->next;
     }
     i_i_current = i_i_t;
-    while (i_i_current != NULL) {
+    while (i_i_current != nullptr) {
 	/* find line, and set text_action */
 	line_current = line_table;
 	found = FALSE;
-	while (line_current != NULL) {
+	while (line_current != nullptr) {
 	    if (!strcmp (line_current->name, i_i_current->line_id)) {
 		line_current->image_action = i_i_current->value;
 		found = TRUE;
@@ -1468,11 +1468,11 @@ BAD_ABSTR:
 	i_i_current = i_i_current->next;
     }
     include_current = include_tab;
-    while (include_current != NULL) {
+    while (include_current != nullptr) {
 	/* find line, and set text_action */
 	line_current = line_table;
 	found = FALSE;
-	while (line_current != NULL) {
+	while (line_current != nullptr) {
 	    if (!strcmp (line_current->name, include_current->line_id)) {
 		line_current->text_action = include_current->value;
 		found = TRUE;
@@ -1494,11 +1494,11 @@ BAD_ABSTR:
 	goto END_DATE_TABLE;
 
     /* loop thru date table and link each field id to its structure */
-    for (date_current = date_table; date_current != NULL;
+    for (date_current = date_table; date_current != nullptr;
         date_current = date_current->next) {
         found = FALSE;
 
-        for (field_current = field_table; field_current != NULL;
+        for (field_current = field_table; field_current != nullptr;
             field_current = field_current->next) {
             if (strcmp (field_current->name, date_current->field_id) == 0) {
                 date_current->field = field_current;
@@ -1516,26 +1516,26 @@ BAD_ABSTR:
 END_DATE_TABLE:
 
     key_current = key_table;
-    while (key_current != NULL) {
+    while (key_current != nullptr) {
 	field_current = field_table;
 	found = FALSE;
 	if (!strcmp ("time", key_current->field_id)) {
 	    found = TRUE;
-	    key_current->field = NULL;
+	    key_current->field = nullptr;
 	} else if (!strcmp ("count", key_current->field_id)) {
 	    found = TRUE;
-	    key_current->field = NULL;
+	    key_current->field = nullptr;
 	}
-	while (field_current != NULL) {
+	while (field_current != nullptr) {
 	    if (!strcmp (field_current->name, key_current->field_id)) {
 		found = TRUE;
 		key_current->field = field_current;
 	    } else if (!strcmp ("time", key_current->field_id)) {
 		found = TRUE;
-		key_current->field = NULL;
+		key_current->field = nullptr;
 	    } else if (!strcmp ("count", key_current->field_id)) {
 		found = TRUE;
-		key_current->field = NULL;
+		key_current->field = nullptr;
 	    }
 	    field_current = field_current->next;
 	}
@@ -1549,10 +1549,10 @@ END_DATE_TABLE:
 	key_current = key_current->next;
     }
     abstract_current = abstract_table;
-    while (abstract_current != NULL) {
+    while (abstract_current != nullptr) {
 	field_current = field_table;
 	found = FALSE;
-	while (field_current != NULL) {
+	while (field_current != nullptr) {
 	    if (!strcmp (field_current->name, abstract_current->field_id)) {
 		found = TRUE;
 		abstract_current->field = field_current;
@@ -1582,14 +1582,14 @@ void            cleanup (void)
 
     /*-- Reset line_table --*/
     line_current = line_table;
-    while (line_current != NULL) {
+    while (line_current != nullptr) {
 	line_current->line = UNDEFINED;
 	line_current = line_current->next;
     }
 
     /*-- Reset field table --*/
     field_current = field_table;
-    while (field_current != NULL) {
+    while (field_current != nullptr) {
 	if (field_current->constant == FALSE)
 	    field_current->value[0] = 0;
 	field_current = field_current->next;
@@ -1597,7 +1597,7 @@ void            cleanup (void)
 
     /*-- clean up record, free memory for reuse --*/
     record = record_head;
-    while (record_head != NULL) {
+    while (record_head != nullptr) {
 	record_head = record->next;
 	free (record);
 	record = record_head;
@@ -1627,7 +1627,7 @@ void            write_record (void)
     value[0] = 0;
     if (abstract == FIELDS) {
 	abst = abstract_table;
-	while (abst != NULL) {
+	while (abst != nullptr) {
 	    strcat (value, abst->field->value);
 	    abst = abst->next;
 	}
@@ -1655,7 +1655,7 @@ void            write_record (void)
 
     /* Lines #5 and thereafter (text) of .fzk rec */
     record = record_head;
-    while (record != NULL) {
+    while (record != nullptr) {
 	/*
 	 * Strip out any control-l's, as we put our own later,
 	 * and any extras might freak out something that wants
@@ -1713,10 +1713,10 @@ void            write_record (void)
 static void	mmm_to_digits (struct field_id *fld)
 {
     static char	valbuf[8];
-    static char	*months = NULL;
+    static char	*months = nullptr;
     int		i;
 
-    if (months == NULL)
+    if (months == nullptr)
 	months = strdup (CATGETS(dtsearch_catd, MS_chandel, 125,
 	    "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC"));
     for (i=0; i<3; i++)
@@ -1759,7 +1759,7 @@ void	process_record (void)
     int		meaningless;
     static int	dotcount = 0;
 
-    if (record_head == NULL)
+    if (record_head == nullptr)
 	return;
 
     /* Print progress dots and messages */
@@ -1780,7 +1780,7 @@ void	process_record (void)
 
     /* Main loop on every line in record */
     record = record_head;
-    while (record != NULL) {
+    while (record != nullptr) {
 	lvalue = (record->line)? record->line->text_action : 0;
 	switch (lvalue) {
 	    case CLEAR:
@@ -1794,7 +1794,7 @@ void	process_record (void)
 	}			/* switch */
 
 	field_current = field_table;
-	while (field_current != NULL) {
+	while (field_current != nullptr) {
 	    if (field_current->line == record->line) {
 		/* this field is defined within this line */
 		memset (value, 0, sizeof(value));
@@ -1826,7 +1826,7 @@ void	process_record (void)
 		/* ...else if profile pattern str was not empty ("xxx") */
 		else {
 		    pos = strstr (record->text, field_current->text);
-		    if (pos != NULL) {	/* pattern found... */
+		    if (pos != nullptr) {	/* pattern found... */
 			if (field_current->defined_length == EOLN)
 			    strncpy (value,
 				pos + (field_current->offset - 1),
@@ -1882,7 +1882,7 @@ void	process_record (void)
     objdate_tmptr = &nowtm;		/* default */
     if (date_pos_defined && !null_date_specified) {
 	date_value[0] = 0;
-	for (date_current = date_table; date_current != NULL;
+	for (date_current = date_table; date_current != nullptr;
 	    date_current = date_current->next) {
 	    if (date_current->field->value[0] != 0) {
 		strcat (date_value, date_current->field->value);
@@ -1969,8 +1969,8 @@ void	process_record (void)
     for (dummy = 0; dummy < 80; dummy++)
 	key_value[dummy] = 0;
     dummy = FALSE;
-    while (key_current != NULL) {
-	if (key_current->field == NULL) {
+    while (key_current != nullptr) {
+	if (key_current->field == nullptr) {
 	    if (strcmp (key_current->field_id, "time") == 0)
 		sprintf (key_value, "%ld%06ld", now, key_count);
 	    else	/* must be 'count' */
@@ -2008,10 +2008,10 @@ int             new_rec (char *buffer)
 {
     int             cant_be = FALSE;
     top_rec->comp = top_rec->head;
-    while (top_rec->comp != NULL) {
+    while (top_rec->comp != nullptr) {
 	if (strcmp (top_rec->comp->text, line_mode) != 0) {
 	    if (top_rec->comp->column_number == ANY) {
-            if (strstr(buffer,top_rec->comp->text)==NULL) 
+            if (strstr(buffer,top_rec->comp->text)==nullptr) 
 		    cant_be = TRUE;
 	    }
 	    /* if */
@@ -2052,7 +2052,7 @@ void            process_infile (void)
 {
     int             line_num = 0;
     struct line_id *line_current;
-    struct rec     *record = NULL;
+    struct rec     *record = nullptr;
     char            buffer[200];
     int             cant_be;
     time_t          startime = 0L;
@@ -2062,16 +2062,16 @@ void            process_infile (void)
     if (!strcmp (infile, "-"))
 	instream = stdin;
     else {
-	if ((instream = fopen (infile, "rt")) == NULL) {
+	if ((instream = fopen (infile, "rt")) == nullptr) {
 	    printf ( CATGETS(dtsearch_catd, MS_chandel, 70,
 		" Unable to open input file '%s'.\n") , infile);
 	    exit (FILE_ERROR);
 	}
     }
 
-    record_head = NULL;
+    record_head = nullptr;
     time (&startime);
-    while (fgets (buffer, sizeof (buffer) - 1, instream) != NULL) {
+    while (fgets (buffer, sizeof (buffer) - 1, instream) != nullptr) {
 	/* clean any non ASCII characters out of buffer */
 	delete_whitespace (buffer);
 	if (feof (instream))
@@ -2080,28 +2080,28 @@ void            process_infile (void)
 	    continue;
 	if (new_rec (buffer)) {
 	    if (bot_defined) {
-		if (record_head == NULL) {
+		if (record_head == nullptr) {
 		    record_head = (struct rec *) malloc (sizeof (struct rec));
 		    record = record_head;
 		} else {
 		    record->next = (struct rec *) malloc (sizeof (struct rec));
 		    record = record->next;
 		}
-		record->next = NULL;
+		record->next = nullptr;
 		line_num++;
 		record->line_num = line_num;
 		strcpy (record->text, buffer);
-		record->line = NULL;
+		record->line = nullptr;
 		/*-- search list of line_id's for a possible match --*/
 		line_current = line_table;
-		while (line_current != NULL) {
+		while (line_current != nullptr) {
 		    cant_be = FALSE;
 		    line_current->comp = line_current->head;
-		    while (line_current->comp != NULL) {
+		    while (line_current->comp != nullptr) {
 			if (strcmp (line_current->comp->text, line_mode) != 0) {
 			    if (line_current->comp->column_number == ANY) {
 	                        if (strstr(buffer,line_current->comp->text)
-					== NULL)
+					== nullptr)
 				    cant_be = TRUE;
 			    } else if (
 				    strncmp (buffer +
@@ -2130,27 +2130,27 @@ void            process_infile (void)
 	    if (bot_defined)
 		continue;
 	}
-	if (record_head == NULL) {
+	if (record_head == nullptr) {
 	    record_head = (struct rec *) malloc (sizeof (struct rec));
 	    record = record_head;
 	} else {
 	    record->next = (struct rec *) malloc (sizeof (struct rec));
 	    record = record->next;
 	}
-	record->next = NULL;
+	record->next = nullptr;
 	line_num++;
 	record->line_num = line_num;
 	strcpy (record->text, buffer);
-	record->line = NULL;
+	record->line = nullptr;
 	/*-- search list of line_id's for a possible match --*/
 	line_current = line_table;
-	while (line_current != NULL) {
+	while (line_current != nullptr) {
 	    cant_be = FALSE;
 	    line_current->comp = line_current->head;
-	    while (line_current->comp != NULL) {
+	    while (line_current->comp != nullptr) {
 		if (strcmp (line_current->comp->text, line_mode) != 0) {
 		    if (line_current->comp->column_number == ANY) {
-                  if (strstr(buffer,line_current->comp->text)==NULL){
+                  if (strstr(buffer,line_current->comp->text)==nullptr){
 			    cant_be = TRUE;
 			}
 		    } else if (strncmp (buffer +
@@ -2271,7 +2271,7 @@ static void	user_arg_processor (int argc, char **argv)
 *******/
 	profile = (char *) malloc (sizeof (char) * (strlen (argv[0])) +10);
 	strcpy (profile, argv[0]);
-	if (strchr (profile, '.') == NULL)
+	if (strchr (profile, '.') == nullptr)
 	    strcat (profile, EXT_HANDEL);
     }
 
@@ -2301,7 +2301,7 @@ static void	user_arg_processor (int argc, char **argv)
 	    outfile = (char *) malloc (sizeof (char) * (strlen (infile) + 10));
 	    strcpy (outfile, infile);
 	    pos = strrchr (outfile, (int) '.');
-	    if (pos == NULL)
+	    if (pos == nullptr)
 		strcat (outfile, EXT_FZKEY);
 	    else {
 		pos++;

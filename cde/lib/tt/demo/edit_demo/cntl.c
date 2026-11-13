@@ -240,7 +240,7 @@ add_delete_callback(Widget widget)
 	WM_DELETE_WINDOW = XmInternAtom(XtDisplay(widget),
                                         "WM_DELETE_WINDOW", False);
 	XmAddWMProtocolCallback(widget, WM_DELETE_WINDOW,
-                                (XtCallbackProc) dismiss_popup, NULL);
+                                (XtCallbackProc) dismiss_popup, nullptr);
 }
 
 
@@ -308,7 +308,7 @@ cntl_receive_tt_message(XtPointer client_data, int *fid, XtInputId *id)
 	Tt_message		msg;
 
 	msg = tt_message_receive();
-	if (msg != NULL &&  tt_pointer_error(msg) == TT_ERR_NOMP) {
+	if (msg != nullptr &&  tt_pointer_error(msg) == TT_ERR_NOMP) {
 		fprintf(stderr,"ToolTalk server down.\n");
 		exit(0);
 	}
@@ -571,7 +571,7 @@ cntl_update_obj_panel()
 	file = XmTextGetString(cntl_ui_file_field);
 		if  (tt_file_objects_query(file,
 				   (Tt_filter_function)cntl_gather_specs,
-				   &list_item, NULL) != TT_OK) {
+				   &list_item, nullptr) != TT_OK) {
 		write_footer("Couldn't query objects for file");
 		return 0;
 	}
@@ -605,8 +605,8 @@ cntl_ui_olist_handler(Widget widget, XtPointer client_data, XmListCallbackStruct
 {
 	char *string;
 
-	string = XmStringUnparse(cbs->item, NULL, XmCHARSET_TEXT, XmCHARSET_TEXT,
-			NULL, 0, XmOUTPUT_ALL);
+	string = XmStringUnparse(cbs->item, nullptr, XmCHARSET_TEXT, XmCHARSET_TEXT,
+			nullptr, 0, XmOUTPUT_ALL);
 	cntl_objid = strdup(string);
 	XtFree (string);
 }
@@ -666,7 +666,7 @@ cntl_ui_initialize()
                                             "menubar", args, n);
 
 	cntl_ui_file_button = (Widget) XmCreatePulldownMenu(cntl_ui_file_menu,
-                                                   "File", NULL, 0);
+                                                   "File", nullptr, 0);
 	label = XmStringCreateSimple("File");
 	XtVaCreateManagedWidget("File",
                                 xmCascadeButtonWidgetClass, cntl_ui_file_menu,

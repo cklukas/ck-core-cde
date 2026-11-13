@@ -235,12 +235,12 @@ LocateTheControl(
     int              new_x, new_y;
     int              offset;
     KeySym           keySym;
-    Widget           widget = NULL;
+    Widget           widget = nullptr;
 
     Boolean          foundOne = False;
     int  clientNum, scr;
     WmFpEmbeddedClientData *pECD;
-    WmScreenData     *pSD = NULL;
+    WmScreenData     *pSD = nullptr;
 
 
 
@@ -380,16 +380,16 @@ LocateTheControl(
     }
     
     
-    if (widget == NULL)
+    if (widget == nullptr)
     {
 	widget = XtWindowToWidget (wmGD.display, target_win);
     }
     
-    if (widget == NULL)
+    if (widget == nullptr)
     {
 	widget = XtWindowToWidget (wmGD.display1, target_win);
 	
-	if (widget == NULL)
+	if (widget == nullptr)
 	{
 	    return (DtHELP_SELECT_INVALID);
 	}
@@ -414,7 +414,7 @@ LocateTheControl(
         }
     }
 
-    if (widget != NULL)
+    if (widget != nullptr)
     {
        *pWidget = widget;
 	return (DtHELP_SELECT_VALID);
@@ -456,9 +456,9 @@ void WmDtStringHelpCB (Widget theWidget,
     pSD = WmScreenDataFromWidget(theWidget);
 
 /*    WmDtDisplayTopic(theRealWidget, NULL, theHelpString, */
-    WmDtDisplayTopic(pSD->screenTopLevelW1, NULL, theHelpString, 
+    WmDtDisplayTopic(pSD->screenTopLevelW1, nullptr, theHelpString, 
 		      DtHELP_TYPE_DYNAMIC_STRING, (Widget) NULL, True,
-		      NULL, 0, NULL, False, NULL);
+		      nullptr, 0, nullptr, False, nullptr);
 
 
 
@@ -485,9 +485,9 @@ void WmDtWmStringHelpCB (Widget theWidget,
     pSD = WmScreenDataFromWidget(theWidget);
 
 	WmDtDisplayTopic(pSD->screenTopLevelW1, 
-			  NULL, theHelpString, 
+			  nullptr, theHelpString, 
 			  DtHELP_TYPE_DYNAMIC_STRING, theWidget, True,
-			  NULL, 0, NULL, False, NULL);
+			  nullptr, 0, nullptr, False, nullptr);
 
 
 } /* END OF FUNCTION WmDtWmStringHelpCB */
@@ -513,7 +513,7 @@ void WmDtDisplayTopicHelp (Widget widget,
     WmDtDisplayTopic(pSD->screenTopLevelW1, 
 		      helpVolume, locationID,
 		      DtHELP_TYPE_TOPIC, (Widget) NULL, True,
-		      NULL, 0, NULL, False, NULL);
+		      nullptr, 0, nullptr, False, nullptr);
 }
 
 /*************************************<->*************************************
@@ -532,9 +532,9 @@ void WmDtDisplayStringHelp (Widget widget,
     WmScreenData *pSD = WmScreenDataFromWidget(widget);
 
     WmDtDisplayTopic(pSD->screenTopLevelW1, 
-			  NULL, helpString, 
+			  nullptr, helpString, 
 			  DtHELP_TYPE_DYNAMIC_STRING, widget, True,
-			  NULL, 0, NULL, False, NULL);
+			  nullptr, 0, nullptr, False, nullptr);
 }
 
 /*************************************<->*************************************
@@ -567,7 +567,7 @@ void WmDtWmTopicHelpCB (Widget theWidget,
     WmDtDisplayTopic(pSD->screenTopLevelW1, helpVolume, 
 		      locationID, 
 		      DtHELP_TYPE_TOPIC, shellWidget, True,
-		      NULL, 0, NULL, False, NULL);
+		      nullptr, 0, nullptr, False, nullptr);
 
 } /* END OF FUNCTION WmDtWmTopicHelpCB */
 
@@ -586,7 +586,7 @@ static WmScreenData *
 WmScreenDataFromWidget (Widget theWidget) 
 {
 
-    WmScreenData *pSD = NULL;
+    WmScreenData *pSD = nullptr;
     int scr;
     
     CacheListStruct *pTemp; 
@@ -635,7 +635,7 @@ static void WmDtCloseHelpCB (
     XtPointer clientData,
     XtPointer callData)
 {
-    WmScreenData *pSD = NULL;
+    WmScreenData *pSD = nullptr;
     int scr;
     Widget helpDialog = (Widget) clientData;
     
@@ -650,7 +650,7 @@ static void WmDtCloseHelpCB (
 	pTemp = pTemp->pNext;
     }
     
-    if (pTemp == NULL)
+    if (pTemp == nullptr)
     {
 	/* ERROR */
      /* printf("Didn't find our help dialog widget in the cache list??? /n");*/
@@ -808,7 +808,7 @@ static void WmDtPopupHelpCB (
     XtPointer callData)
 {
     char * ptr;
-    Atom * workspace_atoms = NULL;
+    Atom * workspace_atoms = nullptr;
     int num_workspaces=0;
 
     CacheListStruct *pTemp = (CacheListStruct *)clientData;
@@ -823,11 +823,11 @@ static void WmDtPopupHelpCB (
     {
 	if (pTemp->workspaces) 
 	{
-	    char **atom_names = NULL;
+	    char **atom_names = nullptr;
 	    do
 	    {
 		ptr = DtStrchr (pTemp->workspaces, '*');
-		if (ptr != NULL) *ptr = '\0';
+		if (ptr != nullptr) *ptr = '\0';
 		
 		atom_names = 
 		    (char **) XtRealloc ((char *)atom_names,
@@ -835,12 +835,12 @@ static void WmDtPopupHelpCB (
 		atom_names[num_workspaces] = XtNewString(pTemp->workspaces);
 		num_workspaces++;
 		
-		if (ptr != NULL)
+		if (ptr != nullptr)
 		{
 		    *ptr = '*';
 		    pTemp->workspaces = ptr + 1;
 		}
-	    } while (ptr != NULL);
+	    } while (ptr != nullptr);
 
 	    workspace_atoms = (Atom *) XtMalloc(sizeof(Atom) * num_workspaces);
 	    XInternAtoms(wmGD.display, atom_names, num_workspaces,
@@ -862,7 +862,7 @@ static void WmDtPopupHelpCB (
 	pTemp->restored = False;
 	XtRemoveCallback(helpShellW, XmNpopupCallback, 
 			 WmDtPopupHelpCB, clientData);
-	XtAddCallback(helpShellW, XmNpopupCallback, WmDtPopupHelpCB, NULL);
+	XtAddCallback(helpShellW, XmNpopupCallback, WmDtPopupHelpCB, nullptr);
     }
     else
     {
@@ -936,7 +936,7 @@ static void WmDtProcessLinkCB (
 			   hyperData->locationId,
 			   /* DtHELP_LINK_JUMP_NEW */ DtHELP_TYPE_TOPIC,
 			   (Widget)NULL, False,
-			   NULL, 0, NULL, True, NULL);
+			   nullptr, 0, nullptr, True, nullptr);
 	break;
 	
       default:  /* This catches the application definded link types */
@@ -976,15 +976,15 @@ void WmDtHelpOnVersion (
     Arg	 	setArgs[10];	
     Arg	 	setArgs2[5];	
     int         n, n2;
-    Widget printButton = NULL;
-    Widget helpButton = NULL;
-    Widget backButton = NULL;
-    Widget closeButton = NULL;
+    Widget printButton = nullptr;
+    Widget helpButton = nullptr;
+    Widget backButton = nullptr;
+    Widget closeButton = nullptr;
 #ifdef NO_MESSAGE_CATALOG
-    XmString    label = NULL;
+    XmString    label = nullptr;
 #endif
 
-   if((versionWidget != NULL) &&
+   if((versionWidget != nullptr) &&
        (XtIsManaged(versionWidget)))
     {
         return ;
@@ -1012,7 +1012,7 @@ void WmDtHelpOnVersion (
 		      (XtPointer) versionWidget);
 
 	XtAddCallback(XtParent(versionWidget), XmNpopupCallback,
-		      WmDtVersionPopupCB, NULL);
+		      WmDtVersionPopupCB, nullptr);
 
 	closeButton = DtHelpQuickDialogGetChild( versionWidget, 
 					     DtHELP_QUICK_CLOSE_BUTTON );
@@ -1107,7 +1107,7 @@ WmDtHelp (String args)
 				  theHelpVolume, 
 				  (char *)topic, 
 				  DtHELP_TYPE_TOPIC, theWidget, True,
-				  NULL, 0, NULL, False, NULL);
+				  nullptr, 0, nullptr, False, nullptr);
 	    }
 	    else
 	    {
@@ -1115,7 +1115,7 @@ WmDtHelp (String args)
 				  (char *)volume, 
 				  (char *)topic, 
 				  DtHELP_TYPE_TOPIC, theWidget, False,
-				  NULL, 0, NULL, False, NULL);
+				  nullptr, 0, nullptr, False, nullptr);
 	    }
 	    
 	}
@@ -1125,7 +1125,7 @@ WmDtHelp (String args)
 			      theHelpVolume, 
 			      theHelpTopic, 
 			      DtHELP_TYPE_TOPIC, theWidget, True,
-			      NULL, 0, NULL, False, NULL);
+			      nullptr, 0, nullptr, False, nullptr);
 	}
 	return(True);
     }
@@ -1160,7 +1160,7 @@ WmDtHelp (String args)
 Boolean
 WmDtHelpMode (void)
 {
-    Widget selectedWidget = NULL;
+    Widget selectedWidget = nullptr;
     int iStatus;
     String sTmp, sMessage, sTitle;
 
@@ -1186,7 +1186,7 @@ WmDtHelpMode (void)
 			selectedWidget = XtParent(selectedWidget);
 		    }
 		}
-		while (selectedWidget != NULL);
+		while (selectedWidget != nullptr);
 	    }
 	    break;
 
@@ -1319,9 +1319,9 @@ WmDtDisplayTopic (
     char *      helpTitle;
     WmPanelistObject  pPanelist;
     char *      defaultTitle="Help";
-    ClientData *pCD = NULL;
-    WmScreenData *pSD = NULL;
-    CacheListStruct *pCurrentNode = NULL;
+    ClientData *pCD = nullptr;
+    WmScreenData *pSD = nullptr;
+    CacheListStruct *pCurrentNode = nullptr;
     Boolean       cachedNode = FALSE;
 
 
@@ -1347,7 +1347,7 @@ WmDtDisplayTopic (
     switch (helpType)
     {
       case  DtHELP_TYPE_TOPIC:
-	if (helpVolume != NULL)
+	if (helpVolume != nullptr)
 	{
 	    XtSetArg (setArgs[n],DtNhelpVolume,helpVolume);     n++; 
 	}
@@ -1410,14 +1410,14 @@ WmDtDisplayTopic (
 
 		XtAddCallback(helpWidget, 
 			      DtNhyperLinkCallback,
-			      WmDtProcessLinkCB, NULL);
+			      WmDtProcessLinkCB, nullptr);
 		
 		XtAddCallback(helpWidget, DtNcloseCallback,
                               WmDtWmCloseHelpCB,
                               (XtPointer) helpWidget);
 
 		XtAddCallback(pSD->dtHelp.shell, XmNpopupCallback,
-			      WmDtWmPopupHelpCB, NULL);
+			      WmDtWmPopupHelpCB, nullptr);
 
 		XtAddEventHandler(pSD->dtHelp.shell, 
 			StructureNotifyMask, 
@@ -1481,7 +1481,7 @@ WmDtDisplayTopic (
 
 		XtAddCallback(pCurrentNode->helpDialog, 
 			      DtNhyperLinkCallback,
-			      WmDtProcessLinkCB, NULL);
+			      WmDtProcessLinkCB, nullptr);
 		
 		XtAddCallback(pCurrentNode->helpDialog, DtNcloseCallback,
 			      WmDtCloseHelpCB, 
@@ -1509,7 +1509,7 @@ WmDtDisplayTopic (
 		    {
 			XtAddCallback(XtParent(pCurrentNode->helpDialog), 
 				      XmNpopupCallback,
-				      WmDtPopupHelpCB, NULL);
+				      WmDtPopupHelpCB, nullptr);
 		    }
 		}
 
@@ -1543,19 +1543,19 @@ static Boolean WmDtGetFromCache(
 {
     CacheListStruct *pTemp; 
     
-    if (pSD->cachedHelp == NULL)
+    if (pSD->cachedHelp == nullptr)
     {
 	/* We have a new list so lets create one and pass it back */
 	pSD->cachedHelp = 
 	    (CacheListStruct *) XtMalloc((sizeof(CacheListStruct)));
 	
 	/* Assign the default values to our node */
-	pSD->cachedHelp->helpDialog = NULL;
+	pSD->cachedHelp->helpDialog = nullptr;
 	pSD->cachedHelp->inUseFlag  = TRUE;
 	pSD->cachedHelp->restored  = False;
 	pSD->cachedHelp->hLink  = False;
-	pSD->cachedHelp->pNext      = NULL;
-	pSD->cachedHelp->pPrevious = NULL;
+	pSD->cachedHelp->pNext      = nullptr;
+	pSD->cachedHelp->pPrevious = nullptr;
 	
 	/* Return our head pointer because it's our first and only node */
 	*pCurrentNode = pSD->cachedHelp;
@@ -1566,7 +1566,7 @@ static Boolean WmDtGetFromCache(
 	/* We have some nodes so search for a free one first */
 	pTemp = pSD->cachedHelp;
 	
-	while (pTemp != NULL)
+	while (pTemp != nullptr)
 	{
 	    if (pTemp->inUseFlag == FALSE)
 	    {
@@ -1589,12 +1589,12 @@ static Boolean WmDtGetFromCache(
 	pTemp =  (CacheListStruct *) XtMalloc((sizeof(CacheListStruct)));
 	
 	/* Assign the default values to our node */
-	pTemp->helpDialog = NULL;
+	pTemp->helpDialog = nullptr;
 	pTemp->inUseFlag  = TRUE;
 	pTemp->restored  = False;
 	pTemp->hLink  = False;	
 	pTemp->pNext      = pSD->cachedHelp;
-	pTemp->pPrevious  = NULL;
+	pTemp->pPrevious  = nullptr;
 	
 	pSD->cachedHelp->pPrevious = pTemp;
 
@@ -1653,14 +1653,14 @@ RestoreHelpDialogs(
     int cachedCount=0;		
     char dialogName[18];
 
-    ClientData *pCD = NULL;
-    char *tTitle = NULL;
-    char *wsName = NULL;
-    char *wmClientName = NULL;
-    char *helpVolume = NULL;
-    char *locationId = NULL;
-    char *stringData = NULL;
-    char *workspaces = NULL;
+    ClientData *pCD = nullptr;
+    char *tTitle = nullptr;
+    char *wsName = nullptr;
+    char *wmClientName = nullptr;
+    char *helpVolume = nullptr;
+    char *locationId = nullptr;
+    char *stringData = nullptr;
+    char *workspaces = nullptr;
 
     Arg setArgs[20];
     int ac;
@@ -1674,7 +1674,7 @@ RestoreHelpDialogs(
 
     if (pSD->helpResources)
     {
-	if ((db = XrmGetStringDatabase (pSD->helpResources)) == NULL) 
+	if ((db = XrmGetStringDatabase (pSD->helpResources)) == nullptr) 
 	{
 	    return(False);
 	}
@@ -1853,8 +1853,8 @@ RestoreHelpDialogs(
 
 		WmDtDisplayTopic(pSD->screenTopLevelW1, helpVolume, 
 				  locationId, 
-				  helpType, NULL, True,
-				  setArgs, ac, pCD, False, NULL); 
+				  helpType, nullptr, True,
+				  setArgs, ac, pCD, False, nullptr); 
 	    }
 	}/* if (XrmQGetResource for wsHelp) */
 
@@ -1876,7 +1876,7 @@ RestoreHelpDialogs(
 
 		displayTopicInfo.xPos = 0;
 		displayTopicInfo.xPos = 0;
-		displayTopicInfo.workspaces = NULL;
+		displayTopicInfo.workspaces = nullptr;
 
 		ac = 0;
 		/* get x position */
@@ -2015,8 +2015,8 @@ RestoreHelpDialogs(
 
 		WmDtDisplayTopic(pSD->screenTopLevelW1, helpVolume, 
 				  locationId, 
-				  helpType, NULL, False,
-				  setArgs, ac, NULL, False, 
+				  helpType, nullptr, False,
+				  setArgs, ac, nullptr, False, 
 				  &displayTopicInfo); 
 		
 	    } /* for all cached help dialogs */
@@ -2096,7 +2096,7 @@ SaveHelpResources(
     pHelp = &pSD->dtHelp;  
 
     /* allocate initial data space */
-    if ((data = (char *) XtMalloc (MAXWMPATH+1)) == NULL)
+    if ((data = (char *) XtMalloc (MAXWMPATH+1)) == nullptr)
     {
         Warning (((char *)
                   GETMESSAGE(76,12,"Insufficient memory to save resources")));
@@ -2225,7 +2225,7 @@ SaveHelpResources(
 
     }
     
-    if (pSD->cachedHelp != NULL)
+    if (pSD->cachedHelp != nullptr)
     {
 	/* 
 	 * We have some nodes so search for 
@@ -2234,7 +2234,7 @@ SaveHelpResources(
 	
 	pTemp = pSD->cachedHelp;
 	
-	while (pTemp != NULL)
+	while (pTemp != nullptr)
 	{
 	    if (pTemp->inUseFlag == FALSE)
 	    {
@@ -2262,7 +2262,7 @@ SaveHelpResources(
 		}
 		else
 		{
-		    pCDforHelp = NULL;
+		    pCDforHelp = nullptr;
 		}
 
 
@@ -2432,7 +2432,7 @@ ShowHelpDialog(
 
     if (pSD->dtHelp.onScreen)
     {
-	ClientData *pCD = NULL;
+	ClientData *pCD = nullptr;
 
 	XFindContext (DISPLAY, XtWindow (pSD->dtHelp.shell),
 			wmGD.windowContextType, (XtPointer) &pCD);
@@ -2730,7 +2730,7 @@ wmDtErrorDialog(
     xmsTitle = 
 	    XmStringCreateLocalized (sTitle);
 
-    if (pSD->dtHelp.errorDialog == NULL)
+    if (pSD->dtHelp.errorDialog == nullptr)
     {
 #ifdef NO_MESSAGE_CATALOG
 	XmString tmpXmString = (XmString)NULL;

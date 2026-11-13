@@ -177,7 +177,7 @@ DtDndDropRegister(
 	Display *	display		= XtDisplayOfObject(dropReceiver);
 	DropSettings	settings;
 	DtDropInfo *	dtDropInfo;
-        DtDropSiteInfo* dsInfo = NULL;
+        DtDropSiteInfo* dsInfo = nullptr;
 	DtDndTransfer *	transfers;
 	Cardinal	numTransfers;
 	Atom	        *importTargets;
@@ -214,8 +214,8 @@ DtDndDropRegister(
 	dtDropInfo->protocols 			= protocols;
 	dtDropInfo->operations 			= operations;
 	dtDropInfo->textIsBuffer 		= settings.textIsBuffer;
-	dtDropInfo->dropSiteInfo		= NULL;
-	dtDropInfo->transferInfo		= NULL;
+	dtDropInfo->dropSiteInfo		= nullptr;
+	dtDropInfo->transferInfo		= nullptr;
 	dtDropInfo->status 			= DtDND_SUCCESS;
 
 	dtDropInfo->dropTransferCallback 
@@ -246,9 +246,9 @@ DtDndDropRegister(
 
 		dsInfo = (DtDropSiteInfo *)XtMalloc(sizeof(DtDropSiteInfo));
 
-		dsInfo->dropProc 		= NULL;
+		dsInfo->dropProc 		= nullptr;
 		dsInfo->operations		= XmDROP_NOOP;
-		dsInfo->importTargets		= NULL;
+		dsInfo->importTargets		= nullptr;
 		dsInfo->numImportTargets	= 0;
 
 		nn = 0;
@@ -264,14 +264,14 @@ DtDndDropRegister(
 
 		XmDropSiteRetrieve(dropReceiver, pArgs, nn);
 
-		if ( (dsInfo->dropProc != NULL) && 
+		if ( (dsInfo->dropProc != nullptr) && 
 		     (dsInfo->numImportTargets > 0)  &&
 		     (dsInfo->operations != XmDROP_NOOP) ){
 
 			dtDropInfo->dropSiteInfo = dsInfo;
 		} else {
 			XtFree((char *)dsInfo);
-			dsInfo = NULL;
+			dsInfo = nullptr;
 		}
 	}
 	
@@ -286,7 +286,7 @@ DtDndDropRegister(
 		numImportTargets += transfers[ii].numTargets;
 	}
 
-	if (dsInfo != NULL) { 
+	if (dsInfo != nullptr) { 
 		numImportTargets += dsInfo->numImportTargets;
 	}
 
@@ -299,7 +299,7 @@ DtDndDropRegister(
 		}
 	}
 
-	if (dsInfo != NULL) {
+	if (dsInfo != nullptr) {
 		for (jj = 0; jj < dsInfo->numImportTargets; jj++) {
 			importTargets[kk++] = dsInfo->importTargets[jj];
 		}
@@ -309,7 +309,7 @@ DtDndDropRegister(
          * Merge operations
          */
  
-	if (dsInfo != NULL) {
+	if (dsInfo != nullptr) {
         	mergedOperations = dsInfo->operations | operations;
 	} else {
         	mergedOperations = operations;
@@ -350,7 +350,7 @@ DtDndDropRegister(
 	 * Register the drop site
 	 */
 
-	if (dsInfo != NULL) {
+	if (dsInfo != nullptr) {
 		XmDropSiteUnregister(dropReceiver);
 		XmDropSiteRegister(dropReceiver, args, nn);
 	} else {
@@ -364,7 +364,7 @@ DtDndDropRegister(
 	 */
 
 	XtAddCallback(dropReceiver, XtNdestroyCallback, 
-			dndDropSiteDestroy, NULL);
+			dndDropSiteDestroy, nullptr);
 
 	(void)dndSaveDropInfo(display, dropReceiver, dtDropInfo);
 
@@ -394,7 +394,7 @@ DtDndDropUnregister(
 	 * was not registered by DtDndDropRegister() so return.
 	 */
 
-	if ((dtDropInfo = dndFindDropInfo(display, dropReceiver)) == NULL) {
+	if ((dtDropInfo = dndFindDropInfo(display, dropReceiver)) == nullptr) {
 	        _DtSvcAppUnlock(app);
 		return;
 	}
@@ -411,7 +411,7 @@ DtDndDropUnregister(
 	 * then restore the drop site to it's original state.
 	 */
 
-	if (dsInfo != NULL) {
+	if (dsInfo != nullptr) {
         	Arg             args[4];
 		Cardinal	nn = 0;
  
@@ -434,7 +434,7 @@ DtDndDropUnregister(
 	 */
 
 	XtRemoveCallback(dropReceiver, XtNdestroyCallback, 
-			dndDropSiteDestroy, NULL);
+			dndDropSiteDestroy, nullptr);
 
 	XDeleteContext(display, dndGetContextXID(display), 
 		(XContext)(intptr_t)dropReceiver);
@@ -470,7 +470,7 @@ dndDropProc(
 			(XmDropProcCallbackStruct *) callData;
 	Display	*	display 	= XtDisplayOfObject(dropReceiver);
 	Boolean		compatible;
-	Atom *		exportTargets	 = NULL;
+	Atom *		exportTargets	 = nullptr;
 	Cardinal	numExportTargets = 0;
 	DtDropInfo *	dtDropInfo;
 	DtDropSiteInfo* dsInfo;
@@ -495,7 +495,7 @@ dndDropProc(
 	 * Get the cached DropInfo
 	 */
 
-	if ((dtDropInfo = dndFindDropInfo(display, dropReceiver)) == NULL) {
+	if ((dtDropInfo = dndFindDropInfo(display, dropReceiver)) == nullptr) {
 		dndTransferStartFailed(xmDropInfo->dragContext);
 		return;
 	}
@@ -507,9 +507,9 @@ dndDropProc(
 	XtVaGetValues(xmDropInfo->dragContext,
 		XmNexportTargets, &exportTargets,
 		XmNnumExportTargets, &numExportTargets,
-		NULL);
+		nullptr);
 
-	if (exportTargets == NULL) {
+	if (exportTargets == nullptr) {
 		dndTransferStartFailed(xmDropInfo->dragContext);
 		dtDropInfo->status = DtDND_FAILURE;
 		return;
@@ -529,7 +529,7 @@ dndDropProc(
 			dtDropInfo->transfers, dtDropInfo->numTransfers,
 			exportTargets, numExportTargets);
 
-	if (transfer != NULL) {
+	if (transfer != nullptr) {
 
 		dndTransferStart(dropReceiver, xmDropInfo, dtDropInfo,
 			transfer, exportTargets, numExportTargets);
@@ -543,7 +543,7 @@ dndDropProc(
 
 	dsInfo = dtDropInfo->dropSiteInfo;
 
-	if (dsInfo == NULL) {
+	if (dsInfo == nullptr) {
 		dndTransferStartFailed(xmDropInfo->dragContext);
 		dtDropInfo->status = DtDND_FAILURE;
 		return;
@@ -566,7 +566,7 @@ dndDropProc(
 		return;
 	}
 
-	if (dsInfo->dropProc != NULL) {
+	if (dsInfo->dropProc != nullptr) {
 		(*(dsInfo->dropProc))(dropReceiver, clientData, callData);
 	}
 }
@@ -587,7 +587,7 @@ dndTransferStart(
 	Cardinal	numExportTargets)
 {
         XtCallbackRec	dropAnimateCbRec[] = { {dndDropAnimateCallback,
-							NULL}, {NULL, NULL} };
+							nullptr}, {nullptr, nullptr} };
 	Display	*	display 	   = XtDisplayOfObject(dropReceiver);
 	DtDndContext *	dropData;
 	DtTransferInfo *transferInfo;
@@ -633,14 +633,14 @@ dndTransferStart(
 	transferInfo->protocol			= transfer->methods->protocol;
 	transferInfo->operation			= xmDropInfo->operation;
 	transferInfo->methods			= transfer->methods;
-	transferInfo->transferTargets		= NULL;
+	transferInfo->transferTargets		= nullptr;
 	transferInfo->numTransferTargets	= 0;
 	transferInfo->currentTransfer		= 0;
 	transferInfo->appTransferCalled		= False;
 	transferInfo->event			= xmDropInfo->event;
 	transferInfo->x				= xmDropInfo->x + posOffsetX;
 	transferInfo->y				= xmDropInfo->y + posOffsetY;
-	transferInfo->clientData		= NULL;
+	transferInfo->clientData		= nullptr;
 
 	/*
 	 * Initialize drop data
@@ -666,13 +666,13 @@ dndTransferStart(
 			exportTargets, numExportTargets,
 			&transferTargets, &numTransferTargets);
 
-	if (transferTargets == NULL) {
+	if (transferTargets == nullptr) {
 
 		XtFree((char *)dtDropInfo->transferInfo);
 		XtFree((char *)dtDropInfo->dropData);
 
-		dtDropInfo->transferInfo	= NULL;
-		dtDropInfo->dropData 		= NULL;
+		dtDropInfo->transferInfo	= nullptr;
+		dtDropInfo->dropData 		= nullptr;
 		dtDropInfo->status 		= DtDND_FAILURE;
 
 		dndTransferStartFailed(xmDropInfo->dragContext);
@@ -771,7 +771,7 @@ dndTransferProc(
 	 * Ignore null transfer (which are responses to DELETE)
 	 */
 
-	if (value == NULL || dtDropInfo == NULL || 
+	if (value == nullptr || dtDropInfo == nullptr || 
 	    dtDropInfo->status == DtDND_FAILURE) {
 		dndTransferFail(dtDropInfo, dropTransfer);
 		XtFree(value);
@@ -872,7 +872,7 @@ dndAppTransfer(
 	 */
 
 	if (dtDropInfo->status == DtDND_FAILURE ||
-	    dtDropInfo->dropTransferCallback == NULL) {
+	    dtDropInfo->dropTransferCallback == nullptr) {
 		return;
 	}
 
@@ -949,7 +949,7 @@ dndDropAnimateCallback(
 	 */
 
 	if (dtDropInfo->status == DtDND_SUCCESS &&
-	    dtDropInfo->dropAnimateCallback != NULL) {
+	    dtDropInfo->dropAnimateCallback != nullptr) {
 
 		dropAnimateCallData.reason	= DtCR_DND_DROP_ANIMATE;
 		dropAnimateCallData.event     	= transferInfo->event;
@@ -977,8 +977,8 @@ dndDropAnimateCallback(
 	XtFree((char *)dtDropInfo->transferInfo);
 	XtFree((char *)dtDropInfo->dropData);
 	
-	dtDropInfo->transferInfo 	= NULL;
-	dtDropInfo->dropData 		= NULL;
+	dtDropInfo->transferInfo 	= nullptr;
+	dtDropInfo->dropData 		= nullptr;
 }
 
 /*
@@ -1051,7 +1051,7 @@ dndFindDropInfo(
 		(XContext)(intptr_t)dropReceiver, (XPointer *)&dtDropInfo);
 
 	if (status != 0)
-		dtDropInfo = (DtDropInfo *)NULL;
+		dtDropInfo = (DtDropInfo *)nullptr;
 	
 	return dtDropInfo;
 }
@@ -1092,6 +1092,6 @@ dndTransferFail(
 	XtVaSetValues(dropTransfer,
 		XmNtransferStatus,	XmTRANSFER_FAILURE,
 		XmNnumDropTransfers,	0,
-		NULL);
+		nullptr);
 }
 

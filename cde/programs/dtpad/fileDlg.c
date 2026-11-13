@@ -197,7 +197,7 @@ SetSaveAsDirAndFile(Editor *pPad)
 
     /* -----> If the user previously entered a file name via the SaveAs FSB,
      *        use its values. */
-    if (currentVal != (char *)NULL && *currentVal != (char)'\0') {
+    if (currentVal != (char *)nullptr && *currentVal != (char)'\0') {
 	/* -----> If the file name begins with '/', it has a pathname and we
 	 *	  can use it for the initial directory: everything up to and
 	 *	  including its last slash. */
@@ -209,7 +209,7 @@ SetSaveAsDirAndFile(Editor *pPad)
 	    /* -----> The filename does not have a directory, so use the value
 	     *        from the directory field.  XmStringGetLtoR() sets the
 	     *        string only when it succeeds, and the caller frees it. */
-	    char *directoryVal = NULL;
+	    char *directoryVal = nullptr;
 
 	    n = 0;
 	    XtSetArg( args[n], XmNdirectory, &dirString ); n++;
@@ -229,7 +229,7 @@ SetSaveAsDirAndFile(Editor *pPad)
 				pPad->fileStuff.pathDir,
 				strlen(pPad->fileStuff.pathDir));
     }
-    if (currentVal != (char *)NULL)
+    if (currentVal != (char *)nullptr)
 	XtFree(currentVal);
 
     /* -----> Otherwise use the current directory of this process. */
@@ -406,7 +406,7 @@ ExtractAndStoreDir(
 
     pFirstSlash = MbStrchr(fileName, '/');
     if(type == OPEN) {
-       if (pFirstSlash != (char *)NULL) {
+       if (pFirstSlash != (char *)nullptr) {
 	   pLastSlash = MbStrrchr(fileName, '/');
 	   strncpy(pPad->fileStuff.pathDir, pFirstSlash,
 		   pLastSlash - pFirstSlash + 1);
@@ -414,12 +414,12 @@ ExtractAndStoreDir(
        }
     }
     else {
-       if (pFirstSlash != (char *)NULL) {
+       if (pFirstSlash != (char *)nullptr) {
 	   pLastSlash = MbStrrchr(fileName, '/');
 	   strncpy(pPad->fileStuff.includePathDir, pFirstSlash,
 		   pLastSlash - pFirstSlash + 1);
 	   pPad->fileStuff.includePathDir[pLastSlash - pFirstSlash + 1] = '\0';
-           if(pPad->fileStuff.lastIncludeName != NULL)
+           if(pPad->fileStuff.lastIncludeName != nullptr)
               XtFree(pPad->fileStuff.lastIncludeName);
            pLastSlash++;
            pPad->fileStuff.lastIncludeName = XtNewString(pLastSlash);
@@ -451,7 +451,7 @@ GetFileName(
     _DtTurnOnHourGlass(pPad->app_shell);
 
     /* -----> create the FSB if it doesn't exits */
-    if (pSelect->file_dialog == NULL) {
+    if (pSelect->file_dialog == nullptr) {
 	CreateFileSelectionDialog(pPad);
     }
 
@@ -463,17 +463,17 @@ GetFileName(
     XtAddCallback(pSelect->file_dialog, XmNokCallback,
 			pStuff->pendingFileFunc,
 			(XtPointer)pPad);
-    pStuff->pendingFileFunc = NULL;
+    pStuff->pendingFileFunc = nullptr;
     XtRemoveAllCallbacks(pSelect->file_dialog, XmNhelpCallback);
     XtAddCallback(pSelect->file_dialog, XmNhelpCallback,
 			pStuff->pendingFileHelpFunc,
 			(XtPointer)pPad);
-    pStuff->pendingFileHelpFunc = NULL;
+    pStuff->pendingFileHelpFunc = nullptr;
 
     /* -----> seed FSB directory from either fileName */
     if(type == OPEN) {
        if (pStuff->pathDir[0] == (char)'\0') {
-	   if (pStuff->fileName != NULL) {
+	   if (pStuff->fileName != nullptr) {
                /* set pStuff->pathDir*/
 	       ExtractAndStoreDir(pPad, pStuff->fileName, OPEN);
 	   }
@@ -509,7 +509,7 @@ GetFileName(
     else {
        /* -----> seed FSB directory with include dir */
        if (pStuff->includePathDir[0] == (char)'\0') {
-	   if (pStuff->fileName != (char *)NULL) {
+	   if (pStuff->fileName != (char *)nullptr) {
                /* set pStuff->pathDir*/
 	       ExtractAndStoreDir(pPad, pStuff->fileName, INCLUDE);
 	   }
@@ -537,7 +537,7 @@ GetFileName(
     pPad->nodo = False;
 
     if(type == INCLUDE) {
-       if(pStuff->lastIncludeName != NULL) {
+       if(pStuff->lastIncludeName != nullptr) {
           tmpStr = XmStringCreateLocalized(pStuff->lastIncludeName);
           XmListSelectItem(XmFileSelectionBoxGetChild(pSelect->file_dialog,
 					XmDIALOG_LIST), tmpStr, False);
@@ -904,7 +904,7 @@ AskIfSave(
 {
     Arg al[10];             /* arg list */
     int ac;        /* arg count */
-    char *tmp = NULL;
+    char *tmp = nullptr;
     XmString tmpStr;
     Select *pSelect = &pPad->fileStuff.fileWidgets.select;
 
@@ -975,7 +975,7 @@ AskIfSave(
 char*
 DialogTitle(Editor *pPad)
 {
-    if (pPad->dialogTitle == NULL)
+    if (pPad->dialogTitle == nullptr)
       pPad->dialogTitle = strdup((char *)GETMESSAGE(7, 2, "Text Editor - "));
     
     return pPad->dialogTitle;

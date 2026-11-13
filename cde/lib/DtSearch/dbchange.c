@@ -141,7 +141,7 @@ int             database_has_changed (void)
 	return FALSE;
     if (file_has_changed (OE_sitecnfg_fname, OE_sitecnfg_mtime))
 	return TRUE;
-    for (db = usrblk.dblist; db != NULL; db = db->link) {
+    for (db = usrblk.dblist; db != nullptr; db = db->link) {
 	sprintf (fnamebuf, "%s%s" EXT_DTBS, db->path, db->name);
 	if (file_has_changed (fnamebuf, db->iimtime))
 	    return TRUE;

@@ -58,14 +58,14 @@
 /*
  * Public symbols
  */
-FILE	*yyin = NULL;
+FILE	*yyin = nullptr;
 
 #define MAX_TOKEN_LEN	1023
 #define MAX_TOKEN_SIZE	(MAX_TOKEN_LEN + 1)	/* len+1 for NULL */
 
 static int	line_number= 1;
 static int	last_token= AB_BIL_UNDEF;
-static char*	last_token_value= NULL;
+static char*	last_token_value= nullptr;
 static int	last_value_type= AB_BIL_UNDEF;
 static char	tokenText[MAX_TOKEN_SIZE] = "";
 static int	tokenTextLen = 0;
@@ -338,15 +338,15 @@ get_comment(FILE *file, int lastChar)
 static int
 get_string(FILE *file, int lastChar)
 {
-    ISTRING	istring = NULL;
-    char	*string= NULL;
+    ISTRING	istring = nullptr;
+    char	*string= nullptr;
 
     ungetc(lastChar, file);
     abio_get_string(file, &istring);
 
     tokenText[0]= 0; tokenTextLen= 0;
     string = istr_string(istring);
-    if (string != NULL)
+    if (string != nullptr)
     {
 	int i;
 	int	len = strlen(string);
@@ -409,7 +409,7 @@ bilP_load_reset(void)
 	line_number= 1;
 	last_token= AB_BIL_UNDEF;
 	last_value_type= AB_BIL_UNDEF;
-	last_token_value= NULL;
+	last_token_value= nullptr;
 	return 0;
 }
 

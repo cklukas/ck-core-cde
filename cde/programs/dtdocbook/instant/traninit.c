@@ -91,7 +91,7 @@ ReadTransSpec(
     int		giLen;
     char	*giBuf;
 
-    if ((fp=OpenFile(transfile)) == NULL) {
+    if ((fp=OpenFile(transfile)) == nullptr) {
 	fprintf(stderr, "Can not open translation spec file '%s'.\n%s\n",
 		transfile, strerror(errno));
 	return;
@@ -272,7 +272,7 @@ RememberTransSpec(
 	    cp = t->context;
 	    if (!strchr(cp, ' ')) {
 		t->parent  = t->context;
-		t->context = NULL;
+		t->context = nullptr;
 	    }
 	    else {
 		/* Figure out depth of context string */
@@ -316,7 +316,7 @@ RememberTransSpec(
      * sture the individual, or the list - not both. */
     if (t->gi && strchr(t->gi, ' ')) {
 	t->gilist = Split(t->gi, 0, S_ALVEC);
-	t->gi = NULL;
+	t->gi = nullptr;
     }
 
     /* Now, store structure in linked list. */
@@ -348,7 +348,7 @@ ReadCharMap(
     int		lineno=0;
     int		n_alloc=0;	/* number of slots allocated so far */
 
-    if ((fp=OpenFile(filename)) == NULL) {
+    if ((fp=OpenFile(filename)) == nullptr) {
 	fprintf(stderr, "Can not open character mapping file '%s'.\n%s\n",
 		filename, strerror(errno));
 	return;
@@ -406,7 +406,7 @@ ReadSDATA(
     char	buf[LINESIZE], *name, *val;
     int		lineno=0;
 
-    if ((fp=OpenFile(filename)) == NULL) {
+    if ((fp=OpenFile(filename)) == nullptr) {
 	fprintf(stderr, "Can not open SDATA file '%s': %s", filename,
 		strerror(errno));
 	return;

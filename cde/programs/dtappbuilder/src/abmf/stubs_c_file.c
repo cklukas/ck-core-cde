@@ -153,17 +153,17 @@ static int write_builtin_action(
 static ABObj
 get_actual_from_obj(ABObj actionOrObj)
 {
-    static ABObj	lastFromObj = NULL;
-    static ABObj	lastActualFromObj = NULL;
+    static ABObj	lastFromObj = nullptr;
+    static ABObj	lastActualFromObj = nullptr;
     AB_TRAVERSAL	refTrav;
-    ABObj		refObj = NULL;
-    ABObj		module = NULL;
-    ABObj		fromObj = NULL;
-    ABObj		actualFromObj = NULL;
+    ABObj		refObj = nullptr;
+    ABObj		module = nullptr;
+    ABObj		fromObj = nullptr;
+    ABObj		actualFromObj = nullptr;
 
-    if (actionOrObj == NULL)
+    if (actionOrObj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     /*
@@ -189,9 +189,9 @@ get_actual_from_obj(ABObj actionOrObj)
     /*
      * See if we can do anything
      */
-    if (fromObj == NULL)
+    if (fromObj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     module = obj_get_module(fromObj);
 
@@ -200,14 +200,14 @@ get_actual_from_obj(ABObj actionOrObj)
      */
     if (   (!obj_is_ref(fromObj))
         && (   (obj_get_type(fromObj) == AB_TYPE_MENU)
-            || (obj_get_parent_of_type(fromObj, AB_TYPE_MENU) != NULL)) )
+            || (obj_get_parent_of_type(fromObj, AB_TYPE_MENU) != nullptr)) )
     {
         /* find an object that references this one, to
          * get the appropriate type (only menu references are 
          * supported, currently).
          */
         for (trav_open(&refTrav, module, AB_TRAV_UI);
-	        (refObj = trav_next(&refTrav)) != NULL; )
+	        (refObj = trav_next(&refTrav)) != nullptr; )
         {
             if (refObj->ref_to == fromObj)
             {
@@ -217,9 +217,9 @@ get_actual_from_obj(ABObj actionOrObj)
         trav_close(&refTrav);
     }
 
-    if (actualFromObj == NULL)
+    if (actualFromObj == nullptr)
     {
-	if (refObj != NULL)
+	if (refObj != nullptr)
 	{
 	    actualFromObj = refObj;
 	}
@@ -284,12 +284,12 @@ printf_setval(GenCodeInfo genCodeInfo, ABObj obj, ...)
  * Sun define va_list as void * */
     va_list             paramList = { 0, 0 };
 #else
-    va_list             paramList = NULL;
+    va_list             paramList = nullptr;
 #endif /* linux */
-    STRING              resName = NULL;
-    void		*resValue = NULL;
-    STRING		objCName = NULL;
-    ISTRING		istrValue = NULL;
+    STRING              resName = nullptr;
+    void		*resValue = nullptr;
+    STRING		objCName = nullptr;
+    ISTRING		istrValue = nullptr;
 
     va_start(paramList, obj);
     
@@ -297,7 +297,7 @@ printf_setval(GenCodeInfo genCodeInfo, ABObj obj, ...)
     abio_printf(codeFile, "\tXtVaSetValues(%s,", objCName);
     abio_printf(codeFile, "\n\t\t");
 
-    while ((resName = va_arg(paramList, STRING)) != NULL)
+    while ((resName = va_arg(paramList, STRING)) != nullptr)
     {
 	resValue = va_arg(paramList, VoidPtr);
 	switch (abmfP_get_res_type(resName, obj))
@@ -319,7 +319,7 @@ printf_setval(GenCodeInfo genCodeInfo, ABObj obj, ...)
 	abio_printf(codeFile, ",\n\t\t");
 
 	istr_destroy(istrValue);
-	resValue = NULL;
+	resValue = nullptr;
     }
     abio_printf(codeFile, "NULL);");
 
@@ -342,7 +342,7 @@ printf_getval(GenCodeInfo genCodeInfo, ABObj obj, int nres,...)
     va_list             ap;
     STRING              resource;
     ARG_TYPES           type;
-    STRING		objCName = NULL;
+    STRING		objCName = nullptr;
     nres = nres;		/* avoid warning */
 
     va_start(ap, nres);
@@ -387,7 +387,7 @@ set_up_user_type_variables(GenCodeInfo genCodeInfo, ABObj toObj)
 {
     File                codeFile = genCodeInfo->code_file;
     ABObj               structObj = abmfP_obj_get_struct_obj(toObj);
-    ABObj		winParent = NULL;
+    ABObj		winParent = nullptr;
     char		winParentName[1024];
     *winParentName = 0;
 
@@ -395,7 +395,7 @@ set_up_user_type_variables(GenCodeInfo genCodeInfo, ABObj toObj)
      * Determine window parent of this popup
      */
     winParent = obj_get_win_parent(structObj);
-    if (winParent == NULL)
+    if (winParent == nullptr)
     {
 	sprintf(winParentName, "%s()", abmfP_lib_get_toplevel_widget->name);
     }
@@ -410,13 +410,13 @@ set_up_user_type_variables(GenCodeInfo genCodeInfo, ABObj toObj)
     if (cwd_is_dtbuilder_src_dir())
     {
         write_instance_ptr_var(genCodeInfo, toObj,
-	    instanceVarName, abmfP_client_data_var_name, TRUE, NULL);
+	    instanceVarName, abmfP_client_data_var_name, TRUE, nullptr);
 	abio_puts(genCodeInfo->code_file, nlstr);
     }
     else
     {
         write_instance_ptr_var(genCodeInfo, toObj,
-	    toVarName, abmfP_client_data_var_name, TRUE, NULL);
+	    toVarName, abmfP_client_data_var_name, TRUE, nullptr);
         write_instance_ptr_var(genCodeInfo, toObj,
 	    instanceVarName, toVarName, FALSE, "/* obsolete */");
 	abio_puts(genCodeInfo->code_file, nlstr);
@@ -443,7 +443,7 @@ write_instance_ptr_var(
 {
     FILE	*codeFile = genCodeInfo->code_file;
 
-    if (ipObj == NULL)
+    if (ipObj == nullptr)
     {
 	return 0;
     }
@@ -457,7 +457,7 @@ write_instance_ptr_var(
 
     abio_printf(codeFile, "%s;", paramName);
 
-    if (comment != NULL)
+    if (comment != nullptr)
     {
 	abio_printf(genCodeInfo->code_file, "\t%s", comment);
     }
@@ -657,7 +657,7 @@ write_tooltalk_cb_body2(
 
     	    abmfP_write_c_comment(genCodeInfo, FALSE,
         	"Now that the Message has been replied, process Quit operation");
-            abmfP_write_user_code_seg(genCodeInfo, NULL);
+            abmfP_write_user_code_seg(genCodeInfo, nullptr);
             abio_puts(codeFile, nlstr);
 
 	    abio_outdent(codeFile);
@@ -697,7 +697,7 @@ write_tooltalk_cb_body2(
     }
 
     abio_puts(codeFile, nlstr);
-    abmfP_write_user_code_seg(genCodeInfo, NULL);
+    abmfP_write_user_code_seg(genCodeInfo, nullptr);
     abio_puts(codeFile, nlstr);
     abio_puts(codeFile, "return True;\n");
     return 0;
@@ -862,15 +862,15 @@ write_action_functions(GenCodeInfo genCodeInfo, ABObj obj)
     static char         msg[256],
                        *s;
     AB_TRAVERSAL        trav;
-    ABObj               action = NULL;
-    ABObj               fromObj = NULL;	/* for error reports */
+    ABObj               action = nullptr;
+    ABObj               fromObj = nullptr;	/* for error reports */
     int                 i = 0;
 
     /*
      * Auto-named functions
      */
     for (trav_open(&trav, obj, AB_TRAV_ACTIONS_FOR_OBJ | AB_TRAV_MOD_SAFE), i = 0;
-	 (action = trav_next(&trav)) != NULL; ++i)
+	 (action = trav_next(&trav)) != nullptr; ++i)
     {
 	if (   mfobj_has_flags(action, CGenFlagIsDuplicateDef)
 	    || mfobj_has_flags(action, CGenFlagWriteDefToProjFile))
@@ -890,7 +890,7 @@ write_action_functions(GenCodeInfo genCodeInfo, ABObj obj)
      * User-named functions
      */
     for (trav_reset(&trav);
-	 (action = trav_next(&trav)) != NULL; ++i)
+	 (action = trav_next(&trav)) != nullptr; ++i)
     {
 	if (   mfobj_has_flags(action, CGenFlagIsDuplicateDef)
 	    || mfobj_has_flags(action, CGenFlagWriteDefToProjFile))
@@ -921,8 +921,8 @@ abmfP_write_stubs_c_file(
 )
 {
     File                codeFile = genCodeInfo->code_file;
-    STRING              errmsg = NULL;
-    ABObj               win_obj = NULL;
+    STRING              errmsg = nullptr;
+    ABObj               win_obj = nullptr;
     ABObj               project = obj_get_project(module);
     char		moduleHeaderFileName[MAX_PATH_SIZE];
     char		moduleName[MAX_PATH_SIZE];
@@ -975,7 +975,7 @@ abmfP_write_stubs_c_file(
 	int                 num_strings = 0;
 	strlist_construct(&connIncludes);
 
-	strlist_add_str(&connIncludes, moduleHeaderFileName, NULL);
+	strlist_add_str(&connIncludes, moduleHeaderFileName, nullptr);
 	abmfP_get_connect_includes(&connIncludes, module);
 	num_strings = strlist_get_num_strs(&connIncludes);
 	if (num_strings > 1)		/* start at 1 - skip this_ui.h */
@@ -987,7 +987,7 @@ abmfP_write_stubs_c_file(
 	for (i = 1; i < num_strings; ++i)
 	{
 	    abio_printf(codeFile, "#include %s\n",
-				  strlist_get_str(&connIncludes, i, NULL));
+				  strlist_get_str(&connIncludes, i, nullptr));
 	}
 
 	strlist_destruct(&connIncludes);
@@ -1022,9 +1022,9 @@ abmfP_write_action_function(
     BOOL		actionPrintfWritten = FALSE;
     int                 return_value = 0;
     ABObj               fromObj = obj_get_from(action);
-    ABObj		actualFromObj = NULL;
+    ABObj		actualFromObj = nullptr;
     ABObj		toObj = obj_get_to(action);
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     char		actionName[1024];
     char		actionPrintf[32 + sizeof(actionName)];
 
@@ -1048,7 +1048,7 @@ abmfP_write_action_function(
 	actualFromObj = get_actual_from_obj(action);
         abmfP_write_xm_callback_begin(genCodeInfo, FALSE, actionName);
         write_instance_ptr_var(genCodeInfo, actualFromObj,
-	    get_from_var_name(), "callData", TRUE, NULL);
+	    get_from_var_name(), "callData", TRUE, nullptr);
 	abio_puts(genCodeInfo->code_file, nlstr);
 
     break;
@@ -1126,11 +1126,11 @@ abmfP_write_action_function(
     if (!topUserSegWritten)
     {
 	STRING	contents = 
-	    	    (actionPrintfWritten? NULL:(isTTCB? actionPrintf:NULL));
+	    	    (actionPrintfWritten? nullptr:(isTTCB? actionPrintf:nullptr));
         abmfP_write_user_var_and_code_seg(genCodeInfo, contents);
         abio_puts(codeFile, nlstr);
 	topUserSegWritten = TRUE;
-	if (contents != NULL)
+	if (contents != nullptr)
 	{
 	    actionPrintfWritten = TRUE;
 	}
@@ -1143,7 +1143,7 @@ abmfP_write_action_function(
     if (isTTCB)
     {
         write_tooltalk_cb_body1(genCodeInfo, action);
-        abmfP_write_user_code_seg(genCodeInfo, NULL);
+        abmfP_write_user_code_seg(genCodeInfo, nullptr);
         write_tooltalk_cb_body2(genCodeInfo, action);
 	funcBodyWritten = TRUE;
 	bottomUserSegWritten = TRUE; 
@@ -1151,7 +1151,7 @@ abmfP_write_action_function(
     else if (ss_cb)
     {
         write_ss_cb_body1(genCodeInfo, action);
-        abmfP_write_user_code_seg(genCodeInfo, NULL);
+        abmfP_write_user_code_seg(genCodeInfo, nullptr);
         write_ss_cb_body2(genCodeInfo, action);
 	funcBodyWritten = TRUE;
 	bottomUserSegWritten = TRUE;
@@ -1206,10 +1206,10 @@ abmfP_write_action_function(
 
     if (!bottomUserSegWritten)
     {
-	STRING	contents = (actionPrintfWritten? NULL:actionPrintf);
+	STRING	contents = (actionPrintfWritten? nullptr:actionPrintf);
 	abmfP_write_user_code_seg(genCodeInfo, contents);
 	bottomUserSegWritten = TRUE;
-	if (contents != NULL)
+	if (contents != nullptr)
 	{
 	    actionPrintfWritten = TRUE;
 	}
@@ -1221,7 +1221,7 @@ abmfP_write_action_function(
 
     if (!funcEndWritten)
     {
-        abmfP_write_c_func_end(genCodeInfo, NULL);
+        abmfP_write_c_func_end(genCodeInfo, nullptr);
 	funcEndWritten = TRUE;
     }
 
@@ -1240,19 +1240,19 @@ abmfP_write_builtin_action(
 {
     int			return_value     = 0;
     File                codeFile         = genCodeInfo->code_file;
-    ABObj               toObj            = NULL;
-    STRING		actionTKResource = NULL;	/* in toolkit */
-    STRING		actionResource   = NULL;	/* in source code */
-    ISTRING		istr_resource    = NULL;
+    ABObj               toObj            = nullptr;
+    STRING		actionTKResource = nullptr;	/* in toolkit */
+    STRING		actionResource   = nullptr;	/* in source code */
+    ISTRING		istr_resource    = nullptr;
     AB_BUILTIN_ACTION	builtin_action   = AB_STDACT_UNDEF;
 
     toObj          = obj_get_to(action);
     builtin_action = obj_get_func_builtin(action);
-    if (toObj != NULL)
+    if (toObj != nullptr)
     {
         toObj = objxm_comp_get_target_for_builtin_action(toObj, builtin_action);
     }
-    if (toObj == NULL)
+    if (toObj == nullptr)
     {
 	abmfP_write_c_comment(genCodeInfo, FALSE, "Invalid action ignored.");
 	abio_puts(codeFile, nlstr);
@@ -1268,7 +1268,7 @@ abmfP_write_builtin_action(
     istr_resource    = objxm_get_res_strname(actionTKResource);
     actionResource   = istr_string(istr_resource);
 
-    if (abmfP_get_c_name(genCodeInfo, toObj) == NULL)
+    if (abmfP_get_c_name(genCodeInfo, toObj) == nullptr)
     {
 	return_value = write_builtin_action_for_ref(genCodeInfo,
 	    action, toObj, setUpVars, builtin_action, actionTKResource,
@@ -1312,8 +1312,8 @@ write_builtin_action_for_ref(
     int                        i = 0;
     int                  numRefs = 0;
     int             return_value = 0;
-    ABObj                 refObj = NULL;
-    ABObjList            refList = NULL;
+    ABObj                 refObj = nullptr;
+    ABObjList            refList = nullptr;
 	
     if (!genCodeInfo || !action || !toObj)
 	return -1;
@@ -1321,20 +1321,20 @@ write_builtin_action_for_ref(
     refList = abmfP_find_refs_to(toObj);
     numRefs = objlist_get_num_objs(refList);
     
-    if ((refList != NULL) && (numRefs > 0))
+    if ((refList != nullptr) && (numRefs > 0))
     {
 	if (setUpVars)
 	{
-	    refObj = objlist_get_obj(refList, 0, NULL);
+	    refObj = objlist_get_obj(refList, 0, nullptr);
 	    set_up_user_type_variables(genCodeInfo, refObj);
 	}
 	    
 	/* write the builtin actions */
 	for (i = 0; i < numRefs; ++i)
 	{
-	    refObj  = objlist_get_obj(refList, i, NULL);
+	    refObj  = objlist_get_obj(refList, i, nullptr);
 
-	    if (abmfP_get_c_name(genCodeInfo, refObj) != NULL)
+	    if (abmfP_get_c_name(genCodeInfo, refObj) != nullptr)
 	    {
 		return_value = write_builtin_action(genCodeInfo,
 		    action, refObj, builtin_action, actionTKResource,
@@ -1380,13 +1380,13 @@ write_builtin_action(
     switch (builtin_action)
     {
 	case AB_STDACT_ENABLE:
-	    abio_print_line(codeFile, NULL);
+	    abio_print_line(codeFile, nullptr);
 	    abio_print_line(codeFile, "XtSetSensitive(%s, True);",
 		abmfP_get_c_name(genCodeInfo, toObj));
 	    break;
 
 	case AB_STDACT_DISABLE:
-	    abio_print_line(codeFile, NULL);
+	    abio_print_line(codeFile, nullptr);
 	    abio_print_line(codeFile, "XtSetSensitive(%s, False);",
 		abmfP_get_c_name(genCodeInfo, toObj));
 	    break;
@@ -1437,22 +1437,22 @@ write_builtin_action(
 	    }
 	    else
 	    {
-		assert(actionTKResource != NULL);
+		assert(actionTKResource != nullptr);
 		printf_setval(genCodeInfo, toObj,
 		    actionTKResource, SVAL(action),
-		    NULL);
+		    nullptr);
 	    }
 	    break;
 
 	case AB_STDACT_SET_VALUE:
 	    printf_setval(genCodeInfo, toObj, 
-		actionTKResource, IVAL(action), NULL);
+		actionTKResource, IVAL(action), nullptr);
 	    break;
 
 	case AB_STDACT_SET_TEXT:
 	    printf_setval(genCodeInfo, toObj, 
 		actionTKResource, SVAL(action),
-		NULL);
+		nullptr);
 	    break;
 
 /* 	case AB_STDACT_SHOW_HELP: */
@@ -1466,7 +1466,7 @@ write_builtin_action(
 	    {
 		static char         msg[255];
 
-		if (obj_get_name(action) != NULL)
+		if (obj_get_name(action) != nullptr)
 		{
 		    char *action_name = obj_get_name(action);
 		    sprintf(msg, CATGETS(Dtb_project_catd, 1, 76,

@@ -77,9 +77,9 @@ StringList
 strlist_create(void)
 {
     StringList          list = (StringList) util_malloc(sizeof(StringListRec));
-    if (list == NULL)
+    if (list == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     strlist_construct(list);
     return list;
@@ -91,8 +91,8 @@ strlist_construct(StringList list)
 {
     list->num_strings = 0;
     list->strings_size = 0;
-    list->strings = NULL;
-    list->user_datas = NULL;
+    list->strings = nullptr;
+    list->user_datas = nullptr;
     list->unique = TRUE;
     list->sort_order = STRLIST_SORT_CLIENT_DEF;
     list->indexes_dirty = TRUE;
@@ -145,7 +145,7 @@ strlist_make_empty(StringList list)
 {
     int		return_value = 0;
 
-    if (list->strings != NULL)
+    if (list->strings != nullptr)
     {
 	return_value = strlistP_shrink_array(list, list->strings_size);
     }
@@ -208,7 +208,7 @@ void *
 strlist_get_istr_data(StringList list, ISTRING istring)
 {
     int		index = strlist_get_istr_index(list, istring);
-    return (index < 0)? NULL:list->user_datas[index];
+    return (index < 0)? nullptr:list->user_datas[index];
 }
 
 
@@ -330,21 +330,21 @@ strlist_remove_index(StringList list, int doomedIndex)
         memmove((void *)(&(strings[doomedIndex])),
 		    (void *)&(strings[doomedIndex+1]),
 		    sizeof(ISTRING) * numToMove);
-        strings[num_strings-1] = NULL;
+        strings[num_strings-1] = nullptr;
     }
 
     /*
      * Destroy user data and collapse list
      */
-    if (user_datas != NULL)
+    if (user_datas != nullptr)
     {
-        user_datas[doomedIndex] = NULL;
+        user_datas[doomedIndex] = nullptr;
         if (numToMove > 0)
         {
             memmove((void *)(&(user_datas[doomedIndex])), 
 		    (void *)&(user_datas[doomedIndex+1]),
 		    sizeof(void*) * numToMove);
-            user_datas[num_strings-1] = NULL;
+            user_datas[num_strings-1] = nullptr;
         }
     }
 
@@ -361,7 +361,7 @@ strlist_remove_index(StringList list, int doomedIndex)
 int
 strlist_get_num_strs(StringList list)
 {
-    if (list == NULL)
+    if (list == nullptr)
     {
 	return 0;
     }
@@ -372,15 +372,15 @@ strlist_get_num_strs(StringList list)
 ISTRING
 strlist_get_istr(StringList list, int whichString, void **clientDataOut)
 {
-    if ((list == NULL) || (whichString >= list->num_strings) ||
+    if ((list == nullptr) || (whichString >= list->num_strings) ||
 	(whichString < 0))
     {
-	return NULL;
+	return nullptr;
     }
-    if (clientDataOut != NULL)
+    if (clientDataOut != nullptr)
     {
 	*clientDataOut = 
-	    (list->user_datas == NULL? NULL:list->user_datas[whichString]);
+	    (list->user_datas == nullptr? nullptr:list->user_datas[whichString]);
     }
     return list->strings[whichString];
 }
@@ -476,7 +476,7 @@ strlist_str_exists(StringList list, STRING string)
 {
     BOOL	doesIt = FALSE;
     ISTRING	istring = istr_dup_existing(string);
-    if (istring != NULL)
+    if (istring != nullptr)
     {
 	doesIt = strlist_istr_exists(list, istring);
 	istr_destroy(istring);
@@ -490,7 +490,7 @@ strlist_get_str_index(StringList list, STRING string)
 {
     long		index = -1;
     ISTRING	istring = istr_create(string);
-    if (istring != NULL)
+    if (istring != nullptr)
     {
 	index = strlist_get_istr_index(list, istring);
 	istr_destroy(istring);
@@ -511,7 +511,7 @@ strlist_remove_str(StringList list, STRING string)
 {
     long		return_value = 0;
     ISTRING	istring = istr_dup_existing(string);
-    if (istring != NULL)
+    if (istring != nullptr)
     {
 	return_value = strlist_remove_istr(list, istring);
 	istr_destroy(istring);
@@ -525,7 +525,7 @@ strlist_set_str_data(StringList list, STRING string, void *data)
 {
     long		return_value = 0;
     ISTRING	istring = istr_dup_existing(string);
-    if (istring != NULL)
+    if (istring != nullptr)
     {
 	return_value = strlist_set_istr_data(list, istring, data);
 	istr_destroy(istring);
@@ -537,9 +537,9 @@ strlist_set_str_data(StringList list, STRING string, void *data)
 void *
 strlist_get_str_data(StringList list, STRING string)
 {
-    void	*clientData = NULL;
+    void	*clientData = nullptr;
     ISTRING	istring = istr_dup_existing(string);
-    if (istring != NULL)
+    if (istring != nullptr)
     {
 	clientData = strlist_get_istr_data(list, istring);
 	istr_destroy(istring);
@@ -551,7 +551,7 @@ StringList
 strlist_dup(StringList list)
 {
     int		i;
-    StringList	new_list = NULL;
+    StringList	new_list = nullptr;
 
     new_list = strlist_create();
     new_list->unique = list->unique;
@@ -576,17 +576,17 @@ strlistP_shrink_array(StringList list, int sizeDiff)
 {
     int		return_value = 0;
     int		new_strings_size = util_max(0, list->strings_size - sizeDiff);
-    ISTRING	*new_strings = NULL;
-    void	**new_user_datas = NULL;
+    ISTRING	*new_strings = nullptr;
+    void	**new_user_datas = nullptr;
     int		i = 0;
 	
     for (i= new_strings_size; i < list->strings_size; ++i)
     {
-	if (list->strings[i] != NULL)
+	if (list->strings[i] != nullptr)
 	{
 	    istr_destroy(list->strings[i]);
 	}
-	list->user_datas[i] = NULL;
+	list->user_datas[i] = nullptr;
     }
 
     if (new_strings_size > 0)
@@ -598,12 +598,12 @@ strlistP_shrink_array(StringList list, int sizeDiff)
     }
     else
     {
-	util_free(list->strings); list->strings = NULL;
-	util_free(list->user_datas); list->user_datas= NULL;
+	util_free(list->strings); list->strings = nullptr;
+	util_free(list->user_datas); list->user_datas= nullptr;
     }
 
     if (   (new_strings_size > 0) 
-	&& ((new_strings == NULL) || (new_user_datas == NULL)) )
+	&& ((new_strings == nullptr) || (new_user_datas == nullptr)) )
     {
 	return_value = -1;
 	goto epilogue;
@@ -630,15 +630,15 @@ strlistP_grow_array(StringList list, int sizeDiff)
     int		return_value = 0;
     int		old_strings_size = list->strings_size;
     int		new_strings_size = list->strings_size + sizeDiff;
-    ISTRING	*new_strings = NULL;
-    void	**new_user_datas = NULL;
+    ISTRING	*new_strings = nullptr;
+    void	**new_user_datas = nullptr;
     int		i = 0;
 
     new_strings = (ISTRING *)realloc(
 			list->strings, new_strings_size * sizeof(ISTRING));
     new_user_datas = (void **)realloc(
 			list->user_datas, new_strings_size * sizeof(void *));
-    if ((new_strings == NULL) || (new_user_datas == NULL))
+    if ((new_strings == nullptr) || (new_user_datas == nullptr))
     {
 	return_value = -1;
 	free(new_strings);
@@ -657,8 +657,8 @@ strlistP_grow_array(StringList list, int sizeDiff)
      */
     for (i = old_strings_size; i < new_strings_size; ++i)
     {
-	list->strings[i] = NULL;
-	list->user_datas[i] = NULL;
+	list->strings[i] = nullptr;
+	list->user_datas[i] = nullptr;
     }
 
 epilogue:
@@ -669,12 +669,12 @@ epilogue:
 static int
 strlistP_build_user_data_array(StringList list, int index, void *data)
 {
-    if (list->user_datas != NULL)
+    if (list->user_datas != nullptr)
     {
 	return -1;
     }
     list->user_datas = (void **)calloc(sizeof(void*), list->strings_size);
-    if (list->user_datas == NULL)
+    if (list->user_datas == nullptr)
     {
 	return -1;
     }
@@ -690,10 +690,10 @@ int
 strlist_dump(StringList list)
 {
     int	i = 0;
-    ISTRING	istring = NULL;
-    STRING	string = NULL;
+    ISTRING	istring = nullptr;
+    STRING	string = nullptr;
 
-    if (list == NULL)
+    if (list == nullptr)
     {
 	util_printf(0, "NULL string list\n");
 	return 0;
@@ -721,7 +721,7 @@ strlist_dump(StringList list)
 		(i >= list->num_strings? " ":"X"),
 		string);
 
-	if (list->user_datas != NULL)
+	if (list->user_datas != nullptr)
 	{
 	    util_dprintf(0, " 0x%08lx", list->user_datas[i]);
 	}

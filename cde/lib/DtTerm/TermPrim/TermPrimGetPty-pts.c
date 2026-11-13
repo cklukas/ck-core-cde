@@ -44,7 +44,7 @@ _DtTermPrimGetPty(char **ptySlave, char **ptyMaster)
     char *c;
     int ptyFd;
 
-    *ptyMaster = NULL;
+    *ptyMaster = nullptr;
 
     if (isDebugFSet('p', 10)) {
 #ifdef	BBA

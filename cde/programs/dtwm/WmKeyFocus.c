@@ -91,8 +91,8 @@ void InitKeyboardFocus (void)
      * Set the keyboard focus based on the keyboard focus policy.
      */
 
-    wmGD.keyboardFocus = NULL;
-    wmGD.nextKeyboardFocus = NULL;
+    wmGD.keyboardFocus = nullptr;
+    wmGD.nextKeyboardFocus = nullptr;
 
     for (scr = 0; scr < wmGD.numScreens; scr++)
     {
@@ -185,7 +185,7 @@ void InitKeyboardFocus (void)
 	    }
 	}
 
-        Do_Focus_Key ((ClientData *)NULL, CurrentTime, ALWAYS_SET_FOCUS);
+        Do_Focus_Key ((ClientData *)nullptr, CurrentTime, ALWAYS_SET_FOCUS);
     }
 
 } /* END OF FUNCTION InitKeyboardFocus */
@@ -251,7 +251,7 @@ void SetKeyboardFocus (ClientData *pCD, long focusFlags)
 	if (currentFocus)
 	{
 	    ResetExplicitSelectHandling (currentFocus);
-	    wmGD.keyboardFocus = NULL;
+	    wmGD.keyboardFocus = nullptr;
 	}
 	
 	if (pCD && ((pCD->clientState == NORMAL_STATE) ||
@@ -295,7 +295,7 @@ void SetKeyboardFocus (ClientData *pCD, long focusFlags)
 		((wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_POINTER) &&
 		 (pCD == GetClientUnderPointer (&sameScreen))))
 	    {
-	        Do_Raise (pCD, (ClientListEntry *)NULL, STACK_NORMAL);
+	        Do_Raise (pCD, (ClientListEntry *)nullptr, STACK_NORMAL);
 	    }
 	}
     }
@@ -513,7 +513,7 @@ void ClearFocusIndication (ClientData *pCD, Boolean refresh)
      */
 
     saveCD = wmGD.keyboardFocus;
-    wmGD.keyboardFocus = NULL;
+    wmGD.keyboardFocus = nullptr;
     bUnseen = (pCD->clientState & UNSEEN_STATE) ? True : False;
     if (bUnseen)
 	pCD->clientState &= ~UNSEEN_STATE;
@@ -601,7 +601,7 @@ ClientData *GetClientUnderPointer (Boolean *pSameScreen)
 	}
     }
 
-    return (NULL);
+    return (nullptr);
 
 } /* END OF FUNCTION GetClientUnderPointer */
 
@@ -768,7 +768,7 @@ Boolean FocusNextTransient (ClientData *pCD, unsigned long type, Boolean initiat
 
 	if (pCD->transientChildren)
 	{
-	    pcdFocus = FindLastTransientTreeFocus (pCD, (ClientData *)NULL);
+	    pcdFocus = FindLastTransientTreeFocus (pCD, (ClientData *)nullptr);
 	    if (pcdFocus != wmGD.keyboardFocus)
 	    {
 		pcdLeader = FindTransientTreeLeader (pcdFocus);
@@ -786,7 +786,7 @@ Boolean FocusNextTransient (ClientData *pCD, unsigned long type, Boolean initiat
 		    }
 		    else
 		    {
-		        F_Lower (NULL, wmGD.keyboardFocus, (XEvent *) NULL);
+		        F_Lower (nullptr, wmGD.keyboardFocus, (XEvent *) nullptr);
 		    }
 	        }
 	        Do_Focus_Key (pcdFocus, focusTime, ALWAYS_SET_FOCUS);
@@ -805,7 +805,7 @@ Boolean FocusNextTransient (ClientData *pCD, unsigned long type, Boolean initiat
 	    pCD->clientID;
 	pcdLeader = FindTransientTreeLeader (pCD);
 	pcdFocus = FindNextTFocusInSeq (pcdLeader, startAt);
-	if ((pcdFocus == NULL) && (type == F_GROUP_TRANSIENT))
+	if ((pcdFocus == nullptr) && (type == F_GROUP_TRANSIENT))
 	{
 	    /*
 	     * Wrap around and find a focus window.
@@ -832,7 +832,7 @@ Boolean FocusNextTransient (ClientData *pCD, unsigned long type, Boolean initiat
 		    }
 		    else
 		    {
-		        F_Lower (NULL, wmGD.keyboardFocus, (XEvent *)NULL);
+		        F_Lower (nullptr, wmGD.keyboardFocus, (XEvent *)nullptr);
 		    }
 	        }
 	        Do_Focus_Key (pcdFocus, focusTime, ALWAYS_SET_FOCUS);
@@ -890,7 +890,7 @@ ClientData *FindLastTransientTreeFocus (ClientData *pCD, ClientData *pcdNoFocus)
 {
     ClientData *pcdNext;
     ClientData *pcdFocus;
-    ClientData *pcdLastFocus = NULL;
+    ClientData *pcdLastFocus = nullptr;
 
 
     pcdNext = pCD->transientChildren;
@@ -899,7 +899,7 @@ ClientData *FindLastTransientTreeFocus (ClientData *pCD, ClientData *pcdNoFocus)
 	pcdFocus = FindLastTransientTreeFocus (pcdNext, pcdNoFocus);
 	if (pcdFocus &&
 	    (!IS_APP_MODALIZED(pcdFocus)) &&
-	    ((pcdLastFocus == NULL) ||
+	    ((pcdLastFocus == nullptr) ||
 	     (pcdFocus->focusPriority > pcdLastFocus->focusPriority)))
 	{
 	    pcdLastFocus = pcdFocus;
@@ -908,7 +908,7 @@ ClientData *FindLastTransientTreeFocus (ClientData *pCD, ClientData *pcdNoFocus)
     }
 
     if ((!IS_APP_MODALIZED(pCD)) &&
-	((pcdLastFocus == NULL) ||
+	((pcdLastFocus == nullptr) ||
 	 (pCD->focusPriority > pcdLastFocus->focusPriority)))
     {
 	pcdLastFocus = pCD;
@@ -948,7 +948,7 @@ ClientData *FindLastTransientTreeFocus (ClientData *pCD, ClientData *pcdNoFocus)
 
 ClientData *FindNextTFocusInSeq (ClientData *pCD, unsigned long startAt)
 {
-    ClientData *pcdNextFocus = NULL;
+    ClientData *pcdNextFocus = nullptr;
     ClientData *pcdNext;
     ClientData *pcdFocus;
 
@@ -959,7 +959,7 @@ ClientData *FindNextTFocusInSeq (ClientData *pCD, unsigned long startAt)
 	pcdFocus = FindNextTFocusInSeq (pcdNext, startAt);
 	if (pcdFocus)
 	{
-	    if ((pcdNextFocus == NULL) ||
+	    if ((pcdNextFocus == nullptr) ||
 		(pcdFocus->clientID > pcdNextFocus->clientID))
 	    {
 		pcdNextFocus = pcdFocus;
@@ -968,7 +968,7 @@ ClientData *FindNextTFocusInSeq (ClientData *pCD, unsigned long startAt)
 	pcdNext = pcdNext->transientSiblings;
     }
 
-    if ((pcdNextFocus == NULL) ||
+    if ((pcdNextFocus == nullptr) ||
 	(pCD->clientID > pcdNextFocus->clientID))
     {
 	if ((!IS_APP_MODALIZED(pCD)) && (pCD->clientID < startAt))
@@ -1145,7 +1145,7 @@ Boolean FocusPrevTransient (ClientData *pCD, unsigned long type, Boolean initiat
 
 	if (pCD->transientChildren)
 	{
-	    pcdFocus = FindLastTransientTreeFocus (pCD, (ClientData *)NULL);
+	    pcdFocus = FindLastTransientTreeFocus (pCD, (ClientData *)nullptr);
 	    if (pcdFocus != wmGD.keyboardFocus)
 	    {
 	        Do_Focus_Key (pcdFocus, focusTime, ALWAYS_SET_FOCUS);
@@ -1163,7 +1163,7 @@ Boolean FocusPrevTransient (ClientData *pCD, unsigned long type, Boolean initiat
 	startAt = (initiate) ? 0 : pCD->clientID;
 	pcdLeader = FindTransientTreeLeader (pCD);
 	pcdFocus = FindPrevTFocusInSeq (pcdLeader, startAt);
-	if ((pcdFocus == NULL) && (type == F_GROUP_TRANSIENT))
+	if ((pcdFocus == nullptr) && (type == F_GROUP_TRANSIENT))
 	{
 	    /*
 	     * Wrap around and find a focus window.
@@ -1227,7 +1227,7 @@ Boolean FocusPrevTransient (ClientData *pCD, unsigned long type, Boolean initiat
 
 ClientData *FindPrevTFocusInSeq (ClientData *pCD, unsigned long startAt)
 {
-    ClientData *pcdNextFocus = NULL;
+    ClientData *pcdNextFocus = nullptr;
     ClientData *pcdNext;
     ClientData *pcdFocus;
 
@@ -1238,7 +1238,7 @@ ClientData *FindPrevTFocusInSeq (ClientData *pCD, unsigned long startAt)
 	pcdFocus = FindPrevTFocusInSeq (pcdNext, startAt);
 	if (pcdFocus)
 	{
-	    if ((pcdNextFocus == NULL) ||
+	    if ((pcdNextFocus == nullptr) ||
 		(pcdFocus->clientID < pcdNextFocus->clientID))
 	    {
 		pcdNextFocus = pcdFocus;
@@ -1247,7 +1247,7 @@ ClientData *FindPrevTFocusInSeq (ClientData *pCD, unsigned long startAt)
 	pcdNext = pcdNext->transientSiblings;
     }
 
-    if ((pcdNextFocus == NULL) ||
+    if ((pcdNextFocus == nullptr) ||
 	(pCD->clientID < pcdNextFocus->clientID))
     {
 	if (!(IS_APP_MODALIZED(pCD)) && (pCD->clientID > startAt))
@@ -1341,7 +1341,7 @@ Boolean CheckForKeyFocus (ClientListEntry *pNextEntry, unsigned long type, Boole
 	    if (focusNext && wmGD.keyboardFocus &&
 		wmGD.keyboardFocus->focusAutoRaise)
 	    {
-		F_Lower (NULL, wmGD.keyboardFocus, (XEvent *)NULL);
+		F_Lower (nullptr, wmGD.keyboardFocus, (XEvent *)nullptr);
 	    }
 	    Do_Focus_Key (pCD, focusTime, ALWAYS_SET_FOCUS);
 	}
@@ -1451,7 +1451,7 @@ void AutoResetKeyFocus (ClientData *pcdNoFocus, Time focusTime)
 {
     ClientListEntry *pNextEntry;
     ClientData *pCD;
-    ClientData *pcdLastFocus = NULL;
+    ClientData *pcdLastFocus = nullptr;
     ClientData *pcdFocus;
 
 
@@ -1481,7 +1481,7 @@ void AutoResetKeyFocus (ClientData *pcdNoFocus, Time focusTime)
 		    pcdFocus = pCD;
 	        }
 	        if (pcdFocus &&
-		    ((pcdLastFocus == NULL) ||
+		    ((pcdLastFocus == nullptr) ||
 		     (pcdFocus->focusPriority > pcdLastFocus->focusPriority)))
 	        {
 		    pcdLastFocus = pcdFocus;
@@ -1507,7 +1507,7 @@ void AutoResetKeyFocus (ClientData *pcdNoFocus, Time focusTime)
 	 * !!! Immediately set the focus indication !!!
 	 */
 
-	Do_Focus_Key ((ClientData *)NULL, focusTime, ALWAYS_SET_FOCUS);
+	Do_Focus_Key ((ClientData *)nullptr, focusTime, ALWAYS_SET_FOCUS);
     }
 
 } /* END OF FUNCTION AutoResetKeyFocus */

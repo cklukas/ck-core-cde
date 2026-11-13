@@ -602,7 +602,7 @@ GetTitleCmd(
      * null the return string
      */
     if (ret_string)
-	*ret_string = NULL;
+	*ret_string = nullptr;
 
     /*
      * check for the token
@@ -781,7 +781,7 @@ _DtHelpCeGetCcdfStrParam(
     int		 spnResult;
     int		 stringSize = 0;
     int		 stringMax  = 0;
-    char	*stringPtr  = NULL;
+    char	*stringPtr  = nullptr;
     char	*myBufPtr;
     char	*mySpace;
     int      done = False;
@@ -1002,7 +1002,7 @@ _DtHelpCeGetCcdfValueParam(
 {
     int    done = False;
     char *myBufPtr;
-    char *stringPtr = NULL;
+    char *stringPtr = nullptr;
     int stringSize = 0;
     int stringMax  = 0;
     int result = 0;
@@ -1036,7 +1036,7 @@ _DtHelpCeGetCcdfValueParam(
 	    return -1;
       }
 
-    if (stringPtr != NULL && *stringPtr != '\0')
+    if (stringPtr != nullptr && *stringPtr != '\0')
       {
         *ret_value = atoi(stringPtr);
 	free (stringPtr);
@@ -1193,13 +1193,13 @@ _DtHelpCeGetCcdfTopicCmd (
     int       cur_mb_len,
     char    **ret_charSet )
 {
-    char    *mycharSet = NULL;
+    char    *mycharSet = nullptr;
 
     /*
      * null the return values
      */
     if (ret_charSet)
-	*ret_charSet = NULL;
+	*ret_charSet = nullptr;
 
     /*
      * check for <TOPIC charset string>
@@ -1396,9 +1396,9 @@ _DtHelpCeGetCcdfTopicAbbrev (
      * NULL the entries.
      */
     if (ret_title)
-        *ret_title   = NULL;
+        *ret_title   = nullptr;
     if (ret_abbrev)
-        *ret_abbrev  = NULL;
+        *ret_abbrev  = nullptr;
 
     /*
      * check for <TOPIC charset string>
@@ -1458,7 +1458,7 @@ _DtHelpCeSkipCcdfAbbrev (
     /*
      * check for the <ABBREV> token and skip its data.
      */
-    return _DtHelpCeGetCcdfAbbrevCmd(file, buffer, buf_size, cur_mb_len,buf_ptr, NULL);
+    return _DtHelpCeGetCcdfAbbrevCmd(file, buffer, buf_size, cur_mb_len,buf_ptr, nullptr);
 }
 
 /******************************************************************************
@@ -1509,7 +1509,7 @@ _DtHelpCeGetCcdfAbbrevCmd(
      * null the return string
      */
     if (ret_string)
-	*ret_string = NULL;
+	*ret_string = nullptr;
 
     /*
      * check for the token

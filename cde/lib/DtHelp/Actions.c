@@ -121,7 +121,7 @@ _DtHelpDeSelectAll (
     XtSetArg(args[0], XmNuserData, &userData);
     XtGetValues(widget, args, 1);
 
-    if (userData != NULL)
+    if (userData != nullptr)
         _DtHelpClearSelection (userData);
 
 }  /* End _DtHelpDeSelectAll */
@@ -145,18 +145,18 @@ _DtHelpSelectAll (
     XtSetArg(args[0], XmNuserData, &userData);
     XtGetValues(widget, args, 1);
 
-    if (userData != NULL)
+    if (userData != nullptr)
       {
         DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) userData;
 
 	_DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_OFF, False, True,
-						NULL, NULL, NULL, NULL, NULL);
+						nullptr, nullptr, nullptr, nullptr, nullptr);
 	_DtHelpGetClearSelection (widget, userData);
 	_DtCanvasProcessSelection(pDAS->canvas, 0, 0, _DtCvSELECTION_START);
 	_DtCanvasProcessSelection(pDAS->canvas, pDAS->dispUseWidth,
 					pDAS->maxYpos, _DtCvSELECTION_END);
 	_DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_ON, False, True,
-						NULL, NULL, NULL, NULL, NULL);
+						nullptr, nullptr, nullptr, nullptr, nullptr);
 	pDAS->text_selected = True;
       }
 
@@ -183,7 +183,7 @@ _DtHelpActivateLink (
     XtSetArg(args[0], XmNuserData, &pDAS);
     XtGetValues(widget, args, 1);
 
-    if (pDAS == NULL)
+    if (pDAS == nullptr)
 	return;
 
     if (! pDAS->dtinfo)
@@ -201,7 +201,7 @@ _DtHelpActivateLink (
       }
     else /* dtinfo context */
       {
-	_DtCvPointer mark_enclosure = NULL;
+	_DtCvPointer mark_enclosure = nullptr;
 
 	_DtCvStatus status;
 
@@ -256,7 +256,7 @@ _DtHelpPageUpOrDown (
     XtSetArg(args[0], XmNuserData, &userData);
     XtGetValues(widget, args, 1);
 
-    if (userData != NULL)
+    if (userData != nullptr)
       {
         DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) userData;
 
@@ -319,7 +319,7 @@ _DtHelpPageLeftOrRight (
     XtSetArg(args[0], XmNuserData, &userData);
     XtGetValues(widget, args, 1);
 
-    if (userData != NULL)
+    if (userData != nullptr)
       {
         DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) userData;
 
@@ -382,7 +382,7 @@ _DtHelpNextLink (
     XtSetArg(args[0], XmNuserData, &userData);
     XtGetValues(widget, args, 1);
 
-    if (userData != NULL)
+    if (userData != nullptr)
       {
         DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) userData;
 
@@ -398,7 +398,7 @@ _DtHelpNextLink (
 
 	if (_DtCvSTATUS_OK == _DtCanvasMoveTraversal(pDAS->canvas, cmd, False,
 				(XtIsRealized(pDAS->dispWid) ? True : False),
-				NULL, &newX, &newY, NULL, &height))
+				nullptr, &newX, &newY, nullptr, &height))
 	  {
 	    /*
 	     * take into account our traversal indicator

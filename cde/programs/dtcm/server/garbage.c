@@ -66,7 +66,7 @@ _DtCmsCollectOne(_DtCmsCalendar *cal)
 	CSA_return_code	 	stat;
 	char *bak, *temp, *clog;
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return;
 
 	status	= rb_check_tree(APPT_TREE(cal));
@@ -74,7 +74,7 @@ _DtCmsCollectOne(_DtCmsCalendar *cal)
 	temp	= _DtCmsGetTmpFN(cal->calendar);
 	bak	= _DtCmsGetBakFN(cal->calendar);
 
-	if (status != rb_ok || clog==NULL || temp==NULL || bak==NULL) {
+	if (status != rb_ok || clog==nullptr || temp==nullptr || bak==nullptr) {
 		fprintf(stderr, "%s: cannot acquire files to execute garbage collection.\n", pgname);
 		fprintf(stderr, "possible causes: cannot find home directory.\n");
 		fprintf(stderr, "\tNIS or your host server might be down.\n");
@@ -131,17 +131,17 @@ _DtCmsCollectOne(_DtCmsCalendar *cal)
 	}
 
 cleanup:
-	if (bak != NULL) {
+	if (bak != nullptr) {
 		free(bak);
-		bak = NULL;
+		bak = nullptr;
 	}
-	if (temp != NULL) {
+	if (temp != nullptr) {
 		free(temp);
-		temp = NULL;
+		temp = nullptr;
 	}
-	if (clog != NULL) {
+	if (clog != nullptr) {
 		free(clog);
-		clog = NULL;
+		clog = nullptr;
 	}
 }
 

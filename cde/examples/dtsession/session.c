@@ -58,12 +58,12 @@ static XtResource applicationResources[] = {
 	sizeof(String),
 	XtOffsetOf(ApplicationArgs,session),
 	XmRImmediate,
-	NULL
+	nullptr
 	},
 };
 
 static XrmOptionDescRec commandLineOpts[] = {
-	{ "-session", "session", XrmoptionSepArg, NULL },
+	{ "-session", "session", XrmoptionSepArg, nullptr },
 };
 
 static ApplicationArgs applicationArgs;
@@ -105,15 +105,15 @@ main(int argc, char **argv)
     toplevel = XtAppInitialize(&appContext, "Session",
 				commandLineOpts, XtNumber(commandLineOpts),
 				&argc, argv,
-				NULL,
-				NULL, 0);
+				nullptr,
+				nullptr, 0);
 
     XtGetApplicationResources(toplevel, &applicationArgs,
 				applicationResources,
 				XtNumber(applicationResources),
-				NULL, 0);
+				nullptr, 0);
 
-    mainWindow = XmCreateWorkArea(toplevel, "mainWindow", NULL, 0);
+    mainWindow = XmCreateWorkArea(toplevel, "mainWindow", nullptr, 0);
     XtManageChild(mainWindow);
 
     labelString = XmStringCreateLocalized("Lights");
@@ -130,7 +130,7 @@ main(int argc, char **argv)
 
     /* Restore state if application was restarted by session manager */
 
-    if (applicationArgs.session != NULL) {
+    if (applicationArgs.session != nullptr) {
 	RestoreSession(toplevel, applicationArgs.session);
     }
 
@@ -146,12 +146,12 @@ main(int argc, char **argv)
 static void SaveSessionCb(Widget w, XtPointer cd, XtPointer cb)
 {
     Widget toplevel = (Widget)cd;
-    char *savePath = NULL;
-    char *saveFile = NULL;
+    char *savePath = nullptr;
+    char *saveFile = nullptr;
 
     DtSessionSavePath(toplevel, &savePath, &saveFile);
 
-    if (savePath != NULL) {
+    if (savePath != nullptr) {
 	SaveApplicationState(savePath);
 	SetWmCommand(saveFile);
 	XtFree(savePath);
@@ -166,7 +166,7 @@ static void SaveApplicationState(char *path)
 
     lightState = XmToggleButtonGetState(toggle);
 
-    if ((fp = fopen(path, "w")) != NULL) {
+    if ((fp = fopen(path, "w")) != nullptr) {
 	fprintf(fp, "%d", lightState);
 	fclose(fp);
     }
@@ -210,11 +210,11 @@ static void SetWmCommand(char *sessionId)
 
 static void RestoreSession(Widget w, char *restoreFile)
 {
-    char *restorePath = NULL;
+    char *restorePath = nullptr;
 
     DtSessionRestorePath(w, &restorePath, restoreFile);
 
-    if (restorePath != NULL) {
+    if (restorePath != nullptr) {
 	RestoreApplicationState(restorePath);
 	XtFree(restorePath);
     }
@@ -225,7 +225,7 @@ static void RestoreApplicationState(char *path)
     Widget toggle = XtNameToWidget(toplevel, "*lightsToggle");
     FILE *fp;
 
-    if ((fp = fopen(path, "r")) != NULL) {
+    if ((fp = fopen(path, "r")) != nullptr) {
 	fscanf(fp, "%d", &lightState);
 	fclose(fp);
     }

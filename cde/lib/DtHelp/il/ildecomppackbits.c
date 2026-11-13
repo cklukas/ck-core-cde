@@ -193,8 +193,8 @@ IL_PRIVATE ilBool _ilDecompPackbits (
     dstdata.pFormat = (bitPerPixel) ? IL_FORMAT_BIT : IL_FORMAT_BYTE;
 
     pPriv = (ilDecompPBPrivPtr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilDecompPBPrivRec), 0, 
-        (ilSrcElementData *)NULL, &dstdata, 
-        IL_NPF, IL_NPF, IL_NPF, ilDecompPackbitsExecute, NULL, 0);
+        (ilSrcElementData *)nullptr, &dstdata, 
+        IL_NPF, IL_NPF, IL_NPF, ilDecompPackbitsExecute, nullptr, 0);
     if (!pPriv) 
         return FALSE;
 

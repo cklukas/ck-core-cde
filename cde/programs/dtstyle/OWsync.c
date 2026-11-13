@@ -127,7 +127,7 @@ OWsyncLocaleResources(
 	char *		lang;
 
 	lang = getenv("LANG");
-	if (lang == NULL || *lang == 0)
+	if (lang == nullptr || *lang == 0)
 		lang = "C";
 
 	sprintf(localeRes,

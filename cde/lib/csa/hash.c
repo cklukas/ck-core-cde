@@ -127,7 +127,7 @@ void * _DtCmMakeHash(int size)
   ptr->size  =   size;
   ptr->table = (hash_entry **) malloc( (unsigned) (sizeof(hash_entry *) * size) );
   (void)memset((char *) ptr->table, (char) 0, sizeof(hash_entry *)*size);
-  ptr->start = NULL;
+  ptr->start = nullptr;
   ptr->hash_type = String_Key;
   return((void*)ptr);
 }
@@ -145,14 +145,14 @@ void ** _DtCmGetHash(void * t, const unsigned char * key)
     tmp = tbl->table[bucket = abs((long)key) % tbl->size];
 
   if(tbl->hash_type == String_Key)
-    while(tmp!=NULL)
+    while(tmp!=nullptr)
       {	
 	if(strcmp((char *)tmp->key, (char *)key)==0)
 	  return(&tmp->data);
 	tmp = tmp->next_entry;
       }
   else
-    while(tmp!=NULL)
+    while(tmp!=nullptr)
       {	
 	if(tmp->key == key)
 	  return(&tmp->data);
@@ -169,7 +169,7 @@ void ** _DtCmGetHash(void * t, const unsigned char * key)
   /*
     hook into chain from tbl...
     */
-  new->right_entry = NULL;
+  new->right_entry = nullptr;
   new->left_entry = tbl->start;
   tbl->start = new;
   /*
@@ -177,7 +177,7 @@ void ** _DtCmGetHash(void * t, const unsigned char * key)
     */
   new->next_entry = tbl->table[bucket];
   tbl->table[bucket] = new;
-  new->data = NULL;   /* so we know that it is new */
+  new->data = nullptr;   /* so we know that it is new */
   return((void*)& new->data);
 }
 
@@ -189,19 +189,19 @@ void ** _DtCmFindHash(void * t, const unsigned char * key)
   if(tbl->hash_type == String_Key)
     {
       tmp = tbl->table[hash_string(key, tbl->size)];
-      for(;tmp!=NULL; tmp = tmp->next_entry)
+      for(;tmp!=nullptr; tmp = tmp->next_entry)
 	if(!strcmp((char *)tmp->key, (char *)key))
 	  return((void *)&tmp->data);
     }
   else
     {
       tmp = tbl->table[abs((long)key) % tbl->size];
-      for(;tmp!=NULL; tmp = tmp->next_entry)
+      for(;tmp!=nullptr; tmp = tmp->next_entry)
 	if(tmp->key == key)
 	  return((void *)&tmp->data);
     }
 
-  return(NULL);
+  return(nullptr);
 }
 
 void _DtCmDestroyHash(

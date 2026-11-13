@@ -199,7 +199,7 @@ free_uil_node(
      * No action on null node. Else freeing is based on the kind
      * of the current node.
      */
-    if (node_entry == NULL)
+    if (node_entry == nullptr)
 	return;
     switch (node_entry->header.b_tag)
     {
@@ -233,7 +233,7 @@ free_uil_node(
       case sym_k_list_entry:
 	list_node = (sym_list_entry_type *) node_entry;
 	for (list_entry = (sym_obj_entry_type *)list_node->obj_header.az_next;
-	     list_entry != NULL;
+	     list_entry != nullptr;
 	    )
 	{
 	    list_entry = (sym_obj_entry_type *)list_entry->obj_header.az_next;
@@ -286,11 +286,11 @@ abuil_get_uil_file(
 )
 {
     sym_entry_type	*uil_parse_tree;
-    ABObj		ab_module = NULL;
+    ABObj		ab_module = nullptr;
 
     uil_parse_tree = parse_uil(uil_file_path);
 
-    if (uil_parse_tree != NULL)
+    if (uil_parse_tree != nullptr)
     {
 
 	if (util_get_verbosity() > 3)
@@ -339,15 +339,15 @@ root_into_project(
 {
     sym_root_entry_type	*root_node;
     ABObjPtr		ab_module;
-    ABObjPtr		ret_val = NULL;
+    ABObjPtr		ret_val = nullptr;
 
-    if (uil_root == (sym_entry_type *)NULL ||
+    if (uil_root == (sym_entry_type *)nullptr ||
 	uil_root->header.b_tag != sym_k_root_entry)
 	return((ABObjPtr)NULL);
     else
 	root_node = (sym_root_entry_type *)uil_root;
 
-    if (ab_project != NULL && obj_is_project(ab_project))
+    if (ab_project != nullptr && obj_is_project(ab_project))
     {
 	/*
 	 * REMIND: populate project;
@@ -360,10 +360,10 @@ root_into_project(
 
 	ab_module = module_hdr_to_module((sym_entry_type *)root_node->module_hdr);
 
-	if (ab_module != NULL)
+	if (ab_module != nullptr)
 	{
 	    if (sections_into_module(ab_module,
-		    (sym_entry_type *)root_node->sections) != NULL)
+		    (sym_entry_type *)root_node->sections) != nullptr)
 	    {
 		obj_append_child(ab_project, ab_module);
 		ret_val = ab_module;
@@ -388,14 +388,14 @@ module_hdr_to_module(
     ABObjPtr			ab_module;
     sym_module_entry_type	*module_node;
 
-    if (uil_module_hdr == (sym_entry_type *)NULL ||
+    if (uil_module_hdr == (sym_entry_type *)nullptr ||
 	uil_module_hdr->header.b_tag != sym_k_module_entry)
 	return((ABObjPtr)NULL);
     else
 	module_node = (sym_module_entry_type *)uil_module_hdr;
 
-    ab_module = obj_create(AB_TYPE_MODULE, NULL);
-    if (ab_module != NULL)
+    ab_module = obj_create(AB_TYPE_MODULE, nullptr);
+    if (ab_module != nullptr)
     {
 	/*
 	 * REMIND: populate module;
@@ -423,7 +423,7 @@ sections_into_module(
     sym_entry_type		*next_node;
     sym_section_entry_type	*section_node;
     short int			done;
-    ABObjPtr			ret_val = NULL;
+    ABObjPtr			ret_val = nullptr;
 
     /*
      * populate module;
@@ -436,7 +436,7 @@ sections_into_module(
     done = 0;
     while (!done)
     {
-	if (next_node == (sym_entry_type *)NULL ||
+	if (next_node == (sym_entry_type *)nullptr ||
 	    next_node->header.b_tag != sym_k_section_entry)
 	{
 	    return((ABObjPtr)NULL);
@@ -462,19 +462,19 @@ sections_into_module(
     done = 0;
     while (!done)
     {
-	if ((section_node = (sym_section_entry_type *)uil_sym_pop()) == NULL)
+	if ((section_node = (sym_section_entry_type *)uil_sym_pop()) == nullptr)
 	    break;
 
 	switch (section_node->header.b_type)
 	{
 	  case sym_k_object_section:
 	    if ((ret_val = object_into_module(ab_module,
-				section_node->entries)) == NULL)
+				section_node->entries)) == nullptr)
 		done = 1;
 	    break;
 	  case 0:
 	    if ((ret_val = object_child_into_module(ab_module,
-				section_node->entries)) == NULL)
+				section_node->entries)) == nullptr)
 		done = 1;
 	    break;
 	}
@@ -491,9 +491,9 @@ object_into_module(
 {
     sym_section_entry_type	*section_node;
     sym_section_entry_type	*section_trav;
-    ABObjPtr			ret_val = NULL;
+    ABObjPtr			ret_val = nullptr;
 
-    if (uil_section_entries == (sym_entry_type *)NULL ||
+    if (uil_section_entries == (sym_entry_type *)nullptr ||
 	uil_section_entries->header.b_tag != sym_k_section_entry)
     {
 	return((ABObjPtr)NULL);
@@ -506,13 +506,13 @@ object_into_module(
      * consisting of type 0 sections (typically one)
      */
     for (section_trav = section_node;
-	 section_trav != (sym_section_entry_type *)NULL;
+	 section_trav != (sym_section_entry_type *)nullptr;
 	 section_trav = (sym_section_entry_type *)section_trav->next)
     {
 	if (section_trav->header.b_type != 0)
 	    continue;
 	if ((ret_val = object_child_into_module(ab_module,
-			    section_trav->entries)) == NULL)
+			    section_trav->entries)) == nullptr)
 	    break;
     }
     return(ret_val);
@@ -524,10 +524,10 @@ object_child_into_module(
     sym_entry_type	*uil_section_entries
 )
 {
-    ABObjPtr			ret_val = NULL;
+    ABObjPtr			ret_val = nullptr;
     sym_widget_entry_type	*uil_widget;
 
-    if (uil_section_entries == (sym_entry_type *)NULL)
+    if (uil_section_entries == (sym_entry_type *)nullptr)
     {
 	return((ABObjPtr)NULL);
     }
@@ -537,13 +537,13 @@ object_child_into_module(
     {
       case sym_k_widget_entry:
 	uil_widget = (sym_widget_entry_type *)uil_section_entries;
-	if (uil_widget->parent_list == NULL)
+	if (uil_widget->parent_list == nullptr)
 	    ret_val = widget_into_module(ab_module, ab_module,
 					    uil_widget);
 	break;
       case sym_k_gadget_entry:
 	uil_widget = (sym_widget_entry_type *)uil_section_entries;
-	if (uil_widget->parent_list == NULL)
+	if (uil_widget->parent_list == nullptr)
 	    ret_val = gadget_into_module(ab_module, ab_module,
 					    uil_widget);
 	break;
@@ -578,18 +578,18 @@ widget_into_module(
     /*
      * Should never happen
      */
-    if (ab_map_entry == (WidgetABObjMap *)NULL)
-	return(NULL);
+    if (ab_map_entry == (WidgetABObjMap *)nullptr)
+	return(nullptr);
 
     if (ab_parent == (ABObj)NULL)
-	return(NULL);
+	return(nullptr);
 
     ab_type = ab_map_entry->obj_type;
     if (ab_type != AB_TYPE_UNKNOWN)
     {
 	char	class_name[BUFSIZ];
 
-	ab_widget = obj_create(ab_type, NULL);
+	ab_widget = obj_create(ab_type, nullptr);
 	if (ab_map_entry->sub_type != 0)
 	    obj_set_subtype(ab_widget, ab_map_entry->sub_type);
 
@@ -611,9 +611,9 @@ widget_into_module(
 	 * Populate arguments and callbacks
 	 */
 	if (arguments_into_ab_widget(ab_widget,
-		    uil_widget->az_arguments) == NULL ||
+		    uil_widget->az_arguments) == nullptr ||
 	    callbacks_into_ab_module(ab_widget,
-		    uil_widget->az_callbacks) == NULL)
+		    uil_widget->az_callbacks) == nullptr)
 	{
 	    obj_destroy(ab_widget);
 	    return((ABObjPtr)NULL);
@@ -634,13 +634,13 @@ widget_into_module(
     }
 
 
-    if (ab_map_entry->object_proc != NULL)
+    if (ab_map_entry->object_proc != nullptr)
     {
 	ABObj	ret_widget;
 
 	ret_widget = (*ab_map_entry->object_proc)(ab_map_entry->widget_name,
 					ab_parent, ab_widget);
-	if (ret_widget == NULL)
+	if (ret_widget == nullptr)
 	{
 	    obj_unparent(ab_widget);
 	    obj_move_children(ab_parent, ab_widget);
@@ -652,12 +652,12 @@ widget_into_module(
     }
 
     controls = uil_widget->az_controls;
-    if (controls == NULL)
+    if (controls == nullptr)
 	return(ab_widget);
 
     sym_stack_push();
     for (a_control = (sym_control_entry_type *)controls->obj_header.az_next;
-	 a_control != NULL;
+	 a_control != nullptr;
 	 a_control = (sym_control_entry_type *)a_control->obj_header.az_next)
     {
 	uil_child = a_control->az_con_obj;
@@ -666,13 +666,13 @@ widget_into_module(
 	 *  If the reference field is set, this is a reference to a control
 	 *  defined elsewhere.  Otherwise it is an inline definition.
 	 */
-	while (uil_child->obj_header.az_reference != NULL)
+	while (uil_child->obj_header.az_reference != nullptr)
 	    uil_child =
 	    	(sym_widget_entry_type *)uil_child->obj_header.az_reference;
 	uil_sym_push((sym_entry_type *) uil_child);
     }
 
-    while ((uil_child = (sym_widget_entry_type *)uil_sym_pop()) != NULL)
+    while ((uil_child = (sym_widget_entry_type *)uil_sym_pop()) != nullptr)
     {
 	ABObj	ab_child;
 
@@ -681,13 +681,13 @@ widget_into_module(
 	if (ab_child == ab_widget)
 	    continue;
 
-	if (ab_map_entry->child_proc != NULL)
+	if (ab_map_entry->child_proc != nullptr)
 	{
 	    ABObj	ret_child;
 
 	    ret_child = (*ab_map_entry->child_proc)(ab_map_entry->widget_name,
 					    ab_widget, ab_child);
-	    if (ret_child == NULL)
+	    if (ret_child == nullptr)
 		obj_destroy(ab_child);
 	    else
 		ab_child = ret_child;
@@ -720,17 +720,17 @@ arguments_into_ab_widget(
 {
     sym_list_entry_type	*widget_args;
 
-    if (uil_widget_arguments == (sym_list_entry_type *)NULL)
+    if (uil_widget_arguments == (sym_list_entry_type *)nullptr)
 	return(ab_widget);
 
     if (uil_widget_arguments->header.b_tag != sym_k_list_entry ||
 	uil_widget_arguments->header.b_type != sym_k_argument_entry)
-	return(NULL);
+	return(nullptr);
 
     abuilP_init_context_attrs();
     widget_args = (sym_list_entry_type *)uil_widget_arguments;
     for (widget_args = (sym_list_entry_type *)widget_args->obj_header.az_next;
-	 widget_args != NULL;
+	 widget_args != nullptr;
 	 widget_args = (sym_list_entry_type *)widget_args->obj_header.az_next)
     {
 
@@ -769,17 +769,17 @@ callbacks_into_ab_module(
     sym_list_entry_type	*widget_cbs;
     ABObjPtr		ab_module;
 
-    if (uil_widget_callbacks == (sym_list_entry_type *)NULL)
+    if (uil_widget_callbacks == (sym_list_entry_type *)nullptr)
 	return(ab_widget);
 
     ab_module = obj_get_module(ab_widget);
     if (uil_widget_callbacks->header.b_tag != sym_k_list_entry ||
 	uil_widget_callbacks->header.b_type != sym_k_callback_entry)
-	return(NULL);
+	return(nullptr);
 
     widget_cbs = (sym_list_entry_type *)uil_widget_callbacks;
     for (widget_cbs = (sym_list_entry_type *)widget_cbs->obj_header.az_next;
-	 widget_cbs != NULL;
+	 widget_cbs != nullptr;
 	 widget_cbs = (sym_list_entry_type *)widget_cbs->obj_header.az_next)
     {
 	/*
@@ -802,15 +802,15 @@ callbacks_into_ab_module(
 	ab_handler_list = ab_action_handler_list_for_uil_callback(uil_cb,
 				&ab_action_when);
 	for (ab_handler_trav = ab_handler_list;
-	     ab_handler_trav != (STRING *)NULL;
+	     ab_handler_trav != (STRING *)nullptr;
 	     ab_handler_trav++)
 	{
-	    ABObjPtr	ab_action = obj_create(AB_TYPE_ACTION, NULL);
+	    ABObjPtr	ab_action = obj_create(AB_TYPE_ACTION, nullptr);
 
 	    obj_set_func_type(ab_action, AB_FUNC_USER_DEF);
 	    obj_set_func_name(ab_action, *ab_handler_trav);
 	    obj_set_arg_type(ab_action, AB_ARG_VOID_PTR);
-	    ab_action->info.action.to = NULL;
+	    ab_action->info.action.to = nullptr;
 	    /*
 	     * REMIND: incorporate new action API
 	     *
@@ -823,7 +823,7 @@ callbacks_into_ab_module(
 	     * obj_action_add_trigger(ab_action, ab_trigger);
 	     */
 	}
-	if (ab_handler_list != (STRING *)NULL)
+	if (ab_handler_list != (STRING *)nullptr)
 	    XtFree((char*)ab_handler_list);
     }
     return(ab_module);
@@ -837,12 +837,12 @@ callbacks_into_ab_module(
 static STRING
 ab_name_for_uil_widget(sym_widget_entry_type	*uil_widget)
 {
-    STRING	wid_name = NULL;
+    STRING	wid_name = nullptr;
 
-    if (uil_widget->obj_header.az_name != NULL)
+    if (uil_widget->obj_header.az_name != nullptr)
 	wid_name = (STRING)&(uil_widget->obj_header.az_name->c_text);
 
-    if (wid_name == NULL)
+    if (wid_name == nullptr)
 	wid_name = "NoName";
 
     return(wid_name);
@@ -884,7 +884,7 @@ resource_value_for_uil_arg(
 	 * REMIND: implement imported values
 	 */
 	fprintf(stderr, "imported value for argument: UNIMPLEMENTED\n");
-	return(NULL);
+	return(nullptr);
     }
 
     /*
@@ -904,7 +904,7 @@ resource_value_for_uil_arg(
 	 *  The reference field will be set; this is a reference to a control
 	 *  defined elsewhere.
 	 */
-	while (uil_child->obj_header.az_reference != NULL)
+	while (uil_child->obj_header.az_reference != nullptr)
 	    uil_child =
 	    	(sym_widget_entry_type *)uil_child->obj_header.az_reference;
 
@@ -913,7 +913,7 @@ resource_value_for_uil_arg(
 
 	abobj_ref = (ABObj)(uintptr_t) uil_child->header.user_data;
 
-	if (abobj_ref == NULL)
+	if (abobj_ref == nullptr)
 	{
 	    *p_res_type = AB_ARG_WIDGET;
 	    ret_val = (XtPointer)uil_child;
@@ -995,7 +995,7 @@ resource_value_for_uil_arg(
           ret_val = _XmStringUngenerate((XmString)resource_value->value.c_value,
                                         XmFONTLIST_DEFAULT_TAG,
                                         XmCHARSET_TEXT, XmCHARSET_TEXT);
-          if (ret_val != NULL)
+          if (ret_val != nullptr)
           {
               *p_res_type = AB_ARG_STRING;
           }
@@ -1090,7 +1090,7 @@ ab_action_handler_list_for_uil_callback(
     AB_WHEN			*p_ab_action_when
 )
 {
-    return((STRING *)NULL);
+    return((STRING *)nullptr);
 }
 
 
@@ -1109,13 +1109,13 @@ parse_uil(
     Uil_status_type		compile_stat;
     int				user_mess_data	= 1;
     int				user_stat_data	= 1;
-    char			*ret_val = NULL;
+    char			*ret_val = nullptr;
 
     /* Set up command description structure */
 
     command_desc.source_file 		= uil_file_name;
-    command_desc.resource_file		= NULL;
-    command_desc.listing_file		= NULL;
+    command_desc.resource_file		= nullptr;
+    command_desc.listing_file		= nullptr;
     command_desc.include_dir_count	= 0;
 
 
@@ -1162,11 +1162,11 @@ parse_uil(
 	break;
      case Uil_k_error_status:
 	fprintf(stderr, "compile failed, some error(s).\n");
-	ret_val = (char *)NULL;
+	ret_val = (char *)nullptr;
 	break;
      case Uil_k_severe_status:
 	fprintf(stderr, "compile failed, severe error(s).\n");
-	ret_val = (char *)NULL;
+	ret_val = (char *)nullptr;
 	break;
    }
    /*
@@ -1267,7 +1267,7 @@ init_sym_stacks(
     stack_stack_size = STACK_INIT;
     stack_stack = (UilSymStack *)
 		    malloc(sizeof(UilSymStack) * stack_stack_size);
-    if (stack_stack == (UilSymStack *)NULL)
+    if (stack_stack == (UilSymStack *)nullptr)
     {
 	fprintf(stderr, "loaduil: malloc failed.\n");
 	exit(1);
@@ -1305,7 +1305,7 @@ sym_stack_push(
     new_stack->stack_size = STACK_INIT;
     new_stack->stack_entries = (sym_entry_type **)
 		    malloc(sizeof(sym_entry_type *) * new_stack->stack_size);
-    if (new_stack->stack_entries == (sym_entry_type **)NULL)
+    if (new_stack->stack_entries == (sym_entry_type **)nullptr)
     {
 	fprintf(stderr, "loaduil: malloc failed.\n");
 	exit(1);
@@ -1321,7 +1321,7 @@ sym_stack_push(
 	stack_stack_size += STACK_INCR;
 	stack_stack = (UilSymStack *)
 	    realloc((void *)stack_stack, sizeof(UilSymStack)*stack_stack_size);
-	if (stack_stack == (UilSymStack *)NULL)
+	if (stack_stack == (UilSymStack *)nullptr)
 	{
 	    fprintf(stderr, "loaduil: realloc failed.\n");
 	    exit(1);
@@ -1357,7 +1357,7 @@ uil_sym_push(
 	cur_stack->stack_entries = (sym_entry_type **)
 	    realloc((void *)cur_stack->stack_entries,
 		    sizeof(sym_entry_type *) * cur_stack->stack_size);
-	if (cur_stack->stack_entries == (sym_entry_type **)NULL)
+	if (cur_stack->stack_entries == (sym_entry_type **)nullptr)
 	{
 	    fprintf(stderr, "loaduil: realloc failed.\n");
 	    exit(1);
@@ -1381,7 +1381,7 @@ uil_sym_pop(
     UilSymStack	cur_stack = stack_stack[stack_stack_ptr - 1];
 
     if (cur_stack->stack_ptr == 0)
-	return((sym_entry_type *) NULL);
+	return((sym_entry_type *) nullptr);
     else
 	return(cur_stack->stack_entries[--cur_stack->stack_ptr]);
 }
@@ -1423,13 +1423,13 @@ object_for_widget(
     sym_widget_entry_type	*field_widget;
     ABObj			obj_ref;
 
-    if (rr == (RefResolve *)NULL)
+    if (rr == (RefResolve *)nullptr)
 	return;
 
 
     field_widget = (sym_widget_entry_type *)
 	obj_get_attach_value(rr->obj, rr->dir);
-    if (field_widget == NULL)
+    if (field_widget == nullptr)
 	return;
     obj_ref = (ABObj)(uintptr_t) field_widget->header.user_data;
     obj_set_attach_value(rr->obj, rr->dir, obj_ref);
@@ -1459,7 +1459,7 @@ free_uil_tree(
      * No action on null node. Else freeing is based on the kind
      * of the current node.
      */
-    if (node_entry == NULL)
+    if (node_entry == nullptr)
 	return;
     switch (node_entry->header.b_tag)
     {
@@ -1493,7 +1493,7 @@ free_uil_tree(
       case sym_k_list_entry:
 	list_node = (sym_list_entry_type *) node_entry;
 	for (list_entry = (sym_obj_entry_type *)list_node->obj_header.az_next;
-	     list_entry != NULL;
+	     list_entry != nullptr;
 	    )
 	{
 	    list_entry = (sym_obj_entry_type *)list_entry->obj_header.az_next;

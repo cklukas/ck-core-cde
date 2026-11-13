@@ -262,7 +262,7 @@ long               *pNLines
 	ilDecompG3G4PrivPtr pPriv;             /* Pointer to private image data         */
 
 	ilPtr               dstImageP;         /* Pointer to the Destn. Image           */
-	ilPtr               pRefLine = NULL;   /* Pointer to the Reference line         */
+	ilPtr               pRefLine = nullptr;   /* Pointer to the Reference line         */
 	ilError             error;             /* Returned error                        */
 	int                 dstBytesPerRow;    /* no.of byte per Row in the dest image  */
 	ilBool              Is_2DCoding;       /* G3 2 D coding is present,  if True    */
@@ -461,7 +461,7 @@ ilImageDes         *pimdes
 	dstdata.pFormat         =  IL_FORMAT_BIT;
 	dstdata.width           =  pinfo->width;
 	dstdata.height          =  pinfo->height;
-	dstdata.pPalette        =  (unsigned short *)NULL;
+	dstdata.pPalette        =  (unsigned short *)nullptr;
 
 	/* set output strip height */
 	dstdata.stripHeight     =  pinfo->stripHeight;
@@ -470,8 +470,8 @@ ilImageDes         *pimdes
 	dstdata.pCompData       =  (ilPtr)NULL;
 
 	pPriv = (ilDecompG3G4PrivPtr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilDecompG3G4PrivRec), 0, (ilSrcElementData
-	    *)NULL,
-	    &dstdata, _ilDecompG3Init,_ilDecompG3Cleanup ,IL_NPF, _ilDecompG3Execute, NULL, 0);
+	    *)nullptr,
+	    &dstdata, _ilDecompG3Init,_ilDecompG3Cleanup ,IL_NPF, _ilDecompG3Execute, nullptr, 0);
 
 	if (!pPriv) return FALSE; /* EXIT */
 

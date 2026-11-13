@@ -75,11 +75,11 @@ ABObj
 obj_get_item(ABObj obj, int which_item)
 {
     AB_TRAVERSAL        trav;
-    ABObj               item = NULL;
+    ABObj               item = nullptr;
     int                 item_num = -1;	/* must be -1 */
 
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-	 (item = trav_next(&trav)) != NULL;)
+	 (item = trav_next(&trav)) != nullptr;)
     {
 	++item_num;
 	if (item_num == which_item)
@@ -100,14 +100,14 @@ obj_get_menubar_help_item(
 )
 {
     AB_TRAVERSAL        trav;
-    ABObj               help_item = NULL;
+    ABObj               help_item = nullptr;
     ABObj               item;
 
     if (!obj_is_menubar(obj))
-	return NULL;
+	return nullptr;
 
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-	 (item = trav_next(&trav)) != NULL;)
+	 (item = trav_next(&trav)) != nullptr;)
     {
 	if (obj_is_help_item(item) == TRUE)
 	{
@@ -129,13 +129,13 @@ obj_get_child_num(ABObj obj)
     int                 child_num = -1;
     ABObj               child;
 
-    if (obj->parent == NULL)
+    if (obj->parent == nullptr)
     {
 	goto epilogue;
     }
 
     for (child = obj->parent->first_child;
-	 child != NULL; child = child->next_sibling)
+	 child != nullptr; child = child->next_sibling)
     {
 	++child_num;
 	if (obj == child)
@@ -153,7 +153,7 @@ ABObj
 obj_get_container_child(ABObj obj)
 {
     ABObj               child;
-    for (child = obj->first_child; child != NULL;
+    for (child = obj->first_child; child != nullptr;
 	 child = child->next_sibling)
     {
 	if (obj_is_container(child))
@@ -174,7 +174,7 @@ obj_get_item_num(ABObj obj)
     int                 item_num = -1;
     ABObj               item;
     for (item = obj->parent->first_child;
-	 item != NULL; item = item->next_sibling)
+	 item != nullptr; item = item->next_sibling)
     {
 	if (!obj_is_item(item))
 	{
@@ -193,8 +193,8 @@ obj_get_item_num(ABObj obj)
 ABObj
 obj_get_menu(ABObj obj)
 {
-    ABObj               child = NULL;
-    for (child = obj->first_child; child != NULL; child = child->next_sibling)
+    ABObj               child = nullptr;
+    for (child = obj->first_child; child != nullptr; child = child->next_sibling)
     {
 	if (obj_is_menu(child))
 	{
@@ -209,7 +209,7 @@ ABObj
 obj_get_pane_child(ABObj obj)
 {
     ABObj               child;
-    for (child = obj->first_child; child != NULL;
+    for (child = obj->first_child; child != nullptr;
 	 child = child->next_sibling)
     {
 	if (obj_is_pane(child))
@@ -239,13 +239,13 @@ obj_move_children(ABObj to, ABObj from)
 {
     int                 iReturn = 0;
     int                 iRC = 0;/* return code */
-    ABObj               child = NULL;
+    ABObj               child = nullptr;
 
     /*
      * Get permission for all children
      */
     for (child = from->first_child;
-	 child != NULL; child = child->next_sibling)
+	 child != nullptr; child = child->next_sibling)
     {
 	if ((iRC = objP_notify_send_allow_reparent(child, to)) < 0)
 	{
@@ -254,7 +254,7 @@ obj_move_children(ABObj to, ABObj from)
 	}
     }
 
-    while ((child = from->first_child) != NULL)
+    while ((child = from->first_child) != nullptr)
     {
 
 	/*
@@ -289,11 +289,11 @@ obj_ensure_unique_name(ABObj obj, ABObj root, int maxlen)
     int                 modlen;
     int                 newlen;
     AB_TRAVERSAL        trav;
-    ABObj               other_obj = NULL;
+    ABObj               other_obj = nullptr;
     int                 modifier = 0;
     unsigned            trav_type;
 
-    if (obj->name == NULL)
+    if (obj->name == nullptr)
     {
 	return -1;
     }
@@ -317,10 +317,10 @@ obj_ensure_unique_name(ABObj obj, ABObj root, int maxlen)
     {
 	unique = TRUE;
 	for (trav_open(&trav, root, trav_type);
-	     (other_obj = trav_next(&trav)) != NULL;)
+	     (other_obj = trav_next(&trav)) != nullptr;)
 	{
 	    if ((other_obj != obj)
-		&& (other_obj->name != NULL)
+		&& (other_obj->name != nullptr)
 		&& (strncmp(istr_string(other_obj->name), obj_name, maxlen)
 		    == 0))
 	    {
@@ -397,7 +397,7 @@ obj_alloc_unique_name(
 )
 {
     ABObj	parent = obj->parent;
-    if (   (parent == NULL)
+    if (   (parent == nullptr)
         || (obj_find_by_name(parent, name) == obj) )
     {
 	return strdup(name);
@@ -414,7 +414,7 @@ obj_alloc_unique_name_istr(
 )
 {
     ABObj	parent = obj->parent;
-    if (   (parent == NULL)
+    if (   (parent == nullptr)
         || (obj_find_by_name(parent, istr_string(name)) == obj) )
     {
 	return istr_dup(name);
@@ -432,7 +432,7 @@ obj_get_unique_name(
 )
 {
     ABObj	parent = obj->parent;
-    if (   (parent == NULL)
+    if (   (parent == nullptr)
         || (obj_find_by_name(parent, name) == obj) )
     {
 	return name;
@@ -452,7 +452,7 @@ obj_alloc_unique_name_for_child(
 )
 {
     char	nameBuf[8192];
-    STRING	unique_name = NULL;
+    STRING	unique_name = nullptr;
     *nameBuf = 0;
 
     if (maxlen < 0)
@@ -480,7 +480,7 @@ obj_alloc_unique_name_istr_for_child(
 )
 {
     char	nameBuf[8192];
-    ISTRING	unique_name = NULL;
+    ISTRING	unique_name = nullptr;
     *nameBuf = 0;
 
     if (maxlen < 0)
@@ -503,9 +503,9 @@ obj_get_unique_name_for_child(
     STRING	nameOutBuf
 )
 {
-    STRING	returnName = NULL;
+    STRING	returnName = nullptr;
     int		nameOutBufSize = maxlen+1;	
-    StringList	namesList = NULL;
+    StringList	namesList = nullptr;
     BOOL	done = FALSE;
     BOOL	unique = FALSE;
     int		nameLen = 0;
@@ -514,7 +514,7 @@ obj_get_unique_name_for_child(
     int		objNumber = 0;
 
     namesList = objP_get_names_scope_for_children(obj);
-    if (namesList == NULL)
+    if (namesList == nullptr)
     {
 	returnName = name;
 	goto epilogue;
@@ -581,7 +581,7 @@ obj_tree_ensure_unique_names(ABObj root, int maxnamelen)
     ABObj               obj;
 
     for (trav_open(&trav, root, AB_TRAV_UI);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	obj_ensure_unique_name(obj, root, maxnamelen);
     }
@@ -600,7 +600,7 @@ obj_tree_ensure_unique_names_in_modules(ABObj root, int maxnamelen)
     ABObj               module;
 
     for (trav_open(&trav, root, AB_TRAV_MODULES);
-	 (module = trav_next(&trav)) != NULL;)
+	 (module = trav_next(&trav)) != nullptr;)
     {
 	obj_tree_ensure_unique_names(module, maxnamelen);
     }
@@ -618,21 +618,21 @@ obj_tree_ensure_unique_names_in_modules(ABObj root, int maxnamelen)
 int
 obj_set_name_from_label(ABObj obj, STRING parent_name_in)
 {
-    STRING              parent_name = NULL;
-    STRING		item_label = NULL;
-    STRING              new_name = NULL;
+    STRING              parent_name = nullptr;
+    STRING		item_label = nullptr;
+    STRING              new_name = nullptr;
 
     parent_name =
-	(parent_name_in == NULL ?
-	 (obj->parent == NULL ?
-	  NULL
+	(parent_name_in == nullptr ?
+	 (obj->parent == nullptr ?
+	  nullptr
 	  :
 	  istr_string(obj->parent->name)
 	  )
 	 :
 	 parent_name
 	);
-    if (parent_name == NULL)
+    if (parent_name == nullptr)
     {
 	return -1;
     }
@@ -656,15 +656,15 @@ int
 obj_set_name_from_parent(ABObj obj, STRING suffix)
 {
     STRING              parent_name;
-    STRING              new_name = NULL;
+    STRING              new_name = nullptr;
 
-    parent_name = (obj->parent == NULL ?
-		   NULL
+    parent_name = (obj->parent == nullptr ?
+		   nullptr
 		   :
 		   istr_string(obj->parent->name)
 	);
 
-    if (parent_name == NULL)
+    if (parent_name == nullptr)
     {
 	return -1;
     }
@@ -691,11 +691,11 @@ obj_get_safe_name(ABObj obj, STRING name, int name_size)
 	return name;
     }
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	strncpy(name, "(nil ABObj)", name_size);
     }
-    else if (obj_get_name(obj) == NULL)
+    else if (obj_get_name(obj) == nullptr)
     {
 	char                buf[256];
 	sprintf(buf, "(ABObj:0x%08lx)", (unsigned long) obj);

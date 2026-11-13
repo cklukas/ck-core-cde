@@ -201,7 +201,7 @@ struct AuthProtocol {
 
 static struct AuthProtocol AuthProtocols[] = {
 { (unsigned short) 18,	"MIT-MAGIC-COOKIE-1",
-    MitInitAuth, MitGetAuth, NULL
+    MitInitAuth, MitGetAuth, nullptr
 },
 #ifdef HASXDMAUTH
 { (unsigned short) 19,	"XDM-AUTHORIZATION-1",
@@ -210,12 +210,12 @@ static struct AuthProtocol AuthProtocols[] = {
 #endif
 #ifdef SECURE_RPC
 { (unsigned short) 9, "SUN-DES-1",
-    SecureRPCInitAuth, SecureRPCGetAuth, NULL,
+    SecureRPCInitAuth, SecureRPCGetAuth, nullptr,
 },
 #endif
 #ifdef K5AUTH
 { (unsigned short) 14, "MIT-KERBEROS-5",
-    Krb5InitAuth, Krb5GetAuth, NULL,
+    Krb5InitAuth, Krb5GetAuth, nullptr,
 },
 #endif
 };
@@ -395,7 +395,7 @@ MakeServerAuthFile (struct display *d)
 		if(-1 == chown(d->authFile, 0, statb.st_gid)) {
                     perror(strerror(errno));
                     free (d->authFile);
-                    d->authFile = NULL;
+                    d->authFile = nullptr;
                     return FALSE;
                 }
             }
@@ -403,7 +403,7 @@ MakeServerAuthFile (struct display *d)
 		if(-1 == chmod(d->authFile, statb.st_mode & 0700)) {
                     perror(strerror(errno));
                     free (d->authFile);
-                    d->authFile = NULL;
+                    d->authFile = nullptr;
                     return FALSE;
                 }
             }
@@ -412,7 +412,7 @@ MakeServerAuthFile (struct display *d)
 		r = mkdir(d->authFile, 0700);
 	    if (r < 0) {
 		free (d->authFile);
-		d->authFile = NULL;
+		d->authFile = nullptr;
 		return FALSE;
 	    }
 	}
@@ -420,7 +420,7 @@ MakeServerAuthFile (struct display *d)
 	r = mkdir(d->authFile, 0700);
 	if (r < 0  &&  errno != EEXIST) {
 	    free (d->authFile);
-	    d->authFile = NULL;
+	    d->authFile = nullptr;
 	    return FALSE;
 	}
     	sprintf (d->authFile, "%s/%s/%s/A%s-XXXXXX",
@@ -428,7 +428,7 @@ MakeServerAuthFile (struct display *d)
 	fd = mkstemp (d->authFile);
 	if (fd < 0) {
 	    free (d->authFile);
-	    d->authFile = NULL;
+	    d->authFile = nullptr;
 	    return FALSE;
 	}
 	close (fd);
@@ -439,7 +439,7 @@ MakeServerAuthFile (struct display *d)
 int
 SaveServerAuthorizations (struct display *d, Xauth **auths, int count)
 {
-    FILE	*auth_file = NULL;
+    FILE	*auth_file = nullptr;
     int		mask;
     int		fd;
     int		ret;
@@ -460,7 +460,7 @@ SaveServerAuthorizations (struct display *d, Xauth **auths, int count)
 	LogError (ReadCatalog(MC_LOG_SET,MC_LOG_SRV_OPEN,MC_DEF_LOG_SRV_OPEN),
 		  d->authFile);
 	free (d->authFile);
-	d->authFile = NULL;
+	d->authFile = nullptr;
 	ret = FALSE;
     }
     else
@@ -483,7 +483,7 @@ SaveServerAuthorizations (struct display *d, Xauth **auths, int count)
 			  d->authFile);
 		    ret = FALSE;
 		    free (d->authFile);
-		    d->authFile = NULL;
+		    d->authFile = nullptr;
 		}
     	}
 	fclose (auth_file);
@@ -502,7 +502,7 @@ SetLocalAuthorization (struct display *d)
 	for (i = 0; i < d->authNum; i++)
 	    XauDisposeAuth (d->authorizations[i]);
 	free ((char *) d->authorizations);
-	d->authorizations = (Xauth **) NULL;
+	d->authorizations = (Xauth **) nullptr;
 	d->authNum = 0;
     }
     if (!d->authNames)
@@ -1007,7 +1007,7 @@ DefineSelf (int fd, int file, int auth)
      */
     uname(&name);
     hp = gethostbyname (name.nodename);
-    if (hp != NULL) {
+    if (hp != nullptr) {
 	saddr.sa.sa_family = hp->h_addrtype;
 	inetaddr = (struct sockaddr_in *) (&(saddr.sa));
 	memmove( (char *) &(inetaddr->sin_addr), (char *) hp->h_addr, (int) hp->h_length);
@@ -1062,7 +1062,7 @@ writeLocalAuth (FILE *file, Xauth *auth, char *name)
     setAuthNumber (auth, name);
 #ifdef STREAMSCONN
     fd = t_open ("/dev/tcp", O_RDWR, 0);
-    t_bind(fd, NULL, NULL);
+    t_bind(fd, nullptr, nullptr);
     DefineSelf (fd, file, auth);
     t_unbind (fd);
     t_close (fd);
@@ -1264,7 +1264,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 	}
 	doneAddrs ();
 	fclose (new);
-	writeName = NULL;
+	writeName = nullptr;
 	Debug ("SetUserAuthorization: name     = %s\n", name);
 	Debug ("SetUserAuthorization: new_name = %s\n", new_name);
 	Debug ("SetUserAuthorization: unlink(%s)\n", name);
@@ -1363,7 +1363,7 @@ RemoveUserAuthorization (struct display *d, struct verify_info *verify)
 	}
 	doneAddrs ();
 	fclose (new);
-	writeName = NULL;
+	writeName = nullptr;
 	if (unlink (name) == -1)
 	    Debug ("unlink %s failed\n", name);
 	if (link (new_name, name) == -1) {

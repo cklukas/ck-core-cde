@@ -72,7 +72,7 @@
 
 extern unsigned int buttonModifierMasks[];
 
-static ClientData *iconPressCD = NULL;
+static ClientData *iconPressCD = nullptr;
 static Boolean iconPressWasActive = False;
 
 
@@ -90,10 +90,10 @@ static void HandleVisibilityNotify (ClientData *pCD,
 {
     if (pCD == pCD->pSD->topClient &&
 	visibilityEvent->state != VisibilityUnobscured)
-	Do_Raise (pCD, NULL, STACK_NORMAL);
+	Do_Raise (pCD, nullptr, STACK_NORMAL);
     else if (pCD == pCD->pSD->bottomClient &&
 	     visibilityEvent->state != VisibilityFullyObscured)
-	Do_Lower (pCD, NULL, STACK_NORMAL);
+	Do_Lower (pCD, nullptr, STACK_NORMAL);
 }
 
 
@@ -195,9 +195,9 @@ void SetupCButtonBindings (Window window, ButtonSpec *buttonSpecs)
 
 Boolean WmDispatchClientEvent (XEvent *event)
 {
-    ClientData * pCD = NULL;
+    ClientData * pCD = nullptr;
 #ifndef	IBM_169380
-    ClientData **cmap_window_data = NULL;
+    ClientData **cmap_window_data = nullptr;
 #endif
     Boolean dispatchEvent = False;
 
@@ -553,7 +553,7 @@ Boolean HandleEventsOnSpecialWindows (XEvent *pEvent)
     {
 	if (pEvent->type == FocusIn)
 	{
-	    SetKeyboardFocus ((ClientData *) NULL, REFRESH_LAST_FOCUS);
+	    SetKeyboardFocus ((ClientData *) nullptr, REFRESH_LAST_FOCUS);
 	}
     }
     else if (pEvent->xany.window == ACTIVE_PSD->feedbackWin)
@@ -696,7 +696,7 @@ Boolean HandleEventsOnSpecialWindows (XEvent *pEvent)
     {
 	if (pEvent->type == ButtonPress)
 	{
-	    F_Beep (NULL, (ClientData *) NULL, (XEvent *) NULL);
+	    F_Beep (nullptr, (ClientData *) nullptr, (XEvent *) nullptr);
 	}
 	else if ((wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_POINTER) &&
 		 (pEvent->type == EnterNotify))
@@ -928,7 +928,7 @@ void HandleCPropertyNotify (ClientData *pCD, XPropertyEvent *propertyEvent)
 	    DeleteClientFromList (pCD->pSD->pActiveWS, pCD);
 	    ProcessWmTransientFor(pCD);
 	    AddClientToList(pCD->pSD->pActiveWS, pCD, True);
-	    if (pCD->transientLeader != NULL)
+	    if (pCD->transientLeader != nullptr)
 		StackTransientWindow(pCD);
 	    break;
 	}
@@ -967,7 +967,7 @@ void HandleCPropertyNotify (ClientData *pCD, XPropertyEvent *propertyEvent)
 		else
 		{
 		    /* property was deleted */
-		    ResetColormapData (pCD, NULL, 0);
+		    ResetColormapData (pCD, nullptr, 0);
 		}
 
 		if ((ACTIVE_PSD->colormapFocus == pCD) &&
@@ -1228,7 +1228,7 @@ void ProcessButtonGrabOnClient (ClientData *pCD, XButtonEvent *buttonEvent, Bool
 	     * the event.
 	     */
 
-	    F_Beep (NULL, pCD, (XEvent *) NULL);
+	    F_Beep (nullptr, pCD, (XEvent *) nullptr);
 	}
 
 	XAllowEvents (DISPLAY, AsyncPointer, CurrentTime);
@@ -1341,7 +1341,7 @@ void CheckButtonPressBuiltin (XButtonEvent *buttonEvent, Context context, Contex
 
 		wmGD.clickData.clickPending = False;
 		wmGD.clickData.doubleClickPending = False;
-		F_Kill (NULL, pCD, (XEvent *) buttonEvent);
+		F_Kill (nullptr, pCD, (XEvent *) buttonEvent);
 		return;
 	    }
 
@@ -1570,7 +1570,7 @@ void HandleIconBoxButtonPress (ClientData *pCD, XButtonEvent *buttonEvent, Conte
     if ((wmGD.clickData.doubleClickContext == F_SUBCONTEXT_IB_IICON) ||
        (wmGD.clickData.doubleClickContext == F_SUBCONTEXT_IB_WICON))
     {
-	F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
+	F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr);
     }
     else if ((subContext == F_SUBCONTEXT_IB_IICON) ||
 	     (subContext == F_SUBCONTEXT_IB_WICON))
@@ -1759,7 +1759,7 @@ Boolean HandleCKeyPress (ClientData *pCD, XKeyEvent *keyEvent)
 	     * Get out of the pass keys mode.
 	     */
 
-	    F_Pass_Key (NULL, (ClientData *) NULL, (XEvent *) NULL);
+	    F_Pass_Key (nullptr, (ClientData *) nullptr, (XEvent *) nullptr);
 	    XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
 	}
 	else
@@ -1785,7 +1785,7 @@ Boolean HandleCKeyPress (ClientData *pCD, XKeyEvent *keyEvent)
 	if ((checkKeyEvent = HandleKeyPress (keyEvent, 
 					     ACTIVE_PSD->keySpecs, True,
 					     F_CONTEXT_ICON, False,
-					     (ClientData *)NULL))
+					     (ClientData *)nullptr))
 	    && ACTIVE_PSD->acceleratorMenuCount)
 	{
 	    int n;
@@ -1795,7 +1795,7 @@ Boolean HandleCKeyPress (ClientData *pCD, XKeyEvent *keyEvent)
 	    {
 		if (!HandleKeyPress (keyEvent,
 		           ACTIVE_PSD->acceleratorMenuSpecs[n]->accelKeySpecs,
-			   True, F_CONTEXT_ICON, True,(ClientData *)NULL))
+			   True, F_CONTEXT_ICON, True,(ClientData *)nullptr))
 		{
 		    checkKeyEvent = False;
 		    break;
@@ -1813,7 +1813,7 @@ Boolean HandleCKeyPress (ClientData *pCD, XKeyEvent *keyEvent)
         (pCD->systemMenuSpec->accelKeySpecs))
     {
 	HandleKeyPress (keyEvent, pCD->systemMenuSpec->accelKeySpecs,
-			FALSE, 0, TRUE,(ClientData *)NULL );
+			FALSE, 0, TRUE,(ClientData *)nullptr );
     }
 
     return (dispatchEvent);
@@ -1884,7 +1884,7 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
 	{
 	    if (pCD->clientState == MINIMIZED_STATE)
 	    {
-		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
+		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr);
 	    }
 	    else if (iconPressCD == pCD && iconPressWasActive &&
 		     (wmGD.keyboardFocus == pCD))
@@ -1894,9 +1894,9 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
 	    else
 	    {
 		Do_Focus_Key (pCD, buttonEvent->time, ALWAYS_SET_FOCUS);
-		F_Raise ((String)NULL, pCD, (XEvent *)NULL);
+		F_Raise ((String)NULL, pCD, (XEvent *)nullptr);
 	    }
-	    iconPressCD = NULL;
+	    iconPressCD = nullptr;
 	    iconPressWasActive = False;
 	}
 	else if (wmGD.iconClick &&
@@ -1925,7 +1925,7 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
         {
 	    if (pCD->clientState == MINIMIZED_STATE)
 	    {
-		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
+		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr);
 	    }
 	    else if (iconPressCD == pCD && iconPressWasActive &&
 		     (wmGD.keyboardFocus == pCD))
@@ -1935,9 +1935,9 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
 	    else
 	    {
 		Do_Focus_Key (pCD, buttonEvent->time, ALWAYS_SET_FOCUS);
-		F_Raise ((String)NULL, pCD, (XEvent *)NULL);
+		F_Raise ((String)NULL, pCD, (XEvent *)nullptr);
 	    }
-	    iconPressCD = NULL;
+	    iconPressCD = nullptr;
 	    iconPressWasActive = False;
         }
         else if ((wmGD.iconClick)  &&
@@ -2344,7 +2344,7 @@ Boolean HandleCFocusIn (ClientData *pCD, XFocusChangeEvent *focusChangeEvent)
 	    }
 	    else
 	    {
-		Do_Focus_Key ((ClientData *) NULL, GetTimestamp (), 
+		Do_Focus_Key ((ClientData *) nullptr, GetTimestamp (), 
 			ALWAYS_SET_FOCUS);
 	    }
 	}
@@ -2426,10 +2426,10 @@ Boolean HandleCFocusOut (ClientData *pCD, XFocusChangeEvent *focusChangeEvent)
 	{
 	    focusFlags |= SCREEN_SWITCH_FOCUS;
 	}
-	SetKeyboardFocus ((ClientData *) NULL, focusFlags);
+	SetKeyboardFocus ((ClientData *) nullptr, focusFlags);
 	if (wmGD.nextKeyboardFocus == pCD)
 	{
-	    wmGD.nextKeyboardFocus = NULL;
+	    wmGD.nextKeyboardFocus = nullptr;
 	}
     }
 
@@ -2551,7 +2551,7 @@ void HandleCConfigureRequest (ClientData *pCD, XConfigureRequestEvent *configure
 	    	    }
 	    	    else if (stackMode == Opposite)
 	    	    {
-			F_Raise_Lower (NULL, pCD, (XEvent *)configureRequest);
+			F_Raise_Lower (nullptr, pCD, (XEvent *)configureRequest);
 	    	    }
 		}
 	    }
@@ -2561,15 +2561,15 @@ void HandleCConfigureRequest (ClientData *pCD, XConfigureRequestEvent *configure
 	{
 	    if ((stackMode == Above) || (stackMode == TopIf))
 	    {
-		Do_Raise (pCD, (ClientListEntry *) NULL, STACK_NORMAL);
+		Do_Raise (pCD, (ClientListEntry *) nullptr, STACK_NORMAL);
 	    }
 	    else if ((stackMode == Below) || (stackMode == BottomIf))
 	    {
-		Do_Lower (pCD, (ClientListEntry *) NULL, STACK_NORMAL);
+		Do_Lower (pCD, (ClientListEntry *) nullptr, STACK_NORMAL);
 	    }
 	    else if (stackMode == Opposite)
 	    {
-		F_Raise_Lower (NULL, pCD, (XEvent *) configureRequest);
+		F_Raise_Lower (nullptr, pCD, (XEvent *) configureRequest);
 	    }
 	}
 
@@ -2685,7 +2685,7 @@ void HandleCColormapNotify (ClientData *pCD, XColormapEvent *colorEvent)
             ClientData  *any_pCD;
             int         j;
 
-            for (j = 0; cmap_window_data[j] != NULL; j++)
+            for (j = 0; cmap_window_data[j] != nullptr; j++)
             {
                 any_pCD = cmap_window_data[j];
                 for (i = 0; i < any_pCD->clientCmapCount; i++)
@@ -2985,7 +2985,7 @@ WmScreenData * GetScreenForWindow (Window win)
 
 {
     XWindowAttributes attribs;
-    WmScreenData *pSD = NULL;
+    WmScreenData *pSD = nullptr;
 
 
     /*
@@ -2998,7 +2998,7 @@ WmScreenData * GetScreenForWindow (Window win)
 	{
 	    if (pSD && !pSD->screenTopLevelW)
 	    {
-		pSD = NULL;
+		pSD = nullptr;
 	    }
 	}
     }

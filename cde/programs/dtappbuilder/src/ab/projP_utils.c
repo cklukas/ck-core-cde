@@ -116,28 +116,28 @@ projP_show_save_as_bil_chooser(
 {
     Widget      	textf;
     char        	init_name[MAXPATHLEN];
-    ChooserInfo		info = NULL;
+    ChooserInfo		info = nullptr;
     XmString		ok_label;
     char		*title;
  
     XtCallbackRec ok_callback[] = {
         {save_as_bil_okCB, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL}
+        {nullptr, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = {
         {proj_cancelCB, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL}
+        {nullptr, (XtPointer) NULL}
     };
     XtCallbackRec popdown_callback[] = {
         {proj_unmap_chooserCB, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL}
+        {nullptr, (XtPointer) NULL}
     };
  
     /* Create the file chooser if it hasn't already
      * been created by anyone else, then set the
      * appropriate resources.
      */  
-    if (AB_generic_chooser == NULL)
+    if (AB_generic_chooser == nullptr)
     {
         AB_generic_chooser = (Widget) XmCreateFileSelectionDialog(
                 widget,
@@ -148,7 +148,7 @@ projP_show_save_as_bil_chooser(
         info = (ChooserInfo)calloc(sizeof(ChooserInfoRec), 1);
         XtVaSetValues(AB_generic_chooser,
                         XmNuserData, (XtPointer) info,
-                        NULL);
+                        nullptr);
     }
     else if (XtIsManaged(AB_generic_chooser))
     {
@@ -158,7 +158,7 @@ projP_show_save_as_bil_chooser(
  
     XtVaGetValues(AB_generic_chooser,
                         XmNuserData, &info,
-                        NULL);
+                        nullptr);
     info->child = (Widget) NULL;
     info->chooser_type = AB_SAVE_MOD_AS_CHOOSER;
  
@@ -174,14 +174,14 @@ projP_show_save_as_bil_chooser(
                 XmNokLabelString, ok_label,
                 XmNokCallback, &ok_callback,
                 XmNcancelCallback, &cancel_callback,
-                NULL);
+                nullptr);
     XmStringFree(ok_label);
 
     title = XtNewString(CATGETS(Dtb_project_catd, 100, 242, "Save BIL File"));
     XtVaSetValues(XtParent(AB_generic_chooser),
                 XmNtitle, title,
                 XmNpopdownCallback, &popdown_callback,
-                NULL);
+                nullptr);
     XtFree(title);
     textf = XmFileSelectionBoxGetChild(AB_generic_chooser,
                         XmDIALOG_TEXT);
@@ -210,14 +210,14 @@ save_as_bil_okCB(
 )
 {
     XmSelectionBoxCallbackStruct *selection_data = call_data;
-    STRING              fullpath = NULL, msg = NULL;
+    STRING              fullpath = nullptr, msg = nullptr;
     char		mod_name[MAXPATHLEN];
     char		mod_dir[MAXPATHLEN];
     ABObj               module_obj = (ABObj) client_data;
     XmString            xm_buf = (XmString) NULL;
     BOOL		read_OK = FALSE, write_OK = FALSE;
     int			iRet = 0;
-    DtbObjectHelpData	help_data = NULL;
+    DtbObjectHelpData	help_data = nullptr;
 
     *mod_name = 0;
     *mod_dir = 0;
@@ -232,7 +232,7 @@ save_as_bil_okCB(
     {
 	dtb_proj_no_name_msg_initialize(&dtb_proj_no_name_msg);
 	(void)dtb_show_modal_message(dtb_get_toplevel_widget(),
-                        &dtb_proj_no_name_msg, NULL, NULL, NULL);
+                        &dtb_proj_no_name_msg, nullptr, nullptr, nullptr);
         return;
     }
     if (util_file_is_directory(fullpath))
@@ -249,7 +249,7 @@ save_as_bil_okCB(
 	help_data->help_locationID = "";
 
         (void)dtb_show_modal_message(widget,
-                        &dtb_proj_error_msg, xm_buf, help_data, NULL);
+                        &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
 	util_free(help_data);
         XmStringFree(xm_buf);
@@ -287,7 +287,7 @@ save_as_bil_okCB(
             help_data->help_locationID = ""; 
 
 	    (void)dtb_show_modal_message(widget,
-                        &dtb_proj_error_msg, xm_buf, help_data, NULL);
+                        &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
 	    util_free(help_data);
 	    XmStringFree(xm_buf);
@@ -306,7 +306,7 @@ projP_save_export_bil(
     BOOL        Exporting
 )
 {
-    STRING              old_filename = NULL;
+    STRING              old_filename = nullptr;
     char                new_filename[MAXPATHLEN];
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
     BOOL		read_OK, write_OK;
@@ -336,7 +336,7 @@ projP_save_export_bil(
 	if (write_OK)
 	{
             iRet = projP_write_out_bil_file(module_obj, new_filename,
-					    NULL, Exporting);
+					    nullptr, Exporting);
 	    if (iRet >= 0)
                 obj_clear_flag(module_obj, SaveNeededFlag);
 	    XtUnmanageChild(AB_generic_chooser);
@@ -347,7 +347,7 @@ projP_save_export_bil(
 		    "%s is a read-only file."), old_filename);
 
 	    util_set_help_data(CATGETS(Dtb_project_catd, 100, 81,
-		"The changes that were made cannot be saved\nbecause you do not have permission to write\nto the file."), NULL, NULL);
+		"The changes that were made cannot be saved\nbecause you do not have permission to write\nto the file."), nullptr, nullptr);
 	    util_printf_err(Buf);
 	}
 
@@ -366,7 +366,7 @@ projP_save_export_bil(
         if (errno == ENOENT)
         {
             iRet = projP_write_out_bil_file(module_obj, new_filename,
-					    NULL, Exporting);
+					    nullptr, Exporting);
             if ((iRet >= 0) && !Exporting)
                 obj_clear_flag(module_obj, SaveNeededFlag);
         }
@@ -381,7 +381,7 @@ projP_save_export_bil(
     {
 	/* The file exists. Post an overwrite dialog. */
 	iRet = proj_overwrite_existing_file(new_filename, module_obj, 
-			FALSE, Exporting, FALSE, NULL, &answer);
+			FALSE, Exporting, FALSE, nullptr, &answer);
  
 	/* Pop down the file chooser if the user has chosen to
 	 * overwrite the existing file.
@@ -405,23 +405,23 @@ projP_write_out_bil_file(
 {
     int			rc = 0;			/* return code */
     char                name[MAXPATHLEN];
-    STRING              rel_path = NULL;
-    STRING              old_file = NULL;
-    STRING              old_name = NULL;
+    STRING              rel_path = nullptr;
+    STRING              old_file = nullptr;
+    STRING              old_name = nullptr;
 
     *name = 0;
 
     if (!obj_is_module(obj))
         return -1;
 
-    if (obj_get_name(obj) != NULL)
+    if (obj_get_name(obj) != nullptr)
 	old_name = (STRING) strdup(obj_get_name(obj));
 
     util_derive_name_from_path(new_filename, name);
 
     if (!Exporting)
     {
-        if (obj_get_file(obj) != NULL)
+        if (obj_get_file(obj) != nullptr)
             old_file =(STRING) strdup(obj_get_file(obj));
 
 	rel_path = proj_cvt_mod_file_to_rel_path(new_filename,
@@ -461,8 +461,8 @@ projP_write_out_bil_file(
 	    }
 	}
 
-	if (old_file != NULL) util_free(old_file);
-	if (rel_path != NULL) util_free(rel_path);
+	if (old_file != nullptr) util_free(old_file);
+	if (rel_path != nullptr) util_free(rel_path);
     }
     else        /* We're exporting the file, not saving it. */
     {
@@ -492,7 +492,7 @@ projP_write_out_bil_file(
 	}
     }
 
-    if (old_name != NULL) util_free(old_name);
+    if (old_name != nullptr) util_free(old_name);
     return rc;
 }
 
@@ -560,7 +560,7 @@ one_module_selected(
 )
 {
     ProjModMenubuttonMenuItems  menu_rec;
-    ChooserInfo                 info = NULL;
+    ChooserInfo                 info = nullptr;
  
     if (!proj_w) return;
 
@@ -574,7 +574,7 @@ one_module_selected(
      * been created but it is not displayed, then make
      * the menu items active.
      */
-    if ((AB_generic_chooser == NULL) ||
+    if ((AB_generic_chooser == nullptr) ||
         !XtIsManaged(AB_generic_chooser))
     {
         ui_set_active(menu_rec->Save_item, TRUE);
@@ -584,7 +584,7 @@ one_module_selected(
     }
     else if (XtIsManaged(AB_generic_chooser))
     {
-        XtVaGetValues(AB_generic_chooser, XmNuserData, &info, NULL);
+        XtVaGetValues(AB_generic_chooser, XmNuserData, &info, nullptr);
         if (info->chooser_type == AB_EXPORT_CHOOSER)
         {
             ui_set_active(menu_rec->Export_item, TRUE);

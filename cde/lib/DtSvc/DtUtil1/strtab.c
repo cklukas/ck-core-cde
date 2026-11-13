@@ -135,17 +135,17 @@ _DtShmProtoInitStrtab(int sizeguess)
 {
   strlist_t * ptr = (strlist_t *) malloc(sizeof(*ptr));
   if(!ptr)
-    return(NULL);
+    return(nullptr);
 
   if(!(ptr->sl_hash =  _DtUtilMakeHash(sizeguess))) {
     free(ptr);
-    return(NULL);
+    return(nullptr);
   }
 
   if(!(ptr->sl_bosons =  _DtUtilMakeIHash(sizeguess))) {
-    (void)_DtUtilDestroyHash(ptr->sl_hash, NULL, NULL);
+    (void)_DtUtilDestroyHash(ptr->sl_hash, nullptr, nullptr);
     free(ptr);
-    return(NULL);
+    return(nullptr);
   }
 
   ptr->sl_charcount = 1;
@@ -157,8 +157,8 @@ _DtShmProtoDestroyStrtab(DtShmProtoStrtab strlist)
 {
   strlist_t * ptr = (strlist_t *) strlist;
   
-  _DtUtilDestroyHash(ptr->sl_hash, NULL, NULL);
-  _DtUtilDestroyHash(ptr->sl_bosons, free_hash_data, NULL);
+  _DtUtilDestroyHash(ptr->sl_hash, nullptr, nullptr);
+  _DtUtilDestroyHash(ptr->sl_bosons, free_hash_data, nullptr);
   free(ptr);
   return(0);
 }
@@ -197,7 +197,7 @@ _DtShmProtoLookUpStrtab (DtShmProtoStrtab prototab, DtShmBoson boson)
   
   sptr = (unsigned char **) _DtUtilFindHash(ptr->sl_bosons, (const unsigned char *) (intptr_t) boson);
 
-  return(sptr?((const char *)*sptr):NULL);
+  return(sptr?((const char *)*sptr):nullptr);
 }
 
 

@@ -56,21 +56,21 @@ gil_load_file(
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    STRING              errmsg = NULL;
-    ABObj               obj = NULL;
-    ABObj               interface = NULL;
+    STRING              errmsg = nullptr;
+    ABObj               obj = nullptr;
+    ABObj               interface = nullptr;
     AB_FILE_TYPE        file_type = AB_FILE_UNDEF;
-    FILE               *gilInFile = NULL;
+    FILE               *gilInFile = nullptr;
 
     /* printf("gil_load_file(%s)\n", gil_file); */
 
-    if (gil_file == NULL)
+    if (gil_file == nullptr)
     {
         return 0;
     }
 
     abil_loadmsg_clear();
-    abil_loadmsg_set_line_number_callback(NULL);	/*don't report line#*/
+    abil_loadmsg_set_line_number_callback(nullptr);	/*don't report line#*/
     abil_loadmsg_set_file(gil_file);
 
     /*
@@ -78,7 +78,7 @@ gil_load_file(
      */
     interface = obj_scoped_find_or_create_undef(project, 
 			ab_ident_from_file_name(gil_file), AB_TYPE_MODULE);
-    if (interface == NULL)
+    if (interface == nullptr)
     {
         abil_print_load_err(ERR_NO_MEMORY);
         goto epilogue;
@@ -90,13 +90,13 @@ gil_load_file(
     /*
      * Open the input file.
      */
-    if (inFile != NULL)
+    if (inFile != nullptr)
     {
         gilInFile = inFile;
     }
     else
     {
-        if ((errmsg = abio_open_gil_input(gil_file, &gilInFile)) != NULL)
+        if ((errmsg = abio_open_gil_input(gil_file, &gilInFile)) != nullptr)
         {
             util_error(errmsg);
             return_value = -1;
@@ -147,7 +147,7 @@ gil_load_file(
         }
     }
 
-    if (inFile == NULL)         /* don't close passed-in stream */
+    if (inFile == nullptr)         /* don't close passed-in stream */
     {
         abio_close_input(gilInFile);
     }
@@ -155,13 +155,13 @@ gil_load_file(
 epilogue:
     if (return_value < 0)
     {
-        if (interface != NULL)
+        if (interface != nullptr)
         {
             obj_destroy(interface);
-            interface = NULL;
+            interface = nullptr;
         }
     }
-    if (interface != NULL)
+    if (interface != nullptr)
     {
 	obj_set_is_defined(interface, TRUE);
     }
@@ -182,18 +182,18 @@ gil_load_project_file(
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    STRING              errmsg = NULL;
-    ABObj               project = obj_create(AB_TYPE_PROJECT, NULL);
-    FILE               *gilInFile = NULL;
+    STRING              errmsg = nullptr;
+    ABObj               project = obj_create(AB_TYPE_PROJECT, nullptr);
+    FILE               *gilInFile = nullptr;
 
     util_dprintf(1,
                  "gil_load_project_file(%s)\n", util_strsafe(project_file));
 
     abil_loadmsg_clear();
-    abil_loadmsg_set_line_number_callback(NULL);	/*don't report line#*/
+    abil_loadmsg_set_line_number_callback(nullptr);	/*don't report line#*/
     abil_loadmsg_set_file(project_file);
 
-    if (project == NULL)
+    if (project == nullptr)
     {
         abil_print_load_err(ERR_NO_MEMORY);
         goto epilogue;
@@ -208,13 +208,13 @@ gil_load_project_file(
      * object and not have the surrounding parens like a GIL file.  So, we
      * can't use load_interface.
      */
-    if (inFile != NULL)
+    if (inFile != nullptr)
     {
         gilInFile = inFile;
     }
     else
     {
-        if ((errmsg = abio_open_gil_input(project_file, &gilInFile)) != NULL)
+        if ((errmsg = abio_open_gil_input(project_file, &gilInFile)) != nullptr)
         {
             util_error(errmsg);
             return_value = -1;
@@ -251,7 +251,7 @@ gil_load_project_file(
         return_value = rc;
         goto epilogue;
     }
-    if (inFile == NULL)
+    if (inFile == nullptr)
     {
         abio_close_input(gilInFile);
     }
@@ -260,7 +260,7 @@ epilogue:
     if (return_value < 0)
     {
         obj_destroy(project);
-        project = NULL;
+        project = nullptr;
     }
 
     *projectOutPtr = project;
@@ -277,9 +277,9 @@ gil_load_project_file_and_resolve_all(
 {
     int                 return_value = 0;
     int                 rc = 0;
-    ABObj		project = NULL;
+    ABObj		project = nullptr;
     int			i = 0;
-    ABObj		interface = NULL;
+    ABObj		interface = nullptr;
     AB_TRAVERSAL	trav;
 
     if ((rc = gil_load_project_file(project_file, inFile, &project)) < 0)
@@ -292,11 +292,11 @@ gil_load_project_file_and_resolve_all(
      * Load in the interfaces referenced in the project file
      */
     for (trav_open(&trav, project, AB_TRAV_MODULES | AB_TRAV_MOD_SAFE);
-	(interface = trav_next(&trav)) != NULL; )
+	(interface = trav_next(&trav)) != nullptr; )
     {
 	if (!obj_is_defined(interface))
 	{
-            if (gil_load_file(obj_get_file(interface), NULL, project) == NULL)
+            if (gil_load_file(obj_get_file(interface), nullptr, project) == nullptr)
             {
                 return_value = -1;
                 goto epilogue;

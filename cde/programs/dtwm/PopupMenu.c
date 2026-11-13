@@ -102,7 +102,7 @@ ActionCB (Widget    w,
 
       DtActionInvoke (control_data->icon,
 	              control_data->actions[indx]->action_name,
-                      aap, 1, NULL, NULL, NULL, 1, NULL, NULL);
+                      aap, 1, nullptr, nullptr, nullptr, 1, nullptr, nullptr);
 
       XtFree ((char *) aap);
    }
@@ -112,7 +112,7 @@ ActionCB (Widget    w,
                       control_data->actions[indx]->action_name,
                       control_data->actions[indx]->aap,
                       control_data->actions[indx]->count,
-                      NULL, NULL, NULL, 1, NULL, NULL);
+                      nullptr, nullptr, nullptr, 1, nullptr, nullptr);
    }
 }
 
@@ -136,7 +136,7 @@ DeleteWorkspaceCB (Widget    w,
 
 {
    long delete_workspace = (long) client_data;
-   SwitchData * switch_data = NULL;
+   SwitchData * switch_data = nullptr;
    int i;
    
 
@@ -145,7 +145,7 @@ DeleteWorkspaceCB (Widget    w,
    
    for (i = 0; i < panel.box_data_count; i++)
    {
-      if (panel.box_data[i]->switch_data != NULL)
+      if (panel.box_data[i]->switch_data != nullptr)
       {
          switch_data = panel.box_data[i]->switch_data;
          break;
@@ -181,7 +181,7 @@ RenameWorkspaceCB (Widget    w,
 
 {
    long rename_ws = (long) client_data;
-   SwitchData * switch_data = NULL;
+   SwitchData * switch_data = nullptr;
    int i;
    
 
@@ -190,7 +190,7 @@ RenameWorkspaceCB (Widget    w,
    
    for (i = 0; i < panel.box_data_count; i++)
    {
-      if (panel.box_data[i]->switch_data != NULL)
+      if (panel.box_data[i]->switch_data != nullptr)
       {
          switch_data = panel.box_data[i]->switch_data;
          break;
@@ -224,7 +224,7 @@ AddWorkspaceCB (Widget    w,
 
 
 {
-   SwitchData * switch_data = NULL;
+   SwitchData * switch_data = nullptr;
    char * switch_name;
    char * temp_name;
 
@@ -245,7 +245,7 @@ AddWorkspaceCB (Widget    w,
    
    for (i = 0; i < panel.box_data_count; i++)
    {
-      if (panel.box_data[i]->switch_data != NULL)
+      if (panel.box_data[i]->switch_data != nullptr)
       {
          switch_data = panel.box_data[i]->switch_data;
          break;
@@ -416,7 +416,7 @@ DeleteControlCB (Widget    w,
     ctrl_name = (char *)
                    control_data->element_values[CONTROL_NAME].parsed_value;
 
-    if (ctrl_label == NULL)
+    if (ctrl_label == nullptr)
        ctrl_label = ctrl_name;
 
     if (control_data->element_values[CONTROL_LOCKED].parsed_value)
@@ -433,7 +433,7 @@ DeleteControlCB (Widget    w,
 
        sprintf(message, "%s %s\n\n%s", del_ctrl, ctrl_label, del_msg);
 
-       _DtMessage (XtParent(w), title, message, NULL, NULL);
+       _DtMessage (XtParent(w), title, message, nullptr, nullptr);
 
        XtFree (title);
        XtFree (del_ctrl);
@@ -445,7 +445,7 @@ DeleteControlCB (Widget    w,
        title = FPGETMESSAGE(82,2, "Workspace Manager - Delete Control");
        title = XtNewString (title);
 
-       if (SessionFileNameLookup (ctrl_name, CONTROL, (char *) control_data->element_values[CONTROL_CONTAINER_NAME].parsed_value, SUBPANEL) == NULL)
+       if (SessionFileNameLookup (ctrl_name, CONTROL, (char *) control_data->element_values[CONTROL_CONTAINER_NAME].parsed_value, SUBPANEL) == nullptr)
           del_msg = FPGETMESSAGE(82,32, "If you delete this control, you cannot restore it using\nthe \"Install Icon\" drop zone.\n\nYou can use \"RestorePanel\" in the Application Manager\nto put back this control at a later time.\n\nAre you sure you want to delete this control?");
        else
           del_msg = FPGETMESSAGE(82,6, "Are you sure you want to delete this control?");
@@ -467,11 +467,11 @@ DeleteControlCB (Widget    w,
        else
           subpanel_data = (SubpanelData *) control_data->subpanel_data;
 
-       dialog = _DtMessageDialog(subpanel_data->shell,title,message,NULL,TRUE,
+       dialog = _DtMessageDialog(subpanel_data->shell,title,message,nullptr,TRUE,
 #else
-       dialog = _DtMessageDialog(panel.shell, title, message, NULL, TRUE,
+       dialog = _DtMessageDialog(panel.shell, title, message, nullptr, TRUE,
 #endif
-                           DeleteCancelCB, DeleteControlOkCB, NULL, NULL, False,
+                           DeleteCancelCB, DeleteControlOkCB, nullptr, nullptr, False,
                            QUESTION_DIALOG);
 
        XtSetArg (args[0], XmNuserData, control_data);
@@ -591,7 +591,7 @@ DeleteSubpanelCB (Widget    w,
 
        sprintf(message, "%s %s\n\n%s", del_spanel, spanel_name, del_msg);
 
-       _DtMessage (XtParent(w), title, message, NULL, NULL);
+       _DtMessage (XtParent(w), title, message, nullptr, nullptr);
 
        XtFree (title);
        XtFree (del_spanel);
@@ -607,7 +607,7 @@ DeleteSubpanelCB (Widget    w,
        {
          if (SessionFileNameLookup (spanel_name, SUBPANEL, (char *)
             subpanel_data->element_values[SUBPANEL_CONTAINER_NAME].parsed_value,
-            CONTROL) == NULL)
+            CONTROL) == nullptr)
              del_msg = FPGETMESSAGE(82,34,
 "If you delete this subpanel, you cannot restore all\nof the controls contained in the subpanel using the\n\"Install Icon\" drop zone.\n\nYou can use \"RestorePanel\" in the Application Manager\nto put back this subpanel and its controls at a later time.\n\nAre you sure you want to delete this subpanel?");
          else
@@ -625,11 +625,11 @@ DeleteSubpanelCB (Widget    w,
        sprintf(message, "%s %s\n\n%s", del_spanel, spanel_name, del_msg);
 
 #ifndef	IBM_163763
-       dialog = _DtMessageDialog(subpanel_data->shell,title,message,NULL,TRUE,
+       dialog = _DtMessageDialog(subpanel_data->shell,title,message,nullptr,TRUE,
 #else
-       dialog = _DtMessageDialog(panel.shell, title, message, NULL, TRUE,
+       dialog = _DtMessageDialog(panel.shell, title, message, nullptr, TRUE,
 #endif
-                          DeleteCancelCB, DeleteSubpanelOkCB, NULL, NULL, False,
+                          DeleteCancelCB, DeleteSubpanelOkCB, nullptr, nullptr, False,
                           QUESTION_DIALOG);
 
        XtSetArg (args[0], XmNuserData, control_data);
@@ -664,7 +664,7 @@ PostWorkspacePopupMenu (Widget      w,
 {
    int i;
    BoxData * box_data;
-   SwitchData * switch_data = NULL;
+   SwitchData * switch_data = nullptr;
    XButtonEvent * b_event = (XButtonEvent *) event;
 
    /* only use BMENU press events */
@@ -675,11 +675,11 @@ PostWorkspacePopupMenu (Widget      w,
    {
       box_data = panel.box_data[i];
 
-      if (box_data->switch_data != NULL)
+      if (box_data->switch_data != nullptr)
          switch_data = box_data->switch_data;
    }
 
-   if (switch_data != NULL)
+   if (switch_data != nullptr)
       XtManageChild(switch_data->popup_data->popup);
 }
 
@@ -770,7 +770,7 @@ GetSubpanelDataFromForm (Widget          form,
       {
          control_data = box_data->control_data[j];
 
-         if (control_data->subpanel_data != NULL)
+         if (control_data->subpanel_data != nullptr)
          {
             subpanel_data = control_data->subpanel_data;
 
@@ -868,7 +868,7 @@ GetMainControlData (BoxData * box_data,
       }
    }
 
-   if (!found) return NULL;
+   if (!found) return nullptr;
 
    return (control_data);
 }
@@ -893,7 +893,7 @@ GetSubpanelControlData (SubpanelData * subpanel_data,
    Boolean found = False;
 
    if ( subpanel_data->dropzone == focus_widget )
-      return NULL;
+      return nullptr;
 
    if (subpanel_data->main_panel_icon_copy == focus_widget ||
        subpanel_data->parent_control_data->indicator == focus_widget)
@@ -913,7 +913,7 @@ GetSubpanelControlData (SubpanelData * subpanel_data,
       }
    }
 
-   if (!found) return NULL;
+   if (!found) return nullptr;
 
    return (control_data);
 }
@@ -958,8 +958,8 @@ SetupActionMenuItems (Widget        w,
    /*  Count the action list for the control in order to adjust  */
    /*  the number of action menu items within the menu.          */
 
-   if (control_data != NULL)
-      while (control_data->actions[num_actions] != NULL)
+   if (control_data != nullptr)
+      while (control_data->actions[num_actions] != nullptr)
          num_actions++;
 
    if (num_actions > *action_count )
@@ -995,7 +995,7 @@ SetupActionMenuItems (Widget        w,
 
    for (i = 0; i < num_actions; i++)
    {
-      if (control_data->actions[i]->action_label != NULL)
+      if (control_data->actions[i]->action_label != nullptr)
          label_string = 
                XmStringCreateLocalized (control_data->actions[i]->action_label);
       else
@@ -1048,11 +1048,11 @@ UpdateMainControlMenu (ControlData * control_data)
    long control_type;
    Arg args[5];
 
-   ElementValue * old_element_values = NULL;
+   ElementValue * old_element_values = nullptr;
 
    /*  Save element values of control then load values of default control */
 
-   if (control_data->subpanel_data != NULL && 
+   if (control_data->subpanel_data != nullptr && 
 	control_data != control_data->subpanel_data->default_control)
    {
 	old_element_values = control_data->element_values;
@@ -1065,7 +1065,7 @@ UpdateMainControlMenu (ControlData * control_data)
    control_label =
 	 (char *) control_data->element_values[CONTROL_LABEL].parsed_value;
 
-   if (control_label == NULL)
+   if (control_label == nullptr)
       control_label = 
 	       (char *) control_data->element_values[CONTROL_NAME].parsed_value;
 
@@ -1085,7 +1085,7 @@ UpdateMainControlMenu (ControlData * control_data)
    {
       XtManageChild (panel.popup_data->modify_subpanel_item);
 
-      if (control_data->subpanel_data == NULL)
+      if (control_data->subpanel_data == nullptr)
       {
          if (panel.popup_data->subpanel_add_state != True)
          {
@@ -1100,9 +1100,9 @@ UpdateMainControlMenu (ControlData * control_data)
             XmStringFree (label_string);
 
             XtRemoveCallback (panel.popup_data->modify_subpanel_item,
-                              XmNactivateCallback, DeleteSubpanelCB, NULL);
+                              XmNactivateCallback, DeleteSubpanelCB, nullptr);
             XtAddCallback (panel.popup_data->modify_subpanel_item,
-                           XmNactivateCallback, AddSubpanelCB, NULL);
+                           XmNactivateCallback, AddSubpanelCB, nullptr);
 
             panel.popup_data->subpanel_add_state = True;
          }
@@ -1127,9 +1127,9 @@ UpdateMainControlMenu (ControlData * control_data)
             XmStringFree (label_string);
 
             XtRemoveCallback (panel.popup_data->modify_subpanel_item,
-                              XmNactivateCallback, AddSubpanelCB, NULL);
+                              XmNactivateCallback, AddSubpanelCB, nullptr);
             XtAddCallback (panel.popup_data->modify_subpanel_item,
-                           XmNactivateCallback, DeleteSubpanelCB, NULL);
+                           XmNactivateCallback, DeleteSubpanelCB, nullptr);
 
             panel.popup_data->subpanel_add_state = False;
          }
@@ -1155,7 +1155,7 @@ UpdateMainControlMenu (ControlData * control_data)
 
    /* Restore element values to control. */
 
-   if (control_data->subpanel_data != NULL && 
+   if (control_data->subpanel_data != nullptr && 
 	control_data != control_data->subpanel_data->default_control)
    {
 	control_data->element_values = old_element_values;
@@ -1189,7 +1189,7 @@ UpdateSubpanelControlMenu (SubpanelData * subpanel_data,
 {
    XmString label_string;
    Arg args[5];
-   char     * control_label = NULL;
+   char     * control_label = nullptr;
 
    /*  Set the title of the menu  */
    
@@ -1198,7 +1198,7 @@ UpdateSubpanelControlMenu (SubpanelData * subpanel_data,
       control_label =
 	 (char *) control_data->element_values[CONTROL_LABEL].parsed_value;
 
-      if (control_label == NULL)
+      if (control_label == nullptr)
          control_label = 
 	       (char *) control_data->element_values[CONTROL_NAME].parsed_value;
    } 
@@ -1215,7 +1215,7 @@ UpdateSubpanelControlMenu (SubpanelData * subpanel_data,
 
    /*  Set the sensitivity of the control deinstall and toggle menu item  */
    
-   if (control_data == NULL)
+   if (control_data == nullptr)
    {
       XtSetSensitive (panel.popup_data->deinstall_item, False);
       XtSetSensitive (panel.popup_data->toggle_item, False);
@@ -1291,9 +1291,9 @@ PopupMenu (Widget    w,
    XEvent * event;
    Widget form, focus_widget;
    XmManagerWidget mgr;
-   SubpanelData * subpanel_data = NULL;
+   SubpanelData * subpanel_data = nullptr;
    ControlData * control_data;
-   BoxData * box_data = NULL;
+   BoxData * box_data = nullptr;
    XmString label_string;
    Arg args[5];
    long control_type, action_count = panel.popup_data->action_count;
@@ -1312,12 +1312,12 @@ PopupMenu (Widget    w,
    if (control_type == CONTROL)
    {
       GetBoxDataFromForm (form, &box_data);
-      subpanel_data = NULL;
+      subpanel_data = nullptr;
    }
    else if (control_type == SUBPANEL)
    {
       GetSubpanelDataFromForm (form, &subpanel_data);
-      box_data = NULL;
+      box_data = nullptr;
    }
 
    if (event->type == ButtonPress)
@@ -1327,7 +1327,7 @@ PopupMenu (Widget    w,
 
       focus_widget = (Widget) XmObjectAtPoint (form, event->xbutton.x,
 					       event->xbutton.y);
-      if (focus_widget == NULL)
+      if (focus_widget == nullptr)
          return;
 
       /* set the menu positioning */
@@ -1355,7 +1355,7 @@ PopupMenu (Widget    w,
 
       UpdateMainControlMenu (control_data);
 
-      if (control_data->subpanel_data != NULL &&			
+      if (control_data->subpanel_data != nullptr &&			
           control_data != control_data->subpanel_data->default_control)
       {
          subpanel_data = control_data->subpanel_data;
@@ -1410,18 +1410,18 @@ CreatePopupMenu (Widget w)
 
    popup_data->popup = XmCreatePopupMenu(w, "FPPopup", args, i);
 
-   popup_data->add_ws_item = NULL;
+   popup_data->add_ws_item = nullptr;
 
    XtAddCallback (popup_data->popup, XmNmapCallback, PopupMenu,
 		  (XtPointer) NULL);
 
    popup_data->popup_title = children[child_num++] =
-		 XmCreateLabelGadget(popup_data->popup, "title", NULL, 0);
+		 XmCreateLabelGadget(popup_data->popup, "title", nullptr, 0);
 
    children[child_num++] = XmCreateSeparatorGadget(popup_data->popup,
-						   "sep1", NULL, 0);
+						   "sep1", nullptr, 0);
    children[child_num++] = XmCreateSeparatorGadget(popup_data->popup,
-						   "sep2", NULL, 0);
+						   "sep2", nullptr, 0);
 
    popup_data->action_item = (Widget *) XtMalloc(sizeof(Widget) * 5);
    popup_data->action_count = 0;
@@ -1438,7 +1438,7 @@ CreatePopupMenu (Widget w)
    }
 
    popup_data->separator1 = children[child_num++] =
-   		XmCreateSeparatorGadget (popup_data->popup, "sep3", NULL, 0);
+   		XmCreateSeparatorGadget (popup_data->popup, "sep3", nullptr, 0);
 
    label_string =
            XmStringCreateLocalized((FPGETMESSAGE(82, 14, "Copy To Main Panel")));
@@ -1472,7 +1472,7 @@ CreatePopupMenu (Widget w)
    popup_data->subpanel_add_state = True;
 
    popup_data->separator2 = children[child_num++] =
-   		XmCreateSeparatorGadget(popup_data->popup, "sep4", NULL, 0);
+   		XmCreateSeparatorGadget(popup_data->popup, "sep4", nullptr, 0);
 
    label_string = XmStringCreateLocalized ((FPGETMESSAGE(82, 18, "Help")));
    XtSetArg (args[0], XmNlabelString, label_string);
@@ -1516,7 +1516,7 @@ CreateActionButtons (Widget        w,
     control_label =
 	  (char *) control_data->element_values[CONTROL_LABEL].parsed_value;
 
-    if (control_label == NULL)
+    if (control_label == nullptr)
        control_label = 
 	       (char *) control_data->element_values[CONTROL_NAME].parsed_value;
 
@@ -1587,7 +1587,7 @@ ShowWorkspaceItems (SwitchData * switch_data,
 
    XtRemoveAllCallbacks (popup_data->delete_ws_item, XmNactivateCallback);
    for (i = 0; i < switch_data->switch_count &&
-               switch_data->buttons[i] != NULL; i++)
+               switch_data->buttons[i] != nullptr; i++)
    {
       if (switch_data->buttons[i] == focus_widget) break;
    }
@@ -1744,7 +1744,7 @@ GetSwitchControlData (SwitchData * switch_data,
       }
    }
 
-   if (!found) return NULL;
+   if (!found) return nullptr;
 
    return (control_data);
 }
@@ -1771,8 +1771,8 @@ WSPopupMenu (Widget     w,
    XmAnyCallbackStruct * callback;
    XEvent * event;
    Widget form, focus_widget;
-   SwitchData * switch_data = NULL;
-   ControlData * control_data = NULL;
+   SwitchData * switch_data = nullptr;
+   ControlData * control_data = nullptr;
    Boolean is_button = False;
    Position x, y;
    Arg args[2];
@@ -1798,7 +1798,7 @@ WSPopupMenu (Widget     w,
      focus_widget = (Widget) XmObjectAtPoint (form, event->xbutton.x,
 					      event->xbutton.y);
 
-     if (focus_widget == NULL)
+     if (focus_widget == nullptr)
      {
         XtSetArg (args[0], XmNx, &x);
         XtSetArg (args[1], XmNy, &y);
@@ -1827,7 +1827,7 @@ WSPopupMenu (Widget     w,
 
       control_data = GetSwitchControlData (switch_data, focus_widget);
 
-      if (control_data == NULL)
+      if (control_data == nullptr)
          is_button = True;
 
       /* set the menu positioning for non button events */
@@ -1835,14 +1835,14 @@ WSPopupMenu (Widget     w,
       KeyMenuPosition (switch_data->popup_data->popup, focus_widget);
    }
 
-   if (focus_widget != NULL)
+   if (focus_widget != nullptr)
    {
       if (is_button)
         /* The mouse is over a button in the switch area */
 	 ShowWorkspaceItems (switch_data, focus_widget);
       else
       {
-         if (control_data != NULL)
+         if (control_data != nullptr)
          {
             control_type =
 		 (long) control_data->element_values[CONTROL_TYPE].parsed_value;
@@ -1902,9 +1902,9 @@ CreateWorkspacePopupMenu (Widget       w,
 
    popup_data->popup = XmCreatePopupMenu(w, "WSPopup", args, i);
 
-   popup_data->deinstall_item = NULL;
-   popup_data->toggle_item = NULL;
-   popup_data->modify_subpanel_item = NULL;
+   popup_data->deinstall_item = nullptr;
+   popup_data->toggle_item = nullptr;
+   popup_data->modify_subpanel_item = nullptr;
    popup_data->subpanel_add_state = True;
 
    XtAddCallback(popup_data->popup, XmNmapCallback, WSPopupMenu,
@@ -1917,9 +1917,9 @@ CreateWorkspacePopupMenu (Widget       w,
    XmStringFree (label_string);
 
    children[child_num++] = XmCreateSeparatorGadget (popup_data->popup, "sep1",
-						    NULL, 0);
+						    nullptr, 0);
    children[child_num++] = XmCreateSeparatorGadget (popup_data->popup, "sep2",
-						    NULL, 0);
+						    nullptr, 0);
 
    popup_data->action_item = (Widget *) XtMalloc(sizeof(Widget) * 5);
    popup_data->action_count = 0;
@@ -1972,9 +1972,9 @@ CreateWorkspacePopupMenu (Widget       w,
 	         RenameWorkspaceCB, (XtPointer) 0);
 
    popup_data->separator1 = children[child_num++] =
-      XmCreateSeparatorGadget (popup_data->popup, "sep3", NULL, 0);
+      XmCreateSeparatorGadget (popup_data->popup, "sep3", nullptr, 0);
 
-   popup_data->separator2 = NULL;
+   popup_data->separator2 = nullptr;
 
    label_string = XmStringCreateLocalized((FPGETMESSAGE(82, 29, "Help")));
    XtSetArg (args[0], XmNlabelString, label_string);

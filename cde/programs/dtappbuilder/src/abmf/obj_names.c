@@ -120,14 +120,14 @@ STRING
 abmfP_get_c_name_global(ABObj obj)
 {
     static char	name[MAX_NAME_SIZE];
-    ABObj	structObj = NULL;
-    ABObj	substructObj = NULL;
-    STRING	structName= NULL;
-    STRING	substructName = NULL;
-    STRING	fieldName= NULL;
+    ABObj	structObj = nullptr;
+    ABObj	substructObj = nullptr;
+    STRING	structName= nullptr;
+    STRING	substructName = nullptr;
+    STRING	fieldName= nullptr;
 
     substructObj = abmfP_obj_get_substruct_obj(obj);
-    if (substructObj == NULL)
+    if (substructObj == nullptr)
     {
 	structObj = abmfP_obj_get_struct_obj(obj);
     }
@@ -136,18 +136,18 @@ abmfP_get_c_name_global(ABObj obj)
 	structObj = abmfP_obj_get_struct_obj(substructObj);
     }
 
-    if (structObj == NULL)
+    if (structObj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     structName = abmfP_get_c_struct_global_name(structObj);
-    if (substructObj != NULL)
+    if (substructObj != nullptr)
     {
 	substructName = abmfP_get_c_substruct_field_name(substructObj);
     }
     fieldName = abmfP_get_c_field_name(obj);
 
-    if (substructName != NULL)
+    if (substructName != nullptr)
     {
 	snprintf(name, sizeof(name), "%s.%s.%s", structName, substructName, fieldName);
     } else {
@@ -164,13 +164,13 @@ STRING
 abmfP_get_c_field_name(ABObj obj)
 {
     char	fieldNameBuf[MAXPATHLEN+1];
-    STRING	fieldName = NULL;
-    ABObj	substructObj = NULL;
-    ABObj	compRoot = NULL;
-    STRING	compRootName = NULL;
+    STRING	fieldName = nullptr;
+    ABObj	substructObj = nullptr;
+    ABObj	compRoot = nullptr;
+    STRING	compRootName = nullptr;
     *fieldNameBuf = 0;
 
-    if (mfobj_data(obj)->field_name != NULL)
+    if (mfobj_data(obj)->field_name != nullptr)
     {
 	goto epilogue;
     }
@@ -183,7 +183,7 @@ abmfP_get_c_field_name(ABObj obj)
     substructObj = abmfP_obj_get_substruct_obj(obj);
     {
 	ABObj	fieldNameObj = obj_get_actual_obj(obj);
-        if ((substructObj != NULL) && (fieldNameObj != obj))
+        if ((substructObj != nullptr) && (fieldNameObj != obj))
         {
 	    abmfP_get_c_field_name(fieldNameObj);	/* we set field_name */
 	    mfobj_data(obj)->field_name = 
@@ -199,7 +199,7 @@ abmfP_get_c_field_name(ABObj obj)
      * it.
      */
     ensure_unique_comp_field_names(obj);
-    if (mfobj_data(obj)->field_name != NULL)
+    if (mfobj_data(obj)->field_name != nullptr)
     {
 	goto epilogue;
     }
@@ -207,9 +207,9 @@ abmfP_get_c_field_name(ABObj obj)
     snprintf(fieldNameBuf, sizeof(fieldNameBuf), "%s", obj_get_name(obj));
     abmfP_uncapitalize_first_char(fieldNameBuf);
 
-    if (substructObj != NULL)
+    if (substructObj != nullptr)
     {
-	if ((compRoot = obj_get_root(substructObj)) != NULL)
+	if ((compRoot = obj_get_root(substructObj)) != nullptr)
 	{
 	    compRootName = obj_get_name(compRoot);
 	}
@@ -219,7 +219,7 @@ abmfP_get_c_field_name(ABObj obj)
      * If this is a field in a substructure, strip of the parent-name
      * prefix, 'cause it's redundant.
      */
-    if ((substructObj != NULL) && (compRootName != NULL))
+    if ((substructObj != nullptr) && (compRootName != nullptr))
     {
 	int	subnamelen = strlen(compRootName);
 	int	fieldnamelen = strlen(fieldNameBuf);
@@ -243,7 +243,7 @@ abmfP_get_c_field_name(ABObj obj)
 	    fieldName = ab_make_valid_c_ident(fieldNameBuf);
 	}
     }
-    if (fieldName == NULL)
+    if (fieldName == nullptr)
     {
 	fieldName = fieldNameBuf;
     }
@@ -262,18 +262,18 @@ STRING
 abmfP_get_c_name_in_inst(ABObj obj)
 {
     static char	name[MAX_NAME_SIZE];
-    ABObj	substructObj = NULL;
-    STRING	substructName = NULL;
-    STRING	fieldName= NULL;
+    ABObj	substructObj = nullptr;
+    STRING	substructName = nullptr;
+    STRING	fieldName= nullptr;
 
     substructObj = abmfP_obj_get_substruct_obj(obj);
-    if (substructObj != NULL)
+    if (substructObj != nullptr)
     {
 	substructName = abmfP_get_c_substruct_field_name(substructObj);
     }
     fieldName = abmfP_get_c_field_name(obj);
 
-    if (substructName != NULL)
+    if (substructName != nullptr)
     {
 	snprintf(name, sizeof(name), "%s->%s.%s",
 	         abmfP_instance_ptr_var_name,
@@ -293,9 +293,9 @@ abmfP_get_c_name_in_subinst(ABObj obj)
     static char		name[256];
     STRING		fieldName = abmfP_get_c_field_name(obj);
 
-    if (fieldName == NULL)
+    if (fieldName == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     sprintf(name, "%s->%s",
@@ -387,14 +387,14 @@ STRING
 abmfP_get_c_name(GenCodeInfo genCodeInfo, ABObj obj)
 {
     static char         nameBuf[MAX_NAME_SIZE];
-    STRING		name= NULL;
+    STRING		name= nullptr;
 
     if (genCodeInfo->writing_func)
     {
 	    ABObj	ipObj= genCodeInfo->cur_func.ip_obj;
 	    ABObj	createObj = genCodeInfo->cur_func.create_obj;
 
-	    if (ipObj == NULL)
+	    if (ipObj == nullptr)
 	    {
 		/* no IP structure pointer */
 		if (createObj == obj)
@@ -406,7 +406,7 @@ abmfP_get_c_name(GenCodeInfo genCodeInfo, ABObj obj)
 	    else
 	    {
 		/* we have an IP structure pointer */
-		if (createObj != NULL)
+		if (createObj != nullptr)
 		{
 		    /* we're in a create proc.  Create procs take struct ptr */
 		    if (abmfP_objs_in_same_struct(ipObj, obj))
@@ -428,7 +428,7 @@ abmfP_get_c_name(GenCodeInfo genCodeInfo, ABObj obj)
 		    }
 	        }
 	    }
-	    if (name == NULL)
+	    if (name == nullptr)
 	    {
 		/* must use the global name (yuck!) */
 		name= abmfP_get_c_name_global(obj);
@@ -463,7 +463,7 @@ abmfP_get_c_struct_or_ptr_name(
 )
 {
     static char	nameBuf[MAX_NAME_SIZE] = "";
-    STRING	name = NULL;
+    STRING	name = nullptr;
     ABObj	structObj = abmfP_obj_get_struct_obj(obj);
 
     if (genCodeInfo->writing_func)
@@ -479,7 +479,7 @@ abmfP_get_c_struct_or_ptr_name(
 	}
     }
     
-    if (name == NULL)
+    if (name == nullptr)
     {
         name = abmfP_get_c_struct_global_name(structObj);
 	if (wantPtr)
@@ -516,9 +516,9 @@ abmfP_get_c_struct_type_name(ABObj obj)
     static char	name[MAX_NAME_SIZE];
     STRING	ptrName= abmfP_get_c_struct_ptr_type_name(obj);
 
-    if (ptrName == NULL)
+    if (ptrName == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     snprintf(name, sizeof(name), "%sRec", abmfP_get_c_struct_ptr_type_name(obj));
     return_c_ident(name);
@@ -529,13 +529,13 @@ STRING
 abmfP_get_c_struct_ptr_type_name(ABObj obj)
 {
     static char	name[MAX_NAME_SIZE];
-    STRING	varName = NULL;
+    STRING	varName = nullptr;
     *name = 0;
 
     varName = abmfP_get_c_struct_global_name(obj);
-    if (varName == NULL)
+    if (varName == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     snprintf(name, sizeof(name), "%s%sInfo", typePrefixString, abmfP_capitalize_first_char(varName));
     cvt_ident_to_type(name);
@@ -548,12 +548,12 @@ STRING
 abmfP_get_c_struct_global_name(ABObj obj)
 {
     static char	varName[MAX_NAME_SIZE];
-    ABObj	structObj = NULL;
+    ABObj	structObj = nullptr;
     
     structObj = abmfP_obj_get_struct_obj(obj);
-    if (structObj == NULL)
+    if (structObj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     abmfP_build_instance_prefix(structObj, varName, MAX_NAME_SIZE);
@@ -574,33 +574,33 @@ STRING
 abmfP_get_c_substruct_name(GenCodeInfo genCodeInfo, ABObj obj)
 {
     static char	nameBuf[1024] = "";
-    STRING	name = NULL;
-    ABObj	structObj = NULL;
-    ABObj	substructObj = NULL;
-    ABObj	createObj = NULL;
-    ABObj	ipObj = NULL;
+    STRING	name = nullptr;
+    ABObj	structObj = nullptr;
+    ABObj	substructObj = nullptr;
+    ABObj	createObj = nullptr;
+    ABObj	ipObj = nullptr;
     BOOL	ipObjIsSubstruct = FALSE;
-    STRING	substructName = NULL;
+    STRING	substructName = nullptr;
 
     if (genCodeInfo->writing_func)
     {
 	ipObj = genCodeInfo->cur_func.ip_obj;
 	createObj = genCodeInfo->cur_func.create_obj;
-	ipObjIsSubstruct = ((createObj != NULL) && (createObj == ipObj));
+	ipObjIsSubstruct = ((createObj != nullptr) && (createObj == ipObj));
     }
 
-    if (ipObj != NULL)
+    if (ipObj != nullptr)
     {
 	/* try to get a value relative to ip */
         substructObj = abmfP_obj_get_substruct_obj(obj);
-        if (substructObj == NULL)
+        if (substructObj == nullptr)
         {
-	    return NULL;
+	    return nullptr;
         }
         structObj = abmfP_obj_get_struct_obj(substructObj);
-        if (structObj == NULL)
+        if (structObj == nullptr)
         {
-	    return NULL;
+	    return nullptr;
         }
 
         if (ipObjIsSubstruct && (substructObj == ipObj))
@@ -614,7 +614,7 @@ abmfP_get_c_substruct_name(GenCodeInfo genCodeInfo, ABObj obj)
 	    /* The structure is the instance */
 	    strcpy(nameBuf, abmfP_instance_ptr_var_name);
             substructName = abmfP_get_c_substruct_field_name(obj);
-	    if (substructName != NULL)
+	    if (substructName != nullptr)
 	    {
 	        strcat(nameBuf, "->");
 	        strcat(nameBuf, substructName);
@@ -623,7 +623,7 @@ abmfP_get_c_substruct_name(GenCodeInfo genCodeInfo, ABObj obj)
         }
     }
 
-    if (name == NULL)
+    if (name == nullptr)
     {
 	name = abmfP_get_c_substruct_global_name(substructObj);
     }
@@ -640,25 +640,25 @@ abmfP_get_c_substruct_global_name(ABObj obj)
 {
     static char	name[256];
     ABObj	subsObj = abmfP_obj_get_substruct_obj(obj);
-    ABObj	structObj = NULL;
-    STRING	structVar = NULL;
-    STRING	structField = NULL;
+    ABObj	structObj = nullptr;
+    STRING	structVar = nullptr;
+    STRING	structField = nullptr;
     
     *name = 0;
-    if (subsObj != NULL)
+    if (subsObj != nullptr)
     {
 	structObj = abmfP_obj_get_struct_obj(subsObj);
     }
-    if (structObj == NULL)
+    if (structObj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     structVar = abmfP_get_c_struct_global_name(structObj);
     structField = abmfP_get_c_substruct_field_name(subsObj);
-    if ((structVar == NULL) || (structField == NULL))
+    if ((structVar == nullptr) || (structField == nullptr))
     {
-	return NULL;
+	return nullptr;
     }
     sprintf(name, "%s.%s", structVar, structField);
     return name;
@@ -682,9 +682,9 @@ abmfP_get_c_substruct_type_name(ABObj obj)
     static char		typeName[256];
     STRING		ptrTypeName = abmfP_get_c_substruct_ptr_type_name(obj);
 
-    if (ptrTypeName == NULL)
+    if (ptrTypeName == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     snprintf(typeName, sizeof(typeName), "%sRec", ptrTypeName);
     return_c_ident(typeName);
@@ -696,16 +696,16 @@ abmfP_get_c_substruct_ptr_type_name(ABObj obj)
 {
     static char		ptrTypeName[MAX_NAME_SIZE];
     char		ptrTypeNameTmp[sizeof(ptrTypeName)];
-    STRING		varName = NULL;
-    ABObj		module = NULL;
+    STRING		varName = nullptr;
+    ABObj		module = nullptr;
     
     if (obj_is_ref(obj))
     {
 	/* refs use the type of the obj they actually are */
 	ABObj	actualObj = obj_get_actual_obj(obj);
-	if (actualObj == NULL)
+	if (actualObj == nullptr)
 	{
-	    return NULL;
+	    return nullptr;
 	}
 	varName = obj_get_name(actualObj);
     }
@@ -714,13 +714,13 @@ abmfP_get_c_substruct_ptr_type_name(ABObj obj)
         varName = obj_get_name(obj);
     }
 
-    if (varName == NULL)
+    if (varName == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
-    if ((module = obj_get_module(obj)) == NULL)
-	return NULL;
+    if ((module = obj_get_module(obj)) == nullptr)
+	return nullptr;
     else
     {
 	/* Warning: Due to abmfP_capitalize_first_char() returning a pointer
@@ -744,9 +744,9 @@ abmfP_get_clear_proc_name(ABObj obj)
     STRING	ptrTypeName = abmfP_get_c_struct_ptr_type_name(obj);
     /* abmfP_build_instance_prefix(obj, name, MAX_NAME_SIZE); */
 
-    if (ptrTypeName == NULL)
+    if (ptrTypeName == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     snprintf(name, sizeof(name), "%s_clear", ptrTypeName);
 
@@ -794,10 +794,10 @@ abmfP_get_widget_name(ABObj obj)
 {
     static char	nameBuf[MAX_NAME_SIZE];
     char	*name = nameBuf;
-    ABObj	project = NULL;
+    ABObj	project = nullptr;
     *nameBuf = 0;
-    assert(abmfP_parent(obj) != NULL);
-    assert(obj_get_name(obj_get_module(obj)) != NULL);
+    assert(abmfP_parent(obj) != nullptr);
+    assert(obj_get_name(obj_get_module(obj)) != nullptr);
 
     if (   ObjWClassIsShellSubclass(obj)
 	|| ObjWClassIsShellSubclass(abmfP_parent(obj)))
@@ -816,7 +816,7 @@ abmfP_get_widget_name(ABObj obj)
 	ABObj	compRoot = obj_get_root(obj);
 	ABObj	objectObj = objxm_comp_get_subobj(compRoot, AB_CFG_OBJECT_OBJ);
 	name =abmfP_get_widget_name(objectObj);
-	if ((name != NULL) && (name != nameBuf))
+	if ((name != nullptr) && (name != nameBuf))
 	{
 	    snprintf(nameBuf, sizeof(nameBuf), "%s", name);
 	}
@@ -830,7 +830,7 @@ abmfP_get_widget_name(ABObj obj)
     {
 	name = abmfP_get_c_field_name(obj);
     }
-    return (((*name) == 0)? NULL:name);
+    return (((*name) == 0)? nullptr:name);
 }
 
 
@@ -858,7 +858,7 @@ abmfP_get_widget_name_for_res_file(ABObj obj)
     static char	name[MAX_NAME_SIZE];
     char	nameTemp[sizeof(name)];
     *name = 0;
-    assert(abmfP_parent(obj) != NULL);
+    assert(abmfP_parent(obj) != nullptr);
 
     if (mfobj_has_flags(obj, CGenFlagTreatAsAppShell))
     {
@@ -883,7 +883,7 @@ abmfP_get_widget_name_for_res_file(ABObj obj)
 	/* name = Class*topmostcontainer*widget.item */
 
 	ABObj	parent = abmfP_parent(obj);
-	STRING	parentName = NULL;
+	STRING	parentName = nullptr;
 
 	*name = 0;
 	abmfP_get_widget_name_for_res_file(parent);
@@ -899,7 +899,7 @@ abmfP_get_widget_name_for_res_file(ABObj obj)
 
 	ABObj	container = obj;
 	ABObj	shell = abmfP_parent(container);
-	while ((shell != NULL) && (!ObjWClassIsShellSubclass(shell)))
+	while ((shell != nullptr) && (!ObjWClassIsShellSubclass(shell)))
 	{
 	    container = shell;
 	    shell = abmfP_parent(container);
@@ -1009,9 +1009,9 @@ STRING
 abmfP_get_exe_file_name(ABObj obj)
 {
     ABObj	project = obj_get_project(obj);
-    assert((project != NULL) && (obj_is_project(project)));
+    assert((project != nullptr) && (obj_is_project(project)));
 
-    if (mfobj_get_proj_data(project)->exe_name == NULL)
+    if (mfobj_get_proj_data(project)->exe_name == nullptr)
     {
 	char	exe_name[1024];
 	*exe_name = 0;
@@ -1042,7 +1042,7 @@ abmfP_build_instance_prefix(ABObj obj, STRING prefixBuf, int prefixBufSize)
     char	tmpBuf2[1024] = "";
     ABObj	module= obj_get_module(obj);
 
-    if (module == NULL)
+    if (module == nullptr)
     {
 	cvt_type_to_ident(obj_get_name(obj), prefixBuf, prefixBufSize);
     }
@@ -1080,12 +1080,12 @@ static int
 ensure_unique_comp_field_names(ABObj obj)
 {
     ABObj	compRoot = obj_get_root(obj);
-    ABObj	objectObj = NULL;
+    ABObj	objectObj = nullptr;
     BOOL	objectObjRenamed = FALSE;
-    STRING	compRootName = NULL;
-    STRING	ext = NULL;
+    STRING	compRootName = nullptr;
+    STRING	ext = nullptr;
 
-    if (   (compRoot == NULL) 
+    if (   (compRoot == nullptr) 
 	|| mfobj_has_flags(compRoot, CGenFlagCompFieldsUnique))
     {
 	return 0;
@@ -1100,7 +1100,7 @@ ensure_unique_comp_field_names(ABObj obj)
      */
     compRootName = obj_get_name(compRoot);
     objectObj = objxm_comp_get_subobj(compRoot, AB_CFG_OBJECT_OBJ);
-    if ((objectObj != NULL) && (objectObj != compRoot))
+    if ((objectObj != nullptr) && (objectObj != compRoot))
     {
 	util_dprintf(2, "changing field name %s -> %s\n",
    	    util_strsafe(obj_get_name(objectObj)), compRootName);
@@ -1115,13 +1115,13 @@ ensure_unique_comp_field_names(ABObj obj)
     if ((objectObjRenamed) && (compRoot != objectObj))
     {
 	ext = get_ident_for_widget_class(compRoot);
-	if (ext == NULL)
+	if (ext == nullptr)
 	{
 	    ext = "container";
 	}
         {
 	    char	newObjName[1024];
-	    if (compRootName != NULL)
+	    if (compRootName != nullptr)
 	    {
 	        snprintf(newObjName, sizeof(newObjName), "%s_%s", compRootName, ext);
 	    } else {
@@ -1142,7 +1142,7 @@ ensure_unique_comp_field_names(ABObj obj)
 static STRING
 get_ident_for_widget_class(ABObj obj)
 {
-    STRING	ident = NULL;
+    STRING	ident = nullptr;
 
     if (ObjWClassIsMenuShell(obj))
 	ident = "menu";
@@ -1190,7 +1190,7 @@ cvt_ident_to_type(STRING ident)
 
     if (identLen < 0)
     {
-	return NULL;
+	return nullptr;
     }
     ident[0] = toupper(ident[0]);
 
@@ -1273,7 +1273,7 @@ cvt_type_to_ident(STRING type, STRING identBuf, int identBufSize)
 static int
 assert_c_ident_ok(STRING ident)
 {
-    assert((ident == NULL) || (ab_c_ident_is_ok(ident)));
+    assert((ident == nullptr) || (ab_c_ident_is_ok(ident)));
     return 0;
 }
 #endif /* DEBUG */

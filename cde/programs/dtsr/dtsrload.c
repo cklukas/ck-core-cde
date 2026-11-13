@@ -122,7 +122,7 @@ extern void     gen_vec (char *fname_huffcode_tab);
 extern long     gen_vec_hufid;
 
 /*--------------- GLOBALS ------------------*/
-static char    *abstrbuf = NULL;
+static char    *abstrbuf = nullptr;
 static int      blobs_are_used;	/* boolean */
 static long     created_reccount = 0L;
 static long     dbrec_hufid = 1L;
@@ -136,7 +136,7 @@ static long     duplicate_recids = 0L;
 char            fname_huffcode_tab[_POSIX_PATH_MAX];
 char            fname_input[_POSIX_PATH_MAX];
 struct stat     fstat_input;
-static FILE    *infile = NULL;
+static FILE    *infile = nullptr;
 static long     input_reccount = 0L;
 static DtSrINT32
 		maxdba = 0;
@@ -517,7 +517,7 @@ static void     write_dbrec (void)
 /* prints complete progress message and statistics to stdout */
 static void     print_progress (void)
 {
-    time_t	seconds = time (NULL) - starttime;
+    time_t	seconds = time (nullptr) - starttime;
     long	bytes_in = ftell (infile);
 
     if (bytes_in <= 0L)
@@ -578,7 +578,7 @@ static int      load_next_miscrec (int first_call)
 	FILL_FZKEY, FILL_ABSTR, FILL_ZEROS
     }
                     fill_state = FILL_ZEROS;
-    static char    *src = NULL;
+    static char    *src = nullptr;
     static int      srclen = 0;
     static int      totbytes = 0;
 
@@ -913,7 +913,7 @@ int             main (int argc, char *argv[])
     if (debug_mode)
 	printf (PROGNAME "211 database OPEN string = '%s%s'\n",
 	    dicpath, dicname);
-    if (!austext_dopen (dicname, dicpath, NULL, 0, NULL)) {
+    if (!austext_dopen (dicname, dicpath, nullptr, 0, nullptr)) {
 	fprintf (aa_stderr, "%s\n", DtSearchGetMessages());
 	DtSearchExit (3);
     }
@@ -926,7 +926,7 @@ int             main (int argc, char *argv[])
 	aa_argv0,
 	(src) ? src : CATGETS(dtsearch_catd, MS_misc, 6, "<unknown>"),
 	fname_input);
-    if ((infile = fopen (fname_input, "r")) == NULL) {
+    if ((infile = fopen (fname_input, "r")) == nullptr) {
 	fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_misc, 12,
 	    "%sUnable to open %s:\n  %s\n"),
 	    PROGNAME "326 ", fname_input, strerror (errno));
@@ -948,7 +948,7 @@ int             main (int argc, char *argv[])
     }
 
     if (dbrec.or_abstrsz > 0)
-	abstrbuf = austext_malloc (dbrec.or_abstrsz + 16, PROGNAME "744", NULL);
+	abstrbuf = austext_malloc (dbrec.or_abstrsz + 16, PROGNAME "744", nullptr);
 
     /* Get input file size for progress msgs */
     if (fstat (fileno (infile), &fstat_input) == -1) {
@@ -991,7 +991,7 @@ int             main (int argc, char *argv[])
 	 * WARNING! Presumes or_fzkeysz <= the space allocated
 	 * for it in the correct miscrec.
 	 *-----------------------------------------------------*/
-	if (fgets (linebuf, sizeof(linebuf) - 1, infile) == NULL)
+	if (fgets (linebuf, sizeof(linebuf) - 1, infile) == nullptr)
 	    break;
 
 	/* Got at least one line of a new record.  Print progress dots */
@@ -1032,7 +1032,7 @@ int             main (int argc, char *argv[])
 	 * Second line is abstract line.  Save it in record buffer,
 	 * hopping over the first 10 chars ("ABSTRACT: ....").
 	 *-----------------------------------------------------*/
-	if (fgets (linebuf, sizeof (linebuf) - 1, infile) == NULL)
+	if (fgets (linebuf, sizeof (linebuf) - 1, infile) == nullptr)
 	    break;
 	linebuf [sizeof(linebuf)-1] = 0;
 	linelen = strlen (linebuf);
@@ -1064,7 +1064,7 @@ int             main (int argc, char *argv[])
 	 * (There may be one more write required
 	 * after we determine total blob size).
 	 *-----------------------------------------------------*/
-	if (fgets (linebuf, sizeof (linebuf) - 1, infile) == NULL)
+	if (fgets (linebuf, sizeof (linebuf) - 1, infile) == nullptr)
 	    break;
 	linebuf [sizeof(linebuf)-1] = 0;
 	linelen = strlen (linebuf);
@@ -1076,7 +1076,7 @@ int             main (int argc, char *argv[])
 	 * Isolate first token surrounded by whitespace
 	 * (and parse out \n) 
 	 */
-	if ((db_key = strtok (linebuf, " \t\n")) == NULL) {
+	if ((db_key = strtok (linebuf, " \t\n")) == nullptr) {
 	    cptr = PROGNAME"1076";
 	    goto INVALID_FORMAT;
 	}
@@ -1148,7 +1148,7 @@ int             main (int argc, char *argv[])
 	 * It is no longer optional.  If invalid, the current
 	 * run date that was preloaded into the record is used.
 	 *-----------------------------------------------------*/
-	if (fgets (linebuf, sizeof (linebuf) - 1, infile) == NULL)
+	if (fgets (linebuf, sizeof (linebuf) - 1, infile) == nullptr)
 	    break;
 	linebuf [sizeof(linebuf)-1] = 0;
 	linelen = strlen (linebuf);
@@ -1231,7 +1231,7 @@ int             main (int argc, char *argv[])
 	    continue;
 	}
 	linelen = 1;
-	while (linebuf [linelen] = readchar_ftext (NULL)) {
+	while (linebuf [linelen] = readchar_ftext (nullptr)) {
 	    if (++linelen >= 80) {
 		call_encoder ((UCHAR *)linebuf, linelen);
 		linelen = 0;

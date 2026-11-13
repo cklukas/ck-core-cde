@@ -61,11 +61,11 @@ FontCatalogLoad(
         Display *display )
 {
     if (!display)
-        return NULL;
+        return nullptr;
 
     FontCatalog *catalog = calloc(1, sizeof(FontCatalog));
     if (!catalog)
-        return NULL;
+        return nullptr;
 
     int count = 0;
     char **font_names = XListFonts(display, FONT_CATALOG_PATTERN,
@@ -74,21 +74,21 @@ FontCatalogLoad(
         if (font_names)
             XFreeFontNames(font_names);
         FontCatalogFree(catalog);
-        return NULL;
+        return nullptr;
     }
 
     catalog->entries = calloc(count, sizeof(FontCatalogEntry));
     if (!catalog->entries) {
         XFreeFontNames(font_names);
         FontCatalogFree(catalog);
-        return NULL;
+        return nullptr;
     }
 
     catalog->families = calloc(count, sizeof(FontCatalogFamily));
     if (!catalog->families) {
         XFreeFontNames(font_names);
         FontCatalogFree(catalog);
-        return NULL;
+        return nullptr;
     }
 
     int added = 0;
@@ -106,7 +106,7 @@ FontCatalogLoad(
         bool duplicate = false;
         for (j = 0; j < added; j++) {
             const char *existing = catalog->entries[j].descriptor ?
-                catalog->entries[j].descriptor->raw : NULL;
+                catalog->entries[j].descriptor->raw : nullptr;
             if (existing && raw && strcmp(existing, raw) == 0) {
                 duplicate = true;
                 break;
@@ -128,7 +128,7 @@ FontCatalogLoad(
 
     if (added == 0) {
         FontCatalogFree(catalog);
-        return NULL;
+        return nullptr;
     }
 
     catalog->count = added;
@@ -136,7 +136,7 @@ FontCatalogLoad(
 
     /* Build family groups once entries are sorted by family */
     int family_count = 0;
-    FontCatalogFamily *current_family = NULL;
+    FontCatalogFamily *current_family = nullptr;
     for (i = 0; i < catalog->count; i++) {
         FontDescriptor *desc = catalog->entries[i].descriptor;
         const char *family_name = desc && desc->family ? desc->family : "unknown";
@@ -208,7 +208,7 @@ FontCatalogDescriptor(
         int index )
 {
     if (!catalog || index < 0 || index >= catalog->count)
-        return NULL;
+        return nullptr;
     return catalog->entries[index].descriptor;
 }
 
@@ -218,7 +218,7 @@ FontCatalogLabel(
         int index )
 {
     if (!catalog || index < 0 || index >= catalog->count)
-        return NULL;
+        return nullptr;
     return catalog->entries[index].label;
 }
 
@@ -235,7 +235,7 @@ FontCatalogFamilyLabel(
         int index )
 {
     if (!catalog || index < 0 || index >= catalog->familyCount)
-        return NULL;
+        return nullptr;
     return catalog->families[index].label;
 }
 
@@ -256,13 +256,13 @@ FontCatalogStyleLabel(
         int styleIndex )
 {
     if (!catalog || familyIndex < 0 || familyIndex >= catalog->familyCount)
-        return NULL;
+        return nullptr;
     FontCatalogFamily *family = &catalog->families[familyIndex];
     if (styleIndex < 0 || styleIndex >= family->styleCount)
-        return NULL;
+        return nullptr;
     FontDescriptor *desc = family->styles[styleIndex]->descriptor;
     if (!desc)
-        return NULL;
+        return nullptr;
     return desc->displayName ? desc->displayName : desc->raw;
 }
 
@@ -273,10 +273,10 @@ FontCatalogStyleDescriptor(
         int styleIndex )
 {
     if (!catalog || familyIndex < 0 || familyIndex >= catalog->familyCount)
-        return NULL;
+        return nullptr;
     FontCatalogFamily *family = &catalog->families[familyIndex];
     if (styleIndex < 0 || styleIndex >= family->styleCount)
-        return NULL;
+        return nullptr;
     return family->styles[styleIndex]->descriptor;
 }
 

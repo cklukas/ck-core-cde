@@ -53,7 +53,7 @@ MainWindow_new(Widget parent)
 	XtVaCreateWidget("MainWindow",
 			 xmMainWindowWidgetClass,
 			 parent,
-			 NULL);
+			 nullptr);
     /*
      * create the menu bar and tool bar
      */
@@ -85,11 +85,11 @@ MainWindow_createMenuBar(MainWindow* me)
     /*
      * create the menu bar
      */
-    menu_bar = XmCreateMenuBar(me->widget, "MenuBar", NULL, 0);
+    menu_bar = XmCreateMenuBar(me->widget, "MenuBar", nullptr, 0);
     /*
      * create the file menu
      */
-    file_menu = XmCreatePulldownMenu(menu_bar, "FileMenu", NULL, 0);
+    file_menu = XmCreatePulldownMenu(menu_bar, "FileMenu", nullptr, 0);
     /*
      * create the file menu cascade button
      */
@@ -99,7 +99,7 @@ MainWindow_createMenuBar(MainWindow* me)
 			    menu_bar,
 			    XmNsubMenuId, file_menu,
 			    XmNlabelString, label,
-			    NULL);
+			    nullptr);
     XmStringFree(label);
     /*
      * create the "Print..." file menu item
@@ -110,12 +110,12 @@ MainWindow_createMenuBar(MainWindow* me)
 				xmPushButtonWidgetClass,
 				file_menu,
 				XmNlabelString, label,
-				NULL);
+				nullptr);
     XmStringFree(label);
     /*
      * separator
      */
-    XtVaCreateManagedWidget("", xmSeparatorGadgetClass, file_menu, NULL);
+    XtVaCreateManagedWidget("", xmSeparatorGadgetClass, file_menu, nullptr);
     /*
      * "Exit" button
      */
@@ -125,7 +125,7 @@ MainWindow_createMenuBar(MainWindow* me)
 				xmPushButtonWidgetClass,
 				file_menu,
 				XmNlabelString, label,
-				NULL);
+				nullptr);
     XmStringFree(label);
     /*
      * manage the menu bar and return it
@@ -155,7 +155,7 @@ MainWindow_createToolBar(MainWindow* me)
                                   me->widget,
                                   XmNorientation, XmHORIZONTAL,
 				  XmNscrolledWindowChildType, XmCOMMAND_WINDOW,
-                                  NULL);
+                                  nullptr);
     /*
      * create just the "quick print" button
      */
@@ -165,6 +165,6 @@ MainWindow_createToolBar(MainWindow* me)
 				xmPushButtonWidgetClass,
 				row,
 				XmNlabelString, label,
-				NULL);
+				nullptr);
     XmStringFree(label);
 }

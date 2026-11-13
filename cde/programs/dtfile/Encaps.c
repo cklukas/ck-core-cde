@@ -136,12 +136,12 @@ typedef struct
 
 extern int filter_dialog,mod_attr_dialog;
 
-static ClassSet * class_set = NULL;
+static ClassSet * class_set = nullptr;
 static int class_set_size = 0;
 static int num_classes = 0;
 static int NumberOfDialogMapped = 0;
 
-static char * resourceBuf = NULL;
+static char * resourceBuf = nullptr;
 static int commonResourceCount = 5;
 static DialogResource commonResources[] =
 {
@@ -266,7 +266,7 @@ _DtInitializeEncapsulation(
 
    encap_parent_shell = XtAppCreateShell (name, class,
                                     applicationShellWidgetClass,
-                                    display, NULL, 0);
+                                    display, nullptr, 0);
 
    /* Supposedly required to be ICCCM complient */
    XtSetArg(args[0], XmNmappedWhenManaged, False);
@@ -315,7 +315,7 @@ _DtInstallDialog(
    }
 
    class_set[num_classes].class = dialog_class;
-   class_set[num_classes].dialog_list = NULL;
+   class_set[num_classes].dialog_list = nullptr;
    class_set[num_classes].cache = cache;
    class_set[num_classes].destroyPopups = destroyPopups;
 
@@ -345,14 +345,14 @@ _DtGetDialogData(
 
    dialog = class_set[dialog_data->type].dialog_list;
 
-   while (dialog != NULL)
+   while (dialog != nullptr)
    {
       if (dialog->dialog_data == dialog_data)
       {
          new_data = (DialogData *) XtMalloc (sizeof (DialogData));
 
          new_data->type = dialog->dialog_data->type;
-         new_data->data = NULL;
+         new_data->data = nullptr;
          if (class_set[new_data->type].class->get_values)
          {
             new_data->data =
@@ -365,7 +365,7 @@ _DtGetDialogData(
       dialog = dialog->next;
    }
 
-   return (NULL);
+   return (nullptr);
 }
 
 
@@ -466,7 +466,7 @@ _DtShowDialog(
    /*  See if there is a cached, unused dialog of the correct type.  */
 
    dialog_type = dialog_data->type;
-   dialog = NULL;
+   dialog = nullptr;
 
    if (!ignoreCache)
    {
@@ -481,11 +481,11 @@ _DtShowDialog(
        * This lets us know it we need to restart the timer, to again build
        * up the cache.
        */
-      while (availableDialog != NULL)
+      while (availableDialog != nullptr)
       {
          if (availableDialog->in_use == False)
          {
-            if (dialog == NULL)
+            if (dialog == nullptr)
                dialog = availableDialog;
             else
                availableDialogCount++;
@@ -494,7 +494,7 @@ _DtShowDialog(
       }
    }
 
-   if (dialog == NULL)
+   if (dialog == nullptr)
    {
       dialog = (Dialog *) XtMalloc (sizeof (Dialog));
 
@@ -528,14 +528,14 @@ _DtShowDialog(
       if(dialog_type == mod_attr_dialog)
       {
         ModAttrRec *mr = (ModAttrRec *)dialog->dialog;
-        ResetFlag(NULL,mr->ok);
-        ResetFlag(NULL,mr->cancel);
+        ResetFlag(nullptr,mr->ok);
+        ResetFlag(nullptr,mr->cancel);
       }
       else if(dialog_type == filter_dialog)
       {
         FilterRec *fr = (FilterRec *)dialog->dialog;
-        ResetFlag(NULL,fr->ok);
-        ResetFlag(NULL,fr->close);
+        ResetFlag(nullptr,fr->ok);
+        ResetFlag(nullptr,fr->close);
       }
    }
 
@@ -559,7 +559,7 @@ _DtShowDialog(
     * Set pointer to top dialog data in child of the shell.
     * This is needed to get help to work.
     */
-   if (top_rec == NULL)
+   if (top_rec == nullptr)
       top_rec = dialog->dialog;
    XtSetArg(args[0], XmNuserData, top_rec);
    XtSetValues(dialog->dialog_widget, args, 1);
@@ -572,7 +572,7 @@ _DtShowDialog(
        * the dialog relative to a window which is not the transientFor
        * parent.  This is used for the audio preview dialog.
        */
-      if (map_parent == NULL)
+      if (map_parent == nullptr)
          map_parent = parent;
 
       (*(class_set[dialog_type].class->map)) (map_parent, dialog->dialog);
@@ -728,7 +728,7 @@ _DtShowDialog(
        * Dialogs with no controlling parent window, need to have their
        * own workspace perperty set, if some workspaces have been requested.
        */
-      if ((parent == NULL) && workspaces)
+      if ((parent == nullptr) && workspaces)
          _DtEncapSetWorkSpaceHints(XtParent(dialog->dialog_widget), workspaces);
    }
 
@@ -770,7 +770,7 @@ _DtShowDialog(
    /*  Fix up the transient-for windowing information so that  */
    /*  the window manager will shuffle and iconify as a group  */
 
-   if (parent != NULL)
+   if (parent != nullptr)
    {
       if (XtIsRealized(parent))
       {
@@ -820,7 +820,7 @@ _DtShowDialog(
                       StructureNotifyMask,
                       False,
                       DialogStructureNotifyHandler,
-                      NULL );
+                      nullptr );
 }
 
 
@@ -849,7 +849,7 @@ _DtHideDialog(
 
    dialog = class_set[dialog_data->type].dialog_list;
 
-   while (dialog != NULL)
+   while (dialog != nullptr)
    {
        if ((dialog->dialog_data &&
             dialog->dialog_data == dialog_data) && dialog->in_use == True)
@@ -918,7 +918,7 @@ _DtHideDialog(
             new_data = (DialogData *) XtMalloc (sizeof (DialogData));
 
             new_data->type = dialog->dialog_data->type;
-            new_data->data = NULL;
+            new_data->data = nullptr;
             if (class_set[new_data->type].class->get_values)
             {
                new_data->data =
@@ -968,7 +968,7 @@ _DtGetDialogShell(
 
    dialog = class_set[dialog_data->type].dialog_list;
 
-   while (dialog != NULL)
+   while (dialog != nullptr)
    {
       if (dialog->dialog_data == dialog_data)
          return (dialog->dialog_widget);
@@ -976,7 +976,7 @@ _DtGetDialogShell(
          dialog = dialog->next;
    }
 
-   return (NULL);
+   return (nullptr);
 }
 
 
@@ -1002,7 +1002,7 @@ _DtGetDialogInstance(
 
    dialog = class_set[dialog_data->type].dialog_list;
 
-   while (dialog != NULL)
+   while (dialog != nullptr)
    {
       if (dialog->dialog_data && dialog->dialog_data == dialog_data)
          return (dialog->dialog);
@@ -1010,7 +1010,7 @@ _DtGetDialogInstance(
          dialog = dialog->next;
    }
 
-   return (NULL);
+   return (nullptr);
 }
 
 
@@ -1039,7 +1039,7 @@ _DtGetInstanceData(
    {
       dialog = class_set[i].dialog_list;
 
-      while (dialog != NULL)
+      while (dialog != nullptr)
       {
          if (dialog->dialog == instance && dialog->in_use == True)
             return (dialog->dialog_data);
@@ -1048,7 +1048,7 @@ _DtGetInstanceData(
       }
    }
 
-   return (NULL);
+   return (nullptr);
 }
 
 
@@ -1075,7 +1075,7 @@ _DtIsDialogShowing(
 
    dialog = class_set[dialog_data->type].dialog_list;
 
-   while (dialog != NULL)
+   while (dialog != nullptr)
    {
       if (dialog->in_use && dialog->dialog_data == dialog_data)
          return (True);
@@ -1104,7 +1104,7 @@ _DtWriteDialogData(
         char **name_list )
 
 {
-   if (dialog_data != NULL)
+   if (dialog_data != nullptr)
       (*(class_set[dialog_data->type].class->write_resource_values))
          (dialog_data, fd, name_list);
 }
@@ -1125,11 +1125,11 @@ _DtFreeDialogData(
         DialogData *dialog_data )
 
 {
-   if (dialog_data != NULL)
+   if (dialog_data != nullptr)
    {
       (*(class_set[dialog_data->type].class->free_values)) (dialog_data->data);
       XtFree ((char *) dialog_data);
-       dialog_data = NULL;
+       dialog_data = nullptr;
    }
 }
 
@@ -1165,9 +1165,9 @@ _DtDialogGetResources(
    /*  provided by the calling procedure.                             */
 
    nameCount = 0;
-   if (name_list != NULL)
+   if (name_list != nullptr)
    {
-      while (name_list[nameCount] != NULL)
+      while (name_list[nameCount] != nullptr)
       {
          xrmName[nameCount] =  XrmStringToQuark (name_list[nameCount]);
          nameCount++;
@@ -1242,17 +1242,17 @@ IntDialogGetResources(
                return;
             }
          else
-            convertedValue.addr = NULL;
+            convertedValue.addr = nullptr;
 
       }
       else
-         convertedValue.addr = NULL;
+         convertedValue.addr = nullptr;
 
 
       /*  Set the converted value address pointer and value to  */
       /*  the proper default value if the addr is NULL.         */
 
-      if (convertedValue.addr == NULL)
+      if (convertedValue.addr == nullptr)
       {
          if (resource->size == sizeof(char))
          {
@@ -1358,9 +1358,9 @@ IntDialogPutResources(
    (void) strcat (outBuf, "*");
 
    nameCount = 0;
-   if (nameList != NULL)
+   if (nameList != nullptr)
    {
-      while (nameList[nameCount] != NULL)
+      while (nameList[nameCount] != nullptr)
       {
          (void) strcat (outBuf, nameList[nameCount]);
          (void) strcat (outBuf, ".");
@@ -1368,7 +1368,7 @@ IntDialogPutResources(
       }
    }
 
-   if (dialogName != NULL)
+   if (dialogName != nullptr)
    {
       (void) strcat (outBuf, dialogName);
       (void) strcat (outBuf, ".");
@@ -1406,7 +1406,7 @@ _DtEncapSetWorkSpaceHints(
 
 {
    char * ptr;
-   Atom * workspace_atoms = NULL;
+   Atom * workspace_atoms = nullptr;
    int num_workspaces=0;
 
    if (workspaces)
@@ -1415,7 +1415,7 @@ _DtEncapSetWorkSpaceHints(
       {
          ptr = DtStrchr (workspaces, '*');
 
-         if (ptr != NULL) *ptr = '\0';
+         if (ptr != nullptr) *ptr = '\0';
 
          workspace_atoms = (Atom *) XtRealloc ((char *)workspace_atoms,
                            sizeof (Atom) * (num_workspaces + 1));
@@ -1425,18 +1425,18 @@ _DtEncapSetWorkSpaceHints(
 
          num_workspaces++;
 
-         if (ptr != NULL)
+         if (ptr != nullptr)
          {
             *ptr = '*';
             workspaces = ptr + 1;
          }
-      } while (ptr != NULL);
+      } while (ptr != nullptr);
 
       DtWsmSetWorkspacesOccupied (XtDisplay(shell), XtWindow (shell), workspace_atoms,
 		           num_workspaces);
 
       XtFree ((char *) workspace_atoms);
-      workspace_atoms = NULL;
+      workspace_atoms = nullptr;
    }
    else
    {
@@ -1518,7 +1518,7 @@ DataChangeCallback(
    new_data = (DialogData *) XtMalloc (sizeof (DialogData));
 
    new_data->type = dialog->dialog_data->type;
-   new_data->data = NULL;
+   new_data->data = nullptr;
    if (class_set[new_data->type].class->get_values)
    {
       new_data->data = (*(class_set[new_data->type].class->get_values))
@@ -1552,7 +1552,7 @@ DataCloseCallback(
 {
    Dialog * dialog = (Dialog *) client_data;
 
-   if(RecheckFlag(NULL,widget)) /* cancel flag already set, just return */
+   if(RecheckFlag(nullptr,widget)) /* cancel flag already set, just return */
        return;
    _DtHideDialog (dialog->dialog_data, True);
 }
@@ -1595,13 +1595,13 @@ TimerEvent(
       if (!class_set[i].cache)
          continue;
 
-      while (dialog != NULL)
+      while (dialog != nullptr)
          if (dialog->in_use == False)
             break;
          else
             dialog = dialog->next;
 
-      if (dialog == NULL)
+      if (dialog == nullptr)
       {
          dialog = (Dialog *) XtMalloc (sizeof (Dialog));
 
@@ -1645,7 +1645,7 @@ TimerEvent(
       dialog = class_set[i].dialog_list;
       count = 0;
 
-      while (dialog != NULL)
+      while (dialog != nullptr)
       {
          if (dialog->in_use == False)
             count++;
@@ -1675,7 +1675,7 @@ TimerEvent(
 
          (*(class_set[i].class->destroy)) (dialog->dialog);
          XtFree ((char *) dialog);
-          dialog = NULL;
+          dialog = nullptr;
 
          break;
       }
@@ -1785,13 +1785,13 @@ _DtXmStringToString(
 
 {
    const XmString *value = resource_value;
-   char *out_value = NULL;
+   char *out_value = nullptr;
 
-   if (*value != NULL)
+   if (*value != nullptr)
    {
        out_value = (char *) _XmStringUngenerate(*value, XmFONTLIST_DEFAULT_TAG,
                                                 XmCHARSET_TEXT, XmCHARSET_TEXT);
-       if ( out_value != NULL)
+       if ( out_value != nullptr)
        {
            if (strlen (out_value) != 0)
            {
@@ -1814,18 +1814,18 @@ _DtXmStringTableToString(
 {
    const XmStringTable *value = resource_value;
    int i;
-   char *out_value = NULL;
+   char *out_value = nullptr;
    Boolean first = True;
 
-   if ((value != NULL) && (*value != NULL))
+   if ((value != nullptr) && (*value != nullptr))
    {
       i = 0;
-      while ((*value)[i] != NULL)
+      while ((*value)[i] != nullptr)
       {
           out_value = (char *)_XmStringUngenerate((*value)[i],
                                                   XmFONTLIST_DEFAULT_TAG,
                                                   XmCHARSET_TEXT, XmCHARSET_TEXT);
-          if ( out_value != NULL)
+          if ( out_value != nullptr)
           {
               if (first)
               {
@@ -1838,7 +1838,7 @@ _DtXmStringTableToString(
               (void) write (fd, out_value, strlen (out_value));
 
               XtFree ((char *) out_value);
-              out_value = NULL;
+              out_value = nullptr;
           }
 
           i++;
@@ -1859,7 +1859,7 @@ _DtStringToString(
 {
    const char *const *value = resource_value;
 
-   if (*value == NULL || strlen (*value) == 0)
+   if (*value == nullptr || strlen (*value) == 0)
       ;
    else
    {
@@ -2056,7 +2056,7 @@ _DtBuildDialog(
    /*  See if there is a cached, unused dialog of the correct type.  */
 
    dialog_type = dialog_data->type;
-   dialog = NULL;
+   dialog = nullptr;
 
    if (!ignoreCache)
    {
@@ -2071,11 +2071,11 @@ _DtBuildDialog(
        * This lets us know it we need to restart the timer, to again build
        * up the cache.
        */
-      while (availableDialog != NULL)
+      while (availableDialog != nullptr)
       {
          if (availableDialog->in_use == False)
          {
-            if (dialog == NULL)
+            if (dialog == nullptr)
                dialog = availableDialog;
             else
                availableDialogCount++;
@@ -2084,7 +2084,7 @@ _DtBuildDialog(
       }
    }
 
-   if (dialog == NULL)
+   if (dialog == nullptr)
    {
       dialog = (Dialog *) XtMalloc (sizeof (Dialog));
 
@@ -2110,7 +2110,7 @@ _DtBuildDialog(
     * Set pointer to top dialog data in child of the shell.
     * This is needed to get help to work.
     */
-   if (top_rec == NULL)
+   if (top_rec == nullptr)
       top_rec = dialog->dialog;
    XtSetArg(args[0], XmNuserData, top_rec);
    XtSetValues(dialog->dialog_widget, args, 1);
@@ -2165,7 +2165,7 @@ _DtShowBuiltDialog(
 
    /*  Find the dialog */
    dialog = class_set[dialog_data->type].dialog_list;
-   while (dialog != NULL)
+   while (dialog != nullptr)
    {
       if (dialog->dialog_data == dialog_data)
          break;
@@ -2181,7 +2181,7 @@ _DtShowBuiltDialog(
        * the dialog relative to a window which is not the transientFor
        * parent.  This is used for the audio preview dialog.
        */
-      if (map_parent == NULL)
+      if (map_parent == nullptr)
          map_parent = parent;
 
       (*(class_set[dialog_type].class->map)) (map_parent, dialog->dialog);
@@ -2318,7 +2318,7 @@ _DtShowBuiltDialog(
        * Dialogs with no controlling parent window, need to have their
        * own workspace perperty set, if some workspaces have been requested.
        */
-      if ((parent == NULL) && workspaces)
+      if ((parent == nullptr) && workspaces)
          _DtEncapSetWorkSpaceHints(XtParent(dialog->dialog_widget), workspaces);
    }
 
@@ -2360,7 +2360,7 @@ _DtShowBuiltDialog(
    /*  Fix up the transient-for windowing information so that  */
    /*  the window manager will shuffle and iconify as a group  */
 
-   if (parent != NULL)
+   if (parent != nullptr)
    {
       if (XtIsRealized(parent))
       {
@@ -2477,7 +2477,7 @@ _DtFreeDialog(
    headptr = &class_set[dialog_data->type].dialog_list;
    dialog = *headptr;
 
-   while (dialog != NULL)
+   while (dialog != nullptr)
    {
       if (dialog->dialog_data == dialog_data)
       {

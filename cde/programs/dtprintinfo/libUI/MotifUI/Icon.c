@@ -291,12 +291,12 @@ static XtResource resources[] =
     {
     GuiNsingleClickCallback, XtCCallback, XtRCallback, sizeof(caddr_t),
     XtOffsetOf(struct _IconRec, icon.single_click_callback),
-    XtRCallback, NULL
+    XtRCallback, nullptr
     },
     {
     GuiNdoubleClickCallback, XtCCallback, XtRCallback, sizeof(caddr_t),
     XtOffsetOf(struct _IconRec, icon.double_click_callback),
-    XtRCallback, NULL
+    XtRCallback, nullptr
     },
     {
     GuiNiconShadowType, GuiCIconShadowType, XmRShadowType,
@@ -394,15 +394,15 @@ static XmSyntheticResource syn_resources[] =
 {
     {
     XmNlabelString, sizeof(XmString),
-    XtOffsetOf(struct _IconRec, icon.label), GetLabelString, NULL
+    XtOffsetOf(struct _IconRec, icon.label), GetLabelString, nullptr
     },
     {
     GuiNtopLabelString, sizeof(XmString),
-    XtOffsetOf(struct _IconRec, icon.top_label), GetTopLabelString, NULL
+    XtOffsetOf(struct _IconRec, icon.top_label), GetTopLabelString, nullptr
     },
     {
     GuiNbottomLabelString, sizeof(XmString),
-    XtOffsetOf(struct _IconRec, icon.bottom_label), GetBottomLabelString, NULL
+    XtOffsetOf(struct _IconRec, icon.bottom_label), GetBottomLabelString, nullptr
     }
 };
 
@@ -414,10 +414,10 @@ IconClassRec iconClassRec =
     "Icon",                             /* class_name           */
     sizeof(IconRec),                    /* widget_size          */
     ClassInitialize,                    /* class_initialize     */
-    NULL,                               /* class_part_initialize*/
+    nullptr,                               /* class_part_initialize*/
     False,                              /* class_inited         */
     Initialize,                         /* initialize           */
-    NULL,                               /* initialize_notify    */
+    nullptr,                               /* initialize_notify    */
     XtInheritRealize,                   /* realize              */
     actionsList,                        /* actions              */
     XtNumber(actionsList),              /* num_actions          */
@@ -432,26 +432,26 @@ IconClassRec iconClassRec =
     Resize,                             /* resize               */
     Redisplay,                          /* expose               */
     SetValues,                          /* set_values           */
-    NULL,                               /* set_values_hook      */
+    nullptr,                               /* set_values_hook      */
     XtInheritSetValuesAlmost,           /* set_values_almost    */
-    NULL,                               /* get_values_hook      */
-    NULL,                               /* accept_focus         */
+    nullptr,                               /* get_values_hook      */
+    nullptr,                               /* accept_focus         */
     XtVersionDontCheck,                 /* version              */
-    NULL,                               /* callback_private     */
+    nullptr,                               /* callback_private     */
     defaultTranslations,                /* tm_table             */
     QueryGeometry,                      /* query_geometry       */
-    NULL,                               /* disp accelerator     */
-    NULL                                /* extension            */
+    nullptr,                               /* disp accelerator     */
+    nullptr                                /* extension            */
     },
     {
     /* primitive_class record */
     HighlightBorder,                    /* border_highlight     */
     UnhighlightBorder,                  /* border_unhighlight   */
     XtInheritTranslations,              /* translations         */
-    NULL,                               /* arm_and_activate     */
+    nullptr,                               /* arm_and_activate     */
     syn_resources,                      /* syn resources        */
     XtNumber(syn_resources),            /* num syn_resources    */
-    NULL,                               /* extension            */
+    nullptr,                               /* extension            */
     },
     {
     /* icon_class record     */
@@ -705,9 +705,9 @@ ClassInitialize(
    )
 {
     GuiRID_PIXMAP_PLACEMENT = XmRepTypeRegister(GuiRPixmapPlacement,
-        PixmapPlacement, NULL, sizeof(PixmapPlacement) / sizeof(char *));
+        PixmapPlacement, nullptr, sizeof(PixmapPlacement) / sizeof(char *));
     GuiRID_STATE_PIXMAP_PLACEMENT = XmRepTypeRegister(GuiRStateGravity, 
-	StatePixmapPlacement, NULL,sizeof(StatePixmapPlacement)/sizeof(char *));
+	StatePixmapPlacement, nullptr,sizeof(StatePixmapPlacement)/sizeof(char *));
 }
 
 /*
@@ -760,7 +760,7 @@ Initialize(
         StringDirection(new) = XmSTRING_DIRECTION_L_TO_R;
       }
 
-    if (Font(new) == NULL)
+    if (Font(new) == nullptr)
       {
         XmFontList defaultFont;
 
@@ -770,22 +770,22 @@ Initialize(
     else
         Font(new) = XmFontListCopy(Font(new));
 
-    if (Pixmap(new) == XmUNSPECIFIED_PIXMAP && Label(new) == NULL)
+    if (Pixmap(new) == XmUNSPECIFIED_PIXMAP && Label(new) == nullptr)
       {
         XmString string;
-        string = (XmString)XmeGetLocalizedString((char *)NULL, 
+        string = (XmString)XmeGetLocalizedString((char *)nullptr, 
 	    (Widget) new, XmNlabelString, new->core.name);
         Label(new) = XmStringCopy(string);
         XmStringFree (string);
       }
-    else if (Label(new) != NULL)
+    else if (Label(new) != nullptr)
       {
         if (XmeStringIsValid((XmString) Label(new)))
             Label(new) = XmStringCopy((XmString) Label(new));
         else
           {
             XmString string;
-            string = (XmString)XmeGetLocalizedString((char *)NULL,
+            string = (XmString)XmeGetLocalizedString((char *)nullptr,
 		(Widget) new, XmNlabelString, new->core.name);
             Label(new) = XmStringCopy(string);
             XmStringFree (string);
@@ -794,11 +794,11 @@ Initialize(
     if (TopLabel(new) && XmeStringIsValid((XmString) TopLabel(new)))
 	TopLabel(new) = XmStringCopy((XmString) TopLabel(new));
     else
-	TopLabel(new) = NULL;
+	TopLabel(new) = nullptr;
     if (BottomLabel(new) && XmeStringIsValid((XmString) BottomLabel(new)))
 	BottomLabel(new) = XmStringCopy((XmString) BottomLabel(new));
     else
-	BottomLabel(new) = NULL;
+	BottomLabel(new) = nullptr;
     if (!(Selected(new) == True || Selected(new) == False))
         Selected(new) = False;
 
@@ -825,7 +825,7 @@ Initialize(
       }
     if (SelectColorPersistent(new) == False)
         XmGetColors(new->core.screen, new->core.colormap,
-            BackgroundPixel(new), NULL, NULL, NULL, &SelectColor(new));
+            BackgroundPixel(new), nullptr, nullptr, nullptr, &SelectColor(new));
     if (SelectLabelColor(new) == SelectColor(new))
         SelectLabelColor(new) = Foreground(new);
     new->icon.old_time = 0;
@@ -848,7 +848,7 @@ CreateGC(
 {
     XGCValues   values;
     XtGCMask    valueMask;
-    XFontStruct *fs = (XFontStruct *) NULL;
+    XFontStruct *fs = (XFontStruct *) nullptr;
 
     valueMask = GCForeground | GCBackground | GCFont | GCGraphicsExposures;
     values.foreground = Foreground(w);
@@ -981,7 +981,7 @@ Destroy(
 	if (Fields(w)->active)
 	    free(Fields(w)->active);
 	free(Fields(w));
-	Fields(w) = NULL;
+	Fields(w) = nullptr;
       }
     XtReleaseGC((Widget)w, NormalGC(w));
     XtReleaseGC((Widget)w, StippleGC(w));
@@ -1076,7 +1076,7 @@ CalculateSize(
             PixmapHeight(w) = 0;
 	  }
       }
-    if (Label(w) != NULL)
+    if (Label(w) != nullptr)
       {
         XmStringExtent(Font(w), Label(w), &LabelWidth(w), &LabelHeight(w));
         LabelWidth(w) += 4;
@@ -1516,12 +1516,12 @@ Redisplay(
 			XmStringDraw(XtDisplay(w), XtWindow(w), Font(w),
 			    Fields(w)->fields[i], label_gc, x, LabelY(w) + 2,
 			    Fields(w)->widths[i], Fields(w)->alignments[i],
-			    StringDirection(w), NULL);
+			    StringDirection(w), nullptr);
 		        x += Fields(w)->widths[i] + Fields(w)->field_spacing;
 		      }
 		  }
 	      }
-            if (Label(w) != NULL)
+            if (Label(w) != nullptr)
               {
                 if (Selected(w) == True && !Fields(w))
                   {
@@ -1540,22 +1540,22 @@ Redisplay(
                   }
 		XmStringDraw(XtDisplay(w), XtWindow(w), Font(w), Label(w),
 		   label_gc, LabelX(w) + 2, LabelY(w) + 2, LabelWidth(w) - 4,
-		   Alignment(w), StringDirection(w), NULL);
+		   Alignment(w), StringDirection(w), nullptr);
               }
-            if (TopLabel(w) != NULL)
+            if (TopLabel(w) != nullptr)
               {
 		XmStringDraw(XtDisplay(w), XtWindow(w), Font(w), TopLabel(w),
 		    NormalGC(w), TopLabelX(w) + 2, TopLabelY(w),
 		    TopLabelWidth(w) - 4, Alignment(w),
-		    StringDirection(w), NULL);
+		    StringDirection(w), nullptr);
 	      }
-            if (BottomLabel(w) != NULL)
+            if (BottomLabel(w) != nullptr)
               {
 		XmStringDraw(XtDisplay(w), XtWindow(w), Font(w),
 		    BottomLabel(w), NormalGC(w),
 		    BottomLabelX(w) + 2, BottomLabelY(w),
 		    BottomLabelWidth(w) - 4, Alignment(w),
-		    StringDirection(w), NULL);
+		    StringDirection(w), nullptr);
 	      }
             if (Pixmap(w) != XmUNSPECIFIED_PIXMAP)
               {
@@ -1630,12 +1630,12 @@ Redisplay(
 			XmStringDraw(XtDisplay(w), XtWindow(w), Font(w),
 			    Fields(w)->fields[i], StippleGC(w), x,
 			    LabelY(w) + 2, Fields(w)->widths[i],
-			    Fields(w)->alignments[i], StringDirection(w), NULL);
+			    Fields(w)->alignments[i], StringDirection(w), nullptr);
 		        x += Fields(w)->widths[i] + Fields(w)->field_spacing;
 		      }
 		  }
 	      }
-            if (Label(w) != NULL)
+            if (Label(w) != nullptr)
               {
                 if (Selected(w) == True && !Fields(w))
                   {
@@ -1655,22 +1655,22 @@ Redisplay(
                 XmStringDraw(XtDisplay(w), XtWindow(w), Font(w), Label(w),
                     StippleGC(w), LabelX(w) + 2, LabelY(w) + 2,
                     LabelWidth(w) - 4, Alignment(w),
-                    StringDirection(w), NULL);
+                    StringDirection(w), nullptr);
               }
-            if (TopLabel(w) != NULL)
+            if (TopLabel(w) != nullptr)
               {
                 XmStringDraw(XtDisplay(w), XtWindow(w), Font(w), TopLabel(w),
                     StippleGC(w), TopLabelX(w) + 2, TopLabelY(w),
                     TopLabelWidth(w) - 4, Alignment(w),
-                    StringDirection(w), NULL);
+                    StringDirection(w), nullptr);
               }
-            if (BottomLabel(w) != NULL)
+            if (BottomLabel(w) != nullptr)
               {
                 XmStringDraw(XtDisplay(w), XtWindow(w), Font(w),
 		    BottomLabel(w), StippleGC(w),
                     BottomLabelX(w) + 2, BottomLabelY(w),
                     BottomLabelWidth(w) - 4, Alignment(w),
-                    StringDirection(w), NULL);
+                    StringDirection(w), nullptr);
               }
             if (Pixmap(w) != XmUNSPECIFIED_PIXMAP)
               {
@@ -1757,22 +1757,22 @@ SetValues(
     if (Label(new) != Label(cur))
       {
         newstring = True;
-        if (Pixmap(new) == XmUNSPECIFIED_PIXMAP && Label(new) == NULL)
+        if (Pixmap(new) == XmUNSPECIFIED_PIXMAP && Label(new) == nullptr)
           {
             XmString string;
-            string = (XmString)XmeGetLocalizedString((char *) NULL,
+            string = (XmString)XmeGetLocalizedString((char *) nullptr,
 		(Widget) new, XmNlabelString, new->core.name);
             Label(new) = XmStringCopy(string);
             XmStringFree(string);
           }
-        else if (Label(new) != NULL)
+        else if (Label(new) != nullptr)
           {
             if (XmeStringIsValid((XmString) Label(new)))
                 Label(new) = XmStringCopy((XmString) Label(new));
             else
               {
                 XmString string;
-                string = (XmString)XmeGetLocalizedString((char *) NULL,
+                string = (XmString)XmeGetLocalizedString((char *) nullptr,
 		    (Widget) new, XmNlabelString, new->core.name);
                 Label(new) = XmStringCopy(string);
                 XmStringFree(string);
@@ -1780,8 +1780,8 @@ SetValues(
           }
 
         XmStringFree(Label(cur));
-        Label(cur) = NULL;
-        Label(req) = NULL;
+        Label(cur) = nullptr;
+        Label(req) = nullptr;
       }
 
     if (TopLabel(new) != TopLabel(cur))
@@ -1790,10 +1790,10 @@ SetValues(
 	if (TopLabel(new) && XmeStringIsValid((XmString) TopLabel(new)))
 	    TopLabel(new) = XmStringCopy((XmString) TopLabel(new));
 	else
-	    TopLabel(new) = NULL;
+	    TopLabel(new) = nullptr;
         XmStringFree(TopLabel(cur));
-        TopLabel(cur) = NULL;
-        TopLabel(req) = NULL;
+        TopLabel(cur) = nullptr;
+        TopLabel(req) = nullptr;
       }
     if (BottomLabel(new) != BottomLabel(cur))
       {
@@ -1801,15 +1801,15 @@ SetValues(
 	if (BottomLabel(new) && XmeStringIsValid((XmString)BottomLabel(new)))
 	    BottomLabel(new) = XmStringCopy((XmString) BottomLabel(new));
 	else
-	    BottomLabel(new) = NULL;
+	    BottomLabel(new) = nullptr;
         XmStringFree(BottomLabel(cur));
-        BottomLabel(cur) = NULL;
-        BottomLabel(req) = NULL;
+        BottomLabel(cur) = nullptr;
+        BottomLabel(req) = nullptr;
       }
     if (Font(new) != Font(cur))
       {
         CleanupFontFlag = True;
-        if (Font(new) == NULL)
+        if (Font(new) == nullptr)
             Font(new) = XmeGetDefaultRenderTable((Widget) new, XmLABEL_FONTLIST);
         Font(new) = XmFontListCopy(Font(new));
       }
@@ -1959,7 +1959,7 @@ SetValues(
             Arg gc_args[2];
 
             XmGetColors(new->core.screen, new->core.colormap,
-                BackgroundPixel(new), NULL, &top_shadow_color,
+                BackgroundPixel(new), nullptr, &top_shadow_color,
                 &bottom_shadow_color, &select_color);
             if (!SelectColorPersistent(new))
                 SelectColor(new) = select_color;
@@ -2123,7 +2123,7 @@ SingleClickCB(
         XtSetArg(args[0], XmNlabelString, &call_value.string);
         XtGetValues(widget, args, 1);
         Selected(widget) = True;
-        Redisplay(widget, NULL, NULL);
+        Redisplay(widget, nullptr, nullptr);
         XtCallCallbackList((Widget) w, callback, &call_value);
         XmStringFree(call_value.string);
       }
@@ -2178,7 +2178,7 @@ DoubleClickCB(
         XtSetArg(args[0], XmNlabelString, &call_value.string);
         XtGetValues(widget, args, 1);
         Selected(widget) = True;
-        Redisplay(widget, NULL, NULL);
+        Redisplay(widget, nullptr, nullptr);
         XtCallCallbackList((Widget) w, w->icon.double_click_callback,
             &call_value);
         XmStringFree(call_value.string);

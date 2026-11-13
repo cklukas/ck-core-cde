@@ -71,12 +71,12 @@ _DtCmsCmsentriesToAppt4ForClient(cms_entry *entries, Appt_4 **appt)
 	CSA_return_code	stat = CSA_SUCCESS;
 	Appt_4	*newappt, *prev, *head;
 
-	if (appt == NULL)
+	if (appt == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	head = prev = NULL;
-	while (entries != NULL) {
-		if ((newappt = _DtCm_make_appt4(B_TRUE)) == NULL)
+	head = prev = nullptr;
+	while (entries != nullptr) {
+		if ((newappt = _DtCm_make_appt4(B_TRUE)) == nullptr)
 			break;
 
 		if ((stat = _DtCmsAttrsToAppt4(entries->num_attrs + 1,
@@ -86,7 +86,7 @@ _DtCmsCmsentriesToAppt4ForClient(cms_entry *entries, Appt_4 **appt)
 		} else
 			newappt->appt_id.key = entries->key.id;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = newappt;
 		else
 			prev->next = newappt;
@@ -97,7 +97,7 @@ _DtCmsCmsentriesToAppt4ForClient(cms_entry *entries, Appt_4 **appt)
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_appt4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*appt = head;
@@ -110,12 +110,12 @@ _DtCmsCmsentriesToAbbrAppt4ForClient(cms_entry *entries, Abb_Appt_4 **abbr)
 	CSA_return_code	stat = CSA_SUCCESS;
 	Abb_Appt_4	*newabbr, *prev, *head;
 
-	if (abbr == NULL)
+	if (abbr == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	head = prev = NULL;
-	while (entries != NULL) {
-		if ((newabbr = _MakeAbbrAppt()) == NULL)
+	head = prev = nullptr;
+	while (entries != nullptr) {
+		if ((newabbr = _MakeAbbrAppt()) == nullptr)
 			break;
 
 		if ((stat = _AttrsToAbbrAppt(entries->num_attrs, entries->attrs,
@@ -125,7 +125,7 @@ _DtCmsCmsentriesToAbbrAppt4ForClient(cms_entry *entries, Abb_Appt_4 **abbr)
 		} else
 			newabbr->appt_id.key = entries->key.id;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = newabbr;
 		else
 			prev->next = newabbr;
@@ -136,7 +136,7 @@ _DtCmsCmsentriesToAbbrAppt4ForClient(cms_entry *entries, Abb_Appt_4 **abbr)
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_abbrev_appt4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*abbr = head;
@@ -149,22 +149,22 @@ _DtCmsConvertV5AccessList(cms_access_entry *cmslist, boolean_t strictmode)
 	Access_Entry_4	*l, *head, *prev;
 	boolean_t	cleanup = B_FALSE;
 
-	prev = head = NULL;
-	while (cmslist != NULL) {
+	prev = head = nullptr;
+	while (cmslist != nullptr) {
 		if ((l = (Access_Entry_4 *)calloc(1, sizeof(Access_Entry_4)))
-		    == NULL) {
+		    == nullptr) {
 			cleanup = B_TRUE;
 			break;
 		}
 
-		if ((l->who = strdup(cmslist->user)) == NULL) {
+		if ((l->who = strdup(cmslist->user)) == nullptr) {
 			free(l);
 			cleanup = B_TRUE;
 			break;
 		}
 		l->access_type = _ConvertV5Access(cmslist->rights, strictmode);
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = l;
 		else
 			prev->next = l;
@@ -175,7 +175,7 @@ _DtCmsConvertV5AccessList(cms_access_entry *cmslist, boolean_t strictmode)
 
 	if (cleanup == B_TRUE) {
 		_DtCm_free_access_list4(head);
-		head = NULL;
+		head = nullptr;
 	}
 	return (head);
 }
@@ -186,22 +186,22 @@ _DtCmsConvertV4AccessList(Access_Entry_4 *alist)
 	cms_access_entry	*l, *head, *prev;
 	boolean_t		cleanup = B_FALSE;
 
-	prev = head = NULL;
-	while (alist != NULL) {
+	prev = head = nullptr;
+	while (alist != nullptr) {
 		if ((l = (cms_access_entry *)calloc(1,
-		    sizeof(cms_access_entry))) == NULL) {
+		    sizeof(cms_access_entry))) == nullptr) {
 			cleanup = B_TRUE;
 			break;
 		}
 
-		if ((l->user = strdup(alist->who)) == NULL) {
+		if ((l->user = strdup(alist->who)) == nullptr) {
 			free(l);
 			cleanup = B_TRUE;
 			break;
 		}
 		l->rights = _ConvertV4Access(alist->access_type);
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = l;
 		else
 			prev->next = l;
@@ -212,7 +212,7 @@ _DtCmsConvertV4AccessList(Access_Entry_4 *alist)
 
 	if (cleanup == B_TRUE) {
 		_DtCm_free_cms_access_entry(head);
-		head = NULL;
+		head = nullptr;
 	}
 	return (head);
 }
@@ -226,11 +226,11 @@ _DtCmsReminderRefToReminder(
 	Reminder_4	*head, *prev, *rptr;
 	char		buf[30];
 
-	prev = head = NULL;
-	while (rems != NULL) {
+	prev = head = nullptr;
+	while (rems != nullptr) {
 
 		if ((rptr = (Reminder_4 *)calloc(1, sizeof(Reminder_4)))
-		    == NULL) {
+		    == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
@@ -240,20 +240,20 @@ _DtCmsReminderRefToReminder(
 		rptr->tick = rems->runtime;
 
 		if ((rptr->attr.attr=_ConvertReminderName(rems->reminder_name))
-		    == NULL) {
+		    == nullptr) {
 			free(rptr);
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
-		if ((rptr->attr.value = calloc(1,1)) == NULL) {
+		if ((rptr->attr.value = calloc(1,1)) == nullptr) {
 			free(rptr->attr.attr);
 			free(rptr);
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
-		if ((rptr->attr.clientdata = calloc(1,1)) == NULL) {
+		if ((rptr->attr.clientdata = calloc(1,1)) == nullptr) {
 			free(rptr->attr.value);
 			free(rptr->attr.attr);
 			free(rptr);
@@ -261,7 +261,7 @@ _DtCmsReminderRefToReminder(
 			break;
 		}
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = rptr;
 		else
 			prev->next = rptr;
@@ -272,7 +272,7 @@ _DtCmsReminderRefToReminder(
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_reminder4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*r4 = head;
@@ -291,11 +291,11 @@ _DtCmsV4ReminderToReminderRef(
 	cms_reminder_ref	*head, *prev, *rptr;
 	char			buf[BUFSIZ];
 
-	prev = head = NULL;
-	while (r4 != NULL) {
+	prev = head = nullptr;
+	while (r4 != nullptr) {
 
 		if ((rptr = (cms_reminder_ref *)calloc(1,
-		    sizeof(cms_reminder_ref))) == NULL) {
+		    sizeof(cms_reminder_ref))) == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
@@ -306,7 +306,7 @@ _DtCmsV4ReminderToReminderRef(
 
 		if ((rptr->reminder_name = strdup(
 		    _DtCm_old_reminder_name_to_name(r4->attr.attr)))
-		    == NULL) {
+		    == nullptr) {
 			free(rptr);
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
@@ -315,14 +315,14 @@ _DtCmsV4ReminderToReminderRef(
 		sprintf(buf, "%ld:%s@%s", ids->id, calname,
 			_DtCmGetHostAtDomain());
 
-		if ((rptr->entryid = strdup(buf)) == NULL) {
+		if ((rptr->entryid = strdup(buf)) == nullptr) {
 			free(rptr->reminder_name);
 			free(rptr);
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = rptr;
 		else
 			prev->next = rptr;
@@ -334,7 +334,7 @@ _DtCmsV4ReminderToReminderRef(
 
 	if (stat != CSA_SUCCESS) {
 		_DtCmsFreeReminderRef(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*rems = head;
@@ -348,10 +348,10 @@ _DtCmsCmsAccessToV4Access(cms_access_entry *alist, Access_Entry_4 **a4)
 	CSA_return_code	stat = CSA_SUCCESS;
 	Access_Entry_4	*to, *prev, *head;
 
-	head = prev = NULL;
-	while (alist != NULL) {
+	head = prev = nullptr;
+	while (alist != nullptr) {
 		if ((to = (Access_Entry_4 *)calloc(1, sizeof(Access_Entry_4)))
-		    == NULL) {
+		    == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
@@ -362,18 +362,18 @@ _DtCmsCmsAccessToV4Access(cms_access_entry *alist, Access_Entry_4 **a4)
 			break;
 		}
 
-		if (alist->user == NULL) {
+		if (alist->user == nullptr) {
 			stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			break;
 		}
 
-		if ((to->who = strdup(alist->user)) == NULL) {
+		if ((to->who = strdup(alist->user)) == nullptr) {
 			free(to);
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = to;
 		else
 			prev->next = to;
@@ -385,7 +385,7 @@ _DtCmsCmsAccessToV4Access(cms_access_entry *alist, Access_Entry_4 **a4)
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_access_list4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*a4 = head;
@@ -401,13 +401,13 @@ _DtCmsAppt4ToCmsentriesForClient(
 	CSA_return_code	stat = CSA_SUCCESS;
         cms_entry	*entry, *head, *prev;
 
-	if (e_r == NULL)
+	if (e_r == nullptr)
 		return(CSA_E_INVALID_PARAMETER);
 
-	prev = head = NULL;
-	while (appt != NULL) {
+	prev = head = nullptr;
+	while (appt != nullptr) {
 
-		if ((entry = (cms_entry *)calloc(1, sizeof(cms_entry))) == NULL)
+		if ((entry = (cms_entry *)calloc(1, sizeof(cms_entry))) == nullptr)
 			break;
 
 		if ((stat = _Appt4ToCmsentryAttrs(calname, appt,
@@ -419,7 +419,7 @@ _DtCmsAppt4ToCmsentriesForClient(
 			break;
 		}
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = entry;
 		else
 			prev->next = entry;
@@ -431,7 +431,7 @@ _DtCmsAppt4ToCmsentriesForClient(
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_cms_entries(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*e_r = head;
@@ -448,10 +448,10 @@ _DtCmsAppt4ToCmsentry(
 	CSA_return_code	stat;
         cms_entry	*entry;
 
-	if (a4 == NULL)
+	if (a4 == nullptr)
 		return(CSA_E_INVALID_PARAMETER);
 
-	if ((entry = _DtCm_make_cms_entry(_DtCm_entry_name_tbl)) == NULL)
+	if ((entry = _DtCm_make_cms_entry(_DtCm_entry_name_tbl)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	entry->key.time = a4->appt_id.tick;
@@ -495,7 +495,7 @@ _DtCmsAttrsToAppt4(
 	for (i = 0; i < size && stat == CSA_SUCCESS; i++) {
 		switch (attrs[i].name.num) {
 		case CSA_ENTRY_ATTR_START_DATE_I:
-			if (check == B_TRUE && attrs[i].value == NULL)
+			if (check == B_TRUE && attrs[i].value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else if (_csa_iso8601_to_tick(attrs[i].value->\
 			    item.date_time_value, &appt->appt_id.tick))
@@ -518,7 +518,7 @@ _DtCmsAttrsToAppt4(
 
 			if (attrs[i].value->item.string_value) {
 				if ((string = strdup(attrs[i].value->item.\
-				    string_value)) == NULL)
+				    string_value)) == nullptr)
 					stat = CSA_E_INSUFFICIENT_MEMORY;
 				else {
 					if (appt->what)
@@ -531,16 +531,16 @@ _DtCmsAttrsToAppt4(
 		case CSA_ENTRY_ATTR_ORGANIZER_I:
 			free(appt->author);
 			if ((appt->author = strdup(attrs[i].value->\
-			    item.calendar_user_value)) == NULL)
+			    item.calendar_user_value)) == nullptr)
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 
 		case CSA_ENTRY_ATTR_AUDIO_REMINDER_I:
 
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = _DtCm_remove_reminder(
 					_DtCM_OLD_ATTR_BEEP_REMINDER, appt);
-			else if (attrs[i].value->item.reminder_value == NULL)
+			else if (attrs[i].value->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_add_reminder(
@@ -551,10 +551,10 @@ _DtCmsAttrsToAppt4(
 
 		case CSA_ENTRY_ATTR_FLASHING_REMINDER_I:
 
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = _DtCm_remove_reminder(
 					_DtCM_OLD_ATTR_FLASH_REMINDER, appt);
-			else if (attrs[i].value->item.reminder_value == NULL)
+			else if (attrs[i].value->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_add_reminder(
@@ -565,10 +565,10 @@ _DtCmsAttrsToAppt4(
 
 		case CSA_ENTRY_ATTR_MAIL_REMINDER_I:
 
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = _DtCm_remove_reminder(
 					_DtCM_OLD_ATTR_MAIL_REMINDER, appt);
-			else if (attrs[i].value->item.reminder_value == NULL)
+			else if (attrs[i].value->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_add_reminder(
@@ -579,10 +579,10 @@ _DtCmsAttrsToAppt4(
 
 		case CSA_ENTRY_ATTR_POPUP_REMINDER_I:
 
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = _DtCm_remove_reminder(
 					_DtCM_OLD_ATTR_POPUP_REMINDER, appt);
-			else if (attrs[i].value->item.reminder_value == NULL)
+			else if (attrs[i].value->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_add_reminder(
@@ -672,8 +672,8 @@ _DtCmsAttrsToAppt4(
 	}
 
 	if (stat == CSA_SUCCESS && enddateindex >= 0) {
-		if (attrs[enddateindex].value == NULL ||
-		    attrs[enddateindex].value->item.date_time_value == NULL) {
+		if (attrs[enddateindex].value == nullptr ||
+		    attrs[enddateindex].value->item.date_time_value == nullptr) {
 			appt->duration = 0;
 		} else if (_csa_iso8601_to_tick(attrs[enddateindex].value->\
 		    item.date_time_value, &endtick)) {
@@ -687,7 +687,7 @@ _DtCmsAttrsToAppt4(
 		if (typeindex >= 0) {
 			if (stat = _DtCm_attrs_to_eventtype4(
 			    attrs[typeindex].value,
-			    (stypeindex >= 0 ? attrs[stypeindex].value : NULL),
+			    (stypeindex >= 0 ? attrs[stypeindex].value : nullptr),
 			    appt->tag)) {
 				if (check == B_FALSE) {
 					/* this is the case where we are
@@ -783,7 +783,7 @@ _AttrsToAbbrAppt(uint size, cms_attribute *attrs, Abb_Appt_4 *appt)
 			{
 				free(appt->what);
 				if ((appt->what = strdup(attrs[i].value->\
-				    item.string_value)) == NULL)
+				    item.string_value)) == nullptr)
 					stat = CSA_E_INSUFFICIENT_MEMORY;
 			}
 			break;
@@ -832,7 +832,7 @@ _AttrsToAbbrAppt(uint size, cms_attribute *attrs, Abb_Appt_4 *appt)
 		appt->duration = 0;
 
 	if (_DtCm_attrs_to_eventtype4(attrs[typeindex].value,
-	    (stypeindex >= 0 ? attrs[stypeindex].value : NULL), appt->tag))
+	    (stypeindex >= 0 ? attrs[stypeindex].value : nullptr), appt->tag))
 		appt->tag->tag = otherTag_4;
 
 	return (CSA_SUCCESS);
@@ -843,12 +843,12 @@ _MakeAbbrAppt(void)
 {
 	Abb_Appt_4 *a;
 
-	if ((a = (Abb_Appt_4 *)calloc(1, sizeof(Abb_Appt_4))) == NULL)
-		return NULL;
+	if ((a = (Abb_Appt_4 *)calloc(1, sizeof(Abb_Appt_4))) == nullptr)
+		return nullptr;
 
-	if ((a->tag = (Tag_4 *)calloc(1, sizeof(Tag_4))) == NULL) {
+	if ((a->tag = (Tag_4 *)calloc(1, sizeof(Tag_4))) == nullptr) {
 		free(a);
-		return NULL;
+		return nullptr;
 	}
 
 	a->tag->tag = appointment_4;
@@ -939,11 +939,11 @@ _Appt4ToCmsentryAttrs(
 	int			index, ntimes, count = 0;
 	char			*ptr1, *ptr2;
 
-	if (num_attrs == NULL || attrs_r == NULL)
+	if (num_attrs == nullptr || attrs_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((attrs = (cms_attribute *)calloc(1,
-	    sizeof(cms_attribute) * (_DtCM_OLD_ENTRY_ATTR_SIZE+ 1))) == NULL)
+	    sizeof(cms_attribute) * (_DtCM_OLD_ENTRY_ATTR_SIZE+ 1))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if (a4->period.period != single_4 &&
@@ -960,11 +960,11 @@ _Appt4ToCmsentryAttrs(
 	tmpval.type = CSA_VALUE_OPAQUE_DATA;
 	tmpval.item.opaque_data_value = &opq;
 	ptr1 = strchr(calname, '@');
-	ptr2 = (ptr1 ? strchr(ptr1, '.') : NULL);
+	ptr2 = (ptr1 ? strchr(ptr1, '.') : nullptr);
 	if (ptr1) {
 		sprintf(buf, "%ld:%s%s%s", a4->appt_id.key, calname,
-			(ptr2 == NULL ? "." : ""),
-			(ptr2 == NULL ? _DtCmGetLocalDomain(ptr1+1) : ""));
+			(ptr2 == nullptr ? "." : ""),
+			(ptr2 == nullptr ? _DtCmGetLocalDomain(ptr1+1) : ""));
 	} else {
 		sprintf(buf, "%ld:%s@%s", a4->appt_id.key, calname,
 			_DtCmGetHostAtDomain());
@@ -1132,12 +1132,12 @@ _Appt4ToCmsentryAttrs(
 		}
 	}
 
-	while (reminders != NULL) {
+	while (reminders != nullptr) {
 		if ((attrs[count].name.num = _DtCm_old_reminder_name_to_index(
 		    reminders->attr)) >= 0) {
 			if ((attrs[count].name.name =
 			    strdup(_DtCm_old_reminder_name_to_name(
-			    reminders->attr))) == NULL) {
+			    reminders->attr))) == nullptr) {
 				count++;
 				goto error;
 			}

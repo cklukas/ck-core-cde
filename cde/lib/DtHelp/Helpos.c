@@ -80,7 +80,7 @@ static const int NL_CAT_LOCALE = 0;
 
 
 /* Global Message Catalog file names */
-static char *CatFileName=NULL;
+static char *CatFileName=nullptr;
 
 
 
@@ -104,23 +104,23 @@ void _DtHelpOSGetHomeDirName(
 /* this solution leads to less change in the current (mwm) code */
 {
    int uid;
-   static char *ptr = NULL;
+   static char *ptr = nullptr;
    _Xgetpwparams	pwd_buf;
    struct passwd *	pwd_ret;
 
     _DtHelpProcessLock();
-    if (ptr == NULL) {
-	if((ptr = (char *)getenv("HOME")) == NULL) {
-	    if((ptr = (char *)getenv("USER")) != NULL) 
+    if (ptr == nullptr) {
+	if((ptr = (char *)getenv("HOME")) == nullptr) {
+	    if((ptr = (char *)getenv("USER")) != nullptr) 
 		pwd_ret = _XGetpwnam(ptr, pwd_buf);
 	    else {
 		uid = getuid();
 		pwd_ret = _XGetpwuid(uid, pwd_buf);
 	    }
-	    if (pwd_ret != NULL) 
+	    if (pwd_ret != nullptr) 
 		ptr = pwd_ret->pw_dir;
 	    else 
-		ptr = NULL;
+		ptr = nullptr;
 	}
     }
 
@@ -162,7 +162,7 @@ String _DtHelpGetUserSearchPath(void)
   extern char * _DtCliSrvGetDtUserSession(void);  /* in libCliSrv */
 
    localPath = (char *)getenv (DtUSER_FILE_SEARCH_ENV);
-   if (localPath  == NULL) 
+   if (localPath  == nullptr) 
    {
        char * session;
 
@@ -218,7 +218,7 @@ String _DtHelpGetSystemSearchPath(void)
    path = getenv(DtSYS_FILE_SEARCH_ENV);
 
    /* if fail, use default */
-   if (NULL == path)
+   if (nullptr == path)
       path = DtDEFAULT_SYSTEM_PATH;
 
    return strdup(path);
@@ -255,7 +255,7 @@ void DtHelpSetCatalogName(
 
   _DtHelpProcessLock();
   /* Setup our Message Catalog file names */
-  if (catFile == NULL)
+  if (catFile == nullptr)
     {
       /* Setup the short and long versions */
       CatFileName = strdup("DtHelp");
@@ -318,7 +318,7 @@ char *_DtHelpGetMessage(
    {
 
      /* Setup our default message catalog names if none have been set! */
-     if (CatFileName  == NULL)
+     if (CatFileName  == nullptr)
        {
          /* Setup the short and long versions */
          CatFileName = strdup("DtHelp");
@@ -364,9 +364,9 @@ char *_DtHelpGetLocale(void)
 {
     char *loc;
 
-    loc = setlocale(LC_MESSAGES, NULL);
-    if (NULL == loc || '\0' == loc[0]) loc = getenv("LANG");
-    if (NULL == loc || '\0' == loc[0]) return NULL;
+    loc = setlocale(LC_MESSAGES, nullptr);
+    if (nullptr == loc || '\0' == loc[0]) loc = getenv("LANG");
+    if (nullptr == loc || '\0' == loc[0]) return nullptr;
 
     loc = strdup(loc);    /* getenv() returns ptr to private memory */
     return loc;

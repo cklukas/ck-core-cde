@@ -53,7 +53,7 @@
  * State data
  *   dbXdefaults - copy of .Xdefaults in Xrm database form
  */
- static XrmDatabase dbXdefaults = NULL;
+ static XrmDatabase dbXdefaults = nullptr;
 
 
 /*
@@ -96,16 +96,16 @@ SmXdefMerge(Display *display)
  /*
   * Load .Xdefaults
   */
-  if ((home = getenv("HOME")) == NULL)
+  if ((home = getenv("HOME")) == nullptr)
     home = "";
 
-  if( (xdefaults = (char *)malloc(strlen(home)+12)) != NULL)  
+  if( (xdefaults = (char *)malloc(strlen(home)+12)) != nullptr)  
   {
     sprintf(xdefaults,"%s/%s",home,".Xdefaults");
     if(access(xdefaults,R_OK) == 0)
     {
       FILE *fp;
-      char *b = NULL;
+      char *b = nullptr;
       int size;
       struct stat statinfo; 
 
@@ -125,12 +125,12 @@ SmXdefMerge(Display *display)
         b = (char *)SM_MALLOC(statinfo.st_size + 1);
       }
 
-      if (b != NULL)
+      if (b != nullptr)
       {
        /*
         * Read file into memory.
         */
-        if ((fp = fopen(xdefaults, "r")) != NULL)
+        if ((fp = fopen(xdefaults, "r")) != nullptr)
         {
           size = fread(b, 1, statinfo.st_size, fp);
           fclose(fp);
@@ -190,7 +190,7 @@ SmXdefSubtract(XrmDatabase db)
   }
   else
   {
-    dbResult = NULL;
+    dbResult = nullptr;
   }
   return(dbResult);
 }

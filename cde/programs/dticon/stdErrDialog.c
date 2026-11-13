@@ -86,7 +86,7 @@ build_stdErrDialog( void )
     stdErrDialog_shell = XtVaCreatePopupShell( "stdErrDialog_shell",
                         xmDialogShellWidgetClass, mainWindow,
                         XmNtitle, GETSTR(8,2, "Icon Editor - Error"),
-                        NULL );
+                        nullptr );
 
     tmpXmStr = GETXMSTR(8,4, "Continue");
     tmpXmStr2= GETXMSTR(8,2, "Icon Editor - Error");
@@ -95,11 +95,11 @@ build_stdErrDialog( void )
                         XmNokLabelString, tmpXmStr,
                         XmNdialogTitle, tmpXmStr2,
                         XmNdialogType, XmDIALOG_ERROR,
-                        NULL );
+                        nullptr );
     XmStringFree(tmpXmStr);
     XmStringFree(tmpXmStr2);
 
-    XtAddCallback( stdErrDialog, XmNokCallback, okCallback_stdErrDialog, NULL);
+    XtAddCallback( stdErrDialog, XmNokCallback, okCallback_stdErrDialog, nullptr);
 
     n = 0;
     XtSetArg (args[n], XmNuseAsyncGeometry, True);                          n++;

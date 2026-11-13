@@ -76,7 +76,7 @@ static int PipeWriteString(int fd,char *value)
 }
 static int PipeReadStringField(int fd,char **value)
 {
-    short length;char *text;*value=NULL;if(PipeReadExact(fd,&length,sizeof(length))!=0||length<0)return -1;if(!length)return 0;text=malloc((size_t)length+1);if(PipeReadExact(fd,text,(size_t)length)!=0){free(text);return -1;}text[length]=0;*value=text;return 0;
+    short length;char *text;*value=nullptr;if(PipeReadExact(fd,&length,sizeof(length))!=0||length<0)return -1;if(!length)return 0;text=malloc((size_t)length+1);if(PipeReadExact(fd,text,(size_t)length)!=0){free(text);return -1;}text[length]=0;*value=text;return 0;
 }
 
 /* PRODUCTION_FUNCTIONS */
@@ -98,16 +98,16 @@ static void desktop_case(const char *name,FileData2 *record)
     if(!strcmp(name,"desktop-invalid-message")) {
         errno=0;CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DONE,"host","/dir","file",record)==-1&&errno==EINVAL);close(p[0]);close(p[1]);return;
     } else if(!strcmp(name,"desktop-null-name")) {
-        errno=0;CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_REMOVED,"host","/dir",NULL,NULL)==-1&&errno==EINVAL);close(p[0]);close(p[1]);return;
+        errno=0;CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_REMOVED,"host","/dir",nullptr,nullptr)==-1&&errno==EINVAL);close(p[0]);close(p[1]);return;
     } else if(!strcmp(name,"desktop-wire-pointer")) {
         FileData2 packed;record->next=(FileData2 *)(uintptr_t)1;
         CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_CHANGED,"host","/dir","file",record)==0);close(p[1]);
-        CHECK(PipeReadExact(p[0],&message,sizeof(message))==0);CHECK(PipeReadStringField(p[0],&host)==0);CHECK(PipeReadStringField(p[0],&directory)==0);CHECK(PipeReadStringField(p[0],&file)==0);CHECK(PipeReadExact(p[0],&packed,sizeof(packed))==0&&packed.next==NULL);free(host);free(directory);free(file);close(p[0]);return;
+        CHECK(PipeReadExact(p[0],&message,sizeof(message))==0);CHECK(PipeReadStringField(p[0],&host)==0);CHECK(PipeReadStringField(p[0],&directory)==0);CHECK(PipeReadStringField(p[0],&file)==0);CHECK(PipeReadExact(p[0],&packed,sizeof(packed))==0&&packed.next==nullptr);free(host);free(directory);free(file);close(p[0]);return;
     } else if(!strcmp(name,"desktop-write-changed")) {
         CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_CHANGED,"host","/dir","alpha",record)==0);close(p[1]);
         CHECK(PipeReadExact(p[0],&message,sizeof(message))==0&&message==PIPEMSG_DESKTOP_CHANGED);
     } else if(!strcmp(name,"desktop-write-removed")) {
-        CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_REMOVED,"host","/dir","file",NULL)==0);close(p[1]);
+        CHECK(DirectoryWriteDesktopRecord(p[1],PIPEMSG_DESKTOP_REMOVED,"host","/dir","file",nullptr)==0);close(p[1]);
         CHECK(PipeReadExact(p[0],&message,sizeof(message))==0&&message==PIPEMSG_DESKTOP_REMOVED);
     } else {
         message=PIPEMSG_DESKTOP_CHANGED;exact_write(p[1],&(short){4},sizeof(short));
@@ -116,8 +116,8 @@ static void desktop_case(const char *name,FileData2 *record)
     }
     rc=DirectoryReadDesktopRecord(p[0],message,&host,&directory,&file,&decoded);close(p[0]);
     if(!strcmp(name,"desktop-write-changed")) {CHECK(rc==0&&!strcmp(host,"host")&&!strcmp(file,"alpha")&&!strcmp(decoded->file_name,"alpha"));FreeFileData(decoded,True);free(host);free(directory);free(file);}
-    else if(!strcmp(name,"desktop-write-removed")) {CHECK(rc==0&&decoded==NULL&&!strcmp(file,"file"));free(host);free(directory);free(file);}
-    else CHECK(rc==-1&&host==NULL&&directory==NULL&&file==NULL&&decoded==NULL&&errno==EPROTO);
+    else if(!strcmp(name,"desktop-write-removed")) {CHECK(rc==0&&decoded==nullptr&&!strcmp(file,"file"));free(host);free(directory);free(file);}
+    else CHECK(rc==-1&&host==nullptr&&directory==nullptr&&file==nullptr&&decoded==nullptr&&errno==EPROTO);
 }
 
 static void free_list(FileData *head)
@@ -127,17 +127,17 @@ static void free_list(FileData *head)
 
 static void pack_filedata_case(const char *name)
 {
-    FileData source;FileData2 packed;FileData *decoded=NULL;size_t used=0;int rc;
+    FileData source;FileData2 packed;FileData *decoded=nullptr;size_t used=0;int rc;
     memset(&source,0,sizeof(source));source.file_name="alpha";source.action_name="action";source.logical_type="TYPE";source.link="link";source.final_link="final";source.physical_type=7;source.errnum=ENOENT;source.is_subdir=True;
-    if(!strcmp(name,"pack-filedata-null")){errno=0;CHECK(FileData2PackFileData(&packed,NULL)==-1&&errno==EINVAL);return;}
+    if(!strcmp(name,"pack-filedata-null")){errno=0;CHECK(FileData2PackFileData(&packed,nullptr)==-1&&errno==EINVAL);return;}
     if(!strcmp(name,"pack-filedata-overflow")){char *large=malloc(BUFSIZ);memset(large,'x',BUFSIZ-1);large[BUFSIZ-1]=0;source.action_name=large;errno=0;CHECK(FileData2PackFileData(&packed,&source)==-1&&errno==EOVERFLOW);free(large);return;}
-    rc=FileData2PackFileData(&packed,&source);CHECK(rc>0&&packed.next==NULL&&packed.errnum==ENOENT);CHECK(FileData2Decode(&packed,sizeof(packed),&decoded,&used)==0&&!strcmp(decoded->file_name,"alpha")&&!strcmp(decoded->final_link,"final")&&decoded->physical_type==7);FreeFileData(decoded,True);
+    rc=FileData2PackFileData(&packed,&source);CHECK(rc>0&&packed.next==nullptr&&packed.errnum==ENOENT);CHECK(FileData2Decode(&packed,sizeof(packed),&decoded,&used)==0&&!strcmp(decoded->file_name,"alpha")&&!strcmp(decoded->final_link,"final")&&decoded->physical_type==7);FreeFileData(decoded,True);
 }
 
 int main(int argc,char **argv)
 {
     FileData2 one,two;
-    FileData *decoded=NULL;
+    FileData *decoded=nullptr;
     size_t used=99;
     int one_len,two_len;
     unsigned char packet[2*sizeof(FileData2)+1];
@@ -169,7 +169,7 @@ int main(int argc,char **argv)
         CHECK(used==(size_t)one_len&&!strcmp(decoded->file_name,"alpha")&&!strcmp(decoded->logical_type,"TYPE"));
         CHECK(decoded->physical_type==7&&decoded->errnum==11&&decoded->is_subdir==True);free_list(decoded);
     } else if(!strcmp(name,"decode-negative")) {
-        one.file_name=-1;errno=0;CHECK(FileData2Decode(&one,sizeof(one),&decoded,&used)==-1&&errno==EPROTO&&decoded==NULL);
+        one.file_name=-1;errno=0;CHECK(FileData2Decode(&one,sizeof(one),&decoded,&used)==-1&&errno==EPROTO&&decoded==nullptr);
     } else if(!strcmp(name,"decode-short-header")) {
         errno=0;CHECK(FileData2Decode(&one,offsetof(FileData2,text)-1,&decoded,&used)==-1&&errno==EPROTO);
     } else if(!strcmp(name,"decode-short-text")) {
@@ -187,7 +187,7 @@ int main(int argc,char **argv)
             packet[one_len]=0;errno=0;CHECK(FileData2DecodePacket(packet,(size_t)one_len+1,1,&decoded)==-1&&errno==EPROTO);
         } else if(!strcmp(name,"packet-short-second")) {
             freed_records=0;errno=0;CHECK(FileData2DecodePacket(packet,(size_t)(one_len+two_len-1),2,&decoded)==-1&&errno==EPROTO);
-            CHECK(decoded==NULL&&freed_records==1);
+            CHECK(decoded==nullptr&&freed_records==1);
         } else return 2;
     }
     if(!failed)printf("PASS %s\n",name);

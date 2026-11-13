@@ -106,16 +106,16 @@ struct menu_entry menu_entries[MAXENTRIES] ;
 
 struct menu cmenus[MAXMENUS] = {                 /* Calculator menus. */
 /*      title     total index defval                           */
-  { (char *) NULL, 10,    0,    2  /* 2 places */    },    /* ACC */
-  { (char *) NULL,  4,   20,    2  /* Decimal  */    },    /* BASE TYPE */
-  { (char *) NULL, 10,    0,    0  /* Con. 0   */    },    /* CON */
-  { (char *) NULL, 10,   10,    0  /* Reg. 0   */    },    /* EXCH */
-  { (char *) NULL, 10,    0,    0  /* Fun. 0   */    },    /* FUN */
-  { (char *) NULL,  4,   30,    0  /* Basic    */    },    /* MODE */
-  { (char *) NULL,  3,   24,    1  /* Fixed    */    },    /* NUM TYPE */
-  { (char *) NULL, 10,   10,    0  /* Reg. 0   */    },    /* RCL */
-  { (char *) NULL, 10,   10,    0  /* Reg. 0   */    },    /* STO */
-  { (char *) NULL,  3,   27,    0  /* Degrees  */    },    /* TRIG TYPE */
+  { (char *) nullptr, 10,    0,    2  /* 2 places */    },    /* ACC */
+  { (char *) nullptr,  4,   20,    2  /* Decimal  */    },    /* BASE TYPE */
+  { (char *) nullptr, 10,    0,    0  /* Con. 0   */    },    /* CON */
+  { (char *) nullptr, 10,   10,    0  /* Reg. 0   */    },    /* EXCH */
+  { (char *) nullptr, 10,    0,    0  /* Fun. 0   */    },    /* FUN */
+  { (char *) nullptr,  4,   30,    0  /* Basic    */    },    /* MODE */
+  { (char *) nullptr,  3,   24,    1  /* Fixed    */    },    /* NUM TYPE */
+  { (char *) nullptr, 10,   10,    0  /* Reg. 0   */    },    /* RCL */
+  { (char *) nullptr, 10,   10,    0  /* Reg. 0   */    },    /* STO */
+  { (char *) nullptr,  3,   27,    0  /* Degrees  */    },    /* TRIG TYPE */
 } ;
 
 /*  This table shows the keyboard values that are currently being used:
@@ -136,151 +136,151 @@ struct button buttons[TITEMS] = {
 /*     str       str2      value opdisp   menutype   resname  func */
 
 /* Row 1. */
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_FUN,    "fun",    do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_CON,    "con",    do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "keys",   do_keys    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_FUN,    "fun",    do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_CON,    "con",    do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "keys",   do_keys    },
 
 /* Row 2. */
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "int",    do_portion },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "frac",   do_portion },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "abs",    do_portion },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "exp",    do_expno   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "int",    do_portion },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "frac",   do_portion },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "abs",    do_portion },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "exp",    do_expno   },
 
 /* Row 3. */
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_ACC,    "acc",    do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_STO,    "sto",    do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_RCL,    "rcl",    do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_EXCH,   "exch",   do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_ACC,    "acc",    do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_STO,    "sto",    do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_RCL,    "rcl",    do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_EXCH,   "exch",   do_pending },
 
 /* Row 4. */
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
 
 /* Row 5. */ 
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
 
 /* Row 6. */ 
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "blank",  do_none },
 
 /* Row 7. */
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "recip",   do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "square",  do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "sqrt",    do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "percent", do_calc   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "recip",   do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "square",  do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "sqrt",    do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "percent", do_calc   },
 
 /* Row 8. */
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "lparen", do_paren   },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "rparen", do_paren   },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "bsp",    do_delete  },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "clr",    do_clear   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "lparen", do_paren   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "rparen", do_paren   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "bsp",    do_delete  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "clr",    do_clear   },
 
 /* Row 9. */
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "numd",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "nume",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "numf",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "chs",    do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "numd",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "nume",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "numf",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "chs",    do_immed   },
 
 /* Row 10. */
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "numa",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "numb",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "numc",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "mul",    do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "numa",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "numb",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "numc",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "mul",    do_calc    },
 
 /* Row 11. */
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num7",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num8",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num9",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "div",    do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num7",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num8",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num9",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "div",    do_calc    },
 
 /* Row 12. */
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num4",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num5",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num6",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "sub",    do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num4",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num5",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num6",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "sub",    do_calc    },
 
 /* Row 13. */
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num1",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num2",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num3",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "add",    do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num1",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num2",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num3",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "add",    do_calc    },
 
 /* Row 14. */
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "num0",   do_number  },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "point",  do_point   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "equals", do_calc    },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "quit",   do_frame   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "num0",   do_number  },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "point",  do_point   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "equals", do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "quit",   do_frame   },
 
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_BASE,   "base",   do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NUM,    "disp",   do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_MODE,   "mode",   do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_TRIG,   "trig",   do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_BASE,   "base",   do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NUM,    "disp",   do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_MODE,   "mode",   do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_TRIG,   "trig",   do_pending },
 } ; 
 
 struct button mode_buttons[MAXMODES * MODEKEYS] = {
 /*     str       str2      value opdisp   menutype   resname  func */
 
 /* Financial. */
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "term",   do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "rate",   do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "pv",     do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "pmt",    do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "fv",     do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "ppy",    do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "clrreg", do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "ctrm",   do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "ddb",    do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "sln",    do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "syd",    do_business},
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "term",   do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "rate",   do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "pv",     do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "pmt",    do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "fv",     do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "ppy",    do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "clrreg", do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "ctrm",   do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "ddb",    do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "sln",    do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "syd",    do_business},
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
 
 /* Logical. */
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "lshift", do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "rshift", do_pending },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "and16",  do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "and32",  do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "or",     do_calc    },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "and",    do_calc    },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "not",    do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "xor",    do_calc    },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "xnor",   do_calc    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "lshift", do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "rshift", do_pending },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "and16",  do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "and32",  do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "or",     do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "and",    do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "not",    do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "xor",    do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "xnor",   do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
 
 /* Scientific. */
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "inv",    do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "hyp",    do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "etox",   do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "tentox", do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_SET,   M_NONE,   "ytox",   do_calc    },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "xfact",  do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "cos",    do_trig    },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "sin",    do_trig    },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "tan",    do_trig    },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "ln",     do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "log",    do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_CLEAR, M_NONE,   "rand",   do_immed   },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
-{ (char *)NULL, (char *)NULL, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "inv",    do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "hyp",    do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "etox",   do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "tentox", do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_SET,   M_NONE,   "ytox",   do_calc    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "xfact",  do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "cos",    do_trig    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "sin",    do_trig    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "tan",    do_trig    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "ln",     do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "log",    do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_CLEAR, M_NONE,   "rand",   do_immed   },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
+{ (char *)nullptr, (char *)nullptr, 0, OP_NOP,   M_NONE,   "",       do_none    },
 } ;
 
 
@@ -350,10 +350,10 @@ do_dtcalc(int argc, char **argv)
   char *ptr ;
 
   v->progname = argv[0] ;     /* Save programs name. */
-  v->appname  = NULL ;
+  v->appname  = nullptr ;
   init_cmdline_opts() ;       /* Initialize command line option strings. */
 
-  if ((ptr = strrchr(argv[0], '/')) != NULL)
+  if ((ptr = strrchr(argv[0], '/')) != nullptr)
     read_str(&v->appname, ptr+1) ;
   else read_str(&v->appname, argv[0]) ;
 
@@ -363,7 +363,7 @@ do_dtcalc(int argc, char **argv)
   load_resources() ;          /* Get resources from various places. */
   read_resources() ;          /* Read resources from merged database. */
   get_options(argc, argv) ;   /* Get command line arguments. */
-  if(application_args.session != NULL)
+  if(application_args.session != nullptr)
   {
       RestoreSession(); 
   }
@@ -371,12 +371,12 @@ do_dtcalc(int argc, char **argv)
   init_graphics() ;
   make_frames() ;             /* Create dtcalc window frames. */
 
-  v->shelf      = NULL ;      /* No selection for shelf initially. */
+  v->shelf      = nullptr ;      /* No selection for shelf initially. */
   v->noparens   = 0 ;         /* No unmatched brackets initially. */
   v->opsptr     = 0 ;         /* Nothing on the parentheses op stack. */
   v->numsptr    = 0 ;         /* Nothing on the parenthese numeric stack. */
   v->pending    = 0 ;         /* No initial pending command. */
-  if(application_args.session == NULL)
+  if(application_args.session == nullptr)
      v->tstate     = 0 ;      /* Button values displayed first. */
   v->hyperbolic = 0 ;         /* Normal trig functions initially. */
   v->inverse    = 0 ;         /* No inverse functions initially. */
@@ -419,7 +419,7 @@ get_bool_resource(enum res_type rtype, int *boolval)
   char *val, tempstr[MAXLINE] ;
   int len, n ;
  
-  if ((val = get_resource(rtype)) == NULL) return(0) ;
+  if ((val = get_resource(rtype)) == nullptr) return(0) ;
   strcpy(tempstr, val) ;
   len = strlen(tempstr) ;
   for (n = 0; n < len; n++)
@@ -464,7 +464,7 @@ get_int_resource(enum res_type rtype, int *intval)
 {
   char *val ;
 
-  if ((val = get_resource(rtype)) == NULL) return(0) ;
+  if ((val = get_resource(rtype)) == nullptr) return(0) ;
   *intval = atoi(val) ;
   return(1) ;
 }
@@ -489,7 +489,7 @@ get_label(int n)
   else 
      temp = buttons[n].str;
 
-  if(temp != NULL)
+  if(temp != nullptr)
      strcpy(v->pstr, temp) ;
   else
      strcpy(v->pstr, "");
@@ -521,7 +521,7 @@ get_options(int argc, char *argv[])
                              msg = (char *) XtMalloc(strlen(
                                                    opts[(int) O_ACCRANGE]) + 3);
                              sprintf(msg, "%s", opts[(int) O_ACCRANGE]);
-                             _DtSimpleError (v->appname, DtWarning, NULL, msg);
+                             _DtSimpleError (v->appname, DtWarning, nullptr, msg);
                              XtFree(msg);
                              v->accuracy = 2 ;
                            }
@@ -550,7 +550,7 @@ get_options(int argc, char *argv[])
                              msg = (char *) XtMalloc(strlen(opts[(int) O_MODE])+
                                                     strlen(next) + 3);
                              sprintf(msg, opts[(int) O_MODE], next);
-                             _DtSimpleError (v->appname, DtWarning, NULL, msg);
+                             _DtSimpleError (v->appname, DtWarning, nullptr, msg);
                              XtFree(msg);
                              v->modetype = SCIENTIFIC ;
                            }
@@ -577,7 +577,7 @@ get_options(int argc, char *argv[])
                              msg = (char *) XtMalloc(strlen(
                                                     opts[(int) O_BASE]) + 3);
                              sprintf(msg, "%s", opts[(int) O_BASE]);
-                             _DtSimpleError (v->appname, DtWarning, NULL, msg);
+                             _DtSimpleError (v->appname, DtWarning, nullptr, msg);
                              XtFree(msg);
                              v->base = DEC ;
                            }
@@ -610,7 +610,7 @@ get_options(int argc, char *argv[])
                                                     opts[(int) O_DISPLAY]) + 
                                                     strlen(next) + 3);
                                 sprintf(msg, opts[(int) O_DISPLAY], next);
-                                _DtSimpleError (v->appname, DtWarning, NULL, msg);
+                                _DtSimpleError (v->appname, DtWarning, nullptr, msg);
                                 XtFree(msg);
                                 v->dtype = FIX ;
                               }
@@ -650,7 +650,7 @@ get_options(int argc, char *argv[])
                                                     opts[(int) O_TRIG]) + 
                                                     strlen(next) + 3);
                                 sprintf(msg, opts[(int) O_TRIG], next);
-                                _DtSimpleError (v->appname, DtWarning, NULL, msg);
+                                _DtSimpleError (v->appname, DtWarning, nullptr, msg);
                                 XtFree(msg);
                                 v->ttype = DEG ;
                               }
@@ -681,13 +681,13 @@ getparam(char *s, char *argv[], char *errmes)
 {
   char *msg;
 
-  if (*argv != NULL && argv[0][0] != '-') strcpy(s, *argv) ;
+  if (*argv != nullptr && argv[0][0] != '-') strcpy(s, *argv) ;
   else
     { 
       msg = (char *) XtMalloc(strlen(mess[(int) MESS_PARAM]) + 
                               strlen(errmes) + 3);
       sprintf(msg, mess[(int) MESS_PARAM], errmes);
-      _DtSimpleError (v->appname, DtError, NULL, msg);
+      _DtSimpleError (v->appname, DtError, nullptr, msg);
       fprintf(stderr, mess[(int) MESS_PARAM], errmes) ;
       exit(1) ;
     }
@@ -706,7 +706,7 @@ get_rcfile(char *name)
   int len, n ;            
   FILE *rcfd ;            /* File descriptor for dtcalc rc file. */
  
-  if ((rcfd = fopen(name, "r")) == NULL) return ;
+  if ((rcfd = fopen(name, "r")) == nullptr) return ;
  
 /*  Process the .dtcalcrc file. There are currently four types of
  *  records to look for:
@@ -743,7 +743,7 @@ get_rcfile(char *name)
  *  example \g would be ascii 7.
  */
 
-  while (fgets(line, MAXLINE, rcfd) != NULL)
+  while (fgets(line, MAXLINE, rcfd) != nullptr)
     {
       isval = 0 ;
            if (line[0] == 'c' || line[0] == 'C') isval = 'c' ;
@@ -807,7 +807,7 @@ get_str_resource(enum res_type rtype, char *strval)
   char *val ;
   int i, len ;
 
-  if ((val = get_resource(rtype)) == NULL) return(0) ;
+  if ((val = get_resource(rtype)) == nullptr) return(0) ;
   strcpy(strval, val) ;
   len = strlen(strval) ;
   if(rtype != R_TRIG && rtype != R_DISPLAY)
@@ -890,7 +890,7 @@ init_vars(void)
   v->error       = 0 ;            /* No calculator error initially. */
   v->key_exp     = 0 ;            /* Not entering an exponent number. */
   v->pending_op  = 0 ;            /* No pending arithmetic operation. */
-  v->titleline   = NULL ;         /* No User supplied title line. */
+  v->titleline   = nullptr ;         /* No User supplied title line. */
   v->display[0]  = 0 ;         
 
   v->x  = 0;
@@ -898,7 +898,7 @@ init_vars(void)
   v->width  = 0;
   v->height = 0; 
 
-  v->workspaces = NULL; 
+  v->workspaces = nullptr; 
 
   read_str(&v->iconlabel, lstrs[(int) L_LCALC]) ;  /* Default icon label. */
 
@@ -1226,7 +1226,7 @@ math_err(void)
 	  
 	  strcat(msg, vstrs[(int) V_ERROR]);
 
-	  _DtSimpleError (v->appname, DtWarning, NULL, msg);
+	  _DtSimpleError (v->appname, DtWarning, nullptr, msg);
   }
 #endif
 
@@ -1605,9 +1605,9 @@ read_rcfiles(void)   /* Read .dtcalcrc's from home and current directories. */
       strcpy(v->fun_vals[n], "") ;    /* Initially empty function strings. */
     }
 
-  if ((home = getenv("HOME")) == NULL)
+  if ((home = getenv("HOME")) == nullptr)
     {
-      if ((entry = getpwuid(getuid())) == NULL) return ;
+      if ((entry = getpwuid(getuid())) == nullptr) return ;
       home = entry->pw_dir ;
     }
   snprintf(name, MAXPATHLEN, "%s/%s", home, RCNAME) ;
@@ -1658,9 +1658,9 @@ write_rcfile(enum menu_type mtype, int exists, int cfno, char *val, char *commen
   if (access(rcname, F_OK) == 0) rcexists = 1 ;
   else
     { 
-      if ((home = getenv("HOME")) == NULL)
+      if ((home = getenv("HOME")) == nullptr)
         {
-          if ((entry = getpwuid(getuid())) == NULL) return ;
+          if ((entry = getpwuid(getuid())) == nullptr) return ;
           home = entry->pw_dir ;
         }
       sprintf(rcname, "%s/%s", home, RCNAME) ;
@@ -1669,7 +1669,7 @@ write_rcfile(enum menu_type mtype, int exists, int cfno, char *val, char *commen
   strcpy(tmp_filename, "/tmp/.dtcalcrcXXXXXX") ;
   tmpfd_number = mkstemp(tmp_filename) ;
   if (tmpfd_number < 0) return ;
-  if ((tmpfd = fdopen(tmpfd_number, "w+")) == NULL) {
+  if ((tmpfd = fdopen(tmpfd_number, "w+")) == nullptr) {
     close(tmpfd_number) ;
     unlink(tmp_filename) ;
     return ;

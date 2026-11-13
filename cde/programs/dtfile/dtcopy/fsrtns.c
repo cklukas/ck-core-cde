@@ -71,9 +71,9 @@
  * Callback functions
  *------------------------------------------------------------------*/
 
-int (*progressCallback)(char *fname) = NULL;
-int (*errorCallback)(char *fname, int errnum) = NULL;
-int (*periodicCallback)(void) = NULL;
+int (*progressCallback)(char *fname) = nullptr;
+int (*errorCallback)(char *fname, int errnum) = nullptr;
+int (*periodicCallback)(void) = nullptr;
 
 /*--------------------------------------------------------------------
  * Local subroutines
@@ -87,7 +87,7 @@ static int ChildPath(const char *parent, const char *name, char **result)
 {
   size_t base = strlen(parent), length = strlen(name), separator;
   char *path;
-  *result = NULL;
+  *result = nullptr;
   if (base == 0)
     return EINVAL;
   separator = parent[base - 1] != '/';
@@ -262,14 +262,14 @@ CopyDir(char *sourceP, char *targetP, int repl, int link, struct stat *statP,
 {
   DIR *dirP;                      /* open directory */
   struct dirent *entryP;          /* directory entry */
-  char *srcname = NULL, *tgtname = NULL;
+  char *srcname = nullptr, *tgtname = nullptr;
   int rc;
   int allCopied = 1;
   *complete = 0;
 
   /* open source directory */
   dirP = opendir(sourceP);
-  if (dirP == NULL)
+  if (dirP == nullptr)
     return errno;
 
   /* create target directory */
@@ -305,8 +305,8 @@ CopyDir(char *sourceP, char *targetP, int repl, int link, struct stat *statP,
     do {
       errno = 0;
       entryP = readdir(dirP);
-    } while (entryP == NULL && errno == EINTR);
-    if (entryP == NULL) {
+    } while (entryP == nullptr && errno == EINTR);
+    if (entryP == nullptr) {
       rc = errno;
       break;
     }
@@ -324,7 +324,7 @@ CopyDir(char *sourceP, char *targetP, int repl, int link, struct stat *statP,
     }
     free(srcname);
     free(tgtname);
-    srcname = tgtname = NULL;
+    srcname = tgtname = nullptr;
   }
 
   if (closedir(dirP) != 0 && rc == 0)
@@ -417,7 +417,7 @@ EmptyDir(char *sourceP, int rm, int force)
 
   /* open source directory */
   dirP = opendir(sourceP);
-  if (dirP == NULL)
+  if (dirP == nullptr)
     return errno;
 
   rc = 0;
@@ -425,8 +425,8 @@ EmptyDir(char *sourceP, int rm, int force)
     do {
       errno = 0;
       entryP = readdir(dirP);
-    } while (entryP == NULL && errno == EINTR);
-    if (entryP == NULL) {
+    } while (entryP == nullptr && errno == EINTR);
+    if (entryP == nullptr) {
       rc = errno;
       break;
     }

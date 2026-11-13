@@ -59,7 +59,7 @@ static Registration_2 * reg4_to_reg2(Registration_4 *r4);
 extern void
 _DtCm_id4_to_id2(Id_4 *from, Id_2 *to)
 {
-        if ((from==NULL) || (to==NULL)) return;	
+        if ((from==nullptr) || (to==nullptr)) return;	
         to->tick = from->tick;
         to->key = from->key;
 }
@@ -69,13 +69,13 @@ _DtCm_uid4_to_uid2(Uid_4 *ui4)
 {
         Uid_2 *ui2, *head, *prev;
 
-	prev = head = NULL;
-	while (ui4 != NULL) {
+	prev = head = nullptr;
+	while (ui4 != nullptr) {
 		ui2 = (Uid_2 *)calloc(1, sizeof(Uid_2));
 		_DtCm_id4_to_id2(&(ui4->appt_id), &(ui2->appt_id));
-		ui2->next = NULL;
+		ui2->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = ui2;
 		else
 			prev->next = ui2;
@@ -92,8 +92,8 @@ _DtCm_appt4_to_appt2(Appt_4 *a4)
         Appt_2 *a2, *head, *prev;
 	struct Attribute_4 *item;
 
-	prev = head = NULL;
-	while (a4 != NULL) {
+	prev = head = nullptr;
+	while (a4 != nullptr) {
 		a2  = (Appt_2 *)calloc(1, sizeof(Appt_2));
 		_DtCm_id4_to_id2(&(a4->appt_id), &(a2->appt_id));
 		a2->tag = tag4_to_tag2(a4->tag);
@@ -111,7 +111,7 @@ _DtCm_appt4_to_appt2(Appt_4 *a4)
 		   proper.
 		*/
 		item = a4->attr;
-		while(item!=NULL) {
+		while(item!=nullptr) {
 			if (strcmp(item->attr, "ml")==0) {
 				a2->mailto=buffer4_to_buffer2(item->clientdata);
 				break;
@@ -120,9 +120,9 @@ _DtCm_appt4_to_appt2(Appt_4 *a4)
 		}
 
 		a2->exception = except4_to_except2(a4->exception);
-		a2->next = NULL;
+		a2->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = a2;
 		else
 			prev->next = a2;
@@ -160,7 +160,7 @@ _DtCm_tableres4_to_tableres2(Table_Res_4 *r4)
 {
         Table_Res_2 *r2;
 
-	if (r4==NULL) return((Table_Res_2 *)NULL);
+	if (r4==nullptr) return((Table_Res_2 *)nullptr);
 	r2 = (Table_Res_2 *)calloc(1, sizeof(Table_Res_2));
         r2->status = _DtCm_accstat4_to_accstat2(r4->status);
         tablereslist4_to_tablereslist2(&(r4->res), &(r2->res));
@@ -172,14 +172,14 @@ _DtCm_acclist4_to_acclist2(Access_Entry_4 *l4)
 {
         Access_Entry_2 *l2, *head, *prev;
 
-	prev = head = NULL;
-	while (l4 != NULL) {
+	prev = head = nullptr;
+	while (l4 != nullptr) {
 		l2 = (Access_Entry_2 *)calloc(1, sizeof(Access_Entry_2));
 		l2->who = buffer4_to_buffer2(l4->who);
 		l2->access_type = l4->access_type;
-		l2->next = NULL;
+		l2->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = l2;
 		else
 			prev->next = l2;
@@ -195,7 +195,7 @@ _DtCm_accargs4_to_accargs2(Access_Args_4 *a4)
 {
         Access_Args_2 *a2;
 
-	if (a4==NULL) return((Access_Args_2 *)NULL);
+	if (a4==nullptr) return((Access_Args_2 *)nullptr);
 	a2 = (Access_Args_2 *)calloc(1, sizeof(Access_Args_2));
         a2->target = buffer4_to_buffer2(a4->target);
         a2->access_list = _DtCm_acclist4_to_acclist2(a4->access_list);
@@ -207,14 +207,14 @@ _DtCm_range4_to_range2(Range_4 *r4)
 {
 	Range_2 *r2, *head, *prev;
 
-	prev = head = NULL;
-	while (r4 != NULL) {
+	prev = head = nullptr;
+	while (r4 != nullptr) {
 		r2 = (Range_2 *)calloc(1, sizeof(Range_2));
 		r2->key1 = r4->key1;
 		r2->key2 = r4->key2;
-		r2->next = NULL;
+		r2->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = r2;
 		else
 			prev->next = r2;
@@ -268,13 +268,13 @@ _DtCm_uidopt4_to_uid2(Uidopt_4 *uidopt)
 {
         Uid_2 *uid2, *head, *prev;
  
-	prev = head = NULL;
-	while (uidopt != NULL) {
+	prev = head = nullptr;
+	while (uidopt != nullptr) {
         	uid2 = (Uid_2 *)calloc(1, sizeof(Uid_2));
         	_DtCm_id4_to_id2(&(uidopt->appt_id), &(uid2->appt_id));
-        	uid2->next = NULL;
+        	uid2->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = uid2;
 		else
 			prev->next = uid2;
@@ -290,11 +290,11 @@ _DtCm_free_attr2(Attribute_2 *a)
 {
 	Attribute_2 *ptr;
 
-	while (a != NULL) {
+	while (a != nullptr) {
 		ptr = a->next;
-		if (a->attr != NULL)
+		if (a->attr != nullptr)
 			free(a->attr);
-		if (a->value != NULL)
+		if (a->value != nullptr)
 			free(a->value);
 		free(a);
 
@@ -307,28 +307,28 @@ _DtCm_free_appt2(Appt_2 *a)
 {
 	Appt_2 *ptr;
 
-	while (a != NULL) {
+	while (a != nullptr) {
 		ptr = a->next;
 
-		if (a->what != NULL)
+		if (a->what != nullptr)
 			free(a->what);
 
-		if (a->mailto != NULL)
+		if (a->mailto != nullptr)
 			free(a->mailto);
 
-		if (a->script != NULL)
+		if (a->script != nullptr)
 			free(a->script);
 
-		if (a->author != NULL)
+		if (a->author != nullptr)
 			free(a->author);
 
-		if (a->client_data != NULL)
+		if (a->client_data != nullptr)
 			free(a->client_data);
 
-		if (a->attr != NULL)
+		if (a->attr != nullptr)
 			_DtCm_free_attr2(a->attr);
 
-		if (a->exception != NULL)
+		if (a->exception != nullptr)
 			free_excpt2(a->exception);
 
      		free(a);
@@ -342,7 +342,7 @@ free_excpt2(Except_2 *e)
 {
 	Except_2 *ptr;
 
-	while (e != NULL) {
+	while (e != nullptr) {
 		ptr = e->next;
 		free(e);
 		e = ptr;
@@ -353,7 +353,7 @@ static Buffer_2
 buffer4_to_buffer2(Buffer_4 b)
 {
 	Buffer_2 copy;
-	if (b!=NULL)
+	if (b!=nullptr)
 		copy = strdup(b);
 	else
 		copy = calloc(1, 1);
@@ -370,7 +370,7 @@ buffer4_to_buffer2(Buffer_4 b)
 static Period_2
 period4_to_period2(Period_4 *p)
 {
-	if (p==NULL) return(otherPeriod_2);
+	if (p==nullptr) return(otherPeriod_2);
         switch (p->period) {
         case single_4:
                 return(single_2);
@@ -392,7 +392,7 @@ period4_to_period2(Period_4 *p)
 static Tag_2
 tag4_to_tag2(Tag_4 *t)
 {
-	if (t==NULL) return(otherTag_2);
+	if (t==nullptr) return(otherTag_2);
 	switch(t->tag) {
 	case appointment_4:
 		return(appointment_2);
@@ -411,14 +411,14 @@ attr4_to_attr2(Attribute_4 *a4)
 {
         Attribute_2 *a2, *head, *prev;
  
-	prev = head = NULL;
-	while (a4 != NULL) {
+	prev = head = nullptr;
+	while (a4 != nullptr) {
 		a2 = (Attribute_2 *)calloc(1, sizeof(Attribute_2));
-		a2->next = NULL;
+		a2->next = nullptr;
 		a2->attr = strdup(a4->attr);
 		a2->value = strdup(a4->value);
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = a2;
 		else
 			prev->next = a2;
@@ -434,13 +434,13 @@ except4_to_except2(Except_4 *e4)
 {
         Except_2 *e2, *head, *prev;
 
-	prev = head = NULL;
-	while (e4 != NULL) {
+	prev = head = nullptr;
+	while (e4 != nullptr) {
 		e2 = (Except_2 *)calloc(1, sizeof(Except_2));
 		e2->ordinal = e4->ordinal;
-		e2->next=NULL;
+		e2->next=nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = e2;
 		else
 			prev->next = e2;
@@ -456,16 +456,16 @@ abb4_to_abb2(Abb_Appt_4 *a4)
 {
         Abb_Appt_2 *a2, *head, *prev;
 
-	prev = head = NULL;
-	while (a4 != NULL) {
+	prev = head = nullptr;
+	while (a4 != nullptr) {
 		a2 = (Abb_Appt_2 *)calloc(1, sizeof(Abb_Appt_2));
 		_DtCm_id4_to_id2(&(a4->appt_id), &(a2->appt_id));
 		a2->what = buffer4_to_buffer2(a4->what);
 		a2->duration = a4->duration;
 		a2->period = period4_to_period2(&(a4->period));
-		a2->next = NULL;
+		a2->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = a2;
 		else
 			prev->next = a2;
@@ -479,7 +479,7 @@ abb4_to_abb2(Abb_Appt_4 *a4)
 static void
 apptid4_to_apptid2(Apptid_4 *from, Apptid_2 *to)
 {
-        if (from==NULL || to==NULL) return;
+        if (from==nullptr || to==nullptr) return;
         _DtCm_id4_to_id2(from->oid, to->oid);
         to->new_appt = _DtCm_appt4_to_appt2(from->new_appt);
 }
@@ -490,17 +490,17 @@ reminder4_to_reminder2(Reminder_4 *r4)
         Reminder_2 *r2, *head, *prev;
 	Attribute_2 *attr2;
 
-	prev = head = NULL;
-	while (r4 != NULL) {
+	prev = head = nullptr;
+	while (r4 != nullptr) {
 		r2 = (Reminder_2 *)calloc(1, sizeof(Reminder_2));
 		_DtCm_id4_to_id2(&(r4->appt_id), &(r2->appt_id));
 		r2->tick = r4->tick;
 		attr2 = attr4_to_attr2(&(r4->attr));
 		r2->attr = *attr2;
 		free(attr2);
-		r2->next = NULL;
+		r2->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = r2;
 		else
 			prev->next = r2;
@@ -531,7 +531,7 @@ tablerestype4_to_tablerestype2(Table_Res_Type_4 t)
 static void
 tablereslist4_to_tablereslist2(Table_Res_List_4 *from, Table_Res_List_2 *to)
 {
-        if (from==NULL || to==NULL) return;
+        if (from==nullptr || to==nullptr) return;
         to->tag = tablerestype4_to_tablerestype2(from->tag);
         switch (from->tag) {
         case AP_4:
@@ -576,7 +576,7 @@ argstag4_to_argstag2(Table_Args_Type_4 t)
 static void
 args4_to_args2(Args_4 *from, Args_2 *to)
 {
-	if (from==NULL || to==NULL) return;
+	if (from==nullptr || to==nullptr) return;
 	to->tag = argstag4_to_argstag2(from->tag);
 	switch(from->tag) {
 	case TICK_4:
@@ -607,7 +607,7 @@ tableargs4_to_tableargs2(Table_Args_4 *a4)
 {
 	Table_Args_2 *a2;
 	
-	if (a4==NULL) return((Table_Args_2 *)NULL);
+	if (a4==nullptr) return((Table_Args_2 *)nullptr);
 	a2 = (Table_Args_2 *)calloc(1, sizeof(Table_Args_2));
 	a2->target = buffer4_to_buffer2(a4->target);
 	args4_to_args2(&(a4->args), &(a2->args));
@@ -619,16 +619,16 @@ reg4_to_reg2(Registration_4 *r4)
 {
         Registration_2 *r2, *head, *prev;
 
-	prev = head = NULL;
-	while (r4 != NULL) {
+	prev = head = nullptr;
+	while (r4 != nullptr) {
 		r2 = (Registration_2 *)calloc(1, sizeof(Registration_2));
 		r2->target = buffer4_to_buffer2(r4->target);
 		r2->prognum = r4->prognum;
 		r2->versnum = r4->versnum;
 		r2->procnum = r4->procnum;
-		r2->next = NULL;
+		r2->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = r2;
 		else
 			prev->next = r2;

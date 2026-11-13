@@ -75,8 +75,8 @@ _DtCmsMatchAttributes(
 static boolean_t
 _MatchOneAttribute(cms_attribute eattr, cms_attribute mattr, int op)
 {
-	if (eattr.value == NULL) {
-		if (op == CSA_MATCH_EQUAL_TO && mattr.value == NULL)
+	if (eattr.value == nullptr) {
+		if (op == CSA_MATCH_EQUAL_TO && mattr.value == nullptr)
 			return (B_TRUE);
 		else
 			return (B_FALSE);

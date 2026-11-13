@@ -70,8 +70,8 @@ static	int	CnvGPFtoBDF(struct ptobhead *head);
 
 static struct ptobhead Head;
 
-static	char	*targ_file = NULL;	/* UDC character filename */
-static	char	*com = NULL;		/* command name */
+static	char	*targ_file = nullptr;	/* UDC character filename */
+static	char	*com = nullptr;		/* command name */
 static	char	*spacing ;
 static	char	*char_set ;
 
@@ -108,13 +108,13 @@ int main(int argc, char *argv[])
 	char	*codeset = DEFAULT_CODESET ;
 
 	/* format */
-	Head.in_file = Head.bdf_file = Head.snf_file = Head.out_file = NULL;
+	Head.in_file = Head.bdf_file = Head.snf_file = Head.out_file = nullptr;
 	help = no_infile = style_err = 0;
 	com = argv[0];
 	COMM_SETDEFAULTSTYLE( style ) ;
 	memset( &key, '\0', sizeof(FalFontData) ) ;
 	xlfdname = cbuf = ep = '\0' ;
-	spacing = char_set = NULL ;
+	spacing = char_set = nullptr ;
 	code_no = code_area = 0 ;
 
 	if (!( bdftopcf = get_cmd_path( getenv( "PATH" ), BDFTOPCF_CMD ))) {
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 		exit( 1 );
 	}
 
-	if ( Head.snf_file == NULL && xlfdname == NULL ) {
+	if ( Head.snf_file == nullptr && xlfdname == nullptr ) {
 		if ( code_area & SYSTM ) {
 			USAGE1("%s : The SNF output file name cannot be omitted.\n", argv[0] );
 		} else {
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
 	/*
 	 * refuse proportional fonts
 	 */
-	if ( GetUdcFontName( Head.snf_file, NULL, &xlfdname ) ) {
+	if ( GetUdcFontName( Head.snf_file, nullptr, &xlfdname ) ) {
 	    USAGE1("%s : This font cannot get XLFD. Terminates abnormally.\n", argv[0]);
 	    exit( 1 );
 	}
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
 
 	COMM_SET_CODECATEGORY( char_set, code_area, Head) ;
 
-	if ( ( targ_file = GetRealFileName( Head.snf_file ) ) == NULL ){
+	if ( ( targ_file = GetRealFileName( Head.snf_file ) ) == nullptr ){
 		USAGE2("%s : It was not possible to refer to the substance of the font file. \"%s\"\n", argv[0], Head.snf_file );
 		exit( 1 );
 	}
@@ -268,10 +268,10 @@ int main(int argc, char *argv[])
 	/*
 	 * open input file(CPF)
 	 */
-	if ( Head.in_file == NULL ) {
+	if ( Head.in_file == nullptr ) {
 		Head.input = stdin;
 	} else {
-		if ( ( Head.input = fopen( Head.in_file, "r" ) ) == NULL ) {
+		if ( ( Head.input = fopen( Head.in_file, "r" ) ) == nullptr ) {
 			put_error_and_exit( &Head, GPF_OPEN_IN, argv[0] );
 		}
 	}
@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
 	}
 
 	close( pfd[0] );
-	if ( ( Head.output = fdopen( pfd[1], "w" ) ) == NULL ) {
+	if ( ( Head.output = fdopen( pfd[1], "w" ) ) == nullptr ) {
 		close( pfd[1] );
 		kill( chld_pid, SIGKILL );
 		WaitID( chld_pid, chld_stat ) ;
@@ -411,11 +411,11 @@ CnvGPFtoBDF(struct ptobhead *head)
 		head->zoomf = 0;
 	}
 
-	if ( ( head->code = (int *)malloc( sizeof(int) * head->num_chars ) ) == NULL ) {
+	if ( ( head->code = (int *)malloc( sizeof(int) * head->num_chars ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
-	if ( ( head->ptn = (char **)malloc( sizeof(char *)*head->num_chars ) ) == NULL ) {
+	if ( ( head->ptn = (char **)malloc( sizeof(char *)*head->num_chars ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
@@ -435,7 +435,7 @@ static	void
 put_error_and_exit(struct ptobhead *ptob, int er_no, char *prog_name)
 {
 	ErrMsgTable_AndExit( er_no, ptob->snf_file, ptob->out_file,
-	    ptob->in_file,  NULL,
+	    ptob->in_file,  nullptr,
 	    ptob->bdf_file,
 	    prog_name
 	    );

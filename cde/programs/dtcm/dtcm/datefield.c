@@ -68,7 +68,7 @@ static  char sccsid[] = "@(#)datefield.c 1.7 94/11/07 Copyr 1993 Sun Microsystem
 extern char*
 get_date_from_widget(Tick t, Widget w, OrderingType order,
 		     SeparatorType separator) {
-        char		*date = NULL;
+        char		*date = nullptr;
 	WidgetClass	wc;
         static char	buf[80];
  
@@ -83,13 +83,13 @@ get_date_from_widget(Tick t, Widget w, OrderingType order,
 		else if (wc == xmTextFieldWidgetClass)
 			date = XmTextFieldGetString(w);
 		else
-			return NULL;
+			return nullptr;
 
 		if (!date || *date == '\0')
 			format_tick(t, order, separator, buf);
 		else if (!datestr2mdy(date, order, separator, buf)) {
 			XtFree(date);
-			return NULL;
+			return nullptr;
 		}
 		if (date)
 			XtFree(date);
@@ -109,7 +109,7 @@ set_date_in_widget(Tick t, Widget w, OrderingType order,
 	if (wc == xmLabelGadgetClass || wc == xmLabelWidgetClass) {
 		xmstr = XmStringCreateLocalized(buf);
 		XtVaSetValues(w, XmNlabelString, xmstr,
-			NULL);
+			nullptr);
 		XmStringFree(xmstr);
 	} else if (wc == xmTextWidgetClass)
 		XmTextSetString(w, buf);

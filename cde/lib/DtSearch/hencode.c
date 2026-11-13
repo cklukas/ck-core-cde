@@ -101,7 +101,7 @@ void            gen_vec (char *fname_huffcode_tab)
     FILE           *tab_stream;
     _Xstrtokparams  strtok_buf;
 
-    if ((tab_stream = fopen (fname_huffcode_tab, "r")) == NULL) {
+    if ((tab_stream = fopen (fname_huffcode_tab, "r")) == nullptr) {
 	printf (CATGETS(dtsearch_catd, MS_huff, 1,
 	    "%s: Cannot open huffman encode file '%s':\n"
 	    "  %s\n  Exit Code = 2\n"),
@@ -124,10 +124,10 @@ void            gen_vec (char *fname_huffcode_tab)
      * its Huffman Code 
      */
     while (fgets (tab_filebuf, sizeof (tab_filebuf) - 1, tab_stream)
-	!= NULL) {
+	!= nullptr) {
 	i = atoi (_XStrtok (tab_filebuf, DELIMITERS, strtok_buf)); /* char */
 	/* read current huff code */
-	strcpy (temp, _XStrtok (NULL, DELIMITERS, strtok_buf));
+	strcpy (temp, _XStrtok (nullptr, DELIMITERS, strtok_buf));
 	if (temp[0] == ' ') {
 	    /* Empty huffcode associated with LITERAL CODE.
 	     * Either this is literal char itself and literal
@@ -354,7 +354,7 @@ main (int argc, char *argv[])
 	fprintf (stderr, "Usage: try filename\n");
 	exit (1);
     }
-    if ((stream = fopen (argv[1], "rb")) == NULL) {
+    if ((stream = fopen (argv[1], "rb")) == nullptr) {
 	fprintf (stderr, "Could not open input file '%s'\n", argv[1]);
 	exit (2);
     }

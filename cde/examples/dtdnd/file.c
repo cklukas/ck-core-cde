@@ -134,7 +134,7 @@ fileConvertCallback(
         int             ii;
 	Widget		fileDraw;
 
-	if (convertInfo == NULL) {
+	if (convertInfo == nullptr) {
 		return;
 	}
 
@@ -186,13 +186,13 @@ fileConvertCallback(
 
                 	/* Remove icon(s) */
 
-                	if (fileDraw != NULL) {
+                	if (fileDraw != nullptr) {
                         	IconDelete(fileDraw, &iconArray[ii]);
 
                         	XClearWindow(XtDisplayOfObject(fileDraw),
                                 	(XtWindow(fileDraw)));
                         	XtCallCallbacks(fileDraw, XmNexposeCallback,
-					NULL);
+					nullptr);
                 	}
 		}
                 break;
@@ -234,12 +234,12 @@ fileTransferCallback(
 {
         DtDndTransferCallbackStruct *transferInfo =
                                 (DtDndTransferCallbackStruct *) callData;
-        IconInfo       *iconList = NULL, *iconPtr;
+        IconInfo       *iconList = nullptr, *iconPtr;
         char           *filePath, *name, *contents,
 			command[2*MAXPATHLEN + 5];
         int             ii;
 
-	if (transferInfo == NULL) {
+	if (transferInfo == nullptr) {
 		return;
 	}
 
@@ -252,8 +252,8 @@ fileTransferCallback(
 		return;
 	}
 
-	if (widget != NULL) {
-		XtVaGetValues(widget, XmNuserData, &iconList, NULL);
+	if (widget != nullptr) {
+		XtVaGetValues(widget, XmNuserData, &iconList, nullptr);
         }
 
 	/*
@@ -268,7 +268,7 @@ fileTransferCallback(
 
 		contents = fileGetContents(filePath);
 
-        	if ((name = strrchr(filePath,'/')) == NULL) {
+        	if ((name = strrchr(filePath,'/')) == nullptr) {
         		name = filePath;
         	} else {
         		name++;
@@ -290,11 +290,11 @@ fileTransferCallback(
         		transferInfo->y + ii * 10,
         		contents, strlen(contents), name, IconByData);
         	iconPtr->next = iconList;
-		if (iconList != NULL) {
+		if (iconList != nullptr) {
 			iconList->prev = iconPtr;
 		}
 		iconList = iconPtr;
-        	XtVaSetValues(widget, XmNuserData, iconList, NULL);
+        	XtVaSetValues(widget, XmNuserData, iconList, nullptr);
 		XtFree(contents);
         }
 }
@@ -316,7 +316,7 @@ fileDragSetup(
 
         XtAppAddActions(demoAppContext, actionTable, 1);
         newTranslations = XtParseTranslationTable(translations);
-        XtVaSetValues(fileDraw, XmNtranslations, newTranslations, NULL);
+        XtVaSetValues(fileDraw, XmNtranslations, newTranslations, nullptr);
 
         XtAddEventHandler(fileDraw, Button1MotionMask, False,
                 (XtEventHandler)demoDragMotionHandler,
@@ -345,12 +345,12 @@ fileDragStart(
         IconInfo       *iconArray,
         int             numFiles)
 {
-        static XtCallbackRec convertCBRec[] = { {fileConvertCallback, NULL},
-                                                {NULL, NULL} };
+        static XtCallbackRec convertCBRec[] = { {fileConvertCallback, nullptr},
+                                                {nullptr, nullptr} };
         static XtCallbackRec dragFinishCBRec[] =
-					      { {demoDragFinishCallback, NULL},
-					        {fileDragFinishCallback, NULL},
-                                                {NULL, NULL} };
+					      { {demoDragFinishCallback, nullptr},
+					        {fileDragFinishCallback, nullptr},
+                                                {nullptr, nullptr} };
         Widget          dragIcon;
         Arg             arg[1];
 
@@ -361,13 +361,13 @@ fileDragStart(
 	 */
 
         if (numFiles == 1) {
-        	if (iconArray[0].dragIcon == NULL) {
+        	if (iconArray[0].dragIcon == nullptr) {
                 	iconArray[0].dragIcon = DtDndCreateSourceIcon(widget,
                         	iconArray[0].bitmap, iconArray[0].mask);
         	}
                 dragIcon = iconArray[0].dragIcon;
         } else {
-                dragIcon = NULL; /* Use default multiple provided by library */
+                dragIcon = nullptr; /* Use default multiple provided by library */
         }
 
         XtSetArg(arg[0], DtNsourceIcon, (XtArgVal)dragIcon);
@@ -379,7 +379,7 @@ fileDragStart(
         if (DtDndDragStart(widget, event, DtDND_FILENAME_TRANSFER, numFiles,
                         XmDROP_COPY | XmDROP_MOVE,
                         convertCBRec, dragFinishCBRec, arg, 1)
-            == NULL) {
+            == nullptr) {
 
                 printf("DragStart returned NULL.\n");
         }
@@ -418,13 +418,13 @@ fileCheckForDrag(
 {
         IconInfo       *iconList, *iconPtr, *iconArray;
 
-        XtVaGetValues(widget, XmNuserData, &iconList, NULL);
+        XtVaGetValues(widget, XmNuserData, &iconList, nullptr);
 
-        if (iconList == NULL) {
+        if (iconList == nullptr) {
                 printf("Unable to locate icon list.\n");
         }
 
-        for (iconPtr = iconList; iconPtr != NULL; iconPtr = iconPtr->next) {
+        for (iconPtr = iconList; iconPtr != nullptr; iconPtr = iconPtr->next) {
                 if ((initialX > (int)iconPtr->icon.x &&
                      initialX < (int)(iconPtr->icon.x + iconPtr->icon.width)) &&
                     (initialY > (int)iconPtr->icon.y &&
@@ -465,12 +465,12 @@ fileCreateDragSource(
 
         fileFrame = XtVaCreateManagedWidget("fileFrame",
                 xmFrameWidgetClass, parent,
-                NULL);
+                nullptr);
 
         fileDraw = XtVaCreateManagedWidget("fileDraw",
                 xmDrawingAreaWidgetClass, fileFrame,
-                NULL);
-        XtAddCallback(fileDraw, XmNexposeCallback, demoDrawExposeCallback,NULL);
+                nullptr);
+        XtAddCallback(fileDraw, XmNexposeCallback, demoDrawExposeCallback,nullptr);
 
 	return fileDraw;
 }
@@ -517,7 +517,7 @@ fileCreateFile(
 
         sprintf(filePathAndName, "%s/%s", filePath, fileName);
 
-        if ((fp = fopen(filePathAndName, "w")) == NULL) {
+        if ((fp = fopen(filePathAndName, "w")) == nullptr) {
                 printf("Cannot create file \"%s\" in current directory.\n"
                         "Exiting...\n", filePathAndName);
                 exit(1);
@@ -588,7 +588,7 @@ fileCreateFiles(
 
         iconList = iconPtr;
 
-        XtVaSetValues(fileDraw, XmNuserData, iconList, NULL);
+        XtVaSetValues(fileDraw, XmNuserData, iconList, nullptr);
 }
 
 /*
@@ -645,24 +645,24 @@ static char*
 fileGetContents(
 	char		*filePath)
 {
-	char		*contents = NULL;
+	char		*contents = nullptr;
         struct stat     fileStatus;
 	FILE		*fp;
 
         if (stat(filePath, &fileStatus) == 0) { /* file exists */
 		contents = (char *) XtMalloc(fileStatus.st_size + 1);
-        	if ((fp = fopen(filePath, "r")) == NULL) {
+        	if ((fp = fopen(filePath, "r")) == nullptr) {
                 	printf("Cannot open file \"%s\" for reading.\n",
 				filePath);
 			XtFree(contents);
-			contents = NULL;
+			contents = nullptr;
         	} else if (fread(contents, fileStatus.st_size, 1, fp) != 1) {
                 	printf("Cannot read file \"%s\".\n", filePath);
 			XtFree(contents);
-			contents = NULL;
+			contents = nullptr;
         	}
-		if (contents != NULL) {
-			contents[fileStatus.st_size] = NULL;
+		if (contents != nullptr) {
+			contents[fileStatus.st_size] = nullptr;
 		}
         	fclose(fp);
 	}
@@ -677,19 +677,19 @@ fileGetContents(
 static char*
 fileGetDemoDirectory(void)
 {
-        static char     *demoDirectory = NULL;
+        static char     *demoDirectory = nullptr;
         char            currentDirectory[MAXPATHLEN];
         int             status;
 
-        if (demoDirectory == NULL) {
+        if (demoDirectory == nullptr) {
                 demoDirectory = (char *) getenv("DNDDEMODIR");
-                if (demoDirectory == NULL) {
-                        demoDirectory = (char *) getcwd(NULL, MAXPATHLEN);
-                        if (demoDirectory == NULL) {
+                if (demoDirectory == nullptr) {
+                        demoDirectory = (char *) getcwd(nullptr, MAXPATHLEN);
+                        if (demoDirectory == nullptr) {
                             sprintf(
                                 "getcwd() could not get current directory.\n"
                                 "\tUsing \".\" instead.\n",
-                                NULL);
+                                nullptr);
                             demoDirectory = ".";
                         } else {
                             /* strip off the /tmp_mnt */
@@ -712,12 +712,12 @@ static char*
 fileGetDirectoryName(
         DragOrDrop      dragOrDrop)
 {
-        static char     *dragDirectory = NULL;
-        static char     *dropDirectory = NULL;
+        static char     *dragDirectory = nullptr;
+        static char     *dropDirectory = nullptr;
 
         switch (dragOrDrop) {
         case DragDirectory:
-                if (dragDirectory == NULL) {
+                if (dragDirectory == nullptr) {
                         dragDirectory = (char *) XtMalloc(MAXPATHLEN + 1);
                         sprintf(dragDirectory, "%s/FileDragDir",
 				fileGetDemoDirectory());
@@ -725,7 +725,7 @@ fileGetDirectoryName(
                 return dragDirectory;
                 break;
         case DropDirectory:
-                if (dropDirectory == NULL) {
+                if (dropDirectory == nullptr) {
                         dropDirectory = (char *) XtMalloc(MAXPATHLEN + 1);
                         sprintf(dropDirectory, "%s/FileDropDir",
 				fileGetDemoDirectory());
@@ -733,7 +733,7 @@ fileGetDirectoryName(
                 return dropDirectory;
                 break;
         default:
-                return NULL;
+                return nullptr;
         }
 }
 
@@ -754,12 +754,12 @@ fileStoreBuffer(
 	int		fd;
         FILE            *fp;
 
-	if (name == NULL)
+	if (name == nullptr)
 		name = "unnamed";
 
         if (snprintf(path, sizeof(path), "%s/%s", dir, name) >=
 	    (int) sizeof(path))
-		return (char *)NULL;
+		return (char *)nullptr;
 
 	/*
 	 * O_EXCL makes the creation fail instead of following a symbolic
@@ -771,22 +771,22 @@ fileStoreBuffer(
 	if (fd == -1 && errno == EEXIST) {
 		if (snprintf(path, sizeof(path), "%s/%sXXXXXX", dir, name) >=
 		    (int) sizeof(path))
-			return (char *)NULL;
+			return (char *)nullptr;
 		fd = mkstemp(path);
 	}
-	if (fd == -1 || (fp = fdopen(fd, "w")) == NULL) {
+	if (fd == -1 || (fp = fdopen(fd, "w")) == nullptr) {
 		if (fd != -1) {
 			close(fd);
 			unlink(path);
 		}
 		printf("Cannot create file \"%s\"\n", path);
-		return (char *)NULL;
+		return (char *)nullptr;
 	}
 
         if (fwrite(buf, len, 1, fp) != 1) {
                 printf("Cannot write to file \"%s\".\n", path);
 		fclose(fp);
-		return (char *)NULL;
+		return (char *)nullptr;
         }
 
         fclose(fp);

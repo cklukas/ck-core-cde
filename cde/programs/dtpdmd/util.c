@@ -87,7 +87,7 @@ xpstrspn(
 
 
    /* A Null string has no spans */
-   if (s1 == NULL)
+   if (s1 == nullptr)
       return(0);
 
    count = 0;
@@ -153,7 +153,7 @@ xpstrcspn(
 
 
    /* An empty string has no spans */
-   if (s1 == NULL)
+   if (s1 == nullptr)
       return(0);
 
    count = 0;
@@ -206,7 +206,7 @@ xpstrtok(
         const char *s2 )
 {
 #ifdef NLS16
-   static char * ptr = NULL;
+   static char * ptr = nullptr;
    char * return_ptr;
    int len;
    int offset;
@@ -220,14 +220,14 @@ xpstrtok(
       ptr = s1 + xpstrspn(s1, s2);
 
    /* A Null string pointer has no tokens */
-   if (ptr == NULL)
-      return(NULL);
+   if (ptr == nullptr)
+      return(nullptr);
 
    /* Find out where the first terminator is */
    if ((len = xpstrcspn(ptr, s2)) <= 0)
    {
       /* No tokens left */
-      return(NULL);
+      return(nullptr);
    }
 
    /* Keep track of where the token started */
@@ -269,6 +269,6 @@ void xp_add_argv( char ***argv, char *str )
     }
 
     (*argv)[i] = str;
-    (*argv)[i+1] = (char *) NULL;
+    (*argv)[i+1] = (char *) nullptr;
 }
 

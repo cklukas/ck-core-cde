@@ -86,12 +86,12 @@ int      fileIOMode;                    /* are we reading or writing a file? */
 int      fileFormat=FORMAT_XPM;         /* default file output format */
 char     last_fname[MAX_FNAME];         /* last file read or written */
 XPoint   pointList[MAX_PTS];            /* pt. list for poly{line/gon} Ops. */
-XImage  *CutCopy=NULL;                  /* XImage from last cut/copy op. */
-XImage  *CutCopy_mono=NULL;             /* XImage from last cut/copy op. */
-XImage  *Rotate=NULL;                   /* XImage from last rotation op. */
-XImage  *Rotate_mono=NULL;              /* XImage from last rotation op. */
-XImage  *Scale=NULL;                    /* XImage from last scale op. */
-XImage  *Scale_mono=NULL;               /* XImage from last scale op. */
+XImage  *CutCopy=nullptr;                  /* XImage from last cut/copy op. */
+XImage  *CutCopy_mono=nullptr;             /* XImage from last cut/copy op. */
+XImage  *Rotate=nullptr;                   /* XImage from last rotation op. */
+XImage  *Rotate_mono=nullptr;              /* XImage from last rotation op. */
+XImage  *Scale=nullptr;                    /* XImage from last scale op. */
+XImage  *Scale_mono=nullptr;               /* XImage from last scale op. */
 Pixel    black_pixel, white_pixel;      /* default black & white pixels */
 Pixel    Foreground, Background,
          TopShadow, BottomShadow,
@@ -120,28 +120,28 @@ PixelTable pixelTable;                  /* used for getting mono equiv icon */
 char dynamic_c_str[NUM_DYNAMICS][30];   /* RGB value str. for dynamic colors */
 
 char *color_table[NUM_STATICS+NUM_DYNAMICS][6] = {
-        "0",  "iconColor1",         "black",   NULL,  NULL,  "black",
-        "1",  "iconColor2",         "white",   NULL,  NULL,  "white",
-        "2",  "iconColor3",         "black",   NULL,  NULL,  "red",
-        "3",  "iconColor4",         "white",   NULL,  NULL,  "green",
-        "4",  "iconColor5",         "black",   NULL,  NULL,  "blue",
-        "5",  "iconColor6",         "white",   NULL,  NULL,  "yellow",
-        "6",  "iconColor7",         "white",   NULL,  NULL,  "cyan",
-        "7",  "iconColor8",         "black",   NULL,  NULL,  "magenta",
-        "8",  "iconGray1",          "white",   NULL,  NULL,  "#dededededede",
-        "9",  "iconGray2",          "white",   NULL,  NULL,  "#bdbdbdbdbdbd",
-        "a",  "iconGray3",          "white",   NULL,  NULL,  "#adadadadadad",
-        "b",  "iconGray4",          "white",   NULL,  NULL,  "#949494949494",
-        "c",  "iconGray5",          "black",   NULL,  NULL,  "#737373737373",
-        "d",  "iconGray6",          "black",   NULL,  NULL,  "#636363636363",
-        "e",  "iconGray7",          "black",   NULL,  NULL,  "#424242424242",
-        "f",  "iconGray8",          "black",   NULL,  NULL,  "#212121212121",
-        "A",  "background",         "black",   NULL,  NULL,  "#949494949494",
-        "B",  "foreground",         "white",   NULL,  NULL,  "white",
-        "C",  "topShadowColor",     "white",   NULL,  NULL,  "#bdbdbdbdbdbd",
-        "D",  "bottomShadowColor",  "black",   NULL,  NULL,  "#636363636363",
-        "E",  "selectColor",        "white",   NULL,  NULL,  "#737373737373",
-        "F",  "none",               "none",    NULL,  NULL,  "none" };
+        "0",  "iconColor1",         "black",   nullptr,  nullptr,  "black",
+        "1",  "iconColor2",         "white",   nullptr,  nullptr,  "white",
+        "2",  "iconColor3",         "black",   nullptr,  nullptr,  "red",
+        "3",  "iconColor4",         "white",   nullptr,  nullptr,  "green",
+        "4",  "iconColor5",         "black",   nullptr,  nullptr,  "blue",
+        "5",  "iconColor6",         "white",   nullptr,  nullptr,  "yellow",
+        "6",  "iconColor7",         "white",   nullptr,  nullptr,  "cyan",
+        "7",  "iconColor8",         "black",   nullptr,  nullptr,  "magenta",
+        "8",  "iconGray1",          "white",   nullptr,  nullptr,  "#dededededede",
+        "9",  "iconGray2",          "white",   nullptr,  nullptr,  "#bdbdbdbdbdbd",
+        "a",  "iconGray3",          "white",   nullptr,  nullptr,  "#adadadadadad",
+        "b",  "iconGray4",          "white",   nullptr,  nullptr,  "#949494949494",
+        "c",  "iconGray5",          "black",   nullptr,  nullptr,  "#737373737373",
+        "d",  "iconGray6",          "black",   nullptr,  nullptr,  "#636363636363",
+        "e",  "iconGray7",          "black",   nullptr,  nullptr,  "#424242424242",
+        "f",  "iconGray8",          "black",   nullptr,  nullptr,  "#212121212121",
+        "A",  "background",         "black",   nullptr,  nullptr,  "#949494949494",
+        "B",  "foreground",         "white",   nullptr,  nullptr,  "white",
+        "C",  "topShadowColor",     "white",   nullptr,  nullptr,  "#bdbdbdbdbdbd",
+        "D",  "bottomShadowColor",  "black",   nullptr,  nullptr,  "#636363636363",
+        "E",  "selectColor",        "white",   nullptr,  nullptr,  "#737373737373",
+        "F",  "none",               "none",    nullptr,  nullptr,  "none" };
 
 char *hints_cmt = { " width height ncolors cpp [x_hot y_hot] " };
 char *colors_cmt = { " colors " };

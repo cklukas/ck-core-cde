@@ -359,7 +359,7 @@ _DtTermPrimRefreshText(Widget w, short startColumn, short startRow,
 	     * line of the display...
 	     */
 	    lineWidth = 0;
-	    linePtr = NULL;
+	    linePtr = nullptr;
 	} else if (lineNum < 0) {
 	    if ((tpd->useHistoryBuffer) &&
 		    (-lineNum <= tpd->lastUsedHistoryRow)) {
@@ -374,7 +374,7 @@ _DtTermPrimRefreshText(Widget w, short startColumn, short startRow,
 		/* we are above the history buffer.  Should not happen, but...
 		 */
 		lineWidth = 0;
-		linePtr = NULL;
+		linePtr = nullptr;
 	    }
 	} else {
 	    /* get the line width and a pointer to the data... */
@@ -820,7 +820,7 @@ _DtTermPrimFillScreenGap(Widget w)
 			    unsigned char eIndex;
 			    short eCol;
 			    short eCount;
-			    enhValue *eValues = (enhValue *)NULL;
+			    enhValue *eValues = (enhValue *)nullptr;
 
 			    overflowChars = (termChar *) XtMalloc(BUFSIZ * sizeof (termChar));
 			    /* Perpetuate the enhancements. */
@@ -830,7 +830,7 @@ _DtTermPrimFillScreenGap(Widget w)
 					i1, eCol, &eValues,
 					&eCount, countAll))
 				{
-				    if ((eValues == (enhValue *)NULL) ||
+				    if ((eValues == (enhValue *)nullptr) ||
 					(eCount <= 0))
 					break;
 
@@ -860,7 +860,7 @@ _DtTermPrimFillScreenGap(Widget w)
 			    if (eCol < length)
 			    {
 				/* Clear out enhancement values if necessary */
-				if (eValues != (enhValue *)NULL)
+				if (eValues != (enhValue *)nullptr)
 				{
 				    for (eIndex = 0;
 					 eIndex < NUM_ENH_FIELDS(tBuffer);
@@ -1043,7 +1043,7 @@ _DtTermPrimInsertText(Widget w, unsigned char *buffer, int length)
         /* 
         ** we could use this if the multi-byte buffer was null terminated
         */
-        wcBufferLen = mbstowcs((wchar_t *)NULL, (char *)buffer, length);
+        wcBufferLen = mbstowcs((wchar_t *)nullptr, (char *)buffer, length);
 #else  /* NOCODE */
         i           = 0;
         pmb         = (char *)buffer;

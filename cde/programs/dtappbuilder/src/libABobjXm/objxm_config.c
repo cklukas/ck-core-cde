@@ -127,7 +127,7 @@ objxmP_get_config_info(
 )
 {
     int 	 i;
-    XmConfigInfo cfginfo = NULL;
+    XmConfigInfo cfginfo = nullptr;
     ABObj        vobj;
 
     vobj = obj_get_root(obj);
@@ -167,7 +167,7 @@ objxm_obj_configure(
     	{
     	    cfginfo = objxmP_get_config_info(obj);
 
-    	    if (cfginfo != NULL && cfginfo->xmconfig != NULL)
+    	    if (cfginfo != nullptr && cfginfo->xmconfig != nullptr)
             	iReturn = (*cfginfo->xmconfig)(obj);
 	    else
 		iReturn = -1;
@@ -211,13 +211,13 @@ objxm_obj_unconfigure(
         {
             cfginfo = objxmP_get_config_info(obj);
 
-            if (cfginfo != NULL && cfginfo->xmunconfig != NULL)
+            if (cfginfo != nullptr && cfginfo->xmunconfig != nullptr)
                 iReturn = (*cfginfo->xmunconfig)(obj);
 
 	    if (iReturn == OK) /* Reset common fields */
 	    {
-		obj->part_of = NULL;
-		obj_set_class_name(obj, NULL);
+		obj->part_of = nullptr;
+		obj_set_class_name(obj, nullptr);
 		obj_clear_flag(obj, XmConfiguredFlag);
 	    }
         }
@@ -269,11 +269,11 @@ objxm_tree_unconfigure(
 {
     int                 iRetVal= 0;
     AB_TRAVERSAL        trav;
-    ABObj               obj= NULL;
+    ABObj               obj= nullptr;
  
     /* MUST be BOTTOM-UP Traversal */
     for (trav_open(&trav, root, AB_TRAV_CHILDREN);
-        (obj= trav_next(&trav)) != NULL; )
+        (obj= trav_next(&trav)) != nullptr; )
         objxm_tree_unconfigure(obj);
 
     if (obj_is_salient(root))
@@ -291,7 +291,7 @@ xm_configure_tree(
 {
     int			iRetVal= 0;
     AB_TRAVERSAL	trav;
-    ABObj		obj= NULL;
+    ABObj		obj= nullptr;
     int			numSalientObjs= 0;
     int			configCount= 0;
 
@@ -299,7 +299,7 @@ xm_configure_tree(
     numSalientObjs= trav_count(root, AB_TRAV_SALIENT);
     for (trav_open(&trav, root, 
 	    AB_TRAV_SALIENT | AB_TRAV_MOD_PARENTS_FIRST | AB_TRAV_MOD_SAFE);
-	(obj= trav_next(&trav)) != NULL; )
+	(obj= trav_next(&trav)) != nullptr; )
     {
 	++configCount;
 	objxm_obj_configure(obj, ctype, FALSE);
@@ -328,7 +328,7 @@ xm_configure_tree_attachments(
     ABObj	 obj;
 
     for (trav_open(&trav, root, AB_TRAV_UI);
-        (obj= trav_next(&trav)) != NULL; )
+        (obj= trav_next(&trav)) != nullptr; )
 	if (obj->attachments)
 	    objxmP_obj_config_attachments(obj);
 
@@ -354,7 +354,7 @@ objxmP_comp_set_type_args(
     {
     	cfginfo = objxmP_get_config_info(obj);
 
-    	if (cfginfo != NULL && cfginfo->set_args != NULL)
+    	if (cfginfo != nullptr && cfginfo->set_args != nullptr)
             return((*cfginfo->set_args)(obj_get_root(obj),ctype));
     }
 
@@ -375,7 +375,7 @@ objxmP_comp_type_post_instantiate(
 
     cfginfo = objxmP_get_config_info(obj);
 
-    if (cfginfo != NULL && cfginfo->post_instantiate != NULL)
+    if (cfginfo != nullptr && cfginfo->post_instantiate != nullptr)
             return((*cfginfo->post_instantiate)(obj_get_root(obj), ctype));
 
     return -1;
@@ -411,7 +411,7 @@ config_attachment(
 )
 {
     ABObj        attobj;
-    ABAttachment *attachment = NULL;
+    ABAttachment *attachment = nullptr;
 
     switch(dir)
     {
@@ -456,13 +456,13 @@ objxm_comp_get_subobj(
 )
 {
     XmConfigInfo	cfginfo;
-    ABObj		cfgobj = NULL;
+    ABObj		cfgobj = nullptr;
 
     if (obj_has_flag(obj, XmConfiguredFlag))
     {
     	cfginfo = objxmP_get_config_info(obj);
  
-    	if (cfginfo != NULL && cfginfo->get_config_obj != NULL)
+    	if (cfginfo != nullptr && cfginfo->get_config_obj != nullptr)
             cfgobj= 
 		((*cfginfo->get_config_obj)(obj_get_root(obj), type));
     }
@@ -489,7 +489,7 @@ objxmP_create_direct_subobj(
 {
     ABObj	subobj;
  
-    subobj = obj_create(type, NULL);
+    subobj = obj_create(type, nullptr);
     subobj->part_of = root;
  
     /* Move children from root to immediate SubObj */
@@ -522,7 +522,7 @@ objxm_comp_config_border_frame(
     ABObj	obj
 )
 {
-    ABObj	subobj = NULL;
+    ABObj	subobj = nullptr;
 
     if (obj_has_border_frame(obj))
     {
@@ -583,7 +583,7 @@ objxm_comp_config_labeled_obj(
     STRING		obj_classname
 )
 {
-    ABObj       lbl_obj = NULL;
+    ABObj       lbl_obj = nullptr;
     ABObj       real_obj;
 
     if (obj_has_label(obj))
@@ -594,14 +594,14 @@ objxm_comp_config_labeled_obj(
         obj_set_class_name(obj, _xmRowColumn);
 
         /* Create Label SubObj */
-        lbl_obj = obj_create(AB_TYPE_LABEL, NULL);
+        lbl_obj = obj_create(AB_TYPE_LABEL, nullptr);
         lbl_obj->part_of = obj;
         obj_set_unique_name(lbl_obj,
                 ab_ident_from_name_and_label(obj_get_name(obj), "label"));
         obj_set_class_name(lbl_obj, _xmLabel);
 
         /* Create Real *Object* SubObj */
-        real_obj = obj_create(obj_type, NULL);
+        real_obj = obj_create(obj_type, nullptr);
         real_obj->part_of = obj;
         obj_set_unique_name(real_obj,
                 ab_ident_from_name_and_label(obj_get_name(obj), obj_suffix));
@@ -657,13 +657,13 @@ objxm_comp_config_menu_ref(
 )
 {
     ABObj	menu_obj;
-    ABObj	menu_ref = NULL;
+    ABObj	menu_ref = nullptr;
     STRING	menuname = obj_get_menu_name(obj);
 
-    if (menuname != NULL)
+    if (menuname != nullptr)
     {
 	/* Make sure Virtual Menu obj exists in module */
-	if ((menu_obj = obj_find_menu_by_name(obj_get_module(obj), menuname)) != NULL)
+	if ((menu_obj = obj_find_menu_by_name(obj_get_module(obj), menuname)) != nullptr)
 	{
 	    /* ALWAYS make Menu Reference FIRST child! */
 	    menu_ref = obj_create_ref(menu_obj);

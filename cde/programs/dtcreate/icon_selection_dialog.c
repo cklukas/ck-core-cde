@@ -74,12 +74,12 @@
 #include <Dt/Icon.h>
 /*#include "Container.h"*/
 
-static  char *selected_icon_name = (char *)NULL;
+static  char *selected_icon_name = (char *)nullptr;
 static  Widget selected_icon = (Widget)NULL;
 static  int icon_count = 0;
 char    *main_filter;
 char    *file_filter_global;
-DtIconGadget **icons_in_container = NULL;
+DtIconGadget **icons_in_container = nullptr;
 
 
 typedef int (*DirentSelectProc)(struct dirent *, char *);
@@ -159,7 +159,7 @@ int myscandir(char *pszDirName, struct dirent ***NameList,
 #endif
 
   adirent = (struct dirent **)malloc(sizeof(void *) * sizeArray);
-  for (dp = readdir(dirptr); dp != NULL; dp = readdir(dirptr)) {
+  for (dp = readdir(dirptr); dp != nullptr; dp = readdir(dirptr)) {
 
 #if 0
      if (select_entry(dp, pszDirName)) {
@@ -207,7 +207,7 @@ struct dirent **build_dirent_list (char *filter, int *filecount)
   /* initialize filecount and namelist                                */
   /********************************************************************/
   *filecount = 0;
-  namelist = NULL;
+  namelist = nullptr;
 
   /********************************************************************/
   /* get length of file filter and create a copy                      */
@@ -251,7 +251,7 @@ struct dirent **build_dirent_list (char *filter, int *filecount)
      sprintf(errPtr, fmtPtr, msgPtr, dirname);
      display_error_message(IconSelector, errPtr);
      XtFree(errPtr);
-     namelist = NULL;
+     namelist = nullptr;
   }
 
 #ifdef DEBUG
@@ -420,7 +420,7 @@ void load_directories_list (char **dirlist)
   /* put xmstrings in list                                          */
   /******************************************************************/
   XtVaSetValues (dir_scrolled_list, XmNitems, xmstringlist,
-                 XmNitemCount, stringcount, NULL);
+                 XmNitemCount, stringcount, nullptr);
 
   XmListSelectPos(dir_scrolled_list, 1, False);
   /******************************************************************/
@@ -630,7 +630,7 @@ void apply_filter (char *filter)
      }
      if (selected_icon_name) {
         XtFree(selected_icon_name);
-        selected_icon_name = (char *)NULL;
+        selected_icon_name = (char *)nullptr;
      }
      XmTextFieldSetString (icon_name_text_field, "");
 
@@ -787,7 +787,7 @@ void  update_container_contents (char *filter)
     /* the filesystem after the application is already up and       */
     /* running, the icon gadgets to not see them.                   */
     /****************************************************************/
-    XmeFlushIconFileCache(NULL);
+    XmeFlushIconFileCache(nullptr);
 
     for (lcv = 0; lcv < count; lcv++) {
        snprintf(iconfile, sizeof(iconfile), "%s%s", path, filelist[lcv]->d_name);
@@ -799,7 +799,7 @@ void  update_container_contents (char *filter)
        XtVaSetValues ((Widget) icons_in_container[lcv],
                              XmNstring,        xmstring,
                              XmNimageName,     iconfile,
-                             NULL);
+                             nullptr);
        XtManageChild((Widget) icons_in_container [lcv]);
        XmStringFree(xmstring);
 
@@ -817,8 +817,8 @@ void  update_container_contents (char *filter)
        xmstring = XmStringCreateLocalized(iconfile);
        XtVaSetValues ((Widget) icons_in_container[0],
                              XmNstring,        xmstring,
-                             XmNimageName,     (char *)NULL,
-                             NULL);
+                             XmNimageName,     (char *)nullptr,
+                             nullptr);
        XtManageChild((Widget) icons_in_container[0]);
        XmStringFree(xmstring);
   }
@@ -867,10 +867,10 @@ void  free_container_contents (void)
      while (icons_in_container[lcv]) {
 #if 0
        XtVaGetValues (icons_in_container[lcv], XmNimageName, &filename,
-                      XmNpixmap, &icon_pixmap, NULL);
+                      XmNpixmap, &icon_pixmap, nullptr);
        XmDestroyPixmap (screen_id, icon_pixmap);
 
-       XtVaSetValues (icons_in_container[lcv], XmNpixmap, NULL, NULL);
+       XtVaSetValues (icons_in_container[lcv], XmNpixmap, nullptr, nullptr);
 #endif
        XtDestroyWidget (icons_in_container[lcv]);
        /*
@@ -879,7 +879,7 @@ void  free_container_contents (void)
        lcv++;
      }  /* end while icons_in_container */
      free (icons_in_container);
-     icons_in_container = NULL;
+     icons_in_container = nullptr;
   }
 
 #ifdef DEBUG
@@ -943,10 +943,10 @@ static  void    calc_bottom_attachment( Widget UxWidget,
                   (_UxCicon_selection_dialog *) UxGetContext( UxWidget );
   {
     if (numberOfTopButtons > 0) {
-       XtVaSetValues (UxWidget, XmNbottomWidget, top_button_form, NULL);
+       XtVaSetValues (UxWidget, XmNbottomWidget, top_button_form, nullptr);
     } else if (use_icon_name_field) {
-       XtVaSetValues (UxWidget, XmNbottomWidget, icon_name_textfield_label, NULL);
-    } else XtVaSetValues (UxWidget, XmNbottomWidget, separatorGadget1, NULL);
+       XtVaSetValues (UxWidget, XmNbottomWidget, icon_name_textfield_label, nullptr);
+    } else XtVaSetValues (UxWidget, XmNbottomWidget, separatorGadget1, nullptr);
   }
   return;
 }
@@ -991,7 +991,7 @@ void    activateCB_NoFindIconDialog_NameOKButton( Widget  UxWidget,
                                         XtPointer UxCallbackArg)
 
 {
-  char *basename = (char *)NULL;
+  char *basename = (char *)nullptr;
 
   TurnOnHourGlassAllWindows();
   if (bottom_button_one_cb) {
@@ -1016,17 +1016,17 @@ void display_nofindicon_message (Widget parent)
   Widget widChild;
   char   buffer[512];
 
-  dialog = XmCreateErrorDialog(parent, "nofindiconDialog", NULL, 0);
+  dialog = XmCreateErrorDialog(parent, "nofindiconDialog", nullptr, 0);
 
   widChild = XmMessageBoxGetChild(dialog, XmDIALOG_OK_BUTTON);
   XtVaSetValues(widChild,
                 RES_CONVERT( XmNlabelString, "Change Name"),
-                NULL);
+                nullptr);
 
   widChild = XmMessageBoxGetChild(dialog, XmDIALOG_CANCEL_BUTTON);
   XtVaSetValues(widChild,
                 RES_CONVERT( XmNlabelString, "Name OK"),
-                NULL);
+                nullptr);
 
   XtUnmanageChild (XmMessageBoxGetChild (dialog, XmDIALOG_HELP_BUTTON));
 
@@ -1046,7 +1046,7 @@ void display_nofindicon_message (Widget parent)
   XtVaSetValues (dialog,
                  RES_CONVERT(XmNdialogTitle, GETMESSAGE(6, 31, "Create Action - Error")),
                  RES_CONVERT(XmNmessageString, buffer),
-                 NULL);
+                 nullptr);
 
   XtManageChild (dialog);
   return;
@@ -1069,8 +1069,8 @@ static  void    activateCB_bottom_button1( Widget UxWidget,
   UxIcon_selection_dialogContext = UxContext =
                   (_UxCicon_selection_dialog *) UxGetContext( UxWidget );
   {
-    char *basename = (char *)NULL;
-    char *fullname = (char *)NULL;
+    char *basename = (char *)nullptr;
+    char *fullname = (char *)nullptr;
     char *msgPtr, *errPtr;
 
     GetWidgetTextString(icon_name_text_field, &basename);
@@ -1110,7 +1110,7 @@ Please enter a valid icon file name in the\n'Enter Icon Filename' field.");
   return;
 
 #if 0   /*************  old code *********************/
-    char *pszIconFileName = (char *)NULL;
+    char *pszIconFileName = (char *)nullptr;
     char    buffer[MAXBUFSIZE];
 
     GetWidgetTextString(icon_name_text_field, &pszIconFileName);
@@ -1125,7 +1125,7 @@ Please enter a valid icon file name in the\n'Enter Icon Filename' field.");
        if (selected_icon_name) {
           XtFree(selected_icon_name);
        }
-       selected_icon_name = (char *)NULL;
+       selected_icon_name = (char *)nullptr;
        XtDestroyWidget (XtParent(icon_selection_dialog));
        IconSelector = (Widget)NULL;
        TurnOffHourGlassAllWindows();
@@ -1150,7 +1150,7 @@ Please enter a valid icon file name in the\n'Enter Icon Filename' field.");
 #ifdef _ICONSELECTOR_DESTROY_ENABLED
       free_container_contents ();
       XtFree(selected_icon_name);
-      selected_icon_name = (char *)NULL;
+      selected_icon_name = (char *)nullptr;
       XtDestroyWidget (XtParent(icon_selection_dialog));
       IconSelector = (Widget)NULL;
       TurnOffHourGlassAllWindows();
@@ -1280,12 +1280,12 @@ static  void    selectionCB_icon_scrolled_container ( Widget UxWidget,
   XmString  xmbasename;
   char     *basename;
 
-  XtVaGetValues (UxWidget, XmNimageName, &filename, NULL);
+  XtVaGetValues (UxWidget, XmNimageName, &filename, nullptr);
 #ifdef DEBUG
   printf("In icon callback for '%s'\n", filename);
 #endif
   if (use_icon_name_field) {
-     XtVaGetValues (UxWidget, XmNstring, &xmbasename, NULL);
+     XtVaGetValues (UxWidget, XmNstring, &xmbasename, nullptr);
      basename = XmStringToText(xmbasename);
      XmTextFieldSetString (icon_name_text_field, basename);
      if (basename) free(basename);
@@ -1295,13 +1295,13 @@ static  void    selectionCB_icon_scrolled_container ( Widget UxWidget,
         _DtIconSetState(selected_icon, FALSE, FALSE);
      }
      XtFree(selected_icon_name);
-     selected_icon_name = (char *)NULL;
+     selected_icon_name = (char *)nullptr;
   }
   if (filename) {
      selected_icon_name = XtMalloc(strlen(filename) + 1);
      selected_icon_name = strcpy(selected_icon_name, filename);
   } else {
-     selected_icon_name = (char *)NULL;
+     selected_icon_name = (char *)nullptr;
   }
   selected_icon = UxWidget;
 
@@ -1322,9 +1322,9 @@ void    resizeCB_clipWindow( Widget UxWidget,
   int        increment;
   XtArgVal /* Dimension */  height;
 
-  XtVaGetValues(XtParent(UxWidget), XmNverticalScrollBar, &widvScrollbar, NULL);
+  XtVaGetValues(XtParent(UxWidget), XmNverticalScrollBar, &widvScrollbar, nullptr);
   widRowColumn = (Widget)UxClientData;
-  XtVaGetValues(widRowColumn, XmNheight, &height, NULL);
+  XtVaGetValues(widRowColumn, XmNheight, &height, nullptr);
 
 #ifdef DEBUG
   printf("height = %d\n", height);
@@ -1332,7 +1332,7 @@ void    resizeCB_clipWindow( Widget UxWidget,
 #endif
 
   increment = icon_count > 0 ? (int)height / icon_count : height;
-  XtVaSetValues(widvScrollbar, XmNincrement, increment, NULL);
+  XtVaSetValues(widvScrollbar, XmNincrement, increment, nullptr);
 
   return;
 
@@ -1353,7 +1353,7 @@ static void focusCB_icon_selection_dialog(Widget UxWidget,
   Widget descendant;
 
   XtRemoveCallback(UxWidget, XmNfocusCallback, focusCB_icon_selection_dialog,
-                   NULL);
+                   nullptr);
 
   TurnOnHourGlassAllWindows();
 
@@ -1391,7 +1391,7 @@ static void focusCB_icon_selection_dialog(Widget UxWidget,
 
   main_filter = strcpy(main_filter, initial_filter);
 
-  icons_in_container = NULL;
+  icons_in_container = nullptr;
   icon_count = 0;
 
   update_container_contents (initial_filter);
@@ -1401,7 +1401,7 @@ static void focusCB_icon_selection_dialog(Widget UxWidget,
   /******************************************************************/
 #if 0
   if (icons_in_container) {
-	  XtVaGetValues (icons_in_container[0], XmNimageName, &icon_file_name, NULL);
+	  XtVaGetValues (icons_in_container[0], XmNimageName, &icon_file_name, nullptr);
 	  XmTextFieldSetString (icon_name_text_field, icon_file_name);
 	  selected_icon_name = XtMalloc(strlen(icon_file_name) + 1);
 	  if (selected_icon_name)
@@ -1438,7 +1438,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
 
         /* Creation of icon_selection_dialog */
         _UxParent = UxParent;
-        if ( _UxParent == NULL )
+        if ( _UxParent == nullptr )
         {
                 _UxParent = UxTopLevel;
         }
@@ -1452,7 +1452,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNshellUnitType, XmPIXELS,
                         XmNkeyboardFocusPolicy, XmEXPLICIT,
                         XmNtitle, "icon_selection_dialog",
-                        NULL );
+                        nullptr );
 
         UxTmp0 = dialog_title ? (char *)dialog_title : "Icon Selection Window";
 
@@ -1466,7 +1466,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         RES_CONVERT( XmNdialogTitle, UxTmp0 ),
                         XmNautoUnmanage, FALSE,
                         XmNdefaultPosition, FALSE,
-                        NULL );
+                        nullptr );
         UxPutContext( icon_selection_dialog, (char *) UxIcon_selection_dialogContext );
 
         /*******************************************************************/
@@ -1477,10 +1477,10 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                 (XtPointer) HELP_ICONSELECTOR );
 
         XtAddCallback(icon_selection_dialog, XmNmapCallback,
-                      mapCB_icon_selection_dialog, NULL);
+                      mapCB_icon_selection_dialog, nullptr);
 
         XtAddCallback(icon_selection_dialog, XmNfocusCallback,
-                      focusCB_icon_selection_dialog, NULL);
+                      focusCB_icon_selection_dialog, nullptr);
 
         /* Creation of bottom_button_form */
         bottom_button_form = XtVaCreateManagedWidget( "bottom_button_form",
@@ -1496,7 +1496,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNbottomOffset, 20,
                         XmNbottomAttachment, XmATTACH_FORM,
 
-                        NULL );
+                        nullptr );
         UxPutContext( bottom_button_form, (char *) UxIcon_selection_dialogContext );
 
 
@@ -1515,7 +1515,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
 
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( bottom_button1, XmNactivateCallback,
                 activateCB_bottom_button1,
@@ -1538,7 +1538,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
 
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( bottom_button2, XmNactivateCallback,
                 bottom_button_two_cb ?
@@ -1563,7 +1563,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
 
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( bottom_button3, XmNactivateCallback,
                 bottom_button_three_cb ?
@@ -1587,7 +1587,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
 
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( bottom_button4, XmNactivateCallback,
                 bottom_button_four_cb ?
@@ -1610,7 +1610,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNbottomOffset, 10,
                         XmNbottomWidget, bottom_button_form,
                         XmNbottomAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
         UxPutContext( separatorGadget1, (char *) UxIcon_selection_dialogContext );
 
 
@@ -1627,7 +1627,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNleftOffset, 10,
                         XmNleftAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         UxPutContext( icon_name_text_field, (char *) UxIcon_selection_dialogContext );
         ISD_SelectedIconTextField = icon_name_text_field;
 
@@ -1647,7 +1647,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNleftWidget, icon_name_text_field,
                         XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
                         XmNalignment, XmALIGNMENT_BEGINNING,
-                        NULL );
+                        nullptr );
         UxPutContext( icon_name_textfield_label, (char *) UxIcon_selection_dialogContext );
 
         UxTmp0 = filter_field_title ? (char *)filter_field_title : GETMESSAGE(12, 10, "Filter");
@@ -1664,7 +1664,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNleftOffset, 10,
                         XmNleftAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         UxPutContext( filter_textfield_label, (char *) UxIcon_selection_dialogContext );
 
 
@@ -1681,7 +1681,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNleftOffset, 10,
                         XmNleftAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         XtAddCallback( filter_text_field, XmNactivateCallback,
                 activateCB_filter_text_field,
                 (XtPointer) UxIcon_selection_dialogContext );
@@ -1704,7 +1704,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNtopAttachment, use_filter_field ? XmATTACH_WIDGET : XmATTACH_FORM,
                         XmNleftOffset, 10,
                         XmNleftAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         UxPutContext( directory_list_label, (char *) UxIcon_selection_dialogContext );
 
         UxTmp0 = container_title ? (char *)container_title : GETMESSAGE(11, 11, "Icon Files");
@@ -1723,7 +1723,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNtopAttachment, XmATTACH_WIDGET,
                         XmNleftAttachment, XmATTACH_POSITION,
                         XmNleftPosition, 55,
-                        NULL );
+                        nullptr );
         UxPutContext( icon_container_label, (char *) UxIcon_selection_dialogContext );
 
 
@@ -1741,7 +1741,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNleftOffset, 1,
                         XmNleftAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         UxPutContext( top_button_form, (char *) UxIcon_selection_dialogContext );
 
         UxTmp0 = top_button_one_label ? (char *)top_button_one_label : "No_Label";
@@ -1758,7 +1758,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNtopOffset, 0,
                         XmNleftPosition, get_top_b1_position (numberOfTopButtons),
                         RES_CONVERT( XmNlabelString, UxTmp0 ),
-                        NULL );
+                        nullptr );
         XtAddCallback( top_button1, XmNactivateCallback,
                 top_button_one_cb,
                 (XtPointer) UxIcon_selection_dialogContext );
@@ -1779,7 +1779,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNbottomAttachment, XmATTACH_FORM,
                         XmNleftAttachment, XmATTACH_POSITION,
                         RES_CONVERT( XmNlabelString, UxTmp0 ),
-                        NULL );
+                        nullptr );
         XtAddCallback( top_button2, XmNactivateCallback,
                 top_button_two_cb,
                 (XtPointer) UxIcon_selection_dialogContext );
@@ -1800,7 +1800,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNleftAttachment, XmATTACH_POSITION,
                         XmNbottomOffset, 0,
                         XmNbottomAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         XtAddCallback( top_button3, XmNactivateCallback,
                 top_button_three_cb,
                 (XtPointer) UxIcon_selection_dialogContext );
@@ -1839,7 +1839,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
         XtVaSetValues(dir_scrolled_list,
                         XmNselectionPolicy, XmBROWSE_SELECT,
                         XmNvisibleItemCount, 15,
-                        NULL );
+                        nullptr );
         XtManageChild(dir_scrolled_list);
 
         UxPutContext( dir_scrolled_list, (char *) UxIcon_selection_dialogContext );
@@ -1872,7 +1872,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNbottomOffset, 10,
                         XmNbottomWidget, None,
                         XmNbottomAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
 
 
@@ -1893,17 +1893,17 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
                         XmNorientation, XmVERTICAL,
                         XmNpacking, XmPACK_COLUMN,
                         XmNshadowThickness, 1,
-                        NULL );
+                        nullptr );
 
         XtVaSetValues(icon_selection_dialog,
                         XmNcancelButton, bottom_button2,
-                        NULL );
+                        nullptr );
 
         XtAddCallback( icon_selection_dialog, XmNdestroyCallback,
                       UxDestroyContextCB,
                       (XtPointer) UxIcon_selection_dialogContext);
 
-        XtVaGetValues (icon_scrolled_win, XmNclipWindow, &widclipWindow, NULL);
+        XtVaGetValues (icon_scrolled_win, XmNclipWindow, &widclipWindow, nullptr);
         XtAddCallback( widclipWindow, XmNresizeCallback,
                 resizeCB_clipWindow,
                 (XtPointer) icon_scrolled_container );

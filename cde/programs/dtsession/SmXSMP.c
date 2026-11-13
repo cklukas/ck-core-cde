@@ -197,7 +197,7 @@ Boolean InitXSMP (void)
 	InstallIOErrorHandler ();
 
 	if (!SmsInitialize (SM_VENDOR_NAME, SM_RELEASE_NAME, 
-				NewClientProc, NULL,
+				NewClientProc, nullptr,
         			HostBasedAuthProc, 
 				ERRORMSGLEN, errorMsg)) {
 		DtMsgLogMessage (smGD.programName, DtMsgLogError, errorMsg);
@@ -282,18 +282,18 @@ InitializeSaveState (
 	smXSMP.saveState.saveComplete = False;
 	smXSMP.saveState.interactCount = 0;
 	smXSMP.saveState.numClientIds = 0;
-	smXSMP.saveState.interactClient = NULL;
+	smXSMP.saveState.interactClient = nullptr;
 	if (startUp) {
-		smXSMP.saveState.clientIds = NULL;
-		smXSMP.saveState.workspaceNums = NULL;
+		smXSMP.saveState.clientIds = nullptr;
+		smXSMP.saveState.workspaceNums = nullptr;
 	} else {
 		if (smXSMP.saveState.clientIds) {
 			free (smXSMP.saveState.clientIds);
-			smXSMP.saveState.clientIds = NULL;
+			smXSMP.saveState.clientIds = nullptr;
 		}
 		if (smXSMP.saveState.workspaceNums) {
 			free (smXSMP.saveState.workspaceNums);
-			smXSMP.saveState.workspaceNums = NULL;
+			smXSMP.saveState.workspaceNums = nullptr;
 		}
 	}
 }
@@ -301,11 +301,11 @@ InitializeSaveState (
 static void 
 InitializeXSMPGlobals (void)
 {
-	smXSMP.authDataEntries = NULL;
+	smXSMP.authDataEntries = nullptr;
 
-	connectedList = NULL;	
+	connectedList = nullptr;	
 
-	smXSMP.xsmpDbList = NULL;
+	smXSMP.xsmpDbList = nullptr;
 	
 	smXSMP.dbVersion = SM_VENDOR_NAME;
 
@@ -339,7 +339,7 @@ NewClientProc (
 			"Unable to malloc memory for operation."));
 		if (str) {
 			if ((*failureReasonRet = (char *) 
-				XtMalloc ( strlen (str) + 1)) != NULL) 
+				XtMalloc ( strlen (str) + 1)) != nullptr) 
 				strcpy (*failureReasonRet, str);
       
 			DtMsgLogMessage (smGD.programName, DtMsgLogError, str);
@@ -353,16 +353,16 @@ NewClientProc (
 
 	newClient->smConn = smsConn;
 	newClient->iceConn = SmsGetIceConnection (smsConn);
-	newClient->clientId = NULL;
-	newClient->clientHost = NULL;
+	newClient->clientId = nullptr;
+	newClient->clientHost = nullptr;
 	newClient->screenNum = 0;
 	newClient->restartHint = SmRestartIfRunning;
-	newClient->props = NULL;
+	newClient->props = nullptr;
 	newClient->active = False;
 	newClient->saveYourselfDone = False;
 	newClient->saveYourselfP2Requested = False;
 	newClient->interactRequested = False;
-	newClient->next = NULL;
+	newClient->next = nullptr;
 
 	AddClient (newClient);
 
@@ -512,7 +512,7 @@ RegisterClientProc (
 		XSMPClientDBRecPtr	pDbRec;
 		Boolean			found = False;
 
-		for (pClientRec = connectedList; pClientRec != NULL; 
+		for (pClientRec = connectedList; pClientRec != nullptr; 
 			pClientRec = pClientRec->next) {
 			/*
 			 * A connection that has not registered yet (this
@@ -534,7 +534,7 @@ RegisterClientProc (
 		}
 
 		for (pDbRec = smXSMP.xsmpDbList; 
-		     pDbRec != NULL && found == False; 
+		     pDbRec != nullptr && found == False; 
 		     pDbRec = pDbRec->next) {
 			if (pDbRec->clientId &&
 			    !strcmp (pDbRec->clientId, previousId)) {
@@ -577,7 +577,7 @@ RegisterClientProc (
 		free (pchar);
 	}
 	else
-		client->clientHost = NULL;
+		client->clientHost = nullptr;
 	client->active = True;
 
 	SmsRegisterClientReply (smsConn, id);
@@ -596,7 +596,7 @@ RegisterClientProc (
 	(void) printf ("CLIENTS REGISTERED:\n");
 
 	for (i = 1, client = connectedList; 
-	     client != NULL; 
+	     client != nullptr; 
 	     i++, client = client->next) {
 
 		if (client->active)
@@ -694,7 +694,7 @@ InteractDoneProc (
 		ClientRecPtr		pClientRec;
 		char			*pch;
 
-		for (pClientRec = connectedList; pClientRec != NULL; 
+		for (pClientRec = connectedList; pClientRec != nullptr; 
 			pClientRec = pClientRec->next) {
 
 			SmsShutdownCancelled (pClientRec->smConn);
@@ -835,7 +835,7 @@ SaveYourselfReqProc (
 		LeaveWaitState();
 	}
 
-	for (pClientRec = connectedList; pClientRec != NULL; 
+	for (pClientRec = connectedList; pClientRec != nullptr; 
 		pClientRec = pClientRec->next) {
 
 		if (pClientRec->active) {
@@ -854,9 +854,9 @@ SaveYourselfReqProc (
 	 * SaveYourselfDone msg until after they have processed
 	 * a P2 message.
 	 */
-	tmpClient = NULL;
+	tmpClient = nullptr;
 
-	for (pClientRec = connectedList; pClientRec != NULL; 
+	for (pClientRec = connectedList; pClientRec != nullptr; 
 		pClientRec = pClientRec->next) {
 
 		if (pClientRec->active) {
@@ -957,7 +957,7 @@ ProcessSaveYourselfResponses (void)
 	 * the save.
 	 */
 	for (done = True, pClientRec = connectedList; 
-		pClientRec != NULL; pClientRec = pClientRec->next) {
+		pClientRec != nullptr; pClientRec = pClientRec->next) {
 
 		if (pClientRec->active && 
 		    pClientRec->saveYourselfDone == False) {
@@ -980,7 +980,7 @@ ProcessSaveYourselfResponses (void)
 	 * marked as having requested a SaveYourselfP2,
 	 * then return.
 	 */
-	for (pClientRec = connectedList; pClientRec != NULL; 
+	for (pClientRec = connectedList; pClientRec != nullptr; 
 		pClientRec = pClientRec->next) {
 
 		if (pClientRec->active && 
@@ -995,7 +995,7 @@ ProcessSaveYourselfResponses (void)
 	 *
 	 * Tell the P2 clients to save themselves.
 	 */
-	for (pClientRec = connectedList; pClientRec != NULL; 
+	for (pClientRec = connectedList; pClientRec != nullptr; 
 		pClientRec = pClientRec->next) {
 
 		if (pClientRec->active) {
@@ -1056,7 +1056,7 @@ CompleteXSMPSave (void)
 	 * is complete.
 	 */
 	if (!smXSMP.saveState.shutdown) {
-		for (pClientRec = connectedList; pClientRec != NULL; 
+		for (pClientRec = connectedList; pClientRec != nullptr; 
 	     		pClientRec = pClientRec->next) {
 
 			if (pClientRec->active) {
@@ -1070,7 +1070,7 @@ CompleteXSMPSave (void)
 	}
 
 	if (!smXSMP.saveState.shutdown) {
-		for (pClientRec = connectedList; pClientRec != NULL; 
+		for (pClientRec = connectedList; pClientRec != nullptr; 
 	     	     pClientRec = pClientRec->next) {
 
 			if (pClientRec->active) {
@@ -1086,7 +1086,7 @@ CompleteXSMPSave (void)
 
 		int		restartHint;
 
-		for (pClientRec = connectedList; pClientRec != NULL; 
+		for (pClientRec = connectedList; pClientRec != nullptr; 
 	     		pClientRec = pClientRec->next) {
 
 			if (pClientRec->active) {
@@ -1122,7 +1122,7 @@ void FreeProps (
 	PropertyRecPtr		trail;
 	int			i;
 
-	for (tmp = pProp; tmp != NULL; ) {
+	for (tmp = pProp; tmp != nullptr; ) {
 
 		for (i = 0; i < tmp->prop.num_vals; i++)
 			XtFree (tmp->prop.vals[i].value);
@@ -1146,7 +1146,7 @@ RemoveClient (
 {
 	ClientRecPtr		* link;
 
-	for (link = &connectedList; *link != NULL; link = &(*link)->next) {
+	for (link = &connectedList; *link != nullptr; link = &(*link)->next) {
 		if (*link == pClientRec) {
 			*link = pClientRec->next;
 			break;
@@ -1154,7 +1154,7 @@ RemoveClient (
 	}
 
 	if (smXSMP.saveState.interactClient == pClientRec)
-		smXSMP.saveState.interactClient = NULL;
+		smXSMP.saveState.interactClient = nullptr;
 
 	FreeProps (pClientRec->props);
 	XtFree (pClientRec->clientId);
@@ -1173,8 +1173,8 @@ void CloseDownClient (
 	IceSetShutdownNegotiation (pClientRec->iceConn, False);
 	IceCloseConnection (pClientRec->iceConn);
 
-	pClientRec->iceConn = NULL;
-	pClientRec->smConn = NULL;
+	pClientRec->iceConn = nullptr;
+	pClientRec->smConn = nullptr;
 	pClientRec->active = False;
 
 	/*
@@ -1183,7 +1183,7 @@ void CloseDownClient (
 	 */
 	pClientRec->interactRequested = False;
 	if (smXSMP.saveState.interactClient == pClientRec)
-		smXSMP.saveState.interactClient = NULL;
+		smXSMP.saveState.interactClient = nullptr;
 
 	if (!GetCardPropertyValue (pClientRec, SmRestartStyleHint, 
 				   &restartHint))
@@ -1210,7 +1210,7 @@ void CloseDownClient (
 		/* 
 		 * Return if any clients are still active 
 		 */ 
-		for (tmp = connectedList; tmp != NULL; tmp = tmp->next) { 
+		for (tmp = connectedList; tmp != nullptr; tmp = tmp->next) { 
 			if (tmp->active) { 
 				return; 
 			}
@@ -1273,8 +1273,8 @@ Tt_callback_action GetWsmClientsHandler(
 	int			lenClientIds = 0;
 	int			lenWorkspaceNums = 0;
 	int			numClientIds = 0;
-	char			* clientIds = NULL;
-	int			* workspaceNums = NULL;
+	char			* clientIds = nullptr;
+	int			* workspaceNums = nullptr;
 	int			num_args =  tt_message_args_count (message);
 #ifdef DEBUG
 	char			* pchar;	
@@ -1283,8 +1283,8 @@ Tt_callback_action GetWsmClientsHandler(
 
 	if (num_args != 3) {
 		smXSMP.saveState.numClientIds = 0;
-		smXSMP.saveState.clientIds = NULL;
-		smXSMP.saveState.workspaceNums = NULL;
+		smXSMP.saveState.clientIds = nullptr;
+		smXSMP.saveState.workspaceNums = nullptr;
 		ProcessInteract (smXSMP.saveState.interactClient, False);
 		return (TT_CALLBACK_PROCESSED);
 	}
@@ -1297,8 +1297,8 @@ Tt_callback_action GetWsmClientsHandler(
 		free (smXSMP.saveState.clientIds); 
 	if (smXSMP.saveState.workspaceNums) 
 		free (smXSMP.saveState.workspaceNums);
-	smXSMP.saveState.clientIds = NULL;
-	smXSMP.saveState.workspaceNums = NULL;
+	smXSMP.saveState.clientIds = nullptr;
+	smXSMP.saveState.workspaceNums = nullptr;
 	smXSMP.saveState.numClientIds = 0;
 
 	tt_message_arg_ival (message, 0, &numClientIds);
@@ -1409,7 +1409,7 @@ void CancelShutdown (void)
 	ClientRecPtr		pClientRec;
 	char			*pch;
 
-	for (pClientRec = connectedList; pClientRec != NULL; 
+	for (pClientRec = connectedList; pClientRec != nullptr; 
 		pClientRec = pClientRec->next) {
 
 		if (pClientRec->active) {
@@ -1443,7 +1443,7 @@ void ProcessInteract (
 	int			currentWorkspace;
 	int			i;
 	ClientRecPtr		pClientRec;
-	ClientRecPtr		tmp = NULL;
+	ClientRecPtr		tmp = nullptr;
 	char			*pchar;
 
 	if (!getWsmClientOK && client && client->smConn) {
@@ -1462,7 +1462,7 @@ void ProcessInteract (
 	currentWorkspace = getWsmClientOK ? GetCurrentWorkspaceNumber () : -1;
 
 	for (pClientRec = connectedList; 
-	     pClientRec != NULL; 
+	     pClientRec != nullptr; 
 	     pClientRec = pClientRec->next) {
 
 		if (pClientRec->interactRequested && pClientRec->smConn) {
@@ -1514,7 +1514,7 @@ void AddClient (
 	/*
 	 * Find the end of the list
 	 */
-	for (pClient = connectedList; pClient->next != NULL; 
+	for (pClient = connectedList; pClient->next != nullptr; 
 		pClient = pClient->next);
 
 	pClient->next = newClient;
@@ -1554,10 +1554,10 @@ InstallIOErrorHandler (void)
 {
 	IceIOErrorHandler default_handler;
 
-	prev_handler = IceSetIOErrorHandler (NULL);
+	prev_handler = IceSetIOErrorHandler (nullptr);
 	default_handler = IceSetIOErrorHandler (MyIoErrorHandler);
 	if (prev_handler == default_handler)
-		prev_handler = NULL;
+		prev_handler = nullptr;
 }
 
 

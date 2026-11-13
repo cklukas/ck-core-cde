@@ -211,9 +211,9 @@ static DTB_MODAL_ANSWER show_modal_msg_relative_initiator(
 **       Data     	                                                **
 **                                                                      **
 **************************************************************************/
-static ABClipboardRec	ABClipboard = NULL;
-static ABUndoRec	ABUndo = NULL;
-static ABUndoRec	ABUndo_backup = NULL;
+static ABClipboardRec	ABClipboard = nullptr;
+static ABUndoRec	ABUndo = nullptr;
+static ABUndoRec	ABUndo_backup = nullptr;
 
 BOOL			in_undo = FALSE;
 
@@ -304,7 +304,7 @@ edit_destroyOCB(
 
                 for (trav_open(&trav, clip_info->action_list, 
                         AB_TRAV_ACTIONS | AB_TRAV_MOD_SAFE);
-                    (action_obj = trav_next(&trav)) != NULL; )
+                    (action_obj = trav_next(&trav)) != nullptr; )
                 {
                     ABObj	to_obj;
 
@@ -345,7 +345,7 @@ edit_destroyOCB(
 
                 for (trav_open(&trav, undo_info->info.cut.from_action_list,
                         AB_TRAV_ACTIONS | AB_TRAV_MOD_SAFE);
-                    (action_obj = trav_next(&trav)) != NULL; )
+                    (action_obj = trav_next(&trav)) != nullptr; )
                 {
                     ABObj	to_obj;
 
@@ -372,7 +372,7 @@ edit_destroyOCB(
 
                 for (trav_open(&trav, undo_info->info.cut.to_action_list,
                         AB_TRAV_ACTIONS | AB_TRAV_MOD_SAFE);
-                    (action_obj = trav_next(&trav)) != NULL; )
+                    (action_obj = trav_next(&trav)) != nullptr; )
                 {
                     ABObj	from_obj;
 
@@ -406,8 +406,8 @@ init_clipboard(void)
     if (!ABClipboard)
     {
 	ABClipboard = (ABClipboardRec)malloc(sizeof(AB_CLIPBOARD_REC));
-	ABClipboard->list = NULL;
-	ABClipboard->info_list = NULL;
+	ABClipboard->list = nullptr;
+	ABClipboard->info_list = nullptr;
 	ABClipboard->count = 0;
 	ABClipboard->action_count = 0;
 	ABClipboard->size = 0;
@@ -498,7 +498,7 @@ resolve_none_attachments(
     /*
      * If no attachments exist, create them
      */
-    if (obj->attachments == NULL)
+    if (obj->attachments == nullptr)
         obj_init_attachments(obj);
 
     /*
@@ -510,7 +510,7 @@ resolve_none_attachments(
         XtVaGetValues(objxm_get_widget(obj),
             XmNx,		&x,
             XmNy,		&y,
-            NULL);
+            nullptr);
     }
 
     /*
@@ -533,7 +533,7 @@ resolve_none_attachments(
 	    if (obj->y < 0)
             obj->y = 0;
 	}
-        obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
+        obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
     }
 
     /*
@@ -548,7 +548,7 @@ resolve_none_attachments(
 	    if (obj->x < 0)
             obj->x = 0;
 	}
-        obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+        obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
     }
 }
 
@@ -604,7 +604,7 @@ resolve_clipboard_connections(
 	 * for this object ('newObj')...
 	 */
         for (trav_open(&trav, info->action_list, AB_TRAV_ACTIONS);
-            (action_obj = trav_next(&trav)) != NULL; )
+            (action_obj = trav_next(&trav)) != nullptr; )
         {
             ABClipbInfo	to_info;
 	    BOOL	to_obj_copied = FALSE;
@@ -700,7 +700,7 @@ resolve_clipboard_attachments(
 {
     AB_TRAVERSAL	trav;
     ABClipbInfo	info;
-    ABObj	*new_list = NULL;
+    ABObj	*new_list = nullptr;
     ABObj	newObj,
 		origObj,
 		childObj,
@@ -763,9 +763,9 @@ resolve_clipboard_attachments(
 	 * Do the same for all salient descendants 
 	 */
         for (trav_open(&trav, newObj, AB_TRAV_SALIENT);
-            (childObj = trav_next(&trav)) != NULL; )
+            (childObj = trav_next(&trav)) != nullptr; )
         {
-	    ABObj	origChildObj = NULL;
+	    ABObj	origChildObj = nullptr;
 
 	    /*
 	     * Skip the top level object - taken care of above
@@ -871,12 +871,12 @@ resolve_attach_one_attachment(
     int			new_count
 )
 {
-    ABAttachment	*one_attachment = NULL;
+    ABAttachment	*one_attachment = nullptr;
     AB_ATTACH_TYPE	attachType;
-    ABObj		attachObj = NULL,
-			parentObj = NULL,
-			origAttachObj = NULL,
-			origParentObj = NULL;
+    ABObj		attachObj = nullptr,
+			parentObj = nullptr,
+			origAttachObj = nullptr,
+			origParentObj = nullptr;
     int			offset = 0;
 
     if (!obj || !origObj || !new_list)
@@ -956,7 +956,7 @@ resolve_attach_one_attachment(
 		         * Since the actual parent object will not be known
 		         * until paste time, set this to NULL for now.
 		         */
-		         attachObj = NULL;
+		         attachObj = nullptr;
 		    }
 		}
 		else
@@ -983,14 +983,14 @@ resolve_attach_one_attachment(
 			 */
 			if (attachObj && (obj_get_parent(attachObj) != parentObj))
 			{
-			    attachObj = NULL;
+			    attachObj = nullptr;
 			}
 
 			/*
 			 * If attached sibling not found, change attachment 
 			 * type to AB_ATTACH_NONE
 			 */
-			if (attachObj == NULL)
+			if (attachObj == nullptr)
 			{
 			    attachType = AB_ATTACH_NONE;
 			    offset = 0;
@@ -1008,7 +1008,7 @@ resolve_attach_one_attachment(
 			 * onto the new list as a top level object.
 		         */
 
-			attachObj = NULL;
+			attachObj = nullptr;
 
 		        for (j=0; j < new_count; ++j)
 		        {
@@ -1021,7 +1021,7 @@ resolve_attach_one_attachment(
 			    }
 		        }
 
-			if (attachObj == NULL)
+			if (attachObj == nullptr)
 			{
 			    attachType = AB_ATTACH_NONE;
 			    offset = 0;
@@ -1042,7 +1042,7 @@ resolve_attach_one_attachment(
 		 * only worry about sibling attachments.
 		 */
 
-		if (origAttachObj != NULL)
+		if (origAttachObj != nullptr)
 		{
 		    int	j;
 
@@ -1051,7 +1051,7 @@ resolve_attach_one_attachment(
 		     * onto the new list as a top level object.
 		     */
 
-		    attachObj = NULL;
+		    attachObj = nullptr;
 
 		    for (j=0; j < new_count; ++j)
 		    {
@@ -1068,7 +1068,7 @@ resolve_attach_one_attachment(
 		     * If the sibling was not found, change the attachment type 
 		     * to AB_ATTACH_NONE.
 		     */
-		    if (attachObj == NULL)
+		    if (attachObj == nullptr)
 		    {
 		        attachType = AB_ATTACH_NONE;
 		        offset = 0;
@@ -1121,7 +1121,7 @@ resolve_attach_parent_dir(
 {
     ABAttachment	*one_attachment;
     AB_ATTACH_TYPE	attachType;
-    ABObj		attachObj = NULL;
+    ABObj		attachObj = nullptr;
 
     if (!obj || !new_parent)
 	return;
@@ -1130,7 +1130,7 @@ resolve_attach_parent_dir(
     attachType = obj_get_attach_type(obj, dir);
     attachObj = (void *)obj_get_attach_value(obj, dir);
 
-    if ((attachType == AB_ATTACH_OBJ) && (attachObj == NULL))
+    if ((attachType == AB_ATTACH_OBJ) && (attachObj == nullptr))
     {
 	obj_set_attach_value(obj, dir, new_parent);
     }
@@ -1176,7 +1176,7 @@ resolve_undo_rec_connections(
         if (from_action_list)
 	{
             for (trav_open(&trav, from_action_list, AB_TRAV_ACTIONS);
-                (action_obj = trav_next(&trav)) != NULL; )
+                (action_obj = trav_next(&trav)) != nullptr; )
             {
                 ABUndoInfo	to_info,
 				from_info;
@@ -1238,7 +1238,7 @@ resolve_undo_rec_connections(
         if (to_action_list)
 	{
             for (trav_open(&trav, to_action_list, AB_TRAV_ACTIONS);
-                (action_obj = trav_next(&trav)) != NULL; )
+                (action_obj = trav_next(&trav)) != nullptr; )
             {
                 ABUndoInfo	to_info,
 			from_info;
@@ -1318,7 +1318,7 @@ resolve_undo_rec_attachments(
     AB_TRAVERSAL	trav;
     ABClipbInfo	info;
     ABUndoInfo		undo_info;
-    ABObj	*new_list = NULL;
+    ABObj	*new_list = nullptr;
     ABObj	newObj,
 		origObj,
 		childObj,
@@ -1386,9 +1386,9 @@ resolve_undo_rec_attachments(
 	 * Do the same for all salient descendants 
 	 */
         for (trav_open(&trav, newObj, AB_TRAV_SALIENT);
-            (childObj = trav_next(&trav)) != NULL; )
+            (childObj = trav_next(&trav)) != nullptr; )
         {
-	    ABObj	origChildObj = NULL;
+	    ABObj	origChildObj = nullptr;
 
 	    /*
 	     * Skip the top level object - taken care of above
@@ -1436,9 +1436,9 @@ init_undo_rec(
     if (!(*undo_rec_ptr))
     {
 	undo_rec = (ABUndoRec)malloc(sizeof(AB_UNDO_REC));
-	undo_rec->list = NULL;
-	undo_rec->info_list = NULL;
-	undo_rec->undo_func = NULL;
+	undo_rec->list = nullptr;
+	undo_rec->info_list = nullptr;
+	undo_rec->undo_func = nullptr;
 	undo_rec->count = 0;
 	undo_rec->action_count = 0;
 	undo_rec->size = 0;
@@ -1576,7 +1576,7 @@ remove_clipboard_descendants(
 	     */
 	    if (obj_is_descendant_of(curObj, curAncestor))
 	    {
-		buf[i] = NULL;
+		buf[i] = nullptr;
 
 		/*
 		 * Keep track of number of objects deleted from list
@@ -1623,7 +1623,7 @@ any_object_at_my_position(
     * the same position as the pasted object
     */
     for (trav_open(&trav, parent, AB_TRAV_SALIENT_CHILDREN);
-        (child = trav_next(&trav)) != NULL; )
+        (child = trav_next(&trav)) != nullptr; )
     {
         if ((child->x == obj->x) && 
                 (child->y == obj->y))
@@ -1666,9 +1666,9 @@ stack_objects(
     if (xy_changed)
     {
         obj_set_attachment(newObj, AB_CP_NORTH, 
-            AB_ATTACH_POINT, NULL, newObj->y);
+            AB_ATTACH_POINT, nullptr, newObj->y);
         obj_set_attachment(newObj, AB_CP_WEST,  
-            AB_ATTACH_POINT, NULL, newObj->x);
+            AB_ATTACH_POINT, nullptr, newObj->x);
     }
 
 }
@@ -1737,7 +1737,7 @@ set_undo_rec(
 	     * descendants) as the source/target.
 	     */
 	    for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-			(action_obj = trav_next(&trav)) != NULL; )
+			(action_obj = trav_next(&trav)) != nullptr; )
 	    {
 		/*
 		 * Does this action have a source ('from') that
@@ -1787,7 +1787,7 @@ set_undo_rec(
 			 */
 		        if (!undo_info->info.cut.from_action_list)
 		            undo_info->info.cut.from_action_list = 
-				    obj_create(AB_TYPE_ACTION_LIST, NULL);
+				    obj_create(AB_TYPE_ACTION_LIST, nullptr);
 
 			/*
 			 * Since the action's source ('from') is the object
@@ -1829,7 +1829,7 @@ set_undo_rec(
 			 */
 		        if (!undo_info->info.cut.to_action_list)
 		            undo_info->info.cut.to_action_list = 
-				    obj_create(AB_TYPE_ACTION_LIST, NULL);
+				    obj_create(AB_TYPE_ACTION_LIST, nullptr);
 
 			/*
 			 * Since the action's target ('to') is the object
@@ -1879,7 +1879,7 @@ set_undo_rec(
 	        XtVaGetValues(objxm_get_widget(obj[j]),
 			XmNx,      &x,
 			XmNy,      &y,
-			NULL);
+			nullptr);
             }
             else
             {
@@ -1954,7 +1954,7 @@ set_undo_rec(
 
 	    for (trav_open(&trav, obj[j], AB_TRAV_SALIENT_CHILDREN |
 	                AB_TRAV_MOD_SAFE), member_index = 0;
-	                (member = trav_next(&trav)) != NULL; ++member_index)
+	                (member = trav_next(&trav)) != nullptr; ++member_index)
 	    {
 		member_list[member_index] = member;
 	    }
@@ -2016,7 +2016,7 @@ clear_undo_rec(
 
 	undo_info = &(undo_rec->info_list[i]);
 
-	list[i] = NULL;
+	list[i] = nullptr;
 
         switch (undo_info->type)
         {
@@ -2034,11 +2034,11 @@ clear_undo_rec(
 	    if (undo_info->info.cut.to_action_list)
 	        obj_destroy(undo_info->info.cut.to_action_list);
 
-	    undo_info->info.cut.dup_obj = NULL;
-	    undo_info->info.cut.from_action_list = NULL;
-	    undo_info->info.cut.to_action_list = NULL;
-	    undo_info->info.cut.parent = NULL;
-	    undo_info->info.cut.pane_sibling = NULL;
+	    undo_info->info.cut.dup_obj = nullptr;
+	    undo_info->info.cut.from_action_list = nullptr;
+	    undo_info->info.cut.to_action_list = nullptr;
+	    undo_info->info.cut.parent = nullptr;
+	    undo_info->info.cut.pane_sibling = nullptr;
 	break;
 
 	case AB_UNDO_PASTE:
@@ -2085,13 +2085,13 @@ clear_undo_rec(
 	    if (undo_info->info.ungroup.dup_old_group)
 	    {
 	        obj_destroy(undo_info->info.ungroup.dup_old_group);
-	        undo_info->info.ungroup.dup_old_group = NULL;
+	        undo_info->info.ungroup.dup_old_group = nullptr;
 	    }
 
 	    if (undo_info->info.ungroup.member_list)
 	    {
 	        free(undo_info->info.ungroup.member_list);
-		undo_info->info.ungroup.member_list = NULL;
+		undo_info->info.ungroup.member_list = nullptr;
 	    }
 
 	    undo_info->info.ungroup.member_count = 0;
@@ -2112,7 +2112,7 @@ clear_undo_rec(
      */
     undo_rec->count = 0;
     undo_rec->action_count = 0;
-    undo_rec->undo_func = NULL;
+    undo_rec->undo_func = nullptr;
 }
 
 
@@ -2125,8 +2125,8 @@ int
 abobj_cut(void)
 {
     ABObj	project = proj_get_project();
-    ABObj	newObj = NULL;
-    ABObj	*clipb_list = NULL;
+    ABObj	newObj = nullptr;
+    ABObj	*clipb_list = nullptr;
     ABSelectedRec sel;
     int		i;
     int		clipb_count = 0;
@@ -2201,7 +2201,7 @@ abobj_paste(
     ABObj		project = proj_get_project(),
     			newObj, 
 			root,
-			newroot = NULL,
+			newroot = nullptr,
 			parent;
     ABSelectedRec 	sel;
     STRING		name = (STRING) NULL;
@@ -2230,8 +2230,8 @@ abobj_paste(
 	    iRet = -1;
 	else
 	{
-	    ABObj	*new_list = NULL,
-			*new_action_list = NULL,
+	    ABObj	*new_list = nullptr,
+			*new_action_list = nullptr,
 			obj;
 	    int		action_index = 0;
 
@@ -2248,7 +2248,7 @@ abobj_paste(
 
                 obj = info->dup_obj;
 
-		newroot = NULL;
+		newroot = nullptr;
 
 		if (obj_is_window(obj) || obj_is_menu(obj) || obj_is_message(obj))
 		{
@@ -2260,8 +2260,8 @@ abobj_paste(
 		else if (obj_is_menubar(obj))
 		{
 		    AB_TRAVERSAL        trav;
-		    ABObj               winobj = NULL;
-		    ABObj		nobj = NULL;
+		    ABObj               winobj = nullptr;
+		    ABObj		nobj = nullptr;
 
 		    winobj = root;
                     while(!(obj_is_window(winobj) && !obj_is_sub(winobj)))
@@ -2285,7 +2285,7 @@ abobj_paste(
                       */
                     {
 			for (trav_open(&trav, winobj, AB_TRAV_UI);
-                            (nobj = trav_next(&trav)) != NULL; )
+                            (nobj = trav_next(&trav)) != nullptr; )
 			{
                             if (obj_is_menubar(nobj))
 			    {
@@ -2304,7 +2304,7 @@ abobj_paste(
 		else if (obj_is_container(obj) && !obj_is_control_panel(obj) &&
 			 !obj_is_group(obj))
         	{
-	            if (root == NULL || (!(obj_is_container(root) &&
+	            if (root == nullptr || (!(obj_is_container(root) &&
 		       obj_is_sub(root) && obj_is_window(obj_get_root(root))
         	       && !obj_is_file_chooser(obj_get_root(root)))))
 		    {
@@ -2321,7 +2321,7 @@ abobj_paste(
         	}
 		else if (obj_is_group(obj))
         	{
-	            if (root == NULL || (!(obj_is_control_panel(obj_get_root(root))
+	            if (root == nullptr || (!(obj_is_control_panel(obj_get_root(root))
 		       || obj_is_group(obj_get_root(root)))))
 		    {
 			Err = True;
@@ -2337,7 +2337,7 @@ abobj_paste(
 		}
 		else if (obj_is_pane(obj))
         	{
-            	    if (root != NULL && (obj_is_pane(root) &&
+            	    if (root != nullptr && (obj_is_pane(root) &&
                       !obj_is_window(obj_get_root(root))))
             	    {
                 	if (!obj_is_control_panel(obj) && obj_is_control_panel(root))
@@ -2347,7 +2347,7 @@ abobj_paste(
 				&dtb_palette_chld_or_layr_msg);
 			    answer = show_modal_msg_relative_initiator(
 				root, initiator, &dtb_palette_chld_or_layr_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
 			    switch(answer)
 			    {
 				case DTB_ANSWER_ACTION1: /* As Child */
@@ -2386,7 +2386,7 @@ abobj_paste(
 				&dtb_palette_layered_pane_msg);
 			    answer = show_modal_msg_relative_initiator(
 				obj_parent, initiator, &dtb_palette_layered_pane_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
 			    switch(answer)
                     	    {
                         	case DTB_ANSWER_ACTION2: /* Layered Pane */
@@ -2402,7 +2402,7 @@ abobj_paste(
 		    /*
 		     * Pasting a pane into a group
 		     */
-            	    else if (root != NULL && obj_is_group(root))
+            	    else if (root != nullptr && obj_is_group(root))
 	    	    {
 		        if (obj_is_control_panel(obj))
 		        {
@@ -2424,7 +2424,7 @@ abobj_paste(
 				&dtb_palette_child_of_group_msg);
 			    answer = show_modal_msg_relative_initiator(
 				root, initiator, &dtb_palette_child_of_group_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                             switch(answer)
                             {
 			        /* OK - Create as a child of group */
@@ -2437,7 +2437,7 @@ abobj_paste(
                             }
 		        }
 	            }
-		    else if (root == NULL || (!obj_is_window(obj_get_root(root)) &&
+		    else if (root == nullptr || (!obj_is_window(obj_get_root(root)) &&
 				!(obj_is_container(root) && !obj_is_menubar(root))))
 		    {
 			Err = True;
@@ -2455,7 +2455,7 @@ abobj_paste(
         	{
 		    newroot = get_ctrl_pane_or_group(root);
 
-            	    if (newroot == NULL ||
+            	    if (newroot == nullptr ||
                 	(!obj_is_control_panel(obj_get_root(newroot)) &&
                 	!obj_is_group(obj_get_root(newroot))))
 		    {
@@ -2479,7 +2479,7 @@ abobj_paste(
 
 		(void) show_modal_msg_relative_initiator(
 		    root, initiator, &dtb_palette_wrn_msg,
-		    xm_buf, NULL, NULL);
+		    xm_buf, nullptr, nullptr);
 		XmStringFree(xm_buf);
 		return -1;	
 	    }
@@ -2533,7 +2533,7 @@ abobj_paste(
 		     * duplicated connections on the clipboard
 		     */
                     for (trav_open(&trav, info->action_list, AB_TRAV_ACTIONS);
-                        (action_obj = trav_next(&trav)) != NULL; )
+                        (action_obj = trav_next(&trav)) != nullptr; )
                     {
 		        ABObj		new_action,
 					orig_from_obj,
@@ -2662,8 +2662,8 @@ abobj_paste(
 	    {
 		ABClipbInfo	info;
 		AB_TRAVERSAL	trav;
-		ABObj		origObj = NULL,
-				childObj = NULL;
+		ABObj		origObj = nullptr,
+				childObj = nullptr;
 
 		info = &(ABClipboard->info_list[i]);
 		origObj = info->dup_obj;
@@ -2671,9 +2671,9 @@ abobj_paste(
 		resolve_attach_one_obj(new_list[i], origObj, new_list, ABClipboard->count);
 		 
 		for (trav_open(&trav, new_list[i], AB_TRAV_SALIENT);
-		        (childObj = trav_next(&trav)) != NULL; )
+		        (childObj = trav_next(&trav)) != nullptr; )
 		{
-		    ABObj       origChildObj = NULL;
+		    ABObj       origChildObj = nullptr;
 							  
 		    /*
 		     * Skip top level object - taken care of above
@@ -2806,7 +2806,7 @@ int
 abobj_delete(void)
 {
     ABObj		project = proj_get_project(),
-			parent = NULL;
+			parent = nullptr;
     ABSelectedRec	sel;
     int		  i;
 
@@ -2833,7 +2833,7 @@ abobj_delete(void)
 	abobj_set_save_needed(obj_get_module(sel.list[i]), TRUE);
 
 	parent = obj_get_parent(sel.list[i]);
-	if ((parent != NULL) && 
+	if ((parent != nullptr) && 
 	    (obj_is_paned_win(parent) || obj_is_group(parent))
 	    && (obj_get_num_children(parent) == 1) )
 	{
@@ -2934,7 +2934,7 @@ abobj_undo_active(void)
 {
     BOOL		i;
 
-    return (ABUndo && (ABUndo->undo_func != NULL));
+    return (ABUndo && (ABUndo->undo_func != nullptr));
 }
 
 
@@ -2994,16 +2994,16 @@ abobj_clipboard_clear(void)
     {
 	ABClipbInfo	info;
 
-	ABClipboard->list[i] = NULL;
+	ABClipboard->list[i] = nullptr;
 
 	info = &(ABClipboard->info_list[i]);
 	obj_destroy(info->dup_obj);
-	info->dup_obj = NULL;
+	info->dup_obj = nullptr;
 	
 	if (info->action_list)
 	{
 	    obj_destroy(info->action_list);
-	    info->action_list = NULL;
+	    info->action_list = nullptr;
 	}
 	    
 	/*
@@ -3057,7 +3057,7 @@ abobj_clipboard_add(
 	 * descendants.
 	 */
 	for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-			(action_obj = trav_next(&trav)) != NULL; )
+			(action_obj = trav_next(&trav)) != nullptr; )
 	{
 	    if (!action_obj->info.action.from)
 	    {
@@ -3077,7 +3077,7 @@ abobj_clipboard_add(
 		 * (and it's descendants).
 		 */
 		if (!info->action_list)
-		    info->action_list = obj_create(AB_TYPE_ACTION_LIST, NULL);
+		    info->action_list = obj_create(AB_TYPE_ACTION_LIST, nullptr);
 
 		/*
 		 * Duplicate action
@@ -3160,7 +3160,7 @@ get_ctrl_pane_or_group(
     ABObj	paste_target
 )
 {
-    ABObj	ret_obj = NULL,
+    ABObj	ret_obj = nullptr,
 		parent = paste_target;
 
     if (!paste_target)
@@ -3175,7 +3175,7 @@ get_ctrl_pane_or_group(
 	}
 
 	if (obj_is_window(parent))
-	    return (NULL);
+	    return (nullptr);
 
         parent = obj_get_parent(parent);
     }
@@ -3226,7 +3226,7 @@ abobj_setup_undo_cut_layer(
 	 */
 	if (parent == layer)
 	{
-	    undo_info->info.cut.parent = NULL;
+	    undo_info->info.cut.parent = nullptr;
 	    undo_info->info.cut.pane_sibling = last_pane;
 	}
     }
@@ -3242,9 +3242,9 @@ undo_cut(
 {
 
     ABUndoInfo	undo_info;
-    ABObj	*new_list = NULL,
-		*new_from_action_list = NULL,
-		*new_to_action_list = NULL;
+    ABObj	*new_list = nullptr,
+		*new_from_action_list = nullptr,
+		*new_to_action_list = nullptr;
     int		i,
 		j,
 		from_action_count = 0,
@@ -3308,7 +3308,7 @@ undo_cut(
 
 	    for (trav_open(&trav, undo_info->info.cut.from_action_list, 
 			AB_TRAV_ACTIONS);
-	        (action_obj = trav_next(&trav)) != NULL; )
+	        (action_obj = trav_next(&trav)) != nullptr; )
 	    {
 	        ABObj	orig_from_obj,
 			new_from_obj,
@@ -3360,7 +3360,7 @@ undo_cut(
 	    ABObj           action_obj;
 
 	    for (trav_open(&trav, undo_info->info.cut.to_action_list, AB_TRAV_ACTIONS);
-	        (action_obj = trav_next(&trav)) != NULL; )
+	        (action_obj = trav_next(&trav)) != nullptr; )
 	    {
 	        ABObj	orig_to_obj,
 			new_to_obj,
@@ -3503,8 +3503,8 @@ undo_cut(
     for (i = 0; i < undo_rec->count; ++i)
     {
         AB_TRAVERSAL	trav;
-        ABObj		origObj = NULL,
-                        childObj = NULL;
+        ABObj		origObj = nullptr,
+                        childObj = nullptr;
 
 	undo_info = &(undo_rec->info_list[i]);
 
@@ -3516,9 +3516,9 @@ undo_cut(
         resolve_attach_one_obj(new_list[i], origObj, new_list, undo_rec->count);
 		 
         for (trav_open(&trav, new_list[i], AB_TRAV_SALIENT);
-                (childObj = trav_next(&trav)) != NULL; )
+                (childObj = trav_next(&trav)) != nullptr; )
         {
-            ABObj       origChildObj = NULL;
+            ABObj       origChildObj = nullptr;
 							  
             /*
              * Skip top level object - taken care of above
@@ -3812,15 +3812,15 @@ show_modal_msg_relative_initiator(
     Widget         	 *modal_dlg_pane_out_ptr
 )
 {
-    ABObj  winobj = NULL;
-    Widget parent = NULL;
+    ABObj  winobj = nullptr;
+    Widget parent = nullptr;
     
     if (!parent_obj || !mbr)
 	return DTB_ANSWER_CANCEL;
     
     winobj = obj_get_window(parent_obj);
 			
-    if ((winobj != NULL) && obj_has_flag(winobj, IconifiedFlag))
+    if ((winobj != nullptr) && obj_has_flag(winobj, IconifiedFlag))
     {
 	/*
 	** The window is iconified, determine who to parent the dialog off

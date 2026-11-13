@@ -243,11 +243,11 @@ void mgr_initialize( XEvent *report, XpPdmServiceRec *rec )
      * Fill in the PDM_MANAGER portion of the client record.
      */
     rec->video_display_str  = xpstrdup( list[0] );
-    rec->video_window       = strtol(list[1], (char **)NULL, 16);
+    rec->video_window       = strtol(list[1], (char **)nullptr, 16);
     rec->print_display_str  = xpstrdup( list[2] );
-    rec->print_window       = strtol(list[3], (char **)NULL, 16);
+    rec->print_window       = strtol(list[3], (char **)nullptr, 16);
 #if 0 && defined(PRINTING_SUPPORTED)
-    rec->print_context      = strtol(list[4], (char **)NULL, 16);
+    rec->print_context      = strtol(list[4], (char **)nullptr, 16);
 #endif /* PRINTING_SUPPORTED */
     rec->locale_hint        = xpstrdup( list[5] );
     XFreeStringList( list );
@@ -365,7 +365,7 @@ void mgr_launch_pdm( XpPdmServiceRec *rec )
 	 * Create new .Xauthority file.
 	 */
 	original_umask = umask (0077);      /* disallow non-owner access */
-	rec->auth_file = NULL;
+	rec->auth_file = nullptr;
 	rec->auth_filename[0] = '\0';
 	/*
 	 * mkstemp creates the file, so no other user can have planted a file
@@ -447,7 +447,7 @@ void mgr_launch_pdm( XpPdmServiceRec *rec )
 	sigemptyset(&svec.sa_mask);
 	svec.sa_flags   = 0;
 	svec.sa_handler = SIG_DFL;
-	(void) sigaction(SIGCHLD, &svec, (struct sigaction *) NULL);
+	(void) sigaction(SIGCHLD, &svec, (struct sigaction *) nullptr);
 
 	for (i=3; i < FOPEN_MAX; i++) {
 	    if ((i != rec->message_pipe[1]) && 
@@ -533,7 +533,7 @@ void mgr_launch_pdm( XpPdmServiceRec *rec )
  */
 void mgr_fetch_pdm( XpPdmServiceRec *rec )
 {
-    char tstr[1024], *tptr1 = NULL, *tptr2, *tptr3;
+    char tstr[1024], *tptr1 = nullptr, *tptr2, *tptr3;
     int  firstTime;
     long now;
     Display *tdpy;
@@ -572,12 +572,12 @@ void mgr_fetch_pdm( XpPdmServiceRec *rec )
 	    }
 #endif /* PRINTING_SUPPORTED */
 
-	    XSetIOErrorHandler( NULL );
+	    XSetIOErrorHandler( nullptr );
 	}
 	else {
 	    lxerrno = 1;
 
-	    XSetIOErrorHandler( NULL );
+	    XSetIOErrorHandler( nullptr );
 	}
 
 	/*
@@ -602,7 +602,7 @@ void mgr_fetch_pdm( XpPdmServiceRec *rec )
      * Note: this parsing code does NOT respect shell
      * quotes and other items.   --tomg
      */
-    rec->pdm_exec_argvs = (char **) NULL;
+    rec->pdm_exec_argvs = (char **) nullptr;
 
     tptr2 = tptr1;	/* retain orig pointer for freeing */
     firstTime = 1;
@@ -622,7 +622,7 @@ void mgr_fetch_pdm( XpPdmServiceRec *rec )
 	    }
 	}
 	else {
-	    tptr3 = xpstrtok( (char *) NULL, " \n\t" );
+	    tptr3 = xpstrtok( (char *) nullptr, " \n\t" );
 	}
 
 	if (tptr3) {
@@ -688,8 +688,8 @@ void mgr_launch_reply( XpPdmServiceRec *rec )
      * real nasty errors should have a message for the log file.
      */
     if ((rec->pdm_exec_errormessage) && (g.log_file)) {
-	if ((errlog = fopen(g.log_file, "a+")) != NULL) {
-	    now = time(NULL);
+	if ((errlog = fopen(g.log_file, "a+")) != nullptr) {
+	    now = time(nullptr);
 
 	    if ( rec->pdm_exec_errorcode == g.pdm_start_ok )
 		eec = "PDM_START_OK";
@@ -816,12 +816,12 @@ void mgr_shutdown_reply( XpPdmServiceRec *rec )
 	    }
 	}
 
-	XSetIOErrorHandler( NULL );
+	XSetIOErrorHandler( nullptr );
     }
     else {
 	lxerrno = 1;
 
-	XSetIOErrorHandler( NULL );
+	XSetIOErrorHandler( nullptr );
     }
 
     if ( g.xerrno || lxerrno ) {
@@ -850,7 +850,7 @@ Bool has_exec_token( XpPdmServiceRec *rec )
     int i1;
 
     s1 = rec->message_string;
-    s2 = NULL;
+    s2 = nullptr;
     i1 = 0;
 
     if (s1) {
@@ -890,14 +890,14 @@ Bool has_exec_token( XpPdmServiceRec *rec )
 		 * it appears no stderr was ever generated. 
 		 */
 		Xfree( rec->message_string );
-		rec->message_string = (char *) NULL;
+		rec->message_string = (char *) nullptr;
 	    }
 	    else if ((strlen(s1) == 1) && (s1[0] == '\n')) {
 		/*
 		 * All but a \n remains - free the buffer.
 		 */
 		Xfree( rec->message_string );
-		rec->message_string = (char *) NULL;
+		rec->message_string = (char *) nullptr;
 	    }
 
 	    return( True );
@@ -965,8 +965,8 @@ void mgr_shutdown_scan(void)
 	     */
 	    if ( ((g.serviceRecs[i]->message_string) ||
 		  (g.serviceRecs[i]->message_string2)) && (g.log_file) ) {
-		if ((errlog = fopen(g.log_file, "a+")) != NULL) {
-		    now = time(NULL);
+		if ((errlog = fopen(g.log_file, "a+")) != nullptr) {
+		    now = time(nullptr);
 
 		    fprintf (errlog, PDMD_MSG_14, g.prog_name, ctime(&now),
 					g.serviceRecs[i]->pdm_exec_argvs[0],

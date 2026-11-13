@@ -74,9 +74,9 @@ objP_get_names_scope_obj(ABObj obj)
     
     if (obj_is_project(obj))
     {
-	return NULL;
+	return nullptr;
     }
-    else if ((namesObj == NULL) || obj_is_module(obj))
+    else if ((namesObj == nullptr) || obj_is_module(obj))
     {
 	/* module names go in project */
 	namesObj = obj_get_project(obj);
@@ -89,11 +89,11 @@ StringList
 objP_get_names_scope(ABObj obj)
 {
     ABObj	nameScopeObj = objP_get_names_scope_obj(obj);
-    if (nameScopeObj != NULL)
+    if (nameScopeObj != nullptr)
     {
 	return objP_get_names_list(nameScopeObj);
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -101,7 +101,7 @@ ABObj
 objP_get_names_scope_obj_for_children(ABObj parent)
 {
     ABObj	scopeObj = obj_get_module(parent);
-    if (scopeObj == NULL)
+    if (scopeObj == nullptr)
     {
 	scopeObj = obj_get_project(parent);
     }
@@ -113,11 +113,11 @@ StringList
 objP_get_names_scope_for_children(ABObj parent)
 {
     ABObj	scopeObj = objP_get_names_scope_obj_for_children(parent);
-    if (scopeObj != NULL)
+    if (scopeObj != nullptr)
     {
 	return objP_get_names_list(scopeObj);
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -132,17 +132,17 @@ objP_get_names_list(ABObj obj)
 	    return obj->info.project.obj_names_list;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 
 int
 objP_add_to_names_list(ABObj obj)
 {
-    StringList	names = NULL;
+    StringList	names = nullptr;
     
     names = objP_get_names_scope(obj);
-    if (names != NULL)
+    if (names != nullptr)
     {
 	strlist_add_istr(names, obj->name, obj);
     }
@@ -154,7 +154,7 @@ int
 objP_remove_from_names_list(ABObj obj)
 {
     StringList	names = objP_get_names_scope(obj);
-    if (names != NULL)
+    if (names != nullptr)
     {
 	strlist_remove_istr(names, obj->name);
     }
@@ -166,21 +166,21 @@ int
 objP_tree_add_to_names_list(ABObj tree)
 {
     ABObj		scopeObj = objP_get_names_scope_obj(tree);
-    StringList		names = NULL;
+    StringList		names = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		obj = NULL;
+    ABObj		obj = nullptr;
 
-    if (scopeObj != NULL)
+    if (scopeObj != nullptr)
     {
 	names = objP_get_names_list(scopeObj);
     }
-    if (names == NULL)
+    if (names == nullptr)
     {
 	return 0;
     }
 
     for (trav_open(&trav, tree, AB_TRAV_ALL);
-	(obj = trav_next(&trav)) != NULL; )
+	(obj = trav_next(&trav)) != nullptr; )
     {
 	if (objP_get_names_scope_obj(obj) == scopeObj)
 	{
@@ -197,21 +197,21 @@ int
 objP_tree_remove_from_names_list(ABObj tree)
 {
     ABObj		scopeObj = objP_get_names_scope_obj(tree);
-    StringList		names = NULL;
+    StringList		names = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		obj = NULL;
+    ABObj		obj = nullptr;
 
-    if (scopeObj != NULL)
+    if (scopeObj != nullptr)
     {
 	names = objP_get_names_list(scopeObj);
     }
-    if (names == NULL)
+    if (names == nullptr)
     {
 	return 0;
     }
 
     for (trav_open(&trav, tree, AB_TRAV_ALL);
-	(obj = trav_next(&trav)) != NULL; )
+	(obj = trav_next(&trav)) != nullptr; )
     {
 	if (objP_get_names_scope_obj(obj) == scopeObj)
 	{

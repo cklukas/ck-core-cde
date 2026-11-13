@@ -317,7 +317,7 @@ dndBuffConvertFinish(
 
 	if (dragData->data.buffers) {
 		XtFree((char *)dragData->data.buffers);
-		dragData->data.buffers = NULL;
+		dragData->data.buffers = nullptr;
 	}
 }
 
@@ -381,7 +381,7 @@ dndBuffTransferTargets(
                 (*transferTargets)[ii++] = foundText ? XA_TEXT : XA_STRING;
 	} else {
 		*numTransferTargets	= 0;
-		*transferTargets	= NULL;
+		*transferTargets	= nullptr;
 		return;
 	}
 }
@@ -505,7 +505,7 @@ dndBuffTransferFinish(
 	TransferState *	xferState = 
 			(TransferState *)dtDropInfo->transferInfo->clientData;
 
-	dtDropInfo->transferInfo->clientData = NULL;
+	dtDropInfo->transferInfo->clientData = nullptr;
 
 	if (xferState->dataValue)
 		XtFree(xferState->dataValue);
@@ -600,7 +600,7 @@ dndBufferNamesToSelectionValue(
 	*returnLength = 0;
 
 	for (ii = 0; ii < numBuffers; ii++) {
-		if (buffers[ii].name != NULL) {
+		if (buffers[ii].name != nullptr) {
 			*returnLength += strlen(buffers[ii].name) + 1;
 		} else {
 			*returnLength += 1;
@@ -612,7 +612,7 @@ dndBufferNamesToSelectionValue(
 	namePtr = (char *)*returnValue;
 
 	for (ii = 0; ii < numBuffers; ii++) {
-		if (buffers[ii].name == NULL) {
+		if (buffers[ii].name == nullptr) {
 			*namePtr = '\0';
 			namePtr++;
 		} else {
@@ -713,7 +713,7 @@ dndSelectionValueToBuffer(
 	char *		namePtr;
 	unsigned long *	lenList;
 
-	if (lengthsLength == 0 || lengthsValue == NULL) {
+	if (lengthsLength == 0 || lengthsValue == nullptr) {
 
 		*numBuffers = 1;
 

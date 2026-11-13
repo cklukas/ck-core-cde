@@ -139,9 +139,9 @@ static XtResource resources[] = {
  */
 static XtResource treeConstraintResources[] = {
     { XtNtreeParent, XtCTreeParent, XtRWidget, sizeof (Widget),
-	XtOffsetOf(TreeConstraintsRec, tree.parent), XtRImmediate, NULL },
+	XtOffsetOf(TreeConstraintsRec, tree.parent), XtRImmediate, nullptr },
     { XtNtreeGC, XtCTreeGC, XtRGC, sizeof(GC),
-	XtOffsetOf(TreeConstraintsRec, tree.gc), XtRImmediate, NULL },
+	XtOffsetOf(TreeConstraintsRec, tree.gc), XtRImmediate, nullptr },
 };
 
 
@@ -152,12 +152,12 @@ TreeClassRec treeClassRec = {
     "Tree",				/* class_name         */
     sizeof(TreeRec),			/* widget_size        */
     ClassInitialize,			/* class_init         */
-    NULL,				/* class_part_init    */
+    nullptr,				/* class_part_init    */
     FALSE,				/* class_inited       */	
     Initialize,				/* initialize         */
-    NULL,				/* initialize_hook    */	
+    nullptr,				/* initialize_hook    */	
     XtInheritRealize,			/* realize            */
-    NULL,				/* actions            */
+    nullptr,				/* actions            */
     0,					/* num_actions        */	
     resources,				/* resources          */
     XtNumber(resources),		/* num_resources      */
@@ -167,19 +167,19 @@ TreeClassRec treeClassRec = {
     TRUE,				/* compress_enterleave*/	
     TRUE,				/* visible_interest   */
     Destroy,				/* destroy            */
-    NULL,				/* resize             */
+    nullptr,				/* resize             */
     Redisplay,				/* expose             */
     SetValues,				/* set_values         */
-    NULL,				/* set_values_hook    */	
+    nullptr,				/* set_values_hook    */	
     XtInheritSetValuesAlmost,		/* set_values_almost  */
-    NULL,				/* get_values_hook    */	
-    NULL,				/* accept_focus       */
+    nullptr,				/* get_values_hook    */	
+    nullptr,				/* accept_focus       */
     XtVersion,				/* version            */	
-    NULL,				/* callback_private   */
-    NULL,				/* tm_table           */
+    nullptr,				/* callback_private   */
+    nullptr,				/* tm_table           */
     QueryGeometry,			/* query_geometry     */	
-    NULL,				/* display_accelerator*/
-    NULL,				/* extension          */
+    nullptr,				/* display_accelerator*/
+    nullptr,				/* extension          */
   },
   {
 					/* composite_class fields */
@@ -187,7 +187,7 @@ TreeClassRec treeClassRec = {
     ChangeManaged,			/* change_managed      */
     XtInheritInsertChild,		/* insert_child        */	
     XtInheritDeleteChild,		/* delete_child        */	
-    NULL,				/* extension           */
+    nullptr,				/* extension           */
   },
   { 
 					/* constraint_class fields */
@@ -197,7 +197,7 @@ TreeClassRec treeClassRec = {
    ConstraintInitialize,		/* initialize          */
    ConstraintDestroy,			/* destroy             */
    ConstraintSetValues,			/* set_values          */
-   NULL,				/* extension           */
+   nullptr,				/* extension           */
    },
   {
 					/* Tree class fields */
@@ -261,7 +261,7 @@ static void insert_node (Widget parent, Widget node)
   
     nc->tree.parent = parent;
 
-    if (parent == NULL) return;
+    if (parent == nullptr) return;
 
     /*
      * If there isn't more room in the children array, 
@@ -390,7 +390,7 @@ static void Initialize (Widget grequest, Widget gnew, ArgList args,
     /*
      * Allocate the array used to hold the widest values per depth
      */
-    new->tree.largest = NULL;
+    new->tree.largest = nullptr;
     new->tree.n_largest = 0;
     initialize_dimensions (&new->tree.largest, &new->tree.n_largest, 
 			   TREE_INITIAL_DEPTH);
@@ -414,7 +414,7 @@ static void ConstraintInitialize (Widget request, Widget new, ArgList args,
      */
     tc->tree.n_children = 0;
     tc->tree.max_children = 0;
-    tc->tree.children = (Widget *) NULL;
+    tc->tree.children = (Widget *) nullptr;
     tc->tree.x = tc->tree.y = 0; 
     tc->tree.bbsubwidth = 0;
     tc->tree.bbsubheight = 0;
@@ -522,7 +522,7 @@ static void ConstraintDestroy (Widget w)
 	if (tc->tree.n_children > 0)
 	  tw->tree.tree_root = tc->tree.children[0];
 	else
-	  tw->tree.tree_root = NULL;
+	  tw->tree.tree_root = nullptr;
     }
 
     delete_node (tc->tree.parent, (Widget) w);
@@ -816,7 +816,7 @@ static void arrange_subtree (TreeWidget tree, Widget w, int depth, Position x, P
     int i;
     int newx, newy;
     Bool horiz = IsHorizontal (tree);
-    Widget child = NULL;
+    Widget child = nullptr;
     Dimension tmp;
     Dimension bw2 = w->core.border_width * 2;
     Bool relayout = True;
@@ -928,7 +928,7 @@ static void set_tree_size (TreeWidget tw, Boolean insetvalues, Dimension width, 
 	 */
 	if (result == XtGeometryAlmost)
 	  XtMakeResizeRequest ((Widget) tw, replyWidth, replyHeight,
-			       (Dimension *) NULL, (Dimension *) NULL);
+			       (Dimension *) nullptr, (Dimension *) nullptr);
     }
     return;
 }
@@ -944,7 +944,7 @@ static void layout_tree (TreeWidget tw, Boolean insetvalues)
      * this information to layout the children at each level.
      */
 
-    if (tw->tree.tree_root == NULL)
+    if (tw->tree.tree_root == nullptr)
 	return;
 
     tw->tree.maxwidth = tw->tree.maxheight = 0;

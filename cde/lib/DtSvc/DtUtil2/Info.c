@@ -95,11 +95,11 @@ DtInfoShowTopic (
 		return (ret_val);
 
 	if (!file) {
-		if ((file = getenv (DTINFOLIBDEFAULT_NAME)) == NULL)
+		if ((file = getenv (DTINFOLIBDEFAULT_NAME)) == nullptr)
 			file = DTINFOLIBDEFAULT_DEFAULT;
 	}
 
-	if ((locale = getenv (LOCALE_NAME)) == NULL)
+	if ((locale = getenv (LOCALE_NAME)) == nullptr)
 		locale = DEFAULT_LOCALE;
 
 	message = tt_message_create ();
@@ -124,7 +124,7 @@ DtInfoShowTopic (
 			    SHOW_INFO_DEFAULT_ACTION);
 
 	if ((Xegetshorthostname (host, MAXHOSTNAMELEN)) != 0)
-		tt_message_arg_add (message, TT_IN, STRING_ARG_TYPE, NULL);
+		tt_message_arg_add (message, TT_IN, STRING_ARG_TYPE, nullptr);
 	else
 		tt_message_arg_add (message, TT_IN, STRING_ARG_TYPE, host);
 

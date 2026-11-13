@@ -96,7 +96,7 @@ ExpGpftoBDF(
 	/*
 	 * parameter check
 	 */
-	if( gpf_name == NULL || bdf_name == NULL ){
+	if( gpf_name == nullptr || bdf_name == nullptr ){
 	    fprintf(stderr, "GPF or BDF file name is not specified.\n" ) ;
 	    return -1 ;
 	}
@@ -119,7 +119,7 @@ ExpGpftoBDF(
 	 * export glyphs in BDF format
 	 */
 	w_bdf.snf_file = gpf_name ;
-	if( (w_bdf.output = fopen( bdf_name, "w" )) == NULL ){
+	if( (w_bdf.output = fopen( bdf_name, "w" )) == nullptr ){
 	    fprintf(stderr, "\"%s\" cannot open.\n", bdf_name ) ;
 	    return -1 ;
 	}
@@ -142,13 +142,13 @@ ExpGpftoBDF(
 
 	num_chars = ((make_all) ? w_bdf.num_chars : code_num) ;
 
-	if( (r_gpf.code = (int *)malloc( sizeof(int) * num_chars)) == NULL ) {
+	if( (r_gpf.code = (int *)malloc( sizeof(int) * num_chars)) == nullptr ) {
 	    fclose(w_bdf.output) ;
 	    fclose(w_bdf.input) ;
 	    return(MALLOC_ERROR);
 	}
 
-	if( (r_gpf.ptn = (char **)calloc( num_chars, sizeof(char *) )) == NULL ) {
+	if( (r_gpf.ptn = (char **)calloc( num_chars, sizeof(char *) )) == nullptr ) {
 	    fclose(w_bdf.output) ;
 	    fclose(w_bdf.input) ;
 	    return(MALLOC_ERROR);
@@ -212,7 +212,7 @@ writeBdfHeader(struct ptobhead *head,
 	union	wait	chld_stat ;
 #endif
 
-	if (head->snf_file != NULL) {
+	if (head->snf_file != nullptr) {
 		if (pipe(fd) != 0) {
 			return	PIPE_ERROR;
 		}
@@ -232,7 +232,7 @@ writeBdfHeader(struct ptobhead *head,
 			break;
 		}
 		close(fd[1]);
-		if((fp = (FILE *)fdopen(fd[0], "r")) == NULL) {
+		if((fp = (FILE *)fdopen(fd[0], "r")) == nullptr) {
 			close( fd[0] );
 			kill( chld_pid, SIGKILL );
 			WaitID( chld_pid, chld_stat ) ;
@@ -246,9 +246,9 @@ writeBdfHeader(struct ptobhead *head,
 	comflg = 0 ;
 
 	while ( 1 ) {
-		if (fgets(buf, BUFSIZE, fp) == NULL) {
+		if (fgets(buf, BUFSIZE, fp) == nullptr) {
 		    fclose( fp );
-		    if (head->snf_file != NULL) {
+		    if (head->snf_file != nullptr) {
 			close(fd[0]);
 			kill( chld_pid, SIGKILL );
 			WaitID( chld_pid, chld_stat ) ;
@@ -274,7 +274,7 @@ writeBdfHeader(struct ptobhead *head,
 		    int	i ;
 		    for( i=0; i<comment_num; i++ ){
 			char	*ep ;
-			if( (ep = (char *)strchr( comment_list[i], '\n' )) != NULL )
+			if( (ep = (char *)strchr( comment_list[i], '\n' )) != nullptr )
 			    *ep = '\0' ;
 			if( !comment_list[i] )	continue ;
 			fprintf(head->output, "COMMENT %s\n", comment_list[i]);
@@ -289,7 +289,7 @@ writeBdfHeader(struct ptobhead *head,
 		    if ((sscanf(p, "SIZE %f%d",
 			&(head->bdf_point), &(head->bdf_xdpi))) != 2) {
 			fclose(fp);
-			if (head->snf_file != NULL) {
+			if (head->snf_file != nullptr) {
 			    close(fd[0]);
 			    kill( chld_pid, SIGKILL );
 			    WaitID( chld_pid, chld_stat ) ;
@@ -305,7 +305,7 @@ writeBdfHeader(struct ptobhead *head,
 				&(head->bdf_x), &(head->bdf_y))) != 4
 		    ) {
 			fclose(fp);
-			if (head->snf_file != NULL) {
+			if (head->snf_file != nullptr) {
 			    close(fd[0]);
 			    kill( chld_pid, SIGKILL );
 			    WaitID( chld_pid, chld_stat ) ;
@@ -353,7 +353,7 @@ int	make_all	/* convert whole GPF fomat file to BDF  */
 	    }
 
 	    head->code[num_char] = code;
-	    if ( ( ptn = head->ptn[num_char++] = (char *)malloc( bsize ) ) == NULL ) {
+	    if ( ( ptn = head->ptn[num_char++] = (char *)malloc( bsize ) ) == nullptr ) {
 		return(MALLOC_ERROR);
 	    }
 

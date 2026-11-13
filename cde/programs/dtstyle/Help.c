@@ -64,11 +64,11 @@ GetHelpDialog(void)
     Arg args[5];
     int n;
 
-    if(pHelpCache == (HelpStruct *)NULL)
+    if(pHelpCache == (HelpStruct *)nullptr)
     {
 	pHelp = pHelpCache = (HelpStruct *)XtMalloc(sizeof(HelpStruct));
-	pHelp->pNext = (HelpStruct *)NULL;
-	pHelp->pPrev = (HelpStruct *)NULL;
+	pHelp->pNext = (HelpStruct *)nullptr;
+	pHelp->pPrev = (HelpStruct *)nullptr;
 	pHelp->inUse = True;
 
 	n = 0;
@@ -80,7 +80,7 @@ GetHelpDialog(void)
         DtWsmRemoveWorkspaceFunctions(style.display, 
                 XtWindow(XtParent(pHelp->dialog)));
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback, 
-                      HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, nullptr);
         XtAddCallback(pHelp->dialog, DtNcloseCallback, 
                       HelpCloseCB, pHelpCache);
         return pHelp->dialog;
@@ -88,7 +88,7 @@ GetHelpDialog(void)
     else
     {
 	for(pHelp = pHelpCache; 
-	    pHelp != (HelpStruct *)NULL;
+	    pHelp != (HelpStruct *)nullptr;
 	    pHelp = pHelp->pNext)
 	{
 	    if(pHelp->inUse == False)
@@ -101,7 +101,7 @@ GetHelpDialog(void)
 	pHelpCache->pPrev = pHelp;
 	pHelp->pNext = pHelpCache;
 	pHelpCache = pHelp;
-	pHelp->pPrev = (HelpStruct *)NULL;
+	pHelp->pPrev = (HelpStruct *)nullptr;
 	pHelp->inUse = True;
 
         n=0;
@@ -112,7 +112,7 @@ GetHelpDialog(void)
         DtWsmRemoveWorkspaceFunctions(style.display, 
                       XtWindow(XtParent(pHelp->dialog)));
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback, 
-                      HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, nullptr);
         XtAddCallback(pHelp->dialog, DtNcloseCallback, 
                       HelpCloseCB, pHelpCache);
 	return pHelp->dialog;
@@ -145,11 +145,11 @@ Help(
         char *helpVolume,
 	char *locationId)
 {
-    static  Widget helpDialog = NULL;
+    static  Widget helpDialog = nullptr;
     Arg args[10];
     int n;
 
-    if(helpDialog == NULL)
+    if(helpDialog == nullptr)
     {
         n = 0;
         XtSetArg(args[n], DtNhelpType, DtHELP_TYPE_TOPIC); n++;
@@ -162,9 +162,9 @@ Help(
         DtWsmRemoveWorkspaceFunctions(style.display, 
                       XtWindow(XtParent(helpDialog)));
         XtAddCallback(helpDialog, DtNhyperLinkCallback, 
-                      HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, nullptr);
         XtAddCallback(helpDialog, DtNcloseCallback, 
-                      HelpCloseCB, NULL);
+                      HelpCloseCB, nullptr);
 
         XtManageChild(helpDialog);
     }

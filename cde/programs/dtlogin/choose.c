@@ -417,14 +417,14 @@ AddChooserHost (
     {
 	if (!parseArgs (argp, "BROADCAST")) {
 	    freeEnv(*argp);
-	    *argp = NULL;
+	    *argp = nullptr;
 	}
     }
     else if (FormatARRAY8 (addr, hostbuf, sizeof (hostbuf)))
     {
 	if (!parseArgs (argp, hostbuf)) {
 	    freeEnv(*argp);
-	    *argp = NULL;
+	    *argp = nullptr;
 	}
     }
 }
@@ -498,7 +498,7 @@ void
 RunChooser (
     struct display  *d)
 {
-    char    **args = NULL;
+    char    **args = nullptr;
     char    buf[1024];
     char    **env;
 

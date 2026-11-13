@@ -85,7 +85,7 @@ char *tag_string[] = {
 	"12:date_time_list",
 	"13:reminder",
 	"14:opaque_data",
-	NULL
+	nullptr
 };
 
 /*
@@ -175,14 +175,14 @@ _DtCmsAppendHTableByFD(int fd, uint size, char **names, int *types)
 {
 	CSA_return_code	stat;
 	char	num[NUMSIZE];
-	Strbuf	sb = { NULL, 0, 0 };
+	Strbuf	sb = { nullptr, 0, 0 };
 	uint	i;
 
 	if (!strbuf_add(&sb, "(entrytable "))
 		goto nomem;
 
 	for (i = 1; i <= size; i++) {
-		if (!strbuf_cat(&sb, "(", numstr(num, i), " ", NULL) ||
+		if (!strbuf_cat(&sb, "(", numstr(num, i), " ", nullptr) ||
 		    !strbuf_cat_quoted(&sb, "\"", names[i], "\" ") ||
 		    !strbuf_cat_quoted(&sb, "\"", tag_string[types[i]],
 		    "\")\n"))
@@ -230,7 +230,7 @@ _DtCmsAppendEntryByFD(int f, cms_entry *entry, _DtCmsLogOps op)
 	if (_csa_tick_to_iso8601(entry->key.time, isotime))
 		return (CSA_E_INVALID_DATE_TIME);
 
-	if ((buf = malloc(100)) == NULL) return (CSA_E_INSUFFICIENT_MEMORY);
+	if ((buf = malloc(100)) == nullptr) return (CSA_E_INSUFFICIENT_MEMORY);
 
 	snprintf(buf, 100, "(%s \"%s\" key: %ld%s",
 		(op == _DtCmsLogAdd ? "add" : "remove"),
@@ -240,12 +240,12 @@ _DtCmsAppendEntryByFD(int f, cms_entry *entry, _DtCmsLogOps op)
 
 	if (op == _DtCmsLogAdd && entry->num_attrs > 0) {
 		if ((cptr = attrs_to_attrliststr(entry->num_attrs,
-		    entry->attrs, B_TRUE, B_TRUE)) == NULL) {
+		    entry->attrs, B_TRUE, B_TRUE)) == nullptr) {
 			free(buf);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
 		count += strlen(cptr);
-		if ((tptr = grow_n_concat(buf, cptr, count)) == NULL) {
+		if ((tptr = grow_n_concat(buf, cptr, count)) == nullptr) {
 			free(cptr);
 			free(buf);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -272,7 +272,7 @@ _DtCmsAppendCalAttrsByFN(char *file, int size, cms_attribute * attrs)
 	int	f;
 	CSA_return_code	stat;
 
-	if (file == NULL || size <= 0)
+	if (file == nullptr || size <= 0)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((f = open(file, O_WRONLY | O_APPEND | O_SYNC)) < 0) {
@@ -296,11 +296,11 @@ _DtCmsAppendCalAttrsByFD(int f, int size, cms_attribute * attrs)
 	size_t	count;
 
 	if ((attrstr = attrs_to_attrliststr(size, attrs, B_FALSE, B_FALSE))
-	    == NULL)
+	    == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	count = strlen(prefix) + strlen(attrstr) + strlen(subfix) + 1;
-	if ((buf = malloc(count)) == NULL) {
+	if ((buf = malloc(count)) == nullptr) {
 		free(attrstr);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
@@ -335,17 +335,17 @@ _DtCmsAppendAppt4ByFD(int f, Appt_4 *appt, _DtCmsLogOps op)
 {
 	char *cptr;
 	char tmpbuf[BUFSIZ], num[NUMSIZE];
-	Strbuf sb = { NULL, 0, 0 };
+	Strbuf sb = { nullptr, 0, 0 };
 	CSA_return_code stat;
 
-	if ((cptr = ctime (&appt->appt_id.tick)) == NULL)
+	if ((cptr = ctime (&appt->appt_id.tick)) == nullptr)
 		return (CSA_E_INVALID_DATE_TIME);
 	cptr[24] = '\0';		/* strip off CR */
 
 	switch (op) {
 	case _DtCmsLogAdd:
 		if (!strbuf_cat(&sb, "(add \"", cptr, "\" key: ",
-		    numstr(num, appt->appt_id.key), " ", NULL))
+		    numstr(num, appt->appt_id.key), " ", nullptr))
 			goto nomem;
 		if (appt->what &&
 		    !strbuf_cat_quoted(&sb, "what: \"", appt->what, "\" "))
@@ -354,37 +354,37 @@ _DtCmsAppendAppt4ByFD(int f, Appt_4 *appt, _DtCmsLogOps op)
 		    appt->client_data, "\" "))
 			goto nomem;
 		if (appt->duration && !strbuf_cat(&sb, "duration: ",
-		    numstr(num, appt->duration), " ", NULL))
+		    numstr(num, appt->duration), " ", nullptr))
 			goto nomem;
 
 		periodtostr (appt->period.period, tmpbuf);
-		if (!strbuf_cat(&sb, "period: ", tmpbuf, " ", NULL))
+		if (!strbuf_cat(&sb, "period: ", tmpbuf, " ", nullptr))
 			goto nomem;
 
 		if (appt->period.nth != 0 && !strbuf_cat(&sb, "nth: ",
-		    numstr(num, appt->period.nth), " ", NULL))
+		    numstr(num, appt->period.nth), " ", nullptr))
 			goto nomem;
 		if (appt->period.enddate != 0) {
-			if ((cptr = ctime (&(appt->period.enddate))) == NULL) {
+			if ((cptr = ctime (&(appt->period.enddate))) == nullptr) {
 				free(sb.str);
 				return (CSA_E_INVALID_DATE_TIME);
 			}
 			cptr[24] = '\0'; /* strip off CR */
-			if (!strbuf_cat(&sb, "enddate: \"", cptr, "\" ", NULL))
+			if (!strbuf_cat(&sb, "enddate: \"", cptr, "\" ", nullptr))
 				goto nomem;
 		}
 
 		if (!strbuf_cat(&sb, "ntimes: ", numstr(num, appt->ntimes), " ",
-		    NULL))
+		    nullptr))
 			goto nomem;
 
-		if (appt->exception != NULL) {
+		if (appt->exception != nullptr) {
 			struct Except_4 *e = appt->exception;
 			if (!strbuf_add(&sb, "exceptions: ("))
 				goto nomem;
-			while(e != NULL) {
+			while(e != nullptr) {
 				if (!strbuf_cat(&sb, numstr(num, e->ordinal),
-				    " ", NULL))
+				    " ", nullptr))
 					goto nomem;
 				e = e->next;
 			}
@@ -392,14 +392,14 @@ _DtCmsAppendAppt4ByFD(int f, Appt_4 *appt, _DtCmsLogOps op)
 				goto nomem;
 		}
 
-		if (appt->author != NULL && !strbuf_cat_quoted(&sb, "author: \"",
+		if (appt->author != nullptr && !strbuf_cat_quoted(&sb, "author: \"",
 		    appt->author, "\" "))
 			goto nomem;
-		if (appt->attr != NULL) {
+		if (appt->attr != nullptr) {
 			struct Attribute_4 *item = appt->attr;
 			if (!strbuf_add(&sb, "attributes: ("))
 				goto nomem;
-			while(item != NULL) {
+			while(item != nullptr) {
 				if (!strbuf_cat_quoted(&sb, "(\"", item->attr,
 				    "\",\"") ||
 				    !strbuf_cat_quoted(&sb, "", item->value,
@@ -412,14 +412,14 @@ _DtCmsAppendAppt4ByFD(int f, Appt_4 *appt, _DtCmsLogOps op)
 			if (!strbuf_add(&sb, ") "))
 				goto nomem;
 		}
-		if (appt->tag != NULL) {
+		if (appt->tag != nullptr) {
 			struct Tag_4 *item = appt->tag;
 			if (!strbuf_add(&sb, "tags: ("))
 				goto nomem;
-			while(item != NULL) {
+			while(item != nullptr) {
 				tagstostr(item->tag, tmpbuf);
 				if (!strbuf_cat(&sb, "(", tmpbuf, " , ",
-				    numstr(num, item->showtime), ")", NULL))
+				    numstr(num, item->showtime), ")", nullptr))
 					goto nomem;
 				item = item->next;
 			}
@@ -428,18 +428,18 @@ _DtCmsAppendAppt4ByFD(int f, Appt_4 *appt, _DtCmsLogOps op)
 		}
 
 		apptstatustostr(appt->appt_status, tmpbuf);
-		if (!strbuf_cat(&sb, "apptstat: ", tmpbuf, " ", NULL))
+		if (!strbuf_cat(&sb, "apptstat: ", tmpbuf, " ", nullptr))
 			goto nomem;
 
 		privacytostr(appt->privacy, tmpbuf);
-		if (!strbuf_cat(&sb, "privacy: ", tmpbuf, " )\n", NULL))
+		if (!strbuf_cat(&sb, "privacy: ", tmpbuf, " )\n", nullptr))
 			goto nomem;
 
 		break;    
 
 	case _DtCmsLogRemove:
 		if (!strbuf_cat(&sb, "(remove \"", cptr, "\" key: ",
-		    numstr(num, appt->appt_id.key), ")\n", NULL))
+		    numstr(num, appt->appt_id.key), ")\n", nullptr))
 			goto nomem;
 		break;
 	}
@@ -476,7 +476,7 @@ _DtCmsAppendAccessByFD(int f, int type, Access_Entry_4 *p)
 {
 	CSA_return_code	stat;
 	char	*p_type;
-	Strbuf	sb = { NULL, 0, 0 };
+	Strbuf	sb = { nullptr, 0, 0 };
 
 	if (type == access_read_4)
 		p_type = "read";
@@ -489,11 +489,11 @@ _DtCmsAppendAccessByFD(int f, int type, Access_Entry_4 *p)
 	else
 		return (CSA_E_INVALID_PARAMETER);
 
-	if (!strbuf_cat(&sb, "(access ", p_type, " ", NULL))
+	if (!strbuf_cat(&sb, "(access ", p_type, " ", nullptr))
 		goto nomem;
 
-	while(p != NULL) {
-		if (p->who != NULL &&
+	while(p != nullptr) {
+		if (p->who != nullptr &&
 		    !strbuf_cat_quoted(&sb, "\"", p->who, "\" "))
 			goto nomem;
 		p = p->next;
@@ -566,11 +566,11 @@ _DtCmsPrintAppt4(caddr_t data)
 	if (fprintf(stderr, "ntimes: %d ", appt->ntimes) == EOF)
 		return (B_TRUE);
 
-	if (appt->exception != NULL) {
+	if (appt->exception != nullptr) {
 		struct Except_4 *e = appt->exception;
 		if (fprintf(stderr, "exceptions: (") == EOF)
 			return (B_TRUE);
-		while(e != NULL) {
+		while(e != nullptr) {
 			if (fprintf(stderr, "%d ", e->ordinal) == EOF)
 				return (B_TRUE);
 			e = e->next;
@@ -578,15 +578,15 @@ _DtCmsPrintAppt4(caddr_t data)
 		if (fprintf(stderr, ") ") == EOF)
 			return (B_TRUE);
 	}
-	if (appt->author != NULL) {
+	if (appt->author != nullptr) {
 		if (fprintf(stderr, "author: \"%s\" ", appt->author) == EOF)
 			return (B_TRUE);
 	}
-	if (appt->attr != NULL) {
+	if (appt->attr != nullptr) {
 		struct Attribute_4 *item = appt->attr;
 		if (fprintf(stderr, "attributes: (") == EOF)
 			return (B_TRUE);
-		while(item != NULL) {
+		while(item != nullptr) {
 			if (fprintf(stderr, "(\"%s\",\"%s\",\"%s\")",
 			    item->attr, item->value, item->clientdata) == EOF)
 				return (B_TRUE);
@@ -595,11 +595,11 @@ _DtCmsPrintAppt4(caddr_t data)
 		if (fprintf(stderr, ") ") == EOF)
 			return (B_TRUE);
 	}
-	if (appt->tag != NULL) {
+	if (appt->tag != nullptr) {
 		struct Tag_4 *item = appt->tag;
 		if (fprintf(stderr, "tags: (") == EOF)
 			return (B_TRUE);
-		while(item != NULL) {
+		while(item != nullptr) {
 			buf[0] = '\0';
 			tagstostr(item->tag, buf);
 			if (fprintf(stderr, "(%s , %d)", buf, item->showtime)
@@ -651,7 +651,7 @@ _DtCmsGetFileSize(char *calendar, int *size)
 	char		*log;
 	struct stat	info;
 
-	if ((log = _DtCmsGetLogFN(calendar)) == NULL)
+	if ((log = _DtCmsGetLogFN(calendar)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if (stat(log, &info) != 0) {
@@ -670,7 +670,7 @@ _DtCmsTruncateFile(char *calendar, int size)
 	char	*log;
 	int	f;
 
-	if ((log = _DtCmsGetLogFN(calendar)) == NULL)
+	if ((log = _DtCmsGetLogFN(calendar)) == nullptr)
 		return;
 
 	/* truncate log file to specified size */
@@ -690,10 +690,10 @@ _DtCmsRemoveLog(char *calendar, char *user)
 	CSA_return_code	stat = CSA_SUCCESS;
 	char		*log, *dlog;
 
-	if ((log = _DtCmsGetLogFN(calendar)) == NULL)
+	if ((log = _DtCmsGetLogFN(calendar)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if ((dlog = _DtCmsGetDelFN(calendar)) == NULL) {
+	if ((dlog = _DtCmsGetDelFN(calendar)) == nullptr) {
 		free(log);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
@@ -812,7 +812,7 @@ _DtCmsSetFileMode(
 static void
 periodtostr(Interval_4 i, char *q)
 {
-	if (q==NULL) return;
+	if (q==nullptr) return;
 	q[0] = '\0';
 	switch (i) {
 		case single_4:
@@ -866,7 +866,7 @@ periodtostr(Interval_4 i, char *q)
 static void
 privacytostr(Privacy_Level_4 p, char *q)
 {
-	if (q==NULL) return;
+	if (q==nullptr) return;
 	q[0] = '\0';
 	switch(p) {
 	case public_4:
@@ -887,7 +887,7 @@ privacytostr(Privacy_Level_4 p, char *q)
 static void
 apptstatustostr(Appt_Status_4 p, char *q)
 {
-	if (q==NULL) return;
+	if (q==nullptr) return;
 	q[0] = '\0';
 	switch(p) {
 	case active_4:
@@ -917,7 +917,7 @@ apptstatustostr(Appt_Status_4 p, char *q)
 static void
 tagstostr(Event_Type_4 p, char *q)
 {
-	if (q==NULL) return;
+	if (q==nullptr) return;
 	q[0] = '\0';
 	switch(p) {
 	case appointment_4:
@@ -949,11 +949,11 @@ get_fname (char *dir, char *fname, char *who)
 	/* who is a calendar name from the network: it names a file in the
 	 * spool directory, never a path
 	 */
-	if (who == NULL || strchr(who, '/') != NULL)
-		return (NULL);
+	if (who == nullptr || strchr(who, '/') != nullptr)
+		return (nullptr);
 
 	buf = (char *)malloc(strlen(dir) + strlen(fname) + strlen(who) + 3);
-	if (buf != NULL)
+	if (buf != nullptr)
 		sprintf (buf, "%s/%s.%s", dir, fname, who);
         return (buf);
 }
@@ -971,7 +971,7 @@ create_log(char *owner, char *file, int version)
 	if (ptr) *ptr = '\0';
 	pw = getpwnam (owner);
 	if (ptr) *ptr = '@';
-	if (pw == NULL)
+	if (pw == nullptr)
 		return(CSA_E_FAILURE);
 	else
 		uid = pw->pw_uid;
@@ -1010,7 +1010,7 @@ append_log(int f, char *buf)
 	struct stat finfo;
 	int file_size = 0, nbytes_written = 0, nbytes_towrite = 0;
 
-	if (buf == NULL)
+	if (buf == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if (fstat(f, &finfo) < 0) {
@@ -1043,8 +1043,8 @@ grow_n_concat(char *base, char *newstr, size_t newcount)
 {
 	char *ptr;
 
-	if ((ptr = realloc(base, newcount)) == NULL)
-		return (NULL);
+	if ((ptr = realloc(base, newcount)) == nullptr)
+		return (nullptr);
 
 	if (base)
 		strcat(ptr, newstr);
@@ -1101,17 +1101,17 @@ attrs_to_attrliststr(
 	int	i;
 	char	num[NUMSIZE], num2[NUMSIZE];
 	boolean_t ok;
-	Strbuf	sb = { NULL, 0, 0 };
+	Strbuf	sb = { nullptr, 0, 0 };
 	CSA_opaque_data *opq;
 	CSA_reminder *rem;
 
 	/* the result is an empty string when there is nothing to write */
 	if (!strbuf_add(&sb, ""))
-		return (NULL);
+		return (nullptr);
 
 	for (i = 1; i <= num_attr; i++) {
 
-		if (attrs[i].value == NULL || (entryattrs &&
+		if (attrs[i].value == nullptr || (entryattrs &&
 		    (i == CSA_ENTRY_ATTR_NUMBER_RECURRENCES_I ||
 		    i == CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I ||
 		    i == CSA_X_DT_ENTRY_ATTR_REPEAT_TIMES_I ||
@@ -1123,12 +1123,12 @@ attrs_to_attrliststr(
 		if (write_hash)
 			/* open_bracket hash_number open quote for value */
 			ok = strbuf_cat(&sb, "(", numstr(num, attrs[i].name.num),
-				" \"", NULL);
+				" \"", nullptr);
 		else
 			/* open bracket name, type, open quote for value */
 			ok = strbuf_cat_quoted(&sb, "(\"", attrs[i].name.name,
 				"\",\"") && strbuf_cat(&sb,
-				tag_string[attrs[i].value->type], "\",\"", NULL);
+				tag_string[attrs[i].value->type], "\",\"", nullptr);
 
 		/* value string */
 		switch (attrs[i].value->type) {
@@ -1164,11 +1164,11 @@ attrs_to_attrliststr(
 				"", (rem->snooze_time ? rem->snooze_time : ""),
 				":") && strbuf_cat(&sb,
 				unumstr(num, rem->repeat_count), ":",
-				unumstr(num2, opq->size), ":", NULL);
+				unumstr(num2, opq->size), ":", nullptr);
 			} else {
 			    ok = ok && strbuf_cat_quoted(&sb, "",
 				rem->lead_time, ":") && strbuf_cat(&sb,
-				unumstr(num, opq->size), ":", NULL);
+				unumstr(num, opq->size), ":", nullptr);
 			}
 
 			if (ok && opq->size > 0)
@@ -1180,7 +1180,7 @@ attrs_to_attrliststr(
 		case CSA_VALUE_OPAQUE_DATA:
 			opq = attrs[i].value->item.opaque_data_value;
 			ok = ok && strbuf_cat(&sb, unumstr(num, opq->size), ":",
-				NULL);
+				nullptr);
 
 			if (ok && opq->size > 0)
 				ok = strbuf_add_escaped(&sb,
@@ -1202,7 +1202,7 @@ attrs_to_attrliststr(
 
 		if (!ok || !strbuf_add(&sb, "\")\n")) {
 			free(sb.str);
-			return (NULL);
+			return (nullptr);
 		}
 	}
 
@@ -1218,7 +1218,7 @@ add_access_list_string(Strbuf *sb, cms_access_entry *list)
 	char num[NUMSIZE];
 	const char *separator = "";
 
-	for (; list != NULL; list = list->next) {
+	for (; list != nullptr; list = list->next) {
 		if (!strbuf_cat_quoted(sb, separator, list->user, ":") ||
 		    !strbuf_add(sb, unumstr(num, list->rights)))
 			return (B_FALSE);
@@ -1233,13 +1233,13 @@ cr_to_str(char *s, size_t size)
 	size_t j, k;
 	char *newstr;
 
-        if (s==NULL)
-		return(NULL);
+        if (s==nullptr)
+		return(nullptr);
 
 	if (size > (SIZE_MAX - 2) / 2)
-		return (NULL);
-	if ((newstr = (char *) calloc(1, (2 * size) + 2)) == NULL)
-		return (NULL);
+		return (nullptr);
+	if ((newstr = (char *) calloc(1, (2 * size) + 2)) == nullptr)
+		return (nullptr);
 	k = 0;
 	for (j=0; j<size; j++) {
 		if (s[j]=='\n') {
@@ -1274,8 +1274,8 @@ add_date_time_list_string(Strbuf *sb, CSA_date_time_list list)
 {
 	const char *separator = "";
 
-	for (; list != NULL; list = list->next) {
-		if (!strbuf_cat(sb, separator, list->date_time, NULL))
+	for (; list != nullptr; list = list->next) {
+		if (!strbuf_cat(sb, separator, list->date_time, nullptr))
 			return (B_FALSE);
 		separator = " ";
 	}
@@ -1299,7 +1299,7 @@ strbuf_reserve(Strbuf *sb, size_t extra)
 		size = sb->size ? sb->size : BUFSIZ;
 		while (size < need)
 			size = (size > SIZE_MAX / 2) ? need : size * 2;
-		if ((p = realloc(sb->str, size)) == NULL)
+		if ((p = realloc(sb->str, size)) == nullptr)
 			return (B_FALSE);
 		sb->str = p;
 		sb->size = size;
@@ -1359,7 +1359,7 @@ strbuf_cat(Strbuf *sb, const char *s, ...)
 	boolean_t ok = B_TRUE;
 
 	va_start(ap, s);
-	for (; s != NULL && ok; s = va_arg(ap, const char *))
+	for (; s != nullptr && ok; s = va_arg(ap, const char *))
 		ok = strbuf_add(sb, s);
 	va_end(ap);
 	return (ok);

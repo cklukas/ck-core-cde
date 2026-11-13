@@ -262,10 +262,10 @@ HelpCloseCB(
      * empty for loop just marches pHelp to the right place
      */
     for(pHelp = pHelpCache; 
-	pHelp != (HelpStruct *)NULL && pHelp->dialog != w;
+	pHelp != (HelpStruct *)nullptr && pHelp->dialog != w;
 	pHelp = pHelp->pNext);
 
-    if(pHelp != (HelpStruct *)NULL)
+    if(pHelp != (HelpStruct *)nullptr)
     {
 	/* this should always happen */
         pHelp->inUse = False;

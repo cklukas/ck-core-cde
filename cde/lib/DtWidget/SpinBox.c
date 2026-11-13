@@ -204,7 +204,7 @@ static XmImportOperator _XmSetSyntheticResForChild (Widget widget,
 						       int offset, 
 						       XtArgVal * value);
 
-static XmString InitLabel = NULL;
+static XmString InitLabel = nullptr;
 
 /*
  * MotifBc
@@ -432,7 +432,7 @@ static XmSyntheticResource syn_resources[] = {
 
 /* Need Class Extension for widget navigation */
 static XmBaseClassExtRec baseClassExtRec = {
-    NULL,
+    nullptr,
     NULLQUARK,
     XmBaseClassExtVersion,
     sizeof(XmBaseClassExtRec),
@@ -440,7 +440,7 @@ static XmBaseClassExtRec baseClassExtRec = {
     (XtSetValuesFunc)NULL,		/* SetValuesPrehook	*/
     (XtInitProc)NULL,			/* InitializePosthook	*/
     (XtSetValuesFunc)NULL,		/* SetValuesPosthook	*/
-    NULL,				/* secondaryObjectClass	*/
+    nullptr,				/* secondaryObjectClass	*/
     (XtInitProc)NULL,			/* secondaryCreate	*/
     (XmGetSecResDataFunc)NULL, 		/* getSecRes data	*/
     { 0 },      			/* fastSubclass flags	*/
@@ -448,8 +448,8 @@ static XmBaseClassExtRec baseClassExtRec = {
     (XtArgsProc)NULL,			/* getValuesPosthook	*/
     (XtWidgetClassProc)NULL,            /* classPartInitPrehook */
     (XtWidgetClassProc)NULL,            /* classPartInitPosthook*/
-    NULL,                               /* ext_resources        */
-    NULL,                               /* compiled_ext_resources*/
+    nullptr,                               /* ext_resources        */
+    nullptr,                               /* compiled_ext_resources*/
     0,                                  /* num_ext_resources    */
     FALSE,                              /* use_sub_resources    */
     WidgetNavigable,
@@ -517,7 +517,7 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     (String)XtInheritTranslations,		/* translations       */     
     (XmSyntheticResource*)syn_resources,	/* syn resources      */     
     (int)XtNumber(syn_resources),		/* num syn_resources  */     
-    (XmSyntheticResource*)NULL,			/* get_cont_resources */     
+    (XmSyntheticResource*)nullptr,			/* get_cont_resources */     
     (int)0,					/* num_get_cont_resources */ 
     (XmParentProcessProc)XmInheritParentProcess,/* parent_process     */     
     (XtPointer)NULL				/* extension          */     
@@ -559,7 +559,7 @@ ClassInitialize(void)
 
     _DtRID_SB_ARROW_SENSITIVITY_TYPE =
       XmRepTypeRegister(DtRArrowSensitivity, _DtArrowSensitivityNames,
-			NULL, XtNumber(_DtArrowSensitivityNames));
+			nullptr, XtNumber(_DtArrowSensitivityNames));
 
     InitLabel = XmStringCreateLocalized(SB_LABEL);
 }
@@ -627,7 +627,7 @@ Initialize(	Widget request_widget,
 
 	if (TextColumns(request) == DEFAULT_COL && Width(request)) {
 		Dimension width;
-		CalculateSizes(new, &width, NULL, NULL);
+		CalculateSizes(new, &width, nullptr, nullptr);
 		XtSetArg(args[n], XmNwidth, width); n++;
 	}
 	else {
@@ -660,7 +660,7 @@ Initialize(	Widget request_widget,
         }                
 	if (Width(new)) {
 		Dimension width;
-		CalculateSizes(new, &width, NULL, NULL);
+		CalculateSizes(new, &width, nullptr, nullptr);
 		XtSetArg(args[n], XmNwidth,  width); n++;
 	}
 	if (n>0)
@@ -720,7 +720,7 @@ Initialize(	Widget request_widget,
 		      grab_leave_cb, (XtPointer)new);
 
     /* Initialize everything based on what the resource values are */
-    StoreResourceInfo(spin_p, NULL, TRUE);
+    StoreResourceInfo(spin_p, nullptr, TRUE);
 
     /*
      * Set initial value in text or label if items was specified
@@ -739,14 +739,14 @@ Initialize(	Widget request_widget,
 
     /* Store Converter for DtNmaximumValue, DtNminimumValue, DtNincrementValue,
      */
-    XtSetTypeConverter(XmRString, DtRMaximumValue, XtCvtStringToInt, NULL, 0, 
-	    XtCacheAll, NULL);
-    XtSetTypeConverter(XmRString, DtRMinimumValue, XtCvtStringToInt, NULL, 0, 
-	    XtCacheAll, NULL);
-    XtSetTypeConverter(XmRString, DtRIncrementValue, XtCvtStringToInt, NULL, 0, 
-	    XtCacheAll, NULL);
-    XtSetTypeConverter(XmRString, DtRNumValues, XtCvtStringToInt, NULL, 0, 
-	    XtCacheAll, NULL);
+    XtSetTypeConverter(XmRString, DtRMaximumValue, XtCvtStringToInt, nullptr, 0, 
+	    XtCacheAll, nullptr);
+    XtSetTypeConverter(XmRString, DtRMinimumValue, XtCvtStringToInt, nullptr, 0, 
+	    XtCacheAll, nullptr);
+    XtSetTypeConverter(XmRString, DtRIncrementValue, XtCvtStringToInt, nullptr, 0, 
+	    XtCacheAll, nullptr);
+    XtSetTypeConverter(XmRString, DtRNumValues, XtCvtStringToInt, nullptr, 0, 
+	    XtCacheAll, nullptr);
     /*
      * this is so these resources can be set uniformly through XtCreateWidget
      * or through defaults file as *spin.backgound
@@ -876,8 +876,8 @@ _SpinBoxUp(	Widget widget,
 	spin = (DtSpinBoxWidget)XtParent(spin);
 
     if (ArrowLayout(spin) != DtARROWS_SPLIT) {
-	up_cb((Widget)UpArrow(spin), (XtPointer)spin, NULL);
-	disarm_cb((Widget)UpArrow(spin), (XtPointer)spin, NULL);
+	up_cb((Widget)UpArrow(spin), (XtPointer)spin, nullptr);
+	disarm_cb((Widget)UpArrow(spin), (XtPointer)spin, nullptr);
     }
 }
 
@@ -895,8 +895,8 @@ _SpinBoxDown(Widget widget,
 	spin = (DtSpinBoxWidget)XtParent(spin);
 
     if (ArrowLayout(spin) != DtARROWS_SPLIT) {
-	down_cb((Widget)DownArrow(spin), (XtPointer)spin, NULL);
-	disarm_cb((Widget)DownArrow(spin), (XtPointer)spin, NULL);
+	down_cb((Widget)DownArrow(spin), (XtPointer)spin, nullptr);
+	disarm_cb((Widget)DownArrow(spin), (XtPointer)spin, nullptr);
     }
 }
 
@@ -914,8 +914,8 @@ _SpinBoxRight(Widget widget,
 	spin = (DtSpinBoxWidget)XtParent(spin);
 
     if (ArrowLayout(spin) == DtARROWS_SPLIT) {
-	up_cb((Widget)UpArrow(spin), (XtPointer)spin, NULL);
-	disarm_cb((Widget)UpArrow(spin), (XtPointer)spin, NULL);
+	up_cb((Widget)UpArrow(spin), (XtPointer)spin, nullptr);
+	disarm_cb((Widget)UpArrow(spin), (XtPointer)spin, nullptr);
     }
 }
 
@@ -933,8 +933,8 @@ _SpinBoxLeft(Widget widget,
 	spin = (DtSpinBoxWidget)XtParent(spin);
 
     if (ArrowLayout(spin) == DtARROWS_SPLIT) {
-	down_cb((Widget)DownArrow(spin), (XtPointer)spin, NULL);
-	disarm_cb((Widget)DownArrow(spin), (XtPointer)spin, NULL);
+	down_cb((Widget)DownArrow(spin), (XtPointer)spin, nullptr);
+	disarm_cb((Widget)DownArrow(spin), (XtPointer)spin, nullptr);
     }
 }
 
@@ -1303,7 +1303,7 @@ SetSpinBoxSize(DtSpinBoxWidget spin)
 			      width + shadow +
 			      (SPIN_MARGIN_W(spin) * 2), 
 			      height + shadow + (SPIN_MARGIN_H(spin) * 2), 
-			      NULL, NULL);
+			      nullptr, nullptr);
     OldWidth(spin) = Width(spin);
     OldHeight(spin) = Height(spin);
 
@@ -1580,7 +1580,7 @@ SetValues(	Widget current_widget,
     if (Editable(new) != Editable(current)) {
 	if (Editable(new)) {
 	    XtUnmanageChild(Label(new));
-	    if (Text(new) == NULL) {
+	    if (Text(new) == nullptr) {
 		widget_name = XtMalloc(strlen(XtName((Widget)new)) + 10);
 		sprintf(widget_name, "%s_TF", XtName((Widget)new));
 		n = 0;
@@ -1611,7 +1611,7 @@ SetValues(	Widget current_widget,
 	}
 	else {
 	    XtUnmanageChild(Text(new));
-	    if (Label(new) == NULL) {
+	    if (Label(new) == nullptr) {
 		widget_name = XtMalloc(strlen(XtName((Widget)new)) + 10);
 		sprintf(widget_name, "%s_Label", XtName((Widget)new));
 		n = 0;
@@ -1896,7 +1896,7 @@ GetTextString(XmString xm_string)
     XmStringComponentType unknown_tag;
     unsigned short ul;
     unsigned char *uv;
-    char *text = NULL;
+    char *text = nullptr;
     Boolean done = FALSE;
 
     XmStringInitContext(&context, xm_string);
@@ -2082,14 +2082,14 @@ timer_dispatch(	XtPointer client_data,
 	    XtRemoveGrab(UpArrow(spin_w));
 	    Grabbed(spin_w) = FALSE;
 	}
-	up_cb(NULL, client_data, NULL);
+	up_cb(nullptr, client_data, nullptr);
     }
     else {
 	if (Grabbed(spin_w)) {
 	    XtRemoveGrab(DownArrow(spin_w));
 	    Grabbed(spin_w) = FALSE;
 	}
-	down_cb(NULL, client_data, NULL);
+	down_cb(nullptr, client_data, nullptr);
     }
 }
 
@@ -2099,8 +2099,8 @@ TextFieldActivate(DtSpinBoxPart *spin_p)
     XmTextFieldWidget w = (XmTextFieldWidget)(spin_p->text);
     XmAnyCallbackStruct cb;
     char string[NUMERIC_LENGTH];
-    char *data = NULL;
-    char *text = NULL;
+    char *data = nullptr;
+    char *text = nullptr;
     Arg arg;
     Boolean free_me = TRUE;
     
@@ -2121,9 +2121,9 @@ TextFieldActivate(DtSpinBoxPart *spin_p)
 	return;
     }
     /* Only send callback if both are not NULL */
-    else if (!((text == NULL) && (data == NULL))) {
+    else if (!((text == nullptr) && (data == nullptr))) {
 	cb.reason = XmCR_ACTIVATE;
-	cb.event  = NULL;
+	cb.event  = nullptr;
 	/* MotifBc */
         if (XtHasCallbacks((Widget)w, XmNactivateCallback)==XtCallbackHasSome)
                XtCallCallbacks((Widget)w, XmNactivateCallback, 
@@ -2146,7 +2146,7 @@ SendCallback(	DtSpinBoxWidget spin,
 		Boolean crossed)
 {
     DtSpinBoxCallbackStruct cb;
-    XmString xm_string = NULL;
+    XmString xm_string = nullptr;
     char string[NUMERIC_LENGTH];
 
     if (ChildType(spin) == DtNUMERIC) {
@@ -2215,7 +2215,7 @@ FinishUpDown(	DtSpinBoxWidget spin,
 		Boolean crossed)
 {
     XmArrowButtonCallbackStruct *arrow_data;
-    XEvent *last_event = NULL;
+    XEvent *last_event = nullptr;
     int repeat_delay = RepeatDelay(spin);
 
     if (InitCb(spin))    
@@ -2637,7 +2637,7 @@ DtSpinBoxDeletePos(	Widget spinw,
 					  (sizeof(XmString) * total_items));
     else {
 	XtFree((char *)Items(spin));
-	Items(spin) = (XmString *)NULL;
+	Items(spin) = (XmString *)nullptr;
     }
     ItemCount(spin) = total_items;
 

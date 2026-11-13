@@ -97,7 +97,7 @@ build_queryDialog( void )
     queryDialog_shell = XtVaCreatePopupShell( "queryDialog_shell",
                         xmDialogShellWidgetClass, mainWindow,
                         XmNtitle, GETSTR(6,2, "Icon Editor - Warning"),
-                        NULL );
+                        nullptr );
 
     tmpXmStr = GETXMSTR(6,2, "Icon Editor - Warning");
     tmpXmStr2= GETXMSTR(6,6, "OK");
@@ -113,15 +113,15 @@ build_queryDialog( void )
                         XmNcancelLabelString, tmpXmStr4,
                         XmNhelpLabelString, tmpXmStr5,
                         XmNdialogType, XmDIALOG_WARNING,
-                        NULL );
+                        nullptr );
     XmStringFree(tmpXmStr);
     XmStringFree(tmpXmStr2);
     XmStringFree(tmpXmStr3);
     XmStringFree(tmpXmStr4);
     XmStringFree(tmpXmStr5);
 
-    XtAddCallback( queryDialog, XmNokCallback, okCallback_queryDialog, NULL);
-    XtAddCallback( queryDialog, XmNcancelCallback, cancelCB_queryDialog, NULL);
+    XtAddCallback( queryDialog, XmNokCallback, okCallback_queryDialog, nullptr);
+    XtAddCallback( queryDialog, XmNcancelCallback, cancelCB_queryDialog, nullptr);
 
     n = 0;
     XtSetArg (args[n], XmNuseAsyncGeometry, True);                          n++;

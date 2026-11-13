@@ -67,8 +67,8 @@ main(int argc, char **argv)
 
     DtTermInitialize();
 
-    toplevel = XtAppInitialize(&appContext, "Term", NULL, 0, &argc, argv,
-				NULL, NULL, 0);
+    toplevel = XtAppInitialize(&appContext, "Term", nullptr, 0, &argc, argv,
+				nullptr, nullptr, 0);
 
     n = 0;
     XtSetArg(args[n], XmNdialogType, XmDIALOG_TEMPLATE); n++;

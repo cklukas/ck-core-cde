@@ -76,10 +76,10 @@ static void     reparent_children(
 PalItemInfo group_palitem_rec = {
     /* type             */  AB_TYPE_CONTAINER,
     /* name             */  "Group",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  group_initialize,
     /* is_a_test        */  obj_is_group
 };
@@ -171,7 +171,7 @@ group_initialize(
     abobj_get_selected(proj_get_project(), FALSE, &sel);
     abobj_get_rect_for_selected(sel.list, sel.count, &current_rect);
 
-    if (obj_get_name(obj) == NULL)
+    if (obj_get_name(obj) == nullptr)
     	obj_set_name(obj, "group");
 
     obj_ensure_unique_name(obj, obj_get_module(obj), -1); 
@@ -182,8 +182,8 @@ group_initialize(
     obj->height = current_rect.height;
 	
     /* Set up Default Layout for group*/
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 }

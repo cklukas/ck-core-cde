@@ -629,13 +629,13 @@ static char *GetHomeDir (
 	struct passwd *pw;
 	char *ptr;
 
-	if((ptr = getenv("HOME")) != NULL)
+	if((ptr = getenv("HOME")) != nullptr)
         {
             snprintf(dest, MAXPATHLEN, "%s", ptr);
 	}
         else
         {
-            if((ptr = getenv("USER")) != NULL)
+            if((ptr = getenv("USER")) != nullptr)
             {
                 char user[MAXPATHLEN];
                 snprintf(user, MAXPATHLEN, "%s", ptr);
@@ -702,7 +702,7 @@ void Usage(void)
       "\t" AN_stringData " string    Help text to print\n",
       "\t" AN_helpFile " filename    file containing Help text\n",
       "\t" AN_topicTitle " title     title string for Help text\n",
-      NULL
+      nullptr
    };
     int i;
     for (i=0; usage[i]; i++)
@@ -1112,7 +1112,7 @@ void _DtHPrBuildResourceDb(
       {AN_outputFile,	RN_outputFile,	XrmoptionSepArg, (caddr_t) NULL},
       {AN_paperSize,	RN_printer "." RN_paperSize,
 					XrmoptionSepArg, (caddr_t) NULL},
-      {AN_xrm,		NULL,		XrmoptionResArg, (caddr_t) NULL},
+      {AN_xrm,		nullptr,		XrmoptionResArg, (caddr_t) NULL},
       {AN_rsrcname,	RN_rsrcname,	XrmoptionSepArg, (caddr_t) NULL},
       {AN_rsrcclass,	RN_rsrcclass,	XrmoptionSepArg, (caddr_t) NULL},
       {AN_evenTocFooter,  RN_evenTocFooter,	XrmoptionSepArg, (caddr_t) NULL},
@@ -1145,26 +1145,26 @@ void _DtHPrBuildResourceDb(
       };
    static int numOptions = XtNumber(optionsTable);  /*number entries in table*/
 	 
-   XrmDatabase appClassDB = NULL;
-   XrmDatabase appUserDB = NULL;
-   XrmDatabase dispDB = NULL;
-   XrmDatabase homeDB = NULL;
-   XrmDatabase scrnDB = NULL;
-   XrmDatabase envDB = NULL;
-   XrmDatabase commandLineDB = NULL;
+   XrmDatabase appClassDB = nullptr;
+   XrmDatabase appUserDB = nullptr;
+   XrmDatabase dispDB = nullptr;
+   XrmDatabase homeDB = nullptr;
+   XrmDatabase scrnDB = nullptr;
+   XrmDatabase envDB = nullptr;
+   XrmDatabase commandLineDB = nullptr;
    char        filename[MAXPATHLEN+1];
    XrmValue    value;
    char *      str_type[20];
-   char *      invocationName=NULL;
+   char *      invocationName=nullptr;
    char        name_prefix[RSRCSPECLEN];
    char        class_prefix[RSRCSPECLEN];
    char        resource_name[RSRCSPECLEN];
    char        resource_class[RSRCSPECLEN];
-   char *      commandLineName = NULL;
-   char *      environment = NULL;
-   char *      display = NULL;
-   char *      dispDBStr = NULL;
-   char *      scrnDBStr = NULL;
+   char *      commandLineName = nullptr;
+   char *      environment = nullptr;
+   char *      display = nullptr;
+   char *      dispDBStr = nullptr;
+   char *      scrnDBStr = nullptr;
    int         i;
    char *      tmp_string;
    
@@ -1172,7 +1172,7 @@ void _DtHPrBuildResourceDb(
        creates a database and stored its ref in appDB.  We don't
        need to explicitly create the db.  **/
 
-   str_type[0] = NULL;
+   str_type[0] = nullptr;
 
    if (*argc < 2) 
    {
@@ -1193,7 +1193,7 @@ void _DtHPrBuildResourceDb(
 	 break;
       }
    }
-   if (invocationName == NULL)
+   if (invocationName == nullptr)
    {
       /* search for last '/' of string */
       if ( _DtHelpCeStrrchr(argv[0],DIR_SLASH_STR,MB_CUR_MAX,&commandLineName) == 0 )
@@ -1233,20 +1233,20 @@ void _DtHPrBuildResourceDb(
       value.addr = HELPPRINT_APPLICATION_CLASS;
    }
    /* CHK: Note that *str_type may be NULL here.  Is this ok? */
-   XrmPutResource(appDB, RN_appclass, NULL, &value);
-   XrmPutResource(appDB, RC_appclass, NULL, &value);
+   XrmPutResource(appDB, RN_appclass, nullptr, &value);
+   XrmPutResource(appDB, RC_appclass, nullptr, &value);
    
    strcpy(resource_name, name_prefix);
    strcat(resource_name, RN_rsrcname);    /* e.g. dthelpprint.name */
    strcpy(resource_class, class_prefix);
    strcat(resource_class, RC_rsrcname);   /* e.g. Dthelpprint.Name */
-   if (invocationName != NULL)      /* always true */
+   if (invocationName != nullptr)      /* always true */
    {
       value.size = strlen(invocationName)+1;
       value.addr = invocationName;           /* e.g. dthelpprint */
       /* CHK: state of *str_type unknown here.  Is this ok? */
-      XrmPutResource(appDB, RN_appname, NULL, &value);
-      XrmPutResource(appDB, RC_appname, NULL, &value);
+      XrmPutResource(appDB, RN_appname, nullptr, &value);
+      XrmPutResource(appDB, RC_appname, nullptr, &value);
    }
    /* CHK: currently, this and the next 'elses' are never executed */
    else if( XrmGetResource((XrmDatabase)commandLineDB, resource_name, 
@@ -1258,15 +1258,15 @@ void _DtHPrBuildResourceDb(
    {
       value.size = strlen(HELPPRINT_APPLICATION_NAME)+1;
       value.addr = HELPPRINT_APPLICATION_NAME;           /* i.e. dthelpprint */
-      XrmPutResource(appDB, RN_appname, NULL, &value);
-      XrmPutResource(appDB, RC_appname, NULL, &value);
+      XrmPutResource(appDB, RN_appname, nullptr, &value);
+      XrmPutResource(appDB, RC_appname, nullptr, &value);
       strcpy(name_prefix, value.addr);
    }
    
    
    /**	Get environment variables and put values in appDB as resource **/
    
-   if ((tmp_string = getenv("DISPLAY")) != NULL) 
+   if ((tmp_string = getenv("DISPLAY")) != nullptr) 
    {
       i = strlen(tmp_string);
       value.addr=malloc(i+1);    /* FIX: use tmp_string here directly? */
@@ -1276,11 +1276,11 @@ void _DtHPrBuildResourceDb(
       strcat(resource_name, RN_display);   /* e.g. dthelpprint.display */
       strcpy(resource_class, class_prefix);
       strcat(resource_class, RC_display);  /* e.g. Dthelpprint.Display */
-      XrmPutResource(appDB, resource_name, NULL, &value);
-      XrmPutResource(appDB, resource_class, NULL, &value);
+      XrmPutResource(appDB, resource_name, nullptr, &value);
+      XrmPutResource(appDB, resource_class, nullptr, &value);
    }
 
-   if ((tmp_string = getenv("PRINTER")) != NULL) 
+   if ((tmp_string = getenv("PRINTER")) != nullptr) 
    {
       i = strlen(tmp_string);
       value.addr=malloc(i+1);     /* FIX: use tmp_string here directly? */
@@ -1290,8 +1290,8 @@ void _DtHPrBuildResourceDb(
       strcat(resource_name, RN_printer);    /* e.g. dthelpprint.printer */
       strcpy(resource_class, class_prefix);
       strcat(resource_class, RC_printer);    /* e.g. Dthelpprint.Printer */
-      XrmPutResource(appDB, resource_name, NULL, &value);
-      XrmPutResource(appDB, resource_class, NULL, &value);
+      XrmPutResource(appDB, resource_name, nullptr, &value);
+      XrmPutResource(appDB, resource_class, nullptr, &value);
    }
    
    /*** Build the display resource db ***/
@@ -1321,14 +1321,14 @@ void _DtHPrBuildResourceDb(
    (void) strcpy(filename, DTAPPDEFAULTS_DIR);
    strcat(filename, class_prefix);/*eg. /usr/dt/app-defaults/C/Dthelpprint*/
    appClassDB = XrmGetFileDatabase(filename);
-   if (appClassDB != NULL)
+   if (appClassDB != nullptr)
       (void) XrmMergeDatabases(appClassDB, appDB);
    
    /* Overlay the central X app-defaults (if exists) */
    (void) strcpy(filename, XAPPDEFAULTS_DIR);
    strcat(filename, class_prefix);/*eg. /usr/lib/X11/app-defaults/Dthelpprint*/
    appClassDB = XrmGetFileDatabase(filename);
-   if (appClassDB != NULL)
+   if (appClassDB != nullptr)
       (void) XrmMergeDatabases(appClassDB, appDB);
    
    /* Overlay the user class resources  */
@@ -1336,7 +1336,7 @@ void _DtHPrBuildResourceDb(
    strcat(filename, DIR_SLASH_STR);
    strcat(filename, class_prefix);          /* e.g. $HOME/Dthelpprint */
    appUserDB = XrmGetFileDatabase(filename);
-   if (appUserDB != NULL)
+   if (appUserDB != nullptr)
       (void) XrmMergeDatabases(appUserDB, appDB);
 
    /** to get the display's resources, we need to open the display first **/
@@ -1352,15 +1352,15 @@ void _DtHPrBuildResourceDb(
 		      resource_class, str_type, &value) == True)
       display = value.addr;
    else
-      display = NULL;
+      display = nullptr;
    /* if display == NULL, uses DISPLAY env var */
    *pDpy = XOpenDisplay(display);  /* FIX: should this be .printer ?? */
-   if (*pDpy == NULL)
+   if (*pDpy == nullptr)
    {  /* Bad display */
                                    /* FIX: chg msg to match above semantics */
       fprintf(stderr, _DTGETMESSAGE(INSET,42,
                   "%s Warning: Unable to open display %s\n"), 
-                  argv[0], (NULL == display ? "" : display) );
+                  argv[0], (nullptr == display ? "" : display) );
    } /* if bad display */
    else
    {  /* Good display */
@@ -1374,17 +1374,17 @@ void _DtHPrBuildResourceDb(
          (void) strcat (filename, XDEFAULTS_FILE);  /* e.g. $HOME/.Xdefaults */
          dispDB = XrmGetFileDatabase (filename);
       }
-      if (dispDB != NULL)
+      if (dispDB != nullptr)
          (void) XrmMergeDatabases(dispDB, appDB);
       
       scrnDBStr = XScreenResourceString(DefaultScreenOfDisplay(*pDpy));
       if (scrnDBStr) scrnDB = XrmGetStringDatabase(scrnDBStr);
-      if (scrnDB != NULL)
+      if (scrnDB != nullptr)
          (void) XrmMergeDatabases(scrnDB, appDB);
    } /* else good display */
 
    /* Overlay either file from XENVIRONMENT or $HOME/.Xdefaults-<host> */
-   if ((environment = getenv ("XENVIRONMENT")) == NULL) 
+   if ((environment = getenv ("XENVIRONMENT")) == nullptr) 
    {	/* no XENVIRONMENT variable */
       int len;
       filename[0] = EOS;
@@ -1395,11 +1395,11 @@ void _DtHPrBuildResourceDb(
       environment = filename;               /* e.g. $HOME/.Xdefaults-<host> */
    }
    envDB = XrmGetFileDatabase (environment);
-   if (envDB != NULL)
+   if (envDB != nullptr)
       (void) XrmMergeDatabases(envDB, appDB);
  
    /* Overlay command line */
-   if (*appDB == NULL) *appDB = commandLineDB;
+   if (*appDB == nullptr) *appDB = commandLineDB;
    else XrmMergeDatabases (commandLineDB, appDB);
    
 }       /*$END$*/
@@ -1506,8 +1506,8 @@ char * _DtHPrCreateTmpFile(
    int    len;
    char * tmp;
 
-   if (NULL == prefix) prefix = EMPTY_STR;
-   if (NULL == suffix) suffix = EMPTY_STR;
+   if (nullptr == prefix) prefix = EMPTY_STR;
+   if (nullptr == suffix) suffix = EMPTY_STR;
 
    GetHomeDir(dirname);
    tmppath = dirname + strlen(dirname) + 1;
@@ -1515,7 +1515,7 @@ char * _DtHPrCreateTmpFile(
 
    /* create the directory */
    for ( tmppath = strchr(tmppath,DIR_SLASH);
-         tmppath != NULL;
+         tmppath != nullptr;
          tmppath = strchr(++tmppath,DIR_SLASH) )
    {
       *tmppath = EOS;
@@ -1527,7 +1527,7 @@ char * _DtHPrCreateTmpFile(
 #define FILENAMELEN 25
    /* generate the new tmp file */
    newtmpfile=malloc((strlen(dirname) + FILENAMELEN + 2) * sizeof(char));
-   if (NULL == newtmpfile)
+   if (nullptr == newtmpfile)
    {
       fprintf(stderr, "%s", _DTGETMESSAGE(INSET,45,
                      "Error: Unable to allocate memory for temporary file\n"));

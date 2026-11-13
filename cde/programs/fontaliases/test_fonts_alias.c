@@ -36,8 +36,8 @@ int main(void) {
   int npaths;
   char cwd[BUF_SIZE];
   char *font_path_list[BUF_SIZE];
-  char **font_path_list_orig = NULL;
-  char *line = NULL;
+  char **font_path_list_orig = nullptr;
+  char *line = nullptr;
   size_t len = 0;
   ssize_t line_len;
 
@@ -49,9 +49,9 @@ int main(void) {
 
   font_path_list[0] = cwd;
 
-  Display *display = XOpenDisplay(NULL);
+  Display *display = XOpenDisplay(nullptr);
 
-  if (display == NULL) {
+  if (display == nullptr) {
     fprintf(stderr, "Cannot open display.\n");
     ret = -1;
     goto done;
@@ -66,7 +66,7 @@ int main(void) {
 
   while ((line_len = getline(&line, &len, stdin)) != -1) {
     int i;
-    char *font_name = NULL;
+    char *font_name = nullptr;
     size_t font_name_len = 0;
 
     ++line_num;

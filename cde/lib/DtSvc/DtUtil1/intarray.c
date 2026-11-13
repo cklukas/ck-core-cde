@@ -62,7 +62,7 @@ _DtShmProtoAddIntLst(DtShmProtoIntList handle, int size, int * index)
   intarray_t * ptr = (intarray_t *) handle;
   intent_t * e = (intent_t *) malloc(sizeof(intent_t) + sizeof(int) * (size-1));
   e->size = size;
-  e->next = NULL;
+  e->next = nullptr;
   *index = ptr->num_ints + 1;
   ptr->num_ints += size + 1;
   *(ptr->next) = e;

@@ -210,12 +210,12 @@ typedef struct _termattrs {
 } TERMATTRS;
 
 #ifdef TERMINAL_SERVER
-static TERMATTRS attrs = { NULL, defaultIgnoredKeysyms, NULL, False,
-                           TRUE, False, False, NULL, False, 5, NULL, NULL, NULL};
+static TERMATTRS attrs = { nullptr, defaultIgnoredKeysyms, nullptr, False,
+                           TRUE, False, False, nullptr, False, 5, nullptr, nullptr, nullptr};
 #elif SUN_TERMINAL_SERVER
-static TERMATTRS attrs = { NULL, defaultIgnoredKeysyms, NULL, False, False, NULL, NULL, NULL};
+static TERMATTRS attrs = { nullptr, defaultIgnoredKeysyms, nullptr, False, False, nullptr, nullptr, nullptr};
 #else
-static TERMATTRS attrs = { NULL, defaultIgnoredKeysyms, NULL, False, NULL, NULL, NULL };
+static TERMATTRS attrs = { nullptr, defaultIgnoredKeysyms, nullptr, False, nullptr, nullptr, nullptr };
 #endif
 
 static Atom xa_MOTIF_WM_MESSAGES = None;
@@ -226,11 +226,11 @@ static Atom xa_WM_SAVE_YOURSELF;
 static XtAppContext appContext;
 static Widget topLevel;
 static Widget topShell;
-static char *title = NULL;
-static DtTermViewWidget *instance_list = NULL;
+static char *title = nullptr;
+static DtTermViewWidget *instance_list = nullptr;
 static Boolean RestoringTerms = False;
 static int  savedArgc = 0;
-static char	**savedArgv = NULL;
+static char	**savedArgv = nullptr;
 
 #ifdef SUN_TERMINAL_SERVER
 int InstanceCount = 0;
@@ -278,7 +278,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"-cc",            "*charClass",	XrmoptionSepArg, (XtPointer) NULL},
 {"-cu",            "*curses",           XrmoptionNoArg,  (XtPointer) _true},
 {"+cu",            "*curses",           XrmoptionNoArg,  (XtPointer) _false},
-{"-e",             NULL,		XrmoptionSkipLine,
+{"-e",             nullptr,		XrmoptionSkipLine,
 							 (XtPointer) NULL},
 {"-fb",            "*userBoldFont",	XrmoptionSepArg, (XtPointer) NULL},
 {"-fn",            "*userFont",		XrmoptionSepArg, (XtPointer) NULL},
@@ -318,35 +318,35 @@ static XrmOptionDescRec optionDescList[] = {
 {"+vb",            "*visualBell",	XrmoptionNoArg,  (XtPointer) _false},
 /* legacy options that are ignored...
  */
-{"-ah",            NULL,		XrmoptionNoArg,  (XtPointer) _true},
-{"+ah",            NULL,		XrmoptionNoArg,  (XtPointer) _false},
-{"-b",             NULL,		XrmoptionSepArg, (XtPointer) NULL},
-{"-cb",            NULL,		XrmoptionNoArg,  (XtPointer) _true},
-{"+cb",            NULL,		XrmoptionNoArg,  (XtPointer) _false},
-{"-cn",            NULL,		XrmoptionNoArg,  (XtPointer) _true},
-{"+cn",            NULL,		XrmoptionNoArg,  (XtPointer) _false},
-{"-cr",            NULL,		XrmoptionSepArg, (XtPointer) NULL},
-{"-s",             NULL,		XrmoptionNoArg,  (XtPointer) _true},
-{"+s",             NULL,		XrmoptionNoArg,  (XtPointer) _false},
-{"-t",             NULL,		XrmoptionNoArg,  (XtPointer) _true},
-{"+t",             NULL,		XrmoptionNoArg,  (XtPointer) _false},
-{"-ut",            NULL,		XrmoptionNoArg,  (XtPointer) _true},
-{"+ut",            NULL,		XrmoptionNoArg,  (XtPointer) _false},
-{"-wf",            NULL,		XrmoptionNoArg,  (XtPointer) _true},
-{"+wf",            NULL,		XrmoptionNoArg,  (XtPointer) _false},
+{"-ah",            nullptr,		XrmoptionNoArg,  (XtPointer) _true},
+{"+ah",            nullptr,		XrmoptionNoArg,  (XtPointer) _false},
+{"-b",             nullptr,		XrmoptionSepArg, (XtPointer) NULL},
+{"-cb",            nullptr,		XrmoptionNoArg,  (XtPointer) _true},
+{"+cb",            nullptr,		XrmoptionNoArg,  (XtPointer) _false},
+{"-cn",            nullptr,		XrmoptionNoArg,  (XtPointer) _true},
+{"+cn",            nullptr,		XrmoptionNoArg,  (XtPointer) _false},
+{"-cr",            nullptr,		XrmoptionSepArg, (XtPointer) NULL},
+{"-s",             nullptr,		XrmoptionNoArg,  (XtPointer) _true},
+{"+s",             nullptr,		XrmoptionNoArg,  (XtPointer) _false},
+{"-t",             nullptr,		XrmoptionNoArg,  (XtPointer) _true},
+{"+t",             nullptr,		XrmoptionNoArg,  (XtPointer) _false},
+{"-ut",            nullptr,		XrmoptionNoArg,  (XtPointer) _true},
+{"+ut",            nullptr,		XrmoptionNoArg,  (XtPointer) _false},
+{"-wf",            nullptr,		XrmoptionNoArg,  (XtPointer) _true},
+{"+wf",            nullptr,		XrmoptionNoArg,  (XtPointer) _false},
 };
 
 /* application specific resources...
  */
 static XtResource applicationResources[] = {
     {"debugLevel", "DebugLevel", XtRString, sizeof(char *),
-	    XtOffsetOf(TERMATTRS, debugString), XtRImmediate, NULL},
+	    XtOffsetOf(TERMATTRS, debugString), XtRImmediate, nullptr},
     {"ignoredKeysyms", "IgnoredKeysyms", XtRString, sizeof(char *),
-	    XtOffsetOf(TERMATTRS, ignoredKeysyms), XtRImmediate, NULL},
+	    XtOffsetOf(TERMATTRS, ignoredKeysyms), XtRImmediate, nullptr},
     {"loginShell", "LoginShell", XtRBoolean, sizeof(Boolean),
 	    XtOffsetOf(TERMATTRS, loginShell), XtRString, "false"},
     {"session", "Session", XtRString, sizeof(char *),
-	    XtOffsetOf(TERMATTRS, session), XtRString, NULL},
+	    XtOffsetOf(TERMATTRS, session), XtRString, nullptr},
 #ifdef	TERMINAL_SERVER
     {"blocking", "Blocking", XtRBoolean, sizeof(Boolean),
 	    XtOffsetOf(TERMATTRS, block), XtRString, "true"},
@@ -355,7 +355,7 @@ static XtResource applicationResources[] = {
     {"server", "Server", XtRBoolean, sizeof(Boolean),
 	    XtOffsetOf(TERMATTRS, server), XtRString, "false"},
     {"serverId", "ServerId", XtRString, sizeof(char *),
-	    XtOffsetOf(TERMATTRS, serverId), XtRImmediate, NULL},
+	    XtOffsetOf(TERMATTRS, serverId), XtRImmediate, nullptr},
     {"standAlone", "StandAlone", XtRBoolean, sizeof(Boolean),
 	    XtOffsetOf(TERMATTRS, standAlone), XtRString, "false"},
     {"pingInterval", "PingInterval", XtRInt, sizeof(int),
@@ -382,14 +382,14 @@ GetUserResourcePath(void)
     size_t len;
     char *path;
 
-    if (home == NULL)
+    if (home == nullptr)
         home = "";
 
     len = strlen(home) + 1 + strlen(DtPERSONAL_CONFIG_DIRECTORY) + 1 +
           strlen("dttermrc") + 1;
     path = XtMalloc((unsigned)len);
-    if (path == NULL)
-        return NULL;
+    if (path == nullptr)
+        return nullptr;
 
     snprintf(path, len, "%s/%s/%s", home, DtPERSONAL_CONFIG_DIRECTORY,
              "dttermrc");
@@ -404,16 +404,16 @@ GetSavedUserFontListIndex(long *index_out)
     char *path;
     char *type;
 
-    if (index_out == NULL)
+    if (index_out == nullptr)
         return False;
 
     path = GetUserResourcePath();
-    if (path == NULL)
+    if (path == nullptr)
         return False;
 
     db = XrmGetFileDatabase(path);
     XtFree(path);
-    if (db == NULL)
+    if (db == nullptr)
         return False;
 
     if (XrmGetResource(db, "Dtterm*userFontListIndex",
@@ -435,16 +435,16 @@ sunSetupIA(Widget w)
     int i, major_op, first_event, first_err;
     int *pids;
     void *symbol;
-    SolarisIASetProcessInfoProc set_process_info = NULL;
+    SolarisIASetProcessInfoProc set_process_info = nullptr;
     DtTermPrimitiveWidget tw;
 
     symbol = dlsym(RTLD_NEXT, "XSolarisIASetProcessInfo");
-    if (symbol != NULL) {
+    if (symbol != nullptr) {
         _Static_assert(sizeof(set_process_info) == sizeof(symbol),
                        "dlsym function pointer size mismatch");
         memcpy(&set_process_info, &symbol, sizeof(set_process_info));
         pids = (int *)malloc(sizeof(int) * (InstanceCount + 1));
-        if (pids == NULL)
+        if (pids == nullptr)
             return;
         pids[0] = getpid();
         for (i = 0; i < InstanceCount; i++) {
@@ -1027,7 +1027,7 @@ FixOSFBindings
     Widget		  w;
     Arg			  al[10];
     int			  ac;
-    char		 *origDisplayBindings,*freeOrigBindings=NULL;
+    char		 *origDisplayBindings,*freeOrigBindings=nullptr;
     char		 *newDisplayBindings;
     char		 *c1;
     char		 *c2;
@@ -1238,7 +1238,7 @@ main(int argc, char **argv)
 
     if (c = getenv("dttermDelayFlags"))
     {
-	if (NULL != c)
+	if (nullptr != c)
 	{
 	    int delay = atoi(c);
 	    pid_t pid = getpid();
@@ -1275,7 +1275,7 @@ main(int argc, char **argv)
 #endif   /* HPVUE */
 
     /* set up the I18N world... */
-    (void) XtSetLanguageProc(NULL, NULL, NULL);
+    (void) XtSetLanguageProc(nullptr, nullptr, nullptr);
 
     if (isDebugSet('T')) {
 #ifdef	BBA
@@ -1359,7 +1359,7 @@ main(int argc, char **argv)
     topShell = XtAppCreateShell((char *) 0, "Dtterm",
 		applicationShellWidgetClass, XtDisplay(topLevel), arglist, i);
 
-    if (attrs.session != NULL)
+    if (attrs.session != nullptr)
        RestoringTerms = TRUE;
 
     if (isDebugSet('T')) {
@@ -1894,7 +1894,7 @@ RestoreSession(
 	path = fileName;
 
     /*  Open the file as a resource database */
-    if ((db = XrmGetFileDatabase (path)) == NULL) 
+    if ((db = XrmGetFileDatabase (path)) == nullptr) 
     {
       /* if we got a bogus filename, bail out... */
       return(False);
@@ -2189,14 +2189,14 @@ SetWorkSpaceHints
 )
 {
     char * ptr;
-    Atom * workspace_atoms = NULL;
+    Atom * workspace_atoms = nullptr;
     int num_workspaces=0;
     Atom thisWsAtom;
 
     if (workspaces) {
 	do {
 	    ptr = strchr (workspaces, ' ');
-	    if (ptr != NULL)
+	    if (ptr != nullptr)
 		*ptr = 0;
 	    thisWsAtom = None;
 
@@ -2212,11 +2212,11 @@ SetWorkSpaceHints
 		num_workspaces++;
 	    }
 
-	    if (ptr != NULL) {
+	    if (ptr != nullptr) {
 		*ptr = ' ';
 		workspaces = ptr + 1;
 	    }
-	} while (ptr != NULL);
+	} while (ptr != nullptr);
 
 	if (num_workspaces > 0) {
 	    DtWsmSetWorkspacesOccupied(XtDisplay(shell), XtWindow (shell),
@@ -2224,6 +2224,6 @@ SetWorkSpaceHints
 	}
 
 	XtFree ((char *) workspace_atoms);
-	workspace_atoms = NULL;
+	workspace_atoms = nullptr;
     }
 }

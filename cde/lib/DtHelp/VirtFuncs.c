@@ -105,7 +105,7 @@ _DtCvGetStringWidth (
     strInfo.wc       = _DtCvIsSegWideChar(segment);
     strInfo.font_ptr = _DtCvFontOfStringSeg(segment);
 
-    if (canvas->virt_functions.get_width != NULL)
+    if (canvas->virt_functions.get_width != nullptr)
 	result = (*(canvas->virt_functions.get_width)) (
 			canvas->client_data, _DtCvSTRING_TYPE,
 			(_DtCvPointer) &strInfo);
@@ -136,18 +136,18 @@ _DtCvFontMetrics(
     _DtCvUnit		*ret_super_y,
     _DtCvUnit		*ret_sub_y)
 {
-    if (ret_ascent != NULL)
+    if (ret_ascent != nullptr)
 	*ret_ascent = 0;
-    if (ret_descent != NULL)
+    if (ret_descent != nullptr)
 	*ret_descent = 0;
-    if (ret_ave != NULL)
+    if (ret_ave != nullptr)
 	*ret_ave = 0;
-    if (ret_super_y != NULL)
+    if (ret_super_y != nullptr)
 	*ret_super_y = 0;
-    if (ret_sub_y != NULL)
+    if (ret_sub_y != nullptr)
 	*ret_sub_y = 0;
 
-    if (canvas->virt_functions.get_font_metrics != NULL)
+    if (canvas->virt_functions.get_font_metrics != nullptr)
         (*(canvas->virt_functions.get_font_metrics))(
 		canvas->client_data, font_handle,
 		ret_ascent, ret_descent, ret_ave, ret_super_y, ret_sub_y);

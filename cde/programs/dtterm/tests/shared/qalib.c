@@ -100,7 +100,7 @@ typedef short __POINTERS[4];
 /* These are needed */
 /* global variables */
 int fd_test = -1;               /* file descriptor for /dev/tty  */
-FILE *f_test = (FILE *)NULL;    /* file pointer to /dev/tty      */
+FILE *f_test = (FILE *)nullptr;    /* file pointer to /dev/tty      */
 int __DEBUG = 0;                /* set from command by   "-D:Y   */
 
 struct termios termio_orig, termio_test;    /* for /dev/tty      */
@@ -873,11 +873,11 @@ START(uchar Test, uchar Ref, uchar Aux1, uchar Aux2, int Echo)
     GET_PARAMS(&V);
     if (__Log_Msg) {
         strcpy(__Message_File_NAME, __File_Name);
-        if (__Message_File != NULL)
+        if (__Message_File != nullptr)
             __Message_File = freopen(__Message_File_NAME, "w", __Message_File);
         else
             __Message_File = fopen(__Message_File_NAME, "w");
-        _SETIO(__Message_File != NULL, FileNotFound);
+        _SETIO(__Message_File != nullptr, FileNotFound);
         if (P_ioresult != 0)
             MODULE_ERR("Illegal log file name specified OR not DOS 3.x");
     }

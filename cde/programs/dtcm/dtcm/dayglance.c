@@ -118,8 +118,8 @@ paint_day_header(Calendar *c, Tick date, void *rect)
 
 	CalFontExtents(c->fonts->labelfont, &fontextents);
 	pfy = fontextents.max_logical_extent.height;
-        XtVaGetValues(c->canvas, XmNcolormap, &cmap, NULL);
-        XtVaGetValues(c->canvas, XmNforeground, &foreground_pixel, NULL);
+        XtVaGetValues(c->canvas, XmNcolormap, &cmap, nullptr);
+        XtVaGetValues(c->canvas, XmNforeground, &foreground_pixel, nullptr);
         buf [0] = '\0';
 	/* NL_COMMENT
 	   Attention Translator:
@@ -167,7 +167,7 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 	Boolean am = True;
 	char buf[5], *appt_str;
 	int pfy, curr_line, maxlines;
-	Lines *lines = NULL, *headlines = NULL;
+	Lines *lines = nullptr, *headlines = nullptr;
 	DisplayType disp_t;
 	Colormap cmap;
 	Pixel fg;
@@ -178,7 +178,7 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 	CalFontExtents(pf2, &fontextents2);
 
 
-	XtVaGetValues(c->canvas, XmNcolormap, &cmap, XmNforeground, &fg, NULL);
+	XtVaGetValues(c->canvas, XmNcolormap, &cmap, XmNforeground, &fg, nullptr);
 
 	/* draw horizontal lines */
 	begin_time = get_int_prop(p, CP_DAYBEGIN);
@@ -254,7 +254,7 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 
 				start_tick = cache[i].start_time;
 				end_tick = cache[i].end_time;
-				if (lines != NULL && lines->s != NULL) { 
+				if (lines != nullptr && lines->s != nullptr) { 
 					appt_str = ckalloc(cm_strlen(lines->s)+18);
 					format_line(start_tick, lines->s, 
 						appt_str, end_tick, 
@@ -263,7 +263,7 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 				}
 				else {
 					appt_str = ckalloc(15);
-					format_line(start_tick, (char*)NULL, 
+					format_line(start_tick, (char*)nullptr, 
 						appt_str, end_tick, 
 						cache[i].show_time, disp_t);
 				}
@@ -278,16 +278,16 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 					gr_text(c->xcontext, x, y,
 					   pf2, appt_str, rect);
 
-				free(appt_str); appt_str = NULL;
+				free(appt_str); appt_str = nullptr;
 				curr_line++;
-				if (curr_line < maxlines && lines != NULL) {
+				if (curr_line < maxlines && lines != nullptr) {
 				 	appt_str = ckalloc(324);
 					cm_strcpy(appt_str, "    ");
-					while (lines != NULL) { 
-						if (lines->s != NULL) 
+					while (lines != nullptr) { 
+						if (lines->s != nullptr) 
 							cm_strcat(appt_str, lines->s);
 						lines = lines->next;
-						if (lines != NULL && lines->s != NULL)
+						if (lines != nullptr && lines->s != nullptr)
 							cm_strcat(appt_str, " - ");
 					}
 					y += pfy;
@@ -304,9 +304,9 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 						   pf2, appt_str, rect);
 
 					curr_line++;
-					free(appt_str); appt_str = NULL;
+					free(appt_str); appt_str = nullptr;
 				}
-				destroy_lines(headlines); lines=NULL;
+				destroy_lines(headlines); lines=nullptr;
 			}
 		}
 	}
@@ -324,7 +324,7 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 			if (curr_line < maxlines) {
 				y += (curr_line * pfy) + h * (hr - begin_time + 1);
 				headlines = lines = text_to_lines(cache[i].summary, 4);
-				if (lines != NULL && lines->s != NULL) { 
+				if (lines != nullptr && lines->s != nullptr) { 
 					appt_str = ckalloc(cm_strlen(lines->s)+18);
 					format_line(start_tick, lines->s, 
 						appt_str, end_tick, 
@@ -333,7 +333,7 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 				}
 				else {
 					appt_str = ckalloc(15);
-					format_line(start_tick, (char*)NULL, 
+					format_line(start_tick, (char*)nullptr, 
 						appt_str, end_tick, 
 						cache[i].show_time, disp_t);
 				}
@@ -348,16 +348,16 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 					gr_text(c->xcontext, x, y,
 					   pf2, appt_str, rect);
 
-				free(appt_str); appt_str = NULL;
+				free(appt_str); appt_str = nullptr;
 				curr_line++;
-				if (curr_line < maxlines && lines != NULL) {
+				if (curr_line < maxlines && lines != nullptr) {
 				 	appt_str = ckalloc(324);
 					cm_strcpy(appt_str, "    ");
-					while (lines != NULL) { 
-						if (lines->s != NULL) 
+					while (lines != nullptr) { 
+						if (lines->s != nullptr) 
 							cm_strcat(appt_str, lines->s);
 						lines = lines->next;
-						if (lines != NULL && lines->s != NULL)
+						if (lines != nullptr && lines->s != nullptr)
 							cm_strcat(appt_str, " - ");
 					}
 					y += pfy;
@@ -374,9 +374,9 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 						   pf2, appt_str, rect);
 
 					curr_line++;
-					free(appt_str); appt_str = NULL;
+					free(appt_str); appt_str = nullptr;
 				}
-				destroy_lines(headlines); lines=NULL;
+				destroy_lines(headlines); lines=nullptr;
 			}
 		}
 	}
@@ -401,14 +401,14 @@ init_dayview(Calendar *c)
 	/*
 	 * Create month panels if they're not already there
 	 */
-	if (day_info->month_panels == (Widget *) NULL) {
+	if (day_info->month_panels == (Widget *) nullptr) {
 		day_info->month_panels = (Widget *)ckalloc(3 * sizeof(Widget));
 
 		create_month_panels(c);
 	}
 
 
-        XtVaGetValues(c->canvas, XmNwidth, &w, XmNheight, &h, NULL);
+        XtVaGetValues(c->canvas, XmNwidth, &w, XmNheight, &h, nullptr);
 	(void)cache_dims(c, w, h);
 
 	day_info->day_selected = -1;
@@ -617,12 +617,12 @@ paint_dayview(Calendar *c, Boolean repaint, XRectangle *rect, Boolean update_mon
 	int		bottom_panel = 2;
 
 	num_hrs = end - beg + 1;
-	if (c->paint_cache == NULL) {
+	if (c->paint_cache == nullptr) {
 		start = (time_t) lower_bound(0, c->view->date);
         	stop = (time_t) next_nhours(start, end+1) - 1;
 		setup_range(&range_attrs, &ops, &j, start, stop, CSA_TYPE_EVENT, 0,
 		    	B_FALSE, c->general->version);
-        	csa_list_entries(c->cal_handle, j, range_attrs, ops, &a_total, &list, NULL);
+        	csa_list_entries(c->cal_handle, j, range_attrs, ops, &a_total, &list, nullptr);
 	
 		free_range(&range_attrs, &ops, j);
 		allocate_paint_cache(list, a_total, &c->paint_cache);
@@ -635,7 +635,7 @@ paint_dayview(Calendar *c, Boolean repaint, XRectangle *rect, Boolean update_mon
 	XtVaGetValues(d->month_panels[1],
 		XmNyear, &panel1_year,
 		XmNmonth, &panel1_month,
-		NULL);
+		nullptr);
 
 	if ((panel1_year == year(get_bot())) && (panel1_month == 1))
 		top_panel = 1;
@@ -645,7 +645,7 @@ paint_dayview(Calendar *c, Boolean repaint, XRectangle *rect, Boolean update_mon
 	XtVaGetValues(d->month_panels[top_panel],
 		XmNyear, &panel0_year,
 		XmNmonth, &panel0_month,
-		NULL);
+		nullptr);
 
 	if ((year_num < panel0_year) || 
 	    ((year_num == panel0_year) && (month_num < panel0_month)))
@@ -654,7 +654,7 @@ paint_dayview(Calendar *c, Boolean repaint, XRectangle *rect, Boolean update_mon
 	XtVaGetValues(d->month_panels[bottom_panel],
 		XmNyear, &panel2_year,
 		XmNmonth, &panel2_month,
-		NULL);
+		nullptr);
 
 	if ((year_num > panel2_year) || 
 	    ((year_num == panel2_year) && (month_num > panel2_month)))
@@ -718,9 +718,9 @@ paint_day(Calendar *c)
         c->view->glance = dayGlance;
 	XmToggleButtonGadgetSetState(c->day_scope, True, False);
 	gr_clear_area(c->xcontext, 0, 0, c->view->winw, c->view->winh);
-	if (day_info->month_panels == (Widget *) NULL)
+	if (day_info->month_panels == (Widget *) nullptr)
 		(void)init_dayview(c);
-	paint_dayview(c, True, NULL, True); 
+	paint_dayview(c, True, nullptr, True); 
 	calendar_select(c, hourSelect, (caddr_t)NULL);
 }
 	
@@ -769,13 +769,13 @@ print_day_range(Calendar *c, Tick start_tick, Tick end_tick)
         Boolean 	done = False, first = True;
         int 		num_page = 1;
 	Props 		*pr = (Props*)c->properties;
-	void *xp = (void *)NULL;
+	void *xp = (void *)nullptr;
 
 	n = (end_tick - start_tick)/daysec + 1;
 
 	if (n <= 0) n = 1;
 
-	if ((xp = x_open_file(c)) == (void *)NULL)
+	if ((xp = x_open_file(c)) == (void *)nullptr)
 	  return;
 
 	for (; n > 0; n--) {
@@ -812,7 +812,7 @@ count_day_pages(Calendar *c, int lines_per_page, Tick tick)
 		end = (time_t) next_nhours(start+1, 1) - 1;
 		setup_range(&range_attrs, &ops, &j, start, end,
 			    CSA_TYPE_EVENT, 0, B_FALSE, c->general->version);
-        	csa_list_entries(c->cal_handle, j, range_attrs, ops, &a_total, &list, NULL);
+        	csa_list_entries(c->cal_handle, j, range_attrs, ops, &a_total, &list, nullptr);
 		free_range(&range_attrs, &ops, j);
 
                 num_appts = count_multi_appts(list, a_total, c);
@@ -891,7 +891,7 @@ _print_day(Calendar *c,
 		  CSA_TYPE_EVENT, 0, B_FALSE, c->general->version);
 
       csa_list_entries(c->cal_handle, j, range_attrs,
-		       ops, &a_total, &list, NULL);
+		       ops, &a_total, &list, nullptr);
       free_range(&range_attrs, &ops, j);
  
       num_appts = count_multi_appts(list, a_total, c);
@@ -941,7 +941,7 @@ day_xytoclock(Calendar *c, int x, int y, Tick t)
 	if (y == 0) hr = 0;
 
 	(void)sprintf(buf, "%d/%d/%d", tm.tm_mon+1, tm.tm_mday, tm.tm_year+1900);
-	val	=cm_getdate(buf, NULL);
+	val	=cm_getdate(buf, nullptr);
 	val	= val+(hr*(int)hrsec);
 	adjust_dst(t, val);
 	return(val);
@@ -1016,7 +1016,7 @@ day_event(XEvent *event)
 			if (in_mbox) {
 				monthbox_deselect(c);
 				monthbox_xytodate(c, x, y);
-				paint_dayview(c, False, NULL, True);
+				paint_dayview(c, False, nullptr, True);
 				calendar_select(c, hourSelect, (caddr_t)NULL);
 				monthbox_select(c);
 				j = day_xytoclock(c, xy.x, xy.y, date);
@@ -1083,7 +1083,7 @@ display_monthpanels(Calendar *c)
 	XtVaGetValues(d->month_panels[1],
 		XmNyear, &panel_year,
 		XmNmonth, &panel_month,
-		NULL);
+		nullptr);
 
 	if ((panel_year == firstyear) && (panel_month == 1)) {
 		XtUnmapWidget(d->month_panels[0]);
@@ -1170,7 +1170,7 @@ create_month_panels(Calendar *c)
         XtAddCallback(d->month_panels[0], XmNactivateCallback,
                         day_btn_cb, (XtPointer) c);
 	XtAddCallback(d->month_panels[0], XmNhelpCallback, 
-			help_view_cb, NULL);
+			help_view_cb, nullptr);
 
 	ac=0;
         XtSetArg(al[ac], XmNtopAttachment, XmATTACH_POSITION); ac++;
@@ -1185,7 +1185,7 @@ create_month_panels(Calendar *c)
         XtAddCallback(d->month_panels[1], XmNactivateCallback,
                         day_btn_cb, (XtPointer) c);
 	XtAddCallback(d->month_panels[1], XmNhelpCallback, 
-			help_view_cb, NULL);
+			help_view_cb, nullptr);
 
 	ac=0;
         XtSetArg(al[ac], XmNtopAttachment, XmATTACH_POSITION); ac++;
@@ -1199,7 +1199,7 @@ create_month_panels(Calendar *c)
         XtAddCallback(d->month_panels[2], XmNactivateCallback,
                         day_btn_cb, (XtPointer) c);
 	XtAddCallback(d->month_panels[2], XmNhelpCallback, 
-			help_view_cb, NULL);
+			help_view_cb, nullptr);
 
 	ManageChildren(d->panel_form);
 
@@ -1221,7 +1221,7 @@ update_quarter(Calendar *c)
 	XtVaSetValues(d->month_panels[0],
 		XmNyear, year_num,
 		XmNmonth, month_num,
-		NULL);
+		nullptr);
 	
 	/* current month */
 	year_num = year(c->view->date);
@@ -1229,7 +1229,7 @@ update_quarter(Calendar *c)
 	XtVaSetValues(d->month_panels[1],
 		XmNyear, year_num,
 		XmNmonth, month_num,
-		NULL);
+		nullptr);
 	
 	/* next month */
 	year_num = year(nextmonth(c->view->date));
@@ -1237,7 +1237,7 @@ update_quarter(Calendar *c)
 	XtVaSetValues(d->month_panels[2],
 		XmNyear, year_num,
 		XmNmonth, month_num,
-		NULL);
+		nullptr);
 	
 }
 
@@ -1251,7 +1251,7 @@ day_btn_cb(Widget w, XtPointer client, XtPointer call)
  
 	invalidate_cache(c);
 
-        XtVaGetValues(w, XmNmonth, &monthno, XmNyear, &year, NULL);
+        XtVaGetValues(w, XmNmonth, &monthno, XmNyear, &year, nullptr);
  
         if (cbs->type == MONTH_SELECTION) {
 
@@ -1268,13 +1268,13 @@ day_btn_cb(Widget w, XtPointer client, XtPointer call)
 			c->view->olddate = c->view->date;
 			c->view->date = monthdayyear(monthno, 1, year);
 			c->view->nwks = numwks(c->view->date);
-			calendar_select (c, monthSelect, NULL);
+			calendar_select (c, monthSelect, nullptr);
 		}
  
                 /* switch to month view */
                 c->view->glance = monthGlance;
                 cleanup_after_dayview(c);
-                prepare_to_paint_monthview(c, NULL);
+                prepare_to_paint_monthview(c, nullptr);
 
 		XtMapWidget(c->canvas);
         }
@@ -1282,7 +1282,7 @@ day_btn_cb(Widget w, XtPointer client, XtPointer call)
                 c->view->olddate = c->view->date;
                 c->view->date = monthdayyear(monthno, cbs->day, year);
 		gr_clear_area(c->xcontext, 0, 0, c->view->winw, c->view->winh);
-		paint_dayview(c, True, NULL, False); 
+		paint_dayview(c, True, nullptr, False); 
 		calendar_select(c, hourSelect, (caddr_t)NULL);
         }
 }

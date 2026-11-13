@@ -79,7 +79,7 @@ static Boolean
 validate_dropped_appt(char *filename, Calendar *c) {
 	Props			*p = (Props *)c->properties;
 	Props_pu		*pu = (Props_pu *)c->properties_pu;
-	CmDataList		*list = NULL;
+	CmDataList		*list = nullptr;
 	Validate_op		op;
 	int			i;
 	Dtcm_appointment	*a;
@@ -285,10 +285,10 @@ cm_register_drop_site(
 	Widget		w)
 
 {
-	XtCallbackRec	transfer_cb_rec[] = { {handle_drop_cb, NULL},
-					      {NULL, NULL} };
-	static XtCallbackRec animateCBRec[] = { {handle_animate_cb, NULL},
-						{NULL, NULL} };
+	XtCallbackRec	transfer_cb_rec[] = { {handle_drop_cb, nullptr},
+					      {nullptr, nullptr} };
+	static XtCallbackRec animateCBRec[] = { {handle_animate_cb, nullptr},
+						{nullptr, nullptr} };
 	Display		*display = XtDisplayOfObject(w);
 
 	/*
@@ -305,7 +305,7 @@ cm_register_drop_site(
 			transfer_cb_rec, 
 			DtNdropAnimateCallback, animateCBRec,
 			DtNtextIsBuffer, 	True,
-			NULL);
+			nullptr);
 	return;
 }
 
@@ -346,7 +346,7 @@ schedule_appt(Calendar *c, Dtcm_appointment *a) {
 			DIALOG_TEXT, buf,
 			BUTTON_IDENT, 1, ident,
 			BUTTON_IDENT, 2, buf2,
-			NULL);
+			nullptr);
 		XtFree(title);
 		XtFree(ident);
 		if (answer == 1)
@@ -402,7 +402,7 @@ extern int
 drag_load_proc(char *filename, Calendar *c) {
 	int			ret_val, i = 1;
 	char			buf[MAXNAMELEN * 2];
-	CmDataList		*list = NULL;
+	CmDataList		*list = nullptr;
 	Props			*p = (Props *)c->properties;
 	Props_pu		*pu = (Props_pu *)c->properties_pu;
 	Validate_op		op;
@@ -508,7 +508,7 @@ drag_load_proc(char *filename, Calendar *c) {
 			BUTTON_IDENT, 1, ident,
 			BUTTON_HELP, DND_ERROR_HELP,
 			DIALOG_IMAGE, pu->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident);
 		XtFree(title);
 		return -1;
@@ -523,9 +523,9 @@ drag_load_proc(char *filename, Calendar *c) {
 
 CSA_entry_handle
 get_appt_struct(DragContext *context) {
-	int             *item_list = NULL, item_cnt = 0, answer;
+	int             *item_list = nullptr, item_cnt = 0, answer;
 	char		buf[MAXNAMELEN];
-	Widget 		list = NULL;
+	Widget 		list = nullptr;
 	Calendar 	*c = context->calendar;
 	Props_pu	*pr;
 	CSA_entry_handle	entry = 0;
@@ -551,7 +551,7 @@ get_appt_struct(DragContext *context) {
                         BUTTON_IDENT, 1, ident,
 			BUTTON_HELP, RESELECT_ERROR_HELP,
                         DIALOG_IMAGE, pr->xm_error_pixmap,
-                        NULL);
+                        nullptr);
 		XtFree(ident);
 		XtFree(text);
 		XtFree(title);
@@ -581,7 +581,7 @@ get_appt_struct(DragContext *context) {
                         DIALOG_TEXT, buf,
                         BUTTON_IDENT, 1, ident,
                         DIALOG_IMAGE, pr->xm_error_pixmap,
-                        NULL);
+                        nullptr);
 		XtFree(ident);
 		XtFree(title);
                 XtFree((XtPointer)item_list);
@@ -732,10 +732,10 @@ TranslationDragStart(
 	String		*parms,
 	Cardinal	*num_params)
 {
-        static XtCallbackRec convertCBRec[] = { {ApptConvertCB, NULL},
-                                                {NULL, NULL} };
-        static XtCallbackRec dragFinishCBRec[] =  { {DragFinishCB, NULL},
-                                                    {NULL, NULL} };
+        static XtCallbackRec convertCBRec[] = { {ApptConvertCB, nullptr},
+                                                {nullptr, nullptr} };
+        static XtCallbackRec dragFinishCBRec[] =  { {DragFinishCB, nullptr},
+                                                    {nullptr, nullptr} };
  
         Display        *display 	= XtDisplay(widget);
         DragContext     *context = calloc(sizeof(DragContext), 1);
@@ -766,7 +766,7 @@ TranslationDragStart(
 	    ((apptstr = parse_appt_to_string(calendar->cal_handle,
 					     entry, p,
 					     calendar->general->version))
-	     == (char *)NULL))
+	     == (char *)nullptr))
 	{
 	  switch (context->editor_type)
 	  {
@@ -794,7 +794,7 @@ TranslationDragStart(
         convertCBRec[0].closure = (XtPointer)context;
         dragFinishCBRec[0].closure = (XtPointer)context;
 
-        if (e->drag_icon == NULL) {
+        if (e->drag_icon == nullptr) {
                 e->drag_icon = CreateDragSourceIcon(widget, 
 						    e->drag_bitmap, 
 						    e->drag_mask);
@@ -804,7 +804,7 @@ TranslationDragStart(
             		     XmDROP_COPY, 
 			     convertCBRec, dragFinishCBRec,
 			     DtNsourceIcon, e->drag_icon,
-			     NULL) == NULL) {
+			     nullptr) == nullptr) {
  
                 printf("%s", CATGETS(calendar->DT_catd, 1, 239,
 					"DragStart returned NULL.\n"));
@@ -818,10 +818,10 @@ ApptDragStart(
         Calendar        *calendar,
         EditorType      editor_type)
 {
-        static XtCallbackRec convertCBRec[] = { {ApptConvertCB, NULL},
-                                                {NULL, NULL} };
-        static XtCallbackRec dragFinishCBRec[] =  { {DragFinishCB, NULL},
-                                                    {NULL, NULL} };
+        static XtCallbackRec convertCBRec[] = { {ApptConvertCB, nullptr},
+                                                {nullptr, nullptr} };
+        static XtCallbackRec dragFinishCBRec[] =  { {DragFinishCB, nullptr},
+                                                    {nullptr, nullptr} };
  
         Display        *display 	= XtDisplay(widget);
         DragContext     *context = calloc(sizeof(DragContext), 1);
@@ -838,7 +838,7 @@ ApptDragStart(
         if (editor_type == SingleEditorIcon)
 	{
                 context->editor = (caddr_t) e;
-		appt = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, NULL);
+		appt = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, nullptr);
 		load_appt_defaults(appt, (Props *) calendar->properties);
 		preDsswFlags = e->dsswFlags;
 		preRfpFlags = e->rfpFlags;
@@ -860,7 +860,7 @@ ApptDragStart(
         else if (editor_type == GroupEditorIcon)
 	{
                 context->editor = (caddr_t) ge;
-		appt = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, NULL);
+		appt = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, nullptr);
 		load_appt_defaults(appt, (Props *) calendar->properties);
 		preDsswFlags = ge->dsswFlags;
 		preRfpFlags = ge->rfpFlags;
@@ -902,10 +902,10 @@ ApptDragStart(
 			      CSA_ENTRY_ATTR_FLASHING_REMINDER_I,
 			      CSA_ENTRY_ATTR_MAIL_REMINDER_I,
 			      CSA_ENTRY_ATTR_POPUP_REMINDER_I,
-			      NULL);
+			      nullptr);
 		else
 		  appt = allocate_appt_struct(appt_write,
-					      DATAVER_ARCHIVE, NULL); 
+					      DATAVER_ARCHIVE, nullptr); 
 
 		dssw_form_to_todo(&t->dssw, appt, calendar->calname, now());
 		preRfpFlags = t->rfpFlags;
@@ -949,7 +949,7 @@ ApptDragStart(
         convertCBRec[0].closure = (XtPointer)context;
         dragFinishCBRec[0].closure = (XtPointer)context;
  
-        if (e->drag_icon == NULL) {
+        if (e->drag_icon == nullptr) {
                 e->drag_icon = CreateDragSourceIcon(widget, e->drag_bitmap,
 						    e->drag_mask);
         }
@@ -958,8 +958,8 @@ ApptDragStart(
             	XmDROP_COPY, 
 		convertCBRec, dragFinishCBRec,
 		DtNsourceIcon,		e->drag_icon,
-		NULL)
-            == NULL) {
+		nullptr)
+            == nullptr) {
  
                 printf("%s", CATGETS(calendar->DT_catd, 1, 239,
 			       "DragStart returned NULL.\n"));
@@ -1031,7 +1031,7 @@ DtcmProcessPress(
         XtVaGetValues(w,
 		XmNselectedPositions, &selected_positions,
 		XmNselectedPositionCount, &nselected_positions,
-		NULL);
+		nullptr);
 
 	for (i=0; i<nselected_positions; i++)
 	{

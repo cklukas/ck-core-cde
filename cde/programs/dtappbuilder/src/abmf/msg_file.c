@@ -182,12 +182,12 @@ MsgSet_create(
     char	*name
     )
 {
-    MsgSetRec	*ret_val = (MsgSetRec *)NULL;
+    MsgSetRec	*ret_val = (MsgSetRec *)nullptr;
 
     if (set_number <= 0)
         goto cret;
 
-    ret_val = msgSet_create_new(set_number, name, NULL, TRUE);
+    ret_val = msgSet_create_new(set_number, name, nullptr, TRUE);
 
 cret:
     return(ret_val);
@@ -202,7 +202,7 @@ MsgSet_destroy(
     if (that == (MsgSet)NULL)
         goto cret;
 
-    if (that->is_generated && that->msgs != (Msg *)NULL)
+    if (that->is_generated && that->msgs != (Msg *)nullptr)
     {
         int	i;
 
@@ -259,7 +259,7 @@ MsgSet_just_find_msg(
     int			ret_val = -1;
     int	i;
 
-    if (that == NULL || string == (char *)NULL)
+    if (that == nullptr || string == (char *)nullptr)
         goto cret;
     
     for (i = 0; i < that->num_msgs; i++)
@@ -291,7 +291,7 @@ MsgSet_sure_find_msg(	/* adds it, if not already there */
     if ((ret_val = MsgSet_just_find_msg(that, string)) != -1)
         goto cret;
 
-    if ((msg = msgSet_add_msg(that, string, NULL,
+    if ((msg = msgSet_add_msg(that, string, nullptr,
                               msgSet_max_msg_number(that)+1)) == (Msg)NULL)
         goto cret;
     
@@ -349,27 +349,27 @@ MsgFile_create(
     char	*file_name	/* message source file name */
     )
 {
-    MsgFileRec	*ret_val = (MsgFileRec *)NULL;
+    MsgFileRec	*ret_val = (MsgFileRec *)nullptr;
     MsgFileRec	*new_msg_file;
     char	proj_name_suffixed[BUFSIZ];
 
-    if (project_name == NULL)
+    if (project_name == nullptr)
         goto cret;
     
-    if ((new_msg_file = (MsgFileRec *)malloc(sizeof(MsgFileRec))) == NULL)
+    if ((new_msg_file = (MsgFileRec *)malloc(sizeof(MsgFileRec))) == nullptr)
         goto cret;
 
-    new_msg_file->fp = (FILE *)NULL;
+    new_msg_file->fp = (FILE *)nullptr;
 
-    new_msg_file->file_comment = (char *)NULL;
+    new_msg_file->file_comment = (char *)nullptr;
     
-    new_msg_file->msg_sets = (MsgSet *)NULL;
+    new_msg_file->msg_sets = (MsgSet *)nullptr;
     new_msg_file->num_msg_sets = 0;
     new_msg_file->alloced_slots = INIT_ALLOCED_SLOTS;
 
     if ((new_msg_file->msg_sets = (MsgSet *)malloc(sizeof(MsgSet)*
                                                    new_msg_file->alloced_slots))
-        == (MsgSet *)NULL)
+        == (MsgSet *)nullptr)
     {
         MsgFile_destroy(new_msg_file);
         ret_val = (MsgFile)NULL;
@@ -379,7 +379,7 @@ MsgFile_create(
     
     ret_val = new_msg_file;
 
-    if (file_name == (char *)NULL)
+    if (file_name == (char *)nullptr)
         goto cret;
 
     if (msgFile_load(ret_val, file_name) == FALSE)
@@ -411,7 +411,7 @@ MsgFile_destroy(
     if (that == (MsgFile)NULL)
         goto cret;
     
-    if (that->msg_sets != (MsgSet *)NULL)
+    if (that->msg_sets != (MsgSet *)nullptr)
     {
         int	i;
 
@@ -421,7 +421,7 @@ MsgFile_destroy(
         free(that->msg_sets);
     }
     
-    if (that->fp != (FILE *)NULL)
+    if (that->fp != (FILE *)nullptr)
        fclose(that->fp);
 
     free(that);
@@ -438,10 +438,10 @@ MsgFile_save(
     )
 {
     int			ret_val = 0;
-    FILE		*fp = NULL;
+    FILE		*fp = nullptr;
     int	i;
 
-    *msgFileOutPtr = NULL;
+    *msgFileOutPtr = nullptr;
 
     if (that == (MsgFile)NULL)
     {
@@ -449,13 +449,13 @@ MsgFile_save(
         goto cret;
     }
     
-    if ((fp = tmpfile()) == NULL)
+    if ((fp = tmpfile()) == nullptr)
     {
 	ret_val = ERR_OPEN;
         goto cret;
     }
 
-    if (that->file_comment == (char *)NULL)
+    if (that->file_comment == (char *)nullptr)
     {
         fputs(
          "$ ==================================================================\n",
@@ -499,23 +499,23 @@ cret:
 MsgSet
 MsgFile_obj_sure_find_msg_set(MsgFile msgFile, ABObj obj)
 {
-    ABObj	msgSetObj = NULL;
-    STRING	msgSetName = NULL;
+    ABObj	msgSetObj = nullptr;
+    STRING	msgSetName = nullptr;
     char	msgSetNameBuf[1024];
-    MsgSet	msgSet = NULL;
+    MsgSet	msgSet = nullptr;
     *msgSetNameBuf = 0;
     
     /*
      * Find the object that defines the message set
      */
     msgSetObj = obj_get_module(obj);
-    if (msgSetObj == NULL)
+    if (msgSetObj == nullptr)
     {
 	msgSetObj = obj_get_project(obj);
     }
-    if (msgSetObj == NULL)
+    if (msgSetObj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     /*
@@ -561,7 +561,7 @@ MsgFile_just_find_msg_set(
 
         msg_set_name = msgSet_get_name(that->msg_sets[i]);
 
-        if (msg_set_name == NULL)
+        if (msg_set_name == nullptr)
             continue;
         
         if (!strcmp(set_name, msgSet_get_name(that->msg_sets[i])))
@@ -610,11 +610,11 @@ msgFile_load(
 {
     BOOL	ret_val = (BOOL)FALSE;
 
-    if (that->fp != (FILE *)NULL)
+    if (that->fp != (FILE *)nullptr)
         goto cret;
 
     /* Open the message file */
-    if ((that->fp = util_fopen_locked(filename, "r")) == (FILE *)NULL)
+    if ((that->fp = util_fopen_locked(filename, "r")) == (FILE *)nullptr)
     {
         /* If there is no existing msg source file,
            load should succeed:
@@ -634,7 +634,7 @@ msgFile_load(
     if (msgFile_read_top_comment(that) == FALSE)
     {
         fclose(that->fp);
-        that->fp = NULL;
+        that->fp = nullptr;
         goto cret;
     }
 
@@ -657,7 +657,7 @@ msgFile_read_top_comment(
 {
     BOOL	ret_val = (BOOL)FALSE;
 
-    if (that->fp == (FILE *)NULL)
+    if (that->fp == (FILE *)nullptr)
         goto cret;
 
     that->file_comment = get_comment(that->fp);
@@ -679,20 +679,20 @@ msgFile_read_msg_set(
     MsgSet	msg_set;
 
     int		msg_num;
-    char	*msg_str = (char *)NULL;
-    char	*msg_cmt = (char *)NULL;
+    char	*msg_str = (char *)nullptr;
+    char	*msg_cmt = (char *)nullptr;
     
 
-    if (that->fp == (FILE *)NULL)
+    if (that->fp == (FILE *)nullptr)
         goto cret;
     if (get_set_number_and_name(that->fp, &set_number, &set_line_cmt) == FALSE)
         goto cret;
 
-    if ((msg_set = msgFile_get_msg_set_by_num(that, set_number)) == NULL)
+    if ((msg_set = msgFile_get_msg_set_by_num(that, set_number)) == nullptr)
     {
         BOOL	is_generated = (BOOL)TRUE;
         
-        if ((bil_name = extract_bil_name(set_line_cmt)) == (char *)NULL)
+        if ((bil_name = extract_bil_name(set_line_cmt)) == (char *)nullptr)
             is_generated = (BOOL)FALSE;
         else
             free(set_line_cmt);
@@ -727,7 +727,7 @@ msgFile_get_msg_set_by_num(
     MsgSet		ret_val = (MsgSet)NULL;
     int	i;
 
-    if (that == NULL)
+    if (that == nullptr)
         goto cret;
 
     for (i = 0; i < that->num_msg_sets; i++)
@@ -767,7 +767,7 @@ msgFile_add_msg_set(
         that->alloced_slots += INIT_ALLOCED_SLOTS;
         if ((new_sets = (MsgSet*)realloc((void *)that->msg_sets,
                                 sizeof(MsgSet)*that->alloced_slots))
-            == NULL)
+            == nullptr)
         {
             that->alloced_slots -= INIT_ALLOCED_SLOTS;
             goto cret;
@@ -776,7 +776,7 @@ msgFile_add_msg_set(
         that->msg_sets = new_sets;
     }
     
-    new_set = msgSet_create_new(set_num, module_name, NULL, is_generated);
+    new_set = msgSet_create_new(set_num, module_name, nullptr, is_generated);
 
     if (new_set == (MsgSet)NULL)
         goto cret;
@@ -796,7 +796,7 @@ msgFile_max_set_number(
     int			ret_val = 0;
     int	i;
 
-    if (that == NULL)
+    if (that == nullptr)
         goto cret;
 
     for (i = 0; i < that->num_msg_sets; i++)
@@ -820,10 +820,10 @@ msgSet_create_new(
     BOOL	is_generated
     )
 {
-    MsgSetRec	*ret_val = (MsgSetRec *)NULL;
+    MsgSetRec	*ret_val = (MsgSetRec *)nullptr;
     MsgSetRec	*new_msg_set;
 
-    if ((new_msg_set = (MsgSetRec *)malloc(sizeof(MsgSetRec))) == NULL)
+    if ((new_msg_set = (MsgSetRec *)malloc(sizeof(MsgSetRec))) == nullptr)
         goto cret;
 
     new_msg_set->set_number = set_number;
@@ -831,12 +831,12 @@ msgSet_create_new(
     new_msg_set->allow_msg_delete = FALSE;
     new_msg_set->is_generated = is_generated;
     new_msg_set->is_referenced = FALSE;
-    new_msg_set->set_comment = NULL;
-    if (comment != NULL)
+    new_msg_set->set_comment = nullptr;
+    if (comment != nullptr)
     {
         new_msg_set->set_comment = strdup(comment);
     }
-    new_msg_set->msgs = (Msg *)NULL;
+    new_msg_set->msgs = (Msg *)nullptr;
     new_msg_set->num_msgs = 0;
     
     if (!is_generated)
@@ -848,7 +848,7 @@ msgSet_create_new(
         new_msg_set->alloced_slots = INIT_ALLOCED_SLOTS;
         if ((new_msg_set->msgs = (Msg *)malloc(sizeof(Msg)*
                                                new_msg_set->alloced_slots))
-            == (Msg *)NULL)
+            == (Msg *)nullptr)
         {
             MsgSet_destroy(new_msg_set);
             ret_val = (MsgSet)NULL;
@@ -868,7 +868,7 @@ msgSet_get_name(
     MsgSet that
     )
 {
-    char	*ret_val = (char *)NULL;
+    char	*ret_val = (char *)nullptr;
 
     if (that == (MsgSet)NULL)
         goto cret;
@@ -910,7 +910,7 @@ msgSet_output(
         goto cret;
 
     set_name = msgSet_get_name(that);
-    if (set_name == (char *)NULL)
+    if (set_name == (char *)nullptr)
         set_name = "";
 
     if (strcmp(set_name, "appfw") == 0)
@@ -923,7 +923,7 @@ msgSet_output(
     else
         fputs(set_name, fp);
 
-    if (that->set_comment != (char *)NULL)
+    if (that->set_comment != (char *)nullptr)
         fputs(that->set_comment, fp);
     else if (msgSet_is_generated(that))
     {
@@ -974,7 +974,7 @@ msgSet_add_msg(
         that->alloced_slots += INIT_ALLOCED_SLOTS;
         if ((new_msgs = (Msg*)realloc((void *)that->msgs,
                                 sizeof(Msg)*that->alloced_slots))
-            == NULL)
+            == nullptr)
         {
             that->alloced_slots -= INIT_ALLOCED_SLOTS;
             goto cret;
@@ -1003,7 +1003,7 @@ msgSet_max_msg_number(
     int			ret_val = 0;
     int	i;
 
-    if (that == NULL)
+    if (that == nullptr)
         goto cret;
 
     for (i = 0; i < that->num_msgs; i++)
@@ -1029,7 +1029,7 @@ msg_create(
     Msg		ret_val = (Msg)NULL;
     MsgRec	*new_msg;
 
-    if ((new_msg = (MsgRec *)malloc(sizeof(MsgRec))) == NULL)
+    if ((new_msg = (MsgRec *)malloc(sizeof(MsgRec))) == nullptr)
         goto cret;
 
     new_msg->msg_string = istr_create(string);
@@ -1064,9 +1064,9 @@ msg_get_string(
     Msg		that
     )
 {
-    char	*ret_val = (char *)NULL;
+    char	*ret_val = (char *)nullptr;
 
-    if (that == NULL)
+    if (that == nullptr)
         goto cret;
 
     ret_val = istr_string(that->msg_string);
@@ -1082,7 +1082,7 @@ msg_get_number(
 {
     int	ret_val = -1;
     
-    if (that == NULL || istr_string(that->msg_string) == NULL)
+    if (that == nullptr || istr_string(that->msg_string) == nullptr)
         goto cret;
 
     ret_val = that->msg_number;
@@ -1134,14 +1134,14 @@ msg_output(
 {
     char *comment;
 
-    if (that == NULL || istr_string(that->msg_string) == NULL)
+    if (that == nullptr || istr_string(that->msg_string) == nullptr)
         goto cret;
 
     fprintf(fp, "%d \"", that->msg_number);
     out_str_puts(istr_string(that->msg_string), fp);
     fprintf(fp,"\"\n");
 
-    if ( (comment=istr_string(that->msg_comment)) != (char *)NULL)
+    if ( (comment=istr_string(that->msg_comment)) != (char *)nullptr)
         fputs(comment, fp);
 
 cret:
@@ -1162,7 +1162,7 @@ in_str_dup(
 )
 {
     int		inc = 256;			/* incremental allocation */
-    char	*dup_str = (char *) NULL;	/* storage buffer */
+    char	*dup_str = (char *) nullptr;	/* storage buffer */
     char	*c;
     int		buf_sz, len;
 
@@ -1229,15 +1229,15 @@ nl_dup(
     char	*string
 )
 {
-    char	*ret_val = (char *)NULL;
+    char	*ret_val = (char *)nullptr;
     char	*trav;
     char	*start;
     char	*end;
-    char	*dup_str = (char *)NULL;
+    char	*dup_str = (char *)nullptr;
     int		cur_len = 0;
     BOOL	done = (BOOL)FALSE;
 
-    if (string == (char *)NULL)
+    if (string == (char *)nullptr)
 	goto cret;
 
     start = trav = string;
@@ -1247,7 +1247,7 @@ nl_dup(
 	int	len;
 	int	offs = 1;
 
-	if ((end = strchr(trav, '\\')) == NULL)
+	if ((end = strchr(trav, '\\')) == nullptr)
 	    done = TRUE;
 	else
 	{
@@ -1266,7 +1266,7 @@ nl_dup(
 	len = strlen(trav);
 	cur_len += len+offs;
 
-	if ((dup_str = (char *)realloc(dup_str, cur_len)) == NULL)
+	if ((dup_str = (char *)realloc(dup_str, cur_len)) == nullptr)
 	    goto cret;
 
 	if (cur_len == len+offs)
@@ -1297,7 +1297,7 @@ nl_puts(
     char	*trav = string;
     char	*end;
 
-    while ((end = strchr(trav, '\n')) != NULL)
+    while ((end = strchr(trav, '\n')) != nullptr)
     {
 	*end = '\0';
 	fputs(trav, fp);
@@ -1322,7 +1322,7 @@ get_set_number_and_name(
     char	comment[BUFSIZ];
     int		num;
 
-    if ((buf = jump_backslash_gets(fp)) == NULL)
+    if ((buf = jump_backslash_gets(fp)) == nullptr)
         goto cret;
 
     if (strncmp(buf, "$set", 4))
@@ -1370,12 +1370,12 @@ get_comment(
     FILE	*fp
 )
 {
-    char	*ret_val = (char *)NULL;
+    char	*ret_val = (char *)nullptr;
     int		cur_len = 0;
-    char	*cmt_str = (char *)NULL;
+    char	*cmt_str = (char *)nullptr;
     char	*buf;
     
-    while ((buf = jump_backslash_gets(fp)) != NULL)
+    while ((buf = jump_backslash_gets(fp)) != nullptr)
     {
         int	new_len = strlen(buf);
         
@@ -1390,7 +1390,7 @@ get_comment(
         }
 
         cur_len += new_len+1;
-        if ((cmt_str = (char *)realloc(cmt_str, cur_len)) == NULL)
+        if ((cmt_str = (char *)realloc(cmt_str, cur_len)) == nullptr)
             goto cret;
 
         if (cur_len == new_len+1)
@@ -1449,7 +1449,7 @@ get_message(
     int		num;
     int		len;
 
-    if ((buf = jump_backslash_gets(fp)) == NULL)
+    if ((buf = jump_backslash_gets(fp)) == nullptr)
         goto cret;
 
     trav = buf;
@@ -1517,12 +1517,12 @@ extract_bil_name(
     char	*set_line_comment
 )
 {
-    char	*ret_val = (char *)NULL;
+    char	*ret_val = (char *)nullptr;
     char	*trav;
     int		len;
     char	*bil_name;
 
-    if (set_line_comment == NULL)
+    if (set_line_comment == nullptr)
         goto cret;
 
     if (strncmp(set_line_comment,
@@ -1548,7 +1548,7 @@ cret:
 }
 
 
-static char	*ungets_buf = (char *)NULL;
+static char	*ungets_buf = (char *)nullptr;
 
 static char *
 jump_backslash_gets(
@@ -1556,15 +1556,15 @@ jump_backslash_gets(
 )
 {
     static char	tmp[BUFSIZ];
-    char	*ret_val = (char *)NULL;
-    char	*new_str = (char *)NULL;
+    char	*ret_val = (char *)nullptr;
+    char	*new_str = (char *)nullptr;
     int		cur_len = 0;
     BOOL	done = (BOOL)FALSE;
 
-    if (ungets_buf != (char *)NULL)
+    if (ungets_buf != (char *)nullptr)
     {
         ret_val = ungets_buf;
-        ungets_buf = (char *)NULL;
+        ungets_buf = (char *)nullptr;
         goto cret;
     }
     
@@ -1572,7 +1572,7 @@ jump_backslash_gets(
     {
         int	len;
         
-        if (fgets(tmp, BUFSIZ, fp) == NULL)
+        if (fgets(tmp, BUFSIZ, fp) == nullptr)
             goto cret;
 
         len = strlen(tmp);
@@ -1580,7 +1580,7 @@ jump_backslash_gets(
         if (len < 2 || tmp[len-2] != '\\')
             done = (BOOL)TRUE;
         cur_len += len+1;
-        if ((new_str = (char *) realloc(new_str, cur_len)) == NULL)
+        if ((new_str = (char *) realloc(new_str, cur_len)) == nullptr)
             goto cret;
 
         if (cur_len == len+1)

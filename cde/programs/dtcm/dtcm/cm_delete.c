@@ -127,9 +127,9 @@ cm_args(int argc, char **argv)
 int main(int argc, char **argv)
 {
 	int		cnt;
-	char		index[10], *target = NULL, *date = NULL, *view = NULL,
+	char		index[10], *target = nullptr, *date = nullptr, *view = nullptr,
 			*uname, *loc;
-	Props		*p = NULL;
+	Props		*p = nullptr;
 	CSA_entry_handle	*list;
 	CSA_session_handle	c_handle;
 	CSA_return_code		stat;
@@ -162,9 +162,9 @@ int main(int argc, char **argv)
 
 	csa_user.user_name = target;
 	csa_user.user_type = 0;
-	csa_user.calendar_user_extensions = NULL;
+	csa_user.calendar_user_extensions = nullptr;
 	csa_user.calendar_address = target;
-	stat = csa_logon(NULL, &csa_user, NULL, NULL, NULL, &c_handle, NULL);
+	stat = csa_logon(nullptr, &csa_user, nullptr, nullptr, nullptr, &c_handle, nullptr);
 
 	if (stat != CSA_SUCCESS) {
 		char *format = strdup(CATGETS(DT_catd, 1, 188,
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
 	while (!cm_index) {
 		if ((cnt = cm_tty_lookup(DT_catd, c_handle, version, date, 
 					view, &list, p)) <= 0) {
-			csa_logoff(c_handle, NULL);
+			csa_logoff(c_handle, nullptr);
 			free(uname);
 			free(loc);
 			exit(0);
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
 		cm_index = 0;
 	}
 
-	csa_logoff(c_handle, NULL);
+	csa_logoff(c_handle, nullptr);
 	props_clean_up(p);
 	free(p);
 	free(uname);

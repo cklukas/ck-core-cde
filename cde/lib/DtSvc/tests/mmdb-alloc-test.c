@@ -87,7 +87,7 @@ static void _DtShmProtoDestroyInttab(DtShmProtoInttab t) { ++inttab_destroyed; f
 
 static char *_DtDtsDbGetFieldByName(DtDtsDbRecord *r, int field)
 {
-    return field == DtDTS_NAME_PATTERN ? r->name : NULL;
+    return field == DtDTS_NAME_PATTERN ? r->name : nullptr;
 }
 
 static int realloc_calls;
@@ -97,7 +97,7 @@ static void *ck_realloc(void *p, size_t n)
 {
     ++realloc_calls;
     if (realloc_fail_at && realloc_calls == realloc_fail_at)
-        return NULL;		/* the old block stays valid, as in libc */
+        return nullptr;		/* the old block stays valid, as in libc */
     return realloc(p, n);
 }
 #define realloc ck_realloc
@@ -154,7 +154,7 @@ static void test_file_list(const char *base)
         assert(fp);
         fclose(fp);
     }
-    paths[0] = d1; paths[1] = d2; paths[2] = NULL;
+    paths[0] = d1; paths[1] = d2; paths[2] = nullptr;
     dirs.dirs = dirs.paths = paths;
     getcwd(cwd, sizeof cwd);
 

@@ -38,7 +38,7 @@ ckfe_api_status __wrap_ckfet_native_copy_v1(const ckfet_job *job,uint64_t genera
 }
 #endif
 
-static void delay(void) { struct timespec ts={0,10000000}; nanosleep(&ts,NULL); }
+static void delay(void) { struct timespec ts={0,10000000}; nanosleep(&ts,nullptr); }
 static void read_view(SyncJob *job,SyncView *view)
 { for (unsigned i=0;i<1000;++i) { if (SyncJobRead(job,view)) return; delay(); } abort(); }
 static void wait_state(SyncJob *job,SyncView *view,unsigned state)
@@ -116,8 +116,8 @@ int main(int argc,char **argv)
     for (unsigned i=0;i<3000;++i) { read_view(job,view); if (view->snapshot.paused) break; delay(); }
     assert(view->snapshot.paused);
     uint64_t reviewed=0;
-    while (!(reviewed=SyncJobReview(job,generation,&rule,1,NULL,0,0,NULL,0))) delay();
-    assert(!SyncJobReview(job,generation,&rule,1,NULL,0,0,NULL,0));
+    while (!(reviewed=SyncJobReview(job,generation,&rule,1,nullptr,0,0,nullptr,0))) delay();
+    assert(!SyncJobReview(job,generation,&rule,1,nullptr,0,0,nullptr,0));
     SyncJobPause(job,0);
     for (unsigned i=0;i<3000;++i) {
         read_view(job,view);
@@ -148,7 +148,7 @@ int main(int argc,char **argv)
     rule.choice=CKFET_KEEP_BOTH_INCOMING;
     atomic_store(&fail_proposed_name,1);
     uint64_t named=0;
-    while (!(named=SyncJobReview(job,generation,&rule,1,NULL,0,1,"file-000-copy",CKFET_NAME_INCOMING))) delay();
+    while (!(named=SyncJobReview(job,generation,&rule,1,nullptr,0,1,"file-000-copy",CKFET_NAME_INCOMING))) delay();
     for (unsigned i=0;i<3000;++i) {
         read_view(job,view);
         if (view->completed_submission==named && view->command_accepted && view->api==CKFE_API_OUT_OF_MEMORY) break;
@@ -175,7 +175,7 @@ int main(int argc,char **argv)
     job=SyncJobStart(&setup,error,sizeof(error)); assert(job);
     wait_state(job,view,CKFET_AWAITING_REVIEW);
     generation=view->snapshot.plan_generation; reviewed=0;
-    while (!(reviewed=SyncJobReview(job,generation,NULL,0,NULL,0,0,NULL,0))) delay();
+    while (!(reviewed=SyncJobReview(job,generation,nullptr,0,nullptr,0,0,nullptr,0))) delay();
     for (unsigned i=0;i<3000;++i) {
         read_view(job,view);
         if (view->completed_submission==reviewed && SyncJobViewCoherent(view)) break;
@@ -213,7 +213,7 @@ int main(int argc,char **argv)
     rule.choice=CKFET_ASK; rule.tie=CKFET_ASK; rule.scope=CKFET_SCOPE_JOB;
     rule.protect_nonempty=rule.retain_replaced=1;
     reviewed=0;
-    while (!(reviewed=SyncJobReview(job,generation,&rule,1,NULL,0,0,NULL,0))) delay();
+    while (!(reviewed=SyncJobReview(job,generation,&rule,1,nullptr,0,0,nullptr,0))) delay();
     for (unsigned i=0;i<3000;++i) {
         read_view(job,view);
         if (view->completed_submission==reviewed) break;

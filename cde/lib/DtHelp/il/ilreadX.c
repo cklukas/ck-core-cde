@@ -546,7 +546,7 @@ int                         RedMask, GreenMask, BlueMask;
     priv.drawable = drawable;
     priv.visual = visual;
     priv.colormap = colormap;
-    priv.pPalette = (unsigned short *)NULL;
+    priv.pPalette = (unsigned short *)nullptr;
     priv.grayMapImage = (ilClientImage)NULL;
     priv.isLongImage = FALSE;
     priv.rgbMapImage = (ilClientImage)NULL;
@@ -838,7 +838,7 @@ int                         RedMask, GreenMask, BlueMask;
     
   
     pPriv = (ilReadXPrivPtr)ilAddPipeElement (pipe, IL_PRODUCER, sizeof (ilReadXPrivRec),
-                0, (ilSrcElementData *)NULL, &dstData, ilReadXInit, ilReadXCleanup,
+                0, (ilSrcElementData *)nullptr, &dstData, ilReadXInit, ilReadXCleanup,
                 ilReadXDestroy, ((SlowMode)?ilReadXExecuteSlow:ilReadXExecute), 0);
                 
   

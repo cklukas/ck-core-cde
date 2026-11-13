@@ -53,7 +53,7 @@ hc_lookup_node (Hc_list	*hc_list, caddr_t key)
 
 	p_node = hc_list->root;
 	private = (Private *) hc_list->private;
-	while (p_node != NULL)
+	while (p_node != nullptr)
 	{
 		result = private->compare (key, p_node->data);
 		if (result == _DtCmsIsGreater)
@@ -69,7 +69,7 @@ hc_lookup_node (Hc_list	*hc_list, caddr_t key)
 			break;
 		}
 	}
-	return (NULL);
+	return (nullptr);
 }
 
 extern	caddr_t
@@ -78,9 +78,9 @@ hc_lookup (Hc_list *hc_list, caddr_t key)
 	List_node	*p_node;
 
 	p_node = hc_lookup_node (hc_list, key);
-	if (p_node != NULL)
+	if (p_node != nullptr)
 		return ((caddr_t) p_node->data);
-	return (NULL);
+	return (nullptr);
 }
 
 extern	int
@@ -90,7 +90,7 @@ hc_size (Hc_list *hc_list)
 	List_node	*p_node;
 
 	p_node = hc_list->root;
-	while (p_node != NULL)
+	while (p_node != nullptr)
 	{
 		n++;
 		p_node = hc_lookup_next (p_node);
@@ -103,17 +103,17 @@ extern Hc_list *
 hc_create(_DtCmsGetKeyProc get, _DtCmsCompareProc compare)
 {
 	Private	*p;
-	List_node	*root = NULL;
+	List_node	*root = nullptr;
 	Hc_list	*list;
 
 	p = (Private *) calloc (1, sizeof (*p));
 
 	list = (Hc_list *) calloc (1, sizeof (*list));
-	list->root = NULL;
+	list->root = nullptr;
 	list->private = (caddr_t) p;
 
 	p->get = get;
-	p->enumerate = NULL;
+	p->enumerate = nullptr;
 	p->compare = compare;
 
 	return (list);
@@ -125,16 +125,16 @@ hc_destroy(Hc_list *hc_list, _DtCmsDestroyProc destroy_func)
 	Private	*p;
 	List_node	*p_node, *p_next;
 
-	if (hc_list == NULL)
+	if (hc_list == nullptr)
 		return;
-	if ((p = (Private *) hc_list->private) != NULL)
+	if ((p = (Private *) hc_list->private) != nullptr)
 		free (p);
 
 	p_node = hc_list->root;
-	while (p_node != NULL)
+	while (p_node != nullptr)
 	{
 		p_next = hc_lookup_next(p_node);
-		if (p_node->data != NULL)
+		if (p_node->data != nullptr)
 		{
 			if (destroy_func)
 				destroy_func(p_node->data);
@@ -150,16 +150,16 @@ hc_insert_node (Hc_list *hc_list, List_node *p_node, caddr_t key)
 	Private	*private;
 	List_node	*p_curr;
 
-	if (hc_list == NULL)
+	if (hc_list == nullptr)
 		return (rb_notable);
 	private = (Private *) hc_list->private;
 
 	p_curr = hc_list->root;
-	while (p_curr != NULL)
+	while (p_curr != nullptr)
 	{
 		if (private->compare (key, p_curr->data) == _DtCmsIsGreater)
 		{
-			if (p_curr->rlink != NULL)
+			if (p_curr->rlink != nullptr)
 				p_curr = p_curr->rlink;
 			else
 			{
@@ -172,7 +172,7 @@ hc_insert_node (Hc_list *hc_list, List_node *p_node, caddr_t key)
 		else
 		{
 			/* Insert at head of the list */
-			if ((p_node->llink = p_curr->llink) == NULL)
+			if ((p_node->llink = p_curr->llink) == nullptr)
 				break;
 
 			/* Insert before the current node */
@@ -184,7 +184,7 @@ hc_insert_node (Hc_list *hc_list, List_node *p_node, caddr_t key)
 
 	/* Insert at head of the list */
 	p_node->rlink = hc_list->root;
-	if (p_node->rlink != NULL)
+	if (p_node->rlink != nullptr)
 		p_node->rlink->llink = p_node;
 	hc_list->root = p_node;
 	return (rb_ok);
@@ -201,7 +201,7 @@ hc_insert(
 	List_node	*p_node;
 	Rb_Status	stat;
 
-	if (hc_list == NULL)
+	if (hc_list == nullptr)
 		return (rb_notable);
 	p_node = (List_node *) calloc (1, sizeof(*p_node));
 	p_node->data = data;
@@ -217,11 +217,11 @@ hc_insert(
 extern List_node *
 hc_delete_node (Hc_list *hc_list, List_node	*p_node)
 {
-	if (p_node->llink == NULL)
+	if (p_node->llink == nullptr)
 		hc_list->root = p_node->rlink;
 	else
 		p_node->llink->rlink = p_node->rlink;
-	if (p_node->rlink != NULL)
+	if (p_node->rlink != nullptr)
 		p_node->rlink->llink = p_node->llink;
 	return (p_node);
 }
@@ -234,7 +234,7 @@ hc_delete (Hc_list *hc_list, caddr_t key)
 
 	p_node = hc_list->root;
 	private = (Private *) hc_list->private;
-	while (p_node != NULL)
+	while (p_node != nullptr)
 	{
 		if (private->compare (key, p_node->data) == _DtCmsIsEqual)
 		{
@@ -243,14 +243,14 @@ hc_delete (Hc_list *hc_list, caddr_t key)
 		}
 		p_node = hc_lookup_next(p_node);
 	}
-	return (NULL);
+	return (nullptr);
 }
 
 extern caddr_t
 hc_lookup_smallest (Hc_list *hc_list)
 {
-	if ((hc_list == NULL) || (hc_list->root == NULL))
-		return (NULL);
+	if ((hc_list == nullptr) || (hc_list->root == nullptr))
+		return (nullptr);
 	return ((caddr_t) hc_list->root->data);
 }
 
@@ -262,13 +262,13 @@ hc_lookup_next_larger (Hc_list *hc_list, caddr_t key)
 
 	p_node = hc_list->root;
 	private = (Private *) hc_list->private;
-	while (p_node != NULL)
+	while (p_node != nullptr)
 	{
 		if (private->compare (key, p_node->data) == _DtCmsIsLess)
 			return ((caddr_t) p_node->data);
 		p_node = hc_lookup_next(p_node);
 	}
-	return (NULL);
+	return (nullptr);
 }
 
 extern caddr_t
@@ -276,11 +276,11 @@ hc_lookup_largest (Hc_list *hc_list)
 {
 	List_node	*p_node;
 
-	if ((hc_list == NULL) || (hc_list->root == NULL))
-		return (NULL);
+	if ((hc_list == nullptr) || (hc_list->root == nullptr))
+		return (nullptr);
 
 	p_node = hc_list->root;
-	while (p_node->rlink != NULL)
+	while (p_node->rlink != nullptr)
 		p_node = hc_lookup_next (p_node);
 	return ((caddr_t) p_node->data);
 }
@@ -293,24 +293,24 @@ hc_lookup_next_smaller (Hc_list *hc_list, caddr_t key)
 
 	p_node = hc_list->root;
 	private = (Private *) hc_list->private;
-	while (p_node != NULL)
+	while (p_node != nullptr)
 	{
 		if (private->compare (key, p_node->data) != _DtCmsIsGreater)
 		{
-			if (p_node->llink == NULL)
-				return (NULL);
+			if (p_node->llink == nullptr)
+				return (nullptr);
 			else
 				return ((caddr_t) p_node->llink->data);
 		}
 		p_node = hc_lookup_next(p_node);
 	}
-	return (NULL);
+	return (nullptr);
 }
 
 extern	Rb_Status
 hc_check_list (Hc_list *hc_list)
 {
-	if ((hc_list == NULL) || (hc_list->root == NULL))
+	if ((hc_list == nullptr) || (hc_list->root == nullptr))
 		return (rb_notable);
 	return (rb_ok);
 }
@@ -322,7 +322,7 @@ hc_enumerate_down(Hc_list *hc_list, _DtCmsEnumerateProc doit)
 	List_node	*p_node;
 
 	p_node = hc_list->root;
-	while (p_node != NULL)
+	while (p_node != nullptr)
 	{
 		if (doit ((caddr_t)p_node, p_node->data))
 			return;
@@ -336,7 +336,7 @@ hc_enumerate_up(Hc_list *hc_list, _DtCmsEnumerateProc doit)
 	List_node	*p_node;
 
 	p_node = hc_list->root;
-	while (p_node != NULL)
+	while (p_node != nullptr)
 	{
 		if (doit ((caddr_t)p_node, p_node->data))
 			return (rb_failed);

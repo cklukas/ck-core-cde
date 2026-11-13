@@ -77,12 +77,12 @@ extern CSA_return_code
 _DtCm_table_create(Calendar *cal)
 {
         CSA_return_code	stat;
-        Table_Status_4	*res = NULL;
+        Table_Status_4	*res = nullptr;
 	_DtCm_Connection	*conn;
 
 	DP(("table.c: _DtCm_table_create\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	conn = &cal->conn;
@@ -102,7 +102,7 @@ _DtCm_table_create(Calendar *cal)
         default:
 		return(CSA_E_FAILURE);
         }
-	if (res != NULL) {
+	if (res != nullptr) {
 		if (tablestat_to_dtcmstat(*res, &stat) != CSA_SUCCESS)
 			DP((errfmt, "table.c:", "_DtCm_table_create", *res));
         } else {
@@ -117,15 +117,15 @@ extern CSA_return_code
 _DtCm_table_get_access(Calendar *cal, cms_access_entry **alist)
 {
 	CSA_return_code	stat = CSA_SUCCESS;
-	Access_Args_4	*res = NULL;
+	Access_Args_4	*res = nullptr;
 	_DtCm_Connection	*conn;
 
 	DP(("table.c: _DtCm_table_get_access\n"));
 
-	if (cal == NULL || alist == NULL)
+	if (cal == nullptr || alist == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	*alist = NULL;
+	*alist = nullptr;
 
 	conn = &cal->conn;
 
@@ -137,23 +137,23 @@ _DtCm_table_get_access(Calendar *cal, cms_access_entry **alist)
                 Access_Args_3 *res3;
         case TABLEVERS_2:
                 a2.target = cal->name;
-                a2.access_list = NULL;
+                a2.access_list = nullptr;
                 res2 = _DtCm_rtable_get_access_2(&a2,  conn);
 		res = _DtCm_accargs2_to_accargs4(res2);
-		if (res2 != NULL)
+		if (res2 != nullptr)
 			 xdr_free((xdrproc_t)_DtCm_xdr_Access_Args_2, (char*)res2);
                 break;
 	case TABLEVERS_3:
                 a3.target = cal->name;
-                a3.access_list = NULL;
+                a3.access_list = nullptr;
                 res3 = _DtCm_rtable_get_access_3(&a3,  conn);
 		res = _DtCm_accargs3_to_accargs4(res3);
-		if (res3 != NULL)
+		if (res3 != nullptr)
 			 xdr_free((xdrproc_t)_DtCm_xdr_Access_Args_3, (char*)res3);
                 break;
         case TABLEVERS_4:
                 a4.target = cal->name;
-                a4.access_list = NULL;
+                a4.access_list = nullptr;
 		res = _DtCm_rtable_get_access_4(&a4, conn);
                 break;
         default:
@@ -161,7 +161,7 @@ _DtCm_table_get_access(Calendar *cal, cms_access_entry **alist)
                 break;
         }
 
-	if (res != NULL) {
+	if (res != nullptr) {
 		stat = _DtCm_accessentry4_to_cmsaccesslist(res->access_list, alist);
 		xdr_free ((xdrproc_t)_DtCm_xdr_Access_Args_4, (char*)res);
 	} else {
@@ -184,7 +184,7 @@ _DtCm_table_set_access(Calendar *cal, CSA_access_list alist)
 
 	DP(("table.c: _DtCm_table_set_access\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_csaaccesslist_toaccessentry4(alist, &alist4))
@@ -204,29 +204,29 @@ _DtCm_table_set_access(Calendar *cal, CSA_access_list alist)
 		a2.target = cal->name;
 		a2.access_list = _DtCm_acclist4_to_acclist2(alist4);
 		s2 = _DtCm_rtable_set_access_2(&a2,  conn);
-		if (s2 != NULL)
+		if (s2 != nullptr)
 			s =  _DtCm_accstat2_to_accstat4(*s2);
 		else
 			nullreturned = B_TRUE;
-		if (a2.access_list != NULL)
+		if (a2.access_list != nullptr)
 			_DtCm_free_access_list4((Access_Entry_4 *)a2.access_list);
 		break;
 	case TABLEVERS_3:
 		a3.target = cal->name;
 		a3.access_list = _DtCm_acclist4_to_acclist3(alist4);
 		s3 = _DtCm_rtable_set_access_3(&a3,  conn);
-		if (s3 != NULL)
+		if (s3 != nullptr)
 			s =  _DtCm_accstat3_to_accstat4(*s3);
 		else
 			nullreturned = B_TRUE;
-		if (a3.access_list != NULL)
+		if (a3.access_list != nullptr)
 			_DtCm_free_access_list4((Access_Entry_4 *)a3.access_list);
 		break;
 	case TABLEVERS_4:
 		a4.target = cal->name;
 		a4.access_list = alist4;
 		res = _DtCm_rtable_set_access_4(&a4, conn);
-		if (res != NULL)
+		if (res != nullptr)
 			s = *res;
 		else
 			nullreturned = B_TRUE;
@@ -236,7 +236,7 @@ _DtCm_table_set_access(Calendar *cal, CSA_access_list alist)
 		break;
 	}
 
-	if (alist4 != NULL)
+	if (alist4 != nullptr)
 		_DtCm_free_access_list4(alist4);
 
 	if (nullreturned) {
@@ -267,19 +267,19 @@ extern CSA_return_code
 _DtCm_table_lookup(Calendar *cal, _DtCm_libentry *entry)
 {
 	CSA_return_code	stat = CSA_SUCCESS;
-	Table_Res_4	*res = NULL;
+	Table_Res_4	*res = nullptr;
 	_DtCm_Connection	*conn;
 	Uid_4		key;
 	Appt_4		*appt;
 
 	DP(("table.c: call to _DtCm_table_lookup\n"));
 
-	if ((cal == NULL) || entry == NULL)
+	if ((cal == nullptr) || entry == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	key.appt_id.tick = entry->e->key.time;
 	key.appt_id.key = entry->e->key.id;
-	key.next = NULL;
+	key.next = nullptr;
 
 	conn = &cal->conn;
 	conn->retry = B_TRUE;
@@ -296,9 +296,9 @@ _DtCm_table_lookup(Calendar *cal, _DtCm_libentry *entry)
         	a2.args.Args_2_u.key = _DtCm_uid4_to_uid2(&key);
         	res2 = _DtCm_rtable_lookup_2(&a2, conn);
 		res = _DtCm_tableres2_to_tableres4(res2);
-		if (a2.args.Args_2_u.key != NULL)
+		if (a2.args.Args_2_u.key != nullptr)
 			free(a2.args.Args_2_u.key);
-		if (res2 != NULL)
+		if (res2 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_2, (char*)res2);
 		break;
 	case TABLEVERS_3:
@@ -308,9 +308,9 @@ _DtCm_table_lookup(Calendar *cal, _DtCm_libentry *entry)
 		a3.pid = getpid();
         	res3 = _DtCm_rtable_lookup_3(&a3, conn);
 		res = _DtCm_tableres3_to_tableres4(res3);
-		if (a3.args.Args_3_u.key != NULL)
+		if (a3.args.Args_3_u.key != nullptr)
 			free(a3.args.Args_3_u.key);
-		if (res3 != NULL)
+		if (res3 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_3, (char*)res3);
 		break;
 	case TABLEVERS_4:
@@ -325,11 +325,11 @@ _DtCm_table_lookup(Calendar *cal, _DtCm_libentry *entry)
 		break;
 	}
 
-	if (res != NULL) {
+	if (res != nullptr) {
         	switch(res->status) {
         	case access_ok_4:
 		case access_failed_4:
-			if ((appt = res->res.Table_Res_List_4_u.a) == NULL)
+			if ((appt = res->res.Table_Res_List_4_u.a) == nullptr)
 				stat = CSA_X_DT_E_ENTRY_NOT_FOUND |
 					CSA_E_INVALID_ENTRY_HANDLE;
 			else {
@@ -383,24 +383,24 @@ _DtCm_table_lookup_range(
 	_DtCm_libentry	**entries)
 {
         CSA_return_code	stat = CSA_SUCCESS;
-        Table_Res_4	*res = NULL;
+        Table_Res_4	*res = nullptr;
 	_DtCm_Connection	*conn;
 	Range_4		new_range, old_range;
-	Appt_4		*appts = NULL, *lptr = NULL, *tptr = NULL, *rptr = NULL;
+	Appt_4		*appts = nullptr, *lptr = nullptr, *tptr = nullptr, *rptr = nullptr;
 
 	DP(("table.c: _DtCm_table_lookup_range\n"));
 
-        if (cal == NULL || entries == NULL)
+        if (cal == nullptr || entries == nullptr)
                 return (CSA_E_INVALID_PARAMETER);
 
-	*entries = NULL;
+	*entries = nullptr;
 
 	old_range.key1 = start1;
 	old_range.key2 = start2;
  
 	new_range.key1 = old_range.key1;
         new_range.key2 = old_range.key2;
-        new_range.next = NULL;
+        new_range.next = nullptr;
 
 	conn = &cal->conn;
 	conn->retry = B_TRUE;
@@ -422,9 +422,9 @@ _DtCm_table_lookup_range(
 			a2.args.Args_2_u.range = _DtCm_range4_to_range2(&new_range);
 			res2 = _DtCm_rtable_lookup_range_2(&a2, conn);
 			res = _DtCm_tableres2_to_tableres4(res2);
-			if (a2.args.Args_2_u.range != NULL)
+			if (a2.args.Args_2_u.range != nullptr)
 				free(a2.args.Args_2_u.range);
-			if (res2 != NULL)
+			if (res2 != nullptr)
 				xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_2, (char*)res2);
 			break;
 		case TABLEVERS_3:
@@ -434,9 +434,9 @@ _DtCm_table_lookup_range(
 			a3.pid = getpid();
 			res3 = _DtCm_rtable_lookup_range_3(&a3, conn);
 			res = _DtCm_tableres3_to_tableres4(res3);
-			if (a3.args.Args_3_u.range != NULL)
+			if (a3.args.Args_3_u.range != nullptr)
 				free(a3.args.Args_3_u.range);
-			if (res3 != NULL)
+			if (res3 != nullptr)
 				xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_3, (char*)res3);
 			break;
 		case TABLEVERS_4:
@@ -451,7 +451,7 @@ _DtCm_table_lookup_range(
 			break;
 		}
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			switch(res->status) {
 			case access_ok_4:
 			case access_failed_4:
@@ -460,13 +460,13 @@ _DtCm_table_lookup_range(
 					if (conn->use == tcp_transport)
                                         	appts = tptr;
                                 	else { /* udp transport */
-                                        	if (appts == NULL)
+                                        	if (appts == nullptr)
                                                 	appts = lptr = tptr;
                                         	else {
                                                 	/* traverse from the last res ptr */
-                                                	for (rptr = lptr; rptr != NULL && 
-								rptr->next != NULL; rptr = rptr->next);
-							if (tptr != NULL)
+                                                	for (rptr = lptr; rptr != nullptr && 
+								rptr->next != nullptr; rptr = rptr->next);
+							if (tptr != nullptr)
                                                 		rptr->next = lptr = tptr;
 							else
 								lptr = rptr;
@@ -486,7 +486,7 @@ _DtCm_table_lookup_range(
 				stat = CSA_E_FAILURE;
 				break;
 			}
-			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_4, (char*)res); res = NULL;
+			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_4, (char*)res); res = nullptr;
 
 			/* range must encompass interested ticks */
 			new_range.key1 = new_range.key2-1;
@@ -514,7 +514,7 @@ _DtCm_table_lookup_range(
 		stat = _DtCm_appt4_to_libentries(cal->name, appts, entries);
 		_DtCm_free_appt4(appts);
 
-	} else if (appts != NULL) {
+	} else if (appts != nullptr) {
 		/* this happens if udp is used and some rpc calls succeeded */
                 _DtCm_free_appt4(appts);
 	}
@@ -542,7 +542,7 @@ _DtCm_table_lookup_key_range(
 	_DtCm_libentry	**elist_r)
 {
 	CSA_return_code		stat = CSA_SUCCESS;
-	Table_Res_4		*res=NULL;
+	Table_Res_4		*res=nullptr;
 	_DtCm_Connection	*conn;
 	Keyrange_4		keyrange;
 	Abb_Appt_4		*abbs;
@@ -550,11 +550,11 @@ _DtCm_table_lookup_key_range(
  
 	DP(("table.c: _DtCm_table_lookup_key_range\n"));
 
-	if (cal == NULL || (entry == NULL && key == NULL) ||
-	   (entry && elist_r == NULL))
+	if (cal == nullptr || (entry == nullptr && key == nullptr) ||
+	   (entry && elist_r == nullptr))
                 return (CSA_E_INVALID_PARAMETER);
  
-	keyrange.next = NULL;
+	keyrange.next = nullptr;
 	keyrange.key = (entry ? entry->e->key.id : id);
 	keyrange.tick1 = start;
 	keyrange.tick2 = end;
@@ -576,9 +576,9 @@ _DtCm_table_lookup_key_range(
 		a3.pid = getpid();
 		res3 = _DtCm_rtable_abbreviated_lookup_key_range_3(&a3, conn);
 		res = _DtCm_tableres3_to_tableres4(res3);
-		if (a3.args.Args_3_u.keyrange != NULL)
+		if (a3.args.Args_3_u.keyrange != nullptr)
 			free(a3.args.Args_3_u.keyrange);
-		if (res3 != NULL)
+		if (res3 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_3, (char*)res3);
 		break;
         case TABLEVERS_4:
@@ -592,14 +592,14 @@ _DtCm_table_lookup_key_range(
 		return (CSA_E_FAILURE);
         }
 
-        if (res != NULL) {
+        if (res != nullptr) {
                 switch(res->status) {
                 case access_ok_4:
                 case access_failed_4:
 			abbs = res->res.Table_Res_List_4_u.b;
-			if (entry == NULL) {
+			if (entry == nullptr) {
 				/* caller is only interested in the first key */
-				if (abbs != NULL) {
+				if (abbs != nullptr) {
 					key->id = abbs->appt_id.key;
 					key->time = abbs->appt_id.tick;
 				} else
@@ -608,8 +608,8 @@ _DtCm_table_lookup_key_range(
 			}
 
 			/* we just copy the time from the returned data */
-			head = prev = NULL;
-			while (abbs != NULL) {
+			head = prev = nullptr;
+			while (abbs != nullptr) {
 				if ((stat = _DtCm_make_libentry(entry->e,
 				    &eptr)) != CSA_SUCCESS)
 					break;
@@ -621,7 +621,7 @@ _DtCm_table_lookup_key_range(
 					attrs[CSA_ENTRY_ATTR_START_DATE_I].\
 					value->item.string_value);
 
-				if (head == NULL)
+				if (head == nullptr)
 					head = eptr;
 				else {
 					prev->next = eptr;
@@ -633,7 +633,7 @@ _DtCm_table_lookup_key_range(
 			}
 			if (stat == CSA_SUCCESS)
 				*elist_r = head;
-			else if (head != NULL)
+			else if (head != nullptr)
 				_DtCm_free_libentries(head);
 
                         break;
@@ -666,13 +666,13 @@ _DtCm_table_insert(
 	_DtCm_libentry **entry_r)
 {
         CSA_return_code	stat = CSA_SUCCESS;
-        Table_Res_4	*res = NULL;
+        Table_Res_4	*res = nullptr;
 	_DtCm_Connection	*conn;
 	Appt_4		*appt4;
 
 	DP(("table.c: _DtCm_table_insert\n"));
 
-        if (cal == NULL || num_attrs == 0 || attrs == NULL || entry_r == NULL)
+        if (cal == nullptr || num_attrs == 0 || attrs == nullptr || entry_r == nullptr)
                 return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_attrs_to_appt4(num_attrs, attrs, &appt4)) != CSA_SUCCESS)
@@ -705,9 +705,9 @@ _DtCm_table_insert(
                 a2.args.Args_2_u.appt = _DtCm_appt4_to_appt2(appt4);
                 res2 = _DtCm_rtable_insert_2(&a2, conn);
                 res = _DtCm_tableres2_to_tableres4(res2);
-		if (a2.args.Args_2_u.appt != NULL)
+		if (a2.args.Args_2_u.appt != nullptr)
 			_DtCm_free_appt2(a2.args.Args_2_u.appt);
-                if (res2 != NULL)
+                if (res2 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_2, (char*)res2);
                 break;
 	case TABLEVERS_3:
@@ -717,9 +717,9 @@ _DtCm_table_insert(
 		a3.pid = getpid();
                 res3 = _DtCm_rtable_insert_3(&a3, conn);
                 res = _DtCm_tableres3_to_tableres4(res3);
-		if (a3.args.Args_3_u.appt != NULL)
+		if (a3.args.Args_3_u.appt != nullptr)
 			_DtCm_free_appt3(a3.args.Args_3_u.appt);
-                if (res3 != NULL)
+                if (res3 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_3, (char*)res3);
                 break;
         case TABLEVERS_4:
@@ -734,7 +734,7 @@ _DtCm_table_insert(
 		break;
 	}
 
-        if (res != NULL) {
+        if (res != nullptr) {
                 switch(res->status) {
                 case access_ok_4:
 			if (res->res.Table_Res_List_4_u.a) {
@@ -782,7 +782,7 @@ _DtCm_table_update(
 	_DtCm_libentry **nentry)
 {
         CSA_return_code	stat = CSA_SUCCESS;
-        Table_Res_4	*res = NULL;
+        Table_Res_4	*res = nullptr;
 	_DtCm_Connection	*conn;
 	Id_4		key;
 	Options_4	opt;
@@ -791,7 +791,7 @@ _DtCm_table_update(
 
 	DP(("table.c: _DtCm_table_update_one\n"));
 
-        if (cal == NULL || oentry == NULL || nentry == NULL)
+        if (cal == nullptr || oentry == nullptr || nentry == nullptr)
                 return (CSA_E_INVALID_PARAMETER);
 
 	/* convert scope to option */
@@ -804,7 +804,7 @@ _DtCm_table_update(
 
 	/* create new appt4 from old entry and new attribute values */
 	temp = oentry->next;
-	oentry->next = NULL;
+	oentry->next = nullptr;
 	stat = _DtCm_libentries_to_appt4(oentry, &appt4);
 	oentry->next = temp;
 
@@ -855,9 +855,9 @@ _DtCm_table_update(
 
                 res = _DtCm_tableres2_to_tableres4(res2);
 		free(a2.args.Args_2_u.apptid.oid);
-		if (a2.args.Args_2_u.apptid.new_appt != NULL)
+		if (a2.args.Args_2_u.apptid.new_appt != nullptr)
 			_DtCm_free_appt2(a2.args.Args_2_u.apptid.new_appt);
-                if (res2 != NULL)
+                if (res2 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_2, (char*)res2);
                 break;
 	case TABLEVERS_3:
@@ -875,9 +875,9 @@ _DtCm_table_update(
 
                 res = _DtCm_tableres3_to_tableres4(res3);
 		free(a3.args.Args_3_u.apptid.oid);
-		if (a3.args.Args_3_u.apptid.new_appt != NULL)
+		if (a3.args.Args_3_u.apptid.new_appt != nullptr)
 			_DtCm_free_appt3(a3.args.Args_3_u.apptid.new_appt);
-                if (res3 != NULL)
+                if (res3 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_3, (char*)res3);
                 break;
         case TABLEVERS_4:
@@ -895,7 +895,7 @@ _DtCm_table_update(
         }
 	_DtCm_free_appt4(appt4);
 
-        if (res != NULL) {
+        if (res != nullptr) {
                 switch(res->status) {
                 case access_ok_4:
                         if (res->res.Table_Res_List_4_u.a) {
@@ -936,14 +936,14 @@ _DtCm_table_delete(
 	CSA_enum scope)
 {
         CSA_return_code	stat = CSA_SUCCESS;
-        Table_Res_4	*res = NULL;
+        Table_Res_4	*res = nullptr;
 	_DtCm_Connection	*conn;
 	Uidopt_4	key;
 	cms_attribute	*rtype;
 
 	DP(("table.c: _DtCm_table_delete\n"));
 
-        if (cal == NULL || entry == NULL)
+        if (cal == nullptr || entry == nullptr)
                 return (CSA_E_INVALID_PARAMETER);
 
 	_csa_iso8601_to_tick(entry->e->attrs[CSA_ENTRY_ATTR_START_DATE_I].\
@@ -951,7 +951,7 @@ _DtCm_table_delete(
 
 	/* if this is an one-time appt, make sure the scope is do_all */
 	rtype = &entry->e->attrs[CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I];
-	if (rtype->value == NULL ||
+	if (rtype->value == nullptr ||
 	    rtype->value->item.sint32_value == CSA_X_DT_REPEAT_ONETIME)
 		scope = CSA_SCOPE_ALL;
 
@@ -959,7 +959,7 @@ _DtCm_table_delete(
 		return (stat);
 
 	key.appt_id.key		= entry->e->key.id;
-	key.next		= NULL;
+	key.next		= nullptr;
 
 	conn = &cal->conn;
 	if ((key.option == do_forward_4) && (conn->ci->vers_out < TABLEVERS_4))
@@ -984,9 +984,9 @@ _DtCm_table_delete(
 		    res2 = _DtCm_rtable_delete_instance_2(&a2, conn);
 
                 res = _DtCm_tableres2_to_tableres4(res2);
-		if (a2.args.Args_2_u.key != NULL)
+		if (a2.args.Args_2_u.key != nullptr)
 			free(a2.args.Args_2_u.key);
-                if (res2 != NULL)
+                if (res2 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_2, (char*)res2);
                 break;
 	case TABLEVERS_3:
@@ -1001,9 +1001,9 @@ _DtCm_table_delete(
 		    res3 = _DtCm_rtable_delete_instance_3(&a3, conn);
 
                 res = _DtCm_tableres3_to_tableres4(res3);
-		if (a3.args.Args_3_u.key != NULL)
+		if (a3.args.Args_3_u.key != nullptr)
 			free(a3.args.Args_3_u.key);
-                if (res3 != NULL)
+                if (res3 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_3, (char*)res3);
 		break;
 	case TABLEVERS_4:
@@ -1018,10 +1018,10 @@ _DtCm_table_delete(
 		break;
         }
 
-        if (res!=NULL) {
+        if (res!=nullptr) {
 		switch(res->status) {
 		case access_ok_4:
-                        if (res->res.Table_Res_List_4_u.a == NULL)
+                        if (res->res.Table_Res_List_4_u.a == nullptr)
 				stat = CSA_X_DT_E_ENTRY_NOT_FOUND |
 					CSA_E_INVALID_ENTRY_HANDLE;
 			break;
@@ -1055,13 +1055,13 @@ _DtCm_table_delete(
 extern CSA_return_code 
 _DtCm_table_size(Calendar *cal, int *size)
 {
-	int *res = NULL;
+	int *res = nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 	_DtCm_Connection	*conn;
 
 	DP(("table.c: _DtCm_table_size\n"));
 
-	if (cal == NULL || size == NULL)
+	if (cal == nullptr || size == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	conn = &cal->conn;
@@ -1096,7 +1096,7 @@ _DtCm_table_size(Calendar *cal, int *size)
                 break;
         }
 
-	if (res != NULL)
+	if (res != nullptr)
 		*size = *res;
 	else {
 		stat = (conn->stat == RPC_SUCCESS) ? CSA_E_SERVICE_UNAVAILABLE :
@@ -1115,14 +1115,14 @@ _DtCm_table_lookup_reminder(
 	CSA_reminder_reference **rems)
 {
         CSA_return_code	stat = CSA_SUCCESS;
-        Table_Res_4	*res = NULL;
+        Table_Res_4	*res = nullptr;
 	_DtCm_Connection	*conn;
 	Reminder_4	*rptr;
 	time_t		tick;
 
 	DP(("table.c: _DtCm_table_lookup_reminder\n"));
 
-	if (cal == NULL || num_rems == 0 || rems == NULL)
+	if (cal == nullptr || num_rems == 0 || rems == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/*
@@ -1148,7 +1148,7 @@ _DtCm_table_lookup_reminder(
                 a2.args.Args_2_u.tick = tick;
                 res2 = _DtCm_rtable_lookup_next_reminder_2(&a2, conn);
                 res = _DtCm_tableres2_to_tableres4(res2);
-                if (res2 != NULL)
+                if (res2 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_2, (char*)res2);
                 break;
 	case TABLEVERS_3:
@@ -1158,7 +1158,7 @@ _DtCm_table_lookup_reminder(
 		a3.pid = getpid();
                 res3 = _DtCm_rtable_lookup_next_reminder_3(&a3, conn);
                 res = _DtCm_tableres3_to_tableres4(res3);
-                if (res3 != NULL)
+                if (res3 != nullptr)
 			xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_3, (char*)res3);
                 break;
         case TABLEVERS_4:
@@ -1173,7 +1173,7 @@ _DtCm_table_lookup_reminder(
 		break;
         }
 
-        if (res != NULL) {
+        if (res != nullptr) {
                 switch(res->status) {
                 case access_ok_4:
 			/*
@@ -1183,7 +1183,7 @@ _DtCm_table_lookup_reminder(
 			rptr = _DtCm_copy_reminder4(res->res.Table_Res_List_4_u.r);
                 	xdr_free((xdrproc_t)_DtCm_xdr_Table_Res_4, (char*)res);
 
-			if (num_names > 0 && reminder_names != NULL) {
+			if (num_names > 0 && reminder_names != nullptr) {
 				rptr = _DtCm_match_reminders(rptr, num_names,
 					reminder_names);
 			}
@@ -1191,7 +1191,7 @@ _DtCm_table_lookup_reminder(
 			stat = _DtCm_reminder4_to_csareminder(rptr, num_rems,
 				rems);
 
-			if (rptr != NULL)
+			if (rptr != nullptr)
 				_DtCm_free_reminder4(rptr);
                         break;
 		case access_notable_4:
@@ -1239,9 +1239,9 @@ _DtCm_table_unregister_target(
         	r2.prognum = _DtCm_transient;
         	r2.versnum = AGENTVERS;
         	r2.procnum = update_callback;
-		r2.next = NULL;
+		r2.next = nullptr;
 		stat2 = _DtCm_deregister_callback_2(&r2, conn);
-		if (stat2 != NULL)
+		if (stat2 != nullptr)
 			res = _DtCm_regstat2_to_regstat4(*stat2);
 		else
 			nullreturned = B_TRUE;
@@ -1252,10 +1252,10 @@ _DtCm_table_unregister_target(
         	r3.prognum = _DtCm_transient;
         	r3.versnum = AGENTVERS;
         	r3.procnum = update_callback;
-		r3.next = NULL;
+		r3.next = nullptr;
 		r3.pid = getpid();
 		stat3 = _DtCm_deregister_callback_3(&r3, conn);
-		if (stat3 != NULL)
+		if (stat3 != nullptr)
 			res = _DtCm_regstat3_to_regstat4(*stat3);
 		else
 			nullreturned = B_TRUE;
@@ -1266,10 +1266,10 @@ _DtCm_table_unregister_target(
         	r4.prognum = _DtCm_transient;
         	r4.versnum = AGENTVERS;
         	r4.procnum = update_callback;
-		r4.next = NULL;
+		r4.next = nullptr;
 		r4.pid = getpid();
 		stat4 = _DtCm_deregister_callback_4(&r4, conn);
-		if (stat4 != NULL)
+		if (stat4 != nullptr)
 			res = *stat4;
 		else
 			nullreturned = B_TRUE;
@@ -1324,9 +1324,9 @@ _DtCm_table_register_target(
         	r2.prognum = _DtCm_transient;
         	r2.versnum = AGENTVERS;
         	r2.procnum = update_callback;
-		r2.next = NULL;
+		r2.next = nullptr;
 		stat2 = _DtCm_register_callback_2(&r2, conn);
-		if (stat2 != NULL)
+		if (stat2 != nullptr)
 			res = _DtCm_regstat2_to_regstat4(*stat2);
 		else
 			nullreturned = B_TRUE;
@@ -1337,10 +1337,10 @@ _DtCm_table_register_target(
         	r3.prognum = _DtCm_transient;
         	r3.versnum = AGENTVERS;
         	r3.procnum = update_callback;
-		r3.next = NULL;
+		r3.next = nullptr;
 		r3.pid = getpid();
 		stat3 = _DtCm_register_callback_3(&r3, conn);
-		if (stat3 != NULL)
+		if (stat3 != nullptr)
 			res = _DtCm_regstat3_to_regstat4(*stat3);
 		else
 			nullreturned = B_TRUE;
@@ -1351,10 +1351,10 @@ _DtCm_table_register_target(
         	r4.prognum = _DtCm_transient;
         	r4.versnum = AGENTVERS;
         	r4.procnum = update_callback;
-		r4.next = NULL;
+		r4.next = nullptr;
 		r4.pid = getpid();
 		stat4 = _DtCm_register_callback_4(&r4, conn);
-		if (stat4 != NULL)
+		if (stat4 != nullptr)
 			res = *stat4;
 		else
 			nullreturned = B_TRUE;

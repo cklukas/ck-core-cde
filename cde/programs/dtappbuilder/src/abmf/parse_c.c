@@ -222,14 +222,14 @@ abmfP_parse_c_file(FILE *cFile, CSegArray *segmentsOutPtr)
     int			return_value = 0;
     int			rc = 0;		/* return code */	
     int			numSegs = 0;
-    CSegArray		segArray = NULL;
+    CSegArray		segArray = nullptr;
     CSegRec		seg;
     BFileRec		bfileRec;
     BFile		bfile = &bfileRec;
 
     bfile_construct(bfile, cFile);
     segArray = cseg_array_create();
-    if (segArray == NULL)
+    if (segArray == nullptr)
     {
 	return_code(ERR_NO_MEMORY);
     }
@@ -271,7 +271,7 @@ abmfP_parse_c_file(FILE *cFile, CSegArray *segmentsOutPtr)
 	++numSegs;
 	segArray->segs = (CSeg)realloc(
 				segArray->segs, numSegs * sizeof(CSegRec));
-	if (segArray->segs == NULL)
+	if (segArray->segs == nullptr)
 	{
 	    cseg_array_destroy(segArray);
 	    util_printf_err("Out of memory!\n");
@@ -316,9 +316,9 @@ epilogue:
 static int
 set_user_seg_next_pointers(CSegArray segArray, BFile file)
 {
-    CSeg	curSeg = NULL;
-    CUserSeg	curUserSeg = NULL;
-    CUserSeg	lastUserSeg = NULL;
+    CSeg	curSeg = nullptr;
+    CUserSeg	curUserSeg = nullptr;
+    CUserSeg	lastUserSeg = nullptr;
     int		segCount = 0;
     int		userSegCount = 0;
 
@@ -329,7 +329,7 @@ set_user_seg_next_pointers(CSegArray segArray, BFile file)
 	    ++userSegCount)
 	{
 	    curUserSeg = &(curSeg->userSegs.segs[userSegCount]);
-	    if (lastUserSeg == NULL)
+	    if (lastUserSeg == nullptr)
 	    {
 		/* first user segment */
 		segArray->firstUserSeg = curUserSeg;
@@ -413,7 +413,7 @@ find_seg(
 		/*
 		 * Found user seg in global segment
 		 */
-		CUserSeg	userSeg = NULL;
+		CUserSeg	userSeg = nullptr;
 		++(userSegs->numSegs);
 		userSeg = &(userSegs->segs[(userSegs->numSegs)-1]);
 		user_seg_construct(userSeg);
@@ -476,7 +476,7 @@ find_seg(
 	identLen = 0;
 	while (lookForIdent)
 	{
-	    iChar = get_char_from_c_file(file, NULL);
+	    iChar = get_char_from_c_file(file, nullptr);
 	    if (iChar == EOF)
 	    {
 		lookForIdent = FALSE;
@@ -499,7 +499,7 @@ find_seg(
 	    {
 	        /* no ident - look for () */
 		segType = CSEG_FUNC;
-		if (find_matching(file, '(', &openingParenOff, NULL)
+		if (find_matching(file, '(', &openingParenOff, nullptr)
 				/* ) vi hack */			>= 0)
 		{
 		    segType = CSEG_FUNC;
@@ -517,7 +517,7 @@ find_seg(
 	    }
 	    else if (iChar == ']')
 	    {
-		if (find_matching(file, '[', NULL, NULL) >= 0) /* ] vi hack */
+		if (find_matching(file, '[', nullptr, nullptr) >= 0) /* ] vi hack */
 		{
 		    segType = CSEG_AGGREGATE_VAR;
 		    identLen = 0;
@@ -824,8 +824,8 @@ get_seg(BFile file, CSeg cseg)
     cseg->name = strdup(segName);
     cseg->offset = segOff;
     cseg->length = segLen;
-    cseg->text = NULL;
-    cseg->declaration = NULL;
+    cseg->text = nullptr;
+    cseg->declaration = nullptr;
     cseg->userSegs = userSegs;
     for (i = 0; i < cseg->userSegs.numSegs; ++i)
     {
@@ -900,7 +900,7 @@ find_matching(
 	/*
 	 * Process magic comments
 	 */
-	if (userSegs != NULL)
+	if (userSegs != nullptr)
 	{
 	    switch (magicCommentType)
 	    {
@@ -914,7 +914,7 @@ find_matching(
 		    }
 		    else
 		    {
-			CUserSeg	userSeg = NULL;
+			CUserSeg	userSeg = nullptr;
 
 			if (iChar != '\n')
 			{
@@ -968,7 +968,7 @@ find_matching(
 	     break;
 
 	     case '{':
-		 if (find_matching(file, '}', NULL, userSegs) < 0)
+		 if (find_matching(file, '}', nullptr, userSegs) < 0)
 		 {
 		     util_printf_err("Unbalanced '{' at line %d.\n",
 			cvt_offset_to_line(file, lCharOff));
@@ -977,7 +977,7 @@ find_matching(
 	     break;
 
 	     case '}':
-		 if (find_matching(file, '{', NULL, userSegs) < 0)
+		 if (find_matching(file, '{', nullptr, userSegs) < 0)
 		 {
 		     util_printf_err("Unbalanced '}' at line %d.\n",
 			cvt_offset_to_line(file, lCharOff));
@@ -986,7 +986,7 @@ find_matching(
 	    break;
 
 	    case '(':
-		if (find_matching(file, ')', NULL, userSegs) < 0)
+		if (find_matching(file, ')', nullptr, userSegs) < 0)
 		{
 		    util_printf_err("Unbalanced '(' at line %d.\n",
 			cvt_offset_to_line(file, lCharOff));
@@ -995,7 +995,7 @@ find_matching(
 	    break;
 
 	    case ')':
-		if (find_matching(file, '(', NULL, userSegs) < 0)
+		if (find_matching(file, '(', nullptr, userSegs) < 0)
 		{
 		    util_printf_err("Unbalanced ')' at line %d.\n",
 			cvt_offset_to_line(file, lCharOff));
@@ -1010,7 +1010,7 @@ epilogue:
     if (foundMatching)
     {
 	/* printf("<<match found(%c) for %ld>>\n", matchChar, startOff); */
-	if (matchOffPtr != NULL)
+	if (matchOffPtr != nullptr)
 	{
 	    matchOff = bfile_get_off(file) + (file->reverse? 1:-1);
 	    *matchOffPtr = matchOff;
@@ -1114,11 +1114,11 @@ skip_white(BFile file)
 static int
 skip_white_and_comment(BFile file)
 {
-    int	iChar = get_char_from_c_file(file, NULL);
+    int	iChar = get_char_from_c_file(file, nullptr);
 
     while ((iChar != EOF) && (isspace(iChar)))
     {
-	iChar = get_char_from_c_file(file, NULL);
+	iChar = get_char_from_c_file(file, nullptr);
     }
     if (iChar != EOF)
     {
@@ -1140,7 +1140,7 @@ get_char_from_c_file(
     int		iChar = EOF;
     BOOL	done = FALSE;
 
-    if (magicCommentTypeOutPtr != NULL)
+    if (magicCommentTypeOutPtr != nullptr)
     {
         *magicCommentTypeOutPtr = MAGIC_CMT_UNDEF;
     }
@@ -1219,7 +1219,7 @@ skip_comment(
 {
     int		return_value = -1;
 
-    if (magicCommentTypeOutPtr != NULL)
+    if (magicCommentTypeOutPtr != nullptr)
     {
         *magicCommentTypeOutPtr = MAGIC_CMT_UNDEF;
     }
@@ -1284,7 +1284,7 @@ skip_slash_slash_comment_fwd(
     }
     cmtBuf[cmtBufLen] = 0;
 
-    if (magicCommentTypeOutPtr != NULL)
+    if (magicCommentTypeOutPtr != nullptr)
     {
         *magicCommentTypeOutPtr = determine_magic_comment_type(cmtBuf);
     }
@@ -1303,7 +1303,7 @@ skip_slash_slash_comment_bwd(
     BOOL	done = FALSE;
     int		iChar = 0;
 
-    if (magicCommentTypeOutPtr != NULL)
+    if (magicCommentTypeOutPtr != nullptr)
     {
         *magicCommentTypeOutPtr = MAGIC_CMT_UNDEF;
     }
@@ -1382,7 +1382,7 @@ skip_slash_star_comment(
 	}
     }
     cmtBuf[cmtBufLen] = 0;
-    if (magicCommentTypeOutPtr != NULL)
+    if (magicCommentTypeOutPtr != nullptr)
     {
         *magicCommentTypeOutPtr = determine_magic_comment_type(cmtBuf);
     }
@@ -1427,7 +1427,7 @@ static BOOL bfileP_set_eof(BFile file);
 static int
 bfile_construct(BFile file, FILE *stream)
 {
-    file->stream = NULL;
+    file->stream = nullptr;
     file->reverse = FALSE;
     file->lastNewlineOff = -1;
     file->lastNewlineOff2 = -1;
@@ -1440,7 +1440,7 @@ bfile_construct(BFile file, FILE *stream)
 static int
 bfile_destruct(BFile file)
 {
-    return bfile_set_file(file, NULL);
+    return bfile_set_file(file, nullptr);
 }
 
 
@@ -1649,7 +1649,7 @@ bfileP_set_eof(BFile file)
 {
     file->eof = FALSE;
 
-    if (file->stream == NULL)
+    if (file->stream == nullptr)
     {
 	file->eof = TRUE;
 	goto epilogue;
@@ -1685,7 +1685,7 @@ CSegArray
 cseg_array_create(void)
 {
     CSegArray	newArray = (CSegArray)util_malloc(sizeof(CSegArrayRec));
-    if (newArray != NULL)
+    if (newArray != nullptr)
     {
         memset(newArray, 0, sizeof(CSegArrayRec));
     }
@@ -1697,7 +1697,7 @@ int
 cseg_arrayP_destroy_impl(CSegArray *arrayInOutPtr)
 {
     CSegArray	array = *arrayInOutPtr;
-    if (array == NULL)
+    if (array == nullptr)
     {
 	return 0;
     }
@@ -1705,7 +1705,7 @@ cseg_arrayP_destroy_impl(CSegArray *arrayInOutPtr)
     util_free(array->segs);
     util_free(array);
 
-    *arrayInOutPtr = NULL;
+    *arrayInOutPtr = nullptr;
     return 0;
 }
 
@@ -1792,10 +1792,10 @@ nl_catd Dtb_project_catd = (nl_catd)-1;
 int 
 main(int argc, char *argv[])
 {
-    STRING		inFilename = NULL;
-    FILE		*inFile = NULL;
-    CSegArray	segs = NULL;
-    CSeg		cseg = NULL;
+    STRING		inFilename = nullptr;
+    FILE		*inFile = nullptr;
+    CSegArray	segs = nullptr;
+    CSeg		cseg = nullptr;
     int			numSegs = 0;
     int			segIndex = 0;
     int			usegIndex = 0;
@@ -1810,7 +1810,7 @@ main(int argc, char *argv[])
 
     inFilename = argv[1];
     inFile = util_fopen_locked(inFilename, "r");
-    if (inFile == NULL)
+    if (inFile == nullptr)
     {
 	perror(inFilename);
 	return -1;
@@ -1836,7 +1836,7 @@ main(int argc, char *argv[])
 	    cseg->offset,
 	    cseg->length,
 	    cseg->userSegs.numSegs);
-	if (cseg->text != NULL)
+	if (cseg->text != nullptr)
 	{
             printf("|||%s|||\n", cseg->text);
 	}

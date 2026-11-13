@@ -93,9 +93,9 @@ static unsigned long quarkMask = 0;
 static Entry zero = 0;
 static Entry *quarkTable = &zero; /* crock */
 static unsigned long quarkRehash;
-static XrmString **stringTable = NULL;
+static XrmString **stringTable = nullptr;
 #ifdef PERMQ
-static Bits **permTable = NULL;
+static Bits **permTable = nullptr;
 #endif
 static XrmQuark nextUniq = -1;	/* next quark from falrmUniqueQuark */
 
@@ -134,7 +134,7 @@ static XrmQuark nextUniq = -1;	/* next quark from falrmUniqueQuark */
 #define DALIGN sizeof(double)
 
 #define NEVERFREETABLESIZE ((8192-12) & ~(DALIGN-1))
-static char *neverFreeTable = NULL;
+static char *neverFreeTable = nullptr;
 static int  neverFreeTableSize = 0;
 
 static char *permalloc(unsigned int length)
@@ -145,7 +145,7 @@ static char *permalloc(unsigned int length)
 	if (length >= NEVERFREETABLESIZE)
 	    return Xmalloc(length);
 	if (! (ret = Xmalloc(NEVERFREETABLESIZE)))
-	    return (char *) NULL;
+	    return (char *) nullptr;
 	neverFreeTableSize = NEVERFREETABLESIZE;
 	neverFreeTable = ret;
     }
@@ -214,7 +214,7 @@ ExpandQuarkTable(void)
 						CHUNKPER);
 	    if (!stringTable)
 		return False;
-	    stringTable[0] = (XrmString *)NULL;
+	    stringTable[0] = (XrmString *)nullptr;
 	}
 #ifdef PERMQ
 	if (!permTable)

@@ -123,22 +123,22 @@ ShowPreferencesDialog(
 
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
    file_mgr_rec->menuStates &= ~ PREFERENCES;
 
-   _DtShowDialog (file_mgr_rec->shell, NULL, (XtPointer)file_mgr_rec, 
+   _DtShowDialog (file_mgr_rec->shell, nullptr, (XtPointer)file_mgr_rec, 
                file_mgr_data->preferences, PreferencesChange,
 	       (XtPointer)file_mgr_rec, PreferencesClose,
-	       (XtPointer)file_mgr_rec, NULL, False, False, NULL, NULL);
+	       (XtPointer)file_mgr_rec, nullptr, False, False, nullptr, nullptr);
 
    /* set the title */
    preferences_rec = (PreferencesRec *)_DtGetDialogInstance(
                                         file_mgr_data->preferences);
 
-   if(file_mgr_data->title != NULL &&
+   if(file_mgr_data->title != nullptr &&
            (strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0 ||
             strcmp(file_mgr_data->title, "Trash Can") == 0))
    {
@@ -272,7 +272,7 @@ PreferencesChange(
       file_mgr_data->show_status_line = preferences_data->show_status_line;
       file_mgr_data->render_image_icons = preferences_data->render_image_icons;
       file_mgr_data->center_icons = preferences_data->center_icons;
-      if (getenv("DTFILE_CENTER_DEBUG") != NULL)
+      if (getenv("DTFILE_CENTER_DEBUG") != nullptr)
       {
          fprintf(stderr, "dtfile-center: apply center_icons=%d\n",
                  file_mgr_data->center_icons ? 1 : 0);
@@ -291,7 +291,7 @@ PreferencesChange(
          DtUpdateIconicPath(file_mgr_rec, file_mgr_data, True);
    
       if(openDirType == NEW)
-         ForceMyIconOpen(file_mgr_data->host, NULL);
+         ForceMyIconOpen(file_mgr_data->host, nullptr);
    }
 }
 

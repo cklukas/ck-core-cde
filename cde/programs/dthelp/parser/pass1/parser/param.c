@@ -246,7 +246,7 @@ void m_stkonedef(int par, M_ELEMENT scanel, M_WCHAR **poccur, int i)
       if (! (M_ENTITY *)
             m_lookfortrie(m_parameter[par - 1].defval, m_enttrie)) {
         m_err1("Interface error: Default entity %s undefined", poccur[i]) ;
-        poccur[i] = NULL ;
+        poccur[i] = nullptr ;
         return ;
         }
 

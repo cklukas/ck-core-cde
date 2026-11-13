@@ -72,7 +72,7 @@ void	ximsStart(void)
 	ret = ErrNoSelection;
     } else {					/* save selection */
 	if (!(OpFlag & FLAG_NOSAVE) && (sel->flag & F_SELECT_CHANGED)) {
-	    if (save_user_selection(sel, NULL) != NoError) {
+	    if (save_user_selection(sel, nullptr) != NoError) {
 		DPR(("save_user_selection(): failed\n"));
 		put_xims_warnmsg(ErrSaveSelection, 0, 0, 0);
 		/* ret = ErrSaveSelection; */
@@ -142,11 +142,11 @@ void	ximsWait(void)
 	lapse = 0;
 	interval.tv_sec = Opt.Interval / 1000;
 	interval.tv_usec = (Opt.Interval % 1000) * 1000;
-	start_tm = time(NULL);
+	start_tm = time(nullptr);
 
 	while (is_waiting()) {
 	    select(0, 0, 0, 0, &interval);		/* usleep */
-	    lapse = (int) time(NULL) - start_tm;
+	    lapse = (int) time(nullptr) - start_tm;
 
 	    if (im_mod_available(sel->renv) != 0 || lapse >= Opt.Timeout) {
 		DPR(("ximsWait(tmout=%d): wait done (%d sec.)\n",
@@ -299,7 +299,7 @@ int	mk_ims_option(char *ptr, UserSelection *sel)
 	/* bp = strcpyx(bp, Opt.ImsOption); */
 	bp += expand_string(Opt.ImsOption, bp, BUFSIZ, ims);
     }
-    if (sel->iconic > 0 && strstr(ptr, STR_ICONIC_OPT) == NULL) {
+    if (sel->iconic > 0 && strstr(ptr, STR_ICONIC_OPT) == nullptr) {
 	bp = strcpyx(bp, STR_ICONIC_OPT);
     }
     *bp = 0;
@@ -343,14 +343,14 @@ int	load_resources(void)
 	return False;
     }
 
-    sess_res = res_file = NULL;
+    sess_res = res_file = nullptr;
     if (!(OpFlag & FLAG_NORESOURCE)) {
 	if (isDT()) {
 	    sess_res = find_session_resfile(RES_TYPE_DT);
 	}
 	if (sess_res && !is_readable(sess_res, False)) {
 	    FREE(sess_res);
-	    sess_res = NULL;
+	    sess_res = nullptr;
 	}
     }
 
@@ -384,14 +384,14 @@ static char	*find_session_resfile(int res_type)
 {
     char	path[MAXPATHLEN];
     char	**ls = (char **) 0, **pp;
-    char	*res = NULL;
+    char	*res = nullptr;
     XimsBool	found = False;
 
     if (res_type == RES_TYPE_DT) {	/* DT */
-	res = Conf.dt ? (Conf.dt)->resPath : NULL;
+	res = Conf.dt ? (Conf.dt)->resPath : nullptr;
     }
 
-    if (!res)	return NULL;
+    if (!res)	return nullptr;
     if ((ls = parse_strlist(res, ':'))) {
 	for (pp = ls; *pp; pp++) {
 	    expand_string(*pp, path, MAXPATHLEN, (ImsConf *)0);
@@ -406,7 +406,7 @@ static char	*find_session_resfile(int res_type)
 
     if (found)
 	return NEWSTR(path);
-    return NULL;
+    return nullptr;
 }
 
 
@@ -577,7 +577,7 @@ static int	invoke_ims(UserSelection *sel)
 #else
 	setpgrp();
 #endif
-	execl(SH_PATH, "sh", "-c", renv->cmdbuf, NULL);
+	execl(SH_PATH, "sh", "-c", renv->cmdbuf, nullptr);
 
 	put_xims_log("%s: exec failed [%s]", SH_PATH, strerror(errno), 0);
 	/* perror(SH_PATH); */
@@ -607,7 +607,7 @@ static void	on_sig_chld(int sig)
     errno = 0;
     do {
 #ifdef	_XPG4_EXTENDED
-	pid = wait3(&wait_status, WNOHANG, (struct rusage *)NULL);
+	pid = wait3(&wait_status, WNOHANG, (struct rusage *)nullptr);
 #else
 	pid = waitpid((pid_t) -1, &wait_status, WNOHANG);
 #endif	/* _XPG4_EXTENDED */

@@ -409,7 +409,7 @@ yyywrap(FILE *f)
   fclose (f);
   munmap(start_of_mmapped_area, len);
   free(parse_buffer);
-  parse_buffer = NULL;
+  parse_buffer = nullptr;
   return (1);
 }
 
@@ -424,7 +424,7 @@ setinput (FILE* f)
   }
   
   if((start_of_mmapped_area = 
-      mmap(NULL,  
+      mmap(nullptr,  
 	   len = buff.st_size,
 	   PROT_READ,
 	   MAP_PRIVATE,
@@ -434,7 +434,7 @@ setinput (FILE* f)
 	return(-1);
       }
 
-  if((parse_buffer = malloc(len + 2)) == NULL) {
+  if((parse_buffer = malloc(len + 2)) == nullptr) {
     perror("malloc");
     munmap(start_of_mmapped_area, len);
     return(-1);
@@ -557,7 +557,7 @@ main(int argc, char ** argv)
     exit(1);
   }
 
-  if((f = fopen(argv[1], "r")) == NULL) {
+  if((f = fopen(argv[1], "r")) == nullptr) {
     perror("fopen");
     exit(2);
   }

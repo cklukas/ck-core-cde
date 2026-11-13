@@ -153,7 +153,7 @@ void            oe_initialize (void)
      * OE_sitecnfg_fname is initialized by ausapi or loadocf and never reset.
      * OE_sitecnfg_mtime is initialized by oe_initialize() and never reset.
      */
-    global_memory_ptr =		NULL;
+    global_memory_ptr =		nullptr;
     austext_exit_mem =		release_memory_on_exit;
 
     OE_flags =			0L;
@@ -173,7 +173,7 @@ void            oe_initialize (void)
     OEF_notessem =		FNAME_NOTES_SEM;
     OEF_readme =		FNAME_README;
 
-    for (oef = oef_table; oef->id != NULL; oef++)
+    for (oef = oef_table; oef->id != nullptr; oef++)
 	oef->previously_specified = FALSE;
 
 
@@ -183,7 +183,7 @@ void            oe_initialize (void)
     if (usrblk.request == OE_INITIALIZE) {
 	if (!is_compatible_version (usrblk.query, SCHEMA_VERSION) ||
 	    !is_compatible_version (usrblk.query, PROTOCOL_VERSION)) {
-	    if (usrblk.query != NULL)
+	    if (usrblk.query != nullptr)
 		ptr = usrblk.query;
 	    else
 		ptr = CATGETS(dtsearch_catd, MS_misc, 6, "<unknown>");
@@ -212,11 +212,11 @@ void            oe_initialize (void)
 	sprintf (sprintbuf,
 	    "ENGINEINIT='%s' UVER='%s' " AUDIT_WHOWHEN "\n",
 	    AUSAPI_VERSION, usrblk.query, usrblk.userid,
-	    nowstring (NULL));
+	    nowstring (nullptr));
 	if (usrblk.debug & USRDBG_RARE)
 	    fprintf (aa_stderr, PROGNAME "362 %s", sprintbuf);
 	if (OE_flags & OE_AUDIT) {
-	    if ((stream = fopen (OEF_audit, "a ")) != NULL)
+	    if ((stream = fopen (OEF_audit, "a ")) != nullptr)
 		/* the blank in "a " works around old aix bug */
 	    {
 		fputs (sprintbuf, stream);
@@ -252,7 +252,7 @@ INIT_FAILED:
     good_dblk_count = 0;
     db = usrblk.dblist;	/* could already = NULL after ve_initialize() */
     lastlink = &usrblk.dblist;
-    while (db != NULL) {
+    while (db != nullptr) {
 	if (!load_language (db, usrblk.dblist))
 	    goto DELETE_DB;
 	/*
@@ -260,7 +260,7 @@ INIT_FAILED:
 	 * files.  If no gui label was provided, set it to the
 	 * database name.  Then increment pointers and continue. 
 	 */
-	if (db->label == NULL)
+	if (db->label == nullptr)
 	    db->label = strdup (db->name);
 	else if (db->label[0] == 0)
 	    db->label = strdup (db->name);
@@ -348,7 +348,7 @@ void            oe_uninitialize (void)
     release_shm_mem ();
 
     /* Free allocated storage in oef table and reset the default filenames. */
-    for (oef = oef_table; oef->id != NULL; oef++) {
+    for (oef = oef_table; oef->id != nullptr; oef++) {
 	if (oef->previously_specified) {
 	    oef->previously_specified = FALSE;
 	    free (*(oef->OEFptr));
@@ -356,7 +356,7 @@ void            oe_uninitialize (void)
     }
 
     db = usrblk.dblist;
-    while (db != NULL) {
+    while (db != nullptr) {
 
 	/* Save next dblk so we'll know where to go after freeing this one */
 	nextdb = db->link;
@@ -364,17 +364,17 @@ void            oe_uninitialize (void)
 	UNMALLOC (db->path);
 	UNMALLOC (db->keytypes);
 
-	if (db->iifile != NULL) {
+	if (db->iifile != nullptr) {
 	    fclose (db->iifile);
-	    db->iifile = NULL;
+	    db->iifile = nullptr;
 	}
-	if (db->syofile != NULL) {
+	if (db->syofile != nullptr) {
 	    fclose (db->syofile);
-	    db->syofile = NULL;
+	    db->syofile = nullptr;
 	}
-	if (db->syifile != NULL) {
+	if (db->syifile != nullptr) {
 	    fclose (db->syifile);
-	    db->syifile = NULL;
+	    db->syifile = nullptr;
 	}
 
 	unload_language (db);
@@ -382,8 +382,8 @@ void            oe_uninitialize (void)
 	free (db);
 	db = nextdb;
     }
-    usrblk.dblist = NULL;
-    usrblk.dblk = NULL;
+    usrblk.dblist = nullptr;
+    usrblk.dblk = nullptr;
     return;
 }  /* oe_uninitialize() */
 

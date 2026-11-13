@@ -40,7 +40,7 @@ typedef struct _appctlist {
 	struct _appctlist *next;
 } AppCtList;
 
-static AppCtList *registered_appct = NULL;
+static AppCtList *registered_appct = nullptr;
 
 /*****************************************************************************
  * forward declaration of static functions
@@ -78,7 +78,7 @@ _DtCm_register_xtcallback(XtAppContext appct)
                */
               id = XtAppAddInput(appct, i,
                                  (XtPointer)XtInputReadMask,
-                                 xtcallback, NULL);
+                                 xtcallback, nullptr);
 
               DP(("xtclient.c: id %d for input at fd %d\n",
                   id, i));
@@ -114,7 +114,7 @@ new_appct(XtAppContext appct)
 	AppCtList	*lptr;
 	boolean_t	newappct = B_TRUE;
 
-	for (lptr = registered_appct; lptr != NULL; lptr = lptr->next) {
+	for (lptr = registered_appct; lptr != nullptr; lptr = lptr->next) {
 		if (lptr->appct == appct) {
 			newappct = B_FALSE;
 			break;

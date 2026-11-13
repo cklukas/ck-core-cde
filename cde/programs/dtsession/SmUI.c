@@ -159,10 +159,10 @@ LockMessage( void )
 {
     const char *format = (char *) GETMESSAGE(18, 1, "Display locked by user %s.");
     char *name = SmPamUserName();
-    size_t length = strlen(format) + (name != NULL ? strlen(name) : 0) + 1;
+    size_t length = strlen(format) + (name != nullptr ? strlen(name) : 0) + 1;
     char *message = XtCalloc(1, length);
 
-    snprintf(message, length, format, name != NULL ? name : "");
+    snprintf(message, length, format, name != nullptr ? name : "");
     free(name);
 
     return message;
@@ -216,7 +216,7 @@ CreateLockDialog( void )
     XtSetArg(uiArgs[i], XmNmappedWhenManaged, True); i++;
     tmpLock = XmCreateFormDialog(smGD.topLevelWid, "lockDialog", uiArgs, i);
     XtAddCallback (XtParent(tmpLock), XmNpopupCallback,
-		   LockDialogUp, NULL);
+		   LockDialogUp, nullptr);
     smDD.matte[0] = tmpLock;
 
     i = 0;
@@ -382,7 +382,7 @@ CreateLockDialog( void )
     XtVaSetValues ( smDD.indLabel[0],
                     XmNborderWidth, 2,
                     XmNborderColor,  focus_color,
-                    NULL );
+                    nullptr );
 
     /*
      * Manage forms AFTER all children have been managed
@@ -501,7 +501,7 @@ ConfirmExit(
 					    retrun to Current */
     static	XmString currentToHome; /* started Current, return to Home */
 
-    if(smDD.confExit == NULL)
+    if(smDD.confExit == nullptr)
     {
 	/*
 	 * Create all compound strings for confirmation dialogs
@@ -621,7 +621,7 @@ Continue Logout?")));
     *pmsg = msg;
 
 
-    XtAddCallback (XtParent(smDD.confExit), XmNpopupCallback, DialogUp, NULL);
+    XtAddCallback (XtParent(smDD.confExit), XmNpopupCallback, DialogUp, nullptr);
 
     XtManageChild(smDD.confExit);
     return(0);
@@ -659,7 +659,7 @@ WarnMsgFailure( void )
     XmString 	bmsDeadString;
     String	tmpString;
 
-    if(smDD.deadWid == NULL)
+    if(smDD.deadWid == nullptr)
     {
 	bmsDeadString = XmStringCreateLocalized(((char *)GETMESSAGE(18, 38,
 		"Messaging System Inoperative\n\n\
@@ -694,7 +694,7 @@ proceed to save your files.")));
 	XtSetValues(XtParent(smDD.deadWid), uiArgs, i);
 
 	XtAddCallback (XtParent(smDD.deadWid),
-		       XmNpopupCallback, DialogUp, NULL);
+		       XmNpopupCallback, DialogUp, nullptr);
 	XtUnmanageChild(XmMessageBoxGetChild(smDD.deadWid,
 					     XmDIALOG_CANCEL_BUTTON));
 
@@ -708,7 +708,7 @@ proceed to save your files.")));
 		       TopicHelpRequested, HELP_BMS_DEAD_STR);
 #endif
 	XtAddCallback (smDD.deadWid, XmNcancelCallback,
-		       	NULL, NULL);
+		       	nullptr, nullptr);
 	XmStringFree(bmsDeadString);
     }
 
@@ -748,7 +748,7 @@ CompatModeExit( void )
     XmString 	compatModeString;
     String	tmpString;
 
-    if(smDD.compatExit == NULL)
+    if(smDD.compatExit == nullptr)
     {
 	compatModeString = XmStringCreateLocalized(((char *)GETMESSAGE(18, 34,
 		"This session was started from an X Window System startup script.\n\n\
@@ -780,7 +780,7 @@ No session information will be saved.\n\nUse the reset key sequence to log out."
 	XtSetValues(XtParent(smDD.compatExit), uiArgs, i);
 
 	XtAddCallback (XtParent(smDD.compatExit),
-		       XmNpopupCallback, DialogUp, NULL);
+		       XmNpopupCallback, DialogUp, nullptr);
 	XtUnmanageChild(XmMessageBoxGetChild(smDD.compatExit,
 					     XmDIALOG_CANCEL_BUTTON));
 
@@ -1005,7 +1005,7 @@ CreateLockDialogWithCover(
     XtVaSetValues ( smDD.indLabel[1],
                     XmNborderWidth, 2,
                     XmNborderColor,  focus_color,
-                    NULL );
+                    nullptr );
     /*
      * Manage forms AFTER all children have been managed
      */
@@ -1085,7 +1085,7 @@ CreateCoverDialog(
     if(withLock == True)
     {
 	XtAddCallback (tmpCover, XmNpopupCallback,
-		       LockDialogUp, NULL);
+		       LockDialogUp, nullptr);
     }
 
     XtRealizeWidget(tmpCover);
@@ -1204,8 +1204,8 @@ ImmediateExit(
      */
     if(smGD.bmsDead == False)
     {
-	notice = (Tt_message) tttk_message_create( NULL, TT_NOTICE, TT_SESSION, NULL,
-						  "XSession_Ending", NULL);
+	notice = (Tt_message) tttk_message_create( nullptr, TT_NOTICE, TT_SESSION, nullptr,
+						  "XSession_Ending", nullptr);
 	tt_message_send( notice );
 	tt_message_destroy( notice );
     }
@@ -1220,8 +1220,8 @@ ImmediateExit(
 	int		sessionType = smGD.sessionType;
 	XtIntervalId	timerId;
 
-    	msg = (Tt_message) tttk_message_create( NULL, TT_NOTICE, TT_SESSION, NULL,
-					       "DtActivity_Beginning", NULL );
+    	msg = (Tt_message) tttk_message_create( nullptr, TT_NOTICE, TT_SESSION, nullptr,
+					       "DtActivity_Beginning", nullptr );
 	tt_message_send( msg );
 	tt_message_destroy( msg );
 
@@ -1253,7 +1253,7 @@ ImmediateExit(
 
         saveTimeout = False;
 	timerId = XtAppAddTimeOut (smGD.appCon, smRes.saveYourselfTimeout,
-				   SaveTimeout, NULL);
+				   SaveTimeout, nullptr);
 
 	/*
 	 * What ends the wait (the replies of the clients, a cancel, the
@@ -1292,7 +1292,7 @@ ImmediateExit(
     /*
      * The shutdown was cancelled: go on as before it was asked for
      */
-    sigprocmask(SIG_SETMASK, &savedMask, (sigset_t *) NULL);
+    sigprocmask(SIG_SETMASK, &savedMask, (sigset_t *) nullptr);
     inProgress = False;
 }
 
@@ -1422,7 +1422,7 @@ DialogUp(
     XtSetArg(uiArgs[i], XmNy, y);i++;
     XtSetValues(w, uiArgs, i);
 
-    XtRemoveCallback(w, XmNpopupCallback, DialogUp, NULL);
+    XtRemoveCallback(w, XmNpopupCallback, DialogUp, nullptr);
 }
 
 
@@ -1833,7 +1833,7 @@ For additional information, see the CDE User's Guide.")));
     XtSetValues(XtParent(smDD.noStart), uiArgs, i);
 
     XtAddCallback (XtParent(smDD.noStart),
-		   XmNpopupCallback, DialogUp, NULL);
+		   XmNpopupCallback, DialogUp, nullptr);
     XtUnmanageChild(XmMessageBoxGetChild(smDD.noStart,
 					 XmDIALOG_HELP_BUTTON));
     XtUnmanageChild(XmMessageBoxGetChild(smDD.noStart,
@@ -1892,7 +1892,7 @@ ConfirmSessionCreation (
 	Position	x, y;
 	XEvent		next;
 	int		argc = _argc;
-	char		**argv = NULL;
+	char		**argv = nullptr;
 
 	/*
 	 * Create temporary argv because the X toolkit may remove
@@ -1936,8 +1936,8 @@ ConfirmSessionCreation (
 	j = 0;
 	XtToolkitInitialize ();
 	smGD.appCon = XtCreateApplicationContext();
-	smGD.display = XtOpenDisplay(smGD.appCon, NULL, argv[0],
-			SM_RESOURCE_CLASS, NULL, 0, &argc, argv);
+	smGD.display = XtOpenDisplay(smGD.appCon, nullptr, argv[0],
+			SM_RESOURCE_CLASS, nullptr, 0, &argc, argv);
 
 	XtSetArg(args[j], XmNbackground,
 		XBlackPixel(smGD.display, XDefaultScreen(smGD.display))); j++;
@@ -1981,14 +1981,14 @@ ConfirmSessionCreation (
 			tmp_widget, "confirmDialog", uiArgs, i);
 
 	XtAddCallback (smDD.confirmSession, XmNokCallback,
-			ConfirmOKCB, NULL);
+			ConfirmOKCB, nullptr);
 
 	/*
 	 * Some help state is not yet initialized and the help
 	 * callback assumes it is so some initializations must
 	 * be done now.
 	 */
-	smDD.smHelpDialog = NULL;
+	smDD.smHelpDialog = nullptr;
 	smDD.okString = ok_string;
 	smGD.topLevelWid = tmp_widget;
 
@@ -1996,7 +1996,7 @@ ConfirmSessionCreation (
 		       TopicHelpRequested, HELP_CONFIRMATION_SESSION_STR);
 
 	XtAddCallback (smDD.confirmSession, XmNcancelCallback,
-			ConfirmCancelCB, NULL);
+			ConfirmCancelCB, nullptr);
 
     	XtManageChild(smDD.confirmSession);
 
@@ -2247,14 +2247,14 @@ PostXSMPFailureDialog (
 			smGD.topLevelWid, "confirmDialog", uiArgs, i);
 
 	XtAddCallback (smDD.confirmSession, XmNokCallback,
-			XSMPFailureOKCB, NULL);
+			XSMPFailureOKCB, nullptr);
 
 	/*
 	 * Some help state is not yet initialized and the help
 	 * callback assumes it is so some initializations must
 	 * be done now.
 	 */
-	smDD.smHelpDialog = NULL;
+	smDD.smHelpDialog = nullptr;
 	smDD.okString = ok_string;
 
 	XtAddCallback (smDD.confirmSession, XmNhelpCallback,
@@ -2338,7 +2338,7 @@ PostSaveSessionErrorDialog ( void )
     XmString 	messageString;
     String	titleString;
 
-    if(smDD.saveSession == NULL)
+    if(smDD.saveSession == nullptr)
     {
 	messageString = XmStringCreateLocalized (((char *) GETMESSAGE(18, 56,
 		"The session cannot be saved because the required\n\
@@ -2370,7 +2370,7 @@ The session will not be saved.")));
 	XtSetValues(XtParent(smDD.saveSession), uiArgs, i);
 
 	XtAddCallback (XtParent(smDD.saveSession),
-		       XmNpopupCallback, DialogUp, NULL);
+		       XmNpopupCallback, DialogUp, nullptr);
 
 	XtUnmanageChild (XmMessageBoxGetChild(smDD.saveSession,
 					     XmDIALOG_CANCEL_BUTTON));
@@ -2492,7 +2492,7 @@ PostReasonsDialog (
 	XtSetValues(XtParent(smDD.clientReasons), uiArgs, i);
 
 	XtAddCallback (XtParent(smDD.clientReasons),
-		       XmNpopupCallback, DialogUp, NULL);
+		       XmNpopupCallback, DialogUp, nullptr);
 
 	XtUnmanageChild (XmMessageBoxGetChild (smDD.clientReasons,
 					     XmDIALOG_CANCEL_BUTTON));

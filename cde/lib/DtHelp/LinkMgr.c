@@ -86,7 +86,7 @@ extern int errno;
 /*****************************************************************************
  *		Private Variables
  *****************************************************************************/
-const static struct _dtCvLinkDb DefLinkDb = { 0, NULL };
+const static struct _dtCvLinkDb DefLinkDb = { 0, nullptr };
 
 /*****************************************************************************
  *		Private Functions
@@ -109,7 +109,7 @@ FindLink (
     for (i = 0; -1 == result && i < link_db->max; i++)
       {
 	if (_DtLinkTypeNone != link_db->list[i].type
-			&& NULL != link_db->list[i].id
+			&& nullptr != link_db->list[i].id
 			&& 0 == _DtCvStrCaseCmpLatin1(link_db->list[i].id, id))
 	  {
 	    /*
@@ -150,7 +150,7 @@ ResolveSwitch (
     int		*ret_hint)
 {
     int          result = -1;
-    char	*valueData = NULL;
+    char	*valueData = nullptr;
 
     if (iterations < 100)
       {
@@ -211,7 +211,7 @@ ResolveSwitch (
 	    free (rid);
 	  }
 
-	if (valueData != NULL)
+	if (valueData != nullptr)
 	    free(valueData);
       }
 
@@ -241,14 +241,14 @@ GetNextEntry (
 	if ((size_t) newMax > SIZE_MAX / sizeof (_DtCvLinkEntry))
 	    return -1;
 
-	if (link_db->list != NULL)
+	if (link_db->list != nullptr)
 	    newList = (_DtCvLinkEntry *) realloc(link_db->list,
 				(sizeof (_DtCvLinkEntry) * newMax));
 	else
 	    newList = (_DtCvLinkEntry *) malloc(
 				sizeof (_DtCvLinkEntry) * newMax);
 
-	if (newList == NULL)
+	if (newList == nullptr)
 	    return -1;
 
 	link_db->list = newList;
@@ -256,7 +256,7 @@ GetNextEntry (
 
 	while (i < link_db->max)
 	  {
-	    link_db->list[i  ].id   = NULL;
+	    link_db->list[i  ].id   = nullptr;
 	    link_db->list[i++].type = _DtLinkTypeNone;
 	  }
 
@@ -338,7 +338,7 @@ _DtLinkDbGetLinkSpec (
     _DtCvLinkDb link_db,
     int		 link_index )
 {
-    char  *ptr = NULL;
+    char  *ptr = nullptr;
 
     if (link_index < link_db->max &&
 			_DtLinkTypeNone != link_db->list[link_index].type)
@@ -422,7 +422,7 @@ _DtLinkDbCreate (void)
 {
     _DtCvLinkDb newDb = (_DtCvLinkDb) malloc (sizeof(struct _dtCvLinkDb));
 
-    if (NULL != newDb)
+    if (nullptr != newDb)
 	*newDb = DefLinkDb;
 
     return (newDb);
@@ -445,16 +445,16 @@ _DtLinkDbDestroy (
 {
     int i;
 
-    if (NULL != link_db)
+    if (nullptr != link_db)
       {
         for (i = 0; i < link_db->max; i++)
           {
 	    if (_DtLinkTypeLink == link_db->list[i].type)
 	      {
-	        if (NULL != link_db->list[i].id)
+	        if (nullptr != link_db->list[i].id)
 	            free(link_db->list[i].id);
 		free(link_db->list[i].info.link.spec);
-	        if (NULL != link_db->list[i].info.link.descrip)
+	        if (nullptr != link_db->list[i].info.link.descrip)
 		    free(link_db->list[i].info.link.descrip);
 	      }
 	    else if (_DtLinkTypeSwitch == link_db->list[i].type)
@@ -465,7 +465,7 @@ _DtLinkDbDestroy (
 		free(link_db->list[i].info.swtch.branches);
 	      }
           }
-	if (NULL != link_db->list)
+	if (nullptr != link_db->list)
 	    free(link_db->list);
 
 	free(link_db);
@@ -505,32 +505,32 @@ _DtLinkDbAddLink (
 {
     int    i = GetNextEntry(link_db);
 
-    if (spec == NULL || 0 > i)
+    if (spec == nullptr || 0 > i)
 	return -1;
 
     /*
      * copy the information
      */
-    if (NULL != id)
+    if (nullptr != id)
       {
 	id = strdup(id);
-	if (NULL == id)
+	if (nullptr == id)
 	    return -1;
       }
 
     spec = strdup(spec);
-    if (NULL == spec)
+    if (nullptr == spec)
       {
-	if (NULL != id) free (id);
+	if (nullptr != id) free (id);
 	return -1;
       }
 
-    if (NULL != description)
+    if (nullptr != description)
       {
 	description = strdup(description);
-	if (NULL == description)
+	if (nullptr == description)
 	  {
-	    if (NULL != id) free (id);
+	    if (nullptr != id) free (id);
 	    free(spec);
 	    return -1;
 	  }
@@ -570,13 +570,13 @@ _DtLinkDbRemoveLink (
     if (link_index < link_db->max &&
 			_DtLinkTypeNone != link_db->list[link_index].type)
       {
-	if (NULL != link_db->list[link_index].id)
+	if (nullptr != link_db->list[link_index].id)
 	    free(link_db->list[link_index].id);
 
 	if (_DtLinkTypeLink == link_db->list[link_index].type)
 	  {
 	    free(link_db->list[link_index].info.link.spec);
-	    if (NULL != link_db->list[link_index].info.link.descrip)
+	    if (nullptr != link_db->list[link_index].info.link.descrip)
 		free(link_db->list[link_index].info.link.descrip);
 	  }
 	else if (_DtLinkTypeSwitch == link_db->list[link_index].type)
@@ -587,7 +587,7 @@ _DtLinkDbRemoveLink (
 	  }
 
 	link_db->list[link_index].type = _DtLinkTypeNone;
-	link_db->list[link_index].id   = NULL;
+	link_db->list[link_index].id   = nullptr;
       }
 }
 
@@ -613,8 +613,8 @@ _DtLinkDbAddSwitch (
 {
     int    i = GetNextEntry(link_db);
 
-    if (NULL == id || NULL == interp || NULL == cmd
-						|| NULL == branches || 0 > i)
+    if (nullptr == id || nullptr == interp || nullptr == cmd
+						|| nullptr == branches || 0 > i)
 	return -1;
 
     /*
@@ -625,12 +625,12 @@ _DtLinkDbAddSwitch (
     cmd    = strdup(cmd);
     branches = strdup(branches);
 
-    if (NULL == id || NULL == interp || NULL == cmd || NULL == branches)
+    if (nullptr == id || nullptr == interp || nullptr == cmd || nullptr == branches)
       {
-	if (NULL != id)       free(id);
-	if (NULL != interp)   free(interp);
-	if (NULL != cmd)      free(cmd);
-	if (NULL != branches) free(branches);
+	if (nullptr != id)       free(id);
+	if (nullptr != interp)   free(interp);
+	if (nullptr != cmd)      free(cmd);
+	if (nullptr != branches) free(branches);
 	return -1;
       }
 

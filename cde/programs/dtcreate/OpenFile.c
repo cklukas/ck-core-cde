@@ -93,9 +93,9 @@ static  void    okCallback_OpenFile( Widget UxWidget,
            XtFree(pszFileToEdit);
         }
 	pszFileToEdit =
-	    _XmStringUngenerate(cbs->value, NULL,
+	    _XmStringUngenerate(cbs->value, nullptr,
 				XmCHARSET_TEXT, XmCHARSET_TEXT);
-        if (pszFileToEdit != (char *)NULL) {
+        if (pszFileToEdit != (char *)nullptr) {
            memset(&ADTmp, 0, sizeof(ActionData));
            rc = OpenDefinitionFile(pszFileToEdit, &ADTmp);
            /*XtFree(text);*/
@@ -157,7 +157,7 @@ static Widget   _Uxbuild_OpenFile(void)
                         XmNallowShellResize, TRUE,
                         XmNshellUnitType, XmPIXELS,
                         XmNtitle, GETMESSAGE(12, 25, "Create Action - Open"),
-                        NULL );
+                        nullptr );
 
         OpenFile = XtVaCreateWidget( "OpenFile",
                         xmFileSelectionBoxWidgetClass,
@@ -178,7 +178,7 @@ static Widget   _Uxbuild_OpenFile(void)
                         XmNdefaultPosition, FALSE,
                         RES_CONVERT( XmNdirMask, "" ),
                         RES_CONVERT( XmNpattern, "" ),
-                        NULL );
+                        nullptr );
         XtAddCallback( OpenFile, XmNcancelCallback,
                 cancelCB_OpenFile,
                 (XtPointer) UxOpenFileContext );
@@ -188,7 +188,7 @@ static Widget   _Uxbuild_OpenFile(void)
         XtAddCallback( OpenFile, XmNhelpCallback,
                 helpCallback_OpenFile,
                 (XtPointer) UxOpenFileContext );
-        XtVaSetValues(OpenFile, XmNuserData, OpenFile, NULL);
+        XtVaSetValues(OpenFile, XmNuserData, OpenFile, nullptr);
 
         UxPutContext( OpenFile, (char *) UxOpenFileContext );
 

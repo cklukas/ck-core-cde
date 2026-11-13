@@ -296,7 +296,7 @@ build_saverList(char * str,
    char tokenSep[] = " ";
    char * token;
    char *tmpstr;
-   SaverSub *saverList = NULL;
+   SaverSub *saverList = nullptr;
    int i = 0;
    char * tmpStr, *tmpStr2;
    int len = strlen(str);
@@ -308,14 +308,14 @@ build_saverList(char * str,
    tmpStr2 = tmpStr;
    strcpy(tmpStr, str);
    token = strtok(tmpStr, tokenSep);
-   while(token != NULL)
+   while(token != nullptr)
      {
        ++(i);
-       token = strtok(NULL, tokenSep);
+       token = strtok(nullptr, tokenSep);
      }
 
    if (i == 0)
-       return (NULL);
+       return (nullptr);
 
    saverList = (SaverSub *) XtCalloc(1, i * sizeof(SaverSub));
    if( saverList )
@@ -325,7 +325,7 @@ build_saverList(char * str,
 	   tmpStr++;
        token = strtok(tmpStr, tokenSep);
        *count=0;
-       while(token != NULL)
+       while(token != nullptr)
 	 {
 	   if (DtActionExists(token))
 	     {
@@ -334,7 +334,7 @@ build_saverList(char * str,
 
 	       // Find the savers description, if not found, use the name again
 	       tmpstr = DtActionDescription(saverList[*count].saverActionName);
-	       if (tmpstr == NULL)
+	       if (tmpstr == nullptr)
 	         {
 	           saverList[*count].saverActionDesc = (char *) XtMalloc(strlen(saverList[*count].saverActionName) + 1);
 	           strcpy(saverList[*count].saverActionDesc, saverList[*count].saverActionName);
@@ -350,7 +350,7 @@ build_saverList(char * str,
 	     }
 	   tmpStr += strlen(token);
 	   if (tmpStr >= tmpStr2 + len )
-	       token = NULL;
+	       token = nullptr;
 	   else 
 	       {
 		   do tmpStr++;
@@ -374,7 +374,7 @@ build_selsaverList(char * envStr,
 {
    char tokenSep[] = " ";
    char * token;
-   char ** saverList = NULL;
+   char ** saverList = nullptr;
    int i = 0;
    char * tmpStr;
    int len = strlen(envStr);
@@ -383,14 +383,14 @@ build_selsaverList(char * envStr,
    tmpStr = (char *)XtCalloc(1, len + 1);
    strcpy(tmpStr, envStr);
    token = strtok(tmpStr, tokenSep);
-   while(token != NULL)
+   while(token != nullptr)
      {
        ++(i);
-       token = strtok(NULL, tokenSep);
+       token = strtok(nullptr, tokenSep);
      }
 
    if (i == 0)
-       return (NULL);
+       return (nullptr);
 
    saverList = (char **) XtCalloc(1, i * sizeof(char *));
    if( saverList )
@@ -398,11 +398,11 @@ build_selsaverList(char * envStr,
        strcpy(tmpStr, envStr); 
        token = strtok(tmpStr, tokenSep);
        *count=0;
-       while(token != NULL)
+       while(token != nullptr)
 	 {
 	   saverList[*count] = (char *) XtCalloc(1, strlen( token ) + 1);
 	   strcpy(saverList[*count], token);
-	   token = strtok(NULL, tokenSep);
+	   token = strtok(nullptr, tokenSep);
 	   ++(*count);
 	 }
      }
@@ -422,14 +422,14 @@ build_selectedList(char ** saverList,
 		    int     count)
 {
 
-   char * selectedList = NULL;
+   char * selectedList = nullptr;
    int i = 0;
    char * tmpStr;
    int len = 0;
    int tmplen = 0;
    
-   if (saverList == NULL)
-     return(NULL);
+   if (saverList == nullptr)
+     return(nullptr);
    
    for (i=0; i<count; i++)
      {
@@ -459,7 +459,7 @@ free_saverList(char ** saverList,
 {
   int   i;
 
-  if (saverList == NULL)
+  if (saverList == nullptr)
     return;
   for (i=0; i<count; i++)
     XtFree((char *) saverList[i]);
@@ -476,7 +476,7 @@ void
 popup_screenBB(
         Widget shell )
 {
-    if (style.screenDialog == NULL) {
+    if (style.screenDialog == nullptr) {
       _DtTurnOnHourGlass(shell);  
       build_screenDialog(shell);
       XtManageChild(style.screenDialog);
@@ -519,17 +519,17 @@ build_screenDialog(
 
     /* initialize saver data */
     savers.shadow = 2;
-    savers.saverstate = NULL;   
+    savers.saverstate = nullptr;   
     savers.saverCount = 0;     
     savers.selsaverCount = 0;
     savers.previous_selsaverCount = 0;
-    savers.saversList = NULL;
-    savers.selsaverActionNames = NULL;
-    savers.selPositions = NULL;
-    savers.selsaversList = NULL;
-    savers.subList = NULL;
-    savers.current_saver = NULL;
-    savers.current_saverDesc = NULL;
+    savers.saversList = nullptr;
+    savers.selsaverActionNames = nullptr;
+    savers.selPositions = nullptr;
+    savers.selsaversList = nullptr;
+    savers.subList = nullptr;
+    savers.current_saver = nullptr;
+    savers.current_saverDesc = nullptr;
     savers.current_position = 0;
     savers.black = BlackPixel(style.display, DefaultScreen(XtDisplay(shell)));
  
@@ -723,7 +723,7 @@ build_screenDialog(
     /* available screen saver actions, load them into the scrolled list*/
     savers.saversList = getenv ("DTSCREENSAVERLIST"); 
     /* if DTSCREENSAVER is not set, set saver count to zero */
-    if (savers.saversList == NULL) {
+    if (savers.saversList == nullptr) {
 	savers.saverCount = 0;
 	savers.selsaverCount=0;
     } else {
@@ -833,7 +833,7 @@ build_screenDialog(
       XtSetArg (args[n], XmNwidth, SAVER_WIDTH); n++; }
     screen.saverArea = XmCreateDrawingArea (screen.saverAreaFrame, "saverArea", args, n);
     /* get the initial secondary color pixel value for dtstyle for later use */
-    XtVaGetValues(screen.saverArea, XmNbackground, &scratch, NULL);
+    XtVaGetValues(screen.saverArea, XmNbackground, &scratch, nullptr);
     savers.bg = (Pixel)scratch;
 
     /* label for the previewed saver  */
@@ -954,40 +954,40 @@ build_screenDialog(
     /* Configure dialog based on the presence of screen saver extensions */
     if (!style.smState.smLockOnTimeoutStatus)
       {
-	XtAddCallback(style.screenDialog, XmNmapCallback, no_svr_ext_formLayoutCB, NULL);
+	XtAddCallback(style.screenDialog, XmNmapCallback, no_svr_ext_formLayoutCB, nullptr);
 	XtAddCallback(style.screenDialog, XmNmapCallback, no_svr_ext_DtmapCB_screenDialog, shell);
-	XtAddCallback(screen.systemDefault, XmNactivateCallback, no_svr_ext_systemDefaultCB, NULL);
+	XtAddCallback(screen.systemDefault, XmNactivateCallback, no_svr_ext_systemDefaultCB, nullptr);
 	XtAddCallback(screen.timeOutScale, XmNvalueChangedCallback, 
-		      no_svr_ext_timeOutvalueChangedCB, NULL);
+		      no_svr_ext_timeOutvalueChangedCB, nullptr);
 	XtAddCallback(screen.saverOn, XmNvalueChangedCallback, 
-		      no_svr_ext_saverToggleCB, NULL);
+		      no_svr_ext_saverToggleCB, nullptr);
 	XtAddCallback(screen.saverOff, XmNvalueChangedCallback,
-		      no_svr_ext_saverToggleCB, NULL);
+		      no_svr_ext_saverToggleCB, nullptr);
 	XtAddCallback(screen.useSaversOn, XmNvalueChangedCallback, 
-		      saversToggleCB, NULL);
+		      saversToggleCB, nullptr);
 	XtAddCallback(screen.useSaversOff, XmNvalueChangedCallback,
-		      saversToggleCB, NULL);
+		      saversToggleCB, nullptr);
 
-	XtAddCallback(style.screenDialog, XmNcallback, no_svr_ext_ButtonCB, NULL);
+	XtAddCallback(style.screenDialog, XmNcallback, no_svr_ext_ButtonCB, nullptr);
       }
     else
       {
-	XtAddCallback(style.screenDialog, XmNmapCallback, formLayoutCB, NULL);
+	XtAddCallback(style.screenDialog, XmNmapCallback, formLayoutCB, nullptr);
         XtAddCallback(style.screenDialog, XmNmapCallback, _DtmapCB_screenDialog, shell);
-	XtAddCallback(screen.systemDefault, XmNactivateCallback, systemDefaultCB, NULL);
+	XtAddCallback(screen.systemDefault, XmNactivateCallback, systemDefaultCB, nullptr);
 	XtAddCallback(screen.timeOutScale, XmNvalueChangedCallback, 
-		      timeOutvalueChangedCB, NULL);
+		      timeOutvalueChangedCB, nullptr);
 	XtAddCallback(screen.lockOutScale, XmNvalueChangedCallback, 
-		      timeOutvalueChangedCB, NULL);
+		      timeOutvalueChangedCB, nullptr);
 	XtAddCallback(screen.saverOn, XmNvalueChangedCallback, 
-		      saverToggleCB, NULL);
+		      saverToggleCB, nullptr);
 	XtAddCallback(screen.saverOff, XmNvalueChangedCallback,
-		      saverToggleCB, NULL);
+		      saverToggleCB, nullptr);
 	XtAddCallback(screen.lockOn, XmNvalueChangedCallback, 
-		      lockToggleCB, NULL);
+		      lockToggleCB, nullptr);
 	XtAddCallback(screen.lockOff, XmNvalueChangedCallback,
-		      lockToggleCB, NULL);
-	XtAddCallback(style.screenDialog, XmNcallback, ButtonCB, NULL);
+		      lockToggleCB, nullptr);
+	XtAddCallback(style.screenDialog, XmNcallback, ButtonCB, nullptr);
       }
     XtAddCallback(style.screenDialog, XmNunmapCallback, UnmapCB, shell);
     XtAddCallback(style.screenDialog, XmNhelpCallback,
@@ -1008,13 +1008,13 @@ build_screenDialog(
 	  MaxLabelWidth = LabelWidth;
       }
     
-    XtVaSetValues(screen.saverLabel, XmNwidth, MaxLabelWidth, NULL);
-    XtVaSetValues(screen.timeOutLabel, XmNwidth, MaxLabelWidth, NULL);
-    XtVaSetValues(screen.cycleTimeLabel, XmNwidth, MaxLabelWidth, NULL);
+    XtVaSetValues(screen.saverLabel, XmNwidth, MaxLabelWidth, nullptr);
+    XtVaSetValues(screen.timeOutLabel, XmNwidth, MaxLabelWidth, nullptr);
+    XtVaSetValues(screen.cycleTimeLabel, XmNwidth, MaxLabelWidth, nullptr);
     if (style.smState.smLockOnTimeoutStatus)
       {
-	XtVaSetValues(screen.lockLabel, XmNwidth, MaxLabelWidth, NULL);
-	XtVaSetValues(screen.lockOutLabel, XmNwidth, MaxLabelWidth, NULL);
+	XtVaSetValues(screen.lockLabel, XmNwidth, MaxLabelWidth, nullptr);
+	XtVaSetValues(screen.lockOutLabel, XmNwidth, MaxLabelWidth, nullptr);
       }
     
     /* manage widgets */
@@ -1055,7 +1055,7 @@ build_screenDialog(
 	XtManageChild(screen.useSaversOn);
 	XtManageChild(screen.useSaversOff);
       }
-   XtAddEventHandler(style.shell, StructureNotifyMask, False, IconHandler, NULL);
+   XtAddEventHandler(style.shell, StructureNotifyMask, False, IconHandler, nullptr);
 
     return(style.screenDialog);
 }
@@ -1327,7 +1327,7 @@ formLayoutCB(
     XtSetValues (screen.saverAreaFrame, args, n);
  
 
-    XtRemoveCallback(style.screenDialog, XmNmapCallback, formLayoutCB, NULL);
+    XtRemoveCallback(style.screenDialog, XmNmapCallback, formLayoutCB, nullptr);
 
 }
 
@@ -1540,7 +1540,7 @@ no_svr_ext_formLayoutCB(
   XtSetValues (screen.saverAreaFrame, args, n);
   
   
-  XtRemoveCallback(style.screenDialog, XmNmapCallback, no_svr_ext_formLayoutCB, NULL);
+  XtRemoveCallback(style.screenDialog, XmNmapCallback, no_svr_ext_formLayoutCB, nullptr);
   }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -1596,9 +1596,9 @@ _DtmapCB_screenDialog(
       
 
       /* set the value of the scales */
-      XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, NULL);
-      XtVaSetValues(screen.lockOutScale, XmNvalue, screen.lockTimeout, NULL);
-      XtVaSetValues(screen.cycleTimeScale, XmNvalue, screen.cycleTimeout , NULL);  
+      XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, nullptr);
+      XtVaSetValues(screen.lockOutScale, XmNvalue, screen.lockTimeout, nullptr);
+      XtVaSetValues(screen.cycleTimeScale, XmNvalue, screen.cycleTimeout , nullptr);  
 
       /* set the value of the saver toggles */
       XmToggleButtonGadgetSetState(screen.saverOn, 
@@ -1727,8 +1727,8 @@ _DtmapCB_screenDialog(
       XmToggleButtonGadgetSetState(screen.lockOff, !screen.xTimeout ? True : False, False);
       
       /* set the value of the scales */
-      XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, NULL);
-      XtVaSetValues(screen.lockOutScale, XmNvalue, screen.lockTimeout_xrdb, NULL);  
+      XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, nullptr);
+      XtVaSetValues(screen.lockOutScale, XmNvalue, screen.lockTimeout_xrdb, nullptr);  
             
       /* make saver widgets insensitive if screen saver is off */
       /* also blankout the preview label widget */
@@ -1790,12 +1790,12 @@ _DtmapCB_screenDialog(
   /* run the current screen saver only if screen saver is turned on and a valid saver exists*/
   if (XmToggleButtonGadgetGetState(screen.saverOn) && savers.saverCount && !savers.saverstate)
     {
-      XtVaSetValues(screen.saverArea, XmNbackground, savers.black, NULL);  
+      XtVaSetValues(screen.saverArea, XmNbackground, savers.black, nullptr);  
       
       savers.saverstate = _DtSaverStart(style.display, &screen.saverArea, 1,
 		      savers.current_saver, style.screenDialog);
       string = XmStringCreateLocalized (savers.current_saverDesc);
-      XtVaSetValues(screen.prevLabel, XmNlabelString, string, NULL);
+      XtVaSetValues(screen.prevLabel, XmNlabelString, string, nullptr);
       XmStringFree(string);	    
     }
 }
@@ -1834,7 +1834,7 @@ no_svr_ext_DtmapCB_screenDialog(
 	screen.cycleTimeout = 0;
       
       /* set the value of the cycle time scale */
-      XtVaSetValues(screen.cycleTimeScale, XmNvalue, screen.cycleTimeout , NULL);  
+      XtVaSetValues(screen.cycleTimeScale, XmNvalue, screen.cycleTimeout , nullptr);  
       
       /* set the initial condition for the locking RadioBoxes */ 
       
@@ -1910,7 +1910,7 @@ no_svr_ext_DtmapCB_screenDialog(
   if (!screen.saverTimeout)
     screen.saverTimeout = screen.saverTimeout_xrdb;
   
-  XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, NULL);  
+  XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, nullptr);  
   
   /* make saver widgets insensitive if screen saver is off */
   if (XmToggleButtonGadgetGetState(screen.saverOff))
@@ -1931,11 +1931,11 @@ no_svr_ext_DtmapCB_screenDialog(
   /* run the current screen saver only if the useSaversOn toggle is enabled and valid saver exist*/
   if (XmToggleButtonGadgetGetState(screen.useSaversOn) && savers.saverCount && !savers.saverstate)
     {
-      XtVaSetValues(screen.saverArea, XmNbackground, savers.black, NULL);  
+      XtVaSetValues(screen.saverArea, XmNbackground, savers.black, nullptr);  
       savers.saverstate = _DtSaverStart(style.display, &screen.saverArea, 1,
 				   savers.current_saver, style.screenDialog);
       string = XmStringCreateLocalized (savers.current_saverDesc);
-      XtVaSetValues(screen.prevLabel, XmNlabelString, string, NULL);
+      XtVaSetValues(screen.prevLabel, XmNlabelString, string, nullptr);
       XmStringFree(string);	    
     }
     
@@ -2035,7 +2035,7 @@ saverToggleCB(
       if (savers.saverstate)
 	{
 	  _DtSaverStop(style.display, savers.saverstate);
-	  savers.saverstate = NULL;
+	  savers.saverstate = nullptr;
 	  XSync(style.display, False);
 	  XClearWindow(style.display, XtWindow(screen.saverArea));
 	} 
@@ -2052,7 +2052,7 @@ saverToggleCB(
       /* set the background color of the saver window to the */
       /* secondary color ID */ 
       XSync(style.display, False);
-      XtVaSetValues(screen.saverArea, XmNbackground, savers.bg, NULL);  
+      XtVaSetValues(screen.saverArea, XmNbackground, savers.bg, nullptr);  
       XClearWindow(style.display, XtWindow(screen.saverArea));
       /* set the new timeout for the X server - note that since */
       /* screen saver is disabled, the new timeout is now the value of the */
@@ -2098,7 +2098,7 @@ saverToggleCB(
 	  /* Restart the screen saver that is is currently selected */	
 	  if (!savers.saverstate)
 	    {
-	      XtVaSetValues(screen.saverArea, XmNbackground, savers.black, NULL);    
+	      XtVaSetValues(screen.saverArea, XmNbackground, savers.black, nullptr);    
 	      savers.saverstate = _DtSaverStart(style.display, 
                       &screen.saverArea, 1, savers.current_saver,
                       style.screenDialog);
@@ -2269,7 +2269,7 @@ saversToggleCB(
 	if (savers.saverstate)
 	  {
 	    _DtSaverStop(style.display, savers.saverstate);
-	    savers.saverstate = NULL;
+	    savers.saverstate = nullptr;
 	    XSync(style.display, False);
 	    XClearWindow(style.display, XtWindow(screen.saverArea));
 	  } 
@@ -2284,7 +2284,7 @@ saversToggleCB(
 	/* set the background color of the saver window to the */
 	/* secondary color ID */
 	XSync(style.display, False);
-	XtVaSetValues(screen.saverArea, XmNbackground, savers.bg, NULL);  
+	XtVaSetValues(screen.saverArea, XmNbackground, savers.bg, nullptr);  
 	XClearWindow(style.display, XtWindow(screen.saverArea));
 	/* let the session manger know not to run any savers */
 	SmNewSaverTime(0);
@@ -2312,7 +2312,7 @@ saversToggleCB(
 	    /* Restart the screen saver that is is currently selected */	
 	    if (!savers.saverstate)
 	      {
-		XtVaSetValues(screen.saverArea, XmNbackground, savers.black, NULL);    
+		XtVaSetValues(screen.saverArea, XmNbackground, savers.black, nullptr);    
 		savers.saverstate = _DtSaverStart(style.display, 
 						  &screen.saverArea, 1, savers.current_saver,                                     style.screenDialog);
 	      }
@@ -2423,7 +2423,7 @@ ButtonCB(
       if (savers.saverstate)
 	{
 	  _DtSaverStop(style.display, savers.saverstate);
-	  savers.saverstate = NULL;
+	  savers.saverstate = nullptr;
 	}
       
       /* write saver timeout resource to xrdb to save scale value */
@@ -2475,7 +2475,7 @@ ButtonCB(
 	      strcpy(savers.selsaverActionNames[i], tmp);
 	    }			
             
-	  if (savers.selsaversList != NULL)
+	  if (savers.selsaversList != nullptr)
 	    XtFree((char*) savers.selsaversList);	
 	  
 	  savers.selsaversList = build_selectedList(savers.selsaverActionNames,
@@ -2483,11 +2483,11 @@ ButtonCB(
 	}
         
       else 
-	savers.selsaversList = NULL;
+	savers.selsaversList = nullptr;
 
       /* save the selected positions for later use */
       savers.orig_selsaverCount = savers.selsaverCount;
-      if (savers.origSelPositions != NULL)
+      if (savers.origSelPositions != nullptr)
 	XtFree((char *) savers.origSelPositions);      
       savers.origSelPositions = (int *) XtMalloc(sizeof(int) * savers.orig_selsaverCount);
       for (i=0; i<savers.orig_selsaverCount; i++)
@@ -2495,9 +2495,9 @@ ButtonCB(
 
       /* free the allocated selected savers */
       free_saverList(savers.selsaverActionNames, savers.selsaverCount); 
-      savers.selsaverActionNames = NULL;
+      savers.selsaverActionNames = nullptr;
 
-      XtVaGetValues(screen.cycleTimeScale, XmNvalue, &scratch, NULL);
+      XtVaGetValues(screen.cycleTimeScale, XmNvalue, &scratch, nullptr);
       screen.cycleTimeout = scratch;
       
       /* send new saver time, lock time and time per saver to SM if they have changed, */
@@ -2544,9 +2544,9 @@ ButtonCB(
       
       
       /* reset the value of the scales */
-      XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, NULL);
-      XtVaSetValues(screen.lockOutScale, XmNvalue, screen.lockTimeout, NULL);
-      XtVaSetValues(screen.cycleTimeScale, XmNvalue, screen.cycleTimeout , NULL);  
+      XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, nullptr);
+      XtVaSetValues(screen.lockOutScale, XmNvalue, screen.lockTimeout, nullptr);
+      XtVaSetValues(screen.cycleTimeScale, XmNvalue, screen.cycleTimeout , nullptr);  
       
       /* reset the value of the saver toggles */
       XmToggleButtonGadgetSetState(screen.saverOn, style.smState.smSaverTimeout  ? True : False, True);
@@ -2639,7 +2639,7 @@ no_svr_ext_ButtonCB(
       if (savers.saverstate)
 	{
 	  _DtSaverStop(style.display, savers.saverstate);
-	  savers.saverstate = NULL;
+	  savers.saverstate = nullptr;
 	}
       
       /* write saver timeout resource to xrdb to save scale value */
@@ -2681,7 +2681,7 @@ no_svr_ext_ButtonCB(
 	      strcpy(savers.selsaverActionNames[i], tmp);
 	    }			
             
-	  if (savers.selsaversList != NULL)
+	  if (savers.selsaversList != nullptr)
 	    XtFree((char*) savers.selsaversList);	
 	  
 	  savers.selsaversList = build_selectedList(savers.selsaverActionNames,
@@ -2689,11 +2689,11 @@ no_svr_ext_ButtonCB(
 	}
         
       else 
-	savers.selsaversList = NULL;
+	savers.selsaversList = nullptr;
 
       /* save the selected positions for later use */
       savers.orig_selsaverCount = savers.selsaverCount;
-      if (savers.origSelPositions != NULL)
+      if (savers.origSelPositions != nullptr)
 	XtFree((char *) savers.origSelPositions);      
       savers.origSelPositions = (int *) XtMalloc(sizeof(int) * savers.orig_selsaverCount);
       for (i=0; i<savers.orig_selsaverCount; i++)
@@ -2701,9 +2701,9 @@ no_svr_ext_ButtonCB(
 
       /* free the allocated selected savers */
       free_saverList(savers.selsaverActionNames, savers.selsaverCount); 
-      savers.selsaverActionNames = NULL;
+      savers.selsaverActionNames = nullptr;
 
-      XtVaGetValues(screen.cycleTimeScale, XmNvalue, &scratch, NULL);
+      XtVaGetValues(screen.cycleTimeScale, XmNvalue, &scratch, nullptr);
       screen.cycleTimeout = scratch;
       
       /* send new saver time, lock time and time per saver to SM if they have changed, */
@@ -2749,8 +2749,8 @@ no_svr_ext_ButtonCB(
 	screen.cycleTimeout = 0;
       
       /* reset the value of the scales */
-      XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, NULL);
-      XtVaSetValues(screen.cycleTimeScale, XmNvalue, screen.cycleTimeout , NULL);  
+      XtVaSetValues(screen.timeOutScale, XmNvalue, screen.saverTimeout, nullptr);
+      XtVaSetValues(screen.cycleTimeScale, XmNvalue, screen.cycleTimeout , nullptr);  
       
       /* reset the value of the saver toggles */
       XmToggleButtonGadgetSetState(screen.saverOn, screen.origTimeout  ? True : False, True);
@@ -2790,7 +2790,7 @@ no_svr_ext_ButtonCB(
 	  /* set the background color of the saver window to the */
 	  /* secondary color ID */
 	  XSync(style.display, False);
-	  XtVaSetValues(screen.saverArea, XmNbackground, savers.bg, NULL);  
+	  XtVaSetValues(screen.saverArea, XmNbackground, savers.bg, nullptr);  
 	  XClearWindow(style.display, XtWindow(screen.saverArea));
 	  /* let the session manger know not to run any savers */
 	  SmNewSaverTime(0);
@@ -2903,7 +2903,7 @@ saveScreen(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.screenDialog != NULL) 
+    if (style.screenDialog != nullptr) 
     {
         if (XtIsManaged(style.screenDialog))
             sprintf(bufr, "*Screen.ismapped: True\n");
@@ -2997,7 +2997,7 @@ ListCB(
     {
       XmListSelectPos(screen.saverList, cb->item_position, False);
       savers.selsaverCount = 1;
-      if (savers.selPositions != NULL)
+      if (savers.selPositions != nullptr)
 	XtFree ((char *) savers.selPositions);
       savers.selPositions = (int *) XtMalloc(sizeof(int));
       savers.selPositions[0] = cb->item_position;
@@ -3008,7 +3008,7 @@ ListCB(
  
   /*  make a copy of the selected item positions for later use */
   
-  if (savers.selPositions != NULL)
+  if (savers.selPositions != nullptr)
     XtFree ((char *) savers.selPositions);
   
   savers.selPositions = (int *) XtMalloc(sizeof(int) * cb->selected_item_count);
@@ -3058,16 +3058,16 @@ ListCB(
 		/* Terminate the screen saver that is currently running */
 		_DtSaverStop(style.display, savers.saverstate);
 		XSync(style.display, False);
-		savers.saverstate = NULL;
+		savers.saverstate = nullptr;
 	      }
 	    savers.current_saver = savers.subList[i - 1].saverActionName;
 	    savers.current_saverDesc = savers.subList[i - 1].saverActionDesc;
 	    savers.current_position = i;
-	    XtVaSetValues(screen.saverArea, XmNbackground, savers.black, NULL);   
+	    XtVaSetValues(screen.saverArea, XmNbackground, savers.black, nullptr);   
 	    savers.saverstate = _DtSaverStart(style.display, &screen.saverArea,
                                   1, savers.current_saver, style.screenDialog);
 	    string = XmStringCreateLocalized (savers.current_saverDesc);
-	    XtVaSetValues(screen.prevLabel, XmNlabelString, string, NULL);
+	    XtVaSetValues(screen.prevLabel, XmNlabelString, string, nullptr);
 	    XmStringFree(string);	    
  	  }
       return;
@@ -3081,13 +3081,13 @@ ListCB(
       /* Terminate the screen saver that is currently running */
       _DtSaverStop(style.display, savers.saverstate);
       XSync(style.display, False);
-      savers.saverstate = NULL;
+      savers.saverstate = nullptr;
     }
   
   XSync(style.display, False);                
   XClearWindow(style.display, XtWindow(screen.saverArea));
   XSync(style.display, False);
-  XtVaSetValues(screen.saverArea, XmNbackground, savers.black, NULL);   
+  XtVaSetValues(screen.saverArea, XmNbackground, savers.black, nullptr);   
   
   savers.current_position = cb->item_position;  
   savers.current_saver = savers.subList[savers.current_position - 1].saverActionName;
@@ -3095,7 +3095,7 @@ ListCB(
   savers.saverstate = _DtSaverStart(style.display, &screen.saverArea, 1,
 				   savers.current_saver, style.screenDialog);
   /* update the preview label with the current running saver */  
-  XtVaSetValues(screen.prevLabel, XmNlabelString, cb->item, NULL);
+  XtVaSetValues(screen.prevLabel, XmNlabelString, cb->item, nullptr);
 }
 
 
@@ -3121,7 +3121,7 @@ IconHandler(
       if (savers.saverstate)
 	{
 	  _DtSaverStop(style.display, savers.saverstate);
-	  savers.saverstate = NULL;
+	  savers.saverstate = nullptr;
 	}
     }
   /* run the current screen saver only if the useSaversOn/saverOn toggle is enabled 
@@ -3131,11 +3131,11 @@ IconHandler(
       {
 	if (XmToggleButtonGadgetGetState(screen.saverOn) && savers.saverCount)
 	  {
-	    XtVaSetValues(screen.saverArea, XmNbackground, savers.black, NULL);  
+	    XtVaSetValues(screen.saverArea, XmNbackground, savers.black, nullptr);  
 	    savers.saverstate = _DtSaverStart(style.display, &screen.saverArea, 1,
 					      savers.current_saver, style.screenDialog);
 	    string = XmStringCreateLocalized (savers.current_saverDesc);
-	    XtVaSetValues(screen.prevLabel, XmNlabelString, string, NULL);
+	    XtVaSetValues(screen.prevLabel, XmNlabelString, string, nullptr);
 	    XmStringFree(string);	    
 	  }
       }
@@ -3143,11 +3143,11 @@ IconHandler(
       {
 	if (XmToggleButtonGadgetGetState(screen.useSaversOn) && savers.saverCount)
 	  {
-	    XtVaSetValues(screen.saverArea, XmNbackground, savers.black, NULL);  
+	    XtVaSetValues(screen.saverArea, XmNbackground, savers.black, nullptr);  
 	    savers.saverstate = _DtSaverStart(style.display, &screen.saverArea, 1,
 					      savers.current_saver, style.screenDialog);
 	    string = XmStringCreateLocalized (savers.current_saverDesc);
-	    XtVaSetValues(screen.prevLabel, XmNlabelString, string, NULL);
+	    XtVaSetValues(screen.prevLabel, XmNlabelString, string, nullptr);
 	    XmStringFree(string);	    
 	  }
       }
@@ -3170,7 +3170,7 @@ UnmapCB(
   if (savers.saverstate)
     {
       _DtSaverStop(style.display, savers.saverstate);
-      savers.saverstate = NULL;
+      savers.saverstate = nullptr;
     }
   
 }

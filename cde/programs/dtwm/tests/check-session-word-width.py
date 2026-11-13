@@ -51,7 +51,7 @@ with tempfile.TemporaryDirectory(prefix="dtwm-session-", dir=os.environ.get("TMP
     reader.write_text("\n".join(functions) + "\n")
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
                    shlex.split(os.environ.get("CPPFLAGS", "")) +
-                   ["-std=gnu99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra",
                     "-Wno-unused-parameter", "-Wno-unused-variable",
                     "-Wno-unused-but-set-variable",
                     "-Wno-unused-result", "-Wno-sign-compare", "-Wno-missing-field-initializers", "-Wno-deprecated-declarations", "-Wno-format-security",

@@ -131,8 +131,8 @@ PopupCpyNotice( String message )
     char bmsg[512] = "";
 
     static NoticeButton buttons[] = {
-	NBTNARGS( DoCpyProc, NULL, NULL, True, False ),
-	NBTNARGS( NULL, NULL, NULL, True, False ),
+	NBTNARGS( DoCpyProc, nullptr, nullptr, True, False ),
+	NBTNARGS( nullptr, nullptr, nullptr, True, False ),
     };
     static NButton BTN = NBUTTONS( buttons );
 
@@ -214,9 +214,9 @@ DelCB(void)
 }
 
 static ButtonItems add_btn[] = {
-    BTNARGS( (void(*)(struct _WidgetRec*,void*,void*)) AddCB, NULL, NULL, True, True ),
-    BTNARGS( (void(*)(struct _WidgetRec*,void*,void*)) DelCB, NULL, NULL, True, False ),
-    BTNARGS( (void(*)(struct _WidgetRec*,void*,void*)) PopdownMngPtn, NULL, NULL, True, False ),
+    BTNARGS( (void(*)(struct _WidgetRec*,void*,void*)) AddCB, nullptr, nullptr, True, True ),
+    BTNARGS( (void(*)(struct _WidgetRec*,void*,void*)) DelCB, nullptr, nullptr, True, False ),
+    BTNARGS( (void(*)(struct _WidgetRec*,void*,void*)) PopdownMngPtn, nullptr, nullptr, True, False ),
 };
 static Button AddBTN = BUTTONS( add_btn );
 
@@ -239,7 +239,7 @@ MngPtnCB(void)
 	rowcol =
 	CreateDialogAndButtons( toplevel, resource.l_add_title,
 
-	    NULL, &AddBTN, XtNumber(add_btn), &mngPtnW);
+	    nullptr, &AddBTN, XtNumber(add_btn), &mngPtnW);
 
 	CreateTextField(rowcol, "wgkTxtF",
 	    resource.l_manage_code, &MngCodeTf, 4);
@@ -287,10 +287,10 @@ void
 PopupDelNotice( Widget owner )
 {
     int i;
-     Widget delNoticeW = NULL;
+     Widget delNoticeW = nullptr;
 
     delNoticeW = CreateDelNotice(owner);
-    XtVaSetValues(XtParent(delNoticeW), XmNmappedWhenManaged, False, NULL);
+    XtVaSetValues(XtParent(delNoticeW), XmNmappedWhenManaged, False, nullptr);
     XtManageChild(delNoticeW);
 
     for ( i=0 ; i < dn.disp_num ; i++ ) {
@@ -300,7 +300,7 @@ PopupDelNotice( Widget owner )
 	drawDelCode(i);
 	drawDelPtn(i);
     }
-    XtVaSetValues(XtParent(delNoticeW), XmNmappedWhenManaged, True, NULL);
+    XtVaSetValues(XtParent(delNoticeW), XmNmappedWhenManaged, True, nullptr);
 
     XBell(XtDisplayOfObject(delNoticeW), 0);
 }
@@ -370,8 +370,8 @@ CreateDelNotice(Widget owner)
     extern void AddDestroyProc(Widget w, void (*destroycb)(void));
 
     static NoticeButton buttons[] = {
-	NBTNARGS( (void(*)(struct _WidgetRec*,void*,void*)) DelOkCB, NULL, NULL, True, False ),
-	NBTNARGS( NULL, NULL, NULL, True, False ),
+	NBTNARGS( (void(*)(struct _WidgetRec*,void*,void*)) DelOkCB, nullptr, nullptr, True, False ),
+	NBTNARGS( nullptr, nullptr, nullptr, True, False ),
     };
     static NButton BTN = NBUTTONS( buttons );
     c = AbsSqToRel( dn.sq_start, dn.sq_end) + 1;
@@ -572,7 +572,7 @@ static void
 DispErrorMessage( Widget owner, String title, String msg )
 {
     static NoticeButton buttons[] = {
-	NBTNARGS( NULL, NULL, NULL, True, False ),
+	NBTNARGS( nullptr, nullptr, nullptr, True, False ),
     };
     static NButton BTN = NBUTTONS( buttons );
 

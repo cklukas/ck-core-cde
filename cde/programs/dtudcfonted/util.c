@@ -178,13 +178,13 @@ String
 GetTextFieldValue(TextField *textf)
 {
     char *s1, *s2, *s3;
-    if (textf->w2 == NULL) {
-	    XtVaGetValues(textf->w1, XmNvalue, &s1, NULL);
+    if (textf->w2 == nullptr) {
+	    XtVaGetValues(textf->w1, XmNvalue, &s1, nullptr);
 	    return(s1);
     } else {
 	if (XtIsSensitive(textf->w2)) {
-	    XtVaGetValues(textf->w1, XmNvalue, &s1, NULL);
-	    XtVaGetValues(textf->w2, XmNvalue, &s2, NULL);
+	    XtVaGetValues(textf->w1, XmNvalue, &s1, nullptr);
+	    XtVaGetValues(textf->w2, XmNvalue, &s2, nullptr);
 	    s3 = (char *) XtMalloc(strlen(s1) + strlen(s2) + 2);
 	    strcpy(s3, s1);
 	    strcat(s3, "-");
@@ -193,7 +193,7 @@ GetTextFieldValue(TextField *textf)
 	    XtFree(s2);
 	    return(s3);
 	} else {
-	    XtVaGetValues(textf->w1, XmNvalue, &s1, NULL);
+	    XtVaGetValues(textf->w1, XmNvalue, &s1, nullptr);
 	    return(s1);
 	}
     }
@@ -210,7 +210,7 @@ arrow_change(int w, TextField *data)
     }
 }
 
-static Widget		focus_widget=NULL;
+static Widget		focus_widget=nullptr;
 extern char		AreaStr[160];
 extern FalFontData	fullFontData;
 
@@ -263,7 +263,7 @@ int maxlength)
     data->w1 = focus_widget = textfield =
 				XmCreateText(row, "textField", args, n);
     XtManageChild(textfield);
-    XtAddCallback(textfield, XmNfocusCallback, (XtCallbackProc)focus, NULL);
+    XtAddCallback(textfield, XmNfocusCallback, (XtCallbackProc)focus, nullptr);
 
     if (! arrow_pix) {
 	disp = XtDisplay(row);
@@ -290,7 +290,7 @@ int maxlength)
     data->w2 = textfield = XmCreateText(row, "textField", args, n);
     XtManageChild(textfield);
     XtSetSensitive(textfield, False);
-    XtAddCallback(textfield, XmNfocusCallback, (XtCallbackProc)focus, NULL);
+    XtAddCallback(textfield, XmNfocusCallback, (XtCallbackProc)focus, nullptr);
 
     n = 0;
     xms = XmStringCreateLocalized(resource.code) ;
@@ -414,19 +414,19 @@ Widget *pop)
 	if (! btns->items[0].cb)
 	    XtAddCallback(*pop, XmNokCallback, _unmap, 0);
 	XtAddCallback(*pop, XmNokCallback, btns->items[0].cb,
-	  (btns->items[0].clientdata != NULL) ? btns->items[0].clientdata : 0);
+	  (btns->items[0].clientdata != nullptr) ? btns->items[0].clientdata : 0);
     }
     if (btns->itemcnt > 1){
 	if (! btns->items[1].cb)
 	    XtAddCallback(*pop, XmNcancelCallback, _unmap, 0);
 	XtAddCallback(*pop, XmNcancelCallback, btns->items[1].cb,
-	  (btns->items[1].clientdata != NULL) ? btns->items[1].clientdata : 0);
+	  (btns->items[1].clientdata != nullptr) ? btns->items[1].clientdata : 0);
     }
     if (btns->itemcnt > 2){
 	if (! btns->items[2].cb)
 	    XtAddCallback(*pop, XmNhelpCallback, _unmap, 0);
 	XtAddCallback(*pop, XmNhelpCallback, btns->items[2].cb,
-	  (btns->items[2].clientdata != NULL) ? btns->items[2].clientdata : 0);
+	  (btns->items[2].clientdata != nullptr) ? btns->items[2].clientdata : 0);
     }
     n = 0;
     XtSetValues(*pop, args, n);
@@ -453,10 +453,10 @@ GuiInitialize(XtAppContext *app, String class_name, int *ac, String av[])
 {
 	Widget top;
 
-	XtSetLanguageProc(NULL, NULL, NULL);
+	XtSetLanguageProc(nullptr, nullptr, nullptr);
 	_DtEnvControl(0);
 
-	top = XtAppInitialize(app, class_name, NULL,0, ac,av, NULL,NULL,0);
+	top = XtAppInitialize(app, class_name, nullptr,0, ac,av, nullptr,nullptr,0);
 
 	return(top);
 }
@@ -499,7 +499,7 @@ AddLeftAttachWidget( Widget w, Widget ref, int offset)
     XmNleftAttachment, XmATTACH_WIDGET,
     XmNleftWidget, ref,
     XmNleftOffset, offset,
-    NULL);
+    nullptr);
 }
 
 void
@@ -508,7 +508,7 @@ AddLeftAttachForm( Widget w, int offset )
     XtVaSetValues( w,
     XmNleftAttachment, XmATTACH_FORM,
     XmNleftOffset, offset,
-    NULL);
+    nullptr);
 }
 
 void
@@ -518,7 +518,7 @@ AddTopAttachWidget( Widget w, Widget ref, int offset )
     XmNtopAttachment, XmATTACH_WIDGET,
     XmNtopWidget, ref,
     XmNtopOffset, offset,
-    NULL);
+    nullptr);
 }
 
 void
@@ -527,7 +527,7 @@ AddTopAttachForm( Widget w, int offset )
     XtVaSetValues( w,
     XmNtopAttachment, XmATTACH_FORM,
     XmNtopOffset, offset,
-    NULL);
+    nullptr);
 }
 
 void
@@ -537,7 +537,7 @@ AddRightAttachWidget( Widget w, Widget ref, int offset )
     XmNrightAttachment, XmATTACH_WIDGET,
     XmNrightWidget, ref,
     XmNrightOffset, offset,
-    NULL);
+    nullptr);
 }
 
 void
@@ -546,7 +546,7 @@ AddRightAttachForm( Widget w, int offset )
     XtVaSetValues( w,
     XmNrightAttachment, XmATTACH_FORM,
     XmNrightOffset, offset,
-    NULL);
+    nullptr);
 }
 
 void
@@ -555,7 +555,7 @@ AddBottomAttachForm( Widget w, int offset )
     XtVaSetValues( w,
     XmNbottomAttachment, XmATTACH_FORM,
     XmNbottomOffset, offset,
-    NULL);
+    nullptr);
 }
 #endif	/* not USE_MACRO */
 
@@ -588,7 +588,7 @@ void
 SetLabelString(Widget w, String str)
 {
     XmString cs = XmStringCreateLocalized(str);
-    XtVaSetValues( w, XmNlabelString, cs, NULL);
+    XtVaSetValues( w, XmNlabelString, cs, nullptr);
     XmStringFree( cs );
 }
 
@@ -596,7 +596,7 @@ void
 SetFooterString(Widget w, String str)
 {
     XmString cs = XmStringCreateLocalized(str);
-    XtVaSetValues( w, XmNlabelString, cs, NULL);
+    XtVaSetValues( w, XmNlabelString, cs, nullptr);
     XmStringFree( cs );
 	XmUpdateDisplay(w);
 }
@@ -606,7 +606,7 @@ SetFooterString(Widget w, String str)
  create and pop up the confirmaiton window
  **********************************************************************/
 
-static Widget notice=NULL;
+static Widget notice=nullptr;
 
 static void
 format_str(Widget st, int charcnt , char *str)
@@ -653,7 +653,7 @@ static void _destroy( Widget w, XtPointer closure, XtPointer call_data)
 		XtDestroyWidget(w);
 	}
 	if (w == notice){
-		notice = NULL;
+		notice = nullptr;
 	}
 }
 
@@ -684,7 +684,7 @@ String title)
 	cs1 = XmStringCreateLocalized(button->items[0].label);
 	XtSetArg(args[n], XmNokLabelString, cs1);  n++;
 	if (button->items[0].cb)
-	    XtAddCallback(notice, XmNokCallback, button->items[0].cb, NULL);
+	    XtAddCallback(notice, XmNokCallback, button->items[0].cb, nullptr);
 	cancel = XmMessageBoxGetChild(notice, XmDIALOG_CANCEL_BUTTON);
 	help = XmMessageBoxGetChild(notice, XmDIALOG_HELP_BUTTON);
     }
@@ -692,17 +692,17 @@ String title)
 	cs2 = XmStringCreateLocalized(button->items[1].label);
 	XtSetArg(args[n], XmNcancelLabelString, cs2);  n++;
 	if (button->items[1].cb)
-	    XtAddCallback(notice, XmNcancelCallback, button->items[1].cb, NULL);
+	    XtAddCallback(notice, XmNcancelCallback, button->items[1].cb, nullptr);
     }
     if (button->itemcnt > 2){
 	cs3 = XmStringCreateLocalized(button->items[2].label);
 	XtSetArg(args[n], XmNhelpLabelString, cs3);  n++;
 	if (button->items[2].cb)
-	    XtAddCallback(notice, XmNhelpCallback, button->items[2].cb, NULL);
-	XtAddCallback(help, XmNactivateCallback, (XtCallbackProc)_unmap, NULL);
+	    XtAddCallback(notice, XmNhelpCallback, button->items[2].cb, nullptr);
+	XtAddCallback(help, XmNactivateCallback, (XtCallbackProc)_unmap, nullptr);
     }
     XtSetValues(notice, args, n);
-    XtAddCallback(notice, XmNunmapCallback, (XtCallbackProc)_destroy, NULL);
+    XtAddCallback(notice, XmNunmapCallback, (XtCallbackProc)_destroy, nullptr);
     if (button->itemcnt == 1){
 	XmStringFree(cs1);
 	XtUnmanageChild(cancel);
@@ -745,16 +745,16 @@ _layout_centerEH(Widget w, XtPointer clientdata)
     Dimension bbw, mw, sw, cw;
 
 
-    XtVaGetValues(w, XmNchildren, &child, XmNnumChildren, &num, NULL);
+    XtVaGetValues(w, XmNchildren, &child, XmNnumChildren, &num, nullptr);
     XtVaGetValues(XtParent(w),
 	XmNwidth, &bbw,
 	XmNmarginWidth, &mw,
 	XmNshadowThickness, &sw,
-	NULL);
-    XtVaGetValues(child[0], XmNwidth, &cw, NULL);
-    XtVaSetValues(w, XmNwidth, ((int)bbw-2*((int)mw+(int)sw)), NULL);
+	nullptr);
+    XtVaGetValues(child[0], XmNwidth, &cw, nullptr);
+    XtVaSetValues(w, XmNwidth, ((int)bbw-2*((int)mw+(int)sw)), nullptr);
     XtVaSetValues(child[0], XmNx,
-			((((int)bbw-2*((int)mw+(int)sw))-(int)cw)/2), NULL);
+			((((int)bbw-2*((int)mw+(int)sw))-(int)cw)/2), nullptr);
 }
 
 /*ARGSUSED*/
@@ -769,7 +769,7 @@ Widget *pop)
 {
     int		n = 0;
     Arg		args[32];
-    XmString	cs, cs1=NULL, cs2=NULL, cs3=NULL;
+    XmString	cs, cs1=nullptr, cs2=nullptr, cs3=nullptr;
     Widget	brtnb;
 
     cs = XmStringCreateLocalized(message);
@@ -794,25 +794,25 @@ Widget *pop)
     }
     *pop = XmCreateTemplateDialog(w, "TemplateDialog", args, n);
     if (button->itemcnt > 0 && button->items[0].cb)
-	XtAddCallback(*pop, XmNokCallback, button->items[0].cb, NULL);
+	XtAddCallback(*pop, XmNokCallback, button->items[0].cb, nullptr);
     if (button->itemcnt > 1 && button->items[1].cb)
-	XtAddCallback(*pop, XmNcancelCallback, button->items[1].cb, NULL);
+	XtAddCallback(*pop, XmNcancelCallback, button->items[1].cb, nullptr);
     if (button->itemcnt > 2 && button->items[2].cb)
-	XtAddCallback(*pop, XmNhelpCallback, button->items[2].cb, NULL);
+	XtAddCallback(*pop, XmNhelpCallback, button->items[2].cb, nullptr);
 
     XmStringFree(cs);
     if (cs1) XmStringFree(cs1);
     if (cs2) XmStringFree(cs2);
     if (cs3) XmStringFree(cs3);
 
-    XtAddCallback(*pop, XmNunmapCallback, (XtCallbackProc)_destroy, NULL);
+    XtAddCallback(*pop, XmNunmapCallback, (XtCallbackProc)_destroy, nullptr);
     n = 0;
     XtSetArg(args[n], XmNwidth, resource.temp_width );  n++;
     XtSetArg(args[n], XmNheight, resource.temp_height );  n++;
     brtnb = XmCreateBulletinBoard(*pop, "BulletinBo", args, n);
     XtManageChild(brtnb);
     XtAddEventHandler(brtnb,
-	StructureNotifyMask, True, (XtEventHandler)_layout_centerEH, NULL);
+	StructureNotifyMask, True, (XtEventHandler)_layout_centerEH, nullptr);
     return(brtnb);
 }
 
@@ -824,7 +824,7 @@ AddDeleteProc(Widget w, void (*delcb)())
 {
 	Atom del = DeleteWindowAtom();
 	XmAddWMProtocols( w, &del, 1);
-	XmAddWMProtocolCallback( w, del, delcb, NULL );
+	XmAddWMProtocolCallback( w, del, delcb, nullptr );
 }
 
 void
@@ -898,7 +898,7 @@ Widget *footer)
     XtSetArg( arg[n], XmNshadowType,       XmSHADOW_IN ); n++;
     footerFrame = XmCreateFrame( form, "footerFrame", arg, n);
     XtManageChild(footerFrame);
-    XtVaSetValues(form, XmNmessageWindow, footerFrame, NULL);
+    XtVaSetValues(form, XmNmessageWindow, footerFrame, nullptr);
 
     n = 0;
     XtSetArg( arg[n], XmNtopAttachment,    XmATTACH_FORM); n++;
@@ -1029,7 +1029,7 @@ void (*proc)())
 
     sc = XmCreateScrollBar(owner, "wgeScro", arg, n);
     XtManageChild( sc );
-    XtAddCallback( sc, XmNvalueChangedCallback, proc, NULL );
+    XtAddCallback( sc, XmNvalueChangedCallback, proc, nullptr );
     return(sc);
 }
 

@@ -34,7 +34,7 @@
 int find_CDE_locale_name(void)
 {
     UserEnv   *uenv = &userEnv;
-   _DtXlateDb db = NULL;
+   _DtXlateDb db = nullptr;
    int        ret = NoError;
    char       plat[_DtPLATFORM_MAX_LEN];
    int        execver;
@@ -43,7 +43,7 @@ int find_CDE_locale_name(void)
    
    if (first) {
 
-       uenv->CDE_locale = NULL;
+       uenv->CDE_locale = nullptr;
 
        ret = _DtLcxOpenAllDbs(&db);
 
@@ -53,7 +53,7 @@ int find_CDE_locale_name(void)
        if (ret == NoError)
 	   ret = _DtLcxXlateOpToStd(db, plat, compver, DtLCX_OPER_SETLOCALE,
 				    uenv->locale, &uenv->CDE_locale,
-				    NULL, NULL, NULL);
+				    nullptr, nullptr, nullptr);
        if (ret == NoError)
 	   ret = _DtLcxCloseDb(&db);
 
@@ -64,12 +64,12 @@ int find_CDE_locale_name(void)
 
 char *find_system_locale_name(char *CDE_locale)
 {
-   _DtXlateDb db = NULL;
+   _DtXlateDb db = nullptr;
    int        ret = NoError;
    char       plat[_DtPLATFORM_MAX_LEN];
    int        execver;
    int        compver;
-   char       *locale = NULL;
+   char       *locale = nullptr;
 
    ret = _DtLcxOpenAllDbs(&db);
 
@@ -78,7 +78,7 @@ char *find_system_locale_name(char *CDE_locale)
 
    if (ret == NoError)
        ret = _DtLcxXlateStdToOp(db, plat, compver, DtLCX_OPER_SETLOCALE,
-				    CDE_locale, NULL, NULL, NULL,
+				    CDE_locale, nullptr, nullptr, nullptr,
 				    &locale);
    if (ret == NoError)
        ret = _DtLcxCloseDb(&db);
@@ -86,7 +86,7 @@ char *find_system_locale_name(char *CDE_locale)
    if (ret == NoError)
        return (locale);
    else
-       return (NULL);
+       return (nullptr);
 }
 
 
@@ -183,14 +183,14 @@ char	**parse_strlist(char *ptr, char sep_ch)
     ptr = save_ptr = NEWSTR(ptr);
 
     if (!sep_ch)	sep_ch = ',';
-    bp = pbuf; pbuf[0] = NULL;
+    bp = pbuf; pbuf[0] = nullptr;
     new = (char **) 0;
     while (ptr) {
 	if ((sep = strchr(ptr, sep_ch)))	*sep++ = 0;
 	p = trim_line(ptr);
 	if (*p) {
 	    *bp++ = NEWSTR(p);
-	    if (bp - pbuf >= 100)	sep = NULL;	/* over-flow */
+	    if (bp - pbuf >= 100)	sep = nullptr;	/* over-flow */
 	}
 	ptr = sep;
     }
@@ -198,7 +198,7 @@ char	**parse_strlist(char *ptr, char sep_ch)
     if (n > 0) {
 	new = ALLOC(n + 1, char *);
 	memcpy((void *) new, (void *)pbuf, n * sizeof(char *));
-	new[n] = NULL;
+	new[n] = nullptr;
     }
     FREE(save_ptr);
 
@@ -267,11 +267,11 @@ XimsBool	parse_dpy_str(char *display_str, char **host, int *dnum, int *snum, int
     if (p == pdnum || (*p && *p != '.'))
 	return False;
 
-    psnum = NULL;
+    psnum = nullptr;
     if (*p) {	/* extract screen number */
 	*p++ = 0;	/* must be '.' */
 	for (psnum = p; *p && isdigit(*p); p++) ;
-	if (p == psnum || *p)	psnum = NULL;
+	if (p == psnum || *p)	psnum = nullptr;
 	*p++ = 0;
     }
 
@@ -289,12 +289,12 @@ XimsBool	parse_dpy_str(char *display_str, char **host, int *dnum, int *snum, int
 char	*std_dpy_str(char *display_str, int *snum)
 {
     char	buf[BUFSIZ], *bp, val[20];
-    char	*host = NULL;
+    char	*host = nullptr;
     int		dnum = 0, dnet = 0;
 
     if (snum)	*snum = 0;
     if (parse_dpy_str(display_str, &host, &dnum, snum, &dnet) == False)
-	return NULL;
+	return nullptr;
 
     /* sprintf(buf, "%s:%s%d", host, dnet ? ":" : NULL, dnum); */
     bp = buf; buf[0] = 0;
@@ -407,8 +407,8 @@ int	is_readable(char *path, int allow_empty)
 	/* ********  file reading  ******** */
 
 static int	tag_line_num = 0;
-static char	*tag_linebuf = NULL;
-static char	*tag_file = NULL;
+static char	*tag_linebuf = nullptr;
+static char	*tag_file = nullptr;
 
 int	start_tag_line(char *fname)
 {
@@ -778,11 +778,11 @@ void	pr_ImsConf(ImsConf *conf, char *ims_name)
     char	**p;
 
     fprintf(LogFp, "ImsConf:\tname=%s  protocols=%s%s%s%s\n", ims_name,
-		(conf->protocols & ProtoBit(Proto_XIM)) ? "XIM,"  : NULL,
-		(conf->protocols & ProtoBit(Proto_Ximp)) ? "Ximp,"  : NULL,
-		(conf->protocols & ProtoBit(Proto_Xsi)) ? "Xsi,"  : NULL,
-		NULL,
-		(conf->protocols & ProtoBit(Proto_None)) ? "None,"  : NULL);
+		(conf->protocols & ProtoBit(Proto_XIM)) ? "XIM,"  : nullptr,
+		(conf->protocols & ProtoBit(Proto_Ximp)) ? "Ximp,"  : nullptr,
+		(conf->protocols & ProtoBit(Proto_Xsi)) ? "Xsi,"  : nullptr,
+		nullptr,
+		(conf->protocols & ProtoBit(Proto_None)) ? "None,"  : nullptr);
     fprintf(LogFp, "\tproperty=%s  servername=%s (%s) class=%s\n",
 		conf->property, conf->servername,
 		conf->servername2, conf->classname);
@@ -790,10 +790,10 @@ void	pr_ImsConf(ImsConf *conf, char *ims_name)
 		conf->cmd_path, conf->cmd_param);
     fprintf(LogFp, "\ttimeout=%d  interval=%d  flags=%s%s%s\n",
 		conf->timeout, conf->interval,
-		(conf->flags & F_NO_SERVER) ? "no_server,"  : NULL,
-		(conf->flags & F_NO_REMOTE) ? "no_remote,"  : NULL,
-		(conf->flags & F_NO_OPTION) ? "no_option," : NULL,
-		(conf->flags & F_TRY_CONNECT) ? "try_connect," : NULL);
+		(conf->flags & F_NO_SERVER) ? "no_server,"  : nullptr,
+		(conf->flags & F_NO_REMOTE) ? "no_remote,"  : nullptr,
+		(conf->flags & F_NO_OPTION) ? "no_option," : nullptr,
+		(conf->flags & F_TRY_CONNECT) ? "try_connect," : nullptr);
     fprintf(LogFp, "\tenv_set: '%s'\n", conf->env_set);
     fprintf(LogFp, "\tenv_unset: '%s'\n", conf->env_unset);
     fprintf(LogFp, "\tenv_pass: '%s'\n", conf->env_pass);
@@ -1075,7 +1075,7 @@ char	*proto_name(int proto_idx)
     if (proto_idx >= 0 && proto_idx < NUM_PROTOCOLS)
 	return _proto_names[proto_idx];
     else
-	return NULL;
+	return nullptr;
 }
 
 static char	*SigNames[] = {		/* 1 ~ 32 */

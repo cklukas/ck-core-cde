@@ -49,7 +49,7 @@ static void *ck_malloc(size_t n)
 {
     void *p;
     if (failing())
-        return NULL;
+        return nullptr;
     p = malloc(n);
     if (p)
         ++live_blocks;
@@ -60,7 +60,7 @@ static void *ck_realloc(void *old, size_t n)
 {
     void *p;
     if (failing())
-        return NULL;		/* the old block stays valid, as in libc */
+        return nullptr;		/* the old block stays valid, as in libc */
     p = realloc(old, n);
     if (p && !old)
         ++live_blocks;
@@ -95,7 +95,7 @@ static XeString *SPC_Add_Env_File(XeString file, XeString *envp)
         ++n;
     assert(n + 1 < DEFAULT_ENVP_SIZE);
     envp[n] = copy;
-    envp[n + 1] = NULL;
+    envp[n + 1] = nullptr;
     return envp;
 }
 
@@ -125,16 +125,16 @@ static void run(unsigned mask, int want_install, int want_config)
     fail_mask = mask;
     live_blocks = 0;
     added_count = 0;
-    default_environment = NULL;
+    default_environment = nullptr;
 
     assert(SPCD_Initialize() == TRUE);
 
-    assert(default_environment != NULL);
+    assert(default_environment != nullptr);
     for (i = 0; i < n; ++i) {
-        assert(default_environment[i] != NULL);
+        assert(default_environment[i] != nullptr);
         assert(strcmp(default_environment[i], want[i]) == 0);
     }
-    assert(default_environment[n] == NULL);
+    assert(default_environment[n] == nullptr);
     assert(added_count == n);
     /* Only the environment array may remain allocated. */
     assert(live_blocks == 1);

@@ -234,7 +234,7 @@ _DtHelpSetScrollBars (
 	 * Check to see if we have a vertical scrollbar and whether it
 	 * is as_needed.  If static, it is always mapped.
 	 */
-	if (NULL != pDAS->vertScrollWid && NeedVertScrollbar(pDAS))
+	if (nullptr != pDAS->vertScrollWid && NeedVertScrollbar(pDAS))
 	  {
 	    /*
 	     * will the information fit on one page?
@@ -330,7 +330,7 @@ _DtHelpSetScrollBars (
 	 * Check to see if we have a horizontal scrollbar and whether it
 	 * is as_needed.  If static, it is always mapped.
 	 */
-	if (NULL != pDAS->horzScrollWid && NeedHorzScrollbar(pDAS))
+	if (nullptr != pDAS->horzScrollWid && NeedHorzScrollbar(pDAS))
 	  {
 	    /*
 	     * will the information fit within the right border?
@@ -804,7 +804,7 @@ _DtHelpGetScrollbarValue (XtPointer client_data)
 
     int  percent = -1;
 
-    if (pDAS->vertScrollWid != NULL)
+    if (pDAS->vertScrollWid != nullptr)
       {
 	percent = 0;
 	if (pDAS->firstVisible && pDAS->maxYpos)
@@ -850,7 +850,7 @@ _DtHelpUpdatePath (
     _DtHelpDATocMarker(pDAS, False);
     (void) _DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_OFF, False,
 			((_DtCvValue) XtIsRealized(pDAS->dispWid)),
-			NULL, NULL, NULL, NULL, NULL);
+			nullptr, nullptr, nullptr, nullptr, nullptr);
 
     /*
      * now create and set the topic
@@ -861,7 +861,7 @@ _DtHelpUpdatePath (
 
     _DtCanvasSetTopic (pDAS->canvas, (_DtCvTopicPtr) topic_handle,
 						pDAS->honor_size,
-						&width, &height, NULL);
+						&width, &height, nullptr);
 
     /*
      * free the old topic and remember the new
@@ -884,7 +884,7 @@ _DtHelpUpdatePath (
       {
         (void) _DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_ID, False,
 		((_DtCvStatus) XtIsRealized(pDAS->dispWid)), realId,
-		NULL, &(pDAS->toc_y), &(pDAS->toc_base), &(pDAS->toc_height));
+		nullptr, &(pDAS->toc_y), &(pDAS->toc_base), &(pDAS->toc_height));
 
         /*
          * figure out where the first line should be...

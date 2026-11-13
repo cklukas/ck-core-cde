@@ -96,7 +96,7 @@ void channel_class_init(object_clasp t)
   c->signal     = signal_channel_object;
   c->wait_for_termination = channel_object_wait_for_termination;
   c->attach     = attach_channel_object;
-  c->input      = NULL;
+  c->input      = nullptr;
   c->add_input  = add_input_channel_object;
   c->remove_logfile = remove_logfile_channel_object;
 }
@@ -133,7 +133,7 @@ SPC_ResetTerminator(void)
     sigemptyset(&svect.sa_mask);
     svect.sa_flags = 0;
 
-    if(sigaction(SIGCHLD, &svect, (struct sigaction *)NULL)==ERROR) {
+    if(sigaction(SIGCHLD, &svect, (struct sigaction *)nullptr)==ERROR) {
       SPC_Error(SPC_No_Signal_Handler);
       return(SPC_ERROR);
     }
@@ -199,7 +199,7 @@ SPC_Channel_Ptr SPC_Initialize_Channel(XeString hostname,
 				       int iomode)
 /*----------------------------------------------------------------------+*/
 {
-  SPC_Channel_Ptr channel = NULL;
+  SPC_Channel_Ptr channel = nullptr;
   
   /* Check for local or remote machine.  If remote, create a 
      remote channel object */
@@ -496,8 +496,8 @@ SPC_Channel_Ptr open_channel_object(SPC_Channel_Ptr channel,
   channel->file_descs[STDIN] = -1;
   channel->file_descs[STDOUT]= -1;
   channel->file_descs[STDERR]= -1;
-  channel->wire_list=NULL;
-  channel->logfile=NULL;
+  channel->wire_list=nullptr;
+  channel->logfile=nullptr;
   
   /* Link it into the activation list (at the front for now) */
 
@@ -648,18 +648,18 @@ int  exec_proc_channel_object (SPC_Channel_Ptr channel)
   /* If there is no argv specified, fix it up to be the convention
      (argv[0] = file pathname) */
   
-  if (channel->argv == NULL) {
+  if (channel->argv == nullptr) {
     tmp_argv=Alloc_Argv(2);
     if(tmp_argv==SPC_ERROR)
       return(SPC_ERROR);
     tmp_argv[0]=SPC_copy_string(channel->path);
-    tmp_argv[1]=NULL;
+    tmp_argv[1]=nullptr;
     channel->argv = tmp_argv;
     channel->IOMode |= SPCIO_DEALLOC_ARGV;
   }
 
   if(IS_SPCIO_WAIT(channel->IOMode))
-    XeSPCRegisterTerminator(channel, NULL, NULL);
+    XeSPCRegisterTerminator(channel, nullptr, nullptr);
   
   return(TRUE);
 

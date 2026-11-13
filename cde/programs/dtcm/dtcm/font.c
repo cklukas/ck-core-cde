@@ -60,7 +60,7 @@ get_font(
 	XmFontContext	 fl_context;
 	XmFontListEntry	 fl_entry;
 	XtPointer	 fl_entry_font,
-			 font_to_use = NULL;
+			 font_to_use = nullptr;
 	char		*fl_entry_font_tag;
 	Boolean		 found_font_set = False,
 			 found_font_struct = False;
@@ -101,7 +101,7 @@ get_font(
 				found_font_struct = True;
 			}
 		}
-	} while (fl_entry != NULL);
+	} while (fl_entry != nullptr);
 
 	XmFontListFreeFontContext(fl_context);
 

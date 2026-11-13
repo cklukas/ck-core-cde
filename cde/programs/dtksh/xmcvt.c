@@ -82,19 +82,19 @@ char *
 XmStringToString(
         XmString string )
 {
-	static char *buf = NULL;
+	static char *buf = nullptr;
 	XmStringContext context;
 	XmStringCharSet charset;
 	XmStringDirection dir;
 	char *text;
 	Boolean separator = FALSE;
 
-        if (string == NULL)
-           return(NULL);
+        if (string == nullptr)
+           return(nullptr);
 
 	XmStringInitContext(&context, string);
         XtFree(buf);
-	buf = NULL;
+	buf = nullptr;
 	while (!separator) {
 		if (XmStringGetNextSegment(context, &text, &charset, &dir,
 			&separator)) {
@@ -155,7 +155,7 @@ _CvtXmStringTableToString(
         XmStringTable stringtable,
         int itemCount )
 {
-   static char *buf = NULL;
+   static char *buf = nullptr;
    XmStringContext context;
    XmStringCharSet charset;
    XmStringDirection dir;
@@ -259,7 +259,7 @@ DtkshCvtNamedValueToString(
 	/*
 	 * same buffer will get used each time
 	 */
-	static char *ret = NULL;
+	static char *ret = nullptr;
 	struct named_integer *table;
 	int numtable;
 	long value;
@@ -292,14 +292,14 @@ DtkshCvtNamedValueToString(
 		 value = (long)*((int *)fval->addr);
 		 break;
 	      }
-	      toval->addr = NULL;
+	      toval->addr = nullptr;
 	      toval->size = 0;
 	      return;
         }
 
 	if (*nargs != 1) 
         {
-	   toval->addr = NULL;
+	   toval->addr = nullptr;
 	   toval->size = 0;
 	   return;
 	}
@@ -313,7 +313,7 @@ DtkshCvtNamedValueToString(
 			return;
 		}
 	}
-	toval->addr = NULL;
+	toval->addr = nullptr;
 	toval->size = 0;
 	return;
 }
@@ -341,7 +341,7 @@ DtkshCvtStringToNamedValue(
 	value = (String)fval->addr;
 
 	if (*nargs != 1) {
-		toval->addr = NULL;
+		toval->addr = nullptr;
 		toval->size = 0;
 		return;
 	}
@@ -362,7 +362,7 @@ DtkshCvtStringToNamedValue(
 	XtWarning(errbuf);
         free(errmsg);
         XtFree(errbuf);
-	toval->addr = NULL;
+	toval->addr = nullptr;
 	toval->size = 0;
 	return;
 }
@@ -1271,7 +1271,7 @@ static ModifierState modifierTable[] = {
    {"Mod4Mask",    Mod4Mask},
    {"Mod5Mask",    Mod5Mask},
    {"ShiftMask",   ShiftMask},
-   {NULL,          0},
+   {nullptr,          0},
 };
 
 
@@ -1282,7 +1282,7 @@ DtkshCvtXEModifierStateToString(
         XrmValuePtr fval,
         XrmValuePtr toval )
 {
-   static char *string = NULL;
+   static char *string = nullptr;
    unsigned int value;
    int i = 0;
    Boolean firstOne = True;
@@ -1327,7 +1327,7 @@ DtkshCvtXEMotionHintToString(
 {
    if (fval->size != sizeof(char)) 
    {
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }

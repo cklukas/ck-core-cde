@@ -230,10 +230,10 @@ XtResource resources[] = {
       XtOffset (ApplicationDataPtr, session), XmRImmediate, (XtPointer)NULL,
   },
   {"backdropDirectories", "BackdropDirectories", XmRString, sizeof(char *),
-        XtOffset(ApplicationDataPtr, backdropDir), XmRString, NULL 
+        XtOffset(ApplicationDataPtr, backdropDir), XmRString, nullptr 
   },
   {"paletteDirectories", "PaletteDirectories", XmRString, sizeof(char *),
-        XtOffset(ApplicationDataPtr, paletteDir), XmRString, NULL
+        XtOffset(ApplicationDataPtr, paletteDir), XmRString, nullptr
   },
   {"timeoutScale", "TimeoutScale", XmRString, sizeof (String),
         XtOffset(ApplicationDataPtr, timeoutScale), XmRString, "10" 
@@ -253,7 +253,7 @@ XtResource resources[] = {
   },
   {"imServerHosts", "ImServerHosts", XmRXmStringTable, sizeof(XmStringTable) ,
         XtOffset(ApplicationDataPtr, imServerHosts), XmRImmediate, 
-        NULL
+        nullptr
   },
   {"preeditType", "PreeditType", XmRXmStringTable, sizeof(XmStringTable) ,
         XtOffset(ApplicationDataPtr, preeditType), XmRString, 
@@ -276,7 +276,7 @@ GetSysFontResource(int i)
 {
     XtGetApplicationResources(style.shell, &style.xrdb,
                             &sysFont_resources[i],
-                              1, NULL, 0);
+                              1, nullptr, 0);
 }
 
 /************************************************************************
@@ -291,7 +291,7 @@ GetUserFontResource(int i)
 {
     XtGetApplicationResources(style.shell, &style.xrdb,
                             &userFont_resources[i],
-                              1, NULL, 0);
+                              1, nullptr, 0);
 }
 
 /************************************************************************
@@ -306,19 +306,19 @@ GetFontStrResources( void )
     int i;
 
     XtGetApplicationResources(style.shell, &style.xrdb, sysStr_resources,
-                              XtNumber(sysStr_resources), NULL, 0);
+                              XtNumber(sysStr_resources), nullptr, 0);
     XtGetApplicationResources(style.shell, &style.xrdb, userStr_resources,
-                              XtNumber(userStr_resources), NULL, 0);
+                              XtNumber(userStr_resources), nullptr, 0);
     for (i=0; i<style.xrdb.numFonts; i++) {
-      style.xrdb.fontChoice[i].userFont = NULL;
-      style.xrdb.fontChoice[i].sysFont = NULL;
-      style.xrdb.fontChoice[i].userFontSet = NULL;
-      style.xrdb.fontChoice[i].sysFontSet = NULL;
-      style.xrdb.fontChoice[i].userFontStruct = NULL;
-      style.xrdb.fontChoice[i].sysFontStruct = NULL;
+      style.xrdb.fontChoice[i].userFont = nullptr;
+      style.xrdb.fontChoice[i].sysFont = nullptr;
+      style.xrdb.fontChoice[i].userFontSet = nullptr;
+      style.xrdb.fontChoice[i].sysFontSet = nullptr;
+      style.xrdb.fontChoice[i].userFontStruct = nullptr;
+      style.xrdb.fontChoice[i].sysFontStruct = nullptr;
       if (style.xrdb.fontChoice[i].descriptor) {
         FreeFontDescriptor(style.xrdb.fontChoice[i].descriptor);
-        style.xrdb.fontChoice[i].descriptor = NULL;
+        style.xrdb.fontChoice[i].descriptor = nullptr;
       }
       if (style.xrdb.fontChoice[i].sysStr)
         style.xrdb.fontChoice[i].descriptor =
@@ -338,7 +338,7 @@ void
 GetApplicationResources( void )
 {
     XtGetApplicationResources(style.shell, &style.xrdb, resources,
-                              XtNumber(resources), NULL, 0);
+                              XtNumber(resources), nullptr, 0);
     GetFontStrResources();
 
 }

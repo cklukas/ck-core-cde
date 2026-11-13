@@ -91,19 +91,19 @@
 #define MAXINT INT_MAX
 #endif
 
-char   		*LabelForString = NULL;
-char   		*LabelForGraphic = NULL;
-char		*NoneItem = NULL;
+char   		*LabelForString = nullptr;
+char   		*LabelForGraphic = nullptr;
+char		*NoneItem = nullptr;
 
-char		*XFieldStr = NULL;
-char		*YFieldStr = NULL;
-char		*WFieldStr = NULL;
-char		*HFieldStr = NULL;
-char		*OffsetFieldStr = NULL;
-char		*PercentageFieldStr = NULL;
-char		*RowColFieldStr = NULL;
-char		*VertSpacingFieldStr = NULL;
-char		*HorizSpacingFieldStr = NULL;
+char		*XFieldStr = nullptr;
+char		*YFieldStr = nullptr;
+char		*WFieldStr = nullptr;
+char		*HFieldStr = nullptr;
+char		*OffsetFieldStr = nullptr;
+char		*PercentageFieldStr = nullptr;
+char		*RowColFieldStr = nullptr;
+char		*VertSpacingFieldStr = nullptr;
+char		*HorizSpacingFieldStr = nullptr;
 
 static char	*menu_strs[4];
 static char	*menu_names[] = {"none_item", "new_menu_item", "menus_item", "edit_item"};
@@ -399,9 +399,9 @@ extern int       	palette_item_cnt;
 extern PalItemInfo	*ab_menu_palitem;
 extern PalItemInfo	*ab_group_palitem;
 
-static PalItemInfo      *cur_list_palitem = NULL;
-static Widget    	revolv_current_frame = NULL;
-static Widget    	revolv_optionmenu   = NULL;
+static PalItemInfo      *cur_list_palitem = nullptr;
+static Widget    	revolv_current_frame = nullptr;
+static Widget    	revolv_optionmenu   = nullptr;
 static BOOL		apply_in_progress = False;
 
 static char      Buf[512];
@@ -445,7 +445,7 @@ prop_show_dialog(
 )
 {
     ABSelectedRec sel;
-    PalItemInfo	  *palitem = NULL;
+    PalItemInfo	  *palitem = nullptr;
     PropStateInfo *pstate;
 
     ab_set_busy_cursor(TRUE);
@@ -457,10 +457,10 @@ prop_show_dialog(
 	util_free(sel.list);
     }
     /* If no objects selected, set to First type */
-    if (palitem == NULL)
+    if (palitem == nullptr)
 	palitem = palette_item[0];
 
-    revolv_invoke_props(palitem, NULL);
+    revolv_invoke_props(palitem, nullptr);
     pstate = get_prop_state_info(AB_rev_prop_dialog);
     objlist_ensure_selection(pstate->objlist);
 
@@ -527,9 +527,9 @@ prop_load_obj(
 {
     PalItemInfo *palitem;
     PalItemInfo *viz_palitem;
-    Widget      dialog = NULL;
+    Widget      dialog = nullptr;
     PropStateInfo *pstate;
-    STRING	modname = NULL;
+    STRING	modname = nullptr;
 
     if (obj_is_module(obj) || obj_is_project(obj))
 	return;
@@ -541,7 +541,7 @@ prop_load_obj(
 
     obj = obj_get_root(obj);
 
-    if ((viz_palitem = palitem = pal_get_item_info(obj)) != NULL)
+    if ((viz_palitem = palitem = pal_get_item_info(obj)) != nullptr)
     {
     	if (ptype == AB_PROP_REVOLVING)
     	{
@@ -563,7 +563,7 @@ prop_load_obj(
 
     ab_set_busy_cursor(FALSE);
 
-    if (dialog != NULL && modname != NULL && viz_palitem == palitem)
+    if (dialog != nullptr && modname != nullptr && viz_palitem == palitem)
     {
 	ui_list_select_item(pstate->objlist, modname, TRUE);
 	util_free(modname);
@@ -579,21 +579,21 @@ prop_fixed_dialog_init(
 {
     Widget	shell = XtParent(dialog);
 
-    init_prop_state_info(dialog, palitem, objlist, NULL);
+    init_prop_state_info(dialog, palitem, objlist, nullptr);
 
     /* The initial position of a Fixed Prop dialog is dependent on
      * how it is invoked and whether the Revolving Prop editor is up,
      * so don't specify an initial position relative to the palette.
      */
     ab_register_window(dialog, AB_WIN_DIALOG, WindowHidden,
-		NULL, AB_WPOS_UNSPECIFIED,
+		nullptr, AB_WPOS_UNSPECIFIED,
 		close_propsCB, (XtPointer)AB_PROP_FIXED);
 
     /* Store current-object in List (init to NULL)  */
     XtVaSetValues(objlist,
                 XmNselectionPolicy,     XmBROWSE_SELECT,
-                XmNuserData,            NULL,
-                NULL);
+                XmNuserData,            nullptr,
+                nullptr);
 
     XtAddCallback(objlist, XmNbrowseSelectionCallback,
             objlist_selectCB, (XtPointer)AB_PROP_FIXED);
@@ -615,25 +615,25 @@ prop_activate_panel_init(
 
     /* Ensure "Apply" is default button */
     dialog = ui_get_ancestor_dialog(apply_button);
-    XtVaSetValues(dialog, XmNdefaultButton, apply_button, NULL);
+    XtVaSetValues(dialog, XmNdefaultButton, apply_button, nullptr);
 
     XtVaSetValues(apply_button,
 		XmNshowAsDefault, True,
 		XmNdefaultButtonShadowThickness, 1,
-		NULL);
+		nullptr);
     XtVaSetValues(ok_button,
                 XmNdefaultButtonShadowThickness, 1,
-                NULL);
+                nullptr);
     XtVaSetValues(reset_button,
                 XmNdefaultButtonShadowThickness, 1,
-                NULL);
+                nullptr);
     XtVaSetValues(cancel_button,
                 XmNdefaultButtonShadowThickness, 1,
-                NULL);
-    if (help_button != NULL)
+                nullptr);
+    if (help_button != nullptr)
     	XtVaSetValues(help_button,
                 XmNdefaultButtonShadowThickness, 1,
-                NULL);
+                nullptr);
 
     XtAddCallback(apply_button, XmNactivateCallback, apply_propsCB, (XtPointer)type);
     XtAddCallback(reset_button, XmNactivateCallback, reset_propsCB, (XtPointer)type);
@@ -695,7 +695,7 @@ prop_checkbox_init(
 
     for (i=0; i < num_items; i++)
     {
-	XtVaSetValues(items[i], XmNuserData, item_keys[i], NULL);
+	XtVaSetValues(items[i], XmNuserData, item_keys[i], nullptr);
         XtAddCallback(items[i], XmNvalueChangedCallback,
                         propP_setting_chgCB, (XtPointer)changebar);
     }
@@ -710,18 +710,18 @@ prop_checkbox_set_value(
 )
 {
     int		num_children = 0;
-    WidgetList  children = NULL;
+    WidgetList  children = nullptr;
     XtArgVal	childkey;
     int		i;
 
     XtVaGetValues(pcs->checkbox,
 	XtNnumChildren,	&num_children,
 	XtNchildren,	&children,
-	NULL);
+	nullptr);
 
     for (i=0; i < num_children; i++)
     {
-	XtVaGetValues(children[i], XmNuserData, &childkey, NULL);
+	XtVaGetValues(children[i], XmNuserData, &childkey, nullptr);
 	if (childkey == itemkey) /* Found it */
 	{
 	    XmToggleButtonSetState(children[i], value, trip_changebar? TRUE : FALSE);
@@ -740,18 +740,18 @@ prop_checkbox_get_value(
 )
 {
     int         num_children = 0;
-    WidgetList  children = NULL;
+    WidgetList  children = nullptr;
     XtArgVal    childkey;
     int         i;
 
     XtVaGetValues(pcs->checkbox,
         XtNnumChildren, &num_children,
         XtNchildren,    &children,
-        NULL);
+        nullptr);
 
     for (i=0; i < num_children; i++)
     {
-        XtVaGetValues(children[i], XmNuserData, &childkey, NULL);
+        XtVaGetValues(children[i], XmNuserData, &childkey, nullptr);
         if (childkey == itemkey) /* Found it */
             return((BOOL)XmToggleButtonGetState(children[i]));
     }
@@ -799,13 +799,13 @@ prop_colorfield_init(
     /* Ensure Swatch's border is contrast to prop sheet */
     XtVaGetValues(XtParent(changebar),
                         XmNforeground,  &contrast_pix,
-                        NULL);
+                        nullptr);
     XtVaSetValues(swatch,
 		XmNborderColor,	  (XtArgVal)contrast_pix,
 		XmNborderWidth,   (XtArgVal)1,
 		XmNuserData,	  (XtArgVal)default_pix,
 		XmNrecomputeSize, (XtArgVal)False,
-		NULL);
+		nullptr);
 
     snprintf(swatch_name, sizeof(swatch_name), "%s", XtName(swatch));
 
@@ -839,14 +839,14 @@ prop_colorfield_set_value(
     Pixel 		pixel;
 
     if (util_strempty(colorname)) /* no color - swatch is 'invisible' */
-        XtVaGetValues(XtParent(pcs->swatch), XmNbackground, &pixel, NULL);
+        XtVaGetValues(XtParent(pcs->swatch), XmNbackground, &pixel, nullptr);
 
     else if (objxm_name_to_pixel(AB_toplevel, colorname, &pixel) != OK)
     {
 	if (objxm_color_exists(colorname)) /* color couldn't be allocated */
 	{
 	    /* Set swatch color to default black or white */
-	    XtVaGetValues(pcs->swatch, XmNuserData, &pixel, NULL);
+	    XtVaGetValues(pcs->swatch, XmNuserData, &pixel, nullptr);
 	}
 	else /* Invalid color name - this should not happen */
 	{
@@ -857,18 +857,18 @@ prop_colorfield_set_value(
     }
     XtVaSetValues(pcs->swatch,
 	XmNbackground, 	(XtArgVal)pixel,
-	NULL);
+	nullptr);
 
     if (!trip_changebar)
         /* Set state so changebar is not triggered */
-        XtVaSetValues(pcs->field, XmNuserData, (XtArgVal)PROP_LOAD, NULL);
+        XtVaSetValues(pcs->field, XmNuserData, (XtArgVal)PROP_LOAD, nullptr);
 
     /* Set field value */
     ui_field_set_string(pcs->field, colorname);
 
     if (!trip_changebar)
         /* Reset state */
-        XtVaSetValues(pcs->field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+        XtVaSetValues(pcs->field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
 
     return OK;
 
@@ -895,7 +895,7 @@ prop_obj_combobox_init(
     propP_changebar_init(changebar, combobox);
 
     /* Load "None" Item */
-    prop_obj_combobox_load(pcs, NULL, NULL);
+    prop_obj_combobox_load(pcs, nullptr, nullptr);
 
     XtAddCallback(combobox, DtNselectionCallback, propP_combobox_chgCB,
 		(XtPointer)pcs);
@@ -915,19 +915,19 @@ prop_obj_combobox_get_value(
     XtVaGetValues(pcs->list,
 	XmNselectedItems, &selected,
 	XmNselectedItemCount, &select_count,
-	NULL);
+	nullptr);
 
     if (select_count == 0)
     {
 	util_dprintf(1, "prop_obj_combobox_get_value: No items select in List\n");
-	return NULL;
+	return nullptr;
     }
     name = objxm_xmstr_to_str(selected[0]);
 
     if (util_strcmp(name, NoneItem) != 0)
         obj = obj_find_by_name(obj_get_module(*pcs->current_obj_ptr), name);
     else
-	obj = NULL; /* "None" was selected */
+	obj = nullptr; /* "None" was selected */
 
     util_free(name);
 
@@ -961,10 +961,10 @@ prop_obj_combobox_load(
     ui_combobox_clear(pcs->combobox);
     ui_combobox_add_item(pcs->combobox, (STRING)NoneItem, 0, False);
 
-    if (root != NULL)
+    if (root != nullptr)
     {
     	for (trav_open(&trav, root, AB_TRAV_SALIENT_UI);
-            (obj= trav_next(&trav)) != NULL; )
+            (obj= trav_next(&trav)) != nullptr; )
 	    if ((*obj_test_func)(obj) == True)
 	    	ui_combobox_add_item(pcs->combobox, obj_get_name(obj), 0, False);
 
@@ -986,7 +986,7 @@ prop_field_init(
     pfs->changebar = changebar;
 
     /* Setup Prop Sheet changebar mechanism */
-    XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
     propP_changebar_init(changebar, field);
 
     XtAddCallback(field, XmNvalueChangedCallback,
@@ -1042,7 +1042,7 @@ prop_field_set_numeric_value(
 
     if (!trip_changebar)
     	/* Set state so changebar is not triggered */
-    	XtVaSetValues(pfs->field, XmNuserData, (XtArgVal)PROP_LOAD, NULL);
+    	XtVaSetValues(pfs->field, XmNuserData, (XtArgVal)PROP_LOAD, nullptr);
 
     /* Convert int to string */
     sprintf(valstr, "%d", value);
@@ -1050,7 +1050,7 @@ prop_field_set_numeric_value(
 
     if (!trip_changebar)
     	/* Reset state */
-    	XtVaSetValues(pfs->field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    	XtVaSetValues(pfs->field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
 
     return OK;
 }
@@ -1076,7 +1076,7 @@ prop_footer_init(
     pfs->changebar = changebar;
 
     /* Setup Prop Sheet changebar mechanism */
-    XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
     propP_changebar_init(changebar, checkbox);
 
     XtAddCallback(field, XmNvalueChangedCallback,
@@ -1084,7 +1084,7 @@ prop_footer_init(
 
     for (i=0; i < num_items; i++)
     {
-        XtVaSetValues(items[i], XmNuserData, item_keys[i], NULL);
+        XtVaSetValues(items[i], XmNuserData, item_keys[i], nullptr);
         XtAddCallback(items[i], XmNvalueChangedCallback,
                         propP_setting_chgCB, (XtPointer)changebar);
     }
@@ -1122,27 +1122,27 @@ prop_geomfield_init(
     propP_changebar_init(changebar,
 	x_field? x_field : (y_field? y_field : (w_field? w_field : h_field)));
 
-    if (x_field != NULL)
+    if (x_field != nullptr)
     {
-    	XtVaSetValues(x_field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    	XtVaSetValues(x_field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
     	XtAddCallback(x_field, XmNvalueChangedCallback,
 			propP_field_chgCB, (XtPointer)changebar);
     }
-    if (y_field != NULL)
+    if (y_field != nullptr)
     {
-    	XtVaSetValues(y_field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    	XtVaSetValues(y_field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
     	XtAddCallback(y_field, XmNvalueChangedCallback,
 			propP_field_chgCB, (XtPointer)changebar);
     }
-    if (h_field != NULL)
+    if (h_field != nullptr)
     {
-    	XtVaSetValues(h_field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    	XtVaSetValues(h_field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
     	XtAddCallback(h_field, XmNvalueChangedCallback,
 			propP_field_chgCB, (XtPointer)changebar);
     }
-    if (w_field != NULL)
+    if (w_field != nullptr)
     {
-    	XtVaSetValues(w_field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    	XtVaSetValues(w_field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
     	XtAddCallback(w_field, XmNvalueChangedCallback,
 			propP_field_chgCB, (XtPointer)changebar);
     }
@@ -1174,7 +1174,7 @@ prop_geomfield_get_value(
 	    field = pgs->h_field;
 	    break;
 	default:
-	    field = NULL;
+	    field = nullptr;
     }
     if (field)
     {
@@ -1210,7 +1210,7 @@ prop_geomfield_set_value(
             field = pgs->h_field;
             break;
         default:
-            field = NULL;
+            field = nullptr;
     }
     if (field)
 	propP_field_set_numeric_value(field, gvalue, trip_changebar);
@@ -1273,7 +1273,7 @@ prop_size_policyCB(
 
     if (state->set)
     {
-    	XtVaGetValues(w, XmNuserData, &value, NULL);
+    	XtVaGetValues(w, XmNuserData, &value, nullptr);
 	active = (value == SIZE_FIXED_KEY);
 	if (pgs->w_label)
             ui_set_active(pgs->w_label, active);
@@ -1319,14 +1319,14 @@ prop_menuname_init(
     pms->current_obj_ptr = current_obj_ptr;
 
     /* Setup Prop Sheet changebar mechanism */
-    XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
     propP_changebar_init(changebar, field);
 
     XtAddCallback(field, XmNvalueChangedCallback,
                 propP_field_chgCB, (XtPointer)changebar);
 
     /* Build Menu and Setup Callbacks */
-    XtVaGetValues(menubutton, XmNsubMenuId, &submenu, NULL);
+    XtVaGetValues(menubutton, XmNsubMenuId, &submenu, nullptr);
 
     for (i=0; i < XtNumber(menu_items); i++)
     {
@@ -1336,7 +1336,7 @@ prop_menuname_init(
                         XtVaTypedArg, XmNlabelString, XtRString,
                                 menu_strs[i], strlen(menu_strs[i])+1,
                         XmNuserData,    pms,
-                        NULL);
+                        nullptr);
     }
 
     XtAddCallback(menu_items[NO_MENU], XmNactivateCallback, menuname_clearCB,
@@ -1351,7 +1351,7 @@ prop_menuname_init(
     /* Set up callback to dynamically build "Menus" submenu */
     XtAddCallback(menubutton, XmNcascadingCallback, menulist_buildCB,
                         (XtPointer)menu_items[MENUS]);
-    XtVaGetValues(menubutton, XmNsubMenuId, &submenu, NULL);
+    XtVaGetValues(menubutton, XmNsubMenuId, &submenu, nullptr);
     XtAddCallback(XtParent(submenu), XtNpopdownCallback, menulist_destroyCB,
                         (XtPointer)submenu);
 
@@ -1419,7 +1419,7 @@ prop_options_init(
 
     for (i=0; i < num_items; i++)
     {
-	XtVaSetValues(items[i], XmNuserData, (XtArgVal)item_values[i], NULL);
+	XtVaSetValues(items[i], XmNuserData, (XtArgVal)item_values[i], nullptr);
         XtAddCallback(items[i], XmNactivateCallback,
                         propP_setting_chgCB, (XtPointer)changebar);
         XtAddCallback(items[i], XmNactivateCallback,
@@ -1436,7 +1436,7 @@ prop_options_get_value(PropOptionsSetting pos)
 {
     XtArgVal value = -1;
 
-    XtVaGetValues(pos->menu, XmNuserData, &value, NULL);
+    XtVaGetValues(pos->menu, XmNuserData, &value, nullptr);
 
     return ((XtPointer)value);
 }
@@ -1456,18 +1456,18 @@ prop_options_set_value(
     XtVaGetValues(pos->menu,
         XtNnumChildren,    &num_children,
         XtNchildren,       &children,
-        NULL);
+        nullptr);
 
     for (i = 0; i < num_children; i++)
     {
         XtVaGetValues(children[i],
                 XmNuserData, 	 &child_val,
-                NULL);
+                nullptr);
 
         if (child_val == (XtArgVal) value)
         {
-	    XtVaSetValues(pos->optionbox, XmNmenuHistory, children[i], NULL);
-            XtVaSetValues(pos->menu, XmNuserData, (XtArgVal)child_val, NULL);
+	    XtVaSetValues(pos->optionbox, XmNmenuHistory, children[i], nullptr);
+            XtVaSetValues(pos->menu, XmNuserData, (XtArgVal)child_val, nullptr);
 
 	    if (trip_changebar)
 		prop_set_changebar(pos->changebar, PROP_CB_ON);
@@ -1500,13 +1500,13 @@ prop_options_remove_value(
     XtVaGetValues(pos->menu,
         XtNnumChildren,    &num_children,
         XtNchildren,       &children,
-        NULL);
+        nullptr);
 
     for (i = 0; i < num_children; i++)
     {
         XtVaGetValues(children[i],
                 XmNuserData, 	 &child_val,
-                NULL);
+                nullptr);
 
         if (child_val == (XtArgVal)value)
         {
@@ -1528,7 +1528,7 @@ prop_options_remove_value(
 		{
                     XtVaGetValues(children[1],
                         XmNuserData, 	 &reset_val,
-                        NULL);
+                        nullptr);
 		    prop_options_set_value(pos, (XtPointer)reset_val, trip_changebar);
 		}
 		else
@@ -1577,7 +1577,7 @@ prop_obj_options_init(
     pos->display_module = display_module;
     pos->current_obj_ptr = current_obj_ptr;
     pos->obj_test_func = obj_test_func;
-    pos->search_root = NULL;
+    pos->search_root = nullptr;
 
     /* Setup callback to dynamically build Object list when Menu is popped up */
     shell = ui_get_ancestor_shell(menu);
@@ -1618,7 +1618,7 @@ prop_obj_options_load(
     XtVaGetValues(pos->options.menu,
 		XmNchildren, 	&items,
 		XmNnumChildren, &num_items,
-		NULL);
+		nullptr);
 
     /* Unmanage all but the First ("None") items */
     if (num_items > 1)
@@ -1628,21 +1628,21 @@ prop_obj_options_load(
 
     /* Load OptionMenu with objects passing "test" */
     pos->search_root = search_root;
-    if (pos->search_root != NULL)
+    if (pos->search_root != nullptr)
     {
         for (trav_open(&trav, pos->search_root, AB_TRAV_SALIENT_UI);
-            (obj= trav_next(&trav)) != NULL; )
+            (obj= trav_next(&trav)) != nullptr; )
             if ((*(pos->obj_test_func))(obj) == True)
 	    {
 		/* Either create new item or use existing one */
-		create_obj_option_item(pos, i < num_items? items[i] : NULL, obj);
+		create_obj_option_item(pos, i < num_items? items[i] : nullptr, obj);
 		i++;
 	    }
         trav_close(&trav);
     }
     XtVaGetValues(pos->options.menu,
                 XmNchildren, 	&items,
-                NULL);
+                nullptr);
 
     /* Manage all eligible items */
     if (i > 1)
@@ -1672,7 +1672,7 @@ prop_radiobox_init(
 
     for (i=0; i < num_items; i++)
     {
-	XtVaSetValues(items[i], XmNuserData, (XtArgVal)item_values[i], NULL);
+	XtVaSetValues(items[i], XmNuserData, (XtArgVal)item_values[i], nullptr);
 	XtAddCallback(items[i], XmNvalueChangedCallback,
 			propP_setting_chgCB, (XtPointer*)changebar);
 	XtAddCallback(items[i], XmNvalueChangedCallback,
@@ -1681,8 +1681,8 @@ prop_radiobox_init(
 	/* Ensure Radiobox has a default Value set */
 	if (i == 0)
 	{
-	    XtVaSetValues(items[i], XmNset, True, NULL);
-	    XtVaSetValues(radiobox, XmNuserData, (XtArgVal)item_values[i], NULL);
+	    XtVaSetValues(items[i], XmNset, True, nullptr);
+	    XtVaSetValues(radiobox, XmNuserData, (XtArgVal)item_values[i], nullptr);
 	}
     }
 
@@ -1695,7 +1695,7 @@ prop_radiobox_get_value(
 {
     XtArgVal value;
 
-    XtVaGetValues(prs->radiobox, XmNuserData, &value, NULL);
+    XtVaGetValues(prs->radiobox, XmNuserData, &value, nullptr);
 
     return((int)value);
 }
@@ -1708,7 +1708,7 @@ prop_radiobox_set_value(
 )
 {
     int         num_children = 0;
-    WidgetList  children = NULL;
+    WidgetList  children = nullptr;
     XtArgVal    childval = 0;
     Boolean     found = FALSE;
     int         i = 0;
@@ -1716,16 +1716,16 @@ prop_radiobox_set_value(
     XtVaGetValues(prs->radiobox,
         XtNnumChildren,    &num_children,
         XtNchildren,       &children,
-        NULL);
+        nullptr);
 
     for (i = 0; i < num_children; i++)
     {
-        XtVaGetValues(children[i], XmNuserData, &childval, NULL);
+        XtVaGetValues(children[i], XmNuserData, &childval, nullptr);
         XmToggleButtonSetState(children[i], childval == (XtArgVal)value? TRUE : FALSE, FALSE);
         if (childval == (XtArgVal)value)
         {
             found = TRUE;
-            XtVaSetValues(prs->radiobox, XmNuserData, (XtArgVal)value, NULL);
+            XtVaSetValues(prs->radiobox, XmNuserData, (XtArgVal)value, nullptr);
 	    if (trip_changebar)
 		prop_set_changebar(prs->changebar, PROP_CB_ON);
         }
@@ -1748,11 +1748,11 @@ prop_label_field_init(
 {
     int		i;
 
-    if (label_pfs->label != NULL && graphic_hint != NULL)
+    if (label_pfs->label != nullptr && graphic_hint != nullptr)
     	XtVaSetValues(label_pfs->label,
 		XmNuserData, (XtArgVal)graphic_hint,
 		XmNrecomputeSize, False,
-		NULL);
+		nullptr);
 
     for(i=0; i < num_items; i++)
         XtAddCallback(labeltype_items[i], XmNactivateCallback,
@@ -1769,9 +1769,9 @@ prop_setup_label_field(
     AB_LINE_TYPE	line_style
 )
 {
-    Widget	graphic_hint = NULL;
+    Widget	graphic_hint = nullptr;
 
-    XtVaGetValues(label_pfs->label, XmNuserData, &graphic_hint, NULL);
+    XtVaGetValues(label_pfs->label, XmNuserData, &graphic_hint, nullptr);
 
     switch(ltype)
     {
@@ -1800,17 +1800,17 @@ prop_setup_label_field(
 		ui_set_active(graphic_hint, False);
 	    break;
     }
-    if (field_val != NULL)
+    if (field_val != nullptr)
     {
-    	XtVaSetValues(label_pfs->field, XmNuserData, (XtArgVal)PROP_LOAD, NULL);
+    	XtVaSetValues(label_pfs->field, XmNuserData, (XtArgVal)PROP_LOAD, nullptr);
     	ui_field_set_string(label_pfs->field, field_val);
-    	XtVaSetValues(label_pfs->field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    	XtVaSetValues(label_pfs->field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
     }
     if (line_style != AB_LINE_UNDEF)
 	prop_options_set_value(label_line_style_pos, (XtPointer)line_style, False);
 
     /* WORKAROUND: for Motif bug */
-    XtVaSetValues(label_pfs->label, XmNalignment, XmALIGNMENT_END, NULL);
+    XtVaSetValues(label_pfs->label, XmNalignment, XmALIGNMENT_END, nullptr);
 
 }
 
@@ -1824,7 +1824,7 @@ prop_changed(
 {
     XtArgVal     cb_state;
 
-    XtVaGetValues(changebar, XmNuserData, &cb_state, NULL);
+    XtVaGetValues(changebar, XmNuserData, &cb_state, nullptr);
 
     if (cb_state == PROP_CB_ON)
         return(TRUE);
@@ -1843,7 +1843,7 @@ prop_changebars_pending(
 {
     XtArgVal	   change_count;
 
-    XtVaGetValues(prop_sheet, XmNuserData, &change_count, NULL);
+    XtVaGetValues(prop_sheet, XmNuserData, &change_count, nullptr);
 
     if (change_count > 0)
 	return True;
@@ -1860,7 +1860,7 @@ prop_changebars_cleared(
     Widget	prop_sheet
 )
 {
-     XtVaSetValues(prop_sheet, XmNuserData, (XtArgVal)0, NULL);
+     XtVaSetValues(prop_sheet, XmNuserData, (XtArgVal)0, nullptr);
 }
 
 /*
@@ -1890,16 +1890,16 @@ prop_set_changebar(
 */
 	    XtVaGetValues(XtParent(changebar),
 			XmNforeground,	&bar_pixel,
-			NULL);
+			nullptr);
 
             XtVaSetValues(changebar,
 		 	XmNbackground,	bar_pixel,
                         XmNforeground,  bar_pixel,
                         XmNuserData,    (XtArgVal)PROP_CB_ON,
-                        NULL);
+                        nullptr);
 
 	    /* Set dirty-bit */
-	    XtVaSetValues(prop_sheet, XmNuserData, (XtArgVal)1, NULL);
+	    XtVaSetValues(prop_sheet, XmNuserData, (XtArgVal)1, nullptr);
 /*
 	}
 */
@@ -1910,12 +1910,12 @@ prop_set_changebar(
         if (prop_changed(changebar))
 	{
 */
-            XtVaGetValues(XtParent(changebar), XmNbackground, &bar_pixel, NULL);
+            XtVaGetValues(XtParent(changebar), XmNbackground, &bar_pixel, nullptr);
             XtVaSetValues(changebar,
 			XmNbackground,  bar_pixel,
                         XmNforeground,  bar_pixel,
                         XmNuserData,    (XtArgVal)PROP_CB_OFF,
-                        NULL);
+                        nullptr);
 /*
 	}
 */
@@ -1945,7 +1945,7 @@ prop_color_ok(
             CATGETS(Dtb_project_catd, 100, 112, "%s is not a valid color."),
                         colorname);
 	util_set_help_data(CATGETS(Dtb_project_catd, 100, 113,
-	    	    "The color that was specified is not recognized\nas a valid color name."), NULL, NULL);
+	    	    "The color that was specified is not recognized\nas a valid color name."), nullptr, nullptr);
 	valid = FALSE;
 
     	propP_popup_message(field, Buf, False);
@@ -1980,7 +1980,7 @@ prop_graphic_filename_ok(
 	else
 	{
 	    util_set_help_data(CATGETS(Dtb_project_catd, 100, 115,
-		"If Graphic is specified as the Label Type for\nthe object whose properties are being modified,\nthen a pixmap (.pm, .xpm) or bitmap (.bm, .xbm)\nfile name must be specified in the Graphic Filename\nfield."), NULL, NULL);
+		"If Graphic is specified as the Label Type for\nthe object whose properties are being modified,\nthen a pixmap (.pm, .xpm) or bitmap (.bm, .xbm)\nfile name must be specified in the Graphic Filename\nfield."), nullptr, nullptr);
 
 	    propP_popup_message(field,
 		CATGETS(Dtb_project_catd, 100, 114,
@@ -2002,7 +2002,7 @@ prop_graphic_filename_ok(
 	    ext[0] = '\0'; /* strip off extension */
 
             util_set_help_data(CATGETS(Dtb_project_catd, 100, 117,
-		"The graphic file name extension should not be included\nwhen it is specified in the Graphic Filename field."), NULL, NULL);
+		"The graphic file name extension should not be included\nwhen it is specified in the Graphic Filename field."), nullptr, nullptr);
 
 	    propP_popup_message(field,
 		CATGETS(Dtb_project_catd, 100, 116,
@@ -2017,7 +2017,7 @@ prop_graphic_filename_ok(
     	}
     	else
 	    propP_popup_message(field,
-		objxm_pixmap_conversion_error_msg(NULL, filebase, status), False);
+		objxm_pixmap_conversion_error_msg(nullptr, filebase, status), False);
 
     }
     util_free(filename);
@@ -2041,7 +2041,7 @@ prop_help_item_ok(
     XtVaGetValues(list,
                 XmNitemCount, &num_items,
                 XmNuserData,  &iobj_list,
-                NULL);
+                nullptr);
 
     /* Search through cascades, looking for another configured
      * to be the "Help" cascade
@@ -2058,7 +2058,7 @@ prop_help_item_ok(
     if (exists)
     {
 	util_set_help_data(CATGETS(Dtb_project_catd, 100, 119,
-	    "Two Menubar items cannot both be specified as the\nHelp cascade. To specify a different Menubar item,\nyou must first clear the item that is currently set\nto be the Help cascade, then select the new Menubar\nitem to be the Help cascade."), NULL, NULL);
+	    "Two Menubar items cannot both be specified as the\nHelp cascade. To specify a different Menubar item,\nyou must first clear the item that is currently set\nto be the Help cascade, then select the new Menubar\nitem to be the Help cascade."), nullptr, nullptr);
 
         sprintf(Buf, CATGETS(Dtb_project_catd, 100, 118,
                 "There can only be one Help cascade per Menubar.Item\n\"%s\" is already configured to be the Help cascade,\ntherefore Item \"%s\" cannot also be the Help cascade."),
@@ -2095,7 +2095,7 @@ prop_name_ok(
 )
 {
     ABObj  module = obj_get_module(obj);
-    ABObj  other = NULL;
+    ABObj  other = nullptr;
     char   Buf[512];
     BOOL   valid = TRUE;
     STRING newname;
@@ -2108,7 +2108,7 @@ prop_name_ok(
     {
 	util_set_help_data(CATGETS(Dtb_project_catd, 100, 121,
 	    "A string must be entered in the Object Name field."),
-	    NULL, NULL);
+	    nullptr, nullptr);
 	propP_popup_message( field, CATGETS(Dtb_project_catd, 100, 120,
 		"A name is required."), False);
 	valid = FALSE;
@@ -2119,13 +2119,13 @@ prop_name_ok(
     	oldname = "";
 
     if (valid &&
-        ((other = obj_find_by_name(module, newname)) != NULL))
+        ((other = obj_find_by_name(module, newname)) != nullptr))
     {
 	if (other != obj)
 	{
 	    util_set_help_data(CATGETS(Dtb_project_catd, 100, 123,
 		"The name specified in the Object Name field is not\na unique name in the module. You must specify a unique\nname for the object."),
-		NULL, NULL);
+		nullptr, nullptr);
 
 	    sprintf(Buf, CATGETS(Dtb_project_catd, 100, 122,
 		"Another object in Module \"%s\"\nhas the name \"%s\".\nPlease enter a unique name."), util_strsafe(obj_get_name(module)),newname);
@@ -2156,14 +2156,14 @@ prop_number_ok(
     string = ui_field_get_string(field);
     s = string;
 
-    if ((s  != NULL) && (*s != '\0'))
+    if ((s  != nullptr) && (*s != '\0'))
     {
     	(void)strtol(s, &p, 10);
 
     	if((s == p) || ((s + strlen(s)) != p))
     	{
 	    util_set_help_data(CATGETS(Dtb_project_catd, 100, 125,
-		"The field only accepts integers. You must enter\nan integer value."), NULL, NULL);
+		"The field only accepts integers. You must enter\nan integer value."), nullptr, nullptr);
             sprintf(Buf, CATGETS(Dtb_project_catd, 100, 124,
 		"\"%s\" must contain an integer."),
                 field_name);
@@ -2177,7 +2177,7 @@ prop_number_ok(
 	if (value < min_val || value > max_val)
 	{
             util_set_help_data(CATGETS(Dtb_project_catd, 100, 127,
-		"The numerical value entered into the field is not valid. Specify a value in the given range."), NULL, NULL);
+		"The numerical value entered into the field is not valid. Specify a value in the given range."), nullptr, nullptr);
 	    sprintf(Buf, CATGETS(Dtb_project_catd, 100, 126,
 		"\"%s\" value (%d) out of\nvalid range [%d - %d]."),
 		field_name, value, min_val, max_val);
@@ -2213,7 +2213,7 @@ prop_obj_name_ok(
     /* ObjName can be blank OR the name of an existing obj */
     if (util_strcmp(objname, "") == 0)
         valid = TRUE;
-    else if ((target = obj_scoped_find_by_name(root, objname)) != NULL)
+    else if ((target = obj_scoped_find_by_name(root, objname)) != nullptr)
     {
 	if (target->type == objtype)
             valid = TRUE;
@@ -2221,7 +2221,7 @@ prop_obj_name_ok(
 	{
 	    util_set_help_data(CATGETS(Dtb_project_catd, 100, 129,
 		"The object specified is not of the correct type.\nFor example, it is an error to specify a button\nas the Popup Menu for a Control Pane."),
-		NULL, NULL);
+		nullptr, nullptr);
 	    sprintf(msgbuf, CATGETS(Dtb_project_catd, 100, 128,
 		"\"%s\" is not an object of type %s."),
 		objname, objtype_name);
@@ -2230,7 +2230,7 @@ prop_obj_name_ok(
     else
     {
 	util_set_help_data(CATGETS(Dtb_project_catd, 100, 136,
-	    "The specified object does not exist or it is\nnot of the correct type."), NULL, NULL);
+	    "The specified object does not exist or it is\nnot of the correct type."), nullptr, nullptr);
 
         sprintf(msgbuf, CATGETS(Dtb_project_catd, 100, 130,
 		"\"%s\" is not the name of an existing %s."),
@@ -2286,8 +2286,8 @@ prop_submenu_name_ok(
 	    menu = obj_scoped_find_by_name(module, menu_name);
             if (menu_in_list(ineligible_menus, ineligible_count, menu))
 	    {
-		STRING	fmtStr = NULL;
-		STRING	help_buf = NULL;
+		STRING	fmtStr = nullptr;
+		STRING	help_buf = nullptr;
 
 		valid = False;
 
@@ -2298,7 +2298,7 @@ prop_submenu_name_ok(
 		    strlen(obj_get_name(owner)) + strlen(menu_name) +1);
 		sprintf(help_buf, fmtStr, obj_get_name(owner), menu_name);
 
-		util_set_help_data(help_buf, NULL, NULL);
+		util_set_help_data(help_buf, nullptr, nullptr);
 		sprintf(msgbuf, CATGETS(Dtb_project_catd, 100, 131,
 		    "Menu \"%s\" is an ancestor of \"%s\"\ntherefore it cannot be attached as a Sub-menu."), menu_name, obj_get_name(owner));
         	propP_popup_message(field, msgbuf, False);
@@ -2324,7 +2324,7 @@ prop_str_to_int(
     char   *s = str;
     char   *p;
 
-    if ((s != NULL) && (*s != '\0'))
+    if ((s != nullptr) && (*s != '\0'))
     {
         val = (int)strtol(s, &p, 10);
 
@@ -2355,13 +2355,13 @@ prop_string_ok(
 
     while(s && *s != '\0')
     {
-    	if (!isalnum(*s) && (strchr(chars, *s) == NULL))
+    	if (!isalnum(*s) && (strchr(chars, *s) == nullptr))
     	{
             if (display_notice)
             {
 		util_set_help_data(CATGETS(Dtb_project_catd, 10, 69,
 		    "Object names are used by the code generator to\ncreate C identifier names. C identifiers must\nbe composed of letters, digits, or underscores.\nTherefore, object names in App Builder must also\nfollow that rule."),
-		     NULL, NULL);
+		     nullptr, nullptr);
 		sprintf(Buf, CATGETS(Dtb_project_catd, 100, 133,
 		    "Only letters, digits, and [%s] allowed."), chars);
                 propP_popup_message(field, Buf, False);
@@ -2409,7 +2409,7 @@ set_changebar_size(
 	XtVaGetValues(setting,
 		XmNheight, &setting_h,
 		XmNy,	   &setting_y,
-		NULL);
+		nullptr);
 
 	changebar_p = XtParent(changebar);
 	setting_p = setting;
@@ -2421,7 +2421,7 @@ set_changebar_size(
     	while (setting_p && XtParent(setting_p) != changebar_p)
 	{
             setting_p = XtParent(setting_p);
-	    XtVaGetValues(setting_p, XmNy, &delta_y, NULL);
+	    XtVaGetValues(setting_p, XmNy, &delta_y, nullptr);
 	    setting_y += delta_y;
 	}
 
@@ -2430,7 +2430,7 @@ set_changebar_size(
 		XmNheight, 	setting_h - 2,
 		XmNy,	   	setting_y + 1,
 		XmNtopOffset, 	setting_y + 1,
-		NULL);
+		nullptr);
 
 	/* Only need to do this once per changebar! */
     	XtRemoveEventHandler(shell, StructureNotifyMask, False,
@@ -2453,16 +2453,16 @@ propP_changebar_init(
     Widget	*wlist;
     unsigned char changebar_top_att;
 
-    XtVaSetValues(changebar, XmNuserData, (XtArgVal)PROP_CB_ON, NULL);
+    XtVaSetValues(changebar, XmNuserData, (XtArgVal)PROP_CB_ON, nullptr);
     prop_set_changebar(changebar, PROP_CB_OFF);
 
     /* If changebar already has attachment, let's not mess with it */
-    XtVaGetValues(changebar, XmNtopAttachment, &changebar_top_att, NULL);
+    XtVaGetValues(changebar, XmNtopAttachment, &changebar_top_att, nullptr);
     if (changebar_top_att != XmATTACH_FORM)
 	return;
 
     wlist = (Widget*)util_malloc(2*sizeof(Widget));
-    if (wlist == NULL)
+    if (wlist == nullptr)
 	return;
 
     wlist[0] = changebar;
@@ -2503,7 +2503,7 @@ propP_field_chgCB(
      Widget      changebar = (Widget)clientdata;
      XtArgVal    field_mode, cb_state;
 
-     XtVaGetValues(widget, XmNuserData, &field_mode, NULL);
+     XtVaGetValues(widget, XmNuserData, &field_mode, nullptr);
 /*
  REMIND: aim - workaround for Motif problem with Prop textfield
 	 input being lost...
@@ -2526,14 +2526,14 @@ propP_field_set_value(
 {
     if (!trip_changebar)
     	/* Set state so changebar is not triggered */
-    	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_LOAD, NULL);
+    	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_LOAD, nullptr);
 
     /* Set field value */
     ui_field_set_string(field, value);
 
     if (!trip_changebar)
     	/* Reset state */
-   	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+   	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
 
     return OK;
 }
@@ -2549,7 +2549,7 @@ propP_field_set_numeric_value(
 
     if (!trip_changebar)
         /* Set state so changebar is not triggered */
-    	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_LOAD, NULL);
+    	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_LOAD, nullptr);
 
     /* Convert int to string */
     sprintf(valstr, "%d", val);
@@ -2557,7 +2557,7 @@ propP_field_set_numeric_value(
 
     if (!trip_changebar)
         /* Reset state */
-    	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, NULL);
+    	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT, nullptr);
 
     return 0;
 
@@ -2573,8 +2573,8 @@ propP_labeltypeCB(
     AB_LABEL_TYPE       label_type = AB_LABEL_UNDEF;
     PropFieldSetting    label_pfs = (PropFieldSetting)clientdata;
 
-    XtVaGetValues(item, XmNuserData, &label_type, NULL);
-    prop_setup_label_field(label_pfs, NULL, label_type, NULL, AB_LINE_UNDEF);
+    XtVaGetValues(item, XmNuserData, &label_type, nullptr);
+    prop_setup_label_field(label_pfs, nullptr, label_type, nullptr, AB_LINE_UNDEF);
     ui_field_select_string(label_pfs->field, True);
 }
 
@@ -2588,9 +2588,9 @@ propP_options_itemCB(
     Widget      optionmenu = (Widget)client_data;
     XtArgVal	value;
 
-    XtVaGetValues(item, XmNuserData, &value, NULL);
+    XtVaGetValues(item, XmNuserData, &value, nullptr);
 
-    XtVaSetValues(optionmenu, XmNuserData, (XtArgVal)value, NULL);
+    XtVaSetValues(optionmenu, XmNuserData, (XtArgVal)value, nullptr);
 
 }
 
@@ -2605,9 +2605,9 @@ propP_popup_message(
 )
 {
     DtbObjectHelpDataRec    help_data;
-    STRING                  help_text = NULL;
-    STRING                  help_vol = NULL;
-    STRING                  help_loc = NULL;
+    STRING                  help_text = nullptr;
+    STRING                  help_vol = nullptr;
+    STRING                  help_loc = nullptr;
     XmString	xm_buf = XmStringCreateLocalized(msg);
 
     dtb_revolv_wrn_msg_initialize(&dtb_revolv_wrn_msg);
@@ -2615,9 +2615,9 @@ propP_popup_message(
     util_get_help_data(&help_text, &help_vol, &help_loc);
     if (!util_strempty(help_text))
     {
-	help_data.help_text = help_text ? (STRING) XtNewString(help_text) : NULL;
-	help_data.help_volume = help_vol ? (STRING) XtNewString(help_vol) : NULL;
-	help_data.help_locationID = help_loc ? (STRING) XtNewString(help_loc) : NULL;
+	help_data.help_text = help_text ? (STRING) XtNewString(help_text) : nullptr;
+	help_data.help_volume = help_vol ? (STRING) XtNewString(help_vol) : nullptr;
+	help_data.help_locationID = help_loc ? (STRING) XtNewString(help_loc) : nullptr;
     }
     else
     {
@@ -2644,7 +2644,7 @@ propP_popup_message(
     }
     else
 	dtb_show_message(parent,
-		&dtb_revolv_wrn_msg, xm_buf, NULL);
+		&dtb_revolv_wrn_msg, xm_buf, nullptr);
 
     XmStringFree(xm_buf);
 }
@@ -2662,7 +2662,7 @@ propP_setting_chgCB(
      Widget changebar = (Widget)clientdata;
      XtArgVal   cb_state;
 
-     XtVaGetValues(changebar, XmNuserData, &cb_state,  NULL);
+     XtVaGetValues(changebar, XmNuserData, &cb_state,  nullptr);
 
      if (cb_state == PROP_CB_OFF)
         prop_set_changebar(changebar, PROP_CB_ON);
@@ -2687,7 +2687,7 @@ propP_radiobox_itemCB(
     if (state->set)
     {
     	excl_setting = XtParent(item);
-    	XtVaSetValues(excl_setting, XmNuserData, value, NULL);
+    	XtVaSetValues(excl_setting, XmNuserData, value, nullptr);
     }
 }
 
@@ -2713,16 +2713,16 @@ revolv_dialog_init(
 		XmNresizePolicy,	XmRESIZE_ANY,
 		XmNallowResize,		True,
 		XmNautoUnmanage,	False,
-		NULL);
+		nullptr);
 
     	revolv_objectspane_init(cgen);
 	revolv_basicframe_init(cgen);
-	prop_activate_panel_init(AB_PROP_REVOLVING, NULL,
+	prop_activate_panel_init(AB_PROP_REVOLVING, nullptr,
 		cgen->ok_button, cgen->apply_button,
 		cgen->reset_button, cgen->cancel_button,
 		cgen->help_button);
 
-	init_prop_state_info(AB_rev_prop_dialog, NULL, cgen->objlist, NULL);
+	init_prop_state_info(AB_rev_prop_dialog, nullptr, cgen->objlist, nullptr);
 
         ab_register_window(AB_rev_prop_dialog, AB_WIN_DIALOG,
                 WindowHidden, AB_toplevel, AB_WPOS_TILE_HORIZONTAL,
@@ -2814,7 +2814,7 @@ revolv_basicframe_init(
 		XmNbottomAttachment,	XmATTACH_FORM,
 		XmNresizePolicy,	XmRESIZE_ANY,
 		XmNheight,		600,
-		NULL);
+		nullptr);
 
     /*
      * Create frame for each object on the palette...
@@ -2830,7 +2830,7 @@ revolv_basicframe_init(
                 XmNrightAttachment,     XmATTACH_FORM,
                 XmNleftAttachment,      XmATTACH_FORM,
                 XmNbottomAttachment,    XmATTACH_FORM,
-                NULL);
+                nullptr);
 
         (*(palette_item[i]->prop_initialize))(rev_frame, AB_PROP_REVOLVING);
         palette_item[i]->rev_prop_frame = rev_frame;
@@ -2845,7 +2845,7 @@ editable_obj_test(
     PalEditableObjInfo *ed_obj_info
 )
 {
-    return (ed_obj_info->palitem != NULL);
+    return (ed_obj_info->palitem != nullptr);
 }
 
 static void
@@ -2867,7 +2867,7 @@ revolv_objectspane_init(
      * Configure Revolving Behavior
      */
     XtAddCallback(cgen->tearoff_button, XmNactivateCallback,
-		tearoff_propsCB, NULL);
+		tearoff_propsCB, nullptr);
 
     XtAddCallback(cgen->objlist, XmNbrowseSelectionCallback,
             objlist_selectCB,
@@ -2882,7 +2882,7 @@ revolv_objectspane_init(
             XmNleftAttachment,   XmATTACH_POSITION,
             XmNleftPosition,     0,
 	    XmNbottomAttachment, XmATTACH_NONE,
-	    NULL);
+	    nullptr);
 
 }
 
@@ -2895,17 +2895,17 @@ revolv_change_prop_frame(
     PalItemInfo	*palitem
 )
 {
-    Widget 		newframe = NULL;
+    Widget 		newframe = nullptr;
     PropStateInfo 	*pstate;
 
-    if (palitem->rev_prop_frame != NULL)
+    if (palitem->rev_prop_frame != nullptr)
     {
         newframe = palitem->rev_prop_frame;
         XtManageChild(newframe);
     }
-    if (newframe != NULL)
+    if (newframe != nullptr)
     {
-        if (revolv_current_frame != NULL)
+        if (revolv_current_frame != nullptr)
             XtUnmanageChild(revolv_current_frame);
         revolv_current_frame = newframe;
     }
@@ -2987,11 +2987,11 @@ fixed_invoke_props(
     char        	title[64];
     static BOOL		first_time = True;
 
-    if (palitem->fix_prop_dialog == NULL)
+    if (palitem->fix_prop_dialog == nullptr)
     {
         prop_dialog = (*(palitem->prop_initialize))(AB_toplevel, AB_PROP_FIXED);
 
-	if (prop_dialog != NULL)
+	if (prop_dialog != nullptr)
 	{
 	    palitem->fix_prop_dialog = prop_dialog;
 	    pstate = get_prop_state_info(palitem->fix_prop_dialog);
@@ -3003,7 +3003,7 @@ fixed_invoke_props(
     else
 	prop_dialog = palitem->fix_prop_dialog;
 
-    if (prop_dialog != NULL)
+    if (prop_dialog != nullptr)
     {
 	if (first_time)
 	{
@@ -3032,7 +3032,7 @@ apply_props(
 
     pstate = get_prop_state_info(dialog);
 
-    if (pstate->loaded_obj == NULL) /* no object currently loaded */
+    if (pstate->loaded_obj == nullptr) /* no object currently loaded */
         return OK;
 
     return(apply_prop_changes(type, pstate->loaded_obj, pstate->palitem));
@@ -3049,7 +3049,7 @@ apply_prop_changes(
     PalItemInfo	*palitem
 )
 {
-    Widget 	 	alt_dialog = NULL;
+    Widget 	 	alt_dialog = nullptr;
     AB_PROP_TYPE 	alt_type;
     PropStateInfo	*alt_pstate;
     int			result;
@@ -3061,7 +3061,7 @@ apply_prop_changes(
     /* If same object is also loaded into alternate prop dialog,
      * propagate the changes to the alternate dialog.
      */
-    if (type == AB_PROP_REVOLVING && palitem->fix_prop_dialog != NULL)
+    if (type == AB_PROP_REVOLVING && palitem->fix_prop_dialog != nullptr)
     {
 	alt_type   = AB_PROP_FIXED;
 	alt_dialog = palitem->fix_prop_dialog;
@@ -3105,12 +3105,12 @@ handle_auto_apply(
     char	   	Buf[256];
     BOOL	   	changing_types = FALSE;
     STRING	   	modname;
-    DtbObjectHelpData   help_data = NULL;
+    DtbObjectHelpData   help_data = nullptr;
 
-    if (pstate->loaded_obj == NULL) /* something's wrong */
+    if (pstate->loaded_obj == nullptr) /* something's wrong */
     {
 	util_dprintf(1,"handle_auto_apply: NULL previous obj!??\n");
-	*result = NULL;
+	*result = nullptr;
 	return answer;
     }
 
@@ -3119,8 +3119,8 @@ handle_auto_apply(
 
 
     help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
-    help_data->help_volume = NULL;
-    help_data->help_locationID = NULL;
+    help_data->help_volume = nullptr;
+    help_data->help_locationID = nullptr;
 
     if (dtb_app_resource_rec.implied_apply == True)
     {
@@ -3131,7 +3131,7 @@ handle_auto_apply(
 	XmString xm_buf = (XmString) NULL;
 	STRING   loadedObjName = obj_get_name(pstate->loaded_obj);
 
-	if (new_obj == NULL)
+	if (new_obj == nullptr)
 	{
 	    if (changing_types)
 	    {
@@ -3171,7 +3171,7 @@ handle_auto_apply(
 	xm_buf = XmStringCreateLocalized(Buf);
 	dtb_revolv_prop_pend_msg_initialize(&dtb_revolv_prop_pend_msg);
 	answer = dtb_show_modal_message(pstate->objlist,
-		&dtb_revolv_prop_pend_msg, xm_buf, help_data, NULL);
+		&dtb_revolv_prop_pend_msg, xm_buf, help_data, nullptr);
 
 	util_free(help_data);
 	XmStringFree(xm_buf);
@@ -3222,7 +3222,7 @@ get_prop_state_info(
 
     dialog = ui_get_ancestor_dialog(widget);
 
-    XtVaGetValues(dialog, XmNuserData, &pstate, NULL);
+    XtVaGetValues(dialog, XmNuserData, &pstate, nullptr);
 
     return pstate;
 
@@ -3245,7 +3245,7 @@ init_prop_state_info(
     pstate->objlist = objlist;
     pstate->loaded_obj = loaded_obj;
 
-    XtVaSetValues(dialog, XmNuserData, (XtArgVal)pstate, NULL);
+    XtVaSetValues(dialog, XmNuserData, (XtArgVal)pstate, nullptr);
 
 }
 
@@ -3295,7 +3295,7 @@ objlist_delete_obj(
          /* Clear Prop Sheet & Make it Inactive */
         (*(palitem->prop_clear))(type);
         (*(palitem->prop_activate))(type, FALSE);
-	pstate->loaded_obj = NULL;
+	pstate->loaded_obj = nullptr;
     }
     else if (info->obj == pstate->loaded_obj) /* Deleted "Current" one...*/
     {
@@ -3304,7 +3304,7 @@ objlist_delete_obj(
 	 * in props.
 	 */
 	if ((*(palitem->prop_pending))(type) == True)
-    	    (*(palitem->prop_load))(NULL, type, LoadAll);
+    	    (*(palitem->prop_load))(nullptr, type, LoadAll);
 
 	ui_list_select_pos(pstate->objlist, 1, TRUE);
     }
@@ -3325,7 +3325,7 @@ objlist_ensure_selection(
     XtVaGetValues(objlist,
 		XmNitemCount, 	      &num_items,
 		XmNselectedItemCount, &num_selected,
-		NULL);
+		nullptr);
 
     if (num_selected == 0 && num_items > 0)
 	ui_list_select_pos(objlist, 1, TRUE);
@@ -3345,11 +3345,11 @@ objlist_load(
     ABObj           proj = proj_get_project();
     int		    num_items = 0;
 
-    if (proj == NULL || pstate->objlist == NULL)
+    if (proj == nullptr || pstate->objlist == nullptr)
         return;
 
     /* Reset Loaded-obj to NULL */
-    pstate->loaded_obj = NULL;
+    pstate->loaded_obj = nullptr;
 
     cur_list_palitem = pstate->palitem;
     num_items = abobj_list_load(pstate->objlist, proj, objlist_test_func);
@@ -3422,9 +3422,9 @@ objlist_show_or_hide_obj(
          /* Clear Prop Sheet & Make it Inactive */
         (*(palitem->prop_clear))(type);
         (*(palitem->prop_activate))(type, FALSE);
-	pstate->loaded_obj = NULL;
+	pstate->loaded_obj = nullptr;
     }
-    else if (!(pstate->loaded_obj != NULL &&
+    else if (!(pstate->loaded_obj != nullptr &&
 		obj_has_flag(obj_get_module(pstate->loaded_obj), MappedFlag)) ||
         num_items == 1)
 	/* Make sure 1 is selected */
@@ -3442,12 +3442,12 @@ objlist_test_func(
         ABObj test_obj
 )
 {
-    if ((obj_get_module(test_obj) != NULL) &&
+    if ((obj_get_module(test_obj) != nullptr) &&
 	 obj_is_defined(test_obj) &&
 	 obj_is_salient_ui(test_obj) &&
          obj_has_flag(test_obj, MappedFlag))
     {
-	if (cur_list_palitem != NULL)
+	if (cur_list_palitem != nullptr)
 	    return((*cur_list_palitem->is_a_test)(test_obj));
         return(True);
     }
@@ -3462,11 +3462,11 @@ create_obj_option_item(
 )
 {
     Widget      newitem;
-    STRING	modname = NULL;
-    STRING	name = NULL;
+    STRING	modname = nullptr;
+    STRING	name = nullptr;
     XmString    xmitem;
 
-    if (obj == NULL)
+    if (obj == nullptr)
 	name = (String)NoneItem;
     else if (pos->display_module)
 	modname = abobj_get_moduled_name(obj);
@@ -3475,7 +3475,7 @@ create_obj_option_item(
 
     xmitem = XmStringCreateLocalized(modname? modname : name);
 
-    if (item == NULL)
+    if (item == nullptr)
     {
 	/* Create new item */
     	newitem = XtVaCreateWidget(modname? modname : name,
@@ -3483,7 +3483,7 @@ create_obj_option_item(
                 pos->options.menu,
                 XmNlabelString, xmitem,
                 XmNuserData,    (XtArgVal)obj,
-                NULL);
+                nullptr);
 
     	XtAddCallback(newitem, XmNactivateCallback,
                         propP_setting_chgCB, (XtPointer)pos->options.changebar);
@@ -3494,7 +3494,7 @@ create_obj_option_item(
 	XtVaSetValues(item,
 		XmNlabelString,	xmitem,
 		XmNuserData,    (XtArgVal)obj,
-		NULL);
+		nullptr);
 
     XmStringFree(xmitem);
     util_free(modname);
@@ -3520,7 +3520,7 @@ obj_renamedOCB(
     int			i;
 
     if (!obj_is_salient(info->obj) ||
-	obj_get_parent(info->obj) == NULL ||
+	obj_get_parent(info->obj) == nullptr ||
 	obj_is_item(info->obj))
         return 0;
 
@@ -3537,18 +3537,18 @@ obj_renamedOCB(
 	    if (palitem->rev_prop_frame == revolv_current_frame)
 		objlist_rename_obj(AB_PROP_REVOLVING, palitem, info);
 
-	    if (palitem->fix_prop_dialog != NULL)
+	    if (palitem->fix_prop_dialog != nullptr)
 		objlist_rename_obj(AB_PROP_FIXED, palitem, info);
 	}
     }
-    else if ((palitem = pal_get_item_info(info->obj)) != NULL) /* Object name changed */
+    else if ((palitem = pal_get_item_info(info->obj)) != nullptr) /* Object name changed */
     {
 	/* If obj's type is currently loaded in Revolving props, update the list */
-    	if (AB_rev_prop_dialog != NULL && revolv_current_frame == palitem->rev_prop_frame)
+    	if (AB_rev_prop_dialog != nullptr && revolv_current_frame == palitem->rev_prop_frame)
 	    objlist_rename_obj(AB_PROP_REVOLVING, palitem, info);
 
     	/* If Fixed Props for obj's type exists, update its list */
-    	if (palitem->fix_prop_dialog != NULL)
+    	if (palitem->fix_prop_dialog != nullptr)
             objlist_rename_obj(AB_PROP_FIXED, palitem, info);
     }
     return 0;
@@ -3572,7 +3572,7 @@ obj_geom_changedOCB(
      * interfere with the apply.
      */
     if (!obj_is_salient(info->obj) ||
-        obj_get_parent(info->obj) == NULL ||
+        obj_get_parent(info->obj) == nullptr ||
         obj_is_item(info->obj) ||
 	apply_in_progress)
         return 0;
@@ -3603,7 +3603,7 @@ obj_geom_changedOCB(
 	info->obj = layers; /* reset back to original obj */
     }
 
-    if ((palitem = pal_get_item_info(info->obj)) != NULL)
+    if ((palitem = pal_get_item_info(info->obj)) != nullptr)
     {
 	util_dprintf(3, "obj_geom_changedOCB: %s's geometry changed to %d,%d %dx%d\n",
 		obj_get_name(info->obj), obj_get_x(info->obj), obj_get_y(info->obj),
@@ -3617,21 +3617,21 @@ obj_geom_changedOCB(
  	/* If modified obj is currently loaded in the Revolving prop editor, update
 	 * only its geometry attributes in the prop sheet
 	 */
-        if (AB_rev_prop_dialog != NULL && revolv_current_frame == palitem->rev_prop_frame)
+        if (AB_rev_prop_dialog != nullptr && revolv_current_frame == palitem->rev_prop_frame)
     	{
 	    pstate = get_prop_state_info(AB_rev_prop_dialog);
 	    if (pstate->loaded_obj == info->obj)
-                (*(palitem->prop_load))(NULL, AB_PROP_REVOLVING, geomflag);
+                (*(palitem->prop_load))(nullptr, AB_PROP_REVOLVING, geomflag);
     	}
 
 	/* If modified obj is currently loaded in its Fixed prop editor, update
          * only its geometry attributes in the prop sheet
          */
-        if (palitem->fix_prop_dialog != NULL)
+        if (palitem->fix_prop_dialog != nullptr)
 	{
 	    pstate = get_prop_state_info(palitem->fix_prop_dialog);
 	    if (pstate->loaded_obj == info->obj)
-                (*(palitem->prop_load))(NULL, AB_PROP_FIXED, geomflag);
+                (*(palitem->prop_load))(nullptr, AB_PROP_FIXED, geomflag);
 	}
     }
     return 0;
@@ -3648,7 +3648,7 @@ obj_destroyedOCB(
     PalItemInfo	*palitem;
 
     if (!obj_is_salient(info->obj) ||
-	 obj_get_parent(info->obj) == NULL ||
+	 obj_get_parent(info->obj) == nullptr ||
 	 obj_is_item(info->obj))
         return 0;
 
@@ -3660,14 +3660,14 @@ obj_destroyedOCB(
     }
 #endif /* DEBUG */
 
-    if ((palitem = pal_get_item_info(info->obj)) != NULL) /* Object being destroyed */
+    if ((palitem = pal_get_item_info(info->obj)) != nullptr) /* Object being destroyed */
     {
         /* If obj's type is currently loaded in Revolving props, update the list */
-        if (AB_rev_prop_dialog != NULL && revolv_current_frame == palitem->rev_prop_frame)
+        if (AB_rev_prop_dialog != nullptr && revolv_current_frame == palitem->rev_prop_frame)
 	    objlist_delete_obj(AB_PROP_REVOLVING, palitem, info);
 
         /* If Fixed Props for obj's type exists, update its list */
-        if (palitem->fix_prop_dialog != NULL)
+        if (palitem->fix_prop_dialog != nullptr)
 	    objlist_delete_obj(AB_PROP_FIXED, palitem, info);
     }
     return 0;
@@ -3685,7 +3685,7 @@ obj_shown_or_hiddenOCB(
     int		i;
 
     if (!obj_is_salient(info->obj) ||
-	 obj_get_parent(info->obj) == NULL ||
+	 obj_get_parent(info->obj) == nullptr ||
 	 obj_is_item(info->obj))
         return 0;
 
@@ -3702,20 +3702,20 @@ obj_shown_or_hiddenOCB(
             if (palitem->rev_prop_frame == revolv_current_frame)
 		objlist_show_or_hide_obj(AB_PROP_REVOLVING, palitem, info);
 
-            if (palitem->fix_prop_dialog != NULL)
+            if (palitem->fix_prop_dialog != nullptr)
                 objlist_show_or_hide_obj(AB_PROP_FIXED, palitem, info);
         }
     }
-    else if ((palitem = pal_get_item_info(info->obj)) != NULL) /* Object being Updated */
+    else if ((palitem = pal_get_item_info(info->obj)) != nullptr) /* Object being Updated */
     {
         cur_list_palitem = palitem;
 
         /* If obj's type is currently loaded in Revolving props, update the list */
-        if (AB_rev_prop_dialog != NULL && revolv_current_frame == palitem->rev_prop_frame)
+        if (AB_rev_prop_dialog != nullptr && revolv_current_frame == palitem->rev_prop_frame)
 	    objlist_show_or_hide_obj(AB_PROP_REVOLVING, palitem, info);
 
         /* If Fixed Props for obj's type exists, update its list */
-        if (palitem->fix_prop_dialog != NULL)
+        if (palitem->fix_prop_dialog != nullptr)
             objlist_show_or_hide_obj(AB_PROP_FIXED, palitem, info);
     }
     return 0;
@@ -3775,7 +3775,7 @@ cancel_propsCB(
     else /* AB_PROP_FIXED */
         dialog = pstate->palitem->fix_prop_dialog;
 
-    (*(pstate->palitem->prop_load))(NULL,type,LoadAll);
+    (*(pstate->palitem->prop_load))(nullptr,type,LoadAll);
 
     ui_win_show(dialog, False, XtGrabNone);
 
@@ -3795,7 +3795,7 @@ change_objecttypeCB(
     PalItemInfo		*viz_palitem;
     PropStateInfo	*pstate;
 
-    viz_palitem = revolv_set_prop_type(ed_obj_info->palitem, NULL);
+    viz_palitem = revolv_set_prop_type(ed_obj_info->palitem, nullptr);
 
     if (viz_palitem == ed_obj_info->palitem)
     {
@@ -3822,7 +3822,7 @@ close_propsCB(
 {
     AB_PROP_TYPE 	type = (AB_PROP_TYPE)client_data;
     DTB_MODAL_ANSWER	answer = DTB_ANSWER_NONE;
-    PalItemInfo		*palitem = NULL;
+    PalItemInfo		*palitem = nullptr;
     PropStateInfo	*pstate;
     WidgetList		shell_child;
     Widget		dialog;
@@ -3830,14 +3830,14 @@ close_propsCB(
     /* Get Immediate child of Shell */
     XtVaGetValues(widget,
 		XmNchildren,	&shell_child,
-		NULL);
+		nullptr);
 
     dialog = shell_child[0];
     pstate = get_prop_state_info(dialog);
 
     if ((*(pstate->palitem->prop_pending))(type) == TRUE)
         /* An Object is loaded with pending changes...*/
-        answer = handle_auto_apply(type, pstate, pstate->palitem, NULL, &palitem);
+        answer = handle_auto_apply(type, pstate, pstate->palitem, nullptr, &palitem);
 
     if (answer != DTB_ANSWER_CANCEL)
     	XtPopdown(widget);
@@ -3859,7 +3859,7 @@ invoke_attach_editorCB(
 
     pstate = get_prop_state_info(widget);
 
-    if (pstate->loaded_obj == NULL)
+    if (pstate->loaded_obj == nullptr)
 	return;
 
     attch_ed_show_dialog(pstate->loaded_obj);
@@ -3880,12 +3880,12 @@ invoke_connectionsCB(
 
     pstate = get_prop_state_info(widget);
 
-    if (pstate->loaded_obj == NULL)
+    if (pstate->loaded_obj == nullptr)
 	return;
 
     conn_set_source(pstate->loaded_obj);
-    conn_set_target(NULL);
-    conn_popup_dialog(widget, (XtPointer)0, NULL);
+    conn_set_target(nullptr);
+    conn_popup_dialog(widget, (XtPointer)0, nullptr);
 }
 
 /*
@@ -3903,11 +3903,11 @@ invoke_help_editorCB(
 
     pstate = get_prop_state_info(widget);
 
-    if (pstate->loaded_obj == NULL)
+    if (pstate->loaded_obj == nullptr)
 	return;
 
     ab_set_help_obj(pstate->loaded_obj);
-    ab_popup_help(widget,(XtPointer)0,NULL);
+    ab_popup_help(widget,(XtPointer)0,nullptr);
 }
 
 static void
@@ -3920,7 +3920,7 @@ objlist_selectCB(
     XmListCallbackStruct *listdata = call_data;
     AB_PROP_TYPE 	type = (AB_PROP_TYPE)client_data;
     PropStateInfo	*pstate;
-    PalItemInfo		*palitem = NULL;
+    PalItemInfo		*palitem = nullptr;
     ABObj		module;
     ABObj        	selected_obj;
     STRING       	name;
@@ -3991,7 +3991,7 @@ reset_propsCB(
 
     pstate = get_prop_state_info(widget);
 
-    (*(pstate->palitem->prop_load))(NULL,type,LoadAll);
+    (*(pstate->palitem->prop_load))(nullptr,type,LoadAll);
 
 }
 
@@ -4009,7 +4009,7 @@ tearoff_propsCB(
 
     pstate = get_prop_state_info(AB_rev_prop_dialog);
 
-    if (pstate->loaded_obj != NULL)
+    if (pstate->loaded_obj != nullptr)
         prop_load_obj(pstate->loaded_obj, AB_PROP_FIXED);
     else
 	fixed_invoke_props(pstate->palitem);
@@ -4039,7 +4039,7 @@ color_chooserCB(
 	{
              XtVaSetValues(pcs->swatch,
              	XmNbackground, c,
-             	NULL);
+             	nullptr);
              XmTextSetString(pcs->field, color_choice);
 	}
     }
@@ -4070,14 +4070,14 @@ menu_newCB(
     PropStateInfo 	*pstate;
     AB_PROP_TYPE	alt_prop_type = AB_PROP_FIXED;
     ABObj		module;
-    Widget		prop_dialog = NULL;
-    STRING      	base = NULL;
+    Widget		prop_dialog = nullptr;
+    STRING      	base = nullptr;
     STRING      	unique_name;
     STRING      	menu_name;
     STRING      	name;
 
     /* Build a menu-name based on the menu-owner's name or label */
-    if (pms->owner_name_field != NULL)
+    if (pms->owner_name_field != nullptr)
     {
         /* Use owner's name as prefix */
         base = ui_field_get_string(pms->owner_name_field);
@@ -4114,7 +4114,7 @@ menu_newCB(
                (*pstate->palitem->prop_pending)(AB_PROP_REVOLVING) == False)
 	    {
 	    	alt_prop_type = AB_PROP_REVOLVING;
-	    	revolv_invoke_props(ab_menu_palitem, NULL);
+	    	revolv_invoke_props(ab_menu_palitem, nullptr);
 	    }
 	}
     }
@@ -4126,7 +4126,7 @@ menu_newCB(
      * happen to be inside the Fixed Menu Prop dialog AND are also
      * creating the new menu in the Fixed Menu Prop dialog.
      */
-    if (pal_create_menu(alt_prop_type, module, unique_name, NULL) == 0 &&
+    if (pal_create_menu(alt_prop_type, module, unique_name, nullptr) == 0 &&
 	!(prop_dialog == ab_menu_palitem->fix_prop_dialog &&
 	  alt_prop_type == AB_PROP_FIXED))
         ui_field_set_string(pms->field, unique_name);
@@ -4147,7 +4147,7 @@ is_submenu_of(
     BOOL	is_sub = False;
 
     for(trav_open(&trav, menu, AB_TRAV_ITEMS);
-       (item = trav_next(&trav)) != NULL; )
+       (item = trav_next(&trav)) != nullptr; )
     {
         if (util_strcmp(obj_get_menu_name(item), submenu_name) == 0)
         {
@@ -4210,20 +4210,20 @@ menulist_buildCB(
     PropMenunameSetting	pms;
     ABObj	current_obj;
     ABObj	*menus;
-    ABObj	*ineligible_menus = NULL;
+    ABObj	*ineligible_menus = nullptr;
     int		num_menus = 0;
     int		ineligible_count = 0;
     Widget      submenu;
     Widget      menus_item = (Widget)client_data;
-    Widget      menus_menu = NULL;
+    Widget      menus_menu = nullptr;
     Widget      menus_menuitem;
     Widget      menu_field;
     STRING      menu_name;
     int         num_children;
     int         i, j;
 
-    XtVaGetValues(widget, XmNsubMenuId, &submenu, NULL);
-    XtVaGetValues(menus_item, XmNuserData, &pms, NULL);
+    XtVaGetValues(widget, XmNsubMenuId, &submenu, nullptr);
+    XtVaGetValues(menus_item, XmNuserData, &pms, nullptr);
 
     current_obj = *(pms->current_obj_ptr);
 
@@ -4245,8 +4245,8 @@ menulist_buildCB(
 
 	for (j = 0; j < num_menus; j++)
 	{
-            if (menus_menu == NULL)
-                menus_menu = XmCreatePulldownMenu(submenu, "menus_menu", NULL, 0);
+            if (menus_menu == nullptr)
+                menus_menu = XmCreatePulldownMenu(submenu, "menus_menu", nullptr, 0);
 
             menu_name = obj_get_name(menus[j]);
 
@@ -4255,7 +4255,7 @@ menulist_buildCB(
                         menus_menu,
                         XtVaTypedArg, XmNlabelString, XtRString,
                                 menu_name, strlen(menu_name)+1,
-                        NULL);
+                        nullptr);
 
 	    /* If Menu is ineligible to be a Submenu, make it inactive */
 	    if (menu_in_list(ineligible_menus, ineligible_count, menus[j]))
@@ -4266,8 +4266,8 @@ menulist_buildCB(
         }
 
         ui_set_active(menus_item, TRUE);
-        XtVaSetValues(menus_item, XmNsubMenuId, menus_menu, NULL);
-        XtVaSetValues(submenu, XmNuserData, (XtArgVal)menus_menu, NULL);
+        XtVaSetValues(menus_item, XmNsubMenuId, menus_menu, nullptr);
+        XtVaSetValues(submenu, XmNuserData, (XtArgVal)menus_menu, nullptr);
 
 	util_free(menus);
 	util_free(ineligible_menus);
@@ -4275,7 +4275,7 @@ menulist_buildCB(
     else /* No Menus - inactivate the item */
     {
         ui_set_active(menus_item, FALSE);
-        XtVaSetValues(submenu, XmNuserData, (XtArgVal)NULL, NULL);
+        XtVaSetValues(submenu, XmNuserData, (XtArgVal)NULL, nullptr);
     }
 }
 
@@ -4292,9 +4292,9 @@ menulist_destroyCB(
     Widget	submenu = (Widget)client_data;
     Widget	menus_menu;
 
-    XtVaGetValues(submenu, XmNuserData, &menus_menu, NULL);
+    XtVaGetValues(submenu, XmNuserData, &menus_menu, nullptr);
 
-    if (menus_menu != NULL)
+    if (menus_menu != nullptr)
 	XtDestroyWidget(menus_menu);
 }
 
@@ -4307,12 +4307,12 @@ menu_edit_set_stateCB(
 {
     PropMenunameSetting 	pms;
     Widget			edit_item = (Widget)client_data;
-    STRING			current_menuname = NULL;
+    STRING			current_menuname = nullptr;
 
     /* Set the "Edit Current" item to be active ONLY if there is a
      * menu name in the field
      */
-    XtVaGetValues(edit_item, XmNuserData, &pms, NULL);
+    XtVaGetValues(edit_item, XmNuserData, &pms, nullptr);
     current_menuname = ui_field_get_string(pms->field);
     ui_set_active(edit_item, !util_strempty(current_menuname));
     util_free(current_menuname);
@@ -4349,7 +4349,7 @@ menuname_setCB(
     XmString	xm_menuname;
     STRING	menu_name;
 
-    XtVaGetValues(w, XmNlabelString, &xm_menuname, NULL);
+    XtVaGetValues(w, XmNlabelString, &xm_menuname, nullptr);
     menu_name = objxm_xmstr_to_str(xm_menuname);
     ui_field_set_string(menu_field, menu_name);
     util_free(menu_name);
@@ -4363,7 +4363,7 @@ menu_editCB(
 )
 {
     PropMenunameSetting pms = (PropMenunameSetting)client_data;
-    STRING		current_menuname = NULL;
+    STRING		current_menuname = nullptr;
     ABObj		module;
     ABObj		menu;
 
@@ -4372,13 +4372,13 @@ menu_editCB(
 
     if (!util_strempty(current_menuname))
     {
-	if ((menu = obj_find_by_name(module, current_menuname)) != NULL)
+	if ((menu = obj_find_by_name(module, current_menuname)) != nullptr)
 	    prop_load_obj(menu, pms->prop_type == AB_PROP_FIXED?
 		AB_PROP_REVOLVING : AB_PROP_FIXED);
 	else
 	{
-            STRING  fmtStr = NULL;
-            STRING  help_buf = NULL;
+            STRING  fmtStr = nullptr;
+            STRING  help_buf = nullptr;
 	    char Buf[256];
 
             fmtStr = XtNewString(CATGETS(Dtb_project_catd, 100, 135,
@@ -4388,7 +4388,7 @@ menu_editCB(
 		strlen(current_menuname) + strlen(obj_get_name(module)) +1);
             sprintf(help_buf, fmtStr, current_menuname, obj_get_name(module));
 
-            util_set_help_data(help_buf, NULL, NULL);
+            util_set_help_data(help_buf, nullptr, nullptr);
             sprintf(Buf, CATGETS(Dtb_project_catd, 100, 134,
             	"Could not find menu \"%s\" in module \"%s\"."),
 		current_menuname, obj_get_name(module));
@@ -4430,7 +4430,7 @@ prop_geomfield_clear(
     GEOM_KEY            gkey
 )
 {
-    Widget      field = NULL;
+    Widget      field = nullptr;
 
     switch(gkey)
     {
@@ -4447,19 +4447,19 @@ prop_geomfield_clear(
             field = pgs->h_field;
             break;
         default:
-            field = NULL;
+            field = nullptr;
     }
 
     if (field)
     {
 	/* Set state so changebar is not triggered */
-	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_LOAD,NULL);
+	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_LOAD,nullptr);
 
 	/* Convert int to string */
-    	ui_field_set_string(field, NULL);
+    	ui_field_set_string(field, nullptr);
 
 	/* Reset state */
-	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT,NULL);
+	XtVaSetValues(field, XmNuserData, (XtArgVal)PROP_EDIT,nullptr);
     }
 
     return OK;

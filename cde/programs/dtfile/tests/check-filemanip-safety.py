@@ -215,7 +215,7 @@ def main():
         else:
             compiler = shlex.split(env.get("CC","cc"))
             if not compiler: raise ValueError("CC contains no command")
-            flags = ["-std=c11","-D_POSIX_C_SOURCE=200809L","-Wall","-Wextra","-Werror",
+            flags = ["-std=gnu23","-D_POSIX_C_SOURCE=200809L","-Wall","-Wextra","-Werror",
                      "-g","-O1","-fno-omit-frame-pointer",
                      "-DFILEMANIP_DIRECTORIES_ONLY" if args.directories_only else "-DFILEMANIP_HELPER_ONLY" if args.helper_only else "-DFILEMANIP_PATHS_ONLY"]
             if (args.paths_only or args.directories_only) and os.uname().sysname == "Darwin": flags += ["-DCSRG_BASED"]

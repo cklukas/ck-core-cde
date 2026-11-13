@@ -97,10 +97,10 @@ extern int debug;
 static void
 ge_add_to_gappt_list(Access_data *ad, int idx, GEditor *ge, Boolean reset) {
 	int			cnt = 1;
-	char			buf[DEFAULT_GAPPT_LEN], *name1, *name2 = NULL;
+	char			buf[DEFAULT_GAPPT_LEN], *name1, *name2 = nullptr;
 	Props			*p = (Props *)ge->cal->properties;
 	XmString		str;
-	List_data		*step = NULL, *last = NULL;
+	List_data		*step = nullptr, *last = nullptr;
 	CSA_return_code		stat;
 	DisplayType		dt = get_int_prop(p, CP_DEFAULTDISP);
 	Dtcm_appointment	*appt;
@@ -125,7 +125,7 @@ ge_add_to_gappt_list(Access_data *ad, int idx, GEditor *ge, Boolean reset) {
 				    CSA_ENTRY_ATTR_START_DATE_I,
 				    CSA_ENTRY_ATTR_SUMMARY_I,
 				    CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
-				    NULL);
+				    nullptr);
 	stat = query_appt_struct(ge->cal->cal_handle, ad->appt_head[idx], appt);
 	backend_err_msg(ge->frame, ge->cal->view->current_calendar, stat,
 			((Props_pu *)ge->cal->properties_pu)->xm_error_pixmap);
@@ -155,7 +155,7 @@ ge_add_to_gappt_list(Access_data *ad, int idx, GEditor *ge, Boolean reset) {
 	**  same owner as the last one, leave the the owner.
 	*/
 	step = (cnt <= 1) ?
-		NULL : (List_data *)CmDataListGetData(ge->list_data, cnt - 1);
+		nullptr : (List_data *)CmDataListGetData(ge->list_data, cnt - 1);
 	name1 = cm_target2name(ad->name);
 	if (step && step->ad)
 		name2 = cm_target2name(step->ad->name);
@@ -172,7 +172,7 @@ ge_add_to_gappt_list(Access_data *ad, int idx, GEditor *ge, Boolean reset) {
 		if (!step || strcmp(ad->name, name2) != 0)
 			format_gappt(appt, ad->name, buf, dt, DEFAULT_GAPPT_LEN);
 		else
-			format_gappt(appt, NULL, buf, dt, DEFAULT_GAPPT_LEN);
+			format_gappt(appt, nullptr, buf, dt, DEFAULT_GAPPT_LEN);
 	}
 
 	/*
@@ -213,7 +213,7 @@ appt_to_form(GEditor *ge, CSA_entry_handle a, char *name, int version) {
 	appt = allocate_appt_struct(appt_read, 
 				        version,
 					CSA_ENTRY_ATTR_ORGANIZER_I, 
-					NULL);
+					nullptr);
 	stat = query_appt_struct(ge->cal->cal_handle, a, appt);
 	backend_err_msg(ge->frame, name, stat, pu->xm_error_pixmap);
 	if (stat == CSA_SUCCESS) {
@@ -254,8 +254,8 @@ ge_list_select_proc(Widget w, XtPointer client_data, XtPointer data) {
 	if (step_ad)
 		XmListSelectPos(ge->access_list, cnt, True);
 
-	XtVaSetValues(ge->change_button, XmNsensitive, True, NULL);
-	XtVaSetValues(ge->delete_button, XmNsensitive, True, NULL);
+	XtVaSetValues(ge->change_button, XmNsensitive, True, nullptr);
+	XtVaSetValues(ge->delete_button, XmNsensitive, True, nullptr);
 }
 
 static void
@@ -289,7 +289,7 @@ static Tt_message
 reply_cb(Tt_message m, void *c_data, Tttk_op op, unsigned char *contents, int len, char *file)
 {
         char *client_procID = tt_message_handler(m);
-        if ( debug && (client_procID != NULL) ) {
+        if ( debug && (client_procID != nullptr) ) {
                 fprintf(stderr, "DEBUG: reply_cb():client_procID = %s\n", client_procID);
                 fprintf(stderr, "DEBUG: reply_cb():message_op = %s\n", tt_message_op(m));
         }
@@ -298,7 +298,7 @@ reply_cb(Tt_message m, void *c_data, Tttk_op op, unsigned char *contents, int le
 
 static char *
 get_mail_address_list(Calendar *c) {
-	int		i, *pos_list = NULL, pos_cnt;
+	int		i, *pos_list = nullptr, pos_cnt;
         GEditor		*ge = (GEditor *)c->geditor;
 	Access_data	*ad;
 	int		address_len;
@@ -359,7 +359,7 @@ nt */
 
 	mime_buf = create_rfc_message(address, "message", address_list, 1);
  
-        msg = ttmedia_load(0, (Ttmedia_load_msg_cb)reply_cb, NULL, TTME_MAIL_EDIT, "RFC_822_MESSAGE", (unsigned char *)mime_buf, strlen(mime_buf), NULL, "dtcm_appointment_attachment", 0);
+        msg = ttmedia_load(0, (Ttmedia_load_msg_cb)reply_cb, nullptr, TTME_MAIL_EDIT, "RFC_822_MESSAGE", (unsigned char *)mime_buf, strlen(mime_buf), nullptr, "dtcm_appointment_attachment", 0);
  
 	status = tt_ptr_error(msg);
 	if (tt_is_err(status))
@@ -404,11 +404,11 @@ ge_build_expand(GEditor *ge) {
 		XmNbottomOffset, 5,
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNleftOffset, 5,
-		NULL);
+		nullptr);
         XtVaGetValues(ge->rfp.rfp_form_mgr,
                 XmNchildren,            &children,
                 XmNnumChildren,         &n,
-                NULL);
+                nullptr);
 
         /* We don't want to manage the privacy widgets */
         for (i = 0; i < n; i++) {
@@ -427,11 +427,11 @@ ge_build_expand(GEditor *ge) {
 		XmNbottomWidget, ge->rfp.rfp_form_mgr,
 		XmNrightAttachment, XmATTACH_FORM,
 		XmNrightOffset, 5,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(ge->mail_button, XmNactivateCallback, ge_mail_proc, ge);
 
-	XtSetSensitive(ge->mail_button, c->tt_procid == NULL ? False : True);
+	XtSetSensitive(ge->mail_button, c->tt_procid == nullptr ? False : True);
 }
 
 /*
@@ -456,8 +456,8 @@ ge_expand_ui_proc(Widget w, XtPointer client_data, XtPointer data) {
 	   it seems to work.  Do *not* remove these calls to 
 	   XtSetSensitive(), of the synlib tests will stop working. */
 
-	XtVaGetValues(ge->appt_list_sw, XmNheight, &height, NULL);
-	XtVaGetValues(ge->access_list_sw, XmNwidth, &width, NULL);
+	XtVaGetValues(ge->appt_list_sw, XmNheight, &height, nullptr);
+	XtVaGetValues(ge->access_list_sw, XmNwidth, &width, nullptr);
 
 	if (expand_state_closed) {
 		Widget children[2];
@@ -474,11 +474,11 @@ ge_expand_ui_proc(Widget w, XtPointer client_data, XtPointer data) {
 				CATGETS(ge->cal->DT_catd, 1, 625, "Less"));
 		XtVaSetValues(ge->expand_ui_button, 
 			XmNlabelString, xmstr,
-			NULL);
+			nullptr);
 		XmStringFree(xmstr);
 
-		XtVaGetValues(ge->rfp.rfp_form_mgr, XmNheight, &h, NULL);
-		XtVaSetValues(ge->separator1, XmNbottomOffset, h + 10, NULL);
+		XtVaGetValues(ge->rfp.rfp_form_mgr, XmNheight, &h, nullptr);
+		XtVaSetValues(ge->separator1, XmNbottomOffset, h + 10, nullptr);
 		
 		children[0] = ge->rfp.rfp_form_mgr;
 		children[1] = ge->mail_button;
@@ -491,15 +491,15 @@ ge_expand_ui_proc(Widget w, XtPointer client_data, XtPointer data) {
 		xmstr = XmStringCreateLocalized(CATGETS(ge->cal->DT_catd, 1, 626,
 							"More"));
 		XtVaSetValues(ge->expand_ui_button, XmNlabelString, xmstr,
-			NULL);
+			nullptr);
 		XmStringFree(xmstr);
-		XtVaSetValues(ge->separator1, XmNbottomOffset, 0, NULL);
+		XtVaSetValues(ge->separator1, XmNbottomOffset, 0, nullptr);
 		XtUnmanageChild(ge->rfp.rfp_form_mgr);
 		XtUnmanageChild(ge->mail_button);
 		expand_state_closed = True;
 	}
-	XtVaSetValues(ge->appt_list_sw, XmNheight, height, NULL);
-	XtVaSetValues(ge->access_list_sw, XmNwidth, width, NULL);
+	XtVaSetValues(ge->appt_list_sw, XmNheight, height, nullptr);
+	XtVaSetValues(ge->access_list_sw, XmNwidth, width, nullptr);
 	XtSetSensitive(ge->rfp.rfp_form_mgr, True);
 }
 
@@ -526,7 +526,7 @@ static Dtcm_appointment*
 form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 	Props			*p = (Props *)ge->cal->properties;
 	boolean_t		all_ok;
-	Dtcm_appointment	*a = NULL;
+	Dtcm_appointment	*a = nullptr;
 
 	if (no_reminders) {
 
@@ -543,7 +543,7 @@ form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 					 CSA_ENTRY_ATTR_STATUS_I,
 					 CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I,
 					 CSA_X_DT_ENTRY_ATTR_REPEAT_TIMES_I,
-					 NULL);
+					 nullptr);
 		else if (version == DATAVER3)
 		a = allocate_appt_struct(appt_write,
 				         version,
@@ -560,7 +560,7 @@ form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 					 CSA_X_DT_ENTRY_ATTR_REPEAT_INTERVAL_I,
 					 CSA_X_DT_ENTRY_ATTR_REPEAT_OCCURRENCE_NUM_I,
 					 CSA_X_DT_ENTRY_ATTR_SEQUENCE_END_DATE_I,
-					 NULL);
+					 nullptr);
 		else if (version == DATAVER4)
 		a = allocate_appt_struct(appt_write,
 				         version,
@@ -577,7 +577,7 @@ form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 					 CSA_X_DT_ENTRY_ATTR_REPEAT_INTERVAL_I,
 					 CSA_X_DT_ENTRY_ATTR_REPEAT_OCCURRENCE_NUM_I,
 					 CSA_ENTRY_ATTR_RECURRENCE_RULE_I,
-					 NULL);
+					 nullptr);
 	}
 	else {
 
@@ -598,7 +598,7 @@ form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 					 CSA_ENTRY_ATTR_FLASHING_REMINDER_I,
 					 CSA_ENTRY_ATTR_MAIL_REMINDER_I,
 					 CSA_ENTRY_ATTR_POPUP_REMINDER_I,
-					 NULL);
+					 nullptr);
 		else if (version == DATAVER3)
 		a = allocate_appt_struct(appt_write,
 				         version,
@@ -619,7 +619,7 @@ form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 					 CSA_ENTRY_ATTR_FLASHING_REMINDER_I,
 					 CSA_ENTRY_ATTR_MAIL_REMINDER_I,
 					 CSA_ENTRY_ATTR_POPUP_REMINDER_I,
-					 NULL);
+					 nullptr);
 		else if (version == DATAVER4)
 		a = allocate_appt_struct(appt_write,
 				         version,
@@ -640,24 +640,24 @@ form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 					 CSA_ENTRY_ATTR_MAIL_REMINDER_I,
 					 CSA_ENTRY_ATTR_POPUP_REMINDER_I,
 					 CSA_ENTRY_ATTR_RECURRENCE_RULE_I,
-					 NULL);
+					 nullptr);
 
 		a->beep->value->item.reminder_value->lead_time = malloc(BUFSIZ);
 		_csa_duration_to_iso8601(ge_reminder_val(p, CP_BEEPUNIT, CP_BEEPADV), 
 				     a->beep->value->item.reminder_value->lead_time);
-		a->beep->value->item.reminder_value->reminder_data.data = NULL;
+		a->beep->value->item.reminder_value->reminder_data.data = nullptr;
 		a->beep->value->item.reminder_value->reminder_data.size = 0;
 
 		a->flash->value->item.reminder_value->lead_time = malloc(BUFSIZ);
 		_csa_duration_to_iso8601(ge_reminder_val(p, CP_FLASHUNIT, CP_BEEPADV), 
 				     a->flash->value->item.reminder_value->lead_time);
-		a->flash->value->item.reminder_value->reminder_data.data = NULL;
+		a->flash->value->item.reminder_value->reminder_data.data = nullptr;
 		a->flash->value->item.reminder_value->reminder_data.size = 0;
 
 		a->popup->value->item.reminder_value->lead_time = malloc(BUFSIZ);
 		_csa_duration_to_iso8601(ge_reminder_val(p, CP_OPENUNIT, CP_BEEPADV), 
 				     a->popup->value->item.reminder_value->lead_time);
-		a->popup->value->item.reminder_value->reminder_data.data = NULL;
+		a->popup->value->item.reminder_value->reminder_data.data = nullptr;
 		a->popup->value->item.reminder_value->reminder_data.size = 0;
 
 		a->mail->value->item.reminder_value->lead_time = malloc(BUFSIZ);
@@ -677,7 +677,7 @@ form_to_appt(GEditor *ge, Boolean no_reminders, int version) {
 
 	if (!all_ok) {
 		free_appt_struct(&a);
-		return NULL;
+		return nullptr;
 	}
 
 	a->type->value->item.sint32_value = CSA_TYPE_EVENT;
@@ -716,7 +716,7 @@ ge_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -729,7 +729,7 @@ ge_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 		ad = (Access_data *)
 			CmDataListGetData(ge->access_data, c_list[i]);
 
-		if(NULL == ad) {
+		if(nullptr == ad) {
 			_DtTurnOffHourGlass(ge->frame);
 			return;
 		}
@@ -745,7 +745,7 @@ ge_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 		else
 	    		appt = form_to_appt(ge, True, ad->version);
 
-		if (appt == NULL) {
+		if (appt == nullptr) {
 			_DtTurnOffHourGlass(ge->frame);
 			return;
 		}
@@ -762,13 +762,13 @@ ge_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 			if (appt->sequence_end_date &&
 			    appt->sequence_end_date->name) {
 				free(appt->sequence_end_date->name);
-				appt->sequence_end_date->name = NULL;
+				appt->sequence_end_date->name = nullptr;
 			}
 
 			stat = csa_add_entry(ad->cal_handle,
 					       appt->count, 
 					       appt->attrs,
-					       &new_a, NULL);
+					       &new_a, nullptr);
 		}
 		backend_err_msg(ge->frame, ad->name, stat,
 				p->xm_error_pixmap);
@@ -792,14 +792,14 @@ ge_insert_proc(Widget w, XtPointer client_data, XtPointer data) {
 
 	reset_alarm(ge->cal);
 	invalidate_cache(ge->cal);
-	paint_canvas(ge->cal, NULL, RENDER_CLEAR_FIRST);
+	paint_canvas(ge->cal, nullptr, RENDER_CLEAR_FIRST);
 	br_display(ge->cal);
 	_DtTurnOffHourGlass(ge->frame);
 }
 
 static void
 ge_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
-	int			*item_list = NULL, item_cnt = 0, c_cnt, i;
+	int			*item_list = nullptr, item_cnt = 0, c_cnt, i;
 	GEditor			*ge = (GEditor *)client_data;
 	Calendar		*c = ge->cal;
 	Props_pu		*p = (Props_pu *)ge->cal->properties_pu;
@@ -822,7 +822,7 @@ ge_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -843,7 +843,7 @@ ge_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, RESELECT_ERROR_HELP,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -854,7 +854,7 @@ ge_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 	XtFree((XtPointer)item_list);
 
 	XtVaGetValues(ge->access_list, XmNselectedItemCount, &c_cnt,
-		NULL);
+		nullptr);
 	if (c_cnt <= 0) {
 		char *title = XtNewString(CATGETS(c->DT_catd, 1, 305,
 				"Calendar : Error - Group Appointment Editor"));
@@ -866,7 +866,7 @@ ge_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -878,7 +878,7 @@ ge_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 	appt = allocate_appt_struct(appt_read, 
 				        ad->version,
 					CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I, 
-					NULL);
+					nullptr);
 	stat = query_appt_struct(c->cal_handle, entry, appt);
 	backend_err_msg(ge->frame, c->view->current_calendar, stat,
 			p->xm_error_pixmap);
@@ -908,7 +908,7 @@ ge_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 				BUTTON_IDENT, 3, ident3,
 				BUTTON_IDENT, 4, ident4,
 				DIALOG_IMAGE, p->xm_question_pixmap,
-				NULL);
+				nullptr);
 			XtFree(ident4);
 			XtFree(ident3);
 			XtFree(ident2);
@@ -930,7 +930,7 @@ ge_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 				BUTTON_IDENT, 1, ident1,
                                 BUTTON_IDENT, 4, ident4,
                                 DIALOG_IMAGE, p->xm_question_pixmap,
-                                NULL);
+                                nullptr);
 		XtFree(ident4);
 		XtFree(ident1);
 		XtFree(text);
@@ -954,21 +954,21 @@ ge_delete_proc(Widget w, XtPointer client_data, XtPointer data) {
 		break;
 	}
 
-	stat = csa_delete_entry(c->cal_handle, entry, scope, NULL);
+	stat = csa_delete_entry(c->cal_handle, entry, scope, nullptr);
 	backend_err_msg(ge->frame, c->view->current_calendar, stat,
 			p->xm_error_pixmap);
 
 	add_all_gappt(ge);
 	reset_alarm(ge->cal);
 	invalidate_cache(ge->cal);
-	paint_canvas(ge->cal, NULL, RENDER_CLEAR_FIRST);
+	paint_canvas(ge->cal, nullptr, RENDER_CLEAR_FIRST);
 	br_display(ge->cal);
 	_DtTurnOffHourGlass(ge->frame);
 }
 
 static void
 ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
-	int			*item_list = NULL, item_cnt = 0, c_cnt, i;
+	int			*item_list = nullptr, item_cnt = 0, c_cnt, i;
 	GEditor			*ge = (GEditor *)client_data;
 	Calendar		*c = ge->cal;
 	Props_pu		*p = (Props_pu *)c->properties_pu;
@@ -976,7 +976,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 	CSA_return_code		stat;
 	Access_data		*ad;
 	CSA_enum		scope;
-	Dtcm_appointment	*new_a = NULL, *appt;
+	Dtcm_appointment	*new_a = nullptr, *appt;
 	static int		answer;
 
 	_DtTurnOnHourGlass(ge->frame);
@@ -991,7 +991,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -1010,7 +1010,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -1021,7 +1021,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 	XtFree((XtPointer)item_list);
 
 	XtVaGetValues(ge->access_list, XmNselectedItemCount, &c_cnt,
-		NULL);
+		nullptr);
 	if (c_cnt <= 0) {
 		char *title = XtNewString(CATGETS(c->DT_catd, 1, 329,
 				"Calendar : Group Appointment Editor - Change"));
@@ -1033,7 +1033,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		_DtTurnOffHourGlass(ge->frame);
 		XtFree(ident1);
 		XtFree(text);
@@ -1051,7 +1051,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 				    CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER_I,
 				    CSA_ENTRY_ATTR_START_DATE_I,
 				    CSA_ENTRY_ATTR_RECURRENCE_RULE_I,
-				    NULL);
+				    nullptr);
 	stat = query_appt_struct(c->cal_handle, old_a, appt);
 	backend_err_msg(ge->frame, ad->name, stat, p->xm_error_pixmap);
 	if (stat != CSA_SUCCESS) {
@@ -1060,7 +1060,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 		return;
 	}
 
-	if ((new_a = form_to_appt(ge, (same_user(ad->name, c->calname)) ? False : True, ad->version)) == NULL) {
+	if ((new_a = form_to_appt(ge, (same_user(ad->name, c->calname)) ? False : True, ad->version)) == nullptr) {
 		free_appt_struct(&appt);
 		_DtTurnOffHourGlass(ge->frame);
 		return;
@@ -1082,7 +1082,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 				BUTTON_IDENT, 1, ident1,
                                 BUTTON_IDENT, 4, ident4,
                                 DIALOG_IMAGE, p->xm_question_pixmap,
-                                NULL);
+                                nullptr);
 		XtFree(ident4);
 		XtFree(ident1);
 		XtFree(text);
@@ -1110,7 +1110,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
                                 BUTTON_IDENT : BUTTON_INSENSITIVE),
                                           4, ident4,
 			DIALOG_IMAGE, p->xm_question_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident4);
 		XtFree(ident3);
 		XtFree(ident2);
@@ -1146,7 +1146,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 	if (new_a->type) {
                 if (new_a->type->name){
                         free(new_a->type->name);
-                        new_a->type->name = NULL;
+                        new_a->type->name = nullptr;
                 }
         }
 
@@ -1165,17 +1165,17 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 				free(new_a->sequence_end_date->value->\
 					item.date_time_value);
 			free(new_a->sequence_end_date->value);
-			new_a->sequence_end_date->value = NULL;
+			new_a->sequence_end_date->value = nullptr;
 		}
 	} else {
 		if (new_a->sequence_end_date && new_a->sequence_end_date->name)
 		{
 			free (new_a->sequence_end_date->name);
-			new_a->sequence_end_date->name = NULL;
+			new_a->sequence_end_date->name = nullptr;
 		}
 	}
 
-	stat = csa_update_entry_attributes(ad->cal_handle, old_a, scope, CSA_FALSE, new_a->count, new_a->attrs, &new_entry, NULL);
+	stat = csa_update_entry_attributes(ad->cal_handle, old_a, scope, CSA_FALSE, new_a->count, new_a->attrs, &new_entry, nullptr);
 	backend_err_msg(ge->frame, ad->name, stat, p->xm_error_pixmap);
 
 	if (stat == CSA_SUCCESS)
@@ -1187,7 +1187,7 @@ ge_change_proc(Widget w, XtPointer client_data, XtPointer data) {
 	add_all_gappt(ge);
 	reset_alarm(c);
 	invalidate_cache(ge->cal);
-	paint_canvas(c, NULL, RENDER_CLEAR_FIRST);
+	paint_canvas(c, nullptr, RENDER_CLEAR_FIRST);
 	br_display(c);
 	_DtTurnOffHourGlass(ge->frame);
 }
@@ -1332,7 +1332,7 @@ ge_make_editor(Calendar *c) {
 		XmNbottomOffset, 5,
                 XmNhorizontalSpacing, 10,
 		XmNfractionBase, 8,
-                NULL);
+                nullptr);
 
 
 	cnt = 0;
@@ -1481,7 +1481,7 @@ ge_make_editor(Calendar *c) {
 						  "second_list_label", args, cnt);
 	XmStringFree(xmstr);
 
-	XtVaGetValues(ge->appt_list_label, XmNheight, &label_height, NULL);
+	XtVaGetValues(ge->appt_list_label, XmNheight, &label_height, nullptr);
 
 	/*
 	**  The dssw widget
@@ -1495,7 +1495,7 @@ ge_make_editor(Calendar *c) {
 		XmNbottomWidget, ge->expand_ui_button,
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNleftOffset, 5,
-		NULL);
+		nullptr);
 
 	/*
 	 * Add a drag source icon inside the dssw, lower right
@@ -1510,7 +1510,7 @@ ge_make_editor(Calendar *c) {
 		XmNbottomAttachment, XmATTACH_FORM,
 		XmNrightAttachment, XmATTACH_FORM,
 		XmNtraversalOn, False,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
         XtAddEventHandler(XtParent(ge->drag_source), Button1MotionMask, False,
@@ -1518,7 +1518,7 @@ ge_make_editor(Calendar *c) {
 
 	XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(c->frame)), 
 			"enableBtn1Transfer",   &btn1_transfer, 
-			NULL); 
+			nullptr); 
 
         /* btn1_transfer is a tri-state variable - see 1195846 */ 
 	if ((Boolean)btn1_transfer != True)
@@ -1530,12 +1530,12 @@ ge_make_editor(Calendar *c) {
         if (p->drag_icon_xbm)
                 XtVaSetValues(ge->drag_source,
                                 XmNpixmap, p->drag_icon_xbm,
-                                NULL);
+                                nullptr);
 
 	XtVaSetValues(ge->dssw.what_scrollwindow, 
 			XmNrightAttachment, 	XmATTACH_WIDGET,
 			XmNrightWidget, 	ge->drag_source, 
-			NULL);
+			nullptr);
 	
 	ManageChildren(ge->dssw.dssw_form_mgr);
 
@@ -1564,7 +1564,7 @@ ge_make_editor(Calendar *c) {
 		XmNrightOffset, 5,
 		XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
 		XmNbottomWidget, ge->dssw.dssw_form_mgr,
-                NULL);
+                nullptr);
         XtManageChild(ge->access_list);
 	/*
 	**  The access list label
@@ -1627,7 +1627,7 @@ ge_make_editor(Calendar *c) {
 		XmNbottomAttachment, XmATTACH_WIDGET,
 		XmNbottomWidget, ge->access_list_label,
 		XmNbottomOffset, 10,
-		NULL);
+		nullptr);
         XtManageChild(ge->appt_list);
 
 	/*
@@ -1636,18 +1636,18 @@ ge_make_editor(Calendar *c) {
 	XtVaSetValues(ge->appt_list_label,
 		XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
 		XmNleftWidget, ge->appt_list_sw,
-		NULL);
+		nullptr);
 
 	XtVaSetValues(second_list_label,
 		XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
 		XmNleftWidget, ge->appt_list_sw,
 		XmNleftOffset, 17 * listfontextents.max_logical_extent.width,
-		NULL);
+		nullptr);
 
-        XtVaSetValues(ge->button_rc_mgr, XmNdefaultButton, ge->insert_button, NULL);
-        XtVaSetValues(ge->button_rc_mgr, XmNcancelButton, ge->close_button, NULL);
+        XtVaSetValues(ge->button_rc_mgr, XmNdefaultButton, ge->insert_button, nullptr);
+        XtVaSetValues(ge->button_rc_mgr, XmNcancelButton, ge->close_button, nullptr);
         XmProcessTraversal(ge->dssw.what_text, XmTRAVERSE_CURRENT);
-        XtVaSetValues(ge->base_form_mgr, XmNinitialFocus, ge->dssw.what_text, NULL);
+        XtVaSetValues(ge->base_form_mgr, XmNinitialFocus, ge->dssw.what_text, nullptr);
 
 	/*
 	**  Managed the base form, reset flags and set up initial X and Y
@@ -1685,7 +1685,7 @@ add_to_gaccess_list(
 	XmString	xmstr;
 	Calendar	*c;
 	Props_pu	*p;
-	Access_data	*new_data = NULL;
+	Access_data	*new_data = nullptr;
 
 	if (!ge)
 		return;
@@ -1723,7 +1723,7 @@ add_to_gaccess_list(
 
 	new_data = (Access_data *)ckalloc(sizeof(Access_data));
 	new_data->appt_count = 0;
-	new_data->appt_head = NULL;
+	new_data->appt_head = nullptr;
 	new_data->name = cm_strdup(name);
 	new_data->cal_handle = cal_handle;
 	new_data->version = version;
@@ -1752,7 +1752,7 @@ add_all_gappt(GEditor *ge) {
 	time_t		start, stop;
 	Boolean		at_least_one;
 	Props_pu	*pu;
-	CSA_entry_handle*entry_list = NULL;
+	CSA_entry_handle*entry_list = nullptr;
 	CSA_return_code	stat;
 	Access_data	*step;
 	OrderingType	o;
@@ -1780,7 +1780,7 @@ add_all_gappt(GEditor *ge) {
 	if (!date)
 		return;
 
-	if ((tick = cm_getdate(date, NULL)) <= 0)
+	if ((tick = cm_getdate(date, nullptr)) <= 0)
 		return;
 	start = lowerbound(tick);
 	stop = next_ndays(tick, 1) - 1;
@@ -1810,7 +1810,7 @@ add_all_gappt(GEditor *ge) {
 		setup_range(&range_attr, &ops, &range_count, start, stop,
 		    	CSA_TYPE_EVENT, 0, B_FALSE, step->version);
 	        csa_list_entries(step->cal_handle, range_count, range_attr,
-			ops, &entry_count, &entry_list, NULL);
+			ops, &entry_count, &entry_list, nullptr);
 		free_range(&range_attr, &ops, range_count);
 
 		backend_err_msg(ge->frame, step->name, stat,
@@ -1854,8 +1854,8 @@ add_all_gappt(GEditor *ge) {
 	if (at_least_one)
 		XtSetSensitive(ge->appt_list, True);
 
-	XtVaSetValues(ge->change_button, XmNsensitive, False, NULL);
-	XtVaSetValues(ge->delete_button, XmNsensitive, False, NULL);
+	XtVaSetValues(ge->change_button, XmNsensitive, False, nullptr);
+	XtVaSetValues(ge->delete_button, XmNsensitive, False, nullptr);
 }
 
 extern void
@@ -1876,7 +1876,7 @@ geditor_nth_appt(GEditor *ge, int idx, Access_data **ad) {
 		return ld->ad->appt_head[ld->entry_idx];
 	}
 
-	*ad = NULL;
+	*ad = nullptr;
 	return 0;
 }
 
@@ -1909,7 +1909,7 @@ remove_all_gaccess_data(GEditor *ge) {
 			free(step->name);
 		if (step && step->appt_head && step->appt_count >= 0)
 			csa_free(step->appt_head);
-		step->appt_head = NULL;
+		step->appt_head = nullptr;
 		step->appt_count = 0;
 	}
 	CmDataListDeleteAll(ge->access_data, B_TRUE);
@@ -1952,7 +1952,7 @@ remove_from_gaccess_list(char *name, GEditor *ge) {
 
 extern void
 set_geditor_defaults(GEditor *ge, Tick start, Tick stop) {
-	int	*list = NULL, cnt;
+	int	*list = nullptr, cnt;
 
 	if (start > 0 || stop > 0) {
 		load_dssw_times(&ge->dssw, start, stop, False);
@@ -1980,7 +1980,7 @@ set_geditor_title(GEditor *ge, char *name) {
 		sprintf(buf, "%s - %s", CATGETS(c->DT_catd, 1, 349,
 			"Calendar : Group Appointment Editor"), name);
 		XtVaSetValues(ge->frame, XmNtitle, buf,
-			NULL);
+			nullptr);
 	}
 }
 
@@ -2009,7 +2009,7 @@ show_geditor(Calendar *c, Tick start, Tick stop) {
         	XmProcessTraversal(ge->dssw.what_text, XmTRAVERSE_CURRENT);
         	XtVaSetValues(ge->base_form_mgr, 
 			XmNinitialFocus, ge->dssw.what_text, 
-			NULL);
+			nullptr);
 	}
 
 	XtPopup(ge->frame, XtGrabNone);

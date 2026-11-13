@@ -153,7 +153,7 @@ PdmShellCreate(PdmShell* me,
      * create the application context and open the video display
      */
     XtToolkitInitialize();
-    XtSetLanguageProc((XtAppContext)NULL, NULL,
+    XtSetLanguageProc((XtAppContext)NULL, nullptr,
 		      (XtPointer)NULL);
     me->app_context = XtCreateApplicationContext();
 
@@ -164,14 +164,14 @@ PdmShellCreate(PdmShell* me,
 		      (String)NULL, "Dtpdm",
 		      PdmOptions, XtNumber(PdmOptions),
 		      argc_in_out, argv_in_out);
-    if((Display*)NULL == me->display)
+    if((Display*)nullptr == me->display)
 	return PDM_EXIT_VXAUTH;
     XtGetApplicationNameAndClass(me->display, &app_name, &app_class);
     /*
      * the fallback resources are only intended for the video display, so
      * remove them from the application context
      */
-    XtAppSetFallbackResources(me->app_context, (String*)NULL);
+    XtAppSetFallbackResources(me->app_context, (String*)nullptr);
     /*
      * get the parent video window id from the display's resource database
      */
@@ -184,7 +184,7 @@ PdmShellCreate(PdmShell* me,
     class_list[2] = NULLQUARK;
     XrmQGetResource(db, name_list, class_list, &rep_type, &value);
     if(!value.addr) return PDM_EXIT_ERROR;
-    me->parent_window = (Window)strtoul((char*)value.addr, (char**)NULL, 0);
+    me->parent_window = (Window)strtoul((char*)value.addr, (char**)nullptr, 0);
     /*
      * obtain the parent video window's attributes
      */
@@ -212,17 +212,17 @@ PdmShellCreate(PdmShell* me,
 			   XmNmwmInputMode,MWM_INPUT_PRIMARY_APPLICATION_MODAL,
 			   XmNscreen, me->parent_attr.screen,
 			   XmNtransient, True,
-			   NULL);
+			   nullptr);
     /*
      * pick up the secondary color set, so that the PDM presents the same
      * colors as a secondary window. (the XmColorObj is created by the
      * the XmDisplay object, which is created when the app shell is
      * created)
      */
-    if(XmeGetColorObjData(XtScreen(me->widget), (int*)NULL,
+    if(XmeGetColorObjData(XtScreen(me->widget), (int*)nullptr,
 			  pixelSets, XmCO_NUM_COLORS,
-			  (short*)NULL, (short*)NULL, (short*)NULL,
-			  &secondary_id, (short*)NULL))
+			  (short*)nullptr, (short*)nullptr, (short*)nullptr,
+			  &secondary_id, (short*)nullptr))
     {
 	/*
 	 * In the Xrm database, reassign primary color resource values
@@ -248,7 +248,7 @@ PdmShellCreate(PdmShell* me,
      */
     XtGetApplicationResources(me->widget, me,
 			      PdmResources, XtNumber(PdmResources),
-			      NULL, 0);
+			      nullptr, 0);
     /*
      * return
      */
@@ -291,7 +291,7 @@ PdmShellPresent(PdmShell* me)
      * get the dimensions of the PDM window
      */
     XtRealizeWidget(me->widget);
-    XtVaGetValues(me->widget, XmNwidth, &width0, XmNheight, &height0, NULL);
+    XtVaGetValues(me->widget, XmNwidth, &width0, XmNheight, &height0, nullptr);
     width = (Dimension)width0;
     height = (Dimension)height0;
     /*
@@ -303,7 +303,7 @@ PdmShellPresent(PdmShell* me)
     /*
      * update the app shell position
      */
-    XtVaSetValues(me->widget, XmNx, x, XmNy, y, NULL);
+    XtVaSetValues(me->widget, XmNx, x, XmNy, y, nullptr);
     /*
      * present the PDM as transient for the passed video window
      *

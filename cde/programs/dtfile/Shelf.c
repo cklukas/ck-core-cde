@@ -24,9 +24,9 @@
 #define SHELF_FILE_NAME ".dtfile_shelf"
 
 static Boolean shelf_loaded = False;
-static ShelfSlot *shelf_slots = NULL;
+static ShelfSlot *shelf_slots = nullptr;
 static int shelf_slot_count = 0;
-static char **ignored_mounts = NULL;
+static char **ignored_mounts = nullptr;
 static int ignored_mount_count = 0;
 
 static void
@@ -34,7 +34,7 @@ ShelfLog(const char *fmt, ...)
 {
    va_list ap;
 
-   if (getenv("DTFILE_SHELF_DEBUG") == NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") == nullptr)
       return;
 
    fprintf(stderr, "dtfile-shelf: ");
@@ -90,7 +90,7 @@ ShelfConfigPath(void)
       return config_path;
 
    home_dir = getenv("HOME");
-   if (home_dir == NULL || *home_dir == '\0')
+   if (home_dir == nullptr || *home_dir == '\0')
       home_dir = ShelfGetHomePath();
 
    snprintf(config_path, sizeof(config_path), "%s/.dt/%s",
@@ -105,7 +105,7 @@ ShelfEnsureConfigDir(void)
    char path[MAX_PATH];
 
    home_dir = getenv("HOME");
-   if (home_dir == NULL || *home_dir == '\0')
+   if (home_dir == nullptr || *home_dir == '\0')
       home_dir = ShelfGetHomePath();
 
    snprintf(path, sizeof(path), "%s/.dt", home_dir);
@@ -139,7 +139,7 @@ ShelfAddSlot(int slot, const char *path)
 static Boolean
 ShelfIsLocalFsType(const char *fs_type)
 {
-   if (fs_type == NULL || *fs_type == '\0')
+   if (fs_type == nullptr || *fs_type == '\0')
       return False;
 
    if (strcmp(fs_type, "nfs") == 0 ||
@@ -168,7 +168,7 @@ ShelfHasPrefix(const char *path, const char *prefix)
 {
    size_t len;
 
-   if (path == NULL || prefix == NULL)
+   if (path == nullptr || prefix == nullptr)
       return False;
 
    len = strlen(prefix);
@@ -183,13 +183,13 @@ ShelfRemoveMissingMounts(void)
 
    for (i = 0; i < shelf_slot_count; i++)
    {
-      if (shelf_slots[i].path == NULL || shelf_slots[i].slot == 0)
+      if (shelf_slots[i].path == nullptr || shelf_slots[i].slot == 0)
          continue;
 
       if (stat(shelf_slots[i].path, &st) != 0)
       {
          XtFree(shelf_slots[i].path);
-         shelf_slots[i].path = NULL;
+         shelf_slots[i].path = nullptr;
       }
    }
 }
@@ -204,7 +204,7 @@ ShelfSave(void)
    ShelfEnsureConfigDir();
    config_path = ShelfConfigPath();
    fp = fopen(config_path, "w");
-   if (fp == NULL)
+   if (fp == nullptr)
       return;
 
    fprintf(fp, "SHELFv1\n");
@@ -250,10 +250,10 @@ ShelfLoad(void)
 
    config_path = ShelfConfigPath();
    fp = fopen(config_path, "r");
-   if (fp == NULL)
+   if (fp == nullptr)
       return;
 
-   while (fgets(line, sizeof(line), fp) != NULL)
+   while (fgets(line, sizeof(line), fp) != nullptr)
    {
       char *cursor = line;
       char *newline = strchr(line, '\n');
@@ -269,7 +269,7 @@ ShelfLoad(void)
 
          cursor += 5;
          slot = (int)strtol(cursor, &path, 10);
-         if (path == NULL)
+         if (path == nullptr)
             continue;
          while (*path == ' ')
             path++;
@@ -326,12 +326,12 @@ ShelfLoadMounts(void)
    DPRINTF(("ShelfLoadMounts: scanning mounts\n"));
    ShelfLog("ShelfLoadMounts: scanning mounts\n");
    fp = setmntent("/proc/mounts", "r");
-   if (fp == NULL)
+   if (fp == nullptr)
       fp = setmntent("/etc/mtab", "r");
-   if (fp == NULL)
+   if (fp == nullptr)
       return;
 
-   while ((ent = getmntent(fp)) != NULL)
+   while ((ent = getmntent(fp)) != nullptr)
    {
       int slot;
       int i;
@@ -400,7 +400,7 @@ ShelfGetPathForSlot(int slot)
          return shelf_slots[i].path;
    }
 
-   return NULL;
+   return nullptr;
 }
 
 int
@@ -408,7 +408,7 @@ ShelfNextEmptySlot(void)
 {
    int slot = 1;
 
-   while (ShelfGetPathForSlot(slot) != NULL)
+   while (ShelfGetPathForSlot(slot) != nullptr)
       slot++;
 
    return slot;
@@ -417,7 +417,7 @@ ShelfNextEmptySlot(void)
 void
 ShelfSetSlot(int slot, const char *path)
 {
-   if (path == NULL || *path == '\0')
+   if (path == nullptr || *path == '\0')
       return;
 
    if (slot == 0)
@@ -464,7 +464,7 @@ ShelfClearSlotFlags(int slot, Boolean ignore_mount)
                ShelfIgnoreMount(shelf_slots[i].path);
             XtFree(shelf_slots[i].path);
          }
-         shelf_slots[i].path = NULL;
+         shelf_slots[i].path = nullptr;
          break;
       }
    }
@@ -477,7 +477,7 @@ ShelfIsIgnoredMount(const char *mount_point)
 {
    int i;
 
-   if (mount_point == NULL || *mount_point == '\0')
+   if (mount_point == nullptr || *mount_point == '\0')
       return False;
 
    for (i = 0; i < ignored_mount_count; i++)
@@ -493,7 +493,7 @@ ShelfIgnoreMount(const char *mount_point)
 {
    int i;
 
-   if (mount_point == NULL || *mount_point == '\0')
+   if (mount_point == nullptr || *mount_point == '\0')
       return;
 
    for (i = 0; i < ignored_mount_count; i++)
@@ -515,7 +515,7 @@ ShelfIgnoreMount(const char *mount_point)
           shelf_slots[i].slot != 0)
       {
          XtFree(shelf_slots[i].path);
-         shelf_slots[i].path = NULL;
+         shelf_slots[i].path = nullptr;
       }
    }
    ShelfSave();
@@ -526,7 +526,7 @@ ShelfUnignoreMount(const char *mount_point)
 {
    int i;
 
-   if (mount_point == NULL || *mount_point == '\0')
+   if (mount_point == nullptr || *mount_point == '\0')
       return;
 
    for (i = 0; i < ignored_mount_count; i++)

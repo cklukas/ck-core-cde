@@ -84,28 +84,28 @@ static XtGeometryResult QueryGeometry(Widget, XtWidgetGeometry *,
 #if XmVersion == 1002
 static void ClassInitialize(void);
 static XmBaseClassExtRec       portholeClassExtRec = {
-    NULL,                                     /* Next extension       */
+    nullptr,                                     /* Next extension       */
     NULLQUARK,                                /* record type XmQmotif */
     XmBaseClassExtVersion,                    /* version              */
     sizeof(XmBaseClassExtRec),                /* size                 */
-    NULL,                                     /* initialize prehook   */
-    NULL,                                     /* set_values prehook   */
-    NULL,                                     /* initialize posthook  */
-    NULL,                                     /* set_values posthook  */
-    NULL,                                     /* secondary class      */
-    NULL,                                     /* creation proc        */
-    NULL,                                     /* getSecResData        */
+    nullptr,                                     /* initialize prehook   */
+    nullptr,                                     /* set_values prehook   */
+    nullptr,                                     /* initialize posthook  */
+    nullptr,                                     /* set_values posthook  */
+    nullptr,                                     /* secondary class      */
+    nullptr,                                     /* creation proc        */
+    nullptr,                                     /* getSecResData        */
     {0},                                      /* fast subclass        */
-    NULL,                                     /* get_values prehook   */
-    NULL,                                     /* get_values posthook  */
-    NULL,                                     /* classPartInitPrehook */
-    NULL,                                     /* classPartInitPosthook*/
-    NULL,                                     /* ext_resources        */
-    NULL,                                     /* compiled_ext_resources*/
+    nullptr,                                     /* get_values prehook   */
+    nullptr,                                     /* get_values posthook  */
+    nullptr,                                     /* classPartInitPrehook */
+    nullptr,                                     /* classPartInitPosthook*/
+    nullptr,                                     /* ext_resources        */
+    nullptr,                                     /* compiled_ext_resources*/
     0,                                        /* num_ext_resources    */
     FALSE,                                    /* use_sub_resources    */
-    NULL,              	                      /* widgetNavigable      */
-    NULL, 	                              /* focusChange          */
+    nullptr,              	                      /* widgetNavigable      */
+    nullptr, 	                              /* focusChange          */
 };
 #define PORTHOLE_EXT_REC (XtPointer)&portholeClassExtRec
 #else
@@ -119,12 +119,12 @@ PortholeClassRec portholeClassRec = {
     /* class_name		*/	"Porthole",
     /* widget_size		*/	sizeof(PortholeRec),
     /* class_initialize		*/	ClassInitialize,
-    /* class_part_initialize	*/	NULL,
+    /* class_part_initialize	*/	nullptr,
     /* class_inited		*/	FALSE,
-    /* initialize		*/	NULL,
-    /* initialize_hook		*/	NULL,
+    /* initialize		*/	nullptr,
+    /* initialize_hook		*/	nullptr,
     /* realize			*/	Realize,
-    /* actions			*/	NULL,
+    /* actions			*/	nullptr,
     /* num_actions		*/	0,
     /* resources		*/	resources,
     /* num_resources		*/	XtNumber(resources),
@@ -133,17 +133,17 @@ PortholeClassRec portholeClassRec = {
     /* compress_exposure	*/	TRUE,
     /* compress_enterleave	*/	TRUE,
     /* visible_interest		*/	FALSE,
-    /* destroy			*/	NULL,
+    /* destroy			*/	nullptr,
     /* resize			*/	Resize,
-    /* expose			*/	NULL,
-    /* set_values		*/	NULL,
-    /* set_values_hook		*/	NULL,
+    /* expose			*/	nullptr,
+    /* set_values		*/	nullptr,
+    /* set_values_hook		*/	nullptr,
     /* set_values_almost	*/	XtInheritSetValuesAlmost,
-    /* get_values_hook		*/	NULL,
-    /* accept_focus		*/	NULL,
+    /* get_values_hook		*/	nullptr,
+    /* accept_focus		*/	nullptr,
     /* version			*/	XtVersion,
-    /* callback_private		*/	NULL,
-    /* tm_table			*/	NULL,
+    /* callback_private		*/	nullptr,
+    /* tm_table			*/	nullptr,
     /* query_geometry		*/	QueryGeometry,
     /* display_accelerator	*/	XtInheritDisplayAccelerator,
     /* extension		*/	PORTHOLE_EXT_REC
@@ -153,7 +153,7 @@ PortholeClassRec portholeClassRec = {
     /* change_managed		*/	ChangeManaged,
     /* insert_child		*/	XtInheritInsertChild,
     /* delete_child		*/	XtInheritDeleteChild,
-    /* extension		*/	NULL
+    /* extension		*/	nullptr
   },
   { /* porthole fields */
     /* ignore                   */	0
@@ -279,7 +279,7 @@ static void Resize (Widget gw)
 	Position x, y;
 	Dimension width, height;
 
-	layout_child (pw, child, NULL, &x, &y, &width, &height);
+	layout_child (pw, child, nullptr, &x, &y, &width, &height);
 	XtConfigureWidget (child, x, y, width, height, (Dimension) 0);
     }
 
@@ -396,7 +396,7 @@ static void ChangeManaged (Widget gw)
 	    if (geom.request_mode &&
 		XtMakeGeometryRequest (gw, &geom, &retgeom) ==
 		XtGeometryAlmost) {
-	        (void) XtMakeGeometryRequest (gw, &retgeom, NULL);
+	        (void) XtMakeGeometryRequest (gw, &retgeom, nullptr);
 	    }
 	}
 	

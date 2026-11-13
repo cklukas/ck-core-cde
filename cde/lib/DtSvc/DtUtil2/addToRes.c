@@ -238,10 +238,10 @@ _DtAddEntry(
 
         if (e->room > INT_MAX / 2 ||
             (size_t)e->room > SIZE_MAX / (2 * sizeof(Entry)))
-            grown = NULL;
+            grown = nullptr;
         else
             grown = (Entry *)realloc(e->entry, 2*e->room*(sizeof(Entry)));
-        if (grown == NULL) {
+        if (grown == nullptr) {
             /* the table keeps its old, valid block; the entry is dropped */
             free(entry.tag);
             free(entry.value);
@@ -288,10 +288,10 @@ _DtFindFirst(
             continue;
         }
         if (*string == '\0')
-            return NULL;
+            return nullptr;
         if (*string == '\\') {
             if (*++string == '\0')
-                return NULL;
+                return nullptr;
         }
         else if (*string == dest)
             return string;
@@ -306,7 +306,7 @@ _DtGetEntries(
         int dosort )
 {
     char *line, *colon, *temp, *str, *temp2;
-    Entry entry = { NULL, NULL, 0, False };
+    Entry entry = { nullptr, nullptr, 0, False };
     int length;
     int lineno = 0;
 
@@ -316,7 +316,7 @@ _DtGetEntries(
     {
         line = _DtFindFirst(str, '\n');
         lineno++;
-        if (line == NULL)
+        if (line == nullptr)
             break;
         if (str[0] == '!')
             continue;
@@ -334,7 +334,7 @@ _DtGetEntries(
         if (!*temp || *temp == '\n') continue;
 
         colon = _DtFindFirst(str, ':');
-        if (colon == NULL)
+        if (colon == nullptr)
             break;
         if (colon > line)
 	{
@@ -500,7 +500,7 @@ _DtAddToResProp(
    /*
     * Init empty newBuffer, then populate by merging db into oldDB.
     */
-    newBuffer = _DtAllocBuffer(NULL);
+    newBuffer = _DtAllocBuffer(nullptr);
     _DtMergeEntries(newBuffer, db, *oldDB);
 
    /*
@@ -542,7 +542,7 @@ _DtGetResString(
     _getWinProp(dpy, id, &win, &prop);
     if (win == (Window)0)
     {
-      return NULL;
+      return nullptr;
     }
 
    /*
@@ -580,7 +580,7 @@ _DtAddResString(
     int                 actualFormat;
     unsigned long       nitems, leftover;
 
-    if((data == NULL) || (*data == '\0'))
+    if((data == nullptr) || (*data == '\0'))
     {
 	return;
     }

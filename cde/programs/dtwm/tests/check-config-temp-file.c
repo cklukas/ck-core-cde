@@ -218,7 +218,7 @@ int main(int argc, char **argv)
     assert(strcmp(ck_cpp_out, ck_top.cppName) == 0);
     snprintf(first, sizeof first, "%s", ck_top.cppName);
     XtFree(ck_top.cppName);
-    ck_top.cppName = NULL;
+    ck_top.cppName = nullptr;
     unlink(first);
 
     /* (a) The file exists, mode 0600, when the converter is started. */
@@ -231,13 +231,13 @@ int main(int argc, char **argv)
     assert(strlen(ck_top.cppName) == strlen(ck_work) + 10);
     unlink(ck_top.cppName);
     XtFree(ck_top.cppName);
-    ck_top.cppName = NULL;
+    ck_top.cppName = nullptr;
 
     /* No converter configured: nothing is made. */
     wmGD.cppCommand = "";
     ck_mk_calls = ck_cpp_calls = 0;
     PreprocessConfigFile();
-    assert(ck_top.cppName == NULL && ck_mk_calls == 0 && ck_cpp_calls == 0);
+    assert(ck_top.cppName == nullptr && ck_mk_calls == 0 && ck_cpp_calls == 0);
     wmGD.cppCommand = "cpp";
 
     /*
@@ -248,7 +248,7 @@ int main(int argc, char **argv)
     ck_mk_fail = 1;
     ck_cpp_calls = 0;
     PreprocessConfigFile();
-    assert(ck_top.cppName == NULL && ck_cpp_calls == 0);
+    assert(ck_top.cppName == nullptr && ck_cpp_calls == 0);
     assert(ck_xtmalloc_live == 0);
     assert(ck_count(ck_work) == before);
     ck_mk_fail = 0;

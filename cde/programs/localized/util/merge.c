@@ -104,10 +104,10 @@
 /* [0] for primary, [1] for default */
 nl_catd catfile[2] = {(nl_catd) -1, (nl_catd) -1};
 char *big_buff;
-char *lang = NULL;
+char *lang = nullptr;
 char envvar[100];
-char *pfile = NULL;
-char *dfile = NULL;
+char *pfile = nullptr;
+char *dfile = nullptr;
 int bs = 0;
 int crt_line[3] = {0, 0, 1}; /* current line  [0]: Primary message file */
                              /*               [1]: Default message file */
@@ -135,10 +135,10 @@ int main (int argc, char *argv [])
 
     get_option(&argc, argv);
 
-    if(pfile == NULL)
+    if(pfile == nullptr)
         fatal("Usage: merge [-lang language][-dfile Default.tmsg] Primary.tmsg < File.nls > File \n", 0, 9);
 
-    if(lang != NULL) {
+    if(lang != nullptr) {
         setlocale(LC_ALL, lang);
         /* LC_CTYPE need to be set to make "gencat" command work correctly */
         sprintf( envvar, "LC_CTYPE=%s", lang );
@@ -246,7 +246,7 @@ void cat_open (void)
     unlink(pFilename);
     unlink(dFilename);
 
-    if(pfile != NULL)
+    if(pfile != nullptr)
     {
         snprintf(line, PATH_MAX, "gencat %s %s", pFilename, pfile);
         if ( system(line) != 0 )
@@ -257,7 +257,7 @@ void cat_open (void)
 
     catfile[0] =  CATOPEN(pFilename,0);
 
-    if(dfile != NULL)
+    if(dfile != nullptr)
     {
         snprintf(line, PATH_MAX, "gencat %s %s", dFilename, dfile);
         if ( system(line) != 0 )
@@ -350,14 +350,14 @@ void get_option (int *argc, char *argv[])
             bs = 1;
         }
         else if(strcmp(argv[i], "-lang") == 0) {
-            if(argv[i+1] != NULL && strlen(argv[i+1]) > 0) {
+            if(argv[i+1] != nullptr && strlen(argv[i+1]) > 0) {
                 lang = (char *)malloc(sizeof(char) * (strlen(argv[i+1]) + 1));
                 strcpy(lang, argv[i+1]);
                 i++;
             }
         }
         else if(strcmp(argv[i], "-dfile") == 0) {
-            if(argv[i+1] != NULL && strlen(argv[i+1]) > 0) {
+            if(argv[i+1] != nullptr && strlen(argv[i+1]) > 0) {
                 dfile = (char *)malloc(sizeof(char) * (strlen(argv[i+1]) + 1));
                 strcpy(dfile, argv[i+1]);
                 i++;

@@ -458,10 +458,10 @@ ilImageDes              des;
     dstData.height = dstHeight;
     dstData.stripHeight = ((dstHeight * pInfo->recommendedStripHeight) / pInfo->height) + 1;
     dstData.constantStrip = FALSE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     pPriv = (ilBiGrayPrivPtr)ilAddPipeElement (pipe, IL_FILTER, sizeof (ilBiGrayPrivRec), 
-                         IL_ADD_PIPE_HOLD_SRC, (ilSrcElementData *)NULL, &dstData, 
-                         ilBiGrayInit, IL_NPF, IL_NPF, ilBiGrayExecute, NULL, 0);
+                         IL_ADD_PIPE_HOLD_SRC, (ilSrcElementData *)nullptr, &dstData, 
+                         ilBiGrayInit, IL_NPF, IL_NPF, ilBiGrayExecute, nullptr, 0);
     if (!pPriv)
         return;
 
@@ -519,16 +519,16 @@ ilDstElementData        dstData;
         /*  Add a filter to do the scale, then init *pPriv. 
         */
     dstData.producerObject = (ilObject)NULL;
-    dstData.pDes = (ilImageDes *)NULL;
+    dstData.pDes = (ilImageDes *)nullptr;
     dstData.pFormat = IL_FORMAT_BIT;
     dstData.width = dstWidth;
     dstData.height = dstHeight;
     dstData.stripHeight = ((dstHeight * pInfo->recommendedStripHeight) / pInfo->height) + 1;
     dstData.constantStrip = FALSE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     pPriv = (ilBiGrayPrivPtr)ilAddPipeElement (pipe, IL_FILTER, sizeof (ilBiGrayPrivRec), 
-                         IL_ADD_PIPE_HOLD_SRC, (ilSrcElementData *)NULL, &dstData, 
-                         ilBiGrayInit, IL_NPF, IL_NPF, ilBiGrayExecute, NULL, 0);
+                         IL_ADD_PIPE_HOLD_SRC, (ilSrcElementData *)nullptr, &dstData, 
+                         ilBiGrayInit, IL_NPF, IL_NPF, ilBiGrayExecute, nullptr, 0);
     if (!pPriv)
         return;
 

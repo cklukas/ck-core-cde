@@ -135,8 +135,8 @@ static int      debug_ocf = FALSE;
  * These are globals which must be accessed by both sides. 
  * Globals unique to the engine are in oe.c.
  */
-char           *OE_server_dir = NULL;
-char           *OE_inittab_dir = NULL;
+char           *OE_server_dir = nullptr;
+char           *OE_inittab_dir = nullptr;
 
 /*-------------------- OEF TABLE ----------------------*/
 /*** (struct typdef located in oe.h)
@@ -154,7 +154,7 @@ OEFTAB          oef_table[] =
     { "NOTESNOT", &OEF_notesnot, FALSE, },
     { "NOTESSEM", &OEF_notessem, FALSE, },
     { "README", &OEF_readme, FALSE, },
-    { NULL, NULL, FALSE },	/* end of list */
+    { nullptr, nullptr, FALSE },	/* end of list */
 };
 
 
@@ -176,7 +176,7 @@ static void     dumpboth (void)
 	fatal_error, ausapi_msglist, usrblk.dblist);
     printf ("%s\n", DtSrGetMessages ());
     DtSrFreeMessages ();
-    for (d = usrblk.dblist; d != NULL; d = d->link) {
+    for (d = usrblk.dblist; d != nullptr; d = d->link) {
 	ptr = typestring;
 	for (i = 0; i < d->ktcount; i++) {
 	    *ptr++ = (d->keytypes[i].is_selected) ? '*' : ' ';
@@ -214,7 +214,7 @@ static void     dumpoef (char *before_after)
     fprintf (aa_stderr,
 	"\toef_table[] %s (* = changed strings)\n",
 	before_after);
-    for (oef = oef_table; oef->id != NULL; oef++) {
+    for (oef = oef_table; oef->id != nullptr; oef++) {
 	fprintf (aa_stderr, "\t%10s = %c'%s'\n",
 	    oef->id,
 	    (oef->previously_specified) ? '*' : ' ',
@@ -238,7 +238,7 @@ static void     dumpoef (char *before_after)
 static int      parse_boolean (char *token)
 {
     /* Completely missing token defaults to affirmative */
-    if (token == NULL)
+    if (token == nullptr)
 	return +1;
 
     strupr (token);
@@ -285,7 +285,7 @@ static int      read_database (char *keyword, _Xstrtokparams *strtok_buf)
 {
     DBLK          **linkptr;
 
-    if ((token = _XStrtok(NULL, DELIMITERS, *strtok_buf)) == NULL) {
+    if ((token = _XStrtok(nullptr, DELIMITERS, *strtok_buf)) == nullptr) {
 	sprintf (sprintbufp,
 	    CATGETS(dtsearch_catd, MS_loadocf, 477,
 		"%s %s: Missing database name after '%s' keyword.\n"),
@@ -307,7 +307,7 @@ static int      read_database (char *keyword, _Xstrtokparams *strtok_buf)
 
     /* Chain down the list looking for previously defined database structure */
     linkptr = &usrblk.dblist;
-    for (db = usrblk.dblist; db != NULL; db = db->link) {
+    for (db = usrblk.dblist; db != nullptr; db = db->link) {
 	if (strcmp (db->name, token) == 0)
 	    return TRUE;
 	linkptr = &db->link;
@@ -318,7 +318,7 @@ static int      read_database (char *keyword, _Xstrtokparams *strtok_buf)
     if (debug_ocf)
 	fprintf (aa_stderr, PROGNAME "204 "
 	    "%s: creating dblk for '%s'\n", cfgfname, token);
-    db = austext_malloc (sizeof (DBLK) + 8, PROGNAME "205", NULL);
+    db = austext_malloc (sizeof (DBLK) + 8, PROGNAME "205", nullptr);
     memset (db, 0, sizeof (DBLK));
     strcpy (db->name, token);
     db->is_selected = TRUE;
@@ -338,7 +338,7 @@ static void     set_boolbit (long *flagvar, long mask, char *flagname,
 {
     int             i;
 
-    token = _XStrtok(NULL, DELIMITERS, *strtok_buf);
+    token = _XStrtok(nullptr, DELIMITERS, *strtok_buf);
     i = parse_boolean (token);
     if (i > 0)
 	*flagvar |= mask;	/* switch ON */
@@ -365,7 +365,7 @@ static void     set_int (int *intvar, char *keyword, _Xstrtokparams *strtok_buf)
 {
     int             myint;
 
-    if ((token = _XStrtok(NULL, DELIMITERS, *strtok_buf)) == NULL) {
+    if ((token = _XStrtok(nullptr, DELIMITERS, *strtok_buf)) == nullptr) {
 	token = CATGETS(dtsearch_catd, MS_loadocf, 140, "(missing)");
 ERR_MSG:
 	sprintf (sprintbufp, CATGETS(dtsearch_catd, MS_loadocf, 610,
@@ -392,7 +392,7 @@ static void     set_long (long *longvar, char *keyword,
 {
     long            longi;
 
-    if ((token = _XStrtok(NULL, DELIMITERS, *strtok_buf)) == NULL) {
+    if ((token = _XStrtok(nullptr, DELIMITERS, *strtok_buf)) == nullptr) {
 	token = CATGETS(dtsearch_catd, MS_loadocf, 140, "(missing)");
 ERR_MSG:
 	sprintf (sprintbufp, CATGETS(dtsearch_catd, MS_loadocf, 610,
@@ -419,7 +419,7 @@ static void     set_boolint (int *boolint, char *keyword,
 {
     int             i;
 
-    token = _XStrtok(NULL, DELIMITERS, *strtok_buf);
+    token = _XStrtok(nullptr, DELIMITERS, *strtok_buf);
     i = parse_boolean (token);
     if (i > 0)
 	*boolint = TRUE;	/* switch ON */
@@ -444,14 +444,14 @@ static void     set_boolint (int *boolint, char *keyword,
 static void     set_fileio (_Xstrtokparams *strtok_buf)
 {
     /* if a value is missing, presume -ON */
-    if ((token = _XStrtok(NULL, DELIMITERS, *strtok_buf)) == NULL) {
+    if ((token = _XStrtok(nullptr, DELIMITERS, *strtok_buf)) == nullptr) {
 	OE_fileio = "-ON";
 	return;
     }
 
     /* check for hardcoded path name (anything that doesn't begin with '-') */
     if (token[0] != '-') {
-	OE_fileio = austext_malloc (strlen (token) + 2, PROGNAME "592", NULL);
+	OE_fileio = austext_malloc (strlen (token) + 2, PROGNAME "592", nullptr);
 	strcpy (OE_fileio, token);
 	return;
     }
@@ -486,14 +486,14 @@ static void     set_fileio (_Xstrtokparams *strtok_buf)
 static void     read_rest_of_line (char *keyword, char **passed_ptr,
 				   _Xstrtokparams *strtok_buf)
 {
-    if ((token = _XStrtok(NULL, "\n", *strtok_buf)) == NULL) {
+    if ((token = _XStrtok(nullptr, "\n", *strtok_buf)) == nullptr) {
 	sprintf (sprintbufp, CATGETS(dtsearch_catd, MS_loadocf, 1007,
 	    "%s%s: Empty %s string ignored."),
 	    PROGNAME"1007 ", cfgfname, keyword);
 	DtSearchAddMessage (sprintbufp);
 	return;
     }
-    *passed_ptr = austext_malloc (strlen(token) + 4, PROGNAME"1020", NULL);
+    *passed_ptr = austext_malloc (strlen(token) + 4, PROGNAME"1020", nullptr);
     strcpy (*passed_ptr, token);
     return;
 }  /* read_rest_of_line() */ 
@@ -514,7 +514,7 @@ static void     read_filepath (_Xstrtokparams *strtok_buf)
     /* Second token on line should be valid id word.
      * Set tabx to matching oef table entry.
      */
-    if ((token = _XStrtok(NULL, DELIMITERS, *strtok_buf)) == NULL) {
+    if ((token = _XStrtok(nullptr, DELIMITERS, *strtok_buf)) == nullptr) {
 	token = CATGETS(dtsearch_catd, MS_loadocf, 142, "rest of line");
 	errp = CATGETS(dtsearch_catd, MS_loadocf, 143, "is empty");
 
@@ -527,11 +527,11 @@ IGNORE_FILEPATH:
 	return;
     }
     strupr (token);
-    for (tabx = 0; oef_table[tabx].id != NULL; tabx++) {
+    for (tabx = 0; oef_table[tabx].id != nullptr; tabx++) {
 	if (strcmp (oef_table[tabx].id, token) == 0)
 	    break;
     }
-    if (oef_table[tabx].id == NULL) {
+    if (oef_table[tabx].id == nullptr) {
 	errp = CATGETS(dtsearch_catd, MS_loadocf, 165, "unknown id");
 	goto IGNORE_FILEPATH;
     }
@@ -543,7 +543,7 @@ IGNORE_FILEPATH:
     /* Third token should be either a directory path (ends in slash)
      * or a directory path plus a file name (does not end in slash).
      */
-    if ((token = _XStrtok(NULL, DELIMITERS, *strtok_buf)) == NULL) {
+    if ((token = _XStrtok(nullptr, DELIMITERS, *strtok_buf)) == nullptr) {
 	token = oef_table[tabx].id;
 	errp = CATGETS(dtsearch_catd, MS_loadocf, 168,
 	    "missing path specification");
@@ -555,7 +555,7 @@ IGNORE_FILEPATH:
      * Leave enough extra room for the default, dos-format file name,
      * i.e. 8 chars, a period, and a 3 char extension.
      */
-    newpath = austext_malloc (toklen + 20, PROGNAME "956", NULL);
+    newpath = austext_malloc (toklen + 20, PROGNAME "956", nullptr);
     strcpy (newpath, token);
     if (token[toklen - 1] == LOCAL_SLASH) {
 	strncpy (newpath + toklen, *(oef_table[tabx].OEFptr), 12);
@@ -585,14 +585,14 @@ static void     read_path (_Xstrtokparams *strtok_buf)
 #endif
 
     /* parse the path for this dictionary/database */
-    if ((token = _XStrtok(NULL, DELIMITERS, *strtok_buf)) == NULL) {
+    if ((token = _XStrtok(nullptr, DELIMITERS, *strtok_buf)) == nullptr) {
 	sprintf (sprintbufp, CATGETS(dtsearch_catd, MS_loadocf, 221,
 	    "%s %s: Database '%s', No PATH specified, statement ignored.\n"),
 	    PROGNAME"221", cfgfname, db->name);
 	DtSearchAddMessage (sprintbufp);
 	return;
     }
-    db->path = austext_malloc (strlen (token) + 4, PROGNAME "244", NULL);
+    db->path = austext_malloc (strlen (token) + 4, PROGNAME "244", nullptr);
     strcpy (db->path, token);
     ensure_end_slash (db->path);
     return;
@@ -629,7 +629,7 @@ static void     read_maxhits (_Xstrtokparams *strtok_buf)
 #endif
 
     /* parse the max number of hits for this dictionary */
-    if ((token = _XStrtok(NULL, DELIMITERS, *strtok_buf)) == NULL) {
+    if ((token = _XStrtok(nullptr, DELIMITERS, *strtok_buf)) == nullptr) {
 INVALID_MAXHITS:
 	sprintf (sprintbufp,
 	    CATGETS(dtsearch_catd, MS_loadocf, 304,
@@ -707,8 +707,8 @@ static int      add_a_keytype (char ktchar)
 
     /* Append valid new keytype to the keytypes array */
     i = sizeof(DtSrKeytype) * db->ktcount;	/* size of current array */
-    kt = austext_malloc (i + sizeof(DtSrKeytype) + 4, PROGNAME "699", NULL);
-    if (db->keytypes != NULL) {
+    kt = austext_malloc (i + sizeof(DtSrKeytype) + 4, PROGNAME "699", nullptr);
+    if (db->keytypes != nullptr) {
 	memcpy (kt, db->keytypes, i);
 	free (db->keytypes);
     }
@@ -761,7 +761,7 @@ static void     read_keytypes (int how_many, _Xstrtokparams *strtok_buf)
 #endif
 
     /* parsing loop for each keytypes token */
-    while ((token = _XStrtok(NULL, DELIMITERS, *strtok_buf)) != NULL) {
+    while ((token = _XStrtok(nullptr, DELIMITERS, *strtok_buf)) != nullptr) {
 	/* quit when comments begin */
 	if (*token == '*' || *token == ':')
 	    break;
@@ -831,7 +831,7 @@ static int      ocfopen (char *prefix, char *fname, FILE ** stream)
     char            fullname[1024];
     FILE           *fptr;
     struct stat     statbuf;
-    int             is_prespecified_fname = (prefix == NULL && fname == NULL);
+    int             is_prespecified_fname = (prefix == nullptr && fname == nullptr);
 
     /*
      * Build a complete path/file name from passed args into fullname
@@ -843,7 +843,7 @@ static int      ocfopen (char *prefix, char *fname, FILE ** stream)
 	goto GOT_FULLNAME;
     }
 
-    if (prefix == NULL) {
+    if (prefix == nullptr) {
 	if (debug_ocf)
 	    fprintf (aa_stderr, " --> open not attempted: null prefix.\n");
 	return FALSE;
@@ -857,7 +857,7 @@ static int      ocfopen (char *prefix, char *fname, FILE ** stream)
 GOT_FULLNAME:
     fptr = fopen (fullname, "rt");
     if (debug_ocf) {
-	if (fptr == NULL)
+	if (fptr == nullptr)
 	    fprintf (aa_stderr, " --> %s\n", strerror (errno));
 	else
 	    fprintf (aa_stderr, " --> open succeeded!\n");
@@ -868,7 +868,7 @@ GOT_FULLNAME:
      * something other than 'cant find file'. (Always retn msg if user
      * prespecified file name). (2) Return now. 
      */
-    if (fptr == NULL) {
+    if (fptr == nullptr) {
 	if (errno != ENOENT || is_prespecified_fname) {
 	    sprintf (sprintbufp, CATGETS(dtsearch_catd, MS_loadocf, 414,
 		"%s Unable to open configuration file '%s':\n  %s."),
@@ -881,7 +881,7 @@ GOT_FULLNAME:
     /* Load OE_... fields associated with site config */
     if (!is_prespecified_fname) {
 	OE_sitecnfg_fname = austext_malloc (strlen (fullname) + 2,
-	    PROGNAME "941", NULL);
+	    PROGNAME "941", nullptr);
 	strcpy (OE_sitecnfg_fname, fullname);
     }
     if (fstat (fileno (fptr), &statbuf) == -1) {
@@ -922,7 +922,7 @@ int             load_ocf (void)
     _Xstrtokparams  strtok_buf;
 
     /* Initialize program globals */
-    usrblk.dblist = NULL;	/* just to be sure */
+    usrblk.dblist = nullptr;	/* just to be sure */
     fatal_error = FALSE;
     sprintbufp = sprintbuf;
     cfgfname = cfgfnamebuf;
@@ -956,7 +956,7 @@ int             load_ocf (void)
 	    fprintf (aa_stderr,
 		PROGNAME "1446 ocfopen '%s', prespecified file name.\n",
 		OE_sitecnfg_fname);
-	if (ocfopen (NULL, NULL, &stream))
+	if (ocfopen (nullptr, nullptr, &stream))
 	    goto OCFOPEN_OK;
 	else
 	    return FALSE;
@@ -973,7 +973,7 @@ int             load_ocf (void)
 	goto OCFOPEN_OK;
 
     /* (3) try to find file in current working directory */
-    if (getcwd (inbuf, sizeof (inbuf)) == NULL)
+    if (getcwd (inbuf, sizeof (inbuf)) == nullptr)
 	strcpy (inbuf, "./");	/* default to 'local' dir */
     else if (inbuf[0] == 0)
 	strcpy (inbuf, "/");	/* presume 'root' dir */
@@ -1044,7 +1044,7 @@ OCFOPEN_OK:
 
     /* MAIN LOOP ---- Read each line from file */
     *inbuf = '\0';
-    while (fgets (inbuf, sizeof (inbuf) - 1, stream) != NULL) {
+    while (fgets (inbuf, sizeof (inbuf) - 1, stream) != nullptr) {
 	/* terminate string just to be sure */
         if (strlen(inbuf) && inbuf[strlen(inbuf)-1] == '\n')
           inbuf[strlen(inbuf)-1] = '\0';
@@ -1054,7 +1054,7 @@ OCFOPEN_OK:
 	    continue;
 
 	/* parse KEYWORD */
-	if ((token = _XStrtok(inbuf, DELIMITERS, strtok_buf)) == NULL)
+	if ((token = _XStrtok(inbuf, DELIMITERS, strtok_buf)) == nullptr)
 	    continue;
 	
 	snprintf(uprtoken, sizeof(uprtoken), "%s", token);
@@ -1148,7 +1148,7 @@ OCFOPEN_OK:
      * or if there was no KEYTYPES line for a database
      * in site config file, remove the dblk and mark fatal error.
      */
-    if (usrblk.dblist == NULL) {
+    if (usrblk.dblist == nullptr) {
 	sprintf (sprintbufp, CATGETS(dtsearch_catd, MS_loadocf, 1869,
 	    "%s %s: Configuration file must specify at least one database."),
 	    PROGNAME"1869", cfgfname);
@@ -1156,7 +1156,7 @@ OCFOPEN_OK:
 	fatal_error = TRUE;
     }
     else
-	for (db = usrblk.dblist; db != NULL; db = db->link) {
+	for (db = usrblk.dblist; db != nullptr; db = db->link) {
 	    if (db->ktcount <= 0) {
 		sprintf (sprintbufp, CATGETS(dtsearch_catd, MS_loadocf, 986,
 		    "%s %s: KEYTYPES missing for database '%s'."),

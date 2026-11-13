@@ -120,13 +120,13 @@ void InitColormapFocus (WmScreenData *pSD)
      * initial keyboard input focus is set up.
      */
 
-    pSD->colormapFocus = NULL;
+    pSD->colormapFocus = nullptr;
 
     if (wmGD.colormapFocusPolicy == CMAP_FOCUS_POINTER)
     {
 	if (wmGD.keyboardFocusPolicy != KEYBOARD_FOCUS_POINTER)
 	{
-	    if ((pCD = GetClientUnderPointer (&sameScreen)) != NULL)
+	    if ((pCD = GetClientUnderPointer (&sameScreen)) != nullptr)
 	    {
 	        SetColormapFocus (pSD, pCD);
 	    }
@@ -190,7 +190,7 @@ void ForceColormapFocus (WmScreenData *pSD, ClientData *pCD)
 	 * !!! icon windows?  should the client colormap be installed ? !!!
 	 */
 
-	pSD->colormapFocus = NULL;
+	pSD->colormapFocus = nullptr;
 	WmInstallColormap (pSD, pSD->workspaceColormap);
     }
 
@@ -382,7 +382,7 @@ void AddColormapWindowReference (ClientData *pCD, Window window)
                         (XPointer *) &cmap_window_data));
     if (context_exists)
     {
-        for (i = 0; cmap_window_data[i] != NULL; i++)
+        for (i = 0; cmap_window_data[i] != nullptr; i++)
         {
             if (cmap_window_data[i] == pCD)
             {
@@ -404,7 +404,7 @@ void AddColormapWindowReference (ClientData *pCD, Window window)
                                 XtMalloc(2 * sizeof(ClientData *));
     }
     new_cmap_window_data[i] = pCD;
-    new_cmap_window_data[i + 1] = NULL;
+    new_cmap_window_data[i + 1] = nullptr;
     XSaveContext (DISPLAY, window, wmGD.cmapWindowContextType,
                         (caddr_t)new_cmap_window_data);
 }
@@ -434,7 +434,7 @@ void RemoveColormapWindowReference (ClientData *pCD, Window window)
                         (XPointer *) &cmap_window_data));
     if (context_exists)
     {
-        for (i = 0; cmap_window_data[i] != NULL; i++)
+        for (i = 0; cmap_window_data[i] != nullptr; i++)
         {
             if (cmap_window_data[i] == pCD)
                 reference_idx = i;
@@ -449,7 +449,7 @@ void RemoveColormapWindowReference (ClientData *pCD, Window window)
             new_cmap_window_data = (ClientData **)
                                         XtMalloc(i * sizeof(ClientData *));
             idx = 0;
-            for (j = 0; cmap_window_data[j] != NULL; j++)
+            for (j = 0; cmap_window_data[j] != nullptr; j++)
             {
                 if (j != reference_idx)
                 {
@@ -457,7 +457,7 @@ void RemoveColormapWindowReference (ClientData *pCD, Window window)
                     idx++;
                 }
             }
-            new_cmap_window_data[idx] = NULL;
+            new_cmap_window_data[idx] = nullptr;
         }
         XtFree((char *) cmap_window_data);
         XDeleteContext(DISPLAY, window, wmGD.cmapWindowContextType);

@@ -59,7 +59,7 @@ static const char *DfltStdCharset = "ISO-8859-1";
 static const char *DfltStdLang = "C";
 
 static char       MyPlatform[_DtPLATFORM_MAX_LEN+1];
-static _DtXlateDb MyDb = NULL;
+static _DtXlateDb MyDb = nullptr;
 char       MyProcess = False;
 char       MyFirst   = True;
 int        ExecVer;
@@ -107,13 +107,13 @@ OpenLcxDb (void)
 			_DtXlateGetXlateEnv(MyDb,MyPlatform,&ExecVer,&CompVer) != 0)
 	  {
 	    _DtLcxCloseDb(&MyDb);
-	    MyDb = NULL;
+	    MyDb = nullptr;
 	  }
 	MyFirst = False;
         MyProcess = False;
       }
 
-    return (MyDb == NULL ? -1 : 0 );
+    return (MyDb == nullptr ? -1 : 0 );
 }
 
 /******************************************************************************
@@ -145,22 +145,22 @@ _DtI18NXlateOpToStdLocale (
 {
     OpenLcxDb();
 
-    if (MyDb != NULL)
+    if (MyDb != nullptr)
       {
 	(void) _DtLcxXlateOpToStd(MyDb, MyPlatform, CompVer,
 				operation,opLocale,
-				ret_stdLocale, ret_stdLang, ret_stdSet, NULL);
+				ret_stdLocale, ret_stdLang, ret_stdSet, nullptr);
       }
 
     /* if failed, give default values */
-    if (ret_stdLocale != NULL && *ret_stdLocale == NULL)
+    if (ret_stdLocale != nullptr && *ret_stdLocale == nullptr)
     {
         *ret_stdLocale = (char *)malloc(strlen(DfltStdLang)+strlen(DfltStdCharset)+3);
 	sprintf(*ret_stdLocale,"%s.%s",DfltStdLang,DfltStdCharset);
     }
-    if (ret_stdLang != NULL && *ret_stdLang == NULL)
+    if (ret_stdLang != nullptr && *ret_stdLang == nullptr)
 	*ret_stdLang = (char *)strdup(DfltStdLang);
-    if (ret_stdSet != NULL && *ret_stdSet == NULL)
+    if (ret_stdSet != nullptr && *ret_stdSet == nullptr)
 	*ret_stdSet = (char *)strdup(DfltStdCharset);
 }
 
@@ -190,14 +190,14 @@ _DtI18NXlateStdToOpLocale (
 {
     OpenLcxDb();
 
-    if (MyDb != NULL)
+    if (MyDb != nullptr)
     {
 	(void) _DtLcxXlateStdToOp(MyDb, MyPlatform, CompVer,
-			operation, stdLocale, NULL, NULL, NULL, ret_opLocale);
+			operation, stdLocale, nullptr, nullptr, nullptr, ret_opLocale);
     }
 
     /* if translation fails, use a default value */
-    if (ret_opLocale && *ret_opLocale == NULL)
+    if (ret_opLocale && *ret_opLocale == nullptr)
     {
        if (dflt_opLocale) *ret_opLocale = (char *)strdup(dflt_opLocale);
        else if (stdLocale) *ret_opLocale = (char *)strdup(stdLocale);

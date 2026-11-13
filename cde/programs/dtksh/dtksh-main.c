@@ -12,7 +12,7 @@ desktop_init(Shell_t *shell, int phase)
     (void)shell;
     if (phase == 0) {
         int *locked = LockKshFileDescriptors();
-        XtSetLanguageProc(NULL, NULL, NULL);
+        XtSetLanguageProc(nullptr, nullptr, nullptr);
         DtNlInitialize();
         _DtEnvControl(DT_ENV_SET);
         UnlockKshFileDescriptors(locked);

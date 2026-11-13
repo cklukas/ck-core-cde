@@ -126,7 +126,7 @@ unique_id (void)
       do
 	{
 	  /* Failure of this call is catastrophic: */
-	  if (gettimeofday (&cur_time, NULL) == -1)
+	  if (gettimeofday (&cur_time, nullptr) == -1)
 	    {
 	      perror ("unique_id:gettimeofday");
 	      abort();

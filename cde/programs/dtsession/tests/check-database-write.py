@@ -168,6 +168,6 @@ with tempfile.TemporaryDirectory(prefix="session-database-", dir=os.environ["TMP
     c.write_text(header + record + types + strings + writers + function("OpenOutputClientDB") +
                  function("CloseClientDB") + main)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
                     "-fsanitize=address,undefined", "-g", str(c), "-o", str(binary)], check=True)
     subprocess.run([str(binary)], cwd=work, check=True)

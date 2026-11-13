@@ -40,7 +40,7 @@ static int login_conv(int num_msg, const struct pam_message **msg,
  * Local structures and variables
  */
 
-static struct pam_conv pam_conv = {login_conv, NULL};
+static struct pam_conv pam_conv = {login_conv, nullptr};
 static char *saved_user_passwd;
 static pam_handle_t *pamh;
 
@@ -52,7 +52,7 @@ static void PamEnd(int status)
 {
     if (pamh) {
 	(void) pam_end(pamh, status);
-	pamh = NULL;
+	pamh = nullptr;
     }
 }
 
@@ -79,7 +79,7 @@ static int PamStart(const char *service_name, const char *user,
 
 	if (status != PAM_SUCCESS) {
 	    /* there is no handle to end */
-	    pamh = NULL;
+	    pamh = nullptr;
 	    return status;
 	}
     }
@@ -98,7 +98,7 @@ static int PamStart(const char *service_name, const char *user,
 	goto done;
     }
 
-    if ((colon = strrchr(hostname, ':')) != NULL) *colon = '\0';
+    if ((colon = strrchr(hostname, ':')) != nullptr) *colon = '\0';
 
     status = pam_set_item(pamh, PAM_RHOST, hostname);
 
@@ -149,7 +149,7 @@ int _DtSvcPamAuthenticate(const char *service_name, const char *user,
     if (status == PAM_SUCCESS)
 	status = pam_acct_mgmt(pamh, PAM_DISALLOW_NULL_AUTHTOK);
 
-    saved_user_passwd = NULL;
+    saved_user_passwd = nullptr;
 
     if (status != PAM_SUCCESS && status != PAM_NEW_AUTHTOK_REQD)
 	PamEnd(status);
@@ -290,12 +290,12 @@ static int login_conv(int num_msg, const struct pam_message **msg,
 
     (void) appdata_ptr;
 
-    if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG || msg == NULL ||
-	response == NULL)
+    if (num_msg <= 0 || num_msg > PAM_MAX_NUM_MSG || msg == nullptr ||
+	response == nullptr)
         return (PAM_CONV_ERR);
 
     answers = (struct pam_response *) calloc(num_msg, sizeof (struct pam_response));
-    if (answers == NULL)
+    if (answers == nullptr)
         return (PAM_BUF_ERR);
 
     for (k = 0; k < num_msg; k++) {
@@ -303,8 +303,8 @@ static int login_conv(int num_msg, const struct pam_message **msg,
         switch (msg[k]->msg_style) {
 
             case PAM_PROMPT_ECHO_OFF:
-                if (saved_user_passwd == NULL ||
-		    (answers[k].resp = strdup(saved_user_passwd)) == NULL)
+                if (saved_user_passwd == nullptr ||
+		    (answers[k].resp = strdup(saved_user_passwd)) == nullptr)
 		    goto failed;
                 break;
 
@@ -322,7 +322,7 @@ static int login_conv(int num_msg, const struct pam_message **msg,
 
 failed:
     for (k = 0; k < num_msg; k++) {
-	if (answers[k].resp != NULL) {
+	if (answers[k].resp != nullptr) {
 	    for (p = answers[k].resp; *p != '\0'; p++)
 		*(volatile char *) p = '\0';
 	    free(answers[k].resp);

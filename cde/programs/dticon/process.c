@@ -208,10 +208,10 @@ Process_Open( void )
 void
 Process_Save( void )
 {
-  static char *untitledStr = NULL;
+  static char *untitledStr = nullptr;
   static char newName[MAX_FNAME];
-  char *tmp1 = NULL;
-  char *tmp2 = NULL;
+  char *tmp1 = nullptr;
+  char *tmp2 = nullptr;
   int c;
 
   DialogFlag = SAVE;
@@ -286,7 +286,7 @@ Process_Quit( void )
     DoQueryDialog( GETSTR(16,16, "The current icon has not been saved.\nYour changes will be lost.") );
   else {
 #ifdef __TOOLTALK
-  edit_notifier(NULL, 0, 1);
+  edit_notifier(nullptr, 0, 1);
   ttdt_session_quit( 0, 0, 1 );
   ttdt_close( 0, 0, 1 );
   tt_release( ttMark );
@@ -312,7 +312,7 @@ Process_Query_OK( void )
   switch (DialogFlag) {
     case QUIT :
 #ifdef __TOOLTALK
-  edit_notifier(NULL, 0, 1);
+  edit_notifier(nullptr, 0, 1);
   ttdt_session_quit( 0, 0, 1 );
   ttdt_close( 0, 0, 1 );
   tt_release( ttMark );
@@ -331,7 +331,7 @@ Process_Query_OK( void )
                   SetFileIODialogInfo();
     break;
     case SAVE_AS : SaveMeNot = False;
-                   Do_FileIO(NULL, NULL, NULL);
+                   Do_FileIO(nullptr, nullptr, nullptr);
     break;
     case GRAB :   Do_GrabOp();
     break;
@@ -526,7 +526,7 @@ Process_Resize( void )
 {
   int flag;
   char old_width[10], old_height[10];
-  static char *untitledStr = NULL;
+  static char *untitledStr = nullptr;
 
   if ( DialogFlag == NEW ) {
     strcpy(undo_file, last_fname);
@@ -795,20 +795,20 @@ ConvertDropName( char *objects)
 
     host = objects;
     tmp = strchr(objects,' ');
-    if (tmp==NULL)      /* shouldn't happen */
+    if (tmp==nullptr)      /* shouldn't happen */
       return (strdup(strchr(objects, '/')));
 
     /* check if same host */
     tmp[0] = '\0';
     if (DtIsLocalHostP(host))
     {
-        char *slash = NULL;
+        char *slash = nullptr;
         tmp[0] = ' ';
         slash = strchr(objects, '/');
         if(slash) {
             return strdup(slash);
         } else {
-            return NULL;
+            return nullptr;
         }
     }
 

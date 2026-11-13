@@ -76,18 +76,18 @@ ilError                     error;
             if ((pSrcFormat->rowBitAlign != 32)
              || (pSrcFormat->nBitsPerSample[0] != 1)) {
                 *pSrcFormat = *IL_FORMAT_BIT;
-                ilConvert (pipe, (ilImageDes *)NULL, pSrcFormat, 0, NULL);
+                ilConvert (pipe, (ilImageDes *)nullptr, pSrcFormat, 0, nullptr);
                 if (pipe->context->error) return FALSE;
-                ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+                ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
                 }
             break;
 
         case IL_STD_FORMAT_BYTE:
             if (pSrcFormat->nBitsPerSample[0] != 8) {
                 *pSrcFormat = *IL_FORMAT_BYTE;
-                ilConvert (pipe, (ilImageDes *)NULL, pSrcFormat, 0, NULL);
+                ilConvert (pipe, (ilImageDes *)nullptr, pSrcFormat, 0, nullptr);
                 if (pipe->context->error) return FALSE;
-                ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+                ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
                 }
             break;
 
@@ -97,9 +97,9 @@ ilError                     error;
              || (pSrcFormat->nBitsPerSample[1] != 8)
              || (pSrcFormat->nBitsPerSample[2] != 8)) {
                 *pSrcFormat = *IL_FORMAT_3BYTE_PIXEL;
-                ilConvert (pipe, (ilImageDes *)NULL, pSrcFormat, 0, NULL);
+                ilConvert (pipe, (ilImageDes *)nullptr, pSrcFormat, 0, nullptr);
                 if (pipe->context->error) return FALSE;
-                ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+                ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
                 }
             break;
         }
@@ -114,10 +114,10 @@ ilError                     error;
     dstData.height = pInfo->height;
     dstData.stripHeight = 0;
     dstData.constantStrip = FALSE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     pPriv = ilAddPipeElement (pipe, IL_FILTER, pCvtData->nBytesPrivate, 0,
-                (ilSrcElementData *)NULL, &dstData, pCvtData->Init, pCvtData->Cleanup, 
-                pCvtData->Destroy, pCvtData->Execute, NULL, 0);
+                (ilSrcElementData *)nullptr, &dstData, pCvtData->Init, pCvtData->Cleanup, 
+                pCvtData->Destroy, pCvtData->Execute, nullptr, 0);
     if (!pPriv) return FALSE;                               /* EXIT */
 
         /*  If successful: call converters init function if non-null, return true.
@@ -157,16 +157,16 @@ ilError                     error;
             other info (des, width, stripHeight, etc.) stays the same.
         */
     dstData.producerObject = (ilObject)NULL;
-    dstData.pDes = (ilImageDes *)NULL;
+    dstData.pDes = (ilImageDes *)nullptr;
     dstData.pFormat = pNewFormat;
     dstData.width = pInfo->width;
     dstData.height = pInfo->height;
     dstData.stripHeight = 0;
     dstData.constantStrip = FALSE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     pPriv = ilAddPipeElement (pipe, IL_FILTER, pData->nBytesPrivate, 0,
-                (ilSrcElementData *)NULL, &dstData, pData->Init, pData->Cleanup, 
-                pData->Destroy, pData->Execute, NULL, 0);
+                (ilSrcElementData *)nullptr, &dstData, pData->Init, pData->Cleanup, 
+                pData->Destroy, pData->Execute, nullptr, 0);
     if (!pPriv) return FALSE;                               /* EXIT */
 
         /*  If successful: call converters init function if non-null, return true.
@@ -180,7 +180,7 @@ ilError                     error;
         }
 
         /*  Update the pipe info, return success. */
-    ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+    ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
     return TRUE;
 }
 
@@ -279,7 +279,7 @@ static unsigned long    defaultThreshold = 128; /* dflt threshold for gray->bito
                                 doCvtYCbCr = TRUE;
                     }
                 if (doCvtYCbCr) {    /* cvt to RGB */
-                    if (!ilConvert (pipe, IL_DES_RGB, (ilImageFormat *)NULL, 0, NULL))
+                    if (!ilConvert (pipe, IL_DES_RGB, (ilImageFormat *)nullptr, 0, nullptr))
                         return FALSE;
                     ilGetPipeInfo (pipe, FALSE, &info, &pipeDes, &pipeFormat);
                     }
@@ -321,7 +321,7 @@ static unsigned long    defaultThreshold = 128; /* dflt threshold for gray->bito
                   case IL_YCBCR:
                   case IL_PALETTE:
                   case IL_RGB: {
-                    if (!ilScale (pipe, info.width, info.height, IL_SCALE_BITONAL_TO_GRAY, NULL))
+                    if (!ilScale (pipe, info.width, info.height, IL_SCALE_BITONAL_TO_GRAY, nullptr))
                         return FALSE;
                     ilGetPipeInfo (pipe, FALSE, &info, &pipeDes, &pipeFormat);
                     break;
@@ -479,7 +479,7 @@ static unsigned long    defaultThreshold = 128; /* dflt threshold for gray->bito
             if (pipeDes.blackIsZero != pDes->blackIsZero) {
                 pipeDes.blackIsZero = pDes->blackIsZero;
                 if (option == IL_CONVERT_SOFT_INVERT)
-                    _ilSetPipeDesFormat (pipe, &pipeDes, (ilImageFormat *)NULL);
+                    _ilSetPipeDesFormat (pipe, &pipeDes, (ilImageFormat *)nullptr);
                 else if (!_ilAddInvertFilter (pipe, &pipeDes, &info)) 
                     goto CantConvert;
                  }

@@ -137,7 +137,7 @@ void
 popup_keyboardBB(
         Widget shell )
 {
-    if (style.kbdDialog == NULL) 
+    if (style.kbdDialog == nullptr) 
     {
       _DtTurnOnHourGlass(shell);  
       build_keyboardDlg(shell);
@@ -186,7 +186,7 @@ build_keyboardDlg(
     XtSetArg (save.posArgs[save.poscnt], XmNdefaultPosition, False); 
     save.poscnt++;
     style.kbdDialog = __DtCreateDialogBoxDialog(shell, "KeyboardDialog", save.posArgs, save.poscnt);
-    XtAddCallback(style.kbdDialog, XmNcallback, ButtonCB, NULL);
+    XtAddCallback(style.kbdDialog, XmNcallback, ButtonCB, nullptr);
     XtAddCallback(style.kbdDialog, XmNhelpCallback,
             HelpRequestCB, (XtPointer)HELP_KEYBOARD_DIALOG);
 
@@ -266,11 +266,11 @@ build_keyboardDlg(
     widget_list[count++] = 
     kbd.volumeScale= XmCreateScale(form,"volumeScale", args, n);
 
-    XtAddCallback(style.kbdDialog, XmNmapCallback, layoutCB, NULL);
+    XtAddCallback(style.kbdDialog, XmNmapCallback, layoutCB, nullptr);
     XtAddCallback(style.kbdDialog, XmNmapCallback, _DtmapCB_keyboardDlg, shell);
-    XtAddCallback(kbd.systemDefault, XmNactivateCallback, systemDefaultCB, NULL);
-    XtAddCallback(kbd.volumeScale, XmNvalueChangedCallback, valueChangedCB, NULL);
-    XtAddCallback(kbd.autoRepeatToggle, XmNvalueChangedCallback, autoRepeatToggleCB, NULL);
+    XtAddCallback(kbd.systemDefault, XmNactivateCallback, systemDefaultCB, nullptr);
+    XtAddCallback(kbd.volumeScale, XmNvalueChangedCallback, valueChangedCB, nullptr);
+    XtAddCallback(kbd.autoRepeatToggle, XmNvalueChangedCallback, autoRepeatToggleCB, nullptr);
 
     XtManageChild(form);
     XtManageChildren(widget_list,count); 
@@ -346,7 +346,7 @@ layoutCB(
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);       n++;
     XtSetValues (kbd.volumeScale, args, n);
 
-    XtRemoveCallback(style.kbdDialog, XmNmapCallback, layoutCB, NULL);
+    XtRemoveCallback(style.kbdDialog, XmNmapCallback, layoutCB, nullptr);
 }
 
 
@@ -614,7 +614,7 @@ saveKeybd(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.kbdDialog != NULL) 
+    if (style.kbdDialog != nullptr) 
     {
         if (XtIsManaged(style.kbdDialog))
             sprintf(bufr, "*keyboardDlg.ismapped: True\n");

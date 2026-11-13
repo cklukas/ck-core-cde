@@ -68,12 +68,12 @@ static int ck_xtmalloc_fail;
 static void *XtMalloc(size_t n)
 {
     if (ck_xtmalloc_fail)
-        return NULL;		/* the real one aborts; the code tests the result */
+        return nullptr;		/* the real one aborts; the code tests the result */
     return malloc(n);
 }
 static void XtFree(void *p) { free(p); }
 static void XFree(void *p) { free(p); }
-static Display *XtDisplay(Widget w) { return NULL; }
+static Display *XtDisplay(Widget w) { return nullptr; }
 static Atom XInternAtom(Display *d, const char *name, int only) { return 1; }
 
 /* Like the real one: a buffer of MAXPATHLEN bytes holding the dt directory. */
@@ -189,7 +189,7 @@ static int ck_count(const char *dir)
 int main(int argc, char **argv)
 {
     char sdir[PATH_MAX], link[PATH_MAX], victim[PATH_MAX];
-    char *path = NULL, *file = NULL;
+    char *path = nullptr, *file = nullptr;
     struct stat st;
     FILE *f;
     int before;
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
     snprintf(link, sizeof link, "%s/dtAAAAAA", sdir);
     snprintf(victim, sizeof victim, "%s/victim", ck_work);
     ck_plant(link, victim);
-    assert(getSessionPath(NULL, "p", &path, &file) == True);
+    assert(getSessionPath(nullptr, "p", &path, &file) == True);
     f = fopen(path, "w");
     assert(f);
     fputs("SESSION\n", f);
@@ -218,10 +218,10 @@ int main(int argc, char **argv)
     assert(strcmp(ck_slurp(path), "SESSION\n") == 0);
     XtFree(path);
     XtFree(file);
-    path = file = NULL;
+    path = file = nullptr;
 
     /* (a) The file exists with mode 0600 and the returned names match. */
-    assert(getSessionPath(NULL, "p", &path, &file) == True);
+    assert(getSessionPath(nullptr, "p", &path, &file) == True);
     ck_check_created(path);
     assert(stat(path, &st) == 0 && st.st_size == 0);
     assert(strlen(file) == 8 && strncmp(file, "dt", 2) == 0);
@@ -229,30 +229,30 @@ int main(int argc, char **argv)
     assert(strncmp(path, sdir, strlen(sdir)) == 0 && path[strlen(sdir)] == '/');
     XtFree(path);
     XtFree(file);
-    path = file = NULL;
+    path = file = nullptr;
 
     /* A name that is given is used as it is, and no file is made. */
     before = ck_count(sdir);
     ck_mk_calls = 0;
     file = strdup("given");
-    assert(getSessionPath(NULL, "p", &path, &file) == True);
+    assert(getSessionPath(nullptr, "p", &path, &file) == True);
     assert(ck_mk_calls == 0 && ck_count(sdir) == before);
     assert(strcmp(path + strlen(path) - 5, "given") == 0);
     XtFree(path);
     free(file);
-    path = file = NULL;
+    path = file = nullptr;
 
     /* (c) mkstemp fails: no path, no file. */
     ck_mk_fail = 1;
-    assert(getSessionPath(NULL, "p", &path, &file) == False);
-    assert(path == NULL && file == NULL);
+    assert(getSessionPath(nullptr, "p", &path, &file) == False);
+    assert(path == nullptr && file == nullptr);
     assert(ck_count(sdir) == before);
     ck_mk_fail = 0;
 
     /* The name cannot be returned: the file just made is removed again. */
     ck_xtmalloc_fail = 1;
-    assert(getSessionPath(NULL, "p", &path, &file) == False);
-    assert(path == NULL && file == NULL);
+    assert(getSessionPath(nullptr, "p", &path, &file) == False);
+    assert(path == nullptr && file == nullptr);
     assert(ck_count(sdir) == before);
     ck_xtmalloc_fail = 0;
 

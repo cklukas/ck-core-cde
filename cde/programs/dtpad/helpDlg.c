@@ -72,15 +72,15 @@ GetHelpDialog(
 {
     HelpStruct *pHelp;
 
-    if (pPad->pHelpCache == (HelpStruct *)NULL) {
+    if (pPad->pHelpCache == (HelpStruct *)nullptr) {
 	pHelp = pPad->pHelpCache = (HelpStruct *)XtMalloc(sizeof(HelpStruct));
-	pHelp->pNext = (HelpStruct *)NULL;
-	pHelp->pPrev = (HelpStruct *)NULL;
+	pHelp->pNext = (HelpStruct *)nullptr;
+	pHelp->pPrev = (HelpStruct *)nullptr;
 	pHelp->inUse = True;
 	pHelp->dialog = CreateHelpDialog(pPad);
         return pHelp->dialog;
     } else {
-	for (pHelp = pPad->pHelpCache; pHelp != (HelpStruct *)NULL;
+	for (pHelp = pPad->pHelpCache; pHelp != (HelpStruct *)nullptr;
 	  pHelp = pHelp->pNext) {
 	    if (pHelp->inUse == False) {
 		pHelp->inUse = True;
@@ -91,7 +91,7 @@ GetHelpDialog(
 	pPad->pHelpCache->pPrev = pHelp;
 	pHelp->pNext = pPad->pHelpCache;
 	pPad->pHelpCache = pHelp;
-	pHelp->pPrev = (HelpStruct *)NULL;
+	pHelp->pPrev = (HelpStruct *)nullptr;
 	pHelp->inUse = True;
 	pHelp->dialog = CreateHelpDialog(pPad);
 	return pHelp->dialog;
@@ -110,7 +110,7 @@ SetHelpVolAndDisplayHelp(
         char *helpVolume)
 {
 
-    if (helpVolume == (char *) NULL)
+    if (helpVolume == (char *) nullptr)
        helpVolume = TEXTEDITOR_HELP_VOLUME;
 
     DisplayHelp(pPad, helpVolume, locationId);
@@ -127,7 +127,7 @@ DisplayHelp(
         char *helpVolume,
 	char *locationId)
 {
-    if (pPad->MainHelp == NULL) {
+    if (pPad->MainHelp == nullptr) {
 	pPad->MainHelp = CreateHelpDialog(pPad);
     }
 

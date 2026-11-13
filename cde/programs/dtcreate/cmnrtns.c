@@ -81,7 +81,7 @@ char * GetExtName(char *pszFileName)
      type = strtok(type, ".");
      return(type);
   } else {
-     return(NULL);
+     return(nullptr);
   }
 }
 #endif
@@ -104,7 +104,7 @@ char * GetPathName(char *pszFileName)
      *ptr = '\0';
   } else {
      free(pszPath);
-     pszPath = (char *)NULL;
+     pszPath = (char *)nullptr;
   }
   return(pszPath);
 }
@@ -123,7 +123,7 @@ void Change_IconGadget_IconType(Widget widIconGadget, char *pszNewType)
   char   *tmpptr;
   ushort rc;
 
-  XtVaGetValues(widIconGadget, XmNimageName, &pszOldName, NULL);
+  XtVaGetValues(widIconGadget, XmNimageName, &pszOldName, nullptr);
   if (pszOldName) {
      tmpptr = strrchr(pszOldName, '.');
      *tmpptr = '\0';
@@ -150,7 +150,7 @@ char * Change_IconName_IconType(char *pszOldName, char *pszNewType)
 {
   char   *tmpptr;
   ushort rc;
-  char   *pszNewName = (char *)NULL;
+  char   *pszNewName = (char *)nullptr;
 
   if (pszOldName) {
      pszNewName = (char *)malloc(strlen(pszOldName) + 10);
@@ -162,7 +162,7 @@ char * Change_IconName_IconType(char *pszOldName, char *pszNewType)
 #endif
      if (!check_file_exists(pszNewName)) {
         free(pszNewName);
-        pszNewName = (char *)NULL;
+        pszNewName = (char *)nullptr;
      }
   }
   return(pszNewName);
@@ -230,7 +230,7 @@ void load_icons (Widget wid, XtPointer client_data,
      type_name = strtok(ptr, ".");
      *ptr = '\0';
   } else {
-     type_name = (char *)NULL;
+     type_name = (char *)nullptr;
   }
 
   /*****************************************/
@@ -241,7 +241,7 @@ void load_icons (Widget wid, XtPointer client_data,
      size_name = strtok(ptr, ".");
      *ptr = '\0';
   } else {
-     size_name = (char *)NULL;
+     size_name = (char *)nullptr;
   }
 
 #ifdef DEBUG
@@ -257,7 +257,7 @@ void load_icons (Widget wid, XtPointer client_data,
   else
   */
     {
-    XtVaGetValues(IconSelector, XmNuserData, &iSource, NULL);
+    XtVaGetValues(IconSelector, XmNuserData, &iSource, nullptr);
     base_name = basename(path_and_base_name);
     ptr = XtMalloc(strlen(base_name) + 1);
     strcpy(ptr, base_name);
@@ -269,7 +269,7 @@ void load_icons (Widget wid, XtPointer client_data,
            SetIconData(CA_TINY_IconGadget, path_and_base_name, Tiny_Icon);
            break;
       case CA_FILETYPE_ICONS:
-           XtVaGetValues(AddFiletype, XmNuserData, &pFtD, NULL);
+           XtVaGetValues(AddFiletype, XmNuserData, &pFtD, nullptr);
            pFtD->pszIcon = ptr;
            SetIconData(AF_MED_IconGadget, path_and_base_name, Medium_Icon);
            SetIconData(AF_TINY_IconGadget, path_and_base_name, Tiny_Icon);
@@ -292,11 +292,11 @@ void load_icons (Widget wid, XtPointer client_data,
 /******************************************************************************/
 void GetWidgetTextString (Widget wid, char **ppszText)
 {
-  char *pszTmp = NULL;
+  char *pszTmp = nullptr;
 
   if (*ppszText) {
      XtFree(*ppszText);
-     *ppszText = (char *)NULL;
+     *ppszText = (char *)nullptr;
   }
   if (XmIsTextField(wid)) {
      pszTmp = XmTextFieldGetString (wid);
@@ -307,7 +307,7 @@ void GetWidgetTextString (Widget wid, char **ppszText)
   if (pszTmp) {
      if (!strcmp(pszTmp, "")) {
         XtFree(pszTmp);
-        pszTmp = (char *)NULL;
+        pszTmp = (char *)nullptr;
      }
      *ppszText = pszTmp;
   }
@@ -345,7 +345,7 @@ void PutWidgetTextString (Widget wid, char *pszText)
 /******************************************************************************/
 char **GetIconSearchPathList(void)
 {
-  char    *iconpath = (char *)NULL;
+  char    *iconpath = (char *)nullptr;
   char    *ptr;
   char    *tmpptr;
   char    *strip;
@@ -420,7 +420,7 @@ char **GetIconSearchPathList(void)
        if ((ptr) && (ptr[1] != '\0')) {
           for (; ptr[0] == ':'; ptr++);
        } else {
-          ptr = (char *)NULL;
+          ptr = (char *)nullptr;
        }
     }
   }
@@ -470,7 +470,7 @@ char **GetIconSearchPathList(void)
           if (ptr) {
              *strip = '\0';
           }
-          ptr = (char *)NULL;
+          ptr = (char *)nullptr;
        }
 
        /*********************************************************************/
@@ -550,7 +550,7 @@ char **GetIconSearchPathList(void)
        if ((ptr) && (ptr[1] != '\0')) {
           for (; ptr[0] == ':'; ptr++);
        } else {
-          ptr = (char *)NULL;
+          ptr = (char *)nullptr;
        }
 #endif
     }
@@ -689,11 +689,11 @@ void SetIconData(Widget wid, char *pszIconFile, enum icon_size_range enumIconSiz
   sprintf(bmFileName, "%s%s%s", pszIconFile, pszSize, BITMAP_EXT );
 #endif
 
-  pszName = CreateIconName((char *)NULL, pszIconFile, enumIconSize, PIXMAP_EXT, FALSE);
+  pszName = CreateIconName((char *)nullptr, pszIconFile, enumIconSize, PIXMAP_EXT, FALSE);
   snprintf(pmFileName, sizeof(pmFileName), "%s", pszName);
   XtFree(pszName);
 
-  pszName = CreateIconName((char *)NULL, pszIconFile, enumIconSize, BITMAP_EXT, FALSE);
+  pszName = CreateIconName((char *)nullptr, pszIconFile, enumIconSize, BITMAP_EXT, FALSE);
   snprintf(bmFileName, sizeof(bmFileName), "%s", pszName);
   XtFree(pszName);
 
@@ -750,14 +750,14 @@ char * GetCorrectIconType(char *pszIconFile)
 
   if (pszIconFile) {
      pszTmp = XtMalloc(strlen(pszIconFile) + strlen(pszNewType) + 1);
-     if (!pszTmp) return((char *)NULL);
+     if (!pszTmp) return((char *)nullptr);
      strcpy(pszTmp, pszIconFile);
      ptr = strrchr(pszTmp, '.');
      if (ptr) {
         strcpy(ptr, pszNewType);
      }
   } else {
-     pszTmp = (char *)NULL;
+     pszTmp = (char *)nullptr;
   }
   return (pszTmp);
 }
@@ -794,7 +794,7 @@ char * CreateMaskName(char *pszIconName)
   if (pszTmpName) {
      strcpy(pszTmpName, pszIconName);
   } else {
-     return((char *)NULL);
+     return((char *)nullptr);
   }
 
   /*****************************************/
@@ -805,7 +805,7 @@ char * CreateMaskName(char *pszIconName)
      type_name = strtok(ptr, ".");
      *ptr = '\0';
   } else {
-     type_name = (char *)NULL;
+     type_name = (char *)nullptr;
   }
 
   /*****************************************/
@@ -816,7 +816,7 @@ char * CreateMaskName(char *pszIconName)
      size_name = strtok(ptr, ".");
      *ptr = '\0';
   } else {
-     size_name = (char *)NULL;
+     size_name = (char *)nullptr;
   }
 
   /*****************************************/

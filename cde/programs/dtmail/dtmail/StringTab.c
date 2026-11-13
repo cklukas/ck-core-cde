@@ -210,5 +210,5 @@ String ApplicationFallbacks[] = {
 "Dtmail*View*Separator*separatorType: SHADOW_ETCHED_IN",
 "Dtmail*ComposeDialog*Text*columns: 72",
 "Dtmail*Work_Area*Text*columns: 72",
-NULL
+nullptr
 };

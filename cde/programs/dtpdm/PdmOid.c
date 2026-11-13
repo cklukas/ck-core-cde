@@ -207,7 +207,7 @@ PdmOidMsgNum(PdmOid pdm_oid)
 const char*
 PdmOidDefaultMsg(PdmOid pdm_oid)
 {
-    if(PdmOidStringMap[pdm_oid].default_message == (const char*)NULL)
+    if(PdmOidStringMap[pdm_oid].default_message == (const char*)nullptr)
 	return PdmOidStringMap[pdm_oid].string;
     else
 	return PdmOidStringMap[pdm_oid].default_message;
@@ -245,10 +245,10 @@ PdmOidStringLength(PdmOid pdm_oid)
 PdmOid
 PdmOidFromString(const char* value)
 {
-    if(value == (const char*)NULL)
+    if(value == (const char*)nullptr)
 	return pdmoid_none;
     else
-	return PdmOidParse(value, (const char**)NULL);
+	return PdmOidParse(value, (const char**)nullptr);
 }
 
 /*
@@ -296,7 +296,7 @@ PdmOidParse(const char* value_string,
     /*
      * update the return pointer and return
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = ptr+length;
     return i;
 }
@@ -316,8 +316,8 @@ PdmOidParse(const char* value_string,
 PdmOidList*
 PdmOidListNew(const char* value_string)
 {
-    if(value_string == (const char*)NULL)
-	return (PdmOidList*)NULL;
+    if(value_string == (const char*)nullptr)
+	return (PdmOidList*)nullptr;
     else
     {
 	const char* ptr;
@@ -394,7 +394,7 @@ Boolean
 PdmOidListHasOid(const PdmOidList* list, PdmOid oid)
 {
     int i;
-    if(list != (PdmOidList*)NULL)
+    if(list != (PdmOidList*)nullptr)
 	for(i = 0; i < list->count; i++)
 	    if(list->list[i] == oid)
 		return 1;
@@ -418,7 +418,7 @@ int
 PdmOidListGetIndex(const PdmOidList* list, PdmOid oid)
 {
     int i;
-    if(list != (PdmOidList*)NULL)
+    if(list != (PdmOidList*)nullptr)
 	for(i = 0; i < list->count; i++)
 	    if(list->list[i] == oid)
 		return i;
@@ -441,7 +441,7 @@ PdmOidListGetIndex(const PdmOidList* list, PdmOid oid)
 void
 PdmOidListDelete(PdmOidList* list)
 {
-    if(list != (PdmOidList*)NULL)
+    if(list != (PdmOidList*)nullptr)
     {
 	XtFree((char*)list->list);
 	XtFree((char*)list);
@@ -477,7 +477,7 @@ PdmOidLinkedListNew(void)
 void
 PdmOidLinkedListDelete(PdmOidLinkedList* me)
 {
-    if(me != (PdmOidLinkedList*)NULL)
+    if(me != (PdmOidLinkedList*)nullptr)
     {
 	while(me->head)
 	{
@@ -662,8 +662,8 @@ PdmOidLocalString(PdmOid pdm_oid)
 PdmOidMediumSS*
 PdmOidMediumSSNew(const char* value_string)
 {
-    if(value_string == (const char*)NULL)
-	return (PdmOidMediumSS*)NULL;
+    if(value_string == (const char*)nullptr)
+	return (PdmOidMediumSS*)nullptr;
     else
     {
 	const char* ptr;
@@ -713,7 +713,7 @@ MediumSSParse(const char* value_string,
 	 */
 	mss.ms.continuous_size =
 	    MediumContinuousSizeParse(*ptr_return, ptr_return);
-	if(mss.ms.continuous_size != (PdmOidMediumContinuousSize*)NULL)
+	if(mss.ms.continuous_size != (PdmOidMediumContinuousSize*)nullptr)
 	{
 	    mss.mstag = PdmOidMediumSS_CONTINUOUS;
 	}
@@ -724,12 +724,12 @@ MediumSSParse(const char* value_string,
 	     */
 	    mss.ms.discrete =
 		MediumDiscreteSizeListParse(*ptr_return, ptr_return, 0);
-	    if(mss.ms.discrete == (PdmOidMediumDiscreteSizeList*)NULL)
+	    if(mss.ms.discrete == (PdmOidMediumDiscreteSizeList*)nullptr)
 	    {
 		/*
 		 * syntax error (MediumDiscreteSizeListParse reports error)
 		 */
-		return NULL;
+		return nullptr;
 	    }
 	    mss.mstag = PdmOidMediumSS_DISCRETE;
 	}
@@ -742,13 +742,13 @@ MediumSSParse(const char* value_string,
 	     * syntax error
 	     */
 	    fprintf(stderr, "%s\n", PDM_MSG_WARN_MSS);
-	    return NULL;
+	    return nullptr;
 	}
 	/*
 	 * recurse to parse the next MediumSourceSize sequence
 	 */
 	medium_ss = MediumSSParse(*ptr_return, ptr_return, i+1);
-	if(medium_ss == (PdmOidMediumSS*)NULL)
+	if(medium_ss == (PdmOidMediumSS*)nullptr)
 	{
 	    /*
 	     * syntax error - clean up and return
@@ -762,7 +762,7 @@ MediumSSParse(const char* value_string,
 		MediumDiscreteSizeListDelete(mss.ms.discrete);
 		break;
 	    }
-	    return NULL;
+	    return nullptr;
 	}
 	/*
 	 * copy the current MediumSourceSize into the array
@@ -790,7 +790,7 @@ MediumSSParse(const char* value_string,
 	     * syntax error
 	     */
 	    fprintf(stderr, "%s\n", PDM_MSG_WARN_MSS);
-	    return NULL;
+	    return nullptr;
 	}
     }
     return medium_ss;
@@ -812,7 +812,7 @@ MediumSSParse(const char* value_string,
 void
 PdmOidMediumSSDelete(PdmOidMediumSS* me)
 {
-    if(me != (PdmOidMediumSS*)NULL)
+    if(me != (PdmOidMediumSS*)nullptr)
     {
 	int i;
 	for(i = 0; i < me->count; i++)
@@ -852,8 +852,8 @@ PdmOidMediumSSGetAllSizes(PdmOidMediumSS* me)
     PdmOidMediumDiscreteSizeList* ds_list;
     PdmOid page_size;
     
-    if(me == (PdmOidMediumSS*)NULL)
-	return (PdmOidLinkedList*)NULL;
+    if(me == (PdmOidMediumSS*)nullptr)
+	return (PdmOidLinkedList*)nullptr;
 
     all_sizes = PdmOidLinkedListNew();
     /*
@@ -919,12 +919,12 @@ PdmOidMediumSSGetTraysSizes(PdmOidMediumSS* me,
     PdmOidMediumDiscreteSizeList* unspecified_tray_ds;
     PdmOidMediumDiscreteSizeList* tray_ds;
 
-    if(me == (PdmOidMediumSS*)NULL
+    if(me == (PdmOidMediumSS*)nullptr
        ||
-       trays_medium == (PdmOidTrayMediumList*)NULL)
+       trays_medium == (PdmOidTrayMediumList*)nullptr)
     {
-	if(trays != (PdmOidList**)NULL) *trays = (PdmOidList*)NULL;
-	if(sizes != (PdmOidList**)NULL) *sizes = (PdmOidList*)NULL;
+	if(trays != (PdmOidList**)nullptr) *trays = (PdmOidList*)nullptr;
+	if(sizes != (PdmOidList**)nullptr) *sizes = (PdmOidList*)nullptr;
 	return;
     }
     /*
@@ -933,16 +933,16 @@ PdmOidMediumSSGetTraysSizes(PdmOidMediumSS* me,
     tray_count = PdmOidTrayMediumListCount(trays_medium);
     if(tray_count == 0)
     {
-	if(trays != (PdmOidList**)NULL) *trays = (PdmOidList*)NULL;
-	if(sizes != (PdmOidList**)NULL) *sizes = (PdmOidList*)NULL;
+	if(trays != (PdmOidList**)nullptr) *trays = (PdmOidList*)nullptr;
+	if(sizes != (PdmOidList**)nullptr) *sizes = (PdmOidList*)nullptr;
 	return;
     }
-    if(trays != (PdmOidList**)NULL)
+    if(trays != (PdmOidList**)nullptr)
     {
 	*trays = (PdmOidList*)XtCalloc(1, sizeof(PdmOidList));
 	(*trays)->list = (PdmOid*)XtCalloc(tray_count, sizeof(PdmOid));
     }
-    if(sizes != (PdmOidList**)NULL)
+    if(sizes != (PdmOidList**)nullptr)
     {
 	*sizes = (PdmOidList*)XtCalloc(1, sizeof(PdmOidList));
 	(*sizes)->list = (PdmOid*)XtCalloc(tray_count, sizeof(PdmOid));
@@ -963,11 +963,11 @@ PdmOidMediumSSGetTraysSizes(PdmOidMediumSS* me,
 	 * loop through the MediumSourceSizes, looking for an appropriate
 	 * discrete sizes spec for the current tray
 	 */
-	unspecified_tray_ds = (PdmOidMediumDiscreteSizeList*)NULL;
-	tray_ds = (PdmOidMediumDiscreteSizeList*)NULL;
+	unspecified_tray_ds = (PdmOidMediumDiscreteSizeList*)nullptr;
+	tray_ds = (PdmOidMediumDiscreteSizeList*)nullptr;
 	for(i_mss = 0;
 	    i_mss < me->count
-	    && tray_ds == (PdmOidMediumDiscreteSizeList*)NULL;
+	    && tray_ds == (PdmOidMediumDiscreteSizeList*)nullptr;
 	    i_mss++)
 	{
 	    switch((me->mss)[i_mss].mstag)
@@ -989,8 +989,8 @@ PdmOidMediumSSGetTraysSizes(PdmOidMediumSS* me,
 	/*
 	 * if the tray was not matched, use the unspecifed tray size list
 	 */
-	if(tray_ds == (PdmOidMediumDiscreteSizeList*)NULL)
-	    if(unspecified_tray_ds == (PdmOidMediumDiscreteSizeList*)NULL)
+	if(tray_ds == (PdmOidMediumDiscreteSizeList*)nullptr)
+	    if(unspecified_tray_ds == (PdmOidMediumDiscreteSizeList*)nullptr)
 	    {
 		/*
 		 * not even an unspecified tray, skip this
@@ -1024,17 +1024,17 @@ PdmOidMediumSSGetTraysSizes(PdmOidMediumSS* me,
 		 * current discrete size; add the tray and medium size
 		 * Oids to the return lists.
 		 */
-		if(trays != (PdmOidList**)NULL)
+		if(trays != (PdmOidList**)nullptr)
 		    (*trays)->list[i_its] = current_tray;
-		if(sizes != (PdmOidList**)NULL)
+		if(sizes != (PdmOidList**)nullptr)
 		    (*sizes)->list[i_its] = (tray_ds->list)[i_ds].page_size;
 		++i_its;
 		break;
 	    }
 	}
     }
-    if(trays != (PdmOidList**)NULL) (*trays)->count = i_its;
-    if(sizes != (PdmOidList**)NULL) (*sizes)->count = i_its;
+    if(trays != (PdmOidList**)nullptr) (*trays)->count = i_its;
+    if(sizes != (PdmOidList**)nullptr) (*sizes)->count = i_its;
 }
 
 /*
@@ -1056,7 +1056,7 @@ MediumContinuousSizeParse(const char* value_string,
 				const char** ptr_return)
 {
     const char* first_nonws_ptr;
-    PdmOidMediumContinuousSize* mcs = NULL;
+    PdmOidMediumContinuousSize* mcs = nullptr;
     /*
      * skip leading whitespace
      */
@@ -1070,7 +1070,7 @@ MediumContinuousSizeParse(const char* value_string,
      * peek ahead to see if it looks like we actually have a continuous
      * size spec (looking for the sequence start char on the 1st range spec)
      */
-    if(!ParseSeqStart(*ptr_return, (const char**)NULL))
+    if(!ParseSeqStart(*ptr_return, (const char**)nullptr))
 	goto MediumContinuousSizeParse_error;
     /*
      * Ok, let's go for it
@@ -1132,7 +1132,7 @@ MediumContinuousSizeParse(const char* value_string,
      */
     *ptr_return = first_nonws_ptr;
     XtFree((char*)mcs);
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1196,7 +1196,7 @@ MediumDiscreteSizeListParse(const char* value_string,
 		 * syntax error
 		 */
 		fprintf(stderr, "%s\n", PDM_MSG_WARN_MSS);
-		return NULL;
+		return nullptr;
 	    }
 	/*
 	 * "assured reproduction area"
@@ -1208,7 +1208,7 @@ MediumDiscreteSizeListParse(const char* value_string,
 	     * syntax error
 	     */
 	    fprintf(stderr, "%s\n", PDM_MSG_WARN_MSS);
-	    return NULL;
+	    return nullptr;
 	}
 	/*
 	 * parse out the MediumSize sequence end character
@@ -1216,13 +1216,13 @@ MediumDiscreteSizeListParse(const char* value_string,
 	if(!ParseSeqEnd(*ptr_return, ptr_return))
 	{
 	    fprintf(stderr, "%s\n", PDM_MSG_WARN_MSS);
-	    return NULL;
+	    return nullptr;
 	}
 	/*
 	 * recurse to parse the next Discrete MediumSize sequence
 	 */
 	list = MediumDiscreteSizeListParse(*ptr_return, ptr_return, i+1);
-	if(list != (PdmOidMediumDiscreteSizeList*)NULL)
+	if(list != (PdmOidMediumDiscreteSizeList*)nullptr)
 	{
 	    /*
 	     * copy the current discrete MediumSize into the list
@@ -1261,7 +1261,7 @@ MediumDiscreteSizeListParse(const char* value_string,
 static void
 MediumDiscreteSizeListDelete(PdmOidMediumDiscreteSizeList* list)
 {
-    if(list != (PdmOidMediumDiscreteSizeList*)NULL)
+    if(list != (PdmOidMediumDiscreteSizeList*)nullptr)
     {
 	XtFree((char*)list->list);
 	XtFree((char*)list);
@@ -1283,8 +1283,8 @@ MediumDiscreteSizeListDelete(PdmOidMediumDiscreteSizeList* list)
 PdmOidTrayMediumList*
 PdmOidTrayMediumListNew(const char* value_string)
 {
-    if(value_string == (const char*)NULL)
-	return (PdmOidTrayMediumList*)NULL;
+    if(value_string == (const char*)nullptr)
+	return (PdmOidTrayMediumList*)nullptr;
     else
     {
 	const char* ptr;
@@ -1330,13 +1330,13 @@ TrayMediumListParse(const char* value_string,
 	if(!ParseSeqEnd(*ptr_return, ptr_return))
 	{
 	    fprintf(stderr, "%s\n", PDM_MSG_WARN_ITM);
-	    return NULL;
+	    return nullptr;
 	}
 	/*
 	 * recurse to parse the next InputTrayMedium sequence
 	 */
 	list = TrayMediumListParse(*ptr_return, ptr_return, i+1);
-	if(list != (PdmOidTrayMediumList*)NULL)
+	if(list != (PdmOidTrayMediumList*)nullptr)
 	{
 	    /*
 	     * copy the current InputTrayMedium into the list
@@ -1358,7 +1358,7 @@ TrayMediumListParse(const char* value_string,
 		XtCalloc(1, sizeof(PdmOidTrayMediumList));
 	    list->count = i;
 	    if (i == 0)
-		list->list = NULL;
+		list->list = nullptr;
 	    else
 	    	list->list = (PdmOidTrayMedium*)
 		    XtCalloc(i, sizeof(PdmOidTrayMedium));
@@ -1369,7 +1369,7 @@ TrayMediumListParse(const char* value_string,
 	     * syntax error
 	     */
 	    fprintf(stderr, "%s\n", PDM_MSG_WARN_ITM);
-	    return NULL;
+	    return nullptr;
 	}
     }
     /*
@@ -1394,7 +1394,7 @@ TrayMediumListParse(const char* value_string,
 void
 PdmOidTrayMediumListDelete(PdmOidTrayMediumList* list)
 {
-    if(list != (PdmOidTrayMediumList*)NULL)
+    if(list != (PdmOidTrayMediumList*)nullptr)
     {
 	XtFree((char*)list->list);
 	XtFree((char*)list);
@@ -1438,25 +1438,25 @@ ParseArea(const char* value_string,
      * parse the minimum x value
      */
     if(!ParseRealValue(ptr, &ptr,
-			   area_return ? &area_return->minimum_x : NULL))
+			   area_return ? &area_return->minimum_x : nullptr))
 	goto ParseArea_error;
     /*
      * parse the maximum x value
      */
     if(!ParseRealValue(ptr, &ptr,
-			   area_return ? &area_return->maximum_x : NULL))
+			   area_return ? &area_return->maximum_x : nullptr))
 	goto ParseArea_error;
     /*
      * parse the minimum y value
      */
     if(!ParseRealValue(ptr, &ptr,
-			   area_return ? &area_return->minimum_y : NULL))
+			   area_return ? &area_return->minimum_y : nullptr))
 	goto ParseArea_error;
     /*
      * parse the maximum y value
      */
     if(!ParseRealValue(ptr, &ptr,
-			   area_return ? &area_return->maximum_y : NULL))
+			   area_return ? &area_return->maximum_y : nullptr))
 	goto ParseArea_error;
     /*
      * parse out the area sequence end
@@ -1466,7 +1466,7 @@ ParseArea(const char* value_string,
     /*
      * update the return pointer
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = ptr;
     /*
      * return
@@ -1478,7 +1478,7 @@ ParseArea(const char* value_string,
     /*
      * syntax error
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = first_nonws_ptr;
     return False;
 }
@@ -1522,13 +1522,13 @@ ParseUnsignedRange(const char* value_string,
      * parse the lower bound
      */
     if(!ParseUnsignedValue(ptr, &ptr,
-			   range_return ? &range_return->lower_bound : NULL))
+			   range_return ? &range_return->lower_bound : nullptr))
 	goto ParseUnsignedRange_error;
     /*
      * parse the upper bound
      */
     if(!ParseUnsignedValue(ptr, &ptr,
-			   range_return ? &range_return->upper_bound : NULL))
+			   range_return ? &range_return->upper_bound : nullptr))
 	goto ParseUnsignedRange_error;
     /*
      * parse out the range sequence end
@@ -1538,7 +1538,7 @@ ParseUnsignedRange(const char* value_string,
     /*
      * update the return pointer
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = ptr;
     /*
      * return
@@ -1550,7 +1550,7 @@ ParseUnsignedRange(const char* value_string,
     /*
      * syntax error
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = first_nonws_ptr;
     return False;
 }
@@ -1570,7 +1570,7 @@ PdmOidNotify PdmOidNotifyParse(const char* value_string)
 {
     const char* ptr = value_string;
 
-    if(value_string == (const char*)NULL)
+    if(value_string == (const char*)nullptr)
 	return PDMOID_NOTIFY_NONE;
     /*
      * look for an event handling profile sequence start
@@ -1653,7 +1653,7 @@ const char* PdmOidNotifyString(PdmOidNotify notify)
     switch(notify)
     {
     case PDMOID_NOTIFY_UNSUPPORTED:
-	return (const char*)NULL;
+	return (const char*)nullptr;
 	break;
     case PDMOID_NOTIFY_NONE:
 	return NOTIFY_NONE_STR;
@@ -1686,7 +1686,7 @@ PdmOidDocumentFormatParse(const char* value_string)
      */
     document_format =
 	PdmOidDocumentFormatNext(value_string, &ptr);
-    if((char*)NULL != document_format)
+    if((char*)nullptr != document_format)
     {
 	/*
 	 * verify that the document format is the only value specified
@@ -1703,7 +1703,7 @@ PdmOidDocumentFormatParse(const char* value_string)
 	     */
 	    XtFree(document_format);
     }
-    return (char*)NULL;
+    return (char*)nullptr;
 }
 
 /*
@@ -1723,7 +1723,7 @@ PdmOidDocumentFormatDefault(const char* value_string)
     /*
      * return the first document format from the value string
      */
-    return PdmOidDocumentFormatNext(value_string, (const char**)NULL);
+    return PdmOidDocumentFormatNext(value_string, (const char**)nullptr);
 }
 
 /*
@@ -1748,8 +1748,8 @@ PdmOidDocumentFormatNext(const char* value_string,
     int document_format_len;
     int token_len;
 
-    if((const char*)NULL == value_string)
-	return (char*)NULL;
+    if((const char*)nullptr == value_string)
+	return (char*)nullptr;
     /*
      * skip leading whitespace
      */
@@ -1798,7 +1798,7 @@ PdmOidDocumentFormatNext(const char* value_string,
     /*
      * update return pointer
      */
-    if((const char**)NULL != ptr_return)
+    if((const char**)nullptr != ptr_return)
 	*ptr_return = ptr;
     /*
      * build the return document format string, and return it
@@ -1810,9 +1810,9 @@ PdmOidDocumentFormatNext(const char* value_string,
 
  PdmOidDocumentFormatNext_error:
     fprintf(stderr, "%s\n", PDM_MSG_WARN_DOC_FMT);
-    if((const char**)NULL != ptr_return)
+    if((const char**)nullptr != ptr_return)
 	*ptr_return = first_nonws_ptr;
-    return (char*)NULL;
+    return (char*)nullptr;
 }
 
 /*
@@ -1847,13 +1847,13 @@ ParseBooleanValue(const char* value_string,
      */
     if(strncasecmp(ptr, "TRUE", length) == 0)
     {
-	if(boolean_return != (Boolean*)NULL)
+	if(boolean_return != (Boolean*)nullptr)
 	    *boolean_return = True;
 	status = True;
     }
     else if(strncasecmp(ptr, "FALSE", length) == 0)
     {
-	if(boolean_return != (Boolean*)NULL)
+	if(boolean_return != (Boolean*)nullptr)
 	    *boolean_return = False;
 	status = True;
     }
@@ -1867,7 +1867,7 @@ ParseBooleanValue(const char* value_string,
     /*
      * update the return pointer and return
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = status ? ptr+length : ptr;
     return status;
 }
@@ -1911,9 +1911,9 @@ ParseUnsignedValue(const char* value_string,
     /*
      * update return parms
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = ptr;
-    if(unsigned_return != (unsigned long*)NULL)
+    if(unsigned_return != (unsigned long*)nullptr)
 	*unsigned_return = unsigned_value;
     /*
      * return
@@ -1960,9 +1960,9 @@ ParseRealValue(const char* value_string,
     /*
      * update return parms
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = ptr;
-    if(real_return != (float*)NULL)
+    if(real_return != (float*)nullptr)
 	*real_return = real_value;
     /*
      * return
@@ -2014,7 +2014,7 @@ ParseSeqEnd(const char* value_string,
     /*
      * update the return pointer
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = ptr;
     /*
      * return
@@ -2064,7 +2064,7 @@ ParseSeqStart(const char* value_string,
     /*
      * update the return pointer
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = ptr;
     /*
      * return
@@ -2108,7 +2108,7 @@ ParseUnspecifiedValue(const char* value_string,
     {
 	char delim[2];
 
-	if(ptr_return != (const char**)NULL)
+	if(ptr_return != (const char**)nullptr)
 	{
 	    delim[0] = *ptr;
 	    delim[1] = '\0';
@@ -2127,7 +2127,7 @@ ParseUnspecifiedValue(const char* value_string,
     /*
      * update the return pointer
      */
-    if(ptr_return != (const char**)NULL)
+    if(ptr_return != (const char**)nullptr)
 	*ptr_return = ptr;
     /*
      * return

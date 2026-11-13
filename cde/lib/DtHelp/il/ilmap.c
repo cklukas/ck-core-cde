@@ -239,7 +239,7 @@ ilPipeExecuteProc       executeProc;
         */
     if (des.nSamplesPerPixel == 1) {
         if (format.nBitsPerSample[0] != 8)
-            if (!ilConvert (pipe, (ilImageDes *)NULL, IL_FORMAT_BYTE, 0, NULL))
+            if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BYTE, 0, nullptr))
                 return FALSE;
         executeProc = ilMapByteExecute;
         }
@@ -248,7 +248,7 @@ ilPipeExecuteProc       executeProc;
          || (format.nBitsPerSample[1] != 8)
          || (format.nBitsPerSample[2] != 8)
          || (format.sampleOrder != IL_SAMPLE_PIXELS))
-            if (!ilConvert (pipe, (ilImageDes *)NULL, IL_FORMAT_3BYTE_PIXEL, 0, NULL))
+            if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_3BYTE_PIXEL, 0, nullptr))
                 return FALSE;
         executeProc = ilMap3ByteExecute;
         }
@@ -258,8 +258,8 @@ ilPipeExecuteProc       executeProc;
             see notes for ilMapDestroy().
         */
     pPriv = (ilMapPrivPtr)ilAddPipeElement (pipe, IL_FILTER, sizeof (ilMapPrivRec), 
-                         0, (ilSrcElementData *)NULL, (ilDstElementData *)NULL, 
-                         ilMapInit, IL_NPF, ilMapDestroy, executeProc, NULL, 0);
+                         0, (ilSrcElementData *)nullptr, (ilDstElementData *)nullptr, 
+                         ilMapInit, IL_NPF, ilMapDestroy, executeProc, nullptr, 0);
     if (!pPriv)
         return FALSE;
     pPriv->mapImage = mapImage;

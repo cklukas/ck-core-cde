@@ -86,7 +86,7 @@ parse_args (int argc, char *argv[])
   int i. len;
 
   if (argc == 1)
-     print_usage_and_exit (argv[0], NULL);
+     print_usage_and_exit (argv[0], nullptr);
 
   for (i=1; i < argc; i++) {
 
@@ -96,7 +96,7 @@ parse_args (int argc, char *argv[])
         if (argv[++i])
           sel_timeout = atoi(argv[i]) * 1000;
         else    
-          print_usage_and_exit(argv[0], NULL);
+          print_usage_and_exit(argv[0], nullptr);
       }
       else
         print_usage_and_exit(argv[0], argv[i]);
@@ -127,12 +127,12 @@ main (int argc, char *argv[])
   parse_args(argc, argv);
 
   /* init x toolkit internals using varargs argument style */
-  toplevel = XtVaAppInitialize (&app_context, "OliasDpy", NULL,
-                                0, &argc, argv, NULL, 
-                                XtNmappedWhenManaged, False, NULL);
+  toplevel = XtVaAppInitialize (&app_context, "OliasDpy", nullptr,
+                                0, &argc, argv, nullptr, 
+                                XtNmappedWhenManaged, False, nullptr);
 
   /* make width & height nonzero; (req'd on solaris) */
-  XtVaSetValues (toplevel, XtNwidth, 1, XtNheight, 1, NULL);
+  XtVaSetValues (toplevel, XtNwidth, 1, XtNheight, 1, nullptr);
 
   /* realize the widget */
   XtRealizeWidget (toplevel);

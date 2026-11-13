@@ -100,11 +100,11 @@ static char *initial_context_names[] = {
 	"myorg",
 	"hostorg",
 	"host:",
-	NULL,
+	nullptr,
 };
-static void		*libfns_handle = NULL;
+static void		*libfns_handle = nullptr;
 static int		initialized = 0;
-static NS_Context_t	*initial_ctx = NULL;
+static NS_Context_t	*initial_ctx = nullptr;
 
 /*
  * These are dynamically bound entry points into libfns.  We dlopen()
@@ -177,17 +177,17 @@ dtfns_init(void)
 	char	*libfns = FNS_LIBRARY;
 	int	error;	
 
-	if (libfns_handle != NULL) {
+	if (libfns_handle != nullptr) {
 		return 1;
 	}
 
 	initialized = TRUE;
 
 	libfns_handle = dlopen(libfns, RTLD_LAZY);
-	if (libfns_handle == NULL) {
+	if (libfns_handle == nullptr) {
 #ifdef CM_DEBUG
 		char	*s = dlerror();
-		if (s == NULL) {
+		if (s == nullptr) {
 			DP(("Could not dlopen %s\n", libfns));
 		} else {
 			DP(("Could not dlopen %s: %s\n", libfns, s));
@@ -306,13 +306,13 @@ dtfns_available(void)
 		return available;
 	}
 
-	if (libfns_handle != NULL) {
+	if (libfns_handle != nullptr) {
 
 		/*
 		 * libfns has been dlopened.  Now see if an FNS namespace
 		 * is reachable by getting the initial context.
 		 */
-		if (dtfns_get_initial_ctx() == NULL) {
+		if (dtfns_get_initial_ctx() == nullptr) {
 			available = 0;
 		} else {
 			available = 1;
@@ -339,7 +339,7 @@ dtfns_get_initial_ctx(void)
 {
 	DP(("dtfns_get_initial_ctx: Getting initial context\n"));
 
-	if (initial_ctx == NULL) {
+	if (initial_ctx == nullptr) {
 		NS_ContextStatus_t *	status;
 
 		status = (*NS_ContextStatus_new_p)();
@@ -409,15 +409,15 @@ dtfns_service_name(
 	char	*tmp_buf;
 	char	*type_str;
 
-	if (libfns_handle == NULL) {
+	if (libfns_handle == nullptr) {
 		return 0;
 	}
 
-	if (name == NULL) {
+	if (name == nullptr) {
 		return -1;
 	}
 
-	if (org != NULL && *org != '\0') {
+	if (org != nullptr && *org != '\0') {
 		/* Sanity check for size */
 		if (strlen(org) + strlen(name) > (size_t)size - 50) {
 			return -1;
@@ -455,7 +455,7 @@ dtfns_isa_helix_name(const char *name)
 	int	n, len;
 	char	**p;
 
-	for (p = initial_context_names; *p != NULL; p++) {
+	for (p = initial_context_names; *p != nullptr; p++) {
 		len = strlen(*p);
 		if (strncmp(name, *p, len) == 0) {
 			return TRUE;
@@ -476,10 +476,10 @@ dtfns_myorg_name(char *buf, int len)
 	char		*principal_name;
 	char		*host_domain;
 	char		*root_domain;
-	char		*pd = NULL;
+	char		*pd = nullptr;
 	char		*myorg_p, *root_p;
 
-	if (myorg_name == NULL) {
+	if (myorg_name == nullptr) {
 		principal_name	= nis_local_principal();
 		host_domain	= nis_local_directory();
 		root_domain	= __nis_local_root();
@@ -488,7 +488,7 @@ dtfns_myorg_name(char *buf, int len)
 			/* Get the domain this principal is in */
 			pd = nis_domain_of(principal_name);
 			if (pd && *pd == '.') {
-				pd = NULL;
+				pd = nullptr;
 			}
 		}
 
@@ -518,7 +518,7 @@ dtfns_myorg_name(char *buf, int len)
 		}
 	}
 
-	if (myorg_name != NULL) {
+	if (myorg_name != nullptr) {
 		buf[len - 1] = '\0';
 		strncpy(buf, myorg_name, len - 1);
 	}
@@ -548,17 +548,17 @@ dtfns_lookup_str(
 	const NS_ReferenceAddress_t *	addr;
 	void			*iter_pos;
 
-	if (libfns_handle == NULL) {
+	if (libfns_handle == nullptr) {
 		return 0;
 	}
 
 	/* Get the reference from the name */
-	if ((ref = dtfns_lookup_ref(name)) == NULL) {
+	if ((ref = dtfns_lookup_ref(name)) == nullptr) {
 		return -1;
 	}
 
 	/* Get the address that matches at least one of the specified types */
-	if ((addr = dtfns_addr_from_ref(ref, types, &iter_pos)) == NULL) {
+	if ((addr = dtfns_addr_from_ref(ref, types, &iter_pos)) == nullptr) {
 		(*NS_Reference_delete_p)(ref);
 		return -1;
 	}
@@ -598,33 +598,33 @@ dtfns_bind_str(
 	const char	*new_str	/* String to bind to name */
 )
 {
-	NS_Reference_t		*ref = NULL;
-	const NS_ReferenceAddress_t	*addr = NULL;
-	NS_ReferenceAddress_t		*new_addr = NULL;
+	NS_Reference_t		*ref = nullptr;
+	const NS_ReferenceAddress_t	*addr = nullptr;
+	NS_ReferenceAddress_t		*new_addr = nullptr;
 	NS_CompositeName_t	*comp_name;
-	NS_ContextStatus_t	*status = NULL;
-	NS_Context_t		*ctx = NULL;
+	NS_ContextStatus_t	*status = nullptr;
+	NS_Context_t		*ctx = nullptr;
 	NS_String_t 		*nstr;
-	void			*iter_pos = NULL;
+	void			*iter_pos = nullptr;
 	char			buf[256];
 	int			rcode = -1;
 
-	if (libfns_handle == NULL) {
+	if (libfns_handle == nullptr) {
 		return 0;
 	}
 
 	/* Get the reference from the name */
-	if ((ref = dtfns_lookup_ref(name)) != NULL) {
+	if ((ref = dtfns_lookup_ref(name)) != nullptr) {
 		/*
 		 * A value is already bound to this name.
 		 * Get the address that matches at least one of
 		 * the specified types
 		 */
 		addr = dtfns_addr_from_ref(ref, types, &iter_pos);
-		if (addr != NULL) {
+		if (addr != nullptr) {
 			/* Get string bound to that address */
 			*buf = '\0';
-			dtfns_str_from_addr(addr, buf, sizeof(buf), NULL, 0);
+			dtfns_str_from_addr(addr, buf, sizeof(buf), nullptr, 0);
 
 			/* Are we changing the string? */
 			if (strcmp(buf, new_str) == 0) {
@@ -640,11 +640,11 @@ dtfns_bind_str(
 		/* Nothing bound to name.  Create an empty reference */
 		nstr = (*NS_String_from_cstring_p)(ref_type);
 		ref = (*NS_Reference_new_p)(nstr);
-		iter_pos = NULL;
+		iter_pos = nullptr;
 	}
 
 	/* Create new address */
-	if ((new_addr = dtfns_create_str_addr(new_str, types[0])) == NULL) {
+	if ((new_addr = dtfns_create_str_addr(new_str, types[0])) == nullptr) {
 		goto EXIT;
 	}
 
@@ -654,7 +654,7 @@ dtfns_bind_str(
 	}
 
 	/* Bind reference into name space */
-	if ((ctx = dtfns_get_initial_ctx()) == NULL) {
+	if ((ctx = dtfns_get_initial_ctx()) == nullptr) {
 		goto EXIT;
 	}
 
@@ -669,9 +669,9 @@ dtfns_bind_str(
 
 EXIT:
 	/* Clean up and return */
-	if (new_addr != NULL) (*NS_ReferenceAddress_delete_p)(new_addr);
-	if (ref    != NULL) (*NS_Reference_delete_p)(ref);
-	if (status != NULL) (*NS_ContextStatus_delete_p)(status);
+	if (new_addr != nullptr) (*NS_ReferenceAddress_delete_p)(new_addr);
+	if (ref    != nullptr) (*NS_Reference_delete_p)(ref);
+	if (status != nullptr) (*NS_ContextStatus_delete_p)(status);
 	return rcode;
 }
 
@@ -688,17 +688,17 @@ dtfns_lookup_ref(
 	const char     *name)/* Absolute Helix name to lookup */
 
 {
-	NS_Reference_t *	ref = NULL;
-	NS_ContextStatus_t *	status = NULL;
-	NS_CompositeName_t *	comp_name = NULL;
+	NS_Reference_t *	ref = nullptr;
+	NS_ContextStatus_t *	status = nullptr;
+	NS_CompositeName_t *	comp_name = nullptr;
 	NS_Context_t *		ctx;
 
-	if (libfns_handle == NULL) {
-		return NULL;
+	if (libfns_handle == nullptr) {
+		return nullptr;
 	}
 
 	status = (*NS_ContextStatus_new_p)();
-	if ((ctx = dtfns_get_initial_ctx()) != NULL) {
+	if ((ctx = dtfns_get_initial_ctx()) != nullptr) {
 		/* Lookup the Helix name specified by "name" */
 		comp_name = (*NS_CompositeName_from_cstring_p)(name);
 		ref = (*NS_Context_lookup_p)(ctx, comp_name, status);
@@ -749,7 +749,7 @@ get_helix_service_name(
 	}
 
 	/* Get reference and extract reference type */
-	if ((ref = dtfns_lookup_ref(tmp_name)) == NULL) {
+	if ((ref = dtfns_lookup_ref(tmp_name)) == nullptr) {
 		return -1;
 	}
 
@@ -764,7 +764,7 @@ get_helix_service_name(
 		return 0;
 	}
 
-	if ((p = strrchr(tmp_name, ':')) != NULL) {
+	if ((p = strrchr(tmp_name, ':')) != nullptr) {
 		p++;
 	}
 
@@ -773,11 +773,11 @@ get_helix_service_name(
 	 * then we want to append ":calendar"
 	 */
 	if (strcmp(type, DTFNS_SERVICE_CONTEXT_TYPE) == 0 ||
-	    (strcmp(type, DTFNS_NULL_CONTEXT_TYPE) == 0 && p != NULL &&
+	    (strcmp(type, DTFNS_NULL_CONTEXT_TYPE) == 0 && p != nullptr &&
 	    strcmp(p, DTFNS_SERVICE_NAME) == 0)) {
 
 		*buf = (char *)malloc(n + strlen(service) + 2);
-		if (*buf == NULL) {
+		if (*buf == nullptr) {
 			return -1;
 		}
 		strcpy(*buf, tmp_name);
@@ -824,22 +824,22 @@ dtfns_addr_from_ref(
 	char			type[128];
 	char			**p;
 
-	if (libfns_handle == NULL) {
+	if (libfns_handle == nullptr) {
 		return 0;
 	}
 
 	addr = (*NS_Reference_first_p)(ref, iter_pos);
-	if (types == NULL) {
+	if (types == nullptr) {
 		return addr;
 	}
 
-	while (addr != NULL) {
+	while (addr != nullptr) {
 		/* Get the type, and see if it is one we want */
-		dtfns_str_from_addr(addr, NULL, 0, type, sizeof(type));
-		for (p = types; *p != NULL && strcmp(*p, type) != 0; *p++)
+		dtfns_str_from_addr(addr, nullptr, 0, type, sizeof(type));
+		for (p = types; *p != nullptr && strcmp(*p, type) != 0; *p++)
 			;
 
-		if (*p != NULL) {
+		if (*p != nullptr) {
 			/* Found it! */
 			break;
 		} else {
@@ -870,15 +870,15 @@ dtfns_str_from_addr(
 
 {
 	XDR		xdr;
-	char		*s = NULL;
+	char		*s = nullptr;
 	NS_String_t	*nstr;
 	const char	*cs;
 
-	if (libfns_handle == NULL) {
+	if (libfns_handle == nullptr) {
 		return 0;
 	}
 
-	if (dbuf != NULL) {
+	if (dbuf != nullptr) {
 		/* Convert data from XDR to a string */
 		xdrmem_create(&xdr,
 			(caddr_t)(*NS_ReferenceAddress_data_p)(addr),
@@ -893,7 +893,7 @@ dtfns_str_from_addr(
 		free(s);
 	}
 
-	if (tbuf != NULL) {
+	if (tbuf != nullptr) {
 		tbuf[tbuf_size - 1] = '\0';
 		nstr = (*NS_ReferenceAddress_type_p)(addr);
 		cs = (*NS_String_cstring_p)(nstr);
@@ -921,13 +921,13 @@ dtfns_create_str_addr(
 	u_char	buf[1024];
 	NS_String_t	*nstring;
 
-	if (libfns_handle == NULL) {
-		return NULL;
+	if (libfns_handle == nullptr) {
+		return nullptr;
 	}
 
 	xdrmem_create(&xdr, (caddr_t)buf, sizeof(buf), XDR_ENCODE);
 	if (xdr_string(&xdr, (char**)&data, ~0) == FALSE) {
-		return NULL;
+		return nullptr;
 	}
 
 	nstring = (*NS_String_from_cstring_p)(type);
@@ -952,11 +952,11 @@ dtfns_insert_addr(
 )
 
 {
-	if (libfns_handle == NULL) {
+	if (libfns_handle == nullptr) {
 		return 0;
 	}
 
-	if (*iter_pos == NULL) {
+	if (*iter_pos == nullptr) {
 		if ((*NS_Reference_prepend_addr_p)(ref, addr) < 1)
 			return -1;
 	} else {
@@ -982,7 +982,7 @@ dtfns_delete_addr(
 )
 
 {
-	if (libfns_handle == NULL) {
+	if (libfns_handle == nullptr) {
 		return 0;
 	}
 

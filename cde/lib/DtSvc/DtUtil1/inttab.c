@@ -87,7 +87,7 @@ _DtShmFindIntTabEntry(DtShmInttab inttab, unsigned int key)
   while(i && key != ptr[i].key)
     i = ptr[i].next;
   
-  return(i?(&ptr[i].data):(const int *)NULL);
+  return(i?(&ptr[i].data):(const int *)nullptr);
 }
 
 DtShmProtoInttab
@@ -148,7 +148,7 @@ int
 _DtShmProtoDestroyInttab(DtShmProtoInttab intlist)
 {
   intlist_t * ptr = (intlist_t *)intlist;
-  _DtUtilDestroyHash(ptr->tbl, free_hash_data, NULL);
+  _DtUtilDestroyHash(ptr->tbl, free_hash_data, nullptr);
   free(intlist);
   return(0);
 }

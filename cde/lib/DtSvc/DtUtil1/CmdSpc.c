@@ -58,7 +58,7 @@ _DtCmdSPCAddInputHandler (
 	SbInputCallbackProc proc,
 	void *data)
 {
-   if (cmd_Globals.app_context == NULL)
+   if (cmd_Globals.app_context == nullptr)
       return(XtAddInput(fd, 
 			(XtPointer) XtInputReadMask, 
 			proc, 
@@ -90,7 +90,7 @@ _DtCmdSPCAddExceptionHandler (
 	SbInputCallbackProc proc,
 	void *data)
 {
-   if (cmd_Globals.app_context == NULL)
+   if (cmd_Globals.app_context == nullptr)
       return(XtAddInput(fd, 
 			(XtPointer) XtInputExceptMask, 
 		        proc, 
@@ -117,5 +117,5 @@ void
 _DtCmdLogErrorMessage(
         char *message )
 {
-   _DtSimpleError (DtProgName, DtError, NULL, "%.2000s", message);
+   _DtSimpleError (DtProgName, DtError, nullptr, "%.2000s", message);
 }

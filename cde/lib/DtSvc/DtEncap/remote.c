@@ -105,7 +105,7 @@ SPC_Channel_Ptr open_remote_channel_object(SPC_Channel_Ptr channel,
 
   SPC_Channel_Ptr result;
   int seqno, retval;
-  Wire *tmpwire=NULL;
+  Wire *tmpwire=nullptr;
   int sid;
   
   call_parent_method(channel, open, (channel, iomode, hostname), result);
@@ -114,7 +114,7 @@ SPC_Channel_Ptr open_remote_channel_object(SPC_Channel_Ptr channel,
     return(SPC_ERROR);
   
   channel->cid=0;
-  channel->queued_remote_data=Xe_make_queue(NULL);
+  channel->queued_remote_data=Xe_make_queue(nullptr);
   iomode=channel->IOMode;
 
   if(IS_SPCIO_STDIN(iomode)) {
@@ -150,12 +150,12 @@ SPC_Channel_Ptr open_remote_channel_object(SPC_Channel_Ptr channel,
 
   if ((SPC_client_version_number >= SPC_PROTOCOL_VERSION_CDE_BASE) &&
       (SPC_who_am_i == SPC_I_AM_A_CLIENT)) {
-    channel->wires[STDIN]->master_name = NULL;
-    channel->wires[STDIN]->slave_name = NULL;
-    channel->wires[STDOUT]->master_name = NULL;
-    channel->wires[STDOUT]->slave_name = NULL;
-    channel->wires[STDERR]->master_name = NULL;
-    channel->wires[STDERR]->slave_name = NULL;
+    channel->wires[STDIN]->master_name = nullptr;
+    channel->wires[STDIN]->slave_name = nullptr;
+    channel->wires[STDOUT]->master_name = nullptr;
+    channel->wires[STDOUT]->slave_name = nullptr;
+    channel->wires[STDERR]->master_name = nullptr;
+    channel->wires[STDERR]->slave_name = nullptr;
   }
   else
     SPC_Query_Devices(channel);

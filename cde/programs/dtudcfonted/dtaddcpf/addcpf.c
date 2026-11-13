@@ -123,8 +123,8 @@ extern	int	fal_glyph_to_code(char    *locale,
 
 static struct ptobhead WriteSnf;
 
-static	char	*targ_file = NULL;	/* UDC_file_name */
-static	char	*com = NULL;		/* command_name */
+static	char	*targ_file = nullptr;	/* UDC_file_name */
+static	char	*com = nullptr;		/* command_name */
 static	char	*spacing ;
 static	char	*char_set ;
 static	char	*util_locale ;
@@ -170,17 +170,17 @@ int main(int argc, char *argv[])
 	int 	code_no;
 	char	*codeset = DEFAULT_CODESET;
 
-	if( (util_locale = (char *)getenv( "LANG" )) == NULL ){
+	if( (util_locale = (char *)getenv( "LANG" )) == nullptr ){
 	    util_locale = "C" ;
 	}
-	ReadSnf.in_file = ReadGpf.in_file = WriteSnf.out_file = NULL;
+	ReadSnf.in_file = ReadGpf.in_file = WriteSnf.out_file = nullptr;
 	com = argv[0];
 	COMM_SETDEFAULTSTYLE( style ) ;
 	cbuf = xlfdname = ep = '\0' ;
 
-	gr = NULL ;
+	gr = nullptr ;
 	num_gr = 0 ;
-	spacing = char_set = NULL ;
+	spacing = char_set = nullptr ;
 
 	if (!( bdftopcf = get_cmd_path( getenv( "PATH" ), BDFTOPCF_CMD ))) {
 		bdftopcf = BDFTOPCF;
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 		exit( 1 );
 	}
 
-	if ( ReadSnf.in_file == NULL && xlfdname == NULL ) {
+	if ( ReadSnf.in_file == nullptr && xlfdname == nullptr ) {
 		if ( code_area & SYSTM ) {
                         USAGE1("%s : The GPF output file name cannot be omitted.\n", argv[0] );
 		} else {	/* string of charcter size */
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
 	    }
 	} else {
 	    num_gr = 1 ;
-	    if( (gr = (FalGlyphRegion *)malloc( sizeof(FalGlyphRegion) * num_gr )) == NULL ) {
+	    if( (gr = (FalGlyphRegion *)malloc( sizeof(FalGlyphRegion) * num_gr )) == nullptr ) {
 		USAGE1("%s : malloc error. Terminates abnormally.\n", argv[0]);
 		exit( 1 );
 	    }
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
 	/*
 	 * refuse proportional fonts
 	 */
-	if ( GetUdcFontName( ReadSnf.in_file, NULL, &xlfdname ) ) {
+	if ( GetUdcFontName( ReadSnf.in_file, nullptr, &xlfdname ) ) {
 	    USAGE1("%s : This font cannot get XLFD. Terminates abnormally.\n", argv[0]);
 	    exit( 1 );
 	}
@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
 	GETCHARSETSTR( char_set, xlfdname ) ;
 
 	/* get ReadSnf.in_file */
-	if ((targ_file = GetRealFileName( ReadSnf.in_file )) == NULL){
+	if ((targ_file = GetRealFileName( ReadSnf.in_file )) == nullptr){
                 USAGE2("%s : It was not possible to refer to the substance of the font file. \"%s\"\n", argv[0], ReadSnf.in_file);
 		exit(1);
 	}
@@ -492,10 +492,10 @@ int		init_all)
 	int 	pfd[2], ofd;
 #endif
 
-	if ( r_gpf->in_file == NULL ) {
+	if ( r_gpf->in_file == nullptr ) {
 		r_gpf->input = stdin;
 	} else {
-		if ( ( r_gpf->input = fopen(r_gpf->in_file, "r")) == NULL ) {
+		if ( ( r_gpf->input = fopen(r_gpf->in_file, "r")) == nullptr ) {
 			return	GPF_OPEN_IN;
 		}
 	}
@@ -530,7 +530,7 @@ int		init_all)
 		break;
 	}
 	close( fd[1] );
-	if ( ( r_snf->input = fdopen( fd[0], "r" ) ) == NULL ) {
+	if ( ( r_snf->input = fdopen( fd[0], "r" ) ) == nullptr ) {
 		return	FDOPEN_ERROR;
 	}
 
@@ -544,7 +544,7 @@ int		init_all)
 	} else {
 		COMM_SNF_POPEN( permission, w_snf->snf_file, w_snf->out_file, ep, buf, command ) ;
 	}
-	if ((w_snf->output = popen(command, "w")) == NULL) {
+	if ((w_snf->output = popen(command, "w")) == nullptr) {
 		return(POPEN_ERROR);
 	}
 #else	/* ROOT_ONLY */
@@ -583,7 +583,7 @@ int		init_all)
 		break;
 	}
 	close( pfd[0] );
-	if ( ( w_snf->output = fdopen( pfd[1], "w" ) ) == NULL ) {
+	if ( ( w_snf->output = fdopen( pfd[1], "w" ) ) == nullptr ) {
 		return	FDOPEN_ERROR;
 	}
 #endif	/* ROOT_ONLY */
@@ -606,11 +606,11 @@ char   	      	*buf)
 
 	nchar = r_snf->num_chars + r_gpf->num_chars;
 
-	if ( ( r_snf->code = (int *)malloc( sizeof(int) * nchar ) ) == NULL ) {
+	if ( ( r_snf->code = (int *)malloc( sizeof(int) * nchar ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
-	if ( ( r_snf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == NULL ) {
+	if ( ( r_snf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
@@ -636,11 +636,11 @@ FalGlyphRegion	*gr)
 
 	nchar = r_snf->num_chars + r_gpf->num_chars;
 
-	if ( ( r_snf->code = (int *)malloc( sizeof(int) * nchar ) ) == NULL ) {
+	if ( ( r_snf->code = (int *)malloc( sizeof(int) * nchar ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
-	if ( ( r_snf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == NULL ) {
+	if ( ( r_snf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
@@ -663,10 +663,10 @@ char	*buf)
 
 	r_snf->num_chars = 0;
 
-	if ( ( r_snf->code = (int *)malloc( sizeof(int) * r_gpf->num_chars ) ) == NULL ) {
+	if ( ( r_snf->code = (int *)malloc( sizeof(int) * r_gpf->num_chars ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
-	if ( ( r_snf->ptn = (char **)malloc( sizeof(char *) * r_gpf->num_chars ) ) == NULL ) {
+	if ( ( r_snf->ptn = (char **)malloc( sizeof(char *) * r_gpf->num_chars ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 	return	0;
@@ -679,7 +679,7 @@ readBdfHeaderAndPut(struct btophead *r_snf, struct ptobhead *w_snf, char *buf)
 	int 	getstat = 0;
 
 	while ( 1 ) {
-		if ( fgets( buf, BUFSIZE, r_snf->input ) == NULL ) {
+		if ( fgets( buf, BUFSIZE, r_snf->input ) == nullptr ) {
 			return	BDF_INVAL;
 		}
 		p = buf;
@@ -753,7 +753,7 @@ int		code_no)
 
 		msize = ( r_gpf->p_width + 7 ) / 8 * r_gpf->p_height;
 
-		if ( ( ptn = (char *)malloc( msize ) ) == NULL ) {
+		if ( ( ptn = (char *)malloc( msize ) ) == nullptr ) {
 			return	MALLOC_ERROR;
 		}
 		r_gpf->ptn = &ptn;
@@ -780,7 +780,7 @@ int		code_no)
 		) {
 		    DispCodePoint( com, char_set, code, dspcode, code_no, util_locale ) ;
 		    USAGE2("%s : The font of a specified code cannot be added/changed \"0x%x\".\n", prog_name, dspcode );
-		    if( fgets(buf, BUFSIZE, r_gpf->input) == NULL){
+		    if( fgets(buf, BUFSIZE, r_gpf->input) == nullptr){
 			return -1;
 		    } else {
 		        continue;
@@ -792,7 +792,7 @@ int		code_no)
 			if ( !modify ) {
 			    DispCodePoint( com, char_set, code, dspcode, code_no, util_locale ) ;
 			    USAGE2("%s : The font has already been registered in a specified code. \"0x%x\"\n", prog_name, dspcode );
-			    if(fgets( buf, BUFSIZE, r_gpf->input ) == NULL){
+			    if(fgets( buf, BUFSIZE, r_gpf->input ) == nullptr){
 				return -1;
 			    } else {
 			        break;
@@ -869,7 +869,7 @@ int 	ix)
 	mwidth = (r_snf->bdf_width + 7) / 8;
 	msize = mwidth * r_snf->bdf_height;
 
-	if ( ( r_snf->ptn[ix] = (char *)malloc( msize ) ) == NULL ) {
+	if ( ( r_snf->ptn[ix] = (char *)malloc( msize ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
@@ -922,7 +922,7 @@ int 	er_no,
 char	*prog_name)
 {
 	ErrMsgTable_AndExit( er_no, ptob_in->in_file, ptob_out->out_file,
-	    btop->in_file,    NULL,
+	    btop->in_file,    nullptr,
 	    ptob_in->bdf_file,
 	    prog_name
 	    );
@@ -985,7 +985,7 @@ FalGlyphRegion	*gr)
 	}
 	head->code[num_char] = code;
 	if ((ptn = head->ptn[num_char++] =
-	    (char *)malloc(bsize)) == NULL) {
+	    (char *)malloc(bsize)) == nullptr) {
 	    return(MALLOC_ERROR);
 	}
 	if ((rtn = GetBdfPtn(head, buf, ptn, mwidth, bsize)) != 0) {

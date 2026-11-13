@@ -69,9 +69,9 @@ get_userscontext()
 {
 	static char *userscontext;
 
-	if (userscontext == NULL) {
+	if (userscontext == nullptr) {
 		if ((userscontext = cm_strdup(
-			(char *)getenv("USERSCONTEXT"))) == NULL)
+			(char *)getenv("USERSCONTEXT"))) == nullptr)
 			userscontext = USERSCONTEXT;
 	}
 	return(userscontext);
@@ -87,7 +87,7 @@ get_principal(char *table, nis_object *ent, void *udata)
 
 	if (ec[PRINCIPALCOLNUM].ec_value.ec_value_len)
 		*principal = cm_strdup(ec[PRINCIPALCOLNUM].ec_value.ec_value_val);
-	else	*principal = NULL;
+	else	*principal = nullptr;
 	return(1);
 }
 
@@ -104,7 +104,7 @@ cm_get_nis_location(char *name, char *calname, char **host)
 	int ncol;
 	nis_object *nis_obj;
 
-	*host = NULL;
+	*host = nullptr;
 	user = get_head(name, '@');
 	domain = get_tail(name, '@');
 	sprintf(cmtbl, "%s.%s.%s", USERMAP, user, get_userscontext());
@@ -128,19 +128,19 @@ cm_get_nis_location(char *name, char *calname, char **host)
 
 	if (eres->status == NIS_SUCCESS || eres->status == NIS_CBRESULTS) {
 		nis_obj = NIS_RES_OBJECT(eres);
-		if (nis_obj == NULL)  
+		if (nis_obj == nullptr)  
 			res = l_nis_error;
 		else {
 			ec = nis_obj->EN_data.en_cols.en_cols_val;
 			ncol = nis_obj->EN_data.en_cols.en_cols_len;
-			if (ncol >= NUMTBLCOLS && ec != NULL &&
+			if (ncol >= NUMTBLCOLS && ec != nullptr &&
 				ec[LOCATIONCOLNUM].ec_value.ec_value_len) {
 				*host = cm_strdup(
 					ec[LOCATIONCOLNUM].ec_value.ec_value_val);
 				res = l_ok;
 			}
 			else {	
-				*host = NULL;
+				*host = nullptr;
 				res = l_nis_error;
 			}
 		}
@@ -162,11 +162,11 @@ netname2principal(char *netname)
 	char indexname[NIS_MAXNAMELEN];
 	char *domain;
 	u_long tflag = EXPAND_NAME;
-	char *principal = NULL;
+	char *principal = nullptr;
 
 	domain = get_tail(netname, '@');
-	if (domain == NULL)
-		return(NULL);
+	if (domain == nullptr)
+		return(nullptr);
 
 	sprintf(indexname, "[%s=%s],%s.%s", AUTHNAMECOLNAME, netname,
 			CREDDIR, domain);
@@ -186,11 +186,11 @@ test_cm_get_target(char *name, char **name2)
 	char *tail;
 	Boolean domain = False;
 
-	*name2 = NULL;
+	*name2 = nullptr;
 
 	f = fopen("/home2/curry/myds/src/cm2/testfile", "r");
 	tail = get_tail(name, '@');
-	if (tail != NULL && strcasecmp(tail, "eng") == 0) {
+	if (tail != nullptr && strcasecmp(tail, "eng") == 0) {
 		domain = True;
 		free(tail);
 	}
@@ -305,14 +305,14 @@ cm_set_nis_location(char *name, char *calname, char *loc)
 
 	if (eres->status == NIS_SUCCESS || eres->status == NIS_CBRESULTS) {
 		nis_obj = NIS_RES_OBJECT(eres);
-		if (nis_obj == NULL) 
+		if (nis_obj == nullptr) 
 			res = l_nis_error;
 		else {
 			ncol = nis_obj->EN_data.en_cols.en_cols_len;
 			ec = nis_obj->EN_data.en_cols.en_cols_val;
-			if (ncol >= NUMTBLCOLS && ec != NULL &&
+			if (ncol >= NUMTBLCOLS && ec != nullptr &&
 				ec[LOCATIONCOLNUM].ec_value.ec_value_len) {
-				new_obj = nis_clone_object(nis_obj, NULL);
+				new_obj = nis_clone_object(nis_obj, nullptr);
 				ec = new_obj->EN_data.en_cols.en_cols_val;
 				ec[LOCATIONCOLNUM].ec_flags = EN_MODIFIED;
 				free(ec[LOCATIONCOLNUM].ec_value.ec_value_val);
@@ -366,9 +366,9 @@ cm_get_target(char *name, char **target)
         int status=0;
         char *host;
 
-        *target = NULL;
+        *target = nullptr;
  
-        if (name == NULL)
+        if (name == nullptr)
                 return(l_other);
 
 	test_cm_get_target(name, target);
@@ -398,7 +398,7 @@ cm_get_target(char *name, char **target)
                         free(domain);
                         free(host);
                 } else  {
-			*target = NULL;
+			*target = nullptr;
 			status  = l_nis_error;	
 		}
         }
@@ -408,7 +408,7 @@ cm_get_target(char *name, char **target)
                  * name = user@host[.domain]
                  * If host is not specified, default to local host.
                  */
-                *target = NULL;
+                *target = nullptr;
 	}
         return(status);
 }
@@ -420,9 +420,9 @@ cm_get_yptarget(char *name, char **name2)
 {
 	char *domain;
 	int outlen, inlen, status=0;
-	char *save_name=NULL, *tmp=NULL, *tmp2=NULL, *ptr;
+	char *save_name=nullptr, *tmp=nullptr, *tmp2=nullptr, *ptr;
 
-	*name2 = NULL;
+	*name2 = nullptr;
 	domain = cm_get_local_domain();
 	inlen = cm_strlen(name)+1;
 	status = yp_match(domain, MAPNAME, name, inlen, &tmp, &outlen);
@@ -433,10 +433,10 @@ cm_get_yptarget(char *name, char **name2)
 	while (status == YP_SUCCESS) {
 		save_name = tmp;
 		/* get rid of beginning white space */
-		while (tmp != NULL && *tmp == ' ') tmp++;
+		while (tmp != nullptr && *tmp == ' ') tmp++;
 		/* get rid of trailing white space */
 		for (ptr = tmp+cm_strlen(tmp)-1;
-			 ptr != NULL && *ptr == ' '; *ptr = 0, ptr--);
+			 ptr != nullptr && *ptr == ' '; *ptr = 0, ptr--);
 		inlen = cm_strlen(tmp)+1;
 		status = yp_match(domain, MAPNAME, tmp, inlen, &tmp2, &outlen);
 		/* no more maps so return value */

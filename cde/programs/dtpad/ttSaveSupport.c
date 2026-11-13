@@ -104,7 +104,7 @@ TTSaveContractCB(
 	 * msg id matching the originating media msg id supplied as the
 	 * 'messageID' (1st) argument of the TTDT_SAVE msg */
 	if (messageID = tt_message_arg_val(m, 0)) {
-	    for (pPad = pPadList; pPad != (Editor *)NULL; pPad = pPad->pNextPad) {
+	    for (pPad = pPadList; pPad != (Editor *)nullptr; pPad = pPad->pNextPad) {
 		if (pPad->inUse == True && pPad->ttEditReq.msg_id &&
 		  strcmp(pPad->ttEditReq.msg_id, messageID) == 0) {
 		    pPad->ttSaveReq.contract = m;	/* process Save msg */
@@ -117,13 +117,13 @@ TTSaveContractCB(
 	    /* no Edit window matching the messageID */
 	    tttk_message_fail(m,
 			TT_DESKTOP_ECANCELED,		/* status */
-			(char *) NULL,			/* status str */
+			(char *) nullptr,			/* status str */
 			1);				/* destroy request */
 
 	} else {	/* no messageID - which is required */
 	    tttk_message_fail(m,
 			TT_DESKTOP_ECANCELED,		/* status */
-			(char *) NULL,			/* status str */
+			(char *) nullptr,			/* status str */
 			1);				/* destroy request */
 	}
 
@@ -406,10 +406,10 @@ TTresetSaveArgs(
 {
     if (!pPad->ttSaveReq.contract)
 	return;
-    pPad->ttSaveReq.contract = NULL;
-    if (pPad->ttSaveReq.messageID != (char *) NULL) {
+    pPad->ttSaveReq.contract = nullptr;
+    if (pPad->ttSaveReq.messageID != (char *) nullptr) {
 	XtFree(pPad->ttSaveReq.messageID);
-	pPad->ttSaveReq.messageID = (char *) NULL;
+	pPad->ttSaveReq.messageID = (char *) nullptr;
     }
 }
 
@@ -424,7 +424,7 @@ TTfailPendingSave(
     if (pPad->ttSaveReq.contract) {
 	tttk_message_fail(pPad->ttSaveReq.contract,	/* original Save req */
 			TT_DESKTOP_ECANCELED,		/* status */
-			(char *) NULL,			/* status string */
+			(char *) nullptr,			/* status string */
 			1);				/* destroy request */
 	TTresetSaveArgs(pPad);
     }

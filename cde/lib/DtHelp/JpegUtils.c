@@ -314,7 +314,7 @@ static void jpeg_stream_src (
 				        INPUT_BUF_SIZE * sizeof(JOCTET));
         src->input_buf_size = INPUT_BUF_SIZE;
         src->pub.bytes_in_buffer = 0;    /* forces fill_input_buffer call */
-        src->pub.next_input_byte = NULL; /* on first read                 */
+        src->pub.next_input_byte = nullptr; /* on first read                 */
         src->start_of_file = TRUE;
     }
     else /* _DtGrBUFFER */
@@ -472,18 +472,18 @@ enum _DtGrLoadStatus jpeg_to_ximage (
 {
     struct jpeg_decompress_struct cinfo;
     struct my_error_mgr jerr;
-    djpeg_dest_ptr dest_mgr = NULL;
+    djpeg_dest_ptr dest_mgr = nullptr;
     ximg_dest_ptr dest;
     int i, num_scanlines, nullCount, ximWidth;
-    unsigned char *ximData = NULL;
+    unsigned char *ximData = nullptr;
     Display *display = DisplayOfScreen(screen);
     int nplanes = DisplayPlanes(display,XScreenNumberOfScreen(screen));
-    XColor *colors = NULL;
+    XColor *colors = nullptr;
 
     /*
     ** Initialize the return values 
     */
-    *ximage = NULL;
+    *ximage = nullptr;
     *xres = *ncolors = *in_out_width = *in_out_height = 0;
 
     /*
@@ -502,9 +502,9 @@ enum _DtGrLoadStatus jpeg_to_ximage (
         /* If we get here, the JPEG code has signaled an error.  We need to
         ** free memory, clean up the JPEG object, and return a failure code.
         */
-        if (*ximage != NULL)
+        if (*ximage != nullptr)
             XDestroyImage (*ximage);
-        if (colors != NULL)
+        if (colors != nullptr)
             free (colors);
         jpeg_destroy_decompress(&cinfo);
         return (_DtGrCONVERT_FAILURE);

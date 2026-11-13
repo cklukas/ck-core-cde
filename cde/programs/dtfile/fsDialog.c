@@ -206,7 +206,7 @@ configFileOK(void)
       msg1 = GETMESSAGE(21, 22, "Cannot open file manager configuration file: ");
       msg2 = strerror(errno);
       snprintf(g_errorMessage, sizeof(g_errorMessage), "%s%s\n   %s\n",msg1,fname,msg2);
-      _DtSimpleError (application_name, DtError, NULL, g_errorMessage, NULL);
+      _DtSimpleError (application_name, DtError, nullptr, g_errorMessage, nullptr);
       return FALSE;
    }
 
@@ -319,12 +319,12 @@ readConfigFile(const String      fsType,
 
    fname = configFileName();
    fptr = fopen(fname,"r");
-   if (fptr == NULL)
+   if (fptr == nullptr)
    {
       msg1 = GETMESSAGE(21, 22, "Cannot open file manager configuration file: ");
       msg2 = strerror(errno);
       snprintf(g_errorMessage, sizeof(g_errorMessage), "%s%s\n   %s\n",msg1,fname,msg2);
-      _DtSimpleError (application_name, DtError, NULL, g_errorMessage, NULL);
+      _DtSimpleError (application_name, DtError, nullptr, g_errorMessage, nullptr);
       return;
    }
 
@@ -340,7 +340,7 @@ readConfigFile(const String      fsType,
       if (strlen(fsDialogData->buttonLabel) != 0)
       {
          msg1 = XtNewString(GETMESSAGE(21, 29, "No value was provided for the fsDialog field in dtfile's configuration file"));
-         _DtSimpleError (application_name, DtError, NULL, msg1, NULL);
+         _DtSimpleError (application_name, DtError, nullptr, msg1, nullptr);
          XtFree(msg1);
       }
    }
@@ -378,14 +378,14 @@ configFileName(void)
       switch (i)
       {
          case 0: /* file name $DTFSCONFIG */
-            if ( (s=getenv("DTFSCONFIG")) != NULL)  	  /* a convenience for debugging */
+            if ( (s=getenv("DTFSCONFIG")) != nullptr)  	  /* a convenience for debugging */
                strncpy(fn,s,MAX_PATH);
             else  /* DTFSCONFIG not defined */
                continue;
             break;
 
          case 1: /* $HOME/dtfile.config */
-            if ( (s=getenv("HOME")) != NULL)
+            if ( (s=getenv("HOME")) != nullptr)
             {
                strncpy(fn,s,MAX_PATH);
                strcat (fn,"/");
@@ -404,7 +404,7 @@ configFileName(void)
          case 3: /* DEFCONFIGFILEDIR, e.g. /usr/dt/config/C/dtfile.config */
             strncpy(fn,DEFCONFIGFILEDIR,MAX_PATH);
             strcat (fn,"/");
-            if ( (s=getenv("LANG")) != NULL)
+            if ( (s=getenv("LANG")) != nullptr)
             {
                strncat(fn,s,MAX_PATH-strlen(fn)-1);
                strcat (fn,"/");
@@ -482,8 +482,8 @@ readFSID (      FILE    * fptr,
       *lineOut = '\0';
 
       pform = strtok(line,":");
-      type  = strtok(NULL,"=");
-      id    = strtok(NULL," ");
+      type  = strtok(nullptr,"=");
+      id    = strtok(nullptr," ");
       if (stricmp(pform,platform)==0 && stricmp(type,fsType)==0)
          strncpy(fsID,id,MAXLINELENGTH);
    }
@@ -545,11 +545,11 @@ readDialogData(      FILE      * fptr,
       {
          /* a section matching the input fsID has been found */
          *dialogAvailable = TRUE;
-         token1 = strtok(NULL," =");
+         token1 = strtok(nullptr," =");
          s = strchr(token1,'\0') + 1;   /* first character after token1 */
          token2 = &s[strspn(s," =")];   /* first non-blank, non-= after token1 */
          /* loop to get data for fields in fsDialogData */
-         while(strchr(token1,':') == NULL  && lineLength != EOF)
+         while(strchr(token1,':') == nullptr  && lineLength != EOF)
          {
             if (stricmp(token1,"buttonlabel") == 0)
                strncpy(fsDialogData->buttonLabel,token2,MAXLINELENGTH);
@@ -565,7 +565,7 @@ readDialogData(      FILE      * fptr,
             {
                msg1 = GETMESSAGE(21, 24, "Unknown field label in file manager configuration file: ");
                sprintf(g_errorMessage,"%s\"%s\"\n",msg1,token1);
-               _DtSimpleError (application_name, DtWarning, NULL, g_errorMessage, NULL);
+               _DtSimpleError (application_name, DtWarning, nullptr, g_errorMessage, nullptr);
             }
             lineLength = readLine(fptr,line);
             if (lineLength != EOF)
@@ -587,7 +587,7 @@ readDialogData(      FILE      * fptr,
    {
       msg1 = GETMESSAGE(21, 25, "No information found in file manager configuration file for file-system identifier");
       sprintf(g_errorMessage,"%s \"%s\"\n",msg1,fsID);
-      _DtSimpleError (application_name, DtError, NULL, g_errorMessage, NULL);
+      _DtSimpleError (application_name, DtError, nullptr, g_errorMessage, nullptr);
    }
 
 }  /* end readDialogData */
@@ -619,7 +619,7 @@ readLine(FILE  * fptr, String  line)
 
    while (TRUE)
    {
-      if ( fgets(myLine,MAXLINELENGTH,fptr) == NULL)
+      if ( fgets(myLine,MAXLINELENGTH,fptr) == nullptr)
          return EOF;
       else
       {
@@ -632,7 +632,7 @@ readLine(FILE  * fptr, String  line)
                   s[i] = ' ';
 
             /* change any imbedded "\n" to space followed by newline */
-            while ( (t=strstr(s,"\\n")) != NULL )
+            while ( (t=strstr(s,"\\n")) != nullptr )
             {
                *t     = ' ';      /* space */
                *(t+1) = '\n';     /* new line */

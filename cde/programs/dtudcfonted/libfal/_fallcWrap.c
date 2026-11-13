@@ -105,7 +105,7 @@ falSetLocaleModifiers(const char   *modifiers)
     char *user_mods;
 
     if (!lcd)
-	return (char *) NULL;
+	return (char *) nullptr;
     if (!modifiers)
 	return lcd->core->modifiers;
     user_mods = getenv("XMODIFIERS");
@@ -145,7 +145,7 @@ Bool _fallcValidModSyntax(char *mods, char **valid_mods)
     return !mods || !*mods;
 }
 
-static const char *im_valid[] = {"im", (char *)NULL};
+static const char *im_valid[] = {"im", (char *)nullptr};
 
 /*ARGSUSED*/
 char *
@@ -155,9 +155,9 @@ _fallcDefaultMapModifiers (XLCd lcd, char *user_mods, char *prog_mods)
     char *mods;
 
     if (!_fallcValidModSyntax(prog_mods, (char **)im_valid))
-	return (char *)NULL;
+	return (char *)nullptr;
     if (!_fallcValidModSyntax(user_mods, (char **)im_valid))
-	return (char *)NULL;
+	return (char *)nullptr;
     i = strlen(prog_mods) + 1;
     if (user_mods)
 	i += strlen(user_mods);
@@ -176,21 +176,21 @@ typedef struct _XLCdListRec {
     int ref_count;
 } XLCdListRec, *XLCdList;
 
-static XLCdList lcd_list = NULL;
+static XLCdList lcd_list = nullptr;
 
 typedef struct _XlcLoaderListRec {
     struct _XlcLoaderListRec *next;
     XLCdLoadProc proc;
 } XlcLoaderListRec, *XlcLoaderList;
 
-static XlcLoaderList loader_list = NULL;
+static XlcLoaderList loader_list = nullptr;
 
 void
 _fallcRemoveLoader(XLCdLoadProc proc)
 {
     XlcLoaderList loader, prev;
 
-    if (loader_list == NULL)
+    if (loader_list == nullptr)
 	return;
 
     prev = loader = loader_list;
@@ -220,12 +220,12 @@ _fallcAddLoader(XLCdLoadProc proc, XlcPosition position)
     _fallcRemoveLoader(proc);		/* remove old loader, if exist */
 
     loader = (XlcLoaderList) Xmalloc(sizeof(XlcLoaderListRec));
-    if (loader == NULL)
+    if (loader == nullptr)
 	return False;
 
     loader->proc = proc;
 
-    if (loader_list == NULL)
+    if (loader_list == nullptr)
 	position = XlcHead;
 
     if (position == XlcHead) {
@@ -236,7 +236,7 @@ _fallcAddLoader(XLCdLoadProc proc, XlcPosition position)
 	while (last->next)
 	    last = last->next;
 
-	loader->next = NULL;
+	loader->next = nullptr;
 	last->next = loader;
     }
 
@@ -254,8 +254,8 @@ _falOpenLC(char *name)
     char *_fallcMapOSLocaleName(char *osname, char *siname);
 #endif
 
-    if (name == NULL) {
-	name = setlocale (LC_CTYPE, (char *)NULL);
+    if (name == nullptr) {
+	name = setlocale (LC_CTYPE, (char *)nullptr);
 #if !defined(X_NOT_STDC_ENV) && !defined(X_LOCALE)
 	name = _fallcMapOSLocaleName (name, siname);
 #endif
@@ -324,9 +324,9 @@ XLCd
 _fallcCurrentLC(void)
 {
     XLCd lcd;
-    static XLCd last_lcd = NULL;
+    static XLCd last_lcd = nullptr;
 
-    lcd = _falOpenLC((char *) NULL);
+    lcd = _falOpenLC((char *) nullptr);
 
     if (last_lcd)
 	_falCloseLC(last_lcd);
@@ -339,7 +339,7 @@ _fallcCurrentLC(void)
 XrmMethods
 _falrmInitParseInfo(XPointer *state)
 {
-    XLCd lcd = _falOpenLC((char *) NULL);
+    XLCd lcd = _falOpenLC((char *) nullptr);
 
     if (lcd == (XLCd) NULL)
 	return (XrmMethods) NULL;
@@ -356,7 +356,7 @@ falmbTextPropertyToTextList(
 {
     XLCd lcd = _fallcCurrentLC();
 
-    if (lcd == NULL)
+    if (lcd == nullptr)
 	return XLocaleNotSupported;
 
     return (*lcd->methods->mb_text_prop_to_list)(lcd, dpy, text_prop, list_ret,
@@ -372,7 +372,7 @@ falwcTextPropertyToTextList(
 {
     XLCd lcd = _fallcCurrentLC();
 
-    if (lcd == NULL)
+    if (lcd == nullptr)
 	return XLocaleNotSupported;
 
     return (*lcd->methods->wc_text_prop_to_list)(lcd, dpy, text_prop, list_ret,
@@ -389,7 +389,7 @@ falmbTextListToTextProperty(
 {
     XLCd lcd = _fallcCurrentLC();
 
-    if (lcd == NULL)
+    if (lcd == nullptr)
 	return XLocaleNotSupported;
 
     return (*lcd->methods->mb_text_list_to_prop)(lcd, dpy, list, count, style,
@@ -406,7 +406,7 @@ falwcTextListToTextProperty(
 {
     XLCd lcd = _fallcCurrentLC();
 
-    if (lcd == NULL)
+    if (lcd == nullptr)
 	return XLocaleNotSupported;
 
     return (*lcd->methods->wc_text_list_to_prop)(lcd, dpy, list, count, style,
@@ -418,7 +418,7 @@ falwcFreeStringList(wchar_t **list)
 {
     XLCd lcd = _fallcCurrentLC();
 
-    if (lcd == NULL)
+    if (lcd == nullptr)
 	return;
 
     (*lcd->methods->wc_free_string_list)(lcd, list);
@@ -429,8 +429,8 @@ falDefaultString(void)
 {
     XLCd lcd = _fallcCurrentLC();
 
-    if (lcd == NULL)
-	return (char *) NULL;
+    if (lcd == nullptr)
+	return (char *) nullptr;
 
     return (*lcd->methods->default_string)(lcd);
 }
@@ -533,7 +533,7 @@ _fallcGetValues(
 	    return args->name;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 char *
@@ -565,5 +565,5 @@ _fallcSetValues(
 	    return args->name;
     }
 
-    return NULL;
+    return nullptr;
 }

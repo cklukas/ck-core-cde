@@ -160,7 +160,7 @@ count_week_pages (Calendar *c, int lines_per_page, Tick start_date)
                 stop = (time_t) next_ndays(start_date, 1) - 1;
 		setup_range(&range_attrs, &ops, &j, start, stop,
 			    CSA_TYPE_EVENT, 0, B_FALSE, c->general->version);
-		csa_list_entries(c->cal_handle, j, range_attrs, ops, &a_total, &list, NULL);
+		csa_list_entries(c->cal_handle, j, range_attrs, ops, &a_total, &list, nullptr);
 		free_range(&range_attrs, &ops, j);
 
                 num_appts = count_multi_appts(list, a_total, c);
@@ -202,11 +202,11 @@ print_week (Calendar *c,
 	static int total_pages;
  
         static char *days[] = {
-                (char *)NULL, (char *)NULL, (char *)NULL,
-                (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL
+                (char *)nullptr, (char *)nullptr, (char *)nullptr,
+                (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr
         };
 
-	if (days[0] == (char *)NULL)
+	if (days[0] == (char *)nullptr)
 	{
 	  days[0] = XtNewString(CATGETS(c->DT_catd, 1, 596, "Monday %d"));
 	  days[1] = XtNewString(CATGETS(c->DT_catd, 1, 597, "Tuesday %d"));
@@ -254,7 +254,7 @@ print_week (Calendar *c,
 	  setup_range(&range_attrs, &ops, &j, start, stop,
 		      CSA_TYPE_EVENT, 0, B_FALSE, c->general->version);
 	  csa_list_entries(c->cal_handle, j, range_attrs,
-			   ops, &a_total, &list, NULL);
+			   ops, &a_total, &list, nullptr);
 	  free_range(&range_attrs, &ops, j);
 
 	  num_appts = count_multi_appts(list, a_total, c);
@@ -296,7 +296,7 @@ print_week_range(Calendar * c, Tick start_tick, Tick end_tick)
         int 		num_weeks;
         Boolean 	done = False, first = True;
         int 		num_page = 1;
-	void *xp = (void *)NULL;
+	void *xp = (void *)nullptr;
 
         /* get number of weeks needed to print */
 
@@ -309,7 +309,7 @@ print_week_range(Calendar * c, Tick start_tick, Tick end_tick)
 	if (!timeok(first_date))
 	  first_date = get_bot();
 
-	if ((xp = x_open_file(c)) == (void *)NULL)
+	if ((xp = x_open_file(c)) == (void *)nullptr)
 	  return;
 
         for (; num_weeks > 0; num_weeks--) {
@@ -341,7 +341,7 @@ count_multi_appts(CSA_entry_handle *list, int num_entries, Calendar *c)
 			      CSA_ENTRY_ATTR_CLASSIFICATION_I,
 			      CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
 			      CSA_ENTRY_ATTR_SUMMARY_I,
-			      NULL);
+			      nullptr);
   for (i = 0; i < num_entries; i++) {
 
     stat = query_appt_struct(c->cal_handle, list[i], appt);
@@ -364,7 +364,7 @@ count_multi_appts(CSA_entry_handle *list, int num_entries, Calendar *c)
       count++;
     }
     l_ptr = lines = text_to_lines(appt->what->value->item.string_value, 10);
-    while (lines != NULL) {
+    while (lines != nullptr) {
       count++;
       lines = lines->next;
     }
@@ -389,7 +389,7 @@ week_button (Widget widget, XtPointer data, XtPointer cbs)
 		case dayGlance:
 			c->view->glance = weekGlance;
 			cleanup_after_dayview(c);
-        		paint_weekview(c, NULL);
+        		paint_weekview(c, nullptr);
 			break;
 		case yearGlance:
 			c->view->glance = weekGlance;
@@ -490,12 +490,12 @@ deallocator(Calendar *c)
 	free(w->current_selection);
 
 	/* allocated in init_week */
-        if (w->time_array != NULL)
+        if (w->time_array != nullptr)
                 free(w->time_array);
 
 	/* structure holding week information */
 	free(w);
-	c->view->week_info = NULL;
+	c->view->week_info = nullptr;
 }
 
 /*
@@ -544,7 +544,7 @@ init_week(Calendar *c, Boundary *boundary)
 	XtVaGetValues(c->canvas, 
 			XmNwidth, &w->canvas_w, 
 			XmNheight, &w->canvas_h, 
-			NULL);
+			nullptr);
 
         w->font = c->fonts->labelfont;
         w->small_font = c->fonts->viewfont;
@@ -602,7 +602,7 @@ init_week(Calendar *c, Boundary *boundary)
         }
  
         w->segs_in_array = BOX_SEG * num_hrs * 7;
-        if (w->time_array != NULL)
+        if (w->time_array != nullptr)
                 free(w->time_array);
         w->time_array = (char*)ckalloc(w->segs_in_array);
  
@@ -621,14 +621,14 @@ paint_weekview(
         c->view->glance = weekGlance;
 
 	/* allocate weekview storage if it's never been used before */
-	if (c->view->week_info == NULL) {
+	if (c->view->week_info == nullptr) {
 		allocator(c);
 		resize_weekview(c, &boundary);
 	} else 
         	init_week(c, &boundary);
 
         draw_week(c, rect, boundary);
-        calendar_select(c, weekdaySelect, NULL);
+        calendar_select(c, weekdaySelect, nullptr);
 }
 
 static void
@@ -700,7 +700,7 @@ chart_draw_appts(Week *w, int start, int end)
         int col_remainder, boxseg_h;
 	Colormap cms;
 
-        XtVaGetValues(c->canvas, XmNcolormap, &cms, NULL);
+        XtVaGetValues(c->canvas, XmNcolormap, &cms, nullptr);
         h = boxseg_h = (double)w->chart_hour_height / (double)BOX_SEG;
         segs_in_col = (w->segs_in_array / 7);
         /* find starting segment in column */
@@ -799,7 +799,7 @@ resize_weekview(
 	Week 		*w = (Week *)c->view->week_info;
 
 	/* allocate weekview storage if it's never been used before */
-	if (c->view->week_info == NULL) {
+	if (c->view->week_info == nullptr) {
 		allocator(c);
 		w = (Week *)c->view->week_info;
 	}
@@ -821,7 +821,7 @@ resize_weekview(
 				XmNy,		y + 1,
 				XmNwidth,	w->day_width - 3,
 				XmNheight,	w->label_height - 2,
-				NULL);
+				nullptr);
                 x += w->day_width;
         }
 }
@@ -838,7 +838,7 @@ draw_week(Calendar *c, XRectangle *rect, Boundary boundary)
         char            **day_names;
         char            label[80];
 	char		buf[MAXNAMELEN];
-	char		*footer_message = NULL;
+	char		*footer_message = nullptr;
         int             start_ind, end_ind;
         int             today_dom, day_om;
         new_XContext        *xc;
@@ -864,11 +864,11 @@ draw_week(Calendar *c, XRectangle *rect, Boundary boundary)
        	start = (time_t) lowerbound(start_date);
        	stop = (time_t) next_ndays(start, 7) - 1;
 
-        if (c->paint_cache == NULL) {
+        if (c->paint_cache == nullptr) {
 		setup_range(&range_attrs, &ops, &i, start, stop, CSA_TYPE_EVENT,
 	    		0, B_FALSE, c->general->version);
 		csa_list_entries(c->cal_handle, i, range_attrs, ops, 
-				 &a_total, &list, NULL);
+				 &a_total, &list, nullptr);
 		free_range(&range_attrs, &ops, i);
                 allocate_paint_cache(list, a_total, &c->paint_cache);
                 c->paint_cache_size = a_total;
@@ -961,7 +961,7 @@ draw_week(Calendar *c, XRectangle *rect, Boundary boundary)
 				footer_message = buf;
 			}
 			else
-				footer_message = NULL;
+				footer_message = nullptr;
 		}
 		else if (boundary == lower) {
 			/* skip days before Jan 1, 1970 */
@@ -983,7 +983,7 @@ draw_week(Calendar *c, XRectangle *rect, Boundary boundary)
 		}
                 x += w->day_width;
         }
-        if (rect != NULL) {
+        if (rect != nullptr) {
 		CalFontExtents(w->small_bold_font, &boldfontextents);
 
                 chartrect.x = w->x;
@@ -993,7 +993,7 @@ draw_week(Calendar *c, XRectangle *rect, Boundary boundary)
                 chartrect.height = w->chart_height + 2*w->label_height;
 	}
 
-       if (rect == NULL || myrect_intersectsrect(rect,  &chartrect)) {
+       if (rect == nullptr || myrect_intersectsrect(rect,  &chartrect)) {
 		for (i = 0; i < c->paint_cache_size; i++) {
 			start_tick = (c->paint_cache)[i].start_time;
 			end_tick = (c->paint_cache)[i].end_time;
@@ -1002,7 +1002,7 @@ draw_week(Calendar *c, XRectangle *rect, Boundary boundary)
                                 &start_ind, &end_ind, True);
 		}
                 chart_draw_appts(w, 0, w->segs_in_array);
-                draw_chart(c, w, NULL);
+                draw_chart(c, w, nullptr);
         }
 
 	/* do not repaint the footer message in a damage display.  
@@ -1025,7 +1025,7 @@ format_entry(Paint_cache *cache_entry, char *buf1, char *buf2,
         struct tm *tm;
 	_Xltimeparams localtime_buf;
 
-        if (cache_entry == NULL || cache_entry->summary == NULL) return;
+        if (cache_entry == nullptr || cache_entry->summary == nullptr) return;
 
 	tick = cache_entry->start_time;
 	end_tick = cache_entry->end_time;
@@ -1041,7 +1041,7 @@ format_entry(Paint_cache *cache_entry, char *buf1, char *buf2,
  
         if (!cache_entry->show_time || magic_time(tick)) {
                 lines = (Lines *) text_to_lines(cache_entry->summary, 1); 
-                if (lines==NULL) return;
+                if (lines==nullptr) return;
                 strncpy(buf2, lines->s, 256);
                 destroy_lines(lines);
                 return;
@@ -1076,7 +1076,7 @@ format_entry(Paint_cache *cache_entry, char *buf1, char *buf2,
           
         lines = (Lines *) text_to_lines(cache_entry->summary, 1);
          
-        if (lines == NULL || lines->s == NULL ||                        
+        if (lines == nullptr || lines->s == nullptr ||                        
                 (cm_strlen(lines->s) == 1 && lines->s[0] == ' '))
                 buf2[0] = '\0';
         else
@@ -1281,7 +1281,7 @@ week_event(XEvent *event)
                         if (j > 0) {
                                 c->view->olddate = c->view->date;
                                 c->view->date = j;
-                                calendar_select(c, weekdaySelect, NULL);
+                                calendar_select(c, weekdaySelect, nullptr);
                         }
                 }
                 lastcol = wsel->col;
@@ -1315,7 +1315,7 @@ week_event(XEvent *event)
 			if (j > 0) {
 				c->view->olddate = c->view->date;
 				c->view->date = j;
-				calendar_select(c, weekdaySelect, NULL);
+				calendar_select(c, weekdaySelect, nullptr);
 			}
 			if (editor_showing(e)) {
 				set_editor_defaults(e, next_nhours(j, hr), next_nhours(j, hr + 1), False);
@@ -1400,7 +1400,7 @@ quick_button_cb(Widget widget, XtPointer client, XtPointer call)
 		c->view->olddate = c->view->date;
 		c->view->date = w->start_date + dow * daysec;
 	}
-	calendar_select(c, weekhotboxSelect, NULL);
+	calendar_select(c, weekhotboxSelect, nullptr);
  
 	cleanup_after_weekview(c);
 
@@ -1430,7 +1430,7 @@ display_hot_btn(
 	sprintf(buf, "%s %d", n == 6 ? days[0] : days[n + 1], date);
 
 	str = XmStringCreateLocalized(buf);
-	XtVaSetValues(btn, XmNlabelString, str, NULL);
+	XtVaSetValues(btn, XmNlabelString, str, nullptr);
 	XmStringFree(str);
 
 	if (!XtIsManaged(btn)) {

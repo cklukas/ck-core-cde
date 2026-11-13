@@ -58,18 +58,18 @@ SmJoinPath(const char *first, ...)
     int firstPart = 1;
 
     va_start(args, first);
-    for (part = first; part != NULL; part = va_arg(args, const char *))
+    for (part = first; part != nullptr; part = va_arg(args, const char *))
         length += strlen(part) + 1;
     va_end(args);
 
     path = malloc(length);
-    if (path == NULL)
-        return NULL;
+    if (path == nullptr)
+        return nullptr;
     end = path;
     *end = '\0';
 
     va_start(args, first);
-    for (part = first; part != NULL; part = va_arg(args, const char *)) {
+    for (part = first; part != nullptr; part = va_arg(args, const char *)) {
         if (!firstPart)
             *end++ = '/';
         firstPart = 0;
@@ -86,10 +86,10 @@ ReadNames(int fd, char ***namesRet, size_t *countRet)
 {
     DIR *dir = fdopendir(fd);
     struct dirent *entry;
-    char **names = NULL;
+    char **names = nullptr;
     size_t count = 0, size = 0;
 
-    if (dir == NULL) {
+    if (dir == nullptr) {
         close(fd);
         return -1;
     }
@@ -98,19 +98,19 @@ ReadNames(int fd, char ***namesRet, size_t *countRet)
            the value set by this call may be looked at */
         errno = 0;
         entry = readdir(dir);
-        if (entry == NULL)
+        if (entry == nullptr)
             break;
         if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
             continue;
         if (count == size) {
             char **grown = realloc(names, (size ? size * 2 : 16) * sizeof(char *));
-            if (grown == NULL)
+            if (grown == nullptr)
                 goto failed;
             names = grown;
             size = size ? size * 2 : 16;
         }
         names[count] = strdup(entry->d_name);
-        if (names[count] == NULL)
+        if (names[count] == nullptr)
             goto failed;
         count++;
     }
@@ -211,7 +211,7 @@ SmRemoveTree(const char *path)
     struct stat st;
     int fd;
 
-    if (path == NULL || path[0] == '\0' || !strcmp(path, "/")) {
+    if (path == nullptr || path[0] == '\0' || !strcmp(path, "/")) {
         errno = EINVAL;
         return -1;
     }
@@ -290,7 +290,7 @@ CopyEntry(const char *from, const char *to, int depth)
         ssize_t length;
         int result;
 
-        if (target == NULL)
+        if (target == nullptr)
             return -1;
         length = readlink(from, target, (size_t) st.st_size);
         if (length < 0) {
@@ -331,10 +331,10 @@ CopyEntry(const char *from, const char *to, int depth)
             return -1;
         }
         for (i = 0; i < count && result == 0; i++) {
-            char *source = SmJoinPath(from, names[i], NULL);
-            char *target = SmJoinPath(to, names[i], NULL);
+            char *source = SmJoinPath(from, names[i], nullptr);
+            char *target = SmJoinPath(to, names[i], nullptr);
 
-            if (source == NULL || target == NULL)
+            if (source == nullptr || target == nullptr)
                 result = -1, errno = ENOMEM;
             else
                 result = CopyEntry(source, target, depth + 1);
@@ -358,7 +358,7 @@ CopyEntry(const char *from, const char *to, int depth)
 int
 SmCopyTree(const char *from, const char *to)
 {
-    if (from == NULL || to == NULL || from[0] == '\0' || to[0] == '\0') {
+    if (from == nullptr || to == nullptr || from[0] == '\0' || to[0] == '\0') {
         errno = EINVAL;
         return -1;
     }
@@ -372,18 +372,18 @@ SmMakeTempDirectory(const char *directory, const char *prefix)
     char *leaf = malloc(length);
     char *path;
 
-    if (leaf == NULL)
-        return NULL;
+    if (leaf == nullptr)
+        return nullptr;
     snprintf(leaf, length, "%s.XXXXXX", prefix);
-    path = SmJoinPath(directory, leaf, NULL);
+    path = SmJoinPath(directory, leaf, nullptr);
     free(leaf);
-    if (path == NULL)
-        return NULL;
-    if (mkdtemp(path) == NULL) {
+    if (path == nullptr)
+        return nullptr;
+    if (mkdtemp(path) == nullptr) {
         int saved = errno;
         free(path);
         errno = saved;
-        return NULL;
+        return nullptr;
     }
     return path;
 }

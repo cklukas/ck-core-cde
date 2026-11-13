@@ -100,12 +100,12 @@ static void ProcessNetWmStateAbove (ClientData *pCD, long action)
     switch (action)
     {
 	case _NET_WM_STATE_REMOVE:
-	    if (pCD->pSD->topClient == pCD) pCD->pSD->topClient = NULL;
+	    if (pCD->pSD->topClient == pCD) pCD->pSD->topClient = nullptr;
 	    break;
 	case _NET_WM_STATE_ADD:
 	    pCD->pSD->topClient = pCD;
 	    ProcessNetWmStateBelow (pCD, _NET_WM_STATE_REMOVE);
-	    Do_Raise (pCD, NULL, STACK_NORMAL);
+	    Do_Raise (pCD, nullptr, STACK_NORMAL);
 	    break;
 	default:
 	    return;
@@ -123,12 +123,12 @@ static void ProcessNetWmStateBelow (ClientData *pCD, long action)
     switch (action)
     {
 	case _NET_WM_STATE_REMOVE:
-	    if (pCD->pSD->bottomClient == pCD) pCD->pSD->bottomClient = NULL;
+	    if (pCD->pSD->bottomClient == pCD) pCD->pSD->bottomClient = nullptr;
 	    break;
 	case _NET_WM_STATE_ADD:
 	    pCD->pSD->bottomClient = pCD;
 	    ProcessNetWmStateAbove (pCD, _NET_WM_STATE_REMOVE);
-	    Do_Lower (pCD, NULL, STACK_NORMAL);
+	    Do_Lower (pCD, nullptr, STACK_NORMAL);
 	    break;
 	default:
 	    return;

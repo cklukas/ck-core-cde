@@ -567,9 +567,9 @@ static FormatStruct DefFormatStruct =
 	_DtCvFALSE,		/* save_blank  */
 	_SdlFontModeResolve,	/* resolve_font*/
 	SdlElementNone,		/* parsed      */
-	NULL,			/* remember    */
-	NULL,			/* vol_name    */
-	NULL,			/* id_string   */
+	nullptr,			/* remember    */
+	nullptr,			/* vol_name    */
+	nullptr,			/* id_string   */
 	-1,			/* cur_link    */
 	 1,			/* mb_len      */
 	 0,			/* flags       */
@@ -578,19 +578,19 @@ static FormatStruct DefFormatStruct =
 	 0,			/* free_cnt    */
 	 0,			/* free_max    */
 	 0,			/* snref_cnt   */
-	NULL,			/* *ui_info    */
-	NULL,			/* block_list  */
-	NULL,			/* add_seg     */
-	NULL,			/* last_seg    */
-	NULL,			/* seg_list    */
-	NULL,			/* prev_data   */
-	NULL,			/* toss        */
-	NULL,			/* snb         */
-	NULL,			/* else_prev   */
-	NULL,			/* then_prev   */
-	NULL,			/* async_blks  */
-	NULL,			/* active_frmt */
-	NULL, 			/* my_links    */
+	nullptr,			/* *ui_info    */
+	nullptr,			/* block_list  */
+	nullptr,			/* add_seg     */
+	nullptr,			/* last_seg    */
+	nullptr,			/* seg_list    */
+	nullptr,			/* prev_data   */
+	nullptr,			/* toss        */
+	nullptr,			/* snb         */
+	nullptr,			/* else_prev   */
+	nullptr,			/* then_prev   */
+	nullptr,			/* async_blks  */
+	nullptr,			/* active_frmt */
+	nullptr, 			/* my_links    */
 	  {			/* ElementInfo	 el_info; */
 	    0,
 	    0,
@@ -602,30 +602,30 @@ static FormatStruct DefFormatStruct =
 	    SdlWindowCurrent,		/* SdlOption       window;    */
 	    SdlInterpKsh,		/* SdlOption       interp;    */
 	    { 0 },			/* SDLNumber       count/offset; */
-	    NULL,			/* SDLCdata	   language;  */
-	    NULL,			/* SDLCdata	   char_set;  */
-	    NULL,			/* SDLCdata	   id;        */
-	    NULL,			/* SDLCdata	   elstr1;    */
-	    NULL,			/* SDLCdata	   elstr2;    */
+	    nullptr,			/* SDLCdata	   language;  */
+	    nullptr,			/* SDLCdata	   char_set;  */
+	    nullptr,			/* SDLCdata	   id;        */
+	    nullptr,			/* SDLCdata	   elstr1;    */
+	    nullptr,			/* SDLCdata	   elstr2;    */
 	      {				/* SDLDocInfo	   doc_info;  */
 		{
-	        NULL,			   /* SDLCdata	   language;  */
-	        NULL,			   /* SDLCdata	   char_set;  */
-	        NULL,			   /* SDLId	   first_pg;  */
-	        NULL,			   /* SDLCdata	   doc-id;    */
-	        NULL,			   /* SDLCdata	   timestamp; */
-	        NULL,			   /* SDLCdata    sdldtd;    */
+	        nullptr,			   /* SDLCdata	   language;  */
+	        nullptr,			   /* SDLCdata	   char_set;  */
+	        nullptr,			   /* SDLId	   first_pg;  */
+	        nullptr,			   /* SDLCdata	   doc-id;    */
+	        nullptr,			   /* SDLCdata	   timestamp; */
+	        nullptr,			   /* SDLCdata    sdldtd;    */
 		},
 	      },
 	      {				/* SdlMatchData              */
 	        SdlClassText,		    /* SdlOption   clan;  */
 	        -1,			    /* SDLNumber   level;     */
-	        NULL,			    /* SDLCdata	   ssi;       */
+	        nullptr,			    /* SDLCdata	   ssi;       */
 	      },
 	  },
-	  NULL,			/* _DtHelpFontHints	 my_fonts;   */
-	  NULL,			/* _DtHelpFontHints	 free_fonts; */
-	  NULL,			/* UnresSnref		*un_snregs;  */
+	  nullptr,			/* _DtHelpFontHints	 my_fonts;   */
+	  nullptr,			/* _DtHelpFontHints	 free_fonts; */
+	  nullptr,			/* UnresSnref		*un_snregs;  */
     };
 
 static const	_DtHelpFontHints	DefFontInfo =
@@ -634,27 +634,27 @@ static const	_DtHelpFontHints	DefFontInfo =
 	(char *)IsoStr,			/* char	*charset    */
 	10,				/* int	 pointsz;   */
 	10,				/* int	 set_width  */
-	NULL,				/* char	*color;     */
-	NULL,				/* char	*xlfd;      */
-	NULL,				/* char	*xlfdb;     */
-	NULL,				/* char	*xlfdi;     */
-	NULL,				/* char	*xlfdib;    */
-	NULL,				/* char	*typenam;   */
-	NULL,				/* char	*typenamb;  */
-	NULL,				/* char	*typenami;  */
-	NULL,				/* char	*typenamib; */
+	nullptr,				/* char	*color;     */
+	nullptr,				/* char	*xlfd;      */
+	nullptr,				/* char	*xlfdb;     */
+	nullptr,				/* char	*xlfdi;     */
+	nullptr,				/* char	*xlfdib;    */
+	nullptr,				/* char	*typenam;   */
+	nullptr,				/* char	*typenamb;  */
+	nullptr,				/* char	*typenami;  */
+	nullptr,				/* char	*typenamib; */
 	_DtHelpFontStyleSanSerif,	/* char	*style;     */
 	_DtHelpFontSpacingMono,		/* char	*spacing;   */
 	_DtHelpFontWeightMedium,	/* char	*weight;    */
 	_DtHelpFontSlantRoman,		/* char	*slant;     */
 	_DtHelpFontSpecialNone,		/* char	*special;   */
-	NULL,		    /* void	*expand;    */
+	nullptr,		    /* void	*expand;    */
   };
 
 static const	_DtCvContainer	DefFrmtSpecs =
   {
-	NULL,			/* char         *id       */
-	NULL,			/* char         *justify_char */
+	nullptr,			/* char         *id       */
+	nullptr,			/* char         *justify_char */
 	_DtCvDYNAMIC,		/* _DtCvFrmtOption  type     */
 	_DtCvBORDER_NONE,	/* _DtCvFrmtOption  border   */
 	_DtCvINHERIT,		/* _DtCvFrmtOption  justify  */
@@ -669,18 +669,18 @@ static const	_DtCvContainer	DefFrmtSpecs =
 	0,			/* _DtCvUnit        rmargin  */
 	0,			/* _DtCvUnit        tmargin  */
 	0,			/* _DtCvUnit        bmargin  */
-	{0, NULL},              /* _DtCvLine     bdr_info;      */
-	NULL,			/* _DtCvSegment    *seg_list */
+	{0, nullptr},              /* _DtCvLine     bdr_info;      */
+	nullptr,			/* _DtCvSegment    *seg_list */
   };
 
 static	const	_FrmtUiInfo	DefUiInfo =
   {
-	NULL,		/* load_graphic */
-	NULL,		/* resolve_spc  */
-	NULL,		/* load_font    */
-	NULL,		/* exec_filter  */
-	NULL,		/* destroy_region */
-	NULL,		/* client_data  */
+	nullptr,		/* load_graphic */
+	nullptr,		/* resolve_spc  */
+	nullptr,		/* load_font    */
+	nullptr,		/* exec_filter  */
+	nullptr,		/* destroy_region */
+	nullptr,		/* client_data  */
 	0,		/* line_width   */
 	0,		/* line_height   */
 	0,		/* leading       */
@@ -949,19 +949,19 @@ static _CEInterpData	InterpData[] =
 	{ SdlInterpCsh,	"csh" },
 	{ SdlInterpSh ,	"sh"  },
 	{ SdlInterpTcl,	"tcl" },
-	{ _DtCvOPTION_BAD, NULL  },
+	{ _DtCvOPTION_BAD, nullptr  },
     };
 
 /******************************************************************************
  * Private Variables
  *****************************************************************************/
-static OptionList hclass[]  = { SDL_ENTITY_CLASSH, {NULL, _DtCvOPTION_BAD}};
-static OptionList fclass[]  = { SDL_ENTITY_CLASSF, {NULL, _DtCvOPTION_BAD}};
-static OptionList kclass[]  = { SDL_ENTITY_CLASSK, {NULL, _DtCvOPTION_BAD}};
-static OptionList pclass[]  = { SDL_ENTITY_CLASSP, {NULL, _DtCvOPTION_BAD}};
-static OptionList gclass[]  = { SDL_ENTITY_CLASSG, {NULL, _DtCvOPTION_BAD}};
+static OptionList hclass[]  = { SDL_ENTITY_CLASSH, {nullptr, _DtCvOPTION_BAD}};
+static OptionList fclass[]  = { SDL_ENTITY_CLASSF, {nullptr, _DtCvOPTION_BAD}};
+static OptionList kclass[]  = { SDL_ENTITY_CLASSK, {nullptr, _DtCvOPTION_BAD}};
+static OptionList pclass[]  = { SDL_ENTITY_CLASSP, {nullptr, _DtCvOPTION_BAD}};
+static OptionList gclass[]  = { SDL_ENTITY_CLASSG, {nullptr, _DtCvOPTION_BAD}};
 static OptionList fgclass[] =
-	{ SDL_ENTITY_CLASSF, SDL_ENTITY_CLASSG, {NULL, _DtCvOPTION_BAD}};
+	{ SDL_ENTITY_CLASSF, SDL_ENTITY_CLASSG, {nullptr, _DtCvOPTION_BAD}};
 
 static OptionList apps[] =
     {
@@ -970,13 +970,13 @@ static OptionList apps[] =
 	{ "tutorial", SdlAppTutorial },
 	{ "ref"     , SdlAppRef      },
 	{ "sys"     , SdlAppSys      },
-	{  NULL     , _DtCvOPTION_BAD   }
+	{  nullptr     , _DtCvOPTION_BAD   }
     };
 static OptionList timing[] =
     {
 	{ (ASyncStr+1), SdlTimingSync  },
 	{ ASyncStr    , SdlTimingAsync },
-	{  NULL       , _DtCvOPTION_BAD   },
+	{  nullptr       , _DtCvOPTION_BAD   },
     };
 
 static OptionList frmtTypes[] =
@@ -984,7 +984,7 @@ static OptionList frmtTypes[] =
 	{ "literal" , SdlTypeLiteral },
 	{ "lined"   , SdlTypeLined   },
 	{ DynamicStr, SdlTypeDynamic },
-	{  NULL     , _DtCvOPTION_BAD   }
+	{  nullptr     , _DtCvOPTION_BAD   }
     };
 
 static OptionList idTypes[] =
@@ -1010,14 +1010,14 @@ static OptionList idTypes[] =
 	{ (SyscmdStr+1)  , SdlIdSysCmd    },
 	{ (ScriptStr+1)  , SdlIdScript    },
 	{ (CallbackStr+1), SdlIdCallback  },
-	{ NULL           , _DtCvOPTION_BAD   },
+	{ nullptr           , _DtCvOPTION_BAD   },
     };
 
 static OptionList bool_types[] =
     {
 	{ "YES", SdlBoolYes   },
 	{ "NO" , SdlBoolNo    },
-	{ NULL , _DtCvOPTION_BAD },
+	{ nullptr , _DtCvOPTION_BAD },
     };
 
 static OptionList borders[] =
@@ -1030,7 +1030,7 @@ static OptionList borders[] =
 	{ "bottom-border"    , _DtCvBORDER_BOTTOM },
 	{ "left-border"      , _DtCvBORDER_LEFT   },
 	{ "right-border"     , _DtCvBORDER_RIGHT  },
-	{ NULL               , _DtCvOPTION_BAD    },
+	{ nullptr               , _DtCvOPTION_BAD    },
     };
 
 static OptionList justify1[] =
@@ -1039,7 +1039,7 @@ static OptionList justify1[] =
 	{ RightJustifyStr  , _DtCvJUSTIFY_RIGHT  },
 	{ CenterJustifyStr , _DtCvJUSTIFY_CENTER },
 	{ "numeric-justify", _DtCvJUSTIFY_NUM    },
-	{ NULL             , _DtCvOPTION_BAD    },
+	{ nullptr             , _DtCvOPTION_BAD    },
     };
 
 static OptionList justify2[] =
@@ -1047,7 +1047,7 @@ static OptionList justify2[] =
 	{ LeftJustifyStr   , _DtCvJUSTIFY_LEFT   },
 	{ RightJustifyStr  , _DtCvJUSTIFY_RIGHT  },
 	{ CenterJustifyStr , _DtCvJUSTIFY_CENTER },
-	{ NULL             , _DtCvOPTION_BAD    },
+	{ nullptr             , _DtCvOPTION_BAD    },
     };
 
 static OptionList vjust[] =
@@ -1055,7 +1055,7 @@ static OptionList vjust[] =
 	{ TopVJustStr   , _DtCvJUSTIFY_TOP    },
 	{ "bottom-vjust", _DtCvJUSTIFY_BOTTOM },
 	{ "center-vjust", _DtCvJUSTIFY_CENTER },
-	{ NULL          , _DtCvOPTION_BAD     },
+	{ nullptr          , _DtCvOPTION_BAD     },
     };
 
 static OptionList orient[] =
@@ -1067,7 +1067,7 @@ static OptionList orient[] =
 	{ "right-margin-orient", _DtCvJUSTIFY_RIGHT_MARGIN},
 	{ "left-corner-orient" , _DtCvJUSTIFY_LEFT_CORNER },
 	{ "right-corner-orient", _DtCvJUSTIFY_RIGHT_CORNER},
-	{ NULL                 , _DtCvOPTION_BAD         },
+	{ nullptr                 , _DtCvOPTION_BAD         },
     };
 
 static OptionList vorient[] =
@@ -1075,21 +1075,21 @@ static OptionList vorient[] =
 	{ TopVOrientStr   , _DtCvJUSTIFY_TOP    },
 	{ "bottom-vorient", _DtCvJUSTIFY_BOTTOM },
 	{ "center-vorient", _DtCvJUSTIFY_CENTER },
-	{ NULL            , _DtCvOPTION_BAD     },
+	{ nullptr            , _DtCvOPTION_BAD     },
     };
 
 static OptionList placement[] =
     {
 	{ "object"     , SdlPlaceObject },
 	{ ParentStr    , SdlPlaceParent },
-	{  NULL        , _DtCvOPTION_BAD   },
+	{  nullptr        , _DtCvOPTION_BAD   },
     };
 
 static OptionList stacking[] =
     {
 	{ "horiz"  , SdlStackHoriz },
 	{ "vert"   , SdlStackVert  },
-	{  NULL    , _DtCvOPTION_BAD  },
+	{  nullptr    , _DtCvOPTION_BAD  },
     };
 
 static OptionList flow[] =
@@ -1097,7 +1097,7 @@ static OptionList flow[] =
 	{ (NoWrapStr+2), _DtCvWRAP       },
 	{  NoWrapStr   , _DtCvWRAP_NONE  },
 	{  "join"      , _DtCvWRAP_JOIN  },
-	{  NULL        , _DtCvOPTION_BAD },
+	{  nullptr        , _DtCvOPTION_BAD },
     };
 
 static OptionList window[] =
@@ -1105,14 +1105,14 @@ static OptionList window[] =
 	{ "current", SdlWindowCurrent },
 	{ "new"    , SdlWindowNew     },
 	{ "popup"  , SdlWindowPopup   },
-	{ NULL    , _DtCvOPTION_BAD },
+	{ nullptr    , _DtCvOPTION_BAD },
     };
 
 static OptionList traversal[] =
     {
 	{ "return"  , SdlTraversalReturn   },
 	{ "noreturn", SdlTraversalNoReturn },
-	{ NULL      , _DtCvOPTION_BAD         },
+	{ nullptr      , _DtCvOPTION_BAD         },
     };
 
 static OptionList interpreters[] =
@@ -1121,7 +1121,7 @@ static OptionList interpreters[] =
 	{ "tcl"     , SdlInterpTcl },
 	{ "csh"     , SdlInterpCsh },
 	{ "sh"      , SdlInterpSh  },
-	{ NULL      , _DtCvOPTION_BAD },
+	{ nullptr      , _DtCvOPTION_BAD },
     };
 
 static	SDLAttributeOptions SDLOptionsList[] =
@@ -1149,7 +1149,7 @@ static	SDLAttributeOptions SDLOptionsList[] =
 	{SDL_ATTR_TRAVERSAL, traversal  },
 	{SDL_ATTR_TYPEID   , idTypes    },
 	{SDL_ATTR_INTERP   , interpreters },
-	{(unsigned long) -1, NULL       }
+	{(unsigned long) -1, nullptr       }
     };
 
 static FontSpecOption styles[] =
@@ -1157,21 +1157,21 @@ static FontSpecOption styles[] =
 	{ "serif"     , _DtHelpFontStyleSerif    },
 	{ "sans-serif", _DtHelpFontStyleSanSerif },
 	{ "symbol"    , _DtHelpFontStyleSymbol   },
-	{ NULL        , _DtHelpFontValueBad   },
+	{ nullptr        , _DtHelpFontValueBad   },
     };
 
 static FontSpecOption spacing[] =
     {
 	{ "monospace" , _DtHelpFontSpacingMono},
 	{ "propspace" , _DtHelpFontSpacingProp},
-	{ NULL        , _DtHelpFontValueBad   },
+	{ nullptr        , _DtHelpFontValueBad   },
     };
 
 static FontSpecOption weights[] =
     {
 	{ "medium"    , _DtHelpFontWeightMedium },
 	{ "bold"      , _DtHelpFontWeightBold   },
-	{ NULL        , _DtHelpFontValueBad  },
+	{ nullptr        , _DtHelpFontValueBad  },
     };
 
 static FontSpecOption slants[] =
@@ -1179,7 +1179,7 @@ static FontSpecOption slants[] =
 	{ "roman"     , _DtHelpFontSlantRoman    },
 	{ "italic"    , _DtHelpFontSlantItalic   },
 	{ "rev-italic", _DtHelpFontSlantRevItalic},
-	{ NULL        , _DtHelpFontValueBad   },
+	{ nullptr        , _DtHelpFontValueBad   },
     };
 
 static FontSpecOption special[] =
@@ -1187,7 +1187,7 @@ static FontSpecOption special[] =
 	{ "none"      , _DtHelpFontSpecialNone      },
 	{ "underline" , _DtHelpFontSpecialUnderLine },
 	{ "strikeout" , _DtHelpFontSpecialStrikeOut },
-	{ NULL        , _DtHelpFontValueBad      },
+	{ nullptr        , _DtHelpFontValueBad      },
     };
 
 static	SDLFontSpecList SDLFontList[] =
@@ -1197,7 +1197,7 @@ static	SDLFontSpecList SDLFontList[] =
 	{SDL_ATTR_WEIGHT   , weights    },
 	{SDL_ATTR_SLANT    , slants     },
 	{SDL_ATTR_SPECIAL  , special    },
-	{(unsigned long) -1, NULL       }
+	{(unsigned long) -1, nullptr       }
     };
 
 /*
@@ -1545,25 +1545,25 @@ static SDLContent SdlDocContent[] =
  */
 	{ SDLInitMask(SdlElementSdlDoc) , FakeEnd     },
 	{ SDLInitMask(SdlElementSdlDoc) , CopyDocInfo },
-	{ SDLInitMask(SdlElementNone)   , NULL        },
+	{ SDLInitMask(SdlElementNone)   , nullptr        },
     };
 static SDLElementAttrList  SdlDocAttrList[] =
     {
-	{ SDL_ATTR_PUBID    , SdlAttrValueRequired, NULL   },
-	{ SDL_ATTR_DOCID    , SdlAttrValueRequired, NULL   },
-	{ SDL_ATTR_TIMESTAMP, SdlAttrValueRequired, NULL   },
-	{ SDL_ATTR_PRODUCT  , SdlAttrValueImplied , NULL   },
-	{ SDL_ATTR_PRODPN   , SdlAttrValueImplied , NULL   },
-	{ SDL_ATTR_PRODVER  , SdlAttrValueImplied , NULL   },
-	{ SDL_ATTR_LICENSE  , SdlAttrValueImplied , NULL   },
+	{ SDL_ATTR_PUBID    , SdlAttrValueRequired, nullptr   },
+	{ SDL_ATTR_DOCID    , SdlAttrValueRequired, nullptr   },
+	{ SDL_ATTR_TIMESTAMP, SdlAttrValueRequired, nullptr   },
+	{ SDL_ATTR_PRODUCT  , SdlAttrValueImplied , nullptr   },
+	{ SDL_ATTR_PRODPN   , SdlAttrValueImplied , nullptr   },
+	{ SDL_ATTR_PRODVER  , SdlAttrValueImplied , nullptr   },
+	{ SDL_ATTR_LICENSE  , SdlAttrValueImplied , nullptr   },
 	{ SDL_ATTR_LANGUAGE , SdlAttrValueImplied , "C"    },
 	{ SDL_ATTR_CHARSET  , SdlAttrValueImplied , "UTF-8"},
-	{ SDL_ATTR_AUTHOR   , SdlAttrValueImplied , NULL   },
-	{ SDL_ATTR_VERSION  , SdlAttrValueImplied , NULL   },
-	{ SDL_ATTR_FRST_PG  , SdlAttrValueImplied , NULL   },
-	{ SDL_ATTR_SDLDTD   , SdlAttrValueRequired, NULL   },
-	{ SDL_ATTR_SRCDTD   , SdlAttrValueImplied , NULL   },
-	{ -1                , SdlAttrValueBad     , NULL   }
+	{ SDL_ATTR_AUTHOR   , SdlAttrValueImplied , nullptr   },
+	{ SDL_ATTR_VERSION  , SdlAttrValueImplied , nullptr   },
+	{ SDL_ATTR_FRST_PG  , SdlAttrValueImplied , nullptr   },
+	{ SDL_ATTR_SDLDTD   , SdlAttrValueRequired, nullptr   },
+	{ SDL_ATTR_SRCDTD   , SdlAttrValueImplied , nullptr   },
+	{ -1                , SdlAttrValueBad     , nullptr   }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1574,13 +1574,13 @@ static SDLElementAttrList  SdlDocAttrList[] =
 static SDLContent VStructContent[] =
     {
 	SDL_ENTITY_GENERATED_ELEMENTS
-	{ SDLInitMask(SdlElementNone)   , NULL      },
+	{ SDLInitMask(SdlElementNone)   , nullptr      },
     };
 static SDLElementAttrList  VStructAttrList[] =
     {
-	{ SDL_ATTR_DOCID   , SdlAttrValueImplied , NULL },
-	{ SDL_ATTR_VERSION , SdlAttrValueImplied , NULL },
-	{ -1               , SdlAttrValueBad     , NULL }
+	{ SDL_ATTR_DOCID   , SdlAttrValueImplied , nullptr },
+	{ SDL_ATTR_VERSION , SdlAttrValueImplied , nullptr },
+	{ -1               , SdlAttrValueBad     , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1602,7 +1602,7 @@ static SDLContent VirpageContent[] =
         { SDLInitMask(SdlElementHead)     , ClearAndCheckSnref},
         { SDLInitMaskTwo(SdlElementBlock, \
 				SdlElementForm), ZeroToN   },
-        { SDLInitMask(SdlElementNone)     , NULL      },
+        { SDLInitMask(SdlElementNone)     , nullptr      },
     };
 static SDLContent VirpageHeadContent[] =
     {
@@ -1610,7 +1610,7 @@ static SDLContent VirpageHeadContent[] =
         { SDLInitMask(SdlElementHead)     , ZeroToN     },
         { SDLInitMask(SdlElementVirpage)  , CheckForSnb },
 	{ SDLInitMask(SdlElementTitle)    , FakeEnd     },
-        { SDLInitMask(SdlElementNone)     , NULL        },
+        { SDLInitMask(SdlElementNone)     , nullptr        },
     };
 
 static SDLContent HeadAndSnb[] =
@@ -1618,19 +1618,19 @@ static SDLContent HeadAndSnb[] =
         { SDLInitMask(SdlElementHead)     , SetSaveSnref},
         { SDLInitMask(SdlElementHead)     , ZeroToN     },
         { SDLInitMask(SdlElementHead)     , CheckForSnb },
-        { SDLInitMask(SdlElementNone)     , NULL        },
+        { SDLInitMask(SdlElementNone)     , nullptr        },
     };
 
 static SDLElementAttrList  VirpageAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueRequired  , NULL   },
-	{ SDL_ATTR_LEVEL   , SdlAttrValueRequired  , NULL   },
-	{ SDL_ATTR_VERSION , SdlAttrValueImplied   , NULL   },
-	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied   , NULL   },
-	{ SDL_ATTR_CHARSET , SdlAttrValueImplied   , NULL   },
-	{ SDL_ATTR_DOCID   , SdlAttrValueRequired  , NULL   },
-	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, NULL   },
-	{ -1               , SdlAttrValueBad       , NULL   }
+	{ SDL_ATTR_ID      , SdlAttrValueRequired  , nullptr   },
+	{ SDL_ATTR_LEVEL   , SdlAttrValueRequired  , nullptr   },
+	{ SDL_ATTR_VERSION , SdlAttrValueImplied   , nullptr   },
+	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied   , nullptr   },
+	{ SDL_ATTR_CHARSET , SdlAttrValueImplied   , nullptr   },
+	{ SDL_ATTR_DOCID   , SdlAttrValueRequired  , nullptr   },
+	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, nullptr   },
+	{ -1               , SdlAttrValueBad       , nullptr   }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1641,12 +1641,12 @@ static SDLContent SnbContent[] =
     {
 	{ SDLInitMask(SdlElementHead)  , ZeroOrOne },
 	{ SDL_ENTITY_SYSTEM_NOTATIONS       , OneToN    },
-	{ SDLInitMask(SdlElementNone)  , NULL      },
+	{ SDLInitMask(SdlElementNone)  , nullptr      },
     };
 static SDLElementAttrList  SnbAttrList[] =
     {
-	{ SDL_ATTR_VERSION, SdlAttrValueImplied , NULL },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ SDL_ATTR_VERSION, SdlAttrValueImplied , nullptr },
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1680,21 +1680,21 @@ static SDLContent BlockContent[] =
 	{ SDLInitMask(SdlElementBlock)                   , SetTransit},
 	{ SDLInitMask(SdlElementHead)                    , ZeroToN   },
 	{ SDLInitMaskTwo(SdlElementPara, SdlElementCPara), ZeroToN   },
-	{ SDLInitMask(SdlElementNone)                    , NULL      },
+	{ SDLInitMask(SdlElementNone)                    , nullptr      },
     };
 static SDLElementAttrList  BlockAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueImpliedDef , NULL           },
+	{ SDL_ATTR_ID      , SdlAttrValueImpliedDef , nullptr           },
 	{ SDL_ATTR_LEVEL   , SdlAttrValueImpliedDef , OneStr         },
-	{ SDL_ATTR_VERSION , SdlAttrValueImplied    , NULL           },
+	{ SDL_ATTR_VERSION , SdlAttrValueImplied    , nullptr           },
 	{ SDL_ATTR_CLASSF  , SdlAttrValueImplied    , (TextStr+1)    },
-	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied    , NULL           },
-	{ SDL_ATTR_CHARSET , SdlAttrValueImplied    , NULL           },
+	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied    , nullptr           },
+	{ SDL_ATTR_CHARSET , SdlAttrValueImplied    , nullptr           },
 	{ SDL_ATTR_LENGTH  , SdlAttrValueImplied    , NegativeOneStr },
 	{ SDL_ATTR_APP     , SdlAttrValueImplied    , AllStr         },
 	{ SDL_ATTR_TIMING  , SdlAttrValueImplied    , (ASyncStr+1)   },
-	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef , NULL           },
-	{ -1               , SdlAttrValueBad        , NULL           }
+	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef , nullptr           },
+	{ -1               , SdlAttrValueBad        , nullptr           }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1726,20 +1726,20 @@ static SDLContent FormContent[] =
 	{ SDLInitMaskTwo(SdlElementFstyle, SdlElementFdata),
 						OnlyOneEach },
 	{ SDLInitMask(SdlElementForm)  , ColInfoToTableInfo },
-	{ SDLInitMask(SdlElementNone)  , NULL      },
+	{ SDLInitMask(SdlElementNone)  , nullptr      },
     };
 static SDLElementAttrList  FormAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueImpliedDef, NULL           },
+	{ SDL_ATTR_ID      , SdlAttrValueImpliedDef, nullptr           },
 	{ SDL_ATTR_LEVEL   , SdlAttrValueImplied   , OneStr         },
-	{ SDL_ATTR_VERSION , SdlAttrValueImplied   , NULL           },
+	{ SDL_ATTR_VERSION , SdlAttrValueImplied   , nullptr           },
 	{ SDL_ATTR_CLASSF  , SdlAttrValueImplied   , (TextStr+1)    },
-	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied   , NULL           },
-	{ SDL_ATTR_CHARSET , SdlAttrValueImplied   , NULL           },
+	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied   , nullptr           },
+	{ SDL_ATTR_CHARSET , SdlAttrValueImplied   , nullptr           },
 	{ SDL_ATTR_LENGTH  , SdlAttrValueImplied   , NegativeOneStr },
 	{ SDL_ATTR_APP     , SdlAttrValueImplied   , AllStr         },
-	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, NULL           },
-	{ -1               ,SdlAttrValueBad        , NULL           }
+	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, nullptr           },
+	{ -1               ,SdlAttrValueBad        , nullptr           }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1759,12 +1759,12 @@ static SDLElementAttrList  FormAttrList[] =
 static SDLContent FstyleContent[] =
     {
 	{ SDLInitMask(SdlElementFrowvec), OneToN  },
-	{ SDLInitMask(SdlElementNone)   , NULL    },
+	{ SDLInitMask(SdlElementNone)   , nullptr    },
     };
 static SDLElementAttrList  FstyleAttrList[] =
     {
 	{ SDL_ATTR_NCOLS  , SdlAttrValueImpliedDef , OneStr },
-	{ -1              , SdlAttrValueBad        , NULL }
+	{ -1              , SdlAttrValueBad        , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1780,14 +1780,14 @@ static SDLElementAttrList  FstyleAttrList[] =
 static SDLContent FrowvecContent[] =
     {
 	{ SDLInitMask(SdlElementFrowvec), AddRowToTable},
-	{ SDLInitMask(SdlElementNone)   , NULL    },
+	{ SDLInitMask(SdlElementNone)   , nullptr    },
     };
 
 static SDLElementAttrList  FrowvecAttrList[] =
     {
 	{ SDL_ATTR_HDR    , SdlAttrValueImplied , "NO"      },
-	{ SDL_ATTR_CELLS  , SdlAttrValueRequired, NULL      },
-	{ -1              , SdlAttrValueBad     , NULL }
+	{ SDL_ATTR_CELLS  , SdlAttrValueRequired, nullptr      },
+	{ -1              , SdlAttrValueBad     , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1796,7 +1796,7 @@ static SDLElementAttrList  FrowvecAttrList[] =
 static SDLContent FdataContent[] =
     {
 	{ SDLInitMaskTwo(SdlElementBlock, SdlElementForm), ZeroToN },
-	{ SDLInitMask(SdlElementNone)                    , NULL    },
+	{ SDLInitMask(SdlElementNone)                    , nullptr    },
     };
 
 /*-----------------------------------------------------------------------------
@@ -1828,15 +1828,15 @@ static SDLContent ParaContent[] =
 	{ SDL_ENTITY_ATOMIC               , OneToN    },
  */
 	{ SDL_ENTITY_ATOMIC               , ZeroToN   },
-	{ SDLInitMask(SdlElementNone), NULL      },
+	{ SDLInitMask(SdlElementNone), nullptr      },
     };
 static SDLElementAttrList  ParaAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueImpliedDef, NULL      },
-	{ SDL_ATTR_VERSION , SdlAttrValueImplied   , NULL      },
+	{ SDL_ATTR_ID      , SdlAttrValueImpliedDef, nullptr      },
+	{ SDL_ATTR_VERSION , SdlAttrValueImplied   , nullptr      },
 	{ SDL_ATTR_TYPEFRMT, SdlAttrValueImplied   , DynamicStr},
-	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, NULL      },
-	{ -1               , SdlAttrValueBad       , NULL }
+	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, nullptr      },
+	{ -1               , SdlAttrValueBad       , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1854,7 +1854,7 @@ static SDLContent CParaContent[] =
     {
 	{ SDLInitMask(SdlElementCPara), InitLast  },
 	{ SDLInitMask(SdlElementCdata), ZeroOrOne },
-	{ SDLInitMask(SdlElementNone) , NULL  },
+	{ SDLInitMask(SdlElementNone) , nullptr  },
     };
 /* uses the same attributes as <p> */
 
@@ -1886,25 +1886,25 @@ static SDLContent HeadContent[] =
 	{ SDLInitMask(SdlElementHead)   , InitLast  },
 	{ SDL_ENTITY_ATOMIC             , ZeroToN   },
 	{ SDLInitMask(SdlElementSubHead), ZeroToN   },
-	{ SDLInitMask(SdlElementNone)   , NULL      },
+	{ SDLInitMask(SdlElementNone)   , nullptr      },
     };
 static SDLContent SubHeadContent[] =
     {
 	{ SDLInitMask(SdlElementSubHead), InitLast  },
 	{ SDL_ENTITY_ATOMIC             , ZeroToN   },
-	{ SDLInitMask(SdlElementNone)   , NULL      },
+	{ SDLInitMask(SdlElementNone)   , nullptr      },
     };
 static SDLElementAttrList  HeadAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueImpliedDef, NULL       },
-	{ SDL_ATTR_VERSION , SdlAttrValueImplied   , NULL       },
+	{ SDL_ATTR_ID      , SdlAttrValueImpliedDef, nullptr       },
+	{ SDL_ATTR_VERSION , SdlAttrValueImplied   , nullptr       },
 	{ SDL_ATTR_CLASSH  , SdlAttrValueImplied   , (HeadStr+1)},
-	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied   , NULL       },
-	{ SDL_ATTR_CHARSET , SdlAttrValueImplied   , NULL       },
+	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied   , nullptr       },
+	{ SDL_ATTR_CHARSET , SdlAttrValueImplied   , nullptr       },
 	{ SDL_ATTR_TYPEFRMT, SdlAttrValueImplied   , DynamicStr },
-	{ SDL_ATTR_ABBREV  , SdlAttrValueImplied   , NULL       },
-	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, NULL       },
-	{ -1               , SdlAttrValueBad       , NULL       }
+	{ SDL_ATTR_ABBREV  , SdlAttrValueImplied   , nullptr       },
+	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, nullptr       },
+	{ -1               , SdlAttrValueBad       , nullptr       }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1915,14 +1915,14 @@ static SDLElementAttrList  HeadAttrList[] =
 -----------------------------------------------------------------------------*/
 static SDLElementAttrList  AnchorAttrList[] =
     {
-	{ SDL_ATTR_ID       , SdlAttrValueRequired, NULL      },
-	{ -1                , SdlAttrValueBad     , NULL }
+	{ SDL_ATTR_ID       , SdlAttrValueRequired, nullptr      },
+	{ -1                , SdlAttrValueBad     , nullptr }
     };
 
 static SDLContent AnchorContent[] =
     {
 	{ SDLInitMask(SdlElementAnchor) , CopyAnchorId },
-	{ SDLInitMask(SdlElementNone)   , NULL         },
+	{ SDLInitMask(SdlElementNone)   , nullptr         },
     };
 
 /*-----------------------------------------------------------------------------
@@ -1957,17 +1957,17 @@ static SDLContent LinkContent[] =
 	{ SDL_ENTITY_ATOMIC                , OneToN       },
  */
 	{ SDL_ENTITY_ATOMIC                , ZeroToN      },
-	{ SDLInitMask(SdlElementNone) , NULL         },
+	{ SDLInitMask(SdlElementNone) , nullptr         },
     };
 static SDLElementAttrList  LinkAttrList[] =
     {
-	{ SDL_ATTR_RID      , SdlAttrValueRequired  , NULL      },
-	{ SDL_ATTR_BUTTON   , SdlAttrValueImpliedDef, NULL      },
+	{ SDL_ATTR_RID      , SdlAttrValueRequired  , nullptr      },
+	{ SDL_ATTR_BUTTON   , SdlAttrValueImpliedDef, nullptr      },
 	{ SDL_ATTR_WINDOW   , SdlAttrValueImplied   , "current" },
 	{ SDL_ATTR_TRAVERSAL, SdlAttrValueImplied   , "noreturn"},
-	{ SDL_ATTR_DESCRIPT , SdlAttrValueImpliedDef, NULL      },
-	{ SDL_ATTR_LINKINFO , SdlAttrValueImpliedDef, NULL      },
-	{ -1                , SdlAttrValueBad       , NULL      }
+	{ SDL_ATTR_DESCRIPT , SdlAttrValueImpliedDef, nullptr      },
+	{ SDL_ATTR_LINKINFO , SdlAttrValueImpliedDef, nullptr      },
+	{ -1                , SdlAttrValueBad       , nullptr      }
     };
 
 /*-----------------------------------------------------------------------------
@@ -1980,12 +1980,12 @@ static SDLContent SnrefContent[] =
 	{ SDLInitMask(SdlElementSnRef)  , MarkFound  },
 	{ SDLInitMask(SdlElementRefItem), OneToN     },
 	{ SDLInitMask(SdlElementAltText), ZeroOrOne  },
-	{ SDLInitMask(SdlElementNone)   , NULL       },
+	{ SDLInitMask(SdlElementNone)   , nullptr       },
     };
 static SDLElementAttrList  SnrefAttrList[] =
     {
-	{ SDL_ATTR_ID, SdlAttrValueImpliedDef, NULL      },
-	{ -1         , SdlAttrValueBad       , NULL }
+	{ SDL_ATTR_ID, SdlAttrValueImpliedDef, nullptr      },
+	{ -1         , SdlAttrValueBad       , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2010,15 +2010,15 @@ static SDLContent RefItemContent[] =
     {
 	{ SDLInitMask(SdlElementHead)    , ZeroOrOne    },
 	{ SDLInitMask(SdlElementRefItem) , SaveItemInfo },
-	{ SDLInitMask(SdlElementNone)    , NULL         },
+	{ SDLInitMask(SdlElementNone)    , nullptr         },
     };
 static SDLElementAttrList  RefItemAttrList[] =
     {
-	{ SDL_ATTR_RID    , SdlAttrValueRequired  , NULL      },
-	{ SDL_ATTR_CLASSFG, SdlAttrValueRequired  , NULL      },
-	{ SDL_ATTR_BUTTON , SdlAttrValueImplied   , NULL      },
-	{ SDL_ATTR_SSI    , SdlAttrValueImpliedDef, NULL      },
-	{ -1              , SdlAttrValueBad       , NULL }
+	{ SDL_ATTR_RID    , SdlAttrValueRequired  , nullptr      },
+	{ SDL_ATTR_CLASSFG, SdlAttrValueRequired  , nullptr      },
+	{ SDL_ATTR_BUTTON , SdlAttrValueImplied   , nullptr      },
+	{ SDL_ATTR_SSI    , SdlAttrValueImpliedDef, nullptr      },
+	{ -1              , SdlAttrValueBad       , nullptr }
     };
 /*-----------------------------------------------------------------------------
 <!-- simple text to use if all else fails -->
@@ -2027,7 +2027,7 @@ static SDLElementAttrList  RefItemAttrList[] =
 static SDLContent AltTextContent[] =
     {
 	{ SDLInitMask(SdlElementCdata), ZeroOrOne },
-	{ SDLInitMask(SdlElementNone) , NULL    },
+	{ SDLInitMask(SdlElementNone) , nullptr    },
     };
 
 /*-----------------------------------------------------------------------------
@@ -2039,7 +2039,7 @@ static SDLContent AltTextContent[] =
 static SDLContent RevContent[] =
     {
 	{ SDL_ENTITY_ATOMIC               , ZeroToN },
-	{ SDLInitMask(SdlElementNone), NULL    },
+	{ SDLInitMask(SdlElementNone), nullptr    },
     };
 
 /*-----------------------------------------------------------------------------
@@ -2055,14 +2055,14 @@ static SDLContent KeyContent[] =
 	{ SDLInitMask(SdlElementKey) , ProcessEnterAttr },
 	{ SDL_ENTITY_ATOMIC          , ZeroToN          },
 	{ SDLInitMask(SdlElementKey) , ProcessExitAttr  },
-	{ SDLInitMask(SdlElementNone), NULL             },
+	{ SDLInitMask(SdlElementNone), nullptr             },
     };
 static SDLElementAttrList  KeyAttrList[] =
     {
-	{ SDL_ATTR_CHARSET , SdlAttrValueImplied   , NULL      },
-	{ SDL_ATTR_CLASSK  , SdlAttrValueRequired  , NULL      },
-	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, NULL      },
-	{ -1               , SdlAttrValueBad       , NULL }
+	{ SDL_ATTR_CHARSET , SdlAttrValueImplied   , nullptr      },
+	{ SDL_ATTR_CLASSK  , SdlAttrValueRequired  , nullptr      },
+	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, nullptr      },
+	{ -1               , SdlAttrValueBad       , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2076,13 +2076,13 @@ static SDLContent SphraseContent[] =
 	{ SDLInitMask(SdlElementSphrase), CheckType },
 	{ SDLInitMaskTwo(SdlElementSpc, SdlElementCdata), ZeroToN   },
 	{ SDLInitMask(SdlElementSphrase), SetType   },
-	{ SDLInitMask(SdlElementNone)   , NULL      },
+	{ SDLInitMask(SdlElementNone)   , nullptr      },
     };
 static SDLElementAttrList  SphraseAttrList[] =
     {
-	{ SDL_ATTR_CLASSP  , SdlAttrValueRequired  , NULL      },
-	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, NULL      },
-	{ -1               , SdlAttrValueBad       , NULL }
+	{ SDL_ATTR_CLASSP  , SdlAttrValueRequired  , nullptr      },
+	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, nullptr      },
+	{ -1               , SdlAttrValueBad       , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2095,7 +2095,7 @@ static SDLContent IfContent[] =
 	{ SDLInitMask(SdlElementCond), OnlyOne   },
 	{ SDLInitMask(SdlElementThen), OnlyOne   },
 	{ SDLInitMask(SdlElementElse), ZeroOrOne },
-	{ SDLInitMask(SdlElementNone), NULL      },
+	{ SDLInitMask(SdlElementNone), nullptr      },
     };
 
 /*-----------------------------------------------------------------------------
@@ -2112,12 +2112,12 @@ static SDLContent CondContent[] =
     {
 	{ SDLInitMask(SdlElementCond) , SetType     },
 	{ SDLInitMask(SdlElementCdata), ZeroOrOne   },
-	{ SDLInitMask(SdlElementNone) , NULL        },
+	{ SDLInitMask(SdlElementNone) , nullptr        },
     };
 static SDLElementAttrList  CondAttrList[] =
     {
 	{ SDL_ATTR_INTERP  , SdlAttrValueImplied    , "ksh"     },
-	{ -1               , SdlAttrValueBad        , NULL      }
+	{ -1               , SdlAttrValueBad        , nullptr      }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2131,7 +2131,7 @@ static SDLContent ThenElseContent[] =
     {
 	{ SDLInitMask(SdlElementIf)  , IfInfo    },
 	{ SDL_ENTITY_ATOMIC               , ZeroToN   },
-	{ SDLInitMask(SdlElementNone), NULL      },
+	{ SDLInitMask(SdlElementNone), nullptr      },
     };
 
 /*-----------------------------------------------------------------------------
@@ -2147,13 +2147,13 @@ static SDLContent ThenElseContent[] =
 static SDLContent SpcContent[] =
     {
 	{ SDLInitMask(SdlElementSpc) , ResolveSpcInfo },
-	{ SDLInitMask(SdlElementNone), NULL        },
+	{ SDLInitMask(SdlElementNone), nullptr        },
     };
 
 static SDLElementAttrList  SpcAttrList[] =
     {
-	{ SDL_ATTR_NAME, SdlAttrValueRequired, NULL        },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ SDL_ATTR_NAME, SdlAttrValueRequired, nullptr        },
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 /*-----------------------------------------------------------------------------
 <!-- Notation Elements _______________________________________________-->
@@ -2172,16 +2172,16 @@ static SDLElementAttrList  SpcAttrList[] =
 static SDLContent GraphicContent[] =
     {
 	{ SDLInitMask(SdlElementGraphic), LoadGraphic     },
-	{ SDLInitMask(SdlElementNone)   , NULL            },
+	{ SDLInitMask(SdlElementNone)   , nullptr            },
     };
 
 static SDLElementAttrList  NotationAttrList[] =
     {
-	{ SDL_ATTR_ID    , SdlAttrValueRequired, NULL        },
-	{ SDL_ATTR_FORMAT, SdlAttrValueImplied , NULL        },
-	{ SDL_ATTR_METHOD, SdlAttrValueImplied , NULL        },
-	{ SDL_ATTR_XID   , SdlAttrValueRequired, NULL        },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ SDL_ATTR_ID    , SdlAttrValueRequired, nullptr        },
+	{ SDL_ATTR_FORMAT, SdlAttrValueImplied , nullptr        },
+	{ SDL_ATTR_METHOD, SdlAttrValueImplied , nullptr        },
+	{ SDL_ATTR_XID   , SdlAttrValueRequired, nullptr        },
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2197,14 +2197,14 @@ static SDLContent TextContent[] =
     {
 	{ SDLInitMask(SdlElementText)  , SaveLangCharSet             },
 	{ SDLInitMaskTwo(SdlElementPara, SdlElementCPara), ZeroToN   },
-	{ SDLInitMask(SdlElementNone)                    , NULL      },
+	{ SDLInitMask(SdlElementNone)                    , nullptr      },
     };
 static SDLElementAttrList  TextAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueRequired, NULL      },
-	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied , NULL      },
-	{ SDL_ATTR_CHARSET , SdlAttrValueImplied , NULL      },
-	{ -1               , SdlAttrValueBad     , NULL      }
+	{ SDL_ATTR_ID      , SdlAttrValueRequired, nullptr      },
+	{ SDL_ATTR_LANGUAGE, SdlAttrValueImplied , nullptr      },
+	{ SDL_ATTR_CHARSET , SdlAttrValueImplied , nullptr      },
+	{ -1               , SdlAttrValueBad     , nullptr      }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2251,13 +2251,13 @@ static SDLContent ScriptContent[] =
     {
 	{ SDLInitMask(SdlElementScript)    , SetType   },
 	{ SDLInitMask(SdlElementCdata)     , ZeroOrOne },
-	{ SDLInitMask(SdlElementNone)      , NULL      },
+	{ SDLInitMask(SdlElementNone)      , nullptr      },
     };
 static SDLElementAttrList  ScriptAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueRequired, NULL      },
+	{ SDL_ATTR_ID      , SdlAttrValueRequired, nullptr      },
 	{ SDL_ATTR_INTERP  , SdlAttrValueImplied , "ksh"     },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 
 
@@ -2276,20 +2276,20 @@ static SDLElementAttrList  ScriptAttrList[] =
 static SDLContent CrossDocContent[] =
     {
 	{ SDLInitMask(SdlElementCrossDoc)  , RegisterSnbLink },
-	{ SDLInitMask(SdlElementNone)      , NULL         },
+	{ SDLInitMask(SdlElementNone)      , nullptr         },
     };
 
 static SDLContent ManPageContent[] =
     {
 	{ SDLInitMask(SdlElementManPage)   , RegisterSnbLink },
-	{ SDLInitMask(SdlElementNone)      , NULL         },
+	{ SDLInitMask(SdlElementNone)      , nullptr         },
     };
 
 static SDLElementAttrList  IdAndXidAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueRequired, NULL      },
-	{ SDL_ATTR_XID     , SdlAttrValueRequired, NULL      },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ SDL_ATTR_ID      , SdlAttrValueRequired, nullptr      },
+	{ SDL_ATTR_XID     , SdlAttrValueRequired, nullptr      },
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2302,16 +2302,16 @@ static SDLElementAttrList  IdAndXidAttrList[] =
 static SDLContent TextFileContent[] =
     {
 	{ SDLInitMask(SdlElementTextFile)  , RegisterSnbLink },
-	{ SDLInitMask(SdlElementNone)      , NULL         },
+	{ SDLInitMask(SdlElementNone)      , nullptr         },
     };
 
 static SDLElementAttrList  TextFileAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueRequired, NULL      },
-	{ SDL_ATTR_XID     , SdlAttrValueRequired, NULL      },
+	{ SDL_ATTR_ID      , SdlAttrValueRequired, nullptr      },
+	{ SDL_ATTR_XID     , SdlAttrValueRequired, nullptr      },
 	{ SDL_ATTR_OFFSET  , SdlAttrValueImplied , ZeroStr   },
-	{ SDL_ATTR_FORMAT  , SdlAttrValueImplied , NULL      },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ SDL_ATTR_FORMAT  , SdlAttrValueImplied , nullptr      },
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2322,14 +2322,14 @@ static SDLElementAttrList  TextFileAttrList[] =
 static SDLContent SysCmdContent[] =
     {
 	{ SDLInitMask(SdlElementSysCmd)    , RegisterSnbLink },
-	{ SDLInitMask(SdlElementNone)      , NULL         },
+	{ SDLInitMask(SdlElementNone)      , nullptr         },
     };
 
 static SDLElementAttrList  SysCmdAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueRequired, NULL      },
-	{ SDL_ATTR_COMMAND , SdlAttrValueRequired, NULL      },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ SDL_ATTR_ID      , SdlAttrValueRequired, nullptr      },
+	{ SDL_ATTR_COMMAND , SdlAttrValueRequired, nullptr      },
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2340,14 +2340,14 @@ static SDLElementAttrList  SysCmdAttrList[] =
 static SDLContent CallbackContent[] =
     {
 	{ SDLInitMask(SdlElementCallback)  , RegisterSnbLink },
-	{ SDLInitMask(SdlElementNone)      , NULL         },
+	{ SDLInitMask(SdlElementNone)      , nullptr         },
     };
 
 static SDLElementAttrList  CallbackAttrList[] =
     {
-	{ SDL_ATTR_ID      , SdlAttrValueRequired, NULL      },
-	{ SDL_ATTR_DATA    , SdlAttrValueImplied , NULL      },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ SDL_ATTR_ID      , SdlAttrValueRequired, nullptr      },
+	{ SDL_ATTR_DATA    , SdlAttrValueImplied , nullptr      },
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2373,14 +2373,14 @@ static SDLContent SwitchContent[] =
 	{ SDLInitMask(SdlElementSwitch), SetType        },
 	{ SDLInitMask(SdlElementCdata) , ZeroOrOne      },
 	{ SDLInitMask(SdlElementSwitch), RegisterSwitch },
-	{ SDLInitMask(SdlElementNone)  , NULL           },
+	{ SDLInitMask(SdlElementNone)  , nullptr           },
     };
 static SDLElementAttrList SwitchAttrList[] =
     {
-	{ SDL_ATTR_ID       , SdlAttrValueRequired, NULL      },
+	{ SDL_ATTR_ID       , SdlAttrValueRequired, nullptr      },
 	{ SDL_ATTR_INTERP   , SdlAttrValueImplied , "ksh"     },
-	{ SDL_ATTR_BRANCHES , SdlAttrValueRequired, NULL      },
-	{ -1                , SdlAttrValueBad     , NULL      }
+	{ SDL_ATTR_BRANCHES , SdlAttrValueRequired, nullptr      },
+	{ -1                , SdlAttrValueBad     , nullptr      }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2411,13 +2411,13 @@ static SDLContent LoidsContent[] = {
 	{ SDLInitMask(SdlElementLoids), AllocateBlock },
 	{ SDLInitMask(SdlElementId)   , ZeroToN       },
 	{ SDLInitMask(SdlElementLoids), CleanUpBlock  },
-	{ SDLInitMask(SdlElementNone) , NULL          },
+	{ SDLInitMask(SdlElementNone) , nullptr          },
     };
 
 static SDLElementAttrList  LoidsAttrList[] =
     {
-	{ SDL_ATTR_COUNT, SdlAttrValueImplied, NULL },
-	{ -1            , SdlAttrValueBad    , NULL }
+	{ SDL_ATTR_COUNT, SdlAttrValueImplied, nullptr },
+	{ -1            , SdlAttrValueBad    , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2450,17 +2450,17 @@ static SDLElementAttrList  LoidsAttrList[] =
 -----------------------------------------------------------------------------*/
 static SDLContent IdContent[] = {
 	{ SDLInitMask(SdlElementId)   , CopyIdInfo },
-	{ SDLInitMask(SdlElementNone) , NULL       },
+	{ SDLInitMask(SdlElementNone) , nullptr       },
     };
 
 static SDLElementAttrList  IdAttrList[] =
     {
-	{ SDL_ATTR_TYPEID  , SdlAttrValueRequired, NULL },
-	{ SDL_ATTR_RID     , SdlAttrValueRequired, NULL },
+	{ SDL_ATTR_TYPEID  , SdlAttrValueRequired, nullptr },
+	{ SDL_ATTR_RID     , SdlAttrValueRequired, nullptr },
 	{ SDL_ATTR_RLEVEL  , SdlAttrValueImplied , NegativeOneStr },
-	{ SDL_ATTR_RSSI    , SdlAttrValueImpliedDef, NULL },
-	{ SDL_ATTR_OFFSET  , SdlAttrValueRequired, NULL },
-	{ -1               , SdlAttrValueBad     , NULL }
+	{ SDL_ATTR_RSSI    , SdlAttrValueImpliedDef, nullptr },
+	{ SDL_ATTR_OFFSET  , SdlAttrValueRequired, nullptr },
+	{ -1               , SdlAttrValueBad     , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2491,13 +2491,13 @@ static SDLElementAttrList  IdAttrList[] =
 -----------------------------------------------------------------------------*/
 static SDLContent IndexContent[] = {
 	{ SDLInitMask(SdlElementEntry), ZeroToN       },
-	{ SDLInitMask(SdlElementNone) , NULL          },
+	{ SDLInitMask(SdlElementNone) , nullptr          },
     };
 
 static SDLElementAttrList  IndexAttrList[] =
     {
-	{ SDL_ATTR_COUNT, SdlAttrValueImplied, NULL },
-	{ -1            , SdlAttrValueBad    , NULL }
+	{ SDL_ATTR_COUNT, SdlAttrValueImplied, nullptr },
+	{ -1            , SdlAttrValueBad    , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2512,17 +2512,17 @@ static SDLContent EntryContent[] = {
 	{ SDLInitMask(SdlElementEntry), CopyEntryInfo },
 	{ SDL_ENTITY_SIMPLE           , ZeroToN       },
 	{ SDLInitMask(SdlElementEntry), ZeroToN       },
-	{ SDLInitMask(SdlElementNone) , NULL          },
+	{ SDLInitMask(SdlElementNone) , nullptr          },
     };
 
 static SDLElementAttrList  EntryAttrList[] =
     {
-	{ SDL_ATTR_ID      ,SdlAttrValueImpliedDef , NULL },
-	{ SDL_ATTR_MAIN    ,SdlAttrValueImpliedDef , NULL },
-	{ SDL_ATTR_LOCS    ,SdlAttrValueImpliedDef , NULL },
-	{ SDL_ATTR_SYNS    ,SdlAttrValueImpliedDef , NULL },
-	{ SDL_ATTR_SORT    ,SdlAttrValueImpliedDef , NULL },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ SDL_ATTR_ID      ,SdlAttrValueImpliedDef , nullptr },
+	{ SDL_ATTR_MAIN    ,SdlAttrValueImpliedDef , nullptr },
+	{ SDL_ATTR_LOCS    ,SdlAttrValueImpliedDef , nullptr },
+	{ SDL_ATTR_SYNS    ,SdlAttrValueImpliedDef , nullptr },
+	{ SDL_ATTR_SORT    ,SdlAttrValueImpliedDef , nullptr },
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2544,13 +2544,13 @@ static SDLElementAttrList  EntryAttrList[] =
 static SDLContent LoPhraseContent[] =
     {
 	{ SDLInitMask(SdlElementPhrase)                  , OneToN },
-	{ SDLInitMask(SdlElementNone)                    , NULL   },
+	{ SDLInitMask(SdlElementNone)                    , nullptr   },
     };
 
 static SDLElementAttrList  LoPhraseAttrList[] =
     {
-	{ SDL_ATTR_COUNT, SdlAttrValueImplied, NULL },
-	{ -1            , SdlAttrValueBad    , NULL }
+	{ SDL_ATTR_COUNT, SdlAttrValueImplied, nullptr },
+	{ -1            , SdlAttrValueBad    , nullptr }
     };
 /*-----------------------------------------------------------------------------
 <!ELEMENT phrase    - O EMPTY     >
@@ -2558,8 +2558,8 @@ static SDLElementAttrList  LoPhraseAttrList[] =
 -----------------------------------------------------------------------------*/
 static SDLElementAttrList  PhraseAttrList[] =
     {
-	{ SDL_ATTR_TEXT    , SdlAttrValueRequired, NULL },
-	{ -1               ,SdlAttrValueBad        , NULL }
+	{ SDL_ATTR_TEXT    , SdlAttrValueRequired, nullptr },
+	{ -1               ,SdlAttrValueBad        , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2593,13 +2593,13 @@ static SDLContent TossContent[] = {
 	{ SDLInitMask(SdlElementFrmtStyle), ZeroToN       },
 	{ SDLInitMask(SdlElementGrphStyle), ZeroToN       },
 	{ SDLInitMask(SdlElementToss)     , CleanUpBlock  },
-	{ SDLInitMask(SdlElementNone)     , NULL          },
+	{ SDLInitMask(SdlElementNone)     , nullptr          },
     };
 
 static SDLElementAttrList  TossAttrList[] =
     {
-	{ SDL_ATTR_COUNT, SdlAttrValueImplied, NULL },
-	{ -1            , SdlAttrValueBad    , NULL }
+	{ SDL_ATTR_COUNT, SdlAttrValueImplied, nullptr },
+	{ -1            , SdlAttrValueBad    , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2624,19 +2624,19 @@ static SDLElementAttrList  TossAttrList[] =
 -----------------------------------------------------------------------------*/
 static SDLContent KeyStyleContent[] = {
 	{ SDLInitMask(SdlElementKeyStyle) , CopyTossInfo  },
-	{ SDLInitMask(SdlElementNone)     , NULL          },
+	{ SDLInitMask(SdlElementNone)     , nullptr          },
     };
 static SDLElementAttrList  KeyStyleAttrList[] =
     {
-	{ SDL_ATTR_CLASSK  , SdlAttrValueRequired  , NULL },
-	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, NULL },
+	{ SDL_ATTR_CLASSK  , SdlAttrValueRequired  , nullptr },
+	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, nullptr },
 	{ SDL_ATTR_RLEVEL  , SdlAttrValueImplied   , NegativeOneStr },
-	{ SDL_ATTR_PHRASE  , SdlAttrValueImpliedDef, NULL },
+	{ SDL_ATTR_PHRASE  , SdlAttrValueImpliedDef, nullptr },
 	{ SDL_ATTR_SRCHWT  , SdlAttrValueImplied   , NegativeOneStr },
-	{ SDL_ATTR_ENTER   , SdlAttrValueImpliedDef, NULL },
-	{ SDL_ATTR_EXIT    , SdlAttrValueImpliedDef, NULL },
+	{ SDL_ATTR_ENTER   , SdlAttrValueImpliedDef, nullptr },
+	{ SDL_ATTR_EXIT    , SdlAttrValueImpliedDef, nullptr },
 	font_stylesAttrList,
-	{ -1               , SdlAttrValueBad       , NULL }
+	{ -1               , SdlAttrValueBad       , nullptr }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2727,14 +2727,14 @@ static SDLElementAttrList  KeyStyleAttrList[] =
 -----------------------------------------------------------------------------*/
 static SDLContent HeadStyleContent[] = {
 	{ SDLInitMask(SdlElementHeadStyle), CopyTossInfo  },
-	{ SDLInitMask(SdlElementNone)     , NULL          },
+	{ SDLInitMask(SdlElementNone)     , nullptr          },
     };
 static SDLElementAttrList  HeadStyleAttrList[] =
     {
-	{ SDL_ATTR_CLASSH   , SdlAttrValueRequired  , NULL           },
-	{ SDL_ATTR_SSI      , SdlAttrValueImpliedDef, NULL           },
+	{ SDL_ATTR_CLASSH   , SdlAttrValueRequired  , nullptr           },
+	{ SDL_ATTR_SSI      , SdlAttrValueImpliedDef, nullptr           },
 	{ SDL_ATTR_RLEVEL   , SdlAttrValueImplied   , NegativeOneStr },
-	{ SDL_ATTR_PHRASE   , SdlAttrValueImplied   , NULL           },
+	{ SDL_ATTR_PHRASE   , SdlAttrValueImplied   , nullptr           },
 	{ SDL_ATTR_SRCHWT   , SdlAttrValueImplied   , NegativeOneStr },
 	{ SDL_ATTR_ORIENT   , SdlAttrValueImplied   , CenterOrientStr},
 	{ SDL_ATTR_VORIENT  , SdlAttrValueImplied   , TopVOrientStr  },
@@ -2745,7 +2745,7 @@ static SDLElementAttrList  HeadStyleAttrList[] =
 	font_stylesAttrList ,
 	formt_stylesAttrList,
 	{ SDL_ATTR_JUSTIFY1 , SdlAttrValueImplied   , LeftJustifyStr }, 
-	{ -1                , SdlAttrValueBad       , NULL           }
+	{ -1                , SdlAttrValueBad       , nullptr           }
     };
 
 /*-----------------------------------------------------------------------------
@@ -2814,20 +2814,20 @@ static SDLElementAttrList  HeadStyleAttrList[] =
 -----------------------------------------------------------------------------*/
 static SDLContent FormStyleContent[] = {
 	{ SDLInitMask(SdlElementFormStyle), CopyTossInfo  },
-	{ SDLInitMask(SdlElementNone)     , NULL          },
+	{ SDLInitMask(SdlElementNone)     , nullptr          },
     };
 static SDLElementAttrList  FormStyleAttrList[] =
     {
-	{ SDL_ATTR_CLASSF  , SdlAttrValueRequired  , NULL           },
-	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, NULL           },
+	{ SDL_ATTR_CLASSF  , SdlAttrValueRequired  , nullptr           },
+	{ SDL_ATTR_SSI     , SdlAttrValueImpliedDef, nullptr           },
 	{ SDL_ATTR_RLEVEL  , SdlAttrValueImplied   , NegativeOneStr },
-	{ SDL_ATTR_PHRASE  , SdlAttrValueImplied   , NULL           },
+	{ SDL_ATTR_PHRASE  , SdlAttrValueImplied   , nullptr           },
 	{ SDL_ATTR_SRCHWT  , SdlAttrValueImplied   , NegativeOneStr },
-	{ SDL_ATTR_COLW    , SdlAttrValueImpliedDef, NULL           },
-	{ SDL_ATTR_COLJ    , SdlAttrValueImpliedDef, NULL           },
+	{ SDL_ATTR_COLW    , SdlAttrValueImpliedDef, nullptr           },
+	{ SDL_ATTR_COLJ    , SdlAttrValueImpliedDef, nullptr           },
 	font_stylesAttrList,
 	formt_stylesAttrList,
-	{ -1               , SdlAttrValueBad       , NULL }
+	{ -1               , SdlAttrValueBad       , nullptr }
     };
 /*-----------------------------------------------------------------------------
 <!ELEMENT frmtstyle - O EMPTY    >
@@ -2862,20 +2862,20 @@ static SDLElementAttrList  FormStyleAttrList[] =
 -----------------------------------------------------------------------------*/
 static SDLContent FrmtStyleContent[] = {
 	{ SDLInitMask(SdlElementFrmtStyle), CopyTossInfo  },
-	{ SDLInitMask(SdlElementNone)     , NULL          },
+	{ SDLInitMask(SdlElementNone)     , nullptr          },
     };
 static SDLElementAttrList  FrmtStyleAttrList[] =
     {
-	{ SDL_ATTR_CLASSF   , SdlAttrValueRequired  , NULL           },
-	{ SDL_ATTR_SSI      , SdlAttrValueImpliedDef, NULL           },
+	{ SDL_ATTR_CLASSF   , SdlAttrValueRequired  , nullptr           },
+	{ SDL_ATTR_SSI      , SdlAttrValueImpliedDef, nullptr           },
 	{ SDL_ATTR_RLEVEL   , SdlAttrValueImplied   , NegativeOneStr },
-	{ SDL_ATTR_PHRASE   , SdlAttrValueImplied   , NULL           },
+	{ SDL_ATTR_PHRASE   , SdlAttrValueImplied   , nullptr           },
 	{ SDL_ATTR_SRCHWT   , SdlAttrValueImplied   , NegativeOneStr },
 	{ SDL_ATTR_FMARGIN  , SdlAttrValueImplied   , ZeroStr        },
 	font_stylesAttrList ,
 	formt_stylesAttrList,
 	{ SDL_ATTR_JUSTIFY1 , SdlAttrValueImplied   , LeftJustifyStr }, 
-	{ -1                , SdlAttrValueBad       , NULL           }
+	{ -1                , SdlAttrValueBad       , nullptr           }
     };
 /*----------------------------------------------------------------------------- <!ELEMENT grphstyle - O EMPTY    >
 <!ATTLIST grphstyle     class     (%graphic-class;)  #REQUIRED
@@ -2899,29 +2899,29 @@ static SDLElementAttrList  FrmtStyleAttrList[] =
 -----------------------------------------------------------------------------*/
 static SDLContent GrphStyleContent[] = {
 	{ SDLInitMask(SdlElementGrphStyle), CopyTossInfo  },
-	{ SDLInitMask(SdlElementNone)     , NULL          },
+	{ SDLInitMask(SdlElementNone)     , nullptr          },
     };
 static SDLElementAttrList  GrphStyleAttrList[] =
     {
-	{ SDL_ATTR_CLASSG   , SdlAttrValueRequired  , NULL           },
-	{ SDL_ATTR_SSI      , SdlAttrValueImpliedDef, NULL           },
+	{ SDL_ATTR_CLASSG   , SdlAttrValueRequired  , nullptr           },
+	{ SDL_ATTR_SSI      , SdlAttrValueImpliedDef, nullptr           },
 	{ SDL_ATTR_RLEVEL   , SdlAttrValueImplied   , NegativeOneStr },
-	{ SDL_ATTR_PHRASE   , SdlAttrValueImplied   , NULL           },
+	{ SDL_ATTR_PHRASE   , SdlAttrValueImplied   , nullptr           },
 	formt_stylesAttrList,
 	{ SDL_ATTR_JUSTIFY2 , SdlAttrValueImplied   , LeftJustifyStr }, 
-	{ -1                , SdlAttrValueBad       , NULL           }
+	{ -1                , SdlAttrValueBad       , nullptr           }
     };
 
 static SDLContent CdataContent[] = {
 	{ SDLInitMask(SdlElementCdata), Cdata },
-	{ SDLInitMask(SdlElementNone) , NULL  },
+	{ SDLInitMask(SdlElementNone) , nullptr  },
     };
 
 static SDLContent SDLDocumentContent[] = {
 	{ SDLInitMask(SdlElementSgml)   , ZeroOrOne },
 	{ SDLInitMask(SdlElementDocType), ZeroOrOne },
 	{ SDLInitMask(SdlElementSdlDoc) , OnlyOne   },
-	{ SDLInitMask(SdlElementNone)   , NULL      },
+	{ SDLInitMask(SdlElementNone)   , nullptr      },
     };
 
 /*
@@ -2936,25 +2936,25 @@ static	SDLElementInfo  SdlElementList[] =
     {"<alttext"  , "</alttext" , 3, 3,
 			SdlElementAltText     ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , AltTextContent  ,
+			nullptr                  , AltTextContent  ,
 			False, False, False   , False, SdlToSnb          },
 
-    {AnchorStr   , NULL        , 4, 0,
+    {AnchorStr   , nullptr        , 4, 0,
 			SdlElementAnchor      ,
 			SDLInitMask(SdlElementNone),
 			AnchorAttrList        , AnchorContent   ,
 			False, True , False   , False, SdlToMarker       },
 
-    {AnimateStr  , NULL        , 4, 0,
+    {AnimateStr  , nullptr        , 4, 0,
 			SdlElementAnimate     ,
 			SDLInitMask(SdlElementNone),
-			NotationAttrList      , NULL            ,
+			NotationAttrList      , nullptr            ,
 			False, True , False   , False, SdlToNone         },
 
-    {AudioStr    , NULL        , 3, 0,
+    {AudioStr    , nullptr        , 3, 0,
 			SdlElementAudio       ,
 			SDLInitMask(SdlElementNone),
-			NotationAttrList      , NULL            ,
+			NotationAttrList      , nullptr            ,
 			False, True , False   , False, SdlToNone         },
 
     {BlockStr    , "</block"   , 2, 3,
@@ -2963,7 +2963,7 @@ static	SDLElementInfo  SdlElementList[] =
 			BlockAttrList         , BlockContent    ,
 			False, True, True     , True , SdlToContainer    },
 
-    {CallbackStr , NULL        , 3, 0,
+    {CallbackStr , nullptr        , 3, 0,
 			SdlElementCallback    ,
 			SDLInitMask(SdlElementNone),
 			CallbackAttrList      , CallbackContent ,
@@ -2981,7 +2981,7 @@ static	SDLElementInfo  SdlElementList[] =
 			ParaAttrList          , CParaContent    ,
 			True , True, True     , True , SdlToContainer    },
 
-    {CrossdocStr , NULL        , 3, 0,
+    {CrossdocStr , nullptr        , 3, 0,
 			SdlElementCrossDoc    ,
 			SDLInitMask(SdlElementNone),
 			IdAndXidAttrList      , CrossDocContent ,
@@ -2990,7 +2990,7 @@ static	SDLElementInfo  SdlElementList[] =
     {"<else"     , "</else"    , 3, 4,
 			SdlElementElse        ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , ThenElseContent ,
+			nullptr                  , ThenElseContent ,
 			False, False, False   , False, SdlToContainer    },
 
     {"<entry"    , "</entry"   , 3, 4,
@@ -3002,14 +3002,14 @@ static	SDLElementInfo  SdlElementList[] =
     {"<fdata"    , "</fdata"   , 3, 4,
 			SdlElementFdata       ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , FdataContent    ,
+			nullptr                  , FdataContent    ,
 			False, False, False   , False, SdlToNone         },
 
 /*
  * when one element is a short version of another, put the longer element
  * before the short element so that tests will check it first.
  */
-    {"<formstyle", NULL        , 6, 0,
+    {"<formstyle", nullptr        , 6, 0,
 			SdlElementFormStyle   ,
 			SDLInitMask(SdlElementNone),
 			FormStyleAttrList     , FormStyleContent,
@@ -3021,13 +3021,13 @@ static	SDLElementInfo  SdlElementList[] =
 			FormAttrList          , FormContent     ,
 			False, True , False   , True , SdlToContainer    },
 
-    {"<frmtstyle", NULL        , 4, 0,
+    {"<frmtstyle", nullptr        , 4, 0,
 			SdlElementFrmtStyle   ,
 			SDLInitMask(SdlElementNone),
 			FrmtStyleAttrList     , FrmtStyleContent,
 			False, True , False   , False, SdlToContainer    },
 
-    {"<frowvec"  , NULL        , 4, 0,
+    {"<frowvec"  , nullptr        , 4, 0,
 			SdlElementFrowvec     ,
 			SDLInitMask(SdlElementNone),
 			FrowvecAttrList       , FrowvecContent  ,
@@ -3039,13 +3039,13 @@ static	SDLElementInfo  SdlElementList[] =
 			FstyleAttrList        , FstyleContent   ,
 			False, True , False   , False, SdlToNone         },
 
-    { GraphicStr , NULL        , 4, 0,
+    { GraphicStr , nullptr        , 4, 0,
 			SdlElementGraphic     ,
 			SDLInitMask(SdlElementNone),
 			NotationAttrList      , GraphicContent ,
 			True , True , False   , False, SdlToSnb          },
 
-    {"<grphstyle", NULL        , 4, 0,
+    {"<grphstyle", nullptr        , 4, 0,
 			SdlElementGrphStyle   ,
 			SDLInitMask(SdlElementNone),
 			GrphStyleAttrList     , GrphStyleContent,
@@ -3055,7 +3055,7 @@ static	SDLElementInfo  SdlElementList[] =
  * when one element is a short version of another, put the longer element
  * before the short element so that tests will check it first.
  */
-    {"<headstyle", NULL        , 6, 0,
+    {"<headstyle", nullptr        , 6, 0,
 			SdlElementHeadStyle   ,
 			SDLInitMask(SdlElementNone),
 			HeadStyleAttrList     , HeadStyleContent,
@@ -3067,7 +3067,7 @@ static	SDLElementInfo  SdlElementList[] =
 			HeadAttrList          , HeadContent     ,
 			False, True , True    , True , SdlToContainer    },
 
-    {"<id"       , NULL        , 3, 0,
+    {"<id"       , nullptr        , 3, 0,
 			SdlElementId          ,
 			SDLInitMask(SdlElementNone),
 			IdAttrList            , IdContent       ,
@@ -3076,7 +3076,7 @@ static	SDLElementInfo  SdlElementList[] =
     {"<if"       , "</if"      , 3, 4,
 			SdlElementIf          ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , IfContent       ,
+			nullptr                  , IfContent       ,
 			False, False, False   , False, SdlToContainer    },
 
     {"<index"    , "</index"    , 3, 4,
@@ -3085,7 +3085,7 @@ static	SDLElementInfo  SdlElementList[] =
 			IndexAttrList         , IndexContent    ,
 			False, True , False   , False, SdlToContainer    },
 
-    {"<keystyle" , NULL        , 6, 0,
+    {"<keystyle" , nullptr        , 6, 0,
 			SdlElementKeyStyle    ,
 			SDLInitMask(SdlElementNone),
 			KeyStyleAttrList      , KeyStyleContent ,
@@ -3115,22 +3115,22 @@ static	SDLElementInfo  SdlElementList[] =
 			LoPhraseAttrList      , LoPhraseContent,
 			False, True , False   , False, SdlToNone         },
 
-    {ManpageStr  , NULL        , 2, 0,
+    {ManpageStr  , nullptr        , 2, 0,
 			SdlElementManPage     ,
 			SDLInitMask(SdlElementNone),
 			IdAndXidAttrList      , ManPageContent,
 			True , True , False   , False, SdlToContainer    },
 
-    {"<notes"    , NULL        , 2, 0,
+    {"<notes"    , nullptr        , 2, 0,
 			SdlElementNotes       ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , NULL          ,
+			nullptr                  , nullptr          ,
 			False, True , False   , False, SdlToNone         },
 
-    {"<phrase"   , NULL        , 3, 0,
+    {"<phrase"   , nullptr        , 3, 0,
 			SdlElementPhrase      ,
 			SDLInitMask(SdlElementNone),
-			PhraseAttrList        , NULL       ,
+			PhraseAttrList        , nullptr       ,
 			False, True , False   , False, SdlToNone         },
 
     {ParaStr     , "</p"       , 2, 3,
@@ -3145,22 +3145,22 @@ static	SDLElementInfo  SdlElementList[] =
 			RefItemAttrList       , RefItemContent,
 			False, True , False   , True , SdlToSnb          },
 
-    {"<rel-docs" , NULL        , 6, 0,
+    {"<rel-docs" , nullptr        , 6, 0,
 			SdlElementRelDocs     ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , NULL          ,
+			nullptr                  , nullptr          ,
 			False, False, False   , False, SdlToNone         },
 
-    {"<rel-file" , NULL        , 6, 0,
+    {"<rel-file" , nullptr        , 6, 0,
 			SdlElementRelFile     ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , NULL          ,
+			nullptr                  , nullptr          ,
 			False, False, False   , False, SdlToNone         },
 
     {"<rev"      , "</rev"     , 4, 5,
 			SdlElementRev         ,
 			SDLInitMask(SdlElementRev),
-			NULL                  , RevContent    ,
+			nullptr                  , RevContent    ,
 			True , False, False   , False, SdlToNone         },
 
     {ScriptStr   , "</script"  , 3, 4,
@@ -3187,7 +3187,7 @@ static	SDLElementInfo  SdlElementList[] =
 			SnrefAttrList         , SnrefContent  ,
 			False, True , False   , False, SdlToContainer    },
 
-    {"<spc"      , NULL        , 4, 0,
+    {"<spc"      , nullptr        , 4, 0,
 			SdlElementSpc         ,
 			SDLInitMask(SdlElementNone),
 			SpcAttrList           , SpcContent    ,
@@ -3211,13 +3211,13 @@ static	SDLElementInfo  SdlElementList[] =
 			SwitchAttrList        , SwitchContent ,
 			True , True , False   , False, SdlToContainer    },
 
-    {SyscmdStr   , NULL        , 3, 0,
+    {SyscmdStr   , nullptr        , 3, 0,
 			SdlElementSysCmd      ,
 			SDLInitMask(SdlElementNone),
 			SysCmdAttrList        , SysCmdContent ,
 			True , True , False   , False, SdlToContainer    },
 
-    {TextfileStr , NULL        , 6, 0,
+    {TextfileStr , nullptr        , 6, 0,
 			SdlElementTextFile    ,
 			SDLInitMask(SdlElementNone),
 			TextFileAttrList      , TextFileContent,
@@ -3232,7 +3232,7 @@ static	SDLElementInfo  SdlElementList[] =
     {"<then"     , "</then"    , 3, 4,
 			SdlElementThen        ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , ThenElseContent,
+			nullptr                  , ThenElseContent,
 			False, False, False   , False, SdlToContainer    },
 
     {"<toss"     , "</toss"    , 3, 4,
@@ -3241,10 +3241,10 @@ static	SDLElementInfo  SdlElementList[] =
 			TossAttrList          , TossContent   ,
 			False, True , False   , False, SdlToContainer    },
 
-    {VideoStr    , NULL        , 4, 0,
+    {VideoStr    , nullptr        , 4, 0,
 			SdlElementVideo       ,
 			SDLInitMask(SdlElementNone),
-			NotationAttrList      , NULL          ,
+			NotationAttrList      , nullptr          ,
 			False, True , False   , False, SdlToNone         },
 
     {VirpageStr  , "</virpage" , 4, 4,
@@ -3265,28 +3265,28 @@ static	SDLElementInfo  SdlElementList[] =
 			VStructAttrList       , VStructContent,
 			False, True , False   , False, SdlToNone         },
 
-    {"<!--"      , NULL        , 3, 0,
+    {"<!--"      , nullptr        , 3, 0,
 			SdlElementComment     ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , NULL          ,
+			nullptr                  , nullptr          ,
 			False, True , False   , False, SdlToNone         },
 
-    {"<!doctype" , NULL        , 3, 0,
+    {"<!doctype" , nullptr        , 3, 0,
 			SdlElementDocType     ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , NULL          ,
+			nullptr                  , nullptr          ,
 			False, True , False   , False, SdlToNone         },
 
-    {"<!sgml"    , NULL        , 3, 0,
+    {"<!sgml"    , nullptr        , 3, 0,
 			SdlElementSgml        ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , NULL          ,
+			nullptr                  , nullptr          ,
 			False, True , False   , False, SdlToNone         },
 
-    { NULL       , NULL        , 0, 0,
+    { nullptr       , nullptr        , 0, 0,
 			SdlElementCdata       ,
 			SDLInitMask(SdlElementNone),
-			NULL                  , CdataContent  ,
+			nullptr                  , CdataContent  ,
 			False, False, False   , False, SdlToNone         },
   };
 
@@ -3364,7 +3364,7 @@ CompressTable(
     /*
      * make sure we're working with a non-null segment.
      */
-    if (NULL != seg)
+    if (nullptr != seg)
       {
 	/*
 	 * get the row ids.
@@ -3376,7 +3376,7 @@ CompressTable(
 	 * compress out the table
 	 */
 	if (1 == _DtCvNumColsOfTableSeg(seg) &&
-		(NULL == rowIds || NULL == *rowIds || NULL == rowIds[1]))
+		(nullptr == rowIds || nullptr == *rowIds || nullptr == rowIds[1]))
 	  {
 	    /*
 	     * get the list of table segments.
@@ -3386,16 +3386,16 @@ CompressTable(
 	    /*
 	     * now find the correct segment. Start out with a null return.
 	     */
-	    retSeg = NULL;
-	    if (NULL != rowIds && NULL != *rowIds)
+	    retSeg = nullptr;
+	    if (nullptr != rowIds && nullptr != *rowIds)
 	      {
-		_DtCvSegment *prevSeg = NULL;
+		_DtCvSegment *prevSeg = nullptr;
 
 		/*
 		 * look through the table's list for the one segment
 		 * to fill the one column/row table.
 		 */
-		while (NULL != tableSegs && NULL != *tableSegs &&
+		while (nullptr != tableSegs && nullptr != *tableSegs &&
 		   _DtCvStrCaseCmpLatin1(*rowIds, _DtCvContainerIdOfSeg(*tableSegs)))
 		  {
 		    prevSeg = *tableSegs;
@@ -3405,7 +3405,7 @@ CompressTable(
 		/*
 		 * does the segment exist in the table's list?
 		 */
-		if (NULL != tableSegs && NULL != *tableSegs)
+		if (nullptr != tableSegs && nullptr != *tableSegs)
 		  {
 		    /*
 		     * set the return value.
@@ -3416,7 +3416,7 @@ CompressTable(
 		     * now propagate the justification.
 		     */
 		    if (_DtCvINHERIT == _DtCvContainerJustifyOfSeg(retSeg)
-				&& NULL != _DtCvColJustifyOfTableSeg(seg))
+				&& nullptr != _DtCvColJustifyOfTableSeg(seg))
 			_DtCvContainerJustifyOfSeg(retSeg) =
 					*(_DtCvColJustifyOfTableSeg(seg));
 
@@ -3425,7 +3425,7 @@ CompressTable(
 		     * eliminating this segment from the list so it
 		     * won't be freed via _DtHelpFreeSegments().
 		     */
-		    while (NULL != *tableSegs)
+		    while (nullptr != *tableSegs)
 		      {
 			*tableSegs = tableSegs[1];
 			tableSegs++;
@@ -3454,7 +3454,7 @@ PropagateJustification(
     _DtCvSegment	 *seg,
     _DtCvFrmtOption	  justify)
 {
-    if (NULL != seg && _DtCvIsSegContainer(seg) &&
+    if (nullptr != seg && _DtCvIsSegContainer(seg) &&
 			_DtCvINHERIT == _DtCvContainerJustifyOfSeg(seg))
 	_DtCvContainerJustifyOfSeg(seg) = justify;
 }
@@ -3487,7 +3487,7 @@ FreeAttributes(
 
     myList = SdlElementList[i].attrib_list;
 
-    if (myList != NULL &&
+    if (myList != nullptr &&
 		(cur_info->str1_values != 0 || cur_info->str2_values != 0))
       {
 	while (myList->sdl_attr_define != -1)
@@ -3513,7 +3513,7 @@ FreeAttributes(
 		    varOffset = varOffset + attrib->field_ptr;
 		    strPtr    = (char **) varOffset;
 
-		    if (NULL != *strPtr)
+		    if (nullptr != *strPtr)
 			free (*strPtr);
 		  }
 	      }
@@ -3541,22 +3541,22 @@ DuplicateElement(
     _DtCvValue		  vis_link)
 {
     int			 oldIndex = link_idx;
-    _DtCvSegment	*topSeg   = NULL;
-    _DtCvSegment	*prevData = NULL;
-    _DtCvSegment	*lastSeg  = NULL;
+    _DtCvSegment	*topSeg   = nullptr;
+    _DtCvSegment	*prevData = nullptr;
+    _DtCvSegment	*lastSeg  = nullptr;
     _DtCvSegment	*newSeg;
     _DtHelpFontHints	 curFonts;
     SdlMatchData	*match;
     _DtHelpDARegion	*region;
     FrmtPrivateInfo	*priv;
 
-    if (NULL != prev_data)
+    if (nullptr != prev_data)
 	prevData = *prev_data;
 
-    if (NULL != last_seg)
+    if (nullptr != last_seg)
 	lastSeg = *last_seg;
 
-    while (src_seg != NULL)
+    while (src_seg != nullptr)
       {
 	curFonts   = srcFonts;
 	link_idx = oldIndex;
@@ -3567,8 +3567,8 @@ DuplicateElement(
 		vis_link = True;
 	  }
 
-	if (_DtHelpCeAllocSegment(1, NULL, NULL, &newSeg) != 0)
-	    return NULL;
+	if (_DtHelpCeAllocSegment(1, nullptr, nullptr, &newSeg) != 0)
+	    return nullptr;
 
 	/*
 	 * copy over the information. (But don't blow away the private
@@ -3597,13 +3597,13 @@ DuplicateElement(
 	    else
 		newSeg->type = _DtCvSetTypeToGhostLink(newSeg->type);
 	  }
-	_DtCvNextSeg(newSeg) = NULL;
-	newSeg->next_disp  = NULL;
+	_DtCvNextSeg(newSeg) = nullptr;
+	newSeg->next_disp  = nullptr;
 
 	/*
 	 * put this segment into the list.
 	 */
-	if (NULL != lastSeg)
+	if (nullptr != lastSeg)
 	    _DtCvNextSeg(lastSeg) = newSeg;
 
 	/*
@@ -3618,9 +3618,9 @@ DuplicateElement(
 		/*
 		 * merge the attributes into the new elements.
 		 */
-		if (NULL != match)
+		if (nullptr != match)
 		  {
-		    if (NULL != toss)
+		    if (nullptr != toss)
 		      {
 			_DtHelpCeMergeSdlAttribInfo(
 						_DtHelpCeMatchSemanticStyle(
@@ -3630,9 +3630,9 @@ DuplicateElement(
 							match->ssi),
 						newSeg,
 						&curFonts,
-						NULL,
-						NULL,
-						NULL);
+						nullptr,
+						nullptr,
+						nullptr);
 			/*
 			 * set the margins to absolute values
 			 */
@@ -3671,10 +3671,10 @@ DuplicateElement(
 					link_idx,
 					vis_link);
 
-		if (NULL == _DtCvContainerListOfSeg(newSeg))
+		if (nullptr == _DtCvContainerListOfSeg(newSeg))
 		  {
 		    free(newSeg);
-		    return NULL;
+		    return nullptr;
 		  }
 
 		/*
@@ -3702,7 +3702,7 @@ DuplicateElement(
 		/*
 		 * put this segment in the display list.
 		 */
-		if (NULL != prevData)
+		if (nullptr != prevData)
 		    prevData->next_disp = newSeg;
 
 		prevData = newSeg;
@@ -3731,7 +3731,7 @@ DuplicateElement(
 		/*
 		 * check for in-line flags on this item.
 		 */
-		if (NULL != match &&
+		if (nullptr != match &&
 			(SdlClassInLine == match->clan ||
 			 SdlClassButton == match->clan ||
 			 SdlClassIcon   == match->clan))
@@ -3740,24 +3740,24 @@ DuplicateElement(
 		/*
 		 * put this segment in the display list.
 		 */
-		if (NULL != prevData)
+		if (nullptr != prevData)
 		    prevData->next_disp = newSeg;
 
 		prevData = newSeg;
 		break;
 	  }
 
-	if (topSeg == NULL)
+	if (topSeg == nullptr)
 	    topSeg = newSeg;
 
 	lastSeg = newSeg;
 	src_seg = _DtCvNextSeg(src_seg);
       }
 
-    if (NULL != prev_data)
+    if (nullptr != prev_data)
 	*prev_data = prevData;
 
-    if (NULL != last_seg)
+    if (nullptr != last_seg)
 	*last_seg = lastSeg;
 
     return topSeg;
@@ -3782,9 +3782,9 @@ ResolveSnref(
     char		*snref_id)
 {
     _DtCvValue	 found      = False;
-    _DtCvSegment	*snbEntry   = NULL;
-    _DtCvSegment	*altText    = NULL;
-    _DtCvSegment	*newSeg     = NULL;
+    _DtCvSegment	*snbEntry   = nullptr;
+    _DtCvSegment	*altText    = nullptr;
+    _DtCvSegment	*newSeg     = nullptr;
     _DtCvSegment	*refItem    = _DtCvContainerListOfSeg(snref);
     FrmtPrivateInfo	*priv;
     _DtHelpFontHints	 saveFonts  = *(my_struct->my_fonts);
@@ -3793,26 +3793,26 @@ ResolveSnref(
      * Check to see if a snb has been found yet. If not, put off resolving
      * refitems.
      */
-    if (NULL != my_struct->snb)
+    if (nullptr != my_struct->snb)
       {
 	/*
 	 * check each refitem to see if it can be resolved
 	 */
-	while (False == found && NULL != refItem)
+	while (False == found && nullptr != refItem)
 	  {
 	    /*
 	     * assume the refitem will be found in the snb
 	     */
 	    found    = True;
-	    snbEntry = NULL;
-	    if (NULL != _DtCvContainerIdOfSeg(refItem))
+	    snbEntry = nullptr;
+	    if (nullptr != _DtCvContainerIdOfSeg(refItem))
 	        snbEntry = FindSnbEntry(my_struct->snb,
 					_DtCvContainerIdOfSeg(refItem));
 	    else
 		/* the <alttext> container */
 		altText  = refItem;
 
-	    if (NULL == snbEntry)
+	    if (nullptr == snbEntry)
 	      {
 		/*
 		 * didn't find the refitem, so set the flag
@@ -3840,7 +3840,7 @@ ResolveSnref(
 		 */
 		SdlMatchData *match;
 		char *runData;
-		char *newData   = NULL;
+		char *newData   = nullptr;
 		char *interpStr = GetInterpCmd((SdlOption) (priv->interp));
 
 		/*
@@ -3849,14 +3849,14 @@ ResolveSnref(
 	        runData = _DtCvStringOfStringSeg(
 					_DtCvContainerListOfSeg(snbEntry));
 
-		if (NULL == interpStr
+		if (nullptr == interpStr
 			|| -1 == _DtCvRunInterp(my_struct->ui_info->exec_filter,
 					my_struct->ui_info->client_data,
 					interpStr, runData, &newData)
-			|| NULL == newData || 0 == strlen(newData))
+			|| nullptr == newData || 0 == strlen(newData))
 		  {
 		    free(newData);
-		    return NULL;
+		    return nullptr;
 		  }
 
 		/*
@@ -3864,7 +3864,7 @@ ResolveSnref(
 		 */
 		match = SegMatchDataPtr(refItem);
 
-		if (NULL != match && NULL != my_struct->toss)
+		if (nullptr != match && nullptr != my_struct->toss)
 		    _DtHelpCeMergeSdlAttribInfo(
 					_DtHelpCeMatchSemanticStyle(
 							my_struct->toss,
@@ -3873,16 +3873,16 @@ ResolveSnref(
 							match->ssi),
 					newSeg,
 					my_struct->my_fonts,
-					NULL,
-					NULL,
-					NULL);
+					nullptr,
+					nullptr,
+					nullptr);
 
 		if (0 != MySaveString(&newSeg, my_struct, newData,
 					my_struct->cur_link, my_struct->mb_len,
 					False))
 		  {
 		    free(newData);
-		    return NULL;
+		    return nullptr;
 		  }
 
 		free(newData);
@@ -3897,7 +3897,7 @@ ResolveSnref(
 	         * in the snbEntry.
 	         */
 	        snbEntry = _DtCvContainerListOfSeg(snbEntry);
-		if (NULL != snbEntry)
+		if (nullptr != snbEntry)
 		  {
 	            SegMatchData(snbEntry) = SegMatchData(refItem);
 
@@ -3905,7 +3905,7 @@ ResolveSnref(
 					my_struct->toss,
 					snbEntry,
 					&(my_struct->prev_data),
-					NULL,
+					nullptr,
 					my_struct->ui_info->load_font,
 					my_struct->ui_info->resolve_spc,
 					my_struct->ui_info->line_height / 2,
@@ -3913,10 +3913,10 @@ ResolveSnref(
 					*(my_struct->my_fonts),
 					my_struct->cur_link, True);
 
-	            SegMatchData(snbEntry) = NULL;
+	            SegMatchData(snbEntry) = nullptr;
 
-	            if (NULL == newSeg)
-		        return NULL;
+	            if (nullptr == newSeg)
+		        return nullptr;
 
 	            /*
 	             * if the only item in the list for the snb entry is
@@ -3926,7 +3926,7 @@ ResolveSnref(
 	             * figure, include them (they may be a caption to the
 	             * region).
 	             */
-	            if (_DtCvIsSegRegion(newSeg) && NULL == _DtCvNextSeg(newSeg))
+	            if (_DtCvIsSegRegion(newSeg) && nullptr == _DtCvNextSeg(newSeg))
 	              {
 		        SdlMatchData *info = SegMatchDataPtr(refItem);
 
@@ -3936,7 +3936,7 @@ ResolveSnref(
 		        if (SdlClassFigure == info->clan)
 		          {
 		            _DtCvNextSeg(newSeg) = _DtCvContainerListOfSeg(refItem);
-		            _DtCvContainerListOfSeg(refItem) = NULL;
+		            _DtCvContainerListOfSeg(refItem) = nullptr;
 		          }
 		      }
 		  }
@@ -3946,7 +3946,7 @@ ResolveSnref(
 	/*
 	 * was there alternate text?
 	 */
-	else if (NULL != altText && NULL != _DtCvContainerListOfSeg(altText))
+	else if (nullptr != altText && nullptr != _DtCvContainerListOfSeg(altText))
 	  {
 	    /*
 	     * the new segment becomes the contents of the <alttext>
@@ -3954,7 +3954,7 @@ ResolveSnref(
 	     * to prevent the free from destroying the contents.
 	     */
 	    newSeg = _DtCvContainerListOfSeg(altText);
-	    _DtCvContainerListOfSeg(altText) = NULL;
+	    _DtCvContainerListOfSeg(altText) = nullptr;
 
 	    /*
 	     * load the font for this snref.
@@ -3966,26 +3966,26 @@ ResolveSnref(
 				&(_DtCvFontOfStringSeg(newSeg)));
 	  }
 
-        if (my_struct->prev_data != NULL)
+        if (my_struct->prev_data != nullptr)
             my_struct->prev_data->next_disp = newSeg;
 
         my_struct->last_was_space = False;
         my_struct->last_was_mb    = False;
         my_struct->last_was_nl    = False;
-	if (NULL != newSeg)
+	if (nullptr != newSeg)
             my_struct->prev_data      = newSeg;
       }
     else if (_DtCvTRUE == my_struct->save_snref)
       {
 	int count = my_struct->snref_cnt;
 
-	if (NULL == my_struct->un_snrefs)
+	if (nullptr == my_struct->un_snrefs)
 	    my_struct->un_snrefs = (UnresSnref *) malloc (sizeof(UnresSnref));
 	else
 	    my_struct->un_snrefs = (UnresSnref *) realloc (
 					(void *) my_struct->un_snrefs,
 					(sizeof(UnresSnref) * (count + 1)));
-	if (NULL != my_struct->un_snrefs)
+	if (nullptr != my_struct->un_snrefs)
 	  {
 	    my_struct->un_snrefs[count].id       = snref_id;
 	    my_struct->un_snrefs[count].seg      = snref;
@@ -4001,7 +4001,7 @@ ResolveSnref(
 	     */
 	    newSeg = snref;
 
-            if (my_struct->prev_data != NULL)
+            if (my_struct->prev_data != nullptr)
                 my_struct->prev_data->next_disp = newSeg;
 
             my_struct->prev_data      = newSeg;
@@ -4034,7 +4034,7 @@ static	_DtHelpFontHints *
 AllocateFontInfo(
     FormatStruct *my_struct)
 {
-    _DtHelpFontHints *retFont = NULL;
+    _DtHelpFontHints *retFont = nullptr;
 
     if (my_struct->free_cnt > 0)
 	retFont = my_struct->free_fonts[--my_struct->free_cnt];
@@ -4045,14 +4045,14 @@ AllocateFontInfo(
          */
         retFont = (_DtHelpFontHints *) malloc (sizeof(_DtHelpFontHints));
 
-        if (NULL == retFont)
-	    return NULL;
+        if (nullptr == retFont)
+	    return nullptr;
       }
 
     /*
      * initialize the font structure
      */
-    if (NULL != my_struct->my_fonts)
+    if (nullptr != my_struct->my_fonts)
 	*retFont = *(my_struct->my_fonts);
     else
         *retFont = DefFontInfo;
@@ -4073,19 +4073,19 @@ AllocateFontInfo(
 static	_DtCvSegment **
 ConvertToList(_DtCvSegment *segs)
 {
-    _DtCvSegment **ptr  = NULL;
+    _DtCvSegment **ptr  = nullptr;
 
     /*
      * count the segments
      */
-    while (NULL != segs)
+    while (nullptr != segs)
       {
 	_DtCvSegment *next;
 
 	ptr = (_DtCvSegment **) _DtCvAddPtrToArray ((void **) ptr,
 							(void *) segs);
 	next = _DtCvNextSeg(segs);
-	_DtCvNextSeg(segs) = NULL;
+	_DtCvNextSeg(segs) = nullptr;
 	segs = next;
       }
 
@@ -4115,12 +4115,12 @@ DestroyFontInfo(
 	free(my_struct->free_fonts[my_struct->free_cnt]);
       }
 
-    if (NULL != my_struct->free_fonts)
+    if (nullptr != my_struct->free_fonts)
 	free(my_struct->free_fonts);
 
-    my_struct->free_fonts = NULL;
+    my_struct->free_fonts = nullptr;
 
-    if (NULL != my_struct->my_fonts)
+    if (nullptr != my_struct->my_fonts)
 	free(my_struct->my_fonts);
 }
 
@@ -4141,7 +4141,7 @@ FreeFontInfo(
     if (my_struct->free_cnt >= my_struct->free_max)
       {
 	my_struct->free_max += GROW_SIZE;
-	if (NULL != my_struct->free_fonts)
+	if (nullptr != my_struct->free_fonts)
             my_struct->free_fonts = (_DtHelpFontHints **) realloc (
 			my_struct->free_fonts,
 			sizeof(_DtHelpFontHints *) * my_struct->free_max);
@@ -4149,7 +4149,7 @@ FreeFontInfo(
             my_struct->free_fonts = (_DtHelpFontHints **) malloc (
 			sizeof(_DtHelpFontHints *) * my_struct->free_max);
 
-        if (NULL == my_struct->free_fonts)
+        if (nullptr == my_struct->free_fonts)
 	    return -1;
       }
 
@@ -4175,7 +4175,7 @@ ResolveAsyncBlock(
 {
     char        c;
     char       *next;
-    char       *start  = NULL;
+    char       *start  = nullptr;
     char      **rowIds = _DtCvCellIdsOfTableSeg(table_seg);
     _DtCvFrmtOption *colJ;
     _DtCvSegment **cellSegs;
@@ -4183,14 +4183,14 @@ ResolveAsyncBlock(
     _DtCvSegment  *asyncSegs;
     _DtCvValue	found;
 
-    while (NULL != rowIds && NULL != *rowIds)
+    while (nullptr != rowIds && nullptr != *rowIds)
       {
 	/*
 	 * get the start of the row ids
 	 */
 	next = *rowIds;
 	colJ = _DtCvColJustifyOfTableSeg(table_seg);
-	while (NULL != next && '\0' != *next)
+	while (nullptr != next && '\0' != *next)
 	  {
 	    /*
 	     * skip leading spaces
@@ -4227,9 +4227,9 @@ ResolveAsyncBlock(
 		 * check that one of these cells matches the id
 		 */
 		found   = False;
-		if (NULL != cellSegs)
+		if (nullptr != cellSegs)
 		  {
-		    while (False == found && NULL != *cellSegs)
+		    while (False == found && nullptr != *cellSegs)
 		      {
 		        if (_DtCvStrCaseCmpLatin1(
 					_DtCvContainerIdOfSeg(*cellSegs),
@@ -4248,7 +4248,7 @@ ResolveAsyncBlock(
 		if (False == found)
 		  {
 		    asyncSegs = my_struct->async_blks;
-		    while (False == found && NULL != asyncSegs)
+		    while (False == found && nullptr != asyncSegs)
 		      {
 		        if (_DtCvStrCaseCmpLatin1(
 					_DtCvContainerIdOfSeg(asyncSegs),
@@ -4264,8 +4264,8 @@ ResolveAsyncBlock(
 		     */
 		    if (True == found)
 		      {
-			_DtCvSegment *lastSrc  = NULL;
-			_DtCvSegment *lastNext = NULL;
+			_DtCvSegment *lastSrc  = nullptr;
+			_DtCvSegment *lastNext = nullptr;
 
 			/*
 			 * break the link to the next segment
@@ -4273,7 +4273,7 @@ ResolveAsyncBlock(
 			 * the next segments.
 			 */
 			_DtCvSegment *nextSeg = _DtCvNextSeg(asyncSegs);
-			_DtCvNextSeg(asyncSegs) = NULL;
+			_DtCvNextSeg(asyncSegs) = nullptr;
 
 			/*
 			 * allocate a new segment for this async block.
@@ -4297,7 +4297,7 @@ ResolveAsyncBlock(
 			/*
 			 * check to see if anything was copied
 			 */
-			if (NULL == newSeg)
+			if (nullptr == newSeg)
 			    return -1;
 			/*
 			 * now place this segment in the list.
@@ -4344,23 +4344,23 @@ FindSnbEntry(
     char      *id;
     _DtCvSegment *retEntry;
 
-    if (NULL != snb)
+    if (nullptr != snb)
       {
 	retEntry = _DtCvContainerListOfSeg(snb);
-	while (NULL != retEntry)
+	while (nullptr != retEntry)
 	  {
-	    id = NULL;
+	    id = nullptr;
 	    if (_DtCvIsSegContainer(retEntry))
 		id = _DtCvContainerIdOfSeg(retEntry);
 
-	    if (NULL != id && _DtCvStrCaseCmpLatin1(target, id) == 0)
+	    if (nullptr != id && _DtCvStrCaseCmpLatin1(target, id) == 0)
 		return retEntry;
 
 	    retEntry = _DtCvNextSeg(retEntry);
 	  }
       }
 
-    return NULL;
+    return nullptr;
 }
 
 /* A little helper function, acts like strcpy
@@ -4434,10 +4434,10 @@ CompressLinkSeg(
     /*
      * check to see if the first segment is a string.
      */
-    while (NULL != p_seg && _DtCvIsSegNoop(p_seg))
+    while (nullptr != p_seg && _DtCvIsSegNoop(p_seg))
 	p_seg = _DtCvNextSeg(p_seg);
 
-    if (NULL == p_seg)
+    if (nullptr == p_seg)
 	return;
 
     if (_DtCvIsSegString(p_seg))
@@ -4449,7 +4449,7 @@ CompressLinkSeg(
 	 * is this the only segment in the link?
 	 * Is it only one character in size?
 	 */
-	if (NULL == _DtCvNextDisp(p_seg) && 1 <= _DtCvStrLen(pChar, wcFlag))
+	if (nullptr == _DtCvNextDisp(p_seg) && 1 <= _DtCvStrLen(pChar, wcFlag))
 	    return;
 
 	/*
@@ -4542,7 +4542,7 @@ MoveString(
           {
 	    char *newSrc = (char *) realloc (src, myLen + 2);
 
-	    if (newSrc == NULL)
+	    if (newSrc == nullptr)
 	        return -1;	/* *string is still the valid old block */
 
 	    src = newSrc;
@@ -4599,13 +4599,13 @@ SetUp (
     *frmt_struct = DefFormatStruct;
 
     frmt_struct->my_links = _DtLinkDbCreate();
-    if (NULL == frmt_struct->my_links)
+    if (nullptr == frmt_struct->my_links)
 	return -1;
 
-    if (volume != NULL && sdl_vol != NULL)
+    if (volume != nullptr && sdl_vol != nullptr)
       {
         *sdl_vol = _DtHelpCeGetSdlVolumePtr(volume);
-	if (*sdl_vol == NULL)
+	if (*sdl_vol == nullptr)
 	  {
 	    _DtLinkDbDestroy(frmt_struct->my_links);
 	    return -1;
@@ -4616,17 +4616,17 @@ SetUp (
      * malloc and initialize the starting font information
      */
     frmt_struct->my_fonts = AllocateFontInfo(frmt_struct);
-    if (NULL == frmt_struct->my_fonts)
+    if (nullptr == frmt_struct->my_fonts)
       {
 	_DtLinkDbDestroy(frmt_struct->my_links);
 	return -1;
       }
 
-    if (volume != NULL)
+    if (volume != nullptr)
       {
         frmt_struct->vol_name = _DtHelpCeGetVolumeName(volume);
 
-	if (toss == NULL && flag == True)
+	if (toss == nullptr && flag == True)
 	    toss = _DtHelpCeGetSdlVolToss(volume, fd);
 
         if (lang == True)
@@ -4664,11 +4664,11 @@ AddToAsyncList (
     _DtCvSegment	*block_seg)
 {
 
-    if (my_struct->async_blks != NULL)
+    if (my_struct->async_blks != nullptr)
       {
         _DtCvSegment  *pSeg = my_struct->async_blks;
 
-	while (_DtCvNextSeg(pSeg) != NULL)
+	while (_DtCvNextSeg(pSeg) != nullptr)
 	    pSeg = _DtCvNextSeg(pSeg);
 	
         _DtCvNextSeg(pSeg) = block_seg;
@@ -4715,7 +4715,7 @@ CheckOptionList(
 	option    = SDLOptionsList[i].options;
 	lowerChar = _DtHelpCeToLower(*attr);
 
-	while (option != NULL && option->string != NULL &&
+	while (option != nullptr && option->string != nullptr &&
 					(check == True || cmpFnd == False))
 	  {
 	    /*
@@ -4791,7 +4791,7 @@ CheckFontList(
       {
 	option = SDLFontList[i].options;
 
-	while (option != NULL && option->string != NULL)
+	while (option != nullptr && option->string != nullptr)
 	  {
 	    if (_DtCvStrCaseCmpLatin1(option->string, attr) == 0)
 	      {
@@ -4838,10 +4838,10 @@ TestLookAhead(
 	if (remove_flag == True)
 	  {
 	    my_struct->parsed = SdlElementNone;
-	    if (my_struct->remember != NULL)
+	    if (my_struct->remember != nullptr)
 	      {
 		free (my_struct->remember);
-		my_struct->remember = NULL;
+		my_struct->remember = nullptr;
 	      }
 	  }
 	return 0;
@@ -4927,7 +4927,7 @@ InitAttributes(
     const SDLElementAttrList	*attr_list)
 {
    char		**strPtr1;
-   char		 *varOffset1 = NULL;
+   char		 *varOffset1 = nullptr;
    SDLNumber	 *numPtr1;
    SdlOption	 *enumPtr1;
    SdlOption	  defNum = _DtCvOPTION_BAD;
@@ -4935,7 +4935,7 @@ InitAttributes(
 
    while (attr_list->sdl_attr_define != -1)
      {
-	if (attr_list->def_string != NULL ||
+	if (attr_list->def_string != nullptr ||
 				attr_list->sdl_value == SdlAttrValueImpliedDef)
 	  {
 	    pAttr = SDLAttributeList;
@@ -5092,7 +5092,7 @@ ProcessSDLAttribute(
     char	*attrValue;
     char	**strPtr;
     char	 numBuf[DTD_NAMELEN+1];
-    char	*varOffset1 = NULL;
+    char	*varOffset1 = nullptr;
     SDLNumber   *numPtr1;
     SdlOption   *enumPtr1;
     SdlOption	 attrNum;
@@ -5289,7 +5289,7 @@ MergeTossInfo(
 {
     _DtCvSegment *tossSeg;
 
-    if (my_struct->toss == NULL)
+    if (my_struct->toss == nullptr)
 	return;
 
     tossSeg = _DtHelpCeMatchSemanticStyle (my_struct->toss,
@@ -5344,7 +5344,7 @@ ParseElementStart(
     if (True == process_flag && element.new_fonts)
       {
 	my_struct->my_fonts = AllocateFontInfo(my_struct);
-	if (NULL == my_struct->my_fonts)
+	if (nullptr == my_struct->my_fonts)
 	    return -1;
       }
 
@@ -5390,7 +5390,7 @@ ParseElementStart(
 		  {
 		    const _DtCvContainer *active = my_struct->active_frmt;
 
-		    if (NULL == active) active = &DefFrmtSpecs;
+		    if (nullptr == active) active = &DefFrmtSpecs;
 
 		    /*
 		     * The margin information - it gets zero'ed
@@ -5411,8 +5411,8 @@ ParseElementStart(
 		    /*
 		     * break the connection with the previous data.
 		     */
-		    my_struct->prev_data = NULL;
-		    _DtCvContainerListOfSeg(segPtr) = NULL;
+		    my_struct->prev_data = nullptr;
+		    _DtCvContainerListOfSeg(segPtr) = nullptr;
 	
 		    /*
 		     * check to see if these are controllers.
@@ -5470,7 +5470,7 @@ ParseElementStart(
 	case SdlElementSnb:
 		my_struct->resolve_font = _SdlFontModeNone;
 		my_struct->snb          = segPtr;
-		my_struct->prev_data    = NULL;
+		my_struct->prev_data    = nullptr;
 		break;
 
 	case SdlElementAltText:
@@ -5487,7 +5487,7 @@ ParseElementStart(
 		    return -1;
 
 		newSeg->type = _DtCvSetTypeToTable(newSeg->type);
-		_DtCvJustifyCharsOfTableSeg(newSeg) = NULL;
+		_DtCvJustifyCharsOfTableSeg(newSeg) = nullptr;
 
 		/*
 		 * set the my_struct pointer to this table so that
@@ -5526,12 +5526,12 @@ ParseElementAttr(
     char          attribName[MAX_ATTRIBUTE_LENGTH + 2];
     _DtCvSegment *mySeg;
 
-    if (attribs == NULL || process_flag == False)
+    if (attribs == nullptr || process_flag == False)
       {
 	/*
 	 * No attributes - is there cdata in here?
 	 */
-	if (flag || attribs != NULL)
+	if (flag || attribs != nullptr)
 	    result = _DtHelpCeSkipCdata (my_struct->my_file,
 			(cur_element == SdlElementDocType ? True : False));
 
@@ -5568,8 +5568,8 @@ ParseElementAttr(
      */
     if (SdlElementForm == ElType(my_struct))
       {
-	ElTableColJStr(my_struct) = NULL;
-	ElTableColWStr(my_struct) = NULL;
+	ElTableColJStr(my_struct) = nullptr;
+	ElTableColWStr(my_struct) = nullptr;
       }
 
     /*
@@ -5611,7 +5611,7 @@ ParseElementAttr(
 	/*
 	 * Do some specific work for containers.
 	 */
-	if (NULL != mySeg && _DtCvIsSegContainer(mySeg))
+	if (nullptr != mySeg && _DtCvIsSegContainer(mySeg))
 	  {
 	    /*
 	     * transfer any id or rid that got specified
@@ -5729,9 +5729,9 @@ ParseElementEnd(
 	     * stripped out when the async blocks or snref item
 	     * is resolved.
 	     */
-	    if (NULL == pElement)
+	    if (nullptr == pElement)
 	      {
-		if (_DtHelpCeAllocSegment(1, NULL, NULL, &pElement) != 0)
+		if (_DtHelpCeAllocSegment(1, nullptr, nullptr, &pElement) != 0)
 		    return -1;
 
 		pElement->type = _DtCvSetTypeToContainer(pElement->type);
@@ -5744,10 +5744,10 @@ ParseElementEnd(
 	     * has match data already been allocated for this element?
 	     */
 	    match = SegMatchDataPtr(pElement);
-	    if (NULL == match)
+	    if (nullptr == match)
 	      {
 		match = (SdlMatchData *) malloc(sizeof(SdlMatchData));
-		if (NULL == match)
+		if (nullptr == match)
 		    return -1;
 	      }
 
@@ -5762,14 +5762,14 @@ ParseElementEnd(
 	/*
 	 * attach the current segment list to the container's list
 	 */
-	if (NULL != pElement && _DtCvIsSegContainer(pElement))
+	if (nullptr != pElement && _DtCvIsSegContainer(pElement))
 	    _DtCvContainerListOfSeg(pElement) = my_struct->seg_list;
 
 	/*
 	 * check to see if the element has any data.
 	 * If not, can it (the element) be eleminated and free up memory?
 	 */
-	if (NULL != pElement && my_struct->seg_list == NULL
+	if (nullptr != pElement && my_struct->seg_list == nullptr
 	    && element.elim_flag == True
 	    && ElType(my_struct) != SdlElementKey
 	    && TMarginOfSeg(pElement) == 0 && BMarginOfSeg(pElement) == 0)
@@ -5781,30 +5781,30 @@ ParseElementEnd(
 	    if (ElType(my_struct) == SdlElementLink)
 		_DtLinkDbRemoveLink(my_struct->my_links,
 						    my_struct->cur_link);
-	    my_struct->add_seg = NULL;
+	    my_struct->add_seg = nullptr;
 	  }
 	else
 	  {
 	    switch(ElType(my_struct))
 	      {
 		case SdlElementSnb:
-		    my_struct->add_seg = NULL;
+		    my_struct->add_seg = nullptr;
 		    break;
 
 		case SdlElementBlock:
 		    if (ElTiming(my_struct) == SdlTimingAsync)
 		      {
-			if (NULL != my_struct->add_seg)
+			if (nullptr != my_struct->add_seg)
 			    AddToAsyncList(my_struct, my_struct->add_seg);
 
-			my_struct->add_seg = NULL;
+			my_struct->add_seg = nullptr;
 		      }
 		    break;
 
 		case SdlElementHead:
 		case SdlElementSubHead:
 		    if (SDLIsAttrSet(my_struct->el_info, SDL_ATTR_ABBREV)
-				&& ElAbbrev(my_struct) != NULL
+				&& ElAbbrev(my_struct) != nullptr
 				&& strlen(ElAbbrev(my_struct)))
 		      {
 			AbbrevOfSeg(my_struct->add_seg) =
@@ -5830,9 +5830,9 @@ ParseElementEnd(
 		    /*
 		     * free the no longer needed segments.
 		     */
-		    if (NULL != pElement)
+		    if (nullptr != pElement)
 		      {
-		        _DtCvContainerListOfSeg(pElement) = NULL;
+		        _DtCvContainerListOfSeg(pElement) = nullptr;
 		        _DtHelpFreeSegments(pElement, _DtCvFALSE,
 					my_struct->ui_info->destroy_region,
 					my_struct->ui_info->client_data);
@@ -5874,7 +5874,7 @@ ParseElementEnd(
 		    /*
 		     * get the id of snref
 		     */
-		    id = NULL;
+		    id = nullptr;
 		    if (SDLIsAttrSet(my_struct->el_info, SDL_ATTR_ID))
 			id = _DtCvContainerIdOfSeg(pElement);
 
@@ -5903,7 +5903,7 @@ ParseElementEnd(
 		         *
 		         * Otherwise, eliminate the container.
 		         */
-		        if (NULL != id)
+		        if (nullptr != id)
 		          {
 			    /*
 			     * remember the segment list of the container.
@@ -5962,7 +5962,7 @@ ParseElementEnd(
 	my_struct->add_seg = my_struct->seg_list;
 
     if (element.formatting == True)
-	my_struct->prev_data = NULL;
+	my_struct->prev_data = nullptr;
 
     return 0;
 
@@ -6011,15 +6011,15 @@ FindAndFix(
 	     * reset the structure to what it was at the time
 	     * this snref was encountered.
 	     */
-	    my_struct->prev_data = NULL;
-	    my_struct->last_seg  = NULL;
+	    my_struct->prev_data = nullptr;
+	    my_struct->last_seg  = nullptr;
 	    my_struct->my_fonts  = &(snref->fonts);
 	    my_struct->cur_link  = snref->cur_link;
 
 	    /*
 	     * resolve it.
 	     */
-	    newSeg = ResolveSnref(my_struct, snref->seg, NULL);
+	    newSeg = ResolveSnref(my_struct, snref->seg, nullptr);
 
 	    /*
 	     * free the snref items
@@ -6032,10 +6032,10 @@ FindAndFix(
 	     * find the end of the new segment's and have it point to
 	     * the next segments that the old segment points to.
 	     */
-	    if (NULL != newSeg)
+	    if (nullptr != newSeg)
 	      {
 	        tmpSeg = newSeg;
-	        while (NULL != _DtCvNextSeg(tmpSeg))
+	        while (nullptr != _DtCvNextSeg(tmpSeg))
 		    tmpSeg = _DtCvNextSeg(tmpSeg);
 
 	        _DtCvNextSeg(tmpSeg)  = _DtCvNextSeg(snref->seg);
@@ -6045,7 +6045,7 @@ FindAndFix(
 	    /*
 	     * does the snref have an id?
 	     */
-	    if (NULL != snref->id)
+	    if (nullptr != snref->id)
 	      {
 		/*
 		 * re-use the old snref, turning it into a marker
@@ -6057,7 +6057,7 @@ FindAndFix(
 		 * set the next pointers on the old segment to
 		 * the new segment.
 		 */
-		if (NULL != newSeg)
+		if (nullptr != newSeg)
 		  {
 		    _DtCvNextSeg(snref->seg)  = newSeg;
 		    _DtCvNextDisp(snref->seg) = newSeg;
@@ -6067,7 +6067,7 @@ FindAndFix(
 	    /*
 	     * else move the resolved segment on top of the old snref.
 	     */
-	    else if (NULL != newSeg)
+	    else if (nullptr != newSeg)
 	      {
 		/*
 		 * free the private information. No longer needed.
@@ -6083,7 +6083,7 @@ FindAndFix(
 		 * free the duplicate new segment.
 		 */
 		if (_DtCvIsSegContainer(newSeg))
-		    _DtCvContainerListOfSeg(newSeg) = NULL;
+		    _DtCvContainerListOfSeg(newSeg) = nullptr;
 
 		free(newSeg);
 	      }
@@ -6099,7 +6099,7 @@ FindAndFix(
 	  }
 
 	free(my_struct->un_snrefs);
-	my_struct->un_snrefs = NULL;
+	my_struct->un_snrefs = nullptr;
       }
 
     my_struct->cur_link  = curLink;
@@ -6132,7 +6132,7 @@ GetInterpCmd(SdlOption	interp_type)
 	interp++;
       }
 
-    return NULL;
+    return nullptr;
 
 }
 
@@ -6169,10 +6169,10 @@ CheckForSnb(
 	_DtCvSegment	*oldPrevSeg = my_struct->prev_data;
 	_DtCvSegment	*oldLastSeg = my_struct->last_seg;
 
-	my_struct->seg_list  = NULL;
-	my_struct->add_seg   = NULL;
-	my_struct->prev_data = NULL;
-	my_struct->last_seg  = NULL;
+	my_struct->seg_list  = nullptr;
+	my_struct->add_seg   = nullptr;
+	my_struct->prev_data = nullptr;
+	my_struct->last_seg  = nullptr;
 
 	result = ProcessSDLMarkup(my_struct, SdlElementSnb, SdlElementNone,
 						exceptions, process_mask);
@@ -6375,8 +6375,8 @@ IfInfo(
 {
     if (ElType(my_struct) == SdlElementIf)
       {
-	my_struct->then_prev = NULL;
-	my_struct->else_prev = NULL;
+	my_struct->then_prev = nullptr;
+	my_struct->else_prev = nullptr;
       }
     else if (ElType(my_struct) == SdlElementThen)
         my_struct->then_prev = my_struct->prev_data;
@@ -6421,7 +6421,7 @@ MarkFound(
 	/*
 	 * tack the space onto the end of previous string if possible.
 	 */
-	if (pSeg != NULL && _DtCvIsSegString(pSeg) &&
+	if (pSeg != nullptr && _DtCvIsSegString(pSeg) &&
 			_DtCvIsSegRegChar(pSeg) && !(_DtCvIsSegNewLine(pSeg)))
 	  {
 	    char *strPtr;
@@ -6429,7 +6429,7 @@ MarkFound(
 
 	    _DtCvStringOfStringSeg(pSeg) = (char *) realloc(
 					_DtCvStringOfStringSeg(pSeg), len+2);
-	    if (_DtCvStringOfStringSeg(pSeg) == NULL)
+	    if (_DtCvStringOfStringSeg(pSeg) == nullptr)
 		return -1;
 
 	     strPtr   = (char *) _DtCvStrPtr(_DtCvStringOfStringSeg(pSeg),
@@ -6477,7 +6477,7 @@ SaveItemInfo(
 	return 0;
 
     info = (SdlMatchData *) malloc (sizeof(SdlMatchData));
-    if (NULL == info)
+    if (nullptr == info)
 	return -1;
 
     /*
@@ -6518,7 +6518,7 @@ AllocateBlock(
      *
      * Simply change the malloc_size in the formatting struct.
      */
-    if (my_struct->add_seg != NULL)
+    if (my_struct->add_seg != nullptr)
       {
         if (SDLIsAttrSet(my_struct->el_info, SDL_ATTR_COUNT))
 	    my_struct->malloc_size = ElCount(my_struct);
@@ -6597,10 +6597,10 @@ RegisterLink(
 			break;
       }
 
-    my_struct->cur_link = _DtLinkDbAddLink(my_struct->my_links, NULL, rid,
-				_DtCvLinkType_SameVolume, winType, NULL);
+    my_struct->cur_link = _DtLinkDbAddLink(my_struct->my_links, nullptr, rid,
+				_DtCvLinkType_SameVolume, winType, nullptr);
 
-    if (rid == NULL || my_struct->cur_link < 0)
+    if (rid == nullptr || my_struct->cur_link < 0)
 	return -1;
 
     /*
@@ -6636,14 +6636,14 @@ ResolveIf(
     _DtCvSegment	*thenSeg     = _DtCvNextSeg(condSeg);
     _DtCvSegment	*elseSeg     = _DtCvNextSeg(thenSeg);
 
-    _DtCvSegment	*resolveSeg  = NULL;
-    _DtCvSegment	*nextDisp    = NULL;
-    _DtCvSegment	*el	     = NULL;
-    char		*ifData      = NULL;
+    _DtCvSegment	*resolveSeg  = nullptr;
+    _DtCvSegment	*nextDisp    = nullptr;
+    _DtCvSegment	*el	     = nullptr;
+    char		*ifData      = nullptr;
     char		*interpStr;
 
     interpStr = GetInterpCmd(ElInterp(my_struct));
-    if (NULL == interpStr)
+    if (nullptr == interpStr)
 	return -1;
 
     if (_DtCvRunInterp(my_struct->ui_info->exec_filter,
@@ -6656,7 +6656,7 @@ ResolveIf(
 	 * list. This usually will point into the 'then' list,
 	 * but may point into the 'else' list.
 	 */
-	if (my_struct->then_prev != NULL)
+	if (my_struct->then_prev != nullptr)
 	    nextDisp = my_struct->then_prev->next_disp;
 
 	/*
@@ -6671,7 +6671,7 @@ ResolveIf(
 	     * 'else' list (because it's about to become a dangling
 	     * next_disp if it is!).
 	     */
-	    if (elseSeg != NULL)
+	    if (elseSeg != nullptr)
 	      {
 		/*
 		 * if the next displayable segment is in the 'else'
@@ -6679,16 +6679,16 @@ ResolveIf(
 		 * there isn't anything in the 'then' list.
 		 */
 	        if (my_struct->then_prev == my_struct->else_prev)
-		    nextDisp = NULL;
+		    nextDisp = nullptr;
 		else
 		    /*
 		     * terminate the displayable segment list
 		     * before the 'else' list.
 		     */
-		    my_struct->else_prev->next_disp = NULL;
+		    my_struct->else_prev->next_disp = nullptr;
 	      }
 	  }
-        else if (elseSeg != NULL)
+        else if (elseSeg != nullptr)
 	  {
 	    /*
 	     * use the 'else' data.
@@ -6698,14 +6698,14 @@ ResolveIf(
 	    /*
 	     * Get the next displayable item in the 'else' list.
 	     */
-	    if (my_struct->else_prev != NULL)
+	    if (my_struct->else_prev != nullptr)
 	        nextDisp = my_struct->else_prev->next_disp;
 	  }
 
-        if (el != NULL)
+        if (el != nullptr)
           {
 	    resolveSeg   = _DtCvContainerListOfSeg(el);
-	    _DtCvContainerListOfSeg(el) = NULL;
+	    _DtCvContainerListOfSeg(el) = nullptr;
           }
 
 	free(ifData);
@@ -6714,7 +6714,7 @@ ResolveIf(
     /*
      * set the true next displayable pointer.
      */
-    if (prev_data != NULL)
+    if (prev_data != nullptr)
 	prev_data->next_disp = nextDisp;
 
     /*
@@ -7023,11 +7023,11 @@ Cdata(
     int		 multiLen = my_struct->mb_len;
     int		 saveLen  = my_struct->mb_len;
     char	 nonBreakChar;
-    char	*string   = NULL;
+    char	*string   = nullptr;
     char	 spaceStr[] = " ";
     char	 dashStr[]  = "-";
     SdlOption type     = ElFrmtType(my_struct);
-    _DtCvSegment	*pSeg       = NULL;
+    _DtCvSegment	*pSeg       = nullptr;
     _DtCvValue	 nlToSpace   = True;
     _DtCvValue	 processFlag = SDLSearchMask(process_mask, SdlElementCdata);
 
@@ -7048,7 +7048,7 @@ Cdata(
 	saveLen = 1;
       }
 
-    if (my_struct->remember != NULL)
+    if (my_struct->remember != nullptr)
       {
         i   = 0;
         string  = my_struct->remember;
@@ -7115,7 +7115,7 @@ Cdata(
 			    char *newString = (char *) realloc(string,
 				sizeof(char) * (myLen + ESC_STRING_LEN + 1));
 
-			    if (newString == NULL)
+			    if (newString == nullptr)
 			      {
 				/*
 				 * 'string' is still valid; hand it back
@@ -7287,7 +7287,7 @@ Cdata(
 
 		myLen = strlen(string);
 		newString = (char *) realloc(string, myLen + multiLen + 1);
-		if (newString == NULL)
+		if (newString == nullptr)
 		  {
 		    /*
 		     * 'string' is still valid; hand it back so the
@@ -7317,11 +7317,11 @@ Cdata(
 	if (processFlag == False)
 	  {
 	    free(string);
-	    string = NULL;
+	    string = nullptr;
 	    myLen  = 0;
 	  }
 
-	my_struct->remember = NULL;
+	my_struct->remember = nullptr;
       }
 
     do {
@@ -7332,12 +7332,12 @@ Cdata(
 				&my_struct->last_was_nl,
 				&my_struct->last_was_mb,
 				&nonBreakChar,
-			(processFlag == True ? &string : ((char**)NULL)),
+			(processFlag == True ? &string : ((char**)nullptr)),
 				&myLen);
         if (reason < 0)
 	    return -1;
 
-	if (string != NULL && *string != '\0')
+	if (string != nullptr && *string != '\0')
 	  {
 	    /*
 	     * save the string.
@@ -7373,7 +7373,7 @@ Cdata(
 	  {
 	    pSeg = my_struct->prev_data;
 
-	    if (pSeg == NULL || _DtCvIsSegNewLine(pSeg))
+	    if (pSeg == nullptr || _DtCvIsSegNewLine(pSeg))
 	      {
 		if (_DtHelpCeAllocSegment(my_struct->malloc_size,
 				&(my_struct->alloc_size),
@@ -7381,7 +7381,7 @@ Cdata(
 		    return -1;
 
 		pSeg->type   = _DtCvSetTypeToNoop(pSeg->type);
-		if (my_struct->prev_data != NULL)
+		if (my_struct->prev_data != nullptr)
 		    my_struct->prev_data->next_disp = pSeg;
 
 		my_struct->prev_data = pSeg;
@@ -7566,7 +7566,7 @@ AddRowToTable(
 					(void **) ElTableCellIds(my_struct),
 					ElTableCellId(my_struct));
 
-	if (NULL == ElTableCellIds(my_struct))
+	if (nullptr == ElTableCellIds(my_struct))
 	    return -1;
 
         ClearAttrFlag(my_struct->el_info, SDL_ATTR_CELLS);
@@ -7604,7 +7604,7 @@ SaveLangCharSet(
 	return 0;
 
     info = (char **) calloc (2, sizeof(char *));
-    if (NULL == info)
+    if (nullptr == info)
         return -1;
 
     if (SDLIsAttrSet(my_struct->el_info, SDL_ATTR_LANGUAGE))
@@ -7645,7 +7645,7 @@ CopyDocInfo(
 	return 0;
 
     docInfo = (SDLDocInfo *) malloc (sizeof(SDLDocInfo));
-    if (NULL == docInfo)
+    if (nullptr == docInfo)
         return -1;
 
     *(docInfo) = ElDocInfo(my_struct);
@@ -7739,7 +7739,7 @@ LoadGraphic(
 	/*
 	 * allocate a Canvas Engine region.
 	 */
-	if (_DtHelpCeAllocSegment(1, NULL, NULL, &cvRegion) == 0)
+	if (_DtHelpCeAllocSegment(1, nullptr, nullptr, &cvRegion) == 0)
 	  {
 	    /*
 	     * got memory for a region, now fill out the information.
@@ -7748,7 +7748,7 @@ LoadGraphic(
 	     * the graphic and continue.
 	     */
 	    result = 0;
-	    if (NULL != my_struct->ui_info->load_graphic &&
+	    if (nullptr != my_struct->ui_info->load_graphic &&
 		(*(my_struct->ui_info->load_graphic))(
 				my_struct->ui_info->client_data,
 				my_struct->vol_name,
@@ -7814,15 +7814,15 @@ ColInfoToTableInfo(
 	int            i;
 	int            mySize = ElTableColNum(my_struct);
 	const char    *next;
-	const char    *start     = NULL;
-	const char    *last      = NULL;
-	char         **colWidths = NULL;
+	const char    *start     = nullptr;
+	const char    *last      = nullptr;
+	char         **colWidths = nullptr;
 	_DtCvFrmtOption  *colJust;
 
 	colWidths = (char **) malloc (sizeof(char *) * mySize);
 	colJust   = (_DtCvFrmtOption *) malloc (sizeof(_DtCvFrmtOption)*mySize);
 
-	if (NULL == colWidths || NULL == colJust)
+	if (nullptr == colWidths || nullptr == colJust)
 	  {
 	    MyFree(colWidths);
 	    MyFree(colJust);
@@ -7833,7 +7833,7 @@ ColInfoToTableInfo(
 	  * now process the column width specification.
 	  */
 	next = ElTableColWStr(my_struct);
-	if (NULL == next || '\0' == *next)
+	if (nullptr == next || '\0' == *next)
 	    next = "1";
 
 	for (i = 0; i < mySize; i++)
@@ -7850,7 +7850,7 @@ ColInfoToTableInfo(
 
 	    /* duplicate the specification */
 	    colWidths[i] = strdup(start);
-	    if (NULL == colWidths[i])
+	    if (nullptr == colWidths[i])
 		return -1;
 
 	    /* mark the end of the string */
@@ -7861,7 +7861,7 @@ ColInfoToTableInfo(
 	  * now process the column justify specification.
 	  */
 	next = ElTableColJStr(my_struct);
-	if (NULL == next || '\0' == *next)
+	if (nullptr == next || '\0' == *next)
 	    next = NullOption;
 
 	for (i = 0; i < mySize; i++)
@@ -7935,7 +7935,7 @@ CopyIdInfo(
 	return 0;
 
     idInfo = (SDLIdInfo *) malloc (sizeof(SDLIdInfo));
-    if (NULL == idInfo)
+    if (nullptr == idInfo)
         return -1;
 
     *(idInfo) = ElIdInfo(my_struct);
@@ -7974,7 +7974,7 @@ RegisterSnbLink(
     int	  linkType;
     int   len = 0;
     char  buffer[64] = "";
-    char *fileSpec = NULL;
+    char *fileSpec = nullptr;
 
     if (SDLSearchMask(process_mask, ElType(my_struct)) == False)
 	return 0;
@@ -8008,7 +8008,7 @@ RegisterSnbLink(
 			    len += strlen(ElSnbXid(my_struct) + 1);
 
 			    fileSpec = malloc(sizeof(char) * len);
-			    if (NULL == fileSpec)
+			    if (nullptr == fileSpec)
 				return -1;
 			
 			    strcpy(fileSpec, ElSnbXid(my_struct));
@@ -8034,7 +8034,7 @@ RegisterSnbLink(
 				fileSpec,
 				linkType,
 				_DtCvWindowHint_Original,
-				NULL))
+				nullptr))
 	return -1;
 
     if (fileSpec != ElSnbXid(my_struct))
@@ -8070,10 +8070,10 @@ RegisterSwitch(
 	return 0;
 
     interpStr = GetInterpCmd(ElInterp(my_struct));
-    if (NULL != interpStr)
+    if (nullptr != interpStr)
 	interpStr = strdup(interpStr);
 
-    if (NULL != interpStr)
+    if (nullptr != interpStr)
       {
         if (0 == _DtLinkDbAddSwitch(my_struct->my_links,
 			_DtCvContainerIdOfSeg(my_struct->add_seg),
@@ -8083,7 +8083,7 @@ RegisterSwitch(
 	    result = 0;
 
 	free(my_struct->add_seg);
-	my_struct->add_seg = NULL;
+	my_struct->add_seg = nullptr;
       }
 
     return result;
@@ -8127,7 +8127,7 @@ ResolveSpcInfo(
 	/*
 	 * now establish the proper display linking.
 	 */
-        if (my_struct->prev_data != NULL)
+        if (my_struct->prev_data != nullptr)
             my_struct->prev_data->next_disp = mySeg;
 
 	my_struct->prev_data  = mySeg;
@@ -8156,7 +8156,7 @@ ResolveSpcInfo(
 	     * malloc a structure to hold the spc
 	     */
 	    pReg = (_DtHelpDARegion *) malloc (sizeof(_DtHelpDARegion));
-	    if (NULL == pReg)
+	    if (nullptr == pReg)
 		return -1;
 	    
 	    /*
@@ -8164,7 +8164,7 @@ ResolveSpcInfo(
 	     * create the spc later.
 	     */
 	    spcInfo = (_DtHelpDASpcInfo *) calloc (1, sizeof(_DtHelpDASpcInfo));
-	    if (NULL == spcInfo)
+	    if (nullptr == spcInfo)
 	      {
 		free(pReg);
 		return -1;
@@ -8228,7 +8228,7 @@ CopyTossInfo(
 	return 0;
 
     tossInfo = (SDLTossInfo *) malloc (sizeof(SDLTossInfo));
-    if (NULL == tossInfo)
+    if (nullptr == tossInfo)
         return -1;
 
     /*
@@ -8333,7 +8333,7 @@ CopyEntryInfo(
 	return 0;
 
     entryInfo = (SDLEntryInfo *) malloc (sizeof(SDLEntryInfo));
-    if (NULL == entryInfo)
+    if (nullptr == entryInfo)
         return -1;
 
     /*
@@ -8387,7 +8387,7 @@ InitLast(
     /*
      * set the container type correctly.
      */
-    if (NULL != my_struct->add_seg &&
+    if (nullptr != my_struct->add_seg &&
 	(SdlTypeLiteral == ElFrmtType(my_struct) ||
 					SdlTypeLined == ElFrmtType(my_struct)))
 	_DtCvContainerTypeOfSeg(my_struct->add_seg) = _DtCvLITERAL;
@@ -8479,9 +8479,9 @@ ParseSDL(
      */
     if (cur_element != SdlElementCdata)
       {
-        my_struct->seg_list = NULL;
-        my_struct->last_seg = NULL;
-        my_struct->add_seg  = NULL;
+        my_struct->seg_list = nullptr;
+        my_struct->last_seg = nullptr;
+        my_struct->add_seg  = nullptr;
       }
 
     /*
@@ -8545,7 +8545,7 @@ ParseSDL(
      */
     my_struct->faked_end = False;
     ElType(my_struct) = cur_element;
-    while (result == 0 && content != NULL &&
+    while (result == 0 && content != nullptr &&
 			SDLSearchMask(content->mask, SdlElementNone) == False)
       {
 	SaveRestoreMask(contentMask, content->mask);
@@ -8561,7 +8561,7 @@ ParseSDL(
     SaveRestoreMask(cur_except  , oldExcept);
     if (cur_element != SdlElementCdata)
       {
-        if (result == 0 && SdlElementList[i].element_end_str != NULL)
+        if (result == 0 && SdlElementList[i].element_end_str != nullptr)
 	    result = ParseElementEnd(my_struct, ifPrevData,
 							SdlElementList[i],
 							processFlag,
@@ -8582,7 +8582,7 @@ ParseSDL(
         my_struct->last_seg = oldCurSeg;
         my_struct->seg_list = oldSeglist;
 
-        if (result == 0 && my_struct->add_seg != NULL)
+        if (result == 0 && my_struct->add_seg != nullptr)
 	    _DtHelpCeAddSegToList(my_struct->add_seg, &(my_struct->seg_list),
 						&(my_struct->last_seg));
 
@@ -8660,7 +8660,7 @@ ProcessContent(
     int   result = 0;
     SDLMask contentMask[SDL_MASK_LEN];
 
-    while (result == 0 && content != NULL &&
+    while (result == 0 && content != nullptr &&
 			SDLSearchMask(content->mask, SdlElementNone) == False)
       {
 	SaveRestoreMask(contentMask, content->mask);
@@ -8689,7 +8689,7 @@ static	_DtCvSegment *
 SearchForController(
     _DtCvSegment		*p_seg)
 {
-    while (NULL != p_seg &&
+    while (nullptr != p_seg &&
 		!(_DtCvIsSegContainer(p_seg) && _DtCvIsSegController(p_seg)))
 	p_seg = _DtCvNextSeg(p_seg);
 
@@ -8737,7 +8737,7 @@ FormatSDLTitle(
      * can we seek to the correct place?
      */
     result = _DtHelpCeFileOpenAndSeek(filename, offset, fd,
-					&(my_struct->my_file), NULL);
+					&(my_struct->my_file), nullptr);
     if (result != -1)
       {
         result = ProcessSDLMarkup (my_struct, SdlElementTitle, SdlElementNone,
@@ -8765,7 +8765,7 @@ SetGhostLink(
     _DtCvSegment	*segments,
     int			 link_idx)
 {
-    while (segments != NULL)
+    while (segments != nullptr)
       {
 	if (!(_DtCvIsSegContainer(segments)))
 	  {
@@ -8808,14 +8808,14 @@ CreateAsciiString(
     int		 len;
     char	*newString;
 
-    while (p_seg != NULL)
+    while (p_seg != nullptr)
       {
 	len = 1;
 	if (_DtCvIsSegString(p_seg))
 	  {
 	    if (*nl_flag == True)
 	      {
-		if (*ret_string != NULL &&
+		if (*ret_string != nullptr &&
 				    (*ret_string)[strlen(*ret_string)-1] != ' ')
 		  len++;
 		else
@@ -8833,10 +8833,10 @@ CreateAsciiString(
 	     * When the string cannot grow, stop here: *ret_string stays
 	     * the valid, shorter string built so far (or NULL).
 	     */
-	    if (*ret_string == NULL)
+	    if (*ret_string == nullptr)
 	      {
 		newString = (char *) malloc (len);
-		if (newString == NULL)
+		if (newString == nullptr)
 		    return -1;
 
 		*ret_string = newString;
@@ -8846,7 +8846,7 @@ CreateAsciiString(
 	      {
 		len += strlen(*ret_string);
 		newString = (char *) realloc (*ret_string, len);
-		if (newString == NULL)
+		if (newString == nullptr)
 		    return -1;
 
 		*ret_string = newString;
@@ -8872,7 +8872,7 @@ CreateAsciiString(
 	        strcpy (&((*ret_string)[len]), _DtCvStringOfStringSeg(p_seg));
 
 	    *nl_flag = False;
-	    if (p_seg->next_disp == NULL)
+	    if (p_seg->next_disp == nullptr)
 		*nl_flag = True;
 	  }
 	else if (_DtCvIsSegContainer(p_seg) && !(_DtCvIsSegController(p_seg)))
@@ -8903,8 +8903,8 @@ CreateAsciiAbbrev(
     _DtCvSegment	 *p_el,
     char		**ret_abbrev)
 {
-  *ret_abbrev = NULL;
-  if (NULL != AbbrevOfSeg(p_el) && strlen ((char *) AbbrevOfSeg(p_el)))
+  *ret_abbrev = nullptr;
+  if (nullptr != AbbrevOfSeg(p_el) && strlen ((char *) AbbrevOfSeg(p_el)))
 	*ret_abbrev = strdup((char *) AbbrevOfSeg(p_el));
 }
 
@@ -8935,7 +8935,7 @@ CleanUpToc(
     if (level < 0)
 	level = 0;
 
-    while (p_seg != NULL)
+    while (p_seg != nullptr)
       {
 	if (_DtCvIsSegNewLine(p_seg))
 	    p_seg->type = p_seg->type & ~(_DtCvNEW_LINE);
@@ -9052,7 +9052,7 @@ AddEntryToToc(
      */
     saveLinks    = my_struct->my_links;
 
-    if (SetUp(NULL,NULL,my_struct,toss,my_struct->ui_info,fd,False,False) != 0)
+    if (SetUp(nullptr,nullptr,my_struct,toss,my_struct->ui_info,fd,False,False) != 0)
 	return -1;
 
     /*
@@ -9077,21 +9077,21 @@ AddEntryToToc(
      */
     if (result != -1)
       {
-	_DtCvSegment *headEl  = NULL;
+	_DtCvSegment *headEl  = nullptr;
 
 	/*
 	 * find the actual head element
 	 */
-	if (my_struct->seg_list != NULL)
+	if (my_struct->seg_list != nullptr)
 	    headEl = SearchForController(
 				_DtCvContainerListOfSeg(my_struct->seg_list));
 
 	/*
 	 * If there isn't a head element, use the id.
 	 */
-	if (headEl == NULL)
+	if (headEl == nullptr)
 	  {
-	    _DtCvSegment *addSeg = NULL;
+	    _DtCvSegment *addSeg = nullptr;
 
 	    if (MySaveString(&(addSeg), my_struct,
 					_DtCvContainerIdOfSeg(info_seg),
@@ -9103,7 +9103,7 @@ AddEntryToToc(
 		_DtHelpFreeSegments(my_struct->seg_list, _DtCvTRUE,
 					my_struct->ui_info->destroy_region,
 					my_struct->ui_info->client_data);
-		my_struct->seg_list = NULL;
+		my_struct->seg_list = nullptr;
 		DestroyFontInfo(my_struct);
 		return -1;
 	      }
@@ -9112,7 +9112,7 @@ AddEntryToToc(
 	     * if there is a virpage, attach the segment to it.
 	     * I.e. just reuse the container.
 	     */
-	    if (NULL != my_struct->seg_list)
+	    if (nullptr != my_struct->seg_list)
 	      {
 		/*
 		 * free the container original list
@@ -9158,11 +9158,11 @@ AddEntryToToc(
 	/*
 	 * there was a empty head, use the abbreviation or the id.
 	 */
-	else if (_DtCvContainerListOfSeg(headEl) == NULL)
+	else if (_DtCvContainerListOfSeg(headEl) == nullptr)
 	  {
 	    char *myPtr = (char *) AbbrevOfSeg(headEl);
 
-	    if (NULL == myPtr)
+	    if (nullptr == myPtr)
 	        myPtr = _DtCvContainerIdOfSeg(info_seg);
 
 	    if (MySaveString(&(_DtCvContainerListOfSeg(headEl)), my_struct,
@@ -9174,7 +9174,7 @@ AddEntryToToc(
 		_DtHelpFreeSegments(my_struct->seg_list, _DtCvTRUE,
 					my_struct->ui_info->destroy_region,
 					my_struct->ui_info->client_data);
-		my_struct->seg_list = NULL;
+		my_struct->seg_list = nullptr;
 		DestroyFontInfo(my_struct);
 		return -1;
 	      }
@@ -9197,7 +9197,7 @@ AddEntryToToc(
 	    /*
 	     * break the link to the freed segments
 	     */
-	    _DtCvNextSeg(headEl) = NULL;
+	    _DtCvNextSeg(headEl) = nullptr;
 
 	    /*
 	     * destroy the segments before this one.
@@ -9214,10 +9214,10 @@ AddEntryToToc(
 		/*
 		 * break the link to the head element
 		 */
-		_DtCvNextSeg(prevSeg) = NULL;
+		_DtCvNextSeg(prevSeg) = nullptr;
 	      }
 	    else
-		_DtCvContainerListOfSeg(my_struct->seg_list) = NULL;
+		_DtCvContainerListOfSeg(my_struct->seg_list) = nullptr;
 
 	    /*
 	     * free the segments before the head and virpage container.
@@ -9228,12 +9228,12 @@ AddEntryToToc(
 	    my_struct->seg_list = headEl;
 	  }
 
-	if (headEl != NULL)
+	if (headEl != nullptr)
 	  {
-	    int	linkIndex = _DtLinkDbAddLink(my_struct->my_links, NULL,
+	    int	linkIndex = _DtLinkDbAddLink(my_struct->my_links, nullptr,
 				_DtCvContainerIdOfSeg(info_seg),
 					_DtCvLinkType_SameVolume,
-					_DtCvWindowHint_CurrentWindow, NULL);
+					_DtCvWindowHint_CurrentWindow, nullptr);
 
 	    CleanUpToc(my_struct, headEl, level, target);
 	    SetGhostLink(my_struct->my_links, headEl, linkIndex);
@@ -9245,25 +9245,25 @@ AddEntryToToc(
         /*
          * now tack this segment onto the end of the list
          */
-        if ((*seg_list) == NULL)
+        if ((*seg_list) == nullptr)
 	    (*seg_list) = my_struct->seg_list;
         else
 	    _DtCvNextSeg((*prev_list)) = my_struct->seg_list;
 
         *prev_list = my_struct->seg_list;
-        while ((*prev_list) != NULL && _DtCvNextSeg((*prev_list)) != NULL)
+        while ((*prev_list) != nullptr && _DtCvNextSeg((*prev_list)) != nullptr)
 	    *prev_list = _DtCvNextSeg((*prev_list));
       }
 
     /*
      * if the snb for this topic was read, free it now.
      */
-    if (my_struct->snb != NULL)
+    if (my_struct->snb != nullptr)
       {
 	_DtHelpFreeSegments(my_struct->snb, _DtCvTRUE,
 					my_struct->ui_info->destroy_region,
 					my_struct->ui_info->client_data);
-	my_struct->snb = NULL;
+	my_struct->snb = nullptr;
       }
 
     /*
@@ -9309,14 +9309,14 @@ ExpandToc(
     /*
      * skip anything that isn't a virpage and of the correct level.
      */
-    while ((*id_seg) != NULL && _SdlSegToSdlIdInfoType(*id_seg) != SdlIdVirpage
+    while ((*id_seg) != nullptr && _SdlSegToSdlIdInfoType(*id_seg) != SdlIdVirpage
 		&& _SdlSegToSdlIdInfoLevel(*id_seg) != level)
 	*id_seg = _DtCvNextSeg((*id_seg));
 
     /*
      * process any virpage that has the correct level
      */
-    while ((*id_seg) != NULL && done == False && result == 0)
+    while ((*id_seg) != nullptr && done == False && result == 0)
       {
 	pEl    = (*id_seg);
 	segLev = _SdlSegToSdlIdInfoLevel(pEl);
@@ -9329,8 +9329,8 @@ ExpandToc(
 		 * If the virpage in the path list has not been found,
 		 * test the next virpage. Otherwise skip.
 		 */
-		if (found == False && *path_list != NULL &&
-					_DtCvContainerIdOfSeg(pEl) != NULL)
+		if (found == False && *path_list != nullptr &&
+					_DtCvContainerIdOfSeg(pEl) != nullptr)
 		    tst   = _DtCvStrCaseCmpLatin1(*path_list,
 						_DtCvContainerIdOfSeg(pEl));
 			
@@ -9342,7 +9342,7 @@ ExpandToc(
 		 */
 	        result = AddEntryToToc(my_struct, volume, fd,
 			segLev, lang, char_set, toss, pEl,
-			(tst == 0 && path_list[1] == NULL ? True : False),
+			(tst == 0 && path_list[1] == nullptr ? True : False),
 			ret_snb, seg_list, prev_list);
 
 		/*
@@ -9403,12 +9403,12 @@ GrowChunks(
     if (count < 1 || (size_t) count > SIZE_MAX / sizeof(void *))
 	return -1;
 
-    if (*chunks == NULL)
+    if (*chunks == nullptr)
 	newChunks = (void **) malloc (sizeof(void *) * count);
     else
 	newChunks = (void **) realloc (*chunks, sizeof(void *) * count);
 
-    if (newChunks == NULL)
+    if (newChunks == nullptr)
 	return -1;
 
     *chunks = newChunks;
@@ -9447,7 +9447,7 @@ CreateTitleChunks(
     void	*ptr;
     _DtHelpDARegion	*daRegion;
 
-    while (result != -1 && p_seg != NULL)
+    while (result != -1 && p_seg != nullptr)
       {
 	myLang = lang;
 	mySet  = char_set;
@@ -9475,7 +9475,7 @@ CreateTitleChunks(
 	    type = DT_HELP_CE_FONT_PTR | DT_HELP_CE_STRING;
 	    ptr  = _DtCvFontOfStringSeg(p_seg);
 
-	    if (p_seg->next_disp == NULL || _DtCvIsSegNewLine(p_seg))
+	    if (p_seg->next_disp == nullptr || _DtCvIsSegNewLine(p_seg))
 		type |= DT_HELP_CE_NEWLINE;
 
 	    (*ret_chunks)[cnt++] = (void *) type;
@@ -9487,7 +9487,7 @@ CreateTitleChunks(
 							* MB_CUR_MAX + 1;
 
 		ptr = malloc (sizeof(char *) * len);
-		if (NULL != ptr)
+		if (nullptr != ptr)
 		    wcstombs((char *) ptr,
 				(wchar_t *) _DtCvStringOfStringSeg(p_seg), len);
 	      }
@@ -9495,7 +9495,7 @@ CreateTitleChunks(
 	        ptr = strdup(_DtCvStringOfStringSeg(p_seg));
 
 	    (*ret_chunks)[cnt++] = (void *) ptr;
-	    if ((*ret_chunks)[cnt-1] == NULL)
+	    if ((*ret_chunks)[cnt-1] == nullptr)
 		return -1;
 
 	    (*ret_chunks)[cnt++] = (void *) DT_HELP_CE_END;
@@ -9548,7 +9548,7 @@ CreateTitleChunks(
 		  }
 
 	        type = DT_HELP_CE_SPC;
-	        if (p_seg->next_disp == NULL || _DtCvIsSegNewLine(p_seg))
+	        if (p_seg->next_disp == nullptr || _DtCvIsSegNewLine(p_seg))
 		    type |= DT_HELP_CE_NEWLINE;
 
 	        (*ret_chunks)[cnt++] = (void *) type;
@@ -9601,11 +9601,11 @@ ProcessSegmentsToChunks(
 					snb_el, stop_mask, lang, char_set,
 					resolve_spc, client_data,
 					&cnt, ret_chunks);
-    if ((result != 0 || cnt == 0) && NULL != AbbrevOfSeg(head_el)
+    if ((result != 0 || cnt == 0) && nullptr != AbbrevOfSeg(head_el)
 				&& strlen ((char *) AbbrevOfSeg(head_el)))
       {
 	*ret_chunks   = (void **) malloc (sizeof(void *) * 4);
-	if (*ret_chunks == NULL)
+	if (*ret_chunks == nullptr)
 	    return -1;
 
 	(*ret_chunks)[0] = (void *) DT_HELP_CE_CHARSET;
@@ -9633,11 +9633,11 @@ static _DtCvSegment *
 GetSdlDocSnb(
     _DtHelpVolumeHdl	 volume)
 {
-    _DtCvSegment	*retEl = NULL;
+    _DtCvSegment	*retEl = nullptr;
     CESDLVolume	*sdlVol;
 
     sdlVol = _DtHelpCeGetSdlVolumePtr(volume);
-    if (sdlVol != NULL && sdlVol->snb != NULL)
+    if (sdlVol != nullptr && sdlVol->snb != nullptr)
 	retEl = (sdlVol->snb);
 
     return retEl;
@@ -9670,14 +9670,14 @@ GetDocumentTitle(
     short		 procFlag = True;
     CESDLVolume		*sdlVol;
     FormatStruct	 frmtStruct;
-    _DtCvSegment		*toss = NULL;
+    _DtCvSegment		*toss = nullptr;
     SDLMask		 skipMask   [SDL_MASK_LEN] = SDLClearAllBits;
     SDLMask		 processMask[SDL_MASK_LEN] = SDLSetAllBits;
     SDLMask		 startExcept[SDL_MASK_LEN] =
 					SDLInitMask(SdlElementNone);
 
     sdlVol = _DtHelpCeGetSdlVolumePtr(volume);
-    if (sdlVol == NULL)
+    if (sdlVol == nullptr)
 	return -1;
 
     if (sdlVol->title_processed == False)
@@ -9685,7 +9685,7 @@ GetDocumentTitle(
 	if (flag == True)
 	    toss = _DtHelpCeGetSdlVolToss(volume, -1);
 
-	if (SetUp(volume,NULL,&frmtStruct,toss,ui_info,-1,True,False) !=0 )
+	if (SetUp(volume,nullptr,&frmtStruct,toss,ui_info,-1,True,False) !=0 )
 	    return -1;
 
 	/*
@@ -9697,7 +9697,7 @@ GetDocumentTitle(
 	 * now get the title.
 	 */
 	if (_DtHelpCeFileOpenAndSeek(_DtHelpCeGetVolumeName(volume), 0, -1,
-					&(frmtStruct.my_file), NULL) != -1)
+					&(frmtStruct.my_file), nullptr) != -1)
           {
 	    if (ProcessContent(&frmtStruct, SDLDocumentContent,
 				SdlElementNone, startExcept, skipMask) != -1
@@ -9716,7 +9716,7 @@ GetDocumentTitle(
 		 * if the volume doesn't have a head, set the
 		 * appropriate flags.
 		 */
-		if (NULL == sdlVol->title)
+		if (nullptr == sdlVol->title)
 		  {
 		    procFlag = -1;	/* processed with no errors */
 		    result   = -2;	/* but no title             */
@@ -9746,7 +9746,7 @@ GetDocumentTitle(
     /*
      * if we have a title, good
      */
-    else if (sdlVol->title != NULL)
+    else if (sdlVol->title != nullptr)
 	result = 0;
 
     /*
@@ -9824,13 +9824,13 @@ _DtHelpCeFrmtSdlPathAndChildren(
     int			 pathCnt;
     FormatStruct	 frmtStruct;
     _DtCvTopicInfo	*topicHandle;
-    _DtCvSegment	*mySegList = NULL;
-    _DtCvSegment	*myPrevSeg = NULL;
+    _DtCvSegment	*mySegList = nullptr;
+    _DtCvSegment	*myPrevSeg = nullptr;
     _DtCvSegment	*loids;
-    _DtCvSegment	*snb    = NULL;
+    _DtCvSegment	*snb    = nullptr;
     SDLIdInfo		*info;
 
-    *ret_handle = NULL;
+    *ret_handle = nullptr;
 
     /*
      * look for the heading for each virpage
@@ -9852,7 +9852,7 @@ _DtHelpCeFrmtSdlPathAndChildren(
      * get the beginning of the path
      */
     loids = _DtHelpCeMapSdlIdToSegment(volume, *topicMap, fd);
-    if (loids == NULL)
+    if (loids == nullptr)
       {
         _DtCvFreeArray((void **) topicMap);
         return -1;
@@ -9872,12 +9872,12 @@ _DtHelpCeFrmtSdlPathAndChildren(
 	result  = AddEntryToToc(&frmtStruct, volume, fd,
 				_SdlIdInfoPtrRlevel(info), lang, charSet,
 				_DtHelpCeGetSdlVolToss(volume, fd),
-				loids, (topicMap[1] == NULL ? True : False),
+				loids, (topicMap[1] == nullptr ? True : False),
 				&snb, &mySegList, &myPrevSeg);
 	/*
 	 * format the children.
 	 */
-	if (result != -1 && _DtCvNextSeg(loids) != NULL)
+	if (result != -1 && _DtCvNextSeg(loids) != nullptr)
 	  {
 	    loids  = _DtCvNextSeg(loids);
 	    result = ExpandToc(&frmtStruct, volume, fd, lang, charSet,
@@ -9891,10 +9891,10 @@ _DtHelpCeFrmtSdlPathAndChildren(
     if (result != -1)
       {
 	topicHandle = (_DtCvTopicInfo *) malloc (sizeof(_DtCvTopicInfo));
-	if (topicHandle != NULL)
+	if (topicHandle != nullptr)
 	  {
-	    topicHandle->id_str    = NULL;
-	    topicHandle->mark_list = NULL;
+	    topicHandle->id_str    = nullptr;
+	    topicHandle->mark_list = nullptr;
 	    topicHandle->link_data = frmtStruct.my_links;
 
 	    topicHandle->seg_list  = (void *) mySegList;
@@ -9902,7 +9902,7 @@ _DtHelpCeFrmtSdlPathAndChildren(
 	    /*
 	     * let the top level know that there isn't a path
 	     */
-	    if (NULL == mySegList)
+	    if (nullptr == mySegList)
 		result = 1;
 
 	    *ret_handle = (void *) topicHandle;
@@ -9947,7 +9947,7 @@ _DtHelpCeFrmtSdlVolumeInfo(
     SDLMask		 startExcept[SDL_MASK_LEN] =
 					SDLInitMask(SdlElementNone);
 
-    if (SetUp(volume,&sdlVol,&frmtStruct,NULL,&DefUiInfo,-1,True,False) != 0)
+    if (SetUp(volume,&sdlVol,&frmtStruct,nullptr,&DefUiInfo,-1,True,False) != 0)
 	return -1;
 
     /*
@@ -9966,7 +9966,7 @@ _DtHelpCeFrmtSdlVolumeInfo(
 
 	    _DtHelpCeBufFileClose (frmtStruct.my_file, True);
 
-	    if (frmtStruct.remember != NULL)
+	    if (frmtStruct.remember != nullptr)
 		free(frmtStruct.remember);
 	  }
     
@@ -10002,8 +10002,8 @@ _DtHelpCeFrmtSdlVolumeInfo(
 	    /*
 	     * free the container
 	     */
-	    FrmtPrivInfoPtr(frmtStruct.seg_list)->doc_info = NULL;
-	    _DtHelpFreeSegments(frmtStruct.seg_list, _DtCvFALSE, NULL, NULL);
+	    FrmtPrivInfoPtr(frmtStruct.seg_list)->doc_info = nullptr;
+	    _DtHelpFreeSegments(frmtStruct.seg_list, _DtCvFALSE, nullptr, nullptr);
 	  }
       }
 
@@ -10039,12 +10039,12 @@ _DtHelpCeFrmtSDLTitleToAscii(
     int			 result = 0;
     FormatStruct	 frmtStruct;
 
-    if (SetUp(volume,NULL,&frmtStruct,NULL,&DefUiInfo,-1,True,False) != 0)
+    if (SetUp(volume,nullptr,&frmtStruct,nullptr,&DefUiInfo,-1,True,False) != 0)
 	return -1;
 
-    *ret_title = NULL;
-    if (ret_abbrev != NULL)
-	*ret_abbrev = NULL;
+    *ret_title = nullptr;
+    if (ret_abbrev != nullptr)
+	*ret_abbrev = nullptr;
 
     /*
      * now set up correct font mode.
@@ -10056,14 +10056,14 @@ _DtHelpCeFrmtSDLTitleToAscii(
      */
     result = FormatSDLTitle(frmtStruct.vol_name, offset, -1, &frmtStruct);
 
-    if (result != -1 && frmtStruct.seg_list != NULL)
+    if (result != -1 && frmtStruct.seg_list != nullptr)
       {
 	_DtCvSegment  *pHeadSeg;
 	_DtCvValue   nlFlag = False;
 
 	pHeadSeg = _DtCvContainerListOfSeg(frmtStruct.seg_list);
 
-	if (pHeadSeg != NULL)
+	if (pHeadSeg != nullptr)
 	  {
 	    CreateAsciiString(_DtCvContainerListOfSeg(pHeadSeg),
 				frmtStruct.snb, &nlFlag, ret_title);
@@ -10075,8 +10075,8 @@ _DtHelpCeFrmtSDLTitleToAscii(
     else
 	result = -1;
 
-    if (frmtStruct.seg_list != NULL)
-	_DtHelpFreeSegments(frmtStruct.seg_list, _DtCvFALSE, NULL, NULL);
+    if (frmtStruct.seg_list != nullptr)
+	_DtHelpFreeSegments(frmtStruct.seg_list, _DtCvFALSE, nullptr, nullptr);
 
     /*
      * free the font structures allocated
@@ -10106,16 +10106,16 @@ _DtHelpCeFrmtSdlVolumeAbstractToAscii(
     _DtHelpVolumeHdl        volume)
 {
     int			 offset;
-    char		*abstr = NULL;
+    char		*abstr = nullptr;
     _DtCvSegment	*pSeg;
     _DtCvSegment	*pSnb;
     _DtCvValue		 nlFlag = False;
     _DtHelpCeLockInfo    lockInfo;
 
     if (_DtHelpCeLockVolume(volume, &lockInfo) != 0)
-	return NULL;
+	return nullptr;
 
-    if (_DtHelpCeFindSdlId(volume,"_abstract",lockInfo.fd,NULL,&offset) == True)
+    if (_DtHelpCeFindSdlId(volume,"_abstract",lockInfo.fd,nullptr,&offset) == True)
       {
 	int	result = 0;
 	SDLMask	startExcept[SDL_MASK_LEN] = SDLInitMask(SdlElementNone);
@@ -10123,9 +10123,9 @@ _DtHelpCeFrmtSdlVolumeAbstractToAscii(
 	FormatStruct	 frmtStruct;
 	CESDLVolume	*sdlVol;
 
-	if (SetUp(volume, &sdlVol, &frmtStruct, NULL, &DefUiInfo,
+	if (SetUp(volume, &sdlVol, &frmtStruct, nullptr, &DefUiInfo,
 					lockInfo.fd, True, False) != 0)
-	    return NULL;
+	    return nullptr;
 
         /*
          * now set up correct font mode.
@@ -10137,7 +10137,7 @@ _DtHelpCeFrmtSdlVolumeAbstractToAscii(
 	 */
 	result = _DtHelpCeFileOpenAndSeek(_DtHelpCeGetVolumeName(volume),
 					offset, lockInfo.fd,
-					&(frmtStruct.my_file), NULL);
+					&(frmtStruct.my_file), nullptr);
 	if (result != -1)
 	  {
 	    result = ProcessSDLMarkup (&frmtStruct, SdlElementVirpage,
@@ -10153,8 +10153,8 @@ _DtHelpCeFrmtSdlVolumeAbstractToAscii(
 
 	    CreateAsciiString(pSeg, pSnb, &nlFlag, &abstr);
 
-	    _DtHelpFreeSegments(frmtStruct.seg_list, _DtCvFALSE, NULL, NULL);
-	    _DtHelpFreeSegments(frmtStruct.snb, _DtCvFALSE, NULL, NULL);
+	    _DtHelpFreeSegments(frmtStruct.seg_list, _DtCvFALSE, nullptr, nullptr);
+	    _DtHelpFreeSegments(frmtStruct.snb, _DtCvFALSE, nullptr, nullptr);
 	  }
 
         /*
@@ -10188,12 +10188,12 @@ _DtHelpCeFrmtSDLVolTitleToAscii(
     _FrmtUiInfo	*ui_info,
     char	**ret_title)
 {
-    char		*abbrev  = NULL;
+    char		*abbrev  = nullptr;
     int			 result  = 0;
     _DtCvSegment	*pHeadSeg;
     _DtHelpCeLockInfo    lockInfo;
 
-    *ret_title = NULL;
+    *ret_title = nullptr;
 
     /*
      * get the head element
@@ -10210,11 +10210,11 @@ _DtHelpCeFrmtSDLVolTitleToAscii(
 	 * get the abbreviation of the head
 	 */
 	result = -2;
-        if (pHeadSeg != NULL)
+        if (pHeadSeg != nullptr)
           {
 	    CreateAsciiAbbrev(pHeadSeg, &abbrev);
 
-	    if (abbrev != NULL && *abbrev != '\0')
+	    if (abbrev != nullptr && *abbrev != '\0')
 	      {
 		*ret_title = abbrev;
 		result     = 0;
@@ -10225,15 +10225,15 @@ _DtHelpCeFrmtSDLVolTitleToAscii(
 	 * if there wasn't an abbreviation, use the head itself, stripping
 	 * all special items and graphics.
 	 */
-        if (0 != result && pHeadSeg != NULL &&
-				NULL != _DtCvContainerListOfSeg(pHeadSeg))
+        if (0 != result && pHeadSeg != nullptr &&
+				nullptr != _DtCvContainerListOfSeg(pHeadSeg))
 	  {
 	    _DtCvValue   nlFlag = False;
 
 	    CreateAsciiString(_DtCvContainerListOfSeg(pHeadSeg),
 						GetSdlDocSnb(volume),
 						&nlFlag, ret_title);
-	    if (abbrev != NULL)
+	    if (abbrev != nullptr)
 		free(abbrev);
 
 	    result = 0;
@@ -10279,19 +10279,19 @@ _DtHelpCeGetSdlTitleChunks(
     SDLMask		 stopMask[SDL_MASK_LEN] =
 					SDLInitMask(SdlElementSubHead);
 
-    *ret_chunks = NULL;
-    if (_DtHelpCeFindSdlId(volume, loc_id, -1, NULL, &offset) != True)
+    *ret_chunks = nullptr;
+    if (_DtHelpCeFindSdlId(volume, loc_id, -1, nullptr, &offset) != True)
 	return -1;
 
-    if (SetUp(volume, &sdlVol, &frmtStruct, NULL, ui_info, -1, True, True) != 0)
+    if (SetUp(volume, &sdlVol, &frmtStruct, nullptr, ui_info, -1, True, True) != 0)
 	return -1;
 
     result = FormatSDLTitle(frmtStruct.vol_name, offset, -1, &frmtStruct);
 
-    if (result != -1 && frmtStruct.seg_list != NULL)
+    if (result != -1 && frmtStruct.seg_list != nullptr)
       {
 	_DtCvSegment  *headEl;
-	_DtCvSegment  *pSnbEl = NULL;
+	_DtCvSegment  *pSnbEl = nullptr;
 
 	result = -1;
 	headEl = _DtCvContainerListOfSeg(frmtStruct.seg_list);
@@ -10302,7 +10302,7 @@ _DtHelpCeGetSdlTitleChunks(
 	 * container and a controller (heads get the controller flag
 	 * put on them), then this virpage does not have a title.
 	 */
-	if (NULL != headEl && _DtCvIsSegContainer(headEl) &&
+	if (nullptr != headEl && _DtCvIsSegContainer(headEl) &&
 						_DtCvIsSegController(headEl))
 	  {
 	    result = ProcessSegmentsToChunks(frmtStruct.toss,
@@ -10318,12 +10318,12 @@ _DtHelpCeGetSdlTitleChunks(
     else
 	result = -1;
 
-    if (frmtStruct.seg_list != NULL)
+    if (frmtStruct.seg_list != nullptr)
 	_DtHelpFreeSegments(frmtStruct.seg_list, _DtCvFALSE,
 						ui_info->destroy_region,
 						ui_info->client_data);
 
-    if (frmtStruct.snb != NULL)
+    if (frmtStruct.snb != nullptr)
 	_DtHelpFreeSegments(frmtStruct.snb, _DtCvFALSE,
 						ui_info->destroy_region,
 						ui_info->client_data);
@@ -10366,13 +10366,13 @@ _DtHelpCeGetSdlVolTitleChunks(
      * get the sdl volume pointer.
      */
     sdlVol = _DtHelpCeGetSdlVolumePtr(volume_handle);
-    if (sdlVol ==  NULL)
+    if (sdlVol ==  nullptr)
 	return -1;
 
     /*
      * find the document attributes
      */
-    if (NULL == sdlVol->sdl_info)
+    if (nullptr == sdlVol->sdl_info)
 	return -1;
 
     /*
@@ -10385,7 +10385,7 @@ _DtHelpCeGetSdlVolTitleChunks(
     /*
      * process it
      */
-    if (pHeadSeg != NULL)
+    if (pHeadSeg != nullptr)
 	result = ProcessSegmentsToChunks(
 				_DtHelpCeGetSdlVolToss(volume_handle, -1),
 				pHeadSeg,
@@ -10432,13 +10432,13 @@ _DtHelpCeGetSdlVolToss(
      * get the sdl volume pointer.
      */
     sdlVol = _DtHelpCeGetSdlVolumePtr(volume);
-    if (sdlVol == NULL)
-	return NULL;
+    if (sdlVol == nullptr)
+	return nullptr;
 
-    if (sdlVol->toss == NULL
-	&& SetUp(volume,NULL,&frmtStruct,NULL,&DefUiInfo,fd,True,False) == 0
+    if (sdlVol->toss == nullptr
+	&& SetUp(volume,nullptr,&frmtStruct,nullptr,&DefUiInfo,fd,True,False) == 0
 	&& _DtHelpCeFileOpenAndSeek(_DtHelpCeGetVolumeName(volume), 0, fd,
-					&(frmtStruct.my_file), NULL) != -1)
+					&(frmtStruct.my_file), nullptr) != -1)
       {
 	if (ProcessContent(&frmtStruct, SDLDocumentContent,
 				SdlElementNone, startExcept, skipMask) != -1
@@ -10459,10 +10459,10 @@ _DtHelpCeGetSdlVolToss(
         _DtLinkDbDestroy(frmtStruct.my_links);
       }
 
-    if (sdlVol->toss != NULL)
+    if (sdlVol->toss != nullptr)
 	return (_DtCvContainerListOfSeg(sdlVol->toss));
 
-    return NULL;
+    return nullptr;
 
 } /* End _DtHelpCeGetSdlVolToss */
 
@@ -10488,13 +10488,13 @@ _DtHelpCeGetSdlVolIndex(
 					SDLInitMask(SdlElementNone);
 
     sdlVol = _DtHelpCeGetSdlVolumePtr(volume);
-    if (sdlVol == NULL)
+    if (sdlVol == nullptr)
 	return -1;
 
-    if (sdlVol->index != NULL)
+    if (sdlVol->index != nullptr)
 	return 0;
 
-    if (SetUp(volume, NULL, &frmtStruct, NULL, &DefUiInfo, -1, True, True) != 0)
+    if (SetUp(volume, nullptr, &frmtStruct, nullptr, &DefUiInfo, -1, True, True) != 0)
 	return -1;
 
     /*
@@ -10503,7 +10503,7 @@ _DtHelpCeGetSdlVolIndex(
     frmtStruct.resolve_font = _SdlFontModeNone;
 
     if (_DtHelpCeFileOpenAndSeek(_DtHelpCeGetVolumeName(volume), 0, -1,
-					&(frmtStruct.my_file), NULL) != -1)
+					&(frmtStruct.my_file), nullptr) != -1)
       {
 	if (ProcessContent(&frmtStruct, SDLDocumentContent,
 				SdlElementNone, startExcept, skipMask) != -1
@@ -10555,17 +10555,17 @@ _DtHelpCeGetSdlVolIds(
     SDLMask		 startExcept[SDL_MASK_LEN] =
 					SDLInitMask(SdlElementNone);
 
-    *ret_ids = NULL;
+    *ret_ids = nullptr;
     sdlVol   = _DtHelpCeGetSdlVolumePtr(volume);
-    if (sdlVol == NULL)
+    if (sdlVol == nullptr)
 	return -1;
 
-    if (sdlVol->loids == NULL)
+    if (sdlVol->loids == nullptr)
       {
 	result = -1;
-        if (SetUp(NULL,NULL,&frmtStruct,NULL,&DefUiInfo,-1,False,False) != -1
+        if (SetUp(nullptr,nullptr,&frmtStruct,nullptr,&DefUiInfo,-1,False,False) != -1
 	    && _DtHelpCeFileOpenAndSeek(_DtHelpCeGetVolumeName(volume), 0, fd,
-					&(frmtStruct.my_file), NULL) != -1)
+					&(frmtStruct.my_file), nullptr) != -1)
           {
 	    if (ProcessContent(&frmtStruct, SDLDocumentContent,
 				SdlElementNone, startExcept, skipMask) != -1)
@@ -10592,7 +10592,7 @@ _DtHelpCeGetSdlVolIds(
           }
       }
 
-    if (sdlVol->loids != NULL)
+    if (sdlVol->loids != nullptr)
         *ret_ids = _DtCvContainerListOfSeg(sdlVol->loids);
 
     return result;
@@ -10638,9 +10638,9 @@ _DtHelpCeParseSdlTopic(
     _DtCvTopicInfo	*topicHandle;
     CESDLVolume		*sdlVol;
 
-    *ret_handle = NULL;
+    *ret_handle = nullptr;
 
-    if (SetUp(volume,&sdlVol,&frmtStruct,NULL,ui_info,fd,True,rich_text) != 0)
+    if (SetUp(volume,&sdlVol,&frmtStruct,nullptr,ui_info,fd,True,rich_text) != 0)
 	return -1;
 
     /*
@@ -10650,7 +10650,7 @@ _DtHelpCeParseSdlTopic(
 
     result = _DtHelpCeFileOpenAndSeek(_DtHelpCeGetVolumeName(volume),
 					offset, fd,
-					&(frmtStruct.my_file), NULL);
+					&(frmtStruct.my_file), nullptr);
     if (result != -1)
       {
 	result = ProcessSDLMarkup (&frmtStruct, SdlElementVirpage,
@@ -10675,11 +10675,11 @@ _DtHelpCeParseSdlTopic(
     if (result != -1)
       {
 	topicHandle = (_DtCvTopicInfo *) malloc (sizeof(_DtCvTopicInfo));
-	if (topicHandle != NULL)
+	if (topicHandle != nullptr)
 	  {
-	    topicHandle->mark_list = NULL;
-	    topicHandle->id_str    = NULL;
-	    if (id_string != NULL)
+	    topicHandle->mark_list = nullptr;
+	    topicHandle->id_str    = nullptr;
+	    if (id_string != nullptr)
 		topicHandle->id_str = strdup(id_string);
 
 	    topicHandle->link_data = frmtStruct.my_links;

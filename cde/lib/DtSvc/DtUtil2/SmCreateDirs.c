@@ -83,27 +83,27 @@ char *
 _DtCreateDtDirs(
         Display *display )
 {
-    char 		*tmpPath = NULL;
+    char 		*tmpPath = nullptr;
     Boolean 		needSessionsDir = False;
     Boolean 		useOldSession = False;
     struct stat 	buf;
     int 		status;
-    char 		*home = NULL;
-    char		*sessionDir = NULL;
-    char		*displayName = NULL;
+    char 		*home = nullptr;
+    char		*sessionDir = nullptr;
+    char		*displayName = nullptr;
 
     /*
      * Sanity check - make sure there's an existing display
      */
     if(!display)
-	return(NULL);
+	return(nullptr);
 
-    if ((home = getenv("HOME")) == NULL)
+    if ((home = getenv("HOME")) == nullptr)
         home = "";
 
     tmpPath = XtCalloc(1, MAXPATHLEN);
-    if(tmpPath == NULL)
-	return(NULL);
+    if(tmpPath == nullptr)
+	return(nullptr);
 
     /*
      * If the $HOME/.dt directory does not exist, create it
@@ -115,7 +115,7 @@ _DtCreateDtDirs(
 	status = mkdir(tmpPath, 0000);
 	if (status == -1) {
 	    XtFree(tmpPath);
-	    return(NULL);
+	    return(nullptr);
 	}
 	(void)chmod(tmpPath, 0755);
     }
@@ -156,7 +156,7 @@ _DtCreateDtDirs(
      *
      * Must check for this property and use it if is set.
      */
-    if ((sessionDir = GetSessionDirProperty (display)) != NULL) {
+    if ((sessionDir = GetSessionDirProperty (display)) != nullptr) {
 	if (!strcmp (sessionDir, DtSM_SESSION_DIRECTORY)) {
 	    /*
 	     * Need to create a DtSM_SESSION_DIRECTORY dir if it
@@ -168,7 +168,7 @@ _DtCreateDtDirs(
 	    /*
 	     * Create a directory for a display-specific session if necessary
 	     */
-	    if ((displayName = GetDisplayName (display)) != NULL) {
+	    if ((displayName = GetDisplayName (display)) != nullptr) {
 
                 snprintf(tmpPath, MAXPATHLEN, "%s/%s/%s",
                          home,
@@ -176,7 +176,7 @@ _DtCreateDtDirs(
                          displayName);
 
 		free(displayName);  /* CDExc22771 */
-                displayName = NULL;
+                displayName = nullptr;
 
                 if ((status = stat (tmpPath, &buf)) == -1) {
 	            if ((status = mkdir (tmpPath, 0000)) != -1)
@@ -211,7 +211,7 @@ _DtCreateDtDirs(
 	 *  This is done for backward compatibility - THE DISPLAY 
 	 *  DEPENDENT DIR TAKES PRECEDENT.
 	 */
-	if ((displayName = GetDisplayName (display)) != NULL) {
+	if ((displayName = GetDisplayName (display)) != nullptr) {
 
             snprintf(tmpPath, MAXPATHLEN, "%s/%s/%s",
                      home,
@@ -219,7 +219,7 @@ _DtCreateDtDirs(
                      displayName);
 
 	    free(displayName);  /* CDExc22771 */
-            displayName = NULL;
+            displayName = nullptr;
 
 	    if ((status = stat(tmpPath, &buf)) != 0)
 		/*
@@ -245,7 +245,7 @@ _DtCreateDtDirs(
 	if ((status = stat(tmpPath, &buf)) == -1) {
 	    if ((status = mkdir(tmpPath, 0000)) == -1) {
 		XtFree(tmpPath);
-		return(NULL);
+		return(nullptr);
 	    }
 	    (void)chmod(tmpPath, 0755);
 	}
@@ -285,7 +285,7 @@ GetSessionDirProperty (
 	int			actualFormat;
 	unsigned long		nitems;
 	unsigned long		leftover;
-	char			*property = NULL;
+	char			*property = nullptr;
 	Atom			tmpAtom;
 
 	tmpAtom = XInternAtom(display, _XA_DT_RESTORE_DIR, False);
@@ -303,7 +303,7 @@ GetSessionDirProperty (
 
 	if (property)
 		XFree(property);
-	return (NULL);
+	return (nullptr);
 }
 
 /*------------------------------------------------------------------------+*/
@@ -317,7 +317,7 @@ GetDisplayName (
 {
     char 		*tmpPath;
     char 		hostName[101], displayName[101];
-    char		*pch, *tmpNumber = NULL;
+    char		*pch, *tmpNumber = nullptr;
     char		*returnPath;
 
     /*

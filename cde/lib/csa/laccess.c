@@ -54,7 +54,7 @@ static boolean_t match_backward(char *str1, char *str2);
 extern boolean_t
 _DtCmIsSamePath(char *str1, char *str2)
 {
-	if (str1 == NULL || str2 == NULL)
+	if (str1 == nullptr || str2 == nullptr)
 		return(B_FALSE);
 
 	/* check format */
@@ -78,14 +78,14 @@ _DtCmIsSameUser(char *user1, char *user2)
 	char *str1, *str2;
 	char buf[BUFSIZ], *domain;
 
-	if (user1 == NULL || user2 == NULL)
+	if (user1 == nullptr || user2 == nullptr)
 		return (B_FALSE);
 
 	/* compare user name */
 	str1 = _DtCmGetPrefix(user1, '@');
 	str2 = _DtCmGetPrefix(user2, '@');
 
-	if (str1 == NULL || str2 == NULL) {
+	if (str1 == nullptr || str2 == nullptr) {
 		free(str1);
 		free(str2);
 		return (B_FALSE);
@@ -101,14 +101,14 @@ _DtCmIsSameUser(char *user1, char *user2)
 
 	/* if only user name is specified, don't need to check domain */
 	str2 = strchr(user2, '@');
-	if (str2 == NULL)
+	if (str2 == nullptr)
 		return (B_TRUE);
 		
-	domain = _DtCmGetLocalDomain(NULL);
+	domain = _DtCmGetLocalDomain(nullptr);
 
 	/* first assume user2=user@domain */
 	str1 = strchr(user1, '.');
-	if (str1 == NULL) {
+	if (str1 == nullptr) {
 		if (_DtCmIsSamePath(domain, ++str2)) {
 			free(domain);
 			return (B_TRUE);
@@ -120,7 +120,7 @@ _DtCmIsSameUser(char *user1, char *user2)
 	}
 
 	/* assume user2=user@host[.domain] */
-	if (str1 == NULL) {
+	if (str1 == nullptr) {
 		str1 = strchr(user1, '@');
 		snprintf(buf, sizeof buf, "%s.%s", ++str1, domain);
 		str1 = buf;
@@ -152,7 +152,7 @@ get_component(char **str, char *comp, char token)
 
 	*comp = 0;
 
-	if (str == NULL)
+	if (str == nullptr)
 		return;
 	else
 		ptr = *str;
@@ -179,7 +179,7 @@ get_last_component(char *head, char **tail, char *comp, char token)
 
 	*comp = 0;
 
-	if (tail == NULL)
+	if (tail == nullptr)
 		return;
 	else
 		cptr = *tail;
@@ -205,7 +205,7 @@ match_forward(char *str1, char *str2)
 {
 	char com1[BUFSIZ], com2[BUFSIZ];
 
-	if (str1 == NULL || str2 == NULL)
+	if (str1 == nullptr || str2 == nullptr)
 		return (B_FALSE);
 
 	while (B_TRUE) {
@@ -252,7 +252,7 @@ match_backward(char *str1, char *str2)
 	char *ptr1, *ptr2;
 	char com1[BUFSIZ], com2[BUFSIZ];
 
-	if (str1 == NULL || str2 == NULL)
+	if (str1 == nullptr || str2 == nullptr)
 		return (B_FALSE);
 
 	len1 = strlen(str1);

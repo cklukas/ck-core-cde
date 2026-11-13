@@ -62,7 +62,7 @@ def main():
                            "child__exit_sites": 3, "shared_static_status": False,
                            "per_operation_status": True, "select_failure_handoff": True}:
         raise SystemExit(f"FileOp startup contract mismatch: {source_contract}")
-    command = [*shlex.split(env.get("CC", "cc")), "-std=c11", "-Wall", "-Wextra", "-Werror",
+    command = [*shlex.split(env.get("CC", "cc")), "-std=gnu23", "-Wall", "-Wextra", "-Werror",
                "-O1", "-g", "-I", str(work), str(frozen), "-pthread", "-o", str(binary)]
     if args.sanitizers != "none": command += ["-fsanitize=" + args.sanitizers, "-fno-omit-frame-pointer"]
     record = {"started_utc": now(), "cases": [], "command": command, "passed": False,

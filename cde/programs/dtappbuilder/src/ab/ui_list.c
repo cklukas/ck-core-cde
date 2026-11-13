@@ -100,7 +100,7 @@ ui_combobox_clear(
     list = ui_combobox_get_list_widget(combobox);
     XtVaGetValues(list,
 	XmNitemCount,	&num_items,
-	NULL);
+	nullptr);
     
     /* REMIND: Cannot delete last item in ComboBox because of
      * bug in ComboBox widget (CMVC#4633)
@@ -234,21 +234,21 @@ ui_list_replace_item_prefix(
     STRING	new_item_prefix
 )
 {
-    STRING	item_str = NULL;
+    STRING	item_str = nullptr;
     int		num_items = 0;
-    XmString	*items = NULL;
+    XmString	*items = nullptr;
     int		old_prefix_len = 0;
     char	new_item_buf[2048] = "";
-    char	*new_item_buf_ptr = NULL;
+    char	*new_item_buf_ptr = nullptr;
     int		new_prefix_len = 0;
-    XmString	new_xmitem_array[1] = {NULL};
+    XmString	new_xmitem_array[1] = {nullptr};
     int		i = 0;
 
-    if (old_item_prefix == NULL)
+    if (old_item_prefix == nullptr)
     {
 	return ERR_BAD_PARAM;
     }
-    if (new_item_prefix == NULL)
+    if (new_item_prefix == nullptr)
     {
 	return ERR_BAD_PARAM;
     }
@@ -258,7 +258,7 @@ ui_list_replace_item_prefix(
     XtVaGetValues(list,
 	XmNitemCount, &num_items,
 	XmNitems, &items,
-	NULL);
+	nullptr);
 
     strcpy(new_item_buf, new_item_prefix);
     new_item_buf_ptr = new_item_buf + strlen(new_item_buf);
@@ -266,7 +266,7 @@ ui_list_replace_item_prefix(
     for (i = 0; i < num_items; ++i)
     {
 	item_str = objxm_xmstr_to_str(items[i]);
-	if (item_str == NULL)
+	if (item_str == nullptr)
 	{
 	    continue;
 	}
@@ -277,7 +277,7 @@ ui_list_replace_item_prefix(
             new_xmitem_array[0] = XmStringCreateLocalized(new_item_buf);
             XmListReplaceItemsPos(list, new_xmitem_array, 1, i+1);
             XmStringFree(new_xmitem_array[0]);
-	    new_xmitem_array[0] = NULL;
+	    new_xmitem_array[0] = nullptr;
 	}
     }
 
@@ -329,7 +329,7 @@ ui_list_get_info(
 	XmNitemCount, &num_items,
 	XmNtopItemPosition, &top_pos,
 	XmNvisibleItemCount, &items_visible,
-	NULL);
+	nullptr);
 
     *num_items_out = num_items;
     *first_visible_out = top_pos;
@@ -384,7 +384,7 @@ ui_list_select_pos(
 	 */
 	    XtVaSetValues(list,
 		XmNtopItemPosition, (item_pos - items_vis) + 1,
-		NULL);
+		nullptr);
 
     }
     else if (item_pos < first_vis)
@@ -394,7 +394,7 @@ ui_list_select_pos(
 	     */
    	    XtVaSetValues(list,
 		XmNtopItemPosition, item_pos,
-		NULL);
+		nullptr);
     }
     /* Else Item already visible */
 

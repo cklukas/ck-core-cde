@@ -102,7 +102,7 @@ void
 do_business(void)     /* Perform special business mode calculations. */
 {
   Boolean need_show = TRUE;
-  char *display_number = NULL;
+  char *display_number = nullptr;
   int MPbv[MP_SIZE], MP1[MP_SIZE], MP2[MP_SIZE], MP3[MP_SIZE], MP4[MP_SIZE] ;
   int i, len, val, accSav ;
   double result, w;
@@ -628,7 +628,7 @@ do_expno(void)           /* Get exponential number. */
   /* the financial state is false - last key was not a fin. key */
   v->funstate = 0;
 
-  v->pointed = (strchr(v->display, '.') != NULL) ;
+  v->pointed = (strchr(v->display, '.') != nullptr) ;
   if (!v->new_input)
     {
       strcpy(v->display, "1.0 +") ;
@@ -1662,7 +1662,7 @@ push_num(int *MPval)            /* Try to push value onto the numeric stack. */
     }
   else
     {
-      if (v->MPnumstack[v->numsptr] == NULL)
+      if (v->MPnumstack[v->numsptr] == nullptr)
         v->MPnumstack[v->numsptr] =
                         (int *) LINT_CAST(calloc(1, sizeof(int) * MP_SIZE)) ;
       mpstr(MPval, v->MPnumstack[v->numsptr++]) ;

@@ -117,7 +117,7 @@ UpdateActionMenuPane(
         unsigned char physical_type)
 {
    XmManagerWidget action_pane;
-   FileMgrData *file_mgr_data = NULL;
+   FileMgrData *file_mgr_data = nullptr;
    DialogData * dialog_data;
    FileViewData *file_view_data;
    DesktopRec *desktopWindow;
@@ -149,8 +149,8 @@ UpdateActionMenuPane(
    action_count = 0;
    command_list = _DtCompileActionVector(file_type);
 
-   if(command_list != NULL)
-      while (command_list[action_count] != NULL &&
+   if(command_list != nullptr)
+      while (command_list[action_count] != nullptr &&
                                     strlen (command_list[action_count]) != 0)
          action_count++;
 
@@ -201,20 +201,20 @@ UpdateActionMenuPane(
             XtAddCallback (child, XmNactivateCallback, DTActionCallback,
                                                     (XtPointer)desktopWindow);
             XtAddCallback(child, XmNhelpCallback,
-                          DTHelpRequestCB, NULL);
+                          DTHelpRequestCB, nullptr);
          }
          else if(type == FM_POPUP)
          {
-            XtAddCallback (child, XmNactivateCallback, ActionCallback, NULL);
+            XtAddCallback (child, XmNactivateCallback, ActionCallback, nullptr);
             XtAddCallback(child, XmNhelpCallback,
-                          HelpRequestCB, NULL);
+                          HelpRequestCB, nullptr);
          }
          else
          {
             XtAddCallback (child, XmNactivateCallback, ActionCallback,
                                                     (XtPointer)file_mgr_rec);
             XtAddCallback(child, XmNhelpCallback,
-                          HelpRequestCB, NULL);
+                          HelpRequestCB, nullptr);
          }
          XtManageChild (child);
       }
@@ -233,7 +233,7 @@ UpdateActionMenuPane(
                                      (XtPointer)desktopWindow);
           else if(type == FM_POPUP)
              XtAddCallback (action_pane->composite.children[i],
-                                  XmNactivateCallback, ActionCallback, NULL);
+                                  XmNactivateCallback, ActionCallback, nullptr);
           else
              XtAddCallback (action_pane->composite.children[i],
                                         XmNactivateCallback, ActionCallback,
@@ -264,7 +264,7 @@ UpdateActionMenuPane(
 
          action_label = DtActionLabel(command_list[i]);
 
-         if(action_label != NULL)
+         if(action_label != nullptr)
              string = XmStringCreateLocalized(action_label);
          else
              string = XmStringCreateLocalized(command_list[i]);
@@ -275,7 +275,7 @@ UpdateActionMenuPane(
       {
          if (physical_type == DtDIRECTORY && i == 0)
          {
-            if((action_label = DtActionLabel(openNewView)) != NULL)
+            if((action_label = DtActionLabel(openNewView)) != nullptr)
                 string = XmStringCreateLocalized(action_label);
             else
                 string = XmStringCreateLocalized(openNewView);
@@ -296,7 +296,7 @@ UpdateActionMenuPane(
                }
                action_label = DtActionLabel(command_list[i - 1]);
 
-               if(action_label != NULL)
+               if(action_label != nullptr)
                    string = XmStringCreateLocalized(action_label);
                else
                    string = XmStringCreateLocalized(command_list[i-1]);
@@ -309,7 +309,7 @@ UpdateActionMenuPane(
             {
                action_label = DtActionLabel(command_list[i]);
 
-               if(action_label != NULL)
+               if(action_label != nullptr)
                    string = XmStringCreateLocalized(action_label);
                else
                    string = XmStringCreateLocalized(command_list[i]);
@@ -325,7 +325,7 @@ UpdateActionMenuPane(
       XtSetArg (argsTmp[0], XmNuserData, &oldCommand);
       XtGetValues (action_pane->composite.children[count], argsTmp, 1);
 
-      if(oldCommand != NULL && strcmp(oldCommand, openNewView) != 0)
+      if(oldCommand != nullptr && strcmp(oldCommand, openNewView) != 0)
          XtFree(oldCommand);
 
 
@@ -386,7 +386,7 @@ ActionCallback(
    mbar = XtParent(w);
 
    callback = (XmAnyCallbackStruct *) call_data;
-   if(client_data == NULL)
+   if(client_data == nullptr)
    {
       popup = True;
       XtSetArg(args[0], XmNuserData, &file_mgr_rec);
@@ -396,7 +396,7 @@ ActionCallback(
       file_view_data = file_mgr_data->popup_menu_icon;
       if(!file_view_data) /* The object would have probably been delete */
          return;
-      file_mgr_data->popup_menu_icon = NULL;  /* Just to make it unuseful */
+      file_mgr_data->popup_menu_icon = nullptr;  /* Just to make it unuseful */
    }
    else
    {
@@ -419,10 +419,10 @@ ActionCallback(
 
       modifiers = event->state;
       if(popup)
-         RunCommand (command, file_mgr_data, file_view_data, NULL, NULL, NULL);
+         RunCommand (command, file_mgr_data, file_view_data, nullptr, nullptr, nullptr);
       else
          RunCommand (command, file_mgr_data, file_mgr_data->selection_list[0],
-                     NULL, NULL, NULL);
+                     nullptr, nullptr, nullptr);
 
       if((modifiers != 0) && ((modifiers & ControlMask) != 0))
       {
@@ -435,10 +435,10 @@ ActionCallback(
    else
    {
       if(popup)
-         RunCommand (command, file_mgr_data, file_view_data, NULL, NULL, NULL);
+         RunCommand (command, file_mgr_data, file_view_data, nullptr, nullptr, nullptr);
       else
          RunCommand (command, file_mgr_data, file_mgr_data->selection_list[0],
-                     NULL, NULL, NULL);
+                     nullptr, nullptr, nullptr);
    }
 }
 
@@ -480,7 +480,7 @@ RunCommand(
         sprintf( msg, GETMESSAGE(30, 1, "Cannot read from %s"),
                  file_view_data->file_data->file_name );
         _DtMessage(((FileMgrRec*)file_mgr_data->file_mgr_rec)->file_window,
-                   title, msg, NULL, HelpRequestCB );
+                   title, msg, nullptr, HelpRequestCB );
         XtFree(title);
         XtFree(msg);
         return;
@@ -562,7 +562,7 @@ ProcessNewView (
    char *tmpStr, *title, *msg;
 
    /* we don't want to execute the default action if in trash ...  */
-   if( trashFileMgrData != NULL
+   if( trashFileMgrData != nullptr
        && file_mgr_data == trashFileMgrData)
    {
       tmpStr = GETMESSAGE(27, 3, "Trash Can Error");
@@ -571,7 +571,7 @@ ProcessNewView (
       msg = XtNewString(tmpStr);
 
       _DtMessage( ((FileMgrRec *)file_mgr_data->file_mgr_rec)->file_window,
-                  title, msg, NULL, HelpRequestCB);
+                  title, msg, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree(msg);
       return;
@@ -628,9 +628,9 @@ ProcessNewView (
    else
    {
       initiating_view = (XtPointer) file_mgr_data;
-      if(file_mgr_data->restricted_directory == NULL)
+      if(file_mgr_data->restricted_directory == nullptr)
       {
-         GetNewView (host_name, directory_name, NULL, position, 0);
+         GetNewView (host_name, directory_name, nullptr, position, 0);
       }
       else
       {
@@ -642,8 +642,8 @@ ProcessNewView (
          special_randomType = file_mgr_data->positionEnabled;
          special_restricted =
             XtNewString(file_mgr_data->restricted_directory);
-         if(file_mgr_data->title == NULL)
-            special_title = NULL;
+         if(file_mgr_data->title == nullptr)
+            special_title = nullptr;
          else
             special_title = XtNewString(file_mgr_data->title);
          special_helpVol = XtNewString(file_mgr_data->helpVol);
@@ -651,7 +651,7 @@ ProcessNewView (
             GetNewView (file_mgr_data->host, directory_name,
                         file_mgr_data->restricted_directory, position, 0);
          else
-            GetNewView (file_mgr_data->host, directory_name, NULL, position, 0);
+            GetNewView (file_mgr_data->host, directory_name, nullptr, position, 0);
       }
 
       initiating_view = (XtPointer) NULL;
@@ -677,8 +677,8 @@ ProcessMoveCopyLink (
    extern void ShelfPrepareDragFinish(DtDndDropCallbackStruct *);
    unsigned int modifiers = 0;
    int numFiles, i;
-   char ** file_set = NULL;
-   char ** host_set = NULL;
+   char ** file_set = nullptr;
+   char ** host_set = nullptr;
    Boolean trashFile;
 
 
@@ -720,7 +720,7 @@ ProcessMoveCopyLink (
       /******************************/
       /* set movement modifier mask */
       /******************************/
-   if( (initiating_view != NULL) &&
+   if( (initiating_view != nullptr) &&
        (((FileMgrData *)initiating_view)->toolbox) )
    {
       /* if initiating_view is a toolbox, the transfer must be */
@@ -810,8 +810,8 @@ ProcessMoveCopyLink (
             {
                DPRINTF (("DropOnFileWindow: Dragging file(s) and dropping from other folders\n"));
 
-               CheckMoveType(file_mgr_data, (FileViewData *)NULL,
-                             (DirectorySet *)NULL, (DesktopRec *)NULL,
+               CheckMoveType(file_mgr_data, (FileViewData *)nullptr,
+                             (DirectorySet *)nullptr, (DesktopRec *)nullptr,
                              file_set, host_set, modifiers,
                              numFiles,
                              drop_parameters->x, drop_parameters->y,
@@ -875,7 +875,7 @@ ProcessMoveCopyLink (
    {
       CheckMoveType(file_mgr_data, file_view_data,
                     (DirectorySet *) file_view_data->directory_set,
-                    (DesktopRec *)NULL,
+                    (DesktopRec *)nullptr,
                     file_set, host_set, modifiers,
                     numFiles, drop_parameters->x, drop_parameters->y,
                     NOT_DESKTOP_DIR);
@@ -905,9 +905,9 @@ ProcessBufferDropOnFolder (
 {
    unsigned int modifiers = 0;
    int num_of_buffers, i;
-   char ** file_set = NULL;
-   char ** host_set = NULL;
-   BufferInfo *buffer_set = NULL;
+   char ** file_set = nullptr;
+   char ** host_set = nullptr;
+   BufferInfo *buffer_set = nullptr;
    char  directory[MAX_PATH];
 
 
@@ -921,12 +921,12 @@ ProcessBufferDropOnFolder (
      return;
 
    /* if dropped on file window and file_mgr_data is null */
-   if (drop_window && (file_mgr_data == NULL))
+   if (drop_window && (file_mgr_data == nullptr))
      return;
 
    /* if dropped on a folder icon and file_view_data */
    /* is NULL, disallow the drop                     */
-   if (!drop_window && (file_view_data == NULL))
+   if (!drop_window && (file_view_data == nullptr))
      return;
 
 
@@ -990,7 +990,7 @@ ProcessBufferDropOnFolder (
       MakeFilesFromBuffers(file_mgr_data, file_mgr_data->current_directory,
 			   file_mgr_data->host, file_set,
 			   host_set, buffer_set, num_of_buffers,
-			   NULL, NULL);
+			   nullptr, nullptr);
 
     }
     else
@@ -1000,13 +1000,13 @@ ProcessBufferDropOnFolder (
       MakeFilesFromBuffers(file_mgr_data, file_mgr_data->current_directory,
 			   file_mgr_data->host, file_set,
 			   host_set, buffer_set, num_of_buffers,
-			   NULL, NULL);
+			   nullptr, nullptr);
 
       /* Do Tree View Stuff      */
       {
          DirectorySet * directory_data;
          char * directory_name;
-         FileViewData * file_view_data = NULL;
+         FileViewData * file_view_data = nullptr;
          int j;
 
          DeselectAllFiles (file_mgr_data);
@@ -1057,7 +1057,7 @@ ProcessBufferDropOnFolder (
     MakeFilesFromBuffers(file_mgr_data, directory,
 			 file_mgr_data->host, file_set,
 			 host_set, buffer_set, num_of_buffers,
-			 NULL, NULL);
+			 nullptr, nullptr);
 
   }
 
@@ -1103,14 +1103,14 @@ InvalidTrashDragDrop (
             tmpStr = (GETMESSAGE(18,37, "You can't copy or link a file or folder out of the Trash Can.\nMove the object out of the Trash and put it into the File Manager.\nYou can then copy or link it from there."));
             break;
          default:
-            tmpStr = NULL;
+            tmpStr = nullptr;
             break;
       }
 
       if (tmpStr)
       {
          msg = XtNewString(tmpStr);
-         _DtMessage (w, title, msg, NULL, HelpRequestCB);
+         _DtMessage (w, title, msg, nullptr, HelpRequestCB);
          XtFree(msg);
       }
 
@@ -1140,18 +1140,18 @@ ProcessAction (
      Widget w)
 
 {
-   FileViewData *first_arg = NULL;
-   DtActionArg * action_args = NULL;
+   FileViewData *first_arg = nullptr;
+   DtActionArg * action_args = nullptr;
    int arg_count = 0;
-   char * pwd_host = NULL;
-   char * pwd_dir = NULL;
+   char * pwd_host = nullptr;
+   char * pwd_dir = nullptr;
    DirectorySet *directory_set;
    FileMgrData *file_mgr_data;
 
    /* We don't want to execute the default action if in trash ...  */
    directory_set = (DirectorySet *) file_view_data->directory_set;
    file_mgr_data = (FileMgrData *) directory_set->file_mgr_data;
-   if( trashFileMgrData != NULL
+   if( trashFileMgrData != nullptr
        && file_mgr_data == trashFileMgrData)
    {
       char *tmpStr, *title, *msg;
@@ -1163,7 +1163,7 @@ ProcessAction (
       msg = XtNewString(tmpStr);
 
       _DtMessage(((FileMgrRec *)file_mgr_data->file_mgr_rec)->file_window,
-                 title, msg, NULL, HelpRequestCB);
+                 title, msg, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree(msg);
       return;
@@ -1218,7 +1218,7 @@ ProcessAction (
 
    /* Invoke action */
    DtActionInvoke(w, action, action_args, arg_count,
-                  NULL, NULL, pwd_dir, True, NULL, NULL);
+                  nullptr, nullptr, pwd_dir, True, nullptr, nullptr);
 
 
    /* Add timer event to turn off hour glass */
@@ -1267,10 +1267,10 @@ MoveCopyLinkHandler(
    struct stat fileInfo;
    char title[256];
    int numArgs, i;
-   char *ptr, *toName, *fileNames = NULL, *type = NULL, *fileList;
-   char *files = NULL;
-   char ** file_set = NULL;
-   char ** host_set = NULL;
+   char *ptr, *toName, *fileNames = nullptr, *type = nullptr, *fileList;
+   char *files = nullptr;
+   char ** file_set = nullptr;
+   char ** host_set = nullptr;
    unsigned int modifiers = 0;
    int file_count = 0;
    int file_set_size = 0;
@@ -1308,7 +1308,7 @@ MoveCopyLinkHandler(
       ptr = DtStrchr(fileList, ' ');
 
       /* if ptr is NULL, we have our last file name (no spaces found) */
-      if(ptr == NULL)
+      if(ptr == nullptr)
       {
          file_set[file_count] = XtNewString(fileList);
          file_count++;
@@ -1367,7 +1367,7 @@ MoveCopyLinkHandler(
          dialogTitle = XtNewString(GETMESSAGE(33, 5, "Link Object Error"));
          sprintf(title, GETMESSAGE(33, 8, "The location you are trying to Link to:\n\n   %s\n\ndoes not exist in the file system."), toName);
       }
-      _DtMessage( toplevel, dialogTitle, title, NULL, HelpRequestCB );
+      _DtMessage( toplevel, dialogTitle, title, nullptr, HelpRequestCB );
 
       tt_free( toName );
       tt_message_reply( ttMsg );
@@ -1399,7 +1399,7 @@ MoveCopyLinkHandler(
          dialogTitle = XtNewString(GETMESSAGE(33, 5, "Link Object Error"));
          sprintf(title, GETMESSAGE(33, 11,"The location you are trying to Link to:\n\n   %s\n\nis not a folder."), toName);
       }
-      _DtMessage( toplevel, dialogTitle, title, NULL, HelpRequestCB );
+      _DtMessage( toplevel, dialogTitle, title, nullptr, HelpRequestCB );
 
       tt_free( toName );
       tt_message_reply( ttMsg );
@@ -1442,7 +1442,7 @@ MoveCopyLinkHandler(
             else
                sprintf(title, GETMESSAGE(33, 17, "One of the objects you are trying to Link:\n\n   %s\n\ndoes not exist in the file system.\nNot Linking any of them."), file_set[i]);
          }
-         _DtMessage( toplevel, dialogTitle, title, NULL, HelpRequestCB );
+         _DtMessage( toplevel, dialogTitle, title, nullptr, HelpRequestCB );
 
          tt_free( toName );
          tt_message_reply( ttMsg );
@@ -1460,9 +1460,9 @@ MoveCopyLinkHandler(
       host_set[i] = home_host_name;
 
    /* Go do the Move/Copy/Link... this function will do proper error checking */
-   FileMoveCopy(NULL, NULL, toName, home_host_name,
+   FileMoveCopy(nullptr, nullptr, toName, home_host_name,
                 host_set, file_set, file_count,
-                modifiers, NULL, NULL);
+                modifiers, nullptr, nullptr);
 
    tt_free( toName );
    tt_message_reply( ttMsg );

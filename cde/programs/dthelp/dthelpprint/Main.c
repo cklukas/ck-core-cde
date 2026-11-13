@@ -81,9 +81,9 @@ int main(
     int		argc,
     char * *	argv)
 {       /*$CODE$*/
-   XrmDatabase   appDB = NULL;
+   XrmDatabase   appDB = nullptr;
    _DtHPrOptions options;
-   Display *     dpy = NULL;
+   Display *     dpy = nullptr;
    int           helpType;
    int           status;
 

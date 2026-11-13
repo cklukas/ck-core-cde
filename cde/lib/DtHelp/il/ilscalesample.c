@@ -539,7 +539,7 @@ IL_PRIVATE void _ilScaleSample (
     )
 {
 
-ilScaleSamplePtr pPriv = NULL;
+ilScaleSamplePtr pPriv = nullptr;
 ilDstElementData          dstdata;
 
 
@@ -547,8 +547,8 @@ ilDstElementData          dstdata;
     /*  Add a filter to do the scale, then init *pPriv.  */
 
     dstdata.producerObject = (ilObject)NULL;
-    dstdata.pDes           = (ilImageDes *) NULL;
-    dstdata.pFormat        = (ilImageFormat *) NULL;
+    dstdata.pDes           = (ilImageDes *) nullptr;
+    dstdata.pFormat        = (ilImageFormat *) nullptr;
     dstdata.width          = dstWidth;
     dstdata.height         = dstHeight;
     dstdata.pPalette       = pInfo->pPalette;;
@@ -559,12 +559,12 @@ ilDstElementData          dstdata;
     switch  (Ncomponents) {
 
        case  3:
-                 pPriv = (ilScaleSamplePtr) ilAddPipeElement (pipe, IL_FILTER, sizeof (ilScaleSampleRec), 0, (ilSrcElementData *)NULL,
-                                                              &dstdata, ilScaleSampleInit, IL_NPF, IL_NPF, ilScaleSample3ByteExecute, NULL, 0);
+                 pPriv = (ilScaleSamplePtr) ilAddPipeElement (pipe, IL_FILTER, sizeof (ilScaleSampleRec), 0, (ilSrcElementData *)nullptr,
+                                                              &dstdata, ilScaleSampleInit, IL_NPF, IL_NPF, ilScaleSample3ByteExecute, nullptr, 0);
                  break;
        case  1:
-                 pPriv = (ilScaleSamplePtr) ilAddPipeElement (pipe, IL_FILTER, sizeof (ilScaleSampleRec), 0, (ilSrcElementData *)NULL,
-                                                              &dstdata, ilScaleSampleInit, IL_NPF, IL_NPF, ilScaleSampleByteExecute, NULL, 0);
+                 pPriv = (ilScaleSamplePtr) ilAddPipeElement (pipe, IL_FILTER, sizeof (ilScaleSampleRec), 0, (ilSrcElementData *)nullptr,
+                                                              &dstdata, ilScaleSampleInit, IL_NPF, IL_NPF, ilScaleSampleByteExecute, nullptr, 0);
     }
 
 

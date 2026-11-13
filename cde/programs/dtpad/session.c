@@ -184,7 +184,7 @@ SaveMain(
 
         write (fd, bufr, strlen(bufr));
     }
-    if(pPad->fileStuff.fileName != (char *)NULL)
+    if(pPad->fileStuff.fileName != (char *)nullptr)
     {
 	sprintf(bufr, "*mainWindow%d.fileName: %s\n", padNum, 
 		pPad->fileStuff.fileName);
@@ -220,7 +220,7 @@ SaveSessionCB(
     if(!XtIsShell(w))
 	w = XtParent(w);
 
-    for(pPad = pPadList, numPadsToSave = 0; pPad != (Editor *)NULL; 
+    for(pPad = pPadList, numPadsToSave = 0; pPad != (Editor *)nullptr; 
 	pPad = pPad->pNextPad)
     {
 	if(pPad->inUse == True)
@@ -228,7 +228,7 @@ SaveSessionCB(
     }
     if(numPadsToSave < 1)
     {
-        xa_CommandStr[0] = (char *)NULL;
+        xa_CommandStr[0] = (char *)nullptr;
         XSetCommand(XtDisplay(w), XtWindow(w), xa_CommandStr, 1);
 	return;
     }
@@ -240,7 +240,7 @@ SaveSessionCB(
     {
         tmpStr = (char *)malloc(strlen(MSG2) + strlen(longpath)+ 1);
         sprintf(tmpStr, MSG2, longpath);
-        _DtSimpleErrnoError(pPad->progname, DtError, MSG1, tmpStr, NULL);
+        _DtSimpleErrnoError(pPad->progname, DtError, MSG1, tmpStr, nullptr);
         free(tmpStr);
         XtFree ((char *)longpath);
         return;
@@ -249,7 +249,7 @@ SaveSessionCB(
     sprintf(bufr, "*pads.numActivePads: %d\n", numPadsToSave);
     write (fd, bufr, strlen(bufr));
 
-    for(pPad = pPadList, i = 0; pPad != (Editor *)NULL; 
+    for(pPad = pPadList, i = 0; pPad != (Editor *)nullptr; 
 	pPad = pPad->pNextPad, i++)
     {
 	if(pPad->inUse == True)
@@ -319,11 +319,11 @@ restoreSession(
 	path = fileName;
 
     /*  Open the file as a resource database */
-    if ((db = XrmGetFileDatabase (path)) == NULL) 
+    if ((db = XrmGetFileDatabase (path)) == nullptr) 
     {
       tmpStr = (char *)XtMalloc(strlen(MSG2) + strlen(path)+ 1);
       sprintf(tmpStr, MSG2, path);
-      _DtSimpleErrnoError(pPad->progname, DtError, MSG1, tmpStr, NULL);
+      _DtSimpleErrnoError(pPad->progname, DtError, MSG1, tmpStr, nullptr);
       XtFree(tmpStr);
       return;
     }
@@ -386,7 +386,7 @@ RestoreMain(
 	int padNum,
         XrmDatabase db)
 {
-    char * iconify = NULL;
+    char * iconify = nullptr;
     char buf[1024];
     XrmName xrm_name[5];
     XrmRepresentation rep_type;
@@ -421,7 +421,7 @@ RestoreMain(
    XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value);
    /*  If there is an iconify resource and its value is True,  */
    /*  then mark the window as iconified.                      */
-   if ((iconify = (char *) value.addr) != NULL &&
+   if ((iconify = (char *) value.addr) != nullptr &&
                                     strcmp (iconify, "True") == 0)
       pPad->iconic = True;
    else

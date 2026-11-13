@@ -75,7 +75,7 @@ void *m_malloc(int size, char *msg)
     void *p ;
 
     size *= sizeof(M_WCHAR);
-    if (! size) return(NULL) ;
+    if (! size) return(nullptr) ;
     p = (void *) malloc(size) ;
     if (! p) {
       m_errline("Unable to allocate space for ") ;
@@ -107,7 +107,7 @@ void *m_realloc(void *ptr, int size, char *msg)
     void *p ;
 
     size *= sizeof(M_WCHAR);
-    if (! size) return(NULL) ;
+    if (! size) return(nullptr) ;
     p = (void *) realloc(ptr, size) ;
     if (! p) {
       m_errline("Unable to re-allocate space for ") ;

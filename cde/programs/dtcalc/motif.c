@@ -162,14 +162,14 @@ static Pixel white_pixel;
 static Pixel black_pixel;
 static Boolean BlackWhite = False;
 
-static char * dt_path = NULL;
+static char * dt_path = nullptr;
 
-static Widget funBtn = NULL;
-static Widget constBtn = NULL;
-static Widget accBtn = NULL;
-static Widget stoBtn = NULL;
-static Widget rclBtn = NULL;
-static Widget exchBtn = NULL;
+static Widget funBtn = nullptr;
+static Widget constBtn = nullptr;
+static Widget accBtn = nullptr;
+static Widget stoBtn = nullptr;
+static Widget rclBtn = nullptr;
+static Widget exchBtn = nullptr;
 
 static Atom saveatom ;
 static Atom command_atom ;
@@ -268,7 +268,7 @@ main(int argc, char **argv)
 {
   Pixmap pixmap;
 
-  XtSetLanguageProc(NULL, NULL, NULL);
+  XtSetLanguageProc(nullptr, nullptr, nullptr);
   _DtEnvControl(DT_ENV_SET);
   signal (SIGHUP, SIG_IGN);
 
@@ -277,15 +277,15 @@ main(int argc, char **argv)
 
   X->kframe = XtVaAppInitialize (&X->app,
 				 DTCALC_CLASS_NAME,	/* app class */
-				 NULL,			/* options list */
+				 nullptr,			/* options list */
 				 0, 			/* num options */
 				 &argc,
 				 argv,
-				 NULL,			/* fallback resources */
+				 nullptr,			/* fallback resources */
 				 XtNiconName,   "dtcalc",
 				 XtNiconPixmap,	X->icon,
 				 XtNiconMask,   X->iconmask,
-				 NULL) ;
+				 nullptr) ;
 
   X->dpy = XtDisplay (X->kframe);
 
@@ -304,9 +304,9 @@ main(int argc, char **argv)
   white_pixel = WhitePixel(X->dpy, X->screen);
   black_pixel = BlackPixel(X->dpy, X->screen);
 
-  X->dval  = NULL;
-  X->vval  = NULL;
-  X->cfval = NULL;
+  X->dval  = nullptr;
+  X->vval  = nullptr;
+  X->cfval = nullptr;
   X->helpMapped = False;
 
   if (DtInitialize (X->dpy, X->kframe, argv[0], DTCALC_CLASS_NAME) == False)
@@ -317,7 +317,7 @@ main(int argc, char **argv)
   }
 
   /*  Get the application defined resources */
-  XtGetApplicationResources(X->kframe, &application_args, resources, 6, NULL,0);
+  XtGetApplicationResources(X->kframe, &application_args, resources, 6, nullptr,0);
 
   v = (Vars) LINT_CAST(calloc(1, sizeof(CalcVars))) ;
 
@@ -420,7 +420,7 @@ button_create(Widget owner, int row, int column, int maxrows, int maxcols)
                       XmNalignment,        XmALIGNMENT_CENTER,
                       XmNrecomputeSize,    False,
                       XmNnavigationType,   XmNONE,
-                      NULL) ;
+                      nullptr) ;
   }
   else
      button = XtVaCreateManagedWidget(buttons[n].resname,
@@ -439,7 +439,7 @@ button_create(Widget owner, int row, int column, int maxrows, int maxcols)
                       XmNalignment,        XmALIGNMENT_CENTER,
                       XmNrecomputeSize,    False,
                       XmNnavigationType,   XmNONE,
-                      NULL) ;
+                      nullptr) ;
 
   XmStringFree(lstr) ;
 
@@ -448,21 +448,21 @@ button_create(Widget owner, int row, int column, int maxrows, int maxcols)
   XtAddCallback(button, XmNactivateCallback, do_button,  (XtPointer) val) ;
   XtAddCallback(button, XmNhelpCallback, HelpRequestCB, (XtPointer) val) ;
   XtAddEventHandler(button, KeyPressMask | KeyReleaseMask,
-                    FALSE, event_proc, NULL) ;
+                    FALSE, event_proc, nullptr) ;
 
-  if( funBtn == NULL && strcmp(v->pstr, GETMESSAGE(3, 5, "Functions")) == 0)
+  if( funBtn == nullptr && strcmp(v->pstr, GETMESSAGE(3, 5, "Functions")) == 0)
      funBtn = button;
-  else if( constBtn == NULL && strcmp(v->pstr,
+  else if( constBtn == nullptr && strcmp(v->pstr,
                                       GETMESSAGE(3, 6, "Constants")) == 0)
      constBtn = button;
-  else if( accBtn == NULL && strcmp(v->pstr,
+  else if( accBtn == nullptr && strcmp(v->pstr,
                                     GETMESSAGE(3, 12, "Accuracy")) == 0)
      accBtn = button;
-  else if( stoBtn == NULL && strcmp(v->pstr, GETMESSAGE(3, 13, "Store")) == 0)
+  else if( stoBtn == nullptr && strcmp(v->pstr, GETMESSAGE(3, 13, "Store")) == 0)
      stoBtn = button;
-  else if( rclBtn == NULL && strcmp(v->pstr, GETMESSAGE(3, 14, "Recall")) == 0)
+  else if( rclBtn == nullptr && strcmp(v->pstr, GETMESSAGE(3, 14, "Recall")) == 0)
      rclBtn = button;
-  else if( exchBtn == NULL && strcmp(v->pstr,
+  else if( exchBtn == nullptr && strcmp(v->pstr,
                                      GETMESSAGE(3, 15, "Exchange")) == 0)
      exchBtn = button;
 
@@ -483,7 +483,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
   {
      if (X->rframe) return ;
 
-     X->rframe = XmCreateFormDialog(owner, "rframe", NULL, 0) ;
+     X->rframe = XmCreateFormDialog(owner, "rframe", nullptr, 0) ;
 
      /*  Adjust the decorations for the dialog shell of the dialog  */
      XtSetArg (args[0], XmNmwmFunctions, MWM_FUNC_MOVE);
@@ -492,9 +492,9 @@ dtcalc_initialize_rframe(Widget owner, int type)
 
      set_title(FCP_REG, lstrs[(int) L_MEMT]) ;
 
-     frame = XmCreateFrame(X->rframe, "frame", NULL, 0);
+     frame = XmCreateFrame(X->rframe, "frame", nullptr, 0);
      XtManageChild(frame);
-     form = (Widget) XmCreateForm(frame, "form", NULL, 0) ;
+     form = (Widget) XmCreateForm(frame, "form", nullptr, 0) ;
      XtManageChild(form);
 
      XtVaSetValues(form,
@@ -502,7 +502,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
                    XmNmarginHeight,     5,
                    XmNallowShellResize, TRUE,
                    XmNdefaultPosition,  FALSE,
-                   NULL) ;
+                   nullptr) ;
 
      sprintf(str, "register%1d", 0) ;
      X->registers[0] = XtVaCreateManagedWidget(str,
@@ -514,7 +514,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
                                    XmNleftOffset, 2,
                                    XmNmarginWidth,      5,
                                    XmNmarginHeight,     1,
-                                   NULL) ;
+                                   nullptr) ;
 
      for (i = 1; i < MAXREGS; i++)
        {
@@ -529,7 +529,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
                                        XmNleftOffset, 2,
                                        XmNmarginWidth,      5,
                                        XmNmarginHeight,     1,
-                                       NULL) ;
+                                       nullptr) ;
        }
 
      XtSetArg (args[0], XmNtopAttachment, XmATTACH_WIDGET);
@@ -566,7 +566,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
   else
   {
      if (X->frframe) return ;
-     X->frframe = XmCreateFormDialog(owner, "frframe", NULL, 0) ;
+     X->frframe = XmCreateFormDialog(owner, "frframe", nullptr, 0) ;
 
      /*  Adjust the decorations for the dialog shell of the dialog  */
      XtSetArg (args[0], XmNmwmFunctions, MWM_FUNC_MOVE);
@@ -575,9 +575,9 @@ dtcalc_initialize_rframe(Widget owner, int type)
 
      set_title(FCP_FIN_REG, GETMESSAGE(2, 18, lstrs[(int) L_FINMEMT] ));
 
-     frame = XmCreateFrame(X->frframe, "frame", NULL, 0);
+     frame = XmCreateFrame(X->frframe, "frame", nullptr, 0);
      XtManageChild(frame);
-     form = (Widget) XmCreateForm(frame, "form", NULL, 0) ;
+     form = (Widget) XmCreateForm(frame, "form", nullptr, 0) ;
      XtManageChild(form);
 
      XtVaSetValues(form,
@@ -585,7 +585,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
                    XmNmarginHeight,     5,
                    XmNallowShellResize, TRUE,
                    XmNdefaultPosition,  FALSE,
-                   NULL) ;
+                   nullptr) ;
 
      sprintf(str, "fregister%1d", 0) ;
      X->fregisters[0] = XtVaCreateManagedWidget(str,
@@ -597,7 +597,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
                                    XmNleftOffset, 2,
                                    XmNmarginWidth,      5,
                                    XmNmarginHeight,     1,
-                                   NULL) ;
+                                   nullptr) ;
 
      for (i = 1; i < FINREGS; i++)
        {
@@ -612,7 +612,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
                                        XmNleftOffset, 2,
                                        XmNmarginWidth,      5,
                                        XmNmarginHeight,     1,
-                                       NULL) ;
+                                       nullptr) ;
        }
 
      sprintf(str, "fregistervals%1d", 0) ;
@@ -628,7 +628,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
                                    XmNrightOffset, 2,
                                    XmNmarginWidth,      5,
                                    XmNmarginHeight,     1,
-                                   NULL) ;
+                                   nullptr) ;
 
      for (i = 1; i < FINREGS; i++)
        {
@@ -646,7 +646,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
                                        XmNrightOffset, 2,
                                        XmNmarginWidth,      5,
                                        XmNmarginHeight,     1,
-                                       NULL) ;
+                                       nullptr) ;
        }
 
      XtSetArg (args[0], XmNtopAttachment, XmATTACH_WIDGET);
@@ -676,7 +676,7 @@ dtcalc_initialize_rframe(Widget owner, int type)
      XtSetArg (args[1], XmNdefaultButton, button);
      XtSetValues (X->frframe, args, 2);
 
-     XtAddCallback(button, XmNactivateCallback, close_reg, NULL) ;
+     XtAddCallback(button, XmNactivateCallback, close_reg, nullptr) ;
 
      XtManageChild(button);
   }
@@ -700,14 +700,14 @@ dtcalc_kkeyboard_create(Widget owner)
                                        XmNrightAttachment,    XmATTACH_FORM,
                                        XmNleftAttachment,     XmATTACH_FORM,
                                        XmNbottomAttachment,   XmATTACH_FORM,
-                                       NULL) ;
+                                       nullptr) ;
 
   X->kkeyboard = XtVaCreateManagedWidget("kkeyboard",
                                          xmFormWidgetClass,
                                          buttonFrame,
                                          XmNfractionBase, BROWS * BCOLS,
                                          XmNnavigationType,  XmSTICKY_TAB_GROUP,
-                                         NULL) ;
+                                         nullptr) ;
 
   v->curwin = FCP_KEY ;
   for (row = 0; row < BROWS; row++)
@@ -765,7 +765,7 @@ dtcalc_kpanel_create(Widget owner)
   X->mainWin = XtVaCreateManagedWidget("mainWin",
                                       xmMainWindowWidgetClass,
                                       owner,
-                                      NULL) ;
+                                      nullptr) ;
 
 #ifdef HAVE_EDITRES
     XtAddEventHandler(owner, 0, True,
@@ -782,7 +782,7 @@ dtcalc_kpanel_create(Widget owner)
                                       XmNshadowType, XmSHADOW_OUT,
                                       XmNmarginWidth, 5,
                                       XmNmarginHeight, 5,
-                                      NULL) ;
+                                      nullptr) ;
 
   X->kpanel = XtVaCreateManagedWidget("kpanel",
                                       xmFormWidgetClass,
@@ -790,7 +790,7 @@ dtcalc_kpanel_create(Widget owner)
                                       XmNshadowThickness, 0,
                                       XmNbackground,         tmp_pixelbg,
                                       XmNforeground,         tmp_pixelfg,
-                                      NULL) ;
+                                      nullptr) ;
 
   create_popup(X->kpanel);
 
@@ -805,7 +805,7 @@ dtcalc_kpanel_create(Widget owner)
                                       XmNrightAttachment,    XmATTACH_FORM,
                                       XmNleftAttachment,     XmATTACH_FORM,
                                       XmNnavigationType,     XmTAB_GROUP,
-                                      NULL) ;
+                                      nullptr) ;
   XtAddCallback(X->textFrame, XmNhelpCallback, HelpRequestCB,
                                                  (XtPointer)HELP_DISPLAY) ;
 
@@ -815,7 +815,7 @@ dtcalc_kpanel_create(Widget owner)
                                       XmNshadowThickness, 0,
                                       XmNbackground,         tmp_pixelbg,
                                       XmNforeground,         tmp_pixelfg,
-                                      NULL) ;
+                                      nullptr) ;
   XtAddCallback(X->textForm, XmNhelpCallback, HelpRequestCB,
                                                  (XtPointer)HELP_DISPLAY) ;
 
@@ -832,11 +832,11 @@ dtcalc_kpanel_create(Widget owner)
                                        XmNverifyBell,         FALSE,
                                        XmNbackground,         tmp_pixelbg,
                                        XmNforeground,         tmp_pixelfg,
-                                       NULL) ;
+                                       nullptr) ;
   XtAddCallback(X->modevals[(int) DISPLAYITEM], XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_DISPLAY) ;
   XtAddEventHandler(X->modevals[(int) DISPLAYITEM],
-                KeyPressMask | KeyReleaseMask, FALSE, event_proc, NULL) ;
+                KeyPressMask | KeyReleaseMask, FALSE, event_proc, nullptr) ;
 
 
   X->modeFrame = XtVaCreateManagedWidget("modeFrame",
@@ -850,7 +850,7 @@ dtcalc_kpanel_create(Widget owner)
                                       XmNrightAttachment,    XmATTACH_FORM,
                                       XmNleftAttachment,     XmATTACH_FORM,
                                       XmNnavigationType,     XmTAB_GROUP,
-                                      NULL) ;
+                                      nullptr) ;
   XtAddCallback(X->modeFrame, XmNhelpCallback, HelpRequestCB,
                                                    (XtPointer) HELP_MODELINE) ;
 
@@ -858,7 +858,7 @@ dtcalc_kpanel_create(Widget owner)
                     xmFormWidgetClass,
                     X->modeFrame,
                     XmNshadowThickness, 0,
-                    NULL) ;
+                    nullptr) ;
   XtAddCallback(X->modeline, XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_MODELINE) ;
 
@@ -872,7 +872,7 @@ dtcalc_kpanel_create(Widget owner)
                        XmNrecomputeSize, False,
                        XmNalignment, XmALIGNMENT_CENTER,
                        XmNlabelString, label_string,
-                       NULL) ;
+                       nullptr) ;
   XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_MODELINE) ;
 
@@ -886,7 +886,7 @@ dtcalc_kpanel_create(Widget owner)
                        XmNrecomputeSize, False,
                        XmNalignment, XmALIGNMENT_CENTER,
                        XmNlabelString, label_string,
-                       NULL) ;
+                       nullptr) ;
   XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_MODELINE) ;
 
@@ -900,7 +900,7 @@ dtcalc_kpanel_create(Widget owner)
                        XmNrecomputeSize, False,
                        XmNalignment, XmALIGNMENT_CENTER,
                        XmNlabelString, label_string,
-                       NULL) ;
+                       nullptr) ;
   XtAddCallback(X->modevals[i], XmNhelpCallback, HelpRequestCB,
                                                     (XtPointer) HELP_MODELINE) ;
   XmStringFree(label_string);
@@ -958,7 +958,7 @@ dtcalc_kpanel_create(Widget owner)
     XtOverrideTranslations(X->modevals[i], trans_table);
 
     XtAddEventHandler(X->modevals[i], KeyPressMask | KeyReleaseMask,
-		      FALSE, event_proc, NULL) ;
+		      FALSE, event_proc, nullptr) ;
 
     i = (int) BASEITEM;
     basePulldown = XmCreatePulldownMenu(X->modeline, "basePD", args, 0);
@@ -1021,7 +1021,7 @@ dtcalc_kpanel_create(Widget owner)
 
     XtOverrideTranslations(X->modevals[i], trans_table);
   XtAddEventHandler(X->modevals[i], KeyPressMask | KeyReleaseMask,
-                    FALSE, event_proc, NULL) ;
+                    FALSE, event_proc, nullptr) ;
 
 
     i = (int) NUMITEM;
@@ -1075,7 +1075,7 @@ dtcalc_kpanel_create(Widget owner)
 
     XtOverrideTranslations(X->modevals[i], trans_table);
   XtAddEventHandler(X->modevals[i], KeyPressMask | KeyReleaseMask,
-                    FALSE, event_proc, NULL) ;
+                    FALSE, event_proc, nullptr) ;
 
 
     i = (int) TTYPEITEM;
@@ -1148,7 +1148,7 @@ dtcalc_kpanel_create(Widget owner)
 
 
   XtAddEventHandler(X->modevals[i], KeyPressMask | KeyReleaseMask,
-                    FALSE, event_proc, NULL) ;
+                    FALSE, event_proc, nullptr) ;
 
   }
 }
@@ -1170,14 +1170,14 @@ create_cfframe(void)    /* Create auxiliary frame for CON/FUN key. */
   Widget sep, frame, form;
   XmString label_string;
 
-  X->CFframe = (Widget) XmCreateFormDialog(X->kframe, "cfframe", NULL, 0) ;
+  X->CFframe = (Widget) XmCreateFormDialog(X->kframe, "cfframe", nullptr, 0) ;
   tstr = XmStringCreateLocalized(lstrs[(int) L_NEWCON]) ;
   XtVaSetValues(X->CFframe,
                 XmNdialogTitle,     tstr,
                 XmNautoUnmanage,    FALSE,
                 XmNallowShellResize, FALSE,
                 XmNdefaultPosition, FALSE,
-                NULL) ;
+                nullptr) ;
   XmStringFree(tstr) ;
 
   /*  Adjust the decorations for the dialog shell of the dialog  */
@@ -1186,9 +1186,9 @@ create_cfframe(void)    /* Create auxiliary frame for CON/FUN key. */
   XtSetArg (args[j], XmNmwmDecorations, MWM_DECOR_BORDER | MWM_DECOR_TITLE); j++;
   XtSetValues (XtParent(X->CFframe), args, j);
 
-  frame = (Widget) XmCreateFrame(X->CFframe, "frame", NULL, 0) ;
+  frame = (Widget) XmCreateFrame(X->CFframe, "frame", nullptr, 0) ;
   XtManageChild(frame);
-  form = (Widget) XmCreateForm(frame, "form", NULL, 0) ;
+  form = (Widget) XmCreateForm(frame, "form", nullptr, 0) ;
   XtManageChild(form);
 
 
@@ -1324,17 +1324,17 @@ create_menu(enum menu_type mtype, Widget button, int n)
   Boolean isAFunction = False;
 
   if ((mtype != M_CON && mtype != M_FUN) &&
-      X->menus[(int) mtype] != NULL) return ;       /* Already created? */
+      X->menus[(int) mtype] != nullptr) return ;       /* Already created? */
 
   X->menus[(int) mtype] = menu = XmCreatePopupMenu(button,
-                                                   "menu", NULL, 0) ;
+                                                   "menu", nullptr, 0) ;
 
   X->mrec[(int) mtype] = n ;
 
   XtCreateManagedWidget(cmenus[(int) mtype].title, xmLabelWidgetClass,
-                        menu, NULL, 0) ;
-  XtCreateManagedWidget("separator", xmSeparatorWidgetClass, menu, NULL, 0) ;
-  XtCreateManagedWidget("separator", xmSeparatorWidgetClass, menu, NULL, 0) ;
+                        menu, nullptr, 0) ;
+  XtCreateManagedWidget("separator", xmSeparatorWidgetClass, menu, nullptr, 0) ;
+  XtCreateManagedWidget("separator", xmSeparatorWidgetClass, menu, nullptr, 0) ;
 
 
   for (i = 0; i < cmenus[(int) mtype].total; i++)
@@ -1363,11 +1363,11 @@ create_menu(enum menu_type mtype, Widget button, int n)
            {
               /* if it's not a "." let's go change it to what it should be */
               ptr = DtStrchr(mstr, '.');
-              if(ptr != NULL)
+              if(ptr != nullptr)
                  ptr[0] = tmpStr[0];
            }
           mi = XtCreateManagedWidget(mstr, xmPushButtonWidgetClass,
-                                     menu, NULL, 0) ;
+                                     menu, nullptr, 0) ;
           val = (v->curwin << 16) +
                 menu_entries[cmenus[(int) mtype].mindex + i].val ;
           XtAddCallback(mi, XmNactivateCallback, menu_proc, (XtPointer) val) ;
@@ -1376,7 +1376,7 @@ create_menu(enum menu_type mtype, Widget button, int n)
     if( !isAFunction && mtype == M_FUN)
     {
        mi = XtCreateManagedWidget(GETMESSAGE(2, 35, "No Functions Defined"),
-                                      xmPushButtonWidgetClass, menu, NULL, 0) ;
+                                      xmPushButtonWidgetClass, menu, nullptr, 0) ;
     }
 }
 
@@ -1424,7 +1424,7 @@ do_continue_notice(Widget parent, char *str)
   char *tmpStr;
 
   X->notice = (Widget) XmCreateInformationDialog(X->kframe, "continue",
-                                                 NULL, 0) ;
+                                                 nullptr, 0) ;
   contstr = XmStringCreateLocalized(vstrs[(int) V_CONTINUE]) ;
   message = XmStringCreateLocalized( str );
   XtVaSetValues(X->notice,
@@ -1432,7 +1432,7 @@ do_continue_notice(Widget parent, char *str)
                 XmNcancelLabelString, contstr,
                 XmNmessageString,     message,
                 XmNdialogStyle,       XmDIALOG_FULL_APPLICATION_MODAL,
-                NULL) ;
+                nullptr) ;
   XmStringFree(contstr) ;
   XmStringFree(message) ;
   XtUnmanageChild((Widget) XmMessageBoxGetChild(X->notice,
@@ -1442,7 +1442,7 @@ do_continue_notice(Widget parent, char *str)
 
   tmpStr = GETMESSAGE(2, 36, "Continue Notice");
   cstr = XmStringCreateLocalized(tmpStr) ;
-  XtVaSetValues(X->notice, XmNdialogTitle, cstr, NULL) ;
+  XtVaSetValues(X->notice, XmNdialogTitle, cstr, nullptr) ;
   XmStringFree(cstr) ;
 
   XtManageChild(X->notice) ;
@@ -1458,7 +1458,7 @@ do_confirm_notice(Widget parent, char *str)
 
 
   X->notice = (Widget) XmCreateInformationDialog(X->kframe, "continue",
-                                                    NULL, 0) ;
+                                                    nullptr, 0) ;
   confirm = XmStringCreateLocalized(vstrs[(int) V_CONFIRM]) ;
   cancel  = XmStringCreateLocalized(vstrs[(int) V_CANCEL]) ;
   message = XmStringCreateLocalized( str );
@@ -1468,17 +1468,17 @@ do_confirm_notice(Widget parent, char *str)
                 XmNokLabelString,     confirm,
                 XmNmessageString,     message,
                 XmNdialogStyle,       XmDIALOG_APPLICATION_MODAL,
-                NULL) ;
+                nullptr) ;
   XmStringFree(confirm) ;
   XmStringFree(cancel) ;
   XmStringFree(message) ;
   XtUnmanageChild((Widget) XmMessageBoxGetChild(X->notice,
                                                 XmDIALOG_HELP_BUTTON)) ;
-  XtAddCallback(X->notice, XmNokCallback, confirm_callback, NULL) ;
+  XtAddCallback(X->notice, XmNokCallback, confirm_callback, nullptr) ;
 
   tmpStr = GETMESSAGE(2, 37, "Confirmation Notice");
   cstr = XmStringCreateLocalized(tmpStr) ;
-  XtVaSetValues(X->notice, XmNdialogTitle, cstr, NULL) ;
+  XtVaSetValues(X->notice, XmNdialogTitle, cstr, nullptr) ;
   XmStringFree(cstr) ;
 
   XtManageChild(X->notice) ;
@@ -1582,7 +1582,7 @@ draw_button(int n, enum fcp_type fcptype, int row, int column, int inverted)
      strcpy(str, "Disarm");
 
   /* go call the correct arm/disarm function from Motif */
-  XtCallActionProc(widget, str, X->event, NULL, 0) ;
+  XtCallActionProc(widget, str, X->event, nullptr, 0) ;
 
 }
 
@@ -1666,7 +1666,7 @@ event_proc(Widget widget, XtPointer client_data, XEvent *event, Boolean *continu
   /* Now lets check to see if the input was for the Constants/Functions
      dialog.  If it was process it.
   */
-  if(X->CFframe != NULL && XtIsManaged(X->CFframe))
+  if(X->CFframe != nullptr && XtIsManaged(X->CFframe))
   {
      w = XmGetFocusWidget(X->CFframe);
      if(w == X->CFpi_butOK)
@@ -1797,7 +1797,7 @@ ProcessMotifSelection(Widget W)
     char key;
     int index;
     long i, bound;
-    char *display = NULL;
+    char *display = nullptr;
     XmTextPosition left, right;
 
     if (XmTextGetSelectionPosition (W, &left, &right) == True)
@@ -1874,7 +1874,7 @@ get_next_event(Widget widget, int ev_action, XEvent *xevent)
        * Latin-1 characters anyway (see CDExc15419).
        */
       if (!XLookupString(key_event, chs, 1, &ksym,
-                         (XComposeStatus *) NULL))
+                         (XComposeStatus *) nullptr))
       {
           if (key_event->keycode == NUM_LOCK)
               return(NUM_LOCK);
@@ -2076,7 +2076,7 @@ init_graphics(void)
   XtVaSetValues(X->kframe,
                 XmNiconName, tmpStr1,
                 XmNtitle,    tmpStr1,
-                NULL) ;
+                nullptr) ;
   dtcalc_kpanel_create(X->kframe) ;
   dtcalc_kkeyboard_create(X->kpanel) ;
   make_modewin();
@@ -2089,9 +2089,9 @@ init_graphics(void)
   XSync(X->dpy, False);
   XtFree(tmpStr1);
 
-  X->Aframe  = NULL ;
-  X->CFframe = NULL ;
-  X->Pframe  = NULL ;
+  X->Aframe  = nullptr ;
+  X->CFframe = nullptr ;
+  X->Pframe  = nullptr ;
 }
 
 
@@ -2167,10 +2167,10 @@ load_resources(void)
 void
 make_frames(void)
 {
-  char *tool_label = NULL ;
+  char *tool_label = nullptr ;
   int depth ;
 
-  if (v->titleline == NULL)
+  if (v->titleline == nullptr)
     {
       tool_label = (char *) calloc(1, strlen(lstrs[(int) L_UCALC]) + 3);
 
@@ -2181,16 +2181,16 @@ make_frames(void)
   X->clipboard   = XInternAtom(X->dpy, "CLIPBOARD", FALSE) ;
   X->length_atom = XInternAtom(X->dpy, "LENGTH",    FALSE) ;
   XtAddEventHandler(X->kframe, StructureNotifyMask, FALSE,
-                    frame_interpose, NULL) ;
+                    frame_interpose, nullptr) ;
   XtVaSetValues(X->kframe,
                 XmNtitle, tool_label,
-                NULL) ;
+                nullptr) ;
 
   XtVaGetValues(X->kframe,
                 XmNdepth, &depth,
-                NULL) ;
+                nullptr) ;
 
-  if(v->titleline == NULL)
+  if(v->titleline == nullptr)
     free(tool_label);
 }
 
@@ -2233,11 +2233,11 @@ make_registers(int type)
          {
             /* if it's not a "." let's go change it to what it should be */
             ptr = DtStrrchr(line, '.');
-            if(ptr != NULL)
+            if(ptr != nullptr)
                ptr[0] = tmpStr[0];
          }
          str = XmStringCreateLocalized(line) ;
-         XtVaSetValues(X->registers[i], XmNlabelString, str, NULL) ;
+         XtVaSetValues(X->registers[i], XmNlabelString, str, nullptr) ;
          XmStringFree(str) ;
        }
   }
@@ -2250,13 +2250,13 @@ make_registers(int type)
             mpcdm(&(v->MPfvals[i]), MPtemp);
             tmp = make_number(MPtemp, FALSE);
             ptr = DtStrchr(tmp, 'e');
-            if(ptr == NULL)
+            if(ptr == nullptr)
             {
                ptr = DtStrchr(tmp, '.');
-               if(ptr == NULL)
+               if(ptr == nullptr)
                {
                   ptr = DtStrchr(tmp, ',');
-                  if(ptr != NULL)
+                  if(ptr != nullptr)
                      *ptr = '\0';
                }
                else
@@ -2282,14 +2282,14 @@ make_registers(int type)
          {
             /* if it's not a "." let's go change it to what it should be */
             ptr = DtStrrchr(tmp, '.');
-            if(ptr != NULL)
+            if(ptr != nullptr)
                ptr[0] = tmpStr[0];
          }
          str = XmStringCreateLocalized(menu_entries[i + 34].str) ;
          numStr = XmStringCreateLocalized(tmp);
-         XtVaSetValues(X->fregisters[i], XmNlabelString, str, NULL) ;
+         XtVaSetValues(X->fregisters[i], XmNlabelString, str, nullptr) ;
          XtVaSetValues(X->fregistersvals[i], XmNlabelString, numStr,
-                                            XmNalignment, XmALIGNMENT_END, NULL) ;
+                                            XmNalignment, XmALIGNMENT_END, nullptr) ;
          XmStringFree(str) ;
          XmStringFree(numStr) ;
        }
@@ -2306,7 +2306,7 @@ menu_handler(Widget widget, XtPointer client_data, XEvent *event, Boolean *conti
 
   X->mtype = (enum menu_type) client_data ;
   menu = X->menus[(int) X->mtype] ;
-  XtVaGetValues(menu, XmNwhichButton, &button, NULL) ;
+  XtVaGetValues(menu, XmNwhichButton, &button, nullptr) ;
   if (event->xbutton.button == button)
     {
       XmMenuPosition(menu, (XButtonPressedEvent *) event) ;
@@ -2339,14 +2339,14 @@ new_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
   enum menu_type mtype = (enum menu_type) client_data;
   XmString cstr ;
 
-  if (X->CFframe == NULL) create_cfframe() ;
+  if (X->CFframe == nullptr) create_cfframe() ;
   if (mtype ==  M_CON)
     {
       X->CFtype = M_CON ;
       set_text_str(X->CFpi_cftext, T_LABEL, lstrs[(int) L_CONNO]) ;
 
       cstr = XmStringCreateLocalized(lstrs[(int) L_NEWCON]) ;
-      XtVaSetValues(X->CFframe, XmNdialogTitle, cstr, NULL) ;
+      XtVaSetValues(X->CFframe, XmNdialogTitle, cstr, nullptr) ;
       XmStringFree(cstr) ;
 
       XtRemoveAllCallbacks(X->CFpi_butHelp, XmNactivateCallback);
@@ -2359,7 +2359,7 @@ new_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
       set_text_str(X->CFpi_cftext, T_LABEL, lstrs[(int) L_FUNNO]) ;
 
       cstr = XmStringCreateLocalized(lstrs[(int) L_NEWFUN]) ;
-      XtVaSetValues(X->CFframe, XmNdialogTitle, cstr, NULL) ;
+      XtVaSetValues(X->CFframe, XmNdialogTitle, cstr, nullptr) ;
       XmStringFree(cstr) ;
 
       XtRemoveAllCallbacks(X->CFpi_butHelp, XmNactivateCallback);
@@ -2417,7 +2417,7 @@ redraw_buttons(void)
         n = row * MAXCOLS + column ;
         get_label(n);
         lstr = XmStringCreateLocalized(v->pstr) ;
-        XtVaSetValues(X->kbuttons[row][column], XmNlabelString, lstr, NULL);
+        XtVaSetValues(X->kbuttons[row][column], XmNlabelString, lstr, nullptr);
         XmStringFree(lstr) ;
       }
   v->curwin = scurwin ;
@@ -2436,7 +2436,7 @@ save_resources(char *filename)
 {
   int reply = ds_save_resources(X->dtcalcDB, filename) ;
 
-  if (reply) _DtSimpleError (v->appname, DtWarning, NULL, vstrs[(int) V_NORSAVE]);
+  if (reply) _DtSimpleError (v->appname, DtWarning, nullptr, vstrs[(int) V_NORSAVE]);
 }
 
 void
@@ -2456,7 +2456,7 @@ set_item(enum item_type itemno, char *str)
     {
       if(!NoDisplay)
       {
-         if(str != NULL && (strcmp(str, "") != 0))
+         if(str != nullptr && (strcmp(str, "") != 0))
          {
             /* Let's get the decimal point, in some languages it's a , */
             strcpy(displayStr, str);
@@ -2465,7 +2465,7 @@ set_item(enum item_type itemno, char *str)
             {
                /* if it's not a "." let's go change it to what it should be */
                ptr = DtStrrchr(displayStr, '.');
-               if(ptr != NULL)
+               if(ptr != nullptr)
                   ptr[0] = tmpStr[0];
             }
             w = X->modevals[(int) DISPLAYITEM] ;
@@ -2478,10 +2478,10 @@ set_item(enum item_type itemno, char *str)
     }
   else
     {
-       if(str != NULL)
+       if(str != nullptr)
        {
           cstr = XmStringCreateLocalized(str) ;
-          XtVaSetValues(X->modevals[(int) itemno], XmNlabelString, cstr, NULL) ;
+          XtVaSetValues(X->modevals[(int) itemno], XmNlabelString, cstr, nullptr) ;
           XmStringFree(cstr) ;
        }
     }
@@ -2509,11 +2509,11 @@ set_title(enum fcp_type fcptype, char *str)
   }
 
   if (fcptype == FCP_KEY)
-    XtVaSetValues(w, XmNtitle, str, NULL) ;
+    XtVaSetValues(w, XmNtitle, str, nullptr) ;
   else
     {
       cstr = XmStringCreateLocalized(str) ;
-      XtVaSetValues(w, XmNdialogTitle, cstr, NULL) ;
+      XtVaSetValues(w, XmNdialogTitle, cstr, nullptr) ;
       XmStringFree(cstr) ;
     }
 
@@ -2543,16 +2543,16 @@ show_ascii_frame(void)      /* Display ASCII popup. */
   Arg args[15];
   XmString label_string;
 
-  if (X->Aframe == NULL)
+  if (X->Aframe == nullptr)
     {
-      X->Aframe = (Widget) XmCreateFormDialog(X->kframe, "aframe", NULL, 0) ;
+      X->Aframe = (Widget) XmCreateFormDialog(X->kframe, "aframe", nullptr, 0) ;
       tstr = XmStringCreateLocalized(pstrs[(int) P_ASCIIT]) ;
       XtVaSetValues(X->Aframe,
                     XmNdialogTitle,     tstr,
                     XmNautoUnmanage,    FALSE,
                     XmNallowShellResize, TRUE,
                     XmNdefaultPosition, FALSE,
-                    NULL) ;
+                    nullptr) ;
       XmStringFree(tstr) ;
 
       /*  Adjust the decorations for the dialog shell of the dialog  */
@@ -2629,8 +2629,8 @@ show_ascii_frame(void)      /* Display ASCII popup. */
       XtManageChild(X->Api_butHelp);
 
       XtAddCallback(X->Api_text->textfield, XmNactivateCallback,
-                                                       show_ascii, NULL) ;
-      XtAddCallback(X->Api_butOK,  XmNactivateCallback, show_ascii, NULL) ;
+                                                       show_ascii, nullptr) ;
+      XtAddCallback(X->Api_butOK,  XmNactivateCallback, show_ascii, nullptr) ;
       XtAddCallback(X->Api_butClose, XmNactivateCallback, close_ascii,
                                                           (XtPointer) NULL) ;
       XtAddCallback(X->Api_butHelp, XmNactivateCallback, HelpRequestCB,
@@ -2667,7 +2667,7 @@ start_tool(void)
   v->started = 1 ;
   XSetErrorHandler(xerror_interpose) ;
   XtAddEventHandler(X->kframe, KeyPressMask | KeyReleaseMask,
-                    FALSE, event_proc, NULL) ;
+                    FALSE, event_proc, nullptr) ;
   XmProcessTraversal( X->kbuttons[0][0], XmTRAVERSE_CURRENT );
 
   do_clear();
@@ -2687,7 +2687,7 @@ clear_buttons(int start)
   if(first)
   {
      i = 0;
-     if(buttons[i].str != NULL)
+     if(buttons[i].str != nullptr)
      {
         XtFree(buttons[i].str);
         XtFree(buttons[i].str2);
@@ -2763,7 +2763,7 @@ make_buttons_fin(void)
   column = 0;
   for(i = 12; i < 24; i++)
   {
-     if(buttons[i].str != NULL)
+     if(buttons[i].str != nullptr)
      {
         XtFree(buttons[i].str);
         XtFree(buttons[i].str2);
@@ -2816,7 +2816,7 @@ make_buttons_log(void)
   column = 0;
   for(i = 12; i < 24; i++)
   {
-     if(buttons[i].str != NULL)
+     if(buttons[i].str != nullptr)
      {
         XtFree(buttons[i].str);
         XtFree(buttons[i].str2);
@@ -2869,7 +2869,7 @@ make_buttons_sci(void)
   column = 0;
   for(i = 12; i < 24; i++)
   {
-     if(buttons[i].str != NULL)
+     if(buttons[i].str != nullptr)
      {
         XtFree(buttons[i].str);
         XtFree(buttons[i].str2);
@@ -2967,7 +2967,7 @@ update_cf_value(void)
                       /* if it's not a "." let's go change it to what it
                          should be */
                       ptr = DtStrchr(X->vval, tmpStr[0]);
-                      while(ptr != NULL)
+                      while(ptr != nullptr)
                       {
                          ptr[0] = '.';
                          ptr = DtStrchr(X->vval, tmpStr[0]);
@@ -3046,7 +3046,7 @@ update_cf_value(void)
 
                    n = sscanf(result, "%lf", &tmp) ;
                    ptr = DtStrchr(result, 'e');
-                   if (n != 1 || ptr != NULL || v->error == TRUE)
+                   if (n != 1 || ptr != nullptr || v->error == TRUE)
                      {
                        sprintf(message, "%s\n%s", vstrs[(int) V_INVCON],
                                vstrs[(int) V_NOCHANGE]) ;
@@ -3094,7 +3094,7 @@ update_cf_value(void)
                       /* if it's not a "." let's go change it to what it
                          should be */
                       ptr = DtStrchr(X->vval, tmpStr[0]);
-                      while(ptr != NULL)
+                      while(ptr != nullptr)
                       {
                          ptr[0] = '.';
                          ptr = DtStrchr(X->vval, tmpStr[0]);
@@ -3139,7 +3139,7 @@ update_cf_value(void)
 void
 win_display(enum fcp_type fcptype, int state)
 {
-  Widget widget = NULL;
+  Widget widget = nullptr;
   Position newX, newY;
   Arg args[3];
 
@@ -3147,7 +3147,7 @@ win_display(enum fcp_type fcptype, int state)
   else if (fcptype == FCP_MODE) widget = X->mframe[(int) v->modetype] ;
   else if (fcptype == FCP_FIN_REG) widget = X->frframe;
 
-  if (widget == NULL)
+  if (widget == nullptr)
      return ;
 
   if (state && !is_window_showing(widget))
@@ -3200,11 +3200,11 @@ write_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
         return;
   }
 
-  if(X->dval != NULL)
+  if(X->dval != nullptr)
      XtFree(X->dval);
-  if(X->vval != NULL)
+  if(X->vval != nullptr)
      XtFree(X->vval);
-  if(X->cfval != NULL)
+  if(X->cfval != nullptr)
      XtFree(X->cfval);
   X->dval = XmTextFieldGetString(X->CFpi_dtext->textfield);
   if(strlen(X->dval) > 41)
@@ -3260,7 +3260,7 @@ xerror_interpose(Display *display, XErrorEvent *error)
 
   XGetErrorText(display, error->error_code, msg1, 80) ;
   sprintf(msg, "\nX Error (intercepted): %s\nMajor Request Code   : %d\nMinor Request Code   : %d\nResource ID (XID)    : %lu\nError Serial Number  : %lu\n", msg1, error->request_code, error->minor_code, error->resourceid, error->serial);
-  _DtSimpleError (v->appname, DtError, NULL, msg);
+  _DtSimpleError (v->appname, DtError, nullptr, msg);
   abort() ;
 }
 
@@ -3326,7 +3326,7 @@ create_menu_bar(Widget parent)
    XmStringFree(labelString);
    XtFree(mnemonic);
 
-   lastMenuPane = XmCreatePulldownMenu(X->menubar, "optionMenu", NULL, 0);
+   lastMenuPane = XmCreatePulldownMenu(X->menubar, "optionMenu", nullptr, 0);
 
    XtSetArg(args[0], XmNsubMenuId, lastMenuPane);
    XtSetValues(lastCascadeButtonGadget, args, 1);
@@ -3420,7 +3420,7 @@ create_menu_bar(Widget parent)
    XmStringFree(labelString);
    XtFree(mnemonic);
 
-   helpPulldown = XmCreatePulldownMenu(X->menubar, "helpMenu", NULL, 0);
+   helpPulldown = XmCreatePulldownMenu(X->menubar, "helpMenu", nullptr, 0);
 
    XtSetArg(args[0], XmNsubMenuId, helpPulldown);
    XtSetValues(lastCascadeButtonGadget, args, 1);
@@ -3616,7 +3616,7 @@ read_resources(void)    /* Read all possible resources from the database. */
   {
      msg = (char *) XtMalloc(strlen( opts[(int) O_BASE]) + 3);
      sprintf(msg, "%s", opts[(int) O_BASE]);
-     _DtSimpleError (v->appname, DtWarning, NULL, msg);
+     _DtSimpleError (v->appname, DtWarning, nullptr, msg);
      XtFree(msg);
      v->base = (enum base_type) 2;
   }
@@ -3634,7 +3634,7 @@ read_resources(void)    /* Read all possible resources from the database. */
   {
      msg = (char *) XtMalloc(strlen( opts[(int) O_DISPLAY]) + strlen(str) + 3);
      sprintf(msg, opts[(int) O_DISPLAY], str);
-     _DtSimpleError (v->appname, DtWarning, NULL, msg);
+     _DtSimpleError (v->appname, DtWarning, nullptr, msg);
      XtFree(msg);
      v->dtype = (enum base_type) 1;
   }
@@ -3650,7 +3650,7 @@ read_resources(void)    /* Read all possible resources from the database. */
   {
      msg = (char *) XtMalloc(strlen( opts[(int) O_MODE]) + strlen(str) + 3);
      sprintf(msg, opts[(int) O_MODE], str);
-     _DtSimpleError (v->appname, DtWarning, NULL, msg);
+     _DtSimpleError (v->appname, DtWarning, nullptr, msg);
      XtFree(msg);
      v->modetype = (enum base_type) 2;
   }
@@ -3669,7 +3669,7 @@ read_resources(void)    /* Read all possible resources from the database. */
   {
      msg = (char *) XtMalloc(strlen( opts[(int) O_TRIG]) + strlen(str) + 3);
      sprintf(msg, opts[(int) O_TRIG], str);
-     _DtSimpleError (v->appname, DtWarning, NULL, msg);
+     _DtSimpleError (v->appname, DtWarning, nullptr, msg);
      XtFree(msg);
      v->ttype = (enum base_type) 0;
   }
@@ -3759,13 +3759,13 @@ create_popup(Widget parent)
   Widget dummyHelp1, dummyHelp2, memRegs;
   Widget helpI, helpToc, helpT, helpR, helpO, helpU, helpV;
 
-  X->popupMenu = XmCreatePopupMenu(parent, "popup", NULL, 0) ;
+  X->popupMenu = XmCreatePopupMenu(parent, "popup", nullptr, 0) ;
   XtCreateManagedWidget(GETMESSAGE(2, 46,"Calculator Popup"),
-                        xmLabelWidgetClass, X->popupMenu, NULL, 0) ;
+                        xmLabelWidgetClass, X->popupMenu, nullptr, 0) ;
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
-                        X->popupMenu, NULL, 0) ;
+                        X->popupMenu, nullptr, 0) ;
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
-                        X->popupMenu, NULL, 0) ;
+                        X->popupMenu, nullptr, 0) ;
 
 
 /*  The popup menu contains the following entries ......................*/
@@ -3777,7 +3777,7 @@ create_popup(Widget parent)
 	                               GETMESSAGE(2, 15, "Memory Registers") ),
 				    XmNmnemonic, XStringToKeysym(
 						      GETMESSAGE(2, 40, "R") ),
-				    NULL);
+				    nullptr);
   XtAddCallback(memRegs, XmNactivateCallback, do_memory,
                                                                (XtPointer)MEM);
 
@@ -3789,7 +3789,7 @@ create_popup(Widget parent)
                                    GETMESSAGE(3, 138, "Financial Registers") ),
 				    XmNmnemonic, XStringToKeysym(
 						GETMESSAGE( 2, 45, "g" ) ),
-				    NULL);
+				    nullptr);
   XtAddCallback(memRegs, XmNactivateCallback, do_memory,
                                                                (XtPointer)FIN);
 
@@ -3801,7 +3801,7 @@ create_popup(Widget parent)
                  XmStringCreateLocalized( GETMESSAGE(2, 16, "ASCII Convert") ),
 					 XmNmnemonic, XStringToKeysym(
 						      GETMESSAGE(2, 41, "A") ),
-					 NULL);
+					 nullptr);
   XtAddCallback(X->asciiConv, XmNactivateCallback, do_ascii_callback,
                                                          (XtPointer)NULL);
 
@@ -3809,7 +3809,7 @@ create_popup(Widget parent)
      XtSetSensitive(X->asciiConv, False);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
-                                                  X->popupMenu, NULL, 0) ;
+                                                  X->popupMenu, nullptr, 0) ;
 
 /* 4.  Enter Functions ...  */
   X->enterFun = XtVaCreateManagedWidget("enterFun",
@@ -3819,7 +3819,7 @@ create_popup(Widget parent)
 			    XmStringCreateLocalized( vstrs[(int) V_FUNWNAME] ),
 					XmNmnemonic, XStringToKeysym(
 						      GETMESSAGE(2, 42, "F") ),
-                                NULL);
+                                nullptr);
   XtAddCallback(X->enterFun, XmNactivateCallback, new_cf_value,
                                                       (XtPointer)(int)M_FUN);
 
@@ -3831,12 +3831,12 @@ create_popup(Widget parent)
 			    XmStringCreateLocalized( vstrs[(int) V_CONWNAME] ),
 					  XmNmnemonic, XStringToKeysym(
 						      GETMESSAGE(2, 43, "C") ),
-					  NULL);
+					  nullptr);
   XtAddCallback(X->enterConst, XmNactivateCallback,new_cf_value,
                                                       (XtPointer)(int)M_CON);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
-                                                  X->popupMenu, NULL, 0) ;
+                                                  X->popupMenu, nullptr, 0) ;
 
 
 /* 6.   Help ... */
@@ -3846,12 +3846,12 @@ create_popup(Widget parent)
                 X->popupMenu,
   		XmNwidth, 10,
 		XmNheight, 10,
-                NULL);
+                nullptr);
 
   dummyHelp2 = XtVaCreateWidget("dummyHelp2",
                 xmRowColumnWidgetClass, dummyHelp1,
                 XmNrowColumnType, XmMENU_PULLDOWN,
-                NULL);
+                nullptr);
 
 
   label = XmStringCreateLocalized ( GETMESSAGE(2, 20, "Overview") );
@@ -3859,7 +3859,7 @@ create_popup(Widget parent)
                 xmPushButtonGadgetClass, dummyHelp2,
                 XmNlabelString, label,
 		XmNmnemonic, XStringToKeysym( GETMESSAGE(2, 19, "v") ),
-                NULL);
+                nullptr);
 
 
   XtAddCallback(helpI, XmNactivateCallback,
@@ -3867,14 +3867,14 @@ create_popup(Widget parent)
   XmStringFree (label);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
-                        dummyHelp2, NULL, 0);
+                        dummyHelp2, nullptr, 0);
 
   label = XmStringCreateLocalized ( GETMESSAGE(2, 39, "Table of Contents") );
   helpToc = XtVaCreateManagedWidget ("toc",
                 xmPushButtonGadgetClass, dummyHelp2,
                 XmNlabelString, label,
 		XmNmnemonic, XStringToKeysym( GETMESSAGE(2, 38, "C") ),
-                NULL);
+                nullptr);
 
   XtAddCallback(helpToc, XmNactivateCallback,
                 HelpRequestCB, (XtPointer)HELP_TABLEOFCONTENTS);
@@ -3887,7 +3887,7 @@ create_popup(Widget parent)
                 xmPushButtonGadgetClass, dummyHelp2,
                 XmNlabelString, label,
 		XmNmnemonic, XStringToKeysym( GETMESSAGE(2, 21, "T") ),
-                NULL);
+                nullptr);
 
   XtAddCallback(helpT, XmNactivateCallback,
                  HelpRequestCB, (XtPointer)HELP_TASKS);
@@ -3900,7 +3900,7 @@ create_popup(Widget parent)
                 xmPushButtonGadgetClass, dummyHelp2,
                 XmNlabelString, label,
 		XmNmnemonic, XStringToKeysym( GETMESSAGE(2, 23, "R" ) ),
-                NULL);
+                nullptr);
 
 
   XtAddCallback(helpR, XmNactivateCallback,
@@ -3914,13 +3914,13 @@ create_popup(Widget parent)
                 xmPushButtonGadgetClass, dummyHelp2,
                 XmNlabelString, label,
 		XmNmnemonic, XStringToKeysym( GETMESSAGE(2, 25, "O") ),
-                NULL);
+                nullptr);
 
   XtAddCallback(helpO, XmNactivateCallback,
                  HelpModeCB, (XtPointer)NULL);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
-                        dummyHelp2, NULL, 0);
+                        dummyHelp2, nullptr, 0);
   XmStringFree (label);
 
   label = XmStringCreateLocalized ( GETMESSAGE(2, 28, "Using Help") );
@@ -3928,14 +3928,14 @@ create_popup(Widget parent)
                 xmPushButtonGadgetClass, dummyHelp2,
                 XmNlabelString, label,
 		XmNmnemonic, XStringToKeysym( GETMESSAGE(2, 27, "U") ),
-                NULL);
+                nullptr);
 
 
   XtAddCallback(helpU, XmNactivateCallback,
                  HelpRequestCB, (XtPointer)HELP_USING);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
-                        dummyHelp2, NULL, 0);
+                        dummyHelp2, nullptr, 0);
 
   XmStringFree(label);
 
@@ -3944,7 +3944,7 @@ create_popup(Widget parent)
                 xmPushButtonGadgetClass, dummyHelp2,
                 XmNlabelString, label,
 		XmNmnemonic, XStringToKeysym( GETMESSAGE(2, 29, "A" ) ),
-                NULL);
+                nullptr);
 
   XtAddCallback(helpV, XmNactivateCallback,
                  HelpRequestCB, (XtPointer)HELP_VERSION);
@@ -3959,11 +3959,11 @@ create_popup(Widget parent)
 		XmNsubMenuId, 		    dummyHelp2,
 		XmNmnemonic,		    XStringToKeysym( mnemonic ),
 		XmNlabelString,		    label,
-		NULL);
+		nullptr);
   XmStringFree(label);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
-                        X->popupMenu, NULL, 0);
+                        X->popupMenu, nullptr, 0);
 
 /* 7.  Exit */
   label = XmStringCreateLocalized ( GETMESSAGE(3, 403, "Exit") );
@@ -3973,7 +3973,7 @@ create_popup(Widget parent)
 		                XmNlabelString,		    label,
 				XmNmnemonic,
 				      XStringToKeysym(GETMESSAGE(2, 44, "X" )),
-                                NULL);
+                                nullptr);
   XmStringFree(label);
   XtAddCallback(X->Close, XmNactivateCallback,do_frame_callback,
                                                       (XtPointer)(int)M_FUN);
@@ -4089,12 +4089,12 @@ map_popup(Widget widget, XtPointer client_data, XtPointer call_data)
 static void
 save_state(Widget widget, XtPointer client_data, XtPointer call_data)
 {
-   char *full_path = NULL;
-   char *file_name = NULL;
+   char *full_path = nullptr;
+   char *file_name = nullptr;
    char *sessionFileName;
 
-   char **restart_argv = NULL;
-   static char **start_argv = NULL;
+   char **restart_argv = nullptr;
+   static char **start_argv = nullptr;
 
    int i, restart_argc;
    static int start_argc = 0;
@@ -4132,12 +4132,12 @@ save_state(Widget widget, XtPointer client_data, XtPointer call_data)
    restart_argc = start_argc + 3;
    restart_argv = (char **) XtMalloc(restart_argc * sizeof(char *));
 
-   if (restart_argv == NULL)
+   if (restart_argv == nullptr)
        return;
 
    restart_argv[0] = XtNewString(v->progname);
 
-   for ( i = 1 ; (i < start_argc && start_argv != NULL) ; i++ )
+   for ( i = 1 ; (i < start_argc && start_argv != nullptr) ; i++ )
    {
        restart_argv[i] = XtNewString(start_argv[i]);
    }
@@ -4161,7 +4161,7 @@ static void
 SaveSession(char *path, char *file_name)
 {
    int fd;
-   Atom * ws_presence = NULL;
+   Atom * ws_presence = nullptr;
    char * workspace_name;
    unsigned long num_workspaces = 0;
    Atom actual_type;
@@ -4189,7 +4189,7 @@ SaveSession(char *path, char *file_name)
    {
       tmpStr = GETMESSAGE(2, 34, "Could not open the session file.");
       msg = XtNewString(tmpStr);
-      _DtSimpleError (v->appname, DtError, NULL, msg);
+      _DtSimpleError (v->appname, DtError, nullptr, msg);
       XtFree(msg);
       return;
    }
@@ -4282,7 +4282,7 @@ RestoreSession(void)
    Boolean status=False;
    char *path, *msg;
    char str[MAXLINE] ;
-   char * full_path = NULL;
+   char * full_path = nullptr;
    XrmDatabase db;
    int boolval, i, intval ;
    int MPtemp[MP_SIZE];
@@ -4304,13 +4304,13 @@ RestoreSession(void)
         {
           msg = (char *) XtMalloc(strlen( opts[(int) O_ACCRANGE]) + 3);
           sprintf(msg, "%s", opts[(int) O_ACCRANGE]);
-          _DtSimpleError (v->appname, DtWarning, NULL, msg);
+          _DtSimpleError (v->appname, DtWarning, nullptr, msg);
           XtFree(msg);
           v->accuracy = 2 ;
         }
     }
 
-   if ((full_path = get_resource(R_BASE)) != NULL)
+   if ((full_path = get_resource(R_BASE)) != nullptr)
     {
       for (i = 0; i < MAXBASES; i++)
         if (EQUAL(full_path, base_str[i])) break ;
@@ -4319,7 +4319,7 @@ RestoreSession(void)
       {
           msg = (char *) XtMalloc(strlen( opts[(int) O_BASE]) + 3);
           sprintf(msg, "%s", opts[(int) O_BASE]);
-          _DtSimpleError (v->appname, DtWarning, NULL, msg);
+          _DtSimpleError (v->appname, DtWarning, nullptr, msg);
           XtFree(msg);
       }
       else
@@ -4338,7 +4338,7 @@ RestoreSession(void)
           msg = (char *) XtMalloc(strlen( opts[(int) O_DISPLAY]) +
                                                           strlen(str) + 3);
           sprintf(msg, opts[(int) O_DISPLAY], str);
-          _DtSimpleError (v->appname, DtWarning, NULL, msg);
+          _DtSimpleError (v->appname, DtWarning, nullptr, msg);
           XtFree(msg);
       }
       else v->dtype = (enum num_type) i ;
@@ -4353,7 +4353,7 @@ RestoreSession(void)
       {
           msg = (char *)XtMalloc(strlen( opts[(int) O_MODE]) + strlen(str) + 3);
           sprintf(msg, opts[(int) O_MODE], str);
-          _DtSimpleError (v->appname, DtWarning, NULL, msg);
+          _DtSimpleError (v->appname, DtWarning, nullptr, msg);
           XtFree(msg);
       }
       else v->modetype = (enum mode_type) i ;
@@ -4368,7 +4368,7 @@ RestoreSession(void)
       {
           msg = (char *)XtMalloc(strlen( opts[(int) O_TRIG]) + strlen(str) + 3);
           sprintf(msg, opts[(int) O_TRIG], str);
-          _DtSimpleError (v->appname, DtWarning, NULL, msg);
+          _DtSimpleError (v->appname, DtWarning, nullptr, msg);
           XtFree(msg);
       }
       else v->ttype = (enum trig_type) i ;
@@ -4387,7 +4387,7 @@ RestoreSession(void)
    if (get_bool_resource(R_KEYS,   &boolval)) v->tstate    = boolval;
 
    /* Get the proper workspaces if needed */
-   if ((full_path = get_resource(R_WORKSPACE)) != NULL)
+   if ((full_path = get_resource(R_WORKSPACE)) != nullptr)
       v->workspaces = XtNewString(full_path);
 
    /* Get the x, y width, and height */
@@ -4464,7 +4464,7 @@ static void
 setCalcHints(void)
 {
    char *ptr;
-   Atom * workspace_atoms = NULL;
+   Atom * workspace_atoms = nullptr;
    int num_workspaces=0;
    Arg args[8];
    XWMHints   *wmhints;
@@ -4502,7 +4502,7 @@ setCalcHints(void)
       {
          ptr = DtStrchr (v->workspaces, ' ');
 
-         if (ptr != NULL) *ptr = '\0';
+         if (ptr != nullptr) *ptr = '\0';
 
          workspace_atoms = (Atom *) XtRealloc ((char *)workspace_atoms,
                               sizeof (Atom) * (num_workspaces + 1));
@@ -4512,12 +4512,12 @@ setCalcHints(void)
 
          num_workspaces++;
 
-         if (ptr != NULL)
+         if (ptr != nullptr)
          {
             *ptr = ' ';
             v->workspaces = ptr + 1;
          }
-      } while (ptr != NULL);
+      } while (ptr != nullptr);
 
       DtWsmSetWorkspacesOccupied (X->dpy, XtWindow (X->kframe),
                               workspace_atoms, num_workspaces);
@@ -4545,7 +4545,7 @@ _DtcalcStripSpaces(char *file)
 {
    int i, j;
 
-   if (file == NULL)
+   if (file == nullptr)
       return (file);
 
    for (i = 0; i < strlen(file); i++)

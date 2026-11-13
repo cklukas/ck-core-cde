@@ -168,7 +168,7 @@ CARD32		type)
 	CARD32	offset;
 	caddr_t	buffer;
 
-	if ( !seekToType( tables, ntables, (CARD32)type, &format, (CARD32 *)NULL, &offset))
+	if ( !seekToType( tables, ntables, (CARD32)type, &format, (CARD32 *)nullptr, &offset))
 		return FALSE;
 
 	buffer = buf_top + offset;
@@ -231,7 +231,7 @@ falInitReadPcf(struct pcf_inf *pcfinf, caddr_t buftop)
 	pcfinf->org_bounds = pcfinf->info.maxbounds;
 
 	if ( !seekToType( pcfinf->tables, pcfinf->ntables, (CARD32)PCF_BITMAPS,
-			&format, (CARD32 *)NULL, &offset))
+			&format, (CARD32 *)nullptr, &offset))
 		return -1;
 
 	buffp = buftop + offset;
@@ -254,7 +254,7 @@ falInitReadPcf(struct pcf_inf *pcfinf, caddr_t buftop)
 	buffp += pcfinf->sizebitmaps;
 
 	if ( !seekToType( pcfinf->tables, pcfinf->ntables, (CARD32)PCF_BDF_ENCODINGS,
-			&format, (CARD32 *)NULL, &offset))
+			&format, (CARD32 *)nullptr, &offset))
 		return -1;
 
 	buffp = buftop + offset;
@@ -619,8 +619,8 @@ FalFontData	*databuff)
 
 		if( updflg == FAL_UPDATE_FONTINFO ) {
 			finf->pFinf = &finf->pcfinf.info;
-			finf->pCinf = NULL;
-			finf->pGlyphs = NULL;
+			finf->pCinf = nullptr;
+			finf->pGlyphs = nullptr;
 		}
 	} else {
 		fal_utyerror = _FAL_FONT_ER;
@@ -690,7 +690,7 @@ falInitReadPcfProp(int updflg, Oak_FontInf *finf, FalFontData *databuff)
 	*/
 	if ( buffp = getPcfFontProp( buftop, pcfinf->tables,
 				     pcfinf->ntables, "FONT" )) {
-		if( (databuff->xlfdname = (char *)strdup( buffp )) == (char *)NULL ){
+		if( (databuff->xlfdname = (char *)strdup( buffp )) == (char *)nullptr ){
 			fal_utyerrno = FAL_ERR_MALLOC ;
 			return -1;
 		}
@@ -705,7 +705,7 @@ falInitReadPcfProp(int updflg, Oak_FontInf *finf, FalFontData *databuff)
 	*/
 	if ( buffp = getPcfFontProp( buftop, pcfinf->tables,
 				     pcfinf->ntables, "FAMILY_NAME")) {
-		if( (databuff->style.name = (char *)strdup( buffp )) == NULL ){
+		if( (databuff->style.name = (char *)strdup( buffp )) == nullptr ){
 			fal_utyerrno = FAL_ERR_MALLOC ;
 			return -1;
 		}
@@ -731,14 +731,14 @@ getPcfFontProp(caddr_t buftop, PCFTablePtr tables, int ntables, char *propname)
 	char *propstr ;
 	CARD32	format, offset;
 
-	if ( !seekToType( tables, ntables, (CARD32)PCF_PROPERTIES, &format, (CARD32 *)NULL, &offset))
-		return NULL;
+	if ( !seekToType( tables, ntables, (CARD32)PCF_PROPERTIES, &format, (CARD32 *)nullptr, &offset))
+		return nullptr;
 
 	buffer = buftop + offset;
 	format = getLSB32( (unsigned char *)buffer );
 	buffer += 4;
 	if ( !PCF_FORMAT_MATCH( format, PCF_DEFAULT_FORMAT))
-		return NULL;
+		return nullptr;
 
 	nprops = getINT32( (unsigned char *)buffer, (CARD32)format);
 	buffer += 4;
@@ -757,7 +757,7 @@ getPcfFontProp(caddr_t buftop, PCFTablePtr tables, int ntables, char *propname)
 		buffer += 5 ;	/* isStringProp + value */
 	}
 
-	return( NULL);
+	return( nullptr);
 }
 
 
@@ -773,7 +773,7 @@ FalFontData		*databuff)
 	caddr_t	stprop ;
 	int	lb, rb, as, ds ;
 	char	*propptr ;
-	char	*fnt = NULL, *fam ;
+	char	*fnt = nullptr, *fam ;
 	int	nprops, bitmapSize, num_chars ;
 
 
@@ -798,7 +798,7 @@ FalFontData		*databuff)
 	* 	read property "FONT"
 	*/
 	if ( propptr = getSnfFontProp( stprop, nprops, "FONT" )) {
-		if( (fnt = (char *)strdup( propptr )) == NULL ){
+		if( (fnt = (char *)strdup( propptr )) == nullptr ){
 			fal_utyerrno = FAL_ERR_MALLOC ;
 			free(fnt);
 			return -1;
@@ -813,7 +813,7 @@ FalFontData		*databuff)
 	* 	read property "FAMILY_NAME"
 	*/
 	if ( propptr = getSnfFontProp( stprop, nprops, "FAMILY_NAME")) {
-		if( (fam = (char *)strdup( propptr )) == NULL ){
+		if( (fam = (char *)strdup( propptr )) == nullptr ){
 			fal_utyerrno = FAL_ERR_MALLOC ;
 			free(fnt);
 			return -1;
@@ -860,7 +860,7 @@ getSnfFontProp(caddr_t buftop, int nprops, char *propname)
 		}
 	}
 
-	return( NULL);
+	return( nullptr);
 }
 
 /***********************< end of readpcf.c >********************/

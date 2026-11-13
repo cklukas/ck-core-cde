@@ -132,8 +132,8 @@ ilRCIPrivPtr   pPriv;
     if (pImage->o.p.context != pipe->context)
         return ilDeclarePipeInvalid (pipe, IL_ERROR_CONTEXT_MISMATCH);
 
-    if (ilGetPipeInfo (pipe, FALSE, (ilPipeInfo *)NULL, (ilImageDes *)NULL, 
-                                    (ilImageFormat *)NULL) != IL_PIPE_EMPTY) {
+    if (ilGetPipeInfo (pipe, FALSE, (ilPipeInfo *)nullptr, (ilImageDes *)nullptr, 
+                                    (ilImageFormat *)nullptr) != IL_PIPE_EMPTY) {
         if (!pipe->context->error)
             ilDeclarePipeInvalid (pipe, IL_ERROR_PIPE_STATE);
         return FALSE;
@@ -159,7 +159,7 @@ ilRCIPrivPtr   pPriv;
         return FALSE;
 
     pPriv = (ilRCIPrivPtr)ilAddPipeElement (pipe, IL_FILTER, sizeof (ilRCIPrivRec), 
-        IL_ADD_PIPE_NO_DST, (ilSrcElementData *)NULL, (ilDstElementData *)NULL, 
+        IL_ADD_PIPE_NO_DST, (ilSrcElementData *)nullptr, (ilDstElementData *)nullptr, 
         ilRCIInit, IL_NPF, IL_NPF, ilRCIExecute, 0);
     if (!pPriv)
         return FALSE;

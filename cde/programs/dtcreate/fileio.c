@@ -154,7 +154,7 @@ void SetCookie(FILE *fp)
   /**************************************************************************/
   /* Find location in header and store cookie                               */
   /**************************************************************************/
-  keystr = (char *)NULL;
+  keystr = (char *)nullptr;
   retbuf = buffer;
   i = 0;
   while ( !keystr && retbuf && (i < MAX_HEADER_LINES) ) {
@@ -236,7 +236,7 @@ Boolean CheckCookie(FILE *fp)
   /**************************************************************************/
   /* Find location in header of old cookie and retrieve it.                 */
   /**************************************************************************/
-  keystr = (char *)NULL;
+  keystr = (char *)nullptr;
   retbuf = buffer;
   i = 0;
   while ( !keystr && retbuf && (i < MAX_HEADER_LINES) ) {
@@ -316,8 +316,8 @@ char * MakeExecString(char *pszCmd, char *pszPrompt)
 
 {
   char    *pszExecString;
-  char    *pArgSrc = (char *)NULL;
-  char    *pArgDst = (char *)NULL;
+  char    *pArgSrc = (char *)nullptr;
+  char    *pArgDst = (char *)nullptr;
   char    *pTmp;
   char    pszArgStr[10];
   int     size = 0;
@@ -405,7 +405,7 @@ char * MakeExecString(char *pszCmd, char *pszPrompt)
 ushort WriteDefinitionFile(char *pszFile, ActionData *pAD)
 
 {
-  FILE            *fp = (FILE *)NULL;
+  FILE            *fp = (FILE *)nullptr;
   int             i;
   FiletypeData    *pFtD;
   char            buffer[MAXBUFSIZE];
@@ -418,7 +418,7 @@ ushort WriteDefinitionFile(char *pszFile, ActionData *pAD)
   /***************************************************************************/
   /* Open action and filetypes definition file for writing.                  */
   /***************************************************************************/
-  if ((fp = fopen(pszFile, "w+")) == NULL) {
+  if ((fp = fopen(pszFile, "w+")) == nullptr) {
 #ifdef DEBUG
     printf("Can not open file.\n"); /* debug */
 #endif
@@ -592,7 +592,7 @@ ushort WriteDefinitionFile(char *pszFile, ActionData *pAD)
         fprintf(fp, "ACTION %s_PRINT\n", pFtD->pszName);
         fprintf(fp, "{\n");
         fprintf(fp, "     TYPE          COMMAND\n");
-        ptr = MakeExecString(pFtD->pszPrintCmd, NULL);
+        ptr = MakeExecString(pFtD->pszPrintCmd, nullptr);
         if (ptr) {
            fprintf(fp, "     EXEC_STRING   %s\n", ptr);
          /*fprintf(fp, "     EXEC_STRING   %s\n", pFtD->pszPrintCmd);*/
@@ -637,7 +637,7 @@ ushort WriteDefinitionFile(char *pszFile, ActionData *pAD)
 ushort WriteActionFile(ActionData *pAD)
 
 {
-  FILE            *fp = (FILE *)NULL;
+  FILE            *fp = (FILE *)nullptr;
   char            *pszFile;
   char            *newName;
   char            *pszEnvVar;
@@ -648,7 +648,7 @@ ushort WriteActionFile(ActionData *pAD)
   /***************************************************************************/
   newName = ReplaceSpaces(AD.pszName);
   pszEnvVar = getenv("HOME");
-  pszFile = NULL;
+  pszFile = nullptr;
   if ( pszEnvVar && strlen(pszEnvVar) ) {
      pszFile = XtMalloc(strlen(pszEnvVar) + strlen(newName) + 10);
      if (pszFile) sprintf(pszFile, "%s/%s", pszEnvVar, newName);
@@ -661,7 +661,7 @@ ushort WriteActionFile(ActionData *pAD)
   /***************************************************************************/
   /* Open action file for writing.                                           */
   /***************************************************************************/
-  if (pszFile == NULL || (fp = fopen(pszFile, "w")) == NULL) {
+  if (pszFile == nullptr || (fp = fopen(pszFile, "w")) == nullptr) {
 #ifdef DEBUG
     printf("Can not open file.\n"); /* debug */
 #endif
@@ -751,14 +751,14 @@ Boolean check_file_exists (char *pszFileName)
 int OpenDefinitionFile(char *pszFile, ActionData *pAD)
 
 {
-  FILE       *fp = (FILE *)NULL;
+  FILE       *fp = (FILE *)nullptr;
   int        rc = 1;
   char       *msgPtr, *fmtPtr, *errPtr;
 
   /***************************************************************************/
   /* Open action and filetypes definition file for reading.                  */
   /***************************************************************************/
-  if ((fp = fopen(pszFile, "r+")) == NULL) {
+  if ((fp = fopen(pszFile, "r+")) == nullptr) {
 #ifdef DEBUG
     printf("Can not open file.\n"); /* debug */
 #endif
@@ -956,8 +956,8 @@ ushort CopyFile(char *pszSource, char *pszDest)
 /*****************************************************************************/
 char * CreateDirName(void)
 {
-  char  *pszNewName = (char *)NULL;
-  char  *pszDirName = (char *)NULL;
+  char  *pszNewName = (char *)nullptr;
+  char  *pszDirName = (char *)nullptr;
   char  *pszEnvVar;
   char  *msgPtr, *errPtr;
 
@@ -990,11 +990,11 @@ ushort CopyFilesFromWid(ActionData *pAD, Widget wid)
 
 {
   IconData      *pIconData;
-  char          *pszDirName = (char *)NULL;
+  char          *pszDirName = (char *)nullptr;
   Boolean       bHaveError = FALSE;
-  char          *pszIconName = (char *)NULL;
-  char          *pszNewName = (char *)NULL;
-  char          *pszMaskName = (char *)NULL;
+  char          *pszIconName = (char *)nullptr;
+  char          *pszNewName = (char *)nullptr;
+  char          *pszMaskName = (char *)nullptr;
 
   pszDirName = CreateDirName();
   if (!pszDirName) bHaveError = True;
@@ -1104,7 +1104,7 @@ ushort CopyIconFiles(ActionData *pAD)
   Boolean       bHaveError = FALSE;
   FiletypeData  *pFtD;
   int           i;
-  char          *pszDirName = (char *)NULL;
+  char          *pszDirName = (char *)nullptr;
   char          *pszNewIconName;
   char          *pszNewIconMask;
   char          *pszOldIconName;
@@ -1145,7 +1145,7 @@ ushort CopyIconFiles(ActionData *pAD)
              if (pFtD->pszMedPmIcon) {
                 CopyFile(pFtD->pszMedPmIcon, pszNewIconName);
              } else {
-                ptr = CreateIconName((char *)NULL, pszOldIconName, Medium_Icon, PIXMAP_EXT, FALSE);
+                ptr = CreateIconName((char *)nullptr, pszOldIconName, Medium_Icon, PIXMAP_EXT, FALSE);
                 if (ptr) {
                    CopyFile(ptr, pszNewIconName);
                    XtFree(ptr);
@@ -1170,7 +1170,7 @@ ushort CopyIconFiles(ActionData *pAD)
                    CopyFile(buffer, pszNewIconMask);
                 }
              } else {
-                ptr = CreateIconName((char *)NULL, pszOldIconName, Medium_Icon, BITMAP_EXT, FALSE);
+                ptr = CreateIconName((char *)nullptr, pszOldIconName, Medium_Icon, BITMAP_EXT, FALSE);
                 if (ptr) {
                    CopyFile(ptr, pszNewIconName);
                    XtFree(ptr);
@@ -1178,7 +1178,7 @@ ushort CopyIconFiles(ActionData *pAD)
                 /****************************/
                 /* Now do the mask file.    */
                 /****************************/
-                ptr = CreateIconName((char *)NULL, pszOldIconName, Medium_Icon, BITMAP_EXT, TRUE);
+                ptr = CreateIconName((char *)nullptr, pszOldIconName, Medium_Icon, BITMAP_EXT, TRUE);
                 if (ptr && check_file_exists(ptr) && pszNewIconMask) {
                    CopyFile(ptr, pszNewIconMask);
                    XtFree(ptr);
@@ -1196,7 +1196,7 @@ ushort CopyIconFiles(ActionData *pAD)
              if (pFtD->pszTinyPmIcon) {
                 CopyFile(pFtD->pszTinyPmIcon, pszNewIconName);
              } else {
-                ptr = CreateIconName((char *)NULL, pszOldIconName, Tiny_Icon, PIXMAP_EXT, FALSE);
+                ptr = CreateIconName((char *)nullptr, pszOldIconName, Tiny_Icon, PIXMAP_EXT, FALSE);
                 if (ptr) {
                    CopyFile(ptr, pszNewIconName);
                    XtFree(ptr);
@@ -1221,7 +1221,7 @@ ushort CopyIconFiles(ActionData *pAD)
                    CopyFile(buffer, pszNewIconMask);
                 }
              } else {
-                ptr = CreateIconName((char *)NULL, pszOldIconName, Tiny_Icon, BITMAP_EXT, FALSE);
+                ptr = CreateIconName((char *)nullptr, pszOldIconName, Tiny_Icon, BITMAP_EXT, FALSE);
                 if (ptr) {
                    CopyFile(ptr, pszNewIconName);
                    XtFree(ptr);
@@ -1229,7 +1229,7 @@ ushort CopyIconFiles(ActionData *pAD)
                 /****************************/
                 /* Now do the mask file.    */
                 /****************************/
-                ptr = CreateIconName((char *)NULL, pszOldIconName, Tiny_Icon, BITMAP_EXT, TRUE);
+                ptr = CreateIconName((char *)nullptr, pszOldIconName, Tiny_Icon, BITMAP_EXT, TRUE);
                 if (ptr && check_file_exists(ptr) && pszNewIconMask) {
                    CopyFile(ptr, pszNewIconMask);
                    XtFree(ptr);

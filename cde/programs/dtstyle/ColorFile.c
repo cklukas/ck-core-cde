@@ -161,7 +161,7 @@ ReadInPalettes(
 */
    AddSystemPath();
 
-   if (text != NULL)
+   if (text != nullptr)
       AddDirectories(text);
 
    AddHomePath();
@@ -222,7 +222,7 @@ ReadPalette(
    {
       tmpStr = (char *)XtMalloc(strlen(ERR4) + strlen(filename) + 1);
       sprintf(tmpStr, ERR4, filename);
-      _DtSimpleErrnoError (progName, DtWarning, NULL, tmpStr, NULL);
+      _DtSimpleErrnoError (progName, DtWarning, nullptr, tmpStr, nullptr);
       XtFree(tmpStr);
       XtFree(filename);
       return;
@@ -248,11 +248,11 @@ ReadPalette(
 ** If it is already in the list but is not from the system palettes,
 ** don't overwrite it - discard the one just read and go on to next palette.
 */
-      if(pHeadPalette != NULL)
+      if(pHeadPalette != nullptr)
       {
          found = FALSE;
          tmp_palette = pHeadPalette;
-         while(tmp_palette->next != NULL )
+         while(tmp_palette->next != nullptr )
          {
             if(strcmp(tmp_palette->name, new_palette->name)) 
                tmp_palette = tmp_palette->next;
@@ -320,7 +320,7 @@ ReadPalette(
 	  {
 	     tmpStr = (char *)XtMalloc(strlen(ERR5) + strlen(filename) + 1);
 	     sprintf(tmpStr, ERR5, filename);
-	     _DtSimpleError (progName, DtWarning, NULL, tmpStr, NULL);
+	     _DtSimpleError (progName, DtWarning, nullptr, tmpStr, nullptr);
 	     XtFree(filename);
 	     XtFree(tmpStr);
 	     close(fd);
@@ -348,13 +348,13 @@ ReadPalette(
     if (add == TRUE)
     {
       /* set the next pointer to NULL*/
-       new_palette->next = NULL;
+       new_palette->next = nullptr;
 
       /* increment the total number of palettes in the customizer */
        NumOfPalettes++;
 
-       if( pHeadPalette == NULL /* First entry */
-          || (pHeadPalette != NULL && strcmp(pHeadPalette->name, new_palette->name) > 0)) /* Earlier entry than current list head */
+       if( pHeadPalette == nullptr /* First entry */
+          || (pHeadPalette != nullptr && strcmp(pHeadPalette->name, new_palette->name) > 0)) /* Earlier entry than current list head */
        {
            new_palette->item_position = 1;
            if(pHeadPalette)
@@ -362,7 +362,7 @@ ReadPalette(
                new_palette->next = pHeadPalette;
                /* Increment position poineter of other items in the list */
 	       tmp_palette = pHeadPalette;
-               while( tmp_palette != NULL)
+               while( tmp_palette != nullptr)
                {
                    tmp_palette->item_position += 1;
                    tmp_palette = tmp_palette->next;
@@ -390,7 +390,7 @@ ReadPalette(
            /* Now continue incrementing through the list increasing the position
               count of all items following the new entry */
            tmp_palette = new_palette->next;
-           while( tmp_palette != NULL)
+           while( tmp_palette != nullptr)
            {
               tmp_palette->item_position += 1;
               tmp_palette = tmp_palette->next;
@@ -438,7 +438,7 @@ WriteOutPalette(
    {
        tmpStr = (char *)XtMalloc(strlen(ERR4) + strlen(filename) + 1);
        sprintf (tmpStr, ERR4, filename);
-       _DtSimpleErrnoError (progName, DtWarning, NULL, tmpStr, NULL);
+       _DtSimpleErrnoError (progName, DtWarning, nullptr, tmpStr, nullptr);
        XtFree(tmpStr);
        XtFree(filename);
        return(-1);
@@ -575,7 +575,7 @@ RemovePalette( void )
 	{
 	    tmpStr = (char *)XtMalloc(strlen(ERR1) + strlen(filename2) + 1); 
 	    sprintf (tmpStr, ERR1, filename2);
-	    _DtSimpleErrnoError (progName, DtWarning, NULL, tmpStr, NULL);
+	    _DtSimpleErrnoError (progName, DtWarning, nullptr, tmpStr, nullptr);
 	    XtFree(tmpStr);
 
 	    tmpStr = (char *)XtMalloc(strlen(ERR1) +
@@ -611,7 +611,7 @@ AddSystemPath( void )
   /*
    ** Null out the head of the palette linked list
    */
-  pHeadPalette = NULL;
+  pHeadPalette = nullptr;
   
   /* set the number of directories to search to 0, this is the first path
      added  */
@@ -662,7 +662,7 @@ AddHomePath( void )
    strcat(home_palette_dir, DT_PAL_DIR);
 
   /* open $HOME/.dt/palettes */
-   if( (dirp = opendir(home_palette_dir)) == NULL)
+   if( (dirp = opendir(home_palette_dir)) == nullptr)
    {
        /*  create .dt/palettes if it does not exit */
        result = mkdir(home_palette_dir, 511);
@@ -671,7 +671,7 @@ AddHomePath( void )
            tmpStr = (char *)XtMalloc(strlen(ERR3) + 
                 strlen(home_palette_dir) +1);
            sprintf(tmpStr, ERR4, home_palette_dir);
-           _DtSimpleError (progName, DtWarning, NULL, tmpStr, NULL);
+           _DtSimpleError (progName, DtWarning, nullptr, tmpStr, nullptr);
            XtFree(tmpStr);
        }
    }
@@ -729,7 +729,7 @@ AddDirectories( char *text )
       {
           tmpStr = (char *)XtMalloc(strlen(ERR9) + 5);
           sprintf(tmpStr, ERR9, MAX_NUM_DIRECTORIES-2);
-          _DtSimpleError (progName, DtWarning, NULL, tmpStr, NULL);
+          _DtSimpleError (progName, DtWarning, nullptr, tmpStr, nullptr);
           XtFree(tmpStr);
           break;
       }
@@ -771,14 +771,14 @@ CheckForDeletedFile(
 
   /* now go see if the filename is in the palette link list */
    tmp_palette = pHeadPalette;
-   while(tmp_palette->next != NULL )
+   while(tmp_palette->next != nullptr )
      if(strcmp(tmp_palette->name, filename)) 
         tmp_palette = tmp_palette->next;
      else
         tmp_palette = RemovePaletteFromList(tmp_palette);
 
    /* check the last palette */
-   if(tmp_palette->next == NULL && (strcmp(tmp_palette->name, filename) == 0))
+   if(tmp_palette->next == nullptr && (strcmp(tmp_palette->name, filename) == 0))
       (void) RemovePaletteFromList(tmp_palette);
 
    XtFree(filename);
@@ -837,7 +837,7 @@ ReadInInfo(
    
       /* use the motif routine to generate fg, sc, ts, and bs */
        if(TypeOfMonitor != XmCO_BLACK_WHITE) {
-          if (edit.calcRGB == NULL) edit.calcRGB = XmGetColorCalculation();
+          if (edit.calcRGB == nullptr) edit.calcRGB = XmGetColorCalculation();
           (*edit.calcRGB)(&tmp_color, 
                                   &(new_palette->color[num_of_colors].fg),
                                   &(new_palette->color[num_of_colors].sc),
@@ -1076,7 +1076,7 @@ RemovePaletteFromList( palette *tmp_palette )
      /* make sure the item_positions are correct*/
    count = 1;
    tmp_palette = pHeadPalette;
-   while(tmp_palette->next != NULL )
+   while(tmp_palette->next != nullptr )
    {
       tmp_palette->item_position = count++;
       tmp_palette = tmp_palette->next;
@@ -1179,7 +1179,7 @@ ReadPaletteLoop(
 */
       if( open_dir == False )
       {
-         if( (dirp = opendir(palette_dirs.directories[loopcount])) == NULL)
+         if( (dirp = opendir(palette_dirs.directories[loopcount])) == nullptr)
          {
             /* note: if there is an error in opening a directory,
 	     * the directory is not deleted from the palette_dirs
@@ -1208,7 +1208,7 @@ ReadPaletteLoop(
           }
       }
 
-      while( file_descpt != NULL)
+      while( file_descpt != nullptr)
       {
        /* check for a valid palette file */
          if(!(strncmp(PALETTE_SUFFIX, DtStrrchr(file_descpt->d_name, '.'),
@@ -1222,7 +1222,7 @@ ReadPaletteLoop(
              if((strcmp(palette_dirs.directories[loopcount],
 		                              home_palette_dir) == 0) && 
 	                  (strncmp(file_descpt->d_name, "~", 1) == 0) &&
-		           pHeadPalette != NULL)
+		           pHeadPalette != nullptr)
              {
                 CheckForDeletedFile(file_descpt);
              }

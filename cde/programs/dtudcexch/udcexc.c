@@ -51,8 +51,8 @@ void udcimp(Exc_data *ed);
 
 Widget toplevel, mainw;
 
-Exc_data *ed = NULL;
-ListData	*ld = NULL;
+Exc_data *ed = nullptr;
+ListData	*ld = nullptr;
 char *maintitle;
 /*char *terminatemsg = "Do you want to terminate dtudcexch";*/
 
@@ -78,14 +78,14 @@ Widget excCreateRadioButton(Widget parent, String name, String label,
     widget = XtVaCreateManagedWidget(name,
 				     xmToggleButtonWidgetClass, parent,
 				     XmNindicatorType, XmONE_OF_MANY,
-				     NULL);
+				     nullptr);
     XtAddCallback(widget, XmNvalueChangedCallback,
 		  callback_func, client_data);
 
     xms = XmStringCreateLocalized(label);
     XtVaSetValues(widget,
 		  XmNlabelString, xms,
-		  NULL);
+		  nullptr);
 
     XmStringFree(xms);
 
@@ -111,12 +111,12 @@ int main(int argc, char * argv[])
     FalFontDataList *fontlist;
 
 /* appinitialize */
-    XtSetLanguageProc(NULL,NULL,NULL);
+    XtSetLanguageProc(nullptr,nullptr,nullptr);
     _DtEnvControl(0);
     n = 0;
     toplevel = XtAppInitialize(&app_context, "UDCexchange",
 			       (XrmOptionDescList) NULL,
-			       0, (int *) &argc, argv, (String *) NULL,
+			       0, (int *) &argc, argv, (String *) nullptr,
 			       args, n);
 
     maintitle = GETMESSAGE(8, 2, "UDC data exchange utitlity");
@@ -167,7 +167,7 @@ int main(int argc, char * argv[])
     exitlabel = GETMESSAGE(8, 86, "Cancel");
 
 /* initialize ed */
-    if ((ed = (Exc_data *) malloc(sizeof(Exc_data))) == NULL) {
+    if ((ed = (Exc_data *) malloc(sizeof(Exc_data))) == nullptr) {
 	excerror(ed, EXCERRMALLOC, "main", "exit");
     }
     memset(ed,0x00,sizeof(Exc_data));
@@ -194,7 +194,7 @@ int main(int argc, char * argv[])
     row = XtVaCreateManagedWidget("row", xmRowColumnWidgetClass, mainw,
 				  XmNradioBehavior, True,
 				  XmNradioAlwaysOne, True,
-				  NULL);
+				  nullptr);
     expfunc = excCreateRadioButton(row, "expfunc", explabel,
 				   callexpCB, (XtPointer) ed);
 
@@ -209,7 +209,7 @@ int main(int argc, char * argv[])
 */
     XtVaSetValues(mainw,
 		  XmNmessageWindow, exit,
-		  NULL);
+		  nullptr);
 
     XtManageChild(mainw);
 

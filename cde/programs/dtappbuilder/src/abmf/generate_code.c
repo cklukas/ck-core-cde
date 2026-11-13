@@ -290,7 +290,7 @@ abmf_generate_code(
     int                 return_value = 0;
     int                 iRC = 0;/* int return code */
     AB_TRAVERSAL        trav;
-    ABObj               module = NULL;
+    ABObj               module = nullptr;
     char                resFileName[MAX_PATH_SIZE];
     BOOL                writeAll = FALSE;
     GenCodeInfoRec      genCodeInfoRec;
@@ -327,7 +327,7 @@ abmf_generate_code(
     {
 	writeAll = TRUE;
 	for (trav_open(&trav, project, AB_TRAV_MODULES);
-	     (module = trav_next(&trav)) != NULL;)
+	     (module = trav_next(&trav)) != nullptr;)
 	{
 	    if (!obj_get_write_me(module))
 	    {
@@ -358,7 +358,7 @@ abmf_generate_code(
      * Write out the modules
      */
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	 (module = trav_next(&trav)) != NULL;)
+	 (module = trav_next(&trav)) != nullptr;)
     {
 	if (!obj_get_write_me(module) 
 	    || !obj_is_defined(module))
@@ -381,7 +381,7 @@ abmf_generate_code(
 		module, resFileName, MAX_PATH_SIZE);
 	    genCodeInfo->resource_file = 
 		abmfP_res_file_open(resFileName, resFileName, module, TRUE);
-	    if (genCodeInfo->resource_file == NULL)
+	    if (genCodeInfo->resource_file == nullptr)
 	    {
 	        exit(1);
 	    }
@@ -421,7 +421,7 @@ abmf_generate_code(
 		project, resFileName, MAX_PATH_SIZE);
 	    genCodeInfo->resource_file = 
 		abmfP_res_file_open(resFileName, resFileName, project, TRUE);
-	    if (genCodeInfo->resource_file == NULL)
+	    if (genCodeInfo->resource_file == nullptr)
 	    {
 		exit(1);
 	    }
@@ -519,14 +519,14 @@ write_module_files(
 #define codeFile (genCodeInfo->code_file)
     int                 return_value = 0;
     int                 iRC = 0;/* int return code */
-    STRING              errmsg = NULL;
+    STRING              errmsg = nullptr;
     char                uiHeaderFileName[MAX_PATH_SIZE];
     char                uiHeaderDefineName[MAX_PATH_SIZE];
     char                uiCFileName[MAX_PATH_SIZE];
     char                stubsFileName[MAX_PATH_SIZE];
     char                stubsBakFileName[MAX_PATH_SIZE];
     BOOL                needStubsMerge = FALSE;
-    STRING              curFileName = NULL;
+    STRING              curFileName = nullptr;
     BOOL                curFileSkipped = FALSE;
     ABMF_SKIP_WHY	curFileSkipReason = ABMF_SKIP_UNDEF;
     *uiHeaderFileName = 0;
@@ -578,7 +578,7 @@ write_module_files(
     else
     {
 	print_processing_message(uiHeaderFileName);
-	if ((errmsg = abio_open_output(NULL, &codeFile)) != NULL)
+	if ((errmsg = abio_open_output(nullptr, &codeFile)) != nullptr)
 	{
 	    util_printf_err("%s\n", errmsg);
 	    return_code(ERR_OPEN);
@@ -625,7 +625,7 @@ write_module_files(
 	print_processing_message(curFileName);
 	if (!util_be_silent())
 	{
-	    if ((genCodeInfo->resource_file != NULL) && (resFileName != NULL))
+	    if ((genCodeInfo->resource_file != nullptr) && (resFileName != nullptr))
 	    {
 		char *prog_name_string = util_get_program_name();
 		fprintf(stderr, CATGETS(Dtb_project_catd, 1, 57,
@@ -635,7 +635,7 @@ write_module_files(
 			resFileName);
 	    }
 	}
-	if ((errmsg = abio_open_output(NULL, &codeFile)) != NULL)
+	if ((errmsg = abio_open_output(nullptr, &codeFile)) != nullptr)
 	{
 	    util_printf_err("%s\n", errmsg);
 	    return_code(ERR_OPEN);
@@ -690,10 +690,10 @@ write_module_files(
 	    /*
 	     * Open the output (temp) file.
 	     */
-	    File	deltaFile = NULL;
+	    File	deltaFile = nullptr;
 
-	    errmsg = abio_open_output(NULL, &codeFile);	/* tmp file */
-	    if (errmsg != NULL)
+	    errmsg = abio_open_output(nullptr, &codeFile);	/* tmp file */
+	    if (errmsg != nullptr)
 	    {
 		util_printf_err("%s\n", errmsg);
 		return_code(ERR_OPEN);
@@ -730,7 +730,7 @@ write_module_files(
 			&curFileSkipReason);
 	    return_if_err(iRC,iRC);
 
-	    if ((stubsCFileChanged) && (deltaFile != NULL))
+	    if ((stubsCFileChanged) && (deltaFile != nullptr))
 	    {
 		char	deltaFileName[MAXPATHLEN];
 		snprintf(deltaFileName, sizeof(deltaFileName), "%s.delta", stubsFileName);
@@ -780,7 +780,7 @@ write_project_files(
 #define codeFile (genCodeInfo->code_file)
     int                 return_value = 0;
     int                 iRC = 0;/* int return code */
-    STRING              errmsg = NULL;
+    STRING              errmsg = nullptr;
     BOOL                needHeaderMerge = FALSE;
     BOOL                needStubsMerge = FALSE;
     char                headerFileName[MAX_PATH_SIZE];
@@ -788,11 +788,11 @@ write_project_files(
     char                headerBakFileName[MAX_PATH_SIZE];
     char                stubsFileName[MAX_PATH_SIZE];
     char                stubsBakFileName[MAX_PATH_SIZE];
-    STRING              curFileName = NULL;
+    STRING              curFileName = nullptr;
     ABMF_SKIP_WHY	curFileSkipReason = ABMF_SKIP_UNDEF;
-    File		orgFile = NULL;
-    File		mergedFile = NULL;
-    File		deltaFile = NULL;
+    File		orgFile = nullptr;
+    File		mergedFile = nullptr;
+    File		deltaFile = nullptr;
 
     headerFileChanged = FALSE;
     stubsCFileChanged = FALSE;
@@ -821,7 +821,7 @@ write_project_files(
 	 * Write the beastie
 	 */
 	print_processing_message(headerFileName);
-	if ((errmsg = abio_open_output(NULL, &codeFile)) != NULL)
+	if ((errmsg = abio_open_output(nullptr, &codeFile)) != nullptr)
 	{
 	    util_printf_err("%s\n", errmsg);
 	    return ERR_OPEN;
@@ -895,8 +895,8 @@ write_project_files(
 	}
 
 	print_processing_message(stubsFileName);
-	errmsg = abio_open_output(NULL, &codeFile);
-	if (errmsg != NULL)
+	errmsg = abio_open_output(nullptr, &codeFile);
+	if (errmsg != nullptr)
 	{
 	    return_value = ERR_OPEN;
 	    util_printf_err("%s\n", errmsg);
@@ -966,12 +966,12 @@ write_make_file(
 #define makeFile (genCodeInfo->code_file)
     int                 return_value = 0;
     int                 rc = 0;
-    STRING              errmsg = NULL;
+    STRING              errmsg = nullptr;
     int                 intOSMin = ((int) AB_OS_UNDEF) + 1;
     int                 intOSMax = ((int) AB_OS_TYPE_NUM_VALUES) - 1;
     AB_OS_TYPE          actualOSType = util_get_os_type();
     AB_OS_TYPE          curOSType = AB_OS_UNDEF;
-    STRING              curOSTypeString = NULL;
+    STRING              curOSTypeString = nullptr;
     char                curMakeFileName[256] = "";
     BOOL		curMakeFileIsActual = FALSE;
     BOOL		writeCurMakeFile = FALSE;
@@ -993,7 +993,7 @@ write_make_file(
 	curMakeFileIsActual = FALSE;
 	curOSType = (AB_OS_TYPE) i;
 	curOSTypeString = util_os_type_to_ident(curOSType);
-	if (curOSTypeString == NULL)
+	if (curOSTypeString == nullptr)
 	{
 	    continue;
 	}
@@ -1023,7 +1023,7 @@ write_make_file(
 	if (writeCurMakeFile)
 	{
 	    print_writing_message(curMakeFileName);
-	    if ((errmsg = abio_open_output(curMakeFileName, &makeFile)) != NULL)
+	    if ((errmsg = abio_open_output(curMakeFileName, &makeFile)) != nullptr)
 	    {
 	        util_printf_err("%s\n", errmsg);
 	        goto epilogue;
@@ -1100,11 +1100,11 @@ write_utils_files(
 #define codeFile (genCodeInfo->code_file)
     int			return_value = 0;
     int			iRC = 0;		/* int return code */
-    STRING		curFileName = NULL;
+    STRING		curFileName = nullptr;
     ABMF_SKIP_WHY	curFileSkipReason = ABMF_SKIP_UNDEF;
     STRING	utilHFileName = abmfP_get_utils_header_file_name(project);
     STRING 	utilCFileName = abmfP_get_utils_c_file_name(project);
-    STRING		errmsg = NULL;
+    STRING		errmsg = nullptr;
 
     /***** UTILITY HEADER FILE *****/
 
@@ -1114,7 +1114,7 @@ write_utils_files(
      * Write the beastie
      */
     print_processing_message(curFileName);
-    if ((errmsg = abio_open_output(NULL, &codeFile)) != NULL)
+    if ((errmsg = abio_open_output(nullptr, &codeFile)) != nullptr)
     {
         util_printf_err("%s\n", errmsg);
         return ERR_OPEN;
@@ -1152,8 +1152,8 @@ write_utils_files(
     curFileSkipReason = ABMF_SKIP_UNDEF;
     {
 	print_processing_message(curFileName);
-	errmsg = abio_open_output(NULL, &codeFile);
-	if (errmsg != NULL)
+	errmsg = abio_open_output(nullptr, &codeFile);
+	if (errmsg != nullptr)
 	{
 	    return_value = ERR_OPEN;
 	    util_printf_err("%s\n", errmsg);
@@ -1199,16 +1199,16 @@ epilogue:
 #define codeFile (genCodeInfo->code_file)
     int		return_value = 0;
     int		rc = 0;			/* return code */
-    STRING	errmsg = NULL;
-    STRING	utilHFileName = NULL;
-    STRING	utilCFileName = NULL;
+    STRING	errmsg = nullptr;
+    STRING	utilHFileName = nullptr;
+    STRING	utilCFileName = nullptr;
     genLog = genLog;	/* avoid warning */
 
     utilHFileName = abmfP_get_utils_header_file_name(project);
     utilCFileName = abmfP_get_utils_c_file_name(project);
 
     errmsg = abio_open_output(utilHFileName, &codeFile);
-    if (errmsg != NULL)
+    if (errmsg != nullptr)
     {
 	util_printf_err("%s\n", errmsg);
     }
@@ -1218,7 +1218,7 @@ epilogue:
     abio_close_output(codeFile);
 
     errmsg = abio_open_output(utilCFileName, &codeFile);
-    if (errmsg != NULL)
+    if (errmsg != nullptr)
     {
 	util_printf_err("%s\n", errmsg);
     }
@@ -1247,9 +1247,9 @@ write_app_resource_file(
 {
     int		return_value = 0;
     int		rc = 0;			/* return code */
-    File	newResFile = NULL;
+    File	newResFile = nullptr;
     char	appResFileName[MAXPATHLEN+1];
-    STRING	curFileName = NULL;
+    STRING	curFileName = nullptr;
     ABMF_SKIP_WHY	curFileSkipReason = ABMF_SKIP_UNDEF;
     *appResFileName = 0;
 
@@ -1258,7 +1258,7 @@ write_app_resource_file(
      */
     abmfP_get_app_res_file_name(project, appResFileName, MAXPATHLEN+1);
     print_processing_message(appResFileName);
-    newResFile = abmfP_res_file_open(NULL, appResFileName, project, FALSE);
+    newResFile = abmfP_res_file_open(nullptr, appResFileName, project, FALSE);
     curFileName = appResFileName;
     abio_printf(newResFile, 
 	"! All CDE applications should include the standard Dt resource file\n"
@@ -1294,19 +1294,19 @@ write_app_resource_file(
     if (merge_files)
     {
 	File	oldResFile = util_fopen_locked(appResFileName, "r");
-	File	mergedResFile = NULL;
+	File	mergedResFile = nullptr;
 	int	rc = 0;
 
-	if (oldResFile != NULL)
+	if (oldResFile != nullptr)
 	{
 	    print_merging_message(curFileName);
 	    abmfP_res_file_merge(newResFile, oldResFile, &mergedResFile);
 	    assert(rc >= 0);
-	    if (mergedResFile != NULL)
+	    if (mergedResFile != nullptr)
 	    {
 	        util_fclose(newResFile);
 	        newResFile = mergedResFile;
-	        mergedResFile = NULL;
+	        mergedResFile = nullptr;
 	    }
 	}
     }
@@ -1348,15 +1348,15 @@ write_msg_file(
 {
     int			return_value = 0;
     int			rc = 0;			/* return code */
-    File		newMsgFile = NULL;
+    File		newMsgFile = nullptr;
     ABMF_SKIP_WHY	msgFileSkipReason = ABMF_SKIP_UNDEF;
     STRING		curFileName = genCodeInfo->msg_src_file_name;
     AB_TRAVERSAL	trav;
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
 
     update_msg_set(genCodeInfo->msg_file_obj, project);
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL; )
+	(module = trav_next(&trav)) != nullptr; )
     {
 	update_msg_set(genCodeInfo->msg_file_obj, module);
     }
@@ -1413,15 +1413,15 @@ update_msg_set(MsgFile msgFile, ABObj obj)
 	    }
 
     int			return_value = 0;
-    STRING		string = NULL;
-    MsgSet		msgSet = NULL;
-    ABObj		stringObj = NULL;
+    STRING		string = nullptr;
+    MsgSet		msgSet = nullptr;
+    ABObj		stringObj = nullptr;
     BOOL		objIsProject = obj_is_project(obj);
     AB_TRAVERSAL	trav;
     assert(obj_is_module(obj) || obj_is_project(obj));
 
     msgSet = MsgFile_obj_sure_find_msg_set(msgFile, obj);
-    if (msgSet == NULL)
+    if (msgSet == nullptr)
     {
 	return ERR_INTERNAL;
     }
@@ -1431,9 +1431,9 @@ update_msg_set(MsgFile msgFile, ABObj obj)
 	MsgSet_set_is_referenced(msgSet, TRUE);
 	MsgSet_set_allow_msg_delete(msgSet, TRUE);
 	for (trav_open(&trav, obj, AB_TRAV_ALL);
-		(stringObj = trav_next(&trav)) != NULL; )
+		(stringObj = trav_next(&trav)) != nullptr; )
 	{
-	    if (objIsProject && (obj_get_module(stringObj) != NULL))
+	    if (objIsProject && (obj_get_module(stringObj) != nullptr))
 	    {
 		continue;
 	    }
@@ -1473,7 +1473,7 @@ should_write_file(
 {
     static BOOL			initialized = FALSE;
     static time_t		exeDate = (time_t)-1;
-    GenLogEntry         	logEntry = NULL;
+    GenLogEntry         	logEntry = nullptr;
     struct stat			fileInfo;
 
 /*
@@ -1491,18 +1491,18 @@ should_write_file(
     if (!initialized)
     {
 	char	exePath[MAX_PATH_SIZE];
-	STRING	exeDir = NULL;
-	STRING	exeFile = NULL;
+	STRING	exeDir = nullptr;
+	STRING	exeFile = nullptr;
 	*exePath = 0;
 	initialized = TRUE;
 
 	exeDir = dtb_get_exe_dir();
 	exeFile = util_get_program_name();
-	if (exeDir != NULL)
+	if (exeDir != nullptr)
 	{
 	    strcpy(exePath, exeDir);
 	}
-	if (exeFile != NULL)
+	if (exeFile != nullptr)
 	{
 	    strcat(exePath, "/");
 	    strcat(exePath, exeFile);
@@ -1524,7 +1524,7 @@ should_write_file(
      * See if the generation parameters have changed.
      */
     logEntry = log_find_entry_by_name(genLog, output_file);
-    if ((logEntry != NULL) && (util_xor(logEntry->merged, merge_files)))
+    if ((logEntry != nullptr) && (util_xor(logEntry->merged, merge_files)))
     {
 	return TRUE;
     }
@@ -1560,10 +1560,10 @@ check_and_merge_c_file(
     int		return_value = 0;
     int		rc = 0;			/* return code */
     File	codeFile = *codeFileInOut;
-    File	mergedFile = NULL;
-    File	deltaFile = NULL;
-    File	*deltaFilePtr = NULL;
-    File	orgFile = NULL;
+    File	mergedFile = nullptr;
+    File	deltaFile = nullptr;
+    File	*deltaFilePtr = nullptr;
+    File	orgFile = nullptr;
 
     #ifdef DEBUG
     if (debugging())
@@ -1572,7 +1572,7 @@ check_and_merge_c_file(
     }
     #endif /* DEBUG */
 
-    *deltaFileOut = NULL;
+    *deltaFileOut = nullptr;
 
     if (   ((*fileSkipReasonInOut) != ABMF_SKIP_UNDEF)
 	|| (!needMerge) )
@@ -1582,7 +1582,7 @@ check_and_merge_c_file(
 
     print_merging_message(codeFileName);
     orgFile = util_fopen_locked(codeFileName, "r");
-    if (orgFile == NULL)
+    if (orgFile == nullptr)
     {
         *fileSkipReasonInOut = ABMF_SKIP_ERR_OCCURRED;
         util_printf_err("%s: %s\n", codeFileName, strerror(errno));
@@ -1600,7 +1600,7 @@ check_and_merge_c_file(
         return_code(-1);
     }
     
-    if (mergedFile == NULL)
+    if (mergedFile == nullptr)
     {
         *fileSkipReasonInOut = ABMF_SKIP_NO_CHANGES;
     }
@@ -1608,7 +1608,7 @@ check_and_merge_c_file(
     {
         /* changes were detected and merged */
         util_fclose(codeFile);
-        codeFile = mergedFile; mergedFile = NULL;
+        codeFile = mergedFile; mergedFile = nullptr;
     }
 
 epilogue:
@@ -1644,7 +1644,7 @@ check_and_replace_file(
     if (check_for_changes && util_file_exists(fileName))
     {
         File orgFile = util_fopen_locked(fileName, "r");
-        if (orgFile == NULL)
+        if (orgFile == nullptr)
         {
 	    fileSkippedReasonOut = ABMF_SKIP_ERR_OCCURRED;
 	    util_printf_err(CATGETS(Dtb_project_catd, 1, 65, "%s: %s\n"),
@@ -1670,7 +1670,7 @@ check_and_replace_file(
 	if (util_file_exists(fileName))
 	{
 	    File	file = util_fopen_locked(fileName, "a+");
-	    if (file == NULL)
+	    if (file == nullptr)
 	    {
 	        fileSkippedReasonOut = ABMF_SKIP_ERR_OCCURRED;
 	        util_printf_err(CATGETS(Dtb_project_catd, 1, 65, "%s: %s\n"),
@@ -1708,7 +1708,7 @@ check_and_replace_file(
     }
 
 epilogue:
-    if (updateLog && (genLog != NULL))
+    if (updateLog && (genLog != nullptr))
     {
         log_add_entry(genLog, fileName, -1, fileWasMerged);
     }
@@ -1749,7 +1749,7 @@ replace_file(STRING fileName, File fromFile, BOOL rewindFiles)
 {
     int		c;
     char	bakFileName[MAXPATHLEN];
-    File	toFile = NULL;
+    File	toFile = nullptr;
 
 
     if (rewindFiles)
@@ -1765,7 +1765,7 @@ replace_file(STRING fileName, File fromFile, BOOL rewindFiles)
     }
 
     toFile = util_fopen_locked(fileName, "w");
-    if (toFile == NULL)
+    if (toFile == nullptr)
     {
 	util_printf_err(CATGETS(Dtb_project_catd, 1, 65, "%s: %s\n"),
 	    fileName, strerror(errno));
@@ -1842,7 +1842,7 @@ compare_file_times(STRING input_file, STRING output_file, GenLog genLog)
     GenLogEntry         logEntry = log_find_entry_by_name(genLog, output_file);
     struct stat         fileInfo;
 
-    if (logEntry == NULL)
+    if (logEntry == nullptr)
     {
 	/* we don't have any record of output file, so input file is newer */
 	return 1;
@@ -1880,11 +1880,11 @@ static BOOL
 file_changed_since_last_log(GenLog genLog, STRING fileName)
 {
     BOOL	fileWasModified = FALSE;
-    GenLogEntry	logEntry = NULL;
+    GenLogEntry	logEntry = nullptr;
     time_t	lastLogWriteTime = 0;
 
     logEntry = log_find_entry_by_name(genLog, fileName);
-    lastLogWriteTime = (logEntry == NULL? 0: logEntry->mod_time);
+    lastLogWriteTime = (logEntry == nullptr? 0: logEntry->mod_time);
     fileWasModified = (get_file_mod_time(fileName) > lastLogWriteTime);
 
     return fileWasModified;
@@ -1919,13 +1919,13 @@ mkgmtime(struct tm * localTimeStruct)
     time_t              curTime = 0;
     time_t              localTime = 0;
     time_t              adjustedTime = 0;
-    struct tm          *gmTimeStruct = NULL;
+    struct tm          *gmTimeStruct = nullptr;
     int                 localTimeIsDST = 0;
 
     /*
      * Determine time difference between localtime and gmtime
      */
-    curTime = time(NULL);
+    curTime = time(nullptr);
     localTimeIsDST = localTimeStruct->tm_isdst;
     if (localTimeIsDST < 0)
     {
@@ -1934,7 +1934,7 @@ mkgmtime(struct tm * localTimeStruct)
 	localTimeIsDST = curTimeStruct->tm_isdst;
     }
     gmTimeStruct = gmtime(&curTime);
-    if (gmTimeStruct == NULL)
+    if (gmTimeStruct == nullptr)
     {
 	goto epilogue;
     }
@@ -1964,7 +1964,7 @@ epilogue:
 static int
 touch_file(STRING fileName)
 {
-    int rc = utime(fileName, NULL);
+    int rc = utime(fileName, nullptr);
     return (rc == 0? OK:ERR);
 }
 
@@ -1985,7 +1985,7 @@ source_files_equal(FILE *file1, FILE *file2)
     {
 	return TRUE;
     }
-    else if ((file1 == NULL) || (file2 == NULL))
+    else if ((file1 == nullptr) || (file2 == nullptr))
     {
 	/* one is NULL, the other is not */
 	return FALSE;
@@ -2022,10 +2022,10 @@ source_files_equal(FILE *file1, FILE *file2)
 static int
 log_construct(GenLog log)
 {
-    log->log_file = NULL;
+    log->log_file = nullptr;
     log->num_entries = 0;
     log->entries_size = 0;
-    log->entries = NULL;
+    log->entries = nullptr;
     return logP_read(log);
 }
 
@@ -2062,13 +2062,13 @@ logP_release_data(GenLog log)
 static              GenLogEntry
 log_find_entry_by_name(GenLog log, STRING file_name)
 {
-    GenLogEntry         return_value = NULL;
+    GenLogEntry         return_value = nullptr;
     ISTRING             istr_file_name = istr_dup_existing(file_name);
     int                 i = 0;
 
-    if (istr_file_name == NULL)
+    if (istr_file_name == nullptr)
     {
-	return_code(NULL);
+	return_code(nullptr);
     }
 
     for (i = 0; i < log->num_entries; ++i)
@@ -2098,14 +2098,14 @@ log_add_entry(GenLog log, STRING file_name, time_t mod_time, BOOL merged)
     GenLogEntry         entry = log_find_entry_by_name(log, file_name);
     int                 new_entries_size = 0;
     int                 new_num_entries = 0;
-    GenLogEntry         new_entries = NULL;
+    GenLogEntry         new_entries = nullptr;
 
     if (mod_time == (time_t)-1)
     { 
 	mod_time = get_file_mod_time(file_name);
     }
 
-    if (entry != NULL)
+    if (entry != nullptr)
     {
 	entry->mod_time = mod_time;
 	entry->merged = merged;
@@ -2121,7 +2121,7 @@ log_add_entry(GenLog log, STRING file_name, time_t mod_time, BOOL merged)
     new_entries = (GenLogEntry) realloc(log->entries,
 				 new_entries_size * sizeof(GenLogEntryRec));
 
-    if (new_entries == NULL)
+    if (new_entries == nullptr)
     {
 	return_code(ERR_NO_MEMORY);
     }
@@ -2151,9 +2151,9 @@ log_dump(GenLog log)
     return 0;
 #else
     int                 i = 0;
-    GenLogEntry         entry = NULL;
+    GenLogEntry         entry = nullptr;
 
-    if (log == NULL)
+    if (log == nullptr)
     {
 	util_dprintf(0, "NULL log\n");
 	return 0;
@@ -2184,13 +2184,13 @@ logP_read(GenLog log)
     int                 return_value = 0;
     char                log_file_name[MAXPATHLEN] = "";
     char                line_buf[MAXPATHLEN] = "";
-    GenLogEntry         next_entry = NULL;
+    GenLogEntry         next_entry = nullptr;
     int                 i = 0;
     int                 num_lines = 0;
-    File                file = NULL;
-    char               *token_start = NULL;
-    char               *line_ptr = NULL;
-    char               *line_tmp_ptr = NULL;
+    File                file = nullptr;
+    char               *token_start = nullptr;
+    char               *line_ptr = nullptr;
+    char               *line_tmp_ptr = nullptr;
     int                 c = 0;
     int                 year = 0;
     int                 month = 0;
@@ -2205,7 +2205,7 @@ logP_read(GenLog log)
     sprintf(log_file_name, ".%s.log", util_get_program_name());
     log->log_file = istr_create(log_file_name);
     file = util_fopen_locked(log_file_name, "rt");
-    if (file == NULL)
+    if (file == nullptr)
     {
 	return_code(0);
     }
@@ -2227,7 +2227,7 @@ logP_read(GenLog log)
     log->entries_size = num_lines;
     log->entries = (GenLogEntry) util_malloc(
 				log->entries_size * sizeof(GenLogEntryRec));
-    if (log->entries == NULL)
+    if (log->entries == nullptr)
     {
 	log->entries_size = 0;
 	return_code(ERR_NO_MEMORY);
@@ -2235,7 +2235,7 @@ logP_read(GenLog log)
     for (i = 0; i < log->entries_size; ++i)
     {
 	next_entry = &(log->entries[i]);
-	next_entry->file_name = NULL;
+	next_entry->file_name = nullptr;
 	next_entry->mod_time = 0;
 	next_entry->merged = FALSE;
     }
@@ -2255,7 +2255,7 @@ logP_read(GenLog log)
 	 */
 	token_start = line_ptr;
 	line_ptr = strchr(line_ptr, ' ');
-	if (line_ptr == NULL)
+	if (line_ptr == nullptr)
 	{
 	    continue;		/* error - skip this one */
 	}
@@ -2284,7 +2284,7 @@ logP_read(GenLog log)
 	time_struct.tm_sec = second;
 	time_struct.tm_isdst = -1;	/* let sys determine DST or no */
 
-	if (line_ptr == NULL)
+	if (line_ptr == nullptr)
 	{
 	    continue;		/* an error - skip this line */
 	}
@@ -2299,7 +2299,7 @@ logP_read(GenLog log)
 	 * merged
 	 */
 	line_tmp_ptr = strstr(line_ptr, "merged:");
-	if (line_tmp_ptr == NULL)
+	if (line_tmp_ptr == nullptr)
 	{
 	    continue;		/* an error - skip this entry */
 	}
@@ -2329,18 +2329,18 @@ logP_write(GenLog log)
 {
     int                 return_value = 0;
     STRING              log_file_name = istr_string(log->log_file);
-    File                file = NULL;
-    GenLogEntry         entry = NULL;
+    File                file = nullptr;
+    GenLogEntry         entry = nullptr;
     int                 i = 0;
-    struct tm          *time_struct = NULL;
-    STRING              file_name = NULL;
+    struct tm          *time_struct = nullptr;
+    STRING              file_name = nullptr;
 
-    if (log_file_name == NULL)
+    if (log_file_name == nullptr)
     {
 	return_code(0);
     }
     file = util_fopen_locked(log_file_name, "wt");
-    if (file == NULL)
+    if (file == nullptr)
     {
 	return_code(ERR);
     }
@@ -2351,7 +2351,7 @@ logP_write(GenLog log)
 	file_name = istr_string(entry->file_name);
 
 	/* this is mostly in case we mucked things up. */
-	if ((file_name == NULL) || (!util_file_exists(file_name)))
+	if ((file_name == nullptr) || (!util_file_exists(file_name)))
 	{
 	    continue;
 	}
@@ -2382,9 +2382,9 @@ logP_get_int_from_string(STRING * ptr_ptr)
 {
 #define ptr (*ptr_ptr)
     int                 int_value = 0;
-    char               *tok_start = NULL;
+    char               *tok_start = nullptr;
 
-    if (ptr == NULL)
+    if (ptr == nullptr)
     {
 	return 0;
     }

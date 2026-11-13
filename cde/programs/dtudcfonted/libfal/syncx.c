@@ -43,7 +43,7 @@
 void	_falmbDefaultDrawImageString()	{ return ; }
 /* Atom */ falInternAtom()		{ return 0 ; }
 int	_falwcGenericDrawString()	{ return 0 ; }
-char	**_falParseBaseFontNameList()	{ return NULL ; }
+char	**_falParseBaseFontNameList()	{ return nullptr ; }
 /* XFontStruct * */ falLoadQueryFont()	{ return 0 ; }
 falFreeFont()				{ return 0 ; }
 falFreeFontInfo()			{ return 0 ; }

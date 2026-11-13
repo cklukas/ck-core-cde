@@ -130,13 +130,13 @@ nl_catd  scmc_catd;   /* Cat descriptor for scmc conversion */
 #endif
 
 char       *ProgramName;        /* argv[0] */
-Display    *dsp = NULL;         /* server display connection */
-DtScreenProc callback = NULL;
-DtScreenProc init = NULL;
+Display    *dsp = nullptr;         /* server display connection */
+DtScreenProc callback = nullptr;
+DtScreenProc init = nullptr;
 
 static perwindow *Win; /* perwindow information */
 static int  windows;            /* number of windows */
-static Window *winprop = NULL;  /* dtsession cover windows */
+static Window *winprop = nullptr;  /* dtsession cover windows */
 
 /* VARARGS1 */
 void
@@ -257,10 +257,10 @@ main(int argc, char *argv[])
      XtToolkitInitialize();
      appContext = XtCreateApplicationContext();
      XtDisplayInitialize(appContext, dsp, ProgramName, ProgramName,
-			 NULL, 0, &dummyArgc, dummyArgv);
+			 nullptr, 0, &dummyArgc, dummyArgv);
      shellWidget = XtAppCreateShell(ProgramName, ProgramName,
 				    applicationShellWidgetClass,
-				    dsp, NULL, 0);
+				    dsp, nullptr, 0);
      DtAppInitialize(appContext, dsp, shellWidget,
 		     ProgramName, ProgramName);
 
@@ -283,8 +283,8 @@ main(int argc, char *argv[])
       for (window = 0; window < windows; window++)
       {
         Win[window].w = winprop[window];
-        Win[window].perscreen = NULL;
-        Win[window].data = NULL;
+        Win[window].perscreen = nullptr;
+        Win[window].data = nullptr;
       }
     }
     else
@@ -304,8 +304,8 @@ main(int argc, char *argv[])
                       WidthOfScreen(scr) - 100, HeightOfScreen(scr) - 100,
                       0, CopyFromParent, InputOutput, CopyFromParent,
                       CWBackPixel | CWEventMask, &xswa);
-      Win[0].perscreen = NULL;
-      Win[0].data = NULL;
+      Win[0].perscreen = nullptr;
+      Win[0].data = nullptr;
       XMapWindow(dsp, Win[0].w);
       XRaiseWindow(dsp, Win[0].w);
     }
@@ -325,7 +325,7 @@ main(int argc, char *argv[])
         }
       }
 
-      if (Win[window].perscreen == NULL)
+      if (Win[window].perscreen == nullptr)
       {
         Colormap cmap;
         perscreen *pscreen;

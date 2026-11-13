@@ -105,8 +105,8 @@ static void	subtract_attached_label(
 **************************************************************************/
 static Boolean       first_move = TRUE;
 static XRectangle    resize_rect;
-static ABObj	     xy_obj = NULL;
-static Widget	     xy_widget = NULL;
+static ABObj	     xy_obj = nullptr;
+static Widget	     xy_widget = nullptr;
 static int	     border_w = 0;
 
 /*************************************************************************
@@ -163,7 +163,7 @@ abobjP_find_resize_direction (
 
         XtVaGetValues((Widget)swobj->ui_handle,
                 XmNclipWindow,  &cwidget,
-                NULL);
+                nullptr);
 
 	if (cwidget)
 	    x_get_widget_rect(cwidget, &w_rect);
@@ -397,7 +397,7 @@ abobjP_resize_object_outline(
 	xy_obj = objxm_comp_get_subobj(obj, AB_CFG_POSITION_OBJ);
 	xy_widget = (Widget)xy_obj->ui_handle;
  
-        if (xy_widget == NULL)
+        if (xy_widget == nullptr)
         {
             if (util_get_verbosity() > 0)
                 fprintf(stderr,"abobjP_resize_object_outline: %s :no SIZE widget\n",
@@ -704,26 +704,26 @@ subtract_attached_label(
     lblObj = objxm_comp_get_subobj(obj, AB_CFG_LABEL_OBJ);
     lbl_widget = objxm_get_widget(lblObj);
 
-    if (lblObj != NULL && lbl_widget != NULL)
+    if (lblObj != nullptr && lbl_widget != nullptr)
     {
 	switch(obj_get_label_position(obj))
 	{
 	    case AB_CP_WEST:
-		XtVaGetValues(lbl_widget, XmNwidth, &lbl_w, NULL);
+		XtVaGetValues(lbl_widget, XmNwidth, &lbl_w, nullptr);
 		XtVaGetValues(XtParent(lbl_widget), /* RowColumn */
 			XmNmarginWidth, &margin,
 			XmNspacing,	&spacing,
-			NULL);
+			nullptr);
 
 		width = r_rect->width - lbl_w - (2*margin) - spacing;
 		r_rect->width = width;
 		break;
 	    case AB_CP_NORTH:
-                XtVaGetValues(lbl_widget, XmNheight, &lbl_h, NULL);
+                XtVaGetValues(lbl_widget, XmNheight, &lbl_h, nullptr);
                 XtVaGetValues(XtParent(lbl_widget), /* RowColumn */
                         XmNmarginHeight, &margin,
                         XmNspacing,      &spacing, 
-                        NULL); 
+                        nullptr); 
  
                 height = r_rect->height - lbl_h - (2*margin) - spacing; 
                 r_rect->height = height; 
@@ -942,7 +942,7 @@ undo_resize(
             XtVaGetValues(objxm_get_widget(obj),
 			XmNx,      &x,
 			XmNy,      &y,
-			NULL);
+			nullptr);
 	}
 	else
 	{

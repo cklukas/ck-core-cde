@@ -50,14 +50,14 @@
  * The name of the directory used for authentication and
  * for temporary logfiles.
  */
-XeString SPCD_Authentication_Dir = NULL;
+XeString SPCD_Authentication_Dir = nullptr;
 
 /*
  * This array contains the names of the logfiles the SPC daemon
  * creates.  Before the daemon exits, if any logfiles exist, they 
  * will be removed.
  */
-char **SPC_logfile_list = NULL;
+char **SPC_logfile_list = nullptr;
 
 /*----------------------------------------------------------------------+*/
 void noio_channel_class_init(object_clasp t)
@@ -177,14 +177,14 @@ static char * get_tmp_dir (
    _Xgetpwparams	pwd_buf;
    struct passwd *	pwd_ret;
 
-   if ((pwd_ret = _XGetpwuid(getuid(), pwd_buf)) == NULL)
-      return (NULL);
+   if ((pwd_ret = _XGetpwuid(getuid(), pwd_buf)) == nullptr)
+      return (nullptr);
 
    dir = malloc (strlen (pwd_ret->pw_dir) +
 		 strlen (SPCD_ENV_HOME_DIRECTORY) + 8);
 
    if (!dir)
-      return (NULL);
+      return (nullptr);
 
    (void) sprintf (dir, "%s/%s/tmp", pwd_ret->pw_dir, SPCD_ENV_HOME_DIRECTORY);
    if (is_dir_usable (dir))
@@ -199,7 +199,7 @@ static char * get_tmp_dir (
       return (dir);
 
    free(dir);
-   return (NULL);
+   return (nullptr);
 }
 
 /*
@@ -216,23 +216,23 @@ static char * make_logfile (
    char		*name;
    int		len, fd;
 
-   if (dir == NULL || *dir == '\0') {
+   if (dir == nullptr || *dir == '\0') {
       dir = getenv ("TMPDIR");
-      if (dir == NULL || *dir == '\0')
+      if (dir == nullptr || *dir == '\0')
 	 dir = P_tmpdir;
    }
 
    len = snprintf (path, sizeof (path), "%s/SPCXXXXXX", dir);
    if (len < 0 || (size_t) len >= sizeof (path))
-      return (NULL);
+      return (nullptr);
 
    fd = mkstemp (path);
    if (fd == -1)
-      return (NULL);
+      return (nullptr);
    (void) close (fd);
 
    name = strdup (path);
-   if (name == NULL)
+   if (name == nullptr)
       (void) unlink (path);
    return (name);
 }
@@ -255,7 +255,7 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
 {
   int i=0;
   SPC_Channel_Ptr result;
-  XeString temp_dir_name = NULL;
+  XeString temp_dir_name = nullptr;
   char **new_list;
   int create_failed = 0;
   
@@ -271,20 +271,20 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
      * The logfile is created here.  Its storage is freed in
      * remove_logfile_local_channel_object.
      */
-    if (SPCD_Authentication_Dir != NULL)
+    if (SPCD_Authentication_Dir != nullptr)
       channel->logfile=make_logfile(SPCD_Authentication_Dir);
     else {
       temp_dir_name = get_tmp_dir ();
       channel->logfile=make_logfile(temp_dir_name);
       free(temp_dir_name);
     }
-    create_failed = (channel->logfile == NULL);
+    create_failed = (channel->logfile == nullptr);
 
     /*
      * Save the name of the logfile so it can removed by the
      * daemon before it exits.
      */
-    if (SPC_logfile_list == NULL)
+    if (SPC_logfile_list == nullptr)
       /*
        * Create the first block plus the NULL terminator.
        */
@@ -293,31 +293,31 @@ SPC_Channel_Ptr open_noio_channel_object(SPC_Channel_Ptr channel,
       /*
        * Need to add this file to the end of the list.
        */
-      for (i = 0; SPC_logfile_list[i] != NULL; i++);
+      for (i = 0; SPC_logfile_list[i] != nullptr; i++);
       if ((size_t) i > SIZE_MAX / sizeof (char *) - 2)
-	new_list = NULL;
+	new_list = nullptr;
       else
 	new_list = (char **) realloc (SPC_logfile_list,
 				      (i+2) * sizeof (char *));
     }
-    if (new_list == NULL) {
+    if (new_list == nullptr) {
       /*
        * The list keeps its old, valid block.  Without an entry in it the
        * logfile name could not be removed by the daemon, so give the name
        * up and report the failure below.
        */
-      if (channel->logfile != NULL)
+      if (channel->logfile != nullptr)
 	(void) unlink (channel->logfile);
       free (channel->logfile);
-      channel->logfile = NULL;
+      channel->logfile = nullptr;
     }
     else {
       SPC_logfile_list = new_list;
-      if (channel->logfile != NULL)
+      if (channel->logfile != nullptr)
 	SPC_logfile_list[i] = strdup (channel->logfile);
       else
-	SPC_logfile_list[i] = (char *) NULL;
-      SPC_logfile_list[i+1] = (char *) NULL;
+	SPC_logfile_list[i] = (char *) nullptr;
+      SPC_logfile_list[i+1] = (char *) nullptr;
     }
     _DtSvcProcessUnlock();
 

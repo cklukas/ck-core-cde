@@ -169,29 +169,29 @@ IconDelete(
 {
 	IconInfo	*iconList;
 
-	if (iconPtr == NULL || drawArea == NULL) {
+	if (iconPtr == nullptr || drawArea == nullptr) {
 		return;
 	}
 
-	if (iconPtr->next != NULL) { /* iconPtr is not the tail of the list */
+	if (iconPtr->next != nullptr) { /* iconPtr is not the tail of the list */
 		iconPtr->next->prev = iconPtr->prev;
 	}
 
-	if (iconPtr->prev != NULL) { /* iconPtr is not the head of the list */
+	if (iconPtr->prev != nullptr) { /* iconPtr is not the head of the list */
 		iconPtr->prev->next = iconPtr->next;
 	}
-	if (iconPtr->next == NULL) { /* iconPtr is the tail of the list */
+	if (iconPtr->next == nullptr) { /* iconPtr is the tail of the list */
 		iconList = iconPtr->prev;
 	} else {
 		iconList = iconPtr->next;
 	}
 
-	while (iconList != NULL && iconList->prev != NULL) {
+	while (iconList != nullptr && iconList->prev != nullptr) {
 		iconList = iconList->prev;
 	}
 	iconFree(iconPtr);
 
-	XtVaSetValues(drawArea, XmNuserData, iconList, NULL);
+	XtVaSetValues(drawArea, XmNuserData, iconList, nullptr);
 }
 
 /*
@@ -204,14 +204,14 @@ IconDraw(
 	Widget		widget,
 	IconInfo	*iconPtr)
 {
-	static GC	graphicsContext = NULL;
+	static GC	graphicsContext = nullptr;
 	static XFontStruct *fontStruct;
 	Display		*display = XtDisplayOfObject(widget);
 	Window		window = XtWindow(widget);
 	int		screen = DefaultScreen(display);
 	XGCValues	gcValues;
 
-	if (graphicsContext == NULL) {
+	if (graphicsContext == nullptr) {
 		gcValues.foreground = BlackPixel(display, screen);
                 gcValues.background = WhitePixel(display, screen);
                 graphicsContext = XCreateGC(display, window,
@@ -235,15 +235,15 @@ IconDraw(
 	 * Draw icon name centered below icon
 	 */
 
-        if (iconPtr->name != NULL) {
+        if (iconPtr->name != nullptr) {
                 int             nameX, nameY;
                 int             direction, ascent, decent;
                 XCharStruct     overall;
                 Widget          xmScreen;
  
-                if (fontStruct == NULL) {
+                if (fontStruct == nullptr) {
                         xmScreen = XmGetXmScreen(XtScreen(widget));
-                        XtVaGetValues(xmScreen, XmNfont, &fontStruct, NULL);
+                        XtVaGetValues(xmScreen, XmNfont, &fontStruct, nullptr);
                 }
                 XTextExtents(fontStruct, iconPtr->name, strlen(iconPtr->name),
                         &direction, &ascent, &decent, &overall);
@@ -336,9 +336,9 @@ iconClearBitmap(
 	int		height)
 {
 	int		xx, yy;
-	static Pixmap	blankBitmap = NULL;
+	static Pixmap	blankBitmap = nullptr;
 
-	if (blankBitmap == NULL) {
+	if (blankBitmap == nullptr) {
 		blankBitmap = XCreateBitmapFromData(display, window,
 			(char *)blankBits, blankWidth, blankHeight);
 	}
@@ -368,7 +368,7 @@ iconDefaultBitmap(
 	static Pixmap	mask;
 
 	if (iconPart == IconMask) { /* create default mask */
-		if (mask == NULL) {
+		if (mask == nullptr) {
 			mask = XCreateBitmapFromData(display, window,
 			   (char *)iconMaskBits, iconMaskWidth, iconMaskHeight);
 		}
@@ -378,7 +378,7 @@ iconDefaultBitmap(
 		return mask;
 
 	} else { /* create default bitmap */
-		if (bitmap == NULL) {
+		if (bitmap == nullptr) {
 			bitmap = XCreateBitmapFromData(display, window,
 				(char *)iconBits, iconWidth, iconHeight);
 		}
@@ -400,7 +400,7 @@ iconFree(
 {
 	Display		*display = XtDisplayOfObject(iconPtr->dragIcon);
 
-	if (iconPtr == NULL) {
+	if (iconPtr == nullptr) {
 		return;
 	}
 
@@ -437,7 +437,7 @@ iconGetBitmap(
 	
 	*returnWidth = *returnHeight = 0;
 
-	if (iconPath != NULL) {
+	if (iconPath != nullptr) {
 
 		status = XReadBitmapFile(display, window, iconPath,
 			&width, &height, &bitmap, &xHot, &yHot);
@@ -449,7 +449,7 @@ iconGetBitmap(
 			printf(
 			    "Unable to read icon from bitmap file \"%s\".\n"
 			    "Using default icon bitmap.\n",
-			    iconPath, NULL);
+			    iconPath, nullptr);
 			bitmap = iconDefaultBitmap(display, window, iconPart,
 				returnWidth, returnHeight);
 		}
@@ -484,15 +484,15 @@ iconGetIconPath(
 		break;
 	case IconByData:
 		iconName = DtDtsBufferToAttributeValue(data, dataLen,
-			"ICON", NULL);
+			"ICON", nullptr);
 		break;
 	case IconByType:
-		iconName = DtDtsDataTypeToAttributeValue(data, "ICON", NULL);
+		iconName = DtDtsDataTypeToAttributeValue(data, "ICON", nullptr);
 		break;
 	default:
-		iconName = NULL;
+		iconName = nullptr;
 	}
-	if (iconName != NULL) {
+	if (iconName != nullptr) {
 		if (iconPart == IconMask) {
 			iconSuffix = ICON_MASK_SUFFIX;
 		} else {
@@ -527,7 +527,7 @@ iconMergeBitmaps(
 	int		screen = DefaultScreen(display);
 	Pixmap		mergedBitmap, blankBitmap;
 	int		extraX, extraY, width, height;
-	static GC	graphicsContext = NULL;
+	static GC	graphicsContext = nullptr;
 	XGCValues	gcValues;
 
 	extraX = width2 - width1 + xOffset + 1;
@@ -540,8 +540,8 @@ iconMergeBitmaps(
 
 	mergedBitmap = XCreatePixmap(display, window, width, height, 1);
 
-	if (graphicsContext == NULL) {
-                graphicsContext = XCreateGC(display, mergedBitmap, 0L, NULL);
+	if (graphicsContext == nullptr) {
+                graphicsContext = XCreateGC(display, mergedBitmap, 0L, nullptr);
 	}
 
 	if (clear) {

@@ -119,7 +119,7 @@ static char        *Includes[] =
     "<Dt/Help.h>",
     "<Dt/HelpQuickD.h>",
     "<Dt/HelpDialog.h>",
-    NULL,
+    nullptr,
 };
 
 /*
@@ -129,7 +129,7 @@ static char        *Session_Includes[] =
 {
     "<unistd.h>",
     "<Dt/Session.h>",
-    NULL,
+    nullptr,
 };
 
 /*
@@ -138,7 +138,7 @@ static char        *Session_Includes[] =
 static char        *I18n_Includes[] =
 {
     "<Dt/MsgCatP.h>",
-    NULL,
+    nullptr,
 };
 
 
@@ -160,14 +160,14 @@ abmfP_write_project_c_file(
 )
 {
     File                codeFile = genCodeInfo->code_file;
-    STRING              errmsg = NULL;
-    STRING             *p = NULL;
-    ABObj               win_obj = NULL;
-    ABObj               obj = NULL;
-    ABObj               action = NULL;
-    AB_ACTION_INFO     *action_info = NULL;
+    STRING              errmsg = nullptr;
+    STRING             *p = nullptr;
+    ABObj               win_obj = nullptr;
+    ABObj               obj = nullptr;
+    ABObj               action = nullptr;
+    AB_ACTION_INFO     *action_info = nullptr;
     AB_TRAVERSAL        trav;
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     int			numFuncsWritten = 0;
     char		projectName[1024];
     *projectName = 0;
@@ -217,7 +217,7 @@ abmfP_write_project_c_file(
      */
     numFuncsWritten = 0;
     for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-	 (action = trav_next(&trav)) != NULL;)
+	 (action = trav_next(&trav)) != nullptr;)
     {
 	action_info = &(action->info.action);
 
@@ -225,7 +225,7 @@ abmfP_write_project_c_file(
 	 * the action is a cross-module connection OR the action
 	 * is a shared connection, then write it out.
 	 */
-	if ( 	(abmfP_get_action_name(action) != NULL) && 
+	if ( 	(abmfP_get_action_name(action) != nullptr) && 
 		(   obj_is_cross_module(action) || 
 		    ( (!mfobj_has_flags(action, CGenFlagIsDuplicateDef))
 	              && (mfobj_has_flags(action, CGenFlagWriteDefToProjFile))
@@ -255,9 +255,9 @@ static int
 write_includes(GenCodeInfo genCodeInfo, ABObj project)
 {
     File	 codeFile = genCodeInfo->code_file;
-    STRING	 *p       = NULL;
+    STRING	 *p       = nullptr;
     AB_TRAVERSAL trav;
-    ABObj	 module   = NULL;
+    ABObj	 module   = nullptr;
     StringList   includes = strlist_create();
     char         buf[MAXPATHLEN+1];
     int          i;
@@ -268,7 +268,7 @@ write_includes(GenCodeInfo genCodeInfo, ABObj project)
     /* standard system includes */
     for (p = Includes; *p; p++)
     {
-	strlist_add_str(includes, *p, NULL);
+	strlist_add_str(includes, *p, nullptr);
     }
 
     /*
@@ -281,7 +281,7 @@ write_includes(GenCodeInfo genCodeInfo, ABObj project)
     {
         for (p = Session_Includes; *p; p++)
         {
-	    strlist_add_str(includes, *p, NULL);
+	    strlist_add_str(includes, *p, nullptr);
         }
     }
 
@@ -294,29 +294,29 @@ write_includes(GenCodeInfo genCodeInfo, ABObj project)
     {
         for (p = I18n_Includes; *p; p++)
         {
-	    strlist_add_str(includes, *p, NULL);
+	    strlist_add_str(includes, *p, nullptr);
         }
     }
 
     /* module includes */
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL; )
+	(module = trav_next(&trav)) != nullptr; )
     {
 	if (!obj_is_defined(module))
 	{
 	    continue;
 	}
 	sprintf(buf, "\"%s\"", abmfP_get_ui_header_file_name(module));
-	strlist_add_str(includes, buf, NULL);
+	strlist_add_str(includes, buf, nullptr);
     }
     trav_close(&trav);
 
     /* project include */
     sprintf(buf, "\"%s\"", abmfP_get_project_header_file_name(project));
-    strlist_add_str(includes, buf, NULL);
+    strlist_add_str(includes, buf, nullptr);
 
     sprintf(buf, "\"%s\"", abmfP_get_utils_header_file_name(project));
-    strlist_add_str(includes, buf, NULL);
+    strlist_add_str(includes, buf, nullptr);
 
     abmfP_get_connect_includes(includes, project);
 
@@ -324,7 +324,7 @@ write_includes(GenCodeInfo genCodeInfo, ABObj project)
     for (i = 0; i < strlist_get_num_strs(includes); ++i)
     {
 	abio_printf(codeFile, "#include %s\n",
-	    strlist_get_str(includes, i, NULL));
+	    strlist_get_str(includes, i, nullptr));
     }
     
     abio_puts(codeFile, nlstr);
@@ -456,18 +456,18 @@ write_map_window(
     ABObj	proj_root_window = abmfP_get_root_window(project);
     ABObjRec	showActionRec;
     ABObj	showAction = &showActionRec;
-    ABObj	winParent = NULL;
+    ABObj	winParent = nullptr;
     char	winParentName[1024];
-    obj_construct(showAction, AB_TYPE_ACTION, NULL);
+    obj_construct(showAction, AB_TYPE_ACTION, nullptr);
     *winParentName = 0;
 
-    obj_set_from(showAction, NULL);
+    obj_set_from(showAction, nullptr);
     obj_set_to(showAction, window);
     obj_set_func_type(showAction, AB_FUNC_BUILTIN);
     obj_set_func_builtin(showAction, AB_STDACT_SHOW);
 
     winParent = obj_get_win_parent(window);
-    if (winParent == NULL)
+    if (winParent == nullptr)
     {
 	sprintf(winParentName, "%s()", abmfP_lib_get_toplevel_widget->name);
     }
@@ -496,23 +496,23 @@ write_main(GenCodeInfo genCodeInfo, ABObj project)
 {
     int                 returnValue = 0;
     File                codeFile = genCodeInfo->code_file;
-    ABObj               window = NULL;
+    ABObj               window = nullptr;
     int                 initialized = FALSE;
-    ABObj		main_window= NULL;
+    ABObj		main_window= nullptr;
     AB_TRAVERSAL        trav;
     BOOL		mainWindowHasIcon = FALSE;
 
     abmfP_gencode_enter_func(genCodeInfo);
 
     main_window = abmfP_get_root_window(project);
-    if (main_window != NULL)
+    if (main_window != nullptr)
     {
 	mfobj_set_flags(main_window, CGenFlagTreatAsAppShell);
     }
     mainWindowHasIcon = 
-	(   (main_window != NULL) 
-	 && (   (obj_get_icon(main_window) != NULL)
-	     || (obj_get_icon_mask(main_window) != NULL)) );
+	(   (main_window != nullptr) 
+	 && (   (obj_get_icon(main_window) != nullptr)
+	     || (obj_get_icon_mask(main_window) != nullptr)) );
 
     abio_puts(codeFile, "\n\n");
     abio_puts(codeFile, abmfP_comment_begin);
@@ -648,7 +648,7 @@ write_main(GenCodeInfo genCodeInfo, ABObj project)
     abmfP_write_c_comment(genCodeInfo, FALSE, 
 	"Initialize all global variables.");
     for (trav_open(&trav, project, AB_TRAV_SALIENT_UI);
-	(window= trav_next(&trav)) != NULL; )
+	(window= trav_next(&trav)) != nullptr; )
     {
 	if (!obj_is_defined(window))
 	{
@@ -671,14 +671,14 @@ write_main(GenCodeInfo genCodeInfo, ABObj project)
     trav_close(&trav);
     abio_puts(codeFile, "\n");
 
-    if (main_window != NULL)
+    if (main_window != nullptr)
     {
 	abmfP_write_c_comment(genCodeInfo, FALSE,
 		"Set up the application's root window.");
         abio_printf(codeFile, "%s = toplevel;\n\n",
 	    abmfP_get_c_name_global(main_window));
 
-	if (obj_get_icon(main_window) != NULL)
+	if (obj_get_icon(main_window) != nullptr)
 	{
 	    abio_printf(codeFile, "%s(%s,\n", 
 		abmfP_lib_cvt_image_file_to_pixmap->name,
@@ -690,7 +690,7 @@ write_main(GenCodeInfo genCodeInfo, ABObj project)
 	    abio_outdent(codeFile);
 	    abmfP_icon_pixmap_var_has_value(genCodeInfo) = TRUE;
 	}
-	if (obj_get_icon_mask(main_window) != NULL)
+	if (obj_get_icon_mask(main_window) != nullptr)
 	{
 	    abio_printf(codeFile, "%s(%s,\n", 
 		abmfP_lib_cvt_image_file_to_pixmap->name,
@@ -719,7 +719,7 @@ write_main(GenCodeInfo genCodeInfo, ABObj project)
 	}
     }
     abio_puts(codeFile, nlstr);
-    if ((main_window != NULL) && (obj_is_initially_visible(main_window)))
+    if ((main_window != nullptr) && (obj_is_initially_visible(main_window)))
     {
 	/* ApplicationShell doesn't require "show" action for mapping */
         write_map_window(genCodeInfo, main_window, False);
@@ -731,7 +731,7 @@ write_main(GenCodeInfo genCodeInfo, ABObj project)
     abmfP_write_c_comment(genCodeInfo, FALSE,
         "Map any initially-visible windows");
     for (trav_open(&trav, project, AB_TRAV_WINDOWS);
-	 (window = trav_next(&trav)) != NULL;)
+	 (window = trav_next(&trav)) != nullptr;)
     {
 	if ( (window != main_window) && 	
 	     (obj_is_initially_visible(window)) &&
@@ -817,7 +817,7 @@ write_main_session_restore(
     {
         AB_TRAVERSAL	trav;
 	ABObj		action;
-	char		*ss_restore_CB_name = NULL;
+	char		*ss_restore_CB_name = nullptr;
 
         abio_puts(codeFile,"\n");
         abio_puts(codeFile,"if (dtb_app_resource_rec.session_file)\n");
@@ -831,7 +831,7 @@ write_main_session_restore(
 	 * action list
 	 */
     	for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-             (action = trav_next(&trav)) != NULL;)
+             (action = trav_next(&trav)) != nullptr;)
     	{
 	    switch(obj_get_when(action))
 	    {
@@ -888,14 +888,14 @@ write_main_register_save_yourself(
     {
         AB_TRAVERSAL	trav;
 	ABObj		action;
-	char		*ss_save_CB_name = NULL;
+	char		*ss_save_CB_name = nullptr;
 
 	/*
 	 * Search for session save callback in project
 	 * action list
 	 */
     	for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-             (action = trav_next(&trav)) != NULL;)
+             (action = trav_next(&trav)) != nullptr;)
     	{
 	    switch(obj_get_when(action))
 	    {
@@ -1069,7 +1069,7 @@ write_main_tooltalk_init(
     if (tt_level == AB_TOOLTALK_DESKTOP_ADVANCED)
     {
     	for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-             (action = trav_next(&trav)) != NULL;)
+             (action = trav_next(&trav)) != nullptr;)
     	{
 	    switch(obj_get_when(action))
 	    {

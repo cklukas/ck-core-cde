@@ -135,10 +135,10 @@ static LLIST   *append_blob (LLIST ** bloblink,
     LLIST          *new;
 
     new = austext_malloc (sizeof (struct or_blobrec) + sizeof (LLIST) + 4,
-	PROGNAME "36", NULL);
+	PROGNAME "36", nullptr);
     new->data = new + 1;	/* hop over exactly 1 LLIST
 				 * structure */
-    new->link = NULL;
+    new->link = nullptr;
     *bloblink = new;
     memcpy (new->data, blobrec, sizeof (struct or_blobrec));
     return new;
@@ -191,7 +191,7 @@ int             ve_initialize (void)
     good_dblk_count = 0;
     db = usrblk.dblist;
     lastlink = &usrblk.dblist;
-    while (db != NULL) {
+    while (db != nullptr) {
 	/*-------------- READ DBREC ----------------*/
 	if (debugging)
 	    fprintf (aa_stderr,
@@ -288,7 +288,7 @@ int             ve_initialize (void)
 	    if (debugging)
 		fprintf (aa_stderr, "--> opening '%s'\n", d9x_fname);
 
-	    if ((db->syofile = fopen (d9x_fname, open_mode)) == NULL) {
+	    if ((db->syofile = fopen (d9x_fname, open_mode)) == nullptr) {
 		sprintf (msgbuf, CATGETS(dtsearch_catd, MS_oeinit, 317,
 			default_cant_open_msg), PROGNAME "286",
 		    d9x_fname, errno, strerror (errno), OE_prodname, db->name);
@@ -300,7 +300,7 @@ int             ve_initialize (void)
 	    if (debugging)
 		fprintf (aa_stderr, "--> opening '%s'\n", d9x_fname);
 
-	    if ((db->syifile = fopen (d9x_fname, open_mode)) == NULL) {
+	    if ((db->syifile = fopen (d9x_fname, open_mode)) == nullptr) {
 		sprintf (msgbuf, CATGETS(dtsearch_catd, MS_oeinit, 317,
 			default_cant_open_msg), PROGNAME "298",
 		    d9x_fname, errno, strerror (errno), OE_prodname, db->name);
@@ -351,7 +351,7 @@ DELETE_DB:
     if (usrblk.abstrbufsz) {
 	max_abstrbufsz = usrblk.abstrbufsz;	/* save */
 	usrblk.abstrbuf = austext_malloc (usrblk.abstrbufsz + 4,
-	    PROGNAME "274", NULL);
+	    PROGNAME "274", nullptr);
 	if (debugging)
 	    fprintf (aa_stderr,
 		PROGNAME "282 Allocating %d bytes for usrblk.abstrbuf.\n",
@@ -373,7 +373,7 @@ DELETE_DB:
 void	ve_shutdown (void)
 {
     d_close ();
-    austext_exit_dbms = NULL;
+    austext_exit_dbms = nullptr;
     return;
 }
 
@@ -450,7 +450,7 @@ int             ve_append_notes (void)
      */
     i = 0;	/* loop counter */
     for (;;) {
-	if ((semaphore_file = fopen (OEF_notessem, "r+")) == NULL) {
+	if ((semaphore_file = fopen (OEF_notessem, "r+")) == nullptr) {
 	    sprintf (mybuf,
 		CATGETS(dtsearch_catd, MS_ve, 183,
 		    "%s Could not open user notes semaphore file '%s': %s.\n"),
@@ -495,7 +495,7 @@ int             ve_append_notes (void)
      */
     entirebufptr = austext_malloc
 	(DtSrMAX_DB_KEYSIZE + sizeof (mybuf) + strlen (usrblk.query),
-	PROGNAME "170", NULL);
+	PROGNAME "170", nullptr);
     sprintf (entirebufptr, "%s\n%s",
 	usrblk.dblk->name, usrblk.objrec.or_objkey);
 
@@ -542,7 +542,7 @@ int             ve_append_notes (void)
     }	/* end of vista append loop */
 
     /* Also append the note to the backup flat file */
-    if ((backup_file = fopen (OEF_notesnot, "at ")) == NULL) {
+    if ((backup_file = fopen (OEF_notesnot, "at ")) == nullptr) {
 	sprintf (mybuf,
 	    CATGETS(dtsearch_catd, MS_ve, 230,
 		"%s Could not open user notes backup file '%s': %s."),
@@ -594,7 +594,7 @@ static void     store_next_misc (
 {
     static enum { STORE_DONE, STORE_FZKEY, STORE_ABSTR }
 			store_state =	STORE_DONE;
-    static char		*targ =		NULL;
+    static char		*targ =		nullptr;
     static int		targlen =	0;
     static int		abstrsz =	0;
     int			i;
@@ -607,9 +607,9 @@ static void     store_next_misc (
 	     * if client didn't send back his astrbuf malloc a new
 	     * one 
 	     */
-	    if (usrblk.abstrbuf == NULL) {
+	    if (usrblk.abstrbuf == nullptr) {
 		usrblk.abstrbuf = austext_malloc (max_abstrbufsz + 4,
-		    PROGNAME "546", NULL);
+		    PROGNAME "546", nullptr);
 	    }
 	    targ = usrblk.abstrbuf;
 	    targlen = abstrsz - 1;	/* leave room for final \0 */
@@ -759,7 +759,7 @@ int             ve_getrec_dba (LLIST ** bloblist)
     /* Retrieve text blobs or set bloblist to NULL if no blobs */
     if (debugging)
 	fputs (PROGNAME "678 Retrieving blobs: ", aa_stderr);
-    *bloblist = NULL;
+    *bloblist = nullptr;
     lastlink = bloblist;
     FINDFM (PROGNAME "148", OR_OBJ_BLOBS, vistano);
     while (db_status == S_OKAY) {
@@ -777,7 +777,7 @@ int             ve_getrec_dba (LLIST ** bloblist)
 	FINDNM (PROGNAME "155", OR_OBJ_BLOBS, vistano);
     }
     if (debugging) {
-	if (*bloblist == NULL)
+	if (*bloblist == nullptr)
 	    fputs ("--> there are no blobs!\n", aa_stderr);
 	else
 	    fputc ('\n', aa_stderr);
@@ -807,8 +807,8 @@ int             ve_getrec_dba (LLIST ** bloblist)
 		    fputc ('n', aa_stderr);
 		new = austext_malloc (sizeof (mymiscrec.or_misc)
 			+ sizeof (LLIST) + 4,
-		    PROGNAME "543", NULL);
-		new->link = NULL;
+		    PROGNAME "543", nullptr);
+		new->link = nullptr;
 		/* hop over exactly 1 LLIST structure */
 		new->data = new + 1;
 		memcpy (new->data, mymiscrec.or_misc,
@@ -870,11 +870,11 @@ LLIST          *ve_getblobs (DB_ADDR dba, int vistano)
 
     /* Retrieve the opera header record */
     if (dba == NULL_DBA)
-	return NULL;
+	return nullptr;
     CRSET (PROGNAME "401", &dba, vistano);
     RECREAD (PROGNAME "402", &myobjbuf, vistano);
     if (db_status != S_OKAY)
-	return NULL;
+	return nullptr;
     swab_objrec (&myobjbuf, NTOH);
     OE_objsize = myobjbuf.or_objsize;
     if (debugging) {
@@ -888,7 +888,7 @@ LLIST          *ve_getblobs (DB_ADDR dba, int vistano)
     /* Retrieve blobs and append to end of growing list.
      * If no blobs, return NULL.
      */
-    bloblist = NULL;
+    bloblist = nullptr;
     lastlink = &bloblist;
     SETOR (PROGNAME "406", OR_OBJ_BLOBS, vistano);
     FINDFM (PROGNAME "407", OR_OBJ_BLOBS, vistano);
@@ -948,7 +948,7 @@ DB_ADDR         ve_reckey2dba (void)
     usrblk.retncode = OE_OK;
 
     /* If UI sent a null query ptr, reset it to empty string */
-    if (usrblk.query == NULL) {
+    if (usrblk.query == nullptr) {
 	null_query = TRUE;
 	usrblk.query = "";
 	DtSearchAddMessage (CATGETS(dtsearch_catd, MS_ve, 398,
@@ -987,7 +987,7 @@ WRAP_SOME_MORE:
 
     CRGET (PROGNAME "211", &dba, vistano);
     if (null_query)
-	usrblk.query = NULL;	/* restore */
+	usrblk.query = nullptr;	/* restore */
     return dba;
 }  /* ve_reckey2dba() */
 

@@ -291,7 +291,7 @@ write_text_defs(GenCodeInfo genCodeInfo, ABObj text)
         write_define_args_var(genCodeInfo, num_args);
         write_define_arg_counter_var(genCodeInfo);
     }
-    if(obj_get_initial_value_string(text) != NULL) {
+    if(obj_get_initial_value_string(text) != nullptr) {
 	write_define_value_str_var(genCodeInfo);
     }
     return 0;
@@ -355,7 +355,7 @@ static int
 write_combobox_defs(GenCodeInfo genCodeInfo, ABObj combobox)
 {
     File                codeFile = genCodeInfo->code_file;
-    ABObj               first_item = NULL;
+    ABObj               first_item = nullptr;
     int                 num_items = 0;
 
     num_items = obj_get_num_items(combobox);
@@ -377,10 +377,10 @@ static int
 write_drawing_area_defs(GenCodeInfo genCodeInfo, ABObj obj)
 {
     int		num_args = 0;
-    ABObj	scrollingObj = NULL;
+    ABObj	scrollingObj = nullptr;
 
     scrollingObj = objxm_comp_get_subobj(obj, AB_CFG_SCROLLING_OBJ);
-    if (scrollingObj == NULL)
+    if (scrollingObj == nullptr)
     {
 	return 0;
     }
@@ -395,8 +395,8 @@ static int
 write_list_defs(GenCodeInfo genCodeInfo, ABObj list)
 {
     File                codeFile = genCodeInfo->code_file;
-    ABObj               first_item = NULL;
-    ABObj		item= NULL;
+    ABObj               first_item = nullptr;
+    ABObj		item= nullptr;
     int                 num_args= 0;
     int                 num_items = 0;
 
@@ -432,8 +432,8 @@ static int
 write_spinbox_defs(GenCodeInfo genCodeInfo, ABObj spinbox)
 {
     File                codeFile = genCodeInfo->code_file;
-    ABObj               first_item = NULL;
-    ABObj               item= NULL;
+    ABObj               first_item = nullptr;
+    ABObj               item= nullptr;
     int                 num_args= 0;
     int                 num_items = 0;
 
@@ -486,19 +486,19 @@ write_window_defs(GenCodeInfo genCodeInfo, ABObj window)
 	}
     }
 
-    if (obj_get_icon(window) != NULL)
+    if (obj_get_icon(window) != nullptr)
     {
         write_define_icon_pixmap_var(genCodeInfo);
     }
-    if (obj_get_icon_mask(window) != NULL)
+    if (obj_get_icon_mask(window) != nullptr)
     {
         write_define_icon_mask_pixmap_var(genCodeInfo);
     }
-    if (obj_get_icon_label(window) != NULL)
+    if (obj_get_icon_label(window) != nullptr)
     {
         write_define_icon_name_str_var(genCodeInfo);
     }
-    if (obj_get_label(window) != NULL) 
+    if (obj_get_label(window) != nullptr) 
     {
 	write_define_title_str_var(genCodeInfo);
     }
@@ -518,13 +518,13 @@ write_file_chooser_defs(GenCodeInfo genCodeInfo, ABObj fchooser)
         write_define_arg_counter_var(genCodeInfo);
         write_define_args_var(genCodeInfo, num_args);
     }
-    if (obj_get_ok_label(fchooser) != NULL)
+    if (obj_get_ok_label(fchooser) != nullptr)
 	write_define_ok_label_xmstr_var(genCodeInfo);
 
-    if (obj_get_directory(fchooser) != NULL)
+    if (obj_get_directory(fchooser) != nullptr)
 	write_define_directory_xmstr_var(genCodeInfo);
 
-    if (obj_get_filter_pattern(fchooser) != NULL)
+    if (obj_get_filter_pattern(fchooser) != nullptr)
 	write_define_pattern_xmstr_var(genCodeInfo);
 
     return 0;
@@ -563,14 +563,14 @@ write_define_var(GenCodeInfo genCodeInfo,
 #define struct_field (*struct_field_ptr)
     File	codeFile = genCodeInfo->code_file;
 
-    if (struct_field != NULL)
+    if (struct_field != nullptr)
     {
 	return 0;
     }
 
     abio_printf(codeFile, "%s\t%s",
 		(type), istr_string(var));
-    if (value != NULL)
+    if (value != nullptr)
     {
 	abio_printf(codeFile, " = %s", value);
     }
@@ -589,7 +589,7 @@ write_define_args_var(GenCodeInfo genCodeInfo, int actual_num_args)
 {
     make_istr_var_name(varArgs, "args");
 
-    if (abmfP_args_var(genCodeInfo) == NULL)
+    if (abmfP_args_var(genCodeInfo) == nullptr)
     {
 	File	codeFile = genCodeInfo->code_file;
 	int	num_extra_args = 5;
@@ -865,10 +865,10 @@ write_items_names_array_def(GenCodeInfo genCodeInfo, ABObj obj)
     File                codeFile = genCodeInfo->code_file;
     int                 num_items= obj_get_num_items(obj);
     int			this_item_num = 0;
-    ABObj		item= NULL;
-    STRING		strings_array_var_name = NULL;
+    ABObj		item= nullptr;
+    STRING		strings_array_var_name = nullptr;
     AB_TRAVERSAL        trav;
-    STRING		widgetName = NULL;
+    STRING		widgetName = nullptr;
 
     if (num_items < 1)
     {
@@ -882,9 +882,9 @@ write_items_names_array_def(GenCodeInfo genCodeInfo, ABObj obj)
     abio_puts(codeFile, "{\n");
     abio_indent(codeFile);
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ), this_item_num = 0;
-	 (item = trav_next(&trav)) != NULL; ++this_item_num)
+	 (item = trav_next(&trav)) != nullptr; ++this_item_num)
     {
-	if ((widgetName = abmfP_get_widget_name(item)) == NULL)
+	if ((widgetName = abmfP_get_widget_name(item)) == nullptr)
 	{
 	    abio_printf(codeFile, "NULL");
 	}
@@ -916,8 +916,8 @@ write_items_strings_array_def(GenCodeInfo genCodeInfo, ABObj obj)
     File                codeFile = genCodeInfo->code_file;
     int                 num_items= obj_get_num_items(obj);
     int			this_item_num = 0;
-    ABObj		item= NULL;
-    STRING		label_array_var_name = NULL;
+    ABObj		item= nullptr;
+    STRING		label_array_var_name = nullptr;
     AB_TRAVERSAL        trav;
 
     if (num_items < 1)
@@ -932,9 +932,9 @@ write_items_strings_array_def(GenCodeInfo genCodeInfo, ABObj obj)
     abio_puts(codeFile, "{\n");
     abio_indent(codeFile);
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ), this_item_num = 0;
-	 (item = trav_next(&trav)) != NULL; ++this_item_num)
+	 (item = trav_next(&trav)) != nullptr; ++this_item_num)
     {
-	if (obj_get_label(item) == NULL)
+	if (obj_get_label(item) == nullptr)
 	{
 	    abio_printf(codeFile, "NULL");
 	    abmfP_label_array_has_nulls(genCodeInfo) = TRUE;
@@ -961,8 +961,8 @@ write_items_mnemonics_array_def(GenCodeInfo genCodeInfo, ABObj obj)
     File                codeFile = genCodeInfo->code_file;
     int                 num_items= obj_get_num_items(obj);
     int                 this_item_num = 0;
-    ABObj               item= NULL;
-    STRING		mnemonic_array_var_name = NULL;
+    ABObj               item= nullptr;
+    STRING		mnemonic_array_var_name = nullptr;
     STRING		mnemonic;
     AB_TRAVERSAL        trav;
 
@@ -978,9 +978,9 @@ write_items_mnemonics_array_def(GenCodeInfo genCodeInfo, ABObj obj)
     abio_puts(codeFile, "{\n");
     abio_indent(codeFile);
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ), this_item_num = 0;
-         (item = trav_next(&trav)) != NULL; ++this_item_num)
+         (item = trav_next(&trav)) != nullptr; ++this_item_num)
     {
-        if ((mnemonic = obj_get_mnemonic(item)) == NULL)
+        if ((mnemonic = obj_get_mnemonic(item)) == nullptr)
         {
             abio_printf(codeFile, "NULL");
         }
@@ -1012,7 +1012,7 @@ write_items_selected_array_def(GenCodeInfo genCodeInfo, ABObj obj)
 {
     File                codeFile = genCodeInfo->code_file;
     int                 num_items= obj_get_num_items(obj);
-    ABObj		item= NULL;
+    ABObj		item= nullptr;
     int			this_item_num = 0;
     AB_TRAVERSAL        trav;
 
@@ -1026,7 +1026,7 @@ write_items_selected_array_def(GenCodeInfo genCodeInfo, ABObj obj)
     abio_puts(codeFile, "{\n");
     abio_indent(codeFile);
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ), this_item_num = 0;
-	 (item = trav_next(&trav)) != NULL; ++this_item_num)
+	 (item = trav_next(&trav)) != nullptr; ++this_item_num)
     {
 	abio_printf(codeFile, "%s", 
 		obj_is_initially_selected(item)? "True":"False");
@@ -1054,7 +1054,7 @@ write_items_widgets_array_def(GenCodeInfo genCodeInfo, ABObj obj)
 {
     File                codeFile = genCodeInfo->code_file;
     int                 num_items= obj_get_num_items(obj);
-    ABObj		item= NULL;
+    ABObj		item= nullptr;
 
     if (num_items < 1)
     {
@@ -1146,19 +1146,19 @@ static int
 write_assign_local_vars_for_proc(GenCodeInfo genCodeInfo)
 {
     File	codeFile = genCodeInfo->code_file;
-    ABObj	activeObj = NULL;
+    ABObj	activeObj = nullptr;
     int		num_written = 0;
 
-    if (abmfP_create_obj(genCodeInfo) != NULL)
+    if (abmfP_create_obj(genCodeInfo) != nullptr)
     {
 	activeObj = abmfP_create_obj(genCodeInfo);
     }
-    else if (abmfP_ip_obj(genCodeInfo) != NULL)
+    else if (abmfP_ip_obj(genCodeInfo) != nullptr)
     {
 	activeObj = abmfP_ip_obj(genCodeInfo);
     }
 
-    if (   (abmfP_display_var(genCodeInfo) != NULL)
+    if (   (abmfP_display_var(genCodeInfo) != nullptr)
         && (!abmfP_display_var_has_value(genCodeInfo)) )
     {
 	++num_written;
@@ -1168,7 +1168,7 @@ write_assign_local_vars_for_proc(GenCodeInfo genCodeInfo)
 	abmfP_display_var_has_value(genCodeInfo) = TRUE;
     }
 
-    if (    (abmfP_drawable_var(genCodeInfo) != NULL)
+    if (    (abmfP_drawable_var(genCodeInfo) != nullptr)
 	&&  (!abmfP_drawable_var_has_value(genCodeInfo)) )
     {
 	++num_written;

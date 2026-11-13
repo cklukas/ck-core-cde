@@ -53,7 +53,7 @@ typedef struct {
   SbInputId			except_id;
 } SPC_Callback_Struct;
 
-static SPC_Callback_Struct **SPC_Fd_Mapping = NULL;
+static SPC_Callback_Struct **SPC_Fd_Mapping = nullptr;
 
 #define SPC_LOOKUP_FD_MAPPING(fd)   SPC_Fd_Mapping[(fd)]
 
@@ -65,10 +65,10 @@ static int SPC_AddInput(int 			source,
 		 SbInputId	 		id)
 /*-----------------------------------------------------------------------+*/
 {
-  SPC_Callback_Struct *structptr = NULL;
+  SPC_Callback_Struct *structptr = nullptr;
 
   _DtSvcProcessLock();
-  if (SPC_Fd_Mapping == NULL) {
+  if (SPC_Fd_Mapping == nullptr) {
     SPC_Fd_Mapping = (SPC_Callback_Struct **) 
 	             XeMalloc (FD_SETSIZE * sizeof (SPC_Callback_Struct *));
     memset(SPC_Fd_Mapping, 0, FD_SETSIZE * sizeof(SPC_Callback_Struct *));
@@ -106,10 +106,10 @@ static SbInputId SPC_RemoveInput(int 			 source,
 			  SPC_Callback_Condition condition)
 /*-----------------------------------------------------------------------+*/
 {
-  SPC_Callback_Struct *structptr = NULL;
+  SPC_Callback_Struct *structptr = nullptr;
   
   _DtSvcProcessLock();
-  if (SPC_Fd_Mapping == NULL) {
+  if (SPC_Fd_Mapping == nullptr) {
     SPC_Fd_Mapping = (SPC_Callback_Struct **) 
 		     XeMalloc (FD_SETSIZE * sizeof (SPC_Callback_Struct *));
     memset(SPC_Fd_Mapping, 0, FD_SETSIZE * sizeof(SPC_Callback_Struct *));
@@ -145,7 +145,7 @@ SPC_Select(void )
     /* Use a function pointer so we don't have explict dependancy */
     /* on libXe.a						    */
     /* ---------------------------------------------------------- */
-    if (SbMainLoopUntil_hookfn == NULL)
+    if (SbMainLoopUntil_hookfn == nullptr)
       (void) fprintf (stderr, "Error: SbMainLoopUntil = NULL\n");
     else
       (*SbMainLoopUntil_hookfn)(&spc_xe_termination_flag);
@@ -185,7 +185,7 @@ void SPC_XtBreak(void)
   _DtSvcProcessLock();
   if(!spc_xe_termination_flag) {
      spc_xe_termination_flag = TRUE;
-     if (SbBreakMainLoop_hookfn == NULL)
+     if (SbBreakMainLoop_hookfn == nullptr)
        (void) fprintf (stderr, "Error: SbBreakMainLoop = NULL\n");
      else
        (*SbBreakMainLoop_hookfn)();      
@@ -211,7 +211,7 @@ void SPC_XtAddInput(SPC_Channel_Ptr channel,
   case SPC_Terminator:
   case SPC_Client:
     /* fprintf(stderr, "SPC add input/terminator for %d\n", fd); */
-    if (SbAddInput_hookfn == NULL)
+    if (SbAddInput_hookfn == nullptr)
       (void) fprintf (stderr, "Error: SbAddInput = NULL\n");
     else
       id = (*SbAddInput_hookfn)(fd, handler, channel);
@@ -219,7 +219,7 @@ void SPC_XtAddInput(SPC_Channel_Ptr channel,
     
   case SPC_Exception:
     /* fprintf(stderr, "SPC add exception for %d\n", fd); */
-    if (SbAddException_hookfn == NULL)
+    if (SbAddException_hookfn == nullptr)
       (void) fprintf (stderr, "Error: SbAddException = NULL\n");
     else
       id = (*SbAddException_hookfn)(fd, handler, channel);
@@ -243,7 +243,7 @@ void SPC_XtRemoveInput(int *id_addr,
     case SPC_Terminator:
     case SPC_Client:
       /* fprintf(stderr, "SPC remove input/terminator\n"); */
-      if (SbRemoveInput_hookfn == NULL)
+      if (SbRemoveInput_hookfn == nullptr)
         (void) fprintf (stderr, "Error: SbRemoveInput = NULL\n");
       else
         (*SbRemoveInput_hookfn)(SPC_RemoveInput(*id_addr, condition));
@@ -251,7 +251,7 @@ void SPC_XtRemoveInput(int *id_addr,
       
     case SPC_Exception:
       /* fprintf(stderr, "SPC remove exception"); */
-      if (SbRemoveException_hookfn == NULL)
+      if (SbRemoveException_hookfn == nullptr)
         (void) fprintf (stderr, "Error: SbRemoveException = NULL\n");
       else
         (*SbRemoveException_hookfn)(SPC_RemoveInput(*id_addr, condition));

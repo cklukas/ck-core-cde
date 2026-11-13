@@ -57,24 +57,24 @@ typedef void (*SbInputCallbackProc)(void *data, int *fd, SbInputId *id);
 SbInputId (*SbAddInput_hookfn) (
 	int fd, 
 	SbInputCallbackProc proc, 
-	void* data) = NULL;
+	void* data) = nullptr;
 
 SbInputId (*SbAddException_hookfn) (
 	int fd, 
 	SbInputCallbackProc proc, 
-	void* data) = NULL;
+	void* data) = nullptr;
 
 void  (*SbRemoveInput_hookfn) (
-	SbInputId id) = NULL;
+	SbInputId id) = nullptr;
 
 void  (*SbRemoveException_hookfn) (
-	SbInputId id) = NULL;
+	SbInputId id) = nullptr;
 
 void  (*SbMainLoopUntil_hookfn) (
-	Boolean *flag) = NULL;
+	Boolean *flag) = nullptr;
 
 void  (*SbBreakMainLoop_hookfn) (
-	void) = NULL;
+	void) = nullptr;
 
 /* spcd calls this guy */
 

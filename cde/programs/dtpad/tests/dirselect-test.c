@@ -31,7 +31,7 @@ exact(size_t size)
 {
     char *p = malloc(size);
 
-    if (p == NULL) {
+    if (p == nullptr) {
 	fprintf(stderr, "out of memory\n");
 	exit(2);
     }
@@ -178,7 +178,7 @@ test_default_directory(void)
     char *cwd = exact(BUF_SIZE);
     size_t len;
 
-    CHECK(getcwd(cwd, BUF_SIZE) != NULL, "the test can read its directory");
+    CHECK(getcwd(cwd, BUF_SIZE) != nullptr, "the test can read its directory");
     DirSelectDefault(buf, BUF_SIZE);
     len = strlen(buf);
     CHECK(len > 0 && buf[len - 1] == '/', "the default directory ends in a slash");

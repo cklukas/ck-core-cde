@@ -412,7 +412,7 @@ XmConfigInfoRec button_config_rec = {
     /* xmunconfig	*/  simple_unconfig,
     /* get_config_obj   */  simple_get_config_obj,
     /* set_args         */  simple_set_args,
-    /* post_instantiate */  NULL,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_button,
 };
 
@@ -457,7 +457,7 @@ XmConfigInfoRec layer_config_rec = {
     /* xmunconfig       */  layer_unconfig,
     /* get_config_obj   */  layer_get_config_obj,
     /* set_args         */  layer_set_args,
-    /* post_instantiate */  NULL,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_layers,
 };
 
@@ -466,7 +466,7 @@ XmConfigInfoRec group_config_rec = {
     /* xmunconfig       */  group_unconfig,
     /* get_config_obj   */  container_get_config_obj,
     /* set_args         */  group_set_args,
-    /* post_instantiate */  NULL,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_group,
 };
 
@@ -493,7 +493,7 @@ XmConfigInfoRec label_config_rec = {
     /* xmunconfig	*/  simple_unconfig,
     /* get_config_obj   */  simple_get_config_obj,
     /* set_args         */  simple_set_args,
-    /* post_instantiate */  NULL,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_label,
 };
 
@@ -520,7 +520,7 @@ XmConfigInfoRec menu_config_rec = {
     /* xmunconfig	*/  menu_unconfig,
     /* get_config_obj   */  menu_get_config_obj,
     /* set_args         */  menu_set_args,
-    /* post_instantiate */  NULL,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_menu,
 };
 
@@ -538,7 +538,7 @@ XmConfigInfoRec separator_config_rec = {
     /* xmunconfig	*/  simple_unconfig,
     /* get_config_obj   */  separator_get_config_obj,
     /* set_args         */  separator_set_args,
-    /* post_instantiate */  NULL,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_separator,
 };
 
@@ -565,7 +565,7 @@ XmConfigInfoRec textf_config_rec = {
     /* xmunconfig	*/  textf_unconfig,
     /* get_config_obj   */  textf_get_config_obj,
     /* set_args         */  textf_set_args,
-    /* post_instantiate */  NULL,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_text_field,
 };
 
@@ -574,7 +574,7 @@ XmConfigInfoRec textp_config_rec = {
     /* xmunconfig	*/  pane_unconfig,
     /* get_config_obj   */  pane_get_config_obj,
     /* set_args         */  textp_set_args,
-    /* post_instantiate */  NULL,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_text_pane,
 };
 
@@ -583,7 +583,7 @@ XmConfigInfoRec scale_config_rec = {
     /* xmunconfig	*/  scale_unconfig,
     /* get_config_obj   */  scale_get_config_obj,
     /* set_args         */  scale_set_args,
-    /* post_instantiate */  NULL,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_scale,
 };
 
@@ -600,15 +600,15 @@ XmConfigInfoRec panedwin_config_rec = {
     /* xmconfig         */  simple_xmconfig,
     /* xmunconfig       */  simple_unconfig,
     /* get_config_obj   */  panedwin_get_config_obj,
-    /* set_args         */  NULL,
-    /* post_instantiate */  NULL,
+    /* set_args         */  nullptr,
+    /* post_instantiate */  nullptr,
     /* is_a_test        */  obj_is_paned_win,
 };
 
 
 static BOOL	init_done = FALSE;
 
-Widget		ObjxmP_toplevel = NULL;
+Widget		ObjxmP_toplevel = nullptr;
 int		ObjxmP_visual_depth = 0;
 
 /*************************************************************************
@@ -630,8 +630,8 @@ objxm_init(
    if (!init_done)
    {
 	ObjxmP_toplevel = toplevel;
-	if (toplevel != NULL)
-	    XtVaGetValues(toplevel, XmNdepth, &ObjxmP_visual_depth, NULL);
+	if (toplevel != nullptr)
+	    XtVaGetValues(toplevel, XmNdepth, &ObjxmP_visual_depth, nullptr);
 
 	objxm_strs_init();
 
@@ -658,7 +658,7 @@ objxm_init(
    	objxm_register_config_info(&file_chooser_config_rec);
    	objxm_register_config_info(&panedwin_config_rec);
 
-	obj_add_destroy_callback(objxmP_destroy, NULL);
+	obj_add_destroy_callback(objxmP_destroy, nullptr);
 
    	init_done = TRUE;
    }
@@ -678,7 +678,7 @@ xmconfig_window_select_area(
     ABObj	msgobj, modobj, selobj;
 
     /* Create MessageArea SubObj */
-    msgobj  = obj_create(AB_TYPE_LABEL, NULL);
+    msgobj  = obj_create(AB_TYPE_LABEL, nullptr);
     msgobj->part_of = winobj;
     obj_append_child(parentobj, msgobj);
     obj_set_class_name(msgobj, _xmForm);
@@ -687,7 +687,7 @@ xmconfig_window_select_area(
 	ab_ident_from_name_and_label(obj_get_name(winobj),"status_area"));
 
     /* Create StatusArea SubObj inside MessageArea */
-    modobj = obj_create(AB_TYPE_LABEL, NULL);
+    modobj = obj_create(AB_TYPE_LABEL, nullptr);
     modobj->part_of = winobj;
     obj_append_child(msgobj, modobj);
     obj_set_unique_name(modobj,
@@ -698,7 +698,7 @@ xmconfig_window_select_area(
     obj_set_flag(modobj, NoCodeGenFlag);
 
     /* Create Select-Status SubObj inside MessageArea*/
-    selobj = obj_create(AB_TYPE_LABEL, NULL);
+    selobj = obj_create(AB_TYPE_LABEL, nullptr);
     selobj->part_of = winobj;
     obj_append_child(msgobj, selobj);
     obj_set_label(selobj, SELECT_OBJ_KEY); /* Key for identifying */
@@ -759,12 +759,12 @@ make_pane_fixed_height(
     /* If a child is specified, it's height takes preference,
      * else the "height" parameter is used.
      */
-    if (child != NULL)
+    if (child != nullptr)
     {
-	if (child->ui_handle != NULL)
+	if (child->ui_handle != nullptr)
     	    XtVaGetValues((Widget)child->ui_handle,
                             XmNheight,      &hgt,
-                            NULL);
+                            nullptr);
 	else
 	    return -1;
     }
@@ -815,7 +815,7 @@ objxm_comp_mainwin_get_area(
     int 	i;
 
     if (!obj_is_base_win(obj))
-        return NULL;
+        return nullptr;
 
     if (obj_has_flag(obj, XmConfiguredFlag))
     {
@@ -833,7 +833,7 @@ objxm_comp_mainwin_get_area(
 	    obj_get_subtype(child) == area_type)
 	    return child;
     }
-    return NULL;
+    return nullptr;
 }
 
 static int
@@ -853,19 +853,19 @@ mainwin_xmconfig(
 	obj_set_class_name(obj, _topLevelShell);
 
     /* Create PanedWindow SubObj (used for BUILD MODE ONLY) */
-    pwobj = obj_create(AB_TYPE_CONTAINER, NULL);
+    pwobj = obj_create(AB_TYPE_CONTAINER, nullptr);
     pwobj->part_of = obj;
     obj_set_class_name(pwobj, _xmPanedWindow);
     obj_set_flag(pwobj, NoCodeGenFlag);
 
     /* Create MainWindow SubObj */
-    mwobj = obj_create(AB_TYPE_CONTAINER, NULL);
+    mwobj = obj_create(AB_TYPE_CONTAINER, nullptr);
     mwobj->part_of = obj;
     obj_set_class_name(mwobj, _xmMainWindow);
 
     /* If Window has a Menubar child, reparent it */
     menubar = objxm_comp_mainwin_get_area(obj, AB_CONT_MENU_BAR);
-    if (menubar != NULL)
+    if (menubar != nullptr)
     {
         obj_unparent(menubar);
         obj_insert_child(mwobj, menubar, 0);
@@ -873,21 +873,21 @@ mainwin_xmconfig(
 
     /* If Window has a Toolbar child, reparent it */
     toolbar = objxm_comp_mainwin_get_area(obj, AB_CONT_TOOL_BAR);
-    if (toolbar != NULL)
+    if (toolbar != nullptr)
     {
         obj_unparent(toolbar);
         obj_append_child(mwobj, toolbar);
     }
 
     /* Create WorkArea SubObj */
-    workobj = obj_create(AB_TYPE_CONTAINER, NULL);
+    workobj = obj_create(AB_TYPE_CONTAINER, nullptr);
     workobj->part_of = obj;
     obj_append_child(mwobj, workobj);
     obj_set_class_name(workobj, _xmForm);
 
     /* If Window has a Footer child, reparent it */
     footer = objxm_comp_mainwin_get_area(obj, AB_CONT_FOOTER);
-    if (footer != NULL)
+    if (footer != nullptr)
     {
         obj_unparent(footer);
         obj_append_child(mwobj, footer);
@@ -929,13 +929,13 @@ mainwin_unconfig(
     toolbar = objxm_comp_mainwin_get_area(obj, AB_CONT_TOOL_BAR);
     footer  = objxm_comp_mainwin_get_area(obj, AB_CONT_FOOTER);
 
-    if (menubar != NULL)
+    if (menubar != nullptr)
 	obj_reparent(menubar, obj);
 
-    if (toolbar != NULL)
+    if (toolbar != nullptr)
 	obj_reparent(toolbar, obj);
 
-    if (footer != NULL)
+    if (footer != nullptr)
 	obj_reparent(footer, obj);
 
     /* Move all other Children to RootObj */
@@ -952,8 +952,8 @@ mainwin_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
-    ABObj workobj = NULL;
+    ABObj cfg_obj = nullptr;
+    ABObj workobj = nullptr;
     ABObj pwobj, mwobj, msgobj, child;
     int   i, num_children;
 
@@ -1003,12 +1003,12 @@ mainwin_get_config_obj(
         case AB_CFG_MENU_OBJ:
         case AB_CFG_BORDER_OBJ:
 	case AB_CFG_SCROLLBAR_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
 
         default:
 	    util_dprintf(1, "mainwin_get_config_obj: unknown type\n");
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
     }
 
     return(cfg_obj);
@@ -1033,7 +1033,7 @@ mainwin_set_args(
     /* Shell Resources */
     objxm_comp_set_icon_args(obj, ctype);
 
-    if ((label = obj_get_label(obj)) != NULL)
+    if ((label = obj_get_label(obj)) != nullptr)
         objxm_obj_set_ui_arg(shobj, AB_ARG_STRING, XmNtitle, label);
 
     objxm_obj_set_ui_arg(shobj, AB_ARG_BOOLEAN, XmNallowShellResize, TRUE);
@@ -1078,7 +1078,7 @@ mainwin_post_inst(
 	util_dprintf(3,"MANAGING %s\n", obj_get_name(workobj));
 	XtVaSetValues(objxm_get_widget(mwobj),
 		XmNworkWindow,	objxm_get_widget(workobj),
-		NULL);
+		nullptr);
     }
     else
     {
@@ -1105,7 +1105,7 @@ objxm_comp_custdlg_get_area(
     int         i;
 
     if (!obj_is_popup_win(obj))
-        return NULL;
+        return nullptr;
 
     if (obj_has_flag(obj, XmConfiguredFlag))
     {
@@ -1123,7 +1123,7 @@ objxm_comp_custdlg_get_area(
             obj_get_subtype(child) == area_type)
             return child;
     }
-    return NULL;
+    return nullptr;
 
 }
 static int
@@ -1133,7 +1133,7 @@ custdlg_xmconfig(
 {
     ABObj    		bbobj, pwobj, workobj;
     ABObj		button_panel, footer;
-    ABObj		apobj = NULL;
+    ABObj		apobj = nullptr;
     STRING		name;
 
     /* DialogShell */
@@ -1141,29 +1141,29 @@ custdlg_xmconfig(
     obj_set_class_name(obj, _xmDialogShell);
 
     /* Dialog-Form */
-    bbobj = obj_create(AB_TYPE_CONTAINER, NULL);
+    bbobj = obj_create(AB_TYPE_CONTAINER, nullptr);
     bbobj->part_of = obj;
     obj_set_class_name(bbobj, _xmForm);
 
     /* Create PanedWindow SubObj */
-    pwobj = obj_create(AB_TYPE_CONTAINER, NULL);
+    pwobj = obj_create(AB_TYPE_CONTAINER, nullptr);
     pwobj->part_of = obj;
     obj_set_class_name(pwobj, _xmPanedWindow);
 
     /* Create WorkArea SubObj */
-    workobj = obj_create(AB_TYPE_CONTAINER, NULL);
+    workobj = obj_create(AB_TYPE_CONTAINER, nullptr);
     workobj->part_of = obj;
     obj_append_child(pwobj, workobj);
     obj_set_class_name(workobj, _xmForm);
 
     /* Look to see if it has an Button Panel child */
     button_panel = objxm_comp_custdlg_get_area(obj, AB_CONT_BUTTON_PANEL);
-    if (button_panel != NULL)
+    if (button_panel != nullptr)
 	obj_reparent(button_panel, pwobj);
 
     /* Look to see if it has a footer child */
     footer = objxm_comp_custdlg_get_area(obj, AB_CONT_FOOTER);
-    if (footer != NULL)
+    if (footer != nullptr)
 	obj_reparent(footer, pwobj);
 
     /* Move any remaining children to be parented off WorkObj
@@ -1208,10 +1208,10 @@ custdlg_unconfig(
     button_panel = objxm_comp_custdlg_get_area(obj, AB_CONT_BUTTON_PANEL);
     footer  = objxm_comp_custdlg_get_area(obj, AB_CONT_FOOTER);
 
-    if (button_panel != NULL)
+    if (button_panel != nullptr)
         obj_reparent(button_panel, obj);
 
-    if (footer != NULL)
+    if (footer != nullptr)
         obj_reparent(footer, obj);
 
     /* Move all other Children to RootObj */
@@ -1229,10 +1229,10 @@ custdlg_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
-    ABObj workobj = NULL;
-    ABObj modobj = NULL;
-    ABObj selobj  = NULL;
+    ABObj cfg_obj = nullptr;
+    ABObj workobj = nullptr;
+    ABObj modobj = nullptr;
+    ABObj selobj  = nullptr;
     ABObj bbobj, pwobj, msgobj, child;
     int   i, num_children;
 
@@ -1287,12 +1287,12 @@ custdlg_get_config_obj(
         case AB_CFG_BORDER_OBJ:
 	case AB_CFG_MENU_OBJ:
 	case AB_CFG_SCROLLBAR_OBJ:
-	    cfg_obj = NULL;
+	    cfg_obj = nullptr;
 	    break;
 
 	default:
 	    util_dprintf(1, "custdlg_get_config_obj: unknown type\n");
-	    cfg_obj = NULL;
+	    cfg_obj = nullptr;
     }
     return(cfg_obj);
 }
@@ -1313,7 +1313,7 @@ custdlg_set_args(
     cgen_args = (ctype == OBJXM_CONFIG_CODEGEN? TRUE : FALSE);
 
     /* Shell Resources */
-    if ((label = obj_get_label(obj)) != NULL)
+    if ((label = obj_get_label(obj)) != nullptr)
         objxm_obj_set_ui_arg(shobj, AB_ARG_STRING, XmNtitle, label);
     objxm_obj_set_ui_arg(shobj, AB_ARG_BOOLEAN, XmNallowShellResize, TRUE);
 
@@ -1390,7 +1390,7 @@ simple_unconfig(
     ABObj	obj
 )
 {
-    ABObj	mr_obj = NULL;
+    ABObj	mr_obj = nullptr;
 
     /* Delete Menu-reference */
     objxm_comp_unconfig_menu_ref(obj);
@@ -1404,7 +1404,7 @@ simple_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
+    ABObj cfg_obj = nullptr;
 
     switch(type)
     {
@@ -1421,7 +1421,7 @@ simple_get_config_obj(
 
 	case AB_CFG_MENU_OBJ:
 	    /* Menu-Refs are the only possible children */
-	    cfg_obj = (obj_get_num_children(obj) > 0)? obj_get_child(obj, 0) : NULL;
+	    cfg_obj = (obj_get_num_children(obj) > 0)? obj_get_child(obj, 0) : nullptr;
 	    break;
         case AB_CFG_PARENT_OBJ:
 	case AB_CFG_SCROLLBAR_OBJ:
@@ -1468,7 +1468,7 @@ choice_xmconfig(
 {
     AB_CHOICE_TYPE type;
     ABObj       ch_obj, p_obj;
-    ABObj	lbl_obj = NULL;
+    ABObj	lbl_obj = nullptr;
     int         num_items;
 
     type = obj->info.choice.type;
@@ -1480,12 +1480,12 @@ choice_xmconfig(
     if (obj_has_label(obj))
     {
     	/* Create Label SubObj */
-    	lbl_obj = obj_create(AB_TYPE_LABEL, NULL);
+    	lbl_obj = obj_create(AB_TYPE_LABEL, nullptr);
     	lbl_obj->part_of = obj;
     	obj_set_class_name(lbl_obj, _xmLabel);
 
     	/* Create Choice SubObj */
-    	ch_obj = obj_create(AB_TYPE_CHOICE, NULL);
+    	ch_obj = obj_create(AB_TYPE_CHOICE, nullptr);
     	ch_obj->part_of = obj;
     	obj_set_class_name(ch_obj, _xmRowColumn);
     }
@@ -1497,7 +1497,7 @@ choice_xmconfig(
     {
         /* Create Option PulldownMenu SubObj */
 	/* NOTE: Menu must be FIRST child */
-        p_obj = obj_create(AB_TYPE_CHOICE, NULL);
+        p_obj = obj_create(AB_TYPE_CHOICE, nullptr);
         p_obj->part_of = obj;
         obj_set_class_name(p_obj, _xmPulldownMenu);
     }
@@ -1533,7 +1533,7 @@ choice_unconfig(
 )
 {
     ABObj	lbl_obj, ch_obj;
-    ABObj	m_obj = NULL;
+    ABObj	m_obj = nullptr;
 
     if (obj_get_subtype(obj) == AB_CHOICE_OPTION_MENU)
 	m_obj = obj_get_child(obj, 0);
@@ -1564,7 +1564,7 @@ choice_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
+    ABObj cfg_obj = nullptr;
     AB_CHOICE_TYPE choice_type;
     BOOL	   has_label = TRUE;
 
@@ -1595,7 +1595,7 @@ choice_get_config_obj(
 	    if (has_label)
             	cfg_obj = obj_get_child(obj, choice_type == AB_CHOICE_OPTION_MENU? 1: 0);
 	    else
-		cfg_obj = NULL;
+		cfg_obj = nullptr;
             break;
         case AB_CFG_POSITION_OBJ:
         case AB_CFG_SELECT_OBJ:
@@ -1608,7 +1608,7 @@ choice_get_config_obj(
         case AB_CFG_STATUS_OBJ:
         case AB_CFG_MENU_OBJ:
         case AB_CFG_BORDER_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
         default:
 	    util_dprintf(1, "choice_get_config_obj: unsupported config-type\n");
@@ -1706,8 +1706,8 @@ choice_post_inst(
 	chobj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ);
 	widget = objxm_get_widget(chobj);
 
-	XtVaGetValues(widget, XmNx, &x, NULL);
-	XtVaSetValues(widget, XmNx, x-6, NULL);
+	XtVaGetValues(widget, XmNx, &x, nullptr);
+	XtVaSetValues(widget, XmNx, x-6, nullptr);
     }
     return 0;
 
@@ -1727,7 +1727,7 @@ cpanel_xmconfig(
     ABObj       panel_obj;
 
     /* Configure for border-frame */
-    if ((panel_obj = objxm_comp_config_border_frame(obj)) == NULL)
+    if ((panel_obj = objxm_comp_config_border_frame(obj)) == nullptr)
 	panel_obj = obj;
 
     /* Configure for Menu */
@@ -1744,7 +1744,7 @@ cpanel_unconfig(
     ABObj       obj
 )
 {
-    ABObj       mr_obj = NULL;
+    ABObj       mr_obj = nullptr;
 
     /* Delete Menu-reference first */
     objxm_comp_unconfig_menu_ref(obj);
@@ -1784,7 +1784,7 @@ cpanel_set_args(
 	    parent = obj_get_root(obj_get_parent(obj));
 	    if (obj_is_popup_win(parent))
 	    {
-		if (objxm_comp_custdlg_get_area(parent, AB_CONT_BUTTON_PANEL) != NULL)
+		if (objxm_comp_custdlg_get_area(parent, AB_CONT_BUTTON_PANEL) != nullptr)
 		    objxm_obj_set_ui_arg(xy_obj, AB_ARG_INT, XmNpositionIndex, 2);
 		else
 		    objxm_obj_set_ui_arg(xy_obj, AB_ARG_INT, XmNpositionIndex, 1);
@@ -1849,7 +1849,7 @@ cpanel_post_inst(
 		    util_dprintf(3, "MANAGING %s\n", obj_get_name(obj));
 		    XtVaSetValues(objxm_get_widget(mwobj),
 			XmNmessageWindow,	objxm_get_widget(obj),
-			NULL);
+			nullptr);
 		}
 		else
 		{
@@ -1866,7 +1866,7 @@ cpanel_post_inst(
 		 * let the routine query its widget's size.
 		 */
 		make_pane_fixed_height(obj, height == -1?
-			objxm_comp_get_subobj(obj, AB_CFG_SIZE_OBJ) : NULL,
+			objxm_comp_get_subobj(obj, AB_CFG_SIZE_OBJ) : nullptr,
 			height, 0);
 	    }
  	    break;
@@ -1883,7 +1883,7 @@ cpanel_post_inst(
 		XtVaSetValues(objxm_get_widget(mwobj),
 			XmNcommandWindow,	objxm_get_widget(obj),
 			XmNcommandWindowLocation, XmCOMMAND_ABOVE_WORKSPACE,
-			NULL);
+			nullptr);
 	    }
 	    else
 	    {
@@ -1910,9 +1910,9 @@ container_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
-    ABObj mr_obj  = NULL;
-    ABObj b_obj = NULL;
+    ABObj cfg_obj = nullptr;
+    ABObj mr_obj  = nullptr;
+    ABObj b_obj = nullptr;
 
     mr_obj = get_menu_ref(obj);
 
@@ -1949,11 +1949,11 @@ container_get_config_obj(
 	case AB_CFG_SCROLLBAR_OBJ:
 	case AB_CFG_SCROLLING_OBJ:
         case AB_CFG_STATUS_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
         default:
 	    util_dprintf(1, "container_get_config_obj: unknown type\n");
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
     }
 
     return(cfg_obj);
@@ -2023,12 +2023,12 @@ layer_get_config_obj(
         case AB_CFG_SCROLLBAR_OBJ:
         case AB_CFG_SCROLLING_OBJ:
         case AB_CFG_STATUS_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
 
         default:
             util_dprintf(1, "layer_get_config_obj: unknown type\n");
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
     }
     return cfg_obj;
 }
@@ -2059,7 +2059,7 @@ group_xmconfig(
     ABObj       panel_obj;
 
     /* Configure for border-frame */
-    if ((panel_obj = objxm_comp_config_border_frame(obj)) == NULL)
+    if ((panel_obj = objxm_comp_config_border_frame(obj)) == nullptr)
 	panel_obj = obj;
 
     obj_set_class_name(panel_obj, _xmForm);
@@ -2075,7 +2075,7 @@ group_unconfig(
     ABObj       obj
 )
 {
-    ABObj       mr_obj = NULL;
+    ABObj       mr_obj = nullptr;
 
     /* Delete Menu-reference first */
     objxm_comp_unconfig_menu_ref(obj);
@@ -2194,7 +2194,7 @@ item_get_config_obj(
             break;
 	case AB_CFG_MENU_OBJ:
 	    /* Menu-refs are the only possible children */
-	    cfg_obj = (obj_get_num_children(obj) > 0)? obj_get_child(obj, 0) : NULL;
+	    cfg_obj = (obj_get_num_children(obj) > 0)? obj_get_child(obj, 0) : nullptr;
 	    break;
         case AB_CFG_BORDER_OBJ:
 	case AB_CFG_DND_OBJ:
@@ -2202,11 +2202,11 @@ item_get_config_obj(
 	case AB_CFG_SCROLLBAR_OBJ:
 	case AB_CFG_SCROLLING_OBJ:
         case AB_CFG_STATUS_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
         default:
 	    util_dprintf(1, "item_get_config_obj: unknown config-type\n");
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
     }
     return(cfg_obj);
 }
@@ -2237,13 +2237,13 @@ item_set_args(
 		    obj_is_initially_selected(i_obj));
     }
 
-    if ((mnemonic = obj_get_mnemonic(obj)) != NULL)
+    if ((mnemonic = obj_get_mnemonic(obj)) != nullptr)
     {
 	objxm_obj_set_ui_arg(i_obj, AB_ARG_MNEMONIC, XmNmnemonic,
 		ctype == OBJXM_CONFIG_BUILD? (XtArgVal)XStringToKeysym(mnemonic) :
 		(XtArgVal)istr_create(mnemonic));
     }
-    if ((accel = obj_get_accelerator(obj)) != NULL)
+    if ((accel = obj_get_accelerator(obj)) != nullptr)
     {
 	acceltext = objxm_accel_to_acceltext(accel);
 
@@ -2285,7 +2285,7 @@ pane_xmconfig(
     /* Configure for border-frame and set root_obj
      * to Obj directly under Frame
      */
-    if ((root_obj = objxm_comp_config_border_frame(obj)) == NULL)
+    if ((root_obj = objxm_comp_config_border_frame(obj)) == nullptr)
         root_obj = obj;
 
     if ( obj_has_hscrollbar(obj) || obj_has_vscrollbar(obj) )
@@ -2306,7 +2306,7 @@ pane_xmconfig(
         {
 	    ABObj	sbobj;
 
-            sbobj = obj_create(AB_TYPE_TERM_PANE, NULL);
+            sbobj = obj_create(AB_TYPE_TERM_PANE, nullptr);
             sbobj->part_of = obj;
             obj_set_class_name(sbobj, _xmScrollBar);
 	    obj_append_child(root_obj, sbobj);
@@ -2370,11 +2370,11 @@ pane_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj   = NULL;
+    ABObj cfg_obj   = nullptr;
     ABObj pane_obj  = obj;  /* Pane SubObj */
-    ABObj mr_obj    = NULL; /* Menu-ref SubObj */
-    ABObj sb_obj    = NULL; /* Scrollbar SubObj */
-    ABObj b_obj	    = NULL; /* Border SubObj */
+    ABObj mr_obj    = nullptr; /* Menu-ref SubObj */
+    ABObj sb_obj    = nullptr; /* Scrollbar SubObj */
+    ABObj b_obj	    = nullptr; /* Border SubObj */
 
     mr_obj = get_menu_ref(obj);
 
@@ -2432,7 +2432,7 @@ pane_get_config_obj(
 	case AB_CFG_PARENT_OBJ:
 	    if (obj_is_text_pane(obj) ||
 		obj_is_term_pane(obj))
-		cfg_obj = NULL;
+		cfg_obj = nullptr;
 	    else
 		cfg_obj = pane_obj;
 	    break;
@@ -2462,10 +2462,10 @@ drawp_set_args(
     OBJXM_CONFIG_TYPE ctype
 )
 {
-    ABObj	da_obj = NULL,  /* DrawArea SubObj */
-		sw_obj = NULL,  /* ScrolledWin SubObj */
-		xy_obj = NULL,	/* Position SubObj */
-		parent = NULL;  /* ABObj parent NOT config parent */
+    ABObj	da_obj = nullptr,  /* DrawArea SubObj */
+		sw_obj = nullptr,  /* ScrolledWin SubObj */
+		xy_obj = nullptr,	/* Position SubObj */
+		parent = nullptr;  /* ABObj parent NOT config parent */
 
     objxm_comp_set_border_args(obj, ctype);
 
@@ -2520,7 +2520,7 @@ drawp_post_inst(
 	gp_obj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ);
 	sw_obj = objxm_comp_get_subobj(obj, AB_CFG_SCROLLING_OBJ);
 
-	XmScrolledWindowSetAreas(objxm_get_widget(sw_obj), NULL, NULL,
+	XmScrolledWindowSetAreas(objxm_get_widget(sw_obj), nullptr, nullptr,
 		objxm_get_widget(gp_obj));
     }
     return 0;
@@ -2547,7 +2547,7 @@ termp_set_args(
     if ((value = obj_get_num_columns(obj)) > 0)
         objxm_obj_set_ui_arg(tp_obj, AB_ARG_INT, XmNcolumns, value);
 
-    if ((pstr = obj_get_process_string(obj)) != NULL)
+    if ((pstr = obj_get_process_string(obj)) != nullptr)
     	objxm_obj_set_ui_arg(tp_obj, AB_ARG_STRING, DtNsubprocessCmd, pstr);
 
     if (obj_has_vscrollbar(obj))
@@ -2664,7 +2664,7 @@ textp_set_args(
     objxm_obj_set_literal_ui_arg(tx_obj, ctype, XmNeditMode, XmMULTI_LINE_EDIT);
     objxm_obj_set_ui_arg(tx_obj, AB_ARG_BOOLEAN, XmNwordWrap, obj->info.text.word_wrap);
 
-    if ((strval = obj_get_initial_value_string(obj)) != NULL)
+    if ((strval = obj_get_initial_value_string(obj)) != nullptr)
 	objxm_obj_set_ui_arg(tx_obj, AB_ARG_STRING, XmNvalue, strval);
     else /* strval == NULL, make sure the text pane is clean */
 	if (ctype == OBJXM_CONFIG_BUILD)
@@ -2696,7 +2696,7 @@ list_xmconfig(
 )
 {
     ABObj       sw_obj, l_obj;
-    ABObj	lbl_obj = NULL;
+    ABObj	lbl_obj = nullptr;
 
     obj->part_of = obj;
 
@@ -2706,12 +2706,12 @@ list_xmconfig(
     	obj_set_class_name(obj, _xmRowColumn);
 
     	/* Create Label SubObj */
-    	lbl_obj = obj_create(AB_TYPE_LABEL, NULL);
+    	lbl_obj = obj_create(AB_TYPE_LABEL, nullptr);
     	lbl_obj->part_of = obj;
     	obj_set_class_name(lbl_obj, _xmLabel);
 
 	/* Create ScrolledWindow SubObj */
-	sw_obj = obj_create(AB_TYPE_LIST, NULL);
+	sw_obj = obj_create(AB_TYPE_LIST, nullptr);
 	sw_obj->part_of = obj;
     }
     else /* No Label: Set Container RootObj class */
@@ -2720,7 +2720,7 @@ list_xmconfig(
     obj_set_class_name(sw_obj, _xmScrolledWindow);
 
     /* Create List SubObj */
-    l_obj = obj_create(AB_TYPE_LIST, NULL);
+    l_obj = obj_create(AB_TYPE_LIST, nullptr);
     l_obj->part_of = obj;
     obj_set_class_name(l_obj, _xmList);
 
@@ -2728,7 +2728,7 @@ list_xmconfig(
     obj_move_children(l_obj, obj);
 
     /* Now that Items are moved, parent SubObjs from Root */
-    if (lbl_obj != NULL)
+    if (lbl_obj != nullptr)
     {
 	obj_append_child(obj, lbl_obj);
 	obj_set_unique_name(lbl_obj,
@@ -2754,8 +2754,8 @@ list_unconfig(
     ABObj	obj
 )
 {
-    ABObj	lbl_obj = NULL;
-    ABObj	sw_obj  = NULL;
+    ABObj	lbl_obj = nullptr;
+    ABObj	sw_obj  = nullptr;
     ABObj	l_obj;
 
     objxm_comp_unconfig_menu_ref(obj);
@@ -2790,11 +2790,11 @@ list_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
-    ABObj l_obj   = NULL;
-    ABObj lbl_obj = NULL;
-    ABObj sw_obj  = NULL;
-    ABObj mr_obj  = NULL;
+    ABObj cfg_obj = nullptr;
+    ABObj l_obj   = nullptr;
+    ABObj lbl_obj = nullptr;
+    ABObj sw_obj  = nullptr;
+    ABObj mr_obj  = nullptr;
     BOOL  has_label = FALSE;
 
     if (obj_has_label(obj))
@@ -2844,7 +2844,7 @@ list_get_config_obj(
 	case AB_CFG_SCROLLBAR_OBJ:
         case AB_CFG_STATUS_OBJ:
         case AB_CFG_BORDER_OBJ:
-	    cfg_obj = NULL;
+	    cfg_obj = nullptr;
 	    break;
         default:
 	    util_dprintf(1, "list_get_config_obj: unknown type\n");
@@ -2961,11 +2961,11 @@ menu_get_config_obj(
         case AB_CFG_STATUS_OBJ:
         case AB_CFG_MENU_OBJ:
         case AB_CFG_BORDER_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
 	    break;
         default:
 	    util_dprintf(1, "menu_get_config_obj: unknown type\n");
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
     }
     return(cfg_obj);
 }
@@ -3035,7 +3035,7 @@ menubar_post_inst(
         util_dprintf(3,"MANAGING %s\n", obj_get_name(obj));
 	XtVaSetValues(objxm_get_widget(mwobj),
 		XmNmenuBar,	objxm_get_widget(obj),
-		NULL);
+		nullptr);
     }
     else
     {
@@ -3044,7 +3044,7 @@ menubar_post_inst(
     }
 
     /* Find "Help" cascade button and set the resource on the menubar */
-    if ((help_item = obj_get_menubar_help_item(obj)) != NULL)
+    if ((help_item = obj_get_menubar_help_item(obj)) != nullptr)
     {
 	objxm_obj_set_widget_ui_arg(obj, ctype, XmNmenuHelpWidget, help_item);
 	obj_set_flag(obj, AttrChangedFlag);
@@ -3109,7 +3109,7 @@ textf_get_config_obj(
 	    if (has_label)
             	cfg_obj = obj_get_child(obj, 0);
 	    else
-		cfg_obj = NULL;
+		cfg_obj = nullptr;
             break;
         case AB_CFG_POSITION_OBJ:
         case AB_CFG_SELECT_OBJ:
@@ -3121,11 +3121,11 @@ textf_get_config_obj(
         case AB_CFG_STATUS_OBJ:
 	case AB_CFG_MENU_OBJ:
         case AB_CFG_BORDER_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
         default:
 	    util_dprintf(1, "textf_get_config_obj: unknown config-type\n");
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
     }
 
     return(cfg_obj);
@@ -3154,7 +3154,7 @@ textf_set_args(
     if ((value = obj_get_max_length(obj)) > 0)
 	objxm_obj_set_ui_arg(tf_obj, AB_ARG_INT, XmNmaxLength, value);
 
-    if ((valstr = obj_get_initial_value_string(obj)) != NULL)
+    if ((valstr = obj_get_initial_value_string(obj)) != nullptr)
 	objxm_obj_set_ui_arg(tf_obj, AB_ARG_STRING, XmNvalue, valstr);
     else /* valstr == NULL, make sure the text field is clean */
 	if (ctype == OBJXM_CONFIG_BUILD)
@@ -3174,7 +3174,7 @@ get_menu_ref(
     if (first_child && obj_is_menu_ref(first_child))
 	return first_child;
 
-    return NULL;
+    return nullptr;
 
 }
 
@@ -3190,7 +3190,7 @@ separator_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
+    ABObj cfg_obj = nullptr;
 
     switch(type)
     {
@@ -3274,7 +3274,7 @@ spin_box_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
+    ABObj cfg_obj = nullptr;
     BOOL  has_label = FALSE;
 
     if (obj_has_label(obj))
@@ -3291,7 +3291,7 @@ spin_box_get_config_obj(
             cfg_obj = has_label? obj_get_child(obj, 1) : obj;
             break;
         case AB_CFG_LABEL_OBJ:
-            cfg_obj = has_label? obj_get_child(obj, 0) : NULL;
+            cfg_obj = has_label? obj_get_child(obj, 0) : nullptr;
             break;
         case AB_CFG_POSITION_OBJ:
         case AB_CFG_SELECT_OBJ:
@@ -3303,7 +3303,7 @@ spin_box_get_config_obj(
         case AB_CFG_MENU_OBJ:
         case AB_CFG_BORDER_OBJ:
         case AB_CFG_MENU_PARENT_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
         default:
             util_dprintf(1, "spin_box_get_config_obj: unsupported config-type\n");
@@ -3399,7 +3399,7 @@ combo_box_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
+    ABObj cfg_obj = nullptr;
     BOOL  has_label = FALSE;
 
     if (obj_has_label(obj))
@@ -3417,7 +3417,7 @@ combo_box_get_config_obj(
             cfg_obj = has_label? obj_get_child(obj, 1) : obj;
             break;
         case AB_CFG_LABEL_OBJ:
-            cfg_obj = has_label? obj_get_child(obj, 0) : NULL;
+            cfg_obj = has_label? obj_get_child(obj, 0) : nullptr;
             break;
         case AB_CFG_POSITION_OBJ:
         case AB_CFG_SELECT_OBJ:
@@ -3429,7 +3429,7 @@ combo_box_get_config_obj(
         case AB_CFG_MENU_OBJ:
         case AB_CFG_BORDER_OBJ:
         case AB_CFG_MENU_PARENT_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
         default:
             util_dprintf(1, "combo_box_get_config_obj: unsupported config-type\n");
@@ -3510,7 +3510,7 @@ scale_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
+    ABObj cfg_obj = nullptr;
     BOOL  has_label = FALSE;
 
     if (obj_has_label(obj))
@@ -3527,7 +3527,7 @@ scale_get_config_obj(
             cfg_obj = has_label? obj_get_child(obj, 1) : obj;
             break;
         case AB_CFG_LABEL_OBJ:
-            cfg_obj = has_label? obj_get_child(obj, 0) : NULL;
+            cfg_obj = has_label? obj_get_child(obj, 0) : nullptr;
             break;
         case AB_CFG_POSITION_OBJ:
         case AB_CFG_SELECT_OBJ:
@@ -3541,12 +3541,12 @@ scale_get_config_obj(
         case AB_CFG_STATUS_OBJ:
         case AB_CFG_MENU_OBJ:
         case AB_CFG_BORDER_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
 
         default:
             util_dprintf(1, "scale_get_config_obj: unknown config-type\n");
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
     }
 
     return(cfg_obj);
@@ -3602,14 +3602,14 @@ fchooser_xmconfig(
 )
 {
     ABObj               pwobj, workobj;
-    ABObj               apobj = NULL;
+    ABObj               apobj = nullptr;
 
     /* DialogShell */
     obj->part_of = obj;
     obj_set_class_name(obj, _xmDialogShell);
 
     /* Create PanedWindow SubObj */
-    pwobj = obj_create(AB_TYPE_CONTAINER, NULL);
+    pwobj = obj_create(AB_TYPE_CONTAINER, nullptr);
     pwobj->part_of = obj;
     obj_set_class_name(pwobj, _xmPanedWindow);
     obj_set_flag(pwobj, NoCodeGenFlag);
@@ -3619,7 +3619,7 @@ fchooser_xmconfig(
      * of AB_toplevel in xm_instantiate_obj(), which we don't
      * want.
      */
-    workobj = obj_create(AB_TYPE_CONTAINER, NULL);
+    workobj = obj_create(AB_TYPE_CONTAINER, nullptr);
     workobj->part_of = obj;
     obj_append_child(pwobj, workobj);
     obj_set_class_name(workobj, _xmFileSelectionBox);
@@ -3654,9 +3654,9 @@ box_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
-    ABObj modobj = NULL;
-    ABObj selobj  = NULL;
+    ABObj cfg_obj = nullptr;
+    ABObj modobj = nullptr;
+    ABObj selobj  = nullptr;
     ABObj pwobj, msgobj, childobj;
 
     pwobj = obj_get_child(obj, 0);
@@ -3716,13 +3716,13 @@ box_get_config_obj(
         case AB_CFG_BORDER_OBJ:
         case AB_CFG_PARENT_OBJ:
         case AB_CFG_MENU_PARENT_OBJ:
-            cfg_obj = NULL;
+            cfg_obj = nullptr;
             break;
 
         default:
             if (util_get_verbosity() > 0)
                 fprintf(stderr,"box_get_config_obj: unsupported config-type\n");
-	    cfg_obj = NULL;
+	    cfg_obj = nullptr;
     }
 
     return(cfg_obj);
@@ -3736,7 +3736,7 @@ fchooser_set_args(
 )
 {
     AB_FILE_TYPE_MASK	ftm = AB_FILE_TYPE_MASK_UNDEF;
-    STRING		label = NULL, str = NULL;
+    STRING		label = nullptr, str = nullptr;
     ABObj	   	fsb_obj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ);
     ABObj	   	lbl_obj = objxm_comp_get_subobj(obj, AB_CFG_LABEL_OBJ);
     ABObj       	pwobj = objxm_comp_get_subobj(obj, AB_CFG_WINDOW_PW_OBJ);
@@ -3744,7 +3744,7 @@ fchooser_set_args(
     XtArgVal		valstr;
 
     /* Shell Resources */
-    if ((label = obj_get_label(obj)) != NULL)
+    if ((label = obj_get_label(obj)) != nullptr)
         objxm_obj_set_ui_arg(lbl_obj, AB_ARG_STRING, XmNtitle, label);
     objxm_obj_set_ui_arg(lbl_obj, AB_ARG_BOOLEAN, XmNallowShellResize, TRUE);
 
@@ -3821,9 +3821,9 @@ fchooser_post_inst(
     OBJXM_CONFIG_TYPE   ctype
 )
 {
-    Widget      dir_list = NULL,
-                files_list = NULL,
-		fselnbox = NULL;
+    Widget      dir_list = nullptr,
+                files_list = nullptr,
+		fselnbox = nullptr;
     ABObj       fsb_obj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ);
 
     if (ctype == OBJXM_CONFIG_BUILD)
@@ -3849,16 +3849,16 @@ clear_fchooser_fields(
     Widget      widget
 )
 {
-    WidgetList  children = NULL;
+    WidgetList  children = nullptr;
     Cardinal    numChild = (Cardinal) 0;
     int         i;
 
-    if (widget == NULL) return;
+    if (widget == nullptr) return;
 
     XtVaGetValues(widget,
                         XmNnumChildren, &numChild,
                         XmNchildren, &children,
-                NULL);
+                nullptr);
 
     for (i = 0; i < (int)numChild; i++)
     {
@@ -3884,7 +3884,7 @@ panedwin_get_config_obj(
     AB_CFG_OBJ_TYPE type
 )
 {
-    ABObj cfg_obj = NULL;
+    ABObj cfg_obj = nullptr;
 
     switch(type)
     {

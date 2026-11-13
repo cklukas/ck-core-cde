@@ -102,7 +102,7 @@ DtWsmGetWorkspaceList(
 	property = XmInternAtom(display, _XA_DT_WORKSPACE_LIST, False); 
 	length = BUFSIZ;
 
-	*ppWorkspaceList = NULL;
+	*ppWorkspaceList = nullptr;
 	if ((rcode=XGetWindowProperty(
 			display,
 			wmWindow,
@@ -126,7 +126,7 @@ DtWsmGetWorkspaceList(
 		{
 		    XFree ((char *)*ppWorkspaceList);
 		}
-		*ppWorkspaceList = NULL;
+		*ppWorkspaceList = nullptr;
 	    }
 	    else
 	    {

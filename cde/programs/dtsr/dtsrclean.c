@@ -130,9 +130,9 @@
 #define TERMINATE_LINE()   if(need_linefeed){fputc('\n',aa_stderr);need_linefeed=FALSE;}
 
 /*-------------------------- GLOBALS ----------------------------*/
-static char    *arg_dbname = NULL;
-static char    *arg_newpath = NULL;
-unsigned char  *bit_vector = NULL;
+static char    *arg_dbname = nullptr;
+static char    *arg_newpath = nullptr;
+unsigned char  *bit_vector = nullptr;
 static size_t   bytes_in = 0L;
 static size_t   corruption_count = 0L;
 static struct or_swordrec
@@ -146,9 +146,9 @@ static int      debug_mode = FALSE;
 static size_t   dot_count = 0L;
 char            fname_d99_new[1024];
 char            fname_d99_old[1024];
-FILE           *fp_d99_new = NULL;
-FILE           *fp_d99_old = NULL;
-static FILE    *frecids = NULL;
+FILE           *fp_d99_new = nullptr;
+FILE           *fp_d99_old = nullptr;
+static FILE    *frecids = nullptr;
 static int      is_valid_dba;
 static size_t   max_corruption = MAX_CORRUPTION;
 static int      normal_exitcode = 0;
@@ -237,7 +237,7 @@ static void     print_progress (char *label)
     long            seconds;
     int             compression;
 
-    seconds = time (NULL) - timestart;	/* total seconds elapsed */
+    seconds = time (nullptr) - timestart;	/* total seconds elapsed */
     if (seconds < 0L)
 	seconds = 0L;
 
@@ -366,7 +366,7 @@ static void     user_args_processor (int argc, char **argv)
 	    case 'v':
 		validation_mode = TRUE;
 		if (argptr[2] != '\0') {
-		    if ((frecids = fopen (argptr + 2, "w")) == NULL) {
+		    if ((frecids = fopen (argptr + 2, "w")) == nullptr) {
 			fprintf (aa_stderr,
 			    CATGETS(dtsearch_catd, MS_dtsrclean, 802,
 			    "%s Unable to open '%s' to output"
@@ -489,7 +489,7 @@ static void     open_all_files
                 (FILE ** fp, char *fname, char *mode, size_t * size, int *oops) {
     struct stat     fstatbuf;
 
-    if ((*fp = fopen (fname, mode)) == NULL) {
+    if ((*fp = fopen (fname, mode)) == nullptr) {
 	fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_dtsrclean, 439,
 	    "%s Can't open %s: %s\n"),
 	    PROGNAME"439", fname, strerror (errno));
@@ -979,12 +979,12 @@ int             main (int argc, char *argv[])
     char            fname_d22_old[1024];
     char            fname_d23_new[1024];
     char            fname_d23_old[1024];
-    FILE           *fp_d21_new = NULL;
-    FILE           *fp_d21_old = NULL;
-    FILE           *fp_d22_new = NULL;
-    FILE           *fp_d22_old = NULL;
-    FILE           *fp_d23_new = NULL;
-    FILE           *fp_d23_old = NULL;
+    FILE           *fp_d21_new = nullptr;
+    FILE           *fp_d21_old = nullptr;
+    FILE           *fp_d22_new = nullptr;
+    FILE           *fp_d22_old = nullptr;
+    FILE           *fp_d23_new = nullptr;
+    FILE           *fp_d23_old = nullptr;
     char            full_dbname_old[1024];
     char            full_dbname_new[1024];
     DtSrINT32	    max_bitvec = 0L;
@@ -1033,7 +1033,7 @@ int             main (int argc, char *argv[])
      */
     full_dbname_old[0] = '\0';
     dbfpath[0] = 0;
-    if ((ptr = getenv ("DBFPATH")) != NULL) {
+    if ((ptr = getenv ("DBFPATH")) != nullptr) {
 	if (*ptr == 0)
 	    fprintf (aa_stderr,
 		 CATGETS(dtsearch_catd, MS_dtsrclean, 12,
@@ -1108,19 +1108,19 @@ int             main (int argc, char *argv[])
      */
     if (!overlay_yes) {
 	oops = FALSE;	/* TRUE forces a user prompt */
-	if ((fp_d99_new = fopen (fname_d99_new, "r")) != NULL) {
+	if ((fp_d99_new = fopen (fname_d99_new, "r")) != nullptr) {
 	    fclose (fp_d99_new);
 	    oops = TRUE;
 	}
-	if ((fp_d21_new = fopen (fname_d21_new, "r")) != NULL) {
+	if ((fp_d21_new = fopen (fname_d21_new, "r")) != nullptr) {
 	    fclose (fp_d21_new);
 	    oops = TRUE;
 	}
-	if ((fp_d22_new = fopen (fname_d22_new, "r")) != NULL) {
+	if ((fp_d22_new = fopen (fname_d22_new, "r")) != nullptr) {
 	    fclose (fp_d22_new);
 	    oops = TRUE;
 	}
-	if ((fp_d23_new = fopen (fname_d23_new, "r")) != NULL) {
+	if ((fp_d23_new = fopen (fname_d23_new, "r")) != nullptr) {
 	    fclose (fp_d23_new);
 	    oops = TRUE;
 	}
@@ -1139,7 +1139,7 @@ int             main (int argc, char *argv[])
 		aa_stderr);
 
             *readbuf = '\0';
-            if(NULL == fgets (readbuf, sizeof(readbuf), stdin)) {
+            if(nullptr == fgets (readbuf, sizeof(readbuf), stdin)) {
 		  fprintf (aa_stderr, "Failed to read from stdin\n");
 		  end_of_job (2, SHOW_EXITCODE);
             }
@@ -1161,10 +1161,10 @@ int             main (int argc, char *argv[])
     open_all_files (&fp_d22_old, fname_d22_old, "rb", &size_d22_old, &oops);
     open_all_files (&fp_d23_old, fname_d23_old, "rb", &size_d23_old, &oops);
     open_all_files (&fp_d99_old, fname_d99_old, "rb", &size_d99_old, &oops);
-    open_all_files (&fp_d21_new, fname_d21_new, "wb", NULL, &oops);
-    open_all_files (&fp_d22_new, fname_d22_new, "wb", NULL, &oops);
-    open_all_files (&fp_d23_new, fname_d23_new, "wb", NULL, &oops);
-    open_all_files (&fp_d99_new, fname_d99_new, "wb", NULL, &oops);
+    open_all_files (&fp_d21_new, fname_d21_new, "wb", nullptr, &oops);
+    open_all_files (&fp_d22_new, fname_d22_new, "wb", nullptr, &oops);
+    open_all_files (&fp_d23_new, fname_d23_new, "wb", nullptr, &oops);
+    open_all_files (&fp_d99_new, fname_d99_new, "wb", nullptr, &oops);
 
     if (shutdown_now)
 	end_of_job (shutdown_now, SHOW_EXITCODE);
@@ -1182,8 +1182,8 @@ int             main (int argc, char *argv[])
     RENFILE (PROGNAME"1102", arg_dbname, OR_D21, fname_d21_new);
     RENFILE (PROGNAME"1104", arg_dbname, OR_D22, fname_d22_new);
     RENFILE (PROGNAME"1106", arg_dbname, OR_D23, fname_d23_new);
-    if (!austext_dopen (arg_dbname, (dbfpath[0] == 0) ? NULL : dbfpath,
-	    NULL, 0, &dbrec)) {
+    if (!austext_dopen (arg_dbname, (dbfpath[0] == 0) ? nullptr : dbfpath,
+	    nullptr, 0, &dbrec)) {
 	puts (DtSearchGetMessages ());
 	end_of_job (3, SHOW_EXITCODE);
     }
@@ -1214,7 +1214,7 @@ int             main (int argc, char *argv[])
 	 * possible d00 database address. 
 	 */
 	max_bitvec = (total_num_addrs >> 1) + 2;
-	if ((bit_vector = malloc ((size_t)max_bitvec + 64)) == NULL) {
+	if ((bit_vector = malloc ((size_t)max_bitvec + 64)) == nullptr) {
 	    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_dtsrclean, 465,
 		"%s WARNING: Can't allocate memory for bit vector.\n"
 		"  'Validate' mode switched off.\n"),

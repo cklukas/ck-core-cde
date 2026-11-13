@@ -131,7 +131,7 @@ char           *bmhcore (
     int		savechar;
     int		savechar2;
     unsigned char
-		*result = NULL;
+		*result = nullptr;
 
     /* Terminate pattern with a char we KNOW is not in text.
      * Note that this requires string to have room for \0 at end.
@@ -196,7 +196,7 @@ main ()
     size_t          fsize = 0L;
     char            fname[BUFSIZ+1];
     char            pattern[MAXPATHLEN+1];
-    char           *readbuf = NULL;
+    char           *readbuf = nullptr;
     char           *ptr;
 
 MAIN_LOOP:
@@ -207,7 +207,7 @@ MAIN_LOOP:
     if (strlen(fname) && fname[strlen(fname)-1] == '\n')
       fname[strlen(fname)-1] = '\0';
 
-    if ((f = fopen (fname, "r")) == NULL) {
+    if ((f = fopen (fname, "r")) == nullptr) {
 	printf ("Can't open '%s': %s\n", fname, strerror (errno));
 	goto MAIN_LOOP;
     }
@@ -215,10 +215,10 @@ MAIN_LOOP:
     fstat (fileno (f), &statbuf);
     if (fsize > statbuf.st_size) {
 	free (readbuf);
-	readbuf = NULL;
+	readbuf = nullptr;
     }
     fsize = statbuf.st_size;
-    if (readbuf == NULL)
+    if (readbuf == nullptr)
 	readbuf = malloc (fsize + 64L);
 
     fread (readbuf, fsize, 1L, f);
@@ -232,13 +232,13 @@ MAIN_LOOP:
       pattern[strlen(pattern)-1] = '\0';
 
     ptr = bmstrstr (readbuf, fsize, pattern, strlen (pattern));
-    if (ptr == NULL)
+    if (ptr == nullptr)
 	puts ("bmstrstr: Pattern not found.");
     else
 	printf ("bmstrstr: Pattern found at offset %ld.\n", ptr - readbuf);
 
     ptr = strstr (readbuf, pattern);
-    if (ptr == NULL)
+    if (ptr == nullptr)
 	puts ("strstr:   Pattern not found.");
     else
 	printf ("strstr:   Pattern found at offset %ld.\n", ptr - readbuf);

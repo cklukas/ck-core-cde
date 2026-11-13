@@ -177,7 +177,7 @@ main( int argc, char **argv )
      */
 
     progPath = strdup(argv[0]);
-    if (progPath == NULL)
+    if (progPath == nullptr)
 	NoMemoryExit (argv[0]);
 
     if (str = strrchr(progPath, '/'))
@@ -193,7 +193,7 @@ main( int argc, char **argv )
 	progName = progPath;
 	progPath = strdup("./");
     }
-    if (progName == NULL || progPath == NULL)
+    if (progName == nullptr || progPath == nullptr)
 	NoMemoryExit (argv[0]);
 
 
@@ -260,7 +260,7 @@ main( int argc, char **argv )
      * user via the Xservers file).
      */
      
-    if ( (p = getpwnam ("nobody")) != NULL) {
+    if ( (p = getpwnam ("nobody")) != nullptr) {
 	puser = *p;
     } else {
 	/*
@@ -353,7 +353,7 @@ ScanServers( void )
 
 #define NumTypes    (sizeof (acceptableTypes) / sizeof (acceptableTypes[0]))
 
-    if (servers == NULL)
+    if (servers == nullptr)
     {
 	/* the name does not lead to a file, and it is no command either */
 	LogError ((unsigned char *)"No servers file or command is configured\n");
@@ -362,7 +362,7 @@ ScanServers( void )
     if (servers[0] == '/')
     {
 	serversFile = fopen (servers, "r");
-	if (serversFile == NULL)
+	if (serversFile == nullptr)
  	{
 	    LogError(
 		ReadCatalog(MC_LOG_SET,MC_LOG_NO_SRVACC,MC_DEF_LOG_NO_SRVACC),
@@ -628,7 +628,7 @@ WaitForChild( void )
 #if defined(SVR4) || defined(__linux__)
 	   while ((pid = waitpid((pid_t) -1, &status, WNOHANG)) > 0 )
 #else
-	    while ((pid = wait3 (&status, WNOHANG, NULL)) > 0 )
+	    while ((pid = wait3 (&status, WNOHANG, nullptr)) > 0 )
 #endif
 		ProcessChildDeath(pid, status);
 
@@ -657,7 +657,7 @@ WaitForChild( void )
 	    BlockRequestSignals (&previous);
 	    if (!RequestPending ())
 		sigsuspend (&previous);
-	    sigprocmask (SIG_SETMASK, &previous, NULL);
+	    sigprocmask (SIG_SETMASK, &previous, nullptr);
 	    ChildReady = 0;
 	    while ((pid = waitpid ((pid_t) -1, &status, WNOHANG)) > 0)
 		ProcessChildDeath(pid, status);
@@ -931,7 +931,7 @@ StartDisplay(
     Debug ("StartDisplay(): %s\n", d->name);
 
     memset(&status, 0, sizeof(waitType));
-    if (d->authFile == NULL) 
+    if (d->authFile == nullptr) 
 	authFile_str = "NULL"; 
     else
 	authFile_str = d->authFile;
@@ -963,12 +963,12 @@ StartDisplay(
       LoadDisplayResources (d);
 
       /* The Xserver may NOT have been killed, so reuse the authFile.  */
-      if (NULL == d->authFile &&
+      if (nullptr == d->authFile &&
 	  0 < strlen(bkup) &&
 	  0 == strncmp(authDir, bkup, strlen(authDir)))
 	d->authFile= (char *) strdup(bkup);
 
-      if (d->authFile == NULL) 
+      if (d->authFile == nullptr) 
 	authFile_str = "NULL"; 
       else
 	authFile_str = d->authFile;
@@ -1008,7 +1008,7 @@ StartDisplay(
 	if (! d->gettyLine || strlen(d->gettyLine) == 0 ) {
 	    char *p;
 	    
-	    if ( (p = strchr(d->name, ':')) != NULL &&
+	    if ( (p = strchr(d->name, ':')) != nullptr &&
 		 (  strncmp(++p,"0",1) == 0 )) {
 
 		d->gettyLine  = (char *) malloc(8);
@@ -1080,7 +1080,7 @@ StartDisplay(
 	    SaveServerAuthorizations (d, d->authorizations, d->authNum);
     }
 
-    if (NULL == d->authFile)
+    if (nullptr == d->authFile)
       authFile_str = "NULL";
     else
       authFile_str = d->authFile;
@@ -1127,8 +1127,8 @@ StartDisplay(
 	    strncpy(p, d->name, sizeof(DisplayName) - 1);
 	    DisplayName[sizeof(DisplayName)-1] = '\0';
 	    
-	    if ( (s = strchr(p,':')) != NULL )
-		if ( (t = strchr(p,'.')) != NULL )
+	    if ( (s = strchr(p,':')) != nullptr )
+		if ( (t = strchr(p,'.')) != nullptr )
 		    strcpy(t,s);
 	}
 
@@ -1416,18 +1416,18 @@ SetTitle( char *name, char *ptr )
      *  remove domain qualifiers and screens from name...
      */
 
-    if ( (p = malloc(strlen(name) + 1)) == NULL) return 0;
+    if ( (p = malloc(strlen(name) + 1)) == nullptr) return 0;
     strcpy(p, name);
 
-    if ( (s = strchr(p,':')) == NULL ) {
+    if ( (s = strchr(p,':')) == nullptr ) {
 	free(p);
 	return 0;
     }
     
-    if ( (t = strchr(s,'.')) != NULL )
+    if ( (t = strchr(s,'.')) != nullptr )
 	*t = '\0';
 
-    if ( (t = strchr(p,'.')) != NULL )
+    if ( (t = strchr(p,'.')) != nullptr )
 	memmove(t, s, strlen(s) + 1);	/* the strings overlap */
     
     /*
@@ -1439,7 +1439,7 @@ SetTitle( char *name, char *ptr )
     length = strlen(s);
     
     t = strrchr(s, '/');
-    if ( (t != NULL) && ((t-s+1) >= (strlen(p) + 3)) ) {
+    if ( (t != nullptr) && ((t-s+1) >= (strlen(p) + 3)) ) {
 	t++;
 
 	memmove(s, t, strlen(t) + 1);		/* "program"			   */
@@ -1580,7 +1580,7 @@ GettyMessage( struct display *d, int msgnum )
 
     snprintf(buf, sizeof(buf), "/dev/%s", d->gettyLine);
     
-    if ( (tf = fopen (buf, "a")) != NULL) {
+    if ( (tf = fopen (buf, "a")) != nullptr) {
 	fprintf (tf, 
 	  "\r\n\r\n*****************************************************************************\r\n*\r\n");
 

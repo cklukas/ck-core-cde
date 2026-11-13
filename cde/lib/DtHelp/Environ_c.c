@@ -48,11 +48,11 @@
 char * _DtCliSrvGetDtUserSession(void)
 {
   char * envVar = getenv("DTUSERSESSION");
-  char * ret_envVar = NULL;
+  char * ret_envVar = nullptr;
 
   /* See if the environment variable exists */
 
-  if (envVar == NULL) {
+  if (envVar == nullptr) {
 
     /* It doesn't, so it needs to be constructed. Use LOGNAME, which
      * always seems to be set, and DISPLAY, which may or may not be
@@ -63,7 +63,7 @@ char * _DtCliSrvGetDtUserSession(void)
     char logname_local[8];
     char * logname = getenv("LOGNAME");
 
-    if (logname == NULL) {
+    if (logname == nullptr) {
       strcpy(logname_local,"generic");
       logname = logname_local;
     }
@@ -72,11 +72,11 @@ char * _DtCliSrvGetDtUserSession(void)
 
     {
       char   screen[BUFSIZ];
-      char * display = NULL;
+      char * display = nullptr;
       char * localDisplayVar = getenv("DISPLAY");
       int needsfree = 0;
 
-      if (localDisplayVar == NULL) {
+      if (localDisplayVar == nullptr) {
 
 	/* run uname to get the display name */
 
@@ -84,14 +84,14 @@ char * _DtCliSrvGetDtUserSession(void)
 	display = pipedata;
 
 	pp = popen("uname -n", "r");
-	if (NULL == pp) {
+	if (nullptr == pp) {
 	  perror("uname -n");
-	  return NULL;
+	  return nullptr;
 	}
 	*display = 0;
-	if(NULL == fgets(display, BUFSIZ, pp)) {
+	if(nullptr == fgets(display, BUFSIZ, pp)) {
 	   perror("fgets() failed to read");
-	   return NULL;	
+	   return nullptr;	
 	}
 	while (isspace(display[strlen(display)-1]))
 	  display[strlen(display)-1] = 0;

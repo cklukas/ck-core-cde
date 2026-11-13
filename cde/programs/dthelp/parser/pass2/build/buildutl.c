@@ -91,10 +91,10 @@ ruleinit() ;
 void ruleinit(void)
   {
     /* Reinitialize for next rule */
-    lhs = NULL ;
+    lhs = nullptr ;
     nextlhs = &lhs ;
     eltsinrule = 0 ;
-    plist = NULL ;
+    plist = nullptr ;
     pcount = 0 ;
     dellist(&bot.finals) ;
     dellist(&bot.allfinal) ;
@@ -110,7 +110,7 @@ void ruleinit(void)
 /* Rule end processing */
 void rulend(void)
   {
-    STATE *fsa = NULL ;
+    STATE *fsa = nullptr ;
     LOGICAL canbenull ;
     LHS *lhsp ;
     LHS *discard ;
@@ -143,7 +143,7 @@ void rulend(void)
       m_free((M_POINTER) discard, "lhs") ;
       }
     if (ruletree) freetree(ruletree) ;
-    ruletree = NULL ;
+    ruletree = nullptr ;
     ruleinit() ;
     }
 

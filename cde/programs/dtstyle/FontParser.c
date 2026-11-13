@@ -9,14 +9,14 @@
 static char *duplicate_field(const char *value)
 {
     if (!value || *value == '\0' || strcmp(value, "*") == 0)
-        return NULL;
+        return nullptr;
     return strdup(value);
 }
 
 static char *keep_field(const char *value)
 {
     if (!value)
-        return NULL;
+        return nullptr;
     return strdup(value);
 }
 
@@ -24,7 +24,7 @@ static int parse_size_field(const char *value)
 {
     if (!value || *value == '\0' || *value == '*')
         return 0;
-    char *endptr = NULL;
+    char *endptr = nullptr;
     long parsed = strtol(value, &endptr, 10);
     if (endptr == value)
         return 0;
@@ -136,7 +136,7 @@ static void set_field_value(FontDescriptor *descriptor, int index, const char *v
     if (!descriptor || index < 0 || index >= 14)
         return;
     free(descriptor->fields[index]);
-    descriptor->fields[index] = value ? strdup(value) : NULL;
+    descriptor->fields[index] = value ? strdup(value) : nullptr;
 }
 
 static void set_numeric_field(FontDescriptor *descriptor, int index, int value)
@@ -149,11 +149,11 @@ static void set_numeric_field(FontDescriptor *descriptor, int index, int value)
 FontDescriptor *ParseXLFD(const char *xlfd)
 {
     if (!xlfd)
-        return NULL;
+        return nullptr;
 
     char *copy = strdup(xlfd);
     if (!copy)
-        return NULL;
+        return nullptr;
 
     char *fields[14] = {0};
     char *p = copy;
@@ -168,23 +168,23 @@ FontDescriptor *ParseXLFD(const char *xlfd)
             p = next + 1;
         } else {
             fields[count++] = p;
-            p = NULL;
+            p = nullptr;
         }
     }
 
     if (count < 14) {
         free(copy);
-        return NULL;
+        return nullptr;
     }
 
     FontDescriptor *descriptor = calloc(1, sizeof(FontDescriptor));
     if (!descriptor) {
         free(copy);
-        return NULL;
+        return nullptr;
     }
 
     for (int i = 0; i < 14; i++)
-        descriptor->fields[i] = NULL;
+        descriptor->fields[i] = nullptr;
 
     descriptor->foundry = duplicate_field(fields[0]);
     descriptor->family = duplicate_field(fields[1]);
@@ -270,11 +270,11 @@ DuplicateFontDescriptor(
         const FontDescriptor *source )
 {
     if (!source)
-        return NULL;
+        return nullptr;
 
     FontDescriptor *copy = calloc(1, sizeof(FontDescriptor));
     if (!copy)
-        return NULL;
+        return nullptr;
 
     for (int i = 0; i < 14; i++) {
         copy->fields[i] = keep_field(source->fields[i]);

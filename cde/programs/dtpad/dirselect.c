@@ -56,7 +56,7 @@ DirSelectDefault(char *dst, size_t dstsize)
      * getcwd() may write the directory, with the NUL, into all of the room
      * that the mask and its separator leave free.
      */
-    if (getcwd(dst, dstsize - DIRSELECT_MASK_LEN - 1) != NULL) {
+    if (getcwd(dst, dstsize - DIRSELECT_MASK_LEN - 1) != nullptr) {
 	len = strlen(dst);
 	if (len > 0 && dst[len - 1] != '/') {
 	    dst[len] = '/';

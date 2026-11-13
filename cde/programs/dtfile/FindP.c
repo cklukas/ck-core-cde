@@ -127,7 +127,7 @@ ShowFindDialog(
 
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
 
    file_mgr_data = (FileMgrData *) dialog_data->data;
@@ -138,48 +138,48 @@ ShowFindDialog(
    find_data = (FindData *)dialog_data->data;
    find_data->file_mgr_data = file_mgr_data;
   
-   if(find_data->content != NULL && w != NULL)
+   if(find_data->content != nullptr && w != nullptr)
    {
       if(strcmp(find_data->content, "") != 0)
          XtFree(find_data->content);
-      find_data->content = NULL;
+      find_data->content = nullptr;
    }
 
-   if(find_data->filter != NULL && w != NULL)
+   if(find_data->filter != nullptr && w != nullptr)
    {
       XtFree(find_data->filter);
-      find_data->filter = NULL;
+      find_data->filter = nullptr;
    }
 
-   if(find_data->directories != NULL && w != NULL)
+   if(find_data->directories != nullptr && w != nullptr)
    {
       XtFree(find_data->directories);
-      find_data->directories = NULL;
+      find_data->directories = nullptr;
    }
 
-   if(w != NULL)
+   if(w != nullptr)
    {
       for (i = 0; i < find_data->num_matches; i++)
          XtFree (find_data->matches[i]);
 
       XtFree ((char *) find_data->matches);
 
-      find_data->matches = NULL;
+      find_data->matches = nullptr;
       find_data->num_matches = 0;
       find_data->selected_item = -1;
    }
 
-   _DtShowDialog (file_mgr_rec->shell, NULL,
+   _DtShowDialog (file_mgr_rec->shell, nullptr,
 	       (XtPointer)file_mgr_rec, file_mgr_data->find, 
-               NULL, (XtPointer)file_mgr_rec,
-	       FindClose, (XtPointer)file_mgr_rec, NULL, False, 
-               False, NULL, NULL);
+               nullptr, (XtPointer)file_mgr_rec,
+	       FindClose, (XtPointer)file_mgr_rec, nullptr, False, 
+               False, nullptr, nullptr);
 
    /* Save a ptr to file_mgr_rec in the find dialogs structure */
    find_rec = (FindRec *)_DtGetDialogInstance(file_mgr_data->find);
    find_rec->fileMgrRec = file_mgr_rec;
 
-   if(file_mgr_data->title != NULL &&
+   if(file_mgr_data->title != nullptr &&
                strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
    {
       tmpStr = (GETMESSAGE(15,46, "Find"));

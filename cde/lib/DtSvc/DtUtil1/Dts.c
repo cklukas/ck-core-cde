@@ -183,7 +183,7 @@ mb_char(const char *s)
 	if(mbtowc(&wc, s, MB_CUR_MAX) < 0)
 	{
 		/* leave the conversion state as it was before the bad byte */
-		(void)mbtowc(NULL, NULL, 0);
+		(void)mbtowc(nullptr, nullptr, 0);
 		return((wchar_t)(unsigned char)*s);
 	}
 	return(wc);
@@ -322,7 +322,7 @@ max_buf(size_t size, type_info_t *info)
 
 	if(size > (size_t)PTRDIFF_MAX)
 	{
-		return(NULL);
+		return(nullptr);
 	}
 	if(!info->mb)
 	{
@@ -331,7 +331,7 @@ max_buf(size_t size, type_info_t *info)
 		mb = (char *)calloc(new_size, 1);
 		if(!mb)
 		{
-			return(NULL);
+			return(nullptr);
 		}
 		info->mb = mb;
 		info->mb_size = new_size;
@@ -341,7 +341,7 @@ max_buf(size_t size, type_info_t *info)
 		mb = (char *)realloc(info->mb, size);
 		if(!mb)
 		{
-			return(NULL);
+			return(nullptr);
 		}
 		memset(mb + info->mb_size, 0, size - info->mb_size);
 		info->mb = mb;
@@ -543,8 +543,8 @@ cleanup(char *ot, type_info_t *info)
 				info->mmap_size_to_free) != 0)
 			{
 			    _DtSimpleError(
-					DtProgName, DtError, NULL,
-					"munmap", NULL);
+					DtProgName, DtError, nullptr,
+					"munmap", nullptr);
 			}
 			info->buffer = 0;
 			info->mmap_size_to_free = -1;
@@ -651,7 +651,7 @@ get_lstat(type_info_t *info)
 
 	if(!info->file_lstat)
 	{
-		if(NULL == info->file_path)
+		if(nullptr == info->file_path)
 		{
 			info->error = ENOENT;
 			info->file_lstat = 0;
@@ -685,7 +685,7 @@ get_stat(type_info_t *info)
 
 	if (!info->file_stat)
 	{
-		if(NULL == get_file_path(info))
+		if(nullptr == get_file_path(info))
 		{
 			info->error = ENOENT;
 			info->file_stat = 0;
@@ -904,7 +904,7 @@ get_buff(type_info_t *info)
 			if ((info->file_fd == -1) && (get_fd(info) == -1))
 			   return 0;
 			
-			mem = mmap(NULL, (size_t)size, PROT_READ, MAP_PRIVATE,
+			mem = mmap(nullptr, (size_t)size, PROT_READ, MAP_PRIVATE,
 				info->file_fd, 0);
 			if(mem != (char *)MAP_FAILED)
 			{
@@ -960,9 +960,9 @@ fprintf(stderr, "Load DataCriteria\n");
 		if(!dc_db)
 		{
 			_DtSimpleError(
-				DtProgName, DtError, NULL,
-				"No DataBase loaded\n", NULL);
-			return(NULL);
+				DtProgName, DtError, nullptr,
+				"No DataBase loaded\n", nullptr);
+			return(nullptr);
 		}
 	}
 #ifdef NO_MMAP
@@ -999,9 +999,9 @@ fprintf(stderr, "Load DataAttributes\n");
 		if(!da_db)
 		{
 			_DtSimpleError(
-				DtProgName, DtError, NULL,
-				"No DataBase loaded\n", NULL);
-			return(NULL);
+				DtProgName, DtError, nullptr,
+				"No DataBase loaded\n", nullptr);
+			return(nullptr);
 		}
 	}
 
@@ -1049,7 +1049,7 @@ type_content(char *attr, type_info_t *info)
 			const char *path;
 
 			c = _XStrtok(c, " \t\n", strtok_buf);
-			c = _XStrtok(NULL, " \t\n", strtok_buf);
+			c = _XStrtok(nullptr, " \t\n", strtok_buf);
 			path = get_file_path(info);
 			if(!c || !path)
 			{
@@ -1109,7 +1109,7 @@ type_content(char *attr, type_info_t *info)
 			c++;
 		}
 
-		offset = strtol(c, NULL, 10);
+		offset = strtol(c, nullptr, 10);
 		if(offset < 0)
 		{
 			/* not an offset a buffer could be indexed with */
@@ -1133,7 +1133,7 @@ type_content(char *attr, type_info_t *info)
 			free(attr);
 			return(0);
 		}
-		c = _XStrtok(NULL, " \t\n", strtok_buf);
+		c = _XStrtok(nullptr, " \t\n", strtok_buf);
 		if(!c)
 		{
 			/* an offset without a type */
@@ -1146,7 +1146,7 @@ type_content(char *attr, type_info_t *info)
 		{
 			int	cl;
 
-			c = _XStrtok(NULL, "\n", strtok_buf);
+			c = _XStrtok(nullptr, "\n", strtok_buf);
 			if(!c)
 			{
 				/* no string to compare with */
@@ -1171,7 +1171,7 @@ type_content(char *attr, type_info_t *info)
 			int	i = 0;
 
 			match = 0;
-			while(c = _XStrtok(NULL, "\t \n", strtok_buf))
+			while(c = _XStrtok(nullptr, "\t \n", strtok_buf))
 			{
 				if(s+i*sizeof(lv)+sizeof(lv) > avail)
 				{
@@ -1201,7 +1201,7 @@ type_content(char *attr, type_info_t *info)
 			const unsigned char *bufPtr;
 
 			match = 0;
-			for(i = 0;(c = _XStrtok(NULL, "\t \n", strtok_buf)); i++)
+			for(i = 0;(c = _XStrtok(nullptr, "\t \n", strtok_buf)); i++)
 			{
 				if(s+i*sizeof(lv)+sizeof(lv) > avail)
 				{
@@ -1234,7 +1234,7 @@ type_content(char *attr, type_info_t *info)
 			const unsigned char *bufPtr;
 
 			match = 0;
-			for(i = 0;(c = _XStrtok(NULL, "\t \n", strtok_buf)); i++)
+			for(i = 0;(c = _XStrtok(nullptr, "\t \n", strtok_buf)); i++)
 			{
 				if(s+i*sizeof(lv)+sizeof(lv) > avail)
 				{
@@ -1281,7 +1281,7 @@ dir_datatype_extent(const u_char *buff, int *start, int *end)
 	const u_char	*p = (const u_char *)strstr((const char *)buff,
 					DtDTS_DATA_ATTRIBUTES_NAME);
 
-	if(p == NULL)
+	if(p == nullptr)
 	{
 		return(0);
 	}
@@ -1526,7 +1526,7 @@ DtDtsDataToDataType(const char *fp,
 	int	atr_m = 0;
 	int	p_atr_m = 1;
 	int	c_atr_m = 1;
-	char	*ot = NULL;
+	char	*ot = nullptr;
 	char	*file;
 	char	*attr;
 	char	op;
@@ -1945,7 +1945,7 @@ append(char *old, char *add)
 		if(!new)
 		{
 			free(old);
-			return(NULL);
+			return(nullptr);
 		}
 	}
 	else
@@ -1953,7 +1953,7 @@ append(char *old, char *add)
 		new = malloc(strlen(add)+1);
 		if(!new)
 		{
-			return(NULL);
+			return(nullptr);
 		}
 		*new = '\0';
 	}
@@ -1987,15 +1987,15 @@ expand_shell(const char *attr, const char *in_pathname)
 
 	if(!attr)
 	{
-		return(NULL);
+		return(nullptr);
 	}
 	nattr = strdup(attr);
 	if(!nattr)
 	{
-		return(NULL);
+		return(nullptr);
 	}
 	srch = kept = nattr;
-	while((start = DtStrchr(srch, '`')) != NULL)
+	while((start = DtStrchr(srch, '`')) != nullptr)
 	{
 		char	*command;
 
@@ -2005,7 +2005,7 @@ expand_shell(const char *attr, const char *in_pathname)
 			srch = start + 1;
 			continue;
 		}
-		if((end = DtStrchr(&start[1], '`')) == NULL)
+		if((end = DtStrchr(&start[1], '`')) == nullptr)
 		{
 			/* no partner: the rest of the text stays as it is */
 			break;
@@ -2016,7 +2016,7 @@ expand_shell(const char *attr, const char *in_pathname)
 		if(!results)
 		{
 			free(nattr);
-			return(NULL);
+			return(nullptr);
 		}
 
 		command = expand_keywords(&start[1], in_pathname, 1);
@@ -2024,17 +2024,17 @@ expand_shell(const char *attr, const char *in_pathname)
 		{
 			free(nattr);
 			free(results);
-			return(NULL);
+			return(nullptr);
 		}
-		if((fd = popen(command, "r")) == NULL)
+		if((fd = popen(command, "r")) == nullptr)
 		{
 			_DtSimpleError(
-				DtProgName, DtError, NULL,
+				DtProgName, DtError, nullptr,
 				"%s", command);
 			free(command);
 			free(nattr);
 			free(results);
-			return(NULL);
+			return(nullptr);
 		}
 		free(command);
 
@@ -2050,7 +2050,7 @@ expand_shell(const char *attr, const char *in_pathname)
 			{
 				pclose(fd);
 				free(nattr);
-				return(NULL);
+				return(nullptr);
 			}
 			memset(buff, '\0', sizeof(buff));
 		}
@@ -2084,7 +2084,7 @@ expand_value(DtShmBoson attr, char *in_pathname)
 	}
 	else
 	{
-		exp = NULL;
+		exp = nullptr;
 	}
 
 	return(exp);
@@ -2129,7 +2129,7 @@ DtDtsDataTypeToAttributeList(const char *obj_type, const char *filename)
 	DtDtsMMRecord	*entry;
 	DtDtsMMField	*fld_ptr_list;
 	DtDtsMMField	*fld_ptr;
-	DtDtsAttribute	**list = NULL;
+	DtDtsAttribute	**list = nullptr;
 	int		i;
 	int		action_flag = 0;
 	int		sort_flag = 0;
@@ -2140,7 +2140,7 @@ DtDtsDataTypeToAttributeList(const char *obj_type, const char *filename)
 	_DtSvcProcessLock();    
 	db = get_da_db();
 	entry = (db && obj_type) ?
-		_DtDtsMMGetRecordByName(db, (char *)obj_type) : NULL;
+		_DtDtsMMGetRecordByName(db, (char *)obj_type) : nullptr;
 
 	if(!entry)
 	{
@@ -2168,7 +2168,7 @@ DtDtsDataTypeToAttributeList(const char *obj_type, const char *filename)
 		{
 			/* free the entries made so far */
 			DtDtsFreeAttributeList(list);
-			list = NULL;
+			list = nullptr;
 			break;
 		}
 		list[i]->name = 
@@ -2220,7 +2220,7 @@ DtDtsAttribute	**
 DtDtsBufferToAttributeList(const void *buffer, const int size, const char *name)
 {
 	char	*ot = DtDtsBufferToDataType(buffer, size, name);
-	DtDtsAttribute **al = DtDtsDataTypeToAttributeList(ot, NULL);
+	DtDtsAttribute **al = DtDtsDataTypeToAttributeList(ot, nullptr);
 
 	DtDtsFreeDataType(ot);
 	return(al);
@@ -2262,7 +2262,7 @@ int
 DtDtsDataTypeIsAction(const char *datatype)
 {
 	char	*val;
-	if(val = DtDtsDataTypeToAttributeValue(datatype, "IS_ACTION", NULL))
+	if(val = DtDtsDataTypeToAttributeValue(datatype, "IS_ACTION", nullptr))
 	{
 		DtDtsFreeAttributeValue(val);
 		return(1);
@@ -2289,7 +2289,7 @@ DtDtsDataTypeNames(void)
 	{
 		_DtSvcProcessUnlock();
 		_DtSvcAppUnlockDefault();
-		return(NULL);
+		return(nullptr);
 	}
 
 	names = (char **)calloc(db->recordCount+1, sizeof(char *));
@@ -2297,7 +2297,7 @@ DtDtsDataTypeNames(void)
 	{
 		_DtSvcProcessUnlock();
 		_DtSvcAppUnlockDefault();
-		return(NULL);
+		return(nullptr);
 	}
 
 	rec_list = _DtDtsMMGetPtr(db->recordList);
@@ -2308,7 +2308,7 @@ DtDtsDataTypeNames(void)
 		if(!names[j])
 		{
 			DtDtsFreeDataTypeNames(names);
-			names = NULL;
+			names = nullptr;
 			break;
 		}
 		j++;
@@ -2346,7 +2346,7 @@ DtDtsFindAttribute(const char *name, const char *value)
 	{
 		_DtSvcProcessUnlock(); 
 		_DtSvcAppUnlockDefault();
-		return(NULL);
+		return(nullptr);
 	}
 
 	/* room for every record and for the terminating null */
@@ -2355,7 +2355,7 @@ DtDtsFindAttribute(const char *name, const char *value)
 	{
 		_DtSvcProcessUnlock();
 		_DtSvcAppUnlockDefault();
-		return(NULL);
+		return(nullptr);
 	}
 	rec_ptr_list = _DtDtsMMGetPtr(ot->recordList);
 	for(i = 0; i < ot->recordCount; i++)
@@ -2369,7 +2369,7 @@ DtDtsFindAttribute(const char *name, const char *value)
 			{
 				_DtDtsMMSafeFree(v);
 				DtDtsFreeDataTypeNames(list);
-				list = NULL;
+				list = nullptr;
 				break;
 			}
 			j++;
@@ -2406,7 +2406,7 @@ DtDtsSetDataType(const char *filename, const char *datatype_in, const int overid
 	char		*file;
 	int		fd;
 	int		size;
-	u_char		*buff = NULL;
+	u_char		*buff = nullptr;
 	struct stat	file_stat;
 	char		*datatype = 0;
 
@@ -2435,7 +2435,7 @@ DtDtsSetDataType(const char *filename, const char *datatype_in, const int overid
 			if(write_size != size)
 			{
 			    _DtSimpleError(
-					DtProgName, DtError, NULL,
+					DtProgName, DtError, nullptr,
 					"%s", (char*) buff);
 			}
 			datatype = strdup(datatype_in);
@@ -2479,7 +2479,7 @@ DtDtsSetDataType(const char *filename, const char *datatype_in, const int overid
 				if(write_size != size)
 				{
 				    _DtSimpleError(
-						DtProgName, DtError, NULL,
+						DtProgName, DtError, nullptr,
 						"%s", (char*) buff);
 				}
 				datatype = strdup(datatype_in);
@@ -2493,14 +2493,14 @@ DtDtsSetDataType(const char *filename, const char *datatype_in, const int overid
 			if(write(fd, datatype_in, dtsize) != dtsize)
 			{
 			    _DtSimpleError(
-					DtProgName, DtError, NULL,
+					DtProgName, DtError, nullptr,
 					"%s", (char*) file);
 			}
 			off = write(fd, &buff[end], strlen((char *)&buff[end])+1);
 			if(off != strlen((char *)&buff[end])+1)
 			{
 			    _DtSimpleError(
-					DtProgName, DtError, NULL,
+					DtProgName, DtError, nullptr,
 					"%s", (char*) file);
 			}
 			else

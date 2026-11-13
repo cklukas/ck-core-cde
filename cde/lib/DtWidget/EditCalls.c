@@ -60,11 +60,11 @@ _DtEditorResetUndo(
    * Reset deletion & insertion contexts.
    */
 
-  if( (M_deletedText(editor) != (char *)NULL) &&
+  if( (M_deletedText(editor) != (char *)nullptr) &&
       (strlen(M_deletedText(editor)) != 0) )
   {
     XtFree(M_deletedText(editor));
-    M_deletedText(editor) = (char *) NULL;
+    M_deletedText(editor) = (char *) nullptr;
   } 
     
   M_deletionStart(editor) = NO_DELETION_IN_PROGRESS;
@@ -95,7 +95,7 @@ DtEditorUndoEdit(
 	/*
 	 * There is an insertion so remove everything we just inserted
 	 */
-	if( (M_deletedText(pPriv) != (char *)NULL) && 
+	if( (M_deletedText(pPriv) != (char *)nullptr) && 
 	    (strlen(M_deletedText(pPriv)) != 0) )
 	{
 	    /*
@@ -104,7 +104,7 @@ DtEditorUndoEdit(
 	     */
 	    int oldDeleteStart = M_deletionStart(pPriv);
 	    char *oldDeletion = M_deletedText(pPriv);
-	    M_deletedText(pPriv) = (char *)NULL;
+	    M_deletedText(pPriv) = (char *)nullptr;
 
 	    /*
 	     * 1. Delete the last insertion.
@@ -136,14 +136,14 @@ DtEditorUndoEdit(
 	    XmTextRemove(M_text(pPriv));
 	}
     }
-    else if(M_deletedText(pPriv) != (char *)NULL)
+    else if(M_deletedText(pPriv) != (char *)nullptr)
     {
 	/*
 	 * Nothing has been inserted so just undo the previous deletion.
 	 */
 
 	char *oldDeletion = M_deletedText(pPriv);
-	M_deletedText(pPriv) = (char *)NULL;
+	M_deletedText(pPriv) = (char *)nullptr;
 
 	XmTextInsert(M_text(pPriv), M_deletionStart(pPriv), oldDeletion);
 
@@ -183,7 +183,7 @@ DtEditorCutToClipboard(
     /*
      * Call routine to cut selection to clipboard
      */
-    XtCallActionProc(M_text(editor), "cut-clipboard", event, NULL, 0);
+    XtCallActionProc(M_text(editor), "cut-clipboard", event, nullptr, 0);
 
     XtFree( (char *) event );
 
@@ -210,7 +210,7 @@ DtEditorCopyToClipboard(
     /*
      * Call routine to copy selection to clipboard
      */
-    XtCallActionProc(M_text(editor), "copy-clipboard", event, NULL, 0);
+    XtCallActionProc(M_text(editor), "copy-clipboard", event, nullptr, 0);
 
     XtFree( (char *) event );
 
@@ -236,7 +236,7 @@ DtEditorPasteFromClipboard(
     /*
      * Call routine to paste contents of clipboard at insertion cursor
      */
-    XtCallActionProc(M_text(editor), "paste-clipboard", event, NULL, 0);
+    XtCallActionProc(M_text(editor), "paste-clipboard", event, nullptr, 0);
 
     XtFree( (char *) event );
 
@@ -274,7 +274,7 @@ SetUndoDeletionState(
 						cb->endPos, 
 						False);
 
-    if( M_deletedText(pPriv) != (char *)NULL    && 
+    if( M_deletedText(pPriv) != (char *)nullptr    && 
 	M_insertionLength(pPriv) == 0           &&
         (cb->startPos == M_deletionStart(pPriv) || 
 	 cb->endPos == M_deletionStart(pPriv))      

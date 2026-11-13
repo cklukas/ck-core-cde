@@ -117,7 +117,7 @@ void
 popup_audioBB(
         Widget shell )
 {
-    if (style.audioDialog == NULL) {
+    if (style.audioDialog == nullptr) {
       _DtTurnOnHourGlass(shell);  
       build_audioDlg(shell);
       XtManageChild(style.audioDialog);
@@ -168,9 +168,9 @@ build_audioDlg(
     save.poscnt++;
     style.audioDialog = 
         __DtCreateDialogBoxDialog(shell, "AudioDialog", save.posArgs, save.poscnt);
-    XtAddCallback(style.audioDialog, XmNmapCallback, formLayoutCB, NULL);
+    XtAddCallback(style.audioDialog, XmNmapCallback, formLayoutCB, nullptr);
     XtAddCallback(style.audioDialog, XmNmapCallback, _DtmapCB_audioDlg, shell);
-    XtAddCallback(style.audioDialog, XmNcallback, ButtonCB, NULL);
+    XtAddCallback(style.audioDialog, XmNcallback, ButtonCB, nullptr);
     XtAddCallback(style.audioDialog, XmNhelpCallback,
             HelpRequestCB, (XtPointer)HELP_AUDIO_DIALOG);
 
@@ -278,10 +278,10 @@ build_audioDlg(
     widget_list[count++] = 
     audio.durScale= XmCreateScale(form,"durationScale", args, n);
 
-    XtAddCallback(audio.systemDefault, XmNactivateCallback, systemDefaultCB, NULL);
-    XtAddCallback(audio.volScale, XmNvalueChangedCallback, valueChangedCB, NULL);
-    XtAddCallback(audio.toneScale, XmNvalueChangedCallback, valueChangedCB, NULL);
-    XtAddCallback(audio.durScale, XmNvalueChangedCallback, valueChangedCB, NULL);
+    XtAddCallback(audio.systemDefault, XmNactivateCallback, systemDefaultCB, nullptr);
+    XtAddCallback(audio.volScale, XmNvalueChangedCallback, valueChangedCB, nullptr);
+    XtAddCallback(audio.toneScale, XmNvalueChangedCallback, valueChangedCB, nullptr);
+    XtAddCallback(audio.durScale, XmNvalueChangedCallback, valueChangedCB, nullptr);
 
     XtManageChild(form);
     XtManageChildren(widget_list,count); 
@@ -430,7 +430,7 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);       n++;
     XtSetValues (audio.durScale, args, n);
 
-    XtRemoveCallback(style.audioDialog, XmNmapCallback, formLayoutCB, NULL);
+    XtRemoveCallback(style.audioDialog, XmNmapCallback, formLayoutCB, nullptr);
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -695,7 +695,7 @@ saveAudio(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.audioDialog != NULL) 
+    if (style.audioDialog != nullptr) 
     {
         if (XtIsManaged(style.audioDialog))
             sprintf(bufr, "*audioDlg.ismapped: True\n");

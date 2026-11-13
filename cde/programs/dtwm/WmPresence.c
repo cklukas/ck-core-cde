@@ -255,8 +255,8 @@ ShowPresenceBox(
      */
     if (!pSD->presence.shellW)
     {
-	pPres->ItemSelected = NULL;
-	pPres->ItemStrings = NULL;
+	pPres->ItemSelected = nullptr;
+	pPres->ItemStrings = nullptr;
 	pPres->currentWsItem = 0;
 
 	MakePresenceBox (pSD);
@@ -427,38 +427,38 @@ wspCreateWidgets(
     XmString tmpXmString;
 #endif /* NO_MESSAGE_CATALOG */
 
-    rval = ((pPres->shellW = wspCreateShell (pSD)) != NULL);
+    rval = ((pPres->shellW = wspCreateShell (pSD)) != nullptr);
 
     if (rval)
     {
-	rval = ((pPres->formW = wspCreateManager (pPres->shellW)) != NULL);
+	rval = ((pPres->formW = wspCreateManager (pPres->shellW)) != nullptr);
     }
 
     if (rval)
     {
         rval = ((pPres->windowLabelW = wspCreateLabel (pPres->formW,
 			(unsigned char *)"window", 
-			 NULL))  != NULL);
+			 nullptr))  != nullptr);
     }
 
     if (rval)
     {
         rval = ((pPres->windowNameW = wspCreateLabel (pPres->formW, 
 			(unsigned char *)"windowName", 
-			(unsigned char *)" ")) != NULL);
+			(unsigned char *)" ")) != nullptr);
     }
 
     if (rval)
     {
         rval = ((pPres->workspaceLabelW = 
 		wspCreateLabel (pPres->formW, (unsigned char *)"workspaces", 
-	       ((unsigned char *)GETMESSAGE(52, 3, "Workspaces: ")))) != NULL);
+	       ((unsigned char *)GETMESSAGE(52, 3, "Workspaces: ")))) != nullptr);
     }
 
     if (rval)
     {
         rval = ((pPres->workspaceListW =
-		wspCreateWorkspaceList (pPres->formW, pPres, pSD)) != NULL);
+		wspCreateWorkspaceList (pPres->formW, pPres, pSD)) != nullptr);
         pPres->workspaceScrolledListW = XtParent (pPres->workspaceListW);
     }
 
@@ -466,14 +466,14 @@ wspCreateWidgets(
     {
         rval = ((pPres->allWsW = wspCreateToggleButton (pPres->formW, 
 		  ((unsigned char *)GETMESSAGE(52, 4, "All Workspaces")))) 
-		!= NULL);
+		!= nullptr);
 	XtAddCallback (pPres->allWsW, XmNvalueChangedCallback, 
 			wspAllWsCB, (XtPointer)pSD);
     }
 
     if (rval)
     {
-        rval = ((pPres->sepW = wspCreateSeparator (pPres->formW)) != NULL);
+        rval = ((pPres->sepW = wspCreateSeparator (pPres->formW)) != nullptr);
     }
 
     if (rval)
@@ -481,12 +481,12 @@ wspCreateWidgets(
 #ifndef NO_MESSAGE_CATALOG
         rval = ((pPres->OkW = 
 		 wspCreatePushButton (pPres->formW, "ok", wmGD.okLabel))
-			!= NULL);
+			!= nullptr);
 #else
 	tmpXmString = XmStringCreateLocalized ("OK");
         rval = ((pPres->OkW = 
 		 wspCreatePushButton (pPres->formW, "ok", tmpXmString))
-			!= NULL);
+			!= nullptr);
 	XmStringFree(tmpXmString);
 #endif
 
@@ -503,12 +503,12 @@ wspCreateWidgets(
     {
 #ifndef NO_MESSAGE_CATALOG
         rval = ((pPres->CancelW = wspCreatePushButton (pPres->formW, 
-			"cancel", wmGD.cancelLabel)) != NULL);
+			"cancel", wmGD.cancelLabel)) != nullptr);
 #else
 	tmpXmString = XmStringCreateLocalized ("Cancel");
         rval = ((pPres->CancelW = 
 		wspCreatePushButton (pPres->formW, "cancel", tmpXmString))
-			!= NULL);
+			!= nullptr);
 	XmStringFree(tmpXmString);
 #endif
 	XtAddCallback (pPres->CancelW, XmNactivateCallback, 
@@ -525,12 +525,12 @@ wspCreateWidgets(
 #ifndef NO_MESSAGE_CATALOG
         rval = ((pPres->HelpW = 
 		wspCreatePushButton (pPres->formW, "help", wmGD.helpLabel))
-			!= NULL);
+			!= nullptr);
 #else
 	tmpXmString = XmStringCreateLocalized ("Help");
         rval = ((pPres->HelpW = 
 		wspCreatePushButton (pPres->formW,  "help", tmpXmString))
-			!= NULL);
+			!= nullptr);
 	XmStringFree(tmpXmString);
 #endif
 
@@ -801,12 +801,12 @@ wspCreateWorkspaceList(
      * Create the array of strings that will go into the list.
      */
     if (((pPres->ItemStrings = (XmStringTable) XtMalloc 
-		(pSD->numWorkspaces * sizeof(XmString *))) == NULL) ||
+		(pSD->numWorkspaces * sizeof(XmString *))) == nullptr) ||
 	((pPres->ItemSelected = (Boolean *) XtMalloc 
-		(pSD->numWorkspaces * sizeof(Boolean))) == NULL))
+		(pSD->numWorkspaces * sizeof(Boolean))) == nullptr))
     {
 	Warning (((char *)GETMESSAGE(52, 5, "Insufficient memory to create Occupy Workspace dialog.")));
-	return (NULL);
+	return (nullptr);
     }
 
     pPres->numWorkspaces = pSD->numWorkspaces;
@@ -1437,7 +1437,7 @@ wspOkCB(
 
     if (bAllSelected)
     {
-	F_AddToAllWorkspaces(NULL, pPres->pCDforClient, NULL);
+	F_AddToAllWorkspaces(nullptr, pPres->pCDforClient, nullptr);
     }
     else if (selectedItemCount)
     {
@@ -1658,7 +1658,7 @@ GetPresenceBoxMenuItems(
         WmScreenData *pSD )
 {
 
-    return(NULL);
+    return(nullptr);
 
 } /* END OF FUNCTION GetPresenceBoxMenuItems */
 
@@ -1688,13 +1688,13 @@ UpdatePresenceWorkspaces(
 	{
 	    if (((pPres->ItemStrings = (XmStringTable) XtRealloc 
 		    ((char *)pPres->ItemStrings,
-		    (pSD->numWorkspaces * sizeof(XmString *)))) == NULL) ||
+		    (pSD->numWorkspaces * sizeof(XmString *)))) == nullptr) ||
 		((pPres->ItemSelected = (Boolean *) XtRealloc 
 		    ((char *)pPres->ItemSelected,
-		    (pSD->numWorkspaces * sizeof(Boolean)))) == NULL))
+		    (pSD->numWorkspaces * sizeof(Boolean)))) == nullptr))
 	    {
 		Warning (((char *)GETMESSAGE(52, 5, "Insufficient memory to create Occupy Workspace dialog.")));
-		pPres->shellW = NULL;
+		pPres->shellW = nullptr;
 		return;
 	    }
 	}
@@ -1733,7 +1733,7 @@ UpdatePresenceWorkspaces(
 		 * Delete this workspace from the list
 		 */
 		XmStringFree (pPres->ItemStrings[wsnum]);
-		pPres->ItemStrings[wsnum] = NULL;
+		pPres->ItemStrings[wsnum] = nullptr;
 		XmListDeletePos (pPres->workspaceListW, 1+wsnum);
 	    }
 	}

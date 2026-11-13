@@ -131,10 +131,10 @@ PalItemInfo label_palitem_rec = {
 
     /* type             */  AB_TYPE_LABEL,
     /* name             */  "Label",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  label_initialize,
     /* is_a_test        */  obj_is_label,
     /* prop_initialize  */  label_prop_init,
@@ -166,8 +166,8 @@ label_initialize(
     obj_set_is_initially_visible(obj, True);
     obj_set_is_initially_active(obj, True);
 
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 
@@ -224,12 +224,12 @@ label_prop_init(
     if (dtb_label_prop_dialog_initialize(cgen, parent) == 0)
     {
         pls->prop_sheet = cgen->attrs_ctrlpanel;
-        pls->current_obj = NULL;
+        pls->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pls->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -334,7 +334,7 @@ label_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 
@@ -357,7 +357,7 @@ label_prop_clear(
 {
     PropLabelSettingsRec	*pls = &(prop_label_settings_rec[type]);
 
-    if (pls->current_obj == NULL)
+    if (pls->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -395,7 +395,7 @@ label_prop_clear(
     /* Clear Foreground Color */
     prop_colorfield_set_value(&(pls->fg_color), "", False);
 
-    pls->current_obj = NULL;
+    pls->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -413,9 +413,9 @@ label_prop_load(
     PropLabelSettingsRec 	*pls = &(prop_label_settings_rec[type]);
     BOOL			load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pls->current_obj != NULL)
+        if (pls->current_obj != nullptr)
             obj = pls->current_obj;
         else
             return ERROR;
@@ -433,7 +433,7 @@ label_prop_load(
     {
 	/* Load Label */
 	prop_options_set_value(&(pls->label_type), (XtPointer)obj->label_type, False);
-	prop_setup_label_field(&(pls->label), NULL,
+	prop_setup_label_field(&(pls->label), nullptr,
 				obj->label_type, obj_get_label(obj), AB_LINE_UNDEF);
 
 	/* Load Label Alignment */
@@ -666,7 +666,7 @@ size_policyCB(
      */
     if (state->set)
     {
-    	XtVaGetValues(w, XmNuserData, &value, NULL);
+    	XtVaGetValues(w, XmNuserData, &value, nullptr);
     	ui_field_set_editable(pls->geometry.w_field, value == SIZE_FIXED_KEY);
     	ui_field_set_editable(pls->geometry.h_field, value == SIZE_FIXED_KEY);
     }

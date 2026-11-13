@@ -63,7 +63,7 @@ static Widget		HostRC = (Widget) 0;
 
 static Widget		FocusW = (Widget) 0;
 
-static XErrorHandler	defaultErrorHandler = NULL;
+static XErrorHandler	defaultErrorHandler = nullptr;
 
 
 /* application resource */
@@ -92,7 +92,7 @@ static XrmOptionDescRec	options[] = {
 };
 
 static char	*fallbacks[] = {
-    NULL
+    nullptr
 };
 
 
@@ -227,7 +227,7 @@ int	init_window_env(void)
 
 	/* disable XIM on my own XmText* */
     putenv("XMODIFIERS=@im=_XIMP_None");	/* putenv("XMODIFIERS=@im=none"); */
-    XtSetLanguageProc(NULL, NULL, NULL);
+    XtSetLanguageProc(nullptr, nullptr, nullptr);
 
     if (!Dpy) {
 	ret = open_display();
@@ -255,7 +255,7 @@ int	init_window_env(void)
 
     XtGetApplicationResources(topW, &appres,
 			      app_resources, XtNumber(app_resources),
-			      NULL, 0);
+			      nullptr, 0);
 
 #if	0
     /* handle system Menu's "close" */
@@ -326,7 +326,7 @@ int	clear_cmd_property(Window win)
 {
     int		ret, ac = 0;
     int		clear_ok = False;
-    char	**av = NULL;
+    char	**av = nullptr;
 
     /* if (!Dpy || !win)	return False; */
 
@@ -407,7 +407,7 @@ static int	disown_main_atom(Window win)
 
 	/* ********  resource_manager  ******** */
 
-static char	*saved_xdefs = NULL;	/* should not be freed */
+static char	*saved_xdefs = nullptr;	/* should not be freed */
 
 int	save_RM(void)
 {
@@ -456,7 +456,7 @@ int	restore_RM(void)
 
     DPR2(("restore_RM(): saved RESOURCE_MANAGER = %d (bytes)\n", len));
 
-    if (saved_xdefs == NULL) {		/* len == 0 */
+    if (saved_xdefs == nullptr) {		/* len == 0 */
 	XDeleteProperty(Dpy, root, XA_RESOURCE_MANAGER);
 #if	0
 	XSync(Dpy, False);
@@ -490,7 +490,7 @@ int	restore_RM(void)
 	/* ********  selection window  ******** */
 
 static int		CurIdx = -1;
-static char		*CurHost = NULL;
+static char		*CurHost = nullptr;
 static int		CurHostType = HOST_UNKNOWN;
 static ImsList		*curList = 0;
 static XimsBool		selection_changed = False;
@@ -511,7 +511,7 @@ static void	clear_selection_var(void)
     curList = (ImsList *) 0;
 
     if (CurHost)	FREE(CurHost);
-    CurHost = NULL;
+    CurHost = nullptr;
     CurHostType = HOST_UNKNOWN;
     CurIdx = -1;
     selection_changed = False;
@@ -717,7 +717,7 @@ static int	create_selection_window(void)
 	switch (userSel.host_type) {
 	    case HOST_UNKNOWN:
 		put_xims_errmsg(ErrUnknownHost, userSel.hostname, 0, 0);
-		ret = change_host(NULL, HOST_LOCAL);
+		ret = change_host(nullptr, HOST_LOCAL);
 		break;
 	    case HOST_REMOTE:
 		ret = change_host(userSel.hostname, userSel.host_type);
@@ -732,7 +732,7 @@ static int	create_selection_window(void)
 	}
     }
     if (use_local)
-	change_ims_list(NULL, userSel.ims_idx);
+	change_ims_list(nullptr, userSel.ims_idx);
 
     add_cmd_btn(cmd_rc, done_cb, 0, done_cb,
 					RemoteOn() ? host_btn_cb : 0, help_cb);
@@ -740,8 +740,8 @@ static int	create_selection_window(void)
     XtManageChildren(w_tbl, ++n);
 
     XtManageChild(SelW); locate_window(SelW); XtUnmanageChild(SelW);
-    XtVaSetValues(SelW, XmNmappedWhenManaged, True, NULL);
-    XtVaSetValues(XtParent(SelW), XmNmappedWhenManaged, True, NULL);
+    XtVaSetValues(SelW, XmNmappedWhenManaged, True, nullptr);
+    XtVaSetValues(XtParent(SelW), XmNmappedWhenManaged, True, nullptr);
     set_cursor(SelW, False);
 
     return NoError;
@@ -755,18 +755,18 @@ static int	change_host(char *new_host, int host_type)
 
     if (new_host && host_type == HOST_REMOTE) {
 	set_cursor(HostW, True);
-	ret = get_remote_conf(&new_list, new_host, NULL, NULL);
+	ret = get_remote_conf(&new_list, new_host, nullptr, nullptr);
 	set_cursor(HostW, False);
     } else {
 	if (!localList)
-	    ret = get_ims_list(&localList, NULL, True);
-	new_host = NULL;
+	    ret = get_ims_list(&localList, nullptr, True);
+	new_host = nullptr;
 	new_list = localList;
     }
 
     if (ret == NoError) {
 	if (CurHost)	FREE(CurHost);
-	CurHost = new_host ? NEWSTR(new_host) : NULL;
+	CurHost = new_host ? NEWSTR(new_host) : nullptr;
 	CurHostType = host_type;
 
 	DPR(("change_host(%s): curList=(%p) <- (%p)\n",
@@ -887,12 +887,12 @@ static void	set_host_label(int host_type, char *hostname)
 
 	    XtSetArg(args[n], XmNmarginLeft, 100); n++;
 	    lb = XmCreateLabelGadget(HostRC, "host_label", args, n);
-	    lb_host = XmCreateLabelGadget(HostRC, "hostname", NULL, 0);
+	    lb_host = XmCreateLabelGadget(HostRC, "hostname", nullptr, 0);
 	    XtManageChild(lb);
 	    XtManageChild(lb_host);
 	}
 	str = XmStringCreateLocalized(hostname);
-	XtVaSetValues(lb_host, XmNlabelString, str, NULL);
+	XtVaSetValues(lb_host, XmNlabelString, str, nullptr);
 	XmStringFree(str);
 
 	XtManageChild(HostRC);
@@ -997,7 +997,7 @@ static void	start_host_window(char *cur_host)
 			host_done_cb, (XtPointer)CANCEL_BTN);
     }
 
-    XtVaSetValues(HostText, XmNvalue, CurHost, NULL);
+    XtVaSetValues(HostText, XmNvalue, CurHost, nullptr);
 
     if (HostText)
 	XmProcessTraversal(HostText, XmTRAVERSE_CURRENT);
@@ -1038,11 +1038,11 @@ static void	host_done_cb(Widget w, XtPointer client_data, XtPointer call_data)
     }
 
     /* if (!HostText)	return; */
-    new_host = NULL;
+    new_host = nullptr;
     txt = XmTextFieldGetString(HostText);
     if (txt) {
 	p = trim_line(txt);
-	new_host = (*p) ? p : NULL;
+	new_host = (*p) ? p : nullptr;
     }
     if (new_host) {
 	if (!(CurHost) || strcmp(CurHost, new_host)) {
@@ -1050,7 +1050,7 @@ static void	host_done_cb(Widget w, XtPointer client_data, XtPointer call_data)
 
 	    switch (host_type) {
 		case HOST_LOCAL:
-		    new_host = NULL;
+		    new_host = nullptr;
 		    if (CurHost)
 			host_changed = True;
 		    break;
@@ -1072,10 +1072,10 @@ static void	host_done_cb(Widget w, XtPointer client_data, XtPointer call_data)
     }
 
     DPR(("host_cb(): hostname %s changed '%s' (<- %s)\n",
-			    host_changed ? NULL : "NOT", new_host, CurHost));
+			    host_changed ? nullptr : "NOT", new_host, CurHost));
 
     if (host_changed) {
-	char	*last_ims = NULL;
+	char	*last_ims = nullptr;
 
 	    /* save the name of selected ims */
 	if (CurIdx >= 0 && CurIdx < curList->num_ent)
@@ -1108,7 +1108,7 @@ static void	host_done_cb(Widget w, XtPointer client_data, XtPointer call_data)
 static void	host_clear_cb(Widget w, XtPointer client_data, XtPointer call_data)
 {
     /* if (!HostText)	return; */
-    XtVaSetValues(HostText, XmNvalue, "", NULL);
+    XtVaSetValues(HostText, XmNvalue, "", nullptr);
 }
 
 static void	host_done_action(Widget w, XEvent *ev, String *args, Cardinal *num_args)
@@ -1198,8 +1198,8 @@ static void	create_host_window(char *cur_host)
     XtOverrideTranslations(HostText, trans);
 
     XtManageChild(HostW); locate_window(HostW); XtUnmanageChild(HostW);
-    XtVaSetValues(XtParent(HostW), XmNmappedWhenManaged, True, NULL);
-    XtVaSetValues(HostW, XmNmappedWhenManaged, True, NULL);
+    XtVaSetValues(XtParent(HostW), XmNmappedWhenManaged, True, nullptr);
+    XtVaSetValues(HostW, XmNmappedWhenManaged, True, nullptr);
     set_cursor(HostW, False);
 
     return;
@@ -1350,7 +1350,7 @@ static int	create_mode_window(int cur_mode)
 	tb[0] = createTB(mode_rc, "button_0", bargs, k);
 	tb[1] = createTB(mode_rc, "button_1", bargs, k);
 	for (k = 0; k < NUM_SEL_MODE; k++) {
-	    XtVaSetValues(tb[k], XmNset, k == set_idx ? True : False, NULL);
+	    XtVaSetValues(tb[k], XmNset, k == set_idx ? True : False, nullptr);
 	    XtAddCallback(tb[k], XmNvalueChangedCallback, mode_cb, (XtPointer)(intptr_t) k);
 	    add_btn_trans(tb[k]);
 	}
@@ -1374,8 +1374,8 @@ static int	create_mode_window(int cur_mode)
     add_cmd_btn(cmd_rc, mode_done_cb, 0, mode_done_cb, 0, mode_help_cb);
 
     XtManageChild(ModeW); locate_window(ModeW); XtUnmanageChild(ModeW);
-    XtVaSetValues(XtParent(ModeW), XmNmappedWhenManaged, True, NULL);
-    XtVaSetValues(ModeW, XmNmappedWhenManaged, True, NULL);
+    XtVaSetValues(XtParent(ModeW), XmNmappedWhenManaged, True, nullptr);
+    XtVaSetValues(ModeW, XmNmappedWhenManaged, True, nullptr);
     set_cursor(ModeW, False);
 
     return NoError;
@@ -1429,7 +1429,7 @@ static void	create_help(void)
 
 void	ximsHelp(int help_type)
 {
-    char	*msg = NULL;
+    char	*msg = nullptr;
     XmString	str;
     static int	last_help_type = -1;
 
@@ -1458,7 +1458,7 @@ void	ximsHelp(int help_type)
 	    XtUnmanageChild(HelpW);
 
 	str = XmStringCreateLocalized(msg);
-	XtVaSetValues(HelpW, XmNmessageString, str, NULL);
+	XtVaSetValues(HelpW, XmNmessageString, str, nullptr);
 	XmStringFree(str);
 
 	last_help_type = help_type;
@@ -1579,7 +1579,7 @@ int	put_msg_win(int type, char *msg)
 			XmNdialogStyle, wait_resp ? XmDIALOG_FULL_APPLICATION_MODAL
 							: XmDIALOG_MODELESS,
 			*/
-			NULL);
+			nullptr);
     XmStringFree(str);
 
     locate_window(MsgW);
@@ -1657,7 +1657,7 @@ static void	locate_window(Widget w)
     dpy_w = DisplayWidth(Dpy, scr);
     dpy_h = DisplayHeight(Dpy, scr);
 
-    XtVaGetValues(w, XmNwidth, &width, XmNheight, &height, NULL);
+    XtVaGetValues(w, XmNwidth, &width, XmNheight, &height, nullptr);
 
     x = y = 0;
     if (locate_type) {
@@ -1671,7 +1671,7 @@ static void	locate_window(Widget w)
 
     DPR3(("locate_window(): w=%d h=%d ==> x=%d y=%d\n", width, height, x, y));
 
-    XtVaSetValues(w, XmNx, x, XmNy, y, NULL);
+    XtVaSetValues(w, XmNx, x, XmNy, y, nullptr);
 }
 
 
@@ -1709,7 +1709,7 @@ void	xt_start_waiting(void)
 {
     if (!appC)	return;
 
-    xt_start_tm = time(NULL);
+    xt_start_tm = time(nullptr);
     xt_last_timer = XtAppAddTimeOut(appC, (unsigned long) Opt.Interval,
 						xt_timer_cb, (XtPointer)0);
     /* if (!xt_last_timer)	return; */
@@ -1740,7 +1740,7 @@ static void	xt_timer_cb(XtPointer client_data, XtIntervalId *timer_id)
 
     if (*timer_id != xt_last_timer)	return;
     xt_last_timer = (XtIntervalId) 0;
-    lapse = (int) time(NULL) - xt_start_tm;
+    lapse = (int) time(nullptr) - xt_start_tm;
 
 #ifdef	DEBUG
     if (DebugLvl >= 1)	putc('.', LogFp), fflush(LogFp);

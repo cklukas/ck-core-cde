@@ -134,7 +134,7 @@ _DtTermPrimBufferCreateBuffer
                                       malloc((unsigned) 
                                              cols * BYTES_PER_CHAR(newTB));
 
-            if (BUFFER(newTL[i]) == NULL)
+            if (BUFFER(newTL[i]) == nullptr)
             {
                 /*
                 ** we couldn't malloc a line buffer
@@ -188,19 +188,19 @@ _DtTermPrimBufferCreateBuffer
     SIZE_OF_LINE(newTB)         = sizeOfLine;
     SIZE_OF_ENH(newTB)          = sizeOfEnh;
     BUFFER_CREATE(newTB)        = _DtTermPrimBufferCreateBuffer;
-    BUFFER_FREE(newTB)          = NULL;
-    BUFFER_RESIZE(newTB)        = NULL;
-    ENH_PROC(newTB)             = NULL;
-    CLEAR_ENH(newTB)            = NULL;
-    INSERT_ENH(newTB)           = NULL;
-    DELETE_ENH(newTB)           = NULL;
-    SET_ENH(newTB)              = NULL;
-    GET_ENH(newTB)              = NULL;
-    SET_LINE_WIDTH(newTB)       = NULL;
-    CLEAR_LINE(newTB)           = NULL;
-    NEXT_BUFFER(newTB)          = NULL;
-    PREV_BUFFER(newTB)          = NULL;
-    BUFFER_SELECT_INFO(newTB)   = NULL;
+    BUFFER_FREE(newTB)          = nullptr;
+    BUFFER_RESIZE(newTB)        = nullptr;
+    ENH_PROC(newTB)             = nullptr;
+    CLEAR_ENH(newTB)            = nullptr;
+    INSERT_ENH(newTB)           = nullptr;
+    DELETE_ENH(newTB)           = nullptr;
+    SET_ENH(newTB)              = nullptr;
+    GET_ENH(newTB)              = nullptr;
+    SET_LINE_WIDTH(newTB)       = nullptr;
+    CLEAR_LINE(newTB)           = nullptr;
+    NEXT_BUFFER(newTB)          = nullptr;
+    PREV_BUFFER(newTB)          = nullptr;
+    BUFFER_SELECT_INFO(newTB)   = nullptr;
     WIDGET(newTB)		= w;
     return (newTB);
 }
@@ -390,7 +390,7 @@ _DtTermPrimBufferResizeBuffer
 		newLineBuffer = (termChar *) malloc((unsigned) 
 						    *newCols * BYTES_PER_CHAR(*oldTB));
 		
-		if (newLineBuffer == NULL)
+		if (newLineBuffer == nullptr)
 		{
 		    /*
 		    ** line buffer malloc failed, we can only increase the
@@ -419,7 +419,7 @@ _DtTermPrimBufferResizeBuffer
 	    */
 	    newTL = (TermLine *) malloc((unsigned) *newRows * 
 					sizeof(TermLine));
-	    if (newTL != NULL)
+	    if (newTL != nullptr)
 	    {
 		/*
 		** the malloc succeeded, copy the old information, and
@@ -441,7 +441,7 @@ _DtTermPrimBufferResizeBuffer
 			BUFFER(newTL[i]) = (termChar *) 
 			    malloc((unsigned) COLS(*oldTB) * 
 				   BYTES_PER_CHAR(*oldTB));
-			if (BUFFER(newTL[i]) == NULL)
+			if (BUFFER(newTL[i]) == nullptr)
 			{
 			    /*
 			    ** line buffer malloc failed...
@@ -827,7 +827,7 @@ _DtTermPrimBufferGetCharacterPointer
     }
     else
     {
-        return(NULL);
+        return(nullptr);
     }
 }
 
@@ -870,7 +870,7 @@ _DtTermPrimGetCharacterInfo
         ** make up some reasonable values when col equals or 
 	** exceeds the width of the line
         */
-        charInfo->u.ptc    = NULL;
+        charInfo->u.ptc    = nullptr;
         charInfo->idx      = LENGTH(line);
         charInfo->len      = BYTES_PER_CHAR(tb);
         charInfo->startCol = col;
@@ -1151,7 +1151,7 @@ _DtTermPrimBufferDelete
     {
         if (returnChars)
 	{
-	    *returnChars = NULL;
+	    *returnChars = nullptr;
 	    *returnCount = 0;
 	}
         return;	
@@ -1205,7 +1205,7 @@ _DtTermPrimBufferDelete
         */
         if (returnChars)
 	{
-	    *returnChars = NULL;
+	    *returnChars = nullptr;
 	    *returnCount = 0;
 	}
         return;
@@ -1216,7 +1216,7 @@ _DtTermPrimBufferDelete
     /* 
     ** Save the current characters before we overwrite them...
     */
-    if (returnChars != NULL)
+    if (returnChars != nullptr)
     {
 	*returnCount = (*width * BYTES_PER_CHAR(tb));
 	*returnChars = (termChar *)XtMalloc(*returnCount);
@@ -2320,7 +2320,7 @@ _termBufferPrintBuffer
     short j;
     short k;
 
-    if (tb == NULL) {
+    if (tb == nullptr) {
         printf("TermBuffer has been freed.\n");
         return;
     }

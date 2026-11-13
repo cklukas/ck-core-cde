@@ -285,7 +285,7 @@ typedef	struct	_rowSpec {
 /*****************************************************************************
  *		Private Variables/Data
  *****************************************************************************/
-static const LayFrmtInfo DefLayFrmtInfo = { 0, 0, {-1, -1, -1, -1, 0}, NULL };
+static const LayFrmtInfo DefLayFrmtInfo = { 0, 0, {-1, -1, -1, -1, 0}, nullptr };
 static const GrpInfo     DefGrpInfo     = { 0, 0, 0, 0, {-1, -1, -1, -1, 0}};
 
 static	const LayoutInfo DefInfo = {
@@ -309,27 +309,27 @@ static	const LayoutInfo DefInfo = {
 	False,		/* _DtCvValue	 table_flag;   */
 	_DtCvJUSTIFY_LEFT,	/* _DtCvFrmtOption txt_justify;   */
 	0,		/* unsigned int	 cur_start;    */
-	NULL,		/* _DtCvSegmentI *lst_rendered; */
-	NULL,		/* char		*target_id;    */
-        NULL,		/* DataPoint	*data_pts;     */
-        NULL,		/* GrpInfo  	*data_pts;     */
+	nullptr,		/* _DtCvSegmentI *lst_rendered; */
+	nullptr,		/* char		*target_id;    */
+        nullptr,		/* DataPoint	*data_pts;     */
+        nullptr,		/* GrpInfo  	*data_pts;     */
 };
 
-static const DataPoint	DefDataPt = { 0, 0, _CEFORMAT_ALL, 0, NULL};
+static const DataPoint	DefDataPt = { 0, 0, _CEFORMAT_ALL, 0, nullptr};
 
 static const double	HeadDivisor = 10000.0;
 
 static const char *PeriodStr = ".";
 
-static const char  *DefWidth[2] = { "", NULL };
+static const char  *DefWidth[2] = { "", nullptr };
 
 static	const	_DtCvSegmentI	BlankTableCell =
   {
 	_DtCvCONTAINER,		/* type         */
 	-1,			/* link_idx     */
 	  {			/* container info */
-	    NULL,		  /* id           */
-	    NULL,		  /* justify_char */
+	    nullptr,		  /* id           */
+	    nullptr,		  /* justify_char */
 	    _DtCvDYNAMIC,	  /* type         */
 	    _DtCvBORDER_NONE,	  /* border       */
 	    _DtCvJUSTIFY_LEFT,	  /* justify      */
@@ -345,12 +345,12 @@ static	const	_DtCvSegmentI	BlankTableCell =
 	    0,			  /* tmargin      */
 	    0,			  /* bmargin      */
 	    _DtCvBORDER_NONE,  /* bdr_info     */
-	    NULL 		  /* seg_list     */
+	    nullptr 		  /* seg_list     */
 	  },
-	NULL,			/* next_seg     */
-	NULL,			/* next_disp    */
-	NULL,			/* client_use   */
-	NULL 			/* internal_use */
+	nullptr,			/* next_seg     */
+	nullptr,			/* next_disp    */
+	nullptr,			/* client_use   */
+	nullptr 			/* internal_use */
   };
 
 /*****************************************************************************
@@ -598,13 +598,13 @@ MaxXOfLine(
 
     xPos = _DtCvGetStartXOfLine(line, &pSeg);
 
-    while (pSeg != NULL && count > 0)
+    while (pSeg != nullptr && count > 0)
       {
         xPos = _DtCvAdvanceXOfLine(canvas, pSeg, xPos,
 						&lnkInd, &lastLinkVisible);
 
         _DtCvGetWidthOfSegment(canvas, pSeg, start, count,
-							&len, &tmpWidth, NULL);
+							&len, &tmpWidth, nullptr);
         xPos  += tmpWidth;
         count -= len;
         start  = 0;
@@ -664,7 +664,7 @@ GetLinkInfo (
     *ret_y      = canvas->txt_lst[line].baseline - canvas->txt_lst[line].ascent;
     *ret_height = canvas->txt_lst[line].ascent + canvas->txt_lst[line].descent;
 
-    while (count > 0 && !found && pSeg != NULL)
+    while (count > 0 && !found && pSeg != nullptr)
       {
 	if (startX < canvas->txt_lst[line].text_x)
 	    startX = canvas->txt_lst[line].text_x;
@@ -763,7 +763,7 @@ CheckId(
     LayoutInfo		*layout,
     char		*id)
 {
-    if (layout->target_id != NULL && NULL != id &&
+    if (layout->target_id != nullptr && nullptr != id &&
 			_DtCvStrCaseCmpLatin1(id, layout->target_id) == 0)
       {
         layout->id_Ypos  = layout->info.y_pos;
@@ -813,7 +813,7 @@ CheckForPageBreak(
 	if (canvas->brk_cnt >= canvas->brk_max)
 	  {
 	    canvas->brk_max += GROW_SIZE;
-	    if (NULL != canvas->pg_breaks)
+	    if (nullptr != canvas->pg_breaks)
 	        canvas->pg_breaks = (_DtCvUnit *) realloc (
 					(void *) canvas->pg_breaks,
 					(sizeof(_DtCvUnit) * canvas->brk_max));
@@ -825,7 +825,7 @@ CheckForPageBreak(
 	/*
 	 * failed to allocate memory, abort.
 	 */
-	if (NULL == canvas->pg_breaks)
+	if (nullptr == canvas->pg_breaks)
 	  {
 	    canvas->brk_max = 0;
 	    canvas->brk_cnt = 0;
@@ -925,7 +925,7 @@ static	void
 SkipToNumber (
     const char	**string)
 {
-    if (string != NULL)
+    if (string != nullptr)
       {
         const char *str = *string;
 
@@ -947,7 +947,7 @@ GetValueFromString (
 {
     int  value = def_num;
 
-    if (string != NULL && *string != NULL && **string != '\0')
+    if (string != nullptr && *string != nullptr && **string != '\0')
       {
         const char *str = *string;
 
@@ -991,10 +991,10 @@ InsertDataPoint (
     LayoutInfo		*layout,
     DataPoint		*data_pt)
 {
-    DataPoint	*lastPt = NULL;
+    DataPoint	*lastPt = nullptr;
     DataPoint	*nextPt = layout->data_pts;
 
-    while (nextPt != NULL &&
+    while (nextPt != nullptr &&
 	nextPt->y_pos != _CEFORMAT_ALL &&
 	(data_pt->y_pos == _CEFORMAT_ALL || nextPt->y_pos < data_pt->y_pos))
       {
@@ -1005,7 +1005,7 @@ InsertDataPoint (
     data_pt->next_pt = nextPt;
     data_pt->x_units = 0;
 
-    if (lastPt == NULL)
+    if (lastPt == nullptr)
         layout->data_pts = data_pt;
     else
 	lastPt->next_pt = data_pt;
@@ -1021,19 +1021,19 @@ RemoveDataPoint (
     LayoutInfo		*layout,
     DataPoint		*data_pt)
 {
-    DataPoint	*lastPt = NULL;
+    DataPoint	*lastPt = nullptr;
     DataPoint	*curPt  = layout->data_pts;
 
-    while (curPt != NULL && curPt != data_pt)
+    while (curPt != nullptr && curPt != data_pt)
       {
 	lastPt = curPt;
 	curPt  = curPt->next_pt;
       }
 
-    if (curPt != NULL)
+    if (curPt != nullptr)
       {
         data_pt->x_units = layout->info.cur_max_x - data_pt->left;
-        if (lastPt == NULL)
+        if (lastPt == nullptr)
 	    layout->data_pts = curPt->next_pt;
         else
 	    lastPt->next_pt  = curPt->next_pt;
@@ -1054,7 +1054,7 @@ GetCurrentDataPoint (
     data_pt->right = 0;
     data_pt->y_pos = _CEFORMAT_ALL;
 
-    if (layout->data_pts != NULL)
+    if (layout->data_pts != nullptr)
 	*data_pt = *(layout->data_pts);
 }
 
@@ -1071,7 +1071,7 @@ SetMargins (
     layout->rmargin = 0;
     layout->info.format_y = _CEFORMAT_ALL;
 
-    if (layout->data_pts != NULL)
+    if (layout->data_pts != nullptr)
       {
 	/*
 	 * base 
@@ -1118,7 +1118,7 @@ CheckFormat (
     LayoutInfo		*layout,
     _DtCvValue		 first)
 {
-    while (layout->data_pts != NULL &&
+    while (layout->data_pts != nullptr &&
 		layout->data_pts->y_pos != _CEFORMAT_ALL &&
 				layout->data_pts->y_pos < layout->info.y_pos)
 	RemoveDataPoint (layout, layout->data_pts);
@@ -1161,7 +1161,7 @@ SaveLine (
  * NOTE....should this routine return a value?
  * If (re)alloc error occurs, this simply ignores the problem.
  */
-	if (canvas->line_lst == NULL)
+	if (canvas->line_lst == nullptr)
 	  {
 	    canvas->line_max = 0;
 	    canvas->line_cnt = 0;
@@ -1592,7 +1592,7 @@ FormatCell(
     /*
      * If a segment was specified for this cell, format it.
      */
-    if (cell_seg != NULL && &BlankTableCell != cell_seg)
+    if (cell_seg != nullptr && &BlankTableCell != cell_seg)
       {
         ProcessContainer(canvas, layout, cell_seg, minY,
 					ret_width, &maxX, ret_ln);
@@ -1603,7 +1603,7 @@ FormatCell(
 	 */
 	nextSeg = _DtCvContainerListOfSeg(cell_seg);
 	*ret_tab_flag = True;
-	while (True == *ret_tab_flag && NULL != nextSeg)
+	while (True == *ret_tab_flag && nullptr != nextSeg)
 	  {
 	     /*
 	      * check to see if there is any segments that aren't one
@@ -1646,12 +1646,12 @@ AdjustFrmtTxtOption(
     _DtCvSegmentI	*p_seg,
     _DtCvFrmtOption	 option)
 {
-    if (p_seg != NULL && _DtCvIsSegContainer(p_seg))
+    if (p_seg != nullptr && _DtCvIsSegContainer(p_seg))
       {
 	TxtHorizJustify(p_seg) = option;
 
 	p_seg = _DtCvContainerListOfSeg(p_seg);
-	while (p_seg != NULL)
+	while (p_seg != nullptr)
 	  {
 	    AdjustFrmtTxtOption(p_seg, option);
 	    p_seg = p_seg->next_seg;
@@ -1677,9 +1677,9 @@ ResolveCell(
     CellInfo		*ret_info)
 {
     int i;
-    char  *id = NULL;
+    char  *id = nullptr;
     char  *idRefs;
-    char  *ptr = NULL;
+    char  *ptr = nullptr;
     char   c = 0;
     int    count;
     int    len;
@@ -1705,7 +1705,7 @@ ResolveCell(
 
     GetCurrentDataPoint(layout, &basePt);
 
-    if (thisCell->cell_seg == NULL)
+    if (thisCell->cell_seg == nullptr)
       {
 	idRefs = row_specs[row].next_id;
 
@@ -1730,7 +1730,7 @@ ResolveCell(
 	     * counting the characters in this id at the same time.
              */
 	    len = 0;
-            while (NULL != ptr && *ptr != ' ' && *ptr != '\0')
+            while (nullptr != ptr && *ptr != ' ' && *ptr != '\0')
 	      {
                 ptr++;
 		len++;
@@ -1740,7 +1740,7 @@ ResolveCell(
 	     * set idRefs to the next id.
 	     */
             idRefs = ptr;
-            while (NULL != idRefs && *idRefs == ' ')
+            while (nullptr != idRefs && *idRefs == ' ')
                 idRefs++;
 
             /*
@@ -1763,11 +1763,11 @@ ResolveCell(
 	/*
 	 * find the segment
 	 */
-	if (NULL != id && '\0' != *id)
+	if (nullptr != id && '\0' != *id)
 	  {
 	    c       = *ptr;
             *ptr    = '\0';
-	    while (f_data != NULL && NULL != *f_data &&
+	    while (f_data != nullptr && nullptr != *f_data &&
 	        _DtCvStrCaseCmpLatin1(_DtCvContainerIdOfSeg(*f_data),id) != 0)
 	        f_data++;
 	    /*
@@ -1775,9 +1775,9 @@ ResolveCell(
 	     * Otherwise, the formatting routines will format too much
 	     * for the cell.
 	     */
-	    if (NULL != f_data && NULL != *f_data)
+	    if (nullptr != f_data && nullptr != *f_data)
 	      {
-	        _DtCvNextSeg(*f_data) = NULL;
+	        _DtCvNextSeg(*f_data) = nullptr;
 
 		/*
 		 * assign the data to this cell.
@@ -1794,7 +1794,7 @@ ResolveCell(
 	 * how many rows does this cell span?
 	 */
 	len = 0;
-	if (NULL != id)
+	if (nullptr != id)
 	    len = strlen(id);
 
 	for (done = False, count = 1, i = row + 1;
@@ -1850,7 +1850,7 @@ ResolveCell(
 	      }
 	  }
 
-	if (NULL != id && '\0' != *id)
+	if (nullptr != id && '\0' != *id)
 	    *ptr = c;
 
 	thisCell->row_spn = count;
@@ -2128,7 +2128,7 @@ ProcessTable(
     const char	 **widthStr;
     const char	  *saveAlignChar = layout->info.align_char;
     char	 **rowIds;
-    char	  *alignCharacters = NULL;
+    char	  *alignCharacters = nullptr;
     char	   alignBuf[MB_LEN_MAX + 1];
 
     _DtCvFrmtOption   saveTxtJustify = layout->txt_justify;
@@ -2160,7 +2160,7 @@ ProcessTable(
      * find out how many rows there are.
      */
     for (rowIds = _DtCvCellIdsOfTableSeg(table), maxRows = 0;
-			rowIds != NULL && rowIds[maxRows] != NULL;  maxRows++);
+			rowIds != nullptr && rowIds[maxRows] != nullptr;  maxRows++);
 
     if (maxRows == 0)
 	return;
@@ -2175,7 +2175,7 @@ ProcessTable(
     if (maxCols < 1)
 	maxCols = 1;
 
-    if (widthStr == NULL)
+    if (widthStr == nullptr)
 	widthStr = DefWidth;
 
     /*
@@ -2192,13 +2192,13 @@ ProcessTable(
     if (maxCols != 1)
       {
         colSpecs = (ColumnSpec *) malloc (sizeof(ColumnSpec) * maxCols);
-	if (colSpecs == NULL)
+	if (colSpecs == nullptr)
 	    return;
       }
     if (maxRows != 1)
       {
         rowSpecs = (RowSpec *) malloc (sizeof(RowSpec) * maxRows);
-	if (rowSpecs == NULL)
+	if (rowSpecs == nullptr)
 	  {
 	    if (maxCols > 1)
 	        free(colSpecs);
@@ -2208,7 +2208,7 @@ ProcessTable(
     if (maxRows != 1 || maxCols != 1)
       {
         cellInfo = (CellInfo *) malloc (sizeof(CellInfo) * maxCols * maxRows);
-	if (cellInfo == NULL)
+	if (cellInfo == nullptr)
 	  {
 	    if (maxCols > 1)
 	        free(colSpecs);
@@ -2268,7 +2268,7 @@ ProcessTable(
 	/*
 	 * get the column justification.
 	 */
-	if (NULL != colJustSpec)
+	if (nullptr != colJustSpec)
 	  {
 	    colJustify = *colJustSpec;
 	    colJustSpec++;
@@ -2285,7 +2285,7 @@ ProcessTable(
 	/*
 	 * skip to the next set of width specifications
 	 */
-	if (col + 1 < maxCols && NULL != widthStr[1])
+	if (col + 1 < maxCols && nullptr != widthStr[1])
 	    widthStr++;
 
 	/*
@@ -2293,7 +2293,7 @@ ProcessTable(
 	 */
 	for (row = 0; row < maxRows; row++)
 	  {
-	    cellInfo[row * maxCols + col].cell_seg = NULL;
+	    cellInfo[row * maxCols + col].cell_seg = nullptr;
 	    cellInfo[row * maxCols + col].col_spn  = 0;
 	    cellInfo[row * maxCols + col].row_spn  = 0;
 	    cellInfo[row * maxCols + col].info     = DefLayFrmtInfo;
@@ -2375,7 +2375,7 @@ ProcessTable(
 	    /*
 	     * are any alignment characters specified?
 	     */
-	    if (NULL != alignCharacters && '\0' != *alignCharacters)
+	    if (nullptr != alignCharacters && '\0' != *alignCharacters)
 	      {
                 size_t len = _DtCvCopyFirstChar(alignCharacters, alignBuf,
                                                sizeof(alignBuf));
@@ -2516,7 +2516,7 @@ ProcessTable(
 	/*
 	 * warning - nothing done if malloc error.
 	 */
-	if (NULL != info)
+	if (nullptr != info)
 	  {
 	    /*
 	     * initialize to the line counts for the table
@@ -2619,7 +2619,7 @@ ProcessTable(
 	for (col = 0, layout->left = saveLeft; col < maxCols;
 				layout->left += colSpecs[col++].actual, cell++)
 	  {
-	    if (cellInfo[cell].cell_seg != NULL)
+	    if (cellInfo[cell].cell_seg != nullptr)
 	      {
 		/*
 		 * calculate the new height
@@ -3004,7 +3004,7 @@ DetermineHeadPositioning(
     (*side)[DIMS_BOTTOM][DIMS_RIGHT] = start_y + max_top +
 			sideHeight - (*side)[DIMS_BOTTOM][DIMS_RIGHT];
 
-    if (ret_side_size != NULL)
+    if (ret_side_size != nullptr)
 	*ret_side_size = sideHeight;
 }
 
@@ -3322,13 +3322,13 @@ ProcessController(
     /*
      * Restore the previous information
      */
-    if (NULL != layout->lst_rendered)
-	layout->lst_rendered->next_disp = NULL;
+    if (nullptr != layout->lst_rendered)
+	layout->lst_rendered->next_disp = nullptr;
 
     layout->left           = saveLeft;
     layout->right          = saveRight;
     layout->max_width      = saveMaxWidth;
-    layout->lst_rendered   = NULL;
+    layout->lst_rendered   = nullptr;
     layout->info.y_pos     = saveYPos;
 
     return frmtInfo;
@@ -3859,7 +3859,7 @@ ProcessContainer(
 		 * check to see if the character is 'valid'.
 		 * if not, default out of JUSTIFY_CHAR
 		 */
-		if ( (NULL != layout->info.align_char) && ( '\0' != *layout->info.align_char)) 
+		if ( (nullptr != layout->info.align_char) && ( '\0' != *layout->info.align_char)) 
 		    layout->txt_justify = _DtCvJUSTIFY_LEFT;
 	      }
 	  }
@@ -3867,9 +3867,9 @@ ProcessContainer(
 	/*
 	 * terminate the previous rendering list
 	 */
-	if (NULL != layout->lst_rendered)
-	    layout->lst_rendered->next_disp = NULL;
-	layout->lst_rendered = NULL;
+	if (nullptr != layout->lst_rendered)
+	    layout->lst_rendered->next_disp = nullptr;
+	layout->lst_rendered = nullptr;
 
 	/*
 	 * push the data point and reset margin/text info.
@@ -3909,7 +3909,7 @@ ProcessContainer(
     layout->info.cur_max_x = 0;
     ProcessSegmentList(canvas, layout, _DtCvContainerListOfSeg(con_seg),
 					myMinY,
-					&maxWidth, &maxXPos, NULL);
+					&maxWidth, &maxXPos, nullptr);
     /*
      * if this container forces a wrap join of the next item,
      * save the current line, but don't add space or null the
@@ -3934,9 +3934,9 @@ ProcessContainer(
 	/*
 	 * terminate the previous rendering list
 	 */
-	if (NULL != layout->lst_rendered)
-	    layout->lst_rendered->next_disp = NULL;
-        layout->lst_rendered = NULL;
+	if (nullptr != layout->lst_rendered)
+	    layout->lst_rendered->next_disp = nullptr;
+        layout->lst_rendered = nullptr;
       }
 
     /*
@@ -4001,7 +4001,7 @@ ProcessContainer(
 	/*
 	 * warning - nothing done if malloc error.
 	 */
-	if (NULL != info)
+	if (nullptr != info)
 	  {
 	    /*
 	     * initialize to the end information of the container.
@@ -4090,8 +4090,8 @@ ProcessSegmentList(
     _DtCvUnit	 maxWidth     = 0;
     _DtCvUnit	 saveYpos     = layout->info.y_pos;
     _DtCvSegmentI	*segStart     = cur_seg;
-    LayFrmtInfo		*headInfo     = NULL;
-    LayFrmtInfo		*lastHead     = NULL;
+    LayFrmtInfo		*headInfo     = nullptr;
+    LayFrmtInfo		*lastHead     = nullptr;
     LayFrmtInfo		*nxtHead;
     _DtCvLayoutInfo	 startInfo;
 
@@ -4128,7 +4128,7 @@ ProcessSegmentList(
     /*
      * process all the controller type containers in the segment list
      */
-    while (NULL != cur_seg)
+    while (nullptr != cur_seg)
       {
 	if (_DtCvIsSegContainer(cur_seg) && _DtCvIsSegController(cur_seg))
 	  {
@@ -4159,7 +4159,7 @@ ProcessSegmentList(
 	    /*
 	     * remember this controller.
 	     */
-	    if (NULL == headInfo)
+	    if (nullptr == headInfo)
 		headInfo = nxtHead;
 	    else
 		lastHead->next_info = nxtHead;
@@ -4175,7 +4175,7 @@ ProcessSegmentList(
     /*
      * Now reset the margins based on the controllers found
      */
-    if (NULL != headInfo)
+    if (nullptr != headInfo)
       {
 	DetermineMaxDims(&topBot, &cornerDims, leftMargin, rightMargin,
 			    &topHeight, &botHeight, &maxWidth);
@@ -4220,10 +4220,10 @@ ProcessSegmentList(
 	    /*
 	     * now calculate the width of this line.
 	     */
-	    while (pSeg != NULL && count > 0)
+	    while (pSeg != nullptr && count > 0)
 	      {
 		_DtCvGetWidthOfSegment(canvas,pSeg,start,count,
-						    &cnt, &tmpWidth, NULL);
+						    &cnt, &tmpWidth, nullptr);
 		layout->info.text_x_pos += tmpWidth;
 		count -= cnt;
 		start  = 0;
@@ -4248,7 +4248,7 @@ ProcessSegmentList(
     saveLineCnt  = canvas->line_cnt;
     saveBrkCnt   = canvas->brk_cnt;
 
-    while (NULL != cur_seg)
+    while (nullptr != cur_seg)
       {
         width = layout->max_width - layout->info.text_x_pos
 				- layout->rmargin - layout->info.cur_len;
@@ -4311,7 +4311,7 @@ ProcessSegmentList(
 						_DtCvSTRING,
 						layout->info.lst_hyper,
 						cur_seg->next_seg,
-						0, cur_seg, NULL, NULL, NULL);
+						0, cur_seg, nullptr, nullptr, nullptr);
 			    /*
 			     * if the next width is zero, reset the flag.
 			     */
@@ -4388,7 +4388,7 @@ ProcessSegmentList(
 		    /*
 		     * indicate this segment as the last item rendered
 		     */
-		    if (NULL != layout->lst_rendered)
+		    if (nullptr != layout->lst_rendered)
 		        layout->lst_rendered->next_disp = cur_seg;
 		    layout->lst_rendered = cur_seg;
 		    break;
@@ -4462,7 +4462,7 @@ ProcessSegmentList(
 		    /*
 		     * indicate this segment as the last item rendered
 		     */
-		    if (NULL != layout->lst_rendered)
+		    if (nullptr != layout->lst_rendered)
 		        layout->lst_rendered->next_disp = cur_seg;
 		    layout->lst_rendered = cur_seg;
 		    break;
@@ -4522,7 +4522,7 @@ ProcessSegmentList(
 	    /*
 	     * Now reset the margins based on the controllers found
 	     */
-	    if (NULL != headInfo)
+	    if (nullptr != headInfo)
 	      {
 		layout->left   += leftMargin;
 		layout->right  += rightMargin;
@@ -4549,10 +4549,10 @@ ProcessSegmentList(
 		    /*
 		     * now calculate the width of this line.
 		     */
-		    while (pSeg != NULL && count > 0)
+		    while (pSeg != nullptr && count > 0)
 		      {
 			_DtCvGetWidthOfSegment(canvas,pSeg,start,count,
-							&cnt, &tmpWidth, NULL);
+							&cnt, &tmpWidth, nullptr);
 			layout->info.text_x_pos += tmpWidth;
 			count -= cnt;
 			start  = 0;
@@ -4569,7 +4569,7 @@ ProcessSegmentList(
     /*
      * if there were heads, now place them correctly.
      */
-    if (NULL != headInfo)
+    if (nullptr != headInfo)
       {
 	_DtCvUnit	blockHeight;
 	_DtCvUnit	blockWidth;
@@ -4577,7 +4577,7 @@ ProcessSegmentList(
 	/*
 	 * make sure all of the information in the body is saved out
 	 */
-	CheckSaveInfo (canvas, layout, NULL, 0);
+	CheckSaveInfo (canvas, layout, nullptr, 0);
 
 	/*
 	 * now calculate the non-controllers overall height.
@@ -4602,7 +4602,7 @@ ProcessSegmentList(
 
 	nxtHead = headInfo;
 	cur_seg = segStart;
-	while (cur_seg != NULL)
+	while (cur_seg != nullptr)
 	  {
 	    if (_DtCvIsSegContainer(cur_seg) && _DtCvIsSegController(cur_seg))
 	      {
@@ -4876,7 +4876,7 @@ CheckSpacing (
     /*
      * see what group is before this group and how much space there is
      */
-    while (NULL != nxtGrp)
+    while (nullptr != nxtGrp)
       {
 	/*
 	 * as long as I'm not comparing against myself, try it.
@@ -5016,7 +5016,7 @@ MoveText (
      * find out what's in front of it. And how much 'extra' room
      * there is.
      */
-    space = CheckSpacing(canvas, layout, NULL, idx, -1,
+    space = CheckSpacing(canvas, layout, nullptr, idx, -1,
 				top_y, bot_y,
 				canvas->txt_lst[idx].text_x,
 				needed);
@@ -5050,7 +5050,7 @@ MoveLines (
      * find out what's in front of it. And how much 'extra' room
      * there is.
      */
-    space = CheckSpacing(canvas, layout, NULL, -1, idx,
+    space = CheckSpacing(canvas, layout, nullptr, -1, idx,
 				top_y, bot_y,
 				canvas->line_lst[idx].pos_x,
 				needed);
@@ -5084,7 +5084,7 @@ CheckMoveInfo (
     /*
      * fill in the max x of each group
      */
-    for (nxtGrp = layout->grp_lst; NULL != nxtGrp; nxtGrp = nxtGrp->next_info)
+    for (nxtGrp = layout->grp_lst; nullptr != nxtGrp; nxtGrp = nxtGrp->next_info)
       {
 	/*
 	 * find the maximum of the group
@@ -5096,7 +5096,7 @@ CheckMoveInfo (
     /*
      * now check each group for exceeding the boundary.
      */
-    for (nxtGrp = layout->grp_lst; NULL != nxtGrp; nxtGrp = nxtGrp->next_info)
+    for (nxtGrp = layout->grp_lst; nullptr != nxtGrp; nxtGrp = nxtGrp->next_info)
       {
 	/*
 	 * does this group exceed the boundary?
@@ -5255,7 +5255,7 @@ LayoutCanvasInfo (
     SetTextPosition (layout, True);
 
     ProcessSegmentList(canvas, layout, canvas->element_lst, -1,
-						&maxWidth, &maxXPos, NULL);
+						&maxWidth, &maxXPos, nullptr);
 
     RemoveDataPoint(layout, &basePt);
 
@@ -5364,7 +5364,7 @@ LayoutCanvas (
     /*
      * clean up table information
      */
-    if (NULL != layout->grp_lst)
+    if (nullptr != layout->grp_lst)
 	free(layout->grp_lst);
 
     /*
@@ -5457,13 +5457,13 @@ ProcessMarks (
     _DtCvSelectData	end;
     _DtCvSegmentI	*firstSeg;
 
-    while (NULL != mark_lst && NULL != *mark_lst)
+    while (nullptr != mark_lst && nullptr != *mark_lst)
       {
 	/*
 	 * convert the segments to begin and end points
 	 */
 	if (_DtCvSTATUS_BAD == _DtCvCvtSegsToPts(canvas, (*mark_lst)->segs,
-					&beg, &end, NULL, NULL, &firstSeg))
+					&beg, &end, nullptr, nullptr, &firstSeg))
 	    /*
 	     * just set a return value since this indicates bad data
 	     * and not system failure.
@@ -5526,8 +5526,8 @@ _DtCanvasResize (
     _DtCvPointInfo       selPt;
     _DtCvPointInfo	**markInfo;
 
-    selPt.client_data = NULL;
-    selPt.segs        = NULL;
+    selPt.client_data = nullptr;
+    selPt.segs        = nullptr;
 
     /*
      * check to see if the width has changed - if not,
@@ -5543,7 +5543,7 @@ _DtCanvasResize (
          * remember the current selection.
          */
         selectStatus = _DtCanvasGetSelectionPoints(canvas, &(selPt.segs),
-								NULL, NULL);
+								nullptr, nullptr);
         /*
          * remember the marks
          */
@@ -5565,7 +5565,7 @@ _DtCanvasResize (
         /*
          * Layout the information if there is anything to do
          */
-        if (_DtCvSTATUS_BAD == LayoutCanvas (canvas, &layOut, NULL))
+        if (_DtCvSTATUS_BAD == LayoutCanvas (canvas, &layOut, nullptr))
 	    return _DtCvSTATUS_BAD;
     
         /*
@@ -5574,7 +5574,7 @@ _DtCanvasResize (
         if (_DtCvSTATUS_OK == selectStatus)
           {
 	    _DtCanvasActivatePts(canvas,_DtCvACTIVATE_SELECTION, &selPt,
-								NULL,NULL);
+								nullptr,nullptr);
 	    _DtCvFreeArray((void **) selPt.segs);
           }
 
@@ -5582,9 +5582,9 @@ _DtCanvasResize (
          * now place the marks in the mark and traversal lists
          */
         ProcessMarks(canvas, markInfo);
-        if (NULL != markInfo)
+        if (nullptr != markInfo)
 	  {
-	    for (i = 0; NULL != markInfo[i]; i++)
+	    for (i = 0; nullptr != markInfo[i]; i++)
 		_DtCvFreeArray((void **) (markInfo[i]->segs));
 	    _DtCvFreeArray((void **) markInfo);
 	  }
@@ -5599,9 +5599,9 @@ _DtCanvasResize (
     /*
      * return the maximum height and width used
      */
-    if (ret_width != NULL)
+    if (ret_width != nullptr)
         *ret_width  = canvas->max_x;
-    if (ret_height != NULL)
+    if (ret_height != nullptr)
         *ret_height = canvas->max_y;
 
     return retStatus;
@@ -5672,13 +5672,13 @@ _DtCanvasSetTopic (
      * return the maximum height and width used
      * And the location of the id.
      */
-    if (ret_width != NULL)
+    if (ret_width != nullptr)
         *ret_width = canvas->max_x;
-    if (ret_height != NULL)
+    if (ret_height != nullptr)
         *ret_height = canvas->max_y;
-    if (ret_y != NULL)
+    if (ret_y != nullptr)
       {
-	if (NULL != layOut.target_id && True != layOut.id_found)
+	if (nullptr != layOut.target_id && True != layOut.id_found)
 	    result = _DtCvSTATUS_ID_BAD;
         *ret_y = layOut.id_Ypos;
       }

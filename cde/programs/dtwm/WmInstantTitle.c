@@ -53,16 +53,16 @@ static void InstantTitleGetTitle(PtrInstantTitleData pITD) {
 
     if (!title) return;
 
-    value = _XmStringUngenerate(title, NULL, XmCHARSET_TEXT, XmCHARSET_TEXT);
+    value = _XmStringUngenerate(title, nullptr, XmCHARSET_TEXT, XmCHARSET_TEXT);
 
     if (!value) return;
 
-    XtVaSetValues(textFieldW, XmNvalue, value, NULL);
+    XtVaSetValues(textFieldW, XmNvalue, value, nullptr);
 
     XtFree(value);
 
     XtVaSetValues(textFieldW, XmNcursorPosition,
-		  XmTextFieldGetLastPosition(textFieldW), NULL);
+		  XmTextFieldGetLastPosition(textFieldW), nullptr);
 }
 
 static void InstantTitleSetTitle(PtrInstantTitleData pITD) {
@@ -84,7 +84,7 @@ static void InstantTitleSetTitle(PtrInstantTitleData pITD) {
 	SetUtf8String (DISPLAY, client, iconName, str);
     }
     else {
-	*title = NULL;
+	*title = nullptr;
 	XDeleteProperty(DISPLAY, client, name);
 	XDeleteProperty(DISPLAY, client, iconName);
     }
@@ -124,7 +124,7 @@ static void InstantTitleButtonCB(Widget w, XtPointer client_data,
 	    break;
 
 	case 3:
-	    XtCallCallbacks(pITD->dialogBoxW, XmNhelpCallback, NULL);
+	    XtCallCallbacks(pITD->dialogBoxW, XmNhelpCallback, nullptr);
 	    break;
 
 	default:
@@ -203,7 +203,7 @@ static Boolean InstantTitleMakeDialog(PtrInstantTitleData pITD) {
 
     XtSetValues (dialogBoxW, args, n);
 
-    formW = pITD->formW = XmCreateForm(dialogBoxW, "instantTitleForm", NULL, 0);
+    formW = pITD->formW = XmCreateForm(dialogBoxW, "instantTitleForm", nullptr, 0);
 
     if (!formW) goto err;
 
@@ -255,7 +255,7 @@ static void InstantTitleSetPosition(PtrInstantTitleData pITD) {
     ClientData *pCD = pITD->pCDforClient;
     WmScreenData *pSD = pCD->pSD;
 
-    XtVaGetValues(dialogShellW, XmNheight, &height, NULL);
+    XtVaGetValues(dialogShellW, XmNheight, &height, nullptr);
 
     if (wmGD.positionIsFrame) {
 	if (pSD->decoupleTitleAppearance)

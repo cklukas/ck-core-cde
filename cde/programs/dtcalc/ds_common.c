@@ -39,13 +39,13 @@
 void
 read_str(char **str, char *value)
 {
-  if (*str != NULL) free(*str) ;
-  if (value != NULL && strlen(value))
+  if (*str != nullptr) free(*str) ;
+  if (value != nullptr && strlen(value))
     {
       *str = (char *) malloc((unsigned) (strlen(value) + 1)) ;
       strcpy(*str, value) ;
     }
-  else *str = NULL ;
+  else *str = nullptr ;
 }
 
 

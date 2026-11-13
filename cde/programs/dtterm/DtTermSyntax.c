@@ -128,7 +128,7 @@ static void GetUsage(void)
 #ifdef    _VUE_NO_PROTO
             SysError(HPT_MALLOC4);
 #else  /* _VUE_NO_PROTO */
-            SysError(HPT_MALLOC4, NULL);
+            SysError(HPT_MALLOC4, nullptr);
 #endif /* _VUE_NO_PROTO */
         }
 #endif	/* DKS */
@@ -199,7 +199,7 @@ static void GetUsage(void)
 #ifdef    _VUE_NO_PROTO
             SysError(HPT_MALLOC5);
 #else  /* _VUE_NO_PROTO */
-            SysError(HPT_MALLOC5, NULL);
+            SysError(HPT_MALLOC5, nullptr);
 #endif /* _VUE_NO_PROTO */
         }
 #endif	/* DKS */

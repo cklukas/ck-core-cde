@@ -64,7 +64,7 @@ typedef struct _fallcConverterListRec {
     struct _fallcConverterListRec *next;
 } XlcConverterListRec, *XlcConverterList;
 
-static XlcConverterList conv_list = NULL;
+static XlcConverterList conv_list = nullptr;
 
 static void
 close_converter(XlcConv conv)
@@ -79,7 +79,7 @@ get_converter(
     XLCd to_lcd,
     XrmQuark to_type)
 {
-    XlcConverterList list, prev = NULL;
+    XlcConverterList list, prev = nullptr;
     XlcConv conv;
 
     for (list = conv_list; list; list = list->next) {
@@ -125,7 +125,7 @@ _fallcSetConverter(
     }
 
     list = (XlcConverterList) Xmalloc(sizeof(XlcConverterListRec));
-    if (list == NULL)
+    if (list == nullptr)
 	return False;
 
     list->from_lcd = from_lcd;
@@ -164,7 +164,7 @@ indirect_convert(
     XPointer tmp_args[1];
     int cs_left, ret, length, unconv_num = 0;
 
-    if (from == NULL || *from == NULL) {
+    if (from == nullptr || *from == nullptr) {
 	if (from_conv->methods->reset)
 	    (*from_conv->methods->reset)(from_conv);
 
@@ -261,13 +261,13 @@ open_indirect_converter(XLCd from_lcd, char *from, XLCd to_lcd, char *to)
 	return (XlcConv) NULL;
 
     lc_conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
-    if (lc_conv == NULL)
+    if (lc_conv == nullptr)
 	return (XlcConv) NULL;
 
     lc_conv->methods = &conv_methods;
 
     lc_conv->state = (XPointer) Xmalloc(sizeof(ConvRec));
-    if (lc_conv->state == NULL){
+    if (lc_conv->state == nullptr){
 	close_indirect_converter(lc_conv);
 	return (XlcConv) NULL;
     }
@@ -275,24 +275,24 @@ open_indirect_converter(XLCd from_lcd, char *from, XLCd to_lcd, char *to)
     conv = (Conv) lc_conv->state;
 
     from_conv = get_converter(from_lcd, from_type, from_lcd, QCTCharSet);
-    if (from_conv == NULL)
+    if (from_conv == nullptr)
 	from_conv = get_converter(from_lcd, from_type, from_lcd, QCharSet);
-    if (from_conv == NULL)
+    if (from_conv == nullptr)
 	from_conv = get_converter((XLCd)NULL, from_type, (XLCd)NULL, QCharSet);
-    if (from_conv == NULL)
+    if (from_conv == nullptr)
 	from_conv = get_converter(from_lcd, from_type, from_lcd, QChar);
-    if (from_conv == NULL){
+    if (from_conv == nullptr){
 	close_indirect_converter(lc_conv);
 	return (XlcConv) NULL;
     }
     conv->from_conv = from_conv;
 
     to_conv = get_converter(to_lcd, QCTCharSet, to_lcd, to_type);
-    if (to_conv == NULL)
+    if (to_conv == nullptr)
 	to_conv = get_converter(to_lcd, QCharSet, to_lcd, to_type);
-    if (to_conv == NULL)
+    if (to_conv == nullptr)
 	to_conv = get_converter((XLCd) NULL, QCharSet, (XLCd) NULL, to_type);
-    if (to_conv == NULL){
+    if (to_conv == nullptr){
 	close_indirect_converter(lc_conv);
 	return (XlcConv) NULL;
     }

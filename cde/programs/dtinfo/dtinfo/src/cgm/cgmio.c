@@ -148,20 +148,20 @@ static int get_b_bytes(unsigned char *out_ptr,
 unsigned char *get_b_cmd(struct cmd_info_s *cmd_ptr, _DtGrStream *stream)
 {
 #define INIT_MEM (50 * 1024)	/* initial allocation */
-  static unsigned char *mem_ptr = NULL;
+  static unsigned char *mem_ptr = nullptr;
   static int mem_allocated;
   int data_left, new_len;
   
   /* if first time in, get the initial memory allocation */
   if ((!mem_ptr) && (!(mem_ptr = (unsigned char *) malloc(INIT_MEM)))) {
     burp(stderr, "couldn't allocate initial memory for get_b_cmd\n");
-    return(NULL);
+    return(nullptr);
   } else mem_allocated = INIT_MEM;
   
   /* get the next two bytes */
   if (!get_b_bytes(mem_ptr, 2, stream)) {
     burp(stderr, "trouble getting first 2 bytes of command\n");
-    return(NULL);
+    return(nullptr);
   }
   /* mark the position */
   cmd_ptr->byte_no = bytes_read - (endin_ptr - in_ptr) - 2;
@@ -177,7 +177,7 @@ unsigned char *get_b_cmd(struct cmd_info_s *cmd_ptr, _DtGrStream *stream)
     if (!get_b_bytes(mem_ptr, (cmd_ptr->p_len % 2) ? 
 		     cmd_ptr->p_len + 1 : cmd_ptr->p_len, stream)) {
       burp(stderr, "trouble with get_b_bytes\n");
-      return(NULL);
+      return(nullptr);
     } else return(mem_ptr);	/* all done */
   } else {				/* long form */
     data_left = 1;
@@ -186,7 +186,7 @@ unsigned char *get_b_cmd(struct cmd_info_s *cmd_ptr, _DtGrStream *stream)
       /* need the next two bytes */
       if (!get_b_bytes(mem_ptr + cmd_ptr->p_len, 2, stream)) {
 	burp(stderr, "trouble with get_b_bytes\n");
-	return(NULL);
+	return(nullptr);
       }
       /* how much to come ? */
       new_len = (int) (((mem_ptr[cmd_ptr->p_len] & 127) << 8) | 
@@ -200,7 +200,7 @@ unsigned char *get_b_cmd(struct cmd_info_s *cmd_ptr, _DtGrStream *stream)
 	      realloc(mem_ptr, 	mem_allocated = cmd_ptr->p_len + new_len))) {
 	  burp(stderr, "couldn't get %d bytes in get_b_cmd\n",
 	       mem_allocated);
-	  return(NULL);
+	  return(nullptr);
 	} else if (io_debug)
 	  burp(stderr, "increasing to %d bytes allocated\n", mem_allocated);
       }
@@ -208,7 +208,7 @@ unsigned char *get_b_cmd(struct cmd_info_s *cmd_ptr, _DtGrStream *stream)
       if (!get_b_bytes(mem_ptr + cmd_ptr->p_len, new_len, stream)) {
 	burp(stderr, "couldn't get next %d bytes in get_b_cmd\n",
 	     new_len);
-	return(NULL);
+	return(nullptr);
       }
       cmd_ptr->p_len += new_len;
     }

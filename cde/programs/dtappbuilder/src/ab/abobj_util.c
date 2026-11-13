@@ -96,7 +96,7 @@ abobj_instantiate_tree(
 {
     int iRet = 0;
  
-    if (root == NULL)
+    if (root == nullptr)
         iRet = -1;
  
     if (iRet == 0 && !obj_has_flag(root, XmConfiguredFlag))
@@ -151,7 +151,7 @@ abobj_hide_tree(
 {
     int iRet = 0;
 
-    if (root == NULL) 
+    if (root == nullptr) 
         iRet = -1; 
 
     if (iRet == 0 && obj_has_flag(root, MappedFlag))
@@ -177,8 +177,8 @@ abobj_get_actual_width(
 
     widget = objxm_get_widget(obj);
 
-    if (widget != NULL)
-        XtVaGetValues(widget, XmNwidth, &width, NULL);
+    if (widget != nullptr)
+        XtVaGetValues(widget, XmNwidth, &width, nullptr);
 
     return((int)width);
 }
@@ -196,8 +196,8 @@ abobj_get_actual_height(
  
     widget = objxm_get_widget(obj); 
  
-    if (widget != NULL) 
-        XtVaGetValues(widget, XmNheight, &height, NULL);
+    if (widget != nullptr) 
+        XtVaGetValues(widget, XmNheight, &height, nullptr);
 
     return((int)height);
 }
@@ -301,8 +301,8 @@ abobj_get_actual_x(
 
     widget = objxm_get_widget(obj);
  
-    if (widget != NULL)
-        XtVaGetValues(widget, XmNx, &w_x, NULL);
+    if (widget != nullptr)
+        XtVaGetValues(widget, XmNx, &w_x, nullptr);
     else
         util_dprintf(1, "abobj_get_actual_x: %s : null widget\n",
                 obj_get_name(obj));
@@ -367,8 +367,8 @@ abobj_get_actual_y(
 
     widget = objxm_get_widget(obj);
 
-    if (widget != NULL)
-        XtVaGetValues(widget, XmNy, &w_y, NULL);
+    if (widget != nullptr)
+        XtVaGetValues(widget, XmNy, &w_y, nullptr);
     else
         util_dprintf(1, "abobj_get_actual_y: %s : null widget\n",
                 obj_get_name(obj));
@@ -396,24 +396,24 @@ abobj_get_label_width(
 	ABObj pobj, child;
         pobj = (ABObj)objxm_comp_get_subobj(obj, AB_CFG_PARENT_OBJ);
 	child = obj_get_child(pobj, 0);
-	if (child != NULL)
+	if (child != nullptr)
 	    width = abobj_get_label_width(child);
 	else
 	    width = 0;
     }
     else if (l_obj != obj)
     {
-	if (l_obj != NULL)
+	if (l_obj != nullptr)
 	    XtVaGetValues(objxm_get_widget(l_obj),
 			XmNwidth,  &width,
-			NULL);
+			nullptr);
 	else /* No label */
 	    width = 0;
     }
     else 
 	XtVaGetValues(objxm_get_widget(obj),
 			XmNwidth,  &width,
-			NULL);
+			nullptr);
 
     return ((int)width);
 }
@@ -467,10 +467,10 @@ abobj_get_greatest_size(
     *height = w_rect.height;
     previous_height = *height;
 
-    if (tallest_obj != NULL)
+    if (tallest_obj != nullptr)
         *tallest_obj = list[0];
 
-    if (widest_obj != NULL)
+    if (widest_obj != nullptr)
     	*widest_obj = list[0];
 
     for (i=0; i < count; i++)
@@ -478,11 +478,11 @@ abobj_get_greatest_size(
         x_get_widget_rect(objxm_get_widget(list[i]), &w_rect);
 
         *width = max((int) w_rect.width, (int) *width); 
-	if (widest_obj != NULL && *width > previous_width)
+	if (widest_obj != nullptr && *width > previous_width)
 		*widest_obj = list[i];
 
         *height = max((int) w_rect.height, (int)*height);
-	if (tallest_obj != NULL && *height > previous_height)
+	if (tallest_obj != nullptr && *height > previous_height)
 		*tallest_obj = list[i];
     }
 }
@@ -501,10 +501,10 @@ abobj_get_value_x(
     {
 	XtVaGetValues(objxm_get_widget(obj),
 			XmNx,      &x,
-			NULL);
+			nullptr);
 	XtVaGetValues(objxm_get_widget(o_obj),
 			XmNx,   &valuex,
-			NULL);
+			nullptr);
 	x += valuex;	
     }
     else 
@@ -512,7 +512,7 @@ abobj_get_value_x(
 	XtVaGetValues(objxm_get_widget(obj),
 			XmNx,      &x,
 			XmNwidth,  &width,
-			NULL);
+			nullptr);
   	x += width;	
     }
 
@@ -590,14 +590,14 @@ abobj_alloc_moduled_name(
     static char full_name[BUFSIZ];
     STRING	moduled_name;
 
-    if (mod_name == NULL)
+    if (mod_name == nullptr)
 	strcpy(full_name, "**unnamed module**");
     else
 	strcpy(full_name, mod_name);
 
     strcat(full_name, " :: "); 
 
-    if (obj_name == NULL)
+    if (obj_name == nullptr)
 	strcat(full_name, "**unnamed object**");
     else
 	strcat(full_name, obj_name);
@@ -626,12 +626,12 @@ abobj_get_moduled_name(
 
     if (obj_is_project(obj))
 	mod_name = "Application";
-    else if ((module = obj_get_module(obj)) == NULL)
+    else if ((module = obj_get_module(obj)) == nullptr)
 	mod_name = "**null module**";
     else
 	mod_name = obj_get_name(module);
 
-    if (obj == NULL)
+    if (obj == nullptr)
 	obj_name = "**null object**";
     else
 	obj_name = obj_get_name(obj);
@@ -657,7 +657,7 @@ abobj_moduled_name_extract(
     STRING	objname;
     int		iRet = 0;
 
-    if (modobjname == NULL)
+    if (modobjname == nullptr)
     {
 	if (util_get_verbosity() > 0)
 	    fprintf(stderr,"abobj_moduled_name_extract: NULL module-object name passed\n");
@@ -666,12 +666,12 @@ abobj_moduled_name_extract(
     else
     {
     	modname = strtok(modobjname, " ::");
-	strtok(NULL, " ");
-    	objname = strtok(NULL, "");
+	strtok(nullptr, " ");
+    	objname = strtok(nullptr, "");
 
-    	if (modname != NULL && objname != NULL)
+    	if (modname != nullptr && objname != nullptr)
     	{
-    	    if ((*module = obj_find_module_by_name(proj_get_project(), modname)) != NULL)
+    	    if ((*module = obj_find_module_by_name(proj_get_project(), modname)) != nullptr)
     	    	*obj = obj_scoped_find_by_name(*module, objname);
 	    else
 	    {
@@ -689,7 +689,7 @@ abobj_moduled_name_extract(
 	}
     }
     if (iRet == -1)
-	*module = *obj = NULL;
+	*module = *obj = nullptr;
 
     XtFree(modobjname);
     return iRet;
@@ -715,7 +715,7 @@ abobj_comp_rename(
  
     /* Change name-base of all subobj to be new obj name */
     for (trav_open(&trav, root, AB_TRAV_COMP_SUBOBJS);
-        (subobj = trav_next(&trav)) != NULL; )
+        (subobj = trav_next(&trav)) != nullptr; )
     {
 	if (subobj != root)
 	{
@@ -756,12 +756,12 @@ abobj_update_module_name(
     {
 	winobj = obj_get_child(modobj, i);
     	statobj = objxm_comp_get_subobj(winobj, AB_CFG_STATUS_OBJ);
-    	if (statobj && objxm_get_widget(statobj) != NULL)
+    	if (statobj && objxm_get_widget(statobj) != nullptr)
     	{
             xmname = XmStringCreateLocalized(modname);
             XtVaSetValues(objxm_get_widget(statobj),
             	XmNlabelString,     xmname,
-            	NULL);
+            	nullptr);
             XmStringFree(xmname);
         }
     }
@@ -774,14 +774,14 @@ abobj_update_proj_name(
     ABObj       proj_obj
 )
 { 
-    STRING	new_title = NULL;
-    STRING	proj_win_title = NULL;
-    STRING	proj_name = NULL;
+    STRING	new_title = nullptr;
+    STRING	proj_win_title = nullptr;
+    STRING	proj_name = nullptr;
  
     if( !obj_is_project(proj_obj) ) 
         return -1;  
  
-    if( AB_proj_window == NULL )
+    if( AB_proj_window == nullptr )
     {	
 	return 0;
     }
@@ -814,7 +814,7 @@ abobj_update_proj_name(
     strcat(new_title, proj_win_title); 
     util_free(proj_win_title);
 
-    XtVaSetValues(XtParent(AB_proj_window), XmNtitle,  new_title, NULL);
+    XtVaSetValues(XtParent(AB_proj_window), XmNtitle,  new_title, nullptr);
     
     /*
      * The project directory is always the current directory
@@ -829,9 +829,9 @@ abobj_update_palette_title(
     ABObj       proj_obj
 )
 { 
-    STRING      	new_title = NULL;
-    STRING      	proj_win_title = NULL;
-    STRING      	proj_name = NULL;
+    STRING      	new_title = nullptr;
+    STRING      	proj_win_title = nullptr;
+    STRING      	proj_name = nullptr;
     AB_TRAVERSAL	trav;
     BOOL		SaveNeeded = FALSE;
     ABObj		mod;
@@ -857,7 +857,7 @@ abobj_update_palette_title(
     strcat(proj_win_title, ".bip");
  
     for (trav_open(&trav, proj_obj, AB_TRAV_MODULES);
-	((mod = trav_next(&trav)) != NULL) && !SaveNeeded; )
+	((mod = trav_next(&trav)) != nullptr) && !SaveNeeded; )
     {
 	if (obj_has_flag(mod, SaveNeededFlag))
 	   SaveNeeded = TRUE;
@@ -883,7 +883,7 @@ abobj_update_palette_title(
 	    CATGETS(Dtb_project_catd, 100, 244, " (Save Needed)"));
     }
 
-    XtVaSetValues(AB_toplevel, XmNtitle,  new_title, NULL); 
+    XtVaSetValues(AB_toplevel, XmNtitle,  new_title, nullptr); 
     return 0;
 }
 
@@ -898,9 +898,9 @@ abobj_dup(ABObj obj)
     ABObj	newObj= obj_dup(obj);
     STRING	name;
 
-    if (newObj == NULL)
+    if (newObj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     if (obj->attachments)
@@ -935,7 +935,7 @@ ABObj
 abobj_dup_tree(ABObj obj)
 {
     AB_TRAVERSAL	trav;
-    ABObj		newObj = NULL,
+    ABObj		newObj = nullptr,
 			child,
 			newChild;
     
@@ -945,7 +945,7 @@ abobj_dup_tree(ABObj obj)
     newObj = abobj_dup(obj);
 
     for (trav_open(&trav, obj, AB_TRAV_SALIENT_CHILDREN);
-        (child = trav_next(&trav)) != NULL; )
+        (child = trav_next(&trav)) != nullptr; )
     {
 	newChild = abobj_dup_tree(child);
 
@@ -981,7 +981,7 @@ abobj_init_pane_position(
         XtVaGetValues(objxm_get_widget(parent),
                 XmNwidth,       &p_width,
                 XmNheight,      &p_height,
-                NULL);
+                nullptr);
 
         /* Snap x,y to edge of parent if already close */
         if (paneobj->x <= AB_grid_size)
@@ -993,8 +993,8 @@ abobj_init_pane_position(
         else if ((paneobj->y + paneobj->height) >= ((int)p_height - AB_grid_size))
             paneobj->y = (int)p_height - (paneobj->height + 1);
 
-        obj_set_attachment(paneobj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, paneobj->y);
-        obj_set_attachment(paneobj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, paneobj->x);
+        obj_set_attachment(paneobj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, paneobj->y);
+        obj_set_attachment(paneobj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, paneobj->x);
     }
 
     return 0;
@@ -1008,7 +1008,7 @@ reset_widget_colors(
     BOOL	reset_fg
 )
 {
-    static Widget	dummy_shell = NULL;
+    static Widget	dummy_shell = nullptr;
     Widget		dummy,
 			dummy_parent;
     Pixel		default_bg,
@@ -1016,7 +1016,7 @@ reset_widget_colors(
     Arg			args[2];
     int			n = 0;
 
-    if (widget == NULL)
+    if (widget == nullptr)
 	return -1;
 
     dummy_parent = XtParent(widget);
@@ -1027,9 +1027,9 @@ reset_widget_colors(
 	 * for cases where the widget parent is already a shell
 	 * and cannot be re-used.
 	 */
-        if (dummy_shell == NULL)
+        if (dummy_shell == nullptr)
             dummy_shell = XtCreatePopupShell("dummy_shell",
-                       transientShellWidgetClass, AB_toplevel, NULL, 0);
+                       transientShellWidgetClass, AB_toplevel, nullptr, 0);
         dummy_parent = dummy_shell;
     }
  
@@ -1039,11 +1039,11 @@ reset_widget_colors(
      * should be replaced with a scheme to cache default colors.
      */
     dummy = XtCreateWidget("dummy", XtClass(widget),
-                                dummy_parent, NULL, 0);
+                                dummy_parent, nullptr, 0);
     XtVaGetValues(dummy,
                         XmNbackground, &default_bg,
                         XmNforeground, &default_fg,
-                        NULL);
+                        nullptr);
     if (reset_bg)
     {
 	XtSetArg(args[n], XmNbackground, default_bg); n++;
@@ -1073,9 +1073,9 @@ abobj_reset_colors(
 
     /* Reset color for entire Composite Object */
     for (trav_open(&trav, obj, AB_TRAV_COMP_SUBOBJS);
-         (subobj= trav_next(&trav)) != NULL; )
+         (subobj= trav_next(&trav)) != nullptr; )
     {
-        if ((widget = objxm_get_widget(subobj)) != NULL)
+        if ((widget = objxm_get_widget(subobj)) != nullptr)
 	    reset_widget_colors(widget, reset_bg, reset_fg);
     }
     trav_close(&trav);
@@ -1096,17 +1096,17 @@ abobj_tree_set_centering_handler(
     AB_TRAVERSAL    trav;
     ABObj       obj;
  
-    if (root == NULL)
+    if (root == nullptr)
 	return ERROR;
 
     for (trav_open(&trav, root, AB_TRAV_UI);
-        (obj = trav_next(&trav)) != NULL; )
+        (obj = trav_next(&trav)) != nullptr; )
     {
 	Widget		w;
 
 	w = objxm_get_widget(obj);
 
-	if (w != NULL)
+	if (w != nullptr)
 	{
 	    DTB_CENTERING_TYPES	type;
 
@@ -1175,7 +1175,7 @@ abobj_build_menus_array(
     {
 	/* Load modules into an array */
     	for (trav_open(&trav, root, AB_TRAV_MODULES);
-             (module= trav_next(&trav)) != NULL; )
+             (module= trav_next(&trav)) != nullptr; )
 	    modules[num_modules++] = module;
 
 	trav_close(&trav);
@@ -1228,11 +1228,11 @@ abobj_project_name_extract(
 )
 {
     STRING	appobjname = XtNewString(app_name);
-    STRING	appname = NULL;
-    STRING	objname = NULL;
+    STRING	appname = nullptr;
+    STRING	objname = nullptr;
     int		iRet = 0;
 
-    if (appobjname == NULL)
+    if (appobjname == nullptr)
     {
 	if (util_get_verbosity() > 0)
 	    fprintf(stderr,"abobj_project_name_extract: NULL project-object name passed\n");
@@ -1241,10 +1241,10 @@ abobj_project_name_extract(
     else
     {
     	appname = strtok(appobjname, " ::");
-	strtok(NULL, " ");
-    	objname = strtok(NULL, "");
+	strtok(nullptr, " ");
+    	objname = strtok(nullptr, "");
 
-    	if (objname != NULL)
+    	if (objname != nullptr)
     	{
 	    if (strcmp(obj_get_name(proj_get_project()), objname) == 0)
 		*obj = proj_get_project();
@@ -1255,7 +1255,7 @@ abobj_project_name_extract(
 	    iRet = -1;
     }
     if (iRet == -1)
-	*obj = NULL;
+	*obj = nullptr;
 
     XtFree(appobjname);
     return iRet;

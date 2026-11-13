@@ -34,7 +34,7 @@ static void	put_selection_header(FILE *fp);
 static void	put_selection_sep(FILE *fp);
 static int	user_selection_fname(char *buf, int buf_len, int dpy_specific);
 
-static char	*SelectFileFormat = NULL;
+static char	*SelectFileFormat = nullptr;
 static XimsBool	cmdconf_initialized = False;
 
 
@@ -68,7 +68,7 @@ int	create_xims_dir(void)
     if (OpMode == MODE_START) {
 	ret = init_log_file(Opt.LogPath, True);
 	if (ret != NoError && Opt.LogPath)	/* try default log file */
-	    ret = init_log_file(NULL, True);
+	    ret = init_log_file(nullptr, True);
 	if (ret != NoError)			/* try alternate log file */
 	    ret = init_log_file(ALT_LOGPATH, True);
 	DPR(("Opt.LogPath='%s'\n", Opt.LogPath));
@@ -150,7 +150,7 @@ int	read_cmd_conf(void)
     char	*conf_dir, *path;
     char	*p, *lp, *valp;
     int		line_num, num_alias;
-    DtEnv	*dt = NULL;
+    DtEnv	*dt = nullptr;
     RemoteEnv	*remote;
     FILE	*fp;
     conf_dir = DTIMS_CONFDIR;
@@ -163,7 +163,7 @@ int	read_cmd_conf(void)
     }
     DPR3(("read_cmd_conf(): path=%s\n", path));
 
-    if ((fp = fopen(path, "r")) == NULL) {
+    if ((fp = fopen(path, "r")) == nullptr) {
 	DPR3(("\tcannot open '%s'\n", path));
 #ifdef	DEBUG2
 	DPR(("cannot open '%s' -- continue with default config\n", path));
@@ -177,7 +177,7 @@ int	read_cmd_conf(void)
     remote = conf->remote = ALLOC(1, RemoteEnv);
     remote->disabled = remote->useRemsh = False;
     remote->timeout = REMOTE_TIMEOUT;
-    remote->passEnv = NULL;
+    remote->passEnv = nullptr;
 
     num_alias = 0;
     start_tag_line(path);
@@ -369,7 +369,7 @@ int	read_imsconf(ImsConf *conf, char *ims_name, char *ims_fname)
     DPR3(("read_imsconf(%s): path=%s\n", ims_name, path));
 
     CLR(conf, ImsConf);
-    if ((fp = fopen(path, "r")) == NULL) {
+    if ((fp = fopen(path, "r")) == nullptr) {
 	DPR3(("\tcannot open '%s'\n", path));
 	return ErrNoImsConf;
     }
@@ -450,7 +450,7 @@ int	read_imsconf(ImsConf *conf, char *ims_name, char *ims_fname)
 int	check_ims_conf(ImsConf *ims, char *ims_name)
 {
     int		ret = NoError;
-    char	*missing_entry = NULL;
+    char	*missing_entry = nullptr;
 
     if (strcmp(ims_name, NAME_NONE) == 0)	return NoError;
 
@@ -506,13 +506,13 @@ int	read_localeconf(ImsList *list, char *locale_name)
     list->default_idx = -1;
     list->def_selmode = SEL_MODE_NOAUTO;
 
-    if ((fp = fopen(path, "r")) == NULL) {
+    if ((fp = fopen(path, "r")) == nullptr) {
 	DPR3(("\tcannot open '%s'\n", path));
 	list->status = ErrNoLocaleConf;
 	return ErrNoLocaleConf;
     }
 
-    def_name = NULL;
+    def_name = nullptr;
     sel_mode = SEL_MODE_NONE;
     num_ent = 0;
     start_tag_line(path);
@@ -591,7 +591,7 @@ int	read_user_selection(FileSel **fselp, char *locale_name)
 
     DPR3(("read_user_selection(): path=%s\n", path));
 
-    if ((fp = fopen(path, "r")) == NULL) {
+    if ((fp = fopen(path, "r")) == nullptr) {
 	DPR3(("\tcannot open '%s'\n", path));
 	/* *fselp = (FileSel *) 0; */
 	return ErrNoSelectionFile;
@@ -619,10 +619,10 @@ int	read_selection_file(FileSel *fsel, FILE *fp)
     ImsOpt	*opts[MAXIMSENT], *op;
 
     select_mode = SEL_MODE_NONE;
-    imsname = hostname = com_opt = NULL;
+    imsname = hostname = com_opt = nullptr;
     iconic = -1;
     nopts = 0;
-    opts[0] = (ImsOpt *)NULL;
+    opts[0] = (ImsOpt *)nullptr;
 
     while ((line_num = read_tag_line(fp, &lp, &valp)) > 0) {
 	if (!valp) {
@@ -704,7 +704,7 @@ int	save_user_selection(UserSelection *sel, char *locale_name)
 
     dpy_specific = user_selection_fname(path, MAXPATHLEN, -1);
 
-    if ((fp = fopen(path, "w")) == NULL) {
+    if ((fp = fopen(path, "w")) == nullptr) {
 	DPR(("\tcannot create '%s'\n", path));
 	setErrFile(path);
 	return ErrFileCreate;
@@ -731,7 +731,7 @@ int	save_user_selection(UserSelection *sel, char *locale_name)
 
 static void put_selection_entry(FILE *fp, int ent_type, XimsBool is_valid, char *val, char *val2)
 {
-    char	*name = NULL;
+    char	*name = nullptr;
 
     switch (ent_type) {
 	case _SELECTMODE:	name = STR_SELECTMODE; break;
@@ -757,20 +757,20 @@ static void	put_ims_conf(FILE *fp, UserSelection *sel)
     char	*valp, val[20];
 
     if ((valp = sel->name) && *valp)
-	put_selection_entry(fp, _IMSNAME, True, valp, NULL);
+	put_selection_entry(fp, _IMSNAME, True, valp, nullptr);
     else {
 	DPR(("put_ims_conf(): no ims name\n"));
 	if (sel->fsel && (valp = sel->fsel->name) && *valp)
-	    put_selection_entry(fp, _IMSNAME, False, valp, NULL);
+	    put_selection_entry(fp, _IMSNAME, False, valp, nullptr);
     }
     if ((valp = sel->hostname) && *valp)
-	put_selection_entry(fp, _HOSTNAME, True, valp, NULL);
+	put_selection_entry(fp, _HOSTNAME, True, valp, nullptr);
     else if (sel->fsel && (valp = sel->fsel->hostname) && *valp)
-	put_selection_entry(fp, _HOSTNAME, False, valp, NULL);
+	put_selection_entry(fp, _HOSTNAME, False, valp, nullptr);
 
     if (sel->iconic != -1) {
 	sprintf(val, "%ld", (long)sel->iconic);
-	put_selection_entry(fp, _ICONIC, True, val, NULL);
+	put_selection_entry(fp, _ICONIC, True, val, nullptr);
     }
 
     if (sel->fsel && (valp = sel->fsel->com_opt) && *valp) {
@@ -778,7 +778,7 @@ static void	put_ims_conf(FILE *fp, UserSelection *sel)
 #if	0
 	opt_valid = !sel->fsel->name || strcmp(sel->name, sel->fsel->name) == 0;
 #endif
-	put_selection_entry(fp, _IMSOPTION, opt_valid, valp, NULL);
+	put_selection_entry(fp, _IMSOPTION, opt_valid, valp, nullptr);
     }
 
     if (sel->fsel && sel->fsel->opts) {
@@ -800,7 +800,7 @@ static void	put_select_mode(FILE *fp, int select_mode)
 	select_mode = SEL_MODE_NOAUTO;
 
     sprintf(val, "%ld", (long)select_mode);
-    put_selection_entry(fp, _SELECTMODE, True, val, NULL);
+    put_selection_entry(fp, _SELECTMODE, True, val, nullptr);
 
 }
 
@@ -830,7 +830,7 @@ int	get_select_mode(void)
 
     DPR3(("get_select_mode(): path=%s\n", path));
 
-    if ((fp = fopen(path, "r")) == NULL) {
+    if ((fp = fopen(path, "r")) == nullptr) {
 	DPR3(("\tcannot open '%s'\n", path));
 	return select_mode;
     }
@@ -846,7 +846,7 @@ int	get_select_mode(void)
     fclose(fp);
 
     DPR3(("get_select_mode(%s): select_mode=%d\n",
-				dpy_specific ? "dpy" : NULL, select_mode));
+				dpy_specific ? "dpy" : nullptr, select_mode));
 
     return select_mode;
 }
@@ -878,9 +878,9 @@ int	set_select_mode(int cur_mode, int new_mode)
     }
 #endif
 
-    if ((fp = fopen(path, "r+")) == NULL) {
+    if ((fp = fopen(path, "r+")) == nullptr) {
 	DPR3(("\tcannot open '%s'\n", path));
-	if ((fp = fopen(path, "w")) == NULL) {
+	if ((fp = fopen(path, "w")) == nullptr) {
 	    setErrFile(path);
 	    return ErrFileCreate;
 	}
@@ -943,7 +943,7 @@ int	set_select_mode(int cur_mode, int new_mode)
     }
 
     DPR2(("set_select_mode(%s): new_mode=%d <- %d\n",
-			dpy_specific ? "dpy" : NULL, new_mode, cur_mode));
+			dpy_specific ? "dpy" : nullptr, new_mode, cur_mode));
 
     return NoError;
 }

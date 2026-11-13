@@ -38,7 +38,7 @@ static void *ck_malloc(size_t n)
 {
     ++alloc_calls;
     if (alloc_fail_at && alloc_calls == alloc_fail_at)
-        return NULL;
+        return nullptr;
     return malloc(n);
 }
 
@@ -46,7 +46,7 @@ static void *ck_realloc(void *p, size_t n)
 {
     ++alloc_calls;
     if (alloc_fail_at && alloc_calls == alloc_fail_at)
-        return NULL;		/* the old block stays valid, as in libc */
+        return nullptr;		/* the old block stays valid, as in libc */
     return realloc(p, n);
 }
 #define malloc ck_malloc

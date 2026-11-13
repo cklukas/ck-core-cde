@@ -131,10 +131,10 @@ static saveRestore save = {FALSE, 0, };
 void 
 init_mainWindow( Widget shell )
 {
-    if (style.mainWindow == NULL) {
+    if (style.mainWindow == nullptr) {
         build_mainWindow(shell);
 	if (save.restoreFlag)
-	    XtAddCallback (shell, XtNpopupCallback, _DtMapCB, NULL);
+	    XtAddCallback (shell, XtNpopupCallback, _DtMapCB, nullptr);
         XtManageChild(style.mainWindow);
         XtPopup(shell, XtGrabNone);
     }
@@ -166,7 +166,7 @@ _DtMapCB(
 	XSetWMNormalHints (style.display, XtWindow(w), &hints);
     }
 
-    XtRemoveCallback(style.shell, XtNpopupCallback, _DtMapCB, NULL);
+    XtRemoveCallback(style.shell, XtNpopupCallback, _DtMapCB, nullptr);
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++*/
@@ -275,7 +275,7 @@ build_mainWindow(
     labelString =  CMPSTR((char *)GETMESSAGE(4, 7, "Exit"));
     XtSetArg(args[n], XmNlabelString, labelString); n++;
     exitBtn= XmCreatePushButton(filePulldown, "exit", args, n );
-    XtAddCallback(exitBtn, XmNactivateCallback, activateCB_exitBtn, NULL);
+    XtAddCallback(exitBtn, XmNactivateCallback, activateCB_exitBtn, nullptr);
     XtAddCallback(exitBtn, XmNhelpCallback,
         HelpRequestCB, (XtPointer)HELP_EXIT);
     XtManageChild(exitBtn);
@@ -380,10 +380,10 @@ build_mainWindow(
     XtGetValues(style.mainWindow, args, n);
 
     XmGetColors (style.screen, style.colormap, bg,
-                 NULL,
+                 nullptr,
                  &style.primTSCol,
                  &style.primBSCol,
-                 NULL);
+                 nullptr);
 
     /*  Get the secondary colors to be used later */
     n = 0;
@@ -454,7 +454,7 @@ ProcessComponentList(
    int       len;
 
    style.workProcs = False;
-   if (style.xrdb.componentList == NULL) return;
+   if (style.xrdb.componentList == nullptr) return;
 
    n = 0;
    XtSetArg(args[n], XmNalignment, XmALIGNMENT_CENTER); n++;
@@ -467,7 +467,7 @@ ProcessComponentList(
    len = strlen(resString);
    string = strtok(resString, " ");
    s = 0;
-   while (string != NULL)
+   while (string != nullptr)
    {
       /* check for valid name, duplicate name *** */
 
@@ -485,75 +485,75 @@ ProcessComponentList(
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 27, "Color"));
           helpTag = HELP_COLOR_BUTTON;
-	  dtIcon = _DtGetIconFileName(style.screen, COLOR_ICON, NULL, NULL, 0);
+	  dtIcon = _DtGetIconFileName(style.screen, COLOR_ICON, nullptr, nullptr, 0);
           style.workProcs = True;          
       }
       else if (strcmp(string, FONT) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 28, "Font"));
-	  dtIcon = _DtGetIconFileName(style.screen, FONT_ICON, NULL, NULL, 0);
+	  dtIcon = _DtGetIconFileName(style.screen, FONT_ICON, nullptr, nullptr, 0);
           helpTag = HELP_FONT_BUTTON;
       }
 
       else if (strcmp(string, BACKDROP) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 29, "Backdrop"));
-	  dtIcon = _DtGetIconFileName(style.screen, BACKDROP_ICON, NULL, NULL, 0);
+	  dtIcon = _DtGetIconFileName(style.screen, BACKDROP_ICON, nullptr, nullptr, 0);
           helpTag = HELP_BACKDROP_BUTTON;
       }
 
       else if (strcmp(string, KEYBOARD) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 30, "Keyboard"));
-	  dtIcon = _DtGetIconFileName(style.screen, KEYBOARD_ICON, NULL, NULL, 0);	  
+	  dtIcon = _DtGetIconFileName(style.screen, KEYBOARD_ICON, nullptr, nullptr, 0);	  
           helpTag = HELP_KEYBOARD_BUTTON;        
       }
 
       else if (strcmp(string, MOUSE) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 31, "Mouse"));
-	  dtIcon = _DtGetIconFileName(style.screen, MOUSE_ICON, NULL, NULL, 0);	  
+	  dtIcon = _DtGetIconFileName(style.screen, MOUSE_ICON, nullptr, nullptr, 0);	  
           helpTag = HELP_MOUSE_BUTTON;
       }
 
       else if (strcmp(string, BEEP) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 32, "Beep"));
-	  dtIcon = _DtGetIconFileName(style.screen, BEEP_ICON, NULL, NULL, 0);	  
+	  dtIcon = _DtGetIconFileName(style.screen, BEEP_ICON, nullptr, nullptr, 0);	  
           helpTag = HELP_AUDIO_BUTTON;
       }
 
       else if (strcmp(string, SCREEN) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 33, "Screen"));
-	  dtIcon = _DtGetIconFileName(style.screen, SCREEN_ICON, NULL, NULL, 0);	  
+	  dtIcon = _DtGetIconFileName(style.screen, SCREEN_ICON, nullptr, nullptr, 0);	  
           helpTag = HELP_SCREEN_BUTTON;
       }
 
       else if (strcmp(string, DTWM) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 38, "Window"));
-	  dtIcon = _DtGetIconFileName(style.screen, DTWM_ICON, NULL, NULL, 0);	  
+	  dtIcon = _DtGetIconFileName(style.screen, DTWM_ICON, nullptr, nullptr, 0);	  
           helpTag = HELP_DTWM_BUTTON;
       }
 
       else if (strcmp(string, STARTUP) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 35, "Startup"));
-	  dtIcon = _DtGetIconFileName(style.screen, STARTUP_ICON, NULL, NULL, 0);	  
+	  dtIcon = _DtGetIconFileName(style.screen, STARTUP_ICON, nullptr, nullptr, 0);	  
           helpTag = HELP_STARTUP_BUTTON;
       }
       else if (strcmp(string, I18N) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 34, "Intl'"));
-	  dtIcon = _DtGetIconFileName(style.screen, I18N_ICON, NULL, NULL, 0);	  
+	  dtIcon = _DtGetIconFileName(style.screen, I18N_ICON, nullptr, nullptr, 0);	  
           helpTag = HELP_I18N_BUTTON;        
       }
       else
       {
           s += strlen(string) +1;
 	  if (resString+s >= resString2 + len)
-	      string = NULL;
+	      string = nullptr;
 	  else
 	      string = strtok(resString+s, " ");
           continue;
@@ -570,7 +570,7 @@ ProcessComponentList(
       
       s += strlen(string) +1;
       if (resString+s >= resString2 + len)
-	  string = NULL;
+	  string = nullptr;
       else
 	  string = strtok(resString+s, " ");
 
@@ -591,37 +591,37 @@ callCancels( void )
   if (!calledAlready) {
      dialogStates[0] = '\0';
 
-   if(style.colorDialog != NULL && XtIsManaged(style.colorDialog)) {
+   if(style.colorDialog != nullptr && XtIsManaged(style.colorDialog)) {
        CancelBut.button_position = CANCEL_BUTTON;
        XtCallCallbacks(style.colorDialog, XmNcallback, &CancelBut);
    }
 
-     if(style.fontDialog != NULL && XtIsManaged(style.fontDialog)) {
+     if(style.fontDialog != nullptr && XtIsManaged(style.fontDialog)) {
 	 CancelBut.button_position = CANCEL_BUTTON;
 	 XtCallCallbacks(style.fontDialog, XmNcallback, &CancelBut);
      }
 
-     if(style.audioDialog != NULL && XtIsManaged(style.audioDialog)) {
+     if(style.audioDialog != nullptr && XtIsManaged(style.audioDialog)) {
 	 CancelBut.button_position = CANCEL_BUTTON;
 	 XtCallCallbacks(style.audioDialog, XmNcallback, &CancelBut);
      }
 
-     if(style.kbdDialog != NULL && XtIsManaged(style.kbdDialog)) {
+     if(style.kbdDialog != nullptr && XtIsManaged(style.kbdDialog)) {
 	 CancelBut.button_position = CANCEL_BUTTON;
 	 XtCallCallbacks(style.kbdDialog, XmNcallback, &CancelBut);
      }
 
-     if(style.mouseDialog != NULL && XtIsManaged(style.mouseDialog)) {
+     if(style.mouseDialog != nullptr && XtIsManaged(style.mouseDialog)) {
 	 CancelBut.button_position = CANCEL_BUTTON;
 	 XtCallCallbacks(style.mouseDialog, XmNcallback, &CancelBut);
      }
 
-     if(style.screenDialog != NULL &&  XtIsManaged(style.screenDialog)) {
+     if(style.screenDialog != nullptr &&  XtIsManaged(style.screenDialog)) {
 	 CancelBut.button_position = CANCEL_BUTTON;
 	 XtCallCallbacks(style.screenDialog, XmNcallback, &CancelBut);
      }
 
-     if(style.startupDialog != NULL && XtIsManaged(style.startupDialog)) {
+     if(style.startupDialog != nullptr && XtIsManaged(style.startupDialog)) {
 	 CancelBut.button_position = CANCEL_BUTTON;
 	 XtCallCallbacks(style.startupDialog, XmNcallback, &CancelBut);
      }
@@ -754,8 +754,8 @@ restoreMain(
       }
     }
     else
-      _DtSimpleError (progName, DtWarning, NULL, ((char *)GETMESSAGE(4,36,
-	"No Dtstyle restore information available for current session")), NULL);
+      _DtSimpleError (progName, DtWarning, nullptr, ((char *)GETMESSAGE(4,36,
+	"No Dtstyle restore information available for current session")), nullptr);
 }
 
 /************************************************************************
@@ -777,7 +777,7 @@ saveMain(
     Position x,y;
     char bufr[1024];     /* size=[1024], make bigger if needed */
 
-    if (style.mainWindow != NULL) {
+    if (style.mainWindow != nullptr) {
         if (XtIsRealized(style.mainWindow))
         {
             sprintf(bufr, "*mainWindow.ismapped: True\n");

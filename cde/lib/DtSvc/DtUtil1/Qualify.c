@@ -75,15 +75,15 @@ FILE * f;
 
   /* assert that the arguments cannot be NULL and cannot be empty */
 
-  if (filename == NULL || searchPath == NULL || 
+  if (filename == nullptr || searchPath == nullptr || 
       filename[0] == 0 || searchPath[0] == 0)
-    return NULL;
+    return nullptr;
 
   while (1) {
 
     /* if there is a :, zero it */
 
-    if ((path = strchr(paths, ':')) != NULL)
+    if ((path = strchr(paths, ':')) != nullptr)
       *path = 0;
 
     /* allocate space and create the qualified filename */
@@ -104,12 +104,12 @@ FILE * f;
     }
 
     free(chance);
-    if (path == NULL)               /* reached the end of the list of paths */
+    if (path == nullptr)               /* reached the end of the list of paths */
       break;
     *path = ':';                    /* restore the colon */
     paths = path + 1;               /* try the next path */
   }
-  return NULL;
+  return nullptr;
 }
 
     

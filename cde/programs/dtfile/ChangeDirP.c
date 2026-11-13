@@ -167,7 +167,7 @@ get_text_pieces(
    int path_len;
    int path_pixels;
    char *path_begin;
-   char *next_part = NULL;
+   char *next_part = nullptr;
 
    *host_len_p = *host_pixels_p = 0;
 
@@ -209,9 +209,9 @@ get_text_pieces(
       do
       {
          /* chop off the next piece (everything up to the next '/') */
-         next_part = NULL;
+         next_part = nullptr;
          next_part = DtStrchr(path_begin + 1, '/');
-         if (next_part == NULL)
+         if (next_part == nullptr)
          {
            /* Got here only when the last directory is still too
               long to display
@@ -229,7 +229,7 @@ get_text_pieces(
    }
 
    /* add the path to the buffer */
-   if( NULL == next_part )
+   if( nullptr == next_part )
    {
      /* Got here only when the last directory is still too
         long to display
@@ -332,7 +332,7 @@ ShowChangeDirDialog(
    }
 
    /* Got an accelerator after we were unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
 
    file_mgr_data = (FileMgrData *) dialog_data->data;
@@ -344,14 +344,14 @@ ShowChangeDirDialog(
    _DtShowDialog (file_mgr_rec->shell, (Widget)NULL, (XtPointer)file_mgr_rec,
                file_mgr_data->change_dir,
 	       CurrentDirChange, (XtPointer)file_mgr_rec,
-               CurrentDirClose, (XtPointer)file_mgr_rec, (char *)NULL,
-	       False, False, (char *)NULL, (XClassHint *)NULL);
+               CurrentDirClose, (XtPointer)file_mgr_rec, (char *)nullptr,
+	       False, False, (char *)nullptr, (XClassHint *)nullptr);
 
    /* Save a ptr to file_mgr_rec in the find dialogs structure */
    change_dir_rec = (ChangeDirRec *)_DtGetDialogInstance(
                                                    file_mgr_data->change_dir);
 
-   if(file_mgr_data->title != NULL &&
+   if(file_mgr_data->title != nullptr &&
                strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
    {
       tmpStr = GETMESSAGE(2,15, "Go To");
@@ -452,7 +452,7 @@ CurrentDirSelected(
    if (event->x < begin_x || event->x >= end_x)
    {
       /* click outside the directory text: nothing selected */
-      new_select = NULL;
+      new_select = nullptr;
    }
    else if (event->x < begin_x + host_pixels ||
             event->x < begin_x + host_pixels + prefix_pixels && !chopped)
@@ -482,7 +482,7 @@ CurrentDirSelected(
       {
          /* find next '/' in path */
          ptr = DtStrchr(buf + i, '/');
-         if (ptr == NULL)
+         if (ptr == nullptr)
          {
            i = host_len + prefix_len + path_len + 1;
            break;
@@ -512,7 +512,7 @@ CurrentDirSelected(
    }
 
    /* in restricted mode, don't allow going above the user's home dir */
-   if (new_select != NULL && restrictMode)
+   if (new_select != nullptr && restrictMode)
    {
       /* check if new_select is the same as or a subdirectory of $HOME */
       len = strlen(users_home_dir);
@@ -533,11 +533,11 @@ CurrentDirSelected(
    /*  If the path was different, set cd_select to the       */
    /*  selected directory and redraw the directory.          */
 
-   if (new_select != NULL && file_mgr_data->cd_select != NULL &&
+   if (new_select != nullptr && file_mgr_data->cd_select != nullptr &&
        strcmp(new_select, file_mgr_data->cd_select) == 0)
    {
       XtFree (file_mgr_data->cd_select);
-      file_mgr_data->cd_select = NULL;
+      file_mgr_data->cd_select = nullptr;
 
       strcpy(buf, new_select);
       strcpy(host_name, file_mgr_data->host);
@@ -723,7 +723,7 @@ CurrentDirectoryIconMotion(
 
 	 initiating_view = (XtPointer) file_mgr_data;
          dirIcon = file_mgr_rec->current_directory_icon;
-	 StartDrag(dirIcon, NULL, event);
+	 StartDrag(dirIcon, nullptr, event);
       }
    }
 }
@@ -752,7 +752,7 @@ CurrentDirExposed(
 
    /*  Check to see if the view has been closed  */
 
-   if (dialog_data == NULL) return;
+   if (dialog_data == nullptr) return;
 
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -783,7 +783,7 @@ ReplaceDecimalPoint(char *buf)
    struct lconv *lc = localeconv();
    char *dot;
 
-   if (lc == NULL || lc->decimal_point == NULL ||
+   if (lc == nullptr || lc->decimal_point == nullptr ||
        lc->decimal_point[0] == '\0' || lc->decimal_point[0] == '.')
       return;
 
@@ -826,7 +826,7 @@ ParseDeletionDate(const char *date_str, time_t *out_time)
    int year, mon, day, hour, min, sec;
    struct tm tm_info;
 
-   if (date_str == NULL || *date_str == '\0' || out_time == NULL)
+   if (date_str == nullptr || *date_str == '\0' || out_time == nullptr)
       return False;
 
    if (sscanf(date_str, "%d-%d-%dT%d:%d:%d",
@@ -855,7 +855,7 @@ FormatLocaleDateTime(time_t t, char *buf, size_t bufsize)
       return;
 
    tm_info = localtime(&t);
-   if (tm_info == NULL || strftime(buf, bufsize, "%x %X", tm_info) == 0)
+   if (tm_info == nullptr || strftime(buf, bufsize, "%x %X", tm_info) == 0)
       snprintf(buf, bufsize, "unknown");
 }
 
@@ -865,12 +865,12 @@ DirnameFromPath(const char *path)
    char *copy;
    char *slash;
 
-   if (path == NULL || *path == '\0')
-      return NULL;
+   if (path == nullptr || *path == '\0')
+      return nullptr;
 
    copy = XtNewString(path);
    slash = strrchr(copy, '/');
-   if (slash == NULL || slash == copy)
+   if (slash == nullptr || slash == copy)
    {
       if (slash == copy)
          *(slash + 1) = '\0';
@@ -885,7 +885,7 @@ AddUniqueDir(char ***dirs, int *count, const char *dir)
 {
    int i;
 
-   if (dir == NULL || *dir == '\0' || dirs == NULL || count == NULL)
+   if (dir == nullptr || *dir == '\0' || dirs == nullptr || count == nullptr)
       return;
 
    for (i = 0; i < *count; i++)
@@ -906,13 +906,13 @@ SumVisibleSize(FileMgrData *file_mgr_data)
    int j;
    FileViewData **file_view_data;
 
-   if (file_mgr_data == NULL ||
-       file_mgr_data->directory_set == NULL ||
-       file_mgr_data->directory_set[0] == NULL)
+   if (file_mgr_data == nullptr ||
+       file_mgr_data->directory_set == nullptr ||
+       file_mgr_data->directory_set[0] == nullptr)
       return 0;
 
    file_view_data = file_mgr_data->directory_set[0]->file_view_data;
-   if (file_view_data == NULL)
+   if (file_view_data == nullptr)
       return 0;
 
    for (j = 0; j < file_mgr_data->directory_set[0]->file_count; j++)
@@ -943,7 +943,7 @@ SumSelectionSize(FileMgrData *file_mgr_data)
    unsigned long long total = 0;
    int j;
 
-   if (file_mgr_data == NULL || file_mgr_data->selection_list == NULL)
+   if (file_mgr_data == nullptr || file_mgr_data->selection_list == nullptr)
       return 0;
 
    for (j = 0; j < file_mgr_data->selected_file_count; j++)
@@ -1012,7 +1012,7 @@ GetStatusMsg(
       for (i = 0; i < file_mgr_data->directory_count; i++)
       {
          file_view_data = file_mgr_data->directory_set[i]->file_view_data;
-         if (file_view_data == NULL)
+         if (file_view_data == nullptr)
             continue;
 
          ts = file_mgr_data->directory_set[i]->sub_root->ts;
@@ -1052,11 +1052,11 @@ GetStatusMsg(
         visible_count = n_files - n_hidden;
 
         if (file_mgr_data->selected_file_count == 1 &&
-            file_mgr_data->selection_list != NULL)
+            file_mgr_data->selection_list != nullptr)
         {
           FileViewData *fvd = file_mgr_data->selection_list[0];
-          String orig_path = NULL;
-          String deletion_date = NULL;
+          String orig_path = nullptr;
+          String deletion_date = nullptr;
           char detail_size[64];
           char date_text[64];
           const char *path_text = "unknown";
@@ -1116,19 +1116,19 @@ GetStatusMsg(
             Boolean have_time = False;
             char from_text[64];
             char to_text[64];
-            char *dir_path = NULL;
-            char **dirs = NULL;
+            char *dir_path = nullptr;
+            char **dirs = nullptr;
             int dir_count = 0;
             const char *from_display = "[multiple directories]";
 
             for (j = 0; j < file_mgr_data->selected_file_count; j++)
             {
                FileViewData *fvd = file_mgr_data->selection_list[j];
-               String orig_path = NULL;
-               String deletion_date = NULL;
+               String orig_path = nullptr;
+               String deletion_date = nullptr;
                time_t t;
 
-               if (fvd == NULL || fvd->file_data == NULL)
+               if (fvd == nullptr || fvd->file_data == nullptr)
                   continue;
 
                if (TrashGetInfo(fvd->file_data->file_name,
@@ -1437,10 +1437,10 @@ CurrentDirChange(
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
-   if (file_mgr_data->cd_select != NULL)
+   if (file_mgr_data->cd_select != nullptr)
    {
       XtFree (file_mgr_data->cd_select);
-      file_mgr_data->cd_select = NULL;
+      file_mgr_data->cd_select = nullptr;
    }
 
    old_change_dir_data = (ChangeDirData *) file_mgr_data->change_dir->data;
@@ -1507,9 +1507,9 @@ CheckCurrentDirectorySelect(
    int length_cd, length_cd_s;
    char *str, *ptr;
 
-   if (file_mgr_data            == NULL ||
-       file_mgr_data->cd_select == NULL ||
-       file_mgr_data->current_directory == NULL)
+   if (file_mgr_data            == nullptr ||
+       file_mgr_data->cd_select == nullptr ||
+       file_mgr_data->current_directory == nullptr)
        return;
 
    /* get the true lengths of current_directory and current_directory_select */
@@ -1569,19 +1569,19 @@ ShowFastChangeDir(
    XtRemoveAllCallbacks (file_mgr_rec->current_directory, XmNexposeCallback);
 
    XtFree (file_mgr_data->cd_select);
-   file_mgr_data->cd_select = NULL;
+   file_mgr_data->cd_select = nullptr;
 
    file_mgr_data->fast_cd_enabled = True;
 
    /* if not a toolbox, just put the current directory in text widget */
-   if (file_mgr_data->restricted_directory == NULL)
+   if (file_mgr_data->restricted_directory == nullptr)
    {
       if (strcmp(file_mgr_data->host, home_host_name) == 0)
          textString = XtNewString(file_mgr_data->current_directory);
       else
          textString = DtCreateContextString(file_mgr_data->host,
                                             file_mgr_data->current_directory,
-                                            NULL);
+                                            nullptr);
    }
    else  /* is a toolbox, so put the subset of what the toolbox is in the text*/
    {
@@ -1605,7 +1605,7 @@ ShowFastChangeDir(
    XtGetValues (file_mgr_rec->current_directory_text, args, 2);
    left_margin = highlight + shadow + margin;
 
-   if(file_mgr_data->restricted_directory == NULL)
+   if(file_mgr_data->restricted_directory == nullptr)
       XtSetArg (args[0], XmNleftOffset, 0);
    else
    {
@@ -1660,7 +1660,7 @@ TimerEvent(
    doubleClick = False;
 
    /* Got an accelerator after we were unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 

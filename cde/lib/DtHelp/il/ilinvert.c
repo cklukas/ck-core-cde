@@ -153,14 +153,14 @@ ilImageFormat               imformat;
 
     dstData.producerObject = (ilObject)NULL;
     dstData.pDes           = pPipedes;
-    dstData.pFormat        = (ilImageFormat *)NULL;
+    dstData.pFormat        = (ilImageFormat *)nullptr;
     dstData.width          = pInfo->width;
     dstData.height         = pInfo->height;
     dstData.stripHeight    = 0;
     dstData.constantStrip  = FALSE;
-    dstData.pPalette       = (unsigned short *)NULL;
-    pPriv = (ilinvertPtr ) ilAddPipeElement (pipe, IL_FILTER, sizeof (ilinvertRec), 0, (ilSrcElementData *)NULL,
-                                             &dstData, ilInitInvert, IL_NPF, IL_NPF, ilExecuteinvert, NULL, 0);
+    dstData.pPalette       = (unsigned short *)nullptr;
+    pPriv = (ilinvertPtr ) ilAddPipeElement (pipe, IL_FILTER, sizeof (ilinvertRec), 0, (ilSrcElementData *)nullptr,
+                                             &dstData, ilInitInvert, IL_NPF, IL_NPF, ilExecuteinvert, nullptr, 0);
     if (!pPriv) return FALSE;                    
 
     if ( imdes.type == IL_BITONAL )  pPriv->bitonal = TRUE;

@@ -73,7 +73,7 @@ SetPropertiesProc (
 			continue;
 
 		for (pProp = pClient->props; 
-		     pProp != NULL; 
+		     pProp != nullptr; 
 		     pProp = pProp->next) {
 			
 			if (!strcmp (theProps[i]->name, pProp->prop.name) &&
@@ -109,7 +109,7 @@ SetPropertiesProc (
 			 */
 			PropertyRecPtr		trail = pClient->props;
 			for (pProp = pClient->props; 
-			     pProp != NULL; 
+			     pProp != nullptr; 
 			     trail = pProp, pProp = pProp->next);
 
 
@@ -125,7 +125,7 @@ SetPropertiesProc (
 			pProp->prop.name = XtNewString (theProps[i]->name);
 			pProp->prop.type = XtNewString (theProps[i]->type);
 			pProp->prop.num_vals = theProps[i]->num_vals;
-			pProp->next = NULL;
+			pProp->next = nullptr;
 
 			pProp->prop.vals = CopyPropValues (
 				theProps[i]->num_vals, theProps[i]->vals);
@@ -139,7 +139,7 @@ SetPropertiesProc (
 
 #ifdef DEBUG
 	for (i = 0, pProp = pClient->props; 
-	     pProp != NULL; 
+	     pProp != nullptr; 
 	     i++, pProp = pProp->next) {
 		(void) printf ("\t[%2d] name = %s\n", i + 1, 
 			pProp->prop.name);
@@ -187,7 +187,7 @@ DeletePropertiesProc (
 		 * the head of the list or the next field of the property
 		 * before.
 		 */
-		while ((pProp = *link) != NULL) {
+		while ((pProp = *link) != nullptr) {
 
 			if (!strcmp (pProp->prop.name, propNames[i])) {
 
@@ -234,18 +234,18 @@ GetPropertiesProc (
 #endif /* DEBUG */
 
 	if (!pClient->props) {
-		SmsReturnProperties (smsConn, 0, NULL);
+		SmsReturnProperties (smsConn, 0, nullptr);
 		return;
 	}
 
 	for (pProp = pClient->props, numProps = 0; 
-	     pProp != NULL;
+	     pProp != nullptr;
 	     pProp = pProp->next, numProps++);
 
 	pPropsRet = (SmProp **) XtMalloc (numProps * sizeof (SmProp *));
 
 	if (!pPropsRet) {
-		SmsReturnProperties (smsConn, 0, NULL);
+		SmsReturnProperties (smsConn, 0, nullptr);
 		return;
 	}
 
@@ -255,12 +255,12 @@ GetPropertiesProc (
 	 * in a linked list, a transformation is required.
 	 */
 	for (i=0, pProp = pClient->props; 
-	     pProp != NULL; 
+	     pProp != nullptr; 
 	     i++, pProp = pProp->next) {
 
 		pPropsRet[i] = (SmProp *) XtMalloc (sizeof (SmProp));
 		if (!pPropsRet[i]) {
-			SmsReturnProperties (smsConn, 0, NULL);
+			SmsReturnProperties (smsConn, 0, nullptr);
 			return;
 		}
 
@@ -271,7 +271,7 @@ GetPropertiesProc (
 			pProp->prop.num_vals * sizeof (SmPropValue));
 
 		if (!pPropsRet[i]->vals) {
-			SmsReturnProperties (smsConn, 0, NULL);
+			SmsReturnProperties (smsConn, 0, nullptr);
 			return;
 		}
 
@@ -283,7 +283,7 @@ GetPropertiesProc (
 				XtMalloc (pProp->prop.vals[j].length);
 
 			if (!pPropsRet[i]->vals[j].value) {
-				SmsReturnProperties (smsConn, 0, NULL);
+				SmsReturnProperties (smsConn, 0, nullptr);
 				return;
 			}
 
@@ -330,7 +330,7 @@ CopyPropValues (
 		  sizeof (SmPropValue));
 
 	if (!pPropValueRet)
-		return (NULL);
+		return (nullptr);
 
 	for (i = 0; i < numPropValues; i++) {
 
@@ -339,7 +339,7 @@ CopyPropValues (
 			XtMalloc(thePropValues[i].length + 1);
 
 		if (!pPropValueRet[i].value)
-			return (NULL);
+			return (nullptr);
 
 		memcpy (pPropValueRet[i].value,
 			thePropValues[i].value,
@@ -387,14 +387,14 @@ GetArrayPropertyValue (
 {
 	PropertyRecPtr		pPropRec;
 
-	if ((pPropRec = GetPropertyRec (pClientRec, propName)) == NULL)
-		return (NULL);
+	if ((pPropRec = GetPropertyRec (pClientRec, propName)) == nullptr)
+		return (nullptr);
 
 	if ((!strcmp (pPropRec->prop.type, SmARRAY8)) &&
 	    (pPropRec->prop.num_vals >= 1))
 		return (pPropRec->prop.vals[0].value);
 
-	return (NULL);
+	return (nullptr);
 }
 
 
@@ -421,22 +421,22 @@ GetListOfArrayPropertyValue (
 	char			** ppchar;
 	int			i;
 
-	if ((pPropRec = GetPropertyRec (pClientRec, propName)) == NULL)
-		return (NULL);
+	if ((pPropRec = GetPropertyRec (pClientRec, propName)) == nullptr)
+		return (nullptr);
 
 	if ((strcmp (pPropRec->prop.type, SmLISTofARRAY8)) ||
 	    		(pPropRec->prop.num_vals <= 0))
-		return (NULL);
+		return (nullptr);
 
 	ppchar = (char **) XtMalloc ((pPropRec->prop.num_vals + 1) *
 				   sizeof (char *));
 	if (!ppchar)
-		return (NULL);
+		return (nullptr);
 
 	for (i = 0; i < pPropRec->prop.num_vals; i++)
 		ppchar[i] = pPropRec->prop.vals[i].value;
 
-	ppchar[pPropRec->prop.num_vals] = NULL;
+	ppchar[pPropRec->prop.num_vals] = nullptr;
 
 	return (ppchar);
 }
@@ -460,7 +460,7 @@ GetCardPropertyValue (
 {
 	PropertyRecPtr		pPropRec;
 
-	if ((pPropRec = GetPropertyRec (pClientRec, propName)) == NULL)
+	if ((pPropRec = GetPropertyRec (pClientRec, propName)) == nullptr)
 		return (False);
 
 	if ((!strcmp (pPropRec->prop.type, SmCARD8)) &&

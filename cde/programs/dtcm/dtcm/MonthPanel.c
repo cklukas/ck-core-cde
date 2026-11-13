@@ -190,13 +190,13 @@ externaldef(xmmonthpanelclassrec) XmMonthPanelClassRec
     /* superclass         */    (WidgetClass) &xmManagerClassRec,
     /* class_name         */    "XmMonthPanel",
     /* widget_size        */    sizeof(XmMonthPanelRec),
-    /* class_initialize   */    NULL,
+    /* class_initialize   */    nullptr,
     /* class_partinit     */    ClassPartInitialize,
     /* class_inited       */	FALSE,
     /* initialize         */    Initialize,
-    /* Init hook	  */    NULL,
+    /* Init hook	  */    nullptr,
     /* realize            */    XtInheritRealize,
-    /* actions		  */	NULL,
+    /* actions		  */	nullptr,
     /* num_actions	  */	0,
     /* resources          */    resources,
     /* num_resources      */    XtNumber(resources),
@@ -205,20 +205,20 @@ externaldef(xmmonthpanelclassrec) XmMonthPanelClassRec
     /* compress_exposure  */	XtExposeCompressMaximal,
     /* compress_enterleave*/	TRUE,
     /* visible_interest   */    FALSE,
-    /* destroy            */    NULL,
+    /* destroy            */    nullptr,
     /* resize             */    Resize,
     /* expose             */    Redisplay,
     /* set_values         */    SetValues,
-    /* set values hook    */    NULL,
+    /* set values hook    */    nullptr,
     /* set values almost  */    XtInheritSetValuesAlmost,
-    /* get values hook    */    NULL,
-    /* accept_focus       */    NULL,
+    /* get values hook    */    nullptr,
+    /* accept_focus       */    nullptr,
     /* Version            */    XtVersion,
-    /* PRIVATE cb list    */    NULL,
+    /* PRIVATE cb list    */    nullptr,
     /* tm_table		  */    XtInheritTranslations,
     /* query_geometry     */    XtInheritQueryGeometry,
-    /* display_accelerator*/    NULL,
-    /* extension          */    NULL,
+    /* display_accelerator*/    nullptr,
+    /* extension          */    nullptr,
   },
   {
 /* composite_class fields */
@@ -226,27 +226,27 @@ externaldef(xmmonthpanelclassrec) XmMonthPanelClassRec
     /* change_managed     */    XtInheritChangeManaged,
     /* insert_child	  */	XtInheritInsertChild,
     /* delete_child	  */	XtInheritDeleteChild,	/* Inherit from superclass */
-    /* Extension          */    NULL,
+    /* Extension          */    nullptr,
   },{
 /* Constraint class Init */
-    NULL,
+    nullptr,
     0,
     0,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr
       
   },
 /* Manager Class */
    {		
       XtInheritTranslations,    		/* translations        */    
-      NULL,					/* get resources      	  */
+      nullptr,					/* get resources      	  */
       0,					/* num get_resources 	  */
-      NULL,					/* get_cont_resources     */
+      nullptr,					/* get_cont_resources     */
       0,					/* num_get_cont_resources */
       XmInheritParentProcess,                   /* parent_process         */
-      NULL,					/* extension           */    
+      nullptr,					/* extension           */    
    },
 
  {
@@ -309,16 +309,16 @@ Initialize( Widget rw, Widget nw, ArgList args, Cardinal *num_args )
 
 	if (new_w->month_panel.active_header) {
 	   new_w->month_panel.header =
-		XmCreatePushButtonGadget((Widget)new_w, "header", NULL, 0);
+		XmCreatePushButtonGadget((Widget)new_w, "header", nullptr, 0);
 	   XtAddCallback(new_w->month_panel.header, XmNactivateCallback,
-		MonthCallback, NULL);
+		MonthCallback, nullptr);
 	   new_w->month_panel.separator = (Widget) NULL;
 	}
 	else {
 	   new_w->month_panel.header =
-		XmCreateLabelGadget((Widget)new_w, "header", NULL, 0);
+		XmCreateLabelGadget((Widget)new_w, "header", nullptr, 0);
 	   new_w->month_panel.separator =
-		XmCreateSeparatorGadget((Widget)new_w, "separator", NULL, 0); 
+		XmCreateSeparatorGadget((Widget)new_w, "separator", nullptr, 0); 
 	   /* Managing of separator is switchable */
 	   if (new_w->month_panel.show_separator) {
 	      XtManageChild(new_w->month_panel.separator);
@@ -472,7 +472,7 @@ DoLayout( XmMonthPanelWidget mw )
 /*
  * position the separator, if any
  */
-	if (mpp->separator != NULL) {
+	if (mpp->separator != nullptr) {
 		if (tall_header)
 			XtMoveWidget(mpp->separator,
 				(Position) w/8, (Position) 2 * row_h);
@@ -568,7 +568,7 @@ scale_components(XmMonthPanelWidget mw) {
 	 * NOTE2: setting the pixmaps should be in redisplay rather than
 	 * here - only done here because this is where labelType is toggled.
 	 ******************************************************************/
-	XtVaGetValues(XtParent(mw), XmNforeground, &fg, XmNbackground, &bg, NULL);
+	XtVaGetValues(XtParent(mw), XmNforeground, &fg, XmNbackground, &bg, nullptr);
 	head_pm = XmGetPixmap(XtScreen(mw), "slant_right", fg, bg);
 	col_head_pm = XmGetPixmap(XtScreen(mw), "slant_left", fg, bg);
 	btn_pm = XmGetPixmap(XtScreen(mw), "50_foreground", fg, bg);
@@ -592,17 +592,17 @@ scale_components(XmMonthPanelWidget mw) {
 		XtVaSetValues(mpp->header,
 			XmNlabelType, XmPIXMAP,
 			XmNlabelPixmap, head_pm,
-			NULL);
+			nullptr);
 	}
 	else
 		XtVaSetValues(mpp->header,
 			XmNlabelType, XmSTRING,
-			NULL);
+			nullptr);
 
 	/**************************
 	 * separator
 	 **************************/
-	if (mpp->separator != NULL) {
+	if (mpp->separator != nullptr) {
 		XtResizeWidget(mpp->separator, 3*(int)w/4, row_h, 0);
 	}
 	
@@ -615,21 +615,21 @@ scale_components(XmMonthPanelWidget mw) {
 	}	
 	/* display pixmap if clipped, string otherwise */
 	this_widget = (mpp->day_labels)[6];
-	XtVaGetValues(this_widget, XmNlabelType, &ltype, NULL);
+	XtVaGetValues(this_widget, XmNlabelType, &ltype, nullptr);
 	if (clipped(this_widget)) {
 	   if (ltype == XmSTRING) {
 		for (i=0; i<7; i++) {
 		   XtVaSetValues((mpp->day_labels)[i],
 			XmNlabelType, XmPIXMAP,
 			XmNlabelPixmap, col_head_pm,
-			NULL);
+			nullptr);
 		}	
 	   }
 	}
 	else {
 	   if (ltype == XmPIXMAP) {
 		for (i=0; i<7; i++) {
-		   XtVaSetValues((mpp->day_labels)[i], XmNlabelType, XmSTRING, NULL);
+		   XtVaSetValues((mpp->day_labels)[i], XmNlabelType, XmSTRING, nullptr);
 		}	
 	   }
 	}
@@ -654,21 +654,21 @@ scale_components(XmMonthPanelWidget mw) {
 	 * 2-digit label.
 	 *************************************************************/
 	this_widget = (mpp->days)[27];
-	XtVaGetValues(this_widget, XmNlabelType, &ltype, NULL);
+	XtVaGetValues(this_widget, XmNlabelType, &ltype, nullptr);
 	if (clipped(this_widget)) {
 	   if (ltype == XmSTRING) {
 		for (i=0; i<31; i++) {
 		   XtVaSetValues((mpp->days)[i],
 			XmNlabelType, XmPIXMAP,
 			XmNlabelPixmap, btn_pm,
-			NULL);
+			nullptr);
 		}	
 	   }
 	}
 	else {
 	   if (ltype == XmPIXMAP) {
 		for (i=0; i<31; i++) {
-		   XtVaSetValues((mpp->days)[i], XmNlabelType, XmSTRING, NULL);
+		   XtVaSetValues((mpp->days)[i], XmNlabelType, XmSTRING, nullptr);
 		}	
 	   }
 	}
@@ -695,7 +695,7 @@ clipped(Widget w)
 		XmNshadowThickness, &shd_w,
 		XmNwidth, &act_w,
 		XmNheight, &act_h,
-		NULL);
+		nullptr);
 
 	XmStringExtent(fl, str, &req_w, &req_h);
 

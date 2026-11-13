@@ -183,7 +183,7 @@ ListSelectItem(int i)
     XtVaSetValues( wgeStaT_list[i],
 	XmNbackground, (XtArgVal) resource.foreground,
 	XmNforeground, (XtArgVal) resource.background,
-	NULL);
+	nullptr);
     xl.list_winID = XtWindow( wgeStaT_disp[i] ) ;
 }
 
@@ -193,7 +193,7 @@ ListUnselectItem(int i)
     XtVaSetValues( wgeStaT_list[i],
 	XmNbackground, (XtArgVal) resource.background,
 	XmNforeground, (XtArgVal) resource.foreground,
-	NULL);
+	nullptr);
     xl.list_winID = 0 ;
 }
 
@@ -208,7 +208,7 @@ ListSetGlyphImage( int i )
 		XClearWindow(xl.display, dl_glyph[i].disp_winID);
 		return;
 	}
-	if (code == edg.code && xl.dispImage != NULL) {
+	if (code == edg.code && xl.dispImage != nullptr) {
 		XPutImage(xl.display, dl_glyph[i].disp_winID, xl.borderGC,
 				xl.dispImage, 0,0,0,0, edg.width, edg.height );
 	} else {
@@ -259,10 +259,10 @@ static menuButtonItems menu_btn[] = {
 static MButton MenuBTN = MBUTTONS( menu_btn );
 
 static ButtonItems file_btn[] = {
-    BTNARGS( OpenCB, NULL, 'O', True, False),
-    BTNARGS( CBeOblB_aAdd,   NULL, 'S', True, False),
-    BTNARGS( NULL,           NULL, NULL, NULL, NULL),
-    BTNARGS( CBeOblB_aEnd,   NULL, 'E', True, False),
+    BTNARGS( OpenCB, nullptr, 'O', True, False),
+    BTNARGS( CBeOblB_aAdd,   nullptr, 'S', True, False),
+    BTNARGS( nullptr,           nullptr, nullptr, nullptr, nullptr),
+    BTNARGS( CBeOblB_aEnd,   nullptr, 'E', True, False),
 };
 static Button FileBTN = BUTTONS( file_btn );
 
@@ -276,19 +276,19 @@ static ButtonItems edit_btn[] = {
     BTNARGS( CBeOblB_rCmd, PROC_ROLL, 'A', True, False),
     BTNARGS( CBeOblB_rCmd, PROC_SYMV, 'V', True, False),
     BTNARGS( CBeOblB_rCmd, PROC_SYMH, 'H', True, False),
-    BTNARGS( CBeOblB_rCan, NULL,      'N', True, False),
+    BTNARGS( CBeOblB_rCan, nullptr,      'N', True, False),
 };
 static Button EditBTN = BUTTONS( edit_btn );
 
 static ButtonItems char_btn[] = {
-    BTNARGS( MngPtnCB, NULL, 'A', True, False ),
-    BTNARGS( CpyPtnCB, NULL, 'C', True, False ),
+    BTNARGS( MngPtnCB, nullptr, 'A', True, False ),
+    BTNARGS( CpyPtnCB, nullptr, 'C', True, False ),
 };
 static Button CharBTN = BUTTONS( char_btn );
 
 static ButtonItems info_btn[] = {
-    BTNARGS( XlfdCB, NULL, 'X', True, False ),
-    BTNARGS( CodeAreaCB, NULL, 'C', True, False ),
+    BTNARGS( XlfdCB, nullptr, 'X', True, False ),
+    BTNARGS( CodeAreaCB, nullptr, 'C', True, False ),
 };
 static Button InfoBTN = BUTTONS( info_btn );
 
@@ -462,7 +462,7 @@ CreateEditPtn(Widget owner)
 	if (i==0){
 	    XtVaGetValues(wgeStaT_disp[i],
 		XmNheight,	&(edlist.elem_h),
-		XmNwidth,	&(edlist.elem_w), NULL);
+		XmNwidth,	&(edlist.elem_w), nullptr);
 
 	    edlist.back = resource.pane_background;
 	    edlist.border = resource.pane_foreground;
@@ -499,7 +499,7 @@ CreateEditPtn(Widget owner)
     }
 
     /* create the scroll bar for Charcter list */
-    XtVaGetValues( listBase, XmNheight, &(edlist.list_h), NULL);
+    XtVaGetValues( listBase, XmNheight, &(edlist.list_h), nullptr);
 
     if (( slimax = efctPtnNum()) < edlist.nlist)
 	slimax = edlist.nlist;
@@ -544,7 +544,7 @@ CreateEditPtn(Widget owner)
 
     XtAddEventHandler( editPane,
 	      ButtonPressMask | ButtonMotionMask | ButtonReleaseMask,
-	      False, EHeBulB_eMEv, NULL );
+	      False, EHeBulB_eMEv, nullptr );
     AddTopAttachForm( editPane, 2 );
     AddLeftAttachForm( editPane, 2 );
 

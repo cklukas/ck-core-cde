@@ -72,8 +72,8 @@ int main( int argc, char *argv[])
 		Usage(argv[0]);
 	}
 
-	spacing = xlfdname = NULL ;
-	Head.in_file = Head.bdf_file = Head.snf_file = Head.out_file = NULL;
+	spacing = xlfdname = nullptr ;
+	Head.in_file = Head.bdf_file = Head.snf_file = Head.out_file = nullptr;
 	Head.start_code = MIN_CODE ;
 	Head.end_code   = MAX_CODE ;
 	Head.code_category = ALL_CODE;
@@ -97,10 +97,10 @@ int main( int argc, char *argv[])
 		}
 	}
 
-	if ( Head.in_file == NULL ) {
+	if ( Head.in_file == nullptr ) {
 		Head.input = stdin;
 	} else {
-		if ( ( Head.input = fopen( Head.in_file, "r" ) ) == NULL ) {
+		if ( ( Head.input = fopen( Head.in_file, "r" ) ) == nullptr ) {
 			USAGE2("%s: The character pattern file cannot be opened. \"%s\"\n", argv[0], Head.in_file );
 			exit( GPF_OPEN * (-1) );
 		}
@@ -111,8 +111,8 @@ int main( int argc, char *argv[])
 	signal( SIGQUIT, (void(*)())sigint_out );
 	signal( SIGTERM, (void(*)())sigint_out );
 
-	if ( Head.bdf_file == NULL ) {
-		if ( Head.snf_file == NULL ) {
+	if ( Head.bdf_file == nullptr ) {
+		if ( Head.snf_file == nullptr ) {
 			USAGE1("%s: If the output is stdout, the user defined font file name cannot be omitted.\n", argv[0]);
 			exit(PARAM_ERROR * (-1));
 		}
@@ -122,7 +122,7 @@ int main( int argc, char *argv[])
 			exit( FATAL_ERROR * ( -1 ) );
 		}
 
-		if ( ( Head.output = fopen( Head.out_file, "w" ) ) == NULL ) {
+		if ( ( Head.output = fopen( Head.out_file, "w" ) ) == nullptr ) {
 			USAGE2("%s: The work file for the output cannot be opened. \"%s\"\n", argv[0], Head.out_file );
 			exit( BDF_OPEN * (-1) );
 		}
@@ -130,10 +130,10 @@ int main( int argc, char *argv[])
 	/* refuse proportional fonts */
 	if ( GetUdcFontName( Head.snf_file, Head.bdf_file, &xlfdname ) ) {
 	    USAGE1("%s : This font cannot get XLFD. Terminates abnormally.\n", argv[0]);
-	    if ( Head.in_file != NULL ) {
+	    if ( Head.in_file != nullptr ) {
 		fclose( Head.input );
 	    }
-	    if ( Head.out_file != NULL ) {
+	    if ( Head.out_file != nullptr ) {
 		fclose( Head.output );
 		unlink( Head.out_file );
 	    }
@@ -142,10 +142,10 @@ int main( int argc, char *argv[])
 	GETSPACINGSTR( spacing, xlfdname ) ;
 	if ( !strcmp( "p", spacing ) || !strcmp( "P", spacing ) ) {
 	    USAGE2("%s cannot edit proportional fonts.(SPACING \"%s\")\n", argv[0], spacing );
-	    if ( Head.in_file != NULL ) {
+	    if ( Head.in_file != nullptr ) {
 		fclose( Head.input );
 	    }
-	    if ( Head.out_file != NULL ) {
+	    if ( Head.out_file != nullptr ) {
 		fclose( Head.output );
 		unlink( Head.out_file );
 	    }
@@ -153,10 +153,10 @@ int main( int argc, char *argv[])
 	}
 
 	if ( ( rtn = CnvGPFtoBDF( &Head ) ) ) {
-		if ( Head.in_file != NULL ) {
+		if ( Head.in_file != nullptr ) {
 			fclose( Head.input );
 		}
-		if ( Head.out_file != NULL ) {
+		if ( Head.out_file != nullptr ) {
 			fclose( Head.output );
 			unlink( Head.out_file );
 		}
@@ -164,16 +164,16 @@ int main( int argc, char *argv[])
 		exit( rtn * (-1) );
 	}
 
-	if ( Head.in_file != NULL ) {
+	if ( Head.in_file != nullptr ) {
 		fclose( Head.input );
 	}
-	if ( Head.out_file != NULL ) {
+	if ( Head.out_file != nullptr ) {
 		fclose( Head.output );
 		signal( SIGHUP, SIG_IGN );
 		signal( SIGINT, SIG_IGN );
 		signal( SIGQUIT, SIG_IGN );
 		signal( SIGTERM, SIG_IGN );
-		if ( Head.bdf_file != NULL ) {
+		if ( Head.bdf_file != nullptr ) {
 			Link_NewFile( Head.out_file, Head.bdf_file );
 			unlink( Head.out_file );
 		}
@@ -203,11 +203,11 @@ CnvGPFtoBDF(struct ptobhead *head)
 		head->zoomf = 0;
 	}
 
-	if ( ( head->code = (int *)malloc( sizeof(int) * head->num_chars ) ) == NULL ) {
+	if ( ( head->code = (int *)malloc( sizeof(int) * head->num_chars ) ) == nullptr ) {
 		return	FATAL_ERROR;
 	}
 
-	if ( ( head->ptn = (char **)malloc( sizeof( char * ) * head->num_chars ) ) == NULL ) {
+	if ( ( head->ptn = (char **)malloc( sizeof( char * ) * head->num_chars ) ) == nullptr ) {
 		return	FATAL_ERROR;
 	}
 

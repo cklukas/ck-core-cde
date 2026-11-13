@@ -221,7 +221,7 @@ void mbox_receive( XpPdmServiceRec *rec, XEvent *report )
 
 	    memcpy( c->data, tptr, c->data_length );
 
-	    Xfree( rec->in_buf ); rec->in_buf = (char *) NULL;
+	    Xfree( rec->in_buf ); rec->in_buf = (char *) nullptr;
 
 	    if (rec->cookie_state == 1) {
 		rec->mbox_flag = True;		/* all done */

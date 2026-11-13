@@ -89,7 +89,7 @@ main()
     BOOL                q;
 
     printf("\n\n\n\n\n");
-    x = NULL;
+    x = nullptr;
     f = istr_create_alloced(x);
     printf("%p value of NULL\n", f);
     x = strdup("one");
@@ -253,7 +253,7 @@ main()
     printf("%p value tenth\n", a);
     a = istr_dup_existing("not");
     printf("%p value not\n", a);
-    a = istr_dup_existing(NULL);
+    a = istr_dup_existing(nullptr);
     printf("%p value NULL\n", a);
     print_array();
     a = (ISTRING)5;
@@ -281,10 +281,10 @@ main()
     print_str((ISTRING)2);
     print_str((ISTRING)1);
     printf("\n");
-    i = istr_cmp((ISTRING)2, NULL);
+    i = istr_cmp((ISTRING)2, nullptr);
     printf("%d value ", i);
     print_str((ISTRING)2);
-    printf("%d\n", NULL);
+    printf("%d\n", nullptr);
 
     printf("istr_equal\n");
     q = istr_equal((ISTRING)2, (ISTRING)2);
@@ -293,8 +293,8 @@ main()
     printf("%d value %d %d\n", q, 1, 2);
     q = istr_equal((ISTRING)2, (ISTRING)1);
     printf("%d value %d %d\n", q, 2, 1);
-    q = istr_equal(2, NULL);
-    printf("%d value %d %d\n", q, 2, NULL);
+    q = istr_equal(2, nullptr);
+    printf("%d value %d %d\n", q, 2, nullptr);
 
     printf("istr_cmpstr\n");
     i = istr_cmpstr((ISTRING)2, "two");
@@ -303,8 +303,8 @@ main()
     printf("%d value %d %d\n", i, 1, 2);
     i = istr_cmpstr((ISTRING)2, "one");
     printf("%d value %d %d\n", i, 2, 1);
-    i = istr_cmpstr((ISTRING)2, NULL);
-    printf("%d value %d %d\n", i, 2, NULL);
+    i = istr_cmpstr((ISTRING)2, nullptr);
+    printf("%d value %d %d\n", i, 2, nullptr);
 
     printf("istr_equalstr\n");
     q = istr_equalstr((ISTRING)2, "two");
@@ -313,8 +313,8 @@ main()
     printf("%d value %d %d\n", q, 1, 2);
     q = istr_equalstr((ISTRING)2, "one");
     printf("%d value %d %d\n", q, 2, 1);
-    q = istr_equalstr((ISTRING)2, NULL);
-    printf("%d value %d %d\n", q, 2, NULL);
+    q = istr_equalstr((ISTRING)2, nullptr);
+    printf("%d value %d %d\n", q, 2, nullptr);
 
     print_array();
 

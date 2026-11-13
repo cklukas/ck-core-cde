@@ -126,7 +126,7 @@ DtHashTbl _DtUtilMakeHash(int size)
   ptr->size  =   size;
   ptr->table = (hash_entry **) malloc( (unsigned) (sizeof(hash_entry *) * size) );
   (void)memset((char *) ptr->table, (char) 0, sizeof(hash_entry *)*size);
-  ptr->start = NULL;
+  ptr->start = nullptr;
   ptr->hash_type = String_Key;
   return((DtHashTbl)ptr);
 }
@@ -139,7 +139,7 @@ DtHashTbl _DtUtilMakeIHash(int size)
   ptr->size  =   size;
   ptr->table = (hash_entry **) malloc( (unsigned) (sizeof(hash_entry *) * size) );
   (void)memset((char *) ptr->table, (char) 0, sizeof(hash_entry *)*size);
-  ptr->start = NULL;
+  ptr->start = nullptr;
   ptr->hash_type = Integer_Key;
   return((DtHashTbl) ptr);
 }
@@ -158,14 +158,14 @@ void ** _DtUtilGetHash(DtHashTbl t, const unsigned char * key)
     tmp = tbl->table[bucket = abs((int)(intptr_t)key) % tbl->size];
 
   if(tbl->hash_type == String_Key)
-    while(tmp!=NULL)
+    while(tmp!=nullptr)
       {	
 	if(strcmp((char *)tmp->key, (char*)key)==0)
 	  return(&tmp->data);
 	tmp = tmp->next_entry;
       }
   else
-    while(tmp!=NULL)
+    while(tmp!=nullptr)
       {	
 	if(tmp->key == key)
 	  return(&tmp->data);
@@ -182,7 +182,7 @@ void ** _DtUtilGetHash(DtHashTbl t, const unsigned char * key)
   /*
     hook into chain from tbl...
     */
-  new->right_entry = NULL;
+  new->right_entry = nullptr;
   new->left_entry = tbl->start;
   tbl->start = new;
   /*
@@ -190,7 +190,7 @@ void ** _DtUtilGetHash(DtHashTbl t, const unsigned char * key)
     */
   new->next_entry = tbl->table[bucket];
   tbl->table[bucket] = new;
-  new->data = NULL;   /* so we know that it is new */
+  new->data = nullptr;   /* so we know that it is new */
   return((void*)& new->data);
 }
 
@@ -202,19 +202,19 @@ void ** _DtUtilFindHash(DtHashTbl t, const unsigned char * key)
   if(tbl->hash_type == String_Key)
     {
       tmp = tbl->table[hash_string(key, tbl->size)];
-      for(;tmp!=NULL; tmp = tmp->next_entry)
+      for(;tmp!=nullptr; tmp = tmp->next_entry)
 	if(!strcmp((char*)tmp->key, (char*)key))
 	  return((void *)&tmp->data);
     }
   else
     {
       tmp = tbl->table[abs((int)(intptr_t)key) % tbl->size];
-      for(;tmp!=NULL; tmp = tmp->next_entry)
+      for(;tmp!=nullptr; tmp = tmp->next_entry)
 	if(tmp->key == key)
 	  return((void *)&tmp->data);
     }
 
-  return(NULL);
+  return(nullptr);
 }
 
 void * _DtUtilDelHash(DtHashTbl t, const unsigned char * key)
@@ -222,20 +222,20 @@ void * _DtUtilDelHash(DtHashTbl t, const unsigned char * key)
   hash * tbl = (hash *) t;
 
   int bucket;
-  hash_entry * tmp, * prev = NULL;
+  hash_entry * tmp, * prev = nullptr;
 
   if(tbl->hash_type == String_Key)
     bucket = hash_string(key, tbl->size);
   else
     bucket = abs((int)(intptr_t)key) % tbl->size;
 
-  if((tmp = tbl->table[bucket])==NULL)
-    return(NULL);
+  if((tmp = tbl->table[bucket])==nullptr)
+    return(nullptr);
 
   else
     {
       if(tbl->hash_type == String_Key)
-	while(tmp!=NULL)
+	while(tmp!=nullptr)
 	  {	
 	    if(!strcmp((char*)tmp->key, (char*)key))
 	      break;  /* found item to delete ! */
@@ -243,15 +243,15 @@ void * _DtUtilDelHash(DtHashTbl t, const unsigned char * key)
 	    tmp  = tmp->next_entry;
 	  }
       else
-	while(tmp!=NULL)
+	while(tmp!=nullptr)
 	  {
 	    if(tmp->key == key)
 	      break;
 	    prev = tmp;
 	    tmp  = tmp->next_entry;
 	  }
-      if(tmp == NULL)
-	return(NULL); /* not found */
+      if(tmp == nullptr)
+	return(nullptr); /* not found */
     }
       /* tmp now points to entry marked for deletion, prev to 
          item preceding in bucket chain or NULL if tmp is first.
@@ -261,18 +261,18 @@ void * _DtUtilDelHash(DtHashTbl t, const unsigned char * key)
 	 */
   if(tbl->hash_type == String_Key)  
     free(tmp->key);
-  if(prev!=NULL)
+  if(prev!=nullptr)
     prev->next_entry = tmp->next_entry;
   else
     tbl->table[bucket] = tmp->next_entry;
   /*
     now remove from tbl chain....
     */
-  if(tmp->right_entry !=NULL) /* not first in chain.... */
+  if(tmp->right_entry !=nullptr) /* not first in chain.... */
     tmp->right_entry->left_entry = (tmp->left_entry ? 
-				    tmp->left_entry->right_entry: NULL);
+				    tmp->left_entry->right_entry: nullptr);
       else	
-	tbl->start = (tmp->left_entry ?tmp->left_entry->right_entry: NULL);
+	tbl->start = (tmp->left_entry ?tmp->left_entry->right_entry: nullptr);
   return(tmp->data);	
 }
 

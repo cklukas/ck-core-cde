@@ -130,7 +130,7 @@ ShowFilterDialog(
 
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -138,14 +138,14 @@ ShowFilterDialog(
 
    _DtTurnOnHourGlass (file_mgr_rec->shell);
 
-   _DtShowDialog (file_mgr_rec->shell, NULL, (XtPointer)file_mgr_rec, 
+   _DtShowDialog (file_mgr_rec->shell, nullptr, (XtPointer)file_mgr_rec, 
                file_mgr_data->filter_edit, FilterChange,
 	       (XtPointer)file_mgr_rec, FilterClose, (XtPointer)file_mgr_rec,
-	       NULL, False, False, NULL, NULL);
+	       nullptr, False, False, nullptr, nullptr);
 
    filter_rec = (FilterRec *)_DtGetDialogInstance(file_mgr_data->filter_edit);
 
-   if(file_mgr_data->title != NULL && 
+   if(file_mgr_data->title != nullptr && 
                strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
    {
       tmpStr = (GETMESSAGE(13,19, "Set Filter Options"));
@@ -166,7 +166,7 @@ ShowFilterDialog(
    _DtTurnOffHourGlass (file_mgr_rec->shell);
 
    {
-     Widget hb = NULL;
+     Widget hb = nullptr;
 
      if( XtIsRealized( filter_rec->shell ) )
      {
@@ -350,11 +350,11 @@ NewFileTypeSelected (
    
    }
    else if (callback_data->reason == XmCR_HIGHLIGHT)
-      DrawHighlight(w, NULL, NULL, NOT_DESKTOP);
+      DrawHighlight(w, nullptr, nullptr, NOT_DESKTOP);
    else if (callback_data->reason == XmCR_UNHIGHLIGHT)
       DrawUnhighlight(w, NOT_DESKTOP);
    else if (callback_data->reason == XmCR_SHADOW)
-      DrawShadowTh(w, NULL, NOT_DESKTOP);
+      DrawShadowTh(w, nullptr, NOT_DESKTOP);
  
 }
 

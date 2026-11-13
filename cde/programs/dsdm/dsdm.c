@@ -131,7 +131,7 @@ typedef struct _site {
     struct _site *next;
 } drop_site_t;
 
-drop_site_t *MasterSiteList = NULL;
+drop_site_t *MasterSiteList = nullptr;
 drop_site_t **NextSite;
 int SitesFound = 0;
 
@@ -177,28 +177,28 @@ GetInterestProperty(Display *dpy, Window win, unsigned long *nitems)
 			   nitems, &remain, &data);
 
     if (s != Success)
-	return NULL;
+	return nullptr;
 
     if (acttype == None)
 	/* property does not exist */
-	return NULL;
+	return nullptr;
 
     if (acttype != ATOM_DRAGDROP_INTEREST) {
 	fputs("dsdm: interest property has wrong type\n", stderr);
-	return NULL;
+	return nullptr;
     }
 
     if (actfmt != 32) {
 	fputs("dsdm: interest property has wrong format\n", stderr);
 	XFree((XFreeDefn) data);
-	return NULL;
+	return nullptr;
     }
 
     if (remain > 0) {
 	/* XXX didn't read it all, punt */
 	fputs("dsdm: interest property too long\n", stderr);
 	XFree((XFreeDefn) data);
-	return NULL;
+	return nullptr;
     }
     return data;
 } /* end of GetInterestProperty */
@@ -236,7 +236,7 @@ FindRecursively(Display *dpy, Window root, Window win, Window *pwin, void **psit
     }
 
     data = GetInterestProperty(dpy, win, &nitems);
-    if (data != NULL) {
+    if (data != nullptr) {
 	if (!XTranslateCoordinates(dpy, win, root, 0, 0, px, py, &junk)) {
 	    fprintf(stderr, "%s: window 0x%lx isn't on the same root!\n",
 		    ProgramName, win);
@@ -263,7 +263,7 @@ FindRecursively(Display *dpy, Window root, Window win, Window *pwin, void **psit
 	DPRINTF(("%s: found top-level window 0x%lx with no interest\n",
 		 ProgramName, win));
 	XFree((XFreeDefn) data);
-	*psite = NULL;
+	*psite = nullptr;
 	*plen = 0;
 
 #ifdef PROXY
@@ -436,8 +436,8 @@ ProcessInterestProperty(Display * dpy, Window win, int screen,
     int areatype;
     int nrects;
     unsigned long flags;
-    Region region = NULL;
-    Region toprgn = NULL;
+    Region region = nullptr;
+    Region toprgn = nullptr;
     XRectangle rect;
     drop_site_t *site;
     int x, y;
@@ -513,11 +513,11 @@ ProcessInterestProperty(Display * dpy, Window win, int screen,
 	site->window_id = wid;
 	site->flags = flags;
 	site->region = region;
-	site->next = NULL;
+	site->next = nullptr;
 	(*NextSite) = site;
 	NextSite = &site->next;
 	++SitesFound;
-	region = NULL;
+	region = nullptr;
     }
     XDestroyRegion(toprgn);
 } /* end of ProcessInterestProperty */
@@ -581,12 +581,12 @@ FindDropSites(Display *dpy)
 
 	    foundtoplevel = SearchChildren(dpy, root, children[i], &topwin,
 				   &sitedata, &datalen, &xoff, &yoff, False);
-	    if (foundtoplevel && sitedata != NULL) {
+	    if (foundtoplevel && sitedata != nullptr) {
 		/* we found a valid drop interest */
 		ProcessInterestProperty(dpy, topwin, s, sitedata,
 					datalen, visrgn, xoff, yoff);
 		XFree((XFreeDefn)sitedata);
-		if (fwdsitedata != NULL) {
+		if (fwdsitedata != nullptr) {
 		    framergn = MakeRegionFromRect(attr.x, attr.y,
 						  attr.width, attr.height);
 		    XIntersectRegion(framergn, visrgn, framergn);
@@ -600,7 +600,7 @@ FindDropSites(Display *dpy)
 		    XFree((XFreeDefn)fwdsitedata);
 		}
 	    } else {
-		if (fwdsitedata != NULL) {
+		if (fwdsitedata != nullptr) {
 		    ProcessInterestProperty(dpy, children[i], s, fwdsitedata,
 					    fwdlen, visrgn, attr.x, attr.y);
 		    XFree((XFreeDefn)fwdsitedata);
@@ -622,14 +622,14 @@ FreeDropSites(void)
     drop_site_t *next, *temp;
 
     next = MasterSiteList;
-    while (next != NULL) {
+    while (next != nullptr) {
 	temp = next->next;
 	if (next->region)
 		XDestroyRegion(next->region);
 	XFree((XFreeDefn)next);
 	next = temp;
     }
-    MasterSiteList = NULL;
+    MasterSiteList = nullptr;
     SitesFound = 0;
     NextSite = &MasterSiteList;
 } /* end of FreeDropSites */
@@ -658,7 +658,7 @@ WriteSiteRectList(Display *dpy, Window win, Atom prop)
     BOX *box, *last;
 
     site = MasterSiteList;
-    while (site != NULL) {
+    while (site != nullptr) {
 	numrects += REGION_NUMRECTS(site->region);
 	site = site->next;
     }
@@ -667,7 +667,7 @@ WriteSiteRectList(Display *dpy, Window win, Atom prop)
     array = (unsigned long *) malloc(8*numrects*sizeof(unsigned long));
     cur = array;
     site = MasterSiteList;
-    while (site != NULL) {
+    while (site != nullptr) {
 	region = (REGION *) site->region;
 	box = region->rects;
 	last = box + region->numRects;
@@ -742,7 +742,7 @@ main(int argc, char **argv)
     XEvent e;
     XEvent reply;
     int xflag = 0;
-    char *slash = NULL;
+    char *slash = nullptr;
     char *cp;
     char call_proxy_main;
     Atom atoms[NUM_ATOMS];
@@ -753,15 +753,15 @@ main(int argc, char **argv)
 	    slash = cp;
 	++cp;
     }
-    if (slash != NULL)
+    if (slash != nullptr)
 	ProgramName = slash + 1;
     else
 	ProgramName = argv[0];	
 
-    dpy = XOpenDisplay(NULL);
-    if (dpy == NULL) {
+    dpy = XOpenDisplay(nullptr);
+    if (dpy == nullptr) {
 	fprintf(stderr, "%s: can't open display %s\n",
-		ProgramName, XDisplayName(NULL));
+		ProgramName, XDisplayName(nullptr));
 	exit(1);
     }
 

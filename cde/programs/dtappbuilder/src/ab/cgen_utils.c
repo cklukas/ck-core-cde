@@ -110,28 +110,28 @@ typedef enum
 
 
 extern CGenOptions		CodeGenOptions;
-StringList	    user_env_vars = NULL;
-StringList	    module_list = NULL;
+StringList	    user_env_vars = nullptr;
+StringList	    module_list = nullptr;
 static CG_GOAL      user_goal = CG_GOAL_UNDEF;
 
 static XtInputId    input_proc_id = (XtInputId)-1;
 static int          status_pipe_read = -1;
 static int          status_pipe_write = -1;
-static Widget       output_termWidget = NULL;
-static Widget       input_termWidget = NULL;
-static Widget       make_run_item = NULL;
-static Widget       gen_code_item = NULL;
-static Widget       make_item = NULL;
-static Widget       run_item = NULL;
-static Widget       abort_item = NULL;
-static Widget	    cgen_props_item = NULL;
-static Widget       gen_code_button = NULL;
-static Widget	    make_run_button = NULL;
-static Widget	    make_button = NULL;
-static Widget	    run_button = NULL;
-static Widget	    abort_button = NULL;
-static Widget	    cur_dir_text = NULL;
-static ISTRING      termSlaveDeviceName = NULL;
+static Widget       output_termWidget = nullptr;
+static Widget       input_termWidget = nullptr;
+static Widget       make_run_item = nullptr;
+static Widget       gen_code_item = nullptr;
+static Widget       make_item = nullptr;
+static Widget       run_item = nullptr;
+static Widget       abort_item = nullptr;
+static Widget	    cgen_props_item = nullptr;
+static Widget       gen_code_button = nullptr;
+static Widget	    make_run_button = nullptr;
+static Widget	    make_button = nullptr;
+static Widget	    run_button = nullptr;
+static Widget	    abort_button = nullptr;
+static Widget	    cur_dir_text = nullptr;
+static ISTRING      termSlaveDeviceName = nullptr;
 static pid_t		child_pid_list[CHILD_PID_LIST_SIZE];
 static pid_t		actual_process_pgid = INVALID_PID;
 static pid_t		abortingPID = INVALID_PID;
@@ -145,7 +145,7 @@ static STRING	dtcodegenCmdList[] =
     "",				/* exe-dir/../abmf : filled in at runtime */
     "dtcodegen", 
     "/usr/dt/bin/dtcodegen", 
-    NULL
+    nullptr
 };
 
 static STRING	makeCmdList[] =
@@ -154,7 +154,7 @@ static STRING	makeCmdList[] =
     "/usr/ccs/bin/make",
     "/usr/dist/exe/make",
     "/usr/dist/local/exe/make",
-    NULL
+    nullptr
 };
 
 
@@ -340,7 +340,7 @@ cgen_show_codegen_win(
          */  
         ab_register_window(AB_cgen_win, AB_WIN_WINDOW, WindowHidden, 
 		AB_toplevel, AB_WPOS_STACK_CENTER,
-		popdown_cgen_window, NULL); 
+		popdown_cgen_window, nullptr); 
 
         cgen_notify_new_project(proj_get_project());
         obj_add_rename_callback( cgen_obj_name_changed_cb,
@@ -355,7 +355,7 @@ cgen_show_codegen_win(
 	 * By setting this via cgenP_put_env_var(), the user has the
 	 * option of resetting it to its original value.
 	 */
-	if (cgenP_get_env_var("XAPPLRESDIR") == NULL)
+	if (cgenP_get_env_var("XAPPLRESDIR") == nullptr)
 	{
 	    cgenP_put_env_var("XAPPLRESDIR", ".");
 	}
@@ -388,11 +388,11 @@ static int
 build_dtcodegen_cmd_list(STRING *cmdList)
 {
     char	exeDirCmd[MAXPATHLEN+1];
-    STRING	exeDir = NULL;
+    STRING	exeDir = nullptr;
     *exeDirCmd = 0;
 
     exeDir = dtb_get_exe_dir();
-    if (exeDir == NULL)
+    if (exeDir == nullptr)
     {
 	return ERR_INTERNAL;
     }
@@ -436,8 +436,8 @@ int
 cgen_notify_new_project(ABObj project)
 {
     public_entry_point(); 	/* see if we'll allow this entry */
-    cgen_set_title(project == NULL? NULL : obj_get_name(project));
-    cgen_set_project_dir(NULL);
+    cgen_set_title(project == nullptr? nullptr : obj_get_name(project));
+    cgen_set_project_dir(nullptr);
     return 0;
 }
 
@@ -473,7 +473,7 @@ cgen_notify_props_new_proj(
 {
     int         ret = 0;
 
-    ret = set_props_proj_name(project == NULL? NULL : obj_get_name(project));
+    ret = set_props_proj_name(project == nullptr? nullptr : obj_get_name(project));
     return ret;
 }
  
@@ -483,11 +483,11 @@ cgenP_init_props_module_list(
 )
 {
     ABObj       	proj = proj_get_project();
-    ABObj       	obj = NULL;
+    ABObj       	obj = nullptr;
     AB_TRAVERSAL	trav;
  
     for (trav_open(&trav, proj, AB_TRAV_MODULES);
-        (obj= trav_next(&trav)) != NULL; )
+        (obj= trav_next(&trav)) != nullptr; )
     {
 	if (obj_is_defined(obj))
 	{
@@ -564,14 +564,14 @@ static int
 print_to_term(STRING msg)
 {
     int                 rc = 0;
-    FILE               *fp = NULL;
+    FILE               *fp = nullptr;
 
     if ((rc = get_slave_device_name()) < 0)
     {
         return rc;
     }
     fp = util_fopen_locked(istr_string(termSlaveDeviceName), "w");
-    if (fp == NULL)
+    if (fp == nullptr)
     {
         return -1;
     }
@@ -615,7 +615,7 @@ term_execute_command(CG_SUBCOMMAND cmd_code, STRING cmd, STRING argv[])
     pid_t		rc_pid = INVALID_PID;
     pid_t		watchdog_pid = INVALID_PID;
     int                 child_status = 0;
-    STRING		msg = NULL;
+    STRING		msg = nullptr;
     int			i= 0, msg_size = 0;
 
     if (actual_process_pgid != INVALID_PID)
@@ -626,20 +626,20 @@ term_execute_command(CG_SUBCOMMAND cmd_code, STRING cmd, STRING argv[])
     {
         return rc;
     }
-    if (cmd == NULL)
+    if (cmd == nullptr)
     {
         return 0;
     }
 
     msg_size = strlen("====> Running: ");
-    for (i = 0; argv[i] != NULL; ++i)
+    for (i = 0; argv[i] != nullptr; ++i)
     {
         msg_size += strlen(argv[i]) + 1;
     }    
     msg = (STRING) XtMalloc(msg_size + 1);  /* Add 1 for NULL */
     strcpy(msg, "====> Running: ");
     strcat(msg, cmd);
-    for (i= 1; argv[i] != NULL; ++i)
+    for (i= 1; argv[i] != nullptr; ++i)
     {
 	strcat(msg, " ");
 	strcat(msg, argv[i]);
@@ -678,7 +678,7 @@ term_execute_command(CG_SUBCOMMAND cmd_code, STRING cmd, STRING argv[])
 	    sigset_t	signals;
 	    sigemptyset(&signals);
 	    sigaddset(&signals, SIGCHLD);
-	    sigprocmask(SIG_BLOCK, &signals, NULL);
+	    sigprocmask(SIG_BLOCK, &signals, nullptr);
 	}
 
 	util_fdclose(status_pipe_read);
@@ -698,9 +698,9 @@ term_execute_command(CG_SUBCOMMAND cmd_code, STRING cmd, STRING argv[])
 	    /* grandchild - becomes the program we are actually running */
 	    int 	num_env_vars = strlist_get_num_strs(user_env_vars);
 	    int	i = 0;
-	    STRING	var_name = NULL;
-	    STRING	var_value = NULL;
-	    STRING	putenv_var = NULL;
+	    STRING	var_name = nullptr;
+	    STRING	var_value = nullptr;
+	    STRING	putenv_var = nullptr;
 	    int		putenv_var_size = 0;
 
 	    setpgid(0,0);		/* make process group leader */
@@ -708,7 +708,7 @@ term_execute_command(CG_SUBCOMMAND cmd_code, STRING cmd, STRING argv[])
 
 	    for (i = 0; i < num_env_vars; ++i)
 	    {
-	        var_value = NULL;
+	        var_value = nullptr;
 	        var_name = strlist_get_str(user_env_vars,i, (void **)&var_value);
 		if (!util_strempty(var_value))
 	  	{
@@ -770,8 +770,8 @@ term_execute_command(CG_SUBCOMMAND cmd_code, STRING cmd, STRING argv[])
 		{
 		    /* child was killed by uncaught signal */
 		    int		kill_signal = WTERMSIG(grandchild_status);
-		    STRING	signalName = NULL;
-		    time_t	signalTime = time(NULL);
+		    STRING	signalName = nullptr;
+		    time_t	signalTime = time(nullptr);
 		    BOOL	coreDumped = FALSE;
 		    struct stat	fileInfo;
 		    /*printf("frontline: child signalled(%d)\n", kill_signal);*/
@@ -861,24 +861,24 @@ term_execute_command(CG_SUBCOMMAND cmd_code, STRING cmd, STRING argv[])
 static int
 get_slave_device_name(void)
 {
-    String              deviceName = NULL;
+    String              deviceName = nullptr;
 
-    if (termSlaveDeviceName != NULL)
+    if (termSlaveDeviceName != nullptr)
     {
         return 0;
     }
 
-    if (termSlaveDeviceName == NULL)
+    if (termSlaveDeviceName == nullptr)
     {
-        XtVaGetValues(output_termWidget, DtNtermSlaveName, &deviceName, NULL);
-        if (deviceName != NULL)
+        XtVaGetValues(output_termWidget, DtNtermSlaveName, &deviceName, nullptr);
+        if (deviceName != nullptr)
         {
 	    termSlaveDeviceName= istr_create(deviceName);
             /*util_dprintf(2,"slavename: '%s'\n", util_strsafe(deviceName));*/
         }
     }   /* deviceName == NULL */
 
-    return (termSlaveDeviceName == NULL ? -1 : 0);
+    return (termSlaveDeviceName == nullptr ? -1 : 0);
 }
 
 
@@ -892,14 +892,14 @@ static int
 exec_generate_code(void)
 {
     ABObj	project= proj_get_project();
-    STRING	project_name= NULL;
+    STRING	project_name= nullptr;
 
-    if (project == NULL)
+    if (project == nullptr)
     {
 	return -1;
     }
     project_name = obj_get_name(project);
-    if (project_name == NULL)
+    if (project_name == nullptr)
     {
 	return -1;
     }
@@ -933,23 +933,23 @@ exec_generate_main(void)
 {
     int		rc = 0;		/* return code */
     ABObj       project= proj_get_project();
-    STRING      project_name= NULL;
+    STRING      project_name= nullptr;
     STRING      argv[MAX_CGEN_FIXED_ARGS];
     int         i = 0;
-    STRING	cmd = NULL;
+    STRING	cmd = nullptr;
 
-    if (project == NULL)
+    if (project == nullptr)
     {
         return -1;
     }
     project_name = obj_get_name(project);
-    if (project_name == NULL)
+    if (project_name == nullptr)
     {
         return -1;
     }
 
     for (i = 0; i < MAX_CGEN_FIXED_ARGS; i++)
-        argv[i] = NULL;
+        argv[i] = nullptr;
 
     i = 0;
     if ((rc = build_dtcodegen_arg_list(argv, &i)) < 0)
@@ -960,7 +960,7 @@ exec_generate_main(void)
     argv[i]= "-main";		i++;
     argv[i]= "-p";		i++;
     argv[i]= project_name;	i++;
-    argv[i]= NULL;
+    argv[i]= nullptr;
 
     term_execute_command(CG_CMD_GEN_CODE, argv[0], argv);
     return 0;
@@ -971,23 +971,23 @@ exec_generate_proj(void)
 {
     int		rc = 0;		/* return code */
     ABObj       project= proj_get_project();
-    STRING      project_name= NULL;
+    STRING      project_name= nullptr;
     STRING      argv[MAX_CGEN_FIXED_ARGS];
     int         i = 0;
-    STRING	cmd = NULL;
+    STRING	cmd = nullptr;
  
-    if (project == NULL)
+    if (project == nullptr)
     {
         return -1;
     }
     project_name= obj_get_name(project);
-    if (project_name == NULL)
+    if (project_name == nullptr)
     {
         return -1;
     }
  
     for (i = 0; i < MAX_CGEN_FIXED_ARGS; i++) 
-        argv[i] = NULL;
+        argv[i] = nullptr;
 
     i = 0;
     if ((rc = build_dtcodegen_arg_list(argv, &i)) < 0)
@@ -997,7 +997,7 @@ exec_generate_proj(void)
        
     argv[i]= "-p";              i++;
     argv[i]= project_name;      i++;
-    argv[i]= NULL;
+    argv[i]= nullptr;
     term_execute_command(CG_CMD_GEN_CODE, argv[0], argv);
  
     return 0;
@@ -1009,17 +1009,17 @@ exec_generate_specific_files(void)
     int		returnValue = 0;
     int		rc = 0;		/* return code */
     ABObj       project= proj_get_project();
-    STRING      project_name= NULL;
+    STRING      project_name= nullptr;
     STRING      *argv;
     int         argv_size = MAX_CGEN_FIXED_ARGS;
     int         i, n, num_args, arg_count, num_mods;
  
-    if (project == NULL)
+    if (project == nullptr)
     {
         return -1;
     }
     project_name= obj_get_name(project);
-    if (project_name == NULL)
+    if (project_name == nullptr)
     {
         return -1;
     }
@@ -1028,7 +1028,7 @@ exec_generate_specific_files(void)
     argv_size += num_mods;
     argv = (STRING *)util_malloc(argv_size * sizeof(STRING));
     for (i = 0; i < argv_size; i++)
-	argv[i] = NULL;
+	argv[i] = nullptr;
  
     arg_count = 0;
     if ((rc = build_dtcodegen_arg_list(argv, &arg_count)) < 0)
@@ -1043,9 +1043,9 @@ exec_generate_specific_files(void)
     num_args = arg_count + num_mods;
     for (i = arg_count, n = 0; i < num_args; i++, n++)
     {
-        argv[i] = strlist_get_str(CodeGenOptions.module_list, n, (void **)NULL);
+        argv[i] = strlist_get_str(CodeGenOptions.module_list, n, (void **)nullptr);
     }
-    argv[num_args] = NULL;
+    argv[num_args] = nullptr;
      
     term_execute_command(CG_CMD_GEN_CODE, argv[0], argv);
 
@@ -1060,17 +1060,17 @@ exec_generate_specific_files_and_main(void)
     int		returnValue = 0;
     int		rc = 0;		/* return code */
     ABObj       project= proj_get_project();
-    STRING      project_name= NULL;
+    STRING      project_name= nullptr;
     STRING      *argv;
     int         argv_size = MAX_CGEN_FIXED_ARGS;
     int         i, n, num_args, arg_count, num_mods;
  
-    if (project == NULL)
+    if (project == nullptr)
     {
         return -1;
     }
     project_name= obj_get_name(project);
-    if (project_name == NULL)
+    if (project_name == nullptr)
     {
         return -1;
     }
@@ -1079,7 +1079,7 @@ exec_generate_specific_files_and_main(void)
     argv_size += num_mods;
     argv = (STRING *)util_malloc(argv_size * sizeof(STRING));
     for (i = 0; i < argv_size; i++) 
-        argv[i] = NULL;
+        argv[i] = nullptr;
 
     arg_count = 0;
     if ((rc = build_dtcodegen_arg_list(argv, &arg_count)) < 0)
@@ -1095,9 +1095,9 @@ exec_generate_specific_files_and_main(void)
     num_args = arg_count + num_mods;
     for (i = arg_count, n = 0; i < num_args; i++, n++)
     {
-        argv[i] = strlist_get_str(CodeGenOptions.module_list, n, (void **)NULL);
+        argv[i] = strlist_get_str(CodeGenOptions.module_list, n, (void **)nullptr);
     }
-    argv[num_args] = NULL;
+    argv[num_args] = nullptr;
      
     term_execute_command(CG_CMD_GEN_CODE, argv[0], argv);
 
@@ -1127,7 +1127,7 @@ build_dtcodegen_arg_list(STRING *argList, int *iInOut)
     int		rc = 0;
     int		i = (*iInOut);
     int		numArgsAdded = 0;
-    STRING	dtcodegenCmd = NULL;
+    STRING	dtcodegenCmd = nullptr;
 
     if ((rc = select_command(dtcodegenCmdList, &dtcodegenCmd)) < 0)
     {
@@ -1158,7 +1158,7 @@ build_dtcodegen_arg_list(STRING *argList, int *iInOut)
         break;
     }
 
-    argList[i] = NULL;
+    argList[i] = nullptr;
 
 epilogue:
     if (returnValue >= 0)
@@ -1175,7 +1175,7 @@ static int
 exec_make(void)
 {
     int			rc = 0;		/* return code */
-    STRING		cmd = NULL;
+    STRING		cmd = nullptr;
     STRING		argv[5];
     BOOL		continueMake = FALSE;
 
@@ -1193,7 +1193,7 @@ exec_make(void)
 
     argv[0] = cmd;
     argv[1] = CodeGenOptions.make_args;
-    argv[2] = NULL;
+    argv[2] = nullptr;
     term_execute_command(CG_CMD_MAKE, argv[0], argv);
     return 0;
 }
@@ -1202,7 +1202,7 @@ exec_make(void)
 static int
 exec_run(void)
 {
-    ABObj	project= NULL;
+    ABObj	project= nullptr;
     char	executable_name[1024];
     char	cmd[sizeof(executable_name) + 3];
     STRING	argv[5];
@@ -1210,7 +1210,7 @@ exec_run(void)
     *cmd = 0;
 
     project= proj_get_project();
-    if ((project == NULL) || (obj_get_name(project) == NULL))
+    if ((project == nullptr) || (obj_get_name(project) == nullptr))
     {
 	return -1;
     }
@@ -1219,7 +1219,7 @@ exec_run(void)
     sprintf(cmd, "./%s", executable_name);
     argv[0] = cmd;
     argv[1] = CodeGenOptions.run_args;
-    argv[2] = NULL;
+    argv[2] = nullptr;
     term_execute_command(CG_CMD_RUN, argv[0], argv);
 
     return 0;
@@ -1564,7 +1564,7 @@ pipe_data_ready_proc(
     BOOL		aborted = FALSE;
     CG_SUBCOMMAND	cmd_code = CG_CMD_UNDEF;
     CG_STATUS		status_code = CG_STATUS_UNDEF;
-    void		*status_data = NULL;
+    void		*status_data = nullptr;
     int			int_status_code = 0;
     int			int_cmd_code = 0;
     int			exit_code = 0;
@@ -1720,7 +1720,7 @@ create_status_pipe(void)
 
         if (   (input_proc_id == -1) 
 	    && (status_pipe_read >= 0)
-	    && (output_termWidget != NULL))
+	    && (output_termWidget != nullptr))
         {
 	    XtAppContext	app_context= XtWidgetToApplicationContext(output_termWidget);
 	    input_proc_id = 
@@ -1729,7 +1729,7 @@ create_status_pipe(void)
 		    status_pipe_read,
 		    (XtPointer)XtInputReadMask,
 		    pipe_data_ready_proc,
-		    NULL
+		    nullptr
 		    );
         }
     }
@@ -1796,7 +1796,7 @@ read_from_status_pipe(
     int		return_value = 0;
     int		int_status_code = 0;
     int		int_cmd_code = 0;
-    void	*status_data = NULL;
+    void	*status_data = nullptr;
     int		nread = 0;
 
     /* util_dprintf(2,"Data ready\n");*/
@@ -1899,7 +1899,7 @@ cgen_set_title(STRING projectName)
 {
     char	newTitle[256];
     strcpy(newTitle, "Code Generator ");
-    if (projectName == NULL)
+    if (projectName == nullptr)
     {
 	strcat(newTitle, "(No Project)");
     }
@@ -1911,7 +1911,7 @@ cgen_set_title(STRING projectName)
 
     XtVaSetValues(XtParent(AB_cgen_win),
 	XmNtitle,	newTitle,
-	NULL);
+	nullptr);
 
     return 0;
 }
@@ -1924,10 +1924,10 @@ cgen_set_title(STRING projectName)
 static int
 cgen_set_project_dir(STRING dir)
 {
-    STRING	newDir= NULL;
-    XmString	xmlabel= NULL;
+    STRING	newDir= nullptr;
+    XmString	xmlabel= nullptr;
 
-    if (dir != NULL)
+    if (dir != nullptr)
     {
 	newDir= dir;
     }
@@ -1938,8 +1938,8 @@ cgen_set_project_dir(STRING dir)
     xmlabel = XmStringCreateLocalized(newDir);
     XtVaSetValues(cur_dir_text,
 		XmNlabelString, xmlabel,
-		NULL);
-    XmStringFree(xmlabel); xmlabel= NULL;
+		nullptr);
+    XmStringFree(xmlabel); xmlabel= nullptr;
     return 0;
 }
 
@@ -1998,7 +1998,7 @@ set_props_proj_name(STRING projectName)
 {
     char        newProj[256];
 
-    if (projectName == NULL)
+    if (projectName == nullptr)
     {
         strcpy(newProj, "(No Project)");
     }
@@ -2010,7 +2010,7 @@ set_props_proj_name(STRING projectName)
     XtVaSetValues(dtb_cgen_props_cgen_props_dlg.proj_name,
         XtVaTypedArg, XmNlabelString, XtRString,
         newProj, strlen(newProj)+1,
-        NULL);
+        nullptr);
 
     return 0;  
 }
@@ -2025,10 +2025,10 @@ obj_renamedOCB(
     ObjEvAttChangeInfo    info
 )
 {
-    Widget      list = NULL;
-    STRING      mod_name = NULL;
+    Widget      list = nullptr;
+    STRING      mod_name = nullptr;
  
-    if (AB_cgen_prop_dialog != NULL)
+    if (AB_cgen_prop_dialog != nullptr)
     {
         if (!obj_is_module(info->obj) && !obj_is_project(info->obj))
 	{
@@ -2044,13 +2044,13 @@ obj_renamedOCB(
         else
         {
             mod_name = obj_get_name(info->obj);
-            if (mod_name == NULL)
+            if (mod_name == nullptr)
                 return -1;
  
-            XtVaGetValues(AB_cgen_prop_dialog, XmNuserData, &list, NULL);
+            XtVaGetValues(AB_cgen_prop_dialog, XmNuserData, &list, nullptr);
  
             /* A new module was created and named */
-            if (info->old_name != NULL)
+            if (info->old_name != nullptr)
 	    {
                 ui_list_replace_item(list, istr_string(info->old_name), mod_name);
 	    }
@@ -2069,19 +2069,19 @@ obj_destroyedOCB(
     ObjEvDestroyInfo    info
 )
 {
-    Widget      list = NULL;
-    STRING      mod_name = NULL;
+    Widget      list = nullptr;
+    STRING      mod_name = nullptr;
  
-    if (AB_cgen_prop_dialog != NULL)
+    if (AB_cgen_prop_dialog != nullptr)
     {
         if (!obj_is_module(info->obj))
             return 0;
 
         mod_name = obj_get_name(info->obj);
-        if (mod_name == NULL)
+        if (mod_name == nullptr)
             return -1;
  
-        XtVaGetValues(AB_cgen_prop_dialog, XmNuserData, &list, NULL);
+        XtVaGetValues(AB_cgen_prop_dialog, XmNuserData, &list, nullptr);
         ui_list_delete_item(list, mod_name);
     }
  
@@ -2096,9 +2096,9 @@ obj_updateOCB(
     ObjEvUpdateInfo     info
 )
 {
-    Widget	list = NULL;
+    Widget	list = nullptr;
 
-    if (AB_cgen_prop_dialog != NULL)
+    if (AB_cgen_prop_dialog != nullptr)
     {
         if ( !obj_is_project(info->obj) &&
 	     !obj_is_module(info->obj)
@@ -2113,17 +2113,17 @@ obj_updateOCB(
 	    set_props_proj_name(obj_get_name(info->obj));
 	}
 	
-	XtVaGetValues(AB_cgen_prop_dialog, XmNuserData, &list, NULL);
+	XtVaGetValues(AB_cgen_prop_dialog, XmNuserData, &list, nullptr);
 	XmListDeleteAllItems(list);
 	cgenP_init_props_module_list(list);
 	
 	/* Initialize the selected modules lists */
-	if (CodeGenOptions.module_list != NULL)  /* the list that is applied */
+	if (CodeGenOptions.module_list != nullptr)  /* the list that is applied */
 	{
 	    strlist_destroy(CodeGenOptions.module_list);
-	    CodeGenOptions.module_list = NULL;
+	    CodeGenOptions.module_list = nullptr;
 	}
-	if (module_list != NULL)	/* the list that reflects what
+	if (module_list != nullptr)	/* the list that reflects what
 					 * is currently selected */
 	{
 	    strlist_destroy(module_list);
@@ -2137,8 +2137,8 @@ obj_updateOCB(
 int
 cgenP_sync_up_dir(void)
 {
-    STRING 	cmd = NULL;
-    STRING 	request_dir = NULL;
+    STRING 	cmd = nullptr;
+    STRING 	request_dir = nullptr;
     int		cmd_size = 0;
 
     request_dir = ab_get_cur_dir();
@@ -2163,7 +2163,7 @@ do_user_action(CG_GOAL goal, CG_SUBCOMMAND cmd)
     BOOL		doAction = TRUE;
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
     ABObj		project = proj_get_project();
-    Widget		dlg = NULL;
+    Widget		dlg = nullptr;
 
     user_goal = goal;
     assert(cmd == CG_CMD_UNDEF);	/* only startup implemented, here */
@@ -2184,8 +2184,8 @@ do_user_action(CG_GOAL goal, CG_SUBCOMMAND cmd)
     {
 	char	exeName[MAXPATHLEN+1];
 	ABObj	project = proj_get_project();
-	STRING	projName = NULL;
-	if ((project != NULL) && ((projName = obj_get_name(project)) != NULL))
+	STRING	projName = nullptr;
+	if ((project != nullptr) && ((projName = obj_get_name(project)) != nullptr))
 	{
 	    sprintf(exeName, "./%s", projName);
 	    if (!util_file_exists(exeName))
@@ -2195,7 +2195,7 @@ do_user_action(CG_GOAL goal, CG_SUBCOMMAND cmd)
 			&dtb_cgen_win_no_exe_msg);
 	        answer = dtb_show_modal_message(AB_cgen_win,
 			&dtb_cgen_win_no_exe_msg, 
-			NULL, NULL, &dlg);
+			nullptr, nullptr, &dlg);
 		if (answer == DTB_ANSWER_ACTION1)	/* Build It */
 		{
 		    goal = CG_GOAL_MAKE_AND_RUN;
@@ -2223,7 +2223,7 @@ do_user_action(CG_GOAL goal, CG_SUBCOMMAND cmd)
 			&dtb_cgen_win_query_save_or_gen_old_msg);
 	        answer = dtb_show_modal_message(AB_cgen_win,
 			&dtb_cgen_win_query_save_or_gen_old_msg, 
-			NULL, NULL, &dlg);
+			nullptr, nullptr, &dlg);
 		switch (answer)
 		{
 		    case DTB_ANSWER_ACTION1:	/* save */
@@ -2244,7 +2244,7 @@ do_user_action(CG_GOAL goal, CG_SUBCOMMAND cmd)
 			&dtb_cgen_win_query_save_or_abort_msg);
 	        answer = dtb_show_modal_message(AB_cgen_win,
 			&dtb_cgen_win_query_save_or_abort_msg, 
-			NULL, NULL, &dlg);
+			nullptr, nullptr, &dlg);
 		switch (answer)
 		{
 		    case DTB_ANSWER_ACTION1:	/* save */
@@ -2303,7 +2303,7 @@ check_path(void)
 	    "/opt/SUNWspro/bin/cc",
 	    "/usr/dist/exe/cc", 
 	    "/usr/dist/local/exe/cc",
-	    NULL
+	    nullptr
         };
         if ((rc = check_path_to_cmd(ccCmdList, &allowWarnUserAboutCc)) < 0)
 	{
@@ -2322,7 +2322,7 @@ check_path(void)
 	    "/sbin/sh",
 	    "/usr/dist/exe/sh",
 	    "/usr/dist/local/exe/sh",
-	    NULL
+	    nullptr
 	};
         if ((rc = check_path_to_cmd(shCmdList, &allowWarnUserAboutSh)) < 0)
 	{
@@ -2338,7 +2338,7 @@ check_path(void)
 	    "rm",
 	    "/bin/rm",
 	    "/usr/bin/rm",
-	    NULL
+	    nullptr
 	};
         if ((rc = check_path_to_cmd(rmCmdList, &allowWarnUserAboutRm)) < 0)
         {
@@ -2365,14 +2365,14 @@ check_path_to_cmd(STRING *cmdList, BOOL *allowWarnUserInOut)
     int			return_value = 0;
     BOOL		userCancelled = FALSE;
     int			rc = 0;		/* return code */
-    STRING		foundCmd = NULL;
+    STRING		foundCmd = nullptr;
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
-    Widget		dlg = NULL;
-    XmString		xmMsg = NULL;
-    STRING		nopathCmd = NULL;	/* cmd with no path */
+    Widget		dlg = nullptr;
+    XmString		xmMsg = nullptr;
+    STRING		nopathCmd = nullptr;	/* cmd with no path */
     
     nopathCmd = strrchr(cmdList[0], '/');
-    if (nopathCmd == NULL)
+    if (nopathCmd == nullptr)
     {
 	nopathCmd = cmdList[0];
     }
@@ -2392,16 +2392,16 @@ check_path_to_cmd(STRING *cmdList, BOOL *allowWarnUserInOut)
 	    char	*slashPtr = strrchr(foundCmd, '/');
 	    int		dirNameLen = 0;
 	    char	buffer[16384];
-	    STRING	oldPath = NULL;
+	    STRING	oldPath = nullptr;
 	    *buffer = 0;
 
 	    oldPath = cgenP_get_env_var("PATH");
-	    if (oldPath == NULL)
+	    if (oldPath == nullptr)
 	    {
 		oldPath = "";
 	    }
 
-	    if (slashPtr != NULL)
+	    if (slashPtr != nullptr)
 	    {
 		dirNameLen = (int)(slashPtr - foundCmd);
 		util_strncpy(dirName, foundCmd, dirNameLen+1);
@@ -2420,8 +2420,8 @@ check_path_to_cmd(STRING *cmdList, BOOL *allowWarnUserInOut)
 			&dtb_cgen_win_modify_path_msg);
 	        answer = dtb_show_modal_message(AB_cgen_win,
 			&dtb_cgen_win_modify_path_msg, 
-			xmMsg, NULL, &dlg);
-		XmStringFree(xmMsg); xmMsg = NULL;
+			xmMsg, nullptr, &dlg);
+		XmStringFree(xmMsg); xmMsg = nullptr;
 
 		switch (answer)
 		{
@@ -2459,11 +2459,11 @@ static BOOL
 all_files_exist(ABObj project)
 {
     BOOL		allFilesExist = TRUE;
-    STRING		fileName = NULL;
+    STRING		fileName = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
 
-    if (   ((fileName= obj_get_file(project)) == NULL)
+    if (   ((fileName= obj_get_file(project)) == nullptr)
 	|| (!util_file_exists(fileName)) )
     {
 	allFilesExist = FALSE;
@@ -2471,9 +2471,9 @@ all_files_exist(ABObj project)
     }
 
     for (trav_open(&trav, project, AB_TRAV_MODULES); 
-	 ((module = trav_next(&trav)) != NULL); )
+	 ((module = trav_next(&trav)) != nullptr); )
     {
-        if (   ((fileName= obj_get_file(module)) == NULL)
+        if (   ((fileName= obj_get_file(module)) == nullptr)
 	    || (!util_file_exists(fileName)) )
 	{
 	    allFilesExist = FALSE;
@@ -2489,13 +2489,13 @@ all_files_exist(ABObj project)
 static STRING
 cgenP_get_env_var(STRING varName)
 {
-    STRING value = NULL;
+    STRING value = nullptr;
     
-    if (user_env_vars != NULL)
+    if (user_env_vars != nullptr)
     {
         value = (STRING)strlist_get_str_data(user_env_vars, varName);
     }
-    if (value == NULL)
+    if (value == nullptr)
     {
 	value = getenv(varName);
     }
@@ -2510,10 +2510,10 @@ static int
 cgenP_put_env_var(STRING varName, STRING varValue)
 {
     int		strIndex = -1;
-    STRING	oldValue = NULL;
-    STRING	newValue = NULL;
+    STRING	oldValue = nullptr;
+    STRING	newValue = nullptr;
 
-    if (user_env_vars == NULL)
+    if (user_env_vars == nullptr)
     {
 	user_env_vars = strlist_create();
     }
@@ -2522,7 +2522,7 @@ cgenP_put_env_var(STRING varName, STRING varValue)
     if (strIndex >= 0)
     {
 	strlist_get_str(user_env_vars, strIndex, (void **)&oldValue);
-	if (oldValue != NULL)
+	if (oldValue != nullptr)
 	{
 	    util_free(oldValue);
 	}
@@ -2544,7 +2544,7 @@ check_makefile(BOOL *continueOutPtr)
     BOOL	makefileExists = FALSE;
     BOOL	makefileIsOK = FALSE;
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
-    Widget		dlg = NULL;
+    Widget		dlg = nullptr;
     BOOL		doDestroyMakefile = FALSE;
     BOOL		doGenMakefile = FALSE;
     BOOL		makeStarted = FALSE;
@@ -2609,7 +2609,7 @@ check_makefile(BOOL *continueOutPtr)
 	dtb_cgen_win_no_makefile_msg_initialize(&dtb_cgen_win_no_makefile_msg);
 	answer = dtb_show_modal_message(AB_cgen_win,
 	&dtb_cgen_win_no_makefile_msg, 
-	    NULL, NULL, &dlg);
+	    nullptr, nullptr, &dlg);
 	switch (answer)
 	{
 	    case DTB_ANSWER_ACTION1:	/* Yes */
@@ -2632,7 +2632,7 @@ check_makefile(BOOL *continueOutPtr)
 		&dtb_cgen_win_wrong_makefile_msg);
 	answer = dtb_show_modal_message(AB_cgen_win,
 		&dtb_cgen_win_wrong_makefile_msg, 
-		NULL, NULL, &dlg);
+		nullptr, nullptr, &dlg);
 	switch (answer)
 	{
 	    case DTB_ANSWER_ACTION1:	/* Yes */
@@ -2701,13 +2701,13 @@ destroy_links_to_file(STRING fileName)
     int			return_value = 0;
     struct stat		doomedFileInfo;
     struct stat		curFileInfo;
-    DIR                 *dir = NULL;
-    struct dirent       *dirEntry = NULL;
+    DIR                 *dir = nullptr;
+    struct dirent       *dirEntry = nullptr;
     StringList		doomedFiles = strlist_create();
     int			i = 0;
     int			numFiles = 0;
 
-    strlist_add_str(doomedFiles, fileName, NULL);
+    strlist_add_str(doomedFiles, fileName, nullptr);
     if (stat(fileName, &doomedFileInfo) != 0)
     {
 	util_free(doomedFiles);
@@ -2715,13 +2715,13 @@ destroy_links_to_file(STRING fileName)
     }
 
     dir = opendir(".");
-    if (dir == NULL)
+    if (dir == nullptr)
     {
 	util_free(doomedFiles);
         return ERR_INTERNAL;
     }
 
-    while ((dirEntry= readdir(dir)) != NULL)
+    while ((dirEntry= readdir(dir)) != nullptr)
     {
         if (stat(dirEntry->d_name, &curFileInfo) != 0)
 	{
@@ -2732,7 +2732,7 @@ destroy_links_to_file(STRING fileName)
 	    && (doomedFileInfo.st_ino == curFileInfo.st_ino) )
 	{
 	    /* files are the same! */
-	    strlist_add_str(doomedFiles, dirEntry->d_name, NULL);
+	    strlist_add_str(doomedFiles, dirEntry->d_name, nullptr);
 	}
     }
 
@@ -2745,12 +2745,12 @@ destroy_links_to_file(STRING fileName)
     numFiles = strlist_get_num_strs(doomedFiles);
     for (i = 0; i < numFiles; ++i)
     {
-	move_file_to_backup(strlist_get_str(doomedFiles, i, NULL));
+	move_file_to_backup(strlist_get_str(doomedFiles, i, nullptr));
     }
 
-    if (dir != NULL)
+    if (dir != nullptr)
     {
-	closedir(dir); dir = NULL;
+	closedir(dir); dir = nullptr;
     }
     strlist_destroy(doomedFiles);
     return return_value;
@@ -2779,21 +2779,21 @@ static int
 cgenP_makefile_is_for_project(STRING fileName, ABObj project)
 {
     int			return_value = 0;
-    FILE		*makeFile = NULL;
+    FILE		*makeFile = nullptr;
     StringList		genFileNames = strlist_create();
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     int			i = 0;
     int			numFiles = 0;
     AB_TRAVERSAL	trav;
-    assert((project == NULL) || obj_is_project(project));
+    assert((project == nullptr) || obj_is_project(project));
 
-    if (project == NULL)
+    if (project == nullptr)
     {
 	goto epilogue;
     }
 
     makeFile = util_fopen_locked(fileName, "r");
-    if (makeFile == NULL)
+    if (makeFile == nullptr)
     {
 	return_value = ERR_OPEN;
 	goto epilogue;
@@ -2802,9 +2802,9 @@ cgenP_makefile_is_for_project(STRING fileName, ABObj project)
     /*
      * Create list of file names
      */
-    add_obj_file_name(genFileNames, project, NULL);
+    add_obj_file_name(genFileNames, project, nullptr);
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL; )
+	(module = trav_next(&trav)) != nullptr; )
     {
 	add_obj_file_name(genFileNames, module, "_ui");
     }
@@ -2825,25 +2825,25 @@ epilogue:
 static int
 add_obj_file_name(StringList fileNames, ABObj obj, STRING suffix)
 {
-    STRING	objName = NULL;
+    STRING	objName = nullptr;
     char	fileName[MAXPATHLEN+1];
     *fileName = 0;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	return -1;
     }
-    if ((objName = obj_get_name(obj)) == NULL)
+    if ((objName = obj_get_name(obj)) == nullptr)
     {
 	return -1;
     }
 
-    if (suffix == NULL)
+    if (suffix == nullptr)
     {
 	suffix = Util_empty_string;
     }
     sprintf(fileName, "%s%s", objName, suffix);
-    strlist_add_str(fileNames, fileName, NULL);
+    strlist_add_str(fileNames, fileName, nullptr);
     return 0;
 }
 
@@ -2854,11 +2854,11 @@ strings_exist_in_file(StringList strings, FILE *file)
 #define fast_strneq(s1,s2,n) \
 	    (((*(s1)) == (*(s2))) && (strncmp(s1,s2,n) == 0))
     BOOL	stringsExist = FALSE;
-    STRING	*stringsArray = NULL;
-    int		*stringsLenArray = NULL;
+    STRING	*stringsArray = nullptr;
+    int		*stringsLenArray = nullptr;
     int		maxFileNameLen = 0;
     int		curFileNameLen = 0;
-    STRING	curFileName = NULL;
+    STRING	curFileName = nullptr;
     char	buf[8193];
     int		numStrings = 0;
     int		numStringsFound = 0;
@@ -2866,8 +2866,8 @@ strings_exist_in_file(StringList strings, FILE *file)
     int		maxBufLen = sizeof(buf)-1;
     int		c = 0;
     int		bufLen = 0;
-    BOOL	*stringExists = NULL;
-    char	*stringStart = NULL;
+    BOOL	*stringExists = nullptr;
+    char	*stringStart = nullptr;
     *buf = 0;
 
     numStrings = strlist_get_num_strs(strings);
@@ -2878,15 +2878,15 @@ strings_exist_in_file(StringList strings, FILE *file)
     stringsArray = (STRING*)util_malloc(numStrings * sizeof(STRING));
     stringsLenArray = (int*)util_malloc(numStrings * sizeof(int));
     stringExists = (BOOL*)util_malloc(numStrings * sizeof(BOOL));
-    if (   (stringsArray == NULL) 
-	|| (stringsLenArray == NULL) 
-	|| (stringExists == NULL) )
+    if (   (stringsArray == nullptr) 
+	|| (stringsLenArray == nullptr) 
+	|| (stringExists == nullptr) )
     {
 	goto epilogue;
     }
     for (i = 0; i < numStrings; ++i)
     {
-	stringsArray[i] = strlist_get_str(strings, i, NULL);
+	stringsArray[i] = strlist_get_str(strings, i, nullptr);
 	stringsLenArray[i] = strlen(stringsArray[i]);
 	stringExists[i] = FALSE;
     }
@@ -2976,12 +2976,12 @@ select_command(STRING *cmdList, STRING *cmdOutPtr)
 {
     int		i = 0;
     int		cmdIndex = -1;
-    STRING	path = NULL;
+    STRING	path = nullptr;
 
-    *cmdOutPtr = NULL;
+    *cmdOutPtr = nullptr;
     path = cgenP_get_env_var("PATH");
 
-    for (i = 0; (cmdIndex < 0) && (cmdList[i] != NULL); ++i)
+    for (i = 0; (cmdIndex < 0) && (cmdList[i] != nullptr); ++i)
     {
 	if ((strlen(cmdList[i]) > 0) && (command_exists(cmdList[i], path)))
 	{

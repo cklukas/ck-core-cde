@@ -107,7 +107,7 @@ int	get_user_environ(void)
     if ((p = getenv("XMODIFIERS")))
 	uenv->xmodifiers = NEWSTR(p);
     else
-	uenv->xmodifiers = NULL;
+	uenv->xmodifiers = nullptr;
 
     gethostname(buf, BUFSIZ);
     uenv->hostname = NEWSTR(buf);
@@ -148,7 +148,7 @@ int	expand_string(char *in_str, char *out_str, int out_len, ImsConf *ims)
 	out_len -= q - out_str;
     }
     while (*p && out_len > 0) {
-	ep = NULL;
+	ep = nullptr;
 	if (*p == '%') {
 	    switch(p[1]) {
 
@@ -221,9 +221,9 @@ static int	shell_type(char *shell)
 	shell[len] = 0;
 	if ((p = strrchr(shell, '/')))	shell = p + 1;
     }
-    if (strstr(shell, "ksh") != NULL)
+    if (strstr(shell, "ksh") != nullptr)
 	return K_Shell;
-    else if (strstr(shell, "csh") != NULL)
+    else if (strstr(shell, "csh") != nullptr)
 	return C_Shell;
 
     return P_Shell;
@@ -251,7 +251,7 @@ int	make_new_environ(OutEnv *oenv, UserSelection *sel)
     ims = sel->ent->ims;
     xmod = ENV_XMODIFIERS;
     xmod_done = False;
-    xinput = NULL;
+    xinput = nullptr;
     xinput_done = True;
     proto = renv ? renv->proto : default_protocol(ims);
 
@@ -280,7 +280,7 @@ int	make_new_environ(OutEnv *oenv, UserSelection *sel)
     if (ep == oenv->set) {
 	FREE(oenv->set); oenv->set = (EnvEnt *)0;
     } else
-	ep->name = NULL;
+	ep->name = nullptr;
 
 	/* unset: XMODIFIERS & X?INPUT, ims->env_unset */
     num = 0;
@@ -298,7 +298,7 @@ int	make_new_environ(OutEnv *oenv, UserSelection *sel)
 	if (oenv->set) {
 	    for (ep2 = oenv->set; ep2->name; ep2++)
 		if (strcmp(p, ep2->name) == 0) {
-		    p = NULL;
+		    p = nullptr;
 		    break;
 		}
 	}
@@ -310,7 +310,7 @@ int	make_new_environ(OutEnv *oenv, UserSelection *sel)
     if (ep == oenv->unset) {
 	FREE(oenv->unset); oenv->unset = (EnvEnt *)0;
     } else
-	ep->name = NULL;
+	ep->name = nullptr;
 
     FREE_LIST(setp);
     FREE_LIST(unsetp);

@@ -57,7 +57,7 @@ static char	Attribute[MAX_NAME_LEN]= "";
 static char	Action_Attr[MAX_NAME_LEN]= "";
 static char	File[MAX_NAME_LEN]= "";
 static AbilErrorMessage Errormsg[BIL_ERRMSG_COUNT];
-static AbilGetLineNumberCallback	getLineNumberCB = NULL;
+static AbilGetLineNumberCallback	getLineNumberCB = nullptr;
 
 int	abilP_err_line_number = -1;
 
@@ -135,7 +135,7 @@ abil_loadmsg(STRING userMessage)
 static int
 move_string(STRING to, STRING from)
 {
-	if (from == NULL)
+	if (from == nullptr)
 	{
 		*to= 0;
 	}
@@ -149,10 +149,10 @@ move_string(STRING to, STRING from)
 int
 abil_loadmsg_clear(void)
 {
-	move_string(Current_Object, NULL);
-	move_string(Attribute, NULL);
-	move_string(Action_Attr, NULL);
-	move_string(File, NULL);
+	move_string(Current_Object, nullptr);
+	move_string(Attribute, nullptr);
+	move_string(Action_Attr, nullptr);
+	move_string(File, nullptr);
 	return 0;
 }
 
@@ -329,7 +329,7 @@ abil_load_errmsg_table(void)
 int
 abil_loadmsg_get_line_number(void)
 {
-    return ((getLineNumberCB == NULL)? -1:getLineNumberCB());
+    return ((getLineNumberCB == nullptr)? -1:getLineNumberCB());
 }
 
 int	

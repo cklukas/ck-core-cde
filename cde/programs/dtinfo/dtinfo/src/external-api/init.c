@@ -82,7 +82,7 @@ _olias_initialize (Widget toplevel)
 
   /* Ok to use CurrentTime because contention not possible. */
   XtOwnSelection (toplevel, _olias_client_atom, CurrentTime,
-		  _olias_convert_event, NULL, NULL);
+		  _olias_convert_event, nullptr, nullptr);
 
-  XtAddEventHandler (toplevel, None, True, _olias_handle_reply, NULL);
+  XtAddEventHandler (toplevel, None, True, _olias_handle_reply, nullptr);
 }

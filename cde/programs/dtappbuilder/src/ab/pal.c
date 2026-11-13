@@ -75,7 +75,7 @@ extern "C" {
 **       Private Data                                                   **
 **                                                                      **
 **************************************************************************/
-static PalEditableObjInfo	*pal_ed_obj_head = NULL;
+static PalEditableObjInfo	*pal_ed_obj_head = nullptr;
 
 /*************************************************************************
 **                                                                      **
@@ -187,9 +187,9 @@ pal_register_item_info(
 	}
     }
 
-    if (pwidget != NULL)
+    if (pwidget != nullptr)
     {
-    	XtVaSetValues(pwidget, XmNuserData, palitem, NULL);
+    	XtVaSetValues(pwidget, XmNuserData, palitem, nullptr);
     	pal_enable_item_drag(pwidget, subtype);
     }
 
@@ -204,7 +204,7 @@ pal_get_item_info(
 )
 {
     int    	    i;
-    PalItemInfo*    palitem = NULL;
+    PalItemInfo*    palitem = nullptr;
     ABObj     	    vobj;
 
     if (obj_is_item(obj))
@@ -233,7 +233,7 @@ pal_get_type_item_info(
 )
 {
     int    	    i;
-    PalItemInfo*    palitem = NULL;
+    PalItemInfo*    palitem = nullptr;
     ABObj     	    vobj;
 
     for (i=0; i < palette_item_cnt; i++)
@@ -259,7 +259,7 @@ pal_initialize_obj(
 
     palitem = pal_get_item_info(obj);
 
-    if (palitem != NULL && palitem->initialize != NULL)
+    if (palitem != nullptr && palitem->initialize != nullptr)
         return((*palitem->initialize)(obj_get_root(obj)));
     else
         return ERROR;
@@ -275,12 +275,12 @@ pal_get_item_pixmap(
 )
 {
     PalItemInfo*   palitem;
-    PalSubtypeInfo *sub = NULL;
+    PalSubtypeInfo *sub = nullptr;
     int            i;
 
     palitem = pal_get_item_info(obj);
 
-    if (palitem != NULL)
+    if (palitem != nullptr)
     {
 	for (i=0; i < palitem->num_subinfo; i++)
 	    if (palitem->subinfo[i].subtype == subtype)
@@ -289,7 +289,7 @@ pal_get_item_pixmap(
 		break;
 	    }
 
-	if (sub != NULL)
+	if (sub != nullptr)
 	{
 	    *p_width  = (int)sub->pmwidth;
             *p_height = (int)sub->pmheight;
@@ -308,18 +308,18 @@ pal_get_item_subname(
 )
 {
     PalItemInfo*   palitem;
-    PalSubtypeInfo *sub = NULL;
+    PalSubtypeInfo *sub = nullptr;
     int            i;
 
     palitem = pal_get_item_info(obj);
 
-    if (palitem != NULL)
+    if (palitem != nullptr)
     {
         for (i=0; i < palitem->num_subinfo; i++)
             if (palitem->subinfo[i].subtype == subtype)
 		return(palitem->subinfo[i].subname);
     }    
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -338,9 +338,9 @@ pal_register_editable_obj(
     ed_obj_info->subtype = subtype;
     ed_obj_info->name = istr_create(name);
     ed_obj_info->palitem = palitem; 
-    ed_obj_info->next = NULL;
+    ed_obj_info->next = nullptr;
 
-    if (pal_ed_obj_head == NULL) /* first one */
+    if (pal_ed_obj_head == nullptr) /* first one */
 	pal_ed_obj_head = ed_obj_info;
     /* 
      * Need to insert into list alphabetically...
@@ -354,7 +354,7 @@ pal_register_editable_obj(
     else
     { 
 	for(cur = pal_ed_obj_head->next, prev = pal_ed_obj_head; 
-	    cur != NULL; cur = cur->next)
+	    cur != nullptr; cur = cur->next)
 	{
 	    if (strcasecmp(name, istr_string(cur->name)) < 0)
 	    {
@@ -364,7 +364,7 @@ pal_register_editable_obj(
 	    }
 	    prev = cur;
 	}
-	if (cur == NULL) /* hit end of list */
+	if (cur == nullptr) /* hit end of list */
 	    prev->next = ed_obj_info;
     }
 }
@@ -377,10 +377,10 @@ pal_get_editable_obj_info(
     PalEditableObjInfo *peo;
     int			subtype;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	util_dprintf(1, "pal_get_editable_obj_info: NULL object\n");
-	return NULL;
+	return nullptr;
     }
 
     if (obj->type == AB_TYPE_SCALE)
@@ -398,7 +398,7 @@ pal_get_editable_obj_info(
     else
 	subtype = obj_get_subtype(obj);
 
-    for (peo = pal_ed_obj_head; peo != NULL; peo = peo->next)
+    for (peo = pal_ed_obj_head; peo != nullptr; peo = peo->next)
     {
 	/* If a palitem structure is registered, use the "is_a" test func
 	 * in that structure to determine if the obj is of that type of
@@ -419,7 +419,7 @@ pal_get_editable_obj_info(
              (subtype == peo->subtype)))
 	    return(peo);
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -433,7 +433,7 @@ pal_add_editable_obj_menu_items(
     XmString 		xmlabel;
     Widget   		button;
 
-    for(eop = pal_ed_obj_head; eop != NULL; eop = eop->next)
+    for(eop = pal_ed_obj_head; eop != nullptr; eop = eop->next)
     {
 	if ((*test_func)(eop) == True)
 	{
@@ -443,7 +443,7 @@ pal_add_editable_obj_menu_items(
             	menu_pane,
             	XmNlabelString,     xmlabel,
             	XmNuserData,        (XtPointer)eop->palitem,
-            	NULL);
+            	nullptr);
     	    XmStringFree(xmlabel);
 
     	    XtAddCallback(button, XmNactivateCallback, menuitem_cb,

@@ -105,7 +105,7 @@ getServerTime
     }
 
     XChangeProperty(XtDisplay(w), XtWindow(w), XA_WM_HINTS, XA_WM_HINTS,
-                    32, PropModeAppend, (unsigned char *)NULL, 0);
+                    32, PropModeAppend, (unsigned char *)nullptr, 0);
 
     XWindowEvent(XtDisplay(w), XtWindow(w), PropertyChangeMask, &event);
 
@@ -685,7 +685,7 @@ setSelection
             if (!XtOwnSelection((Widget)tw, XA_PRIMARY, selectTime,
                                 _DtTermPrimSelectConvert,
                                 _DtTermPrimSelectLoseSelection,
-				NULL))
+				nullptr))
             {
                 /* 
                 ** XtOwnSelection failed, make a dummy call to setSelection
@@ -1017,7 +1017,7 @@ _DtTermPrimSelectInitBtnEvents(Widget w)
 {
     Boolean btn1_transfer = False;
     XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(w)), "enableBtn1Transfer",
-           &btn1_transfer, NULL);
+           &btn1_transfer, nullptr);
     if (btn1_transfer)
         XtOverrideTranslations(w,
             XtParseTranslationTable(_DtTermEventBindingsCDE));
@@ -1060,7 +1060,7 @@ _DtTermPrimSelectDestroy
     selectInfo->ownPrimary = False ;
     XtFree((char *) selectInfo->scanArray);
     XtFree((char *) selectInfo);
-    tpd->selectInfo = NULL ;
+    tpd->selectInfo = nullptr ;
 }
 
 
@@ -1582,7 +1582,7 @@ doHandleTargets
     {
        XtFree((char *)primSelect);
     }    
-    value = NULL ;
+    value = nullptr ;
 }
 
 /*
@@ -1624,7 +1624,7 @@ handleTargets
     tmpAction = (_TermSelectRec *) closure;
     if (!length || *length == 0) {
        XtFree((char *)value);
-       value = NULL;
+       value = nullptr;
        XtFree((char *)tmpAction->event);
        XtFree((char *)tmpAction);
        return;
@@ -1636,7 +1636,7 @@ handleTargets
     abcString            = "ABC";  /* characters in XPCS, so... safe */
     atomPtr              = (Atom *)value;
 
-    tmpProp.value = NULL;
+    tmpProp.value = nullptr;
     status = XmbTextListToTextProperty(XtDisplay(w), &abcString, 1,
                                       (XICCEncodingStyle)XTextStyle, &tmpProp);
     if (status == Success)
@@ -1653,7 +1653,7 @@ handleTargets
         */
         CS_OF_LOCALE = (Atom)9999;
     }
-    if (tmpProp.value != NULL) 
+    if (tmpProp.value != nullptr) 
     {
         XFree((char *)tmpProp.value);
     }
@@ -1702,7 +1702,7 @@ handleTargets
                         tmpAction->event->xbutton.time);
 
     XtFree((char *)value);
-    value = NULL;
+    value = nullptr;
     XtFree((char *)tmpAction->event);
     XtFree((char *)tmpAction);
 }
@@ -1927,9 +1927,9 @@ _DtTermPrimSelectConvert
     } else
        widget = w;
 
-    if (widget == NULL) return False;
+    if (widget == nullptr) return False;
 
-    tmpProp.value = NULL;
+    tmpProp.value = nullptr;
     status = XmbTextListToTextProperty(XtDisplay(widget), &tmpString, 1,
 				(XICCEncodingStyle)XTextStyle, &tmpProp);
     if (status == Success)
@@ -1946,7 +1946,7 @@ _DtTermPrimSelectConvert
         CS_OF_LOCALE = (Atom) 9999;
     }
 
-    if (tmpProp.value != NULL)
+    if (tmpProp.value != nullptr)
     	XFree((char *) tmpProp.value);
 
 
@@ -1993,7 +1993,7 @@ _DtTermPrimSelectConvert
              (*target == COMPOUND_TEXT && !isDebugFSet('s', 1)))
     {
       tmpValue  = getString(widget, begin, end, False);
-      tmpProp.value = NULL;
+      tmpProp.value = nullptr;
         if ((*target == XA_STRING) && !isDebugFSet('s', 4)) {
             *type     = (Atom) XA_STRING;
             *format   = 8;
@@ -2022,14 +2022,14 @@ _DtTermPrimSelectConvert
             *length = tmpProp.nitems;
             memcpy((void*)*value, (void*)tmpProp.value,
                    (unsigned)tmpProp.nitems);
-	    if (tmpProp.value != NULL)
+	    if (tmpProp.value != nullptr)
             	XFree((char*)tmpProp.value);
         }
         else
         {
-            *value  = NULL;
+            *value  = nullptr;
             *length = 0;
-	    if (tmpProp.value != NULL)
+	    if (tmpProp.value != nullptr)
             	XFree((char*)tmpProp.value);
             return(False);
         }
@@ -2044,7 +2044,7 @@ _DtTermPrimSelectConvert
     } 
    else
    {
-      *value  =  NULL;
+      *value  =  nullptr;
       *length = 0;
       return(False);
    }
@@ -2343,7 +2343,7 @@ SendTextToTerm(
     char *pCharEnd;
     char *pCharFollow;
 
-    if (buffer == NULL || length <= 0)
+    if (buffer == nullptr || length <= 0)
         return;
 
     pCharEnd = buffer + length;
@@ -2442,14 +2442,14 @@ DropTransferCallback(
     if (*type == 0) {
       if (value) {
            XtFree((char *)value);
-           value = NULL;
+           value = nullptr;
         }
       return;
      }
-    doHandleTargets((Widget)tw,NULL,seltype,type,value,length,format) ;
+    doHandleTargets((Widget)tw,nullptr,seltype,type,value,length,format) ;
     if (transfer_rec->move) {
        XmDropTransferEntryRec transferEntries[1];
-       XmDropTransferEntryRec *transferList = NULL;
+       XmDropTransferEntryRec *transferList = nullptr;
 
        transferEntries[0].client_data = (XtPointer) transfer_rec;
        transferEntries[0].target = XmInternAtom(XtDisplay(w),"DELETE",
@@ -2525,10 +2525,10 @@ HandleDrop( Widget w, XmDropProcCallbackStruct *cb )
 
     clientData->dropDestroyCB = dropDestroyCB;
     dd_cb->callback = DropDestroyCB;
-    dd_cb->closure = NULL;
+    dd_cb->closure = nullptr;
     dd_cb++;
-    dd_cb->callback = NULL;
-    dd_cb->closure = NULL;    
+    dd_cb->callback = nullptr;
+    dd_cb->closure = nullptr;    
 
     drag_cont = cb->dragContext;
 
@@ -2540,7 +2540,7 @@ HandleDrop( Widget w, XmDropProcCallbackStruct *cb )
 
      {
        XmDropTransferEntryRec transferEntries[2];
-       XmDropTransferEntryRec *transferList = NULL;
+       XmDropTransferEntryRec *transferList = nullptr;
        Atom TEXT = XmInternAtom(XtDisplay(w), "TEXT", False);
        Atom COMPOUND_TEXT = XmInternAtom(XtDisplay(w), "COMPOUND_TEXT", False);
        Atom CS_OF_LOCALE;
@@ -2554,7 +2554,7 @@ HandleDrop( Widget w, XmDropProcCallbackStruct *cb )
        Boolean text_found = False;
        int status;
 
-       tmp_prop.value = NULL;
+       tmp_prop.value = nullptr;
 
        status = XmbTextListToTextProperty(XtDisplay(w), &tmp_string, 1,
                                       (XICCEncodingStyle)XTextStyle, &tmp_prop);
@@ -2566,7 +2566,7 @@ HandleDrop( Widget w, XmDropProcCallbackStruct *cb )
                                  * Xlib is broken, this prevents a core dump.
                                  */
 
-       if (tmp_prop.value != NULL) XFree((char *)tmp_prop.value);
+       if (tmp_prop.value != nullptr) XFree((char *)tmp_prop.value);
 
       /* intialize data to send to drop transfer callback  */
        transfer_rec = (_DtTermDropTransferRec *)
@@ -2665,7 +2665,7 @@ RegisterDropSite(
     if (XmDropSiteRegistered(w))
         return;
 
-    tmp_prop.value = NULL;
+    tmp_prop.value = nullptr;
     status = XmbTextListToTextProperty(XtDisplay(w), &tmp_string, 1,
                                       (XICCEncodingStyle)XTextStyle, &tmp_prop);
     if (status == Success)
@@ -2676,7 +2676,7 @@ RegisterDropSite(
                             * Xlib is broken, this prevents a core dump.
                             */
 
-    if (tmp_prop.value != NULL) XFree((char *)tmp_prop.value);
+    if (tmp_prop.value != nullptr) XFree((char *)tmp_prop.value);
 
     targets[1] = XmInternAtom(XtDisplay(w), "COMPOUND_TEXT", False);
     targets[2] = XA_STRING;
@@ -2692,12 +2692,12 @@ RegisterDropSite(
 
     {
         static XtCallbackRec dndTransferCB[] = {
-            { DtTermDndTransferCallback, NULL },
-            { NULL, NULL }
+            { DtTermDndTransferCallback, nullptr },
+            { nullptr, nullptr }
         };
 
         DtDndDropRegister(w, DtDND_FILENAME_TRANSFER, XmDROP_COPY,
-                          dndTransferCB, NULL, 0);
+                          dndTransferCB, nullptr, 0);
     }
 }
 
@@ -2714,21 +2714,21 @@ DtTermDndTransferCallback(
     char *cursor;
     Boolean have_item = False;
 
-    if (cb == NULL || cb->reason != DtCR_DND_TRANSFER_DATA)
+    if (cb == nullptr || cb->reason != DtCR_DND_TRANSFER_DATA)
         return;
 
-    if (cb->dropData == NULL || cb->status != DtDND_SUCCESS)
+    if (cb->dropData == nullptr || cb->status != DtDND_SUCCESS)
         return;
 
     if (cb->dropData->protocol != DtDND_FILENAME_TRANSFER)
         return;
 
-    if (cb->dropData->numItems == 0 || cb->dropData->data.files == NULL)
+    if (cb->dropData->numItems == 0 || cb->dropData->data.files == nullptr)
         return;
 
     for (ii = 0; ii < cb->dropData->numItems; ii++) {
         const char *path = cb->dropData->data.files[ii];
-        if (path == NULL)
+        if (path == nullptr)
             continue;
         if (have_item)
             total_len += 1;
@@ -2745,7 +2745,7 @@ DtTermDndTransferCallback(
     for (ii = 0; ii < cb->dropData->numItems; ii++) {
         const char *path = cb->dropData->data.files[ii];
 
-        if (path == NULL)
+        if (path == nullptr)
             continue;
 
         if (cursor != buffer)
@@ -2782,7 +2782,7 @@ StartDrag(
     Arg args[10];
     int n = 0;
 
-    tmp_prop.value = NULL;
+    tmp_prop.value = nullptr;
     status = XmbTextListToTextProperty(XtDisplay(w), &tmp_string, 1,
                                       (XICCEncodingStyle)XTextStyle, &tmp_prop);
     if (status == Success)
@@ -2794,7 +2794,7 @@ StartDrag(
                                         * this prevents a core dump.
                                         */
 
-    if (tmp_prop.value != NULL) XFree((char *)tmp_prop.value);
+    if (tmp_prop.value != nullptr) XFree((char *)tmp_prop.value);
 
     targets[num_targets++] = XmInternAtom(XtDisplay(w), "COMPOUND_TEXT", False);
     targets[num_targets++] = XA_STRING;
@@ -2876,7 +2876,7 @@ _DtTermPrimSelectCopyClipboard
     XmTextPosition begin;
     XmTextPosition end;
 
-    char *selected_string = NULL;                  /* text selection */
+    char *selected_string = nullptr;                  /* text selection */
     long item_id = 0L;                 	           /* clipboard item id */
     long data_id = 0L;                             /* clipboard data id */
     int status;                                    /* clipboard status  */
@@ -2893,12 +2893,12 @@ _DtTermPrimSelectCopyClipboard
      * Using the Xm clipboard facilities,
      * copy the selected text to the clipboard
      */
-    tmp_prop.value = NULL;
-    if (selected_string != NULL) {
+    tmp_prop.value = nullptr;
+    if (selected_string != nullptr) {
        clip_label = XmStringCreateLocalized ("XM_TERM");
        /* start copy to clipboard */
        status = XmClipboardStartCopy(display, window, clip_label, copy_time,
-		       w, NULL, &item_id);
+		       w, nullptr, &item_id);
 
        if (status != ClipboardSuccess) {
          XtFree(selected_string);
@@ -2943,7 +2943,7 @@ _DtTermPrimSelectCopyClipboard
      } else
          return False;
 
-   if (selected_string!=NULL) 
+   if (selected_string!=nullptr) 
 	XtFree(selected_string);
    return True;
 }
@@ -2989,7 +2989,7 @@ _DtTermPrimSelectPasteClipboard
       int malloc_size = 0;
       int num_vals;
       char **tmp_value;
-      char * total_tmp_value = NULL;
+      char * total_tmp_value = nullptr;
       int i;
 
       status = XmClipboardInquireLength(display, window, "STRING", &length);

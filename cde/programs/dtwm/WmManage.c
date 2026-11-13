@@ -105,7 +105,7 @@ static void ApplyPrematureClientMessages (ClientData *pCD)
     int actualFormat;
     Atom actualType;
     Atom property = wmGD.xa_PREMATURE_XCLIENTMESSAGEEVENT_LIST;
-    XClientMessageEvent *messages = NULL;
+    XClientMessageEvent *messages = nullptr;
 
     if (!HasProperty (pCD, property)) goto err;
 
@@ -154,7 +154,7 @@ void AdoptInitialClients (WmScreenData *pSD)
     Window *pAncillaryWindows, *pWin1;
     WmWorkspaceData *pWS0;
     unsigned int     nclients;
-    ClientData *pcd = NULL;
+    ClientData *pcd = nullptr;
     PropWMState *wmStateProp;
     Boolean manageOnRestart;
     int i,j;
@@ -197,7 +197,7 @@ void AdoptInitialClients (WmScreenData *pSD)
 
 	for (i = 0; i < nclients; i++) {
 	    if (clients[i]) {
-		if ((tmphint = XGetWMHints (DISPLAY, clients[i])) != NULL) {
+		if ((tmphint = XGetWMHints (DISPLAY, clients[i])) != nullptr) {
 		    if (tmphint->flags & IconWindowHint) {
 			for (j = 0; j < nclients; j++) {
 			    if (clients[j] == tmphint->icon_window) {
@@ -244,7 +244,7 @@ void AdoptInitialClients (WmScreenData *pSD)
 	    if (wmGD.wmRestarted)
 	    {
 		manageFlags |= MANAGEW_WM_RESTART;
-		if ((wmStateProp = GetWMState (clients[i])) != NULL)
+		if ((wmStateProp = GetWMState (clients[i])) != nullptr)
 		{
 		    if (wmStateProp->state == IconicState)
 		    {
@@ -350,7 +350,7 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
 	if (pCD->transientLeader && pCD->transientLeader->pECD)
 	{
 	    WmPanelistObject  pPanelist;
-	    ClientData *pCDfp = NULL;
+	    ClientData *pCDfp = nullptr;
 
 	    pPanelist = (WmPanelistObject) pCD->pSD->wPanelist;
 	    (void) XFindContext (DISPLAY, XtWindow(O_Shell (pPanelist)),
@@ -377,7 +377,7 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
 		SendClientMsg( wmGD.dtSmWindow, 
 			      (long) wmGD.xa_DT_SM_WM_PROTOCOL,
 			      (long) wmGD.xa_DT_WM_WINDOW_ACK,
-			      CurrentTime, NULL, 0);
+			      CurrentTime, nullptr, 0);
 	    }
 	    return;
 	}
@@ -474,7 +474,7 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
      */
 
     if ((pCD->clientFunctions & MWM_FUNC_MINIMIZE) &&
-	(pCD->transientLeader == NULL))
+	(pCD->transientLeader == nullptr))
     {
 	/* 
 	 * Make icons frames 
@@ -526,7 +526,7 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
 		     *  Make root icons for a client
 		     */
  		    if ((pCD->clientFunctions & MWM_FUNC_MINIMIZE) &&
- 			(pCD->transientLeader == NULL))
+ 			(pCD->transientLeader == nullptr))
  		    {
  			if ((i == 0) &&
  			    (!MakeIcon (pwsi, pCD)))
@@ -741,20 +741,20 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
     else if ((pCD->inputMode == MWM_INPUT_SYSTEM_MODAL) ||
 	     (wmGD.keyboardFocus && IS_APP_MODALIZED(wmGD.keyboardFocus)))
     {
-	Do_Focus_Key ((ClientData *)NULL, GetTimestamp() , ALWAYS_SET_FOCUS);
+	Do_Focus_Key ((ClientData *)nullptr, GetTimestamp() , ALWAYS_SET_FOCUS);
     }
 
     if (smAckState == SM_START_ACK)
     {
 	SendClientMsg( wmGD.dtSmWindow, (long) wmGD.xa_DT_SM_WM_PROTOCOL,
 		      (long) wmGD.xa_DT_WM_WINDOW_ACK,
-		      CurrentTime, NULL, 0);
+		      CurrentTime, nullptr, 0);
     }
 
     ApplyPrematureClientMessages (pCD);
 
     if (!HasProperty (pCD, wmGD.xa__NET_WM_STATE))
-	UpdateNetWmState (pCD->client, NULL, 0, _NET_WM_STATE_REMOVE);
+	UpdateNetWmState (pCD->client, nullptr, 0, _NET_WM_STATE_REMOVE);
 
     /*
      * Free the initial property list. This will force
@@ -801,7 +801,7 @@ void UnManageWindow (ClientData *pCD)
 		HandleSubstructEvents,
 		(XtPointer)(pCD));
 
-	pECD->pCD = NULL;
+	pECD->pCD = nullptr;
 	UpdateEmbeddedClientsProperty (pCD->pSD);
     }
 
@@ -823,17 +823,17 @@ void UnManageWindow (ClientData *pCD)
 			 (char *)(pPRCD->pchResName))) &&
 		(pPRCD->pCD == pCD))
 	    {
-		pPRCD->pCD = NULL;
+		pPRCD->pCD = nullptr;
 	    }
 	}
-	pCD->pPRCD = NULL;
+	pCD->pPRCD = nullptr;
     }
 
     /*
      * Withdraw all the transient children of this window.
      */
 
-    if (pCD->transientChildren != NULL) 
+    if (pCD->transientChildren != nullptr) 
     {
 	WithdrawTransientChildren (pCD);
     }
@@ -933,8 +933,8 @@ void WithdrawWindow (ClientData *pCD)
     int i;
     XWindowChanges xwc;
 
-    if (pCD->pSD->topClient == pCD) pCD->pSD->topClient = NULL;
-    if (pCD->pSD->bottomClient == pCD) pCD->pSD->bottomClient = NULL;
+    if (pCD->pSD->topClient == pCD) pCD->pSD->topClient = nullptr;
+    if (pCD->pSD->bottomClient == pCD) pCD->pSD->bottomClient = nullptr;
 
     /*
      * Put the client window into a withdrawn state:
@@ -973,7 +973,7 @@ void WithdrawWindow (ClientData *pCD)
 			if ((pWsTmp=GetWorkspaceData(pCD->pSD, pWsc->wsID)))
 			{
 			  pWsTmp->IPData.placeList[pWsc->iconPlace].pCD 
-			      = NULL;
+			      = nullptr;
 			}
 		    }
 		}
@@ -1002,7 +1002,7 @@ void WithdrawWindow (ClientData *pCD)
 	{
 	    HidePresenceBox (pCD->pSD, True);
 	}
-	pCD->pSD->presence.pCDforClient = NULL;
+	pCD->pSD->presence.pCDforClient = nullptr;
     }
 
     InstantTitleHideDialog (pCD);
@@ -1240,22 +1240,22 @@ void WithdrawWindow (ClientData *pCD)
      * Clean up references to this data before we free it.
      */
     if (wmGD.menuClient == pCD) {
-	wmGD.menuClient = NULL;
+	wmGD.menuClient = nullptr;
     }
 
     if (wmGD.gadgetClient == pCD) {
-	wmGD.gadgetClient = NULL;
+	wmGD.gadgetClient = nullptr;
 	wmGD.gadgetDepressed = 0;
     }
 
     if (wmGD.clickData.pCD == pCD) {
-	wmGD.clickData.pCD = NULL;
+	wmGD.clickData.pCD = nullptr;
     }
 
     if (wmGD.nextKeyboardFocus == pCD)
-	wmGD.nextKeyboardFocus = NULL;
+	wmGD.nextKeyboardFocus = nullptr;
     if (wmGD.keyboardFocus == pCD)
-	wmGD.keyboardFocus = NULL;
+	wmGD.keyboardFocus = nullptr;
 
 /*
  * Fix for 5325 - Delete reference by dirty stack 
@@ -1358,7 +1358,7 @@ void ResetWithdrawnFocii (ClientData *pCD)
 {
     if ((wmGD.keyboardFocus == pCD) ||
 	/* BEGIN fix for CDExc21090 */
-	((wmGD.keyboardFocus == (ClientData *)NULL) &&
+	((wmGD.keyboardFocus == (ClientData *)nullptr) &&
 	 (wmGD.nextKeyboardFocus == pCD) &&
 	 (wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_EXPLICIT)))
 	/* END fix for CDExc21090 */
@@ -1387,11 +1387,11 @@ void ResetWithdrawnFocii (ClientData *pCD)
 
 	    if (wmGD.nextKeyboardFocus == wmGD.keyboardFocus)
 	    {
-	        Do_Focus_Key ((ClientData *)NULL, GetTimestamp(),
+	        Do_Focus_Key ((ClientData *)nullptr, GetTimestamp(),
 		    ALWAYS_SET_FOCUS | WORKSPACE_IF_NULL);
 	    }
 	}
-	SetKeyboardFocus ((ClientData *)NULL, 0);
+	SetKeyboardFocus ((ClientData *)nullptr, 0);
     }
 
     if (((pCD->inputMode == MWM_INPUT_PRIMARY_APPLICATION_MODAL) ||
@@ -1408,12 +1408,12 @@ void ResetWithdrawnFocii (ClientData *pCD)
 
     if (wmGD.nextKeyboardFocus == pCD)
     {
-	wmGD.nextKeyboardFocus = NULL;
+	wmGD.nextKeyboardFocus = nullptr;
     }
 
     if (ACTIVE_PSD->colormapFocus == pCD)
     {
-	SetColormapFocus (ACTIVE_PSD, (ClientData *)NULL);
+	SetColormapFocus (ACTIVE_PSD, (ClientData *)nullptr);
     }
 
 } /* END OF FUNCTION ResetWithdrawnFocii */
@@ -1440,36 +1440,36 @@ void FreeClientFrame (ClientData *pCD)
 {
     if (pCD->pclientTopShadows) {
 	FreeRList (pCD->pclientTopShadows);
-	pCD->pclientTopShadows = NULL;
+	pCD->pclientTopShadows = nullptr;
     }
     if (pCD->pclientBottomShadows) {
 	FreeRList (pCD->pclientBottomShadows);
-	pCD->pclientBottomShadows = NULL;
+	pCD->pclientBottomShadows = nullptr;
     }
     if (pCD->pclientTitleTopShadows) {
 	FreeRList (pCD->pclientTitleTopShadows);
-	pCD->pclientTitleTopShadows = NULL;
+	pCD->pclientTitleTopShadows = nullptr;
     }
     if (pCD->pclientTitleBottomShadows) {
 	FreeRList (pCD->pclientTitleBottomShadows);
-	pCD->pclientTitleBottomShadows = NULL;
+	pCD->pclientTitleBottomShadows = nullptr;
     }
     if (pCD->pclientMatteTopShadows) {
 	FreeRList (pCD->pclientMatteTopShadows);
-	pCD->pclientMatteTopShadows = NULL;
+	pCD->pclientMatteTopShadows = nullptr;
     }
     if (pCD->pclientMatteBottomShadows) {
 	FreeRList (pCD->pclientMatteBottomShadows);
-	pCD->pclientMatteBottomShadows = NULL;
+	pCD->pclientMatteBottomShadows = nullptr;
     }
     if (pCD->pTitleGadgets) {
 	XtFree ((char *)pCD->pTitleGadgets);
-	pCD->pTitleGadgets = NULL;
+	pCD->pTitleGadgets = nullptr;
 	pCD->cTitleGadgets = 0;
     }
     if (pCD->pResizeGadgets) {
 	XtFree ((char *)pCD->pResizeGadgets);
-	pCD->pResizeGadgets = NULL;
+	pCD->pResizeGadgets = nullptr;
     }
 
     /* destroy frame window & all children */
@@ -1502,11 +1502,11 @@ void FreeIcon (ClientData *pCD)
 
     if (pCD->piconTopShadows) {
 	FreeRList (pCD->piconTopShadows);
-	pCD->piconTopShadows = NULL;
+	pCD->piconTopShadows = nullptr;
     }
     if (pCD->piconBottomShadows) {
 	FreeRList (pCD->piconBottomShadows);
-	pCD->piconBottomShadows = NULL;
+	pCD->piconBottomShadows = nullptr;
     }
 
     /* 
@@ -1576,7 +1576,7 @@ void FreeIcon (ClientData *pCD)
 void WithdrawDialog (Widget dialogboxW)
 {
     int i;
-    ClientData *pCD = NULL;
+    ClientData *pCD = nullptr;
 
     /*
      * Get the dialog shell window client data.
@@ -1633,7 +1633,7 @@ void WithdrawDialog (Widget dialogboxW)
 
 void ReManageDialog (WmScreenData *pSD, Widget dialogboxW)
 {
-    ClientData *pCD = NULL;
+    ClientData *pCD = nullptr;
 
     /*
      * Get the dialog shell window client data.
@@ -1665,7 +1665,7 @@ void ReManageDialog (WmScreenData *pSD, Widget dialogboxW)
     if (pSD->clientList)
     {
       StackWindow (pSD->pActiveWS, &pCD->clientEntry,
-                    TRUE, (ClientListEntry *) NULL);
+                    TRUE, (ClientListEntry *) nullptr);
     }
     AddClientToList (pSD->pActiveWS, pCD, True /*on top*/);
     XMapWindow (DISPLAY, pCD->clientFrameWin);
@@ -1973,14 +1973,14 @@ ScanForEmbeddedClients (
     pCLE = pSD->clientList;
     bReset = False;
 
-    while (pCLE != NULL)
+    while (pCLE != nullptr)
     {
 	/*
 	 * See if this is an previously unrecognized embedded client
 	 */
 	pCD = pCLE->pCD;
 
-	if ((pCD->pECD == NULL ) && IsEmbeddedClient (pCD, &pECD))
+	if ((pCD->pECD == nullptr ) && IsEmbeddedClient (pCD, &pECD))
 	{
 	    /*
 	     * Remanage this window and associated transients
@@ -2141,13 +2141,13 @@ ManageEmbeddedClient (
      */
     pCD->clientEntry.type = NORMAL_STATE;
     pCD->clientEntry.pCD = pCD;
-    pCD->clientEntry.nextSibling = NULL;
-    pCD->clientEntry.prevSibling = NULL;
+    pCD->clientEntry.nextSibling = nullptr;
+    pCD->clientEntry.prevSibling = nullptr;
 
     pCD->iconEntry.type = MINIMIZED_STATE;
     pCD->iconEntry.pCD = pCD;
-    pCD->iconEntry.nextSibling = NULL;
-    pCD->iconEntry.prevSibling = NULL;
+    pCD->iconEntry.nextSibling = nullptr;
+    pCD->iconEntry.prevSibling = nullptr;
 
     /*
      *  Save context for event processing.
@@ -2295,8 +2295,8 @@ ReparentEmbeddedClient (
      * to reparent to our current parent, then just
      * say no.
      */
-    if ((pECD == NULL) || 
-	(pECD->pCD == NULL) ||
+    if ((pECD == nullptr) || 
+	(pECD->pCD == nullptr) ||
 	(pECD->winParent == newWin))
     {
 	return (False);
@@ -2392,9 +2392,9 @@ ReparentEmbeddedClient (
 static void
 ForceSubpanelWMState (Window win)
 {
-    ClientData *pCD = NULL;
+    ClientData *pCD = nullptr;
     Window root, parent;
-    Window *children = NULL;
+    Window *children = nullptr;
     unsigned int numChildren;
     PropWMState *wmStateProp;
     Boolean bDone = False;
@@ -2475,7 +2475,7 @@ RegisterPushRecallClients (
 	WmFpPushRecallClientList pPRCD, 
 	int count)
 {
-    WmScreenData *pSD = NULL;
+    WmScreenData *pSD = nullptr;
     int i;
 
     for (i= 0; i < wmGD.numScreens; i++)
@@ -2600,14 +2600,14 @@ ScanForPushRecallClients (
      */
     pCLE = pSD->clientList;
 
-    while (pCLE != NULL)
+    while (pCLE != nullptr)
     {
 	/*
 	 * See if this is an previously unrecognized push recall client
 	 */
 	pCD = pCLE->pCD;
 
-	if ((pCD->pPRCD == NULL ) && IsPushRecallClient (pCD, &pPRCD))
+	if ((pCD->pPRCD == nullptr ) && IsPushRecallClient (pCD, &pPRCD))
 	{
 	    CheckPushRecallClient (pCD);
 	}
@@ -2760,7 +2760,7 @@ UpdateEmbeddedClientsProperty(
         WmScreenData *pSD )
 {
     unsigned int numClients = 0;
-    Window *pClients = NULL;
+    Window *pClients = nullptr;
     Boolean rval = True;
     int i;
     WmFpEmbeddedClientData *pECD;
@@ -2801,7 +2801,7 @@ UpdateEmbeddedClientsProperty(
     SetEmbeddedClientsProperty (pSD->rootWindow, pClients,
 	numClients);
 
-    if (pClients != NULL)
+    if (pClients != nullptr)
     {
 	XtFree ((char *)pClients);
     }

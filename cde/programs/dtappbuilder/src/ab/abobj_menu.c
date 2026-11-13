@@ -258,183 +258,183 @@ static void     tearOffCB(
 **************************************************************************/
 MenuItem	prop_menu[] =
 {
-	{ NULL, NULL/*"Revolving..."*/, AB_LABEL_STRING, &xmPushButtonWidgetClass, rev_propCB, 
-	 NULL, (XtPointer)ABMenuProps, NULL, 0, TRUE },
-	{ NULL, NULL/*"Fixed..."*/, AB_LABEL_STRING, &xmPushButtonWidgetClass, fix_propCB, 
-	 NULL, (XtPointer)ABMenuProps, NULL, 0, TRUE },
-	NULL
+	{ nullptr, nullptr/*"Revolving..."*/, AB_LABEL_STRING, &xmPushButtonWidgetClass, rev_propCB, 
+	 nullptr, (XtPointer)ABMenuProps, nullptr, 0, TRUE },
+	{ nullptr, nullptr/*"Fixed..."*/, AB_LABEL_STRING, &xmPushButtonWidgetClass, fix_propCB, 
+	 nullptr, (XtPointer)ABMenuProps, nullptr, 0, TRUE },
+	nullptr
 };
 
 MenuItem	align_menu[] =
 {
-	{ NULL, "bitmaps/align_left.xbm",  AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/align_left.xbm",  AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) LEFT_EDGES, 
-	  (XtPointer)ABMenuAlign, NULL, 0, TRUE, align_left_width,
+	  (XtPointer)ABMenuAlign, nullptr, 0, TRUE, align_left_width,
 	  align_left_height, align_left_bits },
-	{ NULL, "bitmaps/align_vcenter.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/align_vcenter.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) VCENTERS, 
-	  (XtPointer)ABMenuAlign, NULL, 0, TRUE, align_vcenter_width,
+	  (XtPointer)ABMenuAlign, nullptr, 0, TRUE, align_vcenter_width,
 	  align_vcenter_height, align_vcenter_bits },
-	{ NULL, "bitmaps/align_right.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/align_right.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) RIGHT_EDGES, 
-	  (XtPointer)ABMenuAlign, NULL, 0, TRUE, align_right_width,
+	  (XtPointer)ABMenuAlign, nullptr, 0, TRUE, align_right_width,
 	  align_right_height, align_right_bits },
-	{ NULL, "bitmaps/align_labels.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/align_labels.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) LABELS, 
-	  (XtPointer)ABMenuAlign, NULL, 0, TRUE, align_labels_width,
+	  (XtPointer)ABMenuAlign, nullptr, 0, TRUE, align_labels_width,
 	  align_labels_height, align_labels_bits },
-	{ NULL, "bitmaps/align_top.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/align_top.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) TOP_EDGES, 
-	  (XtPointer)ABMenuAlign, NULL, 0, TRUE, align_top_width,
+	  (XtPointer)ABMenuAlign, nullptr, 0, TRUE, align_top_width,
 	  align_top_height, align_top_bits },
-	{ NULL, "bitmaps/align_hcenter.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/align_hcenter.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) HCENTERS, 
-	  (XtPointer)ABMenuAlign, NULL, 0, TRUE, align_hcenter_width,
+	  (XtPointer)ABMenuAlign, nullptr, 0, TRUE, align_hcenter_width,
 	  align_hcenter_height, align_hcenter_bits },
-	{ NULL, "bitmaps/align_bottom.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/align_bottom.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) BOTTOM_EDGES, 
-	  (XtPointer)ABMenuAlign, NULL, 0, TRUE, align_bottom_width,
+	  (XtPointer)ABMenuAlign, nullptr, 0, TRUE, align_bottom_width,
 	  align_bottom_height, align_bottom_bits },
-	{ NULL, "bitmaps/align_grid.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/align_grid.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) TO_GRID, 
-	  (XtPointer)ABMenuAlign, NULL, 0, TRUE, align_grid_width,
+	  (XtPointer)ABMenuAlign, nullptr, 0, TRUE, align_grid_width,
 	  align_grid_height, align_grid_bits },
-	NULL
+	nullptr
 };
 
 MenuItem	distribute_menu[] =
 {
-	{ NULL, "bitmaps/distribute_horizontal.xbm",  AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/distribute_horizontal.xbm",  AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) HSPACING, 
-	  (XtPointer)ABMenuDistribute, NULL, 0, TRUE, 
+	  (XtPointer)ABMenuDistribute, nullptr, 0, TRUE, 
 	  distribute_horizontal_width, distribute_horizontal_height,
 	  distribute_horizontal_bits },
-	{ NULL, "bitmaps/distribute_vertical.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/distribute_vertical.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) VSPACING, 
-	  (XtPointer)ABMenuDistribute, NULL, 0, TRUE,
+	  (XtPointer)ABMenuDistribute, nullptr, 0, TRUE,
 	  distribute_vertical_width, distribute_vertical_height,
 	  distribute_vertical_bits },
-	{ NULL, "bitmaps/distribute_hcenter.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/distribute_hcenter.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) HCENTERED, 
-	  (XtPointer)ABMenuDistribute, NULL, 0, TRUE, 
+	  (XtPointer)ABMenuDistribute, nullptr, 0, TRUE, 
 	  distribute_hcenter_width, distribute_hcenter_height,
 	  distribute_hcenter_bits },
-	{ NULL, "bitmaps/distribute_vcenter.xbm", AB_LABEL_GLYPH, 
+	{ nullptr, "bitmaps/distribute_vcenter.xbm", AB_LABEL_GLYPH, 
 	  &xmPushButtonWidgetClass, alignCB, (XtPointer) VCENTERED, 
-	  (XtPointer)ABMenuDistribute, NULL, 0, TRUE,
+	  (XtPointer)ABMenuDistribute, nullptr, 0, TRUE,
 	  distribute_vcenter_width, distribute_vcenter_height,
 	  distribute_vcenter_bits },
-	NULL
+	nullptr
 };
 
 MenuItem	obj_menu_items[] = 
 {
-	{ "props_menu",  NULL/*"Props"*/,	AB_LABEL_STRING, 
-	  &xmCascadeButtonWidgetClass, NULL, NULL, (XtPointer)(XtPointer)ABMenuProps, prop_menu, 1, TRUE, 0, 0, NULL, },
-	{ NULL, NULL/*"Browse..."*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, browseCB, NULL, (XtPointer)ABMenuBrowse, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, "", AB_LABEL_SEPARATOR,
-	  &xmSeparatorWidgetClass, NULL, NULL, NULL, NULL, 0, TRUE, 0, 0, NULL },
-        { "undo_menu", NULL/*"Undo"*/, AB_LABEL_STRING,
-          &xmPushButtonWidgetClass, undoCB, NULL, (XtPointer)ABMenuUndo, NULL, 0, TRUE, 0,
-0, NULL },
-	{ "cut_menu", NULL/*"Cut"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, cutCB, NULL, (XtPointer)ABMenuCut, NULL, 0, TRUE, 0, 0, NULL },
-	{ "copy_menu", NULL/*"Copy"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, copyCB, NULL, (XtPointer)ABMenuCopy, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Paste"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, pasteCB, (XtPointer)AB_PASTE_INITIATOR_OBJ_MENU, (XtPointer)ABMenuPaste, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Delete"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, deleteCB, NULL, (XtPointer)ABMenuDelete, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, "", AB_LABEL_SEPARATOR,
-	  &xmSeparatorWidgetClass, NULL, NULL, NULL, NULL, 0, TRUE, 0, 0, NULL },
-	{ "align_menu", NULL/*"Align"*/, AB_LABEL_STRING, 
-	  &xmCascadeButtonWidgetClass, NULL, NULL, (XtPointer)ABMenuAlign, align_menu, 2, TRUE, 0, 0, NULL },
-	{ "distribute_menu", NULL/*"Distribute"*/, AB_LABEL_STRING, 
-	  &xmCascadeButtonWidgetClass, NULL, NULL, (XtPointer)ABMenuDistribute, distribute_menu, 2, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Group"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, groupCB, NULL, (XtPointer)ABMenuGroup, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Ungroup"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, ungroupCB, NULL, (XtPointer)ABMenuUngroup, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Make Paned Window"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, make_paneCB, NULL, (XtPointer)ABMenuPane, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Unmake Paned Window"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, unmake_paneCB, NULL, (XtPointer)ABMenuUnpane, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Attachments..."*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, attachCB, NULL, (XtPointer)ABMenuAttach, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, "", AB_LABEL_SEPARATOR,
-	  &xmSeparatorWidgetClass, NULL, NULL, NULL, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"NextLayer"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, next_layerCB, NULL, (XtPointer)ABMenuNextLayer, NULL, 0, TRUE, 0, 0, NULL },
-	NULL
+	{ "props_menu",  nullptr/*"Props"*/,	AB_LABEL_STRING, 
+	  &xmCascadeButtonWidgetClass, nullptr, nullptr, (XtPointer)(XtPointer)ABMenuProps, prop_menu, 1, TRUE, 0, 0, nullptr, },
+	{ nullptr, nullptr/*"Browse..."*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, browseCB, nullptr, (XtPointer)ABMenuBrowse, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, "", AB_LABEL_SEPARATOR,
+	  &xmSeparatorWidgetClass, nullptr, nullptr, nullptr, nullptr, 0, TRUE, 0, 0, nullptr },
+        { "undo_menu", nullptr/*"Undo"*/, AB_LABEL_STRING,
+          &xmPushButtonWidgetClass, undoCB, nullptr, (XtPointer)ABMenuUndo, nullptr, 0, TRUE, 0,
+0, nullptr },
+	{ "cut_menu", nullptr/*"Cut"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, cutCB, nullptr, (XtPointer)ABMenuCut, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ "copy_menu", nullptr/*"Copy"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, copyCB, nullptr, (XtPointer)ABMenuCopy, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Paste"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, pasteCB, (XtPointer)AB_PASTE_INITIATOR_OBJ_MENU, (XtPointer)ABMenuPaste, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Delete"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, deleteCB, nullptr, (XtPointer)ABMenuDelete, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, "", AB_LABEL_SEPARATOR,
+	  &xmSeparatorWidgetClass, nullptr, nullptr, nullptr, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ "align_menu", nullptr/*"Align"*/, AB_LABEL_STRING, 
+	  &xmCascadeButtonWidgetClass, nullptr, nullptr, (XtPointer)ABMenuAlign, align_menu, 2, TRUE, 0, 0, nullptr },
+	{ "distribute_menu", nullptr/*"Distribute"*/, AB_LABEL_STRING, 
+	  &xmCascadeButtonWidgetClass, nullptr, nullptr, (XtPointer)ABMenuDistribute, distribute_menu, 2, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Group"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, groupCB, nullptr, (XtPointer)ABMenuGroup, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Ungroup"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, ungroupCB, nullptr, (XtPointer)ABMenuUngroup, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Make Paned Window"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, make_paneCB, nullptr, (XtPointer)ABMenuPane, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Unmake Paned Window"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, unmake_paneCB, nullptr, (XtPointer)ABMenuUnpane, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Attachments..."*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, attachCB, nullptr, (XtPointer)ABMenuAttach, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, "", AB_LABEL_SEPARATOR,
+	  &xmSeparatorWidgetClass, nullptr, nullptr, nullptr, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"NextLayer"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, next_layerCB, nullptr, (XtPointer)ABMenuNextLayer, nullptr, 0, TRUE, 0, 0, nullptr },
+	nullptr
 };
 
 MenuItem	browser_menu_items[] = 
 {
-	{ "props_menu",  NULL/*"Props"*/,	AB_LABEL_STRING, 
-	  &xmCascadeButtonWidgetClass, NULL, NULL, (XtPointer)(XtPointer)ABMenuProps, prop_menu, 1, TRUE, 0, 0, NULL, },
-	{ NULL, NULL/*"Tearoff Browser..."*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, tearOffCB, NULL, (XtPointer)ABMenuTearOff, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, "", AB_LABEL_SEPARATOR,
-	  &xmSeparatorWidgetClass, NULL, NULL, NULL, NULL, 0, TRUE, 0, 0, NULL },
-        { "undo_menu", NULL/*"Undo"*/, AB_LABEL_STRING,
-          &xmPushButtonWidgetClass, undoCB, NULL, (XtPointer)ABMenuUndo, NULL, 0, TRUE, 0,
-0, NULL },
-	{ "cut_menu", NULL/*"Cut"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, cutCB, NULL, (XtPointer)ABMenuCut, NULL, 0, TRUE, 0, 0, NULL },
-	{ "copy_menu", NULL/*"Copy"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, copyCB, NULL, (XtPointer)ABMenuCopy, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Paste"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, pasteCB, NULL, (XtPointer)ABMenuPaste, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Delete"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, deleteCB, NULL, (XtPointer)ABMenuDelete, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, "", AB_LABEL_SEPARATOR,
-	  &xmSeparatorWidgetClass, NULL, NULL, NULL, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Group"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, groupCB, NULL, (XtPointer)ABMenuGroup, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Ungroup"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, ungroupCB, NULL, (XtPointer)ABMenuUngroup, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Make Paned Window"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, make_paneCB, NULL, (XtPointer)ABMenuPane, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Unmake Paned Window"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, unmake_paneCB, NULL, (XtPointer)ABMenuUnpane, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Attachments..."*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, attachCB, NULL, (XtPointer)ABMenuAttach, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, "", AB_LABEL_SEPARATOR,
-	  &xmSeparatorWidgetClass, NULL, NULL, NULL, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Expand"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, expandCB, NULL, (XtPointer)ABMenuExpand, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Expand All"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, expandAllCB, NULL, (XtPointer)ABMenuExpandAll, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Collapse"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, collapseCB, NULL, (XtPointer)ABMenuCollapse, NULL, 0, TRUE, 0, 0, NULL },
-	NULL
+	{ "props_menu",  nullptr/*"Props"*/,	AB_LABEL_STRING, 
+	  &xmCascadeButtonWidgetClass, nullptr, nullptr, (XtPointer)(XtPointer)ABMenuProps, prop_menu, 1, TRUE, 0, 0, nullptr, },
+	{ nullptr, nullptr/*"Tearoff Browser..."*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, tearOffCB, nullptr, (XtPointer)ABMenuTearOff, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, "", AB_LABEL_SEPARATOR,
+	  &xmSeparatorWidgetClass, nullptr, nullptr, nullptr, nullptr, 0, TRUE, 0, 0, nullptr },
+        { "undo_menu", nullptr/*"Undo"*/, AB_LABEL_STRING,
+          &xmPushButtonWidgetClass, undoCB, nullptr, (XtPointer)ABMenuUndo, nullptr, 0, TRUE, 0,
+0, nullptr },
+	{ "cut_menu", nullptr/*"Cut"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, cutCB, nullptr, (XtPointer)ABMenuCut, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ "copy_menu", nullptr/*"Copy"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, copyCB, nullptr, (XtPointer)ABMenuCopy, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Paste"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, pasteCB, nullptr, (XtPointer)ABMenuPaste, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Delete"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, deleteCB, nullptr, (XtPointer)ABMenuDelete, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, "", AB_LABEL_SEPARATOR,
+	  &xmSeparatorWidgetClass, nullptr, nullptr, nullptr, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Group"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, groupCB, nullptr, (XtPointer)ABMenuGroup, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Ungroup"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, ungroupCB, nullptr, (XtPointer)ABMenuUngroup, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Make Paned Window"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, make_paneCB, nullptr, (XtPointer)ABMenuPane, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Unmake Paned Window"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, unmake_paneCB, nullptr, (XtPointer)ABMenuUnpane, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Attachments..."*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, attachCB, nullptr, (XtPointer)ABMenuAttach, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, "", AB_LABEL_SEPARATOR,
+	  &xmSeparatorWidgetClass, nullptr, nullptr, nullptr, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Expand"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, expandCB, nullptr, (XtPointer)ABMenuExpand, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Expand All"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, expandAllCB, nullptr, (XtPointer)ABMenuExpandAll, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Collapse"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, collapseCB, nullptr, (XtPointer)ABMenuCollapse, nullptr, 0, TRUE, 0, 0, nullptr },
+	nullptr
 };
 
 
 MenuItem	layout_menu_items[] = 
 {
-	{ "align_menu", NULL/*"Align"*/, AB_LABEL_STRING, 
-	  &xmCascadeButtonWidgetClass, NULL, NULL, (XtPointer)ABMenuAlign, align_menu, 2, TRUE, 0, 0, NULL },
-	{ "distribute_menu", NULL/*"Distribute"*/, AB_LABEL_STRING, 
-	  &xmCascadeButtonWidgetClass, NULL, NULL, (XtPointer)ABMenuDistribute, distribute_menu, 2, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Group"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, groupCB, NULL, (XtPointer)ABMenuGroup, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Ungroup"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, ungroupCB, NULL, (XtPointer)ABMenuUngroup, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Make Paned Window"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, make_paneCB, NULL, (XtPointer)ABMenuPane, NULL, 0, TRUE, 0, 0, NULL },
-	{ NULL, NULL/*"Unmake Paned Window"*/, AB_LABEL_STRING, 
-	  &xmPushButtonWidgetClass, unmake_paneCB, NULL, (XtPointer)ABMenuUnpane, NULL, 0, TRUE, 0, 0, NULL },
-	NULL
+	{ "align_menu", nullptr/*"Align"*/, AB_LABEL_STRING, 
+	  &xmCascadeButtonWidgetClass, nullptr, nullptr, (XtPointer)ABMenuAlign, align_menu, 2, TRUE, 0, 0, nullptr },
+	{ "distribute_menu", nullptr/*"Distribute"*/, AB_LABEL_STRING, 
+	  &xmCascadeButtonWidgetClass, nullptr, nullptr, (XtPointer)ABMenuDistribute, distribute_menu, 2, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Group"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, groupCB, nullptr, (XtPointer)ABMenuGroup, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Ungroup"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, ungroupCB, nullptr, (XtPointer)ABMenuUngroup, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Make Paned Window"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, make_paneCB, nullptr, (XtPointer)ABMenuPane, nullptr, 0, TRUE, 0, 0, nullptr },
+	{ nullptr, nullptr/*"Unmake Paned Window"*/, AB_LABEL_STRING, 
+	  &xmPushButtonWidgetClass, unmake_paneCB, nullptr, (XtPointer)ABMenuUnpane, nullptr, 0, TRUE, 0, 0, nullptr },
+	nullptr
 };
 
 static ABSelectedRec sel;
 
-static WinMenuCache  *win_menu_cache = NULL;
+static WinMenuCache  *win_menu_cache = nullptr;
 static int	     win_menu_cache_max = 0;
 static int	     win_menu_cache_count = 0;
-static BrowserMenuCache *browser_menu_cache = NULL;
+static BrowserMenuCache *browser_menu_cache = nullptr;
 static int	     browser_menu_cache_max = 0;
 static int	     browser_menu_cache_count = 0;
 
@@ -598,7 +598,7 @@ get_edit_menu_from_cache(
 )
 {
     int		i;
-    Widget	menu = NULL;
+    Widget	menu = nullptr;
     ABObj	obj;
     ABObj	winobj;
     ABObj	winchild;
@@ -621,11 +621,11 @@ get_edit_menu_from_cache(
 	menup = (Widget)winchild->ui_handle;
 
         /* Menu not yet in Cache, must create new Menu */
-        menu = ui_build_menu(menup, XmMENU_POPUP, 1, NULL, "obj_menu", obj_menu_items);
+        menu = ui_build_menu(menup, XmMENU_POPUP, 1, nullptr, "obj_menu", obj_menu_items);
     }
     else /* BROWSER_EDIT_MENU */
     {
-	ABBrowser	ab = NULL;
+	ABBrowser	ab = nullptr;
 
         /* Look for menu already stored for Browser widget */
         for(i=0; i < browser_menu_cache_count; i++)
@@ -643,10 +643,10 @@ get_edit_menu_from_cache(
 	 * Set this structure up as client data for the callbacks.
 	 * (User data is used for the item flags so we can't use that here).
 	 */
-	XtVaGetValues(origin, XmNuserData, &ab, NULL);
+	XtVaGetValues(origin, XmNuserData, &ab, nullptr);
 
 	if (ab)
-            for (i = 0; browser_menu_items[i].label != NULL; i++)
+            for (i = 0; browser_menu_items[i].label != nullptr; i++)
 	    {
 		browser_menu_items[i].client_data = (XtPointer)ab;
 	    }
@@ -654,13 +654,13 @@ get_edit_menu_from_cache(
 	/*
 	 * Build menu
 	 */
-        menu = ui_build_menu(menup, XmMENU_POPUP, 1, NULL, "obj_menu", browser_menu_items);
+        menu = ui_build_menu(menup, XmMENU_POPUP, 1, nullptr, "obj_menu", browser_menu_items);
 
 	/*
 	 * Unset the client data fields
 	 */
 	if (ab)
-            for (i = 0; browser_menu_items[i].label != NULL; i++)
+            for (i = 0; browser_menu_items[i].label != nullptr; i++)
 	    {
 		browser_menu_items[i].client_data = (XtPointer)NULL;
 	    }
@@ -701,11 +701,11 @@ set_menu_state(
     XtVaGetValues(menu,
 		XmNnumChildren,	&num_items,
 		XmNchildren,	&items,
-		NULL);
+		nullptr);
 
     for (i=0; i < num_items; i++)
     {
-	XtVaGetValues(items[i], XmNuserData, &item_flag, NULL);
+	XtVaGetValues(items[i], XmNuserData, &item_flag, nullptr);
 	if (item_flag != ABMenuNone)
 	{
 	    if ((flags & (unsigned int)item_flag) != 0)
@@ -908,7 +908,7 @@ rev_propCB(
 {
     ABObj	obj = sel.list[0];
 
-    if (obj != NULL)
+    if (obj != nullptr)
     	prop_load_obj(obj, AB_PROP_REVOLVING);
 }
 
@@ -921,7 +921,7 @@ fix_propCB(
 {
     ABObj       obj = sel.list[0];
  
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         prop_load_obj(obj, AB_PROP_FIXED);
     }

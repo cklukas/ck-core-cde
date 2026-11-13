@@ -103,7 +103,7 @@ static ckfe_api_status native_name(ckfet_job *job, uint64_t gen, uint64_t id, ui
                         uint64_t index, char *out, size_t cap)
 {
     uint64_t required=0; uint32_t encoding=0;
-    ckfe_api_status api=ckfet_native_copy_v1(job,gen,id,kind,index,NULL,0,&required,&encoding);
+    ckfe_api_status api=ckfet_native_copy_v1(job,gen,id,kind,index,nullptr,0,&required,&encoding);
     if (api!=CKFE_API_BUFFER_TOO_SMALL && api!=CKFE_API_OK) return api;
     if (required>65536 || encoding!=CKFET_POSIX_BYTES || (!required && kind==CKFET_NATIVE_COMPONENT)) return CKFE_API_INVALID_ARGUMENT;
     uint64_t capacity=required;
@@ -205,7 +205,7 @@ static ckfe_api_status summarize(SyncJob *owner,ckfet_job *job,SyncView *v)
 static ckfe_api_status open_root(ckfe_engine *engine, const char *path,
                                  ckfe_entry **out, ckfe_error *error)
 {
-    char *copy=strdup(path); ckfe_directory *parent=NULL;
+    char *copy=strdup(path); ckfe_directory *parent=nullptr;
     if (!copy) return CKFE_API_OUT_OF_MEMORY;
     size_t length=strlen(copy);
     while (length>1 && copy[length-1]=='/') copy[--length]=0;
@@ -259,12 +259,12 @@ static int private_journal(SyncJob *s, SyncView *v, unsigned char id[16])
 static void *worker(void *arg)
 {
     SyncJob *s=arg; SyncView *v=calloc(1,sizeof(*v));
-    ckfe_engine *engine=NULL; ckfe_entry *source=NULL,*destination=NULL;
-    ckfet_job *job=NULL; ckfe_error error; ckfe_error_init(&error);
+    ckfe_engine *engine=nullptr; ckfe_entry *source=nullptr,*destination=nullptr;
+    ckfet_job *job=nullptr; ckfe_error error; ckfe_error_init(&error);
     if (!v) {
         pthread_mutex_lock(&s->mutex); s->view.stopped=1; s->view.api=CKFE_API_OUT_OF_MEMORY;
         strcpy(s->view.error,"Cannot allocate operation view"); ++s->view.revision;
-        pthread_mutex_unlock(&s->mutex); return NULL;
+        pthread_mutex_unlock(&s->mutex); return nullptr;
     }
     v->snapshot.state=CKFET_INVENTORY;
     if (ckfe_abi_version_major()!=0 || ckfe_abi_version_minor()<3) {
@@ -302,8 +302,8 @@ static void *worker(void *arg)
         if (atomic_load(&s->cancel) || atomic_load(&s->stop)) ckfet_request_cancel(job);
         int pause=atomic_load(&s->pause);
         if (pause!=applied_pause) { ckfet_request_pause(job,(uint32_t)pause); applied_pause=pause; }
-        Command *command=NULL;
-        pthread_mutex_lock(&s->mutex); command=s->command; s->command=NULL; pthread_mutex_unlock(&s->mutex);
+        Command *command=nullptr;
+        pthread_mutex_lock(&s->mutex); command=s->command; s->command=nullptr; pthread_mutex_unlock(&s->mutex);
         int refresh=0;
         if (command) {
             error_is_cache=0;
@@ -319,7 +319,7 @@ static void *worker(void *arg)
                     SyncRule *in=&command->rules[i]; ckfet_rule_v1 *out=&rules[i];
                     if (in->scope==CKFET_SCOPE_SUBTREE && in->selected_count==1) {
                         uint64_t bytes=0;
-                        ckfe_api_status key_api=ckfet_key_copy_v1(job,command->generation,in->selected[0],NULL,0,&bytes);
+                        ckfe_api_status key_api=ckfet_key_copy_v1(job,command->generation,in->selected[0],nullptr,0,&bytes);
                         if ((key_api!=CKFE_API_BUFFER_TOO_SMALL && key_api!=CKFE_API_OK) || !bytes || bytes>65536) {
                             v->api=key_api==CKFE_API_OK ? CKFE_API_INVALID_ARGUMENT : key_api;
                             break;
@@ -342,7 +342,7 @@ static void *worker(void *arg)
                 name.row_id=command->rename_row; name.side=command->rename_side;
                 if (command->rename) name.component=(ckfet_native){command->rename,strlen(command->rename),CKFET_POSIX_BYTES,0};
                 if (v->api==CKFE_API_OK) v->api=ckfet_review_names_v1(job,command->generation,rules,command->count,
-                        command->rename ? &name : NULL,command->rename ? 1 : 0,
+                        command->rename ? &name : nullptr,command->rename ? 1 : 0,
                         command->deletions,command->deletion_count,&pending);
             }
             if (v->api!=CKFE_API_OK) snprintf(v->error,sizeof(v->error),"Command: %s",ckfe_api_status_name(v->api));
@@ -357,7 +357,7 @@ static void *worker(void *arg)
         ckfet_snapshot_v1 observed_snapshot;
         api=ckfet_poll_v1(job,&observed_snapshot);
         if (api!=CKFE_API_OK) {
-            failure(v,api,NULL);
+            failure(v,api,nullptr);
             v->snapshot.state=CKFET_NEEDS_RECONCILIATION; v->snapshot.recovery_required=1;
             v->cache_valid=0; v->finished=0; v->settling=1; settling_error=1;
             atomic_store(&s->cancel,1); atomic_store(&s->pause,0);
@@ -365,7 +365,7 @@ static void *worker(void *arg)
             if (ckfet_worker_drained_v1(job,&drained)==CKFE_API_OK && drained) v->finished=v->drained=1;
             publish(s,v);
             if (v->drained && atomic_load(&s->stop)) break;
-            struct timespec delay={0,100000000}; nanosleep(&delay,NULL);
+            struct timespec delay={0,100000000}; nanosleep(&delay,nullptr);
             continue; /* Never exit a helper while backend writes may continue. */
         }
         v->snapshot=observed_snapshot;
@@ -375,7 +375,7 @@ static void *worker(void *arg)
                     v->snapshot.failure_state,v->snapshot.failure_domain,(long long)v->snapshot.failure_code);
             ckfe_api_status ack=ckfet_acknowledge_command_v1(job,pending);
             if (ack!=CKFE_API_OK) {
-                failure(v,ack,NULL); v->settling=1; settling_error=1; atomic_store(&s->cancel,1); atomic_store(&s->pause,0);
+                failure(v,ack,nullptr); v->settling=1; settling_error=1; atomic_store(&s->cancel,1); atomic_store(&s->pause,0);
             }
             if (ack==CKFE_API_OK && pending_kind==REVIEW_COMMAND && v->snapshot.command_state==CKFET_COMMAND_ACCEPTED)
                 v->review_submission=pending_serial;
@@ -384,41 +384,41 @@ static void *worker(void *arg)
             pending=0; pending_serial=0; pending_kind=NO_COMMAND; refresh=1;
         }
         if (v->snapshot.failure_domain!=CKFE_ERROR_NONE && !v->error[0]) {
-            ckfe_error observed={v->snapshot.failure_state,v->snapshot.failure_domain,v->snapshot.failure_code,NULL};
+            ckfe_error observed={v->snapshot.failure_state,v->snapshot.failure_domain,v->snapshot.failure_code,nullptr};
             failure(v,CKFE_API_OPERATION_UNAVAILABLE,&observed);
             error_is_cache=0;
         }
         if (v->snapshot.plan_generation && (refresh || !v->cache_valid || !v->names_valid || v->snapshot.sequence!=last_sequence)) {
             v->cache_valid=0;
             api=read_page(job,v,offset);
-            if (api!=CKFE_API_OK) { failure(v,api,NULL); error_is_cache=1; }
+            if (api!=CKFE_API_OK) { failure(v,api,nullptr); error_is_cache=1; }
             else if (error_is_cache) { v->api=CKFE_API_OK; v->error[0]=0; error_is_cache=0; }
             memset(v->counts,0,sizeof(v->counts));
             ckfe_api_status counts_api=v->snapshot.rule_count>SYNC_MAX_RULES ? CKFE_API_INVALID_ARGUMENT : CKFE_API_OK;
             for (uint64_t i=0; counts_api==CKFE_API_OK && i<v->snapshot.rule_count; ++i)
                 counts_api=ckfet_rule_counts_get_v1(job,i,&v->counts[i]);
             if (counts_api!=CKFE_API_OK) {
-                failure(v,counts_api,NULL); v->cache_valid=0; error_is_cache=1;
+                failure(v,counts_api,nullptr); v->cache_valid=0; error_is_cache=1;
             }
         }
         if (v->snapshot.state==CKFET_AWAITING_REVIEW && (!v->summary_valid ||
             v->summary_generation!=v->snapshot.plan_generation || v->summary_receipt!=v->snapshot.receipt_id)) {
             v->summary_valid=0;
             api=summarize(s,job,v);
-            if (api!=CKFE_API_OK) { failure(v,api,NULL); v->cache_valid=0; error_is_cache=1; }
+            if (api!=CKFE_API_OK) { failure(v,api,nullptr); v->cache_valid=0; error_is_cache=1; }
         }
         if (v->cache_valid && v->names_valid) last_sequence=v->snapshot.sequence;
         if (terminal(v->snapshot.state)) {
             uint32_t drained=0;
             ckfe_api_status drain_api=ckfet_worker_drained_v1(job,&drained);
             if (drain_api==CKFE_API_OK) v->drained=!!drained;
-            else { failure(v,drain_api,NULL); v->settling=1; settling_error=1; }
+            else { failure(v,drain_api,nullptr); v->settling=1; settling_error=1; }
         }
         v->finished=terminal(v->snapshot.state) && v->drained;
         publish(s,v);
         /* Keep terminal jobs queryable until the UI releases the result view. */
         if (v->finished && atomic_load(&s->stop)) break;
-        struct timespec delay={0,100000000}; nanosleep(&delay,NULL);
+        struct timespec delay={0,100000000}; nanosleep(&delay,nullptr);
     }
     goto done;
 cancelled:
@@ -428,21 +428,21 @@ failed:
 done:
     if (job) ckfet_release(job);
     ckfe_entry_destroy(destination); ckfe_entry_destroy(source); ckfe_engine_destroy(engine); ckfe_error_free(&error);
-    v->finished=1; v->stopped=1; publish(s,v); free(v); return NULL;
+    v->finished=1; v->stopped=1; publish(s,v); free(v); return nullptr;
 }
 SyncJob *SyncJobStart(const SyncSetup *setup, char *error, size_t capacity)
 {
     if (!setup || !setup->source || !setup->destination || setup->source[0]!='/' || setup->destination[0]!='/' ||
         strnlen(setup->source,65537)>65536 || strnlen(setup->destination,65537)>65536) {
-        snprintf(error,capacity,"Choose two absolute folder paths"); return NULL;
+        snprintf(error,capacity,"Choose two absolute folder paths"); return nullptr;
     }
-    SyncJob *s=calloc(1,sizeof(*s)); if (!s) return NULL;
+    SyncJob *s=calloc(1,sizeof(*s)); if (!s) return nullptr;
     s->source=strdup(setup->source); s->destination=strdup(setup->destination);
-    const char *home=getenv("HOME"); s->home=home ? strdup(home) : NULL;
+    const char *home=getenv("HOME"); s->home=home ? strdup(home) : nullptr;
     s->profile=setup->profile; s->metadata_scope=setup->metadata_scope; s->filters=setup->filters;
     atomic_init(&s->stop,0); atomic_init(&s->cancel,0); atomic_init(&s->pause,0);
     if (!s->source || !s->destination || (!s->home && setup->profile!=CKFSP_COMPARE)) goto fail_alloc;
-    if (pthread_mutex_init(&s->mutex,NULL)) goto fail_alloc;
+    if (pthread_mutex_init(&s->mutex,nullptr)) goto fail_alloc;
     pthread_attr_t attr;
     if (pthread_attr_init(&attr)) { pthread_mutex_destroy(&s->mutex); goto fail_alloc; }
     pthread_t thread;
@@ -453,7 +453,7 @@ SyncJob *SyncJobStart(const SyncSetup *setup, char *error, size_t capacity)
     return s;
 fail_alloc:
     free(s->source); free(s->destination); free(s->home); free(s);
-    snprintf(error,capacity,"Cannot start filesystem worker"); return NULL;
+    snprintf(error,capacity,"Cannot start filesystem worker"); return nullptr;
 }
 int SyncJobRead(SyncJob *s, SyncView *view)
 {
@@ -473,7 +473,7 @@ uint64_t SyncJobReview(SyncJob *s, uint64_t generation, const SyncRule *rules, u
     Command *c=calloc(1,sizeof(*c)); if (!c) return 0;
     c->kind=REVIEW_COMMAND; c->generation=generation; c->count=count; c->deletion_count=deletion_count;
     for (unsigned i=0; i<count; ++i) {
-        c->rules[i]=rules[i]; c->rules[i].subtree=NULL;
+        c->rules[i]=rules[i]; c->rules[i].subtree=nullptr;
         if (rules[i].selected_count>SYNC_PAGE_SIZE || rules[i].subtree_size>65536 ||
             (rules[i].subtree_size && !rules[i].subtree)) { command_free(c); return 0; }
         if (rules[i].subtree_size) {

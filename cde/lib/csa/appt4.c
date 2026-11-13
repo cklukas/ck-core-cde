@@ -56,15 +56,15 @@ _DtCm_make_appt4(boolean_t alloc)
 {
 	Appt_4 *a;
 	
-	if ((a = (Appt_4 *)calloc(1, sizeof(Appt_4))) == NULL)
-		return NULL;
+	if ((a = (Appt_4 *)calloc(1, sizeof(Appt_4))) == nullptr)
+		return nullptr;
 
-	if ((a->tag = (Tag_4 *)calloc(1, sizeof(Tag_4))) == NULL) {
+	if ((a->tag = (Tag_4 *)calloc(1, sizeof(Tag_4))) == nullptr) {
 		free(a);
-		return NULL;
+		return nullptr;
 	}
 	a->tag->tag = appointment_4;
-	a->tag->next = NULL;
+	a->tag->next = nullptr;
 	a->tag->showtime = B_TRUE;
 
 	a->period.period = single_4;
@@ -77,7 +77,7 @@ _DtCm_make_appt4(boolean_t alloc)
 		a->client_data = calloc(1, sizeof(1));
 	}
 
-	a->next = NULL;
+	a->next = nullptr;
 	return(a);
 }
 
@@ -86,11 +86,11 @@ _DtCm_copy_one_appt4(Appt_4 *a4)
 {
 	Appt_4 *ptr, *copy;
 
-	if (a4 == NULL)
-		return NULL;
+	if (a4 == nullptr)
+		return nullptr;
 
 	ptr = a4->next;
-	a4->next = NULL;
+	a4->next = nullptr;
 
 	copy = _DtCm_copy_appt4(a4);
 
@@ -104,9 +104,9 @@ _DtCm_copy_appt4(Appt_4 *a4)
 	Appt_4		*a, *head, *prev;
 	boolean_t	cleanup = B_FALSE;
 
-	prev = head = NULL;
-	while (a4 != NULL) {
-		if ((a = (Appt_4 *)calloc(1, sizeof(Appt_4))) == NULL) {
+	prev = head = nullptr;
+	while (a4 != nullptr) {
+		if ((a = (Appt_4 *)calloc(1, sizeof(Appt_4))) == nullptr) {
 			cleanup = B_TRUE;
 			break;
 		}
@@ -118,12 +118,12 @@ _DtCm_copy_appt4(Appt_4 *a4)
 		a->ntimes = a4->ntimes;
 
         	if (a4->what) {
-			if ((a->what = strdup(a4->what)) == NULL) {
+			if ((a->what = strdup(a4->what)) == nullptr) {
 				_DtCm_free_appt4(a);
 				cleanup = B_TRUE;
 				break;
 			}
-		} else if ((a->what = (char *)calloc(1, 1)) == NULL) {
+		} else if ((a->what = (char *)calloc(1, 1)) == nullptr) {
 			_DtCm_free_appt4(a);
 			cleanup = B_TRUE;
 			break;
@@ -134,63 +134,63 @@ _DtCm_copy_appt4(Appt_4 *a4)
 		a->period.enddate = a4->period.enddate;
 
         	if (a4->author) {
-			if ((a->author = strdup(a4->author)) == NULL) {
+			if ((a->author = strdup(a4->author)) == nullptr) {
 				_DtCm_free_appt4(a);
 				cleanup = B_TRUE;
 				break;
 			}
-		} else if ((a->author = (char *)calloc(1, 1)) == NULL) {
+		} else if ((a->author = (char *)calloc(1, 1)) == nullptr) {
 			_DtCm_free_appt4(a);
 			cleanup = B_TRUE;
 			break;
 		}
 
         	if (a4->client_data) {
-			if ((a->client_data = strdup(a4->client_data)) == NULL) {
+			if ((a->client_data = strdup(a4->client_data)) == nullptr) {
 				_DtCm_free_appt4(a);
 				cleanup = B_TRUE;
 				break;
 			}
-		} else if ((a->client_data = (char *)calloc(1, 1)) == NULL) {
+		} else if ((a->client_data = (char *)calloc(1, 1)) == nullptr) {
 			_DtCm_free_appt4(a);
 			cleanup = B_TRUE;
 			break;
 		}
 
 		if (a4->exception &&
-		    (a->exception = _DtCm_copy_excpt4(a4->exception)) == NULL) {
+		    (a->exception = _DtCm_copy_excpt4(a4->exception)) == nullptr) {
 			_DtCm_free_appt4(a);
 			cleanup = B_TRUE;
 			break;
 		}
 
-		if (a4->attr && (a->attr = copy_attr4(a4->attr)) == NULL) {
+		if (a4->attr && (a->attr = copy_attr4(a4->attr)) == nullptr) {
 			_DtCm_free_appt4(a);
 			cleanup = B_TRUE;
 			break;
 		}
 
 		if (a4->tag) {
-			if ((a->tag = copy_tag4(a4->tag)) == NULL) {
+			if ((a->tag = copy_tag4(a4->tag)) == nullptr) {
 				free(a);
 				cleanup = B_TRUE;
 				break;
 			}
-		} else if ((a->tag = (Tag_4 *)calloc(1, sizeof(Tag_4))) == NULL) {
+		} else if ((a->tag = (Tag_4 *)calloc(1, sizeof(Tag_4))) == nullptr) {
 			free(a);
 			cleanup = B_TRUE;
 			break;
 		} else {
 			a->tag->tag = appointment_4;
 			a->tag->showtime = B_TRUE;
-			a->tag->next = NULL;
+			a->tag->next = nullptr;
 		}
 
 		a->appt_status = a4->appt_status;
 		a->privacy = a4->privacy;
-          	a->next = NULL;
+          	a->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = a;
 		else
 			prev->next = a;
@@ -201,7 +201,7 @@ _DtCm_copy_appt4(Appt_4 *a4)
 
 	if (cleanup == B_TRUE) {
 		_DtCm_free_appt4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
         return (head);
@@ -214,19 +214,19 @@ _DtCm_copy_appt4(Appt_4 *a4)
 extern Appt_4 *
 _DtCm_copy_semiprivate_appt4(Appt_4 *original)
 {
-	Appt_4 *temp, *copy = NULL;
+	Appt_4 *temp, *copy = nullptr;
 
-	if (original != NULL) {
+	if (original != nullptr) {
 		temp = original->next;
-		original->next = NULL;
+		original->next = nullptr;
 
-		if ((copy = _DtCm_copy_appt4(original)) != NULL) {
-			if (copy->what != NULL)
+		if ((copy = _DtCm_copy_appt4(original)) != nullptr) {
+			if (copy->what != nullptr)
 				free(copy->what);
-			if ((copy->what = (char *)strdup(FAUX_STRING)) == NULL)
+			if ((copy->what = (char *)strdup(FAUX_STRING)) == nullptr)
 			{
 				_DtCm_free_appt4(copy);
-				copy = NULL;
+				copy = nullptr;
 			}
 		}
 
@@ -238,23 +238,23 @@ _DtCm_copy_semiprivate_appt4(Appt_4 *original)
 extern Abb_Appt_4 *
 _DtCm_appt_to_abbrev4(Appt_4 *original)
 {
-	Abb_Appt_4 *new = NULL;
+	Abb_Appt_4 *new = nullptr;
 
-	if (original != NULL) {
-		if ((new = (Abb_Appt_4 *)calloc(1, sizeof(Abb_Appt_4))) == NULL)
-			return NULL;
+	if (original != nullptr) {
+		if ((new = (Abb_Appt_4 *)calloc(1, sizeof(Abb_Appt_4))) == nullptr)
+			return nullptr;
 
-		if ((new->tag = copy_tag4(original->tag)) == NULL) {
+		if ((new->tag = copy_tag4(original->tag)) == nullptr) {
 			free(new);
-			return NULL;
+			return nullptr;
 		}
 
 		new->appt_id.tick = original->appt_id.tick;
 		new->appt_id.key = original->appt_id.key;
 
-		if ((new->what = (char *)strdup(original->what)) == NULL) {
+		if ((new->what = (char *)strdup(original->what)) == nullptr) {
 			_DtCm_free_abbrev_appt4(new);
-			return NULL;
+			return nullptr;
 		}
 
 		new->duration = original->duration;
@@ -264,7 +264,7 @@ _DtCm_appt_to_abbrev4(Appt_4 *original)
 
 		new->appt_status = original->appt_status;
 		new->privacy = original->privacy;
-		new->next=NULL;
+		new->next=nullptr;
 	}
 	return(new);
 }
@@ -276,12 +276,12 @@ extern Abb_Appt_4 *
 _DtCm_appt_to_semiprivate_abbrev4(Appt_4 *original)
 {
 	Abb_Appt_4 *new = _DtCm_appt_to_abbrev4(original);
-	if (new != NULL) {
-		if (new->what != NULL)
+	if (new != nullptr) {
+		if (new->what != nullptr)
 			free(new->what);
-		if ((new->what = strdup(FAUX_STRING)) == NULL) {
+		if ((new->what = strdup(FAUX_STRING)) == nullptr) {
 			_DtCm_free_abbrev_appt4(new);
-			new = NULL;
+			new = nullptr;
 		}
 	}
 	return(new);
@@ -292,22 +292,22 @@ _DtCm_free_appt4(Appt_4 *a)
 {
 	Appt_4 *ptr;
 
-	while (a != NULL) {
+	while (a != nullptr) {
 		ptr = a->next;
 
-		if (a->what != NULL)
+		if (a->what != nullptr)
 			free(a->what);
 
-		if (a->author != NULL)
+		if (a->author != nullptr)
 			free(a->author);
 
-		if (a->tag != NULL)
+		if (a->tag != nullptr)
 			free_tag4(a->tag);
 
-		if (a->attr != NULL)
+		if (a->attr != nullptr)
 			_DtCm_free_attr4(a->attr);
 
-		if (a->exception != NULL)
+		if (a->exception != nullptr)
 			_DtCm_free_excpt4(a->exception);
 
      		free(a);
@@ -321,14 +321,14 @@ _DtCm_free_abbrev_appt4(Abb_Appt_4 *a)
 {
 	Abb_Appt_4 *ptr;
 
-	while (a != NULL) {
+	while (a != nullptr) {
 		ptr = a->next;
 
-		if (a->what != NULL) {
+		if (a->what != nullptr) {
 			free(a->what);
 		}
 
-		if (a->tag != NULL) {
+		if (a->tag != nullptr) {
 			free_tag4(a->tag);
 		}
 
@@ -343,22 +343,22 @@ _DtCm_make_attr4(void)
 {
 	Attribute_4 *a;
 	
-	if ((a = (Attribute_4 *)calloc(1, sizeof(Attribute_4))) == NULL)
-		return NULL;
+	if ((a = (Attribute_4 *)calloc(1, sizeof(Attribute_4))) == nullptr)
+		return nullptr;
 
-	if ((a->attr = (char *)calloc(1, 1)) == NULL) {
+	if ((a->attr = (char *)calloc(1, 1)) == nullptr) {
 		free(a);
-		return NULL;
+		return nullptr;
 	}
 
-	if ((a->value = (char *)calloc(1, 1)) == NULL) {
+	if ((a->value = (char *)calloc(1, 1)) == nullptr) {
 		_DtCm_free_attr4(a);
-		return NULL;
+		return nullptr;
 	}
 
-	if ((a->clientdata = (char *)calloc(1, 1)) == NULL) {
+	if ((a->clientdata = (char *)calloc(1, 1)) == nullptr) {
 		_DtCm_free_attr4(a);
-		return NULL;
+		return nullptr;
 	}
 
 	return(a);
@@ -369,13 +369,13 @@ _DtCm_free_attr4(Attribute_4 *a)
 {
 	Attribute_4 *ptr;
 
-	while (a != NULL) {
+	while (a != nullptr) {
 		ptr = a->next;
-		if (a->attr != NULL)
+		if (a->attr != nullptr)
 			free(a->attr);
-		if (a->value != NULL)
+		if (a->value != nullptr)
 			free(a->value);
-		if (a->clientdata != NULL)
+		if (a->clientdata != nullptr)
 			free(a->clientdata);
 		free(a);
 
@@ -388,18 +388,18 @@ _DtCm_copy_reminder4(Reminder_4 *r4)
 {
         Reminder_4 *rem, *head, *prev;
 
-	prev = head = NULL;
-	while (r4 != NULL) {
+	prev = head = nullptr;
+	while (r4 != nullptr) {
 		rem = (Reminder_4 *)calloc(1, sizeof(Reminder_4));
 		rem->appt_id = r4->appt_id;
 		rem->tick = r4->tick;
-		rem->attr.next = NULL;
+		rem->attr.next = nullptr;
 		rem->attr.attr = strdup(r4->attr.attr);
 		rem->attr.value = strdup(r4->attr.value);
 		rem->attr.clientdata = strdup(r4->attr.clientdata);
-		rem->next = NULL;
+		rem->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = rem;
 		else
 			prev->next = rem;
@@ -415,14 +415,14 @@ _DtCm_free_reminder4(Reminder_4 *r)
 {
 	Reminder_4 *ptr;
 
-	while (r != NULL) {
+	while (r != nullptr) {
 		ptr = r->next;
 
-		if (r->attr.attr != NULL)
+		if (r->attr.attr != nullptr)
 			free (r->attr.attr);
-		if (r->attr.value != NULL)
+		if (r->attr.value != nullptr)
 			free (r->attr.value);
-		if (r->attr.clientdata != NULL)
+		if (r->attr.clientdata != nullptr)
 			free (r->attr.clientdata);
 		free (r);
 
@@ -435,7 +435,7 @@ _DtCm_free_keyentry4(Uid_4 *k)
 {
 	Uid_4 *ptr;
 
-	while (k != NULL) {
+	while (k != nullptr) {
 		ptr = k->next;
 		free(k);
 		k = ptr;
@@ -447,17 +447,17 @@ _DtCm_make_access_entry4(char *who, int perms)
 {
         Access_Entry_4 *e;
 
-        if (who==NULL) return((Access_Entry_4 *)NULL);
-        if ((e = (Access_Entry_4 *)calloc(1, sizeof(Access_Entry_4))) == NULL)
-		return NULL;
+        if (who==nullptr) return((Access_Entry_4 *)nullptr);
+        if ((e = (Access_Entry_4 *)calloc(1, sizeof(Access_Entry_4))) == nullptr)
+		return nullptr;
 
-        if ((e->who = strdup(who)) == NULL) {
+        if ((e->who = strdup(who)) == nullptr) {
 		free(e);
-		return NULL;
+		return nullptr;
 	}
 
         e->access_type = perms;
-        e->next = NULL;
+        e->next = nullptr;
         return(e);
 }
 
@@ -466,10 +466,10 @@ _DtCm_free_access_list4(Access_Entry_4 *e)
 {
 	Access_Entry_4 *ptr;
 
-	while (e != NULL) {
+	while (e != nullptr) {
 		ptr = e->next;
 
-		if (e->who != NULL)
+		if (e->who != nullptr)
 			free(e->who);
 		free(e);
 
@@ -482,7 +482,7 @@ _DtCm_free_excpt4(Except_4 *e)
 {
 	Except_4 *ptr;
 
-	while (e != NULL) {
+	while (e != nullptr) {
 		ptr = e->next;
 		free(e);
 		e = ptr;
@@ -495,17 +495,17 @@ _DtCm_copy_excpt4(Except_4 *e4)
 	Except_4	*e, *head, *prev;
 	boolean_t	cleanup = B_FALSE;
 
-	prev = head = NULL;
-	while (e4 != NULL) {
-		if ((e = (Except_4 *)calloc(1, sizeof(Except_4))) == NULL) {
+	prev = head = nullptr;
+	while (e4 != nullptr) {
+		if ((e = (Except_4 *)calloc(1, sizeof(Except_4))) == nullptr) {
 			cleanup = B_TRUE;
 			break;
 		}
 
 		e->ordinal = e4->ordinal;
-		e->next = NULL;
+		e->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = e;
 		else
 			prev->next = e;
@@ -516,7 +516,7 @@ _DtCm_copy_excpt4(Except_4 *e4)
 
 	if (cleanup == B_TRUE) {
 		_DtCm_free_excpt4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	return (head);
@@ -531,7 +531,7 @@ free_tag4(Tag_4 *t)
 {
 	Tag_4 *ptr;
 
-	while (t != NULL) {
+	while (t != nullptr) {
 		ptr = t->next;
 		free(t);
 		t = ptr;
@@ -545,33 +545,33 @@ copy_attr4(Attribute_4 *a4)
 	Attribute_4	*a, *head, *prev;
 	boolean_t	cleanup = B_FALSE;
 
-	prev = head = NULL;
-	while (a4 != NULL) {
+	prev = head = nullptr;
+	while (a4 != nullptr) {
 		if ((a = (Attribute_4 *)calloc(1, sizeof(Attribute_4)))
-		    == NULL) {
+		    == nullptr) {
 			cleanup = B_TRUE;
 			break;
 		}
 
-		if ((a->attr = strdup(a4->attr)) == NULL) {
+		if ((a->attr = strdup(a4->attr)) == nullptr) {
 			free(a);
 			cleanup = B_TRUE;
 			break;
 		}
 	
-		if ((a->value = strdup(a4->value)) == NULL) {
+		if ((a->value = strdup(a4->value)) == nullptr) {
 			_DtCm_free_attr4(a);
 			cleanup = B_TRUE;
 			break;
 		}
 
-		if ((a->clientdata = strdup(a4->clientdata)) == NULL) {
+		if ((a->clientdata = strdup(a4->clientdata)) == nullptr) {
 			_DtCm_free_attr4(a);
 			cleanup = B_TRUE;
 			break;
 		}
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = a;
 		else
 			prev->next = a;
@@ -582,7 +582,7 @@ copy_attr4(Attribute_4 *a4)
 
 	if (cleanup == B_TRUE) {
 		_DtCm_free_attr4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	return (head);
@@ -594,18 +594,18 @@ copy_tag4(Tag_4 *t4)
 	Tag_4		*t, *head, *prev;
 	boolean_t	cleanup = B_FALSE;
 
-	prev = head = NULL;
-	while (t4 != NULL) {
-		if ((t = (Tag_4 *)calloc(1, sizeof(Tag_4))) == NULL) {
+	prev = head = nullptr;
+	while (t4 != nullptr) {
+		if ((t = (Tag_4 *)calloc(1, sizeof(Tag_4))) == nullptr) {
 			cleanup = B_TRUE;
 			break;
 		}
 
 		t->tag = t4->tag;
 		t->showtime = t4->showtime;
-		t->next = NULL;
+		t->next = nullptr;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = t;
 		else
 			prev->next = t;
@@ -616,7 +616,7 @@ copy_tag4(Tag_4 *t4)
 
 	if (cleanup == B_TRUE) {
 		free_tag4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	return (head);

@@ -171,10 +171,10 @@ static void 	pw_panelist_selectCB(
 PalItemInfo panedwin_palitem_rec = {
     /* type             */  AB_TYPE_CONTAINER,
     /* name             */  "Paned Window",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  panedwin_initialize,
     /* is_a_test        */  obj_is_paned_win,
     /* prop_initialize  */  panedwin_prop_init,
@@ -255,8 +255,8 @@ panedwin_prop_init(
     {
 	pws->prop_sheet = cgen->attrs_ctrlpanel;
 	pws->panelist = cgen->panelist;
-        pws->current_pw_obj = NULL;
-        pws->current_pane_obj = NULL;
+        pws->current_pw_obj = nullptr;
+        pws->current_pane_obj = nullptr;
    	pws->width = cgen->width_value;
    	pws->height = cgen->height_value;
 
@@ -273,7 +273,7 @@ panedwin_prop_init(
         if (type == AB_PROP_REVOLVING)
                 XtVaSetValues(parent,
                         XmNuserData, pws->current_pw_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
         if (type == AB_PROP_FIXED)
@@ -311,7 +311,7 @@ panedwin_prop_init(
 
         /* Pane Minimum/Maximum Setting */
         prop_geomfield_init(&(pws->min_max_geo), cgen->pane_height_lbl, 
-		NULL, NULL, NULL, NULL,
+		nullptr, nullptr, nullptr, nullptr,
 		cgen->min_height_field_label, cgen->min_height_field,
 		cgen->max_height_field_label, cgen->max_height_field,
 		cgen->height_cb); 
@@ -321,7 +321,7 @@ panedwin_prop_init(
 	return (cgen->dialog_shellform);
     }
     else
-	return NULL;
+	return nullptr;
 }  
 
 static int
@@ -354,8 +354,8 @@ panedwin_prop_clear(
     /* Clear pane information */
     panedwin_prop_clear_geom(type);
  
-    pws->current_pw_obj = NULL;
-    pws->current_pane_obj = NULL;
+    pws->current_pw_obj = nullptr;
+    pws->current_pane_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -373,11 +373,11 @@ panedwin_prop_clear_geom(
     XtVaSetValues(pws->width,
                 XtVaTypedArg, XmNlabelString, XtRString,
                     "   0", strlen("   0")+1,
-                NULL);
+                nullptr);
     XtVaSetValues(pws->height,
                 XtVaTypedArg, XmNlabelString, XtRString,
                     "   0", strlen("   0")+1,
-                NULL);
+                nullptr);
 
     /* Clear Pane Minimum/Maximum Setting */
     prop_geomfield_clear(&(pws->min_max_geo), GEOM_WIDTH);
@@ -396,9 +396,9 @@ panedwin_prop_load(
     PropPanedWinSettingsRec     *pws = &(prop_pw_settings_rec[type]);
     BOOL			load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pws->current_pw_obj != NULL)
+        if (pws->current_pw_obj != nullptr)
             obj = pws->current_pw_obj;
         else
             return ERROR;
@@ -438,7 +438,7 @@ panedwin_load_panes(
 {
     PropPanedWinSettingsRec     *pws = &(prop_pw_settings_rec[type]);
 
-    if (obj == NULL || !obj_is_paned_win(obj))
+    if (obj == nullptr || !obj_is_paned_win(obj))
 	return ERROR;
 
     /* Clear out the panes list first */
@@ -462,9 +462,9 @@ panedwin_pane_prop_load(
     *width = 0;
     *height = 0;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pws->current_pane_obj != NULL)
+        if (pws->current_pane_obj != nullptr)
             obj = pws->current_pane_obj;
         else
             return ERROR;
@@ -480,11 +480,11 @@ panedwin_pane_prop_load(
     XtVaSetValues(pws->width, 
 		XtVaTypedArg, XmNlabelString, XtRString,
 		    width, strlen(width)+1,
-		NULL);
+		nullptr);
     XtVaSetValues(pws->height, 
 		XtVaTypedArg, XmNlabelString, XtRString,
 		    height, strlen(height)+1,
-		NULL);
+		nullptr);
 
     /* Pane Minimum/Maximum Setting */
     prop_geomfield_set_value(&(pws->min_max_geo), GEOM_WIDTH, 
@@ -534,10 +534,10 @@ panedwin_prop_apply(
 	abobj_set_pane_max(pws->current_pane_obj, geom);
     }
 
-    if (pws->current_pw_obj != NULL)
+    if (pws->current_pw_obj != nullptr)
 	abobj_instantiate_changes(pws->current_pw_obj);
 
-    if (pws->current_pane_obj != NULL)
+    if (pws->current_pane_obj != nullptr)
 	abobj_instantiate_changes(pws->current_pane_obj);
 
     turnoff_changebars(type);
@@ -599,9 +599,9 @@ pw_panelist_selectCB(
 )
 {
     XmListCallbackStruct *listdata = call_data;
-    ABObj               module = NULL;
-    ABObj               selected_obj = NULL;
-    STRING              name = NULL;
+    ABObj               module = nullptr;
+    ABObj               selected_obj = nullptr;
+    STRING              name = nullptr;
     int			ret = 0;
     AB_PROP_TYPE	type;
     PropPanedWinSettingsRec   *pws;
@@ -646,10 +646,10 @@ pw_child_test_func(
     ABObj test_obj
 )
 {
-    ABObj       module = NULL;
-    ABObj	parent = NULL;
+    ABObj       module = nullptr;
+    ABObj	parent = nullptr;
 
-    if ((module = obj_get_module(test_obj)) == NULL)
+    if ((module = obj_get_module(test_obj)) == nullptr)
         return(False);
 
     parent = obj_get_parent(test_obj);
@@ -671,7 +671,7 @@ pw_obj_destroyedOCB(
     ObjEvDestroyInfo    info
 )
 {
-    ABObj	parent = NULL;
+    ABObj	parent = nullptr;
     int         ret = 0, i;
     PropPanedWinSettingsRec   *pws;
                      
@@ -679,7 +679,7 @@ pw_obj_destroyedOCB(
             return 0;
  
     parent = obj_get_parent(info->obj);
-    if ( ((parent = obj_get_parent(info->obj)) != NULL) &&
+    if ( ((parent = obj_get_parent(info->obj)) != nullptr) &&
 	obj_is_paned_win(parent))
     {
 	for (i = 0; i < AB_PROP_TYPE_NUM_VALUES; ++i)
@@ -689,7 +689,7 @@ pw_obj_destroyedOCB(
 	    if (pws->current_pane_obj == info->obj)
 	    {
 		panedwin_prop_clear_geom((AB_PROP_TYPE) i);
-		pws->current_pane_obj = NULL;
+		pws->current_pane_obj = nullptr;
 	    }
 	    ret = abobj_list_obj_destroyed(pws->panelist, info->obj, 
 			pw_child_test_func);
@@ -703,8 +703,8 @@ pw_obj_renamedOCB(
     ObjEvAttChangeInfo    info
 )
 {
-    ABObj       parent = NULL;
-    STRING	mod_name = NULL;
+    ABObj       parent = nullptr;
+    STRING	mod_name = nullptr;
     int         ret = 0, i;
     PropPanedWinSettingsRec   *pws;
 
@@ -715,10 +715,10 @@ pw_obj_renamedOCB(
     if (obj_is_module(info->obj))
     {
 	mod_name = obj_get_name(info->obj);
-	if (mod_name == NULL)
+	if (mod_name == nullptr)
 	    return -1;
      
-	if (info->old_name != NULL)
+	if (info->old_name != nullptr)
 	{
 	    /* Change the module prefix in the panes list */
 	    for (i = 0; i < AB_PROP_TYPE_NUM_VALUES; ++i)
@@ -731,7 +731,7 @@ pw_obj_renamedOCB(
     }
     else	/* obj is a pane OR a layer */
     {
-	if (info->old_name == NULL)
+	if (info->old_name == nullptr)
 	{
 	    /* This is a new pane dropped on an existing
 	     * paned window object OR this is a new layer
@@ -739,7 +739,7 @@ pw_obj_renamedOCB(
 	     * obj's parent.
 	     */  
 	    parent = obj_get_parent(info->obj);
-	    if ( (parent != NULL) && obj_is_paned_win(parent) )
+	    if ( (parent != nullptr) && obj_is_paned_win(parent) )
 	    {
 		for (i = 0; i < AB_PROP_TYPE_NUM_VALUES; ++i)
 		{
@@ -774,7 +774,7 @@ pw_obj_reparentedOCB(
     ObjEvReparentInfo     info
 )
 {
-    ABObj	parent = NULL;
+    ABObj	parent = nullptr;
     int		ret = 0, i;
     PropPanedWinSettingsRec   *pws;
 
@@ -788,7 +788,7 @@ pw_obj_reparentedOCB(
      * it to the pane list).
      */
     parent = obj_get_parent(info->obj);
-    if (obj_get_name(info->obj) != NULL)
+    if (obj_get_name(info->obj) != nullptr)
     {
 	/* Either a new paned window obj was created (via
 	 * the "Make Paned Window" popup menu OR a paned
@@ -799,7 +799,7 @@ pw_obj_reparentedOCB(
 	 * need to update the panes list because that will happen
 	 * when the new paned window obj is selected. 
 	 */
-	if ((info->old_parent != NULL) && 
+	if ((info->old_parent != nullptr) && 
 	    obj_is_paned_win(info->old_parent))
 	{
 	    for (i = 0; i < AB_PROP_TYPE_NUM_VALUES; ++i)
@@ -838,8 +838,8 @@ abobj_make_panedwin(void)
     int		  	i, xpos = 0, ypos = 0;
     AB_ATTACH_TYPE	attach_type = AB_ATTACH_UNDEF,
 			next_attach_type = AB_ATTACH_UNDEF;
-    void		*attach_val = NULL,
-			*next_attach_val = NULL;
+    void		*attach_val = nullptr,
+			*next_attach_val = nullptr;
     int			attach_offset = 0;
     BOOL		AttachTypesEqual;
 
@@ -952,7 +952,7 @@ abobj_make_panedwin(void)
 	    dtb_panedwin_ed_pw_east_attach_msg_initialize(
 			&dtb_panedwin_ed_pw_east_attach_msg);
 	    dtb_show_message((Widget)obj_parent->ui_handle,
-			&dtb_panedwin_ed_pw_east_attach_msg, NULL,NULL);
+			&dtb_panedwin_ed_pw_east_attach_msg, nullptr,nullptr);
 	}
     }
     /* If all of the paned window's children EAST attachment
@@ -970,7 +970,7 @@ abobj_make_panedwin(void)
 	        dtb_panedwin_ed_pw_east_attach_msg_initialize(
 			&dtb_panedwin_ed_pw_east_attach_msg);
 		dtb_show_message((Widget)obj_parent->ui_handle,
-			&dtb_panedwin_ed_pw_east_attach_msg, NULL,NULL);
+			&dtb_panedwin_ed_pw_east_attach_msg, nullptr,nullptr);
 		break;
             }
 	}
@@ -988,7 +988,7 @@ abobj_make_panedwin(void)
 	    dtb_panedwin_ed_pw_west_attach_msg_initialize(
 			&dtb_panedwin_ed_pw_west_attach_msg);
             dtb_show_message((Widget)obj_parent->ui_handle,
-                        &dtb_panedwin_ed_pw_west_attach_msg, NULL,NULL); 
+                        &dtb_panedwin_ed_pw_west_attach_msg, nullptr,nullptr); 
         }
     }  
     /* If all of the paned window's children WEST attachment
@@ -1006,7 +1006,7 @@ abobj_make_panedwin(void)
 	        dtb_panedwin_ed_pw_west_attach_msg_initialize(
 			&dtb_panedwin_ed_pw_west_attach_msg);
 		dtb_show_message((Widget)obj_parent->ui_handle,
-                        &dtb_panedwin_ed_pw_west_attach_msg, NULL,NULL); 
+                        &dtb_panedwin_ed_pw_west_attach_msg, nullptr,nullptr); 
                 break;
             } 
         }
@@ -1080,10 +1080,10 @@ void
 abobj_unmake_panedwin(void)
 {
     ABObj		project = proj_get_project();
-    ABObj		pw_obj = NULL;
-    ABObj		obj_parent = NULL;
-    ABObj         	obj = NULL;
-    ABObj         	*list = NULL;
+    ABObj		pw_obj = nullptr;
+    ABObj		obj_parent = nullptr;
+    ABObj         	obj = nullptr;
+    ABObj         	*list = nullptr;
     ABSelectedRec 	sel;
     int           	i, x_orig = 0, y_orig = 0, ypos = 0;
     int		  	j, numChildren = 0, tree_pos = 0;
@@ -1157,7 +1157,7 @@ abobj_unmake_panedwin(void)
          * Keep a list of parents that need to be 
 	 * updated after all paned windows are unpaned.
          */
-        if (list == NULL)
+        if (list == nullptr)
         { 
 	    list = (ABObj*)XtMalloc(sizeof(ABObj));
             list[0] = obj_parent;

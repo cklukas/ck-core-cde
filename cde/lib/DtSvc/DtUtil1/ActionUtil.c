@@ -114,7 +114,7 @@ _DtBasename( const char *s )
 
 
         if (!s)
-		return NULL;
+		return nullptr;
 
 	/* Work on a local copy of the original string */
 	*p = '\0';
@@ -130,7 +130,7 @@ _DtBasename( const char *s )
 	}
 #endif	/* _Dt_HOST_COLON_PATH_SUPPORT */
 
-	if ( (basep = DtStrrchr(p,'/')) == NULL )
+	if ( (basep = DtStrrchr(p,'/')) == nullptr )
 		return XtNewString(p);
 
 	
@@ -147,7 +147,7 @@ _DtBasename( const char *s )
 		if ( basep == p )
 			return XtNewString(basep);
 		*basep = '\0';	/* replace trailing slash */
-		if ( (basep = DtStrrchr(p,'/')) == NULL )
+		if ( (basep = DtStrrchr(p,'/')) == nullptr )
 			return XtNewString(p);
 	}
 
@@ -172,7 +172,7 @@ _DtPathname( const char *s)
 	if ( !s )
 	{
 		myassert(0);
-		return NULL;
+		return nullptr;
 	}
 
 	/* Chop off the "host:" if necessary */
@@ -186,7 +186,7 @@ _DtPathname( const char *s)
 		 * --- should never get here
 		 */
 		myassert(0);
-		return NULL;
+		return nullptr;
 	}
 
 	return XtNewString(slashp);
@@ -243,7 +243,7 @@ _DtDirname( const char *s)
 	}
 	/* malformed path */
 	if (!slashp )
-		return NULL;
+		return nullptr;
 
 	/*
 	 * Replace the last '/' with a NULL to get the 
@@ -282,8 +282,8 @@ _DtHostString( const char *s)
 	char buf[MAXPATHLEN + MAXHOSTNAMELEN + 1];
 	char *p= buf;
 
-	if ( (slashp = DtStrchr((char *)s,'/')) == NULL )
-		return NULL;
+	if ( (slashp = DtStrchr((char *)s,'/')) == nullptr )
+		return nullptr;
 
 	/*
 	 * Make a local copy of the string to avoid problems modifying
@@ -301,14 +301,14 @@ _DtHostString( const char *s)
 		return host;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 
 char *
 _DtGetSessionHostName( void )
 {
-	static char *sessionHostName = NULL;
+	static char *sessionHostName = nullptr;
 
 	_DtSvcProcessLock();
 	if ( sessionHostName && *sessionHostName ) {
@@ -329,7 +329,7 @@ _DtGetSessionHostName( void )
 	 * initialization should have tucked away the display name.
 	 */
 
-	sessionHostName = _DtGetDisplayHostName( (Display *) NULL );
+	sessionHostName = _DtGetDisplayHostName( (Display *) nullptr );
 	_DtSvcProcessUnlock();
 	return XtNewString(sessionHostName);
 
@@ -338,8 +338,8 @@ _DtGetSessionHostName( void )
 char *
 _DtGetDisplayHostName( Display *dp)
 {
-	static char *displayHostName = NULL;
-	char *tmpName = NULL;
+	static char *displayHostName = nullptr;
+	char *tmpName = nullptr;
 	char *tmp;
 	
 	_DtSvcProcessLock();
@@ -400,7 +400,7 @@ _DtGetDisplayHostName( Display *dp)
         }
 
 	myassert( displayHostName && *displayHostName );
-	myassert( (DtStrchr( displayHostName, ':' ) == NULL) );
+	myassert( (DtStrchr( displayHostName, ':' ) == nullptr) );
 
 	_DtSvcProcessUnlock();
 	return XtNewString(displayHostName); 
@@ -416,7 +416,7 @@ _DtGetDisplayHostName( Display *dp)
 char *
 _DtGetLocalHostName( void )
 {
-	static char *localHostName = NULL;
+	static char *localHostName = nullptr;
 	static char hostNameBuf[MAXHOSTNAMELEN + 1];
 	char *ptr;
 
@@ -428,7 +428,7 @@ _DtGetLocalHostName( void )
 
 	if ( gethostname(hostNameBuf, sizeof(hostNameBuf)) ) {
 	        _DtSvcProcessUnlock();
-		return NULL; /* failed gethostname */
+		return nullptr; /* failed gethostname */
 	      }
 	if ((ptr = DtStrchr(hostNameBuf, '.')))
 		*ptr = '\0';  /* delete domain name if there is one */
@@ -487,9 +487,9 @@ _DtIsSameHost(const char *host1, const char *host2)
 	 * arrays hostName1 and hostName2.  Truncate the names
 	 * to their short form before doing the compare.
 	 */
-	if ( (tp = DtStrchr(hostName1,'.')) != NULL )
+	if ( (tp = DtStrchr(hostName1,'.')) != nullptr )
 		*tp = '\0';
-	if ( (tp = DtStrchr(hostName2,'.')) != NULL )
+	if ( (tp = DtStrchr(hostName2,'.')) != nullptr )
 		*tp = '\0';
 
 	/*
@@ -500,7 +500,7 @@ _DtIsSameHost(const char *host1, const char *host2)
 	if ( !strcmp(hostName1,hostName2) )
 		return True;
 
-	if ( (host_ret = _XGethostbyname(hostName1, host_buf)) == NULL )
+	if ( (host_ret = _XGethostbyname(hostName1, host_buf)) == nullptr )
 		return False;	/* treat them as different on failure */
 
 	/*
@@ -508,7 +508,7 @@ _DtIsSameHost(const char *host1, const char *host2)
 	 * call gethostbyname() again without losing it.
 	 */
 	strcpy(hostName1, host_ret->h_name);
-	if ( (tp = DtStrchr(hostName1,'.')) != NULL )
+	if ( (tp = DtStrchr(hostName1,'.')) != nullptr )
 		*tp = '\0';
 
 	/*
@@ -521,7 +521,7 @@ _DtIsSameHost(const char *host1, const char *host2)
 	/* restore the dot if necessary */
 	if ( tp) *tp = '.';
 
-	if ( (host_ret = _XGethostbyname(hostName2, host_buf)) == NULL )
+	if ( (host_ret = _XGethostbyname(hostName2, host_buf)) == nullptr )
 		return False;	/* treat them as different on failure */
 
 	if ( !strcmp(hostName1, host_ret->h_name) )
@@ -542,7 +542,7 @@ _DtIsSameHost(const char *host1, const char *host2)
 char *
 _DtGetActionIconDefault ( void )
 {
-   static char *defaultActionIcon = NULL;
+   static char *defaultActionIcon = nullptr;
    char		nameBuf[_DtAct_MAX_BUF_SIZE];
    char		classBuf[_DtAct_MAX_BUF_SIZE];
    XrmValue 	resource_value;
@@ -612,7 +612,7 @@ _DtGetActionIconDefault ( void )
 char *
 _DtGetExecHostsDefault ( void )
 {   
-   static char *executionHosts = NULL;
+   static char *executionHosts = nullptr;
    char		nameBuf[_DtAct_MAX_BUF_SIZE];
    char		classBuf[_DtAct_MAX_BUF_SIZE];
    XrmValue resource_value;
@@ -671,8 +671,8 @@ _DtGetExecHostsDefault ( void )
  *****************************************************************************/
 char *_DtGetDtTmpDir(void)
 {
-    static char *DtTmpDirPath = NULL;
-    char *dirBuf = NULL;
+    static char *DtTmpDirPath = nullptr;
+    char *dirBuf = nullptr;
     char nameBuf[_DtAct_MAX_BUF_SIZE];
     char classBuf[_DtAct_MAX_BUF_SIZE];
     char *name;
@@ -787,10 +787,10 @@ _DtActGenerateTmpFile(char *dir,char *format,mode_t mode,int *fd)
                  */
 		int i;
 		static char *AltTmpDirs[] = {
-                                        NULL,   /* reserved for getenv() */
+                                        nullptr,   /* reserved for getenv() */
                                     	P_tmpdir,	/* from stdio.h */
                                         "/tmp",
-					NULL,
+					nullptr,
                                       }; 
 
 		_DtSvcProcessLock();
@@ -822,7 +822,7 @@ _DtActGenerateTmpFile(char *dir,char *format,mode_t mode,int *fd)
                 if ( !d )
                 {
                         myassert(0 /* this should never happen */);
-			return NULL;
+			return nullptr;
                 }
 
         }
@@ -845,7 +845,7 @@ _DtActGenerateTmpFile(char *dir,char *format,mode_t mode,int *fd)
                  * there is no sense trying more than once.
                  */
                 if ( countTrys > 0 && (strcmp(f,nameBuf) == 0))
-                    return NULL;
+                    return nullptr;
 
 		base = XtNewString(nameBuf);
 
@@ -871,7 +871,7 @@ _DtActGenerateTmpFile(char *dir,char *format,mode_t mode,int *fd)
         	XtFree(d);
 
         if ( *fd == -1 )
-		return NULL;	/* unable to generate desired name format */
+		return nullptr;	/* unable to generate desired name format */
 
 	/* 
          * The file has been successfully created -- return the name for 
@@ -964,7 +964,7 @@ _DtExecuteAccess( const char *path )
 
 		if ( i > 0) {
 			for (pgid = groupids; i--; pgid++) {
-				if ((gr = _XGetgrgid(*pgid, grp_buf)) != NULL)
+				if ((gr = _XGetgrgid(*pgid, grp_buf)) != nullptr)
 				    if (gr->gr_gid == s.st_gid) {
 					/* execution permitted to group list */
 			 		return 1;
@@ -1056,7 +1056,7 @@ _DtActInvRecT *_DtActAllocInvRec(void)
 	 * A NULL indicates an available slot.
 	 */
 	for ( i = 0; i < _actInvRecArraySize; i++ )
-	    _DtActInvRecArray[i] = NULL;
+	    _DtActInvRecArray[i] = nullptr;
 
 	first_time = 0;
     }
@@ -1066,7 +1066,7 @@ _DtActInvRecT *_DtActAllocInvRec(void)
      */
     newslot = -1;
     for ( i = 0; i < _actInvRecArraySize; i++ ) {
-	if ( _DtActInvRecArray[i] == NULL ) {
+	if ( _DtActInvRecArray[i] == nullptr ) {
 	    newslot = i;
 	    break;
 	}
@@ -1086,7 +1086,7 @@ _DtActInvRecT *_DtActAllocInvRec(void)
 	 * NULL out new entries
 	 */
 	for ( i = _actInvRecArraySize-10; i < _actInvRecArraySize; i++ )
-	    _DtActInvRecArray[i] = NULL;
+	    _DtActInvRecArray[i] = nullptr;
 
 	newslot = _actInvRecArraySize-10;
     }
@@ -1197,14 +1197,14 @@ int _DtActDeleteChildRec( _DtActInvRecT *invp, _DtActChildRecT *childp)
 		{
 			_DtActFreeChildRec(childp);
 			invp->numChildren--;
-			invp->childRec[i] = NULL;
+			invp->childRec[i] = nullptr;
 			/*
 			 * Close the potential gap created in the array.
 			 */
 			for ( j = i; j < invp->numChildren; j++)
 			{
 				invp->childRec[i] = invp->childRec[i+1];
-				invp->childRec[i+1] = NULL;
+				invp->childRec[i+1] = nullptr;
 			}
 			return 1;
 		}
@@ -1251,7 +1251,7 @@ int _DtActDeleteInvRec( DtActionInvocationID id )
 
                     if (IS_BUFFER_OBJ(infop->mask) && IS_FILE_OBJ(infop->mask))
                     {
-                        myassert((infop->name != NULL) && (*infop->name != '\0'));
+                        myassert((infop->name != nullptr) && (*infop->name != '\0'));
                         if ( !infop->name )
                             continue;
                         /*
@@ -1279,7 +1279,7 @@ int _DtActDeleteInvRec( DtActionInvocationID id )
 		 * and realloc'ing the _DtActInvRecArray.
 		 */
                 _DtActFreeInvRec( _DtActInvRecArray[i] );
-		_DtActInvRecArray[i] = NULL;
+		_DtActInvRecArray[i] = nullptr;
 		_DtSvcProcessUnlock();
 		return 1; /* successfully deleted */
 	    }
@@ -1331,7 +1331,7 @@ _DtActChildRecT *_DtActAllocChildRec( _DtActInvRecT *invRec )
 	return( (_DtActChildRecT *) tchildRec );
     }
     else {
-	return( (_DtActChildRecT *) NULL );	/* should not happen */
+	return( (_DtActChildRecT *) nullptr );	/* should not happen */
     }
 }
 
@@ -1358,7 +1358,7 @@ _DtActInvRecT *_DtActFindInvRec( DtActionInvocationID id )
     }
 
     _DtSvcProcessUnlock();
-    return( (_DtActInvRecT *) NULL );			/* no match */
+    return( (_DtActInvRecT *) nullptr );			/* no match */
 }
 
 /**************************************************
@@ -1373,8 +1373,8 @@ _DtActChildRecT *_DtActFindChildRec(
     _DtActInvRecT *invRec;
 
 
-    if ( (invRec = _DtActFindInvRec( id )) == NULL )
-	return( (_DtActChildRecT *) NULL );		/* no match */
+    if ( (invRec = _DtActFindInvRec( id )) == nullptr )
+	return( (_DtActChildRecT *) nullptr );		/* no match */
 
     for ( i = 0; i < invRec->numChildren; i++ ) {
 	if ( invRec->childRec[i] ) {
@@ -1384,7 +1384,7 @@ _DtActChildRecT *_DtActFindChildRec(
 	}
     }
 
-    return( (_DtActChildRecT *) NULL );			/* no match */
+    return( (_DtActChildRecT *) nullptr );			/* no match */
 	  
 }
 
@@ -1410,7 +1410,7 @@ _DtActFreeInvRec( _DtActInvRecT *invp )
              XtFree(invp->info[i].name);
          }    
          XtFree((char *)invp->info);
-         invp->info = NULL;
+         invp->info = nullptr;
     }
     
 
@@ -1612,7 +1612,7 @@ void _DtActExecutionLeafNodeCleanup(
 	if ( CALL_INV_CB(invRecP->state) ) {
 	    if ( invRecP->cb  ) {
 	        (invRecP->cb)( id, invRecP->client_data,
-		    (DtActionArg *) NULL, 0,
+		    (DtActionArg *) nullptr, 0,
 		    DtACTION_INVOKED );
             }
 	    SET_INV_CB_CALLED(invRecP->state);
@@ -1666,7 +1666,7 @@ void _DtActExecutionLeafNodeCleanup(
             if ( i == newArgc ) {
                 _DtActFreeArgArray( newArgp, newArgc );
 		newArgc = 0;
-                newArgp = NULL;
+                newArgp = nullptr;
 	    }
 	}
     }
@@ -1766,7 +1766,7 @@ DtActionArg *_DtActMallocEmptyArgArray(int ac)
     int i;
 
     if ( ac == 0 )
-	return NULL;
+	return nullptr;
 
     newArgP = (DtActionArg *) XtCalloc( ac, sizeof(DtActionArg) );
 
@@ -1828,9 +1828,9 @@ _DtActReadTmpFileToBuffer( char *fname, int *sizep )
     if ( !fname )
     {
         /* should never get here */
-        myassert(fname != NULL);
+        myassert(fname != nullptr);
         *sizep = 0;
-        return NULL;
+        return nullptr;
     }
 
     if ( (fd = open(fname,O_RDONLY)) < 0 )
@@ -1838,7 +1838,7 @@ _DtActReadTmpFileToBuffer( char *fname, int *sizep )
 	/* couldn't read tmp file */
 	/* myassert( fd >= 0 ); */
         *sizep = 0;
-        return NULL;
+        return nullptr;
     }
 
     buf = (char *) XtMalloc(MAX_BUF_SIZE);
@@ -1891,7 +1891,7 @@ _DtActGetCmdReturnArgs(
     if ( !(invp = _DtActFindInvRec(invId)) )
     {
         myassert( 0 /* this should never happen */ );
-        *aargv = NULL;
+        *aargv = nullptr;
         return 0;
     }
 
@@ -1931,7 +1931,7 @@ _DtActGetCmdReturnArgs(
                 *     instead we'll set the returned name field to NULL; this
                 *     is after all a new copy of the buffer.
                 */
-               newArgp[Idx].u.buffer.name = NULL;
+               newArgp[Idx].u.buffer.name = nullptr;
                newArgp[Idx].u.buffer.writable = True;
                newArgp[Idx].u.buffer.bp = 
                    _DtActReadTmpFileToBuffer( infop->name,

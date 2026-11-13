@@ -72,8 +72,8 @@ static char *trim_line (char * );
 	/* ********  file reading  ******** */
 
 static int	tag_line_num = 0;
-static char	*tag_linebuf = NULL;
-static char	*tag_file = NULL;
+static char	*tag_linebuf = nullptr;
+static char	*tag_file = nullptr;
 
 
 void	start_tag_line(

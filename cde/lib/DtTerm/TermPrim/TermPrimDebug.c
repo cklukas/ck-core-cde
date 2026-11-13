@@ -42,7 +42,7 @@
 #define XOS_USE_NO_LOCKING
 #include <X11/Xos_r.h>
 
-unsigned char *debugLevel[256] = { NULL }; /* debug level		*/
+unsigned char *debugLevel[256] = { nullptr }; /* debug level		*/
 
 #ifdef	BBA
 #pragma BBA_IGNORE
@@ -389,7 +389,7 @@ static enumName eventTypes[] = {
     {"ClientMessage",		33},
     {"MappingNotify",		34},
     {"LASTEvent",		35},
-    {NULL},
+    {nullptr},
 };
 
 static enumName notifyModes[] = {
@@ -397,7 +397,7 @@ static enumName notifyModes[] = {
     {"NotifyGrab",		1},
     {"NotifyUngrab",		2},
     {"NotifyWhileGrabbed",	3},
-    {NULL},
+    {nullptr},
 };
 
 static enumName notifyDetails[] = {
@@ -409,13 +409,13 @@ static enumName notifyDetails[] = {
     {"NotifyPointer",		5},
     {"NotifyPointerRoot",	6},
     {"NotifyDetailNone",	7},
-    {NULL},
+    {nullptr},
 };
 
 static enumName boolTypes[] = {
     {"True",			1},
     {"False",			0},
-    {NULL},
+    {nullptr},
 };
 
 static char *
@@ -427,7 +427,7 @@ enumToName
 {
     int 		  i1;
     char		  buffer[BUFSIZ];
-    static char		 *retBuffer = NULL;
+    static char		 *retBuffer = nullptr;
     char		 *newBuffer;
 
     for (i1 = 0; list[i1].string; i1++) {
@@ -437,7 +437,7 @@ enumToName
     }
     snprintf(buffer, BUFSIZ, "Unknown Value %d", value);
     newBuffer = realloc(retBuffer, strlen(buffer) + 1);
-    if (NULL == newBuffer) {
+    if (nullptr == newBuffer) {
 	/* retBuffer, if any, is still valid; this is a debugging aid, so
 	 * name the value without its number
 	 */

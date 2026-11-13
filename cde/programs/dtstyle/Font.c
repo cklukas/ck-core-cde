@@ -137,7 +137,7 @@ typedef struct {
     int             backupIndex;
 } FontData;
 static FontData font;
-static FontFaceCatalog *faceCatalog = NULL;
+static FontFaceCatalog *faceCatalog = nullptr;
 
 int _DtWmRestartNoConfirm (Display *display, Window root);
 
@@ -201,7 +201,7 @@ static const char *
 GetFontChoiceString(
         int index )
 {
-    FontDescriptor *desc = NULL;
+    FontDescriptor *desc = nullptr;
     if (index >= 0 && index < style.xrdb.numFonts)
         desc = style.xrdb.fontChoice[index].descriptor;
 
@@ -215,7 +215,7 @@ GetFontChoiceString(
             return style.xrdb.fontChoice[index].userStr;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -224,7 +224,7 @@ ClearDescriptorBackup(
 {
     if (font.descriptorBackup) {
         FreeFontDescriptor(font.descriptorBackup);
-        font.descriptorBackup = NULL;
+        font.descriptorBackup = nullptr;
     }
     font.backupIndex = -1;
 }
@@ -425,7 +425,7 @@ void
 popup_fontBB(
         Widget shell )
 {
-  if (style.fontDialog == NULL) {
+  if (style.fontDialog == nullptr) {
     _DtTurnOnHourGlass(shell);  
     CreateFontDlg(shell); 
     XtManageChild(style.fontDialog);
@@ -544,7 +544,7 @@ CreateFontDlg(
     save.poscnt++;
     style.fontDialog = 
         __DtCreateDialogBoxDialog(parent, "Fonts", save.posArgs, save.poscnt);
-    XtAddCallback(style.fontDialog, XmNcallback, ButtonCB, NULL);
+    XtAddCallback(style.fontDialog, XmNcallback, ButtonCB, nullptr);
     XtAddCallback(style.fontDialog, XmNmapCallback, _DtmapCB_fontBB, 
                             (XtPointer)parent);
     XtAddCallback(style.fontDialog, XmNhelpCallback,
@@ -634,9 +634,9 @@ CreateFontDlg(
                   XmNleftAttachment, XmATTACH_FORM,
                   XmNrightAttachment, XmATTACH_POSITION,
                   XmNrightPosition, 25,
-                  NULL);
+                  nullptr);
     XtAddCallback(font.familyList, XmNbrowseSelectionCallback,
-                  fontFamilySelectedCB, NULL);
+                  fontFamilySelectedCB, nullptr);
     XtManageChild(font.familyList);
 
     n = 0;
@@ -651,9 +651,9 @@ CreateFontDlg(
                   XmNleftPosition, 25,
                   XmNrightAttachment, XmATTACH_POSITION,
                   XmNrightPosition, 50,
-                  NULL);
+                  nullptr);
     XtAddCallback(font.variantList, XmNbrowseSelectionCallback,
-                  fontVariantSelectedCB, NULL);
+                  fontVariantSelectedCB, nullptr);
     XtManageChild(font.variantList);
 
     n = 0;
@@ -668,9 +668,9 @@ CreateFontDlg(
                   XmNleftPosition, 50,
                   XmNrightAttachment, XmATTACH_POSITION,
                   XmNrightPosition, 75,
-                  NULL);
+                  nullptr);
     XtAddCallback(font.charsetList, XmNbrowseSelectionCallback,
-                  fontCharsetSelectedCB, NULL);
+                  fontCharsetSelectedCB, nullptr);
     XtManageChild(font.charsetList);
 
     n = 0;
@@ -684,9 +684,9 @@ CreateFontDlg(
                   XmNleftAttachment, XmATTACH_POSITION,
                   XmNleftPosition, 75,
                   XmNrightAttachment, XmATTACH_FORM,
-                  NULL);
+                  nullptr);
     XtAddCallback(font.sizeList, XmNbrowseSelectionCallback,
-                  fontSizeSelectedCB, NULL);
+                  fontSizeSelectedCB, nullptr);
     XtManageChild(font.sizeList);
 
     /* preview TitleBox */
@@ -761,7 +761,7 @@ CreateFontDlg(
     font.userText = 
         XmCreateText(font.previewForm, "userText", args, n);
     /* Add callback to determine if user changes text in sample field */
-    XtAddCallback(font.userText, XmNvalueChangedCallback, valueChangedCB, NULL);
+    XtAddCallback(font.userText, XmNvalueChangedCallback, valueChangedCB, nullptr);
 
     n = 0;
     string = CMPSTR("Type:");
@@ -788,7 +788,7 @@ CreateFontDlg(
     font.dtwmApplyTG =
         XmCreateToggleButtonGadget(font.previewForm, "dtwmApplyTG", args, n);
     XmStringFree(string);
-    XtAddCallback(font.dtwmApplyTG, XmNvalueChangedCallback, dtwmApplyToggleCB, NULL);
+    XtAddCallback(font.dtwmApplyTG, XmNvalueChangedCallback, dtwmApplyToggleCB, nullptr);
     XmToggleButtonGadgetSetState(font.dtwmApplyTG, True, False);
 
     n = 0;
@@ -988,7 +988,7 @@ _DtmapCB_fontBB(
       
     XmTextShowPosition(font.userText, 0);    
 
-    XtRemoveCallback(style.fontDialog, XmNmapCallback, _DtmapCB_fontBB, NULL);
+    XtRemoveCallback(style.fontDialog, XmNmapCallback, _DtmapCB_fontBB, nullptr);
 
 }
 
@@ -1194,11 +1194,11 @@ ButtonCB(
         XtVaSetValues (font.userText, 
 		       XmNvalue, BLANK_MSG, 
 		       XmNfontList, style.xrdb.userFont,
-		       NULL);
+		       nullptr);
 	XtVaSetValues (font.systemLabel, 
 		       XmNlabelString, CMPSTR(BLANK_MSG), 
 		       XmNfontList, style.xrdb.systemFont,
-		       NULL);
+		       nullptr);
 	font.userTextChanged = FALSE;
 	font.selectedFontIndex = -1;
         UpdateFontTypeLabel(-1);
@@ -1236,7 +1236,7 @@ UpdateFontTypeLabel(
         int index )
 {
     char labelText[96];
-    FontDescriptor *desc = NULL;
+    FontDescriptor *desc = nullptr;
     Arg args[1];
 
     if (index >= 0 && index < style.xrdb.numFonts)
@@ -1490,7 +1490,7 @@ fontFamilySelectedCB(
             .reason = XmCR_BROWSE_SELECT,
             .item_position = 1
         };
-        fontVariantSelectedCB(font.variantList, NULL, &variantCB);
+        fontVariantSelectedCB(font.variantList, nullptr, &variantCB);
     } else {
         font.selectedVariantIndex = -1;
         font.selectedCharsetIndex = -1;
@@ -1526,7 +1526,7 @@ fontVariantSelectedCB(
             .reason = XmCR_BROWSE_SELECT,
             .item_position = 1
         };
-        fontCharsetSelectedCB(font.charsetList, NULL, &charsetCB);
+        fontCharsetSelectedCB(font.charsetList, nullptr, &charsetCB);
     } else {
         font.selectedCharsetIndex = -1;
         ClearSizeList();
@@ -1570,7 +1570,7 @@ fontSizeSelectedCB(
         font.selectedFamilyIndex < 0 || font.selectedVariantIndex < 0)
         return;
 
-    char *text = NULL;
+    char *text = nullptr;
     if (!XmStringGetLtoR(cb->item, XmFONTLIST_DEFAULT_TAG, &text) || !text)
         return;
 
@@ -1600,11 +1600,11 @@ BuildFontListFromDescriptor(
         XFontStruct **outFontStruct )
 {
     if (outFontSet)
-        *outFontSet = NULL;
+        *outFontSet = nullptr;
     if (outFontStruct)
-        *outFontStruct = NULL;
+        *outFontStruct = nullptr;
     if (!descriptor || !descriptor->raw)
-        return NULL;
+        return nullptr;
 
     const char *raw = descriptor->raw;
     FontDebugLog("preview: raw=%s scalable=%d px=%d pt=%d resx=%s resy=%s",
@@ -1614,11 +1614,11 @@ BuildFontListFromDescriptor(
                  descriptor->pointSize,
                  descriptor->fields[8] ? descriptor->fields[8] : "?",
                  descriptor->fields[9] ? descriptor->fields[9] : "?");
-    Boolean looksLikeFontSet = (strchr(raw, ';') != NULL) || (strchr(raw, ':') != NULL);
+    Boolean looksLikeFontSet = (strchr(raw, ';') != nullptr) || (strchr(raw, ':') != nullptr);
     if (looksLikeFontSet) {
-        char **missing_list = NULL;
+        char **missing_list = nullptr;
         int missing_count = 0;
-        char *def_string = NULL;
+        char *def_string = nullptr;
         XFontSet font_set = XCreateFontSet(style.display, raw,
                                            &missing_list, &missing_count, &def_string);
         if (FontDebugEnabled() && missing_count > 0 && missing_list) {
@@ -1629,15 +1629,15 @@ BuildFontListFromDescriptor(
             XFreeStringList(missing_list);
         if (!font_set) {
             FontDebugLog("preview: failed to create fontset for %s", raw);
-            return NULL;
+            return nullptr;
         }
         if (outFontSet)
             *outFontSet = font_set;
         XmFontListEntry entry =
             XmFontListEntryCreate(FONT_LIST_TAG, XmFONT_IS_FONTSET, (XtPointer)font_set);
         if (!entry)
-            return NULL;
-        XmFontList fontList = XmFontListAppendEntry(NULL, entry);
+            return nullptr;
+        XmFontList fontList = XmFontListAppendEntry(nullptr, entry);
         XmFontListEntryFree(&entry);
         return fontList;
     }
@@ -1649,15 +1649,15 @@ BuildFontListFromDescriptor(
         XmFontListEntry entry =
             XmFontListEntryCreate(FONT_LIST_TAG, XmFONT_IS_FONT, (XtPointer)font);
         if (!entry)
-            return NULL;
-        XmFontList fontList = XmFontListAppendEntry(NULL, entry);
+            return nullptr;
+        XmFontList fontList = XmFontListAppendEntry(nullptr, entry);
         XmFontListEntryFree(&entry);
         return fontList;
     }
 
-    char **missing_list = NULL;
+    char **missing_list = nullptr;
     int missing_count = 0;
-    char *def_string = NULL;
+    char *def_string = nullptr;
     XFontSet font_set = XCreateFontSet(style.display, raw,
                                        &missing_list, &missing_count, &def_string);
     if (FontDebugEnabled() && missing_count > 0 && missing_list) {
@@ -1668,16 +1668,16 @@ BuildFontListFromDescriptor(
         XFreeStringList(missing_list);
     if (!font_set) {
         FontDebugLog("preview: failed to create fontset for %s", raw);
-        return NULL;
+        return nullptr;
     }
     if (outFontSet)
         *outFontSet = font_set;
     XmFontListEntry entry =
         XmFontListEntryCreate(FONT_LIST_TAG, XmFONT_IS_FONTSET, (XtPointer)font_set);
     if (!entry)
-        return NULL;
+        return nullptr;
 
-    XmFontList fontList = XmFontListAppendEntry(NULL, entry);
+    XmFontList fontList = XmFontListAppendEntry(nullptr, entry);
     XmFontListEntryFree(&entry);
     return fontList;
 }
@@ -1719,8 +1719,8 @@ RebuildFontListsForIndex(
     if (!desc)
         return;
 
-    XFontSet newSysFontSet = NULL;
-    XFontStruct *newSysFontStruct = NULL;
+    XFontSet newSysFontSet = nullptr;
+    XFontStruct *newSysFontStruct = nullptr;
     XmFontList newSysFont = BuildFontListFromDescriptor(desc, &newSysFontSet, &newSysFontStruct);
     if (newSysFont) {
         fontTrash[index].sysFont = style.xrdb.fontChoice[index].sysFont;
@@ -1731,8 +1731,8 @@ RebuildFontListsForIndex(
         style.xrdb.fontChoice[index].sysFontStruct = newSysFontStruct;
     }
 
-    XFontSet newUserFontSet = NULL;
-    XFontStruct *newUserFontStruct = NULL;
+    XFontSet newUserFontSet = nullptr;
+    XFontStruct *newUserFontStruct = nullptr;
     XmFontList newUserFont = BuildFontListFromDescriptor(desc, &newUserFontSet, &newUserFontStruct);
     if (newUserFont) {
         fontTrash[index].userFont = style.xrdb.fontChoice[index].userFont;
@@ -1816,7 +1816,7 @@ saveFonts(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.fontDialog != NULL) {
+    if (style.fontDialog != nullptr) {
         if (XtIsManaged(style.fontDialog))
           sprintf(bufr, "*Fonts.ismapped: True\n");
         else

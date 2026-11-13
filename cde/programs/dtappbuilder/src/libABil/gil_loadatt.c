@@ -100,9 +100,9 @@ typedef LOADATT_FUNC *LOADATT_FUNC_PTR;
 static int
 find_or_create_members(ABObj group, ABObj root, ISTRING_ARRAY * names)
 {
-    ISTRING             member_name = NULL;
-    ABObj 		member = NULL;
-    ABObj               memberParent = NULL;
+    ISTRING             member_name = nullptr;
+    ABObj 		member = nullptr;
+    ABObj               memberParent = nullptr;
     BOOL                group_reparented = FALSE;
     int                 i;
 
@@ -114,7 +114,7 @@ find_or_create_members(ABObj group, ABObj root, ISTRING_ARRAY * names)
                                  istr_string(member_name), AB_TYPE_UNDEF);
         memberParent = obj_get_parent(member);
         obj_reparent(member, group);
-        if ((!group_reparented) && (memberParent != NULL))
+        if ((!group_reparented) && (memberParent != nullptr))
         {
             group_reparented = TRUE;
             obj_reparent(group, memberParent);
@@ -180,7 +180,7 @@ set_children_accelerators(ABObj obj, ISTRING_ARRAY * strings)
         return rc;
     }
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN), i = 0;
-         (child_obj = trav_next(&trav)) != NULL; ++i)
+         (child_obj = trav_next(&trav)) != nullptr; ++i)
     {
         /* for some reason, missing accelerators are stored as "" */
         if ((int) istr_len(strings->strings[i]) > 0)
@@ -210,7 +210,7 @@ set_children_defaults(ABObj obj, BOOL_ARRAY * defaults)
         return rc;
     }
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN), i = 0;
-         (child_obj = trav_next(&trav)) != NULL; ++i)
+         (child_obj = trav_next(&trav)) != nullptr; ++i)
     {
         obj_set_is_default(child_obj, defaults->bools[i]);
     }
@@ -233,7 +233,7 @@ set_children_fgcolors(ABObj obj, ISTRING_ARRAY * colors)
         return 0;
     }
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN), i = 0;
-         (child_obj = trav_next(&trav)) != NULL; ++i)
+         (child_obj = trav_next(&trav)) != nullptr; ++i)
     {
         obj_set_fg_color(child_obj, istr_string(colors->strings[i]));
         istr_destroy(colors->strings[i]);
@@ -261,7 +261,7 @@ set_children_initially_selected(ABObj obj, BOOL_ARRAY * selects)
         return 0;
     }
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN), i = 0;
-         (child_obj = trav_next(&trav)) != NULL; ++i)
+         (child_obj = trav_next(&trav)) != nullptr; ++i)
     {
         obj_set_is_initially_selected(child_obj, selects->bools[i]);
     }
@@ -273,9 +273,9 @@ set_item_labels(ABObj obj, ISTRING_ARRAY * strings)
 {
     int                 num_strings = strings->count;
     int                 i = 0;
-    ABObj               item = NULL;
+    ABObj               item = nullptr;
     AB_TRAVERSAL        trav;
-    STRING		label = NULL;
+    STRING		label = nullptr;
 
     if (num_strings <= 0)
     {
@@ -286,16 +286,16 @@ set_item_labels(ABObj obj, ISTRING_ARRAY * strings)
         return 0;
     }
     for (trav_open(&trav, obj, AB_TRAV_ITEMS), i = 0;
-         (item = trav_next(&trav)) != NULL; ++i)
+         (item = trav_next(&trav)) != nullptr; ++i)
     {
 	label = istr_string(strings->strings[i]);
-	if ( (obj_is_menu_item(item)) && (label == NULL) )
+	if ( (obj_is_menu_item(item)) && (label == nullptr) )
 	{
 	    obj_set_label_type(item, AB_LABEL_SEPARATOR);
 	}
 	else
 	{
-	    if (label == NULL)
+	    if (label == nullptr)
 	    {
 		label = Util_empty_string;
 	    }
@@ -307,12 +307,12 @@ set_item_labels(ABObj obj, ISTRING_ARRAY * strings)
         {
 	    char	name[MAXPATHLEN+1];
 	    *name = 0;
-            obj_set_name_from_label(item, NULL);
+            obj_set_name_from_label(item, nullptr);
 
 	    /*
 	     * Append _item - this is what dtbuilder does
 	     */
-	    util_dassert(1, (obj_get_name(item) != NULL));
+	    util_dassert(1, (obj_get_name(item) != nullptr));
 	    util_strncpy(name, obj_get_name(item), MAXPATHLEN+1);
 	    strcat(name, "_item");
 	    obj_set_unique_name(item, name);
@@ -329,7 +329,7 @@ set_item_label_types(ABObj obj, LABEL_TYPE_ARRAY * label_types)
 {
     int                 num_types = label_types->count;
     int                 i = 0;
-    ABObj               item = NULL;
+    ABObj               item = nullptr;
     AB_TRAVERSAL        trav;
     AB_LABEL_TYPE	label_type = AB_LABEL_UNDEF;
 
@@ -342,7 +342,7 @@ set_item_label_types(ABObj obj, LABEL_TYPE_ARRAY * label_types)
         return 0;
     }
     for (trav_open(&trav, obj, AB_TRAV_ITEMS), i = 0;
-         (item = trav_next(&trav)) != NULL; ++i)
+         (item = trav_next(&trav)) != nullptr; ++i)
     {
 	label_type = label_types->label_types[i];
 
@@ -374,7 +374,7 @@ set_children_menu_names(ABObj obj, ISTRING_ARRAY * strings)
         return 0;
     }
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN), i = 0;
-         (child_obj = trav_next(&trav)) != NULL; ++i)
+         (child_obj = trav_next(&trav)) != nullptr; ++i)
     {
         obj_set_menu_name(child_obj, istr_string(strings->strings[i]));
         istr_destroy(strings->strings[i]);
@@ -424,7 +424,7 @@ load_events(FILE * inFile, AB_WHEN ** p)
 #define SIZE    (sizeof (AB_WHEN*))     /* array element size */
     int                 lth = 0;/* array length */
     int                 c;      /* array count */
-    ISTRING             s = NULL;       /* work string */
+    ISTRING             s = nullptr;       /* work string */
 
     if (!abio_get_list_begin(inFile))
     {
@@ -511,14 +511,14 @@ gilP_load_handlers(FILE * inFile, ISTRING_ARRAY * handlers)
 int
 gilP_load_name(FILE * inFile, ISTRING * name)
 {
-    ISTRING             string_name = NULL;
+    ISTRING             string_name = nullptr;
 
     if (!abio_gil_get_name(inFile, &string_name))
     {
         abil_print_load_err(ERR_WANT_NAME);
         return -1;
     }
-    if ((string_name != NULL) && (!ab_c_ident_is_ok(istr_string(string_name))))
+    if ((string_name != nullptr) && (!ab_c_ident_is_ok(istr_string(string_name))))
     {
         abil_print_load_err(ERR_BAD_IDENTIFIER);
         return -1;
@@ -722,7 +722,7 @@ gilP_load_strings(FILE * inFile, ISTRING_ARRAY * strings)
         {
             return rc;
         }
-        strings->strings[i] = (string == NULL ? istr_create("") : string);
+        strings->strings[i] = (string == nullptr ? istr_create("") : string);
     }
     strings->count = i;
 
@@ -754,7 +754,7 @@ load_att_anchor_object(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             anchor = NULL;
+    ISTRING             anchor = nullptr;
 
     if ((rc = gilP_load_name(inFile, &anchor)) < 0)
     {
@@ -795,7 +795,7 @@ load_att_background_color(FILE * inFile, ABObj obj, ABObj root_obj)
         abil_print_load_err(ERR_WANT_STRING);
         return -1;
     }
-    if (bg_color != NULL)
+    if (bg_color != nullptr)
     {
         obj_set_bg_color(obj, istr_string(bg_color));
         istr_destroy(bg_color);
@@ -809,7 +809,7 @@ static int
 load_att_busy_drop_glyph(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     int                 rc = 0;
-    ISTRING             glyph = NULL;
+    ISTRING             glyph = nullptr;
 
     if ((rc = gilP_load_string(inFile, &glyph)) < 0)
     {
@@ -1103,7 +1103,7 @@ load_att_events(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    AB_WHEN            *events = NULL;
+    AB_WHEN            *events = nullptr;
 
     /* do later - currently returns (AB_WHEN *) */
     if ((rc = load_events(inFile, &events)) < 0)
@@ -1115,12 +1115,12 @@ load_att_events(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_file_chooser_filter_pattern(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
 
-    if (tmp_str != NULL)
+    if (tmp_str != nullptr)
     {
         obj_set_filter_pattern(obj, istr_string(tmp_str));
     }
@@ -1132,7 +1132,7 @@ load_att_file_chooser_filter_pattern(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_file_chooser_match_glyph(FILE * inFile, ABObj obj, ABObj root_obj) 
 {
-    ISTRING              tmp_str = NULL; 
+    ISTRING              tmp_str = nullptr; 
     if (!abio_get_string(inFile, &tmp_str)) 
 	return (abil_print_load_err(ERR_WANT_STRING),-1);
 	
@@ -1145,7 +1145,7 @@ static int
 load_att_file_chooser_match_glyph_mask(
 			FILE * inFile, ABObj obj, ABObj root_obj) 
 {
-    ISTRING              tmp_str = NULL; 
+    ISTRING              tmp_str = nullptr; 
     if (!abio_get_string(inFile, &tmp_str)) 
 	return (abil_print_load_err(ERR_WANT_STRING),-1);
 	
@@ -1157,7 +1157,7 @@ load_att_file_chooser_match_glyph_mask(
 static int
 load_att_file_chooser_type(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_keyword(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_KEYWORD), -1);
@@ -1168,11 +1168,11 @@ load_att_file_chooser_type(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_foreground_color(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
-    if (tmp_str != NULL)
+    if (tmp_str != nullptr)
     {
         if ((obj_is_control(obj) && obj->parent) ||
             obj->type == AB_TYPE_TEXT_PANE)
@@ -1194,7 +1194,7 @@ load_att_foreground_color(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_group_type(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_keyword(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_KEYWORD), -1);
@@ -1224,7 +1224,7 @@ load_att_height(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_help(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     /* REMIND: what about help? */
     if (!abio_get_string(inFile, &tmp_str))
@@ -1272,7 +1272,7 @@ load_att_hspacing(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_icon_file(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
@@ -1284,11 +1284,11 @@ load_att_icon_file(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_icon_label(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
-    if (tmp_str != NULL)
+    if (tmp_str != nullptr)
     {
         obj_set_icon_label(obj, istr_string(tmp_str));
     }
@@ -1299,7 +1299,7 @@ load_att_icon_label(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_icon_mask_file(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     /* for base window - icon mask file */
     if (!abio_get_string(inFile, &tmp_str))
@@ -1315,13 +1315,13 @@ load_att_initial_list_glyphs(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ABObj               child = NULL;
+    ABObj               child = nullptr;
 
     if ((rc = load_att_choices(inFile, obj, root_obj)) < 0)
     {
         return rc;
     }
-    for (child = obj->first_child; child != NULL; child = child->next_sibling)
+    for (child = obj->first_child; child != nullptr; child = child->next_sibling)
     {
         child->label_type = AB_LABEL_GLYPH;
     }
@@ -1353,7 +1353,7 @@ load_att_initial_selections(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_initial_state(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
     AB_OBJECT_STATE	initial_state = AB_STATE_UNDEF;
 
     if (!abio_get_keyword(inFile, &tmp_str))
@@ -1396,7 +1396,7 @@ load_att_interfaces(FILE * inFile, ABObj obj, ABObj root_obj)
         return (abil_print_load_err(ERR_WANT_LIST), -1);
     }
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN), i = 0;
-         (child = trav_next(&trav)) != NULL; ++i)
+         (child = trav_next(&trav)) != nullptr; ++i)
     {
 	obj_set_is_defined(child, FALSE);	/* not read in, yet */
 	obj_set_type(child, AB_TYPE_MODULE);
@@ -1462,7 +1462,7 @@ load_att_initial_value(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_label(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
@@ -1487,7 +1487,7 @@ static int
 load_att_label_type(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     AB_LABEL_TYPE       label_type;
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     /* do later - ignore for now */
     if (!abio_get_keyword(inFile, &tmp_str))
@@ -1507,7 +1507,7 @@ static int
 load_att_layout_type(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     AB_ORIENTATION      orientation;
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     /*
      * for gauge, scrolling-list, choice, scale text-fields
@@ -1555,7 +1555,7 @@ load_att_mapped(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_max_tick_string(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
@@ -1594,7 +1594,7 @@ load_att_max_value(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_max_value_string(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
@@ -1670,14 +1670,14 @@ load_att_menu_item_defaults(FILE * inFile, ABObj obj, ABObj root_obj)
     int                 rc = 0; /* r turn code */
     BOOL_ARRAY          bools;
     int                 i;
-    ABObj               child = NULL;
+    ABObj               child = nullptr;
 
     if ((rc = gilP_load_bools(inFile, &bools)) < 0)
     {
         return rc;
     }
     obj_ensure_num_children(obj, bools.count);
-    for (i = 0, child = obj->first_child; child != NULL;
+    for (i = 0, child = obj->first_child; child != nullptr;
          ++i, child = child->next_sibling)
     {
         obj_set_is_initially_selected(child, bools.bools[i]);
@@ -1710,7 +1710,7 @@ load_att_menu_item_label_types(FILE * inFile, ABObj obj, ABObj root_obj)
         return rc;
     }
     obj_ensure_num_children(obj, ltypes.count);
-    for (child = obj->first_child, i = 0; child != NULL;
+    for (child = obj->first_child, i = 0; child != nullptr;
          child = child->next_sibling, ++i)
     {
         child->label_type = ltypes.label_types[i];
@@ -1738,7 +1738,7 @@ load_att_menu_item_states(FILE * inFile, ABObj obj, ABObj root_obj)
     {
         return ERR_NO_MEMORY;
     }
-    for (i = 0, child = obj->first_child; child != NULL;
+    for (i = 0, child = obj->first_child; child != nullptr;
          ++i, child = child->next_sibling)
     {
 	gilP_obj_set_initial_state(child, states.states[i]);
@@ -1771,7 +1771,7 @@ load_att_menu(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             menu_name = NULL;
+    ISTRING             menu_name = nullptr;
 
     if ((rc = gilP_load_name(inFile, &menu_name)) < 0)
     {
@@ -1786,7 +1786,7 @@ load_att_menu(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_menu_title(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
@@ -1801,7 +1801,7 @@ static int
 load_att_menu_type(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     AB_MENU_TYPE        tmp_menu_type;
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     /* can be command_menu, exclusive_menu and nonexclusive_menu */
     if (!abio_get_keyword(inFile, &tmp_str))
@@ -1820,7 +1820,7 @@ load_att_menu_type(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_min_tick_string(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
@@ -1843,7 +1843,7 @@ load_att_min_value(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_min_value_string(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
@@ -1885,8 +1885,8 @@ load_att_name(FILE * inFile, ABObj *pobj, ABObj root_obj)
 #define obj (*pobj)
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             name = NULL;
-    ABObj               old_obj = NULL;
+    ISTRING             name = nullptr;
+    ABObj               old_obj = nullptr;
 
     if ((rc = gilP_load_name(inFile, &name)) < 0)
     {
@@ -1895,7 +1895,7 @@ load_att_name(FILE * inFile, ABObj *pobj, ABObj root_obj)
     abil_loadmsg_set_object(istr_string(name));
 
     old_obj = obj_find_by_name(root_obj, istr_string(name));
-    if ((old_obj != NULL) && (old_obj != obj))
+    if ((old_obj != nullptr) && (old_obj != obj))
     {
         if (   (!obj_is_defined(old_obj)) 
 	    && (   (obj_get_type(old_obj) == AB_TYPE_UNDEF)
@@ -1933,12 +1933,12 @@ load_att_name(FILE * inFile, ABObj *pobj, ABObj root_obj)
 static int
 load_att_normal_drop_glyph(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_string(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_STRING), -1);
     istr_destroy(tmp_str);
-    tmp_str = NULL;
+    tmp_str = nullptr;
 
     return 0;
 }
@@ -1950,7 +1950,7 @@ static int
 load_att_orientation(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     AB_ORIENTATION      orientation;
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_keyword(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_KEYWORD), -1);
@@ -1969,8 +1969,8 @@ load_att_owner(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             owner_name = NULL;
-    ABObj               parent_obj = NULL;
+    ISTRING             owner_name = nullptr;
+    ABObj               parent_obj = nullptr;
     char                real_name[256];
 
     if ((rc = gilP_load_name(inFile, &owner_name)) < 0)
@@ -1978,7 +1978,7 @@ load_att_owner(FILE * inFile, ABObj obj, ABObj root_obj)
         return rc;
     }
 
-    if (owner_name == NULL)
+    if (owner_name == nullptr)
         return 0;               /* do nothing */
 
     parent_obj =
@@ -2038,7 +2038,7 @@ load_att_read_only(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_reference_point(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING              tmp_str = NULL;
+    ISTRING              tmp_str = nullptr;
 
     if (!abio_get_keyword(inFile, &tmp_str)) return
         abil_print_load_err(ERR_WANT_KEYWORD); 
@@ -2061,7 +2061,7 @@ load_att_resizable(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_row_alignment(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_keyword(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_KEYWORD), -1);
@@ -2081,16 +2081,16 @@ static int
 load_att_root_window(FILE * inFile, ABObj obj, ABObj root_obj)
 {
     int                 return_value = 0;
-    ISTRING             root_window_name = NULL;
-    ABObj               root_window = NULL;
+    ISTRING             root_window_name = nullptr;
+    ABObj               root_window = nullptr;
 
     gilP_load_name(inFile, &root_window_name);
 
-    if (root_window_name != NULL)
+    if (root_window_name != nullptr)
     {
         root_window = obj_scoped_find_or_create_undef(
                   root_obj, istr_string(root_window_name), AB_TYPE_BASE_WINDOW);
-        if (root_window == NULL)
+        if (root_window == nullptr)
         {
             abil_print_load_err(ERR_WANT_NAME);
             return_value = -1;
@@ -2316,7 +2316,7 @@ load_att_max_length(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_text_type(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
     AB_TEXT_TYPE        text_type;
 
     /* for alpha/numeric text-field */
@@ -2345,7 +2345,7 @@ load_att_ticks(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_title(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     /* for list title - internal */
     if (!abio_get_string(inFile, &tmp_str))
@@ -2361,7 +2361,7 @@ load_att_title(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_type(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
     AB_OBJECT_TYPE      obj_type = AB_TYPE_UNDEF;
 
     if (!abio_get_keyword(inFile, &tmp_str))
@@ -2411,7 +2411,7 @@ load_att_type(FILE * inFile, ABObj obj, ABObj root_obj)
 static int
 load_att_user_data(FILE * inFile, ABObj obj, ABObj root_obj)
 {
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     if (!abio_get_list(inFile, &tmp_str))
         return (abil_print_load_err(ERR_WANT_LIST), -1);
@@ -2576,7 +2576,7 @@ gilP_load_attribute_value(
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    LOADATT_FUNC       *func = NULL;
+    LOADATT_FUNC       *func = nullptr;
 
     if (abio_get_eof(inFile))
         return (abil_print_load_err(ERR_EOF), -1);
@@ -2800,7 +2800,7 @@ gilP_load_attribute_value(
         func = load_att_multiple_selections;
         break;
     case AB_GIL_NAME:
-        func = NULL;
+        func = nullptr;
         rc = load_att_name(inFile, &obj, root_obj);     /* special case */
         /* takes obj** */
         break;
@@ -2929,7 +2929,7 @@ gilP_load_attribute_value(
         return -1;
     }
 
-    if (func != NULL)
+    if (func != nullptr)
     {
         rc = func(inFile, obj, root_obj);
     }

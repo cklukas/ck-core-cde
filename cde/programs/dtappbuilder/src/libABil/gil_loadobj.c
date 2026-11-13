@@ -41,10 +41,10 @@ int
 gilP_load_object(FILE * inFile, ABObj parent)
 {
     ABObj obj = obj_create(AB_TYPE_UNDEF, parent);
-    abil_loadmsg_set_object(NULL);
-    abil_loadmsg_set_att(NULL);
-    abil_loadmsg_set_action_att(NULL);
-    if (obj == NULL)
+    abil_loadmsg_set_object(nullptr);
+    abil_loadmsg_set_att(nullptr);
+    abil_loadmsg_set_action_att(nullptr);
+    if (obj == nullptr)
     {
         abil_print_load_err(ERR_NO_MEMORY);
     }
@@ -86,11 +86,11 @@ gilP_load_object2(FILE * inFile, ABObj obj, ABObj parent)
                 if (obj_get_num_children(obj) == 0)
                 {
                     obj_destroy(obj);
-                    obj = NULL;
+                    obj = nullptr;
                     goto epilogue;
                 }
             }
-            if (obj != NULL)
+            if (obj != nullptr)
             {
 
                 /*

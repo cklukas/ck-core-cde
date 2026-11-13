@@ -106,7 +106,7 @@ CreateTempFile (
     int		 len;
     int		 fd;
 
-    if (dir == NULL || *dir == '\0')
+    if (dir == nullptr || *dir == '\0')
 	dir = P_tmpdir;
 
     len = snprintf(path, sizeof(path), "%s/dtXXXXXX", dir);
@@ -118,7 +118,7 @@ CreateTempFile (
 	return -1;
 
     name = strdup(path);
-    if (name == NULL)
+    if (name == nullptr)
       {
 	close(fd);
 	unlink(path);
@@ -153,7 +153,7 @@ _DtCvRunInterp(
     FILE        *myFile;
     int          size;
     int          writeBufSize = 0;
-    char        *writeBuf     = NULL;
+    char        *writeBuf     = nullptr;
     char        *ptr;
     char        *fileName;
     char        *newData;
@@ -164,7 +164,7 @@ _DtCvRunInterp(
      * ask for permission to run the interperator command.
      */
     newData = data;
-    if (filter_exec != NULL && (*filter_exec)(client_data,data,&newData) != 0)
+    if (filter_exec != nullptr && (*filter_exec)(client_data,data,&newData) != 0)
 	return -1;
 
     /*
@@ -243,7 +243,7 @@ _DtCvRunInterp(
      * create a file handler for the pipe.
      */
     myBufFile = _DtHelpCeCreatePipeBufFile(myFile);
-    if (myBufFile == NULL)
+    if (myBufFile == nullptr)
       {
         (void) pclose(myFile); /* don't check for error, it was popen'd */
 	unlink(fileName);
@@ -266,12 +266,12 @@ _DtCvRunInterp(
             char *newBuf;
 
             size = strlen(readBuf);
-            if (writeBuf == NULL)
+            if (writeBuf == nullptr)
                 newBuf = (char *) malloc (size + 1);
             else
                 newBuf = (char *) realloc (writeBuf, writeBufSize + size + 1);
 
-            if (newBuf != NULL)
+            if (newBuf != nullptr)
               {
                 writeBuf = newBuf;
                 writeBuf[writeBufSize] = '\0';
@@ -290,10 +290,10 @@ _DtCvRunInterp(
 
     if (result == -1)
       {
-	if (writeBuf != NULL)
+	if (writeBuf != nullptr)
 	    free(writeBuf);
 	
-	writeBuf = NULL;
+	writeBuf = nullptr;
       }
     else
 	result = 0;

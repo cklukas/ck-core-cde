@@ -231,13 +231,13 @@ DtClockClassRec dtClockClassRec =
 		(WidgetClass) &dtControlClassRec, /* superclass	*/
 		"Clock",			/* class_name		*/
 		sizeof (DtClockRec),		/* widget_size		*/
-		NULL,				/* class_initialize	*/
-		NULL,				/* class_part_initialize*/
+		nullptr,				/* class_initialize	*/
+		nullptr,				/* class_part_initialize*/
 		False,				/* class_inited		*/
 		Initialize,			/* initialize		*/
-		NULL,				/* initialize_hook	*/
-		NULL,				/* realize		*/
-		NULL,				/* actions		*/
+		nullptr,				/* initialize_hook	*/
+		nullptr,				/* realize		*/
+		nullptr,				/* actions		*/
 		0,				/* num_actions		*/
 		resources,			/* resources		*/
 		XtNumber (resources),		/* num_resources	*/
@@ -249,17 +249,17 @@ DtClockClassRec dtClockClassRec =
 		Destroy,			/* destroy		*/	
 		Resize,				/* resize		*/
 		XtInheritExpose,		/* expose		*/	
-		NULL,				/* set_values		*/	
-		NULL,				/* set_values_hook	*/
+		nullptr,				/* set_values		*/	
+		nullptr,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
-		NULL,				/* get_values_hook	*/
-		NULL,				/* accept_focus		*/	
+		nullptr,				/* get_values_hook	*/
+		nullptr,				/* accept_focus		*/	
 		XtVersion,			/* version		*/
-		NULL,				/* callback private	*/
-		NULL,				/* tm_table		*/
-		NULL,				/* query_geometry	*/
-		NULL,				/* display_accelerator	*/
-		NULL,				/* extension		*/
+		nullptr,				/* callback private	*/
+		nullptr,				/* tm_table		*/
+		nullptr,				/* query_geometry	*/
+		nullptr,				/* display_accelerator	*/
+		nullptr,				/* extension		*/
 	},
 
 	/*	XmGadget Part
@@ -270,10 +270,10 @@ DtClockClassRec dtClockClassRec =
 (XtActionProc)	XmInheritArmAndActivate,	/* arm_and_activate	*/
 (XmWidgetDispatchProc)	XmInheritInputDispatch,	/* input_dispatch	*/
 		XmInheritVisualChange,		/* visual_change	*/
-		NULL,				/* get_resources	*/
+		nullptr,				/* get_resources	*/
 		0,				/* num_get_resources	*/
 		XmInheritCachePart,		/* class_cache_part	*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 	/*	DtIcon Part
@@ -285,22 +285,22 @@ DtClockClassRec dtClockClassRec =
 		DtInheritCallCallback,		/* call_callback	*/
 		UpdateGCs,			/* update_gcs		*/
 		False,				/* optimize_redraw	*/
-		NULL,				/* class_cache_part	*/
-		NULL,				/* extension		*/
+		nullptr,				/* class_cache_part	*/
+		nullptr,				/* extension		*/
 	},
 
 	/*	DtClock Part
 	*/
 	{
-		NULL,				/* class_cache_part	*/
-		NULL,				/* extension		*/
+		nullptr,				/* class_cache_part	*/
+		nullptr,				/* extension		*/
 	},
 
 	/*	DtControl Part
 	*/
 	{
-		NULL,				/* class_cache_part	*/
-		NULL,				/* extension		*/
+		nullptr,				/* class_cache_part	*/
+		nullptr,				/* extension		*/
 	}
 };
 
@@ -662,7 +662,7 @@ Initialize(
 			s_t =		G_ShadowThickness (new);
 	XmManagerWidget	mw = (XmManagerWidget) XtParent (new);
 	EventMask	mask;
-	String		name = NULL;
+	String		name = nullptr;
 
 /*	Set width and height.
 */
@@ -918,7 +918,7 @@ Draw(
 	   
    /*	Paint pixmap.
     */
-       if ((gc != NULL) && (pix != XmUNSPECIFIED_PIXMAP))
+       if ((gc != nullptr) && (pix != XmUNSPECIFIED_PIXMAP))
 	   XCopyArea (d, pix, drawable, gc, 0, 0,
 			   width, height, x + p_x, y + p_y);
        }
@@ -928,7 +928,7 @@ Draw(
 	   if (g->clock.numseg != 0)
 		   EraseHands (g, (struct tm *) 0);
 
-	   ClockTick ((XtPointer)g, (XtIntervalId*)NULL);
+	   ClockTick ((XtPointer)g, (XtIntervalId*)nullptr);
 
    /*	Draw shadow.
    */

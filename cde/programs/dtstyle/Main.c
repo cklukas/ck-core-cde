@@ -151,7 +151,7 @@ static void WaitChildDeath(int signal_number);
 /*++++++++++++++++++++++++++++++++++++++*/
 static XrmOptionDescRec option_list[] =
 {
-   {  "-session",  "session",    XrmoptionSepArg,  NULL  },
+   {  "-session",  "session",    XrmoptionSepArg,  nullptr  },
 };
 
 /*++++++++++++++++++++++++++++++++++++++*/
@@ -204,7 +204,7 @@ CenterMsgCB(
 
     /* figure out what to use as "visual" parent */
     shell = (Widget)client_data;
-    if (shell == NULL)
+    if (shell == nullptr)
     {
         if (!style.errParent || !XtParent(style.errParent) || 
 	    !XtIsManaged(style.errParent))
@@ -251,7 +251,7 @@ ErrDialog(
 
     style.errParent = visualParent;
 
-    if (style.errDialog == NULL)     /* create it */
+    if (style.errDialog == nullptr)     /* create it */
     {
         ok = XmStringCreateLocalized((String) _DtOkString);
 
@@ -263,9 +263,9 @@ ErrDialog(
         XtSetArg (args[n], XmNdefaultPosition, False);                      n++;
         style.errDialog = XmCreateErrorDialog(style.shell,"ErrorNotice",args,n);
 
-        XtAddCallback (style.errDialog, XmNokCallback, UnmanageCB, NULL);
-        XtAddCallback (style.errDialog, XmNcancelCallback, UnmanageCB, NULL);
-        XtAddCallback (style.errDialog, XmNmapCallback, CenterMsgCB, NULL);
+        XtAddCallback (style.errDialog, XmNokCallback, UnmanageCB, nullptr);
+        XtAddCallback (style.errDialog, XmNcancelCallback, UnmanageCB, nullptr);
+        XtAddCallback (style.errDialog, XmNmapCallback, CenterMsgCB, nullptr);
         XtUnmanageChild ( XmMessageBoxGetChild (style.errDialog,
                                                 XmDIALOG_CANCEL_BUTTON));
         XtUnmanageChild ( XmMessageBoxGetChild (style.errDialog,
@@ -289,7 +289,7 @@ ErrDialog(
     /* free the compound string */
     XmStringFree (style.tmpXmStr);
 
-    if (XtIsManaged(style.errParent) || XtParent(style.errParent) == NULL)
+    if (XtIsManaged(style.errParent) || XtParent(style.errParent) == nullptr)
     {
         XtManageChild(style.errDialog);
         /* ring the bell (PM behavior) */
@@ -298,7 +298,7 @@ ErrDialog(
     else
     {
         XtAddEventHandler(XtParent(style.errParent), StructureNotifyMask, 0,
-                          errParentMap, NULL);
+                          errParentMap, nullptr);
     }
 
 }
@@ -318,7 +318,7 @@ errParentMap(
         /* ring the bell (PM behavior) */
         XBell(style.display, 0);
         XtRemoveEventHandler(XtParent(style.errParent), StructureNotifyMask,
-                             0, errParentMap, NULL);
+                             0, errParentMap, nullptr);
     }
 }
 
@@ -338,13 +338,13 @@ InfoDialog(
 {
     int             n;
     Arg             args[10];
-    static XmString ok = NULL;
+    static XmString ok = nullptr;
     Widget          w;
 
     /* create the compound string */
     style.tmpXmStr = CMPSTR(infoString);
 
-    if (ok == NULL)
+    if (ok == nullptr)
 	ok = CMPSTR((String) _DtOkString);
 
     /* create it */
@@ -358,7 +358,7 @@ InfoDialog(
     if (unmapParent)
         XtAddCallback (w, XmNokCallback, DestroyCB, parent);
     else
-        XtAddCallback (w, XmNokCallback, DestroyCB, NULL);
+        XtAddCallback (w, XmNokCallback, DestroyCB, nullptr);
     XtUnmanageChild ( XmMessageBoxGetChild(w, XmDIALOG_CANCEL_BUTTON) );
     XtUnmanageChild ( XmMessageBoxGetChild(w, XmDIALOG_HELP_BUTTON) );
 
@@ -400,7 +400,7 @@ DestroyCB(
         XtPointer call_data )
 {
   XtDestroyWidget(XtParent(w));
-  if (client_data != NULL)
+  if (client_data != nullptr)
       XtUnmanageChild((Widget)client_data); 
 }
 
@@ -462,7 +462,7 @@ main(
     XPropertyEvent *pEvent=(XPropertyEvent *)&event;
     long            mwmFunc;
     Boolean         useMaskRtn, useIconFileCacheRtn;    
-    char           *dirs = NULL;
+    char           *dirs = nullptr;
     char           *string;
 	Visual         *visual;
 
@@ -471,7 +471,7 @@ malloc_check(1);
 malloc_trace(0);
 #endif
 
-    XtSetLanguageProc(NULL, NULL, NULL);
+    XtSetLanguageProc(nullptr, nullptr, nullptr);
     _DtEnvControl(DT_ENV_SET); 
     
 
@@ -495,26 +495,26 @@ malloc_trace(0);
     style.colormap   = DefaultColormap(style.display, style.screenNum);
     style.root       = DefaultRootWindow(style.display);
     style.execName   = argv[0];
-    style.errDialog  = NULL;
-    style.tmpXmStr   = NULL;
+    style.errDialog  = nullptr;
+    style.tmpXmStr   = nullptr;
     {
         const char *home = getenv("HOME");
 
-        if (home == NULL)
+        if (home == nullptr)
             home = "";
         style.home = (char *) XtMalloc(strlen(home) + 1);
         strcpy(style.home, home);
     }
-    style.colorDialog = NULL;
-    style.backdropDialog = NULL;
-    style.fontDialog = NULL;
-    style.kbdDialog = NULL;
-    style.mouseDialog = NULL;
-    style.audioDialog = NULL;
-    style.screenDialog = NULL;
-    style.startupDialog = NULL;
-    style.dtwmDialog = NULL;
-    style.i18nDialog = NULL;
+    style.colorDialog = nullptr;
+    style.backdropDialog = nullptr;
+    style.fontDialog = nullptr;
+    style.kbdDialog = nullptr;
+    style.mouseDialog = nullptr;
+    style.audioDialog = nullptr;
+    style.screenDialog = nullptr;
+    style.startupDialog = nullptr;
+    style.dtwmDialog = nullptr;
+    style.i18nDialog = nullptr;
 	visual = XDefaultVisual(style.display,style.screenNum);
 	style.visualClass = visual->class;
     
@@ -526,7 +526,7 @@ malloc_trace(0);
 
     if (_DtGetLock (style.display, STYLE_LOCK) == 0)
     {
-        _DtSimpleError (progName, DtError, NULL, "%s",
+        _DtSimpleError (progName, DtError, nullptr, "%s",
 	     ((char *)GETMESSAGE(2, 5, "Style Manager is already running, second attempt aborted.")));
         exit(1);
     }
@@ -540,7 +540,7 @@ malloc_trace(0);
     XtAppSetErrorHandler(XtWidgetToApplicationContext(style.shell),
                          ToolkitErrorHandler);
     XtAddEventHandler(style.shell, StructureNotifyMask, 0,
-                         MwmReparentNotify, NULL);
+                         MwmReparentNotify, nullptr);
 
     /* set up resolution dependent layout variables */
     switch (_DtGetDisplayResolution(style.display, style.screenNum))
@@ -573,7 +573,7 @@ malloc_trace(0);
     sprintf(string, "%s/.dt/backdrops:", style.home);
 
     dirs = (char *)XtCalloc(1, strlen("/etc/dt/backdrops:/usr/dt/backdrops") + 
-			    (style.xrdb.backdropDir == NULL ? 2 :
+			    (style.xrdb.backdropDir == nullptr ? 2 :
 			    strlen(style.xrdb.backdropDir)) + 
 			    strlen(string) + 2);
   
@@ -598,7 +598,7 @@ malloc_trace(0);
     /* if this is started from save session we need to set up the BMS
        first, otherwise do it after making the window. (for user perception
        for how long it takes for the dtstyle to come up) */
-    if(style.xrdb.session != NULL) {
+    if(style.xrdb.session != nullptr) {
       DtInitialize (style.display, style.shell, progName, progName);
       /*Restore a session or build and display the main Window.*/
       if(!restoreSession(style.shell,style.xrdb.session))
@@ -649,7 +649,7 @@ ErrorHandler(
   char errmsg[_DTSTYLE_BUFSIZE];
 
   _DtPrintDefaultErrorSafe(disp, event, errmsg, _DTSTYLE_BUFSIZE);
-  _DtSimpleError(progName, DtWarning, NULL, errmsg, NULL);
+  _DtSimpleError(progName, DtWarning, nullptr, errmsg, nullptr);
 
    /* We do not want to exit here lets try to continue... */
   return 1;
@@ -688,8 +688,8 @@ ToolkitErrorHandler(
 
 {
     if (message)
-        _DtSimpleError(progName, DtError, NULL, message, NULL);
-    _DtSimpleError (progName, DtError, NULL, 
+        _DtSimpleError(progName, DtError, nullptr, message, nullptr);
+    _DtSimpleError (progName, DtError, nullptr, 
         GETMESSAGE(2, 6, "An X Toolkit error occurred... Exiting.\n"));
     exit (1);
 }
@@ -846,7 +846,7 @@ NewAddDirectories(
 #endif
 
     /* initialize the directorys list in the resource */
-    if(style.xrdb.paletteDir != NULL)
+    if(style.xrdb.paletteDir != nullptr)
       AddDirectories(style.xrdb.paletteDir);
     else
       style.count++;
@@ -1087,7 +1087,7 @@ static void
 ExitSignalHandler(int signal_number)
 {
   (void) signal_number;
-  activateCB_exitBtn(NULL, NULL, NULL);
+  activateCB_exitBtn(nullptr, nullptr, nullptr);
 }
 
 static void

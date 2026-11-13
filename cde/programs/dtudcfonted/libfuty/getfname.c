@@ -97,7 +97,7 @@ int 	*letter)	/* set "letter size" (output) */
 	str_dot = strchr( size_str, '.');
 	/* str_end = strchr( size_str, '\0'); */
 
-	if ( str_dot == NULL) {
+	if ( str_dot == nullptr) {
 		/* change a size of "character size"*/
 		if (falcom_atoi( size_str, '\0', &bdy ) ==-1) {
 			return	-1;
@@ -157,7 +157,7 @@ static int
 falcom_cr_to_null(char *buf)
 {
 	buf = strchr( buf, '\n');
-	if (buf != NULL) {
+	if (buf != nullptr) {
 		*buf = '\0';
 	}
 	return	0;
@@ -190,9 +190,9 @@ GetDefaultFile(
 
 	GETLISTFILEPATH( locale, fal_search_path, uflist_d, uflist_c, uflist_l, UDFLIST_DEF ) ;
 
-	if ( ( fp = fopen( uflist_l, "r" ) ) == NULL ) {
-	    if ( ( fp = fopen( uflist_c, "r" ) ) == NULL ) {
-		if ( ( fp = fopen( uflist_d, "r" ) ) == NULL ) {
+	if ( ( fp = fopen( uflist_l, "r" ) ) == nullptr ) {
+	    if ( ( fp = fopen( uflist_c, "r" ) ) == nullptr ) {
+		if ( ( fp = fopen( uflist_d, "r" ) ) == nullptr ) {
 		    return  FAL_ERROR;
 		}
 	    }
@@ -219,7 +219,7 @@ get_default_file(
 	ret = 0;
 
 	/* read from a file */
-	while( fgets(buf, BUFSIZE, fp) != (char *)NULL ) {
+	while( fgets(buf, BUFSIZE, fp) != (char *)nullptr ) {
 
 		falcom_cr_to_null( buf );
 		if ((buf[0] == '#') || (buf[0] == '\0')) {
@@ -297,7 +297,7 @@ falcom_get_base_name( char *str /* a full path character of a file name */ )
 	char	*str_slash;
 
 	str_slash = strrchr( str, '/');
-	if ( str_slash == NULL ) {
+	if ( str_slash == nullptr ) {
 		return	str;
 	}
 	return	++str_slash;
@@ -544,11 +544,11 @@ ErrMsgTable_FalGetFontList(
 {
 	char	*fontsdir, *locale ;
 
-	if( (locale = (char *)getenv( "LANG" )) == NULL ){
+	if( (locale = (char *)getenv( "LANG" )) == nullptr ){
 	    locale = "C" ;
 	}
 
-	if( (fontsdir = (char *)getenv( "DTUDCFONTS" )) == NULL ) {
+	if( (fontsdir = (char *)getenv( "DTUDCFONTS" )) == nullptr ) {
 	    fontsdir = DTUDCFONTSLISTDIR ;
 	}
 	switch( utyerr ) {
@@ -628,7 +628,7 @@ fal_cut_tailslash( char *name )
 	char *p;
 
 	p = strrchr( name, '\0');
-	if (p == NULL) {
+	if (p == nullptr) {
 		return;
 	}
 	for (p-- ; (p>=name) && (*p == '/') ; p--) {
@@ -655,14 +655,14 @@ GetRealFileName( char	*name )
 
 	struct stat st;
 
-	AllocString( ret_name, name, NULL ) ;
+	AllocString( ret_name, name, nullptr ) ;
 	/* strcpy( ret_name, name ) ; */
 	fal_cut_tailslash( ret_name ); /* for example /tmp/aa/ --> /tmp/aa  */
 
 	while ( 1 ) {
 		if ( lstat( ret_name, &st ) == -1) {
 			FreeString( ret_name ) ;
-			return	NULL;
+			return	nullptr;
 		}
 		errno = 0;
 		if ( ( len = readlink( ret_name, link_name, BUFSIZE ) ) == -1 ) {
@@ -671,31 +671,31 @@ GetRealFileName( char	*name )
 				/* return( strdup( ret_name ) ) ; */
 			} else {
 				FreeString( ret_name ) ;
-				return	NULL;
+				return	nullptr;
 			}
 		}
 		link_name[len-1] = 0;
 		if ( link_name[0] == '/' ) {
 			/* strcpy( ret_name, link_name ) ; */
 			FreeString( ret_name ) ;
-			AllocString( ret_name, link_name, NULL ) ;
+			AllocString( ret_name, link_name, nullptr ) ;
 		} else {
 			char	*slash;
 
 			slash = strrchr( ret_name, '/' );
-			if (slash != NULL) {
+			if (slash != nullptr) {
 				*slash = '\0';
 				fal_cut_tailslash( ret_name );
-				ResizeString( ret_name, NULL );
-				AddString(ret_name, "/", NULL);
+				ResizeString( ret_name, nullptr );
+				AddString(ret_name, "/", nullptr);
 			} else {
 				/* ret_name[0] = '\0' ; */
 				FreeString( ret_name ) ;
-				AllocString(ret_name, "/", NULL);
+				AllocString(ret_name, "/", nullptr);
 			}
 			/* strcat( ret_name, "/" ) ;
 			strcat( ret_name, link_name ) ; */
-			AddString( ret_name, link_name, NULL ) ;
+			AddString( ret_name, link_name, nullptr ) ;
 		}
 	}
 }
@@ -847,18 +847,18 @@ GetUdcRegion(
 	FalFontData	fdata ;
 	char	*locale, *char_set, *tmp_gpf ;
 
-	if( (locale = (char *)getenv( "LANG" )) == NULL ){
+	if( (locale = (char *)getenv( "LANG" )) == nullptr ){
 	    locale = "C" ;
 	}
 	/* parameter check */
-	if( gpf_file == NULL || gr == NULL ) {
+	if( gpf_file == nullptr || gr == nullptr ) {
 		USAGE1("%s : null parameters.\n", com);
 		return( -1 ) ;
 	}
 
 	/* get font properties */
 	tmp_gpf = (char *)GetRealFileName( gpf_file ) ;
-	if( tmp_gpf == NULL ){
+	if( tmp_gpf == nullptr ){
 		return -1 ;
 	}
 	if( falReadFontProp( tmp_gpf, FAL_FONT_PRM, &fdata, 1 ) ) {
@@ -898,7 +898,7 @@ DispUdcCpArea( FILE	*fp )
 	int		num_cr ;
 	char		*locale ;
 
-	if( (locale = (char *)getenv( "LANG" )) == NULL ){
+	if( (locale = (char *)getenv( "LANG" )) == nullptr ){
 	    locale = "C" ;
 	}
 	memset( &fdata, 0, sizeof(FalFontData) ) ;
@@ -952,17 +952,17 @@ GetUdcFontName(
 	unsigned int	getstat;
 	int	fd[2];
 
-	p = tmp_font = NULL ;
+	p = tmp_font = nullptr ;
 	/*
 	 * get temorary file
 	 */
 	memset( &head, 0, sizeof(struct ptobhead) ) ;
 	if( gpf_file ){
 	    head.snf_file = GetRealFileName( gpf_file ) ;
-	    if( head.snf_file == NULL )	return STAT_ERROR ;
+	    if( head.snf_file == nullptr )	return STAT_ERROR ;
 	}else if( bdf_file ){
 	    head.bdf_file = GetRealFileName( bdf_file ) ;
-	    if( head.bdf_file == NULL )	return STAT_ERROR ;
+	    if( head.bdf_file == nullptr )	return STAT_ERROR ;
 	}else{
 	    return STAT_ERROR ;
 	}
@@ -970,7 +970,7 @@ GetUdcFontName(
 	/*
 	 * write BDF header into FIFO
 	 */
-	if (head.snf_file != NULL) {
+	if (head.snf_file != nullptr) {
 	    if (pipe(fd) != 0) {
 		return	PIPE_ERROR;
 	    }
@@ -991,14 +991,14 @@ GetUdcFontName(
 		break;
 	    }
 	    close(fd[1]);
-	    if((fp = (FILE *)fdopen(fd[0], "r")) == NULL) {
+	    if((fp = (FILE *)fdopen(fd[0], "r")) == nullptr) {
 		close( fd[0] );
 		kill( chld_pid, SIGKILL );
 		WaitID( chld_pid, chld_stat ) ;
 		return	FDOPEN_ERROR;
 	    }
 	} else {
-	    if ((fp = fopen(head.bdf_file, "r")) == NULL) {
+	    if ((fp = fopen(head.bdf_file, "r")) == nullptr) {
 		return(BDF_OPEN_HEAD);
 	    }
 	}
@@ -1008,9 +1008,9 @@ GetUdcFontName(
 	 */
 	getstat = 0 ;
 	while ( 1 ) {
-	    if (fgets(readbuf, BUFSIZE, fp) == NULL) {
+	    if (fgets(readbuf, BUFSIZE, fp) == nullptr) {
 		fclose( fp );
-		if (head.snf_file != NULL) {
+		if (head.snf_file != nullptr) {
 		    kill( chld_pid, SIGKILL );
 		    WaitID( chld_pid, chld_stat ) ;
 		}
@@ -1021,7 +1021,7 @@ GetUdcFontName(
 
 	    if (!strncmp( p, "ENDPROPERTIES", strlen("ENDPROPERTIES") )) {
 		fclose( fp );
-		if (head.snf_file != NULL) {
+		if (head.snf_file != nullptr) {
 		    kill( chld_pid, SIGKILL );
 		    WaitID( chld_pid, chld_stat ) ;
 		}
@@ -1039,7 +1039,7 @@ GetUdcFontName(
 		snprintf(fntbuf, sizeof(fntbuf), "%s", sp) ;
 		getstat |= 0x01 ;
 		fclose( fp );
-		if (head.snf_file != NULL) {
+		if (head.snf_file != nullptr) {
 		    kill( chld_pid, SIGKILL );
 		    WaitID( chld_pid, chld_stat ) ;
 		}
@@ -1054,7 +1054,7 @@ GetUdcFontName(
 	/*
 	 * dup font name
 	 */
-	if( (tmp_font = (char *)strdup( fntbuf )) == NULL ){
+	if( (tmp_font = (char *)strdup( fntbuf )) == nullptr ){
 	    return MALLOC_ERROR ;
 	}
 	*fontname = tmp_font ;

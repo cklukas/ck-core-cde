@@ -96,10 +96,10 @@ static	void		DefCvsMetrics(
 static _DtCvVirtualInfo	MyVirtInfo =
   {
 	DefCvsMetrics,	/* void            (*_CEGet_DtCvMetrics)(); */
-	NULL,		/* void            (*_DtCvRenderElem)(); */
-	NULL, /* DefCvsStrWidth, _DtCvUnit (*_DtCvGetElemWidth)(); */
-	NULL, /* DefCvsFontMetrics, void   (*_DtCvGetFontMetrics)(); */
-	NULL,		/* VStatus         (*_DtCvBuildSelection)(); */
+	nullptr,		/* void            (*_DtCvRenderElem)(); */
+	nullptr, /* DefCvsStrWidth, _DtCvUnit (*_DtCvGetElemWidth)(); */
+	nullptr, /* DefCvsFontMetrics, void   (*_DtCvGetFontMetrics)(); */
+	nullptr,		/* VStatus         (*_DtCvBuildSelection)(); */
   };
 
 static	const _DtCvSpaceMetrics	defLinkMetrics = { 0, 0, 0, 0 };
@@ -172,12 +172,12 @@ _DtHelpCeGetVolumeTitle (
     /*
      * set up my UI information
      */
-    myUiInfo.load_graphic = NULL;
-    myUiInfo.resolve_spc  = NULL;
-    myUiInfo.load_font    = NULL;
-    myUiInfo.destroy_region = NULL;
-    myUiInfo.exec_filter  = NULL;
-    myUiInfo.client_data  = NULL;
+    myUiInfo.load_graphic = nullptr;
+    myUiInfo.resolve_spc  = nullptr;
+    myUiInfo.load_font    = nullptr;
+    myUiInfo.destroy_region = nullptr;
+    myUiInfo.exec_filter  = nullptr;
+    myUiInfo.client_data  = nullptr;
     /* since we're going for a string, set avg_char width to 1 */
     myUiInfo.line_width   = 0;
     myUiInfo.line_height  = 0;
@@ -236,7 +236,7 @@ _DtHelpCeGetAsciiVolumeAbstract (
       }
 
     *retAbs = _DtHelpCeGetSdlVolumeAsciiAbstract(volume);
-    if (*retAbs == NULL)
+    if (*retAbs == nullptr)
       {
 	_DtHelpProcessUnlock();
         return (-1);
@@ -259,7 +259,7 @@ _DtHelpCeGetAsciiVolumeAbstract (
 CanvasHandle
 _DtHelpCeCreateDefCanvas (void)
 {
-    return (_DtCanvasCreate(MyVirtInfo, NULL));
+    return (_DtCanvasCreate(MyVirtInfo, nullptr));
 
 } /* End _DtHelpCeCreateDefCanvas */
 

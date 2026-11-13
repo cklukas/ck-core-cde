@@ -56,7 +56,7 @@ static void block_SIGCLD( void )
 
     sigemptyset( &newset );
     sigaddset( &newset, SIGCHLD );
-    rtn = sigprocmask( SIG_BLOCK, &newset, (sigset_t *) NULL );
+    rtn = sigprocmask( SIG_BLOCK, &newset, (sigset_t *) nullptr );
 }
 
 static void unblock_SIGCLD( void )
@@ -66,7 +66,7 @@ static void unblock_SIGCLD( void )
 
     sigemptyset( &newset );
     sigaddset( &newset, SIGCHLD );
-    rtn = sigprocmask( SIG_UNBLOCK, &newset, (sigset_t *) NULL );
+    rtn = sigprocmask( SIG_UNBLOCK, &newset, (sigset_t *) nullptr );
 }
 
 /********************************************************************
@@ -81,7 +81,7 @@ XpPdmServiceRec *find_rec( Window requestor )
 
 
     if (!requestor)
-	return( (XpPdmServiceRec *) NULL );
+	return( (XpPdmServiceRec *) nullptr );
 
     /*
      * See if the record already exists.
@@ -145,7 +145,7 @@ XpPdmServiceRec *find_rec_by_mbox_win( Window window )
 
 
     if (!window)
-	return( (XpPdmServiceRec *) NULL );
+	return( (XpPdmServiceRec *) nullptr );
 
     /*
      * See if the record already exists.
@@ -155,7 +155,7 @@ XpPdmServiceRec *find_rec_by_mbox_win( Window window )
 	    return( g.serviceRecs[i] );
     }
 
-    return( (XpPdmServiceRec *) NULL );
+    return( (XpPdmServiceRec *) nullptr );
 }
 
 

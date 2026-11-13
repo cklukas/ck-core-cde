@@ -49,7 +49,7 @@ static int signal_is_blocked(int sig)
 {
   sigset_t current;
 
-  sigprocmask(SIG_BLOCK, NULL, &current);
+  sigprocmask(SIG_BLOCK, nullptr, &current);
   return(sigismember(&current, sig));
 }
 
@@ -100,7 +100,7 @@ static void dispatch(struct svc_req *rq, SVCXPRT *transp)
 
   switch(rq->rq_proc) {
   case NULLPROC:
-    svc_sendreply(transp, (xdrproc_t)xdr_void, NULL);
+    svc_sendreply(transp, (xdrproc_t)xdr_void, nullptr);
     break;
   case PROC_WORK:
     work();
@@ -139,7 +139,7 @@ static unsigned short start_server(void)
   }
   getsockname(sock, (struct sockaddr *)&addr, &length);
   transp = svcudp_create(sock);
-  if(transp == NULL || !svc_register(transp, TEST_PROGRAM, TEST_VERSION,
+  if(transp == nullptr || !svc_register(transp, TEST_PROGRAM, TEST_VERSION,
 				     dispatch, 0)) {
     fprintf(stderr, "cannot create the service\n");
     exit(2);
@@ -161,12 +161,12 @@ static int call_server(unsigned short port, unsigned proc, int n)
   addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
   addr.sin_port = htons(port);
   client = clntudp_create(&addr, TEST_PROGRAM, TEST_VERSION, wait, &sock);
-  if(client == NULL)
+  if(client == nullptr)
     return(-1);
   for(i = 0; i < n; i++) {
     unsigned reply = 0;
 
-    if(clnt_call(client, proc, (xdrproc_t)xdr_void, NULL,
+    if(clnt_call(client, proc, (xdrproc_t)xdr_void, nullptr,
 		 (xdrproc_t)xdr_u_int, (char *)&reply, total) != RPC_SUCCESS)
       failed++;
   }
@@ -228,7 +228,7 @@ static void case_signals_between_requests(void)
     signaller = start_signaller(getppid(), 300);
     failed = call_server(port, PROC_WORK, 300);
     kill(signaller, SIGKILL);
-    waitpid(signaller, NULL, 0);
+    waitpid(signaller, nullptr, 0);
     kill(getppid(), SIGHUP);
     _exit(failed == 0 ? 0 : 1);
   }
@@ -288,7 +288,7 @@ static void case_sigpipe_ignored(void)
   struct sigaction current;
 
   _DtCmsInstallSignalHandlers();
-  sigaction(SIGPIPE, NULL, &current);
+  sigaction(SIGPIPE, nullptr, &current);
   CHECK(current.sa_handler == SIG_IGN);
 }
 
@@ -299,7 +299,7 @@ static void case_signals_blocked(void)
   sigset_t current;
 
   _DtCmsInstallSignalHandlers();
-  sigprocmask(SIG_BLOCK, NULL, &current);
+  sigprocmask(SIG_BLOCK, nullptr, &current);
   CHECK(sigismember(&current, SIGALRM));
   CHECK(sigismember(&current, SIGUSR1));
   CHECK(sigismember(&current, SIGUSR2));

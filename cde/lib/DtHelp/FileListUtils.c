@@ -113,12 +113,12 @@ static int SpecialStrcmp(
     const char *    str1,
     const char *    str2)
 {
-           if(NULL == str1)
+           if(nullptr == str1)
            {
-              if(NULL == str2) return 0;   /* str1 == str2 */
+              if(nullptr == str2) return 0;   /* str1 == str2 */
               return -1;                   /* str1 < str2 */
            }
-           if(NULL == str2) return 1;      /* str1 > str2 */
+           if(nullptr == str2) return 1;      /* str1 > str2 */
            return(strcmp(str1,str2));      /* str1 ? str2 */
 }
 
@@ -186,12 +186,12 @@ Boolean _DtHelpFileIsSameP(
     file2.fileName = fileName2;
 
     /* get info on the files */
-    (*infoProc)(pDisplayArea,fileName1,NULL,NULL,
+    (*infoProc)(pDisplayArea,fileName1,nullptr,nullptr,
                           &file1.docId,&file1.timeStamp,&file1.nameKey,
-                          NULL,NULL);
-    (*infoProc)(pDisplayArea,fileName2,NULL,NULL,
+                          nullptr,nullptr);
+    (*infoProc)(pDisplayArea,fileName2,nullptr,nullptr,
                           &file2.docId,&file2.timeStamp,&file2.nameKey,
-                          NULL,NULL);
+                          nullptr,nullptr);
 
     ret = FileInfoMatchesP(&file1,&file2,compareFlags);
 
@@ -234,7 +234,7 @@ static int ScanDirForFiles(
 
     /* open the directory */
     pDir = opendir (dirpath);
-    if (pDir == NULL) return 0;                        /* RETURN */
+    if (pDir == nullptr) return 0;                        /* RETURN */
 
     /* build the pathname */
     snprintf(fullName, sizeof(fullName), "%s%s", dirpath, DirSlashStr);
@@ -243,7 +243,7 @@ static int ScanDirForFiles(
     /*
      * Scan through the files looking for matching suffixes
      */
-    while ((result = _XReaddir(pDir, dirEntryBuf)) != NULL) {
+    while ((result = _XReaddir(pDir, dirEntryBuf)) != nullptr) {
         const char * matchedSuffix;
         char * ext;
 
@@ -257,12 +257,12 @@ static int ScanDirForFiles(
         matchedSuffix = "";      /* default (==>no suffix to match) */
 
         /* try to match with a suffix, if specified */
-        if (NULL != suffixList)
+        if (nullptr != suffixList)
         {
           const char * * pSuffix;
-          matchedSuffix = NULL;
+          matchedSuffix = nullptr;
           for (pSuffix = suffixList; 
-               NULL != *pSuffix && NULL == matchedSuffix; 
+               nullptr != *pSuffix && nullptr == matchedSuffix; 
                pSuffix++ )
           {
             if (strcmp(ext,*pSuffix) == 0)
@@ -271,7 +271,7 @@ static int ScanDirForFiles(
         }
 
         /* and a match is found */
-	if ( NULL != matchedSuffix ) 
+	if ( nullptr != matchedSuffix ) 
 	{
            Boolean mod;
 
@@ -330,7 +330,7 @@ _DtHelpFileList _DtHelpFileListGetMatch (
    /* zero the record */
    memset (&file,0,sizeof(file));
 
-   if (NULL == fileListHead || NULL == fullFilePath) return NULL; /* RETURN */
+   if (nullptr == fileListHead || nullptr == fullFilePath) return nullptr; /* RETURN */
 
    /* get filename without path */
    file.fileName = fullFilePath;
@@ -340,13 +340,13 @@ _DtHelpFileList _DtHelpFileListGetMatch (
    /* if an info proc, use it, otherwise make due */
    if (infoProc) 
       (*infoProc)(pDisplayArea,fullFilePath,
-                     NULL,NULL,&file.docId,&file.timeStamp,&file.nameKey,
-                     NULL,NULL);
+                     nullptr,nullptr,&file.docId,&file.timeStamp,&file.nameKey,
+                     nullptr,nullptr);
    else
       file.nameKey = _DtHelpCeStrHashToKey(file.fileName);
 
-   next =  NULL;
-   while ( (next = _DtHelpFileListGetNext(fileListHead, next)) != NULL )
+   next =  nullptr;
+   while ( (next = _DtHelpFileListGetNext(fileListHead, next)) != nullptr )
    {
       if ( FileInfoMatchesP(next,&file,compareFlags) )
          break;                   /* next is the matching entry */
@@ -397,7 +397,7 @@ _DtHelpFileList _DtHelpFileListGetNext (
 void _DtHelpFileFreeEntry (
         _DtHelpFileEntry entry)
 {
-    if(NULL == entry) return;
+    if(nullptr == entry) return;
     XmStringFree(entry->fileTitleXmStr);
     XtFree(entry->docId);
     XtFree(entry->timeStamp);
@@ -451,7 +451,7 @@ Boolean _DtHelpFileListAddFile (
    memset(&addFile, 0, sizeof(addFile));
 
    /* if no full file path, go look for it */
-   if (NULL == fullFilePath || fullFilePath[0] == EOS) 
+   if (nullptr == fullFilePath || fullFilePath[0] == EOS) 
        return False;       /* RETURN : incomplete file spec */
 
    /* trace any links; _DtHelpFileTraceLinks may chg actualPath ptr */
@@ -464,7 +464,7 @@ Boolean _DtHelpFileListAddFile (
    fullFilePath = actualPath;
 
    /* if no filespec, get it */
-   if (NULL == fileName) 
+   if (nullptr == fileName) 
    {
       fileName = fullFilePath;
       if(_DtHelpCeStrrchr(fullFilePath, DirSlashStr, MB_CUR_MAX,&fileName)==0)
@@ -486,8 +486,8 @@ Boolean _DtHelpFileListAddFile (
    }
 
    /* look for prior existence and position */
-   next = prev = NULL;
-   while ( (next = _DtHelpFileListGetNext(*in_out_list, next)) != NULL )
+   next = prev = nullptr;
+   while ( (next = _DtHelpFileListGetNext(*in_out_list, next)) != nullptr )
    {
       if ( FileInfoMatchesP(next,&addFile,compareFlags) )
       {
@@ -517,7 +517,7 @@ Boolean _DtHelpFileListAddFile (
 
    /* no matching path, so create, initialize, and append to list */
    newList = (_DtHelpFileList) XtCalloc(1, sizeof(_DtHelpFileRec));
-   if (NULL == newList) 
+   if (nullptr == newList) 
    {
       XtFree(addFile.docId);
       XtFree(addFile.timeStamp);
@@ -531,8 +531,8 @@ Boolean _DtHelpFileListAddFile (
    newList->fullFilePath = fullFilePath; /* copy made earlier */
    newList->fileName = XtNewString(addFile.fileName);
    newList->nameKey = addFile.nameKey;
-   newList->docId = (addFile.docId == &empty ? NULL : addFile.docId);
-   newList->timeStamp = (addFile.timeStamp == &empty ? NULL : addFile.timeStamp);
+   newList->docId = (addFile.docId == &empty ? nullptr : addFile.docId);
+   newList->timeStamp = (addFile.timeStamp == &empty ? nullptr : addFile.timeStamp);
    newList->fileTitle = addFile.fileTitle;
    newList->fileTitleXmStr = addFile.fileTitleXmStr;
    if (next) newList->next = next;
@@ -585,7 +585,7 @@ int _DtHelpFileListScanPaths (
     int   foundFilesCnt;
     int   compareFlags;
     char * paths[_DtHELP_FILE_NUM_PATHS];
-    char ** scannedPaths = NULL;
+    char ** scannedPaths = nullptr;
     int     scannedPathsCnt = 0;
 
     /* get the search paths */
@@ -593,7 +593,7 @@ int _DtHelpFileListScanPaths (
 
     /* get the locale */
     loc = _DtHelpGetLocale();
-    if (NULL == loc || EOS == loc[0]) loc = strdup(LANG_C_STR);
+    if (nullptr == loc || EOS == loc[0]) loc = strdup(LANG_C_STR);
 
     /* zero found */
     if (scanProc) (*scanProc)(0,clientData);
@@ -605,7 +605,7 @@ int _DtHelpFileListScanPaths (
           curPathIndex++ )
     {
        curPath = paths[curPathIndex];
-       if (NULL == curPath) continue;
+       if (nullptr == curPath) continue;
 
        /* set the comparison flags */
        /* This enables implementation of different policies for
@@ -628,7 +628,7 @@ int _DtHelpFileListScanPaths (
           /* generate the (directory) path using all the variables 
              and fix it up to remove the unwanted stuff involving the filename*/
 	  pathName = _DtHelpCeExpandPathname(curPath, 
-                                     NULL, type, NULL, loc, NULL, 0);
+                                     nullptr, type, nullptr, loc, nullptr, 0);
           if(   pathName 
              && _DtHelpCeStrrchr(pathName,DirSlashStr,MB_CUR_MAX,&slashptr) == 0)
              slashptr[0] = EOS; 
@@ -637,7 +637,7 @@ int _DtHelpFileListScanPaths (
 	  if (ptr) *ptr++ = *PathSeparator;
 
           /* if its a directory; scan for matching files in it */
-	  if (     pathName != NULL 
+	  if (     pathName != nullptr 
                 && *pathName != EOS 
                 && access (pathName, R_OK | X_OK) == 0 
                 && stat (pathName, &status) == 0

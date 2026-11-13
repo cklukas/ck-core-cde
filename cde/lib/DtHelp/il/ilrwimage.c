@@ -337,7 +337,7 @@ long               lineCount;
         /*  If a YCbCr image point pSample to first plane's sample info; else null */
     if (pSrcImage->pDes->type == IL_YCBCR)
          pSample = pSrcImage->pDes->typeInfo.YCbCr.sample;
-    else pSample = (ilYCbCrSampleInfo *)NULL;
+    else pSample = (ilYCbCrSampleInfo *)nullptr;
 
         /*  Loop thru and copy, plane by plane: 1 plane if pixel order.  If YCbCr image 
             (pSample) divide nLines and src/dstStart by subsample factor (1,2 or 4).
@@ -403,8 +403,8 @@ ilSrcElementData        srcData;
     srcData.stripHeight = height;
     srcData.constantStrip = FALSE;
     srcData.minBufferHeight = 0;
-    if (!ilAddPipeElement (pipe, IL_FILTER, 0, 0, &srcData, (ilDstElementData *)NULL, 
-                           IL_NPF, IL_NPF, IL_NPF, ilCopyImageExecute, NULL, 0))
+    if (!ilAddPipeElement (pipe, IL_FILTER, 0, 0, &srcData, (ilDstElementData *)nullptr, 
+                           IL_NPF, IL_NPF, IL_NPF, ilCopyImageExecute, nullptr, 0))
         return FALSE;
 
     pipe->context->error = IL_OK;
@@ -439,9 +439,9 @@ IL_PRIVATE ilBool _ilAddThrottlePipeElement (
 {
 ilPipeInfo              info;
 ilSrcElementData        srcData;
-ilThrottlePrivPtr  pPriv = NULL;
+ilThrottlePrivPtr  pPriv = nullptr;
 
-    ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+    ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
     srcData.consumerImage = (ilObject)NULL;
     srcData.stripHeight = info.stripHeight;
     srcData.constantStrip = FALSE;
@@ -453,8 +453,8 @@ ilThrottlePrivPtr  pPriv = NULL;
       case IL_PIPE_IMAGE:
         pPriv = (ilThrottlePrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
             sizeof (ilThrottlePrivRec), IL_ADD_PIPE_NO_DST, 
-            &srcData, (ilDstElementData *)NULL, ilThrottleInit, IL_NPF, IL_NPF, 
-            ilProducerThrottleExecute, NULL, 0);
+            &srcData, (ilDstElementData *)nullptr, ilThrottleInit, IL_NPF, IL_NPF, 
+            ilProducerThrottleExecute, nullptr, 0);
         constantStrip = TRUE;
         break;
 
@@ -468,8 +468,8 @@ ilThrottlePrivPtr  pPriv = NULL;
       case IL_PIPE_FEED_IMAGE:
         pPriv = (ilThrottlePrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
             sizeof (ilThrottlePrivRec), IL_ADD_PIPE_NO_DST, 
-            &srcData, (ilDstElementData *)NULL, ilThrottleInit, IL_NPF, IL_NPF, 
-            ilFeedProducerThrottleExecute, NULL, 0);
+            &srcData, (ilDstElementData *)nullptr, ilThrottleInit, IL_NPF, IL_NPF, 
+            ilFeedProducerThrottleExecute, nullptr, 0);
         if (!pPriv) return FALSE;
         pPriv->imageHeight = info.height;
         pPriv->stripHeight = stripHeight;
@@ -492,8 +492,8 @@ ilThrottlePrivPtr  pPriv = NULL;
         if (!constantStrip) {
             pPriv = (ilThrottlePrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
                 sizeof (ilThrottlePrivRec), IL_ADD_PIPE_NO_DST, 
-                &srcData, (ilDstElementData *)NULL, ilThrottleInit, IL_NPF, IL_NPF, 
-                ilNonConstantThrottleExecute, NULL, 0);
+                &srcData, (ilDstElementData *)nullptr, ilThrottleInit, IL_NPF, IL_NPF, 
+                ilNonConstantThrottleExecute, nullptr, 0);
             }
         else {
             srcData.minBufferHeight = stripHeight + info.stripHeight - 1;
@@ -501,8 +501,8 @@ ilThrottlePrivPtr  pPriv = NULL;
                 srcData.minBufferHeight = info.height;
             pPriv = (ilThrottlePrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
                 sizeof (ilThrottlePrivRec), IL_ADD_PIPE_NO_DST, 
-                &srcData, (ilDstElementData *)NULL, ilThrottleInit, IL_NPF, IL_NPF, 
-                ilConstantThrottleExecute, NULL, 0);
+                &srcData, (ilDstElementData *)nullptr, ilThrottleInit, IL_NPF, IL_NPF, 
+                ilConstantThrottleExecute, nullptr, 0);
             }
         break;
         }

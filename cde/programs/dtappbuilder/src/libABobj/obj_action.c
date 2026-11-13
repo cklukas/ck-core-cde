@@ -60,8 +60,8 @@ int
 obj_add_action(ABObj obj, ABObj action)
 {
 	int	retval= 0;
-	ABObj	child= NULL;
-	ABObj	actionlist= NULL;
+	ABObj	child= nullptr;
+	ABObj	actionlist= nullptr;
 
 	if (   (!obj_is_module(obj))
 	    && (!obj_is_project(obj))
@@ -77,7 +77,7 @@ obj_add_action(ABObj obj, ABObj action)
 	{
 		/* find the action list for this node */
 		for (child= obj->first_child; 
-			child != NULL; child= child->next_sibling)
+			child != nullptr; child= child->next_sibling)
 		{
 			if (child->type == AB_TYPE_ACTION_LIST)
 			{
@@ -86,10 +86,10 @@ obj_add_action(ABObj obj, ABObj action)
 			}
 		}
 	}
-	if (actionlist == NULL)
+	if (actionlist == nullptr)
 	{
 		/* there BE no action list - create one */
-		actionlist= obj_create(AB_TYPE_ACTION_LIST, NULL);
+		actionlist= obj_create(AB_TYPE_ACTION_LIST, nullptr);
 		obj_prepend_child(obj, actionlist);
 	}
 	
@@ -104,9 +104,9 @@ ABObj
 obj_find_action(ABObj root, ABObj action_template)
 {
 	AB_TRAVERSAL	trav;
-	ABObj		action= NULL;
+	ABObj		action= nullptr;
 	for (trav_open(&trav, root, AB_TRAV_ACTIONS);
-		(action= trav_next(&trav)) != NULL; )
+		(action= trav_next(&trav)) != nullptr; )
 	{
 		if (actions_equal(action, action_template))
 		{

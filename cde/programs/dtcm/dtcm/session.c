@@ -216,7 +216,7 @@ GetSessionInfo(
     XrmRepresentation 	 rep_type;
     XrmValue 		 value;
 
-    if (c->app_data->session_file == NULL)
+    if (c->app_data->session_file == nullptr)
         return;
 
     /***  Open the resource database file ***/
@@ -227,7 +227,7 @@ GetSessionInfo(
         return;
     }
 
-    if ((c->view->sessiondb = XrmGetFileDatabase (path)) == NULL) {
+    if ((c->view->sessiondb = XrmGetFileDatabase (path)) == nullptr) {
     	if (path) XtFree(path);
         return;
     }

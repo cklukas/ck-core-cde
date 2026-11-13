@@ -124,7 +124,7 @@ static void CreatePrintShell(Widget widget, AppPrintData* p)
 	    XmPrintSetup(widget, 
 			 XpGetScreenOfContext(p->print_data->print_display,
 					      p->print_data->print_context),
-			 "Print", NULL, 0);
+			 "Print", nullptr, 0);
 
 	XtAddCallback(p->print_shell, XmNpageSetupCallback, 
 		      PageSetupCB, (XtPointer)p);
@@ -150,7 +150,7 @@ PrintSetupCB(Widget print_dialog, XtPointer client_data, XtPointer call_data)
     DtPrintSetupCallbackStruct *pbs = (DtPrintSetupCallbackStruct*)call_data;
     int copies ;
 
-    XtVaGetValues(print_dialog, DtNcopies, &copies, NULL);
+    XtVaGetValues(print_dialog, DtNcopies, &copies, nullptr);
     if (copies == 3) {
 	String attr ;
 	Display * pdpy = pbs->print_data->print_display ;
@@ -171,7 +171,7 @@ PrintSetupCB(Widget print_dialog, XtPointer client_data, XtPointer call_data)
     }
 
    /* copy the setup data into our space */
-    if (p->print_data->print_display != NULL)
+    if (p->print_data->print_display != nullptr)
 	DtPrintFreeSetupData(p->print_data);
     DtPrintCopySetupData(p->print_data, pbs->print_data);
  
@@ -196,7 +196,7 @@ CancelCB(Widget print_dialog, XtPointer client_data, XtPointer call_data)
     DtPrintSetupCallbackStruct *pbs = (DtPrintSetupCallbackStruct*)call_data;
 
     /* mostly to try it out */
-    XtDestroyWidget(print_dialog); p->print_dialog = NULL ; 
+    XtDestroyWidget(print_dialog); p->print_dialog = nullptr ; 
 }
 
 /*
@@ -223,7 +223,7 @@ CreatePrintSetup(Widget parent, AppPrintData* p)
 	   for a dialog */
 	if(XtIsApplicationShell(parent))
 	    p->print_dialog =
-		DtCreatePrintSetupBox(parent, "PrintSetup", NULL, 0);
+		DtCreatePrintSetupBox(parent, "PrintSetup", nullptr, 0);
 	else
 	{
 	    XmString title = XmStringCreateLocalized("Print");
@@ -273,7 +273,7 @@ PrintCB(Widget print_dialog, XtPointer client_data, XtPointer call_data)
      * get the new printer data from the DtPrintSetupBox, and copy it
      * into our AppPrint data
      */
-    if (p->print_data->print_display != NULL)
+    if (p->print_data->print_display != nullptr)
 	 DtPrintFreeSetupData(p->print_data);
     DtPrintCopySetupData(p->print_data, pbs->print_data);
  
@@ -298,7 +298,7 @@ QuickPrintCB(Widget pr_button, XtPointer client_data, XtPointer call_data)
     /*
      * check if the DtPrintSetupBox ("Print...") has been called yet 
      */
-    if(p->print_data->print_display == NULL)
+    if(p->print_data->print_display == nullptr)
     {
         /*
          * first time thru print setup, so get default data 
@@ -364,7 +364,7 @@ DoPrint(Widget widget, AppPrintData * p)
     if (p->print_data->destination == DtPRINT_TO_FILE)
     {
         if (!XmPrintToFile(XtDisplay(p->print_shell), 
-			   p->print_data->dest_info, FinishPrintToFile, NULL))
+			   p->print_data->dest_info, FinishPrintToFile, nullptr))
 	{
 	    /* Add real error message here. */
 	    printf("XmPrintToFile: Unable to print to file %s\n",
@@ -409,17 +409,17 @@ PageSetupCB(Widget widget, XtPointer client_data, XtPointer call_data)
 	if (!p->pform) {
 	    /* create a form widget with some fixed margins */
 	    p->pform = XtVaCreateManagedWidget("pform", xmFormWidgetClass, 
-					       pshell, NULL);
+					       pshell, nullptr);
 	    /* create a text widget */
 	    p->ptext = XtVaCreateManagedWidget("ptext", xmTextWidgetClass, 
-					       p->pform, NULL);
+					       p->pform, nullptr);
 	}
 	/* transfer value from file buffer to print text widget */
 	XmTextSetString(p->ptext, p->app_object->file_buffer );
 
 	/* get lines per page and total lines */
 	XtVaGetValues(p->ptext, XmNrows, &(p->lines_per_page), 
-		      XmNtotalLines, &(p->total_lines), NULL);
+		      XmNtotalLines, &(p->total_lines), nullptr);
 
 	p->printed_lines += p->lines_per_page ;
 
@@ -476,7 +476,7 @@ PrintCloseDisplayCB(
         p->print_shell = (Widget)NULL ;
 	
 	/* must remember that the children are gone, as well */
-	p->ptext = p->pform = NULL;
+	p->ptext = p->pform = nullptr;
     }
 
     DtPrintFreeSetupData(p->print_data); 

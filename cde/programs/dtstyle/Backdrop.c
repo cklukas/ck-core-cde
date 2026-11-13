@@ -177,24 +177,24 @@ char *BACKDROPSDLG = "backdropsDialog";
  *   copy of the system backdrop description file for the 
  *   current locale in xrm form
  */
-static XrmDatabase sys_bd_DB = NULL;
+static XrmDatabase sys_bd_DB = nullptr;
 
 /*
  *   copy of the admin backdrop description file for the 
  *   current locale in xrm form
  */
-static XrmDatabase adm_bd_DB = NULL;
+static XrmDatabase adm_bd_DB = nullptr;
 
 /*
  *   copy of the user's home backdrop description file for the 
  *   current locale in xrm form
  */
-static XrmDatabase hm_bd_DB = NULL;
+static XrmDatabase hm_bd_DB = nullptr;
 
 /*
  *   final combination of the admin & system data bases 
  */
-static XrmDatabase bd_DB = NULL;
+static XrmDatabase bd_DB = nullptr;
 
 
 
@@ -208,7 +208,7 @@ build_dirList(char * dirStr,
 {
    char tokenSep[] = ":";
    char * token;
-   char ** dirList = NULL;
+   char ** dirList = nullptr;
    int i = 0;
    char * tmpStr;
    int len = strlen(dirStr);
@@ -217,14 +217,14 @@ build_dirList(char * dirStr,
    tmpStr = (char *)XtCalloc(1, len + 1);
    strcpy(tmpStr, dirStr);
    token = strtok(tmpStr, tokenSep);
-   while(token != NULL)
+   while(token != nullptr)
      {
        ++(i);
-       token = strtok(NULL, tokenSep);
+       token = strtok(nullptr, tokenSep);
      }
 
    if (i == 0)
-       return (NULL);
+       return (nullptr);
 
    dirList = (char **) XtCalloc(1, i * sizeof(char *));
    if( dirList )
@@ -232,11 +232,11 @@ build_dirList(char * dirStr,
        strcpy(tmpStr, dirStr); 
        token = strtok(tmpStr, tokenSep);
        *count=0;
-       while(token != NULL)
+       while(token != nullptr)
 	 {
 	   dirList[*count] = (char *) XtCalloc(1, strlen( token ) + 1);
 	   strcpy(dirList[*count], token);
-	   token = strtok(NULL, tokenSep);
+	   token = strtok(nullptr, tokenSep);
 	   ++(*count);
 	 }
      }
@@ -258,7 +258,7 @@ free_dirList(char ** dirList,
 {
   int   i;
 
-  if (dirList == NULL)
+  if (dirList == nullptr)
     return;
   for (i=0; i<count; i++)
     XtFree((char *) dirList[i]);
@@ -273,7 +273,7 @@ free_dirList(char ** dirList,
  ************************************************************************/
 void SelectCurrentBackdrop(int callback)
 {
-    DtWsmWorkspaceInfo   *wInfo=NULL;
+    DtWsmWorkspaceInfo   *wInfo=nullptr;
     Atom	     aWS;
     Widget list;
     char *backdropName;
@@ -331,7 +331,7 @@ BackdropDialog(
 {
     int i;
     
-    if (style.backdropDialog == NULL) 
+    if (style.backdropDialog == nullptr) 
     {
         _DtTurnOnHourGlass(parent);  
         if (!CreateBackdropDialog(parent)) { 
@@ -382,13 +382,13 @@ CreateBackdropDialog(
     }
 
     /* initialize backdrop data */
-    backdrops.bitmapNames = NULL;
-    backdrops.bitmaps = NULL;
+    backdrops.bitmapNames = nullptr;
+    backdrops.bitmaps = nullptr;
     backdrops.numBitmaps = 0;
     backdrops.maxNumBitmaps = 100;
     backdrops.selected = -1;
-    backdrops.gc = NULL;
-    backdrops.errStr = NULL;
+    backdrops.gc = nullptr;
+    backdrops.errStr = nullptr;
     backdrops.shadow = 2;
     backdrops.width = 200 - 2*backdrops.shadow;
     backdrops.height = 200 - 2*backdrops.shadow;
@@ -397,7 +397,7 @@ CreateBackdropDialog(
     
     /* load the backdrop description data base for the given locale*/
     /* from that locale's description file from the system location */
-    lang = setlocale (LC_CTYPE,NULL);
+    lang = setlocale (LC_CTYPE,nullptr);
 
     bd_desc = (char *)XtMalloc(strlen("/usr/dt/backdrops/desc.") + strlen(lang) + 1);
     strcpy (bd_desc,"/usr/dt/backdrops/desc.");
@@ -446,7 +446,7 @@ CreateBackdropDialog(
                                                                  save.poscnt++;
     style.backdropDialog = __DtCreateDialogBoxDialog (parent, BACKDROPSDLG,
                                                      save.posArgs, save.poscnt);
-    XtAddCallback(style.backdropDialog, XmNcallback, ButtonCB, NULL);
+    XtAddCallback(style.backdropDialog, XmNcallback, ButtonCB, nullptr);
     XtAddCallback(style.backdropDialog, XmNmapCallback, _DtMapCB, parent);
     XtAddCallback(style.backdropDialog, XmNhelpCallback,
             HelpRequestCB, (XtPointer)HELP_BACKDROP_DIALOG);
@@ -560,8 +560,8 @@ CreateBackdropDialog(
     XtSetArg (args[n], XmNheight, backdrops.height+2*backdrops.shadow); n++;
     XtSetArg (args[n], XmNtraversalOn, False);                          n++;  
     backdrops.drawnButton = XmCreateDrawnButton (mainForm, "bitmap", args, n);
-    XtAddCallback (backdrops.drawnButton, XmNexposeCallback, DrawBitmap, NULL);
-    XtAddCallback (backdrops.drawnButton, XmNresizeCallback, SizeBitmap, NULL);
+    XtAddCallback (backdrops.drawnButton, XmNexposeCallback, DrawBitmap, nullptr);
+    XtAddCallback (backdrops.drawnButton, XmNresizeCallback, SizeBitmap, nullptr);
 
     /* manage all of the widgets */
     XtManageChild (mainForm);
@@ -655,7 +655,7 @@ static int
   
   /* read the directory $HOME/.dt/backdrops */
   string = (char *)XtMalloc(strlen(style.home) + strlen("/.dt/backdrops") + 1);
-  if (string != NULL)
+  if (string != nullptr)
   {
     sprintf(string, "%s/.dt/backdrops", style.home);
     ReadBitmapDirectory(string);
@@ -768,7 +768,7 @@ ReadBitmapDirectory(
     int             newSize;
 
     /* open the backdrops directory */
-    if ((dirp = opendir(dir)) == NULL)
+    if ((dirp = opendir(dir)) == nullptr)
     {
         /* print message to errorlog, free space, and return */
       return 0;
@@ -782,7 +782,7 @@ ReadBitmapDirectory(
 
     filep = readdir(dirp);
 
-    while (filep != NULL)
+    while (filep != nullptr)
     {
         /* append filename to stat path */
         strcpy (pStatPath, filep->d_name);
@@ -886,7 +886,7 @@ DrawBitmap(
         /* backdrops.newColors = False; */
     }
 
-    if (backdrops.gc == NULL)
+    if (backdrops.gc == nullptr)
     {
         gcValues.background = backdrops.bg;
         gcValues.foreground = backdrops.fg;
@@ -938,7 +938,7 @@ MakeListStrings( void )
     
     for (i=0; i<backdrops.numBitmaps; i++)
       {
-	if (bd_DB !=NULL)
+	if (bd_DB !=nullptr)
 	  {
 	    name_str = (char *) XtMalloc(strlen("backdrops.") + 
 					 strlen(backdrops.bitmapNames[i]) +
@@ -1021,7 +1021,7 @@ ListCB(
     XSetTile (style.display, backdrops.gc, 
 	      backdrops.bitmaps[backdrops.selected]);
 
-    DrawBitmap (backdrops.drawnButton, NULL, NULL);
+    DrawBitmap (backdrops.drawnButton, nullptr, nullptr);
 }
 
 
@@ -1107,7 +1107,7 @@ CheckWorkspace( void )
     backdrops.newColors = True;         /* need to get new colors */
     if (style.backdropDialog && XtIsManaged(style.backdropDialog))
     {
-        DrawBitmap (backdrops.drawnButton, NULL, NULL);
+        DrawBitmap (backdrops.drawnButton, nullptr, nullptr);
     }
 }
 
@@ -1120,7 +1120,7 @@ CheckWorkspace( void )
 static void 
 GetColors( void )
 {
-    DtWsmWorkspaceInfo   *wInfo=NULL;
+    DtWsmWorkspaceInfo   *wInfo=nullptr;
     unsigned long    num=0;
     Pixel            fg, bg;
     XGCValues        gcValues;
@@ -1193,7 +1193,7 @@ FreeAll( void )
 
     /* destory widgets (via first parent) */
     XtDestroyWidget (XtParent(style.backdropDialog));
-    style.backdropDialog = NULL;
+    style.backdropDialog = nullptr;
 }
 
 
@@ -1213,7 +1213,7 @@ _DtMapCB(
     if (!save.restoreFlag)
         putDialog((Widget)client_data, w);
 
-    XtRemoveCallback(style.backdropDialog, XmNmapCallback, _DtMapCB, NULL);
+    XtRemoveCallback(style.backdropDialog, XmNmapCallback, _DtMapCB, nullptr);
 }
 
 
@@ -1295,7 +1295,7 @@ saveBackdrop(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.backdropDialog != NULL) 
+    if (style.backdropDialog != nullptr) 
     {
         if (XtIsManaged(style.backdropDialog))
             sprintf(bufr, "*backdropsDialog.ismapped: True\n");

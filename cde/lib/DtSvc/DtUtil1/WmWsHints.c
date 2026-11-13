@@ -166,8 +166,8 @@ _DtWsmGetWorkspaceHints(
     unsigned int iSizeWsHints;
     Atom property;
     DtWorkspaceHints *pWsH;
-    long *pP = NULL;
-    long *pProp = NULL;
+    long *pP = nullptr;
+    long *pProp = nullptr;
     int i;
     Atom actualType;
     int actualFormat;
@@ -242,7 +242,7 @@ _DtWsmGetWorkspaceHints(
 	    }
 	    else
 	    {
-		pWsH->pWorkspaces = NULL;
+		pWsH->pWorkspaces = nullptr;
 	    }
 	    *ppWsHints = pWsH;
 	}

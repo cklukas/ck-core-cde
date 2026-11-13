@@ -138,10 +138,10 @@ PalItemInfo menubar_palitem_rec = {
 
     /* type             */  AB_TYPE_CONTAINER,
     /* name             */  "Menubar",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  menubar_initialize,
     /* is_a_test        */  obj_is_menubar,
     /* prop_initialize  */  menubar_prop_init,
@@ -185,7 +185,7 @@ menubar_initialize(
     cascades[2] = CATGETS(Dtb_project_catd, 6, 25, "Help");
     for (i=0; i < XtNumber(cascades); i++)
     {
-        iobj = obj_create(AB_TYPE_ITEM, NULL);
+        iobj = obj_create(AB_TYPE_ITEM, nullptr);
 	obj_set_subtype(iobj, AB_ITEM_FOR_MENUBAR);
 	obj_append_child(obj, iobj);
         iobj->label_type = AB_LABEL_STRING;
@@ -257,12 +257,12 @@ menubar_prop_init(
     if (dtb_menubar_prop_dialog_initialize(cgen, parent) == 0)
     {
         pms->prop_sheet = cgen->attrs_ctrlpanel;
-        pms->current_obj = NULL;
+        pms->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pms->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -277,7 +277,7 @@ menubar_prop_init(
 
         /* Alternate Editor Buttons */
         prop_editors_panel_init(type, ab_menubar_palitem,
-            NULL, cgen->conn_button, cgen->helptxt_button);
+            nullptr, cgen->conn_button, cgen->helptxt_button);
 
         /*
           * Prop Sheet Settings....
@@ -343,7 +343,7 @@ menubar_prop_init(
         prop_menuname_init(&(pms->item_menuname), type, cgen->menu_label,
 			cgen->item_menu_mbutton, 
 			cgen->item_menu_field,
-                        cgen->itemlabel_field, cgen->itemlist_cb, NULL/*title*/,
+                        cgen->itemlabel_field, cgen->itemlist_cb, nullptr/*title*/,
 			&(pms->current_obj), True);
 
 	/* Store Items->Insert menu items in array */
@@ -373,7 +373,7 @@ menubar_prop_init(
 		n, item, item_val, /* Insert */
 		j, item2, item2_val,/* Edit */
 		&(pms->item_label), &(pms->item_label_type), cgen->graphic_hint,
-		&(pms->item_mnemonic), NULL/*accel*/, NULL/*line_style*/,
+		&(pms->item_mnemonic), nullptr/*accel*/, nullptr/*line_style*/,
 		&(pms->item_state), &(pms->item_menuname),
 		&(pms->current_obj));
 
@@ -382,7 +382,7 @@ menubar_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 
@@ -405,7 +405,7 @@ menubar_prop_clear(
 {
     PropMenubarSettingsRec	*pms = &(prop_menubar_settings_rec[type]);
 
-    if (pms->current_obj == NULL)
+    if (pms->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -423,7 +423,7 @@ menubar_prop_clear(
     /* Clear Items */
     prop_item_editor_clear(&(pms->items));
 
-    pms->current_obj = NULL;
+    pms->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -441,9 +441,9 @@ menubar_prop_load(
     PropMenubarSettingsRec 	*pms = &(prop_menubar_settings_rec[type]);
     BOOL			load_all = (loadkey & LoadAll);
  
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pms->current_obj != NULL)
+        if (pms->current_obj != nullptr)
             obj = pms->current_obj;
         else
             return ERROR;
@@ -542,8 +542,8 @@ menubar_prop_apply(
     mb_obj = objxm_comp_get_subobj(pms->current_obj, AB_CFG_OBJECT_OBJ);
 
     XtVaSetValues(objxm_get_widget(mb_obj),
-                XmNmenuHelpWidget, help_item? objxm_get_widget(help_item): NULL,
-                NULL);
+                XmNmenuHelpWidget, help_item? objxm_get_widget(help_item): nullptr,
+                nullptr);
 
     turnoff_changebars(type);
 
@@ -630,11 +630,11 @@ prop_menubar_obj_destroy_CB(ObjEvDestroyInfo destroyInfo)
 	pms = &(prop_menubar_settings_rec[i]);
 
 	if (pms->current_obj == doomedObj)
-	    pms->current_obj = NULL;
+	    pms->current_obj = nullptr;
 	if (pms->items.current_item == doomedObj)
-	    pms->items.current_item = NULL;
+	    pms->items.current_item = nullptr;
 	if (pms->items.clipboard_item == doomedObj)
-	    pms->items.clipboard_item = NULL;
+	    pms->items.clipboard_item = nullptr;
     }
 
     return 0;

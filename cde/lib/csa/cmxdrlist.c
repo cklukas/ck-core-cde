@@ -32,7 +32,7 @@
 extern bool_t
 _DtCm_xdr_limited_string(XDR *xdrs, char **sp, u_int maxlen)
 {
-	if (xdrs->x_op == XDR_ENCODE && *sp == NULL) {
+	if (xdrs->x_op == XDR_ENCODE && *sp == nullptr) {
 		char empty[1] = { '\0' };
 		char *none = empty;
 
@@ -47,7 +47,7 @@ _DtCm_xdr_limited_array(XDR *xdrs, char **arrayp, u_int *countp,
 	u_int maxcount, u_int elsize, xdrproc_t proc)
 {
 	if (xdrs->x_op == XDR_ENCODE &&
-	    (*countp > maxcount || (*countp > 0 && *arrayp == NULL)))
+	    (*countp > maxcount || (*countp > 0 && *arrayp == nullptr)))
 		return (FALSE);
 
 	return (xdr_array(xdrs, arrayp, countp, maxcount, elsize, proc));
@@ -72,9 +72,9 @@ set_next(void *node, size_t offset, void *next)
 static void *
 reverse(void *head, size_t offset)
 {
-	void *previous = NULL;
+	void *previous = nullptr;
 
-	while (head != NULL) {
+	while (head != nullptr) {
 		void *next = get_next(head, offset);
 
 		set_next(head, offset, previous);
@@ -96,7 +96,7 @@ code_after_parts(XDR *xdrs, void *head, const _DtCm_xdr_list_type *type)
 	void *node;
 	bool_t ok = TRUE;
 
-	for (node = last; node != NULL && ok;
+	for (node = last; node != nullptr && ok;
 	    node = get_next(node, type->next_offset))
 		ok = type->after(xdrs, node);
 
@@ -109,12 +109,12 @@ free_list(XDR *xdrs, void *head, const _DtCm_xdr_list_type *type)
 {
 	void *node = head;
 
-	while (node != NULL) {
+	while (node != nullptr) {
 		void *next = get_next(node, type->next_offset);
 
-		if (type->before != NULL)
+		if (type->before != nullptr)
 			(void)type->before(xdrs, node);
-		if (type->after != NULL)
+		if (type->after != nullptr)
 			(void)type->after(xdrs, node);
 		if (node != head)
 			free(node);
@@ -135,27 +135,27 @@ _DtCm_xdr_list(XDR *xdrs, void *head, const _DtCm_xdr_list_type *type)
 		return (free_list(xdrs, head, type));
 
 	case XDR_ENCODE:
-		for (node = head; node != NULL;
+		for (node = head; node != nullptr;
 		    node = get_next(node, type->next_offset)) {
 			if (++count > type->limit)
 				return (FALSE);
-			if (type->before != NULL &&
+			if (type->before != nullptr &&
 			    !type->before(xdrs, node))
 				return (FALSE);
-			more = get_next(node, type->next_offset) != NULL;
+			more = get_next(node, type->next_offset) != nullptr;
 			if (!xdr_bool(xdrs, &more))
 				return (FALSE);
 		}
-		if (type->after != NULL)
+		if (type->after != nullptr)
 			return (code_after_parts(xdrs, head, type));
 		return (TRUE);
 
 	case XDR_DECODE:
 		node = head;
-		set_next(node, type->next_offset, NULL);
+		set_next(node, type->next_offset, nullptr);
 		for (;;) {
 			count++;
-			if (type->before != NULL &&
+			if (type->before != nullptr &&
 			    !type->before(xdrs, node))
 				return (FALSE);
 			if (!xdr_bool(xdrs, &more))
@@ -164,14 +164,14 @@ _DtCm_xdr_list(XDR *xdrs, void *head, const _DtCm_xdr_list_type *type)
 				break;
 			if (count >= type->limit)
 				return (FALSE);
-			if ((added = calloc(1, type->size)) == NULL)
+			if ((added = calloc(1, type->size)) == nullptr)
 				return (FALSE);
 			/* linked in before it is read, so that it is freed
 			 * with the others when decoding fails */
 			set_next(node, type->next_offset, added);
 			node = added;
 		}
-		if (type->after != NULL)
+		if (type->after != nullptr)
 			return (code_after_parts(xdrs, head, type));
 		return (TRUE);
 	}

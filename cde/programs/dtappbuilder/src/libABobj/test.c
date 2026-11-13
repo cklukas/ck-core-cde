@@ -51,7 +51,7 @@
 #include <ab_private/obj.h>
 #include <ab_private/trav.h>
 
-static ABObj	*objArray= NULL;
+static ABObj	*objArray= nullptr;
 static int	objArraySize= 0;
 
 static int	print_sizeof(void);
@@ -76,11 +76,11 @@ static unsigned	travMod= 0;
 int 
 main (int argc, STRING argv[])
 {
-    ABObj	tree= NULL;
-    ABObj	module1= NULL;
-    ABObj	module2= NULL;
-    ABObj	module3= NULL;
-    ABObj	obj= NULL;
+    ABObj	tree= nullptr;
+    ABObj	module1= nullptr;
+    ABObj	module2= nullptr;
+    ABObj	module3= nullptr;
+    ABObj	obj= nullptr;
     int		objCount= 0;
 
    util_init(&argc, &argv);
@@ -145,9 +145,9 @@ main (int argc, STRING argv[])
     module1= obj_find_module_by_name(tree, "module1");
     module2= obj_find_module_by_name(tree, "module2");
     module3= obj_find_module_by_name(tree, "module3");
-    if (   ((module1 == NULL) || (!util_streq(obj_get_name(module1), "module1")))
-	|| ((module2 == NULL) || (!util_streq(obj_get_name(module2), "module2")))
-	|| ((module3 == NULL) || (!util_streq(obj_get_name(module3), "module3")))
+    if (   ((module1 == nullptr) || (!util_streq(obj_get_name(module1), "module1")))
+	|| ((module2 == nullptr) || (!util_streq(obj_get_name(module2), "module2")))
+	|| ((module3 == nullptr) || (!util_streq(obj_get_name(module3), "module3")))
 	)
     {
 	printf("error %s:%d\n", __FILE__, __LINE__);
@@ -179,12 +179,12 @@ check_obj_verify(void)
 
     int		rc = 0;		/* return code */
     ABObj	badObjRef = (ABObj)0x01;
-    ABObj	obj = NULL;
+    ABObj	obj = nullptr;
 
     rc = obj_verify(badObjRef);
     printf("obj_verify(badObjRef):%d\n", rc);
 
-    obj = obj_create(AB_TYPE_UNDEF, NULL);
+    obj = obj_create(AB_TYPE_UNDEF, nullptr);
     rc = obj_verify(obj);
     printf ("obj_verify(obj): %d\n", rc);
 
@@ -196,15 +196,15 @@ check_obj_verify(void)
     rc = obj_verify(obj);
     printf("obj_verify(badSibName):%d\n", rc);
 
-    obj->name = NULL;
-    obj->next_sibling = NULL;
+    obj->name = nullptr;
+    obj->next_sibling = nullptr;
     obj_set_name(obj, "TEST OBJECT");
     obj->bg_color = (ISTRING)1000000;
     rc = obj_verify(obj);
     printf("obj_verify(objBadBgColor):%d\n", rc);
-    obj->bg_color = NULL;
+    obj->bg_color = nullptr;
 
-    obj_destroy(obj); obj = NULL;
+    obj_destroy(obj); obj = nullptr;
 
     return 0;
 #undef bg_color
@@ -215,11 +215,11 @@ check_obj_verify(void)
 static int
 check_scoped_searches(ABObj root)
 {
-    ABObj	module1= NULL;
-    ABObj	module2= NULL;
-    ABObj	module3= NULL;
-    ABObj	slider2_parent= NULL;
-    ABObj	obj= NULL;
+    ABObj	module1= nullptr;
+    ABObj	module2= nullptr;
+    ABObj	module3= nullptr;
+    ABObj	slider2_parent= nullptr;
+    ABObj	obj= nullptr;
     char	nameBuf[1024] = "";
 
     module1= obj_find_module_by_name(root, "module1");
@@ -232,7 +232,7 @@ check_scoped_searches(ABObj root)
 
     obj= obj_scoped_find_by_name(module1, "module2::slider2");
     printf("(module1, module2::slider2): "); obj_print(obj);
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	fprintf(stderr, "SEARCH FAILED %s::%d\n", __FILE__, __LINE__);
 	return -1;
@@ -261,10 +261,10 @@ check_parents_first(ABObj root)
     AB_TRAVERSAL	trav;
     AB_TRAVERSAL	parentTrav;
     int			i;
-    ABObj		obj= NULL;
-    ABObj		ancestor= NULL;
+    ABObj		obj= nullptr;
+    ABObj		ancestor= nullptr;
     int			iRet= 0;
-    BOOL		*visited= NULL;
+    BOOL		*visited= nullptr;
 
     visited= (BOOL *)util_malloc(objArraySize * sizeof(BOOL));
     for (i= 0; i < objArraySize; ++i)
@@ -273,7 +273,7 @@ check_parents_first(ABObj root)
     }
 
     for (trav_open(&trav, root, travMod|AB_TRAV_MOD_PARENTS_FIRST);
-	(obj= trav_next(&trav)) != NULL; )
+	(obj= trav_next(&trav)) != nullptr; )
     {
 	/*
 	 * mark object as visited
@@ -291,7 +291,7 @@ check_parents_first(ABObj root)
 	 * Make sure all ancestors have been visited
 	 */
 	for (trav_open(&parentTrav, obj, travMod|AB_TRAV_PARENTS);
-		(ancestor= trav_next(&parentTrav)) != NULL; )
+		(ancestor= trav_next(&parentTrav)) != nullptr; )
 	{
 	    for (i= 0; i < objArraySize; ++i)
 	    {
@@ -330,7 +330,7 @@ static int
 show_salient_ui(ABObj root)
 {
     AB_TRAVERSAL	trav;
-    ABObj		obj= NULL;
+    ABObj		obj= nullptr;
     int			salientCount= 0;
     int			printCount= 0;
     int			i;
@@ -346,7 +346,7 @@ show_salient_ui(ABObj root)
     printf("\n***** AB_TRAV_SALIENT_UI *****\n");
     printCount= 0;
     for (trav_open(&trav, root, travMod|AB_TRAV_SALIENT_UI);
-	(obj= trav_next(&trav)) != NULL; )
+	(obj= trav_next(&trav)) != nullptr; )
     {
 	++printCount;
 	util_dprintf(0, "% 3d ", printCount);
@@ -397,10 +397,10 @@ show_salient_ui_tree(ABObj tree)
 static ABObj
 build_test_project()
 {
-    ABObj	project= NULL;
+    ABObj	project= nullptr;
     
     util_free(objArray); objArraySize= 0;
-    project= obj_create(AB_TYPE_PROJECT, NULL);
+    project= obj_create(AB_TYPE_PROJECT, nullptr);
     add_to_array(project);
     set_name(project);
 
@@ -414,26 +414,26 @@ build_test_project()
 static ABObj 
 build_test_module(ABObj project)
 {
-    ABObj	root= NULL;
-    ABObj	compRoot= NULL;
-    ABObj	obj1= NULL;
-    ABObj	obj2= NULL;
-    ABObj	obj3= NULL;
-    ABObj	obj4= NULL;
-    ABObj	obj5= NULL;
-    ABObj	obj6= NULL;
-    ABObj	obj7= NULL;
+    ABObj	root= nullptr;
+    ABObj	compRoot= nullptr;
+    ABObj	obj1= nullptr;
+    ABObj	obj2= nullptr;
+    ABObj	obj3= nullptr;
+    ABObj	obj4= nullptr;
+    ABObj	obj5= nullptr;
+    ABObj	obj6= nullptr;
+    ABObj	obj7= nullptr;
 
     root= project;
     /*
      * Interface
      */
-    obj1= create_one(root, AB_TYPE_MODULE, NULL);
+    obj1= create_one(root, AB_TYPE_MODULE, nullptr);
     obj1->part_of= obj1;
     compRoot= obj1;
 
     obj2= create_one(obj1, AB_TYPE_TEXT_FIELD, compRoot);
-    obj3= create_one(obj2, AB_TYPE_CONTAINER, NULL);
+    obj3= create_one(obj2, AB_TYPE_CONTAINER, nullptr);
 
     obj2= create_one(obj1, AB_TYPE_LIST, compRoot);
     obj3= create_one(obj2, AB_TYPE_CONTAINER, compRoot);
@@ -441,31 +441,31 @@ build_test_module(ABObj project)
     obj5= create_one(obj4, AB_TYPE_TEXT_FIELD, compRoot);
 
     obj3= create_one(obj2, AB_TYPE_CONTAINER, compRoot);
-    obj4= create_one(obj3, AB_TYPE_LIST, NULL);
+    obj4= create_one(obj3, AB_TYPE_LIST, nullptr);
 
-    obj4= create_one(obj3, AB_TYPE_CONTAINER, NULL);
-    obj5= create_one(obj4, AB_TYPE_SLIDER, NULL);
+    obj4= create_one(obj3, AB_TYPE_CONTAINER, nullptr);
+    obj5= create_one(obj4, AB_TYPE_SLIDER, nullptr);
     obj5->part_of= obj5;
     compRoot= obj5;
 
     obj6= create_one(obj5, AB_TYPE_LIST, compRoot);
-    obj7= create_one(obj6, AB_TYPE_ITEM, NULL);
+    obj7= create_one(obj6, AB_TYPE_ITEM, nullptr);
 
     obj6= create_one(obj5, AB_TYPE_ITEM, compRoot);
 
     compRoot= obj1;
 
-    obj3= create_one(obj2, AB_TYPE_TEXT_FIELD, NULL);
+    obj3= create_one(obj2, AB_TYPE_TEXT_FIELD, nullptr);
 
     obj2= create_one(obj1, AB_TYPE_LIST, compRoot);
-    obj3= create_one(obj2, AB_TYPE_ITEM, NULL);
+    obj3= create_one(obj2, AB_TYPE_ITEM, nullptr);
 
-    obj3= create_one(obj2, AB_TYPE_LIST, NULL);
+    obj3= create_one(obj2, AB_TYPE_LIST, nullptr);
     obj3->part_of= obj3;
     compRoot= obj3;
 
     obj4= create_one(obj3, AB_TYPE_CONTAINER, compRoot);
-    obj5= create_one(obj4, AB_TYPE_BUTTON, NULL);
+    obj5= create_one(obj4, AB_TYPE_BUTTON, nullptr);
 
     if (obj_tree_verify(root) < 0)
     {
@@ -502,8 +502,8 @@ set_name(ABObj obj)
 static ABObj
 create_one(ABObj parent, AB_OBJECT_TYPE type, ABObj compositeRoot)
 {
-    ABObj	obj= NULL;
-    obj= obj_create(type, NULL);
+    ABObj	obj= nullptr;
+    obj= obj_create(type, nullptr);
     add_to_array(obj);
     set_name(obj);
     obj_append_child(parent, obj);
@@ -549,10 +549,10 @@ obj_print_salient_tree_indented(ABObj obj,
 		int spaces, int verbosity, int numPrinted)
 {
 	AB_TRAVERSAL	trav;
-	ABObj		child= NULL;
+	ABObj		child= nullptr;
 	int		child_spaces = spaces;
 
-	if (obj == NULL)
+	if (obj == nullptr)
 	{
 		printf("NULL Tree\n");
 		return numPrinted;
@@ -565,7 +565,7 @@ obj_print_salient_tree_indented(ABObj obj,
 	    child_spaces = spaces + 4;
 	}
 	for (trav_open(&trav, obj, travMod|AB_TRAV_SALIENT_CHILDREN);
-		(child= trav_next(&trav)) != NULL; )
+		(child= trav_next(&trav)) != nullptr; )
 	{
 		numPrinted= obj_print_salient_tree_indented(child, 
 				child_spaces, verbosity, numPrinted);

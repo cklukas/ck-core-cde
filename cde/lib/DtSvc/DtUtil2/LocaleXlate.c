@@ -199,16 +199,16 @@ $EXAMPLE$:
 #include <LocaleXlate.h>
 main()
 {
-   _DtXlateDb db = NULL;
+   _DtXlateDb db = nullptr;
    int  ret;
    char plat[_DtPLATFORM_MAX_LEN];
    int  execver;
    int  compver;
-   char * val = NULL;
-   char * str = NULL;
-   char * val1 = NULL;
-   char * val2 = NULL;
-   char * val3 = NULL;
+   char * val = nullptr;
+   char * str = nullptr;
+   char * val1 = nullptr;
+   char * val2 = nullptr;
+   char * val3 = nullptr;
 
    ret = _DtLcxOpenAllDbs(&db);
 
@@ -216,12 +216,12 @@ main()
    printf("Platform: %s\nExec Ver: %d\nComp Ver: %d\n",
                     plat,execver,compver);
    ret = _DtLcxXlateStdToOp(db,plat,compver,DtLCX_OPER_SETLOCALE,
-                     str="en_US.hp-roman8",NULL,NULL,NULL,&val);
+                     str="en_US.hp-roman8",nullptr,nullptr,nullptr,&val);
    if (ret==0) printf("setlocale(%s) xlation=%s\n", str, val);
    else printf("no xlation\n", val);
 
    ret = _DtLcxXlateStdToOp(db,plat,compver,DtLCX_OPER_SETLOCALE,
-                     str="en_US.?",NULL,NULL,NULL,&val);
+                     str="en_US.?",nullptr,nullptr,nullptr,&val);
    if (ret==0) printf("setlocale(%s) xlation=%s\n", str, val);
    else printf("no xlation\n", val);
 
@@ -319,23 +319,23 @@ void GetHomeDirPath(
 	 unsigned int    max)
 {        /*$CODE$*/
     int    uid;
-    char * ptr = NULL;
+    char * ptr = nullptr;
     _Xgetpwparams pwd_buf;
     struct passwd * pwd_ret;
 
-    if((ptr = (char *)getenv("HOME")) == NULL) 
+    if((ptr = (char *)getenv("HOME")) == nullptr) 
     {
-        if((ptr = (char *)getenv("USER")) != NULL)
+        if((ptr = (char *)getenv("USER")) != nullptr)
             pwd_ret = _XGetpwnam(ptr, pwd_buf);
         else 
         {
             uid = getuid();
             pwd_ret = _XGetpwuid(uid, pwd_buf);
         }
-        if (pwd_ret != NULL)
+        if (pwd_ret != nullptr)
             ptr = pwd_ret->pw_dir;
         else
-            ptr = NULL;
+            ptr = nullptr;
     }
 
     if (ptr && strlen(ptr))
@@ -394,7 +394,7 @@ int  _DtLcxOpenAllDbs(
    int    len;
    char   lcxfile[100];
    char   homePath[MAXPATHLEN];
-   _DtXlateDb   cde_db = NULL;
+   _DtXlateDb   cde_db = nullptr;
 
 #define MAXSHORTFNAMELEN 14
 
@@ -407,7 +407,7 @@ int  _DtLcxOpenAllDbs(
 
    /* get paths for LCX */
    paths = getenv(DTLCXSEARCHPATH);
-   if (NULL != paths && paths[0] != EOS)
+   if (nullptr != paths && paths[0] != EOS)
    {
       dbPaths = strdup(paths);
    }
@@ -568,7 +568,7 @@ int _DtLcxXlateOpToStd(
        char * *           ret_stdModifier)
 {       /*$CODE$*/
     int     ret;
-    char *  stdValue = NULL;
+    char *  stdValue = nullptr;
     Boolean freeStdValue = True;
     int     scanned = 0;
     char    langterr[50];
@@ -577,7 +577,7 @@ int _DtLcxXlateOpToStd(
 
     /* do the translation */
     ret = _DtXlateOpToStdValue(xlationDb,platform,version,operation,opValue,
-                                      &stdValue,NULL);
+                                      &stdValue,nullptr);
 
     /* std locale string syntax: langterr.codeset.modifier */
     /* parse into the desire chunks */
@@ -589,13 +589,13 @@ int _DtLcxXlateOpToStd(
     if ( ret_stdLocale ) 
         { *ret_stdLocale = stdValue; freeStdValue = False; }
     if ( ret_stdLangTerr)
-        { *ret_stdLangTerr = ( scanned >= 1 ? strdup(langterr) : NULL); }
+        { *ret_stdLangTerr = ( scanned >= 1 ? strdup(langterr) : nullptr); }
     if ( ret_stdCodeset ) 
-        { *ret_stdCodeset = ( scanned >= 2 ? strdup(codeset) : NULL); }
+        { *ret_stdCodeset = ( scanned >= 2 ? strdup(codeset) : nullptr); }
     if ( ret_stdModifier ) 
-        { *ret_stdModifier = ( scanned >= 3 ? strdup(mod) : NULL); }
+        { *ret_stdModifier = ( scanned >= 3 ? strdup(mod) : nullptr); }
 
-    if (freeStdValue && NULL != stdValue) free(stdValue);
+    if (freeStdValue && nullptr != stdValue) free(stdValue);
     return ret;
 }       /*$END$*/
 
@@ -637,7 +637,7 @@ from the DtLCX_OPER_xxx constants.
 The stdLocale is the CDE standard locale string, such as the
 one recovered using _DtLcxXlateOpToStd().  The value is
 the '.'-separated concatenation of the <langterr>, <codeset>,
-and <modifier> fields, or it may be NULL.  The stdLocale string
+and <modifier> fields, or it may be nullptr.  The stdLocale string
 alone *or* any combination of stdLangTerr, stdCodeset, and
 stdModifier strings may be specified for the translation, but
 not both.
@@ -647,7 +647,7 @@ such as the one recovered using _DtLcxXlateOpToStd().  The
 strings are valid across CDE platforms and across operations.
 The stdLangTerr, stdCodeset, or stdModifier string may be used
 alone *or* in any combination with each other, but not with the
-stdLocale string.  The values may also be NULL.
+stdLocale string.  The values may also be nullptr.
 $ARGS$:
 xlationDb:	a translation database
 platform:	the platform string (see _DtXlateGetXlateEnv())
@@ -660,7 +660,7 @@ stdCodeset:	standard codeset string
 stdModifier:	standard modifier string
 ret_opValue:	location where ptr to translated string is stored
 $RETURNS$:
--1: if all stdXxx strings have NULL values
+-1: if all stdXxx strings have nullptr values
 plus the return values are those of _DtXlateStdToOp()
 /*================================================$SKIP$==*/
 #endif
@@ -740,7 +740,7 @@ int _DtLcxXlateStdToOp(
 
     retval = _DtXlateStdToOpValue(
 				xlationDb,platform,version,operation,
-				stdValue, ret_opValue,NULL);
+				stdValue, ret_opValue,nullptr);
     if (stdValue && stdValue != stdValueBuf) free(stdValue);
     return retval;
 }       /*$END$*/

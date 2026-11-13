@@ -64,8 +64,8 @@ activate (Widget w, XtPointer client_data, XtPointer call_data)
   static OliasDisplayEvent event;
 
   event.type = OLIAS_DISPLAY_EVENT;
-  XtVaGetValues (ibase, XmNvalue, &event.infobase, NULL);
-  XtVaGetValues (loc,   XmNvalue, &event.locator,  NULL);
+  XtVaGetValues (ibase, XmNvalue, &event.infobase, nullptr);
+  XtVaGetValues (loc,   XmNvalue, &event.locator,  nullptr);
 
 /*  printf ("Infobase = <%s>, locator = <%s>\n", event.infobase, event.locator);
 */
@@ -97,44 +97,44 @@ main (int argc, char *argv[])
   Dimension width, height;
 
   toplevel =
-   XtVaAppInitialize (&app_context, "OliasCmd", NULL, 0, &argc, argv, NULL, 0);
+   XtVaAppInitialize (&app_context, "OliasCmd", nullptr, 0, &argc, argv, nullptr, 0);
 
   XtAddEventHandler(toplevel, (EventMask) 0, TRUE,
-		    _XEditResCheckMessages, NULL);
+		    _XEditResCheckMessages, nullptr);
 
 #define WIDGET  XtVaCreateWidget
 #define WIDGETM XtVaCreateManagedWidget
 
-  form  = WIDGET  ("form",      xmFormWidgetClass,       toplevel, NULL);
-  panel = WIDGET  ("panel",     xmFormWidgetClass,       form,     NULL);
-  send  = WIDGETM ("send",      xmPushButtonWidgetClass, panel,    NULL);
-  quit  = WIDGETM ("quit",      xmPushButtonWidgetClass, panel,    NULL);
-  sep   = WIDGETM ("separator", xmSeparatorWidgetClass,  form,     NULL);
-  lform = WIDGET  ("lform",     xmFormWidgetClass,       form,     NULL);
-          WIDGETM ("infobase",  xmLabelWidgetClass,      lform,    NULL);
-          WIDGETM ("locator",   xmLabelWidgetClass,      lform,    NULL);
-  fform = WIDGET  ("fform",     xmFormWidgetClass,       form,     NULL);
-  ibase = WIDGETM ("ib_field",  xmTextFieldWidgetClass,  fform,    NULL);
-  loc   = WIDGETM ("loc_field", xmTextFieldWidgetClass,  fform,    NULL);
+  form  = WIDGET  ("form",      xmFormWidgetClass,       toplevel, nullptr);
+  panel = WIDGET  ("panel",     xmFormWidgetClass,       form,     nullptr);
+  send  = WIDGETM ("send",      xmPushButtonWidgetClass, panel,    nullptr);
+  quit  = WIDGETM ("quit",      xmPushButtonWidgetClass, panel,    nullptr);
+  sep   = WIDGETM ("separator", xmSeparatorWidgetClass,  form,     nullptr);
+  lform = WIDGET  ("lform",     xmFormWidgetClass,       form,     nullptr);
+          WIDGETM ("infobase",  xmLabelWidgetClass,      lform,    nullptr);
+          WIDGETM ("locator",   xmLabelWidgetClass,      lform,    nullptr);
+  fform = WIDGET  ("fform",     xmFormWidgetClass,       form,     nullptr);
+  ibase = WIDGETM ("ib_field",  xmTextFieldWidgetClass,  fform,    nullptr);
+  loc   = WIDGETM ("loc_field", xmTextFieldWidgetClass,  fform,    nullptr);
   
   XtAddCallback (send, XmNactivateCallback, activate, toplevel);
   XtAddCallback (quit, XmNactivateCallback, quit_callback, toplevel);
 
-  XtVaSetValues (form, XmNdefaultButton, send, NULL);
+  XtVaSetValues (form, XmNdefaultButton, send, nullptr);
 
   XtManageChild (panel);
   XtManageChild (lform);
   XtManageChild (fform);
-  XtVaSetValues (form, XmNshadowThickness, 0, NULL);
+  XtVaSetValues (form, XmNshadowThickness, 0, nullptr);
   XtManageChild (form);
 
   XtRealizeWidget (toplevel);
 
-  XtVaGetValues (toplevel, XmNwidth, &width, XmNheight, &height, NULL);
+  XtVaGetValues (toplevel, XmNwidth, &width, XmNheight, &height, nullptr);
   XtVaSetValues (toplevel, XmNminWidth, (int) width,
 		 XmNminHeight, (int) height,
 		 XmNmaxHeight, (int) height,
-		 NULL);
+		 nullptr);
   
   XtAppMainLoop (app_context);
 

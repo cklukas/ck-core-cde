@@ -529,9 +529,9 @@ unsigned int              rtype;
 
 
        if(convert) {
-            if (!ilConvert(pipe, &imdes, &imformat, 0, NULL))
+            if (!ilConvert(pipe, &imdes, &imformat, 0, nullptr))
                 return FALSE;
-            ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+            ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
        }
          
 
@@ -540,8 +540,8 @@ unsigned int              rtype;
             return ilDeclarePipeInvalid(pipe, IL_ERROR_INVALID_OPTION);
 
        dstdata.producerObject = (ilObject) NULL;
-       dstdata.pDes           = (ilImageDes *) NULL;
-       dstdata.pFormat        = (ilImageFormat *) NULL;
+       dstdata.pDes           = (ilImageDes *) nullptr;
+       dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.pPalette       = info.pPalette;
 
        dstdata.width          = info.width;
@@ -556,11 +556,11 @@ unsigned int              rtype;
             case 3:            
                       switch (direction) {
                         case IL_MIRRORX:
-                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) NULL,
+                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilMirrorInit, IL_NPF, IL_NPF, ilMirrorX3ByteExecute, 0);
                                break;
                         case IL_MIRRORY:
-                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) NULL,
+                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilMirrorInit, IL_NPF, IL_NPF, ilMirrorY3ByteExecute, 0);
                       }
                       break;
@@ -569,22 +569,22 @@ unsigned int              rtype;
                  if(bitonal) {
                       switch (direction) {
                         case IL_MIRRORX:
-                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) NULL,
+                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilMirrorInit, IL_NPF, IL_NPF, ilMirrorXBitonalExecute, 0);
                                break;
                         case IL_MIRRORY:
-                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) NULL,
+                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilMirrorInit, IL_NPF, IL_NPF, ilMirrorYBitonalExecute, 0);
                       }
                  }
                  else {
                       switch (direction) {
                         case IL_MIRRORX:
-                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) NULL,
+                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilMirrorInit, IL_NPF, IL_NPF, ilMirrorXByteExecute, 0);
                                break;
                         case IL_MIRRORY:
-                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) NULL,
+                               pPriv = (ilMirrorPrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilMirrorPriv), 0, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilMirrorInit, IL_NPF, IL_NPF, ilMirrorYByteExecute, 0);
                       }
                  }

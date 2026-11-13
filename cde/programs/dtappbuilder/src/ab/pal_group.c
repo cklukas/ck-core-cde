@@ -286,10 +286,10 @@ DtbGroupPropDialogInfoRec	rev_group_prop_dialog;
 PalItemInfo group_palitem_rec = {
     /* type             */  AB_TYPE_CONTAINER,
     /* name             */  "Group",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  group_initialize,
     /* is_a_test        */  obj_is_group,
     /* prop_initialize  */  group_prop_init,
@@ -380,7 +380,7 @@ group_objects(
     for (i = 0; i < count; i++)
     {
 	AB_TRAVERSAL	trav;
-	ABObj		cur_obj = NULL;
+	ABObj		cur_obj = nullptr;
 
         obj = list[i];
         obj_reparent(obj, newgroup);
@@ -396,7 +396,7 @@ group_objects(
 	 * well
 	 */
         for (trav_open(&trav, obj, AB_TRAV_ALL);
-                (cur_obj = trav_next(&trav)) != NULL; )
+                (cur_obj = trav_next(&trav)) != nullptr; )
 	{
 	    obj_clear_flag(cur_obj, InstantiatedFlag);
 	}
@@ -466,13 +466,13 @@ ungroup_objects(
 {
     ABObj	  group;
     ABObj	  group_parent;
-    ABObj	  parent_list = NULL;
+    ABObj	  parent_list = nullptr;
     XRectangle    group_rect,
 			rect;
     AB_TRAVERSAL  trav;
     ABObj	  member;
     int		  i, j;
-    ABObj	  *list = NULL;
+    ABObj	  *list = nullptr;
     int		  list_items;
     Boolean	  parent_exists = True;
 
@@ -484,8 +484,8 @@ ungroup_objects(
 	group = obj_list[i];
 	if (obj_is_group(group))
 	{
-	    ABObj	oobj = NULL,
-			*member_list = NULL;
+	    ABObj	oobj = nullptr,
+			*member_list = nullptr;
 	    int		num_children,
 			cur_member = 0;
 
@@ -509,7 +509,7 @@ ungroup_objects(
 	     */
 	    for (trav_open(&trav, oobj, AB_TRAV_CHILDREN |
 			    AB_TRAV_MOD_SAFE);
-		(member = trav_next(&trav)) != NULL; )
+		(member = trav_next(&trav)) != nullptr; )
 	    {
 		Widget	member_w;
 
@@ -529,9 +529,9 @@ ungroup_objects(
 		*/
 	        obj_init_attachments(member);
 		obj_set_attachment(member, AB_CP_NORTH, AB_ATTACH_POINT,
-					NULL, 0);
+					nullptr, 0);
 		obj_set_attachment(member, AB_CP_WEST,  AB_ATTACH_POINT,
-					NULL, 0);
+					nullptr, 0);
 
 		/*
 		 * Set new position to be:
@@ -555,7 +555,7 @@ ungroup_objects(
 	     */
 	    for (cur_member = 0; cur_member < num_children; ++cur_member)
 	    {
-		ABObj		cur_obj = NULL;
+		ABObj		cur_obj = nullptr;
 
 		/*
 	 	 * Clear instantiated flag in former group member
@@ -567,7 +567,7 @@ ungroup_objects(
 	 	 * as well
 	 	 */
                 for (trav_open(&trav, member_list[cur_member], AB_TRAV_ALL);
-                    (cur_obj = trav_next(&trav)) != NULL; )
+                    (cur_obj = trav_next(&trav)) != nullptr; )
                 {
                     obj_clear_flag(cur_obj, InstantiatedFlag);
                 }
@@ -589,7 +589,7 @@ ungroup_objects(
 	    * Keep a list of parents (control panels) that need
 	    * to be updated after all groups are ungrouped.
 	    */
-	    if (list == NULL)
+	    if (list == nullptr)
 	    {
 	    	list = (ABObj*)XtMalloc(sizeof(ABObj));
 		list[0] = group_parent;
@@ -648,8 +648,8 @@ group_initialize(
     obj_set_group_type(obj, AB_GROUP_IGNORE);
 
     /* Set up Default Layout for group*/
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 }
@@ -709,12 +709,12 @@ group_prop_init(
     if (dtb_group_prop_dialog_initialize(cgen, parent) == 0)
     {
         pgs->prop_sheet = cgen->attrs_ctrlpanel;
-        pgs->current_obj = NULL;
+        pgs->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pgs->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -784,12 +784,12 @@ group_prop_init(
         item_ptr[n] = (void *) AB_ORIENT_HORIZONTAL; n++;
         item[n] = cgen->gridrowcol_rbox_items.Columns_item;
         item_ptr[n] = (void *) AB_ORIENT_VERTICAL; n++;
-	prop_radiobox_init(&(pgs->grid_rowcol), NULL,
+	prop_radiobox_init(&(pgs->grid_rowcol), nullptr,
 			cgen->gridrowcol_rbox, n, item, item_ptr,
 			cgen->gridrowcol_cb);
 
 	/* Grid Row/Column count */
-	prop_field_init(&(pgs->grid_rowcol_count), NULL,
+	prop_field_init(&(pgs->grid_rowcol_count), nullptr,
 			cgen->gridrowcol_field, cgen->gridrowcol_cb);
 
         /* Vertical Alignment */
@@ -808,7 +808,7 @@ group_prop_init(
 			    cgen->valign_cb);
 
         /* Vertical spacing value */
-        prop_field_init(&(pgs->vspacing), NULL,
+        prop_field_init(&(pgs->vspacing), nullptr,
                         cgen->vert_spacing_field, cgen->valign_cb);
 
         /* Horizontal Alignment */
@@ -825,14 +825,14 @@ group_prop_init(
 			    cgen->halign_cb);
 
         /* Horizontal spacing value */
-        prop_field_init(&(pgs->hspacing), NULL,
+        prop_field_init(&(pgs->hspacing), nullptr,
                         cgen->horiz_spacing_field, cgen->halign_cb);
 
 	/* Position */
 	prop_geomfield_init(&(pgs->pos), cgen->pos_label,
 			    cgen->x_field_label, cgen->x_field,
 			    cgen->y_field_label, cgen->y_field,
-			    NULL, NULL, NULL, NULL,
+			    nullptr, nullptr, nullptr, nullptr,
 			    cgen->pos_cb);
 
 	/* Initial State */
@@ -856,7 +856,7 @@ group_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-	return NULL;
+	return nullptr;
 
 }
 
@@ -867,7 +867,7 @@ group_prop_clear(
 {
     PropGroupSettingsRec	*pgs = &(prop_group_settings_rec[type]);
 
-    if (pgs->current_obj == NULL)
+    if (pgs->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -908,7 +908,7 @@ group_prop_clear(
     /* Clear Color */
     prop_colorfield_set_value(&(pgs->bg_color), "", False);
 
-    pgs->current_obj = NULL;
+    pgs->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -940,9 +940,9 @@ group_prop_load(
     AB_GROUP_TYPE 		gtype;
     BOOL                        load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pgs->current_obj != NULL)
+        if (pgs->current_obj != nullptr)
             obj = pgs->current_obj;
         else
             return ERROR;
@@ -1068,7 +1068,7 @@ group_prop_apply(
     obj = pgs->current_obj;
     gtype = (AB_GROUP_TYPE)prop_radiobox_get_value(&(pgs->layout_type));
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return ERROR;
 
     if (!verify_props(type))
@@ -1240,13 +1240,13 @@ group_prop_apply(
     {
     	ABObj 	oobj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ);
 	Widget	w = objxm_get_widget(oobj);
-        WidgetList	children_list = NULL;
+        WidgetList	children_list = nullptr;
         int		num_children = 0;
 
         XtVaGetValues(w,
             XmNnumChildren, &num_children,
             XmNchildren, &children_list,
-            NULL);
+            nullptr);
 
         XtUnmanageChildren(children_list, num_children);
 
@@ -1374,7 +1374,7 @@ grouptypeCB(
 
     if (state->set)
     {
-        XtVaGetValues(item, XmNuserData, &value, NULL);
+        XtVaGetValues(item, XmNuserData, &value, nullptr);
 	setup_grouptype_settings(type, value);
     }
 
@@ -1532,7 +1532,7 @@ set_new_group_size(
     abobj_get_rect_for_objects(member_list, member_count, &rect);
     abobj_get_greatest_size(member_list, member_count,
 				 &width, &height,
-				 (ABObj *) NULL, (ABObj *) NULL);
+				 (ABObj *) nullptr, (ABObj *) nullptr);
     if (obj_get_group_type(oobj) == AB_GROUP_ROWS)
     {
 	abobj_set_pixel_width(obj, rect.width, 0);
@@ -1769,7 +1769,7 @@ group_expose_handler(
     XtVaGetValues(widget,
             XmNnumChildren, &num_children,
             XmNchildren, &children_list,
-            NULL);
+            nullptr);
 
     if (num_children <= 0)
 	return;
@@ -2197,9 +2197,9 @@ group_align_labels(
     ABObj	child,
 		previous_child,
     		oobj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ),
-		*one_col = NULL,
+		*one_col = nullptr,
 		*child_list,
-		previous_ref_obj = NULL;
+		previous_ref_obj = nullptr;
     int		num_children = 0,
 		num_columns,
 		num_rows,
@@ -2236,7 +2236,7 @@ group_align_labels(
 
     for (i = 0; i < num_columns; i++)
     {
-	ABObj	ref_obj = NULL;
+	ABObj	ref_obj = nullptr;
 	int	ref_width = 0;
 
         for (j = 0; j < num_rows; j++)
@@ -2257,7 +2257,7 @@ group_align_labels(
 	    attach.offset = 0;
 
 	attach.type = AB_ATTACH_POINT;
-	attach.value = (void *)NULL;
+	attach.value = (void *)nullptr;
 
 	abobj_set_attachment(ref_obj, AB_CP_WEST, &attach);
 
@@ -2272,7 +2272,7 @@ group_align_labels(
 	    offset += ref_width - abobj_get_label_width(child);
 
 	    attach.type = AB_ATTACH_POINT;
-	    attach.value = (void *)NULL;
+	    attach.value = (void *)nullptr;
 	    /*
 	    attach.offset = ref_x - abobj_get_label_width(child);
 	    */
@@ -2482,7 +2482,7 @@ create_member_list(
      */
     for (trav_open(&trav, cobj, AB_TRAV_SALIENT_CHILDREN |
 		AB_TRAV_MOD_SAFE), member_index = 0;
-		(member = trav_next(&trav)) != NULL; ++member_index)
+		(member = trav_next(&trav)) != nullptr; ++member_index)
     {
 	(*member_list)[member_index] = member;
     }
@@ -2498,7 +2498,7 @@ get_child(
 )
 {
     AB_GROUP_TYPE	type;
-    ABObj		ret_child = NULL,
+    ABObj		ret_child = nullptr,
     			oobj;
     int			num_children,
 			num_rows,
@@ -2507,7 +2507,7 @@ get_child(
 
     if (!group || !obj_is_group(group) ||
        (x_pos < 0) || (y_pos < 0))
-	return (NULL);
+	return (nullptr);
 
     type = obj_get_group_type(group);
     num_rows = obj_get_num_rows(group);
@@ -2601,7 +2601,7 @@ get_cell_size(
         create_member_list(oobj, &member_list, &member_count);
         abobj_get_greatest_size(member_list, member_count,
                 cell_width, cell_height,
-                (ABObj *) NULL, (ABObj *) NULL);
+                (ABObj *) nullptr, (ABObj *) nullptr);
 
 	util_free(member_list);
     }
@@ -2733,7 +2733,7 @@ get_widest_label_obj(
     int		i,
 		tmp_width,
 		cur_width = 0;
-    ABObj	widest = NULL;
+    ABObj	widest = nullptr;
 
     if (!list || !widest_label)
 	return;
@@ -2769,7 +2769,7 @@ get_widest_value_obj(
     int		i,
 		tmp_width,
 		cur_width = 0;
-    ABObj	widest = NULL;
+    ABObj	widest = nullptr;
 
     if (!list || !widest_value)
 	return;

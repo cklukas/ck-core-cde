@@ -130,11 +130,11 @@ static int	abioP_build_indent_string(
 			int	indent_level
 		);
 
-static UtilOutputHandler	output_handler = NULL;
-static UtilOutputHandler	err_output_handler = NULL;
-static STRING			help_text = NULL;
-static STRING			help_volume = NULL;
-static STRING			help_locID = NULL;
+static UtilOutputHandler	output_handler = nullptr;
+static UtilOutputHandler	err_output_handler = nullptr;
+static STRING			help_text = nullptr;
+static STRING			help_volume = nullptr;
+static STRING			help_locID = nullptr;
 static STRING	gilVersionPrefix = ";GIL-";
 static int	gilMajorVersion	= 4;
 static int	gilMinorVersion	= 0;
@@ -155,7 +155,7 @@ int
 abio_close_input_impl(FILE ** pFile)
 {
 #define file (*pFile)
-    if ((file != NULL) && (file != stdin))
+    if ((file != nullptr) && (file != stdin))
     {
 	util_fclose(file);
     }
@@ -170,7 +170,7 @@ int
 abio_close_output_impl(FILE ** pOutFile)
 {
 #define outFile (*pOutFile)
-    if ((outFile != NULL) && (outFile != stdout))
+    if ((outFile != nullptr) && (outFile != stdout))
     {
 	fflush(outFile);
 	ftruncate(fileno(outFile), (size_t)ftell(outFile));
@@ -299,7 +299,7 @@ abio_get_handler(FILE * inFile, ISTRING * stringOutPtr)
     int                 ch;
     int                 len;	/* string length */
     int                 c = 0;	/* string count */
-    STRING		string = NULL;
+    STRING		string = nullptr;
 
     while (isspace(ch = fgetc(inFile)))
 	;
@@ -418,9 +418,9 @@ abio_get_list(FILE * inFile, ISTRING *stringOutPtr)
     int                 ch;
     int                 len;	/* string length */
     int                 c;	/* string count */
-    STRING		string = NULL;
+    STRING		string = nullptr;
 
-    stringOut = NULL;
+    stringOut = nullptr;
     while (isspace(ch = fgetc(inFile)))
 	;
     if (ch != *abio_list_begin_string())
@@ -492,15 +492,15 @@ abio_gil_get_name(FILE * inFile, ISTRING *stringOutPtr)
 {
 #define stringOut (*stringOutPtr)
     STRING              p = get_token(inFile);
-    stringOut = NULL;
+    stringOut = nullptr;
 
-    if (p == NULL)
+    if (p == nullptr)
     {
 	return FALSE;
     }
     if (strcmp(p, abio_gil_false_string()) == 0)
     {
-        stringOut = NULL;
+        stringOut = nullptr;
     }
     else
     {
@@ -532,7 +532,7 @@ abio_bil_get_full_name(
 #ifdef BOGUS			/* this should NOT call anything in libABil */
     STRING              tmp1,
                         tmp2;
-    STRING              ident = NULL;
+    STRING              ident = nullptr;
     char                ch[4];
     ISTRING             string;
     BOOL                tmp1_done = FALSE;
@@ -540,8 +540,8 @@ abio_bil_get_full_name(
     int                 i,
                         y;
 
-    *parent = NULL;
-    *name = NULL;
+    *parent = nullptr;
+    *name = nullptr;
 
     /** REMIND: this shouldn't oughtta be here
     if ((type = bil_load_get_value_type()) == AB_BIL_VALUE_IDENT)
@@ -623,16 +623,16 @@ abio_gil_get_full_name(
 )
 {
     int			return_value = 0;
-    ISTRING		tmp1 = NULL;
-    ISTRING		tmp2 = NULL;
+    ISTRING		tmp1 = nullptr;
+    ISTRING		tmp2 = nullptr;
     BOOL		tmp2IsString = FALSE;
-    ISTRING		tmp3 = NULL;
+    ISTRING		tmp3 = nullptr;
     BOOL		tmp3IsString = FALSE;
 
-    *interfaceStringOut = NULL;
-    *parentStringOut = NULL;
-    *objStringOut = NULL;
-    *itemStringOut = NULL;
+    *interfaceStringOut = nullptr;
+    *parentStringOut = nullptr;
+    *objStringOut = nullptr;
+    *itemStringOut = nullptr;
 
     if (!abio_get_list_begin(inFile))
     {
@@ -707,7 +707,7 @@ abio_gil_get_full_name(
 epilogue:
     if (return_value >= 0)
     {
-	if (tmp3 != NULL)
+	if (tmp3 != nullptr)
 	{
 	    /* 3 values */
 	    if (tmp3IsString)
@@ -723,7 +723,7 @@ epilogue:
 		(*objStringOut) = istr_dup(tmp3);
 	    }
 	}
-	else if (tmp2 != NULL)
+	else if (tmp2 != nullptr)
 	{
 	    /* 2 strings */
 	    if (tmp2IsString)
@@ -737,7 +737,7 @@ epilogue:
 	        (*objStringOut) = istr_dup(tmp2);
 	    }
 	}
-	else if (tmp1 != NULL)
+	else if (tmp1 != nullptr)
 	{
 	    /* 1 string */
 	    (*objStringOut) = istr_dup(tmp1);
@@ -773,10 +773,10 @@ abio_get_proj_full_name(FILE * inFile, STRING * interface, STRING * parent,
     STRING              tmp1,
                         tmp2;
 
-    *interface = NULL;
-    *parent = NULL;
-    *name = NULL;
-    *item = NULL;
+    *interface = nullptr;
+    *parent = nullptr;
+    *name = nullptr;
+    *item = nullptr;
 
     if (!abio_get_list_begin(inFile))
 	return FALSE;
@@ -905,9 +905,9 @@ abio_get_string(FILE * inFile, ISTRING *istringOutPtr)
     int                 ch;
     int                 len;	/* string length */
     int                 c = 0;	/* string count */
-    STRING		string = NULL;		/* string */
+    STRING		string = nullptr;		/* string */
 
-    istringOut = NULL;		/* necessary (see epilogue) */
+    istringOut = nullptr;		/* necessary (see epilogue) */
 
     while (isspace(ch = fgetc(inFile)))
 	;
@@ -945,7 +945,7 @@ abio_get_string(FILE * inFile, ISTRING *istringOutPtr)
     string[c] = '\0';
 
 epilogue:
-    if (istringOut == NULL)
+    if (istringOut == nullptr)
     {
         istringOut = istr_create_alloced(string);
     }
@@ -1061,15 +1061,15 @@ STRING
 abio_open_bil_input(STRING name, int *pLinesRead, FILE ** pInFile)
 {
 #define inFile (*pInFile)
-    STRING	errmsg = NULL;
+    STRING	errmsg = nullptr;
     float	v = 0.0;
 
-    inFile = NULL;
+    inFile = nullptr;
     /*
      * If the input file exists, can be read, and is
      * the correct version, then open it.
      */
-    if ((inFile = util_fopen_locked(name, "r")) != NULL)
+    if ((inFile = util_fopen_locked(name, "r")) != nullptr)
     {
 	v = abio_get_bil_version(inFile, pLinesRead);
 	errmsg = abio_check_bil_version(v, name);
@@ -1093,10 +1093,10 @@ abio_check_bil_version(
 )
 {
 #define MAXVER 10
-    STRING      errmsg = NULL;
-    STRING      help_msg = NULL;
-    STRING      help_buf = NULL;
-    STRING	fileName = NULL;
+    STRING      errmsg = nullptr;
+    STRING      help_msg = nullptr;
+    STRING      help_buf = nullptr;
+    STRING	fileName = nullptr;
 
     fileName = name? name : CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 35, "NoName");
     fileName = strdup(fileName);
@@ -1112,7 +1112,7 @@ abio_check_bil_version(
 
 	help_buf = (STRING)util_malloc(strlen(help_msg) + strlen(fileName) + MAXVER +1);
 	sprintf(help_buf, help_msg, fileName, ver);
-	util_set_help_data(help_buf, NULL, NULL);
+	util_set_help_data(help_buf, nullptr, nullptr);
     }
     else if (ver == 0.0)
     {
@@ -1125,7 +1125,7 @@ abio_check_bil_version(
 
 	help_buf = (STRING)util_malloc(strlen(help_msg) + strlen(fileName) + 1);
 	sprintf(help_buf, help_msg, fileName);
-	util_set_help_data(help_buf, NULL, NULL);
+	util_set_help_data(help_buf, nullptr, nullptr);
     }
     
     if (errmsg)
@@ -1158,7 +1158,7 @@ abio_open_bil_output(
 #define outFile (*pOutFile)
     int                 version_written = FALSE;
     char                backup[MAXPATHLEN];
-    FILE               *bakp = NULL;
+    FILE               *bakp = nullptr;
     STRING              file_begin = abio_file_begin_string();
     int                 fblen = strlen(file_begin);
     int			iRet = OK;
@@ -1174,7 +1174,7 @@ abio_open_bil_output(
 	/*
 	 * Output file does not exist.  Open a new one.
 	 */
-	if ((outFile = util_fopen_locked(outfile, "w")) != NULL)
+	if ((outFile = util_fopen_locked(outfile, "w")) != nullptr)
 	{
 	    debug_unbuffer_file(outFile);
 	    abio_set_indent_char(outFile, '\t');
@@ -1226,10 +1226,10 @@ abio_open_bil_output(
 	abio_set_indent_char(outFile, '\t');
 	abio_set_indent_chars_per_level(outFile, 1);
 
-	if (bakp == NULL)
+	if (bakp == nullptr)
 	{
 	    bakp = util_fopen_locked(old_file, "r");
-	    if (bakp == NULL)
+	    if (bakp == nullptr)
 	    {
 		iRet = ERR_READ;
 		goto ERROR_EXIT;	/* file access error */
@@ -1288,7 +1288,7 @@ abio_open_gil_input(STRING name, FILE ** pInFile)
 {
 #define inFile (*pInFile)
     int                 v = 0;
-    STRING              errmsg = NULL;
+    STRING              errmsg = nullptr;
     int			ch = -1;
 
     /*
@@ -1318,12 +1318,12 @@ abio_open_gil_input(STRING name, FILE ** pInFile)
     /*
      * Otherwise, return an error message.
      */
-    if (errmsg != NULL)
+    if (errmsg != nullptr)
     {
         sprintf(Buf, "%s: %s", name, errmsg);
 	return Buf;
     }
-    return NULL;
+    return nullptr;
 #undef inFile
 }
 
@@ -1356,7 +1356,7 @@ abio_open_gil_output(STRING outfile, FILE ** pOutFile)
 	     * First line is the version number.
 	     */
 	    fprintf(outFile, "%s%d\n", gilVersionPrefix, gilMajorVersion);
-	    return NULL;
+	    return nullptr;
 	}
 	else
 	    goto ERROR_EXIT;
@@ -1369,7 +1369,7 @@ abio_open_gil_output(STRING outfile, FILE ** pOutFile)
     if (outFile = util_fopen_locked(outfile, "a"))
     {
 	char                backup[MAXPATHLEN];
-	FILE               *bakp = NULL;
+	FILE               *bakp = nullptr;
 	STRING              comment = abio_comment_string();
 	int                 len = strlen(comment);
 
@@ -1418,7 +1418,7 @@ abio_open_gil_output(STRING outfile, FILE ** pOutFile)
 	       strncmp(Buf, comment, len) == 0);
 
 	fclose(bakp);
-	return NULL;
+	return nullptr;
     }
 
 ERROR_EXIT:
@@ -1472,7 +1472,7 @@ STRING
 abio_open_output(STRING name, FILE ** pOutFile)
 {
 #define outFile (*pOutFile)
-    if (name == NULL)
+    if (name == nullptr)
     {
 	outFile = tmpfile();
     }
@@ -1480,12 +1480,12 @@ abio_open_output(STRING name, FILE ** pOutFile)
     {
         outFile = util_fopen_locked(name, "w");
     }
-    if (outFile != NULL)
+    if (outFile != nullptr)
     {
         debug_unbuffer_file(outFile);
 	abio_set_indent_char(outFile, ' ');
 	abio_set_indent_chars_per_level(outFile, 4);
-	return NULL;
+	return nullptr;
     }
 
     sprintf(Buf, "%s: %s", name, strerror(errno));
@@ -1519,7 +1519,7 @@ abio_print_line(FILE *outFile, STRING fmt,...)
     va_list             args;
 
     va_start(args, fmt);
-    if (fmt == NULL)
+    if (fmt == nullptr)
     {
 	fputs("\n", outFile);
 	Newline = TRUE;
@@ -1863,7 +1863,7 @@ abio_put_string_to_file(FILE * outFile, STRING string)
     char		strEndChar = *(abio_string_end_string());
     char		curChar = 0;
 
-    if (string != NULL)
+    if (string != nullptr)
     {
 	for (ptr = string; (*ptr != 0); ++ptr)
 	{
@@ -2083,7 +2083,7 @@ get_token(FILE * inFile)
         ungetc(ch, inFile);
     }
     Buf[count] = '\0';
-    return (count > 0? Buf:NULL);
+    return (count > 0? Buf:nullptr);
 }
 
 
@@ -2156,7 +2156,7 @@ skip_comments(FILE * inFile)
 static int
 debug_unbuffer_file(FILE *file)
 {
-    if ((file == NULL) || (!debugging()))
+    if ((file == nullptr) || (!debugging()))
     {
 	return 0;
     }
@@ -2195,9 +2195,9 @@ util_set_err_output_handler(UtilOutputHandler new_err_output_handler)
 int
 util_puts(STRING msg)
 {
-    if (output_handler == NULL)
+    if (output_handler == nullptr)
     {
-        if (util_get_program_name() != NULL)
+        if (util_get_program_name() != nullptr)
         {
             printf("%s: ", util_get_program_name());
         }
@@ -2207,7 +2207,7 @@ util_puts(STRING msg)
     {
 	output_handler(msg);
     }
-    util_set_help_data(NULL, NULL, NULL);
+    util_set_help_data(nullptr, nullptr, nullptr);
     return 0;
 }
 
@@ -2226,9 +2226,9 @@ util_dputs(int debug_level, STRING msg)
 int
 util_puts_err(STRING msg)
 {
-    if (err_output_handler == NULL)
+    if (err_output_handler == nullptr)
     {
-        if (util_get_program_name() != NULL)
+        if (util_get_program_name() != nullptr)
         {
             fprintf(stderr, "%s: ", util_get_program_name());
         }
@@ -2242,9 +2242,9 @@ util_puts_err(STRING msg)
 	** handler.  Then we'll free it.
 	*/
 	int	msg_len = strlen(msg)+1;
-	STRING	msg_buf = NULL;
+	STRING	msg_buf = nullptr;
 
-	if( (msg_buf = (STRING)util_malloc(msg_len)) == NULL) {
+	if( (msg_buf = (STRING)util_malloc(msg_len)) == nullptr) {
 		fprintf(stderr,"%s: could not allocate memory!\n",
 			util_get_program_name());
 		return 0;
@@ -2253,7 +2253,7 @@ util_puts_err(STRING msg)
 	err_output_handler(msg_buf);
 	free(msg_buf);
     }
-    util_set_help_data(NULL, NULL, NULL);
+    util_set_help_data(nullptr, nullptr, nullptr);
     return 0;
 }
 
@@ -2264,9 +2264,9 @@ util_printf(STRING fmt, ...)
     va_list             args;
     va_start(args, fmt);
 
-    if (output_handler == NULL)
+    if (output_handler == nullptr)
     {
-        if (util_get_program_name() != NULL)
+        if (util_get_program_name() != nullptr)
         {
 	    printf("%s: ", util_get_program_name());
         }
@@ -2283,7 +2283,7 @@ util_printf(STRING fmt, ...)
     }
 
     va_end(args);
-    util_set_help_data(NULL, NULL, NULL);
+    util_set_help_data(nullptr, nullptr, nullptr);
     return 0;
 }
 
@@ -2311,7 +2311,7 @@ util_printf_err(STRING fmt, ...)
     va_list	args;
     va_start(args, fmt);
 
-    if (err_output_handler != NULL)
+    if (err_output_handler != nullptr)
     {
         char	errmsg[8192] = "";
 	int	num_chars = 0;
@@ -2322,7 +2322,7 @@ util_printf_err(STRING fmt, ...)
     }
     else
     {
-        if (util_get_program_name() != NULL)
+        if (util_get_program_name() != nullptr)
         {
 	    fprintf(stderr, "%s: ", util_get_program_name());
         }
@@ -2330,7 +2330,7 @@ util_printf_err(STRING fmt, ...)
     }
 
     va_end(args);
-    util_set_help_data(NULL, NULL, NULL);
+    util_set_help_data(nullptr, nullptr, nullptr);
     return 0;
 }
 
@@ -2432,7 +2432,7 @@ abio_put_string_to_buffer(STRING string, STRING outBuf, int size)
     int			i = 0;
 
     *outBuf = 0;
-    if (string != NULL)
+    if (string != nullptr)
     {
 	for (ptr = string, i = 0; (*ptr != 0); ++ptr, ++i)
 	{
@@ -2489,7 +2489,7 @@ util_set_help_data(
     if (help_text)
     {
 	util_free(help_text); 
-	help_text = NULL;
+	help_text = nullptr;
     }
     if (msg)
     {
@@ -2500,7 +2500,7 @@ util_set_help_data(
     if (help_volume)
     {
 	util_free(help_volume); 
-	help_volume = NULL;
+	help_volume = nullptr;
     }
     if (vol)
     {
@@ -2511,7 +2511,7 @@ util_set_help_data(
     if (help_locID)
     {
 	util_free(help_locID); 
-  	help_locID = NULL;
+  	help_locID = nullptr;
     }
     if (locID)
     {

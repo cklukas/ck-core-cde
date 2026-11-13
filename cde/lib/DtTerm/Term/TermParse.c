@@ -281,7 +281,7 @@ _DtTermPModeSet(Widget w)   /*  DECSET CSI?ph */
                      vtw->term.tpd->cursorColumn = FIRSTCOLUMN(vtw) ;
                      vtw->term.tpd->scrollLockTopRow = TOPROW(vtw);
                      vtw->term.tpd->scrollLockBottomRow = BOTTOMROW(vtw) ;
-                     XtVaSetValues(w, DtNcolumns, 132, NULL) ;
+                     XtVaSetValues(w, DtNcolumns, 132, nullptr) ;
                      vtw->vt.td->col132Mode = True ;
                   }
                   break;
@@ -369,7 +369,7 @@ _DtTermPModeReset(Widget w)   /* DECRST CSI?pl */
                     vtw->term.tpd->cursorColumn = FIRSTCOLUMN(vtw) ;
                     vtw->term.tpd->scrollLockTopRow = TOPROW(vtw);
                     vtw->term.tpd->scrollLockBottomRow = BOTTOMROW(vtw) ;
-                    XtVaSetValues(w, DtNcolumns, 80, NULL) ;
+                    XtVaSetValues(w, DtNcolumns, 80, nullptr) ;
                     vtw->vt.td->col132Mode = False ;
                   }
                   break;
@@ -2115,13 +2115,13 @@ _DtTermParseSunMisc  /*  Misc sun esc seqs  */
 		context->parms[2] + xOffset, context->parms[3] + yOffset);
 		DKS */
 	(void) XtVaSetValues(sw, XmNx, context->parms[2] + xOffset,
-		XmNy, context->parms[3] + yOffset, NULL);
+		XmNy, context->parms[3] + yOffset, nullptr);
         break ;
     case 4:
 	(void) GetWindowOffsets(sw, &xOffset, &yOffset, &widthOffset,
 		&heightOffset);
         (void) XtVaSetValues(sw, XmNwidth, context->parms[3] - widthOffset,
-                       XmNheight,context->parms[2] - heightOffset, NULL);
+                       XmNheight,context->parms[2] - heightOffset, nullptr);
       break ;
     case 5:
       XRaiseWindow(display,sh_win);
@@ -2135,7 +2135,7 @@ _DtTermParseSunMisc  /*  Misc sun esc seqs  */
     case 8:
         rows = context->parms[2];
         columns = context->parms[3];
-        (void) XtVaSetValues(w, DtNrows, rows, DtNcolumns, columns, NULL);
+        (void) XtVaSetValues(w, DtNrows, rows, DtNcolumns, columns, nullptr);
         break ;
     case 11:
       if (vtw->term.tpd->windowMapped)          
@@ -2146,25 +2146,25 @@ _DtTermParseSunMisc  /*  Misc sun esc seqs  */
     case 13:
 	(void) GetWindowOffsets(sw, &xOffset, &yOffset, &widthOffset,
 		&heightOffset);
-        (void) XtVaGetValues(sw, XtNx, &x, XtNy, &y, NULL);
+        (void) XtVaGetValues(sw, XtNx, &x, XtNy, &y, nullptr);
         (void) sprintf(buf, "\033[3;%d;%dt", x - xOffset, y - yOffset);
         (void) sendEscSequence(w, buf);
         break;
     case 14:
 	(void) GetWindowOffsets(sw, &xOffset, &yOffset, &widthOffset,
 		&heightOffset);
-        (void) XtVaGetValues(sw, XtNheight, &height, XtNwidth, &width, NULL);
+        (void) XtVaGetValues(sw, XtNheight, &height, XtNwidth, &width, nullptr);
         (void) sprintf(buf,"\033[4;%d;%dt", height + heightOffset,
 		width + widthOffset);
         (void) sendEscSequence(w, buf);
         break;
     case 18:
-        (void) XtVaGetValues(w, DtNrows, &rows, DtNcolumns, &columns, NULL);
+        (void) XtVaGetValues(w, DtNrows, &rows, DtNcolumns, &columns, nullptr);
         (void) sprintf(buf, "\033[8;%hd;%hdt", rows, columns);
         (void) sendEscSequence(w, buf);
         break;
     case 20:
-      XtVaGetValues(sw,XmNiconName, &icon, NULL);
+      XtVaGetValues(sw,XmNiconName, &icon, nullptr);
       fmt = "\033]L%s\033\\";
       if (strlen(icon) + strlen(fmt) + 1 >= sizeof(buf))
 	s = XtMalloc(strlen(icon) + strlen(fmt) + 1);
@@ -2175,7 +2175,7 @@ _DtTermParseSunMisc  /*  Misc sun esc seqs  */
       if (s != buf) XtFree(s);
       break ;
     case 21:
-      XtVaGetValues(sw,XmNtitle, &title, NULL);
+      XtVaGetValues(sw,XmNtitle, &title, nullptr);
       fmt = "\033]l%s\033\\";
       if (strlen(title) + strlen(fmt) + 1 >= sizeof(buf))
 	s = XtMalloc(strlen(title) + strlen(fmt) + 1);
@@ -2195,7 +2195,7 @@ _DtTermParserSunWindowIcon( Widget w)   /* sun set icon label */
   Widget sw;
   context = GetParserContext(w) ;
   for (sw = w; !XtIsShell(sw); sw = XtParent(sw));
-  XtVaSetValues(sw, XmNiconName, context->stringParms[0].str, NULL) ;
+  XtVaSetValues(sw, XmNiconName, context->stringParms[0].str, nullptr) ;
 }
 
 void
@@ -2208,7 +2208,7 @@ Widget w
   Widget sw;
   context = GetParserContext(w) ;
   for (sw = w; !XtIsShell(sw); sw = XtParent(sw));
-  XtVaSetValues(sw,XmNtitle, context->stringParms[0].str, NULL) ;
+  XtVaSetValues(sw,XmNtitle, context->stringParms[0].str, nullptr) ;
 }
 
 void
@@ -2221,9 +2221,9 @@ _DtTermParserSunIconFile(Widget w)   /* Sun set icon to pixmap in file */
 
   context = GetParserContext(w) ;
   for (sw = w; !XtIsShell(sw); sw = XtParent(sw));
-  XtVaGetValues(sw, XtNforeground, &fg, XtNbackground, &bg, NULL);
+  XtVaGetValues(sw, XtNforeground, &fg, XtNbackground, &bg, nullptr);
   icon = XmGetPixmap(XtScreen(sw),(char *)context->stringParms[0].str,fg,bg);
   if (icon != XmUNSPECIFIED_PIXMAP)
-     XtVaSetValues(sw, XmNiconPixmap,  icon, NULL);
+     XtVaSetValues(sw, XmNiconPixmap,  icon, nullptr);
 }
 

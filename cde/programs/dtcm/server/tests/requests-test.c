@@ -183,7 +183,7 @@ static char *repeat(char c, size_t n)
 {
   char *s = malloc(n + 1);
 
-  if(s == NULL)
+  if(s == nullptr)
     abort();
   memset(s, c, n);
   s[n] = '\0';
@@ -196,13 +196,13 @@ static void setup(void)
   struct passwd *pw = getpwuid(getuid());
   const char *base = getenv("CMSD_TEST_DIR");
 
-  if(pw == NULL) {
+  if(pw == nullptr) {
     fprintf(stderr, "no passwd entry for the test user\n");
     exit(2);
   }
   snprintf(user, sizeof(user), "%s", pw->pw_name);
   snprintf(spool, sizeof(spool), "%s/spool-XXXXXX", base ? base : ".");
-  if(mkdtemp(spool) == NULL) {
+  if(mkdtemp(spool) == nullptr) {
     perror("mkdtemp");
     exit(2);
   }
@@ -234,13 +234,13 @@ static char *slurp(const char *path)
   long size;
   char *text;
 
-  if(f == NULL)
-    return(NULL);
+  if(f == nullptr)
+    return(nullptr);
   fseek(f, 0, SEEK_END);
   size = ftell(f);
   rewind(f);
   text = malloc(size + 1);
-  if(text == NULL || fread(text, 1, size, f) != (size_t)size)
+  if(text == nullptr || fread(text, 1, size, f) != (size_t)size)
     abort();
   text[size] = '\0';
   fclose(f);
@@ -384,19 +384,19 @@ static void case_prefix_length(void)
   char *huge = repeat('A', 20000);
   char *prefix = _DtCmGetPrefix(huge, '@');
 
-  CHECK(prefix != NULL && strlen(prefix) == 20000);
+  CHECK(prefix != nullptr && strlen(prefix) == 20000);
   free(prefix);
   free(huge);
 
   prefix = _DtCmGetPrefix("name@host", '@');
-  CHECK(prefix != NULL && strcmp(prefix, "name") == 0);
+  CHECK(prefix != nullptr && strcmp(prefix, "name") == 0);
   free(prefix);
   prefix = _DtCmGetPrefix("name", '@');
-  CHECK(prefix != NULL && strcmp(prefix, "name") == 0);
+  CHECK(prefix != nullptr && strcmp(prefix, "name") == 0);
   free(prefix);
-  CHECK(_DtCmGetPrefix("@host", '@') == NULL);
-  CHECK(_DtCmGetPrefix("", '@') == NULL);
-  CHECK(_DtCmGetPrefix(NULL, '@') == NULL);
+  CHECK(_DtCmGetPrefix("@host", '@') == nullptr);
+  CHECK(_DtCmGetPrefix("", '@') == nullptr);
+  CHECK(_DtCmGetPrefix(nullptr, '@') == nullptr);
 }
 
 /* A calendar name that is a user name, with a host part of any length. */
@@ -435,7 +435,7 @@ static void case_empty_classification(void)
   set_attribute(&attrs[0], CSA_ENTRY_ATTR_START_DATE, 0,
 		string_value(CSA_VALUE_DATE_TIME, "20300101T120000Z"));
   set_attribute(&attrs[1], CSA_ENTRY_ATTR_TYPE, 0, value(CSA_VALUE_UINT32));
-  set_attribute(&attrs[2], CSA_ENTRY_ATTR_CLASSIFICATION, 0, NULL);
+  set_attribute(&attrs[2], CSA_ENTRY_ATTR_CLASSIFICATION, 0, nullptr);
 
   setup();
   stat = _DtCm_check_entry_cms_attributes(_DtCMS_VERSION4, 3, attrs,
@@ -466,13 +466,13 @@ static void case_criteria_types(void)
   memset(&val, 0, sizeof(val));
   val.type = CSA_VALUE_SINT32;
   val.item.sint32_value = 5;
-  stat = _DtCmHashCriteria(_DtCm_entry_name_tbl, 1, NULL, &attr, NULL,
+  stat = _DtCmHashCriteria(_DtCm_entry_name_tbl, 1, nullptr, &attr, nullptr,
 			   &no_match, &no_start, &no_end, &s1, &s2, &e1, &e2,
 			   &id, &hnum, &hattrs, &hops);
   CHECK_CODE(stat, CSA_E_INVALID_ATTRIBUTE_VALUE);
 
   attr.name.name = CSA_ENTRY_ATTR_END_DATE;
-  stat = _DtCmHashCriteria(_DtCm_entry_name_tbl, 1, NULL, &attr, NULL,
+  stat = _DtCmHashCriteria(_DtCm_entry_name_tbl, 1, nullptr, &attr, nullptr,
 			   &no_match, &no_start, &no_end, &s1, &s2, &e1, &e2,
 			   &id, &hnum, &hattrs, &hops);
   CHECK_CODE(stat, CSA_E_INVALID_ATTRIBUTE_VALUE);
@@ -484,7 +484,7 @@ static void case_criteria_types(void)
   attr.name.name = CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER;
   val.type = CSA_VALUE_OPAQUE_DATA;
   val.item.opaque_data_value = &opaque;
-  stat = _DtCmHashCriteria(_DtCm_entry_name_tbl, 1, NULL, &attr, NULL,
+  stat = _DtCmHashCriteria(_DtCm_entry_name_tbl, 1, nullptr, &attr, nullptr,
 			   &no_match, &no_start, &no_end, &s1, &s2, &e1, &e2,
 			   &id, &hnum, &hattrs, &hops);
   CHECK_CODE(stat, CSA_SUCCESS);
@@ -523,7 +523,7 @@ static void case_rule_date_token(void)
 
 /* ---- log writers ---------------------------------------------------------- */
 
-static Tag_4 appointment_tag = { appointment_4, 1, NULL };
+static Tag_4 appointment_tag = { appointment_4, 1, nullptr };
 
 /* Strings with the characters that need escaping in a log. */
 static char *awkward(size_t n)
@@ -573,21 +573,21 @@ static void case_log_appointment_fields(void)
   close(fd);
 
   text = slurp(path);
-  CHECK(text != NULL);
+  CHECK(text != nullptr);
   if(text) {
     char *end = strchr(text, '\n');
 
     /* the add record is one line that carries all the strings in full, and
        the remove record that follows is the second line */
     CHECK(strncmp(text, "(add \"", 6) == 0);
-    CHECK(end != NULL && strncmp(end + 1, "(remove \"", 9) == 0);
+    CHECK(end != nullptr && strncmp(end + 1, "(remove \"", 9) == 0);
     size = end ? (size_t)(end - text) : 0;
     CHECK(size > 20000 * 3 + 9000 * 3);
-    CHECK(strstr(text, "xxxxxxxxxx\\\"q\\\\b\\nlxxxx") != NULL);
-    CHECK(strstr(text, "details: \"xxxxxxxxxx\\\"q") != NULL);
-    CHECK(strstr(text, "author: \"xxxxxxxxxx\\\"q") != NULL);
-    CHECK(strstr(text, "exceptions: (2 ) ") != NULL);
-    CHECK(strstr(text, "apptstat: active privacy: public )") != NULL);
+    CHECK(strstr(text, "xxxxxxxxxx\\\"q\\\\b\\nlxxxx") != nullptr);
+    CHECK(strstr(text, "details: \"xxxxxxxxxx\\\"q") != nullptr);
+    CHECK(strstr(text, "author: \"xxxxxxxxxx\\\"q") != nullptr);
+    CHECK(strstr(text, "exceptions: (2 ) ") != nullptr);
+    CHECK(strstr(text, "apptstat: active privacy: public )") != nullptr);
     free(text);
   }
   free(what);
@@ -602,7 +602,7 @@ static void case_log_access_list(void)
 {
   char path[PATH_MAX + 64], *text, *who = repeat('w', 6000), *expected;
   int fd;
-  Access_Entry_4 second = { "second", access_read_4, NULL };
+  Access_Entry_4 second = { "second", access_read_4, nullptr };
   Access_Entry_4 first;
 
   setup();
@@ -616,7 +616,7 @@ static void case_log_access_list(void)
   text = slurp(path);
   expected = malloc(6100);
   sprintf(expected, "(access read \"%s\" \"second\" )\n", who);
-  CHECK(text != NULL && strcmp(text, expected) == 0);
+  CHECK(text != nullptr && strcmp(text, expected) == 0);
   free(text);
   free(expected);
   free(who);
@@ -630,7 +630,7 @@ static void case_log_entry_table(void)
 
   setup();
   fd = open_log("table", path, sizeof(path));
-  names[0] = NULL;
+  names[0] = nullptr;
   names[1] = name;
   names[2] = "short";
   types[0] = 0;
@@ -644,7 +644,7 @@ static void case_log_entry_table(void)
   sprintf(expected,
 	  "(entrytable (1 \"%s\" \"5:string\")\n(2 \"short\" \"4:uint32\")\n)\n",
 	  name);
-  CHECK(text != NULL && strcmp(text, expected) == 0);
+  CHECK(text != nullptr && strcmp(text, expected) == 0);
   free(text);
   free(expected);
   free(name);
@@ -726,17 +726,17 @@ static void case_log_calendar_attributes(void)
   close(fd);
 
   text = slurp(path);
-  CHECK(text != NULL);
+  CHECK(text != nullptr);
   if(text) {
     size_t len = strlen(text);
 
     CHECK(strncmp(text, "(calendarattributes (\"cccc", 26) == 0);
     CHECK(len > 6000 + 30000 + 5000 + 6000 + 5000 + 7000);
     CHECK(strcmp(text + len - 5, "\")\n)\n") == 0);
-    CHECK(strstr(text, "\",\"5:string\",\"xxxxxxxxxx\\\"q\\\\b\\nl") != NULL);
-    CHECK(strstr(text, ":3 other:5\")") != NULL);
-    CHECK(strstr(text, "20300101T000000Z ddd") != NULL);
-    CHECK(strstr(text, "\",\"14:opaque_data\",\"7000:xxxxxxxxxx") != NULL);
+    CHECK(strstr(text, "\",\"5:string\",\"xxxxxxxxxx\\\"q\\\\b\\nl") != nullptr);
+    CHECK(strstr(text, ":3 other:5\")") != nullptr);
+    CHECK(strstr(text, "20300101T000000Z ddd") != nullptr);
+    CHECK(strstr(text, "\",\"14:opaque_data\",\"7000:xxxxxxxxxx") != nullptr);
     free(text);
   }
 }
@@ -768,7 +768,7 @@ static void case_log_entry(void)
   close(fd);
 
   text = slurp(path);
-  CHECK(text != NULL);
+  CHECK(text != nullptr);
   if(text) {
     const char *start = "(add \"20300101T000000Z\" key: 5\nhashedattributes: "
 			"((1 \"xxxxxxxxxx\\\"q";
@@ -788,17 +788,17 @@ static void case_calendar_file_names(void)
   char *log, expected[PATH_MAX + 64];
 
   setup();
-  CHECK(_DtCmsGetLogFN("../escape") == NULL);
-  CHECK(_DtCmsGetLogFN("a/b") == NULL);
-  CHECK(_DtCmsGetLogFN("/etc/passwd") == NULL);
-  CHECK(_DtCmsGetBakFN("x/y") == NULL);
-  CHECK(_DtCmsGetTmpFN("x/y") == NULL);
-  CHECK(_DtCmsGetDelFN("x/y") == NULL);
-  CHECK(_DtCmsGetLogFN(NULL) == NULL);
+  CHECK(_DtCmsGetLogFN("../escape") == nullptr);
+  CHECK(_DtCmsGetLogFN("a/b") == nullptr);
+  CHECK(_DtCmsGetLogFN("/etc/passwd") == nullptr);
+  CHECK(_DtCmsGetBakFN("x/y") == nullptr);
+  CHECK(_DtCmsGetTmpFN("x/y") == nullptr);
+  CHECK(_DtCmsGetDelFN("x/y") == nullptr);
+  CHECK(_DtCmsGetLogFN(nullptr) == nullptr);
 
   log = _DtCmsGetLogFN("plain.name");
   snprintf(expected, sizeof(expected), "%s/callog.plain.name", spool);
-  CHECK(log != NULL && strcmp(log, expected) == 0);
+  CHECK(log != nullptr && strcmp(log, expected) == 0);
   free(log);
 }
 
@@ -868,7 +868,7 @@ static void case_create_removes_failed_file(void)
 
   setup();
   rq = request();
-  args = create_args(cal, 0, NULL);
+  args = create_args(cal, 0, nullptr);
   snprintf(path, sizeof(path), "%s/callog.failing", spool);
 
   fail_append_open = 1;
@@ -891,12 +891,12 @@ static void case_create_names(void)
 
   /* no calendar name */
   cal = strdup("");
-  args = create_args(cal, 0, NULL);
+  args = create_args(cal, 0, nullptr);
   res = cms_create_calendar_5_svc(&args, &rq);
   CHECK(*res == CSA_E_INVALID_PARAMETER);
   free(cal);
   cal = strdup("@testhost");
-  args = create_args(cal, 0, NULL);
+  args = create_args(cal, 0, nullptr);
   res = cms_create_calendar_5_svc(&args, &rq);
   CHECK(*res == CSA_E_INVALID_PARAMETER);
   free(cal);
@@ -905,7 +905,7 @@ static void case_create_names(void)
   snprintf(path, sizeof(path), "%s/callog.some", spool);
   CHECK(mkdir(path, 0700) == 0);
   cal = strdup("some/where@testhost");
-  args = create_args(cal, 0, NULL);
+  args = create_args(cal, 0, nullptr);
   res = cms_create_calendar_5_svc(&args, &rq);
   CHECK(*res != CSA_SUCCESS);
   snprintf(path, sizeof(path), "%s/callog.some/where", spool);
@@ -916,7 +916,7 @@ static void case_create_names(void)
   huge = repeat('A', 20000);
   cal = malloc(strlen(huge) + 16);
   sprintf(cal, "%s@testhost", huge);
-  args = create_args(cal, 0, NULL);
+  args = create_args(cal, 0, nullptr);
   res = cms_create_calendar_5_svc(&args, &rq);
   CHECK(*res != CSA_SUCCESS);
   free(cal);
@@ -974,7 +974,7 @@ static void case_large_entry_round_trip(void)
 
   setup();
   rq = request();
-  cargs = create_args(name, 0, NULL);
+  cargs = create_args(name, 0, nullptr);
   res = cms_create_calendar_5_svc(&cargs, &rq);
   CHECK_CODE(*res, CSA_SUCCESS);
 
@@ -995,7 +995,7 @@ static void case_large_entry_round_trip(void)
 
   /* forget the calendar in memory and read it back from its file */
   CHECK(_DtCmsGetCalendarByName(name, B_FALSE, &cal) == CSA_SUCCESS);
-  CHECK(cal != NULL);
+  CHECK(cal != nullptr);
   _DtCmsFreeCalendar(cal);
 
   memset(&largs, 0, sizeof(largs));
@@ -1003,7 +1003,7 @@ static void case_large_entry_round_trip(void)
   largs.char_set = "";
   lres = cms_lookup_entries_5_svc(&largs, &rq);
   CHECK_CODE(lres->stat, CSA_SUCCESS);
-  CHECK(lres->entries != NULL);
+  CHECK(lres->entries != nullptr);
   if(lres->entries) {
     found = lres->entries->attrs;
     for(i = 0; i < lres->entries->num_attrs; i++) {
@@ -1027,7 +1027,7 @@ static void case_large_entry_round_trip(void)
 static void make_v1_calendar(const char *name, int num)
 {
   char *path = _DtCmsGetLogFN((char *)name);
-  Access_Entry_4 world = { WORLD, access_read_4, NULL };
+  Access_Entry_4 world = { WORLD, access_read_4, nullptr };
   Appt_4 appt;
   char author[300];
   int fd, i;
@@ -1076,7 +1076,7 @@ static void case_update_old_format_entry(void)
 
   res = cms_update_entry_5_svc(&args, &rq);
   CHECK_CODE(res->stat, CSA_SUCCESS);
-  CHECK(res->entry != NULL);
+  CHECK(res->entry != nullptr);
   free(cal);
 }
 
@@ -1114,7 +1114,7 @@ static void case_delete_several_appointments(void)
 
   res = _DtCm_rtable_delete_4_svc(&args, &rq);
   CHECK(res->status == access_ok_4);
-  CHECK(res->res.Table_Res_List_4_u.a != NULL);
+  CHECK(res->res.Table_Res_List_4_u.a != nullptr);
 }
 
 static void case_create_existing_calendar(void)
@@ -1139,7 +1139,7 @@ static void case_create_existing_calendar(void)
 
   /* the calendar that was there keeps its content and its file */
   after = slurp(path);
-  CHECK(before != NULL && after != NULL && strcmp(before, after) == 0);
+  CHECK(before != nullptr && after != nullptr && strcmp(before, after) == 0);
   free(before);
   free(after);
 }
@@ -1160,7 +1160,7 @@ static void case_create_new_calendar(void)
 
   snprintf(path, sizeof(path), "%s/callog.fresh", spool);
   text = slurp(path);
-  CHECK(text != NULL && strstr(text, "(access read \"world\" )") != NULL);
+  CHECK(text != nullptr && strstr(text, "(access read \"world\" )") != nullptr);
   free(text);
 }
 
@@ -1196,7 +1196,7 @@ static void case_read_long_string(void)
   fclose(f);
 
   CHECK_CODE(_DtCmsLoadCalendar(name, &cal), CSA_SUCCESS);
-  CHECK(cal != NULL);
+  CHECK(cal != nullptr);
   if(cal) {
     _DtCmsEnumerateUp(cal, note_what);
     CHECK(what_length == 100000);
@@ -1241,7 +1241,7 @@ static void case_reminder_identifier(void)
 
   setup();
   rq = request();
-  cargs = create_args(name, 0, NULL);
+  cargs = create_args(name, 0, nullptr);
   res = cms_create_calendar_5_svc(&cargs, &rq);
   CHECK_CODE(*res, CSA_SUCCESS);
 
@@ -1266,7 +1266,7 @@ static void case_reminder_identifier(void)
   rargs.tick = 1893456000 - 86400;
   rres = cms_lookup_reminder_5_svc(&rargs, &rq);
   CHECK_CODE(rres->stat, CSA_SUCCESS);
-  CHECK(rres->rems != NULL);
+  CHECK(rres->rems != nullptr);
   if(rres->rems && rres->rems->entryid) {
     char expected[300];
 
@@ -1295,12 +1295,12 @@ static void case_calendar_attribute_numbers(void)
 
   setup();
   rq = request();
-  cargs = create_args(name, 0, NULL);
+  cargs = create_args(name, 0, nullptr);
   res = cms_create_calendar_5_svc(&cargs, &rq);
   CHECK_CODE(*res, CSA_SUCCESS);
   CHECK_CODE(_DtCmsGetCalendarByName(name, B_FALSE, &cal), CSA_SUCCESS);
-  CHECK(cal != NULL);
-  if(cal == NULL)
+  CHECK(cal != nullptr);
+  if(cal == nullptr)
     return;
   snprintf(owner, sizeof(owner), "%s",
 	   cal->attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].value->\
@@ -1337,7 +1337,7 @@ static void case_calendar_attribute_numbers(void)
   gargs.names = names;
   gres = cms_get_calendar_attr_5_svc(&gargs, &rq);
   CHECK_CODE(gres->stat, CSA_SUCCESS);
-  CHECK(gres->num_attrs == 1 && gres->attrs != NULL &&
+  CHECK(gres->num_attrs == 1 && gres->attrs != nullptr &&
 	strcmp(gres->attrs[0].name.name, "far-away") == 0);
   free(name);
 }
@@ -1387,10 +1387,10 @@ static void case_entry_attributes_by_name(void)
 
   setup();
   rq = request();
-  cargs = create_args(name, 0, NULL);
+  cargs = create_args(name, 0, nullptr);
   res = cms_create_calendar_5_svc(&cargs, &rq);
   CHECK_CODE(*res, CSA_SUCCESS);
-  key = insert_entry(&rq, name, "entry a", NULL);
+  key = insert_entry(&rq, name, "entry a", nullptr);
   insert_entry(&rq, name, "entry b", "late-attribute");
 
   memset(names, 0, sizeof(names));
@@ -1405,15 +1405,15 @@ static void case_entry_attributes_by_name(void)
   gargs.names = names;
   gres = cms_get_entry_attr_5_svc(&gargs, &rq);
   CHECK_CODE(gres->stat, CSA_SUCCESS);
-  CHECK(gres->entries != NULL);
+  CHECK(gres->entries != nullptr);
   if(gres->entries) {
     cms_get_entry_attr_res_item *item = gres->entries;
 
     CHECK_CODE(item->stat, CSA_SUCCESS);
     CHECK(item->num_attrs == 2);
     if(item->num_attrs == 2) {
-      CHECK(item->attrs[0].value == NULL);
-      CHECK(item->attrs[1].value != NULL &&
+      CHECK(item->attrs[0].value == nullptr);
+      CHECK(item->attrs[1].value != nullptr &&
 	    strcmp(item->attrs[1].value->item.string_value, "entry a") == 0);
     }
   }
@@ -1486,10 +1486,10 @@ static struct svc_req stranger_request(void)
   struct passwd *pw;
 
   setpwent();
-  while((pw = getpwent()) != NULL)
+  while((pw = getpwent()) != nullptr)
     if(pw->pw_uid != getuid() && pw->pw_uid != 0)
       break;
-  if(pw == NULL) {
+  if(pw == nullptr) {
     fprintf(stderr, "no second user in the passwd database\n");
     exit(2);
   }
@@ -1604,8 +1604,8 @@ static void case_dump_closes_descriptor(void)
   setup();
   dump_name = strdup("dump@testhost");
   cal = _DtCmsMakeCalendar(user, dump_name);
-  CHECK(cal != NULL);
-  if(cal == NULL)
+  CHECK(cal != nullptr);
+  if(cal == nullptr)
     return;
   before = count_descriptors();
   for(i = 0; i < 4; i++) {
@@ -1636,15 +1636,15 @@ static void case_null_attribute_values(void)
 
   setup();
   rq = request();
-  cargs = create_args(name, 0, NULL);
+  cargs = create_args(name, 0, nullptr);
   res = cms_create_calendar_5_svc(&cargs, &rq);
   CHECK_CODE(*res, CSA_SUCCESS);
-  key = insert_entry(&rq, name, "an entry", NULL);
+  key = insert_entry(&rq, name, "an entry", nullptr);
 
   memset(attrs, 0, sizeof(attrs));
-  set_attribute(&attrs[0], "no-value-one", 0, NULL);
-  set_attribute(&attrs[1], "no-value-two", 40000, NULL);
-  set_attribute(&attrs[2], CSA_CAL_ATTR_CALENDAR_NAME, 0, NULL);
+  set_attribute(&attrs[0], "no-value-one", 0, nullptr);
+  set_attribute(&attrs[1], "no-value-two", 40000, nullptr);
+  set_attribute(&attrs[2], CSA_CAL_ATTR_CALENDAR_NAME, 0, nullptr);
   memset(&sargs, 0, sizeof(sargs));
   sargs.cal = name;
   sargs.num_attrs = 3;
@@ -1663,8 +1663,8 @@ static void case_null_attribute_values(void)
   }
 
   memset(attrs, 0, sizeof(attrs));
-  set_attribute(&attrs[0], "entry-no-value", 0, NULL);
-  set_attribute(&attrs[1], CSA_ENTRY_ATTR_SUMMARY, 0, NULL);
+  set_attribute(&attrs[0], "entry-no-value", 0, nullptr);
+  set_attribute(&attrs[1], CSA_ENTRY_ATTR_SUMMARY, 0, nullptr);
   memset(&iargs, 0, sizeof(iargs));
   iargs.cal = name;
   iargs.num_attrs = 2;

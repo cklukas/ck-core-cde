@@ -149,10 +149,10 @@ PalItemInfo combo_box_palitem_rec = {
 
     /* type             */  AB_TYPE_COMBO_BOX,
     /* name             */  "Combo Box",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  combo_box_initialize,
     /* is_a_test        */  obj_is_combo_box,
     /* prop_initialize  */  combo_box_prop_init,
@@ -193,15 +193,15 @@ combo_box_initialize(
     items[1] = CATGETS(Dtb_project_catd, 6, 71, "itemB");
     for (i=0; i < XtNumber(items); i++)
     {
-        iobj = obj_create(AB_TYPE_ITEM, NULL);
+        iobj = obj_create(AB_TYPE_ITEM, nullptr);
         obj_set_subtype(iobj, AB_ITEM_FOR_COMBO_BOX);
         obj_append_child(obj, iobj);
         abobj_set_item_name(iobj, obj_get_module(obj), obj_get_name(obj), items[i]);
         obj_set_label(iobj, items[i]);
         obj_set_is_initially_selected(iobj, i==0? True : False);
     }
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 }
@@ -262,12 +262,12 @@ combo_box_prop_init(
     if (dtb_combobox_prop_dialog_initialize(cgen, parent) == 0)
     {
         pcs->prop_sheet = cgen->attrs_ctrlpanel;
-        pcs->current_obj = NULL;
+        pcs->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pcs->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -332,8 +332,8 @@ combo_box_prop_init(
         prop_geomfield_init(&(pcs->pos), cgen->pos_label,
                 cgen->x_field_label, cgen->x_field,
                 cgen->y_field_label, cgen->y_field,
-                NULL, NULL,
-                NULL, NULL,
+                nullptr, nullptr,
+                nullptr, nullptr,
                 cgen->pos_cb);
 
 	/* Width */
@@ -351,9 +351,9 @@ combo_box_prop_init(
                         prop_size_policyCB, (XtPointer)&(pcs->wth));
 
         prop_geomfield_init(&(pcs->wth), cgen->wpolicy_rbox_label,
-                            NULL, NULL, NULL, NULL,
+                            nullptr, nullptr, nullptr, nullptr,
                             cgen->w_field_label, cgen->w_field,
-                            NULL, NULL,
+                            nullptr, nullptr,
                             cgen->wpolicy_cb);
 
         /* Initial State */
@@ -387,7 +387,7 @@ combo_box_prop_init(
         n = 0;
         item[n] = cgen->item_state_ckbox_items.Selected_item;
         item_val[n] = AB_STATE_SELECTED; n++;
-        prop_checkbox_init(&(pcs->item_state), NULL,
+        prop_checkbox_init(&(pcs->item_state), nullptr,
                 cgen->item_state_ckbox, n, item, item_val,
                 cgen->itemlist_cb);
 
@@ -416,9 +416,9 @@ combo_box_prop_init(
 		cgen->item_add_button,
 		n, item, item_val, 
 		j, item2, item2_val,
-		&(pcs->item_label), NULL/*label_type*/, NULL/*graphic_hint*/,
-		NULL/*mnemonic*/, NULL/*accel*/, NULL/*line_style*/,
-		&(pcs->item_state), NULL,
+		&(pcs->item_label), nullptr/*label_type*/, nullptr/*graphic_hint*/,
+		nullptr/*mnemonic*/, nullptr/*accel*/, nullptr/*line_style*/,
+		&(pcs->item_state), nullptr,
 		&(pcs->current_obj));
 
         prop_changebars_cleared(pcs->prop_sheet);
@@ -426,7 +426,7 @@ combo_box_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 }
 
 static int
@@ -448,7 +448,7 @@ combo_box_prop_clear(
 {
     PropComboboxSettingsRec	*pcs = &(prop_combobox_settings_rec[type]);
 
-    if (pcs->current_obj == NULL)
+    if (pcs->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -484,7 +484,7 @@ combo_box_prop_clear(
     /* Clear Items */
     prop_item_editor_clear(&(pcs->items));
 
-    pcs->current_obj = NULL;
+    pcs->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -502,9 +502,9 @@ combo_box_prop_load(
     BOOL		    	editable;
     BOOL                        load_all = (loadkey & LoadAll);
  
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pcs->current_obj != NULL)
+        if (pcs->current_obj != nullptr)
             obj = pcs->current_obj;
         else
             return ERROR;
@@ -525,7 +525,7 @@ combo_box_prop_load(
 	prop_options_set_value(&(pcs->label_pos), (XtPointer)obj_get_label_position(obj), False);
 
 	/* Load Label */
-	prop_setup_label_field(&(pcs->label), NULL,
+	prop_setup_label_field(&(pcs->label), nullptr,
 				obj->label_type, obj_get_label(obj), AB_LINE_UNDEF);
 
 	/* Load Read Only */
@@ -765,11 +765,11 @@ combobox_obj_destroy_CB(ObjEvDestroyInfo destroyInfo)
 	pcs = &(prop_combobox_settings_rec[i]);
 
 	if (pcs->current_obj == doomedObj)
-	    pcs->current_obj = NULL;
+	    pcs->current_obj = nullptr;
 	if (pcs->items.current_item == doomedObj)
-	    pcs->items.current_item = NULL;
+	    pcs->items.current_item = nullptr;
 	if (pcs->items.clipboard_item == doomedObj)
-	    pcs->items.clipboard_item = NULL;
+	    pcs->items.clipboard_item = nullptr;
     }
     return 0;
 }
@@ -790,7 +790,7 @@ wth_policyCB(
      */
     if (state->set)
     {
-    	XtVaGetValues(w, XmNuserData, &value, NULL);
+    	XtVaGetValues(w, XmNuserData, &value, nullptr);
     	ui_field_set_editable(pcs->wth.w_field, value == SIZE_FIXED_KEY);
     }
 }

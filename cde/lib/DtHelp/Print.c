@@ -152,10 +152,10 @@ _DtHelpPrintCBRec * CreatePrintCBRec(
    _DtHelpCommonHelpStuff *	help,
    _DtHelpPrintStuff *		print)
 {
-   _DtHelpPrintCBRec * rec = NULL;
+   _DtHelpPrintCBRec * rec = nullptr;
  
    rec = (_DtHelpPrintCBRec *) XtCalloc(1,sizeof(_DtHelpPrintCBRec));
-   if (NULL == rec) return NULL;
+   if (nullptr == rec) return nullptr;
    rec->widget = widget;
    rec->display = display;
    rec->help = help;
@@ -174,32 +174,32 @@ void _DtHelpInitPrintStuff (
     _DtHelpPrintStuff * print)
 {
     /* Set our print display stuff to initial values */
-    if (print->printer != NULL)
+    if (print->printer != nullptr)
       print->printer = XtNewString(print->printer);
   
     if (print->helpPrint != _DtHelpDefaultHelpPrint)
       print->helpPrint = XtNewString(print->helpPrint);
   
     print->paperSize      = DtHELP_PAPERSIZE_LETTER;
-    print->printVolume    = NULL;
+    print->printVolume    = nullptr;
   
     /* print dialog widgets */
-    print->printForm      = NULL;
-    print->subject        = NULL;
-    print->printerField   = NULL;
-    print->copiesField    = NULL;
-    print->letterBtn = NULL;
-    print->legalBtn = NULL;
-    print->execBtn = NULL;
-    print->b5Btn = NULL;
-    print->a4Btn     = NULL;
-    print->topicsFrame    = NULL;
-    print->curTopicBtn    = NULL;
-    print->subTopicsBtn   = NULL;
-    print->tocBtn   = NULL;
-    print->allTopicsBtn   = NULL;
-    print->paperTopicsSeparator   = NULL;
-    print->topicsBtnsSeparator    = NULL;
+    print->printForm      = nullptr;
+    print->subject        = nullptr;
+    print->printerField   = nullptr;
+    print->copiesField    = nullptr;
+    print->letterBtn = nullptr;
+    print->legalBtn = nullptr;
+    print->execBtn = nullptr;
+    print->b5Btn = nullptr;
+    print->a4Btn     = nullptr;
+    print->topicsFrame    = nullptr;
+    print->curTopicBtn    = nullptr;
+    print->subTopicsBtn   = nullptr;
+    print->tocBtn   = nullptr;
+    print->allTopicsBtn   = nullptr;
+    print->paperTopicsSeparator   = nullptr;
+    print->topicsBtnsSeparator    = nullptr;
 }
 
 
@@ -214,9 +214,9 @@ void _DtHelpFreePrintStuff (
     int			cleanUpKind)
 {
      XtFree(print->printVolume);
-     print->printVolume = NULL;
+     print->printVolume = nullptr;
 
-     if (print->printForm != NULL)
+     if (print->printForm != nullptr)
      {
           XtUnmanageChild(print->printForm);
      }
@@ -225,10 +225,10 @@ void _DtHelpFreePrintStuff (
     {
        if (print->helpPrint != _DtHelpDefaultHelpPrint)
            XtFree(print->helpPrint);
-       print->helpPrint = NULL;
+       print->helpPrint = nullptr;
 
        XtFree(print->printer);
-       print->printer = NULL;
+       print->printer = nullptr;
     }
 }
 
@@ -345,17 +345,17 @@ static void StartPrintingCB(
 {
    _DtHelpPrintCBRec * printrec = (_DtHelpPrintCBRec *) clientData;
    int printType=0;
-   char *printTopic=NULL;
-   char *topicTitle=NULL;
+   char *printTopic=nullptr;
+   char *topicTitle=nullptr;
    Boolean printAll=False;
    Boolean printSub=False;
    Boolean printTocIndex=False;
    char * printer;
-   XmString titleLbl = NULL;
+   XmString titleLbl = nullptr;
    int    paperSize;
    int    copyCnt;
    char * copies;
-   Widget dfltSize = NULL;
+   Widget dfltSize = nullptr;
    Arg args[5];
 
    /* Determine the current selected print type */
@@ -370,7 +370,7 @@ static void StartPrintingCB(
    if (XmToggleButtonGetState(printrec->print->tocBtn))
      {
        printType = _DtPRINT_TOC;
-       printTopic = NULL;
+       printTopic = nullptr;
        printTocIndex = True;
      }
    else
@@ -412,7 +412,7 @@ static void StartPrintingCB(
    /*
     * change the XmString into a char *.
     */
-  if (titleLbl != NULL)
+  if (titleLbl != nullptr)
     {
       int                len;
       int                newLen = 0;
@@ -434,7 +434,7 @@ static void StartPrintingCB(
 	      if (len > 0)
 		{
 	          topicTitle = XtRealloc(topicTitle, len + 1);
-	          if (topicTitle != NULL)
+	          if (topicTitle != nullptr)
 		    {
 	              strcpy(&topicTitle[newLen], newTxt);
 		      newLen += len;
@@ -448,12 +448,12 @@ static void StartPrintingCB(
    /* get printer */
    printer = XmTextFieldGetString(printrec->print->printerField);
    if (printer && printer[0] == EOS) 
-     { XtFree(printer); printer = NULL; }
+     { XtFree(printer); printer = nullptr; }
 
    /* get copies */
    copies = XmTextFieldGetString(printrec->print->copiesField);
    copyCnt = 1;
-   if (   NULL == copies
+   if (   nullptr == copies
        || (copies && copies[0] == EOS) 
        || (copies && sscanf(copies,"%d",&copyCnt) != 1 )
        || (copyCnt < 0 || copyCnt > 500) )
@@ -522,14 +522,14 @@ void _DtHelpUpdatePrintDialog(
    int n;
    Arg args[5];
    char * titleStr;
-   XmString labelString=NULL;
-   XmString volumeString=NULL;
-   XmFontList fontList = NULL;
+   XmString labelString=nullptr;
+   XmString volumeString=nullptr;
+   XmFontList fontList = nullptr;
    Boolean mod = False;
    char buf[400];
 
    /* only work on print dialog if we need to */
-   if (print->printForm == NULL) return;
+   if (print->printForm == nullptr) return;
 
    /* Set the proper default toggle button value */
    if ( setDefaults )
@@ -670,10 +670,10 @@ void _DtHelpDisplayPrintDialog(
    _DtHelpCommonHelpStuff * help)
 {
    Arg args[5];
-   Widget dfltSize = NULL;
+   Widget dfltSize = nullptr;
 
    /* Build a print dialog if we need to */
-   if (print->printForm == NULL)
+   if (print->printForm == nullptr)
    {
       CreatePrintDialog(widget,print,display,help);
 
@@ -759,7 +759,7 @@ static void CreatePrintDialog(
    XmString labelString;
    char * chrStr;
    DtHelpListStruct *pHelpInfo;
-   _DtHelpPrintCBRec * printCBRec = NULL;
+   _DtHelpPrintCBRec * printCBRec = nullptr;
    int n;
    Arg args[20];
 
@@ -828,9 +828,9 @@ static void CreatePrintDialog(
    /* create the printer name text field */
    n = 0;
    /* get the printer value from printer resource, LPDEST, or leave blank */
-   if ( print->printer != NULL && print->printer[0] != EOS )
+   if ( print->printer != nullptr && print->printer[0] != EOS )
       chrStr = print->printer;
-   else if ( (chrStr = getenv("LPDEST")) == NULL || chrStr[0] == EOS)
+   else if ( (chrStr = getenv("LPDEST")) == nullptr || chrStr[0] == EOS)
       chrStr = (char *)_DTGETMESSAGE(PRSET, 60,"");   /* dflt printer value */
    XtSetArg (args[n], XmNvalue, chrStr );                               n++;
    XtSetArg (args[n], XmNcursorPosition, strlen(chrStr) );              n++;
@@ -995,7 +995,7 @@ static void CreatePrintDialog(
 
    /* put form inside frame */
    topicsForm = XmCreateForm (
-                   print->topicsFrame,"topicsForm", NULL, 0);
+                   print->topicsFrame,"topicsForm", nullptr, 0);
    XtManageChild (topicsForm);
 
    /* create the frame title */
@@ -1215,19 +1215,19 @@ void _DtHelpPrintJob(
    i = 0;
    argv[i++] = printExec;
 
-   if (printer != NULL && printer[0] != EOS)
+   if (printer != nullptr && printer[0] != EOS)
    {
         argv[i++] = "-printer";
         argv[i++] = printer;
    }
  
-   if (copies != NULL && copies[0] != EOS)
+   if (copies != nullptr && copies[0] != EOS)
    {
         argv[i++] = "-copies";
         argv[i++] = copies;
    }
  
-   if (NULL != topicTitle)
+   if (nullptr != topicTitle)
    {
       argv[i++] = "-topicTitle";
       argv[i++] = topicTitle;
@@ -1260,7 +1260,7 @@ void _DtHelpPrintJob(
    if (!printSub && !printAll && !printTocIndex)
       argv[i++] = "-oneTopic";
 
-   if (NULL == helpData) helpData = quotes;
+   if (nullptr == helpData) helpData = quotes;
    switch (helpType)
    {
      case DtHELP_TYPE_TOPIC:
@@ -1293,7 +1293,7 @@ void _DtHelpPrintJob(
          break;
    }  /* End Switch Statement */
  
-   argv[i++] = NULL;
+   argv[i++] = nullptr;
  	
 #if 0	/* DBG */
    { /* for debugging, print out the command line */

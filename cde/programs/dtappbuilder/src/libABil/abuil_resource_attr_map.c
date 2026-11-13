@@ -3163,7 +3163,7 @@ abuilP_store_attr_in_abobj(
 		resource_attr_map, XtNumber(resource_attr_map),
 		sizeof(ResourceAttrMap), compare_maps);
 
-    if (match != (ResourceAttrMap *)NULL && match->num_maps > 0)
+    if (match != (ResourceAttrMap *)nullptr && match->num_maps > 0)
     {
 	AB_OBJECT_TYPE	ab_type = obj_get_type(obj);
 	unsigned long	obj_mask = BMASK(ab_type);
@@ -3279,7 +3279,7 @@ abuilP_init_context_attrs(
     {
 	CONTEXT_INIT_HANDLER handler = AbuilP_attr_contexts[i]->init_handler;
 
-	if (handler != NULL)
+	if (handler != nullptr)
 	    (*handler)(AbuilP_attr_contexts[i]);
     }
 }
@@ -3295,7 +3295,7 @@ abuilP_store_context_attrs(
     {
 	CONTEXT_STORE_HANDLER handler = AbuilP_attr_contexts[i]->store_handler;
 
-	if (handler != NULL)
+	if (handler != nullptr)
 	    (*handler)(ab_widget, AbuilP_attr_contexts[i]);
     }
 }
@@ -3308,7 +3308,7 @@ attach_context_init(
     AttachmentContext	*attach_context = (AttachmentContext *)context;
     
     attach_context->att_type = (ISTRING)NULL;
-    attach_context->att_object = (ObjRef *)NULL;
+    attach_context->att_object = (ObjRef *)nullptr;
     attach_context->att_position = 0;
     attach_context->att_offset   = 0;
 }
@@ -3357,7 +3357,7 @@ attach_context_store(
     STRING		attach_str;
     AB_ATTACH_TYPE	att_type = AB_ATTACH_UNDEF;
     long		att_pos = 0, att_off = 0, offset = 0;
-    void		*value  = NULL;
+    void		*value  = nullptr;
     BOOL		need_val = TRUE;
     ObjRef		*obj_ref;
     
@@ -3424,7 +3424,7 @@ attach_context_store(
 	return;
 
 
-    if (need_val == TRUE && (obj_ref = attach_context->att_object) != NULL)
+    if (need_val == TRUE && (obj_ref = attach_context->att_object) != nullptr)
     {
 	if (!obj_ref->is_resolved)
 	{

@@ -83,15 +83,15 @@ typedef enum {dstoff, dston, nochange} DSTchange;
 Tick bot, eot;
 
 char *months[] = {"",
-	   (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL,
-	   (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL,
-	   (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL
+	   (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr,
+	   (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr,
+	   (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr
 };
 
 char *months2[] = {"",
-	   (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL,
-	   (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL,
-	   (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL
+	   (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr,
+	   (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr,
+	   (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr
 };
 
 int monthdays[12] = {
@@ -108,13 +108,13 @@ int monthsecs[12] = {
 	31*daysec,	30*daysec,	31*daysec
 };
 
-char *days[8] = {(char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL};
+char *days[8] = {(char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr};
 
-char *days2[8] = {(char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL};
+char *days2[8] = {(char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr};
 
-char *days3[8] = {(char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL};
+char *days3[8] = {(char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr};
 
-char *days4[8] = {(char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL, (char *)NULL};
+char *days4[8] = {(char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr, (char *)nullptr};
 
 char *numbers[32] = {"",
         " 1 ", " 2 ", " 3 ", " 4 ", " 5 ", " 6 ", " 7 ",
@@ -961,9 +961,9 @@ set_timezone(char *tzname)
         /* I don't like using 'system', but this does the right
 	 * thing according to tha man pages
 	 */
-	if (tzname==NULL) system("unset TZ\n");
+	if (tzname==nullptr) system("unset TZ\n");
 #else
-	if (tzname==NULL) tzsetwall();
+	if (tzname==nullptr) tzsetwall();
 #endif /* SVR4 */
 
 	else {
@@ -1013,7 +1013,7 @@ init_time(void)
 #if defined(SVR4)
 	/* Fix for QAR 31607 */
 	tzset();
-	if (getenv("TZ") == NULL){
+	if (getenv("TZ") == nullptr){
 		char *tzptr;
 		tzptr = malloc(strlen(tzname[0]) + strlen(tzname[1]) + 10);
 		sprintf (tzptr,"TZ=%s%ld%s", tzname[0], timezone/3600, tzname[1]);

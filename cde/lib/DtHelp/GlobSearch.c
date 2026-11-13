@@ -201,12 +201,12 @@ static char * s_GlobSrchDlgBtnStrs[] = {
             "Stop Search",
             "Close",
             "Help",
-            NULL };
+            nullptr };
 /* catalog index numbers for the strings */
 static unsigned char s_GlobSrchDlgBtnCatNum[] = {
              12, 13, 14, 15, 16 };
 
-static char *     s_PrefixFontListTag = NULL;
+static char *     s_PrefixFontListTag = nullptr;
 
 /* Setup for the Retrun Translation set for the text field */
 static char defaultBtnTranslations[] = "<Key>Return: Activate()";
@@ -257,7 +257,7 @@ static void MergeFontListIntoWidgetFonts(
      Widget     widget,
      XmFontList newFontsList)
 {
-    XmFontList fontList = NULL;
+    XmFontList fontList = nullptr;
     XmFontContext context;
     XmFontListEntry entry;
     Arg args[2];
@@ -266,7 +266,7 @@ static void MergeFontListIntoWidgetFonts(
     XtSetArg(args[0], XmNfontList, &fontList);
     XtGetValues(widget,args,1);
 
-    if (NULL == fontList) return;           /* RETURN on error */
+    if (nullptr == fontList) return;           /* RETURN on error */
 
     /* work with copy, because FontListAppendEntry() destroys input FL */
     fontList = XmFontListCopy(fontList);
@@ -274,7 +274,7 @@ static void MergeFontListIntoWidgetFonts(
     /* walk through the volTitlesFontList entries and add them in */
     XmFontListInitFontContext(&context,newFontsList);
     for ( entry = XmFontListNextEntry(context);
-          NULL != entry;
+          nullptr != entry;
           entry = XmFontListNextEntry(context) )
     {
        fontList = XmFontListAppendEntry(fontList,entry);
@@ -357,9 +357,9 @@ static void LoadPrefixFont(
           DtHelpDialogWidget hw)
 {
    XmFontListEntry entry;
-   XmFontList      curFontList = NULL;
-   XmFontList      newFontList = NULL;
-   char *          fontSpec = NULL;
+   XmFontList      curFontList = nullptr;
+   XmFontList      newFontList = nullptr;
+   char *          fontSpec = nullptr;
    Arg             args[3];
 
    if (hw->help_dialog.srch.hitsFontLoaded) return;          /* RETURN */
@@ -382,7 +382,7 @@ static void LoadPrefixFont(
    XmFontListEntryFree(&entry);
 
    /* install font */
-   if (NULL == newFontList)
+   if (nullptr == newFontList)
    {  /* error case */
       s_PrefixFontListTag = XmFONTLIST_DEFAULT_TAG;
    }
@@ -410,10 +410,10 @@ static Boolean VolumeHasIndexP (
     int          helpType,
     char * 	baseName)
 {
-   char * path = NULL;
+   char * path = nullptr;
    _DtHelpVolumeHdl vol;
    int  keyWordCount = 0;
-   char **currentKeyList = NULL;
+   char **currentKeyList = nullptr;
 
    /* if help content isn't a volume, it has no index */
    if (    _DtHelpGlobSrchCurVolume == srchSource
@@ -478,31 +478,31 @@ static Boolean GetVolumeInfoCB (
 
    if (ret_title)
    {
-      char *   locTitle = NULL;
+      char *   locTitle = nullptr;
 
       /* locTitle is owned by caller */
       _DtHelpGetAsciiVolumeTitle(pDisplayArea, vol, &locTitle);
-      if (locTitle == NULL)
+      if (locTitle == nullptr)
          locTitle = XtNewString(baseName);
       *ret_title = locTitle;
    }
 
    if (ret_titleXmStr)
    {
-      XmString   locTitleXmStr = NULL;
+      XmString   locTitleXmStr = nullptr;
 
       /* locTitle is owned by caller */
       _DtHelpFormatVolumeTitle(pDisplayArea,vol,
                                    &locTitleXmStr,io_fontList,ret_mod);
-      if (locTitleXmStr == NULL)
+      if (locTitleXmStr == nullptr)
          locTitleXmStr = XmStringCreateLocalized(baseName); 
       *ret_titleXmStr = locTitleXmStr;
    }
 
    if (ret_docId || ret_timeStamp)
    {
-      char * locDocId = NULL;
-      char * locTimeStamp = NULL;
+      char * locDocId = nullptr;
+      char * locTimeStamp = nullptr;
 
       /* locDocId & locTimeStamp will point to private memory; do not modify */
       _DtHelpCeGetDocStamp(vol,&locDocId, &locTimeStamp);
@@ -538,17 +538,17 @@ static void AdjustPositionValues(
 {
    _DtHelpGlobSrchVol * curVol;
 
-   if (   NULL == fileList 
-       || NULL == (curVol = (_DtHelpGlobSrchVol *) fileList->clientData) )
+   if (   nullptr == fileList 
+       || nullptr == (curVol = (_DtHelpGlobSrchVol *) fileList->clientData) )
        return;                                       /* RETURN */
 
    /* do we need to find first next file that has hits and is in list? */
    if(False == adjustThisFile)
    {
       curVol->nextVolPosition += adjNextAmount;
-      for ( fileList = _DtHelpFileListGetNext(NULL,fileList); /* begin with next */
-            NULL != fileList;
-            fileList = _DtHelpFileListGetNext(NULL,fileList) )
+      for ( fileList = _DtHelpFileListGetNext(nullptr,fileList); /* begin with next */
+            nullptr != fileList;
+            fileList = _DtHelpFileListGetNext(nullptr,fileList) )
       {
          _DtHelpGlobSrchVol * vol=(_DtHelpGlobSrchVol *)fileList->clientData;
          if (vol->showVolInList && (vol->hitCnt > 0 || vol->zeroHitsOk) )
@@ -562,8 +562,8 @@ static void AdjustPositionValues(
 
    /* add in the adjust amount to all files */
    for ( /* do nothing */; 
-         NULL != fileList;
-         fileList = _DtHelpFileListGetNext(NULL,fileList) )
+         nullptr != fileList;
+         fileList = _DtHelpFileListGetNext(nullptr,fileList) )
    {
       _DtHelpGlobSrchVol * vol = (_DtHelpGlobSrchVol *) fileList->clientData;
       if (vol)
@@ -589,13 +589,13 @@ static int HitLoadTopics (
           _DtHelpGlobSrchHit *     hit)
 {
     _DtHelpVolumeHdl volHandle;
-    char * *   origTopicIdList = NULL;
+    char * *   origTopicIdList = nullptr;
     int        topicCnt;
     int        i;
-    XmString * titlesList = NULL;
-    char * *   idList = NULL;
-    char * *   fileList = NULL;
-    XmFontList fontList = NULL;
+    XmString * titlesList = nullptr;
+    char * *   idList = nullptr;
+    char * *   fileList = nullptr;
+    XmFontList fontList = nullptr;
     Boolean    mod = False;
     Boolean    allMods = False;
     Arg        args[5];
@@ -626,9 +626,9 @@ static int HitLoadTopics (
     /* get the titles of all topics */
     for (i=0; i<topicCnt; i++)
     {
-        XmString titleStr = NULL;
+        XmString titleStr = nullptr;
         Boolean  valid = False;
-	XmFontList lastFontList = NULL;
+	XmFontList lastFontList = nullptr;
 
         /*
 	 * mod==True indicates _DtHelpFormatTopicTitle copied fontList
@@ -640,11 +640,11 @@ static int HitLoadTopics (
         valid = _DtHelpFormatTopicTitle(hw->help_dialog.help.pDisplayArea,
                     volHandle,origTopicIdList[i], &titleStr, &fontList, &mod);
 
-	if (mod && NULL != lastFontList) XmFontListFree(lastFontList);
-	lastFontList = NULL;
+	if (mod && nullptr != lastFontList) XmFontListFree(lastFontList);
+	lastFontList = nullptr;
         allMods |= mod;  /* track for all iterations */
 
-        if(valid!=0 || NULL==titleStr) 
+        if(valid!=0 || nullptr==titleStr) 
         {
            titleStr=XmStringCreateLocalized(origTopicIdList[i]);
         }  /* if couldn't get title */
@@ -721,7 +721,7 @@ static int HitNameDisplay (
      }
      LoadPrefixFont(hw);
      prefixString = XmStringGenerate(tmpStr, s_PrefixFontListTag,
-				     XmCHARSET_TEXT, NULL);
+				     XmCHARSET_TEXT, nullptr);
      labelString = XmStringConcat(prefixString,hit->indexTitle);
         /* recall indexTitle is an XmString in the volume's indexXmStrsList */
 
@@ -766,14 +766,14 @@ static int HitTopicsDisplay (
   /*tmpStr = (char *)_DTGETMESSAGE (GSSET, 32,"  *      ");*/
     tmpStr = (char *)_DTGETMESSAGE (GSSET, 31,"         ");
     prefixString = XmStringGenerate(tmpStr, s_PrefixFontListTag,
-				    XmCHARSET_TEXT, NULL);
+				    XmCHARSET_TEXT, nullptr);
 
     if (hit->topicCnt > 0)
     {
 	items = (XmString *) XtMalloc (sizeof (XmString) * hit->topicCnt);
 
         /* put XmString-formatted topic titles into list */
-        for (i = 0, pTopicString = hit->topicTitles; NULL != *pTopicString; 
+        for (i = 0, pTopicString = hit->topicTitles; nullptr != *pTopicString; 
 						pTopicString++, i++ )
 	   items[i] = XmStringConcat(prefixString,*pTopicString);
 
@@ -845,25 +845,25 @@ static _DtHelpGlobSrchHit * HitFree (
    XmString *           nextStr;
    _DtHelpGlobSrchHit * nextHit;
 
-   if (NULL == hit) return NULL;
+   if (nullptr == hit) return nullptr;
 
    nextHit = hit->next;
 
    /* Free the mem of the topics id list */
    _DtHelpCeFreeStringArray(hit->topicIdList);
-   hit->topicIdList = NULL;        /* mem not owned by me */
+   hit->topicIdList = nullptr;        /* mem not owned by me */
 
    /* Free the mem of the topics files list */
    _DtHelpCeFreeStringArray(hit->topicFileList);
-   hit->topicFileList = NULL;
+   hit->topicFileList = nullptr;
 
    /* topicTitles are XmStrings and we can't use FreeStringArray() */
    for ( nextStr = hit->topicTitles; 
-         NULL != nextStr && NULL != *nextStr; 
+         nullptr != nextStr && nullptr != *nextStr; 
          nextStr++)
        XmStringFree (*nextStr);
    XtFree((char *) hit->topicTitles); /* its an XmString * */
-   hit->topicTitles = NULL;
+   hit->topicTitles = nullptr;
 
    /* set flags */
    hit->topicsLoaded = False;
@@ -891,10 +891,10 @@ static void HitListFree(
 {
    _DtHelpGlobSrchHit * hit;
 
-   if (NULL == vol) return;                          /* RETURN */
+   if (nullptr == vol) return;                          /* RETURN */
 
    for ( hit = vol->hitListHead; 
-         NULL != hit; 
+         nullptr != hit; 
          hit = HitFree(hit,freeHitsThemselves) )
       { /* nothing */ }
 
@@ -924,8 +924,8 @@ static void HitListFree(
 
     if (freeHitsThemselves) 
     {
-        vol->hitListHead = NULL;
-        vol->hitListTail = NULL;
+        vol->hitListHead = nullptr;
+        vol->hitListTail = nullptr;
     }
 }
 
@@ -945,12 +945,12 @@ HitListFreeAllVolHits (
    
    /* walk the files, freeing all hits and their data */
    for ( curFile = hw->help_dialog.srch.volListHead;
-         NULL != curFile;
-         curFile = _DtHelpFileListGetNext(NULL,curFile) )
+         nullptr != curFile;
+         curFile = _DtHelpFileListGetNext(nullptr,curFile) )
    {
        vol = (_DtHelpGlobSrchVol *) curFile->clientData;
 
-       if (NULL == vol) continue;                   /* CONTINUE */
+       if (nullptr == vol) continue;                   /* CONTINUE */
        if (vol->gatheredFullIndex && freeFullIndex == False) continue;
        HitListFree(vol,True);         /* True: free hits themselves */
    }
@@ -992,29 +992,29 @@ static int HitListGetNth (
     char * *            ret_locationId,
     char * *            ret_helpFile)
 {
-   _DtHelpGlobSrchHit * hit = NULL;
+   _DtHelpGlobSrchHit * hit = nullptr;
    _DtHelpGlobSrchVol * curVol;
-   _DtHelpFileEntry     curFile = NULL;
-   _DtHelpFileEntry     posFile = NULL;
-   char * *          locationIdList = NULL;
-   char * *          fileNameList = NULL;
+   _DtHelpFileEntry     curFile = nullptr;
+   _DtHelpFileEntry     posFile = nullptr;
+   char * *          locationIdList = nullptr;
+   char * *          fileNameList = nullptr;
    int               curPos;
    
-   if (NULL == volListHead) goto done;               /* GOTO on error */
+   if (nullptr == volListHead) goto done;               /* GOTO on error */
 
    /* walk along the volumes to find the one containing the position
       Because we need the most recent file with hits before the
       nextFile that has too high a position, only set posFile when
       we aren't ready to stop yet and we're on a file with hits. */
    for ( curFile = volListHead;
-         NULL != curFile;
+         nullptr != curFile;
          curFile = _DtHelpFileListGetNext(curFile,curFile) )
    {
      /* it is impt to use > test so that multiple volumes with the same
         start position are properly handled.  This occurs when they
         have no hits in them. */
      curVol = (_DtHelpGlobSrchVol *) curFile->clientData;
-     if (NULL == curVol) continue;
+     if (nullptr == curVol) continue;
 #if 0
      if (curVol->startPosition > position) break;    /* BREAK */
      if (curVol->hitCnt > 0) posFile = curFile;      /* recent with hits */
@@ -1026,14 +1026,14 @@ static int HitListGetNth (
      }
 #endif
    }
-   if(NULL == posFile) goto done;                    /* GOTO on error */
+   if(nullptr == posFile) goto done;                    /* GOTO on error */
 
    /*** walk along the hits to find the one matching the position ***/
    curVol = (_DtHelpGlobSrchVol *) posFile->clientData;
    curPos = curVol->startPosition;
-   hit = NULL;
-   locationIdList = NULL;
-   fileNameList = NULL;
+   hit = nullptr;
+   locationIdList = nullptr;
+   fileNameList = nullptr;
 
    /* (position == curPos) ==> volume name itself was selected */
    if ( curPos < position )
@@ -1041,14 +1041,14 @@ static int HitListGetNth (
       if ( curVol->hitsDisplayed )
       {
          for ( curPos++, hit = curVol->hitListHead;
-               curPos < position && NULL != hit;
+               curPos < position && nullptr != hit;
                curPos++, hit = hit->next )
          {
             if (False == hit->topicsDisplayed) continue;      /* CONTINUE */
    
             /* walk all displayed topics to see if the position is here */
             for ( locationIdList=hit->topicIdList,fileNameList=hit->topicFileList;
-                  NULL != locationIdList[0];
+                  nullptr != locationIdList[0];
                   locationIdList++, fileNameList++ )
             {
                /* use GOTO to escape with all pointers correct and
@@ -1057,7 +1057,7 @@ static int HitListGetNth (
             }  /* for all locations of a hit before the position */
          }  /* for all members of the hit list before the position */
       }  /* if hits are currently shown */
-      else posFile = NULL;            /* an error occurred */
+      else posFile = nullptr;            /* an error occurred */
    }  /* if position is in the hit list */
 
 done:
@@ -1066,12 +1066,12 @@ done:
    if (ret_locationId)
    {
      if ( locationIdList ) *ret_locationId = locationIdList[0];
-     else *ret_locationId = NULL;
+     else *ret_locationId = nullptr;
    }
    if (ret_helpFile)
    {
      if ( fileNameList ) *ret_helpFile = fileNameList[0];
-     else *ret_helpFile = NULL;
+     else *ret_helpFile = nullptr;
    }
    /* WARNING: depends on pointers and integers the same size */
 #ifdef __LP64__
@@ -1114,19 +1114,19 @@ static int HitListAddFound (
    int               newKey;
    _CEStrcollProc strcollfn = _DtHelpCeGetStrcollProc();
    
-   if (NULL == curFile) return -1;                 /* RETURN */
+   if (nullptr == curFile) return -1;                 /* RETURN */
    vol = (_DtHelpGlobSrchVol *) curFile->clientData;
-   if (NULL == vol) return -1;                     /* RETURN */
+   if (nullptr == vol) return -1;                     /* RETURN */
 
    /* walk along the hits, looking for one matching the new hit */
    /* recall that position is 1-based */
    newKey = _DtHelpCeStrHashToKey(indexEntry);
-   prev = next = NULL;
+   prev = next = nullptr;
    if ( insertSorted )     /* find position and check for duplicates */
    {
       /* walk along list */
       for( next = vol->hitListHead;
-           NULL != next; 
+           nullptr != next; 
            prev = next, next = next->next )
       {
         int ret;
@@ -1148,7 +1148,7 @@ static int HitListAddFound (
    {
       /* walk along list */
       for( next = vol->hitListHead;
-           NULL != next; 
+           nullptr != next; 
            prev = next, next = next->next )
       {
         if (    newKey == next->indexKey                    /* quick compare */
@@ -1163,11 +1163,11 @@ static int HitListAddFound (
 
    /* handle a new hit */
    srcHit = (_DtHelpGlobSrchHit *)XtCalloc(1,sizeof(_DtHelpGlobSrchHit));
-   if (NULL == srcHit) return -1;                         /* RETURN */
+   if (nullptr == srcHit) return -1;                         /* RETURN */
 
    /* init hit values */
    /* leave srcHit->hitCnt == 0 here */
-   if (NULL == indexTitle)
+   if (nullptr == indexTitle)
       srcHit->indexTitle = XmStringCreateLocalized(indexEntry);
    else
       srcHit->indexTitle = indexTitle;
@@ -1206,8 +1206,8 @@ static int CountSelectedVolumes (
  
   /* walk all volumes */
   for ( /* nothing */;
-        NULL != volListHead;
-        volListHead = _DtHelpFileListGetNext(NULL, volListHead) )
+        nullptr != volListHead;
+        volListHead = _DtHelpFileListGetNext(nullptr, volListHead) )
   {
     _DtHelpGlobSrchVol * vol;
 
@@ -1241,13 +1241,13 @@ static _DtHelpFileEntry GetNextSearchFileAndDisplayCompleted(
 {
     /* get first file needing work */
     for ( curFile = _DtHelpFileListGetNext(listHead, curFile);
-          NULL != curFile;
-          curFile = _DtHelpFileListGetNext(NULL, curFile) )
+          nullptr != curFile;
+          curFile = _DtHelpFileListGetNext(nullptr, curFile) )
     {
        _DtHelpGlobSrchVol * vol;
 
        vol = (_DtHelpGlobSrchVol *) curFile->clientData;
-       if (NULL == vol) continue;                  /* CONTINUE */
+       if (nullptr == vol) continue;                  /* CONTINUE */
 
        /* if file already searched and should be displayed, then do so */
        if (   vol->searchThisVolume && vol->searchCompleted 
@@ -1304,14 +1304,14 @@ static void AddVolInfoToFile(
 {
    _DtHelpGlobSrchVol * vol;
 
-   if (NULL == file) return;                     /* RETURN */
+   if (nullptr == file) return;                     /* RETURN */
 
    vol = (_DtHelpGlobSrchVol *) file->clientData;
-   if (NULL == vol)
+   if (nullptr == vol)
    {
       vol = (_DtHelpGlobSrchVol *) XtCalloc(1,sizeof(_DtHelpGlobSrchVol));
       file->clientData = (XtPointer) vol;
-      if (NULL == vol) return;       /* RETURN:  memory alloc error */
+      if (nullptr == vol) return;       /* RETURN:  memory alloc error */
 
       /* calloc() inited almost everything inside to 0 */
       /* set first time creation values */
@@ -1347,7 +1347,7 @@ static void AddVolInfoToList(
 {
    /* walk the files and allocate the vol info as needed */
    for ( /*nothing*/;
-         NULL != listHead;
+         nullptr != listHead;
          listHead = _DtHelpFileListGetNext(listHead,listHead) )
    {
        AddVolInfoToFile(listHead,
@@ -1378,12 +1378,12 @@ static void SetVolStatus(
 {
    /* walk the files and set the status */
    for ( /*nothing*/;
-         NULL != listHead;
+         nullptr != listHead;
          listHead = _DtHelpFileListGetNext(listHead,listHead) )
    {
      _DtHelpGlobSrchVol * vol = (_DtHelpGlobSrchVol *) listHead->clientData;
 
-     if (NULL == vol) continue;
+     if (nullptr == vol) continue;
 
      if (    (False == selectedFilesOnly)
           || (True == listHead->fileSelected && True == selectedFilesOnly) )
@@ -1414,7 +1414,7 @@ static void  VolNameDisplay(
    char *   tmpStr;
    char     buf[40];
 
-   if ( NULL == vol || (False == vol->zeroHitsOk && 0 == vol->hitCnt) )
+   if ( nullptr == vol || (False == vol->zeroHitsOk && 0 == vol->hitCnt) )
        return;                                      /* RETURN */
 
    /* put volume name into list */
@@ -1425,7 +1425,7 @@ static void  VolNameDisplay(
 
    LoadPrefixFont(hw);
    prefixString = XmStringGenerate(buf, s_PrefixFontListTag,
-				   XmCHARSET_TEXT, NULL);
+				   XmCHARSET_TEXT, nullptr);
    labelString = XmStringConcat(prefixString,file->fileTitleXmStr);
 
    /* replace or insert to reflect changed contents */
@@ -1464,7 +1464,7 @@ static int VolHitsDisplay (
 
      /*** walk through the hits and count and display any open hits ***/
      for ( hit = vol->hitListHead, itemCnt = 0; 
-           NULL != hit;
+           nullptr != hit;
            hit = hit->next)
      {
         itemCnt++;           /* True: insert Hit into list */
@@ -1546,7 +1546,7 @@ static int VolHitsUndisplay (
    {  /* delete all items with a position > topNonVisPos */
       curDelPos = listPos + 1;   /* starting position */
       for ( hit = vol->hitListHead, itemCnt = 0; 
-            NULL != hit;
+            nullptr != hit;
             hit = hit->next )
       {
          /* are we still in the visible region? */
@@ -1575,7 +1575,7 @@ static int VolHitsUndisplay (
  
    curDelPos = listPos + 1;   /* starting position */
    for ( hit = vol->hitListHead, itemCnt = 0; 
-         (NULL != hit) && (curDelPos < topNonVisPos);
+         (nullptr != hit) && (curDelPos < topNonVisPos);
          hit = hit->next )
    {
       curDelPos++;      /* undisplay hit item */
@@ -1620,7 +1620,7 @@ static void VolListFree (
  
   /* walk all volumes */
   nextFile = srch->volListHead;
-  while ( NULL != nextFile )
+  while ( nullptr != nextFile )
   {
   _DtHelpGlobSrchVol * vol;
   _DtHelpFileList      tmpFile;
@@ -1635,25 +1635,25 @@ static void VolListFree (
     HitListFree(vol,True);           /* True: free hits themselves */
 
     /* no need to free indexEntriesList because these aren't owned by vol */
-    vol->indexEntriesList = NULL;
+    vol->indexEntriesList = nullptr;
 
     /* free indexXmStrsList */
     /* indexXmStrs are XmStrings and we can't use FreeStringArray() */
     for ( nextStr = vol->indexXmStrsList;
-          NULL != nextStr && NULL != *nextStr; 
+          nullptr != nextStr && nullptr != *nextStr; 
           nextStr++)
        XmStringFree (*nextStr);
     XtFree((char *) vol->indexXmStrsList); /* its a XmString * */
-    vol->indexXmStrsList = NULL;
+    vol->indexXmStrsList = nullptr;
 
     tmpFile = nextFile;
-    nextFile = _DtHelpFileListGetNext(NULL, nextFile);
+    nextFile = _DtHelpFileListGetNext(nullptr, nextFile);
     _DtHelpFileFreeEntry(tmpFile);     /* also frees the clientData (vol) */
   } /* walk all volumes */
 
   /* reset related values */
-  srch->volListHead = NULL;
-  srch->curSrchVol = NULL;
+  srch->volListHead = nullptr;
+  srch->curSrchVol = nullptr;
   srch->volLeftCnt = 0;
 
   /* delete the results */
@@ -1751,11 +1751,11 @@ static void OutputVolInfo(
         _DtHelpFileList listHead)
 {
    for ( /*nothing*/;
-         NULL != listHead;
+         nullptr != listHead;
          listHead = _DtHelpFileListGetNext(listHead,listHead) )
    {
      _DtHelpGlobSrchVol * vol = (_DtHelpGlobSrchVol *) listHead->clientData;
-     if (NULL == vol) continue;
+     if (nullptr == vol) continue;
 
      /* output the info */
      printf("==================\n");
@@ -1792,10 +1792,10 @@ static Boolean SearchContinuePossible(
    /* comparison with srchNormWordStr is correct, given calls to this fn */
 /* FIX: use CheckSearchWord()? */
    if (   (   hw->help_dialog.srch.fullIndex
-           || (   NULL != hw->help_dialog.srch.normWordStr
-               && NULL != normSrchWord
+           || (   nullptr != hw->help_dialog.srch.normWordStr
+               && nullptr != normSrchWord
                && strcmp(normSrchWord, hw->help_dialog.srch.normWordStr) == 0) )
-        && NULL != hw->help_dialog.srch.volListHead 
+        && nullptr != hw->help_dialog.srch.volListHead 
         && hw->help_dialog.srch.volLeftCnt > 0 )
        possible = True;
 
@@ -1825,8 +1825,8 @@ static Boolean SearchOnSameCriteria(
    /* are we searching on the same word as previous search ? */
    /* comparison with srchNormWordStr is correct, given calls to this fn */
    if (   hw->help_dialog.srch.fullIndex
-       || (   NULL != hw->help_dialog.srch.normWordStr
-           && NULL != normSrchWord
+       || (   nullptr != hw->help_dialog.srch.normWordStr
+           && nullptr != normSrchWord
            && strcmp(normSrchWord, hw->help_dialog.srch.normWordStr) == 0) )
        sameCrit = True;
 
@@ -1928,9 +1928,9 @@ static Boolean CheckSearchWord(
      char *  rawSrchWord;
 
      /* avoid a core dump */
-     if (   NULL == srchWord )
+     if (   nullptr == srchWord )
      {
-        if (    NULL == hw->help_dialog.srch.normWordStr
+        if (    nullptr == hw->help_dialog.srch.normWordStr
              || hw->help_dialog.srch.normWordStr[0] == 0) 
             return False; /* word hasn't changed */
         return True;                           /* RETURN: word has changed */
@@ -1942,14 +1942,14 @@ static Boolean CheckSearchWord(
      /* FIX: to support regcomp(3), do that here */
 
      /* are we searching on the same word? */
-     if (    NULL != hw->help_dialog.srch.normWordStr
+     if (    nullptr != hw->help_dialog.srch.normWordStr
           && strcmp(srchWord, hw->help_dialog.srch.normWordStr) == 0 )
      {
          XtFree(srchWord);
          XtFree(rawSrchWord);
 #if 0
          /* output a message */
-         if (    NULL != hw->help_dialog.srch.normWordStr 
+         if (    nullptr != hw->help_dialog.srch.normWordStr 
               && EOS != hw->help_dialog.srch.normWordStr[0])
             StatusLabelUpdate(hw,FIRST_PROMPT_STATUS,False,0);
 #endif
@@ -1972,7 +1972,7 @@ static Boolean CheckSearchWord(
      hw->help_dialog.srch.wordFieldFirstChar = firstChar;
 
      /* output a message */
-     if (    NULL != hw->help_dialog.srch.normWordStr 
+     if (    nullptr != hw->help_dialog.srch.normWordStr 
           && EOS != hw->help_dialog.srch.normWordStr[0])
         StatusLabelUpdate(hw,FIRST_PROMPT_STATUS,False,0);
 
@@ -2013,7 +2013,7 @@ static void PrepSearchSourceData(
 
         /* are we continuing an interrupted search? */
         if (    hw->help_dialog.srch.volLeftCnt > 0
-             && NULL != hw->help_dialog.srch.volListHead )
+             && nullptr != hw->help_dialog.srch.volListHead )
             return;                       /* RETURN: continue with search */
 
         /* if searching full index, False=don't free vol with full index */
@@ -2053,7 +2053,7 @@ static void PrepSearchSourceData(
      {
         /* Scan directories for volumes if necessary */
         if (    False == hw->help_dialog.srch.volScanDone
-             || NULL == hw->help_dialog.srch.volListHead)
+             || nullptr == hw->help_dialog.srch.volListHead)
         {
            /* Add on the Vol info; (T,T,F) search, display, all */
            VolListBuild(hw,True,True,False);
@@ -2077,7 +2077,7 @@ static void PrepSearchSourceData(
                       GetVolumeInfoCB, _DtHELP_FILE_NAME,
                       hw->help_dialog.help.pDisplayArea);
 
-       if (NULL == cur && NULL != path)  /*file was located but isn't in list*/
+       if (nullptr == cur && nullptr != path)  /*file was located but isn't in list*/
        {  /* add it to the list */
           Boolean mod;
           XmFontList origFontList;
@@ -2085,7 +2085,7 @@ static void PrepSearchSourceData(
           origFontList = hw->help_dialog.srch.volTitlesFontList;
 
           _DtHelpFileListAddFile(&hw->help_dialog.srch.volListHead,
-                       &hw->help_dialog.srch.volTitlesFontList,&mod,path,NULL,
+                       &hw->help_dialog.srch.volTitlesFontList,&mod,path,nullptr,
                        GetVolumeInfoCB, _DtHELP_FILE_NAME, _DtHELP_FILE_TITLE,
                        hw->help_dialog.help.pDisplayArea);
           if (mod)
@@ -2157,7 +2157,7 @@ static void CloseSearchCB (
    }
 
    /* unmanage the srchForm dialog but don't destroy it */
-   if (NULL != srch->srchForm)
+   if (nullptr != srch->srchForm)
      {
        XtUnmanageChild(srch->srchForm);
        XtUnmapWidget(srch->srchForm);
@@ -2180,15 +2180,15 @@ static void DeleteListContents(
 {
    _DtHelpFileEntry  curFile;
 
-   if (NULL != srch->resultList)
+   if (nullptr != srch->resultList)
        XmListDeleteAllItems(srch->resultList);
 
    for ( curFile = srch->volListHead;
-         NULL != curFile;
-         curFile = _DtHelpFileListGetNext(NULL,curFile) )
+         nullptr != curFile;
+         curFile = _DtHelpFileListGetNext(nullptr,curFile) )
    {
       _DtHelpGlobSrchVol * vol = (_DtHelpGlobSrchVol *) curFile->clientData;
-      if (NULL == vol) continue;                      /* CONTINUE */
+      if (nullptr == vol) continue;                      /* CONTINUE */
 
       /* if any hits are displayed and any have open topics, 
          walk through and close them */
@@ -2197,7 +2197,7 @@ static void DeleteListContents(
       {
          _DtHelpGlobSrchHit * hit;
          for ( hit = vol->hitListHead;
-               NULL != hit;
+               nullptr != hit;
                hit = hit->next)
          {
             hit->topicsDisplayed = False;
@@ -2332,12 +2332,12 @@ static void StatusLabelUpdate(
    labelString = XmStringCreateLocalized(labelMsg);
 
    /* get the current string of the label */
-   curLabelString = NULL;
+   curLabelString = nullptr;
    XtSetArg(args[0],XmNlabelString,&curLabelString);
    XtGetValues (hw->help_dialog.srch.statusLabel, args, 1);
 
    /* update label if it is different; avoid flashing this way */
-   if (    NULL != curLabelString && NULL != labelString
+   if (    nullptr != curLabelString && nullptr != labelString
         && XmStringCompare(labelString,curLabelString) == False )
    {
       /* update msg over results list */
@@ -2372,8 +2372,8 @@ static void ResultsListUpdate(
 
    /* check that in fact, there are no results that will be overwritten */
    for ( testFile = hw->help_dialog.srch.volListHead;
-         NULL != testFile;
-         testFile = _DtHelpFileListGetNext(NULL,testFile) )
+         nullptr != testFile;
+         testFile = _DtHelpFileListGetNext(nullptr,testFile) )
    {
       _DtHelpGlobSrchVol * vol;
       vol = (_DtHelpGlobSrchVol *)testFile->clientData;
@@ -2428,7 +2428,7 @@ static Boolean SearchForPattern(
           else
              string = hit + mblen(hit,1);
        }
-       return (NULL != hit);                    /* RETURN True or False */
+       return (nullptr != hit);                    /* RETURN True or False */
 #else /* if NO_REGEX */
 # ifndef NO_REGCOMP
         regex_t    re;
@@ -2439,23 +2439,23 @@ static Boolean SearchForPattern(
         if ( regcomp(&re,pattern,REG_NOSUB|REG_ICASE|REG_EXTENDED) == 0 )
         {
            /* a 0 return value indicates success */
-           ret = regexec(&re,string,0,NULL,0);
+           ret = regexec(&re,string,0,nullptr,0);
            regfree(&re);
         }
         return (ret == 0);                      /* RETURN True or False */
 # else  /* NO_REGCOMP */
         char *compiledRE;
-        char *ret = NULL;
+        char *ret = nullptr;
 
         /* a non NULL return value indicates success */
-        compiledRE = (char *)regcmp(pattern, (char *) NULL);
+        compiledRE = (char *)regcmp(pattern, (char *) nullptr);
         if (compiledRE)
         {
            /* a non NULL return value indicates success */
 	   ret = regex(compiledRE, string);
 	   free(compiledRE);
         }
-        return (ret != NULL);	                /* RETURN True or False */
+        return (ret != nullptr);	                /* RETURN True or False */
 # endif /* NO_REGCOMP */
 #endif /* if NO_REGEX */
 }
@@ -2485,21 +2485,21 @@ static Boolean OpenVolForSearch(
     Boolean openedVolume = False;
 
     /* open the volume if not open */
-    if ( NULL == curVol->volHandle )
+    if ( nullptr == curVol->volHandle )
     {
        _DtHelpOpenVolume(fullFilePath, &curVol->volHandle);
-       if (NULL == curVol->volHandle) return False;  /* RETURN */
+       if (nullptr == curVol->volHandle) return False;  /* RETURN */
 
        if (curVol->gotLocale == False)
        {
-          char *ptr = NULL;
+          char *ptr = nullptr;
 
           curVol->stdLocale = _DtHelpGetVolumeLocale(curVol->volHandle);
 
           if (_DtHelpCeStrchr(curVol->stdLocale, ".", 1, &ptr) == 0)
           {
             ++ptr;
-            if (ptr == NULL || *ptr == '\0') ptr = NULL;
+            if (ptr == nullptr || *ptr == '\0') ptr = nullptr;
           }
 
           curVol->iconv3Codeset = strdup(ptr ? ptr : "UTF-8");
@@ -2508,8 +2508,8 @@ static Boolean OpenVolForSearch(
        openedVolume = True;
 
        /* get the codeset of the application's locale, if haven't gotten it */
-       if ( NULL == hw->help_dialog.srch.iconv3Codeset )
-         _DtHelpCeGetLcCtype(NULL, NULL, &(hw->help_dialog.srch.iconv3Codeset));
+       if ( nullptr == hw->help_dialog.srch.iconv3Codeset )
+         _DtHelpCeGetLcCtype(nullptr, nullptr, &(hw->help_dialog.srch.iconv3Codeset));
 
        /** only saves or changes the locale if necessary **/
        /* create an iconv3 context to convert codeset of */
@@ -2534,7 +2534,7 @@ static Boolean OpenVolForSearch(
     }
 
     /* get the str coll function, iff needed */
-    if (NULL == curVol->strcollProc)
+    if (nullptr == curVol->strcollProc)
     {
        /* get strcollProc for vol locale */
        curVol->strcollProc = _DtHelpCeGetStrcollProc();
@@ -2560,15 +2560,15 @@ static void CloseVolAfterSearch(
            _DtHelpGlobSrchVol *    curVol)
 {
     /* close the volume if open */
-    if ( NULL != curVol->volHandle )
+    if ( nullptr != curVol->volHandle )
     {
        _DtHelpCloseVolume(curVol->volHandle);
-       curVol->volHandle = NULL;
+       curVol->volHandle = nullptr;
        /* free the locale word string, if allocated */
        if(hw->help_dialog.srch.localeWordStr!=hw->help_dialog.srch.normWordStr)
        {
           XtFree(hw->help_dialog.srch.localeWordStr);
-          hw->help_dialog.srch.localeWordStr = NULL;
+          hw->help_dialog.srch.localeWordStr = nullptr;
        }
     }
    
@@ -2599,17 +2599,17 @@ static void SearchTopic(
     int i;
 
     /* if the volume is not open; don't continue */
-    if ( NULL == curVol->volHandle )
+    if ( nullptr == curVol->volHandle )
        return;                                  /* RETURN */
 
-    if ( NULL == curVol->indexEntriesList )
+    if ( nullptr == curVol->indexEntriesList )
        _CEVolumeTopicList(curVol->volHandle,&curVol->indexEntriesList);
-    if ( NULL == curVol->volHandle || NULL == curVol->indexEntriesList )
+    if ( nullptr == curVol->volHandle || nullptr == curVol->indexEntriesList )
     {
        curVol->topicSearchInProgress = False;
        curVol->topicSearchDone = True;
        curVol->indexSearchInProgress = True;
-       if ( NULL == curVol->volHandle ) curVol->searchCompleted = True;
+       if ( nullptr == curVol->volHandle ) curVol->searchCompleted = True;
        return;                                 /* RETURN */
     }
 
@@ -2621,10 +2621,10 @@ static void SearchTopic(
     /* we can increment the pointer because we don't own this memory;
        the open volume does. */
     for (i=0; 
-         i < numSearches && NULL != curVol->indexEntriesList[0]; 
+         i < numSearches && nullptr != curVol->indexEntriesList[0]; 
          i++, curVol->indexEntriesList++ )
     {
-       char * topicTitle = NULL;
+       char * topicTitle = nullptr;
        Boolean validTopic;
 
        validTopic = _DtHelpGetTopicTitle( curVol->volHandle,
@@ -2634,7 +2634,7 @@ static void SearchTopic(
           /* look for a hit and process if there was one */
           if (SearchForPattern(topicTitle,srchWord,srchWordLen) == True)
           {
-             HitListAddFound(curFile, curVol->indexEntriesList[0], True, NULL);
+             HitListAddFound(curFile, curVol->indexEntriesList[0], True, nullptr);
           }
        }
 
@@ -2644,11 +2644,11 @@ static void SearchTopic(
     }  /* for all topics to search */
 #endif
 
-    if (    NULL == curVol->indexEntriesList      /* no topics queried */
-         || NULL == curVol->indexEntriesList[0] ) /* no more topics available */
+    if (    nullptr == curVol->indexEntriesList      /* no topics queried */
+         || nullptr == curVol->indexEntriesList[0] ) /* no more topics available */
     {
        /* hand off to next stage */
-       curVol->indexEntriesList = NULL;
+       curVol->indexEntriesList = nullptr;
        curVol->topicSearchInProgress = False;
        curVol->topicSearchDone = True;
        curVol->indexSearchInProgress = True;
@@ -2693,18 +2693,18 @@ static void SearchIndex(
    int               numSearches)
 {
     int i;
-    char * indexEntry = NULL;
+    char * indexEntry = nullptr;
     size_t entryLen = 100;      /* starting size */
     Arg    args[5];
 
     /* if the volume is not open; don't continue */
-    if ( NULL == curVol->volHandle )
+    if ( nullptr == curVol->volHandle )
        return;                             /* RETURN */
 
     /* get the XmStrings of the entries */
-    if ( NULL == curVol->indexXmStrsList )
+    if ( nullptr == curVol->indexXmStrsList )
     {
-       XmFontList   fontList = NULL;
+       XmFontList   fontList = nullptr;
        Boolean      mod = False;
        int          numEntries = 0;
 
@@ -2736,7 +2736,7 @@ static void SearchIndex(
     }
 
     /* get the pure strings for searching */
-    if ( NULL == curVol->indexEntriesList )
+    if ( nullptr == curVol->indexEntriesList )
     {
        /* recall that the array and strings pointed to by
           the indexEntriesList is owned by the open volume */
@@ -2746,14 +2746,14 @@ static void SearchIndex(
        curVol->curIndexXmStr = curVol->indexXmStrsList;
     }
 
-    if (   NULL == curVol->volHandle 
-        || NULL == curVol->indexEntriesList
-        || NULL == curVol->indexXmStrsList )
+    if (   nullptr == curVol->volHandle 
+        || nullptr == curVol->indexEntriesList
+        || nullptr == curVol->indexXmStrsList )
     {
        curVol->indexSearchInProgress = False;
        curVol->indexSearchDone = True;
        curVol->searchCompleted = True;
-       if ( NULL == curVol->volHandle ) curVol->searchCompleted = True;
+       if ( nullptr == curVol->volHandle ) curVol->searchCompleted = True;
        return;                                 /* RETURN */
     }
 
@@ -2761,11 +2761,11 @@ static void SearchIndex(
 
     /* alloc memory for index processing */
     indexEntry = XtMalloc(sizeof(char)*(entryLen+1));
-    if (NULL == indexEntry) return;            /* RETURN */
+    if (nullptr == indexEntry) return;            /* RETURN */
 
     /* get a index entry */
     for (i=0; 
-         i < numSearches && NULL != curVol->indexEntriesList[0]; 
+         i < numSearches && nullptr != curVol->indexEntriesList[0]; 
          i++, curVol->indexEntriesList++, curVol->curIndexXmStr++ )
     {
        /* prevent overflow of buffer */
@@ -2773,7 +2773,7 @@ static void SearchIndex(
        {
           entryLen = strlen(curVol->indexEntriesList[0]) + 50;
           indexEntry = XtRealloc(indexEntry,entryLen+1);
-          if (NULL == indexEntry) break;          /* BREAK */
+          if (nullptr == indexEntry) break;          /* BREAK */
        }
        indexEntry[0] = EOS;  /* init to empty string */
 
@@ -2781,12 +2781,12 @@ static void SearchIndex(
        /* if srchWord is NULL, all entries are hits */
        /* copy, and possible iconv, the index string into the */
        /* the codeset of srchWord (the application) */
-       if (    NULL == srchWord
+       if (    nullptr == srchWord
             || (   _DtHelpCeIconvStr(iconvContext,curVol->indexEntriesList[0],
                         &indexEntry, &entryLen,indexEntry,entryLen) == 0
                 && SearchForPattern(indexEntry, srchWord, srchWordLen) == True ) )
        {
-          _DtHelpGlobSrchHit * hit = NULL;
+          _DtHelpGlobSrchHit * hit = nullptr;
           char * *          topicIdList;
 
           HitListAddFound ( curFile, curVol->curIndexXmStr[0],
@@ -2801,11 +2801,11 @@ static void SearchIndex(
        curVol->searchedCnt++;
     }
 
-    if (    NULL == curVol->indexEntriesList     /*no topics queried*/
-         || NULL == curVol->indexEntriesList[0] )/*no more index entries avail*/
+    if (    nullptr == curVol->indexEntriesList     /*no topics queried*/
+         || nullptr == curVol->indexEntriesList[0] )/*no more index entries avail*/
     {
        /* hand off to next stage */
-       curVol->indexEntriesList = NULL;                 /* init */
+       curVol->indexEntriesList = nullptr;                 /* init */
        curVol->curIndexXmStr = curVol->indexXmStrsList; /* re-init */
        curVol->indexSearchInProgress = False;
        curVol->indexSearchDone = True;
@@ -2880,7 +2880,7 @@ static void SearchVolume(
       char * srchWord;
       srchWord = hw->help_dialog.srch.localeWordStr;
       /* FullIndex search indicated by a null search word string */
-      if (hw->help_dialog.srch.fullIndex) srchWord = NULL;
+      if (hw->help_dialog.srch.fullIndex) srchWord = nullptr;
       SearchIndex(hw, curFile, curVol, hw->help_dialog.srch.iconv3Context, 
               srchWord, hw->help_dialog.srch.wordFieldLen, numSearches);
   }
@@ -2890,7 +2890,7 @@ static void SearchVolume(
   {
      /* handle completion */
      CloseVolAfterSearch(hw,curVol);
-     curVol->indexEntriesList = NULL;       /* mem not owned by GlobSrch */
+     curVol->indexEntriesList = nullptr;       /* mem not owned by GlobSrch */
      if (hw->help_dialog.srch.fullIndex)
         curVol->gatheredFullIndex = True;
      hw->help_dialog.srch.volLeftCnt--;
@@ -2926,9 +2926,9 @@ static void SearchFile(
    /* get volume info, adding if necessary */
    vol = (_DtHelpGlobSrchVol *) file->clientData;
    /* (T,T,F): enable search, enable display, any volume */
-   if (NULL == vol) AddVolInfoToFile(file, True, True, False);
+   if (nullptr == vol) AddVolInfoToFile(file, True, True, False);
    vol = (_DtHelpGlobSrchVol *) file->clientData;
-   if (NULL == vol) return;
+   if (nullptr == vol) return;
 
    /* conduct search of entire volume in one call */
    hw->help_dialog.srch.volLeftCnt = 1;
@@ -2977,18 +2977,18 @@ static Boolean DoBackgroundSearchWP(
 {
    DtHelpDialogWidget hw = (DtHelpDialogWidget) clientData;
   _DtHelpFileEntry curFile;
-  _DtHelpGlobSrchVol * curVol = NULL;
+  _DtHelpGlobSrchVol * curVol = nullptr;
   
   if ( 0 == hw->help_dialog.srch.volLeftCnt ) 
      goto searchComplete;                                  /* GOTO: done! */
 
   /* get file to work on */
   curFile = hw->help_dialog.srch.curSrchVol;
-  if ( NULL == curFile )
+  if ( nullptr == curFile )
   {
     curFile = GetNextSearchFileAndDisplayCompleted(
-                             hw, hw->help_dialog.srch.volListHead, NULL);
-    if ( NULL == curFile ) goto searchComplete;            /* GOTO: done */
+                             hw, hw->help_dialog.srch.volListHead, nullptr);
+    if ( nullptr == curFile ) goto searchComplete;            /* GOTO: done */
     hw->help_dialog.srch.curSrchVol = curFile;
   }  /* if no current file */
 
@@ -3027,7 +3027,7 @@ static Boolean DoBackgroundSearchWP(
 
     /* prepare for next search */
     hw->help_dialog.srch.curSrchVol = 
-                     GetNextSearchFileAndDisplayCompleted(hw,NULL,curFile);
+                     GetNextSearchFileAndDisplayCompleted(hw,nullptr,curFile);
 
   }  /* if search completed */
 
@@ -3043,11 +3043,11 @@ searchComplete:
 
   /* zero search data before stopping */
   hw->help_dialog.srch.volLeftCnt = 0;                    /* just in case */
-  hw->help_dialog.srch.curSrchVol = NULL;                 /* just in case */
+  hw->help_dialog.srch.curSrchVol = nullptr;                 /* just in case */
 
   /* generate a fake event to reset the dialog */
   status.reason = XmCR_ACTIVATE;
-  status.event = NULL;
+  status.event = nullptr;
   status.click_count = 1;
   StopSearchCB(hw->help_dialog.srch.actionBtn,
 	       (XtPointer)hw,(XtPointer)&status);
@@ -3081,14 +3081,14 @@ static void StartSearchCB(
     XtPointer clientData,
     XtPointer callData)           /* don't use */
 {
-   char       *srchWord = NULL;
+   char       *srchWord = nullptr;
    DtHelpDialogWidget hw = (DtHelpDialogWidget) clientData;
    XtAppContext appCntx;
    int        n;
    Arg        args[5];
 
    /* set state of start button correctly */
-   UpdateSearchStartStatusCB(NULL, (XtPointer) hw, NULL);
+   UpdateSearchStartStatusCB(nullptr, (XtPointer) hw, nullptr);
 
    /* if help content isn't a volume, it has no index */
    if (    _DtHelpGlobSrchCurVolume == hw->help_dialog.srch.srchSources
@@ -3142,7 +3142,7 @@ static void StartSearchCB(
      /* don't free srchWord */
 
      /* turn on "Stop" label */
-     UpdateActionButtonLabel(hw,NULL,False);
+     UpdateActionButtonLabel(hw,nullptr,False);
 
      _DtHelpTurnOffHourGlass(XtParent(hw));
      _DtHelpTurnOffHourGlass(XtParent(hw->help_dialog.srch.srchForm));
@@ -3193,7 +3193,7 @@ static void StartSelectedVolumeSearchCB(
        /* test the word ; False=dontUpdate--do this in PrepSearchSourceData() */
        if ( CheckSearchWord(hw,srchWord,False) == True )
        {   /* word has changed since last search; do a whole new search */
-           StartSearchCB(NULL,(XtPointer) hw, NULL);
+           StartSearchCB(nullptr,(XtPointer) hw, nullptr);
            return;                                   /* RETURN */
        }
    
@@ -3208,12 +3208,12 @@ static void StartSelectedVolumeSearchCB(
     /* Word is the same, just the selection has changed. */
     /* Determine which one was selected or deselected */
     for ( file = hw->help_dialog.srch.volListHead;
-          NULL != file;
-          file = _DtHelpFileListGetNext(NULL,file) )
+          nullptr != file;
+          file = _DtHelpFileListGetNext(nullptr,file) )
     {
        _DtHelpGlobSrchVol * vol;
        vol = (_DtHelpGlobSrchVol *) file->clientData;
-       if (NULL == vol) continue;
+       if (nullptr == vol) continue;
 
        /* update flag */
        if (file->fileSelected) noSelectedFiles = False;
@@ -3271,7 +3271,7 @@ static void UpdateSearchStartStatusCB(
     XtPointer clientData,
     XtPointer callData)
 {
-   char       *srchWord = NULL;
+   char       *srchWord = nullptr;
    /*XmAnyCallbackStruct *cb = (XmAnyCallbackStruct *) callData;*/
    DtHelpDialogWidget hw = (DtHelpDialogWidget) clientData;
    Boolean    newState;
@@ -3353,7 +3353,7 @@ static void StopSearchCB(
   XtSetArg(args[0],XmNset,&cur);
   XtGetValues(hw->help_dialog.srch.selVolRadBtn,args,1);
   XtSetSensitive(hw->help_dialog.srch.selectBtn,
-           cur && (   NULL == hw->help_dialog.srch.selectionDlg
+           cur && (   nullptr == hw->help_dialog.srch.selectionDlg
                    || !XtIsManaged(hw->help_dialog.srch.selectionDlg) ) );
 
   /* set the action button label appropriately */
@@ -3416,8 +3416,8 @@ static void GotoResultCB(
     XtPointer callData)
 {
    DtHelpDialogWidget hw = (DtHelpDialogWidget) clientData;
-   char *          helpFile = NULL;
-   int *           topicPosList=NULL;  
+   char *          helpFile = nullptr;
+   int *           topicPosList=nullptr;  
    int             topicPosition;  
    Boolean         status;
    int             i;
@@ -3428,9 +3428,9 @@ static void GotoResultCB(
    /* if true, an item selected */
    if (status && topicPosList)
    {
-     _DtHelpGlobSrchHit * entry = NULL;
-     _DtHelpFileEntry  file = NULL;
-     char * locationId = NULL;
+     _DtHelpGlobSrchHit * entry = nullptr;
+     _DtHelpFileEntry  file = nullptr;
+     char * locationId = nullptr;
      topicPosition = topicPosList[0] - 1;	/* convert to 0 based */
      XtFree((String)topicPosList);
   
@@ -3557,7 +3557,7 @@ static void ProcessResultSelectionCB(
     XtPointer callData)
 {
    DtHelpDialogWidget hw = (DtHelpDialogWidget) clientData;
-   int *     topicPosList = NULL;  
+   int *     topicPosList = nullptr;  
    int       topicPosition;  
    Boolean   status;
    int       n;
@@ -3569,10 +3569,10 @@ static void ProcessResultSelectionCB(
    /* if true, an item selected */
    if (status && topicPosList)
    {
-     _DtHelpFileEntry     file = NULL;
-     _DtHelpGlobSrchHit * hit = NULL;
-     char *            locationId = NULL;
-     char *            helpFile = NULL;
+     _DtHelpFileEntry     file = nullptr;
+     _DtHelpGlobSrchHit * hit = nullptr;
+     char *            locationId = nullptr;
+     char *            helpFile = nullptr;
 
      topicPosition = topicPosList[0];	/* 1 based */
      XtFree((String)topicPosList);
@@ -3587,7 +3587,7 @@ static void ProcessResultSelectionCB(
         XmListDeselectPos(hw->help_dialog.srch.resultList,topicPosition);
 
         /* was a volume item selected? */
-        if ( NULL == hit )
+        if ( nullptr == hit )
         {
            _DtHelpGlobSrchVol * vol = (_DtHelpGlobSrchVol *) file->clientData;
            if (vol->hitCnt > 0) 
@@ -3608,7 +3608,7 @@ static void ProcessResultSelectionCB(
            /* else don't otherwise handle a 0-hits volume */
         }
         /* was an expandable index selected */
-        else if (NULL == locationId && hit->topicCnt > 1)
+        else if (nullptr == locationId && hit->topicCnt > 1)
         {
            int topicCnt = 0;
        
@@ -3727,7 +3727,7 @@ static void CreateVolSelDialog(
     XtSetSensitive(hw->help_dialog.srch.selectBtn,False);
     
     /* only create one */
-    if ( NULL != hw->help_dialog.srch.selectionDlg ) 
+    if ( nullptr != hw->help_dialog.srch.selectionDlg ) 
     {
        XtManageChild(hw->help_dialog.srch.selectionDlg);
        return;
@@ -3791,7 +3791,7 @@ static void OpenSelectDialogCB(
 
    /* only build the list of files if it hasn't been done */
    if (   False == hw->help_dialog.srch.volScanDone
-       || NULL == hw->help_dialog.srch.volListHead)
+       || nullptr == hw->help_dialog.srch.volListHead)
    {
       /* Add on the Vol info; (T,T,T) search, display, selected only */
       VolListBuild(hw,True,True,True);
@@ -3856,13 +3856,13 @@ static void UpdateSearchVolumesCB(
         want to catch every click on that button */
    if (   XmCR_VALUE_CHANGED == status->reason 
        && True == status->set 
-       && NULL != status->event ) /* event is NULL for 1st of the two calls 
+       && nullptr != status->event ) /* event is NULL for 1st of the two calls 
                                      to this routine that are made when a 
                                       button is pressed. */
    {
      /*** now update the sources value according to button selected ***/
      hw->help_dialog.srch.volLeftCnt = 0;  /* change invalidates prior search */
-     UpdateActionButtonLabel(hw,NULL,True);
+     UpdateActionButtonLabel(hw,nullptr,True);
 
      XtSetArg(args[0], XmNset, hw->help_dialog.srch.allVolRadBtn == widget);
      XtSetValues(hw->help_dialog.srch.allVolRadBtn,args,1);
@@ -3879,7 +3879,7 @@ static void UpdateSearchVolumesCB(
 
         /* only build the list of files if it hasn't been done */
         if (    False == hw->help_dialog.srch.volScanDone
-             || NULL == hw->help_dialog.srch.volListHead)
+             || nullptr == hw->help_dialog.srch.volListHead)
         {
            /* Add on the Vol info; (T,T,T) search, display, selected only */
            VolListBuild(hw,True,True,True);
@@ -3900,12 +3900,12 @@ static void UpdateSearchVolumesCB(
            CreateVolSelDialog(hw);
            /* NOTE: don't start search here, start it from the callback */
            /* set state of start button correctly */
-           UpdateSearchStartStatusCB(NULL, (XtPointer) hw, NULL);
+           UpdateSearchStartStatusCB(nullptr, (XtPointer) hw, nullptr);
         }
         else  /* volumes already selected; just display */
         {
            hw->help_dialog.srch.hitsFound = False; /*DBG*/
-           StartSearchCB(NULL,(XtPointer) hw, NULL);
+           StartSearchCB(nullptr,(XtPointer) hw, nullptr);
         }
      }   /* if selected volumes button */
 
@@ -3919,7 +3919,7 @@ static void UpdateSearchVolumesCB(
         /* set sources state */
         hw->help_dialog.srch.srchSources = _DtHelpGlobSrchAllVolumes;
         hw->help_dialog.srch.hitsFound = False; /*DBG*/
-        StartSearchCB(NULL,(XtPointer) hw, NULL);
+        StartSearchCB(nullptr,(XtPointer) hw, nullptr);
      }
      /*** current volume button ***/
      else
@@ -3931,7 +3931,7 @@ static void UpdateSearchVolumesCB(
         /* set sources state */
         hw->help_dialog.srch.srchSources = _DtHelpGlobSrchCurVolume;
         hw->help_dialog.srch.hitsFound = False; /*DBG*/
-        StartSearchCB(NULL,(XtPointer) hw, NULL);
+        StartSearchCB(nullptr,(XtPointer) hw, nullptr);
      }
 
      /* update the Select... button status */
@@ -3939,7 +3939,7 @@ static void UpdateSearchVolumesCB(
         the button is not active. */
      XtSetSensitive(hw->help_dialog.srch.selectBtn,
                      (hw->help_dialog.srch.selVolRadBtn == widget) 
-                  && (   NULL == hw->help_dialog.srch.selectionDlg
+                  && (   nullptr == hw->help_dialog.srch.selectionDlg
                       || !XtIsManaged(hw->help_dialog.srch.selectionDlg) ) );
 
    }  /* if value changed */
@@ -3996,7 +3996,7 @@ static void UpdateIndexSelectionCB(
         want to catch every click on that button */
    if (   XmCR_VALUE_CHANGED == status->reason 
        && True == status->set 
-       && NULL != status->event ) /* event is NULL for 1st of the two calls 
+       && nullptr != status->event ) /* event is NULL for 1st of the two calls 
                                      to this routine that are made when a 
                                       button is pressed. */
    {
@@ -4007,7 +4007,7 @@ static void UpdateIndexSelectionCB(
    
          /* generate a fake event to reset the dialog */
          status.reason = XmCR_ACTIVATE;
-         status.event = NULL;
+         status.event = nullptr;
          status.click_count = 1;
          StopSearchCB(hw->help_dialog.srch.actionBtn,
 		      (XtPointer)hw,(XtPointer)&status);
@@ -4030,7 +4030,7 @@ static void UpdateIndexSelectionCB(
      hw->help_dialog.srch.fullIndex = (containsState ? False : True); /*flag*/
  
      /* set state of start button correctly */
-     UpdateSearchStartStatusCB(NULL, (XtPointer) hw, NULL);
+     UpdateSearchStartStatusCB(nullptr, (XtPointer) hw, nullptr);
 
      if (containsState)
      {  /* if changing to "Containing" */
@@ -4043,9 +4043,9 @@ static void UpdateIndexSelectionCB(
         /* indicate that no contains word is valid by deleting it */
         /* FIX: I'm concerned that normWordStr & localeWordStr aren't in synch */
         XtFree(hw->help_dialog.srch.normWordStr);
-        hw->help_dialog.srch.normWordStr = NULL;
+        hw->help_dialog.srch.normWordStr = nullptr;
         /* search full index */
-        StartSearchCB(NULL,(XtPointer) hw, NULL);
+        StartSearchCB(nullptr,(XtPointer) hw, nullptr);
      }
 
      /* and search to update results to the new state */
@@ -4100,12 +4100,12 @@ static Boolean CreateCurVolBtnLabel(
      XmString *         out_labelString,
      char * *           out_mnemonic)
 {
-   char *   path = NULL;
+   char *   path = nullptr;
    char *   preTitle;
    char *   postTitle;
-   XmString volTitleString = NULL;
-   XmString preTitleString = NULL;
-   XmString postTitleString = NULL;
+   XmString volTitleString = nullptr;
+   XmString preTitleString = nullptr;
+   XmString postTitleString = nullptr;
    XmString newTitle;
    XmString labelString;
    char *   mnemonic;
@@ -4139,7 +4139,7 @@ static Boolean CreateCurVolBtnLabel(
       /* title needs to be an XmString to use volume's font */
       if (path) 
       {
-         XmFontList fontList = NULL;
+         XmFontList fontList = nullptr;
          Boolean    mod = False;
    
          /* get the font list of the btn */
@@ -4153,7 +4153,7 @@ static Boolean CreateCurVolBtnLabel(
 #endif
    
          GetVolumeInfoCB(hw->help_dialog.help.pDisplayArea,path,
-                 NULL,&volTitleString,NULL,NULL,NULL,&fontList,&mod);
+                 nullptr,&volTitleString,nullptr,nullptr,nullptr,&fontList,&mod);
    
          /* if font list was changed, install it */
          if (mod)
@@ -4167,7 +4167,7 @@ static Boolean CreateCurVolBtnLabel(
       }
    
       /* just in case */
-      if (NULL == volTitleString)
+      if (nullptr == volTitleString)
          volTitleString = XmStringCreateLocalized(
                   hw->help_dialog.display.helpVolume);
    } /* if helpType == TOPIC */
@@ -4755,7 +4755,7 @@ static void CreateGlobSrchDialog(
    Dimension sumWidth = 0;
    float scale = 0.0;
    float posList[11];  /* need 11 due to algorithm, which uses index 10 */
-   XmFontList fontList = NULL;
+   XmFontList fontList = nullptr;
    int i;
 
    /* get the fontList for the button */
@@ -4927,16 +4927,16 @@ void _DtHelpGlobSrchDisplayDialog(
    Dimension     width;
    int           n;
 #endif
-   XmString      labelString = NULL;
+   XmString      labelString = nullptr;
    Arg           args[10];
 
    /* make the dialog itself */
-   if (NULL == hw->help_dialog.srch.srchForm)
+   if (nullptr == hw->help_dialog.srch.srchForm)
    {
       CreateGlobSrchDialog((Widget) hw,searchWord);
 
       /* create the button label */
-      CreateCurVolBtnLabel(hw, NULL, &labelString, NULL);
+      CreateCurVolBtnLabel(hw, nullptr, &labelString, nullptr);
       XtSetArg (args[0], XmNlabelString, labelString);
       XtSetValues (hw->help_dialog.srch.curVolRadBtn, args, 1);
       XmStringFree (labelString);
@@ -4993,7 +4993,7 @@ void _DtHelpGlobSrchDisplayDialog(
       _DtHelpGlobSrchUpdateCurVol((Widget)hw);
      
       /* fixup search word, if need be */
-      if (NULL != searchWord)
+      if (nullptr != searchWord)
       {
          String srchWord = XtNewString(searchWord);
          /* srchWord is freed or used in CheckSearchWord() */
@@ -5056,15 +5056,15 @@ void _DtHelpGlobSrchUpdateCurVol(
   DtHelpDialogWidget hw = (DtHelpDialogWidget) w;
 
 #if 1
-  if (   NULL == hw->help_dialog.srch.srchForm )
+  if (   nullptr == hw->help_dialog.srch.srchForm )
 #else
-  if (   NULL == hw->help_dialog.srch.srchForm
+  if (   nullptr == hw->help_dialog.srch.srchForm
       || XtIsManaged(hw->help_dialog.srch.srchForm) == False ) 
 #endif
       return;                                         /* RETURN */
 
   /* get full pathname for the volume */
-  path = NULL;
+  path = nullptr;
   if (hw->help_dialog.display.helpVolume)
      path = _DtHelpFileLocate(DtHelpVOLUME_TYPE, 
                                 /* FIX: will helpVolume have matching path? */
@@ -5073,8 +5073,8 @@ void _DtHelpGlobSrchUpdateCurVol(
 
   if (   _DtHelpGlobSrchCurVolume == hw->help_dialog.srch.srchSources
       && hw->help_dialog.display.helpType == DtHELP_TYPE_TOPIC
-      && NULL != path
-      && NULL != hw->help_dialog.srch.curVolPath
+      && nullptr != path
+      && nullptr != hw->help_dialog.srch.curVolPath
       && _DtHelpFileIsSameP(path,hw->help_dialog.srch.curVolPath,
                  GetVolumeInfoCB, _DtHELP_FILE_NAME, 
                  hw->help_dialog.help.pDisplayArea) )
@@ -5095,21 +5095,21 @@ void _DtHelpGlobSrchUpdateCurVol(
           && hw->help_dialog.srch.workProcId)
      {
          /* cancel the search */
-         StopSearchCB(NULL,(XtPointer) hw, NULL);
+         StopSearchCB(nullptr,(XtPointer) hw, nullptr);
 
          /* (F,F,F,F): disable search,disable display,no 0 hits,for all vols */
          SetVolStatus(hw->help_dialog.srch.volListHead,False,False,False,False);
 
          /* zero search data */
          hw->help_dialog.srch.volLeftCnt = 0;
-         hw->help_dialog.srch.curSrchVol = NULL;
+         hw->help_dialog.srch.curSrchVol = nullptr;
 
          /* assumption is, that even though the search was incomplete,
             nothing bad will happen if we don't free the hit data,
             and the search could resume where left off, if necessary. */
      }
 
-     CreateCurVolBtnLabel(hw, NULL, &labelString, NULL);
+     CreateCurVolBtnLabel(hw, nullptr, &labelString, nullptr);
      XtSetArg(args[0],XmNlabelString,labelString);
      XtSetValues(hw->help_dialog.srch.curVolRadBtn,args,1);
      XmStringFree(labelString);
@@ -5118,14 +5118,14 @@ void _DtHelpGlobSrchUpdateCurVol(
      UpdateCurVolBtnSens(hw,False);
 
      /* set state of start button correctly */
-     UpdateSearchStartStatusCB(NULL, (XtPointer) hw, NULL);
+     UpdateSearchStartStatusCB(nullptr, (XtPointer) hw, nullptr);
 
      /* and search if needed */
      if ( _DtHelpGlobSrchCurVolume == hw->help_dialog.srch.srchSources )
      {
         /* if to search a volume, start the search */
         if (hw->help_dialog.display.helpType == DtHELP_TYPE_TOPIC)
-           StartSearchCB(NULL,(XtPointer) hw, NULL);
+           StartSearchCB(nullptr,(XtPointer) hw, nullptr);
         else /* if current isn't a volume, clear the display & update status */
         {
            DeleteListContents(&hw->help_dialog.srch);
@@ -5155,39 +5155,39 @@ void  _DtHelpGlobSrchInitVars(
        srch->hitPrefixFont = XtNewString(srch->hitPrefixFont);
 
     /* File Selection Dialog font list */
-    srch->volTitlesFontList = NULL;
+    srch->volTitlesFontList = nullptr;
 
     /* Set our search dialog widgets to NULL */
-    srch->srchForm      = NULL;
-    srch->actionBtn     = NULL;
-    srch->curVolRadBtn  = NULL;
-    srch->allVolRadBtn  = NULL;
-    srch->selVolRadBtn  = NULL;
-    srch->selectBtn     = NULL;
-    srch->fullIndexRadBtn = NULL;
-    srch->containsRadBtn = NULL;
-    srch->wordField     = NULL;
-    srch->statusLabel   = NULL;
-    srch->resultList    = NULL;
-    srch->gotoBtn       = NULL;
-    srch->closeBtn      = NULL;
-    srch->helpBtn       = NULL;
-    srch->selectionDlg  = NULL;
+    srch->srchForm      = nullptr;
+    srch->actionBtn     = nullptr;
+    srch->curVolRadBtn  = nullptr;
+    srch->allVolRadBtn  = nullptr;
+    srch->selVolRadBtn  = nullptr;
+    srch->selectBtn     = nullptr;
+    srch->fullIndexRadBtn = nullptr;
+    srch->containsRadBtn = nullptr;
+    srch->wordField     = nullptr;
+    srch->statusLabel   = nullptr;
+    srch->resultList    = nullptr;
+    srch->gotoBtn       = nullptr;
+    srch->closeBtn      = nullptr;
+    srch->helpBtn       = nullptr;
+    srch->selectionDlg  = nullptr;
 
     /* init dialog content variables */
-    srch->curVolPath    = NULL;
-    srch->rawWordStr    = NULL;
-    srch->normWordStr   = NULL;
-    srch->localeWordStr = NULL;
+    srch->curVolPath    = nullptr;
+    srch->rawWordStr    = nullptr;
+    srch->normWordStr   = nullptr;
+    srch->localeWordStr = nullptr;
     srch->wordFieldFirstChar = 0;
     srch->wordFieldLen       = 0;
     srch->statusLineUsage = 0;  /* empty */
 
     /* init srch processing variables */
-    srch->iconv3Codeset = NULL;         /* iconv(3)-compatible code set of current locale */
-    srch->iconv3Context = NULL;
+    srch->iconv3Codeset = nullptr;         /* iconv(3)-compatible code set of current locale */
+    srch->iconv3Context = nullptr;
     srch->srchSources   = _DtHelpGlobSrchVolumeUndef;      /* radio btn usage */
-    srch->curSrchVol    = NULL; 	/* volume currently in search */
+    srch->curSrchVol    = nullptr; 	/* volume currently in search */
     srch->hitsFontLoaded= False;	/* is font loaded? */
     srch->volScanDone   = False;	/* is the volume list complete? */
     srch->fullIndex     = False;
@@ -5196,7 +5196,7 @@ void  _DtHelpGlobSrchInitVars(
     srch->searchInProgress= False;	/* state of search */
     srch->curVolRadBtnSens = False;
     srch->volLeftCnt    = 0;
-    srch->volListHead   = NULL; 	/* info on search topics found */
+    srch->volListHead   = nullptr; 	/* info on search topics found */
     srch->workProcId    = 0;
 }
 
@@ -5223,7 +5223,7 @@ void  _DtHelpGlobSrchCleanAndClose(
     if(srch->volTitlesFontList)
     {
          XmFontListFree(srch->volTitlesFontList);
-         srch->volTitlesFontList = NULL;
+         srch->volTitlesFontList = nullptr;
     }
   
     /*
@@ -5231,10 +5231,10 @@ void  _DtHelpGlobSrchCleanAndClose(
      * widget id in its XtUnmanageChild and XtUnmapWidget calls.
      */
     if (destroy)
-	srch->srchForm = NULL;
+	srch->srchForm = nullptr;
 
     /* make dialog invisible; update sensitivities */
-    CloseSearchCB(NULL,(XtPointer)srch, NULL);
+    CloseSearchCB(nullptr,(XtPointer)srch, nullptr);
 
     /* Destroy our index search dialog? */
     if (destroy)
@@ -5249,9 +5249,9 @@ void  _DtHelpGlobSrchCleanAndClose(
         * callback of the widgets. So I don't have to do anything except
         * make sure I know they are destroyed.
         */
-       srch->selectionDlg = NULL;
-       srch->srchForm     = NULL;
-       srch->resultList   = NULL;
+       srch->selectionDlg = nullptr;
+       srch->srchForm     = nullptr;
+       srch->resultList   = nullptr;
 
        /* free other data released to search dialog */
        VolListFree(srch);
@@ -5261,15 +5261,15 @@ void  _DtHelpGlobSrchCleanAndClose(
        if(srch->localeWordStr!=srch->normWordStr)
        {
           XtFree(srch->localeWordStr);
-          srch->localeWordStr=NULL;
+          srch->localeWordStr=nullptr;
        }
        XtFree(srch->normWordStr);
-       srch->normWordStr=NULL;
+       srch->normWordStr=nullptr;
        XtFree(srch->rawWordStr);
-       srch->rawWordStr=NULL;
+       srch->rawWordStr=nullptr;
        XtFree(srch->curVolPath);
-       srch->curVolPath=NULL;
+       srch->curVolPath=nullptr;
        XtFree(srch->iconv3Codeset);
-       srch->iconv3Codeset = NULL;
+       srch->iconv3Codeset = nullptr;
     }
 }

@@ -447,12 +447,12 @@ XeSPCSpawn(XeString pathname,
     
   if(channel->envp) {
     SPC_Free_Envp(channel->envp);
-    channel->envp=NULL;
+    channel->envp=nullptr;
   }
   if(channel->argv && IS_SPCIO_DEALLOC_ARGV(channel->IOMode)) {
     SPC_Free_Envp(channel->argv);
     channel->IOMode &= ~SPCIO_DEALLOC_ARGV;
-    channel->argv=NULL;
+    channel->argv=nullptr;
   }
   
   channel->context_dir=context_dir;
@@ -755,7 +755,7 @@ SPC_Channel_Ptr XeSPCHandleTerminator(int fd)
       channel->IOMode &= ~SPCIO_DELAY_CLOSE;
       if(IS_SPCIO_DO_CLOSE(channel->IOMode)) {
 	XeSPCClose(channel);
-	channel = NULL;
+	channel = nullptr;
       }
     }
     
@@ -855,9 +855,9 @@ void XeSPCRestartCallbacks(void)
 
   while(channel) {
     if(channel->Input_Handler)
-      XeSPCAddInput(channel, (SbInputHandlerProc)NULL, NULL);
+      XeSPCAddInput(channel, (SbInputHandlerProc)NULL, nullptr);
     if(channel->Terminate_Handler)
-      XeSPCRegisterTerminator(channel, NULL, NULL);
+      XeSPCRegisterTerminator(channel, nullptr, nullptr);
     channel=channel->next;
   }
   _DtSvcProcessUnlock();
@@ -892,7 +892,7 @@ int XeSPCSendEOF(SPC_Channel_Ptr channel)
 int XeSPCSetTermio(SPC_Channel_Ptr channel, int connection, int side,
 		   struct termios *termio)
 {
-  if(channel==SPC_ERROR || termio == NULL) {
+  if(channel==SPC_ERROR || termio == nullptr) {
     SPC_Error(SPC_Bad_Argument);
     return(SPC_ERROR);
   }

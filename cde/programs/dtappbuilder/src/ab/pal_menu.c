@@ -176,10 +176,10 @@ PalItemInfo menu_palitem_rec = {
 
     /* type             */  AB_TYPE_MENU,
     /* name             */  "Menu",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  menu_initialize,
     /* is_a_test        */  obj_is_menu,
     /* prop_initialize  */  menu_prop_init,
@@ -221,7 +221,7 @@ menu_initialize(
     items[1] = CATGETS(Dtb_project_catd, 100, 259, "Item2");
     for (i=0; i < XtNumber(items); i++)
     {
-        iobj = obj_create(AB_TYPE_ITEM, NULL);
+        iobj = obj_create(AB_TYPE_ITEM, nullptr);
         obj_append_child(obj, iobj);
         obj_set_subtype(iobj, AB_ITEM_FOR_MENU);
         iobj->label_type = AB_LABEL_STRING;
@@ -289,13 +289,13 @@ menu_prop_init(
     if (dtb_menu_prop_dialog_initialize(cgen, parent) == 0)
     {
         pms->prop_sheet = cgen->attrs_ctrlpanel;
-        pms->current_obj = NULL;
-	pms->clipboard_menu = NULL;
+        pms->current_obj = nullptr;
+	pms->clipboard_menu = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
             XtVaSetValues(parent,
                         XmNuserData, pms->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -310,7 +310,7 @@ menu_prop_init(
 
         /* Alternate Editor Buttons */
         prop_editors_panel_init(type, ab_menu_palitem,
-            NULL, cgen->conn_button, cgen->helptxt_button);
+            nullptr, cgen->conn_button, cgen->helptxt_button);
 
         /*
           * Prop Sheet Settings....
@@ -427,7 +427,7 @@ menu_prop_init(
         prop_menuname_init(&(pms->item_menuname), type, cgen->label,
 			cgen->item_menu_mbutton,
 			cgen->item_menu_field,
-                        cgen->itemlabel_field, cgen->itemlist_cb, NULL/*title*/,
+                        cgen->itemlabel_field, cgen->itemlist_cb, nullptr/*title*/,
 			&(pms->current_obj), True);
 
 	/* Store Items->Insert menu items in array */
@@ -468,7 +468,7 @@ menu_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 }
 
 static int
@@ -542,7 +542,7 @@ menu_prop_clear(
     /* Clear Items */
     prop_item_editor_clear(&(pms->items));
 
-    pms->current_obj = NULL;
+    pms->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -560,9 +560,9 @@ menu_prop_load(
     PropMenuSettingsRec *pms = &(prop_menu_settings_rec[type]);
     BOOL		load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pms->current_obj != NULL)
+        if (pms->current_obj != nullptr)
             obj = pms->current_obj;
         else
             return ERROR;
@@ -707,7 +707,7 @@ edit_item_init(
     AB_EDIT_TYPE etype
 )
 {
-    XtVaSetValues(widget, XmNuserData, (XtArgVal)etype, NULL);
+    XtVaSetValues(widget, XmNuserData, (XtArgVal)etype, nullptr);
     XtAddCallback(widget, XmNactivateCallback, menu_editCB, (XtPointer)ptype);
 }
 
@@ -728,20 +728,20 @@ set_edit_menu_stateCB(
     AB_EDIT_TYPE	item_key;
     int			i;
 
-    menu_exists = (pms->current_obj != NULL);
-    clipboard_full = (pms->clipboard_menu != NULL);
+    menu_exists = (pms->current_obj != nullptr);
+    clipboard_full = (pms->clipboard_menu != nullptr);
 
     XtVaGetValues(pms->edit_menu,
 		XmNnumChildren,	&num_menu_items,
 		XmNchildren,	&menu_items,
-		NULL);
+		nullptr);
 
     /* Loop through the Edit menuitems, setting their sensitivity
      * according to the state of the Menu Props editor
      */
     for (i = 0; i < num_menu_items; i++)
     {
-	XtVaGetValues(menu_items[i], XmNuserData, &value, NULL);
+	XtVaGetValues(menu_items[i], XmNuserData, &value, nullptr);
 	item_key = (AB_EDIT_TYPE)value;
 
 	switch(item_key)
@@ -782,7 +782,7 @@ copy_menu_to_clipboard(
 
     *menu_clipboard = new_selection;
 
-    if (old_selection != NULL)
+    if (old_selection != nullptr)
 	obj_destroy(old_selection);
 }
 
@@ -798,7 +798,7 @@ pal_create_menu(
     PropMenuSettingsRec *pms = &(prop_menu_settings_rec[type]);
     ABObj        newmenu;
 
-    if (module == NULL) /* No module created yet */
+    if (module == nullptr) /* No module created yet */
     {
 	ABObj	proj = proj_get_project();
 
@@ -834,7 +834,7 @@ menu_createCB(
 )
 {
     AB_PROP_TYPE type = (AB_PROP_TYPE)client_data;
-    STRING	name = NULL;
+    STRING	name = nullptr;
     char	nameBuf[5001] = "";
 
     name = obj_get_unique_name_for_child(
@@ -861,12 +861,12 @@ menu_editCB(
 
     module = proj_get_cur_module();
 
-    XtVaGetValues(widget, XmNuserData, &etype, NULL);
+    XtVaGetValues(widget, XmNuserData, &etype, nullptr);
 
     switch(etype)
     {
 	case AB_EDIT_CUT:
-    	    if (pms->current_obj != NULL)
+    	    if (pms->current_obj != nullptr)
 	    {
             	copy_menu_to_clipboard(pms->current_obj, &(pms->clipboard_menu));
 	    	delmenu = pms->current_obj;
@@ -874,11 +874,11 @@ menu_editCB(
 	    }
             break;
         case AB_EDIT_COPY:
-	    if (pms->current_obj != NULL)
+	    if (pms->current_obj != nullptr)
             	copy_menu_to_clipboard(pms->current_obj, &(pms->clipboard_menu));
             break;
         case AB_EDIT_PASTE:
-            if (pms->clipboard_menu != NULL)
+            if (pms->clipboard_menu != nullptr)
             {
 		/* We need to use some trickery here in order to give the
 		 * new copy of the menu an incremented/unique name based
@@ -916,7 +916,7 @@ menu_editCB(
 	    }
 	    break;
         case AB_EDIT_DELETE:
-	    if (pms->current_obj != NULL)
+	    if (pms->current_obj != nullptr)
 	    {
 	    	delmenu = pms->current_obj;
             	obj_destroy(delmenu);
@@ -966,14 +966,14 @@ prop_menu_obj_destroy_CB(ObjEvDestroyInfo destroyInfo)
 	pms = &(prop_menu_settings_rec[i]);
 
 	if (pms->current_obj == doomedObj)
-	    pms->current_obj = NULL;
+	    pms->current_obj = nullptr;
 	if (pms->items.current_item == doomedObj)
-	    pms->items.current_item = NULL;
+	    pms->items.current_item = nullptr;
 	if (pms->items.clipboard_item == doomedObj)
-	    pms->items.clipboard_item = NULL;
+	    pms->items.clipboard_item = nullptr;
     }
 
-    if (obj_is_menu(doomedObj) && obj_get_parent(doomedObj) != NULL)
+    if (obj_is_menu(doomedObj) && obj_get_parent(doomedObj) != nullptr)
     {
 	doomed_menu_name = obj_get_name(doomedObj);
 
@@ -982,7 +982,7 @@ prop_menu_obj_destroy_CB(ObjEvDestroyInfo destroyInfo)
 	 * to NULL.
 	 */
         for (trav_open(&trav, obj_get_module(doomedObj), AB_TRAV_SALIENT);
-            (obj= trav_next(&trav)) != NULL; )
+            (obj= trav_next(&trav)) != nullptr; )
             if (util_strcmp(obj_get_menu_name(obj), doomed_menu_name) == 0)
 	    	abobj_set_menu_name(obj, "");
 
@@ -996,12 +996,12 @@ prop_menu_obj_destroy_CB(ObjEvDestroyInfo destroyInfo)
 	     * the menu being destroyed.  If so, set their menu-name attributes
 	     * to NULL.
 	     */
-	    if (pms->clipboard_menu != NULL)
+	    if (pms->clipboard_menu != nullptr)
 	    {
 		for (trav_open(&trav, pms->clipboard_menu, AB_TRAV_ITEMS);
-		    (item = trav_next(&trav)) != NULL; )
+		    (item = trav_next(&trav)) != nullptr; )
 		    if (util_strcmp(obj_get_menu_name(item), doomed_menu_name) == 0)
-			obj_set_menu_name(item, NULL);
+			obj_set_menu_name(item, nullptr);
 	    }
 	    trav_close(&trav);
 	}

@@ -202,7 +202,7 @@ static UiObjPixmap	object_pixmaps[] =
     {AB_TYPE_LAYERS, AB_NO_SUBTYPE, "DtABlyr", (Pixmap)NULL, 0, 0},
 
     /* The last entry has to be this !!*/
-    {AB_TYPE_UNKNOWN, AB_NO_SUBTYPE, (char *)NULL, (Pixmap)NULL, 0, 0},
+    {AB_TYPE_UNKNOWN, AB_NO_SUBTYPE, (char *)nullptr, (Pixmap)NULL, 0, 0},
 };
 
 /*
@@ -218,9 +218,9 @@ static	unsigned int	default_pixmap_height = 0;
 static Boolean		rband_in_progress= False;
 static Boolean		just_rbanded	  = False;
 static XRectangle	rb_rect;
-static Widget		rb_widget = NULL;
+static Widget		rb_widget = nullptr;
 static BOOL		rb_first_time = TRUE;
-static UiRubberBandFunc	rubberband_func = NULL;
+static UiRubberBandFunc	rubberband_func = nullptr;
 
 /*************************************************************************
 **                                                                      **
@@ -234,7 +234,7 @@ ui_win_front(
 {
     Widget p_shell;
 
-    if (widget == NULL)
+    if (widget == nullptr)
 	return;
 
     p_shell = ui_get_ancestor_shell(widget);
@@ -283,7 +283,7 @@ ui_win_set_resizable(
     XtVaGetValues(shell, 
 	XmNmwmDecorations, &decor, 
 	XmNmwmFunctions,   &func,
-	NULL);
+	nullptr);
 
     if (func & MWM_FUNC_ALL)
     {
@@ -328,7 +328,7 @@ ui_win_set_resizable(
     	XtVaSetValues(shell, 
 		XmNmwmDecorations, new_decor, 
 		XmNmwmFunctions,   new_func,
-		NULL);
+		nullptr);
 
 	if (remap)
     	    XtPopup(shell, XtGrabNone);
@@ -345,7 +345,7 @@ ui_field_set_string(
     XtVaSetValues(field,
 	XmNvalue, 	    (XtArgVal)(valuestr? valuestr : ""),
 	XmNcursorPosition,  (XtArgVal)valuestr? strlen(valuestr) : 0,
-	NULL);
+	nullptr);
 
 }
 
@@ -354,7 +354,7 @@ ui_field_get_string(
     Widget   field
 )
 {
-     char *string = NULL;
+     char *string = nullptr;
 
      if (XtIsSubclass(field, xmTextFieldWidgetClass))
      	string = XmTextFieldGetString(field);
@@ -370,7 +370,7 @@ ui_field_select_string(
     BOOL	assign_focus
 )
 {
-    STRING	valuestr = NULL;
+    STRING	valuestr = nullptr;
 
     valuestr = ui_field_get_string(field);
 
@@ -394,7 +394,7 @@ ui_field_set_editable(
     XtVaSetValues(field,
                 XmNeditable,              editable,
                 XmNcursorPositionVisible, editable,
-		NULL);
+		nullptr);
 }
 
 void
@@ -408,17 +408,17 @@ ui_set_active(
     if (XtIsComposite(widget))
     {
 	int i, num_children = 0;
-	WidgetList children = NULL;
+	WidgetList children = nullptr;
 
 	XtVaGetValues(widget, 
 		XmNnumChildren,	&num_children,
 		XmNchildren,	&children,
-		NULL);
+		nullptr);
 
 	for (i = 0; i < num_children; i++)
 	{
             int c = 0, num_children_children = 0;
-            WidgetList children_children = NULL;
+            WidgetList children_children = nullptr;
 
 	    XtSetSensitive(children[i], (Boolean)state);
 
@@ -427,7 +427,7 @@ ui_set_active(
 	    XtVaGetValues(children[i],
                 XmNnumChildren, &num_children_children,
                 XmNchildren,    &children_children,
-                NULL);
+                nullptr);
 
 	    if (num_children_children > 0)
 	    {
@@ -462,7 +462,7 @@ ui_set_label_string(
 
     xmlabel = XmStringCreateLocalized(string);
 
-    XtVaSetValues(widget, XmNlabelString, xmlabel, NULL);
+    XtVaSetValues(widget, XmNlabelString, xmlabel, nullptr);
  
     XmStringFree(xmlabel);
 }
@@ -479,7 +479,7 @@ ui_set_label_glyph(
     XtVaGetValues(widget,
 	XmNlabelPixmap,            &labelPixmap,
 	XmNlabelInsensitivePixmap, &labelInsensitivePixmap,
-	NULL);
+	nullptr);
 
     if (dtb_set_label_from_image_file(widget, fileName) < 0)
 	return;
@@ -531,7 +531,7 @@ ui_build_menu(
 )
 {
     Widget	menu,
-   		cascade = NULL,
+   		cascade = nullptr,
 		widget;
     Arg		args[4];
     int 	i;
@@ -556,17 +556,17 @@ ui_build_menu(
         cascade = XtVaCreateManagedWidget(menu_name,
 			xmCascadeButtonWidgetClass, parent,
 			XmNsubMenuId,	menu,
-			NULL);
+			nullptr);
 
 	if (menu_title)
         {
 	    xmlabel = XmStringCreateLocalized(menu_title);
-	    XtVaSetValues(cascade, XmNlabelString, xmlabel, NULL);
+	    XtVaSetValues(cascade, XmNlabelString, xmlabel, nullptr);
 	    XmStringFree(xmlabel);
 	}
     }
 
-    for (i = 0; menu_items[i].label != NULL; i++)
+    for (i = 0; menu_items[i].label != nullptr; i++)
     {
         if (menu_items[i].subitems)
 	{
@@ -576,7 +576,7 @@ ui_build_menu(
 				       menu_items[i].name,
 				       (MenuItem *)menu_items[i].subitems);
 
-	    XtVaSetValues(widget, XmNuserData, (XtArgVal)menu_items[i].user_data, NULL);
+	    XtVaSetValues(widget, XmNuserData, (XtArgVal)menu_items[i].user_data, nullptr);
 	}
 	else
 	{
@@ -584,12 +584,12 @@ ui_build_menu(
 			         *menu_items[i].wclass, 
 				  menu, 
                                   XmNuserData,    (XtArgVal)menu_items[i].user_data,
-				  NULL);
+				  nullptr);
 
-	    if (menu_items[i].label != NULL)
+	    if (menu_items[i].label != nullptr)
 	    {
 		xmlabel = XmStringCreateLocalized(menu_items[i].label);
-	  	XtVaSetValues(widget, XmNlabelString, xmlabel, NULL);
+	  	XtVaSetValues(widget, XmNlabelString, xmlabel, nullptr);
 	    	XmStringFree(xmlabel);
 	    }
 	
@@ -598,7 +598,7 @@ ui_build_menu(
 	     */
 	    if (menu_items[i].label_type == AB_LABEL_GLYPH)
 	    {
-        	XtVaSetValues(widget, XmNlabelType, XmPIXMAP, NULL);
+        	XtVaSetValues(widget, XmNlabelType, XmPIXMAP, nullptr);
 		dtb_set_label_from_bitmap_data(widget,
 				menu_items[i].pixwidth,
 				menu_items[i].pixheight,
@@ -609,7 +609,7 @@ ui_build_menu(
 
 	if (menu_items[i].active == FALSE)
 	    XtSetSensitive(widget, FALSE);
- 	else if (menu_items[i].callback != NULL)
+ 	else if (menu_items[i].callback != nullptr)
 	    XtAddCallback(widget, XmNactivateCallback, 
 				menu_items[i].callback, 
 				menu_items[i].client_data);
@@ -645,7 +645,7 @@ ui_populate_pulldown_menu(
 	XtSetValues(menu, args, n);
     }
 
-    for (i = 0; menu_items[i].label != NULL; i++)
+    for (i = 0; menu_items[i].label != nullptr; i++)
     {
         if (menu_items[i].subitems)
 	{
@@ -655,7 +655,7 @@ ui_populate_pulldown_menu(
 				       menu_items[i].name,
 				       (MenuItem *)menu_items[i].subitems);
 
-	    XtVaSetValues(widget, XmNuserData, (XtArgVal)menu_items[i].user_data, NULL);
+	    XtVaSetValues(widget, XmNuserData, (XtArgVal)menu_items[i].user_data, nullptr);
 	}
 	else
 	{
@@ -663,12 +663,12 @@ ui_populate_pulldown_menu(
 			         *menu_items[i].wclass, 
 				  menu, 
                                   XmNuserData,    (XtArgVal)menu_items[i].user_data,
-				  NULL);
+				  nullptr);
 
-	    if (menu_items[i].label != NULL)
+	    if (menu_items[i].label != nullptr)
 	    {
 		xmlabel = XmStringCreateLocalized(menu_items[i].label);
-	  	XtVaSetValues(widget, XmNlabelString, xmlabel, NULL);
+	  	XtVaSetValues(widget, XmNlabelString, xmlabel, nullptr);
 	    	XmStringFree(xmlabel);
 	    }
 	
@@ -677,7 +677,7 @@ ui_populate_pulldown_menu(
 	     */
 	    if (menu_items[i].label_type == AB_LABEL_GLYPH)
 	    {
-        	XtVaSetValues(widget, XmNlabelType, XmPIXMAP, NULL);
+        	XtVaSetValues(widget, XmNlabelType, XmPIXMAP, nullptr);
 		dtb_set_label_from_bitmap_data(widget,
 				menu_items[i].pixwidth,
 				menu_items[i].pixheight,
@@ -688,7 +688,7 @@ ui_populate_pulldown_menu(
 
 	if (menu_items[i].active == FALSE)
 	    XtSetSensitive(widget, FALSE);
- 	else if (menu_items[i].callback != NULL)
+ 	else if (menu_items[i].callback != nullptr)
 	    XtAddCallback(widget, XmNactivateCallback, 
 				menu_items[i].callback, 
 				menu_items[i].client_data);
@@ -728,14 +728,14 @@ ui_size_to_row_col(
                 XmNmarginWidth, &margin_w,
                 XmNmarginHeight,&margin_h,
 		DtNuserFont,	&fontlist,
-                NULL);
+                nullptr);
     else
         XtVaGetValues(text,
                 XmNmarginWidth, &margin_w,
                 XmNmarginHeight,&margin_h,
                 XmNfontList,    &fontlist, 
 		XmNlistSpacing, &text_spacing,
-                NULL);
+                nullptr);
 
     parent = XtParent(text);
 
@@ -745,21 +745,21 @@ ui_size_to_row_col(
 		XmNhorizontalScrollBar,	&hsb,
 		XmNverticalScrollBar,	&vsb,
 		XmNspacing,		&spacing,
-		NULL);
+		nullptr);
 	if (hsb)
 	    XtVaGetValues(hsb,
 		XmNheight,		&hsb_height,
-		NULL);
+		nullptr);
 	if (vsb)
 	    XtVaGetValues(vsb,
 		XmNwidth,       	&vsb_width,
-                NULL); 
+                nullptr); 
     }
     else if (XtIsSubclass(parent, xmRowColumnWidgetClass))
 	XtVaGetValues(parent,
 		XmNmarginWidth, 	&p_margin_w,
 		XmNmarginHeight,	&p_margin_h,
-		NULL);
+		nullptr);
 
     font = objxm_fontlist_to_font(fontlist);
 
@@ -799,7 +799,7 @@ ui_set_busy_cursor(
 )
 {
     static Cursor  busy_cursor = 0;
-    static Display *dpy        = NULL;
+    static Display *dpy        = nullptr;
 
     if (on) /* Turn ON busy cursor */
     {
@@ -810,10 +810,10 @@ ui_set_busy_cursor(
 
         XDefineCursor(dpy, window, busy_cursor);
     }
-    else if (dpy != NULL) /* Turn OFF busy cursor */
+    else if (dpy != nullptr) /* Turn OFF busy cursor */
     {
 	XUndefineCursor(dpy, window);
-	dpy = NULL;
+	dpy = nullptr;
     }
     return 0;
 
@@ -991,7 +991,7 @@ ui_add_window_close_callback(
 
     WM_DELETE_WINDOW = XmInternAtom(XtDisplay(shell), "WM_DELETE_WINDOW", False);
 
-    XtVaSetValues(shell, XmNdeleteResponse, delete_response, NULL);
+    XtVaSetValues(shell, XmNdeleteResponse, delete_response, nullptr);
     XmAddWMProtocolCallback(shell, WM_DELETE_WINDOW, delete_callback, client_data);
 
 }
@@ -1041,7 +1041,7 @@ ui_refresh_widget_tree(
     int		num_children = 0;
     int		i;
 
-    if (widget == NULL || !XtIsWidget(widget) || !XtIsRealized(widget))
+    if (widget == nullptr || !XtIsWidget(widget) || !XtIsRealized(widget))
 	return;
 
     if (XtIsSubclass(widget, compositeWidgetClass))
@@ -1049,7 +1049,7 @@ ui_refresh_widget_tree(
 	XtVaGetValues(widget,
 		XmNnumChildren,	&num_children,
 		XmNchildren,	&children,
-		NULL);
+		nullptr);
 
 	/* Use recursion to traverse all the way to leaf nodes...*/
 	for (i=0; i < num_children; i++)
@@ -1090,7 +1090,7 @@ sync_timeout_proc(
 )
 {
     SyncData		syncData = (SyncData)clientData;
-    time_t		cur_time = time(NULL);
+    time_t		cur_time = time(nullptr);
     BOOL		done = FALSE;
 
     if (syncData->synced)
@@ -1154,15 +1154,15 @@ ui_sync_display_of_widget(Widget widget)
     Bool		ignore_event = FALSE;
     Widget		ancestor = widget;
     Widget		last_ancestor = ancestor;
-    Widget		sync_widget = NULL;
-    Screen		*screen = NULL;
+    Widget		sync_widget = nullptr;
+    Screen		*screen = nullptr;
 
     syncData.timerId = 0;
     syncData.synced = FALSE;
-    syncData.start_time = time(NULL);
+    syncData.start_time = time(nullptr);
     syncData.last_expose_ticks = 0;
     syncData.timeout_ticks = 0;
-    syncData.display = NULL;
+    syncData.display = nullptr;
     syncData.window = 0;
 #define last_expose_ticks (syncData.last_expose_ticks)
 #define synced (syncData.synced)
@@ -1177,7 +1177,7 @@ ui_sync_display_of_widget(Widget widget)
      * This is in case this widget is destroyed (common for popups)
      */
     last_ancestor = ancestor = widget;
-    while ((ancestor != NULL) && 
+    while ((ancestor != nullptr) && 
 	   (XtWidgetToApplicationContext(ancestor) == appContext))
     {
 	last_ancestor = ancestor;
@@ -1203,7 +1203,7 @@ ui_sync_display_of_widget(Widget widget)
 	{
 	    last_expose_ticks = timeout_ticks;
 	}
-	if (difftime(time(NULL), syncData.start_time) >= 5)
+	if (difftime(time(nullptr), syncData.start_time) >= 5)
 	{
 	    /* we've done this long enough - give up */
 	    synced = TRUE;
@@ -1246,7 +1246,7 @@ rubberband_finish(
 	if (rubberband_func)
 	    rubberband_func(widget, event, &rb_rect, client_data);
 
-	rubberband_func = NULL;
+	rubberband_func = nullptr;
 	rb_first_time = TRUE;
     }
 }
@@ -1358,7 +1358,7 @@ ui_initiate_rubberband(
     }
 
     rband_in_progress = False;
-    rubberband_func = NULL;
+    rubberband_func = nullptr;
     return ERROR;
 }
 
@@ -1393,14 +1393,14 @@ ui_optionmenu_add_item(
 )
 {
     XmString    xmitem;
-    Widget	cascade_btn = NULL;
-    Widget	menu = NULL;
-    Widget	mpb = NULL;
+    Widget	cascade_btn = nullptr;
+    Widget	menu = nullptr;
+    Widget	mpb = nullptr;
     int		ret = 0;
  
-    if ((cascade_btn = XmOptionButtonGadget(opmenu)) != NULL)
+    if ((cascade_btn = XmOptionButtonGadget(opmenu)) != nullptr)
     {
-	XtVaGetValues(cascade_btn, XmNsubMenuId, &menu, NULL);
+	XtVaGetValues(cascade_btn, XmNsubMenuId, &menu, nullptr);
 	if (menu)
 	{
 	    xmitem = XmStringCreateLocalized(item_str);
@@ -1408,7 +1408,7 @@ ui_optionmenu_add_item(
                 xmPushButtonWidgetClass,
                 menu,
                 XmNlabelString, xmitem,
-                NULL);
+                nullptr);
 	    XmStringFree(xmitem);
  	}
     }
@@ -1422,11 +1422,11 @@ ui_optionmenu_delete_item(
     STRING      item_str
 ) 
 { 
-    Widget      item = NULL; 
+    Widget      item = nullptr; 
     int		iRet = 0;
   
     item = ui_optionmenu_find_item(opmenu, item_str); 
-    if (item != NULL)
+    if (item != nullptr)
     {
 	XtDestroyWidget(item);
     }
@@ -1445,14 +1445,14 @@ ui_optionmenu_replace_item(
     STRING      new_item_str
 )
 {
-    Widget	item = NULL;
-    Widget	opmenu_label = NULL;
-    XmString	xmstr = NULL;
-    XmString    new_item_xmstr = NULL;
-    XmString	old_item_xmstr = NULL;
+    Widget	item = nullptr;
+    Widget	opmenu_label = nullptr;
+    XmString	xmstr = nullptr;
+    XmString    new_item_xmstr = nullptr;
+    XmString	old_item_xmstr = nullptr;
 
     item = ui_optionmenu_find_item(opmenu, old_item_str);
-    if (item != NULL)
+    if (item != nullptr)
     {
 	new_item_xmstr = XmStringCreateLocalized(new_item_str);
 
@@ -1462,16 +1462,16 @@ ui_optionmenu_replace_item(
 	 */
 	old_item_xmstr = XmStringCreateLocalized(old_item_str);
 	opmenu_label = XmOptionButtonGadget(opmenu);
-	XtVaGetValues(opmenu_label, XmNlabelString, &xmstr, NULL);
+	XtVaGetValues(opmenu_label, XmNlabelString, &xmstr, nullptr);
 	if (XmStringCompare(xmstr, old_item_xmstr))
 	{
 	    XtVaSetValues(opmenu_label, 
 			  XmNlabelString, new_item_xmstr, 
-			  NULL); 
+			  nullptr); 
 	}
 
 	/* Change the button label to the new string */
-	XtVaSetValues(item, XmNlabelString, new_item_xmstr, NULL);
+	XtVaSetValues(item, XmNlabelString, new_item_xmstr, nullptr);
 
 	XmStringFree(xmstr);
 	XmStringFree(old_item_xmstr);
@@ -1486,27 +1486,27 @@ ui_optionmenu_find_item(
     STRING      item_str
 )
 {
-    Widget      cascade_btn = NULL;
-    Widget      menu = NULL;
-    Widget	found_item = NULL;
-    WidgetList	children = NULL;
-    XmString    search_item, child = NULL;
+    Widget      cascade_btn = nullptr;
+    Widget      menu = nullptr;
+    Widget	found_item = nullptr;
+    WidgetList	children = nullptr;
+    XmString    search_item, child = nullptr;
     int         i, numChildren = 0;
     BOOL	Found = FALSE;
 
-    if ((cascade_btn = XmOptionButtonGadget(opmenu)) != NULL)
+    if ((cascade_btn = XmOptionButtonGadget(opmenu)) != nullptr)
     { 
-        XtVaGetValues(cascade_btn, XmNsubMenuId, &menu, NULL);
+        XtVaGetValues(cascade_btn, XmNsubMenuId, &menu, nullptr);
         if (menu)   
         {
 	    search_item = XmStringCreateLocalized(item_str);
 	    XtVaGetValues(menu,
                         XmNnumChildren, &numChildren,
                         XmNchildren, &children,
-                        NULL);
+                        nullptr);
 	    for (i=0; i < numChildren && !Found; i++)
 	    {
-		XtVaGetValues(children[i], XmNlabelString, &child, NULL);
+		XtVaGetValues(children[i], XmNlabelString, &child, nullptr);
 		if (XmStringCompare(search_item, child))
 		{
 		    Found = TRUE;
@@ -1525,20 +1525,20 @@ ui_optionmenu_num_items(
     Widget	opmenu
 )
 {
-    Widget      cascade_btn = NULL;
-    Widget      menu = NULL;
+    Widget      cascade_btn = nullptr;
+    Widget      menu = nullptr;
     int         numChildren = 0;
 
-    if ( (opmenu != NULL) &&
-	 ((cascade_btn = XmOptionButtonGadget(opmenu)) != NULL)
+    if ( (opmenu != nullptr) &&
+	 ((cascade_btn = XmOptionButtonGadget(opmenu)) != nullptr)
        )
     {
-        XtVaGetValues(cascade_btn, XmNsubMenuId, &menu, NULL);
+        XtVaGetValues(cascade_btn, XmNsubMenuId, &menu, nullptr);
         if (menu)
 	{
             XtVaGetValues(menu,
                         XmNnumChildren, &numChildren,
-                        NULL);
+                        nullptr);
 	}
     }
     return (numChildren);
@@ -1551,15 +1551,15 @@ ui_optionmenu_change_label(
     STRING	new_str
 )
 {
-    Widget	opmenu_label = NULL;
+    Widget	opmenu_label = nullptr;
     XmString	new_xmstr;
-    XmString	old_xmstr = NULL;
+    XmString	old_xmstr = nullptr;
 
     opmenu_label = XmOptionButtonGadget(opmenu);
-    if ((opmenu_label != NULL) && (new_str != NULL))
+    if ((opmenu_label != nullptr) && (new_str != nullptr))
     {
 	new_xmstr = XmStringCreateLocalized(new_str);
-	XtVaGetValues(opmenu_label, XmNlabelString, &old_xmstr, NULL);
+	XtVaGetValues(opmenu_label, XmNlabelString, &old_xmstr, nullptr);
 	
 	/* If the two labels are different, then change
 	 * the optionmenu label.
@@ -1568,7 +1568,7 @@ ui_optionmenu_change_label(
 	{
 	    XtVaSetValues(opmenu_label,
                           XmNlabelString, new_xmstr,
-                          NULL);
+                          nullptr);
 	}
 	XmStringFree(new_xmstr);
     }
@@ -1584,12 +1584,12 @@ ui_optionmenu_change_label_pixmap(
  
     opmenu_label = XmOptionButtonGadget(opmenu);
  
-    if (opmenu_label != NULL)
+    if (opmenu_label != nullptr)
     {
         XtVaSetValues(opmenu_label,
                 XmNlabelPixmap, pixmap,
                 XmNlabelType,   XmPIXMAP,
-                NULL);
+                nullptr);
     }
 }
 
@@ -1603,9 +1603,9 @@ ui_obj_set_label_string(
     STRING	label
 )
 {
-    ABObj labelObj   = NULL;
+    ABObj labelObj   = nullptr;
     
-    if (obj == NULL)
+    if (obj == nullptr)
 	return;
 	
     switch (obj_get_type(obj))
@@ -1619,7 +1619,7 @@ ui_obj_set_label_string(
 	case AB_TYPE_SCALE:
 	case AB_TYPE_TEXT_FIELD:
 	    labelObj = objxm_comp_get_subobj(obj, AB_CFG_LABEL_OBJ);
-	    if (labelObj == NULL || objxm_get_widget(labelObj) == NULL)
+	    if (labelObj == nullptr || objxm_get_widget(labelObj) == nullptr)
 		return;
 
 	    ui_set_label_string(objxm_get_widget(labelObj), label);
@@ -1632,7 +1632,7 @@ ui_obj_set_label_string(
 		case AB_ITEM_FOR_MENUBAR:
 		case AB_ITEM_FOR_CHOICE:
 		    labelObj = objxm_comp_get_subobj(obj, AB_CFG_LABEL_OBJ);
-		    if (labelObj == NULL || objxm_get_widget(labelObj) == NULL)
+		    if (labelObj == nullptr || objxm_get_widget(labelObj) == nullptr)
 			return;
 
 		    ui_set_label_string(objxm_get_widget(labelObj), label);
@@ -1649,7 +1649,7 @@ ui_obj_set_label_string(
 			int          num_items = 0;
 			XmString     xmitem;
 	    
-			if (parent != NULL)
+			if (parent != nullptr)
 			{
 			    xmitem = XmStringCreateLocalized(label);
 			    pos = obj_get_child_num(obj);
@@ -1662,11 +1662,11 @@ ui_obj_set_label_string(
 				obj_is_combo_box_item(obj))
 				XtVaGetValues(parent,
 				    XmNitemCount, &num_items,
-				    NULL);
+				    nullptr);
 			    else if (obj_is_spin_box_item(obj))
 				XtVaGetValues(parent,
 				    DtNnumValues, &num_items,
-				    NULL);
+				    nullptr);
 
 			    if (pos <= num_items)
 			    {
@@ -1696,10 +1696,10 @@ ui_obj_set_label_string(
 	case AB_TYPE_DIALOG:
 	case AB_TYPE_FILE_CHOOSER:
 	    labelObj = objxm_comp_get_subobj(obj, AB_CFG_LABEL_OBJ);
-	    if (labelObj == NULL || objxm_get_widget(labelObj) == NULL)
+	    if (labelObj == nullptr || objxm_get_widget(labelObj) == nullptr)
 		return;
 
-	    XtVaSetValues(objxm_get_widget(labelObj), XmNtitle, label, NULL);
+	    XtVaSetValues(objxm_get_widget(labelObj), XmNtitle, label, nullptr);
 	    break;
 
 	default:
@@ -1716,16 +1716,16 @@ ui_obj_set_label_glyph(
     STRING	fileName
 )
 {
-    ABObj  labelObj = NULL;
+    ABObj  labelObj = nullptr;
     
-    if (obj == NULL)
+    if (obj == nullptr)
 	return;
 
     if (util_strempty(fileName))
 	return;
     
     labelObj = objxm_comp_get_subobj(obj, AB_CFG_LABEL_OBJ);
-    if (labelObj == NULL || objxm_get_widget(labelObj) == NULL)
+    if (labelObj == nullptr || objxm_get_widget(labelObj) == nullptr)
 	return;
 
     switch (obj_get_type(obj))
@@ -1770,7 +1770,7 @@ ui_obj_set_label(
     STRING	label
 )
 {
-    if (obj == NULL)
+    if (obj == nullptr)
 	return;
 
     switch (obj_get_label_type(obj))

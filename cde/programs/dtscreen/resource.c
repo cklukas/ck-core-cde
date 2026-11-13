@@ -126,7 +126,7 @@ static LockStruct LockProcs[] = {
     {"flame", initflame, drawflame, 10000, 20, 1.0, "Cosmic Flame Fractals"},
     {"worm", initworm, drawworm, 10000, 20, 1.0, "Wiggly Worms"},
     {"blank", initblank, drawblank, 5000000, 1, 1.0, "Blank screen"},
-    {randomstring, NULL, NULL, 0, 0, 0.0, "Random mode"},
+    {randomstring, nullptr, nullptr, 0, 0, 0.0, "Random mode"},
 };
 #define NUMPROCS (sizeof LockProcs / sizeof LockProcs[0])
 
@@ -163,15 +163,15 @@ static XrmOptionDescRec genTable[] = {
 /** be built on the fly.                                    **/
 /*************************************************************/
 static XrmOptionDescRec modeTable[] = {
-    {"-delay",      NULL, XrmoptionSepArg, (caddr_t) NULL},
-    {"-batchcount", NULL, XrmoptionSepArg, (caddr_t) NULL},
-    {"-saturation", NULL, XrmoptionSepArg, (caddr_t) NULL},
+    {"-delay",      nullptr, XrmoptionSepArg, (caddr_t) NULL},
+    {"-batchcount", nullptr, XrmoptionSepArg, (caddr_t) NULL},
+    {"-saturation", nullptr, XrmoptionSepArg, (caddr_t) NULL},
 };
 #define modeEntries (sizeof modeTable / sizeof modeTable[0])
 
 static XrmOptionDescRec cmdlineTable[] = {
     {"-display", ".display", XrmoptionSepArg, (caddr_t) NULL},
-    {"-xrm",     NULL,       XrmoptionResArg, (caddr_t) NULL},
+    {"-xrm",     nullptr,       XrmoptionResArg, (caddr_t) NULL},
 };
 #define cmdlineEntries (sizeof cmdlineTable / sizeof cmdlineTable[0])
 
@@ -391,7 +391,7 @@ GetResource(XrmDatabase database, char *parentname, char *parentclass,
 	{
 	    char       *s;
 	    s = (char *) malloc(len + 1);
-	    if (s == (char *) NULL)
+	    if (s == (char *) nullptr)
 #ifdef MIT_R5
                 error("GetResource - couldn't allocate memory\n");
 #else
@@ -426,7 +426,7 @@ GetResource(XrmDatabase database, char *parentname, char *parentclass,
 static      XrmDatabase
 parsefilepath(char *xfilesearchpath, char *TypeName, char *ClassName)
 {
-    XrmDatabase database = NULL;
+    XrmDatabase database = nullptr;
     char        appdefaults[1024];
     char       *src;
     char       *dst;
@@ -462,7 +462,7 @@ parsefilepath(char *xfilesearchpath, char *TypeName, char *ClassName)
 	    }
 	} else if (*src == ':') {
 	    database = XrmGetFileDatabase(appdefaults);
-	    if (database == NULL) {
+	    if (database == nullptr) {
 		dst = appdefaults;
 		src++;
 	    } else
@@ -492,10 +492,10 @@ static int screenIOErrorHandler(Display *dpy)
 static void
 open_display(void)
 {
-    if (display != NULL) {
+    if (display != nullptr) {
 	char       *colon = strchr(display, ':');
 
-	if (colon == NULL)
+	if (colon == nullptr)
 #ifdef MIT_R5
             error("Malformed -display argument, \"%s\"\n", display);
 #else
@@ -550,15 +550,15 @@ printvar(char *class, argtype var)
 void
 GetResources(int argc, char *argv[])
 {
-    XrmDatabase RDB = NULL;
-    XrmDatabase modeDB = NULL;
-    XrmDatabase nameDB = NULL;
-    XrmDatabase cmdlineDB = NULL;
-    XrmDatabase generalDB = NULL;
-    XrmDatabase homeDB = NULL;
-    XrmDatabase applicationDB = NULL;
-    XrmDatabase serverDB = NULL;
-    XrmDatabase userDB = NULL;
+    XrmDatabase RDB = nullptr;
+    XrmDatabase modeDB = nullptr;
+    XrmDatabase nameDB = nullptr;
+    XrmDatabase cmdlineDB = nullptr;
+    XrmDatabase generalDB = nullptr;
+    XrmDatabase homeDB = nullptr;
+    XrmDatabase applicationDB = nullptr;
+    XrmDatabase serverDB = nullptr;
+    XrmDatabase userDB = nullptr;
     char        userfile[1024];
     char       *homeenv;
     char       *userpath;

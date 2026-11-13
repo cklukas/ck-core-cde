@@ -322,7 +322,7 @@ LOGICAL m_omitend(void)
       }
     *m_nextme = (M_MIN *) m_malloc(sizeof(M_MIN), "end-tag minimization") ;
     (*m_nextme)->val = m_stacktop->element ;
-    (*m_nextme)->next = NULL ;
+    (*m_nextme)->next = nullptr ;
     m_nextme = &(*m_nextme)->next ;
     return(TRUE) ;
     }
@@ -406,7 +406,7 @@ LOGICAL m_omitstart(void)
     m_push(c, m_element[c - 1].start, FALSE) ;
     *m_nextms = (M_MIN *) m_malloc(sizeof(M_MIN), "start-tag minimization") ;
     (*m_nextms)->val = m_stacktop->element ;
-    (*m_nextms)->next = NULL ;
+    (*m_nextms)->next = nullptr ;
     m_nextms = &(*m_nextms)->next ;
     return(TRUE) ;
     }

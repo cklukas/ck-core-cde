@@ -247,7 +247,7 @@ for (iter = saveusr.iterations;  iter > 0; )
     if (usrblk.dblk->dbrec.or_dbaccess != ORA_BLOB)
 	goto NEXT_DIT;
 
-    if ((bloblist = ve_getblobs (dit->dba, saveusr.vistano)) == NULL)
+    if ((bloblist = ve_getblobs (dit->dba, saveusr.vistano)) == nullptr)
 	{
 	sprintf (sprintbuf, PROGNAME"149 "
 	    "Corrupted database address on hitlist. "
@@ -272,7 +272,7 @@ for (iter = saveusr.iterations;  iter > 0; )
 
     /* Increment ditto pointer. Check for end of dittolist. */
 NEXT_DIT:
-    if ((dit = dit->link) == NULL)
+    if ((dit = dit->link) == nullptr)
 	{
 	entire_list_done = TRUE;
 	break;
@@ -293,7 +293,7 @@ if (usrblk.debug & (USRDBG_SRCHCMPL | USRDBG_HITLIST))
  */
 if (!entire_list_done)
     {
-    time_dif = difftime (time(NULL), start_time);
+    time_dif = difftime (time(nullptr), start_time);
     if (time_dif < 1.)
 	saveusr.iterations = (float) saveusr.iterations * 1.5;
     else if (time_dif > 1.)
@@ -340,7 +340,7 @@ char	*ptr, *ptr2;
 char	msgbuf [256];
 
 /* Validate input fields */
-if (usrblk.query == NULL || usrblk.query[0] == '\0')
+if (usrblk.query == nullptr || usrblk.query[0] == '\0')
     {
     usrblk.retncode = OE_BAD_QUERY;
     return;
@@ -354,7 +354,7 @@ if (strlen(usrblk.query) >= DtSrMAXWIDTH_HWORD)
     usrblk.retncode = OE_BAD_QUERY;
     return;
     }
-if (usrblk.dittocount <= 0 || usrblk.dittolist == NULL)
+if (usrblk.dittocount <= 0 || usrblk.dittolist == nullptr)
     {
     DtSearchAddMessage (PROGNAME"317 Hitlist empty.  Nothing to search.");
     usrblk.retncode = OE_BAD_HITLIST;
@@ -432,7 +432,7 @@ if (saveusr.dittocount > 0)
     {
     dit = usrblk.dittolist;
     lastlink = &usrblk.dittolist;
-    while (dit != NULL)
+    while (dit != nullptr)
 	{
 	/* On a hit, advance the pointers, advance new dittocount.
 	 * Break the loop on the last hit.
@@ -467,7 +467,7 @@ if (saveusr.dittocount > 0)
      * down to the last hit, or to its end.
      * Keep deleting until end of list, or user's stop point.
      */
-    while (dit != NULL)
+    while (dit != nullptr)
 	{
 	if (!(usrblk.flags & USR_STOPSRCH)  /* never stopped */
 	    || !(dit->flags & DIT_STOP))   /* stopped somewhere ahead */
@@ -490,7 +490,7 @@ if (saveusr.dittocount > 0)
      * its because user stopped the search here.
      * Just count the remaining records for the final tally.
      */
-    while (dit != NULL)
+    while (dit != nullptr)
 	{
 	newdittocount++;
 	#ifdef DEBUG_FINDSTR
@@ -559,7 +559,7 @@ time (&start_time);
 for (iter = saveusr.iterations;  iter > 0; )
     {
     /*****usrblk.dba = dit->dba;**** unnecessary?******/
-    if ((bloblist = ve_getblobs (dit->dba, saveusr.vistano)) == NULL)
+    if ((bloblist = ve_getblobs (dit->dba, saveusr.vistano)) == nullptr)
 	{
 	DtSearchAddMessage (
 	    PROGNAME"390 Corrupted database address on hitlist.");
@@ -587,7 +587,7 @@ for (iter = saveusr.iterations;  iter > 0; )
     else dit->flags = 0;			/* string NOT found */
 
     /* advance to next ditto node */
-    if ((dit = dit->link) == NULL)
+    if ((dit = dit->link) == nullptr)
 	{
 	entire_list_done = TRUE;
 	break;
@@ -604,7 +604,7 @@ for (iter = saveusr.iterations;  iter > 0; )
  */
 if (!entire_list_done)
     {
-    time_dif = difftime (time(NULL), start_time);
+    time_dif = difftime (time(nullptr), start_time);
     if (time_dif < 1.)
 	saveusr.iterations = (float) saveusr.iterations * 1.5;
     else if (time_dif > 1.)

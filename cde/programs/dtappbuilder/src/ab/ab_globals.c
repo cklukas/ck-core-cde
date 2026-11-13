@@ -53,30 +53,30 @@
 #include <ab_private/obj.h>
 #include <ab_private/ab.h>
 
-ABObj		AB_project = NULL;
-ABObj		AB_cur_module = NULL;
+ABObj		AB_project = nullptr;
+ABObj		AB_cur_module = nullptr;
 
-Widget		AB_toplevel = NULL;
-Widget		AB_menubar = NULL;
-Widget          AB_generic_chooser = NULL;
-Widget		AB_group_dialog = NULL;
-Widget		AB_layout_dialog = NULL;
-Widget		AB_proj_window = NULL;
-Widget		AB_rev_prop_dialog = NULL;
-Widget          AB_conn_dialog = NULL;
-Widget		AB_dnd_dialog = NULL;
-Widget          AB_help_dialog = NULL;
-Widget          AB_cgen_win = NULL;
-Widget          AB_appfw_dialog = NULL;
-Widget          AB_attch_ed_dialog = NULL;
-Widget		AB_cgen_prop_dialog = NULL;
-Widget		AB_cgen_env_dialog = NULL;
-Widget		AB_msgEd_dialog = NULL;
+Widget		AB_toplevel = nullptr;
+Widget		AB_menubar = nullptr;
+Widget          AB_generic_chooser = nullptr;
+Widget		AB_group_dialog = nullptr;
+Widget		AB_layout_dialog = nullptr;
+Widget		AB_proj_window = nullptr;
+Widget		AB_rev_prop_dialog = nullptr;
+Widget          AB_conn_dialog = nullptr;
+Widget		AB_dnd_dialog = nullptr;
+Widget          AB_help_dialog = nullptr;
+Widget          AB_cgen_win = nullptr;
+Widget          AB_appfw_dialog = nullptr;
+Widget          AB_attch_ed_dialog = nullptr;
+Widget		AB_cgen_prop_dialog = nullptr;
+Widget		AB_cgen_env_dialog = nullptr;
+Widget		AB_msgEd_dialog = nullptr;
 
 int 		AB_builder_mode = MODE_BUILD;
 int		AB_grid_size = 10;
 Boolean		AB_btn1_transfer = True;
 int		AB_BMenu = Button3;
 
-Vwr		Proj_viewer = NULL;
-XrmDatabase	AB_db = NULL;
+Vwr		Proj_viewer = nullptr;
+XrmDatabase	AB_db = nullptr;

@@ -110,7 +110,7 @@ WmInitErrorHandler (Display *display)
 			       pchErrorFormatNames[i], 
 			       pchDefaultErrorFormat[i], buffer, BUFSIZ);
 
-	if ((pchErrorFormat[i] = (char *) XtMalloc (1+strlen(buffer))) == NULL)
+	if ((pchErrorFormat[i] = (char *) XtMalloc (1+strlen(buffer))) == nullptr)
 	{
 	    Warning ("Insufficient memory for error message initialization.");
 	    ExitWM (1);
@@ -322,7 +322,7 @@ Warning (char *message)
     sprintf (pch, "%s: %s\n", 
 	GETMESSAGE(20, 1, "Workspace Manager"), message);
 
-    _DtSimpleError (wmGD.mwmName, DtIgnore, NULL, pch, NULL);
+    _DtSimpleError (wmGD.mwmName, DtIgnore, nullptr, pch, nullptr);
 
 } /* END OF FUNCTION Warning */
 

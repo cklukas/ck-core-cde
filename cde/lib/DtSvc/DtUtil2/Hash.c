@@ -115,7 +115,7 @@ GetTableIndex(
     Signature 		sig = 0;
     DtHashEntry	entry;
     String			s1, s2;
-    DtHashKey			compKey = NULL;
+    DtHashKey			compKey = nullptr;
 
     if (tab->keyIsString) {
 	s1 = (String)key;
@@ -243,7 +243,7 @@ _DtEnumerateHashTable(
 	  tab->entries[i] != &DtHashfake &&
 	  ((*enumFunc) (tab->entries[i], clientData)))
 	return tab->entries[i];
-    return NULL;
+    return nullptr;
 }
 
 
@@ -255,7 +255,7 @@ _DtKeyToHashEntry(
     int idx, rehash, len;
     DtHashEntry entry, *entries = tab->entries;
 
-    if (!key) return NULL;
+    if (!key) return nullptr;
     idx = GetTableIndex(tab, key, False);
     return entries[idx];
 }

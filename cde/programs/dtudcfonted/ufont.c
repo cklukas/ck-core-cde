@@ -177,8 +177,8 @@ void
 Error_message(Widget widget, char *message)
 {
     static NoticeButton is_lock[] = {
-    NBTNARGS( ExitCB, NULL, 'E', True, False ),
-    NBTNARGS( CancelCB, NULL, 'C', True, True )
+    NBTNARGS( ExitCB, nullptr, 'E', True, False ),
+    NBTNARGS( CancelCB, nullptr, 'C', True, True )
     };
     static NButton LockBTN = NBUTTONS( is_lock );
 
@@ -195,11 +195,11 @@ void
 Error_message2(Widget widget, char *message)
 {
     static NoticeButton is_lock[] = {
-    NBTNARGS( CancelCB, NULL, 'C', True, True )
+    NBTNARGS( CancelCB, nullptr, 'C', True, True )
     };
     static NButton LockBTN = NBUTTONS( is_lock );
 
-    if (widget == NULL)
+    if (widget == nullptr)
 	widget = toplevel;
 
     SetItemLabel(&LockBTN, 0, resource.l_ok);
@@ -241,7 +241,7 @@ CBmOblB_edit( Widget widget, caddr_t clientData, caddr_t callData )
     dn.ptn_h = (Dimension) edg.height;
 
 
-    if( xlfdDialog != NULL )
+    if( xlfdDialog != nullptr )
 	PopdownDialog(xlfdDialog);
 
     ptnGetInfo( &ptn_n, &ptn_w, &ptn_h );
@@ -277,7 +277,7 @@ static void CancelCB(void) { }
 static void ContReadCB(Widget w)
 {
     FalCloseFont(font_id);
-    editPtnW = NULL;
+    editPtnW = nullptr;
     OtherFontSelect();
     PopupSelectXLFD(toplevel);
 }
@@ -329,20 +329,20 @@ void
 OpenCB(Widget w, XtPointer client_data, XtPointer call_data)
 {
     static NoticeButton is_save_read_btn1[] = {
-    NBTNARGS( SaveReadCB, NULL, 'S', True, False ),
-    NBTNARGS( ContReadCB, NULL, 'O', True, False ),
-    NBTNARGS( CancelCB, NULL, 'C', True, True ),
+    NBTNARGS( SaveReadCB, nullptr, 'S', True, False ),
+    NBTNARGS( ContReadCB, nullptr, 'O', True, False ),
+    NBTNARGS( CancelCB, nullptr, 'C', True, True ),
     };
     static NoticeButton is_save_read_btn2[] = {
-    NBTNARGS( ContReadCB, NULL, 'O', True, False ),
-    NBTNARGS( CancelCB, NULL, 'C', True, True ),
+    NBTNARGS( ContReadCB, nullptr, 'O', True, False ),
+    NBTNARGS( CancelCB, nullptr, 'C', True, True ),
     };
     static NButton SaveReadBTN1 = NBUTTONS( is_save_read_btn1 );
     static NButton SaveReadBTN2 = NBUTTONS( is_save_read_btn2 );
 
 	if (QuitEditPtn((Widget)NULL, (caddr_t)NULL, (caddr_t)NULL)){
 	    FalCloseFont(font_id);
-	    editPtnW = NULL;
+	    editPtnW = nullptr;
 	    OtherFontSelect();
 	    PopupSelectXLFD(toplevel);
 	}
@@ -372,7 +372,7 @@ OpenCB(Widget w, XtPointer client_data, XtPointer call_data)
 void
 ReadCB(Widget w, XtPointer client_data, XtPointer call_data)
 {
-    if (fullFontData.xlfdname == NULL) {
+    if (fullFontData.xlfdname == nullptr) {
 	return;
     }
     if (fullFontData.xlfdname == (char *) -1) {
@@ -508,9 +508,9 @@ void
 CBeOblB_aEnd( Widget widget, caddr_t clientData, caddr_t callData )
 {
     static NoticeButton is_save_exit_btn[] = {
-    NBTNARGS( SaveEndCB, NULL, 'S', True, False ),
-    NBTNARGS( ContEndCB, NULL, 'E', True, False ),
-    NBTNARGS( CancelCB,  NULL, 'C', True, True ),
+    NBTNARGS( SaveEndCB, nullptr, 'S', True, False ),
+    NBTNARGS( ContEndCB, nullptr, 'E', True, False ),
+    NBTNARGS( CancelCB,  nullptr, 'C', True, True ),
     };
     static NButton SaveEndBTN = NBUTTONS( is_save_exit_btn );
 
@@ -615,7 +615,7 @@ CBeOblB_rCmdp( Widget widget, int proc, caddr_t callData )
     case PROC_PASTE:
 	XtAddEventHandler(wgeBulB_edit,
 			    ButtonReleaseMask|PointerMotionMask,
-				    False, musPasteProc, NULL );
+				    False, musPasteProc, nullptr );
     }
 }
 
@@ -961,7 +961,7 @@ CBeRecB_obj( Widget widget, int obj, XmToggleButtonCallbackStruct *call)
 void
 EHeBulB_dExp( Widget widget, caddr_t clientData )
 {
-    if (xl.display == NULL ){
+    if (xl.display == nullptr ){
 	return;
     }
 
@@ -1209,7 +1209,7 @@ BeforeCpyCheck( int proc )
     char	rstr[30];
     extern void PopupCpyNotice(String message);
 
-    if (copyFontData.xlfdname == NULL) {
+    if (copyFontData.xlfdname == nullptr) {
 	DispCpyErrorMessage(resource.me_non_srcfile);
         return(False);
     }
@@ -1402,7 +1402,7 @@ main(int argc, char *argv[])
 
     /* get application's resources */
     XtGetApplicationResources( toplevel, &resource,
-		app_resources, XtNumber(app_resources), NULL, 0);
+		app_resources, XtNumber(app_resources), nullptr, 0);
 
     if (resource.codepoint)
 	CodePoint = True;
@@ -1543,8 +1543,8 @@ main(int argc, char *argv[])
     resource.falerrmsg[24] = GETMESSAGE(2, 324, "The specified font has not been opened.");
     resource.falerrmsg[25] = GETMESSAGE(2, 325, "Fatal error occurred.");
 
-    xlfdDialog   = NULL ;
-    cpyDialog    = NULL ;
+    xlfdDialog   = nullptr ;
+    cpyDialog    = nullptr ;
 
     /* initialize the global values and allocate the memories */
     xeg_init();
@@ -1597,11 +1597,11 @@ xeg_init(void)
     edpane.back   = resource.pane_background;
     edpane.border = resource.pane_foreground;
 
-    xl.display    = NULL;
+    xl.display    = nullptr;
     xl.root_winID = xl.edit_winID = xl.disp_winID = xl.list_winID =
 			(Window)NULL;
     xl.borderGC   = xl.backGC = xl.rubGC = xl.dashGC = (GC)NULL;
-    xl.dispImage  = NULL;
+    xl.dispImage  = nullptr;
 
     dn.elem_w = dn.elem_h = (Dimension)0;
     dn.ptn_w  = dn.ptn_h  = (Dimension)0;
@@ -1612,12 +1612,12 @@ xeg_init(void)
 
     for ( i=0 ; i<D_MAX ; i++ ) {
 	dl[i].disp_winID = (Window)NULL;
-	dl[i].dispImage = NULL;
+	dl[i].dispImage = nullptr;
 	bitPtnClear( dl[i].ptn );
     }
     for ( i=0 ; i<EDLIST_MAX ; i++ ) {
 	dl_glyph[i].disp_winID = (Window)NULL;
-	dl_glyph[i].dispImage = NULL;
+	dl_glyph[i].dispImage = nullptr;
 	bitPtnClear( dl_glyph[i].ptn );
 	sq_disp[i] = 0 ;
     }
@@ -1662,7 +1662,7 @@ dstrypaneEditPtn(void)
     for( i=0; i<EDLIST_MAX; i++ ){
 	if( dl_glyph[i].dispImage ){
 	    XFree( (char *)dl_glyph[i].dispImage );
-	    dl_glyph[i].dispImage = NULL ;
+	    dl_glyph[i].dispImage = nullptr ;
 	}
     }
 
@@ -1790,7 +1790,7 @@ chgEdPtn( int code )
 {
     extern void SetCodeString(int code);
 
-	if (xl.display == NULL ){
+	if (xl.display == nullptr ){
 		return;
 	}
 
@@ -1837,7 +1837,7 @@ DrawRectEdPn( int x1, int y1, int x2, int y2 )
     XRectangle    recOff[MAXPTNSIZE*MAXPTNSIZE];
     int	nron, nroff;
 
-    if (xl.display == NULL ){
+    if (xl.display == nullptr ){
 	    return;
     }
 
@@ -1896,7 +1896,7 @@ DrawBorderEdPn( int x1, int y1, int x2, int y2 )
     int		wk, i;
     XSegment	dseg[MAXPTNSIZE*2];
 
-    if (xl.display == NULL ){
+    if (xl.display == nullptr ){
 	    return;
     }
 
@@ -1950,7 +1950,7 @@ DrawPointEdPn( int x, int y, int mode )
     int		x1, y1;
     int		x2, y2;
 
-    if (xl.display == NULL ){
+    if (xl.display == nullptr ){
 	    return;
     }
 
@@ -1977,7 +1977,7 @@ DrawPointEdPn( int x, int y, int mode )
 static void
 DrawDpPn(void)
 {
-	if (xl.display == NULL ){
+	if (xl.display == nullptr ){
 		return;
 	}
 
@@ -1999,7 +1999,7 @@ static void
 DrawPointDpPn( int x, int y, int mode )
 {
 
-    if (xl.display == NULL ){
+    if (xl.display == nullptr ){
 	    return;
     }
     if( mode != 0 ){
@@ -2327,7 +2327,7 @@ musPasteProc(Widget w, XtPointer client_data, XEvent *event)
     case ButtonRelease:
 	XtRemoveEventHandler(wgeBulB_edit,
 				ButtonReleaseMask|PointerMotionMask,
-				    False, (XtEventHandler)musPasteProc, NULL );
+				    False, (XtEventHandler)musPasteProc, nullptr );
 	rubBand(ox, oy, ox + cut_w * edpane.pix_w, oy + cut_h * edpane.pix_h);
 	ox = 0;
 	oy = 0;

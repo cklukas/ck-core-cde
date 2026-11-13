@@ -24,25 +24,25 @@ int main(void)
     int i;
 
     db = _DtLinkDbCreate();
-    assert(db != NULL);
+    assert(db != nullptr);
 
     ck_arm(0);
     for (i = 0; i < GROW_SIZE; i++)
-	assert(_DtLinkDbAddLink(db, NULL, "spec", 0, 0, NULL) == i);
+	assert(_DtLinkDbAddLink(db, nullptr, "spec", 0, 0, nullptr) == i);
     assert(db->max == GROW_SIZE);
 
     /* The list is full and cannot grow: the call fails, the list stays. */
     ck_arm(1);
-    assert(_DtLinkDbAddLink(db, NULL, "spec", 0, 0, NULL) == -1);
+    assert(_DtLinkDbAddLink(db, nullptr, "spec", 0, 0, nullptr) == -1);
     assert(ck_realloc_calls == 1);
-    assert(db->list != NULL);
+    assert(db->list != nullptr);
     assert(db->max == GROW_SIZE);
     for (i = 0; i < db->max; i++)
 	assert(db->list[i].type == _DtLinkTypeLink);
 
     /* Once memory is available again the list grows and is usable. */
     ck_arm(0);
-    assert(_DtLinkDbAddLink(db, NULL, "more", 0, 0, NULL) == GROW_SIZE);
+    assert(_DtLinkDbAddLink(db, nullptr, "more", 0, 0, nullptr) == GROW_SIZE);
     assert(db->max == 2 * GROW_SIZE);
 
     _DtLinkDbDestroy(db);
@@ -62,7 +62,7 @@ int main(void)
 {
     static BufFileRec file;
     char text[130];
-    char *str = NULL;
+    char *str = nullptr;
     int live;
 
     /* a quoted value of 100 characters needs one growth beyond 64 */
@@ -80,18 +80,18 @@ int main(void)
     live = ck_live;
     assert(_DtHelpCeGetSdlAttributeCdata(&file, False, &str) == 0);
     assert(ck_realloc_calls == 1);
-    assert(str != NULL && strlen(str) == 100);
+    assert(str != nullptr && strlen(str) == 100);
     free(str);
     assert(ck_live == live);
 
     /* the growth fails: the call fails and nothing is left allocated */
     file.bufp = (BufChar *) text;
     file.left = 102;
-    str = NULL;
+    str = nullptr;
     ck_arm(1);
     assert(_DtHelpCeGetSdlAttributeCdata(&file, False, &str) == -1);
     assert(ck_realloc_calls == 1);
-    assert(str == NULL);
+    assert(str == nullptr);
     assert(ck_live == live);
     puts("UtilSDL: a failed string growth fails the call and frees the string");
     return 0;
@@ -120,23 +120,23 @@ int _DtHelpCeGetNxtBuf(BufFilePtr file, char *dst, char **src, int max_size)
 
 int main(void)
 {
-    char *out = NULL;
+    char *out = nullptr;
     int r;
 
     ck_arm(0);
-    r = _DtCvRunInterp(NULL, NULL, "/bin/sh", "yes x | head -n 6000\n", &out);
+    r = _DtCvRunInterp(nullptr, nullptr, "/bin/sh", "yes x | head -n 6000\n", &out);
     assert(r == 0);
-    assert(out != NULL && strlen(out) == 12000);
+    assert(out != nullptr && strlen(out) == 12000);
     assert(ck_realloc_calls >= 1);
     free(out);
     assert(ck_live == 0);
 
     /* the first growth of the output fails */
-    out = NULL;
+    out = nullptr;
     ck_arm(1);
-    r = _DtCvRunInterp(NULL, NULL, "/bin/sh", "yes x | head -n 6000\n", &out);
+    r = _DtCvRunInterp(nullptr, nullptr, "/bin/sh", "yes x | head -n 6000\n", &out);
     assert(r == -1);
-    assert(out == NULL);
+    assert(out == nullptr);
     assert(ck_live == 0);
     puts("CanvasOs: a failed output growth fails the call and frees the output");
     return 0;
@@ -158,9 +158,9 @@ int main(void)
     /* control: the string is converted in several growth steps */
     assert(_DtHelpCeIconvOpen(&ctx, "ISO-8859-1", "UTF-8", 0, 0) == 0);
     ck_arm(0);
-    out = NULL;
-    assert(_DtHelpCeIconvStr(ctx, latin1, &out, NULL, NULL, 0) == 0);
-    assert(out != NULL && strlen(out) == 58);
+    out = nullptr;
+    assert(_DtHelpCeIconvStr(ctx, latin1, &out, nullptr, nullptr, 0) == 0);
+    assert(out != nullptr && strlen(out) == 58);
     grown = ck_realloc_calls;	/* the first block is malloc'd, the rest are growths */
     assert(grown >= 2);
     free(out);
@@ -169,13 +169,13 @@ int main(void)
     /* the last growth fails: the string this routine allocated is freed */
     ck_arm(grown);
     out = (char *) 1;
-    assert(_DtHelpCeIconvStr(ctx, latin1, &out, NULL, NULL, 0) == -3);
-    assert(out == NULL);
+    assert(_DtHelpCeIconvStr(ctx, latin1, &out, nullptr, nullptr, 0) == -3);
+    assert(out == nullptr);
     assert(ck_live == 0);
 
     /* the caller's buffer is handed back, still valid and not freed */
     keep = malloc(4);
-    assert(keep != NULL);
+    assert(keep != nullptr);
     ck_arm(1);
     out = keep;
     outLen = 4;
@@ -191,7 +191,7 @@ int main(void)
     /* same codesets: a plain copy into the caller's buffer */
     assert(_DtHelpCeIconvOpen(&ctx, "UTF-8", "UTF-8", 0, 0) == 0);
     keep = malloc(2);
-    assert(keep != NULL);
+    assert(keep != nullptr);
     ck_arm(0);
     out = keep;
     outLen = 2;
@@ -200,7 +200,7 @@ int main(void)
     free(out);
 
     keep = malloc(2);
-    assert(keep != NULL);
+    assert(keep != nullptr);
     ck_arm(1);
     out = (char *) 1;
     outLen = 0;
@@ -230,16 +230,16 @@ int main(void)
     first.next_seg = &second;
 
     ck_arm(0);
-    str = AsciiKeyword(&first, NULL, &size);
-    assert(str != NULL && strcmp(str, "abcd") == 0);
+    str = AsciiKeyword(&first, nullptr, &size);
+    assert(str != nullptr && strcmp(str, "abcd") == 0);
     assert(ck_realloc_calls == 1);
     free(str);
     assert(ck_live == 0);
 
     size = 0;
     ck_arm(1);
-    str = AsciiKeyword(&first, NULL, &size);
-    assert(str == NULL);
+    str = AsciiKeyword(&first, nullptr, &size);
+    assert(str == nullptr);
     assert(ck_live == 0);
     puts("AccessSDL: a failed keyword growth fails the call and frees the string");
     return 0;
@@ -258,7 +258,7 @@ int main(void)
 {
     _DtCvSegment first, second;
     _DtCvValue nl = False;
-    char *str = NULL;
+    char *str = nullptr;
 
     memset(&first, 0, sizeof(first));
     memset(&second, 0, sizeof(second));
@@ -269,18 +269,18 @@ int main(void)
 
     /* control */
     ck_arm(0);
-    assert(CREATE_ASCII_STRING(&first, NULL, &nl, &str) == 0);
-    assert(str != NULL && strcmp(str, "ab cd") == 0);
+    assert(CREATE_ASCII_STRING(&first, nullptr, &nl, &str) == 0);
+    assert(str != nullptr && strcmp(str, "ab cd") == 0);
     assert(ck_realloc_calls == 1);
     free(str);
     assert(ck_live == 0);
 
     /* the second string cannot be appended: the first one is kept */
-    str = NULL;
+    str = nullptr;
     nl = False;
     ck_arm(1);
-    assert(CREATE_ASCII_STRING(&first, NULL, &nl, &str) == -1);
-    assert(str != NULL && strcmp(str, "ab") == 0);
+    assert(CREATE_ASCII_STRING(&first, nullptr, &nl, &str) == -1);
+    assert(str != nullptr && strcmp(str, "ab") == 0);
     free(str);
     assert(ck_live == 0);
     puts("FormatSDL: a failed string growth keeps the string built so far");
@@ -292,7 +292,7 @@ int main(void)
 int main(void)
 {
     _DtCvSegment first, second;
-    void **chunks = NULL;
+    void **chunks = nullptr;
     int cnt = 0;
 
     memset(&first, 0, sizeof(first));
@@ -304,21 +304,21 @@ int main(void)
 
     /* control: both strings become chunks */
     ck_arm(0);
-    assert(CreateTitleChunks(NULL, &first, NULL, NULL, "C", "ISO-8859-1",
-			     NULL, NULL, &cnt, &chunks) == 0);
-    assert(cnt == 7 && chunks != NULL);
+    assert(CreateTitleChunks(nullptr, &first, nullptr, nullptr, "C", "ISO-8859-1",
+			     nullptr, nullptr, &cnt, &chunks) == 0);
+    assert(cnt == 7 && chunks != nullptr);
     free(chunks[2]);
     free(chunks[5]);
     free(chunks);
     assert(ck_live == 0);
 
     /* the list cannot grow for the second string: the first one is kept */
-    chunks = NULL;
+    chunks = nullptr;
     cnt = 0;
     ck_arm(1);
-    assert(CreateTitleChunks(NULL, &first, NULL, NULL, "C", "ISO-8859-1",
-			     NULL, NULL, &cnt, &chunks) == -1);
-    assert(chunks != NULL);
+    assert(CreateTitleChunks(nullptr, &first, nullptr, nullptr, "C", "ISO-8859-1",
+			     nullptr, nullptr, &cnt, &chunks) == -1);
+    assert(chunks != nullptr);
     assert(cnt == 4);
     assert(chunks[3] == (void *) DT_HELP_CE_END);
     free(chunks[2]);

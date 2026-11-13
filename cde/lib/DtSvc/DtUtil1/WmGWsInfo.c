@@ -118,7 +118,7 @@ DtWsmGetWorkspaceInfo(
 
     XFree ((char *) pchName);
     XtFree ((char *) pch);
-    pch = NULL;
+    pch = nullptr;
 
     /* 
      * Get window where property is 
@@ -164,7 +164,7 @@ DtWsmGetWorkspaceInfo(
 		if (item < count)
 		{
 		    pWsInfo->bg = (unsigned long) 
-			    strtol (ppchList[item], (char **) NULL, 0);
+			    strtol (ppchList[item], (char **) nullptr, 0);
 		    item++;
 		}
 
@@ -172,7 +172,7 @@ DtWsmGetWorkspaceInfo(
 		if (item < count)
 		{
 		    pWsInfo->fg = (unsigned long) 
-			    strtol (ppchList[item], (char **) NULL, 0);
+			    strtol (ppchList[item], (char **) nullptr, 0);
 		    item++;
 		}
 
@@ -180,7 +180,7 @@ DtWsmGetWorkspaceInfo(
 		if (item < count)
 		{
 		    pWsInfo->backdropName = 
-			    (Atom) strtol (ppchList[item], (char **) NULL, 0);
+			    (Atom) strtol (ppchList[item], (char **) nullptr, 0);
 		    item++;
 		}
 
@@ -195,7 +195,7 @@ DtWsmGetWorkspaceInfo(
 		if (item < count)
 		{
 		    pWsInfo->numBackdropWindows = 
-			    (int) strtol (ppchList[item], (char **) NULL, 0);
+			    (int) strtol (ppchList[item], (char **) nullptr, 0);
 		    item++;
 		}
 
@@ -209,7 +209,7 @@ DtWsmGetWorkspaceInfo(
 		    for (i=0; i<pWsInfo->numBackdropWindows; i++)
 		    {
 			pWin[i] = (Window) 
-			    strtol (ppchList[item], (char **) NULL, 0);
+			    strtol (ppchList[item], (char **) nullptr, 0);
 			item++;
 		    }
 		    pWsInfo->backdropWindows = pWin;
@@ -229,7 +229,7 @@ DtWsmGetWorkspaceInfo(
 	    else 
 	    {
 		/* conversion failed */
-		*ppWsInfo = NULL;
+		*ppWsInfo = nullptr;
 	    }
 	    /* free the property data */
 	    if (tp.value) 

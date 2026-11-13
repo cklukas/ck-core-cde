@@ -188,9 +188,9 @@ void Ecd(int data)
 
 void freecsrec(UDCcsREC *rec)
 {
-    if (rec->charset != NULL)
+    if (rec->charset != nullptr)
 	free(rec->charset);
-    if (rec->udcrenge != NULL)
+    if (rec->udcrenge != nullptr)
 	free(rec->udcrenge);
 }
 
@@ -202,7 +202,7 @@ void freecslist(int n, UDCcsREC *rec)
     recp = rec;
     for (i = 0; i < n; i++)
     {
-	if (recp != NULL)
+	if (recp != nullptr)
 	{
 	    freecsrec(recp);
 	    recp++;
@@ -214,41 +214,41 @@ void freecslist(int n, UDCcsREC *rec)
 
 void freeExcdata(Exc_data *ed)
 {
-    if (ed == NULL)
+    if (ed == nullptr)
 	return;
 
 /* Don't free ed->toplevel */
 
-    if (ed->locale != NULL)
+    if (ed->locale != nullptr)
 	free(ed->locale);
 
-    if (ed->cslist != NULL)
+    if (ed->cslist != nullptr)
 	free(ed->cslist);
 
-    if (ed->xlfdname != NULL)
+    if (ed->xlfdname != nullptr)
 	free(ed->xlfdname);
 
-    if (ed->style != NULL)
+    if (ed->style != nullptr)
 	free(ed->style);
 
-    if (ed->size != NULL)
+    if (ed->size != nullptr)
 	free(ed->size);
 
 /* Don't free ed->fontfile */
 
-    if (ed->bdffile != NULL)
+    if (ed->bdffile != nullptr)
 	XtFree(ed->bdffile);
 
-    if (ed->udcrenge != NULL)
+    if (ed->udcrenge != nullptr)
 	free(ed->udcrenge);
 
-    if (ed->gpf_code_list != NULL)
+    if (ed->gpf_code_list != nullptr)
 	free(ed->gpf_code_list);
 
-    if (ed->bdf_code_list != NULL)
+    if (ed->bdf_code_list != nullptr)
 	free(ed->bdf_code_list);
 
-    if (ed->comment_list != NULL)
+    if (ed->comment_list != nullptr)
 	free(ed->comment_list);
 
     free(ed);
@@ -265,26 +265,26 @@ void Ecsd(char * s1, int i)
 
 void checkdata(Exc_data *ed)
 {
-    if (ed == NULL)
+    if (ed == nullptr)
 	return;
 
 /* Don't free ed->toplevel */
 
-    if (ed->locale != NULL)
+    if (ed->locale != nullptr)
 	Ecss("ed->locale", ed->locale);
 
     Ecsd("ed->csnum", ed->csnum);
 
-    if (ed->xlfdname != NULL)
+    if (ed->xlfdname != nullptr)
 	Ecss("ed->xlfdname",ed->xlfdname);
 
-    if (ed->fontfile != NULL)
+    if (ed->fontfile != nullptr)
 	Ecss("ed->fontfile",ed->fontfile);
 
-    if (ed->bdffile != NULL)
+    if (ed->bdffile != nullptr)
 	Ecss("ed->bdffile",ed->bdffile);
 
-    if (ed->udcrenge != NULL)
+    if (ed->udcrenge != nullptr)
 	Ecss("ed->udcrenge",ed->udcrenge);
 
     Ecsd("ed->code_num", ed->code_num);
@@ -306,15 +306,15 @@ void freeld(ListData *ld)
     int		i;
     char	**cp;
 
-    if (ld != NULL) {
-	if (ld->allcode != NULL)
+    if (ld != nullptr) {
+	if (ld->allcode != nullptr)
 	    free(ld->allcode);
-	if (ld->existcode != NULL)
+	if (ld->existcode != nullptr)
 	    free(ld->existcode);
-	if (ld->existcode_c != NULL) {
+	if (ld->existcode_c != nullptr) {
 	    cp = ld->existcode_c;
 	    for (i = 0; i < ld->existcode_num; i++) {
-		if (*cp != NULL)
+		if (*cp != nullptr)
 		    free(*cp);
 		cp++;
 	    }

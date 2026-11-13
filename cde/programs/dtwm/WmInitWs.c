@@ -337,7 +337,7 @@ static void
 SetupLockingModifierMask(void)
 {
     int i, j, start_index;
-    XModifierKeymap *modifier_map = NULL;
+    XModifierKeymap *modifier_map = nullptr;
     static Modifiers mod_masks[] = { None, Mod1Mask, Mod2Mask,
                                         Mod3Mask, Mod4Mask, Mod5Mask };
     Display *dpy = wmGD.display;
@@ -379,7 +379,7 @@ SetupLockingModifierMask(void)
 
     BuildLockMaskSequence();
 
-    if(modifier_map != NULL)
+    if(modifier_map != nullptr)
 	XFreeModifiermap(modifier_map);
 
 }
@@ -448,7 +448,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
     int savedArgc;
 
     wmGD.errorFlag = False;
-    wmGD.dtSD = NULL;
+    wmGD.dtSD = nullptr;
     wmGD.iSlideUpsInProgress = 0;
 
     SetupWmSignalHandlers (0); /* dummy paramater */
@@ -476,7 +476,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
 
 
     /* set our name */
-    if ((wmGD.mwmName = (char*)strrchr (wmGD.argv[0], '/')) != NULL)
+    if ((wmGD.mwmName = (char*)strrchr (wmGD.argv[0], '/')) != nullptr)
     {
         wmGD.mwmName++;
     }
@@ -494,7 +494,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
     }
     wmGD.statusColorServer = CSERVE_NOT_AVAILABLE;
 
-    wmGD.display = (Display *)NULL;
+    wmGD.display = (Display *)nullptr;
     wmGD.topLevelW = (Widget)NULL;
 
     /*
@@ -506,10 +506,10 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
     wmGD.mwmAppContext = XtCreateApplicationContext();
     AddWmResourceConverters ();
     wmGD.display = XtOpenDisplay (wmGD.mwmAppContext,
-				  NULL,
+				  nullptr,
 				  wmGD.mwmName,
 				  res_class,
-				  NULL,
+				  nullptr,
 				  0,
 				  &argc, /* R5 changed from Cardinal to int*/
 				  argv);
@@ -616,7 +616,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
     XtSetArg (args[argnum], XtNargv, wmGD.argv); argnum++;
 
     /* create topmost shell (application shell) */
-    wmGD.topLevelW = XtAppCreateShell (NULL, 
+    wmGD.topLevelW = XtAppCreateShell (nullptr, 
 			      res_class,
 			      sessionShellWidgetClass,
 			      DISPLAY,
@@ -624,7 +624,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
 			      argnum);
 
     XtAddEventHandler(wmGD.topLevelW, NoEventMask, True,
-			MappingEventHandler, NULL);
+			MappingEventHandler, nullptr);
 
     /* Add callbacks used for communication with Session Manager. */
     AddSMCallbacks ();
@@ -747,38 +747,38 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
 							  &wmGD.shapeErrorBase);
 
                     wmGD.replayEnterEvent = False;
-		    wmGD.menuActive = NULL;
-		    wmGD.menuUnpostKeySpec = NULL;
-		    wmGD.F_NextKeySpec = NULL;
-		    wmGD.F_PrevKeySpec = NULL;
+		    wmGD.menuActive = nullptr;
+		    wmGD.menuUnpostKeySpec = nullptr;
+		    wmGD.F_NextKeySpec = nullptr;
+		    wmGD.F_PrevKeySpec = nullptr;
 		    wmGD.passKeysActive = False;
-		    wmGD.passKeysKeySpec = NULL;
+		    wmGD.passKeysKeySpec = nullptr;
 		    wmGD.checkHotspot = False;
 		    wmGD.configAction = NO_ACTION;
 		    wmGD.configPart = FRAME_NONE;
 		    wmGD.configSet = False;
 		    wmGD.preMove = False;
-		    wmGD.gadgetClient = NULL;
-		    wmGD.wmTimers = NULL;
+		    wmGD.gadgetClient = nullptr;
+		    wmGD.wmTimers = nullptr;
 		    wmGD.clientDefaultTitle = 
 			XmStringCreateLocalized(DEFAULT_CLIENT_TITLE);
 		    wmGD.iconDefaultTitle = 
 			XmStringCreateLocalized(DEFAULT_ICON_TITLE);
 		    wmGD.attributesWindow = (Window)NULL;
-		    wmGD.clickData.pCD = NULL;
+		    wmGD.clickData.pCD = nullptr;
 		    wmGD.clickData.clickPending = False;
 		    wmGD.clickData.doubleClickPending = False;
 		    wmGD.systemModalActive = False;
 		    wmGD.activeIconTextDisplayed = False;
 		    wmGD.movingIcon = False;
-		    wmGD.movingIconClient = NULL;
+		    wmGD.movingIconClient = nullptr;
 		    wmGD.queryScreen = True;
 		    wmGD.dataType = GLOBAL_DATA_TYPE;
 
-		    wmGD.pLockMaskSequence = NULL;
+		    wmGD.pLockMaskSequence = nullptr;
 		    SetupLockingModifierMask ();
 		    wmGD.requestContextWin = (Window) 0L;
-		    wmGD.cppCommand = NULL;
+		    wmGD.cppCommand = nullptr;
 		    wmGD.evLastButton.button = 0;
 		    wmGD.bReplayedButton = False;
 		    wmGD.bSuspendSecondaryRestack = False;
@@ -787,10 +787,10 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
 		     *  internal WM windows.
 		     */
 		    wmGD.display1 = XtOpenDisplay (wmGD.mwmAppContext,
-						   NULL,
+						   nullptr,
 						   wmGD.mwmName,
 						   res_class,
-						   NULL,
+						   nullptr,
 						   0,
 						   &dpy2Argc,
 						   dpy2Argv);
@@ -816,7 +816,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
 				XtNmappedWhenManaged, False);	argnum++;
 
 		    wmGD.topLevelW1 = 
-			XtAppCreateShell (NULL, 
+			XtAppCreateShell (nullptr, 
 					  res_class,
 					  applicationShellWidgetClass,
 					  DISPLAY1,
@@ -1149,7 +1149,7 @@ XFlush (DISPLAY);
 
 		    pPanelist = (WmPanelistObject) pSD->wPanelist;
 
-		    if (pPanelist != NULL && O_Shell(pPanelist))
+		    if (pPanelist != nullptr && O_Shell(pPanelist))
 		    {
 			/*
 			 * Make a default front panel icon image.
@@ -1250,19 +1250,19 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->rootWindow = RootWindow (DISPLAY, sNum);
     pSD->clientCounter = 0;
     pSD->defaultSystemMenuUseBuiltin = TRUE;
-    pSD->displayString = NULL;
+    pSD->displayString = nullptr;
     pSD->acceleratorMenuCount = 0;
     pSD->activeIconTextWin = (Window)NULL;
     pSD->focusPriority = 0;
     pSD->inputScreenWindow = (Window)NULL;
-    pSD->colormapFocus = NULL;
-    pSD->keySpecs = NULL;
+    pSD->colormapFocus = nullptr;
+    pSD->keySpecs = nullptr;
     pSD->screen = sNum;
-    pSD->launcherList = NULL;
-    pSD->confirmboxW[DEFAULT_BEHAVIOR_ACTION] = NULL;
-    pSD->confirmboxW[CUSTOM_BEHAVIOR_ACTION] = NULL;
-    pSD->confirmboxW[RESTART_ACTION] = NULL;
-    pSD->confirmboxW[QUIT_MWM_ACTION] = NULL;
+    pSD->launcherList = nullptr;
+    pSD->confirmboxW[DEFAULT_BEHAVIOR_ACTION] = nullptr;
+    pSD->confirmboxW[CUSTOM_BEHAVIOR_ACTION] = nullptr;
+    pSD->confirmboxW[RESTART_ACTION] = nullptr;
+    pSD->confirmboxW[QUIT_MWM_ACTION] = nullptr;
     pSD->feedbackWin = (Window)NULL;
     pSD->fbStyle = FB_OFF;
     pSD->fbWinWidth = 0;
@@ -1278,10 +1278,10 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->fbSnapEnabled = False;
     pSD->fbSnapFullScreen = False;
     pSD->fbSnapHover = 0;
-    pSD->fbSnapClient = NULL;
-    pSD->fbSnapActiveGC = NULL;
-    pSD->fbSnapInactiveGC = NULL;
-    pSD->fbSnapBgGC = NULL;
+    pSD->fbSnapClient = nullptr;
+    pSD->fbSnapActiveGC = nullptr;
+    pSD->fbSnapInactiveGC = nullptr;
+    pSD->fbSnapBgGC = nullptr;
     pSD->fbSnapActiveColor = 0;
     pSD->fbSnapInactiveColor = 0;
     pSD->fbSnapBgColor = 0;
@@ -1289,18 +1289,18 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->fbLastY = -1;
     pSD->fbLastWidth = -1;
     pSD->fbLastHeight = -1;
-    pSD->fbTop = NULL;
-    pSD->fbBottom = NULL;
+    pSD->fbTop = nullptr;
+    pSD->fbBottom = nullptr;
     pSD->actionNbr = -1;
-    pSD->clientList = NULL;
-    pSD->lastClient = NULL;
+    pSD->clientList = nullptr;
+    pSD->lastClient = nullptr;
     pSD->lastInstalledColormap = (Colormap)NULL;
-    pSD->shrinkWrapGC = NULL;
-    pSD->openIconFillGC = NULL;
+    pSD->shrinkWrapGC = nullptr;
+    pSD->openIconFillGC = nullptr;
     pSD->openIconFillColor = 0;
     pSD->openIconFillPixmap = (Pixmap)None;
-    pSD->openIconBarActiveGC = NULL;
-    pSD->openIconBarInactiveGC = NULL;
+    pSD->openIconBarActiveGC = nullptr;
+    pSD->openIconBarInactiveGC = nullptr;
     pSD->openIconBarActiveColor = 0;
     pSD->openIconBarInactiveColor = 0;
     pSD->animateMinimizeRestore = False;
@@ -1309,8 +1309,8 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->taskSwitchActive = False;
     pSD->taskSwitchGrabbed = False;
     pSD->taskSwitchPinned = False;
-    pSD->taskSwitchList = NULL;
-    pSD->taskSwitchTitles = NULL;
+    pSD->taskSwitchList = nullptr;
+    pSD->taskSwitchTitles = nullptr;
     pSD->taskSwitchCount = 0;
     pSD->taskSwitchIndex = -1;
     pSD->taskSwitchCols = 0;
@@ -1325,26 +1325,26 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->taskSwitchY = 0;
     pSD->taskSwitchWidth = 0;
     pSD->taskSwitchHeight = 0;
-    pSD->bitmapCache = NULL;
+    pSD->bitmapCache = nullptr;
     pSD->bitmapCacheSize = 0;
     pSD->bitmapCacheCount = 0;
     pSD->dataType = SCREEN_DATA_TYPE;
     pSD->managed = False;
 
-    pSD->initialWorkspace=NULL;
-    pSD->presence.shellW = NULL;
+    pSD->initialWorkspace=nullptr;
+    pSD->presence.shellW = nullptr;
     pSD->presence.onScreen = False;
     pSD->presence.userDismissed = True;
     pSD->instantTitleData.widgetsInitialized = False;
-    pSD->workspaceList = NULL;
+    pSD->workspaceList = nullptr;
     pSD->numWorkspaces = 0;
     pSD->numWsDataAllocated = 0;
     pSD->lastBackdropWin = None;
-    pSD->pDtSessionItems = NULL;
+    pSD->pDtSessionItems = nullptr;
     pSD->totalSessionItems = 0;
     pSD->remainingSessionItems = 0;
 
-    pSD->cachedHelp = NULL;
+    pSD->cachedHelp = nullptr;
     pSD->dtHelp.shell  = (Widget)NULL;
     pSD->dtHelp.dialog = (Widget)NULL;
     pSD->dtHelp.errorDialog = (Widget)NULL;
@@ -1353,23 +1353,23 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->dtHelp.restored = False;
     pSD->dtHelp.onScreen = False;
     pSD->dtHelp.userDismissed = False;
-    pSD->dtHelp.pCDforClient= NULL;
-    pSD->helpResources=NULL;
+    pSD->dtHelp.pCDforClient= nullptr;
+    pSD->helpResources=nullptr;
     pSD->bMarqueeSelectionInitialized = False;
     pSD->woN = (Window) 0L;
     pSD->woS = (Window) 0L;
     pSD->woE = (Window) 0L;
     pSD->woW = (Window) 0L;
-    pSD->wPanelist = NULL;
-    pSD->pECD = NULL;
+    pSD->wPanelist = nullptr;
+    pSD->pECD = nullptr;
     pSD->numPushRecallClients = 0;
     pSD->numEmbeddedClients = 0;
-    pSD->pPRCD = NULL;
+    pSD->pPRCD = nullptr;
     pSD->iconBoxControl = False;
     pSD->displayResolutionType = _DtGetDisplayResolution(DISPLAY, sNum);
 
-    pSD->topClient = NULL;
-    pSD->bottomClient = NULL;
+    pSD->topClient = nullptr;
+    pSD->bottomClient = nullptr;
 
     /*
      *  We've got display resolution type--now, let's get color
@@ -1385,7 +1385,7 @@ InitWmScreen (WmScreenData *pSD, int sNum)
 	buf_size = strlen(buffer) + 1;
 
 	if ((wmGD.screenNames[sNum] = 
-	     (unsigned char *)XtRealloc ((char *)wmGD.screenNames[sNum], buf_size)) == NULL)
+	     (unsigned char *)XtRealloc ((char *)wmGD.screenNames[sNum], buf_size)) == nullptr)
 	{
 	    Warning (((char *)GETMESSAGE(40, 7, "Cannot create enough memory for the screen names")));
 	    ExitWM (WM_ERROR_EXIT_VALUE);
@@ -1523,13 +1523,13 @@ InitWmScreen (WmScreenData *pSD, int sNum)
 
     token1 = (char*)strtok(displayName, ":");		/* parse of hostname */
 
-    if((token2 = (char*)strtok(NULL, ".")) ||		/* parse off dpy & scr # */
-       (token2 = (char*)strtok(NULL, "")) ||
+    if((token2 = (char*)strtok(nullptr, ".")) ||		/* parse off dpy & scr # */
+       (token2 = (char*)strtok(nullptr, "")) ||
        (displayName[0] == ':'))
     {
 	if (displayName[0] == ':')		/* local dpy (special case) */
 	{
-	    if ((token2 = (char*)strtok(token1, ".")) != NULL)	/* parse dpy# */
+	    if ((token2 = (char*)strtok(token1, ".")) != nullptr)	/* parse dpy# */
 		sprintf(buffer, "DISPLAY=:%s.%d",
 			token2,	sNum);
 	} else {				/* otherwise process normally */
@@ -1542,7 +1542,7 @@ InitWmScreen (WmScreenData *pSD, int sNum)
 	 */
     
 	if ((pSD->displayString =
-	     (String)XtMalloc ((unsigned int) (strlen(buffer) + 1))) == NULL)
+	     (String)XtMalloc ((unsigned int) (strlen(buffer) + 1))) == nullptr)
 	{
 	    Warning (((char *)GETMESSAGE(40, 9, 
 				    "Insufficient memory for displayString")));
@@ -1584,15 +1584,15 @@ void InitWmWorkspace (WmWorkspaceData *pWS, WmScreenData *pSD)
 
 
     pWS->pSD = pSD;
-    pWS->pIconBox = NULL;
+    pWS->pIconBox = nullptr;
     pWS->dataType = WORKSPACE_DATA_TYPE;
     pWS->backdrop.window = 0;
     pWS->backdrop.nameAtom = 0;
-    pWS->backdrop.image = NULL;
+    pWS->backdrop.image = nullptr;
     pWS->numClients = 0;
     pWS->sizeClientList = 0;
     pWS->ppClients = 0;
-    pWS->buttonW = NULL;
+    pWS->buttonW = nullptr;
 
     /*
      * Create widget for workspace resource hierarchy
@@ -1677,7 +1677,7 @@ InsureDefaultBackdropDir(char **ppchBackdropDirs)
   len = strlen (pchD);
   pchEnd = pch + strlen(pch);
   
-  while (!bFound && (pch != NULL) && (*pch != 0))
+  while (!bFound && (pch != nullptr) && (*pch != 0))
     {
       if (strncmp (pch, pchD, len) == 0)
 	{
@@ -1698,7 +1698,7 @@ InsureDefaultBackdropDir(char **ppchBackdropDirs)
 	{
 	  /* find next path component */
 	  pch = strchr (pch, (int) ':'); 
-	  if ((pch != NULL) && (*pch != 0))
+	  if ((pch != nullptr) && (*pch != 0))
 	    { 
 	      /* skip path separator */
 	      chlen = mblen (pch, MB_CUR_MAX);
@@ -1781,7 +1781,7 @@ void ProcessMotifWmInfo (Window rootWindowOfScreen)
     MwmInfo *pMwmInfo;
 
     wmGD.xa_MWM_INFO = XInternAtom (DISPLAY, _XA_MWM_INFO, False);
-    if ((pMwmInfo = (MotifWmInfo *)GetMwmInfo (rootWindowOfScreen)) != NULL)
+    if ((pMwmInfo = (MotifWmInfo *)GetMwmInfo (rootWindowOfScreen)) != nullptr)
     {
 	wmGD.useStandardBehavior =
 		(pMwmInfo->flags & MWM_INFO_STARTUP_STANDARD) ? True : False;
@@ -1962,10 +1962,10 @@ void MakeWmFunctionResources (WmScreenData *pSD)
 		menuContext = F_CONTEXT_ROOT;
 	    }
 
-	    menuSpec = MAKE_MENU (pSD, NULL, buttonSpec->wmFuncArgs,
+	    menuSpec = MAKE_MENU (pSD, nullptr, buttonSpec->wmFuncArgs,
 				 menuContext,
 	                         buttonSpec->context, 
-				 (MenuItem *) NULL, FALSE);
+				 (MenuItem *) nullptr, FALSE);
 
 	    if (menuSpec)
 	    /* 
@@ -2007,9 +2007,9 @@ void MakeWmFunctionResources (WmScreenData *pSD)
 		menuContext = F_CONTEXT_ROOT;
 	    }
 
-	    menuSpec = MAKE_MENU (pSD, NULL, keySpec->wmFuncArgs, menuContext,
+	    menuSpec = MAKE_MENU (pSD, nullptr, keySpec->wmFuncArgs, menuContext,
 	                         keySpec->context, 
-				 (MenuItem *) NULL, FALSE);
+				 (MenuItem *) nullptr, FALSE);
 
 	    if (menuSpec)
 	    /* 
@@ -2113,7 +2113,7 @@ void CopyArgv (int argc, char *argv [])
     int i;
 
 
-    if ((wmGD.argv = (char **)XtMalloc ((argc + 1) * sizeof (char *))) == NULL)
+    if ((wmGD.argv = (char **)XtMalloc ((argc + 1) * sizeof (char *))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(40, 10, "Insufficient memory for window manager data")));
 	wmGD.argv = argv;
@@ -2125,8 +2125,8 @@ void CopyArgv (int argc, char *argv [])
 	{
 	    wmGD.argv[i] = argv[i];
 	}
-	wmGD.argv[i] = NULL;
-	if ((dpy2Argv = (char **)XtMalloc((argc + 1) * sizeof(char *))) == NULL)
+	wmGD.argv[i] = nullptr;
+	if ((dpy2Argv = (char **)XtMalloc((argc + 1) * sizeof(char *))) == nullptr)
 	{
 	    Warning (((char *)GETMESSAGE(40, 11, "Insufficient memory for window manager data")));
 	    dpy2Argv = argv;
@@ -2138,7 +2138,7 @@ void CopyArgv (int argc, char *argv [])
 		dpy2Argv[i] = argv[i];
 	    }
 	    dpy2Argc = argc;
-	    dpy2Argv[i] = NULL;
+	    dpy2Argv[i] = nullptr;
 	}
     }
     
@@ -2213,7 +2213,7 @@ void InitNlsStrings (void)
 
     tmpString = ((char *)GETMESSAGE(40, 14, "Icons"));
     if ((wmNLS.default_icon_box_title =
-	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(40, 15, "Insufficient memory for local message string")));
 	wmNLS.default_icon_box_title = "Icons";
@@ -2225,7 +2225,7 @@ void InitNlsStrings (void)
 
     tmpString = ((char *)GETMESSAGE(40, 20, "%s: %s on line %d of configuration file %s\n"));
     if ((pWarningStringFile =
-	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(40, 17, "Insufficient memory for local message string")));
 	pWarningStringFile = "%s: %s on line %d of configuration file %s\n";
@@ -2237,7 +2237,7 @@ void InitNlsStrings (void)
 
     tmpString = ((char *)GETMESSAGE(40, 21, "%s: %s on line %d of specification string\n"));
     if ((pWarningStringLine =
-	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(40, 19, "Insufficient memory for local message string")));
 	pWarningStringLine = "%s: %s on line %d of specification string\n";
@@ -2250,7 +2250,7 @@ void InitNlsStrings (void)
 
     tmpString = ((char *)GETMESSAGE(40, 22, "About Workspace Manager"));
     if ((wmNLS.defaultVersionTitle =
-	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(40, 15, "Insufficient memory for local message string")));
 	wmNLS.defaultVersionTitle = "About Workspace Manager";
@@ -2262,7 +2262,7 @@ void InitNlsStrings (void)
 
     tmpString = ((char *)GETMESSAGE(40, 23, "Workspace Manager - Help"));
     if ((wmNLS.defaultDtwmHelpTitle =
-	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(40, 15, "Insufficient memory for local message string")));
 	wmNLS.defaultDtwmHelpTitle = "Workspace Manager - Help";
@@ -2274,7 +2274,7 @@ void InitNlsStrings (void)
 
     tmpString = ((char *)GETMESSAGE(40, 24, "Workspace Manager - Help"));
     if ((wmNLS.defaultHelpTitle =
-	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+	 (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(40, 15, "Insufficient memory for local message string")));
 	wmNLS.defaultHelpTitle = "Workspace Manager - Help";
@@ -2324,9 +2324,9 @@ InitWmDisplayEnv (void)
      * Allocate space for the display string
      */
     if ((wmGD.displayString =
-	 (String)XtMalloc ((unsigned int) (strlen(buffer) + 1))) == NULL)
+	 (String)XtMalloc ((unsigned int) (strlen(buffer) + 1))) == nullptr)
     {
-	wmGD.displayString = NULL;
+	wmGD.displayString = nullptr;
         Warning (((char *)GETMESSAGE(40, 9, 
 				     "Insufficient memory for displayString")));
     }
@@ -2351,15 +2351,15 @@ GetReplacementList(
   int kc_count ;
   KeySym *key_map ; 
   unsigned i ;
-  str_xref xref_rtn = NULL ;
+  str_xref xref_rtn = nullptr ;
   unsigned num_xref = 0 ;
 
   XDisplayKeycodes( dsp, &min_kc, &max_kc) ;
   kc_count = max_kc + 1 - min_kc ;
   key_map = XGetKeyboardMapping( dsp, min_kc, kc_count, &ks_per_kc) ;
-  if(    key_map == NULL    )
+  if(    key_map == nullptr    )
     {
-      return NULL ;
+      return nullptr ;
     }
   kc_count *= ks_per_kc ;
 
@@ -2389,7 +2389,7 @@ GetReplacementList(
           xref_rtn = (str_xref) XtRealloc( (char *) xref_rtn,
                                       sizeof( str_xref_rec) * (num_xref + 2)) ;
           xref_rtn[num_xref++] = std_xref[i] ;
-          xref_rtn[num_xref].default_name = NULL ;
+          xref_rtn[num_xref].default_name = nullptr ;
         }
       ++i ;
     }
@@ -2407,7 +2407,7 @@ GetBindingsProperty(
   int actual_format ;
   unsigned long num_items ;
   unsigned long bytes_after ;
-  unsigned char *prop = NULL ;
+  unsigned char *prop = nullptr ;
 
   XGetWindowProperty( dsp, RootWindow( dsp, 0), property, 0, 1000000L,
       FALSE, XA_STRING, &actual_type, &actual_format, &num_items, &bytes_after,
@@ -2416,7 +2416,7 @@ GetBindingsProperty(
       || (actual_format != 8)
       || (num_items == 0)    )
     {
-      if(    prop != NULL    )
+      if(    prop != nullptr    )
         {
           XFree( prop) ;
         }
@@ -2444,12 +2444,12 @@ FixupBindingsString(
   String fixed_str = XtNewString( bindingsString) ;
   String ptr_next = fixed_str ;
 
-  while(    repl_xref->default_name != NULL    )
+  while(    repl_xref->default_name != nullptr    )
     {
       String ks_ptr = strstr( ptr_next, repl_xref->default_name) ;
       unsigned orig_len = strlen( repl_xref->default_name) ;
 
-      if(    ks_ptr == NULL    )
+      if(    ks_ptr == nullptr    )
         {
           /* Only increment to next replacement when no other instances
            *   are found in fixed_str.
@@ -2515,7 +2515,7 @@ VirtKeys4DIN(
   unsigned num_props = XtNumber( prop_names) ;
 
   vkeysym_xref = GetReplacementList( dsp, std_xref, XtNumber(std_xref)) ;
-  if(    vkeysym_xref == NULL    )
+  if(    vkeysym_xref == nullptr    )
     {
       return PropChanged4DIN ;
     }
@@ -2534,7 +2534,7 @@ VirtKeys4DIN(
           prop_existed = TRUE ;
           XFree( bindingsString) ;
 
-          if(    new_bstring != NULL    )
+          if(    new_bstring != nullptr    )
             {
               SetBindingsProperty( dsp, prop_atoms[i], new_bstring) ;
               XtFree( new_bstring) ;
@@ -2544,7 +2544,7 @@ VirtKeys4DIN(
     }
   if(    !prop_existed    )
     {
-      bindingsString = NULL ;
+      bindingsString = nullptr ;
       /* FIXME: this is an unexported openmotif procedure */
       extern void _XmVirtKeysLoadFallbackBindings(Display *dsp, String *binding);
       _XmVirtKeysLoadFallbackBindings( dsp, &bindingsString) ;
@@ -2558,7 +2558,7 @@ VirtKeys4DIN(
               String new_bstring = FixupBindingsString( bindingsString,
                                                                 vkeysym_xref) ;
               XtFree( bindingsString) ;
-              if(    new_bstring != NULL    )
+              if(    new_bstring != nullptr    )
                 {
                   PropChanged4DIN = TRUE ;
                   SetBindingsProperty( dsp, prop_atoms[i], new_bstring) ;

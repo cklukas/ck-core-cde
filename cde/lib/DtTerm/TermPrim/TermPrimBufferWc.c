@@ -284,7 +284,7 @@ _primBufferInsertWc
     short             overflowWidth;
     short             localCol;
     TermLine          line;
-    wchar_t          *pwc = NULL;
+    wchar_t          *pwc = nullptr;
     TermCharInfoRec   charInfo;
 
     /*
@@ -672,7 +672,7 @@ _DtTermPrimBufferDeleteWc
     {
         if (returnChars)
 	{
-	    *returnChars = NULL;
+	    *returnChars = nullptr;
 	    *returnCount = 0;
 	}
         return;	
@@ -711,7 +711,7 @@ _DtTermPrimBufferDeleteWc
         */
         if (returnChars)
 	{
-	    *returnChars = NULL;
+	    *returnChars = nullptr;
 	    *returnCount = 0;
 	}
         return;
@@ -751,7 +751,7 @@ _DtTermPrimBufferDeleteWc
     ** Save the current characters before we overwrite them
     ** (if returnChars is non-NULL 0)
     */
-    if (returnChars != NULL)
+    if (returnChars != nullptr)
     {
 	*returnCount = (stopCharInfo.idx - startCharInfo.idx) * sizeof(wchar_t);
 	*returnChars = (termChar *)XtMalloc(*returnCount);
@@ -1089,7 +1089,7 @@ _termBufferPrintBuffer
     short j;
     short k;
 
-    if (tb == NULL) {
+    if (tb == nullptr) {
         printf("TermBuffer has been freed.\n");
         return;
     }

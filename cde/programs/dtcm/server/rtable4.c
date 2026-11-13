@@ -173,7 +173,7 @@ _DtCm_rtable_lookup_4_svc (Table_Args_4 *args, struct svc_req *svcrq)
 	static Table_Res_4 res;
 	CSA_return_code		stat;
 	Appt_4		*p_appt;
-	Appt_4		*h = NULL;
+	Appt_4		*h = nullptr;
 	_DtCmsCalendar	*cal;
 	Uid_4		*p_keys;
 	Id_4		*key;
@@ -191,8 +191,8 @@ _DtCm_rtable_lookup_4_svc (Table_Args_4 *args, struct svc_req *svcrq)
 
 	res.status = access_other_4;
 	res.res.tag = AP_4;
-	res.res.Table_Res_List_4_u.a = NULL;
-	if ((p_keys = args->args.Args_4_u.key) == NULL)
+	res.res.Table_Res_List_4_u.a = nullptr;
+	if ((p_keys = args->args.Args_4_u.key) == nullptr)
 		return (&res);
 
 	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
@@ -213,12 +213,12 @@ _DtCm_rtable_lookup_4_svc (Table_Args_4 *args, struct svc_req *svcrq)
 	}
 
 	if (cal->fversion >= _DtCM_FIRST_EXTENSIBLE_DATA_VERSION) {
-		while (p_keys != NULL) {
+		while (p_keys != nullptr) {
 			cmskey.time = p_keys->appt_id.tick;
 			cmskey.id = p_keys->appt_id.key;
 
 			if ((stat = _DtCmsGetEntryAttrByKey(cal, user, access,
-			    cmskey, 0, NULL, &entries, NULL))
+			    cmskey, 0, nullptr, &entries, nullptr))
 			    == CSA_SUCCESS) {
 
 				if ((stat = _DtCmsCmsentriesToAppt4ForClient(
@@ -233,7 +233,7 @@ _DtCm_rtable_lookup_4_svc (Table_Args_4 *args, struct svc_req *svcrq)
 				res.status = csastat2accessstat(stat);
 				if (h) {
 					_DtCm_free_appt4(h);
-					h = NULL;
+					h = nullptr;
 				}
 				break;
 			}
@@ -245,7 +245,7 @@ _DtCm_rtable_lookup_4_svc (Table_Args_4 *args, struct svc_req *svcrq)
 	}
 
 	/* do lookup on old format calendar */
-	while (p_keys != NULL)
+	while (p_keys != nullptr)
 	{
 		key = &p_keys->appt_id;
 
@@ -256,15 +256,15 @@ _DtCm_rtable_lookup_4_svc (Table_Args_4 *args, struct svc_req *svcrq)
 		}
 
 		p_appt = (Appt_4 *)rb_lookup(APPT_TREE(cal), (caddr_t)key);
-		if (p_appt == NULL) {
+		if (p_appt == nullptr) {
 			if ((p_appt = (Appt_4 *)hc_lookup(REPT_LIST(cal),
-			    (caddr_t)key)) != NULL) {
+			    (caddr_t)key)) != nullptr) {
 				if (!_DtCms_in_repeater(key, p_appt, B_FALSE))
-					p_appt = NULL;
+					p_appt = nullptr;
 			}
 		}
 
-		if (p_appt != NULL) {
+		if (p_appt != nullptr) {
 			if (p_appt->appt_id.tick != key->tick) {
 				tmptick = p_appt->appt_id.tick;
 				p_appt->appt_id.tick = key->tick;
@@ -278,7 +278,7 @@ _DtCm_rtable_lookup_4_svc (Table_Args_4 *args, struct svc_req *svcrq)
 			if (stat != CSA_SUCCESS) {
 				if (h) {
 					_DtCm_free_appt4(h);
-					h = NULL;
+					h = nullptr;
 				}
 				res.status = csastat2accessstat(stat);
 			}
@@ -345,10 +345,10 @@ _DtCm_rtable_lookup_range_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 		_DtCm_free_appt4(res.res.Table_Res_List_4_u.a);
 
 	res.res.tag = AP_4;
-	res.res.Table_Res_List_4_u.a = NULL;
+	res.res.Table_Res_List_4_u.a = nullptr;
 
 	res.status = access_other_4;
-	if (args->args.Args_4_u.range == NULL)
+	if (args->args.Args_4_u.range == nullptr)
 		return (&res);
 
 	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
@@ -365,8 +365,8 @@ _DtCm_rtable_lookup_range_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	}
 
 	stat = _DtCmsLookupRangeV4(cal, user, access, args->args.Args_4_u.range,
-		B_TRUE, 0, 0, NULL, 0, NULL, NULL,
-		&res.res.Table_Res_List_4_u.a, NULL);
+		B_TRUE, 0, 0, nullptr, 0, nullptr, nullptr,
+		&res.res.Table_Res_List_4_u.a, nullptr);
 
 	res.status = csastat2accessstat(stat);
 	return (&res);
@@ -394,10 +394,10 @@ _DtCm_rtable_abbreviated_lookup_range_4_svc(
 		_DtCm_free_abbrev_appt4(res.res.Table_Res_List_4_u.b);
 
 	res.res.tag = AB_4;
-	res.res.Table_Res_List_4_u.b = NULL;
+	res.res.Table_Res_List_4_u.b = nullptr;
 
 	res.status = access_other_4;
-	if (args->args.Args_4_u.range == NULL)
+	if (args->args.Args_4_u.range == nullptr)
 		return (&res);
 
 	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
@@ -414,7 +414,7 @@ _DtCm_rtable_abbreviated_lookup_range_4_svc(
 	}
 
 	stat = _DtCmsLookupRangeV4(cal, user, access, args->args.Args_4_u.range,
-		B_TRUE, 0, 0, NULL, 0, NULL, NULL, NULL,
+		B_TRUE, 0, 0, nullptr, 0, nullptr, nullptr, nullptr,
 		&res.res.Table_Res_List_4_u.b);
 
 	res.status = csastat2accessstat(stat);
@@ -430,28 +430,28 @@ _DtCm_rtable_insert_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	char			*author;
 	char			*user;
 	uint			access;
-	Appt_4			*ap, *appt, *prev=NULL, *a;
+	Appt_4			*ap, *appt, *prev=nullptr, *a;
 	cms_entry		*entry;
 
 	if (debug)
 		fprintf(stderr, "_DtCm_rtable_insert_4_svc called\n");
 
 	/* clean out left over */
-	if (res.res.Table_Res_List_4_u.a != NULL)
+	if (res.res.Table_Res_List_4_u.a != nullptr)
 		_DtCm_free_appt4(res.res.Table_Res_List_4_u.a);
 
 	res.status = access_other_4;
 	res.res.tag = AP_4;
-	res.res.Table_Res_List_4_u.a = NULL;
+	res.res.Table_Res_List_4_u.a = nullptr;
 
 	/* check arguments */
-	if (args->target == NULL)
+	if (args->target == nullptr)
 		return (&res);
-	if ((ap = args->args.Args_4_u.appt) == NULL)
+	if ((ap = args->args.Args_4_u.appt) == nullptr)
 		return (&res);
 
 	/* do some sanity checks before inserting : check appt data */
-	for (appt = args->args.Args_4_u.appt; appt != NULL; appt = appt->next)
+	for (appt = args->args.Args_4_u.appt; appt != nullptr; appt = appt->next)
 	{
 		/* ntimes should be 0 or positive */
 		if (appt->ntimes < 0 ||
@@ -491,13 +491,13 @@ _DtCm_rtable_insert_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	/* this copy is used in the result and will be freed
 	 * when this routine is called again
 	 */
-	if ((appt = _DtCm_copy_appt4(args->args.Args_4_u.appt)) == NULL) {
+	if ((appt = _DtCm_copy_appt4(args->args.Args_4_u.appt)) == nullptr) {
 		/* memory problem */
 		return (&res);
 	}
 
 	ap = appt;
-	while (appt != NULL) {
+	while (appt != nullptr) {
 
 		/*
 		 * we used to calculate the correct start day,
@@ -514,11 +514,11 @@ _DtCm_rtable_insert_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 			/* null out readonly attributes */
 			_DtCm_free_cms_attribute_value(entry->attrs\
 				[CSA_ENTRY_ATTR_ORGANIZER_I].value);
-			entry->attrs[CSA_ENTRY_ATTR_ORGANIZER_I].value = NULL;
+			entry->attrs[CSA_ENTRY_ATTR_ORGANIZER_I].value = nullptr;
 			_DtCm_free_cms_attribute_value(entry->attrs\
 				[CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER_I].value);
 			entry->attrs[CSA_ENTRY_ATTR_REFERENCE_IDENTIFIER_I].\
-				value = NULL;
+				value = nullptr;
 
 			if (_DtCmsCheckInitialAttributes(entry)) {
 				_DtCm_free_cms_entry(entry);
@@ -543,12 +543,12 @@ _DtCm_rtable_insert_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 			_DtCm_free_cms_entry(entry);
 
 		} else {
-			if ((a = _DtCm_copy_one_appt4(appt)) == NULL)
+			if ((a = _DtCm_copy_one_appt4(appt)) == nullptr)
 				goto insert_error;
 
 			/* We don't trust the author field; we set our own. */
 			free(a->author);
-			if ((a->author = strdup(user)) == NULL) {
+			if ((a->author = strdup(user)) == nullptr) {
 				_DtCm_free_appt4(a);
 				goto insert_error;
 			}
@@ -572,7 +572,7 @@ _DtCm_rtable_insert_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	/* do callbacks */
 	cal->rlist = _DtCmsDoV1Callback(cal->rlist, user, args->pid, ap);
 
-	for (appt = ap; appt != NULL; appt = appt->next) {
+	for (appt = ap; appt != nullptr; appt = appt->next) {
 		cal->rlist = _DtCmsDoInsertEntryCallback(cal->rlist,
 				cal->calendar, user, appt->appt_id.key,
 				args->pid);
@@ -584,17 +584,17 @@ _DtCm_rtable_insert_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	return (&res);
 
 insert_error:
-	if (prev != NULL) {
+	if (prev != nullptr) {
 		cal->modified = B_TRUE;
 		/* some appts were inserted successfully */
 		res.status = access_partial_4;
-		prev->next = NULL;
+		prev->next = nullptr;
 		res.res.Table_Res_List_4_u.a = ap;
 
 		/* do callback */
 		cal->rlist = _DtCmsDoV1Callback(cal->rlist, user, args->pid,
 			ap);
-		for (appt = ap; appt != NULL; appt = appt->next) {
+		for (appt = ap; appt != nullptr; appt = appt->next) {
 			cal->rlist = _DtCmsDoInsertEntryCallback(cal->rlist,
 					cal->calendar, user,
 					appt->appt_id.key, args->pid);
@@ -618,7 +618,7 @@ _DtCm_rtable_delete_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	char			*user;
 	uint			access;
 	Uidopt_4		*p_keys;
-	Appt_4			*h = NULL;
+	Appt_4			*h = nullptr;
 	Appt_4			*a;
 	int			d, n, nf;
 	cms_key			key;
@@ -633,12 +633,12 @@ _DtCm_rtable_delete_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 
 	res.status = access_other_4;
 	res.res.tag = AP_4;
-	res.res.Table_Res_List_4_u.a = NULL;
+	res.res.Table_Res_List_4_u.a = nullptr;
 
 	/* check arguments */
-	if (args->target == NULL)
+	if (args->target == nullptr)
 		return (&res);
-	if ((p_keys = args->args.Args_4_u.uidopt) == NULL)
+	if ((p_keys = args->args.Args_4_u.uidopt) == nullptr)
 		return (&res);
 
 	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
@@ -654,7 +654,7 @@ _DtCm_rtable_delete_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	}
 
 	nf = d = n = 0;
-	while (p_keys != NULL) {
+	while (p_keys != nullptr) {
 		n++;
 		if (debug) {
 			fprintf (stderr, "Delete: (key %ld)%s\n",
@@ -674,7 +674,7 @@ _DtCm_rtable_delete_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 					access, &key,
 					(p_keys->option == CSA_SCOPE_ONE ?
 					CSA_SCOPE_ONE : CSA_SCOPE_FORWARD),
-					NULL, &entry); 
+					nullptr, &entry); 
 
 			if (stat == CSA_SUCCESS)
 				stat = _DtCm_cms_entry_to_appt4(entry, &a);
@@ -690,7 +690,7 @@ _DtCm_rtable_delete_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 			else {
 				stat = _DtCmsDeleteApptInstancesAndLog(cal,
 					user, access, &p_keys->appt_id,
-					p_keys->option, NULL, &a);
+					p_keys->option, nullptr, &a);
 			}
 		}
 
@@ -707,19 +707,19 @@ _DtCm_rtable_delete_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 		p_keys = p_keys->next;
 	}
 
-	if (h != NULL) {
+	if (h != nullptr) {
 		cal->modified = B_TRUE;
 
 		/* do callback */
 		cal->rlist = _DtCmsDoV1Callback(cal->rlist, user, args->pid, h);
-		for (a = h; a != NULL; a = a->next) {
+		for (a = h; a != nullptr; a = a->next) {
 			/* h is in reverse order of the requested keys */
 			for (p_keys = args->args.Args_4_u.uidopt;
-			    p_keys != NULL &&
+			    p_keys != nullptr &&
 			    a->appt_id.key != p_keys->appt_id.key;
 			    p_keys = p_keys->next)
 				;
-			if (p_keys == NULL)
+			if (p_keys == nullptr)
 				continue;
 
 			cal->rlist = _DtCmsDoDeleteEntryCallback(cal->rlist,
@@ -756,7 +756,7 @@ _DtCm_rtable_delete_instance_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 
 	res.status = access_notsupported_4;
 	res.res.tag = AP_4;
-	res.res.Table_Res_List_4_u.a = NULL;
+	res.res.Table_Res_List_4_u.a = nullptr;
 
 	return(&res);
 }
@@ -773,7 +773,7 @@ _DtCm_rtable_change_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	Appt_4			*newa, *olda;
 	Appt_4			tmpappt;
 	Options_4		option;
-	cms_entry		*entry, *oldentry, *newentry = NULL;
+	cms_entry		*entry, *oldentry, *newentry = nullptr;
 	cms_key			key;
 
 	if (debug)
@@ -782,14 +782,14 @@ _DtCm_rtable_change_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	/* clean out left over */
 	res.status = access_other_4;
 	res.res.tag = AP_4;
-	res.res.Table_Res_List_4_u.a = NULL;
+	res.res.Table_Res_List_4_u.a = nullptr;
 
 	/* check arguments */
-	if (args->target == NULL)
+	if (args->target == nullptr)
 		return (&res);
-	if ((p_key = args->args.Args_4_u.apptid.oid) == NULL)
+	if ((p_key = args->args.Args_4_u.apptid.oid) == nullptr)
 		return (&res);
-	if ((newa = args->args.Args_4_u.apptid.new_appt) == NULL)
+	if ((newa = args->args.Args_4_u.apptid.new_appt) == nullptr)
 		return (&res);
 
 	/* ntimes should be 0 or positive */
@@ -847,7 +847,7 @@ _DtCm_rtable_change_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 			if (option == do_all_4)
 				stat = _DtCmsUpdateEntry(cal, user, access,
 					&key, entry->num_attrs,
-					&entry->attrs[1], &oldentry, NULL);
+					&entry->attrs[1], &oldentry, nullptr);
 			else
 				stat = _DtCmsUpdateInstances(cal, user,
 					access, &key, (option == do_one_4 ?
@@ -890,7 +890,7 @@ _DtCm_rtable_change_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 			olda->next = newa;
 			cal->rlist = _DtCmsDoV1Callback(cal->rlist, user,
 					args->pid, olda);
-			olda->next = NULL;
+			olda->next = nullptr;
 		}
 
 		cal->rlist = _DtCmsDoUpdateEntryCallback(cal->rlist,
@@ -925,7 +925,7 @@ _DtCm_rtable_change_instance_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 
 	res.status = access_notsupported_4;
 	res.res.tag = AP_4;
-	res.res.Table_Res_List_4_u.a = NULL;
+	res.res.Table_Res_List_4_u.a = nullptr;
 
 	return(&res);
 }
@@ -957,9 +957,9 @@ _DtCm_rtable_lookup_next_reminder_4_svc(
 
 	res.status = access_other_4;
 	res.res.tag = RM_4;
-	res.res.Table_Res_List_4_u.r = NULL;
+	res.res.Table_Res_List_4_u.r = nullptr;
 
-	if (args->target == NULL)
+	if (args->target == nullptr)
 		return (&res);
 
 	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
@@ -981,7 +981,7 @@ _DtCm_rtable_lookup_next_reminder_4_svc(
 		fprintf(stderr, "Next reminder after %s", ctime(&tick));
 
 	if (cal->fversion > 1) {
-		if ((stat = _DtCmsLookupReminder(cal->remq, tick, 0, NULL,
+		if ((stat = _DtCmsLookupReminder(cal->remq, tick, 0, nullptr,
 		    &rems)) == CSA_SUCCESS) {
 			stat = _DtCmsReminderRefToReminder(rems,
 			    &res.res.Table_Res_List_4_u.r);
@@ -990,7 +990,7 @@ _DtCm_rtable_lookup_next_reminder_4_svc(
 	} else {
 
 		stat = _DtCmsGetV4Reminders(cal, tick,
-			&res.res.Table_Res_List_4_u.r, NULL);
+			&res.res.Table_Res_List_4_u.r, nullptr);
 	}
 
 	res.status =  csastat2accessstat(stat);
@@ -1088,14 +1088,14 @@ _DtCm_register_callback_4_svc(Registration_4 *r, struct svc_req *svcrq)
 	CSA_return_code stat;
 	char *source;
 	uint access;
-	_DtCmsCalendar *cal = NULL;
-        _DtCmsRegistrationInfo *copy=NULL;
+	_DtCmsCalendar *cal = nullptr;
+        _DtCmsRegistrationInfo *copy=nullptr;
 
 	if (debug)
 		fprintf(stderr, "_DtCm_register_callback_4_svc called\n");
 
 	/* Error */
-        if (r->target == NULL) {
+        if (r->target == nullptr) {
 		regstat = failed_4;
                 return(&regstat);
 	}
@@ -1115,13 +1115,13 @@ _DtCm_register_callback_4_svc(Registration_4 *r, struct svc_req *svcrq)
 
 	/* Check for duplicate registrations */
 	if (_DtCmsGetRegistration(&(cal->rlist), source, r->prognum, r->versnum,
-	    r->procnum, r->pid) == NULL) {
+	    r->procnum, r->pid) == nullptr) {
 		/* not registered */
 
         	/* Make a copy of the callback info. */
 
 		if ((copy = _DtCmsMakeRegistrationInfo(source, 0, r->prognum,
-		    r->versnum, r->procnum, r->pid)) == NULL) {
+		    r->versnum, r->procnum, r->pid)) == nullptr) {
 			regstat = failed_4;
 			return (&regstat);
 		}
@@ -1153,12 +1153,12 @@ _DtCm_deregister_callback_4_svc(Registration_4 *r, struct svc_req *svcrq)
 	CSA_return_code stat;
 	_DtCmsCalendar *cal;
 	char *source;
-        _DtCmsRegistrationInfo *p = NULL, *q = NULL;
+        _DtCmsRegistrationInfo *p = nullptr, *q = nullptr;
 
 	if (debug)
 		fprintf(stderr, "_DtCm_deregister_callback_4_svc called\n");
 
-        if (r->target == NULL) {
+        if (r->target == nullptr) {
 		regstat = failed_4;
                 return(&regstat);
 	}
@@ -1174,13 +1174,13 @@ _DtCm_deregister_callback_4_svc(Registration_4 *r, struct svc_req *svcrq)
 		return (&regstat);
 	}
 
-	if (cal == NULL) {
+	if (cal == nullptr) {
 		regstat = failed_4;
 		return (&regstat);
 	}
 
 	q = p = cal->rlist;
-	while (p != NULL) {
+	while (p != nullptr) {
 
 		/* This says:
 		 * 1) if the name of the caller requesting deregistration
@@ -1232,14 +1232,14 @@ _DtCm_rtable_set_access_4_svc(Access_Args_4 *args, struct svc_req *svcrq)
 	CSA_return_code		stat;
 	char			*user;
 	uint			access;
-	_DtCmsCalendar		*cal = NULL;
+	_DtCmsCalendar		*cal = nullptr;
 
 	if (debug)
 		fprintf(stderr, "_DtCm_rtable_set_access_4_svc called\n");
 
 	s = access_other_4;
 
-	if (args->target == NULL)
+	if (args->target == nullptr)
 		return (&s);
 
 	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
@@ -1261,10 +1261,10 @@ _DtCm_rtable_set_access_4_svc(Access_Args_4 *args, struct svc_req *svcrq)
 	if (cal->fversion >= _DtCM_FIRST_EXTENSIBLE_DATA_VERSION) {
 		cms_attribute		attr;
 		cms_attribute_value	attrval;
-		cms_access_entry	*alist = NULL;
+		cms_access_entry	*alist = nullptr;
 
 		if (args->access_list && (alist =
-		    _DtCmsConvertV4AccessList(args->access_list)) == NULL) {
+		    _DtCmsConvertV4AccessList(args->access_list)) == nullptr) {
 			s = csastat2accessstat(CSA_E_INSUFFICIENT_MEMORY);
 			return (&s);
 		}
@@ -1306,13 +1306,13 @@ _DtCm_rtable_get_access_4_svc(Access_Args_4 *args, struct svc_req *svcrq)
 	if (debug)
 		fprintf(stderr, "_DtCm_rtable_get_access_4_svc called\n");
 
-	if (res.target != NULL)
+	if (res.target != nullptr)
 		free(res.target);
 	if (res.access_list)
 		_DtCm_free_access_list4(res.access_list);
 
-	res.target = NULL;
-	res.access_list = (Access_Entry_4 *) NULL;
+	res.target = nullptr;
+	res.access_list = (Access_Entry_4 *) nullptr;
 
 	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
 	    &access, &cal)) == CSA_SUCCESS) {
@@ -1328,7 +1328,7 @@ _DtCm_rtable_get_access_4_svc(Access_Args_4 *args, struct svc_req *svcrq)
 		if (useronly) {
 			aentry.user = user;
 			aentry.rights = access;
-			aentry.next = NULL;
+			aentry.next = nullptr;
 			res.access_list = _DtCmsConvertV5AccessList(&aentry,
 						B_TRUE);
 		} else {
@@ -1358,7 +1358,7 @@ _DtCm_rtable_abbreviated_lookup_key_range_4_svc(
 	char		*user;
 	uint		access;
 	Keyrange_4	*p_range;
-	Abb_Appt_4	*abbr_r = NULL;
+	Abb_Appt_4	*abbr_r = nullptr;
 
 	if (debug)
 		fprintf(stderr,
@@ -1368,10 +1368,10 @@ _DtCm_rtable_abbreviated_lookup_key_range_4_svc(
 		_DtCm_free_abbrev_appt4(res.res.Table_Res_List_4_u.b);
 
 	res.res.tag = AB_4;
-	res.res.Table_Res_List_4_u.b = NULL;
+	res.res.Table_Res_List_4_u.b = nullptr;
 
 	res.status = access_other_4;
-	if ((p_range = args->args.Args_4_u.keyrange) == NULL)
+	if ((p_range = args->args.Args_4_u.keyrange) == nullptr)
 		return (&res);
 
 	if ((stat = _DtCmsV4LoadAndCheckAccess(svcrq, args->target, &user,
@@ -1387,12 +1387,12 @@ _DtCm_rtable_abbreviated_lookup_key_range_4_svc(
 		return (&res);
 	}
 
-	while (p_range != NULL)
+	while (p_range != nullptr)
 	{
 
 		if ((stat = _DtCmsLookupKeyrangeV4(cal, user, access,
 		    B_FALSE, B_TRUE, p_range->tick1, p_range->tick2, 0, 0,
-		    p_range->key, NULL, 0, NULL, NULL, NULL, &abbr_r))
+		    p_range->key, nullptr, 0, nullptr, nullptr, nullptr, &abbr_r))
 		    != CSA_SUCCESS) {
 			break;
 		}
@@ -1427,7 +1427,7 @@ _DtCm_rtable_gmtoff_4_svc(void *args, struct svc_req *svcrq)
 		fprintf(stderr, "_DtCm_rtable_gmtoff_4_svc called\n");
 
 #if defined(HAVE_STRUCT_TM_TM_GMTOFF)
-	ctime = time(NULL);
+	ctime = time(nullptr);
 	t = _XLocaltime(&ctime, localtime_buf);
 	gmtoff = - t->tm_gmtoff;
 #else
@@ -1466,7 +1466,7 @@ _DtCm_rtable_create_4_svc(Table_Op_Args_4 *args, struct svc_req *svcrq)
 				"check domains, comparing",
 				args->target, source);
 
-		if ((domain = _DtCmsTarget2Domain(args->target)) != NULL) {
+		if ((domain = _DtCmsTarget2Domain(args->target)) != nullptr) {
 
 			if (!_DtCmIsSamePath(domain, ++ptr)) {
 				res = denied_4;
@@ -1477,12 +1477,12 @@ _DtCm_rtable_create_4_svc(Table_Op_Args_4 *args, struct svc_req *svcrq)
 		}
 	}
 
-	if ((calname = _DtCmsTarget2Name(args->target)) == NULL)
+	if ((calname = _DtCmsTarget2Name(args->target)) == nullptr)
 		return(&res);
 
 	/* if the file is loaded in memory, the file already exists */
 	if ((stat = _DtCmsGetCalendarByName(calname, B_FALSE, &cal))
-	    == CSA_SUCCESS && cal != NULL) {
+	    == CSA_SUCCESS && cal != nullptr) {
 		res = tbl_exist_4;
 		free(calname);
 		return(&res);
@@ -1493,11 +1493,11 @@ _DtCm_rtable_create_4_svc(Table_Op_Args_4 *args, struct svc_req *svcrq)
 	 * make sure it's the same as sender.
 	 * format of calendar name assumed: identifier.name
 	 */
-	if ((id = _DtCmGetPrefix(calname, '.')) == NULL) {
+	if ((id = _DtCmGetPrefix(calname, '.')) == nullptr) {
 		free(calname);
 		return(&res);
 	}
-	if ((user = _DtCmGetPrefix(source, '@')) == NULL) {
+	if ((user = _DtCmGetPrefix(source, '@')) == nullptr) {
 		free(calname);
 		free(id);
 		return(&res);
@@ -1512,7 +1512,7 @@ _DtCm_rtable_create_4_svc(Table_Op_Args_4 *args, struct svc_req *svcrq)
 	}
 	free(id);
 
-	if ((log = _DtCmsGetLogFN(calname)) == NULL)
+	if ((log = _DtCmsGetLogFN(calname)) == nullptr)
 	{
 		free(calname);
 		free(user);
@@ -1528,7 +1528,7 @@ _DtCm_rtable_create_4_svc(Table_Op_Args_4 *args, struct svc_req *svcrq)
 		res = ok_4;
 
 		/* initialize the access list to be "WORLD", access_read_4 */
-		aentry.next = NULL;
+		aentry.next = nullptr;
 		aentry.who = WORLD;
 		aentry.access_type = access_read_4;
 		if (_DtCmsAppendAccessByFN(log, access_read_4, &aentry)
@@ -1568,7 +1568,7 @@ _DtCm_rtable_ping_4_svc(void *args, struct svc_req *svcrq)
 	if (debug)
 		fprintf(stderr, "_DtCm_rtable_ping_4_svc called\n");
 
-	return(NULL); /* for RPC reply */
+	return(nullptr); /* for RPC reply */
 }
 
 extern void
@@ -1590,12 +1590,12 @@ append_exception_list(Appt_4 *p_appt, int ordinal)
 	Exception_4 p_prev;
 	Exception_4 p_ex;
 
-	if ((p_excpt = (Exception_4)calloc(1, sizeof(*p_excpt))) == NULL)
-		return (NULL);
+	if ((p_excpt = (Exception_4)calloc(1, sizeof(*p_excpt))) == nullptr)
+		return (nullptr);
 	p_excpt->ordinal = ordinal;
-	p_prev = NULL;
+	p_prev = nullptr;
 	p_ex = p_appt->exception;
-	while (p_ex != NULL)
+	while (p_ex != nullptr)
 	{
 		/* Exception list is in descending order for faster access */
 		if (ordinal > p_ex->ordinal)
@@ -1603,7 +1603,7 @@ append_exception_list(Appt_4 *p_appt, int ordinal)
 		p_prev = p_ex;
 		p_ex = p_ex->next;
 	}
-	if (p_prev == NULL)
+	if (p_prev == nullptr)
 	{
 		p_excpt->next = p_appt->exception;
 		p_appt->exception = p_excpt;
@@ -1626,7 +1626,7 @@ rtable_lookup_internal(_DtCmsCalendar *cal, char **p_src, Id_4 *key)
 	/* Check if it hits a single appointment */
 	p_appt = (Appt_4 *)rb_lookup(APPT_TREE(cal), (caddr_t)key);
 
-	if (p_appt != NULL) {
+	if (p_appt != nullptr) {
 		switch (_DtCmCheckPrivacyLevel(p_src, p_appt)) {
 		case public_4:
 			p_appt = _DtCm_copy_one_appt4(p_appt);
@@ -1636,14 +1636,14 @@ rtable_lookup_internal(_DtCmsCalendar *cal, char **p_src, Id_4 *key)
 			return(p_appt);
 		case private_4:
 		default:
-			return(NULL);
+			return(nullptr);
 		}
 	}
 	
 	/* Check if it hits an event in any repeating appointment */
 	p_appt = (Appt_4 *) hc_lookup (REPT_LIST(cal), (caddr_t)key);
 
-	if (p_appt != NULL) {
+	if (p_appt != nullptr) {
 		if ((p_level = _DtCmCheckPrivacyLevel(p_src, p_appt)) != private_4)
 		{
 			if (_DtCms_in_repeater (key, p_appt, B_FALSE)) {
@@ -1657,7 +1657,7 @@ rtable_lookup_internal(_DtCmsCalendar *cal, char **p_src, Id_4 *key)
 		}
 	}
 
-	return (NULL);
+	return (nullptr);
 }
 
 static Appt_4 *
@@ -1666,14 +1666,14 @@ repeater_next_larger(List_node *p_lnode, Id_4 *key)
 	static Appt_4 appt;
 	Period_4	period;
 	Appt_4	*p_appt;
-	Appt_4	*p_save = NULL;
+	Appt_4	*p_save = nullptr;
 	Id_4	id, next_larger_id;
 	int	ord;
 	int	ntimes;
 
 	next_larger_id.tick = MAXINT;
 	next_larger_id.key = MAXINT;
-	while (p_lnode != NULL)
+	while (p_lnode != nullptr)
 	{
 		p_appt = (Appt_4*)p_lnode->data;
 
@@ -1715,7 +1715,7 @@ repeater_next_larger(List_node *p_lnode, Id_4 *key)
 		p_lnode = hc_lookup_next (p_lnode);
 	}
 
-	if (p_save != NULL)
+	if (p_save != nullptr)
 	{
 		appt = *p_save;
 		APPT_TICK(&appt) = next_larger_id.tick;
@@ -1731,14 +1731,14 @@ repeater_next_smaller(List_node *p_lnode, Id_4 *key)
 	static Appt_4 appt;
 	Appt_4	*p_appt;
 	Period_4	period;
-	Appt_4	*p_save = NULL;
+	Appt_4	*p_save = nullptr;
 	Id_4	id, next_smaller_id;
 	int	ord;
 	int	ntimes;
 
 	next_smaller_id.tick = 0;
 	next_smaller_id.key = 0;
-	while (p_lnode != NULL)
+	while (p_lnode != nullptr)
 	{
 		p_appt = (Appt_4*)p_lnode->data;
 		ord = 0;
@@ -1774,7 +1774,7 @@ repeater_next_smaller(List_node *p_lnode, Id_4 *key)
 		p_lnode = hc_lookup_next (p_lnode);
 	}
 
-	if (p_save != NULL)
+	if (p_save != nullptr)
 	{
 		appt = *p_save;
 		APPT_TICK(&appt) = next_smaller_id.tick;
@@ -1806,7 +1806,7 @@ table_lookup_next(
 
 	res.status = access_other_4;
 	res.res.tag = AP_4;
-	res.res.Table_Res_List_4_u.a = NULL;
+	res.res.Table_Res_List_4_u.a = nullptr;
 
 	switch (args->args.tag) {
 	case TICK_4:
@@ -1841,16 +1841,16 @@ table_lookup_next(
 	p_appt = (Appt_4 *) (*rb_func) (APPT_TREE(cal), (caddr_t)&key);
 	p_appt1 = (*rp_func) (REPT_LIST(cal)->root, &key);
 
-	if (p_appt1 != NULL) {
+	if (p_appt1 != nullptr) {
 		if (rb_func == rb_lookup_next_larger) {
-			if ((p_appt==NULL) ||
+			if ((p_appt==nullptr) ||
 			    (APPT_TICK(p_appt) > APPT_TICK(p_appt1)) ||
 			    ((APPT_TICK(p_appt) == APPT_TICK(p_appt1)) &&
 				(APPT_KEY(p_appt) > APPT_KEY(p_appt1)))) {
 				p_appt = p_appt1;
 			}
 		} else {
-			if ((p_appt==NULL) ||
+			if ((p_appt==nullptr) ||
 			    (APPT_TICK(p_appt) < APPT_TICK(p_appt1)) ||
 			    ((APPT_TICK(p_appt) == APPT_TICK(p_appt1)) &&
 				(APPT_KEY(p_appt) < APPT_KEY(p_appt1)))) {
@@ -1859,7 +1859,7 @@ table_lookup_next(
 		}
 	}
 
-	if (p_appt != NULL) {
+	if (p_appt != nullptr) {
 		switch (_GetAccessLevel(user, access, p_appt)) {
 		case public_4:
 			p_appt = _DtCm_copy_one_appt4(p_appt);
@@ -1868,7 +1868,7 @@ table_lookup_next(
 			p_appt = _DtCm_copy_semiprivate_appt4(p_appt);
 			break;
 		default:
-			p_appt = NULL;
+			p_appt = nullptr;
 			break;
 		}
 	}

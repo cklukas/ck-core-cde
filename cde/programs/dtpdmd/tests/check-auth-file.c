@@ -69,8 +69,8 @@ static char ck_tmpdir[PATH_MAX];
 #define P_tmpdir ck_tmpdir
 
 static int ck_writes;
-static char *XauFileName(void) { return NULL; }
-static Xauth *XauReadAuth(FILE *f) { return NULL; }
+static char *XauFileName(void) { return nullptr; }
+static Xauth *XauReadAuth(FILE *f) { return nullptr; }
 static void XauDisposeAuth(Xauth *a) { }
 static int XauWriteAuth(FILE *f, Xauth *a) { ck_writes++; return fputs("COOKIE\n", f) >= 0; }
 
@@ -78,7 +78,7 @@ static int ck_fdopen_fail;
 static FILE *ck_fdopen(int fd, const char *mode)
 {
     if (ck_fdopen_fail)
-        return NULL;
+        return nullptr;
     return fdopen(fd, mode);
 }
 #define fdopen ck_fdopen
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
     ck_mk_fail = 1;
     ck_writes = 0;
     make_cookie_file(&rec);
-    assert(rec.auth_file == NULL && rec.auth_filename[0] == '\0' && ck_writes == 0);
+    assert(rec.auth_file == nullptr && rec.auth_filename[0] == '\0' && ck_writes == 0);
     assert(ck_count(ck_work) == before);
     assert(umask(022) == 022);
     ck_mk_fail = 0;
@@ -258,7 +258,7 @@ int main(int argc, char **argv)
     /* fdopen fails: the file made is removed again and the name emptied. */
     ck_fdopen_fail = 1;
     make_cookie_file(&rec);
-    assert(rec.auth_file == NULL && rec.auth_filename[0] == '\0' && ck_writes == 0);
+    assert(rec.auth_file == nullptr && rec.auth_filename[0] == '\0' && ck_writes == 0);
     assert(ck_count(ck_work) == before);
     ck_fdopen_fail = 0;
 

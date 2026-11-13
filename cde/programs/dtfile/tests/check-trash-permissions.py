@@ -130,7 +130,7 @@ def qualify(args):
         copied = work / fixture.name
         copied.write_bytes(fixture.read_bytes())
         binary = work / "trash-permissions"
-        command = [*shlex.split(env.get("CC", "cc")), "-std=c11", "-O0", "-g",
+        command = [*shlex.split(env.get("CC", "cc")), "-std=gnu23", "-O0", "-g",
                    "-D_GNU_SOURCE", "-D_DEFAULT_SOURCE", "-D_DARWIN_C_SOURCE",
                    "-D_POSIX_C_SOURCE=200809L", "-Wall", "-Wextra", "-Werror",
                    "-Wno-unused-function", "-I", str(work), str(copied), "-o", str(binary)]

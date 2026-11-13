@@ -83,17 +83,17 @@
 /* Command line options */
 XrmOptionDescRec option_list[] =
 {
-   {  "-timeout",  "timeout",       XrmoptionSepArg,   NULL},
-   {  "-contextHost", "contextHost",XrmoptionSepArg,   NULL},
-   {  "-contextDir", "contextDir",  XrmoptionSepArg,   NULL},
-   {  "-execHost", "execHost",      XrmoptionSepArg,   NULL},
-   {  "-termParms", "termParms",    XrmoptionSepArg,   NULL},
+   {  "-timeout",  "timeout",       XrmoptionSepArg,   nullptr},
+   {  "-contextHost", "contextHost",XrmoptionSepArg,   nullptr},
+   {  "-contextDir", "contextDir",  XrmoptionSepArg,   nullptr},
+   {  "-execHost", "execHost",      XrmoptionSepArg,   nullptr},
+   {  "-termParms", "termParms",    XrmoptionSepArg,   nullptr},
 };
 
 /* Fallback Resources */
 static char *fallback_resources[] = {
     "*timeout: 1",
-    (char *) NULL
+    (char *) nullptr
 };
 
 typedef struct {
@@ -157,7 +157,7 @@ CheckForDone(
 	exit(0);
 
     XtAppAddTimeOut(appContext,
-	appArgs.timer * 1000, (XtTimerCallbackProc)CheckForDone, NULL);
+	appArgs.timer * 1000, (XtTimerCallbackProc)CheckForDone, nullptr);
 }
 
 
@@ -173,11 +173,11 @@ main(
     int numArgs = 0;
     char contextHost[HOSTNAME_MAX_LEN+1];
     char contextDir[PATH_MAX+1];
-    DtActionFileArgp ap = NULL;
+    DtActionFileArgp ap = nullptr;
   
     if (argc < 2) exit(0);
 
-    XtSetLanguageProc(NULL, NULL, NULL);
+    XtSetLanguageProc(nullptr, nullptr, nullptr);
 
     /*  Initialize the toolkit and open the display  */
    (void) signal(SIGCLD, (void (*)())SIG_IGN);
@@ -194,7 +194,7 @@ main(
 
     display = XtDisplay (toplevel);
     XtGetApplicationResources(toplevel, &appArgs, 
-	resources, XtNumber(resources), NULL, 0);
+	resources, XtNumber(resources), nullptr, 0);
 
     if (appArgs.timer < 1)
       appArgs.timer = 1;
@@ -232,8 +232,8 @@ main(
     }
 
     for ( n = 0; n < numArgs; n++) {
-        ap[n].type = NULL;
-        ap[n].host = NULL;
+        ap[n].type = nullptr;
+        ap[n].host = nullptr;
 	ap[n].name = argv[n+2];
     }
 
@@ -248,7 +248,7 @@ main(
      */
     XtAppAddTimeOut(appContext,
 	appArgs.timer * 1000, (XtTimerCallbackProc)CheckForDone,
-                   NULL);
+                   nullptr);
     XtAppMainLoop(appContext);
 
 }

@@ -170,14 +170,14 @@ GetUserResourcePath(void)
     size_t len;
     char *path;
 
-    if (home == NULL)
+    if (home == nullptr)
         home = "";
 
     len = strlen(home) + 1 + strlen(DtPERSONAL_CONFIG_DIRECTORY) + 1 +
           strlen("dtpadrc") + 1;
     path = XtMalloc((unsigned)len);
-    if (path == NULL)
-        return NULL;
+    if (path == nullptr)
+        return nullptr;
 
     snprintf(path, len, "%s/%s/%s", home, DtPERSONAL_CONFIG_DIRECTORY, "dtpadrc");
     return path;
@@ -190,17 +190,17 @@ SaveDroppedFilesModeResource(Editor *pPad)
     char *path;
     char value[8];
 
-    if (pPad == NULL)
+    if (pPad == nullptr)
         return;
 
     _DtCreateDtDirs(pPad->display);
 
     path = GetUserResourcePath();
-    if (path == NULL)
+    if (path == nullptr)
         return;
 
     db = XrmGetFileDatabase(path);
-    if (db == NULL)
+    if (db == nullptr)
         db = XrmGetStringDatabase("");
 
     snprintf(value, sizeof(value), "%d", pPad->xrdb.droppedFilesMode);
@@ -224,7 +224,7 @@ DroppedFilesModeCB(
     OptionsMenuWidgets *pWidg;
     int mode = DtDROP_FILES_AUTO;
 
-    if (pPad == NULL || cb == NULL || cb->set == False)
+    if (pPad == nullptr || cb == nullptr || cb->set == False)
         return;
 
     pWidg = &pPad->optionsStuff.widgets;

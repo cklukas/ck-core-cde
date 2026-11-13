@@ -152,7 +152,7 @@ paint_day_entries(
         Calendar *c=calendar;
         Props *p = (Props*)c->properties;
 	DisplayType dt = get_int_prop(p, CP_DEFAULTDISP);
-        Lines *lines=NULL;
+        Lines *lines=nullptr;
 	Tick start_tick;
         new_XContext *xc    = 	c->xcontext;
 	Cal_Font *pf =		c->fonts->viewfont;
@@ -182,7 +182,7 @@ paint_day_entries(
 
 	                                lines = 
 					     text_to_lines(cache[i].summary, 1);
-	                                if (lines != NULL) {
+	                                if (lines != nullptr) {
 	                                        buf = ckalloc(
 						      cm_strlen(lines->s) + 18);
 	                                        pad = format_line(start_tick, 
@@ -194,12 +194,12 @@ paint_day_entries(
 	                                else {
 	                                        buf = ckalloc(15);
 	                                        pad = format_line(start_tick, 
-							    (char*)NULL, buf, 
+							    (char*)nullptr, buf, 
 							    start_tick, 
 							    cache[i].show_time,
 							    dt);
 	                                }
-	                                destroy_lines(lines); lines=NULL;
+	                                destroy_lines(lines); lines=nullptr;
 
 					if (!pad_width) {
 						pad_width = 
@@ -221,7 +221,7 @@ paint_day_entries(
 	                                	(void)gr_text(xc, x, y, pf, 
 							      buf, rect);
 					}
-	                                free(buf); buf=NULL;
+	                                free(buf); buf=nullptr;
 	                                y = y + pfy;
 	                                nlines++;
 	                        }
@@ -258,7 +258,7 @@ month_button(Widget widget, XtPointer data, XtPointer cbs)
 		default:
 			break;
 	}
-        prepare_to_paint_monthview (c, NULL);
+        prepare_to_paint_monthview (c, nullptr);
 
 	XtMapWidget(c->canvas);
 }
@@ -280,7 +280,7 @@ paint_month(Calendar *c, Tick key, XRectangle *rect)
 	time_t 		start, stop;
 	CSA_enum 	*ops;
 	CSA_attribute 	*range_attrs;
-	CSA_entry_handle *list = NULL;
+	CSA_entry_handle *list = nullptr;
 	XFontSetExtents fontextents;
 	_Xltimeparams	localtime_buf;
  
@@ -303,12 +303,12 @@ paint_month(Calendar *c, Tick key, XRectangle *rect)
         xc              = calendar->xcontext;
  
 
-	if (c->paint_cache == NULL) {
+	if (c->paint_cache == nullptr) {
         	start = (time_t) lowerbound(day);
         	stop = (time_t) last_dom(day);
 		setup_range(&range_attrs, &ops, &j, start, stop, CSA_TYPE_EVENT,
 		    	0, B_FALSE, c->general->version);
-		csa_list_entries(c->cal_handle, j, range_attrs, ops, &a_total, &list, NULL);
+		csa_list_entries(c->cal_handle, j, range_attrs, ops, &a_total, &list, nullptr);
 	
 		free_range(&range_attrs, &ops, j);
 		allocate_paint_cache(list, a_total, &c->paint_cache);
@@ -327,7 +327,7 @@ paint_month(Calendar *c, Tick key, XRectangle *rect)
 		box_origin_y = (y * boxh) + dayname_height + c->view->topoffset;
 
 		XtVaGetValues(m->hot_button[i-1], XmNheight, &btn_ht,
-			XmNwidth, &btn_w, NULL);
+			XmNwidth, &btn_w, nullptr);
 
 		/*
 		 * Paint the list of calendar entries for this day
@@ -380,12 +380,12 @@ display_header(Calendar *c)
 		tm_ret->tm_year + 1900 );
 
 	str = XmStringCreateLocalized(buf);
-	XtVaSetValues(m->month_label, XmNlabelString, str, NULL);
+	XtVaSetValues(m->month_label, XmNlabelString, str, nullptr);
 	XmStringFree(str);
 
 /* positioning */
 	x = c->view->outside_margin; y = 15;
-	XtVaSetValues(m->month_label, XtNx, x, XtNy, y, NULL);
+	XtVaSetValues(m->month_label, XtNx, x, XtNy, y, nullptr);
 
 /* now manage it */
 	if (!XtIsManaged(m->month_label)) {
@@ -536,7 +536,7 @@ prepare_to_paint_monthview(Calendar *c, XRectangle *rect)
         c = calendar;
 
 	XmToggleButtonGadgetSetState(c->month_scope, True, False);
-        XtVaGetValues(c->canvas, XmNwidth, &w, XmNheight, &h, NULL);
+        XtVaGetValues(c->canvas, XmNwidth, &w, XmNheight, &h, nullptr);
         cache_dims(c, w, h);
 
 	/* allocate Month memory & widgets if necessary */
@@ -574,7 +574,7 @@ get_time_str (Dtcm_appointment *appt, char *buf)
 	_csa_iso8601_to_tick(appt->time->value->item.date_time_value, &start_tick);
 	buf[0] = '\0';
 
-        if (appt==NULL || !showtime_set(appt) || magic_time(start_tick))
+        if (appt==nullptr || !showtime_set(appt) || magic_time(start_tick))
                 return;
 
         tm = _XLocaltime(&start_tick, localtime_buf);
@@ -728,7 +728,7 @@ count_month_pages(Calendar *c, Tick start_date, int lines_per_box)
 			    CSA_TYPE_EVENT, 0, B_FALSE,
 			    c->general->version);
 		csa_list_entries(c->cal_handle, j, range_attrs, ops,
-				 &a_total, &list, NULL);
+				 &a_total, &list, nullptr);
 		free_range(&range_attrs, &ops, j);
 
                 num_appts = count_month_appts(list, a_total, c);
@@ -807,7 +807,7 @@ print_month ( Calendar *c,
 	  setup_range(&range_attrs, &ops, &j, lo_hour, hi_hour,
 		      CSA_TYPE_EVENT, 0, B_FALSE, c->general->version);
 	  csa_list_entries(c->cal_handle, j, range_attrs,
-			   ops, &a_total, &list, NULL);
+			   ops, &a_total, &list, nullptr);
 	  free_range(&range_attrs, &ops, j);
 	  num_appts = count_month_appts(list, a_total, c);
 	  if ((lines_per_box > 0) &&
@@ -848,7 +848,7 @@ print_month_range(Calendar *c, Tick start_tick, Tick end_tick)
         int 		n;
         Boolean 	done = False, first = True;
         int 		num_page = 1;
-	void		*xp = (void *)NULL;
+	void		*xp = (void *)nullptr;
 
 	/* counting up the month pages is a little trickier than in the day
 	   and week cases.  Months will have variable numbers of seconds in 
@@ -861,7 +861,7 @@ print_month_range(Calendar *c, Tick start_tick, Tick end_tick)
 	for (n = 1; end < end_tick; n++)
 	  end = last_dom(nextmonth(end));
 
-	if ((xp = x_open_file(c)) == (void *)NULL)
+	if ((xp = x_open_file(c)) == (void *)nullptr)
 	  return;
 
         for (; n > 0; n--)
@@ -894,7 +894,7 @@ count_month_appts(CSA_entry_handle *list, int a_total, Calendar *c)
 	appt = allocate_appt_struct(appt_read, 
 				    	c->general->version,
 					CSA_ENTRY_ATTR_CLASSIFICATION_I, 
-					NULL);
+					nullptr);
         for (i = 0; i < a_total; i++) {
 
 		stat = query_appt_struct(c->cal_handle, list[i], appt);
@@ -930,7 +930,7 @@ quick_button_cb(Widget widget, XtPointer client, XtPointer call)
 	c->view->olddate = c->view->date;
 	c->view->date = next_ndays(first_dom(c->view->date), dom);
 
-	calendar_select(c, daySelect, NULL);
+	calendar_select(c, daySelect, nullptr);
  
 	cleanup_after_monthview(c);
 	
@@ -1028,7 +1028,7 @@ cleanup_after_monthview(Calendar *c)
 static Boolean
 allocated(Calendar *c)
 {
-  return (c->view->month_info != NULL);
+  return (c->view->month_info != nullptr);
 }
 
 /*
@@ -1048,7 +1048,7 @@ allocator(Calendar *c)
 	m->button_loc = (XPoint *) ckalloc(31 * sizeof(XPoint));
 
 	/* label for month & navigation button to year */
-	m->month_label = XmCreateLabel(c->canvas, "monthLabel", NULL, 0);
+	m->month_label = XmCreateLabel(c->canvas, "monthLabel", nullptr, 0);
 	
 	/* navigation buttons to day view */
 	m->hot_button = (Widget *) ckalloc(31 * sizeof(Widget));
@@ -1057,8 +1057,8 @@ allocator(Calendar *c)
 		str = XmStringCreateLocalized(buf);
 		sprintf(buf, "month2day%d", n);
 		m->hot_button[n] =
-			XmCreatePushButton(c->canvas, buf, NULL, 0);
-		XtVaSetValues(m->hot_button[n], XmNlabelString, str, NULL);
+			XmCreatePushButton(c->canvas, buf, nullptr, 0);
+		XtVaSetValues(m->hot_button[n], XmNlabelString, str, nullptr);
 		XtAddCallback(m->hot_button[n],XmNactivateCallback, 
 			quick_button_cb, (XtPointer) (intptr_t) n);
 		XmStringFree(str);
@@ -1090,5 +1090,5 @@ deallocator(Calendar *c)
 
 	/* structure holding month information */
 	free(m);
-	c->view->month_info = NULL;
+	c->view->month_info = nullptr;
 }

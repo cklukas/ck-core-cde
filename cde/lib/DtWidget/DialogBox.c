@@ -178,7 +178,7 @@ static XtResource resources[] =
 	{
 		XmNbuttonLabelStrings,
 		XmCButtonLabelStrings, XmRXmStringTable, sizeof (XtPointer),
-		DB_Offset (button_label_strings), XmRStringTable, NULL
+		DB_Offset (button_label_strings), XmRStringTable, nullptr
 	},
 	{
 		XmNcallback,
@@ -224,9 +224,9 @@ DtDialogBoxClassRec dtDialogBoxClassRec =
 		ClassPartInitialize,		/* class_part_initialize*/
 		False,				/* class_inited		*/
 		Initialize,		/* initialize		*/
-		NULL,				/* initialize_hook	*/
+		nullptr,				/* initialize_hook	*/
 		XtInheritRealize,		/* realize		*/
-		NULL,				/* actions		*/
+		nullptr,				/* actions		*/
 		0,				/* num_actions		*/
 		resources,			/* resources		*/
 		XtNumber (resources),		/* num_resources	*/
@@ -239,16 +239,16 @@ DtDialogBoxClassRec dtDialogBoxClassRec =
 		XtInheritResize,		/* resize		*/
 		XtInheritExpose,		/* expose		*/	
 		SetValues,			/* set_values		*/
-		NULL,				/* set_values_hook	*/
+		nullptr,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
-		NULL,				/* get_values_hook	*/
-		NULL,				/* accept_focus		*/	
+		nullptr,				/* get_values_hook	*/
+		nullptr,				/* accept_focus		*/	
 		XtVersion,			/* version		*/
-		NULL,				/* callback private	*/
+		nullptr,				/* callback private	*/
 		XtInheritTranslations,		/* tm_table		*/
 		XtInheritQueryGeometry,		/* query_geometry	*/
-		NULL,				/* display_accelerator	*/
-		NULL,				/* extension		*/
+		nullptr,				/* display_accelerator	*/
+		nullptr,				/* extension		*/
 	},
 
 /*	Composite Part
@@ -258,7 +258,7 @@ DtDialogBoxClassRec dtDialogBoxClassRec =
 		XtInheritChangeManaged,		/* change_managed	*/
 		InsertChild,			/* insert_child		*/
 		DeleteChild,			/* delete_child		*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	Constraint Part
@@ -268,46 +268,46 @@ DtDialogBoxClassRec dtDialogBoxClassRec =
 		XtNumber (constraints),		/* num_constraint_resources */
 		sizeof (DtDialogBoxConstraintRec),/* constraint_record	*/
 		ConstraintInitialize,		/* constraint_initialize */
-		NULL,				/* constraint_destroy	*/
-		NULL,				/* constraint_set_values */
-		NULL,				/* extension		*/
+		nullptr,				/* constraint_destroy	*/
+		nullptr,				/* constraint_set_values */
+		nullptr,				/* extension		*/
 	},
 
 /*	XmManager Part
 */
 	{
 		XtInheritTranslations,		/* default_translations	*/
-		NULL,				/* get_resources	*/
+		nullptr,				/* get_resources	*/
 		0,				/* num_get_resources	*/
-		NULL,				/* get_cont_resources	*/
+		nullptr,				/* get_cont_resources	*/
 		0,				/* num_get_cont_resources */
 		XmInheritParentProcess,		/* parent_process	*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	XmBulletinBoard Part
 */
 	{
 		True,				/* always_install_accelerators*/
-		NULL,				/* geo_matrix_create	*/
+		nullptr,				/* geo_matrix_create	*/
 		XmInheritFocusMovedProc,	/* focus_moved_proc	*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	XmForm Part
 */
 	{
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	DtDialogBox Part
 */
 	{
 		CreateChildren,			/* create_children	*/
-		NULL,				/* configure_children	*/
+		nullptr,				/* configure_children	*/
 		GetSize,			/* get_size		*/
-		NULL,				/* button_callback	*/
-		NULL,				/* extension		*/
+		nullptr,				/* button_callback	*/
+		nullptr,				/* extension		*/
 	}
 
 };
@@ -399,15 +399,15 @@ Initialize(
 		M_Button (new) = (Widget *)
 			XtMalloc (sizeof (Widget) * M_ButtonCount (new));
 	else
-		M_Button (new) = NULL;
+		M_Button (new) = nullptr;
 
-	M_WorkArea (new) = NULL;
+	M_WorkArea (new) = nullptr;
 	_DtProcessLock();
 	create_children = C_CreateChildren((DtDialogBoxWidgetClass) XtClass(new));
 	_DtProcessUnlock();
 	(*create_children) ((Widget)new); 
 
-	M_ButtonLabelStrings (new) = NULL;
+	M_ButtonLabelStrings (new) = nullptr;
 
 	M_MarginWidth (new) = M_ShadowThickness (new);
 	M_MarginHeight (new) = M_ShadowThickness (new);
@@ -426,7 +426,7 @@ Destroy(
 
 /*	Free button pointers.
 */
-	if (M_Button (mgr) != NULL)
+	if (M_Button (mgr) != nullptr)
 		XtFree ((char *)M_Button (mgr));
 }
 
@@ -496,7 +496,7 @@ ChangeManaged(
 		{
 			case XtGeometryAlmost:
 				XtMakeResizeRequest ((Widget) mgr, w, h,
-					NULL, NULL);
+					nullptr, nullptr);
 			case XtGeometryYes:
 			case XtGeometryNo:
 			default:
@@ -573,9 +573,9 @@ DeleteChild(
 	(*delete_child) (child);
 	
 	if (child == M_Separator (w))
-		M_Separator (w) = NULL;
+		M_Separator (w) = nullptr;
 	else if (child == M_WorkArea (w))
-		M_WorkArea (w) = NULL;
+		M_WorkArea (w) = nullptr;
 
 	/* button children ?? */
 }
@@ -850,7 +850,7 @@ ButtonCallback(
 				(XmAnyCallbackStruct *) call_data;
 	DtDialogBoxCallbackStruct	cb_data;
 
-	if (cb_list != NULL)
+	if (cb_list != nullptr)
 	{
 		cb_data.reason = XmCR_DIALOG_BUTTON;
 		cb_data.event = b_cb_data->event;
@@ -932,7 +932,7 @@ _DtDialogBoxGetButton(
 	DtDialogBoxWidget	mgr =	(DtDialogBoxWidget) w;
 	int			index =	pos - 1;
 	Widget *		button = M_Button (mgr);
-	Widget			rtn_w = NULL;
+	Widget			rtn_w = nullptr;
 
 
 	if (index >= M_ButtonCount (mgr))

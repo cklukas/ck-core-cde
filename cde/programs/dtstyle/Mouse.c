@@ -461,7 +461,7 @@ ScanThemeDir(const char *baseDir, char ***themes, Widget **items, int *count, in
     if (!dir)
 	return;
 
-    while ((entry = readdir(dir)) != NULL)
+    while ((entry = readdir(dir)) != nullptr)
     {
 	char path[1024];
 	char cursorsPath[1060];
@@ -511,7 +511,7 @@ ApplyDialogBgFg(Widget reference, Widget target)
     if (!reference || !target)
 	return;
 
-    XtVaGetValues(reference, XmNbackground, &bg, NULL);
+    XtVaGetValues(reference, XmNbackground, &bg, nullptr);
     XtSetArg(args[0], XmNbackground, bg);
     XtSetValues(target, args, 1);
 }
@@ -526,17 +526,17 @@ ApplyOptionMenuBackground(Widget reference, Widget optionMenu)
     if (!reference || !optionMenu)
 	return;
 
-    XtVaGetValues(reference, XmNbackground, &bg, NULL);
+    XtVaGetValues(reference, XmNbackground, &bg, nullptr);
 
-    XtVaSetValues(optionMenu, XmNbackground, bg, NULL);
+    XtVaSetValues(optionMenu, XmNbackground, bg, nullptr);
 
     label = XtNameToWidget(optionMenu, "*OptionLabel");
     if (label)
-	XtVaSetValues(label, XmNbackground, bg, NULL);
+	XtVaSetValues(label, XmNbackground, bg, nullptr);
 
     button = XtNameToWidget(optionMenu, "*OptionButton");
     if (button)
-	XtVaSetValues(button, XmNbackground, bg, XmNarmColor, bg, NULL);
+	XtVaSetValues(button, XmNbackground, bg, XmNarmColor, bg, nullptr);
 }
 
 static Pixel
@@ -545,9 +545,9 @@ GetCursorPreviewBgPixel(void)
     Pixel bg = style.secBgCol;
 
     if (mouse.cursorPreviewArea[0])
-	XtVaGetValues(mouse.cursorPreviewArea[0], XmNbackground, &bg, NULL);
+	XtVaGetValues(mouse.cursorPreviewArea[0], XmNbackground, &bg, nullptr);
     else if (mouse.cursorPreviewForm)
-	XtVaGetValues(mouse.cursorPreviewForm, XmNbackground, &bg, NULL);
+	XtVaGetValues(mouse.cursorPreviewForm, XmNbackground, &bg, nullptr);
 
     return bg;
 }
@@ -672,7 +672,7 @@ CreateCursorPreviewPixmap(int index, const char *theme,
 	return None;
     }
 
-    gc = XCreateGC(style.display, pixmap, 0, NULL);
+    gc = XCreateGC(style.display, pixmap, 0, nullptr);
     if (!gc)
     {
 	XFreePixmap(style.display, pixmap);
@@ -681,7 +681,7 @@ CreateCursorPreviewPixmap(int index, const char *theme,
     }
 
     ximage = XCreateImage(style.display, visual, depth, ZPixmap, 0,
-			  NULL, previewW, previewH, 32, 0);
+			  nullptr, previewW, previewH, 32, 0);
     if (!ximage)
     {
 	XFreeGC(style.display, gc);
@@ -798,7 +798,7 @@ CreateCursorThemePreviewPixmap(const char *theme)
     if (strip == None)
 	return None;
 
-    GC gc = XCreateGC(style.display, strip, 0, NULL);
+    GC gc = XCreateGC(style.display, strip, 0, nullptr);
     if (!gc)
     {
 	XFreePixmap(style.display, strip);
@@ -841,24 +841,24 @@ static char *
 DupPrefResourceString(const char *resName, const char *resClass)
 {
     char *type;
-    char *result = NULL;
+    char *result = nullptr;
     XrmDatabase db;
     XrmValue value;
     char *prefString;
 
     prefString = _DtGetResString(style.display, _DT_ATR_PREFS);
     if (!prefString)
-	return NULL;
+	return nullptr;
     if (!prefString[0])
     {
 	XtFree(prefString);
-	return NULL;
+	return nullptr;
     }
 
     db = XrmGetStringDatabase(prefString);
     XtFree(prefString);
     if (!db)
-	return NULL;
+	return nullptr;
 
     if (XrmGetResource(db, resName, resClass, &type, &value))
     {
@@ -1095,7 +1095,7 @@ UpdateCursorPreview(void)
 	    XtVaGetValues(mouse.cursorPreviewArea[0],
 			  XmNwidth, &curW,
 			  XmNheight, &curH,
-			  NULL);
+			  nullptr);
 	}
 
 	if (maxW + pad > (int)curW || maxH + pad > (int)curH)
@@ -1107,7 +1107,7 @@ UpdateCursorPreview(void)
 		XtVaSetValues(mouse.cursorPreviewArea[i],
 			      XmNwidth, (Dimension)(maxW + pad),
 			      XmNheight, (Dimension)(maxH + pad),
-			      NULL);
+			      nullptr);
 	    }
 	}
     }
@@ -1123,7 +1123,7 @@ UpdateCursorPreview(void)
 void 
 popup_mouseBB( Widget shell )
 {
-    if (style.mouseDialog == NULL) {
+    if (style.mouseDialog == nullptr) {
         _DtTurnOnHourGlass(shell);  
         build_mouseDialog(shell);
         mouse.systemDefaultFlag = True;
@@ -1289,7 +1289,7 @@ build_mouseDialog( Widget shell )
     save.poscnt++;
     style.mouseDialog = __DtCreateDialogBoxDialog(shell, mouseString, 
                    save.posArgs, save.poscnt);
-    XtAddCallback(style.mouseDialog, XmNcallback, ButtonCB, NULL);
+    XtAddCallback(style.mouseDialog, XmNcallback, ButtonCB, nullptr);
     XtAddCallback(style.mouseDialog, XmNhelpCallback,
             HelpRequestCB, (XtPointer)HELP_MOUSE_DIALOG);
 
@@ -1474,8 +1474,8 @@ build_mouseDialog( Widget shell )
     /* Xcursor theme/size controls */
     int oldCursorThemeCount = mouse.cursorThemeCount;
     Pixmap *oldCursorThemePreviewPixmaps = mouse.cursorThemePreviewPixmaps;
-    mouse.cursorThemes = NULL;
-    mouse.cursorThemeItems = NULL;
+    mouse.cursorThemes = nullptr;
+    mouse.cursorThemeItems = nullptr;
     mouse.cursorThemeCount = 0;
     mouse.cursorChanged = False;
 
@@ -1582,7 +1582,7 @@ build_mouseDialog( Widget shell )
 		(Pixmap *)XtCalloc((Cardinal)mouse.cursorThemeCount,
 				  (Cardinal)sizeof(Pixmap));
 	else
-	    mouse.cursorThemePreviewPixmaps = NULL;
+	    mouse.cursorThemePreviewPixmaps = nullptr;
 
 	for (i = 0; i < mouse.cursorThemeCount; i++)
 	{
@@ -1688,7 +1688,7 @@ build_mouseDialog( Widget shell )
             mouse.cursorPreviewArea[i] = XmCreateDrawingArea(cell, "cursorPreviewArea", args, n);
             XtManageChild(mouse.cursorPreviewArea[i]);
             XtAddCallback(mouse.cursorPreviewArea[i], XmNmapCallback,
-			  cursorPreviewMapCB, NULL);
+			  cursorPreviewMapCB, nullptr);
             XtAddCallback(mouse.cursorPreviewArea[i], XmNexposeCallback,
 			  cursorPreviewExposeCB, (XtPointer)(intptr_t)i);
 
@@ -1739,10 +1739,10 @@ build_mouseDialog( Widget shell )
 	}
     }
 
-    XtAddCallback(style.mouseDialog, XmNmapCallback, formLayoutCB, NULL);
+    XtAddCallback(style.mouseDialog, XmNmapCallback, formLayoutCB, nullptr);
     XtAddCallback(style.mouseDialog, XmNmapCallback, _DtmapCB_mouseDialog, shell);
     XtAddCallback(mouse.systemDefault, XmNactivateCallback, 
-                  systemDefaultCB, NULL);
+                  systemDefaultCB, nullptr);
     
     /* calculate the max width for toggles for the overall alignment */
     /* Set labels to max label width */ 
@@ -1773,11 +1773,11 @@ build_mouseDialog( Widget shell )
 	XmToggleButtonGadgetSetState(mouse.transferToggle, False, False);
       }
 
-    XtVaSetValues(mouse.handLabGad, XmNwidth, MaxLabelWidth1, NULL);
-    XtVaSetValues(mouse.middleLabGad, XmNwidth, MaxLabelWidth1, NULL);
+    XtVaSetValues(mouse.handLabGad, XmNwidth, MaxLabelWidth1, nullptr);
+    XtVaSetValues(mouse.middleLabGad, XmNwidth, MaxLabelWidth1, nullptr);
 
-    XtVaSetValues(mouse.rightToggle, XmNwidth, MaxToggleWidth, NULL);
-    XtVaSetValues(mouse.transferToggle, XmNwidth, MaxToggleWidth, NULL);
+    XtVaSetValues(mouse.rightToggle, XmNwidth, MaxToggleWidth, nullptr);
+    XtVaSetValues(mouse.transferToggle, XmNwidth, MaxToggleWidth, nullptr);
 
     XtAddCallback(mouse.rightToggle, XmNvalueChangedCallback, 
                   warnToggleCB, (XtPointer)RIGHT_HANDED);
@@ -1792,16 +1792,16 @@ build_mouseDialog( Widget shell )
                   midwarnToggleCB, (XtPointer)ADJUST);
 
     XtAddCallback(mouse.accelScale, XmNvalueChangedCallback, 
-                  valueChangedCB, NULL);
+                  valueChangedCB, nullptr);
 
     XtAddCallback(mouse.threshScale, XmNvalueChangedCallback, 
-                  valueChangedCB, NULL);
+                  valueChangedCB, nullptr);
     XtAddCallback(mouse.dclickScale, XmNvalueChangedCallback, 
                   dclickVCCB, (caddr_t)mouse.pictButton);
     XtAddCallback(mouse.cursorPreviewForm, XmNmapCallback,
-                  cursorPreviewMapCB, NULL);
+                  cursorPreviewMapCB, nullptr);
     XtAddCallback(mouse.pictButton, XmNactivateCallback, 
-                  dclickTestCB, NULL);  
+                  dclickTestCB, nullptr);  
 
     XtManageChild(form);
     XtManageChildren(widget_list,count);
@@ -2139,7 +2139,7 @@ formLayoutCB(
     XtSetArg(args[n], XmNbottomOffset,     style.verticalSpacing); n++;
     XtSetValues (mouse.dtwmRestartTG, args, n);
 
-    XtRemoveCallback(style.mouseDialog, XmNmapCallback, formLayoutCB, NULL);
+    XtRemoveCallback(style.mouseDialog, XmNmapCallback, formLayoutCB, nullptr);
 
 }
 
@@ -2240,7 +2240,7 @@ _DtmapCB_mouseDialog(
 	    history = mouse.cursorThemeItems[0];
 
 	if (history)
-	    XtVaSetValues(mouse.cursorThemeOM, XmNmenuHistory, history, NULL);
+	    XtVaSetValues(mouse.cursorThemeOM, XmNmenuHistory, history, nullptr);
 
 	if (mouse.cursorTheme)
 	    XtFree(mouse.cursorTheme);
@@ -2359,7 +2359,7 @@ cursorPreviewExposeCB(
 
     Display *dpy = style.display;
     Window win = XtWindow(w);
-    GC gc = XCreateGC(dpy, win, 0, NULL);
+    GC gc = XCreateGC(dpy, win, 0, nullptr);
     int width = mouse.cursorPreviewPixmapW[index];
     int height = mouse.cursorPreviewPixmapH[index];
     int wWidth = XtWidth(w);
@@ -2410,7 +2410,7 @@ cursorThemeSelectCB(
     if (mouse.cursorTheme)
     {
 	XtFree(mouse.cursorTheme);
-	mouse.cursorTheme = NULL;
+	mouse.cursorTheme = nullptr;
     }
 
     if (client_data)
@@ -2420,7 +2420,7 @@ cursorThemeSelectCB(
 
     mouse.cursorChanged = True;
     if (mouse.cursorThemeOM && w)
-	XtVaSetValues(mouse.cursorThemeOM, XmNmenuHistory, w, NULL);
+	XtVaSetValues(mouse.cursorThemeOM, XmNmenuHistory, w, nullptr);
     UpdateCursorPreview();
 }
 
@@ -2601,14 +2601,14 @@ midwarnToggleCB(
   if ((intptr_t)client_data == TRANSFER)
     {
       warnstring = CMPSTR(MID_WARN_MSG_T);
-      XtVaSetValues(midwarnDialog, XmNmessageString, warnstring, NULL); n++; 
+      XtVaSetValues(midwarnDialog, XmNmessageString, warnstring, nullptr); n++; 
       
       XmToggleButtonGadgetSetState(mouse.adjustToggle, False, False);
     }
   else
     {
       warnstring = CMPSTR(MID_WARN_MSG_A);
-      XtVaSetValues(midwarnDialog, XmNmessageString, warnstring, NULL); n++; 
+      XtVaSetValues(midwarnDialog, XmNmessageString, warnstring, nullptr); n++; 
       
       XmToggleButtonGadgetSetState(mouse.transferToggle, False, False);
     }
@@ -2752,7 +2752,7 @@ reverseToggleCB(
   /* change Pointer Mapping */
   if (XSetPointerMapping(style.display, mouse.new_map_return, mouse.numButtons) 
                    != MappingSuccess)
-    _DtSimpleError (progName, DtWarning, NULL, MSG3, NULL);
+    _DtSimpleError (progName, DtWarning, nullptr, MSG3, nullptr);
   
   mouse.systemDefaultFlag = False;
   XtDestroyWidget(warnDialog);
@@ -2862,7 +2862,7 @@ systemDefaultCB(
       /* change Pointer Mapping */
       if(XSetPointerMapping(style.display, mouse.new_map_return,
 			    mouse.numButtons) != MappingSuccess)
-	_DtSimpleError (progName, DtWarning, NULL, MSG3, NULL);
+	_DtSimpleError (progName, DtWarning, nullptr, MSG3, nullptr);
       
       n=0;
       XtSetArg(args[n], XmNlabelPixmap, mouse.pixmap); n++;
@@ -2915,7 +2915,7 @@ systemDefaultCB(
       if (!history && mouse.cursorThemeCount > 0)
 	  history = mouse.cursorThemeItems[0];
       if (history)
-	  XtVaSetValues(mouse.cursorThemeOM, XmNmenuHistory, history, NULL);
+	  XtVaSetValues(mouse.cursorThemeOM, XmNmenuHistory, history, nullptr);
 
       snprintf(cursorRes, sizeof(cursorRes),
 	       "Xcursor.theme: %s\nXcursor.size: %d\n",
@@ -3048,14 +3048,14 @@ ButtonCB(
 			 int newSize = mouse.cursorSize;
 			 mouse.cursorSize = SnapCursorSize(newSize, mouse.maxCursorSize);
 
-		 if (mouse.cursorTheme == NULL)
+		 if (mouse.cursorTheme == nullptr)
 		     mouse.cursorTheme = XtNewString("default");
 
 		 {
 		     Boolean themeChanged;
-		     themeChanged = (mouse.cursorTheme == NULL) ?
-			 (mouse.origCursorTheme != NULL) :
-			 (mouse.origCursorTheme == NULL ||
+		     themeChanged = (mouse.cursorTheme == nullptr) ?
+			 (mouse.origCursorTheme != nullptr) :
+			 (mouse.origCursorTheme == nullptr ||
 			  strcmp(mouse.cursorTheme, mouse.origCursorTheme) != 0);
 
 		     if ((mouse.cursorSize != mouse.origCursorSize) || themeChanged)
@@ -3146,7 +3146,7 @@ ButtonCB(
 	   {
 	     if (XSetPointerMapping(style.display, mouse.map_return, 
 				    mouse.numButtons) != MappingSuccess)
-	       _DtSimpleError (progName, DtWarning, NULL, MSG3, NULL);
+	       _DtSimpleError (progName, DtWarning, nullptr, MSG3, nullptr);
 	     
 	     /* load the correct mouse pixmaps */
 	     
@@ -3274,7 +3274,7 @@ saveMouse(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.mouseDialog != NULL)
+    if (style.mouseDialog != nullptr)
     {
         if (XtIsManaged(style.mouseDialog))
             sprintf(bufr, "*Mouse.ismapped: True\n");

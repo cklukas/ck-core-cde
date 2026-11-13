@@ -116,7 +116,7 @@ void show_main_help(Widget w, XtPointer clientData, XtPointer cbs)
         Arg 		al[10];
         Calendar 	*c = calendar;
 	Props_pu       	*p = (Props_pu *) c->properties_pu;
-        Widget 		selWidget = NULL;
+        Widget 		selWidget = nullptr;
         int 		status = DtHELP_SELECT_ERROR;
  
         ac = 0;
@@ -157,12 +157,12 @@ void show_main_help(Widget w, XtPointer clientData, XtPointer cbs)
                       printf("%s", CATGETS(c->DT_catd, 1, 350, "Selection Error, cannot continue\n"));
                     break;
                     case DtHELP_SELECT_VALID:
-                      while (selWidget != NULL)
+                      while (selWidget != nullptr)
                         {
                           if ((XtHasCallbacks(selWidget, XmNhelpCallback)                                            == XtCallbackHasSome))
                             {
                                XtCallCallbacks((Widget)selWidget,
-                                               XmNhelpCallback,NULL);
+                                               XmNhelpCallback,nullptr);
                                break;
                             }
                           else
@@ -182,7 +182,7 @@ void show_main_help(Widget w, XtPointer clientData, XtPointer cbs)
 				     DIALOG_TEXT, text,
 				     BUTTON_IDENT, 1, ident1,
 				     DIALOG_IMAGE, p->xm_error_pixmap,
-				     NULL);
+				     nullptr);
 			XtFree(ident1);
 			XtFree(text);
 			XtFree(title);

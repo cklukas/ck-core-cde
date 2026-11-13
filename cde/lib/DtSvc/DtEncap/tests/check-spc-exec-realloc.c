@@ -31,7 +31,7 @@ static void *ck_realloc(void *p, size_t n)
 {
     ++realloc_calls;
     if (realloc_fail_at && realloc_calls == realloc_fail_at)
-        return NULL;		/* the old block stays valid, as in libc */
+        return nullptr;		/* the old block stays valid, as in libc */
     return realloc(p, n);
 }
 #define realloc ck_realloc
@@ -73,7 +73,7 @@ int main(void)
     orig = s = own("CKT_B=$CKT_BASE/foo");
     resolve_variable_reference(&s);
     assert(realloc_calls == 1);
-    assert(s != NULL);
+    assert(s != nullptr);
     assert(s == orig);
     assert(strcmp(s, "CKT_B=$CKT_BASE/foo") == 0);
     /* The unexpanded value is still exported. */
@@ -84,7 +84,7 @@ int main(void)
     s = own("CKT_C=$CKT_BASE:${CKT_BASE}/x");
     resolve_variable_reference(&s);
     assert(realloc_calls == 2);
-    assert(s != NULL);
+    assert(s != nullptr);
     assert(strcmp(s, "CKT_C=/base:${CKT_BASE}/x") == 0);
     assert(strcmp(getenv("CKT_C"), "/base:${CKT_BASE}/x") == 0);
 

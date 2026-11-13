@@ -71,7 +71,7 @@ iljpgError iljpgEncodeInit (
             scaled version of each Q table.
         */
     for (i = 0; i < 4; i++)
-        pPriv->DCTScaleTables[i] = (float *)NULL;
+        pPriv->DCTScaleTables[i] = (float *)nullptr;
     for (i = 0; i < 4; i++) {
         if (pData->QTables[i]) {
             if (!(pPriv->DCTScaleTables[i] = (float *)ILJPG_MALLOC(sizeof(float) * 64)))

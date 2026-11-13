@@ -47,22 +47,22 @@ static int (* spc_state_table[16]) (SPC_Channel_Ptr channel, int connector)= {
   
                             /* old_state new_state */
   
-  NULL,                     /*    00        00     */
-  NULL,                     /*    00        01     */
+  nullptr,                     /*    00        00     */
+  nullptr,                     /*    00        01     */
   error_fun,                /*    00        10     */
-  NULL,                     /*    00        11     */
+  nullptr,                     /*    00        11     */
   sigcld_with_reset,        /*    01        00     */
-  NULL,                     /*    01        01     */
+  nullptr,                     /*    01        01     */
   error_fun,                /*    01        10     */
   error_fun,                /*    01        11     */
   connector_eof_with_reset, /*    10        00     */
   error_fun,                /*    10        01     */
-  NULL,                     /*    10        10     */
+  nullptr,                     /*    10        10     */
   error_fun,                /*    10        11     */
-  NULL,                     /*    11        00     */
+  nullptr,                     /*    11        00     */
   connector_eof,            /*    11        01     */
-  NULL,                     /*    11        10     */
-  NULL                      /*    11        11     */
+  nullptr,                     /*    11        10     */
+  nullptr                      /*    11        11     */
   };
 
 /*----------------------------------------------------------------------+*/
@@ -101,7 +101,7 @@ SPC_Change_State(SPC_Channel_Ptr channel,
   /* If no state change, return */
   
   if(new_state == old_state) {
-    sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)NULL);
+    sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)nullptr);
     return TRUE;
   }
 
@@ -112,19 +112,19 @@ SPC_Change_State(SPC_Channel_Ptr channel,
   fun=spc_state_table[state_index];
 
   if(fun == error_fun) {
-    sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)NULL);
+    sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)nullptr);
     return TRUE;
    }
   
   channel->IOMode=MAKE_CHANNEL_STATE(iomode, new_state);
   if(!fun) {
-    sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)NULL);
+    sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)nullptr);
     return TRUE;
   }
 
   funretval=((*fun)(channel, connector));
 
-  sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)NULL);
+  sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)nullptr);
   return funretval;
 
 }

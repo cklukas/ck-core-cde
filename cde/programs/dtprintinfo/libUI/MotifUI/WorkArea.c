@@ -155,7 +155,7 @@ static XtResource resources[] =
 static XtResource workAreaConstraintResources[] =
 {
    { GuiNsuperNode, GuiCSuperNode, XtRPointer, sizeof(Widget),
-     XtOffset(WorkAreaConstraints, workArea.super_node), XtRPointer, NULL
+     XtOffset(WorkAreaConstraints, workArea.super_node), XtRPointer, nullptr
    },
    { XmNorientation, XmCOrientation, XmROrientation, sizeof(unsigned char),
      XtOffset(WorkAreaConstraints, workArea.orientation),
@@ -174,7 +174,7 @@ static XtResource workAreaConstraintResources[] =
      XtRImmediate, (XtPointer) FALSE
    },
    { GuiNsubNodes, GuiCSubNodes, XtRPointer, sizeof(WidgetList),
-     XtOffset(WorkAreaConstraints, workArea.sub_nodes), XtRPointer, NULL
+     XtOffset(WorkAreaConstraints, workArea.sub_nodes), XtRPointer, nullptr
    },
    { GuiNnumberSubNodes, GuiCNumberSubNodes, XtRInt, sizeof(int),
      XtOffset(WorkAreaConstraints, workArea.n_sub_nodes),
@@ -199,12 +199,12 @@ WorkAreaClassRec workAreaClassRec =
    "WorkArea",                            /* class_name              */
    sizeof(WorkAreaRec),                   /* widget_size             */
    ClassInitialize,                       /* class_init              */
-   NULL,                                  /* class_part_init         */
+   nullptr,                                  /* class_part_init         */
    FALSE,                                 /* class_inited            */
    Initialize,                            /* initialize              */
-   NULL,                                  /* initialize_hook         */
+   nullptr,                                  /* initialize_hook         */
    Realize,                               /* realize                 */
-   NULL,                                  /* actions                 */
+   nullptr,                                  /* actions                 */
    0,                                     /* num_actions             */
    resources,                             /* resources               */
    XtNumber(resources),                   /* num_resources           */
@@ -213,20 +213,20 @@ WorkAreaClassRec workAreaClassRec =
    XtExposeCompressMaximal,               /* compress_exposure       */
    TRUE,                                  /* compress_enterleave     */
    FALSE,                                 /* visible_interest        */
-   NULL,                                  /* destroy                 */
+   nullptr,                                  /* destroy                 */
    Resize,                                /* resize                  */
    Redisplay,                             /* expose                  */
    SetValues,                             /* set_values              */
-   NULL,                                  /* set_values_hook         */
+   nullptr,                                  /* set_values_hook         */
    XtInheritSetValuesAlmost,              /* set_values_almost       */
-   NULL,                                  /* get_values_hook         */
+   nullptr,                                  /* get_values_hook         */
    XtInheritAcceptFocus,                  /* accept_focus            */
    XtVersion,                             /* version                 */
-   NULL,                                  /* callback_private        */
+   nullptr,                                  /* callback_private        */
    XtInheritTranslations,                 /* tm_table                */
    XtInheritQueryGeometry,                /* query_geometry          */
-   NULL,                                  /* display_accelerator     */
-   NULL,                                  /* extension               */
+   nullptr,                                  /* display_accelerator     */
+   nullptr,                                  /* extension               */
   },
   {
    /* composite_class fields */
@@ -234,7 +234,7 @@ WorkAreaClassRec workAreaClassRec =
    ChangeManaged,                         /* change_managed          */
    XtInheritInsertChild,                  /* insert_child            */
    XtInheritDeleteChild,                  /* delete_child            */
-   NULL,                                  /* extension               */
+   nullptr,                                  /* extension               */
   },
   { 
    /* constraint_class fields */
@@ -244,17 +244,17 @@ WorkAreaClassRec workAreaClassRec =
    ConstraintInitialize,                  /* initialize              */
    ConstraintDestroy,                     /* destroy                 */
    ConstraintSetValues,                   /* set_values              */
-   NULL,                                  /* extension               */
+   nullptr,                                  /* extension               */
   },
   {
    /* manager_class fields */
    XtInheritTranslations,                 /* default translations    */
-   NULL,                                  /* syn_resources           */
+   nullptr,                                  /* syn_resources           */
    0,                                     /* num_syn_resources       */
-   NULL,                                  /* syn_cont_resources      */
+   nullptr,                                  /* syn_cont_resources      */
    0,                                     /* num_syn_cont_resources  */
-   NULL,                                  /* parent_process          */
-   NULL,                                  /* extension               */
+   nullptr,                                  /* parent_process          */
+   nullptr,                                  /* extension               */
   },
   {
    /* WorkArea class fields */
@@ -335,7 +335,7 @@ GuiCreateScrolledWorkArea(
 
    swindow = XtCreateManagedWidget(s, xmScrolledWindowWidgetClass, parent,
                                    merged_args, n);
-   XtAddCallback(swindow, XmNtraverseObscuredCallback, MakeChildVisible, NULL);
+   XtAddCallback(swindow, XmNtraverseObscuredCallback, MakeChildVisible, nullptr);
 
    GuiStackFree(s, s_cache);
    GuiStackFree((char *)merged_args, args_cache);
@@ -345,7 +345,7 @@ GuiCreateScrolledWorkArea(
                               argcount);
 
    /* Add callback to destroy ScrolledWindow parent. */
-   XtAddCallback(sworkArea, XmNdestroyCallback, DestroyParent, NULL);
+   XtAddCallback(sworkArea, XmNdestroyCallback, DestroyParent, nullptr);
    /* Add Resize and destroy callbacks to clip widget */
    XtAddCallback(XtParent(sworkArea), XmNresizeCallback, ResizeSW, sworkArea);
 
@@ -379,7 +379,7 @@ GuiWorkAreaReorderChildren(
          sizeof(Widget) * n_subnodes);
       workArea_const->workArea.n_sub_nodes = n_subnodes;
       NewLayout((WorkAreaWidget)XtParent(parent_subnode));
-      Redisplay(XtParent(parent_subnode), NULL, NULL);
+      Redisplay(XtParent(parent_subnode), nullptr, nullptr);
     }
    else
     {
@@ -420,7 +420,7 @@ GuiWorkAreaEnableRedisplay(
     {
       workArea->workArea.delay_layout = FALSE;
       NewLayout(workArea);
-      Redisplay((Widget)workArea, NULL, NULL);
+      Redisplay((Widget)workArea, nullptr, nullptr);
     }
    else
       XmeWarning(w, "Cannot set EnableRedisplay of non-subclass of WorkArea");
@@ -442,7 +442,7 @@ ClassInitialize(
    void)
 {
    GuiRID_CHILDREN_ATTACHMENT = XmRepTypeRegister(GuiRAttachment, 
-      ChildrenAttachment, NULL, sizeof(ChildrenAttachment) / sizeof(char *));
+      ChildrenAttachment, nullptr, sizeof(ChildrenAttachment) / sizeof(char *));
 }
 
 /*
@@ -528,7 +528,7 @@ Realize(
        {
          /* Check the parent of the parent of the workArea, because the
             workArea could be a child of the scrolled window's clip widget */
-         if ((sw = XtParent(sw)) != NULL)
+         if ((sw = XtParent(sw)) != nullptr)
             if (XmIsScrolledWindow(sw))
                sw_child = TRUE;
         }
@@ -547,7 +547,7 @@ Realize(
       XtSetArg(args[n], XmNscrolledWindowMarginWidth, &marginWidth); n++;
       XtGetValues(sw, args, n);
 
-      if (vbar != NULL)
+      if (vbar != nullptr)
        {
          n = 0;
          XtSetArg(args[n], XmNwidth, &vbar_width); n++;
@@ -1041,8 +1041,8 @@ NewLayout(
 
       /* Accept any compromise. */
       if (result == XtGeometryAlmost)
-         XtMakeResizeRequest((Widget)workArea, replyWidth, replyHeight, NULL,
-                             NULL);
+         XtMakeResizeRequest((Widget)workArea, replyWidth, replyHeight, nullptr,
+                             nullptr);
     }
 
    /* Move each widget into place. */

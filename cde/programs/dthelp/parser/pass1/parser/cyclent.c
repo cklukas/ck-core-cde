@@ -47,7 +47,7 @@ M_WCHAR *m_cyclent(LOGICAL init, unsigned char *type, M_WCHAR **content, unsigne
       current = m_enttrie->data ;
       length = 0 ;
       }
-    if (length < 0) return(NULL) ;
+    if (length < 0) return(nullptr) ;
     while (current->symbol) {
       ancestor[length] = current ;
       name[length++] = current->symbol ;

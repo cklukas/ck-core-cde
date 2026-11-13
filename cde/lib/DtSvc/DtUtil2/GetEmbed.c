@@ -99,7 +99,7 @@ _DtGetEmbeddedClients(
     int rcode;
     Atom property;
 
-    *ppEmbeddedClients = NULL;
+    *ppEmbeddedClients = nullptr;
     property = XmInternAtom (display,
 			    _XA_DT_WORKSPACE_EMBEDDED_CLIENTS, False);
 

@@ -288,7 +288,7 @@ int                rowBitAlign, nBits, nSamplesPerPixel, i;
                 Take into account subsampling if YCbCr image.
             */
         pYCbCr = (pDes->type == IL_YCBCR) ? 
-                   pDes->typeInfo.YCbCr.sample : (ilYCbCrSampleInfo *)NULL;
+                   pDes->typeInfo.YCbCr.sample : (ilYCbCrSampleInfo *)nullptr;
 
         while (nSamplesPerPixel-- > 0) {
             nBits = *pNBits++;
@@ -349,7 +349,7 @@ ilYCbCrSampleInfo *pYCbCr;
             MCUMinus1 = pYCbCr[2].subsampleVert;
         MCUMinus1 = MCUMinus1 * 8 - 1;  /* e.g. if max = 4 MCUMinus1 is 31 */
         }
-    else pYCbCr = (ilYCbCrSampleInfo *)NULL;
+    else pYCbCr = (ilYCbCrSampleInfo *)nullptr;
 
     for (plane = 0; plane < nPlanes; plane++) {
         nBytesPerRow = rowBytesPerPlane [plane];
@@ -436,7 +436,7 @@ ilPtr                   pPixels;
         /*  If strip offset array non-null free it */
     if (pImage->pStripOffsets) {
         IL_FREE (pImage->pStripOffsets);
-        pImage->pStripOffsets = (long *)NULL;
+        pImage->pStripOffsets = (long *)nullptr;
         }
 }
 
@@ -508,7 +508,7 @@ ilError                 error;
         }
 
         /*  Validate pDes: don't allow user-defined types. */
-    if ((context->error = _ilValidateDesFormat (FALSE, pDes, (ilImageFormat *)NULL)))
+    if ((context->error = _ilValidateDesFormat (FALSE, pDes, (ilImageFormat *)nullptr)))
         return (ilInternalImage)NULL;
 
         /*  Create the object and add it to context. */
@@ -561,7 +561,7 @@ ilError                 error;
         /*  Init image data, allocate pixels if uncompressed */
     pImage->nStrips = 0;            /* if compressed, strip height not set yet */
     pImage->stripHeight = 0;
-    pImage->pStripOffsets = (long *)NULL;
+    pImage->pStripOffsets = (long *)nullptr;
 
     pImage->i.pDes = &pImage->des;
     pImage->i.pFormat = &pImage->format;
@@ -569,7 +569,7 @@ ilError                 error;
     pImage->i.height = height;
     pImage->i.pCompData = (ilPtr)NULL;
     pImage->i.clientCompData = TRUE;
-    pImage->i.pPalette = (unsigned short *)NULL;
+    pImage->i.pPalette = (unsigned short *)nullptr;
     pImage->i.clientPalette = TRUE;
 
     if ((error = _ilMallocImagePixels (pImage))) {
@@ -693,13 +693,13 @@ int                     plane, nPlanes;
     pImage->format = *pInfo->pFormat;
     pImage->nStrips = 0;            /* if compressed, no data present yet */
     pImage->stripHeight = 0;
-    pImage->pStripOffsets = (long *)NULL;
+    pImage->pStripOffsets = (long *)nullptr;
 
     pImage->i.pDes = &pImage->des;
     pImage->i.pFormat = &pImage->format;
     pImage->i.width = pInfo->width;
     pImage->i.height = pInfo->height;
-    pImage->i.pPalette = (unsigned short *)NULL;    /* assume no palette or comp data */
+    pImage->i.pPalette = (unsigned short *)nullptr;    /* assume no palette or comp data */
     pImage->i.clientPalette = TRUE;
     pImage->i.pCompData = (ilPtr)NULL;
     pImage->i.clientCompData = TRUE;

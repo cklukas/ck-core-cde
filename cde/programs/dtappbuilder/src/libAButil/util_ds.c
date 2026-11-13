@@ -63,7 +63,7 @@ util_llist_create(
 {
     LList tmp = (LList) XtMalloc(sizeof(struct _LListStruct));
 
-    tmp->next = NULL;
+    tmp->next = nullptr;
     return(tmp);
 }
 
@@ -72,7 +72,7 @@ util_llist_destroy(
     LList	llist
 )
 {
-    while (llist != NULL)
+    while (llist != nullptr)
     {
 	LList	tmp = llist;
 
@@ -103,11 +103,11 @@ util_llist_find(
     ASet	prev;
     ASet	trav;
 
-    for (prev = llist, trav = llist->next; trav != NULL;
+    for (prev = llist, trav = llist->next; trav != nullptr;
 			    prev = trav, trav = trav->next)
 	if (trav->value == cl_data)
 	    return(prev);
-    return(NULL);
+    return(nullptr);
 }
 
 extern void
@@ -118,7 +118,7 @@ util_llist_delete(
 {
     LList	tmp = util_llist_find(llist, cl_data);
 
-    if (tmp != NULL)
+    if (tmp != nullptr)
 	llist_delete_next(tmp);
 }
 
@@ -129,7 +129,7 @@ llist_delete_next(
 {
     LList	tmp = llist->next;
 
-    if (tmp != NULL)
+    if (tmp != nullptr)
     {
 	llist->next = tmp->next;
 	XtFree((char *)tmp);
@@ -142,7 +142,7 @@ util_llist_iterate(
     LListIterFn	fn
 )
 {
-    for (llist = llist->next; llist != NULL; llist = llist->next)
+    for (llist = llist->next; llist != nullptr; llist = llist->next)
 	(*fn)(llist->value);
 }
 
@@ -152,6 +152,6 @@ util_aset_add(
     void	*cl_data
 )
 {
-    if (util_llist_find(aset, cl_data) == NULL)
+    if (util_llist_find(aset, cl_data) == nullptr)
 	util_llist_insert_after(aset, cl_data);
 }

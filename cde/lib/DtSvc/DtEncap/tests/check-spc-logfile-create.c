@@ -71,12 +71,12 @@ typedef struct { char *logfile; int IOMode; } SPC_Channel, *SPC_Channel_Ptr;
 #define _DtSvcProcessLock()
 #define _DtSvcProcessUnlock()
 
-char **SPC_logfile_list = NULL;
-XeString SPCD_Authentication_Dir = NULL;
+char **SPC_logfile_list = nullptr;
+XeString SPCD_Authentication_Dir = nullptr;
 static char *ck_tmp_dir_name;		/* what get_tmp_dir() reports */
 static int last_error;
 static void SPC_Error(int code, ...) { last_error = code; }
-static char *get_tmp_dir(void) { return ck_tmp_dir_name ? strdup(ck_tmp_dir_name) : NULL; }
+static char *get_tmp_dir(void) { return ck_tmp_dir_name ? strdup(ck_tmp_dir_name) : nullptr; }
 static void SPC_Close_Unused(void) { }
 static int ck_fd[3];
 static void ck_dup2(int fd, int target) { ck_fd[target] = fd; }
@@ -86,7 +86,7 @@ static int ck_realloc_fail;
 static void *ck_realloc(void *p, size_t n)
 {
     if (ck_realloc_fail)
-        return NULL;		/* the old block stays valid, as in libc */
+        return nullptr;		/* the old block stays valid, as in libc */
     return realloc(p, n);
 }
 #define realloc ck_realloc
@@ -99,9 +99,9 @@ static void *ck_realloc(void *p, size_t n)
 static char *ck_tempnam(const char *dir, const char *prefix)
 {
     char path[PATH_MAX];
-    if (dir == NULL)
+    if (dir == nullptr)
         dir = getenv("TMPDIR");
-    if (dir == NULL)
+    if (dir == nullptr)
         dir = "/tmp";
     snprintf(path, sizeof path, "%s/%sAAAAAA", dir, prefix);
     return strdup(path);
@@ -194,10 +194,10 @@ static int ck_count(const char *dir)
 
 static SPC_Channel_Ptr open_channel(SPC_Channel *c)
 {
-    c->logfile = NULL;
+    c->logfile = nullptr;
     c->IOMode = SPCIO_USE_LOGFILE;
     last_error = 0;
-    return open_noio_channel_object(c, SPCIO_USE_LOGFILE, NULL);
+    return open_noio_channel_object(c, SPCIO_USE_LOGFILE, nullptr);
 }
 
 /* What the forked child does with the name: open it, log through it. */
@@ -256,19 +256,19 @@ int main(int argc, char **argv)
     assert(ck_mk_calls == 1);
     assert(strcmp(ck_mk_template, "XXXXXX") != 0);
     assert(SPC_logfile_list[1] && strcmp(SPC_logfile_list[1], a.logfile) == 0);
-    assert(SPC_logfile_list[2] == NULL);
+    assert(SPC_logfile_list[2] == nullptr);
     child_logs(&a);
     assert(strcmp(ck_slurp(a.logfile), "LOG\n") == 0);
 
     /* The directory comes from get_tmp_dir() when no authentication dir is set. */
-    SPCD_Authentication_Dir = NULL;
+    SPCD_Authentication_Dir = nullptr;
     ck_tmp_dir_name = other;
     assert(open_channel(&c) == &c && c.logfile);
     check_in_dir(&c, other);
     ck_check_created(c.logfile);
 
     /* ... and from $TMPDIR or the system default when that finds none. */
-    ck_tmp_dir_name = NULL;
+    ck_tmp_dir_name = nullptr;
     assert(setenv("TMPDIR", other, 1) == 0);
     assert(open_channel(&d) == &d && d.logfile);
     check_in_dir(&d, other);
@@ -282,18 +282,18 @@ int main(int argc, char **argv)
     ck_mk_fail = 1;
     assert(open_channel(&e) == SPC_ERROR);
     assert(last_error == SPC_Cannot_Open_Log);
-    assert(e.logfile == NULL);
+    assert(e.logfile == nullptr);
     assert(ck_count(dir) + ck_count(dir2) + ck_count(other) == before);
     SPCD_Authentication_Dir = dir;
     assert(open_channel(&e) == SPC_ERROR);
-    assert(e.logfile == NULL);
+    assert(e.logfile == nullptr);
     ck_mk_fail = 0;
 
     /* A list that cannot grow gives the new file up again. */
     ck_realloc_fail = 1;
     assert(open_channel(&f) == SPC_ERROR);
     assert(last_error == SPC_Out_Of_Memory);
-    assert(f.logfile == NULL);
+    assert(f.logfile == nullptr);
     assert(ck_count(dir) + ck_count(dir2) + ck_count(other) == before);
     ck_realloc_fail = 0;
 

@@ -331,7 +331,7 @@ static String btn3_menu_translations =
 static String btn2_menu_translations =
     "<Btn2Down>:                BrowserPopupMenu() ";
 
-static XtTranslations browser_transtbl = NULL;
+static XtTranslations browser_transtbl = nullptr;
 
 /* 
  * Translations for top level view of browser
@@ -344,7 +344,7 @@ static String proj_base_translations =
 static String proj_btn2_adjust_translations =
     "<Btn2Down>,<Btn2Up>:       BrowserProjToggleSelect() \n"; /* will be appended-to */
 
-static XtTranslations browser_proj_transtbl = NULL;
+static XtTranslations browser_proj_transtbl = nullptr;
 
 
 static char	*browser_mainwindow = "mainwindow";
@@ -353,7 +353,7 @@ static char		*sm_font_name = "-*-courier-bold-r-normal--12-120-75-75-m-70-iso885
 
 static XtTranslations	orig_draw_area_trans;
 static Bool		orig_trans_set = False;
-static XRectangle	*rband_rect = NULL;
+static XRectangle	*rband_rect = nullptr;
 
 static Boolean		mselect_adjust = False;
 
@@ -378,14 +378,14 @@ browser_proj_select(
     Cardinal *num_params
 )
 {
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
     Vwr		proj_b;
     Vwr		mod_b;
     VNode	proj_node;
     VNode	mod_node;
     AB_OBJ	*obj;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -448,14 +448,14 @@ browser_proj_toggle_select(
     Cardinal *num_params
 )
 {
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
     Vwr		proj_b;
     Vwr		mod_b;
     VNode	proj_node;
     VNode	mod_node;
     AB_OBJ	*obj;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -536,11 +536,11 @@ browser_proj_invoke_props(
 )
 {
     AB_OBJ	*obj;
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
     Vwr		b;
     VNode	selected_node;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -576,11 +576,11 @@ browser_proj_popup_menu(
 )
 {
     AB_OBJ	*obj;
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
     Vwr		b;
     VNode	selected_node;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -656,9 +656,9 @@ browser_rband(
     XtPointer	client_data
 )
 {
-    ABBrowser	ab = NULL;
-    Vwr		v = NULL;
-    VNode	*selected_nodes = NULL;
+    ABBrowser	ab = nullptr;
+    Vwr		v = nullptr;
+    VNode	*selected_nodes = nullptr;
     VMethods	m;
     ABSelectedRec	old_sel, 
 			new_sel;
@@ -666,7 +666,7 @@ browser_rband(
     int		num_selected = 0,
 		i;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -831,7 +831,7 @@ browser_rband(
     /*
      * Unset rband_rect
      */
-    rband_rect = NULL;
+    rband_rect = nullptr;
 
     /*
      * Mark new objects as selected
@@ -907,13 +907,13 @@ browser_select(
     Cardinal *num_params
 )
 {
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
     Vwr		b;
     VNode	selected_node;
     AB_OBJ	*obj;
     BrowserUiObjects	*ui;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -967,7 +967,7 @@ browser_select(
 
                 XtVaGetValues(objxm_get_widget(obj), 
     	            XtNnumChildren,    &num_children,
-    	            NULL);
+    	            nullptr);
 
 	        util_dprintf(1, 
 			"Widget %s has %d children\n", 
@@ -1002,11 +1002,11 @@ browser_toggle_select(
 )
 {
     AB_OBJ	*obj;
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
     Vwr		b;
     VNode	selected_node;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -1066,12 +1066,12 @@ browser_invoke_props(
 )
 {
     AB_OBJ	*obj;
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
     Vwr		b;
     VNode	selected_node;
 
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -1107,12 +1107,12 @@ browser_popup_menu(
 )
 {
     AB_OBJ	*obj;
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
     Vwr		b;
     VNode	selected_node;
     ABSelectedRec sel;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -1155,11 +1155,11 @@ enable_proj_actions(
 {
     if (!orig_trans_set)
     {
-	XtVaGetValues(widget, XtNtranslations, &orig_draw_area_trans, NULL);
+	XtVaGetValues(widget, XtNtranslations, &orig_draw_area_trans, nullptr);
 	orig_trans_set = True;
     }
 
-    if (browser_proj_transtbl == NULL)
+    if (browser_proj_transtbl == nullptr)
     {
         int        len;
         String     translations, menu_translations;
@@ -1178,7 +1178,7 @@ enable_proj_actions(
             len += strlen(proj_btn2_adjust_translations);
 
         translations = (String)util_malloc(len*sizeof(char));
-        if (translations == NULL)
+        if (translations == nullptr)
             return; /* yikes */
  
         strcpy(translations, proj_base_translations);
@@ -1194,7 +1194,7 @@ enable_proj_actions(
     /* enable build mode behavior */
     XtVaSetValues(widget, 
 		XtNtranslations, browser_proj_transtbl,
-        	NULL);
+        	nullptr);
 }
 
 /*
@@ -1207,11 +1207,11 @@ enable_actions(
 {
     if (!orig_trans_set)
     {
-	XtVaGetValues(widget, XtNtranslations, &orig_draw_area_trans, NULL);
+	XtVaGetValues(widget, XtNtranslations, &orig_draw_area_trans, nullptr);
 	orig_trans_set = True;
     }
 
-    if (browser_transtbl == NULL)
+    if (browser_transtbl == nullptr)
     {
         int        len;
         String     translations, menu_translations;
@@ -1229,7 +1229,7 @@ enable_actions(
             len += strlen(btn2_adjust_translations);
 
         translations = (String)util_malloc(len*sizeof(char));
-	if (translations == NULL)
+	if (translations == nullptr)
 	    return; /* yikes */
 
         strcpy(translations, base_translations);
@@ -1245,7 +1245,7 @@ enable_actions(
     /* enable build mode behavior */
     XtVaSetValues(widget, 
 		XtNtranslations, browser_transtbl,
-        	NULL);
+        	nullptr);
 }
 
 /*
@@ -1258,14 +1258,14 @@ disable_proj_actions(
 {
     if (!orig_trans_set)
     {
-	XtVaGetValues(widget, XtNtranslations, &orig_draw_area_trans, NULL);
+	XtVaGetValues(widget, XtNtranslations, &orig_draw_area_trans, nullptr);
 	orig_trans_set = True;
     }
 
     /* enable build mode behavior */
     XtVaSetValues(widget, 
 		XtNtranslations, orig_draw_area_trans,
-        	NULL);
+        	nullptr);
 }
 
 /*
@@ -1278,14 +1278,14 @@ disable_actions(
 {
     if (!orig_trans_set)
     {
-	XtVaGetValues(widget, XtNtranslations, &orig_draw_area_trans, NULL);
+	XtVaGetValues(widget, XtNtranslations, &orig_draw_area_trans, nullptr);
 	orig_trans_set = True;
     }
 
     /* enable build mode behavior */
     XtVaSetValues(widget, 
 		XtNtranslations, orig_draw_area_trans,
-        	NULL);
+        	nullptr);
 }
 
 /*
@@ -1329,47 +1329,47 @@ setup_callbacks(
     enable_actions(instance->detailed_drawarea);
 
     XtVaSetValues(instance->toplevel_drawarea, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->detailed_drawarea, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->menubar_items.View_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Horizontal_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Hide_Object_Glyph_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Hide_Object_Name_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Show_Object_Type_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Collapse_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Expand_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Expand_All_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
 
 #ifdef BRWS_WIDGET_CLASS
     XtVaSetValues(instance->obj_wclass, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
 #endif
 
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Find_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Tear_Off_Browser_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
 
     XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Module_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
 
     XtVaSetValues(instance->menubar_items.Edit_item, 
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
 
     XtVaSetValues(instance->menubar_View_item_view_pulldown,
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
 
     XtVaSetValues(instance->view_pulldown_Module_item_view_module_pulldown2,
-		XmNuserData, (XtPointer)browser, NULL);
+		XmNuserData, (XtPointer)browser, nullptr);
 
     /*
      * Set callbacks
@@ -1416,7 +1416,7 @@ brws_add_objects_to_browser
     
     if (obj)
     {
-	VNode	*selected_nodes = NULL;
+	VNode	*selected_nodes = nullptr;
 	int	num_selected = 0;
 
         m = ab->project->methods;
@@ -1486,7 +1486,7 @@ brws_add_objects
 {
     AB_OBJ	*project, 
 		*module;
-    ABBrowser	new_b, cur_b, b_list = NULL;
+    ABBrowser	new_b, cur_b, b_list = nullptr;
 
     if (!obj)
 	return;
@@ -1521,7 +1521,7 @@ brws_add_objects
         AB_OBJ		*cur_module;
 
         for (trav_open(&trav, project, AB_TRAV_MODULES);
-            (cur_module = trav_next(&trav)) != NULL; )  {
+            (cur_module = trav_next(&trav)) != nullptr; )  {
 
             for (cur_b = b_list; cur_b; cur_b = cur_b->next)
             {
@@ -1571,7 +1571,7 @@ brws_delete_objects
 )
 {
     AB_OBJ	*project;
-    ABBrowser	cur_b, b_list = NULL;
+    ABBrowser	cur_b, b_list = nullptr;
 
     if (!obj)
 	return;
@@ -1631,7 +1631,7 @@ brws_popup
     if (!shell)
 	return;
 
-    XtVaGetValues(shell, XmNchildren, &children, NULL);
+    XtVaGetValues(shell, XmNchildren, &children, nullptr);
     ab_show_window(children[0]);
 }
 
@@ -1666,7 +1666,7 @@ create_browser_ui_handles
     DtbBrwsMainwindowInfo	instance;
     BrowserUiObj	module_ui;
     BrowserUiObj	project_ui;
-    Widget		browser_main = NULL;
+    Widget		browser_main = nullptr;
     XmString		xmlabel;
     char		*tmp;
     char		title[100];
@@ -1676,7 +1676,7 @@ create_browser_ui_handles
     
     project_ui = aob_create_ui_obj();
     module_ui = aob_create_ui_obj();
-    project_ui->shell = module_ui->shell = NULL;
+    project_ui->shell = module_ui->shell = nullptr;
 
     /*
      * Create the browser widgets
@@ -1687,18 +1687,18 @@ create_browser_ui_handles
 
     (void)dtb_brws_mainwindow_initialize(instance, AB_toplevel);
     module_ui->shell = project_ui->shell = instance->mainwindow;
-    XtVaSetValues(project_ui->shell, XmNmappedWhenManaged, False, NULL);
+    XtVaSetValues(project_ui->shell, XmNmappedWhenManaged, False, nullptr);
 
     XtVaSetValues(instance->menubar,
         XmNmenuHelpWidget, instance->menubar_items.Help_item,
-        NULL);
+        nullptr);
 
     XtAddCallback(project_ui->shell, XtNdestroyCallback, 
 		browser_destroyCB, (XtPointer)b);
 
     browser_main = instance->mainwindow_mainwin;
 
-    XtVaSetValues(browser_main, XmNuserData, instance, NULL);
+    XtVaSetValues(browser_main, XmNuserData, instance, nullptr);
     project_ui->ip = module_ui->ip = (void *)instance;
 
     XtRealizeWidget(project_ui->shell);
@@ -1718,12 +1718,12 @@ create_browser_ui_handles
      */
     ab_register_window(browser_main, AB_WIN_WINDOW, 
 		WindowHidden, AB_toplevel, AB_WPOS_TILE_LEFT,
-		NULL, NULL);
+		nullptr, nullptr);
 
     /* reset the deleteResponse back to the default since a close just
      * means this browser window should be destroyed
      */
-    XtVaSetValues(project_ui->shell, XmNdeleteResponse, XmDESTROY, NULL);
+    XtVaSetValues(project_ui->shell, XmNdeleteResponse, XmDESTROY, nullptr);
 
     /*
      * End of browser widget creation
@@ -1749,7 +1749,7 @@ destroy_browser_ui_handles(
 )
 {
     BrowserUiObjects	*ui;
-    DtbBrwsMainwindowInfo	instance = NULL;
+    DtbBrwsMainwindowInfo	instance = nullptr;
 
     if (!b)
 	return;
@@ -1776,7 +1776,7 @@ destroy_browser_ui_handles(
 	     * this will return right away
 	     */
             XtDestroyWidget(ui->shell);
-	    ui->shell = NULL;
+	    ui->shell = nullptr;
 	}
 
         aob_destroy_ui_obj(b->project);
@@ -1800,7 +1800,7 @@ destroy_browser_ui_handles(
 	if (ui->shell)
 	{
             XtDestroyWidget(ui->shell);
-	    ui->shell = NULL;
+	    ui->shell = nullptr;
 	}
 
         aob_destroy_ui_obj(b->module);
@@ -1840,7 +1840,7 @@ setup_vwr_graphics(
     {
 	Font	font = 0;
 
-        XtVaGetValues(draw_area, XtNfont, &font, NULL);
+        XtVaGetValues(draw_area, XtNfont, &font, nullptr);
         ui_handle->bg_font = (XFontStruct *)XQueryFont(dpy, font);
     }
 
@@ -1850,7 +1850,7 @@ setup_vwr_graphics(
 	XtVaGetValues(draw_area, 
 		XtNbackground, &ui_handle->bg_color,
 		XtNforeground, &ui_handle->fg_color,
-		NULL);
+		nullptr);
 
 	gcvalues.graphics_exposures = False;
 	gcvalues.background = ui_handle->bg_color;
@@ -1971,7 +1971,7 @@ reallocate_drawarea
     XtVaGetValues(draw_area,
         XtNwidth,       &(w_rect.width),
         XtNheight,      &(w_rect.height), 
-        NULL);
+        nullptr);
 	
     if (width != w_rect.width)
     {
@@ -2081,7 +2081,7 @@ browser_show_view_elements(
         xmlabel = XmStringCreateLocalized(unset_str);
     }
 
-    XtVaSetValues(widget, XmNlabelString, xmlabel, NULL);
+    XtVaSetValues(widget, XmNlabelString, xmlabel, nullptr);
 
     XmStringFree(xmlabel);
 
@@ -2177,7 +2177,7 @@ create_browser_struct(void)
      */
     b->project = vwr_create(brwsP_proj_methods);
     b->module = vwr_create(brwsP_mod_methods);
-    b->previous = b->next = NULL;
+    b->previous = b->next = nullptr;
 
     return b;
 }
@@ -2202,7 +2202,7 @@ destroy_browser_struct(
      */
     m = b->module->methods;
     top = b->module->tree;
-    root = top ? (ABObj)top->obj_data : NULL;
+    root = top ? (ABObj)top->obj_data : nullptr;
     (*m->remove_tree)(b->module, root);
     vwr_destroy(b->module);
 
@@ -2213,7 +2213,7 @@ destroy_browser_struct(
      */
     m = b->project->methods;
     top = b->project->tree;
-    root = top ? (ABObj)top->obj_data : NULL;
+    root = top ? (ABObj)top->obj_data : nullptr;
     (*m->remove_tree)(b->project, root);
     vwr_destroy(b->project);
 
@@ -2299,14 +2299,14 @@ BrowserUiObj aob_create_ui_obj(void)
 
     ui = (BrowserUiObj)malloc(sizeof(BrowserUiObjects));
 
-    ui->ip = NULL;
-    ui->shell = NULL;
-    ui->find_box = NULL;
-    ui->normal_gc = NULL;
-    ui->select_gc = NULL;
-    ui->line_gc = NULL;
-    ui->sm_font = NULL;
-    ui->bg_font = NULL;
+    ui->ip = nullptr;
+    ui->shell = nullptr;
+    ui->find_box = nullptr;
+    ui->normal_gc = nullptr;
+    ui->select_gc = nullptr;
+    ui->line_gc = nullptr;
+    ui->sm_font = nullptr;
+    ui->bg_font = nullptr;
     ui->fg_color = 0;
     ui->bg_color = 0;
     
@@ -2348,7 +2348,7 @@ aob_destroy_ui_obj
 
     free(v->ui_handle);
 
-    v->ui_handle = (void *)NULL;
+    v->ui_handle = (void *)nullptr;
 }
 
 /*
@@ -2382,7 +2382,7 @@ browser_destroyCB
 {
     ABBrowser		b = (ABBrowser)client_data,
 			prev, next;
-    ABObj		project = NULL;
+    ABObj		project = nullptr;
 
     if (!b || !b->module)
 	return;
@@ -2454,7 +2454,7 @@ aob_proj_or_module
     if (w == draw_area)
 	return (b->module);
     
-    return (NULL);
+    return (nullptr);
 }
 
 int
@@ -2539,7 +2539,7 @@ node_selected
     int			i, num_child;
 	
     if (!tree)
-	return (NULL);
+	return (nullptr);
 
     m = BNODE_METHODS(tree);
 
@@ -2560,7 +2560,7 @@ node_selected
     if (BRWS_NODE_STATE_IS_SET(tree, BRWS_NODE_SELECTED))
         return tree;
     else
-        return NULL;
+        return nullptr;
 }
 
 /*
@@ -2574,7 +2574,7 @@ aob_set_mode
     AB_OBJ	*project
 )
 {
-    ABBrowser	new_b, cur_b, b_list = NULL;
+    ABBrowser	new_b, cur_b, b_list = nullptr;
 
     if (!project)
 	return;
@@ -2630,12 +2630,12 @@ brws_switch_module(
     XtPointer		call_data
 )
 {
-    ABBrowser		ab = NULL;
+    ABBrowser		ab = nullptr;
     ABObj		module = (ABObj)client_data;
     ViewerMethods	*m;
     ABSelectedRec	sel;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!ab)
 	return;
@@ -2644,14 +2644,14 @@ brws_switch_module(
     {
         m = ab->project->methods;
         (*m->remove_tree)(ab->project, ab->project->tree->obj_data);
-        ab->project->tree = ab->project->current_tree = NULL;
+        ab->project->tree = ab->project->current_tree = nullptr;
     }
 
     if (ab->module->tree && ab->module->current_tree)
     {
         m = ab->module->methods;
         (*m->remove_tree)(ab->module, ab->module->tree->obj_data);
-        ab->module->tree = ab->module->current_tree = NULL;
+        ab->module->tree = ab->module->current_tree = nullptr;
     }
 
     if (!module && ab->project)
@@ -2690,12 +2690,12 @@ brws_edit_cascadeCB(
 {
     ABObj		project = proj_get_project();
     ABSelectedRec	sel;
-    ABBrowser		ab = NULL;
+    ABBrowser		ab = nullptr;
     DtbBrwsMainwindowInfo	instance;
     BrowserUiObj	top_ui;
 
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!project || !ab)
 	return;
@@ -2707,29 +2707,29 @@ brws_edit_cascadeCB(
 
     if (sel.count == 0)
     {
-	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Cut_item, XmNsensitive, False, NULL);
-	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Copy_item, XmNsensitive, False, NULL);
-	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Paste_item, XmNsensitive, False, NULL);
-	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Delete_item, XmNsensitive, False, NULL);
+	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Cut_item, XmNsensitive, False, nullptr);
+	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Copy_item, XmNsensitive, False, nullptr);
+	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Paste_item, XmNsensitive, False, nullptr);
+	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Delete_item, XmNsensitive, False, nullptr);
     }
     else
     {
-	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Cut_item, XmNsensitive, True, NULL);
-	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Copy_item, XmNsensitive, True, NULL);
-	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Delete_item, XmNsensitive, True, NULL);
+	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Cut_item, XmNsensitive, True, nullptr);
+	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Copy_item, XmNsensitive, True, nullptr);
+	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Delete_item, XmNsensitive, True, nullptr);
 
 	if (abobj_clipboard_is_empty())
-	    XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Paste_item, XmNsensitive, False, NULL);
+	    XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Paste_item, XmNsensitive, False, nullptr);
 	else
-	    XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Paste_item, XmNsensitive, True, NULL);
+	    XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Paste_item, XmNsensitive, True, nullptr);
 
         XtFree((char *)sel.list);
     }
 
     if (abobj_undo_active())
-	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Undo_item, XmNsensitive, True, NULL);
+	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Undo_item, XmNsensitive, True, nullptr);
     else
-	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Undo_item, XmNsensitive, False, NULL);
+	XtVaSetValues(instance->menubar_Edit_item_edit_pulldown_items.Undo_item, XmNsensitive, False, nullptr);
 
 }
 
@@ -2739,7 +2739,7 @@ get_main_window(
     Widget	widget
 )
 {
-    Widget	browser_main = NULL,
+    Widget	browser_main = nullptr,
 		cur_widget = widget;
 
     while (cur_widget && !browser_main)
@@ -2760,7 +2760,7 @@ brws_view_cascadeCB(
     XtPointer   call_data 
 )    
 {
-    ABBrowser		ab = NULL;
+    ABBrowser		ab = nullptr;
     BrowserUiObj	top_ui;
     DtbBrwsMainwindowInfo	instance;
     ABObj		project = proj_get_project();
@@ -2768,7 +2768,7 @@ brws_view_cascadeCB(
     Widget		browse, browse_pulldown;
 
     browse = (Widget) client_data;
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     if (!browse || !ab)
 	return;
@@ -2776,8 +2776,8 @@ brws_view_cascadeCB(
     /*
      * Build view -> module menu
      */
-    XtVaSetValues(browse, XmNsensitive, True, NULL);
-    XtVaGetValues(browse, XmNsubMenuId, &browse_pulldown, NULL);
+    XtVaSetValues(browse, XmNsensitive, True, nullptr);
+    XtVaGetValues(browse, XmNsubMenuId, &browse_pulldown, nullptr);
 
     brws_build_module_menu(browse_pulldown, brws_switch_module);
 
@@ -2793,16 +2793,16 @@ brws_view_cascadeCB(
     if (sel.count == 0)
     {
 	XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Expand_item, 
-		XmNsensitive, False, NULL);
+		XmNsensitive, False, nullptr);
 	XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Collapse_item, 
-		XmNsensitive, False, NULL);
+		XmNsensitive, False, nullptr);
     }
     else
     {
 	XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Expand_item, 
-		XmNsensitive, True, NULL);
+		XmNsensitive, True, nullptr);
 	XtVaSetValues(instance->menubar_View_item_view_pulldown_items.Collapse_item, 
-		XmNsensitive, True, NULL);
+		XmNsensitive, True, nullptr);
 
         XtFree((char *)sel.list);
     }
@@ -2821,23 +2821,23 @@ brws_build_module_menu(
 ) 
 { 
     ABObj		project = proj_get_project();
-    Widget		menu = NULL, mpb = NULL;
-    WidgetList		children = NULL;
+    Widget		menu = nullptr, mpb = nullptr;
+    WidgetList		children = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		module = NULL;
-    ABBrowser		ab = NULL;
-    STRING		name = NULL;
-    XmString		label = NULL;
+    ABObj		module = nullptr;
+    ABBrowser		ab = nullptr;
+    STRING		name = nullptr;
+    XmString		label = nullptr;
     Cardinal		numChildren = 0;
     int			i = 0;
     Boolean		shown_modules_exist = False;
 
-    XtVaGetValues(pulldown, XmNuserData, &ab, NULL);
+    XtVaGetValues(pulldown, XmNuserData, &ab, nullptr);
 
     XtVaGetValues(pulldown, 
 			XmNnumChildren, &numChildren, 
 			XmNchildren, &children,
-			NULL);
+			nullptr);
     for (i=0; i < numChildren; i++)
     {
 	XtDestroyWidget(children[i]);
@@ -2848,7 +2848,7 @@ brws_build_module_menu(
      * of the module nodes.
      */
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL; )
+	(module = trav_next(&trav)) != nullptr; )
     {
 	/* Can only browse modules that are shown
 	 * and defined. Undefined modules can occur 
@@ -2875,7 +2875,7 @@ brws_build_module_menu(
 		pulldown,
 		XmNlabelString,	label,
 		XmNuserData, ab,
-		NULL);
+		nullptr);
 	    XtAddCallback(mpb, XmNactivateCallback, callback,(XtPointer)module);
 	    XmStringFree(label);
 	
@@ -2893,7 +2893,7 @@ brws_build_module_menu(
 		pulldown,
 		XmNlabelString,	label,
 		XmNuserData, ab,
-		NULL);
+		nullptr);
 	XmStringFree(label);
     }
 } 
@@ -2979,7 +2979,7 @@ brwsP_obj_renameOCB(
      * which means that this is a new object. We let the
      * update callback handle that.
      */
-    if (info->old_name != NULL)
+    if (info->old_name != nullptr)
         brws_update_node(obj);
 
     return (0);
@@ -3068,9 +3068,9 @@ brwsP_obj_updateOCB(
 )
 {
     ABObj	obj = info->obj,
-		project = NULL,
-		module = NULL;
-    ABBrowser   b_list = NULL,
+		project = nullptr,
+		module = nullptr;
+    ABBrowser   b_list = nullptr,
 		cur_b;
 
     if (!obj)

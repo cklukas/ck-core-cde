@@ -141,7 +141,7 @@ ttyMode _DtTermPrimTtyModeList[] =
     { "flush", 5, 0, '\0' }, /* ltchars.t_flushc         */
     { "weras", 5, 0, '\0' }, /* ltchars.t_werasc         */
     { "lnext", 5, 0, '\0' }, /* ltchars.t_lnextc         */
-    {    NULL, 0, 0, '\0' }, /* NULL terminate the array */
+    {    nullptr, 0, 0, '\0' }, /* NULL terminate the array */
 };
 
 static int

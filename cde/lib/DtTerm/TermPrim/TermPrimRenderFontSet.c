@@ -42,8 +42,8 @@ MeasureFontSetCellWidth(
         return 0;
 
     int num_fonts = 0;
-    XFontStruct **fonts = NULL;
-    char **fontNames = NULL;
+    XFontStruct **fonts = nullptr;
+    char **fontNames = nullptr;
     int width = 0;
 
     num_fonts = XFontsOfFontSet(fontSet, &fonts, &fontNames);
@@ -117,9 +117,9 @@ FontSetRenderFunction(
 
     escapement = (tpd->mbCurMax == 1) ?
         XmbTextExtents(termFontSet->fontSet, (char *) string, len,
-		       NULL, &extents) :
+		       nullptr, &extents) :
         XwcTextExtents(termFontSet->fontSet, (wchar_t*) string, len,
-		       NULL, &extents);
+		       nullptr, &extents);
 
     /* Text height may be smaller than cellHeight (happens when using font sets).
        In this case we need to fill background manually and then use X*DrawString

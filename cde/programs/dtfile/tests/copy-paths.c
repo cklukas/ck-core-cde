@@ -10,8 +10,8 @@
 static int fault, attempts;
 static struct dirent *ReadDirectory(DIR *dir)
 {
-    if (fault==1 && attempts++==0) { errno=EINTR; return NULL; }
-    if (fault==2) { errno=EIO; return NULL; }
+    if (fault==1 && attempts++==0) { errno=EINTR; return nullptr; }
+    if (fault==2) { errno=EIO; return nullptr; }
     return readdir(dir);
 }
 static int CloseDirectory(DIR *dir)
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     assert(access(leaf,F_OK)==0);
     fsMove("copy","skipped-tree",0,&result); assert(result==0);
     assert(access("copy/leaf",F_OK)==0);
-    fault=0; errorCallback=NULL;
+    fault=0; errorCallback=nullptr;
     assert(unlink("failed-move")==0);
     fsErase("skipped-tree",&result,1); assert(result==0);
 

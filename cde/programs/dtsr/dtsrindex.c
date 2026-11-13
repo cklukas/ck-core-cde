@@ -213,8 +213,8 @@ static unsigned long
 extern volatile int shutdown_now;
 static DtSrINT32
 		or_recslots;
-char            *sprintbuffer =		NULL;
-char            *temp =			NULL;
+char            *sprintbuffer =		nullptr;
+char            *temp =			nullptr;
 extern int	debugging_teskey;
 time_t          timestart =		0;
 time_t          totalstart =		0;
@@ -243,7 +243,7 @@ typedef struct _treen_ {
     DBALIST        *dba_list;
 }               TREENODE;
 
-static TREENODE *root_node =		NULL;
+static TREENODE *root_node =		nullptr;
 static TREENODE *top_of_stack;
 static TREENODE *stack;
 static TREENODE *pres;
@@ -263,7 +263,7 @@ static TREENODE *avail_node;
  */
 static char	*displayable (char *passed_string)
 {
-    static char		*buf =		NULL;
+    static char		*buf =		nullptr;
     static size_t	buflen =	0;
     size_t		passed_len =	strlen (passed_string);
     char		*targ, *src;
@@ -271,7 +271,7 @@ static char	*displayable (char *passed_string)
 	if (buf)
 	    free (buf);
 	buflen = passed_len;
-	buf = austext_malloc (buflen + 4, PROGNAME"158", NULL);
+	buf = austext_malloc (buflen + 4, PROGNAME"158", nullptr);
     }
     targ = buf;
     for (src = passed_string;  *src != 0;  src++) {
@@ -299,7 +299,7 @@ static void     print_exit_code (int exit_code)
     }
     /* Put total seconds into totalstart */
     if (totalstart > 0)
-	totalstart = time (NULL) - totalstart;
+	totalstart = time (nullptr) - totalstart;
     printf (CATGETS(dtsearch_catd, MS_cborodin, 206,
 	"%s: Exit Code = %d, Total elapsed time %ldm %lds.\n"),
 	aa_argv0, exit_code, totalstart / 60L, totalstart % 60L);
@@ -363,7 +363,7 @@ void            write_to_file (TREENODE * output_node)
 
     num_addrs_for_word = 0;	/* DtSrINT32 */
     print_dba = output_node->dba_list;
-    while (print_dba != NULL) {
+    while (print_dba != nullptr) {
 
 	mydba = print_dba->dba;
 	if (debugging & DEBUG_t)
@@ -413,12 +413,12 @@ void            descend_tree (void)
     int             not_done = TRUE;
 
     while (not_done) {
-	if ((pres->llink == NULL) && (pres->rlink == NULL)) {
+	if ((pres->llink == nullptr) && (pres->rlink == nullptr)) {
 	    write_to_file (pres);
 	    avail_node = pres;
 	    return;
 	}
-	if (pres->llink != NULL) {
+	if (pres->llink != nullptr) {
 	    next = pres->llink;
 	    pres->llink = prev;
 	    prev = pres;
@@ -453,7 +453,7 @@ void            traverse_tree (void)
     int             descend = TRUE;
 
     /* Dheck for the empty tree */
-    if (root_node == NULL) {
+    if (root_node == nullptr) {
 	printf (CATGETS(dtsearch_catd, MS_cborodin, 288,
 	    "%s Abort. There are no words in the input file %s.\n"),
 	    PROGNAME"288", fname_input);
@@ -462,8 +462,8 @@ void            traverse_tree (void)
     /* Initialize the variables */
     pres = root_node;
     prev = pres;
-    top_of_stack = NULL;
-    stack = NULL;
+    top_of_stack = nullptr;
+    stack = nullptr;
 
     while (not_done) {
 	if (descend) {
@@ -472,7 +472,7 @@ void            traverse_tree (void)
 	if (pres == root_node) {
 	    return;
 	}
-	if (prev->rlink == NULL) {
+	if (prev->rlink == nullptr) {
 	    write_to_file (prev);
 	    next = prev->llink;
 	    prev->llink = pres;
@@ -481,7 +481,7 @@ void            traverse_tree (void)
 	    descend = FALSE;
 	}
 	else {
-	    if (prev->llink == NULL) {
+	    if (prev->llink == nullptr) {
 		next = prev->rlink;
 		prev->rlink = pres;
 		pres = prev;
@@ -493,8 +493,8 @@ void            traverse_tree (void)
 		    next = stack;
 		    top_of_stack = stack->rlink;
 		    stack = stack->llink;
-		    next->llink = NULL;
-		    next->rlink = NULL;
+		    next->llink = nullptr;
+		    next->rlink = nullptr;
 		    next = prev->llink;
 		    prev->llink = prev->rlink;
 		    prev->rlink = pres;
@@ -818,7 +818,7 @@ static void	put_addrs_2_dtbs_addr_file (
 	del_rec.offset = got_word.or_hwoffset;
 	free_slot = find_free_space (got_word.or_hwaddrs, &fl_hdr);
 	add_free_space (&del_rec, &fl_hdr);
-	if (free_slot == NULL) {
+	if (free_slot == nullptr) {
 	    fseek (dtbs_addr_fp, 0L, SEEK_END);
 	    got_word.or_hwoffset = ftell (dtbs_addr_fp);
 	    got_word.or_hwfree = 0;
@@ -1085,7 +1085,7 @@ void            write_new_word_2_dtbs (void)
 	    got_word.or_hwordkey, (long)num_addrs_for_word);
 
     free_slot = find_free_space (num_addrs_for_word, &fl_hdr);
-    if (free_slot == NULL) {
+    if (free_slot == nullptr) {
 	/* append addrs to end of d99 file */
 	ret_fseek = fseek (dtbs_addr_fp, 0L, SEEK_END);
 	got_word.or_hwoffset = ftell (dtbs_addr_fp);
@@ -1187,7 +1187,7 @@ void            fill_data1 (char *node_word)
 	    seconds_left = (unsigned long)
 		(((float) num_of_diff_words /
 		    (float) count_word_ii - 1.) *
-		(float) (time (NULL) - timestart));
+		(float) (time (nullptr) - timestart));
 	    printf (CATGETS(dtsearch_catd, MS_cborodin, 849,
 		"\n%s: Word #%ld, %.0f%% done.  Est %lum %02lus "
 		"to completion.\n"),
@@ -1248,7 +1248,7 @@ static void	load_into_bintree (
     static TREENODE	**this_link;
     static TREENODE	*newnode;
     static DBALIST	*newdba;
-    static char		*tokbuf =	NULL;
+    static char		*tokbuf =	nullptr;
 
     if (*parser_token == 0) {
 	if (debugging & DEBUG_I)
@@ -1261,10 +1261,10 @@ static void	load_into_bintree (
      * to distinguish them from words.
      * Also increment total dba word count.
      */
-    if (tokbuf == NULL) {
+    if (tokbuf == nullptr) {
 	or_maxwordsz = dblk.dbrec.or_maxwordsz;
 	tokbuf = austext_malloc ((size_t) or_maxwordsz + 4,
-	    PROGNAME"1152", NULL);
+	    PROGNAME"1152", nullptr);
     }
     if (token_is_stem) {
 	tokbuf[0] = STEM_CH;
@@ -1280,7 +1280,7 @@ static void	load_into_bintree (
     /* TREE TRAVERSAL.  Search binary tree to find either
      * insertion point or identical preexisting token.
      */
-    for (this_link = &root_node; *this_link != NULL; ) {
+    for (this_link = &root_node; *this_link != nullptr; ) {
 	i = strcmp (tokbuf, (*this_link)->word);
 
 	/* If identical word/stem token already exists... */
@@ -1297,7 +1297,7 @@ static void	load_into_bintree (
 	     * insert dba at start of token's dba list.
 	     */
 	    else {
-		if ((newdba = malloc (sizeof(DBALIST))) == NULL) {
+		if ((newdba = malloc (sizeof(DBALIST))) == nullptr) {
 		    printf (CATGETS(dtsearch_catd, MS_cborodin, 374,
 			msg_374), PROGNAME"1150");
 		    DtSearchExit (26);
@@ -1333,17 +1333,17 @@ static void	load_into_bintree (
      * indicated by link ptr.
      */
     newnode = austext_malloc (sizeof(TREENODE) + strlen(tokbuf) + 4,
-	PROGNAME"1234", NULL);
-    newnode->llink =	NULL;
-    newnode->rlink =	NULL;
+	PROGNAME"1234", nullptr);
+    newnode->llink =	nullptr;
+    newnode->rlink =	nullptr;
     newnode->word = (char *) (newnode + 1);	/* use mem at end of node */
     strcpy (newnode->word, tokbuf);
 
-    newdba = austext_malloc (sizeof(DBALIST), PROGNAME"1235", NULL);
+    newdba = austext_malloc (sizeof(DBALIST), PROGNAME"1235", nullptr);
     newnode->dba_list =	newdba;
     newdba->dba =	dba;
     newdba->w_c =	1;
-    newdba->next_dba =	NULL;
+    newdba->next_dba =	nullptr;
 
     *this_link =	newnode;
     num_of_diff_words++;
@@ -1409,12 +1409,12 @@ main (int argc, char **argv)
     user_args_processor (argc, argv);
 
     /* Finish init now that we know final values */
-    inbuf = austext_malloc (inbufsz + 16, PROGNAME"1349", NULL);
-    temp = austext_malloc (inbufsz + 16, PROGNAME"1285", NULL);
+    inbuf = austext_malloc (inbufsz + 16, PROGNAME"1349", nullptr);
+    temp = austext_malloc (inbufsz + 16, PROGNAME"1285", nullptr);
     sprintbuffer = austext_malloc (inbufsz + _POSIX_PATH_MAX + 16,
-	PROGNAME"1286", NULL);
+	PROGNAME"1286", nullptr);
     record_addr_word = austext_malloc ((sizeof(DB_ADDR) * batch_size) + 16,
-	PROGNAME "1133", NULL);
+	PROGNAME "1133", nullptr);
 
     /* Save dicname and path in dblk.  Save full name of d99 file. */
     strcpy (dblk.name, dicname);
@@ -1424,14 +1424,14 @@ main (int argc, char **argv)
     strcat (dtbs_addr_file, EXT_DTBS);
 
     /* Open the database */
-    if (!austext_dopen (dicname, dicpath, NULL, cache_size, &dbrec)) {
+    if (!austext_dopen (dicname, dicpath, nullptr, cache_size, &dbrec)) {
 	fprintf (aa_stderr, "%s\n", DtSearchGetMessages());
 	DtSearchExit (3);
     }
     memcpy (&dblk.dbrec, &dbrec, sizeof(DBREC));
 
     /* Load database's parser, stemmer, and linguistic files into dblk. */
-    if (!load_language (&dblk, NULL)) {
+    if (!load_language (&dblk, nullptr)) {
 	puts (DtSearchGetMessages());
 	printf (CATGETS(dtsearch_catd, MS_cborodin, 1097,
 	    "%s Aborting due to errors in loading language files.\n"),
@@ -1462,27 +1462,27 @@ main (int argc, char **argv)
      * dbas_word_count = summing bkts for word count statistics.
      */
     dbas_bits_batch = (char *) austext_malloc ((size_t)bit_vector_size + 48,
-	PROGNAME "1150", NULL);
+	PROGNAME "1150", nullptr);
     word_addrs_ii = (DB_ADDR *) austext_malloc (
 	sizeof (DB_ADDR) * (or_reccount + 1) + 48,
-	PROGNAME "1152", NULL);
+	PROGNAME "1152", nullptr);
     mallocsz = sizeof(DtSrINT32) * (or_maxdba + 1) + 48;
     dbas_word_count = (DtSrINT32 *) austext_malloc (mallocsz,
-	PROGNAME "1154", NULL);
+	PROGNAME "1154", nullptr);
     memset (dbas_bits_batch, 0, (size_t)bit_vector_size + 48);
     memset (dbas_word_count, 0, mallocsz);
 
-    root_node = NULL;
+    root_node = nullptr;
 
    /* Open the d99 file that contains database addresses.
     * If the file doesn't exist, it means the database
     * for keyword search is empty - open a new file.
     */
-    if ((dtbs_addr_fp = fopen (dtbs_addr_file, "r+b")) == NULL) {
+    if ((dtbs_addr_fp = fopen (dtbs_addr_file, "r+b")) == nullptr) {
 	dtbs_addr_fp = fopen (dtbs_addr_file, "w+b");
 	check_existing_addrs = FALSE;
 	new_dtbs_file = TRUE;
-	if (dtbs_addr_fp == NULL) {
+	if (dtbs_addr_fp == nullptr) {
 	    /* msg 1068 used multiple places */
 	    printf (CATGETS(dtsearch_catd, MS_cborodin, 1068,
 		"%s Can't open new inverted index file '%s': %s\n"),
@@ -1514,7 +1514,7 @@ main (int argc, char **argv)
 	aa_argv0,
 	(src) ? src : CATGETS(dtsearch_catd, MS_misc, 6, "<unknown>"),
 	fname_input);
-    if ((instream = fopen (fname_input, "rt")) == NULL) {
+    if ((instream = fopen (fname_input, "rt")) == nullptr) {
 BAD_INPUT_FILE:
 	printf (CATGETS(dtsearch_catd, MS_cborodin, 1083,
 	    "%s Can't read input file '%s': %s\n"),
@@ -1558,7 +1558,7 @@ BAD_INPUT_FILE:
 	 */
 
 	/*----- READ LINE #1, fzkey -----*/
-        if (fgets (inbuf, inbufsz, instream) == NULL)
+        if (fgets (inbuf, inbufsz, instream) == nullptr)
 	    break;
 	inbuf [inbufsz] = 0;	/* just to be sure */
 
@@ -1577,7 +1577,7 @@ BAD_INPUT_FILE:
 	record_count++;
 
 	/*----- READ LINE #2, abstract -----*/
-	if (fgets (inbuf, inbufsz, instream) == NULL) {
+	if (fgets (inbuf, inbufsz, instream) == nullptr) {
 INVALID_FZK_FORMAT:
 	    printf (CATGETS(dtsearch_catd, MS_cborodin, 1129,
 		"%s: %s Invalid .fzk file format.\n"),
@@ -1587,11 +1587,11 @@ INVALID_FZK_FORMAT:
 	inbuf[inbufsz] = 0;	/* just to be sure */
 
 	/*--- READ LINE #3, unique database key ---*/
-	if (fgets (inbuf, inbufsz, instream) == NULL)
+	if (fgets (inbuf, inbufsz, instream) == nullptr)
 	    goto INVALID_FZK_FORMAT;
 	inbuf[inbufsz] = 0;	/* just to be sure */
 
-	if ((cptr = strtok (inbuf, " \t\n")) == NULL)
+	if ((cptr = strtok (inbuf, " \t\n")) == nullptr)
 	    goto INVALID_FZK_FORMAT;
 
 	/* If necessary, discard long keys exactly like cravel */
@@ -1689,7 +1689,7 @@ INVALID_FZK_FORMAT:
 		seconds_left = (unsigned long)
 		    (((float) fstat_input.st_size /
 		    (float) bytes_in - 1.) *
-		    (float) (time (NULL) - timestart));
+		    (float) (time (nullptr) - timestart));
 		printf (CATGETS(dtsearch_catd, MS_cborodin, 1190,
 		    "\n%s: Rec #%lu, %.0f%% done.  "
 		    "Est %lum %02lus to end Pass 1.\n"),
@@ -1703,7 +1703,7 @@ INVALID_FZK_FORMAT:
 	}
 
 	/*----- READ LINE #4, date -----*/
-	if (fgets (inbuf, inbufsz, instream) == NULL)
+	if (fgets (inbuf, inbufsz, instream) == nullptr)
 	    goto INVALID_FZK_FORMAT;
 	inbuf[inbufsz] = 0;	/* just to be sure */
 
@@ -1725,7 +1725,7 @@ INVALID_FZK_FORMAT:
 		record_count, db_key);
 	for (	cptr = dblk.parser (&parg);
 		cptr;
-		cptr = dblk.parser (NULL)) {
+		cptr = dblk.parser (nullptr)) {
 
 	    if (debugging & DEBUG_P) {
 		printf ("%6ld %s %n", word_offset, cptr, &i);
@@ -1744,7 +1744,7 @@ INVALID_FZK_FORMAT:
 
     } /* end of PASS 1 Main read loop */
 
-    elapsed = time(NULL) - timestart;
+    elapsed = time(nullptr) - timestart;
     if (dotcount > 0) {
 	putchar ('\n');
 	dotcount = 0;
@@ -1798,7 +1798,7 @@ INVALID_FZK_FORMAT:
     d_close ();
     fclose (dtbs_addr_fp);
 
-    elapsed = time (NULL) - timestart;
+    elapsed = time (nullptr) - timestart;
     printf (CATGETS(dtsearch_catd, MS_cborodin, 1246,
 	"%s: Pass 2 completed in %lum %lus, updated %lu words.\n"),
 	aa_argv0, elapsed / 60L, elapsed % 60L, count_word_ii);

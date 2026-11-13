@@ -174,7 +174,7 @@ trav_uil_node(
      * No action on null node. Else dump and processing is based on the kind
      * of the current node.
      */
-    if (node_entry == NULL)
+    if (node_entry == nullptr)
 	return;
     printf("> ");
     print_uil_symbol(node_entry);
@@ -218,7 +218,7 @@ trav_uil_node(
 	list_node = (sym_list_entry_type *) node_entry;
 	for (list_entry = (sym_obj_entry_type *)
 		list_node->obj_header.az_next;
-		list_entry != NULL;
+		list_entry != nullptr;
 		list_entry = (sym_obj_entry_type *)
 		list_entry->obj_header.az_next)
 	    trav_uil_node((sym_entry_type *) list_entry);
@@ -368,12 +368,12 @@ print_uil_widget(
     sym_widget_entry_type	*az_widget_entry
 )
 {
-    char	*wid_name = NULL;
+    char	*wid_name = nullptr;
 
-    if (az_widget_entry->obj_header.az_name != NULL)
+    if (az_widget_entry->obj_header.az_name != nullptr)
         wid_name = (char *)&(az_widget_entry->obj_header.az_name->c_text);
  
-    if (wid_name == NULL)
+    if (wid_name == nullptr)
         wid_name = "<NoName>";
  
     /*
@@ -396,7 +396,7 @@ print_uil_widget(
 		  (unsigned long) az_widget_entry->az_arguments,
 		  (unsigned long) az_widget_entry->parent_list);
 
-    if (az_widget_entry->az_create_proc != NULL)
+    if (az_widget_entry->az_create_proc != nullptr)
     {
 	printf("  create proc: 0x%lx\n",
 		      (unsigned long) az_widget_entry->az_create_proc);
@@ -435,7 +435,7 @@ print_uil_argument(
      *      - argument must support enumeration set
      *      - value must be from set
      */
-    if (resource_value != NULL &&
+    if (resource_value != nullptr &&
 	resource_value->b_type == sym_k_integer_value &&
 	resource_value->b_enumeration_value_code != 0)
     {
@@ -488,7 +488,7 @@ print_uil_control(
      *  If the reference field is set, this is a reference to a control
      *  defined elsewhere.  Otherwise it is an inline definition.
      */
-    while (control_obj->obj_header.az_reference != NULL)
+    while (control_obj->obj_header.az_reference != nullptr)
 	control_obj =
 	    (sym_widget_entry_type *)control_obj->obj_header.az_reference;
 
@@ -1012,18 +1012,18 @@ print_uil_obj_header(
      get_tag_text(az_obj_entry->header.b_tag),
      (unsigned long) az_obj_entry);
 
-    if (az_obj_entry->obj_header.az_name != NULL)
+    if (az_obj_entry->obj_header.az_name != nullptr)
     {
 	printf("  name: 0x%lx", (unsigned long) az_obj_entry->obj_header.az_name);
     }
 
-    if (az_obj_entry->obj_header.az_reference != NULL)
+    if (az_obj_entry->obj_header.az_reference != nullptr)
     {
 	printf("  reference: 0x%lx",
 		      (unsigned long) az_obj_entry->obj_header.az_reference);
     }
 
-    if (az_obj_entry->obj_header.az_next != NULL)
+    if (az_obj_entry->obj_header.az_next != nullptr)
     {
 	printf("  next: 0x%lx", (unsigned long) az_obj_entry->obj_header.az_next);
     }

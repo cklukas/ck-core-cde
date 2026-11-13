@@ -59,13 +59,13 @@ alloc_list(Bool is_wide_char, int count, int nitems)
 	wchar_t **wstr_list;
 
 	wstr_list = (wchar_t **) Xmalloc(count * sizeof(wchar_t *));
-	if (wstr_list == NULL)
-	    return (XPointer *) NULL;
+	if (wstr_list == nullptr)
+	    return (XPointer *) nullptr;
 
 	*wstr_list = (wchar_t *) Xmalloc(nitems * sizeof(wchar_t));
-	if (*wstr_list == NULL) {
+	if (*wstr_list == nullptr) {
 	    Xfree(wstr_list);
-	    return (XPointer *) NULL;
+	    return (XPointer *) nullptr;
 	}
 
 	return (XPointer *) wstr_list;
@@ -73,13 +73,13 @@ alloc_list(Bool is_wide_char, int count, int nitems)
 	char **str_list;
 
 	str_list = (char **) Xmalloc(count * sizeof(char *));
-	if (str_list == NULL)
-	    return (XPointer *) NULL;
+	if (str_list == nullptr)
+	    return (XPointer *) nullptr;
 
 	*str_list = (char *) Xmalloc(nitems);
-	if (*str_list == NULL) {
+	if (*str_list == nullptr) {
 	    Xfree(str_list);
-	    return (XPointer *) NULL;
+	    return (XPointer *) nullptr;
 	}
 
 	return (XPointer *) str_list;
@@ -142,7 +142,7 @@ _XTextPropertyToTextList(
 	is_wide_char = True;
 
     if (nitems <= 0) {
-	*list_ret = NULL;
+	*list_ret = nullptr;
 	*count_ret = 0;
 	return Success;
     }
@@ -167,13 +167,13 @@ _XTextPropertyToTextList(
 	buf_len = text_prop->nitems * XLC_PUBLIC(lcd, mb_cur_max) + 1;
 	buf = (XPointer) Xmalloc(buf_len);
     }
-    if (buf == NULL)
+    if (buf == nullptr)
 	return XNoMemory;
     to = buf;
     to_left = buf_len;
 
     conv = _fallcOpenConverter(lcd, from_type, lcd, to_type);
-    if (conv == NULL) {
+    if (conv == nullptr) {
 	Xfree(buf);
 	return XConverterNotFound;
     }
@@ -189,7 +189,7 @@ _XTextPropertyToTextList(
 	    from_left = str_ptr - last_ptr;
 	    last_ptr = str_ptr;
 
-	    ret = _fallcConvert(conv, &from, &from_left, &to, &to_left, NULL, 0);
+	    ret = _fallcConvert(conv, &from, &from_left, &to, &to_left, nullptr, 0);
 
 	    if (ret < 0)
 		continue;

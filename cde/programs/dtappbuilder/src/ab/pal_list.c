@@ -153,10 +153,10 @@ PalItemInfo list_palitem_rec = {
 
     /* type             */  AB_TYPE_LIST,
     /* name             */  "List",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  list_initialize,
     /* is_a_test        */  obj_is_list,
     /* prop_initialize  */  list_prop_init,
@@ -202,15 +202,15 @@ list_initialize(
     items[1] = CATGETS(Dtb_project_catd, 6, 71, "itemB");
     for (i=0; i < XtNumber(items); i++)
     {
-        iobj = obj_create(AB_TYPE_ITEM, NULL);
+        iobj = obj_create(AB_TYPE_ITEM, nullptr);
 	obj_set_subtype(iobj, AB_ITEM_FOR_LIST);
         obj_append_child(obj, iobj);
 	abobj_set_item_name(iobj, obj_get_module(obj), obj_get_name(obj), items[i]);
         obj_set_label(iobj, items[i]);
 	obj_set_is_initially_selected(iobj, False);
     }
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 
@@ -274,12 +274,12 @@ list_prop_init(
     if (dtb_list_prop_dialog_initialize(cgen, parent) == 0)
     {
         pls->prop_sheet = cgen->attrs_ctrlpanel;
-        pls->current_obj = NULL;
+        pls->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pls->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -349,7 +349,7 @@ list_prop_init(
 	prop_geomfield_init(&(pls->pos), cgen->pos_label,
 			    cgen->x_field_label, cgen->x_field,
 			    cgen->y_field_label, cgen->y_field,
-			    NULL, NULL, NULL, NULL,
+			    nullptr, nullptr, nullptr, nullptr,
 			    cgen->pos_cb);
 
 	/* Width */
@@ -367,15 +367,15 @@ list_prop_init(
                         prop_size_policyCB, (XtPointer)&(pls->wth));
 
         prop_geomfield_init(&(pls->wth), cgen->wpolicy_rbox_label,
-                            NULL, NULL, NULL, NULL,
+                            nullptr, nullptr, nullptr, nullptr,
                             cgen->width_field_label, cgen->width_field,
-                            NULL, NULL,
+                            nullptr, nullptr,
                             cgen->wpolicy_cb);
 
         /* Height */
         prop_geomfield_init(&(pls->hgt), cgen->hgt_opmenu_label,
-			    NULL, NULL, NULL, NULL,
-                            NULL, NULL,
+			    nullptr, nullptr, nullptr, nullptr,
+                            nullptr, nullptr,
                             cgen->height_field_label, cgen->height_field,
                             cgen->hgt_cb);
 
@@ -432,7 +432,7 @@ list_prop_init(
         n = 0;
         item[n] = cgen->itemstate_ckbox_items.Selected_item;
         item_val[n] = AB_STATE_SELECTED; n++;
-        prop_checkbox_init(&(pls->item_state), NULL,
+        prop_checkbox_init(&(pls->item_state), nullptr,
                 cgen->itemstate_ckbox, n, item, item_val,
                 cgen->itemlist_cb);
 
@@ -462,9 +462,9 @@ list_prop_init(
 		cgen->item_add_button,
 		n, item, item_val, /* Insert */
 		j, item2, item2_val,/* Edit */
-		&(pls->item_label), NULL/*label_type*/, NULL/*graphic_hint*/,
-		NULL/*mnemonic*/, NULL/*accel*/, NULL/*line_style*/,
-		&(pls->item_state), NULL/*submenu*/,
+		&(pls->item_label), nullptr/*label_type*/, nullptr/*graphic_hint*/,
+		nullptr/*mnemonic*/, nullptr/*accel*/, nullptr/*line_style*/,
+		&(pls->item_state), nullptr/*submenu*/,
 		&(pls->current_obj));
 
         prop_changebars_cleared(pls->prop_sheet);
@@ -472,7 +472,7 @@ list_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 
@@ -495,7 +495,7 @@ list_prop_clear(
 {
     PropListSettingsRec	*pls = &(prop_list_settings_rec[type]);
 
-    if (pls->current_obj == NULL)
+    if (pls->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -539,7 +539,7 @@ list_prop_clear(
     /* Clear Items */
     prop_item_editor_clear(&(pls->items));
 
-    pls->current_obj = NULL;
+    pls->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -559,9 +559,9 @@ list_prop_load(
     BOOL		load_all = (loadkey & LoadAll);
     BOOL		editable;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pls->current_obj != NULL)
+        if (pls->current_obj != nullptr)
             obj = pls->current_obj;
         else
             return ERROR;
@@ -582,7 +582,7 @@ list_prop_load(
 	prop_options_set_value(&(pls->label_pos), (XtPointer)obj_get_label_position(obj), False);
 
 	/* Load Label */
-	prop_setup_label_field(&(pls->label), NULL,
+	prop_setup_label_field(&(pls->label), nullptr,
 				obj->label_type, obj_get_label(obj), AB_LINE_UNDEF);
 
 	/* Load Selection Mode */
@@ -784,7 +784,7 @@ list_prop_apply(
             szObj = objxm_comp_get_subobj(pls->current_obj, AB_CFG_SIZE_OBJ);
             XtVaSetValues(objxm_get_widget(szObj),
                 XmNwidth, obj_get_width(pls->current_obj),
-                NULL);
+                nullptr);
 	}
 	abobj_force_dang_form_resize(pls->current_obj);
     }
@@ -902,11 +902,11 @@ prop_list_obj_destroy_CB(ObjEvDestroyInfo destroyInfo)
 	pls = &(prop_list_settings_rec[i]);
 
 	if (pls->current_obj == doomedObj)
-	    pls->current_obj = NULL;
+	    pls->current_obj = nullptr;
 	if (pls->items.current_item == doomedObj)
-	    pls->items.current_item = NULL;
+	    pls->items.current_item = nullptr;
 	if (pls->items.clipboard_item == doomedObj)
-	    pls->items.clipboard_item = NULL;
+	    pls->items.clipboard_item = nullptr;
     }
 
     return 0;
@@ -927,7 +927,7 @@ wth_policyCB(
      */
     if (state->set)
     {
-    	XtVaGetValues(w, XmNuserData, &value, NULL);
+    	XtVaGetValues(w, XmNuserData, &value, nullptr);
     	ui_field_set_editable(pls->wth.w_field, value == SIZE_FIXED_KEY);
     }
 }

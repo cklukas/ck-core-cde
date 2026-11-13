@@ -199,7 +199,7 @@ attr_is_undef(
     switch (attr)
     {
 	case AB_BIL_BG_COLOR:
-	    return( obj_get_bg_color(obj) == NULL );    
+	    return( obj_get_bg_color(obj) == nullptr );    
 
 	case AB_BIL_CHILDREN:
 	    return (obj_get_num_salient_ui_children(obj) == 0);
@@ -243,7 +243,7 @@ attr_is_undef(
 	break;
 
 	case AB_BIL_FG_COLOR:
-	    return( obj_get_fg_color(obj) == NULL );
+	    return( obj_get_fg_color(obj) == nullptr );
 
 	case AB_BIL_HATTACH_TYPE:
 	     return (obj_get_hattach_type(obj) == AB_ATTACH_UNDEF);
@@ -410,11 +410,11 @@ attr_is_undef(
 
 	case AB_BIL_WIN_PARENT:
 	    /* A NULL window parent for the dialog is valid. */
-	    return (obj_get_win_parent(obj) == NULL);
+	    return (obj_get_win_parent(obj) == nullptr);
 
 	case AB_BIL_DEFAULT_BUTTON:
 	    if (obj_is_popup_win(obj))
-		return(obj_get_default_act_button(obj) == NULL);
+		return(obj_get_default_act_button(obj) == nullptr);
 	    break;
 
 	case AB_BIL_DIRECTORY:
@@ -462,13 +462,13 @@ attr_is_undef(
 	    return (util_strempty(obj_get_version(obj)));
 
         case AB_BIL_ROOT_WINDOW:
-            return (obj_get_root_window(obj) == NULL);
+            return (obj_get_root_window(obj) == nullptr);
 
 	case AB_BIL_PANE_MAX_HEIGHT:
 	{
-	    ABObj	parent = NULL;
+	    ABObj	parent = nullptr;
 	    parent = obj_get_parent(obj);
-	    if ((parent != NULL) && obj_is_paned_win(parent))
+	    if ((parent != nullptr) && obj_is_paned_win(parent))
 		return (obj_get_pane_max(obj) == 1000);
 	    else 
 		return (True);
@@ -476,9 +476,9 @@ attr_is_undef(
 
         case AB_BIL_PANE_MIN_HEIGHT:
 	{
-	    ABObj	parent = NULL;
+	    ABObj	parent = nullptr;
             parent = obj_get_parent(obj); 
-            if ((parent != NULL) && obj_is_paned_win(parent))
+            if ((parent != nullptr) && obj_is_paned_win(parent))
 		return (obj_get_pane_min(obj) == 1); 
             else 
 		return (True);
@@ -487,9 +487,9 @@ attr_is_undef(
 	case AB_BIL_HELP_BUTTON:
 	    if (obj_is_popup_win(obj))
 	    {
-		ABObj	helpb = NULL;
+		ABObj	helpb = nullptr;
 		helpb = obj_get_help_act_button(obj);
-		return (helpb == NULL);
+		return (helpb == nullptr);
 	    }
 	    else return (False);
 
@@ -611,11 +611,11 @@ bil_get_filename(
     		module_file[MAXPATHLEN]= "";
     STRING	proj_fullpath, mod_fullpath;
 
-    if ( proj != NULL && module != NULL )
+    if ( proj != nullptr && module != nullptr )
     {
 	proj_fullpath = obj_get_file(proj);
 	mod_fullpath = obj_get_file(module);
-	if (proj_fullpath != NULL && mod_fullpath != NULL)
+	if (proj_fullpath != nullptr && mod_fullpath != nullptr)
 	{
 	    util_get_dir_name_from_path(proj_fullpath, proj_dir, MAXPATHLEN);
 	    util_get_dir_name_from_path(mod_fullpath, module_dir, MAXPATHLEN);
@@ -637,14 +637,14 @@ bil_get_filename(
 	}
  	else
 	{
-	    if (proj_fullpath == NULL && mod_fullpath != NULL)
+	    if (proj_fullpath == nullptr && mod_fullpath != nullptr)
 	    {
 		return(mod_fullpath);
 	    }
-	    else return NULL;
+	    else return nullptr;
 	}
     }
-    return NULL;
+    return nullptr;
 }
     
 /*
@@ -655,7 +655,7 @@ get_object_attrs(
     ABObj	obj
 )
 {
-    BIL_TOKEN		*returnAttrs = NULL;
+    BIL_TOKEN		*returnAttrs = nullptr;
     AB_OBJECT_TYPE	type;
 
     type = obj_get_type(obj);
@@ -1637,7 +1637,7 @@ store_object(
 )
 {
     AB_OBJECT_TYPE	obj_type;
-    BIL_TOKEN		*attrp = NULL;
+    BIL_TOKEN		*attrp = nullptr;
 
 #ifdef DEBUG
     if (bilP_obj_verify(obj) < 0)
@@ -1658,7 +1658,7 @@ store_object(
  * which represent the attributes for a specific object
  * type.
  */
-    for (attrp = get_object_attrs(obj); (attrp != NULL) && (*attrp != -1); 
+    for (attrp = get_object_attrs(obj); (attrp != nullptr) && (*attrp != -1); 
 	++attrp)
     {
         store_attribute(outFile, obj, *attrp, save_type);
@@ -1848,9 +1848,9 @@ store_attribute(
 
 	case AB_BIL_FILES:
 	{
-	    STRING	bil_files = NULL;
+	    STRING	bil_files = nullptr;
 
-	    if ((bil_files = create_bil_file_list(obj)) != NULL)
+	    if ((bil_files = create_bil_file_list(obj)) != nullptr)
 	    {
                 abio_puts(outFile, abio_bil_object_begin_string());
 		abio_puts(outFile, bil_files);
@@ -1864,16 +1864,16 @@ store_attribute(
 
 	case AB_BIL_WIN_CHILDREN: 
 	{
-	    ABObj		refObj = NULL,
-				objModule = NULL,
-				refModule = NULL;
+	    ABObj		refObj = nullptr,
+				objModule = nullptr,
+				refModule = nullptr;
 	    AB_OBJ_REF_TYPE     refType = AB_REF_UNDEF;
-	    STRING		refObj_mod_name = NULL;
-	    ABObjList   	refs = NULL; 
-	    void        	*voidRefType = NULL; 
+	    STRING		refObj_mod_name = nullptr;
+	    ABObjList   	refs = nullptr; 
+	    void        	*voidRefType = nullptr; 
 	    int         	numRefs = 0, i = 0; 
 
-	    if ((refs = obj_get_refs_to(obj)) != NULL)
+	    if ((refs = obj_get_refs_to(obj)) != nullptr)
 	    { 
 		/* Go ahead and write '(' to the file because
 		 * this won't get called unless there are
@@ -1920,13 +1920,13 @@ store_attribute(
 
 	case AB_BIL_WIN_PARENT:
         {
-            ABObj       obj_module= NULL;
-	    ABObj	win_parent= NULL;
-	    ABObj	win_parent_module= NULL;
-            STRING      win_parent_mod_name = NULL;
+            ABObj       obj_module= nullptr;
+	    ABObj	win_parent= nullptr;
+	    ABObj	win_parent_module= nullptr;
+            STRING      win_parent_mod_name = nullptr;
 
 	    win_parent= obj_get_win_parent(obj);
-	    if (win_parent == NULL)
+	    if (win_parent == nullptr)
 	    {
 		abio_puts(outFile, bilP_token_to_string(AB_BIL_UNDEF_KEYWORD));
 		break;
@@ -2060,12 +2060,12 @@ store_attribute(
 
         case AB_BIL_ROOT_WINDOW:
 	{
-            ABObj       root_win= NULL;
-            ABObj       root_win_module= NULL;
-            STRING      root_win_mod_name = NULL;
+            ABObj       root_win= nullptr;
+            ABObj       root_win_module= nullptr;
+            STRING      root_win_mod_name = nullptr;
  
             root_win= obj_get_root_window(obj);
-	    if (root_win != NULL)
+	    if (root_win != nullptr)
 	    {
                 root_win_module = obj_get_module(root_win);
                 root_win_mod_name = obj_get_name(root_win_module);
@@ -2176,7 +2176,7 @@ store_attribute(
 	    else if (type == AB_TYPE_TEXT_FIELD || type == AB_TYPE_TEXT_PANE)
 	    {
 		val = obj_get_initial_value_string(obj);
-		if (val != NULL)
+		if (val != nullptr)
 		    abio_put_string(outFile, val);
 	    }
             break;
@@ -2226,8 +2226,8 @@ store_attribute(
             	{                                               
                    case AB_FUNC_BUILTIN:
 	           {
-		    	ABObj	to_module = NULL, from_module = NULL;
-		    	STRING	from_mod_name = NULL;
+		    	ABObj	to_module = nullptr, from_module = nullptr;
+		    	STRING	from_mod_name = nullptr;
 
 		    	to_module = obj_get_module(obj->info.action.to);
 		    	from_module = obj_get_module(obj->info.action.from);
@@ -2353,7 +2353,7 @@ store_attribute(
 	    abio_putc(outFile, '\n');
 	    abio_set_indent(outFile, 2);
 	    for( trav_open(&trav, obj, AB_TRAV_SALIENT_UI_CHILDREN);
-        	(child = trav_next(&trav)) != NULL; )
+        	(child = trav_next(&trav)) != nullptr; )
 	    {
 	        abio_puts(outFile, obj_get_name(child));
 	        abio_putc(outFile, '\n');
@@ -2390,7 +2390,7 @@ store_attribute(
 		    break;
             }
 	    abio_putc(outFile, ' ');
-	    if (obj->attachments != NULL)
+	    if (obj->attachments != nullptr)
 	        abio_put_integer(outFile, obj_get_attach_offset(obj, AB_CP_NORTH));
 	    else
 		abio_put_integer(outFile, 0); 
@@ -2422,7 +2422,7 @@ store_attribute(
                     break;
             }
 	    abio_putc(outFile, ' ');
-            if (obj->attachments != NULL)
+            if (obj->attachments != nullptr)
                 abio_put_integer(outFile, obj_get_attach_offset(obj, AB_CP_SOUTH));
             else
 		abio_put_integer(outFile, 0);
@@ -2454,7 +2454,7 @@ store_attribute(
                     break;
             }
 	    abio_putc(outFile, ' ');
-            if (obj->attachments != NULL)
+            if (obj->attachments != nullptr)
                 abio_put_integer(outFile,obj_get_attach_offset(obj, AB_CP_EAST));
             else
 		abio_put_integer(outFile, 0);
@@ -2486,7 +2486,7 @@ store_attribute(
                     break;
             }
 	    abio_putc(outFile, ' ');
-            if (obj->attachments != NULL)
+            if (obj->attachments != nullptr)
                 abio_put_integer(outFile, obj_get_attach_offset(obj, AB_CP_WEST));
             else
 		abio_put_integer(outFile, 0);
@@ -2645,7 +2645,7 @@ store_attribute(
 	    if (obj_is_popup_win(obj))
 	    {
 		ABObj help_b = obj_get_help_act_button(obj);
-            	if (help_b != NULL)
+            	if (help_b != nullptr)
                     abio_puts(outFile, obj_get_name(help_b));
 		
             }
@@ -2672,7 +2672,7 @@ store_attribute(
 	    if (obj_is_popup_win(obj))
 	    {
 		ABObj default_b = obj_get_default_act_button(obj);
-            	if (default_b == NULL)
+            	if (default_b == nullptr)
             	{
                     abio_puts(outFile, bilP_token_to_string(AB_BIL_UNDEF_KEYWORD));
                     break;
@@ -2735,7 +2735,7 @@ store_dnd_ops(FILE *outFile, ABDndOpFlags opFlags)
     int		numWritten = 0;
     ABDndOpFlags	oneFlag = 0;
     BIL_TOKEN		token = AB_BIL_UNDEF;
-    STRING		tokenString = NULL;
+    STRING		tokenString = nullptr;
 
     abio_puts(outFile, abio_bil_object_begin_string());
     for (flagCount = 0; flagCount < 3; ++flagCount)
@@ -2771,7 +2771,7 @@ store_dnd_types(FILE *outFile, ABDndTypeFlags typeFlags)
     int			numWritten = 0;
     ABDndTypeFlags	oneFlag = 0;
     BIL_TOKEN		token = AB_BIL_UNDEF;
-    STRING		tokenString = NULL;
+    STRING		tokenString = nullptr;
 
     abio_puts(outFile, abio_bil_object_begin_string());
     for (flagCount = 0; flagCount < 4; ++flagCount)
@@ -2841,7 +2841,7 @@ bilP_write_tree_ui_objs(
     AB_TRAVERSAL    trav;
     ABObj           child;
 
-    if (root == NULL)
+    if (root == nullptr)
         return -1;
 
     if ( !obj_is_sub(root) && obj_is_defined(root)
@@ -2852,7 +2852,7 @@ bilP_write_tree_ui_objs(
 	store_object(outFile, root, save_type);
     }
     for( trav_open(&trav, root, AB_TRAV_SALIENT_CHILDREN);
-        (child = trav_next(&trav)) != NULL; )
+        (child = trav_next(&trav)) != nullptr; )
     {
 	if (   obj_is_module(child) 
 	    && (   (save_type == BIL_SAVE_FILE_PER_MODULE)
@@ -2906,12 +2906,12 @@ bilP_write_tree_conn_objs(
 )
 {
     AB_TRAVERSAL	trav;
-    ABObj		action_obj = NULL;
+    ABObj		action_obj = nullptr;
     AB_FUNC_TYPE        type = AB_FUNC_UNDEF;
-    BOOL		saveCrossModule = (obj_get_module(root) == NULL);
+    BOOL		saveCrossModule = (obj_get_module(root) == nullptr);
 
     for (trav_open(&trav, root, AB_TRAV_ACTIONS_FOR_OBJ);
-	(action_obj = trav_next(&trav)) !=NULL; ) 
+	(action_obj = trav_next(&trav)) !=nullptr; ) 
     {
 	type = obj_get_func_type(action_obj);
 	switch (type)  
@@ -2949,17 +2949,17 @@ save_cross_module_actions(
 )
 {
     AB_TRAVERSAL        mod_trav, act_trav;
-    ABObj               mod_obj = NULL, action_obj = NULL;
+    ABObj               mod_obj = nullptr, action_obj = nullptr;
     AB_FUNC_TYPE        type = AB_FUNC_UNDEF;
 
     if (!obj_is_project(root))
 	return -1;
 
     for (trav_open(&mod_trav, root, AB_TRAV_MODULES);
-        (mod_obj = trav_next(&mod_trav)) !=NULL; )
+        (mod_obj = trav_next(&mod_trav)) !=nullptr; )
     {
 	for (trav_open(&act_trav, mod_obj, AB_TRAV_ACTIONS);
-	    (action_obj = trav_next(&act_trav)) !=NULL; )
+	    (action_obj = trav_next(&act_trav)) !=nullptr; )
 	{
 	    type = obj_get_func_type(action_obj);
 	    if (type == AB_FUNC_BUILTIN)
@@ -2983,19 +2983,19 @@ create_bil_file_list(
 )
 {
     AB_TRAVERSAL	trav;
-    STRING		bil_list = NULL;
+    STRING		bil_list = nullptr;
     ABObj		child;
     int			first = 1;
-    STRING		file = NULL;
+    STRING		file = nullptr;
     int			name_len = 0;
 
     bil_list = util_malloc(MAXPATHLEN * sizeof(char));
-    if (bil_list == NULL)
+    if (bil_list == nullptr)
 	return bil_list;
 
     *bil_list = 0;
     for (trav_open_cond(&trav, proj, AB_TRAV_MODULES, obj_is_defined_module);
-	(child = trav_next(&trav)) != NULL ; )
+	(child = trav_next(&trav)) != nullptr ; )
     {
 	file = obj_get_file(child);
 	name_len = name_len + strlen(file) + 2;	/* for \0 and blank */
@@ -3006,10 +3006,10 @@ create_bil_file_list(
 	if (first)
 	{
 	    first = 0;
-	    if (strcpy(bil_list, file) == NULL)
+	    if (strcpy(bil_list, file) == nullptr)
 	    {
 		util_free(bil_list);
-	  	return NULL;
+	  	return nullptr;
 	    }
 	}
 	else
@@ -3033,10 +3033,10 @@ bil_save_tree(
 )
 {
     int		return_value = OK;
-    STRING	errmsg = NULL;
-    FILE	*bilOutFile= NULL;
+    STRING	errmsg = nullptr;
+    FILE	*bilOutFile= nullptr;
     int		filesWritten = 0;
-    STRING	old_file = NULL;
+    STRING	old_file = nullptr;
     int		old_file_len = 0;
 
     if (save_type == BIL_SAVE_DUMP)
@@ -3044,16 +3044,16 @@ bil_save_tree(
 	save_type = BIL_SAVE_ENCAPSULATED;
     }
 
-    if (root == NULL)
+    if (root == nullptr)
     {
 	goto epilogue;
     }
 
-    if (file_name == NULL)
+    if (file_name == nullptr)
     {
 	file_name = obj_get_file(root);
     }
-    if (file_name == NULL)
+    if (file_name == nullptr)
     {
 	return_value = ERR_CLIENT;
 	goto epilogue;
@@ -3084,7 +3084,7 @@ bil_save_tree(
 	 * is NULL, then the object (module or project) has 
 	 * never been saved, so pass in NULL for old file.
 	 */
-	if (old_proj_dir != NULL)
+	if (old_proj_dir != nullptr)
 	{
 	    old_file = obj_get_file(root);
 
@@ -3097,7 +3097,7 @@ bil_save_tree(
 	     * then we have to cobble together an absolute
 	     * path for the old file.
 	     */
-	    if ((old_file != NULL) && !util_path_is_absolute(old_file))
+	    if ((old_file != nullptr) && !util_path_is_absolute(old_file))
 	    {
 		old_file_len = strlen(old_file);
 		old_file = (STRING) NULL;
@@ -3138,10 +3138,10 @@ bil_save_tree(
 	 */
 	if ((save_type != BIL_SAVE_FILE_PER_MODULE) && (!obj_is_module(root)))
 	{
-	    ABObj		module = NULL;
+	    ABObj		module = nullptr;
 	    AB_TRAVERSAL	trav;
 	    for (trav_open(&trav, root, AB_TRAV_MODULES);
-		(module = trav_next(&trav)) != NULL; )
+		(module = trav_next(&trav)) != nullptr; )
 	    {
 		bilP_write_tree(bilOutFile, module, save_type);
 	    }
@@ -3173,13 +3173,13 @@ store_project_tree(
 )
 {
     int		return_value = 0;
-    FILE	*bilOutFile= NULL;
-    STRING	errmsg = NULL;
+    FILE	*bilOutFile= nullptr;
+    STRING	errmsg = nullptr;
 
-    if ( (root != NULL) && (filename != NULL) )
+    if ( (root != nullptr) && (filename != nullptr) )
     {
 	errmsg = abio_open_bil_output(filename, &bilOutFile);
-	if (errmsg != NULL)
+	if (errmsg != nullptr)
         {
 	    util_printf_err("%s\n", errmsg);
 	    return_value = -1;
@@ -3229,7 +3229,7 @@ bilP_obj_verify(
 {
     int			rc = 0;			/* return code */
     AB_OBJECT_TYPE	type = AB_TYPE_UNDEF;
-    ABObj		project = NULL;
+    ABObj		project = nullptr;
     char		name[1024];
     *name = 0;
 
@@ -3264,7 +3264,7 @@ bilP_obj_verify(
 	    {
 		return bad_obj(obj, "when");
 	    }
-	    if (obj_get_from(obj) == NULL)
+	    if (obj_get_from(obj) == nullptr)
 	    {
 		return bad_obj(obj, "from");
 	    }
@@ -3452,26 +3452,26 @@ bilP_obj_verify(
 		    }
 		    break;
 		case AB_FUNC_USER_DEF:
-		    if (obj_get_func_name(obj) == NULL)
+		    if (obj_get_func_name(obj) == nullptr)
 		    {
 			return bad_obj(obj, "function name");
 		    }
 		    break;
 		case AB_FUNC_CODE_FRAG:
-                    if (obj_get_func_code(obj) == NULL)
+                    if (obj_get_func_code(obj) == nullptr)
 		    {
 			return bad_obj(obj, "user code");
 		    }
 		    break;
 	    }
 
-	    if (obj_get_from(obj) == NULL)
+	    if (obj_get_from(obj) == nullptr)
 	    {
 		return bad_obj(obj, "from");
 	    }
 	    if (obj_get_func_type(obj) == AB_FUNC_BUILTIN)
             {
-                if (obj_get_to(obj) == NULL)
+                if (obj_get_to(obj) == nullptr)
 		{
 		    return bad_obj(obj, "to");
 		}
@@ -3543,7 +3543,7 @@ bilP_obj_verify(
 	    break;
 
         case AB_TYPE_DIALOG:
-            if (obj_get_win_parent(obj) != NULL)
+            if (obj_get_win_parent(obj) != nullptr)
 	    {
 		if (obj_verify(obj_get_win_parent(obj)) < 0)
 		{
@@ -3586,7 +3586,7 @@ bilP_obj_verify(
 	{
 	    return bad_obj(obj, "parent");
 	}
-	if ((win_parent != NULL) && (!obj_is_window(win_parent)))
+	if ((win_parent != nullptr) && (!obj_is_window(win_parent)))
 	{
 	    return bad_obj(obj, "win_parent");
 	}
@@ -3607,7 +3607,7 @@ bilP_obj_verify(
      * As a final check, see if we can determine what attributes this
      * object needs.
      */
-    if (get_object_attrs(obj) == NULL)
+    if (get_object_attrs(obj) == nullptr)
     {
 	return bad_obj(obj, "BIL attributes");
     }
@@ -3644,7 +3644,7 @@ attachment_is_ok(
 )
 {
     AB_ATTACH_TYPE      attach_type = AB_ATTACH_UNDEF;
-    ABObj               attach_obj = NULL;
+    ABObj               attach_obj = nullptr;
     BOOL		attachment_ok = TRUE;
 
     attach_type = obj_get_attach_type(obj, attach_dir);
@@ -3669,12 +3669,12 @@ check_attachments(
 )
 {
     int			iRet = 0;
-    ABObj		parent = NULL;
+    ABObj		parent = nullptr;
 
-    if (obj == NULL)
+    if (obj == nullptr)
 	return iRet;
 
-    if (obj_get_parent(obj) != NULL)
+    if (obj_get_parent(obj) != nullptr)
 	parent = obj_get_root(obj_get_parent(obj));
 	   
     if ( obj_is_group_member(obj) &&

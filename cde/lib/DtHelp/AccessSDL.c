@@ -93,12 +93,12 @@ static	int	ProcessEntry (
 static	const	char	*IsoString = "UTF-8";
 static	const	CESDLVolume	DefaultSdlVolume =
   {
-     NULL,		/* _DtCvSegment *sdl_info; */
-     NULL,		/* _DtCvSegment *toss;     */
-     NULL,		/* _DtCvSegment *loids;    */
-     NULL,		/* _DtCvSegment *index;    */
-     NULL,		/* _DtCvSegment *title;    */
-     NULL,		/* _DtCvSegment *snb;      */
+     nullptr,		/* _DtCvSegment *sdl_info; */
+     nullptr,		/* _DtCvSegment *toss;     */
+     nullptr,		/* _DtCvSegment *loids;    */
+     nullptr,		/* _DtCvSegment *index;    */
+     nullptr,		/* _DtCvSegment *title;    */
+     nullptr,		/* _DtCvSegment *snb;      */
      0,			/* short      minor_no; */
      False,		/* short      title_processed; */
   };
@@ -126,16 +126,16 @@ FreeIds (
 {
     _DtCvSegment *p_seg;
 
-    if (NULL == loids)
+    if (nullptr == loids)
 	return;
 
     p_seg = _DtCvContainerListOfSeg(loids);
 
-    while (NULL != p_seg)
+    while (nullptr != p_seg)
       {
-	if (NULL != _SdlSegToSdlIdInfoPtr(p_seg))
+	if (nullptr != _SdlSegToSdlIdInfoPtr(p_seg))
 	  {
-	    if (NULL != _SdlSegToSdlIdInfoRssi(p_seg))
+	    if (nullptr != _SdlSegToSdlIdInfoRssi(p_seg))
 	        free(_SdlSegToSdlIdInfoRssi(p_seg));
 
 	    free(_SdlSegToSdlIdInfoPtr(p_seg));
@@ -164,43 +164,43 @@ FreeTossInfo (
     _DtCvSegment *p_seg;
     SDLTossInfo  *info;
 
-    if (NULL == toss)
+    if (nullptr == toss)
 	return;
 
     p_seg = _DtCvContainerListOfSeg(toss);
 
-    while (NULL != p_seg)
+    while (nullptr != p_seg)
       {
 	info = (SDLTossInfo *) _SdlSegTossInfo(p_seg);
 
 	/* free the ssi */
-	if (NULL != _SdlTossInfoPtrSsi(info))
+	if (nullptr != _SdlTossInfoPtrSsi(info))
 	    free(_SdlTossInfoPtrSsi(info));
 
 	/* free the colj,colw or the enter, exit data */
-	if (NULL != _SdlTossInfoPtrStr1(info))
+	if (nullptr != _SdlTossInfoPtrStr1(info))
 	    free(_SdlTossInfoPtrStr1(info));
-	if (NULL != _SdlTossInfoPtrStr2(info))
+	if (nullptr != _SdlTossInfoPtrStr2(info))
 	    free(_SdlTossInfoPtrStr2(info));
 
 	/* free the font strings */
-	if (NULL != _DtHelpFontHintsColor(_SdlTossInfoPtrFontSpecs(info)))
+	if (nullptr != _DtHelpFontHintsColor(_SdlTossInfoPtrFontSpecs(info)))
 	    free(_DtHelpFontHintsColor(_SdlTossInfoPtrFontSpecs(info)));
-	if (NULL != _DtHelpFontHintsXlfd(_SdlTossInfoPtrFontSpecs(info)))
+	if (nullptr != _DtHelpFontHintsXlfd(_SdlTossInfoPtrFontSpecs(info)))
 	    free(_DtHelpFontHintsXlfd(_SdlTossInfoPtrFontSpecs(info)));
-	if (NULL != _DtHelpFontHintsXlfdb(_SdlTossInfoPtrFontSpecs(info)))
+	if (nullptr != _DtHelpFontHintsXlfdb(_SdlTossInfoPtrFontSpecs(info)))
 	    free(_DtHelpFontHintsXlfdb(_SdlTossInfoPtrFontSpecs(info)));
-	if (NULL != _DtHelpFontHintsXlfdi(_SdlTossInfoPtrFontSpecs(info)))
+	if (nullptr != _DtHelpFontHintsXlfdi(_SdlTossInfoPtrFontSpecs(info)))
 	    free(_DtHelpFontHintsXlfdi(_SdlTossInfoPtrFontSpecs(info)));
-	if (NULL != _DtHelpFontHintsXlfdib(_SdlTossInfoPtrFontSpecs(info)))
+	if (nullptr != _DtHelpFontHintsXlfdib(_SdlTossInfoPtrFontSpecs(info)))
 	    free(_DtHelpFontHintsXlfdib(_SdlTossInfoPtrFontSpecs(info)));
-	if (NULL != _DtHelpFontHintsTypeNam(_SdlTossInfoPtrFontSpecs(info)))
+	if (nullptr != _DtHelpFontHintsTypeNam(_SdlTossInfoPtrFontSpecs(info)))
 	    free(_DtHelpFontHintsTypeNam(_SdlTossInfoPtrFontSpecs(info)));
-	if (NULL != _DtHelpFontHintsTypeNamb(_SdlTossInfoPtrFontSpecs(info)))
+	if (nullptr != _DtHelpFontHintsTypeNamb(_SdlTossInfoPtrFontSpecs(info)))
 	    free(_DtHelpFontHintsTypeNamb(_SdlTossInfoPtrFontSpecs(info)));
-	if (NULL != _DtHelpFontHintsTypeNami(_SdlTossInfoPtrFontSpecs(info)))
+	if (nullptr != _DtHelpFontHintsTypeNami(_SdlTossInfoPtrFontSpecs(info)))
 	    free(_DtHelpFontHintsTypeNami(_SdlTossInfoPtrFontSpecs(info)));
-	if (NULL != _DtHelpFontHintsTypeNamib(_SdlTossInfoPtrFontSpecs(info)))
+	if (nullptr != _DtHelpFontHintsTypeNamib(_SdlTossInfoPtrFontSpecs(info)))
 	    free(_DtHelpFontHintsTypeNamib(_SdlTossInfoPtrFontSpecs(info)));
 
 	free(info);
@@ -228,24 +228,24 @@ FreeEntryInfo (
     _DtCvSegment *p_seg;
     SDLEntryInfo  *info;
 
-    if (NULL == index)
+    if (nullptr == index)
 	return;
 
     p_seg = _DtCvContainerListOfSeg(index);
 
-    while (NULL != p_seg)
+    while (nullptr != p_seg)
       {
 	info = _SdlSegToSdlEntryInfo(p_seg);
 
-	if (NULL != info)
+	if (nullptr != info)
 	  {
-	    if (NULL != info->main)
+	    if (nullptr != info->main)
 	        free(info->main);
-	    if (NULL != info->locs)
+	    if (nullptr != info->locs)
 	        free(info->locs);
-	    if (NULL != info->syns)
+	    if (nullptr != info->syns)
 	        free(info->syns);
-	    if (NULL != info->sort)
+	    if (nullptr != info->sort)
 	        free(info->sort);
 	  }
 
@@ -276,13 +276,13 @@ ProcessSubEntries (
     _DtCvSegment	*p_seg,
     char	*parent_key)
 {
-    while (p_seg != NULL)
+    while (p_seg != nullptr)
       {
 	/*
 	 * the only sub containers of an entry that should have an non-null
 	 * internal pointer should be a sub <entry>.
 	 */
-	if (_DtCvIsSegContainer(p_seg) && NULL != _SdlSegEntryInfo(p_seg)
+	if (_DtCvIsSegContainer(p_seg) && nullptr != _SdlSegEntryInfo(p_seg)
 		&& ProcessEntry(vol, _DtCvContainerListOfSeg(p_seg),
 						parent_key) == -1)
 	    return -1;
@@ -326,7 +326,7 @@ AsciiKeyword (
     /*
      * if a starting string has been passed in, use it.
      */
-    if (NULL != parent_str)
+    if (nullptr != parent_str)
       {
 	/*
 	 * get the actual byte count.
@@ -339,8 +339,8 @@ AsciiKeyword (
 	if (0 == *str_size)
 	  {
 	    parent_str = strdup(parent_str);
-	    if (NULL == parent_str)
-		return NULL;
+	    if (nullptr == parent_str)
+		return nullptr;
 
 	    *str_size = len;
 	  }
@@ -351,7 +351,7 @@ AsciiKeyword (
      */
     goodStr = parent_str;
 
-    while (p_list != NULL)
+    while (p_list != nullptr)
       {
 	if (_DtCvIsSegString(p_list))
 	  {
@@ -377,7 +377,7 @@ AsciiKeyword (
 	    /*
 	     * are we starting from scratch?
 	     */
-	    if (goodStr == NULL)
+	    if (goodStr == nullptr)
 	      {
 		/*
 		 * include a byte for the end-of-string character.
@@ -398,13 +398,13 @@ AsciiKeyword (
 		 * the caller only sees NULL on failure, so the string
 		 * built so far is released here, as for a failed wcstombs.
 		 */
-		if (newStr == NULL)
+		if (newStr == nullptr)
 		    free(goodStr);
 		goodStr = newStr;
 	      }
 
-	    if (goodStr == NULL)
-		return NULL;
+	    if (goodStr == nullptr)
+		return nullptr;
 
 	    /*
 	     * remember the absolute size of the memory for the string
@@ -428,7 +428,7 @@ AsciiKeyword (
 		if ((size_t) -1 == newLen)
 		  {
 		    free(goodStr);
-		    return NULL;
+		    return nullptr;
 		  }
 
 		len += newLen;
@@ -444,12 +444,12 @@ AsciiKeyword (
 	 * process since it could be a <key>, <sphrase>, etc.
 	 */
 	else if (_DtCvIsSegContainer(p_list) &&
-					NULL == _SdlSegEntryInfo(p_list))
+					nullptr == _SdlSegEntryInfo(p_list))
 	  {
 	    goodStr = AsciiKeyword(_DtCvContainerListOfSeg(p_list), goodStr,
 								str_size);
-	    if (goodStr == NULL)
-		return NULL;
+	    if (goodStr == nullptr)
+		return nullptr;
 
 	    len = strlen(goodStr) + 1;
 	  }
@@ -477,20 +477,20 @@ ProcessLocations (
     char	*locs,
     char	***list)
 {
-    char  **myList = NULL;
+    char  **myList = nullptr;
     char   *nextLoc;
 
-    while (locs != NULL && *locs != '\0')
+    while (locs != nullptr && *locs != '\0')
       {
 	locs = _DtHelpGetNxtToken(locs, &nextLoc);
-	if (nextLoc == NULL)
+	if (nextLoc == nullptr)
 	    return -1;
 
 	if (*nextLoc != '\0')
 	  {
 	    myList = (char **) _DtHelpCeAddPtrToArray ((void **) myList,
 							(void *) nextLoc);
-	    if (myList == NULL)
+	    if (myList == nullptr)
 		return -1;
 	  }
       }
@@ -529,7 +529,7 @@ ProcessEntry (
 {
     int           strSize;
     char	**topics;
-    char	 *nextKey = NULL;
+    char	 *nextKey = nullptr;
 
     /* Now parse the string into the appropriate arrays.  The string has the 
        following syntax:
@@ -545,13 +545,13 @@ ProcessEntry (
 #define	MAIN_STRINGS	(_SdlSegToSdlEntryInfo(p_seg))->main
 #define	LOCS_STRINGS	(_SdlSegToSdlEntryInfo(p_seg))->locs
 
-    while (p_seg != NULL)
+    while (p_seg != nullptr)
       {
 	strSize = 0;
 	nextKey = AsciiKeyword(_DtCvContainerListOfSeg(p_seg),
 							parent_key, &strSize);
 
-	if (nextKey == NULL)
+	if (nextKey == nullptr)
 	    return -1;
 
 	/* We have the next keyword.  Hang onto it and add it to the list
@@ -560,8 +560,8 @@ ProcessEntry (
 	   keywords which specify no topics is an undocumented feature.) */
 
 	/* Now get the list of topics. */
-	topics = NULL;
-	if (NULL != FrmtPrivInfoPtr(p_seg) && NULL != _SdlSegEntryInfo(p_seg)
+	topics = nullptr;
+	if (nullptr != FrmtPrivInfoPtr(p_seg) && nullptr != _SdlSegEntryInfo(p_seg)
 		&& (ProcessLocations(MAIN_STRINGS, &topics) == -1 ||
 			ProcessLocations(LOCS_STRINGS, &topics) == -1))
 	  {
@@ -569,7 +569,7 @@ ProcessEntry (
 	    return -1;
 	  }
 
-	if (topics != NULL)
+	if (topics != nullptr)
 	  {
 	    vol->keywords = (char **) _DtHelpCeAddPtrToArray (
 						(void **) vol->keywords,
@@ -583,12 +583,12 @@ ProcessEntry (
 	     */
 	    if (vol->keywords == 0 || vol->keywordTopics == 0)
 	      {
-		if (vol->keywords != NULL)
+		if (vol->keywords != nullptr)
 		  {
 		    free(nextKey);
 		    _DtHelpCeFreeStringArray (vol->keywords);
 		    _DtHelpCeFreeStringArray (topics);
-		    vol->keywords = NULL;
+		    vol->keywords = nullptr;
 		  }
 		if (vol->keywordTopics)
 		  {
@@ -597,17 +597,17 @@ ProcessEntry (
 		    for (topicList = vol->keywordTopics; topicList; topicList++)
 			_DtHelpCeFreeStringArray (*topicList);
 		    free (vol->keywordTopics);
-		    vol->keywordTopics = NULL;
+		    vol->keywordTopics = nullptr;
 		  }
 		return -1;
 	      }
 	  }
 
-	if (_DtCvContainerListOfSeg(p_seg) != NULL &&
+	if (_DtCvContainerListOfSeg(p_seg) != nullptr &&
 	    ProcessSubEntries(vol,_DtCvContainerListOfSeg(p_seg),nextKey) == -1)
 	    return -1;
 
-	if (topics == NULL)
+	if (topics == nullptr)
 	    free (nextKey);
 
 	p_seg = p_seg->next_seg;
@@ -643,7 +643,7 @@ MapPath (
     int          myLev;
     SDLIdInfo	*info;
 
-    while (mySeg != NULL)
+    while (mySeg != nullptr)
       {
 	/*
 	 * Does this match the target id?
@@ -665,10 +665,10 @@ MapPath (
 	      }
 
 	    *ret_ids = (char **) malloc (sizeof(char *) * (lev_cnt + 1));
-	    if ((*ret_ids) == NULL)
+	    if ((*ret_ids) == nullptr)
 		return -1;
 
-	    (*ret_ids)[lev_cnt] = NULL;
+	    (*ret_ids)[lev_cnt] = nullptr;
 
 	    if (_SdlIdInfoPtrType(info) == SdlIdVirpage)
 		(*ret_ids)[lev_cnt - 1] = strdup(_DtCvContainerIdOfSeg(mySeg));
@@ -745,9 +745,9 @@ _DtHelpCeGetSdlVolumePtr (
 {
     _DtHelpVolume vol = (_DtHelpVolume) volume;
 
-    if (vol != NULL)
+    if (vol != nullptr)
 	return ((CESDLVolume *) vol->vols.sdl_vol);
-    return NULL;
+    return nullptr;
 }
 
 /******************************************************************************
@@ -773,7 +773,7 @@ _DtHelpCeInitSdlVolume (
 {
     CESDLVolume	*sdlVol = _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol != NULL)
+    if (sdlVol != nullptr)
 	*sdlVol = DefaultSdlVolume;
 
 }
@@ -800,7 +800,7 @@ _DtHelpCeOpenSdlVolume (
     _DtHelpVolume  vol = (_DtHelpVolume) volume;
 
     sdlVol  = (CESDLVolume *) calloc (1, sizeof(CESDLVolume));
-    if (sdlVol != NULL)
+    if (sdlVol != nullptr)
       {
 	vol->vols.sdl_vol = (SdlVolumeHandle) sdlVol;
 	_DtHelpCeInitSdlVolume(volume);
@@ -811,7 +811,7 @@ _DtHelpCeOpenSdlVolume (
 	    return 0;
 	  }
 
-	vol->vols.sdl_vol = NULL;
+	vol->vols.sdl_vol = nullptr;
 	free(sdlVol);
       }
 
@@ -838,7 +838,7 @@ _DtHelpCeCleanSdlVolume (
 {
     CESDLVolume	*sdlVol = _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol != NULL)
+    if (sdlVol != nullptr)
       {
 	_DtHelpFreeSegments(sdlVol->snb  , _DtCvFALSE, sdlVol->destroy_region,
 							sdlVol->client_data);
@@ -849,39 +849,39 @@ _DtHelpCeCleanSdlVolume (
 	 * free the index information
 	 */
 	FreeEntryInfo(sdlVol->index);
-	_DtHelpFreeSegments(sdlVol->index, _DtCvFALSE, NULL, NULL);
+	_DtHelpFreeSegments(sdlVol->index, _DtCvFALSE, nullptr, nullptr);
 
 	/*
 	 * free the toss information.
 	 */
 	FreeTossInfo(sdlVol->toss);
-	_DtHelpFreeSegments(sdlVol->toss , _DtCvFALSE, NULL, NULL);
+	_DtHelpFreeSegments(sdlVol->toss , _DtCvFALSE, nullptr, nullptr);
 
 	/*
 	 * free the ids
 	 */
 	FreeIds(sdlVol->loids);
-	_DtHelpFreeSegments(sdlVol->loids, _DtCvFALSE, NULL, NULL);
+	_DtHelpFreeSegments(sdlVol->loids, _DtCvFALSE, nullptr, nullptr);
 
 	/*
 	 * free the document information.
 	 */
-	if (NULL != _SdlDocInfoPtrLanguage(sdlVol->sdl_info))
+	if (nullptr != _SdlDocInfoPtrLanguage(sdlVol->sdl_info))
 	    free(_SdlDocInfoPtrLanguage(sdlVol->sdl_info));
 
-	if (NULL != _SdlDocInfoPtrCharSet(sdlVol->sdl_info))
+	if (nullptr != _SdlDocInfoPtrCharSet(sdlVol->sdl_info))
 	    free(_SdlDocInfoPtrCharSet(sdlVol->sdl_info));
 
-	if (NULL != _SdlDocInfoPtrDocId(sdlVol->sdl_info))
+	if (nullptr != _SdlDocInfoPtrDocId(sdlVol->sdl_info))
 	    free(_SdlDocInfoPtrDocId(sdlVol->sdl_info));
 
-	if (NULL != _SdlDocInfoPtrFirstPg(sdlVol->sdl_info))
+	if (nullptr != _SdlDocInfoPtrFirstPg(sdlVol->sdl_info))
 	    free(_SdlDocInfoPtrFirstPg(sdlVol->sdl_info));
 
-	if (NULL != _SdlDocInfoPtrSdlDtd(sdlVol->sdl_info))
+	if (nullptr != _SdlDocInfoPtrSdlDtd(sdlVol->sdl_info))
 	    free(_SdlDocInfoPtrSdlDtd(sdlVol->sdl_info));
 
-	if (NULL != _SdlDocInfoPtrStamp(sdlVol->sdl_info))
+	if (nullptr != _SdlDocInfoPtrStamp(sdlVol->sdl_info))
 	    free(_SdlDocInfoPtrStamp(sdlVol->sdl_info));
 
 	free(sdlVol->sdl_info);
@@ -909,7 +909,7 @@ _DtHelpCeRereadSdlVolume (
     _DtHelpCeCleanSdlVolume(volume);
     _DtHelpCeInitSdlVolume(volume);
     if (_DtHelpCeFrmtSdlVolumeInfo(_DtHelpCeGetVolumeName(volume),
-					volume, NULL) == 0)
+					volume, nullptr) == 0)
 	    return 0;
 
     return -1;
@@ -935,7 +935,7 @@ _DtHelpCeCloseSdlVolume (
 {
     CESDLVolume	*sdlVol = _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol != NULL)
+    if (sdlVol != nullptr)
       {
 	_DtHelpCeCleanSdlVolume(volume);
 	free(sdlVol);
@@ -977,12 +977,12 @@ _DtHelpCeGetSdlHomeTopicId (
     _DtCvSegment *idSegs;
     CESDLVolume  *sdlVol  =  _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol->sdl_info != NULL)
+    if (sdlVol->sdl_info != nullptr)
       {
 	/*
 	 * Was the first page topic declared in the header?
 	 */
-	if (NULL != _SdlDocInfoPtrFirstPg(sdlVol->sdl_info))
+	if (nullptr != _SdlDocInfoPtrFirstPg(sdlVol->sdl_info))
 	    return (_SdlDocInfoPtrFirstPg(sdlVol->sdl_info));
 
 	/*
@@ -997,9 +997,9 @@ _DtHelpCeGetSdlHomeTopicId (
 	 * attribute.
 	 */
         if (_DtHelpCeGetSdlVolIds(volume, -1, &idSegs) != 0)
-	    return NULL;
+	    return nullptr;
 
-        while (idSegs != NULL)
+        while (idSegs != nullptr)
           {
 	    if (SdlIdVirpage == _SdlSegToSdlIdInfoType(idSegs) &&
 		_DtHelpCeStrCaseCmpLatin1(_SdlIdInfoPtrRssi(
@@ -1011,7 +1011,7 @@ _DtHelpCeGetSdlHomeTopicId (
           }
       }
 
-    return NULL;
+    return nullptr;
 }
 
 /*****************************************************************************
@@ -1054,9 +1054,9 @@ _DtHelpCeFindSdlId (
 
     pEl = _DtHelpCeMapSdlIdToSegment(volume, target_id, fd);
 
-    if (pEl != NULL)
+    if (pEl != nullptr)
       {
-	if (ret_name != NULL)
+	if (ret_name != nullptr)
 	    *ret_name   = strdup(vol->volFile);
 	*ret_offset = _SdlIdInfoPtrOffset(_SdlSegToSdlIdInfoPtr(pEl));
 	return True;
@@ -1083,12 +1083,12 @@ _DtHelpCeGetSdlKeywordList (
 {
     CESDLVolume	*sdlVol =  _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (_DtHelpCeGetSdlVolIndex(volume) != 0 || NULL == sdlVol->index
-			|| NULL == _DtCvContainerListOfSeg(sdlVol->index))
+    if (_DtHelpCeGetSdlVolIndex(volume) != 0 || nullptr == sdlVol->index
+			|| nullptr == _DtCvContainerListOfSeg(sdlVol->index))
 	return -1;
 
     return(ProcessEntry(((_DtHelpVolume) volume),
-			_DtCvContainerListOfSeg(sdlVol->index), NULL));
+			_DtCvContainerListOfSeg(sdlVol->index), nullptr));
 }
 
 /*****************************************************************************
@@ -1135,10 +1135,10 @@ _DtHelpCeGetSdlIdPath(
 
     targetEl = _DtHelpCeMapSdlIdToSegment(volume, target_id, -1);
 
-    if (targetEl == NULL)
+    if (targetEl == nullptr)
 	return -1;
 
-    *ret_ids = NULL;
+    *ret_ids = nullptr;
 
     if (_DtHelpCeGetSdlVolIds(volume, -1, &idSegs) != 0)
 	return 0;
@@ -1194,23 +1194,23 @@ _DtHelpCeMapSdlIdToSegment(
       }
 
     if (_DtHelpCeGetSdlVolIds(volume, fd, &idSegs) != 0)
-	return NULL;
+	return nullptr;
 
-    while (idSegs != NULL)
+    while (idSegs != nullptr)
       {
 	if (underScore == True)
 	    idString = _SdlIdInfoPtrRssi(_SdlSegToSdlIdInfoPtr(idSegs));
 	else
 	    idString = _DtCvContainerIdOfSeg(idSegs);
 
-	if (idString != NULL &&
+	if (idString != nullptr &&
 			_DtHelpCeStrCaseCmpLatin1(idString, target_id) == 0)
 	    return idSegs;
 
 	idSegs = idSegs->next_seg;
       }
 
-    return NULL;
+    return nullptr;
 }
 
 /*****************************************************************************
@@ -1239,9 +1239,9 @@ _DtHelpCeMapIdToSdlTopicId(
     if (_DtHelpCeGetSdlVolIds(volume, -1, &idList) == 0)
       {
         idSeg = _DtHelpCeMapSdlIdToSegment(volume, target_id, -1);
-        if (idSeg != NULL)
+        if (idSeg != nullptr)
           {
-	    while (found == -1 && idList != NULL)
+	    while (found == -1 && idList != nullptr)
 	      {
 	        idInfo = _SdlSegToSdlIdInfoPtr(idList);
 	        if (_SdlIdInfoPtrType(idInfo) == SdlIdVirpage)
@@ -1277,8 +1277,8 @@ _DtHelpCeGetSdlVolCharSet(
     const char	   *charSet = IsoString;
     CESDLVolume    *sdlVol  =  _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol->sdl_info != NULL &&
-			NULL != _SdlDocInfoPtrLanguage(sdlVol->sdl_info))
+    if (sdlVol->sdl_info != nullptr &&
+			nullptr != _SdlDocInfoPtrLanguage(sdlVol->sdl_info))
 	charSet = _SdlDocInfoPtrCharSet(sdlVol->sdl_info);
 
     return charSet;
@@ -1303,8 +1303,8 @@ _DtHelpCeGetSdlVolLanguage(
     char	   *language = "C";
     CESDLVolume    *sdlVol  =  _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol->sdl_info != NULL &&
-			NULL != _SdlDocInfoPtrLanguage(sdlVol->sdl_info))
+    if (sdlVol->sdl_info != nullptr &&
+			nullptr != _SdlDocInfoPtrLanguage(sdlVol->sdl_info))
 	language = _SdlDocInfoPtrLanguage(sdlVol->sdl_info);
 
     return language;
@@ -1336,7 +1336,7 @@ _DtHelpCeGetSdlVolumeLocale(
 
     langLen = strlen(lang);
     locale  = (char *) malloc (langLen + strlen(charSet) + 2);
-    if (locale != NULL)
+    if (locale != nullptr)
       {
 	strcpy(locale, lang);
 	if (langLen != 0 && *charSet != '\0')
@@ -1369,30 +1369,30 @@ _DtHelpCeGetSdlDocStamp(
     char		**ret_time)
 {
     int		    result    = -1;
-    char	   *docId     = NULL;
-    char	   *timestamp = NULL;
+    char	   *docId     = nullptr;
+    char	   *timestamp = nullptr;
     CESDLVolume    *sdlVol    =  _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol->sdl_info != NULL)
+    if (sdlVol->sdl_info != nullptr)
       {
 	result = 0;
-	if (NULL != _SdlDocInfoPtrDocId(sdlVol->sdl_info))
+	if (nullptr != _SdlDocInfoPtrDocId(sdlVol->sdl_info))
 	    docId = strdup(_SdlDocInfoPtrDocId(sdlVol->sdl_info));
 	else
 	    result = -2;
 
-	if (NULL != _SdlDocInfoPtrStamp(sdlVol->sdl_info))
+	if (nullptr != _SdlDocInfoPtrStamp(sdlVol->sdl_info))
 	    timestamp = strdup(_SdlDocInfoPtrStamp(sdlVol->sdl_info));
 	else
 	    result = -2;
       }
 
-    if (ret_doc != NULL)
+    if (ret_doc != nullptr)
 	*ret_doc = docId;
-    if (ret_time != NULL)
+    if (ret_time != nullptr)
 	*ret_time = timestamp;
 
-    if (result == 0 && (docId == NULL || timestamp == NULL)) {
+    if (result == 0 && (docId == nullptr || timestamp == nullptr)) {
 	free(docId);     /* Incase only one of them is NULL */
 	free(timestamp); /*  " */
 	return -1;
@@ -1433,8 +1433,8 @@ _DtHelpCeGetSdlTopicChildren(
     /*
      * save this level and start looking for its children at the next seg.
      */
-    *ret_ids = NULL;
-    if (idSeg != NULL)
+    *ret_ids = nullptr;
+    if (idSeg != nullptr)
       {
 	idInfo = _SdlSegToSdlIdInfoPtr(idSeg);
 	segLev = _SdlIdInfoPtrRlevel(idInfo) + 1;
@@ -1444,7 +1444,7 @@ _DtHelpCeGetSdlTopicChildren(
     /*
      * process any virpage that has the correct level
      */
-    while (idSeg != NULL && done == False)
+    while (idSeg != nullptr && done == False)
       {
 	idInfo = _SdlSegToSdlIdInfoPtr(idSeg);
 	if (_SdlIdInfoPtrType(idInfo) == SdlIdVirpage)
@@ -1458,7 +1458,7 @@ _DtHelpCeGetSdlTopicChildren(
 	      {
 		*ret_ids = (char **) _DtHelpCeAddPtrToArray( (void **) *ret_ids,
 			(void *)(strdup(_DtCvContainerIdOfSeg(idSeg))));
-		if ((*ret_ids) == NULL)
+		if ((*ret_ids) == nullptr)
 		    return -1;
 
 		count++;

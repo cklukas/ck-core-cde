@@ -105,10 +105,10 @@ abmfP_merge_c_files(
 {
     int		return_value = 0;
     int		rc = 0;				/* return code */
-    CSegArray	newSegs = NULL;
-    CSegArray	oldSegs = NULL;
-    File	mergedFile = NULL;
-    File	deltaFile = NULL;
+    CSegArray	newSegs = nullptr;
+    CSegArray	oldSegs = nullptr;
+    File	mergedFile = nullptr;
+    File	deltaFile = nullptr;
 
     /*
     if (debugging())
@@ -145,12 +145,12 @@ abmfP_merge_c_files(
     }
     */
 
-    if (oldFile != NULL)
+    if (oldFile != nullptr)
     {
 	rc = abmfP_parse_c_file(oldFile, &oldSegs);
 	return_if_err(rc,rc);
     }
-    if (newFile != NULL)
+    if (newFile != nullptr)
     {
         rc = abmfP_parse_c_file(newFile, &newSegs);
 	return_if_err(rc,rc);
@@ -168,7 +168,7 @@ abmfP_merge_c_files(
     else
     {
 	*mergedFileOutPtr = mergedFile;
-	if (deltaFileOutPtr != NULL)
+	if (deltaFileOutPtr != nullptr)
 	{
 	    *deltaFileOutPtr = deltaFile;
 	}
@@ -204,13 +204,13 @@ merge_files_by_segment(
     long	oldFileOffset = 0;
     long	nextModOffset = 0;
     long	nextDeltaOffset = 0;
-    File	mergedFile = NULL;
-    File	deltaFile = NULL;
-    CUserSeg	oldUserSeg = NULL;
-    CUserSeg	newUserSeg = NULL;
+    File	mergedFile = nullptr;
+    File	deltaFile = nullptr;
+    CUserSeg	oldUserSeg = nullptr;
+    CUserSeg	newUserSeg = nullptr;
 
-    *mergedFileOutPtr = NULL;
-    *deltaFileOutPtr = NULL;
+    *mergedFileOutPtr = nullptr;
+    *deltaFileOutPtr = nullptr;
 
     numSegsChanged = match_all_segments(oldSegs, newSegs);
     if (numSegsChanged < 1)
@@ -219,7 +219,7 @@ merge_files_by_segment(
     }
 
     mergedFile = tmpfile();
-    if (deltaFileOutPtr != NULL)
+    if (deltaFileOutPtr != nullptr)
     {
 	deltaFile = tmpfile();
     }
@@ -227,11 +227,11 @@ merge_files_by_segment(
     oldFileOffset = 0;
 
     oldUserSeg = oldSegs->firstUserSeg;
-    while ((oldUserSeg != NULL) && (oldUserSeg->clientData == NULL))
+    while ((oldUserSeg != nullptr) && (oldUserSeg->clientData == nullptr))
     {
 	oldUserSeg = oldUserSeg->next;
     }
-    assert(oldUserSeg != NULL);		/* at least one change exists */
+    assert(oldUserSeg != nullptr);		/* at least one change exists */
     nextModOffset = oldUserSeg->offset;
     while ((c = fgetc(oldFile)) != EOF)
     {
@@ -239,7 +239,7 @@ merge_files_by_segment(
 	if (oldFileOffset == (nextModOffset+1))
 	{
 	    newUserSeg = ((CUserSeg)(oldUserSeg->clientData));
-	    if (   (deltaFile != NULL) 
+	    if (   (deltaFile != nullptr) 
 		&& (!util_streq(oldUserSeg->text, newUserSeg->text)) )
 	    {
 		fprintf(deltaFile, 
@@ -261,11 +261,11 @@ merge_files_by_segment(
 	    fseek(oldFile, oldFileOffset, SEEK_SET);
 
 	    oldUserSeg = oldUserSeg->next;
-    	    while ((oldUserSeg != NULL) && (oldUserSeg->clientData == NULL))
+    	    while ((oldUserSeg != nullptr) && (oldUserSeg->clientData == nullptr))
             {
 	        oldUserSeg = oldUserSeg->next;
             }
-	    nextModOffset = (oldUserSeg == NULL? -1:oldUserSeg->offset);
+	    nextModOffset = (oldUserSeg == nullptr? -1:oldUserSeg->offset);
 	}
 	else
 	{
@@ -288,8 +288,8 @@ merge_files_by_segment(
 static int
 match_all_segments(CSegArray oldSegs, CSegArray newSegs)
 {
-    CSeg	oldSeg = NULL;
-    CSeg	newSeg = NULL;
+    CSeg	oldSeg = nullptr;
+    CSeg	newSeg = nullptr;
     BOOL	segChanged = FALSE;
     int		userSegChangeCount = 0;
     int		userSegCount = 0;
@@ -300,9 +300,9 @@ match_all_segments(CSegArray oldSegs, CSegArray newSegs)
 	oldSeg = &(oldSegs->segs[i]);
 	newSeg = match_segment(oldSeg, oldSegs, newSegs);
 
-	oldSeg->clientData = NULL;
+	oldSeg->clientData = nullptr;
 	segChanged = FALSE;
-	if (newSeg != NULL)
+	if (newSeg != nullptr)
 	{
 	    for (userSegCount = 0; 
 		    (userSegCount < oldSeg->userSegs.numSegs)
@@ -321,7 +321,7 @@ match_all_segments(CSegArray oldSegs, CSegArray newSegs)
 
 #ifdef BOGUS /* (debugging stuff) */
 	            printf("[%s] %ld -> %ld\n",
-			oldSeg->userSegs.segs[userSegCount].clientData == NULL?
+			oldSeg->userSegs.segs[userSegCount].clientData == nullptr?
 				" ":"X",
 		        oldSeg->userSegs.segs[userSegCount].line,
 			newSeg->userSegs.segs[userSegCount].line);
@@ -345,7 +345,7 @@ match_segment(
 			CSegArray 	newSegArray
 )
 {
-    CSeg	newSeg = NULL;
+    CSeg	newSeg = nullptr;
     int		oldSegIndex = -1;
     int		oldSegNum = -1;
     int		newSegIndex = -1;
@@ -423,12 +423,12 @@ int
 main (int argc, char *argv[])
 {
     int		rc = 0;			/* return code */
-    STRING	newFileName = NULL;
-    File	newFile = NULL;
-    STRING	oldFileName = NULL;
-    File	oldFile = NULL;
-    File	mergedFile = NULL;
-    File	deltaFile = NULL;
+    STRING	newFileName = nullptr;
+    File	newFile = nullptr;
+    STRING	oldFileName = nullptr;
+    File	oldFile = nullptr;
+    File	mergedFile = nullptr;
+    File	deltaFile = nullptr;
     int		c = 0;
 
     util_init(&argc, &argv);
@@ -444,13 +444,13 @@ main (int argc, char *argv[])
      * Open the files
      */
     oldFile = util_fopen_locked(oldFileName, "r");
-    if (oldFile == NULL)
+    if (oldFile == nullptr)
     {
 	perror(oldFileName);
 	exit(1);
     }
     newFile = util_fopen_locked(newFileName, "r");
-    if (newFile == NULL)
+    if (newFile == nullptr)
     {
 	perror(newFileName);
 	exit(1);
@@ -465,20 +465,20 @@ main (int argc, char *argv[])
 			&mergedFile,
 			&deltaFile);
 
-    if ((rc >= 0) && (mergedFile == NULL))
+    if ((rc >= 0) && (mergedFile == nullptr))
     {
 	printf("No changes found.\n");
     }
 
-    if (deltaFile != NULL)
+    if (deltaFile != nullptr)
     {
 	char	name[1024];
-	File	f = NULL;
+	File	f = nullptr;
 	sprintf(name, "%s.delta", oldFileName);
 	printf("writing %s\n", name);
 	unlink(name);
 	f = util_fopen_locked(name, "w");
-	if (f == NULL)
+	if (f == nullptr)
 	{
 	    perror(name);
 	    exit(1);
@@ -492,15 +492,15 @@ main (int argc, char *argv[])
 	util_fclose(f);
     }
 
-    if (mergedFile != NULL)
+    if (mergedFile != nullptr)
     {
 	char	name[1024];
-	File	f = NULL;
+	File	f = nullptr;
 	sprintf(name, "%s.merge", oldFileName);
 	printf("writing %s\n", name);
 	unlink(name);
 	f = util_fopen_locked(name, "w");
-	if (f == NULL)
+	if (f == nullptr)
 	{
 	    perror(name);
 	    exit(1);

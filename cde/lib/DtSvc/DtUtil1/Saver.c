@@ -70,7 +70,7 @@ struct saver_state {
 
 static Atom xa_saver_register;
 
-static struct saver_state saver_list = {0, (Window)0, NULL};
+static struct saver_state saver_list = {0, (Window)0, nullptr};
 
 /*
  * Local functions.
@@ -179,7 +179,7 @@ _DtSaverStart(
  /* 
   * Add event handler (it might already be there - that's ok).
   */
-  XtAddEventHandler(drawArea[0], 0, True, RegisterSaverCB, NULL);
+  XtAddEventHandler(drawArea[0], 0, True, RegisterSaverCB, nullptr);
 
  /*
   * Allocate state structure for this saver.
@@ -187,7 +187,7 @@ _DtSaverStart(
   if (!(state = (struct saver_state *)malloc(sizeof(struct saver_state))))
   {
     _DtSvcProcessUnlock();
-    return(NULL);
+    return(nullptr);
   }
 
  /*
@@ -195,9 +195,9 @@ _DtSaverStart(
   */
   state->serial = saver_list.serial++;
   state->xid = (Window)0;
-  state->next = NULL;
+  state->next = nullptr;
   p = &saver_list;
-  while (p->next != NULL)
+  while (p->next != nullptr)
   {
     p = p->next;
   }
@@ -224,8 +224,8 @@ _DtSaverStart(
   /*
   * Launch saver.
   */
-  DtActionInvoke(wAction, saverAction, NULL, 0,
-                 NULL, NULL, NULL, 0, NULL, NULL);
+  DtActionInvoke(wAction, saverAction, nullptr, 0,
+                 nullptr, nullptr, nullptr, 0, nullptr, nullptr);
 
  /*
   * Return array as state information.
@@ -352,7 +352,7 @@ DtSaverGetWindows(
   _DtSvcDisplayToAppContext(display); 
 
   _DtSvcAppLock(app);
-  *window = NULL;
+  *window = nullptr;
   *count = 0;
 
   _DtSvcProcessLock();
@@ -384,13 +384,13 @@ DtSaverGetWindows(
   * Extract serial.
   */
   q = _XStrtok(p, " ", strtok_buf);
-  serial = (unsigned short)strtoul(q, NULL, 10);
+  serial = (unsigned short)strtoul(q, nullptr, 10);
 
  /*
   * Extract envcount.
   */
-  q = _XStrtok(NULL, " ", strtok_buf);
-  envcount = (int)strtoul(q, NULL, 10);
+  q = _XStrtok(nullptr, " ", strtok_buf);
+  envcount = (int)strtoul(q, nullptr, 10);
 
  /*
   * Allocate memory for window array.
@@ -409,8 +409,8 @@ DtSaverGetWindows(
   */
   for (*count = 0; *count < envcount; (*count)++)
   {
-    q = _XStrtok(NULL, " ", strtok_buf);
-    (*window)[*count] = (Window)strtoul(q, NULL, 16);
+    q = _XStrtok(nullptr, " ", strtok_buf);
+    (*window)[*count] = (Window)strtoul(q, nullptr, 16);
   }
 
  /*
@@ -424,7 +424,7 @@ DtSaverGetWindows(
   xid_window = XCreateWindow(display, DefaultRootWindow(display),
                              0, 0, 1, 1, 0,
                              CopyFromParent, InputOutput, CopyFromParent,
-                             0, NULL);
+                             0, nullptr);
 
   if (xid_window == (Window)0)
   {
@@ -432,7 +432,7 @@ DtSaverGetWindows(
     * Could not create dummy window.
     */
     free((char *)*window);
-    *window = NULL;
+    *window = nullptr;
     *count = 0;
     _DtSvcProcessUnlock();
     _DtSvcAppUnlock(app);
@@ -519,12 +519,12 @@ RegisterSaverCB(
       * Find event in saver list.
       */
       state = saver_list.next;
-      while (state != NULL && state->serial != serial)
+      while (state != nullptr && state->serial != serial)
       {
         state = state->next;
       }
    
-      if (state != NULL) 
+      if (state != nullptr) 
       {
        /*
         * _DtSaverStop() not yet called for this saver. Store xid in 

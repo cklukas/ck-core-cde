@@ -66,7 +66,7 @@ _DtCmUpdateAttributes(
 		return (stat);
 
 	for (i = 0; i < numsrc && stat == CSA_SUCCESS; i++) {
-		if (srcattrs[i].name.name == NULL)
+		if (srcattrs[i].name.name == nullptr)
 			continue;
 
 		if (srcattrs[i].name.num <= 0)
@@ -81,7 +81,7 @@ _DtCmUpdateAttributes(
 
 			/* an attribute that is not there has no value to
 			 * remove, and a new one needs a value to get its type */
-			if (srcattrs[i].value == NULL)
+			if (srcattrs[i].value == nullptr)
 				continue;
 
 			if ((stat = _DtCmExtendNameTable(srcattrs[i].name.name,
@@ -101,7 +101,7 @@ _DtCmUpdateAttributes(
 					dstattrs, &srcattrs[i]);
 			}
 		} else {
-			if ((*tbl)->names[index] == NULL) {
+			if ((*tbl)->names[index] == nullptr) {
 				/* fill in the missing hole */
 				if ((stat = _DtCm_add_name_to_table(*tbl,
 				    index, srcattrs[i].name.name))
@@ -147,9 +147,9 @@ _DtCmUpdateAttribute(
 {
 	CSA_return_code	stat = CSA_SUCCESS;
 
-	if (to->name.name == NULL) {
+	if (to->name.name == nullptr) {
 		to->name.num = from->name.num;
-		if ((to->name.name = strdup(from->name.name)) == NULL)
+		if ((to->name.name = strdup(from->name.name)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
@@ -201,7 +201,7 @@ _DtCmUpdateAttribute(
 		}
 	} else {
 		_DtCm_free_cms_attribute_value(to->value);
-		to->value = NULL;
+		to->value = nullptr;
 	}
 
 	return (stat);
@@ -213,16 +213,16 @@ _DtCmUpdateAccessListAttrVal(
 	cms_attribute_value **attrval)
 {
 	cms_attribute_value *val;
-	cms_access_entry *newlist = NULL;
+	cms_access_entry *newlist = nullptr;
 
 	if (newval && newval->item.access_list_value &&
 	    (newlist = _DtCm_copy_cms_access_list(
-	    newval->item.access_list_value)) == NULL)
+	    newval->item.access_list_value)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if (*attrval == NULL) {
+	if (*attrval == nullptr) {
 		if ((val = (cms_attribute_value *)malloc(
-		    sizeof(cms_attribute_value))) == NULL) {
+		    sizeof(cms_attribute_value))) == nullptr) {
 			if (newlist)
 				_DtCm_free_cms_access_entry(newlist);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -250,9 +250,9 @@ _DtCmUpdateSint32AttrVal(
 	cms_attribute_value	*val;
 
 	if (newval) {
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				return (CSA_E_INSUFFICIENT_MEMORY);
 			}
 
@@ -265,7 +265,7 @@ _DtCmUpdateSint32AttrVal(
 	} else if (*attrval) {
 
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);
@@ -277,16 +277,16 @@ _DtCmUpdateStringAttrVal(
 	cms_attribute_value **attrval)
 {
 	cms_attribute_value	*val;
-	char *newstring = NULL;
+	char *newstring = nullptr;
 
 	if (newval) {
 		if (newval->item.string_value &&
-		    (newstring = strdup(newval->item.string_value)) == NULL)
+		    (newstring = strdup(newval->item.string_value)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				if (newstring)
 					free(newstring);
 				return (CSA_E_INSUFFICIENT_MEMORY);
@@ -307,7 +307,7 @@ _DtCmUpdateStringAttrVal(
 
 		free((*attrval)->item.string_value);
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);
@@ -320,16 +320,16 @@ _DtCmUpdateReminderAttrVal(
 {
 	CSA_return_code		stat;
 	cms_attribute_value	*val;
-	CSA_reminder		*rem = NULL;
+	CSA_reminder		*rem = nullptr;
 
 	if (newval && newval->item.reminder_value) {
 		if ((stat = _DtCm_copy_reminder(newval->item.reminder_value,
 		    &rem)) != CSA_SUCCESS)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				if (rem)
 					_DtCm_free_reminder(rem);
 				return (CSA_E_INSUFFICIENT_MEMORY);
@@ -350,7 +350,7 @@ _DtCmUpdateReminderAttrVal(
 
 		_DtCm_free_reminder((*attrval)->item.reminder_value);
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);
@@ -362,16 +362,16 @@ _DtCmUpdateDateTimeListAttrVal(
 	cms_attribute_value **attrval)
 {
 	cms_attribute_value	*val;
-	CSA_date_time_list	dtlist = NULL;
+	CSA_date_time_list	dtlist = nullptr;
 
 	if (newval && newval->item.date_time_list_value) {
 		if ((dtlist = _DtCm_copy_date_time_list(
-		    newval->item.date_time_list_value)) == NULL)
+		    newval->item.date_time_list_value)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				if (dtlist)
 					_DtCm_free_date_time_list(dtlist);
 				return (CSA_E_INSUFFICIENT_MEMORY);
@@ -393,7 +393,7 @@ _DtCmUpdateDateTimeListAttrVal(
 
 		_DtCm_free_date_time_list((*attrval)->item.date_time_list_value);
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);
@@ -406,16 +406,16 @@ _DtCmUpdateOpaqueDataAttrVal(
 {
 	CSA_return_code		stat;
 	cms_attribute_value	*val;
-	CSA_opaque_data		*opq = NULL;
+	CSA_opaque_data		*opq = nullptr;
 
 	if (newval && newval->item.opaque_data_value) {
 		if ((stat = _DtCm_copy_opaque_data(
 		    newval->item.opaque_data_value, &opq)) != CSA_SUCCESS)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				if (opq) _DtCm_free_opaque_data(opq);
 				return (CSA_E_INSUFFICIENT_MEMORY);
 			}
@@ -436,7 +436,7 @@ _DtCmUpdateOpaqueDataAttrVal(
 
 		_DtCm_free_opaque_data((*attrval)->item.opaque_data_value);
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);

@@ -126,7 +126,7 @@ splitIntoWords( char *s )
 	{
     	    args = (char **) malloc (2 * sizeof (char *));
     	    if (!args)
-	    	return NULL;
+	    	return nullptr;
 	}
 	else
 	{
@@ -135,7 +135,7 @@ splitIntoWords( char *s )
 	    if (!newargs)
 	    {
 	    	freeArgs (args);
-	    	return NULL;
+	    	return nullptr;
 	    }
 	    args = newargs;
 	}
@@ -143,12 +143,12 @@ splitIntoWords( char *s )
 	if (!args[nargs])
 	{
 	    freeArgs (args);
-	    return NULL;
+	    return nullptr;
 	}
 	strncpy (args[nargs], wordStart, s - wordStart);
 	args[nargs][s-wordStart] = '\0';
 	++nargs;
-	args[nargs] = NULL;
+	args[nargs] = nullptr;
     }
     return args;
 }
@@ -162,7 +162,7 @@ copyArgs( char **args )
 	;
     new = (char **) malloc ((a - args + 1) * sizeof (char *));
     if (!new)
-	return NULL;
+	return nullptr;
     n = new;
     a = args;
     while (*n++ = *a++)
@@ -188,13 +188,13 @@ ParseDisplay( char *source,
 	      struct passwd *puser)
 {
     char		**args, **argv, **a;
-    char		*name = NULL, *class, *type;
+    char		*name = nullptr, *class, *type;
     struct display	*d;
     int			usedDefaultType;
     int			parse_uid;
     DisplayType		displayType;
 
-    char		*device=NULL; /* ITE device associated with display */
+    char		*device=nullptr; /* ITE device associated with display */
 
 
     args = splitIntoWords (source);
@@ -225,13 +225,13 @@ ParseDisplay( char *source,
      *  strip off display device if found in second field...
      */
 
-    if ( (device = strchr(args[1],'@')) != NULL) {
+    if ( (device = strchr(args[1],'@')) != nullptr) {
 	*device = '\0';
 	device++;
     }
     	
     displayType = parseDisplayType (args[1], &usedDefaultType, &parse_uid);
-    class = NULL;
+    class = nullptr;
     type = args[1];
     argv = args + 2;
 
@@ -247,7 +247,7 @@ ParseDisplay( char *source,
 
         memset(tname, 0, 128);
 	gethostname(tname, 128 - 1);
-	if ( (hostent = gethostbyname(tname)) == NULL ) {
+	if ( (hostent = gethostbyname(tname)) == nullptr ) {
 	    LogError(
 		ReadCatalog(MC_LOG_SET,MC_LOG_INV_HOSTNM,MC_DEF_LOG_INV_HOSTNM),
 		      tname);
@@ -280,7 +280,7 @@ ParseDisplay( char *source,
 	 *  strip off display device if found in third field...
 	 */
 
-	if ( device == NULL && (device = strchr(args[2],'@')) != NULL) {
+	if ( device == nullptr && (device = strchr(args[2],'@')) != nullptr) {
 	    *device = '\0';
 	    device++;
 	}
@@ -301,14 +301,14 @@ ParseDisplay( char *source,
     if (parse_uid) {
 	struct passwd *p;
 
-        if (*argv == NULL) {
+        if (*argv == nullptr) {
 	    /* the line ends where the user name should be */
 	    Debug("Xservers 'local_uid' has no user name\n");
 	    Debug("Using default pseudo user = %s\n", puser->pw_name);
 	} else {
 	    Debug("Xservers 'local_uid' pseudo user = %s\n", *argv);
 
-	    if ( (p = getpwnam (*argv)) != NULL) {
+	    if ( (p = getpwnam (*argv)) != nullptr) {
 		*puser = *p;
 	    } else {
 		Debug("Could not get password entry for user name '%s'\n", *argv);
@@ -387,8 +387,8 @@ ParseDisplay( char *source,
      * add device to display information...
      */
      
-    if ( device != NULL && strlen(device) != 0 ) {
-	if (d->gettyLine != NULL)
+    if ( device != nullptr && strlen(device) != 0 ) {
+	if (d->gettyLine != nullptr)
 	    free(d->gettyLine);
 
 	d->gettyLine = strdup(device);

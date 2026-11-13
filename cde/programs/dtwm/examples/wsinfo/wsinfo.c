@@ -108,8 +108,8 @@ int main (int argc, char **argv)
      */
     n = 0;
     XtSetArg (args[n], XmNallowShellResize, True);  n++;
-    toplevel = XtAppInitialize (&app_context, "XMDemos", NULL, 0, 
-	    &argc, argv, NULL, args, n);
+    toplevel = XtAppInitialize (&app_context, "XMDemos", nullptr, 0, 
+	    &argc, argv, nullptr, args, n);
 
     /* 
      * Set up X error handling
@@ -155,7 +155,7 @@ int main (int argc, char **argv)
     /*  
      * add callback  
      */
-    XtAddCallback (QUIT_BUTTON, XmNactivateCallback, quitCB, NULL);
+    XtAddCallback (QUIT_BUTTON, XmNactivateCallback, quitCB, nullptr);
 
     /*******************************************
      * UPDATE WORKSPACE INFO BUTTON
@@ -185,7 +185,7 @@ int main (int argc, char **argv)
     /*  
      * add callback  
      */
-    XtAddCallback (UPDATE_BUTTON, XmNactivateCallback, updateCB, NULL);
+    XtAddCallback (UPDATE_BUTTON, XmNactivateCallback, updateCB, nullptr);
 
     /*******************************************
      * SEPARATOR
@@ -435,7 +435,7 @@ int main (int argc, char **argv)
      *       control when the map of the window occurs.
      */
     (void) DtWsmAddCurrentWorkspaceCallback (toplevel,
-		wschangecb, NULL);
+		wschangecb, nullptr);
 
     DtWsmOccupyAllWorkspaces (XtDisplay(toplevel), XtWindow(toplevel));
 

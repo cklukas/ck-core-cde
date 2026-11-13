@@ -109,10 +109,10 @@ static char DTDATABASESEARCHPATH_DEFAULT[] =
 /****   Substitution records used by XtFindFile() in _DtExpandLang()   ****/
 static SubstitutionRec langSubstitutions[] =
 {
-    {'L', (char *)NULL},
-    {'l', (char *)NULL},
-    {'t', (char *)NULL},
-    {'c', (char *)NULL}
+    {'L', (char *)nullptr},
+    {'l', (char *)nullptr},
+    {'t', (char *)nullptr},
+    {'c', (char *)nullptr}
 };
 static int nLangSubstitutions = XtNumber(langSubstitutions);
 
@@ -197,18 +197,18 @@ __setupLangSubstitutions(void)
  *
  * Here we hard code the default to "C" instead of leaving it NULL.
  */
-    languagePart = territoryPart = codesetPart = (char *)NULL;
-    if ((lang = getenv ("LANG")) == (char *)NULL)
+    languagePart = territoryPart = codesetPart = (char *)nullptr;
+    if ((lang = getenv ("LANG")) == (char *)nullptr)
 	lang = "C";
 
     lang = XtNewString(lang); /* free'd in __freeLangSubstitutions() */
 
     tlPtr = lang;
-    endPtr = (char *)NULL;
-    if ((ttPtr = DtStrchr(tlPtr, '_')) != (char *)NULL)
+    endPtr = (char *)nullptr;
+    if ((ttPtr = DtStrchr(tlPtr, '_')) != (char *)nullptr)
 	ttPtr++;
 
-    if ((tcPtr = DtStrchr(ttPtr ? ttPtr : tlPtr, '.')) != (char *)NULL)
+    if ((tcPtr = DtStrchr(ttPtr ? ttPtr : tlPtr, '.')) != (char *)nullptr)
     {
 	endPtr = tcPtr++;
 	if (*tcPtr != '\0')
@@ -324,8 +324,8 @@ _DtExpandLang(
     char *newString;
     char *tokPtr;
 
-    if (string == NULL)
-	return (NULL);
+    if (string == nullptr)
+	return (nullptr);
 
     /*
      *  We're going to use XtFindFile() to perform the replacements;
@@ -334,7 +334,7 @@ _DtExpandLang(
      *  passing it along.
      */
     for (nColons = 0, tmpPtr = string;
-	 (tmpPtr = DtStrchr(tmpPtr, ':')) != (char *)NULL;
+	 (tmpPtr = DtStrchr(tmpPtr, ':')) != (char *)nullptr;
 	 nColons++, tmpPtr++)
 	/* EMPTY */
 	;
@@ -342,7 +342,7 @@ _DtExpandLang(
     newString =
 	(char *)XtCalloc(1, (strlen(string) + nColons + 1) * sizeof(char));
     for (tmpPtr = string;
-	 (tmpPtr1 = DtStrchr(tmpPtr, ':')) != (char *)NULL;
+	 (tmpPtr1 = DtStrchr(tmpPtr, ':')) != (char *)nullptr;
 	 tmpPtr = tmpPtr1 + 1)
     {
 	strncat(newString, tmpPtr, tmpPtr1 - tmpPtr);
@@ -361,10 +361,10 @@ _DtExpandLang(
      *  pass off to XtFindFile().
      */
     pathLen = maxPathLen = 0;
-    newPath = (char *)NULL;
+    newPath = (char *)nullptr;
     for (thisPath = DtStrtok_r(newString, ",", &tokPtr);
-	 thisPath != (char *)NULL;
-	 thisPath = DtStrtok_r((char *)NULL, ",", &tokPtr))
+	 thisPath != (char *)nullptr;
+	 thisPath = DtStrtok_r((char *)nullptr, ",", &tokPtr))
     {
 	modPath = XtFindFile(thisPath, langSubstitutions,
 			     nLangSubstitutions, __testPath);
@@ -487,7 +487,7 @@ _DtFreeDirVector(
    
    if (dir_vector)
    {
-      for (v = dir_vector; *v != NULL; v++)
+      for (v = dir_vector; *v != nullptr; v++)
          XtFree ((char *)*v);
    
       XtFree ((char *)dir_vector);
@@ -627,7 +627,7 @@ _DtFindMatchingFiles(
    DIR *dirp;		/* Variables for walking through the directory
 			   	entries. */
    char * next_file;
-   struct dirent *dp = NULL;
+   struct dirent *dp = nullptr;
    char *file_suffix;
    int suffixLen, nameLen;
    int nextIndex;
@@ -639,8 +639,8 @@ _DtFindMatchingFiles(
    struct dirent *result;
 
 /* CODE */   
-   if (dirs == NULL)
-      return(NULL);
+   if (dirs == nullptr)
+      return(nullptr);
    
    files = (DtDirPaths *) XtMalloc((Cardinal)(sizeof(DtDirPaths)));
    files->dirs = (char **) XtMalloc(sizeof(char *) * FILE_INCREMENT);
@@ -650,14 +650,14 @@ _DtFindMatchingFiles(
    nextIndex = 0;
    
    /* Process each one of the directories in priority order. */
-   while (dirs->paths[nextIndex] != NULL) {
+   while (dirs->paths[nextIndex] != nullptr) {
 
       next_path = dirs->paths[nextIndex];
       dirp = opendir (next_path);
       base = num_found;
       
       files_in_this_directory = 0;
-      while ((result = _XReaddir(dirp, dirEntryBuf)) != NULL) {
+      while ((result = _XReaddir(dirp, dirEntryBuf)) != nullptr) {
 
 	 /* Check the name to see if it matches the suffix and is
 	    a file. */
@@ -709,8 +709,8 @@ _DtFindMatchingFiles(
          _DtSortFiles (base, files_in_this_directory, files);
       nextIndex++;
    }
-   files->dirs[num_found] = NULL;
-   files->paths[num_found] = NULL;
+   files->dirs[num_found] = nullptr;
+   files->paths[num_found] = nullptr;
    return (files);
    
 }
@@ -814,13 +814,13 @@ _DtGetDatabaseDirPaths( void )
    /* Prepare the input vector and the two output vectors. */
    dir_vector = _DtVectorizeInPlace (dir_string, ',');
    ret_paths = (DtDirPaths *)XtMalloc(sizeof(DtDirPaths));
-   ret_paths->dirs = NULL;
-   ret_paths->paths = NULL;
+   ret_paths->dirs = nullptr;
+   ret_paths->paths = nullptr;
    valid_dirs = 0;
 
-   for (next_dir = dir_vector; *next_dir != NULL; next_dir++) {
+   for (next_dir = dir_vector; *next_dir != nullptr; next_dir++) {
 
-       if (DtStrchr (*next_dir, '/') == NULL){
+       if (DtStrchr (*next_dir, '/') == nullptr){
 	   /* It must be a relative path. */
            /* Ignore relative paths */
            continue;
@@ -848,7 +848,7 @@ _DtGetDatabaseDirPaths( void )
 
               /* Make sure the directory name is fully-qualified with a host
 	         component. */
-              if (DtStrchr (*next_dir, ':') != NULL)
+              if (DtStrchr (*next_dir, ':') != nullptr)
 	         dir = XtNewString(*next_dir);
             
 	      /* If there is no host component, see if there is 
@@ -880,11 +880,11 @@ _DtGetDatabaseDirPaths( void )
    ret_paths->dirs = (char **) XtRealloc ((char *)ret_paths->dirs, 
 					  (Cardinal) (sizeof (char *) * 
 						      (valid_dirs + 1)));
-   ret_paths->dirs[valid_dirs] = NULL;
+   ret_paths->dirs[valid_dirs] = nullptr;
    ret_paths->paths = (char **) XtRealloc ((char *)ret_paths->paths, 
 					   (Cardinal) (sizeof (char *) * 
 						       (valid_dirs + 1)));
-   ret_paths->paths[valid_dirs] = NULL;
+   ret_paths->paths[valid_dirs] = nullptr;
    
    XtFree ((char *) dir_string);
    XtFree ((char *) nwh_host);

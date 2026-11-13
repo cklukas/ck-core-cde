@@ -138,7 +138,7 @@ cms_ping_5_svc(void *args, struct svc_req *svcrq)
 	if (debug)
 		fprintf(stderr, "cms_ping_5_svc called\n");
 
-	return(NULL); /* for RPC reply */
+	return(nullptr); /* for RPC reply */
 }
 
 
@@ -178,7 +178,7 @@ cms_open_calendar_5_svc(cms_open_args *args, struct svc_req *svcrq)
 	}
 
 	/* check parameter */
-	if (args->cal == NULL) {
+	if (args->cal == nullptr) {
 		res.stat = CSA_E_INVALID_PARAMETER;
 		return (&res);
 	}
@@ -223,7 +223,7 @@ cms_create_calendar_5_svc(cms_create_args *args, struct svc_req *svcrq)
 		fprintf(stderr, "cms_create_calendar_5_svc called\n");
 
 	/* check parameter */
-	if (args->cal == NULL) {
+	if (args->cal == nullptr) {
 		res = CSA_E_INVALID_PARAMETER;
 		return (&res);
 	}
@@ -241,7 +241,7 @@ cms_create_calendar_5_svc(cms_create_args *args, struct svc_req *svcrq)
 		return (&res);
 
 	if ((res = _DtCmsGetCalendarByName(args->cal, B_FALSE, &cal))
-	    == CSA_SUCCESS && cal != NULL) {
+	    == CSA_SUCCESS && cal != nullptr) {
 
 		res = CSA_E_CALENDAR_EXISTS;
 
@@ -304,7 +304,7 @@ cms_register_5_svc(cms_register_args *args, struct svc_req *svcrq)
 	if (debug)
 		fprintf(stderr, "cms_register_5_svc called\n");
 
-	if (args->cal == NULL ||
+	if (args->cal == nullptr ||
 	    args->update_type >= (CSA_CB_ENTRY_UPDATED << 1)) {
 		res = CSA_E_INVALID_PARAMETER;
 		return (&res);
@@ -321,12 +321,12 @@ cms_register_5_svc(cms_register_args *args, struct svc_req *svcrq)
 	}
 
 	if ((rinfo = _DtCmsGetRegistration(&(cal->rlist), user, args->prognum,
-	    args->versnum, args->procnum, args->pid)) == NULL) {
+	    args->versnum, args->procnum, args->pid)) == nullptr) {
 		/* this client has not registered */
 
 		if ((rinfo = _DtCmsMakeRegistrationInfo(user,
 		    args->update_type, args->prognum, args->versnum,
-		    args->procnum, args->pid)) == NULL) {
+		    args->procnum, args->pid)) == nullptr) {
 			res = CSA_E_INSUFFICIENT_MEMORY;
 			return (&res);
 		}
@@ -364,7 +364,7 @@ cms_unregister_5_svc(cms_register_args *args, struct svc_req *svcrq)
 	if (debug)
 		fprintf(stderr, "cms_unregister_5_svc called\n");
 
-	if (args->cal == NULL ||
+	if (args->cal == nullptr ||
 	    args->update_type >= (CSA_CB_ENTRY_UPDATED << 1)) {
 		res = CSA_E_INVALID_PARAMETER;
 		return (&res);
@@ -377,8 +377,8 @@ cms_unregister_5_svc(cms_register_args *args, struct svc_req *svcrq)
 	    != CSA_SUCCESS)
 		return (&res);
 
-	if (cal == NULL || (rinfo = _DtCmsGetRegistration(&(cal->rlist), user,
-	    args->prognum, args->versnum, args->procnum, args->pid)) == NULL) {
+	if (cal == nullptr || (rinfo = _DtCmsGetRegistration(&(cal->rlist), user,
+	    args->prognum, args->versnum, args->procnum, args->pid)) == nullptr) {
 		res = CSA_E_CALLBACK_NOT_REGISTERED;
 		return (&res);
 	}
@@ -504,7 +504,7 @@ cms_set_calendar_attr_5_svc(cms_set_cal_attr_args *args, struct svc_req *svcrq)
 	}
 
 	/* check argument */
-	if (args->cal == NULL || args->num_attrs == 0) {
+	if (args->cal == nullptr || args->num_attrs == 0) {
 		res = CSA_E_INVALID_PARAMETER;
 		return (&res);
 	}
@@ -513,7 +513,7 @@ cms_set_calendar_attr_5_svc(cms_set_cal_attr_args *args, struct svc_req *svcrq)
 	if ((res = _DtCm_check_cal_cms_attributes(
 	    (cal->fversion >= _DtCM_FIRST_EXTENSIBLE_DATA_VERSION ?
 	    cal->fversion : _DtCM_FIRST_EXTENSIBLE_DATA_VERSION - 1),
-	    args->num_attrs, args->attrs, NULL, NULL, B_TRUE, B_FALSE, B_TRUE))
+	    args->num_attrs, args->attrs, nullptr, nullptr, B_TRUE, B_FALSE, B_TRUE))
 	    != CSA_SUCCESS)
 		return (&res);
 
@@ -525,7 +525,7 @@ cms_set_calendar_attr_5_svc(cms_set_cal_attr_args *args, struct svc_req *svcrq)
 		}
 	} else {
 		int		i;
-		Access_Entry_4	*v4list = NULL;
+		Access_Entry_4	*v4list = nullptr;
 
 		/* for old format file, the only settable calendar attribute
 		 * is access list
@@ -535,9 +535,9 @@ cms_set_calendar_attr_5_svc(cms_set_cal_attr_args *args, struct svc_req *svcrq)
 				break;
 		}
 
-		if (args->attrs[i].value == NULL ||
-		    args->attrs[i].value->item.access_list_value == NULL) {
-			res = _DtCmsSetV4AccessListAndLog(cal, NULL);
+		if (args->attrs[i].value == nullptr ||
+		    args->attrs[i].value->item.access_list_value == nullptr) {
+			res = _DtCmsSetV4AccessListAndLog(cal, nullptr);
 		} else {
 			if ((res = _DtCmsCmsAccessToV4Access(
 			    args->attrs[i].value->item.access_list_value,
@@ -597,9 +597,9 @@ cms_lookup_reminder_5_svc(cms_reminder_args *args, struct svc_req *svcrq)
 	if (debug)
 		fprintf(stderr, "cms_lookup_reminder_5_svc called\n");
 
-	if (res.rems != NULL) {
+	if (res.rems != nullptr) {
 		_DtCmsFreeReminderRef(res.rems);
-		res.rems = NULL;
+		res.rems = nullptr;
 	}
 
 	if ((res.stat = _DtCmsV5LoadAndCheckAccess(svcrq, args->cal, &user,
@@ -650,7 +650,7 @@ cms_lookup_entries_5_svc(cms_lookup_entries_args *args, struct svc_req *svcrq)
 
 	if (res.entries) {
 		_DtCm_free_cms_entries(res.entries);
-		res.entries = NULL;
+		res.entries = nullptr;
 	}
 
 	if ((res.stat = _DtCmsV5LoadAndCheckAccess(svcrq, args->cal, &user,
@@ -664,7 +664,7 @@ cms_lookup_entries_5_svc(cms_lookup_entries_args *args, struct svc_req *svcrq)
 	}
 
 	/* check operator */
-	if ((res.stat = _DtCm_check_operator(args->num_attrs, NULL,
+	if ((res.stat = _DtCm_check_operator(args->num_attrs, nullptr,
 	    args->attrs, args->ops)) != CSA_SUCCESS)
 		return (&res);
 
@@ -672,7 +672,7 @@ cms_lookup_entries_5_svc(cms_lookup_entries_args *args, struct svc_req *svcrq)
 	if ((res.stat = _DtCmHashCriteria(
 	    cal->fversion < _DtCM_FIRST_EXTENSIBLE_DATA_VERSION ?
 	    _DtCm_entry_name_tbl : cal->entry_tbl, args->num_attrs,
-	    NULL, args->attrs, args->ops, &no_match, &no_start_time_range,
+	    nullptr, args->attrs, args->ops, &no_match, &no_start_time_range,
 	    &no_end_time_range, &start1, &start2, &end1, &end2, &id,
 	    &hnum, &hattrs, &hops)) == CSA_E_INVALID_ATTRIBUTE) {
 
@@ -699,22 +699,22 @@ cms_lookup_entries_5_svc(cms_lookup_entries_args *args, struct svc_req *svcrq)
 					&res.entries);
 	} else {
 		Range_4	prange;
-		Appt_4	*appt = NULL;;
+		Appt_4	*appt = nullptr;;
 
 		if (id > 0) {
 			res.stat = _DtCmsLookupKeyrangeV4(cal, user, access,
 					no_start_time_range, no_end_time_range,
 					start1, start2, end1, end2, id,
 					_DtCm_match_one_appt, hnum, hattrs,
-					hops, &appt, NULL);
+					hops, &appt, nullptr);
 		} else {
 			prange.key1 = start1;
 			prange.key2 = start2;
-			prange.next = NULL;
+			prange.next = nullptr;
 			res.stat = _DtCmsLookupRangeV4(cal, user, access,
 					&prange, no_end_time_range, end1, end2,
 					_DtCm_match_one_appt, hnum,
-					hattrs, hops, &appt, NULL);
+					hattrs, hops, &appt, nullptr);
 		}
 
 		if (res.stat == CSA_SUCCESS && appt) {
@@ -742,7 +742,7 @@ cms_enumerate_sequence_5_svc(cms_enumerate_args *args, struct svc_req *svcrq)
 
 	if (res.entries) {
 		_DtCm_free_cms_entries(res.entries);
-		res.entries = NULL;
+		res.entries = nullptr;
 	}
 
 	if ((res.stat = _DtCmsV5LoadAndCheckAccess(svcrq, args->cal, &user,
@@ -759,14 +759,14 @@ cms_enumerate_sequence_5_svc(cms_enumerate_args *args, struct svc_req *svcrq)
 	if (cal->fversion >= _DtCM_FIRST_EXTENSIBLE_DATA_VERSION) {
 		res.stat = _DtCmsEnumerateSequenceById(cal, user, access,
 				B_FALSE, B_TRUE, args->start, args->end,
-				0, 0, args->id, 0, NULL, NULL, &res.entries);
+				0, 0, args->id, 0, nullptr, nullptr, &res.entries);
 	} else {
 		Range_4 prange;
-		Appt_4 *appt = NULL;
+		Appt_4 *appt = nullptr;
 		res.stat = _DtCmsLookupKeyrangeV4(cal, user, access,
 				B_FALSE, B_TRUE, args->start, args->end,
-				0, 0, args->id, NULL, 0, NULL, NULL, &appt,
-				NULL);
+				0, 0, args->id, nullptr, 0, nullptr, nullptr, &appt,
+				nullptr);
 
 		if (res.stat == CSA_SUCCESS && appt) {
 			res.stat = _DtCmsAppt4ToCmsentriesForClient(args->cal,
@@ -791,7 +791,7 @@ cms_get_entry_attr_5_svc(cms_get_entry_attr_args *args, struct svc_req *svcrq)
 
 	if (res.entries) {
 		_DtCmsFreeEntryAttrResItem(res.entries);
-		res.entries = NULL;
+		res.entries = nullptr;
 	}
 
 	if ((res.stat = _DtCmsV5LoadAndCheckAccess(svcrq, args->cal, &user,
@@ -830,15 +830,15 @@ cms_insert_entry_5_svc(cms_insert_args *args, struct svc_req *svcrq)
 	cms_key			key;
 	char			*user;
 	uint			access, needaccess;
-	Appt_4			*appt = NULL;
+	Appt_4			*appt = nullptr;
 
 	if (debug)
 		fprintf(stderr, "cms_insert_entry_5_svc called\n");
 
-	if (res.entry != NULL) {
+	if (res.entry != nullptr) {
 		res.entry->num_attrs--;
 		_DtCm_free_cms_entry(res.entry);
-		res.entry = NULL;
+		res.entry = nullptr;
 	}
 
 	if ((res.stat = _DtCmsV5LoadAndCheckAccess(svcrq, args->cal, &user,
@@ -854,7 +854,7 @@ cms_insert_entry_5_svc(cms_insert_args *args, struct svc_req *svcrq)
 	}
 
 	/* check argument */
-	if (args->cal == NULL || args->num_attrs == 0) {
+	if (args->cal == nullptr || args->num_attrs == 0) {
 		res.stat = CSA_E_INVALID_PARAMETER;
 		return (&res);
 	}
@@ -903,7 +903,7 @@ cms_insert_entry_5_svc(cms_insert_args *args, struct svc_req *svcrq)
 
 		key = entry->key;
 	} else {
-		if ((appt = _DtCm_make_appt4(B_TRUE)) == NULL) {
+		if ((appt = _DtCm_make_appt4(B_TRUE)) == nullptr) {
 			res.stat = CSA_E_INSUFFICIENT_MEMORY;
 			return (&res);
 		}
@@ -915,7 +915,7 @@ cms_insert_entry_5_svc(cms_insert_args *args, struct svc_req *svcrq)
 		}
 
 		if (appt->author) free(appt->author);
-		if ((appt->author = strdup(user)) == NULL) {
+		if ((appt->author = strdup(user)) == nullptr) {
 			_DtCm_free_appt4(appt);
 			res.stat = CSA_E_INSUFFICIENT_MEMORY;
 			return (&res);
@@ -943,7 +943,7 @@ cms_insert_entry_5_svc(cms_insert_args *args, struct svc_req *svcrq)
 
 	/* do callback */
 	cal->rlist = _DtCmsDoV1CbForV4Data(cal->rlist, user, args->pid,
-			&key, NULL);
+			&key, nullptr);
 
 	cal->rlist = _DtCmsDoInsertEntryCallback(cal->rlist, cal->calendar,
 			user, key.id, args->pid);
@@ -971,15 +971,15 @@ cms_update_entry_5_svc(cms_update_args *args, struct svc_req *svcrq)
 	caddr_t			event;
 	char			*user;
 	uint			access, needaccess;
-	Appt_4			*appt = NULL;
+	Appt_4			*appt = nullptr;
 
 	if (debug)
 		fprintf(stderr, "cms_update_entry_5_svc called\n");
 
-	if (res.entry != NULL) {
+	if (res.entry != nullptr) {
 		res.entry->num_attrs--;
 		_DtCm_free_cms_entry(res.entry);
-		res.entry = NULL;
+		res.entry = nullptr;
 	}
 
 	if ((res.stat = _DtCmsV5LoadAndCheckAccess(svcrq, args->cal, &user,
@@ -995,7 +995,7 @@ cms_update_entry_5_svc(cms_update_args *args, struct svc_req *svcrq)
 	}
 
 	/* check argument */
-	if (args->cal == NULL || args->entry.id <= 0 || args->num_attrs == 0) {
+	if (args->cal == nullptr || args->entry.id <= 0 || args->num_attrs == 0) {
 		res.stat = CSA_E_INVALID_PARAMETER;
 		return (&res);
 	}
@@ -1018,39 +1018,39 @@ cms_update_entry_5_svc(cms_update_args *args, struct svc_req *svcrq)
 
 	/* update entry and log it */
 	if (cal->fversion >= _DtCM_FIRST_EXTENSIBLE_DATA_VERSION) {
-		if (event != NULL || args->scope == CSA_SCOPE_ALL) {
+		if (event != nullptr || args->scope == CSA_SCOPE_ALL) {
 			res.stat = _DtCmsUpdateEntry(cal, user, access,
 					&args->entry, args->num_attrs,
-					args->attrs, NULL, &newentry);
+					args->attrs, nullptr, &newentry);
 		} else {
 			res.stat = _DtCmsUpdateInstances(cal, user, access,
 					&args->entry, args->scope,
-					args->num_attrs, args->attrs, NULL,
+					args->num_attrs, args->attrs, nullptr,
 					&newentry);
 		}
 	} else {
 		Options_4	opt;
 
-		if (event != NULL || args->scope == CSA_SCOPE_ALL)
+		if (event != nullptr || args->scope == CSA_SCOPE_ALL)
 			opt = do_all_4;
 		else
 			opt = (args->scope == CSA_SCOPE_ONE) ?
 				do_one_4 : do_forward_4;
 
-		if (event == NULL && (event = hc_lookup(cal->list,
-		    (caddr_t)&args->entry)) == NULL) {
+		if (event == nullptr && (event = hc_lookup(cal->list,
+		    (caddr_t)&args->entry)) == nullptr) {
 
 			res.stat = CSA_X_DT_E_ENTRY_NOT_FOUND;
 
 		} else if ((appt = _DtCm_copy_one_appt4((Appt_4 *)event))
-		    == NULL) {
+		    == nullptr) {
 
 			res.stat = CSA_E_INSUFFICIENT_MEMORY; 
 
 		} else {
 			/* get rid of exceptions */
 			_DtCm_free_excpt4(appt->exception);
-			appt->exception = NULL;
+			appt->exception = nullptr;
 
 			if ((res.stat = _DtCmsAttrsToAppt4(args->num_attrs,
 			    args->attrs, appt, B_TRUE)) == CSA_SUCCESS) {
@@ -1058,11 +1058,11 @@ cms_update_entry_5_svc(cms_update_args *args, struct svc_req *svcrq)
 				if (opt == do_all_4)
 					res.stat = _DtCmsChangeAll(cal, user,
 						access, (Id_4 *)&args->entry,
-						appt, NULL);
+						appt, nullptr);
 				else
 					res.stat = _DtCmsChangeSome(cal, user,
 						access, (Id_4 *)&args->entry,
-						appt, opt, NULL);
+						appt, opt, nullptr);
 
 			}
 		}
@@ -1127,7 +1127,7 @@ cms_delete_entry_5_svc(cms_delete_args *args, struct svc_req *svcrq)
 	}
 
 	/* check argument */
-	if (args->cal == NULL || args->entry.id <= 0) {
+	if (args->cal == nullptr || args->entry.id <= 0) {
 		res = CSA_E_INVALID_PARAMETER;
 		return (&res);
 	}
@@ -1143,22 +1143,22 @@ cms_delete_entry_5_svc(cms_delete_args *args, struct svc_req *svcrq)
 
 	/* delete entry and log it */
 	if (cal->fversion >= _DtCM_FIRST_EXTENSIBLE_DATA_VERSION) {
-		if (event != NULL || args->scope == CSA_SCOPE_ALL) {
+		if (event != nullptr || args->scope == CSA_SCOPE_ALL) {
 			res = _DtCmsDeleteEntryAndLog(cal, user, access,
-				&args->entry, NULL);
+				&args->entry, nullptr);
 		} else {
 			res = _DtCmsDeleteInstancesAndLog(cal, user, access,
-				&args->entry, args->scope, NULL, NULL);
+				&args->entry, args->scope, nullptr, nullptr);
 		}
 	} else {
-		if (event != NULL || args->scope == CSA_SCOPE_ALL) {
+		if (event != nullptr || args->scope == CSA_SCOPE_ALL) {
 			res = _DtCmsDeleteApptAndLog(cal, user, access,
-				(Id_4 *)&args->entry, NULL);
+				(Id_4 *)&args->entry, nullptr);
 		} else {
 			res = _DtCmsDeleteApptInstancesAndLog(cal, user, access,
 				(Id_4 *)&args->entry,
 				((args->scope == CSA_SCOPE_ONE) ? do_one_4 :
-				do_forward_4), NULL, NULL);
+				do_forward_4), nullptr, nullptr);
 		}
 	}
 
@@ -1169,7 +1169,7 @@ cms_delete_entry_5_svc(cms_delete_args *args, struct svc_req *svcrq)
 
 	/* do callback */
 	cal->rlist = _DtCmsDoV1CbForV4Data(cal->rlist, user, args->pid,
-			&args->entry, NULL);
+			&args->entry, nullptr);
 
 	cal->rlist = _DtCmsDoDeleteEntryCallback(cal->rlist, cal->calendar,
 			user, args->entry.id, args->scope, args->entry.time,
@@ -1203,7 +1203,7 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	cms_attribute_value val;
 	cms_access_entry aentry;
 	int		nidx = -1, oidx = -1;
-	char		*name = NULL, *owner = NULL;
+	char		*name = nullptr, *owner = nullptr;
 
 	/*
 	 * if calendar name is a user name, make sure that
@@ -1212,7 +1212,7 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	calname = _DtCmGetPrefix(args->cal, '@');
 	username = _DtCmGetPrefix(user, '@');
 
-	if (calname == NULL || username == NULL) {
+	if (calname == nullptr || username == nullptr) {
 		free(calname);
 		free(username);
 		return (CSA_E_INVALID_PARAMETER);
@@ -1227,11 +1227,11 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	free(calname);
 	free(username);
 
-	if (log == NULL)
+	if (log == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* create internal calendar data structure */
-	if ((cal = _DtCmsMakeCalendar(user, args->cal)) == NULL) {
+	if ((cal = _DtCmsMakeCalendar(user, args->cal)) == nullptr) {
 		free(log);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
@@ -1250,7 +1250,7 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	/* initialize access list to be "WORLD", VIEW_PUBLIC */
 	aentry.user = WORLD;
 	aentry.rights = CSA_VIEW_PUBLIC_ENTRIES;
-	aentry.next = NULL;
+	aentry.next = nullptr;
 	val.item.access_list_value = &aentry;
 	val.type = CSA_VALUE_ACCESS_LIST;
 
@@ -1285,19 +1285,19 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 		    CSA_CAL_ATTR_CALENDAR_NAME) == 0) {
 			nidx = i;
 			name = args->attrs[i].name.name;
-			args->attrs[i].name.name = NULL;
+			args->attrs[i].name.name = nullptr;
 		} else if (strcmp(args->attrs[i].name.name,
 		    CSA_CAL_ATTR_CALENDAR_OWNER) == 0) {
 			oidx = i;
 			owner = args->attrs[i].name.name;
-			args->attrs[i].name.name = NULL;
+			args->attrs[i].name.name = nullptr;
 		}
 	}
 
 	/* initialize calendar attribute with info provided by caller */
 	stat = _DtCmUpdateAttributes(args->num_attrs, args->attrs,
 	    &cal->num_attrs, &cal->attrs, &cal->cal_tbl, B_TRUE,
-	    NULL, B_FALSE);
+	    nullptr, B_FALSE);
 
 	/* give the names back so that they are freed with the arguments */
 	if (nidx >= 0) args->attrs[nidx].name.name = name;
@@ -1310,7 +1310,7 @@ _DtCmsCreateCallog(char *user, cms_create_args *args, _DtCmsCalendar **newcal)
 	}
 
 	/* use passed in char set if client does not supply one */
-	if (cal->attrs[CSA_CAL_ATTR_CHARACTER_SET_I].value == NULL &&
+	if (cal->attrs[CSA_CAL_ATTR_CHARACTER_SET_I].value == nullptr &&
 	     args->char_set && *args->char_set != '\0') {
 		if ((stat = _DtCm_set_string_attrval(args->char_set,
 		    &cal->attrs[CSA_CAL_ATTR_CHARACTER_SET_I].value,
@@ -1351,11 +1351,11 @@ static CSA_return_code
 _ListCalendarNames(uint *num_names, char ***names)
 {
 	uint	num = 0, count = 0;
-	char	**names_r = NULL;
+	char	**names_r = nullptr;
 	DIR	*dirp;
 	struct	dirent *dp;
 
-	if ((dirp = opendir(".")) == NULL)
+	if ((dirp = opendir(".")) == nullptr)
 		return (CSA_E_FAILURE);
 
 	while (dp = readdir(dirp)) {
@@ -1365,7 +1365,7 @@ _ListCalendarNames(uint *num_names, char ***names)
 				if ((names_r = (char **)_grow_char_array(
 				    names_r, sizeof(char *) * count,
 				    sizeof(char *) * (count + _NAME_INCREMENT)))
-				    == NULL) {
+				    == nullptr) {
 					if (num > 0) {
 						_free_char_array(
 							num, names_r);
@@ -1374,7 +1374,7 @@ _ListCalendarNames(uint *num_names, char ***names)
 					return (CSA_E_INSUFFICIENT_MEMORY);
 				}
 			}
-			if ((names_r[num++] = strdup(dp->d_name)) == NULL) {
+			if ((names_r[num++] = strdup(dp->d_name)) == nullptr) {
 				_free_char_array(num, names_r);
 				closedir(dirp);
 				return (CSA_E_INSUFFICIENT_MEMORY);
@@ -1403,7 +1403,7 @@ _grow_char_array(void *ptr, uint oldcount, uint newcount)
 			newcount - oldcount);
 		return (nptr);
 	} else
-		return (NULL);
+		return (nullptr);
 }
 
 static void
@@ -1438,7 +1438,7 @@ _DtCmsGetOldCalAttrNames(
 	uint		i, j;
 
 	if ((names = (cms_attr_name *)calloc(1,
-	    sizeof(cms_attr_name)*_DtCM_OLD_CAL_ATTR_SIZE)) == NULL)
+	    sizeof(cms_attr_name)*_DtCM_OLD_CAL_ATTR_SIZE)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 1, j = 0; i <= _DtCM_DEFINED_CAL_ATTR_SIZE; i++) {
@@ -1446,7 +1446,7 @@ _DtCmsGetOldCalAttrNames(
 		    _CSA_cal_attr_info[i].fst_vers <= cal->fversion)
 		    || i == CSA_CAL_ATTR_CALENDAR_SIZE_I) {
 			if ((names[j].name =
-			    strdup(_CSA_calendar_attribute_names[i])) == NULL)
+			    strdup(_CSA_calendar_attribute_names[i])) == nullptr)
 			{
 				_DtCmsFreeCmsAttrNames(j, names);
 				return (CSA_E_INSUFFICIENT_MEMORY);

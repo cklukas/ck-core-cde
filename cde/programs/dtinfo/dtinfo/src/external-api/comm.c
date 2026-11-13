@@ -261,7 +261,7 @@ wait_for_reply (Widget toplevel)
   /* convert remainder to microseconds */
   timeout.tv_usec = (stimeout % 1000) * 1000;
 
-  gettimeofday (&start_time, NULL);
+  gettimeofday (&start_time, nullptr);
   
   /* -------- Wait for some activity on the connection. -------- */
 
@@ -269,7 +269,7 @@ wait_for_reply (Widget toplevel)
   while (reply_status == NO_REPLY)
     {
       errno = 0;
-      status = select (width, &readfds, NULL, NULL, &timeout);
+      status = select (width, &readfds, nullptr, nullptr, &timeout);
 
       /* Check for timeout. */
       if (status == 0)
@@ -283,7 +283,7 @@ wait_for_reply (Widget toplevel)
       if (status == -1)
 	{
 	  /* Adjust the timeout value first. */
-	  gettimeofday (&current_time, NULL);
+	  gettimeofday (&current_time, nullptr);
 
 	  /* See if we need to borrow from seconds. */
 	  if (current_time.tv_usec < start_time.tv_usec)
@@ -337,7 +337,7 @@ wait_for_reply (Widget toplevel)
 
       /* Something came in on the socket. */
       while (reply_status == NO_REPLY &&
-	     XCheckIfEvent (display, &event, (Bool(*)()) check_event, NULL))
+	     XCheckIfEvent (display, &event, (Bool(*)()) check_event, nullptr))
 	{
 	  /* puts ("d"); */
 	  XtDispatchEvent (&event);

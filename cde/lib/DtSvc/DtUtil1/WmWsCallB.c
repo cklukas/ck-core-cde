@@ -207,12 +207,12 @@ _WsModifiedCB (Tt_message m, Tt_pattern p)
     /*
      * Convert the atom to binary.
      */
-    aWs = (Atom)strtoul(tt_message_arg_val(m, 1), (char **)NULL, 0);
+    aWs = (Atom)strtoul(tt_message_arg_val(m, 1), (char **)nullptr, 0);
 
     /*
      * Convert "reason" of workspace modification
      */
-    reason = (DtWsmWsReason)strtoul(tt_message_arg_val(m, 2), (char **)NULL, 0);
+    reason = (DtWsmWsReason)strtoul(tt_message_arg_val(m, 2), (char **)nullptr, 0);
 
     /*
      * Call registered callback function.
@@ -279,29 +279,29 @@ DtWsmAddWorkspaceModifiedCallback (
     status = tt_ptr_error(pattern);
     if (status != TT_OK) {
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
 
     if (tt_pattern_scope_add(pattern, TT_SESSION) != TT_OK) {
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
     if (tt_pattern_category_set(pattern, TT_OBSERVE) != TT_OK) {
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
     if (tt_pattern_class_add(pattern, TT_NOTICE) != TT_OK) {
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
     if (tt_pattern_state_add(pattern, TT_SENT) != TT_OK) {
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
     sessId = tt_default_session();
     if (tt_pattern_session_add(pattern, sessId) != TT_OK) {
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
     tt_free( sessId );
 
@@ -315,7 +315,7 @@ DtWsmAddWorkspaceModifiedCallback (
     pCbCtx->widget = widget;
     pCbCtx->callback.workspace_modified = ws_modify;
     pCbCtx->client_data = client_data;
-    pCbCtx->nested_context = NULL;
+    pCbCtx->nested_context = nullptr;
 
     /*
      * Only receive DtWorkspace_Modified notice from the screen
@@ -325,13 +325,13 @@ DtWsmAddWorkspaceModifiedCallback (
     if (status != TT_OK) {
 	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
 
     if (tt_pattern_op_add(pattern, "DtWorkspace_Modified") != TT_OK) {
 	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
 
     /*
@@ -342,7 +342,7 @@ DtWsmAddWorkspaceModifiedCallback (
     if (status != TT_OK) {
 	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
 
     /*
@@ -352,13 +352,13 @@ DtWsmAddWorkspaceModifiedCallback (
     if (tt_pattern_callback_add(pattern, _WsModifiedCB) != TT_OK) {
 	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
 
     if (tt_pattern_register(pattern) != TT_OK) {
 	XtFree((char *)pCbCtx);
 	_DtSvcAppUnlock(app);
-	return NULL;
+	return nullptr;
     }
 
     XtFree (sName);
@@ -395,7 +395,7 @@ DtWsmRemoveWorkspaceCallback (DtWsmCBContext 	pCbCtx)
     /*
      * Is this somewhat valid?
      */
-    if (pCbCtx && (pCbCtx->widget != NULL)) {
+    if (pCbCtx && (pCbCtx->widget != nullptr)) {
         _DtSvcWidgetToAppContext(pCbCtx->widget);
 	_DtSvcAppLock(app);
 

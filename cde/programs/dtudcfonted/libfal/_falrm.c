@@ -271,7 +271,7 @@ typedef struct _EClosure {
  * to bother looking for it.
  */
 
-static unsigned char *resourceQuarks = (unsigned char *)NULL;
+static unsigned char *resourceQuarks = (unsigned char *)nullptr;
 static XrmQuark maxResourceQuark = -1;
 
 /* determines if a quark has been used for a value in any database */
@@ -1444,7 +1444,7 @@ void falrmPutLineResource(XrmDatabase *pdb, char *line)
 {
     if (!*pdb) *pdb = NewDatabase();
     _XLockMutex(&(*pdb)->linfo);
-    GetDatabase(*pdb, line, (char *)NULL, False);
+    GetDatabase(*pdb, line, (char *)nullptr, False);
     _XUnlockMutex(&(*pdb)->linfo);
 }
 
@@ -1454,7 +1454,7 @@ XrmDatabase falrmGetStringDatabase(char *data)
 
     db = NewDatabase();
     _XLockMutex(&db->linfo);
-    GetDatabase(db, data, (char *)NULL, True);
+    GetDatabase(db, data, (char *)nullptr, True);
     _XUnlockMutex(&db->linfo);
     return db;
 }
@@ -1472,20 +1472,20 @@ ReadInFile(char *filename)
     char * filebuf;
 
     if ( (fd = OpenFile(filename)) == -1 )
-	return (char *)NULL;
+	return (char *)nullptr;
 
     GetSizeOfFile(filename, size);
 
     if (!(filebuf = Xmalloc(size + 1))) { /* leave room for '\0' */
 	close(fd);
-	return (char *)NULL;
+	return (char *)nullptr;
     }
 
     size = ReadFile(fd, filebuf, size);
     if (size < 0) {
 	CloseFile(fd);
 	Xfree(filebuf);
-	return (char *)NULL;
+	return (char *)nullptr;
     }
     CloseFile(fd);
 

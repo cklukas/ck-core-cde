@@ -180,43 +180,43 @@ void DtMrmInitialize (void)
      * Initialize the class descriptors for all the known widgets.
      */
     MrmRegisterClass(
-		0, NULL,
+		0, nullptr,
 		"DtCreateEditor", DtCreateEditor,
         	(WidgetClass) &dtEditorClassRec
 		);
 
     MrmRegisterClass(
-		0, NULL,
+		0, nullptr,
 		"DtCreateHelpDialog", DtCreateHelpDialog,
         	(WidgetClass) &dtHelpDialogWidgetClassRec
 		);
 
     MrmRegisterClass(
-		0, NULL,
+		0, nullptr,
 		"DtCreateHelpQuickDialog", DtCreateHelpQuickDialog,
         	(WidgetClass) &dtHelpQuickDialogWidgetClassRec
 		);
 
     MrmRegisterClass(
-		0, NULL,
+		0, nullptr,
 		"DtCreateMenuButton", DtCreateMenuButton,
         	(WidgetClass) &dtMenuButtonClassRec
 		);
 
     MrmRegisterClass(
-		0, NULL,
+		0, nullptr,
 		"DtCreatePrintSetupBox", DtCreatePrintSetupBox,
         	(WidgetClass) &dtPrintSetupBoxClassRec
 		);
 
     MrmRegisterClass(
-		0, NULL,
+		0, nullptr,
 		"DtCreatePrintSetupDialog", DtCreatePrintSetupDialog,
         	(WidgetClass) &dtPrintSetupBoxClassRec
 		);
 
     MrmRegisterClass(
-		0, NULL,
+		0, nullptr,
 		"DtCreateTerm", DtCreateTerm,
         	(WidgetClass) &dtTermClassRec
 		);

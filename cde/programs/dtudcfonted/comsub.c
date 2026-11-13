@@ -76,7 +76,7 @@ extern  FalFontData     fullFontData;
 extern  FalFontData     copyFontData;
 extern int CodePoint;
 
-char			*fullpath=NULL;
+char			*fullpath=nullptr;
 int			begin_code=0, last_code=0;
 
 FalCodeRegion	CodeArea[10];
@@ -91,7 +91,7 @@ get_locale(void)
 {
     char *loc;
 
-    if ((loc = getenv("LANG")) != NULL) {
+    if ((loc = getenv("LANG")) != nullptr) {
 	return(loc);
     } else {
 	return("C");
@@ -217,14 +217,14 @@ int	height			/* pattern height 		*/
     fpsize = pm.ptnsize + 1;
     pm.ptnmemsize = (unsigned int) ( fpsize * pm.nmaxptn ) ;
 
-    if(( pm.ntoc = (unsigned short *)calloc(maxc, sizeof(unsigned short)) ) == NULL) {
+    if(( pm.ntoc = (unsigned short *)calloc(maxc, sizeof(unsigned short)) ) == nullptr) {
 	return( -1 );
     }
-    if(( pm.ctop = (unsigned short *)calloc(maxc, sizeof(unsigned short)) ) == NULL ) {
+    if(( pm.ctop = (unsigned short *)calloc(maxc, sizeof(unsigned short)) ) == nullptr ) {
 	free( pm.ntoc );
 	return( -1 );
     }
-    if(( pm.ptn  = (char   *)malloc(fpsize*pm.nmaxptn) ) == NULL ) {
+    if(( pm.ptn  = (char   *)malloc(fpsize*pm.nmaxptn) ) == nullptr ) {
 	free( pm.ctop );
 	free( pm.ntoc );
 	return( -1 );
@@ -309,12 +309,12 @@ char	*ptn)			/* pointer to the pattern */
 
     if( pm.nptn >= pm.nmaxptn ) {
 	re_ptnmemsize = pm.ptnmemsize + GUADDPTNN*fpsize;
-	if(pm.ptn == NULL) {
+	if(pm.ptn == nullptr) {
 	    re_ptn = malloc( re_ptnmemsize );
 	} else {
 	    re_ptn = realloc(pm.ptn, re_ptnmemsize);
 	}
-	if (re_ptn == NULL) {
+	if (re_ptn == nullptr) {
 	    return( -1 );
 	}
 	pm.ptnmemsize = re_ptnmemsize;
@@ -1054,7 +1054,7 @@ readSNF(FalFontData **fdata, int *width, int *height, char *err)
 
     if (fulllist) {
 	FalFreeFontList(fulllist);
-	fulllist = NULL;
+	fulllist = nullptr;
     }
     mask =  FAL_FONT_MASK_XLFDNAME | FAL_FONT_MASK_UPDATE |
 		FAL_FONT_MASK_DEFINED | FAL_FONT_MASK_UNDEFINED;
@@ -1068,13 +1068,13 @@ readSNF(FalFontData **fdata, int *width, int *height, char *err)
 	strcpy(err, FAL_ERROR_STR);
 	return(-1);
     }
-    if(fulllist == NULL) {
+    if(fulllist == nullptr) {
 	strcpy(err, resource.mn_no_font);
 	return(-1);
     }
     if (fulllist->num != 1) {
 	FalFreeFontList(fulllist);
-	fulllist = NULL;
+	fulllist = nullptr;
 	strcpy(err, resource.mn_plural_font);
 	return(-1);
     }
@@ -1083,7 +1083,7 @@ readSNF(FalFontData **fdata, int *width, int *height, char *err)
     mes = 0;
     if (font_id == 0 && (fal_utyerrno & 0xff) == FAL_ERR_FNT_OPN) {
 	mes = (char *) malloc(strlen(resource.mn_no_perm)+strlen(fal_err_file)+10);
-	if (mes == NULL) {
+	if (mes == nullptr) {
 	    strcpy(err, resource.mn_no_mem);
 	    FalFreeFontList(fulllist);
 	    return( -1 );
@@ -1103,7 +1103,7 @@ readSNF(FalFontData **fdata, int *width, int *height, char *err)
 	FalFreeFontList(fulllist);
 	return( -1 );
     }
-    if (fullpath != NULL)
+    if (fullpath != nullptr)
 	FalFree(fullpath);
     if (FalFontIDToFileName(font_id, &fullpath) == FAL_ERROR) {
 	strcpy(err, FAL_ERROR_STR);
@@ -1150,7 +1150,7 @@ readSNF(FalFontData **fdata, int *width, int *height, char *err)
 	return( -1 );
     }
     if (mes) {
-	Error_message2(NULL, mes);
+	Error_message2(nullptr, mes);
 	free(mes);
 	fullFontData.prm = True;
     }
@@ -1445,7 +1445,7 @@ int		*err)		/* errors : 			*/
 		argv[4] = fullFontData.xlfdname;
 		argv[5] = "-init";
 		argv[6] = "-f";
-		argv[7] = NULL;
+		argv[7] = nullptr;
 		execv (command, argv );
 		exit( 103 );
 	    }

@@ -69,7 +69,7 @@ typedef char XeChar;
 
 XeChar spc_logfile[MAXPATHLEN+1];
 XeChar spc_logging = FALSE;
-FILE *spc_logF = NULL;
+FILE *spc_logF = nullptr;
 static char *XeProgName = "test";
 static char ck_temp_path[PATH_MAX];	/* what XeSBTempPath() reports */
 static void _DtSimpleError(char *prog, int severity, XeString id, XeString fmt, ...) { abort(); }
@@ -195,7 +195,7 @@ static void close_log(void)
 {
     if (spc_logF)
         fclose(spc_logF);
-    spc_logF = NULL;
+    spc_logF = nullptr;
     spc_logging = FALSE;
 }
 
@@ -237,7 +237,7 @@ int main(int argc, char **argv)
     unlink(spc_logfile);
 
     /* The default name is made unique in the temp directory the same way. */
-    assert(SPC_Open_Log(NULL, TRUE) == TRUE);
+    assert(SPC_Open_Log(nullptr, TRUE) == TRUE);
     ck_check_created(spc_logfile);
     assert(strncmp(spc_logfile, ck_work, strlen(ck_work)) == 0);
     close_log();
@@ -259,7 +259,7 @@ int main(int argc, char **argv)
     assert(SPC_Make_Log_Filename(name, TRUE) == FALSE);
     assert(spc_logfile[0] == '\0');
     assert(SPC_Open_Log(name, TRUE) == SPC_ERROR);
-    assert(spc_logF == NULL && !spc_logging);
+    assert(spc_logF == nullptr && !spc_logging);
     assert(ck_count(ck_work) == before);
     ck_mk_fail = 0;
 

@@ -70,7 +70,7 @@ Help(char *helpVolume, char *locationId)
     Position newX, newY;
     int n;
 
-    if(X->helpDialog == NULL)
+    if(X->helpDialog == nullptr)
     {
         n = 0;
         XtSetArg(args[n], DtNhelpType, DtHELP_TYPE_TOPIC); n++;
@@ -82,9 +82,9 @@ Help(char *helpVolume, char *locationId)
         DtWsmRemoveWorkspaceFunctions(X->dpy,
                       XtWindow(XtParent(X->helpDialog)));
         XtAddCallback(X->helpDialog, DtNhyperLinkCallback,
-                      HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, nullptr);
         XtAddCallback(X->helpDialog, DtNcloseCallback,
-                      HelpCloseCB, NULL);
+                      HelpCloseCB, nullptr);
     }
     else
     {
@@ -120,9 +120,9 @@ HelpCloseCB(Widget widget, XtPointer client_data, XtPointer call_data)
   HelpStruct *pHelpCache = (HelpStruct *)client_data;
   HelpStruct *pHelp;
  
-  for (pHelp = pHelpCache; pHelp != (HelpStruct *)NULL && pHelp->dialog !=widget;
+  for (pHelp = pHelpCache; pHelp != (HelpStruct *)nullptr && pHelp->dialog !=widget;
                            pHelp = pHelp->pNext);
-  if (pHelp != (HelpStruct *)NULL)
+  if (pHelp != (HelpStruct *)nullptr)
   {
      pHelp->inUse = False;
   }
@@ -427,11 +427,11 @@ GetHelpDialog(void)
     HelpStruct *pHelp;
     Arg args[5];
 
-    if(pHelpCache == (HelpStruct *)NULL)
+    if(pHelpCache == (HelpStruct *)nullptr)
     {
         pHelp = pHelpCache = (HelpStruct *)XtMalloc(sizeof(HelpStruct));
-        pHelp->pNext = (HelpStruct *)NULL;
-        pHelp->pPrev = (HelpStruct *)NULL;
+        pHelp->pNext = (HelpStruct *)nullptr;
+        pHelp->pPrev = (HelpStruct *)nullptr;
         pHelp->inUse = True;
 
         XtSetArg(args[0], XmNtitle, GETMESSAGE(4, 1, "Calculator - Help"));
@@ -440,7 +440,7 @@ GetHelpDialog(void)
         DtWsmRemoveWorkspaceFunctions(X->dpy,
                 XtWindow(XtParent(pHelp->dialog)));
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback,
-                      HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, nullptr);
         XtAddCallback(pHelp->dialog, DtNcloseCallback,
                       HelpCloseCB, pHelpCache);
         return pHelp->dialog;
@@ -448,7 +448,7 @@ GetHelpDialog(void)
     else
     {
         for(pHelp = pHelpCache;
-            pHelp != (HelpStruct *)NULL;
+            pHelp != (HelpStruct *)nullptr;
             pHelp = pHelp->pNext)
         {
             if(pHelp->inUse == False)
@@ -461,7 +461,7 @@ GetHelpDialog(void)
         pHelpCache->pPrev = pHelp;
         pHelp->pNext = pHelpCache;
         pHelpCache = pHelp;
-        pHelp->pPrev = (HelpStruct *)NULL;
+        pHelp->pPrev = (HelpStruct *)nullptr;
         pHelp->inUse = True;
 
         XtSetArg(args[0], XmNtitle, GETMESSAGE(4, 1, "Calculator - Help"));
@@ -469,7 +469,7 @@ GetHelpDialog(void)
         DtWsmRemoveWorkspaceFunctions(X->dpy,
                       XtWindow(XtParent(pHelp->dialog)));
         XtAddCallback(pHelp->dialog, DtNhyperLinkCallback,
-                      HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, nullptr);
         XtAddCallback(pHelp->dialog, DtNcloseCallback,
                       HelpCloseCB, pHelpCache);
         return pHelp->dialog;
@@ -486,7 +486,7 @@ ErrDialog(char *errString, Widget visualParent)
   label = XmStringCreateLocalized(errString) ;
   X->errParent = visualParent;
 
-  if (X->errDialog == NULL)
+  if (X->errDialog == nullptr)
   {
     ok = XmStringCreateLocalized(GETMESSAGE(4, 4, "OK"));
 
@@ -499,8 +499,8 @@ ErrDialog(char *errString, Widget visualParent)
 
     X->errDialog = XmCreateErrorDialog (X->mainWin, "ErroNotice", args, n);
 
-    XtAddCallback (X->errDialog, XmNokCallback, UnmanageCB, NULL);
-    XtAddCallback (X->errDialog, XmNmapCallback, CenterMsgCB, NULL);
+    XtAddCallback (X->errDialog, XmNokCallback, UnmanageCB, nullptr);
+    XtAddCallback (X->errDialog, XmNmapCallback, CenterMsgCB, nullptr);
 
     XtUnmanageChild (XmMessageBoxGetChild (X->errDialog, 
                                                     XmDIALOG_CANCEL_BUTTON));
@@ -538,7 +538,7 @@ CenterMsgCB (Widget widget, XtPointer client_data, XtPointer call_data)
     Widget   shell;
 
     shell = (Widget)client_data;
-    if (shell == NULL)
+    if (shell == nullptr)
     {
         if (!X->errParent || !XtParent(X->errParent) ||
                 !XtIsManaged(X->errParent))

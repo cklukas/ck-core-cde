@@ -184,7 +184,7 @@ def main():
             compiler = shlex.split(env.get("CC", "cc"))
             if not compiler:
                 raise ValueError("CC has no compiler command")
-            flags = ["-std=c11", "-D_POSIX_C_SOURCE=200809L", "-Wall", "-Wextra",
+            flags = ["-std=gnu23", "-D_POSIX_C_SOURCE=200809L", "-Wall", "-Wextra",
                      "-Werror", "-g", "-O1", "-fno-omit-frame-pointer",
                      "-DCOLLISION_WORKER_HELPERS" if args.helpers_only else "-DCOLLISION_MODEL_ONLY"]
             if args.sanitizers != "none":

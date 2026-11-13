@@ -138,7 +138,7 @@ dndGetTransferMethods(
 	Display *	display,
 	DtDndProtocol	protocol)
 {
-	DtDndMethods *	methods = NULL;
+	DtDndMethods *	methods = nullptr;
 
 	switch (protocol) {
 	case DtDND_BUFFER_TRANSFER:
@@ -205,7 +205,7 @@ _DtDndCreateImportTransfers(
 	}
 
 	if (*numTransfers == 0)
-		return (DtDndTransfer *)NULL;
+		return (DtDndTransfer *)nullptr;
 	
 	transfers = (DtDndTransfer *)XtMalloc(
 				*numTransfers * sizeof(DtDndTransfer));
@@ -266,7 +266,7 @@ _DtDndTransferFromTargets(
 			}
 		}
 	}
-	return (DtDndTransfer *)NULL;
+	return (DtDndTransfer *)nullptr;
 }
 
 /*
@@ -372,11 +372,11 @@ _DtDndCopyCallbackList(
 	XtCallbackList	cl;
 	int		ii, count;
 
-	if (callbacks == NULL)
-		return NULL;
+	if (callbacks == nullptr)
+		return nullptr;
 
 	count = 1;
-	for (cl = callbacks; cl->callback != NULL; cl++) {
+	for (cl = callbacks; cl->callback != nullptr; cl++) {
 		count++;
 	}
 
@@ -401,10 +401,10 @@ _DtDndCallCallbackList(
 {
 	XtCallbackList	cl;
 
-	if (callbacks == NULL)
+	if (callbacks == nullptr)
 		return;
 
-	for (cl = callbacks; cl->callback != NULL; cl++) {
+	for (cl = callbacks; cl->callback != nullptr; cl++) {
 		(*cl->callback)(widget, cl->closure, calldata);
 	}
 }
@@ -422,7 +422,7 @@ _DtDndCountVarArgs(
 
 	argCount = 0; 
 	for (argPtr = va_arg(vaList,String);
-	     argPtr != NULL; 
+	     argPtr != nullptr; 
 	     argPtr = va_arg(vaList,String)) {
 
 		va_arg(vaList, XtArgVal);
@@ -445,7 +445,7 @@ _DtDndArgListFromVarArgs(
 
 	if (0 == maxArgs)
 	{
-	    *argListReturn = NULL;
+	    *argListReturn = nullptr;
 	    *argCountReturn = 0;
 	    return;
 	}
@@ -454,7 +454,7 @@ _DtDndArgListFromVarArgs(
 
 	argCount = 0;
 	for (argPtr = va_arg(vaList,String);
-	     argPtr != NULL;
+	     argPtr != nullptr;
 	     argPtr = va_arg(vaList,String)) {
 
 		XtSetArg(argList[argCount], argPtr, va_arg(vaList,XtArgVal));
@@ -474,11 +474,11 @@ _DtDndGetHostName(void)
         static char *nodename;
 
 	_DtSvcProcessLock();
-	if (nodename == NULL) {
+	if (nodename == nullptr) {
 		struct utsname	un;
 
 		if (uname(&un) == -1) {
-			_DtSimpleError(DtProgName,DtError, NULL, "uname", NULL);
+			_DtSimpleError(DtProgName,DtError, nullptr, "uname", nullptr);
 			nodename = XtNewString("nodename");
 		} else {
 			nodename = XtNewString(un.nodename);

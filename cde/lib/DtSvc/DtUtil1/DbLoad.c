@@ -268,21 +268,21 @@ _DtDtsMMCreateDb(DtDirPaths *dirs, const char *CacheFile, int override)
 
 	/* Build up the record descriptions */
 	criteriaConverters[0] = _DtDtsDCConverter;
-	criteriaConverters[1] = NULL;
+	criteriaConverters[1] = nullptr;
 	recordDescriptions[0].recordKeyword = DtDTS_DC_NAME;
 	recordDescriptions[0].maxFields = _DtMAX_NUM_FIELDS;
 	recordDescriptions[0].converters = criteriaConverters;
 
 	/* Build up the ot record descriptions */
 	attributesConverters[0] = _DtDtsDAConverter;
-	attributesConverters[1] = NULL;
+	attributesConverters[1] = nullptr;
 	recordDescriptions[1].recordKeyword = DtDTS_DA_NAME;
 	recordDescriptions[1].maxFields = _DtMAX_NUM_FIELDS;
 	recordDescriptions[1].converters = attributesConverters;
 
 	actionConverters[0] = _DtActionConverter;
 	actionConverters[1] = _DtOAConverter;
-	actionConverters[2] = NULL;
+	actionConverters[2] = nullptr;
 	recordDescriptions[2].recordKeyword = _DtACTION_NAME;
 	recordDescriptions[2].maxFields = _ActDb_MAX_NUM_FIELDS;
 	recordDescriptions[2].converters = actionConverters;

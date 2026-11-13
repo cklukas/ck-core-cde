@@ -53,30 +53,30 @@
 int
 _fallcmbtowc(XLCd lcd, wchar_t *wstr, char *str, int len)
 {
-    static XLCd last_lcd = NULL;
-    static XlcConv conv = NULL;
+    static XLCd last_lcd = nullptr;
+    static XlcConv conv = nullptr;
     XPointer from, to;
     int from_left, to_left;
     wchar_t tmp_wc;
 
-    if (lcd == NULL) {
+    if (lcd == nullptr) {
 	lcd = _fallcCurrentLC();
-	if (lcd == NULL)
+	if (lcd == nullptr)
 	    return -1;
     }
-    if (str == NULL)
+    if (str == nullptr)
 	return XLC_PUBLIC(lcd, is_state_depend);
 
     if (conv && lcd != last_lcd) {
 	_fallcCloseConverter(conv);
-	conv = NULL;
+	conv = nullptr;
     }
 
     last_lcd = lcd;
 
-    if (conv == NULL) {
+    if (conv == nullptr) {
 	conv = _fallcOpenConverter(lcd, XlcNMultiByte, lcd, XlcNWideChar);
-	if (conv == NULL)
+	if (conv == nullptr)
 	    return -1;
     }
 
@@ -85,7 +85,7 @@ _fallcmbtowc(XLCd lcd, wchar_t *wstr, char *str, int len)
     to = (XPointer) (wstr ? wstr : &tmp_wc);
     to_left = 1;
 
-    if (_fallcConvert(conv, &from, &from_left, &to, &to_left, NULL, 0) < 0)
+    if (_fallcConvert(conv, &from, &from_left, &to, &to_left, nullptr, 0) < 0)
 	return -1;
 
     return (len - from_left);
@@ -94,29 +94,29 @@ _fallcmbtowc(XLCd lcd, wchar_t *wstr, char *str, int len)
 int
 _fallcwctomb(XLCd lcd, char *str, wchar_t wc)
 {
-    static XLCd last_lcd = NULL;
-    static XlcConv conv = NULL;
+    static XLCd last_lcd = nullptr;
+    static XlcConv conv = nullptr;
     XPointer from, to;
     int from_left, to_left, length;
 
-    if (lcd == NULL) {
+    if (lcd == nullptr) {
 	lcd = _fallcCurrentLC();
-	if (lcd == NULL)
+	if (lcd == nullptr)
 	    return -1;
     }
-    if (str == NULL)
+    if (str == nullptr)
 	return XLC_PUBLIC(lcd, is_state_depend);
 
     if (conv && lcd != last_lcd) {
 	_fallcCloseConverter(conv);
-	conv = NULL;
+	conv = nullptr;
     }
 
     last_lcd = lcd;
 
-    if (conv == NULL) {
+    if (conv == nullptr) {
 	conv = _fallcOpenConverter(lcd, XlcNWideChar, lcd, XlcNMultiByte);
-	if (conv == NULL)
+	if (conv == nullptr)
 	    return -1;
     }
 
@@ -125,7 +125,7 @@ _fallcwctomb(XLCd lcd, char *str, wchar_t wc)
     to = (XPointer) str;
     length = to_left = XLC_PUBLIC(lcd, mb_cur_max);
 
-    if (_fallcConvert(conv, &from, &from_left, &to, &to_left, NULL, 0) < 0)
+    if (_fallcConvert(conv, &from, &from_left, &to, &to_left, nullptr, 0) < 0)
 	return -1;
 
     return (length - to_left);
@@ -138,14 +138,14 @@ _fallcmbstowcs(XLCd lcd, wchar_t *wstr, char *str, int len)
     XPointer from, to;
     int from_left, to_left, ret;
 
-    if (lcd == NULL) {
+    if (lcd == nullptr) {
 	lcd = _fallcCurrentLC();
-	if (lcd == NULL)
+	if (lcd == nullptr)
 	    return -1;
     }
 
     conv = _fallcOpenConverter(lcd, XlcNMultiByte, lcd, XlcNWideChar);
-    if (conv == NULL)
+    if (conv == nullptr)
 	return -1;
 
     from = (XPointer) str;
@@ -153,7 +153,7 @@ _fallcmbstowcs(XLCd lcd, wchar_t *wstr, char *str, int len)
     to = (XPointer) wstr;
     to_left = len;
 
-    if (_fallcConvert(conv, &from, &from_left, &to, &to_left, NULL, 0) < 0)
+    if (_fallcConvert(conv, &from, &from_left, &to, &to_left, nullptr, 0) < 0)
 	ret = -1;
     else {
 	ret = len - to_left;
@@ -173,14 +173,14 @@ _fallcwcstombs(XLCd lcd, char *str, wchar_t *wstr, int len)
     XPointer from, to;
     int from_left, to_left, ret;
 
-    if (lcd == NULL) {
+    if (lcd == nullptr) {
 	lcd = _fallcCurrentLC();
-	if (lcd == NULL)
+	if (lcd == nullptr)
 	    return -1;
     }
 
     conv = _fallcOpenConverter(lcd, XlcNWideChar, lcd, XlcNMultiByte);
-    if (conv == NULL)
+    if (conv == nullptr)
 	return -1;
 
     from = (XPointer) wstr;
@@ -188,7 +188,7 @@ _fallcwcstombs(XLCd lcd, char *str, wchar_t *wstr, int len)
     to = (XPointer) str;
     to_left = len;
 
-    if (_fallcConvert(conv, &from, &from_left, &to, &to_left, NULL, 0) < 0)
+    if (_fallcConvert(conv, &from, &from_left, &to, &to_left, nullptr, 0) < 0)
 	ret = -1;
     else {
 	ret = len - to_left;
@@ -211,7 +211,7 @@ _falmbtowc(wchar_t *wstr, char *str, int len)
 int
 _falmblen(char *str, int len)
 {
-    return _falmbtowc((wchar_t *) NULL, str, len);
+    return _falmbtowc((wchar_t *) nullptr, str, len);
 }
 
 int

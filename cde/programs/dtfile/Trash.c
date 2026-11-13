@@ -278,12 +278,12 @@ typedef struct
 
 
 DialogData *trashDialogData;          /* fm data associated with trash dialog */
-FileMgrData *trashFileMgrData = NULL;
+FileMgrData *trashFileMgrData = nullptr;
 
 Boolean removingTrash = False;
 Widget trashShell;
-DialogData * primaryTrashHelpDialog = NULL;
-DialogData ** secondaryTrashHelpDialogList = NULL;
+DialogData * primaryTrashHelpDialog = nullptr;
+DialogData ** secondaryTrashHelpDialogList = nullptr;
 int secondaryTrashHelpDialogCount = 0;
 
 /* Forward prototype */
@@ -298,22 +298,22 @@ static char * TRASH_INFO_FILE = ".dt/Trash/.trashinfo";
 static char * RM = "/bin/rm";
 static char * RM_ARGS = "-rf";
 
-static Widget * selectAllBtn = NULL;
-static Widget * restoreBtn = NULL;
-static Widget * removeBtn = NULL;
+static Widget * selectAllBtn = nullptr;
+static Widget * restoreBtn = nullptr;
+static Widget * removeBtn = nullptr;
 
 static int trashMenuItemCount = 22;         /* trash menu items */
-static MenuDesc * trashMenu = NULL;
+static MenuDesc * trashMenu = nullptr;
 
-static TrashEntry * trashCan = NULL;
+static TrashEntry * trashCan = nullptr;
 static int trashListSize = 0;
 static int numTrashItems = 0;
 
 static Boolean trashDialogPosted;
 
-static char * TrashInfoFileName = NULL;
+static char * TrashInfoFileName = nullptr;
 
-static char ** sacred_dir_list = NULL;   /* list of directories in trash path */
+static char ** sacred_dir_list = nullptr;   /* list of directories in trash path */
 static int sacred_dir_list_size = 0;
 static int sacred_dir_count = 0;
 
@@ -572,9 +572,9 @@ TrashCreateDialog(
    title = XtNewString(tmpStr);
 
    /* Initially, no items can be selected */
-   if (removeBtn != NULL)
+   if (removeBtn != nullptr)
       XtSetSensitive(*removeBtn, False);
-   if (restoreBtn != NULL)
+   if (restoreBtn != nullptr)
       XtSetSensitive(*restoreBtn, False);
 
    /* retrieve the default data for a file manager dialog -- */
@@ -590,7 +590,7 @@ TrashCreateDialog(
 
    if (xdgTrashTimer == 0)
      xdgTrashTimer = XtAppAddTimeOut(XtWidgetToApplicationContext(toplevel),
-                                     10000, XdgTrashTimerCB, NULL);
+                                     10000, XdgTrashTimerCB, nullptr);
 
    TrashMaybeStartRecSizeScan();
 
@@ -606,8 +606,8 @@ TrashCreateDialog(
    LoadPositionInfo(file_mgr_data);
 
    /* build the trash dialog */
-   _DtBuildDialog (NULL, NULL, NULL, dialog_data, NULL, NULL, NULL,
-                NULL, NULL, False, special_view, title, NULL);
+   _DtBuildDialog (nullptr, nullptr, nullptr, dialog_data, nullptr, nullptr, nullptr,
+                nullptr, nullptr, False, special_view, title, nullptr);
    TrashView = False;
 
    XtFree(title);
@@ -637,7 +637,7 @@ ReadTrashList( void )
    DtfileTrashMetadata record = {0};
 
    fd = open(TrashInfoFileName, O_RDWR|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR);
-   trashInfoFileId = fd < 0 ? NULL : fdopen(fd, "a+");
+   trashInfoFileId = fd < 0 ? nullptr : fdopen(fd, "a+");
    if (fd >= 0 && !trashInfoFileId)
      close(fd);
    if (trashInfoFileId == 0)
@@ -652,7 +652,7 @@ ReadTrashList( void )
 
      sprintf( msg, GETMESSAGE(27, 93, "Unable to access this trash information file:\n   %s\n   All trash operations will not be performed.\n   The most common causes are:\n     - Network authentication.\n     - Insufficient disk space.\n     - Wrong permissions $HOME/.dt/Trash."), TrashInfoFileName );
 
-     _DtMessage(toplevel, title, msg, NULL, HelpRequestCB);
+     _DtMessage(toplevel, title, msg, nullptr, HelpRequestCB);
      XtFree(title);
      XtFree(msg);
      return( False );
@@ -712,7 +712,7 @@ ReadTrashList( void )
      entry.intOrig = XtNewString(record.external);
      entry.external = XtNewString(record.external);
      entry.filename = XtNewString(record.filename);
-     entry.deletionDate = record.deletion_date ? XtNewString(record.deletion_date) : NULL;
+     entry.deletionDate = record.deletion_date ? XtNewString(record.deletion_date) : nullptr;
      entry.recSize = record.rec_size;
      entry.recSizeValid = record.rec_size_valid;
      if (!entry.intOrig || !entry.external || !entry.filename ||
@@ -731,7 +731,7 @@ ReadTrashList( void )
    if (status != DTFILE_TRASH_END)
      goto failed;
    status = fclose(trashInfoFileId);
-   trashInfoFileId = NULL;
+   trashInfoFileId = nullptr;
    if (status != 0 || !WriteTrashEntries())
      goto failed;
    return True;
@@ -753,7 +753,7 @@ failed:
      char *title = XtNewString(GetSharedMessage(TRASH_ERROR_TITLE));
      char *message = XtNewString(GETMESSAGE(27, 120,
        "Trash information could not be read or saved safely.\nThe previous information file has been preserved.\nTrash operations are disabled."));
-     _DtMessage(toplevel, title, message, NULL, HelpRequestCB);
+     _DtMessage(toplevel, title, message, nullptr, HelpRequestCB);
      XtFree(title);
      XtFree(message);
    }
@@ -784,7 +784,7 @@ ImportXdgTrashHome( void )
    sprintf(files_dir, "%s/Trash/files", original_base);
 
    dir = opendir(info_dir);
-   if (dir == NULL)
+   if (dir == nullptr)
    {
       XtFree(info_dir);
       XtFree(files_dir);
@@ -792,12 +792,12 @@ ImportXdgTrashHome( void )
       return False;
    }
 
-   while ((entry = readdir(dir)) != NULL)
+   while ((entry = readdir(dir)) != nullptr)
    {
       char *dot;
       char *info_path;
-      char *orig_path = NULL;
-      char *deletion_date = NULL;
+      char *orig_path = nullptr;
+      char *deletion_date = nullptr;
       char *src_path;
       char *to_path;
       char *base_name;
@@ -807,7 +807,7 @@ ImportXdgTrashHome( void )
          continue;
 
       dot = strrchr(entry->d_name, '.');
-      if (dot == NULL || strcmp(dot, ".trashinfo") != 0)
+      if (dot == nullptr || strcmp(dot, ".trashinfo") != 0)
          continue;
 
       info_path = XtMalloc(strlen(info_dir) + strlen(entry->d_name) + 2);
@@ -870,7 +870,7 @@ ImportXdgTrashHome( void )
       trashCan[numTrashItems].intOrig = XtNewString(orig_path);
       trashCan[numTrashItems].external = XtNewString(orig_path);
       trashCan[numTrashItems].filename = XtNewString(base_name);
-      trashCan[numTrashItems].deletionDate = deletion_date ? deletion_date : NULL;
+      trashCan[numTrashItems].deletionDate = deletion_date ? deletion_date : nullptr;
       trashCan[numTrashItems].recSize = 0;
       trashCan[numTrashItems].recSizeValid = False;
       numTrashItems++;
@@ -910,10 +910,10 @@ ParseXdgTrashInfo(
    FILE *fp;
    struct stat file_info;
    int fd, status;
-   char *path_copy = NULL, *date_copy = NULL;
+   char *path_copy = nullptr, *date_copy = nullptr;
 
-   *orig_path = NULL;
-   *deletion_date = NULL;
+   *orig_path = nullptr;
+   *deletion_date = nullptr;
    /* A metadata FIFO must not block the Xt thread waiting for a writer.
     * Bind the type check to the opened object and reject a final symlink.
     */
@@ -928,7 +928,7 @@ ParseXdgTrashInfo(
       return False;
    }
    fp = fdopen(fd, "r");
-   if (fp == NULL)
+   if (fp == nullptr)
    {
       close(fd);
       return False;
@@ -943,7 +943,7 @@ ParseXdgTrashInfo(
       date_copy = XtNewString(record.deletion_date);
    }
    DtfileFreeXdgTrashInfo(&record);
-   if (path_copy == NULL || date_copy == NULL)
+   if (path_copy == nullptr || date_copy == nullptr)
    {
       XtFree(path_copy);
       XtFree(date_copy);
@@ -966,13 +966,13 @@ CurrentDeletionDate( void )
    struct tm *tm_info;
    char buf[32];
 
-   now = time(NULL);
+   now = time(nullptr);
    tm_info = localtime(&now);
-   if (tm_info == NULL)
-      return NULL;
+   if (tm_info == nullptr)
+      return nullptr;
 
    if (strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", tm_info) == 0)
-      return NULL;
+      return nullptr;
 
    return XtNewString(buf);
 }
@@ -991,11 +991,11 @@ TrashGetInfo(
    int i;
 
    if (orig_path)
-     *orig_path = NULL;
+     *orig_path = nullptr;
    if (deletion_date)
-     *deletion_date = NULL;
+     *deletion_date = nullptr;
 
-   if (filename == NULL || *filename == '\0')
+   if (filename == nullptr || *filename == '\0')
      return False;
 
    for (i = 0; i < numTrashItems; i++)
@@ -1026,7 +1026,7 @@ TrashGetRecSize(
    if (rec_valid)
      *rec_valid = False;
 
-   if (filename == NULL || *filename == '\0')
+   if (filename == nullptr || *filename == '\0')
      return False;
 
    for (i = 0; i < numTrashItems; i++)
@@ -1064,13 +1064,13 @@ XdgTrashTimerCB(
 
    moved = ImportXdgTrashHome();
    if (moved && trashFileMgrData)
-     UpdateDirectory(NULL, trashFileMgrData->host,
+     UpdateDirectory(nullptr, trashFileMgrData->host,
                      trashFileMgrData->current_directory);
    if (moved)
      TrashMaybeStartRecSizeScan();
 
    xdgTrashTimer = XtAppAddTimeOut(XtWidgetToApplicationContext(toplevel),
-                                   10000, XdgTrashTimerCB, NULL);
+                                   10000, XdgTrashTimerCB, nullptr);
 }
 
 
@@ -1080,9 +1080,9 @@ TrashSetStatusMsg(
 {
    FileMgrRec *file_mgr_rec;
 
-   if (trashFileMgrData == NULL ||
+   if (trashFileMgrData == nullptr ||
        !trashFileMgrData->show_status_line ||
-       trashFileMgrData->file_mgr_rec == NULL)
+       trashFileMgrData->file_mgr_rec == nullptr)
       return;
 
    file_mgr_rec = (FileMgrRec *)trashFileMgrData->file_mgr_rec;
@@ -1090,7 +1090,7 @@ TrashSetStatusMsg(
    if (trashFileMgrData->special_msg)
    {
       XtFree(trashFileMgrData->special_msg);
-      trashFileMgrData->special_msg = NULL;
+      trashFileMgrData->special_msg = nullptr;
    }
    if (trashFileMgrData->msg_timer_id)
    {
@@ -1125,7 +1125,7 @@ TrashUpdateWindowIcon( void )
    FileMgrRec *file_mgr_rec;
    Arg args[2];
 
-   if (trashFileMgrData == NULL || trashFileMgrData->file_mgr_rec == NULL)
+   if (trashFileMgrData == nullptr || trashFileMgrData->file_mgr_rec == nullptr)
       return;
 
    file_mgr_rec = (FileMgrRec *)trashFileMgrData->file_mgr_rec;
@@ -1187,7 +1187,7 @@ TrashUpdateWindowIcon( void )
 static void
 TrashRaiseAndFocus( void )
 {
-   if (trashShell == NULL)
+   if (trashShell == nullptr)
       return;
 
    if (!XtIsRealized(trashShell))
@@ -1215,7 +1215,7 @@ TrashCalcDirSize(const char *path)
       return (unsigned long long)st.st_size;
 
    dirp = opendir(path);
-   if (dirp == NULL)
+   if (dirp == nullptr)
       return 0;
 
    strncpy(fullpath, path, sizeof(fullpath) - 2);
@@ -1227,7 +1227,7 @@ TrashCalcDirSize(const char *path)
       fullpath[base_len] = '\0';
    }
 
-   while ((dp = readdir(dirp)) != NULL)
+   while ((dp = readdir(dirp)) != nullptr)
    {
       if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
          continue;
@@ -1275,7 +1275,7 @@ TrashRecSizePipeCB(
 
          if (PipeReadExact(*fd, &size, sizeof(size)) != 0)
             goto malformed_response;
-         if (PipeReadStringField(*fd, &name) != 0 || name == NULL)
+         if (PipeReadStringField(*fd, &name) != 0 || name == nullptr)
             goto malformed_response;
          if (name)
          {
@@ -1313,7 +1313,7 @@ finished:
    trashRecsizeInput = 0;
    trashRecsizePipe = -1;
    trashRecsizeRunning = False;
-   TrashSetStatusMsg(NULL);
+   TrashSetStatusMsg(nullptr);
    WriteTrashEntries();
    if (trashFileMgrData)
      UpdateHeaders((FileMgrRec *)trashFileMgrData->file_mgr_rec,
@@ -1328,8 +1328,8 @@ TrashMaybeStartRecSizeScan( void )
    int count = 0;
    int pipe_fd[2];
    int pid;
-   char **paths = NULL;
-   char **names = NULL;
+   char **paths = nullptr;
+   char **names = nullptr;
 
    if (trashRecsizeRunning)
       return;
@@ -1337,7 +1337,7 @@ TrashMaybeStartRecSizeScan( void )
    for (i = 0; i < numTrashItems; i++)
    {
       struct stat st;
-      if (trashCan[i].intNew == NULL)
+      if (trashCan[i].intNew == nullptr)
          continue;
       if (trashCan[i].recSizeValid)
          continue;
@@ -1413,7 +1413,7 @@ TrashMaybeStartRecSizeScan( void )
    TrashSetStatusMsg("Determining size of deleted directories...");
    trashRecsizeInput = XtAppAddInput(XtWidgetToApplicationContext(toplevel),
                                      pipe_fd[0], (XtPointer)XtInputReadMask,
-                                     TrashRecSizePipeCB, NULL);
+                                     TrashRecSizePipeCB, nullptr);
 
    for (i = 0; i < count; i++)
    {
@@ -1441,7 +1441,7 @@ WriteTrashEntries( void )
 {
    size_t length = strlen(TrashInfoFileName);
    char *path;
-   FILE *newFile = NULL;
+   FILE *newFile = nullptr;
    int fd, i;
 
    if (length > SIZE_MAX - sizeof(".XXXXXX"))
@@ -1480,10 +1480,10 @@ WriteTrashEntries( void )
      goto failed;
    if (fclose(newFile) != 0)
    {
-     newFile = NULL;
+     newFile = nullptr;
      goto failed;
    }
-   newFile = NULL;
+   newFile = nullptr;
    if (rename(path, TrashInfoFileName) != 0)
      goto failed;
    free(path);
@@ -1520,7 +1520,7 @@ WriteEntry(
         unsigned long long recSize,
         Boolean recSizeValid )
 {
-  if (deletionDate != NULL && *deletionDate != '\0')
+  if (deletionDate != nullptr && *deletionDate != '\0')
   {
     if (recSizeValid)
       return( fprintf(id, "%ld %ld %s %s DeletionDate=%s RecSize=%llu\n",
@@ -1569,13 +1569,13 @@ CreateTrashMenu(
    for (i = 0; i < trashMenuItemCount; i++)
    {
       trashMenu[i].helpCallback = TrashHelpRequestCB;
-      trashMenu[i].helpData = NULL;
-      trashMenu[i].activateCallback = NULL;
-      trashMenu[i].activateData = NULL;
+      trashMenu[i].helpData = nullptr;
+      trashMenu[i].activateCallback = nullptr;
+      trashMenu[i].activateData = nullptr;
       trashMenu[i].maskBit = 0;
       trashMenu[i].isHelpBtn = False;
-      trashMenu[i].label = NULL;
-      trashMenu[i].mnemonic = NULL;
+      trashMenu[i].label = nullptr;
+      trashMenu[i].mnemonic = nullptr;
    }
 
 
@@ -1617,7 +1617,7 @@ CreateTrashMenu(
 
    trashMenu[j].type = MENU_SEPARATOR;
    trashMenu[j].name = "separator";
-   trashMenu[j++].helpCallback = NULL;
+   trashMenu[j++].helpCallback = nullptr;
 
    restoreBtn = &(trashMenu[j].widget);
    trashMenu[j].type = MENU_BUTTON;
@@ -1641,7 +1641,7 @@ CreateTrashMenu(
 
    trashMenu[j].type = MENU_SEPARATOR;
    trashMenu[j].name = "separator";
-   trashMenu[j++].helpCallback = NULL;
+   trashMenu[j++].helpCallback = nullptr;
 
    trashMenu[j].type = MENU_BUTTON;
    trashMenu[j].maskBit = PREFERENCES;
@@ -1655,7 +1655,7 @@ CreateTrashMenu(
 
    trashMenu[j].type = MENU_SEPARATOR;
    trashMenu[j].name = "separator";
-   trashMenu[j++].helpCallback = NULL;
+   trashMenu[j++].helpCallback = nullptr;
 
    trashMenu[j].type = MENU_BUTTON;
    trashMenu[j].label = GETMESSAGE(20,117, "Close");
@@ -1696,7 +1696,7 @@ CreateTrashMenu(
 
    trashMenu[j].type = MENU_SEPARATOR;
    trashMenu[j].name = "separator";
-   trashMenu[j++].helpCallback = NULL;
+   trashMenu[j++].helpCallback = nullptr;
 
    trashMenu[j].type = MENU_BUTTON;
    trashMenu[j].label = GETMESSAGE(20,107, "Tasks");
@@ -1730,7 +1730,7 @@ CreateTrashMenu(
 
    trashMenu[j].type = MENU_SEPARATOR;
    trashMenu[j].name = "separator";
-   trashMenu[j++].helpCallback = NULL;
+   trashMenu[j++].helpCallback = nullptr;
 
    usingHelpTrash = &(trashMenu[j].widget);
    trashMenu[j].type = MENU_BUTTON;
@@ -1745,7 +1745,7 @@ CreateTrashMenu(
 
    trashMenu[j].type = MENU_SEPARATOR;
    trashMenu[j].name = "separator";
-   trashMenu[j++].helpCallback = NULL;
+   trashMenu[j++].helpCallback = nullptr;
 
    trashMenu[j].type = MENU_BUTTON;
    trashMenu[j].label = GETMESSAGE(27,106, "About Trash Can");
@@ -1759,7 +1759,7 @@ CreateTrashMenu(
 
    menu_bar = _DtCreateMenuSystem(mainw, "menu_bar_trash", TrashHelpRequestCB,
                                HELP_TRASH_DIALOG_STR, True,
-                               trashMenu, trashMenuItemCount, NULL,
+                               trashMenu, trashMenuItemCount, nullptr,
                                Noop, Noop);
 
    /* Fine tune the menubar */
@@ -1767,8 +1767,8 @@ CreateTrashMenu(
    XtSetArg(args[1], XmNmarginHeight, 2);
    XtSetValues(menu_bar, args, 2);
 
-   file_mgr_rec->actions = NULL;
-   file_mgr_rec->action_pane = NULL;
+   file_mgr_rec->actions = nullptr;
+   file_mgr_rec->action_pane = nullptr;
    file_mgr_rec->directoryBarBtn = *directoryBarBtn;
 
    return(menu_bar);
@@ -1795,7 +1795,7 @@ TrashDisplayHandler(
    Atom   current_ws;
    Window root;
 
-   if (msg != NULL) {
+   if (msg != nullptr) {
       tt_message_reply( msg );
       tttk_message_destroy( msg );
    }
@@ -1809,7 +1809,7 @@ TrashDisplayHandler(
      tmpStr = GETMESSAGE(27, 90, "The 'Trash Can' cannot be initialized.\nPlease check:\n      1)$HOME/.dt/Trash for permissions.\n      2)Available disk space.\n      3)Authentication.");
      tmpMsg = XtNewString(tmpStr);
 
-     _DtMessage(toplevel, tmpTitle, tmpMsg, NULL, HelpRequestCB);
+     _DtMessage(toplevel, tmpTitle, tmpMsg, nullptr, HelpRequestCB);
 
      XtFree(tmpTitle);
      XtFree(tmpMsg);
@@ -1817,18 +1817,18 @@ TrashDisplayHandler(
    }
 
 #ifdef DEFER_TRASH_CREATION
-   if( trashFileMgrData == NULL )
+   if( trashFileMgrData == nullptr )
      TrashCreateDialog (XtDisplay(toplevel));
 #endif
 
    if (xdgTrashTimer == 0)
      xdgTrashTimer = XtAppAddTimeOut(XtWidgetToApplicationContext(toplevel),
-                                     10000, XdgTrashTimerCB, NULL);
+                                     10000, XdgTrashTimerCB, nullptr);
 
    {
       Boolean moved = ImportXdgTrashHome();
       if (moved && trashFileMgrData && trashFileMgrData->file_mgr_rec)
-        UpdateDirectory(NULL, trashFileMgrData->host,
+        UpdateDirectory(nullptr, trashFileMgrData->host,
                         trashFileMgrData->current_directory);
       if (moved)
         TrashMaybeStartRecSizeScan();
@@ -1847,7 +1847,7 @@ TrashDisplayHandler(
       classHints.res_class = DTFILE_CLASS_NAME;
 
       TrashView = True;
-      _DtShowBuiltDialog(NULL,NULL, trashDialogData, NULL, False, &classHints);
+      _DtShowBuiltDialog(nullptr,nullptr, trashDialogData, nullptr, False, &classHints);
       TrashView = False;
 
       file_mgr_rec = (FileMgrRec *)trashFileMgrData->file_mgr_rec;
@@ -1961,7 +1961,7 @@ TrashEmptyHandler(
      tmpStr = GETMESSAGE(27, 90, "The 'Trash Can' cannot be initialized.\nPlease check:\n      1)$HOME/.dt/Trash for permissions.\n      2)Available disk space.\n      3)Authentication.");
      tmpMsg = XtNewString(tmpStr);
 
-     _DtMessage(toplevel, tmpTitle, tmpMsg, NULL, HelpRequestCB);
+     _DtMessage(toplevel, tmpTitle, tmpMsg, nullptr, HelpRequestCB);
 
      XtFree(tmpTitle);
      XtFree(tmpMsg);
@@ -1976,8 +1976,8 @@ TrashEmptyHandler(
       tmpStr = GETMESSAGE(27,84, "When trash objects are shredded, they are permanently\nremoved from your system.\n\nAre you sure you want to shred?\n");
       msg = XtNewString(tmpStr);
 
-      _DtMessageDialog(toplevel, title, msg, NULL, TRUE, ConfirmEmptyCancel,
-              ConfirmEmptyOk, NULL, HelpRequestCB, False, QUESTION_DIALOG);
+      _DtMessageDialog(toplevel, title, msg, nullptr, TRUE, ConfirmEmptyCancel,
+              ConfirmEmptyOk, nullptr, HelpRequestCB, False, QUESTION_DIALOG);
 
       XtFree(title);
       XtFree(msg);
@@ -2133,7 +2133,7 @@ TrashRemoveHandler(
      tmpStr = GETMESSAGE(27, 90, "The 'Trash Can' cannot be initialized.\nPlease check:\n      1)$HOME/.dt/Trash for permissions.\n      2)Available disk space.\n      3)Authentication.");
      tmpMsg = XtNewString(tmpStr);
 
-     _DtMessage(toplevel, tmpTitle, tmpMsg, NULL, HelpRequestCB);
+     _DtMessage(toplevel, tmpTitle, tmpMsg, nullptr, HelpRequestCB);
 
      XtFree(tmpTitle);
      XtFree(tmpMsg);
@@ -2248,7 +2248,7 @@ TrashRemoveHandler(
 	  XtFree( file_list[i] );
        }
        XtFree( (char *)file_list );
-        file_list  = NULL;
+        file_list  = nullptr;
        tmpStr = (GETMESSAGE(27,73, "Shred File(s)"));
        title = XtNewString(tmpStr);
        if (number == 1)
@@ -2273,8 +2273,8 @@ TrashRemoveHandler(
        /* Really ought to pass to OK and Cancel CBs via client_data */
 #ifndef SUN_PERF
        global = msg;
-       	_DtMessageDialog(toplevel, title, message, NULL, TRUE,
-               	RemoveCancelCB, RemoveOkCB, NULL, HelpRequestCB, False,
+       	_DtMessageDialog(toplevel, title, message, nullptr, TRUE,
+               	RemoveCancelCB, RemoveOkCB, nullptr, HelpRequestCB, False,
                	QUESTION_DIALOG);
 #else
 	{
@@ -2289,8 +2289,8 @@ TrashRemoveHandler(
 					msg_cache->msg_cnt );
 		memcpy((char *)msg_cache->msg_list, (char *)global_msg_list,
 				sizeof(Tt_message) * msg_cache->msg_cnt ) ;
-		dlog = 	(Widget)_DtMessageDialog(toplevel, title, message, NULL, TRUE,
-                 	RemoveCancelCB, RemoveOkCB, NULL, HelpRequestCB, False,
+		dlog = 	(Widget)_DtMessageDialog(toplevel, title, message, nullptr, TRUE,
+                 	RemoveCancelCB, RemoveOkCB, nullptr, HelpRequestCB, False,
                  	QUESTION_DIALOG);
 		XtSetArg ( args[0], XmNuserData, msg_cache );
 		XtSetValues ( dlog, args, 1);
@@ -2360,7 +2360,7 @@ RemoveOkCB(
 
    {
       String deletionDate = CurrentDeletionDate();
-      MoveToTrash(file_list, file_count, verifyPromptsEnabled, NULL, deletionDate);
+      MoveToTrash(file_list, file_count, verifyPromptsEnabled, nullptr, deletionDate);
       if (deletionDate)
          XtFree(deletionDate);
    }
@@ -2450,7 +2450,7 @@ TrashRemoveNoConfirmHandler(
      tmpStr = GETMESSAGE(27, 90, "The 'Trash Can' cannot be initialized.\nPlease check:\n      1)$HOME/.dt/Trash for permissions.\n      2)Available disk space.\n      3)Authentication.");
      tmpMsg = XtNewString(tmpStr);
 
-     _DtMessage(toplevel, tmpTitle, tmpMsg, NULL, HelpRequestCB);
+     _DtMessage(toplevel, tmpTitle, tmpMsg, nullptr, HelpRequestCB);
 
      XtFree(tmpTitle);
      XtFree(tmpMsg);
@@ -2507,11 +2507,11 @@ static Boolean
 TrashAppendMessageFile(char ***files, int *count, char *file)
 {
    char **grown;
-   if (file == NULL || *count < 0 || *count == INT_MAX ||
+   if (file == nullptr || *count < 0 || *count == INT_MAX ||
        !RestoreCountValid(*count + 1))
    { errno = EINVAL; return False; }
    grown = (char **)XtRealloc((char *)*files, ((size_t)*count + 1) * sizeof(*grown));
-   if (grown == NULL) { errno = ENOMEM; return False; }
+   if (grown == nullptr) { errno = ENOMEM; return False; }
    *files = grown;
    grown[(*count)++] = file;
    return True;
@@ -2523,26 +2523,26 @@ MessageToFileList(
         char ***file_list,
         int *file_count)
 {
-   char *owned_dir = NULL, *owned_value = NULL;
+   char *owned_dir = nullptr, *owned_value = nullptr;
    const char *dir = "";
    size_t dirlen, separator;
    int args, arg, i;
    char *file;
 
    *file_count = 0;
-   *file_list = NULL;
+   *file_list = nullptr;
    args = tt_message_args_count(msg);
    if (tt_is_err(tt_int_error(args))) goto failed;
    owned_dir = tt_message_file(msg);
    if (tt_is_err(tt_ptr_error(owned_dir)))
-   { owned_dir = NULL; goto failed; }
-   if (owned_dir != NULL) dir = owned_dir;
+   { owned_dir = nullptr; goto failed; }
+   if (owned_dir != nullptr) dir = owned_dir;
    dirlen = strnlen(dir, RESTORE_PATH_LIMIT + 1);
    if (dirlen > RESTORE_PATH_LIMIT) goto failed;
    if (args <= 0)
    {
-      if (owned_dir == NULL || dirlen == 0)
-      { if (owned_dir != NULL) tt_free(owned_dir); return True; }
+      if (owned_dir == nullptr || dirlen == 0)
+      { if (owned_dir != nullptr) tt_free(owned_dir); return True; }
       file = XtNewString(dir);
       if (!TrashAppendMessageFile(file_list, file_count, file))
       { XtFree(file); goto failed; }
@@ -2555,13 +2555,13 @@ MessageToFileList(
       char *value;
       owned_value = tt_message_arg_val(msg, arg);
       if (tt_is_err(tt_ptr_error(owned_value)))
-      { owned_value = NULL; goto failed; }
-      if (owned_value == NULL) continue;
+      { owned_value = nullptr; goto failed; }
+      if (owned_value == nullptr) continue;
       /* The existing ToolTalk contract uses a space-separated first argument;
        * later arguments each carry one value. Keep that grammar unchanged.
        */
       for (value = DtStrtok(owned_value, arg == 0 ? " " : ""); value;
-           value = DtStrtok(NULL, arg == 0 ? " " : ""))
+           value = DtStrtok(nullptr, arg == 0 ? " " : ""))
       {
          size_t value_length = strcmp(value, "/") == 0 ? 0 :
                                strnlen(value, RESTORE_PATH_LIMIT + 1);
@@ -2570,7 +2570,7 @@ MessageToFileList(
              value_length > RESTORE_PATH_LIMIT - dirlen - separator) goto failed;
          length = dirlen + separator + value_length;
          file = XtMalloc(length + 1);
-         if (file == NULL) goto failed;
+         if (file == nullptr) goto failed;
          memcpy(file, dir, dirlen);
          if (separator) file[dirlen] = '/';
          memcpy(file + dirlen + separator, value, value_length);
@@ -2579,17 +2579,17 @@ MessageToFileList(
          { XtFree(file); goto failed; }
       }
       tt_free(owned_value);
-      owned_value = NULL;
+      owned_value = nullptr;
    }
-   if (owned_dir != NULL) tt_free(owned_dir);
+   if (owned_dir != nullptr) tt_free(owned_dir);
    return True;
 failed:
-   if (owned_value != NULL) tt_free(owned_value);
-   if (owned_dir != NULL) tt_free(owned_dir);
+   if (owned_value != nullptr) tt_free(owned_value);
+   if (owned_dir != nullptr) tt_free(owned_dir);
    /* Every appended entry has a checked allocation and known capacity. */
    for (i = 0; i < *file_count; ++i) XtFree((*file_list)[i]);
    XtFree((char *)*file_list);
-   *file_list = NULL;
+   *file_list = nullptr;
    *file_count = 0;
    return False;
 }
@@ -2602,21 +2602,21 @@ MessagesToFileList(
         char ***file_list,
         int *file_count)
 {
-   char **part = NULL;
+   char **part = nullptr;
    int part_count = 0, i, j;
-   *file_list = NULL;
+   *file_list = nullptr;
    *file_count = 0;
-   if (msg_cnt < 0 || (msg_cnt > 0 && msg_list == NULL)) return False;
+   if (msg_cnt < 0 || (msg_cnt > 0 && msg_list == nullptr)) return False;
    for (i = 0; i < msg_cnt; ++i)
    {
       if (!MessageToFileList(msg_list[i], &part, &part_count)) goto failed;
       for (j = 0; j < part_count; ++j)
       {
          if (!TrashAppendMessageFile(file_list, file_count, part[j])) goto failed;
-         part[j] = NULL; /* Transfer only after checked admission. */
+         part[j] = nullptr; /* Transfer only after checked admission. */
       }
       XtFree((char *)part);
-      part = NULL;
+      part = nullptr;
       part_count = 0;
    }
    return True;
@@ -2625,7 +2625,7 @@ failed:
    XtFree((char *)part);
    for (j = 0; j < *file_count; ++j) XtFree((*file_list)[j]);
    XtFree((char *)*file_list);
-   *file_list = NULL;
+   *file_list = nullptr;
    *file_count = 0;
    return False;
 }
@@ -2645,7 +2645,7 @@ CreateTrashFilename(
         Boolean uniqueTest )
 {
    String trashName;
-   char * extension = NULL;
+   char * extension = nullptr;
    struct stat statInfo;
 
    /* Create trash path */
@@ -2800,7 +2800,7 @@ VerifyCleanup(
    if (completeDelete)
       {
          String deletionDate = CurrentDeletionDate();
-         MoveToTrash(verifylist, fileCount, False, NULL, deletionDate);
+         MoveToTrash(verifylist, fileCount, False, nullptr, deletionDate);
          if (deletionDate)
             XtFree(deletionDate);
       }
@@ -2838,7 +2838,7 @@ ConfirmCancel(
   XtSetSensitive(*restoreBtn, True);
   XtSetSensitive(fileMgrPopup.trash_objPopup[BTN_REMOVE], True);
   XtSetSensitive(fileMgrPopup.trash_objPopup[BTN_RESTORE], True);
-  trash_popup_client_data = NULL;
+  trash_popup_client_data = nullptr;
 }
 
 
@@ -2865,10 +2865,10 @@ ConfirmOk(
   file_view_data = trashFileMgrData->popup_menu_icon;
   if(!file_view_data && trashFileMgrData->selected_file_count)
       file_view_data = trashFileMgrData->selection_list[0];
-  trashFileMgrData->popup_menu_icon = NULL;
+  trashFileMgrData->popup_menu_icon = nullptr;
 
-  if(file_view_data != NULL)
-      Remove(*removeBtn, file_view_data, NULL);
+  if(file_view_data != nullptr)
+      Remove(*removeBtn, file_view_data, nullptr);
 }
 
 
@@ -2902,8 +2902,8 @@ ConfirmRemove(
   tmpStr = GETMESSAGE(27,84, "When trash objects are shredded, they are permanently\nremoved from your system.\n\nAre you sure you want to shred?\n");
   msg = XtNewString(tmpStr);
 
-  _DtMessageDialog(toplevel, title, msg, NULL, TRUE, ConfirmCancel, ConfirmOk,
-                   NULL, HelpRequestCB, False, QUESTION_DIALOG);
+  _DtMessageDialog(toplevel, title, msg, nullptr, TRUE, ConfirmCancel, ConfirmOk,
+                   nullptr, HelpRequestCB, False, QUESTION_DIALOG);
 
   XtFree(title);
   XtFree(msg);
@@ -2928,7 +2928,7 @@ Remove(
 {
    FileViewData *file_view_data;
    Boolean match = False;
-   DeleteList *deleteList = NULL;
+   DeleteList *deleteList = nullptr;
    int deleteCount;
    int removeType;
    int i;
@@ -2936,12 +2936,12 @@ Remove(
 
    /* Remove may be called to remove a file or to remove a trash file;  */
    /* if w is NULL, this is a call to remove a file */
-   if (w != NULL)
+   if (w != nullptr)
    {
       removeType = TRASH_FILE;
 
       /* Count number of items to 'Delete To Trash' */
-      if (client_data != NULL)
+      if (client_data != nullptr)
       {
          /* This was called by trash popup */
          /* need to check to see if it is selected, if it is restore all
@@ -3000,10 +3000,10 @@ Remove(
       deleteList = (DeleteList *)XtMalloc(sizeof(DeleteList));
       deleteCount = 1;
       deleteList[0].trash = XtNewString(client_data);
-      deleteList[0].orig = NULL;
+      deleteList[0].orig = nullptr;
    }
 
-   EmptyTrash(deleteList, deleteCount, removeType, NULL);
+   EmptyTrash(deleteList, deleteCount, removeType, nullptr);
 }
 
 
@@ -3038,7 +3038,7 @@ AddToDeleteList(
 
    /* file not found in trash list */
    deleteList[i].trash = CreateTrashFilename(filename, FALSE);
-   deleteList[i].orig = NULL;
+   deleteList[i].orig = nullptr;
 }
 
 
@@ -3067,7 +3067,7 @@ TrashRestoreHandler(
      tmpStr = GETMESSAGE(27, 90, "The 'Trash Can' cannot be initialized.\nPlease check:\n      1)$HOME/.dt/Trash for permissions.\n      2)Available disk space.\n      3)Authentication.");
      tmpMsg = XtNewString(tmpStr);
 
-     _DtMessage(toplevel, tmpTitle, tmpMsg, NULL, HelpRequestCB);
+     _DtMessage(toplevel, tmpTitle, tmpMsg, nullptr, HelpRequestCB);
 
      XtFree(tmpTitle);
      XtFree(tmpMsg);
@@ -3090,7 +3090,7 @@ TrashRestoreHandler(
    XtSetSensitive(*removeBtn, False);
    XtSetSensitive(*restoreBtn, False);
 
-   RestoreFromTrash(file_list, file_count, NULL, NULL, msg,NULL);
+   RestoreFromTrash(file_list, file_count, nullptr, nullptr, msg,nullptr);
 }
 
 
@@ -3117,7 +3117,7 @@ Restore(
    int file_count;
    int i;
 
-   if (client_data != NULL)
+   if (client_data != nullptr)
    {
       /* This was called by trash popup */
       /* need to check to see if it is selected, if it is restore all
@@ -3128,7 +3128,7 @@ Restore(
        /* The object would have been deleted if the following condn is true */
        if(!file_view_data)
            return;
-       trashFileMgrData->popup_menu_icon = NULL;
+       trashFileMgrData->popup_menu_icon = nullptr;
 
       for (i = 0;  i < trashFileMgrData->selected_file_count; i++)
       {
@@ -3145,7 +3145,7 @@ Restore(
    file_count = match ? trashFileMgrData->selected_file_count : 1;
    if (!RestoreCountValid(file_count))
    {
-      _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(EINVAL), NULL, HelpRequestCB);
+      _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(EINVAL), nullptr, HelpRequestCB);
       return;
    }
    if (match)
@@ -3170,7 +3170,7 @@ Restore(
    XmUpdateDisplay(w);
 
    /* Start the background process that will do the restore */
-   RestoreFromTrash(file_list, file_count, NULL, NULL, NULL,NULL);
+   RestoreFromTrash(file_list, file_count, nullptr, nullptr, nullptr,nullptr);
 }
 
 
@@ -3223,7 +3223,7 @@ CloseTrash(
       _DtFreeDialogData(secondaryTrashHelpDialogList[i]);
    }
    XtFree((char *)secondaryTrashHelpDialogList);
-   secondaryTrashHelpDialogList = NULL;
+   secondaryTrashHelpDialogList = nullptr;
    secondaryTrashHelpDialogCount = 0;
 
    if (primaryTrashHelpDialog)
@@ -3232,7 +3232,7 @@ CloseTrash(
          _DtHideDialog(primaryTrashHelpDialog, False);
       _DtFreeDialogData(primaryTrashHelpDialog);
    }
-   primaryTrashHelpDialog = NULL;
+   primaryTrashHelpDialog = nullptr;
 
    if (PositionFlagSet(trashFileMgrData))
        SavePositionInfo(trashFileMgrData);
@@ -3268,12 +3268,12 @@ DropOnTrashCan(
    Position drop_x = drop_parameters->x;
    Position drop_y = drop_parameters->y;
 
-   _DtBuildActionArgsWithDroppedFiles(NULL, drop_parameters,
+   _DtBuildActionArgsWithDroppedFiles(nullptr, drop_parameters,
                                       &action_args, &arg_count);
 
    DtActionInvoke(file_mgr_rec->shell, TRASH_ACTION,
-                  action_args, arg_count, NULL, NULL,
-                  trashFileMgrData->current_directory, True, NULL, NULL);
+                  action_args, arg_count, nullptr, nullptr,
+                  trashFileMgrData->current_directory, True, nullptr, nullptr);
 
    _DtFreeActionArgs(action_args, arg_count);
 
@@ -3305,9 +3305,9 @@ MoveOutOfTrashCan(
    char *target_dir;
    char **file_list;
 
-   if (!RestoreCountValid(file_count) || file_set == NULL)
+   if (!RestoreCountValid(file_count) || file_set == nullptr)
    {
-      _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(EINVAL), NULL, HelpRequestCB);
+      _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(EINVAL), nullptr, HelpRequestCB);
       return;
    }
 
@@ -3325,7 +3325,7 @@ MoveOutOfTrashCan(
    for (i = 0;  i < file_count; i++)
       file_list[i] = XtNewString(file_set[i]);
 
-   RestoreFromTrash(file_list, file_count, target_host, target_dir, NULL,NULL);
+   RestoreFromTrash(file_list, file_count, target_host, target_dir, nullptr,nullptr);
 }
 
 
@@ -3396,7 +3396,7 @@ UpdateDirectoryOf(
    strcpy(host, home_host_name);
 
    /* now arrange for the directory to be updated */
-   UpdateDirectory(NULL, host, path);
+   UpdateDirectory(nullptr, host, path);
 
    /* restore the path */
    if (ptr > path)
@@ -3439,7 +3439,7 @@ EraseDir(char *dir_name)
 
    /* open source directory */
    dir = opendir(dir_name);
-   if (dir == NULL)
+   if (dir == nullptr)
      return errno;
 
    /* prepare source name */
@@ -3449,7 +3449,7 @@ EraseDir(char *dir_name)
      srcname[srclen++] = '/';
 
    rc = 0;
-   while (rc == 0 && (entry = readdir(dir)) != NULL)
+   while (rc == 0 && (entry = readdir(dir)) != nullptr)
    {
       if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
          continue;
@@ -3510,7 +3510,7 @@ MoveToTrashProcess(
       /* get base name and full path */
       path = XtNewString(file_list[i]);
       baseName = strrchr(file_list[i], '/');
-      if (baseName == NULL || path == NULL)
+      if (baseName == nullptr || path == nullptr)
       {
          /* Invalid filename */
          XtFree(path);
@@ -3593,10 +3593,10 @@ MoveToTrashProcess(
           */
          if (lstat(path, &statInfo) == 0 &&
              (statInfo.st_mode & S_IFMT) == S_IFDIR &&
-             (dirp = opendir(path)) != NULL)
+             (dirp = opendir(path)) != nullptr)
          {
             /* read the directory */
-            while ((entry = readdir(dirp)) != NULL)
+            while ((entry = readdir(dirp)) != nullptr)
             {
                if ( !(strcmp(entry->d_name, ".") == 0 ||
                       strcmp(entry->d_name, "..") == 0 ||
@@ -3610,7 +3610,7 @@ MoveToTrashProcess(
 
             closedir(dirp);
 
-            if (entry != NULL)
+            if (entry != nullptr)
             {
                /* Directory is not empty */
                XtFree(path);
@@ -3653,7 +3653,7 @@ MoveToTrashProcess(
 static int
 MoveToTrashResultIndex(const MoveToTrashCBData *cb_data, int *index)
 {
-   if (cb_data == NULL || index == NULL || cb_data->done_count < 0 ||
+   if (cb_data == nullptr || index == nullptr || cb_data->done_count < 0 ||
        cb_data->done_count >= cb_data->file_count)
       return -1;
    *index = cb_data->done_count;
@@ -3675,8 +3675,8 @@ MoveToTrashPipeCB(
    MoveToTrashCBData *cb_data = (MoveToTrashCBData *)client_data;
    short pipe_msg;
    int i, j, n, rc;
-   char *title, *err_msg = NULL, *err_arg = NULL;
-   char *path = NULL, *to = NULL;
+   char *title, *err_msg = nullptr, *err_arg = nullptr;
+   char *path = nullptr, *to = nullptr;
    int badCount;
    String buf;
    int bufsize;
@@ -3690,7 +3690,7 @@ MoveToTrashPipeCB(
    char *baseName;
    char *fileName;
    DesktopRec *desktopWin;
-   char *dir_error=NULL,*file_error=NULL,*no_file_error=NULL,*sacred_error=NULL;
+   char *dir_error=nullptr,*file_error=nullptr,*no_file_error=nullptr,*sacred_error=nullptr;
 
    /* read the next msg from the pipe */
    pipe_msg = -1;
@@ -3705,14 +3705,14 @@ MoveToTrashPipeCB(
              PipeReadExact(*fd, &rc, sizeof(rc)) != 0)
             goto malformed_response;
          if (PipeReadStringField(*fd, &err_msg) != 0 ||
-             PipeReadStringField(*fd, &err_arg) != 0 || err_msg == NULL)
+             PipeReadStringField(*fd, &err_arg) != 0 || err_msg == nullptr)
             goto malformed_response;
 
          FileOperationError(toplevel, err_msg, err_arg);
 
          XtFree(err_msg);
          XtFree(err_arg);
-         err_msg = err_arg = NULL;
+         err_msg = err_arg = nullptr;
 
          cb_data->rc[i] = BAD_FILE_ERROR;
          cb_data->done_count++;
@@ -3736,11 +3736,11 @@ MoveToTrashPipeCB(
          if (MoveToTrashResultIndex(cb_data, &i) != 0)
             goto malformed_response;
          if (PipeReadStringField(*fd, &path) != 0 ||
-             PipeReadStringField(*fd, &to) != 0 || path == NULL || to == NULL)
+             PipeReadStringField(*fd, &to) != 0 || path == nullptr || to == nullptr)
             goto malformed_response;
          cb_data->path[i] = path;
          cb_data->to[i] = to;
-         path = to = NULL;
+         path = to = nullptr;
          cb_data->rc[i] = 0;
          cb_data->done_count++;
          break;
@@ -3782,14 +3782,14 @@ decoded:
 
    /* process the results */
    badCount = 0;
-   buf = NULL;
+   buf = nullptr;
    bufsize = 0;
    verifyCount = 0;
-   verifybuf = NULL;
+   verifybuf = nullptr;
    verifybufsize = 0;
    vfiles = False;
    vdirs = False;
-   verifylist = NULL;
+   verifylist = nullptr;
    fileCount = 0;
 
    for (i = 0; i < cb_data->file_count; i++)
@@ -3837,7 +3837,7 @@ decoded:
               }
            }
            XtFree(cb_data->file_list[i]);
-           cb_data->file_list[i] = NULL;
+           cb_data->file_list[i] = nullptr;
         }
         badCount++;
      }
@@ -3860,14 +3860,14 @@ decoded:
          sprintf(sacred_error,"%s%s\n",tmpmsg,cb_data->file_list[i]);
        }
        XtFree(cb_data->file_list[i]);
-       cb_data->file_list[i] = NULL;
+       cb_data->file_list[i] = nullptr;
      }
      badCount++;
    }
    else if (cb_data->rc[i] == BAD_FILE_ERROR)
    {
        XtFree(cb_data->file_list[i]);
-       cb_data->file_list[i] = NULL;
+       cb_data->file_list[i] = nullptr;
    }
    else if (cb_data->rc[i] == NO_TRASH_FILE)
    {
@@ -3896,7 +3896,7 @@ decoded:
               cb_data->rc[i] == VERIFY_DIR)
    {
        if (verifyCount < 6)
-         AddString(&verifybuf, &verifybufsize, cb_data->file_list[i], NULL);
+         AddString(&verifybuf, &verifybufsize, cb_data->file_list[i], nullptr);
        verifyCount++;
 
        /*
@@ -3939,7 +3939,7 @@ decoded:
          baseName = ".";
       trashCan[numTrashItems].filename = XtNewString(baseName);
       trashCan[numTrashItems].deletionDate =
-        cb_data->deletionDate ? XtNewString(cb_data->deletionDate) : NULL;
+        cb_data->deletionDate ? XtNewString(cb_data->deletionDate) : nullptr;
        trashCan[numTrashItems].recSize = 0;
        trashCan[numTrashItems].recSizeValid = False;
 
@@ -3967,7 +3967,7 @@ decoded:
          {
            if (strcmp(fileName, cb_data->path[i]) == 0)
 #ifndef SUN_PERF
-             RemoveDT(desktopWin->shell, (XtPointer)desktopWin, NULL);
+             RemoveDT(desktopWin->shell, (XtPointer)desktopWin, nullptr);
 #else
              RemoveMovedObjectFromDT(desktopWin->shell, (XtPointer)desktopWin,
 			cb_data->file_count, cb_data->file_list);
@@ -4036,12 +4036,12 @@ decoded:
       {
         char *title = XtNewString(GetSharedMessage(TRASH_ERROR_TITLE));
         char *message = XtNewString(GETMESSAGE(27, 88, "Cannot write to a temporary file.\nPerhaps your file system is full.\n"));
-        _DtMessage(toplevel, title, message, NULL, HelpRequestCB);
+        _DtMessage(toplevel, title, message, nullptr, HelpRequestCB);
         XtFree(title);
         XtFree(message);
       }
       if (trashFileMgrData)
-        UpdateDirectory(NULL, trashFileMgrData->host,
+        UpdateDirectory(nullptr, trashFileMgrData->host,
                         trashFileMgrData->current_directory);
       TrashUpdateWindowIcon();
    }
@@ -4084,7 +4084,7 @@ decoded:
       }
 
       title = XtNewString(GetSharedMessage(TRASH_ERROR_TITLE));
-      _DtMessage(toplevel, title, buf, NULL, HelpRequestCB);
+      _DtMessage(toplevel, title, buf, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree ((char *) buf);
    } else {
@@ -4121,7 +4121,7 @@ decoded:
          char extraFiles[256];
 
          (void) sprintf(extraFiles, AdditionalHeader, verifyCount - 6);
-         AddString(&verifybuf, &verifybufsize, extraFiles, NULL);
+         AddString(&verifybuf, &verifybufsize, extraFiles, nullptr);
       }
 
       /*
@@ -4138,8 +4138,8 @@ decoded:
       tmpbuf = XtMalloc(strlen(header) + strlen(verifybuf) + 1);
       sprintf(tmpbuf, "%s%s", header, verifybuf);
       title = XtNewString(GETMESSAGE(27, 4, "Trash Can Warning"));
-      dlog = (Widget)_DtMessageDialog(toplevel, title, tmpbuf, NULL, True,
-                                  VerifyCancel, VerifyOk, NULL, HelpRequestCB,
+      dlog = (Widget)_DtMessageDialog(toplevel, title, tmpbuf, nullptr, True,
+                                  VerifyCancel, VerifyOk, nullptr, HelpRequestCB,
                                   False, WARNING_DIALOG);
       XtFree(title);
       XtFree ((char *) verifybuf);
@@ -4149,7 +4149,7 @@ decoded:
        * Add array as userdata on the dialog.
        * NULL terminate the array.
        */
-      verifylist[verifyCount] = NULL;
+      verifylist[verifyCount] = nullptr;
       XtSetArg(args[0], XmNuserData, verifylist);
       XtSetValues(dlog, args, 1);
    }
@@ -4184,7 +4184,7 @@ MoveToTrash(
    int pipe_fd[2];
    int pid;
 
-   if (!RestoreCountValid(file_count) || file_list == NULL)
+   if (!RestoreCountValid(file_count) || file_list == nullptr)
    {
      FileOpStartError(toplevel, EINVAL);
      if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_EINVAL, 0, 1);
@@ -4328,7 +4328,7 @@ RestoreWriteResults(int fd, const int *results, int count)
    if (result == 0)
       result = RestoreWriteAll(fd, results, (size_t)count * sizeof(*results));
    saved = errno;
-   (void)sigaction(SIGPIPE, &previous, NULL);
+   (void)sigaction(SIGPIPE, &previous, nullptr);
    errno = saved;
    return result;
 }
@@ -4344,7 +4344,7 @@ RestoreCountValid(int count)
 static void
 RestoreFreeConflict(RestoreConflict *conflict)
 {
-   if (conflict == NULL) return;
+   if (conflict == nullptr) return;
    free(conflict->source);
    free(conflict->target);
    free(conflict);
@@ -4357,8 +4357,8 @@ RestoreReleaseInputs(char **files, int count, char *host, char *directory,
    int i;
    for (i = 0; i < count; ++i)
    {
-      if (files != NULL) XtFree(files[i]);
-      if (intents != NULL) free(intents[i].target);
+      if (files != nullptr) XtFree(files[i]);
+      if (intents != nullptr) free(intents[i].target);
    }
    XtFree((char *)files);
    XtFree(host);
@@ -4370,10 +4370,10 @@ static void
 RestoreReleaseRequest(RestoreFromTrashCBData *request)
 {
    int i;
-   if (request == NULL) return;
+   if (request == nullptr) return;
    RestoreReleaseInputs(request->file_list, request->file_count, request->target_host,
                         request->target_dir, request->intents);
-   if (request->conflicts != NULL)
+   if (request->conflicts != nullptr)
       for (i = 0; i < request->file_count; ++i) RestoreFreeConflict(request->conflicts[i]);
    free(request->conflicts);
    free(request->rc);
@@ -4388,7 +4388,7 @@ RestoreWriteConflict(int fd, int index, const char *source, const char *target)
    short tag = PIPEMSG_RESTORE_CONFLICT;
    size_t sourceLength, targetLength;
    int result, saved;
-   if (index < 0 || source == NULL || target == NULL ||
+   if (index < 0 || source == nullptr || target == nullptr ||
        source[0] != '/' || target[0] != '/') { errno = EINVAL; return -1; }
    sourceLength = strnlen(source, RESTORE_PATH_LIMIT + 1);
    targetLength = strnlen(target, RESTORE_PATH_LIMIT + 1);
@@ -4406,7 +4406,7 @@ RestoreWriteConflict(int fd, int index, const char *source, const char *target)
    if (result == 0) result = RestoreWriteAll(fd, source, sourceLength);
    if (result == 0) result = RestoreWriteAll(fd, target, targetLength);
    saved = errno;
-   (void)sigaction(SIGPIPE, &previous, NULL);
+   (void)sigaction(SIGPIPE, &previous, nullptr);
    errno = saved;
    return result;
 }
@@ -4419,7 +4419,7 @@ static int
 RestoreLeaf(const char *path, const char **leaf, size_t *length)
 {
    const char *end, *start;
-   if (path == NULL || path[0] == '\0') return -1;
+   if (path == nullptr || path[0] == '\0') return -1;
    end = path + strlen(path);
    while (end > path && end[-1] == '/') --end;
    start = end;
@@ -4437,15 +4437,15 @@ RestoreDestination(const char *directory, const char *original)
    const char *leaf;
    size_t leafLength, dirLength;
    char *target;
-   if (directory == NULL || directory[0] != '/' ||
+   if (directory == nullptr || directory[0] != '/' ||
        RestoreLeaf(original, &leaf, &leafLength) != 0)
-   { errno = EINVAL; return NULL; }
+   { errno = EINVAL; return nullptr; }
    dirLength = strlen(directory);
    while (dirLength > 1 && directory[dirLength - 1] == '/') --dirLength;
    if (dirLength > SIZE_MAX - leafLength - 2)
-   { errno = ENAMETOOLONG; return NULL; }
+   { errno = ENAMETOOLONG; return nullptr; }
    target = malloc(dirLength + leafLength + 2);
-   if (target == NULL) return NULL;
+   if (target == nullptr) return nullptr;
    memcpy(target, directory, dirLength);
    if (dirLength != 1) target[dirLength++] = '/';
    memcpy(target + dirLength, leaf, leafLength);
@@ -4464,20 +4464,20 @@ RestoreProcess(
         const RestoreTargetIntent *intents)
 {
    int i, j;
-   char *full_dirname = NULL;
+   char *full_dirname = nullptr;
    char *from, *to;
    int status;
 
-   if (!RestoreCountValid(file_count) || rc == NULL) return;
+   if (!RestoreCountValid(file_count) || rc == nullptr) return;
    for (i = 0; i < file_count; ++i) rc[i] = -1;
 
    /* get full path name of target directory */
-   if (target_dir && intents == NULL)
+   if (target_dir && intents == nullptr)
    {
       Tt_status tt_status;
       full_dirname = ResolveLocalPathName(target_host, target_dir,
-                                          NULL, home_host_name, &tt_status);
-      if (TT_OK != tt_status || full_dirname == NULL || full_dirname[0] != '/')
+                                          nullptr, home_host_name, &tt_status);
+      if (TT_OK != tt_status || full_dirname == nullptr || full_dirname[0] != '/')
       {
         DPRINTF(("RestoreProcess: Unable to Resolve local path name\n"));
         goto finished;
@@ -4488,7 +4488,7 @@ RestoreProcess(
    for (i = 0; i < file_count; i++)
    {
       /* Locate file in trash list */
-      if (file_list[i] == NULL) continue;
+      if (file_list[i] == nullptr) continue;
       for (j = 0; j < numTrashItems; j++)
       {
          /* file_list[i] may be a complete path or just a file name */
@@ -4500,12 +4500,12 @@ RestoreProcess(
       }
 
       /* determine source and target for the move */
-      if (intents != NULL)
+      if (intents != nullptr)
       {
          from = file_list[i];
          to = intents[i].target;
       }
-      else if (target_dir == NULL)
+      else if (target_dir == nullptr)
       {
          /* this is a normal restore */
          if (j < numTrashItems)
@@ -4516,7 +4516,7 @@ RestoreProcess(
          else
          {
             /* can't do a restore if the file wasn't found in the trash list */
-            from = to = NULL;
+            from = to = nullptr;
          }
       }
       else
@@ -4528,12 +4528,12 @@ RestoreProcess(
                     j < numTrashItems ? trashCan[j].intOrig : file_list[i]);
       }
 
-      if (to != NULL)
+      if (to != nullptr)
       {
 
          status = RestoreObject((Widget) (intptr_t) pipe_fd, MOVE_FILE, from,to,
                         False, FileOpError, False, NOT_DESKTOP,
-                        intents != NULL ? intents[i].replacement : RESTORE_NO_REPLACE);
+                        intents != nullptr ? intents[i].replacement : RESTORE_NO_REPLACE);
          /* restore was successful */
          if(status == (int) True)
 	   rc[i] = 0;
@@ -4543,7 +4543,7 @@ RestoreProcess(
          {
             if (RestoreWriteConflict(pipe_fd, i, from, to) != 0)
             {
-               if (target_dir != NULL && intents == NULL) free(to);
+               if (target_dir != nullptr && intents == nullptr) free(to);
                goto finished;
             }
             rc[i] = SKIP_FILE;
@@ -4552,7 +4552,7 @@ RestoreProcess(
       else
          /* restore failed */
          rc[i] = -1;
-      if (target_dir != NULL && intents == NULL) free(to);
+      if (target_dir != nullptr && intents == nullptr) free(to);
    }
 
 finished:
@@ -4575,21 +4575,21 @@ RestoreReadConflict(int fd, RestoreFromTrashCBData *request)
    RestoreConflict *conflict;
    const char *leaf;
    size_t leafLength;
-   if (!RestoreCountValid(request->file_count) || request->conflicts == NULL ||
+   if (!RestoreCountValid(request->file_count) || request->conflicts == nullptr ||
        PipeRead(fd, fields, sizeof(fields)) != sizeof(fields) ||
-       fields[0] >= (uint32_t)request->file_count || request->conflicts[fields[0]] != NULL ||
+       fields[0] >= (uint32_t)request->file_count || request->conflicts[fields[0]] != nullptr ||
        fields[1] == 0 || fields[1] > RESTORE_PATH_LIMIT ||
        fields[2] == 0 || fields[2] > RESTORE_PATH_LIMIT) return -1;
    conflict = calloc(1, sizeof(*conflict));
-   if (conflict == NULL) return -1;
+   if (conflict == nullptr) return -1;
    conflict->request_index = fields[0];
    conflict->source = malloc((size_t)fields[1] + 1);
    conflict->target = malloc((size_t)fields[2] + 1);
-   if (conflict->source == NULL || conflict->target == NULL ||
+   if (conflict->source == nullptr || conflict->target == nullptr ||
        PipeRead(fd, conflict->source, (int)fields[1]) != (int)fields[1] ||
        PipeRead(fd, conflict->target, (int)fields[2]) != (int)fields[2] ||
-       memchr(conflict->source, 0, fields[1]) != NULL ||
-       memchr(conflict->target, 0, fields[2]) != NULL) goto failed;
+       memchr(conflict->source, 0, fields[1]) != nullptr ||
+       memchr(conflict->target, 0, fields[2]) != nullptr) goto failed;
    conflict->source[fields[1]] = 0;
    conflict->target[fields[2]] = 0;
    if (conflict->source[0] != '/' || conflict->target[0] != '/' ||
@@ -4612,7 +4612,7 @@ RestoreReadResults(int fd, int *results, int count, RestoreConflict *const *conf
    {
       for (i = 0; i < count; ++i)
          if ((results[i] != 0 && results[i] != -1 && results[i] != SKIP_FILE) ||
-             ((results[i] == SKIP_FILE) != (conflicts != NULL && conflicts[i] != NULL)))
+             ((results[i] == SKIP_FILE) != (conflicts != nullptr && conflicts[i] != nullptr)))
             break;
       if (i == count) return 0;
    }
@@ -4625,14 +4625,14 @@ RestoreUpdateDestination(const char *target)
 {
    char *directory, *slash;
    size_t length;
-   if (target == NULL || target[0] != '/') return;
+   if (target == nullptr || target[0] != '/') return;
    directory = strdup(target);
-   if (directory == NULL) return;
+   if (directory == nullptr) return;
    length = strlen(directory);
    while (length > 1 && directory[length - 1] == '/') directory[--length] = 0;
    slash = strrchr(directory, '/');
    if (slash == directory) slash[1] = 0; else *slash = 0;
-   UpdateDirectory(NULL, home_host_name, directory);
+   UpdateDirectory(nullptr, home_host_name, directory);
    free(directory);
 }
 
@@ -4668,7 +4668,7 @@ RestorePipeCB(
          if (PipeRead(*fd, &rc, sizeof(int)) != sizeof(int)) break;
          err_msg = PipeReadString(*fd);
          err_arg = PipeReadString(*fd);
-         if (err_msg == NULL)
+         if (err_msg == nullptr)
          {
             XtFree(err_arg);
             break;
@@ -4699,9 +4699,9 @@ RestorePipeCB(
    /* close the pipe and cancel the callback */
    DPRINTF(("RestorePipeCB: done\n"));
    close(*fd);
-   if (id != NULL) XtRemoveInput(*id);
+   if (id != nullptr) XtRemoveInput(*id);
 
-   buf = NULL;
+   buf = nullptr;
    bufsize = 0;
 
    for (i = 0; i < cb_data->file_count; i++)
@@ -4717,20 +4717,20 @@ RestorePipeCB(
          }
       }
 
-      if (cb_data->rc[i] == SKIP_FILE && conflicts[i] != NULL)
+      if (cb_data->rc[i] == SKIP_FILE && conflicts[i] != nullptr)
       {
 	 continue;
       }
       /* Check the return code from the restore */
       else if (cb_data->rc[i] == 0)
       {
-         if (cb_data->intents != NULL)
+         if (cb_data->intents != nullptr)
             RestoreUpdateDestination(cb_data->intents[i].target);
          /* restore was successful: remove the file from the trash list */
          if (j < numTrashItems)
          {
             /* arrange for the source directory to be updated */
-            if (cb_data->intents == NULL && cb_data->target_dir == NULL)
+            if (cb_data->intents == nullptr && cb_data->target_dir == nullptr)
                RestoreUpdateDestination(trashCan[j].intOrig);
 
             /* Remove this entry from the trash list */
@@ -4751,14 +4751,14 @@ RestorePipeCB(
                            "The following object(s) could not be put back:\n");
 
          restore_header = XtNewString(tmpStr);
-         if (j < numTrashItems && cb_data->target_dir == NULL)
+         if (j < numTrashItems && cb_data->target_dir == nullptr)
             AddString(&buf, &bufsize, trashCan[j].external, restore_header);
          else
             AddString(&buf, &bufsize, cb_data->file_list[i], restore_header);
          XtFree(restore_header);
       }
       RestoreFreeConflict(conflicts[i]);
-      conflicts[i] = NULL;
+      conflicts[i] = nullptr;
    }
 
    /* Update the trash information file */
@@ -4768,7 +4768,7 @@ RestorePipeCB(
 
      title = XtNewString(GetSharedMessage(TRASH_ERROR_TITLE));
      tmpStr = XtNewString(GETMESSAGE(27, 88, "Cannot write to a temporary file.\nPerhaps your file system is full.\n"));
-     _DtMessage(toplevel, title, tmpStr, NULL, HelpRequestCB);
+     _DtMessage(toplevel, title, tmpStr, nullptr, HelpRequestCB);
      XtFree(title);
      XtFree(tmpStr);
    }
@@ -4785,21 +4785,21 @@ RestorePipeCB(
    if (buf)
    {
       title = XtNewString(GetSharedMessage(TRASH_ERROR_TITLE));
-      _DtMessage(toplevel, title, buf, NULL, HelpRequestCB);
+      _DtMessage(toplevel, title, buf, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree ((char *) buf);
    }
 
-   UpdateDirectory(NULL, trashFileMgrData->host,
+   UpdateDirectory(nullptr, trashFileMgrData->host,
                    trashFileMgrData->current_directory);
    if (cb_data->target_dir)
-      UpdateDirectory(NULL, cb_data->target_host, cb_data->target_dir);
+      UpdateDirectory(nullptr, cb_data->target_host, cb_data->target_dir);
 
    /* Dialogs take only the captured conflicts, never request/widget storage. */
-   cb_data->conflicts = NULL;
+   cb_data->conflicts = nullptr;
    RestoreReleaseRequest(cb_data);
    for (i = 0; i < count; ++i)
-      if (conflicts[i] != NULL) CreateRestoreDialog(conflicts[i]);
+      if (conflicts[i] != nullptr) CreateRestoreDialog(conflicts[i]);
    free(conflicts);
 }
 
@@ -4833,26 +4833,26 @@ RestoreFromTrash(
       errno = EINVAL;
       return False;
    }
-   if (!TrashInitialized || file_list == NULL ||
-       (target_dir != NULL && intents != NULL))
+   if (!TrashInitialized || file_list == nullptr ||
+       (target_dir != nullptr && intents != nullptr))
    {
      if (!TrashInitialized) saved = ENOSPC;
      if (msg != 0) {
        tttk_message_fail( msg, TT_DESKTOP_ENOSPC, 0, 1 );
      }
      RestoreReleaseInputs(file_list, file_count, target_host, target_dir, intents);
-     _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(saved), NULL, HelpRequestCB);
+     _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(saved), nullptr, HelpRequestCB);
      errno = saved;
      return False;
    }
 
    /* set up callback data */
    cb_data = calloc(1, sizeof(*cb_data));
-   if (cb_data == NULL)
+   if (cb_data == nullptr)
    {
       if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_ENOSPC, 0, 1);
       RestoreReleaseInputs(file_list, file_count, target_host, target_dir, intents);
-      _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(ENOMEM), NULL, HelpRequestCB);
+      _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(ENOMEM), nullptr, HelpRequestCB);
       errno = ENOMEM;
       return False;
    }
@@ -4864,13 +4864,13 @@ RestoreFromTrash(
    cb_data->rc = malloc((size_t)file_count * sizeof(*cb_data->rc));
    cb_data->conflicts = calloc((size_t)file_count, sizeof(*cb_data->conflicts));
    cb_data->msg = msg;
-   if (cb_data->rc == NULL || cb_data->conflicts == NULL) { saved = ENOMEM; goto failed; }
+   if (cb_data->rc == nullptr || cb_data->conflicts == nullptr) { saved = ENOMEM; goto failed; }
    for (i = 0; i < file_count; ++i)
    {
       cb_data->rc[i] = -1;
-      if (file_list[i] == NULL || strnlen(file_list[i], RESTORE_PATH_LIMIT + 1) > RESTORE_PATH_LIMIT)
+      if (file_list[i] == nullptr || strnlen(file_list[i], RESTORE_PATH_LIMIT + 1) > RESTORE_PATH_LIMIT)
          goto failed;
-      if (intents != NULL && (file_list[i][0] != '/' || intents[i].target == NULL ||
+      if (intents != nullptr && (file_list[i][0] != '/' || intents[i].target == nullptr ||
           intents[i].target[0] != '/' || strnlen(intents[i].target, RESTORE_PATH_LIMIT + 1) > RESTORE_PATH_LIMIT ||
           (intents[i].replacement != RESTORE_NO_REPLACE && intents[i].replacement != RESTORE_REPLACE_APPROVED)))
          goto failed;
@@ -4929,7 +4929,7 @@ failed:
    if (pipe_fd[1] >= 0) close(pipe_fd[1]);
    if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_ENOSPC, 0, 1);
    RestoreReleaseRequest(cb_data);
-   _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(saved), NULL, HelpRequestCB);
+   _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(saved), nullptr, HelpRequestCB);
    errno = saved;
    return False;
 }
@@ -4971,7 +4971,7 @@ EmptyTrashProcess(
    /* send return codes back trough the pipe */
    pipe_msg = PIPEMSG_DONE;
    DPRINTF(("EmptyTrashProcess: sending DONE\n"));
-   if (RestoreCountValid(del_count) && rc != NULL &&
+   if (RestoreCountValid(del_count) && rc != nullptr &&
        DtfileProcessWriteAll(pipe_fd, &pipe_msg, sizeof(pipe_msg)) == 0)
       (void)DtfileProcessWriteAll(pipe_fd, rc,
                                   (size_t)del_count * sizeof(*rc));
@@ -4980,7 +4980,7 @@ EmptyTrashProcess(
 static int
 TrashReadResults(int fd, int *results, int count)
 {
-   if (results == NULL || count <= 0 || count > INT_MAX / (int)sizeof(*results))
+   if (results == nullptr || count <= 0 || count > INT_MAX / (int)sizeof(*results))
    {
       errno = EINVAL;
       return -1;
@@ -5003,7 +5003,7 @@ EmptyTrashPipeCB(
    EmptyTrashCBData *cb_data = (EmptyTrashCBData *)client_data;
    short pipe_msg;
    int i, j, k, n, rc;
-   char *title, *err_msg = NULL, *err_arg = NULL;
+   char *title, *err_msg = nullptr, *err_arg = nullptr;
    int problemCount, itemCount;
    String buf;
    int bufsize;
@@ -5024,7 +5024,7 @@ EmptyTrashPipeCB(
          if (PipeReadExact(*fd, &rc, sizeof(rc)) != 0)
             goto malformed_response;
          if (PipeReadStringField(*fd, &err_msg) != 0 ||
-             PipeReadStringField(*fd, &err_arg) != 0 || err_msg == NULL)
+             PipeReadStringField(*fd, &err_arg) != 0 || err_msg == nullptr)
             goto malformed_response;
          /* This call will popup an error dialog.
 
@@ -5037,7 +5037,7 @@ EmptyTrashPipeCB(
          */
          XtFree(err_msg);
          XtFree(err_arg);
-         err_msg = err_arg = NULL;
+         err_msg = err_arg = nullptr;
          break;
 
       case PIPEMSG_DONE:
@@ -5068,7 +5068,7 @@ decoded:
    close(*fd);
    XtRemoveInput(*id);
 
-   buf = NULL;
+   buf = nullptr;
    bufsize = 0;
    problemCount = 0;
    itemCount = 0;
@@ -5126,7 +5126,7 @@ decoded:
 
         title = XtNewString(GetSharedMessage(TRASH_ERROR_TITLE));
         tmpStr = XtNewString(GETMESSAGE(27, 88, "Cannot write to a temporary file.\nPerhaps your file system is full.\n"));
-        _DtMessage(toplevel, title, tmpStr, NULL, HelpRequestCB);
+        _DtMessage(toplevel, title, tmpStr, nullptr, HelpRequestCB);
         XtFree(title);
         XtFree(tmpStr);
       }
@@ -5147,7 +5147,7 @@ decoded:
          }
 
          title = XtNewString(GetSharedMessage(TRASH_ERROR_TITLE));
-         _DtMessage(toplevel, title, buf, NULL, HelpRequestCB);
+         _DtMessage(toplevel, title, buf, nullptr, HelpRequestCB);
          XtFree(title);
          XtFree ((char *) buf);
       }
@@ -5161,7 +5161,7 @@ decoded:
       XtSetSensitive(fileMgrPopup.trash_objPopup[BTN_REMOVE], True);
       XtSetSensitive(fileMgrPopup.trash_objPopup[BTN_RESTORE], True);
 
-      UpdateDirectory(NULL, trashFileMgrData->host,
+      UpdateDirectory(nullptr, trashFileMgrData->host,
                       trashFileMgrData->current_directory);
    }
    else
@@ -5183,7 +5183,7 @@ decoded:
          file_name = cb_data->del_list[0].trash;
          buffer = XtMalloc(strlen(tmpStr) + strlen(file_name) + 1);
          sprintf(buffer, "%s%s\n", tmpStr, file_name);
-         _DtMessage(toplevel, title, buffer, NULL, HelpRequestCB);
+         _DtMessage(toplevel, title, buffer, nullptr, HelpRequestCB);
          XtFree(title);
          XtFree(buffer);
       }
@@ -5229,7 +5229,7 @@ EmptyTrash(
    int pipe_fd[2];
    int pid;
 
-   if (!RestoreCountValid(del_count) || del_list == NULL)
+   if (!RestoreCountValid(del_count) || del_list == nullptr)
    {
      FileOpStartError(toplevel, EINVAL);
      if (msg != 0) tttk_message_fail(msg, TT_DESKTOP_EINVAL, 0, 1);
@@ -5309,9 +5309,9 @@ DeletePermissionChild(const char *parent, const char *name)
   char *path;
   if (name_length > SIZE_MAX - separator - 1 ||
       parent_length > SIZE_MAX - name_length - separator - 1)
-  { errno = ENAMETOOLONG; return NULL; }
+  { errno = ENAMETOOLONG; return nullptr; }
   path = malloc(parent_length + name_length + separator + 1);
-  if (!path) return NULL;
+  if (!path) return nullptr;
   memcpy(path, parent, parent_length);
   if (separator) path[parent_length] = '/';
   memcpy(path + parent_length + separator, name, name_length + 1);
@@ -5330,7 +5330,7 @@ CheckDeletePermission(
 #else
   struct stat statbuf;
 #endif
-  if (parentdir == NULL || destinationPath == NULL ||
+  if (parentdir == nullptr || destinationPath == nullptr ||
       parentdir[0] == '\0' || destinationPath[0] == '\0')
   { errno = EINVAL; return -1; }
 
@@ -5357,7 +5357,7 @@ CheckDeletePermission(
     {
        int fd, error = 0;
        char *tmpfile = DeletePermissionChild(parentdir, "dtfile.XXXXXX");
-       if (tmpfile == NULL) return -1;
+       if (tmpfile == nullptr) return -1;
        fd = mkstemp(tmpfile);
        if (fd < 0)                              /* Create a temporary file */
        {
@@ -5403,7 +5403,7 @@ CheckDeletePermissionRecur(
     return 0;   /* no need to check anything more */
 
   dirp = opendir (destinationPath);
-  if (dirp == NULL)
+  if (dirp == nullptr)
     return -1;  /* could not read directory */
 
 
@@ -5413,7 +5413,7 @@ CheckDeletePermissionRecur(
   {
     errno = 0;
     dp = readdir(dirp);
-    if (dp == NULL)
+    if (dp == nullptr)
     {
       if (errno == EINTR) continue;
       error = errno;
@@ -5433,7 +5433,7 @@ CheckDeletePermissionRecur(
         first_file = False;
       }
       child = DeletePermissionChild(destinationPath, dp->d_name);
-      if (child == NULL)
+      if (child == nullptr)
       {
         error = errno ? errno : ENOMEM;
         break;
@@ -5464,9 +5464,9 @@ RestoreDirectoryContains(const struct stat *directory, const char *entry)
   int fd = -1, next = -1, flags = O_RDONLY, result = -1, saved = 0;
   struct stat current, above;
   unsigned depth;
-  if (parent == NULL) return -1;
+  if (parent == nullptr) return -1;
   slash = strrchr(parent, '/');
-  if (slash == NULL) { free(parent); errno = EINVAL; return -1; }
+  if (slash == nullptr) { free(parent); errno = EINVAL; return -1; }
   if (slash == parent) slash[1] = '\0'; else *slash = '\0';
 #ifdef O_DIRECTORY
   flags |= O_DIRECTORY;
@@ -5509,12 +5509,12 @@ RestoreObject(
         RestoreReplacePolicy replacement)
 {
   struct stat statsrc,stattar;
-  char *localdir = NULL, *destination = NULL, *chrptr;
+  char *localdir = nullptr, *destination = nullptr, *chrptr;
   const char *leaf;
   size_t length;
   int result = (int)False;
 
-  if (source == NULL || source[0] != '/' || target == NULL || target[0] != '/' ||
+  if (source == nullptr || source[0] != '/' || target == nullptr || target[0] != '/' ||
       RestoreLeaf(target, &leaf, &length) != 0 ||
       strnlen(source, RESTORE_PATH_LIMIT + 1) > RESTORE_PATH_LIMIT ||
       strnlen(target, RESTORE_PATH_LIMIT + 1) > RESTORE_PATH_LIMIT ||
@@ -5524,7 +5524,7 @@ RestoreObject(
     return (int)False;
   }
   destination = strdup(target);
-  if (destination == NULL)
+  if (destination == nullptr)
   {
     if (errorHandler) (*errorHandler)(w, strerror(ENOMEM), target);
     return (int)False;
@@ -5540,7 +5540,7 @@ RestoreObject(
       }
 
     localdir = strdup(destination);
-    if (localdir == NULL)
+    if (localdir == nullptr)
     {
       if (errorHandler) (*errorHandler)(w, strerror(ENOMEM), target);
       goto finished;
@@ -5611,11 +5611,11 @@ EnsureParentDirs(
   char *p;
   int rc = 0;
 
-  if (target == NULL || target[0] != '/')
+  if (target == nullptr || target[0] != '/')
   { errno = EINVAL; return -1; }
 
   path = strdup(target);
-  if (path == NULL)
+  if (path == nullptr)
     return -1;
 
   /* Skip root */
@@ -5651,20 +5651,20 @@ static void
 CreateRestoreDialog(RestoreConflict *conflict)
 {
     char *tmpbuf,*title;
-    Widget shell = NULL, dw = NULL;
-    XmString text = NULL, ok = NULL, cancel = NULL;
+    Widget shell = nullptr, dw = nullptr;
+    XmString text = nullptr, ok = nullptr, cancel = nullptr;
     Arg args[8];
     Cardinal n;
     char *header    = GETMESSAGE(27,110,"There is already an object named\n\n%s\n\nSelect Ok if you want to replace the object\nwith the object from the Trash.\n\nSelect Cancel if you want to keep the object.\nIf you then rename the object, you will be able\nto repeat the Put Back and keep both objects.");
 
     tmpbuf = malloc(strlen(header) + strlen(conflict->target) + 1);
     title = XtNewString(GETMESSAGE(27, 109, "Put Back Warning"));
-    if (tmpbuf == NULL || title == NULL) goto finished;
+    if (tmpbuf == nullptr || title == nullptr) goto finished;
     sprintf(tmpbuf, header, conflict->target);
     text = XmStringCreateLocalized(tmpbuf);
     ok = XmStringCreateLocalized(Dt11GETMESSAGE(28, 1, "OK"));
     cancel = XmStringCreateLocalized(Dt11GETMESSAGE(28, 2, "Cancel"));
-    if (text == NULL || ok == NULL || cancel == NULL) goto finished;
+    if (text == nullptr || ok == nullptr || cancel == nullptr) goto finished;
     /* MWM hints belong to shell creation, before the first manage/map. */
     n = 0;
     XtSetArg(args[n], XmNtitle, title); ++n;
@@ -5674,7 +5674,7 @@ CreateRestoreDialog(RestoreConflict *conflict)
     XtSetArg(args[n], XmNmwmDecorations, MWM_DECOR_BORDER | MWM_DECOR_TITLE | MWM_DECOR_MENU); ++n;
     XtSetArg(args[n], XmNdeleteResponse, XmDESTROY); ++n;
     shell = XmCreateDialogShell(toplevel, "restoreConflict_popup", args, n);
-    if (shell == NULL) goto finished;
+    if (shell == nullptr) goto finished;
     n = 0;
     XtSetArg(args[n], XmNdialogType, XmDIALOG_WARNING); ++n;
     XtSetArg(args[n], XmNmessageString, text); ++n;
@@ -5685,18 +5685,18 @@ CreateRestoreDialog(RestoreConflict *conflict)
     /* Keep the existing dialogStyle resource/default; admission failure must
      * leave the managed confirmation available for retry. */
     dw = XmCreateMessageBox(shell, "restoreConflict", args, n);
-    if (dw == NULL) goto finished;
+    if (dw == nullptr) goto finished;
     XtAddCallback(dw, XmNdestroyCallback, RestoreConflictDestroyed, conflict);
     XtAddCallback(dw, XmNokCallback, RestoreVerifyOk, dw);
     XtAddCallback(dw, XmNcancelCallback, RestoreVerifyCancel, dw);
     XtUnmanageChild(XmMessageBoxGetChild(dw, XmDIALOG_HELP_BUTTON));
     XtManageChild(dw);
 finished:
-    if (dw == NULL)
+    if (dw == nullptr)
     {
-       if (shell != NULL) XtDestroyWidget(shell);
+       if (shell != nullptr) XtDestroyWidget(shell);
        RestoreFreeConflict(conflict);
-       _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(ENOMEM), NULL, HelpRequestCB);
+       _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(ENOMEM), nullptr, HelpRequestCB);
     }
     XmStringFree(text); XmStringFree(ok); XmStringFree(cancel);
     free(tmpbuf);
@@ -5709,31 +5709,31 @@ RestoreVerifyOk(
         XtPointer client_data,
         XtPointer call_data )
 {
-    RestoreConflict *conflict = NULL;
+    RestoreConflict *conflict = nullptr;
     RestoreTargetIntent *intents;
     char **files;
     Widget mbox = (Widget)client_data;
     (void)w; (void)call_data;
 
-    XtVaGetValues(mbox, XmNuserData, &conflict, NULL);
-    if (conflict == NULL) return;
+    XtVaGetValues(mbox, XmNuserData, &conflict, nullptr);
+    if (conflict == nullptr) return;
     files = (char **)XtCalloc(1, sizeof(*files));
     intents = calloc(1, sizeof(*intents));
-    if (files != NULL) files[0] = XtNewString(conflict->source);
-    if (intents != NULL)
+    if (files != nullptr) files[0] = XtNewString(conflict->source);
+    if (intents != nullptr)
     {
        intents[0].target = strdup(conflict->target);
        intents[0].replacement = RESTORE_REPLACE_APPROVED;
     }
-    if (files == NULL || intents == NULL || files[0] == NULL || intents[0].target == NULL)
+    if (files == nullptr || intents == nullptr || files[0] == nullptr || intents[0].target == nullptr)
     {
-       RestoreReleaseInputs(files, 1, NULL, NULL, intents);
-       _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(ENOMEM), NULL, HelpRequestCB);
+       RestoreReleaseInputs(files, 1, nullptr, nullptr, intents);
+       _DtMessage(toplevel, GetSharedMessage(TRASH_ERROR_TITLE), strerror(ENOMEM), nullptr, HelpRequestCB);
        return;
     }
     /* Admission consumes only these copies, on success and failure alike.
      * The dialog retains its captured conflict until it is destroyed. */
-    if (RestoreFromTrash(files, 1, NULL, NULL, NULL, intents))
+    if (RestoreFromTrash(files, 1, nullptr, nullptr, nullptr, intents))
        XtDestroyWidget(XtParent(mbox));
 }
 

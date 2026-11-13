@@ -163,7 +163,7 @@ CallWmFunction (WmFunction wm_function,
 
 {
    WmGlobalData * wm_global_data = (WmGlobalData *) panel.global_data;
-   ClientData   * wm_client_data = NULL;
+   ClientData   * wm_client_data = nullptr;
    Display      * display = wm_global_data->display;
    Window	  client_window = XtWindow(client);
 
@@ -174,7 +174,7 @@ CallWmFunction (WmFunction wm_function,
    XFindContext (display, client_window, wm_global_data->windowContextType,
                     (XtPointer) &wm_client_data);
 
-   if (wm_client_data == NULL)
+   if (wm_client_data == nullptr)
       return;
 
    /*  
@@ -235,7 +235,7 @@ ArrowCB (Widget    w,
    {
       /*  Execute the window manager function to unpost the subpanel  */
 
-      CallWmFunction (F_Kill, NULL, subpanel_data->shell, NULL);
+      CallWmFunction (F_Kill, nullptr, subpanel_data->shell, nullptr);
    }
 }
 
@@ -256,7 +256,7 @@ HandleInputTranslations(void)
 {
    static XtTranslations handle_translations;
 
-   if (handle_translations == NULL)
+   if (handle_translations == nullptr)
    {
       handle_translations = XtParseTranslationTable(
 	"<BtnDown>:    DrawingAreaInput() ManagerGadgetArm()\n\
@@ -299,7 +299,7 @@ HandleInputCB (Widget    w,
       {
          XUngrabPointer (XtDisplay (w), buttonEvent->time);
          XSync (XtDisplay (w), FALSE);
-	 CallWmFunction (F_Post_FpMenu, NULL, panel.shell, event);
+	 CallWmFunction (F_Post_FpMenu, nullptr, panel.shell, event);
       }
       else
       {
@@ -309,7 +309,7 @@ HandleInputCB (Widget    w,
 
 	 if (buttonEvent->button == Button1)
          {
-	    CallWmFunction (F_Raise, NULL, panel.shell, event);
+	    CallWmFunction (F_Raise, nullptr, panel.shell, event);
             XSync (DISPLAY, FALSE);
             XmUpdateDisplay (panel.shell);
          }
@@ -332,7 +332,7 @@ HandleInputCB (Widget    w,
       {
          XUngrabPointer (XtDisplay (w), motionEvent->time);
          XSync (XtDisplay (w), FALSE);
-         CallWmFunction (F_Move, NULL, panel.shell, event);
+         CallWmFunction (F_Move, nullptr, panel.shell, event);
          wmGD.preMove = False;
       }
    }
@@ -388,7 +388,7 @@ MinimizeInputCB (Widget    w,
       {
          XUngrabPointer (XtDisplay (w), bevent->time);
          XSync (XtDisplay (w), FALSE);
-         CallWmFunction (F_Post_FpMenu, NULL, panel.shell, event);
+         CallWmFunction (F_Post_FpMenu, nullptr, panel.shell, event);
       }
    }
    else if (event->type == ButtonRelease && bevent->button == Button1)
@@ -396,7 +396,7 @@ MinimizeInputCB (Widget    w,
       if (bevent->x >= 0 && bevent->x <= (Position) XtWidth(w) &&
           bevent->y >= 0 && bevent->y <= (Position) XtHeight(w))
       {
-         CallWmFunction (F_Minimize, NULL, panel.shell, event);
+         CallWmFunction (F_Minimize, nullptr, panel.shell, event);
       }
 
       XtSetArg (al[0], XmNbackgroundPixmap, minimize_normal_pixmap);
@@ -441,7 +441,7 @@ MenuInputCB (Widget    w,
    {
       XUngrabPointer (XtDisplay (w), bevent->time);
       XSync (XtDisplay (w), FALSE);
-      CallWmFunction (F_Post_FpMenu, NULL, panel.shell, event);
+      CallWmFunction (F_Post_FpMenu, nullptr, panel.shell, event);
    }
 }
 
@@ -596,7 +596,7 @@ WorkspaceModifyCB (Widget    w,
          /*  Cancel workspace renaming  */
 
          if (XtIsManaged (box_data->switch_edit))
-	    SwitchRenameCancel (box_data->switch_edit, NULL, NULL, NULL);
+	    SwitchRenameCancel (box_data->switch_edit, nullptr, nullptr, nullptr);
 
 
          DtWsmGetWorkspaceList (XtDisplay (switch_data->rc),
@@ -676,7 +676,7 @@ WorkspaceModifyCB (Widget    w,
          /*  Cancel workspace renaming  */
 
          if (XtIsManaged (box_data->switch_edit))
-	    SwitchRenameCancel (box_data->switch_edit, NULL, NULL, NULL);
+	    SwitchRenameCancel (box_data->switch_edit, nullptr, nullptr, nullptr);
 
 
          DtWsmGetWorkspaceList (XtDisplay (switch_data->rc),
@@ -1060,7 +1060,7 @@ SwitchRenameCB (Widget    w,
       s2 = FPGETMESSAGE (86, 2, "Invalid or duplicate workspace name"),
       s2 = XtNewString (s2);
 
-      _DtMessage (XtParent (w), s1, s2, NULL, NULL);
+      _DtMessage (XtParent (w), s1, s2, nullptr, nullptr);
 
       XtFree (s1);
       XtFree (s2);
@@ -1153,9 +1153,9 @@ SwitchRenameLabel (Widget    switch_button,
    /*  then create the text widget to perform the name editing.   */
 
    if ((edit_string =
-	(char *)_XmStringUngenerate(toggle_string, NULL,
+	(char *)_XmStringUngenerate(toggle_string, nullptr,
 				    XmCHARSET_TEXT, XmCHARSET_TEXT))
-       != (char *)NULL)
+       != (char *)nullptr)
    {
 
       /*  Set the switch editing field to the new resource set  */
@@ -1274,7 +1274,7 @@ CheckControlTypeFile (ControlData * control_data)
    message = XtMalloc (strlen (msg) + strlen (file_name) + 2);
    sprintf (message, "%s %s", msg, file_name);
 
-   _DtMessage (panel.shell, title, message, NULL, NULL);
+   _DtMessage (panel.shell, title, message, nullptr, nullptr);
 
    XtFree (title);
    XtFree (message);	    
@@ -1296,28 +1296,28 @@ FreeFunctionArg (
     WmFunction wmFunc,
     void *pArg)
 {
-    if (pArg != NULL)
+    if (pArg != nullptr)
     {
 	if (wmFunc == F_Action)
 	{
 	    WmActionArg *pAP = (WmActionArg *) pArg;
 
-	    if (pAP->aap != NULL)
+	    if (pAP->aap != nullptr)
 	    {
 		int i;
 
 		for (i=0; i < pAP->numArgs; i++)
 		{
-		    if (pAP->aap[i].u.file.name != NULL)
+		    if (pAP->aap[i].u.file.name != nullptr)
 			XtFree ((char *) pAP->aap[i].u.file.name);
 		}
 		XtFree ((char *) pAP->aap);
 	    }
 
-	    if (pAP->actionName != NULL)
+	    if (pAP->actionName != nullptr)
 		XtFree ((char *) pAP->actionName);
 
-	    if (pAP->szExecParms != NULL)
+	    if (pAP->szExecParms != nullptr)
 		XtFree ((char *) pAP->szExecParms);
 
 	}
@@ -1378,7 +1378,7 @@ PushCB (Widget    w,
 
    BoxData      * box_data;
    SubpanelData * subpanel_data;
-   ControlData  * main_control_data = NULL;
+   ControlData  * main_control_data = nullptr;
 
    char m_state;
 
@@ -1398,7 +1398,7 @@ PushCB (Widget    w,
    
    for (i = 0; i < panel.box_data_count; i++)
    {
-      if (panel.box_data[i]->switch_edit != NULL)
+      if (panel.box_data[i]->switch_edit != nullptr)
       {
          if (XtIsManaged (panel.box_data[i]->switch_edit))
          {
@@ -1435,7 +1435,7 @@ PushCB (Widget    w,
       /*  The control may be the main panel icon copy.  If so, find  */
       /*  the subpanel that contains it a set the subpanel data      */
 
-      subpanel_data = NULL;
+      subpanel_data = nullptr;
 
       for (i = 0; i < panel.box_data_count; i++)
       {
@@ -1445,7 +1445,7 @@ PushCB (Widget    w,
 
 	    box_control = panel.box_data[i]->control_data[j];
 
-	    if (box_control->subpanel_data != NULL &&
+	    if (box_control->subpanel_data != nullptr &&
 	        box_control->subpanel_data->main_panel_icon_copy == w)
 	    {
 	       subpanel_data = box_control->subpanel_data;
@@ -1453,7 +1453,7 @@ PushCB (Widget    w,
                break;
 	    }
 	 }
-         if (subpanel_data != NULL)
+         if (subpanel_data != nullptr)
 	    break;
       }
    }
@@ -1463,7 +1463,7 @@ PushCB (Widget    w,
    /*  the input was an escape key.  If so, unpost the subpanel  */
    /*  and return.                                               */
 
-   if (subpanel_data != NULL && event != NULL)
+   if (subpanel_data != nullptr && event != nullptr)
    {
       if (event->xany.type == KeyPress)
       {
@@ -1527,7 +1527,7 @@ PushCB (Widget    w,
       /*  the subpanel control and turn on the arrow to the      */
       /*  highlighted arrow of the subpanel.                     */
       
-      if (subpanel_data != NULL)
+      if (subpanel_data != nullptr)
       {
          monitor_icon = control_data->indicator;
 
@@ -1598,7 +1598,7 @@ PushCB (Widget    w,
             if ((char) (intptr_t) control_data->element_values[CONTROL_MONITOR_TYPE].
 	               parsed_value != MONITOR_NONE)
 	    {
-               if (subpanel_data != NULL)
+               if (subpanel_data != nullptr)
                {
                   monitor_icon = control_data->indicator;
                   XtSetArg (al[0], XmNimageName, indicator_off_image);
@@ -1607,7 +1607,7 @@ PushCB (Widget    w,
             }
 
 
-            if (CheckControlTypeFile (control_data) && push_action != NULL)
+            if (CheckControlTypeFile (control_data) && push_action != nullptr)
             {
                _DtControlDoPushAnimation (w);   
 
@@ -1630,8 +1630,8 @@ PushCB (Widget    w,
 
                      DtActionInvoke (panel.shell, 
                                      push_action->action_name,
-                                     aap, 1, NULL, NULL, NULL,
-                                     1, NULL, NULL);
+                                     aap, 1, nullptr, nullptr, nullptr,
+                                     1, nullptr, nullptr);
 
                      XtFree ((char *) aap);
 		  }
@@ -1646,8 +1646,8 @@ PushCB (Widget    w,
                      {
                         DtActionInvoke (panel.shell, 
 			                push_action->action_name,
-					NULL, 0, NULL, NULL, NULL,
-                                        1, NULL, NULL);
+					nullptr, 0, nullptr, nullptr, nullptr,
+                                        1, nullptr, nullptr);
                      }
                   }
                }
@@ -1655,13 +1655,13 @@ PushCB (Widget    w,
 	       {
                   WmFunction wm_func;
                   int        function_index;
-                  String     func_arg = NULL;
+                  String     func_arg = nullptr;
                   String     s1, s1save;
                   char     * client_name;
                   char     * client_title;		  
 
                   WmGlobalData    * wm_global_data = (WmGlobalData *) panel.global_data;
-                  ClientData      * wm_client_data = NULL;
+                  ClientData      * wm_client_data = nullptr;
                   WmPushRecallArg   push_argument;
 
 
@@ -1678,7 +1678,7 @@ PushCB (Widget    w,
                   client_name = 
 		     (char *) control_data->element_values[CONTROL_CLIENT_NAME].parsed_value;
 
-                  if (client_name == NULL)
+                  if (client_name == nullptr)
                      client_name = 
 		        (char *) control_data->element_values[CONTROL_LABEL].parsed_value;
 
@@ -1715,7 +1715,7 @@ PushCB (Widget    w,
                   /*  Get the window manager client data for the panel and  */
 		  /*  call the push recall function to get the client run.  */
 		  
-                  if (subpanel_data != NULL)
+                  if (subpanel_data != nullptr)
                      XFindContext (wm_global_data->display, 
 		                   XtWindow (subpanel_data->shell),
                                    wm_global_data->windowContextType,
@@ -1748,7 +1748,7 @@ PushCB (Widget    w,
       /*  Call the unposting function and reset the arrow behavior if the  */
       /*  action occurred out of a subpanel.                                */
 
-      if (subpanel_data != NULL && unpost_subpanel &&
+      if (subpanel_data != nullptr && unpost_subpanel &&
           (Boolean) (intptr_t) panel.element_values[PANEL_SUBPANEL_UNPOST].parsed_value &&
           subpanel_data->torn == False)
          ArrowCB (main_control_data->arrow,
@@ -1782,7 +1782,7 @@ DropCB (Widget    w,
    Arg              al[1];
    int              i, j, k, l;
    DtActionArg    * aap;
-   char           * save_name = NULL;
+   char           * save_name = nullptr;
 
    XtSetArg (al[0], XmNuserData, &control_data);
    XtGetValues (w, al, 1);
@@ -1883,7 +1883,7 @@ DropCB (Widget    w,
       }
       else
       {
-         if (save_name != NULL)
+         if (save_name != nullptr)
             drop_action->action_name = save_name;
 
          control_data->operation = 0;
@@ -1892,11 +1892,11 @@ DropCB (Widget    w,
       }
        
       DtActionInvoke (w, drop_action->action_name, aap, numItems,
-                     NULL, NULL, NULL, 1, NULL, NULL);
+                     nullptr, nullptr, nullptr, 1, nullptr, nullptr);
 
       XtFree((char *) aap);
 
-      if (save_name != NULL)
+      if (save_name != nullptr)
          drop_action->action_name = save_name;
 
       control_data->operation = 0;
@@ -2079,10 +2079,10 @@ void InvokeHelp (Widget widget,
 		 char * help_string)
 {
 
-    if (help_volume == NULL)
+    if (help_volume == nullptr)
        help_volume = FP_HELP_VOLUME;
 
-    if (help_topic != NULL)
+    if (help_topic != nullptr)
     {
        if (strcmp (help_volume, FP_HELP_VOLUME) == 0)
           WmDtDisplayTopicHelp (widget, help_volume, help_topic);
@@ -2091,7 +2091,7 @@ void InvokeHelp (Widget widget,
     }
     else
     {
-       if (help_string != NULL)
+       if (help_string != nullptr)
           WmDtDisplayStringHelp (widget, help_string);
     }
 }
@@ -2257,8 +2257,8 @@ GetValuesFromDataType (char *	       data_type,
    for (i = 0; i < CONTROL_KEYWORD_COUNT; i++)
    {
       (*element_values)[i].use_default = True;
-      (*element_values)[i].string_value = NULL;
-      (*element_values)[i].parsed_value = NULL;
+      (*element_values)[i].string_value = nullptr;
+      (*element_values)[i].parsed_value = nullptr;
    }
 
    (*element_values)[CONTROL_FILE_NAME].string_value = XtNewString (file_name);
@@ -2371,21 +2371,21 @@ CustomizeDropCB (Widget    w,
 
          if (element_values[CONTROL_CONTAINER_NAME].use_default == False)
          {
-            if (element_values[CONTROL_CONTAINER_NAME].parsed_value != NULL)
+            if (element_values[CONTROL_CONTAINER_NAME].parsed_value != nullptr)
                XtFree (element_values[CONTROL_CONTAINER_NAME].parsed_value);
-            if (element_values[CONTROL_CONTAINER_NAME].string_value != NULL)
+            if (element_values[CONTROL_CONTAINER_NAME].string_value != nullptr)
                XtFree (element_values[CONTROL_CONTAINER_NAME].string_value);
          }
 
          if (element_values[CONTROL_CONTAINER_TYPE].use_default == False)
          {
-            if (element_values[CONTROL_CONTAINER_TYPE].string_value != NULL)
+            if (element_values[CONTROL_CONTAINER_TYPE].string_value != nullptr)
                XtFree (element_values[CONTROL_CONTAINER_TYPE].string_value);
          }
 
          if (element_values[CONTROL_POSITION_HINTS].use_default == False)
          {
-            if (element_values[CONTROL_POSITION_HINTS].string_value != NULL)
+            if (element_values[CONTROL_POSITION_HINTS].string_value != nullptr)
                XtFree (element_values[CONTROL_POSITION_HINTS].string_value);
          }
 
@@ -2451,7 +2451,7 @@ CustomizeDropCB (Widget    w,
                                 strlen(del_msg) + 4));
             sprintf(message, "%s %s\n\n%s", del_ctrl, new_control_name, del_msg);
 
-            _DtMessage (panel.shell, title, message, NULL, NULL);
+            _DtMessage (panel.shell, title, message, nullptr, nullptr);
 
             XtFree (title);	    
             XtFree (del_ctrl);	    
@@ -2514,7 +2514,7 @@ CustomizeDropCB (Widget    w,
          for (j = 0; j < subpanel_data->control_data_count; j++)
             XtSetValues (subpanel_data->control_data[j]->icon, al, 1);
 
-         if (subpanel_data->main_panel_icon_copy != NULL)
+         if (subpanel_data->main_panel_icon_copy != nullptr)
             XtSetValues (subpanel_data->main_panel_icon_copy, al, 1);
       }
 
@@ -2550,21 +2550,21 @@ CustomizeDropCB (Widget    w,
       control_data->element_values = element_values;
       control_data->parent_data = (XtPointer) subpanel_data;
       control_data->parent_type = SUBPANEL;
-      control_data->subpanel_data = NULL;
-      control_data->icon = NULL;
-      control_data->arrow = NULL;
-      control_data->arrow_separator = NULL;
-      control_data->indicator = NULL;
+      control_data->subpanel_data = nullptr;
+      control_data->icon = nullptr;
+      control_data->arrow = nullptr;
+      control_data->arrow_separator = nullptr;
+      control_data->indicator = nullptr;
       control_data->is_action = False;
-      control_data->move_action = NULL;
-      control_data->copy_action = NULL;
-      control_data->link_action = NULL;
+      control_data->move_action = nullptr;
+      control_data->copy_action = nullptr;
+      control_data->link_action = nullptr;
       control_data->operation = 0;
 
       AddControlActionList (control_data);
 
 
-      if (j == 0 && subpanel_data->main_panel_icon_copy != NULL)
+      if (j == 0 && subpanel_data->main_panel_icon_copy != nullptr)
          attach_widget = subpanel_data->main_panel_icon_copy;
       else
          attach_widget = subpanel_data->control_data[j - 1]->icon;

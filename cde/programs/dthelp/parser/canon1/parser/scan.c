@@ -856,7 +856,7 @@ void m_setmap(int map, LOGICAL useoradd)
         m_free(m_stacktop->map, "short reference map") ;
       /* Done, if USEMAP */
       if (useoradd) {
-        m_stacktop->map = NULL ;
+        m_stacktop->map = nullptr ;
         return ;
         }
       /* <!ADDMAP #EMPTY> restores map from beginning of element */

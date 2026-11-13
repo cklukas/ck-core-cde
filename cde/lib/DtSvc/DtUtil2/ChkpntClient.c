@@ -154,7 +154,7 @@ myDtChkpntMsgSend(char *message, char *type)
     }
     else {		     /* Check event queue */
 	event_found = XCheckIfEvent(dtcp_info.display, &event,
-			 myCheckClientEvent, NULL);
+			 myCheckClientEvent, nullptr);
 	if (event_found == True) {
 	    if (event.type == PropertyNotify)
 		 timestamp = event.xproperty.time; 
@@ -164,7 +164,7 @@ myDtChkpntMsgSend(char *message, char *type)
 	    XChangeProperty(dtcp_info.display,     dtcp_info.window,
 		    dtcp_info.aProperty[propnum],   XA_STRING,
 		    8,                      PropModeAppend,
-		    (unsigned char *) NULL, 0);
+		    (unsigned char *) nullptr, 0);
 	    XFlush(dtcp_info.display);
 	    loop:
 	    XWindowEvent(dtcp_info.display, dtcp_info.window,
@@ -191,7 +191,7 @@ myDtChkpntMsgSend(char *message, char *type)
     oldtime = INVALID_TIME;
     do {
 	event_found = XCheckIfEvent(dtcp_info.display, &event,
-			     myCheckClientEvent, NULL);
+			     myCheckClientEvent, nullptr);
 	if (event.type == PropertyNotify) /* Save timestamp for recycling */
 	     oldtime = event.xproperty.time;
 	else oldtime = event.xselection.time;

@@ -301,42 +301,42 @@ static XmSyntheticResource synResources[] =
     {
 	DtNblinkRate, sizeof(int),
 	XtOffsetOf(struct _DtTermViewRec, termview.blinkRate),
-	GetBlinkRate, NULL
+	GetBlinkRate, nullptr
     },
     {
 	DtNcharCursorStyle, sizeof(unsigned char),
 	XtOffsetOf(struct _DtTermViewRec, termview.charCursorStyle),
-	GetCharCursorStyle, NULL
+	GetCharCursorStyle, nullptr
     },
     {
 	DtNvisualBell, sizeof(Boolean),
 	XtOffsetOf(struct _DtTermViewRec, termview.visualBell),
-	GetVisualBell, NULL
+	GetVisualBell, nullptr
     },
     {
 	DtNmarginBell, sizeof(Boolean),
 	XtOffsetOf(struct _DtTermViewRec, termview.marginBell),
-	GetMarginBell, NULL
+	GetMarginBell, nullptr
     },
     {
 	DtNnMarginBell, sizeof(int),
 	XtOffsetOf(struct _DtTermViewRec, termview.nMarginBell),
-	GetNMarginBell, NULL
+	GetNMarginBell, nullptr
     },
     {
 	DtNjumpScroll, sizeof(Boolean),
 	XtOffsetOf(struct _DtTermViewRec, termview.jumpScroll),
-	GetJumpScroll, NULL
+	GetJumpScroll, nullptr
     },
     {
 	DtNrows, sizeof(short),
 	XtOffsetOf(struct _DtTermViewRec, termview.rows),
-	GetRows, /*SetRows*/ NULL
+	GetRows, /*SetRows*/ nullptr
     },
     {
 	DtNcolumns, sizeof(short),
 	XtOffsetOf(struct _DtTermViewRec, termview.columns),
-	GetColumns, /*SetColumns*/ NULL
+	GetColumns, /*SetColumns*/ nullptr
     },
 };
 
@@ -558,7 +558,7 @@ externaldef(termclassrec) DtTermViewClassRec dtTermViewClassRec =
 	/* initialize		*/	Initialize,
 	/* initialize_hook	*/	(XtArgsProc) NULL,
 	/* realize		*/	Realize,
-	/* actions		*/	NULL, /*actionsList,*/
+	/* actions		*/	nullptr, /*actionsList,*/
 	/* num_actions		*/	0, /*XtNumber(actionsList),*/
 	/* resources		*/	resources,
 	/* num_resources	*/	XtNumber(resources),
@@ -589,18 +589,18 @@ externaldef(termclassrec) DtTermViewClassRec dtTermViewClassRec =
 	/* change_managed		*/ ChangeManaged,
 	/* insert_child			*/ XtInheritInsertChild,
 	/* delete_child			*/ XtInheritDeleteChild,
-	/* Extension			*/ NULL,
+	/* Extension			*/ nullptr,
     },
 
     /* constraint class Init */
     {
-	NULL,
+	nullptr,
 	0,
 	0,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
     },
 
     /* manager class */
@@ -608,10 +608,10 @@ externaldef(termclassrec) DtTermViewClassRec dtTermViewClassRec =
 	/* translations			*/ XtInheritTranslations,
 	/* get_resources		*/ synResources,
 	/* num_get_resources		*/ XtNumber(synResources),
-	/* get_cont_resources		*/ NULL,
+	/* get_cont_resources		*/ nullptr,
 	/* num_get_cont_resources	*/ 0,
 	/* parent_process		*/ XmInheritParentProcess,
-	/* extension			*/ NULL,
+	/* extension			*/ nullptr,
     },
 
     /* bulletin board class */
@@ -619,7 +619,7 @@ externaldef(termclassrec) DtTermViewClassRec dtTermViewClassRec =
         /* always_install_accelerators  */ FALSE,
         /* geom_matrix_create           */ (XmGeoCreateProc) NULL,
         /* focus_moved_proc             */ XmInheritFocusMovedProc,
-        /* extension                    */ NULL,
+        /* extension                    */ nullptr,
     },
 
     /* termview class record */
@@ -964,7 +964,7 @@ Initialize(Widget rw, Widget w, Arg *args, Cardinal *num_args)
     /* DtTermTerminalSizeList sizeList	set via setvalues		*/
 
     /* char *userFontName */
-    tw->termview.userFontName = NULL;
+    tw->termview.userFontName = nullptr;
 
     /* int currentFontToggleButtonIndex */
     tw->termview.currentFontToggleButtonIndex = -1;
@@ -1391,7 +1391,7 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
 	    if (!tw->termview.menuBar.widget) {
 		/* need to create it first... */
 		tw->termview.menuBar.widget =
-			_DtTermViewCreatePulldownMenu(w, w, NULL, 0);
+			_DtTermViewCreatePulldownMenu(w, w, nullptr, 0);
 		(void) XtManageChild(tw->termview.menuBar.widget);
 		tw->termview.menuBar.managed = True;
 	    }
@@ -1548,7 +1548,7 @@ GeometryManager(Widget child, XtWidgetGeometry *desired,
     Dimension widthReturn;
     Dimension heightReturn;
     Dimension ignoreReturn;
-    char *c = NULL;
+    char *c = nullptr;
     XtGeometryResult result;
     Boolean callResize = False;
 

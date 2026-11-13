@@ -159,13 +159,13 @@ typedef struct
 static
 t_entry langtbl[] =
 {
-  { "en_US.UTF-8",	1,	"eng.sfx",	"eng.stp",	NULL },
-  { "es_ES.UTF-8",	2,	"esp.sfx",	"esp.stp",	NULL },
-  { "fr_FR.UTF-8",	3,	"fra.sfx",	"fra.stp",	NULL },
-  { "it_IT.UTF-8",	4,	"ita.sfx",	"ita.stp",	NULL },
-  { "de_DE.UTF-8",	5,	"deu.sfx",	"deu.stp",	NULL },
-  { "ja_JP.UTF-8",	7,	NULL,		NULL,		"jpn.knj" },
-  { NULL,		0,	NULL,		NULL,		NULL }
+  { "en_US.UTF-8",	1,	"eng.sfx",	"eng.stp",	nullptr },
+  { "es_ES.UTF-8",	2,	"esp.sfx",	"esp.stp",	nullptr },
+  { "fr_FR.UTF-8",	3,	"fra.sfx",	"fra.stp",	nullptr },
+  { "it_IT.UTF-8",	4,	"ita.sfx",	"ita.stp",	nullptr },
+  { "de_DE.UTF-8",	5,	"deu.sfx",	"deu.stp",	nullptr },
+  { "ja_JP.UTF-8",	7,	nullptr,		nullptr,		"jpn.knj" },
+  { nullptr,		0,	nullptr,		nullptr,		nullptr }
 };
 
 static char *usageMsg1 = "USAGE:\n\
@@ -296,7 +296,7 @@ touchFile(char *fileName)
 {
     FILE *fp;
 
-    if ((fp = fopen(fileName, "w")) == (FILE *)NULL)
+    if ((fp = fopen(fileName, "w")) == (FILE *)nullptr)
 	dieRWD(-1, "%s: %s: %s\n",
 	       EXEC_NAME, fileName, strerror(errno));
 
@@ -423,20 +423,20 @@ testExec(char *execName, bool tellIt)
     if (!execName)
 	return true;
 
-    if ((path = getenv("PATH")) == (char *)NULL)
+    if ((path = getenv("PATH")) == (char *)nullptr)
 	return true;
 
     path = XtsNewString(path);
     pathVector = _DtVectorizeInPlace(path, ':');
 
-    for (i = 0; pathVector[i] != (char *)NULL; i++)
+    for (i = 0; pathVector[i] != (char *)nullptr; i++)
     {
 	snprintf(execBuf, sizeof(execBuf), "%s/%s", pathVector[i], execName);
 	if (checkStat(execBuf, FSTAT_IS_EXECUTABLE))
 	    break;
     }
 
-    found = (pathVector[i] != (char *)NULL);
+    found = (pathVector[i] != (char *)nullptr);
 
     free((char *)pathVector);
     free(path);
@@ -474,7 +474,7 @@ makeTmpFile(void)
     dieRWD(-1, "%s: could not create tmp file.\n", EXEC_NAME);
 
     /* NOTREACHED */
-    return (char *)NULL;
+    return (char *)nullptr;
 }
 
 /* The return from this function should NOT be freed. */
@@ -512,7 +512,7 @@ makeWorkDir(void)
     dieRWD(-1, "%s: could not create work directory.\n", EXEC_NAME);
 
     /* NOTREACHED */
-    return (char *)NULL;
+    return (char *)nullptr;
 }
 
 static void
@@ -527,7 +527,7 @@ removeWorkDir(void)
 	ret = system(cmdBuf);
 	if(ret != 0) die(-1, "system for rm failed; exiting...\n");
 	free(gStruct->workDir);
-	gStruct->workDir = (char *)NULL;
+	gStruct->workDir = (char *)nullptr;
     }
 }
 
@@ -595,7 +595,7 @@ doBuild(int argc, char *argv[])
 		       EXEC_NAME, bookcase, strerror(errno));
 
 	    bcCopy = XtsNewString(bookcase);
-	    if ((dirName = dirname(bcCopy)) == (char *)NULL)
+	    if ((dirName = dirname(bcCopy)) == (char *)nullptr)
 		dirName = ".";
 	    dirName = XtsNewString(dirName);
 	    free(bcCopy);
@@ -689,7 +689,7 @@ doUpdate(int argc, char *argv[])
 		gStruct->styleProlog);
 
 	if (argsProcessed >= argc)
-	    printUsage((char *)NULL, -1);
+	    printUsage((char *)nullptr, -1);
 	styleSheet = argv[argsProcessed++];
 	if (!checkStat(styleSheet, FSTAT_IS_READABLE))
 	    die(-1, "%s: %s: %s\n", EXEC_NAME, styleSheet, strerror(errno));
@@ -756,7 +756,7 @@ doHelp(int argc, char *argv[])
 {
     if (strcmp(argv[1], "-h") == 0)
     {
-	printUsage((char *)NULL, 0);
+	printUsage((char *)nullptr, 0);
 
 	/* NOTREACHED */
 	return true;
@@ -791,16 +791,16 @@ appendStr(char **str, int *curLen, int *maxLen, char *strToAppend)
 static char *
 makeAbsPathEnv(char *var)
 {
-    char *oldPath, *newPath = NULL;
+    char *oldPath, *newPath = nullptr;
     char *newVar;
     int pathlen;
 
     if (!var)
-	return (char *)NULL;
+	return (char *)nullptr;
 
     oldPath = getenv(var);
-    if (oldPath == (char *)NULL)
-	return (char *)NULL;
+    if (oldPath == (char *)nullptr)
+	return (char *)nullptr;
 
     newPath = makeAbsPathStr(oldPath);
 
@@ -821,7 +821,7 @@ makeAbsPathEnv(char *var)
 static char *
 makeAbsPathStr(char *str)
 {
-    char *newPath = (char *)NULL;
+    char *newPath = (char *)nullptr;
     int newPathLen = 0;
     int maxPathLen = 0;
     char cwd[MAXPATHLEN + 1];
@@ -831,8 +831,8 @@ makeAbsPathStr(char *str)
     char **dirVector;
     int i, j, k;
 
-    if (str == (char *)NULL)
-	return (char *)NULL;
+    if (str == (char *)nullptr)
+	return (char *)nullptr;
     str = XtsNewString(str);
 
     if (!getcwd(cwd, MAXPATHLEN))
@@ -841,7 +841,7 @@ makeAbsPathStr(char *str)
     /* Vectorize current dir, skipping over leading '/' */
     cwdVector = _DtVectorizeInPlace(cwd + 1, '/');
     for (cwdVectorLen = 0;
-	 cwdVector[cwdVectorLen] != (char *)NULL;
+	 cwdVector[cwdVectorLen] != (char *)nullptr;
 	 cwdVectorLen++)
 	/* EMPTY */
 	;
@@ -849,7 +849,7 @@ makeAbsPathStr(char *str)
     /* Vectorize incoming path */
     pathVector = _DtVectorizeInPlace(str, ':');
 
-    for (i = 0; pathVector[i] != (char *)NULL; i++)
+    for (i = 0; pathVector[i] != (char *)nullptr; i++)
     {
 	if (i > 0)
 	    appendStr(&newPath, &newPathLen, &maxPathLen, ":");
@@ -864,12 +864,12 @@ makeAbsPathStr(char *str)
 
 	dirVector = _DtVectorizeInPlace(pathVector[i], '/');
 	for (j = 0;
-	     dirVector[j] != (char *)NULL && (strcmp(dirVector[j], "..") == 0);
+	     dirVector[j] != (char *)nullptr && (strcmp(dirVector[j], "..") == 0);
 	     j++)
 	    /* EMPTY */
 	    ;
 
-	if ((j >= cwdVectorLen) && (dirVector[j] == (char *)NULL))
+	if ((j >= cwdVectorLen) && (dirVector[j] == (char *)nullptr))
 	{
 	    appendStr(&newPath, &newPathLen, &maxPathLen, "/");
 	}
@@ -880,7 +880,7 @@ makeAbsPathStr(char *str)
 		appendStr(&newPath, &newPathLen, &maxPathLen, "/");
 		appendStr(&newPath, &newPathLen, &maxPathLen, cwdVector[k]);
 	    }
-	    for ( ; dirVector[j] != (char *)NULL; j++)
+	    for ( ; dirVector[j] != (char *)nullptr; j++)
 	    {
 		appendStr(&newPath, &newPathLen, &maxPathLen, "/");
 		appendStr(&newPath, &newPathLen, &maxPathLen, dirVector[j]);
@@ -905,7 +905,7 @@ addToEnv(char *var, char *addMe, bool prepend)
     char *ptr;
 
     if (!var)
-	return (char *)NULL;
+	return (char *)nullptr;
     envStr = getenv(var);
 
     if (!addMe)
@@ -914,7 +914,7 @@ addToEnv(char *var, char *addMe, bool prepend)
     len = strlen(var) + strlen(STR(envStr)) + strlen(addMe) + 3;
     ptrlen = len * sizeof(char);
 
-    if ((ptr = malloc(ptrlen)) != (char *)NULL)
+    if ((ptr = malloc(ptrlen)) != (char *)nullptr)
     {
 	if (envStr)
 	{
@@ -984,22 +984,22 @@ defaultGlobals(void)
     gStruct->verbose = false;
 
     /* Clear out the ENV environment variable. */
-    if (getenv("ENV") != (char *)NULL)
+    if (getenv("ENV") != (char *)nullptr)
 	putenv("ENV=");
 
     gStruct->pathEnv = makeAbsPathEnv("PATH");
-    gStruct->sgmlCatFiles = NULL;
+    gStruct->sgmlCatFiles = nullptr;
     gStruct->sgmlCatFilesLen = 0;
     gStruct->sgmlCatFilesMaxLen = 0;
 
-    if ((gStruct->sgml = buildSGML()) == NULL) {
+    if ((gStruct->sgml = buildSGML()) == nullptr) {
 	die(-1, "%s: Cannot find SGML files\n", EXEC_NAME);
     }
 
     gStruct->decl = buildDecl();
     gStruct->styleProlog = buildStyleProlog();
 
-    if ((gStruct->tmpDir = getenv("TMPDIR")) == (char *)NULL)
+    if ((gStruct->tmpDir = getenv("TMPDIR")) == (char *)nullptr)
 	gStruct->tmpDir = "/tmp";
 
     gStruct->spec = buildSpec();
@@ -1007,7 +1007,7 @@ defaultGlobals(void)
     gStruct->searchEngine = "dtsearch";
     gStruct->parser = "onsgmls";
     gStruct->keepWorkDir = false;
-    gStruct->workDir = (char *)NULL;
+    gStruct->workDir = (char *)nullptr;
 
     gStruct->tocElemIndex = 0;
 }
@@ -1066,8 +1066,8 @@ static void
 setLangIndex(const char * const locale)
 {
     char* lang;
-    char *s = NULL;
-    char* code = NULL;
+    char *s = nullptr;
+    char* code = nullptr;
     int curLen;
     int maxLen = 0;
     t_entry* iter;
@@ -1188,7 +1188,7 @@ parseArgs(int argc, char *argv[])
 	}
 	else if (strcmp(argv[i], "-h") == 0)
 	{
-	    printUsage((char *)NULL, 0);
+	    printUsage((char *)nullptr, 0);
 	}
 	else if (strcmp(argv[i], "-T") == 0)
 	{
@@ -1271,7 +1271,7 @@ parseDocument(int runCmd, ...)
 {
     va_list ap;
     char *ptr;
-    char *cmd = (char *)NULL;
+    char *cmd = (char *)nullptr;
     char *sed = " | sed 's/\\&\\&/\\&/g' | sed 's/\\&</</g'";
     int cmdLen = 0;
     int maxLen = 0;
@@ -1302,7 +1302,7 @@ parseDocument(int runCmd, ...)
 
 	runShellCmd(cmd);
 	free(cmd);
-	return (char *)NULL;
+	return (char *)nullptr;
     }
 
     appendStr(&cmd, &cmdLen, &maxLen, "-oline -wno-idref ");
@@ -1475,7 +1475,7 @@ buildBookcase(char *cmdSrc, char *dirName)
 
 	curDir[0] = '\0';
 	ret2 = getcwd(curDir, MAXPATHLEN);
-	if(ret2 == (char *)NULL) die(-1, "getcwd failed; exiting...\n");
+	if(ret2 == (char *)nullptr) die(-1, "getcwd failed; exiting...\n");
 	snprintf(newDir, sizeof(newDir), "%s/%s",
 				bookCaseDir, gStruct->searchEngine);
 	if (chdir(newDir) != 0)
@@ -1561,22 +1561,22 @@ findBookCaseNameAndDesc(char *tmpFile, char *bookCaseName,
     static char *patt2 = "' desc: `";
     unsigned int len;
 
-    if ((fp = fopen(tmpFile, "r")) == (FILE *)NULL)
+    if ((fp = fopen(tmpFile, "r")) == (FILE *)nullptr)
 	dieRWD(-1, "%s: opening %s: %s\n",
 	       EXEC_NAME, tmpFile, strerror(errno));
 
-    while (fgets(lineBuf, MAXPATHLEN, fp) != (char *)NULL)
+    while (fgets(lineBuf, MAXPATHLEN, fp) != (char *)nullptr)
     {
-	if ((p1 = strstr(lineBuf, patt1)) != (char *)NULL)
+	if ((p1 = strstr(lineBuf, patt1)) != (char *)nullptr)
 	{
 	    p1 += strlen(patt1);
-	    if ((p2 = strstr(p1, patt2)) != (char *)NULL)
+	    if ((p2 = strstr(p1, patt2)) != (char *)nullptr)
 	    {
 		len = p2 - p1;
 		*((char *) memcpy(bookCaseName, p1, len) + len) = '\0';
 		validateBookCaseName(bookCaseName);
 		p1 = p2 + strlen(patt2);
-		if ((p2 = strchr(p1, '\'')) != (char *)NULL)
+		if ((p2 = strchr(p1, '\'')) != (char *)nullptr)
 		{
 		    len = p2 - p1;
 		    *((char *) memcpy(bookCaseDesc, p1, len) + len) = '\0';
@@ -1625,16 +1625,16 @@ validateBookCase(char *mapFile, char *bookCaseName)
     char cmdBuf[MAXPATHLEN + 1];
     char *bcName;
 
-    if ((fp = fopen(mapFile, "r")) == (FILE *)NULL)
+    if ((fp = fopen(mapFile, "r")) == (FILE *)nullptr)
 	dieRWD(-1, "%s: cannot open bookcase.map: %s\n",
 	       EXEC_NAME, strerror(errno));
 
     ret = fgets(lineBuf, MAXPATHLEN, fp); /* Skip first line. */
-    if(ret == (char *)NULL) die(-1, "fgets failed; exiting...\n");
+    if(ret == (char *)nullptr) die(-1, "fgets failed; exiting...\n");
 
-    while (fgets(lineBuf, MAXPATHLEN, fp) != (char *)NULL)
+    while (fgets(lineBuf, MAXPATHLEN, fp) != (char *)nullptr)
     {
-	if ((bcName = strtok(lineBuf, "\t\n")) != (char *)NULL)
+	if ((bcName = strtok(lineBuf, "\t\n")) != (char *)nullptr)
 	{
 	    if (strcmp(bcName, bookCaseName) != 0)
 	    {
@@ -1656,7 +1656,7 @@ editMapFile(char *bookCaseName, char *bookCaseMap)
 {
     size_t ret;
     struct stat statBuf;
-    FILE *fp = NULL;
+    FILE *fp = nullptr;
     char *file;
     char **fileVector;
     char *libDesc;
@@ -1669,7 +1669,7 @@ editMapFile(char *bookCaseName, char *bookCaseMap)
     bool replaced = false;
 
     if ((stat(bookCaseMap, &statBuf) != 0) ||
-	((fp = fopen(bookCaseMap, "r")) == (FILE *)NULL))
+	((fp = fopen(bookCaseMap, "r")) == (FILE *)nullptr))
 	dieRWD(-1, "%s: %s: %s\n", EXEC_NAME, bookCaseMap,
 	       strerror(errno));
 
@@ -1685,19 +1685,19 @@ editMapFile(char *bookCaseName, char *bookCaseMap)
 
     firstLine = XtsNewString(fileVector[0]);
     lineVector = _DtVectorizeInPlace(firstLine, '\t');
-    if ((oldDesc = lineVector[0]) != (char *)NULL)
+    if ((oldDesc = lineVector[0]) != (char *)nullptr)
 	libID = lineVector[1];
     else
-	libID = (char *)NULL;
+	libID = (char *)nullptr;
     free((char *)lineVector);
 
-    if ((libDesc = gStruct->libDesc) == (char *)NULL)
+    if ((libDesc = gStruct->libDesc) == (char *)nullptr)
 	libDesc = oldDesc;
 
-    for (i = 0, lastLine = (char *)NULL; fileVector[i] != (char *)NULL; i++)
+    for (i = 0, lastLine = (char *)nullptr; fileVector[i] != (char *)nullptr; i++)
 	lastLine = fileVector[i];
 
-    if ((fp = fopen(bookCaseMap, "w")) == (FILE *)NULL)
+    if ((fp = fopen(bookCaseMap, "w")) == (FILE *)nullptr)
 	dieRWD(-1, "%s: %s: %s\n", EXEC_NAME, bookCaseMap,
 	       strerror(errno));
 
@@ -1706,7 +1706,7 @@ editMapFile(char *bookCaseName, char *bookCaseMap)
     fprintf(fp, "%s\t%s\n", STR(libDesc), STR(libID));
     free(firstLine);
 
-    for (i = 1; fileVector[i] != (char *)NULL; i++)
+    for (i = 1; fileVector[i] != (char *)nullptr; i++)
     {
 	if ((strncmp(fileVector[i], bookCaseName, bcNameLen) == 0) &&
 	    (!isalnum((unsigned char) fileVector[i][bcNameLen])) &&
@@ -1757,26 +1757,26 @@ buildTOC(int argc, char *argv[])
 
     if (checkStat(gStruct->outFile, FSTAT_IS_FILE))
     {
-	if ((fp = fopen(gStruct->outFile, "r")) == (FILE *)NULL)
+	if ((fp = fopen(gStruct->outFile, "r")) == (FILE *)nullptr)
 	    die(-1, "%s: %s: %s\n", EXEC_NAME, gStruct->outFile,
 		strerror(errno));
 
 	idBuf[0] = titleBuf[0] = '\0';
-	while (fgets(lineBuf, MAXPATHLEN, fp) != (char *)NULL)
+	while (fgets(lineBuf, MAXPATHLEN, fp) != (char *)nullptr)
 	{
-	    if ((p1 = strstr(lineBuf, patt1start)) != (char *)NULL)
+	    if ((p1 = strstr(lineBuf, patt1start)) != (char *)nullptr)
 	    {
 		p1 += strlen(patt1start);
-		if ((p2 = strstr(p1, patt1end)) != (char *)NULL)
+		if ((p2 = strstr(p1, patt1end)) != (char *)nullptr)
 		{
 		    len = p2 - p1;
 		    *((char *) memcpy(idBuf, p1, len) + len) = '\0';
 		}
 	    }
-	    if ((p1 = strstr(lineBuf, patt2start)) != (char *)NULL)
+	    if ((p1 = strstr(lineBuf, patt2start)) != (char *)nullptr)
 	    {
 		p1 += strlen(patt2start);
-		if ((p2 = strstr(p1, patt2end)) != (char *)NULL)
+		if ((p2 = strstr(p1, patt2end)) != (char *)nullptr)
 		{
 		    len = p2 - p1;
 		    *((char *) memcpy(titleBuf, p1, len) + len) = '\0';
@@ -1793,7 +1793,7 @@ buildTOC(int argc, char *argv[])
 
     tocBC = tocBookcase(argc, argv);
     cmdSrc = parseDocument(false, tocBC, 0);
-    if ((tocDir = dirname(tocBC)) == (char *)NULL)
+    if ((tocDir = dirname(tocBC)) == (char *)nullptr)
 	tocDir = ".";
     tocDir = XtsNewString(tocDir);
     p1 = storeBookCase(cmdSrc, "toc", makeWorkDir(), tocDir);
@@ -1819,7 +1819,7 @@ tocBookcase(int argc, char *argv[])
     if (gStruct->verbose)
 	fprintf(stderr, "TOC Bookcase: %s\n", tmpFile);
 
-    if ((fp = fopen(tmpFile, "w")) == (FILE *)NULL)
+    if ((fp = fopen(tmpFile, "w")) == (FILE *)nullptr)
 	dieRWD(-1, "%s: %s: %s\n", EXEC_NAME,
 	       tmpFile, strerror(errno));
 
@@ -1872,7 +1872,7 @@ makeTOC(char *id, char *title)
     FILE *fpOut;
     TOCRecord *tocRecord;
     TOCEntry newTOCEntry;
-    TOCEntry *tocEntries = (TOCEntry *)NULL;
+    TOCEntry *tocEntries = (TOCEntry *)nullptr;
     int nTOCEntries = 0;
     int maxTOCEntries = 0;
     int i, j;
@@ -1888,11 +1888,11 @@ makeTOC(char *id, char *title)
     }
 
     fileIn = buildPath("%s/NodeMeta", makeWorkDir());
-    if ((fpIn = fopen(fileIn, "r")) == (FILE *)NULL)
+    if ((fpIn = fopen(fileIn, "r")) == (FILE *)nullptr)
 	dieRWD(-1, "%s: internal error: %s\n",
 	       EXEC_NAME, strerror(errno));
 
-    if ((fpOut = fopen(gStruct->outFile, "w")) == (FILE *)NULL)
+    if ((fpOut = fopen(gStruct->outFile, "w")) == (FILE *)nullptr)
 	dieRWD(-1, "%s: %s: %s\n",
 	       EXEC_NAME, gStruct->outFile, strerror(errno));
 
@@ -2010,7 +2010,7 @@ replaceData(char *inData, char *replaceMe, char *replacement)
 
     p = inData;
     i = 0;
-    while ((p = strstr(p, replaceMe)) != (char *)NULL)
+    while ((p = strstr(p, replaceMe)) != (char *)nullptr)
     {
 	i++;
 	p += replaceMeLen;
@@ -2023,7 +2023,7 @@ replaceData(char *inData, char *replaceMe, char *replacement)
     newData = malloc((newLen + 1) * sizeof(char));
     newData[0] = '\0';
     p = inData;
-    while ((endP = strstr(p, replaceMe)) != (char *)NULL)
+    while ((endP = strstr(p, replaceMe)) != (char *)nullptr)
     {
 	slen = strlen(newData);
 	len = endP - p;
@@ -2104,25 +2104,25 @@ getTOCRecord(FILE *fp)
 
     tocRecord = (TOCRecord *)malloc(sizeof(TOCRecord));
 
-    if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)NULL)
+    if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)nullptr)
     {
 	free((char *)tocRecord);
-	return (TOCRecord *)NULL;
+	return (TOCRecord *)nullptr;
     }
 
     tocRecord->code = atoi(lineBuf);
 
-    if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)NULL)
+    if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)nullptr)
     {
 	free((char *)tocRecord);
-	return (TOCRecord *)NULL;
+	return (TOCRecord *)nullptr;
     }
     cols = atoi(lineBuf);
 
     if (cols < TOC_REC_COLS)
     {
 	free((char *)tocRecord);
-	return (TOCRecord *)NULL;
+	return (TOCRecord *)nullptr;
     }
 
     /* DISCARD first item (book). */
@@ -2174,52 +2174,52 @@ getTOCField(FILE *fp)
     char *ptr;
     int ptrLen;
     int lineType;
-    char *longField = (char *)NULL;
+    char *longField = (char *)nullptr;
     int lfLen = 0;
     int maxLen = 0;
 
-    if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)NULL)
-	return (char *)NULL;
+    if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)nullptr)
+	return (char *)nullptr;
     if (strcmp(lineBuf, "#\n") == 0)
-	return (char *)NULL;
+	return (char *)nullptr;
 
     lineType = atoi(lineBuf);
 
     switch (lineType)
     {
     case COMPRESSED_STRING_CODE:
-	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)NULL)
-	    return (char *)NULL;
+	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)nullptr)
+	    return (char *)nullptr;
 
 	/* FALL THROUGH! */
 
     case STRING_CODE:
-	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)NULL)
-	    return (char *)NULL;
+	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)nullptr)
+	    return (char *)nullptr;
 
-	if ((ptr = strchr(lineBuf, '\t')) != (char *)NULL)
+	if ((ptr = strchr(lineBuf, '\t')) != (char *)nullptr)
 	    ptr++;
 
 	break;
 
     case INTEGER_CODE:
     case OID_CODE:
-	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)NULL)
-	    return (char *)NULL;
+	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)nullptr)
+	    return (char *)nullptr;
 
 	ptr = lineBuf;
 	break;
 
     case SHORT_LIST_CODE:
-	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)NULL)
-	    return (char *)NULL;
+	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)nullptr)
+	    return (char *)nullptr;
 
 	if (strcmp(lineBuf, "#\n") != 0)
 	    dieRWD(-1, "\n");
 
-	while ((ptr = getTOCField(fp)) != (char *)NULL)
+	while ((ptr = getTOCField(fp)) != (char *)nullptr)
 	{
-	    if (longField != (char *)NULL)
+	    if (longField != (char *)nullptr)
 		appendStr(&longField, &lfLen, &maxLen, "#");
 	    appendStr(&longField, &lfLen, &maxLen, ptr);
 
@@ -2230,16 +2230,16 @@ getTOCField(FILE *fp)
 	break;
 
     case OID_LIST_CODE:
-	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)NULL)
-	    return (char *)NULL;
+	if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)nullptr)
+	    return (char *)nullptr;
 
 	if (strcmp(lineBuf, "#\n") != 0)
 	    dieRWD(-1, "\n");
 
 	for ( ; ; )
 	{
-	    if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)NULL)
-		return (char *)NULL;
+	    if (fgets(lineBuf, MAXPATHLEN, fp) == (char *)nullptr)
+		return (char *)nullptr;
 
 	    /* Chop newline */
 	    ptrLen = strlen(lineBuf);
@@ -2249,7 +2249,7 @@ getTOCField(FILE *fp)
 	    if (strcmp(lineBuf, "#") == 0)
 		break;
 
-	    if (longField != (char *)NULL)
+	    if (longField != (char *)nullptr)
 		appendStr(&longField, &lfLen, &maxLen, "#");
 	    appendStr(&longField, &lfLen, &maxLen, lineBuf);
 	}
@@ -2259,11 +2259,11 @@ getTOCField(FILE *fp)
 
     default:
 	fprintf(stderr, "Unknown code: %d\n", lineType);
-	ptr = (char *)NULL;
+	ptr = (char *)nullptr;
 	break;
     }
 
-    if (ptr != (char *)NULL)
+    if (ptr != (char *)nullptr)
     {
 	ptrLen = strlen(ptr);
 	if ((ptrLen > 0) && (ptr[ptrLen - 1] == '\n'))
@@ -2271,13 +2271,13 @@ getTOCField(FILE *fp)
 
 	ptr = XtsNewString(ptr);
 
-	if (longField != (char *)NULL)
+	if (longField != (char *)nullptr)
 	    free(longField);
 
 	return ptr;
     }
 
-    return (char *)NULL;
+    return (char *)nullptr;
 }
 
 int
@@ -2291,7 +2291,7 @@ main(int argc, char *argv[])
 
     if (argc < 2)
     {
-	pm = NULL;
+	pm = nullptr;
 	ec = -1;
 	goto usage;
     }
@@ -2302,7 +2302,7 @@ main(int argc, char *argv[])
     {
 	if (strcmp(argv[i], "-h") == 0)
 	{
-	    pm = NULL;
+	    pm = nullptr;
 	    ec = 0;
 	    goto usage;
 	}
@@ -2314,7 +2314,7 @@ main(int argc, char *argv[])
 
     if (!(il > 2 && il < argc && isalpha(argv[il][0])))
     {
-	pm = NULL;
+	pm = nullptr;
 	ec = -1;
 	goto usage;
     }

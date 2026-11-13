@@ -132,10 +132,10 @@ PalItemInfo termp_palitem_rec = {
 
     /* type             */  AB_TYPE_TERM_PANE,
     /* name             */  "Term Pane",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  termp_initialize,
     /* is_a_test        */  obj_is_term_pane,
     /* prop_initialize  */  termp_prop_init,
@@ -234,12 +234,12 @@ termp_prop_init(
     if (dtb_termp_prop_dialog_initialize(cgen, parent) == 0)
     {
         pts->prop_sheet = cgen->attrs_ctrlpanel;
-        pts->current_obj = NULL;
+        pts->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pts->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -310,12 +310,12 @@ termp_prop_init(
 	prop_geomfield_init(&(pts->pos), cgen->pos_label,
 			    cgen->x_field_label, cgen->x_field,
 			    cgen->y_field_label, cgen->y_field,
-			    NULL, NULL, NULL, NULL,
+			    nullptr, nullptr, nullptr, nullptr,
 			    cgen->pos_cb);
 
 	/* Size */
         prop_geomfield_init(&(pts->size), cgen->size_opmenu_label,
-			    NULL, NULL, NULL, NULL,
+			    nullptr, nullptr, nullptr, nullptr,
                             cgen->width_field_label, cgen->width_field,
                             cgen->height_field_label, cgen->height_field,
                             cgen->size_cb);
@@ -357,7 +357,7 @@ termp_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-	return NULL;
+	return nullptr;
 }
 
 static int
@@ -378,7 +378,7 @@ termp_prop_clear(
 {
     PropTermpSettingsRec	*pts = &(prop_termp_settings_rec[type]);
 
-    if (pts->current_obj == NULL)
+    if (pts->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -414,7 +414,7 @@ termp_prop_clear(
     prop_colorfield_set_value(&(pts->bg_color), "", False);
     prop_colorfield_set_value(&(pts->fg_color), "", False);
 
-    pts->current_obj = NULL;
+    pts->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -434,9 +434,9 @@ termp_prop_load(
     int				width, height;
     BOOL			load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pts->current_obj != NULL)
+        if (pts->current_obj != nullptr)
             obj = pts->current_obj;
         else
             return ERROR;

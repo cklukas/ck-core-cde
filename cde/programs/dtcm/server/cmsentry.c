@@ -63,10 +63,10 @@ _DtCmsMakeHashedEntry(
 	cms_entry	*eptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
-	if (cal == NULL || entry == NULL)
+	if (cal == nullptr || entry == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	if ((eptr = _DtCm_make_cms_entry(cal->entry_tbl)) == NULL)
+	if ((eptr = _DtCm_make_cms_entry(cal->entry_tbl)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 0; i < num && stat == CSA_SUCCESS; i++) {
@@ -127,10 +127,10 @@ _DtCmsGetCmsEntryForClient(cms_entry *e, cms_entry **e_r, boolean_t time_only)
 	cms_entry *ptr;
 	CSA_return_code stat;
 
-	if (e == NULL || e_r == NULL)
+	if (e == nullptr || e_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	if ((ptr = (cms_entry *)calloc(1, sizeof(cms_entry))) == NULL)
+	if ((ptr = (cms_entry *)calloc(1, sizeof(cms_entry))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if ((stat = _ExtractEntryAttrsFromEntry(e->num_attrs, e->attrs,
@@ -160,20 +160,20 @@ _ExtractEntryAttrsFromEntry(
 	int		i, j;
 	cms_attribute	*attrs;
 
-	if (dstsize == NULL || dstattrs == NULL)
+	if (dstsize == nullptr || dstattrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	*dstsize = 0;
-	*dstattrs = NULL;
+	*dstattrs = nullptr;
 
 	if (srcsize == 0)
 		return (CSA_SUCCESS);
 
-	if ((attrs = calloc(1, sizeof(cms_attribute) * srcsize)) == NULL)
+	if ((attrs = calloc(1, sizeof(cms_attribute) * srcsize)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 0, j = 0; i <= srcsize; i++) {
-		if (srcattrs[i].value == NULL)
+		if (srcattrs[i].value == nullptr)
 			continue;
 
 		if ((stat = _DtCm_copy_cms_attribute(&attrs[j], &srcattrs[i],

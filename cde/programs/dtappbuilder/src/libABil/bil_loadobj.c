@@ -61,14 +61,14 @@ bilP_load_end_of_obj(BIL_TOKEN objClass)
 	    /* I'm not sure why this check is here, but I'm afraid to 
 	     * delete it. -jjd 
 	     */
-	    if (   (bilP_load.module != NULL)
+	    if (   (bilP_load.module != nullptr)
 		&& (obj_is_module(bilP_load.module)) )
 	    {
 		obj_tree_set_flag(bilP_load.module, BeingDestroyedFlag);
 	    }
 
-	    bilP_load.module = NULL;	/* may have been project */
-	    bilP_load.obj = NULL;	/* was project */
+	    bilP_load.module = nullptr;	/* may have been project */
+	    bilP_load.obj = nullptr;	/* was project */
 	    bilP_load.objType = AB_TYPE_UNDEF;
 	break;
 
@@ -77,18 +77,18 @@ bilP_load_end_of_obj(BIL_TOKEN objClass)
 /*
 	    bilP_load.module= NULL;
 */
-	    bilP_load.obj = NULL;
+	    bilP_load.obj = nullptr;
 	    bilP_load.objType = AB_TYPE_UNDEF;
 	break;
 
 	default:
 	{
-	    if (bilP_load.obj->parent != NULL)
+	    if (bilP_load.obj->parent != nullptr)
 	    {
 		/*
 		 * parent is valid, object is complete.
 		 */
-		bilP_load.obj = NULL;
+		bilP_load.obj = nullptr;
 		bilP_load.objType = AB_TYPE_UNDEF;
 	    }
 	    else
@@ -97,14 +97,14 @@ bilP_load_end_of_obj(BIL_TOKEN objClass)
 		 * Who is its parent?
 		 */
 	        ABObj	parent= bilP_load.module;
-	        if (parent == NULL)
+	        if (parent == nullptr)
 	        {
 	            parent= bilP_load.project;
 	        }
-	        if (parent != NULL)
+	        if (parent != nullptr)
 	        {
 		    obj_append_child(bilP_load.module, bilP_load.obj);
-	            bilP_load.obj = NULL;
+	            bilP_load.obj = nullptr;
 		    bilP_load.objType = AB_TYPE_UNDEF;
 	        }
 	    }
@@ -119,24 +119,24 @@ bilP_load_end_of_obj(BIL_TOKEN objClass)
      * We set destroy flags above, in case obj is child of something
      * (we won't try to delete it twice!)
      */
-    if (bilP_load.obj != NULL)
+    if (bilP_load.obj != nullptr)
     {
-	obj_destroy(bilP_load.obj); bilP_load.obj = NULL;
+	obj_destroy(bilP_load.obj); bilP_load.obj = nullptr;
 	bilP_load.objType = AB_TYPE_UNDEF;
     }
-    if (   (bilP_load.module != NULL)
+    if (   (bilP_load.module != nullptr)
 	&& obj_has_flag(bilP_load.module, BeingDestroyedFlag) )
     {
-	obj_destroy(bilP_load.module); bilP_load.module= NULL;
+	obj_destroy(bilP_load.module); bilP_load.module= nullptr;
     }
     bilP_load.att= AB_BIL_UNDEF;
 
     /*
      * Clear load msg
      */
-    abil_loadmsg_set_object(NULL);
-    abil_loadmsg_set_att(NULL);
+    abil_loadmsg_set_object(nullptr);
+    abil_loadmsg_set_att(nullptr);
 
-    return NULL;
+    return nullptr;
 }
 

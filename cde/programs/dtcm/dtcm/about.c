@@ -57,7 +57,7 @@ char *main_credits[] = {
 	"Yvonne Tso",
 	"J.F. Unson",
 	"Janice Winsor",
-	NULL
+	nullptr
 };
 
 char *also_credits[] = {
@@ -65,7 +65,7 @@ char *also_credits[] = {
 	"David Curley",
 	"Betty Deluco",
 	"Lin-Chuan Lee",
-	NULL
+	nullptr
 };
 #endif /* CREDITS */
 
@@ -98,7 +98,7 @@ show_about(
 	XtPointer	cbs)
 {
 	Calendar	*c = calendar;
-        XmString    	 xstr = NULL;
+        XmString    	 xstr = nullptr;
 	Dimension	 max_width, form_width;
 	Pixmap		 image = 0;
 	char		 buf[64],
@@ -131,7 +131,7 @@ show_about(
 		XmNtitle, 			title,
 		XmNdeleteResponse,		XmDESTROY,
 		XmNallowShellResize, 		True,
-		NULL);
+		nullptr);
 	XtFree(title);
 
 	main_form =
@@ -146,15 +146,15 @@ show_about(
 		XmNbottomAttachment, 		XmATTACH_FORM,
 		XmNfractionBase,		4,
 		XmNnoResize,			True,
-		NULL);
+		nullptr);
 
 	XtVaGetValues(main_form,
 		XmNbackground,		&bg,
 		XmNforeground,		&fg,
-		NULL);
+		nullptr);
 
-	if ((image_filename = XmGetIconFileName(screen, NULL, 
-						DTCM_ABOUT, NULL, 
+	if ((image_filename = XmGetIconFileName(screen, nullptr, 
+						DTCM_ABOUT, nullptr, 
 						XmUNSPECIFIED_ICON_SIZE))) {
 		image = XmGetPixmap(screen, image_filename, fg, bg); 
 		free(image_filename);
@@ -169,7 +169,7 @@ show_about(
 		XmNtopOffset, 			GAP,
 		XmNleftAttachment, 		XmATTACH_FORM,
 		XmNleftOffset, 			GAP,
-		NULL);
+		nullptr);
 
 	if (!image || image == XmUNSPECIFIED_PIXMAP) {
         	xstr = XmStringCreateLocalized(
@@ -178,13 +178,13 @@ show_about(
 			XmNlabelType, 			XmSTRING,
 			XmNlabelString, 		xstr,
 			XmNborderWidth,			1,
-			NULL);
+			nullptr);
 		XmStringFree(xstr);
 	} else {
 		XtVaSetValues(icon_label,
 			XmNlabelType, 			XmPIXMAP,
 			XmNlabelPixmap, 		image,
-			NULL);
+			nullptr);
 	}
 
 	sub_form =
@@ -198,7 +198,7 @@ show_about(
 		XmNleftAttachment, 		XmATTACH_WIDGET,
                 XmNshadowThickness,             0,
                 XmNshadowType,                  XmSHADOW_IN,
-		NULL);
+		nullptr);
 
         xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 340, "Calendar"));
 	name_label =
@@ -214,7 +214,7 @@ show_about(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 
@@ -244,7 +244,7 @@ show_about(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 
@@ -267,7 +267,7 @@ show_about(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 
@@ -290,7 +290,7 @@ show_about(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 
@@ -325,7 +325,7 @@ show_about(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
         xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 674,
@@ -344,7 +344,7 @@ show_about(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
         xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 675,
@@ -363,7 +363,7 @@ show_about(
 		XmNleftOffset, 			GAP * 2,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
         xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 676,
@@ -382,7 +382,7 @@ show_about(
 		XmNleftOffset, 			GAP * 2,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
         xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 677,
@@ -401,7 +401,7 @@ show_about(
 		XmNleftOffset, 			GAP * 2,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
         xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 678,
@@ -420,7 +420,7 @@ show_about(
 		XmNleftOffset, 			GAP * 2,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 #endif
@@ -438,7 +438,7 @@ show_about(
 		XmNleftWidget,			sub_form,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 	XtAddCallback(more_button, XmNactivateCallback, do_credits, 
@@ -455,7 +455,7 @@ show_about(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			0,
-		NULL);
+		nullptr);
 
 	xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 680, "Close"));
 	close_button = XtVaCreateWidget("close_button",
@@ -467,17 +467,17 @@ show_about(
 		XmNtopAttachment, 		XmATTACH_WIDGET,
 		XmNtopWidget, 			separator,
 		XmNtopOffset, 			GAP,
-		NULL);
+		nullptr);
 
 #ifdef CREDITS
-	max_width = ComputeMaxWidth(more_button, close_button, NULL, NULL);
+	max_width = ComputeMaxWidth(more_button, close_button, nullptr, nullptr);
 #else
-	max_width = ComputeMaxWidth(close_button, close_button, NULL, NULL);
+	max_width = ComputeMaxWidth(close_button, close_button, nullptr, nullptr);
 #endif /* CREDITS */
 
 	XmStringFree(xstr);
-	XtAddCallback(close_button, XmNactivateCallback, close_about, NULL);
-	XtAddCallback(close_button, XmNdestroyCallback, destroy_about, NULL);
+	XtAddCallback(close_button, XmNactivateCallback, close_about, nullptr);
+	XtAddCallback(close_button, XmNdestroyCallback, destroy_about, nullptr);
 
 #ifdef CREDITS
 	XtVaSetValues(more_button,
@@ -485,7 +485,7 @@ show_about(
 		XmNbottomAttachment, 		XmATTACH_WIDGET,
 		XmNbottomWidget, 		separator,
 		XmNbottomOffset,		GAP,
-		NULL);
+		nullptr);
 #endif /* CREDITS */
 
 	ManageChildren(sub_form);
@@ -494,18 +494,18 @@ show_about(
 
 	XtVaGetValues(main_form,
 		XmNwidth,			&form_width,
-		NULL);
+		nullptr);
 
 	XtVaSetValues(close_button,
 		XmNleftAttachment, 		XmATTACH_FORM,
 		XmNleftOffset, 			form_width/2 - max_width/2,
 		XmNwidth,			max_width,
-		NULL);
+		nullptr);
 
         XtVaSetValues(main_form, 
 		XmNdefaultButton, 		close_button,
         	XmNcancelButton, 		close_button,
-		NULL);
+		nullptr);
 
 	XtPopup(dialog, XtGrabNone);
 
@@ -520,7 +520,7 @@ close_about(
 {
 	XtPopdown(calendar->about_dialog);
 	XtDestroyWidget(calendar->about_dialog);
-	calendar->about_dialog = NULL;
+	calendar->about_dialog = nullptr;
 }
 
 static void
@@ -529,7 +529,7 @@ destroy_about(
         XtPointer                client_data,
         XtPointer                callback_struct)
 {
-	calendar->about_dialog = NULL;
+	calendar->about_dialog = nullptr;
 }
 
 static void
@@ -538,7 +538,7 @@ destroy_credits(
         XtPointer                client_data,
         XtPointer                callback_struct)
 {
-	calendar->credits_dialog = NULL;
+	calendar->credits_dialog = nullptr;
 }
 
 static void
@@ -549,7 +549,7 @@ close_credits(
 {
 	XtPopdown(calendar->credits_dialog);
 	XtDestroyWidget(calendar->credits_dialog);
-	calendar->credits_dialog = NULL;
+	calendar->credits_dialog = nullptr;
 }
 
 #ifdef CREDITS
@@ -567,7 +567,7 @@ do_credits(
 	Pixmap		image = (Pixmap)client_data;
 	Widget 		dialog, main_form, sub_form, separator, close_button,
 			icon_label, title_label, label, parent, above_widget;
-        XmString	xstr = NULL;
+        XmString	xstr = nullptr;
 	int		i;
 	Dimension	button_width, dialog_width;
 	char		*title;
@@ -584,7 +584,7 @@ do_credits(
 		XmNtitle, 			title,
 		XmNdeleteResponse,		XmDESTROY,
 		XmNallowShellResize, 		True,
-		NULL);
+		nullptr);
 	XtFree(title);
 
 	main_form =
@@ -597,7 +597,7 @@ do_credits(
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNbottomAttachment, 		XmATTACH_FORM,
 		XmNnoResize,			True,
-		NULL);
+		nullptr);
 
 	icon_label =
 	    XtVaCreateWidget("icon_label",
@@ -607,7 +607,7 @@ do_credits(
 		XmNtopOffset, 			GAP,
 		XmNleftAttachment, 		XmATTACH_FORM,
 		XmNleftOffset, 			GAP,
-		NULL);
+		nullptr);
 
 	if (!image || image == XmUNSPECIFIED_PIXMAP) {
         	xstr = XmStringCreateLocalized(
@@ -616,13 +616,13 @@ do_credits(
 			XmNlabelType, 			XmSTRING,
 			XmNlabelString, 		xstr,
 			XmNborderWidth,			1,
-			NULL);
+			nullptr);
 		XmStringFree(xstr);
 	} else {
 		XtVaSetValues(icon_label,
 			XmNlabelType, 			XmPIXMAP,
 			XmNlabelPixmap, 		image,
-			NULL);
+			nullptr);
 	}
 
 	sub_form =
@@ -634,7 +634,7 @@ do_credits(
 		XmNleftAttachment, 		XmATTACH_WIDGET,
 		XmNleftWidget, 			icon_label,
 		XmNrightAttachment, 		XmATTACH_FORM,
-		NULL);
+		nullptr);
 
         xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 682,
 				"This application was brought to you by:"));
@@ -651,7 +651,7 @@ do_credits(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 
@@ -673,7 +673,7 @@ do_credits(
 			XmNleftOffset, 			90,
 			XmNrightAttachment, 		XmATTACH_FORM,
 			XmNrightOffset,			GAP,
-			NULL);
+			nullptr);
 
 		above_widget = label;
 		XmStringFree(xstr);
@@ -695,7 +695,7 @@ do_credits(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 
@@ -717,7 +717,7 @@ do_credits(
 			XmNleftOffset, 			90,
 			XmNrightAttachment, 		XmATTACH_FORM,
 			XmNrightOffset,			GAP,
-			NULL);
+			nullptr);
 
 		above_widget = label;
 		XmStringFree(xstr);
@@ -733,7 +733,7 @@ do_credits(
 		XmNleftOffset, 			0,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset,			0,
-		NULL);
+		nullptr);
 
 	xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 680, "Close"));
 	close_button = XtVaCreateWidget("close_button",
@@ -745,11 +745,11 @@ do_credits(
 		XmNtopAttachment, 		XmATTACH_WIDGET,
 		XmNtopWidget, 			separator,
 		XmNtopOffset, 			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
-	XtAddCallback(close_button, XmNactivateCallback, close_credits, NULL);
-	XtAddCallback(close_button, XmNdestroyCallback, destroy_credits, NULL);
+	XtAddCallback(close_button, XmNactivateCallback, close_credits, nullptr);
+	XtAddCallback(close_button, XmNdestroyCallback, destroy_credits, nullptr);
 
 	ManageChildren(sub_form);
 	ManageChildren(main_form);
@@ -757,18 +757,18 @@ do_credits(
 
 	XtVaGetValues(dialog,
 		XmNwidth,	&dialog_width,
-		NULL);
+		nullptr);
 	XtVaGetValues(close_button,
 		XmNwidth,	&button_width,
-		NULL);
+		nullptr);
 
 	XtVaSetValues(close_button,
 		XmNleftAttachment, 		XmATTACH_FORM,
 		XmNleftOffset, 			dialog_width/2 - button_width/2,
-		NULL);
+		nullptr);
 
-        XtVaSetValues(main_form, XmNdefaultButton, close_button, NULL);
-        XtVaSetValues(main_form, XmNcancelButton, close_button, NULL);
+        XtVaSetValues(main_form, XmNdefaultButton, close_button, nullptr);
+        XtVaSetValues(main_form, XmNcancelButton, close_button, nullptr);
 
 	XtPopup(dialog, XtGrabNone);
 

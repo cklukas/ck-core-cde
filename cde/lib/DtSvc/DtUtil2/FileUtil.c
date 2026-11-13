@@ -109,7 +109,7 @@ _DtCreateDirs(
       /* Some component of the path doesn't exist.  Recursively make the
 	 parent of the current directory, then make the current directory. */
       parent_path = XtNewString (path);
-      if ((temp_s = DtStrrchr (parent_path, '/')) != NULL) {
+      if ((temp_s = DtStrrchr (parent_path, '/')) != nullptr) {
          *temp_s = '\0';
 	 (void) _DtCreateDirs (parent_path, mode);
       }
@@ -154,7 +154,7 @@ _DtIsOpenableDirContext(
         char *path,
         char **ret_path )
 {
-   char *real_path = NULL;
+   char *real_path = nullptr;
    char * tmp_real_path;
    DIR *dirp;
    int ret_status;
@@ -164,7 +164,7 @@ _DtIsOpenableDirContext(
    char * netfile;
 
    if (ret_path)
-      *ret_path = NULL;
+      *ret_path = nullptr;
 
    host = _DtHostString(path);
    filename = _DtPathname(path);
@@ -179,7 +179,7 @@ _DtIsOpenableDirContext(
       }
 
       if (status != TT_OK) {
-         real_path = NULL;
+         real_path = nullptr;
       } else {
 	 real_path = XtNewString(tmp_real_path);
 	 tt_free(tmp_real_path);
@@ -191,7 +191,7 @@ _DtIsOpenableDirContext(
    else
       real_path = filename;
 
-   if (real_path && ((dirp = opendir (real_path)) != NULL)) 
+   if (real_path && ((dirp = opendir (real_path)) != nullptr)) 
    {
       closedir (dirp);
       ret_status = 1;
@@ -234,5 +234,5 @@ int
 _DtIsOpenableDir(
         char *path )
 {
-   return (_DtIsOpenableDirContext(path, NULL));
+   return (_DtIsOpenableDirContext(path, nullptr));
 }

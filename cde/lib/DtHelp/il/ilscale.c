@@ -785,7 +785,7 @@ ilBool ilScale (
 {
 unsigned int             state;
 ilPipeInfo               info;
-ilScalePrivptr  pPriv = NULL;
+ilScalePrivptr  pPriv = nullptr;
 ilDstElementData         dstdata;
 ilImageDes               imdes;
 ilImageFormat            imformat;
@@ -867,9 +867,9 @@ static unsigned long    defaultBitonalThreshold = 192;
 
 
        if(convert) {
-            if (!ilConvert(pipe, &imdes, &imformat, 0, NULL))
+            if (!ilConvert(pipe, &imdes, &imformat, 0, nullptr))
                 return FALSE;
-            ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+            ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
        }
        if((dstWidth <= 0) || (dstHeight <= 0))
            return ilDeclarePipeInvalid(pipe, IL_ERROR_ZERO_SIZE_IMAGE);
@@ -927,8 +927,8 @@ static unsigned long    defaultBitonalThreshold = 192;
 
 
        dstdata.producerObject = (ilObject) NULL;
-       dstdata.pDes           = (ilImageDes *) NULL;
-       dstdata.pFormat        = (ilImageFormat *) NULL;
+       dstdata.pDes           = (ilImageDes *) nullptr;
+       dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.width          = dstWidth;
        dstdata.height         = dstHeight;
        dstdata.pPalette       = info.pPalette;;
@@ -939,17 +939,17 @@ static unsigned long    defaultBitonalThreshold = 192;
 
        switch (imdes.nSamplesPerPixel) {
             case 3:
-                     pPriv = (ilScalePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilScalePriv), 0, (ilSrcElementData *) NULL,
-                                                               &dstdata, ilScaleInit, IL_NPF, IL_NPF, ilScale3ByteExecute, NULL, 0);
+                     pPriv = (ilScalePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilScalePriv), 0, (ilSrcElementData *) nullptr,
+                                                               &dstdata, ilScaleInit, IL_NPF, IL_NPF, ilScale3ByteExecute, nullptr, 0);
                      break;
 
             case 1:  
                      if(bitonal) 
-                       pPriv = (ilScalePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilScalePriv), 0, (ilSrcElementData *) NULL,
-                                                                 &dstdata, ilScaleInit, IL_NPF, IL_NPF, ilScaleBitonalExecute, NULL, 0);
+                       pPriv = (ilScalePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilScalePriv), 0, (ilSrcElementData *) nullptr,
+                                                                 &dstdata, ilScaleInit, IL_NPF, IL_NPF, ilScaleBitonalExecute, nullptr, 0);
                      else 
-                       pPriv = (ilScalePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilScalePriv), 0, (ilSrcElementData *) NULL,
-                                                                 &dstdata, ilScaleInit, IL_NPF, IL_NPF, ilScaleByteExecute, NULL, 0);
+                       pPriv = (ilScalePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilScalePriv), 0, (ilSrcElementData *) nullptr,
+                                                                 &dstdata, ilScaleInit, IL_NPF, IL_NPF, ilScaleByteExecute, nullptr, 0);
        }
 
        if(!pPriv)

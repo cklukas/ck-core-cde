@@ -287,7 +287,7 @@ GetLoginInfo(struct display *d, int *loginType, char *ttyName, char **hostname)
     Debug("Login Info - Remote user on tty=%s.\n", ttyName);
   } else {
     *loginType = S_LOGIN;
-    *hostname = NULL;
+    *hostname = nullptr;
     Debug("Login Info - Local user on tty=%s.\n", ttyName);
   }
 }
@@ -313,7 +313,7 @@ Authenticate( struct display *d, char *name, char *passwd, char **msg )
 
   GetLoginInfo(d, &loginType, tty, &hostname);
 
-  if (name == NULL)
+  if (name == nullptr)
   {
     unknown = 0;
   }
@@ -460,7 +460,7 @@ Audit( struct passwd *p, char *msg, int errnum )
     seteuid(0);
     if ( (auditwrite ("USER_Login", AUDIT_OK,
             p->pw_name, strlen (p->pw_name) + 1,
-            msg, strlen (msg) + 1, NULL))  == -1 )
+            msg, strlen (msg) + 1, nullptr))  == -1 )
           Debug(" Could not do Auditing\n");
 
 }
@@ -523,7 +523,7 @@ PasswordAged(char *name, struct passwd *pw )
   * the 'lastupdate' and 'flags' fields are set by this operation.
   */
   setpwdb(S_READ);
-  if ((pupw = getuserpw(name)) != NULL)
+  if ((pupw = getuserpw(name)) != nullptr)
   {
     upw.upw_lastupdate = pupw->upw_lastupdate;
     upw.upw_flags = pupw->upw_flags;
@@ -606,7 +606,7 @@ dt_failedlogin(char *name, char *ttyName, char *hostName)
         last_login.ftty = ttyName;
 
         last_login.fhost = (char *) malloc (MAXHOSTNAMELEN);
-        if (hostName == NULL) {
+        if (hostName == nullptr) {
             gethostname (last_login.fhost , MAXHOSTNAMELEN);
         } else {
             strncpy(last_login.fhost, hostName, MAXHOSTNAMELEN);
@@ -669,7 +669,7 @@ Authenticate( struct display *d, char *name, char *passwd, char **msg )
 
 	if ((++login_attempts % MAXATTEMPTS) == 0 ) {
 
-	    if (p == NULL )
+	    if (p == nullptr )
 		p = &nouser;
 
 	    Audit(p, " Failed login (bailout)", 1);
@@ -1038,7 +1038,7 @@ Authenticate( struct display *d, char *name, char *passwd, char **msg )
 
 	    if ((++login_attempts % MAXATTEMPTS) == 0 ) {
 
-		if (p == NULL )
+		if (p == nullptr )
 		    p = &nouser;
 
 		Audit(p, " Failed login (bailout)", 1);

@@ -86,7 +86,7 @@ static XtResource resources[] = {
   {XtNpointerColorBackground, XtCBackground, XtRPixel, sizeof(Pixel),
      offset(pointer_bg), XtRString, XtDefaultBackground},
   {XtNcursorName, XtCCursor, XtRString, sizeof(String),
-     offset(cursor_name), XtRString, NULL},
+     offset(cursor_name), XtRString, nullptr},
 #undef offset
 };
 
@@ -105,10 +105,10 @@ SimpleClassRec simpleClassRec = {
     /* class_initialize		*/	ClassInitialize,
     /* class_part_initialize	*/	ClassPartInitialize,
     /* class_inited		*/	FALSE,
-    /* initialize		*/	NULL,
-    /* initialize_hook		*/	NULL,
+    /* initialize		*/	nullptr,
+    /* initialize_hook		*/	nullptr,
     /* realize			*/	Realize,
-    /* actions			*/	NULL,
+    /* actions			*/	nullptr,
     /* num_actions		*/	0,
     /* resources		*/	resources,
     /* num_resources		*/	XtNumber(resources),
@@ -117,20 +117,20 @@ SimpleClassRec simpleClassRec = {
     /* compress_exposure	*/	TRUE,
     /* compress_enterleave	*/	TRUE,
     /* visible_interest		*/	FALSE,
-    /* destroy			*/	NULL,
-    /* resize			*/	NULL,
-    /* expose			*/	NULL,
+    /* destroy			*/	nullptr,
+    /* resize			*/	nullptr,
+    /* expose			*/	nullptr,
     /* set_values		*/	SetValues,
-    /* set_values_hook		*/	NULL,
+    /* set_values_hook		*/	nullptr,
     /* set_values_almost	*/	XtInheritSetValuesAlmost,
-    /* get_values_hook		*/	NULL,
-    /* accept_focus		*/	NULL,
+    /* get_values_hook		*/	nullptr,
+    /* accept_focus		*/	nullptr,
     /* version			*/	XtVersion,
-    /* callback_private		*/	NULL,
-    /* tm_table			*/	NULL,
+    /* callback_private		*/	nullptr,
+    /* tm_table			*/	nullptr,
     /* query_geometry		*/	XtInheritQueryGeometry,
     /* display_accelerator	*/	XtInheritDisplayAccelerator,
-    /* extension		*/	NULL
+    /* extension		*/	nullptr
   },
   { /* simple fields */
     /* change_sensitive		*/	ChangeSensitive
@@ -154,7 +154,7 @@ static void ClassInitialize(void)
     XawInitializeWidgetSet();
     XtSetTypeConverter( XtRString, XtRColorCursor, XmuCvtStringToColorCursor,
 		       convertArg, XtNumber(convertArg), 
-		       XtCacheByDisplay, NULL);
+		       XtCacheByDisplay, nullptr);
 }
 
 static void ClassPartInitialize(WidgetClass class)
@@ -163,7 +163,7 @@ static void ClassPartInitialize(WidgetClass class)
     SimpleWidgetClass super = (SimpleWidgetClass)
 	c->core_class.superclass;
 
-    if (c->simple_class.change_sensitive == NULL) {
+    if (c->simple_class.change_sensitive == nullptr) {
 	char buf[BUFSIZ];
 
 	snprintf(buf, sizeof(buf),
@@ -224,7 +224,7 @@ ConvertCursor(Widget w)
     XrmValue from, to;
     Cursor cursor;
    
-    if (simple->simple.cursor_name == NULL)
+    if (simple->simple.cursor_name == nullptr)
 	return;
 
     from.addr = (XPointer) simple->simple.cursor_name;
@@ -241,7 +241,7 @@ ConvertCursor(Widget w)
 	XtAppErrorMsg(XtWidgetToApplicationContext(w),
 		      "convertFailed","ConvertCursor","XawError",
 		      "Simple: ConvertCursor failed.",
-		      (String *)NULL, (Cardinal *)NULL);
+		      (String *)nullptr, (Cardinal *)nullptr);
     }
 }
 

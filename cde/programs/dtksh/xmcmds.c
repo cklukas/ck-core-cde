@@ -359,7 +359,7 @@ ConvertWidgetToWtab(
     * a 'hidden' parent.
     */
    ctab = wtab->wclass;
-   if (ctab->res == NULL)
+   if (ctab->res == nullptr)
       (void)str_to_class(arg0, ctab->cname);
 
    return(wtab);
@@ -463,15 +463,15 @@ toolkit_initialize(
 		newargv[i] = (char *)malloc(strlen(argv[i + 4]) + 1);
 		strcpy(newargv[i], argv[i + 4]);
 	}
-	newargv[i] = (char *)NULL;
+	newargv[i] = (char *)nullptr;
 
-	Toplevel = XtInitialize((char *)NULL, argv[3], (XrmOptionDescRec *)NULL,
+	Toplevel = XtInitialize((char *)nullptr, argv[3], (XrmOptionDescRec *)nullptr,
 							0, &newargc, newargv);
 
-	if (Toplevel == NULL) {
+	if (Toplevel == nullptr) {
 		errmsg = strdup(GETMESSAGE(
                                 "Unable to initialize the Toolkit"));
-		printerr(argv[0], errmsg, NULL);
+		printerr(argv[0], errmsg, nullptr);
                 free(errmsg);
 		env_blank(argv[1]);
 		return(1);
@@ -483,161 +483,161 @@ toolkit_initialize(
 
 	DtkshRegisterNamedIntConverters();
 	XtAddConverter(XmRTopItemPosition, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRHorizontalInt, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRVerticalInt, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRWhichButton, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRShellHorizPos, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRShellVertPos, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRShellHorizDim, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRShellVertDim, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRKeySym, XtRString, 
-		DtkshCvtKeySymToString, NULL, 0);
+		DtkshCvtKeySymToString, nullptr, 0);
 	XtAddConverter(XtRInt, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XtRShort, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XtRCardinal, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XtRDimension, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRBooleanDimension, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XtRPosition, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRHorizontalDimension, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRVerticalDimension, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRHorizontalPosition, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRVerticalPosition, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XmRTextPosition, XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XtRBoolean, XtRString, 
-		DtkshCvtBooleanToString, NULL, 0);
+		DtkshCvtBooleanToString, nullptr, 0);
 	XtAddConverter("Set", XtRString, 
-		DtkshCvtBooleanToString, NULL, 0);
+		DtkshCvtBooleanToString, nullptr, 0);
 	XtAddConverter(XtRBool, XtRString, 
-		DtkshCvtBooleanToString, NULL, 0);
+		DtkshCvtBooleanToString, nullptr, 0);
 	XtAddConverter(XtRPixel, XtRString, 
-		DtkshCvtHexIntToString, NULL, 0);
+		DtkshCvtHexIntToString, nullptr, 0);
 	XtAddConverter(XtRPixmap, XtRString, 
-		DtkshCvtHexIntToString, NULL, 0);
+		DtkshCvtHexIntToString, nullptr, 0);
 	XtAddConverter("XE_ModifierState", XtRString, 
-		DtkshCvtXEModifierStateToString, NULL, 0);
+		DtkshCvtXEModifierStateToString, nullptr, 0);
 	XtAddConverter("XE_MotionHint", XtRString, 
-		DtkshCvtXEMotionHintToString, NULL, 0);
+		DtkshCvtXEMotionHintToString, nullptr, 0);
 	XtAddConverter("XE_HexValue", XtRString, 
-		DtkshCvtHexIntToString, NULL, 0);
+		DtkshCvtHexIntToString, nullptr, 0);
 	XtAddConverter("XE_IntValue", XtRString, 
-		DtkshCvtIntToString, NULL, 0);
+		DtkshCvtIntToString, nullptr, 0);
 	XtAddConverter(XtRPointer, XtRString, 
-		DtkshCvtHexIntToString, NULL, 0);
+		DtkshCvtHexIntToString, nullptr, 0);
 	XtAddConverter("XE_Window", XtRString, 
-		DtkshCvtWindowToString, NULL, 0);
+		DtkshCvtWindowToString, nullptr, 0);
 	XtAddConverter(XtRScreen, XtRString, 
-		DtkshCvtScreenToString, NULL, 0);
+		DtkshCvtScreenToString, nullptr, 0);
 	XtAddConverter(XtRString, XtRScreen, 
-		DtkshCvtStringToScreen, NULL, 0);
+		DtkshCvtStringToScreen, nullptr, 0);
 	XtAddConverter(XtRString, XmRTopItemPosition, 
-		DtkshCvtStringToTopItemPosition, NULL, 0);
+		DtkshCvtStringToTopItemPosition, nullptr, 0);
 	XtAddConverter(XtRString, XmRUnitType,
-		XmCvtStringToUnitType, NULL, 0);
+		XmCvtStringToUnitType, nullptr, 0);
 	XtSetTypeConverter(XmRXmString, XtRString,
-		CvtXmStringToString, NULL, 0,
-                XtCacheNone, NULL);
+		CvtXmStringToString, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRWidget, XtRString,
-		CvtWidgetToString, NULL, 0,
-                XtCacheNone, NULL);
+		CvtWidgetToString, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter("MenuWidget", XtRString,
-		CvtWidgetToString, NULL, 0,
-                XtCacheNone, NULL);
+		CvtWidgetToString, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, XtRWidget,
-		CvtStringToWidget, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToWidget, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "MenuWidget",
-		CvtStringToWidget, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToWidget, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, XtRCallback,
-		CvtStringToCallback, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToCallback, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRCallback, XtRString,
-		CvtCallbackToString, NULL, 0,
-                XtCacheNone, NULL);
+		CvtCallbackToString, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, DtRPrintSetupProc,
-		CvtStringToPrintSetupProc, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToPrintSetupProc, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "EventMask",
-		CvtStringToEventMask, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToEventMask, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "MWMDecoration",
-		CvtStringToMWMDecoration, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToMWMDecoration, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter("MWMDecoration", XtRString,
-		CvtMWMDecorationToString, NULL, 0,
-                XtCacheNone, NULL);
+		CvtMWMDecorationToString, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "MWMFunctions",
-		CvtStringToMWMFunctions, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToMWMFunctions, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter("MWMFunctions", XtRString,
-		CvtMWMFunctionsToString, NULL, 0,
-                XtCacheNone, NULL);
+		CvtMWMFunctionsToString, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "ListItems",
-		CvtStringToListItems, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToListItems, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "SelectedListItems",
-		CvtStringToListItems, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToListItems, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "SelBoxItems",
-		CvtStringToListItems, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToListItems, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "FSFileItems",
-		CvtStringToListItems, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToListItems, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "FSDirItems",
-		CvtStringToListItems, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToListItems, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, XmRWidgetClass,
-		CvtStringToWidgetClass, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToWidgetClass, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XtRString, "PanedWinPosIndex",
-		CvtStringToPanedWinPosIndex, NULL, 0,
-                XtCacheNone, NULL);
+		CvtStringToPanedWinPosIndex, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter("PanedWinPosIndex", XtRString,
-		CvtPanedWinPosIndexToString, NULL, 0,
-                XtCacheNone, NULL);
+		CvtPanedWinPosIndexToString, nullptr, 0,
+                XtCacheNone, nullptr);
 	XtSetTypeConverter("ListItems", XtRString,
 		CvtListItemsToString,
                 listItemConvertArgs, 1, 
-                XtCacheNone, NULL);
+                XtCacheNone, nullptr);
 	XtSetTypeConverter("SelBoxItems", XtRString,
 		CvtListItemsToString,
                 selBoxItemConvertArgs, 1, 
-                XtCacheNone, NULL);
+                XtCacheNone, nullptr);
 	XtSetTypeConverter("SelectedListItems", XtRString,
 		CvtListItemsToString,
                 selectedListItemConvertArgs, 1, 
-                XtCacheNone, NULL);
+                XtCacheNone, nullptr);
 	XtSetTypeConverter("FSFileItems", XtRString,
 		CvtListItemsToString,
                 fileSelBoxFileConvertArgs, 1, 
-                XtCacheNone, NULL);
+                XtCacheNone, nullptr);
 	XtSetTypeConverter("FSDirItems", XtRString,
 		CvtListItemsToString,
                 fileSelBoxDirConvertArgs, 1, 
-                XtCacheNone, NULL);
+                XtCacheNone, nullptr);
 	XtSetTypeConverter(XmRWidgetClass, XtRString,
 		CvtWidgetClassToString,
-                NULL, 0, XtCacheNone, NULL);
+                nullptr, 0, XtCacheNone, nullptr);
 
         /* 
          * Override standard Xt StringToPixel converter;
@@ -645,16 +645,16 @@ toolkit_initialize(
          */
         RegisterXtOverrideConverters();
 
-	w = set_up_w(Toplevel, NULL, argv[1], argv[2], 
+	w = set_up_w(Toplevel, nullptr, argv[1], argv[2], 
                      str_to_class(argv[0], "ApplicationShell"));
 
 	var = env_get(str_TOPLEVEL);
-	if (var == NULL || *var == '\0') {
+	if (var == nullptr || *var == '\0') {
 		env_set_var(str_TOPLEVEL, w->widid);
 	}
 
 	var = env_get(str_APPNAME);
-	if (var == NULL || *var == '\0') {
+	if (var == nullptr || *var == '\0') {
 		env_set_var(str_APPNAME, argv[2]);
 	}
 
@@ -700,7 +700,7 @@ toolkit_special_resource(
         int *freeit,
         Boolean postponePixmaps )
 {
-   if ((w == NULL) && 
+   if ((w == nullptr) && 
        ((strcmp(res->resource_type, XmRHorizontalDimension) == 0) ||
         (strcmp(res->resource_type, XmRVerticalDimension) == 0)   ||
         (strcmp(res->resource_type, XmRHorizontalPosition) == 0)  ||
@@ -713,7 +713,7 @@ toolkit_special_resource(
    }
    else if (postponePixmaps  &&
             ((strcmp(resource, XmNpixmap) == 0) ||
-             (strstr(resource, "Pixmap") != NULL)))
+             (strstr(resource, "Pixmap") != nullptr)))
    {
       return(TRUE);
    }
@@ -744,8 +744,8 @@ _xmcreatefunc(
 	if (argc < 4) {
                 errmsg = strdup(GETMESSAGE(
                      "Usage: %s variable parent name [argument:value ...]"));
-		printerrf(str_nill, errmsg, argv[0], NULL,
-                    NULL, NULL, NULL, NULL, NULL, NULL);
+		printerrf(str_nill, errmsg, argv[0], nullptr,
+                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
                 free(errmsg);
 		return(1);
 	}
@@ -753,15 +753,15 @@ _xmcreatefunc(
 	parentid = argv[2];
 	wname = argv[3];
 	pw = str_to_wtab(argv[0], parentid);
-	if (pw == NULL) {
+	if (pw == nullptr) {
 		errmsg = strdup(GetSharedMsg(DT_NO_PARENT));
-		printerr(argv[0], errmsg, NULL);
+		printerr(argv[0], errmsg, nullptr);
                 free(errmsg);
 		return(1);
 	}
 	argv += 4;
 	argc -= 4;
-	if ((class = str_to_class(arg0, wclass)) == NULL) {
+	if ((class = str_to_class(arg0, wclass)) == nullptr) {
 		return(1);
 	}
 	pargc = 0;
@@ -771,10 +771,10 @@ _xmcreatefunc(
 	else {
 		pargv = 0;
 	}
-	parse_args(arg0, argc, argv, NULL, pw, class, &n, args, &pargc, pargv,
+	parse_args(arg0, argc, argv, nullptr, pw, class, &n, args, &pargc, pargv,
                    True);
 	widget = func(pw->w, wname, args, n);
-	if (widget != NULL) {
+	if (widget != nullptr) {
 		/* Some of the XmCreate* functions return a widget
 		 * id whose parent is not necessarily the parent
 		 * passed in.  For example, DialogShell returns the
@@ -798,13 +798,13 @@ _xmcreatefunc(
 			free_args(n, args);
 			n = 0;
 			parse_args(arg0, pargc, pargv, wtab, pw, class, &n, 
-				   args, NULL, NULL, False);
+				   args, nullptr, nullptr, False);
 			XtSetValues(widget, args, n);
 		}
 	} else {
                 errmsg = strdup(GetSharedMsg(DT_WIDGET_CREATE_FAILED));
 		printerrf(argv[0], errmsg,
-                          wname, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                          wname, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
                 free(errmsg);
 		env_blank(argv[1]);
 	}
@@ -1372,13 +1372,13 @@ do_DtHelpReturnSelectedWidgetId(
    {
       errmsg = strdup(GETMESSAGE(
          "Usage: DtHelpReturnSelectedWidgetId variable widget variable"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[2]);
-   if (w == NULL) {
+   if (w == nullptr) {
         alt_env_set_var(variable, ""); 
         env_blank(results);
 	return(1);
@@ -1389,7 +1389,7 @@ do_DtHelpReturnSelectedWidgetId(
 
    f.addr = (caddr_t)&res;
    f.size = sizeof(int);
-   t.addr = NULL;
+   t.addr = nullptr;
    t.size = 0;
    XtConvert(w->w, "HelpReturnSelectedWidgetResultType", &f, XtRString, &t);
    env_set_var(results,  (char *)(t.addr)); 
@@ -1419,7 +1419,7 @@ do_DtHelpSetCatalogName(
    {
       errmsg = strdup(GETMESSAGE(
                       "Usage: DtHelpSetCatalogName catalogName"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -1449,13 +1449,13 @@ do_DtHelpQuickDialogGetChild(
    {
       errmsg = strdup(GETMESSAGE(
             "Usage: DtHelpQuickDialogGetChild variable quickHelpWidget child"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[2]);
-   if (w == NULL) {
+   if (w == nullptr) {
         alt_env_set_var(variable, ""); 
 	return(1);
    }
@@ -1463,7 +1463,7 @@ do_DtHelpQuickDialogGetChild(
    if (w->wclass->class != dtHelpQuickDialogWidgetClass) {
       errmsg = strdup(GETMESSAGE(
                       "The widget must be a 'quickHelp' widget"));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -1471,7 +1471,7 @@ do_DtHelpQuickDialogGetChild(
 
    f.addr = argv[3];
    f.size = strlen(argv[3]) + 1;
-   t.addr = NULL;
+   t.addr = nullptr;
    t.size = 0;
    XtConvert(w->w, XtRString, &f, "QuickHelpChildType", &t);
 
@@ -1480,8 +1480,8 @@ do_DtHelpQuickDialogGetChild(
    else 
    {
       errmsg = strdup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -1489,7 +1489,7 @@ do_DtHelpQuickDialogGetChild(
 
    child = DtHelpQuickDialogGetChild(w->w, childType);
  
-   if (child == NULL)
+   if (child == nullptr)
    {
       alt_env_set_var(variable, ""); 
       return(1);
@@ -1510,15 +1510,15 @@ verifyListWidget(
    wtab_t *w;
    char * errmsg;
 
-   if ((w = str_to_wtab(cmd, widget)) == NULL)
-      return(NULL);
+   if ((w = str_to_wtab(cmd, widget)) == nullptr)
+      return(nullptr);
 
    if (w->wclass->class != xmListWidgetClass) 
    {
       errmsg = strdup(GETMESSAGE("The widget must be a 'list' widget"));
-      printerr(cmd, errmsg, NULL);
+      printerr(cmd, errmsg, nullptr);
       free(errmsg);
-      return(NULL);
+      return(nullptr);
    }
 
    return(w);
@@ -1540,13 +1540,13 @@ List_ItemAndPos(
    if (argc != 4) 
    {
       errmsg = strdup(GETMESSAGE("Usage: %s widget position item"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL, NULL, NULL, NULL, 
-                NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 
+                nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    string = XmStringCreateLocalized(argv[3]);
@@ -1585,7 +1585,7 @@ List_ItemListAndPos(
    char *arg0 = argv[0];
    wtab_t *w;
    int position = 0;
-   XmString *items = NULL;
+   XmString *items = nullptr;
    int itemCount = 0;
    int itemListSize = 0;
    int i;
@@ -1594,13 +1594,13 @@ List_ItemListAndPos(
    if (argc < 4)
    {
       errmsg = strdup(GETMESSAGE("Usage: %s widget position itemList"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    position = atoi(argv[2]);
@@ -1675,13 +1675,13 @@ List_WidgetOnly(
    if (argc != 2) 
    {
       errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    (*func) (w->w);
@@ -1731,13 +1731,13 @@ List_ItemOnly(
    if (argc != 3) 
    {
       errmsg = strdup(GETMESSAGE("Usage: %s widget item"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL, NULL,
-                NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    string = XmStringCreateLocalized(argv[2]);
@@ -1798,13 +1798,13 @@ List_PositionOnly(
    if (argc != 3) 
    {
       errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET_POS));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL,
-               NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr, nullptr,
+               nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    position = atoi(argv[2]);
@@ -1873,12 +1873,12 @@ do_XmListDeleteItemsPos(
    {
       errmsg = strdup(GETMESSAGE(
                "Usage: XmListDeleteItemsPos widget count position"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    count = atoi(argv[2]);
@@ -1895,7 +1895,7 @@ do_XmListDeleteItems(
 {
    char *arg0 = argv[0];
    wtab_t *w;
-   XmString *items = NULL;
+   XmString *items = nullptr;
    int itemCount = 0;
    int itemListSize = 0;
    int i;
@@ -1905,12 +1905,12 @@ do_XmListDeleteItems(
    {
       errmsg = strdup(GETMESSAGE(
                       "Usage: XmListDeleteItems widget itemList"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    for (i = 2; i < argc; i++, itemCount++)
@@ -1942,7 +1942,7 @@ do_XmListDeletePositions(
    char *arg0 = argv[0];
    wtab_t *w;
    int positionCount = 0;
-   int * positionList = NULL;
+   int * positionList = nullptr;
    int positionListSize = 0;
    int i;
    char * errmsg;
@@ -1951,12 +1951,12 @@ do_XmListDeletePositions(
    {
       errmsg = strdup(GETMESSAGE(
            "Usage: XmListDeletePositions widget positionList"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    for (i = 2; i < argc; i++, positionCount++)
@@ -2027,10 +2027,10 @@ GetSelectedPosList(
 
    if (argc != 3)
    {
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       return 1;
    }
-   if ((w = verifyListWidget(argv[0], argv[2])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[2])) == nullptr)
    {
       alt_env_set_var(argv[1], "");
       return 1;
@@ -2055,10 +2055,10 @@ GetMatchPosList(
 
    if (argc != 4)
    {
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       return 1;
    }
-   if ((w = verifyListWidget(argv[0], argv[2])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[2])) == nullptr)
    {
       alt_env_set_var(argv[1], "");
       return 1;
@@ -2119,12 +2119,12 @@ do_XmListGetKbdItemPos(
    {
       errmsg = strdup(GETMESSAGE(
                       "Usage: XmListGetKbdItemPos variable widget"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[2])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[2])) == nullptr)
    {
       alt_env_set_var(argv[1], ""); 
       return(1);
@@ -2152,12 +2152,12 @@ do_XmListItemExists(
    if (argc != 3) 
    {
       errmsg = strdup(GETMESSAGE("Usage: XmListItemExists widget item"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    string = XmStringCreateLocalized(argv[2]);
@@ -2184,12 +2184,12 @@ do_XmListItemPos(
    if (argc != 4)
    {
       errmsg = strdup(GETMESSAGE("Usage: XmListItemPos variable widget item"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[2])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[2])) == nullptr)
    {
       alt_env_set_var(argv[1], ""); 
       return(1);
@@ -2219,12 +2219,12 @@ do_XmListPosSelected(
    if (argc != 3) 
    {
       errmsg = strdup(GETMESSAGE("Usage: XmListPosSelected widget position"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    position = atoi(argv[2]);
@@ -2254,12 +2254,12 @@ do_XmListPosToBounds(
    {
       errmsg=strdup(GETMESSAGE(
             "Usage: XmListPosToBounds widget position variable variable variable variable"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
    {
       env_blank(argv[3]); 
       env_blank(argv[4]); 
@@ -2320,13 +2320,13 @@ ListSelectItem(
          errmsg = strdup(GETMESSAGE("Usage: %s widget item notifyFlag"));
       }
 
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL, NULL, NULL, NULL, 
-                NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 
+                nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    if (usePosition)
@@ -2386,12 +2386,12 @@ do_XmListSetAddMode(
    if (argc != 3)
    {
       errmsg = strdup(GETMESSAGE("Usage: XmListSetAddMode widget boolean"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    fval.addr = argv[2];
@@ -2422,12 +2422,12 @@ do_XmListSetKbdItemPos(
    {
       errmsg = strdup(GETMESSAGE(
                       "Usage: XmListSetKbdItemPos widget position"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyListWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyListWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    position = atoi(argv[2]);
@@ -2451,7 +2451,7 @@ do_XmMainWindowSetAreas(
    {
       errmsg=strdup(GETMESSAGE(
            "Usage: XmMainWindowSetAreas mainwindow menu command hscroll vscroll work"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -2461,25 +2461,25 @@ do_XmMainWindowSetAreas(
       if ((argv[i][0] == '\0') || 
           (strcmp(argv[i], (char *)("NULL")) == 0)) 
       {
-         w[i-1] = NULL;
+         w[i-1] = nullptr;
          continue;
       }
 
       w[i-1] = str_to_wtab(arg0, argv[i]);
-      if (w[i-1] == NULL) 
+      if (w[i-1] == nullptr) 
          continue;
    }
 
-   if (w[0] == NULL) {
+   if (w[0] == nullptr) {
       errmsg = strdup(GETMESSAGE("The 'mainWindow' handle is NULL"));
-      printerr(argv[0], errmsg, NULL);
+      printerr(argv[0], errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    if (w[0]->wclass->class != xmMainWindowWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_MAIN_WIN_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -2511,21 +2511,21 @@ GetMainWindowSeparator(
    if (argc != 3) 
    {
       errmsg = strdup(GETMESSAGE("Usage: %s variable mainwindow"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[2]);
-   if (w == NULL) {
+   if (w == nullptr) {
         alt_env_set_var(variable, ""); 
 	return(1);
    }
 
    if (w->wclass->class != xmMainWindowWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_MAIN_WIN_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -2538,7 +2538,7 @@ GetMainWindowSeparator(
    else if (childType == MWSep3)
       child = XmMainWindowSep3(w->w);
  
-   if (child == NULL)
+   if (child == nullptr)
    {
       alt_env_set_var(variable, ""); 
       return(1);
@@ -2589,18 +2589,18 @@ do_XmProcessTraversal(
 
    if (argc != 3) {
       errmsg = strdup(GETMESSAGE("Usage: XmProcessTraversal widget direction"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(argv[0], argv[1]);
-   if (w == NULL)
+   if (w == nullptr)
       return(1);
 
    f.addr = argv[2];
    f.size = strlen(argv[2]) + 1;
-   t.addr = NULL;
+   t.addr = nullptr;
    t.size = 0;
    XtConvert(w->w, XtRString, &f, "TraversalDirection", &t);
 
@@ -2612,8 +2612,8 @@ do_XmProcessTraversal(
    else 
    {
       errmsg = strdup(GETMESSAGE("Unknown traversal direction: %s"));
-      printerrf(argv[0], errmsg, argv[2], NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -2637,7 +2637,7 @@ do_XmInternAtom(
    {
       errmsg = strdup(GETMESSAGE(
              "Usage: XmInternAtom variable display name onlyIfExists"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -2646,8 +2646,8 @@ do_XmInternAtom(
    if (p == argv[2])
    {
       errmsg = strdup(GetSharedMsg(DT_BAD_DISPLAY));
-      printerrf(argv[0], errmsg, argv[2], NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(argv[1], ""); 
       return(1);
@@ -2700,7 +2700,7 @@ do_XmGetAtomName(
    if (argc != 4)
    {
       errmsg = strdup(GETMESSAGE("Usage: XmGetAtomName variable display atom"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -2709,8 +2709,8 @@ do_XmGetAtomName(
    if (p == argv[2])
    {
       errmsg = strdup(GetSharedMsg(DT_BAD_DISPLAY));
-      printerrf(argv[0], errmsg, argv[2], NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(argv[1], ""); 
       return(1);
@@ -2721,7 +2721,7 @@ do_XmGetAtomName(
    {
       errmsg = strdup(GETMESSAGE("The specified atom is invalid: %s"));
       printerrf(argv[0], errmsg, argv[3],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(argv[1], ""); 
       return(1);
@@ -2729,7 +2729,7 @@ do_XmGetAtomName(
    oldHandler = XSetErrorHandler(CatchAndIgnoreXError);
    name = XmGetAtomName (display, atom);
    XSetErrorHandler(oldHandler);
-   if (name == NULL)
+   if (name == nullptr)
    {
       alt_env_set_var(argv[1], ""); 
       return(1);
@@ -2763,13 +2763,13 @@ do_XmGetColors(
    {
       errmsg=strdup(GETMESSAGE(
           "Usage: XmGetColors widget background foreground topshadow bottomshadow select"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(argv[0], argv[1]);
-   if (w == NULL)
+   if (w == nullptr)
    {
       env_blank(argv[3]); 
       env_blank(argv[4]); 
@@ -2783,7 +2783,7 @@ do_XmGetColors(
    {
       errmsg = strdup(GETMESSAGE("The background pixel is invalid: %s"));
       printerrf(argv[0], errmsg, argv[2],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       env_blank(argv[3]); 
       env_blank(argv[4]); 
@@ -2822,13 +2822,13 @@ do_XmUpdateDisplay(
    if (argc != 2)
    {
       errmsg = strdup(GETMESSAGE("Usage: XmUpdateDisplay widget"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(argv[0], argv[1]);
-   if (w == NULL)
+   if (w == nullptr)
       return(1);
 
    XmUpdateDisplay (w->w);
@@ -2852,13 +2852,13 @@ AddOrDeleteWMProtocols(
       errmsg = strdup(GETMESSAGE(
                       "Usage: %s widget protocol [protocol ...]"));
       printerrf(argv[0], errmsg, argv[0],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(argv[0], argv[1]);
-   if (w == NULL)
+   if (w == nullptr)
       return(1);
 
    protocolList = (Atom*)XtMalloc(sizeof(Atom) * (argc - 2));
@@ -2869,7 +2869,7 @@ AddOrDeleteWMProtocols(
       {
          errmsg = strdup(GETMESSAGE("The atom specified is invalid: %s"));
          printerrf(argv[0], errmsg, argv[i],
-                   NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                   nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
          free(errmsg);
          XtFree((char *)protocolList);
          return(1);
@@ -2914,12 +2914,12 @@ do_XmAddWMProtocolCallback(
    {
       errmsg = strdup(GETMESSAGE(
             "Usage: XmAddWMProtocolCallback widget protocol ksh-command"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   return(AddOneCallback(argv[0], argv[1], NULL, argv[3], argv[2]));
+   return(AddOneCallback(argv[0], argv[1], nullptr, argv[3], argv[2]));
 }
 
 int
@@ -2933,12 +2933,12 @@ do_XmRemoveWMProtocolCallback(
    {
       errmsg = strdup(GETMESSAGE(
           "Usage: XmRemoveWMProtocolCallback widget protocol ksh-command"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
-   return(RemoveOneCallback (argv[0], argv[1], NULL, argv[3], argv[2], NULL));
+   return(RemoveOneCallback (argv[0], argv[1], nullptr, argv[3], argv[2], nullptr));
 }
 
 
@@ -2955,21 +2955,21 @@ do_XmMenuPosition(
    if (argc != 3)
    {
       errmsg = strdup(GETMESSAGE("Usage: XmMenuPosition menu event"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(argv[0], argv[1]);
-   if (w == NULL)
+   if (w == nullptr)
       return(1);
 
    event = (XEvent *)strtoul(argv[2], &p, 0);
    if (p == argv[2])
    {
       errmsg = strdup(GETMESSAGE("The specified event is invalid: %s"));
-      printerrf(argv[0], errmsg, argv[2], NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -2993,18 +2993,18 @@ do_XmCommandAppendValue(
    {
       errmsg = strdup(GETMESSAGE(
              "Usage: XmCommandAppendValue commandWidget string"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
       return(1);
 
    if (w->wclass->class != xmCommandWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_CMD_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3031,18 +3031,18 @@ do_XmCommandError(
    {
       errmsg = strdup(GETMESSAGE(
           "Usage: XmCommandError commandWidget errorMessage"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
       return(1);
 
    if (w->wclass->class != xmCommandWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_CMD_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3069,18 +3069,18 @@ do_XmCommandSetValue(
    {
       errmsg = strdup(GETMESSAGE(
               "Usage: XmCommandSetValue commandWidget command"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
       return(1);
 
    if (w->wclass->class != xmCommandWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_CMD_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3112,20 +3112,20 @@ do_XmCommandGetChild(
    {
       errmsg = strdup(GETMESSAGE(
              "Usage: XmCommandGetChild variable commandWidget child"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[2]);
-   if (w == NULL) {
+   if (w == nullptr) {
         alt_env_set_var(variable, ""); 
 	return(1);
    }
 
    if (w->wclass->class != xmCommandWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_CMD_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3133,7 +3133,7 @@ do_XmCommandGetChild(
 
    f.addr = argv[3];
    f.size = strlen(argv[3]) + 1;
-   t.addr = NULL;
+   t.addr = nullptr;
    t.size = 0;
    XtConvert(w->w, XtRString, &f, "CommandChildType", &t);
 
@@ -3142,8 +3142,8 @@ do_XmCommandGetChild(
    else 
    {
       errmsg = strdup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3151,7 +3151,7 @@ do_XmCommandGetChild(
 
    child = XmCommandGetChild(w->w, childType);
  
-   if (child == NULL)
+   if (child == nullptr)
    {
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3183,13 +3183,13 @@ do_XmMessageBoxGetChild(
    {
       errmsg = strdup(GETMESSAGE(
             "Usage: XmMessageBoxGetChild variable commandWidget child"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[2]);
-   if (w == NULL) {
+   if (w == nullptr) {
         alt_env_set_var(variable, ""); 
 	return(1);
    }
@@ -3197,7 +3197,7 @@ do_XmMessageBoxGetChild(
    if (w->wclass->class != xmMessageBoxWidgetClass) {
       errmsg = strdup(GETMESSAGE(
                       "The widget must be a 'messageBox' widget"));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3205,7 +3205,7 @@ do_XmMessageBoxGetChild(
 
    f.addr = argv[3];
    f.size = strlen(argv[3]) + 1;
-   t.addr = NULL;
+   t.addr = nullptr;
    t.size = 0;
    XtConvert(w->w, XtRString, &f, "MessageBoxChildType", &t);
 
@@ -3214,8 +3214,8 @@ do_XmMessageBoxGetChild(
    else 
    {
       errmsg = strdup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3223,7 +3223,7 @@ do_XmMessageBoxGetChild(
 
    child = XmMessageBoxGetChild(w->w, childType);
  
-   if (child == NULL)
+   if (child == nullptr)
    {
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3255,13 +3255,13 @@ do_XmFileSelectionBoxGetChild(
    {
       errmsg = strdup(GETMESSAGE(
              "Usage: XmFileSelectionBoxGetChild variable widget child"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[2]);
-   if (w == NULL) {
+   if (w == nullptr) {
       alt_env_set_var(variable, ""); 
       return(1);
    }
@@ -3269,7 +3269,7 @@ do_XmFileSelectionBoxGetChild(
    if (w->wclass->class != xmFileSelectionBoxWidgetClass) {
       errmsg = strdup(GETMESSAGE(
             "The widget must be a 'file selection box' widget"));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3277,7 +3277,7 @@ do_XmFileSelectionBoxGetChild(
 
    f.addr = argv[3];
    f.size = strlen(argv[3]) + 1;
-   t.addr = NULL;
+   t.addr = nullptr;
    t.size = 0;
    XtConvert(w->w, XtRString, &f, "FileSelChildType", &t);
 
@@ -3286,8 +3286,8 @@ do_XmFileSelectionBoxGetChild(
    else 
    {
       errmsg = strdup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3295,7 +3295,7 @@ do_XmFileSelectionBoxGetChild(
 
    child = XmFileSelectionBoxGetChild(w->w, childType);
  
-   if (child == NULL)
+   if (child == nullptr)
    {
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3327,13 +3327,13 @@ do_XmSelectionBoxGetChild(
    {
       errmsg = strdup(GETMESSAGE(
               "Usage: XmSelectionBoxGetChild variable widget child"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[2]);
-   if (w == NULL) {
+   if (w == nullptr) {
       alt_env_set_var(variable, ""); 
       return(1);
    }
@@ -3341,7 +3341,7 @@ do_XmSelectionBoxGetChild(
    if (w->wclass->class != xmSelectionBoxWidgetClass) {
       errmsg = strdup(GETMESSAGE(
              "The widget must be a 'selection box' widget"));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3349,7 +3349,7 @@ do_XmSelectionBoxGetChild(
 
    f.addr = argv[3];
    f.size = strlen(argv[3]) + 1;
-   t.addr = NULL;
+   t.addr = nullptr;
    t.size = 0;
    XtConvert(w->w, XtRString, &f, "SelBoxChildType", &t);
 
@@ -3358,8 +3358,8 @@ do_XmSelectionBoxGetChild(
    else 
    {
       errmsg = strdup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3367,7 +3367,7 @@ do_XmSelectionBoxGetChild(
 
    child = XmSelectionBoxGetChild(w->w, childType);
  
-   if (child == NULL)
+   if (child == nullptr)
    {
       alt_env_set_var(variable, ""); 
       return(1);
@@ -3405,13 +3405,13 @@ do_XmScaleGetValue(
    {
       errmsg = strdup(GETMESSAGE(
                       "Usage: XmScaleGetValue scaleWidget variable"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
    {
       env_blank(variable); 
       return(1);
@@ -3419,7 +3419,7 @@ do_XmScaleGetValue(
 
    if (w->wclass->class != xmScaleWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_SCALE_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       env_blank(variable); 
       return(1);
@@ -3448,18 +3448,18 @@ do_XmScaleSetValue(
    {
       errmsg = strdup(GETMESSAGE(
                       "Usage: XmScaleSetValue scaleWidget value"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
 	return(1);
 
    if (w->wclass->class != xmScaleWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_SCALE_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3470,7 +3470,7 @@ do_XmScaleSetValue(
       errmsg = strdup(GETMESSAGE(
                       "The scale value specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[2],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3498,13 +3498,13 @@ do_XmScrollBarGetValues(
    {
       errmsg=strdup(GETMESSAGE(
            "Usage: XmScrollBarGetValues scrollbar variable variable variable variable"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
    {
       env_blank(argv[2]); 
       env_blank(argv[3]); 
@@ -3515,7 +3515,7 @@ do_XmScrollBarGetValues(
 
    if (w->wclass->class != xmScrollBarWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_SCROLLBAR_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       env_blank(argv[2]); 
       env_blank(argv[3]); 
@@ -3558,18 +3558,18 @@ do_XmScrollBarSetValues(
    {
       errmsg=strdup(GETMESSAGE(
            "Usage: XmScrollBarSetValues scrollbar value sliderSize increment pageIncrement notify"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
 	return(1);
 
    if (w->wclass->class != xmScrollBarWidgetClass) {
       errmsg = strdup(GetSharedMsg(DT_SCROLLBAR_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3578,8 +3578,8 @@ do_XmScrollBarSetValues(
    if (p == argv[2])
    {
       errmsg = strdup(GETMESSAGE("The value specified is invalid: %s"));
-      printerrf(arg0, errmsg, argv[2], NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL);
+      printerrf(arg0, errmsg, argv[2], nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3590,7 +3590,7 @@ do_XmScrollBarSetValues(
       errmsg = strdup(GETMESSAGE(
                       "The slider size specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[3],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3601,7 +3601,7 @@ do_XmScrollBarSetValues(
       errmsg = strdup(GETMESSAGE(
                       "The increment specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[4],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3612,7 +3612,7 @@ do_XmScrollBarSetValues(
       errmsg = strdup(GETMESSAGE(
                       "The page increment specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[5],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3649,29 +3649,29 @@ do_XmScrollVisible(
    {
       errmsg=strdup(GETMESSAGE(
         "Usage: XmScrollVisible scrolledWin widget leftRightMargin topBottomMargin"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
 	return(1);
 
    if (w->wclass->class != xmScrolledWindowWidgetClass) {
       errmsg = strdup(GETMESSAGE(
              "The widget must be a 'scrolledWindow' widget"));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w2 = str_to_wtab(arg0, argv[2]);
-   if (w2 == NULL) 
+   if (w2 == nullptr) 
    {
       errmsg = strdup(GETMESSAGE(
               "The widget to be made visible does not exist."));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3681,8 +3681,8 @@ do_XmScrollVisible(
    {
       errmsg = strdup(GETMESSAGE(
             "The left/right margin specified is invalid: %s"));
-      printerrf(arg0, errmsg, argv[3], NULL, NULL, NULL, NULL, NULL, NULL, 
-                NULL);
+      printerrf(arg0, errmsg, argv[3], nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 
+                nullptr);
       free(errmsg);
       return(1);
    }
@@ -3692,8 +3692,8 @@ do_XmScrollVisible(
    {
       errmsg = strdup(GETMESSAGE(
              "The top/bottom margin specified is invalid: %s"));
-      printerrf(arg0, errmsg, argv[4], NULL, NULL, NULL, NULL, NULL, NULL, 
-                NULL);
+      printerrf(arg0, errmsg, argv[4], nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 
+                nullptr);
       free(errmsg);
       return(1);
    }
@@ -3715,21 +3715,21 @@ GetToggleState(
    if (argc != 2) 
    {
       errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL, NULL,
-                NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
 	return(1);
 
    if ((w->wclass->class != xmToggleButtonWidgetClass) &&
        (w->wclass->class != xmToggleButtonGadgetClass))
    {
       errmsg = strdup(GetSharedMsg(DT_TOGGLE_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3772,21 +3772,21 @@ SetToggleState(
    if (argc != 4) 
    {
       errmsg = strdup(GETMESSAGE("Usage: %s widget state notify"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL) 
+   if (w == nullptr) 
 	return(1);
 
    if ((w->wclass->class != xmToggleButtonWidgetClass) &&
        (w->wclass->class != xmToggleButtonGadgetClass))
    {
       errmsg = strdup(GetSharedMsg(DT_TOGGLE_WIDGET));
-      printerr(arg0, errmsg, NULL);
+      printerr(arg0, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3848,7 +3848,7 @@ do_catopen(
    if (argc != 3)
    {
       errmsg = strdup(GETMESSAGE("Usage: catopen variable catName"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3866,7 +3866,7 @@ do_catopen(
 
       altCatName = XtMalloc(strlen(catName) + 10);
       /* These platforms don't have strrstr() */
-      ptr = NULL;
+      ptr = nullptr;
       nextMatch = catName;
       while (nextMatch = strstr(nextMatch, ".cat"))
       {
@@ -3910,7 +3910,7 @@ do_catclose(
    if (argc != 2)
    {
       errmsg = strdup(GETMESSAGE("Usage: catclose catId"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3943,7 +3943,7 @@ do_catgets(
    {
       errmsg = strdup(GETMESSAGE(
              "Usage: catgets variable catId setNum msgNum dftMsg"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
@@ -3966,17 +3966,17 @@ verifyTextWidget(
    wtab_t *w;
    char * errmsg;
 
-   if ((w = str_to_wtab(cmd, widget)) == NULL)
-      return(NULL);
+   if ((w = str_to_wtab(cmd, widget)) == nullptr)
+      return(nullptr);
 
    if ((w->wclass->class != xmTextWidgetClass) &&
        (w->wclass->class != xmTextFieldWidgetClass))
    {
       errmsg = strdup(GETMESSAGE(
              "The widget must be a 'text' or 'textField' widget"));
-      printerr(cmd, errmsg, NULL);
+      printerr(cmd, errmsg, nullptr);
       free(errmsg);
-      return(NULL);
+      return(nullptr);
    }
 
    return(w);
@@ -3997,13 +3997,13 @@ Text_WidgetBoolean(
    if (argc != 2) 
    {
       errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    result = (*func) (w->w);
@@ -4023,12 +4023,12 @@ Text_WidgetVoid(
    if (argc != 2)
    {
       errmsg = strdup(GetSharedMsg(DT_USAGE_WIDGET));
-      printerrf(str_nill, errmsg, argv[0], NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(str_nill, errmsg, argv[0], nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       free(errmsg);
       return 1;
    }
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return 1;
 
    func(w->w);
@@ -4095,12 +4095,12 @@ Text_PositionVarAndWidget(
    if (argc != 3)
    {
       errmsg = strdup(GETMESSAGE("Usage: %s variable widget"));
-      printerrf(str_nill, errmsg, argv[0], NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, argv[0], nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return 1;
    }
-   if ((w = verifyTextWidget(argv[0], argv[2])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[2])) == nullptr)
    {
       alt_env_set_var(argv[1], "");
       return 1;
@@ -4125,12 +4125,12 @@ Text_IntVarAndWidget(
    if (argc != 3)
    {
       errmsg = strdup(GETMESSAGE("Usage: %s variable widget"));
-      printerrf(str_nill, errmsg, argv[0], NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, argv[0], nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return 1;
    }
-   if ((w = verifyTextWidget(argv[0], argv[2])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[2])) == nullptr)
    {
       alt_env_set_var(argv[1], "");
       return 1;
@@ -4154,12 +4154,12 @@ Text_StringVarAndWidget(
    if (argc != 3)
    {
       errmsg = strdup(GETMESSAGE("Usage: %s variable widget"));
-      printerrf(str_nill, errmsg, argv[0], NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, argv[0], nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return 1;
    }
-   if ((w = verifyTextWidget(argv[0], argv[2])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[2])) == nullptr)
    {
       alt_env_set_var(argv[1], "");
       return 1;
@@ -4251,13 +4251,13 @@ Text_WidgetAndBoolean(
    if (argc != 3) 
    {
       errmsg = strdup(GETMESSAGE("Usage: %s widget boolean"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL, NULL,
-                NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    fval.addr = argv[2];
@@ -4305,19 +4305,19 @@ Text_WidgetAndValue(
 
    if (argc != 3)
    {
-      printerrf(str_nill, usageMsg, argv[0], NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(str_nill, usageMsg, argv[0], nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       return 1;
    }
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return 1;
 
    value = strtoul(argv[2], &p, 0);
    if (p == argv[2])
    {
       errmsg = strdup(GETMESSAGE("The parameter specified is invalid: %s"));
-      printerrf(argv[0], errmsg, argv[2], NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       free(errmsg);
       return 1;
    }
@@ -4337,11 +4337,11 @@ Text_WidgetAndString(
 
    if (argc != 3)
    {
-      printerrf(str_nill, usageMsg, argv[0], NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(str_nill, usageMsg, argv[0], nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       return 1;
    }
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return 1;
 
    func(w->w, argv[2]);
@@ -4362,19 +4362,19 @@ Text_WidgetAndTime(
 
    if (argc != 3)
    {
-      printerrf(str_nill, usageMsg, argv[0], NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(str_nill, usageMsg, argv[0], nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       return 1;
    }
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return 1;
 
    value = (Time)strtoul(argv[2], &p, 0);
    if (p == argv[2])
    {
       errmsg = strdup(GETMESSAGE("The parameter specified is invalid: %s"));
-      printerrf(argv[0], errmsg, argv[2], NULL, NULL, NULL, NULL, NULL,
-                NULL, NULL);
+      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr, nullptr, nullptr,
+                nullptr, nullptr);
       free(errmsg);
       return 1;
    }
@@ -4567,13 +4567,13 @@ do_XmTextGetSelectionPosition(
    if (argc != 4) 
    {
       errmsg = strdup(GETMESSAGE("Usage: %s widget variable variable"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
    {
       env_blank(argv[2]);
       env_blank(argv[3]);
@@ -4612,13 +4612,13 @@ do_XmTextInsert(
    if (argc != 4) 
    {
       errmsg = strdup(GETMESSAGE("Usage: %s widget position string"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    position = strtoul(argv[2], &p, 0);
@@ -4626,7 +4626,7 @@ do_XmTextInsert(
    {
       errmsg = strdup(GetSharedMsg(DT_BAD_POSITION));
       printerrf(arg0, errmsg, argv[2],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -4655,13 +4655,13 @@ do_XmTextPosToXY(
    {
       errmsg = strdup(GETMESSAGE(
                       "Usage: %s widget position variable variable"));
-      printerrf(str_nill, errmsg, arg0, NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
    {
       env_blank(argv[3]);
       env_blank(argv[4]);
@@ -4672,8 +4672,8 @@ do_XmTextPosToXY(
    if (p == argv[2])
    {
       errmsg = strdup(GetSharedMsg(DT_BAD_POSITION));
-      printerrf(arg0, errmsg, argv[2], NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL);
+      printerrf(arg0, errmsg, argv[2], nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       env_blank(argv[3]);
       env_blank(argv[4]);
@@ -4713,13 +4713,13 @@ do_XmTextReplace(
    {
       errmsg = strdup(GETMESSAGE(
               "Usage: %s widget fromPosition toPosition string"));
-      printerrf(str_nill, errmsg, arg0, NULL,
-               NULL, NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr,
+               nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    from = strtoul(argv[2], &p, 0);
@@ -4728,7 +4728,7 @@ do_XmTextReplace(
       errmsg = strdup(GETMESSAGE(
                "The 'from' position specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[2],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -4739,7 +4739,7 @@ do_XmTextReplace(
       errmsg = strdup(GETMESSAGE(
                       "The 'to' position specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[3],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -4766,13 +4766,13 @@ do_XmTextSetSelection(
    {
       errmsg = strdup(GETMESSAGE(
               "Usage: %s widget firstPosition lastPosition time"));
-      printerrf(str_nill, errmsg, arg0, NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    first = strtoul(argv[2], &p, 0);
@@ -4781,7 +4781,7 @@ do_XmTextSetSelection(
       errmsg = strdup(GETMESSAGE(
                       "The first position specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[2],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -4792,7 +4792,7 @@ do_XmTextSetSelection(
       errmsg = strdup(GETMESSAGE(
                       "The last position specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[3],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -4802,7 +4802,7 @@ do_XmTextSetSelection(
    {
       errmsg = strdup(GETMESSAGE("The time specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[4],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -4829,13 +4829,13 @@ do_XmTextXYToPos(
    if (argc != 5) 
    {
       errmsg = strdup(GETMESSAGE("Usage: %s variable widget x y"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[2])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[2])) == nullptr)
    {
       alt_env_set_var(argv[1], "");
       return(1);
@@ -4847,7 +4847,7 @@ do_XmTextXYToPos(
       errmsg = strdup(GETMESSAGE(
                       "The x position specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[3],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(argv[1], "");
       return(1);
@@ -4859,7 +4859,7 @@ do_XmTextXYToPos(
       errmsg = strdup(GETMESSAGE(
                       "The y position specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[4],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(argv[1], "");
       return(1);
@@ -4889,13 +4889,13 @@ do_XmTextSetHighlight(
    if (argc != 5) 
    {
       errmsg = strdup(GETMESSAGE("Usage: %s widget left right mode"));
-      printerrf(str_nill, errmsg, arg0, NULL, NULL,
-                NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
       return(1);
 
    left = strtoul(argv[2], &p, 0);
@@ -4904,7 +4904,7 @@ do_XmTextSetHighlight(
       errmsg = strdup(GETMESSAGE(
                       "The left position specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[2],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -4915,7 +4915,7 @@ do_XmTextSetHighlight(
       errmsg = strdup(GETMESSAGE(
                       "The right position specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[3],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
@@ -4953,13 +4953,13 @@ do_XmTextFindString(
    {
       errmsg = strdup(GETMESSAGE(
               "Usage: %s widget start string direction variable"));
-      printerrf(str_nill, errmsg, arg0, NULL,
-                NULL, NULL, NULL, NULL, NULL, NULL);
+      printerrf(str_nill, errmsg, arg0, nullptr,
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       return(1);
    }
 
-   if ((w = verifyTextWidget(argv[0], argv[1])) == NULL)
+   if ((w = verifyTextWidget(argv[0], argv[1])) == nullptr)
    {
       env_blank(argv[5]);
       return(1);
@@ -4971,7 +4971,7 @@ do_XmTextFindString(
       errmsg = strdup(GETMESSAGE(
                       "The start position specified is invalid: %s"));
       printerrf(arg0, errmsg, argv[2],
-                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       env_blank(argv[5]);
       return(1);
@@ -5015,19 +5015,19 @@ GetSubWidget(
 
    if (argc != 3) 
    {
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[2]);
-   if (w == NULL) {
+   if (w == nullptr) {
       alt_env_set_var(variable, ""); 
       return(1);
    }
 
    child = (*func)(w->w);
  
-   if (child == NULL)
+   if (child == nullptr)
    {
       alt_env_set_var(variable, ""); 
       return(1);
@@ -5088,13 +5088,13 @@ do_XmGetVisibility(
    {
       errmsg = strdup(GETMESSAGE(
          "Usage: XmGetVisibility variable widget"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[2]);
-   if (w == NULL) {
+   if (w == nullptr) {
         alt_env_set_var(results, ""); 
 	return(1);
    }
@@ -5103,7 +5103,7 @@ do_XmGetVisibility(
 
    f.addr = (caddr_t)&res;
    f.size = sizeof(XmVisibility);
-   t.addr = NULL;
+   t.addr = nullptr;
    t.size = 0;
    XtConvert(w->w, "VisibilityType", &f, XtRString, &t);
    alt_env_set_var(results,  (char *)(t.addr)); 
@@ -5189,13 +5189,13 @@ do_XmFileSelectionDoSearch(
    {
       errmsg = strdup(GETMESSAGE(
               "Usage: XmFileSelectionDoSearch widget directoryMask"));
-      printerr(str_nill, errmsg, NULL);
+      printerr(str_nill, errmsg, nullptr);
       free(errmsg);
       return(1);
    }
 
    w = str_to_wtab(arg0, argv[1]);
-   if (w == NULL)
+   if (w == nullptr)
 	return(1);
 
    string = XmStringCreateLocalized(argv[2]);
@@ -5224,26 +5224,26 @@ _CreatePDMJobSetup(
 	if (argc < 2) {
                 errmsg = strdup(GETMESSAGE(
                      "Usage: %s variable parent"));
-		printerrf(str_nill, errmsg, argv[0], NULL,
-                    NULL, NULL, NULL, NULL, NULL, NULL);
+		printerrf(str_nill, errmsg, argv[0], nullptr,
+                    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
                 free(errmsg);
 		return(1);
 	}
 	var = argv[1];
 	parentid = argv[2];
 	pw = str_to_wtab(argv[0], parentid);
-	if (pw == NULL) {
+	if (pw == nullptr) {
 		errmsg = strdup(GetSharedMsg(DT_NO_PARENT));
-		printerr(argv[0], errmsg, NULL);
+		printerr(argv[0], errmsg, nullptr);
                 free(errmsg);
 		return(1);
 	}
 	widget = func(pw->w);
 	wclass = XtClass(widget);
-	if ((class = str_to_class(arg0, wclass->core_class.class_name)) == NULL) {
+	if ((class = str_to_class(arg0, wclass->core_class.class_name)) == nullptr) {
 		return(1);
 	}
-	if (widget != NULL) {
+	if (widget != nullptr) {
 		/* Some of the XmCreate* functions return a widget
 		 * id whose parent is not necessarily the parent
 		 * passed in.  For example, DialogShell returns the
@@ -5264,8 +5264,8 @@ _CreatePDMJobSetup(
 	} else {
                 errmsg = strdup(GetSharedMsg(DT_WIDGET_CREATE_FAILED));
 		printerrf(argv[0], errmsg,
-                          wclass->core_class.class_name, NULL, NULL, NULL,
-			NULL, NULL, NULL, NULL);
+                          wclass->core_class.class_name, nullptr, nullptr, nullptr,
+			nullptr, nullptr, nullptr, nullptr);
                 free(errmsg);
 		env_blank(argv[1]);
 	}

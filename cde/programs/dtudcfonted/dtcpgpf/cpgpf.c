@@ -128,8 +128,8 @@ extern	int	fal_code_to_glyph(char            *locale,
 
 static struct ptobhead WriteGpf;
 
-static	char	*targ_file = NULL;	/* UDC_file_name */
-static	char	*com = NULL;		/* command_name */
+static	char	*targ_file = nullptr;	/* UDC_file_name */
+static	char	*com = nullptr;		/* command_name */
 static	char	create_font[BUFSIZE] ;
 static	int	new_target = 0 ;
 static	unsigned int	firstCol, lastCol, firstRow, lastRow ;
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 	 */
 	com = argv[0];
 	*create_font = '\0' ;
-	if( (locale = (char *)getenv( "LANG" )) == NULL ){
+	if( (locale = (char *)getenv( "LANG" )) == nullptr ){
 	    locale = "C" ;
 	}
 
@@ -189,11 +189,11 @@ int main(int argc, char **argv)
 	COMM_SETDEFAULTSTYLE( istyle ) ;
 	COMM_SETDEFAULTSTYLE( ostyle ) ;
 
-	InputGpf.in_file = OutputGpf.in_file = WriteGpf.out_file = NULL;
+	InputGpf.in_file = OutputGpf.in_file = WriteGpf.out_file = nullptr;
 	ixlfdname = oxlfdname = '\0' ;
-	spacing = char_set = xlfdname = NULL ;
+	spacing = char_set = xlfdname = nullptr ;
 
-	gr 		= NULL ;
+	gr 		= nullptr ;
 	num_gr 		= 0 ;
 	firstCol = firstRow = 0xff ;
 	lastCol = lastRow = 0 ;
@@ -359,7 +359,7 @@ int main(int argc, char **argv)
 	 * refuse proportional fonts
 	 */
 	if( ( !stat( OutputGpf.in_file, &statbuf ) )){
-	    if ( GetUdcFontName( OutputGpf.in_file, NULL, &xlfdname ) ) {
+	    if ( GetUdcFontName( OutputGpf.in_file, nullptr, &xlfdname ) ) {
 		USAGE2("%s : This font cannot get XLFD(%s). Terminates abnormally.\n", com, OutputGpf.in_file );
 		exit( 1 );
 	    }
@@ -376,7 +376,7 @@ int main(int argc, char **argv)
 	    }
 	}
 	if( xlfdname )	free( xlfdname ) ;
-	if ( GetUdcFontName( InputGpf.in_file, NULL, &xlfdname ) ) {
+	if ( GetUdcFontName( InputGpf.in_file, nullptr, &xlfdname ) ) {
 	    USAGE2("%s : This font cannot get XLFD(%s). Terminates abnormally.\n", com, InputGpf.in_file );
 	    exit( 1 );
 	}
@@ -397,7 +397,7 @@ int main(int argc, char **argv)
 	    }
 	} else {
 	    num_gr = 1 ;
-	    if( (gr = (FalGlyphRegion *)malloc( sizeof(FalGlyphRegion) * num_gr )) == NULL ) {
+	    if( (gr = (FalGlyphRegion *)malloc( sizeof(FalGlyphRegion) * num_gr )) == nullptr ) {
 		USAGE1("%s : malloc error. Terminates abnormally.\n", com);
 		exit( 1 );
 	    }
@@ -434,7 +434,7 @@ int main(int argc, char **argv)
 	* check status of font file
 	*****************************************************************/
 	/* get InputGpf.in_file */
-	if ((targ_file = GetRealFileName( OutputGpf.in_file )) == NULL){
+	if ((targ_file = GetRealFileName( OutputGpf.in_file )) == nullptr){
 	    if( errno == ENOENT && (code_area & SYSTM) ){
 		/* create new file */
 		if ( ( chk_fd = open( OutputGpf.in_file, O_RDWR | O_CREAT, 0644 ) ) < 0  ) {
@@ -584,7 +584,7 @@ char	*style)
 {
 
 
-	if ( gpfinf->in_file == NULL && xlfdname == NULL ) {
+	if ( gpfinf->in_file == nullptr && xlfdname == nullptr ) {
 	    if ( code_area & SYSTM ) {
 		USAGE1("%s : The GPF output file name cannot be omitted.\n", com );
 	    } else {	/* string of charcter size */
@@ -668,7 +668,7 @@ int		type)
 		break;
 	}
 	close( ifd[1] );
-	if ( ( i_gpf->input = fdopen( ifd[0], "r" ) ) == NULL ) {
+	if ( ( i_gpf->input = fdopen( ifd[0], "r" ) ) == nullptr ) {
 		return	FDOPEN_ERROR;
 	}
 
@@ -697,7 +697,7 @@ int		type)
 		break;
 	}
 	close( ofd[1] );
-	if ( ( o_gpf->input = fdopen( ofd[0], "r" ) ) == NULL ) {
+	if ( ( o_gpf->input = fdopen( ofd[0], "r" ) ) == nullptr ) {
 		return	FDOPEN_ERROR;
 	}
 
@@ -712,7 +712,7 @@ int		type)
 	} else {
 		COMM_SNF_POPEN( permission, w_gpf->snf_file, w_gpf->out_file, ep, buf, command ) ;
 	}
-	if ((w_gpf->output = popen(command, "w")) == NULL) {
+	if ((w_gpf->output = popen(command, "w")) == nullptr) {
 		return(POPEN_ERROR);
 	}
 #else	/* ROOT_ONLY */
@@ -752,7 +752,7 @@ int		type)
 		break;
 	}
 	close( pfd[0] );
-	if ( ( w_gpf->output = fdopen( pfd[1], "w" ) ) == NULL ) {
+	if ( ( w_gpf->output = fdopen( pfd[1], "w" ) ) == nullptr ) {
 	    return	FDOPEN_ERROR;
 	}
 #endif	/* ROOT_ONLY */
@@ -778,11 +778,11 @@ FalGlyphRegion	*gr)
 
 	nchar = i_gpf->num_chars ;
 
-	if ( ( i_gpf->code = (int *)malloc( sizeof(int) * nchar ) ) == NULL ) {
+	if ( ( i_gpf->code = (int *)malloc( sizeof(int) * nchar ) ) == nullptr ) {
 	    return MALLOC_ERROR;
 	}
 
-	if ( ( i_gpf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == NULL ) {
+	if ( ( i_gpf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == nullptr ) {
 	    return MALLOC_ERROR;
 	}
 
@@ -803,12 +803,12 @@ readBdfHeaderAndPut(struct btophead *o_gpf, struct ptobhead *w_gpf, char *buf)
 	if( o_gpf->p_width || o_gpf->p_height ){
 	    zoom = 1 ;
 	}
-	if ( (fp = fopen( w_gpf->out_file, "w" )) == NULL ) {
+	if ( (fp = fopen( w_gpf->out_file, "w" )) == nullptr ) {
 	    return BDF_OPEN_HEAD ;
 	}
 
 	while ( 1 ) {
-		if ( fgets( buf, BUFSIZE, o_gpf->input ) == NULL ) {
+		if ( fgets( buf, BUFSIZE, o_gpf->input ) == nullptr ) {
 			fclose(fp) ;
 			return	BDF_INVAL;
 		}
@@ -919,10 +919,10 @@ writeGpf(struct btophead *i_gpf, struct btophead *o_gpf, struct ptobhead *w_gpf)
 	char	rdbuf[BUFSIZE] ;
 
 	/* put BDF header from temporary file */
-	if ( (fp = fopen( w_gpf->out_file, "r" )) == NULL ) {
+	if ( (fp = fopen( w_gpf->out_file, "r" )) == nullptr ) {
 	    return BDF_OPEN_HEAD ;
 	}
-	while( fgets( rdbuf, BUFSIZE, fp ) != (char *)NULL ){
+	while( fgets( rdbuf, BUFSIZE, fp ) != (char *)nullptr ){
 	    fprintf( w_gpf->output, "%s", rdbuf ) ;
 	}
 	if( feof(fp) != 0 ){
@@ -1101,7 +1101,7 @@ FalGlyphRegion	*gr)
 	    getDefaultCh( (unsigned int)code ) ;
 
 	    head->code[num_char] = code;
-	    if ( ( ptn = head->ptn[num_char++] = (char *)malloc( bsize ) ) == NULL ) {
+	    if ( ( ptn = head->ptn[num_char++] = (char *)malloc( bsize ) ) == nullptr ) {
 		return(MALLOC_ERROR);
 	    }
 	    if ((rtn = GetBdfPtn(head, buf, ptn, mwidth, bsize)) != 0) {
@@ -1193,7 +1193,7 @@ int 	er_no,
 char	*prog_name)
 {
 	ErrMsgTable_AndExit( er_no, ptob_in->in_file, ptob_out->out_file,
-	    NULL, NULL, NULL, prog_name );
+	    nullptr, nullptr, nullptr, prog_name );
 	return;
 }
 

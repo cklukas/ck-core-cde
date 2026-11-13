@@ -426,10 +426,10 @@ InitSMGlobals( void )
      * Get application specific resource values
      */
     XtAppAddConverter (smGD.appCon, XtRString, SmRContManagement,
-                       SmCvtStringToContManagement, NULL, 0);
+                       SmCvtStringToContManagement, nullptr, 0);
     XtGetApplicationResources(smGD.topLevelWid, (XtPointer) &smRes,
                               sessionResources,
-                              XtNumber(sessionResources), NULL, 0);
+                              XtNumber(sessionResources), nullptr, 0);
 
     if (smGD.lockOnTimeoutStatus == True)
     {
@@ -451,7 +451,7 @@ InitSMGlobals( void )
     XtGetSubresources(smGD.topLevelWid, (XtPointer) &smSaverRes,
                       smGD.SmNextension, smGD.SmCextension,
                       saverResources,
-                      XtNumber(saverResources), NULL, 0);
+                      XtNumber(saverResources), nullptr, 0);
 
     smGD.wmStartup = SmNewString(smRes.wmStartup);
     smGD.sessionLang = SmNewString(smRes.sessionLang);
@@ -472,7 +472,7 @@ InitSMGlobals( void )
     else
         smSettings.startState = DtSM_HOME_STATE;
     smGD.homeSave = False;
-    smGD.saverListParse = NULL;
+    smGD.saverListParse = nullptr;
 
     smGD.loggingOut = False;
 
@@ -508,12 +508,12 @@ InitSMGlobals( void )
     smGD.screen = XDefaultScreen(smGD.display);
     smGD.blackPixel = XBlackPixel(smGD.display, smGD.screen);
     smGD.whitePixel = XWhitePixel(smGD.display, smGD.screen);
-    smDD.lockDialog = NULL;
-    smDD.lockCoverDialog = NULL;
+    smDD.lockDialog = nullptr;
+    smDD.lockCoverDialog = nullptr;
     for(i = 0;i < smGD.numSavedScreens;i++)
     {
-        smDD.coverDialog[i] = NULL;
-        smDD.coverDrawing[i] = NULL;
+        smDD.coverDialog[i] = nullptr;
+        smDD.coverDrawing[i] = nullptr;
     }
     smGD.lockedState = UNLOCKED;
 
@@ -534,17 +534,17 @@ InitSMGlobals( void )
     /*
      * Initialize other global data related to dialogs
      */
-    smDD.confExit = NULL;
-    smDD.qExit = NULL;
-    smDD.compatExit = NULL;
-    smDD.deadWid = NULL;
-    smDD.saveSession = NULL;         	/* Error dialog for Save_Session */
+    smDD.confExit = nullptr;
+    smDD.qExit = nullptr;
+    smDD.compatExit = nullptr;
+    smDD.deadWid = nullptr;
+    smDD.saveSession = nullptr;         	/* Error dialog for Save_Session */
 
     if (!smDD.smHelpDialog)
 	/*
 	 * Don't wipe it out if it is already created
 	 */
-        smDD.smHelpDialog = NULL;
+        smDD.smHelpDialog = nullptr;
 
     /*
      * Intern all the atoms needed for the WSM communication
@@ -588,7 +588,7 @@ InitSMGlobals( void )
     /*
      * Set up the signal handler for forking and execing
      */
-    sigaction(SIGCHLD, &smGD.childvec, (struct sigaction *) NULL);
+    sigaction(SIGCHLD, &smGD.childvec, (struct sigaction *) nullptr);
 }
 
 
@@ -612,11 +612,11 @@ CreateSessionDirs(
 {
     char *path = _DtCreateDtDirs(display);
 
-    if (path != NULL && strlen(path) + SM_PATH_MARGIN > MAXPATHLEN)
+    if (path != nullptr && strlen(path) + SM_PATH_MARGIN > MAXPATHLEN)
     {
         XtFree(path);
         errno = ENAMETOOLONG;
-        path = NULL;
+        path = nullptr;
     }
 
     return path;
@@ -686,8 +686,8 @@ SetRestorePath(
 {
     Display  *tmpDisplay;
     int 	i;
-    char        *displayName = NULL;
-    char	*session_option = NULL;
+    char        *displayName = nullptr;
+    char	*session_option = nullptr;
 
     smGD.compatMode = False;
 
@@ -742,12 +742,12 @@ SetRestorePath(
 	smGD.resourcePath[0] = 0;
 	smGD.settingPath[0] = 0;
 	smGD.sessionType = DEFAULT_SESSION;
-	smGD.restoreSession = NULL;
+	smGD.restoreSession = nullptr;
         return(0);
     }
 
     tmpDisplay = XOpenDisplay(displayName);
-    if(tmpDisplay == NULL)
+    if(tmpDisplay == nullptr)
     {
         PrintError(DtError, GETMESSAGE(4, 1, "Invalid display name - exiting."));
         SM_EXIT(-1);
@@ -765,7 +765,7 @@ SetRestorePath(
      * Need to know if the session is for a specific display
      */
     smGD.displaySpecific = True;
-    if (smGD.savePath != NULL && (session_option = strrchr (smGD.savePath, '/')))
+    if (smGD.savePath != nullptr && (session_option = strrchr (smGD.savePath, '/')))
     {
 	session_option++;
 	if (!strcmp (session_option, DtSM_SESSION_DIRECTORY))
@@ -782,7 +782,7 @@ SetRestorePath(
     **   $HOME/.dt/sessions/sessionexit
     ** Without a session directory there are none.
     */
-    if (smGD.savePath != NULL)
+    if (smGD.savePath != nullptr)
     {
         snprintf(smGD.etcPath, sizeof(smGD.etcPath), "%s/%s", smGD.savePath,
                  smEtcFile);
@@ -812,7 +812,7 @@ FixPath
     strcat(pathList,":" CDE_INSTALLATION_TOP "/config");
 
     tempPath = _DtQualifyWithFirst(the1stPath,pathList);
-    if (tempPath != NULL) {
+    if (tempPath != nullptr) {
         strcpy(the1stPath,tempPath);
         free(tempPath);
     }
@@ -869,7 +869,7 @@ SetSysDefaults( void )
     smGD.restoreSession = (char *) SM_SYSTEM_DIRECTORY;
 
     langSpec = getenv("LANG");
-    if ((langSpec != NULL) && (*langSpec != 0))
+    if ((langSpec != nullptr) && (*langSpec != 0))
     {
         strcat(smGD.clientPath, "/");
         strncat(smGD.clientPath, langSpec, MAXPATHLEN-2);
@@ -888,7 +888,7 @@ SetSysDefaults( void )
     status = stat(smGD.clientPath, &buf);
     if(status == -1)
     {
-        if((langSpec == NULL) || (*langSpec == 0))
+        if((langSpec == nullptr) || (*langSpec == 0))
         {
             PrintErrnoError(DtError, GETMESSAGE(4, 2,
                         "No defaults files exist.  "
@@ -1051,7 +1051,7 @@ static int
 ArchiveSessionDirectory( void )
 {
     struct stat buf;
-    char        *tmpName = NULL;
+    char        *tmpName = nullptr;
 
     if (!SetArchivePath())
     {
@@ -1062,14 +1062,14 @@ ArchiveSessionDirectory( void )
     if (stat(smGD.etcPath, &buf) == 0)
     {
         tmpName = SmMakeTempDirectory(smGD.savePath, smGD.restoreSession);
-        if (tmpName != NULL && MoveDirectory(smGD.etcPath, tmpName, False) == 0)
+        if (tmpName != nullptr && MoveDirectory(smGD.etcPath, tmpName, False) == 0)
         {
             RememberPath(savedTmpDir, sizeof(savedTmpDir), tmpName);
         }
         else
         {
             /* no second archive: the older version is dropped */
-            if (tmpName == NULL)
+            if (tmpName == nullptr)
             {
                 PrintErrnoError(DtError, smNLS.cantCreateDirsString);
             }
@@ -1156,7 +1156,7 @@ SetSavePath(
      */
     SM_FREE(smGD.savePath);
     smGD.savePath = CreateSessionDirs(smGD.display);
-    if(smGD.savePath == NULL)
+    if(smGD.savePath == nullptr)
     {
         PrintErrnoError(DtError, smNLS.cantCreateDirsString);
         smGD.clientPath[0] = 0;
@@ -1537,7 +1537,7 @@ WaitChildDeath( int i )
   while ((pid = waitpid(-1, &stat_loc, WNOHANG)) > 0)
   ;
 
-  sigaction(SIGCHLD, &smGD.childvec, (struct sigaction *) NULL);
+  sigaction(SIGCHLD, &smGD.childvec, (struct sigaction *) nullptr);
 }
 
                                       
@@ -1572,16 +1572,16 @@ TrimErrorlog( void )
     struct stat buf;
     char *home;
 
-    if ((home=getenv("HOME")) == NULL)
+    if ((home=getenv("HOME")) == nullptr)
         home="";
 
     errorlog = SmJoinPath(home, DtPERSONAL_CONFIG_DIRECTORY,
-                          DtERRORLOG_FILE, NULL);
+                          DtERRORLOG_FILE, nullptr);
     old = SmJoinPath(home, DtPERSONAL_CONFIG_DIRECTORY,
-                     DtOLD_ERRORLOG_FILE, NULL);
+                     DtOLD_ERRORLOG_FILE, nullptr);
     older = SmJoinPath(home, DtPERSONAL_CONFIG_DIRECTORY,
-                       DtOLDER_ERRORLOG_FILE, NULL);
-    if (errorlog == NULL || old == NULL || older == NULL)
+                       DtOLDER_ERRORLOG_FILE, nullptr);
+    if (errorlog == nullptr || old == nullptr || older == nullptr)
     {
         free(errorlog);
         free(old);
@@ -1853,7 +1853,7 @@ unsigned char *_DtNextToken (unsigned char *pchIn, int *pLen,
     }
     else
     {
-       return(NULL);
+       return(nullptr);
     }
 
 } /* END OF FUNCTION _DtNextToken */   
@@ -1968,7 +1968,7 @@ InitializeGenericSession (
     char	tmpPath[MAXPATHLEN];
 
     smGD.savePath = CreateSessionDirs(tmpDisplay);
-    if (smGD.savePath == NULL)
+    if (smGD.savePath == nullptr)
     {
       /* there is nowhere to restore a session from */
       PrintErrnoError(DtError, smNLS.cantCreateDirsString);
@@ -2151,8 +2151,8 @@ InitializeSpecificSession (
 	unsigned int	argc,
 	char		**argv)
 {
-	char		*session_dir = NULL;
-	char		*alt_dir = NULL;
+	char		*session_dir = nullptr;
+	char		*alt_dir = nullptr;
 	struct stat 	buf;
 
 	if (!InternSessionDir (session_option, disp))
@@ -2160,7 +2160,7 @@ InitializeSpecificSession (
 
 	InitializePaths (smGD.restoreSession, disp);
 
-	if (smGD.savePath == NULL) {
+	if (smGD.savePath == nullptr) {
 		/*
 		 * There is no session directory to take a session from
 		 */
@@ -2194,11 +2194,11 @@ InitializeSpecificSession (
 			 * Fallback to the generic home session
 			 */
 			session_dir = SmJoinPath (smGD.savePath,
-						  SM_CURRENT_DIRECTORY, NULL);
+						  SM_CURRENT_DIRECTORY, nullptr);
 			alt_dir = SmJoinPath (smGD.savePath,
-					      SM_HOME_DIRECTORY, NULL);
+					      SM_HOME_DIRECTORY, nullptr);
 
-			if (session_dir == NULL || alt_dir == NULL ||
+			if (session_dir == nullptr || alt_dir == nullptr ||
 			    !SetAlternateSession (session_dir, alt_dir, True))
 				SetSysDefaults ();
 		}
@@ -2210,9 +2210,9 @@ InitializeSpecificSession (
 		 * Display-specific Home session
 		 */
 		session_dir = SmJoinPath (smGD.savePath, SM_HOME_DIRECTORY,
-					  NULL);
+					  nullptr);
 
-		if (session_dir != NULL && (stat(session_dir, &buf)) != 0){
+		if (session_dir != nullptr && (stat(session_dir, &buf)) != 0){
 			/*
 			 * The session does not exist, give the user a
 			 * change to exit.
@@ -2227,7 +2227,7 @@ InitializeSpecificSession (
 			 * Fallback to the generic home session
 			 */
 			alt_dir = GenericHomeSessionDir ();
-			if (session_dir == NULL || alt_dir == NULL ||
+			if (session_dir == nullptr || alt_dir == nullptr ||
 			    !SetAlternateSession (session_dir, alt_dir, True))
 				SetSysDefaults ();
 		}
@@ -2239,9 +2239,9 @@ InitializeSpecificSession (
 		 * Display-specific Current session
 		 */
 		session_dir = SmJoinPath (smGD.savePath, SM_CURRENT_DIRECTORY,
-					  NULL);
+					  nullptr);
 
-		if (session_dir != NULL && (stat(session_dir, &buf)) != 0){
+		if (session_dir != nullptr && (stat(session_dir, &buf)) != 0){
 			/*
 			 * The session does not exist, give the user a
 			 * change to exit.
@@ -2255,9 +2255,9 @@ InitializeSpecificSession (
 			 * First, fallback to the display-specific home session
 			 */
 			alt_dir = SmJoinPath (smGD.savePath,
-					      SM_HOME_DIRECTORY, NULL);
+					      SM_HOME_DIRECTORY, nullptr);
 
-			if (session_dir == NULL || alt_dir == NULL ||
+			if (session_dir == nullptr || alt_dir == nullptr ||
 			    !SetAlternateSession (session_dir, alt_dir, False)){
 				/*
 				 * Try the generic home session
@@ -2265,7 +2265,7 @@ InitializeSpecificSession (
 				free (alt_dir);
 				alt_dir = GenericHomeSessionDir ();
 
-				if (session_dir == NULL || alt_dir == NULL ||
+				if (session_dir == nullptr || alt_dir == nullptr ||
 				    !SetAlternateSession (session_dir, 
 							  alt_dir, 
 							  True))
@@ -2300,7 +2300,7 @@ GenericHomeSessionDir (void)
 		home = "";
 
 	return (SmJoinPath (home, DtPERSONAL_CONFIG_DIRECTORY,
-			    DtSM_SESSION_DIRECTORY, SM_HOME_DIRECTORY, NULL));
+			    DtSM_SESSION_DIRECTORY, SM_HOME_DIRECTORY, nullptr));
 }
 
 
@@ -2342,7 +2342,7 @@ InitializePaths (
 	smGD.resourcePath[0] = '\0';
 
 	smGD.savePath = CreateSessionDirs (disp);
-	if (smGD.savePath == NULL)
+	if (smGD.savePath == nullptr)
 	  {
 	    PrintErrnoError(DtError, smNLS.cantCreateDirsString);
 	    return;
@@ -2354,8 +2354,8 @@ InitializePaths (
 	snprintf (smGD.resourcePath, sizeof (smGD.resourcePath), "%s/%s/%s",
 			smGD.savePath, session_name, SM_RESOURCE_FILE);
 
-	db_file = SmJoinPath (smGD.savePath, session_name, SM_CLIENT_FILE2, NULL);
-	if (db_file == NULL)
+	db_file = SmJoinPath (smGD.savePath, session_name, SM_CLIENT_FILE2, nullptr);
+	if (db_file == nullptr)
 	  {
 	    PrintError(DtError, smNLS.cantMallocErrorString);
 	    return;
@@ -2403,9 +2403,9 @@ SetAlternateSession (
 	char		* alt_dir,
 	Boolean		make_dir)
 {
-	char		*tmp_dir = NULL;
-	char		*db_file1 = NULL;
-	char		*db_file2 = NULL;
+	char		*tmp_dir = nullptr;
+	char		*db_file1 = nullptr;
+	char		*db_file2 = nullptr;
 	struct stat 	buf;
 	Boolean		result = False;
 
@@ -2416,8 +2416,8 @@ SetAlternateSession (
 		 * it exists and has a client database) or by
 		 * calling mkdir.
 		 */
-		db_file1 = SmJoinPath (alt_dir, SM_CLIENT_FILE2, NULL);
-		db_file2 = SmJoinPath (alt_dir, SM_CLIENT_FILE, NULL);
+		db_file1 = SmJoinPath (alt_dir, SM_CLIENT_FILE2, nullptr);
+		db_file2 = SmJoinPath (alt_dir, SM_CLIENT_FILE, nullptr);
 		if (!db_file1 || !db_file2) {
 			PrintError(DtError, smNLS.cantMallocErrorString);
 			goto done;
@@ -2521,5 +2521,5 @@ SetSIGPIPEToDefault (void)
 	sigemptyset(&pipeSig.sa_mask);
 	pipeSig.sa_flags = 0;
 	pipeSig.sa_handler = SIG_DFL;
-	(void) sigaction(SIGPIPE, &pipeSig, (struct sigaction *) NULL);
+	(void) sigaction(SIGPIPE, &pipeSig, (struct sigaction *) nullptr);
 }

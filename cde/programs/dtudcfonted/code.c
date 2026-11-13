@@ -47,7 +47,7 @@
 
 #define NUM 0x80
 
-static Display *display=NULL;
+static Display *display=nullptr;
 static int     screen;
 static Boolean open_font;
 static Widget toggle[NUM];
@@ -60,7 +60,7 @@ static unsigned long fg, bg;
 static unsigned char *ptn, *clr;
 static Pixmap no_pix;
 static int len, code1;
-static char *FontName=NULL;
+static char *FontName=nullptr;
 static FalFontID	fid;
 
 extern FalFontID font_id;
@@ -102,7 +102,7 @@ static void
 DrawCode(Widget w, int low_code)
 {
     int hi_code;
-    char *f = NULL;
+    char *f = nullptr;
     XImage image;
     GC gc = XDefaultGC(display, 0);
 
@@ -122,7 +122,7 @@ DrawCode(Widget w, int low_code)
 
     if (open_font) {
 	f = (char *)FalReadFont(fid, hi_code | low_code, font_w, font_h);
-	if(f == NULL || f == (char *)FAL_ERROR) {
+	if(f == nullptr || f == (char *)FAL_ERROR) {
 	    return;
 	}
 	if( EXISTS_FLAG == 0 ) {
@@ -146,7 +146,7 @@ static void
 SetPixmap(start_code)
 {
     int hi_code, low_code;
-    char *f = NULL;
+    char *f = nullptr;
     XImage image;
     GC gc = XDefaultGC(display, 0);
 
@@ -167,7 +167,7 @@ SetPixmap(start_code)
     if (open_font) {
 	for (low_code=0; low_code < NUM; low_code++) {
 	    f = (char *)FalReadFont(fid, hi_code | low_code, font_w, font_h);
-	    if(f == NULL || f == (char *)FAL_ERROR) {
+	    if(f == nullptr || f == (char *)FAL_ERROR) {
 		return;
 	    }
 	    if( EXISTS_FLAG == 0 ) {
@@ -202,7 +202,7 @@ Code2Call(Widget w, int code2, XmPushButtonCallbackStruct *data)
 {
     char asc[16];
     sprintf(asc, "%2.2X%2.2X", code1, code2);
-    XtVaSetValues(text, XmNvalue, asc, NULL);
+    XtVaSetValues(text, XmNvalue, asc, nullptr);
     DrawCode(w, code2);
 }
 
@@ -224,7 +224,7 @@ NextPage(Widget w, Widget scroll)
 {
     int *list;
     int num, item;
-    XtVaGetValues(scroll, XmNitemCount, &item, NULL);
+    XtVaGetValues(scroll, XmNitemCount, &item, nullptr);
     if (XmListGetSelectedPos(scroll, &list, &num)) {
         if(list[0] < item) {
 	    XmListSelectPos(scroll, list[0] + 1, True);
@@ -243,8 +243,8 @@ static void
 Apply(void)
 {
     char *asc;
-    XtVaGetValues(text, XmNvalue, &asc, NULL);
-    XtVaSetValues(set_widget, XmNvalue, asc, NULL);
+    XtVaGetValues(text, XmNvalue, &asc, nullptr);
+    XtVaSetValues(set_widget, XmNvalue, asc, nullptr);
     XtFree(asc);
     Cancel();
 }
@@ -313,13 +313,13 @@ CreateCodeWindow(Widget w)
     top = XmCreateFormDialog(w, "code", args, n);
 
     base1 = XtVaCreateManagedWidget("base1", xmRowColumnWidgetClass, top,
-					XmNorientation, XmVERTICAL, NULL);
+					XmNorientation, XmVERTICAL, nullptr);
 
     frame = XtVaCreateManagedWidget("frame", xmFrameWidgetClass, base1,
-					NULL);
+					nullptr);
 
     base2 = XtVaCreateManagedWidget("base2", xmRowColumnWidgetClass, frame,
-					XmNorientation, XmHORIZONTAL, NULL);
+					XmNorientation, XmHORIZONTAL, nullptr);
 
     CreateItem(item, &item_count, &start_code);
     code1 = start_code;
@@ -343,21 +343,21 @@ CreateCodeWindow(Widget w)
 					XmNmarginHeight, 0,
 					XmNmarginWidth, 0,
 					XmNspacing, 0,
-					XmNnumColumns, 9, NULL);
+					XmNnumColumns, 9, nullptr);
 
 
     len = (font_w / 8 + 1) * font_h;
     ptn = (unsigned char *) malloc(len);
     clr = (unsigned char *) malloc(len);
     memset(clr, 0, len);
-    XtVaGetValues(w, XmNforeground, &fg, XmNbackground, &bg, NULL);
+    XtVaGetValues(w, XmNforeground, &fg, XmNbackground, &bg, nullptr);
     no_pix = XCreatePixmapFromBitmapData(display, BaseW, (char *)clr,
 		font_w, font_h, fg, bg, DefaultDepth(display, screen));
 
-    XtVaCreateManagedWidget("", xmLabelWidgetClass, base3, NULL);
+    XtVaCreateManagedWidget("", xmLabelWidgetClass, base3, nullptr);
     for (i=0; i < 16; i++) {
 	sprintf(add, "%2.1X", i);
-	XtVaCreateManagedWidget(add, xmLabelWidgetClass, base3, NULL);
+	XtVaCreateManagedWidget(add, xmLabelWidgetClass, base3, nullptr);
     }
     if (CodePoint)
 	add_c = 8;
@@ -366,14 +366,14 @@ CreateCodeWindow(Widget w)
     for (i=0; i < NUM; i++) {
 	if ((i % 16) == 0) {
 	    snprintf(add, sizeof(add), "%2.1X", add_c++);
-	    XtVaCreateManagedWidget(add, xmLabelWidgetClass, base3, NULL);
+	    XtVaCreateManagedWidget(add, xmLabelWidgetClass, base3, nullptr);
 	}
 	toggle[i] = XtVaCreateWidget("toggle",
 					xmPushButtonWidgetClass, base3,
 					XmNwidth, font_w,
 					XmNheight, font_h,
 					XmNlabelType, XmPIXMAP,
-					XmNlabelPixmap, no_pix, NULL);
+					XmNlabelPixmap, no_pix, nullptr);
 	XtAddCallback(toggle[i], XmNactivateCallback,
 				(XtCallbackProc)Code2Call, (XtPointer) (intptr_t) i);
 	XtAddCallback(toggle[i], XmNarmCallback,
@@ -385,31 +385,31 @@ CreateCodeWindow(Widget w)
     }
     XtManageChildren(toggle, NUM);
 
-    base4 = XtVaCreateManagedWidget("base4", xmFormWidgetClass, base1, NULL);
+    base4 = XtVaCreateManagedWidget("base4", xmFormWidgetClass, base1, nullptr);
 
     xcs = XmStringCreateLocalized(resource.l_code);
     label = XtVaCreateManagedWidget("code", xmLabelWidgetClass, base4,
 					XmNlabelString, xcs,
 					XmNleftAttachment, XmATTACH_POSITION,
-					XmNleftPosition, 30, NULL);
+					XmNleftPosition, 30, nullptr);
 
     text = XtVaCreateManagedWidget("text", xmTextWidgetClass, base4,
 					XmNeditable, False,
 					XmNcursorPositionVisible, False,
 					XmNcolumns, 4,
 					XmNleftAttachment, XmATTACH_WIDGET,
-					XmNleftWidget, label, NULL);
+					XmNleftWidget, label, nullptr);
 
     sep = XtVaCreateManagedWidget("sep", xmSeparatorGadgetClass, base1,
-					XmNorientation, XmHORIZONTAL, NULL);
+					XmNorientation, XmHORIZONTAL, nullptr);
 
-    form = XtVaCreateManagedWidget("sep", xmFormWidgetClass, base1, NULL);
+    form = XtVaCreateManagedWidget("sep", xmFormWidgetClass, base1, nullptr);
 
     xcs = XmStringCreateLocalized(resource.previous);
     push1 = XtVaCreateManagedWidget("PreviousPage", xmPushButtonWidgetClass, form,
 					XmNleftAttachment, XmATTACH_POSITION,
 					XmNlabelString, xcs,
-					XmNleftPosition, 10, NULL);
+					XmNleftPosition, 10, nullptr);
     XtAddCallback(push1, XmNactivateCallback,
 				(XtCallbackProc)PrevPage, (XtPointer)scroll);
     XmStringFree(xcs);
@@ -418,7 +418,7 @@ CreateCodeWindow(Widget w)
     push2 = XtVaCreateManagedWidget("NextPage", xmPushButtonWidgetClass, form,
 					XmNleftAttachment, XmATTACH_POSITION,
 					XmNlabelString, xcs,
-					XmNleftPosition, 35, NULL);
+					XmNleftPosition, 35, nullptr);
     XtAddCallback(push2, XmNactivateCallback,
 				(XtCallbackProc)NextPage, (XtPointer)scroll);
     XmStringFree(xcs);
@@ -427,16 +427,16 @@ CreateCodeWindow(Widget w)
     push3 = XtVaCreateManagedWidget("Apply", xmPushButtonWidgetClass, form,
 					XmNleftAttachment, XmATTACH_POSITION,
 					XmNlabelString, xcs,
-					XmNleftPosition, 60, NULL);
-    XtAddCallback(push3, XmNactivateCallback, (XtCallbackProc)Apply, NULL);
+					XmNleftPosition, 60, nullptr);
+    XtAddCallback(push3, XmNactivateCallback, (XtCallbackProc)Apply, nullptr);
     XmStringFree(xcs);
 
     xcs = XmStringCreateLocalized(resource.l_cancel);
     push4 = XtVaCreateManagedWidget("Cancel", xmPushButtonWidgetClass, form,
 					XmNleftAttachment, XmATTACH_POSITION,
 					XmNlabelString, xcs,
-					XmNleftPosition, 80, NULL);
-    XtAddCallback(push4, XmNactivateCallback, (XtCallbackProc)Cancel, NULL);
+					XmNleftPosition, 80, nullptr);
+    XtAddCallback(push4, XmNactivateCallback, (XtCallbackProc)Cancel, nullptr);
     XmStringFree(xcs);
 
     return(top);
@@ -453,7 +453,7 @@ CodeWindow(Widget widget, char *font_name, Boolean load_font)
     BaseW = XtWindow(widget);
     display = XtDisplay(widget);
     screen  = DefaultScreen(display);
-    if (FontName == NULL || strcmp(font_name, FontName) ||
+    if (FontName == nullptr || strcmp(font_name, FontName) ||
 				load_font != old_load_font) {
 	old_load_font = load_font;
 	if (code_w) {

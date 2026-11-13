@@ -173,7 +173,7 @@ static void SetSelectionCB(
     XtPointer callData)
 {
    FLSelDlgRec * selDlgData = (FLSelDlgRec *) clientData;
-   int *         selList = NULL;
+   int *         selList = nullptr;
    int           selCnt = 0;
    int           setCnt = 0;
    int           pos = 0;
@@ -184,7 +184,7 @@ static void SetSelectionCB(
 
    /* get the list of selected list items */
    XmListGetSelectedPos(selDlgData->dlgWidgets.list, &selList,&selCnt);
-   if (NULL == selList)
+   if (nullptr == selList)
    {  /* no more items selected ==> deselected last item */
       selCnt = 0;          /* 0 < 1, which is minimum pos */
       selList = &selCnt;
@@ -193,8 +193,8 @@ static void SetSelectionCB(
 
    /* set the files */
    for ( file = selDlgData->fileList, pos = 1, setCnt = 0;
-         NULL != file && NULL != selList && setCnt <= selCnt;
-         file = _DtHelpFileListGetNext(NULL,file), pos++ )
+         nullptr != file && nullptr != selList && setCnt <= selCnt;
+         file = _DtHelpFileListGetNext(nullptr,file), pos++ )
    {
         if (   setCnt < selCnt  /* fixes bug due to valid value at selList[selCnt] */
             && pos == selList[setCnt] ) 
@@ -240,12 +240,12 @@ static Widget CreateFileSelDialog(
 
    /* create and init the dlg data */
    selDlgData = (FLSelDlgRec *) XtCalloc(1,sizeof(FLSelDlgRec));
-   if (NULL == selDlgData) return NULL;
+   if (nullptr == selDlgData) return nullptr;
    selDlgData->fileList = in_out_list;
    selDlgData->modalDialog = modalDialog;
 
    /*  Create the shell and form used for the dialog.  */
-   if (NULL == dlgTitle)
+   if (nullptr == dlgTitle)
       dlgTitle = (char *)_DTGETMESSAGE (FUSET, 1, "Help - Volume Selection");
 
    dlgTitle = XtNewString(dlgTitle);
@@ -517,12 +517,12 @@ Widget _DtHelpFileListCreateSelectionDialog (
    {
       XmFontContext context;
 
-      if (    (NULL != io_titlesFontList)
+      if (    (nullptr != io_titlesFontList)
            && XmFontListInitFontContext(&context,fontList) == True)
       {
          XmFontListEntry entry;
          for ( entry = XmFontListNextEntry(context) ;
-               NULL != entry ;
+               nullptr != entry ;
                entry = XmFontListNextEntry(context) )
          {
             *io_titlesFontList = 
@@ -539,8 +539,8 @@ Widget _DtHelpFileListCreateSelectionDialog (
 
    /* populate the list with volumes */
    for ( file = in_out_list;
-         NULL != file;
-         file = _DtHelpFileListGetNext(NULL,file) )
+         nullptr != file;
+         file = _DtHelpFileListGetNext(nullptr,file) )
    {
       XmListAddItem(widgets.list,file->fileTitleXmStr,0);
 

@@ -80,12 +80,12 @@ typedef LOADATT_FUNC *LOADATT_FUNC_PTR;
 ISTRING
 bilP_get_string(void)
 {
-    STRING              tmp_str = NULL;
+    STRING              tmp_str = nullptr;
     ISTRING             value1;
     /* ISTRING	value2; */
     int                 valueToken = AB_BIL_UNDEF;
     int                 length;
-    STRING              tmp = NULL;
+    STRING              tmp = nullptr;
 
     valueToken = bilP_load_get_value_type();
     if (valueToken == AB_BIL_VALUE_STRING)
@@ -94,12 +94,12 @@ bilP_get_string(void)
     }
     else if (valueToken == AB_BIL_NIL)
     {
-	return NULL;
+	return nullptr;
     }
     else
     {
 	abil_print_load_err(ERR_WANT_STRING);
-	return NULL;
+	return nullptr;
     }
 
     value1 = istr_create(tmp_str);
@@ -136,7 +136,7 @@ STRING
 bilP_load_att(void)
 {
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -146,79 +146,79 @@ STRING
 bilP_load_att_children_begin(void)
 {
     nset_att(AB_BIL_CHILDREN);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_children_end(void)
 {
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_east_attachment_begin(void)
 {
     nset_att(AB_BIL_EAST_ATTACHMENT);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_east_attachment_end(void)
 {
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_west_attachment_begin(void)
 {
     nset_att(AB_BIL_WEST_ATTACHMENT);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_west_attachment_end(void)
 {
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_north_attachment_begin(void)
 {
     nset_att(AB_BIL_NORTH_ATTACHMENT);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_north_attachment_end(void)
 {
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_south_attachment_begin(void)
 {
     nset_att(AB_BIL_SOUTH_ATTACHMENT);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_south_attachment_end(void)
 {
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_class(BIL_TOKEN valueToken)
 {
     AB_OBJECT_TYPE      objType = AB_TYPE_UNKNOWN;
-    STRING              errMessage = NULL;
-    ABObj		obj = NULL;
+    STRING              errMessage = nullptr;
+    ABObj		obj = nullptr;
 
     util_dprintf(3, "bilP_load_att_class %d/%s\n",
 	       valueToken,
 	       str_safe(bilP_token_to_string(valueToken)));
 
-    if (bilP_load.obj != NULL)
+    if (bilP_load.obj != nullptr)
     {
 	if (bilP_load.obj->type == AB_TYPE_MODULE)
 	{
@@ -227,18 +227,18 @@ bilP_load_att_class(BIL_TOKEN valueToken)
 	     * We've found an element inside a module
 	     */
 	    bilP_load.module = bilP_load.obj;
-	    bilP_load.obj = NULL;
+	    bilP_load.obj = nullptr;
 	}
 	else
 	{
 	    if (bilP_load.obj->type == AB_TYPE_PROJECT)
 	    {
-		bilP_load.obj = NULL;
+		bilP_load.obj = nullptr;
 	    }
 	    else
 	    {
 		obj_destroy(bilP_load.obj);
-		bilP_load.obj = NULL;
+		bilP_load.obj = nullptr;
 	    }
 	}
     }
@@ -247,7 +247,7 @@ bilP_load_att_class(BIL_TOKEN valueToken)
     switch (valueToken)
     {
     case AB_BIL_MODULE:
-        if (bilP_load.project == NULL)
+        if (bilP_load.project == nullptr)
         {
             /* If the parser has read in the :module keyword and
              * bilP_load.project is NULL, then something is wrong.
@@ -263,7 +263,7 @@ bilP_load_att_class(BIL_TOKEN valueToken)
 	break;
 
     case AB_BIL_PROJECT:
-	if (bilP_load.project == NULL)
+	if (bilP_load.project == nullptr)
 	{
 	    /* 
 	     * MUST SET BOTH "project" and "module" TO BE THE PROJECT
@@ -288,7 +288,7 @@ bilP_load_att_class(BIL_TOKEN valueToken)
 
     case AB_BIL_CONNECTION:
 	objType = AB_TYPE_ACTION;
-	obj = obj_create(objType, NULL);
+	obj = obj_create(objType, nullptr);
 
 	/* Store the action on bilP_load.module. bilP_load.module
 	 * is equal to bilP_load.project, if we're parsing a project 
@@ -296,7 +296,7 @@ bilP_load_att_class(BIL_TOKEN valueToken)
 	 * file, so the action obj will be parented off of the module 
 	 * not the project in this case.
 	 */
-	if (bilP_load.module != NULL)
+	if (bilP_load.module != nullptr)
 	{
 	    obj_add_action(bilP_load.module, obj);
 	}
@@ -314,7 +314,7 @@ STRING
 bilP_load_att_class_name(BIL_TOKEN valueToken)
 {
     int                 type = AB_BIL_UNDEF;
-    STRING              class_name = NULL;
+    STRING              class_name = nullptr;
     ABObj               obj = bilP_load.obj;
 
     nset_att(AB_BIL_CLASS_NAME);
@@ -324,7 +324,7 @@ bilP_load_att_class_name(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_WANT_STRING);
     obj_set_class_name(obj, class_name);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -342,7 +342,7 @@ bilP_load_att_container_type(BIL_TOKEN valueToken)
 	containerType = AB_CONT_RELATIVE;
     }
     obj_set_subtype(bilP_load.obj, containerType);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -359,14 +359,14 @@ bilP_load_att_decimal_points(BIL_TOKEN valueToken)
         abil_print_load_err(ERR_WANT_INTEGER);
     obj_set_decimal_points(obj, value);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_default(BIL_TOKEN valueToken)
 {
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL                is_default = FALSE;
     ABObj               obj = bilP_load.obj;
 
@@ -374,12 +374,12 @@ bilP_load_att_default(BIL_TOKEN valueToken)
     if (!bilP_token_is_bool(valueToken))
     {
 	abil_print_load_err(ERR_WANT_BOOLEAN);
-	return NULL;
+	return nullptr;
     }
     is_default = bilP_token_to_bool(valueToken);
     obj_set_is_default(obj, is_default);
 
-    return NULL;
+    return nullptr;
 }
 STRING
 bilP_load_att_direction(BIL_TOKEN valueToken)
@@ -392,7 +392,7 @@ bilP_load_att_direction(BIL_TOKEN valueToken)
     if ((type = bilP_load_get_token()) == AB_BIL_UNDEF)
     {
         abil_print_load_err(ERR_WANT_KEYWORD);
-        return NULL;
+        return nullptr;
     }   
     obj_type = bilP_token_to_direction(type);
     if (obj_set_direction(obj, obj_type) < 0)
@@ -400,7 +400,7 @@ bilP_load_att_direction(BIL_TOKEN valueToken)
         abil_print_load_err(ERR_BAD_ATT_FOR_OBJ);
     }
  
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -409,7 +409,7 @@ bilP_load_att_drag_cursor(BIL_TOKEN valueToken)
     ISTRING	cursor = bilP_get_string();
     obj_set_drag_cursor(bilP_load.obj, istr_string(cursor));
     istr_destroy(cursor);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -418,7 +418,7 @@ bilP_load_att_drag_cursor_mask(BIL_TOKEN valueToken)
     ISTRING	mask = bilP_get_string();
     obj_set_drag_cursor_mask(bilP_load.obj, istr_string(mask));
     istr_destroy(mask);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -428,21 +428,21 @@ bilP_load_att_drag_enabled(BIL_TOKEN valueToken)
     nset_att(AB_BIL_DRAG_ENABLED);
     draggable = bilP_token_to_bool(valueToken);
     obj_set_drag_initially_enabled(bilP_load.obj, draggable);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_drag_ops_begin(void)
 {
     nset_att(AB_BIL_DRAG_OPS);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_drag_ops_end(void)
 {
     clear_att();
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -452,21 +452,21 @@ bilP_load_att_drag_to_root_allowed(BIL_TOKEN valueToken)
     nset_att(AB_BIL_DRAG_TO_ROOT_ALLOWED);
     ok = bilP_token_to_bool(valueToken);
     obj_set_drag_to_root_allowed(bilP_load.obj, ok);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_drag_types_begin(void)
 {
     nset_att(AB_BIL_DRAG_TYPES);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_drag_types_end(void)
 {
     clear_att();
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -476,7 +476,7 @@ bilP_load_att_drop_enabled(BIL_TOKEN valueToken)
     nset_att(AB_BIL_DROP_ENABLED);
     droppable = bilP_token_to_bool(valueToken);
     obj_set_drop_initially_enabled(bilP_load.obj, droppable);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -485,49 +485,49 @@ bilP_load_att_drop_site_child_allowed(BIL_TOKEN valueToken)
     BOOL	dropAllowed = bilP_token_to_bool(valueToken);
     nset_att(AB_BIL_DROP_SITE_CHILD_ALLOWED);
     obj_set_drop_on_children_is_allowed(bilP_load.obj, dropAllowed);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_drop_ops_begin(void)
 {
     nset_att(AB_BIL_DROP_OPS);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_drop_ops_end(void)
 {
     clear_att();
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_drop_types_begin(void)
 {
     nset_att(AB_BIL_DROP_TYPES);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_drop_types_end(void)
 {
     clear_att();
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_files_begin(void)
 {
     nset_att(AB_BIL_FILES);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_files_end(void)
 {
     clear_att();
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -542,13 +542,13 @@ bilP_load_att_filter_pattern(BIL_TOKEN valueToken)
     obj_set_filter_pattern(obj, istr_string(filter));
     istr_destroy(filter);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_icon_label(BIL_TOKEN valueToken)
 {
-    ISTRING             icon_label = NULL;
+    ISTRING             icon_label = nullptr;
     ABObj               obj = bilP_load.obj;
 
     nset_att(AB_BIL_ICON_LABEL);
@@ -556,7 +556,7 @@ bilP_load_att_icon_label(BIL_TOKEN valueToken)
     obj_set_icon_label(obj, istr_string(icon_label));
     istr_destroy(icon_label);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -568,13 +568,13 @@ bilP_load_att_item_type(BIL_TOKEN valueToken)
     itemType = bilP_token_to_item_type(valueToken);
     obj_set_subtype(bilP_load.obj, itemType);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_menu(BIL_TOKEN valueToken)
 {
-    ABObj               newObj = NULL;
+    ABObj               newObj = nullptr;
     STRING              stringValue = bilP_load_get_value();
 
     if (valueToken == AB_BIL_VALUE_IDENT)
@@ -591,7 +591,7 @@ bilP_load_att_menu(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_WANT_NAME);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -605,7 +605,7 @@ bilP_load_att_menu_title(BIL_TOKEN valueToken)
     obj_set_menu_title(obj, istr_string(title));
     istr_destroy(title);
  
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -619,7 +619,7 @@ bilP_load_att_menu_type(BIL_TOKEN valueToken)
     obj_set_subtype(bilP_load.obj, menuType);
 */
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -635,7 +635,7 @@ bilP_load_att_accelerator(BIL_TOKEN valueToken)
     obj_set_accelerator(obj, istr_string(accel));
     istr_destroy(accel);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -649,7 +649,7 @@ bilP_load_att_mnemonic(BIL_TOKEN valueToken)
     obj_set_mnemonic(obj, istr_string(mnemon));
     istr_destroy(mnemon);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -663,7 +663,7 @@ bilP_load_att_alignment(BIL_TOKEN valueToken)
     if ((align_string = bilP_load_get_token()) == AB_BIL_UNDEF)
     {
 	abil_print_load_err(ERR_WANT_KEYWORD);
-	return NULL;
+	return nullptr;
     }
 
     alignment = bilP_token_to_alignment(align_string);
@@ -685,10 +685,10 @@ bilP_load_att_alignment(BIL_TOKEN valueToken)
     else
     {
 	abil_print_load_err(ERR_BAD_ATT_FOR_OBJ);
-	return NULL;
+	return nullptr;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -702,26 +702,26 @@ bilP_load_att_col_alignment(BIL_TOKEN valueToken)
     if ((align_string = bilP_load_get_token()) == AB_BIL_UNDEF)
     {
 	abil_print_load_err(ERR_WANT_KEYWORD);
-	return NULL;
+	return nullptr;
     }
 
     alignment = bilP_token_to_alignment(align_string);
     obj->info.container.col_align = alignment;
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_res_file_types_begin(void)
 {
     nset_att(AB_BIL_RES_FILE_TYPES);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_res_file_types_end(void)
 {
-    return NULL;
+    return nullptr;
 }
 
 
@@ -736,13 +736,13 @@ bilP_load_att_row_alignment(BIL_TOKEN valueToken)
     if ((align_string = bilP_load_get_token()) == AB_BIL_UNDEF)
     {
 	abil_print_load_err(ERR_WANT_KEYWORD);
-	return NULL;
+	return nullptr;
     }
 
     alignment = bilP_token_to_alignment(align_string);
     obj->info.container.row_align = alignment;
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -750,14 +750,14 @@ STRING
 bilP_load_att_bg_color(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
-    ISTRING             bg_color = NULL;
+    ISTRING             bg_color = nullptr;
     int                 type;
 
     nset_att(AB_BIL_BG_COLOR);
     bg_color = bilP_get_string();
     obj_set_bg_color(obj, istr_string(bg_color));
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -776,7 +776,7 @@ bilP_load_att_button_type(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_UNKNOWN_OBJ);
     obj_set_button_type(obj, obj_type);
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -795,7 +795,7 @@ bilP_load_att_drawarea_height(BIL_TOKEN valueToken)
     if (value >= 0)
 	obj_set_drawarea_height(obj, value);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -813,20 +813,20 @@ bilP_load_att_drawarea_width(BIL_TOKEN valueToken)
     if (value >= 0)
 	obj_set_drawarea_width(obj, value);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_fg_color(BIL_TOKEN valueToken)
 {
-    ISTRING             fg_color = NULL;
+    ISTRING             fg_color = nullptr;
     int                 type;
     ABObj               obj = bilP_load.obj;
 
     nset_att(AB_BIL_FG_COLOR);
     fg_color = bilP_get_string();
     obj_set_fg_color(obj, istr_string(fg_color));
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -850,7 +850,7 @@ bilP_load_att_msg_type(BIL_TOKEN valueToken)
 
     obj_set_msg_type(obj, obj_type);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -861,7 +861,7 @@ bilP_load_att_group_type(BIL_TOKEN valueToken)
     nset_att(AB_BIL_GROUP_TYPE);
     groupType = bilP_token_to_group_type(valueToken);
     obj_set_group_type(bilP_load.obj, groupType);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -872,7 +872,7 @@ bilP_load_att_hattach_type(BIL_TOKEN valueToken)
     nset_att(AB_BIL_HATTACH_TYPE);
     hattachType = bilP_token_to_attachment(valueToken);
     obj_set_hattach_type(bilP_load.obj, hattachType);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -891,7 +891,7 @@ bilP_load_att_height(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_WANT_INTEGER);
     obj->height = value;
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -910,7 +910,7 @@ bilP_load_att_height_max(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_WANT_INTEGER);
     obj->height_max = value;
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -918,28 +918,28 @@ bilP_load_att_height_resizable(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL                resizable;
 
     set_att(":height-resizable");
     resizable = bilP_token_to_bool(valueToken);
     obj_set_height_is_resizable(obj, resizable);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_help_text(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     set_att(":help-text");
     tmp_str = bilP_get_string();
     obj_set_help_text(obj, istr_string(tmp_str));
     istr_destroy(tmp_str);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -947,7 +947,7 @@ bilP_load_att_hscrollbar(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL		sb_flag = FALSE;
     AB_SCROLLBAR_POLICY	hscrollbar;
 
@@ -972,7 +972,7 @@ bilP_load_att_hscrollbar(BIL_TOKEN valueToken)
 	obj_set_hscrollbar_policy(obj, hscrollbar);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -993,7 +993,7 @@ bilP_load_att_hspacing(BIL_TOKEN valueToken)
 	obj->info.container.hspacing = tmp_int;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1013,7 +1013,7 @@ bilP_load_att_hoffset(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_UNKNOWN_OBJ);
     obj->info.container.hoffset = tmp_int;
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1022,7 +1022,7 @@ bilP_load_att_hoffset(BIL_TOKEN valueToken)
 STRING
 bilP_load_att_icon(BIL_TOKEN valueToken)
 {
-    ISTRING             icon = NULL;
+    ISTRING             icon = nullptr;
     ABObj               obj = bilP_load.obj;
 
     nset_att(AB_BIL_ICON_FILE);
@@ -1030,13 +1030,13 @@ bilP_load_att_icon(BIL_TOKEN valueToken)
     obj_set_icon(obj, istr_string(icon));
     istr_destroy(icon);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_icon_mask(BIL_TOKEN valueToken)
 {
-    ISTRING             mask = NULL;
+    ISTRING             mask = nullptr;
     ABObj               obj = bilP_load.obj;
 
     nset_att(AB_BIL_ICON_MASK_FILE);
@@ -1044,7 +1044,7 @@ bilP_load_att_icon_mask(BIL_TOKEN valueToken)
     obj_set_icon_mask(obj, istr_string(mask));
     istr_destroy(mask);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1081,7 +1081,7 @@ bilP_load_att_label(BIL_TOKEN valueToken)
     }   
     obj_set_label(obj, istr_string(value));
     istr_destroy(value);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1098,7 +1098,7 @@ bilP_load_att_label_emphasis(BIL_TOKEN valueToken)
             obj_type = ab_bil_token_to_label_emphasis(label_emphasis);
 	    obj->label_emphasis= obj_type;
     ***/
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1114,7 +1114,7 @@ bilP_load_att_label_type(BIL_TOKEN valueToken)
 
     obj_type = bilP_token_to_label_type(label_type);
     obj->label_type = obj_type;
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1129,7 +1129,7 @@ bilP_load_att_max_label(BIL_TOKEN valueToken)
     ***/
     istr_destroy(value);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1148,12 +1148,12 @@ bilP_load_att_max_value(BIL_TOKEN valueToken)
     else
     {
 	abil_print_load_err(ERR_WANT_INTEGER);
-	return NULL;
+	return nullptr;
     }
 
     obj_set_max_value(obj, tmp_int);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1168,7 +1168,7 @@ bilP_load_att_min_label(BIL_TOKEN valueToken)
     ***/
     istr_destroy(tmp_str);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1185,7 +1185,7 @@ bilP_load_att_min_value(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_WANT_INTEGER);
     obj_set_min_value(obj, value);
 
-    return NULL;
+    return nullptr;
 }
 
 #ifdef BOGUS
@@ -1203,19 +1203,19 @@ bilP_load_att_module_files(BIL_TOKEN valueToken)
     set_att(":module-files");
     module = bilP_get_string();
 
-    if (module == NULL)
-	return NULL;
+    if (module == nullptr)
+	return nullptr;
 
     if (obj->type != AB_TYPE_PROJECT)
 	abil_print_load_err(ERR_UNKNOWN_OBJECT);
-    module_obj = obj_create(AB_TYPE_UNKNOWN, NULL);
+    module_obj = obj_create(AB_TYPE_UNKNOWN, nullptr);
     obj_append_child(obj, module_obj);
     obj_set_file(module_obj, istr_string(module));
     obj_set_name(module_obj, module);
     obj_set_loaded(module_obj, FALSE);
     istr_destroy(module);
 
-    return NULL;
+    return nullptr;
 }
 
 #endif				/* BOGUS */
@@ -1225,7 +1225,7 @@ bilP_load_att_multiple_selections(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL                selection;
 
     /* for exclusive and non-exclusive in scrolling-list */
@@ -1238,7 +1238,7 @@ bilP_load_att_multiple_selections(BIL_TOKEN valueToken)
 */
     util_dprintf(1, "%s", abil_loadmsg("multiple-selections attribute is obsolete!"));
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1253,11 +1253,11 @@ bilP_load_att_name(BIL_TOKEN valueToken)
 #define load_module (bilP_load.module)
 #define load_compObjsRead (bilP_load.compObjsRead)
 #define load_project (bilP_load.project)
-    STRING              errmsg = NULL;
-    STRING              string_name = NULL;
-    ISTRING             name = NULL;
+    STRING              errmsg = nullptr;
+    STRING              string_name = nullptr;
+    ISTRING             name = nullptr;
     int                 type = AB_BIL_UNDEF;
-    ABObj               forward_obj = NULL;
+    ABObj               forward_obj = nullptr;
 
     nset_att(AB_BIL_NAME);
     if ((type = bilP_load_get_value_type()) == AB_BIL_VALUE_IDENT)
@@ -1273,7 +1273,7 @@ bilP_load_att_name(BIL_TOKEN valueToken)
     util_dprintf(3, "bilP_load_att_name(%s)\n", string_name);
 
     name = istr_create(string_name);
-    if ((istr_string(name) != NULL) &&
+    if ((istr_string(name) != nullptr) &&
 	(!ab_c_ident_is_ok(istr_string(name))))
     {
 	istr_destroy(name);
@@ -1287,7 +1287,7 @@ bilP_load_att_name(BIL_TOKEN valueToken)
     if (load_type == AB_TYPE_MODULE)
     {
 	/* always have to look in the project for a module */
-	if (load_project != NULL)
+	if (load_project != nullptr)
 	    forward_obj = obj_find_module_by_name(load_project, string_name);
     }
     else
@@ -1298,7 +1298,7 @@ bilP_load_att_name(BIL_TOKEN valueToken)
     /*
      * Reconcile the forward reference (if there is one)
      */
-    if (forward_obj != NULL)
+    if (forward_obj != nullptr)
     {
 	if (!obj_is_defined(forward_obj))
 	{
@@ -1310,7 +1310,7 @@ bilP_load_att_name(BIL_TOKEN valueToken)
 	     * into the forward reference.
 	     */
 	    AB_OBJECT_TYPE      obj_type = AB_TYPE_UNKNOWN;
-	    ABObj		doomed_obj = NULL;
+	    ABObj		doomed_obj = nullptr;
 
 	    /* 
 	     * Set the "current" object to be the "forward" reference
@@ -1331,16 +1331,16 @@ bilP_load_att_name(BIL_TOKEN valueToken)
 	    /* The object has not been created yet, so create it
 	     * here.
 	     */
-	    load_obj = obj_create(load_type, NULL);
+	    load_obj = obj_create(load_type, nullptr);
 	    obj_set_name(load_obj, istr_string(name));
 
 	    if (obj_is_module(load_obj))
 	    {
-		if (load_project != NULL)
+		if (load_project != nullptr)
 		    obj_ensure_unique_name(load_obj, load_project, -1);
 		load_module = load_obj;
-		objlist_add_obj(load_compObjsRead, load_module, NULL);
-		if (load_project != NULL)
+		objlist_add_obj(load_compObjsRead, load_module, nullptr);
+		if (load_project != nullptr)
 		{
 		    obj_append_child(load_project, load_module);
 		}
@@ -1360,7 +1360,7 @@ bilP_load_att_name(BIL_TOKEN valueToken)
     else /* forward_obj == NULL */
     {
 	/* brand new object! */
-	load_obj = obj_create(load_type, NULL);
+	load_obj = obj_create(load_type, nullptr);
 	obj_set_name(load_obj, istr_string(name));
 
 	/*
@@ -1370,15 +1370,15 @@ bilP_load_att_name(BIL_TOKEN valueToken)
         {
         case AB_TYPE_MODULE:
 	    load_module = load_obj;
-	    objlist_add_obj(load_compObjsRead, load_module, NULL);
-	    if (load_project != NULL)
+	    objlist_add_obj(load_compObjsRead, load_module, nullptr);
+	    if (load_project != nullptr)
 	    {
 	        obj_append_child(load_project, load_module);
 	    }
 	    break;
 
         case AB_TYPE_PROJECT:
-	    if (load_project == NULL)
+	    if (load_project == nullptr)
 	    {
 	        /* 
 	         * MUST SET BOTH "project" and "module" TO BE THE PROJECT
@@ -1450,7 +1450,7 @@ bilP_load_att_num_columns(BIL_TOKEN valueToken)
 	break;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1467,7 +1467,7 @@ bilP_load_att_orientation(BIL_TOKEN valueToken)
     if ((type = bilP_load_get_token()) == AB_BIL_UNDEF)
     {
 	abil_print_load_err(ERR_WANT_KEYWORD);
-	return NULL;
+	return nullptr;
     }
     obj_type = bilP_token_to_orientation(type);
     if (obj_set_orientation(obj, obj_type) < 0)
@@ -1475,7 +1475,7 @@ bilP_load_att_orientation(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_BAD_ATT_FOR_OBJ);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1490,7 +1490,7 @@ bilP_load_att_process_string(BIL_TOKEN valueToken)
     value = bilP_get_string();
     obj_set_process_string(obj, istr_string(value));
     istr_destroy(value);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1508,18 +1508,18 @@ bilP_load_att_reference_point(BIL_TOKEN valueToken)
     if (!obj_is_container(obj))
 	abil_print_load_err(ERR_UNKNOWN_OBJ);
     obj->info.container.ref_point = obj_type;
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_resource(BIL_TOKEN valueToken)
 {
     int                 type = AB_BIL_UNDEF;
-    STRING              value1 = NULL;
-    STRING              value2 = NULL;
+    STRING              value1 = nullptr;
+    STRING              value2 = nullptr;
     BOOL                resource;
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1531,7 +1531,7 @@ bilP_load_att_read_only(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL                read_only;
 
     set_att(":read-only");
@@ -1545,7 +1545,7 @@ bilP_load_att_read_only(BIL_TOKEN valueToken)
     	obj_set_read_only(obj, read_only);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1570,7 +1570,7 @@ bilP_load_att_root_window(BIL_TOKEN valueToken)
     else
         abil_print_load_err(ERR_WANT_NAME);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1578,7 +1578,7 @@ bilP_load_att_selection_required(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL                selection_required;
 
     /* for choices & scrolling-list */
@@ -1590,7 +1590,7 @@ bilP_load_att_selection_required(BIL_TOKEN valueToken)
     selection_required = bilP_token_to_bool(valueToken);
     obj_set_selection_required(obj, selection_required);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1605,7 +1605,7 @@ bilP_load_att_sessioning_method(BIL_TOKEN valueToken)
     sessioning_method = bilP_token_to_sessioning_method(valueToken);
     obj_set_sessioning_method(obj, sessioning_method);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1620,7 +1620,7 @@ bilP_load_att_tt_desktop_level(BIL_TOKEN valueToken)
     tt_level = bilP_token_to_tt_desktop_level(valueToken);
     obj_set_tooltalk_level(obj, tt_level);
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1639,7 +1639,7 @@ bilP_load_att_choice_type(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_UNKNOWN_OBJ);
     obj->info.choice.type = obj_type;
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1655,7 +1655,7 @@ bilP_load_att_border_frame(BIL_TOKEN valueToken)
     borderType = bilP_token_to_border_frame(valueToken);
     obj_set_border_frame(bilP_load.obj, borderType);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1678,7 +1678,7 @@ bilP_load_att_has_footer(BIL_TOKEN valueToken)
     REMIND: has-footer attribute is now obsolete
     obj_set_has_footer(obj, has_footer);
 */
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1701,7 +1701,7 @@ bilP_load_att_max_length(BIL_TOKEN valueToken)
 	obj->info.text.max_length = tmp_int;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1709,7 +1709,7 @@ bilP_load_att_tear_off(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL                tear_off = FALSE;
 
     set_att(":tear-off");
@@ -1725,7 +1725,7 @@ bilP_load_att_tear_off(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_UNKNOWN_OBJ);
     obj->info.menu.tear_off = tear_off;
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1744,7 +1744,7 @@ bilP_load_att_text_type(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_UNKNOWN_OBJ);
     obj_set_text_type(obj, text_type);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1761,13 +1761,13 @@ bilP_load_att_increment(BIL_TOKEN valueToken)
         abil_print_load_err(ERR_WANT_INTEGER);
     obj_set_increment(obj, value);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_initial_value(BIL_TOKEN valueToken)
 {
-    ISTRING             istr_value = NULL;
+    ISTRING             istr_value = nullptr;
     int                 ival = 0;
 
     set_att(":initial-value");
@@ -1789,7 +1789,7 @@ bilP_load_att_initial_value(BIL_TOKEN valueToken)
     /*
      * istr_destroy(istr_value);
      */
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1800,7 +1800,7 @@ bilP_load_att_vattach_type(BIL_TOKEN valueToken)
     nset_att(AB_BIL_VATTACH_TYPE);
     vattachType = bilP_token_to_attachment(valueToken);
     obj_set_vattach_type(bilP_load.obj, vattachType);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1815,7 +1815,7 @@ bilP_load_att_vendor(BIL_TOKEN valueToken)
     value = bilP_get_string();
     obj_set_vendor(obj, istr_string(value));
     istr_destroy(value);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1830,14 +1830,14 @@ bilP_load_att_version(BIL_TOKEN valueToken)
     value = bilP_get_string();
     obj_set_version(obj, istr_string(value));
     istr_destroy(value);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_visible(BIL_TOKEN valueToken)
 {
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL                visible;
 
     set_att(":visible");
@@ -1848,7 +1848,7 @@ bilP_load_att_visible(BIL_TOKEN valueToken)
     visible = bilP_token_to_bool(valueToken);
     obj_set_is_initially_visible(bilP_load.obj, visible);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1868,7 +1868,7 @@ bilP_load_att_voffset(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_UNKNOWN_OBJ);
     obj->info.container.voffset = tmp_int;
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1876,7 +1876,7 @@ bilP_load_att_vscrollbar(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL		sb_flag = FALSE;
     AB_SCROLLBAR_POLICY vscrollbar;
 
@@ -1901,7 +1901,7 @@ bilP_load_att_vscrollbar(BIL_TOKEN valueToken)
 	obj_set_vscrollbar_policy(obj, vscrollbar);
     } 
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1921,7 +1921,7 @@ bilP_load_att_vspacing(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_UNKNOWN_OBJ);
     obj->info.container.vspacing = tmp_int;
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1945,7 +1945,7 @@ bilP_load_att_num_rows(BIL_TOKEN valueToken)
   	abil_print_load_err(ERR_BAD_ATT_FOR_OBJ);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1953,14 +1953,14 @@ bilP_load_att_selected(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
 
     set_att(":selected");
     if (!bilP_token_is_bool(valueToken))
 	abil_print_load_err(ERR_WANT_BOOLEAN);
     obj_set_is_initially_selected(obj, bilP_token_to_bool(valueToken));
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -1996,7 +1996,7 @@ bilP_load_att_type(BIL_TOKEN valueToken)
 
     obj_set_type(obj, obj_type);
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -2013,7 +2013,7 @@ bilP_load_att_user_data(BIL_TOKEN valueToken)
     obj_set_user_data(obj, istr_string(userdata));
     istr_destroy(userdata);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2031,7 +2031,7 @@ bilP_load_att_width(BIL_TOKEN valueToken)
     if (value >= 0)
 	obj->width = value;
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2048,7 +2048,7 @@ bilP_load_att_width_max(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_WANT_INTEGER);
     obj->width_max = value;
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2056,7 +2056,7 @@ bilP_load_att_width_resizable(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL                resizable;
 
     set_att(":width-resizable");
@@ -2067,7 +2067,7 @@ bilP_load_att_width_resizable(BIL_TOKEN valueToken)
     resizable = bilP_token_to_bool(valueToken);
     obj_set_width_is_resizable(obj, resizable);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2084,7 +2084,7 @@ bilP_load_att_x(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_WANT_INTEGER);
     obj->x = value;
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2101,7 +2101,7 @@ bilP_load_att_y(BIL_TOKEN valueToken)
 	abil_print_load_err(ERR_WANT_INTEGER);
     obj->y = value;
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -2112,7 +2112,7 @@ STRING
 bilP_load_list_value(BIL_TOKEN token)
 {
 #define loadObj (bilP_load.obj)
-    ABObj               newObj = NULL;
+    ABObj               newObj = nullptr;
     STRING              stringValue = bilP_load_get_value();
     ABDndOpFlags	dndOpFlag = 0;
     ABDndTypeFlags	dndTypeFlag = 0;
@@ -2155,7 +2155,7 @@ bilP_load_list_value(BIL_TOKEN token)
 	break;
 
 	case AB_BIL_FILES:
-	    newObj = obj_create(AB_TYPE_FILE, NULL);
+	    newObj = obj_create(AB_TYPE_FILE, nullptr);
 	    obj_set_name(newObj, stringValue);
 	    obj_append_child(bilP_load.obj, newObj);
 	break;
@@ -2190,7 +2190,7 @@ bilP_load_list_value(BIL_TOKEN token)
     }
 
 
-    return NULL;
+    return nullptr;
 #undef loadObj
 }
 
@@ -2202,7 +2202,7 @@ bilP_load_set_current_att(BIL_TOKEN att)
     bilP_load.att = att;
     if (att == AB_BIL_UNDEF)
     {
-	attName = NULL;
+	attName = nullptr;
     }
     abil_loadmsg_set_att(bilP_token_to_string(att));
     return 0;
@@ -2333,7 +2333,7 @@ bilP_load_att_is_help_item(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
     BOOL                is_help_item;
 
     set_att(":is-help-item");
@@ -2343,14 +2343,14 @@ bilP_load_att_is_help_item(BIL_TOKEN valueToken)
     }
     is_help_item = bilP_token_to_bool(valueToken);
     obj_set_is_help_item(obj, is_help_item);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_initial_state(BIL_TOKEN valueToken)
 {
     nset_att(AB_BIL_INITIAL_STATE);
-    return NULL;
+    return nullptr;
 /*
     ABObj               obj = bilP_load.obj;
     BIL_TOKEN           init_state = AB_BIL_UNDEF;
@@ -2409,14 +2409,14 @@ bilP_load_attachment_type(BIL_TOKEN valueToken)
 	    break;
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_attachment_value(BIL_TOKEN valueToken)
 {
-    ABObj               target = NULL;
-    STRING              name = NULL;
+    ABObj               target = nullptr;
+    STRING              name = nullptr;
     long                value = 0;
     AB_COMPASS_POINT    cp = AB_CP_UNDEF;
 
@@ -2458,7 +2458,7 @@ bilP_load_attachment_value(BIL_TOKEN valueToken)
 	    break;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2497,7 +2497,7 @@ bilP_load_attachment_offset(BIL_TOKEN valueToken)
     else
 	abil_print_load_err(ERR_WANT_INTEGER);
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -2549,7 +2549,7 @@ bilP_load_att_resizable(BIL_TOKEN valueToken)
     }
     resizable = bilP_token_to_bool(valueToken);
     obj_set_resizable(obj, resizable);
-    return NULL;
+    return nullptr;
 }
 
 /* REMIND: (mcv) take out when bil files have been converted.
@@ -2562,7 +2562,7 @@ bilP_load_att_resizable(BIL_TOKEN valueToken)
 STRING
 bilP_load_att_sb_always_visible(BIL_TOKEN valueToken)
 {
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2578,20 +2578,20 @@ bilP_load_att_label_position(BIL_TOKEN valueToken)
     if ((val = bilP_load_get_token()) == AB_BIL_UNDEF)
     {
         abil_print_load_err(ERR_WANT_KEYWORD);
-        return NULL;
+        return nullptr;
     }
 
     nset_att(AB_BIL_LABEL_POSITION);
     pos = bilP_token_to_compass_point(valueToken);
     obj_set_label_position(bilP_load.obj, pos);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_help_volume(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     set_att(":help-volume");
     tmp_str = bilP_get_string();
@@ -2601,14 +2601,14 @@ bilP_load_att_help_volume(BIL_TOKEN valueToken)
 	obj_set_func_help_volume(obj, istr_string(tmp_str));
     istr_destroy(tmp_str);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_help_location(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
-    ISTRING             tmp_str = NULL;
+    ISTRING             tmp_str = nullptr;
 
     set_att(":help-location");
     tmp_str = bilP_get_string();
@@ -2618,7 +2618,7 @@ bilP_load_att_help_location(BIL_TOKEN valueToken)
 	obj_set_func_help_location(obj, istr_string(tmp_str));
     istr_destroy(tmp_str);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2638,7 +2638,7 @@ bilP_load_att_word_wrap(BIL_TOKEN valueToken)
     }
     word_wrap = bilP_token_to_bool(valueToken);
     obj_set_word_wrap(obj, word_wrap);
-    return NULL;
+    return nullptr;
 }
 
 /* 
@@ -2647,7 +2647,7 @@ bilP_load_att_word_wrap(BIL_TOKEN valueToken)
 STRING
 bilP_load_att_win_parent(BIL_TOKEN valueToken)
 {
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2659,7 +2659,7 @@ bilP_load_att_line_style(BIL_TOKEN valueToken)
     lineStyle = bilP_token_to_line_style(valueToken);
     obj_set_line_style(bilP_load.obj, lineStyle);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2671,7 +2671,7 @@ bilP_load_att_arrow_style(BIL_TOKEN valueToken)
     arrowStyle = bilP_token_to_arrow_style(valueToken);
     obj_set_arrow_style(bilP_load.obj, arrowStyle);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2679,14 +2679,14 @@ bilP_load_att_active(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
 
     set_att(":active");
     if (!bilP_token_is_bool(valueToken))
         abil_print_load_err(ERR_WANT_BOOLEAN);
     obj_set_is_initially_active(obj, bilP_token_to_bool(valueToken));
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2694,14 +2694,14 @@ bilP_load_att_iconic(BIL_TOKEN valueToken)
 {
     ABObj               obj = bilP_load.obj;
     int                 type = AB_BIL_UNDEF;
-    STRING              value = NULL;
+    STRING              value = nullptr;
 
     set_att(":iconic");
     if (!bilP_token_is_bool(valueToken))
         abil_print_load_err(ERR_WANT_BOOLEAN);
     obj_set_is_initially_iconic(obj, bilP_token_to_bool(valueToken));
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2718,7 +2718,7 @@ bilP_load_att_combo_box_style(BIL_TOKEN valueToken)
     obj_set_combo_box_style(bilP_load.obj, comboboxStyle);
 */
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2738,7 +2738,7 @@ bilP_load_att_show_value( BIL_TOKEN valueToken)
     }
     show_val = bilP_token_to_bool(valueToken);
     obj_set_show_value(obj, show_val);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2763,7 +2763,7 @@ bilP_load_att_slider_type( BIL_TOKEN valueToken)
 */
 /* Replaced with read_only */
 
-    return NULL;
+    return nullptr;
 } 
 
 STRING
@@ -2775,7 +2775,7 @@ bilP_load_att_selection_mode(BIL_TOKEN valueToken)
     selectionMode = bilP_token_to_selection_mode(valueToken);
     obj_set_selection_mode(bilP_load.obj, selectionMode);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2793,7 +2793,7 @@ bilP_load_att_ok_label(BIL_TOKEN valueToken)
     ok_label = bilP_get_string();
     obj_set_ok_label(bilP_load.obj, istr_string(ok_label));
     istr_destroy(ok_label);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2814,7 +2814,7 @@ bilP_load_att_auto_dismiss(BIL_TOKEN valueToken)
     }
     auto_dismiss = bilP_token_to_bool(valueToken);
     obj_set_auto_dismiss(bilP_load.obj, auto_dismiss);
-    return NULL; 
+    return nullptr; 
 }
 
 STRING
@@ -2832,7 +2832,7 @@ bilP_load_att_directory(BIL_TOKEN valueToken)
     dir = bilP_get_string();
     obj_set_directory(bilP_load.obj, istr_string(dir));
     istr_destroy(dir);
-    return NULL;
+    return nullptr;
 }
 
 STRING 
@@ -2849,7 +2849,7 @@ bilP_load_att_file_type_mask(BIL_TOKEN valueToken)
         abil_print_load_err(ERR_UNKNOWN_OBJ); 
     ftm = bilP_token_to_file_type_mask(valueToken); 
     obj_set_file_type_mask(bilP_load.obj, ftm);
-    return NULL; 
+    return nullptr; 
 } 
 
 STRING
@@ -2867,7 +2867,7 @@ bilP_load_att_message(BIL_TOKEN valueToken)
     msg = bilP_get_string();
     obj_set_msg_string(bilP_load.obj, istr_string(msg));
     istr_destroy(msg);
-    return NULL;
+    return nullptr;
 }
 
 /* Here for backwards compatibility */
@@ -2877,7 +2877,7 @@ bilP_load_att_action1_button(BIL_TOKEN valueToken)
     util_dprintf(3, "bilP_load_att_action1_button %d/%s\n",
                valueToken,
                str_safe(bilP_token_to_string(valueToken)));
-    return NULL;
+    return nullptr;
 }
 
 /* Here for backwards compatibility */
@@ -2887,7 +2887,7 @@ bilP_load_att_action2_button(BIL_TOKEN valueToken)
     util_dprintf(3, "bilP_load_att_action2_button %d/%s\n",
                valueToken,
                str_safe(bilP_token_to_string(valueToken)));
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2908,7 +2908,7 @@ bilP_load_att_cancel_button(BIL_TOKEN valueToken)
     }
     cancel_button = bilP_token_to_bool(valueToken);
     obj_set_cancel_button(bilP_load.obj, cancel_button);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2930,13 +2930,13 @@ bilP_load_att_help_button(BIL_TOKEN valueToken)
         }
         help_button = bilP_token_to_bool(valueToken);
         obj_set_help_button(bilP_load.obj, help_button);
-        return NULL;
+        return nullptr;
     }
     else if (obj_is_popup_win(bilP_load.obj)) {
         if (bilP_load_get_value_type() == AB_BIL_VALUE_IDENT)
         {
             strValue = bilP_load_get_value();
-            if (strValue != NULL)
+            if (strValue != nullptr)
             {
                 buttonObj = obj_scoped_find_or_create_undef(bilP_load.module,
                                 strValue, AB_TYPE_UNKNOWN);
@@ -2948,11 +2948,11 @@ bilP_load_att_help_button(BIL_TOKEN valueToken)
         {
             abil_print_load_err(ERR_WANT_STRING);
         }
-	return NULL;
+	return nullptr;
     }
     else
         abil_print_load_err(ERR_UNKNOWN_OBJ);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2972,7 +2972,7 @@ bilP_load_att_action1_label(BIL_TOKEN valueToken)
     action1_label = bilP_get_string();
     obj_set_action1_label(bilP_load.obj, istr_string(action1_label));
     istr_destroy(action1_label);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -2992,7 +2992,7 @@ bilP_load_att_action2_label(BIL_TOKEN valueToken)
     action2_label = bilP_get_string();
     obj_set_action2_label(bilP_load.obj, istr_string(action2_label));
     istr_destroy(action2_label);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -3012,7 +3012,7 @@ bilP_load_att_action3_label(BIL_TOKEN valueToken)
     action3_label = bilP_get_string();
     obj_set_action3_label(bilP_load.obj, istr_string(action3_label));
     istr_destroy(action3_label);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -3029,7 +3029,7 @@ bilP_load_att_default_button(BIL_TOKEN valueToken)
     if (!obj_is_popup_win(obj) && !obj_is_message(obj))
     {
         abil_print_load_err(ERR_UNKNOWN_OBJECT);
-	return NULL;
+	return nullptr;
     }
 
     if (obj_is_popup_win(obj)) /* Looking for Button Object Name */
@@ -3037,7 +3037,7 @@ bilP_load_att_default_button(BIL_TOKEN valueToken)
     	if (bilP_load_get_value_type() == AB_BIL_VALUE_IDENT)
     	{
             strValue = bilP_load_get_value();
-            if (strValue != NULL)
+            if (strValue != nullptr)
             {
                 buttonObj = obj_scoped_find_or_create_undef(bilP_load.module,
                                 strValue, AB_TYPE_UNKNOWN);
@@ -3070,7 +3070,7 @@ bilP_load_att_default_button(BIL_TOKEN valueToken)
 	}
     }
  
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -3091,7 +3091,7 @@ bilP_load_att_pane_max_height(BIL_TOKEN valueToken)
         abil_print_load_err(ERR_WANT_INTEGER);
     obj_set_pane_max(obj, value);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -3112,7 +3112,7 @@ bilP_load_att_pane_min_height(BIL_TOKEN valueToken)
         abil_print_load_err(ERR_WANT_INTEGER);
     obj_set_pane_min(obj, value); 
  
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -3127,19 +3127,19 @@ bilP_load_att_i18n_enabled(BIL_TOKEN valueToken)
     i18n_enabled = bilP_token_to_bool(valueToken);
     obj_set_i18n_enabled(obj, i18n_enabled);
 
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_win_children_begin(void)
 {
     nset_att(AB_BIL_WIN_CHILDREN);
-    return NULL;
+    return nullptr;
 }
 
 STRING
 bilP_load_att_win_children_end(void)
 {
     clear_att();
-    return NULL;
+    return nullptr;
 }

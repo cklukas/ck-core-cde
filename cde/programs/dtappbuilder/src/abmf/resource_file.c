@@ -174,18 +174,18 @@ abmfP_res_file_open(
 			BOOL	isIntermediateFile
 )
 {
-    File                fp = NULL;
+    File                fp = nullptr;
 
-    if (filePath != NULL)
+    if (filePath != nullptr)
     {
-	if ((fp = util_fopen_locked(filePath, "w")) == NULL)
+	if ((fp = util_fopen_locked(filePath, "w")) == nullptr)
 	{
 	    goto epilogue;
 	}
     }
     else
     {
-        if ((fp = tmpfile()) == NULL)
+        if ((fp = tmpfile()) == nullptr)
 	{
 	    goto epilogue;
 	}
@@ -194,7 +194,7 @@ abmfP_res_file_open(
     write_header(fp, fileDescName, obj, isIntermediateFile);
 
 epilogue:
-    if (fp != NULL)
+    if (fp != nullptr)
     {
 	resFile.fileName = istr_create(filePath);
 	resFile.file = fp;
@@ -208,7 +208,7 @@ int
 abmfP_res_file_close_impl(File *pfile)
 {
 #define closeFile (*pfile)
-    if (closeFile != NULL)
+    if (closeFile != nullptr)
     {
 	assert(resFile.file == closeFile);
 	util_fclose(closeFile);
@@ -218,7 +218,7 @@ abmfP_res_file_close_impl(File *pfile)
     istr_destroy(resFile.fileName);
     memset((void *)&resFile, 0, sizeof(ResFileInfoRec));
 
-    closeFile = NULL;
+    closeFile = nullptr;
     return 0;
 #undef closeFile
 }
@@ -234,7 +234,7 @@ abmfP_res_file_merge(
     int		return_value = 0;
     int		rc = 0;
     long	userSegOff = 0;
-    File	mergedFile = NULL;
+    File	mergedFile = nullptr;
     int		iChar = 0;
     int		iLastChar = 0;
     int		i = 0;
@@ -242,11 +242,11 @@ abmfP_res_file_merge(
     UserSegsRec	modifiedUserSegs;
     long	vanillaOffset = 0;
     int		curSegIndex = 0;
-    UserSeg	curVanillaSeg = NULL;
-    UserSeg	curModifiedSeg = NULL;
+    UserSeg	curVanillaSeg = nullptr;
+    UserSeg	curModifiedSeg = nullptr;
     long	modifiedOffset = 0;
 
-    *mergedFileOut = NULL;
+    *mergedFileOut = nullptr;
 
     rc = find_user_segs(vanillaFile, &vanillaUserSegs);
     return_if_err(rc,rc);
@@ -256,7 +256,7 @@ abmfP_res_file_merge(
     /*
      * Copy the "vanilla" file to the merged file
      */
-    if ((mergedFile = tmpfile()) == NULL)
+    if ((mergedFile = tmpfile()) == nullptr)
     {
 	return ERR_INTERNAL;
     }
@@ -269,7 +269,7 @@ abmfP_res_file_merge(
     while ((iChar = fgetc(vanillaFile)) != EOF)
     {
 	++vanillaOffset;
-	if (   (curVanillaSeg != NULL) 
+	if (   (curVanillaSeg != nullptr) 
 	    && (vanillaOffset >= curVanillaSeg->offset) )
 	{
 	    /*
@@ -295,8 +295,8 @@ abmfP_res_file_merge(
 	    }
 	    else
 	    {
-                curVanillaSeg = NULL;
-                curModifiedSeg = NULL;
+                curVanillaSeg = nullptr;
+                curModifiedSeg = nullptr;
 	    }
 	}
 	else
@@ -309,7 +309,7 @@ abmfP_res_file_merge(
     /*
      * End-of-file segment may have gotten skipped
      */
-    if (curModifiedSeg != NULL)
+    if (curModifiedSeg != nullptr)
     {
 	fseek(modifiedFile, curModifiedSeg->offset, SEEK_SET);
 	for (i = 0; i < curModifiedSeg->len; ++i)
@@ -321,7 +321,7 @@ abmfP_res_file_merge(
     }
 
 epilogue:
-    *mergedFileOut = mergedFile; mergedFile = NULL;
+    *mergedFileOut = mergedFile; mergedFile = nullptr;
     return return_value;
 }
 
@@ -513,14 +513,14 @@ abmfP_get_intermediate_res_file_name(
 			int	nameMax
 )
 {
-    ABObj	resFileObj = NULL;
+    ABObj	resFileObj = nullptr;
     nameMax = nameMax;	/* avoid warning */
 
-    if ((resFileObj = obj_get_module(obj)) == NULL)
+    if ((resFileObj = obj_get_module(obj)) == nullptr)
     {
 	resFileObj = obj_get_project(obj);
     }
-    assert(resFileObj != NULL);
+    assert(resFileObj != nullptr);
 
     strcpy(fileNameOut, obj_get_name(resFileObj));
     if (obj_is_project(resFileObj))
@@ -543,7 +543,7 @@ abmfP_get_app_res_file_name(
 )
 {
     ABObj	project = obj_get_project(obj);
-    STRING	fileName = NULL;
+    STRING	fileName = nullptr;
 
     strcpy(fileNameOut, obj_get_name(obj));
     fileName = abmfP_capitalize_first_char(fileNameOut);
@@ -670,9 +670,9 @@ abmfP_res_file_append_intermediate_files(
 {
     int			return_value = 0;
     char		partResFileName[MAX_PATH_SIZE];
-    File		partResFile = NULL;
+    File		partResFile = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     BOOL		allFilesFound = TRUE;
     char		nameBuf[MAXPATHLEN];
     *partResFileName = 0;
@@ -687,7 +687,7 @@ abmfP_res_file_append_intermediate_files(
     /* always put comment in, whether file exists, or not */
     abio_printf(appResFile, "\n! Resource list for %s\n!\n",
 		get_name_for_comment(project, nameBuf, MAXPATHLEN));
-    if (partResFile == NULL)
+    if (partResFile == nullptr)
     {
 	allFilesFound = FALSE;
     }
@@ -701,7 +701,7 @@ abmfP_res_file_append_intermediate_files(
      * Get the module res files
      */
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL; )
+	(module = trav_next(&trav)) != nullptr; )
     {
 	abmfP_get_intermediate_res_file_name(
 		module, partResFileName, MAX_PATH_SIZE);
@@ -710,7 +710,7 @@ abmfP_res_file_append_intermediate_files(
         /* always put comment in, whether file exists, or not */
         abio_printf(appResFile, "\n! Resource list for %s\n!\n",
 			get_name_for_comment(module, nameBuf, MAXPATHLEN));
-	if (partResFile == NULL)
+	if (partResFile == nullptr)
 	{
 	    allFilesFound = FALSE;
 	}
@@ -778,7 +778,7 @@ get_name_for_comment(ABObj obj, STRING buf, int bufSize)
 {
     assert(bufSize >= util_strlen(obj_get_name(obj)) + 20);
     assert(obj_is_project(obj) || obj_is_module(obj));
-    assert(obj_get_name(obj) != NULL);
+    assert(obj_get_name(obj) != nullptr);
 
     strcpy(buf, "AppBuilder ");
     if (obj_is_project(obj))

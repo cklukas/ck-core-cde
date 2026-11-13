@@ -132,7 +132,7 @@ ShowHelpDialog(
 
    /* 
     * DialogData is not NULL, if doing a restore session */
-   if (dialogData == NULL)
+   if (dialogData == nullptr)
    {
       /* We are not restoring a session, so get the default values */
       dialogData = _DtGetDefaultDialogData(help_dialog);
@@ -161,15 +161,15 @@ ShowHelpDialog(
       helpData->helpType = helpType;
    }
 
-   _DtShowDialog(parentShell, NULL, topLevelRec, dialogData, 
-              NULL, NULL, MainWindowHelpClose, topLevelRec, NULL, False,
-              False, NULL, NULL);
+   _DtShowDialog(parentShell, nullptr, topLevelRec, dialogData, 
+              nullptr, nullptr, MainWindowHelpClose, topLevelRec, nullptr, False,
+              False, nullptr, nullptr);
 
    /* lets set the title appropriately */
    fmDialogData = _DtGetInstanceData(topLevelRec);
    fileMgrData = (FileMgrData *) fmDialogData->data;
    helpData = (HelpData *)dialogData->data;
-   if(fileMgrData->title == NULL || fileMgrData->helpVol == NULL ||
+   if(fileMgrData->title == nullptr || fileMgrData->helpVol == nullptr ||
            strcmp(fileMgrData->helpVol, DTFILE_HELP_NAME) == 0 ||
                      strcmp(helpData->volString, "Help4Help") == 0)
    {
@@ -184,7 +184,7 @@ ShowHelpDialog(
       else
       {
         XtSetArg(args[0], XmNtitle, (GETMESSAGE(29,1, "File Manager Help")));
-        helpName = NULL;
+        helpName = nullptr;
       }
    }
    else
@@ -197,7 +197,7 @@ ShowHelpDialog(
    }
    helpRec = (HelpRec *)_DtGetDialogInstance(dialogData);
    XtSetValues(XtParent(helpRec->helpDialog), args, 1);
-   if(helpName != NULL)
+   if(helpName != nullptr)
       XtFree(helpName);
 
    /* Add hyperlink callback */
@@ -235,7 +235,7 @@ MainWindowHelpClose(
    /*  Remove the dialog data from the top level window's list  */
    if (old_dialog_data == fileMgrData->primaryHelpDialog)
    {
-      fileMgrData->primaryHelpDialog = NULL;
+      fileMgrData->primaryHelpDialog = nullptr;
    }
    else
    {
@@ -274,8 +274,8 @@ MainWinHyperLink(
    {
       ShowHelpDialog(fileMgrRec->shell, (XtPointer)fileMgrRec,
 		     HYPER_HELP_DIALOG, 
-                     NULL, hyperData->locationId,
-                     hyperData->helpVolume, NULL, NULL, DtHELP_TYPE_TOPIC);
+                     nullptr, hyperData->locationId,
+                     hyperData->helpVolume, nullptr, nullptr, DtHELP_TYPE_TOPIC);
    }
 }
 
@@ -322,8 +322,8 @@ ShowTrashHelpDialog(
    helpData->volString = XtNewString(volString);
    helpData->helpType  = DtHELP_TYPE_TOPIC;
 
-   _DtShowDialog(parentShell, NULL, NULL, dialogData, NULL, NULL, TrashHelpClose, 
-              NULL, NULL, False, False, NULL, NULL);
+   _DtShowDialog(parentShell, nullptr, nullptr, dialogData, nullptr, nullptr, TrashHelpClose, 
+              nullptr, nullptr, False, False, nullptr, nullptr);
 
    /* lets set the title appropriately */
    XtSetArg(args[0], XmNtitle, (GETMESSAGE(29,9, "Trash Can Help")));
@@ -334,7 +334,7 @@ ShowTrashHelpDialog(
    helpRec = (HelpRec *)_DtGetDialogInstance(dialogData);
    XtRemoveAllCallbacks(helpRec->helpDialog, DtNhyperLinkCallback);
    XtAddCallback(helpRec->helpDialog, DtNhyperLinkCallback,
-                 TrashHyperLink, NULL);
+                 TrashHyperLink, nullptr);
 }
 
 
@@ -361,7 +361,7 @@ TrashHelpClose(
    /*  Remove the dialog data from the trash window's list  */
    if (old_dialog_data == primaryTrashHelpDialog)
    {
-      primaryTrashHelpDialog = NULL;
+      primaryTrashHelpDialog = nullptr;
    }
    else
    {
@@ -397,7 +397,7 @@ TrashHyperLink(
    hyperData = (DtHelpDialogCallbackStruct *)callData;
    if (hyperData->hyperType == DtHELP_LINK_JUMP_NEW)
    {
-      ShowTrashHelpDialog(trashShell, HYPER_HELP_DIALOG, NULL, 
+      ShowTrashHelpDialog(trashShell, HYPER_HELP_DIALOG, nullptr, 
                           hyperData->locationId, hyperData->helpVolume);
    }
 }
@@ -430,7 +430,7 @@ ShowDTHelpDialog(
 
    /* 
     * DialogData is not NULL, if doing a restore session */
-   if (dialogData == NULL)
+   if (dialogData == nullptr)
    {
       /* We are not restoring a session, so get the default values */
       dialogData = _DtGetDefaultDialogData(help_dialog);
@@ -460,10 +460,10 @@ ShowDTHelpDialog(
       helpData->helpType = helpType;
    }
 
-   _DtShowDialog(parentShell, NULL, NULL, dialogData, NULL, NULL, 
+   _DtShowDialog(parentShell, nullptr, nullptr, dialogData, nullptr, nullptr, 
               DTHelpClose, (XtPointer)(XtArgVal)workspaceNum,
               desktop_data->workspaceData[workspaceNum]->name,
-              False, False, NULL, NULL);
+              False, False, nullptr, nullptr);
 
    /* lets set the title appropriately */
    XtSetArg(args[0], XmNtitle, (GETMESSAGE(29,1, "File Manager Help")));
@@ -504,7 +504,7 @@ DTHelpClose(
    /*  Remove the dialog data from the top level window's list  */
    if (old_dialog_data == wsInfo->primaryHelpDialog)
    {
-      wsInfo->primaryHelpDialog = NULL;
+      wsInfo->primaryHelpDialog = nullptr;
    }
    else
    {
@@ -541,9 +541,9 @@ DTHyperLink(
    hyperData = (DtHelpDialogCallbackStruct *)callData;
    if (hyperData->hyperType == DtHELP_LINK_JUMP_NEW)
    {
-      ShowDTHelpDialog(NULL, workspaceNum, HYPER_HELP_DIALOG, 
-                     NULL, hyperData->locationId,
-                     hyperData->helpVolume, NULL, NULL, DtHELP_TYPE_TOPIC);
+      ShowDTHelpDialog(nullptr, workspaceNum, HYPER_HELP_DIALOG, 
+                     nullptr, hyperData->locationId,
+                     hyperData->helpVolume, nullptr, nullptr, DtHELP_TYPE_TOPIC);
    }
 }
 

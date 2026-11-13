@@ -97,13 +97,13 @@
 #include <stdlib.h>
 #include "Search.h"
 
-void	(*austext_exit_first) (int) =	NULL;
-void	(*austext_exit_dbms) (int) =	NULL;
-void	(*austext_exit_comm) (int) =	NULL;
-void	(*austext_exit_endwin) (int) =	NULL;
-void	(*austext_exit_mem) (int) =	NULL;
-void	(*austext_exit_user) (int) =	NULL;
-void	(*austext_exit_last) (int) =	NULL;
+void	(*austext_exit_first) (int) =	nullptr;
+void	(*austext_exit_dbms) (int) =	nullptr;
+void	(*austext_exit_comm) (int) =	nullptr;
+void	(*austext_exit_endwin) (int) =	nullptr;
+void	(*austext_exit_mem) (int) =	nullptr;
+void	(*austext_exit_user) (int) =	nullptr;
+void	(*austext_exit_last) (int) =	nullptr;
 
 
 /****************************************/
@@ -113,19 +113,19 @@ void	(*austext_exit_last) (int) =	NULL;
 /****************************************/
 void	DtSearchExit (int return_code)
 {
-    if (austext_exit_first != NULL)
+    if (austext_exit_first != nullptr)
 	austext_exit_first (return_code);
-    if (austext_exit_dbms != NULL)
+    if (austext_exit_dbms != nullptr)
 	austext_exit_dbms (return_code);
-    if (austext_exit_comm != NULL)
+    if (austext_exit_comm != nullptr)
 	austext_exit_comm (return_code);
-    if (austext_exit_endwin != NULL)
+    if (austext_exit_endwin != nullptr)
 	austext_exit_endwin (return_code);
-    if (austext_exit_mem != NULL)
+    if (austext_exit_mem != nullptr)
 	austext_exit_mem (return_code);
-    if (austext_exit_user != NULL)
+    if (austext_exit_user != nullptr)
 	austext_exit_user (return_code);
-    if (austext_exit_last != NULL)
+    if (austext_exit_last != nullptr)
 	austext_exit_last (return_code);
     exit (return_code);
 }
@@ -145,6 +145,6 @@ void    DtSearchAddUserExit (void (*user_exit)(int))
 /*					*/
 /****************************************/
 void    DtSearchRemoveUserExit (void)
-{ austext_exit_user = NULL; }
+{ austext_exit_user = nullptr; }
 
 /********************* AUSEXIT.C ************************/

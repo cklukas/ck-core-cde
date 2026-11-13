@@ -208,7 +208,7 @@ static char * img_extensions[] = {
     "tif",  "TIFF",
     "xwd",  "XWD",
     "cgm",  "CGM",
-    NULL
+    nullptr
 };
    
 /*****************************************************************************/
@@ -421,25 +421,25 @@ static _DtGrRegistryRec registry[] =
     {
         "PM",
 	processXpm,
-        NULL
+        nullptr
     },
 
     {
         "BM",
 	processBitmap,
-        NULL
+        nullptr
     },
 
     {
         "GIF",
 	processGIF,
-        NULL
+        nullptr
     },
 
     {
         "JPEG",
 	processJPEG,
-        NULL
+        nullptr
     },
 
     {
@@ -451,14 +451,14 @@ static _DtGrRegistryRec registry[] =
     {
         "XWD",
 	processXwd,
-        NULL
+        nullptr
     },
 };
 
 static int registry_count = XtNumber(registry);
 
 /* Registry of converters and destructors for non-default image types */
-static _DtGrRegistryRec *new_registry = NULL;
+static _DtGrRegistryRec *new_registry = nullptr;
 static int new_registry_count = 0;
 
 /***************************************************************************** 
@@ -576,7 +576,7 @@ GreyScale (
 /*--- into a corresponding greyscale value (in the range [0-255]). ---*/
 
   grey_scale = (int *) calloc(width*height, sizeof(int));
-  if (grey_scale == NULL) {
+  if (grey_scale == nullptr) {
      return GR_ALLOC_ERR;
    }
 
@@ -831,7 +831,7 @@ Do_Pseudo(
     for (i = 0; i < ncolors; i++)
 	colors[i].flags = 0;
 
-    *ret_colors = NULL;
+    *ret_colors = nullptr;
     *ret_number = 0;
 
     /*
@@ -887,7 +887,7 @@ Do_Pseudo(
 	result = GR_SUCCESS;
         *ret_colors = (unsigned long *) malloc (
 					sizeof (unsigned long) * colorCount);
-	if (*ret_colors == NULL)
+	if (*ret_colors == nullptr)
 	  {
 	    colorCount = 0;
 	    result = GR_ALLOC_ERR;
@@ -936,7 +936,7 @@ Do_Direct(
     oldPixels = (Pixel *) malloc (sizeof (Pixel) * pixMax);
     newPixels = (Pixel *) malloc (sizeof (Pixel) * pixMax);
 
-    if (oldPixels == NULL || newPixels == NULL)
+    if (oldPixels == nullptr || newPixels == nullptr)
       {
 	if (oldPixels)
 	    free (oldPixels);
@@ -1008,7 +1008,7 @@ Do_Direct(
 			/*
 			 * check the realloc
 			 */
-			if (oldPixels == NULL || newPixels == NULL)
+			if (oldPixels == nullptr || newPixels == nullptr)
 			  {
 			    if (oldPixels)
 				free (oldPixels);
@@ -1037,7 +1037,7 @@ Do_Direct(
 	  {
 	    newPixels = (Pixel *) realloc ((void *) newPixels,
 					(sizeof (Pixel) * pixI));
-	    if (newPixels == NULL)
+	    if (newPixels == nullptr)
 	        result = GR_ALLOC_ERR;
 	  }
 
@@ -1100,7 +1100,7 @@ XwdFileToPixmap (
     unsigned buffer_size;
     int ncolors;
     Bool rawbits = False;
-    XColor *colors = NULL;
+    XColor *colors = nullptr;
 #ifdef __alpha
 /* Use a different structure for compatibility with 32-bit platform */
     XWDColor   xwd_color;
@@ -1157,7 +1157,7 @@ XwdFileToPixmap (
     in_image.red_mask = header.red_mask;
     in_image.green_mask = header.green_mask;
     in_image.blue_mask = header.blue_mask;
-    in_image.obdata = NULL;
+    in_image.obdata = nullptr;
     _XInitImageFuncPtrs(&in_image);
 
     /* read in the color map buffer */
@@ -1212,9 +1212,9 @@ XwdFileToPixmap (
      */
     buffer_size = Image_Size(&in_image);
     buffer = (char *) malloc(buffer_size);
-    if (buffer == NULL)
+    if (buffer == nullptr)
       {
-	if (NULL != colors)
+	if (nullptr != colors)
 	    XFree ((char *) colors);
         return GR_ALLOC_ERR;
       }
@@ -1224,7 +1224,7 @@ XwdFileToPixmap (
 
     if (count != buffer_size)
       {
-	if (NULL != colors)
+	if (nullptr != colors)
 	    XFree ((char *) colors);
 	XFree (buffer);
         return GR_FILE_ERR;
@@ -1244,7 +1244,7 @@ XwdFileToPixmap (
     } else {
 	out_image = XCreateImage(dpy, visual, depth,
 			 (depth == 1) ? XYBitmap : in_image.format,
-				 in_image.xoffset, NULL,
+				 in_image.xoffset, nullptr,
 				 in_image.width, in_image.height,
 				 XBitmapPad(dpy), 0);
 
@@ -1270,7 +1270,7 @@ XwdFileToPixmap (
     /*
      * free the buffers
      */
-    if (NULL != colors)
+    if (nullptr != colors)
         XFree ((char *) colors);
     XFree (buffer);
     if (!rawbits)
@@ -1414,14 +1414,14 @@ static enum _DtGrLoadStatus processTiff(
     ilPipe	 inPipe;
     ilFileImage	 inImage;
     const ilImageDes   *inDes = 0;
-    static ilContext	IlContext = NULL;
+    static ilContext	IlContext = nullptr;
     Display      *dpy = DisplayOfScreen(screen);
     Drawable      drawable = RootWindowOfScreen(screen);  
     ilXWC	 *tiff_xwc;
     float         ratio = 1.0;
 
     _DtHelpProcessLock();
-    if ((context == NULL) || (stream->type == _DtGrNONE))
+    if ((context == nullptr) || (stream->type == _DtGrNONE))
       {
 	_DtHelpProcessUnlock();
         return (_DtGrCONVERT_FAILURE);
@@ -1434,21 +1434,21 @@ static enum _DtGrLoadStatus processTiff(
       }
 
     tiff_xwc =  (ilXWC *) &(context->context);
-    if (IlContext == NULL)
+    if (IlContext == nullptr)
       {
 	if (IL_CREATE_CONTEXT (&IlContext, 0))
 	  {
-	    IlContext = NULL;
+	    IlContext = nullptr;
 	    _DtHelpProcessUnlock();
  	    return (_DtGrCONVERT_FAILURE);
 	  }
       }
 
-    if (*tiff_xwc == NULL)
+    if (*tiff_xwc == nullptr)
       {
 	/* Fill in the context record fields */
         *tiff_xwc = ilCreateXWC (IlContext, dpy, visual, colormap, gc, 0, 0);
-        if (*tiff_xwc == NULL)
+        if (*tiff_xwc == nullptr)
 	  {
 	    _DtHelpProcessUnlock();
  	    return(_DtGrCONVERT_FAILURE);
@@ -1492,16 +1492,16 @@ static enum _DtGrLoadStatus processTiff(
 			inDes = IL_DES_BITONAL;
 
 		    result = 0;
-		    if (!ilReadFileImage (inPipe, inImage, (ilRect *) NULL, 0))
+		    if (!ilReadFileImage (inPipe, inImage, (ilRect *) nullptr, 0))
 			result = -1;
 
 		    if (result == 0 && color_model != _DtGrCOLOR &&
-			ilConvert (inPipe, inDes, ((ilImageFormat *) NULL), 0, NULL) != True)
+			ilConvert (inPipe, inDes, ((ilImageFormat *) nullptr), 0, nullptr) != True)
 			result  = -1;
 
 		    if (result == 0 &&
 			ilWriteXDrawable (inPipe, pixmap, *tiff_xwc,
-						(ilRect *) NULL, 0, 0, 0))
+						(ilRect *) nullptr, 0, 0, 0))
 		      {
 			ilExecutePipe (inPipe, 0, ratio);
 			if (IlContext->error != 0)
@@ -1655,9 +1655,9 @@ myXpmReadFileToPixmap(
     float           ratio
 )
 {
-    XImage *image = NULL;
+    XImage *image = nullptr;
     XImage **imageptr = 0;
-    XImage *shapeimage, **shapeimageptr = NULL;
+    XImage *shapeimage, **shapeimageptr = nullptr;
     int ErrorStatus;
     int switchFlag = 0;
     int scaledWidth, scaledHeight;
@@ -1680,7 +1680,7 @@ myXpmReadFileToPixmap(
 
     if (stream->type == _DtGrFILE)
     {
-        if (stream->source.file.uncompressed_filename != NULL)
+        if (stream->source.file.uncompressed_filename != nullptr)
             ErrorStatus = XpmReadFileToImage(display,
                                     stream->source.file.uncompressed_filename, 
                                     imageptr, shapeimageptr, attributes);
@@ -1766,7 +1766,7 @@ myXpmReadFileToPixmap(
     return (ErrorStatus);
 }
 
-static XpmColorSymbol colorSymbol = {"none", NULL, 0};
+static XpmColorSymbol colorSymbol = {"none", nullptr, 0};
 
 /***********
  *
@@ -1826,7 +1826,7 @@ static enum _DtGrLoadStatus processXpm(
         xpmAttr.colormap     = colormap;
         xpmAttr.numsymbols   = 1;
         xpmAttr.depth        = depth;
-        xpmAttr.pixels       = NULL;
+        xpmAttr.pixels       = nullptr;
 
         /*
          * If not color, force to black and white.
@@ -1971,7 +1971,7 @@ static enum _DtGrLoadStatus processGIF(
     }
     else
     {
-       if (stream->source.file.uncompressed_filename != NULL)
+       if (stream->source.file.uncompressed_filename != nullptr)
            stat (stream->source.file.uncompressed_filename, &stbuf);
        else
            stat (stream->source.file.filename, &stbuf);
@@ -2112,7 +2112,7 @@ static enum _DtGrLoadStatus processJPEG(
             */
 	    out_image = XCreateImage(dpy, visual, depth,
 			           (depth == 1) ? XYBitmap : in_image->format,
-				   in_image->xoffset, NULL,
+				   in_image->xoffset, nullptr,
 				   in_image->width, in_image->height,
 				   XBitmapPad(dpy), 0);
 
@@ -2186,15 +2186,15 @@ static enum _DtGrLoadStatus processJPEG(
 static void destroyTiffContext(
     _DtGrContext          *context)
 {
-    if (context != NULL)
+    if (context != nullptr)
     {
-        if (context->context != NULL)
+        if (context->context != nullptr)
 	  {
 	    _DtHelpProcessLock();
             ilDestroyObject ((ilObject) context->context);
 	    _DtHelpProcessUnlock();
 	  }
-        if (context->image_type != NULL)
+        if (context->image_type != nullptr)
             XtFree(context->image_type);
     }
 }
@@ -2234,14 +2234,14 @@ static enum _DtGrLoadStatus DetermineImageType(
     if (stream->type == _DtGrFILE)
     {
         /* First try to match the file name extension to a known mapping */
-        if (stream->source.file.filename != NULL)
+        if (stream->source.file.filename != nullptr)
 	{
             /* Get the filename extension */
             if (_DtHelpCeStrrchr(stream->source.file.filename, ".", 
                                  MB_CUR_MAX, &ext) == 0)
 	    {
                 ext++; /* Increment past the dot */
-        	while (img_extensions[i] != NULL)
+        	while (img_extensions[i] != nullptr)
 		{
                     if (strcmp(ext, img_extensions[i]) == 0)
 		    {
@@ -2260,13 +2260,13 @@ static enum _DtGrLoadStatus DetermineImageType(
          * First try the filename, then try the uncompressed temporary 
          * filename, if it exists.
          */
-        if ((ext = DtDtsFileToDataType(stream->source.file.filename)) == NULL)
-            if (stream->source.file.uncompressed_filename != NULL)
+        if ((ext = DtDtsFileToDataType(stream->source.file.filename)) == nullptr)
+            if (stream->source.file.uncompressed_filename != nullptr)
                 ext = DtDtsFileToDataType(
                                    stream->source.file.uncompressed_filename);
 
         /* If successful, save the image type and return */
-        if (ext != NULL)
+        if (ext != nullptr)
 	{
             strcpy (image_type, ext);
             DtDtsFreeDataType(ext);
@@ -2278,10 +2278,10 @@ static enum _DtGrLoadStatus DetermineImageType(
         /* See if the CDE datatyping mechanism can determine the image type */
         ext = DtDtsBufferToDataType (stream->source.buffer.base,
 				     stream->source.buffer.size,
-				     NULL);
+				     nullptr);
 
         /* If successful, save the image type and return */
-        if (ext != NULL)
+        if (ext != nullptr)
 	{
             strcpy (image_type, ext);
             DtDtsFreeDataType(ext);
@@ -2312,7 +2312,7 @@ static enum _DtGrLoadStatus GetConverterAndDestructor(
     int i;
 
     /* No image_type string, return failure */
-    if (image_type == NULL)
+    if (image_type == nullptr)
         return (_DtGrCONVERT_FAILURE);
 
     /* Search the default image type registry for the specified image type */
@@ -2396,7 +2396,7 @@ _DtHelpProcessGraphic(
     /*
      * initialize the return values
      */
-    *ret_colors = NULL;
+    *ret_colors = nullptr;
     *ret_number = 0;
     *ret_mask   = None;
 
@@ -2408,8 +2408,8 @@ _DtHelpProcessGraphic(
       {
 	char    *ptr;
 	char    *ptr2;
-	char    *xrmName  = NULL;
-	char    *xrmClass = NULL;
+	char    *xrmName  = nullptr;
+	char    *xrmClass = nullptr;
 	char	*retStrType;
 	XrmValue retValue;
 
@@ -2460,7 +2460,7 @@ _DtHelpProcessGraphic(
       }
     _DtHelpProcessUnlock();
 
-    if (filename != NULL)
+    if (filename != nullptr)
       {
 	int   result;
 
@@ -2472,7 +2472,7 @@ _DtHelpProcessGraphic(
         else 
 	{
 	    /* Create a pixmap from the image data stream */
-           _DtGrLoad(&stream, NULL, scrptr, depth, colormap, visual,
+           _DtGrLoad(&stream, nullptr, scrptr, depth, colormap, visual,
                      fore_ground, back_ground, gc, ForceColor, TRUE, &pWidth, 
                      &pHeight, media_resolution, &pix, &mask, ret_colors, 
 		     ret_number, context);
@@ -2584,7 +2584,7 @@ enum _DtGrLoadStatus _DtGrLoad(
     char buf[20],*itype;
 
     /* Determine the image type */
-    if ((image_type != NULL) && (*image_type != NULL))
+    if ((image_type != nullptr) && (*image_type != nullptr))
         itype = *image_type; /* Caller specified image type */
     else
     {
@@ -2599,7 +2599,7 @@ enum _DtGrLoadStatus _DtGrLoad(
 	                                                     _DtGrSUCCESS)
     {
         /* Call the converter */
-        if (converter != NULL)
+        if (converter != nullptr)
 	{
 	    status = (*converter)(stream, screen, depth, colormap, visual,
                                   foreground, background, gc, color_model, 
@@ -2614,7 +2614,7 @@ enum _DtGrLoadStatus _DtGrLoad(
     
     /* Return a copy of the image type string if successful */
     if (status == _DtGrSUCCESS || status == _DtGrCOLOR_REDUCE)
-        if ((image_type != NULL) && (*image_type == NULL) && (itype != NULL))
+        if ((image_type != nullptr) && (*image_type == nullptr) && (itype != nullptr))
 	    *image_type = XtNewString(itype);
 
     /* Return the conversion status */
@@ -2638,7 +2638,7 @@ void _DtGrDestroyContext(
     if (GetConverterAndDestructor(context->image_type, &converter, 
                                   &destructor) == _DtGrSUCCESS)
     {
-        if (destructor != NULL)
+        if (destructor != nullptr)
 	    (*destructor)(context);
     }
 }
@@ -2666,7 +2666,7 @@ void _DtGrRegisterConverter(
 {
     int i;
 
-    if (image_type == NULL)
+    if (image_type == nullptr)
         return;
 
     /* Search the default converter registry for the specified image type */
@@ -2677,9 +2677,9 @@ void _DtGrRegisterConverter(
 	{
 	    /* Found it, save the current procs, then replace them */
             /* with the new ones and return                        */
-	    if (current_convert_proc != NULL)
+	    if (current_convert_proc != nullptr)
 	        *current_convert_proc = registry[i].convert_proc;
-	    if (current_destroy_proc != NULL)
+	    if (current_destroy_proc != nullptr)
 	        *current_destroy_proc = registry[i].destroy_context_proc;
             registry[i].convert_proc = convert_proc;
 	    registry[i].destroy_context_proc = destroy_context_proc;
@@ -2695,9 +2695,9 @@ void _DtGrRegisterConverter(
 	{
 	    /* Found it, save the current procs, then replace them */
             /* with the new ones and return                        */
-	    if (current_convert_proc != NULL)
+	    if (current_convert_proc != nullptr)
 	        *current_convert_proc = new_registry[i].convert_proc;
-	    if (current_destroy_proc != NULL)
+	    if (current_destroy_proc != nullptr)
 	        *current_destroy_proc = new_registry[i].destroy_context_proc;
             new_registry[i].convert_proc = convert_proc;
 	    new_registry[i].destroy_context_proc = destroy_context_proc;
@@ -2717,10 +2717,10 @@ void _DtGrRegisterConverter(
     _DtHelpProcessUnlock();
 
     /* Newly registered type, so return NULL for current function params */
-    if (current_convert_proc != NULL)
-        *current_convert_proc = NULL;
-    if (current_destroy_proc != NULL)
-        *current_destroy_proc = NULL;
+    if (current_convert_proc != nullptr)
+        *current_convert_proc = nullptr;
+    if (current_destroy_proc != nullptr)
+        *current_destroy_proc = nullptr;
 
     return;
 }
@@ -2750,9 +2750,9 @@ int _DtGrOpenFile(
     _DtGrStream *stream,
     char  *path)
 {
-    char *fname = NULL;
+    char *fname = nullptr;
 
-    if (stream == NULL) 
+    if (stream == nullptr) 
         return (-1);    /* Failure */
 
     /* Uncompress the file if necessary and obtain the new filename */
@@ -2764,11 +2764,11 @@ int _DtGrOpenFile(
 
     /* Open the file */
     stream->source.file.fileptr = fopen(fname,"r");
-    if (stream->source.file.fileptr == NULL)
+    if (stream->source.file.fileptr == nullptr)
     {
         /* Failure, couldn't open the file */
         stream->type = _DtGrNONE;
-        if ((fname != path) && (fname != NULL))
+        if ((fname != path) && (fname != nullptr))
 	{
             unlink (fname);
             free (fname);             
@@ -2782,7 +2782,7 @@ int _DtGrOpenFile(
 
     /* If the file was uncompressed and renamed, save the new name */
     if (fname == path)
-        stream->source.file.uncompressed_filename = NULL;
+        stream->source.file.uncompressed_filename = nullptr;
     else
         stream->source.file.uncompressed_filename = fname;
 
@@ -2802,9 +2802,9 @@ int _DtGrOpenBuffer(
     const char  *buffer,
     int         buffer_size)
 {
-    if ((stream == NULL) || (buffer == NULL) || (buffer_size < 0))
+    if ((stream == nullptr) || (buffer == nullptr) || (buffer_size < 0))
     {
-        if (stream != NULL)
+        if (stream != nullptr)
 	    stream->type = _DtGrNONE;
         return(EINVAL); /* Failure */
     }
@@ -2834,16 +2834,16 @@ int _DtGrCloseStream(
 {
     int status = 0;
 
-    if ((stream == NULL) || (stream->type == _DtGrNONE))
+    if ((stream == nullptr) || (stream->type == _DtGrNONE))
         return(EOF);    /* Failure */
 
     if (stream->type == _DtGrFILE)
     {
         /* Close the file and free the filename */
         status = fclose(stream->source.file.fileptr);
-        if (stream->source.file.filename != NULL)
+        if (stream->source.file.filename != nullptr)
             XtFree(stream->source.file.filename);      
-        if (stream->source.file.uncompressed_filename != NULL)
+        if (stream->source.file.uncompressed_filename != nullptr)
 	{ 
             /* Unlink the uncompressed file and free the filename */
             unlink(stream->source.file.uncompressed_filename);
@@ -2879,7 +2879,7 @@ size_t _DtGrRead(
     unsigned nleft;
     int n;
 
-    if ((stream == NULL) || (stream->type == _DtGrNONE))
+    if ((stream == nullptr) || (stream->type == _DtGrNONE))
         return(0);
 
     if (stream->type == _DtGrFILE)
@@ -2935,7 +2935,7 @@ int _DtGrSeek(
 {        
     long newpos;
 
-    if ((stream == NULL) || (stream->type == _DtGrNONE))
+    if ((stream == nullptr) || (stream->type == _DtGrNONE))
         return(-1); /* Failure */
 
     if (stream->type == _DtGrFILE)
@@ -2983,7 +2983,7 @@ int _DtGrSeek(
 int _DtGrGetChar(
     _DtGrStream *stream)
 {
-    if ((stream == NULL) || (stream->type == _DtGrNONE))
+    if ((stream == nullptr) || (stream->type == _DtGrNONE))
         return(EOF);
 
     if (stream->type == _DtGrFILE)
@@ -3018,8 +3018,8 @@ char *_DtGrGetString(
     char *p, *save = buffer;
     int i;
 
-    if ((stream == NULL) || (stream->type == _DtGrNONE))
-        return(NULL); /* Failure */
+    if ((stream == nullptr) || (stream->type == _DtGrNONE))
+        return(nullptr); /* Failure */
 
     if (stream->type == _DtGrFILE)
     {
@@ -3036,7 +3036,7 @@ char *_DtGrGetString(
                     stream->source.buffer.end + 1)
                 {
                     if (save == buffer)
-                        return (NULL);
+                        return (nullptr);
                     break; /* no more data */
                 }
                 stream->source.buffer.current--;
@@ -3048,11 +3048,11 @@ char *_DtGrGetString(
             /* Copy the data into the buffer */
             if ((p = memccpy((void *)buffer,
 			     (void *)stream->source.buffer.current,
-			     (int)'\n',(size_t)i)) != NULL)
+			     (int)'\n',(size_t)i)) != nullptr)
                 i = p - buffer;
             buffer += i;
             stream->source.buffer.current += i;
-            if (p != NULL)
+            if (p != nullptr)
                 break; /* found '\n' in buffer */
         }
         *buffer = '\0';

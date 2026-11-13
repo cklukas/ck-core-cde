@@ -70,8 +70,8 @@ _DtCmdBuildPathList( void )
 	*pbeg;		/* Points to the end of a directory */
 
    /* Get the PATH */
-   if ((path = (char *) (getenv ("PATH"))) == NULL) {
-      cmd_Globals.path_list = (char **) NULL;
+   if ((path = (char *) (getenv ("PATH"))) == nullptr) {
+      cmd_Globals.path_list = (char **) nullptr;
       return;
    }
 
@@ -108,6 +108,6 @@ _DtCmdBuildPathList( void )
    if (n > 0) {
       n++;
       cmd_Globals.path_list = (char **) XtRealloc ((char *) cmd_Globals.path_list, n * sizeof (char *));
-      cmd_Globals.path_list [n-1] = (char *) NULL;
+      cmd_Globals.path_list [n-1] = (char *) nullptr;
    }
 }

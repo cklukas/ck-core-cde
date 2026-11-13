@@ -162,7 +162,7 @@ _DtFileComputeDragLocalCoords(
       *local_x = 0;
    if (local_y)
       *local_y = 0;
-   if (w == NULL || event == NULL)
+   if (w == nullptr || event == nullptr)
       return;
 
    XtTranslateCoords(w, 0, 0, &widget_root_x, &widget_root_y);
@@ -235,8 +235,8 @@ _DtFileCreateDragStateIcon(
    Widget icon;
    int half;
 
-   if (w == NULL || hot_x < 0 || hot_y < 0)
-      return NULL;
+   if (w == nullptr || hot_x < 0 || hot_y < 0)
+      return nullptr;
 
    if (marker_size < 1)
       marker_size = 1;
@@ -245,23 +245,23 @@ _DtFileCreateDragStateIcon(
 
    dpy = XtDisplay(w);
    screen = XtScreenOfObject(w);
-   if (dpy == NULL || screen == NULL)
-      return NULL;
+   if (dpy == nullptr || screen == nullptr)
+      return nullptr;
 
    /* Keep this icon small; we offset it relative to the source icon. */
    width = (unsigned int)marker_size;
    height = (unsigned int)marker_size;
    if (width == 0 || height == 0)
-      return NULL;
+      return nullptr;
 
    pm = XCreatePixmap(dpy, RootWindowOfScreen(screen), width, height, 1);
    mask = XCreatePixmap(dpy, RootWindowOfScreen(screen), width, height, 1);
    if (pm == None || mask == None)
-      return NULL;
+      return nullptr;
 
-   gc = XCreateGC(dpy, pm, 0, (XGCValues *)NULL);
+   gc = XCreateGC(dpy, pm, 0, (XGCValues *)nullptr);
    if (gc == 0)
-      return NULL;
+      return nullptr;
 
    values.foreground = 0;
    XChangeGC(dpy, gc, GCForeground, &values);
@@ -313,7 +313,7 @@ _DtFileCreateDragStateIcon(
    icon = XmCreateDragIcon(XtParent(w), "drag_state_icon", args, n);
 
    if (drag_state_debug_enabled < 0)
-      drag_state_debug_enabled = (getenv("DTFILE_DRAG_DEBUG") != NULL) ? 1 : 0;
+      drag_state_debug_enabled = (getenv("DTFILE_DRAG_DEBUG") != nullptr) ? 1 : 0;
    if (drag_state_debug_enabled)
    {
       fprintf(stderr,
@@ -379,7 +379,7 @@ _DtPName(
    strcpy(pnam, name);
    q = strrchr(pnam, '/');
 
-   if (q == NULL)
+   if (q == nullptr)
       q = pnam;
    else if ((q == pnam) &&
 #ifdef NLS16
@@ -447,8 +447,8 @@ _DtFollowLink (
             for (i = 0; i < history_count; i++)
                XtFree(history[i]);
             XtFree((char *)history);
-            history = NULL;
-            return(NULL);
+            history = nullptr;
+            return(nullptr);
          }
       }
 
@@ -466,7 +466,7 @@ _DtFollowLink (
    for (i = 0; i < history_count; i++)
       XtFree(history[i]);
    XtFree((char *)history);
-   history = NULL;
+   history = nullptr;
 
    return(file);
 }
@@ -559,7 +559,7 @@ _DtDuplicateDialogNameList (
 
    /*  Get a copy of the name list to be used to build new name lists.  */
    *nameCount = 0;
-   while (nameList[*nameCount] != NULL)
+   while (nameList[*nameCount] != nullptr)
    {
       newNameList[*nameCount] = nameList[*nameCount];
       (*nameCount)++;
@@ -567,7 +567,7 @@ _DtDuplicateDialogNameList (
 
    /* NULL out any remaining array entries */
    for (i = (*nameCount); i < newNameListSize; i++)
-      newNameList[i] = NULL;
+      newNameList[i] = nullptr;
 }
 
 
@@ -587,7 +587,7 @@ _DtLoadSubdialogArray (
 
    /* Load sub-dialogs */
    nameList[nameCount] = number;
-   nameList[nameCount + 1] = NULL;
+   nameList[nameCount + 1] = nullptr;
 
    /* Get text annotation dialogs */
    *dialogArray = (DialogData **) XtMalloc(sizeof(DialogData *) * dialogCount);
@@ -616,7 +616,7 @@ _DtSaveSubdialogArray (
    static char number[10];
 
    nameList[nameCount] = number;
-   nameList[nameCount + 1] = NULL;
+   nameList[nameCount + 1] = nullptr;
 
    for (i = 0; i < dialogCount; i++)
    {
@@ -684,7 +684,7 @@ _DtHideOneSubdialog (
    if (*dialogCountPtr == 0)
    {
       XtFree((char *)*dialogArray);
-      *dialogArray = NULL;
+      *dialogArray = nullptr;
    }
    else
    {
@@ -857,7 +857,7 @@ _DtRetrievePixmapData(
 
   pixmapData = (PixmapData *) XtMalloc(sizeof(PixmapData));
   if (!pixmapData)
-    return NULL;
+    return nullptr;
 
   path[0] = 0x0;
   _DtBuildPath(path, directory, fileName);
@@ -867,7 +867,7 @@ _DtRetrievePixmapData(
   /* retrieve host name */
   pixmapData->hostPrefix = DtDtsDataTypeToAttributeValue(dataType,
                                                          DtDTS_DA_DATA_HOST,
-                                                         NULL);
+                                                         nullptr);
 
   /*
      retrieve instance icon name if one exists; otherwise, retrieve class
@@ -880,13 +880,13 @@ _DtRetrievePixmapData(
                                             path);
   }
   else
-    pixmapData->instanceIconName = NULL;
+    pixmapData->instanceIconName = nullptr;
 
-  if (pixmapData->instanceIconName == NULL)
+  if (pixmapData->instanceIconName == nullptr)
   {
     pixmapData->iconName = DtDtsDataTypeToAttributeValue( dataType, 
-                                                          DtDTS_DA_ICON, NULL);
-    if( pixmapData->iconName == NULL )
+                                                          DtDTS_DA_ICON, nullptr);
+    if( pixmapData->iconName == nullptr )
     {
       if( strcmp( dataType, LT_DIRECTORY ) == 0 )
         pixmapData->iconName = XtNewString( "DtdirB" );
@@ -896,7 +896,7 @@ _DtRetrievePixmapData(
   }
   else
   {
-    pixmapData->iconName = NULL;
+    pixmapData->iconName = nullptr;
   }
 
   /* retrieve icon file name */
@@ -907,13 +907,13 @@ _DtRetrievePixmapData(
                                                pixmapData->iconName,
                                                pixmapData->hostPrefix,
                                                DtLARGE);
-     if (pixmapData->iconFileName == NULL)
+     if (pixmapData->iconFileName == nullptr)
         pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                                pixmapData->instanceIconName,
                                                pixmapData->iconName,
                                                pixmapData->hostPrefix,
                                                DtMEDIUM);
-     if (pixmapData->iconFileName == NULL)
+     if (pixmapData->iconFileName == nullptr)
         pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                                pixmapData->instanceIconName,
                                                pixmapData->iconName,
@@ -978,25 +978,25 @@ _DtCheckAndFreePixmapData(
         *(ptr) = 0;
       XmeFlushIconFileCache( tmp );
 
-      if (pixmapData->iconFileName != NULL)
+      if (pixmapData->iconFileName != nullptr)
          XtFree(pixmapData->iconFileName);
       if (pixmapData->size == EXTRA_LARGE)
       {
         pixmapData->iconFileName = _DtGetIconFileName( XtScreen(shell),
                                               pixmapData->instanceIconName,
-                                              NULL,
+                                              nullptr,
                                               pixmapData->hostPrefix,
                                               DtLARGE );
-        if (pixmapData->iconFileName == NULL)
+        if (pixmapData->iconFileName == nullptr)
           pixmapData->iconFileName = _DtGetIconFileName( XtScreen(shell),
                                                 pixmapData->instanceIconName,
-                                                NULL,
+                                                nullptr,
                                                 pixmapData->hostPrefix,
                                                 DtMEDIUM );
-        if (pixmapData->iconFileName == NULL)
+        if (pixmapData->iconFileName == nullptr)
           pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                                 pixmapData->instanceIconName,
-                                                NULL,
+                                                nullptr,
                                                 pixmapData->hostPrefix,
                                                 DtTINY);
       }
@@ -1004,7 +1004,7 @@ _DtCheckAndFreePixmapData(
       {
         pixmapData->iconFileName = _DtGetIconFileName( XtScreen(shell),
                                               pixmapData->instanceIconName,
-                                              NULL,
+                                              nullptr,
                                               pixmapData->hostPrefix,
                                               DtMEDIUM );
       }
@@ -1012,7 +1012,7 @@ _DtCheckAndFreePixmapData(
       {
         pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                               pixmapData->instanceIconName,
-                                              NULL,
+                                              nullptr,
                                               pixmapData->hostPrefix,
                                               DtTINY);
       }
@@ -1028,7 +1028,7 @@ _DtCheckAndFreePixmapData(
 
 
     DtDtsFreeAttributeValue(pixmapData->instanceIconName);
-    pixmapData->instanceIconName = NULL;
+    pixmapData->instanceIconName = nullptr;
 
     if (iconGadget->icon.pixmap == 0                     ||
         iconGadget->icon.pixmap_width == 0               ||
@@ -1039,13 +1039,13 @@ _DtCheckAndFreePixmapData(
 
       pixmapData->iconName = DtDtsDataTypeToAttributeValue(
                                              dataType, 
-                                             DtDTS_DA_ICON, NULL);
+                                             DtDTS_DA_ICON, nullptr);
 
       /* retrieve icon file name */
-      if (pixmapData->iconFileName != NULL)
+      if (pixmapData->iconFileName != nullptr)
       {
          XtFree(pixmapData->iconFileName);
-         pixmapData->iconFileName = NULL;
+         pixmapData->iconFileName = nullptr;
       }
 
       if (pixmapData->size == EXTRA_LARGE)
@@ -1055,13 +1055,13 @@ _DtCheckAndFreePixmapData(
                                              pixmapData->iconName,
                                              pixmapData->hostPrefix,
                                              DtLARGE);
-            if (pixmapData->iconFileName == NULL)
+            if (pixmapData->iconFileName == nullptr)
                pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                              pixmapData->instanceIconName,
                                              pixmapData->iconName,
                                              pixmapData->hostPrefix,
                                              DtMEDIUM);
-            if (pixmapData->iconFileName == NULL)
+            if (pixmapData->iconFileName == nullptr)
                pixmapData->iconFileName = _DtGetIconFileName(XtScreen(shell),
                                              pixmapData->instanceIconName,
                                              pixmapData->iconName,
@@ -1091,13 +1091,13 @@ _DtCheckAndFreePixmapData(
       XtSetValues((Widget) iconGadget, args, 1);
 
       DtDtsFreeAttributeValue(pixmapData->iconName);
-      pixmapData->iconName = NULL;
+      pixmapData->iconName = nullptr;
     }
   }
   else
   {
      DtDtsFreeAttributeValue(pixmapData->iconName);
-     pixmapData->iconName = NULL;
+     pixmapData->iconName = nullptr;
   }
 
   DtDtsFreeAttributeValue(pixmapData->hostPrefix);
@@ -1126,7 +1126,7 @@ _DtCheckForDataTypeProperty(
 
    properties = DtDtsDataTypeToAttributeValue(dataType,
                                               DtDTS_DA_PROPERTIES,
-                                              NULL);
+                                              nullptr);
 
    if (properties)
    {
@@ -1168,11 +1168,11 @@ _DtCompileActionVector(
 
 {
    char *actions;
-   char **vector = NULL;
+   char **vector = nullptr;
 
    actions = DtDtsDataTypeToAttributeValue(dataType,
                                            DtDTS_DA_ACTION_LIST,
-                                           NULL);
+                                           nullptr);
    if (actions)
      vector = (char **) _DtVectorizeInPlace(actions, ',');
 
@@ -1192,11 +1192,11 @@ _DtRetrieveDefaultAction(
 {
    char *actions;
    char *acts;
-   char *default_action = NULL;
+   char *default_action = nullptr;
 
    actions = DtDtsDataTypeToAttributeValue(dataType,
                                            DtDTS_DA_ACTION_LIST,
-                                           NULL);
+                                           nullptr);
    if (actions)
    {
      if (acts = DtStrchr(actions, ','))
@@ -1431,7 +1431,7 @@ _DtBuildActionArgsWithDroppedBuffers(
    if (*action_args)
    {
       int i;
-      DtActionBuffer buffer_arg = {NULL, 0, NULL, NULL, False};
+      DtActionBuffer buffer_arg = {nullptr, 0, nullptr, nullptr, False};
 
       if (dropped_on_obj)
       {
@@ -1470,7 +1470,7 @@ _DtFreeActionArgs(
       if (action_args[i].argClass == DtACTION_FILE)
       {
          XtFree(action_args[i].u.file.name);
-         action_args[i].u.file.name = NULL;
+         action_args[i].u.file.name = nullptr;
       }
    }
    
@@ -1538,7 +1538,7 @@ SetBufferFileNames (char **file_set,
 
  for (i = 0; i < num_of_buffers; i++)
  {
-     if (buffers[i].name == NULL)
+     if (buffers[i].name == nullptr)
      {
        /* generate buffer name using Untitled as a base name */
        file_set[i]=BuildBufferFileName(DEFAULT_BUFFER_FILENAME,
@@ -1621,12 +1621,12 @@ RetrieveAndUseNameTemplateInfo(
 
 {
    char *name_template;
-   char *buffer_name = NULL;
+   char *buffer_name = nullptr;
 
    name_template = DtDtsBufferToAttributeValue(buffer,
                                                buffer_size,
                                                DtDTS_DA_NAME_TEMPLATE,
-                                               NULL);
+                                               nullptr);
    if (name_template)
       buffer_name = (char *) XtMalloc(strlen(name_template) +
                                       strlen(template_input) +
@@ -1716,7 +1716,7 @@ char * tmpPtr, * newName;
 
     newName = (char *)XtCalloc( 1, strlen( *name ) + MAX_INT_SIZE );
 
-    if( tmpPtr == NULL )
+    if( tmpPtr == nullptr )
       sprintf( newName, "%s_%d", *name, addIndex );
     else if( tmpPtr == *name )
       sprintf( newName, "%d%s", addIndex, *name );
@@ -1778,7 +1778,7 @@ _DtIsBufferExecutable(
    exe_attribute = DtDtsBufferToAttributeValue(buffer,
                                                buffer_size,
                                                "IS_EXECUTABLE",
-                                               NULL);
+                                               nullptr);
    if (exe_attribute)
    {
       if (DtDtsIsTrue(exe_attribute))
@@ -1875,8 +1875,8 @@ _DtPathFromInput(
 
 {
    char *path;
-   char *tmp_path = NULL;
-   char *true_path = NULL;
+   char *tmp_path = nullptr;
+   char *true_path = nullptr;
    Tt_status tt_status;
    int dir_len;
 
@@ -1891,17 +1891,17 @@ _DtPathFromInput(
 
    /* Resolve, if there're any, environment variables */
    {
-      FILE *pfp = NULL;
+      FILE *pfp = nullptr;
       char command[MAXPATHLEN];
 
       memset(command, 0, sizeof(command));
       sprintf(command,"echo %s",path);
 
-      if((pfp=popen(command,"r")) != NULL)
+      if((pfp=popen(command,"r")) != nullptr)
       {
 	  int read_ok = 1;
 
-          if (NULL == (fgets(command,MAXPATHLEN,pfp))) 
+          if (nullptr == (fgets(command,MAXPATHLEN,pfp))) 
 	  {
 	      /*
 	       * Try a few more reads and if the read still fails, 
@@ -1911,7 +1911,7 @@ _DtPathFromInput(
 	      for (i=0; i < 5; i++) 
 	      {
 	 	  sleep (1);
- 		  if (NULL != (fgets(command,MAXPATHLEN,pfp))) 
+ 		  if (nullptr != (fgets(command,MAXPATHLEN,pfp))) 
 		      break;
               }
 	     if (i >= 5)
@@ -1928,13 +1928,13 @@ _DtPathFromInput(
              XtFree(path);
              path = XtNewString(command);
              pclose(pfp);
-             pfp = NULL;
+             pfp = nullptr;
 	 }
       }
       if (pfp)
       {
           pclose(pfp);
-          pfp = NULL;
+          pfp = nullptr;
       }
    }
 
@@ -1961,12 +1961,12 @@ _DtPathFromInput(
 
          XtFree(path);
          path = tmp_path;
-         tmp_path = NULL;
+         tmp_path = nullptr;
       }
    }
    else if (!path)
    {
-     *rel_path = NULL;
+     *rel_path = nullptr;
      XtFree(tmp_path);
      return;
    }
@@ -1981,7 +1981,7 @@ _DtPathFromInput(
       /* Resolve to local pathname */
       true_path = ResolveLocalPathName(*host,
                                        path,
-                                       NULL,
+                                       nullptr,
                                        home_host_name,
                                        &tt_status);
       XtFree(path);
@@ -1993,7 +1993,7 @@ _DtPathFromInput(
    }
    else
    {
-      true_path = NULL;
+      true_path = nullptr;
       XtFree(tmp_path);
    }
 
@@ -2036,12 +2036,12 @@ _DtChangeTildeToHome (
       /* find user */
       if (path)
          *path = '\0';
-      if ((pwInfo = getpwnam(input_string + 1)) == NULL)
+      if ((pwInfo = getpwnam(input_string + 1)) == nullptr)
       {
          /* user doesn't exist */
          if (path)
             *path = '/';
-         return NULL;
+         return nullptr;
       }
 
       if (path)
@@ -2108,8 +2108,8 @@ _DtSpacesInFileNames(
   {
      fileNames[i] = (char *) _DtStripSpaces(fileNames[i]);
 
-     if (DtStrchr (fileNames[i], ' ') != NULL ||
-         DtStrchr (fileNames[i], '\t') != NULL)
+     if (DtStrchr (fileNames[i], ' ') != nullptr ||
+         DtStrchr (fileNames[i], '\t') != nullptr)
         return(TRUE);
   }
 
@@ -2164,11 +2164,11 @@ DtfileLooksLikeImageIcon(
    char buf[4096];
    unsigned int w = 0, h = 0;
    Boolean saw_xpm = False;
-   const char *ext = NULL;
+   const char *ext = nullptr;
 
    if (out_w) *out_w = 0;
    if (out_h) *out_h = 0;
-   if (path == NULL || path[0] == '\0')
+   if (path == nullptr || path[0] == '\0')
       return False;
 
    {
@@ -2180,8 +2180,8 @@ DtfileLooksLikeImageIcon(
       if (fname)
       {
          size_t fn_len = strlen(fname);
-         const char *ext3 = NULL;
-         const char *ext4 = NULL;
+         const char *ext3 = nullptr;
+         const char *ext4 = nullptr;
 
          if (fn_len >= 3)
             ext3 = fname + fn_len - 3;
@@ -2199,7 +2199,7 @@ DtfileLooksLikeImageIcon(
    }
 
    fp = fopen(path, "r");
-   if (fp == NULL)
+   if (fp == nullptr)
       return False;
 
    {
@@ -2208,23 +2208,23 @@ DtfileLooksLikeImageIcon(
       const size_t max_bytes = 65536;
       const int max_lines = 200;
 
-      while (fgets(buf, sizeof(buf), fp) != NULL)
+      while (fgets(buf, sizeof(buf), fp) != nullptr)
       {
          total += strlen(buf);
          lines++;
          if (total > max_bytes || lines > max_lines)
             break;
 
-         if (!saw_xpm && strstr(buf, "XPM") != NULL)
+         if (!saw_xpm && strstr(buf, "XPM") != nullptr)
             saw_xpm = True;
 
          if (saw_xpm)
          {
             const char *p = strchr(buf, '"');
-            if (p != NULL)
+            if (p != nullptr)
             {
                const char *q = strchr(p + 1, '"');
-               if (q != NULL)
+               if (q != nullptr)
                {
                   char header[128];
                   size_t len = (size_t)(q - (p + 1));
@@ -2253,7 +2253,7 @@ DtfileLooksLikeImageIcon(
       const size_t max_bytes = 65536;
       const int max_lines = 200;
 
-      while (fgets(buf, sizeof(buf), fp) != NULL)
+      while (fgets(buf, sizeof(buf), fp) != nullptr)
       {
          const char *p = strstr(buf, "#define");
 
@@ -2262,7 +2262,7 @@ DtfileLooksLikeImageIcon(
          if (total > max_bytes || lines > max_lines)
             break;
 
-         if (p != NULL)
+         if (p != nullptr)
          {
             unsigned int val = 0;
             char macro[128];

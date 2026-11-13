@@ -111,7 +111,7 @@ int	is_objdatestr (char *string, DtSrObjdate *objdptr)
     strncpy (parsebuf, string, sizeof (parsebuf));
     parsebuf[sizeof (parsebuf) - 1] = '\0';
 
-    if ((token = _XStrtok(parsebuf, "/", strtok_buf)) == NULL)
+    if ((token = _XStrtok(parsebuf, "/", strtok_buf)) == nullptr)
 	return FALSE;
     i = atoi (token);
     if (i < 1 || i > 4095)	/* yy */
@@ -119,7 +119,7 @@ int	is_objdatestr (char *string, DtSrObjdate *objdptr)
     else
 	myobjdate |= (i << 20);
 
-    if ((token = _XStrtok(NULL, "/", strtok_buf)) == NULL)
+    if ((token = _XStrtok(nullptr, "/", strtok_buf)) == nullptr)
 	return FALSE;
     i = atoi (token);
     if (i < 1 || i > 12)	/* mm */
@@ -127,7 +127,7 @@ int	is_objdatestr (char *string, DtSrObjdate *objdptr)
     else
 	myobjdate |= (--i << 16);
 
-    if ((token = _XStrtok(NULL, "~", strtok_buf)) == NULL)
+    if ((token = _XStrtok(nullptr, "~", strtok_buf)) == nullptr)
 	return FALSE;
     i = atoi (token);
     if (i < 1 || i > 31)	/* dd */
@@ -135,7 +135,7 @@ int	is_objdatestr (char *string, DtSrObjdate *objdptr)
     else
 	myobjdate |= (i << 11);
 
-    if ((token = _XStrtok(NULL, ":", strtok_buf)) == NULL)
+    if ((token = _XStrtok(nullptr, ":", strtok_buf)) == nullptr)
 	return FALSE;
     i = atoi (token);
     if (i < 0 || i > 23)	/* hh */
@@ -143,7 +143,7 @@ int	is_objdatestr (char *string, DtSrObjdate *objdptr)
     else
 	myobjdate |= (i << 6);
 
-    if ((token = _XStrtok(NULL, "\n", strtok_buf)) == NULL)
+    if ((token = _XStrtok(nullptr, "\n", strtok_buf)) == nullptr)
 	return FALSE;
     i = atoi (token);
     if (i < 0 || i > 59)	/* mm */

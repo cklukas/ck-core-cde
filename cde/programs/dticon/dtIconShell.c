@@ -956,7 +956,7 @@ build_dtIconShell( void )
                            XmNtitle, tmpStr,
                            XmNiconName, GETSTR(10,66, "(UNTITLED)"),
                            XmNdeleteResponse, XmDO_NOTHING,
-                           NULL);
+                           nullptr);
             dtIconShell = TopLevel;
         }
         else
@@ -972,18 +972,18 @@ build_dtIconShell( void )
                            XmNdeleteResponse, XmDO_NOTHING,
                            XmNgeometry, geometry,
                            XmNinitialState, session.iconicState,
-                           NULL);
+                           nullptr);
             dtIconShell = TopLevel;
 
         }
 
         mainWindow = XtVaCreateManagedWidget( "mainWindow",
                         xmMainWindowWidgetClass, dtIconShell,
-                        NULL);
+                        nullptr);
 
         mainForm = XtVaCreateManagedWidget( "mainForm",
                         xmFormWidgetClass, mainWindow,
-                        NULL);
+                        nullptr);
 
 
         tmpXmStr = GETXMSTR(12,204, "Pencil");
@@ -996,7 +996,7 @@ build_dtIconShell( void )
                         XmNrightAttachment, XmATTACH_OPPOSITE_FORM,
                         XmNleftOffset, 5,
                         XmNleftAttachment, XmATTACH_FORM,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1013,7 +1013,7 @@ build_dtIconShell( void )
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNleftOffset, 230,
                         XmNleftAttachment, XmATTACH_WIDGET,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1024,7 +1024,7 @@ build_dtIconShell( void )
                         XmNtopAttachment, XmATTACH_WIDGET,
                         XmNrightOffset, 5,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL);
+                        nullptr);
 
         iconImage = XtVaCreateManagedWidget( "iconImage",
                         xmDrawnButtonWidgetClass, iconForm,
@@ -1033,7 +1033,7 @@ build_dtIconShell( void )
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNshadowType, XmSHADOW_ETCHED_OUT,
                         XmNtraversalOn, False,
-                        NULL);
+                        nullptr);
 
         tmpXmStr = XmStringCreateLocalized ("32 x 32");
         iconSize = XtVaCreateManagedWidget( "iconSize",
@@ -1043,7 +1043,7 @@ build_dtIconShell( void )
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         monoImage = XtVaCreateManagedWidget( "monoImage",
@@ -1055,7 +1055,7 @@ build_dtIconShell( void )
                         XmNtopAttachment, XmATTACH_WIDGET,
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNtraversalOn, False,
-                        NULL);
+                        nullptr);
 
         tmpXmStr = GETXMSTR(12,2, "2 Color");
         monoLabel = XtVaCreateManagedWidget( "monoLabel",
@@ -1065,7 +1065,7 @@ build_dtIconShell( void )
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNlabelString, (tmpXmStr ),
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1076,7 +1076,7 @@ build_dtIconShell( void )
                         XmNtopAttachment, XmATTACH_WIDGET,
                         XmNleftOffset, 5,
                         XmNleftAttachment, XmATTACH_FORM,
-                        NULL);
+                        nullptr);
 
         cmdButtonMgr = XtVaCreateManagedWidget( "cmdButtonMgr",
                         xmRowColumnWidgetClass, cmdButtonForm,
@@ -1090,7 +1090,7 @@ build_dtIconShell( void )
                         XmNspacing, 1,
                         XmNradioAlwaysOne, TRUE,
                         XmNradioBehavior, TRUE,
-                        NULL);
+                        nullptr);
 
         pointButton = XtVaCreateManagedWidget( "pointButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1101,7 +1101,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         lineButton = XtVaCreateManagedWidget( "lineButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1112,7 +1112,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         rectangleButton = XtVaCreateManagedWidget( "rectangleButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1123,7 +1123,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         circleButton = XtVaCreateManagedWidget( "circleButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1134,7 +1134,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         eraseButton = XtVaCreateManagedWidget( "eraseButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1145,7 +1145,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         floodButton = XtVaCreateManagedWidget( "floodButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1156,7 +1156,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         polylineButton = XtVaCreateManagedWidget( "polylineButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1167,7 +1167,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         polygonButton = XtVaCreateManagedWidget( "polygonButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1178,7 +1178,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         ellipseButton = XtVaCreateManagedWidget( "ellipseButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1189,7 +1189,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         selectButton = XtVaCreateManagedWidget( "selectButton",
                         xmToggleButtonWidgetClass, cmdButtonMgr,
@@ -1200,7 +1200,7 @@ build_dtIconShell( void )
                         XmNrecomputeSize, FALSE,
                         XmNwidth, PIXMAP_WIDTH,
                         XmNheight, PIXMAP_HEIGHT,
-                        NULL);
+                        nullptr);
 
         tmpXmStr = GETXMSTR(12,6, "Fill Solids");
         fillToggle = XtVaCreateManagedWidget( "fillToggle",
@@ -1214,7 +1214,7 @@ build_dtIconShell( void )
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNshadowThickness, 0,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1227,7 +1227,7 @@ build_dtIconShell( void )
                         XmNleftOffset, 5,
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNshadowThickness, 0,
-                        NULL);
+                        nullptr);
 
         tmpXmStr = GETXMSTR(12,8, "Static Colors");
         staticColorsBox = XtVaCreateManagedWidget( "staticColorsBox",
@@ -1237,12 +1237,12 @@ build_dtIconShell( void )
                         XmNtitleString, tmpXmStr,
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNshadowType, XmSHADOW_ETCHED_OUT,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         stdColorPens = XtVaCreateManagedWidget( "stdColorPens",
                         xmFormWidgetClass, staticColorsBox,
-                        NULL);
+                        nullptr);
 
         color_pb1 = XtVaCreateManagedWidget( "color_pb1",
                         xmToggleButtonWidgetClass, stdColorPens,
@@ -1255,7 +1255,7 @@ build_dtIconShell( void )
                         XmNwidth, COLOR_BUTTON_SIZE,
                         XmNheight, COLOR_BUTTON_SIZE,
                         XmNleftAttachment, XmATTACH_FORM,
-                        NULL);
+                        nullptr);
 
         color_pb2 = XtVaCreateManagedWidget( "color_pb2",
                         xmToggleButtonWidgetClass, stdColorPens,
@@ -1270,7 +1270,7 @@ build_dtIconShell( void )
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNtopOffset, COLOR_BUTTON_SIZE,
-                        NULL);
+                        nullptr);
 
         color_pb3 = XtVaCreateManagedWidget( "color_pb3",
                         xmToggleButtonWidgetClass, stdColorPens,
@@ -1284,7 +1284,7 @@ build_dtIconShell( void )
                         XmNheight, COLOR_BUTTON_SIZE,
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNleftWidget, color_pb1,
-                        NULL);
+                        nullptr);
 
         color_pb4 = XtVaCreateManagedWidget( "color_pb4",
                         xmToggleButtonWidgetClass, stdColorPens,
@@ -1300,7 +1300,7 @@ build_dtIconShell( void )
                         XmNleftWidget, color_pb2,
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNtopOffset, COLOR_BUTTON_SIZE,
-                        NULL);
+                        nullptr);
 
         color_pb5 = XtVaCreateManagedWidget( "color_pb5",
                         xmToggleButtonWidgetClass, stdColorPens,
@@ -1314,7 +1314,7 @@ build_dtIconShell( void )
                         XmNheight, COLOR_BUTTON_SIZE,
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNleftWidget, color_pb3,
-                        NULL);
+                        nullptr);
 
         color_pb6 = XtVaCreateManagedWidget( "color_pb6",
                         xmToggleButtonWidgetClass, stdColorPens,
@@ -1330,7 +1330,7 @@ build_dtIconShell( void )
                         XmNleftWidget, color_pb4,
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNtopOffset, COLOR_BUTTON_SIZE,
-                        NULL);
+                        nullptr);
 
         color_pb7 = XtVaCreateManagedWidget( "color_pb7",
                         xmToggleButtonWidgetClass, stdColorPens,
@@ -1344,7 +1344,7 @@ build_dtIconShell( void )
                         XmNheight, COLOR_BUTTON_SIZE,
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNleftWidget, color_pb5,
-                        NULL);
+                        nullptr);
 
         color_pb8 = XtVaCreateManagedWidget( "color_pb8",
                         xmToggleButtonWidgetClass, stdColorPens,
@@ -1360,7 +1360,7 @@ build_dtIconShell( void )
                         XmNleftWidget, color_pb6,
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNtopOffset, COLOR_BUTTON_SIZE,
-                        NULL);
+                        nullptr);
 
 
         tmpXmStr = GETXMSTR(12,12, "Static Grays");
@@ -1373,12 +1373,12 @@ build_dtIconShell( void )
                         XmNleftOffset, 5,
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNshadowType, XmSHADOW_ETCHED_OUT,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         stdGreyPens = XtVaCreateManagedWidget( "stdGreyPens",
                         xmFormWidgetClass, staticGreysBox,
-                        NULL);
+                        nullptr);
 
         grey_pb1 = XtVaCreateManagedWidget( "grey_pb1",
                         xmToggleButtonWidgetClass, stdGreyPens,
@@ -1391,7 +1391,7 @@ build_dtIconShell( void )
                         XmNwidth, COLOR_BUTTON_SIZE,
                         XmNheight, COLOR_BUTTON_SIZE,
                         XmNleftAttachment, XmATTACH_FORM,
-                        NULL);
+                        nullptr);
 
         grey_pb2 = XtVaCreateManagedWidget( "grey_pb2",
                         xmToggleButtonWidgetClass, stdGreyPens,
@@ -1406,7 +1406,7 @@ build_dtIconShell( void )
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNtopOffset, COLOR_BUTTON_SIZE,
-                        NULL);
+                        nullptr);
 
         grey_pb3 = XtVaCreateManagedWidget( "grey_pb3",
                         xmToggleButtonWidgetClass, stdGreyPens,
@@ -1420,7 +1420,7 @@ build_dtIconShell( void )
                         XmNheight, COLOR_BUTTON_SIZE,
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNleftWidget, grey_pb1,
-                        NULL);
+                        nullptr);
 
         grey_pb4 = XtVaCreateManagedWidget( "grey_pb4",
                         xmToggleButtonWidgetClass, stdGreyPens,
@@ -1436,7 +1436,7 @@ build_dtIconShell( void )
                         XmNleftWidget, grey_pb2,
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNtopOffset, COLOR_BUTTON_SIZE,
-                        NULL);
+                        nullptr);
 
         grey_pb5 = XtVaCreateManagedWidget( "grey_pb5",
                         xmToggleButtonWidgetClass, stdGreyPens,
@@ -1450,7 +1450,7 @@ build_dtIconShell( void )
                         XmNheight, COLOR_BUTTON_SIZE,
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNleftWidget, grey_pb3,
-                        NULL);
+                        nullptr);
 
         grey_pb6 = XtVaCreateManagedWidget( "grey_pb6",
                         xmToggleButtonWidgetClass, stdGreyPens,
@@ -1466,7 +1466,7 @@ build_dtIconShell( void )
                         XmNleftWidget, grey_pb4,
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNtopOffset, COLOR_BUTTON_SIZE,
-                        NULL);
+                        nullptr);
 
         grey_pb7 = XtVaCreateManagedWidget( "grey_pb7",
                         xmToggleButtonWidgetClass, stdGreyPens,
@@ -1480,7 +1480,7 @@ build_dtIconShell( void )
                         XmNheight, COLOR_BUTTON_SIZE,
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNleftWidget, grey_pb5,
-                        NULL);
+                        nullptr);
 
         grey_pb8 = XtVaCreateManagedWidget( "grey_pb8",
                         xmToggleButtonWidgetClass, stdGreyPens,
@@ -1496,7 +1496,7 @@ build_dtIconShell( void )
                         XmNleftWidget, grey_pb6,
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNtopOffset, COLOR_BUTTON_SIZE,
-                        NULL);
+                        nullptr);
 
 
         tmpXmStr = GETXMSTR(12,10, "Dynamic Colors");
@@ -1509,7 +1509,7 @@ build_dtIconShell( void )
                         XmNleftOffset, 5,
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNshadowType, XmSHADOW_ETCHED_OUT,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         symbolicColorPens = XtVaCreateManagedWidget( "symbolicColorPens",
@@ -1523,7 +1523,7 @@ build_dtIconShell( void )
                         XmNradioBehavior, FALSE,
                         XmNorientation, XmHORIZONTAL,
                         XmNnumColumns, 3,
-                        NULL);
+                        nullptr);
 
         tmpXmStr = GETXMSTR(12,14, "Foreground");
         fgColorToggle = XtVaCreateManagedWidget( "fgColorToggle",
@@ -1532,7 +1532,7 @@ build_dtIconShell( void )
                         XmNlabelString, tmpXmStr,
                         XmNindicatorOn, FALSE,
                         XmNfillOnSelect, FALSE,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         tmpXmStr = GETXMSTR(12,16, "Background");
@@ -1542,7 +1542,7 @@ build_dtIconShell( void )
                         XmNlabelString, tmpXmStr,
                         XmNindicatorOn, FALSE,
                         XmNfillOnSelect, FALSE,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         tmpXmStr = GETXMSTR(12,18, "TopShadow");
@@ -1552,7 +1552,7 @@ build_dtIconShell( void )
                         XmNlabelString, tmpXmStr,
                         XmNindicatorOn, FALSE,
                         XmNfillOnSelect, FALSE,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         tmpXmStr = GETXMSTR(12,20, "BottomShadow");
@@ -1562,7 +1562,7 @@ build_dtIconShell( void )
                         XmNlabelString, tmpXmStr,
                         XmNindicatorOn, FALSE,
                         XmNfillOnSelect, FALSE,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         tmpXmStr = GETXMSTR(12,22, "Select");
@@ -1572,7 +1572,7 @@ build_dtIconShell( void )
                         XmNlabelString, tmpXmStr,
                         XmNindicatorOn, FALSE,
                         XmNfillOnSelect, FALSE,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         tmpXmStr = GETXMSTR(12,24, "Transparent");
@@ -1582,7 +1582,7 @@ build_dtIconShell( void )
                         XmNlabelString, tmpXmStr,
                         XmNindicatorOn, FALSE,
                         XmNfillOnSelect, FALSE,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1602,7 +1602,7 @@ build_dtIconShell( void )
                         XmNleftOffset, 5,
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNscrollingPolicy, XmAUTOMATIC,
-                        NULL);
+                        nullptr);
 
 
         tabletBorder = XtVaCreateManagedWidget( "tabletBorder",
@@ -1610,7 +1610,7 @@ build_dtIconShell( void )
                         XmNmarginWidth, 10,
                         XmNmarginHeight, 10,
                         XmNtraversalOn, False,
-                        NULL);
+                        nullptr);
 
 
         tabletFrame = XtVaCreateManagedWidget( "tabletFrame",
@@ -1618,7 +1618,7 @@ build_dtIconShell( void )
                         XmNshadowType, XmSHADOW_ETCHED_OUT,
                         XmNmarginWidth, 0,
                         XmNmarginHeight, 0,
-                        NULL);
+                        nullptr);
 
 
         tablet = XtVaCreateManagedWidget( "tablet",
@@ -1628,26 +1628,26 @@ build_dtIconShell( void )
                         XmNmarginWidth, 0,
                         XmNmarginHeight, 0,
                         XmNhighlightThickness, 0,
-                        NULL);
+                        nullptr);
 
 
         menu1 = XtVaCreateManagedWidget( "menu1",
                         xmRowColumnWidgetClass, mainWindow,
                         XmNmenuAccelerator, "<KeyUp>F10",
                         XmNrowColumnType, XmMENU_BAR,
-                        NULL);
+                        nullptr);
 
 
         fileMenu_shell = XtVaCreatePopupShell ("fileMenu_shell",
                         xmMenuShellWidgetClass, menu1,
                         XmNwidth, 10,
                         XmNheight, 10,
-                        NULL);
+                        nullptr);
 
         fileMenu = XtVaCreateWidget( "fileMenu",
                         xmRowColumnWidgetClass, fileMenu_shell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL);
+                        nullptr);
 
 
         mnemonicStr = GETSTR(12,26, "N");
@@ -1657,7 +1657,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, fileMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         mnemonicStr = GETSTR(12,30, "O");
@@ -1667,11 +1667,11 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, fileMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         XtVaCreateManagedWidget( "fileMenu_separator1",
-                        xmSeparatorGadgetClass, fileMenu, NULL);
+                        xmSeparatorGadgetClass, fileMenu, nullptr);
 
         mnemonicStr = GETSTR(12,34, "S");
         mnemonic = mnemonicStr[0];
@@ -1680,7 +1680,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, fileMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         mnemonicStr = GETSTR(12,38, "A");
@@ -1690,11 +1690,11 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, fileMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         XtVaCreateManagedWidget( "fileMenu_separator1",
-                        xmSeparatorGadgetClass, fileMenu, NULL);
+                        xmSeparatorGadgetClass, fileMenu, nullptr);
 
         mnemonicStr = GETSTR(12,42, "x");
         mnemonic = mnemonicStr[0];
@@ -1703,7 +1703,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, fileMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         tmpXmStr = GETXMSTR(12,48, "File");
@@ -1714,7 +1714,7 @@ build_dtIconShell( void )
                         XmNsubMenuId, fileMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1722,12 +1722,12 @@ build_dtIconShell( void )
                         xmMenuShellWidgetClass, menu1,
                         XmNwidth, 10,
                         XmNheight, 10,
-                        NULL);
+                        nullptr);
 
         editMenu = XtVaCreateWidget( "editMenu",
                         xmRowColumnWidgetClass, editMenu_shell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL);
+                        nullptr);
 
 
         mnemonicStr = GETSTR(12,50, "U");
@@ -1737,13 +1737,13 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
         XtSetSensitive( editMenu_undo_pb, False);
 
 
         XtVaCreateManagedWidget( "editMenu_separator",
-                        xmSeparatorGadgetClass, editMenu, NULL);
+                        xmSeparatorGadgetClass, editMenu, nullptr);
 
         mnemonicStr = GETSTR(12,54, "t");
         mnemonic = mnemonicStr[0];
@@ -1752,7 +1752,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
         XtSetSensitive( editMenu_cut_pb, False);
 
@@ -1764,7 +1764,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
         XtSetSensitive( editMenu_copy_pb, False);
 
@@ -1776,25 +1776,25 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
         XtSetSensitive( editMenu_paste_pb, False);
 
 
         XtVaCreateManagedWidget( "editMenu_separator",
-                        xmSeparatorGadgetClass, editMenu, NULL);
+                        xmSeparatorGadgetClass, editMenu, nullptr);
 
 
         rotateMenu_shell = XtVaCreatePopupShell ("rotateMenu_shell",
                         xmMenuShellWidgetClass, editMenu,
                         XmNwidth, 10,
                         XmNheight, 10,
-                        NULL);
+                        nullptr);
 
         rotateMenu = XtVaCreateWidget( "rotateMenu",
                         xmRowColumnWidgetClass, rotateMenu_shell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL);
+                        nullptr);
 
         mnemonicStr = GETSTR(12,68, "L");
         mnemonic = mnemonicStr[0];
@@ -1803,7 +1803,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, rotateMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         mnemonicStr = GETSTR(12,72, "R");
@@ -1813,7 +1813,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, rotateMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1825,7 +1825,7 @@ build_dtIconShell( void )
                         XmNsubMenuId, rotateMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
         XtSetSensitive(editMenu_rotate_pb, False);
 
@@ -1834,12 +1834,12 @@ build_dtIconShell( void )
                         xmMenuShellWidgetClass, editMenu,
                         XmNwidth, 10,
                         XmNheight, 10,
-                        NULL);
+                        nullptr);
 
         flipMenu = XtVaCreateWidget( "flipMenu",
                         xmRowColumnWidgetClass, flipMenu_shell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL);
+                        nullptr);
 
         mnemonicStr = GETSTR(12,82, "V");
         mnemonic = mnemonicStr[0];
@@ -1848,7 +1848,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, flipMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         mnemonicStr = GETSTR(12,86, "H");
@@ -1858,7 +1858,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, flipMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         mnemonicStr = GETSTR(12,90, "F");
@@ -1869,7 +1869,7 @@ build_dtIconShell( void )
                         XmNsubMenuId, flipMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
         XtSetSensitive(editMenu_flip_pb, False);
 
@@ -1881,7 +1881,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
         XtSetSensitive(editMenu_scale_pb, False);
 
@@ -1893,12 +1893,12 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
         XtVaCreateManagedWidget( "editMenu_separator",
-                        xmSeparatorGadgetClass, editMenu, NULL);
+                        xmSeparatorGadgetClass, editMenu, nullptr);
 
 
         mnemonicStr = GETSTR(12,102, "A");
@@ -1908,7 +1908,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1920,12 +1920,12 @@ build_dtIconShell( void )
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
                         XtNsensitive, False,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
         XtVaCreateManagedWidget( "editMenu_separator",
-                        xmSeparatorGadgetClass, editMenu, NULL);
+                        xmSeparatorGadgetClass, editMenu, nullptr);
 
 
         mnemonicStr = GETSTR(12,110, "G");
@@ -1935,7 +1935,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
          XmStringFree(tmpXmStr);
 
 
@@ -1946,7 +1946,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1958,7 +1958,7 @@ build_dtIconShell( void )
                         XmNsubMenuId, editMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1966,12 +1966,12 @@ build_dtIconShell( void )
                         xmMenuShellWidgetClass, menu1,
                         XmNwidth, 10,
                         XmNheight, 10,
-                        NULL);
+                        nullptr);
 
         optionsMenu = XtVaCreateWidget( "optionsMenu",
                         xmRowColumnWidgetClass, optionsMenu_shell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL);
+                        nullptr);
 
 
         mnemonicStr = GETSTR(12,122, "V");
@@ -1983,7 +1983,7 @@ build_dtIconShell( void )
                         XmNvisibleWhenOff, TRUE,
                         XmNindicatorType, XmN_OF_MANY,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -1991,13 +1991,13 @@ build_dtIconShell( void )
                         xmMenuShellWidgetClass, optionsMenu,
                         XmNwidth, 10,
                         XmNheight, 10,
-                        NULL);
+                        nullptr);
 
         formatMenu = XtVaCreateWidget( "formatMenu",
                         xmRowColumnWidgetClass, formatMenu_shell,
                         XmNradioBehavior, TRUE,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL);
+                        nullptr);
 
 
         mnemonicStr = GETSTR(12,128, "B");
@@ -2007,7 +2007,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, formatMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2018,7 +2018,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, formatMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2030,7 +2030,7 @@ build_dtIconShell( void )
                         XmNsubMenuId, formatMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2038,13 +2038,13 @@ build_dtIconShell( void )
                         xmMenuShellWidgetClass, optionsMenu,
                         XmNwidth, 10,
                         XmNheight, 10,
-                        NULL);
+                        nullptr);
 
         magnificationMenu = XtVaCreateWidget( "magnificationMenu",
                         xmRowColumnWidgetClass, magnificationMenu_shell,
                         XmNradioBehavior, TRUE,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL);
+                        nullptr);
 
 
         tmpXmStr = GETXMSTR(12,144, "2x");
@@ -2052,7 +2052,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2061,7 +2061,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2070,7 +2070,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2079,7 +2079,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2088,7 +2088,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2097,7 +2097,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2106,7 +2106,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2115,7 +2115,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         tmpXmStr = GETXMSTR(12,160, "x");
@@ -2123,7 +2123,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         tmpXmStr = GETXMSTR(12,162, "x");
@@ -2131,7 +2131,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         tmpXmStr = GETXMSTR(12,164, "x");
@@ -2139,7 +2139,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2148,7 +2148,7 @@ build_dtIconShell( void )
                         xmToggleButtonGadgetClass, magnificationMenu,
                         XmNvisibleWhenOff, FALSE,
                         XmNlabelString,tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2160,7 +2160,7 @@ build_dtIconShell( void )
                         XmNmnemonic, mnemonic,
                         XmNsubMenuId, magnificationMenu,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2172,7 +2172,7 @@ build_dtIconShell( void )
                         XmNmnemonic, mnemonic,
                         XmNsubMenuId, optionsMenu,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2180,12 +2180,12 @@ build_dtIconShell( void )
                         xmMenuShellWidgetClass, menu1,
                         XmNwidth, 10,
                         XmNheight, 10,
-                        NULL);
+                        nullptr);
 
         helpMenu = XtVaCreateWidget( "helpMenu",
                         xmRowColumnWidgetClass, helpMenu_shell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL);
+                        nullptr);
 
 
         mnemonicStr = GETSTR(12,176, "v");
@@ -2195,11 +2195,11 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         XtVaCreateManagedWidget( "helpMenu_separator1",
-                        xmSeparatorGadgetClass, helpMenu, NULL);
+                        xmSeparatorGadgetClass, helpMenu, nullptr);
 
         mnemonicStr = GETSTR(12,180, "T");
         mnemonic = mnemonicStr[0];
@@ -2208,7 +2208,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         mnemonicStr = GETSTR(12,184, "R");
@@ -2218,7 +2218,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         mnemonicStr = GETSTR(12,188, "O");
@@ -2228,11 +2228,11 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         XtVaCreateManagedWidget( "helpMenu_separator2",
-                        xmSeparatorGadgetClass, helpMenu, NULL);
+                        xmSeparatorGadgetClass, helpMenu, nullptr);
 
         mnemonicStr = GETSTR(12,192, "U");
         mnemonic = mnemonicStr[0];
@@ -2241,11 +2241,11 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         XtVaCreateManagedWidget( "helpMenu_separator3",
-                        xmSeparatorGadgetClass, helpMenu, NULL);
+                        xmSeparatorGadgetClass, helpMenu, nullptr);
 
         mnemonicStr = GETSTR(12,196, "A");
         mnemonic = mnemonicStr[0];
@@ -2254,7 +2254,7 @@ build_dtIconShell( void )
                         xmPushButtonGadgetClass, helpMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
         mnemonicStr = GETSTR(12,198, "H");
@@ -2265,7 +2265,7 @@ build_dtIconShell( void )
                         XmNsubMenuId, helpMenu,
                         XmNmnemonic, mnemonic,
                         XmNlabelString, tmpXmStr,
-                        NULL);
+                        nullptr);
         XmStringFree(tmpXmStr);
 
 
@@ -2279,169 +2279,169 @@ build_dtIconShell( void )
 
         /* set up initial focus  */
         XmAddTabGroup(mainWindow);              /* main window     */
-        XtVaSetValues(mainWindow, XmNinitialFocus, viewport, NULL);
+        XtVaSetValues(mainWindow, XmNinitialFocus, viewport, nullptr);
 
 
         XtAddCallback(pointButton, XmNvalueChangedCallback,
-                        armCB_pointButton, NULL);
+                        armCB_pointButton, nullptr);
         XtAddCallback(lineButton, XmNvalueChangedCallback,
-                        armCB_lineButton, NULL);
+                        armCB_lineButton, nullptr);
         XtAddCallback(rectangleButton, XmNvalueChangedCallback,
-                        armCB_rectangleButton, NULL);
+                        armCB_rectangleButton, nullptr);
         XtAddCallback(circleButton, XmNvalueChangedCallback,
-                        armCB_circleButton, NULL);
+                        armCB_circleButton, nullptr);
         XtAddCallback(eraseButton, XmNvalueChangedCallback,
-                        armCB_eraseButton, NULL);
+                        armCB_eraseButton, nullptr);
         XtAddCallback(floodButton, XmNvalueChangedCallback,
-                        armCB_floodButton, NULL);
+                        armCB_floodButton, nullptr);
         XtAddCallback(polylineButton, XmNvalueChangedCallback,
-                        armCB_polylineButton, NULL);
+                        armCB_polylineButton, nullptr);
         XtAddCallback(polygonButton, XmNvalueChangedCallback,
-                        armCB_polygonButton, NULL);
+                        armCB_polygonButton, nullptr);
         XtAddCallback(ellipseButton, XmNvalueChangedCallback,
-                        armCB_ellipseButton, NULL);
+                        armCB_ellipseButton, nullptr);
         XtAddCallback(selectButton, XmNvalueChangedCallback,
-                        armCB_selectButton, NULL);
+                        armCB_selectButton, nullptr);
 
         XtAddCallback(fillToggle, XmNvalueChangedCallback,
-                        valueChangedCB_fillToggle, NULL);
+                        valueChangedCB_fillToggle, nullptr);
 
         XtAddCallback(color_pb1, XmNvalueChangedCallback,
-                        valueChangedCB_color_pb1, NULL);
+                        valueChangedCB_color_pb1, nullptr);
         XtAddCallback(color_pb2, XmNvalueChangedCallback,
-                        valueChangedCB_color_pb2, NULL);
+                        valueChangedCB_color_pb2, nullptr);
         XtAddCallback(color_pb3, XmNvalueChangedCallback,
-                        valueChangedCB_color_pb3, NULL);
+                        valueChangedCB_color_pb3, nullptr);
         XtAddCallback(color_pb4, XmNvalueChangedCallback,
-                        valueChangedCB_color_pb4, NULL);
+                        valueChangedCB_color_pb4, nullptr);
         XtAddCallback(color_pb5, XmNvalueChangedCallback,
-                        valueChangedCB_color_pb5, NULL);
+                        valueChangedCB_color_pb5, nullptr);
         XtAddCallback(color_pb6, XmNvalueChangedCallback,
-                        valueChangedCB_color_pb6, NULL);
+                        valueChangedCB_color_pb6, nullptr);
         XtAddCallback(color_pb7, XmNvalueChangedCallback,
-                        valueChangedCB_color_pb7, NULL);
+                        valueChangedCB_color_pb7, nullptr);
         XtAddCallback(color_pb8, XmNvalueChangedCallback,
-                        valueChangedCB_color_pb8, NULL);
+                        valueChangedCB_color_pb8, nullptr);
 
         XtAddCallback(grey_pb1, XmNvalueChangedCallback,
-                        valueChangedCB_grey_pb1, NULL);
+                        valueChangedCB_grey_pb1, nullptr);
         XtAddCallback(grey_pb2, XmNvalueChangedCallback,
-                        valueChangedCB_grey_pb2, NULL);
+                        valueChangedCB_grey_pb2, nullptr);
         XtAddCallback(grey_pb3, XmNvalueChangedCallback,
-                        valueChangedCB_grey_pb3, NULL);
+                        valueChangedCB_grey_pb3, nullptr);
         XtAddCallback(grey_pb4, XmNvalueChangedCallback,
-                        valueChangedCB_grey_pb4, NULL);
+                        valueChangedCB_grey_pb4, nullptr);
         XtAddCallback(grey_pb5, XmNvalueChangedCallback,
-                        valueChangedCB_grey_pb5, NULL);
+                        valueChangedCB_grey_pb5, nullptr);
         XtAddCallback(grey_pb6, XmNvalueChangedCallback,
-                        valueChangedCB_grey_pb6, NULL);
+                        valueChangedCB_grey_pb6, nullptr);
         XtAddCallback(grey_pb7, XmNvalueChangedCallback,
-                        valueChangedCB_grey_pb7, NULL);
+                        valueChangedCB_grey_pb7, nullptr);
         XtAddCallback(grey_pb8, XmNvalueChangedCallback,
-                        valueChangedCB_grey_pb8, NULL);
+                        valueChangedCB_grey_pb8, nullptr);
 
         XtAddCallback(fgColorToggle, XmNvalueChangedCallback,
-                        valueChangedCB_fgColorToggle, NULL);
+                        valueChangedCB_fgColorToggle, nullptr);
         XtAddCallback(bgColorToggle, XmNvalueChangedCallback,
-                        valueChangedCB_bgColorToggle, NULL);
+                        valueChangedCB_bgColorToggle, nullptr);
         XtAddCallback(tsColorToggle, XmNvalueChangedCallback,
-                        valueChangedCB_tsColorToggle, NULL);
+                        valueChangedCB_tsColorToggle, nullptr);
         XtAddCallback(bsColorToggle, XmNvalueChangedCallback,
-                        valueChangedCB_bsColorToggle, NULL);
+                        valueChangedCB_bsColorToggle, nullptr);
         XtAddCallback(selectColorToggle, XmNvalueChangedCallback,
-                        valueChangedCB_selectColorToggle, NULL);
+                        valueChangedCB_selectColorToggle, nullptr);
         XtAddCallback(transparentColorToggle, XmNvalueChangedCallback,
-                        valueChangedCB_transparentColorToggle, NULL);
+                        valueChangedCB_transparentColorToggle, nullptr);
 
 
-        XtVaSetValues(menu1, XmNmenuHelpWidget, helpMenu_top_pb, NULL);
+        XtVaSetValues(menu1, XmNmenuHelpWidget, helpMenu_top_pb, nullptr);
 
 
         XtAddCallback(fileMenu_new_pb, XmNactivateCallback,
-                        activateCB_fileMenu_new_pb, NULL);
+                        activateCB_fileMenu_new_pb, nullptr);
         XtAddCallback(fileMenu_open_pb, XmNactivateCallback,
-                        activateCB_fileMenu_open_pb, NULL);
+                        activateCB_fileMenu_open_pb, nullptr);
         XtAddCallback(fileMenu_save_pb, XmNactivateCallback,
-                        activateCB_fileMenu_save_pb, NULL);
+                        activateCB_fileMenu_save_pb, nullptr);
         XtAddCallback(fileMenu_saveAs_pb, XmNactivateCallback,
-                        activateCB_fileMenu_saveAs_pb, NULL);
+                        activateCB_fileMenu_saveAs_pb, nullptr);
         XtAddCallback(fileMenu_quit_pb, XmNactivateCallback,
-                        activateCB_fileMenu_quit_pb, NULL);
+                        activateCB_fileMenu_quit_pb, nullptr);
 
 
         XtAddCallback(editMenu_undo_pb, XmNactivateCallback,
-                        activateCB_editMenu_undo_pb, NULL);
+                        activateCB_editMenu_undo_pb, nullptr);
 
         XtAddCallback(editMenu_cut_pb, XmNactivateCallback,
-                        activateCB_editMenu_cut_pb, NULL);
+                        activateCB_editMenu_cut_pb, nullptr);
 
         XtAddCallback(editMenu_copy_pb, XmNactivateCallback,
-                        activateCB_editMenu_copy_pb, NULL);
+                        activateCB_editMenu_copy_pb, nullptr);
 
         XtAddCallback(editMenu_paste_pb, XmNactivateCallback,
-                        activateCB_editMenu_paste_pb, NULL);
+                        activateCB_editMenu_paste_pb, nullptr);
 
         XtAddCallback(rotateMenu_pb1, XmNactivateCallback,
-                        activateCB_rotateMenu_pb1, NULL);
+                        activateCB_rotateMenu_pb1, nullptr);
         XtAddCallback(rotateMenu_pb2, XmNactivateCallback,
-                        activateCB_rotateMenu_pb2, NULL);
+                        activateCB_rotateMenu_pb2, nullptr);
 
         XtAddCallback(flipMenu_pb1, XmNactivateCallback,
-                        activateCB_flipMenu_pb1, NULL);
+                        activateCB_flipMenu_pb1, nullptr);
         XtAddCallback(flipMenu_pb2, XmNactivateCallback,
-                        activateCB_flipMenu_pb2, NULL);
+                        activateCB_flipMenu_pb2, nullptr);
 
         XtAddCallback(editMenu_scale_pb, XmNactivateCallback,
-                        activateCB_editMenu_scale_pb, NULL);
+                        activateCB_editMenu_scale_pb, nullptr);
 
         XtAddCallback(editMenu_resize_pb, XmNactivateCallback,
-                        activateCB_editMenu_resize_pb, NULL);
+                        activateCB_editMenu_resize_pb, nullptr);
 
         XtAddCallback(editMenu_addHS_pb, XmNactivateCallback,
-                        activateCB_editMenu_addHS_pb, NULL);
+                        activateCB_editMenu_addHS_pb, nullptr);
 
         XtAddCallback(editMenu_deleteHS_pb, XmNactivateCallback,
-                        activateCB_editMenu_deleteHS_pb, NULL);
+                        activateCB_editMenu_deleteHS_pb, nullptr);
 
         XtAddCallback(editMenu_grabImage_pb, XmNactivateCallback,
-                        activateCB_editMenu_grabImage_pb, NULL);
+                        activateCB_editMenu_grabImage_pb, nullptr);
 
         XtAddCallback(editMenu_clear_pb, XmNactivateCallback,
-                        activateCB_editMenu_clear_pb, NULL);
+                        activateCB_editMenu_clear_pb, nullptr);
 
 
         XtAddCallback(optionsMenu_grid, XmNvalueChangedCallback,
-                        valueChangedCB_optionsMenu_grid, NULL);
+                        valueChangedCB_optionsMenu_grid, nullptr);
 
         XtAddCallback(formatMenu_xbm_tb, XmNvalueChangedCallback,
-                        valueChangedCB_formatMenu_xbm_tb, NULL);
+                        valueChangedCB_formatMenu_xbm_tb, nullptr);
         XtAddCallback(formatMenu_xpm_tb, XmNvalueChangedCallback,
-                        valueChangedCB_formatMenu_xpm_tb, NULL);
+                        valueChangedCB_formatMenu_xpm_tb, nullptr);
 
         XtAddCallback(magMenu_2x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_2x_tb, NULL);
+                        valueChangedCB_magMenu_2x_tb, nullptr);
         XtAddCallback(magMenu_3x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_3x_tb, NULL);
+                        valueChangedCB_magMenu_3x_tb, nullptr);
         XtAddCallback(magMenu_4x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_4x_tb, NULL);
+                        valueChangedCB_magMenu_4x_tb, nullptr);
         XtAddCallback(magMenu_5x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_5x_tb, NULL);
+                        valueChangedCB_magMenu_5x_tb, nullptr);
         XtAddCallback(magMenu_6x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_6x_tb, NULL);
+                        valueChangedCB_magMenu_6x_tb, nullptr);
         XtAddCallback(magMenu_8x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_8x_tb, NULL);
+                        valueChangedCB_magMenu_8x_tb, nullptr);
         XtAddCallback(magMenu_10x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_10x_tb, NULL);
+                        valueChangedCB_magMenu_10x_tb, nullptr);
         XtAddCallback(magMenu_12x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_12x_tb, NULL);
+                        valueChangedCB_magMenu_12x_tb, nullptr);
         XtAddCallback(magMenu_14x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_14x_tb, NULL);
+                        valueChangedCB_magMenu_14x_tb, nullptr);
         XtAddCallback(magMenu_16x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_16x_tb, NULL);
+                        valueChangedCB_magMenu_16x_tb, nullptr);
         XtAddCallback(magMenu_18x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_18x_tb, NULL);
+                        valueChangedCB_magMenu_18x_tb, nullptr);
         XtAddCallback(magMenu_20x_tb, XmNvalueChangedCallback,
-                        valueChangedCB_magMenu_20x_tb, NULL);
+                        valueChangedCB_magMenu_20x_tb, nullptr);
 
 
         XmMainWindowSetAreas( mainWindow, menu1, (Widget) NULL,
@@ -2456,11 +2456,11 @@ build_dtIconShell( void )
 *******************************************************************************/
 static void NewGraphicsOp(void)
 {
-    static char *fillOnStr = NULL;
+    static char *fillOnStr = nullptr;
     int fillOp = False;
-    char *graphicsOpStr = NULL;
-    char *tmpStr = NULL;
-    XmString tmpXmStr = NULL;
+    char *graphicsOpStr = nullptr;
+    char *tmpStr = nullptr;
+    XmString tmpXmStr = nullptr;
     Arg args[10];
     int n;
 

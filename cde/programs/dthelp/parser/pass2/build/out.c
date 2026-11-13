@@ -470,7 +470,7 @@ char *partype(int n)
 void srefout(void)
   {
     LOGICAL first = TRUE ;
-    int *mapbysref = NULL;
+    int *mapbysref = nullptr;
     SREFSTRUCT *srefp ;
     SREFDATA *data ;
     int count = 0 ;
@@ -595,7 +595,7 @@ if (eltp->parptr)
 		        mb_keyword,
 			mb_keyword) ;
 		m_free(mb_keyword,"multi-byte string");
-		ptypep = ptypep->next ? ptypep->nextptr : (PTYPE *) NULL ;
+		ptypep = ptypep->next ? ptypep->nextptr : (PTYPE *) nullptr ;
 		if (ptypep)
 		    {
 		    fputs(",\n", tempfile) ;

@@ -13,6 +13,7 @@ case (exit status 0 means the failure was observed) and still pass HOME set.
 """
 import argparse
 import os
+import re
 from pathlib import Path
 import shlex
 import subprocess
@@ -37,9 +38,10 @@ if args.source_revision:
     text = subprocess.run(["git", "-C", str(args.worktree), "show",
                            f"{args.source_revision}:{relative}"],
                           check=True, capture_output=True, text=True).stdout
+    text = re.sub(r"\bnullptr\b", "NULL", text)
     label = args.source_revision
 else:
-    text = (args.worktree / relative).read_text()
+    text = re.sub(r"\bnullptr\b", "NULL", (args.worktree / relative).read_text())
     label = "working tree"
 
 for marker in (START, END):
@@ -58,7 +60,7 @@ tag = "control" if args.source_revision else "fixed"
 c, binary = scratch / f"home-{tag}.c", scratch / f"home-{tag}"
 c.write_text(src.replace("/* @@EXTRACTED@@ */\n", block))
 subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-               ["-std=gnu99", "-Wall", "-Wno-nonnull", "-Wno-unused-variable",
+               ["-std=gnu23", "-Wall", "-Wno-nonnull", "-Wno-unused-variable",
                 "-Wno-unused-value", "-fsanitize=address,undefined",
                 "-fno-sanitize-recover=all", "-fno-omit-frame-pointer", "-O0", "-g",
                 str(c), "-o", str(binary)], check=True)

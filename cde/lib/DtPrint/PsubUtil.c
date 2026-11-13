@@ -100,7 +100,7 @@ static Boolean TrimWhitespace(
 static String*
 BuildStringList(String list_string, int i)
 {
-    String string = NULL;
+    String string = nullptr;
     /*
      * parse the next item out of the string list
      */
@@ -190,12 +190,12 @@ OpenXPrinterOnDisplay(
     int event_base;
     int printer_count;
 
-    *ct_printer_name = (char*)NULL;
+    *ct_printer_name = (char*)nullptr;
     /*
      * open the print display
      */
     print_display = XOpenDisplay(display_spec);
-    if(print_display != (Display*)NULL)
+    if(print_display != (Display*)nullptr)
     {
 	if(XpQueryExtension(print_display, &event_base, &error_base))
 	{
@@ -205,7 +205,7 @@ OpenXPrinterOnDisplay(
 	    StringToCompoundText(print_display,
 				 ct_printer_name,
 				 printer_name);
-	    if((char*)NULL == *ct_printer_name)
+	    if((char*)nullptr == *ct_printer_name)
 	    {
 		printer_list =
 		    XpGetPrinterList(print_display,
@@ -324,7 +324,7 @@ StringToCompoundText(
     if(Success == status)
 	*compound_text = (char*)text_prop.value;
     else
-	*compound_text = (char*)NULL;
+	*compound_text = (char*)nullptr;
 
     return status;
 }
@@ -370,7 +370,7 @@ TrimWhitespace(String string)
     /*
      * find the last non-whitespace character
      */
-    for(ptr = string, last_non_ws = NULL; *ptr != '\0'; ptr = DtNextChar(ptr))
+    for(ptr = string, last_non_ws = nullptr; *ptr != '\0'; ptr = DtNextChar(ptr))
 	if(!DtIsspace(ptr))
 	    last_non_ws = ptr;
     /*
@@ -634,7 +634,7 @@ _DtPrintGetXpPrinterList(
 	return BuildStringList(xp_printer_list, 0);
     }
     else
-	return (String*)NULL;
+	return (String*)nullptr;
 }
 
 /*
@@ -715,7 +715,7 @@ _DtPrintGetXpServerList(
     }
     else
 #endif /* PRINTING_SUPPORTED */
-	server_list = (String*)NULL;
+	server_list = (String*)nullptr;
     /*
      * default the display number to ":0" if needed
      */
@@ -728,9 +728,9 @@ _DtPrintGetXpServerList(
 	 */
 	_DtPrintParseXDisplaySpecifier(server_list[i],
 				       &host_name,
-				       (DtPrintSpecNet*)NULL,
+				       (DtPrintSpecNet*)nullptr,
 				       &display_num,
-				       (int*)NULL);
+				       (int*)nullptr);
 	if(display_num == -1)
 	{
 	    /*
@@ -802,7 +802,7 @@ _DtPrintParseXDisplaySpecifier(
      * find the start of the display number in the display spec
      */
     ptr = DtStrchr(display_spec, ':');
-    if(ptr == (char*)NULL)
+    if(ptr == (char*)nullptr)
     {
 	/*
 	 * not found, return -1 for display and screen
@@ -1092,7 +1092,7 @@ _DtPrintVerifyXPrinter(
 	     * find a server in the server list that manages the printer
 	     */
 	    status = DtPRINT_NO_DEFAULT_DISPLAY;
-	    if((server_list = _DtPrintGetXpServerList(w)) != (String*)NULL)
+	    if((server_list = _DtPrintGetXpServerList(w)) != (String*)nullptr)
 	    {
 		for(i = 0; server_list[i] != (String)NULL; i++)
 		{
@@ -1124,9 +1124,9 @@ _DtPrintVerifyXPrinter(
 	     */
 	    _DtPrintParseXDisplaySpecifier(display_spec,
 					   &host_name,
-					   (DtPrintSpecNet*)NULL,
+					   (DtPrintSpecNet*)nullptr,
 					   &display_num,
-					   (int*)NULL);
+					   (int*)nullptr);
 	    if(display_num == -1)
 	    {
 		String new_display_spec;
@@ -1167,7 +1167,7 @@ _DtPrintVerifyXPrinter(
 	 * initialize the print context
 	 */
 #if 0 && defined(PRINTING_SUPPORTED)
-	if((char*)NULL != ct_printer_name)
+	if((char*)nullptr != ct_printer_name)
 	{
 	    *new_context = XpCreateContext(print_display, ct_printer_name);
 	    XFree(ct_printer_name);

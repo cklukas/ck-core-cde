@@ -79,7 +79,7 @@ arpaPhrase(const char * name)
     const char * start;
     
     if (name == (char *) 0) {
-	return(NULL);
+	return(nullptr);
     }
 
     /* We need to figure out what is the biggest possible address.
@@ -213,7 +213,7 @@ arpaPhrase(const char * name)
 	}
     }
     *cp2 = 0;
-    addrs[cur_addr] = NULL;
+    addrs[cur_addr] = nullptr;
     return(addrs);
 }
 
@@ -226,7 +226,7 @@ formatMessage(char ** addrs, const char * subject, const char * body)
     char **	to;
     int isAllASCII;
     char hdr_buf[1024];
-    _DtXlateDb db = NULL;
+    _DtXlateDb db = nullptr;
     char plat[_DtPLATFORM_MAX_LEN];
     int execver;
     int compver;
@@ -234,11 +234,11 @@ formatMessage(char ** addrs, const char * subject, const char * body)
     char digest[16];
     char mime_type[64];
     char tmpbuf[20];
-    char *ret_locale = NULL;
-    char *ret_lang = NULL;
-    char *ret_codeset = NULL;
+    char *ret_locale = nullptr;
+    char *ret_lang = nullptr;
+    char *ret_codeset = nullptr;
     char default_charset[64];
-    char *NewBuf = NULL;
+    char *NewBuf = nullptr;
     unsigned long _len = 0;
     Encoding enc;
 
@@ -264,7 +264,7 @@ formatMessage(char ** addrs, const char * subject, const char * body)
 
     for (to = addrs; *to; to++) {
 	strcat(msg, *to);
-	if (*(to + 1) != NULL) {
+	if (*(to + 1) != nullptr) {
 	    strcat(msg, ", ");
 	    line += strlen(*to);
 	    if (line > 72) {
@@ -302,7 +302,7 @@ formatMessage(char ** addrs, const char * subject, const char * body)
 		strcpy(mime_type,"text/plain");
 		rfc1522cpy(hdr_buf,subject);	
 		strcat(hdr_buf,"Mime-Version: 1.0\n");
-		isAllASCII= CvtStr((char *)NULL,(void *)body,(unsigned long)body_len,(void**)&NewBuf, &_len, CURRENT_TO_INTERNET);
+		isAllASCII= CvtStr((char *)nullptr,(void *)body,(unsigned long)body_len,(void**)&NewBuf, &_len, CURRENT_TO_INTERNET);
 
 		enc = getEncodingType(body,body_len,FALSE);
        /*
@@ -328,7 +328,7 @@ formatMessage(char ** addrs, const char * subject, const char * body)
 		writeContentHeaders(hdr_buf,mime_type,enc,(char *)digest,isAllASCII);
 		strcat(hdr_buf,"\n");
 		strcat(hdr_buf,"Content-Length: ");
-		if (( NewBuf != NULL) && ( _len != 0))
+		if (( NewBuf != nullptr) && ( _len != 0))
 		{
 			sprintf(tmpbuf,"%ld",_len);
 			strcat(hdr_buf,tmpbuf);
@@ -374,7 +374,7 @@ deliver(char ** addrs, char * msg)
     for (cp = 0; addrs[cp]; cp++) {
 	argv[cp + 1] = addrs[cp];
     }
-    argv[cp + 1] = NULL;
+    argv[cp + 1] = nullptr;
 
     if(-1 == pipe(fd)) {
 	fprintf(stderr, "pipe() failed %d '%s'\n", errno, strerror(errno));

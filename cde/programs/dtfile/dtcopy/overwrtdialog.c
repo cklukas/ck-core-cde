@@ -102,19 +102,19 @@ radio_callback(
         case G_OVERWRITE_EXISTING:
            XtVaSetValues (G_rename_text,
                           XmNsensitive, FALSE,
-                          NULL);
+                          nullptr);
         break;
 
         case G_SKIP:
            XtVaSetValues (G_rename_text,
                           XmNsensitive, FALSE,
-                          NULL);
+                          nullptr);
         break;
 
         case G_RENAME_EXISTING:
            XtVaSetValues (G_rename_text,
                           XmNsensitive, TRUE,
-                          NULL);
+                          nullptr);
            XmProcessTraversal(G_rename_text, XmTRAVERSE_CURRENT);
        break;
 
@@ -173,8 +173,8 @@ ok_callback(
             sprintf(msg,
                     GETMESSAGE(5, 10, "%s\nalready exists: choose another name."),
                     renameNewName);
-            _DtMessageDialog (G_over_dialog, title, msg, 0, FALSE, NULL,
-                              renameError_ok_callback, NULL, NULL, False, ERROR_DIALOG);
+            _DtMessageDialog (G_over_dialog, title, msg, 0, FALSE, nullptr,
+                              renameError_ok_callback, nullptr, nullptr, False, ERROR_DIALOG);
             free(renameNewName);
             return;
 
@@ -190,8 +190,8 @@ ok_callback(
             sprintf(msg,
                     GETMESSAGE(5, 10, "%s\ncannot be renamed to\n%s\n%s"),
                     G_rename_oldname, renameNewName, strerror(saveError));
-            _DtMessageDialog (G_over_dialog, title, msg, 0, FALSE, NULL,
-                              renameError_ok_callback, NULL, NULL, False, ERROR_DIALOG);
+            _DtMessageDialog (G_over_dialog, title, msg, 0, FALSE, nullptr,
+                              renameError_ok_callback, nullptr, nullptr, False, ERROR_DIALOG);
             free(renameNewName);
             return;
 
@@ -207,7 +207,7 @@ ok_callback(
    }
 
   XtDestroyWidget(G_over_dialog);
-  G_over_dialog = NULL;
+  G_over_dialog = nullptr;
   G_wait_on_input = FALSE;
 
   return;
@@ -265,8 +265,8 @@ create_overwrite_dialog(
   Position x, y;
 
   static ActionAreaItem action_items[] = {
-    {"Ok",          6, 1, ok_callback,               NULL},
-    {"Cancel Copy", 6, 7, overwrite_cancel_callback, NULL},  /* possibly changed below to "Cancel Move" */
+    {"Ok",          6, 1, ok_callback,               nullptr},
+    {"Cancel Copy", 6, 7, overwrite_cancel_callback, nullptr},  /* possibly changed below to "Cancel Move" */
     {"Help",        6, 4, help_callback,             (XtPointer) HELP_OVERWRITE},
   };
 
@@ -306,7 +306,7 @@ create_overwrite_dialog(
                              G_over_dialog,
                              XmNshadowThickness, 3,
                              XmNshadowType, XmSHADOW_ETCHED_IN,
-                             NULL);
+                             nullptr);
 
   /* Create the Manager Widget, form, for the copy dialog */
   form  = XtVaCreateWidget ("dialog_form",
@@ -314,7 +314,7 @@ create_overwrite_dialog(
                              outerFrame,
                              XmNverticalSpacing,   VERTICAL_SPACING,
                              XmNhorizontalSpacing, HORIZONTAL_SPACING,
-                             NULL);
+                             nullptr);
 
   /* Create a question dialog icon */
   n = 0;
@@ -335,7 +335,7 @@ create_overwrite_dialog(
                              XmNlabelPixmap,      px,
                              XmNtopAttachment,    XmATTACH_FORM,
                              XmNleftAttachment,   XmATTACH_FORM,
-                             NULL);
+                             nullptr);
 
   /* Create the message label */
   split_path(tname,tfolder,tobject);
@@ -353,7 +353,7 @@ create_overwrite_dialog(
                              XmNleftWidget,       icon,
                              XmNleftOffset,       HORIZONTAL_SPACING,
                              XmNrightAttachment,  XmATTACH_FORM,
-                             NULL);
+                             nullptr);
   XmStringFree(msg);
 
 
@@ -369,7 +369,7 @@ create_overwrite_dialog(
                              XmNtopOffset,        2*VERTICAL_SPACING,
                              XmNleftAttachment,   XmATTACH_OPPOSITE_WIDGET,
                              XmNleftWidget,       msg_label,
-                             NULL);
+                             nullptr);
   XmStringFree(msg);
 
 
@@ -400,7 +400,7 @@ create_overwrite_dialog(
                                             xmToggleButtonWidgetClass, G_overwrite_radio,
                                             XmNalignment,   XmALIGNMENT_BEGINNING,
                                             XmNlabelString, xm_string[i],
-                                            NULL);
+                                            nullptr);
        XtAddCallback(radiobtn[i], XmNvalueChangedCallback, radio_callback, (XtPointer)(XtArgVal) i);
        XmStringFree(xm_string[i]);
      }
@@ -427,7 +427,7 @@ create_overwrite_dialog(
                  	      XmNvalue, 		gobject,
                  	      XmNsensitive, 		FALSE,
                  	      XmNcursorPosition,        strlen(gobject),
-                              NULL);
+                              nullptr);
 
 
   /* create the toggle button */
@@ -444,12 +444,12 @@ create_overwrite_dialog(
                              XmNleftOffset,       0,
                              XmNrightAttachment,  XmATTACH_FORM,
                              XmNalignment,        XmALIGNMENT_BEGINNING,
-                             NULL);
-  XtAddCallback(G_over_confirm, XmNvalueChangedCallback, confirmtoggle_callback, NULL);
+                             nullptr);
+  XtAddCallback(G_over_confirm, XmNvalueChangedCallback, confirmtoggle_callback, nullptr);
   XmStringFree(msg);
 
   /* create the action area of the Copy Directory Dialog */
-  action_area = Create_Action_Area(form, overwriteActions, NULL);
+  action_area = Create_Action_Area(form, overwriteActions, nullptr);
   separator  =  XtVaCreateManagedWidget("separator",
                              xmSeparatorWidgetClass,
                              form,
@@ -459,7 +459,7 @@ create_overwrite_dialog(
                              XmNbottomWidget,      action_area,
                              XmNleftAttachment,    XmATTACH_FORM,
                              XmNrightAttachment,   XmATTACH_FORM,
-                             NULL);
+                             nullptr);
 
 
   /* set initial keyborad focus to the action button area */
@@ -504,7 +504,7 @@ touch(String path)
 FILE *stream;
 
 errno = 0;
-if ( ( stream = fopen(path, "w") ) == NULL)
+if ( ( stream = fopen(path, "w") ) == nullptr)
    return ( EOF );
 
 return ( fclose (stream) );

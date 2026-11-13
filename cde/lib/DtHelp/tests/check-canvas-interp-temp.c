@@ -63,9 +63,9 @@ static char *ck_tempnam(const char *dir, const char *prefix)
 {
     char path[PATH_MAX];
     (void)prefix;
-    if (dir == NULL)
+    if (dir == nullptr)
         dir = getenv("TMPDIR");
-    if (dir == NULL)
+    if (dir == nullptr)
         dir = "/tmp";
     snprintf(path, sizeof path, "%s/AAAAAA", dir);
     return strdup(path);
@@ -120,7 +120,7 @@ static FILE *ck_popen(const char *cmd, const char *mode)
                   access(ck_popen_file, R_OK) == 0 &&
                   strcmp(ck_slurp_early(ck_popen_file), ck_expect) == 0;
     if (ck_popen_fail)
-        return NULL;
+        return nullptr;
     (void)mode;
     f = fopen("/dev/null", "r");
     assert(f);
@@ -279,8 +279,8 @@ int main(int argc, char **argv)
      * read-only after the data was written).
      */
     ck_reset();
-    out = NULL;
-    rc = _DtCvRunInterp(NULL, NULL, INTERP, data, &out);
+    out = nullptr;
+    rc = _DtCvRunInterp(nullptr, nullptr, INTERP, data, &out);
     assert(rc == 0 && out && strcmp(out, "OUT\n") == 0);
     free(out);
     assert(ck_mk_calls == 1 && ck_popen_calls == 1);
@@ -302,8 +302,8 @@ int main(int argc, char **argv)
      */
     ck_reset();
     ck_filter_calls = 0;
-    out = NULL;
-    assert(_DtCvRunInterp(ck_filter, NULL, LONG_INTERP, data, &out) == 0);
+    out = nullptr;
+    assert(_DtCvRunInterp(ck_filter, nullptr, LONG_INTERP, data, &out) == 0);
     assert(ck_filter_calls == 1 && ck_popen_ok);
     assert(strncmp(ck_cmd, LONG_INTERP " ", strlen(LONG_INTERP) + 1) == 0);
     free(out);
@@ -313,17 +313,17 @@ int main(int argc, char **argv)
     ck_reset();
     ck_mk_fail = 1;
     ck_filter_calls = 0;
-    out = NULL;
-    assert(_DtCvRunInterp(ck_filter, NULL, INTERP, data, &out) == -1);
-    assert(ck_mk_calls == 1 && ck_popen_calls == 0 && out == NULL);
+    out = nullptr;
+    assert(_DtCvRunInterp(ck_filter, nullptr, INTERP, data, &out) == -1);
+    assert(ck_mk_calls == 1 && ck_popen_calls == 0 && out == nullptr);
     assert(ck_count(dir) == base);
     ck_victim_intact();
 
     /* popen fails: -1 and the file is removed again. */
     ck_reset();
     ck_popen_fail = 1;
-    out = NULL;
-    assert(_DtCvRunInterp(NULL, NULL, INTERP, data, &out) == -1);
+    out = nullptr;
+    assert(_DtCvRunInterp(nullptr, nullptr, INTERP, data, &out) == -1);
     assert(ck_popen_calls == 1);
     assert(ck_count(dir) == base);
     ck_victim_intact();

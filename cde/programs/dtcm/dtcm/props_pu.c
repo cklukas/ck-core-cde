@@ -135,7 +135,7 @@ p_set_change(Props_pu *p) {
 	if (p->defaults_button)
 		XtSetSensitive(p->defaults_button, True);
 	if (p->base_form_mgr)
-        	XtVaSetValues(p->base_form_mgr, XmNdefaultButton, p->apply_button, NULL);
+        	XtVaSetValues(p->base_form_mgr, XmNdefaultButton, p->apply_button, nullptr);
 }
 
 static void
@@ -162,7 +162,7 @@ p_clear_change(Props_pu *p) {
 		v4_gap_clear_pending_change(p);
 
         XtSetSensitive(p->gap_remove_button, False);
-        XtVaSetValues(p->base_form_mgr, XmNdefaultButton, p->close_button, NULL);
+        XtVaSetValues(p->base_form_mgr, XmNdefaultButton, p->close_button, nullptr);
 }
 static void
 p_mark_change(Widget w, XtPointer data, XtPointer cbs) {
@@ -179,11 +179,11 @@ set_menu_marker(Widget menu, Props_pu *p) {
 	WidgetList	children;
 	Cardinal	num_c;
 
-	XtVaGetValues(menu, XmNsubMenuId, &submenu, NULL);
+	XtVaGetValues(menu, XmNsubMenuId, &submenu, nullptr);
         XtVaGetValues(submenu, 
 		XmNchildren, &children, 
 		XmNnumChildren, &num_c, 
-		NULL);
+		nullptr);
 
 	while (num_c > 0)
 		XtAddCallback(children[--num_c], XmNactivateCallback, p_mark_change, p);
@@ -220,7 +220,7 @@ p_create_editor_pane(
 		XmNleftAttachment, 	XmATTACH_FORM,
 		XmNrightAttachment, 	XmATTACH_FORM,
 		XmNbottomOffset,	10,
-		NULL);
+		nullptr);
 	pu->pane_list[EDITOR_PANE] = ep_form_mgr;
 
 	/*
@@ -236,7 +236,7 @@ p_create_editor_pane(
                 XmNtopOffset, 		GAP,
 		XmNleftAttachment, 	XmATTACH_FORM,
                 XmNleftOffset, 		GAP,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	build_dssw(&pu->ep_dssw, c, ep_form_mgr, False, False);
@@ -255,7 +255,7 @@ p_create_editor_pane(
         pu->ep_dur_label = widgets[4] = XtVaCreateWidget("duration",
 		xmLabelGadgetClass, pu->ep_dssw.dssw_form_mgr,
 		XmNlabelString, xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	ac = 0;
@@ -265,7 +265,7 @@ p_create_editor_pane(
 	pu->ep_dur_cb = widgets[5] = XmCreateComboBox(pu->ep_dssw.dssw_form_mgr,
 					 "ep_dur_cb", args, ac);
 	XtManageChild(pu->ep_dur_cb);
-	XtVaSetValues(pu->ep_dur_cb, XmNwidth, 75, NULL);
+	XtVaSetValues(pu->ep_dur_cb, XmNwidth, 75, nullptr);
 
 	for(ac = 15; ac <= 90; ac += 15) {
 		if (ac != 75) {
@@ -277,7 +277,7 @@ p_create_editor_pane(
 		}
 	}
 
-	XtVaGetValues(pu->ep_dur_cb, XmNtextField, &text_field, NULL);
+	XtVaGetValues(pu->ep_dur_cb, XmNtextField, &text_field, nullptr);
 	XtAddCallback(text_field, XmNvalueChangedCallback, p_mark_change, pu);
 	XtAddCallback(pu->ep_dur_cb, XmNselectionCallback, p_mark_change, pu);
 
@@ -285,7 +285,7 @@ p_create_editor_pane(
         pu->ep_dur_message = widgets[6] = XtVaCreateWidget("message",
 		xmLabelGadgetClass, pu->ep_dssw.dssw_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	/*
@@ -308,19 +308,19 @@ p_create_editor_pane(
 	XtVaSetValues( curr,
 			XmNtopAttachment, XmATTACH_FORM,
 			XmNtopOffset, GAP,
-			NULL );
+			nullptr );
 	XtVaSetValues( pu->ep_dur_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toLabel,
-			NULL );
+			nullptr );
 	XtVaSetValues( pu->ep_dur_cb,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	XtVaSetValues( pu->ep_dur_message,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toMenu,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -341,23 +341,23 @@ p_create_editor_pane(
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, GAP,
-			NULL );
+			nullptr );
 	XtVaSetValues( pu->ep_dssw.start_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toLabel,
-			NULL );
+			nullptr );
 	XtVaSetValues( pu->ep_dssw.start_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	XtVaSetValues( pu->ep_dssw.start_menu,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toMenu,
-			NULL );
+			nullptr );
 	XtVaSetValues( pu->ep_dssw.start_ampm_rc_mgr,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toRC,
-			NULL );
+			nullptr );
 
 	XtVaSetValues(pu->ep_dssw.dssw_form_mgr,
 		XmNtopAttachment, 	XmATTACH_WIDGET,
@@ -367,7 +367,7 @@ p_create_editor_pane(
 		XmNleftAttachment, 	XmATTACH_OPPOSITE_WIDGET,
 		XmNleftWidget, 		pu->ep_appt_label,
 		XmNleftOffset, 		0,
-		NULL);
+		nullptr);
 
 	XtManageChildren(widgets, 7);
 
@@ -380,7 +380,7 @@ p_create_editor_pane(
 		XmNtopWidget, pu->ep_dssw.dssw_form_mgr,
 		XmNtopOffset, 5,
 		XmNleftAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
 
 	/*
 	**  Build the stuff for privacy ...
@@ -390,13 +390,13 @@ p_create_editor_pane(
         pu->privacy_label = XtVaCreateWidget("privacy",
 		xmLabelGadgetClass, 	pu->ep_reminders.bfpm_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	pu->privacy_menu = create_privacy_menu(pu->ep_reminders.bfpm_form_mgr);
 	XtVaSetValues(pu->privacy_menu,
 		XmNuserData, 		0,
-		NULL);
+		nullptr);
 	ManageChildren(pu->ep_reminders.bfpm_form_mgr);
 
 	/*
@@ -413,15 +413,15 @@ p_create_editor_pane(
 			XmNtopOffset, 30,
 			XmNbottomAttachment, XmATTACH_FORM,
 			XmNbottomOffset, 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( pu->privacy_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 15,   /* See reminders.c l. 783 */
-			NULL );
+			nullptr );
 	XtVaSetValues( pu->privacy_menu,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 15 + widest + 5,
-			NULL );
+			nullptr );
 
 	XtAddCallback(pu->privacy_menu, XmNselectionCallback, p_mark_change, pu);
 
@@ -486,7 +486,7 @@ set_scale_value(Widget w, int val, Props_pu *p)
 
 	XtVaSetValues(w,
 		XmNlabelString, xmstr,
-		NULL);
+		nullptr);
 
 	XmStringFree(xmstr);
 }
@@ -558,7 +558,7 @@ p_create_display_pane(Props_pu *p) {
 		XmNbottomAttachment, 	XmATTACH_WIDGET,
 		XmNbottomOffset, 	10,
 		XmNbottomWidget, 	p->separator2,
-		NULL);
+		nullptr);
 	p->pane_list[DISPLAY_PANE] = dp_form_mgr;
 
 	/*
@@ -569,12 +569,12 @@ p_create_display_pane(Props_pu *p) {
         p->dp_loc_label = XtVaCreateWidget("location",
 		xmLabelGadgetClass, dp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
         p->dp_loc_text = XtVaCreateWidget("dp_loc_text",
 		xmTextWidgetClass, dp_form_mgr,
-                NULL);
+                nullptr);
 
 	XtAddCallback(p->dp_loc_text, 
 			XmNvalueChangedCallback, p_mark_change, p);
@@ -599,14 +599,14 @@ p_create_display_pane(Props_pu *p) {
         p->dp_day_label = XtVaCreateWidget("dayBoundaries",
 		xmLabelGadgetClass, dp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 393, "Begin:"));
         p->dp_beg_label = XtVaCreateWidget("begin",
 		xmLabelGadgetClass, dp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	p->dp_beg_scale = XtVaCreateWidget("dp_beg_scale",
@@ -616,7 +616,7 @@ p_create_display_pane(Props_pu *p) {
 		XmNminimum, 		0,
 		XmNvalue, 		0,
 		XmNscaleMultiple, 	1,
-		NULL);
+		nullptr);
 	XtAddCallback(p->dp_beg_scale, XmNvalueChangedCallback,
 		      p_dp_scale_mod_proc, p);
 	XtAddCallback(p->dp_beg_scale, XmNdragCallback,
@@ -626,14 +626,14 @@ p_create_display_pane(Props_pu *p) {
         p->dp_beg_value = XtVaCreateWidget("begin",
 		xmLabelGadgetClass, dp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 394, "End:"));
         p->dp_end_label = XtVaCreateWidget("end",
 		xmLabelGadgetClass, dp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	p->dp_end_scale = XtVaCreateWidget("dp_end_scale",
@@ -643,7 +643,7 @@ p_create_display_pane(Props_pu *p) {
 		XmNminimum, 		1,
 		XmNvalue, 		1,
 		XmNscaleMultiple, 	1,
-		NULL);
+		nullptr);
 	XtAddCallback(p->dp_end_scale, XmNvalueChangedCallback,
 		      p_dp_scale_mod_proc, p);
 	XtAddCallback(p->dp_end_scale, XmNdragCallback,
@@ -653,7 +653,7 @@ p_create_display_pane(Props_pu *p) {
         p->dp_end_value = XtVaCreateWidget("begin",
 		xmLabelGadgetClass, dp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	/*
@@ -664,7 +664,7 @@ p_create_display_pane(Props_pu *p) {
         p->dp_hour_label = XtVaCreateWidget("hourDisplay",
 		xmLabelGadgetClass, dp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	p->dp_hour_rc_mgr = XtVaCreateWidget("dp_hour_rc_mgr",
@@ -674,13 +674,13 @@ p_create_display_pane(Props_pu *p) {
                 XmNradioBehavior, 	True,
                 XmNisHomogeneous, 	True,
                 XmNentryClass, 		xmToggleButtonGadgetClass,
-                NULL);
+                nullptr);
  
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 396, "12 Hour"));
         p->dp_hour12_toggle = widgets[0] = XtVaCreateWidget("twelveHour",
                 xmToggleButtonGadgetClass, p->dp_hour_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);      
+                nullptr);      
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dp_hour12_toggle, 
@@ -690,7 +690,7 @@ p_create_display_pane(Props_pu *p) {
         p->dp_hour24_toggle = widgets[1] = XtVaCreateWidget("twentyFourHour",
                 xmToggleButtonGadgetClass, p->dp_hour_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dp_hour24_toggle, 
@@ -706,7 +706,7 @@ p_create_display_pane(Props_pu *p) {
         p->dp_view_label = XtVaCreateWidget("defaultView:",
 		xmLabelGadgetClass, dp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	p->dp_view_rc_mgr = XtVaCreateWidget("dp_view_rc_mgr",
@@ -716,14 +716,14 @@ p_create_display_pane(Props_pu *p) {
                 XmNradioBehavior, 	True,
                 XmNisHomogeneous, 	True,
                 XmNentryClass, 		xmToggleButtonGadgetClass,
-                NULL);
+                nullptr);
  
  
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 402, "Day"));
         p->dp_view_day_toggle = XtVaCreateWidget("day",
                 xmToggleButtonGadgetClass, p->dp_view_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);      
+                nullptr);      
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dp_view_day_toggle, 
@@ -733,7 +733,7 @@ p_create_display_pane(Props_pu *p) {
         p->dp_view_week_toggle = XtVaCreateWidget("week",
                 xmToggleButtonGadgetClass, p->dp_view_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);      
+                nullptr);      
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dp_view_week_toggle, 
@@ -743,7 +743,7 @@ p_create_display_pane(Props_pu *p) {
         p->dp_view_month_toggle = XtVaCreateWidget("month",
                 xmToggleButtonGadgetClass, p->dp_view_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);      
+                nullptr);      
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dp_view_month_toggle, 
@@ -753,7 +753,7 @@ p_create_display_pane(Props_pu *p) {
         p->dp_view_year_toggle = XtVaCreateWidget("year",
                 xmToggleButtonGadgetClass, p->dp_view_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);      
+                nullptr);      
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dp_view_year_toggle, 
@@ -769,12 +769,12 @@ p_create_display_pane(Props_pu *p) {
         p->dp_init_view_label = XtVaCreateWidget("initialView",
 		xmLabelGadgetClass, dp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
         p->dp_init_view_text = XtVaCreateWidget("dp_init_view_text",
 		xmTextWidgetClass, dp_form_mgr,
-                NULL);
+                nullptr);
 
 	XtAddCallback(p->dp_init_view_text, 
 			XmNvalueChangedCallback, p_mark_change, p);
@@ -798,15 +798,15 @@ p_create_display_pane(Props_pu *p) {
 	XtVaSetValues( curr,
 			XmNtopAttachment, XmATTACH_FORM,
 			XmNtopOffset, 12,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_loc_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to1st,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_loc_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to2nd,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -818,11 +818,11 @@ p_create_display_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_day_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to1st,
-			NULL );
+			nullptr );
 	prev = p->dp_day_label;
 
 	/*
@@ -838,19 +838,19 @@ p_create_display_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 12,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_beg_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to1st,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_beg_scale,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to2nd,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_beg_value,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to3rd,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -866,19 +866,19 @@ p_create_display_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 12,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_end_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to1st,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_end_scale,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to2nd,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_end_value,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to3rd,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -892,15 +892,15 @@ p_create_display_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 12,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_hour_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to1st,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_hour_rc_mgr,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to2nd,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -914,15 +914,15 @@ p_create_display_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 12,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_view_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to1st,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_view_rc_mgr,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to2nd,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -936,15 +936,15 @@ p_create_display_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 12,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_init_view_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to1st,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->dp_init_view_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _to2nd,
-			NULL );
+			nullptr );
 	prev = curr;
 
 
@@ -1013,7 +1013,7 @@ p_gap_convert_permissions(
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, ACCESS_RIGHTS_ERROR_HELP,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -1055,12 +1055,12 @@ p_gap_create_entry_string(Props_pu *p, char *who, char *p_str, XmString *val) {
 
 static void
 p_gap_add_proc(Widget w, XtPointer client_data, XtPointer callback_struct) {
-	int		*item_list = NULL, item_cnt = 0;
+	int		*item_list = nullptr, item_cnt = 0;
 	CSA_flags	pt;
 	char		*who, *p_str;
 	Props_pu	*p = (Props_pu *)client_data;
 	XmString	xmstr;
-	CSA_access_list	step = p->gap_list, last = NULL, new_e;
+	CSA_access_list	step = p->gap_list, last = nullptr, new_e;
 
 	/*
 	**  First, get the necessary strings from the UI
@@ -1080,7 +1080,7 @@ p_gap_add_proc(Widget w, XtPointer client_data, XtPointer callback_struct) {
 	new_e->user = (CSA_calendar_user *)ckalloc(sizeof(CSA_calendar_user));
 	new_e->user->user_name = cm_strdup(who);
 	new_e->rights = pt;
-	new_e->next = NULL;
+	new_e->next = nullptr;
 	XtFree(who);
 
 	if (XmListGetSelectedPos(p->gap_access_list, &item_list, &item_cnt)) {
@@ -1124,9 +1124,9 @@ p_gap_add_proc(Widget w, XtPointer client_data, XtPointer callback_struct) {
 extern void
 p_gap_remove_proc(Widget w, XtPointer client_data, XtPointer callback_struct) {
 	Calendar *c = calendar;
-	int		*item_list = NULL, item_cnt = 0;
+	int		*item_list = nullptr, item_cnt = 0;
 	Props_pu	*p = (Props_pu *)client_data;
-	CSA_access_list	step = p->gap_list, last = NULL;
+	CSA_access_list	step = p->gap_list, last = nullptr;
 
 	if (XmListGetSelectedPos(p->gap_access_list, &item_list, &item_cnt)) {
 		/*
@@ -1167,7 +1167,7 @@ p_gap_remove_proc(Widget w, XtPointer client_data, XtPointer callback_struct) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -1176,7 +1176,7 @@ p_gap_remove_proc(Widget w, XtPointer client_data, XtPointer callback_struct) {
 
 extern void
 gap_list_select_proc(Widget w, XtPointer client_data, XtPointer data) {
-	int		*item_list = NULL, item_cnt = 0;
+	int		*item_list = nullptr, item_cnt = 0;
 	Props_pu	*p = (Props_pu *)client_data;
 	CSA_access_list	step = p->gap_list;
 
@@ -1272,7 +1272,7 @@ p_create_v4_group_access_pane(Props_pu *p) {
                 XmNbottomAttachment, 	XmATTACH_WIDGET,
                 XmNbottomOffset, 	10,
                 XmNbottomWidget, 	p->separator2,
-		NULL);
+		nullptr);
 	p->pane_list[GROUP_ACCESS_PANE] = gap_form_mgr;
 
 	/*
@@ -1283,12 +1283,12 @@ p_create_v4_group_access_pane(Props_pu *p) {
         p->gap_user_label = XtVaCreateWidget("userName",
 		xmLabelGadgetClass, gap_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
         p->gap_user_text = XtVaCreateWidget("gap_user_text",
 		xmTextWidgetClass, gap_form_mgr,
-                NULL);
+                nullptr);
 
 	XtAddCallback(p->gap_user_text, 
 			XmNvalueChangedCallback, v4_gap_pending_change, 
@@ -1301,7 +1301,7 @@ p_create_v4_group_access_pane(Props_pu *p) {
 		XmNlabelString, 	xmstr,
 		XmNnavigationType, 	XmTAB_GROUP,
 		XmNsensitive, 		False,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(p->gap_add_button, 
 			XmNactivateCallback, p_gap_add_proc, p);
@@ -1322,20 +1322,20 @@ p_create_v4_group_access_pane(Props_pu *p) {
         p->gap_access_header = XtVaCreateManagedWidget("gap_access_header",
 		xmLabelGadgetClass, gap_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	free(buf);
 
-	p->gap_list = NULL;
+	p->gap_list = nullptr;
 	p->gap_access_list = (Widget)XmCreateScrolledList(gap_form_mgr,
-		"gap_access_list", NULL, 0);
+		"gap_access_list", nullptr, 0);
 	p->gap_access_list_sw = XtParent(p->gap_access_list);
         XtVaSetValues(p->gap_access_list_sw,
-		NULL);
+		nullptr);
 	XtVaSetValues(p->gap_access_list,
                 XmNvisibleItemCount, 	10,
 		XmNdoubleClickInterval, 5,
-                NULL);
+                nullptr);
 	XtAddCallback(p->gap_access_list,
 		XmNbrowseSelectionCallback, gap_list_select_proc, p);
 	XtManageChild(p->gap_access_list);
@@ -1347,7 +1347,7 @@ p_create_v4_group_access_pane(Props_pu *p) {
 		XmNlabelString, 	xmstr,
 		XmNnavigationType, 	XmTAB_GROUP,
 		XmNsensitive, 		False,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(p->gap_remove_button,
 		XmNactivateCallback, p_gap_remove_proc, p);
@@ -1357,7 +1357,7 @@ p_create_v4_group_access_pane(Props_pu *p) {
         p->gap_access_msg = XtVaCreateWidget("browseInsertDelete",
 		xmLabelGadgetClass, gap_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	/*
@@ -1368,7 +1368,7 @@ p_create_v4_group_access_pane(Props_pu *p) {
         p->gap_perm_label = XtVaCreateWidget("permissions",
 		xmLabelGadgetClass, gap_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	p->gap_perm_rc_mgr = XtVaCreateWidget("gap_perm_rc_mgr",
@@ -1379,27 +1379,27 @@ p_create_v4_group_access_pane(Props_pu *p) {
 		XmNisHomogeneous, 	True,
 		XmNindicatorType, 	XmN_OF_MANY,
 		XmNentryClass, 		xmToggleButtonGadgetClass,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 417, "Browse"));
         p->gap_browse_toggle = XtVaCreateWidget("browse", 
 		xmToggleButtonGadgetClass, p->gap_perm_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 342, "Insert"));
         p->gap_insert_toggle = XtVaCreateWidget("insert", 
 		xmToggleButtonGadgetClass, p->gap_perm_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 419, "Delete"));
         p->gap_delete_toggle = XtVaCreateWidget("delete", 
 		xmToggleButtonGadgetClass, p->gap_perm_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	/*
@@ -1414,23 +1414,23 @@ p_create_v4_group_access_pane(Props_pu *p) {
 	XtVaSetValues( curr,
 			XmNtopAttachment, XmATTACH_FORM,
 			XmNtopOffset, 12,
-			NULL );
+			nullptr );
 	prev = curr;
 	XtVaSetValues( p->gap_user_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 5,
-			NULL );
+			nullptr );
 	_i18n_WidestWidget( 1, &curr, &widest, p->gap_user_label );
 	XtVaSetValues( p->gap_user_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 5 + widest + 10,
-			NULL );
+			nullptr );
 	_i18n_WidestWidget( 1, &curr, &dmy, p->gap_user_text );
 	_toEdge = 5 + widest + 10 + dmy;
 	XtVaSetValues( p->gap_add_button,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toEdge + 10,
-			NULL );
+			nullptr );
 
 	/*
 	 * p->gap_access_header
@@ -1441,7 +1441,7 @@ p_create_v4_group_access_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 10,
-			NULL );
+			nullptr );
 	prev = p->gap_access_header;
 
 	/*
@@ -1457,14 +1457,14 @@ p_create_v4_group_access_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 5,
-			NULL ),
+			nullptr ),
 	XtVaSetValues( p->gap_remove_button,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toEdge + 10,
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 5,
-			NULL ),
+			nullptr ),
 	prev = curr;
 
 	/*
@@ -1476,7 +1476,7 @@ p_create_v4_group_access_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 5,
-			NULL );
+			nullptr );
 	prev = p->gap_access_msg;
 
 	/*
@@ -1488,17 +1488,17 @@ p_create_v4_group_access_pane(Props_pu *p) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 12,
-			NULL );
+			nullptr );
 	prev = curr;
 	XtVaSetValues( p->gap_perm_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 5,
-			NULL );
+			nullptr );
 	_i18n_WidestWidget( 1, &curr, &widest, p->gap_perm_label );
 	XtVaSetValues( p->gap_perm_rc_mgr,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 5 + widest + 5,
-			NULL );
+			nullptr );
 
 	ManageChildren(p->gap_perm_rc_mgr);
 	ManageChildren(gap_form_mgr);
@@ -1544,7 +1544,7 @@ p_create_printer_ops_pane(
 		XmNbottomAttachment, 	XmATTACH_WIDGET,
 		XmNbottomWidget, 	p->separator2,
 		XmNbottomOffset, 	GAP,
-		NULL);
+		nullptr);
 	p->pane_list[PRINTER_OPS_PANE] = pop_form_mgr;
 
 	p->pop_margin_frame = _DtPrintCreateMarginFrame(pop_form_mgr);
@@ -1555,7 +1555,7 @@ p_create_printer_ops_pane(
 		      XmNleftOffset, 0,
 		      XmNrightAttachment, XmATTACH_FORM,
 		      XmNrightOffset, 0,
-		      NULL);
+		      nullptr);
 	p->pop_left_text =
 	  _DtPrintMarginFrameEnumToWidget(p->pop_margin_frame,
 					  DTPRINT_OPTION_MARGIN_LEFT);
@@ -1583,7 +1583,7 @@ p_create_printer_ops_pane(
 
 	p->pop_header_frame =
 	  _DtPrintCreateHdrFtrFrame(pop_form_mgr, POP_HDR_NUM_CHOICES,
-				    hdrStrings, (void **)NULL);
+				    hdrStrings, (void **)nullptr);
 	XtVaSetValues(p->pop_header_frame,
 		      XmNtopAttachment, XmATTACH_WIDGET,
 		      XmNtopWidget, p->pop_margin_frame,
@@ -1592,11 +1592,11 @@ p_create_printer_ops_pane(
 		      XmNleftOffset, 0,
 		      XmNrightAttachment, XmATTACH_FORM,
 		      XmNrightOffset, 0,
-		      NULL);
+		      nullptr);
 	_DtPrintHdrFtrFrameMenuWidgets(p->pop_header_frame,
 				       &optionPane,
-				       (int *)NULL,
-				       (Widget **)NULL);
+				       (int *)nullptr,
+				       (Widget **)nullptr);
 	XtAddCallback(optionPane, XmNentryCallback,
 		      p_mark_change, (XtPointer)p);
 
@@ -1627,7 +1627,7 @@ p_create_printer_ops_pane(
 		XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
 		XmNleftOffset, 0,
 		XmNleftWidget, p->pop_margin_frame,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	/*
@@ -1649,7 +1649,7 @@ p_create_printer_ops_pane(
                 XmNleftAttachment, 	XmATTACH_WIDGET,
                 XmNleftOffset, 		GAP,
                 XmNleftWidget, 		p->pop_privacy_label,
-                NULL);
+                nullptr);
  
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 435,
 						"Show Time and Text Appts"));
@@ -1657,7 +1657,7 @@ p_create_printer_ops_pane(
 		"showTimeText",
                 xmToggleButtonGadgetClass, p->pop_privacy_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->pop_privacy_public_toggle,
@@ -1669,7 +1669,7 @@ p_create_printer_ops_pane(
 		"showTimeOnly",
                 xmToggleButtonGadgetClass, p->pop_privacy_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->pop_privacy_semi_toggle,
@@ -1681,7 +1681,7 @@ p_create_printer_ops_pane(
 		"showNothing",
                 xmToggleButtonGadgetClass, p->pop_privacy_rc_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->pop_privacy_private_toggle,
@@ -1716,7 +1716,7 @@ p_create_date_format_pane(
                 XmNbottomAttachment, 	XmATTACH_WIDGET,
                 XmNbottomOffset, 	10,
                 XmNbottomWidget, 	p->separator2,
-		NULL);
+		nullptr);
 	p->pane_list[DATE_FORMAT_PANE] = dfp_form_mgr;
 
 	/*
@@ -1727,7 +1727,7 @@ p_create_date_format_pane(
        	p->dfp_order_label = XtVaCreateWidget("dateOrdering",
 		xmLabelGadgetClass, dfp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	xmstr = XmStringCreateLocalized(
@@ -1735,12 +1735,12 @@ p_create_date_format_pane(
        	p->dfp_sep_label = XtVaCreateWidget("dateSeparator",
 		xmLabelGadgetClass, dfp_form_mgr,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	max_left_label_width = ComputeMaxWidth(p->dfp_order_label, 
 					       p->dfp_sep_label,
-					       NULL, NULL) + 2 * GAP;
+					       nullptr, nullptr) + 2 * GAP;
 
         p->dfp_order_rc_mgr = XtVaCreateWidget("dfp_order_rc_mgr",
 		xmRowColumnWidgetClass, dfp_form_mgr,
@@ -1753,14 +1753,14 @@ p_create_date_format_pane(
 		XmNleftOffset, 		max_left_label_width,
 		XmNtopAttachment, 	XmATTACH_FORM,
 		XmNtopOffset, 		GAP,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(
 				CATGETS(c->DT_catd, 1, 439, "MM | DD | YY"));
         p->dfp_order_mmddyy_toggle = XtVaCreateWidget("mmddyy",
                 xmToggleButtonGadgetClass, p->dfp_order_rc_mgr,
 		XmNlabelString, xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dfp_order_mmddyy_toggle, 
@@ -1771,7 +1771,7 @@ p_create_date_format_pane(
         p->dfp_order_ddmmyy_toggle = XtVaCreateWidget("ddmmyy",
                 xmToggleButtonGadgetClass, p->dfp_order_rc_mgr,
 		XmNlabelString, xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dfp_order_ddmmyy_toggle, 
@@ -1782,7 +1782,7 @@ p_create_date_format_pane(
         p->dfp_order_yymmdd_toggle = XtVaCreateWidget("yymmdd",
                 xmToggleButtonGadgetClass, p->dfp_order_rc_mgr,
 		XmNlabelString, xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dfp_order_yymmdd_toggle, 
@@ -1805,13 +1805,13 @@ p_create_date_format_pane(
 		XmNtopAttachment, 	XmATTACH_WIDGET,
 		XmNtopWidget, 		p->dfp_order_rc_mgr,
 		XmNtopOffset, 		GAP,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 443, "Blank"));
         p->dfp_sep_blank_toggle = XtVaCreateWidget("blank",
                 xmToggleButtonGadgetClass, p->dfp_sep_rc_mgr,
 		XmNlabelString, xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dfp_sep_blank_toggle, 
@@ -1821,7 +1821,7 @@ p_create_date_format_pane(
         p->dfp_sep_slash_toggle = XtVaCreateWidget("oblique",
                 xmToggleButtonGadgetClass, p->dfp_sep_rc_mgr,
 		XmNlabelString, xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dfp_sep_slash_toggle, 
@@ -1831,7 +1831,7 @@ p_create_date_format_pane(
         p->dfp_sep_period_toggle = XtVaCreateWidget("period",
                 xmToggleButtonGadgetClass, p->dfp_sep_rc_mgr,
 		XmNlabelString, xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dfp_sep_period_toggle, 
@@ -1841,7 +1841,7 @@ p_create_date_format_pane(
         p->dfp_sep_dash_toggle = XtVaCreateWidget("hyphen",
                 xmToggleButtonGadgetClass, p->dfp_sep_rc_mgr,
 		XmNlabelString, xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(p->dfp_sep_dash_toggle, 
@@ -1854,7 +1854,7 @@ p_create_date_format_pane(
                 XmNrightAttachment,     XmATTACH_WIDGET,
                 XmNrightWidget,         p->dfp_order_rc_mgr,
                 XmNrightOffset,         GAP,
-                NULL);
+                nullptr);
 
         XtVaSetValues(p->dfp_sep_label,
                 XmNtopAttachment,    	XmATTACH_OPPOSITE_WIDGET,
@@ -1863,7 +1863,7 @@ p_create_date_format_pane(
                 XmNrightAttachment,     XmATTACH_WIDGET,
                 XmNrightWidget,         p->dfp_sep_rc_mgr,
                 XmNrightOffset,         GAP,
-                NULL);
+                nullptr);
 
         ManageChildren(p->dfp_sep_rc_mgr);
         ManageChildren(dfp_form_mgr);
@@ -1877,7 +1877,7 @@ p_category_notify(Widget w, XtPointer client_data, XtPointer call_data)
 {
   Widget	base_form_mgr = XtParent(XtParent(XtParent(w)));
   PaneType	item_no = (PaneType)client_data;
-  Props_pu	*p = (Props_pu *)NULL;
+  Props_pu	*p = (Props_pu *)nullptr;
 
   /*
    **  Note this cheesy hack.  The convenience functions allow you NO
@@ -1889,7 +1889,7 @@ p_category_notify(Widget w, XtPointer client_data, XtPointer call_data)
    **  This sucks, but Motif sucks worse and I could find no other method.
    */
   XtVaGetValues(base_form_mgr, XmNuserData, &p,
-		NULL);
+		nullptr);
   if (p)
     show_ui(p, item_no);
 }
@@ -1941,12 +1941,12 @@ show_ui(Props_pu *p, PaneType item_no)
 	  WidgetList children;
 	  int nChildren;
 
-	  XtVaGetValues(p->category_menu, XmNsubMenuId, &optMenu, NULL);
+	  XtVaGetValues(p->category_menu, XmNsubMenuId, &optMenu, nullptr);
 	  XtVaGetValues(optMenu, XmNchildren, &children,
-			XmNnumChildren, &nChildren, NULL);
+			XmNnumChildren, &nChildren, nullptr);
 	  if (p->last_props_pane < nChildren)
 	    XtVaSetValues(p->category_menu, XmNmenuHistory,
-			  children[p->last_props_pane], NULL);
+			  children[p->last_props_pane], nullptr);
 	  return;
 	}
 
@@ -1990,17 +1990,17 @@ show_ui(Props_pu *p, PaneType item_no)
 	XtUnmanageChild(p->pane_list[p->last_props_pane]);
 	XtVaSetValues(p->separator2,
 		XmNtopWidget, p->pane_list[item_no],
-		NULL);
+		nullptr);
 	XtManageChild(p->pane_list[item_no]);
 	p->last_props_pane = item_no;
 
 
 	/* code for display settings */
 
-	XtVaGetValues(p->dp_beg_label, XmNheight, &label_height, NULL);
-	XtVaGetValues(p->dp_beg_scale, XmNheight, &slider_height, NULL);
-	XtVaSetValues(p->dp_beg_scale, XmNbottomOffset, ((int) label_height - (int) slider_height)/2, NULL);
-	XtVaSetValues(p->dp_end_scale, XmNbottomOffset, ((int) label_height - (int) slider_height)/2, NULL);
+	XtVaGetValues(p->dp_beg_label, XmNheight, &label_height, nullptr);
+	XtVaGetValues(p->dp_beg_scale, XmNheight, &slider_height, nullptr);
+	XtVaSetValues(p->dp_beg_scale, XmNbottomOffset, ((int) label_height - (int) slider_height)/2, nullptr);
+	XtVaSetValues(p->dp_end_scale, XmNbottomOffset, ((int) label_height - (int) slider_height)/2, nullptr);
 
 
 	/* Center Category menu */
@@ -2046,7 +2046,7 @@ p_save_changes(Calendar *c) {
 	int		redisplay_mask;
 	int		val;
 	Tick		current_mb_date = 0;
-	char		*date = NULL;
+	char		*date = nullptr;
 	OrderingType 	ot;
         SeparatorType 	st;
 	Browser 	*b = (Browser*)c->browser;
@@ -2059,7 +2059,7 @@ p_save_changes(Calendar *c) {
 		date = get_date_from_widget(c->view->date, b->datetext, ot, st);
 
 		if (date)
-			current_mb_date = cm_getdate(date, NULL);
+			current_mb_date = cm_getdate(date, nullptr);
 	}
 
 	if (get_props_from_ui(pu, p, &redisplay_mask) == True) {
@@ -2076,7 +2076,7 @@ p_save_changes(Calendar *c) {
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, DESKSET_DEFAULTS_ERROR_HELP,
 			DIALOG_IMAGE, pu->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -2098,11 +2098,11 @@ p_save_changes(Calendar *c) {
 		XtVaGetValues(c->canvas, 
 				XmNwidth, 	&width, 
 				XmNheight, 	&height, 
-				NULL);
+				nullptr);
 		cache_dims(c, width, height);
 
 		if (c->view->glance != yearGlance) 
-			paint_canvas(c, NULL, RENDER_CLEAR_FIRST);
+			paint_canvas(c, nullptr, RENDER_CLEAR_FIRST);
 
 		if (c->browser)
 			mb_refigure_chart(c);
@@ -2170,9 +2170,9 @@ p_save_changes(Calendar *c) {
 
 		set_dssw_menus(&pu->ep_dssw, p);
 
-		XtVaSetValues(c->browse_button, XmNsubMenuId, NULL, NULL);
+		XtVaSetValues(c->browse_button, XmNsubMenuId, nullptr, nullptr);
 		update_browse_menu_names(c);
-		XtVaSetValues(c->browse_button, XmNsubMenuId, c->browse_menu, NULL);
+		XtVaSetValues(c->browse_button, XmNsubMenuId, c->browse_menu, nullptr);
 		if (c->browser)
 			browser_reset_list(c);
 	
@@ -2247,7 +2247,7 @@ extern void p_defaults_proc_helper(XtPointer client_data){
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, DESKSET_DEFAULTS_ERROR_HELP,
 			DIALOG_IMAGE, pu->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -2295,7 +2295,7 @@ p_flush_changes(Calendar *c) {
 			BUTTON_IDENT, 2, ident2,
 			BUTTON_IDENT, 3, ident3,
 			DIALOG_IMAGE, pu->xm_warning_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident3);
 		XtFree(ident2);
 		XtFree(ident1);
@@ -2358,7 +2358,7 @@ p_make_props_pu(Calendar *c) {
 		XmNdeleteResponse, XmDO_NOTHING,
 		XmNtitle, buf,
 		XmNallowShellResize, True,
-		NULL);
+		nullptr);
 	free(buf);
 	setup_quit_handler(p->frame, p_quit_handler, (caddr_t)c);
 
@@ -2378,7 +2378,7 @@ p_make_props_pu(Calendar *c) {
 		XmNrightOffset, 0,
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNleftOffset, 	0,
-		NULL);
+		nullptr);
 
 	/*
 	**  Now the "top" portion - the category menu and the first separator
@@ -2406,16 +2406,16 @@ p_make_props_pu(Calendar *c) {
 	p->category_menu = widgets[0] = 
 		XmVaCreateSimpleOptionMenu(p->base_form_mgr,
 		"category_menu",  label, 0, 0, p_category_notify,
-		XmVaPUSHBUTTON, Pane_XmStrs[EDITOR_PANE], NULL, NULL, NULL,
-		XmVaPUSHBUTTON, Pane_XmStrs[DISPLAY_PANE], NULL, NULL, NULL,
-		XmVaPUSHBUTTON, Pane_XmStrs[GROUP_ACCESS_PANE], NULL, NULL,NULL,
-		XmVaPUSHBUTTON, Pane_XmStrs[PRINTER_OPS_PANE], NULL, NULL, NULL,
-		XmVaPUSHBUTTON, Pane_XmStrs[DATE_FORMAT_PANE], NULL, NULL, NULL,
+		XmVaPUSHBUTTON, Pane_XmStrs[EDITOR_PANE], nullptr, nullptr, nullptr,
+		XmVaPUSHBUTTON, Pane_XmStrs[DISPLAY_PANE], nullptr, nullptr, nullptr,
+		XmVaPUSHBUTTON, Pane_XmStrs[GROUP_ACCESS_PANE], nullptr, nullptr,nullptr,
+		XmVaPUSHBUTTON, Pane_XmStrs[PRINTER_OPS_PANE], nullptr, nullptr, nullptr,
+		XmVaPUSHBUTTON, Pane_XmStrs[DATE_FORMAT_PANE], nullptr, nullptr, nullptr,
                 XmNtopAttachment, XmATTACH_FORM,
                 XmNleftAttachment, XmATTACH_FORM,
                 XmNrightAttachment, XmATTACH_NONE,
 		XmNnavigationType, XmTAB_GROUP,
-		NULL);
+		nullptr);
 	XmStringFree(label);
 
         p->separator1 = widgets[1] = XtVaCreateWidget("separator1",
@@ -2424,7 +2424,7 @@ p_make_props_pu(Calendar *c) {
                 XmNrightAttachment, XmATTACH_FORM,
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, p->category_menu,
-                NULL);
+                nullptr);
 
 	/*
 	**  Now create the "bottom" part - the separator and choice buttons
@@ -2435,7 +2435,7 @@ p_make_props_pu(Calendar *c) {
                 xmSeparatorGadgetClass, p->base_form_mgr,
                 XmNleftAttachment, XmATTACH_FORM,
                 XmNrightAttachment, XmATTACH_FORM,
-                NULL);
+                nullptr);
 
 	/*
 	 * To get the pane to resize instead of the buttons at the bottom
@@ -2446,7 +2446,7 @@ p_make_props_pu(Calendar *c) {
 		XmNbottomAttachment, XmATTACH_WIDGET,
 		XmNbottomOffset, 10,
 		XmNbottomWidget, p->separator2,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 655, "OK"));
 	p->ok_button = widgets[3] = XtVaCreateWidget("ok",
@@ -2460,7 +2460,7 @@ p_make_props_pu(Calendar *c) {
 		XmNrightAttachment, XmATTACH_POSITION,
 		XmNrightPosition, 7,
 		XmNrightOffset, 5,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(p->ok_button, XmNactivateCallback, p_ok_proc, c);
 
@@ -2468,7 +2468,7 @@ p_make_props_pu(Calendar *c) {
 		XmNbottomAttachment, XmATTACH_WIDGET,
 		XmNbottomOffset, 10,
 		XmNbottomWidget, p->ok_button,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 460, "Apply"));
 	p->apply_button = widgets[4] = XtVaCreateWidget("apply",
@@ -2483,7 +2483,7 @@ p_make_props_pu(Calendar *c) {
 		XmNrightAttachment, XmATTACH_POSITION,
 		XmNrightPosition, 12,
 		XmNrightOffset, 5,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(p->apply_button, XmNactivateCallback, p_apply_proc, c);
  
@@ -2499,7 +2499,7 @@ p_make_props_pu(Calendar *c) {
 		XmNrightAttachment, XmATTACH_POSITION,
 		XmNrightPosition, 17,
 		XmNrightOffset, 5,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(p->defaults_button,
 		XmNactivateCallback, p_defaults_proc, c);
@@ -2516,7 +2516,7 @@ p_make_props_pu(Calendar *c) {
 		XmNrightAttachment, XmATTACH_POSITION,
 		XmNrightPosition, 22,
 		XmNrightOffset, 5,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(p->close_button, XmNactivateCallback, p_close_proc, p);
 
@@ -2531,7 +2531,7 @@ p_make_props_pu(Calendar *c) {
 		XmNleftPosition, 22,
 		XmNrightAttachment, XmATTACH_POSITION,
 		XmNrightPosition, 27,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(p->help_button, XmNactivateCallback,
 		help_cb, OPTIONS_HELP_BUTTON);
@@ -2559,7 +2559,7 @@ p_make_props_pu(Calendar *c) {
 
 	/* set default button */
         XtVaSetValues(p->base_form_mgr, XmNcancelButton,
-		      p->close_button, NULL);
+		      p->close_button, nullptr);
 
 
 	XtManageChildren(widgets, 9);
@@ -2638,14 +2638,14 @@ extern Boolean
 get_editor_vals_from_ui(Props_pu *pu, Props *p) {
 	int		i, hr, min;
 	char		buf[5];
-	Widget		text = NULL;
+	Widget		text = nullptr;
 	DisplayType	dt = get_int_prop(p, CP_DEFAULTDISP);
 	Reminders_val	*val;
 	char		*msg, *dur_txt;
 	Reminder_val_op status;
 	Calendar	*c = pu->cal;
 
-	XtVaGetValues(pu->ep_dur_cb, XmNtextField, &text, NULL);
+	XtVaGetValues(pu->ep_dur_cb, XmNtextField, &text, nullptr);
 	dur_txt = XmTextGetString(text);
 
 	if (string_is_number(dur_txt) == False) {
@@ -2660,7 +2660,7 @@ get_editor_vals_from_ui(Props_pu *pu, Props *p) {
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, DURATION_ERROR_HELP,
 			DIALOG_IMAGE, pu->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -2679,7 +2679,7 @@ get_editor_vals_from_ui(Props_pu *pu, Props *p) {
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, DURATION_ERROR_HELP,
 			DIALOG_IMAGE, pu->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -2698,7 +2698,7 @@ get_editor_vals_from_ui(Props_pu *pu, Props *p) {
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, START_ERROR_HELP,
 			DIALOG_IMAGE, pu->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -2725,7 +2725,7 @@ get_editor_vals_from_ui(Props_pu *pu, Props *p) {
 	min = atoi(buf) % 60;
 	set_int_prop(p, CP_APPTBEGIN, (hr * minsec) + min);
 
-	XtVaGetValues(pu->ep_dur_cb, XmNtextField, &text, NULL);
+	XtVaGetValues(pu->ep_dur_cb, XmNtextField, &text, nullptr);
 	if (text) {
 		min = atoi(XmTextGetString(text));
 		set_int_prop(p, CP_APPTDURATION, min);
@@ -2733,7 +2733,7 @@ get_editor_vals_from_ui(Props_pu *pu, Props *p) {
 
 	if ((status = get_reminders_vals(&pu->ep_reminders, False)) != REMINDERS_OK) {
 		char *title = XtNewString(CATGETS(c->DT_catd, 1, 1079, "Calendar : Error - Editor Settings"));
-		char *text = NULL;
+		char *text = nullptr;
 		char *ident1 = XtNewString(CATGETS(c->DT_catd, 1, 95, "Continue"));
 		switch (status) {
 
@@ -2753,7 +2753,7 @@ get_editor_vals_from_ui(Props_pu *pu, Props *p) {
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, pu->xm_error_pixmap,
 			BUTTON_HELP, ADVANCE_ERROR_HELP,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -2781,7 +2781,7 @@ get_editor_vals_from_ui(Props_pu *pu, Props *p) {
 	set_char_prop(p, CP_MAILUNIT, (char *)time_scope_str(val->scope));
 	set_char_prop(p, CP_MAILTO, pu->ep_reminders.mailto_val);
 
-	XtVaGetValues(pu->privacy_menu, XmNselectedPosition, &i, NULL);
+	XtVaGetValues(pu->privacy_menu, XmNselectedPosition, &i, nullptr);
 	--i;
 	set_char_prop(p, CP_PRIVACY, privacy_str(i));
 
@@ -2805,7 +2805,7 @@ get_display_vals_from_ui(Props_pu *pu, Props *p) {
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, CAL_LOCATION_ERROR_HELP,
 			DIALOG_IMAGE, pu->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -2816,10 +2816,10 @@ get_display_vals_from_ui(Props_pu *pu, Props *p) {
 	XtFree(str);
 
 	XtVaGetValues(pu->dp_beg_scale, XmNvalue, &val,
-		NULL);
+		nullptr);
 	set_int_prop(p, CP_DAYBEGIN, val);
 	XtVaGetValues(pu->dp_end_scale, XmNvalue, &val,
-		NULL);
+		nullptr);
 	set_int_prop(p, CP_DAYEND, val);
 
 	set_int_prop(p, CP_DEFAULTDISP, XmToggleButtonGadgetGetState(
@@ -2847,7 +2847,7 @@ get_display_vals_from_ui(Props_pu *pu, Props *p) {
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, pu->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -2868,11 +2868,11 @@ get_gap_vals_from_ui(Props_pu *pu, Props *p) {
 	cal = allocate_cal_struct(appt_write, 
 				    	pu->cal->my_cal_version,
 					CSA_CAL_ATTR_ACCESS_LIST_I, 
-					NULL);
+					nullptr);
 	cal->access_list->value->item.access_list_value = pu->gap_list;
-	pu->gap_list = NULL;
+	pu->gap_list = nullptr;
 
-	stat = csa_update_calendar_attributes(pu->cal->my_cal_handle, cal->count, cal->attrs, NULL);
+	stat = csa_update_calendar_attributes(pu->cal->my_cal_handle, cal->count, cal->attrs, nullptr);
 	backend_err_msg(pu->frame, pu->cal->calname, stat, pu->xm_error_pixmap);
 	free_cal_struct(&cal);
 	set_gap_vals_on_ui(pu, p);
@@ -2884,13 +2884,13 @@ print_option_error(Props_pu *pu, int setNum, int msgNum, char *str)
 {
   Calendar *c = pu->cal;
   char *text = XtNewString(CATGETS(c->DT_catd, setNum, msgNum, str));
-  static char *title = (char *)NULL;
-  static char *ident1 = (char *)NULL;
+  static char *title = (char *)nullptr;
+  static char *ident1 = (char *)nullptr;
 
-  if (title == (char *)NULL)
+  if (title == (char *)nullptr)
     title = XtNewString(CATGETS(c->DT_catd, 1, 1085,
 				"Calendar : Error - Printer Settings"));
-  if (ident1 == (char *)NULL)
+  if (ident1 == (char *)nullptr)
     ident1 = XtNewString(CATGETS(c->DT_catd, 1, 95, "Continue"));
 
   dialog_popup(pu->frame,
@@ -2899,7 +2899,7 @@ print_option_error(Props_pu *pu, int setNum, int msgNum, char *str)
 	       BUTTON_IDENT, 1, ident1,
 	       BUTTON_HELP, PRINT_HELP_BUTTON,
 	       DIALOG_IMAGE, pu->xm_error_pixmap,
-	       NULL);
+	       nullptr);
   XtFree(text);
 }
 
@@ -2908,7 +2908,7 @@ get_printer_vals_from_ui(Props_pu *pu, Props *p) {
 	char		*str;
 	int		plevel = 0;
 
-	if ((str = _DtPrintGetMarginSpec(pu->pop_right_text)) != (char *)NULL)
+	if ((str = _DtPrintGetMarginSpec(pu->pop_right_text)) != (char *)nullptr)
 	{
 	  if (valid_margin_str(pu, str))
 	  {
@@ -2924,7 +2924,7 @@ get_printer_vals_from_ui(Props_pu *pu, Props *p) {
 	  }
 	}
 
-	if ((str = _DtPrintGetMarginSpec(pu->pop_bottom_text)) != (char *)NULL)
+	if ((str = _DtPrintGetMarginSpec(pu->pop_bottom_text)) != (char *)nullptr)
 	{
 	  if (valid_margin_str(pu, str))
 	  {
@@ -2940,7 +2940,7 @@ get_printer_vals_from_ui(Props_pu *pu, Props *p) {
 	  }
 	}
 
-	if ((str = _DtPrintGetMarginSpec(pu->pop_left_text)) != (char *)NULL)
+	if ((str = _DtPrintGetMarginSpec(pu->pop_left_text)) != (char *)nullptr)
 	{
 	  if (valid_margin_str(pu, str))
 	  {
@@ -2956,7 +2956,7 @@ get_printer_vals_from_ui(Props_pu *pu, Props *p) {
 	  }
 	}
 
-	if ((str = _DtPrintGetMarginSpec(pu->pop_top_text)) != (char *)NULL)
+	if ((str = _DtPrintGetMarginSpec(pu->pop_top_text)) != (char *)nullptr)
 	{
 	  if (valid_margin_str(pu, str))
 	  {
@@ -3068,7 +3068,7 @@ set_editor_vals_on_ui(Props_pu *pu, Props *p) {
 	Reminders_val	*val;
 
 	set_dssw_defaults(&pu->ep_dssw, now(), True);
-	XtVaGetValues(pu->ep_dur_cb, XmNtextField, &text, NULL);
+	XtVaGetValues(pu->ep_dur_cb, XmNtextField, &text, nullptr);
 	if (text) {
 		sprintf(buf, "%d", get_int_prop(p, CP_APPTDURATION));
 		XmTextSetString(text, buf);
@@ -3101,7 +3101,7 @@ set_editor_vals_on_ui(Props_pu *pu, Props *p) {
 	set_reminders_vals(&pu->ep_reminders, False);
 
 	i = convert_privacy_str_to_op(get_char_prop(p, CP_PRIVACY));
-	XtVaSetValues(pu->privacy_menu, XmNselectedPosition, i + 1, NULL);
+	XtVaSetValues(pu->privacy_menu, XmNselectedPosition, i + 1, nullptr);
 }
 
 extern void
@@ -3109,11 +3109,11 @@ set_display_vals_on_ui(Props_pu *pu, Props *p) {
 	XmTextSetString(pu->dp_loc_text, get_char_prop(p, CP_CALLOC));
 
 	XtVaSetValues(pu->dp_beg_scale, XmNvalue, get_int_prop(p, CP_DAYBEGIN),
-		NULL);
+		nullptr);
 	set_scale_value(pu->dp_beg_value, get_int_prop(p, CP_DAYBEGIN), pu);
 
 	XtVaSetValues(pu->dp_end_scale, XmNvalue, get_int_prop(p, CP_DAYEND),
-		NULL);
+		nullptr);
 	set_scale_value(pu->dp_end_value, get_int_prop(p, CP_DAYEND), pu);
 
 	XmToggleButtonGadgetSetState((get_int_prop(p, CP_DEFAULTDISP) == HOUR12)
@@ -3148,12 +3148,12 @@ set_gap_vals_on_ui(Props_pu *pu, Props *p) {
 	XmString	xmstr;
 	CSA_return_code	stat;
 	Dtcm_calendar	*cal;
-	CSA_access_list	step = NULL, holder = NULL, last;
+	CSA_access_list	step = nullptr, holder = nullptr, last;
 
 	cal = allocate_cal_struct(appt_read, 
 				    	pu->cal->my_cal_version,
 					CSA_CAL_ATTR_ACCESS_LIST_I, 
-					NULL);
+					nullptr);
 	stat = query_cal_struct(pu->cal->my_cal_handle, cal);
 	backend_err_msg(pu->frame, pu->cal->calname, stat, pu->xm_error_pixmap);
 	if (stat != CSA_SUCCESS) {
@@ -3161,7 +3161,7 @@ set_gap_vals_on_ui(Props_pu *pu, Props *p) {
 		return;
 	}
 	pu->gap_list = cal->access_list->value->item.access_list_value;
-	cal->access_list->value->item.access_list_value = NULL;
+	cal->access_list->value->item.access_list_value = nullptr;
 
 	XmListDeleteAllItems(pu->gap_access_list);
 	step = pu->gap_list;
@@ -3348,7 +3348,7 @@ extern void
 props_pu_clean_up(Props_pu *p) {
 	if (p->pane_list)
 		free(p->pane_list);
-	p->pane_list = NULL;
+	p->pane_list = nullptr;
 }
 
 extern Boolean
@@ -3402,9 +3402,9 @@ p_gap_center_cat_menu(
 {
   Dimension frame_width, menu_width;
 
-  XtVaGetValues(frame, XmNwidth, &frame_width, NULL);
-  XtVaGetValues(menu, XmNwidth, &menu_width, NULL);
+  XtVaGetValues(frame, XmNwidth, &frame_width, nullptr);
+  XtVaGetValues(menu, XmNwidth, &menu_width, nullptr);
 
   XtVaSetValues(menu, XmNleftOffset, frame_width/2 - menu_width/2,
-		NULL);
+		nullptr);
 }

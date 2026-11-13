@@ -241,7 +241,7 @@ static DialogClass preferencesClassRec =
    WriteResourceValues,
    FreeValues,
    _DtGenericMapWindow,
-   NULL,
+   nullptr,
 };
 
 DialogClass * preferencesClass = (DialogClass *) &preferencesClassRec;
@@ -1803,7 +1803,7 @@ ApplyCallback(
         XtPointer call_data )
 {
    PreferencesApply *apply_data = client_data;
-   (*(apply_data->callback)) (w, apply_data->client_data, NULL);
+   (*(apply_data->callback)) (w, apply_data->client_data, nullptr);
 }
 
 
@@ -1894,7 +1894,7 @@ ShowTypeToString(
         char *out_buf )
 {
    const unsigned char *value = resource_value;
-   const char *buf = NULL;
+   const char *buf = nullptr;
 
    if (*value == SINGLE_DIRECTORY)
       buf = Single_directory;
@@ -1934,7 +1934,7 @@ StringToShowType(
    else
    {
       to_val->size = 0;
-      to_val->addr = NULL;
+      to_val->addr = nullptr;
       XtStringConversionWarning ((char *)from_val->addr, SHOW_TYPE);
    }
 }
@@ -1956,7 +1956,7 @@ TreeFilesToString(
         char *out_buf )
 {
    const unsigned char *value = resource_value;
-   const char *buf = NULL;
+   const char *buf = nullptr;
 
    if (*value == TREE_FILES_NEVER)
       buf = Tree_files_never;
@@ -2000,7 +2000,7 @@ StringToTreeFiles(
    else
    {
       to_val->size = 0;
-      to_val->addr = NULL;
+      to_val->addr = nullptr;
       XtStringConversionWarning ((char *)from_val->addr, TREE_FILES);
    }
 }
@@ -2022,7 +2022,7 @@ ViewToString(
         char *out_buf )
 {
    const unsigned char *value = resource_value;
-   const char *buf = NULL;
+   const char *buf = nullptr;
 
    if (*value == BY_NAME)
       buf = By_name;
@@ -2074,7 +2074,7 @@ StringToView(
    else
    {
       to_val->size = 0;
-      to_val->addr = NULL;
+      to_val->addr = nullptr;
       XtStringConversionWarning ((char *)from_val->addr, VIEW);
    }
 }
@@ -2097,7 +2097,7 @@ OrderToString(
         char *out_buf )
 {
    const unsigned char *value = resource_value;
-   const char *buf = NULL;
+   const char *buf = nullptr;
 
    if (*value == ORDER_BY_FILE_TYPE)
       buf = Order_by_file_type;
@@ -2145,7 +2145,7 @@ StringToOrder(
    else
    {
       to_val->size = 0;
-      to_val->addr = NULL;
+      to_val->addr = nullptr;
       XtStringConversionWarning ((char *)from_val->addr, DIRECTION_RESRC);
    }
 }
@@ -2167,7 +2167,7 @@ DirectionToString(
         char *out_buf )
 {
    const unsigned char *value = resource_value;
-   const char *buf = NULL;
+   const char *buf = nullptr;
 
    if (*value == DIRECTION_ASCENDING)
       buf = Direction_ascending;
@@ -2192,7 +2192,7 @@ RandomToString(
         char *out_buf )
 {
    const unsigned char *value = resource_value;
-   const char *buf = NULL;
+   const char *buf = nullptr;
 
    if (*value == RANDOM_ON)
       buf = Random_on;
@@ -2230,7 +2230,7 @@ StringToDirection(
    else
    {
       to_val->size = 0;
-      to_val->addr = NULL;
+      to_val->addr = nullptr;
       XtStringConversionWarning ((char *)from_val->addr, DIRECTION_RESRC);
    }
 }
@@ -2263,7 +2263,7 @@ StringToRandom(
    else
    {
       to_val->size = 0;
-      to_val->addr = NULL;
+      to_val->addr = nullptr;
       XtStringConversionWarning ((char *)from_val->addr, RANDOM);
    }
 }

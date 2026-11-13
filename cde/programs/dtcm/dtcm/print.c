@@ -136,7 +136,7 @@ Boolean
 inDebugMode(Calendar *c)
 {
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
-  if (pd != (_DtCmPrintData *)NULL)
+  if (pd != (_DtCmPrintData *)nullptr)
     return XmToggleButtonGadgetGetState(pd->debugToggle);
 
   return False;
@@ -153,7 +153,7 @@ pd_set_start_date(Calendar *c, Tick tick)
   Arg args[5];
   int nargs;
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return False;
 
   if (tick > get_eot())
@@ -196,7 +196,7 @@ pd_set_end_date(Calendar *c, Tick tick)
   Arg args[5];
   int nargs;
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return False;
 
   if (tick < get_bot())
@@ -253,7 +253,7 @@ pd_set_report_type(Calendar *c, int reportType)
   Arg args[10];
   int nargs;
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return False;
 
   if (reportType == pd->report_type)
@@ -294,7 +294,7 @@ pd_set_report_managed(Calendar *c, int reportType)
   Arg args[10];
   int nargs;
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return False;
 
   if (reportType == pd->report_type)
@@ -367,14 +367,14 @@ pd_get_start_positions(Calendar *c, int *m, int *d, int *y)
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
   int dayPos = 1, monthPos = 0, yearPos;
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return False;
 
   if (XtIsManaged(pd->from_day))
-    XtVaGetValues(pd->from_day, XmNposition, &dayPos, NULL);
+    XtVaGetValues(pd->from_day, XmNposition, &dayPos, nullptr);
   if (XtIsManaged(pd->from_month))
-    XtVaGetValues(pd->from_month, XmNposition, &monthPos, NULL);
-  XtVaGetValues(pd->from_year, XmNposition, &yearPos, NULL);
+    XtVaGetValues(pd->from_month, XmNposition, &monthPos, nullptr);
+  XtVaGetValues(pd->from_year, XmNposition, &yearPos, nullptr);
 
   *m = monthPos;
   *d = dayPos;
@@ -389,14 +389,14 @@ pd_get_end_positions(Calendar *c, int *m, int *d, int *y)
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
   int dayPos = 1, monthPos = 0, yearPos;
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return False;
 
   if (XtIsManaged(pd->to_day))
-    XtVaGetValues(pd->to_day, XmNposition, &dayPos, NULL);
+    XtVaGetValues(pd->to_day, XmNposition, &dayPos, nullptr);
   if (XtIsManaged(pd->to_month))
-    XtVaGetValues(pd->to_month, XmNposition, &monthPos, NULL);
-  XtVaGetValues(pd->to_year, XmNposition, &yearPos, NULL);
+    XtVaGetValues(pd->to_month, XmNposition, &monthPos, nullptr);
+  XtVaGetValues(pd->to_year, XmNposition, &yearPos, nullptr);
 
   *m = monthPos;
   *d = dayPos;
@@ -851,7 +851,7 @@ post_print_dialog(
   create_print_dialog(c);
 
   /* display the dialog on-screen */
-  if ((pd = (_DtCmPrintData *)c->print_data) != (_DtCmPrintData *)NULL)
+  if ((pd = (_DtCmPrintData *)c->print_data) != (_DtCmPrintData *)nullptr)
   {
     if (!XtIsManaged(pd->pdb))
       XtManageChild(pd->pdb);
@@ -885,7 +885,7 @@ createPrintShell(Calendar *c)
       XtDestroyWidget(pd->printShell);
 
     pd->printShell = XmCreateDialogShell(c->frame, "Print",
-					 0, NULL);
+					 0, nullptr);
   }
   else
 #endif
@@ -895,7 +895,7 @@ createPrintShell(Calendar *c)
       XmPrintSetup(pd->pdb,
 		   XpGetScreenOfContext(pd->setupData.print_display,
 					pd->setupData.print_context),
-		   "Print", NULL, 0);
+		   "Print", nullptr, 0);
 
     XtAddCallback(pd->printShell, XmNpdmNotificationCallback,
 		  pdm_notify_cb, (XtPointer)c);
@@ -921,7 +921,7 @@ create_print_dialog(Calendar *c)
 	int		 reportType;
 	Widget		 helpButton;
 
-	if ((pd = (_DtCmPrintData *)c->print_data) == NULL)
+	if ((pd = (_DtCmPrintData *)c->print_data) == nullptr)
 	{
 	  c->print_data = (caddr_t)XtMalloc(sizeof(_DtCmPrintData));
 	  pd = (_DtCmPrintData *) c->print_data;
@@ -990,12 +990,12 @@ create_print_dialog(Calendar *c)
 	  pd->report_type_option = XmVaCreateSimpleOptionMenu(pd->form,
 		"TypeOptionMenu", view, 0,
 		pd->report_type, report_option_cb,
-		XmVaPUSHBUTTON, 	day_view, NULL, NULL, NULL,
-		XmVaPUSHBUTTON, 	week_view, NULL, NULL, NULL,
-		XmVaPUSHBUTTON, 	month_view, NULL, NULL, NULL,
-		XmVaPUSHBUTTON, 	year_view, NULL, NULL, NULL,
-		XmVaPUSHBUTTON, 	appt_list, NULL, NULL, NULL,
-		XmVaPUSHBUTTON, 	todo_list, NULL, NULL, NULL,
+		XmVaPUSHBUTTON, 	day_view, nullptr, nullptr, nullptr,
+		XmVaPUSHBUTTON, 	week_view, nullptr, nullptr, nullptr,
+		XmVaPUSHBUTTON, 	month_view, nullptr, nullptr, nullptr,
+		XmVaPUSHBUTTON, 	year_view, nullptr, nullptr, nullptr,
+		XmVaPUSHBUTTON, 	appt_list, nullptr, nullptr, nullptr,
+		XmVaPUSHBUTTON, 	todo_list, nullptr, nullptr, nullptr,
 		XmNorientation, 	XmVERTICAL,
 		XmNtopAttachment, 	XmATTACH_FORM,
 		XmNtopOffset, 		10,
@@ -1004,7 +1004,7 @@ create_print_dialog(Calendar *c)
 		XmNleftOffset,		5,
 		XmNmarginWidth,		0,
 		XmNnavigationType, 	XmTAB_GROUP,
-		NULL);
+		nullptr);
 	  XtManageChild(pd->report_type_option);
 
 	  XmStringFree(day_view);
@@ -1027,7 +1027,7 @@ create_print_dialog(Calendar *c)
 		XmNtopAttachment,	XmATTACH_OPPOSITE_WIDGET,
 		XmNtopWidget,		pd->report_type_option,
 		XmNtopOffset,		0,
-		NULL);
+		nullptr);
 	  XmStringFree(xmstr);
 	  XtManageChild(pd->from_label);
 
@@ -1108,7 +1108,7 @@ create_print_dialog(Calendar *c)
 		XmNtopAttachment,	XmATTACH_OPPOSITE_WIDGET,
 		XmNtopWidget,		pd->report_type_option,
 		XmNtopOffset,		0,
-		NULL);
+		nullptr);
 	  XmStringFree(xmstr);
 	  XtManageChild(pd->to_label);
 
@@ -1249,7 +1249,7 @@ report_error(Calendar *c, char *title, char *errText)
 	       DIALOG_TEXT, errText,
 	       BUTTON_IDENT, 1, label,
 	       DIALOG_IMAGE, pu->xm_error_pixmap,
-	       NULL);
+	       nullptr);
 
   XtFree(label);
 }
@@ -1261,7 +1261,7 @@ pdm_notify_cb(Widget w, XtPointer uData, XtPointer cbData)
   XmPrintShellCallbackStruct *cbStruct =
     (XmPrintShellCallbackStruct *)cbData;
   Calendar *c = (Calendar *)uData;
-  char *errText = (char *)NULL;
+  char *errText = (char *)nullptr;
   char *title;
 
   switch (cbStruct->reason)
@@ -1297,7 +1297,7 @@ close_print_display_cb(Widget w, XtPointer uData, XtPointer cbData)
   Calendar *c = (Calendar *)uData;
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
 
-  if (pd != (_DtCmPrintData *)NULL)
+  if (pd != (_DtCmPrintData *)nullptr)
   {
     /* Destroy printShell associated with Display, if any. */
     if (pd->printShell != (Widget)NULL)
@@ -1383,7 +1383,7 @@ print_report(Calendar *c)
   SeparatorType st = get_int_prop(p, CP_DATESEPARATOR);
   Tick		start_date = pd_get_start_date(c);
   Tick		end_date = pd_get_end_date(c);
-  char *text = (char *)NULL;
+  char *text = (char *)nullptr;
 
   if ((start_date == DATE_BBOT) || (end_date == DATE_BBOT) || 
       (start_date == DATE_AEOT) || (end_date == DATE_BBOT))
@@ -1418,7 +1418,7 @@ print_report(Calendar *c)
     return;
   }
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return;
 
   if (!pd->setupDataValid)
@@ -1507,13 +1507,13 @@ pd_get_printer_name(Calendar *c)
 {
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
 
-  if ((pd == (_DtCmPrintData *)NULL) ||
+  if ((pd == (_DtCmPrintData *)nullptr) ||
       (!pd->setupDataValid) ||
       pd_print_to_file(c))
-    return (char *)NULL;
+    return (char *)nullptr;
 
   return pd->setupData.printer_name ?
-    XtNewString(pd->setupData.printer_name) : (char *)NULL;
+    XtNewString(pd->setupData.printer_name) : (char *)nullptr;
 }
 
 int
@@ -1522,10 +1522,10 @@ pd_get_copies(Calendar *c)
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
   int nCopies = 0;
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return 0;
 
-  XtVaGetValues(pd->pdb, DtNcopies, &nCopies, NULL);
+  XtVaGetValues(pd->pdb, DtNcopies, &nCopies, nullptr);
   return nCopies;
 }
 
@@ -1562,7 +1562,7 @@ pd_print_to_file(Calendar *c)
 {
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
 
-  if ((pd == (_DtCmPrintData *)NULL) ||
+  if ((pd == (_DtCmPrintData *)nullptr) ||
       (!pd->setupDataValid))
     return False;
 
@@ -1574,13 +1574,13 @@ pd_get_file_name(Calendar *c)
 {
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
 
-  if ((pd == (_DtCmPrintData *)NULL) ||
+  if ((pd == (_DtCmPrintData *)nullptr) ||
       (!pd->setupDataValid) ||
       !pd_print_to_file(c))
-    return (char *)NULL;
+    return (char *)nullptr;
 
   return pd->setupData.dest_info ?
-    XtNewString(pd->setupData.dest_info) : (char *)NULL;
+    XtNewString(pd->setupData.dest_info) : (char *)nullptr;
 }
 
 int
@@ -1588,7 +1588,7 @@ pd_get_report_type(Calendar *c)
 {
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return PR_MONTH_VIEW;
 
   return pd->report_type;
@@ -1599,7 +1599,7 @@ pd_get_print_shell(Calendar *c)
 {
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
 
-  if (pd == (_DtCmPrintData *)NULL)
+  if (pd == (_DtCmPrintData *)nullptr)
     return (Widget)NULL;
 
   return pd->printShell;
@@ -1611,7 +1611,7 @@ pd_get_print_display(Calendar *c)
   Widget printShell = pd_get_print_shell(c);
 
   if (printShell == (Widget)NULL)
-      return (Display *)NULL;
+      return (Display *)nullptr;
 
   return XtDisplay(printShell);
 }
@@ -1621,7 +1621,7 @@ pd_set_bad_alloc_error(Calendar *c, Boolean errorOn)
 {
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
 
-  if (pd != (_DtCmPrintData *)NULL)
+  if (pd != (_DtCmPrintData *)nullptr)
       pd->badAllocError = errorOn;
 }
 
@@ -1630,7 +1630,7 @@ pd_get_bad_alloc_error(Calendar *c)
 {
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
 
-  if (pd != (_DtCmPrintData *)NULL)
+  if (pd != (_DtCmPrintData *)nullptr)
       return pd->badAllocError;
       
   return False;

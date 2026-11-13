@@ -82,7 +82,7 @@ FormatParaCB(
     Editor		*pPad = (Editor *) client_data;
     DtEditorErrorCode	 error = DtEDITOR_NO_ERRORS;
 
-    error = DtEditorFormat(pPad->editor, NULL, DtEDITOR_FORMAT_PARAGRAPH);
+    error = DtEditorFormat(pPad->editor, nullptr, DtEDITOR_FORMAT_PARAGRAPH);
     if (DtEDITOR_NO_ERRORS != error)
     {
         switch(error)
@@ -117,7 +117,7 @@ FormatAllCB(
     Editor		*pPad = (Editor *)client_data;
     DtEditorErrorCode	 error = DtEDITOR_NO_ERRORS;
 
-    error = DtEditorFormat(pPad->editor, NULL, DtEDITOR_FORMAT_ALL);
+    error = DtEditorFormat(pPad->editor, nullptr, DtEDITOR_FORMAT_ALL);
     if (DtEDITOR_NO_ERRORS != error)
     {
         switch(error)

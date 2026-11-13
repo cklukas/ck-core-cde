@@ -36,8 +36,8 @@ typedef struct { char *logfile; } SPC_Channel, *SPC_Channel_Ptr;
 #define _DtSvcProcessLock()
 #define _DtSvcProcessUnlock()
 
-char **SPC_logfile_list = NULL;
-pid_t *SPC_pid_list = NULL;
+char **SPC_logfile_list = nullptr;
+pid_t *SPC_pid_list = nullptr;
 /* The directory of the logfiles: a real one, as the files are created. */
 static char ck_dir[PATH_MAX];
 static char *SPCD_Authentication_Dir = ck_dir;
@@ -52,7 +52,7 @@ static void *ck_malloc(size_t n)
 {
     ++alloc_calls;
     if (alloc_fail_at && alloc_calls == alloc_fail_at)
-        return NULL;
+        return nullptr;
     return malloc(n);
 }
 
@@ -60,7 +60,7 @@ static void *ck_realloc(void *p, size_t n)
 {
     ++alloc_calls;
     if (alloc_fail_at && alloc_calls == alloc_fail_at)
-        return NULL;		/* the old block stays valid, as in libc */
+        return nullptr;		/* the old block stays valid, as in libc */
     return realloc(p, n);
 }
 #define malloc ck_malloc
@@ -75,9 +75,9 @@ static void arm(int fail_at)
 
 static SPC_Channel_Ptr open_channel(SPC_Channel *c)
 {
-    c->logfile = NULL;
+    c->logfile = nullptr;
     last_error = 0;
-    return open_noio_channel_object(c, SPCIO_USE_LOGFILE, NULL);
+    return open_noio_channel_object(c, SPCIO_USE_LOGFILE, nullptr);
 }
 
 static void test_logfile_list(void)
@@ -90,11 +90,11 @@ static void test_logfile_list(void)
     assert(open_channel(&a) == &a && a.logfile);
     assert(alloc_calls == 1);
     assert(SPC_logfile_list[0] && strcmp(SPC_logfile_list[0], a.logfile) == 0);
-    assert(SPC_logfile_list[1] == NULL);
+    assert(SPC_logfile_list[1] == nullptr);
     assert(open_channel(&b) == &b && b.logfile);
     assert(alloc_calls == 2);
     assert(strcmp(SPC_logfile_list[1], b.logfile) == 0);
-    assert(SPC_logfile_list[2] == NULL);
+    assert(SPC_logfile_list[2] == nullptr);
 
     /*
      * The realloc fails: the channel is refused with an out-of-memory
@@ -105,17 +105,17 @@ static void test_logfile_list(void)
     assert(open_channel(&c) == SPC_ERROR);
     assert(alloc_calls == 1);
     assert(last_error == SPC_Out_Of_Memory);
-    assert(c.logfile == NULL);
+    assert(c.logfile == nullptr);
     assert(SPC_logfile_list == old);
     assert(strcmp(SPC_logfile_list[0], a.logfile) == 0);
     assert(strcmp(SPC_logfile_list[1], b.logfile) == 0);
-    assert(SPC_logfile_list[2] == NULL);
+    assert(SPC_logfile_list[2] == nullptr);
 
     /* Without injection the list grows again. */
     arm(0);
     assert(open_channel(&d) == &d && d.logfile);
     assert(strcmp(SPC_logfile_list[2], d.logfile) == 0);
-    assert(SPC_logfile_list[3] == NULL);
+    assert(SPC_logfile_list[3] == nullptr);
 }
 
 static void test_logfile_list_first_block(void)
@@ -124,12 +124,12 @@ static void test_logfile_list_first_block(void)
 
     /* The list does not exist yet and its first block cannot be made. */
     free(SPC_logfile_list);
-    SPC_logfile_list = NULL;
+    SPC_logfile_list = nullptr;
     arm(1);
     assert(open_channel(&a) == SPC_ERROR);
     assert(last_error == SPC_Out_Of_Memory);
-    assert(a.logfile == NULL);
-    assert(SPC_logfile_list == NULL);
+    assert(a.logfile == nullptr);
+    assert(SPC_logfile_list == nullptr);
 }
 
 #ifdef TEST_PID_LIST
@@ -174,10 +174,10 @@ static void test_pid_list(void)
 
     /* The first block of a list that does not exist yet cannot be made. */
     free(SPC_pid_list);
-    SPC_pid_list = NULL;
+    SPC_pid_list = nullptr;
     arm(1);
     assert(reserve_pid_slot(&slot) == 0);
-    assert(SPC_pid_list == NULL);
+    assert(SPC_pid_list == nullptr);
 }
 #endif
 

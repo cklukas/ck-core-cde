@@ -146,7 +146,7 @@ with tempfile.TemporaryDirectory(prefix="session-properties-", dir=os.environ["T
     c, binary = Path(work) / "session.c", Path(work) / "session"
     c.write_text(harness)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
                     "-fsanitize=address,undefined", "-g", "-I", str(source),
                     str(c), "-o", str(binary)], check=True)
     subprocess.run([str(binary)], check=True)

@@ -135,9 +135,9 @@ static const char *volumeStr = "Volume.";
 
 static const struct _CcdfVolumeInfo DefaultCcdfVol =
   {
-    NULL,		/* XrmDatabase volDb; */
-    NULL,		/* char **topicList;  */
-    NULL,		/* char *keywordFile; */
+    nullptr,		/* XrmDatabase volDb; */
+    nullptr,		/* char **topicList;  */
+    nullptr,		/* char *keywordFile; */
   };
 
 /******************************************************************************
@@ -251,10 +251,10 @@ GetTopicMap (
 	else
 	  {
 	    *ret_ids = (char **) malloc (sizeof(char *) * (level + 2));
-	    if ((*ret_ids) == NULL)
+	    if ((*ret_ids) == nullptr)
 		return -1;
 
-	    (*ret_ids)[level + 1] = NULL;
+	    (*ret_ids)[level + 1] = nullptr;
 	    result = 0;
 	  }
       }
@@ -298,25 +298,25 @@ GetResourceString (
 {
     int		 len;
     int		 topicLen = 0;
-    char	*retVal   = NULL;
+    char	*retVal   = nullptr;
     char	*fullResName;
     char	*fullResClass;
     char	*resType;
     XrmValue	 resValue;
 
 
-    if (topic != NULL)
+    if (topic != nullptr)
 	topicLen = strlen(topic) + strlen(Period);
 
     len          = strlen(volumeStr) + topicLen + 1;
     fullResName  = (char *) malloc (len + strlen (resName));
     fullResClass = (char *) malloc (len + strlen (resClass));
-    if (fullResName != NULL && fullResClass != NULL)
+    if (fullResName != nullptr && fullResClass != nullptr)
       {
 	strcpy (fullResName, volumeStr);
 	strcpy (fullResClass, VolumeStr);
 
-	if (topic != NULL)
+	if (topic != nullptr)
 	  {
 	    strcat (fullResName, topic);
 	    strcat (fullResName, Period);
@@ -332,7 +332,7 @@ GetResourceString (
 	errno = CEErrorMalloc;
 
 
-    if (fullResClass != NULL && fullResName != NULL)
+    if (fullResClass != nullptr && fullResName != nullptr)
       {
 	if (XrmGetResource (db, fullResClass, fullResName, &resType, &resValue)
 				&& strlen ((char *) resValue.addr))
@@ -379,24 +379,24 @@ GetResourceStringArray (
     char	*resName)
 {
     char	 *val;
-    char	**valArray = NULL;
+    char	**valArray = nullptr;
     char	 *token;
     char	 *nextC;
 
     /* Get the resource value which is a single string where the elements are 
        separated by white space. */
     val = GetResourceString (db, topic, resClass, resName);
-    if (val != NULL)
+    if (val != nullptr)
       {
         nextC = val;
         while (nextC && *nextC != '\0')
 	  {
 	    nextC = _DtHelpGetNxtToken (nextC, &token);
 
-	    if (token == NULL)
+	    if (token == nullptr)
 	      {
 	        _DtHelpCeFreeStringArray (valArray);
-	        return NULL;
+	        return nullptr;
 	      }
 
 	    /* If the token is a '\0' then we are at the end and we can quit. 
@@ -533,12 +533,12 @@ TopicFilename (
     CcdfVolumePtr  ccdfVol = GetCcdfVolumePtr(vol);
 
     *retFname = GetFilenameResource (ccdfVol, topic);
-    if (*retFname == NULL && errno == CEErrorIllegalResource)
+    if (*retFname == nullptr && errno == CEErrorIllegalResource)
 	errno = CEErrorMissingFilenameRes;
     else
         *retFname = CreateFileName (vol->volFile, *retFname);
 
-    if (*retFname == NULL)
+    if (*retFname == nullptr)
 	return (-1);
 
     return (0);
@@ -630,19 +630,19 @@ LocationIDTopic (
 {
     char	**allTopics;
     char	**nextTopic;
-    char	**locIdList = NULL;
+    char	**locIdList = nullptr;
     char	**nextLocId;
 
     CcdfVolumePtr  ccdfVol = GetCcdfVolumePtr(vol);
 
-    *retTopic = NULL;
+    *retTopic = nullptr;
 
     if (_DtHelpCeGetCcdfVolIdList (vol, &allTopics) != 0)
 	return (-1);
 
     /* Check whether the locationID is a topic. */
     for (nextTopic = allTopics;
-	nextTopic && *nextTopic != NULL && *retTopic == NULL; nextTopic++)
+	nextTopic && *nextTopic != nullptr && *retTopic == nullptr; nextTopic++)
       {
 	if (_DtHelpCeStrCaseCmpLatin1 (locId, *nextTopic) == 0)
 	    *retTopic = strdup(*nextTopic);
@@ -654,10 +654,10 @@ LocationIDTopic (
        that returns all of the locationIDs in a topic, which might
        prove useful someday. */
 
-    if (*retTopic == NULL)
+    if (*retTopic == nullptr)
       {
 	for (nextTopic = allTopics;
-		nextTopic && *nextTopic != NULL && *retTopic == NULL;
+		nextTopic && *nextTopic != nullptr && *retTopic == nullptr;
 								nextTopic++)
 	  {
 	    /*
@@ -666,24 +666,24 @@ LocationIDTopic (
 	    errno = 0;
 	    locIdList = GetResourceStringArray  (ccdfVol->volDb, *nextTopic,
 						"LocationIDs", "locationIDs");
-	    if (locIdList == NULL && errno != CEErrorIllegalResource)
+	    if (locIdList == nullptr && errno != CEErrorIllegalResource)
 		break;
 
 	    errno = CEErrorLocIdNotFound;
 	    for (nextLocId = locIdList;
-		nextLocId != NULL && *nextLocId != NULL && *retTopic == NULL;
+		nextLocId != nullptr && *nextLocId != nullptr && *retTopic == nullptr;
 								nextLocId++)
 	      {
 		if (_DtHelpCeStrCaseCmpLatin1 (locId, *nextLocId) == 0)
 		    *retTopic = strdup(*nextTopic);
 	      }
 
-	    if (NULL != locIdList)
+	    if (nullptr != locIdList)
 	        _DtHelpCeFreeStringArray (locIdList);
 	  }
       }
 
-    if (*retTopic == NULL)
+    if (*retTopic == nullptr)
 	return (-1);
 
     return (0);
@@ -717,7 +717,7 @@ _DtHelpCeGetCcdfIdPath (
     char            ***ret_ids )
 {
     int       idCount = 0;
-    char     *topicId = NULL;
+    char     *topicId = nullptr;
 
     if (LocationIDTopic (vol, target_id, &topicId) != 0)
         return -1;
@@ -772,7 +772,7 @@ _DtHelpCeGetCcdfTopicChildren (
     int     count = 0;
     char   *parent_id;
     char   *child_id;
-    char   *topicId = NULL;
+    char   *topicId = nullptr;
     char  **topicList;
 
     if (LocationIDTopic (vol, topic_id, &topicId) != 0)
@@ -781,7 +781,7 @@ _DtHelpCeGetCcdfTopicChildren (
     /*
      * initialize the return value
      */
-    *retTopics = NULL;
+    *retTopics = nullptr;
 
     /*
      * get the list
@@ -806,7 +806,7 @@ _DtHelpCeGetCcdfTopicChildren (
 		      {
 		        *retTopics = (char **) _DtHelpCeAddPtrToArray (
 					(void **) (*retTopics), child_id);
-		        if (*retTopics == NULL)
+		        if (*retTopics == nullptr)
 			    result = -1;
 			count++;
 		      }
@@ -817,7 +817,7 @@ _DtHelpCeGetCcdfTopicChildren (
 			 */
 			if (*retTopics)
 			    _DtHelpCeFreeStringArray (*retTopics);
-			*retTopics = NULL;
+			*retTopics = nullptr;
 			result = -1;
 			break;
 		      }
@@ -830,7 +830,7 @@ _DtHelpCeGetCcdfTopicChildren (
 		 */
 		if (*retTopics)
 		    _DtHelpCeFreeStringArray (*retTopics);
-		*retTopics = NULL;
+		*retTopics = nullptr;
 		break;
 	      }
 	    topicList++;
@@ -870,11 +870,11 @@ _DtHelpCeGetCcdfVolIdList (
 {
     CcdfVolumePtr  ccdfVol = GetCcdfVolumePtr(vol);
 
-    if (ccdfVol->topicList == NULL)
-	ccdfVol->topicList = GetResourceStringArray (ccdfVol->volDb, NULL, 
+    if (ccdfVol->topicList == nullptr)
+	ccdfVol->topicList = GetResourceStringArray (ccdfVol->volDb, nullptr, 
 						"TopicList", "topicList");
     *retTopics = ccdfVol->topicList;
-    if (*retTopics == NULL)
+    if (*retTopics == nullptr)
       {
 	if (errno == CEErrorIllegalResource)
 	    errno = CEErrorMissingTopicList;
@@ -911,7 +911,7 @@ _DtHelpCeFindCcdfId (
     int		*ret_offset )
 {
     char        newTarget[65];
-    char       *topicId = NULL;
+    char       *topicId = nullptr;
     int   found = False;
 
     snprintf(newTarget, sizeof(newTarget), "%s", target_id);
@@ -976,13 +976,13 @@ _DtHelpCeGetCcdfTopicParent (
        the topic has no parent.  Both cases are valid (and used by
        _DtTopicPath). */
 
-    *retParent = NULL;
-    if (topic != NULL)
+    *retParent = nullptr;
+    if (topic != nullptr)
       {
 	errno = 0;
 	*retParent = GetResourceString(ccdfVol->volDb, topic,
 							"Parent", "parent");
-	if (*retParent == NULL && errno != CEErrorIllegalResource)
+	if (*retParent == nullptr && errno != CEErrorIllegalResource)
 	    return -1;
       }
 
@@ -1024,10 +1024,10 @@ _DtHelpCeGetCcdfKeywordList (
      * But don't malloc memory again, because we'll leak memory.
      * Just use what is given.
      */
-    if (ccdfVol->keywordFile == NULL)
+    if (ccdfVol->keywordFile == nullptr)
       {
         ccdfVol->keywordFile = (char *) malloc (strlen (vol->volFile) + 2);
-        if (ccdfVol->keywordFile == NULL)
+        if (ccdfVol->keywordFile == nullptr)
 	    return -1;
 
         strcpy (ccdfVol->keywordFile, vol->volFile);
@@ -1042,11 +1042,11 @@ _DtHelpCeGetCcdfKeywordList (
 
     /* Load the keyword file and get the "keywords" resource. */
     kDb = XrmGetFileDatabase (ccdfVol->keywordFile);
-    if (kDb == NULL)
+    if (kDb == nullptr)
 	return -1;
 
-    keywordString = GetResourceString (kDb, NULL, "Keywords", "keywords");
-    if (keywordString == NULL)
+    keywordString = GetResourceString (kDb, nullptr, "Keywords", "keywords");
+    if (keywordString == nullptr)
       {
 	if (errno == CEErrorIllegalResource)
 	    errno = CEErrorMissingKeywordsRes;
@@ -1072,13 +1072,13 @@ _DtHelpCeGetCcdfKeywordList (
 	 */
 	nextC = GetNextKeyword (nextC, "<\\>", &token);
 
-	if (token == NULL)
+	if (token == nullptr)
 	  {
 	    XrmDestroyDatabase (kDb);
 	    if (vol->keywords)
 	      {
 	        _DtHelpCeFreeStringArray (vol->keywords);
-	        vol->keywords = NULL;
+	        vol->keywords = nullptr;
 	      }
 	    if (vol->keywordTopics)
 	      {
@@ -1086,7 +1086,7 @@ _DtHelpCeGetCcdfKeywordList (
 						topicList; topicList++)
 		    _DtHelpCeFreeStringArray (*topicList);
 	        free (vol->keywordTopics);
-	        vol->keywordTopics = NULL;
+	        vol->keywordTopics = nullptr;
 	      }
 	    return -1;
 	  }
@@ -1102,18 +1102,18 @@ _DtHelpCeGetCcdfKeywordList (
 	currKeyword = token;
 
 	/* Now get the list of topics. */
-	topics = NULL;
+	topics = nullptr;
 	do
 	  {
 	    nextC = _DtHelpGetNxtToken (nextC, &token);
 
-	    if (token == NULL)
+	    if (token == nullptr)
 	      {
 		XrmDestroyDatabase (kDb);
 		if (vol->keywords)
 		  {
 		    _DtHelpCeFreeStringArray (vol->keywords);
-		    vol->keywords = NULL;
+		    vol->keywords = nullptr;
 		  }
 		if (vol->keywordTopics)
 		  {
@@ -1121,7 +1121,7 @@ _DtHelpCeGetCcdfKeywordList (
 						topicList; topicList++)
 			_DtHelpCeFreeStringArray (*topicList);
 		    free (vol->keywordTopics);
-		    vol->keywordTopics = NULL;
+		    vol->keywordTopics = nullptr;
 		  }
 		if (topics)
 			_DtHelpCeFreeStringArray (topics);
@@ -1143,7 +1143,7 @@ _DtHelpCeGetCcdfKeywordList (
 		/* We have all of the topics.  If the array of topics isn't
 		   empty, add everything to the data structures.
 		 */
-		if (topics != NULL)
+		if (topics != nullptr)
 		  {
 		    vol->keywords = (char **) _DtHelpCeAddPtrToArray (
 			              (void **) vol->keywords,
@@ -1163,7 +1163,7 @@ _DtHelpCeGetCcdfKeywordList (
 			    free (currKeyword);
 			    _DtHelpCeFreeStringArray (vol->keywords);
 			    _DtHelpCeFreeStringArray (topics);
-			    vol->keywords = NULL;
+			    vol->keywords = nullptr;
 			  }
 			if (vol->keywordTopics)
 			  {
@@ -1171,7 +1171,7 @@ _DtHelpCeGetCcdfKeywordList (
 							topicList; topicList++)
 				_DtHelpCeFreeStringArray (*topicList);
 			    free (vol->keywordTopics);
-			    vol->keywordTopics = NULL;
+			    vol->keywordTopics = nullptr;
 			  }
 			return -1;
 		      }
@@ -1186,22 +1186,22 @@ _DtHelpCeGetCcdfKeywordList (
 		 * If we just malloc'ed ourselves out of existence
 		 * stop here.
 		 */
-		if (topics == NULL)
+		if (topics == nullptr)
 		  {
 		    free (currKeyword);
 		    XrmDestroyDatabase (kDb);
 		    if (vol->keywords)
 		      {
 			_DtHelpCeFreeStringArray (vol->keywords);
-			vol->keywords = NULL;
+			vol->keywords = nullptr;
 		      }
-		    if (vol->keywordTopics != NULL)
+		    if (vol->keywordTopics != nullptr)
 		      {
 			for (topicList = vol->keywordTopics;
 							topicList; topicList++)
 			    _DtHelpCeFreeStringArray (*topicList);
 			free (vol->keywordTopics);
-			vol->keywordTopics = NULL;
+			vol->keywordTopics = nullptr;
 		      }
 
 		    return -1;
@@ -1210,7 +1210,7 @@ _DtHelpCeGetCcdfKeywordList (
 
 	  } while (nextC && *nextC);
 
-	if (topics == NULL)
+	if (topics == nullptr)
 	    free (currKeyword);
       }
 
@@ -1240,9 +1240,9 @@ _DtHelpCeGetCcdfVolumeAbstract (
     char          *abstract;
     CcdfVolumePtr  ccdfVol = GetCcdfVolumePtr(vol);
 
-    *retAbs = NULL;
-    abstract = GetResourceString(ccdfVol->volDb, NULL, "Abstract", "abstract");
-    if (abstract == NULL)
+    *retAbs = nullptr;
+    abstract = GetResourceString(ccdfVol->volDb, nullptr, "Abstract", "abstract");
+    if (abstract == nullptr)
       {
 	if (errno == CEErrorIllegalResource)
 	    errno = CEErrorMissingAbstractRes;
@@ -1250,7 +1250,7 @@ _DtHelpCeGetCcdfVolumeAbstract (
     else
         *retAbs = strdup(abstract);
 
-    if (*retAbs == NULL)
+    if (*retAbs == nullptr)
 	return (-1);
 
     return (0);
@@ -1290,7 +1290,7 @@ _DtHelpCeMapCcdfTargetToId (
      * and offset.
      */
     *ret_id = (char *) target_id;
-    if (GetFilenameResource (ccdfVol, newTarget) == NULL)
+    if (GetFilenameResource (ccdfVol, newTarget) == nullptr)
       {
 	/*
 	 * if the reason TopicFilename failed was because we couldn't
@@ -1298,7 +1298,7 @@ _DtHelpCeMapCcdfTargetToId (
 	 */
     	if (errno == CEErrorIllegalResource &&
 		LocationIDTopic (vol, newTarget, ret_id) == 0 &&
-				GetFilenameResource(ccdfVol, *ret_id) != NULL)
+				GetFilenameResource(ccdfVol, *ret_id) != nullptr)
 	    return 0;
 
 	return -1;
@@ -1327,8 +1327,8 @@ _DtHelpCeGetCcdfVolLocale (
 	_DtHelpVolume	vol)
 {
     char	  *locale, *ptr, *resStr;
-    char	  *mResStr = NULL;
-    char	  *mLang = NULL;
+    char	  *mResStr = nullptr;
+    char	  *mLang = nullptr;
     char	  *lang = "C";
     char	  *defLocale = "C.UTF-8";
     CcdfVolumePtr  ccdfVol = GetCcdfVolumePtr(vol);
@@ -1336,9 +1336,9 @@ _DtHelpCeGetCcdfVolLocale (
     errno  = 0;
 
     /* resStr is owned by the volume Xrm database; don't free */
-    resStr = GetResourceString(ccdfVol->volDb, NULL, "CharSet", "charSet");
+    resStr = GetResourceString(ccdfVol->volDb, nullptr, "CharSet", "charSet");
 
-    if (resStr == NULL || *resStr == '\0')
+    if (resStr == nullptr || *resStr == '\0')
       {
 	locale = strdup(defLocale);
 	goto done;
@@ -1350,7 +1350,7 @@ _DtHelpCeGetCcdfVolLocale (
       {
 	*ptr++ = '\0';
 
-	if (mResStr == NULL || *mResStr == '\0' || ptr == NULL || *ptr == '\0')
+	if (mResStr == nullptr || *mResStr == '\0' || ptr == nullptr || *ptr == '\0')
 	  locale = strdup(defLocale);
 	else
 	  locale = strdup(resStr);
@@ -1363,7 +1363,7 @@ _DtHelpCeGetCcdfVolLocale (
     if (_DtHelpCeStrrchr(mLang, ".", 1, &ptr) == 0)
       {
 	*ptr = '\0';
-	if (mLang != NULL && *mLang != '\0') lang = mLang;
+	if (mLang != nullptr && *mLang != '\0') lang = mLang;
       }
 
     asprintf(&locale, "%s.%s", lang, resStr);
@@ -1401,17 +1401,17 @@ _DtHelpCeGetCcdfDocStamp (
     struct stat buf;
 
     result = -2;
-    if (ret_doc != NULL)
-	*ret_doc = NULL;
+    if (ret_doc != nullptr)
+	*ret_doc = nullptr;
 
-    if (ret_time != NULL)
+    if (ret_time != nullptr)
       {
 	result = -1;
-	*ret_time = NULL;
+	*ret_time = nullptr;
 	if (stat(vol->volFile, &buf) == 0)
 	  {
 	    *ret_time = (char *) malloc (sizeof(time_t) * 3 + 1);
-	    if (*ret_time != NULL)
+	    if (*ret_time != nullptr)
 	      {
 		sprintf(*ret_time, "%u", (unsigned) buf.st_mtime);
 		return -2;
@@ -1443,8 +1443,8 @@ _DtHelpCeGetCcdfTopTopic (
 {
     CcdfVolumePtr  ccdfVol = GetCcdfVolumePtr(vol);
 
-    *retTopic = GetResourceString(ccdfVol->volDb, NULL, "TopTopic", "topTopic");
-    if (*retTopic == NULL)
+    *retTopic = GetResourceString(ccdfVol->volDb, nullptr, "TopTopic", "topTopic");
+    if (*retTopic == nullptr)
       {
 	if (errno == CEErrorIllegalResource)
 	    errno = CEErrorMissingTopTopicRes;
@@ -1472,7 +1472,7 @@ _DtHelpCeGetCcdfVolTitle (
 {
     CcdfVolumePtr  ccdfVol = GetCcdfVolumePtr(vol);
 
-    return (GetResourceString (ccdfVol->volDb, NULL, "Title", "title"));
+    return (GetResourceString (ccdfVol->volDb, nullptr, "Title", "title"));
 }
 
 /******************************************************************************
@@ -1494,7 +1494,7 @@ _DtHelpCeGetCcdfVolumeTitle (
 {
     *ret_title = _DtHelpCeGetCcdfVolTitle(vol);
 
-    if (*ret_title == NULL)
+    if (*ret_title == nullptr)
       {
 	if (errno == CEErrorIllegalResource)
 	    errno = CEErrorMissingTitleRes;
@@ -1502,7 +1502,7 @@ _DtHelpCeGetCcdfVolumeTitle (
       }
 
     *ret_title = strdup(*ret_title);
-    if (*ret_title == NULL)
+    if (*ret_title == nullptr)
       {
 	errno = CEErrorMalloc;
 	return (-1);
@@ -1528,11 +1528,11 @@ _DtHelpCeOpenCcdfVolume (
     CcdfVolumePtr ccdfVol;
 
     ccdfVol = (struct _CcdfVolumeInfo *) malloc(sizeof(struct _CcdfVolumeInfo));
-    if (ccdfVol != NULL)
+    if (ccdfVol != nullptr)
       {
 	*ccdfVol = DefaultCcdfVol;
         ccdfVol->volDb = XrmGetFileDatabase(vol->volFile);
-        if (ccdfVol->volDb != NULL)
+        if (ccdfVol->volDb != nullptr)
           {
 	    (void) stat(vol->volFile, &buf);
 	    vol->check_time = buf.st_mtime;
@@ -1561,13 +1561,13 @@ _DtHelpCeCloseCcdfVolume (
 {
     CcdfVolumePtr  ccdfVol = GetCcdfVolumePtr(vol);
 
-    if (ccdfVol->volDb != NULL)
+    if (ccdfVol->volDb != nullptr)
 	XrmDestroyDatabase (ccdfVol->volDb);
 
-    if (ccdfVol->topicList != NULL)
+    if (ccdfVol->topicList != nullptr)
 	_DtHelpCeFreeStringArray (ccdfVol->topicList);
 
-    if (ccdfVol->keywordFile != NULL)
+    if (ccdfVol->keywordFile != nullptr)
 	free (ccdfVol->keywordFile);
 
     free(ccdfVol);
@@ -1589,20 +1589,20 @@ _DtHelpCeRereadCcdfVolume (
 {
     CcdfVolumePtr  ccdfVol = GetCcdfVolumePtr(vol);
 
-    if (ccdfVol->volDb != NULL)
+    if (ccdfVol->volDb != nullptr)
 	XrmDestroyDatabase (ccdfVol->volDb);
 
-    if (ccdfVol->topicList != NULL)
+    if (ccdfVol->topicList != nullptr)
 	_DtHelpCeFreeStringArray (ccdfVol->topicList);
 
-    if (ccdfVol->keywordFile != NULL)
+    if (ccdfVol->keywordFile != nullptr)
 	free (ccdfVol->keywordFile);
 
-    ccdfVol->topicList   = NULL;
-    ccdfVol->keywordFile = NULL;
+    ccdfVol->topicList   = nullptr;
+    ccdfVol->keywordFile = nullptr;
     ccdfVol->volDb       = XrmGetFileDatabase(vol->volFile);
 
-    if (ccdfVol->volDb != NULL)
+    if (ccdfVol->volDb != nullptr)
 	return 0;
 
     return -1;

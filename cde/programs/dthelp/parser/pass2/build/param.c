@@ -77,7 +77,7 @@ else
     }
 thisptype = *nextptype ;
 thisptype->next = M_NULLVAL ;
-thisptype->nextptr = NULL ;
+thisptype->nextptr = nullptr ;
 nextptype = &(thisptype->nextptr) ;
 length = w_strlen(name) + 1 ;
 thisptype->keyword = (M_WCHAR *) m_malloc(length, "keyword") ;
@@ -89,7 +89,7 @@ ptypelen++ ;
 /* Add a parameter to the current element */
 void addpar(void)
 {
-PARAMETER *paramp, *last = NULL ;
+PARAMETER *paramp, *last = nullptr ;
 int length ;
 
 parcount++ ;
@@ -109,17 +109,17 @@ else
     last->next = newpar ;
 *nextpar = newpar ;
 nextpar = &newpar->nextptr ;
-*nextpar = NULL ;
-newpar->next = NULL ;
+*nextpar = nullptr ;
+newpar->next = nullptr ;
 newpar->deftype = NULLDEF ;
 newpar->defval = M_NULLVAL ;
-newpar->defstring = NULL ;
+newpar->defstring = nullptr ;
 newpar->kwlist = M_NULLVAL ;
 length = w_strlen(name) + 1 ;
 pnamelen += length ;
 newpar->paramname = (M_WCHAR *) m_malloc(length, "parameter name") ;
 w_strcpy(newpar->paramname, name) ;
-newpar->ptypep = NULL ;
+newpar->ptypep = nullptr ;
 }
 
 

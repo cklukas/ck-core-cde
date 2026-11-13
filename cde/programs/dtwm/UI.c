@@ -124,10 +124,10 @@ void DeleteSubpanelControl (SubpanelData *, ControlData *);
 static char DTFP_CLASS_NAME[] = "Frontpanel";
 static char DTFP_APP_NAME[] = "frontpanel";
 
-static XtCallbackRec dropCB[] = { {DropCB, NULL}, {NULL, NULL} };
-static XtCallbackRec transferDropCB[] = { {TransferDropCB, NULL},{NULL, NULL} };
-static XtCallbackRec customizeDropCB[] = { {CustomizeDropCB, NULL}, {NULL, NULL} };
-static XtCallbackRec customizeTransferDropCB[] = { {CustomizeTransferDropCB, NULL},{NULL, NULL} };
+static XtCallbackRec dropCB[] = { {DropCB, nullptr}, {nullptr, nullptr} };
+static XtCallbackRec transferDropCB[] = { {TransferDropCB, nullptr},{nullptr, nullptr} };
+static XtCallbackRec customizeDropCB[] = { {CustomizeDropCB, nullptr}, {nullptr, nullptr} };
+static XtCallbackRec customizeTransferDropCB[] = { {CustomizeTransferDropCB, nullptr},{nullptr, nullptr} };
                                   
 
 /************************************************************************
@@ -136,19 +136,19 @@ static XtCallbackRec customizeTransferDropCB[] = { {CustomizeTransferDropCB, NUL
  *
  ************************************************************************/
 
-String post_arrow_image = NULL;
-String unpost_arrow_image = NULL;
-String post_monitor_arrow_image = NULL;
-String unpost_monitor_arrow_image = NULL;
-String blank_arrow_image = NULL;
-String dropzone_image = NULL;
-String indicator_on_image = NULL;
-String indicator_off_image = NULL;
-String minimize_normal_image = NULL;
-String minimize_selected_image = NULL;
-String menu_normal_image = NULL;
-String menu_selected_image = NULL;
-String handle_image = NULL;
+String post_arrow_image = nullptr;
+String unpost_arrow_image = nullptr;
+String post_monitor_arrow_image = nullptr;
+String unpost_monitor_arrow_image = nullptr;
+String blank_arrow_image = nullptr;
+String dropzone_image = nullptr;
+String indicator_on_image = nullptr;
+String indicator_off_image = nullptr;
+String minimize_normal_image = nullptr;
+String minimize_selected_image = nullptr;
+String menu_normal_image = nullptr;
+String menu_selected_image = nullptr;
+String handle_image = nullptr;
 
 Pixmap minimize_normal_pixmap;
 Pixmap minimize_selected_pixmap;
@@ -160,7 +160,7 @@ Pixmap menu_selected_pixmap;
 
 static int _ws_high_color_map[] = { 3, 5, 6, 7 };
 static	Dimension	switch_height = 0;
-static XmFontList date_icon_font_list = NULL;
+static XmFontList date_icon_font_list = nullptr;
 
 static XmFontList
 GetDateIconFontList(
@@ -176,7 +176,7 @@ GetDateIconFontList(
                                 XmFONTLIST_DEFAULT_TAG);
     if (entry)
     {
-        date_icon_font_list = XmFontListAppendEntry(NULL, entry);
+        date_icon_font_list = XmFontListAppendEntry(nullptr, entry);
         XmFontListEntryFree(&entry);
     }
 
@@ -312,13 +312,13 @@ FrontPanelCreate (Widget toplevel)
 
       XtOverrideTranslations(panel.left_handle, handle_translations);
       XtAddCallback (panel.left_handle, XmNinputCallback,
-                     HandleInputCB, NULL);
+                     HandleInputCB, nullptr);
       XtAddCallback (panel.left_handle, XmNhelpCallback,
                      GeneralTopicHelpCB, PANEL_HANDLE);
 
       XtOverrideTranslations(panel.right_handle, handle_translations);
       XtAddCallback (panel.right_handle, XmNinputCallback,
-                     HandleInputCB, NULL);
+                     HandleInputCB, nullptr);
       XtAddCallback (panel.right_handle, XmNhelpCallback,
                      GeneralTopicHelpCB, PANEL_HANDLE);
 
@@ -327,7 +327,7 @@ FrontPanelCreate (Widget toplevel)
          panel.menu = PanelControlCreate (panel.form, "menu", menu_normal_image);
 
          XtAddCallback (panel.menu, XmNinputCallback,
-                        MenuInputCB, NULL);
+                        MenuInputCB, nullptr);
          XtAddCallback (panel.menu, XmNhelpCallback,
                      GeneralTopicHelpCB, PANEL_MENU);
 
@@ -361,7 +361,7 @@ FrontPanelCreate (Widget toplevel)
       }
       else
       {
-         panel.menu = NULL;
+         panel.menu = nullptr;
 
          ac = 0;
          XtSetArg (al[ac], XmNtopAttachment, XmATTACH_FORM);  ac++;
@@ -384,7 +384,7 @@ FrontPanelCreate (Widget toplevel)
 	    PanelControlCreate (panel.form, "minimize", minimize_normal_image);
 
          XtAddCallback (panel.iconify, XmNinputCallback,
-                        MinimizeInputCB, NULL);
+                        MinimizeInputCB, nullptr);
          XtAddCallback (panel.iconify, XmNhelpCallback,
                      GeneralTopicHelpCB, PANEL_ICONIFY);
 
@@ -418,7 +418,7 @@ FrontPanelCreate (Widget toplevel)
       }
       else
       {
-         panel.iconify = NULL;
+         panel.iconify = nullptr;
 
          ac = 0;
          XtSetArg (al[ac], XmNtopAttachment, XmATTACH_FORM);  ac++;
@@ -437,8 +437,8 @@ FrontPanelCreate (Widget toplevel)
    }
    else
    {
-      panel.left_handle = NULL;
-      panel.right_handle = NULL;
+      panel.left_handle = nullptr;
+      panel.right_handle = nullptr;
    }
 
 
@@ -552,7 +552,7 @@ Initialize (DtPanelShellWidget panel_shell)
    }
 
    /* initialize popup_data to NULL */
-   panel.popup_data = NULL; 
+   panel.popup_data = nullptr; 
 
    /*  See if using bitonal or multicolor icons.  If bitonal, set the  */
    /*  pixel set to black and white based on the colors of the parent  */
@@ -630,17 +630,17 @@ Initialize (DtPanelShellWidget panel_shell)
 
    /*  Initialize other panel specific information  */
    
-   panel.busy_light_data = NULL;
+   panel.busy_light_data = nullptr;
 
-   panel.push_recall_list = NULL;
+   panel.push_recall_list = nullptr;
    panel.push_recall_count = 0;
    panel.max_push_recall_count = 0;
 
-   panel.embedded_client_list = NULL;
+   panel.embedded_client_list = nullptr;
    panel.embedded_client_count = 0;
    panel.max_embedded_client_count = 0;
    
-   panel.dynamic_data_list = NULL;
+   panel.dynamic_data_list = nullptr;
    panel.dynamic_data_count = 0;
    panel.max_dynamic_data_count = 0;
 
@@ -759,7 +759,7 @@ BoxCreate (void)
 {
    int i, j;
    BoxData * box_data;
-   BoxData * switch_box_data = NULL;
+   BoxData * switch_box_data = nullptr;
    Widget    prev_form;
    int switch_position = POSITION_FIRST;
 
@@ -772,7 +772,7 @@ BoxCreate (void)
    /*  Loop through the panels boxes, creating the set outer forms    */
    /*  necessary to hold the inner forms for the controls, arrows...  */
 
-   prev_form = NULL;
+   prev_form = nullptr;
 
    for (i = 0; i < panel.box_data_count; i++)
    {
@@ -784,7 +784,7 @@ BoxCreate (void)
       ac = 0;
       XtSetArg (al[ac], XmNshadowThickness, 0);  ac++;
 
-      if (panel.left_handle != NULL)
+      if (panel.left_handle != nullptr)
       {
 	 XtSetArg (al[ac], XmNrightAttachment, XmATTACH_WIDGET);  ac++;
 	 XtSetArg (al[ac], XmNrightWidget, panel.right_handle);  ac++;
@@ -797,7 +797,7 @@ BoxCreate (void)
 	 XtSetArg (al[ac], XmNleftAttachment, XmATTACH_FORM);  ac++;
       }
 
-      if (prev_form != NULL)
+      if (prev_form != nullptr)
       {
 	 XtSetArg (al[ac], XmNtopAttachment, XmATTACH_WIDGET);  ac++;
 	 XtSetArg (al[ac], XmNtopWidget, prev_form);  ac++;
@@ -847,7 +847,7 @@ BoxCreate (void)
    {
       box_data = panel.box_data[i];
 
-      if (box_data->switch_data != NULL)
+      if (box_data->switch_data != nullptr)
       {
          switch_box_data = box_data;
 	 
@@ -929,7 +929,7 @@ BoxCreate (void)
 
       /*  Create the arrow boxes  */
 
-      if (box_data->switch_form != NULL)
+      if (box_data->switch_form != nullptr)
       {
 	 if (switch_position == POSITION_FIRST)
 	 {
@@ -1093,7 +1093,7 @@ BoxCreate (void)
 
       /*  Now create the control boxes  */
       
-      if (box_data->switch_form != NULL)
+      if (box_data->switch_form != nullptr)
       {
          if (switch_position == POSITION_FIRST ||
              switch_position == POSITION_LAST)
@@ -1298,9 +1298,9 @@ BoxCreate (void)
          XtManageChild (box_data->left_control_form);
       }
 
-      if (box_data->left_control_form != NULL)
+      if (box_data->left_control_form != nullptr)
       {
-         if (panel.popup_data == NULL || panel.popup_data->popup == NULL)
+         if (panel.popup_data == nullptr || panel.popup_data->popup == nullptr)
 	    CreatePopupMenu(box_data->left_control_form);
          else
 	    XmAddToPostFromList(panel.popup_data->popup,
@@ -1313,9 +1313,9 @@ BoxCreate (void)
                            PostPopupMenu, (XtPointer) NULL);
       }
 
-      if (box_data->right_control_form != NULL)
+      if (box_data->right_control_form != nullptr)
       {
-         if (panel.popup_data == NULL || panel.popup_data->popup == NULL)
+         if (panel.popup_data == nullptr || panel.popup_data->popup == nullptr)
 	    CreatePopupMenu(box_data->right_control_form);
          else
 	    XmAddToPostFromList(panel.popup_data->popup,
@@ -1339,19 +1339,19 @@ BoxCreate (void)
    
    /*  Call a function to create the control and button set for the switch  */
    
-   if (switch_box_data != NULL)
+   if (switch_box_data != nullptr)
       SwitchCreate (switch_box_data);
 
    for (i = 0; i < panel.box_data_count; i++)
    {
       box_data = panel.box_data[i];
 
-      if (box_data->switch_data != NULL)
+      if (box_data->switch_data != nullptr)
       {
-         if (box_data->switch_form != NULL)
+         if (box_data->switch_form != nullptr)
          {
-            if (box_data->switch_data->popup_data == NULL ||
-                box_data->switch_data->popup_data->popup == NULL)
+            if (box_data->switch_data->popup_data == nullptr ||
+                box_data->switch_data->popup_data->popup == nullptr)
                CreateWorkspacePopupMenu (box_data->switch_form,
 				         box_data->switch_data);
             else
@@ -1407,7 +1407,7 @@ MainControlCreate (int switch_position)
 
       if (switch_position == POSITION_FIRST ||
           switch_position == POSITION_LAST  || 
-          box_data->switch_form == NULL)
+          box_data->switch_form == nullptr)
       {
          ControlCreate (box_data->left_control_form, box_data->control_data,
 	                box_data->control_data_count);
@@ -1495,7 +1495,7 @@ ControlSetVisualData (ControlData * control_data,
    }
    else
    {
-      if (control_data != NULL &&
+      if (control_data != nullptr &&
         (intptr_t) control_data->element_values[CONTROL_TYPE].parsed_value ==
                                                                CONTROL_CLOCK)
       {
@@ -1601,7 +1601,7 @@ ControlSetIconData (Widget        parent,
    *icon_name = 
       (char *) control_data->element_values[CONTROL_NORMAL_ICON].parsed_value;
 
-   if (*icon_name != NULL)
+   if (*icon_name != nullptr)
    {
       *icon_name = GetIconName (*icon_name, icon_size);
       XtSetArg (al[*ac], XmNimageName, *icon_name);			(*ac)++;
@@ -1611,7 +1611,7 @@ ControlSetIconData (Widget        parent,
    *alternate_icon_name = 
     (char *) control_data->element_values[CONTROL_ALTERNATE_ICON].parsed_value;
 
-   if (*alternate_icon_name != NULL)
+   if (*alternate_icon_name != nullptr)
    {
       *alternate_icon_name = GetIconName (*alternate_icon_name, icon_size);
       XtSetArg (al[*ac], XmNalternateImage, *alternate_icon_name); (*ac)++;
@@ -1635,12 +1635,12 @@ ControlSetIconData (Widget        parent,
       if ((intptr_t) control_data->element_values[CONTROL_TYPE].parsed_value
 							 != CONTROL_BLANK)
       {
-         if (control_label != NULL)
+         if (control_label != nullptr)
          {
             *icon_label = XmStringCreateLocalized (control_label);
             XtSetArg (al[*ac], XmNstring, *icon_label);			(*ac)++;
          }
-         else if (icon_name == NULL)
+         else if (icon_name == nullptr)
          {
             control_label = 
                (char *) control_data->element_values[CONTROL_NAME].parsed_value;
@@ -1690,7 +1690,7 @@ ControlSetBehavior (ControlData * control_data,
    /*  Set local shadow thickness and sensitive values to be used  */
    /*  to set the resources for the various control types.         */
 
-   if (control_data->element_values[CONTROL_DROP_ACTION].parsed_value != NULL)
+   if (control_data->element_values[CONTROL_DROP_ACTION].parsed_value != nullptr)
    {
       if (panel.resolution == LOW) 
          shadow_thickness = 1;
@@ -1700,7 +1700,7 @@ ControlSetBehavior (ControlData * control_data,
    else
       shadow_thickness = 1;
 
-   if (control_data->element_values[CONTROL_PUSH_ACTION].parsed_value != NULL)
+   if (control_data->element_values[CONTROL_PUSH_ACTION].parsed_value != nullptr)
    {
       sensitive = True;
       highlight_thickness = 1;
@@ -1935,7 +1935,7 @@ ControlCreateAndRegister (Widget        parent,
 
    if ((intptr_t)control_data->element_values[CONTROL_TYPE].parsed_value
  	                                             == CONTROL_DATE &&
-       (control_data->subpanel_data == NULL || main_copy) &&
+       (control_data->subpanel_data == nullptr || main_copy) &&
        (main_copy ||
 	(intptr_t)control_data->element_values[CONTROL_CONTAINER_TYPE].parsed_value
  	                                             == SUBPANEL))
@@ -1972,7 +1972,7 @@ ControlCreateAndRegister (Widget        parent,
    /*  it.  Also register non-file controls that have drop actions as copy.  */
 
    if (control_data->element_values[CONTROL_DROP_ACTION].parsed_value
-                                                                   != NULL)
+                                                                   != nullptr)
    {
       if ((intptr_t)control_data->element_values[CONTROL_TYPE].parsed_value ==
                                                              CONTROL_FILE)
@@ -1983,11 +1983,11 @@ ControlCreateAndRegister (Widget        parent,
          }
          else
          {
-	    if (control_data->move_action != NULL)
+	    if (control_data->move_action != nullptr)
 	       operations |= XmDROP_MOVE;
-	    if (control_data->copy_action != NULL)
+	    if (control_data->copy_action != nullptr)
 	       operations |= XmDROP_COPY;
-	    if (control_data->link_action != NULL)
+	    if (control_data->link_action != nullptr)
 	       operations |= XmDROP_LINK;
          }
       }
@@ -2071,13 +2071,13 @@ SwitchCreate (BoxData * box_data)
 
    Pixmap pixmap;
 
-   Widget prev_left = NULL;
-   Widget prev_right = NULL;
+   Widget prev_left = nullptr;
+   Widget prev_right = nullptr;
 
-   char * icon_name = NULL;
-   char * alt_icon_name = NULL;
+   char * icon_name = nullptr;
+   char * alt_icon_name = nullptr;
 
-   String exp_file_name = NULL;
+   String exp_file_name = nullptr;
 
    int ac;
    Arg al[40];
@@ -2128,7 +2128,7 @@ SwitchCreate (BoxData * box_data)
    }
    else
    {
-      switch_data->switch_names = NULL;
+      switch_data->switch_names = nullptr;
       switch_data->switch_count = 0;
    }
 
@@ -2137,7 +2137,7 @@ SwitchCreate (BoxData * box_data)
    switch_data->buttons = 
       (Widget *) XtMalloc (sizeof (Widget) * switch_count);
 
-   switch_data->popup_data = NULL;
+   switch_data->popup_data = nullptr;
 
 
    /*  Create the row column within the switch form to contain the  */
@@ -2206,7 +2206,7 @@ SwitchCreate (BoxData * box_data)
    for (i = 0; i < switch_data->control_data_count; i++)
    {
       ControlData * control_data = switch_data->control_data[i];
-      XmString icon_label = NULL;
+      XmString icon_label = nullptr;
 
       ac = 0;
       ControlSetVisualData (control_data, al, &ac);
@@ -2215,7 +2215,7 @@ SwitchCreate (BoxData * box_data)
 
       if (i % 2)
       {
-         if (prev_right == NULL)
+         if (prev_right == nullptr)
 	 {
             XtSetArg (al[ac], XmNtopAttachment, XmATTACH_FORM);	ac++;
             XtSetArg (al[ac], XmNtopOffset, 1);			ac++;
@@ -2233,7 +2233,7 @@ SwitchCreate (BoxData * box_data)
       }
       else
       {
-         if (prev_left == NULL)
+         if (prev_left == nullptr)
 	 {
             XtSetArg (al[ac], XmNtopAttachment, XmATTACH_FORM);	ac++;
             XtSetArg (al[ac], XmNtopOffset, 1);			ac++;
@@ -2273,16 +2273,16 @@ SwitchCreate (BoxData * box_data)
          ControlCreateAndRegister (box_data->switch_form, 
                                    control_data, False, al, ac);
 
-      if (icon_label != NULL)
+      if (icon_label != nullptr)
          XmStringFree (icon_label);
 
-      if (icon_name != NULL)
+      if (icon_name != nullptr)
          XtFree(icon_name);
 
-      if (alt_icon_name != NULL)
+      if (alt_icon_name != nullptr)
          XtFree(alt_icon_name);
 
-      if (exp_file_name != NULL)
+      if (exp_file_name != nullptr)
          XtFree(exp_file_name);
 
       if (i % 2)
@@ -2456,7 +2456,7 @@ SwitchButtonCreate (SwitchData * switch_data,
       XtManageChild (switch_data->buttons[i]);
 
       XtAddCallback (switch_data->buttons[i], XmNcallback,
-                     SwitchButtonCB, NULL);
+                     SwitchButtonCB, nullptr);
 
       XtAddCallback (switch_data->buttons[i], XmNhelpCallback,
                   GeneralTopicHelpCB, SWITCH_BUTTON);
@@ -2484,12 +2484,12 @@ ControlCreate (Widget         parent,
    int i;
    Arg al[40];
    int ac;
-   Widget prev_icon = NULL;
+   Widget prev_icon = nullptr;
    
-   char * icon_name = NULL;
-   char * alt_icon_name = NULL;
-   String exp_file_name = NULL;
-   XmString icon_label = NULL;
+   char * icon_name = nullptr;
+   char * alt_icon_name = nullptr;
+   String exp_file_name = nullptr;
+   XmString icon_label = nullptr;
 
 
    /*  Set up a loop and create each control within the box  */
@@ -2506,7 +2506,7 @@ ControlCreate (Widget         parent,
       XtSetArg (al[ac], XmNbottomAttachment, XmATTACH_FORM);	ac++;
       XtSetArg (al[ac], XmNbottomOffset, 1);			ac++;
 
-      if (prev_icon == NULL)
+      if (prev_icon == nullptr)
       {
          XtSetArg (al[ac], XmNleftAttachment, XmATTACH_FORM);	ac++;
          XtSetArg (al[ac], XmNleftOffset, 1);			ac++;
@@ -2540,33 +2540,33 @@ ControlCreate (Widget         parent,
       control_data[i]->icon = 
          ControlCreateAndRegister (parent, control_data[i], False, al, ac);
 
-      if (icon_label != NULL)
+      if (icon_label != nullptr)
       {
          XmStringFree (icon_label);
-         icon_label = NULL;
+         icon_label = nullptr;
       }
 	 
-      if (icon_name != NULL)
+      if (icon_name != nullptr)
       {
          XtFree(icon_name);
-         icon_name = NULL;
+         icon_name = nullptr;
       }
 
-      if (alt_icon_name != NULL)
+      if (alt_icon_name != nullptr)
       {
          XtFree(alt_icon_name);
-         alt_icon_name = NULL;
+         alt_icon_name = nullptr;
       }
 
-      if (exp_file_name != NULL)
+      if (exp_file_name != nullptr)
       {
          XtFree(exp_file_name);
-         exp_file_name = NULL;
+         exp_file_name = nullptr;
       }
 
       prev_icon = control_data[i]->icon;
 
-      if (control_data[i]->subpanel_data != NULL)
+      if (control_data[i]->subpanel_data != nullptr)
          SubpanelCreate (control_data[i], control_data[i]->subpanel_data);
    }
 }
@@ -2590,7 +2590,7 @@ ArrowCreate (Widget         parent,
 
 {
    int i;
-   Widget prev_separator = NULL;
+   Widget prev_separator = nullptr;
    Arg al[40];
    Arg al2[30];
    Arg al3[1];
@@ -2605,7 +2605,7 @@ ArrowCreate (Widget         parent,
    /*  If there is no arrow form (there are no subpanels for the controls)  */
    /*  then the parent widget will be null so just return.                  */
    
-   if (parent == NULL)
+   if (parent == nullptr)
       return;
 
    ac = 0;
@@ -2661,7 +2661,7 @@ ArrowCreate (Widget         parent,
       ac = ac_save;
       ac2 = ac2_save;
 
-      if (prev_separator == NULL)
+      if (prev_separator == nullptr)
       {
          XtSetArg (al[ac], XmNleftAttachment, XmATTACH_FORM);	ac++;
          if (first_box)
@@ -2694,7 +2694,7 @@ ArrowCreate (Widget         parent,
 
       XtSetArg (al[ac], XmNwidth, control_width);            	ac++;
 
-      if (control_data[i]->subpanel_data == NULL)
+      if (control_data[i]->subpanel_data == nullptr)
       {
          XtSetArg (al[ac], XmNimageName, blank_arrow_image);	ac++;
       }
@@ -2725,7 +2725,7 @@ ArrowCreate (Widget         parent,
 
       XtManageChild (control_data[i]->arrow);
 
-      if (control_data[i]->subpanel_data == NULL)
+      if (control_data[i]->subpanel_data == nullptr)
          XtSetSensitive (control_data[i]->arrow, False);
       
       XtAddCallback (control_data[i]->arrow, XmNcallback, 
@@ -2861,7 +2861,7 @@ SubpanelCreate (ControlData  * main_control_data,
    XtAddCallback (subpanel_data->form, XmNhelpCallback,
                   SubpanelTopicHelpCB, subpanel_data);
 
-   if (panel.popup_data == NULL || panel.popup_data->popup == NULL)
+   if (panel.popup_data == nullptr || panel.popup_data->popup == nullptr)
       CreatePopupMenu (subpanel_data->form);
    else
       XmAddToPostFromList (panel.popup_data->popup, subpanel_data->form);
@@ -3063,7 +3063,7 @@ SubpanelControlCreate (SubpanelData * subpanel_data,
                        Boolean        monitor)
 
 {
-   XmString icon_label = NULL;
+   XmString icon_label = nullptr;
    Widget control_icon;
 
    Arg al[40];
@@ -3072,9 +3072,9 @@ SubpanelControlCreate (SubpanelData * subpanel_data,
 
    char m_state;
 
-   char * icon_name = NULL;
-   char * alt_icon_name = NULL;
-   String exp_file_name = NULL;
+   char * icon_name = nullptr;
+   char * alt_icon_name = nullptr;
+   String exp_file_name = nullptr;
 
 
    /*  Call the function used to set the control's pixel and font data  */
@@ -3128,16 +3128,16 @@ SubpanelControlCreate (SubpanelData * subpanel_data,
       control_data->icon = control_icon;
 
 
-   if (icon_label != NULL)
+   if (icon_label != nullptr)
       XmStringFree (icon_label);
 
-   if (icon_name != NULL)
+   if (icon_name != nullptr)
       XtFree(icon_name);
 
-   if (alt_icon_name != NULL)
+   if (alt_icon_name != nullptr)
       XtFree(alt_icon_name);
 
-   if (exp_file_name != NULL)
+   if (exp_file_name != nullptr)
       XtFree(exp_file_name);
 
    /*  If there is a monitor file, create the indicator  */
@@ -3207,7 +3207,7 @@ UpdateSwitchGeometry (BoxData * box_data)
    Arg al[2];
    int i;
 
-   if (box_data->switch_data == NULL) return;
+   if (box_data->switch_data == nullptr) return;
 
    XtSetArg (al[0], XmNheight, &switch_rc_height);
    XtGetValues (box_data->switch_data->rc, al, 1);
@@ -3229,7 +3229,7 @@ UpdateSwitchGeometry (BoxData * box_data)
    switch_button_width = ComputeSwitchButtonWidth(box_data->switch_data);
    cur_width = 0;
    if (box_data->switch_data->buttons && box_data->switch_data->buttons[0])
-      XtVaGetValues (box_data->switch_data->buttons[0], XmNwidth, &cur_width, NULL);
+      XtVaGetValues (box_data->switch_data->buttons[0], XmNwidth, &cur_width, nullptr);
    if (cur_width > 0 && switch_button_width + 2 < cur_width)
       need_relayout = True;
 
@@ -3273,7 +3273,7 @@ AddSubpanel (ControlData * control_data)
 
 {
    ElementValue * element_values;
-   SubpanelData * subpanel_data = NULL;
+   SubpanelData * subpanel_data = nullptr;
    BoxData * box_data = (BoxData *)control_data->parent_data;
 
    DtWmHints vHints;
@@ -3282,7 +3282,7 @@ AddSubpanel (ControlData * control_data)
    int i;
 
 
-   if (control_data->subpanel_data == NULL)
+   if (control_data->subpanel_data == nullptr)
    {
       control_data->subpanel_data =
             (SubpanelData *) XtMalloc (sizeof (SubpanelData));   
@@ -3295,22 +3295,22 @@ AddSubpanel (ControlData * control_data)
       for (i = 0; i < SUBPANEL_KEYWORD_COUNT; i++)
       {
          (element_values)[i].use_default = True;
-         (element_values)[i].string_value = NULL;
-         (element_values)[i].parsed_value = NULL;
+         (element_values)[i].string_value = nullptr;
+         (element_values)[i].parsed_value = nullptr;
       }
 
       element_values[SUBPANEL_NAME].string_value = XtNewString(
 		control_data->element_values[CONTROL_NAME].parsed_value);
       element_values[SUBPANEL_CONTAINER_NAME].string_value = XtNewString(
 		control_data->element_values[CONTROL_NAME].parsed_value);
-      if (control_data->element_values[CONTROL_LABEL].parsed_value != NULL)
+      if (control_data->element_values[CONTROL_LABEL].parsed_value != nullptr)
          element_values[SUBPANEL_TITLE].string_value = XtNewString(
                 control_data->element_values[CONTROL_LABEL].parsed_value);
       else
          element_values[SUBPANEL_TITLE].string_value = XtNewString(
                 control_data->element_values[CONTROL_NAME].parsed_value);
       
-      subpanel_data->control_data = NULL;
+      subpanel_data->control_data = nullptr;
       subpanel_data->control_data_count = 0;
       subpanel_data->parent_control_data = control_data;
 
@@ -3407,7 +3407,7 @@ DeleteControl (ControlData * control_data)
    if (control_data->icon)
    {
       if (control_data->element_values[CONTROL_DROP_ACTION].parsed_value
-                                                                    != NULL)
+                                                                    != nullptr)
          DtDndDropUnregister(control_data->icon);
       XtDestroyWidget (control_data->icon);
    }
@@ -3455,7 +3455,7 @@ DeleteSubpanel (ControlData * control_data)
    {
       subpanel_data->torn = True;
       DeleteSubpanelControl (subpanel_data, subpanel_data->parent_control_data);
-      subpanel_data->parent_control_data->subpanel_data = NULL;
+      subpanel_data->parent_control_data->subpanel_data = nullptr;
    }
 
 
@@ -3495,7 +3495,7 @@ DeleteSubpanel (ControlData * control_data)
    RemoveEntry ((RecordData *)subpanel_data, SUBPANEL);
 
    XtFree ((char *) subpanel_data);
-   control_data->subpanel_data = NULL;
+   control_data->subpanel_data = nullptr;
 
    box_data->subpanel_count--;
 
@@ -3587,8 +3587,8 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
 
    Widget  * child_list;
    int       num_children;
-   Widget    attach_widget = NULL;
-   Widget    target_widget = NULL;
+   Widget    attach_widget = nullptr;
+   Widget    target_widget = nullptr;
    Boolean   last = False;
    Dimension height;
 
@@ -3665,7 +3665,7 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
 
    if (i == num_children)
    {
-      attach_widget = NULL;
+      attach_widget = nullptr;
       last = True;
    }
 
@@ -3694,7 +3694,7 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
       if (SessionFileNameLookup ((char *) main_control_data->element_values[CONTROL_NAME].parsed_value,
                                  (int) CONTROL,
                                  (char *) main_control_data->element_values[CONTROL_CONTAINER_NAME].parsed_value,
-                                 (int) BOX) != NULL)
+                                 (int) BOX) != nullptr)
          RemoveControlComponentFile (main_control_data);
 
       RemoveControlComponentFile (subpanel_control_data);
@@ -3739,7 +3739,7 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
       /*  since it is being used within the subpanel_control_data.  */
       
       subpanel_control_data->icon = main_control_data->icon;
-      main_control_data->icon = NULL;
+      main_control_data->icon = nullptr;
       DeleteControl (main_control_data);
 
 
@@ -3796,7 +3796,7 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
       if (subpanel_data->control_data_count == 0)
       {
 	 XtFree ((char *) subpanel_data->control_data);
-	 subpanel_data->control_data = NULL;
+	 subpanel_data->control_data = nullptr;
       }
    }
    else
@@ -3825,7 +3825,7 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
             if (i > 0)
                ToggleDefaultControl (main_control_data, subpanel_data,
                                      subpanel_data->control_data[i - 1]);
-            else if (subpanel_data->main_panel_icon_copy != NULL)
+            else if (subpanel_data->main_panel_icon_copy != nullptr)
                ToggleDefaultControl (main_control_data, subpanel_data,
                                      main_control_data);
          }
@@ -3847,7 +3847,7 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
 
    /*  If the subpanel is empty, delete it.  */
    
-   if (subpanel_data->main_panel_icon_copy == NULL &&
+   if (subpanel_data->main_panel_icon_copy == nullptr &&
        subpanel_data->control_data_count == 0)
    {
       DeleteSubpanel (subpanel_data->parent_control_data);
@@ -3857,7 +3857,7 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
 
    /*  Get the control positioning constraints reset  */
    
-   if (attach_widget != NULL && target_widget != NULL)
+   if (attach_widget != nullptr && target_widget != nullptr)
    {
       XtSetArg (al[0], XmNtopWidget, target_widget);
       XtSetValues (attach_widget, al, 1);
@@ -3903,7 +3903,7 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
       for (j = 0; j < subpanel_data->control_data_count; j++)
          XtSetValues (subpanel_data->control_data[j]->icon, al, 1);
 
-      if (subpanel_data->main_panel_icon_copy != NULL)
+      if (subpanel_data->main_panel_icon_copy != nullptr)
          XtSetValues (subpanel_data->main_panel_icon_copy, al, 1);
    }
 
@@ -3954,19 +3954,19 @@ ToggleDefaultControl (ControlData  * main_control_data,
 {
    BoxData * box_data;
 
-   Widget prev_icon = NULL;
-   Widget next_icon = NULL;
+   Widget prev_icon = nullptr;
+   Widget next_icon = nullptr;
    Widget old_main_icon = main_control_data->icon;
    Widget main_subpanel_icon;
    Widget parent = XtParent (old_main_icon);
    Widget control_icon;
 
-   char * icon_name = NULL;
-   char * alt_icon_name = NULL;
-   String exp_file_name = NULL;
+   char * icon_name = nullptr;
+   char * alt_icon_name = nullptr;
+   String exp_file_name = nullptr;
 
 
-   XmString icon_label = NULL;
+   XmString icon_label = nullptr;
 
    Dimension width;
    Dimension new_width;
@@ -4081,7 +4081,7 @@ ToggleDefaultControl (ControlData  * main_control_data,
    XtSetArg (al[ac], XmNbottomAttachment, XmATTACH_FORM);	ac++;
    XtSetArg (al[ac], XmNbottomOffset, 1);			ac++;
 
-   if (prev_icon == NULL)
+   if (prev_icon == nullptr)
    {
       XtSetArg (al[ac], XmNleftAttachment, XmATTACH_FORM);	ac++;
       XtSetArg (al[ac], XmNleftOffset, 1);			ac++;
@@ -4092,7 +4092,7 @@ ToggleDefaultControl (ControlData  * main_control_data,
       XtSetArg (al[ac], XmNleftWidget, prev_icon);		ac++;	 
    }
 
-   if (next_icon == NULL)
+   if (next_icon == nullptr)
    {
       XtSetArg (al[ac], XmNrightAttachment, XmATTACH_FORM);	ac++;
       XtSetArg (al[ac], XmNrightOffset, 1);			ac++;
@@ -4136,23 +4136,23 @@ ToggleDefaultControl (ControlData  * main_control_data,
    }
 
 
-   if (icon_label != NULL)
+   if (icon_label != nullptr)
       XmStringFree (icon_label);
 
-   if (icon_name != NULL)
+   if (icon_name != nullptr)
       XtFree(icon_name);
 
-   if (alt_icon_name != NULL)
+   if (alt_icon_name != nullptr)
       XtFree(alt_icon_name);
 
-   if (exp_file_name != NULL)
+   if (exp_file_name != nullptr)
       XtFree(exp_file_name);
 
    /*  If this is not the right most control within its parent,  */
    /*  reset the poistioning constraints of the control to the  */
    /*  right of this one.                                        */
    
-   if (next_icon != NULL)
+   if (next_icon != nullptr)
    {
       ac = 0;
       XtSetArg (al[ac], XmNleftAttachment, XmATTACH_WIDGET);		ac++;
@@ -4216,8 +4216,8 @@ ToggleDefaultControl (ControlData  * main_control_data,
    /*  Set the width of the arrow  */
 
    new_width += 2;
-   if (prev_icon != NULL) new_width -= 2;
-   if (next_icon != NULL) new_width -= 2;
+   if (prev_icon != nullptr) new_width -= 2;
+   if (next_icon != nullptr) new_width -= 2;
 
    XtSetArg (al[0], XmNwidth, new_width);
    XtSetValues (main_control_data->arrow, al, 1);
@@ -4254,7 +4254,7 @@ SetupPushAnimation (ControlData * control_data)
 
    count = panel.animation_count;
    
-   if (animation_name == NULL) return;
+   if (animation_name == nullptr) return;
 
    for (i = 0; i < count; i++)
    {
@@ -4308,7 +4308,7 @@ SetupDropAnimation (ControlData * control_data)
 
    count = panel.animation_count;
    
-   if (animation_name == NULL) return;
+   if (animation_name == nullptr) return;
 
    for (i = 0; i < count; i++)
    {
@@ -4355,7 +4355,7 @@ GetIconName (String       image_name,
 
 
 {
-   String       return_name = NULL;
+   String       return_name = nullptr;
    Screen     * screen = XtScreen (panel.shell);
    unsigned int next_size;
 
@@ -4367,10 +4367,10 @@ GetIconName (String       image_name,
 
    /*  Loop through until all sizes are exhausted  */
 
-   while (return_name == NULL)
+   while (return_name == nullptr)
    {
      return_name = 
-        _DtGetIconFileName (screen, image_name, NULL, NULL, next_size);
+        _DtGetIconFileName (screen, image_name, nullptr, nullptr, next_size);
 
      if (next_size == DtLARGE)
         next_size = DtMEDIUM;
@@ -4383,15 +4383,15 @@ GetIconName (String       image_name,
    }
 
 
-   if (return_name == NULL)
+   if (return_name == nullptr)
       return_name = 
-         _DtGetIconFileName (screen, image_name, NULL, NULL, DtUNSPECIFIED);
+         _DtGetIconFileName (screen, image_name, nullptr, nullptr, DtUNSPECIFIED);
 
-   if (return_name == NULL)
+   if (return_name == nullptr)
       return_name = 
-         _DtGetIconFileName (screen, DEFAULT_IMAGE_NAME, NULL, NULL, icon_size);
+         _DtGetIconFileName (screen, DEFAULT_IMAGE_NAME, nullptr, nullptr, icon_size);
 
-   if (return_name == NULL)
+   if (return_name == nullptr)
       return_name = XtNewString (image_name);
 
 

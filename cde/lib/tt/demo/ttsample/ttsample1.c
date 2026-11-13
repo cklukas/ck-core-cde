@@ -61,8 +61,8 @@ main(int argc, char **argv)
 	/*
 	 * Initialize Motif and create ui components
 	 */
-	toplevel = XtVaAppInitialize(&app, "ttsample1", NULL, 0,
-					&argc, argv, NULL, NULL);
+	toplevel = XtVaAppInitialize(&app, "ttsample1", nullptr, 0,
+					&argc, argv, nullptr, nullptr);
 	XtVaSetValues(toplevel, XmNtitle, "ToolTalk Sample 1", 0);
 	create_ui_components();
 
@@ -131,7 +131,7 @@ broadcast_value(Widget widget, XtPointer client_data, XtPointer call_data)
 
 	XtVaGetValues(slider, XmNvalue, &slider_value, 0);
 	msg_out = tt_pnotice_create(TT_SESSION, "ttsample1_value");
-	tt_message_arg_add(msg_out, TT_IN, "integer", NULL);
+	tt_message_arg_add(msg_out, TT_IN, "integer", nullptr);
 	tt_message_arg_ival_set(msg_out, 0, slider_value);
 	tt_message_send(msg_out);
 
@@ -164,7 +164,7 @@ receive_tt_message(XtPointer client_data, int *fid, XtInputId *id)
 	 * The returned message handle is NULL in this case.
 	 */
 
-	if (msg_in == NULL) return;
+	if (msg_in == nullptr) return;
 
 
 	/*
@@ -211,7 +211,7 @@ create_ui_components()
 	XtVaSetValues(base_frame, XmNmwmDecorations, &decor, 0);
 
 	controls = XtVaCreateManagedWidget("controls",
-                xmFormWidgetClass, base_frame, NULL, 0, 0);
+                xmFormWidgetClass, base_frame, nullptr, 0, 0);
 
 	slabel = XtVaCreateManagedWidget("Send:",
                 xmLabelWidgetClass, controls,

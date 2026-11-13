@@ -310,13 +310,13 @@ IL_PRIVATE ilBool _ilFastUpsample (
 
         /*  Check image type; return if not handled, else init upPrivRec */
     pipe->context->error = IL_OK;           /* assume no error */
-    pNewDes = (ilImageDes *)NULL;           /* assume no descriptor change */
+    pNewDes = (ilImageDes *)nullptr;           /* assume no descriptor change */
     upPriv.scaleFactor = scaleFactor;
 
     switch (pDes->type) {
       case IL_GRAY:
         if (!scaleFactor) return TRUE;      /* no scaling is noop; return */
-        if (!ilConvert (pipe, IL_DES_GRAY, IL_FORMAT_BYTE, 0, NULL))
+        if (!ilConvert (pipe, IL_DES_GRAY, IL_FORMAT_BYTE, 0, nullptr))
             return FALSE;
         upPriv.nSamples = 1;                /* double one plane */
         upPriv.subsampleShift[0] = 0;
@@ -326,7 +326,7 @@ IL_PRIVATE ilBool _ilFastUpsample (
 
       case IL_RGB:
         if (!scaleFactor) return TRUE;      /* no scaling is noop; return */
-        if (!ilConvert (pipe, IL_DES_RGB, IL_FORMAT_3BYTE_PLANE, 0, NULL))
+        if (!ilConvert (pipe, IL_DES_RGB, IL_FORMAT_3BYTE_PLANE, 0, nullptr))
             return FALSE;
         upPriv.nSamples = 3;                /* double three planes */
         upPriv.subsampleShift[0] = upPriv.subsampleShift[1] = upPriv.subsampleShift[2] = 0;
@@ -364,7 +364,7 @@ IL_PRIVATE ilBool _ilFastUpsample (
     dstData.height = pInfo->height << scaleFactor;
     dstData.stripHeight = pInfo->stripHeight << scaleFactor;
     dstData.constantStrip = pInfo->constantStrip;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
 
         /*  Set format: 32 bit alignment required if any scales up by 4x.
             Don't mark as such if width multiple of 4, as other filters may check it.
@@ -388,7 +388,7 @@ IL_PRIVATE ilBool _ilFastUpsample (
     srcData.minBufferHeight = 0;
     pUpPriv = (ilUpFastPrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
                  sizeof (ilUpFastPrivRec), 0, &srcData,
-                 &dstData, IL_NPF, IL_NPF, IL_NPF, ilExecuteFastUpsample, NULL, 0);
+                 &dstData, IL_NPF, IL_NPF, IL_NPF, ilExecuteFastUpsample, nullptr, 0);
     if (!pUpPriv)
         return FALSE;
     *pUpPriv = upPriv;
@@ -745,7 +745,7 @@ IL_PRIVATE ilBool _ilUpsampleYCbCr (
      || (pFormat->nBitsPerSample[2] != 8)) {
         if (upSample)
             return ilDeclarePipeInvalid (pipe, IL_ERROR_NOT_IMPLEMENTED);
-        if (!ilConvert (pipe, (ilImageDes *)NULL, IL_FORMAT_3BYTE_PLANE, 0, NULL))
+        if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_3BYTE_PLANE, 0, nullptr))
             return FALSE;
         *pFormat = *IL_FORMAT_3BYTE_PLANE;
         }
@@ -789,7 +789,7 @@ IL_PRIVATE ilBool _ilUpsampleYCbCr (
     dstData.height = pInfo->height;
     dstData.stripHeight = 0;
     dstData.constantStrip = FALSE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
 
         /*  Demand constant strips, a multiple of maximum subsample (4). To avoid the
             problem of having the last strip have 3 lines or less (and therefore for * 4
@@ -827,7 +827,7 @@ IL_PRIVATE ilBool _ilUpsampleYCbCr (
         }
     pUpPriv = (ilUpsamplePrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
                  sizeof (ilUpsamplePrivRec), 0, &srcData,
-                 &dstData, IL_NPF, IL_NPF, IL_NPF, ilExecuteUpsample, NULL, 0);
+                 &dstData, IL_NPF, IL_NPF, IL_NPF, ilExecuteUpsample, nullptr, 0);
     if (!pUpPriv)
         return FALSE;
 

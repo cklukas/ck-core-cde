@@ -37,7 +37,7 @@ static pid_t helper_observe_waitpid(pid_t pid,int *status,int flags)
     if(pid<=0) { ++helper_invalid_wait_calls;errno=EINVAL;return -1; }
     if(helper_interrupt_mode && !helper_timer_armed) {
         struct itimerval timer={{0,0},{0,50000}};
-        if(setitimer(ITIMER_REAL,&timer,NULL)!=0)return -1;
+        if(setitimer(ITIMER_REAL,&timer,nullptr)!=0)return -1;
         helper_timer_armed=1;
     }
     pid_t result=waitpid(pid,status,flags);
@@ -59,11 +59,11 @@ static int helper_case(const char *name)
 {
     if(!strcmp(name,"helper-invalid-pid-zero") || !strcmp(name,"helper-invalid-pid-negative")) {
         FileHelperSignals signals;sigset_t before,after;
-        HVERIFY(sigprocmask(SIG_SETMASK,NULL,&before)==0);
+        HVERIFY(sigprocmask(SIG_SETMASK,nullptr,&before)==0);
         HVERIFY(FileHelperBegin(&signals)==0);
         HVERIFY(FileHelperWait(strstr(name,"zero")?0:-1,&signals)<0&&errno==EINVAL);
         HVERIFY(helper_wait_calls==0 && helper_invalid_wait_calls==0);
-        HVERIFY(sigprocmask(SIG_SETMASK,NULL,&after)==0&&helper_mask_equal(&before,&after));
+        HVERIFY(sigprocmask(SIG_SETMASK,nullptr,&after)==0&&helper_mask_equal(&before,&after));
         printf("PASS %s waitpid_not_called\n",name);return 0;
     }
     int interrupt=!strcmp(name,"helper-real-eintr");
@@ -77,26 +77,26 @@ static int helper_case(const char *name)
     HVERIFY(interrupt||ignored||no_wait||mask_test||term||unrelated||exit_one||missing||!strcmp(name,"helper-exit-zero"));
     struct sigaction initial,chosen={0},expected,after,old_alarm,old_term;
     sigset_t initial_mask,expected_mask,after_mask,block;
-    HVERIFY(sigaction(SIGCHLD,NULL,&initial)==0);
-    HVERIFY(sigprocmask(SIG_SETMASK,NULL,&initial_mask)==0);
+    HVERIFY(sigaction(SIGCHLD,nullptr,&initial)==0);
+    HVERIFY(sigprocmask(SIG_SETMASK,nullptr,&initial_mask)==0);
     chosen.sa_handler=ignored?SIG_IGN:SIG_DFL;sigemptyset(&chosen.sa_mask);
     if(no_wait)chosen.sa_flags=SA_NOCLDWAIT;
-    HVERIFY(sigaction(SIGCHLD,&chosen,NULL)==0);
+    HVERIFY(sigaction(SIGCHLD,&chosen,nullptr)==0);
     sigemptyset(&block);
-    if(mask_test) {sigaddset(&block,SIGCHLD);sigaddset(&block,SIGUSR1);HVERIFY(sigprocmask(SIG_BLOCK,&block,NULL)==0);}
+    if(mask_test) {sigaddset(&block,SIGCHLD);sigaddset(&block,SIGUSR1);HVERIFY(sigprocmask(SIG_BLOCK,&block,nullptr)==0);}
     if(interrupt) {
         struct sigaction action={0};action.sa_handler=helper_alarm;sigemptyset(&action.sa_mask);
         HVERIFY(sigaction(SIGALRM,&action,&old_alarm)==0);
-        sigemptyset(&block);sigaddset(&block,SIGALRM);HVERIFY(sigprocmask(SIG_UNBLOCK,&block,NULL)==0);
+        sigemptyset(&block);sigaddset(&block,SIGALRM);HVERIFY(sigprocmask(SIG_UNBLOCK,&block,nullptr)==0);
         helper_interrupt_mode=1;
     }
     if(term) {
         struct sigaction action={0};action.sa_handler=SIG_IGN;sigemptyset(&action.sa_mask);
         HVERIFY(sigaction(SIGTERM,&action,&old_term)==0);
-        sigemptyset(&block);sigaddset(&block,SIGTERM);HVERIFY(sigprocmask(SIG_BLOCK,&block,NULL)==0);
+        sigemptyset(&block);sigaddset(&block,SIGTERM);HVERIFY(sigprocmask(SIG_BLOCK,&block,nullptr)==0);
     }
-    HVERIFY(sigaction(SIGCHLD,NULL,&expected)==0);
-    HVERIFY(sigprocmask(SIG_SETMASK,NULL,&expected_mask)==0);
+    HVERIFY(sigaction(SIGCHLD,nullptr,&expected)==0);
+    HVERIFY(sigprocmask(SIG_SETMASK,nullptr,&expected_mask)==0);
     FileHelperSignals signals;
     HVERIFY(FileHelperBegin(&signals)==0);
     int ready[2],release[2];HVERIFY(pipe(ready)==0 && pipe(release)==0);
@@ -111,14 +111,14 @@ static int helper_case(const char *name)
     if(child==0) {
         close(ready[0]);close(release[1]);FileHelperChildSignals();
         struct sigaction action;sigset_t mask;
-        if(sigaction(SIGTERM,NULL,&action)!=0 || action.sa_handler!=SIG_DFL ||
-           sigaction(SIGCHLD,NULL,&action)!=0 || action.sa_handler!=SIG_DFL ||
-           sigprocmask(SIG_SETMASK,NULL,&mask)!=0 || sigismember(&mask,SIGTERM) ||
+        if(sigaction(SIGTERM,nullptr,&action)!=0 || action.sa_handler!=SIG_DFL ||
+           sigaction(SIGCHLD,nullptr,&action)!=0 || action.sa_handler!=SIG_DFL ||
+           sigprocmask(SIG_SETMASK,nullptr,&mask)!=0 || sigismember(&mask,SIGTERM) ||
            sigismember(&mask,SIGCHLD))_exit(91);
         char byte=1;if(write(ready[1],&byte,1)!=1)_exit(92);close(ready[1]);
         if(interrupt||term) {if(read(release[0],&byte,1)!=1)_exit(93);}
         close(release[0]);
-        if(missing) {execl("./no-such-filemanip-helper","no-such-filemanip-helper",(char *)NULL);_exit(127);}
+        if(missing) {execl("./no-such-filemanip-helper","no-such-filemanip-helper",(char *)nullptr);_exit(127);}
         _exit(exit_one?1:0);
     }
     close(ready[1]);close(release[0]);char byte;
@@ -128,7 +128,7 @@ static int helper_case(const char *name)
     else close(release[1]);
     errno=0;int result=FileHelperWait(child,&signals);int wait_error=errno;
     if(interrupt) {
-        struct itimerval zero={{0,0},{0,0}};HVERIFY(setitimer(ITIMER_REAL,&zero,NULL)==0);
+        struct itimerval zero={{0,0},{0,0}};HVERIFY(setitimer(ITIMER_REAL,&zero,nullptr)==0);
         close(release[1]);helper_release_fd=-1;
         HVERIFY(helper_alarm_seen>0 && helper_real_eintr>0);
     }
@@ -137,20 +137,20 @@ static int helper_case(const char *name)
     else if(missing)HVERIFY(result<0 && wait_error==ENOEXEC);
     else if(term)HVERIFY(result<0 && wait_error==EIO);
     else HVERIFY(result==0);
-    HVERIFY(sigaction(SIGCHLD,NULL,&after)==0);
+    HVERIFY(sigaction(SIGCHLD,nullptr,&after)==0);
     HVERIFY(after.sa_handler==expected.sa_handler && after.sa_flags==expected.sa_flags);
     HVERIFY(helper_mask_equal(&after.sa_mask,&expected.sa_mask));
-    HVERIFY(sigprocmask(SIG_SETMASK,NULL,&after_mask)==0);
+    HVERIFY(sigprocmask(SIG_SETMASK,nullptr,&after_mask)==0);
     HVERIFY(helper_mask_equal(&after_mask,&expected_mask));
     int status=0;HVERIFY(waitpid(child,&status,WNOHANG)<0 && errno==ECHILD);
     if(unrelated) {
         HVERIFY(waitpid(other,&status,0)==other);
         HVERIFY(WIFEXITED(status) && WEXITSTATUS(status)==23);
     }
-    if(interrupt)HVERIFY(sigaction(SIGALRM,&old_alarm,NULL)==0);
-    if(term)HVERIFY(sigaction(SIGTERM,&old_term,NULL)==0);
-    HVERIFY(sigaction(SIGCHLD,&initial,NULL)==0);
-    HVERIFY(sigprocmask(SIG_SETMASK,&initial_mask,NULL)==0);
+    if(interrupt)HVERIFY(sigaction(SIGALRM,&old_alarm,nullptr)==0);
+    if(term)HVERIFY(sigaction(SIGTERM,&old_term,nullptr)==0);
+    HVERIFY(sigaction(SIGCHLD,&initial,nullptr)==0);
+    HVERIFY(sigprocmask(SIG_SETMASK,&initial_mask,nullptr)==0);
     printf("PASS %s actual_waitpid_eintr=%d\n",name,helper_real_eintr);return 0;
 }
 int main(int argc,char **argv)
@@ -214,7 +214,7 @@ static int RunFileCommand(char *cmd,char *a,char *b,char *c)
 }
 /* Resolver seam only; FileManip still owns the actual fallback transfer. */
 static char *_DtFollowLink(char *p)
-{ ++path_follow_calls;return path_follow_null?NULL:p; }
+{ ++path_follow_calls;return path_follow_null?nullptr:p; }
 static char *DName(char *p) {char *s=strrchr(p,'/');return s?s+1:p;}
 char *GetSharedMessage(int id) {(void)id;return "File operation failed: %s";}
 static void path_error(Widget w,char *a,char *b) {(void)w;(void)a;(void)b;++path_errors;}
@@ -298,7 +298,7 @@ static int path_case(const char *name)
     if(!strcmp(name,"path-join-dynamic")) {
         char raw[]="/native\n\\copy";char *copy=FilePathCopy(raw);PVERIFY(copy&&!strcmp(copy,raw));
         raw[1]='X';PVERIFY(!strcmp(copy,"/native\n\\copy"));free(copy);
-        PVERIFY(!FilePathCopy(NULL)&&errno==EINVAL);
+        PVERIFY(!FilePathCopy(nullptr)&&errno==EINVAL);
         size_t n=16000;char *directory=malloc(n+1);PVERIFY(directory);
         memset(directory,'d',n);directory[0]='/';directory[n]=0;
         char *p=FilePathJoin(directory,"native\n\\leaf");PVERIFY(p);
@@ -307,40 +307,40 @@ static int path_case(const char *name)
         char *root=FilePathJoin("/","leaf"), *trail=FilePathJoin("/dir/","leaf");
         PVERIFY(root && trail && !strcmp(root,"/leaf") && !strcmp(trail,"/dir/leaf"));
         FilePathsFree(p,root,trail,directory);
-        PVERIFY(!FilePathJoin(NULL,"leaf") && errno==EINVAL);
+        PVERIFY(!FilePathJoin(nullptr,"leaf") && errno==EINVAL);
         PVERIFY(!FilePathJoin("/dir","") && errno==EINVAL);
     } else if(!strcmp(name,"path-parent-native")) {
         const char raw[]="/dir\n\\native/leaf///";
         char *a=FileParentPath(raw),*b=FileParentPath("/"),*c=FileParentPath("leaf");
         PVERIFY(a&&b&&c && !strcmp(a,"/dir\n\\native") && !strcmp(b,"/") && !strcmp(c,"."));
-        PVERIFY(!strcmp(raw,"/dir\n\\native/leaf///"));FilePathsFree(a,b,c,NULL);
+        PVERIFY(!strcmp(raw,"/dir\n\\native/leaf///"));FilePathsFree(a,b,c,nullptr);
     } else if(!strncmp(name,"path-occupied-",14)) {
         PVERIFY(path_put("source","input-source")==0);
         if(!strcmp(name+14,"file"))PVERIFY(path_put("target","old-target")==0);
         else if(!strcmp(name+14,"directory"))PVERIFY(mkdir("target",0700)==0);
         else {PVERIFY(!strcmp(name+14,"symlink"));PVERIFY(path_put("referent","old-target")==0);PVERIFY(symlink("referent","target")==0);}
-        PVERIFY(!FileManip(NULL,COPY_FILE,"source","target",False,path_error,False,NOT_DESKTOP));
+        PVERIFY(!FileManip(nullptr,COPY_FILE,"source","target",False,path_error,False,NOT_DESKTOP));
         PVERIFY(path_exact("source","input-source") && path_errors>0);
         if(!strcmp(name+14,"file"))PVERIFY(path_exact("target","old-target"));
         else if(!strcmp(name+14,"directory")) {struct stat st;PVERIFY(stat("target",&st)==0&&S_ISDIR(st.st_mode));PVERIFY(lstat("target/source",&st)<0&&errno==ENOENT);}
         else {char text[20];PVERIFY(readlink("target",text,sizeof(text))==8&&!memcmp(text,"referent",8));PVERIFY(path_exact("referent","old-target"));}
     } else if(!strcmp(name,"path-move-followlink-null")) {
         PVERIFY(path_put("source","input-source")==0);path_follow_null=1;
-        PVERIFY(FileManip(NULL,MOVE_FILE,"source","target",False,path_error,False,NOT_DESKTOP));
+        PVERIFY(FileManip(nullptr,MOVE_FILE,"source","target",False,path_error,False,NOT_DESKTOP));
         PVERIFY(path_follow_calls==1 && path_errors==0);
         PVERIFY(path_exact("target","input-source"));
         struct stat st;PVERIFY(lstat("source",&st)<0&&errno==ENOENT);
         puts("_DtFollowLink NULL resolver seam; actual regular-file MOVE copy fallback and source removal.");
     } else if(!strcmp(name,"path-move-rollback-null-handler")) {
         PVERIFY(path_put("source","input-source")==0);path_rollback_mode=1;
-        PVERIFY(!FileManip(NULL,MOVE_FILE,"source","target",False,NULL,False,NOT_DESKTOP));
+        PVERIFY(!FileManip(nullptr,MOVE_FILE,"source","target",False,nullptr,False,NOT_DESKTOP));
         PVERIFY(path_link_hits==1 && path_unlink_hits==1);
         PVERIFY(path_exact("source","input-source"));
         struct stat st;PVERIFY(lstat("target",&st)<0&&errno==ENOENT);
         puts("Reported EXDEV/source-unlink EACCES seams; actual copy and target rollback with NULL errorHandler.");
     } else if(!strcmp(name,"path-move-fallback-command")) {
         PVERIFY(symlink("missing-native-target","source-link")==0);path_fallback_mode=1;
-        PVERIFY(!FileManip(NULL,MOVE_FILE,"source-link","target-link",False,NULL,False,NOT_DESKTOP));
+        PVERIFY(!FileManip(nullptr,MOVE_FILE,"source-link","target-link",False,nullptr,False,NOT_DESKTOP));
         PVERIFY(path_readlink_hits==1 && path_move_calls==1 && path_link_calls==0);
         char value[64];PVERIFY(readlink("source-link",value,sizeof(value))==21&&!memcmp(value,"missing-native-target",21));
         struct stat st;PVERIFY(lstat("target-link",&st)<0&&errno==ENOENT);
@@ -353,13 +353,13 @@ static int path_case(const char *name)
             puts("Native symlink limit: 700-byte growth fixture; no >1024 native claim.");
         }
         char *readback=FileReadLink("source-link");PVERIFY(readback&&strlen(readback)==n&&!memcmp(readback,text,n));free(readback);
-        PVERIFY(FileManip(NULL,MOVE_FILE,"source-link","target-link",False,path_error,False,NOT_DESKTOP));
+        PVERIFY(FileManip(nullptr,MOVE_FILE,"source-link","target-link",False,path_error,False,NOT_DESKTOP));
         readback=FileReadLink("target-link");PVERIFY(readback&&strlen(readback)==n&&!memcmp(readback,text,n));
-        struct stat st;PVERIFY(lstat("source-link",&st)<0&&errno==ENOENT);FilePathsFree(text,readback,NULL,NULL);
+        struct stat st;PVERIFY(lstat("source-link",&st)<0&&errno==ENOENT);FilePathsFree(text,readback,nullptr,nullptr);
     } else if(!strcmp(name,"path-container-deep") || !strncmp(name,"ancestry-",9)) {
         PVERIFY(mkdir("tree",0700)==0 && mkdir("sibling",0700)==0);
         struct stat ancestor,root,sibling;PVERIFY(stat("tree",&ancestor)==0&&stat("/",&root)==0&&stat("sibling",&sibling)==0);
-        char *cwd=getcwd(NULL,0);PVERIFY(cwd);char *deep=FilePathJoin(cwd,"tree");PVERIFY(deep);
+        char *cwd=getcwd(nullptr,0);PVERIFY(cwd);char *deep=FilePathJoin(cwd,"tree");PVERIFY(deep);
         char component[81];memset(component,'d',80);component[80]=0;
         long max=pathconf(".",_PC_PATH_MAX);PVERIFY(max>0);
         size_t wanted=max>2000?1500:600;
@@ -368,7 +368,7 @@ static int path_case(const char *name)
         }
         if(!strcmp(name,"path-container-deep")) {
             PVERIFY(path_put("source","input-source")==0);
-            PVERIFY(FileManip(NULL,COPY_FILE,"source",deep,True,path_error,False,NOT_DESKTOP));
+            PVERIFY(FileManip(nullptr,COPY_FILE,"source",deep,True,path_error,False,NOT_DESKTOP));
             char *target=FilePathJoin(deep,"source");PVERIFY(target&&path_exact(target,"input-source"));free(target);
             printf("Actual native container length=%zu native_path_limit=%ld\n",strlen(deep),max);
         } else if(!strcmp(name,"ancestry-deep")) {
@@ -389,11 +389,11 @@ static int path_case(const char *name)
             if(!strcmp(name,"ancestry-fstat-error"))ancestry_fault=1;
             else if(!strcmp(name,"ancestry-openat-error"))ancestry_fault=2;
             else {PVERIFY(!strcmp(name,"ancestry-close-error"));ancestry_fault=3;}
-            PVERIFY(Check(NULL,deep,&sibling,COPY_FILE,path_error)!=0);
+            PVERIFY(Check(nullptr,deep,&sibling,COPY_FILE,path_error)!=0);
             PVERIFY(path_errors>0&&ancestry_hits>0);
             PVERIFY(errno==(ancestry_fault==2?EACCES:EIO));
         }
-        FilePathsFree(deep,cwd,NULL,NULL);
+        FilePathsFree(deep,cwd,nullptr,nullptr);
     } else {fprintf(stderr,"Unknown path case %s\n",name);return 2;}
     printf("PASS %s\n",name);return 0;
 }
@@ -440,13 +440,13 @@ static int directory_envfd(const char *key,int fd)
 {char value[40];snprintf(value,sizeof(value),"%d",fd);return setenv(key,value,1);}
 static int directory_case(const char *name,const char *binary)
 {
-    int move=strstr(name,"move-")!=NULL;
-    int failure=strstr(name,"failure")!=NULL;
-    int missing=strstr(name,"missing-exec")!=NULL;
-    int signaled=strstr(name,"signal")!=NULL;
-    int deep=strstr(name,"dynamic-target")!=NULL;
+    int move=strstr(name,"move-")!=nullptr;
+    int failure=strstr(name,"failure")!=nullptr;
+    int missing=strstr(name,"missing-exec")!=nullptr;
+    int signaled=strstr(name,"signal")!=nullptr;
+    int deep=strstr(name,"dynamic-target")!=nullptr;
     PVERIFY(mkdir("source-home",0700)==0&&mkdir("target-home",0700)==0&&mkdir("helper-bin",0700)==0);
-    char *cwd=getcwd(NULL,0);PVERIFY(cwd);
+    char *cwd=getcwd(nullptr,0);PVERIFY(cwd);
     char *source=FilePathJoin(cwd,"source-home/source-dir");
     char *container=FilePathJoin(cwd,"target-home");
     char *executable=FilePathJoin(cwd,"helper-bin/dtfile_copy");PVERIFY(source&&container&&executable);
@@ -473,8 +473,8 @@ static int directory_case(const char *name,const char *binary)
     pid_t caller=fork();PVERIFY(caller>=0);
     if(caller==0) {
         close(started[0]);close(gate[1]);close(result_pipe[0]);
-        directory_device_path=move?container:NULL;
-        result.returned=FileManip(NULL,move?MOVE_FILE:COPY_FILE,source,container,True,path_error,False,NOT_DESKTOP);
+        directory_device_path=move?container:nullptr;
+        result.returned=FileManip(nullptr,move?MOVE_FILE:COPY_FILE,source,container,True,path_error,False,NOT_DESKTOP);
         result.error=errno;result.caller=getpid();result.device_hits=directory_device_hits;
         int status=0;errno=0;
         result.no_child=waitpid(-1,&status,WNOHANG)<0&&errno==ECHILD;
@@ -504,7 +504,7 @@ static int directory_case(const char *name,const char *binary)
         int fd=open("helper.argv",O_RDONLY);PVERIFY(fd>=0);
         pid_t identity[2];PVERIFY(directory_io(fd,identity,sizeof(identity),0)==0);
         PVERIFY(identity[0]>0&&identity[0]!=caller&&identity[1]==caller);
-        char *last[2]={NULL,NULL};int seen_move=0;
+        char *last[2]={nullptr,nullptr};int seen_move=0;
         for(;;) {
             size_t length;ssize_t n=read(fd,&length,sizeof(length));if(n==0)break;
             PVERIFY(n==(ssize_t)sizeof(length)&&length<65536);
@@ -514,12 +514,12 @@ static int directory_case(const char *name,const char *binary)
             free(last[0]);last[0]=last[1];last[1]=arg;
         }
         close(fd);PVERIFY(last[0]&&last[1]&&!strcmp(last[0],source)&&!strcmp(last[1],target));
-        PVERIFY(seen_move==move);FilePathsFree(last[0],last[1],NULL,NULL);
+        PVERIFY(seen_move==move);FilePathsFree(last[0],last[1],nullptr,nullptr);
         if(!signaled)PVERIFY(path_exact("helper.completed","helper finished"));
         printf("Actual helper pid=%ld caller=%ld resolved_target=%s length=%zu\n",(long)identity[0],(long)caller,target,strlen(target));
     }
     if(move)puts("Cross-device branch forced by target-parent st_dev metadata ONLY; not native EXDEV qualification.");
-    FilePathsFree(source,container,executable,payload);FilePathsFree(target,cwd,NULL,NULL);
+    FilePathsFree(source,container,executable,payload);FilePathsFree(target,cwd,nullptr,nullptr);
     printf("PASS %s real production directory caller/helper wait/outcome; helper transfer engine excluded\n",name);return 0;
 }
 #endif

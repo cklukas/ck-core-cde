@@ -241,7 +241,7 @@ XeString *SPC_Create_Default_Envp(XeString *old_envp)
   XeString *envp;
   XeChar *display;
   XeString envVar;
-  XeString sys_env_path = NULL;
+  XeString sys_env_path = nullptr;
   
   if(old_envp)
     envp=old_envp;
@@ -254,17 +254,17 @@ XeString *SPC_Create_Default_Envp(XeString *old_envp)
     {
     display = (XeChar *)malloc(
 			(strlen(official_hostname) + 11) * sizeof(XeChar));
-    if (display != (XeChar *)NULL)
+    if (display != (XeChar *)nullptr)
       sprintf(display, "DISPLAY=%s:0", official_hostname);
     }
   else
     {
     display = (XeChar *)malloc((strlen(envVar) + 9) * sizeof(XeChar));
-    if (display != (XeChar *)NULL)
+    if (display != (XeChar *)nullptr)
       sprintf(display, "DISPLAY=%s", envVar);
     }
  
-  if (display != (XeChar *)NULL)
+  if (display != (XeChar *)nullptr)
     { 
     envp=SPC_Putenv(display, envp);
     free(display);
@@ -279,7 +279,7 @@ XeString *SPC_Create_Default_Envp(XeString *old_envp)
     XeChar *langBuf;
 
     if ((langBuf = (XeChar *)malloc((strlen(envVar) + 6) * sizeof(XeChar)))
-	!= (XeChar *)NULL)
+	!= (XeChar *)nullptr)
     {
       sprintf(langBuf, "LANG=%s", envVar);
       envp = SPC_Putenv(langBuf, envp);
@@ -293,7 +293,7 @@ XeString *SPC_Create_Default_Envp(XeString *old_envp)
    */
   sys_env_path = (XeString) malloc (strlen(SPCD_ENV_INSTALL_DIRECTORY) +
                                     strlen(SPCD_ENV_FILE) + 3);
-  if (sys_env_path != NULL) {
+  if (sys_env_path != nullptr) {
     (void) sprintf (sys_env_path, "%s/%s",
 		    SPCD_ENV_INSTALL_DIRECTORY,
                     SPCD_ENV_FILE);
@@ -306,7 +306,7 @@ XeString *SPC_Create_Default_Envp(XeString *old_envp)
   free (sys_env_path);
   sys_env_path = (XeString) malloc (strlen(SPCD_ENV_CONFIG_DIRECTORY) +
 				    strlen(SPCD_ENV_FILE) + 3);
-  if (sys_env_path != NULL) {
+  if (sys_env_path != nullptr) {
     (void) sprintf (sys_env_path, "%s/%s",
 		    SPCD_ENV_CONFIG_DIRECTORY,
 		    SPCD_ENV_FILE);
@@ -347,7 +347,7 @@ XeString *SPC_Fixup_Environment(XeString *envp,
 	!strncmp(disp, (XeString)"local", 5) ||
 	!strncmp(disp, (XeString)":", 1))
     {
-      XeChar *dispBuf = NULL;
+      XeChar *dispBuf = nullptr;
       XeString screenptr;
       XeChar null=XeChar_NULL;
 
@@ -371,7 +371,7 @@ XeString *SPC_Fixup_Environment(XeString *envp,
       XeChar *langBuf;
 
       if ((langBuf = (XeChar *)malloc((strlen(myLang) + 6) * sizeof(XeChar)))
-		      != (XeChar *)NULL)
+		      != (XeChar *)nullptr)
       {
         sprintf(langBuf, "LANG=%s", myLang);
         envp = SPC_Putenv(langBuf, envp);

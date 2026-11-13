@@ -96,9 +96,9 @@ ABObjList
 objlist_create(void)
 {
     ABObjList          list = (ABObjList) util_malloc(sizeof(ABObjListRec));
-    if (list == NULL)
+    if (list == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     objlist_construct(list);
     return list;
@@ -110,8 +110,8 @@ objlist_construct(ABObjList list)
 {
     list->num_objs = 0;
     list->objs_size = 0;
-    list->objs = NULL;
-    list->user_datas = NULL;
+    list->objs = nullptr;
+    list->user_datas = nullptr;
     list->unique = TRUE;
     list->sort_order = OBJLIST_SORT_CLIENT_DEF;
     list->indexes_dirty = TRUE;
@@ -126,7 +126,7 @@ int
 objlist_destroy_impl(ABObjList *listInOut)
 {
     ABObjList	list = (*listInOut);
-    if (list != NULL)
+    if (list != nullptr)
     {
         objlist_destruct(list);
         util_free(list);
@@ -169,7 +169,7 @@ objlist_make_empty(ABObjList list)
 {
     int		return_value = 0;
 
-    if (list->objs != NULL)
+    if (list->objs != nullptr)
     {
 	return_value = objlistP_shrink_array(list, list->objs_size);
     }
@@ -329,27 +329,27 @@ objlist_remove_index(ABObjList list, int doomedIndex)
     /*
      * Remove this obj and collapse the list
      */
-    objs[doomedIndex] = NULL;
+    objs[doomedIndex] = nullptr;
     if (numToMove > 0)
     {
         memmove((void *)(&(objs[doomedIndex])),
 		    (void *)&(objs[doomedIndex+1]),
 		    sizeof(ABObj) * numToMove);
-        objs[num_objs-1] = NULL;
+        objs[num_objs-1] = nullptr;
     }
 
     /*
      * Destroy user data and collapse list
      */
-    if (user_datas != NULL)
+    if (user_datas != nullptr)
     {
-        user_datas[doomedIndex] = NULL;
+        user_datas[doomedIndex] = nullptr;
         if (numToMove > 0)
         {
             memmove((void *)(&(user_datas[doomedIndex])), 
 		    (void *)&(user_datas[doomedIndex+1]),
 		    sizeof(void*) * numToMove);
-            user_datas[num_objs-1] = NULL;
+            user_datas[num_objs-1] = nullptr;
         }
     }
 
@@ -366,7 +366,7 @@ objlist_remove_index(ABObjList list, int doomedIndex)
 int
 objlist_get_num_objs(ABObjList list)
 {
-    if (list == NULL)
+    if (list == nullptr)
     {
 	return 0;
     }
@@ -377,12 +377,12 @@ objlist_get_num_objs(ABObjList list)
 ABObj
 objlist_get_obj(ABObjList list, int whichObj, void **clientDataOut)
 {
-    if ((list == NULL) || (whichObj >= list->num_objs) ||
+    if ((list == nullptr) || (whichObj >= list->num_objs) ||
 	(whichObj < 0))
     {
-	return NULL;
+	return nullptr;
     }
-    if (clientDataOut != NULL)
+    if (clientDataOut != nullptr)
     {
 	*clientDataOut = objlistP_get_user_data(list, whichObj);
     }
@@ -469,7 +469,7 @@ ABObjList
 objlist_dup(ABObjList list)
 {
     int		i;
-    ABObjList	new_list = NULL;
+    ABObjList	new_list = nullptr;
 
     new_list = objlist_create();
     new_list->unique = list->unique;
@@ -495,16 +495,16 @@ objlistP_shrink_array(ABObjList list, int sizeDiff)
 {
     int		return_value = 0;
     int		new_objs_size = util_max(0, list->objs_size - sizeDiff);
-    ABObj	*new_objs = NULL;
-    void	**new_user_datas = NULL;
+    ABObj	*new_objs = nullptr;
+    void	**new_user_datas = nullptr;
     int		i = 0;
 	
     for (i= new_objs_size; i < list->objs_size; ++i)
     {
-	list->objs[i] = NULL;
-	if (list->user_datas != NULL)
+	list->objs[i] = nullptr;
+	if (list->user_datas != nullptr)
 	{
-	    list->user_datas[i] = NULL;
+	    list->user_datas[i] = nullptr;
 	}
     }
 
@@ -512,7 +512,7 @@ objlistP_shrink_array(ABObjList list, int sizeDiff)
     {
         new_objs = (ABObj*) realloc(
 			  list->objs, new_objs_size * sizeof(ABObj));
-	if (new_user_datas != NULL)
+	if (new_user_datas != nullptr)
 	{
 	    new_user_datas = (void **) realloc(
 		  list->user_datas, new_objs_size * sizeof(void*));
@@ -520,12 +520,12 @@ objlistP_shrink_array(ABObjList list, int sizeDiff)
     }
     else
     {
-	util_free(list->objs); list->objs = NULL;
-	util_free(list->user_datas); list->user_datas= NULL;
+	util_free(list->objs); list->objs = nullptr;
+	util_free(list->user_datas); list->user_datas= nullptr;
     }
 
     if (   (new_objs_size > 0) 
-	&& ((new_objs == NULL) || (new_user_datas == NULL)) )
+	&& ((new_objs == nullptr) || (new_user_datas == nullptr)) )
     {
 	return_value = ERR_NO_MEMORY;
 	goto epilogue;
@@ -552,10 +552,10 @@ objlistP_grow_array(ABObjList list, int sizeDiff)
     int		return_value = 0;
     int		old_objs_size = list->objs_size;
     int		new_objs_size = list->objs_size + sizeDiff;
-    ABObj	*new_objs = NULL;
-    void	**new_user_datas = NULL;
+    ABObj	*new_objs = nullptr;
+    void	**new_user_datas = nullptr;
     int		i = 0;
-    BOOL	user_datas_valid = (list->user_datas != NULL);
+    BOOL	user_datas_valid = (list->user_datas != nullptr);
 
     new_objs = (ABObj*)realloc(
 			list->objs, new_objs_size * sizeof(ABObj));
@@ -564,8 +564,8 @@ objlistP_grow_array(ABObjList list, int sizeDiff)
         new_user_datas = (void **)realloc(
 			list->user_datas, new_objs_size * sizeof(void *));
     }
-    if (   (new_objs == NULL) 
-	|| (user_datas_valid && (new_user_datas == NULL)) )
+    if (   (new_objs == nullptr) 
+	|| (user_datas_valid && (new_user_datas == nullptr)) )
     {
 	free(new_objs);
 	free(new_user_datas);
@@ -584,10 +584,10 @@ objlistP_grow_array(ABObjList list, int sizeDiff)
      */
     for (i = old_objs_size; i < new_objs_size; ++i)
     {
-	list->objs[i] = NULL;
+	list->objs[i] = nullptr;
 	if (user_datas_valid)
 	{
-	    list->user_datas[i] = NULL;
+	    list->user_datas[i] = nullptr;
 	}
     }
 
@@ -599,12 +599,12 @@ epilogue:
 static int
 objlistP_build_user_data_array(ABObjList list, int index, void *data)
 {
-    if (list->user_datas != NULL)
+    if (list->user_datas != nullptr)
     {
 	return -1;
     }
     list->user_datas = (void **)calloc(sizeof(void*), list->objs_size);
-    if (list->user_datas == NULL)
+    if (list->user_datas == nullptr)
     {
 	return -1;
     }
@@ -631,13 +631,13 @@ int
 objlist_dump(ABObjList list)
 {
     int	i = 0;
-    ABObj	obj = NULL;
+    ABObj	obj = nullptr;
     BOOL	entryUsed = FALSE;
     BOOL	entryValid = FALSE;
     char	objName[1024];
     *objName = 0;
 
-    if (list == NULL)
+    if (list == nullptr)
     {
 	util_printf(0, "NULL obj list\n");
 	return 0;
@@ -679,7 +679,7 @@ objlist_dump(ABObjList list)
 		(i >= list->num_objs? " ":"X"),
 		objName);
 
-	if (list->user_datas != NULL)
+	if (list->user_datas != nullptr)
 	{
 	    util_dprintf(0, " 0x%08lx", objlistP_get_user_data(list,i));
 	}

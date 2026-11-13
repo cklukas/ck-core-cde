@@ -97,8 +97,8 @@ bil_load_file(
 )
 {
 #define compObjsOut (*compObjsOutPtr)
-    ABObj               obj = NULL;
-    STRING              errmsg = NULL;
+    ABObj               obj = nullptr;
+    STRING              errmsg = nullptr;
     AB_FILE_TYPE        file_type = AB_FILE_UNDEF;
     int                 success = OK;
     int                 i;
@@ -107,9 +107,9 @@ bil_load_file(
     BOOL		LoadErr = FALSE;
     float		ver = 0.0;
 
-    if (util_strempty(bil_file) && inFile == NULL)
+    if (util_strempty(bil_file) && inFile == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     if (util_be_verbose() && (!util_strempty(bil_file)))
@@ -120,12 +120,12 @@ bil_load_file(
     /*
      * Reset everything
      */
-    bilP_load.project = NULL;
-    bilP_load.module = NULL;
-    bilP_load.compObjsRead = NULL;
-    bilP_load.obj = NULL;
+    bilP_load.project = nullptr;
+    bilP_load.module = nullptr;
+    bilP_load.compObjsRead = nullptr;
+    bilP_load.obj = nullptr;
     bilP_load.objType = AB_TYPE_UNDEF;
-    bilP_load.fileName = NULL;
+    bilP_load.fileName = nullptr;
     abil_loadmsg_clear();
     abil_loadmsg_set_line_number_callback(bilP_load_get_line_number);
 
@@ -141,11 +141,11 @@ bil_load_file(
      * inFile will be NULL if this routine is being called
      * by dtcodegen (abmf.c) to load a project or module file.
      */
-    if (inFile == NULL)
+    if (inFile == nullptr)
     {
 	/* Open the input file.  */
 	errmsg = abio_open_bil_input(bil_file, &lineNumber, &yyin);
-	if (errmsg != NULL)
+	if (errmsg != nullptr)
 	{
 	    LoadErr = TRUE;
 	    goto epilogue;
@@ -156,7 +156,7 @@ bil_load_file(
 	/* Read in header information */
 	ver = abio_get_bil_version(inFile, &lineNumber);
 	errmsg = abio_check_bil_version(ver, bil_file);
-	if (errmsg != NULL)
+	if (errmsg != nullptr)
 	{
 	    LoadErr = TRUE;
 	    goto epilogue;
@@ -187,7 +187,7 @@ bil_load_file(
     {
 	AB_TRAVERSAL        trav;
 	for (trav_open(&trav, bilP_load.project, AB_TRAV_ALL), i = 0;
-	     (obj = trav_next(&trav)) != NULL; ++i)
+	     (obj = trav_next(&trav)) != nullptr; ++i)
 	{
 	    if (obj->type == AB_TYPE_UNKNOWN)
 	    {
@@ -206,7 +206,7 @@ bil_load_file(
     /* Close the input file. */
     abio_close_input(yyin);
 
-    if (bilP_load.project == NULL)
+    if (bilP_load.project == nullptr)
     {
 	LoadErr = TRUE;
 	sprintf(Buf, "%s", CATGETS(ABIL_MESSAGE_CATD, ABIL_MESSAGE_SET, 39,
@@ -219,12 +219,12 @@ bil_load_file(
     /*
      * Update the returned list of composite objects
      */
-    if (compObjsOutPtr != NULL)
+    if (compObjsOutPtr != nullptr)
     {
 	int	numObjs = objlist_get_num_objs(bilP_load.compObjsRead);
 	int	i;
 
-	if (compObjsOut == NULL)
+	if (compObjsOut == nullptr)
 	{
 	    compObjsOut = objlist_create();
 	}
@@ -232,7 +232,7 @@ bil_load_file(
 	for (i = 0; i < numObjs; ++i)
 	{
 	    objlist_add_obj(compObjsOut, 
-			objlist_get_obj(bilP_load.compObjsRead, i, NULL), NULL);
+			objlist_get_obj(bilP_load.compObjsRead, i, nullptr), nullptr);
 	}
     }
 
@@ -241,7 +241,7 @@ epilogue:
     objlist_destroy(bilP_load.compObjsRead);
     if (LoadErr)
     {
-	if (errmsg != NULL)
+	if (errmsg != nullptr)
 	{
 	    util_printf_err("%s\n", errmsg);
 	}
@@ -276,12 +276,12 @@ epilogue:
 	 * 	  for that case, otherwise we'll be destroying
 	 *	  the same object, the project, twice - not good. 
 	 */
-	if ((bilP_load.module != NULL) && (bilP_load.module != bilP_load.project))
+	if ((bilP_load.module != nullptr) && (bilP_load.module != bilP_load.project))
 	{
 	    obj_destroy(bilP_load.module);
-	    bilP_load.module = NULL;
+	    bilP_load.module = nullptr;
 	} 
-	return NULL;
+	return nullptr;
     }
     else
     {
@@ -305,14 +305,14 @@ bil_load_file_and_resolve_all(
 #define newProject (*newProjectPtr)
     int			return_value = 0;
     AB_TRAVERSAL        trav;
-    ABObj               file = NULL;
-    ABObj		ret = NULL;
+    ABObj               file = nullptr;
+    ABObj		ret = nullptr;
     char                dirName[MAXPATHLEN];
     char		fileName[MAXPATHLEN];
-    STRING		modfile = NULL;
+    STRING		modfile = nullptr;
     *dirName = 0;
     *fileName = 0;
-    newProject = NULL;
+    newProject = nullptr;
 
     /* If the path is NULL then that means that a 
      * data buffer was dropped (i.e. dtmail attachment)
@@ -329,14 +329,14 @@ bil_load_file_and_resolve_all(
 	}
     }
 
-    newProject = bil_load_file(fileName, inFile, NULL, NULL);
+    newProject = bil_load_file(fileName, inFile, nullptr, nullptr);
     /* If bil_load_file returns NULL, then something went wrong
      * with reading in the bip file, so destroy the project.
      */
-    if (newProject == NULL)
+    if (newProject == nullptr)
     {
 	obj_destroy(bilP_load.project);
-	bilP_load.project = NULL;
+	bilP_load.project = nullptr;
 	return_value = ERR;
 	goto epilogue;
     }
@@ -345,26 +345,26 @@ bil_load_file_and_resolve_all(
      * Find any references to other files in the project and load them
      */
     for (trav_open(&trav, newProject, AB_TRAV_FILES);
-	 (file = trav_next(&trav)) != NULL;)
+	 (file = trav_next(&trav)) != nullptr;)
     {
         modfile = obj_get_file(file);
 
 	/* Pass in NULL for the FILE * argument, because we
 	 * haven't opened (util_fopen_locked) the module files yet.
  	 */
-	ret = bil_load_file(modfile, NULL, newProject, NULL);
+	ret = bil_load_file(modfile, nullptr, newProject, nullptr);
 
 	/* If the return value from bil_load_file is NULL,
 	 * then something went wrong with reading in the
 	 * bil file (i.e. it was a corrupt bil file).  In this
 	 * case, don't load the project, destroy it.
 	 */
-	if (ret == NULL)
+	if (ret == nullptr)
 	{
 	    return_value = -1;
 	    obj_destroy(bilP_load.project);
-	    bilP_load.project = NULL;
-	    newProject = NULL;
+	    bilP_load.project = nullptr;
+	    newProject = nullptr;
 	    break;
 	}
 	else

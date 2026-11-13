@@ -140,14 +140,14 @@ typedef struct {
 int			debugging_boolsrch =	FALSE;
 
 static int		all_key_types =		TRUE;
-static UCHAR		*bitvec_allocp =	NULL;
+static UCHAR		*bitvec_allocp =	nullptr;
 static size_t		bitvec_allocsz =	0;
 static long		bitveclen;	/* 1/8 of tot_addr_count */
 static UCHAR		*bitvecs [DtSrMAX_STEMCOUNT];
 static int		check_dates =		FALSE;
 static int		do_stat_sort =		FALSE;
 static double		idf [DtSrMAX_STEMCOUNT];
-static char		*msgbuf =		NULL;
+static char		*msgbuf =		nullptr;
 static int		need_zero_permute =	FALSE;
 static struct or_objrec	objrec;
 static DB_ADDR		objrecdba;
@@ -158,16 +158,16 @@ static long		or_maxdba;	/* largest dba in database */
 static long		or_reccount;	/* tot num db obj (real_num_rec) */
 static long		or_recslots;	/* D00 slots per obj (slot_d00) */
 static struct or_hwordrec
-			*or_wordrecs =		NULL;
-static PROXWT		*proxwts =		NULL;
+			*or_wordrecs =		nullptr;
+static PROXWT		*proxwts =		nullptr;
 static int		proxwtct;
 static UCHAR		*result_bitvec;
 static long		result_count =		0;
-static DtSrResult	*resultlist =		NULL;
+static DtSrResult	*resultlist =		nullptr;
 static int		save_stemno =		0;
 static long		tot_addr_count; /* may be > reccount bcs deletes */
 static int		vistano;
-static float		*wtvec =		NULL;
+static float		*wtvec =		nullptr;
 
 extern void     find_keyword (char *cur_word, int vista_num);
 extern void     read_wordstr (struct or_hwordrec * glob_word, int vista_num);
@@ -300,7 +300,7 @@ static int	load_or_wordrecs (void)
 	free (or_wordrecs);
     or_wordrecs = austext_malloc (
 	saveusr.stemcount * sizeof (struct or_hwordrec) + 16,
-	PROGNAME "782", NULL);
+	PROGNAME "782", nullptr);
 
     for (stemno = 0; stemno < saveusr.stemcount; stemno++) {
 
@@ -529,7 +529,7 @@ static void	load_DtSrResults_WK (void)
 	return;
     if (resultlist) {
 	DtSearchFreeResults (&resultlist);
-	resultlist = NULL;
+	resultlist = nullptr;
     }
 
     /* Make a single pass through the final result_bitvec.
@@ -552,7 +552,7 @@ static void	load_DtSrResults_WK (void)
 	    continue;
 
 	/* Create new DtSrResult node, push it onto resultlist. */
-	resultp = austext_malloc (resultsz + 4, PROGNAME"466", NULL);
+	resultp = austext_malloc (resultsz + 4, PROGNAME"466", nullptr);
 	memset (resultp, 0, resultsz);
 	resultp->link = resultlist;
 	resultlist = resultp;
@@ -577,11 +577,11 @@ static void	load_DtSrResults_WK (void)
   @@@@@ sort may take a long time */
     if (wtvec) {
 	free (wtvec);
-	wtvec = NULL;
+	wtvec = nullptr;
     }
     if (proxwts) {
 	free (proxwts);
-	proxwts = NULL;
+	proxwts = nullptr;
     }
 
     if (dittocount <= 0) {
@@ -608,7 +608,7 @@ static void	load_DtSrResults_WK (void)
     if (usrblk.dittolist)
 	DtSearchFreeResults (&usrblk.dittolist);
     usrblk.dittolist =	resultlist;
-    resultlist = NULL;
+    resultlist = nullptr;
     return;
 } /* load_DtSrResults_WK() */
 
@@ -645,7 +645,7 @@ static void	weights_filter_WK (void)
 	free (proxwts);
     proxwtct = (result_count < aa_maxhits)? result_count : aa_maxhits;
     proxwts = austext_malloc (proxwtct * sizeof(PROXWT) + 4,
-	PROGNAME"429", NULL);
+	PROGNAME"429", nullptr);
     memset (proxwts, 0, proxwtct * sizeof(PROXWT));
     smallest = 0;
     scalefac = 0.0;
@@ -724,7 +724,7 @@ static void	weights_filter_WK (void)
     } /* end loop on every recno */
 
     free (wtvec);
-    wtvec = NULL;
+    wtvec = nullptr;
 
     /* PROXIMITY CALCULATIONS.
      * In order to translate statistical weight into an AusText
@@ -840,7 +840,7 @@ static void	dbread_filter_WK (void)
 
 	/* Skip undesired record types */
 	if (!all_key_types) {
-	    if (strchr (saveusr.ktchars, objrec.or_objkey[0]) == NULL) {
+	    if (strchr (saveusr.ktchars, objrec.or_objkey[0]) == nullptr) {
 		RESET_BIT (result_bitvec, byteno, bitmask);
 		result_count--;
 		if (debugging_boolsrch) {
@@ -1211,7 +1211,7 @@ static int	get_colloc_bitvec (void)
 	dba |= (OR_D00 << 24);
 
 	/* Silently skip records that have no document text */
-	if ((bloblist = ve_getblobs (dba, vistano)) == NULL) {
+	if ((bloblist = ve_getblobs (dba, vistano)) == nullptr) {
 	    if (debugging_boolsrch) {
 		fprintf (aa_stderr,
 		    PROGNAME"126 No blobs for recno=%ld byteno=%ld mask%02x\n",
@@ -1243,7 +1243,7 @@ static int	get_colloc_bitvec (void)
 	}
 	hitwords_A = usrblk.hitwords;
 	hitwcount_A = usrblk.hitwcount;
-	usrblk.hitwords = NULL;
+	usrblk.hitwords = nullptr;
 	usrblk.hitwcount = 0;
 
 	/* In the same way build 'hilite' table for stem B */
@@ -1261,7 +1261,7 @@ static int	get_colloc_bitvec (void)
 	}
 	hitwords_B = usrblk.hitwords;
 	hitwcount_B = usrblk.hitwcount;
-	usrblk.hitwords = NULL;
+	usrblk.hitwords = nullptr;
 	usrblk.hitwcount = 0;
 
 	/* Compare the two hilite tables for range matches */
@@ -1325,7 +1325,7 @@ static void	read_stem_bitvec_WK (void)
 
     for (	d99recno = read_d99 (&or_wordrecs [save_stemno]);
 		d99recno;
-		d99recno = read_d99 (NULL)) {
+		d99recno = read_d99 (nullptr)) {
 	if (d99recno == -1)	/* read error */
 	    break;
 
@@ -1439,7 +1439,7 @@ void	boolean_search (void)
 
     /*---------- Init globals ----------*/
     if (!msgbuf)
-	msgbuf = austext_malloc (500, PROGNAME"393", NULL);
+	msgbuf = austext_malloc (500, PROGNAME"393", nullptr);
     debugging_boolsrch =	(usrblk.debug & USRDBG_SRCHCMPL);
     need_zero_permute =	(final_truthtab.permutes[0] == 0);
     do_stat_sort =	((usrblk.flags & USR_SORT_WHITL) != 0);
@@ -1451,7 +1451,7 @@ void	boolean_search (void)
     usrblk.flags &=	~USR_STOPSRCH;	/* turn off stop button */
 
     saveusr.vistano = vistano =	usrblk.dblk->vistano;
-    saveusr.dittolist =		NULL;
+    saveusr.dittolist =		nullptr;
     saveusr.dittocount =	0L;
     saveusr.iterations =	INIT_ITERATIONS;
     /*
@@ -1529,7 +1529,7 @@ void	boolean_search (void)
 	if (bitvec_allocp)
 	    free (bitvec_allocp);
 	bitvec_allocp = austext_malloc (allocsz_needed + 16,
-	    PROGNAME"508", NULL);
+	    PROGNAME"508", nullptr);
 	if (debugging_boolsrch)
 	    fprintf (aa_stderr, PROGNAME"432 bitvecs[] realloc %lu-->%lu.\n",
 		(unsigned long) bitvec_allocsz, (unsigned long) allocsz_needed);
@@ -1547,11 +1547,11 @@ void	boolean_search (void)
      */
     if (wtvec) {
 	free (wtvec);
-	wtvec = NULL;
+	wtvec = nullptr;
     }
     if (do_stat_sort) {
 	wtvec = austext_malloc ((tot_addr_count + 4) * sizeof(float) + 4,
-	    PROGNAME"040", NULL);
+	    PROGNAME"040", nullptr);
 	memset (wtvec, 0, (tot_addr_count + 4) * sizeof(float));
     }
 

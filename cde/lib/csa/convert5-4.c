@@ -95,7 +95,7 @@ _DtCm_cmsattrs_to_apptdata(uint size, cms_attribute *attrs, Appt_4 *appt)
 		buf[aptr->value->item.opaque_data_value->size] = '\0';
 
 		ptr = strchr(buf, ':');
-		if (ptr != NULL)
+		if (ptr != nullptr)
 			*ptr = '\0';
 
 		appt->appt_id.key = atol(buf);
@@ -112,7 +112,7 @@ _DtCm_cmsattrs_to_apptdata(uint size, cms_attribute *attrs, Appt_4 *appt)
 	/* _DtCm_old_attr_what */
 	aptr = &attrs[CSA_ENTRY_ATTR_SUMMARY_I];
 	if (aptr->value->item.string_value) {
-		if ((string = strdup(aptr->value->item.string_value)) == NULL)
+		if ((string = strdup(aptr->value->item.string_value)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		else {
 			if (appt->what)
@@ -125,7 +125,7 @@ _DtCm_cmsattrs_to_apptdata(uint size, cms_attribute *attrs, Appt_4 *appt)
 	aptr = &attrs[CSA_ENTRY_ATTR_ORGANIZER_I];
 	if (aptr->value && aptr->value->item.calendar_user_value) {
 		if ((string = strdup(aptr->value->item.calendar_user_value))
-		    == NULL)
+		    == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		else {
 			if (appt->author)
@@ -248,7 +248,7 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 
 	for (i = 0; i < size && stat == CSA_SUCCESS; i++) {
 
-		if (attrs[i].name == NULL)
+		if (attrs[i].name == nullptr)
 			continue;
 
 		if ((stat = _DtCm_get_old_attr_by_name(attrs[i].name, &oldattr))
@@ -261,15 +261,15 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 			break;
 
 		case _DtCm_old_attr_time:
-			if (attrs[i].value == NULL ||
-			    attrs[i].value->item.date_time_value == NULL ||
+			if (attrs[i].value == nullptr ||
+			    attrs[i].value->item.date_time_value == nullptr ||
 			    _csa_iso8601_to_tick(
 			    attrs[i].value->item.date_time_value,
 			    &appt->appt_id.tick))
 				stat = CSA_E_INVALID_DATE_TIME;
 			break;
 		case _DtCm_old_attr_type:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				tindex = i;
@@ -278,10 +278,10 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 			stindex = i;
 			break;
 		case _DtCm_old_attr_duration:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				appt->duration = 0;
 			else if (attrs[i].value->item.date_time_value
-			    == NULL || _csa_iso8601_to_tick(
+			    == nullptr || _csa_iso8601_to_tick(
 			    attrs[i].value->item.date_time_value,
 			    &endtick))
 				stat = CSA_E_INVALID_DATE_TIME;
@@ -291,7 +291,7 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 			{
 				if ((string = strdup(
 				    attrs[i].value->item.string_value))
-				    == NULL)
+				    == nullptr)
 					stat = CSA_E_INSUFFICIENT_MEMORY;
 				else {
 					if (appt->what)
@@ -305,10 +305,10 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 			break;
 
 		case _DtCm_old_attr_beep_reminder:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = _DtCm_remove_reminder(
 					_DtCM_OLD_ATTR_BEEP_REMINDER, appt);
-			else if (attrs[i].value->item.reminder_value == NULL)
+			else if (attrs[i].value->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_add_reminder(
@@ -318,10 +318,10 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 			break;
 
 		case _DtCm_old_attr_flash_reminder:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = _DtCm_remove_reminder(
 					_DtCM_OLD_ATTR_FLASH_REMINDER, appt);
-			else if (attrs[i].value->item.reminder_value == NULL)
+			else if (attrs[i].value->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_add_reminder(
@@ -331,10 +331,10 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 			break;
 
 		case _DtCm_old_attr_mail_reminder:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = _DtCm_remove_reminder(
 					_DtCM_OLD_ATTR_MAIL_REMINDER, appt);
-			else if (attrs[i].value->item.reminder_value == NULL)
+			else if (attrs[i].value->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_add_reminder(
@@ -344,10 +344,10 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 			break;
 
 		case _DtCm_old_attr_popup_reminder:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = _DtCm_remove_reminder(
 					_DtCM_OLD_ATTR_POPUP_REMINDER, appt);
-			else if (attrs[i].value->item.reminder_value == NULL)
+			else if (attrs[i].value->item.reminder_value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				stat = _DtCm_add_reminder(
@@ -357,7 +357,7 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 			break;
 
 		case _DtCm_old_attr_repeat_type:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				appt->period.period = single_4;
 			else if (_DtCm_rtype_to_interval4(
 			    attrs[i].value->item.sint32_value,
@@ -365,21 +365,21 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			break;
 		case _DtCm_old_attr_repeat_times:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				appt->ntimes = 1;
 			else 
 				appt->ntimes =
 					attrs[i].value->item.uint32_value;
 			break;
 		case _DtCm_old_attr_showtime:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else
 				appt->tag->showtime =
 					attrs[i].value->item.sint32_value;
 			break;
 		case _DtCm_old_attr_status:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else if (_DtCm_status_to_apptstatus4(
 			    attrs[i].value->item.sint32_value,
@@ -387,7 +387,7 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			break;
 		case _DtCm_old_attr_privacy:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			else if (_DtCm_classification_to_privacy4(
 			    attrs[i].value->item.sint32_value,
@@ -395,21 +395,21 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 				stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			break;
 		case _DtCm_old_attr_repeat_nth_interval:
-			if (attrs[i].value != NULL) {
+			if (attrs[i].value != nullptr) {
 				set_interval = B_TRUE;
 				interval = attrs[i].value->item.uint32_value;
 			}
 			break;
 		case _DtCm_old_attr_repeat_nth_weeknum:
-			if (attrs[i].value != NULL) {
+			if (attrs[i].value != nullptr) {
 				set_weeknum = B_TRUE;
 				week_num = attrs[i].value->item.sint32_value;
 			}
 			break;
 		case _DtCm_old_attr_end_date:
-			if (attrs[i].value == NULL)
+			if (attrs[i].value == nullptr)
 				appt->period.enddate = 0;
-			else if (attrs[i].value->item.date_time_value == NULL ||
+			else if (attrs[i].value->item.date_time_value == nullptr ||
 			    _csa_iso8601_to_tick(
 			    attrs[i].value->item.date_time_value,
 			    &appt->period.enddate))
@@ -445,7 +445,7 @@ _DtCm_attrs_to_apptdata(uint size, CSA_attribute *attrs, Appt_4 *appt)
 				(cms_attribute_value *)
 				(tindex ? attrs[tindex].value : &otype),
 				(cms_attribute_value *)
-				(stindex ? attrs[stindex].value : NULL),
+				(stindex ? attrs[stindex].value : nullptr),
 				appt->tag);
 		}
 
@@ -488,10 +488,10 @@ _DtCm_cms_entry_to_appt4(cms_entry *entry, Appt_4 **appt4_r)
 	CSA_return_code	stat;
 	Appt_4		*appt;
 
-	if (entry == NULL || appt4_r == NULL)
+	if (entry == nullptr || appt4_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	if ((appt = _DtCm_make_appt4(B_TRUE)) == NULL)
+	if ((appt = _DtCm_make_appt4(B_TRUE)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if ((stat = _DtCm_cmsattrs_to_apptdata(entry->num_attrs, entry->attrs,
@@ -510,10 +510,10 @@ _DtCm_attrs_to_appt4(uint num_attrs, CSA_attribute *attrs, Appt_4 **appt4_r)
 	CSA_return_code	stat;
 	Appt_4		*appt;
 
-	if (appt4_r == NULL)
+	if (appt4_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	if ((appt = _DtCm_make_appt4(B_TRUE)) == NULL)
+	if ((appt = _DtCm_make_appt4(B_TRUE)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if ((stat = _DtCm_attrs_to_apptdata(num_attrs, attrs, appt)) != CSA_SUCCESS) {
@@ -528,7 +528,7 @@ _DtCm_attrs_to_appt4(uint num_attrs, CSA_attribute *attrs, Appt_4 **appt4_r)
 extern CSA_return_code
 _DtCm_scope_to_options4(CSA_enum scope, Options_4 *opt)
 {
-	if (opt == NULL)
+	if (opt == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	switch (scope) {
@@ -554,10 +554,10 @@ _DtCm_csaaccesslist_toaccessentry4(CSA_access_list alist, Access_Entry_4 **a4)
 	CSA_return_code	stat = CSA_SUCCESS;
 	Access_Entry_4	*to, *prev, *head;
 
-	head = prev = NULL;
-	while (alist != NULL) {
+	head = prev = nullptr;
+	while (alist != nullptr) {
 		if ((to = (Access_Entry_4 *)calloc(1, sizeof(Access_Entry_4)))
-		    == NULL) {
+		    == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
@@ -568,18 +568,18 @@ _DtCm_csaaccesslist_toaccessentry4(CSA_access_list alist, Access_Entry_4 **a4)
 			break;
 		}
 
-		if (alist->user == NULL || alist->user->user_name == NULL) {
+		if (alist->user == nullptr || alist->user->user_name == nullptr) {
 			stat = CSA_E_INVALID_ATTRIBUTE_VALUE;
 			break;
 		}
 
-		if ((to->who = strdup(alist->user->user_name)) == NULL) {
+		if ((to->who = strdup(alist->user->user_name)) == nullptr) {
 			free(to);
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = to;
 		else
 			prev->next = to;
@@ -591,7 +591,7 @@ _DtCm_csaaccesslist_toaccessentry4(CSA_access_list alist, Access_Entry_4 **a4)
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_access_list4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*a4 = head;
@@ -760,14 +760,14 @@ _DtCm_remove_reminder(char *rem, Appt_4 *appt)
 {
 	Attribute_4	*attr, *prev;
 
-	for (attr = prev = appt->attr; attr != NULL; attr = attr->next) { 
+	for (attr = prev = appt->attr; attr != nullptr; attr = attr->next) { 
 		if (strcmp(attr->attr, rem) == 0) {
 			if (prev == attr)
 				appt->attr = attr->next;
 			else
 				prev->next = attr->next;
 
-			attr->next = NULL;
+			attr->next = nullptr;
 			_DtCm_free_attr4(attr);
 		} else
 			prev = attr;
@@ -782,7 +782,7 @@ _DtCm_remove_reminder(char *rem, Appt_4 *appt)
 extern CSA_return_code
 _DtCm_add_reminder(char *rem, CSA_reminder * val, Appt_4 *appt)
 {
-	Attribute_4	*newattr, *attrs, *prev = NULL;
+	Attribute_4	*newattr, *attrs, *prev = nullptr;
 	char		adv[80];
 	time_t		ltime = 0;
 
@@ -792,10 +792,10 @@ _DtCm_add_reminder(char *rem, CSA_reminder * val, Appt_4 *appt)
 		return (CSA_E_INVALID_ATTRIBUTE_VALUE);
 */
 
-	if ((newattr = calloc(1, sizeof(Attribute_4))) == NULL)
+	if ((newattr = calloc(1, sizeof(Attribute_4))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if ((newattr->attr = strdup(rem)) == NULL) {
+	if ((newattr->attr = strdup(rem)) == nullptr) {
 		free(newattr);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
@@ -805,14 +805,14 @@ _DtCm_add_reminder(char *rem, CSA_reminder * val, Appt_4 *appt)
 		_csa_iso8601_to_duration(val->lead_time, &ltime);
 	sprintf(adv, "%ld", ltime);
 
-	if ((newattr->value = strdup(adv)) == NULL) {
+	if ((newattr->value = strdup(adv)) == nullptr) {
 		_DtCm_free_attr4(newattr);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	if (val->reminder_data.size > 0) {
 		if ((newattr->clientdata = malloc(val->reminder_data.size + 1))
-		    == NULL) {
+		    == nullptr) {
 			_DtCm_free_attr4(newattr);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
@@ -820,21 +820,21 @@ _DtCm_add_reminder(char *rem, CSA_reminder * val, Appt_4 *appt)
 			val->reminder_data.size);
 		newattr->clientdata[val->reminder_data.size] = '\0';
 
-	} else if ((newattr->clientdata = calloc(1,1)) == NULL) {
+	} else if ((newattr->clientdata = calloc(1,1)) == nullptr) {
 		_DtCm_free_attr4(newattr);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
-	for (attrs = appt->attr; attrs != NULL; attrs = attrs->next) {
+	for (attrs = appt->attr; attrs != nullptr; attrs = attrs->next) {
 		if (strcmp(attrs->attr, rem) == 0) {
 
 			newattr->next = attrs->next;
-			if (prev == NULL)
+			if (prev == nullptr)
 				appt->attr = newattr;
 			else
 				prev->next = newattr;
 
-			attrs->next = NULL;
+			attrs->next = nullptr;
 			_DtCm_free_attr4(attrs);
 
 			break;
@@ -842,7 +842,7 @@ _DtCm_add_reminder(char *rem, CSA_reminder * val, Appt_4 *appt)
 			prev = attrs;
 	}
 
-	if (attrs == NULL) {
+	if (attrs == nullptr) {
 		newattr->next = appt->attr;
 		appt->attr = newattr;
 	}

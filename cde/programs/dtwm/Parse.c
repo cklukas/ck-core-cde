@@ -90,7 +90,7 @@ StringToInt (char * parse_source,
       }
       else
       {
-         _DtSimpleError (panel.app_name, DtError, NULL, 
+         _DtSimpleError (panel.app_name, DtError, nullptr, 
                         "Invalid Integer -- %s", parse_source);
          return (False);
       }
@@ -122,7 +122,7 @@ StringToBoolean (char * parse_source,
       *parse_return = (void *) False;
    else
    {
-      _DtSimpleError (panel.app_name, DtError, NULL, 
+      _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Boolean -- %s", parse_source);
       return (False);
    }
@@ -156,7 +156,7 @@ StringToResolution (char * parse_source,
       *parse_return = (void *) MATCH_DISPLAY;
    else
    {
-      _DtSimpleError (panel.app_name, DtError, NULL, 
+      _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Resolution -- %s", parse_source);
       return (False);
    }
@@ -186,7 +186,7 @@ StringToControlBehavior (char * parse_source,
       *parse_return = (void *) SINGLE_CLICK;
    else
    {
-      _DtSimpleError (panel.app_name, DtError, NULL, 
+      _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Control Behavior -- %s", parse_source);
       return (False);
    }
@@ -234,7 +234,7 @@ StringToGeometry (char * parse_source,
    }
    else
    {
-      _DtSimpleError (panel.app_name, DtError, NULL, 
+      _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Geometry -- %s", parse_source);
       return (False);
    }
@@ -264,16 +264,16 @@ StringToAction (char * parse_source,
 
    head_ptr = source = (unsigned char *) strdup (parse_source);
 
-   if ((string = _DtWmParseNextTokenC (&source, False)) != NULL)
+   if ((string = _DtWmParseNextTokenC (&source, False)) != nullptr)
    {
       action_data = (PanelActionData *) XtMalloc (sizeof (PanelActionData));
 
       action_data->action_name = strdup ((char *) string);
-      action_data->action_label = NULL;
-      action_data->aap = NULL;
+      action_data->action_label = nullptr;
+      action_data->aap = nullptr;
       action_data->count = 0;
 
-      while ((string = _DtWmParseNextTokenC (&source, False)) != NULL)
+      while ((string = _DtWmParseNextTokenC (&source, False)) != nullptr)
       {
          action_data->count++;
          action_data->aap =
@@ -287,7 +287,7 @@ StringToAction (char * parse_source,
    }
    else
    {
-      _DtSimpleError (panel.app_name, DtError, NULL, 
+      _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Action -- %s", parse_source);
       free (head_ptr);
       return (False);
@@ -330,7 +330,7 @@ StringToControlType (char * parse_source,
       *parse_return = (void *) CONTROL_FILE;
    else
    {
-      _DtSimpleError (panel.app_name, DtError, NULL, 
+      _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Control Type -- %s", parse_source);
       return (False);
    }
@@ -362,7 +362,7 @@ StringToMonitorType (char * parse_source,
       *parse_return = (void *) MONITOR_FILE;
    else
    {
-      _DtSimpleError (panel.app_name, DtError, NULL, 
+      _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Monitor Type -- %s", parse_source);
       return (False);
    }
@@ -392,7 +392,7 @@ StringToControlContainerType (char * parse_source,
       *parse_return = (void *) SWITCH;
    else
    {
-      _DtSimpleError (panel.app_name, DtError, NULL, 
+      _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Control Container Type -- %s", parse_source);
       return (False);
    }
@@ -428,7 +428,7 @@ StringToPositionHints (char * parse_source,
    if ((long) *parse_return < 0 || (long) *parse_return > 100)
    {
       
-      _DtSimpleError (panel.app_name, DtError, NULL, 
+      _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Position Hints value -- %d",
                      (long) *parse_return);
       return (False);

@@ -351,9 +351,9 @@ return(TRUE);
 /* Out of context space.  Increase. */
 void inccon(void)
   {
-    M_TRIE **newtrie = NULL;
-    int *newtransit = NULL;
-    M_WCHAR **newcontexts = NULL;
+    M_TRIE **newtrie = nullptr;
+    int *newtransit = nullptr;
+    M_WCHAR **newcontexts = nullptr;
     int trysize;
     int i, j;
 
@@ -398,8 +398,8 @@ void inccon(void)
 /* Increase delimiter space. */
 void incdelim(void)
 {
-int *newtransit = NULL;
-char **newdlm = NULL;
+int *newtransit = nullptr;
+char **newdlm = nullptr;
 int trysize;
 int i, j;
 

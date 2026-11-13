@@ -201,7 +201,7 @@ _DtDbPathIdToString(
    }
 
    /* Bogus Id */
-   return(NULL);
+   return(nullptr);
 }
 
 /********************
@@ -269,9 +269,9 @@ _DtDbRead (
    Boolean versionCanBeSet;
    char * verString;
    int NumberFieldsAllocated = 0;
-   char *tmpBuffer = NULL;	/* Buffer to store a field value that may
+   char *tmpBuffer = nullptr;	/* Buffer to store a field value that may
 				   grow to an unlimited size */
-   char *tmpLine = NULL; 	/* Temporary input line */
+   char *tmpLine = nullptr; 	/* Temporary input line */
 
 /* CODE */
 
@@ -285,7 +285,7 @@ _DtDbRead (
    _DtSvcProcessUnlock();
 
    /* Verify the incoming parameters */
-   if (dirs == NULL)
+   if (dirs == nullptr)
       return;
 
    tmpLine = XtMalloc (MAX_LINE_LENGTH);
@@ -293,7 +293,7 @@ _DtDbRead (
 
    tmp_dirs.paths = (char **) XtMalloc (2 * sizeof (char *));
    tmp_dirs.dirs  = (char **) XtMalloc (2 * sizeof (char *));
-   tmp_dirs.dirs[1] = tmp_dirs.paths[1] = NULL;
+   tmp_dirs.dirs[1] = tmp_dirs.paths[1] = nullptr;
 
    /*
     * The fields for each record will temporarily be stored
@@ -314,13 +314,13 @@ _DtDbRead (
 					    sizeof (DtDtsDbField));
 
    /* Load all of the database files in each of the specified directories. */
-   for (i=0; dirs->dirs[i] != NULL; i++) 
+   for (i=0; dirs->dirs[i] != nullptr; i++) 
    {
-      char *host = NULL,
-	   *dir = NULL,
-	   *pch = NULL,
-	   *tmp = NULL,
-	   *host_prefix = NULL;
+      char *host = nullptr,
+	   *dir = nullptr,
+	   *pch = nullptr,
+	   *tmp = nullptr,
+	   *host_prefix = nullptr;
 
       /* Locate all matching db file in the current directory */
       tmp_dirs.dirs[0]  = (char *) dirs->dirs[i]; 
@@ -331,7 +331,7 @@ _DtDbRead (
       /* Determine the "host_prefix" for this directory. */
       tmp  = (char *) XtNewString (dirs->dirs[i]);
       host = tmp;
-      if ((pch = DtStrchr (tmp, ':')) != NULL)
+      if ((pch = DtStrchr (tmp, ':')) != nullptr)
       {
          char * netfile;
          Tt_status status;
@@ -352,7 +352,7 @@ _DtDbRead (
             }
 
             if (status != TT_OK)
-	       host_prefix = NULL;
+	       host_prefix = nullptr;
             else if (hpx)
             {
                DtLastChar(hpx, &lastChar, &charLen);
@@ -372,16 +372,16 @@ _DtDbRead (
 	    /*
 	     * The database host is the same as the invoking host.
 	     */
-	    host_prefix = NULL;
+	    host_prefix = nullptr;
 	 }
       }
       XtFree ((char *) tmp);
 
       /* Open each of the db files, and extract any matching records */
-      while (db_files->paths[nextIndex] != NULL) 
+      while (db_files->paths[nextIndex] != nullptr) 
       {
 	 /* If we can't open the next db file, just skip it. */
-	 if ((fd = fopen (db_files->paths[nextIndex], "r")) == NULL) 
+	 if ((fd = fopen (db_files->paths[nextIndex], "r")) == nullptr) 
 	 {
 	    nextIndex++;
 	    continue;;
@@ -420,7 +420,7 @@ _DtDbRead (
       }
 
       _DtFreeDatabaseDirPaths (db_files);
-      if (host_prefix != NULL)
+      if (host_prefix != nullptr)
 	 XtFree (host_prefix);
    
    }
@@ -499,7 +499,7 @@ get_variable (
     */
        for (i=0, ppchar = environ; *ppchar; *ppchar++, i++) 
        {
-	  if ((tmp = (char *) DtStrchr (*ppchar, '=')) != NULL)
+	  if ((tmp = (char *) DtStrchr (*ppchar, '=')) != nullptr)
 	  {
 	     int  evar_len = tmp - *ppchar;
 	     if ( (key_len == evar_len) 
@@ -510,7 +510,7 @@ get_variable (
 	     }
 	  }
        }
-	*value = NULL;
+	*value = nullptr;
 	return(False);
    }
    else
@@ -573,8 +573,8 @@ read_line (
 {
    size_t length;
 
-   if ((fgets (string, n, fd)) == NULL)
-      return (NULL);
+   if ((fgets (string, n, fd)) == nullptr)
+      return (nullptr);
 
    length = strlen (string);
    if (length > 0 && string[length - 1] == '\n')
@@ -959,16 +959,16 @@ report_error(const char *format, const char *first, const char *second)
    size_t size;
    char *message;
 
-   if (first == NULL)
+   if (first == nullptr)
       first = "";
-   if (second == NULL)
+   if (second == nullptr)
       second = "";
    size = strlen(format) + strlen(first) + strlen(second) + 1;
    message = (char *)malloc(size);
-   if (message == NULL)
+   if (message == nullptr)
       return;
    snprintf(message, size, format, first, second);
-   _DtSimpleError(DtProgName, DtError, NULL, "%s", message);
+   _DtSimpleError(DtProgName, DtError, nullptr, "%s", message);
    free(message);
 }
 
@@ -1021,10 +1021,10 @@ ReadNextEntry(
 
       remove_defn = False;
       multi_line = False;
-      start = NULL;
+      start = nullptr;
       indx = 0;
 
-      if (read_line (*tmpLine, MAX_LINE_LENGTH, fd) == NULL) 
+      if (read_line (*tmpLine, MAX_LINE_LENGTH, fd) == nullptr) 
       { 
 	 /* EOF */
 	 break;
@@ -1141,7 +1141,7 @@ ReadNextEntry(
       {
 	 (*tmpLine)[0] = '\000';
 
-	 if (read_line (*tmpLine, MAX_LINE_LENGTH, fd) == NULL) /* EOF */ 
+	 if (read_line (*tmpLine, MAX_LINE_LENGTH, fd) == nullptr) /* EOF */ 
 	 { 
 	    if (multi_line || (indx >=1)) 
 	    {
@@ -1270,7 +1270,7 @@ ReadNextEntry(
 	 save = start;
 
 	 /* Need to see if this line is part of a multi_line field. */
-	 if ((last = DtStrrchr (start, '\\')) != NULL) 
+	 if ((last = DtStrrchr (start, '\\')) != nullptr) 
 	 {
 	    /* 
 	     * Need to see if 'last' is the last non-whitespace char. 
@@ -1364,7 +1364,7 @@ ReadNextEntry(
       else 
       {
          /* Add terminating NULL to fieldPtr array */
-         SplitField(fieldPtr, &indx, NULL, NumberFieldsAllocated);
+         SplitField(fieldPtr, &indx, nullptr, NumberFieldsAllocated);
 
 	 return (TRUE);
       }
@@ -1677,7 +1677,7 @@ DefineVariable(
          continue;
 
       /* when memory is short the variable keeps its value */
-      if ((newValue = strdup(valStart)) != NULL)
+      if ((newValue = strdup(valStart)) != nullptr)
       {
          free((void *)variableSet[i].value);
          variableSet[i].value = newValue;
@@ -1693,7 +1693,7 @@ DefineVariable(
 
       grown = (VariableEntry *) realloc((void *)variableSet, 
                    (size_t)(sizeof(VariableEntry) * (variableCapacity + 10)));
-      if (grown == NULL)
+      if (grown == nullptr)
       {
          /* the variable is not defined */
          _DtSvcProcessUnlock();
@@ -1705,8 +1705,8 @@ DefineVariable(
 
    variableSet[variableCount].varName = strdup(nameStart);
    variableSet[variableCount].value = strdup(valStart);
-   if (variableSet[variableCount].varName == NULL ||
-       variableSet[variableCount].value == NULL)
+   if (variableSet[variableCount].varName == nullptr ||
+       variableSet[variableCount].value == nullptr)
    {
       free((void *)variableSet[variableCount].varName);
       free((void *)variableSet[variableCount].value);
@@ -1744,11 +1744,11 @@ SplitField(
    }
 
    (*fields)[*slotToUse].fieldName = 0;
-   (*fields)[*slotToUse].fieldValue = NULL;
+   (*fields)[*slotToUse].fieldValue = nullptr;
 
    /* A NULL ptr is how we force a NULL entry to terminate the array */
    nextChar = ptr;
-   if (ptr != NULL)
+   if (ptr != nullptr)
    {
       /* Find the end of the fieldName ('\0' or whitespace) */
       while (*nextChar)

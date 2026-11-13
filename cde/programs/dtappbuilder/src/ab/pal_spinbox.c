@@ -156,10 +156,10 @@ PalItemInfo spinbox_palitem_rec = {
 
     /* type             */  AB_TYPE_SPIN_BOX,
     /* name             */  "Spin Box",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  spinbox_initialize,
     /* is_a_test        */  obj_is_spin_box,
     /* prop_initialize  */  spinbox_prop_init,
@@ -198,8 +198,8 @@ spinbox_initialize(
     obj_set_is_initially_visible(obj, True);
     obj_set_is_initially_active(obj, True);
 
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 }
@@ -260,12 +260,12 @@ spinbox_prop_init(
     if (dtb_spinbox_prop_dialog_initialize(cgen, parent) == 0)
     {
         pss->prop_sheet = cgen->attrs_ctrlpanel;
-        pss->current_obj = NULL;
+        pss->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pss->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -367,7 +367,7 @@ spinbox_prop_init(
                 cgen->x_field_label, cgen->x_field,
                 cgen->y_field_label, cgen->y_field,
                 cgen->width_field_label, cgen->width_field,
-		NULL, NULL,
+		nullptr, nullptr,
                 cgen->geom_cb);
 
         /* Initial State */
@@ -401,7 +401,7 @@ spinbox_prop_init(
         n = 0;
         item[n] = cgen->item_state_ckbox_items.Selected_item;
         item_val[n] = AB_STATE_SELECTED; n++;
-        prop_checkbox_init(&(pss->item_state), NULL,
+        prop_checkbox_init(&(pss->item_state), nullptr,
                 cgen->item_state_ckbox, n, item, item_val,
                 cgen->itemlist_cb);
 
@@ -433,9 +433,9 @@ spinbox_prop_init(
 		cgen->item_add_button,
 		n, item, item_val,
 		j, item2, item2_val,
-		&(pss->item_label), NULL/*label_type*/, NULL/*graphic_hint*/,
-		NULL/*mnemonic*/, NULL/*accel*/, NULL/*line_style*/,
-		&(pss->item_state), NULL/*submenu*/,
+		&(pss->item_label), nullptr/*label_type*/, nullptr/*graphic_hint*/,
+		nullptr/*mnemonic*/, nullptr/*accel*/, nullptr/*line_style*/,
+		&(pss->item_state), nullptr/*submenu*/,
 		&(pss->current_obj));
 
         prop_changebars_cleared(pss->prop_sheet);
@@ -443,7 +443,7 @@ spinbox_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 
@@ -466,7 +466,7 @@ spinbox_prop_clear(
 {
     PropSpinboxSettingsRec	*pss = &(prop_spinbox_settings_rec[type]);
 
-    if (pss->current_obj == NULL)
+    if (pss->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -512,7 +512,7 @@ spinbox_prop_clear(
     /* Clear Items */
     prop_item_editor_clear(&(pss->items));
 
-    pss->current_obj = NULL;
+    pss->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -530,9 +530,9 @@ spinbox_prop_load(
     AB_TEXT_TYPE	   	spinbox_type;
     BOOL			load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pss->current_obj != NULL)
+        if (pss->current_obj != nullptr)
             obj = pss->current_obj;
         else
             return ERROR;
@@ -553,7 +553,7 @@ spinbox_prop_load(
 	prop_options_set_value(&(pss->label_pos), (XtPointer)obj_get_label_position(obj), False);
 
 	/* Load Label */
-	prop_setup_label_field(&(pss->label), NULL,
+	prop_setup_label_field(&(pss->label), nullptr,
 				obj->label_type, obj_get_label(obj), AB_LINE_UNDEF);
 
 	/* Load Spinbox Type */
@@ -647,7 +647,7 @@ spinbox_prop_apply(
 	     int		num_items;
 	     DTB_MODAL_ANSWER	answer = DTB_ANSWER_NONE;
 
-	    XtVaGetValues(pss->items.item_list, XmNitemCount, &num_items, NULL);
+	    XtVaGetValues(pss->items.item_list, XmNitemCount, &num_items, nullptr);
 	    if (num_items > 0)
 	    {
             	/* Popup Modal Message and wait for answer */
@@ -656,7 +656,7 @@ spinbox_prop_apply(
             	answer = dtb_show_modal_message(
 				pss->spinbox_type.radiobox,
 				&dtb_spinbox_chg_type_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
             	if (answer == DTB_ANSWER_CANCEL)
 	   	    return 0;
 	    	else
@@ -685,7 +685,7 @@ spinbox_prop_apply(
     }
     if (prop_changed(pss->ivalue.changebar))
     {
-	abobj_set_initial_value(pss->current_obj, NULL,
+	abobj_set_initial_value(pss->current_obj, nullptr,
 		prop_field_get_numeric_value(&(pss->ivalue)));
         abobj_set_decimal_points(pss->current_obj,
                 prop_field_get_numeric_value(&(pss->decimal)));
@@ -844,7 +844,7 @@ spinbox_typeCB(
 
     if (state->set)
     {
-        XtVaGetValues(item, XmNuserData, &value, NULL);
+        XtVaGetValues(item, XmNuserData, &value, nullptr);
 	setup_content_settings(type, (AB_TEXT_TYPE)value);
 
 	if (value == AB_TEXT_DEFINED_STRING)
@@ -852,7 +852,7 @@ spinbox_typeCB(
 	    /* If type is changed to StringList and there are no items,
 	     * inactivate the item settings.
 	     */
-            XtVaGetValues(pss->items.item_list, XmNitemCount, &num_items, NULL);
+            XtVaGetValues(pss->items.item_list, XmNitemCount, &num_items, nullptr);
 	    if (num_items < 1)
 	    {
             	ui_field_set_editable(pss->item_label.field, False);
@@ -946,11 +946,11 @@ spinbox_obj_destroy_CB(ObjEvDestroyInfo destroyInfo)
 	pss = &(prop_spinbox_settings_rec[i]);
 
 	if (pss->current_obj == doomedObj)
-	    pss->current_obj = NULL;
+	    pss->current_obj = nullptr;
 	if (pss->items.current_item == doomedObj)
-	    pss->items.current_item = NULL;
+	    pss->items.current_item = nullptr;
 	if (pss->items.clipboard_item == doomedObj)
-	    pss->items.clipboard_item = NULL;
+	    pss->items.clipboard_item = nullptr;
     }
     return 0;
 }

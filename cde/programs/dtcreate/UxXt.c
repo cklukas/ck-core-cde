@@ -135,7 +135,7 @@ static  int     handle_dialog_child( Widget wgt, void (*manage_func)(Widget) )
         XtVaGetValues( wgt,
                        XmNnumChildren, &num_children,
                        XmNchildren, &children,
-                       NULL );
+                       nullptr );
 
         /*-----------------------------------------------------
          * We manage/unmanage the first rectObj child in the list.
@@ -312,7 +312,7 @@ int     UxPutContext( Widget wgt, caddr_t context )
         if ( xcontext_id == 0 )
                 xcontext_id = XUniqueContext();
 
-        if ( wgt == NULL )
+        if ( wgt == nullptr )
                 return ( UX_ERROR );
 
         status = XSaveContext( XtDisplay( UxTopLevel ),
@@ -347,7 +347,7 @@ caddr_t         UxGetContext( Widget wgt )
         int             status;
         caddr_t         context;
 
-        if ( wgt == NULL )
+        if ( wgt == nullptr )
                 return ( (caddr_t) NULL );
 
         status = XFindContext( XtDisplay( UxTopLevel ),
@@ -377,7 +377,7 @@ static  void    DelayedFreeData( XtPointer client_data, XtIntervalId *_id)
 {
         XtIntervalId    *id = _id;
 
-        if (client_data != NULL) {
+        if (client_data != nullptr) {
                 XtFree((char *) client_data);
         }
 }
@@ -403,7 +403,7 @@ void    UxDestroyContextCB( Widget _wgt, XtPointer client_data,
         Widget          wgt = _wgt;
         XtPointer       call_data = _call_data;
 
-        if (client_data != NULL) {
+        if (client_data != nullptr) {
                 XtAppAddTimeOut(UxAppContext, 0,
                                 DelayedFreeData, client_data);
         }
@@ -427,7 +427,7 @@ CREATION:       Visual Edge Software            June 17 1992
 XmFontList    UxConvertFontList( char *fontlist_str )
 {
         XrmValue        from, to;
-        XmFontList      fontlist = NULL;
+        XmFontList      fontlist = nullptr;
         Boolean         status;
 
         from.size = strlen( fontlist_str ) + 1;

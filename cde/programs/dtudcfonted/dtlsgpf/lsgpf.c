@@ -119,11 +119,11 @@ main( int argc, char *argv[] )
 	dsp_opt = 0 ;
 
 	/* get locale strings */
-	if( (utillocale = (char *)getenv( "LANG" )) == NULL ){
+	if( (utillocale = (char *)getenv( "LANG" )) == nullptr ){
 	    utillocale = "C" ;
 	}
 
-	if( (fontdir = (char *)getenv( "DTUDCFONTS" )) == (char *)NULL ) {
+	if( (fontdir = (char *)getenv( "DTUDCFONTS" )) == (char *)nullptr ) {
 		fontdir = DTUDCFONTSLISTDIR ;
 	}
 
@@ -256,7 +256,7 @@ int		*errflg)
 
 	srt_lst.num = lst->num ;
 	srt_lst.list = (FalFontData *)malloc( sizeof(FalFontData) * lst->num ) ;
-	if( srt_lst.list == NULL ) {
+	if( srt_lst.list == nullptr ) {
 		USAGE("dtlsgpf : malloc error.\n" ) ;
 		exit(1) ;
 	}
@@ -484,7 +484,7 @@ dsp_error_files( FalFontDataList *lst, MISS_ENTRY *unknown )
 		USAGE1("\tstyle \t\t%s \n", lst->list[entry_start].style.name ) ;
 		USAGE("\n" );
 		for ( j = entry_start; j <= entry_end; j++ ) {
-			ret = search_fontfile_name( lst->list[j], tmp_fname, NULL, 0, 0 ) ;
+			ret = search_fontfile_name( lst->list[j], tmp_fname, nullptr, 0, 0 ) ;
 			if( ret == -1 ){
 				USAGE("\t\tThere is no font file that is required." );
 				USAGE1("\t%s\n", lst->list[j].xlfdname );
@@ -527,7 +527,7 @@ int		*data_cnt)
 	    return ;
 	}
 
-	if( (size_offset_list = (int *)malloc( flist->num * sizeof(int) )) == NULL )
+	if( (size_offset_list = (int *)malloc( flist->num * sizeof(int) )) == nullptr )
 	{
 		USAGE("dtlsgpf: malloc error.\n" );
 		exit(1) ;
@@ -815,7 +815,7 @@ sort_fontlist( FalFontDataList *lst )
 
 	srt.num  = lst->num;
 
-	if (( srt.list = (FalFontData *)malloc(sizeof(FalFontData) * srt.num)) == NULL) {
+	if (( srt.list = (FalFontData *)malloc(sizeof(FalFontData) * srt.num)) == nullptr) {
 		return	FAL_ERROR;
 	}
 	memmove (srt.list, lst->list, sizeof(FalFontData) * srt.num);
@@ -866,7 +866,7 @@ get_new_target( FalFontData *target, FalFontData *choose )
 	NEW_TARGET_SET( diff, choose, target, str_chk ) ;
 
 	diff.shape.def = choose->shape.def - target->shape.def;
-	if( (choose->shape.name != NULL) && (target->shape.name != NULL) ) {
+	if( (choose->shape.name != nullptr) && (target->shape.name != nullptr) ) {
 	    str_chk.shape =  strcmp( choose->shape.name, target->shape.name ) ;
 	}
 

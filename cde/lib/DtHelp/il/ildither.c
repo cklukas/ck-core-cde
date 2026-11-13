@@ -1032,14 +1032,14 @@ IL_PRIVATE ilBool _ilConvertRGBToPalette (
     long                   *pColorTable;
     ilBool                  diffusion, chooseColors;
     int                     i, shifts[3] = { 0, 0, 0 }, nColors = 0;
-    const unsigned short         *pMulTable[3] = { NULL, NULL, NULL };      /* dither other than 484 only: pMul? */
+    const unsigned short         *pMulTable[3] = { nullptr, nullptr, nullptr };      /* dither other than 484 only: pMul? */
     static ilConvertToPaletteInfo  defaultConvert = 
                                   {IL_DIFFUSION, { 4, 8, 4 }, 8, IL_PALETTE, (ilObject)NULL};
 
 
         /*  Init to null those things freed by "cleanup" if error. */
-    pPalette = (unsigned short *)NULL;
-    pColorTable = (long *)NULL;
+    pPalette = (unsigned short *)nullptr;
+    pColorTable = (long *)nullptr;
 
         /*  Get format = planar order, 8 bits / pixel, or error.
             Src image already guaranteed to be 256-level RGB image.
@@ -1048,7 +1048,7 @@ IL_PRIVATE ilBool _ilConvertRGBToPalette (
      || (pFormat->nBitsPerSample[1] != 8)
      || (pFormat->nBitsPerSample[2] != 8)
      || (pFormat->sampleOrder != IL_SAMPLE_PIXELS)) {
-        if (!ilConvert (pipe, (ilImageDes *)NULL, IL_FORMAT_3BYTE_PIXEL, 0, NULL))
+        if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_3BYTE_PIXEL, 0, nullptr))
             return FALSE;
         }
 
@@ -1243,8 +1243,8 @@ IL_PRIVATE ilBool _ilConvertRGBToPalette (
     dstData.constantStrip = FALSE;
     dstData.pPalette = pPalette;
     pPriv = (ilDitherPrivPtr)ilAddPipeElement (pipe, IL_FILTER, sizeof(ilDitherPrivRec), 0,
-            (chooseColors) ? &srcData : (ilSrcElementData *)NULL, &dstData, 
-            ilInitDitherRGB, cleanupFunction, ilDestroyDitherRGB, executeFunction, NULL, 0);
+            (chooseColors) ? &srcData : (ilSrcElementData *)nullptr, &dstData, 
+            ilInitDitherRGB, cleanupFunction, ilDestroyDitherRGB, executeFunction, nullptr, 0);
     if (!pPriv)
         goto cleanup;
 

@@ -123,7 +123,7 @@
  * but must be visible to real engine... */
 USRBLK          usrblk = { { 0 } };
 static int      save_search_type = '$';
-static char    *sprintbuf = NULL;
+static char    *sprintbuf = nullptr;
 
 /*------------------- EXTERNS (aajoint.c) ---------------------*/
 extern int      aa_is_initialized;
@@ -174,7 +174,7 @@ static int      valid_dbname (char *dbname)
 {
     DBLK           *db;
     aa_check_initialization ();
-    if (dbname == NULL) {
+    if (dbname == nullptr) {
 	usrblk.dblk = usrblk.dblist;
 	return TRUE;
     }
@@ -182,7 +182,7 @@ static int      valid_dbname (char *dbname)
 	usrblk.dblk = usrblk.dblist;
 	return TRUE;
     }
-    for (db = usrblk.dblist; db != NULL; db = db->link) {
+    for (db = usrblk.dblist; db != nullptr; db = db->link) {
 	if (db->label) {
 	    if (strcmp (dbname, db->label) == 0)
 		break;
@@ -190,14 +190,14 @@ static int      valid_dbname (char *dbname)
 	if (strcmp (dbname, db->name) == 0)
 	    break;
     }
-    if (db == NULL) {
+    if (db == nullptr) {
 	sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_ausapi, 1,
 		"%1$sInvalid or unavailable database '%2$s'."),
 	    PROGNAME "48 ", dbname);
 	DtSearchAddMessage (sprintbuf);
 	if (DtSrInANY_DEBUG & save_init_switches) {
 	    fputs (PROGNAME "49 Available Databases:\n", aa_stderr);
-	    for (db = usrblk.dblist; db != NULL; db = db->link)
+	    for (db = usrblk.dblist; db != nullptr; db = db->link)
 		fprintf (aa_stderr, "  name='%s'\tlabel='%s'\n",
 		    db->name, db->label);
 	}
@@ -230,19 +230,19 @@ static void     build_dbnames_array (void)
     if (ausapi_dbnamesv)
 	free (ausapi_dbnamesv);
     ausapi_dbnamesc = 0;
-    for (db = usrblk.dblist; db != NULL; db = db->link) {
+    for (db = usrblk.dblist; db != nullptr; db = db->link) {
 	ausapi_dbnamesc++;
 	mallocsz += ((db->label) ? strlen (db->label) : sizeof (db->name)) + 2L;
     }
     ausapi_dbnamesv = austext_malloc (
 	mallocsz + (sizeof (char *) * (2 + ausapi_dbnamesc)) + 4,
-	PROGNAME "106", NULL);
+	PROGNAME "106", nullptr);
     /* The first part of the malloc is the array of pointers.
      * The strings start just after the array.  Set 'targ' to
      * the beginning of the strings, while 'i' indexes the ptrs.
      */
     targ = (char *) ausapi_dbnamesv + (sizeof (char *) * (1 + ausapi_dbnamesc));
-    for (i = 0, db = usrblk.dblist; db != NULL; i++, db = db->link) {
+    for (i = 0, db = usrblk.dblist; db != nullptr; i++, db = db->link) {
 	ausapi_dbnamesv[i] = targ;
 	src = (db->label) ? db->label : db->name;
 	while (*src != 0)
@@ -257,7 +257,7 @@ static void     build_dbnames_array (void)
 	}
 
     }
-    ausapi_dbnamesv[i] = NULL;	/* terminate the list this way too */
+    ausapi_dbnamesv[i] = nullptr;	/* terminate the list this way too */
     return;
 }  /* build_dbnames_array() */
 
@@ -317,7 +317,7 @@ int             DtSearchInit (
     else
 	aa_stderr = stderr;
 
-    sprintbuf = austext_malloc (SPRINTBUFSZ, PROGNAME "135", NULL);
+    sprintbuf = austext_malloc (SPRINTBUFSZ, PROGNAME "135", nullptr);
 
     /* Open msgs and help text catalogs. */
     if (switches & (DtSrInNOLOCALE == 0)) {
@@ -346,8 +346,8 @@ int             DtSearchInit (
     }
 
     /* If user name was not passed, get it from LOGNAME environment var */
-    if (userid == NULL || *userid == 0)
-	if ((userid = (char *) getenv ("LOGNAME")) == NULL) {
+    if (userid == nullptr || *userid == 0)
+	if ((userid = (char *) getenv ("LOGNAME")) == nullptr) {
 	    sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_ausapi, 187,
 		"%1$s Missing both userid and LOGNAME environment variable."),
 		PROGNAME "187 ");
@@ -390,7 +390,7 @@ int             DtSearchInit (
     usrblk.request = OE_INITIALIZE;
     usrblk.query = AUSAPI_VERSION;
     Opera_Engine ();
-    usrblk.query = NULL;  /* so we don't try to free it at query time */
+    usrblk.query = nullptr;  /* so we don't try to free it at query time */
     if (usrblk.retncode != OE_OK)
 	return DtSrFAIL;
 
@@ -578,7 +578,7 @@ int             DtSearchQuery (
     }	/* end switch on search_type */
 
     /* Validate the 'qry' argument */
-    if (qry == NULL) {
+    if (qry == nullptr) {
 QUERY_ERROR:
 	sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_ausapi, 30,
 		"%s Null query.  No search performed."),
@@ -595,9 +595,9 @@ QUERY_ERROR:
      * copy it over now to userblk.
      */
     if (qryarg == TEXT && qry != usrblk.query) {
-	if (usrblk.query != NULL)
+	if (usrblk.query != nullptr)
 	    free (usrblk.query);
-	usrblk.query = austext_malloc (strlen (qry) + 16, PROGNAME "102", NULL);
+	usrblk.query = austext_malloc (strlen (qry) + 16, PROGNAME "102", nullptr);
 	strcpy (usrblk.query, qry);
     }
 
@@ -643,7 +643,7 @@ END_OF_SEARCH:
     if (usrblk.debug & USRDBG_SRCHCMPL) {
 	/* count msgs */
 	i = 0;
-	for (llp = ausapi_msglist; llp != NULL; llp = llp->link)
+	for (llp = ausapi_msglist; llp != nullptr; llp = llp->link)
 	    i++;
 	fprintf (aa_stderr, PROGNAME "380 Return from Search:  "
 	    "retncode=%d  hitcount=%ld  srchmsgs=%d.\n",
@@ -662,7 +662,7 @@ END_OF_SEARCH:
 	     */
 	    *dittolist = usrblk.dittolist;
 	    *dittocount = usrblk.dittocount;
-	    usrblk.dittolist = NULL;
+	    usrblk.dittolist = nullptr;
 	    usrblk.dittocount = 0;
 	    if (stems) {
 		*stemcount = usrblk.stemcount;
@@ -684,7 +684,7 @@ END_OF_SEARCH:
 
 	case OE_BAD_QUERY:
 	    /* Query was invalid.  Tell the user why. */
-	    if (ausapi_msglist == NULL) {
+	    if (ausapi_msglist == nullptr) {
 		sprintf (sprintbuf,
 		    CATGETS(dtsearch_catd, MS_ausapi, 806,
 			"%s Query insufficient or search options "
@@ -794,7 +794,7 @@ int             DtSearchHighlight (
 	return DtSrREINIT;
 
     /* copy cleartext to usrblk if necessary */
-    if (cleartext == NULL || cleartext[0] == 0) {
+    if (cleartext == nullptr || cleartext[0] == 0) {
 	sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_ausapi, 40,
 		"%1$s Null cleartext.  No highlighting performed."),
 	    PROGNAME "349 ", dbname);
@@ -802,11 +802,11 @@ int             DtSearchHighlight (
 	return DtSrERROR;
     }
     if (cleartext != usrblk.cleartext) {
-	if (usrblk.cleartext != NULL)
+	if (usrblk.cleartext != nullptr)
 	    free (usrblk.cleartext);
 	usrblk.clearlen = strlen (cleartext);
 	usrblk.cleartext = austext_malloc (usrblk.clearlen + 16,
-	    PROGNAME "267", NULL);
+	    PROGNAME "267", nullptr);
 	strcpy (usrblk.cleartext, cleartext);
     }
 

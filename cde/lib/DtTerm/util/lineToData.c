@@ -100,7 +100,7 @@ main(int argc, char **argv)
 	}
     }
 
-    if (NULL == (f = fopen(datafilename, "r"))) {
+    if (nullptr == (f = fopen(datafilename, "r"))) {
 	(void) perror(datafilename);
 	(void) exit(1);
     }
@@ -298,12 +298,12 @@ main(int argc, char **argv)
 static void *
 growList(void *list, int count, size_t size)
 {
-    void *newList = NULL;
+    void *newList = nullptr;
 
     if (count > 0 && (size_t) count <= SIZE_MAX / size)
 	newList = realloc(list, (size_t) count * size);
 
-    if (NULL == newList) {
+    if (nullptr == newList) {
 	(void) fprintf(stderr, "lineToData: out of memory\n");
 	(void) exit(1);
     }

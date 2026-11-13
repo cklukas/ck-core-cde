@@ -50,8 +50,8 @@ void main(int argc, char **argv)
     int n=0;
     int numArgs = 0;
 
-    shell = XtAppInitialize(&appContext , ApplicationClass, NULL, 0, 
-						&argc, argv, NULL, args, n);  
+    shell = XtAppInitialize(&appContext , ApplicationClass, nullptr, 0, 
+						&argc, argv, nullptr, args, n);  
 
     CreateWidgets(shell);
 
@@ -64,7 +64,7 @@ void main(int argc, char **argv)
     DtDbLoad();
 
     /* Notice changes to the database without needing to restart application */
-    DtDbReloadNotify(DbReloadProc, NULL);
+    DtDbReloadNotify(DbReloadProc, nullptr);
 
     XtRealizeWidget(shell);
     XmProcessTraversal(actionText, XmTRAVERSE_CURRENT);
@@ -87,7 +87,7 @@ static void CreateWidgets(Widget shell)
     messageBox = XmCreateMessageBox(shell, "messageBox", args, n);
     XtManageChild(messageBox);
     XmStringFree(labelString);
-    XtAddCallback(messageBox, XmNokCallback, InvokeActionCb, NULL);
+    XtAddCallback(messageBox, XmNokCallback, InvokeActionCb, nullptr);
 
     n = 0;
     XtSetArg(args[n], XmNorientation, XmVERTICAL); n++;
@@ -135,7 +135,7 @@ static void InvokeActionCb(Widget w, XtPointer cd, XtPointer cb)
 
     action = XmTextFieldGetString(actionText);
 
-    if (action == NULL) return;
+    if (action == nullptr) return;
     if (strlen(action) == 0) {
 	XtFree(action);
 	return;
@@ -156,14 +156,14 @@ static void InvokeActionCb(Widget w, XtPointer cd, XtPointer cb)
 
 static void InvokeAction(char *action, char *file)
 {
-    DtActionArg *ap = NULL;
+    DtActionArg *ap = nullptr;
     int nap = 0;
     DtActionInvocationID actionId;
   
     /* If a file was specified, build the file argument list */
 
 printf("%s(%s)\n",action,file);
-    if (file != NULL && strlen(file) != 0) {
+    if (file != nullptr && strlen(file) != 0) {
 	ap = (DtActionArg*) XtCalloc(1, sizeof(DtActionArg));
 	ap[0].argClass = DtACTION_FILE;
 	ap[0].u.file.name = file;
@@ -172,6 +172,6 @@ printf("%s(%s)\n",action,file);
 
     /* Invoke the specified action */
 
-    actionId = DtActionInvoke(shell,action,ap,nap,NULL,NULL,NULL,True,NULL,NULL);
+    actionId = DtActionInvoke(shell,action,ap,nap,nullptr,nullptr,nullptr,True,nullptr,nullptr);
 }
 

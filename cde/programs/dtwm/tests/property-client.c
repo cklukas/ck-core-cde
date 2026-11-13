@@ -13,20 +13,20 @@ static int Managed(Display *d, Window w, Atom state)
 {
     for (int attempt=0; attempt<100; ++attempt) {
         Atom type; int format; unsigned long count, remaining;
-        unsigned char *data=NULL;
+        unsigned char *data=nullptr;
         int status=XGetWindowProperty(d,w,state,0,2,False,state,
                                      &type,&format,&count,&remaining,&data);
         int valid=status==Success && data && type==state && format==32 &&
                   count==2 && remaining==0;
         if (data) XFree(data);
         if (valid) return 1;
-        struct timespec delay={0,100000000}; nanosleep(&delay,NULL);
+        struct timespec delay={0,100000000}; nanosleep(&delay,nullptr);
     }
     return 0;
 }
 int main(void)
 {
-    Display *d=XOpenDisplay(NULL); assert(d); XSetErrorHandler(Error);
+    Display *d=XOpenDisplay(nullptr); assert(d); XSetErrorHandler(Error);
     Window root=DefaultRootWindow(d);
     Atom hints=XInternAtom(d,"_MOTIF_WM_HINTS",False);
     Atom state=XInternAtom(d,"WM_STATE",False);

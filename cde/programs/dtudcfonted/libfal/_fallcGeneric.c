@@ -66,13 +66,13 @@ static Bool initialize(XLCd lcd);
 static void destroy(XLCd lcd);
 
 static XLCdPublicMethodsRec genericMethods = {
-    { NULL },                   /* use default methods */
+    { nullptr },                   /* use default methods */
     {
-	NULL,
+	nullptr,
 	create,
 	initialize,
 	destroy,
-	NULL
+	nullptr
     }
 };
 
@@ -85,19 +85,19 @@ create(char *name, XLCdMethods methods)
     XLCdPublicMethods new;
 
     lcd = (XLCd) Xmalloc(sizeof(XLCdRec));
-    if (lcd == NULL)
+    if (lcd == nullptr)
         return (XLCd) NULL;
     memset((char *) lcd, 0, sizeof(XLCdRec));
 
     lcd->core = (XLCdCore) Xmalloc(sizeof(XLCdGenericRec));
-    if (lcd->core == NULL){
+    if (lcd->core == nullptr){
 	Xfree(lcd);
 	return (XLCd) NULL;
     }
     memset((char *) lcd->core, 0, sizeof(XLCdGenericRec));
 
     new = (XLCdPublicMethods) Xmalloc(sizeof(XLCdPublicMethodsRec));
-    if (new == NULL){
+    if (new == nullptr){
 	Xfree(lcd);
 	return (XLCd) NULL;
     }
@@ -164,7 +164,7 @@ string_to_ulong(char *str, unsigned long *value)
 	       return(False);
 	  }
      }
-    *value = (unsigned) strtol(tmp1, NULL, base);
+    *value = (unsigned) strtol(tmp1, nullptr, base);
      return(True);
 }
 
@@ -181,7 +181,7 @@ add_charset(CodeSet codeset, XlcCharSet charset)
     else
         new_list = (XlcCharSet *) Xmalloc(sizeof(XlcCharSet));
 
-    if (new_list == NULL)
+    if (new_list == nullptr)
 	return False;
 
     new_list[num] = charset;
@@ -198,8 +198,8 @@ add_codeset(XLCdGenericPart *gen)
     int num;
 
     new = (CodeSet) Xmalloc(sizeof(CodeSetRec));
-    if (new == NULL)
-        return NULL;
+    if (new == nullptr)
+        return nullptr;
     memset((char *) new, 0, sizeof(CodeSetRec));
 
     if (num = gen->codeset_num)
@@ -208,9 +208,9 @@ add_codeset(XLCdGenericPart *gen)
     else
         new_list = (CodeSet *) Xmalloc(sizeof(CodeSet));
 
-    if (new_list == NULL){
+    if (new_list == nullptr){
         Xfree(new);
-	return NULL;
+	return nullptr;
     }
 
     new_list[num] = new;
@@ -233,12 +233,12 @@ add_parse_list(
     int num;
 
     str = (char *) Xmalloc(strlen(encoding) + 1);
-    if (str == NULL)
+    if (str == nullptr)
         return False;
     strcpy(str, encoding);
 
     new = (ParseInfo) Xmalloc(sizeof(ParseInfoRec));
-    if (new == NULL){
+    if (new == nullptr){
 	Xfree(str);
 	if (new)
             Xfree(new);
@@ -247,9 +247,9 @@ add_parse_list(
     }
     memset((char *) new, 0, sizeof(ParseInfoRec));
 
-    if (gen->mb_parse_table == NULL) {
+    if (gen->mb_parse_table == nullptr) {
         gen->mb_parse_table = (unsigned char *) Xmalloc(256); /* 2^8 */
-        if (gen->mb_parse_table == NULL){
+        if (gen->mb_parse_table == nullptr){
             Xfree(str);
 	    if (new)
 		Xfree(new);
@@ -266,7 +266,7 @@ add_parse_list(
         new_list = (ParseInfo *) Xmalloc(2 * sizeof(ParseInfo));
     }
 
-    if (new_list == NULL){
+    if (new_list == nullptr){
         Xfree(str);
 	if (new)
 	    Xfree(new);
@@ -275,7 +275,7 @@ add_parse_list(
     }
 
     new_list[num] = new;
-    new_list[num + 1] = NULL;
+    new_list[num + 1] = nullptr;
     gen->mb_parse_list = new_list;
     gen->mb_parse_list_num = num + 1;
 
@@ -287,7 +287,7 @@ add_parse_list(
     new->encoding = str;
     new->codeset = codeset;
 
-    if (codeset->parse_info == NULL)
+    if (codeset->parse_info == nullptr)
         codeset->parse_info = new;
 
     return True;
@@ -367,8 +367,8 @@ FontScope falparse_scopemaps(char *str, int *size)
         char *str_sc;
         num = count_scopemap(str);
         scope = (FontScope )Xmalloc(num * sizeof(FontScopeRec));
-        if(scope == NULL) {
-                return (NULL);
+        if(scope == nullptr) {
+                return (nullptr);
         }
         for (i=0,str_sc=str,sc_ptr=scope;
                         i < num; i++,sc_ptr++){
@@ -408,10 +408,10 @@ dmpscope(char *name, FontScope sc, int num)
 
 static XlcCharSet srch_charset_define(char *name, int *new)
 {
-    XlcCharSet charset = NULL;
+    XlcCharSet charset = nullptr;
     *new = 0;
     charset = _fallcGetCharSet(name);
-    if (charset == NULL &&
+    if (charset == nullptr &&
         (charset = _fallcCreateDefaultCharSet(name, ""))) {
         _fallcAddCharSet(charset);
         *new = 1;
@@ -455,8 +455,8 @@ read_charset_define(XLCd lcd, XLCdGenericPart *gen)
                     side =  XlcGR ;
                     strcat(cset_name,":GR");
                 }
-                if (charsetd == NULL &&
-                    (charsetd = srch_charset_define(cset_name,&new)) == NULL)
+                if (charsetd == nullptr &&
+                    (charsetd = srch_charset_define(cset_name,&new)) == nullptr)
                     return 0;
             }
         } else {
@@ -468,7 +468,7 @@ read_charset_define(XLCd lcd, XLCdGenericPart *gen)
         }
         if(new){
             tmp = (char *)Xmalloc(strlen(cset_name)+1);
-            if(tmp == NULL){
+            if(tmp == nullptr){
                 return 0;
             }
             strcpy(tmp,cset_name);
@@ -512,7 +512,7 @@ read_charset_define(XLCd lcd, XLCdGenericPart *gen)
             }
 */
             tmp = (char *)Xmalloc(strlen(value[0])+1);
-            if(tmp == NULL){
+            if(tmp == nullptr){
                 return 0;
             }
             charsetd->ct_sequence = tmp;
@@ -551,7 +551,7 @@ faladd_conversion(XLCdGenericPart *gen)
         new_list = (SegConv) Xmalloc(sizeof(SegConvRec));
     }
 
-    if (new_list == NULL)
+    if (new_list == nullptr)
         return False;
 
     gen->segment_conv = new_list;
@@ -578,8 +578,8 @@ read_segmentconversion(XLCd lcd, XLCdGenericPart *gen)
         _fallcGetResource(lcd, "XLC_SEGMENTCONVERSION", name, &value, &num);
         if (num > 0) {
             char *tmp;
-            if (conversion == NULL &&
-                (conversion = faladd_conversion(gen)) == NULL) {
+            if (conversion == nullptr &&
+                (conversion = faladd_conversion(gen)) == nullptr) {
                 return 0;
             }
             dbg_printValue(name,value,num);
@@ -599,7 +599,7 @@ read_segmentconversion(XLCd lcd, XLCdGenericPart *gen)
             char *tmp;
             dbg_printValue(name,value,num);
             tmp = (char *)Xmalloc(strlen(value[0])+1);
-            if(tmp == NULL){
+            if(tmp == nullptr){
                 return 0;
             }
             strcpy(tmp,value[0]);
@@ -607,7 +607,7 @@ read_segmentconversion(XLCd lcd, XLCdGenericPart *gen)
             conversion->source = srch_charset_define(tmp,&new);
             if(new){
                 tmp = (char *)Xmalloc(strlen(conversion->source_encoding)+1);
-                if(tmp == NULL){
+                if(tmp == nullptr){
                     return 0;
                 }
                 strcpy(tmp,conversion->source_encoding);
@@ -621,7 +621,7 @@ read_segmentconversion(XLCd lcd, XLCdGenericPart *gen)
             char *tmp;
             dbg_printValue(name,value,num);
             tmp = (char *)Xmalloc(strlen(value[0])+1);
-            if(tmp == NULL){
+            if(tmp == nullptr){
                 return 0;
             }
             strcpy(tmp,value[0]);
@@ -630,7 +630,7 @@ read_segmentconversion(XLCd lcd, XLCdGenericPart *gen)
             if(new){
                 tmp = (char *)Xmalloc(
                     strlen(conversion->destination_encoding)+1);
-                if(tmp == NULL){
+                if(tmp == nullptr){
                     return 0;
                 }
                 strcpy(tmp,conversion->destination_encoding);
@@ -669,14 +669,14 @@ static ExtdSegment create_ctextseg(char **value, int num)
     int i,new;
     FontScope scope;
     ret = (ExtdSegment)Xmalloc(sizeof(ExtdSegmentRec));
-    if(ret == NULL){
+    if(ret == nullptr){
         return (0);
     }
     if(strchr(value[0],':')){
         ret->name = (char *)Xmalloc(strlen(value[0])+1);
-        if(ret->name == NULL){
+        if(ret->name == nullptr){
             XFree(ret);
-            return(NULL);
+            return(nullptr);
         }
         strcpy(ret->name,value[0]);
         ptr = strchr(ret->name,':');
@@ -695,17 +695,17 @@ static ExtdSegment create_ctextseg(char **value, int num)
         }
     } else {
         ret->name = (char *)Xmalloc(strlen(value[0])+1);
-        if(ret->name == NULL){
+        if(ret->name == nullptr){
             XFree(ret);
-            return(NULL);
+            return(nullptr);
         }
         strcpy(ret->name,value[0]);
     }
     ret->area = (FontScope)Xmalloc((num - 1)*sizeof(FontScopeRec));
-    if(ret->area == NULL){
+    if(ret->area == nullptr){
         XFree(ret->name);
         XFree(ret);
-        return(NULL);
+        return(nullptr);
     }
     ret->area_num  = num - 1;
     scope = ret->area ;
@@ -715,11 +715,11 @@ static ExtdSegment create_ctextseg(char **value, int num)
     ret->charset = srch_charset_define(cset_name,&new);
     if(new){
         tmp = (char *)Xmalloc(strlen(cset_name)+1);
-        if(tmp == NULL){
+        if(tmp == nullptr){
             XFree(ret->area);
             XFree(ret->name);
             XFree(ret);
-            return NULL;
+            return nullptr;
         }
         strcpy(tmp,cset_name);
         ret->charset->name = tmp;
@@ -771,7 +771,7 @@ load_generic(XLCd lcd)
 #endif
 
     for (i = 0; ; i++) {
-	CodeSetRec *codeset = NULL;
+	CodeSetRec *codeset = nullptr;
 	char cs[16];
 	char name[BUFSIZ];
 
@@ -783,7 +783,7 @@ load_generic(XLCd lcd)
 	if (num > 0) {
 	    char *tmp;
 
-	    if (codeset == NULL && (codeset = add_codeset(gen)) == NULL){
+	    if (codeset == nullptr && (codeset = add_codeset(gen)) == nullptr){
 		free_charset(lcd);
                 return False;
 	    }
@@ -799,7 +799,7 @@ load_generic(XLCd lcd)
             }
 
 	    tmp = strrchr(value[0], ':');
-	    if (tmp != NULL && !_fallcCompareISOLatin1(tmp + 1, "Default")) {
+	    if (tmp != nullptr && !_fallcCompareISOLatin1(tmp + 1, "Default")) {
 		if (codeset->side == XlcGR)
 		    gen->initial_state_GR = codeset;
 		else
@@ -811,7 +811,7 @@ load_generic(XLCd lcd)
 	sprintf(name, "%s.%s", cs , "length");
 	_fallcGetResource(lcd, "XLC_XLOCALE", name, &value, &num);
 	if (num > 0) {
-	    if (codeset == NULL && (codeset = add_codeset(gen)) == NULL){
+	    if (codeset == nullptr && (codeset = add_codeset(gen)) == nullptr){
 		free_charset(lcd);
                 return False;
 	    }
@@ -835,7 +835,7 @@ load_generic(XLCd lcd)
 	    };
 	    int j;
 
-	    if (codeset == NULL && (codeset = add_codeset(gen)) == NULL){
+	    if (codeset == nullptr && (codeset = add_codeset(gen)) == nullptr){
 		free_charset(lcd);
                 return False;
 	    }
@@ -863,7 +863,7 @@ load_generic(XLCd lcd)
 	sprintf(name, "%s.%s", cs, "wc_encoding");
 	_fallcGetResource(lcd, "XLC_XLOCALE", name, &value, &num);
 	if (num > 0) {
-	    if ((codeset == NULL && (codeset = add_codeset(gen)) == NULL) || \
+	    if ((codeset == nullptr && (codeset = add_codeset(gen)) == nullptr) || \
                (string_to_ulong(value[0], &l) == False)){
 		free_charset(lcd);
 		return False;
@@ -878,21 +878,21 @@ load_generic(XLCd lcd)
 	    XlcCharSet charset;
 	    char *encoding;
 
-	    if (codeset == NULL && (codeset = add_codeset(gen)) == NULL){
+	    if (codeset == nullptr && (codeset = add_codeset(gen)) == nullptr){
 		free_charset(lcd);
 		return False;
 	    }
 	    for ( ; num-- > 0; value++) {
 		string_to_encoding(*value, name);
-		charset = NULL;
+		charset = nullptr;
 		if ((encoding = strchr(name, ':')) &&
 		    (encoding = strchr(encoding + 1, ':'))) {
 		    *encoding++ = '\0';
 		    charset = _fallcAddCT(name, encoding);
 		}
-		if (charset == NULL) {
+		if (charset == nullptr) {
 		    charset = _fallcGetCharSet(name);
-		    if (charset == NULL &&
+		    if (charset == nullptr &&
 			(charset = _fallcCreateDefaultCharSet(name, ""))) {
 			charset->side = codeset->side;
 			charset->char_size = codeset->length;
@@ -908,7 +908,7 @@ load_generic(XLCd lcd)
 	    }
 	}
 
-	if (codeset == NULL)
+	if (codeset == nullptr)
 	    break;
 	codeset->cs_num = i;
         /* For VW/UDC */
@@ -922,13 +922,13 @@ load_generic(XLCd lcd)
 
             if( M == 1){
                 if(num < 1) {
-                    codeset->byteM = NULL ;
+                    codeset->byteM = nullptr ;
                     break ;
                 }
                 codeset->byteM =
                     (ByteInfoListRec *)Xmalloc(
                          (codeset->length)*sizeof(ByteInfoListRec));
-                if(codeset->byteM == NULL){
+                if(codeset->byteM == nullptr){
                         free_charset(lcd);
 			return False;
                 }
@@ -1025,18 +1025,18 @@ freeByteM(CodeSet codeset)
 {
     int i;
     ByteInfoList blst;
-    if(codeset->byteM == NULL) {
+    if(codeset->byteM == nullptr) {
 	return ;
     }
     blst = codeset->byteM;
     for(i=0;i<codeset->length;i++){
 	if(blst[i].byteinfo){
 	    Xfree(blst[i].byteinfo);
-	    blst[i].byteinfo = NULL;
+	    blst[i].byteinfo = nullptr;
 	}
     }
     Xfree(codeset->byteM);
-    codeset->byteM = NULL;
+    codeset->byteM = nullptr;
 }
 static void
 freeConversion(CodeSet codeset)
@@ -1048,20 +1048,20 @@ freeConversion(CodeSet codeset)
 	/*  ...  */
 	if(mbconv->convlist){
 	    Xfree(mbconv->convlist);
-	    mbconv->convlist = NULL;
+	    mbconv->convlist = nullptr;
 	}
 	Xfree(mbconv);
-	codeset->mbconv = NULL;
+	codeset->mbconv = nullptr;
     }
     if( codeset->ctconv ) {
 	ctconv = codeset->ctconv;
 	/*  ...  */
 	if(ctconv->convlist){
 	    Xfree(ctconv->convlist);
-	    ctconv->convlist = NULL;
+	    ctconv->convlist = nullptr;
 	}
 	Xfree(ctconv);
-	codeset->ctconv = NULL;
+	codeset->ctconv = nullptr;
     }
 }
 static void
@@ -1069,36 +1069,36 @@ freeExtdSegment(CodeSet codeset)
 {
     int i;
     ExtdSegment ctextseg;
-    if(codeset->ctextseg == NULL) {
+    if(codeset->ctextseg == nullptr) {
 	return ;
     }
     ctextseg = codeset->ctextseg;
     if(ctextseg->name){
 	Xfree(ctextseg->name);
-	ctextseg->name = NULL;
+	ctextseg->name = nullptr;
     }
     if(ctextseg->area){
 	Xfree(ctextseg->area);
-	ctextseg->area = NULL;
+	ctextseg->area = nullptr;
     }
     Xfree(codeset->ctextseg);
-    codeset->ctextseg = NULL;
+    codeset->ctextseg = nullptr;
 }
 static void
 freeParseInfo(CodeSet codeset)
 {
     int i;
     ParseInfo parse_info;
-    if(codeset->parse_info == NULL) {
+    if(codeset->parse_info == nullptr) {
 	return ;
     }
     parse_info = codeset->parse_info;
     if(parse_info->encoding){
 	Xfree(parse_info->encoding);
-	parse_info->encoding = NULL;
+	parse_info->encoding = nullptr;
     }
     Xfree(codeset->parse_info);
-    codeset->parse_info = NULL;
+    codeset->parse_info = nullptr;
 }
 static void
 destroy_CodeSetList(XLCdGenericPart *gen)
@@ -1115,11 +1115,11 @@ destroy_CodeSetList(XLCdGenericPart *gen)
 	freeParseInfo(codeset[i]);
 	if(codeset[i]->charset_list){
 	    Xfree(codeset[i]->charset_list);
-	    codeset[i]->charset_list = NULL;
+	    codeset[i]->charset_list = nullptr;
 	}
-	Xfree(codeset[i]); codeset[i]=NULL;
+	Xfree(codeset[i]); codeset[i]=nullptr;
     }
-    Xfree(codeset); gen->codeset_list = NULL;
+    Xfree(codeset); gen->codeset_list = nullptr;
 }
 
 static void
@@ -1133,17 +1133,17 @@ destroy_SegConv(XLCdGenericPart *gen)
     for(i=0;i<gen->segment_conv_num;i++){
 	if(seg[i].source_encoding){
 	    Xfree(seg[i].source_encoding);
-	    seg[i].source_encoding = NULL;
+	    seg[i].source_encoding = nullptr;
 	}
 	if(seg[i].destination_encoding){
 	    Xfree(seg[i].destination_encoding);
-	    seg[i].destination_encoding = NULL;
+	    seg[i].destination_encoding = nullptr;
 	}
 	if(seg[i].conv){
-	    Xfree(seg[i].conv); seg[i].conv = NULL;
+	    Xfree(seg[i].conv); seg[i].conv = nullptr;
 	}
     }
-    Xfree(seg); gen->segment_conv = NULL;
+    Xfree(seg); gen->segment_conv = nullptr;
 }
 
 static void
@@ -1154,11 +1154,11 @@ destroy_gen(XLCd lcd)
     destroy_CodeSetList(gen);
     if(gen->mb_parse_table){
 	Xfree(gen->mb_parse_table);
-	gen->mb_parse_table = NULL;
+	gen->mb_parse_table = nullptr;
     }
     if(gen->mb_parse_list){
 	Xfree(gen->mb_parse_list);
-	gen->mb_parse_list = NULL;
+	gen->mb_parse_list = nullptr;
     }
 }
 /* VW/UDC end 95.01.08 */

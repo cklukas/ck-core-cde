@@ -49,7 +49,7 @@ int main(int argc, char **argv)
   int status ;
   _DtGrContext gr_context ;
 
-  if (!(display = XOpenDisplay(NULL))) {
+  if (!(display = XOpenDisplay(nullptr))) {
     fprintf(stderr, "couldn't open X display\n");
     exit(1);
   }
@@ -58,8 +58,8 @@ int main(int argc, char **argv)
 			    512, 512, 2,
 			    BlackPixel(display, scr_num),
 			    WhitePixel(display, scr_num));
-  XSetStandardProperties(display, win, "VCGM", "VCGM", 0, NULL, 0,
-			 NULL);
+  XSetStandardProperties(display, win, "VCGM", "VCGM", 0, nullptr, 0,
+			 nullptr);
   XMapWindow(display, win);
   /* find out what we actually got */
   XGetWindowAttributes(display, win, &wa);
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
   if ((argc < 3) || !sscanf(argv[2], " %d", &pageNo)) pageNo = 1;
 
   /* first register our converter */
-  _DtGrRegisterConverter("CGM",  processCGM, NULL, NULL, NULL);
+  _DtGrRegisterConverter("CGM",  processCGM, nullptr, nullptr, nullptr);
 
 
   /* set up our stream */
@@ -83,11 +83,11 @@ int main(int argc, char **argv)
   stream.source.file.filename = fileName ;
   stream.source.file.fileptr = fopen(stream.source.file.filename, "r") ;
 
-  gr_context.image_type = NULL;
-  gr_context.context = NULL;
+  gr_context.image_type = nullptr;
+  gr_context.context = nullptr;
 
   /* get the pixmap we want */
-  status = _DtGrLoad (&stream, NULL,
+  status = _DtGrLoad (&stream, nullptr,
 		      ScreenOfDisplay(display, scr_num),
 		      wa.depth,
 		      wa.colormap,
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 		      &ret_width,
 		      &ret_height,
 		      100,
-		      &myPixmap, NULL,
+		      &myPixmap, nullptr,
 		      &ret_colors,
 		      &ret_number, 
 		      &gr_context);

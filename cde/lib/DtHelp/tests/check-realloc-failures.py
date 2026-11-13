@@ -97,7 +97,7 @@ for name in args.case or sorted(CASES):
     c, binary = scratch / f"realloc-{name}-{tag}.c", scratch / f"realloc-{name}-{tag}"
     c.write_text('#include "realloc-inject.h"\n' + text_of(source) + "\n" + body)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) + flags + [f"-DCASE_{name.upper()}"] +
-                   ["-std=gnu99", "-w", "-DDTLIB", "-D_DEFAULT_SOURCE",
+                   ["-std=gnu23", "-w", "-DDTLIB", "-D_DEFAULT_SOURCE",
                     "-fsanitize=address,undefined", "-fno-sanitize-recover=all",
                     "-fno-omit-frame-pointer", "-g"] + includes + [str(c)] +
                    [str(srcdir / p) for p in plain] + lazy + ["-o", str(binary)], check=True)

@@ -100,7 +100,7 @@ static	_DtCanvasStruct	DefaultCanvas =
 	0,		/* _DtCvUnit max_y;            */
 	_DtCvIGNORE_BOUNDARY,	/* _DtCvValue	constraint; */
 	_DtCvFALSE,	/* _DtCvValue	trav_on;            */
-	NULL,		/* _DtCvPointer    client_data;     */
+	nullptr,		/* _DtCvPointer    client_data;     */
 	  {		/* CanvasMetrics metrics;           */
 	    0,			/* _DtCvUnit width;         */
 	    0,			/* _DtCvUnit height;        */
@@ -122,14 +122,14 @@ static	_DtCanvasStruct	DefaultCanvas =
 	  },
 	  {		/* _DtCvLocale locale; */
 	    _DtCvModeWrapNone,	/* _DtCvModeType  line_wrap_mode;    */
-	    NULL,		/* const wchar_t *cant_begin_chars;  */
-	    NULL,		/* const wchar_t *cant_end_chars;    */
+	    nullptr,		/* const wchar_t *cant_begin_chars;  */
+	    nullptr,		/* const wchar_t *cant_end_chars;    */
 	  },
-	NULL,		/* _DtCvSegment      *element_lst;   */
-	NULL,		/* _DtCvDspLine       *txt_lst;       */
-	NULL,		/* _DtCvLineSeg  *line_lst;       */
-	NULL,		/* _DtCvTraversalInfo *trav_lst;      */
-	NULL,		/* _DtCvLinkDb	      link_data; */
+	nullptr,		/* _DtCvSegment      *element_lst;   */
+	nullptr,		/* _DtCvDspLine       *txt_lst;       */
+	nullptr,		/* _DtCvLineSeg  *line_lst;       */
+	nullptr,		/* _DtCvTraversalInfo *trav_lst;      */
+	nullptr,		/* _DtCvLinkDb	      link_data; */
 	  {		/* CESelection select_start; */
 		-1,		/* _DtCvUnit x;           */
 		-1, 		/* _DtCvUnit y;           */
@@ -142,10 +142,10 @@ static	_DtCanvasStruct	DefaultCanvas =
 		-1,		/* int  line_idx;    */
 		-1,		/* int	char_idx;    */
 	  },
-	NULL,		/* _DtCvMarkData	*marks; */
-	NULL,		/* searchs */
-	NULL,		/* pg_breaks */
-	{ NULL },	/* _DtCvVirtualInfo	 virt_functions; */
+	nullptr,		/* _DtCvMarkData	*marks; */
+	nullptr,		/* searchs */
+	nullptr,		/* pg_breaks */
+	{ nullptr },	/* _DtCvVirtualInfo	 virt_functions; */
   };
 
 /*****************************************************************************
@@ -174,7 +174,7 @@ RenderSubSet (
     /*
      * Loop through the list looking for the item(s) next to the text.
      */
-    for (i = 0; NULL != lines && i < cnt; lines++, i++)
+    for (i = 0; nullptr != lines && i < cnt; lines++, i++)
       {
 	/*
 	 * get the minimum and maximum y of the next line
@@ -313,7 +313,7 @@ FindChar (
      * get information about the font used
      */
     _DtCvFontMetrics(canvas, _DtCvFontOfStringSeg(segment),
-					NULL, NULL, &charWidth, NULL, NULL);
+					nullptr, nullptr, &charWidth, nullptr, nullptr);
 
     /*
      * try to get close to the correct index.
@@ -355,7 +355,7 @@ FindChar (
 	  }
       }
 
-    if (diff != NULL)
+    if (diff != nullptr)
 	*diff = myDiff;
 
     return (myIndex);
@@ -384,8 +384,8 @@ DrawCanvasLines(
     /*
      * are there any lines?
      */
-    if (canvas->line_lst != NULL && canvas->line_cnt &&
-				NULL != canvas->virt_functions.render_elem)
+    if (canvas->line_lst != nullptr && canvas->line_cnt &&
+				nullptr != canvas->virt_functions.render_elem)
       {
 	/*
 	 * find the maximum y of all the lines that fit in the page.
@@ -435,7 +435,7 @@ DrawCanvasLines(
 		(*(canvas->virt_functions.render_elem))(
 			canvas->client_data, _DtCvLINE_TYPE,
 			pLS->pos_x, pLS->pos_y, -1, 0, 0,
-			_DtCvBAD_TYPE, NULL, &lnInfo);
+			_DtCvBAD_TYPE, nullptr, &lnInfo);
 	      }
 	    /*
 	     * otherwise, would this start the next page?
@@ -513,7 +513,7 @@ DrawText(
     /*
      * now process the line
      */
-    while (NULL != pSeg && 0 < count)
+    while (nullptr != pSeg && 0 < count)
       {
 	len = count;
 
@@ -542,7 +542,7 @@ DrawText(
 				&scriptX, &superWidth, &superY, &subWidth,
 				&subY, &lastWasSub, &lastWasSuper,
 				&lastLnkVis, old_flag, new_flag,
-				_DtCvBAD_TYPE, NULL);
+				_DtCvBAD_TYPE, nullptr);
 	/*
 	 * decrement the count by the length processed
 	 */
@@ -582,7 +582,7 @@ IsLineSpecial (
      * zero out the return flag (which will be a logical OR of
      * the mark flags.
      */
-    if (NULL != ret_flag)
+    if (nullptr != ret_flag)
 	*ret_flag = 0;
 
     /*
@@ -696,7 +696,7 @@ IsLineSpecial (
 	 */
 	if (start.y != end.y)
 	  {
-	    if (NULL != ret_flag)
+	    if (nullptr != ret_flag)
 		*ret_flag = flag;
 	    return True;
 	  }
@@ -723,7 +723,7 @@ IsLineSpecial (
      * start.y <= minY and maxY
      * minY && maxY < end.y
      */
-    if (NULL != ret_flag)
+    if (nullptr != ret_flag)
 	*ret_flag = flag;
 
     return True;
@@ -867,7 +867,7 @@ DrawTraversalIndicator (
 	 * get the width of the segment.
 	 */
 	_DtCvGetWidthOfSegment(canvas, pSeg, start, count,
-						    &len, &tmpWidth, NULL);
+						    &len, &tmpWidth, nullptr);
 	dstX += tmpWidth;
 
 	/*
@@ -921,11 +921,11 @@ DrawTraversalIndicator (
 	    tmpSeg = pSeg;
 	    count  = 0;
 	    wrkChr = start;
-	    while  (totCnt > 0 && tmpSeg != NULL
+	    while  (totCnt > 0 && tmpSeg != nullptr
 					&& tmpSeg->link_idx == linkIndex)
 	      {
 		_DtCvGetWidthOfSegment(canvas, tmpSeg, wrkChr,
-						totCnt, &len, NULL, NULL);
+						totCnt, &len, nullptr, nullptr);
 		totCnt    -= len;
 		count     += len;
 		wrkChr     = 0;
@@ -937,7 +937,7 @@ DrawTraversalIndicator (
 	     */
 	    newFlag |= (_DtCvTRAVERSAL_BEGIN | _DtCvLINK_BEGIN);
 	    oldFlag |= (_DtCvTRAVERSAL_BEGIN | _DtCvLINK_BEGIN);
-	    while (count > 0 && pSeg != NULL && pSeg->link_idx == linkIndex)
+	    while (count > 0 && pSeg != nullptr && pSeg->link_idx == linkIndex)
 	      {
 		/*
 		 * the original count for the traversal.
@@ -968,7 +968,7 @@ DrawTraversalIndicator (
 			    &scriptX,&superWidth,&superY,&subWidth,&subY,
 			    &lastWasSub, &lastWasSuper,
 			    &lstLnkVis, oldFlag, newFlag,
-			    _DtCvLINK_TYPE, NULL);
+			    _DtCvLINK_TYPE, nullptr);
 
 		count  -= len;
 		curIdx += len;
@@ -1159,7 +1159,7 @@ _DtCvCheckLineMarks (
 	if (IsLineSpecial(start, end,
 				canvas->txt_lst[line_idx], line_idx,
 				char_idx, length, dst_x,
-				&length, NULL))
+				&length, nullptr))
 	  {
 	    /*
 	     * set the selected flag.
@@ -1244,7 +1244,7 @@ _DtCvSkipLineChars(
 	/*
 	 * get the byte length of the segment processed.
 	 */
-	_DtCvGetWidthOfSegment(canvas, p_seg, start, max_cnt, &len, NULL, NULL);
+	_DtCvGetWidthOfSegment(canvas, p_seg, start, max_cnt, &len, nullptr, nullptr);
 	/*
 	 * increment the start index by the number of total
 	 * bytes processed. If this is more that what is in
@@ -1284,7 +1284,7 @@ _DtCvClearInternalUse(
     _DtCvSegmentI	*list,
     _DtCvStatus		 flag)
 {
-    while (NULL != list)
+    while (nullptr != list)
       {
 	/*
 	 * initialize the internal variables
@@ -1346,7 +1346,7 @@ _DtCvGetCharIdx(
              * advance the pointer by the width
              */
             _DtCvGetWidthOfSegment(canvas, pSeg, start, count,
-							&len, &segWidth, NULL);
+							&len, &segWidth, nullptr);
 	    if (segWidth + xPos <= find_x)
 	      {
 	        xPos  += segWidth;
@@ -1366,7 +1366,7 @@ _DtCvGetCharIdx(
 		        len = count;
 
 	            count -= FindChar(canvas, pSeg, pChar, len,
-							find_x - xPos, NULL);
+							find_x - xPos, nullptr);
                   }
                 done = True;
               }
@@ -1452,10 +1452,10 @@ _DtCvGetWidthOfSegment(
      * return the width of the segment.
      */
     *ret_cnt = 0;
-    if (ret_w != NULL)
+    if (ret_w != nullptr)
         *ret_w = 0;
 
-    if (ret_trimmed != NULL)
+    if (ret_trimmed != nullptr)
         *ret_trimmed = False;
 
     if (!(_DtCvIsSegNoop(p_seg)))
@@ -1463,7 +1463,7 @@ _DtCvGetWidthOfSegment(
         if (_DtCvIsSegRegion(p_seg))
           {
 	    *ret_cnt = 1;
-	    if (ret_w != NULL)
+	    if (ret_w != nullptr)
                 *ret_w = _DtCvWidthOfRegionSeg(p_seg);
           }
 	else 
@@ -1474,14 +1474,14 @@ _DtCvGetWidthOfSegment(
             if (*ret_cnt > max_cnt)
 	      {
 	        *ret_cnt = max_cnt;
-		if (ret_trimmed != NULL)
+		if (ret_trimmed != nullptr)
 		    *ret_trimmed = True;
 	      }
 
 	    /*
 	     * determine the width of the string.
 	     */
-	    if (ret_w != NULL)
+	    if (ret_w != nullptr)
                 *ret_w = _DtCvGetStringWidth(canvas, p_seg,pChar,*ret_cnt);
           }
       }
@@ -1628,7 +1628,7 @@ _DtCvAdjustForSuperSub(
       {
 	if (_DtCvIsSegString(pSeg))
 	    _DtCvFontMetrics (canvas,_DtCvFontOfStringSeg(pSeg),
-				NULL, NULL, NULL, super_y, sub_y);
+				nullptr, nullptr, nullptr, super_y, sub_y);
 	else if (_DtCvIsSegRegion(pSeg))
 	  {
 	    *super_y = _DtCvHeightOfRegionSeg(pSeg) * 4 / 10;
@@ -1733,7 +1733,7 @@ _DtCvDrawSegments(
     /*
      * skip any leading no-op lines
      */
-    while (p_seg != NULL && _DtCvIsSegNoop(p_seg))
+    while (p_seg != nullptr && _DtCvIsSegNoop(p_seg))
       {
 	start_char = 0;
 	p_seg  = p_seg->next_disp;
@@ -1749,7 +1749,7 @@ _DtCvDrawSegments(
     /*
      * now process the segments included in 'count'
      */
-    while (p_seg != NULL && count > 0)
+    while (p_seg != nullptr && count > 0)
       {
 	/*
 	 * reset the baseline.
@@ -1975,7 +1975,7 @@ _DtCvDrawSegments(
 	    /*
 	     * render the element
 	     */
-	    if (NULL != canvas->virt_functions.render_elem)
+	    if (nullptr != canvas->virt_functions.render_elem)
 	        (*(canvas->virt_functions.render_elem))(
 				canvas->client_data, elemType,
 				txt_x, yPos,
@@ -2039,8 +2039,8 @@ _DtCanvasCreate (
     _DtCanvasStruct	*newCanvas;
 
     newCanvas = (_DtCanvasStruct *) malloc (sizeof (_DtCanvasStruct));
-    if (newCanvas == NULL)
-	return NULL;
+    if (newCanvas == nullptr)
+	return nullptr;
 
     *newCanvas                = DefaultCanvas;
     newCanvas->virt_functions = virt_info;
@@ -2111,8 +2111,8 @@ _DtCanvasClean (_DtCvHandle canvas_handle)
      * free the internal use structures.
      */
     _DtCvClearInternalUse(canvas->element_lst, _DtCvTRUE);
-    canvas->element_lst = NULL;
-    canvas->link_data   = NULL;
+    canvas->element_lst = nullptr;
+    canvas->link_data   = nullptr;
 
 } /* End _DtCanvasClean */
 
@@ -2134,17 +2134,17 @@ _DtCanvasDestroy (_DtCvHandle canvas_handle)
 
     _DtCanvasClean (canvas_handle);
 
-    if (NULL != canvas->txt_lst)
+    if (nullptr != canvas->txt_lst)
         free ((void *) canvas->txt_lst);
-    if (NULL != canvas->line_lst)
+    if (nullptr != canvas->line_lst)
         free ((void *) canvas->line_lst);
-    if (NULL != canvas->trav_lst)
+    if (nullptr != canvas->trav_lst)
         free ((void *) canvas->trav_lst);
-    if (NULL != canvas->marks)
+    if (nullptr != canvas->marks)
       free ((void*) canvas->marks);
-    if (NULL != canvas->searchs)
+    if (nullptr != canvas->searchs)
       free ((void*) canvas->searchs);
-    if (NULL != canvas->pg_breaks)
+    if (nullptr != canvas->pg_breaks)
       free ((void*) canvas->pg_breaks);
       
     free ((void *) canvas);
@@ -2211,7 +2211,7 @@ _DtCanvasRender (
 	_DtCvClearProcessed(canvas->txt_lst[i]);
 
     for (lines = canvas->txt_lst, i = 0;
-			NULL != lines && i < canvas->txt_cnt; lines++, i++)
+			nullptr != lines && i < canvas->txt_cnt; lines++, i++)
       {
 	/*
 	 * get the minimum and maximum y of the next line
@@ -2284,10 +2284,10 @@ _DtCanvasRender (
     /*
      * return the values if the user asked for them.
      */
-    if (NULL != max_y)
+    if (nullptr != max_y)
 	*max_y = lastY;
 
-    if (NULL != next_y)
+    if (nullptr != next_y)
 	*next_y = nextY;
 
 } /* End _DtCanvasRender */
@@ -2357,7 +2357,7 @@ _DtCanvasMoveTraversal (
 
 	case _DtCvTRAVERSAL_ID:
 	case _DtCvTRAVERSAL_MARK:
-		if (NULL != rid)
+		if (nullptr != rid)
 		  {
 		    int		 idx;
 		    char	*lnkId;
@@ -2402,7 +2402,7 @@ _DtCanvasMoveTraversal (
       {
 	if (-1 != canvas->cur_trav)
 	    DrawTraversalIndicator (canvas, render, False,
-					NULL, NULL, NULL, NULL);
+					nullptr, nullptr, nullptr, nullptr);
 	canvas->trav_on = _DtCvFALSE;
       }
     /*
@@ -2412,7 +2412,7 @@ _DtCanvasMoveTraversal (
       {
 	if (-1 != canvas->cur_trav)
 	    DrawTraversalIndicator (canvas, render, False,
-					NULL, NULL, NULL, NULL);
+					nullptr, nullptr, nullptr, nullptr);
 
         canvas->cur_trav = newIndex;
 	DrawTraversalIndicator (canvas, render, True,
@@ -2467,7 +2467,7 @@ _DtCanvasGetPosLink (
     void		*pChar;
     _DtCvValue		 junk;
     _DtCvStatus		 found = _DtCvSTATUS_NONE;
-    _DtCvSegmentI	*pSeg  = NULL;
+    _DtCvSegmentI	*pSeg  = nullptr;
     _DtCanvasStruct	*canvas   = (_DtCanvasStruct *) canvas_handle;
     _DtCvTraversalInfo	*lnkSegs  = canvas->trav_lst;
 
@@ -2642,7 +2642,7 @@ _DtCanvasGetCurLink (
     /*
      * otherwise this is a hypertext link
      */
-    if (NULL != ret_info &&
+    if (nullptr != ret_info &&
 			_DtCvTraversalLink == canvas->trav_lst[curTrav].type)
       {
         pSeg = canvas->trav_lst[curTrav].seg_ptr;
@@ -2685,7 +2685,7 @@ _DtCanvasGetCurTraversal (
     /*
      * if this is a mark, return the client data.
      */
-    if (NULL != ret_data &&
+    if (nullptr != ret_data &&
 			_DtCvTraversalMark == canvas->trav_lst[curTrav].type)
       {
 	*ret_data = canvas->marks[canvas->trav_lst[curTrav].idx].client_data;
@@ -2695,7 +2695,7 @@ _DtCanvasGetCurTraversal (
     /*
      * otherwise this is a hypertext link
      */
-    if (NULL != ret_info &&
+    if (nullptr != ret_info &&
 			_DtCvTraversalLink == canvas->trav_lst[curTrav].type)
       {
         pSeg = canvas->trav_lst[curTrav].seg_ptr;
@@ -2743,11 +2743,11 @@ _DtCanvasGetSpotInfo (
     void		*pChar;
     _DtCvValue		 junk;
     _DtCvStatus		 found = _DtCvSTATUS_NONE;
-    _DtCvSegmentI	*pSeg  = NULL;
+    _DtCvSegmentI	*pSeg  = nullptr;
     _DtCanvasStruct	*canvas   = (_DtCanvasStruct *) canvas_handle;
 
-    if (NULL != ret_seg)
-        *ret_seg = NULL;
+    if (nullptr != ret_seg)
+        *ret_seg = nullptr;
 
     botY = 0;
     topY = 0;
@@ -2861,11 +2861,11 @@ _DtCanvasGetSpotInfo (
 	if (_DtCvIsSegString(pSeg))
 	    *ret_elem = _DtCvSTRING_TYPE;
 
-	if (NULL != ret_seg)
+	if (nullptr != ret_seg)
 	    *ret_seg  = pSeg;
-	if (NULL != ret_offx)
+	if (nullptr != ret_offx)
 	    *ret_offx = x - startX;
-	if (NULL != ret_offy)
+	if (nullptr != ret_offy)
 	    *ret_offy = y - topY;
       }
 

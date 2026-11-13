@@ -90,12 +90,12 @@ CvtStringToStringList(
         int *countPtr )
 {
    int num_items = 0;
-   String * items = NULL;
+   String * items = nullptr;
    int size_item_array = 0;
    String ptr = (String)_DtStripSpaces(string);
    String end;
 
-   while ((ptr != NULL) && (*ptr != '\0'))
+   while ((ptr != nullptr) && (*ptr != '\0'))
    {
       if (num_items >= size_item_array)
       {
@@ -110,7 +110,7 @@ CvtStringToStringList(
 
       items[num_items] = strcpy(XtMalloc(strlen(ptr)+1), ptr);
       num_items++;
-      if (end != NULL)
+      if (end != nullptr)
          ptr = (String)_DtStripSpaces(end + 1);
       else
          break;
@@ -136,7 +136,7 @@ CvtStringListToString(
 {
    int i, offset;
    int stringSize = 0;
-   String string = NULL;
+   String string = nullptr;
 
 
    /* 
@@ -204,7 +204,7 @@ VFTextChangeSpace(
    /* Extract the path */
    path[0] = '\0';
 
-   if(currentDirectoryText == NULL)
+   if(currentDirectoryText == nullptr)
    {
       strcpy (path, value);
    }
@@ -227,7 +227,7 @@ VFTextChangeSpace(
    if(val == 1 && strcmp(*temp, test) != 0)
    {
       /* there was one and only one match */
-      if(currentDirectoryText == NULL)
+      if(currentDirectoryText == nullptr)
          XmTextFieldSetString(text, *temp);
       else
          XmTextFieldSetString(text, *temp + strlen(currentDirectoryText));
@@ -267,7 +267,7 @@ VFTextChangeSpace(
       }
       temp[0][length + i] = '\0';
 
-      if(currentDirectoryText == NULL)
+      if(currentDirectoryText == nullptr)
          XmTextFieldSetString(text, *temp);
       else
          XmTextFieldSetString(text, *temp + strlen(currentDirectoryText));
@@ -359,14 +359,14 @@ AddString(
    Boolean addHeader = False;
 
    delta = strlen(DELETE_SEPARATOR) + strlen(string) + 1;
-   if (*buf != NULL)
+   if (*buf != nullptr)
       buflen = strlen(*buf);
    if ((buflen + delta) >= *size)
    {
-      if ((*buf == NULL) && header)
+      if ((*buf == nullptr) && header)
          addHeader = True;
       *size += delta + 512;
-      if (*buf == NULL)
+      if (*buf == nullptr)
       {
         *buf = XtMalloc(*size);
         (*buf)[0]='\0';

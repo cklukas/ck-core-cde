@@ -77,12 +77,12 @@ _DtCmsMakeRegistrationInfo(
 	_DtCmsRegistrationInfo *rinfo;
 
 	if ((rinfo = (_DtCmsRegistrationInfo *)calloc(1,
-	    sizeof(_DtCmsRegistrationInfo))) == NULL)
-		return (NULL);
+	    sizeof(_DtCmsRegistrationInfo))) == nullptr)
+		return (nullptr);
 
-	if ((rinfo->client = strdup(client)) == NULL) {
+	if ((rinfo->client = strdup(client)) == nullptr) {
 		free(rinfo);
-		return (NULL);
+		return (nullptr);
 	}
 
 	rinfo->types	= types;
@@ -90,15 +90,15 @@ _DtCmsMakeRegistrationInfo(
 	rinfo->versnum	= versnum;
 	rinfo->procnum	= procnum;
 	rinfo->pid	= pid;
-	rinfo->next	= NULL;
+	rinfo->next	= nullptr;
 	return(rinfo);
 }
 
 extern void
 _DtCmsFreeRegistrationInfo(_DtCmsRegistrationInfo *rinfo)
 {
-	if (rinfo==NULL) return;
-	if (rinfo->client != NULL)
+	if (rinfo==nullptr) return;
+	if (rinfo->client != nullptr)
 		free(rinfo->client);
 	free(rinfo);
 }
@@ -120,7 +120,7 @@ _DtCmsGetRegistration(
 				*ptr, 
 				*tmp_ptr;
 
-        for (prev = ptr = rlist; ptr != NULL; ) {
+        for (prev = ptr = rlist; ptr != nullptr; ) {
                 if ((strcmp(ptr->client, client)==0) &&
                     (ptr->prognum == prognum)  &&
                     (ptr->versnum == versnum)  &&
@@ -152,7 +152,7 @@ _DtCmsGetRegistration(
         }
 
 	*_rlist = rlist;
-        return (NULL);
+        return (nullptr);
 }
 
 /*
@@ -163,7 +163,7 @@ extern _DtCmsRegistrationInfo *
 _DtCmsCheckRegistrationList(_DtCmsRegistrationInfo *rlist)
 {
 	int nclients=0, ndereg=0;
-	char *sourcehost=NULL;
+	char *sourcehost=nullptr;
 	_DtCmsRegistrationInfo *p_next;
 	_DtCmsRegistrationInfo *p_prev;
 	_DtCmsRegistrationInfo *head;
@@ -177,7 +177,7 @@ _DtCmsCheckRegistrationList(_DtCmsRegistrationInfo *rlist)
 	/* loop through the registration list */
 
 	head = p_prev = rlist;
-	while (rlist != NULL) {
+	while (rlist != nullptr) {
 
 		p_next = rlist->next;
 
@@ -192,7 +192,7 @@ _DtCmsCheckRegistrationList(_DtCmsRegistrationInfo *rlist)
 		cl = clnt_create(sourcehost, rlist->prognum, rlist->versnum,
 			"udp");
 
-		if (cl != NULL) {
+		if (cl != nullptr) {
 			clnt_control(cl, CLSET_TIMEOUT, (char *)&timeout_tv);
 			timeout_tv.tv_sec = 5;
 			clnt_control(cl, CLSET_RETRY_TIMEOUT,
@@ -200,8 +200,8 @@ _DtCmsCheckRegistrationList(_DtCmsRegistrationInfo *rlist)
 		}
 				
 		/* no client or client not responding */
-		if (cl == NULL || clnt_call(cl, 0, _DtCm_xdr_void, (char *)NULL,
-			_DtCm_xdr_void, (char *)NULL, timeout_tv) != RPC_SUCCESS)
+		if (cl == nullptr || clnt_call(cl, 0, _DtCm_xdr_void, (char *)nullptr,
+			_DtCm_xdr_void, (char *)nullptr, timeout_tv) != RPC_SUCCESS)
 		{
 			if (debug) {
 				clnt_pcreateerror(sourcehost);
@@ -258,7 +258,7 @@ _DtCmsDoV1CbForV4Data(
 {
 	Appt_4	appt1, appt2;
 
-	if (rlist == NULL)
+	if (rlist == nullptr)
 		return (rlist);
 
 	appt1.appt_id.tick = key1->time;
@@ -267,10 +267,10 @@ _DtCmsDoV1CbForV4Data(
 	if (key2) {
 		appt2.appt_id.tick = key2->time;
 		appt2.appt_id.key = key2->id;
-		appt2.next = NULL;
+		appt2.next = nullptr;
 		appt1.next = &appt2;
 	} else
-		appt1.next = NULL;
+		appt1.next = nullptr;
 
 	return (_DtCmsDoV1Callback(rlist, source, pid, &appt1));
 }
@@ -286,23 +286,23 @@ _DtCmsDoV1Callback(
 	int			pid,
 	Appt_4			*a)
 {
-	Uid_4 *k, *ids = NULL;
+	Uid_4 *k, *ids = nullptr;
 	Table_Res_4 res;
         int nclients=0, ncallbacks=0;
-	char *sourcehost=NULL;
+	char *sourcehost=nullptr;
         _DtCmsRegistrationInfo *ptr;
         _DtCmsRegistrationInfo *prev;
 	struct timeval timeout_tv;
 	CLIENT *cl;
 	boolean_t advance = B_TRUE;
 
-	if (rlist == NULL)
+	if (rlist == nullptr)
 		return (rlist);
 
 	/* Callback with appointment ids only for security reason. */
-	while (a != NULL)
+	while (a != nullptr)
 	{
-		if ((k = (Uid_4 *)malloc(sizeof(Uid_4))) == NULL) {
+		if ((k = (Uid_4 *)malloc(sizeof(Uid_4))) == nullptr) {
 			_DtCm_free_keyentry4(ids);
 			return (rlist);
 		}
@@ -319,7 +319,7 @@ _DtCmsDoV1Callback(
 
 	rlist = _DtCmsDoCallback(rlist, 0, source, pid, AGENTVERS, (void *)&res);
 
-	if (ids != NULL)
+	if (ids != nullptr)
 		_DtCm_free_keyentry4(ids);
 
 	return (rlist);
@@ -331,7 +331,7 @@ _DtCmsListRegistration(_DtCmsRegistrationInfo *rlist, char *cal)
 	int n = 0;
 
 	fprintf(stderr, "registration list of calendar %s\n", cal);
-	while(rlist != NULL) {
+	while(rlist != nullptr) {
 		n++;
 		fprintf(stderr, "\t%s (pid %d)\n", rlist->client, rlist->pid);
 		rlist = rlist->next;
@@ -347,7 +347,7 @@ _DtCmsRemoveRegistration(
 	_DtCmsRegistrationInfo *ptr, *prev;
 
 
-	for (ptr = prev = rlist; ptr != NULL; prev = ptr, ptr = ptr->next) {
+	for (ptr = prev = rlist; ptr != nullptr; prev = ptr, ptr = ptr->next) {
 		if (ptr == rinfo) {
 			if (ptr == rlist)
 				rlist = ptr->next;
@@ -372,7 +372,7 @@ _DtCmsDoOpenCalCallback(
 	cmcb_update_callback_args args;
 	char calendar[BUFSIZ];
 
-	if (rlist == NULL)
+	if (rlist == nullptr)
 		return (rlist);
 
 	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
@@ -395,7 +395,7 @@ _DtCmsDoRemoveCalCallback(
 	cmcb_update_callback_args args;
 	char calendar[BUFSIZ];
 
-	if (rlist == NULL)
+	if (rlist == nullptr)
 		return (rlist);
 
 	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
@@ -423,7 +423,7 @@ _DtCmsDoUpdateCalAttrsCallback(
 	char calendar[BUFSIZ];
 	int i;
 
-	if (rlist == NULL)
+	if (rlist == nullptr)
 		return (rlist);
 
 	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
@@ -436,7 +436,7 @@ _DtCmsDoUpdateCalAttrsCallback(
 			cdata.names[i] = attrs[i].name.name;
 	} else {
 		cdata.num_names = 0;
-		cdata.names = NULL;
+		cdata.names = nullptr;
 	}
 
 	args.calendar = calendar;
@@ -465,7 +465,7 @@ _DtCmsDoInsertEntryCallback(
 	char buf[80];
 	char calendar[BUFSIZ];
 
-	if (rlist == NULL)
+	if (rlist == nullptr)
 		return (rlist);
 
 	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
@@ -497,7 +497,7 @@ _DtCmsDoDeleteEntryCallback(
 	char buf[80];
 	char calendar[BUFSIZ];
 
-	if (rlist == NULL)
+	if (rlist == nullptr)
 		return (rlist);
 
 	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
@@ -532,7 +532,7 @@ _DtCmsDoUpdateEntryCallback(
 	char nbuf[80], obuf[80];
 	char calendar[BUFSIZ];
 
-	if (rlist == NULL)
+	if (rlist == nullptr)
 		return (rlist);
 
 	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
@@ -570,7 +570,7 @@ _DtCmsDoCallback(
 	void			*args)
 {
         int nclients=0, ncallbacks=0;
-	char *sourcehost=NULL;
+	char *sourcehost=nullptr;
         _DtCmsRegistrationInfo *ptr;
         _DtCmsRegistrationInfo *prev;
 	struct timeval timeout_tv;
@@ -582,7 +582,7 @@ _DtCmsDoCallback(
 	 * interested in this transaction.
 	 */
 
-        for (ptr = prev = rlist; ptr != NULL; ) {
+        for (ptr = prev = rlist; ptr != nullptr; ) {
 
 		/* The caller will get the results of the rpc call.
 		 * If he's registered on the callback list, don't call him -
@@ -615,7 +615,7 @@ _DtCmsDoCallback(
 		cl = clnt_create(sourcehost, ptr->prognum, ptr->versnum, "udp");
 
 		/* deregister client if fails to create handle */
-		if (cl == NULL) {
+		if (cl == nullptr) {
 			if (debug) {
 				clnt_pcreateerror(sourcehost);
 			}

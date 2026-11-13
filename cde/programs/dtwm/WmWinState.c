@@ -92,7 +92,7 @@ IsOpenIconEligible (ClientData *pCD)
     int actualFormat;
     unsigned long nitems;
     unsigned long bytesAfter;
-    Atom *typeList = NULL;
+    Atom *typeList = nullptr;
     Atom skipTypes[6];
     int i;
 
@@ -452,13 +452,13 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 		    }
 		    else
 		    {
-		        Do_Focus_Key (NULL, setTime, 
+		        Do_Focus_Key (nullptr, setTime, 
 				ALWAYS_SET_FOCUS | WORKSPACE_IF_NULL);
 		    }
 
 		    if (clientHasFocus)
 		    {
-			SetKeyboardFocus (NULL, 0);
+			SetKeyboardFocus (nullptr, 0);
 		    }
 		}
 
@@ -506,7 +506,7 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 		     * Hide active icon text window and reparent it to
 		     * root
 		     */
-		    HideActiveIconText((WmScreenData *)NULL);
+		    HideActiveIconText((WmScreenData *)nullptr);
 		    pSD->activeLabelParent = ACTIVE_ROOT;
 		    XReparentWindow(DISPLAY, ACTIVE_ICON_TEXT_WIN , 
 				ACTIVE_ROOT, 0, 0 );
@@ -532,9 +532,9 @@ void SetClientStateWithEventMask (ClientData *pCD, int newState, Time setTime, u
 		/*
 		 * Give up the keyboard focus 
 		 */
-		Do_Focus_Key ((ClientData *)NULL, 
+		Do_Focus_Key ((ClientData *)nullptr, 
 			CurrentTime, ALWAYS_SET_FOCUS);
-		SetKeyboardFocus (NULL, 0);
+		SetKeyboardFocus (nullptr, 0);
 	    }
 
 	    if (!(pCD->clientState & UNSEEN_STATE) &&
@@ -655,7 +655,7 @@ static void SetupWindowStateWithEventMask (ClientData *pCD, int newState,
 	if ((wmGD.keyboardFocus == pCD) ||
 	    (wmGD.nextKeyboardFocus == pCD))
 	{
-	    Do_Focus_Key (NULL, setTime, ALWAYS_SET_FOCUS | WORKSPACE_IF_NULL);
+	    Do_Focus_Key (nullptr, setTime, ALWAYS_SET_FOCUS | WORKSPACE_IF_NULL);
 	}
 
 	if (wmGD.keyboardFocus == pCD)
@@ -711,7 +711,7 @@ static void SetupWindowStateWithEventMask (ClientData *pCD, int newState,
 			        pWS_i = GetWorkspaceData (pCD->pSD,
 						    pCD->pWsList[wsI].wsID);
 			        pWS_i->IPData.placeList[iplace].pCD = 
-				        NULL;
+				        nullptr;
 			    }
 		        }
 	            }
@@ -730,7 +730,7 @@ static void SetupWindowStateWithEventMask (ClientData *pCD, int newState,
 	    if (clearIconFocus)
 	    {
 		ClearFocusIndication (pCD, False /*no refresh*/);
-		wmGD.keyboardFocus = NULL;
+		wmGD.keyboardFocus = nullptr;
 	    }
 	}
     }
@@ -750,7 +750,7 @@ static void SetupWindowStateWithEventMask (ClientData *pCD, int newState,
 
 	    pCD->clientState = newState;
 		    wmGD.bSuspendSecondaryRestack = True;
-	    F_Raise (NULL, pCD, NULL);
+	    F_Raise (nullptr, pCD, nullptr);
 		    wmGD.bSuspendSecondaryRestack = False;
 	}
 
@@ -1181,7 +1181,7 @@ SlideOutTimerProc ( XtPointer client_data, XtIntervalId *id)
 
 	    /* done! clean up */
 	    XDestroyWindow (DISPLAY, pSOR->coverWin);
-	    pSOR->pCD->pSOR = NULL;
+	    pSOR->pCD->pSOR = nullptr;
 	    XtFree ((char *)pSOR);
 	    wmGD.iSlideUpsInProgress -= 1;
 	}
@@ -1283,7 +1283,7 @@ SlideWindowOut (ClientData *pCD)
 	pSOR->interval = SLIDE_UP_INTERVAL;
 	pSOR->direction = pCD->slideDirection;
 	pSOR->mapping = True;
-	pSOR->wSubpanel = NULL;
+	pSOR->wSubpanel = nullptr;
 	pSOR->pCD->pSOR = pSOR;
 	
 	switch (pSOR->direction)
@@ -1354,7 +1354,7 @@ SlideWindowOut (ClientData *pCD)
 	if (pSOR) 
 	{
 	    XtFree ((char *) pSOR);
-	    pCD->pSOR = NULL;
+	    pCD->pSOR = nullptr;
 	}
     }
 
@@ -1520,7 +1520,7 @@ SlideSubpanelBackIn (ClientData *pCD, Widget wSubpanel)
 	if (pSOR) 
 	{
 	    XtFree ((char *) pSOR);
-	    pCD->pSOR = NULL;
+	    pCD->pSOR = nullptr;
 	}
     }
 
@@ -1677,7 +1677,7 @@ void ShowIconForMinimizedClient (WmWorkspaceData *pWS, ClientData *pCD)
 		XConfigureWindow (DISPLAY, ICON_FRAME_WIN(pCD),
 		    		  (CWSibling | CWStackMode), &windowChanges);
 		MoveEntryInList (pWS, &pCD->iconEntry, 
-		    False /*on bottom*/, NULL);
+		    False /*on bottom*/, nullptr);
 	    }
 	}
 	else

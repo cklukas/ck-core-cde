@@ -66,12 +66,12 @@
 /*
  * Public symbols
  */
-ObjxmFilenameToPixmapFunc	ObjxmP_filename_to_pixmap_cb = NULL;
+ObjxmFilenameToPixmapFunc	ObjxmP_filename_to_pixmap_cb = nullptr;
 
 /*
  * Post instantiate func, which can be registered via
  */
-ObjxmPostInstantiateFunc	ObjxmP_post_instantiate_cb = NULL;
+ObjxmPostInstantiateFunc	ObjxmP_post_instantiate_cb = nullptr;
 
 
 /*************************************************************************
@@ -143,11 +143,11 @@ objxm_color_exists(
 )
 {
     static Colormap     colormap = 0;
-    static Display	*display = NULL;
+    static Display	*display = nullptr;
     XColor              color;
     XColor              exact_color;
  
-    if (display == NULL) /* dtbuilder doesn't handle multiple displays */
+    if (display == nullptr) /* dtbuilder doesn't handle multiple displays */
     {
 	display = XtDisplay(ObjxmP_toplevel);
         colormap = XDefaultColormap(display, XDefaultScreen(display));
@@ -197,7 +197,7 @@ objxm_filebase_to_pixmap(
     *pixmap_p = 0;
 
     /* Use Pixmap conversion callback if it exists */
-    if (ObjxmP_filename_to_pixmap_cb != NULL)
+    if (ObjxmP_filename_to_pixmap_cb != nullptr)
     {
         return(ObjxmP_filename_to_pixmap_cb(widget, filebase, pixmap_p));
     }
@@ -218,7 +218,7 @@ objxm_pixmap_conversion_error_msg(
     char	buf2[BUF_SIZE];
     char	file_buf[BUF_SIZE];
 
-    if (obj != NULL)
+    if (obj != nullptr)
 	sprintf(buf, CATGETS(OBJXM_MESSAGE_CATD, 203, 14,
 		"Warning: %s :\n"), util_strsafe(obj_get_name(obj)));
     else
@@ -249,7 +249,7 @@ objxm_pixmap_conversion_error_msg(
     }
 
     util_set_help_data(CATGETS(OBJXM_MESSAGE_CATD, 203, 20,
-	"The graphic file name specified could not be converted\ninto a pixmap. App Builder searches for a file of the\nform Filename.pm, Filename.xpm, Filename.bm, and\nFilename.xbm.\n\nEither none of those files exists in the directory specified\n(via the Graphic Filename field or if no path was specified,\nthen the current working directory), or a file exists but may\nbe corrupt."), NULL, NULL);
+	"The graphic file name specified could not be converted\ninto a pixmap. App Builder searches for a file of the\nform Filename.pm, Filename.xpm, Filename.bm, and\nFilename.xbm.\n\nEither none of those files exists in the directory specified\n(via the Graphic Filename field or if no path was specified,\nthen the current working directory), or a file exists but may\nbe corrupt."), nullptr, nullptr);
 
     return(buf);
 }
@@ -304,7 +304,7 @@ convert_file_to_pixmap(
 )
 {
     int		rc = 0;			/* return code */
-    Screen      *screen = NULL; 
+    Screen      *screen = nullptr; 
     Pixel       fgPixel = 0;
     Pixel       bgPixel = 0; 
 
@@ -323,7 +323,7 @@ convert_file_to_pixmap(
     XtVaGetValues(widget,
 	XmNforeground, &fgPixel,
 	XmNbackground, &bgPixel,
-	NULL);
+	nullptr);
 
     /*
      * In CDE, XmGetPixmap handles .xpm files, as well.
@@ -368,7 +368,7 @@ objxm_fontlist_to_font(
     XmStringCharSet     charset;
 
     if (!fontlist)
-	return NULL;
+	return nullptr;
 
     XmFontListInitFontContext(&context, fontlist);
 
@@ -384,7 +384,7 @@ objxm_fontlist_to_font(
     }
 
     XmFontListFreeFontContext(context);
-    return NULL;
+    return nullptr;
 
 }
 
@@ -447,7 +447,7 @@ objxm_xmstr_to_str(
     {
         util_puts_err("objxm_xmstr_to_str: could not convert xmstring\n");
     }
-    return NULL;
+    return nullptr;
 
 }
 
@@ -466,23 +466,23 @@ objxm_accel_to_acceltext(
     char	*p;	
 
     if (util_strempty(accelstr))
-	return NULL;
+	return nullptr;
 
     strcpy(buf, accelstr);
 
     p = strtok(buf, "<");
-    if (p != NULL)
+    if (p != nullptr)
     {
 	strcpy(acceltext, p);
-        while(p != NULL)
+        while(p != nullptr)
     	{
 	    /* Replace any "<..>" with "+" */
-    	    p = strtok(NULL, ">");
-	    if (p != NULL)
+    	    p = strtok(nullptr, ">");
+	    if (p != nullptr)
 	    {
 		strcat(acceltext,"+");
-	    	p = strtok(NULL, "<");
-	    	if (p != NULL)
+	    	p = strtok(nullptr, "<");
+	    	if (p != nullptr)
 		    strcat(acceltext, p);
 	    }
 	}
@@ -590,12 +590,12 @@ int
 objxm_tree_print_indented(ABObj obj, int spaces, int verbosity)
 {
     AB_TRAVERSAL	trav;
-    ABObj		child = NULL;
+    ABObj		child = nullptr;
 
     objxm_print_indented(obj, spaces, verbosity);
 
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-	(child= trav_next(&trav)) != NULL; )
+	(child= trav_next(&trav)) != nullptr; )
     {
 	objxm_tree_print_indented(child, spaces+4, verbosity);
     }

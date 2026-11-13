@@ -167,11 +167,11 @@ void CloseHelpCB (
   pTemp = pCacheListHead;
   
   /* Search our Cache List for the closed help dialog */
-  while ((pTemp != NULL) && (pTemp->helpDialog != helpDialog))
+  while ((pTemp != nullptr) && (pTemp->helpDialog != helpDialog))
      pTemp = pTemp->pNext;
  
 
-  if (pTemp == NULL) {
+  if (pTemp == nullptr) {
     /* ERROR */
     printf("We did not find our help dialog widget in the cache list??? /n");
     /* TODO what error handling here? */
@@ -189,14 +189,14 @@ void CloseHelpCB (
   pTemp = pCacheListHead;
 
   /* Check and see if we should exit  */
-  while (pTemp != NULL && (pTemp->inUseFlag != TRUE))
+  while (pTemp != nullptr && (pTemp->inUseFlag != TRUE))
      pTemp = pTemp->pNext;
 
-  if (pTemp == NULL)  /* We have no dialog mapped so exit */
+  if (pTemp == nullptr)  /* We have no dialog mapped so exit */
     {
       /* Lets clean up our cache list just for fun, prior to exiting */
       pTemp = pCacheListHead;
-      while (pTemp != NULL)
+      while (pTemp != nullptr)
 	{
          pTempCurrent = pTemp;
          pTemp = pTemp->pNext;
@@ -244,7 +244,7 @@ void ProcessLinkCB (
       case DtHELP_LINK_JUMP_NEW:
 
         DisplayTopic (topLevel, hyperData->helpVolume,
-                      hyperData->locationId, 0, NULL);
+                      hyperData->locationId, 0, nullptr);
         
       break;
 
@@ -300,14 +300,14 @@ void DisplayTopic (
 {
   Arg	 	   args[15];	
   int              n;
-  CacheListStruct  *pCurrentNode = NULL;
+  CacheListStruct  *pCurrentNode = nullptr;
   Boolean          cachedNode = FALSE;
   char             *titleString;
 
   /* If we have a null location id within helpview we want to force
    * it to the default: _HOMETOPIC.
    */
-   if (locationId == NULL)
+   if (locationId == nullptr)
       locationId = XtNewString("_HOMETOPIC");
 
   /* Get a used or new node form our cache if we have one */
@@ -323,7 +323,7 @@ void DisplayTopic (
 
        n = 0;
        XtSetArg (args[n], XmNtitle, titleString);          n++;
-       if (helpVolume != NULL)
+       if (helpVolume != nullptr)
          {
            XtSetArg (args[n],DtNhelpVolume,helpVolume);     n++; 
          }
@@ -342,7 +342,7 @@ void DisplayTopic (
         XtSetArg (args[n], XmNtitle, titleString);          n++;
         XtSetArg (args[n], DtNshowTopLevelButton, TRUE);    n++;
         XtSetArg (args[n], DtNshowNewWindowButton, TRUE);    n++;
-       if (helpVolume != NULL)
+       if (helpVolume != nullptr)
          {
            XtSetArg (args[n],DtNhelpVolume,helpVolume);     n++; 
          }
@@ -352,7 +352,7 @@ void DisplayTopic (
 
 
         XtAddCallback(pCurrentNode->helpDialog, DtNhyperLinkCallback,
-                       ProcessLinkCB, NULL);
+                       ProcessLinkCB, nullptr);
              
         XtAddCallback(pCurrentNode->helpDialog, DtNcloseCallback,
                       CloseHelpCB,(XtPointer) pCurrentNode->helpDialog);
@@ -395,17 +395,17 @@ Boolean GetFromCache(
 
   CacheListStruct *pTemp; 
 
-  if (pCacheListHead == NULL)
+  if (pCacheListHead == nullptr)
     {
        /* We have a new list so lets create one and pass it back */
        pCacheListHead = 
                 (CacheListStruct *) XtMalloc((sizeof(CacheListStruct)));
 
        /* Assign the default values to our node */
-       pCacheListHead->helpDialog = NULL;
+       pCacheListHead->helpDialog = nullptr;
        pCacheListHead->inUseFlag  = TRUE;
-       pCacheListHead->pNext      = NULL;
-       pCacheListHead->pPrevious = NULL;
+       pCacheListHead->pNext      = nullptr;
+       pCacheListHead->pPrevious = nullptr;
 
        /* Assign our tale pointer */
        pCacheListTale = pCacheListHead;
@@ -423,7 +423,7 @@ Boolean GetFromCache(
        /* We have some nodes so search for a free one first */
        pTemp = pCacheListHead;
 
-       while (pTemp != NULL)
+       while (pTemp != nullptr)
          {
            if (pTemp->inUseFlag == FALSE)
              {
@@ -443,11 +443,11 @@ Boolean GetFromCache(
        pTemp =  (CacheListStruct *) XtMalloc((sizeof(CacheListStruct)));
 
        /* Assign the default values to our node */
-       pTemp->helpDialog = NULL;
+       pTemp->helpDialog = nullptr;
        pTemp->inUseFlag  = TRUE;
      
        pTemp->pNext      = pCacheListHead;
-       pTemp->pPrevious  = NULL;
+       pTemp->pPrevious  = nullptr;
 
        pCacheListHead->pPrevious = pTemp;
 
@@ -562,7 +562,7 @@ void DisplayMan (
   XmUpdateDisplay(topLevel);
  
 
-  if (viewWidget == NULL)
+  if (viewWidget == nullptr)
     {    
       /* Create the QuickHelpDialog widget for help on help */
       title = XtNewString(man);

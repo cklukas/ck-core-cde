@@ -87,7 +87,7 @@ SessionFileGetName (void)
 
    /*  Get the home directory used to build the path to the session file.  */
 
-   if ((home_dir = (char *)getenv("HOME")) != NULL || strlen (home_dir) == 0)
+   if ((home_dir = (char *)getenv("HOME")) != nullptr || strlen (home_dir) == 0)
    {
       pw_info = getpwuid (getuid());
       home_dir = pw_info->pw_dir;
@@ -120,7 +120,7 @@ SessionRestoreData (void)
    BoxData * box_data;
    ControlData * control_data;
 
-   SubpanelData ** subpanel_data = NULL;
+   SubpanelData ** subpanel_data = nullptr;
    int subpanel_count = 0;
    int max_subpanel_count = 0;
    
@@ -161,7 +161,7 @@ SessionRestoreData (void)
    session_file = SessionFileGetName ();
 
 
-   if ((fd = fopen (session_file, "r")) != NULL)
+   if ((fd = fopen (session_file, "r")) != nullptr)
    {
       /*  Get the full list of subpanels  */
       
@@ -173,7 +173,7 @@ SessionRestoreData (void)
 	 {
 	    control_data = box_data->control_data[j];
 	    
-	    if (control_data->subpanel_data != NULL)
+	    if (control_data->subpanel_data != nullptr)
 	    {
                if (subpanel_count == max_subpanel_count)
 	       {
@@ -483,7 +483,7 @@ WmFrontPanelSessionSaveData (void)
    BoxData * box_data;
    ControlData * control_data;
 
-   SubpanelData ** subpanel_data = NULL;
+   SubpanelData ** subpanel_data = nullptr;
    int subpanel_count = 0;
    int max_subpanel_count = 0;
    
@@ -501,7 +501,7 @@ WmFrontPanelSessionSaveData (void)
 
    session_file = SessionFileGetName ();
 
-   if ((fd = fopen (session_file, "w")) != NULL)
+   if ((fd = fopen (session_file, "w")) != nullptr)
    {
 
       /*  Get the full list of subpanels  */
@@ -514,7 +514,7 @@ WmFrontPanelSessionSaveData (void)
 	 {
 	    control_data = box_data->control_data[j];
 	    
-	    if (control_data->subpanel_data != NULL)
+	    if (control_data->subpanel_data != nullptr)
 	    {
                if (subpanel_count == max_subpanel_count)
 	       {
@@ -762,7 +762,7 @@ SessionFileNameLookup (char * component_name,
       }
    }
 
-   return ((char *) NULL);
+   return ((char *) nullptr);
 }
 
 /************************************************************************
@@ -791,7 +791,7 @@ SessionDeleteAll(void)
 
    /*  Get the home directory used to build the path to the session file.  */
 
-   if ((home_dir = (char *)getenv("HOME")) != NULL || strlen (home_dir) == 0)
+   if ((home_dir = (char *)getenv("HOME")) != nullptr || strlen (home_dir) == 0)
    {
       pw_info = getpwuid (getuid());
       home_dir = pw_info->pw_dir;
@@ -805,7 +805,7 @@ SessionDeleteAll(void)
   /* Open the fp_dynamic directory */
    dir = opendir(fp_dir);
 
-   if (dir == NULL)
+   if (dir == nullptr)
      return;
 
   /* prepare source name */
@@ -818,7 +818,7 @@ SessionDeleteAll(void)
    *  remove them.
    */
 
-   while ((entry = readdir(dir)) != NULL)
+   while ((entry = readdir(dir)) != nullptr)
    {
       if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
          continue;

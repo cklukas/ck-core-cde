@@ -56,7 +56,7 @@ void m_eduptype(int type)
   {
     if ((int) m_entity->type != type) {
       m_err1("Redefinition of entity %s ignored", m_entity->name) ;
-      m_entity = NULL ;
+      m_entity = nullptr ;
       m_curcon = TYPEDENTVAL ;
       } 
     }
@@ -82,7 +82,7 @@ void m_ntrent(M_WCHAR *p)
       if (m_entity->wheredef == M_DPARSER) {
         if (m_entdupchk) {
           m_err1("Redefinition of entity %s ignored", p) ;
-          m_entity = NULL ;
+          m_entity = nullptr ;
           }
         else m_curcon = DUPENT ;
         }
@@ -90,7 +90,7 @@ void m_ntrent(M_WCHAR *p)
         if (m_entity->content) {
           m_err1("Warning: Redefinition of predefined entity %s", p) ;
           m_entity->type = M_GENERAL ;
-          m_entity->content = NULL ;
+          m_entity->content = nullptr ;
           }
         m_entity->wheredef = M_DPARSER ;
         }
@@ -99,7 +99,7 @@ void m_ntrent(M_WCHAR *p)
     m_entity = new ;
     m_entity->type = M_GENERAL ;
     m_entity->wheredef = M_DPARSER ;
-    m_entity->content = NULL ;
+    m_entity->content = nullptr ;
     m_entity->name = (M_WCHAR *) m_malloc(w_strlen(p) + 1, "entity name") ;
     w_strcpy(m_entity->name, p) ;
     }

@@ -95,7 +95,7 @@ static struct dirent *TestReaddir(DIR *dir)
     if (dir==fault_directory) {
         ++root_reads;
         if (read_fault && !injected && (read_fault==EINTR || root_reads>=2)) {
-            ++injected;errno=read_fault;return NULL;
+            ++injected;errno=read_fault;return nullptr;
         }
     }
     return readdir(dir);
@@ -109,7 +109,7 @@ static int TestClosedir(DIR *dir)
 }
 static void *TestMalloc(size_t size)
 {
-    if (++allocations==allocation_fault) { ++injected;errno=ENOMEM;return NULL; }
+    if (++allocations==allocation_fault) { ++injected;errno=ENOMEM;return nullptr; }
     return malloc(size);
 }
 static int TestMkstemp(char *path)
@@ -169,7 +169,7 @@ static int make_deep(char result[PATH_MAX])
         fprintf(stderr,"SKIP: native pathname limit %ld prevents a real >1024-byte path\n",maximum);
         return 0;
     }
-    char path[PATH_MAX];fixture(getcwd(path,sizeof(path))!=NULL);
+    char path[PATH_MAX];fixture(getcwd(path,sizeof(path))!=nullptr);
     while (strlen(path)<1120) {
         const char *part="/private-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
         fixture(strlen(path)+strlen(part)+16<sizeof(path));strcat(path,part);
@@ -185,7 +185,7 @@ static int helper_case(void)
     CHECK(joined && !strcmp(joined,"/native/a\\\001-\303\251/kid\n\t\\\002"));free(joined);
     joined=DeletePermissionChild("/","leaf");CHECK(joined && !strcmp(joined,"/leaf"));free(joined);
     joined=DeletePermissionChild("/parent/","leaf");CHECK(joined && !strcmp(joined,"/parent/leaf"));free(joined);
-    char *long_parent=malloc(1201);fixture(long_parent!=NULL);memset(long_parent,'x',1200);long_parent[0]='/';long_parent[1200]=0;
+    char *long_parent=malloc(1201);fixture(long_parent!=nullptr);memset(long_parent,'x',1200);long_parent[0]='/';long_parent[1200]=0;
     joined=DeletePermissionChild(long_parent,"leaf");
     CHECK(joined && strlen(joined)==1205 && !memcmp(joined,long_parent,1200) && !strcmp(joined+1200,"/leaf"));
     free(joined);free(long_parent);
@@ -200,7 +200,7 @@ int main(int argc,char **argv)
 {
     fixture(argc==3);case_name=argv[1];fixture(chdir(argv[2])==0);
     if (!strcmp(case_name,"helper-bytes")) return helper_case();
-    fixture(getcwd(parent,sizeof(parent))!=NULL);
+    fixture(getcwd(parent,sizeof(parent))!=nullptr);
     fixture(mkdir("tree",0700)==0 && mkdir("tree/child",0700)==0);
     put("tree/child/file");
     fixture(strlen(parent)+6<sizeof(destination));strcpy(destination,parent);strcat(destination,"/tree");

@@ -99,7 +99,7 @@ saveSessionCB(
   char *longpath, *name;
   int fd, n; 
   char *xa_CommandStr[3];
-  unsigned char *data = NULL;
+  unsigned char *data = nullptr;
   char *tmpStr;
 
   /* get the root window property of SaveMode */
@@ -108,7 +108,7 @@ saveSessionCB(
   /* if the property is "home" don't save dtstyle */
   if(strcmp((char *)data, "home") == 0)
   {
-     XSetCommand(style.display, XtWindow(w), NULL, 0);
+     XSetCommand(style.display, XtWindow(w), nullptr, 0);
      return;
   }
 
@@ -123,7 +123,7 @@ saveSessionCB(
     {
       tmpStr = (char *)XtMalloc(strlen(MSG2) + strlen(longpath)+ 1);
       sprintf(tmpStr, MSG2, longpath);
-      _DtSimpleErrnoError(progName,DtError, MSG1, tmpStr, NULL);   
+      _DtSimpleErrnoError(progName,DtError, MSG1, tmpStr, nullptr);   
       XtFree(tmpStr);
       XtFree ((char *)longpath);
       XtFree ((char *)name);
@@ -187,10 +187,10 @@ restoreSession(
       return(1);
   
   /*  Open the file as a resource database */
-  if ((db = XrmGetFileDatabase (longpath)) == NULL) {
+  if ((db = XrmGetFileDatabase (longpath)) == nullptr) {
     tmpStr = (char *)XtMalloc(strlen(MSG2) + strlen(longpath)+ 1);
     sprintf(tmpStr, MSG2, longpath);
-    _DtSimpleErrnoError(progName, DtError, MSG1, tmpStr, NULL);   
+    _DtSimpleErrnoError(progName, DtError, MSG1, tmpStr, nullptr);   
     XtFree(tmpStr);
     XtFree(longpath);
     return(1);

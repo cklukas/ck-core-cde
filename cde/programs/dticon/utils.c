@@ -368,7 +368,7 @@ Init_Editor(
   pixelTable.pixelTableSize = 0;
   pixelTable.numItems = 0;
   pixelTable.lastFound = 0;
-  pixelTable.item = NULL;
+  pixelTable.item = nullptr;
 
 /*** Initialize the GCs used by the app. ***/
   Color_gc = XCreateGC(dpy, root, 0, 0);
@@ -1487,10 +1487,10 @@ AnimateCallback(
 void
 RegisterDropSites( void )
 {
-    static XtCallbackRec transferCB[] = { {TransferCallback, NULL},
-                                               {NULL, NULL} };
-    static XtCallbackRec animateCB[] = { {AnimateCallback, NULL},
-                                               {NULL, NULL} };
+    static XtCallbackRec transferCB[] = { {TransferCallback, nullptr},
+                                               {nullptr, nullptr} };
+    static XtCallbackRec animateCB[] = { {AnimateCallback, nullptr},
+                                               {nullptr, nullptr} };
     Arg args[3];
     int n;
     Widget clipWin;
@@ -1545,7 +1545,7 @@ Abort(
         char *str )
 
 {
-  _DtSimpleError (progName, DtError, NULL, str, NULL);
+  _DtSimpleError (progName, DtError, nullptr, str, nullptr);
   exit(-1);
 }
 
@@ -1876,7 +1876,7 @@ DoQueryDialog(
   int i;
   Arg arg[10];
   XmString local_str;
-  static Widget w=NULL;
+  static Widget w=nullptr;
 
   XtPopup(dtIconShell, XtGrabNone);
   XMapRaised(XtDisplay(dtIconShell), XtWindow(dtIconShell));
@@ -1948,7 +1948,7 @@ LoadGrabbedImage(
                 x, y, width, height);
 #endif
 
-  img = NULL;
+  img = nullptr;
 
   if (width > 0 && height > 0)
     img = XGetImage(dpy, root, x, y, width, height, AllPlanes, format);
@@ -2047,7 +2047,7 @@ ParseAppArgs(
 /*** First, figure out which arguments get used ***/
 
   /* don't process command line args if restoring from a session file */
-  if (xrdb.session != NULL)
+  if (xrdb.session != nullptr)
     argsNeedProcessed = True;
   else
   {
@@ -2243,7 +2243,7 @@ static int jskXerrorDebug(Display *disp, XErrorEvent *error_event)
         stat_out("\n\nX Protocol Error:\n");
 
     _DtPrintDefaultErrorSafe(disp, error_event, error_msg, MAX_MSG_STR);
-    _DtSimpleError (progName, DtWarning, NULL, error_msg, NULL);
+    _DtSimpleError (progName, DtWarning, nullptr, error_msg, nullptr);
 #endif /* DEBUG */
 
     return (TRUE);
@@ -2300,7 +2300,7 @@ SaveSession( void )
         tmpStr = GETSTR(16,24, "Couldn't save session to file");
         tmpStr2 = (char *)XtMalloc(strlen(tmpStr) + strlen(path) + 4); /* +4 = ':', ' ', '\n' and '\0' */
         snprintf(tmpStr2, strlen(tmpStr) + strlen(path) + 4, "%s: %s\n", tmpStr, path);
-        _DtSimpleErrnoError(progName, DtError, NULL, tmpStr2, NULL);
+        _DtSimpleErrnoError(progName, DtError, nullptr, tmpStr2, nullptr);
         XtFree(tmpStr2);
         XtFree ((char *)path);
         XtFree ((char *)name);
@@ -2399,7 +2399,7 @@ GetSessionInfo( void )
     stat_out("GetSessionInfo\n");
 #endif
 
-    if (xrdb.session == NULL)
+    if (xrdb.session == nullptr)
     {
         session.useSession = False;
         return;
@@ -2414,12 +2414,12 @@ GetSessionInfo( void )
     if (DtSessionRestorePath(TopLevel, &path, xrdb.session) == False)
         path = xrdb.session;
 
-    if ((db = XrmGetFileDatabase (path)) == NULL)
+    if ((db = XrmGetFileDatabase (path)) == nullptr)
     {
         tmpStr = GETSTR(16,22, "Couldn't restore session from file");
         tmpStr2 = (char *)XtMalloc(strlen(tmpStr) + strlen(path)+ 3);
         sprintf(tmpStr2, "%s: %s\n", tmpStr, path);
-        _DtSimpleErrnoError(progName, DtError, NULL, tmpStr2, NULL);
+        _DtSimpleErrnoError(progName, DtError, nullptr, tmpStr2, nullptr);
         XtFree(tmpStr2);
         if (path != xrdb.session)
             XtFree(path);
@@ -2471,7 +2471,7 @@ GetSessionInfo( void )
     xrm_name[0] = XrmStringToQuark ("iconic");
     if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value))
     {
-        if ( value.addr!=NULL && strcmp((char *)value.addr, "True")==0 )
+        if ( value.addr!=nullptr && strcmp((char *)value.addr, "True")==0 )
             session.iconicState = IconicState;
         else
             session.iconicState = NormalState;
@@ -2497,7 +2497,7 @@ GetSessionInfo( void )
 void
 ChangeTitle(void)
 {
-    static char *dialogTitle = NULL;
+    static char *dialogTitle = nullptr;
     Arg al[10];
     int ac;
     char *name;

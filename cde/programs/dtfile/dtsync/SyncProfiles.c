@@ -193,7 +193,7 @@ static ProfileDB *db_decode(ProfileBytes *b, ProfileError *error)
         !get32(b, &version) || version != SYNC_PROFILES_VERSION ||
         !get32(b, &count) || count > SYNC_PROFILES_MAX) goto corrupt;
     ProfileDB *db = calloc(1, sizeof(*db));
-    if (!db) { profile_error(error, SYNC_PROFILES_NOMEM, "Cannot allocate profile database"); return NULL; }
+    if (!db) { profile_error(error, SYNC_PROFILES_NOMEM, "Cannot allocate profile database"); return nullptr; }
     for (uint32_t i = 0; i < count; ++i) {
         uint32_t name, source, destination, rules;
         if (!get32(b, &name) || !name || name > SYNC_PROFILE_NAME_MAX ||
@@ -201,7 +201,7 @@ static ProfileDB *db_decode(ProfileBytes *b, ProfileError *error)
             !get32(b, &destination) || !destination || destination > SYNC_PROFILE_PATH_MAX ||
             !get32(b, &rules) || rules > SYNC_PROFILE_RULES_MAX) goto bad_db;
         SyncProfile *p = calloc(1, sizeof(*p));
-        if (!p) { db_free(db); profile_error(error, SYNC_PROFILES_NOMEM, "Cannot allocate saved profile"); return NULL; }
+        if (!p) { db_free(db); profile_error(error, SYNC_PROFILES_NOMEM, "Cannot allocate saved profile"); return nullptr; }
         db->items[db->count++] = p;
         p->version = SYNC_PROFILES_VERSION;
         p->rule_count = rules;
@@ -232,7 +232,7 @@ bad_db:
 corrupt:
     profile_error(error, SYNC_PROFILES_CORRUPT,
                   "Saved profiles have an unsupported version or invalid/truncated data; store retained unchanged");
-    return NULL;
+    return nullptr;
 }
 static int db_encode(const ProfileDB *db, ProfileBytes *b, ProfileError *error)
 {
@@ -266,7 +266,7 @@ static int db_encode(const ProfileDB *db, ProfileBytes *b, ProfileError *error)
     b->offset = 0;
     return 1;
 limit:
-    free(b->bytes); b->bytes = NULL;
+    free(b->bytes); b->bytes = nullptr;
     profile_error(error, SYNC_PROFILES_LIMIT, "Saved profile payload exceeds the store limit; no profiles dropped");
     return 0;
 }
@@ -375,7 +375,7 @@ static int profile_lock(SyncProfiles *s, int dir, ProfileError *error)
             close(fd); return -1;
         }
         struct timespec delay = { 0, 20000000 };
-        nanosleep(&delay, NULL);
+        nanosleep(&delay, nullptr);
     }
     StoreIdentity identity = { 0 };
     identity.present = 1;
@@ -390,21 +390,21 @@ static ProfileDB *store_read(SyncProfiles *s, int dir, StoreIdentity *identity, 
     int fd = openat(dir, STORE_FILE, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
     memset(identity, 0, sizeof(*identity));
     if (fd < 0) {
-        if (errno != ENOENT) { profile_errno(error, "Read saved profiles without following links"); return NULL; }
+        if (errno != ENOENT) { profile_errno(error, "Read saved profiles without following links"); return nullptr; }
         ProfileDB *empty = calloc(1, sizeof(*empty));
         if (!empty) profile_error(error, SYNC_PROFILES_NOMEM, "Cannot allocate empty profile list");
         return empty;
     }
     identity->present = 1;
-    if (!private_stat(fd, 0, error)) { close(fd); return NULL; }
-    if (fstat(fd, &identity->stat) < 0) { profile_errno(error, "Inspect saved profile size"); close(fd); return NULL; }
+    if (!private_stat(fd, 0, error)) { close(fd); return nullptr; }
+    if (fstat(fd, &identity->stat) < 0) { profile_errno(error, "Inspect saved profile size"); close(fd); return nullptr; }
     if (identity->stat.st_size < 16 || identity->stat.st_size > STORE_BYTES_MAX) {
         profile_error(error, SYNC_PROFILES_CORRUPT, "Saved profile store is empty, truncated or exceeds its bounded payload; retained unchanged");
-        close(fd); return NULL;
+        close(fd); return nullptr;
     }
-    ProfileBytes bytes = { NULL, (size_t)identity->stat.st_size, 0 };
+    ProfileBytes bytes = { nullptr, (size_t)identity->stat.st_size, 0 };
     bytes.bytes = malloc(bytes.length);
-    if (!bytes.bytes) { profile_error(error, SYNC_PROFILES_NOMEM, "Cannot read bounded profile store"); close(fd); return NULL; }
+    if (!bytes.bytes) { profile_error(error, SYNC_PROFILES_NOMEM, "Cannot read bounded profile store"); close(fd); return nullptr; }
     size_t received = 0;
     while (received < bytes.length) {
         if (atomic_load(&s->stop)) {
@@ -433,7 +433,7 @@ static ProfileDB *store_read(SyncProfiles *s, int dir, StoreIdentity *identity, 
 failure:
     if (fd >= 0) close(fd);
     free(bytes.bytes);
-    return NULL;
+    return nullptr;
 }
 static int temporary_name(char name[64], ProfileError *error)
 {
@@ -521,9 +521,9 @@ static ProfileDB *profile_operation(SyncProfiles *s, const SyncProfile *save,
                                     const char *deletion, ProfileError *error)
 {
     int dir = profile_directory(s, error);
-    if (dir < 0) return NULL;
+    if (dir < 0) return nullptr;
     int lock = profile_lock(s, dir, error);
-    if (lock < 0) { close(dir); return NULL; }
+    if (lock < 0) { close(dir); return nullptr; }
     StoreIdentity identity;
     ProfileDB *db = store_read(s, dir, &identity, error);
     if (db && save) {
@@ -532,17 +532,17 @@ static ProfileDB *profile_operation(SyncProfiles *s, const SyncProfile *save,
             if (!strcmp(save->name, db->items[index]->name)) break;
         if (index == db->count && db->count == SYNC_PROFILES_MAX) {
             profile_error(error, SYNC_PROFILES_LIMIT, "Profile store already contains 64 names; no existing profile was discarded");
-            db_free(db); db = NULL;
+            db_free(db); db = nullptr;
         } else {
             SyncProfile *copy = malloc(sizeof(*copy));
             if (!copy) {
-                profile_error(error, SYNC_PROFILES_NOMEM, "Cannot merge saved profile"); db_free(db); db = NULL;
+                profile_error(error, SYNC_PROFILES_NOMEM, "Cannot merge saved profile"); db_free(db); db = nullptr;
             } else {
                 *copy = *save;
                 if (index == db->count) ++db->count;
                 else free(db->items[index]);
                 db->items[index] = copy;
-                if (!store_write(s, dir, &identity, db, error)) { db_free(db); db = NULL; }
+                if (!store_write(s, dir, &identity, db, error)) { db_free(db); db = nullptr; }
             }
         }
     }
@@ -556,8 +556,8 @@ static ProfileDB *profile_operation(SyncProfiles *s, const SyncProfile *save,
             free(db->items[index]);
             memmove(db->items + index, db->items + index + 1,
                     (db->count - index - 1) * sizeof(db->items[0]));
-            db->items[--db->count] = NULL;
-            if (!store_write(s, dir, &identity, db, error)) { db_free(db); db = NULL; }
+            db->items[--db->count] = nullptr;
+            if (!store_write(s, dir, &identity, db, error)) { db_free(db); db = nullptr; }
         }
     }
     /* Closing the independent lock description releases it for other helpers. */
@@ -583,7 +583,7 @@ static void publish(SyncProfiles *s, ProfileDB *db, const ProfileError *error, u
             memcpy(next.names[i], db->items[i]->name, sizeof(next.names[i]));
     }
     pthread_mutex_lock(&s->mutex);
-    ProfileDB *old = NULL;
+    ProfileDB *old = nullptr;
     if (db) { old = s->db; s->db = db; }
     else { next.count = s->snapshot.count; memcpy(next.names, s->snapshot.names, sizeof(next.names)); }
     next.submitted = s->snapshot.submitted;
@@ -597,7 +597,7 @@ static void *profiles_worker(void *arg)
 {
     SyncProfiles *s = arg;
     ProfileError error = { SYNC_PROFILES_OK, { 0 } };
-    ProfileDB *db = profile_operation(s, NULL, NULL, &error);
+    ProfileDB *db = profile_operation(s, nullptr, nullptr, &error);
     publish(s, db, &error, 1);
     for (;;) {
         pthread_mutex_lock(&s->mutex);
@@ -624,18 +624,18 @@ static void *profiles_worker(void *arg)
         SyncProfile *save = s->pending;
         char deletion[SYNC_PROFILE_NAME_MAX + 1] = { 0 };
         if (s->deleting) memcpy(deletion, s->deletion, sizeof(deletion));
-        s->pending = NULL;
+        s->pending = nullptr;
         s->reload = s->deleting = 0;
         uint64_t serial = s->snapshot.submitted;
         pthread_mutex_unlock(&s->mutex);
         memset(&error, 0, sizeof(error));
-        db = profile_operation(s, save, deletion[0] ? deletion : NULL, &error);
+        db = profile_operation(s, save, deletion[0] ? deletion : nullptr, &error);
         free(save);
         publish(s, db, &error, serial);
     }
     /* No native I/O or access to s follows this release publication. */
     atomic_store_explicit(&s->finished, 1, memory_order_release);
-    return NULL;
+    return nullptr;
 }
 SyncProfiles *SyncProfilesStart(const char *home, char *error, size_t error_size)
 {
@@ -643,7 +643,7 @@ SyncProfiles *SyncProfilesStart(const char *home, char *error, size_t error_size
     int code = 0;
     if (!home || home[0] != '/' || !bounded_length(home, SYNC_PROFILE_PATH_MAX, &length)) {
         if (error && error_size) snprintf(error, error_size, "Profile home must be an absolute bounded path");
-        return NULL;
+        return nullptr;
     }
     SyncProfiles *s = calloc(1, sizeof(*s));
     if (!s) goto no_memory;
@@ -657,21 +657,21 @@ SyncProfiles *SyncProfilesStart(const char *home, char *error, size_t error_size
     s->snapshot.revision = 1;
     s->snapshot.submitted = 1;
     s->snapshot.state = SYNC_PROFILES_LOADING;
-    code = pthread_mutex_init(&s->mutex, NULL);
+    code = pthread_mutex_init(&s->mutex, nullptr);
     if (code) goto thread_error;
-    code = pthread_cond_init(&s->wake, NULL);
+    code = pthread_cond_init(&s->wake, nullptr);
     if (code) { pthread_mutex_destroy(&s->mutex); goto thread_error; }
-    code = pthread_create(&s->thread, NULL, profiles_worker, s);
+    code = pthread_create(&s->thread, nullptr, profiles_worker, s);
     if (code) { pthread_cond_destroy(&s->wake); pthread_mutex_destroy(&s->mutex); goto thread_error; }
     if (error && error_size) error[0] = 0;
     return s;
 thread_error:
     if (error && error_size) snprintf(error, error_size, "Start profile worker: %s", strerror(code));
     free(s->home); free(s);
-    return NULL;
+    return nullptr;
 no_memory:
     if (error && error_size) snprintf(error, error_size, "Cannot allocate profile worker");
-    return NULL;
+    return nullptr;
 }
 SyncProfilesResult SyncProfilesGetSnapshot(SyncProfiles *s, SyncProfilesSnapshot *out)
 {
@@ -703,8 +703,8 @@ static SyncProfilesResult submit(SyncProfiles *s, SyncProfile *save, const char 
     else if (s->busy) result = SYNC_PROFILES_BUSY;
     else {
         s->pending = save;
-        s->reload = save == NULL && deletion == NULL;
-        s->deleting = deletion != NULL;
+        s->reload = save == nullptr && deletion == nullptr;
+        s->deleting = deletion != nullptr;
         if (deletion) strcpy(s->deletion, deletion);
         s->busy = 1;
         ++s->snapshot.submitted;
@@ -726,7 +726,7 @@ SyncProfilesResult SyncProfilesSave(SyncProfiles *s, const SyncProfile *profile)
     SyncProfile *copy = malloc(sizeof(*copy));
     if (!copy) return SYNC_PROFILES_NOMEM;
     *copy = *profile;
-    return submit(s, copy, NULL);
+    return submit(s, copy, nullptr);
 }
 SyncProfilesResult SyncProfilesDelete(SyncProfiles *s, const char *name)
 {
@@ -734,11 +734,11 @@ SyncProfilesResult SyncProfilesDelete(SyncProfiles *s, const char *name)
     if (!name) return SYNC_PROFILES_INVALID;
     if (!bounded_length(name, SYNC_PROFILE_NAME_MAX, &length)) return SYNC_PROFILES_LIMIT;
     if (!valid_name(name)) return SYNC_PROFILES_INVALID;
-    return submit(s, NULL, name);
+    return submit(s, nullptr, name);
 }
 SyncProfilesResult SyncProfilesReload(SyncProfiles *s)
 {
-    return submit(s, NULL, NULL);
+    return submit(s, nullptr, nullptr);
 }
 void SyncProfilesStop(SyncProfiles *s)
 {
@@ -750,7 +750,7 @@ int SyncProfilesDestroy(SyncProfiles *s)
 {
     if (!s) return 1;
     if (!atomic_load_explicit(&s->finished, memory_order_acquire)) return 0;
-    pthread_join(s->thread, NULL);
+    pthread_join(s->thread, nullptr);
     pthread_cond_destroy(&s->wake);
     pthread_mutex_destroy(&s->mutex);
     db_free(s->db);
@@ -776,7 +776,7 @@ int SyncProfilesDestroy(SyncProfiles *s)
 static void test_pause(void)
 {
     struct timespec delay = { 0, 1000000 };
-    nanosleep(&delay, NULL);
+    nanosleep(&delay, nullptr);
 }
 /* Deterministic initialization fault: hold the creator immediately before its
  * parent flush, then make an EEXIST adopter's own parent flush fail. Real mkdir,
@@ -964,7 +964,7 @@ static void test_no_staging(const char *home)
     char *path = test_path(home, STORE_DIR);
     DIR *dir = opendir(path); assert(dir);
     struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL)
+    while ((entry = readdir(dir)) != nullptr)
         assert(strncmp(entry->d_name, ".profiles-new-", 14));
     assert(closedir(dir) == 0); free(path);
 }
@@ -975,7 +975,7 @@ static void test_remove_tree(const char *path)
     if (!S_ISDIR(st.st_mode)) { assert(unlink(path) == 0); return; }
     DIR *dir = opendir(path); assert(dir);
     struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
+    while ((entry = readdir(dir)) != nullptr) {
         if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..")) continue;
         char *child = test_path(path, entry->d_name);
         test_remove_tree(child); free(child);
@@ -1031,7 +1031,7 @@ static acl_t test_storage_acl_get(int fd)
     struct stat st;
     if (atomic_load(&test_acl_failure.enabled) && fstat(fd, &st) == 0 &&
         st.st_dev == test_acl_failure.device && st.st_ino == test_acl_failure.inode) {
-        errno = EIO; return NULL;
+        errno = EIO; return nullptr;
     }
     return acl_get_fd_np(fd, ACL_TYPE_EXTENDED);
 }
@@ -1265,9 +1265,9 @@ int main(int argc, char **argv)
     int lock = open(lockpath, O_RDWR | O_NOFOLLOW | O_CLOEXEC); assert(lock >= 0);
     assert(flock(lock, LOCK_EX | LOCK_NB) == 0);
     pid_t first = fork(); assert(first >= 0);
-    if (!first) { execl(argv[0], argv[0], "--writer", home, "process-a", (char *)NULL); _exit(127); }
+    if (!first) { execl(argv[0], argv[0], "--writer", home, "process-a", (char *)nullptr); _exit(127); }
     pid_t second = fork(); assert(second >= 0);
-    if (!second) { execl(argv[0], argv[0], "--writer", home, "process-b", (char *)NULL); _exit(127); }
+    if (!second) { execl(argv[0], argv[0], "--writer", home, "process-b", (char *)nullptr); _exit(127); }
     assert(close(lock) == 0);
     int status;
     assert(waitpid(first, &status, 0) == first && WIFEXITED(status) && WEXITSTATUS(status) == 0);

@@ -84,7 +84,7 @@ extern int expCheckCode(unsigned int code, int code_num, int *code_list);
 
 static struct ptobhead WriteGpf;
 
-static char	*targ_file = NULL;	/* UDC_file_name */
+static char	*targ_file = nullptr;	/* UDC_file_name */
 
 
 static void
@@ -109,13 +109,13 @@ ImpBDFCodeList(char *bdf_name, int *code_num, int **code_list)
 	int	cnt ;
 
 	/* open BDF file */
-	if( (bdfp = fopen( bdf_name, "r" )) == NULL ){
+	if( (bdfp = fopen( bdf_name, "r" )) == nullptr ){
 	    return(-1);
 	}
 
 	/* get number of characters in BDF file */
 	while ( 1 ) {
-	    if( fgets( buf, BUFSIZE, bdfp ) == NULL) {
+	    if( fgets( buf, BUFSIZE, bdfp ) == nullptr) {
 		return (BDF_INVAL);
 	    }
 	    p = buf;
@@ -129,14 +129,14 @@ ImpBDFCodeList(char *bdf_name, int *code_num, int **code_list)
 	}
 
 	/* alloc memory for codes */
-	if( (glyph_list = (int *)calloc( *code_num, (unsigned int)sizeof(int) )) == NULL ){
+	if( (glyph_list = (int *)calloc( *code_num, (unsigned int)sizeof(int) )) == nullptr ){
 	    return(-1);
 	}
 
 	/* get codes of BDF file */
 	cnt = 0 ;
 	while( cnt < *code_num ) {
-	    if (fgets(buf, BUFSIZE, bdfp ) == NULL) {
+	    if (fgets(buf, BUFSIZE, bdfp ) == nullptr) {
 		return (BDF_INVAL);
 	    }
 	    p = buf;
@@ -182,7 +182,7 @@ char	*gpf_name	/* GPF file name */
 )
 {
 	/* parameter check */
-	if( bdf_name == NULL || gpf_name == NULL ){
+	if( bdf_name == nullptr || gpf_name == nullptr ){
 		return(-1) ;
 	}
 	return(0) ;
@@ -208,7 +208,7 @@ int	*bdf_codelist
 
 	int 	chk_fd;
 
-	ReadGpf.in_file = ReadUdc.in_file = WriteGpf.out_file = NULL;
+	ReadGpf.in_file = ReadUdc.in_file = WriteGpf.out_file = nullptr;
 
 	if (!( bdftopcf = get_cmd_path( getenv( "PATH" ), BDFTOPCF_CMD ))) {
 		bdftopcf = BDFTOPCF;
@@ -237,7 +237,7 @@ int	*bdf_codelist
 	/*
 	* get real file name of GPF file
 	*/
-	if ((targ_file = GetRealFileName( ReadGpf.in_file )) == NULL){
+	if ((targ_file = GetRealFileName( ReadGpf.in_file )) == nullptr){
 		return(-1);
 	}
 
@@ -380,7 +380,7 @@ struct ptobhead	*w_gpf
 
 
 
-	if ( ( r_udc->input = fopen(r_udc->in_file, "r")) == NULL ) {
+	if ( ( r_udc->input = fopen(r_udc->in_file, "r")) == nullptr ) {
 		return	GPF_OPEN_IN;
 	}
 
@@ -418,7 +418,7 @@ struct ptobhead	*w_gpf
 		break;
 	}
 	close( fd[1] );
-	if ( ( r_gpf->input = (FILE *)fdopen( fd[0], "r" ) ) == NULL ) {
+	if ( ( r_gpf->input = (FILE *)fdopen( fd[0], "r" ) ) == nullptr ) {
 		return	FDOPEN_ERROR;
 	}
 
@@ -465,7 +465,7 @@ struct ptobhead	*w_gpf
 		break;
 	}
 	close( pfd[0] );
-	if ( ( w_gpf->output = (FILE *)fdopen( pfd[1], "w" ) ) == NULL ) {
+	if ( ( w_gpf->output = (FILE *)fdopen( pfd[1], "w" ) ) == nullptr ) {
 		return	FDOPEN_ERROR;
 	}
 	return	0;
@@ -491,11 +491,11 @@ int		bdf_codenum
 
 	nchar = r_gpf->num_chars + bdf_codenum ;
 
-	if ( ( r_gpf->code = (int *)malloc( sizeof(int) * nchar ) ) == NULL ) {
+	if ( ( r_gpf->code = (int *)malloc( sizeof(int) * nchar ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
-	if ( ( r_gpf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == NULL ) {
+	if ( ( r_gpf->ptn = (char **)malloc( sizeof(char *) * nchar ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 
@@ -515,7 +515,7 @@ char	*buf
 	unsigned int 	getstat = 0;
 
 	while ( 1 ) {
-		if ( fgets( buf, BUFSIZE, r_gpf->input ) == NULL ) {
+		if ( fgets( buf, BUFSIZE, r_gpf->input ) == nullptr ) {
 			return	BDF_INVAL;
 		}
 		p = buf;
@@ -574,7 +574,7 @@ int	*bdf_codelist
 
 		msize = ( r_udc->bdf_width + 7 ) / 8 * r_udc->bdf_height;
 
-		if ( ( ptn = (char *)malloc( msize ) ) == NULL ) {
+		if ( ( ptn = (char *)malloc( msize ) ) == nullptr ) {
 			return	MALLOC_ERROR;
 		}
 		r_udc->ptn = &ptn;
@@ -663,7 +663,7 @@ int 	ix
 	mwidth = (r_gpf->bdf_width + 7) / 8;
 	msize = mwidth * r_gpf->bdf_height;
 
-	if ( ( r_gpf->ptn[ix] = (char *)malloc( msize ) ) == NULL ) {
+	if ( ( r_gpf->ptn[ix] = (char *)malloc( msize ) ) == nullptr ) {
 		return	MALLOC_ERROR;
 	}
 

@@ -99,7 +99,7 @@ _falsetlocale(int category, const char *name)
     XPointer state;
 
     if (category != LC_CTYPE && category != LC_ALL)
-	return NULL;
+	return nullptr;
     if (!name) {
 	if (xsl_name)
 	    return xsl_name;
@@ -116,13 +116,13 @@ _falsetlocale(int category, const char *name)
     methods = _falrmInitParseInfo(&state);
     xsl_name = old_name;
     if (!methods)
-	return NULL;
+	return nullptr;
     name = (*methods->lcname)(state);
     xsl_name = Xmalloc(strlen(name) + 1);
     if (!xsl_name) {
 	xsl_name = old_name;
 	(*methods->destroy)(state);
-	return NULL;
+	return nullptr;
     }
     strcpy(xsl_name, name);
     if (old_name)

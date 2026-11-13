@@ -383,7 +383,7 @@ _DtCmdStringToArrayOfStrings(
 	    /*
 	     * Must be at the end of the line.
 	     */
-	    theArray[i] = (char *) NULL;
+	    theArray[i] = (char *) nullptr;
 	    break;
 	 }
       }
@@ -393,7 +393,7 @@ _DtCmdStringToArrayOfStrings(
    }
 
    /* Null terminate the array of string pointers. */
-   theArray[i]=NULL;
+   theArray[i]=nullptr;
 
    XtFree ((char *) tmp);
 }
@@ -418,9 +418,9 @@ _DtCmdFreeStringVector(
 {
    char **pch;
 
-   for (pch = stringv; *pch != NULL; pch++) {
+   for (pch = stringv; *pch != nullptr; pch++) {
       XtFree (*pch);
-      *pch = NULL;
+      *pch = nullptr;
    }
 }
 

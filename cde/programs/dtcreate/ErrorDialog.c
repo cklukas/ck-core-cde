@@ -47,7 +47,7 @@ void    activateCB_ErrorDialog_OkButton( Widget  UxWidget,
 
 {
   XtDestroyWidget(XtParent(UxWidget));
-  *(Widget **)UxClientData = NULL;
+  *(Widget **)UxClientData = nullptr;
 }
 
 /******************************************************************************/
@@ -58,7 +58,7 @@ void    activateCB_ErrorDialog_OkButton( Widget  UxWidget,
 void display_error_message (Widget parent, char *message)
 {
 
-  ErrorDialog = XmCreateErrorDialog(parent, "errorDialog", NULL, 0);
+  ErrorDialog = XmCreateErrorDialog(parent, "errorDialog", nullptr, 0);
   XtUnmanageChild (XmMessageBoxGetChild (ErrorDialog, XmDIALOG_CANCEL_BUTTON));
   XtUnmanageChild (XmMessageBoxGetChild (ErrorDialog, XmDIALOG_HELP_BUTTON));
 
@@ -69,7 +69,7 @@ void display_error_message (Widget parent, char *message)
   XtVaSetValues (ErrorDialog,
                  RES_CONVERT(XmNdialogTitle, GETMESSAGE(6, 31, "Create Action - Error")),
                  RES_CONVERT(XmNmessageString, message),
-                 NULL);
+                 nullptr);
 
   XtManageChild (ErrorDialog);
   return;

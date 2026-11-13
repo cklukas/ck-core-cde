@@ -326,14 +326,14 @@ static const FormatVariables DefVars = {
 	False,		/* int		 last_was_mb;		*/
 	False,		/* int		 last_was_nl;		*/
 
-	NULL,		/* char		*rd_buf;		*/
-	NULL,		/* char		*rd_ptr;		*/
-	NULL,		/* char		*fmt_buf;		*/
-	NULL,		/* char		*my_path;		*/
-	NULL,		/* char		*vol_name;		*/
-	NULL,		/* char		*topic_id;		*/
-	NULL,		/* char		*topic_char_set;	*/
-	NULL,		/* char		*topic_lang;		*/
+	nullptr,		/* char		*rd_buf;		*/
+	nullptr,		/* char		*rd_ptr;		*/
+	nullptr,		/* char		*fmt_buf;		*/
+	nullptr,		/* char		*my_path;		*/
+	nullptr,		/* char		*vol_name;		*/
+	nullptr,		/* char		*topic_id;		*/
+	nullptr,		/* char		*topic_char_set;	*/
+	nullptr,		/* char		*topic_lang;		*/
 
 	0,		/* int		 rd_size;		*/
 	0,		/* int		 rd_flag;		*/
@@ -345,27 +345,27 @@ static const FormatVariables DefVars = {
 	0,		/* int		 fmt_size;		*/
 	0,		/* int		 cell_cnt;		*/
 
-	NULL,		/* BufFilePtr	 my_file;		*/
+	nullptr,		/* BufFilePtr	 my_file;		*/
 	  {		/* SegList	 my_list;		*/
 	    0,		    /* int		 cnt;	*/
 	    0,		    /* int		 max;	*/
-	    NULL,	    /* _DtCvSegment	*list;	*/
+	    nullptr,	    /* _DtCvSegment	*list;	*/
 	  },		/* SegList	 my_list;		*/
-	NULL,		/* _DtCvLinkDb	 my_links;		*/
-	NULL,		/* _FrmtUiInfo	 ui_info;		*/
+	nullptr,		/* _DtCvLinkDb	 my_links;		*/
+	nullptr,		/* _FrmtUiInfo	 ui_info;		*/
 };
 
 static	const	SegList		InitList =
   {
     0,		/* int		 cnt;	*/
     0,		/* int		 max;	*/
-    NULL,	/* _DtCvSegment	*list;	*/
+    nullptr,	/* _DtCvSegment	*list;	*/
   };
 
 static	const	_DtCvContainer	DefContainer =
   {
-        NULL,			/* char			*id;		*/
-        NULL,			/* char			*justify_char;	*/
+        nullptr,			/* char			*id;		*/
+        nullptr,			/* char			*justify_char;	*/
         _DtCvDYNAMIC,		/* _DtCvFrmtOption	 type;		*/
         _DtCvBORDER_NONE,	/* _DtCvFrmtOption	 border;	*/
         _DtCvJUSTIFY_LEFT,	/* _DtCvFrmtOption	 justify;	*/
@@ -380,8 +380,8 @@ static	const	_DtCvContainer	DefContainer =
         0,			/* _DtCvUnit		 rmargin;	*/
         0,			/* _DtCvUnit		 tmargin;	*/
         1,			/* _DtCvUnit		 bmargin;	*/
-	{0, NULL},		/* _DtCvLine             bdr_info;      */
-        NULL,			/* _DtCvSegment		 seg_list;	*/
+	{0, nullptr},		/* _DtCvLine             bdr_info;      */
+        nullptr,			/* _DtCvSegment		 seg_list;	*/
   };
 
 static const FrmtPrivateInfo DefPrivInfo =
@@ -390,8 +390,8 @@ static const FrmtPrivateInfo DefPrivInfo =
 	(char) False,		/* char		 dup_flag;	*/
 	0,			/* int		 sdl_type;	*/
 	0,			/* void		*match_info;	*/
-	NULL,			/* void		*id_info;	*/
-	NULL,			/* void		*tmp_info;	*/
+	nullptr,			/* void		*id_info;	*/
+	nullptr,			/* void		*tmp_info;	*/
   };
 
 /******************************************************************************
@@ -469,9 +469,9 @@ GetMbLen (
 {
     int   i;
     char *ptr;
-    char *langPart = NULL;
-    char *codePart = NULL;
-    char *mLang = NULL;
+    char *langPart = nullptr;
+    char *codePart = nullptr;
+    char *mLang = nullptr;
 
     /*
      * strip spaces
@@ -500,7 +500,7 @@ GetMbLen (
     /*
      * old CCDF volume
      */
-    if (font_str == NULL || *font_str == '\0') codePart = strdup("UTF-8");
+    if (font_str == nullptr || *font_str == '\0') codePart = strdup("UTF-8");
     else codePart = strdup(font_str);
 
     mLang = _DtHelpGetLocale();
@@ -509,7 +509,7 @@ GetMbLen (
       {
 	*ptr = '\0';
 
-	if (mLang != NULL && *mLang != '\0')
+	if (mLang != nullptr && *mLang != '\0')
 	  {
 	    langPart = strdup(mLang);
 	    goto done;
@@ -524,12 +524,12 @@ done:
     /*
      * now set the return variables
      */
-    if (lang_ptr != NULL)
+    if (lang_ptr != nullptr)
         *lang_ptr = langPart;
     else
 	free(langPart);
 
-    if (set_ptr != NULL)
+    if (set_ptr != nullptr)
         *set_ptr = codePart;
     else
 	free(codePart);
@@ -586,7 +586,7 @@ ReturnLinkType (
 	case CCDF_LINK_JUMP_NEW:
 	case CCDF_LINK_JUMP_REUSE:
         case CCDF_LINK_DEFINITION:
-		if (strchr(spec, ' ') != NULL)
+		if (strchr(spec, ' ') != nullptr)
 		    trueType = _DtCvLinkType_CrossLink;
 		break;
 
@@ -633,7 +633,7 @@ CheckSegList (
 				cur_vars->my_list.max,
 				(cur_vars->my_list.max + GROW_SIZE));
 
-	if (NULL == cur_vars->my_list.list)
+	if (nullptr == cur_vars->my_list.list)
 	    return -1;
 
 	cur_vars->my_list.max += GROW_SIZE;
@@ -666,9 +666,9 @@ AllocateSegments (
 	int		 original_size,
 	int		 new_size )
 {
-    FrmtPrivateInfo *priv = NULL;
+    FrmtPrivateInfo *priv = nullptr;
 
-    if (NULL != p_seg)
+    if (nullptr != p_seg)
       {
 	int count = 0;
 
@@ -683,11 +683,11 @@ AllocateSegments (
         priv = p_seg->client_use;
 	priv = (FrmtPrivateInfo *) realloc ((void *) priv,
 					sizeof(FrmtPrivateInfo) * new_size);
-	if (NULL == priv)
+	if (nullptr == priv)
 	  {
 	    free(p_seg);
-	    p_seg = NULL;
-	    return NULL;
+	    p_seg = nullptr;
+	    return nullptr;
 	  }
 
 	/*
@@ -699,7 +699,7 @@ AllocateSegments (
     else
 	p_seg = _DtHelpAllocateSegments (new_size);
 
-    if (NULL != p_seg)
+    if (nullptr != p_seg)
       {
         /*
          * want to 'empty' the type.
@@ -713,15 +713,15 @@ AllocateSegments (
 	     * variables for us. The only reason we have to do it
 	     * is if we've reallocated the list.
 	     */
-	    if (NULL != priv)
+	    if (nullptr != priv)
 	      {
 		*priv = DefPrivInfo;
 
 	        p_seg[original_size  ].client_use   = priv++;
 	        p_seg[original_size  ].type         = _DtCvNOOP;
 	        p_seg[original_size  ].link_idx     = -1;
-	        p_seg[original_size  ].next_seg     = NULL;
-	        p_seg[original_size  ].next_disp    = NULL;
+	        p_seg[original_size  ].next_seg     = nullptr;
+	        p_seg[original_size  ].next_disp    = nullptr;
 	      }
 
 	    p_seg[original_size++].handle.container = DefContainer;
@@ -786,7 +786,7 @@ CheckList (
 	/*
 	 * return an code if no list allocated.
 	 */
-	if (NULL == seg_list->list)
+	if (nullptr == seg_list->list)
 	    return -1;
 
 	/*
@@ -863,7 +863,7 @@ SegmentSave (
 	     * malloc the memory
 	     */
 	    pwcs = (wchar_t *) malloc(sizeof(wchar_t) * num_chars);
-	    if (NULL != pwcs)
+	    if (nullptr != pwcs)
 	      {
 		/* convert */
 		str_size = mbstowcs(pwcs, string, ((size_t) num_chars));
@@ -878,7 +878,7 @@ SegmentSave (
 	else
 	    _DtCvStringOfStringSeg(pSeg) = (void *) strdup(string);
 
-        if (NULL == _DtCvStringOfStringSeg(pSeg))
+        if (nullptr == _DtCvStringOfStringSeg(pSeg))
 	    return -1;
 
 	/*
@@ -890,7 +890,7 @@ SegmentSave (
 	/*
 	 * load the font
 	 */
-	if (NULL != cur_vars->ui_info->load_font)
+	if (nullptr != cur_vars->ui_info->load_font)
 	    (*(cur_vars->ui_info->load_font))(
 			    cur_vars->ui_info->client_data,
 			    _DtHelpFontHintsLang(*font_attr),
@@ -1072,10 +1072,10 @@ TerminateSegList (
     int		 flag)
 {
     int	count;
-    _DtCvSegment *lastDisp = NULL;
+    _DtCvSegment *lastDisp = nullptr;
     _DtCvSegment *pSeg;
 
-    if (True == flag && 0 == seg_list->cnt && NULL != seg_list->list)
+    if (True == flag && 0 == seg_list->cnt && nullptr != seg_list->list)
       {
 	free(seg_list->list);
 	*seg_list = InitList;
@@ -1103,7 +1103,7 @@ TerminateSegList (
 	     * Is there a displayable segment yet?
 	     * If so, set its next displayable link to this segment.
 	     */
-	    if (NULL != lastDisp)
+	    if (nullptr != lastDisp)
 	        lastDisp->next_disp = pSeg;
 
 	    /*
@@ -1112,10 +1112,10 @@ TerminateSegList (
 	    lastDisp = pSeg;
 	  }
 	else
-	   lastDisp = NULL;
+	   lastDisp = nullptr;
       }
 
-    if (NULL != pSeg && NULL != lastDisp
+    if (nullptr != pSeg && nullptr != lastDisp
 	&& (_DtCvIsSegNoop(pSeg) || _DtCvIsSegRegion(pSeg)
 						|| _DtCvIsSegString(pSeg)))
 	lastDisp->next_disp = pSeg;
@@ -1160,7 +1160,7 @@ InitStructure(
      * allocate the link data base.
      */
     cur_vars->my_links = _DtLinkDbCreate();
-    if (NULL == cur_vars->my_links)
+    if (nullptr == cur_vars->my_links)
 	return -1;
 
     return 0;
@@ -1250,7 +1250,7 @@ AppendOctalToInfo(
     /*
      * must have 0xXX
      */
-    if (((int)strlen(src)) < 4 && cur_vars->my_file != NULL)
+    if (((int)strlen(src)) < 4 && cur_vars->my_file != nullptr)
       {
 	if (GetNextBuffer (cur_vars) == -1)
 	    return -1;
@@ -1334,7 +1334,7 @@ AppendSpaceToInfo (
         cur_vars->last_was_space = True;
     }
 
-    if (src != NULL)
+    if (src != nullptr)
         *src = *src + 1;
     return result;
 }
@@ -1501,7 +1501,7 @@ CreateSaveGraphic (
       {
 	fullName = (char *) malloc (strlen (cur_vars->my_path) +
 						strlen (file_name) + 2);
-	if (fullName == NULL)
+	if (fullName == nullptr)
 	    return -1;
 
 	strcpy (fullName, cur_vars->my_path);
@@ -1513,14 +1513,14 @@ CreateSaveGraphic (
      * load the graphic into the current segment
      */
     cvRegion = NextAvailSeg(cur_vars->my_list);
-    if (NULL != cur_vars->ui_info->load_graphic &&
+    if (nullptr != cur_vars->ui_info->load_graphic &&
 		(*(cur_vars->ui_info->load_graphic))(
 				cur_vars->ui_info->client_data,
 				cur_vars->vol_name,
 				cur_vars->topic_id,
 				fullName,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				&(_DtCvWidthOfRegionSeg(cvRegion)),
 				&(_DtCvHeightOfRegionSeg(cvRegion)),
 				&(_DtCvInfoOfRegionSeg(cvRegion))) == 0)
@@ -1841,15 +1841,15 @@ GetParagraphParameters(
     int		 result = 0;
     int		 optionCount = 0;
     int		 value;
-    char	*tmpString = NULL;
+    char	*tmpString = nullptr;
 
     /*
      * initialize string variables if valid addresses
      */
-    *ret_label   = NULL;
-    *file_name   = NULL;
-    *glink       = NULL;
-    *description = NULL;
+    *ret_label   = nullptr;
+    *file_name   = nullptr;
+    *glink       = nullptr;
+    *description = nullptr;
 
     *gpos       = _DtCvJUSTIFY_LEFT;
     *glinktype  = -1;
@@ -2041,7 +2041,7 @@ GetParagraphParameters(
 		    /*
 		     * If we got a label process it.
 		     */
-		    if (ret_label == NULL || *ret_label)
+		    if (ret_label == nullptr || *ret_label)
 		      {
 		        /*
 		         * we've already processed a label!
@@ -2239,7 +2239,7 @@ FlowingParagraph(
 		 * attach the it to the non-controller
 		 * container and mark it as used.
 		 */
-		if (NULL != cur_vars->my_list.list)
+		if (nullptr != cur_vars->my_list.list)
 		  {
 	            _DtCvContainerListOfSeg(bodySeg) = cur_vars->my_list.list;
 		    flowList.cnt++;
@@ -2279,19 +2279,19 @@ ProcessParagraph(
     int		 glinktype   = -1;
     int		 linkIndex   = -1;
     _DtCvUnit	 gspace      = 0;
-    char	*glinkSpec   = NULL;
-    char	*label       = NULL;
-    char	*fileName    = NULL;
-    char	*description = NULL;
+    char	*glinkSpec   = nullptr;
+    char	*label       = nullptr;
+    char	*fileName    = nullptr;
+    char	*description = nullptr;
     char	 numChar[16];
 
     ProcessState	 myState = NormalState;
     _DtCvFrmtOption	 gpos;
     _DtCvFrmtOption	 frmtType = _DtCvDYNAMIC;
     _DtCvSegment	*paraSeg;
-    _DtCvSegment	*labelSeg = NULL;
-    _DtCvSegment	*col1     = NULL;
-    _DtCvSegment	*col2     = NULL;
+    _DtCvSegment	*labelSeg = nullptr;
+    _DtCvSegment	*col1     = nullptr;
+    _DtCvSegment	*col2     = nullptr;
     _DtCvSegment	**childList;
     SegList		 oldList;
     SegList		 tableList = InitList;
@@ -2352,14 +2352,14 @@ ProcessParagraph(
 	/*
 	 * check for the parameter
 	 */
-	if (NULL != label)
+	if (nullptr != label)
 	  {
 	    FormatVariables   oldVars = *cur_vars;
 
 	    cur_vars->rd_buf  = label;
 	    cur_vars->rd_flag = 0;
 	    cur_vars->rd_ptr  = label;
-	    cur_vars->my_file = NULL;
+	    cur_vars->my_file = nullptr;
 
 	    result = Parse (CCDF_LABEL_CMD, NormalState, cur_vars,
 					0, frmtType,
@@ -2451,7 +2451,7 @@ ProcessParagraph(
 		sprintf(numChar, "%d", cur_vars->cell_cnt++);
 		_DtCvContainerIdOfSeg(col1) = (char *) malloc (
 				strlen("&CCDF_RES_") + strlen(numChar) + 1);
-		if (NULL != _DtCvContainerIdOfSeg(col1))
+		if (nullptr != _DtCvContainerIdOfSeg(col1))
 		  {
 		    /*
 		     * copy over the id and attach the list.
@@ -2466,7 +2466,7 @@ ProcessParagraph(
 		    sprintf(numChar, "%d", cur_vars->cell_cnt++);
 		    _DtCvContainerIdOfSeg(col2) = (char *) malloc (
 				strlen("&CCDF_RES_") + strlen(numChar) + 1);
-		    if (NULL != _DtCvContainerIdOfSeg(col2))
+		    if (nullptr != _DtCvContainerIdOfSeg(col2))
 		      {
 			strcpy(_DtCvContainerIdOfSeg(col2), "&CCDF_RES_");
 			strcat(_DtCvContainerIdOfSeg(col2), numChar);
@@ -2506,16 +2506,16 @@ ProcessParagraph(
 	 *
 	 * First, create the link index for the graphic.
 	 */
-	if (NULL != glinkSpec)
+	if (nullptr != glinkSpec)
 	  {
 	    /*
 	     * but if there isn't a graphic, throw away the link
 	     * specifications since they are useless!
 	     */
-	    if (NULL != fileName && strlen (glinkSpec))
+	    if (nullptr != fileName && strlen (glinkSpec))
 	      {
 		linkIndex = _DtLinkDbAddLink (cur_vars->my_links,
-					NULL,
+					nullptr,
 					glinkSpec,
 					ReturnLinkType(glinktype, glinkSpec),
 					ReturnLinkWinHint(glinktype),
@@ -2535,7 +2535,7 @@ ProcessParagraph(
 	 */
 	if (0 == result)
 	  {
-	    if (NULL != fileName)
+	    if (nullptr != fileName)
 	        result = FlowingParagraph(cur_vars,
 					myState,
 					frmtType,
@@ -2597,10 +2597,10 @@ ProcessParagraph(
 		/*
 		 * create the column width strings.
 		 */
-		colW = NULL;
+		colW = nullptr;
 		colW = (char **) _DtCvAddPtrToArray((void **) colW,
 						((void *) strdup(colW1)));
-		if (NULL != colW)
+		if (nullptr != colW)
 		    colW = (char **) _DtCvAddPtrToArray((void **) colW,
 						((void *) strdup (colW2)));
 
@@ -2608,7 +2608,7 @@ ProcessParagraph(
 		 * create the array for column justification.
 		 */
 		colJ = (_DtCvFrmtOption *) malloc (sizeof(_DtCvFrmtOption) * 2);
-		if (NULL != colJ)
+		if (nullptr != colJ)
 		  {
 		    colJ[0] = _DtCvJUSTIFY_LEFT;
 		    colJ[1] = _DtCvJUSTIFY_LEFT;
@@ -2622,7 +2622,7 @@ ProcessParagraph(
 		_DtCvNumColsOfTableSeg(paraSeg)      = 2;
 		_DtCvColWOfTableSeg(paraSeg)         = colW;
 		_DtCvColJustifyOfTableSeg(paraSeg)   = colJ;
-		_DtCvJustifyCharsOfTableSeg(paraSeg) = NULL;
+		_DtCvJustifyCharsOfTableSeg(paraSeg) = nullptr;
 
 		/*
 		 * now create the list of ids in this table.
@@ -2630,13 +2630,13 @@ ProcessParagraph(
 		ids = (char *) malloc (
 				strlen(_DtCvContainerIdOfSeg(col1)) +
 				strlen(_DtCvContainerIdOfSeg(col2)) + 2);
-		if (NULL != ids)
+		if (nullptr != ids)
 		  {
 		    strcpy(ids, _DtCvContainerIdOfSeg(col1));
 		    strcat(ids, " ");
 		    strcat(ids, _DtCvContainerIdOfSeg(col2));
 		  }
-		_DtCvCellIdsOfTableSeg(paraSeg) = NULL;
+		_DtCvCellIdsOfTableSeg(paraSeg) = nullptr;
 		_DtCvCellIdsOfTableSeg(paraSeg) = (char **)
 			_DtCvAddPtrToArray(
 				(void **) _DtCvCellIdsOfTableSeg(paraSeg),
@@ -2645,20 +2645,20 @@ ProcessParagraph(
 		/*
 		 * now create the list of cells in the table.
 		 */
-		_DtCvCellsOfTableSeg(paraSeg) = NULL;
+		_DtCvCellsOfTableSeg(paraSeg) = nullptr;
 		_DtCvCellsOfTableSeg(paraSeg) = (_DtCvSegment **)
 				_DtCvAddPtrToArray(
 					(void **) _DtCvCellsOfTableSeg(paraSeg),
 					(void  *) col1);
-		if (NULL != _DtCvCellsOfTableSeg(paraSeg))
+		if (nullptr != _DtCvCellsOfTableSeg(paraSeg))
 		    _DtCvCellsOfTableSeg(paraSeg) = (_DtCvSegment **)
 				_DtCvAddPtrToArray(
 					(void **) _DtCvCellsOfTableSeg(paraSeg),
 					(void  *) col2);
 
-		if (NULL == colW || NULL == colJ || NULL == ids
-				|| NULL == _DtCvCellIdsOfTableSeg(paraSeg)
-				|| NULL == _DtCvCellsOfTableSeg(paraSeg))
+		if (nullptr == colW || nullptr == colJ || nullptr == ids
+				|| nullptr == _DtCvCellIdsOfTableSeg(paraSeg)
+				|| nullptr == _DtCvCellsOfTableSeg(paraSeg))
 		    result = -1;
 	      }
 	    else
@@ -2673,13 +2673,13 @@ ProcessParagraph(
 		/*
 		 * consolidate any table children I have.
 		 */
-		for (pSeg = cur_vars->my_list.list, labelSeg = NULL;
-				-1 != result && NULL != pSeg;
+		for (pSeg = cur_vars->my_list.list, labelSeg = nullptr;
+				-1 != result && nullptr != pSeg;
 							pSeg = pSeg->next_seg)
 		  {
 		    if (_DtCvIsSegTable(pSeg))
 		      {
-			if (NULL != labelSeg)
+			if (nullptr != labelSeg)
 			  {
 			    /*
 			     * bypass this segment since it will no
@@ -2706,7 +2706,7 @@ ProcessParagraph(
 				    (void **) _DtCvCellsOfTableSeg(labelSeg),
 					*childList);
 			    childList++;
-			    if (NULL != _DtCvCellsOfTableSeg(labelSeg))
+			    if (nullptr != _DtCvCellsOfTableSeg(labelSeg))
 				_DtCvCellsOfTableSeg(labelSeg) = (_DtCvSegment **)
 				    _DtCvAddPtrToArray(
 					(void **)_DtCvCellsOfTableSeg(labelSeg),
@@ -2723,8 +2723,8 @@ ProcessParagraph(
 
 			    free((void *) _DtCvCellIdsOfTableSeg(pSeg));
 
-			    if (NULL == _DtCvCellIdsOfTableSeg(labelSeg)
-				|| NULL == _DtCvCellsOfTableSeg(labelSeg))
+			    if (nullptr == _DtCvCellIdsOfTableSeg(labelSeg)
+				|| nullptr == _DtCvCellsOfTableSeg(labelSeg))
 				result = -1;
 			  }
 			else
@@ -2737,7 +2737,7 @@ ProcessParagraph(
 			  }
 		      }
 		    else
-			labelSeg = NULL;
+			labelSeg = nullptr;
 		  }
 	      }
 	  }
@@ -2751,17 +2751,17 @@ ProcessParagraph(
     /*
      * free all the strings
      */
-    if (label != NULL)
+    if (label != nullptr)
         free (label);
-    if (fileName != NULL)
+    if (fileName != nullptr)
         free (fileName);
 
     /*
      * free the linkSpec and description,
      */
-    if (NULL != description)
+    if (nullptr != description)
 	free(description);
-    if (NULL != glinkSpec)
+    if (nullptr != glinkSpec)
 	free(glinkSpec);
 
     if (result == -1)
@@ -2807,8 +2807,8 @@ ProcessHypertext(
     int    result = 0;
     int    hyperType;
     int    hyperIndex;
-    char  *description = NULL;
-    char  *hyperlink = NULL;
+    char  *description = nullptr;
+    char  *hyperlink = nullptr;
 
     /*
      * is a <LINK> command allowed here?
@@ -2841,15 +2841,15 @@ ProcessHypertext(
         result = GetStringParameter (cur_vars, _DtCvFALSE, _DtCvTRUE,
 					_DtCvFALSE, _DtCvFALSE, &description);
         if (result == 1)
-	    description = NULL;
+	    description = nullptr;
 
 	result = _DtLinkDbAddLink (cur_vars->my_links,
-					NULL,
+					nullptr,
 					hyperlink,
 					ReturnLinkType(hyperType, hyperlink),
 					ReturnLinkWinHint(hyperType),
 					description);
-	if (NULL != description)
+	if (nullptr != description)
 	    free(description);
 
 	free(hyperlink);
@@ -2999,10 +2999,10 @@ ProcessFigureCmd(
     int		linkType     = CCDF_LINK_JUMP_REUSE;
     int		linkIndex    = -1;
     int		segType      = _DtCvREGION;
-    char	*description = NULL;
-    char	*idString    = NULL;
-    char	*filename    = NULL;
-    char	*linkspec    = NULL;
+    char	*description = nullptr;
+    char	*idString    = nullptr;
+    char	*filename    = nullptr;
+    char	*linkspec    = nullptr;
     _DtCvFrmtOption	vertOrientCap  = _DtCvJUSTIFY_BOTTOM;
     _DtCvFrmtOption	horzOrientCap  = _DtCvJUSTIFY_CENTER;
     _DtCvFrmtOption	justifyCap     = _DtCvJUSTIFY_CENTER;
@@ -3150,7 +3150,7 @@ ProcessFigureCmd(
 		 * if this figure had an id associated with it, create
 		 * marker segment for it.
 		 */
-		if (-1 != result && NULL != idString && '\0' != *idString)
+		if (-1 != result && nullptr != idString && '\0' != *idString)
 		  {
 		    /*
 		     * create the marker. If there is an error, free the
@@ -3227,7 +3227,7 @@ ProcessFigureCmd(
 	  }
       }
 
-    if (result != -1 && (filename == NULL || strlen(filename) == 0))
+    if (result != -1 && (filename == nullptr || strlen(filename) == 0))
 	result = -1;
 
     if (result != -1)
@@ -3240,9 +3240,9 @@ ProcessFigureCmd(
 	  {
 	    segType = segType & ~(_DtCvHYPER_TEXT);
 
-	    if (NULL != description)
+	    if (nullptr != description)
 	        free (description);
-	    description = NULL;
+	    description = nullptr;
 	  }
 
 	/*
@@ -3252,7 +3252,7 @@ ProcessFigureCmd(
 	if (IsTypeHyperText(segType))
 	  {
 	    linkIndex = _DtLinkDbAddLink (cur_vars->my_links,
-					NULL,
+					nullptr,
 					linkspec,
 					ReturnLinkType(linkType, linkspec),
 					ReturnLinkWinHint(linkType),
@@ -3409,8 +3409,8 @@ ProcessInLine(
 {
     int		done = False;
     int		result = 0;
-    char	*idString = NULL;
-    char	*filename = NULL;
+    char	*idString = nullptr;
+    char	*filename = nullptr;
 
     /*
      * process the graphic parameters
@@ -3454,7 +3454,7 @@ ProcessInLine(
 		 * if this graphic had an id associated with it, create
 		 * marker segment for it.
 		 */
-		if (-1 != result && NULL != idString && '\0' != *idString)
+		if (-1 != result && nullptr != idString && '\0' != *idString)
 		  {
 		    /*
 		     * create the marker. If there is an error, free the
@@ -3472,7 +3472,7 @@ ProcessInLine(
 	  }
       }
 
-    if (result != -1 && (filename == NULL || strlen(filename) == 0))
+    if (result != -1 && (filename == nullptr || strlen(filename) == 0))
 	result = -1;
 
     if (result != -1)
@@ -3527,7 +3527,7 @@ CheckIdString(
     int			 fnt_flag)
 {
     int    result = -1;
-    char  *ptr    = NULL;
+    char  *ptr    = nullptr;
 
     /*
      * is it legal to have a <ID> command at this point?
@@ -3634,7 +3634,7 @@ Parse(
 	     * If so, it may need to be replaced with a space.
 	     */
 	    if (cur_vars->last_was_nl == True &&
-			AppendSpaceToInfo(cur_vars, NULL, frmt_type) == -1)
+			AppendSpaceToInfo(cur_vars, nullptr, frmt_type) == -1)
 		return -1;
 
 	    cur_vars->last_was_nl = False;
@@ -3887,7 +3887,7 @@ Parse(
 	    if ((cur_vars->ui_info->nl_to_space == 1 ||
 			(cur_vars->last_was_mb == False
 					&& cur_vars->last_was_nl == True))
-	         && AppendSpaceToInfo(cur_vars, NULL, frmt_type) == -1)
+	         && AppendSpaceToInfo(cur_vars, nullptr, frmt_type) == -1)
 		done = -1;
 		
 	    cur_vars->last_was_nl = False;
@@ -4021,7 +4021,7 @@ ParseTitle(
 	     * for a CCDF title.  Simply set the type to container
 	     * and controller to get it to act properly.
 	     */
-	    if (NULL != list)
+	    if (nullptr != list)
 	      {
 		list[cnt].type = _DtCvSetTypeToContainer(list[cnt].type);
 		if (True == cont_flag)
@@ -4078,7 +4078,7 @@ Format(
 {
     int			 result  = 0;
     int			 done    = 0;
-    char		*charSet = NULL;
+    char		*charSet = nullptr;
     char		 readBuf[BUFF_SIZE];
     _DtHelpFontHints     fontAttrs;
     _DtCvTopicInfo	*topicHandle;
@@ -4088,7 +4088,7 @@ Format(
      * malloc space for the topic handle.
      */
     topicHandle = (_DtCvTopicInfo *) malloc (sizeof(_DtCvTopicInfo));
-    if (topicHandle == NULL)
+    if (topicHandle == nullptr)
 	return -1;
 
     /*
@@ -4114,7 +4114,7 @@ Format(
      * The first command in the buffer MUST be the <TOPIC> command.
      * It is in a one byte charset.
      */
-    if (_DtHelpCeGetCcdfTopicCmd (((void *) NULL), cur_vars->my_file,
+    if (_DtHelpCeGetCcdfTopicCmd (((void *) nullptr), cur_vars->my_file,
 			cur_vars->rd_buf, &(cur_vars->rd_ptr),
 			cur_vars->rd_size, 1, &charSet) == -1)
 	return -1;
@@ -4124,7 +4124,7 @@ Format(
      * Assume that the charset is 'UTF-8' if not specified.
      */
     cur_vars->cur_mb_max = 1;
-    if (NULL != charSet)
+    if (nullptr != charSet)
 	GetMbLen(cur_vars, charSet, &(_DtHelpFontHintsLang(fontAttrs)),
 					&(_DtHelpFontHintsCharSet(fontAttrs)));
 
@@ -4141,7 +4141,7 @@ Format(
      */
     if (0 != CheckList(&(cur_vars->my_list), 2, 2))
       {
-	if (NULL != charSet)
+	if (nullptr != charSet)
 	  {
 	    free(_DtHelpFontHintsLang(fontAttrs));
 	    free(_DtHelpFontHintsCharSet(fontAttrs));
@@ -4155,7 +4155,7 @@ Format(
      */
     if (0 != ParseTitle(cur_vars, True, True, 0, &fontAttrs))
       {
-	if (NULL != charSet)
+	if (nullptr != charSet)
 	  {
 	    free(_DtHelpFontHintsLang(fontAttrs));
 	    free(_DtHelpFontHintsCharSet(fontAttrs));
@@ -4249,7 +4249,7 @@ Format(
 	else
 	  {
 	    free ((char *) myList.list);
-	    myList.list = NULL;
+	    myList.list = nullptr;
 	  }
       }
 
@@ -4257,13 +4257,13 @@ Format(
      * return the values, even if they are null and zero.
      */
 
-    if (id_string == NULL)
+    if (id_string == nullptr)
         topicHandle->id_str = id_string;
     else
         topicHandle->id_str = strdup(id_string);
 
     topicHandle->seg_list  = myList.list;
-    topicHandle->mark_list = NULL;
+    topicHandle->mark_list = nullptr;
     topicHandle->link_data = cur_vars->my_links;
 
     *ret_topic = (void *) topicHandle;
@@ -4271,7 +4271,7 @@ Format(
     /*
      * free memory
      */
-    if (NULL != charSet)
+    if (nullptr != charSet)
       {
 	free(_DtHelpFontHintsLang(fontAttrs));
 	free(_DtHelpFontHintsCharSet(fontAttrs));
@@ -4318,7 +4318,7 @@ FormatCCDFTitle(
     int			 want_abbrev)
 {
     char    *strPtr;
-    char    *charSet   = NULL;
+    char    *charSet   = nullptr;
     int      result    = 0;
     int      origCnt   = cur_vars->my_list.cnt;
     int      len;
@@ -4329,7 +4329,7 @@ FormatCCDFTitle(
     cur_vars->rd_ptr    = cur_vars->rd_buf;
 
     if (_DtHelpCeFileOpenAndSeek(filename, offset, -1,
-					&(cur_vars->my_file), NULL) != 0)
+					&(cur_vars->my_file), nullptr) != 0)
 	return -1;
 
     cur_vars->rd_flag = _DtHelpCeReadBuf (cur_vars->my_file, cur_vars->rd_buf,
@@ -4345,7 +4345,7 @@ FormatCCDFTitle(
      * The first command in the buffer MUST be the <TOPIC> command.
      * It is in a one byte charset.
      */
-    if (_DtHelpCeGetCcdfTopicCmd (((void *) NULL), cur_vars->my_file,
+    if (_DtHelpCeGetCcdfTopicCmd (((void *) nullptr), cur_vars->my_file,
 			cur_vars->rd_buf, &(cur_vars->rd_ptr),
 			cur_vars->rd_size, 1, &charSet) == -1)
       {
@@ -4358,7 +4358,7 @@ FormatCCDFTitle(
      * Assume that the charset is 'UTF-8' if not specified.
      */
     cur_vars->cur_mb_max = 1;
-    if (NULL != charSet)
+    if (nullptr != charSet)
 	GetMbLen(cur_vars, charSet, &(_DtHelpFontHintsLang(fontAttrs)),
 					&(_DtHelpFontHintsCharSet(fontAttrs)));
 
@@ -4374,7 +4374,7 @@ FormatCCDFTitle(
      */
     if (0 != CheckSegList(cur_vars))
       {
-	if (NULL != charSet)
+	if (nullptr != charSet)
 	  {
 	    free(_DtHelpFontHintsLang(fontAttrs));
 	    free(_DtHelpFontHintsCharSet(fontAttrs));
@@ -4400,7 +4400,7 @@ FormatCCDFTitle(
      */
     if (-1 == ParseTitle(cur_vars, False, False, fnt_flags, &fontAttrs))
       {
-	if (NULL != charSet)
+	if (nullptr != charSet)
 	  {
 	    free(_DtHelpFontHintsLang(fontAttrs));
 	    free(_DtHelpFontHintsCharSet(fontAttrs));
@@ -4417,17 +4417,17 @@ FormatCCDFTitle(
      * if the title is null or we want the abbrev,
      * process the abbreviation.
      */
-    if (NULL == _DtCvContainerListOfSeg(titleSeg) || want_abbrev)
+    if (nullptr == _DtCvContainerListOfSeg(titleSeg) || want_abbrev)
       {
 	SegList	titleList = cur_vars->my_list;
 
 	/*
 	 * reset the buffer to get the abbreviation
 	 */
-	if (cur_vars->fmt_buf != NULL)
+	if (cur_vars->fmt_buf != nullptr)
 	  {
 	    free(cur_vars->fmt_buf);
-	    cur_vars->fmt_buf     = NULL;
+	    cur_vars->fmt_buf     = nullptr;
 	    cur_vars->fmt_size    = 0;
 	    cur_vars->fmt_buf_max = 0;
 	  }
@@ -4444,12 +4444,12 @@ FormatCCDFTitle(
 	    /*
 	     * save the abbreviation
 	     */
-	    if (cur_vars->fmt_buf != NULL)
+	    if (cur_vars->fmt_buf != nullptr)
 	      {
 		/*
 		 * If there was a title, free it
 		 */
-		if (NULL != _DtCvContainerListOfSeg(titleSeg))
+		if (nullptr != _DtCvContainerListOfSeg(titleSeg))
 		    _DtHelpFreeSegments(_DtCvContainerListOfSeg(titleSeg),
 					_DtCvFALSE, 
 					cur_vars->ui_info->destroy_region,
@@ -4476,7 +4476,7 @@ FormatCCDFTitle(
 	/*
 	 * eliminate this segment if no title or abbrev was found.
 	 */
-	if (NULL == _DtCvContainerListOfSeg(titleSeg))
+	if (nullptr == _DtCvContainerListOfSeg(titleSeg))
 	  {
 	    titleList.cnt = origCnt;
 	    _DtCvContainerTypeOfSeg(titleSeg) = _DtCvDYNAMIC;
@@ -4492,7 +4492,7 @@ FormatCCDFTitle(
 				&(cur_vars->rd_ptr), cur_vars->rd_size,
 				cur_vars->cur_mb_max);
 
-    if (cur_vars->fmt_buf != NULL)
+    if (cur_vars->fmt_buf != nullptr)
 	cur_vars->fmt_buf[0] = '\0';
     cur_vars->fmt_size     = 0;
 
@@ -4501,7 +4501,7 @@ FormatCCDFTitle(
      * change all the newlines on the segments into a space.
      */
     for (list = _DtCvContainerListOfSeg(titleSeg);
-					NULL != list; list = list->next_seg)
+					nullptr != list; list = list->next_seg)
       {
 	if (_DtCvIsSegNewLine(list))
 	  {
@@ -4515,7 +4515,7 @@ FormatCCDFTitle(
 	     * the first character of the next segment is a space.
 	     * if not, add one.
 	     */
-	    if (NULL != list->next_disp && _DtCvIsSegString(list)
+	    if (nullptr != list->next_disp && _DtCvIsSegString(list)
 						&& _DtCvIsSegRegChar(list))
 	      {
 		/*
@@ -4541,7 +4541,7 @@ FormatCCDFTitle(
 			_DtCvStringOfStringSeg(list) = (char *) realloc(
 					(void *) _DtCvStringOfStringSeg(list),
 					sizeof(char *) * len);
-			if (NULL == _DtCvStringOfStringSeg(list))
+			if (nullptr == _DtCvStringOfStringSeg(list))
 			    return -1;
 
 			strPtr = (char *) _DtCvStrPtr(
@@ -4561,7 +4561,7 @@ FormatCCDFTitle(
     /*
      * free memory
      */
-    if (NULL != charSet)
+    if (nullptr != charSet)
       {
 	free(_DtHelpFontHintsLang(fontAttrs));
 	free(_DtHelpFontHintsCharSet(fontAttrs));
@@ -4598,7 +4598,7 @@ FormatEntryInToc(
     int		  tocLen    = 0;
     int		  offset;
     int		  num;
-    char	 *strPtr = NULL;
+    char	 *strPtr = nullptr;
     _DtCvSegment *pSeg;
     _DtCvSegment *titleSeg;
     SegList       titleList;
@@ -4632,10 +4632,10 @@ FormatEntryInToc(
 	/*
 	 * now create the hypertext link index for the ghostlink.
 	 */
-	num    = _DtLinkDbAddLink(cur_vars->my_links, NULL, loc_id,
+	num    = _DtLinkDbAddLink(cur_vars->my_links, nullptr, loc_id,
 					    _DtCvLinkType_SameVolume,
 					    _DtCvWindowHint_CurrentWindow,
-					    NULL);
+					    nullptr);
 	/*
 	 * if a link index was successfully created, process the item.
 	 */
@@ -4647,9 +4647,9 @@ FormatEntryInToc(
 	     * check to see if this title had any segments.
 	     */
 	    pSeg = _DtCvContainerListOfSeg(titleSeg);
-	    if (NULL != pSeg)
+	    if (nullptr != pSeg)
 	      {
-		while (NULL != pSeg)
+		while (nullptr != pSeg)
 		  {
 		    /*
 		     * If this segment has a hypertext link, remove it.
@@ -4679,7 +4679,7 @@ FormatEntryInToc(
 		tocLen = strlen (loc_id) + 9;
 		if (tocLen > cur_vars->fmt_buf_max)
 		  {
-		    if (NULL == cur_vars->fmt_buf)
+		    if (nullptr == cur_vars->fmt_buf)
 			cur_vars->fmt_buf = (char *) malloc (tocLen);
 		    else
 			cur_vars->fmt_buf = (char *) realloc(
@@ -4715,7 +4715,7 @@ FormatEntryInToc(
 	  }
       }
 
-   if (NULL != strPtr)
+   if (nullptr != strPtr)
        free(strPtr);
 
    return result;
@@ -4739,7 +4739,7 @@ FormatExpandedToc(
 {
     int    result = 0;
 
-    if (*path_lst != NULL)
+    if (*path_lst != nullptr)
       {
 	font_attrs.weight = _DtHelpFontWeightMedium;
 	if (_DtCvStrCaseCmpLatin1(*path_lst, cur_id) == 0)
@@ -4767,7 +4767,7 @@ FormatExpandedToc(
 		/*
 		 * found the next item in the list
 		 */
-		if (*path_lst != NULL &&
+		if (*path_lst != nullptr &&
 			_DtCvStrCaseCmpLatin1(*path_lst, *childLst) == 0)
 		    result = FormatExpandedToc(volume,
 					cur_id, path_lst,
@@ -4780,7 +4780,7 @@ FormatExpandedToc(
 		count--;
 	      }
 
-	    if (children != NULL)
+	    if (children != nullptr)
 		_DtCvFreeArray((void **) children);
           }
       }
@@ -4856,7 +4856,7 @@ __DtHelpCeProcessString(
     myVars->rd_ptr  = in_string;
     myVars->my_file = my_file;
 
-    if (my_file == NULL)
+    if (my_file == nullptr)
 	myVars->rd_flag = 0;
     else
 	myVars->rd_flag = strlen(in_string);
@@ -4875,7 +4875,7 @@ __DtHelpCeProcessString(
 	if (done != -1 && True == ret_on_nl)
 	  {
 	    TerminateSegList (&(myVars->my_list), True);
-	    if (NULL != myVars->my_list.list)
+	    if (nullptr != myVars->my_list.list)
 	      {
 		done = CheckList (&oldList, 1, GROW_SIZE);
 		if (-1 != done)
@@ -4933,7 +4933,7 @@ __DtHelpCeGetParagraphList (
     /*
      * check the parameters.
      */
-    if (ret_handle == NULL || myVars == NULL)
+    if (ret_handle == nullptr || myVars == nullptr)
       {
         errno = EINVAL;
         return -1;
@@ -4942,15 +4942,15 @@ __DtHelpCeGetParagraphList (
     TerminateSegList(&(myVars->my_list), True);
 
     topicHandle = (_DtCvTopicInfo *) malloc (sizeof(_DtCvTopicInfo));
-    if (topicHandle != NULL)
+    if (topicHandle != nullptr)
       {
 	result = 0;
 
 	if (True == make_cont)
 	  {
-	    _DtCvSegment *myCont = AllocateSegments(NULL, 0, 1);
+	    _DtCvSegment *myCont = AllocateSegments(nullptr, 0, 1);
 
-	    if (NULL != myCont)
+	    if (nullptr != myCont)
 	      {
 		myCont->type = _DtCvSetTypeToContainer(myCont->type);
 	        _DtCvContainerTypeOfSeg(myCont) = type;
@@ -4964,15 +4964,15 @@ __DtHelpCeGetParagraphList (
 	        result = -1;
 	  }
 
-	topicHandle->id_str    = NULL;
+	topicHandle->id_str    = nullptr;
         topicHandle->seg_list  = myVars->my_list.list;
-        topicHandle->mark_list = NULL;
+        topicHandle->mark_list = nullptr;
         topicHandle->link_data = myVars->my_links;
 
         *ret_handle = (_DtCvTopicPtr) topicHandle;
       }
 
-    if (myVars->fmt_buf != NULL)
+    if (myVars->fmt_buf != nullptr)
 	free(myVars->fmt_buf);
 
     return result;
@@ -5019,7 +5019,7 @@ _DtHelpCeFrmtCcdfTopic(
     /*
      * Check the parameters
      */
-    if (volume == NULL || filename == NULL || offset < 0 || ret_handle == NULL)
+    if (volume == nullptr || filename == nullptr || offset < 0 || ret_handle == nullptr)
       {
 	errno = EINVAL;
 	return -1;
@@ -5034,7 +5034,7 @@ _DtHelpCeFrmtCcdfTopic(
       {
 	variables.vol_name = _DtHelpCeGetVolumeName(volume);
 	variables.my_path  = strdup (variables.vol_name);
-	if (variables.my_path == NULL)
+	if (variables.my_path == nullptr)
 	    return -1;
 
 	result = _DtHelpCeStrrchr (variables.my_path, Slash, MB_CUR_MAX, &ptr);
@@ -5049,7 +5049,7 @@ _DtHelpCeFrmtCcdfTopic(
      * open the file and seek to the correct place.
      */
     result = _DtHelpCeFileOpenAndSeek (filename, offset, -1,
-						&(variables.my_file), NULL);
+						&(variables.my_file), nullptr);
     if (result != -1)
       {
 	/*
@@ -5060,10 +5060,10 @@ _DtHelpCeFrmtCcdfTopic(
 	_DtHelpCeBufFileClose (variables.my_file, True);
       }
 
-    if (variables.fmt_buf != NULL)
+    if (variables.fmt_buf != nullptr)
 	free (variables.fmt_buf);
 
-    if (variables.my_path != NULL)
+    if (variables.my_path != nullptr)
 	free (variables.my_path);
 
     return result;
@@ -5111,7 +5111,7 @@ _DtHelpCeFrmtCcdfPathAndChildren(
     /*
      * Check the parameters
      */
-    if (volume == NULL || ret_handle == NULL)
+    if (volume == nullptr || ret_handle == nullptr)
       {
 	errno = EINVAL;
 	return -1;
@@ -5152,7 +5152,7 @@ _DtHelpCeFrmtCcdfPathAndChildren(
         myVars.topic_id = loc_id;
 	myVars.vol_name = _DtHelpCeGetVolumeName(volume);
 	myVars.my_path  = strdup (myVars.vol_name);
-        if (myVars.my_path == NULL)
+        if (myVars.my_path == nullptr)
 	    return -1;
 
         if (-1 == _DtHelpCeStrrchr (myVars.my_path, Slash, MB_CUR_MAX, &ptr))
@@ -5173,10 +5173,10 @@ _DtHelpCeFrmtCcdfPathAndChildren(
     /*
      * check for an empty path.
      */
-    if (-1 != result && NULL == ((_DtCvTopicInfo *) *ret_handle)->seg_list)
+    if (-1 != result && nullptr == ((_DtCvTopicInfo *) *ret_handle)->seg_list)
 	result = 1;
 
-    if (myVars.my_path != NULL)
+    if (myVars.my_path != nullptr)
         free(myVars.my_path);
 
     return result;
@@ -5215,7 +5215,7 @@ _DtHelpCeGetCcdfTitleChunks(
     char	 *ptr;
     char	  readBuf[BUFF_SIZE];
     _DtCvSegment	*titleSeg;
-    _DtCvSegment	*list    = NULL;
+    _DtCvSegment	*list    = nullptr;
     FormatVariables     myVars;
     _DtHelpFontHints    fontAttrs;
     _DtHelpCeLockInfo lockInfo;
@@ -5223,7 +5223,7 @@ _DtHelpCeGetCcdfTitleChunks(
     /*
      * Check the parameters
      */
-    if (volume == NULL || ret_chunks == NULL)
+    if (volume == nullptr || ret_chunks == nullptr)
       {
 	errno = EINVAL;
 	return -1;
@@ -5232,7 +5232,7 @@ _DtHelpCeGetCcdfTitleChunks(
     /*
      * init the return value
      */
-    *ret_chunks = NULL;
+    *ret_chunks = nullptr;
 
     /*
      * get the topic in the volume.
@@ -5260,7 +5260,7 @@ _DtHelpCeGetCcdfTitleChunks(
     myVars.topic_id = loc_id;
     myVars.vol_name = _DtHelpCeGetVolumeName(volume);
     myVars.my_path  = strdup (myVars.vol_name);
-    if (myVars.my_path == NULL)
+    if (myVars.my_path == nullptr)
       {
 	_DtHelpCeUnlockVolume(lockInfo);
 	return -1;
@@ -5282,11 +5282,11 @@ _DtHelpCeGetCcdfTitleChunks(
 	list     = _DtCvContainerListOfSeg(titleSeg);
       }
 
-    if (result != -1 && NULL != list)
+    if (result != -1 && nullptr != list)
       {
 	_DtCvSegment *pSeg = list;
 
-	while (-1 != result && NULL != pSeg)
+	while (-1 != result && nullptr != pSeg)
 	  {
 	    /*
 	     * create the types and add the informatio to the array.
@@ -5299,18 +5299,18 @@ _DtHelpCeGetCcdfTitleChunks(
 	      {
 		*ret_chunks = (void **) _DtCvAddPtrToArray(*ret_chunks,
 					(void *) type);
-		if (NULL != *ret_chunks)
+		if (nullptr != *ret_chunks)
 		    *ret_chunks = (void **) _DtCvAddPtrToArray(*ret_chunks,
 					(void *) _DtCvFontOfStringSeg(pSeg));
 
-		if (NULL != *ret_chunks)
+		if (nullptr != *ret_chunks)
 		  {
 		    if (_DtCvIsSegWideChar(pSeg))
 		      {
 		        offset = _DtCvStrLen(_DtCvStringOfStringSeg(pSeg), 1)
 					* MB_CUR_MAX + 1;
 			ptr    = (char *) malloc (sizeof(char) * offset);
-			if (NULL != ptr)
+			if (nullptr != ptr)
 			    wcstombs(ptr,
 					(wchar_t *)_DtCvStringOfStringSeg(pSeg),
 					offset);
@@ -5318,12 +5318,12 @@ _DtHelpCeGetCcdfTitleChunks(
 		    else
 			ptr = strdup((char *) _DtCvStringOfStringSeg(pSeg));
 
-		    if (NULL != ptr)
+		    if (nullptr != ptr)
 		        *ret_chunks = (void **)_DtCvAddPtrToArray(
 					*ret_chunks, (void *) ptr);
 		  }
 
-		if (NULL == *ret_chunks || NULL == ptr)
+		if (nullptr == *ret_chunks || nullptr == ptr)
 		    result = -1;
 	      }
 
@@ -5343,7 +5343,7 @@ _DtHelpCeGetCcdfTitleChunks(
 	 * create the location id string.
 	 */
 	idStr  = (char *) malloc (idLen);
-	if (NULL != idStr)
+	if (nullptr != idStr)
 	  {
 	    /*
 	     * format the location id
@@ -5364,16 +5364,16 @@ _DtHelpCeGetCcdfTitleChunks(
 	     */
 	    *ret_chunks = (void **) _DtCvAddPtrToArray(*ret_chunks,
 	    		(void *) (DT_HELP_CE_CHARSET | DT_HELP_CE_STRING));
-	    if (NULL != *ret_chunks)
+	    if (nullptr != *ret_chunks)
 	        *ret_chunks = (void **) _DtCvAddPtrToArray(*ret_chunks,
 						(void *) strdup(buf));
-	    if (NULL != *ret_chunks)
+	    if (nullptr != *ret_chunks)
 	        *ret_chunks = (void **) _DtCvAddPtrToArray(*ret_chunks,
 						(void *) idStr);
           }
       }
 
-    if (NULL != *ret_chunks)
+    if (nullptr != *ret_chunks)
 	*ret_chunks = (void **) _DtCvAddPtrToArray(*ret_chunks,
 						(void *) DT_HELP_CE_END);
 
@@ -5393,9 +5393,9 @@ _DtHelpCeGetCcdfTitleChunks(
     /*
      * free memory
      */
-    if (myVars.my_path != NULL)
+    if (myVars.my_path != nullptr)
         free(myVars.my_path);
-    if (myVars.fmt_buf != NULL)
+    if (myVars.fmt_buf != nullptr)
         free(myVars.fmt_buf);
 
     _DtHelpCeUnlockVolume(lockInfo);
@@ -5404,7 +5404,7 @@ _DtHelpCeGetCcdfTitleChunks(
      * indicate an error if problems.
      */
     result = 0;
-    if (NULL == *ret_chunks)
+    if (nullptr == *ret_chunks)
 	result = -1;
 
     return result;
@@ -5444,14 +5444,14 @@ _DtHelpCeGetCcdfVolTitleChunks(
      * get the title of the volume (we own the memory).
      */
     charSet = _DtHelpCeGetCcdfVolLocale(volume);
-    if (charSet == NULL)
+    if (charSet == nullptr)
 	charSet = strdup("C.UTF-8");
 
     titleStr = _DtHelpCeGetCcdfVolTitle(volume);
-    if (titleStr != NULL)
+    if (titleStr != nullptr)
       {
         *ret_chunks = (void **) malloc(sizeof(void *) * 4);
-        if (*ret_chunks == NULL)
+        if (*ret_chunks == nullptr)
 	    return -1;
 
         (*ret_chunks)[0] = (void *) (DT_HELP_CE_CHARSET | DT_HELP_CE_STRING);

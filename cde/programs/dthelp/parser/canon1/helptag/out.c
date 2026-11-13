@@ -153,7 +153,7 @@ if (!wla)
 if (textchar == wla)
     {
     holdSaveExSeg = saveexseg;
-    saveexseg = NULL;
+    saveexseg = nullptr;
     mb_strcode("&<", outfile);
     saveexseg = holdSaveExSeg;
     }

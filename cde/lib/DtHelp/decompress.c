@@ -400,7 +400,7 @@ _DtHelpCeUncompressFile(
 	}
 
     myInfo = (CECompressInfoPtr) malloc (sizeof(CECompressInfo));
-    if (myInfo == NULL)
+    if (myInfo == nullptr)
       {
 	close(inFd);
 	close(outFd);

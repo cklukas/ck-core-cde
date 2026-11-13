@@ -46,7 +46,7 @@ XeString Xe_shellexp(XeString path)
 			 SHX_NOGLOB | SHX_NOSPACE | SHX_NOMETA | SHX_NOGRAVE);
       
    if (num == 0)
-      return NULL;
+      return nullptr;
    else
       return res[0];
 }

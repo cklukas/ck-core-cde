@@ -126,7 +126,7 @@ static IncludeFileRec incDtbUtils = {"\"dtb_utils.h\""};
 /*
  * Note - more than one table entry may exist for a given class!
  */
-static IncludeForClass class_includes = NULL;
+static IncludeForClass class_includes = nullptr;
 
 /*
  * Initialization file includes.
@@ -136,7 +136,7 @@ static IncludeFileRec *std_includes[] =
     &incStandardLib,
     &incIntrinsic,
     &incDtbUtils,
-    NULL,
+    nullptr,
 };
 
 int
@@ -148,7 +148,7 @@ abmfP_ui_header_file_init(void)
     ++(in_entry);
 
     int                 class_includes_size = 22;
-    IncludeForClass     include = NULL;
+    IncludeForClass     include = nullptr;
 
     /*
      * class_includes
@@ -226,7 +226,7 @@ abmfP_ui_header_file_init(void)
     add_inc(include, abmfP_xmText, &incText);
     add_inc(include, abmfP_xmTextField, &incTextField);
     add_inc(include, abmfP_xmToggleButton, &incToggleButton);
-    add_inc(include, NULL, NULL);
+    add_inc(include, nullptr, nullptr);
     assert((include - class_includes) <= class_includes_size);
 
     return 0;
@@ -243,10 +243,10 @@ abmfP_comp_get_widget_specific_includes(StringList includesList, ABObj obj)
     int			return_value = 0;
     int			rc = 0;		/* return code */
     AB_TRAVERSAL	trav;
-    ABObj		subobj = NULL;
+    ABObj		subobj = nullptr;
 
     for (trav_open(&trav, obj, AB_TRAV_COMP_SUBOBJS);
-	(subobj = trav_next(&trav)) != NULL; )
+	(subobj = trav_next(&trav)) != nullptr; )
     {
 	rc = abmfP_obj_get_widget_specific_includes(includesList, subobj);
 	return_if_err(rc,rc);
@@ -277,28 +277,28 @@ abmfP_obj_get_widget_specific_includes(StringList includesList, ABObj obj)
      */
     if (obj_has_scrollbar(obj))
     {
-        strlist_add_str(includesList, incScrollbar.include_file, NULL);
+        strlist_add_str(includesList, incScrollbar.include_file, nullptr);
     }
 
     if (obj_is_base_win(obj) && !obj_get_resizable(obj))
     {
-	strlist_add_str(includesList, incMwmUtil.include_file, NULL);
+	strlist_add_str(includesList, incMwmUtil.include_file, nullptr);
     }
 
     /*
      * Save all the includes for this class
      */
-    if (obj_get_class_name(obj) != NULL)
+    if (obj_get_class_name(obj) != nullptr)
     {
-        for (include = class_includes; include->class_name != NULL;
-             ((include->class_name != NULL) ? ++include : include))
+        for (include = class_includes; include->class_name != nullptr;
+             ((include->class_name != nullptr) ? ++include : include))
         {
             if (util_streq(obj_get_class_name(obj), 
                         istr_string(include->class_name)))
             {
                 /* this include file is needed */
                 strlist_add_str(includesList, 
-				include->include->include_file, NULL);
+				include->include->include_file, nullptr);
             }
         } /* for include */
     } /* class_name != NULL */
@@ -321,7 +321,7 @@ abmfP_tree_write_widget_specific_includes(File codeFile, ABObj module)
     int			return_value = 0;
     int			num_includes = 0;
     AB_TRAVERSAL	trav;
-    ABObj		obj = NULL;
+    ABObj		obj = nullptr;
     StringListRec	includesRec;
     StringList		includes = &includesRec;
     strlist_construct(&includesRec);
@@ -331,14 +331,14 @@ abmfP_tree_write_widget_specific_includes(File codeFile, ABObj module)
     /*
      * Get standard includes
      */
-    strlist_add_str(includes, incStandardLib.include_file, NULL);
-    strlist_add_str(includes, incIntrinsic.include_file, NULL);
+    strlist_add_str(includes, incStandardLib.include_file, nullptr);
+    strlist_add_str(includes, incIntrinsic.include_file, nullptr);
 
     /*
      * Get the list of includes we need
      */
     for (trav_open(&trav, module, AB_TRAV_UI);
-         (obj = trav_next(&trav)) != NULL;)
+         (obj = trav_next(&trav)) != nullptr;)
     {
 	abmfP_obj_get_widget_specific_includes(includes, obj);
     }
@@ -352,11 +352,11 @@ abmfP_tree_write_widget_specific_includes(File codeFile, ABObj module)
     if (num_includes > 0)
     {
         int     i = 0;
-        STRING  include = NULL;
+        STRING  include = nullptr;
         abio_puts(codeFile, "\n");
         for (i= 0; i < num_includes; ++i)
         {
-            include = strlist_get_str(includes, i, NULL);
+            include = strlist_get_str(includes, i, nullptr);
             abio_printf(codeFile, "#include %s\n", include);
         }
     }
@@ -379,11 +379,11 @@ write_struct_def(GenCodeInfo genCodeInfo, ABObj structObj)
     File                codeFile= genCodeInfo->code_file;
     AB_TRAVERSAL        salientTrav;
     AB_TRAVERSAL        uiTrav;
-    ABObj               item = NULL;
-    ABObj               fieldObj= NULL;
-    ABObj               salientObj = NULL;
-    STRING              typeName = NULL;
-    STRING              fieldName = NULL;
+    ABObj               item = nullptr;
+    ABObj               fieldObj= nullptr;
+    ABObj               salientObj = nullptr;
+    STRING              typeName = nullptr;
+    STRING              fieldName = nullptr;
     int                 numFields = 0;
     int                 thisFieldNum = 0;
     BOOL                objHasItems = FALSE;
@@ -403,7 +403,7 @@ write_struct_def(GenCodeInfo genCodeInfo, ABObj structObj)
      * Write out all the substructure data types
      */
     for (trav_open(&uiTrav, structObj, AB_TRAV_UI|AB_TRAV_MOD_PARENTS_FIRST);
-        (fieldObj = trav_next(&uiTrav)) != NULL; )
+        (fieldObj = trav_next(&uiTrav)) != nullptr; )
     {
         /* ref objs do not have their own type (they take the menu's type */
         if (    abmfP_obj_is_substruct_obj(fieldObj)
@@ -420,7 +420,7 @@ write_struct_def(GenCodeInfo genCodeInfo, ABObj structObj)
 
     for (trav_open(&salientTrav, 
                 structObj, AB_TRAV_UI|AB_TRAV_MOD_PARENTS_FIRST);
-        (salientObj= trav_next(&salientTrav)) != NULL;
+        (salientObj= trav_next(&salientTrav)) != nullptr;
         lastNumFields = numFields, lastSeparateObj = separateObj)
     {
         if (! (obj_is_salient(salientObj) || obj_is_menu_ref(salientObj)) )
@@ -428,7 +428,7 @@ write_struct_def(GenCodeInfo genCodeInfo, ABObj structObj)
             continue;
         }
         item = obj_get_item(salientObj, 0);
-        objHasItems = ((item != NULL) && 
+        objHasItems = ((item != nullptr) && 
                         !obj_is_list_item(item) &&
                         !obj_is_combo_box_item(item) &&
                         !obj_is_spin_box_item(item));
@@ -446,10 +446,10 @@ write_struct_def(GenCodeInfo genCodeInfo, ABObj structObj)
          */
         for (trav_open(&uiTrav, salientObj, 
                 AB_TRAV_COMP_SUBOBJS|AB_TRAV_MOD_PARENTS_FIRST);
-            (fieldObj = trav_next(&uiTrav)) != NULL; ++thisFieldNum)
+            (fieldObj = trav_next(&uiTrav)) != nullptr; ++thisFieldNum)
         {
-            typeName = NULL;
-            fieldName = NULL;
+            typeName = nullptr;
+            fieldName = nullptr;
             if (    abmfP_obj_has_struct_field(fieldObj)
                      && (!obj_was_written(fieldObj)) )
             {
@@ -457,7 +457,7 @@ write_struct_def(GenCodeInfo genCodeInfo, ABObj structObj)
                 fieldName = abmfP_get_c_field_name(fieldObj);
             }
     
-            if ((typeName != NULL) && (fieldName != NULL))
+            if ((typeName != nullptr) && (fieldName != nullptr))
             {
                 ++thisFieldNum;
                 ++fieldsWritten;
@@ -472,7 +472,7 @@ write_struct_def(GenCodeInfo genCodeInfo, ABObj structObj)
                     typeName, fieldName);
                 if (separateObj && (thisFieldNum == 0))
                 {
-                    STRING      userObjName = NULL;
+                    STRING      userObjName = nullptr;
                     if (obj_is_ref(salientObj))
                     {
                         userObjName = 
@@ -522,14 +522,14 @@ static int
 write_substruct_def(GenCodeInfo genCodeInfo, ABObj structObj)
 {
     File        codeFile = genCodeInfo->code_file;
-    ABObj       fieldObj = NULL;
+    ABObj       fieldObj = nullptr;
     AB_TRAVERSAL        trav;
 
     abio_printf(codeFile, "typedef struct {\n");
     abio_indent(codeFile);
 
     for (trav_open(&trav, structObj, AB_TRAV_ITEMS_FOR_OBJ);
-        (fieldObj = trav_next(&trav)) != NULL; )
+        (fieldObj = trav_next(&trav)) != nullptr; )
     {
         if (abmfP_obj_has_substruct_field(fieldObj))
         {
@@ -556,7 +556,7 @@ static int
 write_all_struct_defs(GenCodeInfo genCodeInfo, ABObj module)
 {
     AB_TRAVERSAL        trav;
-    ABObj               structObj= NULL;
+    ABObj               structObj= nullptr;
     ABObj               menuObj;
     int                 numWritten = 0;
 
@@ -570,7 +570,7 @@ write_all_struct_defs(GenCodeInfo genCodeInfo, ABObj module)
      */
     abmfP_write_c_comment(genCodeInfo, FALSE, "Shared data structures");
     for (trav_open(&trav, module, AB_TRAV_MENUS);
-        (menuObj = trav_next(&trav)) != NULL; )
+        (menuObj = trav_next(&trav)) != nullptr; )
     {
         /* refs use the type that they reference */
         if ((!obj_is_ref(menuObj)) && (abmfP_obj_is_substruct_obj(menuObj)))
@@ -590,7 +590,7 @@ write_all_struct_defs(GenCodeInfo genCodeInfo, ABObj module)
      * Write all structures
      */
     for (trav_open(&trav, module, AB_TRAV_UI | AB_TRAV_MOD_PARENTS_FIRST);
-        (structObj= trav_next(&trav)) != NULL; )
+        (structObj= trav_next(&trav)) != nullptr; )
     {
         if (    abmfP_obj_is_struct_obj(structObj))
         {
@@ -636,11 +636,11 @@ write_all_shared_var_decls(GenCodeInfo genCodeInfo, ABObj module)
 {
     File                codeFile= genCodeInfo->code_file;
     AB_TRAVERSAL        trav;
-    ABObj               structObj= NULL;;
+    ABObj               structObj= nullptr;;
 
     abio_printf(codeFile, "\n\n");
     for (trav_open(&trav, module, AB_TRAV_ALL);
-        (structObj= trav_next(&trav)) != NULL; )
+        (structObj= trav_next(&trav)) != nullptr; )
     {
         if (!abmfP_obj_is_struct_obj(structObj))
         {
@@ -665,10 +665,10 @@ write_action_decls(
                         BOOL auto_named)
 {
     AB_TRAVERSAL        trav;
-    ABObj               action = NULL;
+    ABObj               action = nullptr;
 
     for (trav_open(&trav, module, AB_TRAV_ACTIONS_FOR_OBJ);
-         (action = trav_next(&trav)) != NULL;)
+         (action = trav_next(&trav)) != nullptr;)
     {
         if (   mfobj_has_flags(action, CGenFlagIsDuplicateDef)
             || mfobj_has_flags(action, CGenFlagWriteDefToProjFile))
@@ -715,10 +715,10 @@ static int
 write_clear_proc_decls(GenCodeInfo genCodeInfo, ABObj module)
 {
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
 
     for (trav_open(&trav, module, AB_TRAV_ALL);
-         (obj = trav_next(&trav)) != NULL;)
+         (obj = trav_next(&trav)) != nullptr;)
     {
         if (!abmfP_obj_has_clear_proc(obj)) 
         {
@@ -742,10 +742,10 @@ static int
 write_init_proc_decls(GenCodeInfo genCodeInfo, ABObj module)
 {
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
 
     for (trav_open(&trav, module, AB_TRAV_SALIENT_UI);
-         (obj = trav_next(&trav)) != NULL;)
+         (obj = trav_next(&trav)) != nullptr;)
     {
         if (!abmfP_obj_has_init_proc(obj))
         {
@@ -792,7 +792,7 @@ abmfP_write_ui_header_file(
 {
     File                codeFile = genCodeInfo->code_file;
     char                moduleName[1024];
-    STRING              errmsg = NULL;
+    STRING              errmsg = nullptr;
     int                 i = 0;
     *moduleName = 0;
 
@@ -811,7 +811,7 @@ abmfP_write_ui_header_file(
     /*
      * Write standard includes.
      */
-    for (i = 0; std_includes[i] != NULL; ++i)
+    for (i = 0; std_includes[i] != nullptr; ++i)
     {
         abio_printf(codeFile,
                     "#include %s\n", std_includes[i]->include_file);
@@ -880,11 +880,11 @@ int
 abmfP_write_action_func_decl(GenCodeInfo genCodeInfo, ABObj action)
 {
     STRING		funcName = abmfP_get_action_name(action);
-    ABObj		fromObj = NULL;
+    ABObj		fromObj = nullptr;
     AB_TRAVERSAL        refTrav;
-    ABObj               refObj = NULL;
-    ABObj               actualFromObj = NULL;
-    ABObj		module = NULL;
+    ABObj               refObj = nullptr;
+    ABObj               actualFromObj = nullptr;
+    ABObj		module = nullptr;
 
     fromObj = obj_get_from(action);
     module = obj_get_module(fromObj);

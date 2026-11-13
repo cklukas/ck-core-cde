@@ -144,7 +144,7 @@ main(
 
     app = XtCreateApplicationContext();
 
-    display = XtOpenDisplay(app, NULL, argv[0], "Customize", NULL, 0,
+    display = XtOpenDisplay(app, nullptr, argv[0], "Customize", nullptr, 0,
                                          &argc, argv);
 
     /* Go register the DT error handler */

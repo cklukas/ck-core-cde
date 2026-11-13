@@ -423,11 +423,11 @@ static int	ximsShowImsList(void)
 	    break;
 
 	case HOST_REMOTE:
-	    ret = get_remote_conf(&list, hostname, NULL, NULL);
+	    ret = get_remote_conf(&list, hostname, nullptr, nullptr);
 	    break;
 
 	case HOST_LOCAL:
-	    ret = get_ims_list(&list, NULL, True);
+	    ret = get_ims_list(&list, nullptr, True);
 	    break;
     }
 
@@ -491,7 +491,7 @@ static int	ximsShowCurrentIms(void)
 
     DPR(("ximsShowCurrentIms()\n"));
 
-    if (read_user_selection(&fsel, NULL) != NoError) {
+    if (read_user_selection(&fsel, nullptr) != NoError) {
 	DPR2(("No selection file.\n"));
 	return ErrNoSelectionFile;
     }
@@ -516,7 +516,7 @@ static int	ximsShowCurrentIms(void)
 static int	prepare_remote(int win_st)
 {
     int		ret;
-    char	**av = NULL;
+    char	**av = nullptr;
     int		ac = 0;
     int		cur_st;
 
@@ -585,7 +585,7 @@ static int	ximsSetMode(void)
 
     OpState = State_Mode;
 
-    if ((ret = read_localeconf(&imsList, NULL)) != NoError) {
+    if ((ret = read_localeconf(&imsList, nullptr)) != NoError) {
 	DPR(("ximsSetMode(%s) locale '%s' isn't supported\n", userEnv.locale));
 	/* return ErrNoLocaleConf; */
     }
@@ -646,7 +646,7 @@ static void	show_select_mode(int mode)
 static int	set_locale_env(char *locale)
 {
     char	*env_name, *env_value, *bp, *vp, buf[BUFSIZ], buf2[BUFSIZ];
-    static char	*last_lang_env[2] = { NULL, NULL };
+    static char	*last_lang_env[2] = { nullptr, nullptr };
 
     buf[0] = buf2[0] = 0;
     env_name = "LANG";
@@ -736,7 +736,7 @@ static void	init_command(char *progname)
     OpErrCode = NoError;
     LogFp = stderr;
     Wargc = 0;
-    Wargv = NULL;
+    Wargv = nullptr;
     WaitingDialogReply = False;
     WaitingActionDone = False;
     UseMsgWindow = True;
@@ -747,7 +747,7 @@ static void	init_command(char *progname)
 
     ximsErrArgs[0] = ximsErrArgs[1] = ximsErrArgs[2] = (void *) 0;
     errFilePath[0] = 0;
-    errFuncName = NULL;
+    errFuncName = nullptr;
 
     CLR(&Conf, CmdConf);
     CLR(&Opt, CmdOpt);
@@ -970,7 +970,7 @@ static int	parse_options(int argc, char **argv)
 	    }
 	    if (Opt.LogPath) {	/* open log file */
 		if (set_errorlog(Opt.LogPath) != NoError)
-		    Opt.LogPath = NULL;
+		    Opt.LogPath = nullptr;
 	    }
 	    if (CHK_FLAG(FLAG_REMOTERUN)) {
 		SET_FLAG(FLAG_NOTIFY);
@@ -1002,7 +1002,7 @@ static int	parse_options(int argc, char **argv)
 	Wargv = ALLOC(wac + 1 + 4, char *);	/* spare for '-xnlLanguage' */
 	memcpy(Wargv, wav, sizeof(char *) * wac);
 	Wargv[0] = ProgramName;
-	Wargv[wac] = NULL;
+	Wargv[wac] = nullptr;
 	Wargc = wac;
     } else {
 	UseMsgWindow = False;		/* disable msg window */
@@ -1040,13 +1040,13 @@ static OptDesc	opts_start[] = {
     { "-mode",	"change input method selection mode" },
     { "-list",	"show registered input method" },
     { "-help",	"show this message" },
-    { NULL, NULL }
+    { nullptr, nullptr }
 };
 
 static OptDesc	opts_mode[] = {
     { "-auto",		"enable auto-selection mode" },
     { "-noauto",	"disable auto-selection mode" },
-    { NULL, NULL }
+    { nullptr, nullptr }
 };
 #endif
 
@@ -1085,7 +1085,7 @@ static OptDesc	opts_internal[] = {
     { "-verbose",	"print verbose messages" },
     { "-debug",		"print debug messages" },
     { "<Xt options>",	"standard X toolkit options" },
-    { NULL, NULL }
+    { nullptr, nullptr }
 };
 #endif	/* DEBUG */
 
@@ -1139,7 +1139,7 @@ static void	usage(int force)
 
 char	*xims_errmsg(int err_num, void *arg1, void *arg2, void *arg3)
 {
-    char	*fmt = NULL, *bp;
+    char	*fmt = nullptr, *bp;
     int		len;
     static char	msgbuf[BUFSIZ];
 
@@ -1327,7 +1327,7 @@ char	*xims_errmsg(int err_num, void *arg1, void *arg2, void *arg3)
 #endif	/* DEBUG */
     }
 
-    if (!fmt)	return NULL;
+    if (!fmt)	return nullptr;
 
     bp = strcpyx(msgbuf, ProgramName); *bp++ = ':'; *bp++ = ' ';
     if (!arg1)	arg1 = ximsErrArgs[0];

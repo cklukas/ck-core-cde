@@ -70,7 +70,7 @@ tag = "control" if args.source_revision else "fixed"
 src, binary = scratch / f"drop-file-create-{tag}.c", scratch / f"drop-file-create-{tag}"
 src.write_text(prologue + production + "\n" + body)
 subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-               ["-std=gnu99", "-Wall", "-Wno-unused-function", "-Wno-unused-variable",
+               ["-std=gnu23", "-Wall", "-Wno-unused-function", "-Wno-unused-variable",
                 "-Wno-deprecated-declarations", "-Wno-unused-value", "-Wno-writable-strings",
                 "-Wno-write-strings", "-Wno-sometimes-uninitialized", "-Wno-unused-but-set-variable", "-Wno-format-security",
                 "-fsanitize=address,undefined", "-fno-sanitize-recover=all",

@@ -38,8 +38,8 @@
 #include "attr.h"
 
 /* standard calendar attr name and entry attr name table */
-_DtCmNameTable *_DtCm_cal_name_tbl = NULL;
-_DtCmNameTable *_DtCm_entry_name_tbl = NULL;
+_DtCmNameTable *_DtCm_cal_name_tbl = nullptr;
+_DtCmNameTable *_DtCm_entry_name_tbl = nullptr;
 
 /*
  * allocate a cms_entry structure and initialized with
@@ -51,23 +51,23 @@ _DtCm_make_cms_entry(_DtCmNameTable *tbl)
 	int	i;
 	cms_entry *ptr;
 
-	if ((ptr = (cms_entry *)calloc(1, sizeof(cms_entry))) == NULL)
-		return (NULL);
+	if ((ptr = (cms_entry *)calloc(1, sizeof(cms_entry))) == nullptr)
+		return (nullptr);
 
 	/* initialize the entry with attribute names */
 
 	if ((ptr->attrs = (cms_attribute *)calloc(1,
-	    sizeof(cms_attribute)*(tbl->size + 1))) == NULL) {
+	    sizeof(cms_attribute)*(tbl->size + 1))) == nullptr) {
 		free(ptr);
-		return (NULL);
+		return (nullptr);
 	}
 
 	for (i = 1; i <= tbl->size; i++) {
-		if ((ptr->attrs[i].name.name = strdup(tbl->names[i])) == NULL) {
+		if ((ptr->attrs[i].name.name = strdup(tbl->names[i])) == nullptr) {
 			/* clean up */
 			ptr->num_attrs = i - 1;
 			_DtCm_free_cms_entry(ptr);
-			return (NULL);
+			return (nullptr);
 		}
 
 		ptr->attrs[i].name.num = i;
@@ -84,10 +84,10 @@ _DtCm_copy_cms_entry(cms_entry *e, cms_entry **e_r)
 	cms_entry *ptr;
 	CSA_return_code stat;
 
-	if (e == NULL || e_r == NULL)
+	if (e == nullptr || e_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	if ((ptr = (cms_entry *)calloc(1, sizeof(cms_entry))) == NULL)
+	if ((ptr = (cms_entry *)calloc(1, sizeof(cms_entry))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if ((stat = _DtCm_copy_cms_attributes(e->num_attrs, e->attrs,
@@ -104,7 +104,7 @@ _DtCm_copy_cms_entry(cms_entry *e, cms_entry **e_r)
 extern void
 _DtCm_free_cms_entry(cms_entry *entry)
 {
-	if (entry == NULL)
+	if (entry == nullptr)
 		return;
 
 	if (entry->num_attrs > 0) {
@@ -160,7 +160,7 @@ _DtCmGrowAttrArray(uint *num_attrs, cms_attribute **attrs, cms_attribute *attr)
 	index = attr->name.num;
 
 	if ((newptr = (cms_attribute *)realloc(*attrs,
-	    sizeof(cms_attribute) * (index + 1))) == NULL)
+	    sizeof(cms_attribute) * (index + 1))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	else {
 		*attrs = newptr;

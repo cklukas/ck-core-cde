@@ -37,10 +37,10 @@ struct xref *xref;
 char *buffer;
 char *mb_id;
 
-if (!id) return(NULL);
+if (!id) return(nullptr);
 
 m_getline(&xrffile, &xrfline);
-if (xrffile == NULL)
+if (xrffile == nullptr)
     {
     /* set to primary input */
     xrffile = inputname;
@@ -75,7 +75,7 @@ if (xref->file)
     m_free(mb_file,"multi-byte string");
     }
 m_errline(".\n");
-return(NULL);
+return(nullptr);
 }
 
 /* Write a single cross-reference macro definition */
@@ -320,7 +320,7 @@ while (TRUE)
           csensitive,
           inchapter,
           chapnum,
-          NULL,
+          nullptr,
           0,
           xrefable);
     }
@@ -400,7 +400,7 @@ xref->file = xrffile;
 xref->line = xrfline;
 xref->xrefable = xrefable;
 xstrlen = 0;
-savid = NULL;
+savid = nullptr;
 }
 
 /* Generate a cross-reference */
@@ -508,7 +508,7 @@ else
     have_forward_xrefs = TRUE;
     xref->defined = FALSE;
     xref->retrieved = FALSE;
-    xref->textptr = NULL;
+    xref->textptr = nullptr;
     xref->wheredef = FALSE;
 
     /* This is a forward ref.  We assume it is xrefable */
@@ -522,7 +522,7 @@ else
 if (! xref->retrieved && ! xref->defined)
     {
     m_getline(&xref->file, &xref->line);
-    if (xref->file == NULL)
+    if (xref->file == nullptr)
 	{
 	/* set to primary input */
 	xref->file = inputname;

@@ -116,14 +116,14 @@ HasOpenLookHints(
         ClientData *pCD )
 {
     Boolean rval = False;
-    OLWinAttr *property = NULL;
+    OLWinAttr *property = nullptr;
 
     if (ValidPropertyList (pCD) &&
 	HasProperty(pCD, wmGD.xa_OL_WIN_ATTR))
     {
 	rval = True;
     }
-    else if ((property=GetOLWinAttr (pCD)) != NULL)
+    else if ((property=GetOLWinAttr (pCD)) != nullptr)
     {
 	XFree ((char *) property);
 	rval = True;
@@ -159,7 +159,7 @@ GetOLWinAttr(
         ClientData *pCD )
 {
     Boolean rval = False;
-    OLWinAttr *property = NULL;
+    OLWinAttr *property = nullptr;
     OLWinAttr *prop_new;
     Atom actual_type;
     int actual_format;
@@ -175,14 +175,14 @@ GetOLWinAttr(
 
     if (ret_val != Success)
     {
-	    property = NULL;
+	    property = nullptr;
     }
     else if ((actual_format != 32) || 
 	(actual_type != wmGD.xa_OL_WIN_ATTR)) 
     {
 	    if (property) 
 		XFree((char *)property);
-	    property = NULL;
+	    property = nullptr;
     }
 
     if (property && (nitems == OLDOLWINATTRLENGTH))
@@ -256,7 +256,7 @@ GetOLDecorFlags(
     int actual_format;
     unsigned long nitems;
     unsigned long leftover;
-    Atom *pAtoms = NULL;
+    Atom *pAtoms = nullptr;
 
     status = XGetWindowProperty (DISPLAY, pCD->client, property,
 		  0L, ENTIRE_CONTENTS,
@@ -328,7 +328,7 @@ ProcessOLDecoration(
     long decorMask;
 
     if (HasOpenLookHints (pCD) && 
-	((pOLWinAttr = GetOLWinAttr (pCD)) != NULL))
+	((pOLWinAttr = GetOLWinAttr (pCD)) != nullptr))
     {
 	/*
 	 * This window already has some decoration applied to

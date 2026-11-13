@@ -68,7 +68,7 @@ void    activateCB_Confirmed_OkButton( Widget  UxWidget,
 void display_confirmed_message (Widget parent, char *message)
 {
 
-  Confirmed = XmCreateInformationDialog(parent, "confirmedDialog", NULL, 0);
+  Confirmed = XmCreateInformationDialog(parent, "confirmedDialog", nullptr, 0);
   XtUnmanageChild (XmMessageBoxGetChild (Confirmed, XmDIALOG_CANCEL_BUTTON));
   XtUnmanageChild (XmMessageBoxGetChild (Confirmed, XmDIALOG_HELP_BUTTON));
 
@@ -79,7 +79,7 @@ void display_confirmed_message (Widget parent, char *message)
   XtVaSetValues (Confirmed,
                  RES_CONVERT(XmNdialogTitle, GETMESSAGE(6, 41, "Create Action - Confirmation")),
                  RES_CONVERT(XmNmessageString, message),
-                 NULL);
+                 nullptr);
   XtRealizeWidget(Confirmed);
 
   XtManageChild (Confirmed);
@@ -149,13 +149,13 @@ void display_question_message (Widget parent, char *message,
 {
   Widget tmpw;
 
-  QuestionDialog = XmCreateQuestionDialog(parent, "questionDialog", NULL, 0);
+  QuestionDialog = XmCreateQuestionDialog(parent, "questionDialog", nullptr, 0);
 
   tmpw = XmMessageBoxGetChild(QuestionDialog, XmDIALOG_OK_BUTTON);
   if (button1) {
      XtVaSetValues(tmpw,
                    RES_CONVERT( XmNlabelString, button1),
-                   NULL);
+                   nullptr);
      XtAddCallback( QuestionDialog, XmNokCallback,
              cb_button1,
              (XtPointer) NULL );
@@ -167,7 +167,7 @@ void display_question_message (Widget parent, char *message,
   if (button2) {
      XtVaSetValues(tmpw,
                    RES_CONVERT( XmNlabelString, button2),
-                   NULL);
+                   nullptr);
      XtAddCallback( QuestionDialog, XmNcancelCallback,
              cb_button2,
              (XtPointer) NULL );
@@ -179,7 +179,7 @@ void display_question_message (Widget parent, char *message,
   if (button3) {
      XtVaSetValues(tmpw,
                    RES_CONVERT( XmNlabelString, button3),
-                   NULL);
+                   nullptr);
      XtAddCallback( QuestionDialog, XmNhelpCallback,
              cb_button3,
              (XtPointer) NULL );
@@ -190,7 +190,7 @@ void display_question_message (Widget parent, char *message,
   XtVaSetValues (QuestionDialog,
                  RES_CONVERT(XmNdialogTitle, GETMESSAGE(6, 51, "Create Action - Question")),
                  RES_CONVERT(XmNmessageString, message),
-                 NULL);
+                 nullptr);
 
   XtManageChild (QuestionDialog);
   return;

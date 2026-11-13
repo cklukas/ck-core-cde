@@ -303,22 +303,22 @@ proj_update_stat_region(
     STRING              value
 )
 {
-    Vwr				proj_vwr = NULL;
-    DtbProjProjMainInfoRec	*projInfo = NULL;
+    Vwr				proj_vwr = nullptr;
+    DtbProjProjMainInfoRec	*projInfo = nullptr;
     BrowserUiObj		ui;
-    static Widget       projwin_mod_path = NULL;
-    static Widget       projwin_proj_path = NULL;
-    Widget              path_value = NULL;
+    static Widget       projwin_mod_path = nullptr;
+    static Widget       projwin_proj_path = nullptr;
+    Widget              path_value = nullptr;
     String              nullstr = "        ";
 
     util_dprintf(2, "proj_update_stat_region:\n");
 
-    if (dtb_proj_proj_main.module_drawarea == NULL)
+    if (dtb_proj_proj_main.module_drawarea == nullptr)
     {
 	return 0;
     }
    
-    XtVaGetValues(dtb_proj_proj_main.module_drawarea, XmNuserData, &proj_vwr, NULL);
+    XtVaGetValues(dtb_proj_proj_main.module_drawarea, XmNuserData, &proj_vwr, nullptr);
     
     if (!proj_vwr)
 	return(-1);
@@ -338,16 +338,16 @@ proj_update_stat_region(
 	    util_dprintf(2, "\tcase PROJ_STATUS_PROJ_PATH\n");
             break;
     }
-    if (value == NULL)
+    if (value == nullptr)
         value = nullstr;
  
-    if (path_value != NULL)
+    if (path_value != nullptr)
     {
 	util_dprintf(2, "\tsetting the path value to %s\n", value);
         XtVaSetValues(path_value,
                 XtVaTypedArg, XmNlabelString, XtRString,
                 value, strlen(value)+1,
-                NULL);
+                nullptr);
     }
 
     return 0;          
@@ -359,43 +359,43 @@ proj_show_save_proj_as_chooser(
     ProjSaveCallbackFunc	saveDoneCB
 )
 {
-    Widget      	textf = NULL,
-			encap_cbox = NULL;
+    Widget      	textf = nullptr,
+			encap_cbox = nullptr;
     char        	init_name[MAXPATHLEN];
-    ChooserInfo		info = NULL;
+    ChooserInfo		info = nullptr;
     XmString		ok_label;
     char		*title;
  
     XtCallbackRec ok_callback[] = {
         {save_proj_as_okCB, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL}
+        {nullptr, (XtPointer) NULL},
+        {nullptr, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = {
         {proj_cancelCB, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL}
+        {nullptr, (XtPointer) NULL},
+        {nullptr, (XtPointer) NULL}
     };
 
     XtCallbackRec popdown_callback[] = {
         {proj_unmap_chooserCB, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL}
+        {nullptr, (XtPointer) NULL}
     };
 
 
     /* Add callback to call saveDone, if necessary */
-    ok_callback[1].callback = NULL;
-    ok_callback[1].closure = NULL;
-    if (saveDoneCB != NULL)
+    ok_callback[1].callback = nullptr;
+    ok_callback[1].closure = nullptr;
+    if (saveDoneCB != nullptr)
     {
 	ok_callback[1].callback = notify_proj_save_as_okCB;
 	ok_callback[1].closure = (XtPointer)saveDoneCB;
     }
 
     /* Add callback to call saveDone, if necessary */
-    cancel_callback[1].callback = NULL;
-    cancel_callback[1].closure = NULL;
-    if (saveDoneCB != NULL)
+    cancel_callback[1].callback = nullptr;
+    cancel_callback[1].closure = nullptr;
+    if (saveDoneCB != nullptr)
     {
 	cancel_callback[1].callback = notify_proj_save_as_cancelCB;
 	cancel_callback[1].closure = (XtPointer)saveDoneCB;
@@ -405,7 +405,7 @@ proj_show_save_proj_as_chooser(
      * been created by anyone else, then set the
      * appropriate resources.
      */  
-    if (AB_generic_chooser == NULL)
+    if (AB_generic_chooser == nullptr)
     {
         AB_generic_chooser = XmCreateFileSelectionDialog(
                 widget,
@@ -416,7 +416,7 @@ proj_show_save_proj_as_chooser(
         info = (ChooserInfo) calloc(sizeof(ChooserInfoRec), 1);
         XtVaSetValues(AB_generic_chooser,
                         XmNuserData, (XtPointer) info,
-                        NULL);
+                        nullptr);
     }
     else if (XtIsManaged(AB_generic_chooser))
     {
@@ -429,7 +429,7 @@ proj_show_save_proj_as_chooser(
      */
     XtVaGetValues(AB_generic_chooser,
                         XmNuserData, &info,
-                        NULL);
+                        nullptr);
     info->writeEncapsulated = FALSE;
 
     /* Create the "Save As Encapsulated Project" checkbox */
@@ -448,14 +448,14 @@ proj_show_save_proj_as_chooser(
                 XmNokLabelString, ok_label,
                 XmNokCallback, &ok_callback,
                 XmNcancelCallback, &cancel_callback,
-                NULL);
+                nullptr);
     XmStringFree(ok_label);
 
     title = XtNewString(CATGETS(Dtb_project_catd, 100, 238, "Save Project"));
     XtVaSetValues(XtParent(AB_generic_chooser),
                 XmNtitle, title,
                 XmNpopdownCallback, &popdown_callback,
-                NULL);
+                nullptr);
     XtFree(title);
     textf = XmFileSelectionBoxGetChild(AB_generic_chooser,
                         XmDIALOG_TEXT);
@@ -510,15 +510,15 @@ save_proj_as_okCB(
 )
 {
     XmSelectionBoxCallbackStruct *selection_data = call_data;
-    STRING              proj_filename = NULL;
+    STRING              proj_filename = nullptr;
     char		proj_name[MAXPATHLEN];
     char		proj_dir[MAXPATHLEN];
     char		help_buf[MAXPATHLEN];
     int			iRet = 0; 
-    ChooserInfo		chooserInfo = NULL;
+    ChooserInfo		chooserInfo = nullptr;
     XmString            xm_buf = (XmString) NULL;
     BOOL		read_OK = FALSE, write_OK = FALSE;
-    DtbObjectHelpData	help_data = NULL;
+    DtbObjectHelpData	help_data = nullptr;
 
     *proj_name = 0;
     *proj_dir = 0;
@@ -533,7 +533,7 @@ save_proj_as_okCB(
     {
 	dtb_proj_no_name_msg_initialize(&dtb_proj_no_name_msg);
 	(void)dtb_show_modal_message(widget, 
-			&dtb_proj_no_name_msg, NULL, NULL, NULL);
+			&dtb_proj_no_name_msg, nullptr, nullptr, nullptr);
 	return;
     }
     if (util_file_is_directory(proj_filename))
@@ -551,7 +551,7 @@ save_proj_as_okCB(
         help_data->help_locationID = ""; 
 
 	(void)dtb_show_modal_message(widget,
-                        &dtb_proj_error_msg, xm_buf, help_data, NULL);
+                        &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
 	util_free(help_data);
         XmStringFree(xm_buf);
@@ -570,7 +570,7 @@ save_proj_as_okCB(
 	    util_derive_name_from_path(proj_filename, proj_name);
     	    if (ab_c_ident_is_ok(proj_name))
     	    {
-		XtVaGetValues(widget, XmNuserData, &chooserInfo, NULL);
+		XtVaGetValues(widget, XmNuserData, &chooserInfo, nullptr);
 		if (chooserInfo->writeEncapsulated)
 		    iRet = save_proj_as_bix(proj_filename);
 		else
@@ -584,12 +584,12 @@ save_proj_as_okCB(
 	 	 */
 		dtb_proj_save_proj_as_msg_initialize(&dtb_proj_save_proj_as_msg);	
 		(void)dtb_show_modal_message(widget, 
-			&dtb_proj_save_proj_as_msg, NULL, NULL, NULL);
+			&dtb_proj_save_proj_as_msg, nullptr, nullptr, nullptr);
     	    }
 	}
 	else
         {
-	    XtVaGetValues(widget, XmNuserData, &chooserInfo, NULL);
+	    XtVaGetValues(widget, XmNuserData, &chooserInfo, nullptr);
 	    if (chooserInfo->writeEncapsulated)
 	    {
 		sprintf(Buf, CATGETS(Dtb_project_catd, 100, 77,
@@ -602,7 +602,7 @@ save_proj_as_okCB(
 	    }
 
 	    util_set_help_data(CATGETS(Dtb_project_catd, 100, 83,
-		"The directory you specified for saving is not\nwritable by you. Therefore, the project cannot\nbe saved.  Try saving the project to another directory."), NULL, NULL);
+		"The directory you specified for saving is not\nwritable by you. Therefore, the project cannot\nbe saved.  Try saving the project to another directory."), nullptr, nullptr);
 
             util_printf_err(Buf);
         }
@@ -619,7 +619,7 @@ save_proj_as_bip(
 )
 {
     AB_TRAVERSAL        trav;
-    ABObj               module= NULL;
+    ABObj               module= nullptr;
     ABObj               project = proj_get_project();
     char                new_filename[MAXPATHLEN];
     char                new_proj_dir[MAXPATHLEN];
@@ -627,7 +627,7 @@ save_proj_as_bip(
     BOOL                changed_dir= FALSE;
     BOOL		EncapProj = FALSE;
     BOOL		Edited = FALSE;
-    BOOL                ProjHasBeenSaved = (obj_get_file(project) != NULL);
+    BOOL                ProjHasBeenSaved = (obj_get_file(project) != nullptr);
     int			iRet = 0;
     char		msg[MAXPATHLEN];
     DTB_MODAL_ANSWER	answer = DTB_ANSWER_ACTION1;
@@ -685,8 +685,8 @@ save_proj_as_bip(
 	int		msg_len = 0;
 	char		old_file[MAXPATHLEN];
 	char		new_file[MAXPATHLEN];
-	STRING		msg = NULL;
-  	XmString	xm_msg = NULL;
+	STRING		msg = nullptr;
+  	XmString	xm_msg = nullptr;
 
    	*old_file = 0;
    	*new_file = 0;
@@ -700,15 +700,15 @@ save_proj_as_bip(
 	msg = (STRING)util_malloc((2*old_name_len)+new_name_len+msg_len +1);
 
 	help_data.help_text = CATGETS(Dtb_project_catd, 100, 102, HLP_MSG);
-	help_data.help_volume = NULL;
-	help_data.help_locationID = NULL;
+	help_data.help_volume = nullptr;
+	help_data.help_locationID = nullptr;
 	if (msg)
 	{
 	    sprintf(msg, CATGETS(Dtb_project_catd, 100, 101, MSG),
 			new_file, old_file, old_file);
 	    xm_msg = XmStringCreateLocalized(msg);
 	    answer = dtb_show_modal_message(AB_generic_chooser,
-			&dtb_proj_wrn_msg, xm_msg, &help_data, NULL);
+			&dtb_proj_wrn_msg, xm_msg, &help_data, nullptr);
 	    util_free(msg);
 	    XmStringFree(xm_msg);
 	}
@@ -722,7 +722,7 @@ save_proj_as_bip(
     if (answer == DTB_ANSWER_ACTION1)
     {
 	for (trav_open(&trav, project, AB_TRAV_MODULES);
-            (module= trav_next(&trav)) != NULL; )
+            (module= trav_next(&trav)) != nullptr; )
     	{
 	    if (obj_has_flag(module, SaveNeededFlag))
 	    	Edited = TRUE;
@@ -760,7 +760,7 @@ save_proj_as_bip(
 	    if (!Edited)
 	    {
 	    	for (trav_open(&trav, project, AB_TRAV_MODULES);
-		    (module= trav_next(&trav)) != NULL; )
+		    (module= trav_next(&trav)) != nullptr; )
             	{
 		    obj_clear_flag(module, SaveNeededFlag);
             	}
@@ -793,13 +793,13 @@ proj_show_name_dlg(
     Widget              dlg = (Widget) NULL;
     int                 i, num_cascades = 0;
     WidgetList          cascades = (WidgetList) NULL;
-    DtbObjectHelpData   help_data = NULL;
+    DtbObjectHelpData   help_data = nullptr;
     ABObj		project = proj_get_project();
-    STRING		dialog_title = NULL;
-    STRING		textf_lbl = NULL;
-    STRING		btn1_lbl = NULL;
-    STRING		btn2_lbl = NULL;
-    STRING		btn3_lbl = NULL;
+    STRING		dialog_title = nullptr;
+    STRING		textf_lbl = nullptr;
+    STRING		btn1_lbl = nullptr;
+    STRING		btn2_lbl = nullptr;
+    STRING		btn3_lbl = nullptr;
 
     /* Post the name dialog */
     if (module)
@@ -828,7 +828,7 @@ proj_show_name_dlg(
         XtVaGetValues(dtb_palette_ab_palette_main.palette_menubar,
                 XmNnumChildren, &num_cascades,
                 XmNchildren,    &cascades,
-                NULL);
+                nullptr);
 
         for (i = 0; i < num_cascades - 1; i++)
   	{
@@ -894,28 +894,28 @@ proj_show_export_bil_chooser(
     Widget      	textf;
     Widget		format_cbox = (Widget)NULL;
     char        	init_name[MAXPATHLEN];
-    ChooserInfo		info = NULL;
+    ChooserInfo		info = nullptr;
     XmString		ok_label;
     char		*title;
 
     XtCallbackRec ok_callback[] = {
         {export_bil_okCB, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL},
+        {nullptr, (XtPointer) NULL},
     };
     XtCallbackRec cancel_callback[] = {
         {proj_cancelCB, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL}
+        {nullptr, (XtPointer) NULL}
     };
     XtCallbackRec popdown_callback[] = {
         {proj_unmap_chooserCB, (XtPointer) NULL},
-        {NULL, (XtPointer) NULL}
+        {nullptr, (XtPointer) NULL}
     };
 
     /* Create the file chooser if it hasn't already
      * been created by anyone else, then set the
      * appropriate resources.
      */  
-    if (AB_generic_chooser == NULL)
+    if (AB_generic_chooser == nullptr)
     {
         AB_generic_chooser = XmCreateFileSelectionDialog(
                 widget,
@@ -926,7 +926,7 @@ proj_show_export_bil_chooser(
         info = (ChooserInfo) util_malloc(sizeof(ChooserInfoRec));
         XtVaSetValues(AB_generic_chooser,
                         XmNuserData, (XtPointer) info,
-                        NULL);
+                        nullptr);
     }
     else if (XtIsManaged(AB_generic_chooser))
     {
@@ -936,7 +936,7 @@ proj_show_export_bil_chooser(
 
     XtVaGetValues(AB_generic_chooser,
                         XmNuserData, &info,
-                        NULL);
+                        nullptr);
 
     /* Force 'export as BIL' default */
     ExportAsUIL = FALSE;
@@ -959,14 +959,14 @@ proj_show_export_bil_chooser(
                 XmNokLabelString, ok_label,
                 XmNokCallback, &ok_callback,
                 XmNcancelCallback, &cancel_callback,
-                NULL);
+                nullptr);
     XmStringFree(ok_label);
 
     title = XtNewString(CATGETS(Dtb_project_catd, 100, 239, "Export Module"));
     XtVaSetValues(XtParent(AB_generic_chooser),
                 XmNtitle, title,
                 XmNpopdownCallback, &popdown_callback,
-                NULL);
+                nullptr);
     XtFree(title);
     textf = XmFileSelectionBoxGetChild(AB_generic_chooser,
                         XmDIALOG_TEXT);
@@ -990,14 +990,14 @@ export_bil_okCB(
 )
 {
     XmSelectionBoxCallbackStruct *selection_data = call_data;
-    STRING	fullpath = NULL;
+    STRING	fullpath = nullptr;
     ABObj	module_obj = (ABObj) client_data;
     XmString	xm_buf = (XmString) NULL;
     char        mod_name[MAXPATHLEN];
     char        mod_dir[MAXPATHLEN];
     BOOL        read_OK = FALSE, write_OK = FALSE;
     int		iRet = 0;
-    DtbObjectHelpData	help_data = NULL;
+    DtbObjectHelpData	help_data = nullptr;
 
     *mod_name = 0;
     *mod_dir = 0;
@@ -1010,7 +1010,7 @@ export_bil_okCB(
     {
 	dtb_proj_no_name_msg_initialize(&dtb_proj_no_name_msg);
 	(void)dtb_show_modal_message(widget, 
-			&dtb_proj_no_name_msg, NULL, NULL, NULL);
+			&dtb_proj_no_name_msg, nullptr, nullptr, nullptr);
 	return;
     }
     if (util_file_is_directory(fullpath))
@@ -1027,7 +1027,7 @@ export_bil_okCB(
 	help_data->help_locationID = "";
 
         (void)dtb_show_modal_message(widget,
-                        &dtb_proj_error_msg, xm_buf, help_data, NULL);
+                        &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
 	util_free(help_data);
         XmStringFree(xm_buf);
@@ -1071,7 +1071,7 @@ export_bil_okCB(
 				&dtb_proj_save_as_mod_msg);
 		    (void) dtb_show_modal_message(widget,
                         	&dtb_proj_save_as_mod_msg,
-                        	NULL, NULL, NULL);
+                        	nullptr, nullptr, nullptr);
 		}
     	    }
 	}
@@ -1089,7 +1089,7 @@ export_bil_okCB(
             help_data->help_locationID = "";
 
             (void)dtb_show_modal_message(widget,
-                        &dtb_proj_error_msg, xm_buf, help_data, NULL);
+                        &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
 	    util_free(help_data);
             XmStringFree(xm_buf);
@@ -1135,7 +1135,7 @@ proj_overwrite_existing_file(
 	}
 
 	util_set_help_data(CATGETS(Dtb_project_catd, 100, 79,
-		"The file name you specified for saving already exists\nand cannot be overwritten, since it is not writable by\nyou. Your edits can be saved if you type a different\nfile name."), NULL, NULL);
+		"The file name you specified for saving already exists\nand cannot be overwritten, since it is not writable by\nyou. Your edits can be saved if you type a different\nfile name."), nullptr, nullptr);
 
 	util_error(Buf);
 	return (-1);
@@ -1146,7 +1146,7 @@ proj_overwrite_existing_file(
 
     dtb_proj_overwrite_msg_initialize(&dtb_proj_overwrite_msg);
     *answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-		&dtb_proj_overwrite_msg, xm_buf, NULL, NULL);
+		&dtb_proj_overwrite_msg, xm_buf, nullptr, nullptr);
 
     switch (*answer)
     {
@@ -1188,7 +1188,7 @@ proj_save_needed(
 {
     ABObj		project = proj_get_project();
     DTB_MODAL_ANSWER	answer = DTB_ANSWER_NONE;
-    BOOL		projHasBeenSaved = (obj_get_file(project) != NULL);
+    BOOL		projHasBeenSaved = (obj_get_file(project) != nullptr);
     BOOL		encapFile = FALSE;
     int			iRet = 0;
     XmString		xm_buf = (XmString) NULL;
@@ -1210,7 +1210,7 @@ proj_save_needed(
 	encapFile = TRUE;
 	dtb_proj_bix_save_msg_initialize(&dtb_proj_bix_save_msg);
 	answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-			&dtb_proj_bix_save_msg, xm_buf, NULL, NULL);
+			&dtb_proj_bix_save_msg, xm_buf, nullptr, nullptr);
 	XmStringFree(xm_buf);
 
 	if (answer != DTB_ANSWER_ACTION1)
@@ -1243,7 +1243,7 @@ proj_save_needed(
 		if (iRet >= 0)
 		    abobj_set_save_needed(project, FALSE);
 
-		if (saveDoneCB != NULL)
+		if (saveDoneCB != nullptr)
 		    saveDoneCB(iRet>=0? AB_SAVE_NORMAL:iRet);
 	    }
             else
@@ -1252,7 +1252,7 @@ proj_save_needed(
 		    "Cannot save project to \"%s\".\n\"%s\" does not have write permission."), proj_dir, proj_dir);
 
 		util_set_help_data(CATGETS(Dtb_project_catd, 100, 83,
-		     "The directory you specified for saving is not\nwritable by you. Therefore, the project cannot\nbe saved. Try saving the project to another directory."), NULL, NULL);
+		     "The directory you specified for saving is not\nwritable by you. Therefore, the project cannot\nbe saved. Try saving the project to another directory."), nullptr, nullptr);
 
 		util_printf_err(Buf);
             }
@@ -1274,18 +1274,18 @@ int
 proj_set_files_exploded(ABObj project)
 {
     AB_TRAVERSAL	trav;
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     STRING		projFileName = obj_get_file(project);
     int			numFilesChanged = 0;
     char		newFileName[1024];
     *newFileName = 0;
 
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL; )
+	(module = trav_next(&trav)) != nullptr; )
     {
 	if (util_streq(projFileName, obj_get_file(module)))
 	{
-	    obj_set_file(module, NULL);
+	    obj_set_file(module, nullptr);
 	    ++numFilesChanged;
 	    abobj_set_save_needed(module, TRUE);
 	}
@@ -1294,7 +1294,7 @@ proj_set_files_exploded(ABObj project)
 
     if (numFilesChanged > 0)
     {
-	obj_set_file(project, NULL);
+	obj_set_file(project, nullptr);
 	abobj_set_save_needed(project, TRUE);
     }
 
@@ -1305,14 +1305,14 @@ int
 proj_unset_files_exploded(ABObj project)
 {
     AB_TRAVERSAL        trav;
-    ABObj               module = NULL;
+    ABObj               module = nullptr;
     STRING              projFileName = obj_get_file(project);
  
-    if (projFileName == NULL)
+    if (projFileName == nullptr)
         return 0;
  
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-        (module = trav_next(&trav)) != NULL; )
+        (module = trav_next(&trav)) != nullptr; )
     {
 	obj_set_file(module, projFileName);
     }
@@ -1326,17 +1326,17 @@ BOOL
 proj_is_exploded(ABObj project)
 {
     AB_TRAVERSAL	trav;
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     STRING		projFileName = obj_get_file(project);
     BOOL		isExploded = TRUE;
 
-    if (projFileName == NULL)
+    if (projFileName == nullptr)
     {
 	return TRUE;
     }
 
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL; )
+	(module = trav_next(&trav)) != nullptr; )
     {
 	if (util_streq(projFileName, obj_get_file(module)))
 	{
@@ -1371,7 +1371,7 @@ proj_save_encapsulated(
     {
 	if (write_OK)
 	{
-	    rc = bil_save_tree(obj, file_name, NULL,
+	    rc = bil_save_tree(obj, file_name, nullptr,
 				BIL_SAVE_ENCAPSULATED);
 	    if (rc < 0)
 		util_print_error(rc, file_name);
@@ -1382,7 +1382,7 @@ proj_save_encapsulated(
               "Cannot save encapsulated project to \"%s\".\n\"%s\" does not have write permission."), proj_dir, proj_dir);
 
 	    util_set_help_data(CATGETS(Dtb_project_catd, 100, 83,
-		 "The directory you specified for saving is not\nwritable by you. Therefore, the project cannot\nbe saved. Try saving the project to another directory."), NULL, NULL);
+		 "The directory you specified for saving is not\nwritable by you. Therefore, the project cannot\nbe saved. Try saving the project to another directory."), nullptr, nullptr);
 
             util_printf_err(Buf);
 	    rc = ERR;
@@ -1407,8 +1407,8 @@ proj_save_exploded(
 {
     int                 rc = 0;                 /* return code */
     char                name[MAXPATHLEN];
-    STRING              old_name = NULL;
-    STRING              old_file = NULL;
+    STRING              old_name = nullptr;
+    STRING              old_file = nullptr;
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
     BOOL                DiffFile = TRUE;
     char                tmp_path[MAXPATHLEN],
@@ -1417,7 +1417,7 @@ proj_save_exploded(
     AB_TRAVERSAL        trav;
     int                 iRet = 0;
     XmString            xm_buf = (XmString) NULL;
-    STRING              old_proj_dir = NULL;
+    STRING              old_proj_dir = nullptr;
  
     *name = 0;
     *tmp_path = 0;
@@ -1432,12 +1432,12 @@ proj_save_exploded(
      * file name is used to check if we're saving to
      * the same file or not.
      */
-    if (obj_get_name(project) != NULL)
+    if (obj_get_name(project) != nullptr)
     {  
         old_name = (STRING) util_malloc(strlen(obj_get_name(project))+1);
         strcpy( old_name, obj_get_name(project) );
     }
-    if (obj_get_file(project) != NULL)
+    if (obj_get_file(project) != nullptr)
     {
         old_file = (STRING) util_malloc(strlen(obj_get_file(project))+1);
         strcpy( old_file, obj_get_file(project) );
@@ -1457,13 +1457,13 @@ proj_save_exploded(
      * same directory as the project file.
      */
     for (trav_open_cond(&trav, project, AB_TRAV_MODULES, obj_is_defined_module);
-	(module = trav_next(&trav)) != NULL; )
+	(module = trav_next(&trav)) != nullptr; )
     {
         /* Check if the file has never been saved or
          * if we're trying to save an encapsulated file
          * to individual files.
          */
-        if ((obj_get_file(module) == NULL) || encap_file)
+        if ((obj_get_file(module) == nullptr) || encap_file)
         {
             snprintf(tmp_path, sizeof(tmp_path), "%s", obj_get_name(module));
             abio_expand_file(tmp_path, mod_exp_file);
@@ -1478,9 +1478,9 @@ proj_save_exploded(
                     {
 			obj_set_name(project, old_name);
 			util_print_error(rc, mod_exp_file);
-    			if (old_name != NULL) util_free(old_name);
-    			if (old_file != NULL) util_free(old_file);
-    			if (old_proj_dir != NULL) util_free(old_proj_dir);
+    			if (old_name != nullptr) util_free(old_name);
+    			if (old_file != nullptr) util_free(old_file);
+    			if (old_proj_dir != nullptr) util_free(old_proj_dir);
                         return rc;
                     }
                     obj_clear_flag(module, SaveNeededFlag);
@@ -1496,9 +1496,9 @@ proj_save_exploded(
                     obj_set_name(project, old_name);
                     snprintf(Buf, sizeof(Buf), "%s: %s", mod_exp_file, strerror(errno));
 		    util_printf_err(Buf);
-    		    if (old_name != NULL) util_free(old_name);
-		    if (old_file != NULL) util_free(old_file);
-		    if (old_proj_dir != NULL) util_free(old_proj_dir);
+    		    if (old_name != nullptr) util_free(old_name);
+		    if (old_file != nullptr) util_free(old_file);
+		    if (old_proj_dir != nullptr) util_free(old_proj_dir);
                     return -1;
                 }
             }
@@ -1522,9 +1522,9 @@ proj_save_exploded(
                         proj_unset_files_exploded(project);
                     }
                     XtUnmanageChild(AB_generic_chooser);
-		    if (old_name != NULL) util_free(old_name);
-		    if (old_file != NULL) util_free(old_file);
-		    if (old_proj_dir != NULL) util_free(old_proj_dir);
+		    if (old_name != nullptr) util_free(old_name);
+		    if (old_file != nullptr) util_free(old_file);
+		    if (old_proj_dir != nullptr) util_free(old_proj_dir);
                     return (iRet);
                 }
                 else obj_set_file(module, mod_exp_file);
@@ -1532,7 +1532,7 @@ proj_save_exploded(
         }       /* End if module has never been saved. */
         else /* The module has been previously saved to a file. */
         {
-	    STRING	rel_path = NULL;
+	    STRING	rel_path = nullptr;
 
             if (obj_has_flag(module, SaveNeededFlag) || save_as)
             {
@@ -1563,9 +1563,9 @@ proj_save_exploded(
 			    snprintf(Buf, sizeof(Buf), "%s: %s", dir, strerror(errno));
 			    util_printf_err(Buf);
 			    if (rel_path) util_free(rel_path);
-			    if (old_name != NULL) util_free(old_name);
-			    if (old_file != NULL) util_free(old_file);
-			    if (old_proj_dir != NULL) util_free(old_proj_dir);
+			    if (old_name != nullptr) util_free(old_name);
+			    if (old_file != nullptr) util_free(old_file);
+			    if (old_proj_dir != nullptr) util_free(old_proj_dir);
                             return (iRet);
                         }
                     }
@@ -1579,9 +1579,9 @@ proj_save_exploded(
                     	    obj_set_name(project, old_name);
                     	    XtUnmanageChild(AB_generic_chooser);
 			    if (rel_path) util_free(rel_path);
-			    if (old_name != NULL) util_free(old_name);
-			    if (old_file != NULL) util_free(old_file);
-			    if (old_proj_dir != NULL) util_free(old_proj_dir);
+			    if (old_name != nullptr) util_free(old_name);
+			    if (old_file != nullptr) util_free(old_file);
+			    if (old_proj_dir != nullptr) util_free(old_proj_dir);
                     	    return (iRet);
 			}
 			else 
@@ -1600,9 +1600,9 @@ proj_save_exploded(
 			    obj_set_name(project, old_name);
 			    util_print_error(rc, rel_path);
 			    if (rel_path) util_free(rel_path);
-			    if (old_name != NULL) util_free(old_name);
-			    if (old_file != NULL) util_free(old_file);
-			    if (old_proj_dir != NULL) util_free(old_proj_dir);
+			    if (old_name != nullptr) util_free(old_name);
+			    if (old_file != nullptr) util_free(old_file);
+			    if (old_proj_dir != nullptr) util_free(old_proj_dir);
 			    return rc;
 			}      
 			if (rel_path)
@@ -1623,9 +1623,9 @@ proj_save_exploded(
                     {
 		    	obj_set_name(project, old_name);
 		    	util_print_error(rc, rel_path);
-			if (old_name != NULL) util_free(old_name);
-			if (old_file != NULL) util_free(old_file);
-			if (old_proj_dir != NULL) util_free(old_proj_dir);
+			if (old_name != nullptr) util_free(old_name);
+			if (old_file != nullptr) util_free(old_file);
+			if (old_proj_dir != nullptr) util_free(old_proj_dir);
                     	return rc;
                     }
 		    if (rel_path)
@@ -1714,9 +1714,9 @@ proj_save_exploded(
     if (save_as)
         abobj_update_proj_name(project);
  
-    if (old_name != NULL) util_free(old_name);
-    if (old_file != NULL) util_free(old_file);
-    if (old_proj_dir != NULL) util_free(old_proj_dir);
+    if (old_name != nullptr) util_free(old_name);
+    if (old_file != nullptr) util_free(old_file);
+    if (old_proj_dir != nullptr) util_free(old_proj_dir);
  
     return (iRet);
 }
@@ -1726,7 +1726,7 @@ proj_check_unsaved_edits(
     ABObj       root
 )
 {
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
     AB_TRAVERSAL        trav;
     BOOL                NeedsSaving = False;
  
@@ -1737,7 +1737,7 @@ proj_check_unsaved_edits(
      * has unsaved edits.  If so,  set NeedsSaving to true.
      */  
     for (trav_open(&trav, root, AB_TRAV_MODULES);
-        ((obj = trav_next(&trav)) != NULL) && !NeedsSaving; )
+        ((obj = trav_next(&trav)) != nullptr) && !NeedsSaving; )
     {
         if ( obj_has_flag(obj, SaveNeededFlag) )
             NeedsSaving = True;
@@ -1761,7 +1761,7 @@ name_module(
 {
     ABObj       project = proj_get_project();
 
-    if (new_module == NULL)
+    if (new_module == nullptr)
     {
         new_module = obj_create(AB_TYPE_MODULE, project);
         abobj_set_name(new_module, new_module_name);
@@ -1778,7 +1778,7 @@ name_module(
          * when the user dragged out a window, the file field
          * will already be NULL.
          */
-        obj_set_file(new_module, NULL);
+        obj_set_file(new_module, nullptr);
 
         if (strcmp(new_module_name, obj_get_name(new_module)) != 0) 
             proj_rename_module(new_module, new_module_name);
@@ -1791,13 +1791,13 @@ proj_create_new_proj(
     STRING      proj_name
 )
 {
-    ABObj       new_proj = NULL;
+    ABObj       new_proj = nullptr;
 
     /* Create the new project and module.
      * Set the new module to be the current one.
      */  
-    new_proj = obj_create(AB_TYPE_PROJECT, NULL);
-    if (proj_name != NULL)
+    new_proj = obj_create(AB_TYPE_PROJECT, nullptr);
+    if (proj_name != nullptr)
         obj_set_name(new_proj, proj_name);
     else
         obj_set_name(new_proj, "project");
@@ -1821,19 +1821,19 @@ int
 proj_show_proj_dir(void)
 {
     ABObj       proj = proj_get_project();
-    STRING      projPath = NULL;
+    STRING      projPath = nullptr;
     char        dir_buf[MAXPATHLEN+1] = "";
 
-    if (proj == NULL)
+    if (proj == nullptr)
     {
         return -1;
     }
     projPath = obj_get_file(proj);
-    if (projPath == NULL)
+    if (projPath == nullptr)
     {
         return -1;
     }
-    if (util_get_dir_name_from_path(projPath, dir_buf, MAXPATHLEN) == NULL)    {
+    if (util_get_dir_name_from_path(projPath, dir_buf, MAXPATHLEN) == nullptr)    {
         return -1;
     }
     return ab_change_dir(dir_buf);
@@ -1842,15 +1842,15 @@ proj_show_proj_dir(void)
 void
 proj_name_proj(void)
 {
-    STRING              proj_name = NULL;
+    STRING              proj_name = nullptr;
     UI_MODAL_ANSWER     answer = UI_ANSWER_NONE;
-    DtbObjectHelpData	help_data = NULL;
-    STRING		dialog_title = NULL;
-    STRING		textf_lbl = NULL;
-    STRING		def_name = NULL;
-    STRING		btn1_lbl = NULL;
-    STRING		btn2_lbl = NULL;
-    STRING		btn3_lbl = NULL;
+    DtbObjectHelpData	help_data = nullptr;
+    STRING		dialog_title = nullptr;
+    STRING		textf_lbl = nullptr;
+    STRING		def_name = nullptr;
+    STRING		btn1_lbl = nullptr;
+    STRING		btn2_lbl = nullptr;
+    STRING		btn3_lbl = nullptr;
 
     help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
     help_data->help_text = XtNewString(CATGETS(Dtb_project_catd, 100, 42,
@@ -1902,13 +1902,13 @@ verify_name(
     XtPointer   client_data
 )
 {
-    STRING              seln_str = NULL;
+    STRING              seln_str = nullptr;
     char                new_name[MAXPATHLEN];
     char                title[MAXPATHLEN];
     Boolean             retval = True;
     Prompt_Info_Rec     *prompt_info;
     Boolean             ObjIsModule;
-    ABObj               obj = NULL, newObj = NULL;
+    ABObj               obj = nullptr, newObj = nullptr;
 
     prompt_info = (Prompt_Info_Rec  *) client_data;
     newObj = (ABObj)prompt_info->client_data;
@@ -1923,7 +1923,7 @@ verify_name(
      * the first window getting dragged out (see create_obj_
      * action() and locate_obj_parent() in pal_create.c).
      */
-    if (newObj == NULL)
+    if (newObj == nullptr)
 	ObjIsModule = TRUE;
     else
 	ObjIsModule = obj_is_module((ABObj)newObj);
@@ -1936,7 +1936,7 @@ verify_name(
 	    dtb_proj_vrfy_mod_name_msg_initialize(
 			&dtb_proj_vrfy_mod_name_msg);
 	    dtb_show_message(prompt_text, 
-			&dtb_proj_vrfy_mod_name_msg, NULL, NULL);
+			&dtb_proj_vrfy_mod_name_msg, nullptr, nullptr);
         }
         else
         {
@@ -1944,7 +1944,7 @@ verify_name(
 	    dtb_proj_vrfy_proj_name_msg_initialize(
 			&dtb_proj_vrfy_proj_name_msg);
 	    dtb_show_message(prompt_text, 
-			&dtb_proj_vrfy_proj_name_msg, NULL, NULL);
+			&dtb_proj_vrfy_proj_name_msg, nullptr, nullptr);
         }
         retval = False;
     }
@@ -1976,8 +1976,8 @@ create_save_encap_cbox(
     BOOL	*EncapProj
 )
 {
-    Widget      encap_toggle = NULL;
-    XmString    label_xmstring = NULL;
+    Widget      encap_toggle = nullptr;
+    XmString    label_xmstring = nullptr;
 
     label_xmstring = XmStringCreateLocalized(
 	CATGETS(Dtb_project_catd, 100, 240, "Save As Encapsulated Project"));
@@ -1987,12 +1987,12 @@ create_save_encap_cbox(
                         XmNlabelString, label_xmstring,
 			XmNspacing, 0,
 			XmNuserData, (XtPointer) parent,
-                        NULL);
+                        nullptr);
     XtAddCallback(encap_toggle, 
 		XmNvalueChangedCallback, save_as_encap,
 		(XtPointer) EncapProj);
     XmStringFree(label_xmstring);
-    label_xmstring = NULL;
+    label_xmstring = nullptr;
 
     return (encap_toggle);
 }
@@ -2003,8 +2003,8 @@ create_export_format_cbox(
     ABObj	obj
 )
 {
-    Widget      format_toggle = NULL;
-    XmString    label_xmstring = NULL;
+    Widget      format_toggle = nullptr;
+    XmString    label_xmstring = nullptr;
 
     label_xmstring = XmStringCreateLocalized(
 	CATGETS(Dtb_project_catd, 100, 241, "Save As UIL"));
@@ -2014,12 +2014,12 @@ create_export_format_cbox(
                         XmNlabelString, label_xmstring,
 			XmNspacing, 0,
 			XmNuserData, (XtPointer) obj,
-                        NULL);
+                        nullptr);
     XtAddCallback(format_toggle, 
 		XmNvalueChangedCallback, export_format_changed,
 		(XtPointer) parent);
     XmStringFree(label_xmstring);
-    label_xmstring = NULL;
+    label_xmstring = nullptr;
 
     return (format_toggle);
 }
@@ -2034,12 +2034,12 @@ save_as_encap(
     XmToggleButtonCallbackStruct *state =
                 (XmToggleButtonCallbackStruct *)callData;
     BOOL        *EncapProj = (BOOL *) clientData;
-    Widget	fchooser = NULL,
-		textf = NULL;
+    Widget	fchooser = nullptr,
+		textf = nullptr;
     char        init_name[MAXPATHLEN];
-    STRING	filename = NULL;	
+    STRING	filename = nullptr;	
  
-    XtVaGetValues(widget, XmNuserData, &fchooser, NULL);
+    XtVaGetValues(widget, XmNuserData, &fchooser, nullptr);
     textf = XmFileSelectionBoxGetChild(fchooser, XmDIALOG_TEXT);
     filename = XmTextFieldGetString(textf);    
 
@@ -2071,10 +2071,10 @@ export_format_changed(
 {
     XmToggleButtonCallbackStruct *state =
                 (XmToggleButtonCallbackStruct *)callData;
-    Widget	fchooser = NULL,
-		textf = NULL;
+    Widget	fchooser = nullptr,
+		textf = nullptr;
     char        init_name[MAXPATHLEN];
-    STRING	filename = NULL;	
+    STRING	filename = nullptr;	
     ABObj	module_obj = (ABObj) NULL;
  
     /* REMIND: Shouldn't this just be AB_generic_chooser? */
@@ -2083,7 +2083,7 @@ export_format_changed(
     filename = XmTextFieldGetString(textf);    
 
     /* Get target module object out of userData */
-    XtVaGetValues(widget,XmNuserData,&module_obj,NULL);
+    XtVaGetValues(widget,XmNuserData,&module_obj,nullptr);
 
     /* 
     ** If a filename is not specified, use the name of the module to be 
@@ -2141,14 +2141,14 @@ save_proj_as_bix(
 		xm_buf = XmStringCreateLocalized(Buf);
 		dtb_proj_error_msg_initialize(&dtb_proj_error_msg);
 		(void)dtb_show_modal_message(dtb_get_toplevel_widget(), 
-			&dtb_proj_error_msg, xm_buf, NULL, NULL);
+			&dtb_proj_error_msg, xm_buf, nullptr, nullptr);
 		XmStringFree(xm_buf);
             }
         }
         else /* The file already exists. Post an overwrite dialog. */
         {
             iRet = proj_overwrite_existing_file(bix_file,
-			proj_get_project(), TRUE, TRUE, FALSE, NULL, 
+			proj_get_project(), TRUE, TRUE, FALSE, nullptr, 
 			&answer);
  
             /* Popdown the file chooser if the user chooses to 
@@ -2174,7 +2174,7 @@ proj_get_file_basename(
     char	*slashPtr, *dotPtr;
 
     slashPtr = strrchr(filename, '/');
-    if(slashPtr == NULL) {
+    if(slashPtr == nullptr) {
 	strcpy(basename,filename);
     }
     else {
@@ -2182,7 +2182,7 @@ proj_get_file_basename(
     }
 
     dotPtr = strrchr(basename, '.');
-    if(dotPtr != NULL) {
+    if(dotPtr != nullptr) {
 	if( (strncmp(dotPtr, ".bi", 3) == 0) ||
 	    (strncmp(dotPtr, ".uil",3) == 0)    ) {
 		*dotPtr = 0;
@@ -2202,7 +2202,7 @@ export_uil_file(
 )
 {
     FILE 		*fp;
-    STRING		errmsg = NULL;
+    STRING		errmsg = nullptr;
     Boolean		retval = FALSE;
     DTB_MODAL_ANSWER	answer = DTB_ANSWER_NONE;
     XmString            xm_buf = (XmString) NULL;
@@ -2216,7 +2216,7 @@ export_uil_file(
 	if (errno == ENOENT) 
 	{
 	    /* Nope, the file doesn't exist, so write it out */
-	    if( (fp=util_fopen_locked(fullpath,"w")) != (FILE *)NULL) 
+	    if( (fp=util_fopen_locked(fullpath,"w")) != (FILE *)nullptr) 
 	    {
 	    	abuil_obj_print_uil(fp,module_obj);
 		fclose(fp);
@@ -2230,7 +2230,7 @@ export_uil_file(
 	    xm_buf = XmStringCreateLocalized(Buf);
 	    dtb_proj_error_msg_initialize(&dtb_proj_error_msg);
 	    (void)dtb_show_modal_message(dtb_get_toplevel_widget(), 
-			&dtb_proj_error_msg, xm_buf, NULL, NULL);
+			&dtb_proj_error_msg, xm_buf, nullptr, nullptr);
 	    XmStringFree(xm_buf);
 	    retval = FALSE;
 	}
@@ -2246,13 +2246,13 @@ export_uil_file(
 	xm_buf = XmStringCreateLocalized(Buf);
 	dtb_proj_overwrite_msg_initialize(&dtb_proj_overwrite_msg);
 	answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-			&dtb_proj_overwrite_msg, xm_buf, NULL, NULL);
+			&dtb_proj_overwrite_msg, xm_buf, nullptr, nullptr);
 	XmStringFree(xm_buf);
 
 	if (answer == DTB_ANSWER_ACTION1)
 	{
 	    /* Yes, we should overwrite the existing file */
-	    if( (fp=util_fopen_locked(fullpath,"w")) != (FILE *)NULL) 
+	    if( (fp=util_fopen_locked(fullpath,"w")) != (FILE *)nullptr) 
 	    {
 	    	abuil_obj_print_uil(fp,module_obj);
 		fclose(fp);
@@ -2301,7 +2301,7 @@ proj_cvt_mod_file_to_rel_path(
     char                mod_dir[MAXPATHLEN];
     char                proj_dir[MAXPATHLEN];
     char                rel_dir[MAXPATHLEN];
-    STRING		rel_path = NULL;
+    STRING		rel_path = nullptr;
     int			iRet = 0;
 
     *mod_name = 0;
@@ -2309,15 +2309,15 @@ proj_cvt_mod_file_to_rel_path(
     *proj_dir = 0;
     *rel_dir = 0;
 
-    if (mod_path == NULL)
+    if (mod_path == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     iRet = util_derive_name_from_path(mod_path, mod_name);
     util_get_dir_name_from_path(mod_path, mod_dir, MAXPATHLEN);
 
-    if (proj_path != NULL)
+    if (proj_path != nullptr)
     {
 	util_get_dir_name_from_path(proj_path, 
 			proj_dir, MAXPATHLEN);
@@ -2325,7 +2325,7 @@ proj_cvt_mod_file_to_rel_path(
                         proj_dir, rel_dir, MAXPATHLEN);
         if (iRet == ERR)
         {
-	    return NULL;
+	    return nullptr;
         }
     }
     else
@@ -2364,8 +2364,8 @@ proj_set_menus(
     BOOL		active
 )
 {
-    Vwr		proj_vwr = NULL;
-    VNode       *selected_nodes = NULL;
+    Vwr		proj_vwr = nullptr;
+    VNode       *selected_nodes = nullptr;
     int         num_selected = 0;
     Widget	open_proj_item = dtb_proj_proj_main.menubar_Project_item_proj_menubutton_menu_items.Open_item;
     Widget	save_proj_as_item = dtb_proj_proj_main.menubar_Project_item_proj_menubutton_menu_items.Save_As_item;
@@ -2375,7 +2375,7 @@ proj_set_menus(
     Widget	save_mod_item = dtb_proj_proj_main.menubar_Module_item_mod_menubutton_menu_items.Save_item;
     Widget	export_item = dtb_proj_proj_main.menubar_Module_item_mod_menubutton_menu_items.Export_item;
 
-    if (AB_proj_window == NULL)
+    if (AB_proj_window == nullptr)
     {
 	return;
     }
@@ -2385,7 +2385,7 @@ proj_set_menus(
      */
     XtVaGetValues(open_proj_item,
 			XmNuserData, &proj_vwr,
-			NULL);
+			nullptr);
     if (!proj_vwr)
 	return;
 
@@ -2535,11 +2535,11 @@ proj_verify_name(
 {
     Boolean	retval = TRUE;
     XmString    xm_buf = (XmString) NULL;
-    ABObj	obj = NULL;
+    ABObj	obj = nullptr;
 
     if (!ab_c_ident_is_ok(new_name))
     {
-	dtb_show_message(parent, msgData, NULL, NULL);
+	dtb_show_message(parent, msgData, nullptr, nullptr);
         retval = False;
     }
     else /* The name is legal, but need to check if it's unique */
@@ -2555,14 +2555,14 @@ proj_verify_name(
 	     * when the user first drags out a window and
 	     * names the module the default name, "module".
 	     */
-            if ((obj != NULL) && (obj != newObj))
+            if ((obj != nullptr) && (obj != newObj))
             {
 		sprintf(Buf, CATGETS(Dtb_project_catd, 100, 6,
 		    "%s is not a unique name for the module."), 
 		    new_name );
 		xm_buf = XmStringCreateLocalized(Buf);
 		dtb_show_message(parent, &dtb_proj_unique_name_msg, 
-			xm_buf, NULL); 
+			xm_buf, nullptr); 
 		XmStringFree(xm_buf);
                 retval = False;
 	    }

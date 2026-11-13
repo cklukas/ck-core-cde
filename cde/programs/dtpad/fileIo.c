@@ -91,7 +91,7 @@ LoadFile(
     Boolean		fileLoadError = False;
 
 
-    if (include != (char *)NULL) {
+    if (include != (char *)nullptr) {
 	localName = include; 
     } else { 
         localName = pPad->fileStuff.fileName; 
@@ -102,7 +102,7 @@ LoadFile(
 	/* try to load the file to the Dt Editor widget */ 
         _DtTurnOnHourGlass(pPad->app_shell);
         XSync(XtDisplay(pPad->editor), False);
-	if (include != (char *) NULL) {
+	if (include != (char *) nullptr) {
 	    errorCode = DtEditorInsertFromFile(
 				pPad->editor,
 				localName);
@@ -119,7 +119,7 @@ LoadFile(
 		break;
 	    case DtEDITOR_READ_ONLY_FILE:
 		fileLoaded = True;
-		if (include == (char *) NULL) {
+		if (include == (char *) nullptr) {
 		    pPad->fileStuff.readOnly = True;
 		    if (pPad->xrdb.readOnlyWarning &&
 		      ! pPad->xrdb.statusLine &&
@@ -131,7 +131,7 @@ LoadFile(
 		}
 		break;
 	    case DtEDITOR_NONEXISTENT_FILE:
-		if (include != (char *) NULL ) {
+		if (include != (char *) nullptr ) {
 		    Warning(pPad, (char *) GETMESSAGE(6, 2,
 			    "This file does not exist."),
 			XmDIALOG_ERROR);
@@ -197,7 +197,7 @@ LoadFile(
 	} /* switch (errorCode) */
     } /* file name specified */
     
-    if (include != (char *)NULL)
+    if (include != (char *)nullptr)
 	return; 
 
     /*
@@ -222,7 +222,7 @@ LoadFile(
 	if (fileLoadError) {
 	    if (pPad->fileStuff.fileName && *pPad->fileStuff.fileName)
 		XtFree(pPad->fileStuff.fileName);
-	    pPad->fileStuff.fileName = NULL;
+	    pPad->fileStuff.fileName = nullptr;
 	    ChangeMainWindowTitle(pPad);
 	    return;
 	}
@@ -233,19 +233,19 @@ LoadFile(
 
 	    strcpy(pPad->fileStuff.pathDir, pPad->fileStuff.fileName);
 	    if ((lastSlash = MbStrrchr(pPad->fileStuff.pathDir, '/')) != 
-		                                             (char *)NULL) {
+		                                             (char *)nullptr) {
 	       *(lastSlash + 1) = (char)'\0';
 	    }
 
 	    lastSlash = MbStrrchr(pPad->fileStuff.fileName, '/');
-	    if (lastSlash != (char *)NULL) {
+	    if (lastSlash != (char *)nullptr) {
 	        lastSlash++;
 	    } else {
 	        lastSlash = pPad->fileStuff.fileName;
 	    }
 	    if (*lastSlash == (char)'-' || *lastSlash == (char)'*') {
 	        XtFree(pPad->fileStuff.fileName);
-	        pPad->fileStuff.fileName = (char *)NULL;
+	        pPad->fileStuff.fileName = (char *)nullptr;
 	    }
 	}
     } /* ! fileLoaded */
@@ -272,7 +272,7 @@ GetTempFile(void)
     if (fd == -1)
     {
         XtFree(tempname);
-        return (char *)NULL;
+        return (char *)nullptr;
     }
     close(fd);
     return tempname;
@@ -295,11 +295,11 @@ AddPound(
     char tempBuf[512];
     static char returnBuf[512];
 
-    if (nameBuf != (char *)NULL && nameBuf[0] != (char) '\0') {
+    if (nameBuf != (char *)nullptr && nameBuf[0] != (char) '\0') {
         char *baseName;
 	strcpy(tempBuf, nameBuf);
         baseName = MbStrrchr(tempBuf, '/');
-	if (baseName != (char *)NULL) {
+	if (baseName != (char *)nullptr) {
 		strncpy(returnBuf, tempBuf, (baseName - tempBuf) + 1);
 		returnBuf[(baseName - tempBuf) + 1] = (char)'\0';
 		baseName++;
@@ -331,9 +331,9 @@ PanicSave(void)
     Boolean addNewLines;
     DtEditorErrorCode errorCode;
 
-    for (pPad = pPadList; pPad != (Editor *)NULL; pPad = pPad->pNextPad) {
+    for (pPad = pPadList; pPad != (Editor *)nullptr; pPad = pPad->pNextPad) {
 	char *fileName = pPad->fileStuff.fileName;
-	if (pPad->inUse != True || pPad->editor == NULL || 
+	if (pPad->inUse != True || pPad->editor == nullptr || 
 		(! DtEditorCheckForUnsavedChanges(pPad->editor)))
 	    continue;
 	/* -----> Try to cook up a name for a file that doesn't already exist */

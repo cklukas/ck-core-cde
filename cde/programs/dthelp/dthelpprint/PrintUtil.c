@@ -102,14 +102,14 @@ void PutOpt(
    char * fmt;
    
    /* check params */
-   if (    option == NULL 
+   if (    option == nullptr 
         || option[0] == EOS 
         || (   optionHasValue == True 
-            && (value == NULL || value[0] == EOS) ) )
+            && (value == nullptr || value[0] == EOS) ) )
        return;						/* RETURN */
    
    start = &cmdStr[strlen(cmdStr)];
-   if ( value == NULL ) fmt = " %s";
+   if ( value == nullptr ) fmt = " %s";
    else fmt = " %s '%s'";
    sprintf(start,fmt,option,value);
 } /*$END$*/
@@ -211,8 +211,8 @@ int _DtHPrGenFileOrPrint(
    PutOpt(printCommand,OPT_LPDEST,options->printer,True);
    PutOpt(printCommand,OPT_COMMAND,options->lpCommand,True);
    PutOpt(printCommand,OPT_COPYCOUNT,options->copies,True);
-   PutOpt(printCommand,OPT_SILENT,NULL,False);
-   PutOpt(printCommand,OPT_FILEREMOVE,NULL,False);
+   PutOpt(printCommand,OPT_SILENT,nullptr,False);
+   PutOpt(printCommand,OPT_FILEREMOVE,nullptr,False);
    PutOpt(printCommand,OPT_FILE,tmpfile,True);
    PutOpt(printCommand,OPT_USERFILE,userfile,True);
  
@@ -249,12 +249,12 @@ char * _DtHPrGetMessage(
 {       /*$CODE$*/
    static int s_First = 1;
    static nl_catd s_Nlmsg_fd = (nl_catd) -1;
-   static char * s_CatFileName = NULL;
+   static char * s_CatFileName = nullptr;
 
    if ( s_First ) 
    {
       /* Setup our default message catalog names if none have been set! */
-      if (s_CatFileName  == NULL)
+      if (s_CatFileName  == nullptr)
       {
          /* Setup the short and long versions */
          s_CatFileName = strdup(HELPPRINT_CAT);

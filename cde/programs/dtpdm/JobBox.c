@@ -164,7 +164,7 @@ PdmJobBoxCreate(PdmSetupBox* me, Widget parent)
      */
     if(data->job_name_supported)
     {
-	XtVaSetValues(data->job_name_text, XmNvalue, data->job_name, NULL);
+	XtVaSetValues(data->job_name_text, XmNvalue, data->job_name, nullptr);
     }
     else
     {
@@ -178,7 +178,7 @@ PdmJobBoxCreate(PdmSetupBox* me, Widget parent)
     {
 	XtVaSetValues(data->job_options_text,
 		      XmNvalue, data->job_options,
-		      NULL);
+		      nullptr);
     }
     else
     {
@@ -237,8 +237,8 @@ static void
 PdmJobBoxGetAttr(PdmSetupBox* me, PdmXp* pdm_xp)
 {
     PdmJobBoxData* data = (PdmJobBoxData*)me->subclass_data;
-    PdmOidList* job_attrs_supported = NULL;
-    const char* strval = NULL;
+    PdmOidList* job_attrs_supported = nullptr;
+    const char* strval = nullptr;
     
     /*
      * job attributes supported
@@ -310,7 +310,7 @@ PdmJobBoxSetAttr(PdmSetupBox* me, PdmXp* pdm_xp)
     if(data->job_options_supported)
     {
 	String value;
-	XtVaGetValues(data->job_options_text, XmNvalue, &value, NULL);
+	XtVaGetValues(data->job_options_text, XmNvalue, &value, nullptr);
 #if 0 && defined(PRINTING_SUPPORTED)
 	PdmXpSetStringValue(pdm_xp, XPJobAttr,
 			    pdmoid_att_xp_spooler_command_options, value);
@@ -320,7 +320,7 @@ PdmJobBoxSetAttr(PdmSetupBox* me, PdmXp* pdm_xp)
     if(data->job_name_supported)
     {
 	String value;
-	XtVaGetValues(data->job_name_text, XmNvalue, &value, NULL);
+	XtVaGetValues(data->job_name_text, XmNvalue, &value, nullptr);
 #if 0 && defined(PRINTING_SUPPORTED)
 	PdmXpSetStringValue(pdm_xp, XPJobAttr, pdmoid_att_job_name, value);
 #endif /* PRINTING_SUPPORTED */

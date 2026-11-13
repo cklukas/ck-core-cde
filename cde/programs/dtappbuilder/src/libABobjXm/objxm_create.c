@@ -168,7 +168,7 @@ objxm_map_tree(
     AB_TRAVERSAL trav;
     ABObj	 obj;
 
-    if (root == NULL)
+    if (root == nullptr)
 	return -1;
 
 /*
@@ -205,7 +205,7 @@ xm_map_obj(
 	/* If the object has an associated widget and is NOT a menu-pane,
 	 * then Manage it...
 	 */
-	if ((widget = (Widget)obj->ui_handle) != NULL) 
+	if ((widget = (Widget)obj->ui_handle) != nullptr) 
 	{
             if (XtIsSubclass(widget, topLevelShellWidgetClass))
             	XtPopup(widget, XtGrabNone);
@@ -229,7 +229,7 @@ xm_unmap_obj(
 
     if (obj_has_flag(obj, MappedFlag)) 
     { 
-        if ((widget = (Widget)obj->ui_handle) != NULL)
+        if ((widget = (Widget)obj->ui_handle) != nullptr)
         { 
             if (XtIsSubclass(widget, topLevelShellWidgetClass)) 
                 XtPopdown(widget); 
@@ -251,13 +251,13 @@ xm_instantiate_tree(
     AB_TRAVERSAL    trav;
     ABObj           child;
 
-    if (root == NULL)
+    if (root == nullptr)
         return -1;
     
     /* Top-down traversal is crucial */
     xm_instantiate_obj(root, map);
     for (trav_open(&trav, root, AB_TRAV_CHILDREN);
-        (child = trav_next(&trav)) != NULL; )
+        (child = trav_next(&trav)) != nullptr; )
     {
     	xm_instantiate_tree(child, map);
     }
@@ -276,12 +276,12 @@ post_instantiate_tree(
     AB_TRAVERSAL    trav;
     ABObj           child;
  
-    if (root == NULL)
+    if (root == nullptr)
         return -1;
     
     /* Bottom-up traversal is crucial*/
     for (trav_open(&trav, root, AB_TRAV_UI);
-	(child = trav_next(&trav)) != NULL; )
+	(child = trav_next(&trav)) != nullptr; )
 	post_instantiate_obj(child, map);
 
     trav_close(&trav);
@@ -320,7 +320,7 @@ xm_instantiate_obj(
     {
 	XmString xmitem;
 
-	if ((parent = (Widget)(obj_get_parent(obj)->ui_handle)) != NULL)
+	if ((parent = (Widget)(obj_get_parent(obj)->ui_handle)) != nullptr)
 	{
 	    xmitem = XmStringCreateLocalized(obj_get_label(obj));
 	    XmListAddItem(parent, xmitem, 0);
@@ -349,7 +349,7 @@ xm_instantiate_obj(
  
         parent = (Widget)parentobj->ui_handle;
     }
-    if (parent == NULL)
+    if (parent == nullptr)
     {
         if (util_get_verbosity() > 2)
         fprintf(stderr,"xm_instantiate_obj: %s: ui_handle for parent is NULL\n",
@@ -359,7 +359,7 @@ xm_instantiate_obj(
 
     widget = instantiate_widget(obj, parent, map);
 
-    if (widget != NULL)
+    if (widget != nullptr)
     {
 
 	/* If we have an OptionMenu menupane, we need to hook it
@@ -379,11 +379,11 @@ xm_instantiate_obj(
 	}
 
 	/* if widget is being replaced, destroy old one */
-	if (obj->ui_handle != NULL)
+	if (obj->ui_handle != nullptr)
 	    objxm_uninstantiate_tree(obj, TRUE);
 
 	/* obj & widget point to each other...*/
-        XtVaSetValues(widget, XmNuserData, obj, NULL);
+        XtVaSetValues(widget, XmNuserData, obj, nullptr);
 	obj->ui_handle = (void*)widget;
 
 	objxm_remove_all_ui_args(obj);
@@ -406,18 +406,18 @@ objxm_instantiate_menus(
     ABObj           obj;
     ABObj	    m_parent;
  
-    if (root == NULL)
+    if (root == nullptr)
         return -1;
    
     for (trav_open(&trav, root, AB_TRAV_UI);
-        (obj = trav_next(&trav)) != NULL; )
+        (obj = trav_next(&trav)) != nullptr; )
   	/* Instantiate a menu for the object if one exists.
 	 * NOTE: SubMenus (menus off of other menu-items) are 
 	 * actually instantiated using recursion in xm_instantiate_menu(),
 	 * thus we do not call xm_instantiate_menu() for them directly.
 	 */
     	if (obj_is_salient(obj) &&
-	    obj_get_menu_name(obj) != NULL && !obj_is_menu_item(obj))
+	    obj_get_menu_name(obj) != nullptr && !obj_is_menu_item(obj))
     	{
 	    m_parent = objxm_get_config_obj(obj, AB_CFG_MENU_PARENT_OBJ);
 	    xm_instantiate_menu(obj, (Widget)obj->ui_handle, 
@@ -459,12 +459,12 @@ xm_instantiate_menu(
     Widget	menu_w;
     Widget	item_w;
 
-    if ((menu_ref = objxm_get_config_obj(obj, AB_CFG_MENU_OBJ)) != NULL)
+    if ((menu_ref = objxm_get_config_obj(obj, AB_CFG_MENU_OBJ)) != nullptr)
     {
 	/* Get Virtual Menu & object to parent menu off of */
 	menu = obj_get_ref_menu(menu_ref);
 
-    	if (menu != NULL && parent != NULL)
+    	if (menu != nullptr && parent != nullptr)
     	{
 	    /* Set Pseudo-class for Menu based on the type
 	     * of object that owns it
@@ -484,18 +484,18 @@ xm_instantiate_menu(
 	    menu_w = instantiate_widget(menu, parent, TRUE);
 
 	    if (m_type == AB_MENU_PULLDOWN)
-	    	XtVaSetValues(owner, XmNsubMenuId, menu_w, NULL);
+	    	XtVaSetValues(owner, XmNsubMenuId, menu_w, nullptr);
 	    else /* PopupMenu */
 		XtAddEventHandler(parent, ButtonPressMask, False, xm_popup_menu, obj);
 
 	    /* Instantiate Menu Items */
 	    for (trav_open(&trav, menu, AB_TRAV_CHILDREN);
-            (item = trav_next(&trav)) != NULL; )
+            (item = trav_next(&trav)) != nullptr; )
 	    {
 	    	item_w = instantiate_widget(item, menu_w, TRUE);
 
 		/* If SubMenu exists, instantiate it */
-		if (obj_get_menu_name(item) != NULL)
+		if (obj_get_menu_name(item) != nullptr)
 		    xm_instantiate_menu(item, item_w, menu_w, TRUE);
 	    }
 	    trav_close(&trav);
@@ -528,15 +528,15 @@ objxm_destroy_menus(
     ABObj           menu_ref;
     ABObj	    menu_p;
  
-    if (root == NULL)
+    if (root == nullptr)
         return -1;
    
     for (trav_open(&trav, root, AB_TRAV_UI);
-        (obj = trav_next(&trav)) != NULL; )
+        (obj = trav_next(&trav)) != nullptr; )
         if (obj_is_salient(obj) && !obj_is_menu_item(obj) &&
-	   (menu_ref = objxm_get_config_obj(obj, AB_CFG_MENU_OBJ)) != NULL)
+	   (menu_ref = objxm_get_config_obj(obj, AB_CFG_MENU_OBJ)) != nullptr)
         {
-	    if (menu_ref->ui_handle != NULL)
+	    if (menu_ref->ui_handle != nullptr)
 	    {
 		menu = obj_get_ref_menu(menu_ref);
 
@@ -557,7 +557,7 @@ objxm_destroy_menus(
 fprintf(stderr,"DESTROY_MENU: %s\n", XtName(menu_ref->ui_handle));
 */
 		XtDestroyWidget((Widget)menu_ref->ui_handle);
-		menu_ref->ui_handle = (void*)NULL;
+		menu_ref->ui_handle = (void*)nullptr;
 	    }
         }
  
@@ -573,29 +573,29 @@ instantiate_widget(
     BOOL	map
 )
 {
-    Widget       widget = NULL;
+    Widget       widget = nullptr;
     WidgetClass  xmclass;
     XmCreateFunc xmcreate_func;
     STRING	 classname;
     String       name;
     int        	 num_args;
-    ArgList      all_args = NULL;
+    ArgList      all_args = nullptr;
 
     name = (String)obj_get_name(obj);
-    if (name == NULL)
+    if (name == nullptr)
     {
         if (util_get_verbosity() > 2)
             fprintf(stderr,"instantiate_widget: object must have name\n");
-        return NULL;
+        return nullptr;
     }
 
-    if ((classname = obj_get_class_name(obj)) == NULL)
+    if ((classname = obj_get_class_name(obj)) == nullptr)
     {
 	classname = objxm_get_default_motif_class(obj);
 	obj_set_class_name(obj, classname);
     }
 
-    if (obj->ui_args == NULL) /* Make sure Resources are set */
+    if (obj->ui_args == nullptr) /* Make sure Resources are set */
         objxm_set_obj_ui_args(obj, OBJXM_CONFIG_BUILD, TRUE);
 
     /* Instantiate Widget using class & arglist
@@ -633,7 +633,7 @@ objxm_dump_arglist(obj, all_args, num_args);
 
         xmcreate_func = objxm_get_xmcreate_func(obj);
 
-        if (xmcreate_func != NULL)
+        if (xmcreate_func != nullptr)
             widget = (*xmcreate_func)(parent, name, all_args, num_args);
     
         else
@@ -666,13 +666,13 @@ post_instantiate_obj(
 
     widget = (Widget)obj->ui_handle;
 
-    if (widget == NULL)
+    if (widget == nullptr)
 	return 0;
 
     if (obj_is_salient(obj))
     	objxmP_type_post_instantiate(obj);
 
-    if (obj->attachments != NULL)
+    if (obj->attachments != nullptr)
     	objxm_set_attachment_args(obj);
 
     if (!obj_is_window(obj))
@@ -711,13 +711,13 @@ objxmP_destroy(
 {
     Widget	widget = (Widget)info->obj->ui_handle;
 
-    if (widget != NULL)
+    if (widget != nullptr)
     {
 /*
 fprintf(stderr,"DESTROY: %s\n", istr_string_safe(info->obj->name));
 */
 	XtDestroyWidget(widget);
-	info->obj->ui_handle = NULL;
+	info->obj->ui_handle = nullptr;
     }
     return 0;
 
@@ -729,7 +729,7 @@ objxm_destroy_tree(
 )
 {
 
-    if (root == NULL)
+    if (root == nullptr)
 	return -1;
 
     /* Destroy any existing widgets */
@@ -750,7 +750,7 @@ objxm_uninstantiate_tree(
     AB_TRAVERSAL    trav;
     ABObj           child;
 
-    if (root == NULL || root->ui_handle == NULL)
+    if (root == nullptr || root->ui_handle == nullptr)
         return -1;
 
     if (topmost)
@@ -762,11 +762,11 @@ fprintf(stderr,"DESTROY2: %s\n", istr_string_safe(root->name));
 }
 
     for (trav_open(&trav, root, AB_TRAV_CHILDREN);
-        (child = trav_next(&trav)) != NULL; )
+        (child = trav_next(&trav)) != nullptr; )
     {
         objxm_uninstantiate_tree(child, FALSE);
     }
-    root->ui_handle = NULL;
+    root->ui_handle = nullptr;
     obj_clear_flag(root, InstantiatedFlag);
     obj_clear_flag(root, MappedFlag);
 
@@ -858,7 +858,7 @@ xm_get_class(
         wclass = xmToggleButtonGadgetClass; 
 
     else    /* Unknown Widget class */
-	wclass = NULL;
+	wclass = nullptr;
 
     return(wclass);
 }
@@ -872,8 +872,8 @@ objxm_get_xmcreate_func(
     ISTRING        class_name = obj->class_name;
     XmCreateFunc   xmcreate_func;
 
-    if (class_name == NULL)
-        return NULL;
+    if (class_name == nullptr)
+        return nullptr;
 
     /* REMIND: aim,8/25/93 - change to a switch statement? */
 
@@ -1002,7 +1002,7 @@ objxm_get_xmcreate_func(
         xmcreate_func = XmCreateToggleButtonGadget; 
 
     else    /* Unknown Widget class */
-	xmcreate_func = NULL;
+	xmcreate_func = nullptr;
 
     return(xmcreate_func);
 }
@@ -1055,10 +1055,10 @@ formlist_force_resize(
     for (i= form_list_count-1; i >= 0; i--)
     {
         /* UGLY! */
-        XtVaGetValues(form_list[i], XmNwidth, &f_width, XmNheight, &f_height, NULL);
-        XtVaSetValues(form_list[i], XmNwidth, f_width+1,XmNheight, f_height+1,NULL);
-        XtVaSetValues(form_list[i], XmNwidth, f_width,  XmNheight, f_height,  NULL);
-	form_list[i] = NULL;
+        XtVaGetValues(form_list[i], XmNwidth, &f_width, XmNheight, &f_height, nullptr);
+        XtVaSetValues(form_list[i], XmNwidth, f_width+1,XmNheight, f_height+1,nullptr);
+        XtVaSetValues(form_list[i], XmNwidth, f_width,  XmNheight, f_height,  nullptr);
+	form_list[i] = nullptr;
     }
     form_list_count = 0;
 
@@ -1084,7 +1084,7 @@ xm_popup_menu(
     {
     	menu_ref = objxm_get_config_obj(obj, AB_CFG_MENU_OBJ);
 
-    	if (menu_ref != NULL && (menu = (Widget)menu_ref->ui_handle) != NULL)
+    	if (menu_ref != nullptr && (menu = (Widget)menu_ref->ui_handle) != nullptr)
     	{
 	    XmMenuPosition(menu, (XButtonPressedEvent*)bevent);
 	    XtManageChild(menu);

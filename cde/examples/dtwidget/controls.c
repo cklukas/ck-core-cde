@@ -56,8 +56,8 @@ main(int argc, char **argv)
 
     Widget toplevel, mainWindow, spinContainer, comboContainer, menuContainer;
     
-    toplevel = XtAppInitialize(&appContext, ApplicationClass, NULL, 0,
-						&argc, argv, NULL, NULL, 0);
+    toplevel = XtAppInitialize(&appContext, ApplicationClass, nullptr, 0,
+						&argc, argv, nullptr, nullptr, 0);
 
     n = 0;
     XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
@@ -178,7 +178,7 @@ static void CreateSpinBoxes(Widget parent)
     spinBox = XmCreateSimpleSpinBox(parent, "spinBox3", args, n);
     XtManageChild(spinBox);
 
-    XtAddCallback(spinBox, XmNmodifyVerifyCallback, ModifyVerifyCb, NULL);
+    XtAddCallback(spinBox, XmNmodifyVerifyCallback, ModifyVerifyCb, nullptr);
 
 
     /*
@@ -316,7 +316,7 @@ static void CreateComboBoxes(Widget parent)
 
     list = XtNameToWidget(comboBox, "*List");
     XmListAddItems(list, valueXmstrings, 10, 0);
-    XtVaSetValues(list, XmNvisibleItemCount, 10, NULL);
+    XtVaSetValues(list, XmNvisibleItemCount, 10, nullptr);
 
 
     /*
@@ -334,8 +334,8 @@ static void CreateComboBoxes(Widget parent)
 
     list = XtNameToWidget(comboBox, "*List");        
     XmListAddItems(list, valueXmstrings, 7, 0);
-    XtVaSetValues(list, XmNvisibleItemCount, 7, NULL);
-    XtVaSetValues(comboBox, DtNselectedPosition, 3, NULL);
+    XtVaSetValues(list, XmNvisibleItemCount, 7, nullptr);
+    XtVaSetValues(comboBox, DtNselectedPosition, 3, nullptr);
 
 
     /*
@@ -353,7 +353,7 @@ static void CreateComboBoxes(Widget parent)
     XtManageChild(comboBox);
 
     xmString = XmStringCreateLocalized("gamma");
-    XtVaSetValues(comboBox, DtNselectedItem, xmString, NULL);
+    XtVaSetValues(comboBox, DtNselectedItem, xmString, nullptr);
     XmStringFree(xmString);
 
 
@@ -372,7 +372,7 @@ static void CreateComboBoxes(Widget parent)
     for (i = 0; i < numValueStrings; i++) {
 	DtComboBoxAddItem(comboBox, valueXmstrings[i], 0, True);
     }
-    XtVaSetValues(comboBox, DtNselectedPosition, 4, NULL);
+    XtVaSetValues(comboBox, DtNselectedPosition, 4, nullptr);
 
 
     /*
@@ -437,12 +437,12 @@ static void CreateMenuButtons(Widget parent)
     XtManageChild(menuButton);
     XmStringFree(labelString);
 
-    XtVaGetValues(menuButton, DtNsubMenuId, &submenu, NULL);
-    button = XmCreatePushButton(submenu, "Push", NULL, 0);
+    XtVaGetValues(menuButton, DtNsubMenuId, &submenu, nullptr);
+    button = XmCreatePushButton(submenu, "Push", nullptr, 0);
     XtManageChild(button);
-    button = XmCreatePushButton(submenu, "Pull", NULL, 0);
+    button = XmCreatePushButton(submenu, "Pull", nullptr, 0);
     XtManageChild(button);
-    button = XmCreatePushButton(submenu, "Turn", NULL, 0);
+    button = XmCreatePushButton(submenu, "Turn", nullptr, 0);
     XtManageChild(button);
 
 
@@ -464,14 +464,14 @@ static void CreateMenuButtons(Widget parent)
     n = 0;
     XtSetArg(args[0], XmNtearOffModel, XmTEAR_OFF_ENABLED); n++;
     submenu = XmCreatePopupMenu(menuButton, "submenu", args, n);
-    button = XmCreatePushButton(submenu, "Run", NULL, 0);
+    button = XmCreatePushButton(submenu, "Run", nullptr, 0);
     XtManageChild(button);
-    button = XmCreatePushButton(submenu, "Jump", NULL, 0);
+    button = XmCreatePushButton(submenu, "Jump", nullptr, 0);
     XtManageChild(button);
-    button = XmCreatePushButton(submenu, "Stop", NULL, 0);
+    button = XmCreatePushButton(submenu, "Stop", nullptr, 0);
     XtManageChild(button);
 
-    XtVaSetValues(menuButton, DtNsubMenuId, submenu, NULL);
+    XtVaSetValues(menuButton, DtNsubMenuId, submenu, nullptr);
 
     /* Create a pixmap using the menu button's colors and depth */
 
@@ -479,13 +479,13 @@ static void CreateMenuButtons(Widget parent)
 			XmNforeground, &fg,
 			XmNbackground, &bg,
 			XmNdepth, &depth,
-			NULL);
+			nullptr);
 
     cascadePixmap = XCreatePixmapFromBitmapData(XtDisplay(menuButton),
 				DefaultRootWindow(XtDisplay(menuButton)),
 				(char*)menu_glyph_bits,
 				menu_glyph_width, menu_glyph_height,
 				fg, bg, depth);
-    XtVaSetValues(menuButton, DtNcascadePixmap, cascadePixmap, NULL);
+    XtVaSetValues(menuButton, DtNcascadePixmap, cascadePixmap, nullptr);
 }
 

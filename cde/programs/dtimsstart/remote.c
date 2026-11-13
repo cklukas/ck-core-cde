@@ -158,7 +158,7 @@ int	put_remote_conf(char *locale, char *ims_name)
 
     DPR(("put_remote_conf(locale=%s, ims=%s)\n", locale, ims_name));
 
-    ret = get_ims_list(&list, NULL, True);
+    ret = get_ims_list(&list, nullptr, True);
     msg_status = ret;
 
     ret = mk_remote_conf(list, locale, ims_name, msg_status, confbuf, &conflen);
@@ -187,7 +187,7 @@ int	get_remote_conf(ImsList **listp, char *hostname, char *locale, char *ims_nam
     char	*confbuf = 0;
     char	*opts[16];
     int		n, num_opts;
-    char        *CDE_locale = NULL;
+    char        *CDE_locale = nullptr;
 
     if (!locale)
 	locale = userEnv.real_locale ? userEnv.real_locale : userEnv.locale;
@@ -224,7 +224,7 @@ int	get_remote_conf(ImsList **listp, char *hostname, char *locale, char *ims_nam
 	for (i = 0; i < DebugLvl; i++)	opts[n++] = "-debug";
     }
 #endif
-    opts[n] = NULL;
+    opts[n] = nullptr;
     num_opts = n;
 
     ret = prepare_action(ACT_GETREMCONF, opts, num_opts);
@@ -373,14 +373,14 @@ static int	parse_ims_list(char *ptr, ImsList *list)
     char	*def_name;
     int		i, num_ent;
     ImsEnt	*ent = 0;
-    ImsConf	*ims = NULL;
+    ImsConf	*ims = nullptr;
 
     CLR(list, ImsList);
     list->default_idx = -1;
     list->def_selmode = SEL_MODE_NOAUTO;
     list->num_ent = 0;
 
-    def_name = NULL;
+    def_name = nullptr;
     num_ent = 0;
     while ((np = strchr(bp, '\n'))) {
 	if (np == bp) {
@@ -594,8 +594,8 @@ int	exec_remote_ims(UserSelection *sel)
 	opts[n++] = "-imsopt";
 	opts[n++] = bp; bp = np + 1;
     }
-    bp = NULL;
-    opts[n] = NULL;
+    bp = nullptr;
+    opts[n] = nullptr;
     num_opts = n;
 
 	/* env variables */
@@ -610,7 +610,7 @@ int	exec_remote_ims(UserSelection *sel)
     if (ret != NoError)	return ret;
 
     ac = 0;
-    av = NULL;
+    av = nullptr;
     ret = get_window_data(&ac, &av);
     put_xims_log("'%s' started for %s on %s.",
                  sel->name, userEnv.displayname, sel->hostname);
@@ -669,14 +669,14 @@ int	set_remote_confdata(char *confbuf, int conflen)
 {
     char *av[2];
 
-    av[0] = confbuf; av[1] = NULL;
+    av[0] = confbuf; av[1] = nullptr;
 
     return set_window_data(1, av);
 }
 
 int	read_remote_confdata(char **confbuf, int *conflen)
 {
-    char **av = NULL;
+    char **av = nullptr;
     int ac = 0;
     int ret;
 
@@ -813,12 +813,12 @@ int	get_window_data(int *acp, char ***avp)
     if (read_property(winEnv.atom_data, XA_STRING, 8, True, &property_data,
                       &len) != True) {
 	*acp = 0;
-	*avp = NULL;
+	*avp = nullptr;
 	return ErrRemoteData;
     }
     data = (char *)property_data;
 
-    ac = 0; av = NULL;
+    ac = 0; av = nullptr;
     if (len > 0) {
 	for (i = 1; i < len - 1; i++)	if (data[i] == '\0')	ac++;
 	av = (char **) ALLOC(ac + 1, char *);
@@ -834,7 +834,7 @@ int	get_window_data(int *acp, char ***avp)
 		}
 	    FREE(data);
 	}
-	av[j] = NULL;
+	av[j] = nullptr;
     }
 
 #ifdef	DEBUG
@@ -862,7 +862,7 @@ static int	read_property(Atom prop, Atom type, int format,
     int realformat;
     unsigned long bytesafter;
 
-    *datapp = NULL;
+    *datapp = nullptr;
 
     (void)XGetWindowProperty(winEnv.Dpy, winEnv.atom_owner,
 			     prop, 0L, 1000000L, del_flag, type,
@@ -874,8 +874,8 @@ static int	read_property(Atom prop, Atom type, int format,
     } else if (realtype != type) {	/* wrong type */
 	return False;
     } else if (realformat != format) {	/* wrong format */
-	if (*datapp != NULL) XtFree((char *)*datapp);
-	*datapp = NULL;
+	if (*datapp != nullptr) XtFree((char *)*datapp);
+	*datapp = nullptr;
 	return False;
     }
     return True;

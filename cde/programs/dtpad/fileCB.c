@@ -138,12 +138,12 @@ FileNewCB(
 	TTmediaReply(pPad);	/* reply/close ToolTalk media request */
     }
 
-    if (pPad->fileStuff.fileName != (char *)NULL) {
+    if (pPad->fileStuff.fileName != (char *)nullptr) {
 	XtFree(pPad->fileStuff.fileName);
-        pPad->fileStuff.fileName = (char *)NULL;
+        pPad->fileStuff.fileName = (char *)nullptr;
     }
     _DtTurnOnHourGlass(pPad->app_shell);
-    LoadFile(pPad, NULL);
+    LoadFile(pPad, nullptr);
     ChangeMainWindowTitle(pPad);
     _DtTurnOffHourGlass(pPad->app_shell);
 }
@@ -250,7 +250,7 @@ FileSaveCB(
 	_DtTurnOffHourGlass(pPad->app_shell);
 	if (errorCode != DtEDITOR_NO_ERRORS) {
 	    PostSaveError(pPad, pPad->fileStuff.fileName, errorCode);
-	    pPad->fileStuff.pendingFileFunc = NULL;
+	    pPad->fileStuff.pendingFileFunc = nullptr;
 	    TTfailPendingSave(pPad);
 	    return;
 	}
@@ -279,7 +279,7 @@ FileSaveCB(
 			TTfailPendingQuit(pPad);
 		    }
 		    TTfailPendingSave(pPad);
-		    pPad->fileStuff.pendingFileFunc = NULL;
+		    pPad->fileStuff.pendingFileFunc = nullptr;
 		    return;	/* deposit failed */
 		}
 	    } else {	/* TT request without fileName and contents */
@@ -300,8 +300,8 @@ FileSaveCB(
 	}
     }
 
-    if ((pFunc = pPad->fileStuff.pendingFileFunc) != NULL)  {
-	pPad->fileStuff.pendingFileFunc = NULL;
+    if ((pFunc = pPad->fileStuff.pendingFileFunc) != nullptr)  {
+	pPad->fileStuff.pendingFileFunc = nullptr;
 	if (pFunc != FileSaveCB) {
 	    (*pFunc)(w, client_data, call_data);
 	}
@@ -395,7 +395,7 @@ FilePrintCB(
     Editor *pPad = (Editor *) client_data;
     DtActionArg *actionArgp = (DtActionArg *) XtCalloc(2,sizeof(DtActionArg));
     DtActionInvocationID actionID;
-    char *pr_name = (char *) NULL, *user_name;
+    char *pr_name = (char *) nullptr, *user_name;
     DtEditorErrorCode errorCode;
 
     Boolean addNewlines = pPad->xrdb.wordWrap == True &&
@@ -408,7 +408,7 @@ FilePrintCB(
      */
 
     /* -----> Get a place to temporarily write the text */
-    if ((pr_name = GetTempFile()) == (char *)NULL) {
+    if ((pr_name = GetTempFile()) == (char *)nullptr) {
 	_DtTurnOffHourGlass(pPad->app_shell);
 	Warning(pPad, ((char *)
 		GETMESSAGE(4, 5, "Unable to create a temporary file.")),		XmDIALOG_ERROR);
@@ -475,9 +475,9 @@ FilePrintCB(
     actionID = DtActionInvoke(pPad->app_shell,
 		"PRINT_DTPAD_TEMPFILE",		/* action */
 		actionArgp, 2,			/* action arguments & count */
-		(char *) NULL,			/* terminal options */
-		(char *) NULL,			/* execution host */
-		(char *) NULL,			/* context dir */
+		(char *) nullptr,			/* terminal options */
+		(char *) nullptr,			/* execution host */
+		(char *) nullptr,			/* context dir */
 		False,				/* no "use indicator" */
 		PrintActionCB,			/* action callback */
                 (XtPointer) pPad);		/* callback client data */
@@ -503,7 +503,7 @@ static void FileDoXpPrint(Editor *pPad, Boolean silent)
     DtActionInvocationID actionID;
     DtEditorErrorCode errorCode;
 
-    char *pr_name = (char *) NULL, *user_name;
+    char *pr_name = (char *) nullptr, *user_name;
 
     Boolean addNewlines = pPad->xrdb.wordWrap == True &&
 			  pPad->fileStuff.saveWithNewlines == True;
@@ -515,7 +515,7 @@ static void FileDoXpPrint(Editor *pPad, Boolean silent)
      */
 
     /* -----> Get a place to temporarily write the text */
-    if ((pr_name = GetTempFile()) == (char *)NULL) {
+    if ((pr_name = GetTempFile()) == (char *)nullptr) {
 	_DtTurnOffHourGlass(pPad->app_shell);
 	Warning(pPad, ((char *)
 		GETMESSAGE(4, 5, "Unable to create a temporary file.")),		XmDIALOG_ERROR);
@@ -683,46 +683,46 @@ FileExitWP(XtPointer client_data)
     /* -----> clear ToolTalk message info */
     TTresetQuitArgs(pPad);
     pPad->ttEditReq.contract = 0;
-    if (pPad->ttEditReq.msg_id != (char *)NULL) {
+    if (pPad->ttEditReq.msg_id != (char *)nullptr) {
 	XtFree(pPad->ttEditReq.msg_id);
-	pPad->ttEditReq.msg_id = (char *)NULL;
+	pPad->ttEditReq.msg_id = (char *)nullptr;
     }
-    if (pPad->ttEditReq.vtype != (char *)NULL) {
+    if (pPad->ttEditReq.vtype != (char *)nullptr) {
 	XtFree(pPad->ttEditReq.vtype);
-	pPad->ttEditReq.vtype = (char *)NULL;
+	pPad->ttEditReq.vtype = (char *)nullptr;
     }
-    if (pPad->ttEditReq.fileName != (char *)NULL) {
+    if (pPad->ttEditReq.fileName != (char *)nullptr) {
 	XtFree(pPad->ttEditReq.fileName);
-	pPad->ttEditReq.fileName = (char *)NULL;
+	pPad->ttEditReq.fileName = (char *)nullptr;
     }
-    if (pPad->ttEditReq.docName != (char *)NULL) {
+    if (pPad->ttEditReq.docName != (char *)nullptr) {
 	XtFree(pPad->ttEditReq.docName);
-	pPad->ttEditReq.docName = (char *)NULL;
+	pPad->ttEditReq.docName = (char *)nullptr;
     }
     if (pPad->ttEditReq.savePattern) {
 	tt_pattern_destroy(pPad->ttEditReq.savePattern);
-	pPad->ttEditReq.savePattern = NULL;
+	pPad->ttEditReq.savePattern = nullptr;
     }
 
-    if (pPad->dialogTitle != (char *)NULL) {
+    if (pPad->dialogTitle != (char *)nullptr) {
 	XtFree(pPad->dialogTitle);
-	pPad->dialogTitle = NULL;
+	pPad->dialogTitle = nullptr;
     }
 
     pPad->saveRestore = False;
 
-    pPad->fileStuff.pendingFileFunc = NULL;
-    pPad->fileStuff.pendingFileHelpFunc = NULL;
+    pPad->fileStuff.pendingFileFunc = nullptr;
+    pPad->fileStuff.pendingFileHelpFunc = nullptr;
     pPad->fileStuff.fileExists = False;
     pPad->fileStuff.saveWithNewlines = True;
     pPad->fileStuff.readOnly = False;
-    if (pPad->fileStuff.fileName != (char *) NULL) {
+    if (pPad->fileStuff.fileName != (char *) nullptr) {
 	XtFree(pPad->fileStuff.fileName);
-	pPad->fileStuff.fileName = (char *) NULL;
+	pPad->fileStuff.fileName = (char *) nullptr;
     }
-    if (pPad->fileStuff.netfile != (char *) NULL) {
+    if (pPad->fileStuff.netfile != (char *) nullptr) {
 	tt_free(pPad->fileStuff.netfile);
-	 pPad->fileStuff.netfile = (char *) NULL;
+	 pPad->fileStuff.netfile = (char *) nullptr;
     }
 
     /* -----> Clear contents, undo, find/change, format and message area */
@@ -826,45 +826,45 @@ oldFileExitCB(
     /* -----> clear ToolTalk message info */
     TTresetQuitArgs(pPad);
     pPad->ttEditReq.contract = 0;
-    if (pPad->ttEditReq.msg_id != (char *)NULL) {
+    if (pPad->ttEditReq.msg_id != (char *)nullptr) {
 	XtFree(pPad->ttEditReq.msg_id);
-	pPad->ttEditReq.msg_id = (char *)NULL;
+	pPad->ttEditReq.msg_id = (char *)nullptr;
     }
-    if (pPad->ttEditReq.vtype != (char *)NULL) {
+    if (pPad->ttEditReq.vtype != (char *)nullptr) {
 	XtFree(pPad->ttEditReq.vtype);
-	pPad->ttEditReq.vtype = (char *)NULL;
+	pPad->ttEditReq.vtype = (char *)nullptr;
     }
-    if (pPad->ttEditReq.fileName != (char *)NULL) {
+    if (pPad->ttEditReq.fileName != (char *)nullptr) {
 	XtFree(pPad->ttEditReq.fileName);
-	pPad->ttEditReq.fileName = (char *)NULL;
+	pPad->ttEditReq.fileName = (char *)nullptr;
     }
-    if (pPad->ttEditReq.docName != (char *)NULL) {
+    if (pPad->ttEditReq.docName != (char *)nullptr) {
 	XtFree(pPad->ttEditReq.docName);
-	pPad->ttEditReq.docName = (char *)NULL;
+	pPad->ttEditReq.docName = (char *)nullptr;
     }
     if (pPad->ttEditReq.savePattern) {
 	tt_pattern_destroy(pPad->ttEditReq.savePattern);
-	pPad->ttEditReq.savePattern = NULL;
+	pPad->ttEditReq.savePattern = nullptr;
     }
 
-    if (pPad->dialogTitle != (char *)NULL) {
+    if (pPad->dialogTitle != (char *)nullptr) {
 	XtFree(pPad->dialogTitle);
     }
 
     pPad->saveRestore = False;
 
-    pPad->fileStuff.pendingFileFunc = NULL;
-    pPad->fileStuff.pendingFileHelpFunc = NULL;
+    pPad->fileStuff.pendingFileFunc = nullptr;
+    pPad->fileStuff.pendingFileHelpFunc = nullptr;
     pPad->fileStuff.fileExists = False;
     pPad->fileStuff.saveWithNewlines = True;
     pPad->fileStuff.readOnly = False;
-    if (pPad->fileStuff.fileName != (char *) NULL) {
+    if (pPad->fileStuff.fileName != (char *) nullptr) {
 	XtFree(pPad->fileStuff.fileName);
-	pPad->fileStuff.fileName = (char *) NULL;
+	pPad->fileStuff.fileName = (char *) nullptr;
     }
-    if (pPad->fileStuff.netfile != (char *) NULL) {
+    if (pPad->fileStuff.netfile != (char *) nullptr) {
 	tt_free(pPad->fileStuff.netfile);
-	 pPad->fileStuff.netfile = (char *) NULL;
+	 pPad->fileStuff.netfile = (char *) nullptr;
     }
 
     /* -----> Clear contents, undo, find/change, format and message area */
@@ -905,12 +905,12 @@ NoSaveCB(
     XtUnmanageChild(pPad->fileStuff.fileWidgets.select.save_warning);
 
 
-    if ((pFunc = pPad->fileStuff.pendingFileFunc) != NULL)  {
+    if ((pFunc = pPad->fileStuff.pendingFileFunc) != nullptr)  {
 	/* -----> don't clear the pending function if it calls SaveUnsaved() */
 	if (pPad->fileStuff.pendingFileFunc != FileNewCB &&
 	  pPad->fileStuff.pendingFileFunc != FileOpenCB &&
 	  pPad->fileStuff.pendingFileFunc != FileExitCB) {
-	    pPad->fileStuff.pendingFileFunc = NULL;
+	    pPad->fileStuff.pendingFileFunc = nullptr;
 	}
 	if (pFunc != FileSaveCB) {
 	    (*pFunc)(w, client_data, call_data);
@@ -931,8 +931,8 @@ CancelFileSelectCB(
 {
     Editor *pPad = (Editor *)client_data;
 
-    pPad->fileStuff.pendingFileFunc = NULL;
-    pPad->fileStuff.pendingFileHelpFunc = NULL;
+    pPad->fileStuff.pendingFileFunc = nullptr;
+    pPad->fileStuff.pendingFileHelpFunc = nullptr;
 
     /* popdown the file selection box */
     XtUnmanageChild (w);
@@ -976,16 +976,16 @@ FileOpenOkCB(
      * Additionally, we can get quit saving the text field ID and
      * deal only with the FSB. */
 
-    name = (char *) _XmStringUngenerate(cb->value, NULL,
+    name = (char *) _XmStringUngenerate(cb->value, nullptr,
                                         XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
 
-    if (pStuff->fileName != (char *)NULL) {
+    if (pStuff->fileName != (char *)nullptr) {
 	XtFree(pStuff->fileName);
     }
     pStuff->fileName = name;
     ExtractAndStoreDir(pPad, name, OPEN); /* store pPad->fileStuff.pathDir */
 
-    LoadFile(pPad, NULL);		/* this is always successful */
+    LoadFile(pPad, nullptr);		/* this is always successful */
     ChangeMainWindowTitle(pPad);
 
     CancelFileSelectCB(w, client_data, call_data);
@@ -1026,7 +1026,7 @@ IncludeFile(
      * deal only with the FSB.
      */
 
-    name = (char *) _XmStringUngenerate(cb->value, NULL,
+    name = (char *) _XmStringUngenerate(cb->value, nullptr,
                                         XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
 
     ExtractAndStoreDir(pPad, name, INCLUDE); /* store pPad->fileStuff.pathDir */
@@ -1034,7 +1034,7 @@ IncludeFile(
     LoadFile(pPad, name);
     ChangeMainWindowTitle(pPad);
     CancelFileSelectCB(w, client_data, call_data);
-    if (name != (char *)NULL)
+    if (name != (char *)nullptr)
         XtFree(name);
 }
 
@@ -1101,7 +1101,7 @@ SaveUnsaved(
 		     * choose to not save changes in order to exit. */
 		    pPad->xrdb.saveOnClose = False;
 		}
-		pPad->fileStuff.pendingFileFunc = NULL;
+		pPad->fileStuff.pendingFileFunc = nullptr;
 		return True;	/* don't finish calling func */
 	    } else {
 		if (pPad->ttEditReq.contract) {
@@ -1119,7 +1119,7 @@ SaveUnsaved(
 		/* We've already did AskIfSave but the user responded
 		 * "No" so lets not keep asking (NoSaveCB does not clear
 		 * pPad->fileStuff.pendingFileFunc). */
-		pPad->fileStuff.pendingFileFunc = NULL;
+		pPad->fileStuff.pendingFileFunc = nullptr;
 		pPad->ttEditReq.returnBufContents = False;
 	    } else {
 		/* AskIfSave assigns either FileSaveAsCB or FileSaveCB to the
@@ -1188,7 +1188,7 @@ SaveAsOkCB(
 
     /* -----> Get the "save as" file name */
 
-    name = (char *) _XmStringUngenerate(cb->value, NULL,
+    name = (char *) _XmStringUngenerate(cb->value, nullptr,
                                         XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
 
     pPad->fileStuff.savingName = name;
@@ -1235,8 +1235,8 @@ SaveAsOkCB(
     if (errorCode != SUCCESS) {
         PostSaveError(pPad, pPad->fileStuff.savingName, errorCode);
 	XtFree(pPad->fileStuff.savingName);
-	pPad->fileStuff.savingName = (char *)NULL;
-	pPad->fileStuff.pendingFileFunc = NULL;
+	pPad->fileStuff.savingName = (char *)nullptr;
+	pPad->fileStuff.pendingFileFunc = nullptr;
     } else {
 	if (pPad->ttEditReq.contract) {
 	    /* ZZZ -----> Create and send Saved notice */
@@ -1263,8 +1263,8 @@ SaveAsOkCB(
     XtUnmanageChild (pSaveAs->saveAs_form);
     _DtTurnOffHourGlass(pSaveAs->saveAs_form);
     _DtTurnOffHourGlass(pPad->app_shell);
-    if ((pFunc = pPad->fileStuff.pendingFileFunc) != NULL)  {
-	pPad->fileStuff.pendingFileFunc = NULL;
+    if ((pFunc = pPad->fileStuff.pendingFileFunc) != nullptr)  {
+	pPad->fileStuff.pendingFileFunc = nullptr;
 	(*pFunc)(w, client_data, call_data);
     }
 }
@@ -1344,10 +1344,10 @@ AlrdyExistsOkCB(
     }
     if (pPad->fileStuff.savingName != pPad->fileStuff.fileName)
 	XtFree(pPad->fileStuff.savingName);
-    pPad->fileStuff.savingName = (char *)NULL;
+    pPad->fileStuff.savingName = (char *)nullptr;
 
-    if ((pFunc = pPad->fileStuff.pendingFileFunc) != NULL)  {
-	pPad->fileStuff.pendingFileFunc = NULL;
+    if ((pFunc = pPad->fileStuff.pendingFileFunc) != nullptr)  {
+	pPad->fileStuff.pendingFileFunc = nullptr;
 	(*pFunc)(w, client_data, call_data);
     }
 }
@@ -1366,8 +1366,8 @@ SaveAsCancelCB(
     Editor *pPad = (Editor *) client_data;
 
     XtUnmanageChild ((Widget) pPad->fileStuff.fileWidgets.saveAs.saveAs_form);
-    pPad->fileStuff.pendingFileFunc = NULL;
-    pPad->fileStuff.pendingFileHelpFunc = NULL;
+    pPad->fileStuff.pendingFileFunc = nullptr;
+    pPad->fileStuff.pendingFileHelpFunc = nullptr;
 }
 
 
@@ -1384,9 +1384,9 @@ AlrdyExistsCancelCB(
     Editor *pPad = (Editor *)client_data;
     XtUnmanageChild ((Widget) pPad->fileStuff.fileWidgets.saveAs.alrdy_exist);
     XtFree(pPad->fileStuff.savingName);
-    pPad->fileStuff.savingName = (char *) NULL;
-    pPad->fileStuff.pendingFileFunc = NULL;
-    pPad->fileStuff.pendingFileHelpFunc = NULL;
+    pPad->fileStuff.savingName = (char *) nullptr;
+    pPad->fileStuff.pendingFileFunc = nullptr;
+    pPad->fileStuff.pendingFileHelpFunc = nullptr;
 }
 
 
@@ -1406,7 +1406,7 @@ AskIfSaveCancelCB(
     if (pPad->fileStuff.pendingFileFunc == FileExitCB) {
 	TTfailPendingQuit(pPad);
     }
-    pPad->fileStuff.pendingFileFunc = NULL;
-    pPad->fileStuff.pendingFileHelpFunc = NULL;
+    pPad->fileStuff.pendingFileFunc = nullptr;
+    pPad->fileStuff.pendingFileHelpFunc = nullptr;
 }
 

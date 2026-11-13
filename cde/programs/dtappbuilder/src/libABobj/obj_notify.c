@@ -159,14 +159,14 @@ static int		recurseLevel= 0;
 OBJ_EVENT		eventQueue[MAX_EVENT_QUEUE_SIZE];
 int			firstEventIndex= 0;
 int			lastEventIndex= 0;
-NamedCallbackList	callbacksForAllowGeometryChange= NULL;
-NamedCallbackList	callbacksForAllowReparent= NULL;
-NamedCallbackList	callbacksForAttChange= NULL;
-NamedCallbackList	callbacksForCreate= NULL;
-NamedCallbackList	callbacksForDestroy= NULL;
-NamedCallbackList	callbacksForReparent= NULL;
-NamedCallbackList	callbacksForUpdate= NULL;
-NamedCallbackList	callbacksForUpdateWithData= NULL;
+NamedCallbackList	callbacksForAllowGeometryChange= nullptr;
+NamedCallbackList	callbacksForAllowReparent= nullptr;
+NamedCallbackList	callbacksForAttChange= nullptr;
+NamedCallbackList	callbacksForCreate= nullptr;
+NamedCallbackList	callbacksForDestroy= nullptr;
+NamedCallbackList	callbacksForReparent= nullptr;
+NamedCallbackList	callbacksForUpdate= nullptr;
+NamedCallbackList	callbacksForUpdateWithData= nullptr;
 
 
 /*************************************************************************
@@ -428,7 +428,7 @@ objP_notify_send_geometry_change(ABObj obj,
     event.type= OBJEV_ATT_CHANGE;
     event.info.att_change.atts = geomflag;
     event.info.att_change.obj = obj;
-    event.info.att_change.old_name = NULL;
+    event.info.att_change.old_name = nullptr;
     return objP_dispatch_event(&event);
 }
 
@@ -440,7 +440,7 @@ objP_notify_send_rc_geometry_change(ABObj obj)
     event.type= OBJEV_ATT_CHANGE;
     event.info.att_change.atts = OBJEV_ATT_SIZE;
     event.info.att_change.obj = obj;
-    event.info.att_change.old_name = NULL;
+    event.info.att_change.old_name = nullptr;
     return objP_dispatch_event(&event);
 }
 
@@ -475,7 +475,7 @@ objP_notify_send_selected_change(ABObj obj)
     event.type = OBJEV_ATT_CHANGE;
     event.info.att_change.atts = OBJEV_ATT_SELECTED;
     event.info.att_change.obj= obj;
-    event.info.att_change.old_name = NULL;
+    event.info.att_change.old_name = nullptr;
     return objP_dispatch_event(&event);
 }
 
@@ -646,8 +646,8 @@ objP_send_event(ObjEvent event)
 {
     int			iReturn= 0;
     int			iRC= 0;		/* return code */
-    NamedCallbackList	callbackList= NULL;
-    void		*data= NULL;
+    NamedCallbackList	callbackList= nullptr;
+    void		*data= nullptr;
 
     switch (event->type)
     {
@@ -731,7 +731,7 @@ flush_queue(void)
 {
     int		iReturn= 0;
     int		numEventsProcessed= 0;
-    ObjEvent	event= NULL;
+    ObjEvent	event= nullptr;
 
     while (!queue_is_empty())
     {
@@ -765,7 +765,7 @@ force_flush_queue(void)
 {
     int		iReturn= ERR_RECURSION;
     int		numEventsProcessed= 0;
-    ObjEvent	event= NULL;
+    ObjEvent	event= nullptr;
 
     /*
      * We have probably run into an endless event cycle.  To fix this,
@@ -903,7 +903,7 @@ cleanup_ev_update_with_data(ObjEvent event)
 			    event->info.update_with_data.update_data_free_func;
     BOOL		dataStillInUse= FALSE;
 
-    if (free_func == NULL)
+    if (free_func == nullptr)
     {
 	goto epilogue;
     }
@@ -923,8 +923,8 @@ cleanup_ev_update_with_data(ObjEvent event)
     {
 	free_func(event->info.update_with_data.update_code,
 			update_data);  
-	update_data= NULL;
-	event->info.update_with_data.update_data= NULL;
+	update_data= nullptr;
+	event->info.update_with_data.update_data= nullptr;
     }
 
 epilogue:
@@ -935,7 +935,7 @@ epilogue:
 static int
 event_print(OBJ_EVENT *event, FILE *outFile, BOOL addNewline, STRING name)
 {
-    ABObj	obj= NULL;
+    ABObj	obj= nullptr;
     char	eventName[1024];
     char	eventParams[1024 + 2];
     char	*eventParamsPtr= eventParams;
@@ -1060,7 +1060,7 @@ event_print(OBJ_EVENT *event, FILE *outFile, BOOL addNewline, STRING name)
     {
 	char	objName[1024];
 	sprintf(objName, "(%#lx", (unsigned long) obj);
-	if (obj_get_name(obj) != NULL)
+	if (obj_get_name(obj) != nullptr)
 	{
 	    strcat(objName, " = ");
 	    strcat(objName, obj_get_name(obj));
@@ -1069,7 +1069,7 @@ event_print(OBJ_EVENT *event, FILE *outFile, BOOL addNewline, STRING name)
 	sprintf(eventParams, "(%s)", objName);
     }
 
-    if (name != NULL)
+    if (name != nullptr)
     {
         strcat(eventName, ": ");
 	strcat(eventName, name);
@@ -1099,7 +1099,7 @@ event_queue_print(void)
     printf("Event queue:\n");
     while (!queue_is_empty())
     {
-	event_print(&(eventQueue[firstEventIndex]), stdout, TRUE, NULL);
+	event_print(&(eventQueue[firstEventIndex]), stdout, TRUE, nullptr);
 	firstEventIndex= queue_next_index(firstEventIndex);
     }
     printf("\n");
@@ -1124,12 +1124,12 @@ add_to_callback_list(NamedCallbackList *ppsList,
 {
 #define list (*ppsList)
     int			iNumEntries;
-    NamedCallbackList	newList= NULL;
+    NamedCallbackList	newList= nullptr;
 
-    if (list == NULL)
+    if (list == nullptr)
     {
 	list= (NamedCallbackList)util_malloc(1 * sizeof(NAMED_CALLBACK));
-	if (list == NULL)
+	if (list == nullptr)
 	{
 	    return ERR_NO_MEMORY;
 	}
@@ -1143,7 +1143,7 @@ add_to_callback_list(NamedCallbackList *ppsList,
     iNumEntries+= 2;
     newList= (NamedCallbackList)
 		realloc(list, iNumEntries * sizeof(NAMED_CALLBACK));
-    if (newList == NULL)
+    if (newList == nullptr)
     {
 	return ERR_NO_MEMORY;
     }
@@ -1166,7 +1166,7 @@ call_callbacks_in_list(NamedCallbackList list, void *data, ObjEvent event)
     int			iReturn= 0;	/* our return value */
     int			i= 0;
 
-    if (list == NULL)
+    if (list == nullptr)
     {
 	return 0;
     }

@@ -54,11 +54,11 @@
 
 static struct timeval timeout_tv;
 static struct timeval retry_tv;
-static AUTH *unix_credential = NULL;
+static AUTH *unix_credential = nullptr;
 static int tcp_count = 0;
 static int cl_count = 0;
-static _DtCm_Client_Info *client_cache_head = NULL;
-static _DtCm_Client_Info *client_cache_tail = NULL;
+static _DtCm_Client_Info *client_cache_head = nullptr;
+static _DtCm_Client_Info *client_cache_tail = nullptr;
 
 /*****************************************************************************
  * forward declaration of static functions.
@@ -96,20 +96,20 @@ _DtCm_create_udp_client(
 	CSA_return_code	stat;
 	_DtCm_Client_Info	*ci;
 	u_long		vers_out;
-	CLIENT		*cl=NULL;
+	CLIENT		*cl=nullptr;
 
-	if (host == NULL || clnt == NULL)
+	if (host == nullptr || clnt == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* if client info is found, we have at least the udp handle */
-	if (((*clnt) = get_client_info(host, version)) != NULL) {
+	if (((*clnt) = get_client_info(host, version)) != nullptr) {
 		return (CSA_SUCCESS);
 	}
 
 #if defined(SunOS)
 	cl = clnt_create_vers(host, TABLEPROG, 
 		&vers_out, TABLEVERS_2, version, "udp");
-	if (cl==NULL) {
+	if (cl==nullptr) {
 		_DtCm_print_errmsg(clnt_spcreateerror(host));
 		return (_DtCm_clntstat_to_csastat(rpc_createerr.cf_stat));
 	}
@@ -122,7 +122,7 @@ _DtCm_create_udp_client(
 
 	/* if version is lower than requested, check the list again */
 	if (vers_out < version) {
-		if ((ci = get_client_info(host, vers_out)) != NULL) {
+		if ((ci = get_client_info(host, vers_out)) != nullptr) {
 			clnt_destroy(cl);
 			*clnt = ci;
 			return (CSA_SUCCESS);
@@ -149,13 +149,13 @@ _DtCm_create_udp_client(
 	retry_tv.tv_usec = 0;
 	clnt_control(cl, CLSET_RETRY_TIMEOUT, (char*)&retry_tv);
 
-	if ((ci  = (_DtCm_Client_Info *)calloc(1, sizeof(_DtCm_Client_Info))) == NULL) {
+	if ((ci  = (_DtCm_Client_Info *)calloc(1, sizeof(_DtCm_Client_Info))) == nullptr) {
 		destroy_auth(cl);
 		clnt_destroy(cl);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
-	if ((ci->host = strdup(host)) == NULL) {
+	if ((ci->host = strdup(host)) == nullptr) {
 		destroy_auth(cl);
 		clnt_destroy(cl);
 		free(ci);
@@ -184,9 +184,9 @@ _DtCm_create_tcp_client(
 	CSA_return_code	stat;
 	_DtCm_Client_Info	*ci;
 	u_long		vers_out;
-	CLIENT		*cl=NULL;
+	CLIENT		*cl=nullptr;
 
-	if (host == NULL || clnt == NULL)
+	if (host == nullptr || clnt == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* Get a udp client handle.  This serves two purposes:	       	   */ 
@@ -210,7 +210,7 @@ _DtCm_create_tcp_client(
 #endif
 
 		/* if can't create tcp connection, use udp */
-		if (cl==NULL) {
+		if (cl==nullptr) {
 			_DtCm_print_errmsg(clnt_spcreateerror(host));
 			*clnt = ci;
 			return (CSA_SUCCESS);
@@ -258,14 +258,14 @@ _DtCm_clnt_call(
 	int retry = conn->retry;
 
 	while (B_TRUE) {
-		if (conn->ci == NULL)
+		if (conn->ci == nullptr)
 			break;
 		else {
 			ci = conn->ci;
 			ci->last_used = time(0);
 		}
 
-		if (conn->use == udp_transport || ci->tcpcl == NULL)
+		if (conn->use == udp_transport || ci->tcpcl == nullptr)
 			ttype = udp_transport;
 		else
 			ttype = tcp_transport;
@@ -287,20 +287,20 @@ _DtCm_clnt_call(
 				 */
 
 				/* get new client handle */
-				if (get_new_client_handle(conn) == NULL)
+				if (get_new_client_handle(conn) == nullptr)
 					break;
 
 			} else {
 				/* purge the client handle */
 				delete_client_info(conn->ci);
-				conn->ci = NULL;
+				conn->ci = nullptr;
 				break;
 			}
 		} else
 			break;
 	}
 
-	if (status != RPC_SUCCESS && conn->ci != NULL) {
+	if (status != RPC_SUCCESS && conn->ci != nullptr) {
 		_DtCm_print_errmsg(clnt_sperror((ttype == tcp_transport ? ci->tcpcl :
 				ci->udpcl), ci->host));
 	}
@@ -318,10 +318,10 @@ _DtCm_add_registration(
 	_DtCm_Target_List *listitem;
 	int result;
 
-	if (ci == NULL || cal == NULL)
+	if (ci == nullptr || cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	for (listp = prev = ci->tlist; listp != NULL;
+	for (listp = prev = ci->tlist; listp != nullptr;
 	     prev = listp, listp = listp->next) {
 		if ((result = strcmp(listp->cal, cal)) == 0) {
 			/* registered already */
@@ -331,17 +331,17 @@ _DtCm_add_registration(
 	}
 
 	/* register the first time, insert in list in ascending order */
-	if ((listitem = (_DtCm_Target_List *)calloc(1, sizeof(_DtCm_Target_List))) == NULL)
+	if ((listitem = (_DtCm_Target_List *)calloc(1, sizeof(_DtCm_Target_List))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if ((listitem->cal = strdup(cal)) == NULL) {
+	if ((listitem->cal = strdup(cal)) == nullptr) {
 		free(listitem);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	listitem->update_type = update_type;
 
-	if (prev == NULL || listp == prev)
+	if (prev == nullptr || listp == prev)
 		ci->tlist = listitem;
 	else
 		prev->next = listitem;
@@ -359,10 +359,10 @@ _DtCm_remove_registration(_DtCm_Client_Info *ci, char *cal)
 	_DtCm_Client_Info *c;
 	int result;
 
-	if (cal == NULL) return;
+	if (cal == nullptr) return;
 
 	/* if found, just increment the number of registration */
-	for (listp = prev = ci->tlist; listp != NULL;
+	for (listp = prev = ci->tlist; listp != nullptr;
 	     prev = listp, listp = listp->next) {
 		if ((result = strcmp(listp->cal, cal)) == 0) {
 			if (listp == prev)
@@ -381,14 +381,14 @@ _DtCm_remove_registration(_DtCm_Client_Info *ci, char *cal)
 				if (ci->tcpcl) {
 					destroy_auth(ci->tcpcl);
 					clnt_destroy(ci->tcpcl);
-					ci->tcpcl = NULL;
+					ci->tcpcl = nullptr;
 					tcp_count--;
 				}
 
 				/* find other tcp connection for the
 				 * same host
 				 */
-				for (c = client_cache_head; c != NULL;
+				for (c = client_cache_head; c != nullptr;
 				    c = c->next) {
 					if ((result = strcmp(c->host,
 					    ci->host)) == 0) {
@@ -396,7 +396,7 @@ _DtCm_remove_registration(_DtCm_Client_Info *ci, char *cal)
 						    c->tcpcl) {
 							destroy_auth(c->tcpcl);
 							clnt_destroy(c->tcpcl);
-							c->tcpcl = NULL;
+							c->tcpcl = nullptr;
 							tcp_count--;
 						}
 					} else if (result > 0)
@@ -416,7 +416,7 @@ _DtCm_get_server_rpc_version(char *host, int *version)
 	CSA_return_code stat;
 	_DtCm_Client_Info *ci;
 
-	if (host == NULL) {
+	if (host == nullptr) {
 		return (CSA_E_INVALID_PARAMETER);
 	}
 
@@ -453,7 +453,7 @@ static void
 create_auth(CLIENT *cl)
 {
 	/* Always cache the Unix style credentials. */
-	if (unix_credential == NULL)
+	if (unix_credential == nullptr)
 #if defined(SunOS)
 		unix_credential = authsys_create_default ();
 #else
@@ -481,15 +481,15 @@ get_client_info(char *host, int version)
 	_DtCm_Client_Info *ci;
 	int result;
 
-	if (host==NULL) return(NULL);
-	for (ci = client_cache_head; ci != NULL; ci = ci->next) {
+	if (host==nullptr) return(nullptr);
+	for (ci = client_cache_head; ci != nullptr; ci = ci->next) {
 		if ((result = strcmp(ci->host, host)) == 0) {
 			if (ci->vers_out <= version)
 				return(ci); 
 		} else if (result > 0)
 			break;
 	}
-	return(NULL);
+	return(nullptr);
 }
 
 static void
@@ -497,7 +497,7 @@ destroy_target_list(_DtCm_Target_List *tlist)
 {
 	_DtCm_Target_List *listp, *listitem;
 
-	for (listp = tlist; listp != NULL; ) {
+	for (listp = tlist; listp != nullptr; ) {
 		listitem = listp;
 		listp = listp->next;
 
@@ -510,9 +510,9 @@ destroy_target_list(_DtCm_Target_List *tlist)
 static void
 destroy_client_info(_DtCm_Client_Info *ci)
 {
-	if (ci==NULL) return;
+	if (ci==nullptr) return;
 
-	if (ci->host != NULL)
+	if (ci->host != nullptr)
 		free(ci->host);
 	if (ci->tcpcl) {
 		destroy_auth(ci->tcpcl);
@@ -544,7 +544,7 @@ insert_client_info(_DtCm_Client_Info *ci)
 		cleanup_some_connection(ci);
 
 	/* insert new item alphabetically */
-	for (citem = client_cache_head; citem != NULL; citem = citem->next) {
+	for (citem = client_cache_head; citem != nullptr; citem = citem->next) {
 		/* there shouldn't be an entry with the same host name
 		 * if there's, it would be picked up in get_client_info()
 		 */
@@ -552,8 +552,8 @@ insert_client_info(_DtCm_Client_Info *ci)
 			break;
 	}
 
-	if (citem == NULL) {
-		if (client_cache_head == NULL)
+	if (citem == nullptr) {
+		if (client_cache_head == nullptr)
 			client_cache_head = client_cache_tail = ci;
 		else {
 			ci->prev = client_cache_tail;
@@ -585,23 +585,23 @@ insert_client_info(_DtCm_Client_Info *ci)
 static void
 delete_client_info(_DtCm_Client_Info *oldci)
 {
-	if (oldci == NULL) return;
+	if (oldci == nullptr) return;
 
 	if (oldci == client_cache_head) {
 		client_cache_head = oldci->next;
 		if (client_cache_head)
-			client_cache_head->prev = NULL;
+			client_cache_head->prev = nullptr;
 	} else if (oldci == client_cache_tail) {
 		client_cache_tail = oldci->prev;
 		if (client_cache_tail)
-			client_cache_tail->next = NULL;
+			client_cache_tail->next = nullptr;
 	} else {
 		oldci->prev->next = oldci->next;
 		oldci->next->prev = oldci->prev;
 	}
 
 	if (oldci == client_cache_tail)
-		client_cache_tail = NULL;
+		client_cache_tail = nullptr;
 
 	destroy_client_info(oldci);
 
@@ -633,13 +633,13 @@ cleanup_some_connection(_DtCm_Client_Info *dontclose)
 	_DtCm_Client_Info *ci, *oldci;
 	int total = 0, deleted = 0, done = 0;
 
-	for (ci = client_cache_head; ci != NULL; )
+	for (ci = client_cache_head; ci != nullptr; )
 	{
 		total++;
 
 		if (ci != dontclose && ci->nregistered == 0 &&
-		    (ci->tcpcl || (!done && ci->tcpcl == NULL) ||
-		     (ci->tcpcl==NULL && (time(NULL) - ci->last_used)>DAYSEC)))
+		    (ci->tcpcl || (!done && ci->tcpcl == nullptr) ||
+		     (ci->tcpcl==nullptr && (time(nullptr) - ci->last_used)>DAYSEC)))
 		{
 			if (!done) done = 1;
 
@@ -669,7 +669,7 @@ check_registration(_DtCm_Connection *conn)
 	_DtCm_Transport_Type olduse;
 	CSA_return_code	stat;
 
-	if (conn->ci->tlist == NULL)
+	if (conn->ci->tlist == nullptr)
 		return;
 
 	olduse = conn->use;
@@ -687,7 +687,7 @@ check_registration(_DtCm_Connection *conn)
 			free(listp);
 		}
 	} else if (stat == CSA_E_CALLBACK_NOT_REGISTERED || stat == CSA_E_FAILURE) {
-		for (listp = prev = conn->ci->tlist; listp != NULL; ) {
+		for (listp = prev = conn->ci->tlist; listp != nullptr; ) {
 			if (_DtCm_do_registration(conn, listp->cal,
 			    listp->update_type) != CSA_SUCCESS)
 			{
@@ -699,7 +699,7 @@ check_registration(_DtCm_Connection *conn)
 				/* free target item */
 				free(listp->cal);
 				free(listp);
-				listp = (prev ? prev->next : NULL);
+				listp = (prev ? prev->next : nullptr);
 			} else {
 				prev = listp;
 				listp = listp->next;
@@ -715,7 +715,7 @@ get_new_client_handle(_DtCm_Connection *conn)
 	CLIENT *cl;
 	int oldver;
 
-	if (conn == NULL) return(NULL);
+	if (conn == nullptr) return(nullptr);
 
 	oldver = conn->ci->vers_out;
 
@@ -723,7 +723,7 @@ get_new_client_handle(_DtCm_Connection *conn)
 #if defined(SunOS)
 	cl = clnt_create_vers(conn->ci->host, TABLEPROG, &(conn->ci->vers_out),
 			TABLEVERS_2, oldver, "udp");
-	if (cl == NULL) {
+	if (cl == nullptr) {
 		_DtCm_print_errmsg(clnt_spcreateerror(conn->ci->host));
 	}
 #else
@@ -732,10 +732,10 @@ get_new_client_handle(_DtCm_Connection *conn)
 			"udp", &cl);
 #endif
 
-	if (cl == NULL) {
+	if (cl == nullptr) {
 		delete_client_info(conn->ci);
-		conn->ci = NULL;
-		return(NULL);
+		conn->ci = nullptr;
+		return(nullptr);
 	} else {
 		create_auth(cl);
 
@@ -757,8 +757,8 @@ get_new_client_handle(_DtCm_Connection *conn)
 	check_registration(conn);
 
 	/* ci might be set to NULL if an rpc call failed */
-	if (conn->ci == NULL)
-		return (NULL);
+	if (conn->ci == nullptr)
+		return (nullptr);
 
 	/* now deal with tcp handle */
 
@@ -767,7 +767,7 @@ get_new_client_handle(_DtCm_Connection *conn)
 		destroy_auth(conn->ci->tcpcl);
 		clnt_destroy(conn->ci->tcpcl);
 		tcp_count--;
-		conn->ci->tcpcl = NULL;
+		conn->ci->tcpcl = nullptr;
 	}
 
 	if (conn->use == udp_transport) {
@@ -779,7 +779,7 @@ get_new_client_handle(_DtCm_Connection *conn)
 #if defined(SunOS)
 		cl = clnt_create_vers(conn->ci->host, TABLEPROG,
 			&(conn->ci->vers_out), TABLEVERS_2, oldver, "tcp");
-		if (cl == NULL)
+		if (cl == nullptr)
 			_DtCm_print_errmsg(clnt_spcreateerror(conn->ci->host));
 #else
 		(void) get_client_handle(conn->ci->host, (u_int)TABLEPROG,
@@ -787,9 +787,9 @@ get_new_client_handle(_DtCm_Connection *conn)
 			&cl);
 #endif
 
-		if (cl == NULL) {
+		if (cl == nullptr) {
 			conn->ci->vers_out = oldver;
-			return(NULL);
+			return(nullptr);
 		} else {
 			create_auth(cl);
 
@@ -827,14 +827,14 @@ get_client_handle(
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
 
-	*clnt = NULL;
+	*clnt = nullptr;
 	for (vers = vers_high; vers >= vers_low; vers--) {
 
-		if ((cl = clnt_create(host, prognum, vers, nettype)) != NULL) {
+		if ((cl = clnt_create(host, prognum, vers, nettype)) != nullptr) {
 			clnt_control(cl, CLSET_TIMEOUT, (char *)&tv);
 			status = clnt_call(cl, 0, _DtCm_xdr_void,
-					   (char *)NULL, _DtCm_xdr_void,
-					   (char *)NULL, tv);
+					   (char *)nullptr, _DtCm_xdr_void,
+					   (char *)nullptr, tv);
 
 			if (status == RPC_SUCCESS) {
 				*vers_outp = vers;

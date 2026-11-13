@@ -87,7 +87,7 @@ M_TRIE *m_gettrienode(void)
 
     new = (M_TRIE *) m_malloc(sizeof(M_TRIE), "trie") ;
     new->symbol = 0 ;
-    new->next = new->data = NULL ;
+    new->next = new->data = nullptr ;
     return(new) ;
     } /*end m_gettrienode */
 
@@ -100,7 +100,7 @@ void *m_lookfortrie( const M_WCHAR *p , const M_TRIE *xtrie )
 
     currentnode = xtrie->data ;
     while (TRUE) {
-      if (! currentnode) return(NULL) ;
+      if (! currentnode) return(nullptr) ;
       if (currentnode->symbol == m_ctupper(*p))
         if (! *p) return((void *) currentnode->data) ;
         else {
@@ -112,7 +112,7 @@ void *m_lookfortrie( const M_WCHAR *p , const M_TRIE *xtrie )
         currentnode = currentnode->next ;
         continue ;
         }
-      else return(NULL) ;
+      else return(nullptr) ;
       }
     }
 
@@ -128,5 +128,5 @@ void *m_ntrtrie(M_WCHAR *p, M_TRIE *xtrie, void *dataval)
       m_entercharintrie(&currentnode, m_ctupper(*p)) ;
     m_entercharintrie(&currentnode, M_EOS) ;
     currentnode->data = (M_TRIE *) dataval ;
-    return(NULL) ;
+    return(nullptr) ;
     }

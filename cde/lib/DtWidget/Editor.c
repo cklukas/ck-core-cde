@@ -815,136 +815,136 @@ static XmSyntheticResource syn_resources[] =
         {
                 DtNcolumns, sizeof(short),
                 XtOffset (DtEditorWidget, editor.editStuff.columns),
-                _DtEditorGetColumns, NULL
+                _DtEditorGetColumns, nullptr
         },
         {
                 DtNcenterToggleLabel, sizeof (XmString),
                 XtOffset (DtEditorWidget, editor.formatStuff.centerToggleLabel),
-                _DtEditorGetCenterToggleLabel, NULL
+                _DtEditorGetCenterToggleLabel, nullptr
         },
         {
                 DtNchangeAllButtonLabel, sizeof (XmString),
                 XtOffset (DtEditorWidget,
 			  editor.searchStuff.changeAllButtonLabel),
-                _DtEditorGetChangeAllButtonLabel, NULL
+                _DtEditorGetChangeAllButtonLabel, nullptr
         },
         {
                 DtNchangeButtonLabel, sizeof (XmString),
                 XtOffset(DtEditorWidget, editor.searchStuff.changeButtonLabel),
-		_DtEditorGetChangeButtonLabel, NULL
+		_DtEditorGetChangeButtonLabel, nullptr
         },
         {
                 DtNchangeFieldLabel, sizeof (XmString),
                 XtOffset(DtEditorWidget, editor.searchStuff.changeFieldLabel),
-		_DtEditorGetChangeFieldLabel, NULL
+		_DtEditorGetChangeFieldLabel, nullptr
         },
         {
                 DtNcurrentLineLabel, sizeof (XmString),
                 XtOffset(DtEditorWidget, editor.statusStuff.currentLineLabel),
-		_DtEditorGetCurrentLineLabel, NULL
+		_DtEditorGetCurrentLineLabel, nullptr
         },
         {
 		DtNcursorPosition, sizeof (XmTextPosition),
 		XtOffset(DtEditorWidget, editor.editStuff.cursorPos),
-                _DtEditorGetCursorPosition, NULL
+                _DtEditorGetCursorPosition, nullptr
         },
         {
                 DtNfindButtonLabel, sizeof (XmString),
                 XtOffset(DtEditorWidget, editor.searchStuff.findButtonLabel),
-		_DtEditorGetFindButtonLabel, NULL
+		_DtEditorGetFindButtonLabel, nullptr
         },
         {
                 DtNfindFieldLabel, sizeof (XmString),
                 XtOffset(DtEditorWidget, editor.searchStuff.findFieldLabel),
-		_DtEditorGetFindFieldLabel, NULL
+		_DtEditorGetFindFieldLabel, nullptr
         },
         {
                 DtNformatAllButtonLabel, sizeof (XmString),
                 XtOffset(DtEditorWidget, 
 			 editor.formatStuff.formatAllButtonLabel),
-		_DtEditorGetFormatAllButtonLabel, NULL
+		_DtEditorGetFormatAllButtonLabel, nullptr
         },
         {
                 DtNformatParagraphButtonLabel, sizeof (XmString),
                 XtOffset(DtEditorWidget,
 			 editor.formatStuff.formatParaButtonLabel),
-		_DtEditorGetFormatParagraphButtonLabel, NULL
+		_DtEditorGetFormatParagraphButtonLabel, nullptr
         },
         {
                 DtNjustifyToggleLabel, sizeof (XmString),
                 XtOffset (DtEditorWidget, 
 			  editor.formatStuff.justifyToggleLabel),
-                _DtEditorGetJustifyToggleLabel, NULL
+                _DtEditorGetJustifyToggleLabel, nullptr
         },
         {
                 DtNleftAlignToggleLabel, sizeof (XmString),
                 XtOffset (DtEditorWidget,  
 			  editor.formatStuff.leftAlignToggleLabel),
-                _DtEditorGetLeftAlignToggleLabel, NULL
+                _DtEditorGetLeftAlignToggleLabel, nullptr
         },
         {
                 DtNleftMarginFieldLabel, sizeof (XmString),
                 XtOffset (DtEditorWidget,  
 			  editor.formatStuff.leftMarginFieldLabel),
-                _DtEditorGetLeftMarginFieldLabel, NULL
+                _DtEditorGetLeftMarginFieldLabel, nullptr
         },
         {
 		DtNmaxLength, sizeof(int),
 		XtOffset(DtEditorWidget, editor.editStuff.maxLength),
-                _DtEditorGetMaxLength, NULL
+                _DtEditorGetMaxLength, nullptr
         },
         {
                 DtNmisspelledListLabel, sizeof (XmString),
                 XtOffset (DtEditorWidget,  
 			  editor.searchStuff.misspelledListLabel),
-                _DtEditorGetMisspelledListLabel, NULL
+                _DtEditorGetMisspelledListLabel, nullptr
         },
         {
                 DtNrightAlignToggleLabel, sizeof (XmString),
                 XtOffset (DtEditorWidget,  
 			  editor.formatStuff.rightAlignToggleLabel),
-                _DtEditorGetRightAlignToggleLabel, NULL
+                _DtEditorGetRightAlignToggleLabel, nullptr
         },
         {
                 DtNrightMarginFieldLabel, sizeof (XmString),
                 XtOffset (DtEditorWidget,  
 			  editor.formatStuff.rightMarginFieldLabel),
-                _DtEditorGetRightMarginFieldLabel, NULL
+                _DtEditorGetRightMarginFieldLabel, nullptr
         },
         {
                 DtNrows, sizeof(short),
                 XtOffset (DtEditorWidget, editor.editStuff.rows),
-                _DtEditorGetRows, NULL
+                _DtEditorGetRows, nullptr
         },
         {
                 DtNscrollLeftSide, sizeof (Boolean),
                 XtOffset (DtEditorWidget, editor.editStuff.scrollLeft),
-                _DtEditorGetScrollLeftSide, NULL
+                _DtEditorGetScrollLeftSide, nullptr
         },
         {
                 DtNscrollTopSide, sizeof (Boolean),
                 XtOffset (DtEditorWidget, editor.editStuff.scrollTop),
-                _DtEditorGetScrollTopSide, NULL
+                _DtEditorGetScrollTopSide, nullptr
         },
         {
                 DtNtextBackground, sizeof(Pixel),
                 XtOffset (DtEditorWidget, editor.editStuff.background),
-                _DtEditorGetTextBackground, NULL
+                _DtEditorGetTextBackground, nullptr
         },
         {
                 DtNtextForeground, sizeof(Pixel),
                 XtOffset (DtEditorWidget, editor.editStuff.foreground),
-                _DtEditorGetTextForeground, NULL
+                _DtEditorGetTextForeground, nullptr
         },
         {
                 DtNtopCharacter, sizeof(XmTextPosition),
                 XtOffset (DtEditorWidget, editor.editStuff.topCharacter),
-                _DtEditorGetTopCharacter, NULL
+                _DtEditorGetTopCharacter, nullptr
         },
         {
                 DtNtotalLineCountLabel, sizeof (XmString),
                 XtOffset (DtEditorWidget, editor.statusStuff.totalLineLabel),
-                _DtEditorGetLineCountLabel, NULL
+                _DtEditorGetLineCountLabel, nullptr
         },
 };
 
@@ -1267,10 +1267,10 @@ dtEditorClassRec =
 		"DtEditor",			/* class_name		*/
  	  	sizeof (DtEditorRec),		/* widget_size		*/
 	  	ClassInitialize,		/* class_initialize	*/
-	 	NULL,				/* class_part_initialize*/
+	 	nullptr,				/* class_part_initialize*/
 		False,				/* class_inited		*/
 		Initialize,			/* initialize		*/
-		NULL,				/* initialize_hook	*/
+		nullptr,				/* initialize_hook	*/
 		XtInheritRealize,		/* realize		*/
 		(XtActionList)EditorActionTable,/* actions		*/
 		(Cardinal)XtNumber(EditorActionTable), /* num_actions	*/
@@ -1285,16 +1285,16 @@ dtEditorClassRec =
 		XtInheritResize,		/* resize		*/
 		XtInheritExpose,		/* expose		*/	
 		SetValues,			/* set_values		*/
-		NULL,				/* set_values_hook	*/
+		nullptr,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
-		NULL,		 		/* get_values_hook	*/
+		nullptr,		 		/* get_values_hook	*/
 		XtInheritAcceptFocus,		/* accept_focus		*/	
 		XtVersion,			/* version		*/
-		NULL,				/* callback private	*/
+		nullptr,				/* callback private	*/
 		XtInheritTranslations,		/* tm_table		*/
 		XtInheritQueryGeometry,		/* query_geometry	*/
 		(XtStringProc)NULL,		/* display_accelerator	*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	Composite Part
@@ -1304,20 +1304,20 @@ dtEditorClassRec =
 		XtInheritChangeManaged,		/* change_managed	*/
 		XtInheritInsertChild,		/* insert_child		*/
 		XtInheritDeleteChild,		/* delete_child		*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 
 /*	Constraint Part
 */
 	{
-		NULL,				/* constraint_resources	   */
+		nullptr,				/* constraint_resources	   */
 		0,				/* num_constraint_resource */
       		sizeof(XmFormConstraintRec),	/* size of constraint      */
-      		NULL,				/* initialization          */
-		NULL,				/* constraint_destroy	   */
-		NULL,				/* constraint_set_values   */
-		NULL,				/* extension		   */
+      		nullptr,				/* initialization          */
+		nullptr,				/* constraint_destroy	   */
+		nullptr,				/* constraint_set_values   */
+		nullptr,				/* extension		   */
 	},
 
 /*	XmManager Part
@@ -1326,10 +1326,10 @@ dtEditorClassRec =
 		XmInheritTranslations,		/* default_translations	*/
 		syn_resources,			/* syn_resources	*/
 		XtNumber(syn_resources),	/* num_syn_resources	*/
-		NULL,				/* syn_cont_resources	*/
+		nullptr,				/* syn_cont_resources	*/
 		0,				/* num_syn_cont_resources */
 		XmInheritParentProcess,		/* parent_process	*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /* XmbulletinBoard Part
@@ -1338,13 +1338,13 @@ dtEditorClassRec =
       FALSE,				/* always_install_accelerators */
       (XmGeoCreateProc)NULL,			/* geo_matrix_create  */
       XmInheritFocusMovedProc,			/* focus_moved_proc   */
-      NULL,					/* extension          */
+      nullptr,					/* extension          */
    },
 
 /*	XmForm Part 
 */
 	{
-		NULL,			/* extension		*/
+		nullptr,			/* extension		*/
 	},
 
 /*	DtEditor Part
@@ -1495,7 +1495,7 @@ VariableInitialize(
   M_unreadChanges(new) = False;     /* There have not been any changes since */
                                     /* the app requested the data            */
   M_deletionStart(new) = NO_DELETION_IN_PROGRESS;
-  M_deletedText(new) = (char *)NULL;
+  M_deletedText(new) = (char *)nullptr;
   M_insertStart(new) = 0;
   M_insertionLength(new) = 0;
   M_textSelectCbCalled(new) = False;
@@ -1510,9 +1510,9 @@ VariableInitialize(
   /* Initialize search function data                               */
   M_search_dialog(new) = (Widget) NULL;
   M_search_dialogMode(new) = SPELL;
-  M_search_string(new) = (char *)NULL;
-  M_replace_string(new) = (char *)NULL;
-  M_misspelled_string(new) = (char *)NULL;
+  M_search_string(new) = (char *)nullptr;
+  M_replace_string(new) = (char *)nullptr;
+  M_misspelled_string(new) = (char *)nullptr;
   M_misspelled_found(new) = False;
 
   /* Initialize format function data                               */
@@ -1548,7 +1548,7 @@ ValidateResources(
    * Make local copies of all resource strings assigned by the application. 
    */
 
-  if (M_spellFilter(request) != (char *) NULL)
+  if (M_spellFilter(request) != (char *) nullptr)
     M_spellFilter(new) = XtNewString( M_spellFilter(request) );
 
   /* 
@@ -1792,14 +1792,14 @@ extractFontMetrics(
     XmFontListEntry next_entry;
     XmFontType type_return = XmFONT_IS_FONT;
     XtPointer tmp_font;
-    XFontStruct *font = NULL;
+    XFontStruct *font = nullptr;
     Boolean have_font_struct = False;
     Boolean have_font_set = False;
     Boolean use_font_set = False;
     XFontSetExtents *fs_extents;
     unsigned long tmp_width = 0;
     int	font_descent, font_ascent;
-    char* font_tag = NULL;
+    char* font_tag = nullptr;
     
 
     *width = *height = 0;
@@ -1858,7 +1858,7 @@ extractFontMetrics(
                    do_break = True; 
                 }
 
-		if (NULL != font_tag)
+		if (nullptr != font_tag)
 		  XtFree(font_tag);
 
 		if (do_break)
@@ -1881,7 +1881,7 @@ extractFontMetrics(
              }
           }
 
-       } while (next_entry != NULL);
+       } while (next_entry != nullptr);
 
        XmFontListFreeFontContext(context);
 
@@ -2237,7 +2237,7 @@ SetValues(
 
     UpdateOverstrikeIndicator( new, M_overstrikeMode(request) );
     XtCallActionProc( (Widget) M_text(current), "toggle-overstrike", 
-		      (XEvent *)NULL, (String *)NULL, 0 );
+		      (XEvent *)nullptr, (String *)nullptr, 0 );
     redisplay_flag = True;
   }
 
@@ -3497,7 +3497,7 @@ GoToLine(
         */
 
        XtCallActionProc( (Widget)M_status_lineText(editor), "select-all",
-			 event, (String *)NULL, 0 );
+			 event, (String *)nullptr, 0 );
     }
 
 } /* end GoToLine */
@@ -3821,7 +3821,7 @@ QuoteNextChar(
 	      (! IsModifierKey(XLookupKeysym((XKeyEvent *) &next, 0))) ) 
 	    {
 	      if (next.xkey.state & (ControlMask|ExtendcharMask)) 
-		XtCallActionProc(M_text(editor), "self-insert", &next, NULL, 0);
+		XtCallActionProc(M_text(editor), "self-insert", &next, nullptr, 0);
 	      else
 		XtDispatchEvent(&next);
 	      break;
@@ -3883,7 +3883,7 @@ ToggleInsertMode(
     /*
      * Toggle the state of the DtNoverstrike resource
      */
-    XtVaSetValues(w, DtNoverstrike, !M_overstrikeMode(editor), NULL);
+    XtVaSetValues(w, DtNoverstrike, !M_overstrikeMode(editor), nullptr);
 
 } /* end ToggleInsertMode */
 
@@ -3966,7 +3966,7 @@ Call_TextSelectCallback(
 
 	M_textSelectCbCalled(editor) = True;
 	select_cb.reason = DtEDITOR_TEXT_SELECT;
-	select_cb.event = (XEvent *)NULL;
+	select_cb.event = (XEvent *)nullptr;
 	XtCallCallbackList ((Widget)editor, M_textSelect(editor),
 	  	            (XtPointer) &select_cb);
    }
@@ -3989,7 +3989,7 @@ Call_TextDeselectCallback(
 
 	M_textSelectCbCalled(editor) = False;
 	select_cb.reason = DtEDITOR_TEXT_DESELECT;
-        select_cb.event = (XEvent *)NULL;
+        select_cb.event = (XEvent *)nullptr;
         XtCallCallbackList ((Widget)editor, M_textDeselect(editor),
 			    (XtPointer) &select_cb);
    }
@@ -4081,7 +4081,7 @@ IsTextDropFile(const char *path)
     char *attr_value;
     Boolean is_text = False;
 
-    if (path == NULL || *path == '\0')
+    if (path == nullptr || *path == '\0')
         return False;
 
     if (!dts_loaded) {
@@ -4090,7 +4090,7 @@ IsTextDropFile(const char *path)
     }
 
     attr_value = DtDtsFileToAttributeValue(path, DtDTS_DA_IS_TEXT);
-    if (attr_value != NULL) {
+    if (attr_value != nullptr) {
         is_text = DtDtsIsTrue(attr_value);
         DtDtsFreeAttributeValue(attr_value);
     }
@@ -4105,7 +4105,7 @@ InsertDroppedPath(DtEditorWidget editor, const char *path, Boolean add_newline)
     char *buffer;
     size_t len;
 
-    if (path == NULL)
+    if (path == nullptr)
         return DtEDITOR_NO_ERRORS;
 
     len = strlen(path);
@@ -4383,8 +4383,8 @@ RegisterDropZone(
     int             ac;
     Arg		    al[2];
     
-    XtCallbackRec transferCB[] = { {TransferCallback, NULL}, {NULL, NULL} };
-    XtCallbackRec animateCB[] = { {AnimateCallback, NULL}, {NULL, NULL} };
+    XtCallbackRec transferCB[] = { {TransferCallback, nullptr}, {nullptr, nullptr} };
+    XtCallbackRec animateCB[] = { {AnimateCallback, nullptr}, {nullptr, nullptr} };
     transferCB[0].closure = (XtPointer) w;
     animateCB[0].closure = (XtPointer) w;
 
@@ -5004,7 +5004,7 @@ CallHelpCallback(
     DtEditorHelpCallbackStruct      help_cb;
 
     help_cb.reason = reason;
-    help_cb.event = (XEvent *) NULL;
+    help_cb.event = (XEvent *) nullptr;
     XtCallCallbackList( (Widget)editor, M_HelpCB(editor), 
 			(XtPointer) &help_cb );
 
@@ -5656,9 +5656,9 @@ FormatText (
 /*
  * Initialize global/statics.
  */
-	if((data.wordbuf = malloc(sizeof(wint_t) * LINESIZE * 3)) == (wint_t *)NULL)
+	if((data.wordbuf = malloc(sizeof(wint_t) * LINESIZE * 3)) == (wint_t *)nullptr)
 			return 0;
-	if((data.word  = malloc(sizeof(WORD) * WORDMAX)) == (WORD *)NULL)
+	if((data.word  = malloc(sizeof(WORD) * WORDMAX)) == (WORD *)nullptr)
 	{
 		retVal = 0;
 		goto CleanUp;
@@ -5724,11 +5724,11 @@ FormatText (
 	retVal = 1;
 
 CleanUp:
-	if(data.wordbuf != (wint_t *)NULL)
+	if(data.wordbuf != (wint_t *)nullptr)
 	{
 		free(data.wordbuf);
 	}
-	if(data.word != (WORD *)NULL)
+	if(data.word != (WORD *)nullptr)
 	{
 		free(data.word);
 	}
@@ -6916,7 +6916,7 @@ prnword(WORD *pword)
 {
    int i = 0;
 
-   if (pword == NULL)
+   if (pword == nullptr)
      return;
    for (i=0; i < pword->wclen; i++)
      fprintf(stderr,(const char *)"%c",(char)*(pword->cp+i));
@@ -6933,7 +6933,7 @@ AdjustParaCB(
         XtPointer call_data )
 {
 
-    DtEditorFormat( (Widget)client_data, (DtEditorFormatSettings *)NULL,
+    DtEditorFormat( (Widget)client_data, (DtEditorFormatSettings *)nullptr,
     		    DtEDITOR_FORMAT_PARAGRAPH );
 
 } /* AdjustParaCB */
@@ -6946,7 +6946,7 @@ AdjustAllCB(
         XtPointer call_data )
 {
 
-    DtEditorFormat( (Widget)client_data, (DtEditorFormatSettings *)NULL,
+    DtEditorFormat( (Widget)client_data, (DtEditorFormatSettings *)nullptr,
     		    DtEDITOR_FORMAT_ALL );
 
 } /* AdjustAllCB */
@@ -6969,19 +6969,19 @@ CreateTempFile(
     int len;
     int fd;
 
-    if (dir == NULL || *dir == '\0')
+    if (dir == nullptr || *dir == '\0')
        dir = P_tmpdir;
 
     len = snprintf(name, size, "%s/dtXXXXXX", dir);
     if (len < 0 || (size_t) len >= size)
-       return (FILE *) NULL;
+       return (FILE *) nullptr;
 
     fd = mkstemp(name);
     if (fd == -1)
-       return (FILE *) NULL;
+       return (FILE *) nullptr;
 
     fp = fdopen(fd, "w");
-    if (fp == (FILE *) NULL)
+    if (fp == (FILE *) nullptr)
     {
        close(fd);
        unlink(name);
@@ -7102,14 +7102,14 @@ DoAdjust(
         * Create the two temp files
         */
        if ((adjRec.infp = CreateTempFile(tempName1, sizeof(tempName1)))
-	   != (FILE *)NULL) {
+	   != (FILE *)nullptr) {
 
          /* 
           * Successfully opened the first temporary file 
           */
 
          if((adjRec.outfp = CreateTempFile(tempName2, sizeof(tempName2)))
-	    != (FILE *)NULL) {
+	    != (FILE *)nullptr) {
 
             /* 
 	     * Successfully opened the second temporary file, so do the
@@ -7119,7 +7119,7 @@ DoAdjust(
 
             fixLeftMarginAndNewlines( editor, adjRec.infp, leftMargin, 
 				      rightMargin, (int)start, (int)end );
-            freopen(NULL, "r", adjRec.infp);
+            freopen(nullptr, "r", adjRec.infp);
 
             FormatText(&adjRec);
 
@@ -7872,7 +7872,7 @@ DtEditorClearSelection(
         Widget widget)
 {
     DtEditorWidget editor = (DtEditorWidget) widget;
-    char *params=(char *)NULL;
+    char *params=(char *)nullptr;
     Cardinal num_params = 0;
     XEvent event;
     _DtWidgetToAppContext(widget);
@@ -7903,7 +7903,7 @@ DtEditorDeselect(
 	Widget widget)
 {
   DtEditorWidget editor = (DtEditorWidget) widget;
-  char *params=(char *)NULL;
+  char *params=(char *)nullptr;
   Cardinal num_params = 0;
   XEvent event;
   _DtWidgetToAppContext(widget);
@@ -7996,7 +7996,7 @@ DtEditorFormat(
    * Check to see if we should use the format settings from the 
    * Format Settings dialog.
    */
-  if( formatSettings == (DtEditorFormatSettings *) NULL )
+  if( formatSettings == (DtEditorFormatSettings *) nullptr )
   {
 
     DtEditorFormatSettings tmpFormatSettings;
@@ -8036,7 +8036,7 @@ DtEditorFormat(
     case DtEDITOR_FORMAT_PARAGRAPH: 
     {
        XmTextPosition start, end;
-       char *params=(char *)NULL;
+       char *params=(char *)nullptr;
        Cardinal num_params = 0;
 
        /*
@@ -8361,15 +8361,15 @@ DtEditorReset(
    */
   if ( M_search_string(editor) ) 
     XtFree(M_search_string(editor));
-  M_search_string(editor) = (char *)NULL;
+  M_search_string(editor) = (char *)nullptr;
 
   if ( M_replace_string(editor) ) 
     XtFree(M_replace_string(editor));
-  M_replace_string(editor) = (char *)NULL;
+  M_replace_string(editor) = (char *)nullptr;
 
   if (M_misspelled_string(editor))
     XtFree(M_misspelled_string(editor));
-  M_misspelled_string(editor) = (char *)NULL;
+  M_misspelled_string(editor) = (char *)nullptr;
 
   /*
    * Reset the Format Settings dialog
@@ -8391,7 +8391,7 @@ DtEditorSelectAll(
 	Widget widget)
 {
     DtEditorWidget editor = (DtEditorWidget) widget;
-    char *params=(char *)NULL;
+    char *params=(char *)nullptr;
     Cardinal num_params = 0;
     XEvent event;
     _DtWidgetToAppContext(widget);

@@ -139,7 +139,7 @@ popup_startupBB(
         Widget shell )
 {
 
-    if (style.startupDialog == NULL) 
+    if (style.startupDialog == nullptr) 
     {
       if (smWindow != 0)
       {
@@ -207,7 +207,7 @@ BuildStartup(
                    modeForm,
                    shutdownRC;
 
-  startup.dlg = NULL;
+  startup.dlg = nullptr;
 
   /* Set up DialogBoxDialog button labels */
   button_string[0] = CMPSTR((String) _DtOkString);
@@ -227,7 +227,7 @@ BuildStartup(
   save.poscnt++;
   style.startupDialog = 
     __DtCreateDialogBoxDialog(shell, "startupDlg", save.posArgs, save.poscnt);
-  XtAddCallback(style.startupDialog, XmNcallback, ButtonCB, NULL);
+  XtAddCallback(style.startupDialog, XmNcallback, ButtonCB, nullptr);
   XtAddCallback(style.startupDialog, XmNhelpCallback,
 		HelpRequestCB, (XtPointer)HELP_STARTUP_DIALOG);
   
@@ -408,11 +408,11 @@ BuildStartup(
   XtAddCallback(style.startupDialog, XmNmapCallback, MapStartup, shell);
   XtAddCallback(style.startupDialog, XmNmapCallback, LayoutCB, shell);
   XtAddCallback(startup.resumeTgl, XmNvalueChangedCallback, 
-		SetCurrentCB, NULL);
+		SetCurrentCB, nullptr);
   XtAddCallback(startup.homeTgl, XmNvalueChangedCallback, 
-		SetHomeCB, NULL);
+		SetHomeCB, nullptr);
   XtAddCallback(startup.modeYesTgl, XmNvalueChangedCallback, 
-		SetConfirmCB, NULL);
+		SetConfirmCB, nullptr);
   XtAddCallback( widget_list[count-1], XmNactivateCallback, 
 		SetHomeSession, style.startupDialog);
   
@@ -443,7 +443,7 @@ MapStartup(
     if (!save.restoreFlag)
         putDialog ((Widget)client_data, w);
 
-    XtRemoveCallback(style.startupDialog, XmNmapCallback, MapStartup, NULL);
+    XtRemoveCallback(style.startupDialog, XmNmapCallback, MapStartup, nullptr);
 }
 
 
@@ -466,7 +466,7 @@ LayoutCB(
         XtSetArg (args[n], XmNrightAttachment, XmATTACH_FORM);  n++;
         XtSetValues(startup.setHome, args, n);
     }
-    XtRemoveCallback(style.startupDialog, XmNmapCallback, LayoutCB, NULL);
+    XtRemoveCallback(style.startupDialog, XmNmapCallback, LayoutCB, nullptr);
 }
 
 
@@ -557,7 +557,7 @@ SetHomeSession(
   XmString    string;
   XmString    okstr, cancelstr;
 
-  if (startup.dlg == NULL)
+  if (startup.dlg == nullptr)
     {
       string = CMPSTR(((char *)GETMESSAGE(7, 11, "This will replace your home session with\nthe current session.\n\n                   Continue?")));
       XtSetArg(args[n], XmNmessageString, string); n++;
@@ -568,7 +568,7 @@ SetHomeSession(
       XtSetArg(args[n], XmNmwmFunctions, DIALOG_MWM_FUNC ); n++;
       startup.dlg = XmCreateWarningDialog(shell, "QNotice", args, n);
       XtUnmanageChild (XmMessageBoxGetChild(startup.dlg, XmDIALOG_HELP_BUTTON));
-      XtAddCallback(startup.dlg, XmNokCallback, SaveHomeOk, NULL);
+      XtAddCallback(startup.dlg, XmNokCallback, SaveHomeOk, nullptr);
       XmStringFree(string);
       XmStringFree(okstr);
       XmStringFree(cancelstr);
@@ -712,7 +712,7 @@ saveStartup(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.startupDialog != NULL) {
+    if (style.startupDialog != nullptr) {
         if (XtIsManaged(style.startupDialog))
           sprintf(bufr, "*startupDlg.ismapped: True\n");
         else

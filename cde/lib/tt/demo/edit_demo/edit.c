@@ -239,7 +239,7 @@ edit_receive_tt_message(XtPointer client_data, int *fid, XtInputId *id)
 	char 			*file;
 
 	msg_in = tt_message_receive();
-	if (msg_in == NULL) return;
+	if (msg_in == nullptr) return;
 	if (tt_pointer_error(msg_in) == TT_ERR_NOMP) {
 		fprintf(stderr,"ToolTalk server down.\n");
 		exit(0);
@@ -506,7 +506,7 @@ get_selection(Widget widget, char **selection, XmTextPosition *first_ptr, XmText
 	char			*ptr;
 
 	ptr = XmTextGetSelection(widget);
-	if (ptr == NULL) return 0;
+	if (ptr == nullptr) return 0;
 	*selection = malloc(strlen(ptr) + 1);
 	if (*selection == (char *)0) {
 		return -1;
@@ -546,7 +546,7 @@ text_find_bytes(Widget widget, XmTextPosition *first, XmTextPosition *last, char
 		reverse_str(str);
 	}
 	ptr = strstr(&text[*first], str);
-	if (ptr == NULL) return -1;
+	if (ptr == nullptr) return -1;
 	n = strlen(str);
 	if (reverse) {
 		*last  = (XmTextPosition) ptr;

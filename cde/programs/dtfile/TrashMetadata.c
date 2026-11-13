@@ -76,7 +76,7 @@ static int ReadField(FILE *stream, size_t length, char **field)
 
 static int ReadAttributes(FILE *stream, DtfileTrashMetadata *record)
 {
-    char *line = NULL, *token, *state;
+    char *line = nullptr, *token, *state;
     size_t capacity = 0;
     ssize_t length;
     int status = DTFILE_TRASH_RECORD;
@@ -93,7 +93,7 @@ static int ReadAttributes(FILE *stream, DtfileTrashMetadata *record)
         return DTFILE_TRASH_INVALID;
     }
     for (token = strtok_r(line, " \t\r\n", &state); token;
-         token = strtok_r(NULL, " \t\r\n", &state)) {
+         token = strtok_r(nullptr, " \t\r\n", &state)) {
         if (strncmp(token, "DeletionDate=", 13) == 0) {
             if (record->deletion_date || token[13] == '\0') {
                 status = DTFILE_TRASH_INVALID;

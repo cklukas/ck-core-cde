@@ -102,7 +102,7 @@ ds_get_resource(XrmDatabase rDB, char *appname, char *resource)
   snprintf(cstr, sizeof(cstr), "%s.%s", app, res) ;
 
   if (XrmGetResource(rDB, nstr, cstr, str_type, &value) == 0)
-    return((char *) NULL) ;
+    return((char *) nullptr) ;
   else return(value.addr) ;
 }
 
@@ -140,13 +140,13 @@ ds_load_resources(Display *display)
   char *home, name[MAXPATHLEN], *ptr ;
   int len ;
 
-  rDB  = NULL ;
+  rDB  = nullptr ;
   home = getenv("HOME") ;
   XrmInitialize() ;
 
 /* Merge server defaults, created by xrdb. If nor defined, use ~/.Xdefaults. */
 
-  if (XResourceManagerString(display) != NULL)
+  if (XResourceManagerString(display) != nullptr)
     db = XrmGetStringDatabase(XResourceManagerString(display)) ;
   else
     { 
@@ -159,7 +159,7 @@ ds_load_resources(Display *display)
  *  into existing database.
  */
 
-  if ((ptr = getenv("XENVIRONMENT")) == NULL)
+  if ((ptr = getenv("XENVIRONMENT")) == nullptr)
     {
       snprintf(name, sizeof(name), "%s/.Xdefaults-", home) ;
       len = strlen(name) ;
@@ -173,7 +173,7 @@ ds_load_resources(Display *display)
  *  defined, the ~/.dtcalcdef file.
  */
 
-  if ((ptr = getenv("DTCALCDEF")) == NULL)
+  if ((ptr = getenv("DTCALCDEF")) == nullptr)
     {
       snprintf(name, MAXPATHLEN - 1, "%s/.dtcalcdef", home) ;
       db = XrmGetFileDatabase(name) ;
@@ -259,15 +259,15 @@ ds_save_resources(XrmDatabase rDB, char *filename)
   struct stat statbuf;
   bool needsFree = false;
 
-  if (filename == NULL)
+  if (filename == nullptr)
   {
-    if ((filename = getenv("DTCALCDEF")) == NULL)
+    if ((filename = getenv("DTCALCDEF")) == nullptr)
       {
           if ( !(home = getenv("HOME")) )
               return 1;
 
           size_t fileLen = strlen(home) + 18;
-          if ( (filename = calloc(1, fileLen)) != NULL )
+          if ( (filename = calloc(1, fileLen)) != nullptr )
           {
               needsFree = true;
               snprintf(filename, fileLen, "%s/.dtcalcdef", home);

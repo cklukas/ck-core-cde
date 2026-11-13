@@ -62,13 +62,13 @@ _DtCmsTarget2Location(char *target)
 {
 	char *ptr;
 
-	if (target == NULL)
-		return (NULL);
+	if (target == nullptr)
+		return (nullptr);
 
 	if (ptr = strchr(target, '@')) {
 		return (strdup(++ptr));
 	} else
-		return (NULL);
+		return (nullptr);
 }
  
 /*
@@ -79,12 +79,12 @@ _DtCmsTarget2Host(char *target)
 {
         char *location, *host;
  
-        if ((location = _DtCmsTarget2Location(target)) != NULL) {
+        if ((location = _DtCmsTarget2Location(target)) != nullptr) {
                 host = _DtCmGetPrefix(location, '.');
                 free(location);
                 return(host);
         } else
-                return(NULL);
+                return(nullptr);
 }
 
 /*
@@ -95,14 +95,14 @@ _DtCmsTarget2Domain(char *target)
 {
         char *location, *domain, *ptr;
  
-        if ((location = _DtCmsTarget2Location(target)) != NULL) {
+        if ((location = _DtCmsTarget2Location(target)) != nullptr) {
 		if (ptr = strchr(location, '.'))
 			domain = strdup(++ptr);
 		else
-			domain = NULL;
+			domain = nullptr;
                 free(location);
                 return(domain);
         } else
-                return(NULL);
+                return(nullptr);
 }
 

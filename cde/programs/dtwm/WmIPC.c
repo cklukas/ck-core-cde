@@ -398,7 +398,7 @@ dtReadyNotification( void )
     SendClientMsg( wmGD.dtSmWindow,
 		  (long) wmGD.xa_DT_SM_WM_PROTOCOL,
 		  (long) wmGD.xa_DT_WM_READY,
-		  CurrentTime, NULL, 0);
+		  CurrentTime, nullptr, 0);
 
 } /* END OF FUNCTION dtReadyNotification */
 
@@ -564,31 +564,31 @@ dtSendMarqueeSelectionNotification(
     if (status != TT_OK) {
         return;
     }
-    if (tt_message_arg_add(msg, TT_IN, "integer", NULL) != TT_OK) {
+    if (tt_message_arg_add(msg, TT_IN, "integer", nullptr) != TT_OK) {
 	return;
     }
     if (tt_message_arg_ival_set(msg, 1, type) != TT_OK) {
 	return;
     }
-    if (tt_message_arg_add(msg, TT_IN, "integer", NULL) != TT_OK) {
+    if (tt_message_arg_add(msg, TT_IN, "integer", nullptr) != TT_OK) {
 	return;
     }
     if (tt_message_arg_ival_set(msg, 2, x) != TT_OK) {
 	return;
     }
-    if (tt_message_arg_add(msg, TT_IN, "integer", NULL) != TT_OK) {
+    if (tt_message_arg_add(msg, TT_IN, "integer", nullptr) != TT_OK) {
 	return;
     }
     if (tt_message_arg_ival_set(msg, 3, y) != TT_OK) {
 	return;
     }
-    if (tt_message_arg_add(msg, TT_IN, "integer", NULL) != TT_OK) {
+    if (tt_message_arg_add(msg, TT_IN, "integer", nullptr) != TT_OK) {
 	return;
     }
     if (tt_message_arg_ival_set(msg, 4, width) != TT_OK) {
 	return;
     }
-    if (tt_message_arg_add(msg, TT_IN, "integer", NULL) != TT_OK) {
+    if (tt_message_arg_add(msg, TT_IN, "integer", nullptr) != TT_OK) {
 	return;
     }
     if (tt_message_arg_ival_set(msg, 5, height) != TT_OK) {
@@ -725,7 +725,7 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 
     int			screen_num;
     WmScreenData	*pSD;
-    WmWorkspaceData	*pWS = NULL;
+    WmWorkspaceData	*pWS = nullptr;
     Atom		aWs;
     char		*pch;
     String		sName;
@@ -744,7 +744,7 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 
 	SessionDeleteAll();
 
-	F_Restart( DTWM_REQP_NO_CONFIRM, NULL, NULL );
+	F_Restart( DTWM_REQP_NO_CONFIRM, nullptr, nullptr );
     }
     else if (!strcmp(op, "DtWorkspace_SetCurrent")) {
 	/*
@@ -760,7 +760,7 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 	pch = tt_message_arg_val(m, 1);
 
 	/* retrieve the selected workspace */
-	aWs = strtoul (pch, (char **) NULL, 0);
+	aWs = strtoul (pch, (char **) nullptr, 0);
 	tt_free( pch );
 	pWS = GetWorkspaceData (pSD, aWs);
 
@@ -786,7 +786,7 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 	pch = tt_message_arg_val(m, 1);
 
 	/* retrieve the selected workspace */
-	aWs = strtoul (pch, (char **) NULL, 0);
+	aWs = strtoul (pch, (char **) nullptr, 0);
 	tt_free( pch );
 	pWS = GetWorkspaceData (pSD, aWs);
 
@@ -807,7 +807,7 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 	 */
 	pch = tt_message_arg_val(m, 0);
 
-	F_CreateWorkspace( pch, NULL, NULL );
+	F_CreateWorkspace( pch, nullptr, nullptr );
 	tt_free( pch );
 
 	tt_message_reply(m);
@@ -820,11 +820,11 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 	pch = tt_message_arg_val(m, 0);
 
 	/* retrieve the selected workspace */
-	aWs = strtoul (pch, (char **) NULL, 0);
+	aWs = strtoul (pch, (char **) nullptr, 0);
 	tt_free( pch );
 	sName = (String) XmGetAtomName (DISPLAY1, aWs);
 
-	F_DeleteWorkspace( sName, NULL, NULL );
+	F_DeleteWorkspace( sName, nullptr, nullptr );
 
 	tt_message_reply(m);
 	tt_message_destroy(m);
@@ -838,8 +838,8 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 
 	if (GetSmClientIdClientList(&clients, &nClients))
 	{
-	    char *clientIds = (char *)NULL;
-	    int *clientWorkspaces = (int *)NULL;
+	    char *clientIds = (char *)nullptr;
+	    int *clientWorkspaces = (int *)nullptr;
 	    int clientIdLen = 0;
 
 	    SortClientListByWorkspace(clients, nClients);
@@ -857,12 +857,12 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 
 		if (((clientIds =
 		      (char *)XtMalloc(clientIdLen * sizeof(char)))
-		     == (char *)NULL) ||
+		     == (char *)nullptr) ||
 		    ((clientWorkspaces =
 		      (int *)XtMalloc(nClients * sizeof(int)))
-		     == (int *)NULL))
+		     == (int *)nullptr))
 		{
-		    if (clientIds != (char *)NULL)
+		    if (clientIds != (char *)nullptr)
 			XtFree(clientIds);
 
 		    /* LATER - Right way to handle errors? */
@@ -889,9 +889,9 @@ RequestMsgCB(Tt_message m, Tt_pattern p)
 	    tt_message_arg_bval_set(m, 2, (unsigned char *)clientWorkspaces,
 				    nClients * sizeof(int));
 
-	    if (clientIds != (char *)NULL)
+	    if (clientIds != (char *)nullptr)
 		XtFree(clientIds);
-	    if (clientWorkspaces != (int *)NULL)
+	    if (clientWorkspaces != (int *)nullptr)
 		XtFree((char *)clientWorkspaces);
 	    XtFree((char *)clients);
 	}
@@ -977,7 +977,7 @@ ToolTalkError(Widget parent, char *errfmt, Tt_status status)
     XtManageChild(dialog);
     XtRealizeWidget(dialogShell);
 
-    _DtSimpleError("Dtwm", DtFatalError, NULL, errmsg);
+    _DtSimpleError("Dtwm", DtFatalError, nullptr, errmsg);
 
     XtFree(errmsg);
     XmStringFree(xms_ok);

@@ -53,7 +53,7 @@
 /*
  * local variables
  */
-static XeString context_host = NULL;
+static XeString context_host = nullptr;
 
 static XeString FindDomainHost (XeString host_spec);
 static void UnParseFileString (XeString host, XeString path);
@@ -72,8 +72,8 @@ XeCreateContextString(XeString host,
 
    host = XeFindShortHost(host);
 
-   if ((strequal(directory, (XeString)"")) || (directory == NULL)){
-      if ((strequal(file, (XeString)"")) || (file == NULL)){
+   if ((strequal(directory, (XeString)"")) || (directory == nullptr)){
+      if ((strequal(file, (XeString)"")) || (file == nullptr)){
          Xe_release_str(host);
 	 return((XeString) NULL);
       } else {
@@ -81,7 +81,7 @@ XeCreateContextString(XeString host,
 	 sprintf (context_string, "%s:%s", host, file);
       }
    } else {
-      if ((strequal(file, (XeString)"")) || (file == NULL)){
+      if ((strequal(file, (XeString)"")) || (file == nullptr)){
 	 context_string = XeMalloc(strlen(host) + strlen(directory) + 2);
 	 sprintf (context_string, "%s:%s", host, directory);
       }
@@ -272,7 +272,7 @@ GetDomainName(XeString buffer, unsigned int bufsize)
    ptr = strstr(tmpbuf, (XeString)".");
    _DtSvcProcessLock();
    if (domainname && ptr && strcmp(domainname, ptr)) /* domains are different */
-      _DtSimpleError(XeProgName, XeWarning, NULL, (XeString) "><Domain configured in hostname and domain server are different: '%s', '%s'", domainname, ptr);
+      _DtSimpleError(XeProgName, XeWarning, nullptr, (XeString) "><Domain configured in hostname and domain server are different: '%s', '%s'", domainname, ptr);
    if (!domainname && ptr)
       domainname = strdup(ptr);
    if (ptr) { /* "." in hostname */
@@ -286,8 +286,8 @@ GetDomainName(XeString buffer, unsigned int bufsize)
    if (!domainname && (firstPass)) {
       firstPass = FALSE;
       host_ret = _XGethostbyname(tmpbuf, host_buf);
-      if (host_ret == NULL) {
-	 _DtSimpleError(XeProgName, XeWarning, NULL, (XeString) "><%s not found in hosts database", tmpbuf);
+      if (host_ret == nullptr) {
+	 _DtSimpleError(XeProgName, XeWarning, nullptr, (XeString) "><%s not found in hosts database", tmpbuf);
 	 _DtSvcProcessUnlock();
 	 return -1;
       }
@@ -364,7 +364,7 @@ XeIsSameHostP(XeString host1, XeString host2)
 /* note the following functions use char not Xechar because they are
    plug replacements for the Unix functions */
 
-static char *last_env_string = NULL; /* save env so it can be freed later */
+static char *last_env_string = nullptr; /* save env so it can be freed later */
 
 /* Note: only use this function for $PWD as it assumes it can free the
    env variable when a new one is assigned -- this will only be true if
@@ -430,7 +430,7 @@ Xechdir (const char *path)
 /*------------------------------------------------------------------------+*/
 {
    int status;
-   char *simple_path = NULL;
+   char *simple_path = nullptr;
    char *env;
    char buf[MAXPATHLEN+10];
    if ((status = chdir(path))==0) {
@@ -441,7 +441,7 @@ Xechdir (const char *path)
 	 sprintf(env, "PWD=%s", path);
       }
       else {
-	 char *canon_path = pathcollapse(path, NULL, FALSE);
+	 char *canon_path = pathcollapse(path, nullptr, FALSE);
          /* absolute path */
          sprintf(env, "PWD=%s", canon_path);
 	 /* note XeFree() not appropriate if Xemalloc not used */

@@ -63,8 +63,8 @@ static XLCdPublicMethodsRec publicMethods = {
     {
 	destroy,
 	_fallcDefaultMapModifiers,
-	NULL,
-	NULL,
+	nullptr,
+	nullptr,
 	_falrmDefaultInitParseInfo,
 	_falmbTextPropertyToTextList,
 	_falwcTextPropertyToTextList,
@@ -72,11 +72,11 @@ static XLCdPublicMethodsRec publicMethods = {
 	_falwcTextListToTextProperty,
 	_falwcFreeStringList,
 	default_string,
-	NULL,
-	NULL
+	nullptr,
+	nullptr
     },
     {
-	NULL,
+	nullptr,
 	create,
 	initialize,
 	destroy,
@@ -100,19 +100,19 @@ create(char *name, XLCdMethods methods)
     XLCdPublicMethods new;
 
     lcd = (XLCd) Xmalloc(sizeof(XLCdRec));
-    if (lcd == NULL)
+    if (lcd == nullptr)
         return (XLCd) NULL;
     memset((char *) lcd, 0, sizeof(XLCdRec));
 
     lcd->core = (XLCdCore) Xmalloc(sizeof(XLCdPublicRec));
-    if (lcd->core == NULL){
+    if (lcd->core == nullptr){
 	Xfree(lcd);
         return (XLCd) NULL;
 	}
     memset((char *) lcd->core, 0, sizeof(XLCdPublicRec));
 
     new = (XLCdPublicMethods) Xmalloc(sizeof(XLCdPublicMethodsRec));
-    if (new == NULL){
+    if (new == nullptr){
 	Xfree(lcd);
         return (XLCd) NULL;
 	}
@@ -129,7 +129,7 @@ load_public(XLCd lcd)
     char **values, *str;
     int num;
 
-    if(_fallcCreateLocaleDataBase(lcd) == NULL)
+    if(_fallcCreateLocaleDataBase(lcd) == nullptr)
 	return False;
 
     _fallcGetResource(lcd, "XLC_XLOCALE", "mb_cur_max", &values, &num);
@@ -149,7 +149,7 @@ load_public(XLCd lcd)
     _fallcGetResource(lcd, "XLC_XLOCALE", "encoding_name", &values, &num);
     str = (num > 0) ? values[0] : "STRING";
     pub->encoding_name = (char*) Xmalloc(strlen(str) + 1);
-    if (pub->encoding_name == NULL)
+    if (pub->encoding_name == nullptr)
 	return False;
     strcpy(pub->encoding_name, str);
 
@@ -162,34 +162,34 @@ initialize_core(XLCd lcd)
     XLCdMethods methods = lcd->methods;
     XLCdMethods core = &publicMethods.core;
 
-    if (methods->close == NULL)
+    if (methods->close == nullptr)
 	methods->close = core->close;
 
-    if (methods->map_modifiers == NULL)
+    if (methods->map_modifiers == nullptr)
 	methods->map_modifiers = core->map_modifiers;
 
-    if (methods->open_om == NULL)
+    if (methods->open_om == nullptr)
 	_falInitOM(lcd);
 
-    if (methods->init_parse_info == NULL)
+    if (methods->init_parse_info == nullptr)
 	methods->init_parse_info = core->init_parse_info;
 
-    if (methods->mb_text_prop_to_list == NULL)
+    if (methods->mb_text_prop_to_list == nullptr)
 	methods->mb_text_prop_to_list = core->mb_text_prop_to_list;
 
-    if (methods->wc_text_prop_to_list == NULL)
+    if (methods->wc_text_prop_to_list == nullptr)
 	methods->wc_text_prop_to_list = core->wc_text_prop_to_list;
 
-    if (methods->mb_text_list_to_prop == NULL)
+    if (methods->mb_text_list_to_prop == nullptr)
 	methods->mb_text_list_to_prop = core->mb_text_list_to_prop;
 
-    if (methods->wc_text_list_to_prop == NULL)
+    if (methods->wc_text_list_to_prop == nullptr)
 	methods->wc_text_list_to_prop = core->wc_text_list_to_prop;
 
-    if (methods->wc_free_string_list == NULL)
+    if (methods->wc_free_string_list == nullptr)
 	methods->wc_free_string_list = core->wc_free_string_list;
 
-    if (methods->default_string == NULL)
+    if (methods->default_string == nullptr)
 	methods->default_string = core->default_string;
 
     return True;
@@ -220,12 +220,12 @@ initialize(XLCd lcd)
     name = _fallcMapOSLocaleName(name, siname);
 #endif
 
-    if (_fallcResolveLocaleName(name, NULL, lang, terr, code) == 0)
+    if (_fallcResolveLocaleName(name, nullptr, lang, terr, code) == 0)
 	return False;
 
     str = (char*) Xmalloc(strlen(name) + strlen(lang) + strlen(terr) +
 			  strlen(code) + 4);
-    if (str == NULL)
+    if (str == nullptr)
 	return False;
 
     strcpy(str, name);
@@ -243,13 +243,13 @@ initialize(XLCd lcd)
     strcpy(str, code);
     pub->codeset = str;
 
-    if (pub->default_string == NULL)
+    if (pub->default_string == nullptr)
 	pub->default_string = "";
 
-    if (methods->get_values == NULL)
+    if (methods->get_values == nullptr)
 	methods->get_values = pub_methods->get_values;
 
-    if (methods->get_resource == NULL)
+    if (methods->get_resource == nullptr)
 	methods->get_resource = pub_methods->get_resource;
 
     return load_public(lcd);

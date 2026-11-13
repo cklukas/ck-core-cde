@@ -100,7 +100,7 @@ static XrmQuark XrmStringToQuark(const char *s)
 
 static const char *XrmQuarkToString(XrmQuark q)
 {
-	return (q >= 1 && q <= quark_count) ? quarks[q - 1] : NULL;
+	return (q >= 1 && q <= quark_count) ? quarks[q - 1] : nullptr;
 }
 
 /* what the library prints about a bad file */
@@ -145,7 +145,7 @@ static char *repeat(int c, size_t count)
 	return s;
 }
 
-static DtDbRecordDesc records[] = { { "DATA_ATTRIBUTES", 0, NULL }, { "DATA_CRITERIA", 0, NULL } };
+static DtDbRecordDesc records[] = { { "DATA_ATTRIBUTES", 0, nullptr }, { "DATA_CRITERIA", 0, nullptr } };
 
 struct reader {
 	DtDtsDbField *fields;
@@ -201,7 +201,7 @@ static const char *field_value(struct reader *r, const char *name)
 	for (i = 0; r->fields[i].fieldName; ++i)
 		if (r->fields[i].fieldName == q)
 			return r->fields[i].fieldValue;
-	return NULL;
+	return nullptr;
 }
 
 static FILE *open_text(const char *text, size_t length)
@@ -362,7 +362,7 @@ static void scenario_cycles(const char *unused)
 	alarm(30);
 	assert(next_record(&r, f, "file", &index));
 	alarm(0);
-	assert(field_value(&r, "ICON") != NULL);
+	assert(field_value(&r, "ICON") != nullptr);
 	fclose(f);
 	reader_stop(&r);
 }
@@ -413,8 +413,8 @@ static void scenario_multibyte(const char *unused)
 	line = XtMalloc(MAX_LINE_LENGTH);
 	strcpy(line, "caf\xc3\xa9 ${AFTER} and \xc3\xa9${AFTER}");
 	_DtDbFillVariables(&line);
-	assert(strstr(line, "found and") != NULL);
-	assert(strstr(line, "\xc3\xa9" "found") != NULL);
+	assert(strstr(line, "found and") != nullptr);
+	assert(strstr(line, "\xc3\xa9" "found") != nullptr);
 	XtFree(line);
 	is_multibyte = 0;
 	setlocale(LC_ALL, "C");

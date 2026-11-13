@@ -232,7 +232,7 @@ IL_PRIVATE ilBool _ilCompressPackbits (
     else {
         bitPerPixel = FALSE;
         if (pimformat->nBitsPerSample[0] != 8)
-            if (!ilConvert (pipe, (ilImageDes *)NULL, IL_FORMAT_BYTE, 0, (ilPtr)NULL))
+            if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BYTE, 0, (ilPtr)NULL))
                 return FALSE;
         }
 

@@ -138,7 +138,7 @@ void
 _DtTermPrimActionRedrawDisplay(Widget w, XEvent *event,
 	String *params, Cardinal *num_params)
 {
-    (void) invokeAction(w, NULL, _DtTermPrimFuncRedrawDisplay, 1);
+    (void) invokeAction(w, nullptr, _DtTermPrimFuncRedrawDisplay, 1);
     return;
 }
 
@@ -256,9 +256,9 @@ _DtTermPrimActionKeymap(Widget w, XEvent *event, String *params, Cardinal *num_p
     (void) strcpy(mapClass, mapName);
     mapClass[0] = toupper(mapClass[0]);
     (void) XtGetSubresources(w, (XtPointer) &keymap, mapName, mapClass,
-	    key_resources, XtNumber(key_resources), NULL, (Cardinal) 0);
+	    key_resources, XtNumber(key_resources), nullptr, (Cardinal) 0);
 
-    if (keymap != NULL) {
+    if (keymap != nullptr) {
 	(void) XtOverrideTranslations(w, keymap);
     }
     return;

@@ -140,7 +140,7 @@ with tempfile.TemporaryDirectory(prefix="session-arrays-", dir=os.environ["TMPDI
     c, binary = Path(work) / "arrays.c", Path(work) / "arrays"
     c.write_text(header + records + types + strings + body + main)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
                     "-Wno-unused-parameter", "-fsanitize=address,undefined", "-g",
                     str(c), "-lXt", "-lX11", "-o", str(binary)], check=True)
     subprocess.run([str(binary)], check=True)

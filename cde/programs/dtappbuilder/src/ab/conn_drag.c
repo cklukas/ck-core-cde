@@ -186,7 +186,7 @@ conn_drag_chord(
     in_browser = aob_is_browser_win(project, source_win);
     source_obj = get_obj_at_point(project, in_browser,
 					source_win, win_x, win_y);
-    if (source_obj == NULL)
+    if (source_obj == nullptr)
     {
 	XBell(display, 0);
 	return;
@@ -235,17 +235,17 @@ conn_drag_chord(
      */
     cleanup_drag(widget, (XButtonEvent *)&new_event);
 
-    if (target_obj != NULL)
+    if (target_obj != nullptr)
     {
 	preview_object(target_obj, in_browser, target_win);
 
 	conn_set_source(source_obj);
 
   	if (obj_is_message(target_obj) || obj_is_menu(target_obj))
-	    conn_set_target(NULL);
+	    conn_set_target(nullptr);
 	else
 	     conn_set_target(target_obj);
-	conn_popup_dialog(AB_toplevel, (XtPointer)0, NULL);
+	conn_popup_dialog(AB_toplevel, (XtPointer)0, nullptr);
     }
     else
     {
@@ -498,18 +498,18 @@ get_obj_at_point(
     {
 	ret_val = aob_get_object_from_xy(project, window, x, y);
 
-	if (ret_val != NULL)
+	if (ret_val != nullptr)
 	{
 	    ret_val = obj_get_root(ret_val);
 	    if (!connP_obj_enabled(obj_get_type(ret_val),
 				    obj_get_subtype(ret_val)))
-		ret_val = NULL;
+		ret_val = nullptr;
 	}
     }
     else
     {
 	ret_val = ui_get_obj_at_point(project, window, x, y);
-	if (ret_val != NULL)
+	if (ret_val != nullptr)
 	{
 	    ret_val = obj_get_root(ret_val);
 	}
@@ -529,11 +529,11 @@ ui_get_obj_at_point(
     int		y
 )
 {
-    ABObj		ui_obj = NULL;
+    ABObj		ui_obj = nullptr;
     AB_TRAVERSAL	trav;
 
     for (trav_open(&trav, project, AB_TRAV_UI);
-         (ui_obj = trav_next(&trav)) != NULL; )
+         (ui_obj = trav_next(&trav)) != nullptr; )
     {
 	Widget	win_wid = (Widget)ui_obj->ui_handle;
 
@@ -542,14 +542,14 @@ ui_get_obj_at_point(
     }
     trav_close(&trav);
 
-    if (ui_obj == NULL)
+    if (ui_obj == nullptr)
     {
 	for (trav_open(&trav, project, AB_TRAV_WINDOWS);
-	     (ui_obj = trav_next(&trav)) != NULL; )
+	     (ui_obj = trav_next(&trav)) != nullptr; )
 	{
 	    Widget	win_wid = objxm_get_widget(ui_obj);
 	    
-	    if ((win_wid != NULL) && is_win_decor(win_wid, window))
+	    if ((win_wid != nullptr) && is_win_decor(win_wid, window))
 	    {
 		return ui_obj;
 	    }
@@ -691,7 +691,7 @@ preview_object(
     Window	win
 )
 {
-    if (obj == NULL)
+    if (obj == nullptr)
 	return;
 
     if (in_browser)
@@ -724,7 +724,7 @@ ui_preview_object(
  
     gwidget = (Widget)gobj->ui_handle;
  
-    if (gwidget == NULL)
+    if (gwidget == nullptr)
     {
 	fprintf(stderr,"ui_preview_object: no geometry widget\n");
 	return;

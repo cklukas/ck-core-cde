@@ -312,21 +312,21 @@ AdjustSelection (
 	    if (LessThanEq(start, end))
 		_DtCvDrawAreaWithFlags (canvas, end, next,
 						0, _DtCvSELECTED_FLAG,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
 
 	    else if (GreaterThanEq(start, next))
 		_DtCvDrawAreaWithFlags (canvas, end, next,
 						_DtCvSELECTED_FLAG, 0,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
 
 	    else /* end < start < next */
 	      {
 		_DtCvDrawAreaWithFlags (canvas, end  , start,
 						_DtCvSELECTED_FLAG, 0,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
 		_DtCvDrawAreaWithFlags (canvas, start, next ,
 						0, _DtCvSELECTED_FLAG,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
 	      }
 	  }
 	else /* if (next < end) */
@@ -334,21 +334,21 @@ AdjustSelection (
 	    if (LessThanEq(start, next))
 		_DtCvDrawAreaWithFlags (canvas, next, end,
 						_DtCvSELECTED_FLAG, 0,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
 
 	    else if (GreaterThanEq(start, end))
 		_DtCvDrawAreaWithFlags (canvas, next, end,
 						0, _DtCvSELECTED_FLAG,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
 
 	    else /* next < start < end */
 	      {
 		_DtCvDrawAreaWithFlags (canvas, start, end  ,
 						_DtCvSELECTED_FLAG, 0,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
 		_DtCvDrawAreaWithFlags (canvas, next , start,
 						0, _DtCvSELECTED_FLAG,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
 	      }
 	  }
       }
@@ -440,7 +440,7 @@ AddSegmentToData(
          * advance the pointer by the width
          */
         _DtCvGetWidthOfSegment(canvas, pSeg, start, count,
-							&cnt, &segWidth, NULL);
+							&cnt, &segWidth, nullptr);
 	if (cnt < char_idx)
 	  {
 	    xPos     += segWidth;
@@ -452,7 +452,7 @@ AddSegmentToData(
         else 
           {
             _DtCvGetWidthOfSegment(canvas, pSeg, start, char_idx,
-							&cnt, &segWidth, NULL);
+							&cnt, &segWidth, nullptr);
 	    xPos  += segWidth;
 	    start += cnt;
 	    count -= cnt;
@@ -463,7 +463,7 @@ AddSegmentToData(
     if (start_x > xPos)
 	start_x = xPos;
 
-    while (_DtCvSTATUS_OK == result && pSeg != NULL && copy_cnt > 0)
+    while (_DtCvSTATUS_OK == result && pSeg != nullptr && copy_cnt > 0)
       {
 	/*
 	 * advance past the link and traversal info
@@ -491,7 +491,7 @@ AddSegmentToData(
 		strInfo.wc       = _DtCvIsSegWideChar(pSeg);
 		strInfo.font_ptr = _DtCvFontOfStringSeg(pSeg);
 
-		if (canvas->virt_functions.build_selection != NULL)
+		if (canvas->virt_functions.build_selection != nullptr)
 		    result = (*(canvas->virt_functions.build_selection))(
 				canvas->client_data,
 				_DtCvSTRING_TYPE,
@@ -520,7 +520,7 @@ AddSegmentToData(
 		if (copy_cnt == 1)
 		    flag = end_flag;
 
-		if (canvas->virt_functions.build_selection != NULL)
+		if (canvas->virt_functions.build_selection != nullptr)
 		    result = (*(canvas->virt_functions.build_selection))(
 				canvas->client_data,
 				_DtCvREGION_TYPE,
@@ -573,10 +573,10 @@ BuildLine(
 {
     _DtCvUnit		 topY;
     _DtCvDspLine	*lines = canvas->txt_lst;
-    _DtCvStringInfo	 strInfo = { NULL, 0, 1, NULL };
+    _DtCvStringInfo	 strInfo = { nullptr, 0, 1, nullptr };
 
     topY = lines[line_idx].baseline - lines[line_idx].ascent;
-    if (topY > prev_y && canvas->virt_functions.build_selection != NULL)
+    if (topY > prev_y && canvas->virt_functions.build_selection != nullptr)
       {
 	int   newLines;
 	_DtCvUnit  lineSize = canvas->metrics.line_height / 2;
@@ -792,7 +792,7 @@ GetSegsInArea (
     _DtCvSegmentI	*pSeg;
     _DtCvDspLine	*lines = canvas->txt_lst;
 
-    *ret_segs = NULL;
+    *ret_segs = nullptr;
 
     if (beg->x == -1)
 	return _DtCvSTATUS_NONE;
@@ -875,13 +875,13 @@ GetSegsInArea (
 	     */
 	    pSeg = lines[next.line_idx].seg_ptr;
 	    count = next.char_idx;
-	    while (NULL != pSeg && 0 < count)
+	    while (nullptr != pSeg && 0 < count)
 	      {
 		/*
 		 * get the byte count of this segment
 		 */
 		_DtCvGetWidthOfSegment(canvas, pSeg, start, length,
-					&cnt, NULL, NULL);
+					&cnt, nullptr, nullptr);
 
 		/*
 		 * is the byte count of this segment larger than
@@ -902,7 +902,7 @@ GetSegsInArea (
 		count -= cnt;
 	      }
 
-	    while (0 == result && NULL != pSeg && 0 < length)
+	    while (0 == result && nullptr != pSeg && 0 < length)
 	      {
 	        /*
 		 * start with error condition. If the malloc works
@@ -910,7 +910,7 @@ GetSegsInArea (
 		 */
 	        result = -1;
 	        newPt = (_DtCvSegPts *) malloc (sizeof(_DtCvSegPts));
-	        if (NULL != newPt)
+	        if (nullptr != newPt)
 		  {
 		    /*
 		     * indicate everything is okay.
@@ -921,7 +921,7 @@ GetSegsInArea (
 		     * get the width of this segment
 		     */
 		    _DtCvGetWidthOfSegment(canvas, pSeg, start, length,
-							&cnt, NULL, NULL);
+							&cnt, nullptr, nullptr);
 
 		    /*
 		     * now set the segment point information and add it to the
@@ -934,7 +934,7 @@ GetSegsInArea (
 		    *ret_segs = (_DtCvSegPts **) _DtCvAddPtrToArray(
 							(void **) *ret_segs,
 							(void  *)  newPt);
-		    if (NULL == *ret_segs)
+		    if (nullptr == *ret_segs)
 		        result = -1;
 
 		    pSeg    = pSeg->next_disp;
@@ -979,8 +979,8 @@ GetSegsInArea (
     if (0 != result)
       {
         *ret_segs = (_DtCvSegPts **) _DtCvAddPtrToArray((void **) *ret_segs,
-							(void  *) NULL);
-	if (NULL == *ret_segs)
+							(void  *) nullptr);
+	if (nullptr == *ret_segs)
 	    result = -1; 
       }
 
@@ -989,19 +989,19 @@ GetSegsInArea (
      */
     if (0 != result)
       {
-	if (NULL != *ret_segs)
+	if (nullptr != *ret_segs)
 	  {
-	    for (lineCnt = 0; NULL != (*ret_segs)[lineCnt]; lineCnt++)
+	    for (lineCnt = 0; nullptr != (*ret_segs)[lineCnt]; lineCnt++)
 		free((*ret_segs)[lineCnt]);
 	    free(*ret_segs);
 	  }
 	return _DtCvSTATUS_BAD;
       }
 
-    if (NULL != ret_y1)
+    if (nullptr != ret_y1)
 	*ret_y1 = minY;
     
-    if (NULL != ret_y2)
+    if (nullptr != ret_y2)
 	*ret_y2 = minY;
 
     return _DtCvSTATUS_OK;
@@ -1082,7 +1082,7 @@ _DtCvDrawAreaWithFlags (
 	    startChar   = lines[i].byte_index;
 	    count       = lines[i].length;
 
-	    while (pSeg != NULL && _DtCvIsSegNoop(pSeg))
+	    while (pSeg != nullptr && _DtCvIsSegNoop(pSeg))
 	      {
 	        startChar  = 0;
 	        pSeg       = pSeg->next_disp;
@@ -1266,7 +1266,7 @@ _DtCvGetMarkSegs (
 {
     int			  i;
 
-    *ret_info = NULL;
+    *ret_info = nullptr;
 
     for (i = 0; i < canvas->mark_cnt; i++)
       {
@@ -1276,7 +1276,7 @@ _DtCvGetMarkSegs (
 	 * allocate mark information structure
 	 */
 	nxtInfo = (_DtCvPointInfo *) malloc (sizeof(_DtCvPointInfo));
-	if (NULL == nxtInfo)
+	if (nullptr == nxtInfo)
 	    return _DtCvSTATUS_BAD;
 
 	nxtInfo->client_data = canvas->marks[i].client_data;
@@ -1284,12 +1284,12 @@ _DtCvGetMarkSegs (
 	if (_DtCvSTATUS_BAD == GetSegsInArea(canvas, &(canvas->marks[i].beg),
 						&(canvas->marks[i].end),
 						&(nxtInfo->segs),
-						NULL, NULL))
+						nullptr, nullptr))
 	    return _DtCvSTATUS_BAD;
 
 	*ret_info = (_DtCvPointInfo **) _DtCvAddPtrToArray((void **) *ret_info,
 							(void *) nxtInfo);
-	if (NULL == *ret_info)
+	if (nullptr == *ret_info)
 	    return _DtCvSTATUS_BAD;
 	  }
 
@@ -1313,7 +1313,7 @@ _DtCanvasGetSelection (
 {
     _DtCanvasStruct     *canvas = (_DtCanvasStruct *) canvas_handle;
 
-    *ret_select = NULL;
+    *ret_select = nullptr;
     return(GetSelectedText(canvas, canvas->select_start, canvas->select_end,
 							mask, ret_select));
 }
@@ -1344,7 +1344,7 @@ _DtCanvasProcessSelection (
 		_DtCvDrawAreaWithFlags(canvas, canvas->select_start,
 				canvas->select_end,
 				_DtCvSELECTED_FLAG, 0,
-				_DtCvBAD_TYPE, NULL);
+				_DtCvBAD_TYPE, nullptr);
 
 		canvas->select_start = defaultSelect;
 		if (mode == _DtCvSELECTION_START)
@@ -1419,10 +1419,10 @@ _DtCanvasActivatePts (
     /*
      * Convert the segments into starting and ending positions.
      */
-    if (((mask & _DtCvDEACTIVATE) && NULL == info->client_data)
+    if (((mask & _DtCvDEACTIVATE) && nullptr == info->client_data)
 		|| (mask & REQUIRE_SEGS))
       {
-	if (NULL == info || NULL == info->segs ||
+	if (nullptr == info || nullptr == info->segs ||
 		_DtCvSTATUS_BAD == _DtCvCvtSegsToPts(canvas, info->segs,
 						&startSel, &endSel,
 						ret_y1, ret_y2, &firstSeg))
@@ -1441,7 +1441,7 @@ _DtCanvasActivatePts (
 
 	_DtCvDrawAreaWithFlags (canvas, startSel, endSel,
 						0, _DtCvSELECTED_FLAG,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
       }
 
     /*
@@ -1486,7 +1486,7 @@ _DtCanvasActivatePts (
 
 	_DtCvDrawAreaWithFlags (canvas, startSel, endSel,
 							0, flag,
-							_DtCvBAD_TYPE, NULL);
+							_DtCvBAD_TYPE, nullptr);
       }
 
     /*
@@ -1499,7 +1499,7 @@ _DtCanvasActivatePts (
 	/*
 	 * is there anything to deacivate?
 	 */
-	if (NULL == canvas->marks || 0 == canvas->mark_cnt)
+	if (nullptr == canvas->marks || 0 == canvas->mark_cnt)
 	    return _DtCvSTATUS_BAD;
 
 	/*
@@ -1507,7 +1507,7 @@ _DtCanvasActivatePts (
 	 * the segment data.
 	 */
 	markIdx = 0;
-	if (NULL != info->client_data)
+	if (nullptr != info->client_data)
 	  {
 	    while (markIdx < canvas->mark_cnt &&
 		   canvas->marks[markIdx].client_data != info->client_data)
@@ -1547,7 +1547,7 @@ _DtCanvasActivatePts (
 
 	canvas->marks[markIdx].on = _DtCvFALSE;
 	_DtCvDrawAreaWithFlags (canvas, startSel, endSel, flag, 0,
-						_DtCvBAD_TYPE, NULL);
+						_DtCvBAD_TYPE, nullptr);
 
 	/*
 	 * remove the mark from the traversal list
@@ -1608,7 +1608,7 @@ _DtCanvasActivatePts (
     else if ((_DtCvACTIVATE_MARK_ON | _DtCvACTIVATE_MARK_OFF) & mask)
       {
 	markIdx = 0;
-	if (NULL != info && NULL != info->client_data)
+	if (nullptr != info && nullptr != info->client_data)
 	  {
 	    while (markIdx < canvas->mark_cnt &&
 		   canvas->marks[markIdx].client_data != info->client_data)
@@ -1662,7 +1662,7 @@ _DtCanvasActivatePts (
 	_DtCvDrawAreaWithFlags (canvas, canvas->marks[markIdx].beg,
 				canvas->marks[markIdx].end,
 				(flag ^ _DtCvMARK_ON), flag,
-				_DtCvBAD_TYPE, NULL);
+				_DtCvBAD_TYPE, nullptr);
       }
 
     return _DtCvSTATUS_OK;
@@ -1684,7 +1684,7 @@ _DtCanvasGetMarkPositions (
     _DtCvMarkPos	*nextPos;
     _DtCvMarkData	*markLst = canvas->marks;
 
-    *ret_pos = NULL;
+    *ret_pos = nullptr;
 
     if (0 == canvas->mark_cnt)
 	return _DtCvSTATUS_NONE;
@@ -1695,7 +1695,7 @@ _DtCanvasGetMarkPositions (
 	 * malloc memory for the information
 	 */
 	nextPos = (_DtCvMarkPos *) malloc (sizeof(_DtCvMarkPos));
-	if (NULL == nextPos)
+	if (nullptr == nextPos)
 	    return _DtCvSTATUS_BAD;
 
 	/*
@@ -1721,7 +1721,7 @@ _DtCanvasGetMarkPositions (
 
 	*ret_pos = (_DtCvMarkPos **) _DtCvAddPtrToArray((void **) *ret_pos,
 							(void *) nextPos);
-	if (NULL == *ret_pos)
+	if (nullptr == *ret_pos)
 	    return _DtCvSTATUS_BAD;
       }
 

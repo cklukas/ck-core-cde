@@ -91,7 +91,7 @@ extern FalFontData fullFontData;
 FalFontData     copyFontData;
 
 extern  Widget	toplevel ;
-Widget	cpyDialog=NULL;
+Widget	cpyDialog=nullptr;
 static Widget codeLabel[COPYLABELS];
 static Widget codeText[COPYLABELS+1];
 
@@ -114,28 +114,28 @@ extern	Resource resource ;
 
 static Widget		pull1, pull2, pull3, pull4, scrolllist;
 static int	xlf_count = 0;
-static XmString *xlf=NULL;
+static XmString *xlf=nullptr;
 static int	udc_count = 0;
 static Boolean	udc_flag = False;
-static int	*udc=NULL;
+static int	*udc=nullptr;
 static int	udc_val;
 static int	sty_count = 0;
 static Boolean	sty_flag = False;
-static char	**sty=NULL;
-static char 	*sty_val=NULL;
+static char	**sty=nullptr;
+static char 	*sty_val=nullptr;
 static int	wls_count = 0;
 static Boolean	wls_flag = False;
-static int	*wls=NULL;
+static int	*wls=nullptr;
 static int	wls_val;
 static int	hls_count = 0;
 static Boolean	hls_flag = False;
-static int	*hls=NULL;
+static int	*hls=nullptr;
 static int	hls_val;
-static Widget       *button1=NULL;
-static Widget       *button2=NULL;
-static Widget       *button3=NULL;
-static Widget       *button4=NULL;
-static Widget       focus_widget=NULL;
+static Widget       *button1=nullptr;
+static Widget       *button2=nullptr;
+static Widget       *button3=nullptr;
+static Widget       *button4=nullptr;
+static Widget       focus_widget=nullptr;
 
 /****************************************************************
  * callbacks							*
@@ -150,12 +150,12 @@ CpyXLFDCB(Widget w, caddr_t client_data, caddr_t *call_data)
     XmStringTable	st;
     /* get font file name (str:  XLFD name)	*/
     /* get font file name (str:  XLFD name)	*/
-    XtVaGetValues(scrolllist, XmNselectedItems, &st, NULL);
-    if( st == NULL ){
-        copyFontData.xlfdname = NULL;
+    XtVaGetValues(scrolllist, XmNselectedItems, &st, nullptr);
+    if( st == nullptr ){
+        copyFontData.xlfdname = nullptr;
 	return ;
     }
-    str = _XmStringUngenerate(st[0], NULL, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
+    str = _XmStringUngenerate(st[0], nullptr, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
     copyFontData.xlfdname = str;
     if(udc_flag == True)
 	copyFontData.cd_set = udc_val;
@@ -167,17 +167,17 @@ CpyXLFDCB(Widget w, caddr_t client_data, caddr_t *call_data)
 void
 CpyPtnXLFD(void)
 {
-    if( cpyDialog == NULL )
+    if( cpyDialog == nullptr )
     {
 	CreateCopyXLFD( toplevel ) ;
 
 	/*
 	 * add callbacks
 	 */
-	XtAddCallback(cpyDialog, XmNokCallback, (XtCallbackProc)_unmap, NULL);
+	XtAddCallback(cpyDialog, XmNokCallback, (XtCallbackProc)_unmap, nullptr);
 	XtAddCallback(cpyDialog, XmNokCallback,
-					(XtCallbackProc)CpyXLFDCB, NULL);
-	XtAddCallback(cpyDialog, XmNokCallback, (XtCallbackProc)CpyCB, NULL);
+					(XtCallbackProc)CpyXLFDCB, nullptr);
+	XtAddCallback(cpyDialog, XmNokCallback, (XtCallbackProc)CpyCB, nullptr);
 
 	XtAddCallback(cpyDialog, XmNcancelCallback,
 				(XtCallbackProc)_unmap, (XtPointer)1);
@@ -185,16 +185,16 @@ CpyPtnXLFD(void)
 				(XtCallbackProc)CpyXLFDCB,  (XtPointer)1);
 	XtAddCallback(cpyDialog, XmNcancelCallback,
 				(XtCallbackProc)CpyCB, (XtPointer)1);
-	XtAddCallback(cpyDialog, XmNhelpCallback, (XtCallbackProc)_unmap, NULL);
+	XtAddCallback(cpyDialog, XmNhelpCallback, (XtCallbackProc)_unmap, nullptr);
 	XtAddCallback(cpyDialog, XmNhelpCallback,
-				(XtCallbackProc)PopdownCpyPtn, NULL);
+				(XtCallbackProc)PopdownCpyPtn, nullptr);
 
 	AddPopupProc( cpyDialog, InitCpyPtn ) ;
 
 	SrcTf.w1  = codeText[0] ;
 	SrcTf.w2  = codeText[1] ;
 	DestTf.w1 = codeText[2] ;
-	DestTf.w2 = NULL;
+	DestTf.w2 = nullptr;
 
     }
     xlfdPopupDialog( cpyDialog );
@@ -246,8 +246,8 @@ udc_call(Widget w)
 {
 	XmString label;
 	char *moji;
-	XtVaGetValues(w, XmNlabelString, &label, NULL);
-	moji = _XmStringUngenerate(label, NULL, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
+	XtVaGetValues(w, XmNlabelString, &label, nullptr);
+	moji = _XmStringUngenerate(label, nullptr, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
 	if(strncmp(moji, "*", 1) == 0) {
 		udc_flag = False;
 	} else if(strcmp(moji, CS0) == 0) {
@@ -267,7 +267,7 @@ udc_call(Widget w)
 	}
 	XtFree(moji);
 	create_xlfd();
-	XtVaSetValues(scrolllist, XmNitems, xlf, XmNitemCount, xlf_count, NULL);
+	XtVaSetValues(scrolllist, XmNitems, xlf, XmNitemCount, xlf_count, nullptr);
 }
 
 static void
@@ -277,10 +277,10 @@ sty_call(Widget w)
 	char *moji;
 	if (sty_val) {
 		XtFree(sty_val);
-		sty_val = NULL;
+		sty_val = nullptr;
 	}
-	XtVaGetValues(w, XmNlabelString, &label, NULL);
-	moji = _XmStringUngenerate(label, NULL, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
+	XtVaGetValues(w, XmNlabelString, &label, nullptr);
+	moji = _XmStringUngenerate(label, nullptr, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
 	if(strncmp(moji, "*", 1) == 0) {
 		sty_flag = False;
 	}
@@ -291,7 +291,7 @@ sty_call(Widget w)
 	}
 	XtFree(moji);
 	create_xlfd();
-	XtVaSetValues(scrolllist, XmNitems, xlf, XmNitemCount, xlf_count, NULL);
+	XtVaSetValues(scrolllist, XmNitems, xlf, XmNitemCount, xlf_count, nullptr);
 }
 
 static void
@@ -299,8 +299,8 @@ wls_call(Widget w)
 {
 	XmString label;
 	char *moji;
-	XtVaGetValues(w, XmNlabelString, &label, NULL);
-	moji = _XmStringUngenerate(label, NULL, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
+	XtVaGetValues(w, XmNlabelString, &label, nullptr);
+	moji = _XmStringUngenerate(label, nullptr, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
 	if(strncmp(moji, "*", 1) == 0) {
 		wls_flag = False;
 	}
@@ -311,7 +311,7 @@ wls_call(Widget w)
 	XmStringFree(label);
 	XtFree(moji);
 	create_xlfd();
-	XtVaSetValues(scrolllist, XmNitems, xlf, XmNitemCount, xlf_count, NULL);
+	XtVaSetValues(scrolllist, XmNitems, xlf, XmNitemCount, xlf_count, nullptr);
 }
 
 static void
@@ -319,8 +319,8 @@ hls_call(Widget w)
 {
 	XmString label;
 	char *moji;
-	XtVaGetValues(w, XmNlabelString, &label, NULL);
-	moji = _XmStringUngenerate(label, NULL, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
+	XtVaGetValues(w, XmNlabelString, &label, nullptr);
+	moji = _XmStringUngenerate(label, nullptr, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
 	if(strncmp(moji, "*", 1) == 0) {
 		hls_flag = False;
 	}
@@ -331,7 +331,7 @@ hls_call(Widget w)
 	XmStringFree(label);
 	XtFree(moji);
 	create_xlfd();
-	XtVaSetValues(scrolllist, XmNitems, xlf, XmNitemCount, xlf_count, NULL);
+	XtVaSetValues(scrolllist, XmNitems, xlf, XmNitemCount, xlf_count, nullptr);
 }
 
 static void
@@ -545,7 +545,7 @@ font_init(void)
 	extern void	Error_message(Widget widget, char *message);
 
 	xlf_count = udc_count = sty_count = wls_count = hls_count = 0;
-	if (FalGetFontList(NULL, FAL_FONT_MASK_DEFINED |
+	if (FalGetFontList(nullptr, FAL_FONT_MASK_DEFINED |
 			FAL_FONT_MASK_UNDEFINED, &fontlist) == FAL_ERROR) {
 		snprintf(err, sizeof(err), "%s", FAL_ERROR_STR);
 		Error_message((Widget)NULL, err);
@@ -615,10 +615,10 @@ font_init(void)
 	button3 = (Widget *) XtMalloc(sizeof(Widget) * wls_count);
 	button4 = (Widget *) XtMalloc(sizeof(Widget) * hls_count);
 
-	button = XmCreatePushButton(pull1, "*", NULL, 0);
+	button = XmCreatePushButton(pull1, "*", nullptr, 0);
 	XtManageChild(button);
 	XtAddCallback(button, XmNactivateCallback,
-						(XtCallbackProc)udc_call, NULL);
+						(XtCallbackProc)udc_call, nullptr);
 	for (i=0; i < udc_count; i++) {
 		if(udc[i] == FAL_FONT_CS0)
 			snprintf(tmp, sizeof(tmp), "%s", CS0);
@@ -630,45 +630,45 @@ font_init(void)
 			snprintf(tmp, sizeof(tmp), "%s", CS3);
 		else
 			snprintf(tmp, sizeof(tmp), "Codeset %x?", udc[i]);
-		button1[i] = XmCreatePushButton(pull1, tmp, NULL, 0);
+		button1[i] = XmCreatePushButton(pull1, tmp, nullptr, 0);
 		XtManageChild(button1[i]);
 		XtAddCallback(button1[i], XmNactivateCallback,
-						(XtCallbackProc)udc_call, NULL);
+						(XtCallbackProc)udc_call, nullptr);
 	}
 
-	button = XmCreatePushButton(pull2, "*", NULL, 0);
+	button = XmCreatePushButton(pull2, "*", nullptr, 0);
 	XtManageChild(button);
 	XtAddCallback(button, XmNactivateCallback,
-						(XtCallbackProc)sty_call, NULL);
+						(XtCallbackProc)sty_call, nullptr);
 	for (i=0; i < sty_count; i++) {
-		button2[i] = XmCreatePushButton(pull2, sty[i], NULL, 0);
+		button2[i] = XmCreatePushButton(pull2, sty[i], nullptr, 0);
 		XtManageChild(button2[i]);
 		XtAddCallback(button2[i], XmNactivateCallback,
-						(XtCallbackProc)sty_call, NULL);
+						(XtCallbackProc)sty_call, nullptr);
 	}
 
-	button = XmCreatePushButton(pull3, "*", NULL, 0);
+	button = XmCreatePushButton(pull3, "*", nullptr, 0);
 	XtManageChild(button);
 	XtAddCallback(button, XmNactivateCallback,
-						(XtCallbackProc)wls_call, NULL);
+						(XtCallbackProc)wls_call, nullptr);
 	for (i=0; i < wls_count; i++) {
 		snprintf(tmp, sizeof(tmp), "%d", wls[i]);
-		button3[i] = XmCreatePushButton(pull3, tmp, NULL, 0);
+		button3[i] = XmCreatePushButton(pull3, tmp, nullptr, 0);
 		XtManageChild(button3[i]);
 		XtAddCallback(button3[i], XmNactivateCallback,
-						(XtCallbackProc)wls_call, NULL);
+						(XtCallbackProc)wls_call, nullptr);
 	}
 
-	button = XmCreatePushButton(pull4, "*", NULL, 0);
+	button = XmCreatePushButton(pull4, "*", nullptr, 0);
 	XtManageChild(button);
 	XtAddCallback(button, XmNactivateCallback,
-						(XtCallbackProc)hls_call, NULL);
+						(XtCallbackProc)hls_call, nullptr);
 	for (i=0; i < hls_count; i++) {
 		snprintf(tmp, sizeof(tmp), "%d", hls[i]);
-		button4[i] = XmCreatePushButton(pull4, tmp, NULL, 0);
+		button4[i] = XmCreatePushButton(pull4, tmp, nullptr, 0);
 		XtManageChild(button4[i]);
 		XtAddCallback(button4[i], XmNactivateCallback,
-						(XtCallbackProc)hls_call, NULL);
+						(XtCallbackProc)hls_call, nullptr);
 	}
 }
 
@@ -695,11 +695,11 @@ code_input(void)
     char	*str;
     XmStringTable	st;
     extern void	CodeWindow(Widget widget, char *font_name, Boolean load_font);
-    XtVaGetValues(scrolllist, XmNselectedItems, &st, NULL);
-    if( st == NULL ){
+    XtVaGetValues(scrolllist, XmNselectedItems, &st, nullptr);
+    if( st == nullptr ){
 	return ;
     }
-    str = _XmStringUngenerate(st[0], NULL, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
+    str = _XmStringUngenerate(st[0], nullptr, XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
     CodeWindow(focus_widget, str, True);
 }
 
@@ -785,7 +785,7 @@ CreateCopyXLFD( Widget top )
 	cas1  = XmCreateOptionMenu( row2, "CodeSet", args, n );
 	XtManageChild( cas1 );
 	XtAddCallback(XmOptionButtonGadget(cas1), XmNcascadingCallback,
-					(XtCallbackProc)button_set1, NULL);
+					(XtCallbackProc)button_set1, nullptr);
 	XmStringFree(str);
 
 	n = 0 ;
@@ -794,7 +794,7 @@ CreateCopyXLFD( Widget top )
 	XtSetArg(args[n], XmNsubMenuId, pull2);  n++;
 	cas2  = XmCreateOptionMenu( row2, "Style", args, n );
 	XtAddCallback(XmOptionButtonGadget(cas2), XmNcascadingCallback,
-					(XtCallbackProc)button_set2, NULL);
+					(XtCallbackProc)button_set2, nullptr);
 	XtManageChild( cas2 );
 	XmStringFree(str);
 
@@ -805,7 +805,7 @@ CreateCopyXLFD( Widget top )
 	cas3  = XmCreateOptionMenu( row2, "Width", args, n );
 	XtManageChild( cas3 );
 	XtAddCallback(XmOptionButtonGadget(cas3), XmNcascadingCallback,
-					(XtCallbackProc)button_set3, NULL);
+					(XtCallbackProc)button_set3, nullptr);
 	XmStringFree(str);
 
 	n = 0 ;
@@ -815,7 +815,7 @@ CreateCopyXLFD( Widget top )
 	cas4  = XmCreateOptionMenu( row2, "Height", args, n );
 	XtManageChild( cas4 );
 	XtAddCallback(XmOptionButtonGadget(cas4), XmNcascadingCallback,
-					(XtCallbackProc)button_set4, NULL);
+					(XtCallbackProc)button_set4, nullptr);
 	XmStringFree(str);
 
 	font_init();
@@ -866,7 +866,7 @@ CreateCopyXLFD( Widget top )
 								args, n);
 	XtManageChild(codeText[0]);
 
-	XtAddCallback(codeText[0], XmNfocusCallback, (XtCallbackProc)focus, NULL);
+	XtAddCallback(codeText[0], XmNfocusCallback, (XtCallbackProc)focus, nullptr);
 
 	n = 0;
 	XtSetArg(args[n], XmNlabelPixmap, arrow_pix);  n++;
@@ -887,7 +887,7 @@ CreateCopyXLFD( Widget top )
 	XtManageChild(codeText[1]);
 	XtSetSensitive(codeText[1], False);
 
-	XtAddCallback(codeText[1], XmNfocusCallback, (XtCallbackProc)focus, NULL);
+	XtAddCallback(codeText[1], XmNfocusCallback, (XtCallbackProc)focus, nullptr);
 
 	XtAddCallback(arrow, XmNvalueChangedCallback,
 			(XtCallbackProc)arrow_change, (XtPointer)codeText[1]);

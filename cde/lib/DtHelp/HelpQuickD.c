@@ -320,31 +320,31 @@ static XtResource resources[] = {
       {	DtNcloseLabelString,
         DtCCloseLabelString, XmRXmString, sizeof (XmString), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.qhelp.closeLabelString), 
-	XmRString, NULL
+	XmRString, nullptr
       }, 
  
       {	DtNmoreLabelString,
         DtCMoreLabelString, XmRXmString, sizeof (XmString), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.qhelp.moreLabelString), 
-	XmRString, NULL
+	XmRString, nullptr
       }, 
  
       {	DtNbackLabelString,
         DtCBackLabelString, XmRXmString, sizeof (XmString), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.qhelp.backLabelString), 
-	XmRString, NULL
+	XmRString, nullptr
       }, 
 
       {	DtNhelpLabelString, 
         DtCHelpLabelString, XmRXmString, sizeof (XmString), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.qhelp.helpLabelString), 
-	XmRString, NULL
+	XmRString, nullptr
 	}, 
       
       {	DtNprintLabelString, 
         DtCPrintLabelString, XmRXmString, sizeof (XmString), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.qhelp.printLabelString), 
-	XmRString, NULL
+	XmRString, nullptr
 	}, 
 
       { XmNnavigationType, XmCNavigationType, XmRNavigationType,
@@ -386,7 +386,7 @@ externaldef( dthelpquickdialogwidgetclassrec) DtHelpQuickDialogWidgetClassRec dt
       ClassPartInitialize,                      /* class_part_init    */
       FALSE,                                    /* class_inited       */
       Initialize,                               /* initialize         */
-      NULL,                                     /* initialize_hook    */
+      nullptr,                                     /* initialize_hook    */
       XtInheritRealize,                         /* realize            */
       DrawnBActions,                            /* actions            */
       XtNumber(DrawnBActions),                  /* num_actions        */
@@ -401,16 +401,16 @@ externaldef( dthelpquickdialogwidgetclassrec) DtHelpQuickDialogWidgetClassRec dt
       XtInheritResize,                          /* resize             */
       XtInheritExpose,                          /* expose             */
       SetValues,                                /* set_values         */
-      NULL,                                     /* set_values_hook    */
+      nullptr,                                     /* set_values_hook    */
       XtInheritSetValuesAlmost,                 /* set_values_almost  */
-      NULL,                                     /* get_values_hook    */
+      nullptr,                                     /* get_values_hook    */
       XtInheritAcceptFocus,                     /* enter_focus        */
       XtVersion,                                /* version            */
-      NULL,                                     /* callback_private   */
+      nullptr,                                     /* callback_private   */
       XtInheritTranslations,                    /* tm_table           */
       XtInheritQueryGeometry,                   /* query_geometry     */
-      NULL,                                     /* display_accelerator*/
-      NULL,                                     /* extension          */
+      nullptr,                                     /* display_accelerator*/
+      nullptr,                                     /* extension          */
    },
 
    {                                            /* composite_class fields */
@@ -418,34 +418,34 @@ externaldef( dthelpquickdialogwidgetclassrec) DtHelpQuickDialogWidgetClassRec dt
       XtInheritChangeManaged,                   /* change_managed     */
       XtInheritInsertChild,                     /* insert_child       */
       XtInheritDeleteChild,                     /* delete_child       */
-      NULL,                                     /* extension          */
+      nullptr,                                     /* extension          */
    },
 
    {                                            /* constraint_class fields */
-      NULL,                                     /* resource list        */   
+      nullptr,                                     /* resource list        */   
       0,                                        /* num resources        */   
       0,                                        /* constraint size      */   
-      NULL,                                     /* init proc            */   
-      NULL,                                     /* destroy proc         */   
-      NULL,                                     /* set values proc      */   
-      NULL,                                     /* extension            */
+      nullptr,                                     /* init proc            */   
+      nullptr,                                     /* destroy proc         */   
+      nullptr,                                     /* set values proc      */   
+      nullptr,                                     /* extension            */
    },
 
    {                                            /* manager_class fields   */
       XmInheritTranslations,                    /* translations           */
-      NULL,                                     /* syn_resources          */
+      nullptr,                                     /* syn_resources          */
       0,                                        /* num_syn_resources      */
-      NULL,                                     /* syn_cont_resources     */
+      nullptr,                                     /* syn_cont_resources     */
       0,                                        /* num_syn_cont_resources */
       XmInheritParentProcess,                   /* parent_process         */
-      NULL,                                     /* extension              */
+      nullptr,                                     /* extension              */
    },
 
    {                                            /* bulletinBoard class  */
       TRUE,                                     /*always_install_accelerators*/
       _DtHelpQuickDialogWidgetGeoMatrixCreate,      /* geo__matrix_create */
       XmInheritFocusMovedProc,                  /* focus_moved_proc */
-      NULL                                      /* extension */
+      nullptr                                      /* extension */
    },   
 
    {                                            /* messageBox class - none */
@@ -559,13 +559,13 @@ static void ClassInitialize(
       {
         /* Register the help representation types here */
    
-        XmRepTypeRegister(DtRDtHelpType, HelpTypeNames, NULL,
+        XmRepTypeRegister(DtRDtHelpType, HelpTypeNames, nullptr,
                                       NUM_NAMES(HelpTypeNames)) ;
-        XmRepTypeRegister(DtRDtScrollBarPolicy, ScrollBarValueNames, NULL,
+        XmRepTypeRegister(DtRDtScrollBarPolicy, ScrollBarValueNames, nullptr,
                                       NUM_NAMES(ScrollBarValueNames)) ;
-        XmRepTypeRegister(DtRDtExecutionPolicy, ExecutionValueNames, NULL,
+        XmRepTypeRegister(DtRDtExecutionPolicy, ExecutionValueNames, nullptr,
                                       NUM_NAMES(ExecutionValueNames)) ;
-        XmRepTypeRegister(DtRDtPaperSize, _DtHelpPaperSizeNames, NULL,
+        XmRepTypeRegister(DtRDtPaperSize, _DtHelpPaperSizeNames, nullptr,
                                       _DtHelpPaperSizeNamesCnt) ;
       }
 
@@ -600,26 +600,26 @@ DtHelpQuickDialogWidget nw)
 
   /* Set display values */
   /* Make local copies of all resource strings assigned by the user */
-  if (qw->qhelp_dialog.display.locationId != NULL)
+  if (qw->qhelp_dialog.display.locationId != nullptr)
     qw->qhelp_dialog.display.locationId = XtNewString(qw->qhelp_dialog.display.locationId);
-  if (qw->qhelp_dialog.display.helpVolume != NULL)
+  if (qw->qhelp_dialog.display.helpVolume != nullptr)
      qw->qhelp_dialog.display.helpVolume =
                           XtNewString(qw->qhelp_dialog.display.helpVolume);
-  if (qw->qhelp_dialog.display.manPage != NULL)
+  if (qw->qhelp_dialog.display.manPage != nullptr)
     qw->qhelp_dialog.display.manPage = XtNewString(qw->qhelp_dialog.display.manPage);
-  if (qw->qhelp_dialog.display.stringData != NULL)
+  if (qw->qhelp_dialog.display.stringData != nullptr)
     qw->qhelp_dialog.display.stringData = XtNewString(qw->qhelp_dialog.display.stringData);
-  if (qw->qhelp_dialog.display.helpFile != NULL)
+  if (qw->qhelp_dialog.display.helpFile != nullptr)
     qw->qhelp_dialog.display.helpFile = XtNewString(qw->qhelp_dialog.display.helpFile);
 
   /* Initialize the topic title variables. */
-  qw->qhelp_dialog.display.topicTitleLbl = NULL;
-  if (qw->qhelp_dialog.display.topicTitleStr != NULL)
+  qw->qhelp_dialog.display.topicTitleLbl = nullptr;
+  if (qw->qhelp_dialog.display.topicTitleStr != nullptr)
     qw->qhelp_dialog.display.topicTitleLbl = XmStringCreateLocalized(
 					qw->qhelp_dialog.display.topicTitleStr);
 
   /* Set our volume handle to an NULL initial value */
-  qw->qhelp_dialog.display.volumeHandle = NULL;
+  qw->qhelp_dialog.display.volumeHandle = nullptr;
 
   /* setup print stuff */
   _DtHelpInitPrintStuff(&qw->qhelp_dialog.print);
@@ -632,20 +632,20 @@ DtHelpQuickDialogWidget nw)
 
 
   /* Set our jump list display stuff to initial values */
-  qw->qhelp_dialog.backtr.pJumpListHead     = NULL;
-  qw->qhelp_dialog.backtr.pJumpListTale     = NULL;
+  qw->qhelp_dialog.backtr.pJumpListHead     = nullptr;
+  qw->qhelp_dialog.backtr.pJumpListTale     = nullptr;
   qw->qhelp_dialog.backtr.totalJumpNodes    = 0;
   qw->qhelp_dialog.backtr.scrollPosition    = -1;
  
   /* Set our help dialog widgets to NULL starting values */
-  qw->qhelp_dialog.qhelp.separator          = NULL;
-  qw->qhelp_dialog.qhelp.displayAreaFrame   = NULL;
-  qw->qhelp_dialog.qhelp.closeButton        = NULL;
-  qw->qhelp_dialog.qhelp.helpButton         = NULL;
-  qw->qhelp_dialog.qhelp.printButton        = NULL;
-  qw->qhelp_dialog.qhelp.moreButton         = NULL;
-  qw->qhelp_dialog.qhelp.backButton         = NULL;
-  qw->qhelp_dialog.qhelp.definitionBox      = NULL;
+  qw->qhelp_dialog.qhelp.separator          = nullptr;
+  qw->qhelp_dialog.qhelp.displayAreaFrame   = nullptr;
+  qw->qhelp_dialog.qhelp.closeButton        = nullptr;
+  qw->qhelp_dialog.qhelp.helpButton         = nullptr;
+  qw->qhelp_dialog.qhelp.printButton        = nullptr;
+  qw->qhelp_dialog.qhelp.moreButton         = nullptr;
+  qw->qhelp_dialog.qhelp.backButton         = nullptr;
+  qw->qhelp_dialog.qhelp.definitionBox      = nullptr;
 }
 
 
@@ -738,7 +738,7 @@ static void Initialize(
 
   /* Close button */
 
-  if (qw->qhelp_dialog.qhelp.closeLabelString != NULL)
+  if (qw->qhelp_dialog.qhelp.closeLabelString != nullptr)
     labelStr = XmStringCopy(qw->qhelp_dialog.qhelp.closeLabelString);
   else
     labelStr = XmStringCreateLocalized(
@@ -763,7 +763,7 @@ static void Initialize(
 
   /* More button: We do not manage this button, the user must do that */
 
-  if (qw->qhelp_dialog.qhelp.moreLabelString != NULL)
+  if (qw->qhelp_dialog.qhelp.moreLabelString != nullptr)
     labelStr = XmStringCopy(qw->qhelp_dialog.qhelp.moreLabelString);
   else
     labelStr = XmStringCreateLocalized(
@@ -778,7 +778,7 @@ static void Initialize(
 
   /* Back button */
 
-  if (qw->qhelp_dialog.qhelp.backLabelString != NULL)
+  if (qw->qhelp_dialog.qhelp.backLabelString != nullptr)
     labelStr = XmStringCopy(qw->qhelp_dialog.qhelp.backLabelString);
   else
     labelStr = XmStringCreateLocalized(
@@ -798,7 +798,7 @@ static void Initialize(
 
 
   /* Print button */
-  if (qw->qhelp_dialog.qhelp.printLabelString != NULL)
+  if (qw->qhelp_dialog.qhelp.printLabelString != nullptr)
     labelStr = XmStringCopy(qw->qhelp_dialog.qhelp.printLabelString);
   else
     labelStr = XmStringCreateLocalized(
@@ -817,7 +817,7 @@ static void Initialize(
 
   /* Help Button */
 
-  if (qw->qhelp_dialog.qhelp.helpLabelString != NULL)
+  if (qw->qhelp_dialog.qhelp.helpLabelString != nullptr)
     labelStr = XmStringCopy(qw->qhelp_dialog.qhelp.helpLabelString);
   else
     labelStr = XmStringCreateLocalized(
@@ -1376,7 +1376,7 @@ Widget DtHelpQuickDialogGetChild(
         unsigned char child )
 {
     DtHelpQuickDialogWidget  w = (DtHelpQuickDialogWidget)widget;
-    Widget result = NULL;
+    Widget result = nullptr;
 
     _DtHelpWidgetToAppContext(widget);
 
@@ -1480,12 +1480,12 @@ switch (hyperData->hyper_type)
         
                _DtHelpTurnOnHourGlass(XtParent(qw));
   
-               if (qw->qhelp_dialog.display.hyperLinkCallback != NULL)
+               if (qw->qhelp_dialog.display.hyperLinkCallback != nullptr)
                  {
                     pTempAccessPath = 
                       _DtHelpParseAccessFile(hyperData->specification);
          
-                    if (pTempAccessPath != NULL)       /* Use the New one */
+                    if (pTempAccessPath != nullptr)       /* Use the New one */
                       callData.helpVolume = pTempAccessPath;
                     else                               /* Use the old one */
                       callData.helpVolume =
@@ -1496,7 +1496,7 @@ switch (hyperData->hyper_type)
                     callData.event         = hyperData->event;
                     callData.locationId    = _DtHelpParseIdString
                                                 (hyperData->specification);
-                    callData.specification = NULL;
+                    callData.specification = nullptr;
                     callData.hyperType     = DtHELP_LINK_TOPIC;
                     callData.windowHint    = DtHELP_NEW_WINDOW;
 
@@ -1525,7 +1525,7 @@ switch (hyperData->hyper_type)
                pTempAccessPath = 
                          _DtHelpParseAccessFile(hyperData->specification);
          
-               if (pTempAccessPath == NULL)  /* Use the old one */  
+               if (pTempAccessPath == nullptr)  /* Use the old one */  
                  pTempAccessPath = XtNewString(qw->qhelp_dialog.display.helpVolume);
 
                pTempLocationId = _DtHelpParseIdString(hyperData->specification);
@@ -1572,7 +1572,7 @@ switch (hyperData->hyper_type)
         _DtHelpTurnOnHourGlass(XtParent(qw));
 
         /* If the application registered a hypertext callback use it! */
-        if (qw->qhelp_dialog.display.hyperLinkCallback != NULL)
+        if (qw->qhelp_dialog.display.hyperLinkCallback != nullptr)
           {
   
             /* Setup the DtHyperProcStructer to pass back to the 
@@ -1580,8 +1580,8 @@ switch (hyperData->hyper_type)
              */
              callData.reason         = DtCR_HELP_LINK_ACTIVATE;
              callData.event          = hyperData->event;
-             callData.locationId     = NULL;
-             callData.helpVolume     = NULL;
+             callData.locationId     = nullptr;
+             callData.helpVolume     = nullptr;
 	     if (_DtCvLinkType_AppDefine == hyperData->hyper_type)
 	       {
 		 callData.locationId =
@@ -1659,7 +1659,7 @@ static void ResizeQuickDialogCB (
 
 
   /* Re-Set our rows and colums values */
-  if ((qw->qhelp_dialog.help.pDisplayArea != NULL) &&
+  if ((qw->qhelp_dialog.help.pDisplayArea != nullptr) &&
        qw->qhelp_dialog.display.firstTimePopupFlag == TRUE)
     _DtHelpDisplayAreaDimensionsReturn (qw->qhelp_dialog.help.pDisplayArea,
                                   &(qw->qhelp_dialog.display.textRows),
@@ -1700,7 +1700,7 @@ static void  ProcessJumpReuse(
 
    pTempAccessPath = _DtHelpParseAccessFile(hyperData->specification);
          
-   if (pTempAccessPath != NULL) 
+   if (pTempAccessPath != nullptr) 
      {
        /* Free the old one and assign the new path */
        XtFree(qw->qhelp_dialog.display.helpVolume);
@@ -1751,7 +1751,7 @@ static void SetupDisplayType(
     * the proper value for our scrollPosition.
     */
 
-   if (qw->qhelp_dialog.backtr.pJumpListHead != NULL)
+   if (qw->qhelp_dialog.backtr.pJumpListHead != nullptr)
      {
        tmpPtr = qw->qhelp_dialog.backtr.pJumpListHead;
        tmpPtr->scrollPosition = 
@@ -1961,9 +1961,9 @@ static void SetupTopic(
   Boolean validPath  = FALSE;
   XtPointer	topicHandle;
   int           status=NON_VALID_STATUS;
-  char          *userErrorStr=NULL;
-  char          *sysErrorStr=NULL;
-  char          *tmpMsg=NULL;
+  char          *userErrorStr=nullptr;
+  char          *sysErrorStr=nullptr;
+  char          *tmpMsg=nullptr;
   char          *tmpError;
   char          *locTitle;
   char          *volumeTitle;
@@ -1975,7 +1975,7 @@ static void SetupTopic(
   _DtHelpTurnOnHourGlass(XtParent(qw));
     
   /* Locate our HelpVolume file */
-   if (qw->qhelp_dialog.display.helpVolume != NULL)
+   if (qw->qhelp_dialog.display.helpVolume != nullptr)
      {
        validPath = _DtHelpExpandHelpVolume((Widget)qw,
                                 &qw->qhelp_dialog.display,
@@ -1986,7 +1986,7 @@ static void SetupTopic(
   if (validPath)
     {
       validTopic = False;  /* default */
-      if (qw->qhelp_dialog.display.locationId != NULL)
+      if (qw->qhelp_dialog.display.locationId != nullptr)
         {
            XmUpdateDisplay((Widget)qw);
 
@@ -2021,14 +2021,14 @@ static void SetupTopic(
    */
    if (!validPath)
      {
-       if (qw->qhelp_dialog.display.helpVolume == NULL)
+       if (qw->qhelp_dialog.display.helpVolume == nullptr)
          {
 
            tmpError = XtNewString((char *)_DTGETMESSAGE(2, 60,
                                   "No help volume specified."));
 
            _DtHelpDisplayFormatError(qw->qhelp_dialog.help.pDisplayArea, (Widget)qw,
-                                  tmpError, NULL);
+                                  tmpError, nullptr);
            
            if (updateKind == DtJUMP_UPDATE)
                UpdateJumpList(tmpError, DtHELP_TYPE_DYNAMIC_STRING,
@@ -2070,7 +2070,7 @@ static void SetupTopic(
 
 
            _DtHelpDisplayFormatError(qw->qhelp_dialog.help.pDisplayArea, (Widget)qw,
-                    tmpError, NULL);
+                    tmpError, nullptr);
  
           
            UpdateJumpList((char *)tmpError,
@@ -2089,7 +2089,7 @@ static void SetupTopic(
      }
    else if  (!validTopic)
      {
-       if (qw->qhelp_dialog.display.locationId == NULL)
+       if (qw->qhelp_dialog.display.locationId == nullptr)
          {
             tmpMsg =_DTGETMESSAGE(2, 59,"No location ID specified.");
             userErrorStr = XtNewString(tmpMsg);
@@ -2166,15 +2166,15 @@ static void FreeQuickHelpInfo(
 
   /* Free our jump list display stuff */
   _DtHelpTopicListFree(qw->qhelp_dialog.backtr.pJumpListHead);
-  qw->qhelp_dialog.backtr.pJumpListHead     = NULL;
-  qw->qhelp_dialog.backtr.pJumpListTale     = NULL;
+  qw->qhelp_dialog.backtr.pJumpListHead     = nullptr;
+  qw->qhelp_dialog.backtr.pJumpListTale     = nullptr;
   qw->qhelp_dialog.backtr.totalJumpNodes    = 0;
 
   /* Close our current help volume */
-  if (qw->qhelp_dialog.display.volumeHandle != NULL)
+  if (qw->qhelp_dialog.display.volumeHandle != nullptr)
     {
       _DtHelpCloseVolume(qw->qhelp_dialog.display.volumeHandle);
-      qw->qhelp_dialog.display.volumeHandle = NULL;
+      qw->qhelp_dialog.display.volumeHandle = nullptr;
     }
 
 
@@ -2188,7 +2188,7 @@ static void FreeQuickHelpInfo(
       XtFree(qw->qhelp_dialog.display.manPage);
       XtFree(qw->qhelp_dialog.display.stringData);
       XtFree(qw->qhelp_dialog.display.helpFile);
-      if (qw->qhelp_dialog.display.topicTitleLbl != NULL)
+      if (qw->qhelp_dialog.display.topicTitleLbl != nullptr)
           XmStringFree(qw->qhelp_dialog.display.topicTitleLbl);
      
       /* close print dialog, free all memory */
@@ -2243,7 +2243,7 @@ static void UpdateJumpList(
   /* We add a -1 for the scrollbar position value, and will replace it with the
    * actual value just prior to changing the window to the new topic.
    */
-  _DtHelpTopicListAddToHead(topicInfo, NULL, topicType, 999,
+  _DtHelpTopicListAddToHead(topicInfo, nullptr, topicType, 999,
                         qw->qhelp_dialog.display.helpVolume,
                         &qw->qhelp_dialog.backtr.pJumpListHead,
                         &qw->qhelp_dialog.backtr.pJumpListTale,
@@ -2282,7 +2282,7 @@ static void  ProcessBackCB(
 
  
   DtHelpQuickDialogWidget qw = (DtHelpQuickDialogWidget)  clientData;
-  DtTopicListStruct *pTemp= NULL;
+  DtTopicListStruct *pTemp= nullptr;
 
   _DtHelpTurnOnHourGlass(XtParent(qw));
 
@@ -2453,13 +2453,13 @@ static void CloseQuickCB (
   FreeQuickHelpInfo((Widget)qw, DtCLEAN_FOR_REUSE);
  
   /* Look to see if they registered their own close callback */
-  if (qw->qhelp_dialog.qhelp.closeCallback != NULL)
+  if (qw->qhelp_dialog.qhelp.closeCallback != nullptr)
     {
        callDataInfo.reason = DtCR_HELP_CLOSE;
        callDataInfo.event = callbackStruct->event;
-       callDataInfo.locationId = NULL;
-       callDataInfo.helpVolume = NULL;
-       callDataInfo.specification = NULL;
+       callDataInfo.locationId = nullptr;
+       callDataInfo.helpVolume = nullptr;
+       callDataInfo.specification = nullptr;
        callDataInfo.hyperType = 0;
           
        /* All we do is envoke the applications close callback */
@@ -2493,7 +2493,7 @@ static void HelpButtonCB (
 
 
   /* Invoke the help system. */
-  _XmManagerHelp((Widget)qw, callback->event, NULL, NULL);
+  _XmManagerHelp((Widget)qw, callback->event, nullptr, nullptr);
 
 
 }

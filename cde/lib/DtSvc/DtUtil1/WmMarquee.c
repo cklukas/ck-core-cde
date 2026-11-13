@@ -158,18 +158,18 @@ _DtWsmAddMarqueeSelectionCallback (
     pattern = tt_pattern_create();
     status = tt_ptr_error(pattern);
     if (status != TT_OK) {
-	return NULL;
+	return nullptr;
     }
 
     if (tt_pattern_category_set(pattern, TT_OBSERVE) != TT_OK) {
-	return NULL;
+	return nullptr;
     }
     if (tt_pattern_scope_add(pattern, TT_SESSION) != TT_OK) {
-	return NULL;
+	return nullptr;
     }
     sessId = tt_default_session();
     if (tt_pattern_session_add(pattern, sessId) != TT_OK) {
-	return NULL;
+	return nullptr;
     }
     tt_free(sessId);
 
@@ -183,7 +183,7 @@ _DtWsmAddMarqueeSelectionCallback (
     pCbCtx->widget = widget;
     pCbCtx->callback.marquee_selection = marquee_selection;
     pCbCtx->client_data = client_data;
-    pCbCtx->nested_context = NULL;
+    pCbCtx->nested_context = nullptr;
 
     /*
      * Only receive DtMarquee_Selection notice from the screen
@@ -192,17 +192,17 @@ _DtWsmAddMarqueeSelectionCallback (
     status = tt_pattern_arg_add(pattern, TT_IN, Tttk_string, sNum);
     if (status != TT_OK) {
 	XtFree((char *)pCbCtx);
-	return NULL;
+	return nullptr;
     }
 
     if (tt_pattern_op_add(pattern, "DtMarquee_Selection") != TT_OK) {
 	XtFree((char *)pCbCtx);
-	return NULL;
+	return nullptr;
     }
 
     if (tt_pattern_state_add(pattern, TT_SENT) != TT_OK) {
 	XtFree((char *)pCbCtx);
-	return NULL;
+	return nullptr;
     }
 
     /*
@@ -212,7 +212,7 @@ _DtWsmAddMarqueeSelectionCallback (
     status = tt_pattern_user_set(pattern, 0, (void *)pCbCtx);
     if (status != TT_OK) {
 	XtFree((char *)pCbCtx);
-	return NULL;
+	return nullptr;
     }
 
     /*
@@ -221,12 +221,12 @@ _DtWsmAddMarqueeSelectionCallback (
      */
     if (tt_pattern_callback_add(pattern, _WsSelectionCB) != TT_OK) {
 	XtFree((char *)pCbCtx);
-	return NULL;
+	return nullptr;
     }
 
     if (tt_pattern_register(pattern) != TT_OK) {
 	XtFree((char *)pCbCtx);
-	return NULL;
+	return nullptr;
     }
 
     XtFree (sName);

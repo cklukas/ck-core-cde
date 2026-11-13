@@ -163,13 +163,13 @@ static void     mwm_close_mboxCB(
 **                                                                      **
 **************************************************************************/
 
-static ISTRING  current_dir = NULL;		/* formatted for user */
-static ISTRING  raw_current_dir = NULL;		/* full path for system */
+static ISTRING  current_dir = nullptr;		/* formatted for user */
+static ISTRING  raw_current_dir = nullptr;		/* full path for system */
 static STRING	home_env_var_name = "HOME";
 
-static ABWindow	*AB_win_head = NULL;
-static ABWindow	*AB_win_tail = NULL;
-static ABWindow *AB_win_leader = NULL;
+static ABWindow	*AB_win_head = nullptr;
+static ABWindow	*AB_win_tail = nullptr;
+static ABWindow *AB_win_leader = nullptr;
 
 static int	AB_stack_offset = 50;
 static int	AB_frame_title_height = 25;
@@ -195,7 +195,7 @@ ab_position_window(
     int		screen_w, screen_h;
     int		delta_w, delta_h;
 
-    if (widget == NULL || ref_widget == NULL ||
+    if (widget == nullptr || ref_widget == nullptr ||
 	!XtIsRealized(ref_widget))
 	return;
     
@@ -210,7 +210,7 @@ ab_position_window(
     XtVaGetValues(shell,
 		XmNwidth,	&shell_w,
 		XmNheight,	&shell_h,
-		NULL);
+		nullptr);
 
     ref_shell = ui_get_ancestor_shell(ref_widget);
     XtVaGetValues(ref_shell,
@@ -218,7 +218,7 @@ ab_position_window(
 		XmNy, 		&ref_y,
 		XmNwidth, 	&ref_w,
 		XmNheight, 	&ref_h,
-		NULL);
+		nullptr);
 
     /* 
      * Adjust geometry values to accommodate window-frame
@@ -303,7 +303,7 @@ ab_position_window(
     XtVaSetValues(shell, 
 	XmNx,	shell_x,
 	XmNy,	shell_y,
-	NULL);
+	nullptr);
 }
 
 BOOL
@@ -331,7 +331,7 @@ ab_register_window(
     newwin->widget = widget;
     newwin->type   = type;
     newwin->state  = init_state;
-    newwin->next   = NULL;
+    newwin->next   = nullptr;
 
     /*
      * Install a Window close callback and ensure the deleteResponse
@@ -342,13 +342,13 @@ ab_register_window(
      */  
     ui_add_window_close_callback(shell,
         close_callback? close_callback : popdown_winCB,
-        close_callback? close_clientdata : NULL,
+        close_callback? close_clientdata : nullptr,
         XmDO_NOTHING);
 
     if (type == AB_WIN_LEADER)
     {
 	/* The Window leader is stored separately */
-	if (AB_win_leader == NULL)
+	if (AB_win_leader == nullptr)
 	{
 	    AB_win_leader = newwin;
 	    ui_add_window_iconify_handler(shell,
@@ -362,7 +362,7 @@ ab_register_window(
     /*
      * Append new Win Record onto linked-list 
      */
-    if (AB_win_head == NULL) /* first one */
+    if (AB_win_head == nullptr) /* first one */
 	AB_win_head = AB_win_tail = newwin;
     else
     {
@@ -408,7 +408,7 @@ ab_show_window(
 {
     ABWindow *win;
  
-    for(win = AB_win_head; win != NULL; win = win->next)
+    for(win = AB_win_head; win != nullptr; win = win->next)
     {
         if (win->widget == widget)
 	{
@@ -453,7 +453,7 @@ ab_window_is_open(
 {
     ABWindow *win;
 
-    for(win = AB_win_head; win != NULL; win = win->next)
+    for(win = AB_win_head; win != nullptr; win = win->next)
     {
         if (win->widget == widget)
 	    return((win->state & WindowUp) && 
@@ -519,7 +519,7 @@ track_win_iconify(
 	    	!(AB_win_leader->state & WindowIconified))
             {
                 win->state &= (~WindowIconified);
-	    	XtVaSetValues(widget, XtNinitialState, NormalState, NULL);
+	    	XtVaSetValues(widget, XtNinitialState, NormalState, nullptr);
             }
             break;
         case UnmapNotify:
@@ -537,7 +537,7 @@ track_win_iconify(
                 !(AB_win_leader->state & WindowIconified))
             {
                 win->state |= WindowIconified;
-	    	XtVaSetValues(widget, XtNinitialState, IconicState, NULL);
+	    	XtVaSetValues(widget, XtNinitialState, IconicState, nullptr);
             }
             break;
     }
@@ -598,7 +598,7 @@ track_win_popdownCB(
         win->state &= (~WindowUp);
 	if (win->state & WindowIconified)
 	{
-	    XtVaSetValues(shell, XtNinitialState, NormalState, NULL);
+	    XtVaSetValues(shell, XtNinitialState, NormalState, nullptr);
 	    win->state &= (~WindowIconified);
 	}
     }
@@ -612,7 +612,7 @@ track_win_destroyCB(
 )
 {
     ABWindow *win = (ABWindow*)client_data;
-    ABWindow *prev = NULL;
+    ABWindow *prev = nullptr;
     ABWindow *p;
 
     /* 
@@ -657,7 +657,7 @@ set_windows_visibility(
 {
     ABWindow *win;
  
-    for(win = AB_win_head; win != NULL; win = win->next)
+    for(win = AB_win_head; win != nullptr; win = win->next)
     {
         if (win->state & WindowUp)
 	{
@@ -697,7 +697,7 @@ set_window_objects_visibility(
     ABObj       winobj;
  
     for (trav_open(&trav, project, AB_TRAV_WINDOWS);
-        (winobj = trav_next(&trav)) != NULL; )
+        (winobj = trav_next(&trav)) != nullptr; )
     {   
         if (obj_is_base_win(winobj) &&
             obj_has_flag(winobj, MappedFlag))
@@ -713,59 +713,59 @@ ab_update_stat_region(
     String         value
 )
 {
-    static Widget       obj_type = NULL;
-    static Widget       obj_name = NULL;
-    static Widget       obj_pos  = NULL;
-    static Widget       obj_size = NULL;
-    static Widget       curs_pos = NULL;
-    static Widget       cur_module = NULL;
-    Widget              widget = NULL;
+    static Widget       obj_type = nullptr;
+    static Widget       obj_name = nullptr;
+    static Widget       obj_pos  = nullptr;
+    static Widget       obj_size = nullptr;
+    static Widget       curs_pos = nullptr;
+    static Widget       cur_module = nullptr;
+    Widget              widget = nullptr;
     String              nullstr = "        ";
 
     switch(type)
     {
         case AB_STATUS_OBJ_TYPE:
-            if (obj_type == NULL)
+            if (obj_type == nullptr)
                 obj_type = dtb_palette_ab_palette_main.object_type_field;
             widget = obj_type;
             break;
         case AB_STATUS_OBJ_NAME:
-            if (obj_name == NULL)
+            if (obj_name == nullptr)
                 obj_name = dtb_palette_ab_palette_main.object_name_field;
             widget = obj_name;
             break;
         case AB_STATUS_OBJ_POS:
-            if (obj_pos == NULL)
+            if (obj_pos == nullptr)
                 obj_pos = dtb_palette_ab_palette_main.position_field;
             widget = obj_pos;
             break;
         case AB_STATUS_OBJ_SIZE:
-            if (obj_size == NULL)
+            if (obj_size == nullptr)
                 obj_size = dtb_palette_ab_palette_main.size_field;
             widget = obj_size;
             break;
         case AB_STATUS_CURS_POS:
-            if (curs_pos == NULL)
+            if (curs_pos == nullptr)
                 curs_pos = dtb_palette_ab_palette_main.cursor_position_field;
             widget = curs_pos;
             break;
         case AB_STATUS_CUR_MODULE:
-            if (cur_module == NULL)
+            if (cur_module == nullptr)
                 cur_module = dtb_palette_ab_palette_main.editing_module_field;
 
             widget = cur_module;
-	    if (value == NULL)
+	    if (value == nullptr)
 		value = "( None )";
     }
-    if (value == NULL)
+    if (value == nullptr)
         value = nullstr;
  
     /* Update the footer to display the current object-type */
-    if (widget != NULL)
+    if (widget != nullptr)
         XtVaSetValues(widget,
                 XtVaTypedArg, XmNlabelString, XtRString,
                 value, strlen(value)+1,
-                NULL);
+                nullptr);
  
     return 0;
 }
@@ -800,7 +800,7 @@ ab_set_busy_cursor(
      * Loop through Windows and set cursor on any that
      * are currently UP
      */  
-    for(win = AB_win_head; win != NULL; win = win->next)
+    for(win = AB_win_head; win != nullptr; win = win->next)
     {
         if (win->state & WindowUp)
 	    set_cursor(win->widget, new_cursor, on);
@@ -808,13 +808,13 @@ ab_set_busy_cursor(
  
     /* Set busy cursor for any AB windows currently up */
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-        (module = trav_next(&trav)) != NULL; )
+        (module = trav_next(&trav)) != nullptr; )
     {
         num_wins = obj_get_num_children(module);
         for (i = 0; i < num_wins; i++)
         {
             winobj = obj_get_child(module, i);
-            if (obj_is_window(winobj) && winobj->ui_handle != NULL)
+            if (obj_is_window(winobj) && winobj->ui_handle != nullptr)
                 set_cursor((Widget)winobj->ui_handle, new_cursor, on);
         }
     }
@@ -867,8 +867,8 @@ ab_post_instantiate(
 	 */
 	if (group_w)
 	{
-	    ABObj	parent = NULL;
-	    Widget	parent_w = NULL;
+	    ABObj	parent = nullptr;
+	    Widget	parent_w = nullptr;
 
 	    /*
 	     * Get (root) parent ABObj
@@ -915,11 +915,11 @@ ab_change_dir(STRING request_dir)
     /*
      * Determine the new directory
      */  
-    if (current_dir == NULL)
+    if (current_dir == nullptr)
     {
         ab_get_cur_dir();               /* initialize it! */
     }
-    if (request_dir == NULL)
+    if (request_dir == nullptr)
     {
         dir_changed = FALSE;
 	force_update = TRUE;
@@ -993,12 +993,12 @@ ab_is_cur_dir(STRING dir)
     BOOL        is_cur_dir= FALSE;
     *pretty_dir = 0;
          
-    if (current_dir == NULL)
+    if (current_dir == nullptr)
     {
         ab_get_cur_dir();       /* initialize it! */
     }
  
-    if ((dir == NULL) || (*dir == 0) || (*dir == '.'))
+    if ((dir == nullptr) || (*dir == 0) || (*dir == '.'))
     {
         return TRUE;
     }
@@ -1016,13 +1016,13 @@ ab_get_cur_dir(void)
     static BOOL initialized = FALSE;
     char        formatted_cur_dir[MAXPATHLEN];
     char        cur_dir[MAXPATHLEN];
-    STRING      new_raw_dir = NULL;
-    STRING      new_dir = NULL;
+    STRING      new_raw_dir = nullptr;
+    STRING      new_dir = nullptr;
     *formatted_cur_dir = 0;
     *cur_dir = 0;
  
     if ( initialized &&
-         (raw_current_dir != NULL) &&
+         (raw_current_dir != nullptr) &&
          util_paths_are_same_file(istr_string(raw_current_dir), ".") )
     {
         goto epilogue;  /* no change */
@@ -1031,15 +1031,15 @@ ab_get_cur_dir(void)
     /*
      * Get the raw current directory
      */
-    new_raw_dir = NULL;
+    new_raw_dir = nullptr;
     if (!initialized)
     {
         initialized = TRUE;
         new_raw_dir = getenv("PWD");
     }
-    if (new_raw_dir == NULL)
+    if (new_raw_dir == nullptr)
     {
-        if (getcwd(cur_dir, MAXPATHLEN) != NULL)
+        if (getcwd(cur_dir, MAXPATHLEN) != nullptr)
         {
             new_raw_dir = cur_dir;
         }
@@ -1048,7 +1048,7 @@ ab_get_cur_dir(void)
     /*
      * Get the pretty version of the current directory
      */
-    if (new_raw_dir == NULL)
+    if (new_raw_dir == nullptr)
     {  
         new_raw_dir = ".";
         new_dir = "* Indeterminable *";
@@ -1085,7 +1085,7 @@ format_dir_name_for_user(
     int         home_name_len = 0;
     int         i= 0;
  
-    if (home != NULL)
+    if (home != nullptr)
     {
         char    home_relative[MAXPATHLEN];
         home_name_len = strlen(home);
@@ -1149,7 +1149,7 @@ format_dir_name_for_system(
 {
     int		return_value = 0;
     char	*user_dir_ptr = user_dir_name;
-    STRING	homeVar = NULL;
+    STRING	homeVar = nullptr;
     *system_dir = 0;
     if (util_strempty(user_dir_name))
     {
@@ -1158,7 +1158,7 @@ format_dir_name_for_system(
 
     if (user_dir_name[0] == '~')
     {
-	if ((homeVar = getenv(home_env_var_name)) != NULL)
+	if ((homeVar = getenv(home_env_var_name)) != nullptr)
 	{
 	    util_strncpy(system_dir, homeVar, system_dir_size);
 	    ++user_dir_ptr;
@@ -1204,11 +1204,11 @@ ab_palette_set_active(
     BOOL        active
 )
 {
-    static Widget       palette_cpanel = NULL;
-    static Widget       palette_footer = NULL;
+    static Widget       palette_cpanel = nullptr;
+    static Widget       palette_footer = nullptr;
     /* REMIND andy: take out when working */
 
-    if (palette_cpanel == NULL)
+    if (palette_cpanel == nullptr)
     {
         palette_cpanel = dtb_palette_ab_palette_main.palette_cpanel;
         palette_footer = dtb_palette_ab_palette_main.palette_footer;
@@ -1281,14 +1281,14 @@ ab_exit_dtbuilder(void)
                     XtAppProcessEvent(app, XtIMAll);
                 }
             }
-            else if (shell == NULL)
+            else if (shell == nullptr)
             {
                 /* Display the "unsaved edits" message DIALOG if the
                  * "unsaved edits" message topLevelShell is not already
                  * up.
                  */
                 answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-                        &dtb_palette_exit_msg, NULL, NULL, &dlg);
+                        &dtb_palette_exit_msg, nullptr, nullptr, &dlg);
             }
  
             switch (answer)
@@ -1307,9 +1307,9 @@ ab_exit_dtbuilder(void)
     }
     else
     {
-        if (dlg != NULL)
+        if (dlg != nullptr)
 	    ui_win_front(dlg);
-        else if (shell != NULL)
+        else if (shell != nullptr)
 	    ui_win_front(shell);
     }
 }
@@ -1322,9 +1322,9 @@ exit_mboxCB(
 )
 {
     DTB_MODAL_ANSWER     op = (DTB_MODAL_ANSWER) client_data;
-    DTB_MODAL_ANSWER     *answerp = NULL;
+    DTB_MODAL_ANSWER     *answerp = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &answerp, NULL);
+    XtVaGetValues(widget, XmNuserData, &answerp, nullptr);
 
     /* Dismiss the "unsaved edits" message. */
     XtPopdown(ui_get_ancestor_shell(widget));

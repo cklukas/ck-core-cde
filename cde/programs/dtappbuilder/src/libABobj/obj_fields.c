@@ -94,7 +94,7 @@ int
 obj_set_file(ABObj obj, STRING file)
 {
     int                 iRet = 0;
-    ISTRING            *old_name = NULL;
+    ISTRING            *old_name = nullptr;
 
     verify_for_write(obj);
     switch (obj->type)
@@ -116,7 +116,7 @@ obj_set_file(ABObj obj, STRING file)
 	iRet = -1;
 	break;
     }
-    if (old_name != NULL)
+    if (old_name != nullptr)
     {
 	istr_destroy(*old_name);
 	*old_name = istr_create(file);
@@ -340,7 +340,7 @@ obj_set_filter_pattern(ABObj obj, STRING filter_pattern)
 STRING
 obj_get_filter_pattern( ABObj obj)
 {
-    STRING              pattern = NULL;
+    STRING              pattern = nullptr;
 
     verify_for_read(obj);
     pattern = istr_string(obj->info.file_chooser.filter_pattern);
@@ -368,7 +368,7 @@ obj_get_icon(ABObj obj)
     if (obj_is_window(obj) && !obj_is_file_chooser(obj))
 	return istr_string(obj->info.window.icon);
 
-    return NULL;
+    return nullptr;
 }
 
 int
@@ -392,7 +392,7 @@ obj_get_icon_label(ABObj obj)
     if (obj_is_window(obj) && !obj_is_file_chooser(obj))
 	return istr_string(obj->info.window.icon_label);
 
-    return NULL;
+    return nullptr;
 }
 int
 obj_set_icon_mask(ABObj obj, STRING icon_mask)
@@ -415,7 +415,7 @@ obj_get_icon_mask(ABObj obj)
     if (obj_is_window(obj) && !obj_is_file_chooser(obj))
         return istr_string(obj->info.window.icon_mask);
  
-    return NULL;
+    return nullptr;
 }
 
 int
@@ -440,7 +440,7 @@ obj_get_initial_value_string(ABObj obj)
     {
 	return (istr_string(obj->info.text.initial_value_string));
     }
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -453,19 +453,19 @@ obj_get_initial_value_string(ABObj obj)
 int
 obj_set_name_istr(ABObj obj, ISTRING new_name)
 {
-    ISTRING		old_name = NULL;
-    StringList		names = NULL;
-    ABObj		oldNameObj = NULL;
+    ISTRING		old_name = nullptr;
+    StringList		names = nullptr;
+    ABObj		oldNameObj = nullptr;
 
     if (istr_equal(new_name, obj->name))
     {
 	/* no change! */
 	return 0;
     }
-    if ((names = objP_get_names_scope(obj)) != NULL)
+    if ((names = objP_get_names_scope(obj)) != nullptr)
     {
 	oldNameObj = (ABObj)strlist_get_istr_data(names, new_name);
-	if (oldNameObj != NULL) 
+	if (oldNameObj != nullptr) 
 	{
 	    if (oldNameObj == obj)
 	    {
@@ -494,7 +494,7 @@ obj_set_name_istr(ABObj obj, ISTRING new_name)
     /*
      * Update the names list
      */
-    if ((names = objP_get_names_scope(obj)) != NULL)
+    if ((names = objP_get_names_scope(obj)) != nullptr)
     {
 	if (strlist_get_istr_data(names, old_name) == ((void*)obj))
 	{
@@ -929,7 +929,7 @@ obj_get_menu_title(ABObj obj)
         case AB_TYPE_TERM_PANE:
             return(istr_string(obj->info.term.menu_title));
         default:
-            return NULL;
+            return nullptr;
     }
 }
 
@@ -967,16 +967,16 @@ obj_cvt_to_ref(
 		 ABObj ref_obj
 )
 {
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-	return (ref_obj == NULL? 0:-1);		/* NULL can only ref NULL */
+	return (ref_obj == nullptr? 0:-1);		/* NULL can only ref NULL */
     }
     verify_for_write(obj);
 
     /*
      * The types must match!
      */
-    if (ref_obj != NULL)
+    if (ref_obj != nullptr)
     {
 	obj_set_type(obj, obj_get_type(ref_obj));
     }
@@ -989,13 +989,13 @@ obj_get_actual_obj(
 		 ABObj obj
 )
 {
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     verify_for_read(obj);
 
-    return (obj->ref_to == NULL? obj:obj->ref_to);
+    return (obj->ref_to == nullptr? obj:obj->ref_to);
 }
 
 int
@@ -1304,7 +1304,7 @@ obj_get_process_string(
     if (obj->type == AB_TYPE_TERM_PANE)
 	return (istr_string(obj->info.term.process_string));
 
-    return NULL;
+    return nullptr;
 
 }
 
@@ -1375,11 +1375,11 @@ obj_get_win_parent(
     ABObj obj
 )
 {
-    ABObj               wparent = NULL;
+    ABObj               wparent = nullptr;
     AB_OBJECT_TYPE      type = AB_TYPE_UNDEF; 
  
     if (!obj_is_window(obj))
-	return NULL;
+	return nullptr;
 
     verify_for_read(obj);
     type = obj_get_type(obj);
@@ -1555,7 +1555,7 @@ obj_get_vendor(ABObj obj)
     if (!obj_is_project(obj))
     {
         member_error(obj, "vendor");
-        return NULL;
+        return nullptr;
     }
     return (istr_string(obj->info.project.vendor));
 }
@@ -1581,7 +1581,7 @@ obj_get_version(ABObj obj)
     if (!obj_is_project(obj)) 
     { 
         member_error(obj, "version");
-        return NULL;
+        return nullptr;
     }
     return (istr_string(obj->info.project.version));
 } 
@@ -1608,7 +1608,7 @@ obj_get_root_window(ABObj obj)
     if (!obj_is_project(obj))
     {
 	member_error(obj, "root_window");
-	return NULL;
+	return nullptr;
     }
     return (obj->info.project.root_window);
 }
@@ -1873,7 +1873,7 @@ AB_GROUP_TYPE
 obj_get_group_type(ABObj obj)
 {
     verify_for_read(obj);
-    if ((obj != NULL) && obj_is_container(obj))
+    if ((obj != nullptr) && obj_is_container(obj))
     {
 	return (obj->info.container.group_type);
     }
@@ -2014,10 +2014,10 @@ obj_get_default_act_button(
     ABObj obj
 )
 {
-    ABObj               defaultb = NULL;
+    ABObj               defaultb = nullptr;
  
     if (!obj_is_window(obj))
-        return NULL;
+        return nullptr;
  
     verify_for_read(obj);
 
@@ -2456,7 +2456,7 @@ obj_get_to(ABObj obj)
     if (!obj_is_action(obj))
     {
 	member_error(obj, "to");
-	return NULL;
+	return nullptr;
     }
     return obj->info.action.to;
 }
@@ -2481,7 +2481,7 @@ obj_get_from(ABObj obj)
     if (!obj_is_action(obj))
     {
 	member_error(obj, "from");
-	return NULL;
+	return nullptr;
     }
     return obj->info.action.from;
 }
@@ -2535,16 +2535,16 @@ obj_set_func_type(ABObj obj, AB_FUNC_TYPE new_func_type)
 	break;
 
     case AB_FUNC_CODE_FRAG:
-	obj->info.action.func_value.code_frag = NULL;
+	obj->info.action.func_value.code_frag = nullptr;
 	break;
 
     case AB_FUNC_USER_DEF:
-	obj->info.action.func_value.func_name = NULL;
+	obj->info.action.func_value.func_name = nullptr;
 	break;
 
     case AB_FUNC_HELP_VOLUME:
-        obj->info.action.volume_id = NULL;
-        obj->info.action.location = NULL;
+        obj->info.action.volume_id = nullptr;
+        obj->info.action.location = nullptr;
         break;
 
     default:
@@ -2587,7 +2587,7 @@ obj_get_func_name(ABObj obj)
     if (!(obj_is_action(obj)
 	  && (obj->info.action.func_type == AB_FUNC_USER_DEF)))
     {
-	return NULL;
+	return nullptr;
     }
     return (istr_string(obj->info.action.func_value.func_name));
 }
@@ -2613,7 +2613,7 @@ obj_get_func_name_suffix(ABObj obj)
     if (!obj_is_action(obj))
     {
 	member_error(obj, "func_name_suffix");
-	return NULL;
+	return nullptr;
     }
     return istr_string(obj->info.action.func_name_suffix);
 }
@@ -2751,7 +2751,7 @@ obj_set_arg_type(ABObj obj, AB_ARG_TYPE arg_type)
 	break;
 
     case AB_ARG_STRING:
-	obj->info.action.arg_value.sval = NULL;
+	obj->info.action.arg_value.sval = nullptr;
 	break;
     }
     return 0;
@@ -2857,7 +2857,7 @@ obj_get_arg_string(ABObj obj)
     {
 	return (istr_string(obj->info.action.arg_value.sval));
     }
-    return NULL;
+    return nullptr;
 }
 
 ABAttachment       *
@@ -2866,10 +2866,10 @@ obj_get_attachment(
 		   AB_COMPASS_POINT dir
 )
 {
-    ABAttachment       *attach = NULL;
+    ABAttachment       *attach = nullptr;
     verify_for_read(obj);
 
-    if (obj->attachments == NULL)
+    if (obj->attachments == nullptr)
     {
 	goto epilogue;
     }
@@ -2891,7 +2891,7 @@ obj_get_attachment(
     default:
 	if (util_get_verbosity() >= 3)
 	    fprintf(stderr, "obj_get_attachment: invalid direction\n");
-	attach = NULL;
+	attach = nullptr;
 	break;
     }
 
@@ -2906,7 +2906,7 @@ obj_get_attach_type(
 )
 {
     verify_for_read(obj);
-    if (obj->attachments == NULL)
+    if (obj->attachments == nullptr)
 	return AB_ATTACH_UNDEF;
 
     switch (dir)
@@ -2934,8 +2934,8 @@ obj_get_attach_value(
 )
 {
     verify_for_read(obj);
-    if (obj->attachments == NULL)
-	return NULL;
+    if (obj->attachments == nullptr)
+	return nullptr;
 
     switch (dir)
     {
@@ -2950,7 +2950,7 @@ obj_get_attach_value(
     default:
 	if (util_get_verbosity() > 0)
 	    fprintf(stderr, "obj_get_attach_value: invalid direction\n");
-	return NULL;
+	return nullptr;
 
     }
 }
@@ -2962,7 +2962,7 @@ obj_get_attach_offset(
 )
 {
     verify_for_read(obj);
-    if (obj->attachments == NULL)
+    if (obj->attachments == nullptr)
 	return 0;
 
     switch (dir)
@@ -2992,10 +2992,10 @@ obj_set_attachment(
 		   int offset
 )
 {
-    ABAttachment       *attachment = NULL;
+    ABAttachment       *attachment = nullptr;
     verify_for_write(obj);
 
-    if (obj->attachments == NULL)
+    if (obj->attachments == nullptr)
 	obj_init_attachments(obj);
 
     switch (dir)
@@ -3030,7 +3030,7 @@ obj_set_attach_type(
 )
 {
     verify_for_write(obj);
-    if (obj->attachments == NULL)
+    if (obj->attachments == nullptr)
 	obj_init_attachments(obj);
 
     switch (dir)
@@ -3059,7 +3059,7 @@ obj_set_attach_value(
 )
 {
     verify_for_write(obj);
-    if (obj->attachments == NULL)
+    if (obj->attachments == nullptr)
 	obj_init_attachments(obj);
 
     switch (dir)
@@ -3088,7 +3088,7 @@ obj_set_attach_offset(
 )
 {
     verify_for_write(obj);
-    if (obj->attachments == NULL)
+    if (obj->attachments == nullptr)
 	obj_init_attachments(obj);
 
     switch (dir)
@@ -3140,10 +3140,10 @@ obj_get_help_act_button(
     ABObj obj
 )
 {
-    ABObj               defaultb = NULL;
+    ABObj               defaultb = nullptr;
  
     if (!obj_is_window(obj))
-        return NULL;
+        return nullptr;
 
     verify_for_read(obj);
     return(obj->info.window.help_act_button);
@@ -3239,7 +3239,7 @@ obj_get_help_volume(
 		    ABObj obj
 )
 {
-    STRING              help_volume = NULL;
+    STRING              help_volume = nullptr;
     verify_for_read(obj);
 
     help_volume = istr_string(obj->help_volume);
@@ -3251,7 +3251,7 @@ obj_get_help_location(
 		      ABObj obj
 )
 {
-    STRING              help_location = NULL;
+    STRING              help_location = nullptr;
     verify_for_read(obj);
 
     help_location = istr_string(obj->help_location);
@@ -3263,7 +3263,7 @@ obj_get_help_text(
 		  ABObj obj
 )
 {
-    STRING              help_text = NULL;
+    STRING              help_text = nullptr;
     verify_for_read(obj);
 
     help_text = istr_string(obj->help_text);
@@ -3537,13 +3537,13 @@ obj_set_ok_label(ABObj obj, STRING label)
 STRING
 obj_get_ok_label( ABObj obj)
 {
-    STRING              label = NULL;
+    STRING              label = nullptr;
  
     verify_for_read(obj);
     if (!obj_is_file_chooser(obj))
     {
         member_error(obj, "ok_label");
-        return NULL;
+        return nullptr;
     }
     label = istr_string(obj->info.file_chooser.ok_label);
     return (label);
@@ -3566,13 +3566,13 @@ obj_set_action1_label(ABObj obj, STRING label)
 STRING
 obj_get_action1_label( ABObj obj)
 {
-    STRING              label = NULL;
+    STRING              label = nullptr;
 
     verify_for_read(obj);
     if (!obj_is_message(obj))
     {
         member_error(obj, "action1_label");
-        return NULL;
+        return nullptr;
     }
     label = istr_string(obj->info.message.action1_label);
     return (label);
@@ -3595,13 +3595,13 @@ obj_set_action2_label(ABObj obj, STRING label)
 STRING
 obj_get_action2_label( ABObj obj)
 {
-    STRING              label = NULL;
+    STRING              label = nullptr;
 
     verify_for_read(obj);
     if (!obj_is_message(obj))
     {
         member_error(obj, "action2_label");
-        return NULL;
+        return nullptr;
     }
     label = istr_string(obj->info.message.action2_label);
     return (label);
@@ -3624,13 +3624,13 @@ obj_set_action3_label(ABObj obj, STRING label)
 STRING
 obj_get_action3_label( ABObj obj)
 {
-    STRING              label = NULL;
+    STRING              label = nullptr;
 
     verify_for_read(obj);
     if (!obj_is_message(obj))
     {
         member_error(obj, "action3_label");
-        return NULL;
+        return nullptr;
     }
     label = istr_string(obj->info.message.action3_label);
     return (label);
@@ -3653,13 +3653,13 @@ obj_set_directory(ABObj obj, STRING dir)
 STRING 
 obj_get_directory( ABObj obj)
 { 
-    STRING              dir = NULL; 
+    STRING              dir = nullptr; 
  
     verify_for_read(obj);   
     if (!obj_is_file_chooser(obj))
     {
         member_error(obj, "directory");
-        return NULL;
+        return nullptr;
     }
     dir = istr_string(obj->info.file_chooser.directory);
     return (dir);
@@ -3735,13 +3735,13 @@ obj_set_msg_string(ABObj obj, STRING msg)
 STRING
 obj_get_msg_string( ABObj obj)
 {
-    STRING              msg = NULL;
+    STRING              msg = nullptr;
 
     verify_for_read(obj);
     if (!obj_is_message(obj))
     {
         member_error(obj, "message");
-        return NULL;
+        return nullptr;
     }
     msg = istr_string(obj->info.message.msg_string);
     return (msg);
@@ -4012,10 +4012,10 @@ obj_get_i18n_enabled( ABObj obj)
 int
 obj_get_num_win_children( ABObj obj)
 {
-    ABObj       	refObj = NULL;
+    ABObj       	refObj = nullptr;
     AB_OBJ_REF_TYPE	refType = AB_REF_UNDEF;
-    ABObjList		refs = NULL;
-    void        	*voidRefType = NULL;
+    ABObjList		refs = nullptr;
+    void        	*voidRefType = nullptr;
     int			numRefs = 0, i = 0;
     int			numWinChildren = 0;
 
@@ -4023,7 +4023,7 @@ obj_get_num_win_children( ABObj obj)
     if (!obj_is_base_win(obj))
 	return ERR;
 
-    if ((refs = obj_get_refs_to(obj)) != NULL)
+    if ((refs = obj_get_refs_to(obj)) != nullptr)
     {
 	numRefs = objlist_get_num_objs(refs);
 	for (i = 0; i < numRefs; i++)
@@ -4073,7 +4073,7 @@ obj_get_func_help_location(ABObj obj)
         return (istr_string(obj->info.action.location));
     }
     member_error(obj, "func_help_location");
-    return NULL;
+    return nullptr;
 }
 
 int
@@ -4100,7 +4100,7 @@ obj_get_func_help_volume(ABObj obj)
         return (istr_string(obj->info.action.volume_id));
     }
     member_error(obj, "func_help_volume");
-    return NULL;
+    return nullptr;
 }
 
 int

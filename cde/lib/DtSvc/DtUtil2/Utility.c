@@ -145,7 +145,7 @@ _DtVectorizeInPlace(
    }
 	
    /* The last pointer in the vector must be set to NULL. */
-   *next_string = NULL;
+   *next_string = nullptr;
    return (vector);
 }
 
@@ -195,11 +195,11 @@ static char *
 RemapSpecialDisplayName(
         char *dispInfo )
 {
-   static char * localHost = NULL;
+   static char * localHost = nullptr;
    char * name;
 
    _DtSvcProcessLock();
-   if (localHost == NULL)
+   if (localHost == nullptr)
    {
       localHost = XtMalloc((Cardinal)30);
       DtGetShortHostname(localHost, 30);

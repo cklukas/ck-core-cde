@@ -183,7 +183,7 @@ with tempfile.TemporaryDirectory(prefix="login-environment-", dir=os.environ["TM
     c, binary = Path(work) / "environment.c", Path(work) / "environment"
     c.write_text(header + body + main)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror", "-Wno-unused-parameter",
                     "-fsanitize=address,undefined", "-g", str(c), "-o", str(binary)], check=True)
     for mode in range(3):
         subprocess.run([str(binary), str(mode)], check=True)

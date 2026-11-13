@@ -1306,7 +1306,7 @@ bil_token_table_init(void)
     bil_token_table_inited = TRUE;
     for (i = 0; i < BIL_TOKEN_NUM_VALUES; ++i)
     {
-	bil_token_table[i] = NULL;
+	bil_token_table[i] = nullptr;
     }
 
     /* AB_BIL_UNDEF should not be here (returns NULL) */
@@ -1710,7 +1710,7 @@ bilP_token_to_string(BIL_TOKEN token)
     bil_token_table_check_init();
     if ((token < BIL_TOKEN_MIN_VALUE) || (token > BIL_TOKEN_MAX_VALUE))
     {
-	return NULL;
+	return nullptr;
     }
     return istr_string(bil_token_table[((int) token) - BIL_TOKEN_MIN_VALUE]);
 
@@ -1761,7 +1761,7 @@ STRING
 bilP_compass_point_to_string(AB_COMPASS_POINT compass_point)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_compass_point_to_token(compass_point))
     {
@@ -1774,7 +1774,7 @@ STRING
 bilP_text_type_to_string(AB_TEXT_TYPE text_type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_text_type_to_token(text_type))
     {
@@ -1787,7 +1787,7 @@ STRING
 bilP_container_type_to_string(AB_CONTAINER_TYPE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_container_type_to_token(type))
     {
@@ -1800,7 +1800,7 @@ STRING
 bilP_packing_to_string(AB_PACKING pack)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_packing_to_token(pack))
     {
@@ -1813,7 +1813,7 @@ STRING
 bilP_alignment_to_string(AB_ALIGNMENT align)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_alignment_to_token(align))
     {
@@ -1841,7 +1841,7 @@ STRING
 bilP_label_type_to_string(AB_LABEL_TYPE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_label_type_to_token(type))
     {
@@ -1854,7 +1854,7 @@ STRING
 bilP_group_type_to_string(AB_GROUP_TYPE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_group_type_to_token(type))
     {
@@ -1867,7 +1867,7 @@ STRING
 bilP_button_type_to_string(AB_BUTTON_TYPE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_button_type_to_token(type))
     {
@@ -1880,7 +1880,7 @@ STRING
 bilP_orientation_to_string(AB_ORIENTATION type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_orientation_to_token(type))
     {
@@ -1893,7 +1893,7 @@ STRING
 bilP_direction_to_string(AB_DIRECTION type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_direction_to_token(type))
     {
@@ -1906,7 +1906,7 @@ STRING
 bilP_item_type_to_string(AB_ITEM_TYPE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_item_type_to_token(type))
     {
@@ -1919,7 +1919,7 @@ STRING
 bilP_choice_type_to_string(AB_CHOICE_TYPE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_choice_type_to_token(type))
     {
@@ -1932,7 +1932,7 @@ STRING
 bilP_label_style_to_string(AB_LABEL_STYLE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_label_style_to_token(type))
     {
@@ -1945,7 +1945,7 @@ STRING
 bilP_func_type_to_string(AB_FUNC_TYPE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_func_type_to_token(type))
     {
@@ -1958,7 +1958,7 @@ STRING
 bilP_builtin_action_to_string(AB_BUILTIN_ACTION type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_builtin_action_to_token(type))
     {
@@ -1971,7 +1971,7 @@ STRING
 bilP_when_to_string(AB_WHEN type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_when_to_token(type))
     {
@@ -1984,7 +1984,7 @@ STRING
 bilP_arg_class_to_string(AB_ARG_CLASS argClass)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
     if (token = bilP_arg_class_to_token(argClass))
     {
 	string = (bilP_token_to_string(token));
@@ -1996,7 +1996,7 @@ STRING
 bilP_arg_type_to_string(AB_ARG_TYPE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_arg_type_to_token(type))
     {
@@ -2009,7 +2009,7 @@ STRING
 bilP_attachment_to_string(AB_ATTACH_TYPE type)
 {
     BIL_TOKEN           token;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_attachment_to_token(type))
     {
@@ -2076,7 +2076,7 @@ STRING
 bilP_initial_state_to_string(AB_OBJECT_STATE type)
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_initial_state_to_token(type))
 	string = bilP_token_to_string(token);
@@ -2129,7 +2129,7 @@ STRING
 bilP_border_frame_to_string(AB_LINE_TYPE type)
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_border_frame_to_token(type))
 	string = bilP_token_to_string(token);
@@ -2199,7 +2199,7 @@ STRING
 bilP_line_style_to_string(AB_LINE_TYPE line_style)
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_line_style_to_token(line_style))
 	string = bilP_token_to_string(token);
@@ -2252,7 +2252,7 @@ STRING
 bilP_arrow_style_to_string(AB_ARROW_STYLE arrow_style)
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_arrow_style_to_token(arrow_style))
 	string = bilP_token_to_string(token);
@@ -2301,7 +2301,7 @@ STRING
 bilP_selection_mode_to_string(AB_SELECT_TYPE selection_mode)
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_selection_mode_to_token(selection_mode))
         string = bilP_token_to_string(token);
@@ -2346,7 +2346,7 @@ STRING
 bilP_scrollbar_policy_to_string(AB_SCROLLBAR_POLICY sb_policy)
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_scrollbar_policy_to_token(sb_policy))
         string = bilP_token_to_string(token);
@@ -2404,7 +2404,7 @@ STRING
 bilP_msg_type_to_string(AB_MESSAGE_TYPE msg_type) 
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_msg_type_to_token(msg_type))
         string = bilP_token_to_string(token);
@@ -2454,7 +2454,7 @@ STRING
 bilP_file_type_mask_to_string(AB_FILE_TYPE_MASK ftm) 
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_file_type_mask_to_token(ftm))
         string = bilP_token_to_string(token);
@@ -2507,7 +2507,7 @@ STRING
 bilP_sessioning_method_to_string(AB_SESSIONING_METHOD sessioning_method) 
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
 
     if (token = bilP_sessioning_method_to_token(sessioning_method))
         string = bilP_token_to_string(token);
@@ -2556,7 +2556,7 @@ STRING
 bilP_tt_desktop_level_to_string(AB_TOOLTALK_LEVEL tt_level)
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
  
     if (token = bilP_tt_desktop_level_to_token(tt_level))
         string = bilP_token_to_string(token);
@@ -2613,7 +2613,7 @@ STRING
 bilP_default_button_to_string(AB_DEFAULT_BUTTON button)
 {
     BIL_TOKEN           token = AB_BIL_UNDEF;
-    STRING              string = NULL;
+    STRING              string = nullptr;
  
     if (token = bilP_default_button_to_token(button))
         string = bilP_token_to_string(token);

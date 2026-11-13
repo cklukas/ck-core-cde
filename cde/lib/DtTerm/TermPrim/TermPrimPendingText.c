@@ -133,7 +133,7 @@ _DtTermPrimPendingTextAppendChunk
         
         if (!newChunk)
         {
-            return(PendingTextChunk(NULL));
+            return(PendingTextChunk(nullptr));
         }
     }   
     /* 

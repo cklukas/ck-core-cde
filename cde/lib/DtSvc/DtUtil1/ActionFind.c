@@ -226,7 +226,7 @@ _DtActionDbDescription (  char *s )
 	int n;
 	XrmQuark	 tmpq;
 	DtDtsDbRecord	**act_rec;
-	DtDtsDbRecord	**last_rec_found = NULL;
+	DtDtsDbRecord	**last_rec_found = nullptr;
 	DtDtsDbDatabase	*act_db;
 
 	_DtSvcProcessLock();     
@@ -234,7 +234,7 @@ _DtActionDbDescription (  char *s )
 	myassert(s);
 	if ( !s ) {
 		_DtSvcProcessUnlock();
-		return NULL;
+		return nullptr;
 	}
 
 	tmpq = XrmStringToQuark(s);
@@ -263,7 +263,7 @@ _DtActionDbDescription (  char *s )
 	}
 
 	_DtSvcProcessUnlock();
-	return NULL;
+	return nullptr;
 }
 
 static char *
@@ -273,7 +273,7 @@ _DtActionMMDescription (  char *s )
 	DtShmBoson	tmpq;
 	DtDtsMMRecord	*act_rec;
 	DtDtsMMRecord	*act_rec_list;
-	DtDtsMMRecord	*last_rec_found = NULL;
+	DtDtsMMRecord	*last_rec_found = nullptr;
 	DtDtsMMDatabase	*act_db;
 	int		*start;
 
@@ -282,13 +282,13 @@ _DtActionMMDescription (  char *s )
 	myassert(s);
 	if ( !s ) {
 		_DtSvcProcessUnlock();
-		return NULL;
+		return nullptr;
 	}
 
 	if((tmpq = _DtDtsMMStringToBoson(s)) == -1)
 	{
 		_DtSvcProcessUnlock();
-		return(NULL);
+		return(nullptr);
 	}
 
 	act_rec_list = _DtDtsMMGetPtr(act_db->recordList);
@@ -315,7 +315,7 @@ _DtActionMMDescription (  char *s )
 				_DtACTION_DESCRIPTION);
 	}
 	_DtSvcProcessUnlock();
-	return NULL;
+	return nullptr;
 }
 
 /******************************************************************************
@@ -434,7 +434,7 @@ _DtActionDbLabel (  char *s )
 	XrmQuark 	tmpq;
 	char		*label;
 	DtDtsDbRecord	**act_rec;
-	DtDtsDbRecord	**last_rec_found = NULL;
+	DtDtsDbRecord	**last_rec_found = nullptr;
 	DtDtsDbDatabase	*act_db;
 
 	_DtSvcProcessLock();     
@@ -442,7 +442,7 @@ _DtActionDbLabel (  char *s )
 	myassert(s);
 	if ( !s ) {
 	        _DtSvcProcessUnlock();
-		return NULL;
+		return nullptr;
 	}
 
 	tmpq = XrmStringToQuark(s);
@@ -478,7 +478,7 @@ _DtActionDbLabel (  char *s )
 	 * We failed to find the desired action -- therefore return NULL.
 	 */
 	_DtSvcProcessUnlock();
-	return NULL;
+	return nullptr;
 }
 
 static char *
@@ -489,7 +489,7 @@ _DtActionMMLabel (  char *s )
 	char		*label;
 	DtDtsMMRecord	*act_rec;
 	DtDtsMMRecord	*act_rec_list;
-	DtDtsMMRecord	*last_rec_found = NULL;
+	DtDtsMMRecord	*last_rec_found = nullptr;
 	DtDtsMMDatabase	*act_db;
 	int		*start;
 
@@ -498,20 +498,20 @@ _DtActionMMLabel (  char *s )
 	myassert(s);
 	if ( !s ) {
 		_DtSvcProcessUnlock();
-		return NULL;
+		return nullptr;
 	}
 
 	if((tmpq = _DtDtsMMStringToBoson(s)) == -1)
 	{
 		_DtSvcProcessUnlock();
-		return(NULL);
+		return(nullptr);
 	}
 
 	act_rec_list = _DtDtsMMGetPtr(act_db->recordList);
 	start =  (int*)_DtDtsMMGetDbName(act_db,tmpq);
 	if ( !start ) {
 		_DtSvcProcessUnlock();
-		return NULL;
+		return nullptr;
 	}
 
 	for ( n = *start; n < act_db->recordCount; n++)
@@ -543,7 +543,7 @@ _DtActionMMLabel (  char *s )
 	 * We failed to find the desired action -- therefore return NULL.
 	 */
 	_DtSvcProcessUnlock();
-	return NULL;
+	return nullptr;
 }
 
 /******************************************************************************
@@ -578,7 +578,7 @@ _DtActionDbIcon (  char *s )
 	XrmQuark 	tmpq;
 	char		*iconString;
 	DtDtsDbRecord	**act_rec;
-	DtDtsDbRecord	**last_rec_found = NULL;
+	DtDtsDbRecord	**last_rec_found = nullptr;
 	DtDtsDbDatabase	*act_db;
 
 	_DtSvcProcessLock();     
@@ -586,7 +586,7 @@ _DtActionDbIcon (  char *s )
 	myassert(s);
 	if ( !s ) {
 		_DtSvcProcessUnlock();
-		return NULL;
+		return nullptr;
 	}
 
 	tmpq = XrmStringToQuark(s);
@@ -615,7 +615,7 @@ _DtActionDbIcon (  char *s )
 		 */
 		if ((iconString = 
 			_DtActGetDtsDbField(*last_rec_found,_DtACTION_ICON))
-		    != NULL ) {
+		    != nullptr ) {
 			_DtSvcProcessUnlock();
 			return XtNewString(iconString);
 		}
@@ -632,7 +632,7 @@ _DtActionDbIcon (  char *s )
 	 * We failed to find the desired action -- therefore return NULL.
 	 */
 	_DtSvcProcessUnlock();
-	return NULL;
+	return nullptr;
 }
 
 static char *
@@ -643,7 +643,7 @@ _DtActionMMIcon (  char *s )
 	char		*iconString;
 	DtDtsMMRecord	*act_rec;
 	DtDtsMMRecord	*act_rec_list;
-	DtDtsMMRecord	*last_rec_found = NULL;
+	DtDtsMMRecord	*last_rec_found = nullptr;
 	DtDtsMMDatabase	*act_db;
 	int		*start;
 
@@ -652,13 +652,13 @@ _DtActionMMIcon (  char *s )
 	myassert(s);
 	if ( !s ) {
 		_DtSvcProcessUnlock();
-		return NULL;
+		return nullptr;
 	}
 
 	if((tmpq = _DtDtsMMStringToBoson(s)) == -1)
 	{
 		_DtSvcProcessUnlock();
-		return(NULL);
+		return(nullptr);
 	}
 
 	act_rec_list = _DtDtsMMGetPtr(act_db->recordList);
@@ -685,7 +685,7 @@ _DtActionMMIcon (  char *s )
 		 */
 		if ((iconString = 
 			_DtActGetDtsMMField(last_rec_found,_DtACTION_ICON))
-		    != NULL ) {
+		    != nullptr ) {
 			_DtSvcProcessUnlock();
 			return iconString;
 		}
@@ -702,7 +702,7 @@ _DtActionMMIcon (  char *s )
 	 * We failed to find the desired action -- therefore return NULL.
 	 */
 	_DtSvcProcessUnlock();
-	return NULL;
+	return nullptr;
 }
 
 
@@ -746,7 +746,7 @@ _DtActGetDtsDbField ( DtDtsDbRecord *actRecp, char *name )
 	if ( !strcmp( name, _DtACTION_ARG_MODE ) )
 		return _DtACT_ARG_MODE_DFLT;
 
-	return NULL;
+	return nullptr;
 
 }
 
@@ -772,7 +772,7 @@ _DtActGetDtsMMField ( DtDtsMMRecord *actRecp, char *name )
 	if ( !strcmp( name, _DtACTION_ARG_MODE ) )
 		return strdup(_DtACT_ARG_MODE_DFLT);
 
-	return NULL;
+	return nullptr;
 
 }
 
@@ -791,10 +791,10 @@ _DtActDbChooseLabel(DtDtsDbRecord *rec)
 	char *label;
 
 	if ( !rec )
-		return NULL;
+		return nullptr;
 
 	if ((label=
-		_DtActGetDtsDbField(rec, _DtACTION_LABEL)) != NULL)
+		_DtActGetDtsDbField(rec, _DtACTION_LABEL)) != nullptr)
 		return XtNewString(label);
 
 	/*
@@ -810,10 +810,10 @@ _DtActMMChooseLabel(DtDtsMMRecord *rec)
 	char *label;
 
 	if ( !rec )
-		return NULL;
+		return nullptr;
 
 	label= _DtActGetDtsMMField(rec, _DtACTION_LABEL);
-	if (NULL != label)
+	if (nullptr != label)
 	{
 	    /*
 	     * Fix FMM Purify error.
@@ -857,7 +857,7 @@ _DtSortActionDb( void )
        *  which sorts fields lexically by name; by passing a
        *  NULL for the compare function address.
        */
-     _DtDtsDbFieldSort(actionDB->recordList[i], NULL);
+     _DtDtsDbFieldSort(actionDB->recordList[i], nullptr);
    }
 
 
@@ -1285,7 +1285,7 @@ static void
 _DtActMMGetCmdInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 {
 	char *s;
-	char *tmp = NULL;
+	char *tmp = nullptr;
 	int amtToAlloc;
 	static char *titleStr = "-title \"";
 
@@ -1313,7 +1313,7 @@ _DtActMMGetCmdInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 	_DtDtsMMSafeFree(s);
 
 	/* Get the (optional) CWD info */
-	if ( (s = _DtActGetDtsMMField(actRecp,_DtACTION_CWD)) != NULL)
+	if ( (s = _DtActGetDtsMMField(actRecp,_DtACTION_CWD)) != nullptr)
 	{
 		/*
                  * HOST:CWD syntax is no longer recognized here.
@@ -1327,7 +1327,7 @@ _DtActMMGetCmdInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 	_DtDtsMMSafeFree(s);
 
 	/* Get the (required) Exec String */
-	if ( (s = _DtActGetDtsMMField(actRecp,_DtACTION_EXEC_STRING)) != NULL)
+	if ( (s = _DtActGetDtsMMField(actRecp,_DtACTION_EXEC_STRING)) != nullptr)
 	{
 		ParseMessage(actp,s,&(actp->u.cmd.execString));
 	} else
@@ -1342,7 +1342,7 @@ _DtActMMGetCmdInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 	_DtDtsMMSafeFree(s);
 
 	/* Get the (optional) Exec Host List */
-	if ( (s = _DtActGetDtsMMField(actRecp,_DtACTION_EXEC_HOST)) != NULL)
+	if ( (s = _DtActGetDtsMMField(actRecp,_DtACTION_EXEC_HOST)) != nullptr)
 	{
 		ParseMessage(actp,s,&(actp->u.cmd.execHosts));
 		/*
@@ -1399,7 +1399,7 @@ _DtActMMGetTtMsgInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 		+ sizeof(_DtACTION_TTN_REP_TYPE)]; /* space for longest suffix */
 	int  i;
 	char *s;
-	char *tmp = NULL;
+	char *tmp = nullptr;
 
 	/* Get the (required) tt_class field */
 	s = _DtActGetDtsMMField(actRecp,_DtACTION_TT_CLASS);
@@ -1581,7 +1581,7 @@ _DtActDbGetDtNtfyInfo(
 			+ 3	/* enough space for three decimal digits */
 			+ sizeof(_DtACTION_DTN_VALUE)]; /* space for suffix */
 	char *s;
-	char *tmp = NULL;
+	char *tmp = nullptr;
 
 	/* Get the (required) dt_ngroup field */
 	if ( !(s = _DtActGetDtsDbField(actRecp,_DtACTION_DT_NGROUP)) )
@@ -1626,7 +1626,7 @@ _DtActDbGetDtReqInfo(
 			+ 3	/* enough space for three decimal digits */
 			+ sizeof(_DtACTION_DTN_VALUE)]; /* space for suffix */
 	char *s;
-	char *tmp = NULL;
+	char *tmp = nullptr;
 
 	/* Get the (required) dt_svc field */
 	if ( !(s = _DtActGetDtsDbField(actRecp,_DtACTION_DT_SVC)) )
@@ -1852,7 +1852,7 @@ _DtActionLocateRecord(
 	int		n;
 	DtDtsMMRecord	*act_rec;
 	DtDtsMMRecord	*act_rec_list;
-	DtDtsMMRecord	*last_rec_found = NULL;
+	DtDtsMMRecord	*last_rec_found = nullptr;
 	char		*tmp = 0;
 	int		*start;
 	
@@ -1863,7 +1863,7 @@ _DtActionLocateRecord(
 	start =  (int*)_DtDtsMMGetDbName(act_db,actQuark);
 	if(!start)
 	{
-		return(NULL);
+		return(nullptr);
 	}
 	for ( n = *start; n < act_db->recordCount; n++)
 	{
@@ -1906,7 +1906,7 @@ _DtActionLocateRecord(
 	/*
 	 * No match found
 	 */
-	return NULL;
+	return nullptr;
 }
 
 
@@ -2078,7 +2078,7 @@ ValidKeyword(
       if (*keywordId != NO_KEYWORD)
       {
          /* All done */
-         *prompt = NULL;
+         *prompt = nullptr;
          return(True);
       }
       else
@@ -2121,12 +2121,12 @@ _DtActionFindDBEntry(	ActionRequest *reqp,
 {
 	int numSearches = 0;
 	DtDtsMMRecord	*actRecp;
-	char		*mapto = NULL;
+	char		*mapto = nullptr;
 	long		mask = 0;
 	DtShmBoson	type = 0;
 	int		num = 0;
-	ActionPtr	actp = NULL;
-        char            *origLabel = NULL;
+	ActionPtr	actp = nullptr;
+        char            *origLabel = nullptr;
 	char		*tmp = 0;
 	DtDtsMMDatabase	*act_db;
 
@@ -2168,7 +2168,7 @@ _DtActionFindDBEntry(	ActionRequest *reqp,
 				SET_TOO_MANY_MAPS(reqp->mask);
 			_DtSvcProcessUnlock();
 			free(mapto);
-			return NULL;
+			return nullptr;
 		}
 	}
 	
@@ -2231,13 +2231,13 @@ _DtActionFindDBEntry(	ActionRequest *reqp,
 				myassert(0);	/* should never get here */
 				_DtFreeActionStruct(actp);
 				_DtSvcProcessUnlock();
-				return NULL;
+				return nullptr;
 				break;
 			default:	/* unkown action type */
 				myassert(0);	/* should never get here */
 				_DtFreeActionStruct(actp);
 				_DtSvcProcessUnlock();
-				return NULL;
+				return nullptr;
 				break;
 		}
 
@@ -2289,12 +2289,12 @@ ParseMessage(
    MsgComponent *newBlock;
 
    /* Initialize all fields */
-   msg->parsedMessage = NULL;
+   msg->parsedMessage = nullptr;
    msg->numMsgParts = 0;
-   msg->compiledMessage = NULL;
+   msg->compiledMessage = nullptr;
 
    /* Make sure there is a message to parse */
-   if ((start = string = str) == NULL)
+   if ((start = string = str) == nullptr)
       return;
 
 /* 
@@ -2309,10 +2309,10 @@ ParseMessage(
       if ((keywordStart = DtStrchr(start, '%')))
          keywordEnd = DtStrchr(keywordStart+1, '%');
       else
-         keywordEnd = NULL;
+         keywordEnd = nullptr;
 
       /* See if a keyword was found */
-      if ((keywordStart == NULL) || (keywordEnd == NULL))
+      if ((keywordStart == nullptr) || (keywordEnd == nullptr))
       {
          /*
           * No more keywords left; bundle the remaining string into
@@ -2327,7 +2327,7 @@ ParseMessage(
 
             newBlock = msg->parsedMessage + (msg->numMsgParts - 1);
             newBlock->precedingText = XtNewString(string);
-            newBlock->prompt = NULL;
+            newBlock->prompt = nullptr;
             newBlock->keyword = NO_KEYWORD;
             newBlock->argNum = NO_ARG;
             newBlock->mask = 0;
@@ -2362,7 +2362,7 @@ ParseMessage(
                newBlock->precedingText[keywordStart - string] = '\0';
             }
             else
-               newBlock->precedingText = NULL;
+               newBlock->precedingText = nullptr;
 
             newBlock->prompt = prompt;
             newBlock->keyword = keyword;

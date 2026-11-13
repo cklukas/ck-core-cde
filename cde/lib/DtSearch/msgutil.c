@@ -98,7 +98,7 @@
 #define MAX_LINELEN	77
 #define MS_misc		1
 
-CMPLL compare_llist = NULL;	/* global function pointer */
+CMPLL compare_llist = nullptr;	/* global function pointer */
 
 /************************************************/
 /*						*/
@@ -116,7 +116,7 @@ char           *nowstring (time_t * now)
     struct tm *	    time_ptr;
     _Xltimeparams   localtime_buf;
 
-    if (now == NULL) {
+    if (now == nullptr) {
 	now = &mynow;
 	time (now);
     }
@@ -143,12 +143,12 @@ void            free_llist (LLIST ** llhead)
 {
     LLIST          *next;
     LLIST          *ll = *llhead;
-    while (ll != NULL) {
+    while (ll != nullptr) {
 	next = ll->link;
 	free (ll);
 	ll = next;
     }
-    *llhead = NULL;
+    *llhead = nullptr;
     return;
 }  /* free_llist() */
 
@@ -173,9 +173,9 @@ void            free_llist (LLIST ** llhead)
 void            join_llists (LLIST ** mainlist, LLIST ** sublist)
 {
     LLIST         **pp;
-    for (pp = mainlist; *pp != NULL; pp = &((*pp)->link));
+    for (pp = mainlist; *pp != nullptr; pp = &((*pp)->link));
     *pp = *sublist;
-    *sublist = NULL;
+    *sublist = nullptr;
     return;
 }  /* join_llists() */
 
@@ -195,7 +195,7 @@ void            join_llists (LLIST ** mainlist, LLIST ** sublist)
 LLIST          *pop_llist (LLIST ** llistp)
 {
     LLIST          *first_node = *llistp;
-    if (first_node != NULL)
+    if (first_node != nullptr)
 	*llistp = first_node->link;
     return first_node;
 }  /* pop_llist() */
@@ -214,12 +214,12 @@ LLIST          *pop_llist (LLIST ** llistp)
 LLIST          *cutnode_llist (LLIST * node, LLIST ** llistp)
 {
     LLIST         **pp;	/* link addr pointing to current node */
-    for (pp = llistp; *pp != NULL; pp = &((*pp)->link)) {
+    for (pp = llistp; *pp != nullptr; pp = &((*pp)->link)) {
 	if (*pp == node)
 	    break;
     }
-    if (*pp == NULL)
-	return NULL;
+    if (*pp == nullptr)
+	return nullptr;
     *pp = node->link;	/* join the loose ends */
     return node;
 }  /* cutnode_llist() */
@@ -238,18 +238,18 @@ LLIST          *cutnode_llist (LLIST * node, LLIST ** llistp)
 static LLIST   *split_llist (LLIST * lst)
 {
     LLIST          *tail;
-    if (lst == NULL || lst->link)
+    if (lst == nullptr || lst->link)
 	return lst;
 
     tail = lst->link;
 
     /* advance 'tail' to end of list, and advance 'lst' only half as often */
-    while ((tail != NULL) && ((tail = tail->link) != NULL)) {
+    while ((tail != nullptr) && ((tail = tail->link) != nullptr)) {
 	lst = lst->link;
 	tail = tail->link;
     }
     tail = lst->link;
-    lst->link = NULL;
+    lst->link = nullptr;
     return tail;
 }  /* split_llist() */
 
@@ -262,11 +262,11 @@ static LLIST   *split_llist (LLIST * lst)
 /* Subroutine of sort_llist().  Merges two sorted LLISTs together. */
 static LLIST   *merge_llist (LLIST * l1, LLIST * l2)
 {
-    LLIST          *myqueue = NULL;
-    LLIST          *myend = NULL;
+    LLIST          *myqueue = nullptr;
+    LLIST          *myend = nullptr;
     LLIST          *mynext;
 
-    while ((l1 != NULL) && (l2 != NULL)) {
+    while ((l1 != nullptr) && (l2 != nullptr)) {
 	/*
 	 * Perform ENQUEUE function. Next item popped off a list is
 	 * the next one in sorted order. It is added to END of
@@ -275,8 +275,8 @@ static LLIST   *merge_llist (LLIST * l1, LLIST * l2)
 	 */
 	mynext = (compare_llist (l1, l2) < 0) ?
 	    pop_llist (&l1) : pop_llist (&l2);
-	mynext->link = NULL;
-	if (myqueue == NULL)
+	mynext->link = nullptr;
+	if (myqueue == nullptr)
 	    myqueue = mynext;
 	else
 	    myend->link = mynext;
@@ -284,9 +284,9 @@ static LLIST   *merge_llist (LLIST * l1, LLIST * l2)
     }
 
     /* attach the remainder of whichever list is left to the end of queue */
-    if (l1 != NULL)
+    if (l1 != nullptr)
 	myend->link = l1;
-    if (l2 != NULL)
+    if (l2 != nullptr)
 	myend->link = l2;
     return myqueue;
 }  /* merge_llist() */
@@ -317,7 +317,7 @@ static LLIST   *merge_llist (LLIST * l1, LLIST * l2)
 LLIST          *sort_llist (LLIST * lst)
 {
     LLIST          *lst2;
-    if ((lst == NULL) || (lst->link == NULL))
+    if ((lst == nullptr) || (lst->link == nullptr))
 	return lst;
     lst2 = split_llist (lst);
     return merge_llist (sort_llist (lst), sort_llist (lst2));
@@ -337,11 +337,11 @@ void           *austext_malloc (size_t size, char *location, void *ignore)
     static void    *ptr;
     char           *outofmem_msg;
 
-    if ((ptr = malloc (size)) != NULL)
+    if ((ptr = malloc (size)) != nullptr)
 	return ptr;
 
     ptr = ((aa_argv0) ? aa_argv0 : "");
-    if (location == NULL)
+    if (location == nullptr)
 	location = CATGETS(dtsearch_catd, MS_misc, 1, "<null>");
     outofmem_msg = CATGETS(dtsearch_catd, MS_misc, 3,
 	"*** %sOut of Memory at %s asking for %lu bytes! ***\n");
@@ -351,7 +351,7 @@ void           *austext_malloc (size_t size, char *location, void *ignore)
 	fprintf (aa_stderr, "%s\n", DtSearchGetMessages ());
     fflush (aa_stderr);
     DtSearchExit (43);
-    return NULL;
+    return nullptr;
 }  /* austext_malloc */
 
 /************************************************/

@@ -83,7 +83,7 @@ ok_callback(
   XtDestroyWidget(G_error_dialog);
   G_wait_on_input = FALSE;
   G_error_status = 0;
-  G_error_dialog = NULL;
+  G_error_dialog = nullptr;
   return;
 
 }
@@ -120,16 +120,16 @@ toggle_callback(
 
   if (w == G_toggle_main)
   {
-     if (G_error_dialog != NULL)
+     if (G_error_dialog != nullptr)
         XtVaSetValues(G_toggle_error,
                       XmNset, !G_ignore_errors,
-                      NULL);
+                      nullptr);
   }
   else
   {
      XtVaSetValues(G_toggle_main,
                    XmNset, !G_ignore_errors,
-                   NULL);
+                   nullptr);
   }
   return;
 }
@@ -160,8 +160,8 @@ create_error_dialog(
    Position x, y;
 
    static ActionAreaItem copy_action_items[] = {
-     {"Continue",    6, 6, ok_callback,           NULL},
-     {"Cancel Copy", 6, 7, error_cancel_callback, NULL},
+     {"Continue",    6, 6, ok_callback,           nullptr},
+     {"Cancel Copy", 6, 7, error_cancel_callback, nullptr},
      {"Help",        6, 4, help_callback,         (XtPointer) HELP_DIR_ERROR},
    };
 
@@ -172,8 +172,8 @@ create_error_dialog(
   };
 
    static ActionAreaItem move_action_items[] = {
-     {"Continue",    6, 6, ok_callback,           NULL},
-     {"Cancel Move", 6, 8, error_cancel_callback, NULL},
+     {"Continue",    6, 6, ok_callback,           nullptr},
+     {"Cancel Move", 6, 8, error_cancel_callback, nullptr},
      {"Help",        6, 4, help_callback,         (XtPointer) HELP_DIR_ERROR},
    };
 
@@ -204,7 +204,7 @@ create_error_dialog(
                                xmFrameWidgetClass, G_error_dialog,
                                XmNshadowThickness, 3,
                                XmNshadowType, XmSHADOW_ETCHED_IN,
-                               NULL);
+                               nullptr);
 
 
    /* Create the Manager Widget, form, for the copy error dialog */
@@ -213,13 +213,13 @@ create_error_dialog(
                               outerFrame,
                               XmNverticalSpacing,   VERTICAL_SPACING,
                               XmNhorizontalSpacing, HORIZONTAL_SPACING,
-                              NULL);
+                              nullptr);
 
    /* create the action area of the Error Dialog */
    if (G_move)
-      action_area = Create_Action_Area(form, moveActions, NULL);
+      action_area = Create_Action_Area(form, moveActions, nullptr);
    else
-      action_area = Create_Action_Area(form, copyActions, NULL);
+      action_area = Create_Action_Area(form, copyActions, nullptr);
 
    /* create the separator widget */
    separator  =  XtVaCreateManagedWidget("separator",
@@ -229,7 +229,7 @@ create_error_dialog(
                               XmNbottomWidget,      action_area,
                               XmNleftAttachment,    XmATTACH_FORM,
                               XmNrightAttachment,   XmATTACH_FORM,
-                              NULL);
+                              nullptr);
 
 
 
@@ -253,7 +253,7 @@ create_error_dialog(
                               XmNbottomAttachment, XmATTACH_WIDGET,
                               XmNbottomWidget,     separator,
                               XmNleftAttachment,   XmATTACH_FORM,
-                              NULL);
+                              nullptr);
 
    /* Create the first error message label */
    sprintf(buf,GETMESSAGE(4, 1, "Error %s\n%s"), op, filename);
@@ -267,7 +267,7 @@ create_error_dialog(
                               XmNleftWidget,      icon,
                               XmNrightAttachment, XmATTACH_FORM,
                               XmNalignment,       XmALIGNMENT_BEGINNING,
-                              NULL);
+                              nullptr);
    XmStringFree(xm_string);
 
    /* Create the second error message label */
@@ -283,7 +283,7 @@ create_error_dialog(
                               XmNleftWidget,       icon,
                               XmNrightAttachment,  XmATTACH_FORM,
                               XmNalignment,        XmALIGNMENT_BEGINNING,
-                              NULL);
+                              nullptr);
    XmStringFree(xm_string);
 
    /* create the toggle button */
@@ -300,8 +300,8 @@ create_error_dialog(
                               XmNbottomAttachment, XmATTACH_WIDGET,
                               XmNbottomWidget,     separator,
                               XmNalignment,        XmALIGNMENT_BEGINNING,
-                              NULL);
-   XtAddCallback(G_toggle_error, XmNvalueChangedCallback, toggle_callback, NULL);
+                              nullptr);
+   XtAddCallback(G_toggle_error, XmNvalueChangedCallback, toggle_callback, nullptr);
    XmStringFree(xm_string);
    /* set initial keyborad focus to the action button area */
    XtSetArg (args[0], XmNinitialFocus, action_area);

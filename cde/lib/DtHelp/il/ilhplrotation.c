@@ -91,9 +91,9 @@ static short Build_Mult_Table(OPERAND *table[INTER_LEVELS])
 
     /* Allocate Memory */
     for (i = 0; i < INTER_LEVELS; i++) {
-        if ((table[i] = (OPERAND *) malloc(511*sizeof(OPERAND)))==NULL) {
+        if ((table[i] = (OPERAND *) malloc(511*sizeof(OPERAND)))==nullptr) {
             for (j = 0; j < i; j++) {
-                free(table[j]); table[j] = NULL;
+                free(table[j]); table[j] = nullptr;
             }
             return(-1);
         }
@@ -125,9 +125,9 @@ static void Free_Mult_Table(OPERAND *table[INTER_LEVELS])
 
     /* Shift then free all table[j] pointers */
     for (i = 0; i < INTER_LEVELS; i++) {
-        if (table[i] != NULL) {
+        if (table[i] != nullptr) {
             free(table[i] - 255);
-            table[i] = NULL;
+            table[i] = nullptr;
         }
     }
 }
@@ -143,7 +143,7 @@ static float r_angle;                  /* rotation angle */
 static float r_sinA, r_cosA;           /* sin, cos of rotation angle */
 static float r_tanA, r_cotA;           /* tan, cotan of rotation angle */
 static QUADRANT_TYPE r_quadrant;       /* which quadrant that r_angle belongs to */
-static DATA_IN_PTR r_buf = NULL;       /* contains image data(RGB interl. if color)*/
+static DATA_IN_PTR r_buf = nullptr;       /* contains image data(RGB interl. if color)*/
 static DATA_IN_PTR r_data;             /* points to 1st pixel in r_buf */
 static OPERAND r_next_row_out;         /* next output row number */
 static OPERAND r_next_row_in ;         /* next  input row number */
@@ -155,8 +155,8 @@ static OPERAND *r_mul_tbls[INTER_LEVELS];
 
 static void Free_All_Buffers()
 {
-    if (r_buf != NULL) free(r_buf);
-    r_buf = NULL;
+    if (r_buf != nullptr) free(r_buf);
+    r_buf = nullptr;
 
     if (r_mul_tbls_valid) {
         Free_Mult_Table(r_mul_tbls);
@@ -293,9 +293,9 @@ DATA_IN_PTR _il_Rotate_Image_Begin(
             input_bytes*sizeof(DATA_IN));
         r_data = r_buf + ((input_w+4)*2 + 2)*input_bytes;
     }
-    if (r_buf == NULL) {
+    if (r_buf == nullptr) {
         Free_All_Buffers();
-        return(NULL);
+        return(nullptr);
     }
 
     r_input_w = input_w; r_input_h = input_h;

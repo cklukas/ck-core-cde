@@ -299,15 +299,15 @@ SmXrmSubtractDatabase(
  /*
   * return if source or target db not specified
   */
-  if (source_db == NULL || target_db == NULL)
-    return NULL;
+  if (source_db == nullptr || target_db == nullptr)
+    return nullptr;
 
  /*
   * set up state
   */
   state.source_db = source_db;
   state.target_db = target_db;
-  state.result_db = NULL;
+  state.result_db = nullptr;
 
  /*
   * populate result db by looping through target and

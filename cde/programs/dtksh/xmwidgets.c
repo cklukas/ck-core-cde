@@ -140,7 +140,7 @@ resfixup_t mainwindow_fixups[] = {
         { "menuBar", XmCMenuBar, XtRWidget, sizeof(Widget) },
         { "commandWindow", XmCCommandWindow, XtRWidget, sizeof(Widget) },
         { "messageWindow", XmCMessageWindow, XtRWidget, sizeof(Widget) },
-        { NULL }
+        { nullptr }
 };
 
 
@@ -153,7 +153,7 @@ resfixup_t helpDialogs_fixups[] = {
         { "scrollBarDisplayPolicy", XmCScrollBarDisplayPolicy,
                "HelpScrollBarDisplayPolicy", 
                sizeof(char) },
-        { NULL }
+        { nullptr }
 };
 
 
@@ -166,23 +166,23 @@ resfixup_t list_fixups[] = {
         { "items", XmCItems, "ListItems", sizeof(XmStringTable) },
         { "selectedItems", XmCSelectedItems, "SelectedListItems", 
                sizeof(XmStringTable) },
-        { NULL }
+        { nullptr }
 };
 
 resfixup_t command_fixups[] = {
         { "historyItems", XmCItems, "SelBoxItems", sizeof(XmStringTable) },
-        { NULL }
+        { nullptr }
 };
 
 resfixup_t selbox_fixups[] = {
         { "listItems", XmCItems, "SelBoxItems", sizeof(XmStringTable) },
-        { NULL }
+        { nullptr }
 };
 
 resfixup_t fileselbox_fixups[] = {
         { "fileListItems", XmCItems, "FSFileItems", sizeof(XmStringTable) },
         { "dirListItems", XmCItems, "FSDirItems", sizeof(XmStringTable) },
-        { NULL }
+        { nullptr }
 };
 
 
@@ -193,7 +193,7 @@ resfixup_t fileselbox_fixups[] = {
  */
 resfixup_t wmshell_fixups[] = {
         { "winGravity", XtCWinGravity, "XWinGravity", sizeof(int) },
-        { NULL }
+        { nullptr }
 };
 
 resfixup_t vendor_fixups[] = {
@@ -201,7 +201,7 @@ resfixup_t vendor_fixups[] = {
         { "mwmDecorations", XmCMwmDecorations, "MWMDecoration", sizeof(long) },
         { "mwmFunctions", XmCMwmFunctions, "MWMFunctions", sizeof(long) },
         { "mwmInputMode", XmCMwmInputMode, "MWMInputMode", sizeof(long) },
-        { NULL }
+        { nullptr }
 };
 
 /*
@@ -210,7 +210,7 @@ resfixup_t vendor_fixups[] = {
  */
 resfixup_t panedwin_con_fixups[] = {
         {"positionIndex", XmCPositionIndex, "PanedWinPosIndex", sizeof(short)},
-        { NULL }
+        { nullptr }
 };
 
 
@@ -221,52 +221,52 @@ classtab_t C[] = {
 	 * because the initialize code below depends on
 	 * the order.
 	 */
-	{ "XmArrowButton",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmArrowButtonGadget",  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmBulletinBoard",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmCascadeButton",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmCascadeButtonGadget", NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmComboBox",	          NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmCommand",	          NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmDialogShell",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmDrawingArea",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmDrawnButton",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmFileSelectionBox",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmForm",	          NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmFrame",	          NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmLabel",	          NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmLabelGadget",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmList",	          NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmMainWindow",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmMenuShell",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmMessageBox",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmPanedWindow",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmPushButton",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmPushButtonGadget",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmRowColumn",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmScale",	          NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmScrollBar",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmScrolledWindow",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmSelectionBox",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmSeparator",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmSeparatorGadget",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmSimpleSpinBox",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmTearOffButton",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmText",	          NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmTextField",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmToggleButton",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "XmToggleButtonGadget", NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "ApplicationShell",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "OverrideShell",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "Shell",	   	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "TopLevelShell",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "TransientShell",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "VendorShell",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "WMShell",		  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "DtHelpDialog",         NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "DtHelpQuickDialog",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ "DtPrintSetupBox",	  NULL, NULL, NULL, NULL, NULL, NULL},
-	{ NULL }
+	{ "XmArrowButton",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmArrowButtonGadget",  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmBulletinBoard",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmCascadeButton",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmCascadeButtonGadget", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmComboBox",	          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmCommand",	          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmDialogShell",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmDrawingArea",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmDrawnButton",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmFileSelectionBox",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmForm",	          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmFrame",	          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmLabel",	          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmLabelGadget",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmList",	          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmMainWindow",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmMenuShell",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmMessageBox",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmPanedWindow",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmPushButton",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmPushButtonGadget",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmRowColumn",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmScale",	          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmScrollBar",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmScrolledWindow",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmSelectionBox",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmSeparator",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmSeparatorGadget",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmSimpleSpinBox",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmTearOffButton",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmText",	          nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmTextField",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmToggleButton",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "XmToggleButtonGadget", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "ApplicationShell",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "OverrideShell",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "Shell",	   	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "TopLevelShell",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "TransientShell",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "VendorShell",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "WMShell",		  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "DtHelpDialog",         nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "DtHelpQuickDialog",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ "DtPrintSetupBox",	  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr},
+	{ nullptr }
 };
 
 void
@@ -275,7 +275,7 @@ toolkit_init_widgets( void )
 	int i, n = 0;
 	struct namnod *nam;
 
-	if (C[0].class != NULL)
+	if (C[0].class != nullptr)
 		return;
 	/*
 	 * NOTE: keep these in alphabetical order because
@@ -387,8 +387,8 @@ setArrowDisciplines( void )
    info[1].discipline = (void *)&arrowDisc;
    info[2].callbackName = strdup(XmNdisarmCallback);
    info[2].discipline = (void *)&arrowDisc;
-   info[3].callbackName = NULL;
-   info[3].discipline = NULL;
+   info[3].callbackName = nullptr;
+   info[3].discipline = nullptr;
    return(info);
 }
 
@@ -399,8 +399,8 @@ setComboDisciplines( void )
 
    info[0].callbackName = strdup(XmNselectionCallback);
    info[0].discipline = (void *)&comboDisc;
-   info[1].callbackName = NULL;
-   info[1].discipline = NULL;
+   info[1].callbackName = nullptr;
+   info[1].discipline = nullptr;
    return(info);
 }
 
@@ -413,8 +413,8 @@ setCmdDisciplines( void )
    info[0].discipline = (void *)&cmdDisc;
    info[1].callbackName = strdup(XmNcommandEnteredCallback);
    info[1].discipline = (void *)&cmdDisc;
-   info[2].callbackName = NULL;
-   info[2].discipline = NULL;
+   info[2].callbackName = nullptr;
+   info[2].discipline = nullptr;
    return(info);
 }
 
@@ -430,8 +430,8 @@ setDAreaDisciplines( void )
    info[1].discipline = (void *)&dAreaDisc;
    info[2].callbackName = strdup(XmNresizeCallback);
    info[2].discipline = (void *)&dAreaDisc;
-   info[3].callbackName = NULL;
-   info[3].discipline = NULL;
+   info[3].callbackName = nullptr;
+   info[3].discipline = nullptr;
    return(info);
 }
 
@@ -450,8 +450,8 @@ setDBtnDisciplines( void )
    info[3].discipline = (void *)&dbtnDisc;
    info[4].callbackName = strdup(XmNresizeCallback);
    info[4].discipline = (void *)&dbtnDisc;
-   info[5].callbackName = NULL;
-   info[5].discipline = NULL;
+   info[5].callbackName = nullptr;
+   info[5].discipline = nullptr;
    return(info);
 }
 
@@ -466,8 +466,8 @@ setDtPrintSetupProcDisciplines( void )
 	 */
    info[0].callbackName = strdup(DtRPrintSetupProc);
    info[0].discipline = (void *)&dtPrintDisc;
-   info[1].callbackName = NULL;
-   info[1].discipline = NULL;
+   info[1].callbackName = nullptr;
+   info[1].discipline = nullptr;
    return(info);
 }
 
@@ -484,8 +484,8 @@ setFSelDisciplines( void )
    info[2].discipline = (void *)&fselDisc;
    info[3].callbackName = strdup(XmNokCallback);
    info[3].discipline = (void *)&fselDisc;
-   info[4].callbackName = NULL;
-   info[4].discipline = NULL;
+   info[4].callbackName = nullptr;
+   info[4].discipline = nullptr;
    return(info);
 }
 
@@ -504,8 +504,8 @@ setListDisciplines( void )
    info[3].discipline = (void *)&listDisc;
    info[4].callbackName = strdup(XmNsingleSelectionCallback);
    info[4].discipline = (void *)&listDisc;
-   info[5].callbackName = NULL;
-   info[5].discipline = NULL;
+   info[5].callbackName = nullptr;
+   info[5].discipline = nullptr;
    return(info);
 }
 
@@ -520,8 +520,8 @@ setPBtnDisciplines( void )
    info[1].discipline = (void *)&pbtnDisc;
    info[2].callbackName = strdup(XmNdisarmCallback);
    info[2].discipline = (void *)&pbtnDisc;
-   info[3].callbackName = NULL;
-   info[3].discipline = NULL;
+   info[3].callbackName = nullptr;
+   info[3].discipline = nullptr;
    return(info);
 }
 
@@ -540,8 +540,8 @@ setRCDisciplines( void )
    info[3].discipline = (void *)&rcDisc;
    info[4].callbackName = strdup(XmNunmapCallback);
    info[4].discipline = (void *)&rcDisc;
-   info[5].callbackName = NULL;
-   info[5].discipline = NULL;
+   info[5].callbackName = nullptr;
+   info[5].discipline = nullptr;
    return(info);
 }
 
@@ -554,8 +554,8 @@ setScaleDisciplines( void )
    info[0].discipline = (void *)&scaleDisc;
    info[1].callbackName = strdup(XmNvalueChangedCallback);
    info[1].discipline = (void *)&scaleDisc;
-   info[2].callbackName = NULL;
-   info[2].discipline = NULL;
+   info[2].callbackName = nullptr;
+   info[2].discipline = nullptr;
    return(info);
 }
 
@@ -580,8 +580,8 @@ setSBarDisciplines( void )
    info[6].discipline = (void *)&sbarDisc;
    info[7].callbackName = strdup(XmNvalueChangedCallback);
    info[7].discipline = (void *)&sbarDisc;
-   info[8].callbackName = NULL;
-   info[8].discipline = NULL;
+   info[8].callbackName = nullptr;
+   info[8].discipline = nullptr;
    return(info);
 }
 
@@ -592,8 +592,8 @@ setSWinDisciplines( void )
 
    info[0].callbackName = strdup(XmNtraverseObscuredCallback);
    info[0].discipline = (void *)&swinDisc;
-   info[1].callbackName = NULL;
-   info[1].discipline = NULL;
+   info[1].callbackName = nullptr;
+   info[1].discipline = nullptr;
    return(info);
 }
 
@@ -610,8 +610,8 @@ setSBoxDisciplines( void )
    info[2].discipline = (void *)&sboxDisc;
    info[3].callbackName = strdup(XmNokCallback);
    info[3].discipline = (void *)&sboxDisc;
-   info[4].callbackName = NULL;
-   info[4].discipline = NULL;
+   info[4].callbackName = nullptr;
+   info[4].discipline = nullptr;
    return(info);
 }
 
@@ -638,8 +638,8 @@ setTextDisciplines( void )
    info[7].discipline = (void *)&textDisc;
    info[8].callbackName = strdup(XmNvalueChangedCallback);
    info[8].discipline = (void *)&dftDisc;
-   info[9].callbackName = NULL;
-   info[9].discipline = NULL;
+   info[9].callbackName = nullptr;
+   info[9].discipline = nullptr;
    return(info);
 }
 
@@ -654,8 +654,8 @@ setTBtnDisciplines( void )
    info[1].discipline = (void *)&tbtnDisc;
    info[2].callbackName = strdup(XmNvalueChangedCallback);
    info[2].discipline = (void *)&tbtnDisc;
-   info[3].callbackName = NULL;
-   info[3].discipline = NULL;
+   info[3].callbackName = nullptr;
+   info[3].discipline = nullptr;
    return(info);
 }
 
@@ -668,7 +668,7 @@ setHelpDisciplines( void )
    info[0].discipline = (void *)&helpDisc;
    info[1].callbackName = strdup(DtNcloseCallback);
    info[1].discipline = (void *)&helpDisc;
-   info[2].callbackName = NULL;
-   info[2].discipline = NULL;
+   info[2].callbackName = nullptr;
+   info[2].discipline = nullptr;
    return(info);
 }

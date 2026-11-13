@@ -153,7 +153,7 @@ main (int argc,
     sprintf (outname, "%s", mname);
     if (strrchr(mname,'/'))
       mname = strrchr(mname,'/') + 1;
-    if ((outfp = fopen (outname, "w")) == NULL) {
+    if ((outfp = fopen (outname, "w")) == nullptr) {
       fprintf (stderr, "mkcatdefs: Cannot open %s\n", outname);
       exit (1);
     } else  {
@@ -193,13 +193,13 @@ main (int argc,
       descfile = stdin;       /* input from stdin if no source files */
       mkcatdefs(inname);
     } else	{
-      if ((descfile = fopen(inname,"r")) == NULL) {
+      if ((descfile = fopen(inname,"r")) == nullptr) {
 	fprintf (stderr, "mkcatdefs: Cannot open %s\n", inname);
 	errflg = 1;
       } else  {
 	mkcatdefs (inname);
 	fclose(descfile);
-	descfile = NULL;
+	descfile = nullptr;
       }
     }
   }

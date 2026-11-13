@@ -69,9 +69,9 @@ ABObj
 obj_create(AB_OBJECT_TYPE obj_type, ABObj parent)
 {
 	ABObj obj= (ABObj)util_malloc(sizeof(AB_OBJ));
-	if (obj == NULL)
+	if (obj == nullptr)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	/*
@@ -100,16 +100,16 @@ static ABObj
 objP_create_dup_or_ref(ABObj obj, BOOL createRef)
 {
     ABObj	newObj= (ABObj)util_malloc(sizeof(AB_OBJ));
-    if (newObj == NULL)
+    if (newObj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     *newObj= *obj;
-    newObj->parent= NULL;
-    newObj->next_sibling= NULL;
-    newObj->prev_sibling= NULL;
-    newObj->first_child= NULL;
+    newObj->parent= nullptr;
+    newObj->next_sibling= nullptr;
+    newObj->prev_sibling= nullptr;
+    newObj->first_child= nullptr;
 
     newObj->name= istr_dup(obj->name);
 #ifdef DEBUG
@@ -120,16 +120,16 @@ objP_create_dup_or_ref(ABObj obj, BOOL createRef)
     newObj->fg_color= istr_dup(obj->fg_color);
     newObj->label= istr_dup(obj->label);
     newObj->menu_name= istr_dup(obj->menu_name);
-    newObj->attachments= NULL;
-    newObj->part_of= NULL;
+    newObj->attachments= nullptr;
+    newObj->part_of= nullptr;
     newObj->ref_to = (createRef? obj : obj->ref_to);
 
-    newObj->ui_handle= NULL;
+    newObj->ui_handle= nullptr;
     newObj->class_name= istr_dup(obj->class_name);
-    newObj->ui_args= NULL;
+    newObj->ui_args= nullptr;
     obj_set_is_selected(newObj, FALSE);
-    newObj->browser_data= NULL;
-    newObj->projwin_data= NULL;
+    newObj->browser_data= nullptr;
+    newObj->projwin_data= nullptr;
 
     if (obj_is_action(newObj))
     {
@@ -200,10 +200,10 @@ objP_create_dup_or_ref(ABObj obj, BOOL createRef)
 static ABObj
 objP_tree_create_dup_or_ref(ABObj tree, BOOL createRef)
 {
-    ABObj	dupTree = NULL;
+    ABObj	dupTree = nullptr;
 
     dupTree = objP_create_dup_or_ref(tree, createRef);
-    if (dupTree != NULL)
+    if (dupTree != nullptr)
     {
         objP_dup_or_ref_child_trees(dupTree, tree, createRef);
     }
@@ -216,14 +216,14 @@ objP_dup_or_ref_child_trees(ABObj dupRoot, ABObj orgRoot, BOOL createRef)
 {
     int		return_value = 0;
     int		rc = 0;			/* return code */
-    ABObj	orgChild = NULL;
-    ABObj	dupChild = NULL;
+    ABObj	orgChild = nullptr;
+    ABObj	dupChild = nullptr;
 
     for (orgChild = orgRoot->first_child; 
-	orgChild != NULL; orgChild = orgChild->next_sibling)
+	orgChild != nullptr; orgChild = orgChild->next_sibling)
     {
 	dupChild = objP_create_dup_or_ref(orgChild, createRef);
-	if (dupChild == NULL)
+	if (dupChild == nullptr)
 	{
 	    return_value = -1;
 	    goto epilogue;
@@ -235,7 +235,7 @@ objP_dup_or_ref_child_trees(ABObj dupRoot, ABObj orgRoot, BOOL createRef)
     }
 
     for (orgChild = orgRoot->first_child, dupChild = dupRoot->first_child;
-	 (orgChild != NULL) && (dupChild != NULL);
+	 (orgChild != nullptr) && (dupChild != nullptr);
 	 orgChild = orgChild->next_sibling, dupChild= dupChild->next_sibling)
     {
 	rc = objP_dup_or_ref_child_trees(dupChild, orgChild, createRef);
@@ -367,14 +367,14 @@ obj_destroy_one_impl(ABObj *objPtr)
      * It's officially destroyed, at this point. It just doesn't know it, yet.
      * It won't show up in traversal, find_by_name(), et cetera
      */
-    if (obj != NULL)
+    if (obj != nullptr)
     {
         obj_clear_impl_flags(obj, ObjFlagBeingDestroyed);
         obj_set_impl_flags(obj, ObjFlagDestroyed);
     }
 
 epilogue:
-    obj = NULL;			/* it's always set to NULL */
+    obj = nullptr;			/* it's always set to NULL */
     return return_value;
 #undef obj
 }
@@ -398,7 +398,7 @@ obj_destroy_impl(ABObj *treePtr)
 
     objP_notify_pop_mode();
 
-    tree = NULL;		/* it's toast! */
+    tree = nullptr;		/* it's toast! */
     return iReturn;
 #undef tree
 }
@@ -412,9 +412,9 @@ objP_tree_do_destroy(ABObj obj)
 {
     int		iReturn= 0;
     int 	iRC= 0;	/* return code */
-    ABObj	doomedChild = NULL;
+    ABObj	doomedChild = nullptr;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
         goto epilogue;
     }
@@ -459,7 +459,7 @@ objP_actually_destroy_one_impl(ABObj *objPtr)
 #define obj (*objPtr)
     int		iReturn= 0;
     int		iRC= 0;		/* return code */
-    ABObj	parent= NULL;
+    ABObj	parent= nullptr;
 
     /*
      * don't send events!
@@ -468,7 +468,7 @@ objP_actually_destroy_one_impl(ABObj *objPtr)
         objP_notify_clear_mode(OBJEV_MODE_SEND_ALLOW_EVS);
         objP_notify_clear_mode(OBJEV_MODE_SEND_NOTIFY_EVS);
 
-        if ((parent= obj_get_parent(obj)) != NULL)
+        if ((parent= obj_get_parent(obj)) != nullptr)
         {
 	    if ((iRC = obj_move_children(parent, obj)) < 0)
 	    {
@@ -490,13 +490,13 @@ objP_actually_destroy_one_impl(ABObj *objPtr)
          */
 	obj->impl_flags= ObjFlagAlreadyFreedValue;
         objP_free_mem(obj);	/* actually destroy it! */
-	obj = NULL;	/* objP_free_mem() does this, but I'm going to set */
+	obj = nullptr;	/* objP_free_mem() does this, but I'm going to set */
 			/* it to NULL, again. */
 
     objP_notify_pop_mode();
 
 epilogue:
-    obj = NULL;		/* forget we ever saw it... */
+    obj = nullptr;		/* forget we ever saw it... */
     return iReturn;
 #undef obj
 }
@@ -505,7 +505,7 @@ epilogue:
 static int
 objP_remove_all_refs_to(ABObj obj)
 {
-    return obj_replace(obj, NULL);
+    return obj_replace(obj, nullptr);
 }
 
 
@@ -519,7 +519,7 @@ objP_free_mem_impl(ABObj *objPtr)
 
     obj_destruct(obj);
     util_free(obj);
-    obj= NULL;
+    obj= nullptr;
 
     return 0;
 #undef obj

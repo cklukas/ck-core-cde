@@ -74,15 +74,15 @@ externaldef(restraintclassrec) RestraintClassRec restraintClassRec =
       (WidgetClass) &xmManagerClassRec, /* superclass	 	 */
       "Restraint",			/* class_name	         */	
       sizeof(RestraintRec),		/* widget_size           */	
-      NULL,				/* class_initialize      */    
-      NULL, 			        /* class_part_initialize */
+      nullptr,				/* class_initialize      */    
+      nullptr, 			        /* class_part_initialize */
       False,                            /* class_inited          */	
       Initialize,                       /* initialize	         */
-      NULL,                             /* initialize_hook       */
+      nullptr,                             /* initialize_hook       */
       Realize,				/* realize	         */	
-      NULL,				/* actions               */	
+      nullptr,				/* actions               */	
       0,				/* num_actions    	 */	
-      NULL, 	                        /* resources	         */	
+      nullptr, 	                        /* resources	         */	
       0,				/* num_resources         */	
       NULLQUARK,                        /* xrm_class	         */	
       True,                             /* compress_motion       */	
@@ -91,18 +91,18 @@ externaldef(restraintclassrec) RestraintClassRec restraintClassRec =
       False,                            /* visible_interest      */	
       0,				/* destroy               */	
       Resize,			        /* resize                */	
-      NULL,			        /* expose                */	
-      NULL,				/* set_values	         */	
-      NULL,                             /* set_values_hook       */
+      nullptr,			        /* expose                */	
+      nullptr,				/* set_values	         */	
+      nullptr,                             /* set_values_hook       */
       XtInheritSetValuesAlmost,         /* set_values_almost     */
-      NULL,                             /* get_values_hook       */
-      NULL,                             /* accept_focus	         */	
+      nullptr,                             /* get_values_hook       */
+      nullptr,                             /* accept_focus	         */	
       XtVersion,                        /* version               */
-      NULL,                             /* callback private      */
-      NULL,				/* tm_table              */
-      NULL,                             /* query_geometry        */
-      NULL,                             /* display_accelerator   */
-      NULL,                             /* extension             */
+      nullptr,                             /* callback private      */
+      nullptr,				/* tm_table              */
+      nullptr,                             /* query_geometry        */
+      nullptr,                             /* display_accelerator   */
+      nullptr,                             /* extension             */
    },
 
    {		/* composite_class fields */
@@ -110,31 +110,31 @@ externaldef(restraintclassrec) RestraintClassRec restraintClassRec =
       ChangeManaged,				/* change_managed     */
       XtInheritInsertChild,			/* insert_child       */
       XtInheritDeleteChild,			/* delete_child       */
-      NULL,                                     /* extension          */
+      nullptr,                                     /* extension          */
    },
 
    {		/* constraint_class fields */
-      NULL,					/* resource list        */   
+      nullptr,					/* resource list        */   
       0,					/* num resources        */   
       0,					/* constraint size      */   
-      NULL,					/* init proc            */   
-      NULL,             			/* destroy proc         */   
-      NULL,					/* set values proc      */   
-      NULL,                                     /* extension            */
+      nullptr,					/* init proc            */   
+      nullptr,             			/* destroy proc         */   
+      nullptr,					/* set values proc      */   
+      nullptr,                                     /* extension            */
    },
 
    {		/* manager_class fields */
       XtInheritTranslations,			/* default translations   */
-      NULL,					/* syn_resources      	  */
+      nullptr,					/* syn_resources      	  */
       0,					/* num_syn_resources 	  */
-      NULL,					/* syn_cont_resources     */
+      nullptr,					/* syn_cont_resources     */
       0,					/* num_syn_cont_resources */
       XmInheritParentProcess,			/* parent_process         */
-      NULL,					/* extension		  */
+      nullptr,					/* extension		  */
    },
 
    {		/* restraint class fields */     
-      NULL					/* extension		  */
+      nullptr					/* extension		  */
    }
 };
 
@@ -209,7 +209,7 @@ compute_height (RestraintWidget w, Widget child)
 	      ON_DEBUG(printf ("  Asking again for %d\n", my_reply.height));
 	      my_request.height = my_reply.height;
 	      /* Parent must say Yes. */
-	      XtMakeGeometryRequest ((Widget) w, &my_request, NULL);
+	      XtMakeGeometryRequest ((Widget) w, &my_request, nullptr);
 	    }
 	}
       else if (result == XtGeometryYes)
@@ -236,7 +236,7 @@ compute_width (RestraintWidget w, Widget child)
   XtWidgetGeometry my_request, my_reply;
 
   /* Let's see how big the kid wants to be. */
-  XtQueryGeometry (child, NULL, &reply);
+  XtQueryGeometry (child, nullptr, &reply);
 
   ON_DEBUG(printf ("In Restraint::compute_width, child wants to be:\n"));
   ON_DEBUG(printf ("  Width: %d,  Height: %d\n", reply.width, reply.height));
@@ -258,7 +258,7 @@ compute_width (RestraintWidget w, Widget child)
 	  my_request.width = my_reply.width;
 
 	  /* Parent must say Yes. */
-	  XtMakeGeometryRequest ((Widget) w, &my_request, NULL);
+	  XtMakeGeometryRequest ((Widget) w, &my_request, nullptr);
 	}
       else if (result == XtGeometryYes)
 	ON_DEBUG(printf ("  Parent said Yes\n"));
@@ -280,7 +280,7 @@ static void
 ChangeManaged (Widget widget)
 {
   RestraintWidget w = (RestraintWidget) widget;
-  Widget child = NULL;
+  Widget child = nullptr;
   int i;
   /* Find the child, if any. */
   for (i = 0; i < w->composite.num_children; i++)
@@ -303,7 +303,7 @@ ChangeManaged (Widget widget)
      handle both cases correctly. */
   ON_DEBUG(printf ("  Checking for width calc\n    child = 0x%p, first = %d\n",
 		   (void*)child, w->restraint.had_child));
-  if (child != NULL && w->restraint.had_child == False)
+  if (child != nullptr && w->restraint.had_child == False)
     {
       compute_width (w, child);
       /* Q: Should this be reset when last child is deleted, so next new
@@ -312,7 +312,7 @@ ChangeManaged (Widget widget)
     }
 
   /* Force child to take on my width. */
-  if (child != NULL)
+  if (child != nullptr)
     {
       compute_height (w, child);
       ON_DEBUG(printf ("Restraint::ChangeManaged: sizing child to %d x %d\n",

@@ -267,7 +267,7 @@ void _DtHelpBuildPathArea(
                                     ((int) hw->help_dialog.browser.visiblePathCount),
                                     1,
                                     _DtHelpDialogHypertextCB,
-                                    NULL /*ResizeHelpDialogCB*/,
+                                    nullptr /*ResizeHelpDialogCB*/,
                                     _DtHelpFilterExecCmdCB,
                                     (XtPointer) hw,
                                     defaultList);
@@ -354,7 +354,7 @@ void _DtHelpUpdatePathArea(
   int retState=-1;
 
 
-  if (locationId != NULL)
+  if (locationId != nullptr)
     {
       retState = _DtHelpUpdatePath (hw->help_dialog.browser.pTocArea,
 					hw->help_dialog.display.volumeHandle,
@@ -368,7 +368,7 @@ void _DtHelpUpdatePathArea(
            */
         }
     }
-  else if (locationId == NULL)
+  else if (locationId == nullptr)
     { 
       /* We have most likely entered an error state and must set our path 
        * area to NULL values while we display and error message in the 

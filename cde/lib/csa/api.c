@@ -78,12 +78,12 @@ csa_list_calendars(
 {
 	DP(("api.c: csa_list_calendars\n"));
 
-	if (calendar_service == NULL || number_names == NULL ||
-	    calendar_names == NULL)
+	if (calendar_service == nullptr || number_names == nullptr ||
+	    calendar_names == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* no function extension is supported */
-	if (list_calendars_extensions != NULL)
+	if (list_calendars_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	return (_DtCm_rpc_list_calendars(calendar_service, number_names,
@@ -116,21 +116,21 @@ csa_logon(
 {
 	CSA_return_code	stat;
 	Calendar	*cal;
-	CSA_extension	*pext = NULL;
+	CSA_extension	*pext = nullptr;
 
 	DP(("api.c: csa_logon\n"));
 
 	/* check validity of arguments */
-	if (user == NULL || user->calendar_address == NULL || session == NULL
-	   || strchr(user->calendar_address, '@') == NULL)
+	if (user == nullptr || user->calendar_address == nullptr || session == nullptr
+	   || strchr(user->calendar_address, '@') == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* create calendar object */
-	if ((cal = _DtCm_new_Calendar(user->calendar_address)) == NULL) {
+	if ((cal = _DtCm_new_Calendar(user->calendar_address)) == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
-	if (logon_extensions != NULL) {
+	if (logon_extensions != nullptr) {
 		if ((stat = _handle_logon_ext(logon_extensions, &pext))
 		    != CSA_SUCCESS)
 			return (stat);
@@ -175,17 +175,17 @@ csa_add_calendar(
 	DP(("api.c: csa_add_calendar\n"));
 
 	/* check validity of arguments */
-	if (user == NULL || user->calendar_address == NULL ||
-	    (host = strchr(user->calendar_address, '@')) == NULL)
+	if (user == nullptr || user->calendar_address == nullptr ||
+	    (host = strchr(user->calendar_address, '@')) == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* check add_calendar_extensions and return appropriate return code */
 	/* no function extension is supported */
-	if (add_calendar_extensions != NULL)
+	if (add_calendar_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* create calendar object */
-	if ((cal = _DtCm_new_Calendar(user->calendar_address)) == NULL) {
+	if ((cal = _DtCm_new_Calendar(user->calendar_address)) == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
@@ -228,12 +228,12 @@ csa_logoff(
 	DP(("api.c: csa_logoff\n"));
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	/* check logoff_extensions and return appropriate return code */
 	/* no function extension is supported */
-	if (logoff_extensions != NULL)
+	if (logoff_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* unregister with server */
@@ -259,12 +259,12 @@ csa_delete_calendar(
 	DP(("api.c: csa_delete_calendar\n"));
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	/* check extensions and return appropriate return code */
 	/* no function extension is supported */
-	if (delete_calendar_extensions != NULL)
+	if (delete_calendar_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	if (cal->rpc_version < 5)
@@ -284,15 +284,15 @@ csa_list_calendar_attributes(
 
 	DP(("api.c: csa_list_calendar_attributes\n"));
 
-	if (number_names == NULL || calendar_attributes_names == NULL)
+	if (number_names == nullptr || calendar_attributes_names == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* no function extension is supported */
-	if (list_calendar_attributes_extensions != NULL)
+	if (list_calendar_attributes_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	if (cal->rpc_version < _DtCM_FIRST_EXTENSIBLE_SERVER_VERSION) {
@@ -353,10 +353,10 @@ csa_list_entries(
 
 	DP(("api.c: csa_list_entries\n"));
 
-	if (entries == NULL || number_entries == NULL)
+	if (entries == nullptr || number_entries == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 	else {
-		*entries = NULL;
+		*entries = nullptr;
 		*number_entries = 0;
 	}
 
@@ -364,15 +364,15 @@ csa_list_entries(
 	 * and return appropriate return code
 	 * no function extension is supported
 	 */
-	if (list_entries_extensions != NULL)
+	if (list_entries_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	if (list_operators && (stat = _DtCm_check_operator(number_attributes,
-	    entry_attributes, NULL, list_operators)) != CSA_SUCCESS) {
+	    entry_attributes, nullptr, list_operators)) != CSA_SUCCESS) {
 
 		return (stat);
 	}
@@ -418,18 +418,18 @@ csa_list_entry_attributes(
 
 	DP(("api.c: csa_list_entry_attributes\n"));
 
-	if (number_names == NULL || entry_attribute_names == NULL)
+	if (number_names == nullptr || entry_attribute_names == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* check list_entry_attributes_extensions
 	 * and return appropriate return code
 	 * no function extension is supported
 	 */
-	if (list_entry_attributes_extensions != NULL)
+	if (list_entry_attributes_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* get appointment */
-	if ((entry = _DtCm_get_libentry(entryh)) == NULL)
+	if ((entry = _DtCm_get_libentry(entryh)) == nullptr)
 		return (CSA_E_INVALID_ENTRY_HANDLE);
 
 	if ((stat = _DtCm_get_entry_detail(entry)) != CSA_SUCCESS)
@@ -455,18 +455,18 @@ csa_read_entry_attributes(
 
 	DP(("api.c: csa_read_entry_attributes\n"));
 
-	if (number_attributes == 0 || entry_attributes == NULL)
+	if (number_attributes == 0 || entry_attributes == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* check read_entry_attributes_extensions
 	 * and return appropriate return code
 	 * no function extension is supported
 	 */
-	if (read_entry_attributes_extensions != NULL)
+	if (read_entry_attributes_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* get entry object */
-	if ((entry = _DtCm_get_libentry(entryh)) == NULL)
+	if ((entry = _DtCm_get_libentry(entryh)) == nullptr)
 		return (CSA_E_INVALID_ENTRY_HANDLE);
 
 	if ((stat = _DtCm_get_entry_detail(entry)) != CSA_SUCCESS)
@@ -515,13 +515,13 @@ csa_query_configuration(
 	DP(("api.c: csa_query_configuration\n"));
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	if (item < CSA_CONFIG_CHARACTER_SET || item > CSA_CONFIG_VER_SPEC)
 		return (CSA_E_INVALID_ENUM);
 
-	if (reference == NULL)
+	if (reference == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if (query_configuration_extensions) {
@@ -533,7 +533,7 @@ csa_query_configuration(
 	switch (item) {
 	case CSA_CONFIG_DEFAULT_SERVICE:
 	case CSA_CONFIG_DEFAULT_USER:
-		*reference = NULL;
+		*reference = nullptr;
 		break;
 
 	case CSA_CONFIG_REQ_PASSWORD:
@@ -575,18 +575,18 @@ csa_read_calendar_attributes(
 
 	DP(("api.c: csa_read_calendar_attributes\n"));
 
-	if (number_attributes == 0 || calendar_attributes == NULL)
+	if (number_attributes == 0 || calendar_attributes == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* check read_calendar_attributes_extensions
 	 * and return appropriate return code
 	 * no function extension is supported
 	 */
-	if (read_calendar_attributes_extensions != NULL)
+	if (read_calendar_attributes_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	_DtCm_reset_cal_attrs(cal);
@@ -614,7 +614,7 @@ csa_register_callback(
 	boolean_t		async = B_FALSE;
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	/* make sure some valid flags are set
@@ -630,13 +630,13 @@ csa_register_callback(
 	/* must specify a callback function otherwise
 	 * there is no point to make this call
 	 */
-	if (callback == NULL)
+	if (callback == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* need to initialize agent before doing XtAppAddInput */
 	_DtCm_init_agent();
 
-	if (register_callback_extensions != NULL) {
+	if (register_callback_extensions != nullptr) {
 		if ((stat = _handle_register_callback_ext(
 		    register_callback_extensions)) != CSA_SUCCESS)
 			return (stat);
@@ -654,7 +654,7 @@ csa_register_callback(
 		return stat;
 
 	if ((cb_entry = (_DtCmCallbackEntry*)malloc(sizeof(_DtCmCallbackEntry)))
-	    == NULL)
+	    == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* update info in calendar structure */
@@ -675,8 +675,8 @@ csa_register_callback(
 	
 	/* insert it at head of list */
 	cb_entry->next = cal->cb_list;
-	cb_entry->prev = (_DtCmCallbackEntry*) NULL;
-	if (cal->cb_list != (_DtCmCallbackEntry*) NULL)
+	cb_entry->prev = (_DtCmCallbackEntry*) nullptr;
+	if (cal->cb_list != (_DtCmCallbackEntry*) nullptr)
 		cal->cb_list->prev = cb_entry;
 	cal->cb_list = cb_entry;
 
@@ -705,7 +705,7 @@ csa_unregister_callback(
 	_DtCmCallbackEntry *cb, *ncb;
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	if (reason == 0 || reason >= (CSA_CB_ENTRY_UPDATED << 1))
@@ -715,12 +715,12 @@ csa_unregister_callback(
 	 * and return appropriate return code
 	 * no function extension is supported
 	 */
-	if (unregister_callback_extensions != NULL)
+	if (unregister_callback_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
-	if (handler == NULL && client_data == NULL)
+	if (handler == nullptr && client_data == nullptr)
 		match_all = B_TRUE;
-	else if (handler == NULL)	/* but client data is not NULL */
+	else if (handler == nullptr)	/* but client data is not NULL */
 		return (CSA_E_INVALID_PARAMETER);
 
 	/*
@@ -748,9 +748,9 @@ csa_unregister_callback(
 			all = all | cb->reason;
 		} else {
 			/* remove entry */
-			if (cb->prev != NULL)
+			if (cb->prev != nullptr)
 				cb->prev->next = cb->next;
-			if (cb->next != NULL)
+			if (cb->next != nullptr)
 				cb->next->prev = cb->prev;
 			if (cb == cal->cb_list)
 				cal->cb_list = cb->next;
@@ -783,11 +783,11 @@ csa_call_callbacks(
 	DP(("api.c: csa_call_callbacks\n"));
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	/* no function extension is supported */
-	if (call_callbacks_extensions != NULL)
+	if (call_callbacks_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* set up information in calendar structure */
@@ -816,10 +816,10 @@ csa_update_calendar_attributes(
 	DP(("api.c: csa_update_calendar_attributes\n"));
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
-	if (num_attrs == 0 || attrs == NULL)
+	if (num_attrs == 0 || attrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/*
@@ -827,7 +827,7 @@ csa_update_calendar_attributes(
 	 * return appropriate return code
 	 * no function extension is supported
 	 */
-	if (update_calendar_attributes_extensions != NULL)
+	if (update_calendar_attributes_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* check authority */
@@ -865,11 +865,11 @@ csa_add_entry(
 
 	DP(("api.c: csa_add_entry\n"));
 
-	if (num_attrs == 0 || attrs == NULL)
+	if (num_attrs == 0 || attrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
 	/* check data type, readonly attributes, etc */
@@ -879,15 +879,15 @@ csa_add_entry(
 	}
 
 	/* no function extension is supported */
-	if (add_entry_extensions != NULL)
+	if (add_entry_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* insert in calendar */
 	if ((stat = _DtCm_rpc_insert_entry(cal, num_attrs, attrs, &entry))
 	    == CSA_SUCCESS) {
 
-		if (entry_r != NULL) {
-			if ((entry = _DtCm_convert_entry_wheader(entry))==NULL)
+		if (entry_r != nullptr) {
+			if ((entry = _DtCm_convert_entry_wheader(entry))==nullptr)
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 			else {
 				_DtCm_add_to_entry_list(cal, (caddr_t)entry);
@@ -916,7 +916,7 @@ csa_delete_entry(
 	DP(("api.c: csa_delete_entry\n"));
 
 	/* get entry object */
-	if ((entry = _DtCm_get_libentry(entryh)) == NULL)
+	if ((entry = _DtCm_get_libentry(entryh)) == nullptr)
 		return (CSA_E_INVALID_ENTRY_HANDLE);
 
 	if (delete_scope < CSA_SCOPE_ALL || delete_scope > CSA_SCOPE_FORWARD)
@@ -924,7 +924,7 @@ csa_delete_entry(
 
 	/* check delete_entry_extensions and return appropriate return code */
 	/* no function extension is supported */
-	if (delete_entry_extensions != NULL)
+	if (delete_entry_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* delete entry from calendar */
@@ -967,29 +967,29 @@ csa_list_entry_sequence(
 	DP(("api.c: csa_list_entry_sequence\n"));
 
 	/* get entry object */
-	if ((entry = _DtCm_get_libentry(entryh)) == NULL)
+	if ((entry = _DtCm_get_libentry(entryh)) == nullptr)
 		return (CSA_E_INVALID_ENTRY_HANDLE);
 
-	if (number_entries == NULL || entries == NULL)
+	if (number_entries == nullptr || entries == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 	else {
 		*number_entries = 0;
-		*entries = NULL;
+		*entries = nullptr;
 	}
 
 	/* check whether this entry repeats */
 	/* fail it if it's not a repeating event */
 	if (entry->cal->file_version < _DtCM_FIRST_EXTENSIBLE_DATA_VERSION) {
 		rtype = &entry->e->attrs[CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I];
-		if (rtype->value == NULL ||
+		if (rtype->value == nullptr ||
 	    	    rtype->value->item.sint32_value == CSA_X_DT_REPEAT_ONETIME)
 		{
 			return (CSA_E_INVALID_PARAMETER);
 		}
 	} else {
 		rtype = &entry->e->attrs[CSA_ENTRY_ATTR_RECURRENCE_RULE_I];
-		if (rtype->value == NULL ||
-		    rtype->value->item.string_value == NULL ||
+		if (rtype->value == nullptr ||
+		    rtype->value->item.string_value == nullptr ||
 		    *(rtype->value->item.string_value) == '\0' ) {
 			return (CSA_E_INVALID_PARAMETER);
 		}
@@ -1015,7 +1015,7 @@ csa_list_entry_sequence(
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* no function extension is supported */
-	if (list_entry_sequence_extensions != NULL)
+	if (list_entry_sequence_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* lookup sequence */
@@ -1051,20 +1051,20 @@ csa_read_next_reminder(
 {
 	CSA_return_code	stat;
 	Calendar	*cal;
-	_DtCm_libentry	*eptr, *prev = NULL, *head = NULL;
+	_DtCm_libentry	*eptr, *prev = nullptr, *head = nullptr;
 	int	i;
 	time_t	timeval;
 
 	DP(("api.c: csa_read_next_reminder\n"));
 
 	/* get calendar object */
-	if ((cal = _DtCm_get_Calendar(session)) == NULL)
+	if ((cal = _DtCm_get_Calendar(session)) == nullptr)
 		return (CSA_E_INVALID_SESSION_HANDLE);
 
-	if (number_reminders == 0 || reminders == NULL)
+	if (number_reminders == 0 || reminders == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	if (given_time == NULL || _csa_iso8601_to_tick(given_time, &timeval))
+	if (given_time == nullptr || _csa_iso8601_to_tick(given_time, &timeval))
 		return (CSA_E_INVALID_DATE_TIME);
 
 	/*
@@ -1072,7 +1072,7 @@ csa_read_next_reminder(
 	 * return appropriate return code
 	 * no function extension is supported
 	 */
-	if (read_next_reminder_extensions != NULL)
+	if (read_next_reminder_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* lookup reminders */
@@ -1093,7 +1093,7 @@ csa_read_next_reminder(
 			/* link up entries in the same order as
 			 * the associated reminders
 			 */
-			if (head == NULL)
+			if (head == nullptr)
 				head = eptr;
 			else {
 				prev->next = eptr;
@@ -1130,13 +1130,13 @@ csa_update_entry_attributes(
 	DP(("api.c: csa_update_entry_attributes\n"));
 
 	/* get entry object */
-	if ((oentry = _DtCm_get_libentry(entry)) == NULL)
+	if ((oentry = _DtCm_get_libentry(entry)) == nullptr)
 		return (CSA_E_INVALID_ENTRY_HANDLE);
 
 	if (scope < CSA_SCOPE_ALL || scope > CSA_SCOPE_FORWARD)
 		return (CSA_E_INVALID_ENUM);
 
-	if (num_attrs == 0 || attrs == NULL)
+	if (num_attrs == 0 || attrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/*
@@ -1144,7 +1144,7 @@ csa_update_entry_attributes(
 	 * return appropriate return code
 	 * no function extension is supported
 	 */
-	if (update_entry_attributes_extensions != NULL)
+	if (update_entry_attributes_extensions != nullptr)
 		return (CSA_E_UNSUPPORTED_FUNCTION_EXT);
 
 	/* check data type, readonly attributes, etc */
@@ -1158,7 +1158,7 @@ csa_update_entry_attributes(
 	    attrs, scope, &nentry)) == CSA_SUCCESS) {
 		if (new_entry) {
 			if ((nentry = _DtCm_convert_entry_wheader(nentry))
-			    == NULL)
+			    == nullptr)
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 			else {
 				_DtCm_add_to_entry_list(oentry->cal,

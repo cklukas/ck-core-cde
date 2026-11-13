@@ -94,7 +94,7 @@ _DtPerfChkpntListenInit(Display *display, Window parentwin)
 
 	    XChangeProperty(dtsvc_info.display,  dtsvc_info.window,
 				    aProperty, XA_STRING, 8,
-				    PropModeAppend, (unsigned char *) NULL, 0);
+				    PropModeAppend, (unsigned char *) nullptr, 0);
 	    XFlush(dtsvc_info.display);
 	    loop:
 	    XWindowEvent(dtsvc_info.display, dtsvc_info.window,
@@ -176,10 +176,10 @@ Bool _DtPerfChkpntMsgReceive(DtChkpntMsg *dtcp_msg, Bool bBlock)
     }
 
     if (bBlock == True)
-	XIfEvent(dtsvc_info.display, &event, myCheckSelectionEvent, NULL);
+	XIfEvent(dtsvc_info.display, &event, myCheckSelectionEvent, nullptr);
     else
 	event_found = XCheckIfEvent(dtsvc_info.display, &event,
-				myCheckSelectionEvent, NULL);
+				myCheckSelectionEvent, nullptr);
     
     if (event_found == True) {
 	switch (event.type) {

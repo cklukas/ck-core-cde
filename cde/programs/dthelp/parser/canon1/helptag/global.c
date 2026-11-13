@@ -28,7 +28,7 @@
 #include "global.h"
 
 /* global variables */
-PBLOCK blockinfo INIT(NULL);
+PBLOCK blockinfo INIT(nullptr);
 LOGICAL inParText INIT(FALSE);
 LOGICAL inSdlP    INIT(FALSE);
 

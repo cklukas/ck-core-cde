@@ -33,7 +33,7 @@
 /*
  * Global Variables
  */
-DtXineramaInfo_t *DtXI = NULL;/* Xinerama data is static for life of X server */
+DtXineramaInfo_t *DtXI = nullptr;/* Xinerama data is static for life of X server */
 
 
 /*************************************<->*************************************
@@ -68,13 +68,13 @@ DtXineramaInfo_t *DtXI = NULL;/* Xinerama data is static for life of X server */
  *
  *************************************<->***********************************/
 WmHeadInfo_t *GetHeadInfo(const ClientData *pcd) {
-    WmHeadInfo_t *WmHI = NULL;
+    WmHeadInfo_t *WmHI = nullptr;
 
     if (!DtXI)
         DtXI = _DtXineramaInit(DISPLAY);
 
     if (!pcd || !DtXI)
-        return NULL;
+        return nullptr;
 
     if (!(WmHI = (WmHeadInfo_t *)malloc(sizeof(WmHeadInfo_t)))) {
 #ifdef DEBUG
@@ -82,7 +82,7 @@ WmHeadInfo_t *GetHeadInfo(const ClientData *pcd) {
 #endif
 
         free(DtXI);
-        return NULL;
+        return nullptr;
     }
 
     /*
@@ -111,7 +111,7 @@ WmHeadInfo_t *GetHeadInfo(const ClientData *pcd) {
     free(WmHI);
 
     /* No valid screen */
-    return NULL;
+    return nullptr;
 }
 
 
@@ -145,13 +145,13 @@ WmHeadInfo_t *GetHeadInfo(const ClientData *pcd) {
  *
  *************************************<->***********************************/
 WmHeadInfo_t *GetHeadInfoById(int id) {
-    WmHeadInfo_t *WmHI = NULL;
+    WmHeadInfo_t *WmHI = nullptr;
 
     if (!DtXI)
         DtXI = _DtXineramaInit(DISPLAY);
 
     if (id < 0 || !DtXI)
-        return NULL;
+        return nullptr;
 
     if (!(WmHI = (WmHeadInfo_t *)malloc(sizeof(WmHeadInfo_t)))) {
 #ifdef DEBUG
@@ -159,7 +159,7 @@ WmHeadInfo_t *GetHeadInfoById(int id) {
 #endif
 
         free(DtXI);
-        return NULL;
+        return nullptr;
     }
 
     if (_DtXineramaGetScreen(DtXI, id,
@@ -167,5 +167,5 @@ WmHeadInfo_t *GetHeadInfoById(int id) {
         return WmHI;
 
     free(WmHI);
-    return NULL;
+    return nullptr;
 }

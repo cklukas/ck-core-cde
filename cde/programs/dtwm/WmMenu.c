@@ -137,9 +137,9 @@ MenuSpec *MakeMenu (WmScreenData *pSD,
     MenuItem     *menuItem;
     KeySpec      *accelKeySpec;
     
-    if ((menuName == NULL) || (pSD == NULL))
+    if ((menuName == nullptr) || (pSD == nullptr))
     {
-	return (NULL);
+	return (nullptr);
     }
 
     /*
@@ -149,7 +149,7 @@ MenuSpec *MakeMenu (WmScreenData *pSD,
     menuSpec = pSD->menuSpecs;
     while (menuSpec)
     {
-	if ((menuSpec->name != NULL) && !strcmp (menuSpec->name, menuName))
+	if ((menuSpec->name != nullptr) && !strcmp (menuSpec->name, menuName))
 	/* Found the menu pane. */
 	{
 	    break;
@@ -157,11 +157,11 @@ MenuSpec *MakeMenu (WmScreenData *pSD,
 	menuSpec = menuSpec->nextMenuSpec;
     }
     
-    if (menuSpec == NULL)
+    if (menuSpec == nullptr)
     /* the menuSpecs list is exhausted */
     {
 	MWarning(((char *)GETMESSAGE(48, 1, "Menu specification %s not found\n")), menuName);
-	return (NULL);
+	return (nullptr);
     }
 
     /*
@@ -186,21 +186,21 @@ MenuSpec *MakeMenu (WmScreenData *pSD,
      *   contexts and return the specification.
      */
 
-    if (moreMenuItems != NULL)
+    if (moreMenuItems != nullptr)
     {
-        if ((newMenuSpec = (MenuSpec *) XtMalloc (sizeof (MenuSpec))) == NULL)
+        if ((newMenuSpec = (MenuSpec *) XtMalloc (sizeof (MenuSpec))) == nullptr)
 	/* Handle insufficent memory */
         {
             MWarning(((char *)GETMESSAGE(48, 2, "Insufficient memory for menu %s\n")), menuName);
-	    return (NULL);
+	    return (nullptr);
         }
-	newMenuSpec->name = NULL;  /* distinguishes this as custom */
+	newMenuSpec->name = nullptr;  /* distinguishes this as custom */
 	newMenuSpec->whichButton = SELECT_BUTTON;
 	newMenuSpec->height = 0;
 	newMenuSpec->menuItems = menuSpec->menuItems; /* temporary */
 	newMenuSpec->accelContext = menuSpec->accelContext;
-	newMenuSpec->accelKeySpecs = NULL;
-	newMenuSpec->nextMenuSpec = NULL;
+	newMenuSpec->accelKeySpecs = nullptr;
+	newMenuSpec->nextMenuSpec = nullptr;
 
 	menuSpec = newMenuSpec;
     }
@@ -259,17 +259,17 @@ MenuSpec *MakeMenu (WmScreenData *pSD,
     if (n)
     {
         if ((menuSpec->menuButtons =
-	       (MenuButton *) XtMalloc (n * sizeof(MenuButton))) == NULL)
+	       (MenuButton *) XtMalloc (n * sizeof(MenuButton))) == nullptr)
         /* insufficent memory */
 	{
             MWarning(((char *)GETMESSAGE(48, 3, "Insufficient memory for menu %s\n")), menuName);
-	    return (NULL);
+	    return (nullptr);
 	}
         menuSpec->menuButtonSize = n;
     }
     else
     {
-        menuSpec->menuButtons = NULL;
+        menuSpec->menuButtons = nullptr;
         menuSpec->menuButtonSize = 0;
     }
     menuSpec->menuButtonCount = 0;
@@ -283,12 +283,12 @@ MenuSpec *MakeMenu (WmScreenData *pSD,
     menuSpec->menuWidget = CREATE_MENU_WIDGET (pSD, pCD, menuName, 
 					     pSD->screenTopLevelW,
 					     TRUE, menuSpec, moreMenuItems);
-    if (menuSpec->menuWidget == NULL)
+    if (menuSpec->menuWidget == nullptr)
     {
         /*
 	 *  Could not make the top-level menu pane.
 	 */
-	return (NULL);
+	return (nullptr);
     }
 /*
     _XmSetPopupMenuClick(menuSpec->menuWidget, False); 
@@ -309,7 +309,7 @@ void CheckTerminalSeparator(MenuSpec *menuSpec, Widget buttonWidget, Boolean man
     Cardinal        wPos;
 
 
-    if ((menuSpec == NULL) || (menuSpec->menuWidget == NULL))
+    if ((menuSpec == nullptr) || (menuSpec->menuWidget == nullptr))
       {
 	 return;
       }
@@ -377,14 +377,14 @@ void CheckTerminalSeparator(MenuSpec *menuSpec, Widget buttonWidget, Boolean man
 static MenuItem *
 DuplicateMenuItems (MenuItem *menuItems)
 {
-    MenuItem *newMenuItem = NULL, *returnMenuItem = NULL, *curMenuItem;
+    MenuItem *newMenuItem = nullptr, *returnMenuItem = nullptr, *curMenuItem;
     
     for (curMenuItem = menuItems;
-	 curMenuItem != (MenuItem *) NULL;
+	 curMenuItem != (MenuItem *) nullptr;
 	 curMenuItem = curMenuItem->nextMenuItem)
     {
 	/* If its the first one ... */
-	if (newMenuItem == (MenuItem *) NULL)
+	if (newMenuItem == (MenuItem *) nullptr)
 	{
 	    newMenuItem = (MenuItem *)XtMalloc(sizeof(MenuItem));
 	    returnMenuItem = newMenuItem;
@@ -400,7 +400,7 @@ DuplicateMenuItems (MenuItem *menuItems)
 	if (curMenuItem->label != (String) NULL)
 	  newMenuItem->label = XtNewString(curMenuItem->label);
 	else
-	  newMenuItem->label = NULL;
+	  newMenuItem->label = nullptr;
 	newMenuItem->labelBitmapIndex = curMenuItem->labelBitmapIndex;
 	newMenuItem->mnemonic = curMenuItem->mnemonic;
 	newMenuItem->accelState = curMenuItem->accelState;
@@ -408,7 +408,7 @@ DuplicateMenuItems (MenuItem *menuItems)
 	if (curMenuItem->accelText != (String) NULL)
 	  newMenuItem->accelText = XtNewString(curMenuItem->accelText);
 	else
-	  newMenuItem->accelText = NULL;
+	  newMenuItem->accelText = nullptr;
 	newMenuItem->wmFunction = curMenuItem->wmFunction;
 
 	if ((curMenuItem->wmFunction == F_Send_Msg)
@@ -428,11 +428,11 @@ DuplicateMenuItems (MenuItem *menuItems)
 	else if (curMenuItem->wmFuncArgs != (String) NULL)
 	  newMenuItem->wmFuncArgs = XtNewString(curMenuItem->wmFuncArgs);
 	else
-	  newMenuItem->wmFuncArgs = NULL;
+	  newMenuItem->wmFuncArgs = nullptr;
 
 	newMenuItem->greyedContext = curMenuItem->greyedContext;
 	newMenuItem->mgtMask = curMenuItem->mgtMask;
-	newMenuItem->nextMenuItem = (MenuItem *) NULL;
+	newMenuItem->nextMenuItem = (MenuItem *) nullptr;
     }
     
     return(returnMenuItem);
@@ -475,12 +475,12 @@ DuplicateMenuSpec (MenuSpec *menuSpec)
 {
     MenuSpec *newMenuSpec;
     
-    if ((newMenuSpec = (MenuSpec *) XtMalloc (sizeof (MenuSpec))) == NULL)
+    if ((newMenuSpec = (MenuSpec *) XtMalloc (sizeof (MenuSpec))) == nullptr)
       /* Handle insufficent memory */
     {
 	Warning((char *)GETMESSAGE(48, 9,
 		 "Insufficient memory for menu specification\n"));
-	return (NULL);
+	return (nullptr);
     }
     newMenuSpec->name = XtNewString(menuSpec->name);
     newMenuSpec->currentContext = menuSpec->currentContext;
@@ -488,12 +488,12 @@ DuplicateMenuSpec (MenuSpec *menuSpec)
     newMenuSpec->whichButton = menuSpec->whichButton;
     newMenuSpec->height = menuSpec->height;
     newMenuSpec->menuItems = DuplicateMenuItems(menuSpec->menuItems);
-    newMenuSpec->menuButtons = (MenuButton *) NULL;
+    newMenuSpec->menuButtons = (MenuButton *) nullptr;
     newMenuSpec->menuButtonSize = 0;
     newMenuSpec->menuButtonCount = 0;
     newMenuSpec->accelContext = menuSpec->accelContext;
-    newMenuSpec->accelKeySpecs = (KeySpec *) NULL;
-    newMenuSpec->nextMenuSpec = (MenuSpec *) NULL;
+    newMenuSpec->accelKeySpecs = (KeySpec *) nullptr;
+    newMenuSpec->nextMenuSpec = (MenuSpec *) nullptr;
     
     return(newMenuSpec);
 }
@@ -547,7 +547,7 @@ static Boolean AdjustPBs (MenuSpec *menuSpec, ClientData  *pCD,
      */
 
     /* check for bad input value - shouldn't happen. */
-    if (menuSpec == NULL) return (FALSE);
+    if (menuSpec == nullptr) return (FALSE);
 
     for (n = 0, menuButton = menuSpec->menuButtons;
          n < menuSpec->menuButtonCount;
@@ -733,7 +733,7 @@ static Boolean SavePBInfo (MenuSpec *topMenuSpec, MenuItem *menuItem,
 
 
     /* check for bad input value - shouldn't happen. */
-    if (topMenuSpec == NULL) return (FALSE);
+    if (topMenuSpec == nullptr) return (FALSE);
 
     if (topMenuSpec->menuButtonSize == 0)
     /* need to create array */
@@ -751,7 +751,7 @@ static Boolean SavePBInfo (MenuSpec *topMenuSpec, MenuItem *menuItem,
 		     topMenuSpec->menuButtonSize * sizeof(MenuButton));
     }
 
-    if (topMenuSpec->menuButtons == NULL)
+    if (topMenuSpec->menuButtons == nullptr)
     /* insufficent memory */
     {
 	topMenuSpec->menuButtonSize = 0;
@@ -820,7 +820,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
     int         i, n;
     Arg         sepArgs[1];
     Arg         args[10];
-    MenuSpec   *menuSpec = (MenuSpec *)NULL;
+    MenuSpec   *menuSpec = (MenuSpec *)nullptr;
     MenuItem   *menuItem;
     Widget      menuShellW;
     Widget      menuW;
@@ -830,7 +830,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
     KeySpec    *accelKeySpec;
     Dimension   menuHeight;
     Boolean     fUseTitleSep = False;
-    StrList    *stringsToFree = NULL, *sPtr;
+    StrList    *stringsToFree = nullptr, *sPtr;
     XmString    tmpstr;
 #ifndef	IBM_151913
     Screen     *scr;
@@ -838,9 +838,9 @@ Widget CreateMenuWidget (WmScreenData *pSD,
 
 
     /* check for bad input values. */
-    if ((menuName == NULL) || (pSD == NULL))
+    if ((menuName == nullptr) || (pSD == nullptr))
     {
-	return (NULL);
+	return (nullptr);
     }
 
     /*
@@ -858,7 +858,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
         menuSpec = pSD->menuSpecs;
         while (menuSpec)
         {
-	    if ((menuSpec->name != NULL) && !strcmp (menuSpec->name, menuName))
+	    if ((menuSpec->name != nullptr) && !strcmp (menuSpec->name, menuName))
 	    {
 	        break;  /* found menuName's specification */
 	    }
@@ -866,11 +866,11 @@ Widget CreateMenuWidget (WmScreenData *pSD,
         }
     }
 
-    if (menuSpec == NULL)
+    if (menuSpec == nullptr)
     /* (submenu) specification not found */
     {
 	MWarning(((char *)GETMESSAGE(48, 4, "Menu specification %s not found\n")), menuName);
-	return (NULL);
+	return (nullptr);
     }
 
     /*
@@ -882,7 +882,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
     /* menu recursion */
     {
 	MWarning(((char *)GETMESSAGE(48, 5, "Menu recursion detected for %s\n")), menuName);
-	return (NULL);
+	return (nullptr);
     }
     menuSpec->currentContext |= CR_MENU_MARK;   /* no, mark it */
 
@@ -902,7 +902,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
     XtSetArg (args[i], XtNscreen, 
 	      (XtArgVal) ScreenOfDisplay(XtDisplay(parent), pSD->screen)); i++;
 
-    if ((XtParent (parent) != NULL) && XmIsMenuShell (XtParent (parent)))
+    if ((XtParent (parent) != nullptr) && XmIsMenuShell (XtParent (parent)))
     {
 	parent = XtParent (parent);
     }
@@ -954,11 +954,11 @@ Widget CreateMenuWidget (WmScreenData *pSD,
 
     n = 0;
     menuItem = menuSpec->menuItems;
-    if ((menuItem == NULL) && (moreMenuItems != NULL))
+    if ((menuItem == nullptr) && (moreMenuItems != nullptr))
     /* handle custom menu with empty standard specification */
     {
         menuSpec->menuItems = menuItem = moreMenuItems;
-	moreMenuItems = NULL;
+	moreMenuItems = nullptr;
     }
     while (menuItem)
     {
@@ -1006,10 +1006,10 @@ Widget CreateMenuWidget (WmScreenData *pSD,
                 XtSetArg (args[i], XmNlabelString, (XtArgVal)
 			  (tmpstr = XmStringCreateLocalized(menuItem->label))); i++;
 		sPtr = (StrList *) XtMalloc(sizeof(StrList));
-		if (sPtr == NULL)
+		if (sPtr == nullptr)
 		  {
 		     MWarning(((char *)GETMESSAGE(48, 2, "Insufficient memory for menu %s\n")), menuName);
-		     return (NULL);
+		     return (nullptr);
 		  }
 		else
 		  {
@@ -1083,7 +1083,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
 		    subMenuW = CREATE_MENU_WIDGET (pSD, pCD,
 						 menuItem->wmFuncArgs, menuW,
 						 FALSE, topMenuSpec, 
-						 (MenuItem *)NULL);
+						 (MenuItem *)nullptr);
                     if (subMenuW)
 		    /*
 		     * Attach submenu to cascade button. 
@@ -1126,10 +1126,10 @@ Widget CreateMenuWidget (WmScreenData *pSD,
 		        XtSetArg (args[i], XmNacceleratorText, (XtArgVal)
 				  (tmpstr = XmStringCreateLocalized(menuItem->accelText))); i++;
 		        sPtr = (StrList *) XtMalloc(sizeof(StrList));
-			if (sPtr == NULL)
+			if (sPtr == nullptr)
 			  {
 			     MWarning(((char *)GETMESSAGE(48, 2, "Insufficient memory for menu %s\n")), menuName);
-			     return (NULL);
+			     return (nullptr);
 			  }
 			else
 			  {
@@ -1139,13 +1139,13 @@ Widget CreateMenuWidget (WmScreenData *pSD,
 			  }
 
                         if ((accelKeySpec = (KeySpec *)
-                                 XtMalloc (sizeof (KeySpec ))) == NULL)
+                                 XtMalloc (sizeof (KeySpec ))) == nullptr)
 	                /* Handle insufficent memory */
                         {
                             MWarning (((char *)GETMESSAGE(48, 6, "Insufficient memory for menu %s\n")),
 				      menuName);
                             menuSpec->currentContext &= ~CR_MENU_MARK;
-	                    return (NULL);
+	                    return (nullptr);
                         }
 
 		        accelKeySpec->state = menuItem->accelState;
@@ -1188,7 +1188,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
                             MWarning(((char *)GETMESSAGE(48, 7, "Insufficient memory for menu %s\n")),
 				       menuName);
                             menuSpec->currentContext &= ~CR_MENU_MARK;
-	                    return (NULL);
+	                    return (nullptr);
                         }
 		    }
 
@@ -1216,10 +1216,10 @@ Widget CreateMenuWidget (WmScreenData *pSD,
 	 * Next menu item:  handle custom items and full children[]. 
 	 */
 	menuItem = menuItem->nextMenuItem;
-        if ((menuItem == NULL) && (moreMenuItems != NULL))
+        if ((menuItem == nullptr) && (moreMenuItems != nullptr))
         {
             menuSpec->menuItems = menuItem = moreMenuItems;
-	    moreMenuItems = NULL;
+	    moreMenuItems = nullptr;
         }
 	if (n >= CHILDREN_CACHE - 2)  /* leave room for title separators */
 	{
@@ -1266,7 +1266,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
 #endif	/* IBM_151913 */
 
     /* free the string that may have been created earlier. */
-    for (sPtr = stringsToFree; sPtr != NULL; )
+    for (sPtr = stringsToFree; sPtr != nullptr; )
       {
 	 stringsToFree = stringsToFree->next;
 	 XmStringFree(sPtr->string);
@@ -1330,7 +1330,7 @@ void PostMenu (MenuSpec *menuSpec, ClientData *pCD, int x, int y, unsigned int b
     Window           saveWindow;
     Display          *saveDisplay;
     
-    if ((menuSpec == NULL) || (menuSpec->menuWidget == NULL))
+    if ((menuSpec == nullptr) || (menuSpec->menuWidget == nullptr))
     {
 	return;
     }
@@ -1539,7 +1539,7 @@ void ActivateCallback (Widget w, XtPointer client_data, XtPointer call_data)
     if (pSD) SetActiveScreen (pSD);
 
     ((MenuItem *)client_data)->wmFunction (
-		((MenuItem *)client_data)->wmFuncArgs, wmGD.menuClient, NULL);
+		((MenuItem *)client_data)->wmFuncArgs, wmGD.menuClient, nullptr);
 
 } /* END OF FUNCTION ActivateCallback */
 
@@ -1579,8 +1579,8 @@ void ActivateCallback (Widget w, XtPointer client_data, XtPointer call_data)
 static void UnmapCallback (Widget w, XtPointer client_data,
 			   XtPointer call_data)
 {
-    wmGD.menuActive = NULL;
-    wmGD.menuUnpostKeySpec = NULL;
+    wmGD.menuActive = nullptr;
+    wmGD.menuUnpostKeySpec = nullptr;
     wmGD.checkHotspot = FALSE;
 
     if (wmGD.gadgetClient) 
@@ -1660,7 +1660,7 @@ void TraversalOff (MenuSpec *menuSpec)
 	(*((XmRowColumnWidgetClass) XtClass (menuSpec->menuWidget))
 				       ->row_column_class.menuProcedures) 
 		/* argument list */
-	       (XmMENU_TRAVERSAL, menuSpec->menuWidget, False, NULL, NULL);
+	       (XmMENU_TRAVERSAL, menuSpec->menuWidget, False, nullptr, nullptr);
     }
 
 } /* END OF FUNCTION TraversalOff */
@@ -1702,7 +1702,7 @@ void TraversalOn (MenuSpec *menuSpec)
 	(*((XmRowColumnWidgetClass) XtClass (menuSpec->menuWidget))
 				   ->row_column_class.menuProcedures) 
 		/*argument list */
-	       (XmMENU_TRAVERSAL, menuSpec->menuWidget, True, NULL, NULL);
+	       (XmMENU_TRAVERSAL, menuSpec->menuWidget, True, nullptr, nullptr);
     }
 
 } /* END OF FUNCTION TraversalOn */
@@ -1747,7 +1747,7 @@ void FreeCustomMenuSpec (MenuSpec *menuSpec)
     KeySpec     *accelKeySpec;
     KeySpec     *nextAccelKeySpec;
 
-    if ((menuSpec == NULL) || (menuSpec->name != NULL))
+    if ((menuSpec == nullptr) || (menuSpec->name != nullptr))
     /* we only destroy custom menus! */
     {
 	return;

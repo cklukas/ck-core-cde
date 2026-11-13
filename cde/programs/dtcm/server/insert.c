@@ -82,19 +82,19 @@ _DtCmsInsertEntry(_DtCmsCalendar *cal, cms_entry *entry)
 {
 	CSA_return_code	stat;
 	Rb_Status	rb_stat;
-	List_node	*lnode = NULL;
+	List_node	*lnode = nullptr;
 	cms_entry	*newptr;
 	time_t		current_time;
 	time_t		key, tick, endtime;
 	char		*date, buf[80];
 	CSA_opaque_data	opq;
 	cms_attribute	*aptr;
-	RepeatEvent	*re = NULL;
-	RepeatEventState *res = NULL;
+	RepeatEvent	*re = nullptr;
+	RepeatEventState *res = nullptr;
 	uint		count;
 	int		i;
 
-	if (cal == NULL || entry == NULL)
+	if (cal == nullptr || entry == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	/* assign key if this is a new appointment */
@@ -124,19 +124,19 @@ _DtCmsInsertEntry(_DtCmsCalendar *cal, cms_entry *entry)
 		aptr = &entry->attrs[CSA_ENTRY_ATTR_RECURRENCE_RULE_I];
 		_DtCm_rule_buf = aptr->value->item.string_value;
 		_DtCm_rule_parser();
-		if ((re = _DtCm_repeat_info) == NULL)
+		if ((re = _DtCm_repeat_info) == nullptr)
 			return (CSA_E_INVALID_RULE);
 
 		/* get number of recurrences */
 		aptr = &entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I];
 		count = CountEvents(entry->key.time, re,
 			(aptr->value ?
-			aptr->value->item.date_time_list_value : NULL));
+			aptr->value->item.date_time_list_value : nullptr));
 
 		if (count == 1) {
 			/* turn into onetime entry */
 			_DtCmsConvertToOnetime(entry, re);
-			re = NULL;
+			re = nullptr;
 		} else {
 
 			if (count == 0)
@@ -188,7 +188,7 @@ _DtCmsInsertEntry(_DtCmsCalendar *cal, cms_entry *entry)
 		return (stat);
 
 	/* Add the entry into the data structure */
-	if (re == NULL) {
+	if (re == nullptr) {
 		rb_stat = rb_insert (cal->tree, (caddr_t)newptr,
 				(caddr_t)&(newptr->key));
 	} else {
@@ -213,8 +213,8 @@ _DtCmsInsertEntryAndLog(_DtCmsCalendar *cal, cms_entry *entry)
 		/* append entry to the log file */
 		if ((stat = _DtCmsV5TransactLog(cal, entry, _DtCmsLogAdd))
 		    != CSA_SUCCESS) {
-			(void)_DtCmsDeleteEntry(cal, NULL, 0, &entry->key,
-				NULL); 
+			(void)_DtCmsDeleteEntry(cal, nullptr, 0, &entry->key,
+				nullptr); 
 		}
 	}
 	return (stat);
@@ -229,7 +229,7 @@ _IsOnetimeEntry(cms_entry *entry)
 {
 	cms_attribute	*attr;
 
-	if (entry->attrs[CSA_ENTRY_ATTR_RECURRENCE_RULE_I].value == NULL)
+	if (entry->attrs[CSA_ENTRY_ATTR_RECURRENCE_RULE_I].value == nullptr)
 		return (B_TRUE);
 	else
 		return (B_FALSE);
@@ -243,7 +243,7 @@ _RuleToRepeatInfo(cms_entry *entry, RepeatEvent *re)
 	char	buf[BUFSIZ];
 	int	type;
 
-	if (re == NULL)
+	if (re == nullptr)
 	    return (_DtCm_set_sint32_attrval(CSA_X_DT_REPEAT_ONETIME,
 		&entry->attrs[CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I].value)); 
 

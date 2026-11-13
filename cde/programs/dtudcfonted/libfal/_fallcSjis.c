@@ -388,7 +388,7 @@ wc_codeset(XLCd lcd, wchar_t wch)
 	if ( widech == (*codesets)->wc_encoding )
 	    return *codesets;
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -403,7 +403,7 @@ sjis_mbtocs(
     int num_args)
 {
     XLCd lcd = (XLCd)conv->state;
-    XlcCharSet charset = NULL;
+    XlcCharSet charset = nullptr;
     int char_size = 0;
     int unconv_num = 0;
     char *src = *from, *dst = *to;
@@ -878,7 +878,7 @@ sjis_mbstocts(
 /* Initial State: */
 
     ct_state.GL_charset = ctdptr[Ascii];
-    ct_state.GR_charset = NULL;
+    ct_state.GR_charset = nullptr;
 
 
     if (*from_left > *to_left)
@@ -1016,7 +1016,7 @@ sjis_wcstocts(
 
 /* Initial State: */
     ct_state.GL_charset = ctdptr[0]; /* Codeset 0 */
-    ct_state.GR_charset = NULL;
+    ct_state.GR_charset = nullptr;
 
     if (*from_left > *to_left)
 	*from_left = *to_left;
@@ -1345,7 +1345,7 @@ create_conv(XLCd lcd, XlcConvMethods methods)
     XlcConv conv;
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
-    if (conv == NULL)
+    if (conv == nullptr)
 	return (XlcConv) NULL;
 
     conv->methods = methods;
@@ -1358,17 +1358,17 @@ enum { MBSTOCS, WCSTOCS, MBTOCS, CSTOMBS, CSTOWCS, MBSTOWCS, WCSTOMBS,
        WCSTOCTS, MBSTOCTS, CTSTOMBS, CTSTOWCS };
 
 static XlcConvMethodsRec conv_methods[] = {
-    {close_converter, sjis_mbstocs,  NULL },
-    {close_converter, sjis_wcstocs,  NULL },
-    {close_converter, sjis_mbtocs,   NULL },
-    {close_converter, sjis_cstombs,  NULL },
-    {close_converter, sjis_cstowcs,  NULL },
-    {close_converter, sjis_mbstowcs, NULL },
-    {close_converter, sjis_wcstombs, NULL },
-    {close_converter, sjis_wcstocts, NULL },
-    {close_converter, sjis_mbstocts, NULL },
-    {close_converter, sjis_ctstombs, NULL },
-    {close_converter, sjis_ctstowcs, NULL },
+    {close_converter, sjis_mbstocs,  nullptr },
+    {close_converter, sjis_wcstocs,  nullptr },
+    {close_converter, sjis_mbtocs,   nullptr },
+    {close_converter, sjis_cstombs,  nullptr },
+    {close_converter, sjis_cstowcs,  nullptr },
+    {close_converter, sjis_mbstowcs, nullptr },
+    {close_converter, sjis_wcstombs, nullptr },
+    {close_converter, sjis_wcstocts, nullptr },
+    {close_converter, sjis_mbstocts, nullptr },
+    {close_converter, sjis_ctstombs, nullptr },
+    {close_converter, sjis_ctstowcs, nullptr },
 };
 
 
@@ -1445,7 +1445,7 @@ _fallcSjisLoader(char *name)
     CodeSet *codeset_list;
 
     lcd = _fallcCreateLC(name, _fallcGenericMethods);
-    if (lcd == NULL)
+    if (lcd == nullptr)
 	return lcd;
 
     if ((_fallcCompareISOLatin1(XLC_PUBLIC_PART(lcd)->codeset, "sjis"))) {

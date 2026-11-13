@@ -101,7 +101,7 @@ void	discard_to_ETX (PARG *parg)
 {
     if (!readchar_ftext (parg))
 	return;
-    while (readchar_ftext (NULL))
+    while (readchar_ftext (nullptr))
 	;
     return;
 } /* discard_to_ETX() */
@@ -134,9 +134,9 @@ void	discard_to_ETX (PARG *parg)
 UCHAR	readchar_ftext (void *argument)
 {
     PARG *parg = argument;
-    static FILE		*ftext =	NULL;
-    static UCHAR	*etxdelim =	NULL;
-    static UCHAR	*rabuf =	NULL;
+    static FILE		*ftext =	nullptr;
+    static UCHAR	*etxdelim =	nullptr;
+    static UCHAR	*rabuf =	nullptr;
     static int		ETX_flag =	TRUE;
     static int		delimsz =	0;
     static int		bufcount =	0;
@@ -161,14 +161,14 @@ UCHAR	readchar_ftext (void *argument)
 	}
 	if (etxdelim) {
 	    free (etxdelim);
-	    etxdelim = NULL;
+	    etxdelim = nullptr;
 	}
 	if (parg->etxdelim)
 	    etxdelim =	(UCHAR *) strdup (parg->etxdelim);
 	ETX_flag =	FALSE;
 	delimsz =	(etxdelim)? strlen((char*) etxdelim) : 0;
 	if (!rabuf) {
-	    rabuf = austext_malloc (MAX_ETXDELIM + 2, PROGNAME"479", NULL);
+	    rabuf = austext_malloc (MAX_ETXDELIM + 2, PROGNAME"479", nullptr);
 	    rabufend = rabuf + MAX_ETXDELIM;
 	}
 	if (delimsz >= MAX_ETXDELIM) {

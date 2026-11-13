@@ -74,16 +74,16 @@ Dt11GetMessage(
         char *msg;
         static int first = 1;
         static nl_catd nlmsg_fd;
-	static char *nlmsg_filename = NULL;
+	static char *nlmsg_filename = nullptr;
 
 	_DtSvcProcessLock();
-        if ( NULL == nlmsg_filename || 0 != strcmp(nlmsg_filename, filename) )
+        if ( nullptr == nlmsg_filename || 0 != strcmp(nlmsg_filename, filename) )
         {
 		nlmsg_fd = CATOPEN(filename, NL_CAT_LOCALE);
 		if (nlmsg_filename)
 		{
 		    free(nlmsg_filename);
-		    nlmsg_filename = NULL;
+		    nlmsg_filename = nullptr;
 		}
 		nlmsg_filename = strdup(filename);
         }

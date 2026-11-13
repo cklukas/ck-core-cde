@@ -4,6 +4,7 @@ import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
+import re
 import os
 from pathlib import Path
 import runpy
@@ -63,9 +64,9 @@ def main():
     fixture = Path(__file__).with_name("file-dialog-safety.c")
     lexical_file = Path(__file__).with_name("check-transfer-completion.py")
     lexical = runpy.run_path(str(lexical_file))
-    text = source_file.read_text()
-    file_op_text = file_op_source.read_text()
-    main_text = main_header.read_text()
+    text = re.sub(r"\bnullptr\b", "NULL", source_file.read_text())
+    file_op_text = re.sub(r"\bnullptr\b", "NULL", file_op_source.read_text())
+    main_text = re.sub(r"\bnullptr\b", "NULL", main_header.read_text())
     functions = []
     records = []
     for name in ("FileDialogBuildPath", "GetToPath"):
@@ -132,7 +133,7 @@ def main():
                               "exit_code": version.returncode}
         if version.returncode != 0:
             raise RuntimeError("compiler identity failed")
-        command = compiler + ["-std=c11", "-D_POSIX_C_SOURCE=200809L",
+        command = compiler + ["-std=gnu23", "-D_POSIX_C_SOURCE=200809L",
                               "-Wall", "-Wextra", "-Werror", "-g", "-O1",
                               "-fno-omit-frame-pointer"]
         if args.sanitizers != "none":

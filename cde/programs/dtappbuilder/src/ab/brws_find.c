@@ -108,11 +108,11 @@ brwsP_create_find_box(
 
         XtCallbackRec	find_callback_list[] = {
                 {find_callback, (XtPointer) NULL},
-                {NULL, (XtPointer) NULL}
+                {nullptr, (XtPointer) NULL}
             };
         XtCallbackRec	cancel_callback_list[] = {
                 {cancel_callback, (XtPointer) NULL},
-                {NULL, (XtPointer) NULL}
+                {nullptr, (XtPointer) NULL}
             };
 	Arg		args[3];
 	int		num_args = 0;
@@ -127,7 +127,7 @@ brwsP_create_find_box(
 			"Module Browser: Find Object"));
         XtVaSetValues(XtParent(ui->find_box), 
 			XmNtitle, title,
-			NULL);
+			nullptr);
 	XtFree(title);
 
 	sel_label = XmStringCreateLocalized(
@@ -140,7 +140,7 @@ brwsP_create_find_box(
 		XmNokCallback, &find_callback_list,
 		XmNcancelCallback, &cancel_callback_list,
 		XmNuserData, b,
-		NULL);
+		nullptr);
 	
 	XmStringFree(sel_label);
 	XmStringFree(ok_label);
@@ -165,7 +165,7 @@ brwsP_destroy_find_box(
     if (ui->find_box)
     {
 	XtDestroyWidget(ui->find_box);
-	ui->find_box = NULL;
+	ui->find_box = nullptr;
     }
 }
 
@@ -225,17 +225,17 @@ find_callback(
 )
 {
     XmSelectionBoxCallbackStruct *selection_data = call_data;
-    ABBrowser		b = NULL;
+    ABBrowser		b = nullptr;
     Vwr			v;
     VNode		root_node;
     BrowserUiObj	ui;
     DtbBrwsMainwindowInfo	instance;
     ABObj		root_obj;
     ABObj		found_obj;
-    char		*obj_name_str = NULL;
-    char		*obj_type_str = NULL;
+    char		*obj_name_str = nullptr;
+    char		*obj_type_str = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &b, NULL); 
+    XtVaGetValues(widget, XmNuserData, &b, nullptr); 
 
     if (!b)
 	return;

@@ -234,7 +234,7 @@ The caller must free the memory when no longer needed.
 $ARGS$:
 filespec:  the pathname
 $RETURNS$:
-ptr to mallocedd memory or NULL
+ptr to mallocedd memory or nullptr
 /*================================================$SKIP$==*/
 #endif
 
@@ -243,11 +243,11 @@ char * ExpandPath (
 {  /* $CODE$ */
     char tmpPath[MAXPATHLEN + 2];
     char * pathName;
-    char * eos = NULL;
-    const char * slash = NULL;
+    char * eos = nullptr;
+    const char * slash = nullptr;
 
     /* test args */
-    if (NULL == filespec) return NULL;
+    if (nullptr == filespec) return nullptr;
 
     /*** is the file absolute ***/
     /* if filespec begins with / then it is absolute */
@@ -261,7 +261,7 @@ char * ExpandPath (
     /*** otherwise, make it relative to the current directory ***/
 
     /* get user's current working directory */
-    if (getcwd(tmpPath, MAXPATHLEN) == 0) return NULL; /* RETURN: error */
+    if (getcwd(tmpPath, MAXPATHLEN) == 0) return nullptr; /* RETURN: error */
 
     /*** add a slash to end of path component, if needed ***/
     /* get end of the string */
@@ -277,7 +277,7 @@ char * ExpandPath (
     /* make a malloc'd copy of the path with room to grow */
     pathName = malloc(sizeof(char) * 
                  (strlen(filespec) + (eos-tmpPath) + 5) ); /* 5: arbitrary */
-    if (NULL == pathName) return NULL;		/* RETURN: error */
+    if (nullptr == pathName) return nullptr;		/* RETURN: error */
 
     /* build the absolute path */
     strcpy(pathName,tmpPath);
@@ -305,10 +305,10 @@ void DeleteDbMem(
       _DtXlateDb * io_db)
 { /*$CODE$*/
        /* zero out object mem and free it */
-       (*io_db)->xrmDb = NULL;
+       (*io_db)->xrmDb = nullptr;
        (*io_db)->initGuard = 0;
        free(*io_db);
-       *io_db= NULL;
+       *io_db= nullptr;
 } /*$END$*/
 
 #if DOC
@@ -337,7 +337,7 @@ int _DtMBStrchr (
     const char * p1;
     wchar_t      wcs;
 
-    *ret_ptr = NULL;
+    *ret_ptr = nullptr;
 
     if (!s1 || *s1 == '\0')
         return 1;
@@ -409,7 +409,7 @@ int _DtMBStrrchr (
     const char * p1;
     wchar_t      wcs;
 
-    *ret_ptr = NULL;
+    *ret_ptr = nullptr;
 
     if (!s1 || *s1 == '\0')
         return 1;
@@ -506,7 +506,7 @@ void ReplaceMatchallSubex(
         {
            /* if MATCHALL_CHAR is not followed by a digit, e.g. \1
               or no replacement values exist, ignore it */
-           if (   NULL == subex 
+           if (   nullptr == subex 
                || isdigit(*(old+1)) == 0 ) 
            {
               old++;                 /* go past the escape char */
@@ -543,7 +543,7 @@ void ReplaceMatchallSubex(
 
                  /* expand memory and reset pointers */
                  *pStr = realloc(*pStr,strLen+repLen+1);
-                 if (NULL == *pStr) return;           /* RETURN */
+                 if (nullptr == *pStr) return;           /* RETURN */
                  nxt = *pStr + newOff;
                  old = *pStr + oldOff;
 
@@ -573,7 +573,7 @@ void ReplaceMatchallSubex(
 $PFUNBEG$: StripMetaAndReplaceEscSubex()
 $1LINER$:  Strips off meta chars and replaces escaped subex (e.g. \1) values
 $SUMMARY$:
-Strip is performed in place if replaceValues is NULL.
+Strip is performed in place if replaceValues is nullptr.
 
 If replaceValues are specified and referenced, the
 routine assumes that the string pointed to by pStr was
@@ -608,7 +608,7 @@ void StripMetaAndReplaceEscSubex(
         {
            /* if ESCAPE_CHAR is not followed by a digit, e.g. \1
               or no replacement values exist, ignore it */
-           if (   NULL == replaceValues 
+           if (   nullptr == replaceValues 
                || keepEscChar
                || isdigit(*(old+1)) == 0 )
            {
@@ -633,7 +633,7 @@ void StripMetaAndReplaceEscSubex(
               /* test for valid replacement */
               if (   refNum >= 0
                   && refNum < MAXSPECQUARKS
-                  && replaceValues[refNum] != NULL)
+                  && replaceValues[refNum] != nullptr)
               {
                  int    repLen;
                  int    strLen;
@@ -646,7 +646,7 @@ void StripMetaAndReplaceEscSubex(
                  strLen = strlen(*pStr);
                  /* expand memory and reset pointers */
                  *pStr = realloc(*pStr,strlen(*pStr)+repLen+1);
-                 if (NULL == *pStr) return;           /* RETURN */
+                 if (nullptr == *pStr) return;           /* RETURN */
                  nxt = *pStr + newOff;
                  old = *pStr + oldOff;
 
@@ -790,7 +790,7 @@ Boolean CheckForMatchall(
       if (   matchingString[0] == MATCHALL_CHAR
           && matchingString[1] == EOS )
       {
-         srchData->curSpecRefs[refNum] = NULL;
+         srchData->curSpecRefs[refNum] = nullptr;
          /* don't add to score for a matchall with no replacement value */
       }
       else
@@ -911,7 +911,7 @@ Boolean CheckSearchOperMatchesSpec(
    const char * hit;
    const char * remainingOps;
 
-   if (   srchData->operStr == NULL
+   if (   srchData->operStr == nullptr
        || CheckForMatchall(srchData,opStr,srchData->operStr) == True
        || CheckForMatchall(srchData,srchData->operStr,opStr) == True )
       return True;          /* RETURN; matchall specified */
@@ -928,7 +928,7 @@ Boolean CheckSearchOperMatchesSpec(
       /* look for operation in remainingOps */
       hit = strstr(remainingOps,srchData->operStr);
       /* see if the hit is on a complete token */
-      if (   NULL != hit
+      if (   nullptr != hit
           && (hit == remainingOps || *(hit-1) == OPER_SEPARATOR)
           && (hit[hitLen] == EOS || hit[hitLen] == OPER_SEPARATOR) )
       {
@@ -936,7 +936,7 @@ matched:
          srchData->curScore += 2; /*perfect match better than a matchall match*/
          return True;             /* RETURN: operation matches */
       }
-   } while(hit != NULL && *(remainingOps = hit+1) != EOS);
+   } while(hit != nullptr && *(remainingOps = hit+1) != EOS);
 
    return False;        /* RETURN: no match on operation */
 }        /*$END$*/
@@ -1128,14 +1128,14 @@ Boolean CheckSearchOpValueMatchesSpec(
     if (srchData->curTransType == __DtXLATE_TYPE_REGEX)
     {
 #if defined(sun)
-        char *     ex = NULL;
+        char *     ex = nullptr;
 
         /* True: leave escape char in place */
-        StripMetaAndReplaceEscSubex(&pOpValBuf,True,NULL);
+        StripMetaAndReplaceEscSubex(&pOpValBuf,True,nullptr);
 
         /* we need to use regexex to pattern match */
         /* and we need to save of the reference value matches */
-        if (   (ex = compile(opValBuf,NULL,NULL)) != NULL
+        if (   (ex = compile(opValBuf,nullptr,nullptr)) != nullptr
             && advance(srchData->opValue,ex) != 0)
         {
             int matchSize;
@@ -1143,7 +1143,7 @@ Boolean CheckSearchOpValueMatchesSpec(
             matches = True;       /* if got this far */
 
             /* need due to bug in advance()--operation doesn't meet documentation */
-            if (NULL == loc1) loc1=(char *)srchData->opValue;
+            if (nullptr == loc1) loc1=(char *)srchData->opValue;
 
             /* inc score by the size of the match after 
                scaling for the maximum possible match size */
@@ -1190,7 +1190,7 @@ Boolean CheckSearchOpValueMatchesSpec(
         regex_t    re;
 
         /* True: leave escape char in place */
-        StripMetaAndReplaceEscSubex(&pOpValBuf,True,NULL);
+        StripMetaAndReplaceEscSubex(&pOpValBuf,True,nullptr);
 
         /* we need to use regexex to pattern match */
         /* and we need to save of the reference value matches */
@@ -1244,7 +1244,7 @@ Boolean CheckSearchOpValueMatchesSpec(
         char * opValueInBuf;
 
         /* False: strip escape char as well */
-        StripMetaAndReplaceEscSubex(&pOpValBuf,False,NULL);
+        StripMetaAndReplaceEscSubex(&pOpValBuf,False,nullptr);
         matches = (strcmp(srchData->opValue,opValBuf) == 0);
 
         /* if matches, inc score to show a perfect match (max poss value) */
@@ -1257,10 +1257,10 @@ Boolean CheckSearchOpValueMatchesSpec(
         /*  (srchData->curTransType == __DtXLATE_TYPE_CONTAINS) */
         /* is opValue contained in opValBuf? */
         /* is opValBuf contained in opValue? */
-        opValueInBuf = NULL;
+        opValueInBuf = nullptr;
         matches =    (opValBuf[0] != EOS && srchData->opValue[0] != EOS) 
-                  && ((opValueInBuf=strstr(opValBuf,srchData->opValue)) != NULL
-                      || strstr(srchData->opValue,opValBuf) != NULL);
+                  && ((opValueInBuf=strstr(opValBuf,srchData->opValue)) != nullptr
+                      || strstr(srchData->opValue,opValBuf) != nullptr);
 
         /* if matches, inc score to show a contains match */
         if (matches) 
@@ -1540,11 +1540,11 @@ Opens a translation resource database and returns a
 reference to it in ret_db.
 
 Initializes the _DtXlateDb object to ready for use.
-If an error occurs, _DtXlateDb is set to NULL.
+If an error occurs, _DtXlateDb is set to nullptr.
 $ARGS$:
 $RETURNS$:
 0:  no error occurred
--1: if ret_db is NULL
+-1: if ret_db is nullptr
     if XrmGetFileDatabase() failed on databaseName
     if malloc fails to alloc a db structure
 /*================================================$SKIP$==*/
@@ -1555,11 +1555,11 @@ int  _DtXlateOpenDb(
        _DtXlateDb *  ret_db)
 {       /*$CODE$*/
     XrmDatabase xrmDb;
-    __DtXlateDbRec * dbRec = NULL;
-    char * path = NULL;
+    __DtXlateDbRec * dbRec = nullptr;
+    char * path = nullptr;
 
-    if(NULL == ret_db) return -1;        /* RETURN */
-    *ret_db = NULL;
+    if(nullptr == ret_db) return -1;        /* RETURN */
+    *ret_db = nullptr;
 
     /* Do NOT check for whether *ret_db is already
        a valid db; this is none of our affair. */
@@ -1567,14 +1567,14 @@ int  _DtXlateOpenDb(
     /* get an absolute path for the file */
     path = ExpandPath(databaseName);
 
-    if (NULL == path) return -1;        /* RETURN */
+    if (nullptr == path) return -1;        /* RETURN */
 
     xrmDb = XrmGetFileDatabase(path);
-    if (NULL == xrmDb) { free(path); return -1; } /* RETURN */
+    if (nullptr == xrmDb) { free(path); return -1; } /* RETURN */
 
     /* alloc a db ref */
     dbRec = (__DtXlateDbRec *) calloc(1,sizeof(__DtXlateDbRec));
-    if(NULL == dbRec) 
+    if(nullptr == dbRec) 
     {
        XrmDestroyDatabase(xrmDb); 
        free(path);
@@ -1608,7 +1608,7 @@ Initializes the _DtXlateDb object to ready for use.
 $ARGS$:
 $RETURNS$:
 0:  no error occurred
--1: if io_db is NULL
+-1: if io_db is nullptr
     if XrmGetFileDatabase() failed on databaseName
 /*================================================$SKIP$==*/
 #endif
@@ -1621,12 +1621,12 @@ int  _DtXlateOpenAndMergeDbs(
     char * path;
     int  ret;
 
-    if(NULL == io_db) return -1;                /* RETURN */
+    if(nullptr == io_db) return -1;                /* RETURN */
 
     /* if a db has not yet been opened */
-    if(   NULL == *io_db
+    if(   nullptr == *io_db
        || (*io_db)->initGuard != INIT_OCCURRED 
-       || (*io_db)->xrmDb == NULL)
+       || (*io_db)->xrmDb == nullptr)
     {
        ret = _DtXlateOpenDb(databaseName,io_db); /* RETURN */
        if ( (*io_db) && (*io_db)->debugMode) 
@@ -1644,10 +1644,10 @@ int  _DtXlateOpenAndMergeDbs(
     /* get an absolute path for the file */
     path = ExpandPath(databaseName);
 
-    if (NULL == path) goto Failed;     /* RETURN */
+    if (nullptr == path) goto Failed;     /* RETURN */
 
     xrmDb = XrmGetFileDatabase(path);
-    if (NULL == xrmDb) goto Failed;    /* RETURN */
+    if (nullptr == xrmDb) goto Failed;    /* RETURN */
 
     /* merge and destroy xrmDb for me */
     XrmMergeDatabases(xrmDb,&(*io_db)->xrmDb);
@@ -1689,8 +1689,8 @@ io_dbToMerge:    database to merge into io_mergeIntoDb
 io_mergeIntoDb:  database to hold merged result
 $RETURNS$:
 0:  no error occurred
--1: if io_dbToMerge or io_mergeIntoDb is NULL
-    if *io_dbToMerge is NULL or uninitialized
+-1: if io_dbToMerge or io_mergeIntoDb is nullptr
+    if *io_dbToMerge is nullptr or uninitialized
 /*================================================$SKIP$==*/
 #endif
 
@@ -1700,11 +1700,11 @@ int  _DtXlateMergeDbs(
 {       /*$CODE$*/
 
     /* check args */
-    if(   NULL == io_mergeIntoDb 
-       || NULL == io_dbToMerge
-       || NULL == *io_dbToMerge
+    if(   nullptr == io_mergeIntoDb 
+       || nullptr == io_dbToMerge
+       || nullptr == *io_dbToMerge
        || (*io_dbToMerge)->initGuard != INIT_OCCURRED 
-       || (*io_dbToMerge)->xrmDb == NULL)
+       || (*io_dbToMerge)->xrmDb == nullptr)
        return -1;                             /* RETURN */
 
     /* check for debug mode */
@@ -1714,9 +1714,9 @@ int  _DtXlateMergeDbs(
                   "mergeIntoDb: %p; dbToMerge: %p\n", (void *) *io_mergeIntoDb, (void *) *io_dbToMerge);
 
     /* if db_mergeIntoDb has not yet been opened */
-    if(   NULL == *io_mergeIntoDb
+    if(   nullptr == *io_mergeIntoDb
        || (*io_mergeIntoDb)->initGuard != INIT_OCCURRED 
-       || (*io_mergeIntoDb)->xrmDb == NULL)
+       || (*io_mergeIntoDb)->xrmDb == nullptr)
     {
        /* just move dbToMerge into mergeIntoDb */
        *io_mergeIntoDb = *io_dbToMerge;
@@ -1761,7 +1761,7 @@ int  _DtXlateOpenAllDbs(
          _DtXlateDb * ret_db)
 {       /*$CODE$*/
     const char * workStart = searchPaths;
-    const char * separator = NULL;
+    const char * separator = nullptr;
     char         dbFile[MAXPATHLEN+1];
     int          ret = ~0;    /* all bits set */
 
@@ -1769,14 +1769,14 @@ int  _DtXlateOpenAllDbs(
     do
     {
        int  workLen = 0;
-       const char * slash = NULL;
+       const char * slash = nullptr;
 
        dbFile[0] = EOS;
 
        /* isolate the next part of the path */
        _DtMBStrchr (workStart, PATH_SEPARATOR, -1, &separator);
-       if (NULL == separator) _DtMBStrchr (workStart, EOS, -1, &separator);
-       if (NULL == separator) break;           /* BREAK */
+       if (nullptr == separator) _DtMBStrchr (workStart, EOS, -1, &separator);
+       if (nullptr == separator) break;           /* BREAK */
        workLen = separator - workStart;  /* don't include +1 for EOS */
 
        /* copy over the path component */
@@ -1831,8 +1831,8 @@ int _DtXlateCloseDb(
 {       /*$CODE$*/
      __DtXlateDbRec * dbRec;
      
-     if(   NULL == io_db 
-        || NULL == (dbRec = *io_db)        /* dbRec assigned */
+     if(   nullptr == io_db 
+        || nullptr == (dbRec = *io_db)        /* dbRec assigned */
         || dbRec->initGuard != INIT_OCCURRED) 
         return -1;                     /* RETURN */
  
@@ -1859,7 +1859,7 @@ at the location pointed to by ret_opValue.
 The translated string was allocated using malloc() and
 must be freed when no longer needed.
 
-If ret_opValue is NULL, the function merely verifies that
+If ret_opValue is nullptr, the function merely verifies that
 a valid translation exists.
 $ARGS$:
 db:		a translation database
@@ -1871,7 +1871,7 @@ ret_opValue:	location where ptr to translated string is stored
 ret_reserved:	reserved for future use
 $RETURNS$:
  0: translation found
--1: invalid database (NULL ptr, not opened)
+-1: invalid database (nullptr ptr, not opened)
     no operation was specified
     query failed to find a match
 /*================================================$SKIP$==*/
@@ -1889,9 +1889,9 @@ int _DtXlateStdToOpValue(
    __DtXlateSrchData srchData;
    XrmQuark  empty = NULLQUARK;
 
-   if (   NULL == db 
+   if (   nullptr == db 
        || db->initGuard != INIT_OCCURRED
-       || NULL == operation
+       || nullptr == operation
        || operation[0] == EOS)
        return -1;                                   /* RETURN error */
 
@@ -1899,16 +1899,16 @@ int _DtXlateStdToOpValue(
    DoCommonSrchDataPrep(&srchData,db,platform,version,operation);
 
    /* handle a rare case */
-   if (NULL == stdValue)
+   if (nullptr == stdValue)
    {
        if (db->debugMode) fprintf(stderr,"_DtXlateStdToOpValue: NULL std value\n");
-       if (ret_opValue) *ret_opValue = NULL;
+       if (ret_opValue) *ret_opValue = nullptr;
        return -1;                                  /* RETURN error */
    }
 
    /* build std value list for use during comparison */
    srchData.stdValueQuarks[0] = NULLQUARK;
-   if (NULL != stdValue && stdValue[0] != EOS)
+   if (nullptr != stdValue && stdValue[0] != EOS)
       XrmStringToQuarkList(stdValue,srchData.stdValueQuarks);
 
    if (db->debugMode)
@@ -1919,12 +1919,12 @@ int _DtXlateStdToOpValue(
    XrmEnumerateDatabase(db->xrmDb,&empty,&empty,
               XrmEnumAllLevels, FindStdToOpMatchCB, (XPointer) &srchData);
 
-   if (   srchData.opValue != NULL
+   if (   srchData.opValue != nullptr
        && srchData.bestTransType != __DtXLATE_TYPE_INHIBIT )
    {
        char * opValue;
        
-       if (ret_opValue == NULL)
+       if (ret_opValue == nullptr)
        {
           if (db->debugMode) fprintf(stderr,"translation exists\n");
           return 0;  /* RETURN: translation exists */
@@ -1939,7 +1939,7 @@ int _DtXlateStdToOpValue(
        if ( srchData.bestTransType == __DtXLATE_TYPE_REGEX )
           StripMetaAndReplaceEscSubex(&opValue,False,srchData.bestSpecRefs);
        else
-          StripMetaAndReplaceEscSubex(&opValue,False,NULL);
+          StripMetaAndReplaceEscSubex(&opValue,False,nullptr);
 
        if (db->debugMode) fprintf(stderr,"op value:%s\n",opValue);
 
@@ -1962,7 +1962,7 @@ at the location pointed to by ret_stdValue.
 The standard string was allocated using malloc() and
 must be freed when no longer needed.
 
-If ret_stdValue is NULL, the function merely verifies that
+If ret_stdValue is nullptr, the function merely verifies that
 a valid translation exists.
 $ARGS$:
 db:		a translation database
@@ -1974,7 +1974,7 @@ ret_stdValue:	location where ptr to standard string is stored
 ret_reserved:	reserved for future use
 $RETURNS$:
  0: translation found
--1: invalid database (NULL ptr, not opened)
+-1: invalid database (nullptr ptr, not opened)
     no operation was specified
     query failed to find a match
 /*================================================$SKIP$==*/
@@ -1993,9 +1993,9 @@ int _DtXlateOpToStdValue(
    XrmQuark  empty = NULLQUARK;
    char      lhs[MAXLHSSIZE];
 
-   if (   NULL == db 
+   if (   nullptr == db 
        || db->initGuard != INIT_OCCURRED
-       || NULL == operation
+       || nullptr == operation
        || operation[0] == EOS)
        return -1;                                   /* RETURN error */
 
@@ -2004,10 +2004,10 @@ int _DtXlateOpToStdValue(
 
    /* after check on value, store op value for use during comparison */
    /* not meaningful to check for a NULL value */
-   if (NULL == opValue)
+   if (nullptr == opValue)
    {
       if (db->debugMode) fprintf(stderr,"_DtXlateOpToStdValue: NULL op value\n");
-      if (ret_stdValue) *ret_stdValue = NULL;
+      if (ret_stdValue) *ret_stdValue = nullptr;
       return -1;                                   /* RETURN error */
    }
    srchData.opValue = opValue;
@@ -2027,7 +2027,7 @@ int _DtXlateOpToStdValue(
       char * stdValue = lhs;
       int    stdValueLen = 0;
 
-      if (ret_stdValue == NULL)
+      if (ret_stdValue == nullptr)
       {
          if (db->debugMode) fprintf(stderr,"translation exists\n");
          return 0;  /* RETURN: translation exists */
@@ -2040,7 +2040,7 @@ int _DtXlateOpToStdValue(
       {
          const char * str = XrmQuarkToString(*stdQ);
          int strLen;
-         if (NULL == str || str[0] == EOS) continue;
+         if (nullptr == str || str[0] == EOS) continue;
          
          strLen = strlen(str);
          if (stdValue != lhs) 
@@ -2145,15 +2145,15 @@ xlateStd2Op(_DtXlateDb db,Boolean runtimeOp, char * operation,char * stdVal)
 {
    char platform[_DtPLATFORM_MAX_LEN];
    int  version;
-   char * opVal = NULL;
+   char * opVal = nullptr;
    int    ret;
 
    if (runtimeOp)
-      ret=_DtXlateGetXlateEnv(db,platform,&version,NULL);
+      ret=_DtXlateGetXlateEnv(db,platform,&version,nullptr);
    else
-      ret=_DtXlateGetXlateEnv(db,platform,NULL,&version);
+      ret=_DtXlateGetXlateEnv(db,platform,nullptr,&version);
    if (ret == 0)
-      _DtXlateStdToOpValue(db,platform,version,operation,stdVal,&opVal,NULL);
+      _DtXlateStdToOpValue(db,platform,version,operation,stdVal,&opVal,nullptr);
    return opVal;       /* will be NULL if error occurred */
 }
 
@@ -2166,7 +2166,7 @@ ret_AppExecEnvVersion:   pts to an integer that will receive the platform
 ret_XlateCompiledForOSVersion:   pts to an integer that will receive the
                          operating system version for which _DtXlate was
                          compiled using OSMajorVersion * 100 + OSMinorVersion
-Any of the arguments may be NULL.
+Any of the arguments may be nullptr.
 $RETURNS$:
  0: if no error occurred
 -1: if no translation was possible to get the AppExecEnvVersion
@@ -2200,7 +2200,7 @@ int _DtXlateGetXlateEnv(
    if (ret_AppExecEnvVersion) 
    {
       char version[sizeof(names.release)+sizeof(names.version)-1];
-      char * stdVer = NULL;
+      char * stdVer = nullptr;
       int  verNum = MATCHALL_VER;
 
       /* cat release version and do a translation on it to a std value */
@@ -2209,7 +2209,7 @@ int _DtXlateGetXlateEnv(
       version[sizeof(names.release)-1] = EOS;
       strncat(version,names.version,sizeof(names.version)-1);
       ret = _DtXlateOpToStdValue(db,names.sysname,0,
-                   _DtXLATE_OPER_VERSION,version,&stdVer,NULL);
+                   _DtXLATE_OPER_VERSION,version,&stdVer,nullptr);
       if (ret == 0)
       {
          if (sscanf(stdVer,"%d",&verNum) != 1) verNum = MATCHALL_VER;;

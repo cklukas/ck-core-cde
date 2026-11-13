@@ -86,12 +86,12 @@ static CSA_return_code _GetV4UserAccess(Calendar *cal, cms_access_entry *alist);
 extern CSA_return_code
 _DtCm_rpc_open_calendar(Calendar *cal)
 {
-	_DtCm_Client_Info	*ci=NULL;
+	_DtCm_Client_Info	*ci=nullptr;
 	CSA_return_code	stat;
 
 	DP(("rpccalls.c: _DtCm_rpc_open_calendar\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -110,7 +110,7 @@ _DtCm_rpc_open_calendar(Calendar *cal)
 
 		res = cms_open_calendar_5(&arg, &cal->conn);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if ((stat = res->stat) == CSA_SUCCESS) {
 				cal->rpc_version = res->svr_vers;
 				cal->file_version = res->file_vers;
@@ -135,7 +135,7 @@ _DtCm_rpc_open_calendar(Calendar *cal)
 		 * the calendar
 		 */
 		if ((stat = _DtCm_table_lookup_range(cal, 0, 0, B_TRUE, 0, 0,
-		    0, 0, NULL, NULL, &entries)) == CSA_SUCCESS) {
+		    0, 0, nullptr, nullptr, &entries)) == CSA_SUCCESS) {
 			if (entries) _DtCm_free_libentries(entries);
 
 			if ((stat = _DtCm_table_get_access(cal, &alist))
@@ -154,12 +154,12 @@ _DtCm_rpc_create_calendar(
 	CSA_uint32 num_attrs,
 	CSA_attribute * attrs)
 {
-	_DtCm_Client_Info	*ci=NULL;
+	_DtCm_Client_Info	*ci=nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
 	DP(("rpccalls.c: _DtCm_rpc_create_calendar\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -175,8 +175,8 @@ _DtCm_rpc_create_calendar(
 		CSA_uint32	num_cmsattrs;
 		cms_attribute	*cmsattrs;
 
-		if ((stat = csa2cmsattrs(num_attrs, attrs, NULL, &num_cmsattrs,
-		    &cmsattrs, NULL)) != CSA_SUCCESS)
+		if ((stat = csa2cmsattrs(num_attrs, attrs, nullptr, &num_cmsattrs,
+		    &cmsattrs, nullptr)) != CSA_SUCCESS)
 			return (stat);
 
 		args.cal	= cal->name;
@@ -189,7 +189,7 @@ _DtCm_rpc_create_calendar(
 
 		if (num_cmsattrs) free_cmsattrs(num_cmsattrs, cmsattrs);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			stat = *res;
 		} else {
 			stat = (cal->conn.stat == RPC_SUCCESS) ?
@@ -211,8 +211,8 @@ _DtCm_rpc_create_calendar(
 				if (attrs[i].name)
 					break;
 			}
-			if (attrs[i].value == NULL)
-				stat = _DtCm_table_set_access(cal, NULL);
+			if (attrs[i].value == nullptr)
+				stat = _DtCm_table_set_access(cal, nullptr);
 			else
 				stat = _DtCm_table_set_access(cal,
 					attrs[i].value->item.access_list_value);
@@ -228,7 +228,7 @@ _DtCm_rpc_create_calendar(
 		if (ptr = strchr(cal->name, '@')) *ptr = '\0';
 		if (_DtCmIsUserName(cal->name) == B_TRUE) {
 
-			if ((owner = _DtCmGetUserName()) == NULL)
+			if ((owner = _DtCmGetUserName()) == nullptr)
 				stat = CSA_E_FAILURE;
 
 			if (strcmp(cal->name, owner))
@@ -244,7 +244,7 @@ _DtCm_rpc_create_calendar(
 		 */
 		if (stat == CSA_SUCCESS &&
 		    (stat = _DtCm_table_lookup_range(cal, 0, 0, B_TRUE, 0, 0,
-		    0, 0, NULL, NULL, &entries)) == CSA_SUCCESS) {
+		    0, 0, nullptr, nullptr, &entries)) == CSA_SUCCESS) {
 			if (entries) _DtCm_free_libentries(entries);
 		}
 	}
@@ -259,7 +259,7 @@ _DtCm_rpc_delete_calendar(Calendar *cal)
 
 	DP(("rpccalls.c: _DtCm_rpc_delete_calendar\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -279,7 +279,7 @@ _DtCm_rpc_delete_calendar(Calendar *cal)
 
 		res = cms_remove_calendar_5(&arg, &cal->conn);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			stat = *res;
 		} else {
 			stat = (cal->conn.stat == RPC_SUCCESS) ?
@@ -296,11 +296,11 @@ extern CSA_return_code
 _DtCm_rpc_register_client(Calendar *cal, unsigned long update_type)
 {
 	CSA_return_code	stat;
-	_DtCm_Client_Info *ci = NULL;
+	_DtCm_Client_Info *ci = nullptr;
 
 	DP(("rpccalls.c: _DtCm_rpc_register_client\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -318,11 +318,11 @@ extern CSA_return_code
 _DtCm_rpc_unregister_client(Calendar *cal, unsigned long update_type)
 {
 	CSA_return_code	stat;
-	_DtCm_Client_Info *ci = NULL;
+	_DtCm_Client_Info *ci = nullptr;
 
 	DP(("rpccalls.c: _DtCm_rpc_unregister_client\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -345,12 +345,12 @@ _DtCm_rpc_lookup_reminder(
 	CSA_uint32 *num_rems,
 	CSA_reminder_reference **rems)
 {
-	_DtCm_Client_Info	*ci=NULL;
+	_DtCm_Client_Info	*ci=nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
 	DP(("rpccalls.c: _DtCm_rpc_lookup_reminder\n"));
 
-	if (cal == NULL || num_rems == 0 || rems == NULL)
+	if (cal == nullptr || num_rems == 0 || rems == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -380,7 +380,7 @@ _DtCm_rpc_lookup_reminder(
 		if (cmsnames)
 			free(cmsnames);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if ((stat = res->stat) == CSA_SUCCESS)
 				stat = _DtCm_cms2csa_reminder_ref(res->rems,
 					num_rems, rems);
@@ -412,12 +412,12 @@ _DtCm_rpc_lookup_entries(
 	CSA_enum *ops,
 	_DtCm_libentry **elist_r)
 {
-	_DtCm_Client_Info	*ci=NULL;
+	_DtCm_Client_Info	*ci=nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
 	DP(("rpccalls.c: _DtCm_rpc_lookup_entries\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -427,7 +427,7 @@ _DtCm_rpc_lookup_entries(
 	cal->conn.ci = ci;
 	cal->conn.retry = B_TRUE;
 
-	*elist_r = NULL;
+	*elist_r = nullptr;
 
 	if (ci->vers_out == TABLEVERS) {
 		cms_lookup_entries_args	args;
@@ -451,7 +451,7 @@ _DtCm_rpc_lookup_entries(
 		free_cmsattrs(num_cmsattrs, cmsattrs);
 		if (newops) free(newops);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if ((stat = res->stat) == CSA_SUCCESS) {
 				stat = _DtCmCmsentriesToLibentries(
 					&cal->entry_tbl, res->entries, elist_r);
@@ -477,7 +477,7 @@ _DtCm_rpc_lookup_entries(
  
 		/* hash the matching criteria */
 		if ((stat = _DtCmHashCriteria(cal->entry_tbl, num_attrs, attrs,
-		    NULL, ops, &no_match, &no_start_time_range,
+		    nullptr, ops, &no_match, &no_start_time_range,
 		    &no_end_time_range, &start1, &start2, &end1, &end2, &id,
 		    &hnum, &hattrs, &hops)) == CSA_E_INVALID_ATTRIBUTE)
 		{
@@ -489,12 +489,12 @@ _DtCm_rpc_lookup_entries(
 		if (id > 0 && no_start_time_range && no_end_time_range) {
 			/* get the key for the first event */
 			key.id = 0;
-			if ((stat = _DtCm_table_lookup_key_range(cal, NULL, id,
-			    _DtCM_BOT, _DtCM_EOT, &key, NULL)) == CSA_SUCCESS &&
+			if ((stat = _DtCm_table_lookup_key_range(cal, nullptr, id,
+			    _DtCM_BOT, _DtCM_EOT, &key, nullptr)) == CSA_SUCCESS &&
 			    key.id > 0) {
 
 				/* get the detail */
-				if ((stat = _DtCm_make_libentry(NULL, &entry))
+				if ((stat = _DtCm_make_libentry(nullptr, &entry))
 				    == CSA_SUCCESS) {
 					entry->e->key = key;
 
@@ -525,12 +525,12 @@ _DtCm_rpc_enumerate_sequence(
 	time_t end,
 	_DtCm_libentry **elist_r)
 {
-	_DtCm_Client_Info	*ci=NULL;
+	_DtCm_Client_Info	*ci=nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
 	DP(("rpccalls.c: _DtCm_rpc_enumerate_sequence\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -540,7 +540,7 @@ _DtCm_rpc_enumerate_sequence(
 	cal->conn.ci = ci;
 	cal->conn.retry = B_TRUE;
 
-	*elist_r = NULL;
+	*elist_r = nullptr;
 
 	if (ci->vers_out == TABLEVERS) {
 		cms_enumerate_args	args;
@@ -553,7 +553,7 @@ _DtCm_rpc_enumerate_sequence(
 
 		res = cms_enumerate_sequence_5(&args, &cal->conn);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if ((stat = res->stat) == CSA_SUCCESS) {
 				stat = _DtCmCmsentriesToLibentries(
 					&cal->entry_tbl, res->entries, elist_r);
@@ -569,7 +569,7 @@ _DtCm_rpc_enumerate_sequence(
 	} else {
  
 		stat = _DtCm_table_lookup_key_range(cal, entry, 0, start, end,
-			NULL, elist_r);
+			nullptr, elist_r);
 	}
 
         return(stat);
@@ -578,12 +578,12 @@ _DtCm_rpc_enumerate_sequence(
 extern CSA_return_code
 _DtCm_rpc_lookup_entry_by_id(Calendar *cal, _DtCm_libentry *entry)
 {
-	_DtCm_Client_Info	*ci=NULL;
+	_DtCm_Client_Info	*ci=nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
 	DP(("rpccalls.c: _DtCm_rpc_lookup_entry_by_id\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location,
@@ -607,11 +607,11 @@ _DtCm_rpc_lookup_entry_by_id(Calendar *cal, _DtCm_libentry *entry)
 		args.num_keys = 1;
 		args.keys = &entry->e->key;
 		args.num_names = 0;
-		args.names = NULL;
+		args.names = nullptr;
 
 		res = cms_get_entry_attr_5(&args, &cal->conn);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if (res->entries) {
 				if ((stat = res->entries->stat) == CSA_SUCCESS)
 				{
@@ -621,7 +621,7 @@ _DtCm_rpc_lookup_entry_by_id(Calendar *cal, _DtCm_libentry *entry)
 					    &entry->e->num_attrs,
 					    &entry->e->attrs,
 					    &cal->entry_tbl, B_FALSE,
-					    NULL, B_TRUE)) == CSA_SUCCESS)
+					    nullptr, B_TRUE)) == CSA_SUCCESS)
 					{
 						entry->filled = B_TRUE;
 					}
@@ -652,7 +652,7 @@ _DtCm_rpc_get_cal_attrs(Calendar *cal, int index, CSA_uint32 num_names, char **n
 
 	DP(("rpccalls.c: _DtCm_rpc_get_cal_attrs\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
         if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -679,11 +679,11 @@ _DtCm_rpc_get_cal_attrs(Calendar *cal, int index, CSA_uint32 num_names, char **n
 
 		res = cms_get_calendar_attr_5(&arg, &cal->conn);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if ((stat = res->stat) == CSA_SUCCESS) {
 				if ((stat = _DtCmUpdateAttributes(
 				    res->num_attrs, res->attrs, &cal->num_attrs,
-				    &cal->attrs, &cal->cal_tbl, B_TRUE, NULL,
+				    &cal->attrs, &cal->cal_tbl, B_TRUE, nullptr,
 				    B_TRUE)) == CSA_SUCCESS)
 					cal->got_attrs = B_TRUE;
 			}
@@ -732,7 +732,7 @@ _DtCm_rpc_set_cal_attrs(Calendar *cal, CSA_uint32 num_attrs, CSA_attribute * att
 
 	DP(("rpccalls.c: _DtCm_rpc_set_cal_attrs\n"));
 
-	if (cal == NULL || attrs == NULL)
+	if (cal == nullptr || attrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
         if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -750,8 +750,8 @@ _DtCm_rpc_set_cal_attrs(Calendar *cal, CSA_uint32 num_attrs, CSA_attribute * att
 		CSA_uint32	num_cmsattrs;
 		cms_attribute	*cmsattrs;
 
-		if ((stat = csa2cmsattrs(num_attrs, attrs, NULL, &num_cmsattrs,
-		    &cmsattrs, NULL)) != CSA_SUCCESS)
+		if ((stat = csa2cmsattrs(num_attrs, attrs, nullptr, &num_cmsattrs,
+		    &cmsattrs, nullptr)) != CSA_SUCCESS)
 			return (stat);
 
 		if (num_cmsattrs == 0)
@@ -766,7 +766,7 @@ _DtCm_rpc_set_cal_attrs(Calendar *cal, CSA_uint32 num_attrs, CSA_attribute * att
 
 		free_cmsattrs(num_cmsattrs, cmsattrs);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			stat = *res;
 			if (stat == CSA_SUCCESS) {
 				_DtCm_free_cms_attribute_values(cal->num_attrs,
@@ -788,8 +788,8 @@ _DtCm_rpc_set_cal_attrs(Calendar *cal, CSA_uint32 num_attrs, CSA_attribute * att
 			if (attrs[i].name)
 				break;
 		}
-		if (attrs[i].value == NULL)
-			stat = _DtCm_table_set_access(cal, NULL);
+		if (attrs[i].value == nullptr)
+			stat = _DtCm_table_set_access(cal, nullptr);
 		else
 			stat = _DtCm_table_set_access(cal,
 				attrs[i].value->item.access_list_value);
@@ -805,12 +805,12 @@ _DtCm_rpc_insert_entry(
 	CSA_attribute * attrs,
 	_DtCm_libentry **entry_r)
 {
-	_DtCm_Client_Info	*ci = NULL;
+	_DtCm_Client_Info	*ci = nullptr;
 	CSA_return_code		stat = CSA_SUCCESS;
 
 	DP(("rpccalls.c: _DtCm_rpc_insert_entry;\n"));
 
-	if (cal == NULL || num_attrs == 0 || attrs == NULL || entry_r == NULL)
+	if (cal == nullptr || num_attrs == 0 || attrs == nullptr || entry_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -827,8 +827,8 @@ _DtCm_rpc_insert_entry(
 		CSA_uint32	num_cmsattrs;
 		cms_attribute	*cmsattrs;
 
-		if ((stat = csa2cmsattrs(num_attrs, attrs, NULL, &num_cmsattrs,
-		    &cmsattrs, NULL)) != CSA_SUCCESS)
+		if ((stat = csa2cmsattrs(num_attrs, attrs, nullptr, &num_cmsattrs,
+		    &cmsattrs, nullptr)) != CSA_SUCCESS)
 			return (stat);
 
 		if (num_cmsattrs == 0)
@@ -843,7 +843,7 @@ _DtCm_rpc_insert_entry(
 
 		free_cmsattrs(num_cmsattrs, cmsattrs);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if ((stat = res->stat) == CSA_SUCCESS) {
 				stat = _DtCmCmsentriesToLibentries(
 					&cal->entry_tbl, res->entry, entry_r);
@@ -873,12 +873,12 @@ _DtCm_rpc_update_entry(
 	CSA_enum scope,
 	_DtCm_libentry **nentry)
 {
-	_DtCm_Client_Info	*ci = NULL;
+	_DtCm_Client_Info	*ci = nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
 	DP(("rpccalls.c: _DtCm_rpc_update_entry\n"));
 
-	if (cal == NULL || oentry == NULL)
+	if (cal == nullptr || oentry == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -895,8 +895,8 @@ _DtCm_rpc_update_entry(
 		CSA_uint32	num_cmsattrs;
 		cms_attribute	*cmsattrs;
 
-		if ((stat = csa2cmsattrs(num_attrs, attrs, NULL, &num_cmsattrs,
-		    &cmsattrs, NULL)) != CSA_SUCCESS)
+		if ((stat = csa2cmsattrs(num_attrs, attrs, nullptr, &num_cmsattrs,
+		    &cmsattrs, nullptr)) != CSA_SUCCESS)
 			return (stat);
 
 		if (num_cmsattrs == 0)
@@ -913,7 +913,7 @@ _DtCm_rpc_update_entry(
 
 		free_cmsattrs(num_cmsattrs, cmsattrs);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if ((stat = res->stat) == CSA_SUCCESS) {
 				stat = _DtCmCmsentriesToLibentries(
 					&cal->entry_tbl, res->entry, nentry);
@@ -942,12 +942,12 @@ _DtCm_rpc_delete_entry(
 	_DtCm_libentry *entry,
 	CSA_enum scope)
 {
-	_DtCm_Client_Info	*ci = NULL;
+	_DtCm_Client_Info	*ci = nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
 	DP(("rpccalls.c: _DtCm_rpc_delete_entry\n"));
 
-	if (cal == NULL || entry == NULL)
+	if (cal == nullptr || entry == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -969,7 +969,7 @@ _DtCm_rpc_delete_entry(
 
 		res = cms_delete_entry_5(&args, &cal->conn);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			stat = *res;
 		} else {
 			stat = (cal->conn.stat == RPC_SUCCESS) ?
@@ -991,12 +991,12 @@ _DtCm_rpc_list_calendar_attributes(
 	CSA_uint32	*number_names,
 	char		***names_r)
 {
-	_DtCm_Client_Info	*ci = NULL;
+	_DtCm_Client_Info	*ci = nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
 	DP(("rpccalls.c: _DtCm_rpc_list_calendar_attributes\n"));
 
-	if (cal == NULL)
+	if (cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCm_create_tcp_client(cal->location, TABLEVERS,
@@ -1012,11 +1012,11 @@ _DtCm_rpc_list_calendar_attributes(
 		int				i;
 
 		*number_names = 0;
-		*names_r = NULL;
+		*names_r = nullptr;
 
 		res = cms_enumerate_calendar_attr_5(&cal->name, &cal->conn);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if ((stat = res->stat) == CSA_SUCCESS && res->num_names)
 			{
 				if (names = _DtCm_alloc_character_pointers(
@@ -1024,7 +1024,7 @@ _DtCm_rpc_list_calendar_attributes(
 					for (i = 0; i < res->num_names; i++) {
 						if ((names[i] = strdup(
 						    res->names[i].name))
-						    == NULL) {
+						    == nullptr) {
 							_DtCm_free(names);
 							return (CSA_E_INSUFFICIENT_MEMORY);
 						}
@@ -1053,7 +1053,7 @@ _DtCm_rpc_list_calendars(
 	CSA_uint32		*number_names,
 	CSA_calendar_user	**names_r)
 {
-	_DtCm_Client_Info	*ci = NULL;
+	_DtCm_Client_Info	*ci = nullptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 	_DtCm_Connection	conn;
 
@@ -1072,11 +1072,11 @@ _DtCm_rpc_list_calendars(
 		int			i;
 
 		*number_names = 0;
-		*names_r = NULL;
+		*names_r = nullptr;
 
-		res = cms_list_calendars_5(NULL, &conn);
+		res = cms_list_calendars_5(nullptr, &conn);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			if ((stat = res->stat) == CSA_SUCCESS && res->num_names)
 			{
 				if (names = _DtCm_alloc_calendar_users(
@@ -1084,7 +1084,7 @@ _DtCm_rpc_list_calendars(
 					for (i = 0; i < res->num_names; i++) {
 						if ((names[i].calendar_address =
 						    strdup(res->names[i]))
-						    == NULL) {
+						    == nullptr) {
 							_DtCm_free(names);
 							return (CSA_E_INSUFFICIENT_MEMORY);
 						}
@@ -1128,7 +1128,7 @@ _DtCm_do_unregistration(
 
 		res = cms_unregister_5(&args, conn);
 
-		if (res != NULL) {
+		if (res != nullptr) {
 			stat = *res;
 		} else {
 			stat = (conn->stat == RPC_SUCCESS) ?
@@ -1166,7 +1166,7 @@ _DtCm_do_registration(
 
 		res = cms_register_5(&args, conn);
 
-		if (res != NULL)
+		if (res != nullptr)
 			stat = *res;
 		else {
 			stat = (conn->stat == RPC_SUCCESS) ?
@@ -1206,40 +1206,40 @@ csa2cmsattrs(
 {
 	CSA_return_code	stat = CSA_SUCCESS;
 	cms_attribute	*cmsattrs;
-	CSA_enum	*ops_r = NULL;
+	CSA_enum	*ops_r = nullptr;
 	CSA_reminder	*rptr1, *rptr2;
 	int		i,j;
 
 	*newnum = 0;
-	*newattrs = NULL;
-	if (newops) *newops = NULL;
+	*newattrs = nullptr;
+	if (newops) *newops = nullptr;
 
 	if (num_attrs == 0)
 		return CSA_SUCCESS;
 
-	if ((cmsattrs = calloc(1, sizeof(cms_attribute)*num_attrs)) == NULL)
+	if ((cmsattrs = calloc(1, sizeof(cms_attribute)*num_attrs)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if (newops && (ops_r = malloc(sizeof(CSA_enum)*num_attrs)) == NULL) {
+	if (newops && (ops_r = malloc(sizeof(CSA_enum)*num_attrs)) == nullptr) {
 		free(cmsattrs);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	for (i = 0, j = 0; i < num_attrs && stat == CSA_SUCCESS; i++) {
-		if (csaattrs[i].name == NULL)
+		if (csaattrs[i].name == nullptr)
 			continue;
 
 		if (newops)
 			ops_r[j] = (ops ? ops[i] : CSA_MATCH_EQUAL_TO);
 
 		cmsattrs[j].name.name = csaattrs[i].name;
-		if (csaattrs[i].value == NULL) {
+		if (csaattrs[i].value == nullptr) {
 			j++;
 			continue;
 		}
 
 		if ((cmsattrs[j].value = (cms_attribute_value *)malloc(
-		    sizeof(cms_attribute_value))) == NULL) {
+		    sizeof(cms_attribute_value))) == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
@@ -1287,7 +1287,7 @@ csa2cmsattrs(
 				rptr2->repeat_count = rptr1->repeat_count;
 				rptr2->reminder_data = rptr1->reminder_data;
 				cmsattrs[j].value->item.reminder_value = rptr2;
-			} else if (rptr1 && rptr2 == NULL)
+			} else if (rptr1 && rptr2 == nullptr)
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		default:
@@ -1324,7 +1324,7 @@ free_cmsattrs(CSA_uint32 num_attrs, cms_attribute *attrs)
 	int i;
 
 	for (i = 0; i < num_attrs; i++) {
-		if (attrs[i].value == NULL)
+		if (attrs[i].value == nullptr)
 			continue;
 
 		switch (attrs[i].value->type) {
@@ -1357,16 +1357,16 @@ csa2cmsnames(
 	int		i,j;
 
 	*newnum = 0;
-	*newnames = NULL;
+	*newnames = nullptr;
 
 	if (num_names == 0)
 		return (CSA_SUCCESS);
 
-	if ((cmsnames = calloc(1, sizeof(cms_attr_name)*num_names)) == NULL)
+	if ((cmsnames = calloc(1, sizeof(cms_attr_name)*num_names)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 0, j = 0; i < num_names; i++) {
-		if (reminder_names[i] == NULL)
+		if (reminder_names[i] == nullptr)
 			continue;
 		else {
 			cmsnames[j].name = reminder_names[i];
@@ -1414,8 +1414,8 @@ _GetV4UserAccess(Calendar *cal, cms_access_entry *alist)
 			 * the same domain
 			 */
 			if (dom = strchr(cal->location, '.')) dom++;
-			if (dom == NULL || _DtCmIsSamePath(
-			    _DtCmGetLocalDomain(NULL), dom) == B_TRUE)
+			if (dom == nullptr || _DtCmIsSamePath(
+			    _DtCmGetLocalDomain(nullptr), dom) == B_TRUE)
 				isowner = B_TRUE;
 		}
 	} else {
@@ -1446,7 +1446,7 @@ _GetV4UserAccess(Calendar *cal, cms_access_entry *alist)
 	}
 
 	snprintf(buf, sizeof buf, "%s@%s", user, localhost);
-	for (; alist != NULL; alist = alist->next) {
+	for (; alist != nullptr; alist = alist->next) {
 		if (strcasecmp(alist->user, "world") == 0)
 			worldaccess = alist->rights;
 		else if (_DtCmIsSameUser(buf, alist->user)) {

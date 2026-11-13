@@ -42,11 +42,11 @@
 static char * 
 ReadFile(char * filename, int * filesize)
 {
-   char *buffer = NULL;
+   char *buffer = nullptr;
    FILE * file;
    *filesize = 0 ;
 
-   if ((file = fopen(filename, "r")) == NULL) return NULL ;
+   if ((file = fopen(filename, "r")) == nullptr) return nullptr ;
 
    fseek(file, 0L, SEEK_END);
    *filesize = ftell(file);
@@ -59,7 +59,7 @@ ReadFile(char * filename, int * filesize)
    }
 
    free(buffer);
-   return NULL;
+   return nullptr;
 }
 
 AppObject*
@@ -78,7 +78,7 @@ AppObject_new(
 	me->file_name = XtNewString("README.txt");
 
     me->file_buffer = ReadFile(me->file_name, &filesize);
-    if (me->file_buffer == NULL)  {
+    if (me->file_buffer == nullptr)  {
 	me->file_buffer = XtNewString("abcdefghijklmnopqrstuvwxyz");
 	filesize = strlen("abcdefghijklmnopqrstuvwxyz");
     }
@@ -98,7 +98,7 @@ AppObject_new(
 				    xmLabelWidgetClass,
 				    parent,
 				    XmNlabelString, label,
-				    NULL);
+				    nullptr);
 	XmStringFree(label);
     }
 
@@ -133,13 +133,13 @@ AppObject_customizePrintSetupBox(
      */
     XtVaSetValues(print_dialog,
 		  DtNworkAreaLocation, DtWORK_AREA_TOP,
-		  NULL);
+		  nullptr);
     row = XtVaCreateManagedWidget(
 				  "DocumentNameRow",
 				  xmRowColumnWidgetClass,
 				  print_dialog,
 				  XmNorientation, XmHORIZONTAL,
-				  NULL);
+				  nullptr);
     /*
      * create the document name label
      */
@@ -148,7 +148,7 @@ AppObject_customizePrintSetupBox(
 			 xmLabelGadgetClass,
 			 row,
 			 XmNlabelString, label,
-			 NULL);
+			 nullptr);
     XmStringFree(label);
     /*
      * create the document name
@@ -158,6 +158,6 @@ AppObject_customizePrintSetupBox(
 			 xmLabelGadgetClass,
 			 row,
 			 XmNlabelString, label,
-			 NULL);
+			 nullptr);
     XmStringFree(label);
 }

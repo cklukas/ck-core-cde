@@ -62,17 +62,17 @@ _DtCmGetPrefix(char *str, char sep)
         size_t len;
         char *prefix;
 
-        if (str == NULL)
-                return(NULL);
+        if (str == nullptr)
+                return(nullptr);
 
         /* the string comes from the network, so it has no length limit */
         for (len = 0; str[len] != '\0' && str[len] != sep; len++)
                 ;
         if (len == 0)
-                return(NULL);
+                return(nullptr);
 
-        if ((prefix = malloc(len + 1)) == NULL)
-                return(NULL);
+        if ((prefix = malloc(len + 1)) == nullptr)
+                return(nullptr);
         memcpy(prefix, str, len);
         prefix[len] = '\0';
         return(prefix);
@@ -81,9 +81,9 @@ _DtCmGetPrefix(char *str, char sep)
 extern char *
 _DtCmGetLocalHost(void)
 {
-	static char *host = NULL;
+	static char *host = nullptr;
 
-	if (host == NULL) {
+	if (host == nullptr) {
 		host = (char *)malloc(MAXHOSTNAMELEN+1);
 #if defined(sun)
 		(void)sysinfo(SI_HOSTNAME, host, MAXHOSTNAMELEN);
@@ -98,11 +98,11 @@ _DtCmGetLocalHost(void)
 extern char *
 _DtCmGetLocalDomain(char *hostname)
 {
-	static char	*domain = NULL;
+	static char	*domain = nullptr;
 	char		buf[BUFSIZ], *ptr;
 	CLIENT		*cl;
 
-	if (domain == NULL) {
+	if (domain == nullptr) {
 		domain = (char *)malloc(BUFSIZ);
 #if defined(sun)
 		sysinfo(SI_SRPC_DOMAIN, domain, BUFSIZ - 1);
@@ -118,10 +118,10 @@ _DtCmGetLocalDomain(char *hostname)
 		 * hence we need to stripe out the first component
 		 */
 		ptr = domain;
-		if (hostname == NULL) hostname = _DtCmGetLocalHost();
+		if (hostname == nullptr) hostname = _DtCmGetLocalHost();
 		while (1) {
 			snprintf(buf, sizeof buf, "%s.%s", hostname, ptr);
-			if ((cl = clnt_create(buf, 100068, 5, "udp")) == NULL) {
+			if ((cl = clnt_create(buf, 100068, 5, "udp")) == nullptr) {
 				ptr = strchr(ptr, '.');
 				if (ptr)
 					ptr++;
@@ -142,14 +142,14 @@ _DtCmGetLocalDomain(char *hostname)
 extern char *
 _DtCmGetHostAtDomain(void)
 {
-	static char	*hostname = NULL;
+	static char	*hostname = nullptr;
 	char		*host;
 
-	if (hostname == NULL) {
+	if (hostname == nullptr) {
 		hostname = malloc(BUFSIZ);
 
 		host = _DtCmGetLocalHost();
-		if (strchr(host, '.') == NULL)
+		if (strchr(host, '.') == nullptr)
 			snprintf(hostname, BUFSIZ, "%s.%s", host,
 				_DtCmGetLocalDomain(host));
 		else
@@ -163,14 +163,14 @@ _DtCmGetHostAtDomain(void)
 extern char *
 _DtCmGetUserName(void)
 {
-        static char *name = NULL;
+        static char *name = nullptr;
 	_Xgetpwparams	pwd_buf;
 	struct passwd *	pwd_ret;
 
-        if (name == NULL) {
+        if (name == nullptr) {
 	  name = malloc(BUFSIZ);
 
-	  if ((pwd_ret = _XGetpwuid(geteuid(), pwd_buf)) == NULL)
+	  if ((pwd_ret = _XGetpwuid(geteuid(), pwd_buf)) == nullptr)
 	    strcpy(name, "nobody");
 	  else
 	    strcpy(name, pwd_ret->pw_name);
@@ -189,7 +189,7 @@ _DtCmIsUserName(char *user)
 	struct passwd *	pwd_ret;
 
 	pwd_ret = _XGetpwnam(user, pwd_buf);
-	if (pwd_ret == NULL)
+	if (pwd_ret == nullptr)
 		return (B_FALSE);
 	else
 		return (B_TRUE);

@@ -93,7 +93,7 @@ DtWsmSetCurrentWorkspace (
     _DtSvcAppLock(app);
     sprintf (pch, "0x%lx", aWs);
     pStr[0] = (String) &pch[0];
-    pStr[1] = NULL;
+    pStr[1] = nullptr;
     msg = tttk_message_create(0, TT_REQUEST, TT_SESSION, 0,
 	    "DtWorkspace_SetCurrent", 0);
     status = tt_ptr_error(msg);
@@ -101,7 +101,7 @@ DtWsmSetCurrentWorkspace (
 	_DtSvcAppUnlock(app);
 	return dtmsg_FAIL;
     }
-    status = tt_message_arg_add(msg, TT_IN, "integer", NULL);
+    status = tt_message_arg_add(msg, TT_IN, "integer", nullptr);
     if (status != TT_OK) {
 	_DtSvcAppUnlock(app);
 	return dtmsg_FAIL;

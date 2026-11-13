@@ -91,7 +91,7 @@ static Boolean path_is_executable(char *path, uid_t euid, gid_t egid);
 /*
  * Directory where the binary for this process whate loaded from
  */
-static char                             *dtb_exe_dir = (char *)NULL;
+static char                             *dtb_exe_dir = (char *)nullptr;
 
 
 /*************************************************************************
@@ -110,7 +110,7 @@ dtb_save_command(char *argv0)
     if (determine_exe_dir(argv0, exe_dir, MAXPATHLEN+1) >= 0)
     {
         dtb_exe_dir = (char *)malloc(strlen(exe_dir)+1);
-        if (dtb_exe_dir != NULL)
+        if (dtb_exe_dir != nullptr)
         {
             strcpy(dtb_exe_dir, exe_dir);
         }
@@ -137,7 +137,7 @@ determine_exe_dir(char *argv0, char *buf, int bufSize)
 {
     Boolean	foundDir= False;
 
-    if ((buf == NULL) || (bufSize < 1))
+    if ((buf == nullptr) || (bufSize < 1))
     {
 	return -1;
     }
@@ -162,24 +162,24 @@ determine_exe_dir(char *argv0, char *buf, int bufSize)
     if (foundDir && (buf[0] != '/'))
     {
 	char	cwd[MAXPATHLEN+1];
-	char	*env_pwd = NULL;
-	char	*path_prefix = NULL;
+	char	*env_pwd = nullptr;
+	char	*path_prefix = nullptr;
 	char	abs_exe_dir[MAXPATHLEN+1];
 
-	if (getcwd(cwd, MAXPATHLEN+1) != NULL)
+	if (getcwd(cwd, MAXPATHLEN+1) != nullptr)
 	{
 	    path_prefix = cwd;
 	}
 	else
 	{
 	    env_pwd = getenv("PWD");
-	    if (env_pwd != NULL)
+	    if (env_pwd != nullptr)
 	    {
 		path_prefix = env_pwd;
 	    }
 	}
 
-	if (path_prefix != NULL)
+	if (path_prefix != nullptr)
 	{
 	    strcpy(abs_exe_dir, path_prefix);
 	    if (strcmp(buf, ".") != 0)
@@ -230,7 +230,7 @@ determine_exe_dir_from_path (char *argv0, char *buf, int bufSize)
     Boolean	moreDirs= True;
     char	*szExeName= argv0;
     int		iExeNameLen= strlen(szExeName);
-    char	*szTemp= NULL;
+    char	*szTemp= nullptr;
     char	szPathVar[MAXPATHLEN+1];
     int		iPathVarLen= 0;
     char	szCurrentPath[MAXPATHLEN+1];
@@ -241,7 +241,7 @@ determine_exe_dir_from_path (char *argv0, char *buf, int bufSize)
     uid_t	egid= getegid();
 
     szTemp= getenv("PATH");
-    if (szTemp == NULL)
+    if (szTemp == nullptr)
     {
 	moreDirs= False;
     }

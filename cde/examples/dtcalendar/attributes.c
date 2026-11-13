@@ -55,10 +55,10 @@ void main(int argc, char **argv)
 		return;
 	}
 
-	memset((void *)&user, NULL, sizeof(CSA_calendar_user));
+	memset((void *)&user, nullptr, sizeof(CSA_calendar_user));
 	user.calendar_address = argv[1];
 
-	if ((stat = csa_logon(NULL, &user, NULL, NULL, NULL, &cal, NULL))
+	if ((stat = csa_logon(nullptr, &user, nullptr, nullptr, nullptr, &cal, nullptr))
 	    != CSA_SUCCESS)
 	{
 		printf("Logon to %s failed, stat = %d\n", argv[1],
@@ -67,7 +67,7 @@ void main(int argc, char **argv)
 	}
 
 	if ((stat = csa_list_calendar_attributes(cal, &num_names, &names,
-	    NULL)) == CSA_SUCCESS) {
+	    nullptr)) == CSA_SUCCESS) {
 
 		printf("List calendar attributes:\n");
 		for (i = 0; i < num_names; i++)
@@ -78,6 +78,6 @@ void main(int argc, char **argv)
 		printf("csa_list_calendar_attributes failed, stat = %d\n",
 			stat);
 
-	(void)csa_logoff(cal, NULL);
+	(void)csa_logoff(cal, nullptr);
 }
 

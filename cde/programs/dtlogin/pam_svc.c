@@ -69,9 +69,9 @@ static char* create_devname(char* short_devname);
  * Local structures and variables 
  */
 
-static struct pam_conv pam_conv = {login_conv, NULL};
+static struct pam_conv pam_conv = {login_conv, nullptr};
 static char *saved_user_passwd;
-static pam_handle_t *pamh = NULL;
+static pam_handle_t *pamh = nullptr;
 static int pam_auth_trys = 0;
 
 /****************************************************************************
@@ -94,7 +94,7 @@ PamInit(char* prog_name,
 	    status = pam_start( prog_name, user, &pam_conv, &pamh );
 	    if (status != PAM_SUCCESS) {
         	Debug("PamInit: pam_start error=%d\n", status);
-	        pamh = NULL;
+	        pamh = nullptr;
 	    } else {
         	Debug("PamInit: pam_start success\n");
 	    }
@@ -172,7 +172,7 @@ PamAuthenticate ( char*   prog_name,
 	    if (pamh) {
                 Debug("PamAuthenticate: calling pam_end\n");
 	        pam_end(pamh, PAM_ABORT);
-		pamh=NULL;
+		pamh=nullptr;
 	    }
 	}  
 
@@ -328,7 +328,7 @@ PamSetCred(char* prog_name, char* user, uid_t uid, gid_t gid)
         Debug("PamSetCred: uid=%d\n", uid);
         Debug("PamSetCred: gid=%d\n", gid);
 
-	status = PamInit(prog_name, user, NULL, NULL);
+	status = PamInit(prog_name, user, nullptr, nullptr);
 
 	/* Set users credentials */
 
@@ -365,13 +365,13 @@ create_devname(char* short_devname)
 {
        char* long_devname;
 
-       if (short_devname == NULL)
+       if (short_devname == nullptr)
 	  short_devname = "";
 
        long_devname = (char *) malloc (strlen(short_devname) + 5);
 
-       if (long_devname == NULL)
-	  return(NULL); 
+       if (long_devname == nullptr)
+	  return(nullptr); 
 
        strcpy(long_devname,"/dev/");
        strcat(long_devname, short_devname);
@@ -406,7 +406,7 @@ login_conv(int num_msg, struct pam_message **msg,
 
 	*response = (struct pam_response*) 
 				calloc(num_msg, sizeof (struct pam_response));
-	if (*response == NULL)
+	if (*response == nullptr)
 		return (PAM_CONV_ERR);
 
 	(void) memset(*response, 0, sizeof (struct pam_response));
@@ -419,11 +419,11 @@ login_conv(int num_msg, struct pam_message **msg,
 		switch (m->msg_style) {
 
 		case PAM_PROMPT_ECHO_OFF:
-                    if (saved_user_passwd != NULL) {
+                    if (saved_user_passwd != nullptr) {
                         r->resp = (char *) malloc(strlen(saved_user_passwd)+1);
-                        if (r->resp == NULL) {
+                        if (r->resp == nullptr) {
 			  /* __pam_free_resp(num_msg, *response); */
-                            *response = NULL;
+                            *response = nullptr;
                             return (PAM_CONV_ERR);
                         }
                         (void) strcpy(r->resp, saved_user_passwd);
@@ -436,7 +436,7 @@ login_conv(int num_msg, struct pam_message **msg,
 
 
 		case PAM_ERROR_MSG:
-			if (m->msg != NULL) { 
+			if (m->msg != nullptr) { 
 	    	 	    Debug ("login_conv ERROR: %s\n", m->msg); 
 			}
 			m++;
@@ -444,7 +444,7 @@ login_conv(int num_msg, struct pam_message **msg,
 			break;
 
 		case PAM_TEXT_INFO:
-			if (m->msg != NULL) { 
+			if (m->msg != nullptr) { 
 	    	 	    Debug ("login_conv INFO: %s\n", m->msg); 
 			}
 			m++;

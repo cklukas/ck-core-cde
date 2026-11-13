@@ -96,7 +96,7 @@ _DtHelpDisplayAreaClean (XtPointer  client_data)
     /*
      * clean the canvas
      */
-    if (NULL != pDAS->canvas)
+    if (nullptr != pDAS->canvas)
     	_DtCanvasClean (pDAS->canvas);
 
     /*
@@ -151,7 +151,7 @@ _DtHelpDisplayAreaDestroyCB (
      */
     _DtHelpDisplayAreaClean(client_data);
 
-    if (NULL != pDAS->canvas)
+    if (nullptr != pDAS->canvas)
 	_DtCanvasDestroy (pDAS->canvas);
 
     dpy = XtDisplay(pDAS->dispWid);
@@ -164,7 +164,7 @@ _DtHelpDisplayAreaDestroyCB (
     if (pDAS->def_pix != 0 &&
 	XmDestroyPixmap(XDefaultScreenOfDisplay(dpy), pDAS->def_pix) == False)
 	    XFreePixmap(dpy, pDAS->def_pix);
-    if (pDAS->context != NULL)
+    if (pDAS->context != nullptr)
     {
         _DtGrDestroyContext(pDAS->context);
         XtFree((char *) pDAS->context);
@@ -178,15 +178,15 @@ _DtHelpDisplayAreaDestroyCB (
      */
     XtDestroyWidget(pDAS->dispWid);
 
-    if (pDAS->horzScrollWid != NULL)
+    if (pDAS->horzScrollWid != nullptr)
         XtDestroyWidget(pDAS->horzScrollWid);
-    if (pDAS->vertScrollWid != NULL)
+    if (pDAS->vertScrollWid != nullptr)
         XtDestroyWidget(pDAS->vertScrollWid);
 
     /*
      * free the special characters
      */
-    if (pDAS->spc_chars != NULL)
+    if (pDAS->spc_chars != nullptr)
         free ((char *) pDAS->spc_chars);
 
     /*
@@ -196,16 +196,16 @@ _DtHelpDisplayAreaDestroyCB (
     if (__DtHelpFontIndexGet(pDAS, xrmList, &strIdx) != 0)
 	usedDef = True;
 
-    if (pDAS->font_info.def_font_db != NULL)
+    if (pDAS->font_info.def_font_db != nullptr)
         XrmDestroyDatabase(pDAS->font_info.def_font_db);
-    if (pDAS->font_info.font_idx_db != NULL)
+    if (pDAS->font_info.font_idx_db != nullptr)
         XrmDestroyDatabase(pDAS->font_info.font_idx_db);
-    if (pDAS->font_info.exact_fonts != NULL)
+    if (pDAS->font_info.exact_fonts != nullptr)
       {
 	_DtHelpCeFreeStringArray(pDAS->font_info.exact_fonts);
 	free(pDAS->font_info.exact_idx);
       }
-    if (pDAS->font_info.font_structs != NULL)
+    if (pDAS->font_info.font_structs != nullptr)
       {
 	/*
 	 * if the string index is a positive number, this
@@ -220,7 +220,7 @@ _DtHelpDisplayAreaDestroyCB (
 	  }
         free(pDAS->font_info.font_structs);
       }
-    if (pDAS->font_info.font_sets != NULL)
+    if (pDAS->font_info.font_sets != nullptr)
       {
 	/*
 	 * if the string index is a negative number, this turns
@@ -243,9 +243,9 @@ _DtHelpDisplayAreaDestroyCB (
     /*
      * free the locale dependant information
      */
-    if (NULL != pDAS->cant_begin_chars)
+    if (nullptr != pDAS->cant_begin_chars)
         free (pDAS->cant_begin_chars);
-    if (NULL != pDAS->cant_end_chars)
+    if (nullptr != pDAS->cant_end_chars)
         free (pDAS->cant_end_chars);
 
     /*

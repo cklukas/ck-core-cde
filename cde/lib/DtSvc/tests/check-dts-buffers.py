@@ -132,7 +132,7 @@ with tempfile.TemporaryDirectory(prefix="dts-buffers-", dir=os.environ.get("TMPD
     for build, is_real, names in builds:
         (work / "dts-functions.h").write_text(functions_of(is_real))
         binary = work / build
-        subprocess.run(cc + ["-std=c99", "-D_DEFAULT_SOURCE", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
+        subprocess.run(cc + ["-std=gnu23", "-D_DEFAULT_SOURCE", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
                              "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined"]
                        + (["-DREAL_PROBES"] if is_real else [])
                        + (["-DOLD_EXPAND_SHELL"] if "expand_keywords" not in text else []) +

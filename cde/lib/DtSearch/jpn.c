@@ -211,17 +211,17 @@ static int	jstate, last_jstate;
 static UCHAR	jchar [8];
 static int	jcharlen =		0;
 static DBLK	*jpn_dblk;
-static JPNTREE	*jpn_kanjitree =	NULL;
-static JPNTREE	*jpn_katatree =		NULL;
-static JPNTREE	*kanjitree =		NULL;
+static JPNTREE	*jpn_kanjitree =	nullptr;
+static JPNTREE	*jpn_katatree =		nullptr;
+static JPNTREE	*kanjitree =		nullptr;
 static int	language;
 static long	*offsetp;
 static long	readcount =		0;
 static READCFP	readchar;
 static void	*readchar_arg;
-static UCHAR	*outbuf =		NULL;
-static UCHAR	*save_parg_string =	NULL;
-static UCHAR	*substrbuf =		NULL;
+static UCHAR	*outbuf =		nullptr;
+static UCHAR	*save_parg_string =	nullptr;
+static UCHAR	*substrbuf =		nullptr;
 static long	substr_offset;
 
 char *ensure_end_slash (char *pathstr);
@@ -268,10 +268,10 @@ static int	read_jchar (void)
 
     if (readchar_arg) {
 	jchar[0] = readchar (readchar_arg);
-	readchar_arg = NULL;
+	readchar_arg = nullptr;
     }
     else
-	jchar[0] = readchar (NULL);
+	jchar[0] = readchar (nullptr);
     if (jchar[0] == 0)
 	return jstate = JS_ETX;
     readcount++;
@@ -279,7 +279,7 @@ static int	read_jchar (void)
     for (jcharlen = 1; jcharlen < MB_CUR_MAX; ++jcharlen) {
 	jchar[jcharlen] = 0;
 	if (mblen ((char *) jchar, MB_CUR_MAX) != -1) break;
-	if ((jchar[jcharlen] = readchar (NULL))) readcount++;
+	if ((jchar[jcharlen] = readchar (nullptr))) readcount++;
     }
 
     /* If jchar is an invalid multibyte sequence,
@@ -333,8 +333,8 @@ static UCHAR	*kanji_compounder (void)
 {
     static int		all_done =	TRUE;
     static int		clen =		MAX_KANJI_CLEN + 1;
-    static UCHAR	*mysubstrp =	NULL;
-    static UCHAR	*mysubstrend =	NULL;
+    static UCHAR	*mysubstrp =	nullptr;
+    static UCHAR	*mysubstrend =	nullptr;
     static UCHAR	*op, *ss;
     static int		i, j, mbl;
 
@@ -352,7 +352,7 @@ static UCHAR	*kanji_compounder (void)
      */
     else {
 	if (all_done)
-	    return NULL;
+	    return nullptr;
 	if (++clen > MAX_KANJI_CLEN) {
 	    clen = 1;
 	    mysubstrp += mblen ((char *)mysubstrp, MB_CUR_MAX);
@@ -394,7 +394,7 @@ static UCHAR	*kanji_compounder (void)
     }
 
     all_done = TRUE;
-    return NULL;
+    return nullptr;
 } /* kanji_compounder() */
 
 
@@ -430,7 +430,7 @@ static UCHAR	*search_kanjitree (void)
 	substrp = substrbuf;
 
 	/* Return first substr jchar as next token */
-	last_node = NULL;	/* NULL = tree not searched yet */
+	last_node = nullptr;	/* NULL = tree not searched yet */
 	jcharlen = mblen ((char *)substrp, MB_CUR_MAX);
 	strncpy ((char*)outbuf, (char*)substrp, jcharlen);
 	outbuf [jcharlen] = 0;
@@ -439,7 +439,7 @@ static UCHAR	*search_kanjitree (void)
 	return outbuf;
     }
     else if (all_done)
-	return NULL;
+	return nullptr;
 
     /* If not enough chars left in substring to search tree,
      * treat it as an exhausted tree search.  In other words,
@@ -451,11 +451,11 @@ static UCHAR	*search_kanjitree (void)
 EXHAUSTED_TREE:
 	if (debugging_jpn)
 	    fputs (".\n", aa_stderr);
-	last_node = NULL;
+	last_node = nullptr;
 	substrp += jcharlen;
 	if (substrp >= substrend) {
 	    all_done = TRUE;
-	    return NULL;
+	    return nullptr;
 	}
 	jcharlen = mblen ((char *)substrp, MB_CUR_MAX);
 	strncpy ((char*)outbuf, (char*)substrp, jcharlen);
@@ -496,7 +496,7 @@ LINKED_LIST_SEARCH:
     if (debugging_jpn)
 	fprintf (aa_stderr,
 	    "knjtree: \"%.4s...\" ", substrp);
-    for (node = kanjitree;  node != NULL;  ) {
+    for (node = kanjitree;  node != nullptr;  ) {
 	if ((direction = strncmp ((char*)substrp, node->word, 4)) == 0) {
 	    /* HIT on binary search */
 	    last_node = node;
@@ -553,14 +553,14 @@ static UCHAR	*parse_substring (void)
 		&&  substrbuf[0] == '\n') {
 	    is_substr_end = TRUE;
 	    is_new_substring = FALSE;
-	    return NULL;
+	    return nullptr;
 	}
 
 	is_substr_end = FALSE;
 
 	if (!outbuf)
 	    outbuf = austext_malloc (DtSrMAXWIDTH_HWORD + 8,
-		PROGNAME"807", NULL);
+		PROGNAME"807", nullptr);
 
 	if (debugging_jpn) {
 	    int		i;
@@ -576,7 +576,7 @@ static UCHAR	*parse_substring (void)
     } /* endif is_new_substring */
 
     if (is_substr_end)
-	return NULL;
+	return nullptr;
 
     switch (last_jstate) {
 
@@ -584,7 +584,7 @@ static UCHAR	*parse_substring (void)
 	    /* Ignore discardable substrings */
 	    is_new_substring = FALSE;
 	    is_substr_end = TRUE;
-	    return NULL;
+	    return nullptr;
 
 	case JS_OTHERS:
 	    /* Treat entire substring as single parsed word */
@@ -609,12 +609,12 @@ ENTIRE_SUBSTR_IS_WORD:
 		    fputs ("  calling teskey parser.\n", aa_stderr);
 		myparg.dblk =		jpn_dblk;
 		myparg.string =		substrbuf;
-		myparg.ftext =		NULL;
+		myparg.ftext =		nullptr;
 		myparg.offsetp =	&myoffset;
 		token = (UCHAR *) teskey_parser (&myparg);
 	    }
 	    else
-		token = (UCHAR *) teskey_parser (NULL);
+		token = (UCHAR *) teskey_parser (nullptr);
 	    if (token) {
 		if (offsetp)
 		    *offsetp = substr_offset + myoffset;
@@ -658,7 +658,7 @@ ENTIRE_SUBSTR_IS_WORD:
 	PROGNAME"246", last_jstate);
     DtSearchExit (46);
 
-    return NULL;
+    return nullptr;
 } /* parse_substring() */
 
 
@@ -714,7 +714,7 @@ char	*jpn_parser (PARG *parg)
     static int		filling_substring =	TRUE;
     static int		was_discarding =	FALSE;
     static int		add_msgs = 		FALSE;
-    static UCHAR	*endsubstrbuf =		NULL;
+    static UCHAR	*endsubstrbuf =		nullptr;
     static size_t	substrbufsz =		0;
     static UCHAR	*token;
     static UCHAR	*substrp;
@@ -733,14 +733,14 @@ char	*jpn_parser (PARG *parg)
 	    readchar = readchar_string;
 	}
 	else {			/* text is from .fzk file in dtsrindex */
-	    save_parg_string = NULL;
+	    save_parg_string = nullptr;
 	    readchar_arg = parg;
 	    readchar = readchar_ftext;
 	}
 
 	if (substrbufsz == 0) {
 	    substrbufsz = SUBSTRBUFSZ;
-	    substrbuf = austext_malloc (SUBSTRBUFSZ + 8, PROGNAME"680", NULL);
+	    substrbuf = austext_malloc (SUBSTRBUFSZ + 8, PROGNAME"680", nullptr);
 	}
 	endsubstrbuf = substrbuf + substrbufsz;
 
@@ -794,7 +794,7 @@ FILL_ANOTHER_SUBSTRING:
                     PROGNAME"812", DtSrMAXWIDTH_HWORD, save_parg_string);
                 DtSearchAddMessage (msgbuf);
             }
-	    return NULL;
+	    return nullptr;
 	}
 
 	last_jstate = jstate;
@@ -892,7 +892,7 @@ static int	load_jpntree (
 	fprintf (aa_stderr, PROGNAME"1071 "
 	    "load_jpntree: fname='%s'\n", NULLORSTR(fname));
 
-    if ((fileid = fopen (fname, "rt")) == NULL) {
+    if ((fileid = fopen (fname, "rt")) == nullptr) {
 	/* Not being able to find the file is not an error.
 	 * We indicate that with the return code.
 	 * But any other error (like permissions) is fatal.
@@ -912,7 +912,7 @@ static int	load_jpntree (
     }
 
     /*--------- Main Read Loop ----------*/
-    while (fgets ((char*)readbuf, sizeof(readbuf), fileid) != NULL) {
+    while (fgets ((char*)readbuf, sizeof(readbuf), fileid) != nullptr) {
 	linecount++;
 	/*
 	 * Ignore lines beginning with any ascii char (comments).
@@ -944,24 +944,24 @@ static int	load_jpntree (
 	/* Allocate and populate a new node */
 	i = strlen ((char*) readbuf);
 	new = austext_malloc (sizeof(JPNTREE) + i + 4,
-	    PROGNAME"104", NULL);
-	new->llink = NULL;
-	new->rlink = NULL;
-	new->next = NULL;
+	    PROGNAME"104", nullptr);
+	new->llink = nullptr;
+	new->rlink = nullptr;
+	new->next = nullptr;
 	new->len = i;
 	new->word = (void *) (new + 1);
 	strcpy (new->word, (char *) readbuf);
 
 	/* Search binary tree, comparing only first 4 bytes */
 	is_duplicate = FALSE;
-	for (this_link = treetop;  *this_link != NULL;  ) {
+	for (this_link = treetop;  *this_link != nullptr;  ) {
 	    i = strncmp (new->word, (*this_link)->word, 4);
 
 	    if (i == 0) {
 		/* If first 4 bytes are similar, search
 		 * linked list, comparing entire string.
 		 */
-		while (*this_link != NULL) {
+		while (*this_link != nullptr) {
 		    i = strcmp (new->word, (*this_link)->word);
 
 		    /* Test for duplicate word */
@@ -1064,7 +1064,7 @@ int      load_jpn_language (DBLK *dblk, DBLK *dblist)
         dblk->dbrec.or_maxwordsz = MAXWIDTH_SWORD - 1;
     if (dblk->dbrec.or_minwordsz == 0)	/* for teskey */
         dblk->dbrec.or_minwordsz = MINWIDTH_TOKEN + 1;
-    jpnblk = austext_malloc (sizeof(JPNBLK) + 4, PROGNAME"2107", NULL);
+    jpnblk = austext_malloc (sizeof(JPNBLK) + 4, PROGNAME"2107", nullptr);
     memset (jpnblk, 0, sizeof(JPNBLK));
     dblk->parse_extra = (void *) jpnblk;
 
@@ -1074,7 +1074,7 @@ int      load_jpn_language (DBLK *dblk, DBLK *dblist)
      * If either has load errors, return a failure.
      * If both are missing, just forget it.
      */
-    if (dblk->path == NULL)
+    if (dblk->path == nullptr)
 	path[0] = 0;
     else {
 	if (strlen (dblk->path) > _POSIX_PATH_MAX - 14) {
@@ -1095,7 +1095,7 @@ int      load_jpn_language (DBLK *dblk, DBLK *dblist)
     strcat (fname, EXT_KATAKANA);
     i = load_jpntree (&jpnblk->katatree, fname);
     if (i == 1) { 	/* ...db specific file not found */
-	if (jpn_katatree == NULL) {	/* load default... */
+	if (jpn_katatree == nullptr) {	/* load default... */
 	    strcpy (fname, path);
 	    strcat (fname, "jpn");
 	    strcat (fname, EXT_KATAKANA);
@@ -1126,7 +1126,7 @@ int      load_jpn_language (DBLK *dblk, DBLK *dblist)
 	    /* If the generic knj file (jpn.knj) was
 	     * never loaded, try loading it now.
 	     */
-	    if (jpn_kanjitree == NULL) {
+	    if (jpn_kanjitree == nullptr) {
 		strcpy (fname, path);
 		strcat (fname, "jpn");
 		strcat (fname, EXT_KANJI);
@@ -1163,15 +1163,15 @@ static void	free_jpntree (JPNTREE ** jpntree_head)
     JPNTREE	*next, *prev, *pres;
     JPNTREE	*listp, *next_listp;
 
-    if (*jpntree_head == NULL)
+    if (*jpntree_head == nullptr)
 	return;
     pres = *jpntree_head;
-    prev = NULL;
+    prev = nullptr;
 
 DESCEND_LEFT:
     pres->word = (void *) 0;	/* preorder visit:  TAG = 0 */
     next = pres->llink;
-    if (next != NULL) {
+    if (next != nullptr) {
 	pres->llink = prev;
 	prev = pres;
 	pres = next;
@@ -1179,7 +1179,7 @@ DESCEND_LEFT:
     }
 DESCEND_RIGHT:
      next = pres->rlink;
-    if (next != NULL) {
+    if (next != nullptr) {
 	pres->word = (void *) 1;	/* TAG = 1 */
 	pres->rlink = prev;
 	prev = pres;
@@ -1195,8 +1195,8 @@ POSTORDER_VISIT:
     }
     free (listp);
 
-    if (prev == NULL) {			/* end of algorithm? */
-	*jpntree_head = NULL;
+    if (prev == nullptr) {			/* end of algorithm? */
+	*jpntree_head = nullptr;
 	return;
     }
     if (prev->word == (void *) 0) {	/* go up left leg */
@@ -1237,7 +1237,7 @@ void	unload_jpn_language (DBLK *dblk)
 	if (jpnblk->kanjitree &&  jpnblk->kanjitree != jpn_kanjitree)
 	    free_jpntree (&jpnblk->kanjitree);
 	free (jpnblk);
-	dblk->parse_extra = NULL;
+	dblk->parse_extra = nullptr;
     }
     return;
 } /* unload_jpn_language() */

@@ -64,7 +64,7 @@ static char *ck_tmpnam(char *buf)
 {
     const char *dir = getenv("TMPDIR");
     static char own[PATH_MAX];
-    if (buf == NULL)
+    if (buf == nullptr)
         buf = own;
     snprintf(buf, PATH_MAX, "%s/ckAAAAAA", dir ? dir : "/tmp");
     return buf;
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
      * denotes the plain 0600 file the uncompressor wrote, not the link.
      */
     ck_reset();
-    ret = NULL;
+    ret = nullptr;
     rc = _DtHelpCeGetUncompressedFileName(name, &ret);
     assert(rc == 0 && ret && ret != name);
     assert(ck_unc_calls == 1 && ck_unc_existed && ck_mk_calls == 1);
@@ -305,7 +305,7 @@ int main(int argc, char **argv)
     ck_reset();
     ck_unc_result = -1;
     errno = 0;
-    ret = NULL;
+    ret = nullptr;
     assert(_DtHelpCeGetUncompressedFileName(name, &ret) == -1 && errno == ENOENT);
     assert(ck_unc_calls == 1 && ck_unc_existed);
     ck_gone(ck_unc_out);
@@ -315,7 +315,7 @@ int main(int argc, char **argv)
     ck_reset();
     ck_mk_fail = 1;
     errno = 0;
-    ret = NULL;
+    ret = nullptr;
     assert(_DtHelpCeGetUncompressedFileName(name, &ret) == -1);
     assert(errno != 0 && ck_mk_calls == 1 && ck_unc_calls == 0);
     assert(ck_count(dir) == base);
@@ -324,7 +324,7 @@ int main(int argc, char **argv)
     /* An existing file is returned as it is. */
     ck_reset();
     ck_write_file(name, "PLAIN\n", 0644);
-    ret = NULL;
+    ret = nullptr;
     assert(_DtHelpCeGetUncompressedFileName(name, &ret) == 1 && ret == name);
     assert(ck_mk_calls == 0 && ck_unc_calls == 0);
 

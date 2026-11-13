@@ -141,7 +141,7 @@ if (freeMask & IL_FREE_XCOLORS) {
             pColor++;
             }
         IL_FREE (pXWC->pColors);
-        pXWC->pColors = (XColor *)NULL;
+        pXWC->pColors = (XColor *)nullptr;
         pXWC->nColors = 0;
         }
     if (pXWC->colorMapImage) {
@@ -161,7 +161,7 @@ if (freeMask & IL_FREE_XGRAYS) {
             pColor++;
             }
         IL_FREE (pXWC->pGrays);
-        pXWC->pGrays = (XColor *)NULL;
+        pXWC->pGrays = (XColor *)nullptr;
         pXWC->nGrays = 0;
         }
     if (pXWC->grayMapImage) {
@@ -615,7 +615,7 @@ int                     notUsed;
             get the info for the given visual; exit if not found. 
         */
     if (!visual || !colormap) {
-        visual = (Visual *)NULL;
+        visual = (Visual *)nullptr;
         colormap = (Colormap)0;
         }
     else {
@@ -643,10 +643,10 @@ int                     notUsed;
         }
     pXWC->i.gc = gc;
     pXWC->i.colormap = colormap;
-    pXWC->pColors = (XColor *)NULL;
+    pXWC->pColors = (XColor *)nullptr;
     pXWC->nColors = 0;
     pXWC->colorMapImage = (ilClientImage)NULL;
-    pXWC->pGrays = (XColor *)NULL;
+    pXWC->pGrays = (XColor *)nullptr;
     pXWC->nGrays = 0;
     pXWC->grayMapImage = (ilClientImage)NULL;
     pXWC->i.ditherMethod = IL_AREA_DITHER;
@@ -779,7 +779,7 @@ XImage            *pXImage;
         if (!pPriv->pBuffer)
             return IL_ERROR_MALLOC;                     /* EXIT */
         }
-    else pPriv->pBuffer = NULL;
+    else pPriv->pBuffer = nullptr;
 
         /*  Create an XImage that will be pointed to each buffer (strip) to 
 	    write. */
@@ -828,7 +828,7 @@ static ilError ilWriteXCleanup (
         XFlush (pPriv->pXWC->i.display);
     if (pPriv->pBuffer)
         IL_FREE (pPriv->pBuffer);
-    pPriv->pXImage->data = (char *)NULL;
+    pPriv->pXImage->data = (char *)nullptr;
     XDestroyImage (pPriv->pXImage);
     return IL_OK;
 }
@@ -1105,7 +1105,7 @@ static unsigned int writeTypeTable [(IL_MAX_TYPE + 1) *
             if ((des.nSamplesPerPixel != 1) || (format.nBitsPerSample[0] != 1))
                 return ilDeclarePipeInvalid (pipe, IL_ERROR_RAW_MODE);
             }
-        else if (!ilConvert (pipe, IL_DES_BITONAL, IL_FORMAT_BIT, 0, NULL))
+        else if (!ilConvert (pipe, IL_DES_BITONAL, IL_FORMAT_BIT, 0, nullptr))
             return FALSE;
         break;
 
@@ -1119,7 +1119,7 @@ static unsigned int writeTypeTable [(IL_MAX_TYPE + 1) *
                 return ilDeclarePipeInvalid (pipe, IL_ERROR_RAW_MODE);
             }
         else {
-            if (!ilConvert (pipe, IL_DES_GRAY, IL_FORMAT_BYTE, 0, NULL))
+            if (!ilConvert (pipe, IL_DES_GRAY, IL_FORMAT_BYTE, 0, nullptr))
                 return FALSE;
             if (mapPixels)
                 if (!ilMap (pipe, pXWC->grayMapImage))
@@ -1142,8 +1142,8 @@ static unsigned int writeTypeTable [(IL_MAX_TYPE + 1) *
               && (des.typeInfo.palette.levels[1] == NGREEN)
               && (des.typeInfo.palette.levels[2] == NBLUE)) {
                 if ((format.nBitsPerSample[0] != 8)
-                 && !ilConvert (pipe, (ilImageDes *)NULL, IL_FORMAT_BYTE, 0, 
-				NULL))
+                 && !ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BYTE, 0, 
+				nullptr))
                     return FALSE;
                 if (mapPixels)
                     if (!ilMap (pipe, pXWC->colorMapImage))
@@ -1185,7 +1185,7 @@ static unsigned int writeTypeTable [(IL_MAX_TYPE + 1) *
                 return ilDeclarePipeInvalid (pipe, IL_ERROR_RAW_MODE);
             }
         else {
-            if (!ilConvert (pipe, IL_DES_RGB, IL_FORMAT_3BYTE_PIXEL, 0, NULL))
+            if (!ilConvert (pipe, IL_DES_RGB, IL_FORMAT_3BYTE_PIXEL, 0, nullptr))
                 return FALSE;
             if (mapPixels && pXWC->mapDirect)
                 if (!ilMap (pipe, pXWC->colorMapImage))
@@ -1236,11 +1236,11 @@ ilError                   (*executeFunction)( ilExecuteData *,
         /*  Convert as necessary, mapping pixels to X pixels and get 
 	    pXWC->i.writeType */
     pXWC = (ilXWCPtr)XWC;
-    if (!ilConvertForXWrite (pipe, (ilXWC)pXWC, TRUE, 0, NULL))
+    if (!ilConvertForXWrite (pipe, (ilXWC)pXWC, TRUE, 0, nullptr))
         return FALSE;
 
-    ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)NULL, 
-		   (ilImageFormat *)NULL);
+    ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)nullptr, 
+		   (ilImageFormat *)nullptr);
 
         /*  If writing 24 bits: use separate executeFunction, set "bufferSize"
 	    to buffer to be allocated, and if too large force pipe to give us 
@@ -1257,11 +1257,11 @@ ilError                   (*executeFunction)( ilExecuteData *,
             srcData.minBufferHeight = 0;
             pSrcData = &srcData;
             }
-        else pSrcData = (ilSrcElementData *)NULL;
+        else pSrcData = (ilSrcElementData *)nullptr;
         executeFunction = ilWriteXOptLongExecute;
         }
     else {
-        pSrcData = (ilSrcElementData *)NULL;
+        pSrcData = (ilSrcElementData *)nullptr;
         executeFunction = ilWriteXExecute;
         }
 
@@ -1271,8 +1271,8 @@ ilError                   (*executeFunction)( ilExecuteData *,
 	    ilXDestroy() will decrement it when this pipe element is removed.
         */
     pPriv = (ilXPrivPtr)ilAddPipeElement (pipe, IL_CONSUMER, 
-        sizeof(ilXPrivRec), 0, pSrcData, (ilDstElementData *)NULL,
-        ilWriteXInit, ilWriteXCleanup, ilXDestroy, NULL, executeFunction, 0);
+        sizeof(ilXPrivRec), 0, pSrcData, (ilDstElementData *)nullptr,
+        ilWriteXInit, ilWriteXCleanup, ilXDestroy, nullptr, executeFunction, 0);
     if (!pPriv) return FALSE;                          /* EXIT */
 
     pPriv->pXWC = pXWC;

@@ -86,7 +86,7 @@ static char _cmdClientHost[MAXHOSTNAMELEN];
 /*
  * Static variables for the Command Invoker.
  */
-static Cmd_RequestQueue *requestQueue = NULL;
+static Cmd_RequestQueue *requestQueue = nullptr;
 
 /*
  * Static function declarations:.
@@ -294,8 +294,8 @@ _DtSPCOpen(
 			case SPC_Register_Handshake:
 				this_uid = getuid();
 				if((pwd_ret = _XGetpwuid(this_uid, pwd_buf)) == 
-				   NULL)
-					username = NULL;
+				   nullptr)
+					username = nullptr;
 				else
 					username = pwd_ret->pw_name;
 				(void) sprintf (errorMessage, 
@@ -309,8 +309,8 @@ _DtSPCOpen(
 			case SPC_Register_Username:
 				this_uid = getuid();
 				if((pwd_ret = _XGetpwuid(this_uid, pwd_buf)) == 
-				   NULL)
-					username = NULL;
+				   nullptr)
+					username = nullptr;
 				else
 					username = pwd_ret->pw_name;
 				(void) sprintf (errorMessage, 
@@ -408,7 +408,7 @@ QueueRequest (
 
    pNewNode = (Cmd_RequestQueue *) XtMalloc (sizeof (Cmd_RequestQueue));
 
-   pNewNode->next = (Cmd_RequestQueue *) NULL;
+   pNewNode->next = (Cmd_RequestQueue *) nullptr;
    pNewNode->channel = channel;
    pNewNode->context = XtNewString (context);
    pNewNode->exec_host = XtNewString (execHost);
@@ -416,8 +416,8 @@ QueueRequest (
    pNewNode->argv = argv;
    pNewNode->winType = winType;
    pNewNode->request_num = requestNum;
-   if (replyContext == NULL)
-      pNewNode->replyContext = NULL;
+   if (replyContext == nullptr)
+      pNewNode->replyContext = nullptr;
    else
       pNewNode->replyContext = replyContext;
    pNewNode->success_proc = success_proc;
@@ -425,7 +425,7 @@ QueueRequest (
    pNewNode->failure_proc = failure_proc;
    pNewNode->failure_data = failure_data;
 
-   if (requestQueue == NULL) 
+   if (requestQueue == nullptr) 
    {
       requestQueue = pNewNode;
       return;
@@ -434,7 +434,7 @@ QueueRequest (
    /*
     * Find the End Of the Queue and link in the NewNode.
     */
-   for (pNode = requestQueue; pNode->next != NULL; pNode = pNode->next);
+   for (pNode = requestQueue; pNode->next != nullptr; pNode = pNode->next);
 
    pNode->next = pNewNode;
 
@@ -462,11 +462,11 @@ ExecuteQueuedRequest (
 {
    char			*errorMessage;
    Boolean 		success = True;
-   Cmd_RequestQueue 	*prev  = NULL;
+   Cmd_RequestQueue 	*prev  = nullptr;
    Cmd_RequestQueue 	*pNode = requestQueue;
    unsigned long	iomode;
 
-   for (; pNode != NULL; pNode = pNode->next)
+   for (; pNode != nullptr; pNode = pNode->next)
    {
        if ( pNode->request_num == requestNum )
        {
@@ -478,7 +478,7 @@ ExecuteQueuedRequest (
            else
                requestQueue = pNode->next;
 
-           pNode->next = NULL;
+           pNode->next = nullptr;
            break;
        }
        /*
@@ -487,7 +487,7 @@ ExecuteQueuedRequest (
        prev = pNode;
    }
 
-   if (pNode == NULL)
+   if (pNode == nullptr)
       return;
 
    errorMessage = XtMalloc (MAX_BUF_SIZE * sizeof (char));
@@ -510,8 +510,8 @@ ExecuteQueuedRequest (
       }
 
    if ( success )
-       if ((_DtSPCSpawn(pNode->argv[0], pNode->context, pNode->argv, NULL, 
-		    pNode->channel, pNode->exec_host, NULL, NULL,
+       if ((_DtSPCSpawn(pNode->argv[0], pNode->context, pNode->argv, nullptr, 
+		    pNode->channel, pNode->exec_host, nullptr, nullptr,
 		    errorMessage)) == SPC_ERROR) 
        {
 	  success = False;
@@ -519,9 +519,9 @@ ExecuteQueuedRequest (
 	     DtSPCClose(pNode->channel);
        }
 
-   if (success && pNode->success_proc != NULL)
+   if (success && pNode->success_proc != nullptr)
    {
-      if (cmd_Resources.executionHostLogging && pNode->success_data != NULL)
+      if (cmd_Resources.executionHostLogging && pNode->success_data != nullptr)
       {
 	 CallbackData *data;
 	 data = (CallbackData *) pNode->success_data;
@@ -530,7 +530,7 @@ ExecuteQueuedRequest (
 	 _DtCmdLogErrorMessage (errorMessage);
       }
 
-      (*pNode->success_proc) (NULL, pNode->success_data);
+      (*pNode->success_proc) (nullptr, pNode->success_data);
    }
    else if (!success)
    {
@@ -569,7 +569,7 @@ ExecuteQueuedRequest (
 	    XtFree(tmp_message);
 	 }
       }
-      if (pNode->failure_proc != NULL)
+      if (pNode->failure_proc != nullptr)
 	 (*pNode->failure_proc) (errorMessage, pNode->failure_data);
    }
 
@@ -599,7 +599,7 @@ static void
 FreeRequest (Cmd_RequestQueue *pNode)
 {
 
-   if (pNode == NULL)
+   if (pNode == nullptr)
       return;
 
    XtFree (pNode->context);
@@ -650,13 +650,13 @@ _DtCmdCommandInvokerExecute (
    char tmpDir [MAXPATHLEN];
    char **commandArray;
    SPC_Channel_Ptr cmdChannel;
-   char *theCommand = NULL;
+   char *theCommand = nullptr;
    Boolean terminalRequest = False;
    char *commandArray2[MAX_EXEC_ARGS];
    Boolean localExecution = True;
    Boolean xhostError;
    static unsigned long requestNum = 0;
-   char *toolRequest = NULL;	/* backward compatibility kludge */
+   char *toolRequest = nullptr;	/* backward compatibility kludge */
 
 
    myassert( !(contextFile && replyContext) );
@@ -711,7 +711,7 @@ _DtCmdCommandInvokerExecute (
    /*
     * See if the request requires Remote Execution.
     */
-   localExecution = _DtIsSameHost(execHost,NULL);
+   localExecution = _DtIsSameHost(execHost,nullptr);
 
    /*
     * If this is a terminalRequest and the Command Invoker subprocess
@@ -781,13 +781,13 @@ _DtCmdCommandInvokerExecute (
        * Create a "netfile" for the cwd to be used.
        */
       netfile = (char *) tt_host_file_netfile (
-	 ((contextHost == NULL) ? execHost : contextHost),
-	 ((contextDir  == NULL) ? (char *) getenv ("HOME") : contextDir));
+	 ((contextHost == nullptr) ? execHost : contextHost),
+	 ((contextDir  == nullptr) ? (char *) getenv ("HOME") : contextDir));
 
       if (tt_pointer_error (netfile) != TT_OK) {
 	 (void) sprintf (errorMessage, cmd_Globals.error_directory_name_map,
-	    ((contextDir  == NULL) ? (char *) getenv ("HOME") : contextDir),
-	    ((contextHost == NULL) ? execHost : contextHost),
+	    ((contextDir  == nullptr) ? (char *) getenv ("HOME") : contextDir),
+	    ((contextHost == nullptr) ? execHost : contextHost),
 	    tt_status_message (tt_pointer_error(netfile)));
 	 Cmd_FreeAllocatedStringVector (commandArray);
 	 return (_CMD_EXECUTE_FAILURE);
@@ -806,9 +806,9 @@ _DtCmdCommandInvokerExecute (
       */
 
      argv[0] = cmd_Resources.dtexecPath;
-     argv[1] = (char *) NULL;
+     argv[1] = (char *) nullptr;
 
-     if ((_DtSPCSpawn(argv[0], context, argv, NULL, cmdChannel,
+     if ((_DtSPCSpawn(argv[0], context, argv, nullptr, cmdChannel,
 		      execHost, contextHost, contextDir, errorMessage)) 
 	  == SPC_ERROR) 
      {
@@ -846,7 +846,7 @@ _DtCmdCommandInvokerExecute (
      argv[0] = "ksh";
      argv[1] = "-c";
      argv[2] = tmp;
-     argv[3] = (char *) NULL;
+     argv[3] = (char *) nullptr;
 
      /*
       * Reopen the channel
@@ -876,7 +876,7 @@ _DtCmdCommandInvokerExecute (
 	return (_CMD_EXECUTE_FAILURE);
       }
       
-      if ((_DtSPCSpawn(argv[0], context, argv, NULL, cmdChannel,
+      if ((_DtSPCSpawn(argv[0], context, argv, nullptr, cmdChannel,
 		      execHost, contextHost, contextDir, errorMessage)) 
 	  == SPC_ERROR) 
       {
@@ -930,7 +930,7 @@ _DtCmdCommandInvokerExecute (
        * Save the current directory and then "chdir" to the directory
        * to do the execution.  If the chdir fails, return.
        */
-      if(NULL == getcwd (tmpDir, MAXPATHLEN))
+      if(nullptr == getcwd (tmpDir, MAXPATHLEN))
       {
 	 perror(strerror(errno));
 	 return (_CMD_EXECUTE_FAILURE);  
@@ -1075,7 +1075,7 @@ CheckCommandTerminator(
    unsigned long requestNum = (unsigned long)(uintptr_t)terminate_data;
    Boolean xhostError;
    char errorMessage[MAX_BUF_SIZE];
-   Cmd_RequestQueue *prev  = NULL;
+   Cmd_RequestQueue *prev  = nullptr;
    Cmd_RequestQueue *pNode = requestQueue;
 
    DtSPCClose(cmdChannel);
@@ -1083,7 +1083,7 @@ CheckCommandTerminator(
    /*
     * Must find the node in the queue.
     */
-   for (; pNode != NULL; pNode = pNode->next)
+   for (; pNode != nullptr; pNode = pNode->next)
    {
        if ( pNode->request_num == requestNum )
        {
@@ -1095,7 +1095,7 @@ CheckCommandTerminator(
            else
                requestQueue = pNode->next;
 
-           pNode->next = NULL;
+           pNode->next = nullptr;
            break;
        }
        /*
@@ -1104,7 +1104,7 @@ CheckCommandTerminator(
        prev = pNode;
    }
 
-   if (pNode == NULL)
+   if (pNode == nullptr)
       return;
 
    /*
@@ -1112,7 +1112,7 @@ CheckCommandTerminator(
     */
    if (cause == COMMAND_CHECK_FAILURE)
    {
-      if (pNode->failure_proc != NULL)
+      if (pNode->failure_proc != nullptr)
       {
 	 (void) sprintf (errorMessage, errorSpawn, pNode->exec_host, 
 			 pNode->exec_string);
@@ -1213,9 +1213,9 @@ _DtActionCommandInvoke(
 	int status;
 	char errorMessage[MAX_BUF_SIZE * 2];
 
-	status = _DtCmdCommandInvokerExecute (errorMessage, NULL, 
+	status = _DtCmdCommandInvokerExecute (errorMessage, nullptr, 
 			       wintype, 
-			       cwdHost, cwdDir, NULL,
+			       cwdHost, cwdDir, nullptr,
 			       termOpts, execHost, execString,
                                procId, tmpFiles,
 			       success_proc, success_data,
@@ -1223,7 +1223,7 @@ _DtActionCommandInvoke(
 	switch (status)
 	{
 	case _CMD_EXECUTE_SUCCESS :
-		if (cmd_Resources.executionHostLogging && success_data != NULL)
+		if (cmd_Resources.executionHostLogging && success_data != nullptr)
 		{
 			CallbackData *data;
 			data = (CallbackData *) success_data;
@@ -1231,8 +1231,8 @@ _DtActionCommandInvoke(
 				data->actionLabel, execHost);
 			_DtCmdLogErrorMessage (errorMessage);
 		}
-		if (success_proc != NULL)
-			(*success_proc) (NULL, success_data);
+		if (success_proc != nullptr)
+			(*success_proc) (nullptr, success_data);
 		break;
 	case _CMD_EXECUTE_QUEUED :
 		 /*
@@ -1246,7 +1246,7 @@ _DtActionCommandInvoke(
 		  */
 		if (cmd_Resources.executionHostLogging)
 			_DtCmdLogErrorMessage (errorMessage);
-		if (failure_proc != NULL)
+		if (failure_proc != nullptr)
 			(*failure_proc) (errorMessage, failure_data);
 		break;
 	}
@@ -1294,7 +1294,7 @@ _DtCommandInvokerExecute(
 
    _DtActionCommandInvoke(_DtAct_NO_STDIO_BIT,context_host,
 		context_dir, exec_string, exec_parameters, exec_host,
-                NULL, NULL,
+                nullptr, nullptr,
 		success_proc,success_data, failure_proc,failure_data);
    _DtSvcAppUnlock(cmd_Globals.app_context);
 		

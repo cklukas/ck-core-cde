@@ -112,7 +112,7 @@ SPC_Channel_Ptr open_pipe_channel_object(SPC_Channel_Ptr channel,
 /*----------------------------------------------------------------------+*/
 {
 
-  Wire *tmpwire=NULL;
+  Wire *tmpwire=nullptr;
   SPC_Channel_Ptr result;
   
   call_parent_method(channel, open, (channel, iomode, hostname), result);
@@ -121,7 +121,7 @@ SPC_Channel_Ptr open_pipe_channel_object(SPC_Channel_Ptr channel,
     return(SPC_ERROR);
 
   if (IS_SPCIO_STDIN(iomode)) {
-    tmpwire=channel->wires[STDIN]=getpipe(NULL);
+    tmpwire=channel->wires[STDIN]=getpipe(nullptr);
     if(!tmpwire)
       return(SPC_ERROR);
   }
@@ -291,7 +291,7 @@ int reset_pipe_channel_object(SPC_Channel_Ptr channel)
   channel->file_descs[STDOUT] = (channel->wires[STDOUT])->fd[READ_SIDE];
   channel->file_descs[STDERR] = (channel->wires[STDERR])->fd[READ_SIDE];
 
-  XeSPCAddInput(channel, NULL, NULL);
+  XeSPCAddInput(channel, nullptr, nullptr);
   
   return(TRUE);
   

@@ -241,7 +241,7 @@ int                     stripOffsetsIndex, stripByteCountsIndex = 0, colorMapInd
         */
     if (pPriv->compression == IL_UNCOMPRESSED) {
         unsigned long dstRowBytes = pPriv->pDstImagePlane->nBytesPerRow;
-        pPriv->pByteCounts = pPriv->pByteCountsInit = (CARD32 *)NULL;
+        pPriv->pByteCounts = pPriv->pByteCountsInit = (CARD32 *)nullptr;
         pPriv->nStripBytes = pPriv->stripHeight * dstRowBytes;
         pPriv->nLastStripBytes = pPriv->lastStripHeight * dstRowBytes;
         }
@@ -513,8 +513,8 @@ ilPtr                   pCompData;
         return ilDeclarePipeInvalid (pipe, IL_ERROR_CONTEXT_MISMATCH);
 
         /*  Get pipe state - must be IL_PIPE_EMPTY or declare an error. */
-    if (ilGetPipeInfo (pipe, FALSE, (ilPipeInfo *)NULL, (ilImageDes *)NULL, 
-                                    (ilImageFormat *)NULL) != IL_PIPE_EMPTY) {
+    if (ilGetPipeInfo (pipe, FALSE, (ilPipeInfo *)nullptr, (ilImageDes *)nullptr, 
+                                    (ilImageFormat *)nullptr) != IL_PIPE_EMPTY) {
         if (!pFileImage->context->error)
             ilDeclarePipeInvalid (pipe, IL_ERROR_PIPE_STATE);
         return FALSE;
@@ -532,7 +532,7 @@ ilPtr                   pCompData;
         if (!pPalette)
             return ilDeclarePipeInvalid (pipe, IL_ERROR_MALLOC);
         }
-    else pPalette = (unsigned short *)NULL;
+    else pPalette = (unsigned short *)nullptr;
 
         /*  Allocate and zero pCompData if JPEG (similar to pPalette) */
     if (pFileImage->p.des.compression == IL_JPEG) {
@@ -554,8 +554,8 @@ ilPtr                   pCompData;
     dstData.pCompData = pCompData;
 
     pPriv = (ilReadFilePrivPtr)ilAddPipeElement (pipe, IL_PRODUCER, 
-            sizeof (ilReadFilePrivRec), 0, (ilSrcElementData *)NULL, &dstData,
-            ilReadFileInit, IL_NPF, ilReadFileDestroy, ilReadFileExecute, NULL, 0);
+            sizeof (ilReadFilePrivRec), 0, (ilSrcElementData *)nullptr, &dstData,
+            ilReadFileInit, IL_NPF, ilReadFileDestroy, ilReadFileExecute, nullptr, 0);
     if (!pPriv) {
         if (pPalette) IL_FREE (pPalette);
         if (pCompData) IL_FREE (pCompData);

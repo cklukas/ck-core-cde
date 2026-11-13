@@ -55,7 +55,7 @@ int _DtCatclose(nl_catd catd)
 
 char *_DtCatgets(nl_catd catd, int set, int num, const char *dflt)
 {
-    char *msg = NULL;
+    char *msg = nullptr;
 
     if (catd == (nl_catd) -1 || set < 0 || num < 0) {
       /* Some catgets() implementations will fault if catd is invalid. */

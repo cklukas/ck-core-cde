@@ -75,7 +75,7 @@ fflush(stdout);
 #endif
 
 free((void *) *pptr);
-*pptr = NULL;
+*pptr = nullptr;
 }
 
 
@@ -191,7 +191,7 @@ M_WCHAR *CopyWString(M_WCHAR *string)
 {
 M_WCHAR *retVal;
 
-if (!string) return NULL;
+if (!string) return nullptr;
 
 retVal = m_malloc(w_strlen(string) + 1, wideCharacterString);
 w_strcpy(retVal, string);
@@ -1045,7 +1045,7 @@ while (pElement)
 			{
 			pSubElement->u.u_form.pHead =
 						pElement->u.u_form.pHead;
-			pElement->u.u_form.pHead = NULL;
+			pElement->u.u_form.pHead = nullptr;
 			}
 		    }
 		if (pId)
@@ -1061,15 +1061,15 @@ while (pElement)
 		pSubElement->u.u_form.length   = pElement->u.u_form.length;
 		pSubElement->u.u_form.app      = pElement->u.u_form.app;
 		pSubElement->u.u_form.ssi      = pElement->u.u_form.ssi;
-		pElement->u.u_form.id          = NULL;
-		pElement->u.u_form.level       = NULL;
-		pElement->u.u_form.version     = NULL;
-		pElement->u.u_form.class       = NULL;
-		pElement->u.u_form.language    = NULL;
-		pElement->u.u_form.charset     = NULL;
-		pElement->u.u_form.length      = NULL;
-		pElement->u.u_form.app         = NULL;
-		pElement->u.u_form.ssi         = NULL;
+		pElement->u.u_form.id          = nullptr;
+		pElement->u.u_form.level       = nullptr;
+		pElement->u.u_form.version     = nullptr;
+		pElement->u.u_form.class       = nullptr;
+		pElement->u.u_form.language    = nullptr;
+		pElement->u.u_form.charset     = nullptr;
+		pElement->u.u_form.length      = nullptr;
+		pElement->u.u_form.app         = nullptr;
+		pElement->u.u_form.ssi         = nullptr;
 		DeleteElement(pFstyle);
 		DeleteElement(pFrowvec);
 		DeleteElement(pFdata);
@@ -1112,7 +1112,7 @@ while (pElement)
 			{
 			pSubElement->u.u_block.pHead =
 						pElement->u.u_form.pHead;
-			pElement->u.u_form.pHead = NULL;
+			pElement->u.u_form.pHead = nullptr;
 			}
 		    }
 		if (pId)
@@ -1127,17 +1127,17 @@ while (pElement)
 		pSubElement->u.u_block.charset  = pElement->u.u_form.charset;
 		pSubElement->u.u_block.length   = pElement->u.u_form.length;
 		pSubElement->u.u_block.app      = pElement->u.u_form.app;
-		pSubElement->u.u_block.timing   = NULL;
+		pSubElement->u.u_block.timing   = nullptr;
 		pSubElement->u.u_block.ssi      = pElement->u.u_form.ssi;
-		pElement->u.u_form.id           = NULL;
-		pElement->u.u_form.level        = NULL;
-		pElement->u.u_form.version      = NULL;
-		pElement->u.u_form.class        = NULL;
-		pElement->u.u_form.language     = NULL;
-		pElement->u.u_form.charset      = NULL;
-		pElement->u.u_form.length       = NULL;
-		pElement->u.u_form.app          = NULL;
-		pElement->u.u_form.ssi          = NULL;
+		pElement->u.u_form.id           = nullptr;
+		pElement->u.u_form.level        = nullptr;
+		pElement->u.u_form.version      = nullptr;
+		pElement->u.u_form.class        = nullptr;
+		pElement->u.u_form.language     = nullptr;
+		pElement->u.u_form.charset      = nullptr;
+		pElement->u.u_form.length       = nullptr;
+		pElement->u.u_form.app          = nullptr;
+		pElement->u.u_form.ssi          = nullptr;
 		DeleteElement(pFstyle);
 		DeleteElement(pFrowvec);
 		DeleteElement(pFdata);
@@ -1198,13 +1198,13 @@ pNewId->rid    = MakeMByteString(pwcId);
 if (pwcSSI)
     pNewId->rssi   = MakeMByteString(pwcSSI);
 else
-    pNewId->rssi   = NULL;
+    pNewId->rssi   = nullptr;
 if (pwcLevel)
     pNewId->rlevel = MakeMByteString(pwcLevel);
 else
-    pNewId->rlevel = NULL;
+    pNewId->rlevel = nullptr;
 pNewId->offset     = virpageOffset;
-pNewId->next       = NULL;
+pNewId->next       = nullptr;
 
 pLoidsEnd->next = pNewId;
 pLoidsEnd = pNewId;
@@ -1447,8 +1447,8 @@ unlink(compZFileName);
 static void MarkUsedStyle(M_WCHAR *level, M_WCHAR *class, M_WCHAR *ssi)
 {
 ElementPtr  pThis;
-M_WCHAR    *rlevel = NULL, *rclass = NULL, *rssi = NULL;
-LOGICAL    *pBeenUsed = NULL;
+M_WCHAR    *rlevel = nullptr, *rclass = nullptr, *rssi = nullptr;
+LOGICAL    *pBeenUsed = nullptr;
 
 pThis = pTossChain;
 while (pThis)
@@ -1513,7 +1513,7 @@ M_WCHAR    **pId;
 static char errMess[] =
 	    "internal error - unrecognized element type in LookupInSnb";
 
-if (!pSnb) return NULL;
+if (!pSnb) return nullptr;
 
 pThis = pSnb->u.u_snb.pSystemNotations;
 
@@ -1566,7 +1566,7 @@ while (pThis)
     if (w_strcmp(rid, *pId) == 0) return pThis;
     pThis = pThis->pNext;
     }
-return NULL;
+return nullptr;
 }
 
 
@@ -1603,7 +1603,7 @@ while (pThis)
 		pThis = pThis->u.u_sdldoc.pSnb;
 		break;
 		}
-	    pThis = NULL;
+	    pThis = nullptr;
 	    break;
 	case e_virpage:
 	    pThis->tossChecked = FALSE;
@@ -1633,7 +1633,7 @@ while (pThis)
 		pThis = pThis->pNext;
 		break;
 		}
-	    pThis = NULL;
+	    pThis = nullptr;
 	    break;
 	case e_snb:
 	    pThis->tossChecked = FALSE;
@@ -1879,7 +1879,7 @@ while (pThis)
 	    break;
 	case e_refitem:
 	    pThis->tossChecked = FALSE;
-	    pThis->u.u_refitem.pReferencedItem = NULL;
+	    pThis->u.u_refitem.pReferencedItem = nullptr;
 	    if (pThis->u.u_refitem.pHead &&
 	        pThis->u.u_refitem.pHead->tossChecked)
 		{
@@ -2229,12 +2229,12 @@ while (pThis)
 */
 static void MarkUsedTOSS(ElementPtr pRoot)
 {
-ElementPtr pParent, pSnb = NULL, pItem, pThis;
+ElementPtr pParent, pSnb = nullptr, pItem, pThis;
 static char errMess[] =
 	    "internal error - unrecognized element type in MarkUsedTOSS";
 
 pThis   = pRoot;
-pParent = NULL;
+pParent = nullptr;
 
 while (pThis)
     {
@@ -2264,7 +2264,7 @@ while (pThis)
 		pThis = pThis->u.u_sdldoc.pSnb;
 		break;
 		}
-	    pThis = NULL;
+	    pThis = nullptr;
 	    break;
 	case e_virpage:
 	    if (!pThis->tossChecked)
@@ -2310,7 +2310,7 @@ while (pThis)
 		break;
 		}
 	    m_free(pThis->inheritedClass, "wide character inherited class");
-	    pThis = NULL;
+	    pThis = nullptr;
 	    break;
 	case e_snb:
 	    if (!pThis->tossChecked)
@@ -3254,7 +3254,7 @@ int            zFileSize, length;
 unsigned char  zTemp[4];
 int            zFd;
 char           buffer[BUFSIZ];
-FILE          *saveOutFile = NULL;
+FILE          *saveOutFile = nullptr;
 char           cCount[32];
 static char    errMess[] =
 		    "internal error - unrecognized element type in EmitSDL";
@@ -3282,12 +3282,12 @@ else
     pThis = pElementChain;
     sprintf(cCount, " COUNT=\"%d\">\n", nElements);
     PutString(cCount);
-    pElementChain = NULL;
+    pElementChain = nullptr;
     nElements     = 0;
 
     /* push a null so the last <entry> pop will terminate the loop */
     if (pThis && (pThis->type == e_entry))
-	PushThisElement(NULL);
+	PushThisElement(nullptr);
     }
 
 while (pThis)
@@ -3301,7 +3301,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_sdldoc.pHead;
-		pThat->u.u_sdldoc.pHead = NULL;
+		pThat->u.u_sdldoc.pHead = nullptr;
 		break;
 		}
 	    if (pThis->u.u_sdldoc.pSnb)
@@ -3309,11 +3309,11 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_sdldoc.pSnb;
-		pThat->u.u_sdldoc.pSnb = NULL;
+		pThat->u.u_sdldoc.pSnb = nullptr;
 		break;
 		}
 	    DeleteElement(pThis);
-	    pThis = NULL;
+	    pThis = nullptr;
 	    break;
 	case e_virpage:
 	    if (!pThis->beenEmitted)
@@ -3339,7 +3339,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_virpage.pHead;
-		pThat->u.u_virpage.pHead = NULL;
+		pThat->u.u_virpage.pHead = nullptr;
 		break;
 		}
 	    if (pThis->u.u_virpage.pSnb)
@@ -3347,7 +3347,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_virpage.pSnb;
-		pThat->u.u_virpage.pSnb = NULL;
+		pThat->u.u_virpage.pSnb = nullptr;
 		break;
 		}
 	    if (pThis->u.u_virpage.pBlockOrForm)
@@ -3355,21 +3355,21 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_virpage.pBlockOrForm;
-		pThat->u.u_virpage.pBlockOrForm = NULL;
+		pThat->u.u_virpage.pBlockOrForm = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("VIRPAGE", TRUE);
 		break;
 		}
 	    DeleteElement(pThis);
 	    CloseNamedTag("VIRPAGE", TRUE);
-	    pThis = NULL;
+	    pThis = nullptr;
 	    break;
 	case e_snb:
 	    if (!pThis->beenEmitted)
@@ -3384,7 +3384,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_virpage.pHead;
-		pThat->u.u_virpage.pHead = NULL;
+		pThat->u.u_virpage.pHead = nullptr;
 		break;
 		}
 	    if (pThis->u.u_snb.pSystemNotations)
@@ -3392,14 +3392,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_snb.pSystemNotations;
-		pThat->u.u_snb.pSystemNotations = NULL;
+		pThat->u.u_snb.pSystemNotations = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("SNB", TRUE);
 		break;
@@ -3435,7 +3435,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_block.pHead;
-		pThat->u.u_block.pHead = NULL;
+		pThat->u.u_block.pHead = nullptr;
 		break;
 		}
 	    if (pThis->u.u_block.pCpOrP)
@@ -3443,14 +3443,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_block.pCpOrP;
-		pThat->u.u_block.pCpOrP = NULL;
+		pThat->u.u_block.pCpOrP = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("BLOCK", TRUE);
 		break;
@@ -3485,7 +3485,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_form.pHead;
-		pThat->u.u_form.pHead = NULL;
+		pThat->u.u_form.pHead = nullptr;
 		break;
 		}
 	    if (pThis->u.u_form.pFdata)
@@ -3493,7 +3493,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_form.pFdata;
-		pThat->u.u_form.pFdata = NULL;
+		pThat->u.u_form.pFdata = nullptr;
 		break;
 		}
 	    if (pThis->u.u_form.pFstyle)
@@ -3501,14 +3501,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_form.pFstyle;
-		pThat->u.u_form.pFstyle = NULL;
+		pThat->u.u_form.pFstyle = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("FORM", TRUE);
 		break;
@@ -3530,14 +3530,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_fstyle.pFrowvec;
-		pThat->u.u_fstyle.pFrowvec = NULL;
+		pThat->u.u_fstyle.pFrowvec = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("FSTYLE", TRUE);
 		break;
@@ -3559,7 +3559,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -3577,14 +3577,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_fdata.pBlockOrForm;
-		pThat->u.u_fdata.pBlockOrForm = NULL;
+		pThat->u.u_fdata.pBlockOrForm = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("FDATA", TRUE);
 		break;
@@ -3601,7 +3601,7 @@ while (pThis)
 		AddToLOIDS("P",
 			   pThis->u.u_p.id,
 			   pThis->u.u_p.ssi,
-			   NULL,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("VERSION", pThis->u.u_p.version);
 		ImpliedAttribute("TYPE", pThis->u.u_p.type);
@@ -3614,7 +3614,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_p.pHead;
-		pThat->u.u_p.pHead = NULL;
+		pThat->u.u_p.pHead = nullptr;
 		break;
 		}
 	    if (pThis->u.u_p.pAtomicOrPCDATA)
@@ -3622,14 +3622,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_p.pAtomicOrPCDATA;
-		pThat->u.u_p.pAtomicOrPCDATA = NULL;
+		pThat->u.u_p.pAtomicOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("P", TRUE);
 		break;
@@ -3646,7 +3646,7 @@ while (pThis)
 		AddToLOIDS("CP",
 			   pThis->u.u_cp.id,
 			   pThis->u.u_cp.ssi,
-			   NULL,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("VERSION", pThis->u.u_cp.version);
 		ImpliedAttribute("TYPE", pThis->u.u_cp.type);
@@ -3659,14 +3659,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_cp.pCDATA;
-		pThat->u.u_cp.pCDATA = NULL;
+		pThat->u.u_cp.pCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("CP", TRUE);
 		break;
@@ -3683,7 +3683,7 @@ while (pThis)
 		AddToLOIDS("HEAD",
 			   pThis->u.u_head.id,
 			   pThis->u.u_head.ssi,
-			   NULL,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("VERSION", pThis->u.u_head.version);
 		ImpliedAttribute("CLASS", pThis->u.u_head.class);
@@ -3700,7 +3700,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_head.pAtomicOrPCDATA;
-		pThat->u.u_head.pAtomicOrPCDATA = NULL;
+		pThat->u.u_head.pAtomicOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->u.u_head.pSubhead)
@@ -3708,14 +3708,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_head.pSubhead;
-		pThat->u.u_head.pSubhead = NULL;
+		pThat->u.u_head.pSubhead = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		pThat = PopThisElement();
 		if (pThat->type == e_p)
@@ -3740,7 +3740,7 @@ while (pThis)
 		AddToLOIDS("SUBHEAD",
 			   pThis->u.u_subhead.id,
 			   pThis->u.u_subhead.ssi,
-			   NULL,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("VERSION", pThis->u.u_subhead.version);
 		ImpliedAttribute("CLASS", pThis->u.u_subhead.class);
@@ -3757,14 +3757,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_subhead.pAtomicOrPCDATA;
-		pThat->u.u_subhead.pAtomicOrPCDATA = NULL;
+		pThat->u.u_subhead.pAtomicOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("SUBHEAD", FALSE);
 		break;
@@ -3780,8 +3780,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_anchor.id);
 		AddToLOIDS("ANCHOR",
 			   pThis->u.u_anchor.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		PutString(">");
 		pThis->beenEmitted = TRUE;
@@ -3790,7 +3790,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -3815,14 +3815,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_link.pAtomicOrPCDATA;
-		pThat->u.u_link.pAtomicOrPCDATA = NULL;
+		pThat->u.u_link.pAtomicOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("LINK", FALSE);
 		break;
@@ -3838,8 +3838,8 @@ while (pThis)
 		ImpliedAttribute("ID", pThis->u.u_snref.id);
 		AddToLOIDS("SNREF",
 			   pThis->u.u_snref.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		PutString(">");
 		pThis->beenEmitted = TRUE;
@@ -3849,7 +3849,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_snref.pRefitem;
-		pThat->u.u_snref.pRefitem = NULL;
+		pThat->u.u_snref.pRefitem = nullptr;
 		break;
 		}
 	    if (pThis->u.u_snref.pAlttext)
@@ -3857,14 +3857,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_snref.pAlttext;
-		pThat->u.u_snref.pAlttext = NULL;
+		pThat->u.u_snref.pAlttext = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("SNREF", FALSE);
 		break;
@@ -3889,14 +3889,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_refitem.pHead;
-		pThat->u.u_refitem.pHead = NULL;
+		pThat->u.u_refitem.pHead = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("REFITEM", TRUE);
 		break;
@@ -3916,14 +3916,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_alttext.pCDATA;
-		pThat->u.u_alttext.pCDATA = NULL;
+		pThat->u.u_alttext.pCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("ALTTEXT", TRUE);
 		break;
@@ -3943,14 +3943,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_rev.pAtomicOrPCDATA;
-		pThat->u.u_rev.pAtomicOrPCDATA = NULL;
+		pThat->u.u_rev.pAtomicOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("REV", FALSE);
 		break;
@@ -3974,14 +3974,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_key.pAtomicOrPCDATA;
-		pThat->u.u_key.pAtomicOrPCDATA = NULL;
+		pThat->u.u_key.pAtomicOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("KEY", FALSE);
 		break;
@@ -4004,14 +4004,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_sphrase.pSpcOrPCDATA;
-		pThat->u.u_sphrase.pSpcOrPCDATA = NULL;
+		pThat->u.u_sphrase.pSpcOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("SPHRASE", FALSE);
 		break;
@@ -4031,7 +4031,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_if.pCond;
-		pThat->u.u_if.pCond = NULL;
+		pThat->u.u_if.pCond = nullptr;
 		break;
 		}
 	    if (pThis->u.u_if.pThen)
@@ -4039,7 +4039,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_if.pThen;
-		pThat->u.u_if.pThen = NULL;
+		pThat->u.u_if.pThen = nullptr;
 		break;
 		}
 	    if (pThis->u.u_if.pElse)
@@ -4047,14 +4047,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_if.pElse;
-		pThat->u.u_if.pElse = NULL;
+		pThat->u.u_if.pElse = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("IF", FALSE);
 		break;
@@ -4076,14 +4076,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_cond.pCDATA;
-		pThat->u.u_cond.pCDATA = NULL;
+		pThat->u.u_cond.pCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("COND", TRUE);
 		break;
@@ -4103,14 +4103,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_then.pAtomicOrPCDATA;
-		pThat->u.u_then.pAtomicOrPCDATA = NULL;
+		pThat->u.u_then.pAtomicOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("THEN", TRUE);
 		break;
@@ -4130,14 +4130,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_else.pAtomicOrPCDATA;
-		pThat->u.u_else.pAtomicOrPCDATA = NULL;
+		pThat->u.u_else.pAtomicOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("ELSE", TRUE);
 		break;
@@ -4158,7 +4158,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4172,8 +4172,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_graphic.id);
 		AddToLOIDS("GRAPHIC",
 			   pThis->u.u_graphic.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("FORMAT", pThis->u.u_graphic.format);
 		ImpliedAttribute("METHOD", pThis->u.u_graphic.method);
@@ -4185,7 +4185,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4199,8 +4199,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_text.id);
 		AddToLOIDS("TEXT",
 			   pThis->u.u_text.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("LANGUAGE", pThis->u.u_text.language);
 		ImpliedAttribute("CHARSET", pThis->u.u_text.charset);
@@ -4212,14 +4212,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_text.pCpOrP;
-		pThat->u.u_text.pCpOrP = NULL;
+		pThat->u.u_text.pCpOrP = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("TEXT", TRUE);
 		break;
@@ -4235,8 +4235,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_audio.id);
 		AddToLOIDS("AUDIO",
 			   pThis->u.u_audio.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("FORMAT", pThis->u.u_audio.format);
 		ImpliedAttribute("METHOD", pThis->u.u_audio.method);
@@ -4248,7 +4248,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4262,8 +4262,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_video.id);
 		AddToLOIDS("VIDEO",
 			   pThis->u.u_video.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("FORMAT", pThis->u.u_video.format);
 		ImpliedAttribute("METHOD", pThis->u.u_video.method);
@@ -4275,7 +4275,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4289,8 +4289,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_animate.id);
 		AddToLOIDS("ANIMATE",
 			   pThis->u.u_animate.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("FORMAT", pThis->u.u_animate.format);
 		ImpliedAttribute("METHOD", pThis->u.u_animate.method);
@@ -4302,7 +4302,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4316,8 +4316,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_script.id);
 		AddToLOIDS("SCRIPT",
 			   pThis->u.u_script.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("INTERP", pThis->u.u_script.interp);
 		PutString(">\n");
@@ -4328,14 +4328,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_script.pCDATA;
-		pThat->u.u_script.pCDATA = NULL;
+		pThat->u.u_script.pCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("SCRIPT", TRUE);
 		break;
@@ -4351,8 +4351,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_crossdoc.id);
 		AddToLOIDS("CROSSDOC",
 			   pThis->u.u_crossdoc.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		RequiredAttribute("XID", pThis->u.u_crossdoc.xid);
 		PutString(">\n");
@@ -4362,7 +4362,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4376,8 +4376,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_man_page.id);
 		AddToLOIDS("MAN-PAGE",
 			   pThis->u.u_man_page.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		RequiredAttribute("XID", pThis->u.u_man_page.xid);
 		PutString(">\n");
@@ -4387,7 +4387,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4401,8 +4401,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_textfile.id);
 		AddToLOIDS("TEXTFILE",
 			   pThis->u.u_textfile.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		RequiredAttribute("XID", pThis->u.u_textfile.xid);
 		ImpliedAttribute("OFFSET", pThis->u.u_textfile.offset);
@@ -4414,7 +4414,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4428,8 +4428,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_sys_cmd.id);
 		AddToLOIDS("SYS-CMD",
 			   pThis->u.u_sys_cmd.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		RequiredAttribute("COMMAND", pThis->u.u_sys_cmd.command);
 		PutString(">\n");
@@ -4439,7 +4439,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4453,8 +4453,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_callback.id);
 		AddToLOIDS("CALLBACK",
 			   pThis->u.u_callback.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("DATA", pThis->u.u_callback.data);
 		PutString(">\n");
@@ -4464,7 +4464,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4478,8 +4478,8 @@ while (pThis)
 		RequiredAttribute("ID", pThis->u.u_switch.id);
 		AddToLOIDS("SWITCH",
 			   pThis->u.u_switch.id,
-			   NULL,
-			   NULL,
+			   nullptr,
+			   nullptr,
 			   virpageOffset);
 		ImpliedAttribute("INTERP", pThis->u.u_switch.interp);
 		RequiredAttribute("BRANCHES", pThis->u.u_switch.branches);
@@ -4491,14 +4491,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_switch.pCDATA;
-		pThat->u.u_switch.pCDATA = NULL;
+		pThat->u.u_switch.pCDATA = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("SWITCH", TRUE);
 		break;
@@ -4515,7 +4515,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4539,7 +4539,7 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_entry.pSimpleOrPCDATA;
-		pThat->u.u_entry.pSimpleOrPCDATA = NULL;
+		pThat->u.u_entry.pSimpleOrPCDATA = nullptr;
 		break;
 		}
 	    if (pThis->u.u_entry.pEntry)
@@ -4547,14 +4547,14 @@ while (pThis)
 		PushThisElement(pThis);
 		pThat = pThis;
 		pThis = pThis->u.u_entry.pEntry;
-		pThat->u.u_entry.pEntry = NULL;
+		pThat->u.u_entry.pEntry = nullptr;
 		break;
 		}
 	    if (pThis->pNext)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		CloseNamedTag("ENTRY", TRUE);
 		break;
@@ -4576,7 +4576,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4607,7 +4607,7 @@ while (pThis)
 	    PutString(">\n");
 	    pThat = pThis;
 	    pThis = pThat->pNext;
-	    pThat->pNext = NULL;
+	    pThat->pNext = nullptr;
 	    DeleteElement(pThat);
 	    break;
 	case e_headstyle:
@@ -4615,7 +4615,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4657,7 +4657,7 @@ while (pThis)
 	    PutString(">\n");
 	    pThat = pThis;
 	    pThis = pThat->pNext;
-	    pThat->pNext = NULL;
+	    pThat->pNext = nullptr;
 	    DeleteElement(pThat);
 	    break;
 	case e_formstyle:
@@ -4665,7 +4665,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4702,7 +4702,7 @@ while (pThis)
 	    PutString(">\n");
 	    pThat = pThis;
 	    pThis = pThat->pNext;
-	    pThat->pNext = NULL;
+	    pThat->pNext = nullptr;
 	    DeleteElement(pThat);
 	    break;
 	case e_frmtstyle:
@@ -4710,7 +4710,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4747,7 +4747,7 @@ while (pThis)
 	    PutString(">\n");
 	    pThat = pThis;
 	    pThis = pThat->pNext;
-	    pThat->pNext = NULL;
+	    pThat->pNext = nullptr;
 	    DeleteElement(pThat);
 	    break;
 	case e_grphstyle:
@@ -4755,7 +4755,7 @@ while (pThis)
 		{
 		pThat = pThis;
 		pThis = pThat->pNext;
-		pThat->pNext = NULL;
+		pThat->pNext = nullptr;
 		DeleteElement(pThat);
 		break;
 		}
@@ -4774,7 +4774,7 @@ while (pThis)
 	    PutString(">\n");
 	    pThat = pThis;
 	    pThis = pThat->pNext;
-	    pThat->pNext = NULL;
+	    pThat->pNext = nullptr;
 	    DeleteElement(pThat);
 	    break;
 	default:
@@ -5143,7 +5143,7 @@ else
     exit(code);
     }
 
-if ((file = fopen(name, mode)) == NULL)
+if ((file = fopen(name, mode)) == nullptr)
     {
     fprintf(stderr,
 	    "%s: error opening \"%s\" for %s\n",
@@ -6396,7 +6396,7 @@ else /* emit only those <toss> elements actually used in the document */
     OpenNamedTag("TOSS", TRUE, TRUE);
     pElementChain = pTossChain;
     nElements     = nStyles;
-    EmitSDL(NULL);
+    EmitSDL(nullptr);
     CloseNamedTag("TOSS", TRUE);
     }
 
@@ -6473,7 +6473,7 @@ if (init)
     length = 0 ;
     }
 
-if (length < 0) return(NULL) ;
+if (length < 0) return(nullptr) ;
 
 while (current->symbol)
     {
@@ -6547,7 +6547,7 @@ char       *charset;
 if (!pLang && !pCharset)
     return;
 
-mb_charset = NULL;
+mb_charset = nullptr;
 if (pLang)
     mb_lang = MakeMByteString(pLang);
 else

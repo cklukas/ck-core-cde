@@ -129,7 +129,7 @@ resetJob( void *display )
 	}
 	Debug ("Before XSync\n");
 	XSync (dpy, False);
-	return NULL;
+	return nullptr;
 }
 
 /*
@@ -149,6 +149,6 @@ pseudoReset( Display *dpy )
 		LogError(
 		  ReadCatalog(MC_LOG_SET,MC_LOG_PSEUDO,MC_DEF_LOG_PSEUDO));
 	}
-	XSetErrorHandler (NULL);
+	XSetErrorHandler (nullptr);
 	Debug ("pseudoReset() done\n");
 }

@@ -199,7 +199,7 @@ void
 popup_dtwmBB(
         Widget shell )
 {
-    if (style.dtwmDialog == NULL) {
+    if (style.dtwmDialog == nullptr) {
       _DtTurnOnHourGlass(shell);  
       build_dtwmDlg(shell);
       getDtwmValues();
@@ -795,10 +795,10 @@ build_dtwmDlg(
     XtManageChild(dtwm.iconGapText);
     XtManageChild(dtwm.iconGapLabel);
 
-    XtAddCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, NULL);
+    XtAddCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, nullptr);
     XtAddCallback(style.dtwmDialog, XmNmapCallback, _DtmapCB_dtwmDlg, shell);
-    XtAddCallback(style.dtwmDialog, XmNcallback, ButtonCB, NULL);
-    XtAddCallback(dtwm.systemDefault, XmNactivateCallback, systemDefaultCB, NULL);
+    XtAddCallback(style.dtwmDialog, XmNcallback, ButtonCB, nullptr);
+    XtAddCallback(dtwm.systemDefault, XmNactivateCallback, systemDefaultCB, nullptr);
 
     XtManageChild(form);
     XtManageChildren(widgetList1,count); 
@@ -1020,7 +1020,7 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
     XtSetValues (dtwm.iconGapLabel, args, n);
 
-    XtRemoveCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, NULL);
+    XtRemoveCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, nullptr);
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -1043,7 +1043,7 @@ _DtmapCB_dtwmDlg(
     if (!save.restoreFlag)
         putDialog ((Widget)client_data, w);
    
-    XtRemoveCallback(style.dtwmDialog, XmNmapCallback, _DtmapCB_dtwmDlg, NULL);
+    XtRemoveCallback(style.dtwmDialog, XmNmapCallback, _DtmapCB_dtwmDlg, nullptr);
   
 }
 
@@ -1223,7 +1223,7 @@ ButtonCB(
       
       if (changeFlag)
 	{
-	  if (dtwm.warnDialog == NULL)
+	  if (dtwm.warnDialog == nullptr)
 	    {
 	      n = 0;
 	      XtSetArg(args[n], XmNokLabelString, CMPSTR((String) _DtOkString)); n++;
@@ -1365,7 +1365,7 @@ saveDtwm(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.dtwmDialog != NULL) 
+    if (style.dtwmDialog != nullptr) 
     {
         if (XtIsManaged(style.dtwmDialog))
             sprintf(bufr, "*dtwmDlg.ismapped: True\n");
@@ -1442,7 +1442,7 @@ void _DtWmParseToLower (unsigned char  *string)
 	pch += chlen;
     }
 #else
-    while (*pch != NULL)
+    while (*pch != nullptr)
     {
         if (isupper (*pch))
 	{

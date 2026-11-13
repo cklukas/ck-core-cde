@@ -544,7 +544,7 @@ FormatManPage(
 		    if (result != -1)
 		      {
 		        result = __DtHelpCeProcessString(
-					my_vars, NULL,
+					my_vars, nullptr,
 					_DtCvLITERAL,
 					ScanString,
 					*out_buf,
@@ -780,7 +780,7 @@ _DtHelpFormatManPage(
     int      writeBufSize = 0;
     int      writeBufMax  = 0;
     char    *ptr;
-    char    *writeBuf = NULL;
+    char    *writeBuf = nullptr;
     char     readBuf[BUFSIZ];
     _DtHelpFontHints    fontAttr;
     VarHandle  myVars;
@@ -788,9 +788,9 @@ _DtHelpFormatManPage(
     BufFilePtr myBufFile;
     static char manString[]     = "man ";
     static char devNullString[] = " 2>/dev/null";
-    _DtCvTopicPtr topic = NULL;
+    _DtCvTopicPtr topic = nullptr;
     DtHelpDispAreaStruct *pDAS     = (DtHelpDispAreaStruct *) client_data;
-    _FrmtUiInfo		  myUiInfo = { NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 1, False };
+    _FrmtUiInfo		  myUiInfo = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0, 0, 0, 1, False };
 
     /*
      * fill out the ui information
@@ -829,7 +829,7 @@ _DtHelpFormatManPage(
      * make sure we don't try to read compressed.
      */
     myBufFile = _DtHelpCeCreatePipeBufFile(myFile);
-    if (myBufFile == NULL)
+    if (myBufFile == nullptr)
       {
 	(void) pclose(myFile); /* don't check for error, it was popen'd */
 	return -1;
@@ -840,9 +840,9 @@ _DtHelpFormatManPage(
      */
     _DtHelpCeCopyDefFontAttrList (&fontAttr);
     fontAttr.spacing  = _DtHelpFontSpacingMono;
-    _DtHelpCeGetLcCtype(NULL, &(fontAttr.language), &(fontAttr.char_set));
+    _DtHelpCeGetLcCtype(nullptr, &(fontAttr.language), &(fontAttr.char_set));
     myVars = __DtHelpCeSetUpVars(&myUiInfo);
-    if (myVars == NULL)
+    if (myVars == nullptr)
       {
 	free(fontAttr.language);
 	free(fontAttr.char_set);
@@ -864,7 +864,7 @@ _DtHelpFormatManPage(
 				     &writeBufMax );
 
     if ((result != -1) && writeBufSize)
-	result = __DtHelpCeProcessString(myVars, NULL, _DtCvLITERAL,
+	result = __DtHelpCeProcessString(myVars, nullptr, _DtCvLITERAL,
 			ScanString, writeBuf, writeBufSize,
 			0, False, &fontAttr);
 
@@ -890,13 +890,13 @@ _DtHelpFormatManPage(
    /*
     * did we have any paragraphs to format?
     */
-   if ((topic != NULL && NULL == topicStruct->seg_list)
-		|| NULL == _DtCvContainerListOfSeg(topicStruct->seg_list))
+   if ((topic != nullptr && nullptr == topicStruct->seg_list)
+		|| nullptr == _DtCvContainerListOfSeg(topicStruct->seg_list))
       {
 	_DtHelpFreeSegments(topicStruct->seg_list, _DtCvFALSE,
-						NULL, (_DtCvPointer) pDAS);
+						nullptr, (_DtCvPointer) pDAS);
 	free ((char *) topicStruct);
-	topic = NULL;
+	topic = nullptr;
 	errno = ENOENT; /* we'll just assume no man page existed */
 	result = -1;
       }

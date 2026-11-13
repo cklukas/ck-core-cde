@@ -132,14 +132,14 @@ static const char *iconPmSuffixes[] = {
     "%B" "%M.pm",
     "%B" "%M.bm",
     "%B",
-    NULL
+    nullptr
 };
 
 static const char *iconBmSuffixes[] = {
     "%B" "%M.bm",
     "%B" "%M.pm",
     "%B",
-    NULL
+    nullptr
 };
 
 
@@ -177,7 +177,7 @@ makeDefaultIconPath(
 	bytes_needed = strlen(varname) + strlen(basedefault) + 2;
 
 	homedir = getenv("HOME");
-	if (NULL != homedir)
+	if (nullptr != homedir)
 	{
 	    homedir_bytes = strlen(homedir);
 	    fmt_bytes = strlen(fmt);
@@ -187,7 +187,7 @@ makeDefaultIconPath(
 
 	outbuf = XtMalloc(bytes_needed);
 	(void)sprintf(outbuf, "%s=", varname);
-	if (homedir != NULL)
+	if (homedir != nullptr)
 	{
 	    char *temp = XtMalloc(bytes_needed);
 
@@ -211,9 +211,9 @@ makeDefaultIconPath(
 static char *
 makeDefaultIconPmPath(void)
 {
-    static char *defaultIconPmPath = NULL;
+    static char *defaultIconPmPath = nullptr;
 
-    if (NULL == defaultIconPmPath)
+    if (nullptr == defaultIconPmPath)
       defaultIconPmPath =
 	makeDefaultIconPath(PM_PATH_ENVIRON, DTPMSYSDEFAULT, iconPmSuffixes);
     
@@ -227,9 +227,9 @@ makeDefaultIconPmPath(void)
 static char *
 makeDefaultIconBmPath(void)
 {
-    static char *defaultIconBmPath = NULL;
+    static char *defaultIconBmPath = nullptr;
 
-    if (NULL == defaultIconBmPath)
+    if (nullptr == defaultIconBmPath)
       defaultIconBmPath =
 	makeDefaultIconPath(BM_PATH_ENVIRON, DTBMSYSDEFAULT, iconBmSuffixes);
     
@@ -260,13 +260,13 @@ _DtEnvSessionManager(void)
 {
 #define SESSION_MANAGER	"SESSION_MANAGER"
     char *session_manager = getenv(SESSION_MANAGER);
-    if (NULL == session_manager)
+    if (nullptr == session_manager)
     {
 	Display	*display;
         Atom sm_atom;
 
-	display = XOpenDisplay(NULL);
-	if (NULL != display)
+	display = XOpenDisplay(nullptr);
+	if (nullptr != display)
 	{
             sm_atom = XInternAtom(display, SESSION_MANAGER, True);
 	    if (None != sm_atom)
@@ -282,7 +282,7 @@ _DtEnvSessionManager(void)
 				&nitems, &leftover,
 				(unsigned char **) &session_manager))
 	        {
-	            if (NULL != session_manager && None != actual_format)
+	            if (nullptr != session_manager && None != actual_format)
 		    {
 		        char *envstr;
 			envstr = (char*) malloc(
@@ -829,7 +829,7 @@ static void _EnvAdd
 
       int i;
       size_t envVarLen = strlen(envVar);
-      char *envPtr = NULL;
+      char *envPtr = nullptr;
 
     /* if we have previously put this environment variable out to the
      * environment, we can retrieve it and reuse it rather than letting
@@ -947,7 +947,7 @@ _DtEnvRemove(
 		     */
 
 		    pEnviron2[index] = pEnviron2[count - 1];
-		    pEnviron2[count - 1] = NULL;
+		    pEnviron2[count - 1] = nullptr;
 
 		    XtFree (freeMe);
 #endif /* linux || CSRG_BASED */
@@ -1020,7 +1020,7 @@ _AddToPath (
 {
     char * sNew;
 
-    if (sPath != NULL)
+    if (sPath != nullptr)
     {
 	sNew = XtRealloc (sPath, strlen(sPath) + 1 + strlen(sDir) + 1);
     }
@@ -1084,7 +1084,7 @@ _DtWsmSetBackdropSearchPath (
     char postDtEnvironmentStringBuf[MAX_ENV_STRING]; 
     char *postDtEnvironmentString;
 
-    if (backdropPath == NULL) return (returnValue);
+    if (backdropPath == nullptr) return (returnValue);
 
     sOldEnv = getenv(PM_PATH_ENVIRON);
 
@@ -1115,7 +1115,7 @@ _DtWsmSetBackdropSearchPath (
 	sNext = _XStrtok(sBackDirs, ":", strtok_buf);
 
 	/* process each directory individually */
-	while (sNext != NULL)
+	while (sNext != nullptr)
 	{
 	    bytes_needed = (3 * (strlen(sNext) + fmtlen));
 	    if (bytes_needed >= MAX_ENV_STRING)
@@ -1134,11 +1134,11 @@ _DtWsmSetBackdropSearchPath (
 	    if (postDtEnvironmentString != postDtEnvironmentStringBuf)
 	    {
 	        if (postDtEnvironmentString) XtFree(postDtEnvironmentString);
-		postDtEnvironmentString = NULL;
+		postDtEnvironmentString = nullptr;
 	    }
 
 	    /* get next directory */
-	    sNext = _XStrtok(NULL, ":", strtok_buf);
+	    sNext = _XStrtok(nullptr, ":", strtok_buf);
 	}
 
 	XtFree (sBackDirs);
@@ -1170,7 +1170,7 @@ _DtWsmSetBackdropSearchPath (
 	sNext = _XStrtok(sBackDirs, ":", strtok_buf);
 
 	/* process each directory individually */
-	while (sNext != NULL)
+	while (sNext != nullptr)
 	{
 	    bytes_needed = (3 * (strlen(sNext) + fmtlen));
 	    if (bytes_needed >= MAX_ENV_STRING)
@@ -1189,11 +1189,11 @@ _DtWsmSetBackdropSearchPath (
 	    if (postDtEnvironmentString != postDtEnvironmentStringBuf)
 	    {
 	        XtFree(postDtEnvironmentString);
-		postDtEnvironmentString = NULL;
+		postDtEnvironmentString = nullptr;
 	    }
 
 	    /* get next directory */
-	    sNext = _XStrtok(NULL, ":", strtok_buf);
+	    sNext = _XStrtok(nullptr, ":", strtok_buf);
 	}
 
 	XtFree (sBackDirs);
@@ -1228,7 +1228,7 @@ _DtWsmSetBackdropSearchPath (
 	sNext = _XStrtok(sBackDirs, ":", strtok_buf);
 
 	/* process each directory individually */
-	while (sNext != NULL)
+	while (sNext != nullptr)
 	{
 	    bytes_needed = (3 * (strlen(sNext) + fmtlen));
 	    if (bytes_needed >= MAX_ENV_STRING)
@@ -1244,11 +1244,11 @@ _DtWsmSetBackdropSearchPath (
 	    if (postDtEnvironmentString != postDtEnvironmentStringBuf)
 	    {
 	        if (postDtEnvironmentString) XtFree(postDtEnvironmentString);
-		postDtEnvironmentString = NULL;
+		postDtEnvironmentString = nullptr;
 	    }
 
 	    /* get next directory */
-	    sNext = _XStrtok(NULL, ":", strtok_buf);
+	    sNext = _XStrtok(nullptr, ":", strtok_buf);
 	}
 
 	XtFree (sBackDirs);
@@ -1280,7 +1280,7 @@ _DtWsmSetBackdropSearchPath (
 	sNext = _XStrtok(sBackDirs, ":", strtok_buf);
 
 	/* process each directory individually */
-	while (sNext != NULL)
+	while (sNext != nullptr)
 	{
 	    bytes_needed = (3 * (strlen(sNext) + fmtlen));
 	    if (bytes_needed >= MAX_ENV_STRING)
@@ -1296,11 +1296,11 @@ _DtWsmSetBackdropSearchPath (
 	    if (postDtEnvironmentString != postDtEnvironmentStringBuf)
 	    {
 	        XtFree(postDtEnvironmentString);
-		postDtEnvironmentString = NULL;
+		postDtEnvironmentString = nullptr;
 	    }
 
 	    /* get next directory */
-	    sNext = _XStrtok(NULL, ":", strtok_buf);
+	    sNext = _XStrtok(nullptr, ":", strtok_buf);
 	}
 
 	XtFree (sBackDirs);

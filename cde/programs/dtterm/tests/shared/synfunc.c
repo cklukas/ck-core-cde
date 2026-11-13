@@ -65,12 +65,12 @@ int Size;
    char *P;
      if (Size <= 0) {
         sprintf(LogStr, "Invalid Size for memory allocation %d ", Size); 
-        LogError(LogStr); return(NULL);
+        LogError(LogStr); return(nullptr);
      }
      P = (char *) calloc(Size, 1);
-     if (P == NULL) {
+     if (P == nullptr) {
         sprintf(LogStr, "No memory for allocation");
-        LogError(LogStr); return(NULL);
+        LogError(LogStr); return(nullptr);
      }
      return(P);
 }
@@ -78,14 +78,14 @@ int Size;
 void MemRelease(P)
 char *P;
 {
-    if (P == NULL) {LogError("Invalid memory address for release");return;}
+    if (P == nullptr) {LogError("Invalid memory address for release");return;}
     free(P);
 }
 
 int FileExists(FileName)
 char *FileName;
 {
-    if (fopen(FileName, "r") != NULL) return(0);
+    if (fopen(FileName, "r") != nullptr) return(0);
     return((int) errno);
 }
 
@@ -94,7 +94,7 @@ void InitTest(argc, argv)
 int argc;
 char *argv[];
 {
-    test.display = SynOpenDisplay(NULL);
+    test.display = SynOpenDisplay(nullptr);
     SynParseCommandOptions(argc, argv);
     SynNameWindow(test.display, DefaultRootWindow(test.display), "WinRoot");
 #if 0
@@ -328,8 +328,8 @@ void Deiconify(WinName)
 char *WinName;
 {
      SynDoubleClickButton(test.display, "Button1", WinName, "LocTerm1");
-     SynWaitWindowMap(test.display, NULL, WIN_WAIT_TIME);
-     SynWaitWindowUnmap(test.display, NULL,WIN_WAIT_TIME);
+     SynWaitWindowMap(test.display, nullptr, WIN_WAIT_TIME);
+     SynWaitWindowUnmap(test.display, nullptr,WIN_WAIT_TIME);
      SynWaitWindowUnmap(test.display, WinName, WIN_WAIT_TIME);
 }
 

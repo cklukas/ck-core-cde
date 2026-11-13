@@ -156,7 +156,7 @@ void _DtHelpDisplayHistoryInfo(
 
   DtHelpDialogWidget hw = (DtHelpDialogWidget) nw;
  
-  if (hw->help_dialog.history.historyWidget == NULL)
+  if (hw->help_dialog.history.historyWidget == nullptr)
      CreateHistoryDialog((Widget) hw);
   
    /* if its not managed, manage it */
@@ -195,7 +195,7 @@ static Boolean IsTopicInHistoryList(
 
   Boolean done=FALSE;
   
-  while (!done && (pTopicList != NULL))
+  while (!done && (pTopicList != nullptr))
     {
       if (XmStringCompare (topicTitle, pTopicList->topicTitleLbl) == True)
          done= TRUE;
@@ -231,7 +231,7 @@ static void UpdateTopicList(
    Arg args[5];
    XmString labelString;
    XmString *items;
-   DtTopicListStruct *pTopicList=NULL;
+   DtTopicListStruct *pTopicList=nullptr;
    DtHelpDialogWidget hw = (DtHelpDialogWidget) nw;
    
 
@@ -321,11 +321,11 @@ static void ProcessVolumeSelectionCB(
 {
    XmListCallbackStruct *selectedItem = (XmListCallbackStruct *) call_data;
    DtHelpDialogWidget hw = (DtHelpDialogWidget) client_data;
-   DtHistoryListStruct *pTemp= NULL;
+   DtHistoryListStruct *pTemp= nullptr;
    int topicPosition=0;  
    int i;   
    XmString labelString;
-   int * topicPosList = NULL;
+   int * topicPosList = nullptr;
    int   topicCnt = 0;
    Boolean mod = False;
    Arg          args[2];
@@ -342,7 +342,7 @@ static void ProcessVolumeSelectionCB(
       doesnt seem properly initialized and leads to a core dump;
       so use XmListGetSelectedPos() instead */
    if (   False == XmListGetSelectedPos(w, &topicPosList, &topicCnt)
-       && NULL == topicPosList )
+       && nullptr == topicPosList )
    {
       XmListSelectPos(w,topicPosition,False); /* False=dont notify */
       return;                               /* RETURN */
@@ -367,7 +367,7 @@ static void ProcessVolumeSelectionCB(
 				   hw->help_dialog.display.volumeHandle,
 				   hw->help_dialog.display.locationId,
 				   &labelString, &fontList, &mod) != 0 
-       || NULL == labelString)
+       || nullptr == labelString)
    {
        labelString = XmStringCreateLocalized(hw->help_dialog.display.locationId);
    }
@@ -411,7 +411,7 @@ static void ProcessTopicSelectionCB(
    XmListCallbackStruct *selectedItem = (XmListCallbackStruct *) call_data;
    DtHelpDialogWidget hw = (DtHelpDialogWidget) client_data;
    
-   DtTopicListStruct *pTemp= NULL;
+   DtTopicListStruct *pTemp= nullptr;
    int topicPosition=0;  
    int i;
 
@@ -423,7 +423,7 @@ static void ProcessTopicSelectionCB(
 
    pTemp = PullTopicListFromSelVolumeList((Widget)hw); 
 
-   if (pTemp == NULL)
+   if (pTemp == nullptr)
      {
        /*FIX: We have a problem, this should never happen; decide what to do*/
        return;
@@ -440,7 +440,7 @@ static void ProcessTopicSelectionCB(
 
    if (hw->help_dialog.display.helpType != DtHELP_TYPE_TOPIC)
      {
-       if (hw->help_dialog.display.topicTitleLbl != NULL)
+       if (hw->help_dialog.display.topicTitleLbl != nullptr)
            XmStringFree(hw->help_dialog.display.topicTitleLbl);
        hw->help_dialog.display.topicTitleLbl =
 					XmStringCopy(pTemp->topicTitleLbl);
@@ -451,8 +451,8 @@ static void ProcessTopicSelectionCB(
      {
        case DtHELP_TYPE_TOPIC:
          /* Look and see if we need to update our helpVolue to a new value */
-         if (   pTemp->helpVolume != NULL
-             && (   hw->help_dialog.display.helpVolume == NULL
+         if (   pTemp->helpVolume != nullptr
+             && (   hw->help_dialog.display.helpVolume == nullptr
                  || strcmp(hw->help_dialog.display.helpVolume,pTemp->helpVolume) != 0))
          {
            XtFree(hw->help_dialog.display.helpVolume);
@@ -756,7 +756,7 @@ static void CreateHistoryDialog(
    Widget btnList[2];
    unsigned long avgWidth = 73; /* default size, in 10ths of pixel */
    Dimension formWidth;
-   XmFontList fontList = NULL;
+   XmFontList fontList = nullptr;
    Atom xa_ave_width;
 #define BTN_MARGINS   4
 #define BETW_BTN_SPC  5
@@ -850,9 +850,9 @@ void _DtHelpUpdateHistoryList(
     Boolean vol_changed,
     Widget nw)
 {
-  DtHistoryListStruct *pCurrentHistoryList=NULL;
-  XmString   topicTitle       = NULL;
-  XmString   currentItemTitle = NULL;
+  DtHistoryListStruct *pCurrentHistoryList=nullptr;
+  XmString   topicTitle       = nullptr;
+  XmString   currentItemTitle = nullptr;
   Boolean allocTopic=FALSE;
   Boolean dupItem=FALSE;
   Boolean changedSelectedVolume=FALSE;
@@ -866,7 +866,7 @@ void _DtHelpUpdateHistoryList(
    /* Lets just build a history dialog so we can start populating it. 
     * We won't manage it tell we need it 
     */
-   if (hw->help_dialog.history.historyWidget == NULL)
+   if (hw->help_dialog.history.historyWidget == nullptr)
      CreateHistoryDialog((Widget) hw);
 
   /* Find out what type of topic we are currently processing */
@@ -887,7 +887,7 @@ void _DtHelpUpdateHistoryList(
 					hw->help_dialog.display.volumeHandle,
 					locationId, &topicTitle,
 					&fontList, &mod) != 0
-		|| NULL == topicTitle)
+		|| nullptr == topicTitle)
 	    topicTitle = XmStringCreateLocalized(locationId);
 
 	if (mod == True)
@@ -909,8 +909,8 @@ void _DtHelpUpdateHistoryList(
                                  hw->help_dialog.display.volumeHandle,
                                  &currentItemTitle, &fontList, &mod);   
 
-        if(currentItemTitle == NULL &&
-				NULL != hw->help_dialog.display.helpVolume)
+        if(currentItemTitle == nullptr &&
+				nullptr != hw->help_dialog.display.helpVolume)
           currentItemTitle = XmStringCreateLocalized(
 					hw->help_dialog.display.helpVolume);
 	if (mod == True)
@@ -972,12 +972,12 @@ void _DtHelpUpdateHistoryList(
        XmListSelectItem(hw->help_dialog.history.volumeList,
 						currentItemTitle, FALSE);
        changedSelectedVolume = TRUE;
-       if (NULL != currentItemTitle)
+       if (nullptr != currentItemTitle)
            XmStringFree(currentItemTitle);
      }
 
   /* Now add this item to the proper Topic List. */
-  if (pCurrentHistoryList != NULL)
+  if (pCurrentHistoryList != nullptr)
     {
 
       if (!IsTopicInHistoryList(pCurrentHistoryList->pTopicHead, topicTitle))
@@ -1037,7 +1037,7 @@ static DtHistoryListStruct *AddItemToHistoryList(
      int topicType,
      Boolean *duplicateItem)
 {
-  DtHistoryListStruct *pTemp=NULL;
+  DtHistoryListStruct *pTemp=nullptr;
   Boolean done=FALSE;
 
    /*
@@ -1046,7 +1046,7 @@ static DtHistoryListStruct *AddItemToHistoryList(
    pTemp = (*pHead); 
    *duplicateItem = False;
  
-   while (!done && (pTemp != NULL))
+   while (!done && (pTemp != nullptr))
      {
        if (XmStringCompare (title, pTemp->itemTitle) == True)
           {
@@ -1059,7 +1059,7 @@ static DtHistoryListStruct *AddItemToHistoryList(
 
      }
 
-   if (pTemp == NULL)
+   if (pTemp == nullptr)
      {
        /* We did not find a match, so lets add one to the top of 
         * our current list.
@@ -1071,8 +1071,8 @@ static DtHistoryListStruct *AddItemToHistoryList(
        pTemp->totalNodes       = 0;
        pTemp->topicType        = topicType;
        pTemp->pNext            = (*pHead);
-       pTemp->pTopicHead       = NULL;
-       pTemp->pTopicTale       = NULL;
+       pTemp->pTopicHead       = nullptr;
+       pTemp->pTopicTale       = nullptr;
 
        /* Re-Assign our head pointer to point to the new 
         * head of the list
@@ -1101,7 +1101,7 @@ static DtTopicListStruct *PullTopicListFromSelVolumeList(
      Widget nw)
 {
   DtHelpDialogWidget hw = (DtHelpDialogWidget) nw;
-  DtHistoryListStruct *pTemp=NULL;
+  DtHistoryListStruct *pTemp=nullptr;
   Boolean itemsSelected=FALSE;
   int positionCount;
   int *positionList;  /* Should always be only one item */
@@ -1128,7 +1128,7 @@ static DtTopicListStruct *PullTopicListFromSelVolumeList(
   else
     {
       free(positionList);
-      return (NULL);
+      return (nullptr);
       /* error condition we must account for */
     }
 

@@ -72,17 +72,17 @@ travP_open_safe(
 {
     int		iRet= 0;
     unsigned	unsafeTravType= travType & ~AB_TRAV_MOD_SAFE;
-    ABObj	*objArray= NULL;
+    ABObj	*objArray= nullptr;
     int		objArraySize= 0;
     int		objIndex= 0;
-    ABObj	obj= NULL;
+    ABObj	obj= nullptr;
 
     /* if we use safe, we will end up back here! */
     objArraySize= trav_count_cond(root, unsafeTravType, testFunc);
     if (objArraySize > 0)
     {
         objArray= (ABObj *)util_malloc(objArraySize * sizeof(ABObj*));
-        if (objArray == NULL)
+        if (objArray == nullptr)
         {
 	    return -1;
         }
@@ -90,7 +90,7 @@ travP_open_safe(
 
     /* travP_open will set the data correctly */
     for (objIndex= 0, travP_open(trav, root, travType, testFunc); 
-	(obj= travP_next(trav)) != NULL; ++objIndex)
+	(obj= travP_next(trav)) != nullptr; ++objIndex)
     {
 	if (objIndex >= objArraySize)
 	{
@@ -129,13 +129,13 @@ travP_next_safe(ABTraversal trav)
 {
     if (trav->done)
     {
-	return NULL;
+	return nullptr;
     }
 
     ++(trav->objArrayIndex);
     if ((trav->objArrayIndex) >= (trav->objArraySize))
     {
-	trav->curObj= NULL;
+	trav->curObj= nullptr;
 	trav->done= TRUE;
     }
     else
@@ -151,7 +151,7 @@ int
 travP_reset_safe(ABTraversal trav)
 {
     trav->done= FALSE;
-    trav->curObj= NULL;
+    trav->curObj= nullptr;
     trav->objArrayIndex= -1;
     return 0;
 }
@@ -162,7 +162,7 @@ travP_goto_safe(ABTraversal trav, int nodeNum)
 {
     if ((nodeNum < -1) || (nodeNum >= (trav->objArraySize)))
     {
-	return NULL;
+	return nullptr;
     }
     else if (nodeNum == -1)
     {

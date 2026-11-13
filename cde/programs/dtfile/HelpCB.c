@@ -136,7 +136,7 @@ HelpRequestCB(
    DialogData * dialogData;
    Arg args[8];
    int n;
-   String topicTitle = NULL;
+   String topicTitle = nullptr;
    int helpType;
    Boolean freeClientData;
    String fileType;
@@ -178,7 +178,7 @@ HelpRequestCB(
                   msg = XtNewString(tmpStr);
                 }
 
-                _DtMessage(fileMgrRec->shell, title, msg, NULL,
+                _DtMessage(fileMgrRec->shell, title, msg, nullptr,
                            HelpRequestCB);
                 XtFree(title);
                 XtFree(msg);
@@ -188,8 +188,8 @@ HelpRequestCB(
             /* Item help comes in with a NULL client data */
             if (clientData)
             {
-               fileType = NULL;
-               topicTitle = NULL;
+               fileType = nullptr;
+               topicTitle = nullptr;
                helpType = DtHELP_TYPE_TOPIC;
                freeClientData = False;
             }
@@ -222,11 +222,11 @@ HelpRequestCB(
                /* Action/Filetype Help */
                topicTitle = GetSharedMessage(ACTION_FT_HELP_TITLE);
                helpType = DtHELP_TYPE_DYNAMIC_STRING;
-               fileType = NULL;
+               fileType = nullptr;
 
                /* Determine string, and set clientData accordingly */
                if ((clientData =
-                      MapIconWidgetToFileType(w, fileMgrData)) == NULL)
+                      MapIconWidgetToFileType(w, fileMgrData)) == nullptr)
                {
                   /* Not a file icon; is it an action menu item? */
                   if (!IsMenuWidget(w, fileMgrRec, fileMgrData, &strVal, 
@@ -260,7 +260,7 @@ HelpRequestCB(
                /* Create the main help window for this view */
                ShowHelpDialog(fileMgrRec->shell, (XtPointer)fileMgrRec,
 			      MAIN_HELP_DIALOG, 
-                              NULL, clientData, vol,
+                              nullptr, clientData, vol,
                               topicTitle, fileType, helpType);
             }
 
@@ -274,7 +274,7 @@ HelpRequestCB(
    }
       else if (clientData)
       {
-         Widget mainHelpDialog=NULL;
+         Widget mainHelpDialog=nullptr;
          Arg args[10];
          int i=0;
 
@@ -318,10 +318,10 @@ DTHelpRequestCB(
    DesktopRec * dtInfo;
    Arg args[8];
    int n,i;
-   String topicTitle = NULL;
+   String topicTitle = nullptr;
    int helpType;
    String filetypeOrActionName;
-   String fileType = NULL;
+   String fileType = nullptr;
 
    /* Refresh the display */
    XmUpdateDisplay(w);
@@ -330,7 +330,7 @@ DTHelpRequestCB(
     * For all of the following cases, the desktop information is
     * attached as userData to the direct child of the closest shell.
     */
-   if ((dtInfo = (DesktopRec *)LocateRecordStructure(w)) == NULL)
+   if ((dtInfo = (DesktopRec *)LocateRecordStructure(w)) == nullptr)
       return;
 
    /*
@@ -382,8 +382,8 @@ DTHelpRequestCB(
    else
    {
       /* Create the main help window for this workspace */
-      ShowDTHelpDialog(NULL, i, MAIN_HELP_DIALOG, 
-                       NULL, filetypeOrActionName, DTFILE_HELP_NAME,
+      ShowDTHelpDialog(nullptr, i, MAIN_HELP_DIALOG, 
+                       nullptr, filetypeOrActionName, DTFILE_HELP_NAME,
                        topicTitle, fileType, helpType);
    }
 }
@@ -425,7 +425,7 @@ TrashHelpRequestCB(
         tmpStr = GetSharedMessage( ITEM_HELP_ERROR ),
         msg = XtNewString(tmpStr);
 
-        _DtMessage(trashShell, title, msg, NULL,
+        _DtMessage(trashShell, title, msg, nullptr,
                    HelpRequestCB);
         XtFree(title);
         XtFree(msg);
@@ -443,12 +443,12 @@ TrashHelpRequestCB(
    if (primaryTrashHelpDialog)
    {
       ReusePrimaryHelpWindow(primaryTrashHelpDialog,
-                             clientData, vol, NULL, NULL, DtHELP_TYPE_TOPIC);
+                             clientData, vol, nullptr, nullptr, DtHELP_TYPE_TOPIC);
    }
    else
    {
       /* Create the main help window for this view */
-      ShowTrashHelpDialog(trashShell, MAIN_HELP_DIALOG, NULL, clientData, 
+      ShowTrashHelpDialog(trashShell, MAIN_HELP_DIALOG, nullptr, clientData, 
                           vol);
    }
 }
@@ -479,7 +479,7 @@ LocateRecordStructure(
       return(recordPtr);
    }
 
-   return(NULL);
+   return(nullptr);
 }
 
 
@@ -542,7 +542,7 @@ MapIconWidgetToFileType(
    }
 
    /* The icon was unknown; should never happen */
-   return(NULL);
+   return(nullptr);
 }
 
 
@@ -569,7 +569,7 @@ IsMenuWidget(
    String actionName;
    Arg args[2];
 
-   if (action_pane == NULL)
+   if (action_pane == nullptr)
       return(False);
 
    /* First, check if this is a menubar item */
@@ -598,7 +598,7 @@ IsMenuWidget(
       /* Get the filetype from the active item */
       *ftName = XtNewString(
                   fileMgrData->popup_menu_icon->file_data->logical_type);
-      fileMgrData->popup_menu_icon = NULL;
+      fileMgrData->popup_menu_icon = nullptr;
       return (True);
    }
 
@@ -675,7 +675,7 @@ ProcessItemHelp(
                   == XtCallbackHasSome)
             {
                XtCallCallbacks(selectedWidget, 
-                                  XmNhelpCallback, NULL);
+                                  XmNhelpCallback, nullptr);
                return True;
             }
 
@@ -708,7 +708,7 @@ ReusePrimaryHelpWindow(
 {
    HelpData * helpData;
    HelpRec * helpRec;
-   String helpString = NULL;
+   String helpString = nullptr;
    int n;
    Arg args[10];
 
@@ -749,7 +749,7 @@ ObjectHelp(
         XtPointer callData )
 
 {
-  XtCallCallbacks((Widget)clientData, XmNhelpCallback, NULL);
+  XtCallCallbacks((Widget)clientData, XmNhelpCallback, nullptr);
 }
 
 

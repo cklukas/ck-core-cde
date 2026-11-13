@@ -88,7 +88,7 @@ ReTextAppend(
 
 	va_start(args, format);
 	va_copy(again, args);
-	needed = vsnprintf(NULL, 0, format, args);
+	needed = vsnprintf(nullptr, 0, format, args);
 	va_end(args);
 
 	if (needed < 0) {
@@ -102,7 +102,7 @@ ReTextAppend(
 
 		while (size < text->length + (size_t)needed + 1)
 			size *= 2;
-		if ((grown = realloc(text->data, size)) == NULL) {
+		if ((grown = realloc(text->data, size)) == nullptr) {
 			text->failed = 1;
 			va_end(again);
 			return;
@@ -126,9 +126,9 @@ char *
 ReToString(
 	RepeatEvent *re)
 {
-	ReText	 text = { NULL, 0, 0, 0 };
+	ReText	 text = { nullptr, 0, 0, 0 };
 
-	if (!re) return (char *)NULL;
+	if (!re) return (char *)nullptr;
 
 	while (re) {
 		size_t	start = text.length;
@@ -158,7 +158,7 @@ ReToString(
 			break;
 		default:
 			/* nothing to say about a rule of an unknown type */
-			if (text.data != NULL)
+			if (text.data != nullptr)
 				text.data[text.length = start] = '\0';
 			break;
 		}
@@ -168,11 +168,11 @@ ReToString(
 
 	if (text.failed) {
 		free(text.data);
-		return (char *)NULL;
+		return (char *)nullptr;
 	}
 
 	/* rules of unknown types have no text; that is the empty text */
-	if (text.data == NULL)
+	if (text.data == nullptr)
 		return strdup("");
 
 	return text.data;

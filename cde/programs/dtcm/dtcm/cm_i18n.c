@@ -125,7 +125,7 @@ match_locale(char *locale, char line[MAX_LINE_LEN])
  * conversion mechanism. See libDtMail/RFC/RFCMIME.C ! Have fun !
  */
 #define WORKSIZE 1024
-static void           *_i18nwork1 = NULL;
+static void           *_i18nwork1 = nullptr;
 static unsigned long  _i18nsize1 = 0;
 static int            shouldAlloc1 = ~0;
 static int	      isFirstCall = ~0;
@@ -139,20 +139,20 @@ void _converter_( void *from, unsigned long from_len,
 {
     char          *InBuf;
     size_t        InBytesLeft;
-    char          *OutBuf = NULL;
+    char          *OutBuf = nullptr;
     size_t        OutBytesLeft = 0;
     size_t        _OutBytesLeft = 0;
     size_t        iconv_ret;
     size_t        converted_num = 0;
 
-    *to = NULL;
+    *to = nullptr;
     *to_len = 0;
 
     if ( shouldAlloc1 ) {
         /* Obtain work area */
         _i18nwork1 = (size_t *)malloc( WORKSIZE );
         if ( !_i18nwork1 ) {
-            _i18nwork1 = NULL;
+            _i18nwork1 = nullptr;
             return;
         }
         _i18nsize1 = WORKSIZE; 
@@ -252,10 +252,10 @@ void _converter_( void *from, unsigned long from_len,
 		_i18nsize1 += WORKSIZE;
 		_p = realloc( _i18nwork1, _i18nsize1 );
 		if ( !_p ) {
-		    *to = NULL;
+		    *to = nullptr;
 		    *to_len = 0;
 		    free( _i18nwork1 );
-		    _i18nwork1 = NULL;
+		    _i18nwork1 = nullptr;
 		    _i18nsize1 = 0;
 		    shouldAlloc1 = ~0;
 		    break;
@@ -265,7 +265,7 @@ void _converter_( void *from, unsigned long from_len,
 		    OutBytesLeft += WORKSIZE;
 		}  
 	    } else {
-		*to = NULL;
+		*to = nullptr;
 		*to_len = 0;
 		break;
 	    }
@@ -284,10 +284,10 @@ void _converter_( void *from, unsigned long from_len,
 	_p = realloc( _i18nwork1, _i18nsize1 );
 
 	if ( !_p ) {
-	    *to = NULL;
+	    *to = nullptr;
 	    *to_len = 0;
 	    free( _i18nwork1 );
-	    _i18nwork1 = NULL;
+	    _i18nwork1 = nullptr;
 	    _i18nsize1 = 0;
 	    shouldAlloc1 = ~0;
 	} else {
@@ -365,23 +365,23 @@ cm_printf(double value, int decimal_pt)
 	int buf_cnt = 0;
 	int formatted_cnt = 0;
 	int buf_len = 0;
-	char *buf = NULL;
-	static char *formatted = NULL;
+	char *buf = nullptr;
+	static char *formatted = nullptr;
 
-	if ( formatted != NULL ) {
+	if ( formatted != nullptr ) {
 		free(formatted);
-		formatted = NULL;
+		formatted = nullptr;
 	}
 	if ( (value == (double)0) && (decimal_pt == 0) ) {
 		formatted = (char *)cm_strdup("0");
 		return formatted;
 	}
-	if ( (buf = (char *)malloc(DBL_SIZE + decimal_pt)) == NULL ) {
-		return (char *)NULL;
+	if ( (buf = (char *)malloc(DBL_SIZE + decimal_pt)) == nullptr ) {
+		return (char *)nullptr;
 	}
-	if ( (formatted = (char *)calloc(1, DBL_SIZE + decimal_pt)) == NULL ) {
+	if ( (formatted = (char *)calloc(1, DBL_SIZE + decimal_pt)) == nullptr ) {
 		free(buf);
-		return (char *)NULL;
+		return (char *)nullptr;
 	}
 	snprintf(buf, decimal_pt, "%f", value);
 

@@ -87,8 +87,8 @@ void SPCD_MainLoopUntil(Boolean *flag)
 
     
     do result=select(SPCD_max_fd + 1, FD_SET_CAST(&input_mask),
-		     FD_SET_CAST(NULL),
-		     FD_SET_CAST(&except_mask), NULL);
+		     FD_SET_CAST(nullptr),
+		     FD_SET_CAST(&except_mask), nullptr);
     while(result == -1 && errno==EINTR);
     
     if(result < 0) {

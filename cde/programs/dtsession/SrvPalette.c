@@ -339,7 +339,7 @@ _DtCacheProperties(
 
   palette = colorSrv.pCurrentPalette[screen_number];
   typeOfMonitor = colorSrv.TypeOfMonitor[screen_number];
-     if (palette->converted == NULL)
+     if (palette->converted == nullptr)
      {
        palette->converted = convert_pixel_set(typeOfMonitor, palette->color);
        palette->converted_len = strlen(palette->converted);
@@ -501,10 +501,10 @@ CheckMonitor(
     int n, screen_number, result;
     Arg args[4];
     char screenStr[5], cust_msg[24];
-    char *tmpStr = NULL;
+    char *tmpStr = nullptr;
     char tmpPalette[SRVBUFSIZE];
-    char *token1 = NULL;
-    char *xrdb_string = NULL;
+    char *token1 = nullptr;
+    char *xrdb_string = nullptr;
 
     Widget mainShell;
     XtAppContext app_context;
@@ -532,11 +532,11 @@ CheckMonitor(
 
    /* Register the resource converters */
     XtAppAddConverter(app_context, XmRString, "ColorUse",
-            CvtStringToColorUse, NULL, 0);
+            CvtStringToColorUse, nullptr, 0);
     XtAppAddConverter(app_context, XmRString, "ForegroundColor",
-            CvtStringToForegroundColor, NULL, 0);
+            CvtStringToForegroundColor, nullptr, 0);
     XtAppAddConverter(app_context, XmRString, "ShadowPixmaps",
-            CvtStringToShadowPixmaps, NULL, 0);
+            CvtStringToShadowPixmaps, nullptr, 0);
 
    /* cycle through each screen */
     for(screen_number=0;screen_number != colorSrv.NumOfScreens;screen_number++)
@@ -567,7 +567,7 @@ CheckMonitor(
        result = XtOwnSelection(shell[screen_number],
 			       colorSrv.XA_CUSTOMIZE[screen_number],
 			       CurrentTime, convert_selection,
-			       lose_selection, NULL);
+			       lose_selection, nullptr);
 
        if(result == False)
        {
@@ -580,9 +580,9 @@ CheckMonitor(
            {
                snprintf(tmpStr, len, "%s colorSrv.XA_CUSTOMIZE[%d].\n",
                         MSG1, screen_number);
-               _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, NULL, tmpStr, NULL);
+               _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, nullptr, tmpStr, nullptr);
                SRV_FREE(tmpStr);
-               tmpStr = NULL;
+               tmpStr = nullptr;
            }
 	   return(-1);
        }
@@ -590,7 +590,7 @@ CheckMonitor(
       /* Get the colorserver resources for this screen */
 
        XtGetSubresources(mainShell, &pColorSrvRsrc, screenStr, screenStr,
-                          resources, XtNumber(resources), NULL, 0);
+                          resources, XtNumber(resources), nullptr, 0);
 
       /*
        * Set TypeOfMonitor, UsePixmaps FgColor and
@@ -625,10 +625,10 @@ CheckMonitor(
                (char *)SRV_MALLOC(strlen(tmpPalette) + 1);
            strcpy(colorSrv.pCurrentPalette[screen_number]->name,
                   (char *) tmpPalette);
-           colorSrv.pCurrentPalette[screen_number]->converted = NULL;
+           colorSrv.pCurrentPalette[screen_number]->converted = nullptr;
        }
 
-       if (colorSrv.pCurrentPalette[screen_number] == (struct _palette *) NULL)
+       if (colorSrv.pCurrentPalette[screen_number] == (struct _palette *) nullptr)
        {
            return(-1);
        }
@@ -766,7 +766,7 @@ convert_selection(
   {
     /* wants to know the pixels allocated for the palette */
 
-     if (palette->converted == NULL)
+     if (palette->converted == nullptr)
      {
        palette->converted = convert_pixel_set(typeOfMonitor, palette->color);
        palette->converted_len = strlen(palette->converted);
@@ -815,7 +815,7 @@ lose_selection(
      pixel_set_atom = XInternAtom(XtDisplay(w), XmSPIXEL_SET_PROP, FALSE) ;
      XDeleteProperty(XtDisplay(w), XtWindow(shell[0]), pixel_set_atom) ;
 
-     if (selection != NULL) {
+     if (selection != nullptr) {
           tmpStr3 = XGetAtomName(XtDisplay(w), *selection);
      } else {
           tmpStr3 = "(null)";
@@ -828,7 +828,7 @@ lose_selection(
 
      snprintf(tmpStr2, str2len, "%s", MSG2);
      snprintf(tmpStr, str1len, "%s %s\n%s", tmpStr2, tmpStr3, MSG2a);
-     _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, NULL, tmpStr, NULL);
+     _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, nullptr, tmpStr, nullptr);
      SRV_FREE(tmpStr);
      SRV_FREE(tmpStr2);
 }
@@ -1191,7 +1191,7 @@ AllocReadWrite(
        {
             tmpStr = (char *)SRV_MALLOC(strlen(MSG3) + 6);
             sprintf(tmpStr,"%s%d", MSG3, screen_number);
-            _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, NULL, tmpStr, NULL);
+            _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, nullptr, tmpStr, nullptr);
             SRV_FREE(tmpStr);
             return(False);
        }
@@ -1210,7 +1210,7 @@ AllocReadWrite(
               if(status == False)
               {
                  SRV_FREE((char *) pixels);
-                 _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, NULL, ((char *)GETMESSAGE(26, 5, "Warning, can't allocate enough pixels.\n")), NULL);
+                 _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, nullptr, ((char *)GETMESSAGE(26, 5, "Warning, can't allocate enough pixels.\n")), nullptr);
                  return(False);
               }
            }
@@ -1314,7 +1314,7 @@ CvtStringToColorUse(
    else
    {
       to_val->size = 0;
-      to_val->addr = NULL;
+      to_val->addr = nullptr;
       XtStringConversionWarning ((char *)from_val->addr, DtRColorUse);
    }
 }
@@ -1345,7 +1345,7 @@ CvtStringToForegroundColor(
    else
    {
       to_val->size = 0;
-      to_val->addr = NULL;
+      to_val->addr = nullptr;
       XtStringConversionWarning ((char *)from_val->addr, DtRForegroundColor);
    }
 }
@@ -1377,7 +1377,7 @@ CvtStringToShadowPixmaps(
    else
    {
       to_val->size = 0;
-      to_val->addr = NULL;
+      to_val->addr = nullptr;
       XtStringConversionWarning ((char *)from_val->addr, DtRShadowPixmaps);
    }
 }

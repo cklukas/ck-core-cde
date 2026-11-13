@@ -51,7 +51,7 @@
 #include "lutil.h"
 
 /* linked list of calendar structure representing opened calendars */
-Calendar *_DtCm_active_cal_list = NULL;
+Calendar *_DtCm_active_cal_list = nullptr;
 
 /******************************************************************************
  * forward declaration of static functions used within the file
@@ -87,14 +87,14 @@ _DtCm_new_Calendar(const char *calendar)
 
 	_DtCm_init_hash();
 
-	if ((cal = (Calendar *)malloc(sizeof(Calendar))) == NULL)
-		return(NULL);
+	if ((cal = (Calendar *)malloc(sizeof(Calendar))) == nullptr)
+		return(nullptr);
 
 	memset((void *)cal, 0, sizeof(Calendar));
 
-	if ((cal->name = strdup(calendar)) == NULL) {
+	if ((cal->name = strdup(calendar)) == nullptr) {
 		free(cal);
-		return(NULL);
+		return(nullptr);
 	}
 
 	cal->location = strchr(cal->name, '@');
@@ -102,28 +102,28 @@ _DtCm_new_Calendar(const char *calendar)
 
 	/* set up attribute array */
 	if ((cal->attrs = (cms_attribute *)calloc(1,
-	    sizeof(cms_attribute) * (_DtCm_cal_name_tbl->size + 1))) == NULL) {
+	    sizeof(cms_attribute) * (_DtCm_cal_name_tbl->size + 1))) == nullptr) {
 		free(cal->name);
 		free(cal);
-		return(NULL);
+		return(nullptr);
 	}
 
 	for (i = 1; i <= _DtCm_cal_name_tbl->size; i++) {
 		if ((cal->attrs[i].name.name =
-		    strdup(_DtCm_cal_name_tbl->names[i])) == NULL) {
+		    strdup(_DtCm_cal_name_tbl->names[i])) == nullptr) {
 			/* clean up */
 			cal->num_attrs = i - 1;
 			_DtCm_free_Calendar(cal);
-			return(NULL);
+			return(nullptr);
 		} else
 			cal->attrs[i].name.num = i;
 	}
 	cal->num_attrs = _DtCm_cal_name_tbl->size;
 
-	if (_DtCm_active_cal_list == NULL) {
+	if (_DtCm_active_cal_list == nullptr) {
 		_DtCm_active_cal_list = cal;
-		cal->next = NULL;
-		cal->prev = NULL;
+		cal->next = nullptr;
+		cal->prev = nullptr;
 	}
 	else {
 		cal->next = _DtCm_active_cal_list;
@@ -152,10 +152,10 @@ _DtCm_free_Calendar(Calendar *cal)
 	if (_DtCm_active_cal_list == cal)
 		_DtCm_active_cal_list = cal->next;
 
-	if (cal->prev != NULL)
+	if (cal->prev != nullptr)
 		cal->prev->next = cal->next;
 
-	if (cal->next != NULL)
+	if (cal->next != nullptr)
 		cal->next->prev = cal->prev;
 
 	/* free up resources used by it */
@@ -188,7 +188,7 @@ _DtCm_free_Calendar(Calendar *cal)
 	memset((void *)cal, '\0', sizeof(Calendar));
 
 	/* if no calendar is open, destroy rpc mapping */
-	if (_DtCm_active_cal_list == NULL)
+	if (_DtCm_active_cal_list == nullptr)
 		_DtCm_destroy_agent();
 }
 
@@ -200,8 +200,8 @@ _DtCm_get_Calendar(CSA_session_handle calhandle)
 {
 	Calendar *cal = (Calendar *)calhandle;
 
-	if (cal == NULL || cal->handle != (void *)cal)
-		return (NULL);
+	if (cal == nullptr || cal->handle != (void *)cal)
+		return (nullptr);
 	else
 		return ((Calendar *)calhandle);
 }
@@ -215,10 +215,10 @@ _DtCm_add_to_entry_list(Calendar *cal, caddr_t elist)
 	int i;
 	_DtCm_libentry *entries = (_DtCm_libentry *)elist;
 
-	if (entries == NULL)
+	if (entries == nullptr)
 		return (0);
 
-	if (cal->ehead == NULL)
+	if (cal->ehead == nullptr)
 		cal->ehead = elist;
 	else {
 		((_DtCm_libentry *)cal->etail)->next = entries;
@@ -228,7 +228,7 @@ _DtCm_add_to_entry_list(Calendar *cal, caddr_t elist)
 	/* find tail of given entry list */
 	i = 1;
 	entries->cal = cal;
-	while (entries->next != NULL) {
+	while (entries->next != nullptr) {
 		i++;
 		entries->next->cal = cal;
 		entries = entries->next;
@@ -252,7 +252,7 @@ _DtCm_remove_from_entry_list(
 	_DtCm_libentry *ehead = (_DtCm_libentry *)head;
 	_DtCm_libentry *etail = (_DtCm_libentry *)tail;
 
-	if (ehead == NULL || tail == NULL)
+	if (ehead == nullptr || tail == nullptr)
 		return;
 
 	if (ehead == (_DtCm_libentry *)cal->ehead)
@@ -262,13 +262,13 @@ _DtCm_remove_from_entry_list(
 		cal->etail = (caddr_t)ehead->prev;
 
 	/* remove from list */
-	if (ehead->prev != NULL)
+	if (ehead->prev != nullptr)
 		ehead->prev->next = etail->next;
 
-	if (etail->next != NULL)
+	if (etail->next != nullptr)
 		etail->next->prev = ehead->prev;
 
-	etail->next = ehead->prev = NULL;
+	etail->next = ehead->prev = nullptr;
 
 #ifdef CM_DEBUG
 	_DtCm_count_entry_in_list(cal->ehead);
@@ -295,7 +295,7 @@ _DtCm_list_old_cal_attr_names(
 	int		i, j;
 
 	if ((names = _DtCm_alloc_character_pointers(_DtCM_OLD_CAL_ATTR_SIZE))
-	    == NULL)
+	    == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* find out whether we know the owner of the calendar */
@@ -311,7 +311,7 @@ _DtCm_list_old_cal_attr_names(
 				continue;
 
 			if ((names[j] =
-			    strdup(_CSA_calendar_attribute_names[i])) == NULL)
+			    strdup(_CSA_calendar_attribute_names[i])) == nullptr)
 			{
 				_DtCm_free(names);
 				return (CSA_E_INSUFFICIENT_MEMORY);
@@ -336,20 +336,20 @@ _DtCm_get_all_cal_attrs(
 	int		i, j;
 	CSA_attribute	*attrs_r;
 
-	if (num_attrs == NULL || attrs == NULL)
+	if (num_attrs == nullptr || attrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if (cal->rpc_version >= _DtCM_FIRST_EXTENSIBLE_SERVER_VERSION) {
-		if ((stat = _DtCm_rpc_get_cal_attrs(cal, 0, 0, NULL))
+		if ((stat = _DtCm_rpc_get_cal_attrs(cal, 0, 0, nullptr))
 		    != CSA_SUCCESS)
 			return (stat);
 
-		if ((attrs_r = _DtCm_alloc_attributes(cal->num_attrs)) == NULL)
+		if ((attrs_r = _DtCm_alloc_attributes(cal->num_attrs)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
 		/* get attributes */
 		for (i = 1, j = 0; i <= cal->num_attrs; i++) {
-			if (cal->attrs[i].value != NULL) {
+			if (cal->attrs[i].value != nullptr) {
 
 				if ((stat = _DtCm_cms2csa_attribute(
 				    cal->attrs[i], &attrs_r[j])) != CSA_SUCCESS)
@@ -386,15 +386,15 @@ _DtCm_get_cal_attrs_by_name(
 	CSA_attribute *attrs_r;
 	int i, j, index;
 
-	if (num_attrs == 0 || attrs == NULL)
+	if (num_attrs == 0 || attrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 
-	if ((attrs_r = _DtCm_alloc_attributes(num_names)) == NULL)
+	if ((attrs_r = _DtCm_alloc_attributes(num_names)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 0, j = 0; i < num_names; i++) {
-		if (names[i] == NULL)
+		if (names[i] == nullptr)
 			continue;
 
 		index = _DtCm_get_index_from_table(cal->cal_tbl, names[i]);
@@ -471,7 +471,7 @@ _DtCm_get_cal_attrs_by_name(
 		}
 
 		if (stat == CSA_SUCCESS) {
-			if (attrs_r[j].value != NULL)
+			if (attrs_r[j].value != nullptr)
 				j++;
 		} else {
 			_DtCm_free(attrs_r);
@@ -484,7 +484,7 @@ _DtCm_get_cal_attrs_by_name(
 	if (j > 0) {
 		*attrs = attrs_r;
 	} else {
-		*attrs = NULL;
+		*attrs = nullptr;
 		_DtCm_free(attrs_r);
 	}
 
@@ -501,7 +501,7 @@ _DtCm_count_entry_in_list(caddr_t elist)
 	_DtCm_libentry *list;
 
 	for (i = 0, list = (_DtCm_libentry *)elist;
-	    list != NULL;
+	    list != nullptr;
 	    i++, list = list->next)
 		;
 
@@ -523,7 +523,7 @@ _get_owner_from_old_cal(Calendar *cal, char *owner)
 {
 	char		*calname;
 
-	if ((calname = _DtCmGetPrefix(cal->name, '@')) == NULL)
+	if ((calname = _DtCmGetPrefix(cal->name, '@')) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if (_DtCmIsUserName(calname) == B_TRUE)
@@ -565,7 +565,7 @@ _get_calendar_owner(
 
 	if (attr->name = strdup(CSA_CAL_ATTR_CALENDAR_OWNER)) {
 		if ((val = (CSA_attribute_value *)calloc(1,
-		    sizeof(CSA_attribute_value))) == NULL) {
+		    sizeof(CSA_attribute_value))) == nullptr) {
 			free(attr->name);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
@@ -573,7 +573,7 @@ _get_calendar_owner(
 		val->type = CSA_VALUE_CALENDAR_USER;
 
 		if ((val->item.calendar_user_value = (CSA_calendar_user *)
-		    calloc(1, sizeof(CSA_calendar_user))) == NULL) {
+		    calloc(1, sizeof(CSA_calendar_user))) == nullptr) {
 			free(val);
 			free(attr->name);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -654,7 +654,7 @@ _get_access_list(
 
 	if (cal->rpc_version < _DtCM_FIRST_EXTENSIBLE_SERVER_VERSION)
 		stat = _DtCm_rpc_get_cal_attrs(cal, CSA_CAL_ATTR_ACCESS_LIST_I,
-			0, NULL);
+			0, nullptr);
 	else if (cal->got_attrs == B_FALSE)
 		stat = _DtCm_rpc_get_cal_attrs(cal, 0, num_names, names);
 
@@ -676,7 +676,7 @@ _get_number_entries(
 
 	if (cal->rpc_version < _DtCM_FIRST_EXTENSIBLE_SERVER_VERSION)
 		stat = _DtCm_rpc_get_cal_attrs(cal,
-			CSA_CAL_ATTR_NUMBER_ENTRIES_I, 0, NULL);
+			CSA_CAL_ATTR_NUMBER_ENTRIES_I, 0, nullptr);
 	else if (cal->got_attrs == B_FALSE)
 		stat = _DtCm_rpc_get_cal_attrs(cal, 0, num_names, names);
 

@@ -128,7 +128,7 @@ abobj_handle_layered_pane(
 	 * child.
 	 */
 	pos = obj_get_child_num(pane);
-	layers = obj_create(AB_TYPE_LAYERS, NULL);
+	layers = obj_create(AB_TYPE_LAYERS, nullptr);
 	obj_insert_child(pobj, layers, pos);
 	
 	obj_set_unique_name(layers, "layers");
@@ -196,10 +196,10 @@ abobj_layer_show_next(
 {
     AB_TRAVERSAL	trav;
     ABObj		pane;
-    ABObj		old_top = NULL;
-    ABObj		new_top = NULL;
+    ABObj		old_top = nullptr;
+    ABObj		new_top = nullptr;
 
-    if (layers == NULL || !obj_is_layers(layers))
+    if (layers == nullptr || !obj_is_layers(layers))
 	return -1;
 
     /* If there is only one pane, do nothing */
@@ -207,12 +207,12 @@ abobj_layer_show_next(
 	return 0;
 
     for (trav_open(&trav, layers, AB_TRAV_SALIENT_CHILDREN);
-	(pane = trav_next(&trav)) != NULL; )
+	(pane = trav_next(&trav)) != nullptr; )
     {
 	/* Search for currently visible pane and mark it */
 	if (obj_has_flag(pane, VisibleFlag))
 	    old_top = pane;
-	else if (old_top != NULL) /* previous pane is visible */
+	else if (old_top != nullptr) /* previous pane is visible */
 	{
 	    new_top = pane;
 	    break;
@@ -220,7 +220,7 @@ abobj_layer_show_next(
     }
     trav_close(&trav);
 
-    if (new_top == NULL) /* wraparound to first pane */
+    if (new_top == nullptr) /* wraparound to first pane */
 	new_top = obj_get_salient_child(layers, 0);
 
     if (old_top)
@@ -266,7 +266,7 @@ abobj_layer_set_size(
     abobj_set_pixel_size(layers, new_width, new_height, 0);
 
     for (trav_open(&trav, layers, AB_TRAV_SALIENT_CHILDREN);
-        (pane = trav_next(&trav)) != NULL; )
+        (pane = trav_next(&trav)) != nullptr; )
     {
 	if (obj_has_border_frame(pane))
 	{
@@ -306,12 +306,12 @@ abobj_layer_manage_visible(
     AB_TRAVERSAL	trav;
     ABObj		pane;
 
-    if (layer == NULL || !obj_is_layers(layer))
+    if (layer == nullptr || !obj_is_layers(layer))
 	return -1;
 
     /* manage the visible pane, unmanage the rest */
     for (trav_open(&trav, layer, AB_TRAV_SALIENT_CHILDREN);
-	(pane = trav_next(&trav)) != NULL; )
+	(pane = trav_next(&trav)) != nullptr; )
     {
 	if (obj_has_flag(pane, VisibleFlag))
 	{
@@ -353,7 +353,7 @@ obj_destroyedOCB(
     ObjEvDestroyInfo    info
 )
 {
-    static ABObj	pane = NULL;
+    static ABObj	pane = nullptr;
     ABObj		layers;
     ABObj		last_pane;
     AB_ATTACH_TYPE      atype;
@@ -361,7 +361,7 @@ obj_destroyedOCB(
     int                 aoffset;
     int			i;
 
-    if (obj_get_parent(info->obj) == NULL)
+    if (obj_get_parent(info->obj) == nullptr)
 	return 0;
 
     layers = obj_get_root(obj_get_parent(info->obj));

@@ -49,7 +49,7 @@ set_timezone(char *tzname)
 {
         static char tzenv[BUFSIZ];
  
-        if (tzname==NULL)
+        if (tzname==nullptr)
                 (void) putenv("TZ");
         else {
                 snprintf(tzenv, sizeof tzenv, "TZ=%s", tzname);
@@ -147,7 +147,7 @@ _csa_iso8601_to_tick(char *buf, time_t *tick_out)
 	if (orig_tzset == B_TRUE)
 		set_timezone(tz_orig);
 	else
-		set_timezone(NULL);
+		set_timezone(nullptr);
 
 	if (*tick_out != (long)-1)
 		return(0);
@@ -193,7 +193,7 @@ _csa_tick_to_iso8601(time_t tick, char *buf_out)
 	if (orig_tzset == B_TRUE)
 		set_timezone(tz_orig);
 	else
-		set_timezone(NULL);
+		set_timezone(nullptr);
 
 #else 
 	/* let's use something a little more reasonable */
@@ -201,7 +201,7 @@ _csa_tick_to_iso8601(time_t tick, char *buf_out)
 #endif /* !linux && !CSGRC_BASED */
 
 	/* the tick may be beyond what a calendar date can express */
-	if (time_str == NULL)
+	if (time_str == nullptr)
 		return (-1);
 
 	/* format string forces fixed width (zero-padded) fields */
@@ -236,7 +236,7 @@ _csa_iso8601_to_range(char *buf, time_t *start, time_t *end)
     char tmpstr[BUFSIZ];
     char *p;
 
-    if ((p = strchr(buf, '/')) == NULL) {
+    if ((p = strchr(buf, '/')) == nullptr) {
         return (-1);
     }
 

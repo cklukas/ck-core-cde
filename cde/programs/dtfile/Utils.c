@@ -121,7 +121,7 @@ ResolveLocalPathName(
       strcpy( fully_qualified_name, directory_name );
     }
     else
-      fully_qualified_name = NULL;
+      fully_qualified_name = nullptr;
   }
 
   *tt_status=TT_OK;
@@ -154,7 +154,7 @@ ResolveLocalPathName(
 #ifdef DEBUG
     printf( "Tooltalk error message: %s\n", tt_status_message(*tt_status));
 #endif
-    return (NULL);
+    return (nullptr);
   }
 
 
@@ -168,7 +168,7 @@ ResolveLocalPathName(
 #ifdef DEBUG
     printf( "Tooltalk error message: %s\n", tt_status_message(*tt_status));
 #endif
-    return (NULL);
+    return (nullptr);
   }
 
   path = XtNewString( tmp );
@@ -185,7 +185,7 @@ ResolveTranslationString( char * originalString,
 
 {
   char   addressStr[20];
-  char * resolvedString = NULL;
+  char * resolvedString = nullptr;
   int    i, j, k, total, length;
 
   sprintf( addressStr, "%p", address );
@@ -204,7 +204,7 @@ ResolveTranslationString( char * originalString,
   {
     resolvedString = (char *)XtCalloc( 1, length + ( ( strlen( addressStr ) )
                                                      * total ) + 1 );
-    if( resolvedString != NULL )
+    if( resolvedString != nullptr )
     {
       i = 0;
       j = 0;

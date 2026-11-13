@@ -283,7 +283,7 @@ gr_nchars(int area, char *str, Cal_Font *font) {
                         buf = (char *)cm_mbchar(str);
                         first = 0;
                 } else {
-                        buf = (char *)cm_mbchar((char *)NULL);
+                        buf = (char *)cm_mbchar((char *)nullptr);
                 }
 		l = cm_strlen(buf);
 		CalTextExtents(font, buf, l, &nop, &nop, &width, &nop);
@@ -369,7 +369,7 @@ gr_center(int area, char *str, Cal_Font *font) {
                         buf = (char*)cm_mbchar(str);
                         first = 0;
                 } else {
-                        buf = (char*)cm_mbchar((char *)NULL);
+                        buf = (char*)cm_mbchar((char *)nullptr);
                 }
                 l = cm_strlen(buf);
 		CalTextExtents(font, buf, l, &nop, &nop, &width, &nop);
@@ -386,7 +386,7 @@ gr_text(new_XContext *xc, int x, int y, Cal_Font *font, char *str,
 	int x2, y2, w, h;
 	XRectangle overall_ink_return;
  
-        if (rect != NULL) {
+        if (rect != nullptr) {
 		CalTextExtents(font, str, len, &x2, &y2, &w, &h);
 
 		overall_ink_return.x = x2 + rect->x;
@@ -408,7 +408,7 @@ gr_text_rgb(new_XContext *xc, int x, int y, Cal_Font *font, char *str,
 	XRectangle overall_ink_return;
 	int x2, y2, w, h;
  
-        if (rect != NULL) {
+        if (rect != nullptr) {
 		CalTextExtents(font, str, cm_strlen(str), &x2, &y2, &w, &h);
 
 		overall_ink_return.x = x2 + rect->x;
@@ -433,7 +433,7 @@ gr_draw_line(new_XContext *xc, int x1, int y1, int x2, int y2,
 
         int dash_offset = 0;
 
-        if (rect != NULL) {
+        if (rect != nullptr) {
                 XRectangle    gr_rect;
 
                 gr_rect.x = x1;
@@ -464,7 +464,7 @@ y2);
 extern void 
 gr_draw_box(new_XContext *xc, int x, int y, int w, int h, XRectangle *rect) {
 
-        if (rect != NULL) {
+        if (rect != nullptr) {
                 XRectangle    gr_rect;
  
                 gr_rect.x = x;
@@ -520,8 +520,8 @@ gr_create_xcontext(Calendar *c, Widget widget, GR_depth depth, XtAppContext app)
 	XColor		def_color;
  
         /* X Drawing Stuff */
-        if ((xc = (new_XContext *) ckalloc(sizeof(new_XContext))) == NULL)
-                return NULL;
+        if ((xc = (new_XContext *) ckalloc(sizeof(new_XContext))) == nullptr)
+                return nullptr;
  
         xc->display = (Display *) XtDisplay(widget);
         xc->app = app;
@@ -534,7 +534,7 @@ gr_create_xcontext(Calendar *c, Widget widget, GR_depth depth, XtAppContext app)
 		XtVaGetValues(widget,
 			XmNbackground, &xc->background,
 			XmNforeground, &xc->foreground,
-			NULL);
+			nullptr);
 		/*
 		 * XXX EEEEEEK!  We use a private interface to get the
 		 * hilight color.  We do this because there is no public

@@ -41,18 +41,18 @@ typedef struct {
     int capacity;
 } StringList;
 
-static ActionIconEntry *actionEntries = NULL;
+static ActionIconEntry *actionEntries = nullptr;
 static int actionEntryCount = 0;
 static int actionEntryCapacity = 0;
 static Boolean actionEntriesLoaded = False;
 
-static ActionCacheEntry *cacheEntries = NULL;
+static ActionCacheEntry *cacheEntries = nullptr;
 static int cacheEntryCount = 0;
 static int cacheEntryCapacity = 0;
 static Boolean cacheLoaded = False;
 static Boolean cacheDirty = False;
-static char *cacheFilePath = NULL;
-static char *homePath = NULL;
+static char *cacheFilePath = nullptr;
+static char *homePath = nullptr;
 
 static const char *GetHomeDir(void);
 static const char *GetCacheFilePath(void);
@@ -100,7 +100,7 @@ GetHomeDir(void)
     }
 
     if (!value)
-        return NULL;
+        return nullptr;
 
     homePath = strdup(value);
     return homePath;
@@ -114,12 +114,12 @@ GetCacheFilePath(void)
 
     const char *home = GetHomeDir();
     if (!home || home[0] == '\0')
-        return NULL;
+        return nullptr;
 
     char path[PATH_MAX];
     int len = snprintf(path, sizeof(path), "%s/%s", home, ACTION_ICON_CACHE_FILE);
     if (len < 0 || len >= (int)sizeof(path))
-        return NULL;
+        return nullptr;
 
     cacheFilePath = strdup(path);
     return cacheFilePath;
@@ -185,7 +185,7 @@ ActionIconCacheLog(const char *fmt, ...)
         return;
 
     static Boolean wroteHeader = False;
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     struct tm tm;
     localtime_r(&now, &tm);
     char timestr[32];
@@ -223,7 +223,7 @@ StringListInit(StringList *list)
 {
     if (!list)
         return;
-    list->items = NULL;
+    list->items = nullptr;
     list->count = 0;
     list->capacity = 0;
 }
@@ -238,7 +238,7 @@ StringListFree(StringList *list)
         free(list->items[i]);
 
     free(list->items);
-    list->items = NULL;
+    list->items = nullptr;
     list->count = 0;
     list->capacity = 0;
 }
@@ -343,12 +343,12 @@ static char *
 DeriveActionCommand(const char *execString)
 {
     if (!execString)
-        return NULL;
+        return nullptr;
 
     size_t len = strlen(execString);
     char *buffer = (char *)malloc(len + 1);
     if (!buffer)
-        return NULL;
+        return nullptr;
 
     size_t dst = 0;
     const char *src = execString;
@@ -383,7 +383,7 @@ DeriveActionCommand(const char *execString)
     if (*start == '\0')
     {
         free(buffer);
-        return NULL;
+        return nullptr;
     }
 
     char *end = start;
@@ -414,8 +414,8 @@ CommandsMatch(const char *actionCmd, const char *windowCmd)
         return True;
 
     if (*actionName && *windowName &&
-        (strcasestr(actionName, windowName) != NULL ||
-         strcasestr(windowName, actionName) != NULL))
+        (strcasestr(actionName, windowName) != nullptr ||
+         strcasestr(windowName, actionName) != nullptr))
     {
         return True;
     }
@@ -427,7 +427,7 @@ static const char *
 FindInEntries(const ActionIconEntry *entries, int count, const char *command)
 {
     if (!entries || !command)
-        return NULL;
+        return nullptr;
 
     for (int i = 0; i < count; ++i)
     {
@@ -435,14 +435,14 @@ FindInEntries(const ActionIconEntry *entries, int count, const char *command)
             return entries[i].icon;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static const char *
 FindCachedAction(const char *command)
 {
     if (!cacheEntries || !command)
-        return NULL;
+        return nullptr;
 
     for (int i = 0; i < cacheEntryCount; ++i)
     {
@@ -450,7 +450,7 @@ FindCachedAction(const char *command)
             return cacheEntries[i].action;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -487,7 +487,7 @@ FreeActionEntries(void)
         free(actionEntries[i].icon);
     }
     free(actionEntries);
-    actionEntries = NULL;
+    actionEntries = nullptr;
     actionEntryCount = 0;
     actionEntryCapacity = 0;
 }
@@ -538,7 +538,7 @@ LoadActionDatabaseFromInMemoryDb(void)
         DtDtsDbField *iconField = _DtDtsDbGetField(rec, _DtACTION_ICON);
         DtDtsDbField *instanceIconField = _DtDtsDbGetField(rec, _DtACTION_INSTANCE_ICON);
 
-        const char *iconValue = NULL;
+        const char *iconValue = nullptr;
         if (iconField && iconField->fieldValue && iconField->fieldValue[0])
             iconValue = iconField->fieldValue;
         else if (instanceIconField && instanceIconField->fieldValue && instanceIconField->fieldValue[0])
@@ -656,8 +656,8 @@ AddOrUpdateActionEntry(const char *command, const char *icon, const char *source
     {
         free(actionEntries[actionEntryCount].command);
         free(actionEntries[actionEntryCount].icon);
-        actionEntries[actionEntryCount].command = NULL;
-        actionEntries[actionEntryCount].icon = NULL;
+        actionEntries[actionEntryCount].command = nullptr;
+        actionEntries[actionEntryCount].icon = nullptr;
         return;
     }
 
@@ -670,7 +670,7 @@ static void
 LoadActionDatabaseFromFiles(void)
 {
     free(actionEntries);
-    actionEntries = NULL;
+    actionEntries = nullptr;
     actionEntryCount = 0;
     actionEntryCapacity = 0;
 
@@ -719,7 +719,7 @@ LoadActionDatabaseFromDir(const char *dirPath)
         return;
 
     struct dirent *ent;
-    while ((ent = readdir(dir)) != NULL)
+    while ((ent = readdir(dir)) != nullptr)
     {
         const char *name = ent->d_name;
         size_t len = strlen(name);
@@ -849,9 +849,9 @@ ParseActionFile(const char *filePath)
             sscanf(cur, "%255s", instanceIconValue);
         }
 
-        if (braceDepth <= 0 && strchr(cur, '}') != NULL)
+        if (braceDepth <= 0 && strchr(cur, '}') != nullptr)
         {
-            const char *icon = iconValue[0] ? iconValue : (instanceIconValue[0] ? instanceIconValue : NULL);
+            const char *icon = iconValue[0] ? iconValue : (instanceIconValue[0] ? instanceIconValue : nullptr);
             if (execValue[0] && icon && icon[0])
             {
                 if (typeValue[0] == '\0' || strcmp(typeValue, _DtACTION_COMMAND) == 0)
@@ -881,8 +881,8 @@ FreeCacheEntry(ActionCacheEntry *entry)
         return;
     free(entry->command);
     free(entry->action);
-    entry->command = NULL;
-    entry->action = NULL;
+    entry->command = nullptr;
+    entry->action = nullptr;
 }
 
 static Boolean
@@ -1039,7 +1039,7 @@ const char *
 ActionIconFind(const char *command)
 {
     if (!command)
-        return NULL;
+        return nullptr;
 
     if (!actionEntriesLoaded || actionEntryCount == 0)
         LoadActionDatabase();

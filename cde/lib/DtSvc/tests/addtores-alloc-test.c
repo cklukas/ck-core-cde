@@ -31,7 +31,7 @@ static void *ck_realloc(void *p, size_t n)
 {
     ++realloc_calls;
     if (realloc_fail_at && realloc_calls == realloc_fail_at)
-        return NULL;		/* the old block stays valid, as in libc */
+        return nullptr;		/* the old block stays valid, as in libc */
     return realloc(p, n);
 }
 
@@ -47,7 +47,7 @@ static void ck_free(void *p)
 /* @@BODY@@ */
 static Entry make(const char *tag, const char *value)
 {
-    Entry e = { NULL, NULL, 0, False };
+    Entry e = { nullptr, nullptr, 0, False };
     e.tag = malloc(strlen(tag) + 1);
     e.value = malloc(strlen(value) + 1);
     assert(e.tag && e.value);

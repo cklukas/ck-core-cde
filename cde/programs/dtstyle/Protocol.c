@@ -153,11 +153,11 @@ InitDtstyleProtocol( void )
     {
       if (_DtGetSmState (style.display, smWindow, &style.smState) != Success)
 	{
-	  _DtSimpleError (progName, DtWarning, NULL, ERR1, NULL);
+	  _DtSimpleError (progName, DtWarning, nullptr, ERR1, nullptr);
 	  exit(1);
 	}
       if (_DtGetSmSaver (style.display, smWindow, &style.smSaver) != Success)
-	_DtSimpleError (progName, DtWarning, NULL, ERR2, NULL);
+	_DtSimpleError (progName, DtWarning, nullptr, ERR2, nullptr);
     }
   else smWindow = 0;
   
@@ -197,10 +197,10 @@ SetWindowProperties( void )
 {
 
     /* Add WM_SAVE_YOURSELF property to the main window */
-    XmAddWMProtocolCallback(style.shell, xaWmSaveYourself, saveSessionCB, NULL);
+    XmAddWMProtocolCallback(style.shell, xaWmSaveYourself, saveSessionCB, nullptr);
 
     /* Add WM_DELETE_WINDOW property to the main window */
-    XmAddWMProtocolCallback(style.shell, xaWmDeleteWindow, activateCB_exitBtn, NULL);
+    XmAddWMProtocolCallback(style.shell, xaWmDeleteWindow, activateCB_exitBtn, nullptr);
 
 }
 
@@ -239,7 +239,7 @@ ListenForWorkspaceChange( void )
 {
 
   DtWsmAddCurrentWorkspaceCallback (style.shell, 
-				    HandleWorkspaceChange, NULL);
+				    HandleWorkspaceChange, nullptr);
   
 }
 

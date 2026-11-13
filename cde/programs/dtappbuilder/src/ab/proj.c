@@ -220,13 +220,13 @@ static String btn2_adjust_translations =
     "\n<Btn2Down>:                ModButtonPress() \n\
        <Btn2Down>,<Btn2Up>:       ModToggleSelect() ";
 
-static XtTranslations proj_transtbl = NULL;
+static XtTranslations proj_transtbl = nullptr;
 
 
 /*
  * Static variables used for rubber banding
  */
-static XRectangle       *rband_rect = NULL;
+static XRectangle       *rband_rect = nullptr;
 static Boolean          mselect_adjust = False;
 
 extern char			Buf[MAXPATHLEN];	/* Work buffer */
@@ -253,9 +253,9 @@ proj_show_dialog(void)
 {
     ABObj		proj = proj_get_project();
     BrowserUiObj 	ui;
-    ChooserInfo		info = NULL;
+    ChooserInfo		info = nullptr;
  
-    if (AB_proj_window == NULL)
+    if (AB_proj_window == nullptr)
     {
 	if (!Proj_viewer)
             Proj_viewer = create_proj_struct();
@@ -268,12 +268,12 @@ proj_show_dialog(void)
 	 * If it is, then find out which one is up and
 	 * set the appropriate menu items inactive.
 	 */
-	if ((AB_generic_chooser != NULL) &&
+	if ((AB_generic_chooser != nullptr) &&
 	    XtIsManaged(AB_generic_chooser))
  	{
 	    XtVaGetValues(AB_generic_chooser,
 				XmNuserData, &info,
-				NULL);
+				nullptr);
 	    proj_set_menus(info->chooser_type, FALSE);
 	}
 	/* When the Project Organizer is first brought
@@ -313,7 +313,7 @@ projP_store_viewer(
 	Proj_viewer = create_proj_struct();
     }
 
-    XtVaSetValues(widget, XmNuserData, (XtPointer)Proj_viewer, NULL);
+    XtVaSetValues(widget, XmNuserData, (XtPointer)Proj_viewer, nullptr);
 
 }
 
@@ -346,7 +346,7 @@ create_proj_ui_handles(
     Vwr		v
 )
 {
-    Widget	draw_area = NULL;
+    Widget	draw_area = nullptr;
     BrowserUiObj ui;
 
 
@@ -363,7 +363,7 @@ create_proj_ui_handles(
 
     ab_register_window(AB_proj_window, AB_WIN_WINDOW, 
 	WindowHidden, AB_toplevel, AB_WPOS_TILE_VERTICAL,
-	popdown_proj_window, NULL);
+	popdown_proj_window, nullptr);
 
     /*
      * WORKAROUND FOR BUG
@@ -372,7 +372,7 @@ create_proj_ui_handles(
      */
     XtVaSetValues(dtb_proj_proj_main.menubar,
         XmNmenuHelpWidget, dtb_proj_proj_main.menubar_items.Help_item,
-        NULL);
+        nullptr);
 
     XtRealizeWidget(ui->shell);
 
@@ -492,7 +492,7 @@ enable_proj_actions(
     Widget widget
 )
 {
-    if (proj_transtbl == NULL)
+    if (proj_transtbl == nullptr)
     {
 	String	   translations;
         int        len;
@@ -503,7 +503,7 @@ enable_proj_actions(
             len += strlen(btn2_adjust_translations);
 
         translations = (String)util_malloc(len*sizeof(char));
-        if (translations == NULL)
+        if (translations == nullptr)
             return; /* yikes */
 
 	strcpy(translations, base_translations);
@@ -518,7 +518,7 @@ enable_proj_actions(
     /* enable build mode behavior */
     XtVaSetValues(widget, 
 		XtNtranslations, proj_transtbl,
-        	NULL);
+        	nullptr);
 }
 
 /*
@@ -542,12 +542,12 @@ select_module(
     Cardinal *num_params
 )
 {
-    Vwr		v = NULL;
+    Vwr		v = nullptr;
     VNode	selected_node;
     VMethods	m;
     AB_OBJ	*obj;
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL); 
+    XtVaGetValues(widget, XmNuserData, &v, nullptr); 
 
     if (!v)
 	return;
@@ -557,7 +557,7 @@ select_module(
     
     if (selected_node)
     {
-	VNode	*selected_nodes = NULL;
+	VNode	*selected_nodes = nullptr;
 	int	num_selected = 0;
 
 	if (!(m = v->methods))
@@ -597,12 +597,12 @@ toggle_select_module(
     Cardinal *num_params
 )
 {
-    Vwr		v = NULL;
+    Vwr		v = nullptr;
     VNode	selected_node;
     VMethods	m;
     AB_OBJ	*obj;
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL); 
+    XtVaGetValues(widget, XmNuserData, &v, nullptr); 
 
     if (!v)
 	return;
@@ -612,7 +612,7 @@ toggle_select_module(
     
     if (selected_node)
     {
-	VNode	*selected_nodes = NULL;
+	VNode	*selected_nodes = nullptr;
 	int	num_selected = 0;
 
 	if (!(m = v->methods))
@@ -653,14 +653,14 @@ show_module(
     Cardinal *num_params
 )
 {
-    Vwr         v = NULL;
+    Vwr         v = nullptr;
     VNode       selected_node;
     VMethods    m;
     ABObj       obj;
     ABObj       winobj;
     AB_TRAVERSAL trav;
  
-    XtVaGetValues(widget, XmNuserData, &v, NULL);
+    XtVaGetValues(widget, XmNuserData, &v, nullptr);
 
     if (!v)
         return;
@@ -670,7 +670,7 @@ show_module(
 
     if (selected_node)
     {
-        VNode   *selected_nodes = NULL;
+        VNode   *selected_nodes = nullptr;
         int     num_selected = 0;
  
         if (!(m = v->methods))
@@ -695,7 +695,7 @@ show_module(
         if (obj_has_flag(obj, MappedFlag))
         {
             for (trav_open(&trav, obj, AB_TRAV_WINDOWS);
-                (winobj = trav_next(&trav)) != NULL; )
+                (winobj = trav_next(&trav)) != nullptr; )
             {
                 if (obj_has_flag(winobj, MappedFlag))
                     ui_win_front(objxm_get_widget(winobj));
@@ -823,7 +823,7 @@ one_module_selected(
 )
 {
     ProjModMenubuttonMenuItems	menu_rec;
-    ChooserInfo                 info = NULL;
+    ChooserInfo                 info = nullptr;
 
     if (!proj_w) return;
     
@@ -838,7 +838,7 @@ one_module_selected(
      * been created but it is not displayed, then make
      * the menu items active.
      */
-    if ((AB_generic_chooser == NULL) ||
+    if ((AB_generic_chooser == nullptr) ||
         !XtIsManaged(AB_generic_chooser))
     {
         ui_set_active(menu_rec->Save_item, TRUE);
@@ -848,7 +848,7 @@ one_module_selected(
     }
     else if (XtIsManaged(AB_generic_chooser))
     {
-        XtVaGetValues(AB_generic_chooser, XmNuserData, &info, NULL);
+        XtVaGetValues(AB_generic_chooser, XmNuserData, &info, nullptr);
         if (info->chooser_type == AB_EXPORT_CHOOSER)
         {
             ui_set_active(menu_rec->Export_item, TRUE);
@@ -900,7 +900,7 @@ proj_init(void)
     obj_add_destroy_callback(projP_obj_destroyOCB, "PROJ");
     obj_add_update_callback(projP_obj_updateOCB, "PROJ");
 
-    AB_project = obj_create(AB_TYPE_PROJECT, NULL);
+    AB_project = obj_create(AB_TYPE_PROJECT, nullptr);
     obj_set_name(AB_project, "project");
     abobj_show_tree(AB_project, TRUE);
 
@@ -918,7 +918,7 @@ proj_destroy_project(
 {
     obj_set_flag(proj, BeingDestroyedFlag);
     obj_destroy(proj);
-    proj_create_new_proj(NULL);
+    proj_create_new_proj(nullptr);
     return OK;
 }
 
@@ -927,7 +927,7 @@ proj_set_project(
     ABObj       proj
 )
 {
-    if (proj != NULL)
+    if (proj != nullptr)
     {
 	/*
 	 * Update project window and browsers
@@ -937,7 +937,7 @@ proj_set_project(
 	/* Initialize the current module to NULL,
 	 * since no modules are showing yet.
 	 */
-	proj_set_cur_module(NULL);
+	proj_set_cur_module(nullptr);
 
 	cgen_notify_new_project(AB_project);
 	appfw_notify_new_project(AB_project);
@@ -958,14 +958,14 @@ proj_set_cur_module(
     ABObj	module
 )
 {
-    if ( (module != NULL) && (obj_get_type(module) != AB_TYPE_MODULE) )
+    if ( (module != nullptr) && (obj_get_type(module) != AB_TYPE_MODULE) )
 	return -1;
 
     AB_cur_module = module;
-    if (module != NULL)
+    if (module != nullptr)
 	ab_update_stat_region(AB_STATUS_CUR_MODULE, obj_get_name(module));
     else
-	ab_update_stat_region(AB_STATUS_CUR_MODULE, NULL);
+	ab_update_stat_region(AB_STATUS_CUR_MODULE, nullptr);
 	
     return OK;
 }
@@ -1017,21 +1017,21 @@ pointer_motion_proc(
     Cardinal *num_params
 )
 {
-    Vwr			v = NULL;
-    VNode		node_under_pointer = NULL;
-    ABObj		obj = NULL;
+    Vwr			v = nullptr;
+    VNode		node_under_pointer = nullptr;
+    ABObj		obj = nullptr;
     XMotionEvent	*mevent = (XMotionEvent*)event;
     char		mod_path[MAXPATHLEN] = "";
 
     util_dprintf(2, "pointer_motion_proc:\n");
-    XtVaGetValues(widget, XmNuserData, &v, NULL); 
+    XtVaGetValues(widget, XmNuserData, &v, nullptr); 
 
     if (!v)
 	return;
 
     node_under_pointer = vwr_locate_node(v, 
 		        mevent->x, mevent->y);
-    if (node_under_pointer != NULL)
+    if (node_under_pointer != nullptr)
     {
 	/* USE METHODS !! */
 	obj = (AB_OBJ *)node_under_pointer->obj_data;
@@ -1042,7 +1042,7 @@ pointer_motion_proc(
 	util_dprintf(2, "\tmodule name is %s\n", obj_get_name(obj));
 
 	/* If the module has not been saved, file will be NULL */
-	if (obj_get_file(obj) != NULL)
+	if (obj_get_file(obj) != nullptr)
 	{
 	    util_get_dir_name_from_path(obj_get_file(obj), mod_path,
 			MAXPATHLEN);
@@ -1066,7 +1066,7 @@ pointer_motion_proc(
 	 * path status label in the project window.
 	 */
 	util_dprintf(2, "\tpointer is not positioned over a node\n");
-	proj_update_stat_region(PROJ_STATUS_MOD_PATH, NULL);
+	proj_update_stat_region(PROJ_STATUS_MOD_PATH, nullptr);
     }
 }
 
@@ -1107,7 +1107,7 @@ proj_open_proj_okCB(
     XmSelectionBoxCallbackStruct *selection_data = call_data;
     STRING      	proj_filename = (STRING) NULL;
     XmString		xm_buf = (XmString) NULL;
-    DtbObjectHelpData	help_data = NULL;
+    DtbObjectHelpData	help_data = nullptr;
 
     proj_filename = (STRING)objxm_xmstr_to_str(selection_data->value);
 
@@ -1116,7 +1116,7 @@ proj_open_proj_okCB(
     {
 	dtb_proj_no_name_msg_initialize(&dtb_proj_no_name_msg);
 	(void)dtb_show_modal_message(widget,
-                        &dtb_proj_no_name_msg, NULL, NULL, NULL);
+                        &dtb_proj_no_name_msg, nullptr, nullptr, nullptr);
     }
     else if (!util_file_exists(proj_filename))
     {
@@ -1139,7 +1139,7 @@ proj_open_proj_okCB(
 	help_data->help_locationID = "";
 
         (void)dtb_show_modal_message(widget,
-                        &dtb_proj_error_msg, xm_buf, help_data, NULL);
+                        &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
 	util_free(help_data);
         XmStringFree(xm_buf);
@@ -1177,7 +1177,7 @@ proj_import_okCB(
     STRING 	file_name = (STRING) NULL;
     XmString	xm_buf = (XmString) NULL;
     BOOL	read_OK, write_OK;
-    DtbObjectHelpData	help_data = NULL;
+    DtbObjectHelpData	help_data = nullptr;
 
     if (selection_data->reason != XmCR_OK)
     {
@@ -1194,7 +1194,7 @@ proj_import_okCB(
     {
 	dtb_proj_no_name_msg_initialize(&dtb_proj_no_name_msg);
 	(void)dtb_show_modal_message(widget,
-                        &dtb_proj_no_name_msg, NULL, NULL, NULL);
+                        &dtb_proj_no_name_msg, nullptr, nullptr, nullptr);
     }
     else if (!util_file_exists(file_name))
     {
@@ -1220,18 +1220,18 @@ proj_import_okCB(
         help_data->help_locationID = ""; 
  
 	(void)dtb_show_modal_message(widget,
-                        &dtb_proj_error_msg, xm_buf, help_data, NULL);
+                        &dtb_proj_error_msg, xm_buf, help_data, nullptr);
 
 	util_free(help_data);
         XmStringFree(xm_buf);
     }
     else
     {
-	ChooserInfo	info = NULL;
+	ChooserInfo	info = nullptr;
 
  	XtVaGetValues(AB_generic_chooser,
 			XmNuserData, &info,
-			NULL);
+			nullptr);
 	
 	if (info->ImportAsBil)
 	{
@@ -1283,7 +1283,7 @@ projP_obj_renameOCB(
      * If the old name is NULL that means this is a new object.
      * and we let the update callback handle that.
      */
-    if (info->old_name != NULL)
+    if (info->old_name != nullptr)
         proj_update_node(obj);
 
 
@@ -1426,8 +1426,8 @@ project_rband(
     XtPointer	client_data
 )
 {
-    Vwr		v = NULL;
-    VNode	*selected_nodes = NULL;
+    Vwr		v = nullptr;
+    VNode	*selected_nodes = nullptr;
     VMethods	m;
     ABSelectedRec	old_sel, 
 			new_sel;
@@ -1436,7 +1436,7 @@ project_rband(
 		num_cur_selected = 0,
 		i;
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL); 
+    XtVaGetValues(widget, XmNuserData, &v, nullptr); 
 
     if (!v)
 	return;
@@ -1550,7 +1550,7 @@ project_rband(
     /*
      * Unset rband_rect
      */
-    rband_rect = NULL;
+    rband_rect = nullptr;
 
     /*
      * Free up node list if it contained anything
@@ -1566,14 +1566,14 @@ proj_unmap_chooserCB(
     XtPointer 	callData
 )
 {
-    ChooserInfo	info = NULL;
+    ChooserInfo	info = nullptr;
 
-    XtVaGetValues(AB_generic_chooser, XmNuserData, &info, NULL);
+    XtVaGetValues(AB_generic_chooser, XmNuserData, &info, nullptr);
 
     /* Destroy the "extra" file chooser child if one
      * exists (i.e. Save Project As, Import Module, etc.)
      */
-    if (info->child != NULL)
+    if (info->child != nullptr)
     {
 	XtDestroyWidget(info->child);
     }

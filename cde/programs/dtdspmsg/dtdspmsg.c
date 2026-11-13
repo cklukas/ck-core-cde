@@ -298,7 +298,7 @@ void parse_args(int argc, char *argv[], struct arguments *args)
 
 {
 
-	args->args = NULL;
+	args->args = nullptr;
 	args->def = "";
 	args->argmax = 0;
 	args->set = 1;

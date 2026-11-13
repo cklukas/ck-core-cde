@@ -250,7 +250,7 @@ ilBool _ilDecompJPEG (
         }
     dstData.width = pInfo->width;
     dstData.height = pInfo->height;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     dstData.pCompData = (ilPtr)NULL;
 
         /*  Init iljpg package data */
@@ -261,8 +261,8 @@ ilBool _ilDecompJPEG (
         dstData.stripHeight = pInfo->stripHeight;   /* decode strips as they come in */
         dstData.constantStrip = pInfo->constantStrip;
         pPriv = (ilJPEGPrivPtr)ilAddPipeElement(pipe, IL_FILTER, 
-                sizeof(ilJPEGPrivRec), 0, (ilSrcElementData *)NULL, &dstData, 
-                ilDecompInit, ilDecompCleanup, IL_NPF, ilDecompRawExecute, NULL, 0);
+                sizeof(ilJPEGPrivRec), 0, (ilSrcElementData *)nullptr, &dstData, 
+                ilDecompInit, ilDecompCleanup, IL_NPF, ilDecompRawExecute, nullptr, 0);
         }
     else {
             /*  JIF: a single data stream (strip) with tables in the stream: decompress
@@ -280,8 +280,8 @@ ilBool _ilDecompJPEG (
         dstData.stripHeight = stripHeight;
         dstData.constantStrip = TRUE;
         pPriv = (ilJPEGPrivPtr)ilAddPipeElement(pipe, IL_FILTER, 
-                sizeof(ilJPEGPrivRec), 0, (ilSrcElementData *)NULL, &dstData, 
-                ilDecompInit, ilDecompCleanup, IL_NPF, ilDecompJIFExecute, NULL, 0);
+                sizeof(ilJPEGPrivRec), 0, (ilSrcElementData *)nullptr, &dstData, 
+                ilDecompInit, ilDecompCleanup, IL_NPF, ilDecompJIFExecute, nullptr, 0);
         }
 
         /*  Fill in data into private; copy jpgData */

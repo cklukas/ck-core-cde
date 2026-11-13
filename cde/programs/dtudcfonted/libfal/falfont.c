@@ -65,9 +65,9 @@ typedef struct _MngFontID {
 } MngFontID ;
 
 /*** structures for UDC fontpath ***/
-static FalFontPath	orgn = { 0, NULL };	/* for libfal */
-static FalFontPath	copy = { 0, NULL };	/* report to the user */
-static FalFontPath	wpath = { 0, NULL };	/* for libfal */
+static FalFontPath	orgn = { 0, nullptr };	/* for libfal */
+static FalFontPath	copy = { 0, nullptr };	/* report to the user */
+static FalFontPath	wpath = { 0, nullptr };	/* for libfal */
 
 /***** Variables for notice kind of error *****/
 int 	fal_utyerror;
@@ -89,11 +89,11 @@ char	fal_err_file_buf[ sizeof(fal_err_file) ] ;
 static	int	execDefined ;
 static	int	execUndefined ;
 static	int	IsDefaultPath = FALSE ;
-static	MngFontID	mngfid = { 0, NULL } ;
+static	MngFontID	mngfid = { 0, nullptr } ;
 static	int	tmp_codeset = 0 ;
-static	char	*fal_locale = NULL ;
-static	char	*charset_str_buf = NULL ;
-static	int	*codeset_list_sav = NULL ;
+static	char	*fal_locale = nullptr ;
+static	char	*charset_str_buf = nullptr ;
+static	int	*codeset_list_sav = nullptr ;
 static	int	codeset_list_num = 0 ;
 
 /* declaration of inner functions */
@@ -161,10 +161,10 @@ fal_init(void)
 
     if ( !fal_locale ){
 	char	*lcl ;
-	if( (lcl = (char *)getenv( "LANG" )) == NULL ){
+	if( (lcl = (char *)getenv( "LANG" )) == nullptr ){
 	    lcl = "C" ;
 	}
-	if( (fal_locale = (char *)strdup( lcl )) == NULL ){
+	if( (fal_locale = (char *)strdup( lcl )) == nullptr ){
 	    fal_utyerror = _FAL_MALOC_ER;
 	    fal_utyderror = 0;
 	    fal_utyerrno = FAL_ERR_MALLOC ;
@@ -375,8 +375,8 @@ __FalOpenFont(char *file, int protect_key_data, int codeset, int lockflag)
 		    = finf->pFinf->maxbounds.ascent
 		    + finf->pFinf->maxbounds.descent;
 	} else if ( finf->isPcf ) {
-		finf->pCinf = NULL;
-		finf->pGlyphs = NULL;
+		finf->pCinf = nullptr;
+		finf->pGlyphs = nullptr;
 		falGetPcfGSize( &finf->pcfinf, &finf->width, &finf->height);
 	} else {
 	    fal_utyerror = _FAL_FONT_ER;
@@ -399,7 +399,7 @@ __FalOpenFont(char *file, int protect_key_data, int codeset, int lockflag)
 
 	finf->sptnBufL = ((finf->width + 7) / 8) * (finf->height);
 	finf->sptnBuf = (char *)malloc(finf->sptnBufL);
-	if ( finf->sptnBuf == NULL ) {
+	if ( finf->sptnBuf == nullptr ) {
 	    fal_utyerror = _FAL_MALOC_ER;
 	    fal_utyderror = 0;
 	    fal_utyerrno = FAL_ERR_MALLOC ;
@@ -446,7 +446,7 @@ __FalOpenFont(char *file, int protect_key_data, int codeset, int lockflag)
     set_errfile_str( fal_err_file, openfontfile ) ;
     free( openfontfile );
     free( finf->fname );
-    finf->fname = NULL;
+    finf->fname = nullptr;
     free(finf);
 
     return	(FalFontID)FAL_ERROR;
@@ -482,7 +482,7 @@ __FalCloseFont(FalFontID fid, int lockflag)
 
 	finf = ( Oak_FontInf * )fid;
 
-	if ( finf == NULL ) {
+	if ( finf == nullptr ) {
 		fal_utyerror = _FAL_PARM_ER;
 		fal_utyderror = 0;
 		fal_utyerrno = FAL_ERR_PARM ;
@@ -492,7 +492,7 @@ __FalCloseFont(FalFontID fid, int lockflag)
 
 	set_errfile_str( fal_err_file_buf, finf->fname ) ;
 	free( finf->fname );
-	if ( finf->buf != NULL ) {
+	if ( finf->buf != nullptr ) {
 #if	defined( SVR4 )
 		if ( finf->ismmap == TRUE ) {
 			munmap( finf->buf, finf->fsize );
@@ -541,9 +541,9 @@ FalQueryFont(FalFontID fid, FalFontinfo *fontinfo)
 		return FAL_ERROR;
 	}
 	finf = ( Oak_FontInf * )fid;
-	if ( finf == NULL || fontinfo == NULL ) {
+	if ( finf == nullptr || fontinfo == nullptr ) {
 		fal_utyerror = _FAL_PARM_ER;
-		if (finf == NULL) {
+		if (finf == nullptr) {
 			fal_utyderror = _FAL_Q_P_FINF_DER;
 		} else {
 			fal_utyderror = _FAL_Q_P_FONT_DER;
@@ -586,7 +586,7 @@ FalReadFont(
 
 	finf = ( Oak_FontInf * )fid;
 
-	if ( finf == NULL ) {
+	if ( finf == nullptr ) {
 		fal_utyerror = _FAL_PARM_ER;
 		fal_utyderror = _FAL_R_P_FINF_DER;
 		fal_utyerrno = FAL_ERR_PARM ;
@@ -638,12 +638,12 @@ FalReadFont(
 	if ( zoom_on == TRUE ) {
 		ptnBsize = ((width + 7)/8)*height;
 		if ( ptnBsize > finf->dptnBufL ) {
-			if ( finf->dptnBuf == NULL ) {
+			if ( finf->dptnBuf == nullptr ) {
 				toglyph = (char *)malloc( ptnBsize );
 			} else {
 				toglyph = (char *)realloc( finf->dptnBuf, ptnBsize );
 			}
-			if ( toglyph == NULL ) {
+			if ( toglyph == nullptr ) {
 				fal_utyerror = _FAL_MALOC_ER;
 				fal_utyderror = 0;
 				fal_utyerrno = FAL_ERR_MALLOC ;
@@ -655,12 +655,12 @@ FalReadFont(
 		}
 		ptnBsize = (width + 7) / 8;
 		if ( ptnBsize > finf->dbufL ) {
-			if ( finf->dbuf == NULL ) {
+			if ( finf->dbuf == nullptr ) {
 				toglyph = (char *)malloc( ptnBsize );
 			} else {
 				toglyph = (char *)realloc( finf->dbuf, ptnBsize );
 			}
-			if ( toglyph == NULL ) {
+			if ( toglyph == nullptr ) {
 				fal_utyerror = _FAL_MALOC_ER;
 				fal_utyderror = 0;
 				fal_utyerrno = FAL_ERR_MALLOC ;
@@ -850,7 +850,7 @@ FalGetFontList(
 	SET_EXECDEFAULT( mask, execDefined, execUndefined ) ;
 
 	/* interface check */
-	if ( list_ret == NULL ) {
+	if ( list_ret == nullptr ) {
 		fal_utyerror  = _FAL_PARM_ER;
 		fal_utyderror = _FAL_L_P_LST_DER;
 		fal_utyerrno = FAL_ERR_PARM ;
@@ -865,7 +865,7 @@ FalGetFontList(
 	}
 
 	/* error check */
-	if ( orgn.path == NULL ) {
+	if ( orgn.path == nullptr ) {
 		if ( set_default_path() == FAL_ERROR ) {
 			fal_utyerrno |= (FAL_FUNCNUM_GFLST<<8) ;
 			return FAL_ERROR ;
@@ -873,7 +873,7 @@ FalGetFontList(
 	}
 
 	/* make an structure of "FalFontDataList()" */
-	if ((fls = (FalFontDataList *)malloc( sizeof( FalFontDataList ))) == NULL){
+	if ((fls = (FalFontDataList *)malloc( sizeof( FalFontDataList ))) == nullptr){
 		fal_utyerror = _FAL_MALOC_ER;
 		fal_utyerrno = FAL_ERR_MALLOC ;
 		fal_utyerrno |= (FAL_FUNCNUM_GFLST<<8) ;
@@ -882,7 +882,7 @@ FalGetFontList(
 
 	/* inital set for search */
 	fls->num  = 0;
-	fls->list = NULL;
+	fls->list = nullptr;
 
 	/* make font infomation list */
 	if ( fal_make_fontlist( fls, key_data, mask ) == FAL_ERROR) {
@@ -921,21 +921,21 @@ int		mask)		/* a mask                               */
 {
 	int     flg = 0;
 
-	if( key == NULL ) {
+	if( key == nullptr ) {
 		return 0 ;
 	}
 
 	/* check a character of setting a mask */
 	/* xlfd name */
-	if ((mask & FAL_FONT_MASK_XLFDNAME) && (key->xlfdname == NULL)) {
+	if ((mask & FAL_FONT_MASK_XLFDNAME) && (key->xlfdname == nullptr)) {
 		flg++;
 	}
 	/* style */
-	if ((mask & FAL_FONT_MASK_STYLE_NAME) && (key->style.name == NULL)) {
+	if ((mask & FAL_FONT_MASK_STYLE_NAME) && (key->style.name == nullptr)) {
 		flg++;
 	}
 	/* shape */
-	if ((mask & FAL_FONT_MASK_SHAPE_NAME) && (key->shape.name == NULL)) {
+	if ((mask & FAL_FONT_MASK_SHAPE_NAME) && (key->shape.name == nullptr)) {
 		flg++;
 	}
 	CHK_KEY_STR_OPTION( mask, key, flg ) ;
@@ -963,8 +963,8 @@ int		mask)	/* a mask for a saerch */
 {
 	return	falReadFontInfoLists(MKFONTLIST,
 				key, mask, fls,
-				NULL, NULL,
-				NULL, NULL) ;
+				nullptr, nullptr,
+				nullptr, nullptr) ;
 }
 
 
@@ -978,14 +978,14 @@ FalFreeFontList(FalFontDataList *list)
 	int 	i;
 
 	/* parametter check */
-	if ( list == NULL ) {
+	if ( list == nullptr ) {
 		fal_utyerror = _FAL_PARM_ER;
 		fal_utyerrno = FAL_ERR_PARM ;
 		fal_utyerrno |= (FAL_FUNCNUM_FRFLST<<8) ;
 		return	FAL_ERROR;
 	}
 	/* free a structure's array of "FalFontData()" */
-	if ( list->list != NULL ) {
+	if ( list->list != nullptr ) {
 		for ( i = 0;  i < list->num; i++ ) {
 			/* free a structure's character of "FalFontData()" */
 			free( list->list[i].xlfdname );
@@ -997,7 +997,7 @@ FalFreeFontList(FalFontDataList *list)
 		free( list->list );
 	}
 	list->num  = 0 ;
-	list->list = NULL ;
+	list->list = nullptr ;
 
 	/* free a structure of " FalFontDataList()" */
 	free( list );
@@ -1096,7 +1096,7 @@ fal_sort_fontlist(FalFontDataList *lst)
 
 	srt.num  = lst->num;
 
-	if (( srt.list = malloc(sizeof(FalFontData) * srt.num)) == NULL) {
+	if (( srt.list = malloc(sizeof(FalFontData) * srt.num)) == nullptr) {
 		fal_utyerrno = FAL_ERR_MALLOC ;
 		return	FAL_ERROR;
 	}
@@ -1238,19 +1238,19 @@ FalGetFontPath(FalFontPath **dlist_ret)
 	if( fal_init() )	return FAL_ERROR ;
 
 	/* parametter check */
-	if ( dlist_ret == NULL ) {
+	if ( dlist_ret == nullptr ) {
 		fal_utyerror = _FAL_PARM_ER;
 		fal_utyerrno = FAL_ERR_PARM ;
 		return	FAL_ERROR;
 	}
-	if ( orgn.path == NULL ) {
+	if ( orgn.path == nullptr ) {
 		if ( set_default_path() == FAL_ERROR ) {
 			return	FAL_ERROR;
 		}
 		if ( cpy_default_path( &copy ) == FAL_ERROR ){
 			return	FAL_ERROR;
 		}
-	} else if ( copy.path == NULL ) {
+	} else if ( copy.path == nullptr ) {
 		if ( cpy_default_path(&copy) == FAL_ERROR ){
 			return	FAL_ERROR;
 		}
@@ -1279,15 +1279,15 @@ cpy_default_path(FalFontPath *p)
 	int         i;
 	FalFontPath tmp;
 
-	if ((orgn.num == 0) || (orgn.path == NULL)) {
+	if ((orgn.num == 0) || (orgn.path == nullptr)) {
 		p->num  = 0;
-		p->path = NULL;
+		p->path = nullptr;
 		return	0;
 	}
 
 	if (
 		(tmp.path = (char **)malloc(sizeof(char *) * (orgn.num) ))
-		== NULL
+		== nullptr
 	){
 		fal_utyerror = _FAL_MALOC_ER;
 		fal_utyerrno = FAL_ERR_MALLOC ;
@@ -1297,7 +1297,7 @@ cpy_default_path(FalFontPath *p)
 	for ( i = 0 ; i< orgn.num ; i++ ) {
 	char    *tmp_str;
 	/* malloc & copy in strdup */
-		if ((tmp_str = (char *)strdup((orgn.path)[i])) == NULL) {
+		if ((tmp_str = (char *)strdup((orgn.path)[i])) == nullptr) {
 			fal_clear_font_path( &tmp );
 			fal_utyerror = _FAL_MALOC_ER;
 			fal_utyerrno = FAL_ERR_MALLOC ;
@@ -1337,16 +1337,16 @@ fal_clear_font_path(FalFontPath *ls)
 {
 	int             i;
 
-	if (ls->path != NULL) {
+	if (ls->path != nullptr) {
 		/* free a fontpath character */
 		for (i=0 ; i < ls->num ; i++) {
-			if ((ls->path[i] != NULL) && (ls->path[i] == orgn.path[i])) {
+			if ((ls->path[i] != nullptr) && (ls->path[i] == orgn.path[i])) {
 				free(ls->path[i]);
 			}
 		}
 		/* free a character pointer array */
 		free( ls->path );
-		ls->path = NULL;
+		ls->path = nullptr;
 	}
 	ls->num = 0;
 
@@ -1436,14 +1436,14 @@ set_struct(FalFontData *tmp_data, char *elm[])
 	/* character information */
 
 	/* xlfd name */
-	if ( ( dup_p = (char *)strdup( elm[FAL_FONT_ELM_XLFDNAME] ) ) == NULL ) {
+	if ( ( dup_p = (char *)strdup( elm[FAL_FONT_ELM_XLFDNAME] ) ) == nullptr ) {
 		fal_utyerrno = FAL_ERR_MALLOC ;
 		return	FAL_ERROR;
 	}
 	tmp_data->xlfdname = dup_p;
 
 	/* character style (character) */
-	if ( ( dup_p = (char *)strdup( elm[FAL_FONT_ELM_STYLE_NAME] ) ) == NULL) {
+	if ( ( dup_p = (char *)strdup( elm[FAL_FONT_ELM_STYLE_NAME] ) ) == nullptr) {
 		free( tmp_data->xlfdname );
 		fal_utyerror = _FAL_MALOC_ER;
 		fal_utyerrno = FAL_ERR_MALLOC ;
@@ -1456,7 +1456,7 @@ set_struct(FalFontData *tmp_data, char *elm[])
 		= fal_read_db( tmp_data->style.name, (FalFontDB *)&fal_db_style );
 
 	/* character shape (character) */
-	if ( ( dup_p = (char *)strdup( elm[FAL_FONT_ELM_SHAPE_NAME] ) ) == NULL ) {
+	if ( ( dup_p = (char *)strdup( elm[FAL_FONT_ELM_SHAPE_NAME] ) ) == nullptr ) {
 		free( tmp_data->style.name );
 		free( tmp_data->xlfdname );
 		fal_utyerror = _FAL_MALOC_ER;
@@ -1483,9 +1483,9 @@ int     searchFontFileName(FalFontData data, char *fullPathName)
 {
 	int	rtn ;
 	rtn =	falReadFontInfoLists(SRCHFNAME,
-				NULL, NULL, NULL,
+				nullptr, nullptr, nullptr,
 				data, fullPathName,
-				NULL, NULL) ;
+				nullptr, nullptr) ;
 	if( fal_utyerrno != 0 ){
 	    fal_utyerrno |= (FAL_FUNCNUM_SRCHFNM<<8) ;
 	}
@@ -1537,7 +1537,7 @@ int     fal_eq_data(FalFontData data, FalFontData tmp_data)
 	}
 
 	/* character style */
-	if ( (data.style.name != NULL) && (tmp_data.style.name != NULL) ) {
+	if ( (data.style.name != nullptr) && (tmp_data.style.name != nullptr) ) {
 	    if ( ( flg == 0 ) && ( strcmp( data.style.name, tmp_data.style.name ) != 0 ) ) {
 		flg++;
 	    }
@@ -1549,7 +1549,7 @@ int     fal_eq_data(FalFontData data, FalFontData tmp_data)
 	}
 
 	/* character shape */
-	if ( (data.shape.name != NULL) && (tmp_data.shape.name != NULL) ) {
+	if ( (data.shape.name != nullptr) && (tmp_data.shape.name != nullptr) ) {
 	    if ( ( flg == 0 ) && ( strcmp( data.shape.name, tmp_data.shape.name ) != 0 ) ) {
 		flg++;
 	    }
@@ -1596,7 +1596,7 @@ char *fal_get_base_name(char *str)
 	char    *str_slash;
 
 	str_slash = strrchr( str, '/');
-	if ( str_slash == NULL ) {
+	if ( str_slash == nullptr ) {
 		return( str );
 	}
 	return( ++str_slash );
@@ -1610,7 +1610,7 @@ fal_cmp_data(FalFontData *op1, FalFontData *key, int mask)
 		return(0);
 	}
 
-	if ( key == NULL ) {
+	if ( key == nullptr ) {
 		return(0);
 	}
 
@@ -1662,7 +1662,7 @@ fal_cmp_data(FalFontData *op1, FalFontData *key, int mask)
 	) {
 		return	_FAL_TRY_NEXT;
 	}
-	if( (op1->style.name != NULL) && (key->style.name != NULL) ) {
+	if( (op1->style.name != nullptr) && (key->style.name != nullptr) ) {
 	    if (
 		( mask & FAL_FONT_MASK_STYLE_NAME )
 		&& strcmp( op1->style.name, key->style.name )
@@ -1676,7 +1676,7 @@ fal_cmp_data(FalFontData *op1, FalFontData *key, int mask)
 	) {
 		return	_FAL_TRY_NEXT;
 	}
-	if( (op1->shape.name != NULL) && (key->shape.name != NULL) ) {
+	if( (op1->shape.name != nullptr) && (key->shape.name != nullptr) ) {
 	    if (
 		( mask & FAL_FONT_MASK_SHAPE_NAME )
 		&& strcmp( op1->shape.name, key->shape.name )
@@ -1715,14 +1715,14 @@ new_target(FalFontData *target, FalFontData *choose)
 	DEF_STR_SET ;
 
 	diff.style.def = choose->style.def - target->style.def;
-	if( (choose->style.name != NULL) && (target->style.name != NULL) ) {
+	if( (choose->style.name != nullptr) && (target->style.name != nullptr) ) {
 	    str_chk.style =  strcmp( choose->style.name, target->style.name ) ;
 	}
 
 	NEW_TARGET_SET( diff, choose, target, str_chk ) ;
 
 	diff.shape.def = choose->shape.def - target->shape.def;
-	if( (choose->shape.name != NULL) && (target->shape.name != NULL) ) {
+	if( (choose->shape.name != nullptr) && (target->shape.name != nullptr) ) {
 	    str_chk.shape =  strcmp( choose->shape.name, target->shape.name ) ;
 	}
 
@@ -1827,8 +1827,8 @@ int 	FalFontOfFontID(
 {
 	int	rtn ;
 	rtn =	falReadFontInfoLists(FONTOFID,
-				NULL, NULL, NULL,
-				NULL, NULL,
+				nullptr, nullptr, nullptr,
+				nullptr, nullptr,
 				fid, fontdata) ;
 	if( fal_utyerrno != 0 ){
 	    fal_utyerrno |= (FAL_FUNCNUM_FID<<8) ;
@@ -1852,7 +1852,7 @@ FalOpenSysFont(
 		);
 	/* case of an abnormal end */
 	if ( retFL != 0 ) {
-		*missing_font_list_return = NULL;
+		*missing_font_list_return = nullptr;
 		return	0;
 	}
 
@@ -1869,7 +1869,7 @@ FalOpenSysFont(
 			FalFreeFontList( *missing_font_list_return  );
 			fal_utyerrno &= 0xff ;
 			fal_utyerrno |= (FAL_FUNCNUM_SRCHFNM<<8) ;
-			*missing_font_list_return = NULL;
+			*missing_font_list_return = nullptr;
 			return	0;
 		}
 		/* open a font by "__FalOpenFont()" */
@@ -1887,11 +1887,11 @@ FalOpenSysFont(
 			FalFreeFontList( *missing_font_list_return );
 			fal_utyerrno &= 0xff ;
 			fal_utyerrno |= (FAL_FUNCNUM_OPNFNT<<8) ;
-			*missing_font_list_return = NULL;
+			*missing_font_list_return = nullptr;
 			return	0;
 		} else {
 		/* normal end ( return  retOF ) */
-			*missing_font_list_return = NULL;
+			*missing_font_list_return = nullptr;
 			FalFreeFontList( *missing_font_list_return );
 			if( fal_add_fidinf( retOF,
 				dspcode, slct_cdset, islock ) == FAL_ERROR ){
@@ -1905,11 +1905,11 @@ FalOpenSysFont(
 	 * set NULL in "missing_font_list_return"
 	 */
 		FalFreeFontList( *missing_font_list_return );
-		*missing_font_list_return = NULL;
+		*missing_font_list_return = nullptr;
 		return  0;
 	} else {
 	/* case abnormal */
-		*missing_font_list_return = NULL;
+		*missing_font_list_return = nullptr;
 		fal_utyerrno = FAL_ERR_FATAL ;
 		fal_utyerrno |= (FAL_FUNCNUM_OPNFNT<<8) ;
 		return  0;
@@ -1925,17 +1925,17 @@ FILE	*open_fonts_list(void)
 {
 
 	FILE    *fp;
-	char	*locale			= NULL ;
-	char	*fal_search_path	= NULL ;
+	char	*locale			= nullptr ;
+	char	*fal_search_path	= nullptr ;
 	char	flist_d[FAL_LINE_MAX] ;
 	char	flist_c[FAL_LINE_MAX] ;
 	char	flist_l[FAL_LINE_MAX] ;
 
 	GETLISTFILEPATH( locale, fal_search_path, flist_d, flist_c, flist_l, FONTS_LIST_FILE ) ;
 
-	if ( ( fp = fopen( flist_l, "r" ) ) == NULL ) {
-	    if( (fp = fopen( flist_c, "r" )) == NULL ) {
-		if( (fp = fopen( flist_d, "r" )) == NULL ) {
+	if ( ( fp = fopen( flist_l, "r" ) ) == nullptr ) {
+	    if( (fp = fopen( flist_c, "r" )) == nullptr ) {
+		if( (fp = fopen( flist_d, "r" )) == nullptr ) {
 		    set_errfile_str( fal_err_file, flist_d ) ;
 		    set_errfile_str( fal_err_file_buf, flist_d ) ;
 		    fal_utyerror = _FAL_DATA_OPEN_ER;
@@ -1976,13 +1976,13 @@ set_font_pathlist(FalFontPath *pathlist, int nodef)
 {
 	FILE    *fp;
 	char    buf[FAL_LINE_MAX];
-	char    *font_path = NULL ;
+	char    *font_path = nullptr ;
 	char    **tmp_list ;
 	int     num;
 
 	errno = 0;
 	/* open a font directory information file */
-	if ((fp = open_fonts_list()) == NULL) {
+	if ((fp = open_fonts_list()) == nullptr) {
 	    /* Make default path list */
 	    if( errno == ENOENT || errno == EACCES || errno == EISDIR ){
 		if ( make_default_path(pathlist) ) {
@@ -1994,7 +1994,7 @@ set_font_pathlist(FalFontPath *pathlist, int nodef)
 	}
 	memset( buf, '\0', sizeof(buf) ) ;
 
-	while ( fgets( buf, FAL_LINE_MAX, fp ) != (char *)NULL ){
+	while ( fgets( buf, FAL_LINE_MAX, fp ) != (char *)nullptr ){
 		struct	stat	statbuf ;
 		char	*ep ;
 
@@ -2007,12 +2007,12 @@ set_font_pathlist(FalFontPath *pathlist, int nodef)
 		    /* add font_path to pathlist */
 		    if( font_path ){
 			num = pathlist->num;
-			if (pathlist->path == NULL) {
+			if (pathlist->path == nullptr) {
 			    tmp_list = (char **)malloc(sizeof(char *)*(num +1));
 			} else {
 			    tmp_list = (char **)realloc(pathlist->path, sizeof(char *)*(num+1));
 			}
-			if (tmp_list == NULL) {
+			if (tmp_list == nullptr) {
 			    fclose( fp );
 			    free( font_path );
 			    fal_clear_font_path( pathlist );
@@ -2026,7 +2026,7 @@ set_font_pathlist(FalFontPath *pathlist, int nodef)
 		    }
 
 		    /* get font_path */
-		    if ((font_path = (char *)strdup(buf)) == NULL) {
+		    if ((font_path = (char *)strdup(buf)) == nullptr) {
 			fclose( fp );
 			fal_clear_font_path( pathlist );
 			fal_utyerror = _FAL_MALOC_ER;
@@ -2039,12 +2039,12 @@ set_font_pathlist(FalFontPath *pathlist, int nodef)
 
 		    if( stat( font_path, &statbuf ) ) {
 			free( font_path ) ;
-			font_path = NULL ;
+			font_path = nullptr ;
 			continue;
 		    }
 		    if( !(statbuf.st_mode & S_IFDIR) ) {
 			free( font_path ) ;
-			font_path = NULL ;
+			font_path = nullptr ;
 			continue;
 		    }
 
@@ -2052,7 +2052,7 @@ set_font_pathlist(FalFontPath *pathlist, int nodef)
 		    if( nodef ){
 			if( font_path ){
 			    free( font_path ) ;
-			    font_path = NULL ;
+			    font_path = nullptr ;
 			}
 		    }
 		    continue ;
@@ -2062,12 +2062,12 @@ set_font_pathlist(FalFontPath *pathlist, int nodef)
 	/* add font_path to pathlist */
 	if( font_path ){
 	    num = pathlist->num;
-	    if (pathlist->path == NULL) {
+	    if (pathlist->path == nullptr) {
 		    tmp_list = (char **)malloc(sizeof(char *)*(num +1));
 	    } else {
 		    tmp_list = (char **)realloc(pathlist->path, sizeof(char *)*(num+1));
 	    }
-	    if (tmp_list == NULL) {
+	    if (tmp_list == nullptr) {
 		fclose( fp );
 		free( font_path );
 		fal_clear_font_path( pathlist );
@@ -2106,7 +2106,7 @@ make_default_path(FalFontPath *pathlist)
 	memset( pbuf, '\0', sizeof(pbuf) ) ;
 
 	p = pbuf ;
-	if( (dir = getenv( "DTUDCFONTPATH" )) != NULL ) {
+	if( (dir = getenv( "DTUDCFONTPATH" )) != nullptr ) {
 		len = strlen( dir ) ;
 		strcpy( p, dir ) ;
 		p[len++] = ':' ;
@@ -2116,11 +2116,11 @@ make_default_path(FalFontPath *pathlist)
 	strcat( p, ":" ) ;
 
 	sp = pbuf ;
-	while ( (ep = strchr( sp, ':' )) != (char *)NULL ){
+	while ( (ep = strchr( sp, ':' )) != (char *)nullptr ){
 
 	    /* get path */
 	    *ep = '\0' ;
-	    if ((path = (char *)malloc(sizeof(char) * (strlen(sp)+2))) == NULL) {
+	    if ((path = (char *)malloc(sizeof(char) * (strlen(sp)+2))) == nullptr) {
 		fal_clear_font_path( pathlist );
 		fal_utyerror = _FAL_MALOC_ER;
 		fal_utyerrno = FAL_ERR_MALLOC ;
@@ -2145,12 +2145,12 @@ make_default_path(FalFontPath *pathlist)
 
 	    /* add path to pathlist */
 	    num = pathlist->num;
-	    if (pathlist->path == NULL) {
+	    if (pathlist->path == nullptr) {
 		plist = (char **)malloc(sizeof(char *)*(num +1));
 	    } else {
 		plist = (char **)realloc(pathlist->path, sizeof(char *)*(num+1));
 	    }
-	    if (plist == NULL) {
+	    if (plist == nullptr) {
 		fal_clear_font_path( pathlist );
 		fal_utyerror = _FAL_MALOC_ER;
 		fal_utyerrno = FAL_ERR_MALLOC ;
@@ -2202,9 +2202,9 @@ FalFontData	*fdata)
     int		fontnum ;
     int		codeset_num, *codeset_list ;
 
-    keyfname = fontFileName = fonts_list_file = NULL ;
+    keyfname = fontFileName = fonts_list_file = nullptr ;
     codeset_num = 0 ;
-    codeset_list = NULL ;
+    codeset_list = nullptr ;
     if( func & FONTOFID ){
 	finf = (Oak_FontInf *)fid ;
 	keyfname = finf->fname ;
@@ -2214,7 +2214,7 @@ FalFontData	*fdata)
     if( fal_init() )	return FAL_ERROR ;
 
     /* get font path list */
-    if( wpath.path==NULL ) {
+    if( wpath.path==nullptr ) {
 	if( set_font_pathlist( &wpath, 1 ) ) {
 	    return FAL_ERROR ;
 	}
@@ -2225,12 +2225,12 @@ FalFontData	*fdata)
      */
     if( execDefined == TRUE && IsDefaultPath == FALSE ) {
 	/* open an information file */
-	if ((fp = open_fonts_list()) == NULL) {
+	if ((fp = open_fonts_list()) == nullptr) {
 	    return FAL_ERROR ;
 	}
 	memset( pname, 0, sizeof( pname ) );
 
-	while ( fgets( buf, FAL_LINE_MAX, fp ) != ( char * ) NULL ) {
+	while ( fgets( buf, FAL_LINE_MAX, fp ) != ( char * ) nullptr ) {
 	    int     eq;
 
 	    /* clear an area */
@@ -2323,7 +2323,7 @@ FalFontData	*fdata)
 	    FalFontData	*p_bak ;
 
 	    fonts_list_file = (char *)malloc( sizeof(char) * ( strlen(wpath.path[i]) + strlen(FONTSDIR) + 1 ) ) ;
-	    if( fonts_list_file == (char *)NULL ) {
+	    if( fonts_list_file == (char *)nullptr ) {
 		fal_utyerror = _FAL_MALOC_ER;
 		fal_utyerrno = FAL_ERR_MALLOC ;
 		return FAL_ERROR ;
@@ -2340,7 +2340,7 @@ FalFontData	*fdata)
 	    }
 	    errno = 0 ;
 	    /* open "fonts.dir" */
-	    if ((fp = fopen( fonts_list_file, "r" )) == NULL) {
+	    if ((fp = fopen( fonts_list_file, "r" )) == nullptr) {
 		if( errno == EACCES ) {
 		    FreeString( fonts_list_file ) ;
 		    continue ;
@@ -2358,7 +2358,7 @@ FalFontData	*fdata)
 	    FreeString( fonts_list_file ) ;
 
 	    /* Get number of fonts in current path */
-	    if( fgets( buf, FAL_LINE_MAX, fp ) == (char *)NULL ) {
+	    if( fgets( buf, FAL_LINE_MAX, fp ) == (char *)nullptr ) {
 		set_errfile_str( fal_err_file, fal_err_file_buf ) ;
 		fal_utyerror = _FAL_DATA_READ_ER;
 		fal_utyerrno = FAL_ERR_FNTDIR_RD ;
@@ -2369,12 +2369,12 @@ FalFontData	*fdata)
 
 	    /* Get list of font informations */
 	    if( func & MKFONTLIST){
-		if ( fls->list == NULL ) {
+		if ( fls->list == nullptr ) {
 		    p_bak  = (FalFontData *)malloc(sizeof(FalFontData) * (fls->num + fontnum));
 		} else {
 		    p_bak  = (FalFontData *)realloc(fls->list, sizeof(FalFontData)*(fls->num + fontnum));
 		}
-		if ( p_bak == NULL ) {
+		if ( p_bak == nullptr ) {
 		    fal_utyerror = _FAL_MALOC_ER;
 		    fal_utyerrno = FAL_ERR_MALLOC ;
 		    return  FAL_ERROR  ;
@@ -2384,7 +2384,7 @@ FalFontData	*fdata)
 
 	    memset( buf, 0, sizeof(buf));
 
-	    while( fgets( buf, FAL_LINE_MAX, fp ) != (char *)NULL ) {
+	    while( fgets( buf, FAL_LINE_MAX, fp ) != (char *)nullptr ) {
 		int	tmp_num, eq ;
 		char	*ep, *xlfd ;
 
@@ -2393,7 +2393,7 @@ FalFontData	*fdata)
 		memset( &tmp_data, 0, sizeof(FalFontData));
 
 		/* parse string of font file */
-		if( (ep = strchr( buf, ' ' )) == (char *)NULL ) continue ;
+		if( (ep = strchr( buf, ' ' )) == (char *)nullptr ) continue ;
 		else	*ep = 0 ;
 		/* refuse font file (not gpf) */
 		if(
@@ -2407,7 +2407,7 @@ FalFontData	*fdata)
 		/* get string of font file */
 		if( (func & SRCHFNAME) || (func & FONTOFID) ){
 		    fontFileName = (char *)malloc( sizeof(char) * ( strlen(wpath.path[i]) + strlen(buf) + 1 ) ) ;
-		    if( fontFileName == (char *)NULL ) {
+		    if( fontFileName == (char *)nullptr ) {
 			fal_utyerror = _FAL_MALOC_ER;
 			fal_utyerrno = FAL_ERR_MALLOC ;
 			return FAL_ERROR ;
@@ -2550,9 +2550,9 @@ static void
 clear_charset_info(void)
 {
 	if( charset_str_buf )	free( charset_str_buf ) ;
-	charset_str_buf = NULL ;
+	charset_str_buf = nullptr ;
 	if( codeset_list_sav )	free( codeset_list_sav ) ;
-	codeset_list_sav = NULL ;
+	codeset_list_sav = nullptr ;
 	codeset_list_num = 0 ;
 }
 
@@ -2606,12 +2606,12 @@ int		fontnum)
 	return _FAL_TRY_NEXT ;
     }
 
-    if ( fls->list == NULL ) {
+    if ( fls->list == nullptr ) {
 	p_bak  = malloc(sizeof(FalFontData) * (fls->num + fontnum));
     } else {
 	p_bak  = realloc(fls->list, sizeof(FalFontData)*(fls->num + fontnum));
     }
-    if ( p_bak == NULL ) {
+    if ( p_bak == nullptr ) {
 	fal_utyerror = _FAL_MALOC_ER;
 	fal_utyerrno = FAL_ERR_MALLOC ;
 	return  FAL_ERROR  ;
@@ -2648,7 +2648,7 @@ int		**codeset_list)
 	/*
 	 * parse XLFD and get font informations
 	 */
-	cbuf = ep = family = pixsize = NULL ;
+	cbuf = ep = family = pixsize = nullptr ;
 	/* XLFD */
 	strcpy( xlfdname, xlfd ) ;
 	/* pixel size */
@@ -2662,12 +2662,12 @@ int		**codeset_list)
 	GETXLFDELMSTR( family, xlfd, XLFD_ELM_FAMILY_NAME ) ;
 
 	/* set font data */
-	if( (tmp_data->style.name = (char *)strdup( family )) == NULL ) {
+	if( (tmp_data->style.name = (char *)strdup( family )) == nullptr ) {
 	    fal_utyerror = _FAL_MALOC_ER ;
 	    fal_utyerrno = FAL_ERR_MALLOC ;
 	    return FAL_ERROR ;
 	}
-	if( (tmp_data->xlfdname = (char *)strdup( xlfdname )) == NULL ) {
+	if( (tmp_data->xlfdname = (char *)strdup( xlfdname )) == nullptr ) {
 	    fal_utyerror = _FAL_MALOC_ER ;
 	    fal_utyerrno = FAL_ERR_MALLOC ;
 	    return FAL_ERROR ;
@@ -2690,7 +2690,7 @@ int		**codeset_list)
 		    return rtn ;
 		}
 		/* save code set infomations */
-		if( (charset_str_buf = (char *)strdup( char_set )) == NULL ) {
+		if( (charset_str_buf = (char *)strdup( char_set )) == nullptr ) {
 		    fal_utyerror = _FAL_MALOC_ER ;
 		    fal_utyerrno = FAL_ERR_MALLOC ;
 		    return FAL_ERROR ;
@@ -2715,14 +2715,14 @@ FalFontIDToFileName(
 {
 	char		*fname ;
 	Oak_FontInf	*finf ;
-	if( fid == NULL ) {
+	if( fid == nullptr ) {
 		fal_utyerror  = _FAL_PARM_ER ;
 		fal_utyderror = _FAL_R_P_FINF_DER ;
 		fal_utyerrno = FAL_ERR_PARM ;
 		fal_utyerrno |= (FAL_FUNCNUM_IDTOFNM<<8) ;
 		return FAL_ERROR ;
 	}
-	if( file_name == NULL ) {
+	if( file_name == nullptr ) {
 		fal_utyerror  = _FAL_PARM_ER ;
 		fal_utyderror = _FAL_R_P_W_DER ;
 		fal_utyerrno = FAL_ERR_PARM ;
@@ -2730,7 +2730,7 @@ FalFontIDToFileName(
 		return FAL_ERROR ;
 	}
 	finf = (Oak_FontInf *)fid ;
-	if( (fname = (char *)strdup( finf->fname )) == NULL ) {
+	if( (fname = (char *)strdup( finf->fname )) == nullptr ) {
 		fal_utyerror = _FAL_MALOC_ER ;
 		fal_utyerrno = FAL_ERR_MALLOC ;
 		fal_utyerrno |= (FAL_FUNCNUM_IDTOFNM<<8) ;
@@ -2744,7 +2744,7 @@ FalFontIDToFileName(
 int
 FalFree(void *list)
 {
-	if( list == NULL ) {
+	if( list == nullptr ) {
 		fal_utyerror  = _FAL_PARM_ER ;
 		fal_utyerrno = FAL_ERR_PARM ;
 		fal_utyerrno |= (FAL_FUNCNUM_FREE<<8) ;
@@ -2760,13 +2760,13 @@ int
 FalFreeGI(FalGIInf *ginf, int num)
 {
 	int	i ;
-	if( ginf == NULL ) {
+	if( ginf == nullptr ) {
 		fal_utyerror  = _FAL_PARM_ER ;
 		fal_utyerrno = FAL_ERR_PARM ;
 		return FAL_ERROR ;
 	}
 	for( i=0; i<num; i++ ) {
-		if( ginf[i].charset_str != NULL )
+		if( ginf[i].charset_str != nullptr )
 			free( ginf[i].charset_str ) ;
 	}
 	free( ginf ) ;
@@ -2784,7 +2784,7 @@ fal_add_fidinf(FalFontID fid, int dspcode, int cd_set, int islock)
 {
 	int		exist, i, cnt ;
 	FontIDInfo	**flist ;
-	if( fid == NULL ) {
+	if( fid == nullptr ) {
 		fal_utyerror  = _FAL_PARM_ER ;
 		fal_utyerrno = FAL_ERR_PARM ;
 		return FAL_ERROR ;
@@ -2801,9 +2801,9 @@ fal_add_fidinf(FalFontID fid, int dspcode, int cd_set, int islock)
 	}
 	/* add new data */
 	if( !exist ) {
-	    if( mngfid.finf == NULL ) {
+	    if( mngfid.finf == nullptr ) {
 		cnt = 0 ;
-		if( (flist = (FontIDInfo **)malloc( sizeof(FontIDInfo *) )) == NULL ) {
+		if( (flist = (FontIDInfo **)malloc( sizeof(FontIDInfo *) )) == nullptr ) {
 			fal_utyerror = _FAL_MALOC_ER ;
 			fal_utyerrno = FAL_ERR_MALLOC ;
 			return FAL_ERROR ;
@@ -2811,14 +2811,14 @@ fal_add_fidinf(FalFontID fid, int dspcode, int cd_set, int islock)
 	    } else {
 		cnt = mngfid.num ;
 		if( (flist = (FontIDInfo **)realloc(
-			mngfid.finf, sizeof(FontIDInfo *) * (cnt + 1) )) == NULL )
+			mngfid.finf, sizeof(FontIDInfo *) * (cnt + 1) )) == nullptr )
 		{
 			fal_utyerror = _FAL_MALOC_ER ;
 			fal_utyerrno = FAL_ERR_MALLOC ;
 			return FAL_ERROR ;
 		}
 	    }
-	    if( (flist[cnt] = (FontIDInfo *)malloc( sizeof(FontIDInfo) )) == NULL ) {
+	    if( (flist[cnt] = (FontIDInfo *)malloc( sizeof(FontIDInfo) )) == nullptr ) {
 		fal_utyerror = _FAL_MALOC_ER ;
 		fal_utyerrno = FAL_ERR_MALLOC ;
 		free(flist);
@@ -2840,7 +2840,7 @@ static	int
 fal_read_fidinf(FalFontID fid, FontIDInfo *fontid_inf)
 {
 	int	i ;
-	if( fid == NULL ) {
+	if( fid == nullptr ) {
 		fal_utyerror = _FAL_PARM_ER ;
 		fal_utyerrno = FAL_ERR_PARM ;
 		return FAL_ERROR ;
@@ -2879,7 +2879,7 @@ fal_del_fidinf(FalFontID fid)
 	}
 	if( cnt > 0 ) {
 		if( (flist = (FontIDInfo **)realloc(
-			mngfid.finf, sizeof(FontIDInfo *) * cnt )) == NULL )
+			mngfid.finf, sizeof(FontIDInfo *) * cnt )) == nullptr )
 		{
 			fal_utyerror = _FAL_MALOC_ER ;
 			fal_utyerrno = FAL_ERR_MALLOC ;
@@ -2890,7 +2890,7 @@ fal_del_fidinf(FalFontID fid)
 	} else {
 		free( mngfid.finf ) ;
 		mngfid.num = 0 ;
-		mngfid.finf = NULL ;
+		mngfid.finf = nullptr ;
 	}
 	return 0 ;
 }

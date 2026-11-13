@@ -204,7 +204,7 @@ answer(Tt_message msg)
     char *op = tt_message_op(msg);
     int is_locale, is_situation, is_xinfo, is_geometry;
 
-    if (op == NULL || tt_message_class(msg) != TT_REQUEST) {
+    if (op == nullptr || tt_message_class(msg) != TT_REQUEST) {
 	tt_message_destroy(msg);
 	tt_free(op);
 	return;
@@ -259,7 +259,7 @@ serve_requests(int fd, int stop_fd)
 	    break;
 	if (pfds[1].revents & (POLLIN | POLLHUP))
 	    break;
-	while ((msg = tt_message_receive()) != NULL &&
+	while ((msg = tt_message_receive()) != nullptr &&
 	       tt_ptr_error(msg) == TT_OK) {
 	    if (tt_message_state(msg) == TT_SENT)
 		answer(msg);
@@ -279,7 +279,7 @@ serve_as_client(int fd, int milliseconds)
 	struct pollfd pfd = { fd, POLLIN, 0 };
 
 	if (poll(&pfd, 1, 100) > 0)
-	    tttk_Xt_input_handler(NULL, &fd, NULL);
+	    tttk_Xt_input_handler(nullptr, &fd, nullptr);
     }
 }
 
@@ -347,7 +347,7 @@ imprint(int argc, char **argv)
     Ttdt_sender_imprints imprints = TTDT_IMPRINT_NONE;
     int want_display = 0, want_geometry = 0, timeout = 5000, linger = 0;
     const char *handler;
-    char *display = NULL, cwd[4096], buf[16];
+    char *display = nullptr, cwd[4096], buf[16];
     int w = 7, h = 7, x = 7, y = 7, i, fd, utf8;
     const char *locale, *shown_display;
     Tt_status status;
@@ -356,7 +356,7 @@ imprint(int argc, char **argv)
 	fprintf(stderr, "usage: imprint PROCID WORD ...\n");
 	return 2;
     }
-    handler = strcmp(argv[2], "-") == 0 ? NULL : argv[2];
+    handler = strcmp(argv[2], "-") == 0 ? nullptr : argv[2];
     for (i = 3; i < argc; i++) {
 	if (strcmp(argv[i], "locale") == 0)
 	    imprints |= TTDT_IMPRINT_LOCALE;
@@ -383,7 +383,7 @@ imprint(int argc, char **argv)
 	perror(START_DIR);
 	return 2;
     }
-    utf8 = setlocale(LC_CTYPE, "C.UTF-8") != NULL;
+    utf8 = setlocale(LC_CTYPE, "C.UTF-8") != nullptr;
     setlocale(LC_ALL, "C");
     setenv("DISPLAY", "original.example.com:0", 1);
     if (tt_ptr_error(tt_open()) != TT_OK) {
@@ -398,20 +398,20 @@ imprint(int argc, char **argv)
 
 #ifdef TT_IMPRINT_TEST_OLD_CALL
     /* the call of that library has no imprints: it adopts all it is told */
-    status = ttdt_sender_imprint_on(handler, NULL,
-				    want_display ? &display : NULL,
-				    want_geometry ? &w : NULL,
-				    want_geometry ? &h : NULL,
-				    want_geometry ? &x : NULL,
-				    want_geometry ? &y : NULL,
+    status = ttdt_sender_imprint_on(handler, nullptr,
+				    want_display ? &display : nullptr,
+				    want_geometry ? &w : nullptr,
+				    want_geometry ? &h : nullptr,
+				    want_geometry ? &x : nullptr,
+				    want_geometry ? &y : nullptr,
 				    (XtAppContext)0, timeout);
 #else
-    status = ttdt_sender_imprint_on(handler, NULL, imprints,
-				    want_display ? &display : NULL,
-				    want_geometry ? &w : NULL,
-				    want_geometry ? &h : NULL,
-				    want_geometry ? &x : NULL,
-				    want_geometry ? &y : NULL,
+    status = ttdt_sender_imprint_on(handler, nullptr, imprints,
+				    want_display ? &display : nullptr,
+				    want_geometry ? &w : nullptr,
+				    want_geometry ? &h : nullptr,
+				    want_geometry ? &x : nullptr,
+				    want_geometry ? &y : nullptr,
 				    (XtAppContext)0, timeout);
 #endif
     shown_display = display ? display : "(none)";
@@ -422,7 +422,7 @@ imprint(int argc, char **argv)
     /* a reply that comes late meets whatever the call left behind */
     if (linger > 0)
 	serve_as_client(fd, linger);
-    locale = setlocale(LC_CTYPE, NULL);
+    locale = setlocale(LC_CTYPE, nullptr);
     printf("state cwd=%s locale=%s display=%s\n",
 	   getcwd(cwd, sizeof cwd) ? cwd : "(none)", locale ? locale : "(none)",
 	   getenv("DISPLAY") ? getenv("DISPLAY") : "(unset)");

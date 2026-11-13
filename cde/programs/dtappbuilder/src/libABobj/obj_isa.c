@@ -90,7 +90,7 @@ obj_is_salient(ABObj obj)
 BOOL
 obj_is_virtual(ABObj obj)
 {
-    if (obj == NULL)
+    if (obj == nullptr)
         return FALSE;
 
     switch (obj->type)
@@ -132,7 +132,7 @@ obj_is_sub(ABObj obj)
 
     vroot = obj->part_of;
 
-    if (vroot == NULL || vroot == obj)
+    if (vroot == nullptr || vroot == obj)
 	return FALSE;
 
     return TRUE;
@@ -255,7 +255,7 @@ obj_is_intra_module(ABObj obj)
     case AB_TYPE_DIALOG:
     {
         ABObj winParent = obj_get_win_parent(obj);
-        if (   (winParent != NULL) 
+        if (   (winParent != nullptr) 
 	    && (obj_get_module(winParent) != obj_get_module(obj)) )
         {
 	    isIt = FALSE;
@@ -270,7 +270,7 @@ obj_is_intra_module(ABObj obj)
     {
 	ABObj from = obj_get_from(obj);
 	ABObj to = obj_get_to(obj);
-	if ((from != NULL) && (to != NULL))
+	if ((from != nullptr) && (to != nullptr))
 	{
 	    if (obj_get_module(from) != obj_get_module(to))
 	    {
@@ -375,7 +375,7 @@ obj_is_menu(ABObj obj)
 BOOL
 obj_is_ref(ABObj obj)
 {
-    return ((obj == NULL)? FALSE:(obj->ref_to != NULL));
+    return ((obj == nullptr)? FALSE:(obj->ref_to != nullptr));
 }
 
 BOOL

@@ -163,13 +163,13 @@ DtViewClassRec dtViewClassRec =
 		(WidgetClass) &xmFormClassRec,	/* superclass		*/
 		"Box",				/* class_name		*/
 		sizeof (DtViewRec),		/* widget_size		*/
-		NULL,				/* class_initialize	*/
-		NULL,				/* class_part_initialize*/
+		nullptr,				/* class_initialize	*/
+		nullptr,				/* class_part_initialize*/
 		False,				/* class_inited		*/
 		(XtInitProc) NULL,		/* initialize		*/
-		NULL,				/* initialize_hook	*/
+		nullptr,				/* initialize_hook	*/
 		XtInheritRealize,		/* realize		*/
-		NULL,				/* actions		*/
+		nullptr,				/* actions		*/
 		0,				/* num_actions		*/
 		resources,			/* resources		*/
 		XtNumber (resources),		/* num_resources	*/
@@ -178,20 +178,20 @@ DtViewClassRec dtViewClassRec =
 		XtExposeCompressMaximal,	/* compress_exposure	*/
 		True,				/* compress_enterleave	*/
 		False,				/* visible_interest	*/	
-		NULL,			 	/* destroy		*/	
+		nullptr,			 	/* destroy		*/	
 		XtInheritResize,		/* resize		*/
 		XtInheritExpose,		/* expose		*/	
 		(XtSetValuesFunc) NULL,		/* set_values		*/	
-		NULL,				/* set_values_hook	*/
+		nullptr,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
-		NULL,				/* get_values_hook	*/
-		NULL,				/* accept_focus		*/	
+		nullptr,				/* get_values_hook	*/
+		nullptr,				/* accept_focus		*/	
 		XtVersion,			/* version		*/
-		NULL,				/* callback private	*/
+		nullptr,				/* callback private	*/
 		XtInheritTranslations,		/* tm_table		*/
 		XtInheritQueryGeometry,		/* query_geometry	*/
-		NULL,				/* display_accelerator	*/
-		NULL,				/* extension		*/
+		nullptr,				/* display_accelerator	*/
+		nullptr,				/* extension		*/
 	},
 
 /*	Composite Part
@@ -201,52 +201,52 @@ DtViewClassRec dtViewClassRec =
 		XtInheritChangeManaged,		/* change_managed	*/
 		XtInheritInsertChild,		/* insert_child		*/
 		XtInheritDeleteChild,		/* delete_child		*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	Constraint Part
 */
 	{
-		NULL,				/* constraint_resources	*/
+		nullptr,				/* constraint_resources	*/
 		0,				/* num_constraint_resources */
 		sizeof (DtViewConstraintRec),/* constraint_record	*/
-		NULL,				/* constraint_initialize */
-		NULL,				/* constraint_destroy	*/
-		NULL,				/* constraint_set_values */
-		NULL,				/* extension		*/
+		nullptr,				/* constraint_initialize */
+		nullptr,				/* constraint_destroy	*/
+		nullptr,				/* constraint_set_values */
+		nullptr,				/* extension		*/
 	},
 
 /*	XmManager Part
 */
 	{
 		XtInheritTranslations,		/* default_translations	*/
-		NULL,				/* syn_resources	*/
+		nullptr,				/* syn_resources	*/
 		0,				/* num_syn_resources	*/
-		NULL,				/* syn_cont_resources	*/
+		nullptr,				/* syn_cont_resources	*/
 		0,				/* num_syn_cont_resources */
 		XmInheritParentProcess,		/* parent_process	*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	XmBulletinBoard Part
 */
 	{
 		False,				/* always_install_accelerators*/
-		NULL,				/* geo_matrix_create	*/
+		nullptr,				/* geo_matrix_create	*/
 		XmInheritFocusMovedProc,	/* focus_moved_proc	*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	XmForm Part
 */
 	{
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	DtView Part
 */
 	{
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	}
 
 };

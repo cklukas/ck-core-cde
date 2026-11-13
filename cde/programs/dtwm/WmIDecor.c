@@ -56,8 +56,8 @@
  */
 static unsigned int activeIconTextWidth = 1;
 static unsigned int activeIconTextHeight = 1;
-static RList *pActiveIconTopRects = NULL;
-static RList *pActiveIconBotRects = NULL;
+static RList *pActiveIconTopRects = nullptr;
+static RList *pActiveIconBotRects = nullptr;
 static const unsigned long kMinimizeBlinkIntervalMs = 320;
 static const int kMinimizeBlinkToggles = 2;
 
@@ -73,7 +73,7 @@ typedef struct _IconBlinkData
     struct _IconBlinkData *next;
 } IconBlinkData;
 
-static IconBlinkData *iconBlinkList = NULL;
+static IconBlinkData *iconBlinkList = nullptr;
 
 
 static GC GetOpenIconFillGC (ClientData *pcd)
@@ -99,7 +99,7 @@ static GC GetOpenIconFillGC (ClientData *pcd)
 	if (pSD->openIconFillGC)
 	{
 	    XFreeGC (DISPLAY, pSD->openIconFillGC);
-	    pSD->openIconFillGC = NULL;
+	    pSD->openIconFillGC = nullptr;
 	}
 
 	values.foreground = color;
@@ -141,7 +141,7 @@ static GC GetOpenIconBarGC (ClientData *pcd, Boolean active)
 	if (*gcPtr)
 	{
 	    XFreeGC (DISPLAY, *gcPtr);
-	    *gcPtr = NULL;
+	    *gcPtr = nullptr;
 	}
 
 	values.foreground = color;
@@ -181,7 +181,7 @@ static Window CreateOpenIconIndicatorWindow (ClientData *pcd)
 {
     Window parent;
     Window root;
-    Window *children = NULL;
+    Window *children = nullptr;
     unsigned int nchildren = 0;
     XSetWindowAttributes attrs;
     unsigned long mask;
@@ -416,7 +416,7 @@ static IconBlinkData *FindIconBlink (ClientData *pcd)
 	}
 	cur = cur->next;
     }
-    return NULL;
+    return nullptr;
 }
 
 static void RemoveIconBlink (IconBlinkData *blink)
@@ -683,7 +683,7 @@ Boolean MakeIcon (WmWorkspaceData *pWS, ClientData *pcd)
     /* make space for the top/bottom changing shadow rectangles */
 
     if ((pcd->piconTopShadows = 
-	    AllocateRList ((unsigned)NUM_BOTH_TOP_RECTS)) == NULL)
+	    AllocateRList ((unsigned)NUM_BOTH_TOP_RECTS)) == nullptr)
     {
 	/* Out of memory! */
 	Warning (((char *)GETMESSAGE(30, 2, "Insufficient memory for icon creation")));
@@ -691,7 +691,7 @@ Boolean MakeIcon (WmWorkspaceData *pWS, ClientData *pcd)
     }
     
     if ((pcd->piconBottomShadows = 
-	 AllocateRList ((unsigned)NUM_BOTH_BOTTOM_RECTS)) == NULL)
+	 AllocateRList ((unsigned)NUM_BOTH_BOTTOM_RECTS)) == nullptr)
     {
 	/* Out of memory! */
 	Warning (((char *)GETMESSAGE(30, 3, "Insufficient memory for icon creation")));
@@ -1789,7 +1789,7 @@ void ShowActiveIcon (ClientData *pcd)
 
 	/* clear the frame to the right background */
 	if ((!ACTIVE_PSD->useIconBox) || 
-	    (P_ICON_BOX(pcd) == NULL))
+	    (P_ICON_BOX(pcd) == nullptr))
 	{
 	    if (ICON_DECORATION(pcd) & ICON_IMAGE_PART)
 	    {
@@ -1927,7 +1927,7 @@ void ShowInactiveIcon (ClientData *pcd, Boolean refresh)
 	{
 	    /* clear the frame to the right background */
 	    if ((!ACTIVE_PSD->useIconBox) || 
-	        (P_ICON_BOX(pcd) == NULL))
+	        (P_ICON_BOX(pcd) == nullptr))
 	    {
 		XmeClearBorder (DISPLAY, ICON_FRAME_WIN(pcd),
 				0, 0,

@@ -51,8 +51,8 @@
 
 static char *when_labels[(int)AB_WHEN_NUM_VALUES+1];
 static char *stdact_labels[(int)AB_BUILTIN_ACTION_NUM_VALUES+1];
-static char	*unknown_str = NULL;
-static char	*invalid_str = NULL;
+static char	*unknown_str = nullptr;
+static char	*invalid_str = nullptr;
 
 static AB_WHEN
 application_whens[] =
@@ -490,7 +490,7 @@ ConnP_conn_objs[] =
     { AB_TYPE_PROJECT, 	-1, 		"Application",
 	application_whens, XtNumber(application_whens),
 	AB_WHEN_SESSION_SAVE,
-        (AB_BUILTIN_ACTION *) NULL, (Cardinal) 0,
+        (AB_BUILTIN_ACTION *) nullptr, (Cardinal) 0,
 	(AB_BUILTIN_ACTION) NULL			},
     { AB_TYPE_BUTTON,	-1,		"Button",
 	button_whens, XtNumber(button_whens),
@@ -555,7 +555,7 @@ ConnP_conn_objs[] =
     { AB_TYPE_MENU,	-1,		"Menu",
 	menu_whens, XtNumber(menu_whens),
 	AB_WHEN_POPPED_UP,
-	(AB_BUILTIN_ACTION *) NULL, (Cardinal) 0,
+	(AB_BUILTIN_ACTION *) nullptr, (Cardinal) 0,
 	(AB_BUILTIN_ACTION) NULL			},
     { AB_TYPE_ITEM,	(int)AB_ITEM_FOR_MENU, "Menu Item",
 	menuitem_whens, XtNumber(menuitem_whens),
@@ -575,7 +575,7 @@ ConnP_conn_objs[] =
     { AB_TYPE_MESSAGE,	-1,	"Message",
 	message_whens, XtNumber(message_whens), 
 	(AB_WHEN) NULL,
-	(AB_BUILTIN_ACTION *) NULL, (Cardinal) 0,
+	(AB_BUILTIN_ACTION *) nullptr, (Cardinal) 0,
 	(AB_BUILTIN_ACTION) NULL			},
     { AB_TYPE_CONTAINER, AB_CONT_PANED,	"Paned Window", 
         panedwin_whens, XtNumber(panedwin_whens), 
@@ -617,11 +617,11 @@ ConnP_conn_objs[] =
 int		ConnP_num_conn_objs = XtNumber(ConnP_conn_objs);
 
 
-ConnWhen	*ConnP_conn_whens = (ConnWhen *)NULL;
+ConnWhen	*ConnP_conn_whens = (ConnWhen *)nullptr;
 int		ConnP_num_conn_whens = 0;
 
 
-ConnAct		*ConnP_conn_acts = (ConnAct *)NULL;
+ConnAct		*ConnP_conn_acts = (ConnAct *)nullptr;
 int		ConnP_num_conn_acts = 0;
 
 
@@ -662,7 +662,7 @@ get_when_label(
     AB_WHEN	when_type
 )
 {
-    STRING	ret_val = NULL;
+    STRING	ret_val = nullptr;
 
     /*
      * Fetch right string to return from when_labels array
@@ -688,7 +688,7 @@ get_stdact_label(
     AB_BUILTIN_ACTION	stdact_type
 )
 {
-    STRING	ret_val = NULL;
+    STRING	ret_val = nullptr;
 
     /*
      * Fetch right string to return from the stdact_labels array
@@ -716,9 +716,9 @@ connP_get_when_labels(
     int	*num_labels
 )
 {
-    static STRING	*when_label_list = (STRING *)NULL;
+    static STRING	*when_label_list = (STRING *)nullptr;
 
-    if (when_label_list == NULL)
+    if (when_label_list == nullptr)
     {
 	int	i;
 
@@ -737,9 +737,9 @@ connP_get_act_labels(
     int	*num_labels
 )
 {
-    static STRING	*stdact_label_list = (STRING *)NULL;
+    static STRING	*stdact_label_list = (STRING *)nullptr;
 
-    if (stdact_label_list == NULL)
+    if (stdact_label_list == nullptr)
     {
 	int	i;
 
@@ -804,7 +804,7 @@ connP_set_source_type(
 	    cur_source_subtype = obj_subtype;
 	else
 	    cur_source_subtype = -1;
-	cur_action_obj = NULL;
+	cur_action_obj = nullptr;
 
 	assign_when_list(cur_source_type, cur_source_subtype);
 	connP_ui_source_type_update(cur_source_type, cur_source_subtype);
@@ -826,7 +826,7 @@ connP_set_target_type(
 	    cur_target_subtype = obj_subtype;
 	else
 	    cur_target_subtype = -1;
-	cur_action_obj = NULL;
+	cur_action_obj = nullptr;
 
  	if (ChangedType)
 	{
@@ -844,7 +844,7 @@ conn_set_source(
     if (cur_source == obj)
 	return;
 
-    if ((cur_source = obj) != NULL)
+    if ((cur_source = obj) != nullptr)
     {
 	connP_set_source_type(obj_get_type(obj), obj_get_subtype(obj));
     }
@@ -869,7 +869,7 @@ conn_set_target(
     if (cur_target == obj)
 	return;
 
-    if ((cur_target = obj) != NULL)
+    if ((cur_target = obj) != nullptr)
     {
 	connP_set_target_type(obj_get_type(obj), obj_get_subtype(obj));
     }
@@ -940,7 +940,7 @@ connP_make_conn_string(
 
     src_obj = action_info->from;
 
-    if (src_obj == NULL)
+    if (src_obj == nullptr)
 	return(conn_string);
 
     si = connP_get_obj_type_index(obj_get_type(src_obj),
@@ -974,7 +974,7 @@ connP_make_conn_string(
 	    ABObj		target_obj;
 
 	    target_obj = action_info->to;
-	    if (target_obj == NULL)
+	    if (target_obj == nullptr)
 		return("");
 	    
 	    ti = connP_get_obj_type_index(obj_get_type(target_obj),
@@ -1008,7 +1008,7 @@ connP_make_conn_string(
 	{
 	    ISTRING	istr_val = action_info->func_value.func_name;
 
-	    if (istr_val != NULL)
+	    if (istr_val != nullptr)
 		strcat(conn_string, istr_string(istr_val));
 	}
 	strcat(conn_string, "\"");
@@ -1094,10 +1094,10 @@ connP_guess_when_action(
     long     i = connP_get_obj_type_index(source_type, source_subtype);
     long     j = connP_get_obj_type_index(target_type, target_subtype);
 
-    if (ConnP_conn_objs[i].when_list != NULL)
+    if (ConnP_conn_objs[i].when_list != nullptr)
 	*when_ret = ConnP_conn_objs[i].default_when;
 
-    if (ConnP_conn_objs[j].action_list != NULL)
+    if (ConnP_conn_objs[j].action_list != nullptr)
 	*act_ret = ConnP_conn_objs[j].default_act;
 
     *func_type = AB_FUNC_BUILTIN;
@@ -1139,7 +1139,7 @@ connP_guess_when_action(
 	break;
 
 	case AB_TYPE_MESSAGE:
-	    if (connP_get_source() != NULL)
+	    if (connP_get_source() != nullptr)
 	    {
 		ABObj	src_obj = connP_get_source();
 
@@ -1171,14 +1171,14 @@ is_descendant(
     ABObj		obj;
     BOOL		ret_val = FALSE;
 
-    if (parent == NULL || child == NULL)
+    if (parent == nullptr || child == nullptr)
 	return(FALSE);
 
     if (parent == child)
 	return(TRUE);
 
     for (trav_open(&trav, parent, AB_TRAV_CHILDREN);
-	 (obj = trav_next(&trav)) != NULL; )
+	 (obj = trav_next(&trav)) != nullptr; )
 	if (is_descendant(obj, child))
 	{
 	    ret_val = TRUE;
@@ -1199,9 +1199,9 @@ assign_when_list(
     int		n;
     ConnObj	*src_conn_obj;
     
-    if (ConnP_conn_whens != (ConnWhen *)NULL)
+    if (ConnP_conn_whens != (ConnWhen *)nullptr)
 	XtFree((char *)ConnP_conn_whens);
-    ConnP_conn_whens = (ConnWhen *)NULL;
+    ConnP_conn_whens = (ConnWhen *)nullptr;
     ConnP_num_conn_whens = 0;
     
     i = connP_get_obj_type_index(source_type, source_subtype);
@@ -1234,9 +1234,9 @@ assign_action_list(
     int		n;
     ConnObj	*trg_conn_obj;
     
-    if (ConnP_conn_acts != (ConnAct *)NULL)
+    if (ConnP_conn_acts != (ConnAct *)nullptr)
 	XtFree((char *)ConnP_conn_acts);
-    ConnP_conn_acts = (ConnAct *)NULL;
+    ConnP_conn_acts = (ConnAct *)nullptr;
     ConnP_num_conn_acts = 0;
     
     i = connP_get_obj_type_index(target_type, target_subtype);
@@ -1343,7 +1343,7 @@ connP_make_user_def_conn(
 )
 {
     ab_action->info.action.from = c_source;
-    ab_action->info.action.to = NULL;
+    ab_action->info.action.to = nullptr;
     ab_action->info.action.when = c_when;
     ab_action->info.action.func_type = AB_FUNC_USER_DEF;
     ab_action->info.action.func_value.func_name = istr_create(function_name);
@@ -1358,7 +1358,7 @@ connP_make_code_frag_conn(
 )
 {
     ab_action->info.action.from = c_source;
-    ab_action->info.action.to = NULL;
+    ab_action->info.action.to = nullptr;
     ab_action->info.action.when = c_when;
     ab_action->info.action.func_type = AB_FUNC_CODE_FRAG;
     ab_action->info.action.func_value.code_frag = istr_create(code_frag);
@@ -1426,7 +1426,7 @@ connP_change_in_builtin(
 	switch (cur_arg_type)
 	{
 	    case AB_ARG_STRING:
-		if (arg_str != (char *)NULL)
+		if (arg_str != (char *)nullptr)
 		    istr_value = istr_create(arg_str);
 	    	else
 		    istr_value = (ISTRING)NULL;
@@ -1467,13 +1467,13 @@ connP_destroy_connections_for(
     AB_TRAVERSAL	trav;
     ABObj		cobj;
 
-    if (obj == NULL ||
-	(project = obj_get_project(obj)) == NULL)
+    if (obj == nullptr ||
+	(project = obj_get_project(obj)) == nullptr)
 	return;
 
 
     for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-        (cobj = trav_next(&trav)) != NULL; )
+        (cobj = trav_next(&trav)) != nullptr; )
     {
 	if (cobj->info.action.from == obj	||
 	    (cobj->info.action.func_type == AB_FUNC_BUILTIN &&
@@ -1491,7 +1491,7 @@ connP_make_on_item_help_conn(
 )
 {
     ab_action->info.action.from = c_source;
-    ab_action->info.action.to = NULL;
+    ab_action->info.action.to = nullptr;
     ab_action->info.action.when = c_when;
     ab_action->info.action.func_type = AB_FUNC_ON_ITEM_HELP;
     ab_action->info.action.auto_named = TRUE;
@@ -1507,7 +1507,7 @@ connP_make_help_vol_conn(
 )
 {
     ab_action->info.action.from = c_source;
-    ab_action->info.action.to = NULL;
+    ab_action->info.action.to = nullptr;
     ab_action->info.action.when = c_when;
     ab_action->info.action.func_type = AB_FUNC_HELP_VOLUME;
     ab_action->info.action.volume_id = istr_create(volume);

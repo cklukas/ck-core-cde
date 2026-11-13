@@ -243,13 +243,13 @@ Widget clear_button;		/* clear name/password text button	   */
 Widget options_button;		/* login options button			   */
 Widget help_button;		/* help button				   */
 
-Widget copyright_msg    = NULL;	/* copyright notice widget		   */
-Widget help_message     = NULL;	/* the help message box			   */
-Widget error_message    = NULL;	/* the error message box		   */
-Widget hostname_message = NULL;	/* the invalid hostname message box	   */
-Widget passwd_message   = NULL;	/* the expired password message box	   */
+Widget copyright_msg    = nullptr;	/* copyright notice widget		   */
+Widget help_message     = nullptr;	/* the help message box			   */
+Widget error_message    = nullptr;	/* the error message box		   */
+Widget hostname_message = nullptr;	/* the invalid hostname message box	   */
+Widget passwd_message   = nullptr;	/* the expired password message box	   */
 
-Widget options_menu = NULL;	/* pop-up menu on options button	   */
+Widget options_menu = nullptr;	/* pop-up menu on options button	   */
 Widget options_item[10];	/* items on options pop_up menu	  	   */
 Widget options_nowindows;	/* nowindows pane on options pop_up menu   */
 Widget options_failsafe;	/* failsafe pane on options pop_up menu	   */
@@ -258,8 +258,8 @@ Widget *alt_dts;		/* alt_dts  widgets on options pop_up menu */
 Widget options_dt;		/* dt regular pane on options pop_up menu */
 Widget options_last_dt;		/* user's last dt 			  */
 
-Widget lang_menu = NULL;	/* cascading menu on "Language" option	   */
-Widget session_menu = NULL;     /* cascading menu on "Session" option     */
+Widget lang_menu = nullptr;	/* cascading menu on "Language" option	   */
+Widget session_menu = nullptr;     /* cascading menu on "Session" option     */
 
 
 /***************************************************************************
@@ -321,7 +321,7 @@ static
 
     {"languageList", "LanguageList",
 	XtRString, sizeof(char *), XtOffset(AppInfoPtr, languageList),
-	XtRString, NULL							},
+	XtRString, nullptr							},
 
 #if defined(USE_XINERAMA)
     { "xineramaPreferredScreen",        "XineramaPreferredScreen",
@@ -333,7 +333,7 @@ static
 #if defined (ENABLE_DYNAMIC_LANGLIST)
     {"languageListCmd", "LanguageListCmd",
         XtRString, sizeof(char *), XtOffset(AppInfoPtr, languageListCmd),
-        XtRString, NULL                                                 },
+        XtRString, nullptr                                                 },
 #endif /* ENABLE_DYNAMIC_LANGLIST */
 
     };
@@ -363,7 +363,7 @@ main( int argc, char **argv )
 #endif /* VG_TRACE */
 
     setlocale(LC_ALL, "");
-    XtSetLanguageProc( NULL, NULL, NULL );
+    XtSetLanguageProc( nullptr, nullptr, nullptr );
     langenv = getenv("LANG");
     
     /*
@@ -379,7 +379,7 @@ main( int argc, char **argv )
     errorLogFile = getenv(ERRORLOG);
 	
 #ifdef sun
-    if (getenv("OPENWINHOME") == NULL) putenv(OWPATH_ENV);
+    if (getenv("OPENWINHOME") == nullptr) putenv(OWPATH_ENV);
 #endif
 
     _DtEnvControl( DT_ENV_SET );
@@ -472,7 +472,7 @@ main( int argc, char **argv )
     dpyinfo.DtXineramaInfo = _DtXineramaInit(dpyinfo.dpy);
 
 # ifdef DEBUG
-    if (dpyinfo.DtXineramaInfo == NULL)
+    if (dpyinfo.DtXineramaInfo == nullptr)
       {				/* No xinerama, no joy. */
 	fprintf(stderr, "### JET VGMAIN: Xinerama NOT available.\n"); 
       }
@@ -501,7 +501,7 @@ main( int argc, char **argv )
      *  add the unit convertor for resources...
      */
      
-    XtAddConverter(XmRString, XmRUnitType, XmCvtStringToUnitType, NULL, 0);
+    XtAddConverter(XmRString, XmRUnitType, XmCvtStringToUnitType, nullptr, 0);
 
     /*
      *  get user-specified resources...
@@ -510,7 +510,7 @@ main( int argc, char **argv )
     SetResourceDatabase();
  
     XtGetApplicationResources(toplevel, &appInfo, AppResources,
-    				XtNumber(AppResources), NULL, 0);
+    				XtNumber(AppResources), nullptr, 0);
 
 #ifdef VG_TRACE
     vg_TRACE_EXECUTION("main:  got application resources ...");
@@ -544,7 +544,7 @@ main( int argc, char **argv )
 	MakeOptionsMenu();	/* make option_button pop-up menu	  */
     else
 	XtAddTimeOut((unsigned long) appInfo.optionsDelay * 1000, 
-		      MakeOptionsProc, NULL);
+		      MakeOptionsProc, nullptr);
 
     MakeAltDtButtons();        /* make alt desktop buttons, if any  	 */
 #ifdef VG_TRACE
@@ -594,7 +594,7 @@ main( int argc, char **argv )
     {
 	XUndefineCursor(dpyinfo.dpy, dpyinfo.root);
     }
-    PingServerCB(NULL, NULL);
+    PingServerCB(nullptr, nullptr);
 
     
     /*
@@ -613,7 +613,7 @@ main( int argc, char **argv )
      * Add request callback.
      */
      sleep(5);
-     XtAddInput(0, (XtPointer)XtInputReadMask, RequestCB, NULL);
+     XtAddInput(0, (XtPointer)XtInputReadMask, RequestCB, nullptr);
    
 #ifdef VG_TRACE
     vg_TRACE_EXECUTION("main:  entering XtMainLoop ...");
@@ -660,7 +660,7 @@ InitToolKit( int argc, char **argv )
      *  use server grabTimeout as initial value for timeout...
      */
 
-    timeout = ((t = (char *)getenv(GRABTIMEOUT)) == NULL ? 0 : atoi(t));
+    timeout = ((t = (char *)getenv(GRABTIMEOUT)) == nullptr ? 0 : atoi(t));
     timeout += MINTIMEOUT;  /* minimum MINTIMEOUT seconds */
 
 
@@ -679,12 +679,12 @@ InitToolKit( int argc, char **argv )
 
     alarm ((unsigned) timeout);
 
-    root = XtInitialize("dtlogin", "Dtlogin", NULL, 0, 
+    root = XtInitialize("dtlogin", "Dtlogin", nullptr, 0, 
     			 &argc, argv);
     /* Disable Drag and Drop  RK 11.02.93 */
     XtVaSetValues(XmGetXmDisplay(XtDisplay(root)),
                 XmNdragInitiatorProtocolStyle, XmDRAG_NONE,
-                NULL);
+                nullptr);
  
 
     alarm (0);
@@ -758,7 +758,7 @@ MakeBackground( void )
 
     login_shell = XtCreatePopupShell("login_shell", transientShellWidgetClass,
 				     toplevel, argt, i);
-    XtAddCallback(login_shell, XmNpopupCallback, LayoutCB, NULL);
+    XtAddCallback(login_shell, XmNpopupCallback, LayoutCB, nullptr);
 
     /* Fix to display Input Method's status area. */
     XtSetArg(argt[0], XmNheight, dpyinfo.height);
@@ -777,7 +777,7 @@ MakeBackground( void )
     table = XtCreateManagedWidget("table", xmDrawingAreaWidgetClass,
 				   login_shell, argt, i);
 
-    XtAddEventHandler(table, ButtonPressMask, False, RefreshEH, NULL);
+    XtAddEventHandler(table, ButtonPressMask, False, RefreshEH, nullptr);
     XtAddCallback(table, XmNhelpCallback, ShowDialogCB, (XtPointer) help);
 
 
@@ -833,7 +833,7 @@ char 	    temp[MAXPATHLEN] = "\0";
 char 	    *session;
 FILE	    *ls;
 char	    lastsess[MAXPATHLEN];
-Widget	    default_dt = NULL;
+Widget	    default_dt = nullptr;
 int	    default_is_custom_dt = True;
 int 	    found_alt_dt = False;
 char 	    *temp_p;
@@ -843,17 +843,17 @@ char 	    *temp_p;
     vg_TRACE_EXECUTION("MakeAltDtButtons:  entered ...");
 #endif /* VG_TRACE */
 
-    if (getenv("SESSION_SET") == NULL) {
+    if (getenv("SESSION_SET") == nullptr) {
 	default_is_custom_dt = False;
     }
 
-    if ((session = getenv ("SESSION")) == NULL)  {
+    if ((session = getenv ("SESSION")) == nullptr)  {
         session = "  ";
     }
 
     if(appInfo.altDts > 0) { 
       if ((alt_dts =
-	    (Widget *) calloc(appInfo.altDts, sizeof (Widget))) == NULL)
+	    (Widget *) calloc(appInfo.altDts, sizeof (Widget))) == nullptr)
         LogError(
 		ReadCatalog(MC_ERROR_SET,MC_NO_MEMORY, MC_DEF_NO_MEMORY),
 		dpyinfo.name);
@@ -979,7 +979,7 @@ char 	    *temp_p;
      * Use the regular desktop if none of the known sessions matched the
      * specified custom session.
      */
-    if (default_is_custom_dt && NULL == default_dt) {
+    if (default_is_custom_dt && nullptr == default_dt) {
 	default_dt = options_dt;
 	if (found_alt_dt)
        	  XtManageChild(options_dt);  
@@ -1052,7 +1052,7 @@ MakeButtons( void )
     XmStringFree(xmstr);
     XtManageChild(ok_button);
 
-    XtAddCallback(ok_button, XmNactivateCallback, RespondChallengeCB, NULL);    
+    XtAddCallback(ok_button, XmNactivateCallback, RespondChallengeCB, nullptr);    
 
 
     /* clear button */
@@ -1167,7 +1167,7 @@ MakeDialog( DialogType dtype )
     FILE	*fp;
     char	buffer[128];
 
-    Widget	w = NULL, text;
+    Widget	w = nullptr, text;
     Dimension txt_width, txt_height;
     XmString	ok, cancel, nw, sv;
 
@@ -1274,17 +1274,17 @@ MakeDialog( DialogType dtype )
 
 
     case copyright:
-	if ((fp = fopen(COPYRIGHT,"r")) == NULL)
+	if ((fp = fopen(COPYRIGHT,"r")) == nullptr)
 	    xmstr = XmStringCreate("Cannot open copyright file '/etc/copyright'.",
 				XmFONTLIST_DEFAULT_TAG);
 	else {
 	    xmstr = (XmString) NULL;
 	
-	    while (fgets(buffer, 128, fp) != NULL) {
+	    while (fgets(buffer, 128, fp) != nullptr) {
 		j = strlen(buffer);
 		if ( buffer[j-1] == '\n' ) buffer[j-1] = '\0';
 	    
-		if ( xmstr != NULL )
+		if ( xmstr != nullptr )
 		    xmstr = XmStringConcat(xmstr, XmStringSeparatorCreate());
 
 		xmstr = XmStringConcat(xmstr,
@@ -1349,8 +1349,8 @@ MakeDialog( DialogType dtype )
       case error:
       case hostname:
       case expassword:
-        XtAddCallback(w, XmNokCallback,     RespondDialogCB, NULL);
-        XtAddCallback(w, XmNcancelCallback, RespondDialogCB, NULL);
+        XtAddCallback(w, XmNokCallback,     RespondDialogCB, nullptr);
+        XtAddCallback(w, XmNcancelCallback, RespondDialogCB, nullptr);
         break;
     }
 
@@ -1435,7 +1435,7 @@ static	XtResource greetResources[] = {
 
     {XmNfontList, XmCFontList, 
         XmRFontList, sizeof(XmFontList),
-	XtOffset(GreetInfoPtr, fontList), XtRString, NULL		}
+	XtOffset(GreetInfoPtr, fontList), XtRString, nullptr		}
 };     
 
 static void 
@@ -1459,7 +1459,7 @@ MakeGreeting( void )
      */
      
     XtGetSubresources(table, &greetInfo, "greeting", "Greeting",
-	greetResources, XtNumber(greetResources), NULL, 0);
+	greetResources, XtNumber(greetResources), nullptr, 0);
 
 
     /*
@@ -1467,7 +1467,7 @@ MakeGreeting( void )
      */
      
     gethostname(host, sizeof (host));
-    if ( (p = strchr(host,'.')) != NULL )
+    if ( (p = strchr(host,'.')) != nullptr )
 	*p = '\0';
 
     /* 
@@ -1533,7 +1533,7 @@ MakeGreeting( void )
 	     *  If found, work with that substring first...
 	     */
 	     
-	    if ( (p = strchr(q, '\n')) != NULL ) {
+	    if ( (p = strchr(q, '\n')) != nullptr ) {
 		*p = '\0';
 		newLine = True;
 		s = ++p;
@@ -1556,8 +1556,8 @@ MakeGreeting( void )
                 t = strstr(q, DISPLAYNAME);
                 
                 if (p && t) { /* both present? do whichever comes first */
-                    if (p > t) p = NULL;
-                    else t = NULL;
+                    if (p > t) p = nullptr;
+                    else t = nullptr;
                 }
                 if (p) { /* replace a %LocalHost% string */
                     t = host;
@@ -1617,7 +1617,7 @@ MakeGreeting( void )
      *  the application's default...
      */
 
-    if ( greetInfo.fontList != NULL ) {
+    if ( greetInfo.fontList != nullptr ) {
 	XtSetArg(argt[i], XmNfontList,		greetInfo.fontList	); i++;
     }
 
@@ -1721,7 +1721,7 @@ MakeLogin( void )
     textdata->text[1] = login_text;
 
     XtManageChild(passwd_text);
-    XtAddCallback(passwd_text, XmNmodifyVerifyCallback, EditPasswdCB, NULL);
+    XtAddCallback(passwd_text, XmNmodifyVerifyCallback, EditPasswdCB, nullptr);
 
    /*
     * Get default greeting string
@@ -1730,7 +1730,7 @@ MakeLogin( void )
     XtSetArg(argt[i], XmNlabelString, &textdata->onGreeting); i++;
     XtGetValues(greeting, argt, i);
     textdata->offGreetingFormat = greetInfo.persLabelString;
-    textdata->offGreetingUname = NULL;
+    textdata->offGreetingUname = nullptr;
 
     /*
      *  create the login labels...
@@ -1794,13 +1794,13 @@ MakeOptionsMenu( void )
      * get the built-in pop_up menu from the DtMenuButton...
      */
      
-    XtVaGetValues(options_button, DtNsubMenuId, &options_menu, NULL);
+    XtVaGetValues(options_button, DtNsubMenuId, &options_menu, nullptr);
 
     /*
      *  create language cascade menus...
      */
 
-    if ( lang_menu == NULL )
+    if ( lang_menu == nullptr )
 	MakeLangMenu();
 
 
@@ -1812,7 +1812,7 @@ MakeOptionsMenu( void )
     /*
      *  build [ Language ] menu pane if there are languages to choose from...
      */
-    if ( lang_menu != NULL ) {
+    if ( lang_menu != nullptr ) {
         /*
          *  [ Language ] menu pane...
          *  attach language cascade menu to this pane
@@ -1837,8 +1837,8 @@ MakeOptionsMenu( void )
         j++;
     }
 
-    if( session_menu == NULL)  {
-        session_menu = XmCreatePulldownMenu(options_menu, "session_menu", NULL, 0);
+    if( session_menu == nullptr)  {
+        session_menu = XmCreatePulldownMenu(options_menu, "session_menu", nullptr, 0);
 
 
     /*
@@ -1879,7 +1879,7 @@ MakeOptionsMenu( void )
 
     }
 
-if ( session_menu != NULL ) {
+if ( session_menu != nullptr ) {
         /*
          *  [ Language ] menu pane...
          *  attach language cascade menu to this pane
@@ -1919,7 +1919,7 @@ if ( session_menu != NULL ) {
     XtAddCallback(options_item[j], XmNactivateCallback,
                   MenuItemCB, (XtPointer) OB_NO_WINDOWS);
 
-    if (getenv(LOCATION) == NULL || strcmp(getenv(LOCATION), "local") != 0 )
+    if (getenv(LOCATION) == nullptr || strcmp(getenv(LOCATION), "local") != 0 )
         XtSetSensitive(options_item[j], False);
     j++;
 #endif
@@ -1986,7 +1986,7 @@ if ( session_menu != NULL ) {
 */
     }
 
-    if ( getenv(PINGINTERVAL) != NULL )
+    if ( getenv(PINGINTERVAL) != nullptr )
 	XtUnmanageChild(options_nowindows);
 	
 
@@ -2011,7 +2011,7 @@ MyInsert( Widget w, XEvent *event, char **params, Cardinal *num_params )
     int 	   n;
 
     n = XLookupString((XKeyEvent *)event, str, sizeof(str),
-                      (KeySym *)NULL, &compstatus);
+                      (KeySym *)nullptr, &compstatus);
 
     if (n > 0) {
        str[n] = '\0';
@@ -2104,7 +2104,7 @@ static void
 MakeOptionsProc( XtPointer data, XtIntervalId *id )
 {
 
-    if (options_menu == NULL)
+    if (options_menu == nullptr)
 	MakeOptionsMenu();
     
     return;
@@ -2127,7 +2127,7 @@ Terminate( int arg )
     if(-1 == write(1, "terminate", 9)) {
         perror(strerror(errno));
     }
-    CleanupAndExit(NULL, NOTIFY_ABORT);
+    CleanupAndExit(nullptr, NOTIFY_ABORT);
 }
 
 

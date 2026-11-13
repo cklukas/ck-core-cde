@@ -71,11 +71,11 @@ layout_show_dialog(
 {
     Widget	shell;
     Widget      *children;
-    MrmType     class   = NULL;
+    MrmType     class   = nullptr;
  
     /* Get the dialog shell for the layout popup window.  */
 
-    if (AB_layout_dialog == NULL)
+    if (AB_layout_dialog == nullptr)
     {
 	if (MrmFetchWidget(s_mrm_hierarchy, (String)layoutwin_dialog,
                  widget, &shell, &class) != MrmSUCCESS)
@@ -91,12 +91,12 @@ layout_show_dialog(
 	/* Now get the handle to the bulletin board widget, so that
 	* we can popup the layout window by managing the BBoard.
 	*/
-	XtVaGetValues(shell, XmNchildren, &children, NULL);
+	XtVaGetValues(shell, XmNchildren, &children, nullptr);
 
 	/* There can be only one child of a shell widget, and
 	* we know that the child is the BBoard widget.
 	*/
-	if (*children != NULL)
+	if (*children != nullptr)
 	{
 	    /* Store the layout dialog bulletin board handle in
 	     * a global variable so that it can be easily accessed.

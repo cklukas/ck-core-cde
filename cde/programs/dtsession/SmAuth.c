@@ -118,7 +118,7 @@ freeEntryList (
 {
     IceAuthFileEntryList *nextEntryP;
 
-    while (entryList != (IceAuthFileEntryList *)NULL)
+    while (entryList != (IceAuthFileEntryList *)nullptr)
     {
 	nextEntryP = entryList->next;
 
@@ -164,7 +164,7 @@ addToEntryList (
 
     if ((newItem =
 	 (IceAuthFileEntryList *)XtMalloc(sizeof(IceAuthFileEntryList)))
-	== (IceAuthFileEntryList *)NULL)
+	== (IceAuthFileEntryList *)nullptr)
 	return 0;
 
     /* I assume it's ok to reverse the order; otherwise */
@@ -182,17 +182,17 @@ writeIceauth (
 	IceAuthDataEntry	*entries,
 	int			restore)
 {
-    FILE *fp = NULL;
+    FILE *fp = nullptr;
     char *path;
     int oldUmask;
     int i;
     IceAuthDataEntry *dataEntry;
     IceAuthFileEntry *fileEntry;
     IceAuthFileEntry newEntry;
-    IceAuthFileEntryList *fileEntryList = (IceAuthFileEntryList *)NULL;
+    IceAuthFileEntryList *fileEntryList = (IceAuthFileEntryList *)nullptr;
     IceAuthFileEntryList *fileEntryP;
 
-    if ((path = IceAuthFileName()) == (char *)NULL)
+    if ((path = IceAuthFileName()) == (char *)nullptr)
 	return 0;
 
     /*
@@ -208,7 +208,7 @@ writeIceauth (
     /* If file exists, read entries into memory. */
     if (access(path, F_OK) == 0)
     {
-	if ((fp = fopen(path, "rb")) == (FILE *)NULL)
+	if ((fp = fopen(path, "rb")) == (FILE *)nullptr)
 	{
 	    IceUnlockAuthFile(path);
 	    return 0;
@@ -217,7 +217,7 @@ writeIceauth (
 	/* For each file entry: if matches something in entries, discard. */
 	/* Otherwise, hold onto it - we'll be writing it back to file. */
 	while ((fileEntry = IceReadAuthFileEntry(fp))
-	       != (IceAuthFileEntry *)NULL)
+	       != (IceAuthFileEntry *)nullptr)
 	{
 	    if (!fileEntryInDataEntries(nEntries, entries, fileEntry) &&
 		!addToEntryList(&fileEntryList, fileEntry))
@@ -236,7 +236,7 @@ writeIceauth (
     oldUmask = umask(0077);
 
     /* Write entries and fileEntryList to file. */
-    if ((fp = fopen(path, "wb")) == (FILE *)NULL)
+    if ((fp = fopen(path, "wb")) == (FILE *)nullptr)
     {
 	freeEntryList(fileEntryList);
 	IceUnlockAuthFile(path);
@@ -245,7 +245,7 @@ writeIceauth (
     }
 
     for (fileEntryP = fileEntryList;
-	 fileEntryP != (IceAuthFileEntryList *)NULL;
+	 fileEntryP != (IceAuthFileEntryList *)nullptr;
 	 fileEntryP = fileEntryP->next)
     {
 	if (IceWriteAuthFileEntry(fp, fileEntryP->fileEntry) == 0)
@@ -325,7 +325,7 @@ SetAuthentication (
      * were not filled in when a cookie could not be made.
      */
     if ((*authDataEntries = (IceAuthDataEntry *) XtCalloc (
-	nEntries, sizeof (IceAuthDataEntry))) == NULL)
+	nEntries, sizeof (IceAuthDataEntry))) == nullptr)
 	return 0;
 
     for (i = 0; i < nEntries; i += 2)
@@ -338,7 +338,7 @@ SetAuthentication (
 	(*authDataEntries)[i].auth_data =
 	    IceGenerateMagicCookie (MAGIC_COOKIE_LEN);
 	(*authDataEntries)[i].auth_data_length = MAGIC_COOKIE_LEN;
-	if ((*authDataEntries)[i].auth_data == NULL)
+	if ((*authDataEntries)[i].auth_data == nullptr)
 	    return 0;
 
 	(*authDataEntries)[i+1].network_id =
@@ -349,7 +349,7 @@ SetAuthentication (
 	(*authDataEntries)[i+1].auth_data = 
 	    IceGenerateMagicCookie (MAGIC_COOKIE_LEN);
 	(*authDataEntries)[i+1].auth_data_length = MAGIC_COOKIE_LEN;
-	if ((*authDataEntries)[i+1].auth_data == NULL)
+	if ((*authDataEntries)[i+1].auth_data == nullptr)
 	    return 0;
 
 	IceSetHostBasedAuthProc (listenObjs[i/2], HostBasedAuthProc);

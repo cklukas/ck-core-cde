@@ -177,7 +177,7 @@ void SPC_Error (int error, ...)
 
   if(err->text) {
     free(err->text);
-    err->text = NULL;
+    err->text = nullptr;
   }
 
   va_start(ap, error);                 /** Start varargs **/
@@ -251,7 +251,7 @@ SPC_Make_Log_Filename(XeString name,
 /*----------------------------------------------------------------------+*/
 {
   /* Make a log filename based on the passed name (and perhaps process id) */
-  XeString log_file_path = NULL;
+  XeString log_file_path = nullptr;
 
   _DtSvcProcessLock();
   /* first build the log file path */
@@ -342,7 +342,7 @@ SPC_Close_Log(void)
     fclose(spc_logF);
   }
   spc_logfd = 0;
-  spc_logF = NULL;
+  spc_logF = nullptr;
   spc_logging = FALSE;
 
   _DtSvcProcessUnlock();
@@ -361,7 +361,7 @@ SPC_Write_Log(XeString str)
 
   _DtSvcProcessLock();
   if (spc_logging && spc_logF) {
-    t = time(NULL);
+    t = time(nullptr);
     result = _XCtime(&t, ctime_buf);
     fprintf(spc_logF, "%s: %s", str, result);
     fflush(spc_logF);
@@ -390,7 +390,7 @@ int SPC_Format_Log (XeString format, ...)
     va_end(args);
 
     /* Now a time stamp */
-    t = time(NULL);
+    t = time(nullptr);
     result = _XCtime(&t, ctime_buf);
     fprintf(spc_logF, ": %s", result);
     fflush(spc_logF);

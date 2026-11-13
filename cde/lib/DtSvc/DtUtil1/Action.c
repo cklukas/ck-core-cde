@@ -513,7 +513,7 @@ DtActionInvoke(
 {
     int	i;
     ActionRequest	*request;
-    char 		*contextHost= NULL;/* dummy to replace old parameter */
+    char 		*contextHost= nullptr;/* dummy to replace old parameter */
     _DtActInvRecT	*invp;		/* pointer to invocation record */
     Tt_status		 status = TT_OK;
     static Boolean initialized = False;
@@ -572,9 +572,9 @@ DtActionInvoke(
       XtFree(tmpDir);
 
       _DtInitializeCommandInvoker( XtDisplay(w),
-	NULL,	/* bms tool class -- ignored */
-	NULL,   /* application class -- ignored */
-	NULL, /* reloadDBHandler -- none here */
+	nullptr,	/* bms tool class -- ignored */
+	nullptr,   /* application class -- ignored */
+	nullptr, /* reloadDBHandler -- none here */
         (_DtInitAppContextp ? 
 	    *_DtInitAppContextp : XtWidgetToApplicationContext(w)));
     }
@@ -586,7 +586,7 @@ DtActionInvoke(
         _DtSendActivityNotification(INDICATOR_TIME);
     }
  
-    if ( (invp = CreateInvocationRecord(action,w,aap,aac)) == NULL)
+    if ( (invp = CreateInvocationRecord(action,w,aap,aac)) == nullptr)
     {
 	myassert( 0 );  /* no request structure --should never happen */
         /* give up -- cannot allocate record */
@@ -615,7 +615,7 @@ DtActionInvoke(
 
     /* Create and fill in the request structure */
     if ( !IS_INV_FINISHED(invp->state) && (request = CreateActionRequest ( 
-           w,action,aap,aac,termOpts,execHost,contextHost,cwd,invp)) != NULL)
+           w,action,aap,aac,termOpts,execHost,contextHost,cwd,invp)) != nullptr)
     {
         if (ProcessRequest(w, request))
         {
@@ -629,7 +629,7 @@ DtActionInvoke(
 	      * Evaluate whether we are done with this invocation. 
 	      * We may have to return  values  to the caller.  
 	      */
-             _DtActExecutionLeafNodeCleanup(invp->id,NULL,0,True);
+             _DtActExecutionLeafNodeCleanup(invp->id,nullptr,0,True);
 	     _DtFreeRequest(request);
         }
 	/* Otherwise, a dialog was posted; request will be freed later */
@@ -662,14 +662,14 @@ DtDbReloadNotify( DtDbReloadCallbackProc proc, XtPointer client_data)
     extern XtAppContext *_DtInitAppContextp;
 
 
-    if (NULL == proc) return;
+    if (nullptr == proc) return;
 
     _DtSvcAppLock(*_DtInitAppContextp);
 
     /* 
      *  Check if we need to initialize tooltalk
      */
-    status = _DtInitializeToolTalk(NULL);
+    status = _DtInitializeToolTalk(nullptr);
     if (TT_OK != status) {
           _DtSvcAppUnlock(*_DtInitAppContextp);
 	  return;
@@ -755,7 +755,7 @@ static void
 _DtActTimerCB( XtPointer clientData, XtIntervalId *IntId)
 {
         _DtActExecutionLeafNodeCleanup((unsigned long)clientData,
-           NULL,0,True);
+           nullptr,0,True);
 }
 
 static void
@@ -804,7 +804,7 @@ _DbReloadCB(Tt_message m, Tt_pattern p)
     /*
      * Call registered callback function.
      */
-    if (context != NULL && context->proc != NULL)
+    if (context != nullptr && context->proc != nullptr)
         context->proc(context->client_data);
 
     return TT_CALLBACK_PROCESSED;
@@ -1065,14 +1065,14 @@ NoActionError(
 {
    char     *msgbuf = XtMalloc(2*MAXPATHLEN);
    XmString msg;
-   char *   name = NULL;
+   char *   name = nullptr;
 
    /* Construct the error message */
-   if ((host == NULL) && (dir == NULL) && (file == NULL) && (type == NULL) )
+   if ((host == nullptr) && (dir == nullptr) && (file == nullptr) && (type == nullptr) )
    {
       (void)sprintf(msgbuf,NoActionMsg2,actionName);
    }
-   else if ( (type != NULL ) && (file == NULL) && (dir == NULL))
+   else if ( (type != nullptr ) && (file == nullptr) && (dir == nullptr))
    {
       /*
        * We are dealing with a buffer object for which an action couldn't 
@@ -1333,7 +1333,7 @@ CreateActionRequest(
        request->invocId = invp->id;
 
    /* If there are no objects, then there's no reason to continue */
-   if ((aac <= 0) || (aap == NULL))
+   if ((aac <= 0) || (aap == nullptr))
       return(request);
 
    /*
@@ -1350,11 +1350,11 @@ CreateActionRequest(
        memset((void *)&objectData,0,sizeof(ObjectData));
        if ( (aap+i)->argClass == DtACTION_FILE ) 
        {
-          if (ParseFileArgument(w, request, &objectData, NULL ,
-                            aap[i].u.file.name, NULL , True))
+          if (ParseFileArgument(w, request, &objectData, nullptr ,
+                            aap[i].u.file.name, nullptr , True))
           {
 	     XtFree((char *)objectDataArray);
-             return(NULL);
+             return(nullptr);
           }
        } 
        else if ( (aap+i)->argClass == DtACTION_BUFFER )
@@ -1372,11 +1372,11 @@ CreateActionRequest(
                * set the BUFFER bit to indicate that this is a tmp file 
                * representing a buffer.
                */
-	      if (ParseFileArgument(w, request, &objectData, NULL ,
+	      if (ParseFileArgument(w, request, &objectData, nullptr ,
 				invp->info[i].name, invp->info[i].type , True))
 	      {
 		 XtFree((char *)objectDataArray);
-		 return(NULL);
+		 return(nullptr);
 	      }
               /*
                * Set the buffer object bit as well -- and check whether
@@ -1442,7 +1442,7 @@ CreateActionRequest(
 	       } else
 	       {
 		   myassert(0 /* null buffer pointer */ );
-		   objectData.u.buffer.bp = NULL;
+		   objectData.u.buffer.bp = nullptr;
 		   objectData.u.buffer.size = 0;
 	       }
            }
@@ -1493,14 +1493,14 @@ CreateInvocationRecord(
                  *         allocation does not fail as is done throughout the
                  *         library.
                  */
-		return NULL;
+		return nullptr;
       }
       myassert(invp->id != 0);
 
       SET_INV_PENDING(invp->state);
       invp->w = w;
       invp->numChildren = 0;
-      invp->childRec = NULL;
+      invp->childRec = nullptr;
 
       /*
        * Fill in argument information
@@ -1508,7 +1508,7 @@ CreateInvocationRecord(
       invp->ac = aac;
 
       if (aac == 0) {
- 	 invp->info = NULL;
+ 	 invp->info = nullptr;
 
 	 return invp;
       }
@@ -1539,7 +1539,7 @@ CreateInvocationRecord(
              * over the type "hint".
              */
             if ( aap[i].u.buffer.name 
-                 || (aap[i].u.buffer.type == NULL) ) 
+                 || (aap[i].u.buffer.type == nullptr) ) 
             {
 		tmp = DtDtsBufferToDataType(
 			  aap[i].u.buffer.bp,aap[i].u.buffer.size,
@@ -1571,7 +1571,7 @@ CreateInvocationRecord(
 	   /* first determine the permissions for the new tmp file */
 	   is_executable = 
 	        DtDtsDataTypeToAttributeValue(invp->info[i].type,
-	             _DtActIS_EXECUTABLE,NULL);
+	             _DtActIS_EXECUTABLE,nullptr);
 	   /*
 	    * The tmp file should at LEAST be readable
 	    */
@@ -1590,7 +1590,7 @@ CreateInvocationRecord(
                /*
                 * Attempt to use the name supplied for the buffer.
                 */
-	       invp->info[i].name = _DtActGenerateTmpFile(NULL,
+	       invp->info[i].name = _DtActGenerateTmpFile(nullptr,
                         aap[i].u.buffer.name,mode,&fd);
            }
            if ( !invp->info[i].name )
@@ -1600,9 +1600,9 @@ CreateInvocationRecord(
                 * file type.
                 */
 	       format = DtDtsDataTypeToAttributeValue(invp->info[i].type,
-			 _DtActNAME_TEMPLATE,NULL);
+			 _DtActNAME_TEMPLATE,nullptr);
 
-	       invp->info[i].name = _DtActGenerateTmpFile(NULL,format,mode,&fd);
+	       invp->info[i].name = _DtActGenerateTmpFile(nullptr,format,mode,&fd);
 	       DtDtsFreeAttributeValue(format);
            }
            if ( !invp->info[i].name )
@@ -1747,7 +1747,7 @@ ParseFileArgument(
    String host;
    String dir;
    int hostId;
-   char *resolvedPath=NULL;
+   char *resolvedPath=nullptr;
 
 /********************************************************************
 	WE NO LONGER ACCEPT host:/path FORMAT
@@ -1765,7 +1765,7 @@ ParseFileArgument(
    }
    else
    {
-      if ( request->cwdHost != NULL ) 
+      if ( request->cwdHost != nullptr ) 
       {
          hostId = _DtAddEntry(request->cwdHost, &request->hostNames, 
                               &request->numHostNames);
@@ -1787,7 +1787,7 @@ ParseFileArgument(
    objectData->type = -1;
 
    /* Hash the directory name */
-   if ( (dirName  = _DtDirname(filename)) == NULL )
+   if ( (dirName  = _DtDirname(filename)) == nullptr )
    {
       if ( request->cwdDir )
          dirName = XtNewString(request->cwdDir);
@@ -1817,7 +1817,7 @@ ParseFileArgument(
       dirName=tmpName;
    }
 	  
-   if ( objectData->u.file.baseFilename == NULL || dirName == NULL )
+   if ( objectData->u.file.baseFilename == nullptr || dirName == nullptr )
    {
       /* Invalidly formed file name */
       InvalidFilename(w, request->clonedAction->label, filename);
@@ -1891,11 +1891,11 @@ _DtFindCwd( void )
 	String tmp = 0;
 	char buf[MAXPATHLEN + 1];
 
-	if ((tmp = getcwd(buf, MAXPATHLEN)) == NULL)
+	if ((tmp = getcwd(buf, MAXPATHLEN)) == nullptr)
 	{
 		_DtSimpleError(
-			DtProgName, DtError, NULL,
-			"getcwd(): unable to get current directory", NULL);
+			DtProgName, DtError, nullptr,
+			"getcwd(): unable to get current directory", nullptr);
 		tmp = "/";
 	}
 	return (XtNewString(tmp));
@@ -1987,10 +1987,10 @@ LinkToTypeQuark(
    history_size = 100;
    history = (char **)XtMalloc(sizeof(char *) * history_size);
 
-   path = _DtActMapFileName(host, dir, file, NULL);
-   if (path == NULL)
+   path = _DtActMapFileName(host, dir, file, nullptr);
+   if (path == nullptr)
    {
-      *resolvedPath=NULL;
+      *resolvedPath=nullptr;
       return(-1);
    }
    strcpy(file_name, path);
@@ -2083,7 +2083,7 @@ ProcessRequest(
    Tt_status status = TT_OK;
 
    /* See if this is the first pass for the request */
-   if (request->clonedAction == NULL)
+   if (request->clonedAction == nullptr)
    {
 
       /* Always start with the first host, when processing a request */
@@ -2093,7 +2093,7 @@ ProcessRequest(
       actionQuark = _DtDtsMMStringToBoson(request->actionName);
       RESET_TOO_MANY_MAPS(request->mask);
 
-      if (actionQuark == -1 || (action = _DtActionFindDBEntry(request, actionQuark)) == NULL) 
+      if (actionQuark == -1 || (action = _DtActionFindDBEntry(request, actionQuark)) == nullptr) 
       {
           /*
            * No action label is available here for error dialogs
@@ -2123,8 +2123,8 @@ ProcessRequest(
                NoActionError(w, actionQuark,
 		 request->actionName, 
                  (char *)_DtDtsMMBosonToString(request->objects[0].type),
-                 NULL,	/* host */
-                 NULL,	/* dir */
+                 nullptr,	/* host */
+                 nullptr,	/* dir */
                  "Memory Object"   /* filename */);
             } else
                 myassert(0 /* should never get here */ );
@@ -2135,7 +2135,7 @@ ProcessRequest(
          }
          else
             NoActionError(w, actionQuark, request->actionName, 
-		NULL, NULL, NULL, NULL);
+		nullptr, nullptr, nullptr, nullptr);
 
          /*
           * If we are in the middle of reprocessing a single argument
@@ -2163,7 +2163,7 @@ ProcessRequest(
        * then we need to bail out.
        */
       if (IS_TT_MSG(action->mask) &&
-	  (status = _DtInitializeToolTalk(NULL)) != TT_OK)
+	  (status = _DtInitializeToolTalk(nullptr)) != TT_OK)
       {
          NoToolTalkConnectionError(w, request->clonedAction->label, status);
 	 {
@@ -2186,7 +2186,7 @@ ProcessRequest(
        *       the prompt dialog; there's little sense in collecting
        *       additional input if the user is going to abort the action!
        */
-      if ((prompts != NULL) &&
+      if ((prompts != nullptr) &&
           ((unused == 0) || IS_ARG_SINGLE_ARG(action->mask) || 
             IS_ARG_NONE_FOUND(action->mask)))
       {
@@ -2285,7 +2285,7 @@ PrepareAndExecuteAction(
    /*
     * Allocate a child rec -- fill it in
     */
-   if ( (childrecp = _DtActAllocChildRec(invp)) != NULL )
+   if ( (childrecp = _DtActAllocChildRec(invp)) != nullptr )
    {
 	request->childId = childrecp->childId;
 
@@ -2461,7 +2461,7 @@ __ExtractCWD(
        (request->objects[0].type >= 0) && 
         IS_FILE_OBJ(request->objects[0].mask))
    {
-      if (action->u.cmd.contextHost != NULL)
+      if (action->u.cmd.contextHost != nullptr)
 	 *hostPtr = XtNewString(action->u.cmd.contextHost);
       else
       {
@@ -2485,7 +2485,7 @@ __ExtractCWD(
 	 theHost = request->hostNames[request->objects[0].u.file.hostIndex];
 	 theDir = request->dirNames[request->objects[0].u.file.dirIndex];
          nfsPath = _DtActMapFileName(theHost, theDir, 
-                               request->objects[0].u.file.baseFilename, NULL);
+                               request->objects[0].u.file.baseFilename, nullptr);
 
          if (nfsPath && (stat(nfsPath, &statInfo) == 0) &&
              ((statInfo.st_mode & S_IFMT) == S_IFDIR))
@@ -2497,7 +2497,7 @@ __ExtractCWD(
 
       if (IS_DIR_OBJ(request->objects[0].mask))
       {
-	 if (action->u.cmd.contextDir != NULL)
+	 if (action->u.cmd.contextDir != nullptr)
             *dirPtr = XtNewString(action->u.cmd.contextDir);
 	 else 
 	 {
@@ -2516,7 +2516,7 @@ __ExtractCWD(
       }
       else
       {
-	 if (action->u.cmd.contextDir != NULL)
+	 if (action->u.cmd.contextDir != nullptr)
 	    *dirPtr = XtNewString(action->u.cmd.contextDir);
 	 else
          {
@@ -2528,7 +2528,7 @@ __ExtractCWD(
    else 
    {
       /* Use specified context, or get process context, if necessary */
-      if (IS_CMD(action->mask) && (action->u.cmd.contextHost != NULL))
+      if (IS_CMD(action->mask) && (action->u.cmd.contextHost != nullptr))
 	 *hostPtr = XtNewString(action->u.cmd.contextHost);
       else if (request->cwdHost)
          *hostPtr = XtNewString(request->cwdHost);
@@ -2537,7 +2537,7 @@ __ExtractCWD(
 	 *hostPtr = _DtGetLocalHostName();
       }
 
-      if (IS_CMD(action->mask) && (action->u.cmd.contextDir != NULL))
+      if (IS_CMD(action->mask) && (action->u.cmd.contextDir != nullptr))
 	 *dirPtr = XtNewString(action->u.cmd.contextDir);
       else if (request->cwdDir)
          *dirPtr = XtNewString(request->cwdDir);
@@ -2601,19 +2601,19 @@ MoreArgumentsToProcess(
 
       /* Free up our previously cloned action */
       _DtFreeActionStruct(request->clonedAction);
-      request->clonedAction = NULL;
+      request->clonedAction = nullptr;
 
       /* Free up any leftover prompt strings */
       for (i = 0; i < request->numPromptInputs; i++)
          XtFree(request->promptInputs[i]);
       XtFree((char *)request->promptInputs);
-      request->promptInputs = NULL;
+      request->promptInputs = nullptr;
       request->numPromptInputs = 0;
       SET_REPROCESSING(request->mask);
       XtFree(request->badHostList);
-      request->badHostList = NULL;
+      request->badHostList = nullptr;
       XtFree(request->currentHost);
-      request->currentHost = NULL;
+      request->currentHost = nullptr;
       request->hostIndex = 0;
 
       /* Type the object, if possible */
@@ -2625,7 +2625,7 @@ MoreArgumentsToProcess(
             path = _DtActMapFileName(
                  request->hostNames[request->objects[0].u.file.hostIndex], 
                  request->dirNames[request->objects[0].u.file.dirIndex], 
-                 request->objects[0].u.file.baseFilename, NULL);
+                 request->objects[0].u.file.baseFilename, nullptr);
             dtype = DtDtsFileToDataType(path);
             request->objects[0].type = _DtDtsMMStringToBoson(dtype);
             DtDtsFreeDataType(dtype);
@@ -2766,7 +2766,7 @@ _DtCloneRequest (
    if (request->clonedAction)
       newRequest->clonedAction = CloneActionDBEntry(request->clonedAction);
    else
-      newRequest->clonedAction = NULL;
+      newRequest->clonedAction = nullptr;
 
    newRequest->badHostList = XtNewString(request->badHostList);
    newRequest->currentHost = XtNewString(request->currentHost);
@@ -2868,7 +2868,7 @@ CloneActionDBEntry(
        newAction->arg_types[i] = action->arg_types[i];
    }
    else {
-     newAction->arg_types = NULL;
+     newAction->arg_types = nullptr;
    }
 
    newAction->arg_count = action->arg_count;
@@ -2892,7 +2892,7 @@ CloneActionDBEntry(
 	  newCmd->execHostArray[i] = XtNewString(oldCmd->execHostArray[i]);
       }
       else {
-	newCmd->execHostArray = NULL;
+	newCmd->execHostArray = nullptr;
       }
    }
    else if (IS_MAP(action->mask))
@@ -2917,7 +2917,7 @@ CloneActionDBEntry(
 	  newMsg->tt_argn_mode[i] = oldMsg->tt_argn_mode[i];
       }
       else {
-	newMsg->tt_argn_mode = NULL;
+	newMsg->tt_argn_mode = nullptr;
       }
 
       newMsg->vtype_count = oldMsg->vtype_count;
@@ -2936,7 +2936,7 @@ CloneActionDBEntry(
 	  newMsg->tt_argn_rep_type[i] = oldMsg->tt_argn_rep_type[i];
       }
       else {
-	newMsg->tt_argn_rep_type = NULL;
+	newMsg->tt_argn_rep_type = nullptr;
       }
    }
 
@@ -2955,7 +2955,7 @@ _DtFreeActionStruct(
 {
    int i;
 
-   if (action == NULL)
+   if (action == nullptr)
       return;
 
    XtFree(action->label);
@@ -3019,7 +3019,7 @@ CloneParsedMessage(
    }
    else
    {
-      new_pmsg->compiledMessage = NULL;
+      new_pmsg->compiledMessage = nullptr;
       new_pmsg->msgLen = 0;
    }
 
@@ -3039,12 +3039,12 @@ CloneParsedMessage(
          if (piece->precedingText)
             newPiece->precedingText = XtNewString(piece->precedingText);
          else
-            newPiece->precedingText = NULL;
+            newPiece->precedingText = nullptr;
 
          if (piece->prompt)
             newPiece->prompt = XtNewString(piece->prompt);
          else
-            newPiece->prompt = NULL;
+            newPiece->prompt = nullptr;
 
          newPiece->keyword = piece->keyword;
          newPiece->argNum = piece->argNum;
@@ -3052,7 +3052,7 @@ CloneParsedMessage(
       }
    }
    else
-      new_pmsg->parsedMessage = NULL;
+      new_pmsg->parsedMessage = nullptr;
 }
 
 
@@ -3097,7 +3097,7 @@ CloneParsedMessageArray(
    int i;
 
    if (count == 0)
-      return(NULL);
+      return(nullptr);
 
    newArray = (parsedMsg *)XtMalloc(sizeof(parsedMsg) * count);
 
@@ -3160,15 +3160,15 @@ _DtCompileMessagePiece(
    int i, j;
    Boolean firstParmUsed;
    MsgComponent * segment;
-   char * compiledMsg = NULL;
+   char * compiledMsg = nullptr;
    int    compiledMsgSize = 0;
    ObjectData tmpObjData;
-   static char *sessionHostName= NULL;
-   static char *displayHostName = NULL;
-   static char *localHostName = NULL;
+   static char *sessionHostName= nullptr;
+   static char *displayHostName = nullptr;
+   static char *localHostName = nullptr;
 
    XtFree(piece->compiledMessage);
-   piece->compiledMessage = NULL;
+   piece->compiledMessage = nullptr;
    piece->msgLen = 0;
 
    if (initialize)
@@ -3294,8 +3294,8 @@ _DtCompileMessagePiece(
             {
                /* Create dummy object; makes processing easier */
                if (ParseFileArgument(w, request, &tmpObjData,
-                             NULL, request->promptInputs[*promptDataIndex],
-                             NULL, False))
+                             nullptr, request->promptInputs[*promptDataIndex],
+                             nullptr, False))
                {
 		  XtFree(compiledMsg);
                   return(False);
@@ -3399,7 +3399,7 @@ _DtCompileMessagePiece(
       }
    }
 
-   if ((piece->compiledMessage = compiledMsg) == NULL)
+   if ((piece->compiledMessage = compiledMsg) == nullptr)
 	piece->msgLen = 0;
    else
        piece->msgLen = compiledMsg ? strlen(compiledMsg) + 1: 0;
@@ -3450,7 +3450,7 @@ InsertArgumentString(
          {
             char * origInfo = object->u.file.origFilename;
 
-            ParseFileArgument(w, request, object, NULL, origInfo, NULL, True);
+            ParseFileArgument(w, request, object, nullptr, origInfo, nullptr, True);
             XtFree(origInfo);
          }
 	 /* 
@@ -3485,9 +3485,9 @@ InsertArgumentString(
                   request->hostNames[object->u.file.hostIndex], 
                   request->dirNames[object->u.file.dirIndex], 
                   object->u.file.baseFilename, 
-                  NULL)) == NULL)
+                  nullptr)) == nullptr)
                {
-                  path = NULL;
+                  path = nullptr;
                }
 
                mediaAttr = DtDtsDataTypeToAttributeValue(dataType, "MEDIA", 
@@ -3518,7 +3518,7 @@ InsertArgumentString(
                request->hostNames[object->u.file.hostIndex], 
                request->dirNames[object->u.file.dirIndex], 
                object->u.file.baseFilename, 
-               request->currentHost)) == NULL)
+               request->currentHost)) == nullptr)
             {
                AddFailedHostToList(request, request->currentHost);
                return(False);
@@ -3568,7 +3568,7 @@ InsertArgumentString(
                if ((path = _DtActMapFileName(
                   request->hostNames[object->u.file.hostIndex], 
                   request->dirNames[object->u.file.dirIndex], 
-                  object->u.file.baseFilename, NULL)) == NULL)
+                  object->u.file.baseFilename, nullptr)) == nullptr)
                {
                   return(False);
                }
@@ -3616,7 +3616,7 @@ InsertUnmappedArgumentString(
         Boolean addLeadingSpace )
 
 {
-   char * host = NULL;
+   char * host = nullptr;
    int size;
 
    /* No mapping is necessary here. */
@@ -3736,7 +3736,7 @@ MatchParamsToAction(
         int *numPrompts,
         PromptEntry **prompts )
 {
-   Boolean * paramUsed = NULL;
+   Boolean * paramUsed = nullptr;
    int unused;
    Boolean argsOptionFound;
    int i;
@@ -3745,7 +3745,7 @@ MatchParamsToAction(
 
    /* Initialize things */
    *numPrompts = 0;
-   *prompts = NULL;
+   *prompts = nullptr;
    argsOptionFound = False;
    lastArgReferenced = -1;
 
@@ -3946,7 +3946,7 @@ CancelOut(
    XtGetValues(w, args, 1);
 
    /* Unpost the text annotation dialog */
-   XtCallCallbacks(cancel, XmNactivateCallback, NULL);
+   XtCallCallbacks(cancel, XmNactivateCallback, nullptr);
 }
 
 
@@ -3997,7 +3997,7 @@ CancelPromptDialog(
     * We may have to return  values  to the caller.  
     */
    
-   _DtActExecutionLeafNodeCleanup(invp->id,NULL,0,True);
+   _DtActExecutionLeafNodeCleanup(invp->id,nullptr,0,True);
 
 }
 
@@ -4073,9 +4073,9 @@ ProcessPromptDialog(
                dialog->request->objects[j].type = -1;
                dialog->request->objects[j].u.file.hostIndex = -1;
                dialog->request->objects[j].u.file.dirIndex = -1;
-               dialog->request->objects[j].u.file.origFilename = NULL;
-               dialog->request->objects[j].u.file.origHostname = NULL;
-               dialog->request->objects[j].u.file.baseFilename = NULL;
+               dialog->request->objects[j].u.file.origFilename = nullptr;
+               dialog->request->objects[j].u.file.origHostname = nullptr;
+               dialog->request->objects[j].u.file.baseFilename = nullptr;
                dialog->request->objects[j].u.file.bp = 0;
                dialog->request->objects[j].u.file.sizebp = 0;
                dialog->request->objects[j].u.buffer.bp = 0;
@@ -4151,7 +4151,7 @@ ProcessPromptDialog(
 	    * evaluate whether all child actions have been completed
 	    * and if its time to call the user callback.
 	    */
-           _DtActExecutionLeafNodeCleanup(invp->id,NULL,0,True);
+           _DtActExecutionLeafNodeCleanup(invp->id,nullptr,0,True);
        }
        myassert(invp); /* there should always be one to find */
        _DtFreeRequest(dialog->request);
@@ -4310,7 +4310,7 @@ CreatePromptDialog(
     * Add "Run in Terminal" toggle for the built-in "Run..." action.
     * This dialog is generic, so keep the toggle scoped to that action.
     */
-   dialog->runInTerminalToggle = NULL;
+   dialog->runInTerminalToggle = nullptr;
    if (request && request->actionName && strcmp(request->actionName, "Run") == 0 &&
        (IS_PERM_TERM(request->clonedAction->mask) || IS_TERMINAL(request->clonedAction->mask)))
    {
@@ -4518,7 +4518,7 @@ ContinueRequest(
       {
 	   _DtActInvRecT	*invp;
 
-	   if((invp=_DtActFindInvRec(dialog->request->invocId))!=NULL)
+	   if((invp=_DtActFindInvRec(dialog->request->invocId))!=nullptr)
 	   {
 	       /* all done invoking ? */
 	       RESET_INV_PENDING(invp->state);
@@ -4530,7 +4530,7 @@ ContinueRequest(
 		* evaluate whether all child actions have been completed
 		* and if its time to call the user callback.
 		*/
-               _DtActExecutionLeafNodeCleanup(invp->id,NULL,0,True);
+               _DtActExecutionLeafNodeCleanup(invp->id,nullptr,0,True);
 	   }
 
 	   myassert(invp); /* there should always be one to find */
@@ -4603,7 +4603,7 @@ CancelRequest(
     *
     * We may have to return  values  to the caller.  
     */
-   _DtActExecutionLeafNodeCleanup(invp->id,NULL,0,True);
+   _DtActExecutionLeafNodeCleanup(invp->id,nullptr,0,True);
 }
 
 /*
@@ -4653,7 +4653,7 @@ CreateContinueDialog(
       }
    }
    else
-      dialog->prompts = NULL;
+      dialog->prompts = nullptr;
 
    ok = XmStringCreateLocalized((String)_DtOkString);
    cancel = XmStringCreateLocalized((String)_DtCancelString);
@@ -4718,8 +4718,8 @@ ProcessCommandInvokerRequest(
    char * cwdHost;
    char * cwdDir;
    ActionPtr action = request->clonedAction;
-   _DtActInvRecT *invp = NULL;
-   _DtActChildRecT *childp = NULL;
+   _DtActInvRecT *invp = nullptr;
+   _DtActChildRecT *childp = nullptr;
 
    if (ResolveCommandInvokerMessagePieces(w, request, relPathHost, relPathDir))
    {
@@ -4814,7 +4814,7 @@ ResolveCommandInvokerMessagePieces(
    ActionPtr action = request->clonedAction;
    cmdAttr * cmd = &(action->u.cmd);
    char * termOpts;
-   Boolean * paramUsed = NULL;
+   Boolean * paramUsed = nullptr;
    int promptDataIndex = 0;
 	/*
 	 * NOTE: The current implementation of prompt strings requires that
@@ -4844,9 +4844,9 @@ ResolveCommandInvokerMessagePieces(
       XtFree(cmd->execString.compiledMessage);
       XtFree(cmd->termOpts.compiledMessage);
       XtFree(cmd->execHosts.compiledMessage);
-      cmd->execString.compiledMessage = NULL;
-      cmd->termOpts.compiledMessage = NULL;
-      cmd->execHosts.compiledMessage = NULL;
+      cmd->execString.compiledMessage = nullptr;
+      cmd->termOpts.compiledMessage = nullptr;
+      cmd->execHosts.compiledMessage = nullptr;
       XtFree(paramUsed);
       return(False);
    }
@@ -4888,7 +4888,7 @@ InitiateCommandInvokerRequest(
    char procIdBuf[_DtAct_MAX_BUF_SIZE];
    char tmpFileBuf[_DtAct_MAX_BUF_SIZE];
    char *procId;		/* for dtexec command line */
-   char *tmpFiles = NULL;	/* for dtexec command line */
+   char *tmpFiles = nullptr;	/* for dtexec command line */
    _DtActInvRecT *invp;
    _DtActChildRecT *childp;
    CallbackData *data=(CallbackData *)XtMalloc((Cardinal)sizeof(CallbackData));
@@ -4907,19 +4907,19 @@ InitiateCommandInvokerRequest(
            ;	/* fall through */
        case TT_ERR_PROCID: /* Try to establish a connection */
            tt_free(procId) ;
-           if ( !_DtInitializeToolTalk(NULL) )
-               procId=NULL;
+           if ( !_DtInitializeToolTalk(nullptr) )
+               procId=nullptr;
            else if ( tt_ptr_error(procId = tt_default_procid()) != TT_OK )
            {
                myassert( 0 ); /* we should never get here */
-               procId = NULL;
+               procId = nullptr;
            }
            break;
        case TT_OK:
            break;
        default:
            tt_free(procId);
-	   procId = NULL;
+	   procId = nullptr;
            break;
    }
    /*
@@ -4940,10 +4940,10 @@ InitiateCommandInvokerRequest(
     * Generate string of tmp file args  for dtexec.
     */
     
-    if ( (invp = _DtActFindInvRec(request->invocId)) != NULL )
+    if ( (invp = _DtActFindInvRec(request->invocId)) != nullptr )
     {
         if ( (childp =
-             _DtActFindChildRec(request->invocId,request->childId)) != NULL )
+             _DtActFindChildRec(request->invocId,request->childId)) != nullptr )
         {
 	    int i;
             char *p;
@@ -4986,11 +4986,11 @@ InitiateCommandInvokerRequest(
         else
         {
             myassert( 0 /* could not find child rec */ );
-	    tmpFiles = NULL;
+	    tmpFiles = nullptr;
         }
     }
     else
-        tmpFiles = NULL;
+        tmpFiles = nullptr;
 
    /* Fill out the callback structure */
    data->actionLabel = XtNewString(request->clonedAction->label);
@@ -5032,12 +5032,12 @@ SetExecHost (
    ActionPtr action = request->clonedAction;
    int hostCount = 0;
    int hostListSize = 0;
-   char ** hostList = NULL;
+   char ** hostList = nullptr;
 
    XtFree(request->currentHost);
 
    /* If this is the first call, we may need to parse the host list */
-   if (action->u.cmd.execHostArray == NULL)
+   if (action->u.cmd.execHostArray == nullptr)
    {
       /* Explicitly specified execHost overrides action definition execHost */
       if (request->execHost)
@@ -5114,7 +5114,7 @@ ParseHostList (
          (*hostCountPtr)++;
       }
 
-      nextHost = _XStrtok(NULL, ",", strtok_buf);
+      nextHost = _XStrtok(nullptr, ",", strtok_buf);
    }
 
    XtFree(workString);
@@ -5198,8 +5198,8 @@ CmdInvSuccessfulRequest(
         void *data2)
 
 {
-   _DtActInvRecT *invp = NULL;
-   _DtActChildRecT *childrecp = NULL;
+   _DtActInvRecT *invp = nullptr;
+   _DtActChildRecT *childrecp = nullptr;
 
    CallbackData *data = (CallbackData *) data2;
 
@@ -5207,7 +5207,7 @@ CmdInvSuccessfulRequest(
     * Mark this invocation step as done
     * The child process itself may not be done.
     */
-   if ((invp = _DtActFindInvRec(data->requestPtr->invocId)) != NULL )
+   if ((invp = _DtActFindInvRec(data->requestPtr->invocId)) != nullptr )
    {
        extern void *_DtCmdCheckQForId(DtActionInvocationID id);
        
@@ -5235,7 +5235,7 @@ CmdInvSuccessfulRequest(
        else
 	   myassert(0 /* could not find child record */ );
        
-       _DtActExecutionLeafNodeCleanup(invp->id,NULL,0,True);
+       _DtActExecutionLeafNodeCleanup(invp->id,nullptr,0,True);
    }
    else
 	myassert( 0 /* Couldn't find an invocation record */);
@@ -5265,8 +5265,8 @@ CmdInvFailedRequest(
    String msg = error_message;
    ActionPtr action;
    ActionRequest * request;
-   _DtActChildRecT *childp = NULL;
-   _DtActInvRecT *invp = NULL;
+   _DtActChildRecT *childp = nullptr;
+   _DtActInvRecT *invp = nullptr;
 
 
    /*
@@ -5368,7 +5368,7 @@ CmdInvFailedRequest(
 
 
       /* Cleanup */
-      _DtActExecutionLeafNodeCleanup(invp->id,NULL,0,True);
+      _DtActExecutionLeafNodeCleanup(invp->id,nullptr,0,True);
       _DtFreeRequest(request);
       XtFree(data->actionLabel);
    }
@@ -5392,10 +5392,10 @@ _DtActMapFileName(
         const char * newHost )
 {
    char buf[MAXPATHLEN];
-   char *chp = NULL;
+   char *chp = nullptr;
    int   clen = 0;
-   char *netpath = NULL;
-   char *path = NULL;
+   char *netpath = nullptr;
+   char *path = nullptr;
 
    /*
     * Create the full path name relative to curHost
@@ -5439,19 +5439,19 @@ _DtActMapFileName(
          case TT_OK:
             break;
          case TT_ERR_PATH:
-            netpath = NULL;
+            netpath = nullptr;
             break;
 	 case TT_ERR_DBAVAIL:
-            netpath = NULL;
+            netpath = nullptr;
             break;
          case TT_ERR_DBEXIST:
-            netpath = NULL;
+            netpath = nullptr;
             break;
          case TT_ERR_INTERNAL:
-            netpath = NULL;
+            netpath = nullptr;
             break;
          default:
-            netpath = NULL;
+            netpath = nullptr;
             break;
        }
        if ( netpath )
@@ -5461,19 +5461,19 @@ _DtActMapFileName(
             case TT_OK:
                break;
             case TT_ERR_PATH:
-               path = NULL;
+               path = nullptr;
                break;
             case TT_ERR_DBAVAIL:
-               path = NULL;
+               path = nullptr;
                break;
             case TT_ERR_DBEXIST:
-               path = NULL;
+               path = nullptr;
                break;
             case TT_ERR_INTERNAL:
-               path = NULL;
+               path = nullptr;
                break;
             default:
-               path = NULL;
+               path = nullptr;
                break;
           }
         }
@@ -5483,7 +5483,7 @@ _DtActMapFileName(
        * Convert the file path which is relative to curHost to be
        * relative to the local host.
        */
-      if ( _DtIsSameHost(curHost,NULL) )
+      if ( _DtIsSameHost(curHost,nullptr) )
       {
          /*
           * The current host is the same as the  local host 
@@ -5500,19 +5500,19 @@ _DtActMapFileName(
          case TT_OK:
             break;
          case TT_ERR_PATH:
-            netpath = NULL;
+            netpath = nullptr;
             break;
 	 case TT_ERR_DBAVAIL:
-            netpath = NULL;
+            netpath = nullptr;
             break;
          case TT_ERR_DBEXIST:
-            netpath = NULL;
+            netpath = nullptr;
             break;
          case TT_ERR_INTERNAL:
-            netpath = NULL;
+            netpath = nullptr;
             break;
          default:
-            netpath = NULL;
+            netpath = nullptr;
             break;
        }
        if ( netpath )
@@ -5522,19 +5522,19 @@ _DtActMapFileName(
             case TT_OK:
                break;
             case TT_ERR_PATH:
-               path = NULL;
+               path = nullptr;
                break;
             case TT_ERR_DBAVAIL:
-               path = NULL;
+               path = nullptr;
                break;
             case TT_ERR_DBEXIST:
-               path = NULL;
+               path = nullptr;
                break;
             case TT_ERR_INTERNAL:
-               path = NULL;
+               path = nullptr;
                break;
             default:
-               path = NULL;
+               path = nullptr;
                break;
           }
        }

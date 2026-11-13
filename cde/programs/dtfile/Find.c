@@ -380,8 +380,8 @@ Create(
    char * tmpStr;
 
    /* Initialize some global varibles */
-   buffer = NULL;
-   ptr = NULL;
+   buffer = nullptr;
+   ptr = nullptr;
 
    /*  Allocate the find file dialog instance record.  */
 
@@ -799,7 +799,7 @@ Create(
 #if defined(sun)
    find_rec->followLink = followLink;
 #else
-   find_rec->followLink = NULL;
+   find_rec->followLink = nullptr;
 #endif
    find_rec->listLabel = listLabel;
    find_rec->matchList = scrolledList;
@@ -812,11 +812,11 @@ Create(
    find_rec->help = help;
 
    find_rec->selectedItem = -1;
-   find_rec->popenId = NULL;
+   find_rec->popenId = nullptr;
    find_rec->childpid = -1;
    find_rec->alternateInputId = 0;
    find_rec->searchInProgress = False;
-   find_rec->fileMgrRec = NULL;
+   find_rec->fileMgrRec = nullptr;
 
 
    /*  Set the return values for the dialog widget and dialog instance.  */
@@ -952,7 +952,7 @@ GetDefaultValues( void )
 
    find_data = (FindData *) XtMalloc (sizeof (FindData));
    if (!find_data)
-       return NULL;
+       return nullptr;
 
    find_data->displayed = False;
    find_data->x = 0;
@@ -963,7 +963,7 @@ GetDefaultValues( void )
    if (!getcwd((char *)dirbuf, (unsigned int)MAX_DIR_PATH_LEN))
    {
        XtFree((char *)find_data);
-       return NULL;
+       return nullptr;
    }
    if(restrictMode &&
            strncmp(users_home_dir, dirbuf, strlen(users_home_dir)) != 0)
@@ -977,9 +977,9 @@ GetDefaultValues( void )
       strcpy(find_data->directories, dirbuf);
    }
 
-   find_data->filter = NULL;
-   find_data->content = NULL;
-   find_data->matches = NULL;
+   find_data->filter = nullptr;
+   find_data->content = nullptr;
+   find_data->matches = nullptr;
    find_data->num_matches = 0;
    find_data->selected_item = -1;
 #if defined(sun)
@@ -1191,7 +1191,7 @@ WriteResourceValues(
                           match_resources, XtNumber (match_resources));
 
       XtFree ((char *) dummy.string);
-      dummy.string = NULL;
+      dummy.string = nullptr;
    }
 }
 
@@ -1252,7 +1252,7 @@ GetFindValues(
 					 (strcmp(find_data->content, "") == 0))
       {
          XtFree ((char *) find_data->filter);
-         find_data->filter = NULL;
+         find_data->filter = nullptr;
       }
    }
 
@@ -1269,11 +1269,11 @@ GetFindValues(
       {
          /* A directory must be supplied */
 
-         InvalidFindMessage (find_rec, BAD_DIR_NAME, NULL);
+         InvalidFindMessage (find_rec, BAD_DIR_NAME, nullptr);
          XtFree ((char *) find_data->filter);
-         find_data->filter = NULL;
+         find_data->filter = nullptr;
          XtFree ((char *) find_data->directories);
-         find_data->directories = NULL;
+         find_data->directories = nullptr;
          return (False);
       }
    }
@@ -1286,7 +1286,7 @@ GetFindValues(
    XtGetValues (find_rec->matchList, args, 2);
    if (find_data->num_matches == 0)
    {
-      find_data->matches = NULL;
+      find_data->matches = nullptr;
    }
    else
    {
@@ -1334,16 +1334,16 @@ InvalidFindMessage(
         int messageIndex,
         String extra_string )
 {
-   String string = NULL;
-   String new_string = NULL;
-   char * title = NULL;
-   static String badDirectoryNameMessage = NULL;
-   static String noDirectoryAccessMessage = NULL;
-   static String noSearchArgumentMessage = NULL;
-   static String noExistanceMessage = NULL;
-   char * tmpStr = NULL;
+   String string = nullptr;
+   String new_string = nullptr;
+   char * title = nullptr;
+   static String badDirectoryNameMessage = nullptr;
+   static String noDirectoryAccessMessage = nullptr;
+   static String noSearchArgumentMessage = nullptr;
+   static String noExistanceMessage = nullptr;
+   char * tmpStr = nullptr;
 
-   if (noExistanceMessage == NULL)
+   if (noExistanceMessage == nullptr)
    {
       tmpStr = GETMESSAGE(15,44, "Search Folder name argument is missing.\nType in the name of the folder where you want the search to begin.");
       badDirectoryNameMessage = XtNewString(tmpStr);
@@ -1381,7 +1381,7 @@ InvalidFindMessage(
       (void) sprintf(new_string, string, extra_string);
       tmpStr = GetSharedMessage(FIND_ERROR_TITLE);
       title = XtNewString(tmpStr);
-      _DtMessage (find_rec->shell, title, new_string, NULL, HelpRequestCB);
+      _DtMessage (find_rec->shell, title, new_string, nullptr, HelpRequestCB);
       XtFree ((char *) new_string);
       XtFree(title);
    }
@@ -1389,7 +1389,7 @@ InvalidFindMessage(
    {
       tmpStr = GetSharedMessage(FIND_ERROR_TITLE);
       title = XtNewString(tmpStr);
-      _DtMessage (find_rec->shell, title, string, NULL, HelpRequestCB);
+      _DtMessage (find_rec->shell, title, string, nullptr, HelpRequestCB);
       XtFree(title);
    }
 
@@ -1414,7 +1414,7 @@ FreeMatchInfo(
 {
    int i;
 
-   if (matches == NULL)
+   if (matches == nullptr)
       return;
 
    for (i = 0; i < numMatches; i++)
@@ -1446,13 +1446,13 @@ StopSearch(
    /* just as the user hit the 'stop' key, we need to check to see   */
    /* if the operation is still active.                              */
 
-   if (find_rec->popenId != NULL)
+   if (find_rec->popenId != nullptr)
    {
       /* Abort the find process, and remove the alternate input handler */
       (void) fclose (find_rec->popenId);
       if(find_rec->childpid > 1)  /* trying to be safe */
         kill(find_rec->childpid,SIGTERM);  /* Ignore errors */
-      find_rec->popenId = NULL;
+      find_rec->popenId = nullptr;
       find_rec->childpid = -1;
       XtRemoveInput (find_rec->alternateInputId);
       find_rec->alternateInputId = 0;
@@ -1478,8 +1478,8 @@ StopSearch(
    _DtTurnOffHourGlass (find_rec->shell);
    XmUpdateDisplay (w);
    XtFree(buffer);
-   buffer = NULL;
-   ptr = NULL;
+   buffer = nullptr;
+   ptr = nullptr;
 }
 
 
@@ -1765,9 +1765,9 @@ ExecuteFind(
    XtSetValues (find_rec->listLabel, args, 1);
    XmStringFree(label_string);
 
-   if(find_data->filter == NULL )
+   if(find_data->filter == nullptr )
    {
-     InvalidFindMessage (find_rec, NO_FILE_OR_FOLDER_ARG, NULL);
+     InvalidFindMessage (find_rec, NO_FILE_OR_FOLDER_ARG, nullptr);
      return( False );
    }
 
@@ -1788,7 +1788,7 @@ ExecuteFind(
 
    _DtPathFromInput(findptr, file_mgr_data->current_directory, &host, &path);
 
-   if (path == NULL)
+   if (path == nullptr)
    {
      InvalidFindMessage (find_rec, NO_DIR_ACCESS, findptr);
      return( False );
@@ -1798,7 +1798,7 @@ ExecuteFind(
    XtFree(path);
    path = XtNewString(link_path);
 
-   if(path == NULL)
+   if(path == nullptr)
    {
       XtFree(command);
       return False;
@@ -1929,7 +1929,7 @@ ExecuteFind(
    find_rec->popenId = findpopen(command, "r",&(find_rec->childpid));
    signal (SIGCHLD, oldSig);
 
-   if (find_rec->popenId == NULL)
+   if (find_rec->popenId == nullptr)
    {
       XtFree ((char *) command);
       return (False);
@@ -1992,19 +1992,19 @@ ExecuteGrep( FindRec * find_rec)
    (void) strcat (command, "\"");
    (void) strcat (command, " ");
 
-   if( ptr == NULL)
+   if( ptr == nullptr)
       ptr = buffer;
 
    ptr2 = DtStrchr(ptr, ',');
-   if(ptr2 == NULL)
+   if(ptr2 == nullptr)
    {
       XtFree ((char *) command);
       XtFree(buffer);
-      buffer = NULL;
-      ptr = NULL;
-      if(find_rec->popenId != NULL)
+      buffer = nullptr;
+      ptr = nullptr;
+      if(find_rec->popenId != nullptr)
          (void) fclose (find_rec->popenId);
-      find_rec->popenId = NULL;
+      find_rec->popenId = nullptr;
       find_rec->alternateInputId = 0;
 
       find_rec->searchInProgress = False;
@@ -2029,7 +2029,7 @@ ExecuteGrep( FindRec * find_rec)
          title = XtNewString(tmpStr);
          tmpStr = GetSharedMessage(NO_FILES_FOUND_ERROR);
          msg = XtNewString(tmpStr);
-         _DtMessage (find_rec->shell, title, msg, NULL, HelpRequestCB);
+         _DtMessage (find_rec->shell, title, msg, nullptr, HelpRequestCB);
          XtFree(title);
          XtFree(msg);
       }
@@ -2064,7 +2064,7 @@ ExecuteGrep( FindRec * find_rec)
 
    /* Start the 'grep' process */
 
-   if ((find_rec->popenId = popen (command, "r")) == NULL)
+   if ((find_rec->popenId = popen (command, "r")) == nullptr)
    {
       XtFree ((char *) command);
       return (False);
@@ -2081,11 +2081,11 @@ ExecuteGrep( FindRec * find_rec)
 
    XtFree ((char *) command);
 
-   if(ptr == NULL)
+   if(ptr == nullptr)
    {
       XtFree(buffer);
-      buffer = NULL;
-      ptr = NULL;
+      buffer = nullptr;
+      ptr = nullptr;
    }
    return (True);
 }
@@ -2110,7 +2110,7 @@ AlternateInputHandler(
         XtInputId *id )
 {
    static int bufSize = 0;
-   static char * buf = NULL;
+   static char * buf = nullptr;
    FindRec * find_rec = (FindRec *) client_data;
    FileMgrData *file_mgr_data;
    DialogData * dialog_data;
@@ -2129,7 +2129,7 @@ AlternateInputHandler(
 
    /* Abort if the pipe has already been closed */
 
-   if (find_rec->popenId == NULL) {
+   if (find_rec->popenId == nullptr) {
       XtSetArg (args[0], XmNdefaultButton, find_rec->start);
       XtSetValues (find_rec->form, args, 1);
       _DtTurnOffHourGlass (find_rec->shell);
@@ -2185,10 +2185,10 @@ AlternateInputHandler(
             /* Strip out any invisible files */
             if (findptr)
             {
-               file_type = (char *) DtDtsDataToDataType(findptr, NULL, 0, NULL,
-                                                        NULL, NULL, NULL);
+               file_type = (char *) DtDtsDataToDataType(findptr, nullptr, 0, nullptr,
+                                                        nullptr, nullptr, nullptr);
                if (_DtCheckForDataTypeProperty(file_type, "invisible"))
-                  findptr = NULL;
+                  findptr = nullptr;
             }
 
             /*  Add string to the scrolled list of matches  */
@@ -2197,7 +2197,7 @@ AlternateInputHandler(
             if (findptr &&
                     strncmp(desktop_dir, findptr, strlen(desktop_dir)) != 0)
             {
-               if(file_mgr_data->restricted_directory != NULL)
+               if(file_mgr_data->restricted_directory != nullptr)
                   string = XmStringCreateLocalized (findptr +
                          strlen(file_mgr_data->restricted_directory));
                else
@@ -2215,7 +2215,7 @@ AlternateInputHandler(
          /* Clean up */
 
          (void) fclose (find_rec->popenId);
-         find_rec->popenId = NULL;
+         find_rec->popenId = nullptr;
          XtRemoveInput (find_rec->alternateInputId);
          XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, LeaveStopBttn, find_rec);
          XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, EnterStopBttn, find_rec);
@@ -2243,7 +2243,7 @@ AlternateInputHandler(
             title = XtNewString(tmpStr);
             tmpStr = GetSharedMessage(NO_FILES_FOUND_ERROR);
             msg = XtNewString(tmpStr);
-            _DtMessage (find_rec->shell, title, msg, NULL, HelpRequestCB);
+            _DtMessage (find_rec->shell, title, msg, nullptr, HelpRequestCB);
             XtFree(title);
             XtFree(msg);
          }
@@ -2266,7 +2266,7 @@ AlternateInputHandler2(
         XtInputId *id )
 {
    static int bufSize = 0;
-   static char * buf = NULL;
+   static char * buf = nullptr;
    FindRec * find_rec = (FindRec *) client_data;
    int offset = 0;
    char next;
@@ -2281,7 +2281,7 @@ AlternateInputHandler2(
 
   /* Abort if the pipe has already been closed */
 
-   if (find_rec->popenId == NULL) {
+   if (find_rec->popenId == nullptr) {
       Arg args[1];
 
       _DtTurnOffHourGlass (find_rec->shell);
@@ -2337,7 +2337,7 @@ AlternateInputHandler2(
             if (findptr)
             {
                /* save it with the content, */
-               if(buffer == NULL)
+               if(buffer == nullptr)
                {
                   buffer = (char *)XtMalloc(strlen(findptr) + strlen(content) + 3);
                   strcpy(buffer, findptr);
@@ -2362,7 +2362,7 @@ AlternateInputHandler2(
          /* Clean up */
 
          (void) fclose (find_rec->popenId);
-         find_rec->popenId = NULL;
+         find_rec->popenId = nullptr;
          XtRemoveInput (find_rec->alternateInputId);
          XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, LeaveStopBttn, find_rec);
          XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, EnterStopBttn, find_rec);
@@ -2384,7 +2384,7 @@ AlternateInputHandler3(
         XtInputId *id )
 {
    static int bufSize = 0;
-   static char * buf = NULL;
+   static char * buf = nullptr;
    FindRec * find_rec = (FindRec *) client_data;
    FileMgrData *file_mgr_data;
    DialogData * dialog_data;
@@ -2401,7 +2401,7 @@ AlternateInputHandler3(
 
   /* Abort if the pipe has already been closed */
 
-   if (find_rec->popenId == NULL) {
+   if (find_rec->popenId == nullptr) {
       _DtTurnOffHourGlass (find_rec->shell);
 
       XtSetArg (args[0], XmNdefaultButton, find_rec->start);
@@ -2459,7 +2459,7 @@ AlternateInputHandler3(
                if(!((stat_data.st_mode & S_IFMT) == S_IFDIR) &&
                      strncmp(desktop_dir, findptr, strlen(desktop_dir)) != 0)
                {
-                  if(file_mgr_data->restricted_directory != NULL)
+                  if(file_mgr_data->restricted_directory != nullptr)
                      string = XmStringCreateLocalized (findptr +
                             strlen(file_mgr_data->restricted_directory));
                   else
@@ -2478,13 +2478,13 @@ AlternateInputHandler3(
          /* Clean up */
 
          (void) fclose (find_rec->popenId);
-         find_rec->popenId = NULL;
+         find_rec->popenId = nullptr;
          XtRemoveInput (find_rec->alternateInputId);
          XtRemoveEventHandler (find_rec->stop, LeaveWindowMask, FALSE, LeaveStopBttn, find_rec);
          XtRemoveEventHandler (find_rec->stop, EnterWindowMask, FALSE, EnterStopBttn, find_rec);
          find_rec->alternateInputId = 0;
 
-         if(buffer != NULL)
+         if(buffer != nullptr)
             ExecuteGrep(find_rec);
          else
          {
@@ -2509,7 +2509,7 @@ AlternateInputHandler3(
                title = XtNewString(tmpStr);
                tmpStr = GetSharedMessage(NO_FILES_FOUND_ERROR);
                msg = XtNewString(tmpStr);
-               _DtMessage (find_rec->shell, title, msg, NULL, HelpRequestCB);
+               _DtMessage (find_rec->shell, title, msg, nullptr, HelpRequestCB);
                XtFree(title);
                XtFree(msg);
             }
@@ -2555,20 +2555,20 @@ GetFileName(
    temp =  (char *) _XmStringUngenerate(items[selectedItem],
                                         XmFONTLIST_DEFAULT_TAG,
                                         XmCHARSET_TEXT, XmCHARSET_TEXT);
-   *host = NULL;
+   *host = nullptr;
    *path = temp;
-   if(file_mgr_data->restricted_directory != NULL)
+   if(file_mgr_data->restricted_directory != nullptr)
    {
       tmpptr = (char *)XtMalloc(
                       strlen(file_mgr_data->restricted_directory) +
                                                      strlen(*path) + 1);
       strcpy(tmpptr, file_mgr_data->restricted_directory);
       strcat(tmpptr, *path);
-      if(*host == NULL)
+      if(*host == nullptr)
          XtFree(*path);
       *path = (String)tmpptr;
    }
-   else if (*host != NULL)
+   else if (*host != nullptr)
    {
       *path = XtNewString(*path);
    }
@@ -2597,7 +2597,7 @@ ExtractDirectory(
    Tt_status tt_status;
    struct stat statData;
 
-   realPath = (String) ResolveLocalPathName (host, path, NULL, home_host_name, &tt_status);
+   realPath = (String) ResolveLocalPathName (host, path, nullptr, home_host_name, &tt_status);
    if( TT_OK != tt_status )
      return( False );
    else
@@ -2617,7 +2617,7 @@ ExtractDirectory(
 
    if ((statData.st_mode & S_IFMT) == S_IFDIR)
    {
-      *file_name = NULL;
+      *file_name = nullptr;
       return (True);
    }
 
@@ -2630,7 +2630,7 @@ ExtractDirectory(
    }
    else
    {
-      *file_name = NULL;
+      *file_name = nullptr;
       return (True);
    }
 }
@@ -2669,16 +2669,16 @@ NewView(
    GetFileName (find_rec->matchList, find_rec->selectedItem, &host, &path,
                                                                file_mgr_data);
 
-   dialog_data = NULL;
-   if (host == NULL)
+   dialog_data = nullptr;
+   if (host == nullptr)
    {
       /* No host specified, use the one associated with the view */
 
       if (ExtractDirectory (file_mgr_data->host, path, &file_name))
       {
          initiating_view = (XtPointer) file_mgr_data;
-         if(file_mgr_data->restricted_directory == NULL)
-            dialog_data = GetNewView (file_mgr_data->host, path, NULL, NULL, 0);
+         if(file_mgr_data->restricted_directory == nullptr)
+            dialog_data = GetNewView (file_mgr_data->host, path, nullptr, nullptr, 0);
          else
          {
             special_view = True;
@@ -2689,29 +2689,29 @@ NewView(
             special_randomType = file_mgr_data->positionEnabled;
             special_restricted =
                    XtNewString(file_mgr_data->restricted_directory);
-            if(file_mgr_data->title == NULL)
-               special_title = NULL;
+            if(file_mgr_data->title == nullptr)
+               special_title = nullptr;
             else
                special_title = XtNewString(file_mgr_data->title);
             special_helpVol = XtNewString(file_mgr_data->helpVol);
             if(file_mgr_data->toolbox)
                dialog_data = GetNewView (file_mgr_data->host, path,
-                              file_mgr_data->restricted_directory, NULL, 0);
+                              file_mgr_data->restricted_directory, nullptr, 0);
             else
                dialog_data = GetNewView (file_mgr_data->host,
-					 path, NULL, NULL, 0);
+					 path, nullptr, nullptr, 0);
          }
       }
       else
-        InvalidFindMessage (find_rec, NO_EXISTANCE, NULL);
+        InvalidFindMessage (find_rec, NO_EXISTANCE, nullptr);
    }
    else
    {
       if (ExtractDirectory (host, path, &file_name))
       {
          initiating_view = (XtPointer) file_mgr_data;
-         if(file_mgr_data->restricted_directory == NULL)
-            dialog_data = GetNewView (host, path, NULL, NULL, 0);
+         if(file_mgr_data->restricted_directory == nullptr)
+            dialog_data = GetNewView (host, path, nullptr, nullptr, 0);
          else
          {
             special_view = True;
@@ -2722,24 +2722,24 @@ NewView(
             special_randomType = file_mgr_data->positionEnabled;
             special_restricted =
                   XtNewString(file_mgr_data->restricted_directory);
-            if(file_mgr_data->title == NULL)
-               special_title = NULL;
+            if(file_mgr_data->title == nullptr)
+               special_title = nullptr;
             else
                special_title = XtNewString(file_mgr_data->title);
             special_helpVol = XtNewString(file_mgr_data->helpVol);
             if(file_mgr_data->toolbox)
                dialog_data = GetNewView (file_mgr_data->host, path,
-                               file_mgr_data->restricted_directory, NULL, 0);
+                               file_mgr_data->restricted_directory, nullptr, 0);
             else
                dialog_data = GetNewView (file_mgr_data->host,
-					 path, NULL, NULL, 0);
+					 path, nullptr, nullptr, 0);
          }
       }
       else
-        InvalidFindMessage  (find_rec, NO_EXISTANCE, NULL);
+        InvalidFindMessage  (find_rec, NO_EXISTANCE, nullptr);
    }
 
-   if(dialog_data != NULL)
+   if(dialog_data != nullptr)
    {
       file_mgr_data = (FileMgrData *) dialog_data->data;
       directory_data = file_mgr_data->directory_set[0];
@@ -2759,9 +2759,9 @@ NewView(
       if (!directory_data->file_count)
          file_mgr_data->desktop_file = XtNewString(file_name);
       else
-         file_mgr_data->desktop_file = NULL;
+         file_mgr_data->desktop_file = nullptr;
    }
-   if(file_mgr_data->selection_list[0] != NULL)
+   if(file_mgr_data->selection_list[0] != nullptr)
       ActivateSingleSelect ((FileMgrRec *) file_mgr_data->file_mgr_rec,
                     file_mgr_data->selection_list[0]->file_data->logical_type);
 
@@ -2803,36 +2803,36 @@ FindPutOnDesktop(
    if (file_mgr_data->toolbox)
       path = _DtResolveAppManPath(path, file_mgr_data->restricted_directory);
 
-   if( host == NULL)
+   if( host == nullptr)
        result =  ExtractDirectory (file_mgr_data->host, path, &file_name);
    else
        result = ExtractDirectory (host, path, &file_name);
 
    if(!result)
    {
-      InvalidFindMessage (find_rec, NO_EXISTANCE, NULL);
+      InvalidFindMessage (find_rec, NO_EXISTANCE, nullptr);
       XtFree((char *)path);
       XtFree((char *)host);
       return;
    }
 
-   if(file_name == NULL)
+   if(file_name == nullptr)
    {
       fileptr = strrchr (path, '/');
       *fileptr = '\0';
       file_name = fileptr + 1;
    }
 
-   if( host == NULL)
+   if( host == nullptr)
    {
-      SetupDesktopWindow (XtDisplay(widget), NULL,
+      SetupDesktopWindow (XtDisplay(widget), nullptr,
                           (FileMgrRec *)file_mgr_data->file_mgr_rec,
                           file_name, file_mgr_data->host, path, -1, -1,
                           file_mgr_data->restricted_directory,EndIndex);
    }
    else
    {
-      SetupDesktopWindow (XtDisplay(widget), NULL,
+      SetupDesktopWindow (XtDisplay(widget), nullptr,
                           (FileMgrRec *)file_mgr_data->file_mgr_rec,
                           file_name, host, path, -1, -1,
                           file_mgr_data->restricted_directory,EndIndex);
@@ -2882,7 +2882,7 @@ findpopen(char *cmd, char *mode, int *childpid)
    int parentside, childside;
 
    if(pipe(fd) < 0)
-        return(NULL);
+        return(nullptr);
    parentside = (mode[0] == 'r')? fd[0]:fd[1];
    childside = (mode[0] == 'r')? fd[1]:fd[0];
    if((*childpid = fork()) == 0)
@@ -2909,7 +2909,7 @@ findpopen(char *cmd, char *mode, int *childpid)
    }
 
    if(*childpid == -1)
-      return(NULL);
+      return(nullptr);
 
    DBGFORK(("%s:  forked child<%d>, pipe %d\n", pname, childpid, parentside));
 

@@ -40,7 +40,7 @@ main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
-   while (fgets(buf, sizeof(buf), stdin) != NULL) {
+   while (fgets(buf, sizeof(buf), stdin) != nullptr) {
        size_t length = strlen(buf);
 
        if (length > 0 && buf[length - 1] == '\n')

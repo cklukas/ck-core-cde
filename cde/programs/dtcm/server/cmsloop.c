@@ -71,7 +71,7 @@ set_handler(int signal_number, void (*handler)(int))
 	memset(&action, 0, sizeof(action));
 	action.sa_handler = handler;
 	sigemptyset(&action.sa_mask);
-	sigaction(signal_number, &action, NULL);
+	sigaction(signal_number, &action, nullptr);
 }
 
 extern void
@@ -114,12 +114,12 @@ _DtCmsRunServiceLoop(const _DtCmsLoopActions *actions)
 			return (0);
 		if (debug_requested) {
 			debug_requested = 0;
-			if (actions != NULL && actions->switch_debug != NULL)
+			if (actions != nullptr && actions->switch_debug != nullptr)
 				actions->switch_debug();
 		}
 		if (garbage_requested) {
 			garbage_requested = 0;
-			if (actions != NULL && actions->collect_garbage != NULL)
+			if (actions != nullptr && actions->collect_garbage != nullptr)
 				actions->collect_garbage();
 		}
 
@@ -128,7 +128,7 @@ _DtCmsRunServiceLoop(const _DtCmsLoopActions *actions)
 		if (nfds > FD_SETSIZE)
 			nfds = FD_SETSIZE;
 
-		ready = pselect(nfds, &readfds, NULL, NULL, NULL, &wait_mask);
+		ready = pselect(nfds, &readfds, nullptr, nullptr, nullptr, &wait_mask);
 		if (ready < 0) {
 			if (errno == EINTR)
 				continue;

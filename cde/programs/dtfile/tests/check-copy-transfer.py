@@ -14,7 +14,7 @@ with tempfile.TemporaryDirectory(prefix="dtfile-copy-", dir=os.environ["TMPDIR"]
     for test in ("copy-transfer", "copy-paths"):
         binary = root / test
         subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                       ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
+                       ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
                         "-Wno-unused-parameter", "-Wno-parentheses", "-Wno-unused-function",
                         "-fsanitize=address,undefined", "-g", "-I", str(source),
                         str(source / ("tests/" + test + ".c")), "-o", str(binary)], check=True)

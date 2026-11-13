@@ -173,15 +173,15 @@ DtDndDragStart(
 	Cardinal	argCount)
 {
         XtCallbackRec	dragDropFinishCbRec[] = { {dndDragDropFinishCallback,
-						   NULL}, {NULL, NULL} };
+						   nullptr}, {nullptr, nullptr} };
 	XtCallbackRec	topLevelEnterCbRec[]  = { {dndTopLevelEnterCallback,
-						   NULL},  {NULL, NULL} };
+						   nullptr},  {nullptr, nullptr} };
 	XtCallbackRec	topLevelLeaveCbRec[]  = { {dndTopLevelLeaveCallback,
-						   NULL},  {NULL, NULL} };
+						   nullptr},  {nullptr, nullptr} };
 	XtCallbackRec	dropStartCbRec[]      = { {dndDropStartCallback,
-					    	   NULL}, {NULL, NULL} };
+					    	   nullptr}, {nullptr, nullptr} };
 	XtCallbackRec	dropFinishCbRec[]     = { {dndDropFinishCallback,
-						   NULL}, {NULL, NULL} };
+						   nullptr}, {nullptr, nullptr} };
 	Display *	display 	= XtDisplayOfObject(dragInitiator);
 	Screen *	screen 		= XtScreenOfObject(dragInitiator);
 	Window		rootWindow 	= RootWindowOfScreen(screen);
@@ -227,16 +227,16 @@ DtDndDragStart(
 	dtDragInfo = (DtDragInfo *) XtMalloc(sizeof(DtDragInfo));
 
 	dtDragInfo->dragInitiator 		= dragInitiator;
-	dtDragInfo->dragContext			= NULL;
+	dtDragInfo->dragContext			= nullptr;
 	dtDragInfo->protocol			= protocol;
 	dtDragInfo->numItems			= numItems;
 	dtDragInfo->operations			= operations;
 	dtDragInfo->sourceIcon 			= settings.sourceIcon;
 	dtDragInfo->bufferIsText		= settings.bufferIsText;
-	dtDragInfo->dragData 			= NULL;
+	dtDragInfo->dragData 			= nullptr;
 	dtDragInfo->inRoot 			= False;
 	dtDragInfo->status 			= DtDND_SUCCESS;
-	dtDragInfo->clientData 			= NULL;
+	dtDragInfo->clientData 			= nullptr;
 	dtDragInfo->backdropWindow 
 			= DtWsmGetCurrentBackdropWindow(display, rootWindow);
 
@@ -315,7 +315,7 @@ DtDndDragStart(
 	XtSetArg(args[nn], XmNclientData, 	dtDragInfo);
 					nn++;
 
-	if (dtDragInfo->sourceIcon != NULL) {
+	if (dtDragInfo->sourceIcon != nullptr) {
 		XtSetArg(args[nn],XmNsourcePixmapIcon, dtDragInfo->sourceIcon);
 		nn++;
 		XtSetArg(args[nn],XmNsourceCursorIcon, dtDragInfo->sourceIcon);
@@ -345,7 +345,7 @@ DtDndDragStart(
 	 * Only use top-level-enter/leave callbacks if also doing drop-on-root
 	 */
 
-	if (dtDragInfo->dropOnRootCallback != NULL) {
+	if (dtDragInfo->dropOnRootCallback != nullptr) {
 
 		topLevelEnterCbRec[0].closure 	= (XtPointer) dtDragInfo;
 		topLevelLeaveCbRec[0].closure 	= (XtPointer) dtDragInfo;
@@ -424,8 +424,8 @@ dndDropStartCallback(
 
 	if (xmDragContext->drag.dragCompletionStatus == XmDROP_CANCEL ||
 	    dtDragInfo->inRoot == False ||
-	    dtDragInfo->dropOnRootCallback == NULL ||
-	    dtDragInfo->dragConvertCallback == NULL ) {
+	    dtDragInfo->dropOnRootCallback == nullptr ||
+	    dtDragInfo->dragConvertCallback == nullptr ) {
  
 		xmDropInfo->dropSiteStatus 	= XmINVALID_DROP_SITE;
 		xmDropInfo->dropAction 		= XmDROP_CANCEL;
@@ -503,7 +503,7 @@ dndConvertProc(
 	int	       *returnFormat)
 {
 	Atom 		realSelectionAtom; /* Motif hides the selection atom */
-	DtDragInfo     *dtDragInfo = NULL;
+	DtDragInfo     *dtDragInfo = nullptr;
 	XSelectionRequestEvent *selectionRequestEvent;
 	Boolean 	status;
 
@@ -519,9 +519,9 @@ dndConvertProc(
 	 * Get the DtDragInfo
 	 */
 
-	XtVaGetValues(dragContext, XmNclientData, &dtDragInfo, NULL);
+	XtVaGetValues(dragContext, XmNclientData, &dtDragInfo, nullptr);
 
-	if (dtDragInfo == NULL || dtDragInfo->status == DtDND_FAILURE) {
+	if (dtDragInfo == nullptr || dtDragInfo->status == DtDND_FAILURE) {
 		return False;
 	}
 
@@ -529,9 +529,9 @@ dndConvertProc(
 	 * Get selection request event
 	 */
 
-	XtVaGetValues(dragContext, XmNiccHandle, &realSelectionAtom, NULL);
+	XtVaGetValues(dragContext, XmNiccHandle, &realSelectionAtom, nullptr);
 	selectionRequestEvent = XtGetSelectionRequest(dragContext,
-		realSelectionAtom, NULL); /* REMIND: NULL for atomic transfer */
+		realSelectionAtom, nullptr); /* REMIND: NULL for atomic transfer */
 
 	/*
 	 * Get the application drag data if necessary
@@ -710,14 +710,14 @@ dndDropFinishCallback(
 	XmDropFinishCallbackStruct *xmDropFinishCallData =
 			(XmDropFinishCallbackStruct *) callData;
 
-	if (dtDragInfo->dropOnRootCallback != NULL &&
+	if (dtDragInfo->dropOnRootCallback != nullptr &&
 	    dtDragInfo->inRoot &&
 	    xmDropFinishCallData->dropSiteStatus == XmVALID_DROP_SITE) {
 
 		xmDropFinishCallData->completionStatus = XmDROP_SUCCESS;
 
 		XtVaSetValues(dtDragInfo->dragContext,
-			XmNblendModel, XmBLEND_NONE, NULL);
+			XmNblendModel, XmBLEND_NONE, nullptr);
 	}
 }
 
@@ -753,7 +753,7 @@ dndDragDropFinishCallback(
 	 * Restore motif default drag cursors
 	 */
 
-	_DtDndSelectDragSource(dragContext, DtDND_DRAG_SOURCE_DEFAULT, NULL);
+	_DtDndSelectDragSource(dragContext, DtDND_DRAG_SOURCE_DEFAULT, nullptr);
 
 	/*
 	 * Invoke protocol specific convertFinish
@@ -771,7 +771,7 @@ dndDragDropFinishCallback(
 	XtFree((char *)dtDragInfo->dragFinishCallback);
 	XtFree((char *)dtDragInfo->dragDropFinishCallback);
 	XtFree((char *)dtDragInfo->dropFinishCallback);
-	if (dtDragInfo->dropOnRootCallback != NULL) {
+	if (dtDragInfo->dropOnRootCallback != nullptr) {
 	  XtFree((char *)dtDragInfo->topLevelEnterCallback);
 	  XtFree((char *)dtDragInfo->topLevelLeaveCallback);
 	  XtFree((char *)dtDragInfo->dropStartCallback);

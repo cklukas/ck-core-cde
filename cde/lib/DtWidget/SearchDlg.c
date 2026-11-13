@@ -132,7 +132,7 @@ _DtEditorSearch(
 	 * be seeded with the last replace string, in Spell mode it will
 	 * remain blank.
 	 */
-	XmTextFieldSetString( M_replaceText(pPriv), (char *)NULL );
+	XmTextFieldSetString( M_replaceText(pPriv), (char *)nullptr );
 
         if (spell) 
 	{
@@ -237,10 +237,10 @@ _DtEditorSearch(
 	       XmTextFieldSetString(M_findText(pPriv),M_search_string(pPriv));
                event.xkey.time = XtLastTimestampProcessed(M_display(pPriv));
 	       XtCallActionProc( (Widget) M_findText(pPriv), "select-all",
-			         &event, (String *)NULL, 0 );
+			         &event, (String *)nullptr, 0 );
     	    }
 	    else
-	       XmTextFieldSetString( M_findText(pPriv), (char *)NULL );
+	       XmTextFieldSetString( M_findText(pPriv), (char *)nullptr );
 
 	    /* 
 	     * Seed the Change To field with the last replacement string.

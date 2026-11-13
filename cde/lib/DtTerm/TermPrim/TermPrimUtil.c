@@ -466,7 +466,7 @@ _DtTermPrimStartLog(Widget w)
 	    _bA_dump();
 #endif	/* BBA */
             (void) execl(DEFAULT_SHELL, DEFAULT_SHELL_ARGV0, 
-                         "-c", &tw->term.logFile[1], NULL);
+                         "-c", &tw->term.logFile[1], nullptr);
             (void) fprintf(stderr, " Can't exec \"%s\"\n",
                                        &tw->term.logFile[1]);
             (void) exit(1);
@@ -493,7 +493,7 @@ _DtTermPrimStartLog(Widget w)
         } else if (access(".", W_OK) < 0) {
 	    return;
 	}
-        if ((tpd->logStream = fopen(tw->term.logFile, "a")) == NULL) {
+        if ((tpd->logStream = fopen(tw->term.logFile, "a")) == nullptr) {
             return;
         }
 	(void) AddLogFileEntry(tpd->logStream);
@@ -511,7 +511,7 @@ ForceCloseLog(DtTermPrimitiveWidget tw)
     {
 	(void) DeleteLogFileEntry(tpd->logStream);
 	(void) fclose(tpd->logStream);
-        tpd->logStream = NULL;
+        tpd->logStream = nullptr;
 	tw->term.log_on = False;
     }
 }

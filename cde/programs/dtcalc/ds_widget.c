@@ -57,17 +57,17 @@ make_textW(Widget owner, char *label)
                                        owner,
                                        XmNorientation,  XmHORIZONTAL,
                                        XmNnumColumns,   1,
-                                       NULL) ;
+                                       nullptr) ;
   w->label = XtVaCreateManagedWidget(label,
                                      xmLabelWidgetClass,
                                      w->manager,
                                      XmNalignment, XmALIGNMENT_BEGINNING,
-                                     NULL) ;
+                                     nullptr) ;
   w->textfield = XtVaCreateManagedWidget("textfield",
                                          xmTextFieldWidgetClass,
                                          w->manager,
                                          XmNmaxLength, INT_MAX,
-                                         NULL) ;
+                                         nullptr) ;
   return(w) ;
 }
 
@@ -79,7 +79,7 @@ set_text_str(struct tW_struct *w, enum text_type ttype, char *str)
   switch (ttype)
     {
       case T_LABEL : cstr = XmStringCreateLocalized(str) ;
-                     XtVaSetValues(w->label, XmNlabelString, cstr, NULL) ;
+                     XtVaSetValues(w->label, XmNlabelString, cstr, nullptr) ;
                      XmStringFree(cstr) ;
                      break ;
       case T_VALUE : XmTextFieldSetString(w->textfield, str) ;

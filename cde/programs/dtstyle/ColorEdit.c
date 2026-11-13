@@ -177,7 +177,7 @@ ColorEditor(
         Widget parent,
         ColorSet *color_set )
 {
-    if (edit.DialogShell == NULL)
+    if (edit.DialogShell == nullptr)
     {
         _DtTurnOnHourGlass(parent);  
         edit.color_set = color_set;
@@ -198,7 +198,7 @@ ColorEditor(
 				XmNarmColor,edit.color_set->bg.pixel,
 				XmNforeground,edit.color_set->fg.pixel,
 				XmNtopShadowColor,edit.color_set->ts.pixel,
-				XmNbottomShadowColor,edit.color_set->bs.pixel,NULL);
+				XmNbottomShadowColor,edit.color_set->bs.pixel,nullptr);
 		}
 	    InitializeNewButton();
 	    SetScales(&edit.color_set->bg);
@@ -255,8 +255,8 @@ CreateColorEditor(
         save.poscnt++;
 	edit.DialogShell = __DtCreateDialogBoxDialog(parent,"colorEditDlg", 
 						     save.posArgs, save.poscnt);
-	XtAddCallback(edit.DialogShell, XmNmapCallback, sliderLayoutCB, NULL);
-	XtAddCallback(edit.DialogShell, XmNcallback, dialogBoxCB, NULL);
+	XtAddCallback(edit.DialogShell, XmNmapCallback, sliderLayoutCB, nullptr);
+	XtAddCallback(edit.DialogShell, XmNcallback, dialogBoxCB, nullptr);
         XtAddCallback(edit.DialogShell, XmNmapCallback, _DtmapCB, parent);
         XtAddCallback(edit.DialogShell, XmNhelpCallback,
             HelpRequestCB, (XtPointer)HELP_MODIFY_PALETTE_DIALOG);
@@ -823,7 +823,7 @@ sliderLayoutCB(
         XtSetArg(args[n], XmNrightWidget, edit.hueScale); n++;
         XtSetValues (edit.valScale, args, n);
 
-	XtRemoveCallback(edit.DialogShell, XmNmapCallback, sliderLayoutCB, NULL);
+	XtRemoveCallback(edit.DialogShell, XmNmapCallback, sliderLayoutCB, nullptr);
 
 }
 
@@ -962,7 +962,7 @@ GenerateColors( void )
     int         j=0;
     XColor      colors[5];
 
-    if (edit.calcRGB == NULL) 
+    if (edit.calcRGB == nullptr) 
         edit.calcRGB = XmGetColorCalculation();
 
     (*edit.calcRGB) (&edit.color_set->bg, &edit.color_set->fg, 
@@ -1023,7 +1023,7 @@ GenerateColors( void )
 			XmNarmColor,edit.color_set->bg.pixel,
 			XmNforeground,edit.color_set->fg.pixel,
 			XmNtopShadowColor,edit.color_set->ts.pixel,
-			XmNbottomShadowColor,edit.color_set->bs.pixel,NULL);
+			XmNbottomShadowColor,edit.color_set->bs.pixel,nullptr);
 	}
  }
 
@@ -1225,7 +1225,7 @@ CopyPixelSet(
        colors[j++] =  color_set_dest->ts;
        colors[j++] =  color_set_dest->bs;
     }
-    if(OldNewSame && edit.oldButton != NULL)
+    if(OldNewSame && edit.oldButton != nullptr)
     {
        n=0;
        XtSetArg(args[n], XmNforeground, color_set_dest->fg.pixel); n++;
@@ -1461,8 +1461,8 @@ grabcolorCB(
                                 cursor, CurrentTime); 
 	if (status != GrabSuccess)
         {
-               _DtSimpleError (progName, DtWarning, NULL, 
-                    ((char *)GETMESSAGE(17, 14, "Warning, couldn't grab pointer.\n")), NULL);
+               _DtSimpleError (progName, DtWarning, nullptr, 
+                    ((char *)GETMESSAGE(17, 14, "Warning, couldn't grab pointer.\n")), nullptr);
                return;
         }
        
@@ -1472,8 +1472,8 @@ grabcolorCB(
 	if (status != GrabSuccess)
         {
                XtUngrabPointer (style.colorDialog, CurrentTime);
-               _DtSimpleError (progName, DtWarning, NULL, 
-                    ((char *)GETMESSAGE(17, 15, "Warning, couldn't grab Keyboard.\n")), NULL);
+               _DtSimpleError (progName, DtWarning, nullptr, 
+                    ((char *)GETMESSAGE(17, 15, "Warning, couldn't grab Keyboard.\n")), nullptr);
                return;
         }
  
@@ -1644,7 +1644,7 @@ _DtmapCB(
 
     }
 
-    XtRemoveCallback(edit.DialogShell, XmNmapCallback, _DtmapCB, NULL);
+    XtRemoveCallback(edit.DialogShell, XmNmapCallback, _DtmapCB, nullptr);
 
 }
 
@@ -1687,7 +1687,7 @@ restoreColorEdit(
     XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value);
     /* Are we supposed to be mapped? */
     if (strcmp(value.addr, "True") == 0)
-      XtCallCallbacks(modifyColorButton, XmNactivateCallback, NULL);
+      XtCallCallbacks(modifyColorButton, XmNactivateCallback, nullptr);
 }
 
 
@@ -1711,7 +1711,7 @@ saveColorEdit(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (edit.DialogShell != NULL) 
+    if (edit.DialogShell != nullptr) 
     {
         if (XtIsManaged(edit.DialogShell))
             sprintf(bufr, "*colorEditDlg.ismapped: True\n");

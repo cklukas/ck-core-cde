@@ -156,7 +156,7 @@ calcStateIconOffset(
 	int		pixmapX, pixmapY;
 	unsigned int	pixmapW, pixmapH, junk;
 
-	XtVaGetValues(sourceIcon, XmNpixmap, &pixmap, NULL);
+	XtVaGetValues(sourceIcon, XmNpixmap, &pixmap, nullptr);
 
 	if (pixmap == None)
 		return;
@@ -245,13 +245,13 @@ selectDragSource(
 		break;
 	default:
 	case DtDND_DRAG_SOURCE_DEFAULT:
-		validIcon	= NULL;
-		invalidIcon	= NULL;
-		noneIcon	= NULL;
-		moveIcon	= NULL;
-		copyIcon	= NULL;
-		linkIcon	= NULL;
-		defSourceIcon	= NULL;
+		validIcon	= nullptr;
+		invalidIcon	= nullptr;
+		noneIcon	= nullptr;
+		moveIcon	= nullptr;
+		copyIcon	= nullptr;
+		linkIcon	= nullptr;
+		defSourceIcon	= nullptr;
 		hotX		= motif_x_hot;
 		hotY		= motif_y_hot;
 		stateOffsetX	= motif_x_offset_state;
@@ -304,7 +304,7 @@ selectDragSource(
 		XmNdefaultCopyCursorIcon, 	copyIcon,
 		XmNdefaultLinkCursorIcon, 	linkIcon,
 		XmNdefaultSourceCursorIcon, 	defSourceIcon,
-		NULL);
+		nullptr);
 
 	dc->sourceType = sourceType;
 }
@@ -491,7 +491,7 @@ static DragCollection *
 getDragCollection(
 	Widget		xmScreen)
 {
-	DragCollection	*dc     = NULL;
+	DragCollection	*dc     = nullptr;
 	Display		*dpy	= XtDisplayOfObject(xmScreen);
 	Screen		*screen	= XtScreenOfObject(xmScreen);
 	Window		root	= RootWindowOfScreen(screen);
@@ -557,11 +557,11 @@ _DtDndGetIconOffset(
 		*offsetX = -(data_x_hot + data_x_offset_state);
 		*offsetY = -(data_y_hot + data_y_offset_state);
 
-		if (dragContext != NULL) {
+		if (dragContext != nullptr) {
 			XtVaGetValues(dragContext,
 				XmNhotX,	&hotX,
 				XmNhotY,	&hotY,
-				NULL);
+				nullptr);
 			if (hotX >= 0 && hotY >= 0) {
 				*offsetX = -(int)hotX;
 				*offsetY = -(int)hotY;
@@ -571,13 +571,13 @@ _DtDndGetIconOffset(
 
 		XtVaGetValues(dragContext,
 			XmNsourcePixmapIcon,	&sourceIcon,
-			NULL);
+			nullptr);
 
-		if (sourceIcon != NULL) {
+		if (sourceIcon != nullptr) {
 			XtVaGetValues(sourceIcon,
 				XmNhotX,	&hotX,
 				XmNhotY,	&hotY,
-				NULL);
+				nullptr);
 			if (hotX >= 0 && hotY >= 0) {
 				*offsetX = -(int)hotX;
 				*offsetY = -(int)hotY;

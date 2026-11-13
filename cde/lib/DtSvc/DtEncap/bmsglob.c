@@ -35,7 +35,7 @@
 #include <bms/sbport.h>
 #include <bms/bms.h>
 
-char *XeToolClass = NULL;
+char *XeToolClass = nullptr;
 
 /* --------- */
 /* context.c */
@@ -51,7 +51,7 @@ int SPC_Initialized=FALSE;
 /* SPC/spc-error.c */
 /*-------------- */
 int XeSPCErrorNumber = 0;
-FILE *spc_logF = (FILE*)NULL;
+FILE *spc_logF = (FILE*)nullptr;
 
 /*-------------- */
 /* SPC/spc-env.c */
@@ -61,4 +61,4 @@ XeString spc_user_environment_file=XeString_NULL;
 /*-------------- */
 /* SPC/spc-proto.c */
 /*-------------- */
-FILE *SPC_Print_Protocol = (FILE*)NULL;
+FILE *SPC_Print_Protocol = (FILE*)nullptr;

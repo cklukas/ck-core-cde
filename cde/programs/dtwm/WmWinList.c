@@ -157,11 +157,11 @@ void AddClientToList (WmWorkspaceData *pWS, ClientData *pCD, Boolean onTop)
 	}
 	else if (onTop)
 	{
-	    AddEntryToList (pWS, &pCD->clientEntry, True /*on top*/, NULL);
+	    AddEntryToList (pWS, &pCD->clientEntry, True /*on top*/, nullptr);
 	}
 	else
 	{
-	    AddEntryToList (pWS, &pCD->clientEntry, False /*on bottom*/, NULL);
+	    AddEntryToList (pWS, &pCD->clientEntry, False /*on bottom*/, nullptr);
 	}
 
 
@@ -193,7 +193,7 @@ void AddClientToList (WmWorkspaceData *pWS, ClientData *pCD, Boolean onTop)
 
 	    pCD->iconEntry.type = MINIMIZED_STATE;
 	    pCD->iconEntry.pCD = pCD;
-	    pCD->iconEntry.nextSibling = NULL;
+	    pCD->iconEntry.nextSibling = nullptr;
 	    pCD->iconEntry.prevSibling = pSD->lastClient;
 	    pSD->lastClient->nextSibling = &pCD->iconEntry;
 	    pSD->lastClient = &pCD->iconEntry;
@@ -264,7 +264,7 @@ void AddEntryToList (WmWorkspaceData *pWS, ClientListEntry *pEntry, Boolean onTo
 	    if (pSD->clientList != pEntry)
 	    {
 	        pEntry->nextSibling = pSD->clientList;
-	        pEntry->prevSibling = NULL;
+	        pEntry->prevSibling = nullptr;
 		if (pSD->clientList)
 		{
 		    pSD->clientList->prevSibling = pEntry;
@@ -300,7 +300,7 @@ void AddEntryToList (WmWorkspaceData *pWS, ClientListEntry *pEntry, Boolean onTo
 	{
 	    if (pSD->lastClient != pEntry)
 	    {
-	        pEntry->nextSibling = NULL;
+	        pEntry->nextSibling = nullptr;
 	        pEntry->prevSibling = pSD->lastClient;
 		if (pSD->clientList)
 		{
@@ -603,7 +603,7 @@ void AddTransient (WmWorkspaceData *pWS, ClientData *pCD)
 
     if ((pSD->clientList != &pcdTop->clientEntry) && !wmGD.systemModalActive)
     {
-	F_Raise (NULL, pCD, NULL);
+	F_Raise (nullptr, pCD, nullptr);
     }
     else if (restackTransients)
     {
@@ -974,7 +974,7 @@ Boolean PutTransientOnTop (ClientData *pcd)
 
 
     pcdLeader = pcd->transientLeader;
-    if (pcdLeader != NULL)
+    if (pcdLeader != nullptr)
     {
 	pcdPrev = pcdLeader->transientChildren;
 	if (pcdPrev != pcd)
@@ -1061,7 +1061,7 @@ Boolean PutTransientBelowSiblings (ClientData *pcd)
 	    }
 	    pcdNext->transientSiblings = pcd;
 	}
-	pcd->transientSiblings = NULL;
+	pcd->transientSiblings = nullptr;
     }
 
     return (restack);
@@ -1094,7 +1094,7 @@ void RestackTransients (ClientData *pcd)
     ClientData *pcdLeader;
     int count;
     static int size = 0;
-    static Window *windows = NULL;
+    static Window *windows = nullptr;
     XWindowChanges windowChanges;
     int i;
     int leaderIndex;
@@ -1965,7 +1965,7 @@ Boolean CheckIfClientObscuredByAny (ClientData *pcd)
 		((pListEntry->type != MINIMIZED_STATE) &&
 		 (pListEntry->pCD->clientState != MINIMIZED_STATE)))
 	    {
-		pListEntry = NULL;
+		pListEntry = nullptr;
 	    }
 	}
 	else if (((pListEntry->type == MINIMIZED_STATE) &&
@@ -2083,7 +2083,7 @@ void SetupSystemModalState (ClientData *pCD)
      * so that grabs from the menu don't interfere with
      * the system modal dialog. We want to avoid lock-ups.
      */
-    if (wmGD.menuActive != NULL)
+    if (wmGD.menuActive != nullptr)
     {
         UnpostMenu (wmGD.menuActive);
 	XSync (DISPLAY, False);
@@ -2218,7 +2218,7 @@ void SetupSystemModalState (ClientData *pCD)
 	 * dialog box.
          */
 	
-	SetKeyboardFocus (NULL, REFRESH_LAST_FOCUS);
+	SetKeyboardFocus (nullptr, REFRESH_LAST_FOCUS);
 	XSetInputFocus (DISPLAY, wmGD.systemModalWindow, RevertToPointerRoot,
 			CurrentTime);
     }
@@ -2293,7 +2293,7 @@ void UndoSystemModalState (void)
 
     if (!wmGD.systemModalClient)
     {
-	AutoResetKeyFocus (NULL, GetTimestamp());
+	AutoResetKeyFocus (nullptr, GetTimestamp());
     }
 
 
@@ -2302,7 +2302,7 @@ void UndoSystemModalState (void)
      */
 
     wmGD.systemModalActive = False;
-    wmGD.systemModalClient = NULL;
+    wmGD.systemModalClient = nullptr;
     wmGD.systemModalWindow = 0;
 
 } /* END OF FUNCTION UndoSystemModalState */
@@ -2498,7 +2498,7 @@ LowestWindowInTransientFamily (ClientData *pcdLeader)
 {
     int count;
     static int size = 0;
-    static Window *windows = NULL;
+    static Window *windows = nullptr;
     Window wReturn = None;
 
     /*
@@ -2567,7 +2567,7 @@ FindSubLeaderToTop (
 	ClientData *pcd)
 
 {
-    ClientData *pcdRet = NULL;
+    ClientData *pcdRet = nullptr;
     ClientData *pcdNext;
 
     pcdNext = pcd->transientChildren;

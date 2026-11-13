@@ -99,7 +99,7 @@ xdr_cms_access_entry_members(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type cms_access_entry_list = {
 	sizeof (cms_access_entry), offsetof(cms_access_entry, next),
-	xdr_cms_access_entry_members, NULL, _DtCM_LIMIT_ACCESS_ENTRIES
+	xdr_cms_access_entry_members, nullptr, _DtCM_LIMIT_ACCESS_ENTRIES
 };
 
 /* codes the access list that starts with objp */
@@ -129,7 +129,7 @@ xdr_CSA_opaque_data(XDR *xdrs, CSA_opaque_data *objp)
 {
 	u_int	size = objp->size;
 
-	if (xdrs->x_op == XDR_ENCODE && size > 0 && objp->data == NULL)
+	if (xdrs->x_op == XDR_ENCODE && size > 0 && objp->data == nullptr)
 		return (FALSE);
 	if (!xdr_bytes(xdrs, (char **)&objp->data, &size, _DtCM_LIMIT_TEXT))
 		return (FALSE);
@@ -164,7 +164,7 @@ xdr_CSA_date_time_entry_members(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type CSA_date_time_entry_list = {
 	sizeof (CSA_date_time_entry), offsetof(CSA_date_time_entry, next),
-	xdr_CSA_date_time_entry_members, NULL, _DtCM_LIMIT_ACCESS_ENTRIES
+	xdr_CSA_date_time_entry_members, nullptr, _DtCM_LIMIT_ACCESS_ENTRIES
 };
 
 /* codes the list of dates and times that starts with objp */
@@ -297,7 +297,7 @@ xdr_cms_entry_members(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type cms_entry_list = {
 	sizeof (cms_entry), offsetof(cms_entry, next),
-	xdr_cms_entry_members, NULL, _DtCM_LIMIT_ENTRIES
+	xdr_cms_entry_members, nullptr, _DtCM_LIMIT_ENTRIES
 };
 
 /* codes the list of entries that starts with objp */
@@ -613,7 +613,7 @@ xdr_cms_reminder_ref_members(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type cms_reminder_ref_list = {
 	sizeof (cms_reminder_ref), offsetof(cms_reminder_ref, next),
-	xdr_cms_reminder_ref_members, NULL, _DtCM_LIMIT_ENTRIES
+	xdr_cms_reminder_ref_members, nullptr, _DtCM_LIMIT_ENTRIES
 };
 
 /* codes the list of reminders that starts with objp */
@@ -744,7 +744,7 @@ xdr_cms_get_entry_attr_res_item_members(XDR *xdrs, void *node)
 static const _DtCm_xdr_list_type cms_get_entry_attr_res_item_list = {
 	sizeof (cms_get_entry_attr_res_item),
 	offsetof(cms_get_entry_attr_res_item, next),
-	xdr_cms_get_entry_attr_res_item_members, NULL, _DtCM_LIMIT_KEYS
+	xdr_cms_get_entry_attr_res_item_members, nullptr, _DtCM_LIMIT_KEYS
 };
 
 /* codes the list of results that starts with objp */

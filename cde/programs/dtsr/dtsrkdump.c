@@ -87,7 +87,7 @@
 
 /*----------------- GLOBALS -------------------*/
 char            buf[2048];
-static long    *counters = NULL;	/* allocated array */
+static long    *counters = nullptr;	/* allocated array */
 static int      do_verbose = FALSE;
 static DB_ADDR  dba;
 static long     min_threshold = MIN_THRESHOLD;
@@ -369,7 +369,7 @@ PRINT_USAGE:
 
     /* Open database in read-only mode. */
     db_oflag = O_RDONLY;
-    if (!austext_dopen (dbname, dbpath, NULL, 0, &dbrec)) {
+    if (!austext_dopen (dbname, dbpath, nullptr, 0, &dbrec)) {
 	fprintf (stderr, "%s\n", DtSearchGetMessages());
 	DtSearchExit (3);
     }
@@ -413,7 +413,7 @@ PRINT_USAGE:
 	 * Allocate and initialize an array of keytype counters, one for
 	 * each possible ascii keytype char (256). 
 	 */
-	counters = austext_malloc (258 * sizeof(long), PROGNAME"113", NULL);
+	counters = austext_malloc (258 * sizeof(long), PROGNAME"113", nullptr);
 	memset (counters, 0, 258 * sizeof(long));
 	dotcount = 0;
 	keycount = 0;
@@ -506,7 +506,7 @@ PRINT_USAGE:
 	 * words (everything else). Next are for long stems, long words,
 	 * huge stems, and huge words (6 in all). 
 	 */
-	counters = austext_malloc (8 * sizeof (long), PROGNAME"113", NULL);
+	counters = austext_malloc (8 * sizeof (long), PROGNAME"113", nullptr);
 	memset (counters, 0, 6 * sizeof(long));
 
 	count_words (0);	/* short */

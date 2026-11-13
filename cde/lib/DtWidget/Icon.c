@@ -542,7 +542,7 @@ static XmSyntheticResource cache_syn_resources[] =
 */
 
 static XmCacheClassPart IconClassCachePart = {
-        {NULL, 0, 0},            /* head of class cache list */
+        {nullptr, 0, 0},            /* head of class cache list */
         _XmCacheCopy,           /* Copy routine         */
         _XmCacheDelete,         /* Delete routine       */
         IconCacheCompare,       /* Comparison routine   */
@@ -552,7 +552,7 @@ static XmCacheClassPart IconClassCachePart = {
 **	Base Class Extension Record
 */
 static XmBaseClassExtRec       iconBaseClassExtRec = {
-    NULL,                                     /* Next extension       */
+    nullptr,                                     /* Next extension       */
     NULLQUARK,                                /* record type XmQmotif */
     XmBaseClassExtVersion,                    /* version              */
     sizeof(XmBaseClassExtRec),                /* size                 */
@@ -566,10 +566,10 @@ static XmBaseClassExtRec       iconBaseClassExtRec = {
     {0},                                      /* fast subclass        */
     GetValuesPrehook,                         /* get_values prehook   */
     GetValuesPosthook,                        /* get_values posthook  */
-    NULL,                                     /* classPartInitPrehook */
-    NULL,                                     /* classPartInitPosthook*/
-    NULL,                                     /* ext_resources        */
-    NULL,                                     /* compiled_ext_resources*/
+    nullptr,                                     /* classPartInitPrehook */
+    nullptr,                                     /* classPartInitPosthook*/
+    nullptr,                                     /* ext_resources        */
+    nullptr,                                     /* compiled_ext_resources*/
     0,                                        /* num_ext_resources    */
     FALSE,                                    /* use_sub_resources    */
     XmInheritWidgetNavigable,                 /* widgetNavigable      */
@@ -586,13 +586,13 @@ DtIconCacheObjClassRec dtIconCacheObjClassRec =
       /* superclass         */    (WidgetClass) &xmExtClassRec,
       /* class_name         */    "DtIcon",
       /* widget_size        */    sizeof(DtIconCacheObjRec),
-      /* class_initialize   */    NULL,
-      /* chained class init */    NULL,
+      /* class_initialize   */    nullptr,
+      /* chained class init */    nullptr,
       /* class_inited       */    False,
-      /* initialize         */    NULL,
-      /* initialize hook    */    NULL,
-      /* realize            */    NULL,
-      /* actions            */    NULL,
+      /* initialize         */    nullptr,
+      /* initialize hook    */    nullptr,
+      /* realize            */    nullptr,
+      /* actions            */    nullptr,
       /* num_actions        */    0,
       /* resources          */    cache_resources,
       /* num_resources      */    XtNumber(cache_resources),
@@ -601,26 +601,26 @@ DtIconCacheObjClassRec dtIconCacheObjClassRec =
       /* compress_exposure  */    False,
       /* compress enter/exit*/    False,
       /* visible_interest   */    False,
-      /* destroy            */    NULL,
-      /* resize             */    NULL,
-      /* expose             */    NULL,
-      /* set_values         */    NULL,
-      /* set values hook    */    NULL,
-      /* set values almost  */    NULL,
-      /* get values hook    */    NULL,
-      /* accept_focus       */    NULL,
+      /* destroy            */    nullptr,
+      /* resize             */    nullptr,
+      /* expose             */    nullptr,
+      /* set_values         */    nullptr,
+      /* set values hook    */    nullptr,
+      /* set values almost  */    nullptr,
+      /* get values hook    */    nullptr,
+      /* accept_focus       */    nullptr,
       /* version            */    XtVersion,
-      /* callback offsetlst */    NULL,
-      /* default trans      */    NULL,
-      /* query geo proc     */    NULL,
-      /* display accelerator*/    NULL,
-      /* extension record   */    NULL,
+      /* callback offsetlst */    nullptr,
+      /* default trans      */    nullptr,
+      /* query geo proc     */    nullptr,
+      /* display accelerator*/    nullptr,
+      /* extension record   */    nullptr,
    },
 
    {
       /* synthetic resources */   cache_syn_resources,
       /* num_syn_resources   */   XtNumber(cache_syn_resources),
-      /* extension           */   NULL,
+      /* extension           */   nullptr,
    },
 };
 
@@ -640,9 +640,9 @@ DtIconClassRec dtIconClassRec =
 		ClassPartInitialize,		/* class_part_initialize*/
 		False,				/* class_inited		*/
 		Initialize,		/* initialize		*/
-		NULL,				/* initialize_hook	*/
-		NULL,				/* realize		*/
-		NULL,				/* actions		*/
+		nullptr,				/* initialize_hook	*/
+		nullptr,				/* realize		*/
+		nullptr,				/* actions		*/
 		0,				/* num_actions		*/
 		resources,			/* resources		*/
 		XtNumber (resources),		/* num_resources	*/
@@ -655,15 +655,15 @@ DtIconClassRec dtIconClassRec =
 		Resize,				/* resize		*/
 		Redisplay,			/* expose		*/
 		SetValues,			/* set_values		*/
-		NULL,				/* set_values_hook	*/
+		nullptr,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
-		NULL,				/* get_values_hook	*/
-		NULL,				/* accept_focus		*/	
+		nullptr,				/* get_values_hook	*/
+		nullptr,				/* accept_focus		*/	
 		XtVersion,			/* version		*/
-		NULL,				/* callback private	*/
-		NULL,				/* tm_table		*/
-		NULL,				/* query_geometry	*/
-		NULL,				/* display_accelerator	*/
+		nullptr,				/* callback private	*/
+		nullptr,				/* tm_table		*/
+		nullptr,				/* query_geometry	*/
+		nullptr,				/* display_accelerator	*/
 		(XtPointer)&iconBaseClassExtRec,/* extension		*/
 	},
 
@@ -678,7 +678,7 @@ DtIconClassRec dtIconClassRec =
 		syn_resources,			/* get_resources	*/
 		XtNumber (syn_resources),	/* num_get_resources	*/
 		&IconClassCachePart,		/* class_cache_part	*/
-		NULL,	 			/* extension		*/
+		nullptr,	 			/* extension		*/
 	},
 
 	/*	DtIconGadget Part
@@ -690,8 +690,8 @@ DtIconClassRec dtIconClassRec =
 		CallCallback,			/* call_callback	*/
 		UpdateGCs,			/* update_gcs		*/
 		True,				/* optimize_redraw	*/
-		NULL,				/* class_cache_part	*/
-		NULL,				/* extension		*/
+		nullptr,				/* class_cache_part	*/
+		nullptr,				/* extension		*/
 	}
 };
 
@@ -902,7 +902,7 @@ IconEventHandler(
         XEvent *event,
         Boolean *continue_to_dispatch )
 {
-	DtIconGadget		g =	NULL;
+	DtIconGadget		g =	nullptr;
 	XButtonEvent		*button_event = &event->xbutton;
 
 	g = (DtIconGadget) XmObjectAtPoint (w, button_event->x, button_event->y);
@@ -939,7 +939,7 @@ ClickTimeout(
 	{
 		G_ClickTimerID (g) = 0;
 		XtFree ((char *)G_ClickEvent (g));
-		G_ClickEvent (g) = NULL;
+		G_ClickEvent (g) = nullptr;
 		return;
 	}
 
@@ -947,7 +947,7 @@ ClickTimeout(
 		/*
   		 * fix for bug# 4504
 		 */
-	if( G_ClickEvent (g) == NULL) return;
+	if( G_ClickEvent (g) == nullptr) return;
 
 	end_time = G_ClickEvent (g) -> time + (Time)
 				XtGetMultiClickTime (XtDisplay (g)); 
@@ -987,9 +987,9 @@ ClickTimeout(
                    /* Do nothing */
                 }
                 else
-		   (*expose) ((Widget)g, (XEvent*)G_ClickEvent (g), NULL);
+		   (*expose) ((Widget)g, (XEvent*)G_ClickEvent (g), nullptr);
 		XtFree ((char *)G_ClickEvent (g));
-		G_ClickEvent (g) = NULL;
+		G_ClickEvent (g) = nullptr;
 	}
 }
 
@@ -1038,7 +1038,7 @@ IconArm(
 	    _DtProcessLock();
 	    expose = XtCoreProc(w, expose);
 	    _DtProcessUnlock();
-	    (*expose) ((Widget)g, event, NULL);
+	    (*expose) ((Widget)g, event, nullptr);
 	  }
 }
 
@@ -1070,7 +1070,7 @@ if (G_Behavior (g) == XmICON_DRAG)
 	  expose = XtCoreProc(w, expose);
 	  _DtProcessUnlock();
 	  (*call_callback) (g, G_Callback (g), XmCR_DISARM, event);
-	  (*expose) ((Widget)g, event, NULL);
+	  (*expose) ((Widget)g, event, nullptr);
 	}
 }
 
@@ -1102,7 +1102,7 @@ IconActivate(
 	{
 		G_Armed (g) = False;
 		(*call_callback) (g, G_Callback (g), XmCR_ACTIVATE, event);
-		(*expose) ((Widget)g, event, NULL);
+		(*expose) ((Widget)g, event, nullptr);
 	}
 
 	else if (G_Behavior (g) == XmICON_TOGGLE)
@@ -1118,7 +1118,7 @@ IconActivate(
 		{
 			G_ClickTimerID (g) = 0;
 			XtFree ((char *)G_ClickEvent (g));
-			G_ClickEvent (g) = NULL;
+			G_ClickEvent (g) = nullptr;
 			G_Armed (g) = False;
 			(*call_callback) (g, G_Callback (g),
 					XmCR_DEFAULT_ACTION, event);
@@ -1144,7 +1144,7 @@ IconActivate(
 		}
 
                 if (G_ShadowThickness (g) > 0)
-		   (*expose) ((Widget)g, event, NULL);
+		   (*expose) ((Widget)g, event, nullptr);
 	}
 }
 
@@ -1205,7 +1205,7 @@ IconEnter(
 	DtIconGadget	g = 	(DtIconGadget) w;
 
         _XmEnterGadget (w, (XEvent *)event,
-                                 (String *)NULL,(Cardinal *)0);
+                                 (String *)nullptr,(Cardinal *)0);
 
 	if (G_Armed (g))
 		{
@@ -1216,7 +1216,7 @@ IconEnter(
 		    _DtProcessLock();
 		    expose = XtCoreProc(w, expose);
 		    _DtProcessUnlock();
-		    (*expose) ((Widget)g, event, NULL);
+		    (*expose) ((Widget)g, event, nullptr);
 		  }
 		}
 }
@@ -1234,7 +1234,7 @@ IconLeave(
 	DtIconGadget	g = 	(DtIconGadget) w;
 
 	_XmLeaveGadget (w, (XEvent *)event,
-                               (String *)NULL,  (Cardinal *)0);
+                               (String *)nullptr,  (Cardinal *)0);
 	if (G_Armed (g))
 	{
 	if ((G_Behavior (g) == XmICON_BUTTON) ||
@@ -1247,7 +1247,7 @@ IconLeave(
 		  _DtProcessUnlock();
 
 		  G_Armed (g) = False;
-		  (*expose) ((Widget)g, event, NULL);
+		  (*expose) ((Widget)g, event, nullptr);
 		  G_Armed (g) = True;
 		}
 	}
@@ -1356,7 +1356,7 @@ SecondaryObjectCreate(
     _DtProcessLock();
     cePtr = _XmGetBaseClassExtPtr(XtClass(new_w), XmQmotif);
     wc = (*cePtr)->secondaryObjectClass;
-    if (NULL == wc) return;
+    if (nullptr == wc) return;
     size = wc->core_class.widget_size;
     resources = wc->core_class.resources;
     num_resources = wc->core_class.num_resources;
@@ -1369,7 +1369,7 @@ SecondaryObjectCreate(
      * fetch the resources in superclass to subclass order
      */
 
-    XtGetSubresources(new_w, newSec, NULL, NULL, 
+    XtGetSubresources(new_w, newSec, nullptr, nullptr, 
 		      resources, num_resources, args, *num_args );
 
     extData = (XmWidgetExtData) XtCalloc(sizeof(XmWidgetExtDataRec), 1);
@@ -1472,8 +1472,8 @@ SetValuesPrehook(
     newSec->object.parent = XtParent(newParent);
     newSec->object.xrm_name = newParent->core.xrm_name;
     newSec->object.being_destroyed = False;
-    newSec->object.destroy_callbacks = NULL;
-    newSec->object.constraints = NULL;
+    newSec->object.destroy_callbacks = nullptr;
+    newSec->object.constraints = nullptr;
 
     newSec->ext.logicalParent = newParent;
     newSec->ext.extensionType = XmCACHE_EXTENSION;
@@ -1536,8 +1536,8 @@ GetValuesPrehook(
     newSec->object.parent = XtParent(newParent);
     newSec->object.xrm_name = newParent->core.xrm_name;
     newSec->object.being_destroyed = False;
-    newSec->object.destroy_callbacks = NULL;
-    newSec->object.constraints = NULL;
+    newSec->object.destroy_callbacks = nullptr;
+    newSec->object.constraints = nullptr;
 
     newSec->ext.logicalParent = newParent;
     newSec->ext.extensionType = XmCACHE_EXTENSION;
@@ -1726,7 +1726,7 @@ Initialize(
 			int_bw, depth;
 	Dimension	w, h;
 	EventMask	mask;
-	String		name = NULL;
+	String		name = nullptr;
 	UpdateGCsProc	update_gcs;
 
 	(void)args;
@@ -1762,7 +1762,7 @@ Initialize(
 	}
 
 	G_ClickTimerID (new) = 0;
-	G_ClickEvent (new) = NULL;
+	G_ClickEvent (new) = nullptr;
 
 	G_Armed (new) = False;
 
@@ -1792,7 +1792,7 @@ Initialize(
 			else
 			{
 /* warning? */				
-				name = NULL;
+				name = nullptr;
 				G_Pixmap (new) = None;
 			}
 		}
@@ -1812,7 +1812,7 @@ Initialize(
 			G_ImageName (new) = XtNewString(name);
 		}
 		else
-			G_ImageName (new) = NULL;
+			G_ImageName (new) = nullptr;
 	}
 	G_PixmapWidth(new) = Limit((Dimension) int_w, G_MaxPixmapWidth(new));
 	G_PixmapHeight(new) = Limit((Dimension) int_h, G_MaxPixmapHeight(new));
@@ -1876,7 +1876,7 @@ Initialize(
 
 /*	Copy fontlist.
 */
-	if (G_FontList (new) == NULL)
+	if (G_FontList (new) == nullptr)
 		G_FontList (new) =
 			XmeGetDefaultRenderTable ((Widget)new, XmBUTTON_FONTLIST);
 	G_FontList (new) = XmFontListCopy (G_FontList (new));
@@ -1955,11 +1955,11 @@ Initialize(
 
 /*  	Get graphics contexts.
 */
-	G_NormalGC (new) = NULL;
-	G_ClipGC (new) = NULL;
-	G_BackgroundGC (new) = NULL;
-	G_ArmedGC (new) = NULL;
-	G_ArmedBackgroundGC (new) = NULL;
+	G_NormalGC (new) = nullptr;
+	G_ClipGC (new) = nullptr;
+	G_BackgroundGC (new) = nullptr;
+	G_ArmedGC (new) = nullptr;
+	G_ArmedBackgroundGC (new) = nullptr;
 	_DtProcessLock();
 	update_gcs = C_UpdateGCs(XtClass(new));
 	_DtProcessUnlock();
@@ -1990,10 +1990,10 @@ Destroy(
 
 	XtFree ((char *)G_ClickEvent (g));
 
-	if (G_String (g) != NULL)
+	if (G_String (g) != nullptr)
 		XmStringFree (G_String (g));
 
-	if (G_ImageName (g) != NULL)
+	if (G_ImageName (g) != nullptr)
 	{
 		XtFree (G_ImageName (g));
 		ReleasePixmapAndMask(XtScreen(w), G_Pixmap(g), G_Mask(g));
@@ -2096,7 +2096,7 @@ SetValues(
 	(void)request_w;
 	(void)args;
 	(void)num_args;
-	String		name = NULL;
+	String		name = nullptr;
 	Boolean		optimize_redraw = False;
 
 /*	If unchanged, reuse old image name
@@ -2246,7 +2246,7 @@ SetValues(
 	    G_PixmapBackground (current) != G_PixmapBackground (new))
 	{
 		if (G_Pixmap (current) == G_Pixmap (new) &&
-		    (G_ImageName (new) != NULL) &&
+		    (G_ImageName (new) != nullptr) &&
 		    (! new_image_name))
 		{
 			draw_pixmap = True;
@@ -2277,7 +2277,7 @@ SetValues(
 
 /*	Try to get pixmap from image name.
 */
-		if (G_ImageName (current) != NULL) 
+		if (G_ImageName (current) != nullptr) 
 		  {
 		      ReleasePixmapAndMask(XtScreen(new), G_Pixmap(current), G_Mask(current));
 		  }
@@ -2300,7 +2300,7 @@ SetValues(
 		}
 		else
 		{
-			name = NULL;
+			name = nullptr;
 			G_Pixmap (new) = None;
 			w = 0;
 			h = 0;
@@ -2319,7 +2319,7 @@ SetValues(
 		    if (name)
 		      G_ImageName (new) = XtNewString(name);
 		    else
-		      G_ImageName (new) = NULL;
+		      G_ImageName (new) = nullptr;
 		    if (G_ImageName (current))
 		      XtFree (G_ImageName (current));
 		}
@@ -2345,8 +2345,8 @@ SetValues(
 */
 	else if (G_Pixmap (new) == G_Pixmap (current))
 	{
-		if ((G_ImageName (current) != NULL) && 
-		    (G_ImageName (new) == NULL))
+		if ((G_ImageName (current) != nullptr) && 
+		    (G_ImageName (new) == nullptr))
 		{
 			redraw_flag = True;
 			XtFree (G_ImageName (current));
@@ -2371,11 +2371,11 @@ SetValues(
 		}
 		else
 		{
-			if (G_ImageName (current) != NULL)
+			if (G_ImageName (current) != nullptr)
 			{
 				XtFree (G_ImageName (current));
 				ReleasePixmapAndMask(XtScreen(new), G_Pixmap(current), G_Mask(current));
-				G_ImageName (new) = NULL;
+				G_ImageName (new) = nullptr;
 			}
 			w = h = 0;
 		}
@@ -2482,7 +2482,7 @@ SetValues(
 	{
 		if (G_FontList (new) != G_FontList (current))
 		{
-			if (G_FontList (new) == NULL)
+			if (G_FontList (new) == nullptr)
 				G_FontList (new) = G_FontList (current);
 			else
 			{
@@ -2516,7 +2516,7 @@ SetValues(
 		if (G_Spacing (new) < SPACING_DEFAULT)
 			G_Spacing (new) = SPACING_DEFAULT;
 
-		if ((G_String (new) != NULL) &&
+		if ((G_String (new) != nullptr) &&
 		    (G_StringWidth (new) == G_StringWidth (current)) &&
 		    (G_StringHeight (new) == G_StringHeight (current)))
 			draw_string = True;
@@ -2681,7 +2681,7 @@ SetValues(
 		       call_callback = C_CallCallback(XtClass(new));
 		       _DtProcessUnlock();
 		       (*call_callback) (new, G_Callback (new),
-                                                    XmCR_SHADOW, NULL);
+                                                    XmCR_SHADOW, nullptr);
 		     }
 		}
 	}
@@ -2739,7 +2739,7 @@ BorderHighlight(Widget widget)
    _DtProcessLock();
    call_callback = C_CallCallback(XtClass(g));
    _DtProcessUnlock();
-   (*call_callback) (g, G_Callback (g), XmCR_HIGHLIGHT, NULL);
+   (*call_callback) (g, G_Callback (g), XmCR_HIGHLIGHT, nullptr);
 }
 
 /*-------------------------------------------------------------
@@ -2773,7 +2773,7 @@ BorderUnhighlight(Widget widget)
    _DtProcessLock();
    call_callback = C_CallCallback(XtClass(g));
    _DtProcessUnlock();
-   (*call_callback) (g, G_Callback (g), XmCR_UNHIGHLIGHT, NULL);
+   (*call_callback) (g, G_Callback (g), XmCR_UNHIGHLIGHT, nullptr);
 }
 
 /*-------------------------------------------------------------
@@ -2829,15 +2829,15 @@ InputDispatch(
 			IconDisarm (w, xevent);
 	}
 	else if (event_mask & XmHELP_EVENT)
-		_XmSocorro (w, (XEvent *)event,NULL,NULL);
+		_XmSocorro (w, (XEvent *)event,nullptr,nullptr);
 	else if (event_mask & XmENTER_EVENT)
 		IconEnter (w, (XEvent *)event);
 	else if (event_mask & XmLEAVE_EVENT)
 		IconLeave (w, (XEvent *)event);
 	else if (event_mask & XmFOCUS_IN_EVENT)
-		_XmFocusInGadget (w, (XEvent *)event,NULL,NULL);
+		_XmFocusInGadget (w, (XEvent *)event,nullptr,nullptr);
 	else if (event_mask & XmFOCUS_OUT_EVENT)
-		_XmFocusOutGadget (w, (XEvent *)event,NULL,NULL);
+		_XmFocusOutGadget (w, (XEvent *)event,nullptr,nullptr);
 }
 
 
@@ -2902,7 +2902,7 @@ VisualChange(
 	  _DtProcessUnlock();
 	  (*update_gcs) (g);
 	  
-	  if (G_ImageName (g) != NULL)
+	  if (G_ImageName (g) != nullptr)
 	    {
 		ReleasePixmapAndMask(XtScreen(g), G_Pixmap(g), G_Mask(g));
 		G_Pixmap(g) = XmUNSPECIFIED_PIXMAP;
@@ -3411,7 +3411,7 @@ Draw(
 	       _DtProcessLock();
 	       call_callback = C_CallCallback(XtClass(g));
 	       _DtProcessUnlock();
-	       (*call_callback) (g, G_Callback (g), XmCR_SHADOW, NULL);
+	       (*call_callback) (g, G_Callback (g), XmCR_SHADOW, nullptr);
 	     }
 	}
 }
@@ -3431,7 +3431,7 @@ CallCallback(
 {
 	DtIconCallbackStruct	cb_data;
 
-	if (cb != NULL)
+	if (cb != nullptr)
 	{
 		cb_data.reason = reason;
 		cb_data.event = event;
@@ -3507,7 +3507,7 @@ UpdateGCs(
 	    G_ClipGC (g) = XtGetGC ((Widget)mw, value_mask, &values);
 	}
 	else
-	  G_ClipGC (g) = NULL;
+	  G_ClipGC (g) = nullptr;
 }
 
 
@@ -3530,9 +3530,9 @@ GetIconClassSecResData(
 
     _DtProcessLock();
     bcePtr = &( iconBaseClassExtRec);
-    client_data = NULL;
-    resource_class = NULL;
-    resource_name = NULL;
+    client_data = nullptr;
+    resource_class = nullptr;
+    resource_name = nullptr;
     arrayCount =
       _XmSecondaryResourceData ( bcePtr, data_rtn, client_data,
                                 resource_name, resource_class,
@@ -3638,11 +3638,11 @@ _DtIconSetState(
 	_DtProcessUnlock();
 
 	G_Set (g) = state;
-	(*expose) ((Widget)g, NULL, NULL);
+	(*expose) ((Widget)g, nullptr, nullptr);
 
 	if (notify)
 	  {
-	    (*call_callback) (g, G_Callback (g), XmCR_VALUE_CHANGED, NULL);
+	    (*call_callback) (g, G_Callback (g), XmCR_VALUE_CHANGED, nullptr);
 	  }
 }
 
@@ -3696,7 +3696,7 @@ typedef struct _DtScaledPixmapEntry {
 	struct _DtScaledPixmapEntry *next;
 } DtScaledPixmapEntry;
 
-static DtScaledPixmapEntry *dt_scaled_pixmaps = NULL;
+static DtScaledPixmapEntry *dt_scaled_pixmaps = nullptr;
 
 static DtScaledPixmapEntry *
 FindScaledPixmapEntryByPixmap(Pixmap pixmap)
@@ -3707,7 +3707,7 @@ FindScaledPixmapEntryByPixmap(Pixmap pixmap)
 		if (e->pixmap == pixmap)
 			return e;
 	}
-	return NULL;
+	return nullptr;
 }
 
 static void
@@ -3816,8 +3816,8 @@ ScalePixmapNearest(
 {
 	Display *dpy;
 	Pixmap dst = XmUNSPECIFIED_PIXMAP;
-	XImage *src_img = NULL;
-	XImage *dst_img = NULL;
+	XImage *src_img = nullptr;
+	XImage *dst_img = nullptr;
 	GC gc;
 	unsigned int x, y;
 
@@ -3833,7 +3833,7 @@ ScalePixmapNearest(
 		goto done;
 
 	dst_img = XCreateImage(dpy, DefaultVisualOfScreen(s), depth, ZPixmap,
-	                       0, NULL, dst_w, dst_h, 32, 0);
+	                       0, nullptr, dst_w, dst_h, 32, 0);
 	if (!dst_img)
 		goto done;
 
@@ -3859,7 +3859,7 @@ ScalePixmapNearest(
 		goto done;
 	}
 
-	gc = XCreateGC(dpy, dst, 0, NULL);
+	gc = XCreateGC(dpy, dst, 0, nullptr);
 	XPutImage(dpy, dst, gc, dst_img, 0, 0, 0, 0, dst_w, dst_h);
 	XFreeGC(dpy, gc);
 
@@ -3882,8 +3882,8 @@ ScaleMaskNearest(
 {
 	Display *dpy;
 	Pixmap dst_mask = XmUNSPECIFIED_PIXMAP;
-	XImage *src_img = NULL;
-	XImage *dst_img = NULL;
+	XImage *src_img = nullptr;
+	XImage *dst_img = nullptr;
 	GC gc;
 	unsigned int x, y;
 
@@ -3899,7 +3899,7 @@ ScaleMaskNearest(
 		goto done;
 
 	dst_img = XCreateImage(dpy, DefaultVisualOfScreen(s), 1, ZPixmap,
-	                       0, NULL, dst_w, dst_h, 8, 0);
+	                       0, nullptr, dst_w, dst_h, 8, 0);
 	if (!dst_img)
 		goto done;
 
@@ -3925,7 +3925,7 @@ ScaleMaskNearest(
 		goto done;
 	}
 
-	gc = XCreateGC(dpy, dst_mask, 0, NULL);
+	gc = XCreateGC(dpy, dst_mask, 0, nullptr);
 	XPutImage(dpy, dst_mask, gc, dst_img, 0, 0, 0, 0, dst_w, dst_h);
 	XFreeGC(dpy, gc);
 
@@ -4050,21 +4050,21 @@ _DtDuplicateIcon(
    G_FontList(new) = XmFontListCopy(G_FontList(gadget));
 
    /* Certain fields should not be inherited by the clone */
-   new->object.destroy_callbacks = NULL;
-   new->object.constraints = NULL;
-   new->gadget.help_callback = NULL;
-   new->icon.drop_callback = NULL;
+   new->object.destroy_callbacks = nullptr;
+   new->object.constraints = nullptr;
+   new->gadget.help_callback = nullptr;
+   new->icon.drop_callback = nullptr;
    new->rectangle.managed = False;
-   G_Callback(new) = NULL;
+   G_Callback(new) = nullptr;
 
    /* Set the user_data field */
    new->gadget.user_data = user_data;
 
    /* Process the optional pixmap name */
-   if ((pixmap == NULL) || LoadPixmap(new, pixmap))
+   if ((pixmap == nullptr) || LoadPixmap(new, pixmap))
    {
       /* No pixmap to load */
-      G_ImageName(new) = NULL;
+      G_ImageName(new) = nullptr;
       G_Pixmap(new) = None;
       G_PixmapWidth(new) = 0;
       G_PixmapHeight(new) = 0;
@@ -4083,11 +4083,11 @@ _DtDuplicateIcon(
    ReCacheIcon_r(&local_cache, new);
 
    /* Get copies of the GC's */
-   G_NormalGC(new) = NULL;
-   G_BackgroundGC(new) = NULL;
-   G_ArmedGC(new) = NULL;
-   G_ArmedBackgroundGC(new) = NULL;
-   G_ClipGC(new) = NULL;
+   G_NormalGC(new) = nullptr;
+   G_BackgroundGC(new) = nullptr;
+   G_ArmedGC(new) = nullptr;
+   G_ArmedBackgroundGC(new) = nullptr;
+   G_ClipGC(new) = nullptr;
    UpdateGCs(new);
 
    /* Size the gadget */
@@ -4332,8 +4332,8 @@ _DtIconRegisterDropsite(
         Widget w)
 
 {
-    XtCallbackRec transferCB[] = { {TransferCallback, NULL}, {NULL, NULL} };
-    XtCallbackRec animateCB[] = { {AnimateCallback, NULL}, {NULL, NULL} };
+    XtCallbackRec transferCB[] = { {TransferCallback, nullptr}, {nullptr, nullptr} };
+    XtCallbackRec animateCB[] = { {AnimateCallback, nullptr}, {nullptr, nullptr} };
     DtIconGadget g =	(DtIconGadget) w;
     XRectangle rects[2];
     unsigned char flags;

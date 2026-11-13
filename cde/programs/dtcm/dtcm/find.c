@@ -93,7 +93,7 @@ make_find(Calendar *c)
 	Widget	 	 highest_label;
 	char		 *title;
 
-	if (c->find == NULL) {
+	if (c->find == nullptr) {
                 c->find = (caddr_t)ckalloc(sizeof(Find));
                 f = (Find*)c->find;
         }
@@ -107,7 +107,7 @@ make_find(Calendar *c)
                 XmNtitle, 		title,
                 XmNallowShellResize, 	True,
 		XmNmappedWhenManaged, 	False,
-                NULL);
+                nullptr);
 	XtFree(title);
 
         f->form = XtVaCreateWidget("form",
@@ -117,7 +117,7 @@ make_find(Calendar *c)
 		XmNfractionBase, 	4,
 		XmNmarginWidth, 	0,
 		XmNmarginHeight, 	0,
-                NULL);
+                nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 284, "Find:"));
         f->apptstr_label = XtVaCreateWidget("label", 
@@ -128,7 +128,7 @@ make_find(Calendar *c)
 		XmNleftOffset,		10,
                 XmNtopAttachment, 	XmATTACH_FORM,
 		XmNtopOffset,		15,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
         f->apptstr = XtVaCreateWidget("appt", 
@@ -140,7 +140,7 @@ make_find(Calendar *c)
 		XmNrightOffset,		10,
 		XmNleftAttachment, 	XmATTACH_WIDGET,
 		XmNleftWidget, 		f->apptstr_label,
-                NULL);
+                nullptr);
 
 	f->search_rc_mgr = XtVaCreateWidget("search_rc_mgr",
                 xmRowColumnWidgetClass, 
@@ -156,7 +156,7 @@ make_find(Calendar *c)
                 XmNleftAttachment, 	XmATTACH_OPPOSITE_WIDGET,
                 XmNleftWidget, 		f->apptstr,
                 XmNleftOffset, 		0,
-                NULL);
+                nullptr);
  
         xmstr = XmStringCreateLocalized(
 				CATGETS(c->DT_catd, 1, 973, "Search all"));
@@ -165,10 +165,10 @@ make_find(Calendar *c)
 		f->search_rc_mgr,
 		XmNlabelString, 	xmstr,
 		XmNuserData, 		f,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(f->search_all, XmNvalueChangedCallback, f_searchall_cb, 
-									NULL);
+									nullptr);
  
         xmstr = XmStringCreateLocalized(
 				CATGETS(c->DT_catd, 1, 974, "Search from"));
@@ -178,10 +178,10 @@ make_find(Calendar *c)
 		XmNlabelString, 	xmstr,
 		XmNuserData, 		f,
 		XmNset, 		True,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(f->search_range, XmNvalueChangedCallback, 
-							f_searchrange_cb, NULL);
+							f_searchrange_cb, nullptr);
 
 	f->search_set = search_range;
  
@@ -203,7 +203,7 @@ make_find(Calendar *c)
 		XmNtopOffset, 		30, 
 		XmNuserData, 		c,
 		XmNvalue, 		buffer,
-                NULL);
+                nullptr);
 	XtSetSensitive(f->search_from, True);
 
 
@@ -225,7 +225,7 @@ make_find(Calendar *c)
 		XmNtopAttachment, 	XmATTACH_WIDGET,
 		XmNtopWidget, 		f->apptstr,
 		XmNtopOffset, 		35, 
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
         f->search_to = XtVaCreateWidget("search_to", 
@@ -239,7 +239,7 @@ make_find(Calendar *c)
 		XmNrightOffset,		10, 
 		XmNuserData, 		c,
 		XmNvalue, 		buffer,
-                NULL);
+                nullptr);
 	XtSetSensitive(f->search_to, True);
 
         separator1 = XtVaCreateWidget("separator1",
@@ -250,7 +250,7 @@ make_find(Calendar *c)
 		XmNtopAttachment, 	XmATTACH_WIDGET,
 		XmNtopWidget, 		f->search_rc_mgr,
 		XmNtopOffset, 		5,
-                NULL);
+                nullptr);
  
 	xmstr = XmStringCreateLocalized(
 		CATGETS(c->DT_catd, 1, 848, "Date"));
@@ -263,7 +263,7 @@ make_find(Calendar *c)
 		XmNtopOffset, 		10,
 		XmNleftAttachment, 	XmATTACH_FORM,
 		XmNleftOffset, 		10,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	xmstr = XmStringCreateLocalized(
 		CATGETS(c->DT_catd, 1, 849, "Time"));
@@ -276,7 +276,7 @@ make_find(Calendar *c)
 		XmNtopOffset, 		10,
 		XmNleftAttachment, 	XmATTACH_WIDGET,
 		XmNleftWidget, 		f->date_label,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	xmstr = XmStringCreateLocalized(
 		CATGETS(c->DT_catd, 1, 850, "What"));
@@ -289,7 +289,7 @@ make_find(Calendar *c)
 		XmNtopOffset, 		10,
 		XmNleftAttachment, 	XmATTACH_WIDGET,
 		XmNleftWidget, 		f->time_label,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	f->find_message = XtVaCreateWidget("message",
@@ -299,7 +299,7 @@ make_find(Calendar *c)
 		XmNleftOffset, 		10,
 		XmNrightAttachment, 	XmATTACH_FORM,
 		XmNbottomAttachment, 	XmATTACH_FORM,
-		NULL);
+		nullptr);
 
         button_form = XtVaCreateWidget("print_button_form_mgr",
                 xmFormWidgetClass,
@@ -314,7 +314,7 @@ make_find(Calendar *c)
                 XmNbottomAttachment,    XmATTACH_WIDGET,
                 XmNbottomWidget,        f->find_message,
                 XmNbottomOffset,        5,
-                NULL);
+                nullptr);
 
         separator2 = XtVaCreateWidget("separator1",
                 xmSeparatorGadgetClass, 
@@ -324,7 +324,7 @@ make_find(Calendar *c)
                 XmNbottomAttachment, 	XmATTACH_WIDGET,
 		XmNbottomWidget, 	button_form,
 		XmNbottomOffset, 	5,
-                NULL);
+                nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 285, "Find"));
         f->find_button = XtVaCreateWidget("findbutton", 
@@ -339,8 +339,8 @@ make_find(Calendar *c)
 		XmNrightOffset, 	0,
 		XmNbottomAttachment,	XmATTACH_FORM,
 		XmNshowAsDefault,	0,
-                NULL);
-	XtAddCallback(f->find_button, XmNactivateCallback, find_appts, NULL);
+                nullptr);
+	XtAddCallback(f->find_button, XmNactivateCallback, find_appts, nullptr);
 	XmStringFree(xmstr);
 		
 	xmstr = XmStringCreateLocalized(
@@ -356,10 +356,10 @@ make_find(Calendar *c)
 		XmNrightPosition, 	3,
 		XmNrightOffset, 	0,
 		XmNbottomAttachment,	XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
-	XtAddCallback(f->show_button, XmNactivateCallback, show_appt, NULL);
+	XtAddCallback(f->show_button, XmNactivateCallback, show_appt, nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 680, "Close"));
 	f->cancel_button = XtVaCreateWidget("cancel", 
@@ -373,10 +373,10 @@ make_find(Calendar *c)
 		XmNrightPosition, 	4,
 		XmNrightOffset, 	0,
 		XmNbottomAttachment,	XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
-	XtAddCallback(f->cancel_button, XmNactivateCallback, f_cancel_cb, NULL);
+	XtAddCallback(f->cancel_button, XmNactivateCallback, f_cancel_cb, nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 77, "Help"));
 	f->help_button = XtVaCreateWidget("help", 
@@ -390,7 +390,7 @@ make_find(Calendar *c)
 		XmNrightPosition, 	5,
 		XmNrightOffset, 	0,
 		XmNbottomAttachment,	XmATTACH_FORM,
-                NULL);
+                nullptr);
         XtAddCallback(f->help_button, XmNactivateCallback, 
 		help_cb, FIND_HELP_BUTTON);
         XtAddCallback(f->form, XmNhelpCallback, 
@@ -419,11 +419,11 @@ make_find(Calendar *c)
 		XmNbottomWidget, 	separator2,
 		XmNbottomOffset, 	10,
                 XmNlistSizePolicy, 	XmCONSTANT,
-		NULL);
+		nullptr);
 
 	XtManageChild(f->find_list);
 
-	XtAddCallback(f->find_list, XmNdefaultActionCallback, show_appt, NULL);
+	XtAddCallback(f->find_list, XmNdefaultActionCallback, show_appt, nullptr);
 
 	layout_labels(f->date_label, f->time_label, 
 		      f->what_label, f->find_list);
@@ -432,11 +432,11 @@ make_find(Calendar *c)
         XtVaSetValues(button_form,
 		XmNdefaultButton, 	f->find_button,
         	XmNcancelButton, 	f->cancel_button,
-		NULL);
+		nullptr);
         XtVaSetValues(f->form,
 		XmNdefaultButton, 	f->find_button,
         	XmNcancelButton, 	f->cancel_button,
-		NULL);
+		nullptr);
 
 /*
 	XtManageChild(f->apptstr_label);
@@ -464,7 +464,7 @@ make_find(Calendar *c)
 	ManageChildren(button_form);
 	ManageChildren(f->form);
 	XtManageChild(f->form);
-        XtVaSetValues(f->frame, XmNmappedWhenManaged, True, NULL);
+        XtVaSetValues(f->frame, XmNmappedWhenManaged, True, nullptr);
 	XtRealizeWidget(f->frame);
 
 	XtPopup(f->frame, XtGrabNone);
@@ -485,7 +485,7 @@ f_get_searchdate(Widget widget, Props *p)
         st = get_int_prop(p, CP_DATESEPARATOR);
 	buf = get_date_from_widget(c->view->date, widget, ot, st);
 
-	new_date = (Tick) cm_getdate(buf, NULL);
+	new_date = (Tick) cm_getdate(buf, nullptr);
 
 	return(new_date);
 }
@@ -497,7 +497,7 @@ f_searchall_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 	XmToggleButtonCallbackStruct *state =
 		(XmToggleButtonCallbackStruct *) call_data;
 
-	XtVaGetValues(widget, XmNuserData, &f, NULL);
+	XtVaGetValues(widget, XmNuserData, &f, nullptr);
 
 	if (state->set)
 		f->search_set = search_all;
@@ -512,7 +512,7 @@ f_searchrange_cb(Widget widget, XtPointer client_data, XtPointer call_data)
 	XmToggleButtonCallbackStruct *state =
 		(XmToggleButtonCallbackStruct *) call_data;
 
-	XtVaGetValues(widget, XmNuserData, &f, NULL);
+	XtVaGetValues(widget, XmNuserData, &f, nullptr);
 
 	if (state->set)
 		f->search_set = search_range;
@@ -552,11 +552,11 @@ fmt_time_what(
 		sprintf(buf, "%8s", "");
 
         lines = text_to_lines(appt->what->value->item.string_value, 1);
-        if (lines != NULL && lines->s != NULL) {
+        if (lines != nullptr && lines->s != nullptr) {
                 (void) cm_strcat(buf, lines->s);
         }
 
-        if (lines != NULL) {
+        if (lines != nullptr) {
                 destroy_lines(lines);
         }
 }
@@ -578,10 +578,10 @@ find_appts(Widget widget, XtPointer client_data, XtPointer call_data)
         int num_items, mo, last_match_total = 0, match_total = 0;
         pr_pos xy;
 	Tick end_of_time, start, stop;
-	Tick_list *ptr, *next_ptr, *tail_ptr = NULL, *new_tick;
+	Tick_list *ptr, *next_ptr, *tail_ptr = nullptr, *new_tick;
 	CSA_session_handle cal = 0;
 	CSA_return_code stat;
-        CSA_entry_handle *entries = NULL;
+        CSA_entry_handle *entries = nullptr;
 	CSA_enum *ops;
         CSA_attribute *range_attrs;
 	CSA_uint32 num_entries;
@@ -592,7 +592,7 @@ find_appts(Widget widget, XtPointer client_data, XtPointer call_data)
 
 	astr = XmTextGetString(f->apptstr);
 
-        if (astr == NULL || *astr == '\0') {
+        if (astr == nullptr || *astr == '\0') {
 		sprintf(message, "%s", CATGETS(c->DT_catd, 1, 290, "Specify Appt String to Match."));
 		set_message(f->find_message, message);
                 return;
@@ -600,12 +600,12 @@ find_appts(Widget widget, XtPointer client_data, XtPointer call_data)
 	XmListDeleteAllItems(f->find_list);
 	set_message(f->find_message, " ");
 	ptr = f->ticks;
-	while (ptr != NULL) {
+	while (ptr != nullptr) {
 		next_ptr = ptr->next;
 		free(ptr);
 		ptr = next_ptr;
 	}
-	f->ticks = NULL;
+	f->ticks = nullptr;
 
 	if (f->search_set == search_all) {
 		end_of_time = real_eot;
@@ -666,13 +666,13 @@ find_appts(Widget widget, XtPointer client_data, XtPointer call_data)
 				    CSA_ENTRY_ATTR_START_DATE_I,
 				    CSA_ENTRY_ATTR_SUMMARY_I,
                                     CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
-				    NULL);
+				    nullptr);
 
 	_DtTurnOnHourGlass(f->frame);
         for (; stop <= end_of_time;) {
 		setup_range(&range_attrs, &ops, &range_count, start, stop,
 			    CSA_TYPE_EVENT, 0, B_FALSE, c->general->version);
-	        stat = csa_list_entries(c->cal_handle, range_count, range_attrs, ops, &num_entries, &entries, NULL);
+	        stat = csa_list_entries(c->cal_handle, range_count, range_attrs, ops, &num_entries, &entries, nullptr);
 
         	if (stat != CSA_SUCCESS) {
 			free_range(&range_attrs, &ops, range_count);
@@ -693,16 +693,16 @@ find_appts(Widget widget, XtPointer client_data, XtPointer call_data)
 				if (strncasecmp(astr, &(appt->what->value->item.string_value[j]),
 			     		comparison_length) == 0) {
 					new_tick = (Tick_list *) ckalloc(sizeof(Tick_list));
-					if (new_tick == NULL) {
+					if (new_tick == nullptr) {
 						free_appt_struct(&appt);
 						free_range(&range_attrs, &ops, range_count);
 						csa_free(entries);
 						_DtTurnOffHourGlass(f->frame);
 						return;
 					}
-					new_tick->next = NULL;
+					new_tick->next = nullptr;
 					_csa_iso8601_to_tick(appt->time->value->item.date_time_value, &(new_tick->tick));
-					if (f->ticks == NULL)
+					if (f->ticks == nullptr)
 						f->ticks = new_tick;
 					else
 						tail_ptr->next = new_tick;
@@ -784,7 +784,7 @@ show_appt(Widget widget, XtPointer client_data, XtPointer call_data)
 	char buf[BUFSIZ];
 	int list_cnt;
 
-	XtVaGetValues(f->find_list, XmNitemCount, &list_cnt, NULL);
+	XtVaGetValues(f->find_list, XmNitemCount, &list_cnt, nullptr);
 	if (list_cnt == 0) {
 		sprintf(buf, "%s", CATGETS(c->DT_catd, 1, 714, "There are no appointments in the list.  You must find one before showing an appointment."));
 		set_message(f->find_message, buf);
@@ -796,18 +796,18 @@ show_appt(Widget widget, XtPointer client_data, XtPointer call_data)
 		return;
 	}
 	set_message(f->find_message, " ");
-	XtVaGetValues(c->canvas, XmNheight, &h, XmNwidth, &w, NULL);
+	XtVaGetValues(c->canvas, XmNheight, &h, XmNwidth, &w, nullptr);
 	gr_clear_area(c->xcontext, 0, 0, w, h);
 
 	c->view->olddate = c->view->date;
-	for (ptr = (Tick_list*)f->ticks, i = 1; ptr != NULL && i < *pos_list; i++)
+	for (ptr = (Tick_list*)f->ticks, i = 1; ptr != nullptr && i < *pos_list; i++)
 		ptr = ptr->next;
 
 	c->view->date = ptr->tick;
 	c->view->nwks = numwks(c->view->date);
 	XtFree((XtPointer)pos_list);
 	invalidate_cache(c);
-	paint_canvas(c, NULL, RENDER_UNMAP);
+	paint_canvas(c, nullptr, RENDER_UNMAP);
 	calendar_deselect(c);
 	paint_selection(c);
 
@@ -847,27 +847,27 @@ layout_labels(
 
 	xmstr = XmStringCreateLocalized(" ");
 
-	XtVaGetValues(list, XmNfontList, &font_list, NULL);
+	XtVaGetValues(list, XmNfontList, &font_list, nullptr);
 
 	list_char_width = XmStringWidth(font_list, xmstr);
 
-	XtVaGetValues(l1, XmNwidth, &label_width, NULL);
+	XtVaGetValues(l1, XmNwidth, &label_width, nullptr);
 
 	/*
 	 * The ``Time'' label.
 	 */
 	XtVaSetValues(l2,
 		XmNleftOffset,	(14 * list_char_width) - label_width,
-		NULL);
+		nullptr);
 
-	XtVaGetValues(l2, XmNwidth, &label_width, NULL);
+	XtVaGetValues(l2, XmNwidth, &label_width, nullptr);
 
 	/*
 	 * The ``What'' label.
 	 */
 	XtVaSetValues(l3,
 		XmNleftOffset,	(8 * list_char_width) - label_width,
-		NULL);
+		nullptr);
 
 	XmStringFree(xmstr);
 }

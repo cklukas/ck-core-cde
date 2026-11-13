@@ -154,9 +154,9 @@ cm_args(int argc, char **argv)
 int main(int argc, char **argv)
 {
 	int		cnt;
-	char		*target = NULL, *date = NULL, *view = NULL,
+	char		*target = nullptr, *date = nullptr, *view = nullptr,
 			*uname, *loc;
-	Props		*p = NULL;
+	Props		*p = nullptr;
 	CSA_session_handle	c_handle;
 	CSA_entry_handle	*list;
 	CSA_calendar_user	csa_user;
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 
 	if (cm_file[0]) {
 		if (Mode == archive) {
-			if ((output_stream = fopen(cm_file, "w")) == NULL) {
+			if ((output_stream = fopen(cm_file, "w")) == nullptr) {
 				fprintf(stderr, CATGETS(DT_catd, 1, 698, "\nCould not open output file \"%s\"\n"), cm_file);
 				exit(1);
 			}
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 		}
 
 		if (Mode == restore) {
-			if ((input_stream = fopen(cm_file, "r")) == NULL) {
+			if ((input_stream = fopen(cm_file, "r")) == nullptr) {
 				fprintf(stderr, CATGETS(DT_catd, 1, 699, "\nCould not open input file \"%s\"\n"), cm_file);
 				exit(1);
 			}
@@ -202,9 +202,9 @@ int main(int argc, char **argv)
 	}
 	csa_user.user_name = target;
 	csa_user.user_type = 0;
-	csa_user.calendar_user_extensions = NULL;
+	csa_user.calendar_user_extensions = nullptr;
 	csa_user.calendar_address = target;
-	stat = csa_logon(NULL, &csa_user, NULL, NULL, NULL, &c_handle, NULL);
+	stat = csa_logon(nullptr, &csa_user, nullptr, nullptr, nullptr, &c_handle, nullptr);
 
 	if (stat != CSA_SUCCESS) {
 		char *format = XtNewString(CATGETS(DT_catd, 1, 208,
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	csa_logoff(c_handle, NULL);
+	csa_logoff(c_handle, nullptr);
 	props_clean_up(p);
 	free(p);
 	free(uname);

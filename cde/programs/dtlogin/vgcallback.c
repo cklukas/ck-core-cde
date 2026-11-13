@@ -112,7 +112,7 @@ static void _DtShowDialog(DialogType dtype, XmString msg);
 static void TellRequester(char * buf, size_t nbytes);
 
 static int session_selected = False;
-static Widget default_dt = NULL;
+static Widget default_dt = nullptr;
 
 
 /***************************************************************************
@@ -121,7 +121,7 @@ static Widget default_dt = NULL;
  *
  ***************************************************************************/
 
-       Widget	focusWidget = NULL;
+       Widget	focusWidget = nullptr;
 
 char	*userName = "\0";
 struct passwd *user_p;
@@ -143,12 +143,12 @@ XmString multiline_xmstring(char *text)
 
     char *start, *end;
     Boolean done;
-    XmString string = NULL;
+    XmString string = nullptr;
     XmString tmp_string;
-    XmString separator = NULL;
+    XmString separator = nullptr;
     char *buffer;
 
-    if (!text) return (NULL);
+    if (!text) return (nullptr);
 
 
     buffer = alloca(strlen((const char *)text) + 1);
@@ -248,7 +248,7 @@ CleanupAndExit( Widget w, int exit_code )
     vg_TRACE_EXECUTION("main:  entered CleanupAndExit ...");
 #endif /* VG_TRACE */
 
-    if (w != NULL)
+    if (w != nullptr)
       XtDestroyWidget(w);
     
     /*
@@ -270,13 +270,13 @@ CleanupAndExit( Widget w, int exit_code )
 	if ( toggleon ) exit_code = NOTIFY_DT;
 
 
-	if(options_last_dt != NULL) {
+	if(options_last_dt != nullptr) {
 	XtGetValues(options_last_dt, argt, 1);
 	if ( toggleon ) exit_code = NOTIFY_LAST_DT;
 	}
 
         for(i = 0; i < appInfo.altDts ; ++i) {
-	  if(alt_dts[i] != NULL) {
+	  if(alt_dts[i] != nullptr) {
            XtGetValues(alt_dts[i], argt, 1);
 	      if ( toggleon ) exit_code = NOTIFY_ALT_DTS + i + 1; /* alt desktops start  at 1 */ 
 	   }	
@@ -340,7 +340,7 @@ ClearDtButtons(void)
     XtSetArg(argt[0], XmNset, False);
 
     for (i=0; i<appInfo.altDts; ++i)
-      if (alt_dts[i] != NULL)
+      if (alt_dts[i] != nullptr)
         XtSetValues(alt_dts[i], argt, 1);
 
     if (options_failsafe) XtSetValues(options_failsafe, argt, 1);
@@ -371,7 +371,7 @@ RespondClearCB( Widget w, XtPointer client, XtPointer call )
 
   ClearDtlabel();
   ClearDtButtons();
-  SetDefaultDt(NULL);
+  SetDefaultDt(nullptr);
 
   r->hdr.opcode = REQUEST_OP_CLEAR;
   r->hdr.reserved = 0;
@@ -399,7 +399,7 @@ CopyrightCB( Widget w, XtPointer client_data, XtPointer call_data )
     vg_TRACE_EXECUTION("main:  entered CopyrightCB ...");
 #endif /* VG_TRACE */
 
-    if ( focusWidget != NULL)
+    if ( focusWidget != nullptr)
 	ProcessTraversal(focusWidget, XmTRAVERSE_CURRENT);
 
 }
@@ -432,7 +432,7 @@ EditPasswdCB(Widget w, XtPointer client, XtPointer call_data)
 #endif /* VG_TRACE */
 
     textdata = GetLoginTextPtr(w);
-    if (NULL == textdata || textdata->bEcho) return;
+    if (nullptr == textdata || textdata->bEcho) return;
     if (cbs->reason == XmCR_MOVING_INSERT_CURSOR) return;
 
     for (i=0, s=buffer, t=textdata->noechobuf;
@@ -523,7 +523,7 @@ FakeFocusIn( Widget focus_widget, XtPointer client_data, XEvent *eventprm,
    ProcessTraversal(focus_widget, XmTRAVERSE_CURRENT);
    
    XtRemoveEventHandler(focus_widget, ExposureMask, FALSE,
-   		   FakeFocusIn, NULL);
+   		   FakeFocusIn, nullptr);
 }
 
 /***************************************************************************
@@ -743,7 +743,7 @@ LayoutCB( Widget w, XtPointer client_data, XtPointer call_data )
      */
 
     if (copyright_msg) {
-	XtQueryGeometry(copyright_msg, NULL, &geometry);
+	XtQueryGeometry(copyright_msg, nullptr, &geometry);
     
 	i = 0;
 	XtSetArg(argt[i], XmNshadowThickness,	&width			); i++;
@@ -791,15 +791,15 @@ MenuItemCB( Widget w, XtPointer client_data, XtPointer call_data )
     switch ( (long) client_data) {
 
     case OB_RESTART_SERVER:
-	CleanupAndExit(NULL, NOTIFY_RESTART);
+	CleanupAndExit(nullptr, NOTIFY_RESTART);
 	break;
 
     case OB_NO_WINDOWS:
-	CleanupAndExit(NULL, NOTIFY_NO_WINDOWS);
+	CleanupAndExit(nullptr, NOTIFY_NO_WINDOWS);
 	break;
 
     case OB_COPYRIGHT:
-	_DtShowDialog(copyright, NULL);
+	_DtShowDialog(copyright, nullptr);
 	break;
 
     case OB_ALT_DTS:
@@ -834,13 +834,13 @@ MenuItemCB( Widget w, XtPointer client_data, XtPointer call_data )
 	    temp_p = logoFile;
  
         logoName = _DtGetIconFileName(DefaultScreenOfDisplay(dpyinfo.dpy),
-                          temp_p, NULL, NULL, 0);
+                          temp_p, nullptr, nullptr, 0);
  
-        if (logoName == NULL) {
+        if (logoName == nullptr) {
            LogError( 
 	     ReadCatalog(MC_LOG_SET,MC_LOG_NO_LOGOBIT,MC_DEF_LOG_NO_LOGOBIT),
                              logoFile);
-           logoFile = NULL;
+           logoFile = nullptr;
         }
         i = 0;
         XtSetArg(argt[i], XmNimageName, logoName); i++;
@@ -863,7 +863,7 @@ MenuItemCB( Widget w, XtPointer client_data, XtPointer call_data )
 	 *  return focus to name/password widgets...
 	 */
 	 
-	if ( focusWidget != NULL)
+	if ( focusWidget != nullptr)
 	    ProcessTraversal(focusWidget, XmTRAVERSE_CURRENT);
 
 	break;
@@ -1007,8 +1007,8 @@ PingServerCB( XtPointer call_data, XtIntervalId *id )
      */
 
     if ( pingInterval == 0 ) {
-	pingInterval  = ((t = (char *)getenv(PINGINTERVAL)) == NULL ? 0 : atoi(t));
-	pingTimeout   = ((t = (char *)getenv(PINGTIMEOUT))  == NULL ? 0 : atoi(t));
+	pingInterval  = ((t = (char *)getenv(PINGINTERVAL)) == nullptr ? 0 : atoi(t));
+	pingTimeout   = ((t = (char *)getenv(PINGTIMEOUT))  == nullptr ? 0 : atoi(t));
     }
 
     
@@ -1020,7 +1020,7 @@ PingServerCB( XtPointer call_data, XtIntervalId *id )
     if ( pingInterval != 0 ) {
 	if (PingServer())
 	    XtAddTimeOut((unsigned long) pingInterval * 60 * 1000, 
-	    		  PingServerCB, NULL);
+	    		  PingServerCB, nullptr);
 	else
 	    exit(NOTIFY_RESTART);
     }
@@ -1051,7 +1051,7 @@ PostMenuCB( Widget w, XtPointer client_data, XtPointer call_data )
      *  make options menus if they don't yet exist...
      */
 
-    if (options_menu == NULL)
+    if (options_menu == nullptr)
 	MakeOptionsMenu();
 
 
@@ -1094,7 +1094,7 @@ ProcessTraversal( Widget w, int direction )
      * callback routine...
      */
 
-    TextFocusCB(w, NULL, NULL);
+    TextFocusCB(w, nullptr, nullptr);
 }
 
 
@@ -1135,7 +1135,7 @@ RefreshEH( Widget w, XtPointer client_data, XEvent *event,
 			    InputOutput,		/* class	   */
 			    CopyFromParent,		/* visual	   */
 			    0,				/* value mask	   */
-			    (XSetWindowAttributes *)NULL); /* attributes   */
+			    (XSetWindowAttributes *)nullptr); /* attributes   */
     
     XMapWindow(dpyinfo.dpy, cover);
     XDestroyWindow(dpyinfo.dpy, cover);
@@ -1198,7 +1198,7 @@ RequestCB(
 #ifdef VG_TRACE
       vg_TRACE_EXECUTION("main:  got REQUEST_OP_EXIT ...");
 #endif /* VG_TRACE */
-      RespondExitCB(NULL, NULL, NULL);
+      RespondExitCB(nullptr, nullptr, nullptr);
       break;
 
     case REQUEST_OP_MESSAGE:
@@ -1217,7 +1217,7 @@ RequestCB(
           * Caller passed in MC_* message id.
           */
           if (r->idMC == MC_NO_LOGIN &&
-              (fp = fopen(NO_LOGIN_FILE,"r")) != NULL)
+              (fp = fopen(NO_LOGIN_FILE,"r")) != nullptr)
           {
            /*
             * For MC_NO_LOGIN read message from file.
@@ -1225,9 +1225,9 @@ RequestCB(
             char buffer[256];
             int j;
 
-            string = NULL;
+            string = nullptr;
 
-            while (fgets(buffer, 256, fp) != NULL)
+            while (fgets(buffer, 256, fp) != nullptr)
             {
               j = strlen(buffer);
               if ( buffer[j-1] == '\n' ) buffer[j-1] = '\0';
@@ -1270,14 +1270,14 @@ RequestCB(
 #ifdef VG_TRACE
       vg_TRACE_EXECUTION("main:  got REQUEST_OP_HOSTNAME ...");
 #endif /* VG_TRACE */
-      _DtShowDialog(hostname, NULL);
+      _DtShowDialog(hostname, nullptr);
       break;
 
     case REQUEST_OP_EXPASSWORD:
 #ifdef VG_TRACE
       vg_TRACE_EXECUTION("main:  got REQUEST_OP_EXPASSWORD ...");
 #endif /* VG_TRACE */
-      _DtShowDialog(expassword, NULL);
+      _DtShowDialog(expassword, nullptr);
       break;
 
     case REQUEST_OP_CHPASS:
@@ -1307,7 +1307,7 @@ RequestCB(
         textdata->noechobuf[0] = '\0';
 
         XtAddEventHandler(textdata->text[textdata->bEcho], ExposureMask, False,
-                        FakeFocusIn, NULL);
+                        FakeFocusIn, nullptr);
 
         XtMapWidget(textdata->text[textdata->bEcho]);
 
@@ -1398,7 +1398,7 @@ RequestCB(
           {
           siaFormInfo.visible[i] = r->visible[i];
           siaFormInfo.prompts[i] = XtMalloc(strlen(prompt_ptr));
-          siaFormInfo.answers[i] = NULL;
+          siaFormInfo.answers[i] = nullptr;
           strcpy(siaFormInfo.prompts[i], prompt_ptr);
           prompt_ptr += strlen(prompt_ptr) + 1;
           }
@@ -1467,7 +1467,7 @@ RespondExitCB(
 
   TellRequester(buf, (size_t) r->hdr.length);
 
-  CleanupAndExit(NULL, NOTIFY_OK);
+  CleanupAndExit(nullptr, NOTIFY_OK);
 }
 /***************************************************************************
  *
@@ -1514,7 +1514,7 @@ RespondLangCB( Widget w, XtPointer client, XtPointer call)
 
     TellRequester(buf, (size_t) r->hdr.length);
  
-    CleanupAndExit(NULL, NOTIFY_LANG_CHANGE);
+    CleanupAndExit(nullptr, NOTIFY_LANG_CHANGE);
   }
 }
 
@@ -1671,7 +1671,7 @@ SetDefaultDt(Widget w)
 void
 SetDtLabelAndIcon(void)
 {
-  static XmString	blanks = NULL;
+  static XmString	blanks = nullptr;
   int			i;
   char           	*logoFile;
   char           	*logoName;
@@ -1681,7 +1681,7 @@ SetDtLabelAndIcon(void)
   vg_TRACE_EXECUTION("main:  entered SetDtLabelAndIcon ...");
 #endif /* VG_TRACE */
 
-  if (NULL == blanks)
+  if (nullptr == blanks)
     blanks = XmStringCreateLocalized("       ");
 
   /*
@@ -1694,14 +1694,14 @@ SetDtLabelAndIcon(void)
   XtSetValues(options_failsafe, argt, i);
   XtSetValues(options_dtlite, argt, i);
   XtSetValues(options_dt, argt, i);
-  if (options_last_dt != NULL)
+  if (options_last_dt != nullptr)
     XtSetValues(options_last_dt, argt, i);
  
   for(i = 0; i<appInfo.altDts ; ++i)
-    if(alt_dts[i] != NULL)
+    if(alt_dts[i] != nullptr)
       XtSetValues(alt_dts[i], argt, i);
 
-  if (NULL != default_dt) {
+  if (nullptr != default_dt) {
       i = 0;
       XtSetArg(argt[i], XmNset, True); i++;
       XtSetValues(default_dt, argt, i);
@@ -1757,13 +1757,13 @@ SetDtLabelAndIcon(void)
  
   logoName = _DtGetIconFileName(
 			DefaultScreenOfDisplay(dpyinfo.dpy),
-                        temp_p, NULL, NULL, 0);
+                        temp_p, nullptr, nullptr, 0);
  
-  if (logoName == NULL) {
+  if (logoName == nullptr) {
         LogError(
 	ReadCatalog(MC_LOG_SET,MC_LOG_NO_LOGOBIT,MC_DEF_LOG_NO_LOGOBIT),
                              logoFile);
-        logoFile = NULL;
+        logoFile = nullptr;
   }
 
   i = 0;
@@ -1781,7 +1781,7 @@ SetDtLabelAndIcon(void)
 static void 
 _DtShowDialog( DialogType dtype, XmString msg)
 {
-    Widget *w = NULL;
+    Widget *w = nullptr;
     
 #ifdef VG_TRACE
     vg_TRACE_EXECUTION("main:  entered _DtShowDialog ...");
@@ -1797,12 +1797,12 @@ _DtShowDialog( DialogType dtype, XmString msg)
       default: return;
     }
 
-    if (*w == NULL)
+    if (*w == nullptr)
     {
       MakeDialog(dtype);
     }
     
-    if ( msg != NULL ) {
+    if ( msg != nullptr ) {
 	XtSetArg(argt[0], XmNmessageString, msg	);
 	XtSetValues(*w, argt, 1);
     }
@@ -1827,7 +1827,7 @@ void
 ShowDialogCB( Widget w, XtPointer dialog, XtPointer call_data )
 {
 
-    _DtShowDialog( (DialogType) dialog, NULL);
+    _DtShowDialog( (DialogType) dialog, nullptr);
 }
 
 

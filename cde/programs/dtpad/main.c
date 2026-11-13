@@ -160,14 +160,14 @@ GetUserResourcePath(void)
     size_t len;
     char *path;
 
-    if (home == NULL)
+    if (home == nullptr)
         home = "";
 
     len = strlen(home) + 1 + strlen(DtPERSONAL_CONFIG_DIRECTORY) + 1 +
           strlen("dtpadrc") + 1;
     path = XtMalloc((unsigned)len);
-    if (path == NULL)
-        return NULL;
+    if (path == nullptr)
+        return nullptr;
 
     snprintf(path, len, "%s/%s/%s", home, DtPERSONAL_CONFIG_DIRECTORY, "dtpadrc");
     return path;
@@ -180,15 +180,15 @@ LoadUserResources(Display *display)
     XrmDatabase display_db;
     char *path;
 
-    if (display == NULL)
+    if (display == nullptr)
         return;
 
     path = GetUserResourcePath();
-    if (path == NULL)
+    if (path == nullptr)
         return;
 
     user_db = XrmGetFileDatabase(path);
-    if (user_db != NULL) {
+    if (user_db != nullptr) {
         display_db = XtDatabase(display);
         XrmMergeDatabases(user_db, &display_db);
     }
@@ -271,19 +271,19 @@ static String fallbacks[] =
     "Dtpad.Print.height:11.0in",
     "Dtpad.Print*renderTable:-adobe-courier-medium-r-normal--0-140-0-0-m-0-iso8859-1",
     "Dtpad.Print*shadowThickness:0",
-    NULL
+    nullptr
 };
 
 ApplicationData initialServerResources;
 char *initialServerGeometry;
-Editor *pPadList = (Editor *)NULL;
+Editor *pPadList = (Editor *)nullptr;
 int numActivePads = 0;
 Widget topLevelWithWmCommand;
 Boolean ActionDBInitialized = False;
 int waitCB = 1;
-char *value = NULL;
+char *value = nullptr;
 
-char **pArgv = NULL;
+char **pArgv = nullptr;
 int pArgc = 0;
 
 
@@ -346,7 +346,7 @@ main(
      * and message catalogs. */
     (void)_DtEnvControl(DT_ENV_SET);
 
-    (void) XtSetLanguageProc((XtAppContext)NULL, NULL,
+    (void) XtSetLanguageProc((XtAppContext)NULL, nullptr,
 			     (XtPointer)NULL);
 
     pArgc = argc;
@@ -362,7 +362,7 @@ main(
 
     /* -----> Resolve conficts between -standAlone, -session and -server */
     if (pPad->xrdb.standAlone) {	/* standAlone takes precedence */
-	pPad->xrdb.session = (char *) NULL;
+	pPad->xrdb.session = (char *) nullptr;
 	pPad->xrdb.server = False;
     } else if (pPad->xrdb.session) {	/* session is 2nd in precedence */
  	pPad->xrdb.server = False;
@@ -460,7 +460,7 @@ main(
             * to something other then NULL, lets use it to print out the 
             * message.
             */
-           if(validTT && value != NULL) {
+           if(validTT && value != nullptr) {
               tmpStr = (char *)XtMalloc(strlen(GETMESSAGE(7, 7, "ERROR: A dtpad server on %s\nis already serving this display.")) + strlen(value) + 10);
 
               sprintf(tmpStr, GETMESSAGE(7, 7, "ERROR: A dtpad server on %s\nis already serving this display."), value);
@@ -609,7 +609,7 @@ CreateFirstPad(
 		for (i = 1; i < ((*pArgc) - 1); i++)
 		{
 		    inS = MbStrchri(argv[i], '-', &in);
-		    if (inS != NULL) {
+		    if (inS != nullptr) {
 			if (in == 0)
 			{
 			    printf(GETMESSAGE(2, 2,"dtpad: illegal option: %s"),
@@ -678,7 +678,7 @@ CreateFirstPad(
 
     /* Get the application resources */
     XtGetApplicationResources(pPad->app_shell, &pPad->xrdb, resources,
-                              XtNumber(resources), NULL, 0);
+                              XtNumber(resources), nullptr, 0);
     if (pPad->xrdb.server) {
 	initialServerResources = pPad->xrdb;
 	initialServerResources.server = False; /* so window will be mapped */ 
@@ -713,11 +713,11 @@ CreatePad(
     Editor *pPad;
 
     pPad = *ppPad = (Editor *) XtCalloc(1, sizeof(Editor));
-    pPad->pPrevPad = (Editor *)NULL;
+    pPad->pPrevPad = (Editor *)nullptr;
 
-    if (pPadList == (Editor *)NULL) {
+    if (pPadList == (Editor *)nullptr) {
         pPadList = pPad;
-        pPad->pNextPad = (Editor *)NULL;
+        pPad->pNextPad = (Editor *)nullptr;
     } else {
 	Editor *pTemp = pPadList;
 	pPadList = pPad;
@@ -740,7 +740,7 @@ SetupLoadArgs(Tt_message m, Editor *pPad)
      *        Instead a "private" ToolTalk request, DtPadSession_Run is
      *        used (which is sent in SendMessageToServer() and handled in
      *        HandleTtRequest() - the handler is setup in main()) */
-    if (pPad->xrdb.session != (char *)NULL) {
+    if (pPad->xrdb.session != (char *)nullptr) {
       tt_message_context_set(m, "SESSION", pArgs->session);
       return;
     }
@@ -748,7 +748,7 @@ SetupLoadArgs(Tt_message m, Editor *pPad)
     /* -----> The following is the only resource passed to the text editor
      *        server which is not a text editor specific resource.
      *        It is always passed. */
-    if (pPad->geometry != (char *)NULL) {
+    if (pPad->geometry != (char *)nullptr) {
       tt_message_context_set(m, "GEOMETRY", pPad->geometry);
     }
 
@@ -883,7 +883,7 @@ SendMessageToServer(
     Tt_status status;
     Tttk_op op;
 
-    if (pPad->xrdb.session != (char *)NULL) {
+    if (pPad->xrdb.session != (char *)nullptr) {
 	fileName = pPad->xrdb.session;
     } else if (argc > 1) {
 	fileName = argv[argc - 1];
@@ -900,7 +900,7 @@ SendMessageToServer(
     status = tt_ptr_error(pPad->fileStuff.netfile);
     if (status != TT_OK) {
 	tt_free(pPad->fileStuff.netfile);
-	pPad->fileStuff.netfile = (char *) NULL;
+	pPad->fileStuff.netfile = (char *) nullptr;
 	pPad->xrdb.standAlone = True;
 	InitEditSessionAndFirstPad(pPad, argc, argv);	/* start standAlone  */
 	TTwarning( pPad, status,
@@ -927,7 +927,7 @@ SendMessageToServer(
     status = TTstartDesktopMediaExchange(topLevelWithWmCommand, pPad);
     if (TT_OK != status) {
 	tt_free(pPad->fileStuff.netfile);
-	pPad->fileStuff.netfile = (char *) NULL;
+	pPad->fileStuff.netfile = (char *) nullptr;
 	pPad->xrdb.standAlone = True;
         InitEditSessionAndFirstPad(pPad, argc, argv);
 	TTwarning( pPad, status,
@@ -965,13 +965,13 @@ SendMessageToServer(
 
      msg = ttmedia_load(0,
 	 	        pLoadMsgCB,
-		        NULL,
+		        nullptr,
 		        op,
 		        "C_STRING",
-		        NULL,
+		        nullptr,
 		        0,
 		        fileName,
-		        NULL,
+		        nullptr,
 		        0);
      
      status = tt_ptr_error(msg);
@@ -983,7 +983,7 @@ SendMessageToServer(
 
      ttdt_subcontract_manage(msg,
 		        pStatusCB,
-		        NULL,
+		        nullptr,
 		        (void *) ((XtArgVal) pPad->xrdb.blocking));/* client data */
 
      /* Add pArgs to msg using tt_message_context_set */
@@ -1007,7 +1007,7 @@ InitEditSessionAndFirstPad(
 	int argc,
 	char **argv)
 {
-    char *pTmp = (char *)NULL;
+    char *pTmp = (char *)nullptr;
 
     CreateDefaultImage ((char *) warningBits, 32, 32, "warn_image");
 
@@ -1019,19 +1019,19 @@ InitEditSessionAndFirstPad(
     pPad->user_id = getuid();
 
     /* Set up file name */
-    if (pPad->saveRestore == True && argv[3] != NULL) {
+    if (pPad->saveRestore == True && argv[3] != nullptr) {
 	pTmp = argv[3];
     } else if (argc > 1) {
 	pTmp = argv[argc - 1];
     }
 
-    if (pTmp != (char *)NULL) {
+    if (pTmp != (char *)nullptr) {
         pPad->fileStuff.fileName = (char *) XtMalloc(strlen(pTmp) + 1);
         strcpy(pPad->fileStuff.fileName, pTmp);
     } else {
-	pPad->fileStuff.fileName = (char *)NULL;
+	pPad->fileStuff.fileName = (char *)nullptr;
     }
-    pPad->fileStuff.lastIncludeName = (char *)NULL;
+    pPad->fileStuff.lastIncludeName = (char *)nullptr;
     RealizeNewPad(pPad);	/* display first pPad Editor window */
 
     setPanicConditions();	/* Set up emergency calls to PanicSave */
@@ -1045,7 +1045,7 @@ InitEditSessionAndFirstPad(
         sigfillset(&act.sa_mask);
         act.sa_flags = 0;
         act.sa_handler = SigcldHndlr;
-        sigaction(SIGCHLD, &act, (struct sigaction *)NULL);
+        sigaction(SIGCHLD, &act, (struct sigaction *)nullptr);
     }
 }
 
@@ -1079,7 +1079,7 @@ RealizeNewPad(
     XtSetArg(al[ac], XmNgeometry, NULL); ac++;
     XtSetValues(pPad->app_shell, al, ac);
 
-    if (pPad->xrdb.session != NULL) {
+    if (pPad->xrdb.session != nullptr) {
        restoreSession(pPad);
     }
     pPad->nodo = False;
@@ -1147,7 +1147,7 @@ RealizeNewPad(
     }
 
     /* load the file (if there's actually a file name specified) */
-    LoadFile(pPad, NULL);
+    LoadFile(pPad, nullptr);
 
 }
 
@@ -1172,7 +1172,7 @@ ManageOldPad(
 	Boolean isCurrentlyVisible)
 {
 
-    if(pPad->xrdb.session != NULL)
+    if(pPad->xrdb.session != nullptr)
        restoreSession(pPad);
 
     /*.. create the title */
@@ -1197,7 +1197,7 @@ ManageOldPad(
        XtMapWidget(pPad->app_shell);
     }
 
-    LoadFile(pPad, NULL);
+    LoadFile(pPad, nullptr);
 }
 
 
@@ -1244,23 +1244,23 @@ setPanicConditions(void)
     sigfillset(&act.sa_mask);
     act.sa_flags = 0;
     act.sa_handler = panicSignalHandler;
-    sigaction(SIGHUP, &act, (struct sigaction *)NULL);
-    sigaction(SIGINT, &act, (struct sigaction *)NULL);
-    sigaction(SIGQUIT, &act, (struct sigaction *)NULL);
-    sigaction(SIGILL, &act, (struct sigaction *)NULL);
-    sigaction(SIGABRT, &act, (struct sigaction *)NULL);
-    sigaction(SIGIOT, &act, (struct sigaction *)NULL);
+    sigaction(SIGHUP, &act, (struct sigaction *)nullptr);
+    sigaction(SIGINT, &act, (struct sigaction *)nullptr);
+    sigaction(SIGQUIT, &act, (struct sigaction *)nullptr);
+    sigaction(SIGILL, &act, (struct sigaction *)nullptr);
+    sigaction(SIGABRT, &act, (struct sigaction *)nullptr);
+    sigaction(SIGIOT, &act, (struct sigaction *)nullptr);
 #ifdef SIGEMT
-    sigaction(SIGEMT, &act, (struct sigaction *)NULL);
+    sigaction(SIGEMT, &act, (struct sigaction *)nullptr);
 #endif
-    sigaction(SIGFPE, &act, (struct sigaction *)NULL);
-    sigaction(SIGBUS, &act, (struct sigaction *)NULL);
-    sigaction(SIGSEGV, &act, (struct sigaction *)NULL);
+    sigaction(SIGFPE, &act, (struct sigaction *)nullptr);
+    sigaction(SIGBUS, &act, (struct sigaction *)nullptr);
+    sigaction(SIGSEGV, &act, (struct sigaction *)nullptr);
 #ifdef SIGSYS
-    sigaction(SIGSYS, &act, (struct sigaction *)NULL);
+    sigaction(SIGSYS, &act, (struct sigaction *)nullptr);
 #endif
-    sigaction(SIGPIPE, &act, (struct sigaction *)NULL);
-    sigaction(SIGTERM, &act, (struct sigaction *)NULL);
+    sigaction(SIGPIPE, &act, (struct sigaction *)nullptr);
+    sigaction(SIGTERM, &act, (struct sigaction *)nullptr);
 
     XSetErrorHandler(dtpadXErrorHandler);
     XSetIOErrorHandler(dtpadXIOErrorHandler);
@@ -1662,7 +1662,7 @@ void SigcldHndlr (int dummy)
     /*
      * Is this really necessary?
      */
-    sigaction(SIGCHLD, &act, (struct sigaction *)NULL);
+    sigaction(SIGCHLD, &act, (struct sigaction *)nullptr);
 }
 
 
@@ -1720,7 +1720,7 @@ UnmanageAllDialogs(
     {
         XtUnmanageChild(pPad->MainHelp);
     }
-    for (pHelp = pPad->pHelpCache; pHelp != (HelpStruct *)NULL;
+    for (pHelp = pPad->pHelpCache; pHelp != (HelpStruct *)nullptr;
 	 pHelp = pHelp->pNext)
     {
 	if (pHelp->dialog != (Widget)NULL &&
@@ -1740,21 +1740,21 @@ RestoreInitialServerResources(
         Editor *pPad)
 {
     /* -----> free resource strings */
-    if (pPad->xrdb.workspaceList != (char *)NULL)
+    if (pPad->xrdb.workspaceList != (char *)nullptr)
 	XtFree(pPad->xrdb.workspaceList);
-    if (pPad->xrdb.session != (char *)NULL)
+    if (pPad->xrdb.session != (char *)nullptr)
 	XtFree(pPad->xrdb.session);
-    if (pPad->geometry != (char *)NULL)
+    if (pPad->geometry != (char *)nullptr)
 	XtFree(pPad->geometry );
 
     pPad->xrdb = initialServerResources;
 
     /* -----> duplicate resource strings */
-    if (initialServerResources.workspaceList != (char *)NULL)
+    if (initialServerResources.workspaceList != (char *)nullptr)
 	pPad->xrdb.workspaceList = strdup(initialServerResources.workspaceList);
-    if (initialServerResources.session != (char *)NULL)
+    if (initialServerResources.session != (char *)nullptr)
 	pPad->xrdb.session = strdup(initialServerResources.session);
-    if (initialServerGeometry != (char *)NULL)
+    if (initialServerGeometry != (char *)nullptr)
 	pPad->geometry = strdup(initialServerGeometry);
 
 }
@@ -1906,7 +1906,7 @@ dtpadXErrorHandler(
 
     /* log error */
     _DtPrintDefaultErrorSafe(display, xerr, msg, _DTPAD_BUFSIZE);
-    _DtSimpleError("dtpad", DtWarning, NULL, msg, NULL);
+    _DtSimpleError("dtpad", DtWarning, nullptr, msg, nullptr);
 
     /*
      * if the error occurred on the print display we're going to set

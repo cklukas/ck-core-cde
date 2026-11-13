@@ -90,7 +90,7 @@ _DtWsmGetDtWmHints(
     property = XmInternAtom(display, _XA_DT_WM_HINTS, False);
     length = sizeof (DtWmHints) / sizeof (long);
 
-    *ppDtWmHints = NULL;
+    *ppDtWmHints = nullptr;
     if ((rcode=XGetWindowProperty(
 			display,
 			window,
@@ -114,7 +114,7 @@ _DtWsmGetDtWmHints(
 	    {
 		XFree ((char *)*ppDtWmHints);
 	    }
-	    *ppDtWmHints = NULL;
+	    *ppDtWmHints = nullptr;
 	}
     }
     return(rcode);

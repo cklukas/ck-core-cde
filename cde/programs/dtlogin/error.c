@@ -76,7 +76,7 @@ InitErrorLog( void )
 	 *  have the correct value...
 	 */
 	 
-	if (timeZone != NULL && strlen(timeZone) < 29) {
+	if (timeZone != nullptr && strlen(timeZone) < 29) {
 	    strcpy(tz,"TZ=");
 	    strcat(tz,timeZone);
 	    putenv(tz);
@@ -145,10 +145,10 @@ SyncErrorFile( int stamp )
     
     TrimErrorFile();
     if (errorLogFile && errorLogFile[0] && 
-        (freopen(errorLogFile, "a", stderr) != NULL)) {
+        (freopen(errorLogFile, "a", stderr) != nullptr)) {
 
 	if (stamp) {
-	    timer = time(NULL);
+	    timer = time(nullptr);
 	    fprintf(stderr, "\n%s", ctime(&timer));
 	}	    
 	return(1);
@@ -240,7 +240,7 @@ TrimErrorFile( void )
         memset(buf, 0, BUFSIZ);
 	n = read(f2, buf, BUFSIZ - 1);
 
-	if ( (p = strchr(buf,'\n')) != NULL ) {
+	if ( (p = strchr(buf,'\n')) != nullptr ) {
 	    p++; 
 	    n -= p - buf;
 	    deleteBytes += p - buf;
@@ -451,7 +451,7 @@ Debug( char *fmt, ...)
 	 * does not contain a "new line" character...
 	 */
 
-	if ( strchr(fmt,'\n') == NULL )
+	if ( strchr(fmt,'\n') == nullptr )
 	    DoName=False;
 	else
 	    DoName=True;

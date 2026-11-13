@@ -90,27 +90,27 @@
 void AddWmResourceConverters (void)
 {
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRAbsentMapBehavior, 
-	WmCvtStringToAMBehavior, NULL, 0);
+	WmCvtStringToAMBehavior, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRCFocusPolicy, 
-	WmCvtStringToCFocus, NULL, 0);
+	WmCvtStringToCFocus, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRClientDecor, 
-	WmCvtStringToCDecor, NULL, 0);
+	WmCvtStringToCDecor, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRClientFunction, 
-	WmCvtStringToCFunc, NULL, 0);
+	WmCvtStringToCFunc, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRFrameStyle, 
-	WmCvtStringToFrameStyle, NULL, 0);
+	WmCvtStringToFrameStyle, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRIconDecor, 
-	WmCvtStringToIDecor, NULL, 0);
+	WmCvtStringToIDecor, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRIconPlacement, 
-	WmCvtStringToIPlace, NULL, 0);
+	WmCvtStringToIPlace, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRKFocusPolicy, 
-	WmCvtStringToKFocus, NULL, 0);
+	WmCvtStringToKFocus, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRSize, 
-	WmCvtStringToSize, NULL, 0);
+	WmCvtStringToSize, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRShowFeedback, 
-	WmCvtStringToShowFeedback, NULL, 0);
+	WmCvtStringToShowFeedback, nullptr, 0);
     XtAppAddConverter (wmGD.mwmAppContext, XtRString, WmRUsePPosition, 
-	WmCvtStringToUsePPosition, NULL, 0);
+	WmCvtStringToUsePPosition, nullptr, 0);
 
 } /* END OF FUNCTION AddWmResourceConverters */
 
@@ -1521,7 +1521,7 @@ unsigned char *NextToken (unsigned char *pchIn, int *pLen,
     }
     else
     {
-       return(NULL);
+       return(nullptr);
     }
 
 } /* END OF FUNCTION NextToken */   

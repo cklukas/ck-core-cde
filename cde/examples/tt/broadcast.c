@@ -61,9 +61,9 @@ main(int argc, char **argv)
 	/*
 	 * Initialize Motif and create ui components
 	 */
-	toplevel = XtVaAppInitialize(&app, "ttsample1", NULL, 0,
-					&argc, argv, NULL, NULL);
-	XtVaSetValues(toplevel, XmNtitle, "ToolTalk Sample 1", NULL);
+	toplevel = XtVaAppInitialize(&app, "ttsample1", nullptr, 0,
+					&argc, argv, nullptr, nullptr);
+	XtVaSetValues(toplevel, XmNtitle, "ToolTalk Sample 1", nullptr);
 	create_ui_components();
 
 	/*
@@ -134,12 +134,12 @@ broadcast_value(Widget widget, XtPointer client_data, XtPointer call_data)
 	 * ttsample1_value(in int <new value)
 	 */
 
-	XtVaGetValues(slider, XmNvalue, &slider_value, 0, NULL);
+	XtVaGetValues(slider, XmNvalue, &slider_value, 0, nullptr);
 	slider_value++;
-	XtVaSetValues(slider, XmNvalue, slider_value, 0, NULL);
+	XtVaSetValues(slider, XmNvalue, slider_value, 0, nullptr);
 
 	msg_out = tt_pnotice_create(TT_SESSION, "ttsample1_value");
-	tt_message_arg_add(msg_out, TT_IN, "integer", NULL);
+	tt_message_arg_add(msg_out, TT_IN, "integer", nullptr);
 	tt_message_arg_ival_set(msg_out, 0, slider_value);
 	tt_message_send(msg_out);
 
@@ -172,7 +172,7 @@ receive_tt_message(XtPointer client_data, int *fid, XtInputId *id)
 	 * The returned message handle is NULL in this case.
 	 */
 
-	if (msg_in == NULL) return;
+	if (msg_in == nullptr) return;
 
 
 	/*
@@ -189,7 +189,7 @@ receive_tt_message(XtPointer client_data, int *fid, XtInputId *id)
 	} else if (op != 0) {
 		if (0==strcmp("ttsample1_value", tt_message_op(msg_in))) {
 			tt_message_arg_ival(msg_in, 0, &val_in);
-			XtVaSetValues(gauge, XmNvalue, val_in, 0, NULL);
+			XtVaSetValues(gauge, XmNvalue, val_in, 0, nullptr);
 		}
 	}
 
@@ -213,13 +213,13 @@ create_ui_components(void)
                 xmMainWindowWidgetClass, toplevel,
                 XmNwidth,                250,
                 XmNheight,               175,
-                NULL);
-	XtVaGetValues(base_frame, XmNmwmDecorations, &decor, 0, NULL);
+                nullptr);
+	XtVaGetValues(base_frame, XmNmwmDecorations, &decor, 0, nullptr);
 	decor &= ~MWM_DECOR_RESIZEH;
-	XtVaSetValues(base_frame, XmNmwmDecorations, &decor, 0, NULL);
+	XtVaSetValues(base_frame, XmNmwmDecorations, &decor, 0, nullptr);
 
 	controls = XtVaCreateManagedWidget("controls",
-                xmFormWidgetClass, base_frame, NULL, 0, NULL);
+                xmFormWidgetClass, base_frame, nullptr, 0, nullptr);
 
 	slabel = XtVaCreateManagedWidget("Send:",
                 xmLabelWidgetClass, controls,
@@ -228,7 +228,7 @@ create_ui_components(void)
                 XmNtopWidget,       controls,
 		XmNtopOffset,		10,
 		XmNleftOffset,		5,
-                NULL);
+                nullptr);
         slider = XtVaCreateManagedWidget("slider",
                 xmScaleWidgetClass, controls,
                 XmNleftAttachment,  XmATTACH_WIDGET,
@@ -242,7 +242,7 @@ create_ui_components(void)
                 XmNmaximum,         25,
                 XmNorientation,     XmHORIZONTAL,
                 XmNshowValue,       TRUE,
-                NULL);
+                nullptr);
 
 	glabel = XtVaCreateManagedWidget("Received:",
                 xmLabelWidgetClass, controls,
@@ -250,7 +250,7 @@ create_ui_components(void)
                 XmNtopAttachment,   XmATTACH_WIDGET,
 		XmNleftOffset,		5,
                 XmNtopWidget,       slider,
-                NULL);
+                nullptr);
 	gauge = XtVaCreateManagedWidget("gauge",
                 xmScaleWidgetClass, controls,
                 XmNleftAttachment,  XmATTACH_WIDGET,
@@ -264,7 +264,7 @@ create_ui_components(void)
                 XmNminimum,         0,
                 XmNmaximum,         25,
                 XmNshowValue,       TRUE,
-                NULL);
+                nullptr);
 
 	label = XmStringCreateSimple("Broadcast");
 	button = XtVaCreateManagedWidget("button",
@@ -277,7 +277,7 @@ create_ui_components(void)
                 XmNleftAttachment,  XmATTACH_WIDGET,
 		XmNbottomOffset,	5,
                 XmNlabelString, label,
-                NULL);
+                nullptr);
 	XmStringFree(label);
 	XtAddCallback(button, XmNactivateCallback, broadcast_value, 0);
 }

@@ -201,7 +201,7 @@ tmode_disable(
 
     /* make sure windows are Mapped correctly */
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	 (mod = trav_next(&trav)) != NULL; )
+	 (mod = trav_next(&trav)) != nullptr; )
 	if (obj_is_module(mod))
 	{
 	    if (obj_has_flag(mod, MappedFlag))

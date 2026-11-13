@@ -76,8 +76,8 @@ ilImagePtr     pImage;
         return ilDeclarePipeInvalid (pipe, IL_ERROR_CONTEXT_MISMATCH);
 
         /*  Get pipe state - must be IL_PIPE_EMPTY or declare an error. */
-    if (ilGetPipeInfo (pipe, FALSE, (ilPipeInfo *)NULL, (ilImageDes *)NULL, 
-                                    (ilImageFormat *)NULL) != IL_PIPE_EMPTY) {
+    if (ilGetPipeInfo (pipe, FALSE, (ilPipeInfo *)nullptr, (ilImageDes *)nullptr, 
+                                    (ilImageFormat *)nullptr) != IL_PIPE_EMPTY) {
         if (!pipe->context->error)
             ilDeclarePipeInvalid (pipe, IL_ERROR_PIPE_STATE);
         return FALSE;
@@ -285,7 +285,7 @@ ilTapPrivPtr   pPriv;
     srcData.constantStrip = FALSE;
     srcData.minBufferHeight = 0;
     if (!(pPriv = (ilTapPrivPtr)ilAddPipeElement (pipe, IL_FILTER, sizeof (ilTapPrivRec),
-                    IL_ADD_PIPE_NO_DST, &srcData, (ilDstElementData *)NULL,
+                    IL_ADD_PIPE_NO_DST, &srcData, (ilDstElementData *)nullptr,
                     ilTapInit, IL_NPF, ilTapDestroy, ilTapExecute, 0)))
         goto tpError;
 

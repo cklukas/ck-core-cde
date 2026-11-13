@@ -80,35 +80,35 @@ static void DtGlobalsInitialize(
  *
  *****************************************/
 
-XrmDatabase _DtResourceDatabase = NULL;	/* This Dt global indicates which
+XrmDatabase _DtResourceDatabase = nullptr;	/* This Dt global indicates which
 					   Xrm database should be read for
 					   resources. */
 
-XtAppContext _DtAppContext = NULL;	/* This Dt global keeps track of the
+XtAppContext _DtAppContext = nullptr;	/* This Dt global keeps track of the
 					   app-context, if one has been 
 					   specified.  Note that libXv does
 					   not yet support multiple app-
 					   contexts. */
-XtAppContext *_DtInitAppContextp = NULL;
-Widget   _DtInitTtContextWidget = NULL;
+XtAppContext *_DtInitAppContextp = nullptr;
+Widget   _DtInitTtContextWidget = nullptr;
 
-Display *_DtDisplay = NULL;		/* This global variable is saved
+Display *_DtDisplay = nullptr;		/* This global variable is saved
 					   when a client invokes "DtInitialize"
 					   It is used later to get resources
 					   when the DT databases are loaded.*/
-char *_DtApplicationName = NULL;	/* This global variable is the
+char *_DtApplicationName = nullptr;	/* This global variable is the
 					   client's "ApplicationName". */
-char *_DtApplicationClass = NULL;	/* This global variable is the
+char *_DtApplicationClass = nullptr;	/* This global variable is the
 					   client's "ApplicationClass". */
-char *_DtToolClass = NULL;		/* Tool class passed to _DtInit...() */
+char *_DtToolClass = nullptr;		/* Tool class passed to _DtInit...() */
 
 
 /* Localizable button labels */
-const char * _DtOkString = NULL;
-const char * _DtCancelString = NULL;
-const char * _DtHelpString = NULL;
-const char * _DtApplyString = NULL;
-const char * _DtCloseString = NULL;
+const char * _DtOkString = nullptr;
+const char * _DtCancelString = nullptr;
+const char * _DtHelpString = nullptr;
+const char * _DtApplyString = nullptr;
+const char * _DtCloseString = nullptr;
 
 
 /*********************************************
@@ -144,7 +144,7 @@ DtInitialize(
     _DtSvcDisplayToAppContext(display);
 
     _DtSvcAppLock(app);
-   result = DtBigInitialize (display, widget, name, toolClass, NULL);
+   result = DtBigInitialize (display, widget, name, toolClass, nullptr);
    _DtSvcAppUnlock(app);
    return (result);
 }

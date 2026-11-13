@@ -186,7 +186,7 @@ ProcessTabletEvent(
                              tmpstr[0] = '\0';
                              snprintf(tmpstr, sizeof(tmpstr), "%dx%d", xGrid, yGrid);
                              str= XmStringCreateLocalized (tmpstr);
-                             XtVaSetValues (coordinateText, XmNlabelString, str, NULL);
+                             XtVaSetValues (coordinateText, XmNlabelString, str, nullptr);
                              XmStringFree(str);
                           }
 #ifdef DEBUG
@@ -472,7 +472,7 @@ Do_ButtonOp(
                           polyTimerID = XtAppAddTimeOut( AppContext,
                                                          multiClickTime,
                                                          Clear_ClickCountTimeout,
-                                                         NULL);
+                                                         nullptr);
                           break;
        } /* switch(GraphicsOp) */
     break;
@@ -772,7 +772,7 @@ Do_ButtonOp(
 			       GETSTR(18,2,"Grabbed Image Size = %dx%d"), 
 			       abs(tx-last_tx), abs(ty-last_ty));
                              str= XmStringCreateLocalized (tmpstr);
-                             XtVaSetValues (coordinateText, XmNlabelString, str, NULL);
+                             XtVaSetValues (coordinateText, XmNlabelString, str, nullptr);
                              XmStringFree(str);
                            }
                           break;

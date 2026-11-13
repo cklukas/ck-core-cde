@@ -266,7 +266,7 @@ Start_HotBox(
   selectTimerID = XtAppAddTimeOut(AppContext,
                                   FLASH_INTERVAL,
                                   Do_HotBox,
-                                  NULL);
+                                  nullptr);
 
 #ifdef DEBUG
   if (debug)
@@ -325,7 +325,7 @@ Do_HotBox(
     selectTimerID=XtAppAddTimeOut(AppContext,
                                   FLASH_INTERVAL,
                                   Do_HotBox,
-                                  NULL);
+                                  nullptr);
     }
     else
       Stop_HotBox();

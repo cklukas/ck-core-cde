@@ -62,7 +62,7 @@ void * XeMalloc( size_t size )
     _DtSimpleError(XeProgName, XeError,  XeString_NULL,
 		   "><DtEncap: cannot malloc memory");
     exit(1);
-    return (void*)NULL;
+    return (void*)nullptr;
 }
 
 /*-----------------------------------------------------------------------+*/

@@ -147,12 +147,12 @@ join(Ttdt_contract_cb cb, Ttdt_session_requests wanted, Widget shell)
 {
 #ifdef TT_SESSION_REQUESTS_OLD_JOIN
     (void)wanted;
-    return ttdt_session_join(NULL, cb, shell, NULL, 1);
+    return ttdt_session_join(nullptr, cb, shell, nullptr, 1);
 #else
 #ifdef TT_SESSION_REQUESTS_OLD_XINFO
     wanted &= ~(Ttdt_session_requests)TTDT_SESSION_SET_XINFO;
 #endif
-    return ttdt_session_join(NULL, cb, shell, NULL, 1, wanted);
+    return ttdt_session_join(nullptr, cb, shell, nullptr, 1, wanted);
 #endif
 }
 
@@ -166,9 +166,9 @@ accept_contract(Tt_message msg, Ttdt_contract_cb cb, Widget shell,
 {
 #ifdef TT_SESSION_REQUESTS_OLD_XINFO
     (void)wanted;
-    return ttdt_message_accept(msg, cb, shell, NULL, 1, 1);
+    return ttdt_message_accept(msg, cb, shell, nullptr, 1, 1);
 #else
-    return ttdt_message_accept(msg, cb, shell, NULL, 1, 1,
+    return ttdt_message_accept(msg, cb, shell, nullptr, 1, 1,
 			       bad_contract_request ? 1u << 20 :
 			       (wanted & TTDT_SESSION_SET_XINFO) != 0 ?
 			       TTDT_CONTRACT_SET_XINFO : TTDT_CONTRACT_NO_REQUESTS);
@@ -218,16 +218,16 @@ open_shell(const char **connection)
     Display *dpy;
     Widget shell;
     int argc = 1;
-    char *argv[] = { "session-requests-test", NULL };
+    char *argv[] = { "session-requests-test", nullptr };
 
     XtToolkitInitialize();
     app = XtCreateApplicationContext();
-    dpy = XtOpenDisplay(app, NULL, "session-requests-test", "SessionRequestsTest",
-			NULL, 0, &argc, argv);
-    if (dpy == NULL)
+    dpy = XtOpenDisplay(app, nullptr, "session-requests-test", "SessionRequestsTest",
+			nullptr, 0, &argc, argv);
+    if (dpy == nullptr)
 	return (Widget)0;
     shell = XtAppCreateShell("session-requests-test", "SessionRequestsTest",
-			     applicationShellWidgetClass, dpy, NULL, 0);
+			     applicationShellWidgetClass, dpy, nullptr, 0);
     XtRealizeWidget(shell);
     *connection = DisplayString(dpy);
     return shell;
@@ -249,10 +249,10 @@ serve_contract(Widget shell, Ttdt_session_requests wanted, int fd)
 	    break;
 	if (pfds[1].revents & (POLLIN | POLLHUP))
 	    break;
-	while ((msg = tt_message_receive()) != NULL && tt_ptr_error(msg) == TT_OK) {
+	while ((msg = tt_message_receive()) != nullptr && tt_ptr_error(msg) == TT_OK) {
 	    char *op = tt_message_op(msg);
 
-	    if (op != NULL && strcmp(op, "Accept_Test") == 0 &&
+	    if (op != nullptr && strcmp(op, "Accept_Test") == 0 &&
 		tt_message_state(msg) == TT_SENT) {
 		Tt_pattern *pats = accept_contract(msg, contract_cb, shell, wanted);
 		char buf[16];
@@ -317,9 +317,9 @@ handle(int argc, char **argv)
     memset(&act, 0, sizeof act);
     act.sa_handler = count_signal;
     sigemptyset(&act.sa_mask);
-    sigaction(SIGUSR1, &act, NULL);
+    sigaction(SIGUSR1, &act, nullptr);
     setlocale(LC_ALL, "C");
-    can_set_locale = setlocale(LC_CTYPE, "C.UTF-8") != NULL;
+    can_set_locale = setlocale(LC_CTYPE, "C.UTF-8") != nullptr;
     setlocale(LC_ALL, "C");
 
     procid = ttdt_open(&fd, "session-requests-test", "CDE", "1.0", 0);
@@ -336,13 +336,13 @@ handle(int argc, char **argv)
     }
     if (as_contract) {
 	/* the contract is joined to the session by hand: nothing else is asked */
-	pats = NULL;
+	pats = nullptr;
 	if (tt_session_join(tt_default_session()) != TT_OK) {
 	    fprintf(stderr, "cannot join the session\n");
 	    return 2;
 	}
     } else {
-	pats = join(no_callback ? NULL : contract_cb, wanted, shell);
+	pats = join(no_callback ? nullptr : contract_cb, wanted, shell);
 	if (tt_ptr_error(pats) != TT_OK) {
 	    fprintf(stderr, "ttdt_session_join: %s\n",
 		    tt_status_message(tt_ptr_error(pats)));
@@ -363,11 +363,11 @@ handle(int argc, char **argv)
 	    if (pfds[1].revents & (POLLIN | POLLHUP))
 		break;
 	    /* what a client does with its connection */
-	    tttk_Xt_input_handler(NULL, &fd, NULL);
+	    tttk_Xt_input_handler(nullptr, &fd, nullptr);
 	}
     }
 
-    locale = setlocale(LC_CTYPE, NULL);
+    locale = setlocale(LC_CTYPE, nullptr);
     printf("state env=%s cwd=%s signals=%d locale=%s docommands=%d probe2=%s probe3=%s sensitive=%s display=%s connection=%s\n",
 	   getenv(PROBE) ? getenv(PROBE) : "(unset)",
 	   getcwd(cwd, sizeof cwd) ? cwd : "(none)",
@@ -377,9 +377,9 @@ handle(int argc, char **argv)
 	   shell == (Widget)0 ? "(none)" : XtIsSensitive(shell) ? "yes" : "no",
 	   getenv("DISPLAY") ? getenv("DISPLAY") : "(unset)", connection);
     fflush(stdout);
-    if (pats != NULL)
-	ttdt_session_quit(NULL, pats, 1);
-    ttdt_close(NULL, NULL, 0);
+    if (pats != nullptr)
+	ttdt_session_quit(nullptr, pats, 1);
+    ttdt_close(nullptr, nullptr, 0);
     return 0;
 }
 
@@ -424,7 +424,7 @@ make_request(int r, const char *handler, const char *workdir)
 
     tt_message_class_set(msg, TT_REQUEST);
     tt_message_scope_set(msg, TT_SESSION);
-    if (handler != NULL) {
+    if (handler != nullptr) {
 	tt_message_address_set(msg, TT_HANDLER);
 	tt_message_handler_set(msg, handler);
     } else {
@@ -434,7 +434,7 @@ make_request(int r, const char *handler, const char *workdir)
     switch (requests[r].request) {
     case TTDT_SESSION_GET_LOCALE:
 	tt_message_arg_add(msg, TT_IN, Tttk_string, "LC_CTYPE");
-	tt_message_arg_add(msg, TT_OUT, Tttk_string, NULL);
+	tt_message_arg_add(msg, TT_OUT, Tttk_string, nullptr);
 	break;
     case TTDT_SESSION_SET_LOCALE:
 	tt_message_arg_add(msg, TT_IN, Tttk_string, "LC_CTYPE");
@@ -442,14 +442,14 @@ make_request(int r, const char *handler, const char *workdir)
 	break;
     case TTDT_SESSION_GET_ENVIRONMENT:
 	tt_message_arg_add(msg, TT_IN, Tttk_string, PROBE);
-	tt_message_arg_add(msg, TT_OUT, Tttk_string, NULL);
+	tt_message_arg_add(msg, TT_OUT, Tttk_string, nullptr);
 	break;
     case TTDT_SESSION_SET_ENVIRONMENT:
 	tt_message_arg_add(msg, TT_IN, Tttk_string, PROBE);
 	tt_message_arg_add(msg, TT_IN, Tttk_string, "changed");
 	break;
     case TTDT_SESSION_GET_SITUATION:
-	tt_message_arg_add(msg, TT_OUT, Tttk_string, NULL);
+	tt_message_arg_add(msg, TT_OUT, Tttk_string, nullptr);
 	break;
     case TTDT_SESSION_SET_SITUATION:
 	tt_message_arg_add(msg, TT_IN, Tttk_string, workdir);
@@ -459,11 +459,11 @@ make_request(int r, const char *handler, const char *workdir)
 	break;
     case TTDT_SESSION_GET_SYSINFO:
 	for (i = 0; i < 8; i++)
-	    tt_message_arg_add(msg, TT_OUT, Tttk_string, NULL);
+	    tt_message_arg_add(msg, TT_OUT, Tttk_string, nullptr);
 	break;
     case TTDT_SESSION_DO_COMMAND:
 	tt_message_arg_add(msg, TT_IN, Tttk_string, "not a command to run");
-	tt_message_arg_add(msg, TT_OUT, Tttk_string, NULL);
+	tt_message_arg_add(msg, TT_OUT, Tttk_string, nullptr);
 	break;
     case TTDT_SESSION_SET_XINFO:
 	/* the arguments of ttdt_Set_XInfo(): display, visual, depth */
@@ -487,7 +487,7 @@ exchange(Tt_message sent, int fd)
 
 	if (poll(&pfd, 1, 250) <= 0)
 	    continue;
-	while ((got = tt_message_receive()) != NULL &&
+	while ((got = tt_message_receive()) != nullptr &&
 	       tt_ptr_error(got) == TT_OK) {
 	    Tt_state state;
 
@@ -501,7 +501,7 @@ exchange(Tt_message sent, int fd)
 		return got;
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -520,7 +520,7 @@ send_one(int r, const char *handler, const char *workdir, int fd)
 	return;
     }
     got = exchange(sent, fd);
-    if (got == NULL) {
+    if (got == nullptr) {
 	printf("result %s %s timeout -\n", requests[r].op,
 	       handler ? "addressed" : "unaddressed");
 	return;
@@ -532,7 +532,7 @@ send_one(int r, const char *handler, const char *workdir, int fd)
 	 i < n; i++) {
 	char *v = tt_message_arg_val(got, i);
 
-	if (tt_ptr_error(v) == TT_OK && v != NULL) {
+	if (tt_ptr_error(v) == TT_OK && v != nullptr) {
 	    size_t used = strlen(values);
 
 	    snprintf(values + used, sizeof values - used, " %s", v);
@@ -566,7 +566,7 @@ send_requests(int argc, char **argv)
 	return 2;
     }
     /* Set_Situation goes to the directory the sender is in */
-    if (getcwd(workdir, sizeof workdir) == NULL) {
+    if (getcwd(workdir, sizeof workdir) == nullptr) {
 	perror("getcwd");
 	return 2;
     }
@@ -577,7 +577,7 @@ send_requests(int argc, char **argv)
 	    fprintf(stderr, "unknown request %s\n", argv[i]);
 	    return 2;
 	}
-	send_one(r, NULL, workdir, fd);
+	send_one(r, nullptr, workdir, fd);
 	if (strcmp(argv[2], "-") != 0)
 	    send_one(r, argv[2], workdir, fd);
     }
@@ -690,7 +690,7 @@ fill_hostile(const char *name, Tt_message m)
 	    str(m, var); str(m, "v");
 	}
     } else if (strcmp(name, "env-get-name-blank") == 0) {
-	str(m, "A B"); tt_message_arg_add(m, TT_OUT, Tttk_string, NULL);
+	str(m, "A B"); tt_message_arg_add(m, TT_OUT, Tttk_string, nullptr);
     } else if (strcmp(name, "locale-path") == 0) {
 	str(m, "LC_CTYPE"); str(m, "/tmp/evil");
     } else if (strcmp(name, "locale-dots") == 0) {
@@ -725,7 +725,7 @@ fill_hostile(const char *name, Tt_message m)
 	tt_message_iarg_add(m, TT_IN, Tttk_integer, -5);
     } else if (strcmp(name, "env-remove") == 0) {
 	/* a variable without a value is removed */
-	str(m, PROBE); tt_message_arg_add(m, TT_IN, Tttk_string, NULL);
+	str(m, PROBE); tt_message_arg_add(m, TT_IN, Tttk_string, nullptr);
     } else if (strcmp(name, "env-valid") == 0) {
 	str(m, PROBE3); str(m, "valid");
     }
@@ -767,7 +767,7 @@ hostile(int argc, char **argv)
 	    continue;
 	}
 	got = exchange(sent, fd);
-	if (got == NULL) {
+	if (got == nullptr) {
 	    printf("hostile %s timeout -\n", hostile_cases[c].name);
 	    continue;
 	}
@@ -797,7 +797,7 @@ fill_xinfo(const char *name, Tt_message m)
     else if (strcmp(name, "nocolon") == 0)
 	display = "hostname";
     else if (strcmp(name, "unset") == 0)
-	display = NULL;
+	display = nullptr;
     else if (strcmp(name, "visual") == 0)
 	visual = "Fancy";
     else if (strcmp(name, "depth-zero") == 0)
@@ -832,7 +832,7 @@ fill_xinfo(const char *name, Tt_message m)
 
 static const char *xinfo_cases[] = {
     "garbage", "nocolon", "nul", "long", "unset", "visual", "visual-long",
-    "depth-zero", "depth-big", "valid", NULL
+    "depth-zero", "depth-big", "valid", nullptr
 };
 
 /* Send a request and print what became of it: "KEY NAME STATE STATUS". */
@@ -848,7 +848,7 @@ send_and_print(const char *key, const char *name, Tt_message sent, int fd)
 	return;
     }
     got = exchange(sent, fd);
-    if (got == NULL) {
+    if (got == nullptr) {
 	printf("%s %s timeout -\n", key, name);
 	return;
     }
@@ -869,7 +869,7 @@ xinfo_request(const char *name, const char *handler, const char *contract_id)
     tt_message_handler_set(m, handler);
     tt_message_op_set(m, "Set_XInfo");
     fill_xinfo(name, m);
-    if (contract_id != NULL)
+    if (contract_id != nullptr)
 	tt_message_arg_add(m, TT_IN, Tttk_message_id, contract_id);
     return m;
 }
@@ -946,8 +946,8 @@ xinfo(int argc, char **argv)
     }
     if (connect_sender(&fd) != 0)
 	return 2;
-    for (c = 0; xinfo_cases[c] != NULL; c++)
-	send_and_print("xinfo", xinfo_cases[c], xinfo_request(xinfo_cases[c], argv[2], NULL), fd);
+    for (c = 0; xinfo_cases[c] != nullptr; c++)
+	send_and_print("xinfo", xinfo_cases[c], xinfo_request(xinfo_cases[c], argv[2], nullptr), fd);
     tt_close();
     return 0;
 }
@@ -986,10 +986,10 @@ contract(int argc, char **argv)
 
 	if (poll(&pfd, 1, 250) <= 0)
 	    continue;
-	while ((got = tt_message_receive()) != NULL && tt_ptr_error(got) == TT_OK) {
+	while ((got = tt_message_receive()) != nullptr && tt_ptr_error(got) == TT_OK) {
 	    char *op = tt_message_op(got);
 
-	    if (op != NULL && strcmp(op, "Status") == 0)
+	    if (op != nullptr && strcmp(op, "Status") == 0)
 		accepted = 1;
 	    tt_free(op);
 	    if (got != sent)
@@ -1022,26 +1022,26 @@ refuse(void)
 	fprintf(stderr, "ttdt_open: %s\n", tt_status_message(tt_ptr_error(procid)));
 	return 2;
     }
-    pats = join(NULL, TTDT_SESSION_DO_COMMAND, (Widget)0);
+    pats = join(nullptr, TTDT_SESSION_DO_COMMAND, (Widget)0);
     printf("join do_command-without-callback %s\n",
 	   status_name(tt_ptr_error(pats), buf, sizeof buf));
     pats = join(contract_cb, 1u << 20, (Widget)0);
     printf("join unknown-request %s\n",
 	   status_name(tt_ptr_error(pats), buf, sizeof buf));
-    pats = join(NULL, TTDT_SESSION_SET_XINFO, (Widget)0);
+    pats = join(nullptr, TTDT_SESSION_SET_XINFO, (Widget)0);
     printf("join set_xinfo-without-callback-or-shell %s\n",
 	   status_name(tt_ptr_error(pats), buf, sizeof buf));
     pats = join(contract_cb, TTDT_SESSION_SET_XINFO, (Widget)0);
     printf("join set_xinfo-with-callback %s\n",
 	   status_name(tt_ptr_error(pats), buf, sizeof buf));
     if (tt_ptr_error(pats) == TT_OK)
-	ttdt_session_quit(NULL, pats, 1);
-    pats = join(NULL, TTDT_SESSION_NO_REQUESTS, (Widget)0);
+	ttdt_session_quit(nullptr, pats, 1);
+    pats = join(nullptr, TTDT_SESSION_NO_REQUESTS, (Widget)0);
     printf("join no-requests-without-callback %s\n",
 	   status_name(tt_ptr_error(pats), buf, sizeof buf));
     if (tt_ptr_error(pats) == TT_OK)
-	ttdt_session_quit(NULL, pats, 1);
-    ttdt_close(NULL, NULL, 0);
+	ttdt_session_quit(nullptr, pats, 1);
+    ttdt_close(nullptr, nullptr, 0);
     return 0;
 #endif
 }

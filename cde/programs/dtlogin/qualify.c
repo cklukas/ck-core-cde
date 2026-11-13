@@ -52,35 +52,35 @@ char * qualifyWithFirst
   char * searchPath
   )
 {
-char * paths = NULL;
-char * savepaths = NULL;
+char * paths = nullptr;
+char * savepaths = nullptr;
 char * path;
 char * chance;
 struct stat st;
 
   /* assert that the arguments cannot be NULL */
 
-  if (filename == NULL || searchPath == NULL)
-    return NULL;
+  if (filename == nullptr || searchPath == nullptr)
+    return nullptr;
 
   paths = strdup(searchPath);
-  if (paths == NULL)
-    return NULL;
+  if (paths == nullptr)
+    return nullptr;
   savepaths = paths;
 
   while (1) {
 
     /* if there is a :, zero it */
 
-    if ((path = strchr(paths, ':')) != NULL)
+    if ((path = strchr(paths, ':')) != nullptr)
       *path = 0;
 
     /* allocate space and create the qualified filename */
 
     chance = (char *)malloc(strlen(paths) + strlen(filename) + 2);
-    if (chance == NULL) {
+    if (chance == nullptr) {
       free(savepaths);
-      return NULL;
+      return nullptr;
     }
     sprintf(chance,"%s/%s",paths,filename);
 
@@ -103,7 +103,7 @@ struct stat st;
 
     /* reached the end of the list of paths */
 
-    if (path == NULL)
+    if (path == nullptr)
       break;
 
     /* try the next path */
@@ -111,5 +111,5 @@ struct stat st;
     paths = path + 1;
   }
   free(savepaths);
-  return NULL;
+  return nullptr;
 }

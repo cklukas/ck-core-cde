@@ -55,6 +55,6 @@ with tempfile.TemporaryDirectory(prefix="login-path-", dir=os.environ["TMPDIR"])
     c, binary = Path(work) / "path.c", Path(work) / "path"
     c.write_text(header + text[start:end] + main)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
                     "-fsanitize=address,undefined", "-g", str(c), "-o", str(binary)], check=True)
     subprocess.run([str(binary)], check=True)

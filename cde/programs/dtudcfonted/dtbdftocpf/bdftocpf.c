@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	Usage(argv[0]);
     }
 
-    Head.in_file = Head.out_file = Head.text_file = NULL;
+    Head.in_file = Head.out_file = Head.text_file = nullptr;
     Head.p_width = Head.p_height = USE_ORG_SIZE;
 
 
@@ -107,14 +107,14 @@ int main(int argc, char *argv[])
 	}
     }
 
-    if (Head.in_file == NULL) {
+    if (Head.in_file == nullptr) {
 	Head.input = stdin;
     } else {
 	char	*spacing ;
 	char	*xlfdname ;
-	spacing = xlfdname = NULL ;
+	spacing = xlfdname = nullptr ;
 	/* refuse proportional fonts */
-	if ( GetUdcFontName( NULL, Head.in_file, &xlfdname ) ) {
+	if ( GetUdcFontName( nullptr, Head.in_file, &xlfdname ) ) {
 	    USAGE1("%s : This font cannot get XLFD. Terminates abnormally.\n", argv[0]);
 	    exit( 1 );
 	}
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	    USAGE2("%s cannot edit proportional fonts.(SPACING \"%s\")\n", argv[0], spacing );
 	    exit( 1 );
 	}
-	if ((Head.input = fopen(Head.in_file, "r")) == NULL) {
+	if ((Head.input = fopen(Head.in_file, "r")) == nullptr) {
 	    USAGE2("%s:  The BDF file cannot be opened.\"%s\"\n",
 		argv[0], Head.in_file);
 	    exit(BDF_OPEN * (-1));
@@ -135,22 +135,22 @@ int main(int argc, char *argv[])
     signal(SIGQUIT, (void(*)())sigint_out);
     signal(SIGTERM, (void(*)())sigint_out);
 
-    if (Head.out_file == NULL) {
+    if (Head.out_file == nullptr) {
 	Head.output = stdout;
     } else {
 	if (stat(Head.out_file, &st) != 0) {
-	    if ((Head.output = fopen(Head.out_file, "w")) == NULL) {
+	    if ((Head.output = fopen(Head.out_file, "w")) == nullptr) {
 		USAGE2("%s: The character pattern file cannot be opened. \"%s\"\n",
 		    argv[0], Head.out_file);
 		exit(GPF_OPEN *(-1));
 	    }
 	} else {
 	    Head.text_file = Head.out_file;
-	    if ((Head.out_file = GetTmpPath( Head.out_file )) == NULL) {
+	    if ((Head.out_file = GetTmpPath( Head.out_file )) == nullptr) {
 		USAGE1("%s: Failed convert.\n", argv[0]);
 		exit(FATAL_ERROR * (-1));
 	    }
-	    if ((Head.output = fopen(Head.out_file, "w")) == NULL) {
+	    if ((Head.output = fopen(Head.out_file, "w")) == nullptr) {
 		USAGE2("%s: The character pattern file cannot be opened. \"%s\"\n",
 		    argv[0], Head.out_file);
 		exit(GPF_OPEN * (-1));
@@ -159,10 +159,10 @@ int main(int argc, char *argv[])
     }
 
     if ((rtn = CnvBDFtoGPF(&Head))) {
-	if (Head.in_file != NULL) {
+	if (Head.in_file != nullptr) {
 	    fclose(Head.input);
 	}
-	if (Head.out_file != NULL) {
+	if (Head.out_file != nullptr) {
 	    fclose(Head.output);
 	    unlink(Head.out_file);
 	}
@@ -170,16 +170,16 @@ int main(int argc, char *argv[])
 	exit(rtn * (-1));
     }
 
-    if (Head.in_file != NULL) {
+    if (Head.in_file != nullptr) {
 	fclose(Head.input);
     }
-    if (Head.out_file != NULL) {
+    if (Head.out_file != nullptr) {
 	fclose(Head.output);
 	signal(SIGHUP, SIG_IGN);
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
 	signal(SIGTERM, SIG_IGN);
-	if (Head.text_file != NULL) {
+	if (Head.text_file != nullptr) {
 	    Link_NewFile(Head.out_file, Head.text_file);
 	    unlink(Head.out_file);
 	}
@@ -210,11 +210,11 @@ CnvBDFtoGPF( struct btophead *head)
 	head->zoomf = 0;
     }
 
-    if ((head->code = (int *)malloc(sizeof(int)*head->num_chars)) == NULL) {
+    if ((head->code = (int *)malloc(sizeof(int)*head->num_chars)) == nullptr) {
 	return(FATAL_ERROR);
     }
 
-    if ((head->ptn = (char **)malloc(sizeof(char *)*head->num_chars)) == NULL) {
+    if ((head->ptn = (char **)malloc(sizeof(char *)*head->num_chars)) == nullptr) {
 	return(FATAL_ERROR);
     }
 

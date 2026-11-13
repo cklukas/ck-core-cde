@@ -30,96 +30,96 @@ typedef struct {
 static const TrashInfoFixture trash_info_fixtures[] = {
     {"absolute",
      "[Trash Info]\nPath=/original/item\nDeletionDate=2024-02-29T23:59:59\n",
-     1, "/original/item", NULL, "2024-02-29T23:59:59"},
+     1, "/original/item", nullptr, "2024-02-29T23:59:59"},
     {"key-format-spaces",
      "[Trash Info]\nPath \t= \t/outside/item\nDeletionDate\t = \t2024-02-29T23:59:59\n",
-     1, "/outside/item", NULL, "2024-02-29T23:59:59"},
+     1, "/outside/item", nullptr, "2024-02-29T23:59:59"},
     {"encoded-leading-space",
      "[Trash Info]\nPath= \t%20%09folder/item\nDeletionDate=2024-02-29T23:59:59\n",
-     1, NULL, " \tfolder/item", "2024-02-29T23:59:59"},
+     1, nullptr, " \tfolder/item", "2024-02-29T23:59:59"},
     {"normalized-first-duplicates-win",
      "[Trash Info]\nPath \t= /first\nPath=/second\n"
      "DeletionDate \t= 2000-01-01T00:00:00\nDeletionDate=2024-02-29T23:59:59\n",
-     1, "/first", NULL, "2000-01-01T00:00:00"},
+     1, "/first", nullptr, "2000-01-01T00:00:00"},
     {"literal-percent-one-pass",
      "[Trash Info]\nPath=/original/%252F%25name\nDeletionDate=2000-01-01T00:00:00\n",
-     1, "/original/%2F%name", NULL, "2000-01-01T00:00:00"},
+     1, "/original/%2F%name", nullptr, "2000-01-01T00:00:00"},
     {"control-native-bytes",
      "[Trash Info]\nPath=/original/%01%09%0a%0D%5c%7F%C3%A9\nDeletionDate=2024-02-29T23:59:59\n",
-     1, "/original/\001\t\n\r\\\177\303\251", NULL, "2024-02-29T23:59:59"},
+     1, "/original/\001\t\n\r\\\177\303\251", nullptr, "2024-02-29T23:59:59"},
     {"relative-to-original-base",
      "[Trash Info]\nPath=folder/item%20one\nDeletionDate=2024-02-29T23:59:59\n",
-     1, NULL, "folder/item one", "2024-02-29T23:59:59"},
+     1, nullptr, "folder/item one", "2024-02-29T23:59:59"},
     {"relative-literal-encoded-dots",
      "[Trash Info]\nPath=%252e%252e/item\nDeletionDate=2024-02-29T23:59:59\n",
-     1, NULL, "%2e%2e/item", "2024-02-29T23:59:59"},
+     1, nullptr, "%2e%2e/item", "2024-02-29T23:59:59"},
     {"dot-lookalikes",
      "[Trash Info]\nPath=.../name..part\nDeletionDate=2024-02-29T23:59:59\n",
-     1, NULL, ".../name..part", "2024-02-29T23:59:59"},
+     1, nullptr, ".../name..part", "2024-02-29T23:59:59"},
     {"first-fields-win",
      "[Trash Info]\nPath=/first\nDeletionDate=2000-01-01T00:00:00\n"
      "Path=/second\nDeletionDate=2024-02-29T23:59:59\n",
-     1, "/first", NULL, "2000-01-01T00:00:00"},
+     1, "/first", nullptr, "2000-01-01T00:00:00"},
     {"later-invalid-duplicates-ignored",
      "[Trash Info]\nPath=/first\nDeletionDate=2000-01-01T00:00:00\n"
      "Path=%00\nDeletionDate=\n",
-     1, "/first", NULL, "2000-01-01T00:00:00"},
+     1, "/first", nullptr, "2000-01-01T00:00:00"},
     {"unknown-lines-ignored",
      "[Trash Info]\nUnknown=value\nPath=/original/item\n"
      "Another=ignored\nDeletionDate=2024-02-29T23:59:59\n",
-     1, "/original/item", NULL, "2024-02-29T23:59:59"},
+     1, "/original/item", nullptr, "2024-02-29T23:59:59"},
     {"crlf", "[Trash Info]\r\nPath=/original/item\r\nDeletionDate=2024-02-29T23:59:59\r\n",
-     1, "/original/item", NULL, "2024-02-29T23:59:59"},
+     1, "/original/item", nullptr, "2024-02-29T23:59:59"},
     {"complete-final-eof", "[Trash Info]\nPath=/original/item\nDeletionDate=2024-02-29T23:59:59",
-     1, "/original/item", NULL, "2024-02-29T23:59:59"},
+     1, "/original/item", nullptr, "2024-02-29T23:59:59"},
     {"leap-second", "[Trash Info]\nPath=/original/item\nDeletionDate=2000-02-29T23:59:60\n",
-     1, "/original/item", NULL, "2000-02-29T23:59:60"},
+     1, "/original/item", nullptr, "2000-02-29T23:59:60"},
     {"invalid-calendar", "[Trash Info]\nPath=/original/item\nDeletionDate=1900-02-29T12:00:00\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"invalid-clock", "[Trash Info]\nPath=/original/item\nDeletionDate=2024-02-29T24:00:00\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"invalid-date-format", "[Trash Info]\nPath=/original/item\nDeletionDate=2024-02-29 12:00:00\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"missing-header",
      "Path=/original/item\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"header-not-first",
      "Unknown=value\n[Trash Info]\nPath=/original/item\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"missing-path",
      "[Trash Info]\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"missing-date", "[Trash Info]\nPath=/original/item\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"empty-path",
      "[Trash Info]\nPath=\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"empty-date", "[Trash Info]\nPath=/original/item\nDeletionDate=\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"encoded-nul",
      "[Trash Info]\nPath=/original/%00suffix\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"invalid-first-path-not-rescued",
      "[Trash Info]\nPath=/original/%00suffix\nPath=/later\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"invalid-first-date-not-rescued",
      "[Trash Info]\nPath=/original/item\nDeletionDate=\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"invalid-percent",
      "[Trash Info]\nPath=/original/%GG\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"trailing-percent",
      "[Trash Info]\nPath=/original/%\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"half-percent",
      "[Trash Info]\nPath=/original/%2\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"relative-parent-component",
      "[Trash Info]\nPath=folder/../escape\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL},
+     0, nullptr, nullptr, nullptr},
     {"relative-encoded-parent",
      "[Trash Info]\nPath=folder/%2E%2e/escape\nDeletionDate=2024-02-29T23:59:59\n",
-     0, NULL, NULL, NULL}
+     0, nullptr, nullptr, nullptr}
 };
 
 
@@ -139,31 +139,31 @@ static void fixture(int ok) { if (!ok) { perror("trash-info fixture");exit(2); }
 /* Allocation-only seams around the entire actual standalone module. */
 void *TrashInfoTestMalloc(size_t size)
 {
-    if (++core_allocations==core_fail_at) { ++core_fault_hits;errno=ENOMEM;return NULL; }
+    if (++core_allocations==core_fail_at) { ++core_fault_hits;errno=ENOMEM;return nullptr; }
     return malloc(size);
 }
 char *TrashInfoTestStrdup(const char *text)
 {
-    if (++core_allocations==core_fail_at) { ++core_fault_hits;errno=ENOMEM;return NULL; }
+    if (++core_allocations==core_fail_at) { ++core_fault_hits;errno=ENOMEM;return nullptr; }
     return strdup(text);
 }
 static void *XtAllocate(size_t size)
 {
-    void *p=malloc(size);fixture(p!=NULL);
+    void *p=malloc(size);fixture(p!=nullptr);
     for (size_t i=0;i<32;++i) if (!xt_owned[i]) { xt_owned[i]=p;return p; }
-    fixture(0);return NULL;
+    fixture(0);return nullptr;
 }
 static char *XtCopy(const char *text)
 {
     ++xt_calls;
     if (!wrapper_closes) ++copy_before_close;
-    if (xt_calls==xt_fail_at) { ++xt_fault_hits;errno=ENOMEM;return NULL; }
+    if (xt_calls==xt_fail_at) { ++xt_fault_hits;errno=ENOMEM;return nullptr; }
     char *copy=XtAllocate(strlen(text)+1);strcpy(copy,text);return copy;
 }
 static void XtRelease(void *p)
 {
     if (!p) return;
-    for (size_t i=0;i<32;++i) if (xt_owned[i]==p) { xt_owned[i]=NULL;free(p);return; }
+    for (size_t i=0;i<32;++i) if (xt_owned[i]==p) { xt_owned[i]=nullptr;free(p);return; }
     CHECK(0); /* The wrapper must never free unowned/static data. */
 }
 typedef struct { int fd; size_t remaining; } ErrorCookie;
@@ -187,15 +187,15 @@ static int apple_cookie_read(void *data,char *out,int size)
 static FILE *error_stream_fd(int fd)
 {
     struct stat st;fixture(fstat(fd,&st)==0 && st.st_size>=0);
-    ErrorCookie *cookie=malloc(sizeof(*cookie));fixture(cookie!=NULL);
+    ErrorCookie *cookie=malloc(sizeof(*cookie));fixture(cookie!=nullptr);
     cookie->fd=fd;cookie->remaining=(size_t)st.st_size;
 #ifdef __APPLE__
-    FILE *stream=funopen(cookie,apple_cookie_read,NULL,NULL,cookie_close);
+    FILE *stream=funopen(cookie,apple_cookie_read,nullptr,nullptr,cookie_close);
 #else
     cookie_io_functions_t io={0};io.read=cookie_read;io.close=cookie_close;
     FILE *stream=fopencookie(cookie,"r",io);
 #endif
-    fixture(stream!=NULL);return stream;
+    fixture(stream!=nullptr);return stream;
 }
 static FILE *error_stream(const char *name)
 {
@@ -215,7 +215,7 @@ static int StatDescriptor(int fd,struct stat *info)
 }
 static FILE *StreamDescriptor(int fd,const char *mode)
 {
-    if (wrapper_fdopen_error) { ++descriptor_fault_hits;errno=ENOMEM;return NULL; }
+    if (wrapper_fdopen_error) { ++descriptor_fault_hits;errno=ENOMEM;return nullptr; }
     return wrapper_read_error?error_stream_fd(fd):fdopen(fd,mode);
 }
 static int CloseDescriptor(int fd)
@@ -253,20 +253,20 @@ static void put_text(FILE *fp,const char *text) { put_bytes(fp,text,strlen(text)
 
 static void run_record(const char *name,int wrapper)
 {
-    const TrashInfoFixture *record=NULL;
+    const TrashInfoFixture *record=nullptr;
     for (size_t i=0;i<sizeof(trash_info_fixtures)/sizeof(trash_info_fixtures[0]);++i)
         if (!strcmp(trash_info_fixtures[i].name,name)) record=&trash_info_fixtures[i];
     const char *base="/original-base",*expected="/original/item",*date="2024-02-29T23:59:59";
-    char *owned_expected=NULL,*owned_base=NULL;
+    char *owned_expected=nullptr,*owned_base=nullptr;
     int status=DTFILE_XDG_INFO_OK;
-    FILE *fp=fopen("input.trashinfo","wb");fixture(fp!=NULL);
+    FILE *fp=fopen("input.trashinfo","wb");fixture(fp!=nullptr);
     if (record) {
         put_text(fp,record->metadata);
         status=record->valid?DTFILE_XDG_INFO_OK:DTFILE_XDG_INFO_INVALID;
         expected=record->absolute_path;date=record->date;
         if (record->relative_to_base) {
             size_t n=strlen(base)+strlen(record->relative_to_base)+2;
-            owned_expected=malloc(n);fixture(owned_expected!=NULL);
+            owned_expected=malloc(n);fixture(owned_expected!=nullptr);
             snprintf(owned_expected,n,"%s/%s",base,record->relative_to_base);expected=owned_expected;
         }
     } else if (!strcmp(name,"line-limit") || !strcmp(name,"overlong-line") ||
@@ -293,17 +293,17 @@ static void run_record(const char *name,int wrapper)
         put_bytes(fp,raw,sizeof(raw)-1);status=DTFILE_XDG_INFO_INVALID;
     } else if (!strcmp(name,"resolved-limit") || !strcmp(name,"resolved-too-large")) {
         size_t length=DTFILE_XDG_INFO_LINE_LIMIT-(!strcmp(name,"resolved-limit")?2:1);
-        owned_base=malloc(length+1);fixture(owned_base!=NULL);
+        owned_base=malloc(length+1);fixture(owned_base!=nullptr);
         memset(owned_base,'x',length);owned_base[0]='/';owned_base[length]=0;base=owned_base;
         put_text(fp,"[Trash Info]\nPath=r\nDeletionDate=2024-02-29T23:59:59\n");
         status=!strcmp(name,"resolved-limit")?DTFILE_XDG_INFO_OK:DTFILE_XDG_INFO_TOO_LARGE;
         if (status==DTFILE_XDG_INFO_OK) {
-            owned_expected=malloc(length+3);fixture(owned_expected!=NULL);
+            owned_expected=malloc(length+3);fixture(owned_expected!=nullptr);
             memcpy(owned_expected,base,length);memcpy(owned_expected+length,"/r",3);expected=owned_expected;
         }
     } else if (!strcmp(name,"relative-no-base") || !strncmp(name,"no-memory-",10)) {
         put_text(fp,"[Trash Info]\nPath=folder/item\nDeletionDate=2024-02-29T23:59:59\n");
-        if (!strcmp(name,"relative-no-base")) { base=NULL;status=DTFILE_XDG_INFO_INVALID; }
+        if (!strcmp(name,"relative-no-base")) { base=nullptr;status=DTFILE_XDG_INFO_INVALID; }
         else {
             int at=atoi(name+10);fixture(at>=1 && at<=4);
             if (wrapper) xt_fail_at=at;else core_fail_at=at;
@@ -318,7 +318,7 @@ static void run_record(const char *name,int wrapper)
         if (!strcmp(name,"read-error")) { wrapper_read_error=1;status=DTFILE_XDG_INFO_IO_ERROR; }
         if (!strcmp(name,"close-error")) { wrapper_close_error=1;status=DTFILE_XDG_INFO_IO_ERROR; }
         if (!strcmp(name,"missing-file")) status=DTFILE_XDG_INFO_IO_ERROR;
-        if (!strcmp(name,"absolute-no-base")) base=NULL;
+        if (!strcmp(name,"absolute-no-base")) base=nullptr;
         if (!strcmp(name,"fifo-input") || !strcmp(name,"symlink-input")) status=DTFILE_XDG_INFO_INVALID;
         if (!strcmp(name,"fstat-error")) { wrapper_fstat_error=1;status=DTFILE_XDG_INFO_IO_ERROR; }
         if (!strcmp(name,"fdopen-error")) { wrapper_fdopen_error=1;status=DTFILE_XDG_INFO_NO_MEMORY; }
@@ -328,7 +328,7 @@ static void run_record(const char *name,int wrapper)
         const char *filename=!strcmp(name,"missing-file")?"missing.trashinfo":"input.trashinfo";
         if (!strcmp(name,"fifo-input")) { fixture(mkfifo("fifo.trashinfo",0600)==0);filename="fifo.trashinfo"; }
         if (!strcmp(name,"symlink-input")) { fixture(symlink("input.trashinfo","link.trashinfo")==0);filename="link.trashinfo"; }
-        char *path=NULL,*deletion=NULL;
+        char *path=nullptr,*deletion=nullptr;
         int ok=TestParseTrashInfo(filename,base,&path,&deletion);
         fprintf(stderr,"WRAPPER: ok=%d expected_status=%d closes=%d copies_before_close=%d Xt_calls=%d\n",
                 ok,status,wrapper_closes,copy_before_close,xt_calls);
@@ -351,7 +351,7 @@ static void run_record(const char *name,int wrapper)
             CHECK(n==(ssize_t)strlen("input.trashinfo") && !memcmp(link,"input.trashinfo",(size_t)n));
         }
         if (!strcmp(name,"fifo-input") || !strcmp(name,"symlink-input")) {
-            char bytes[128];FILE *verify=fopen("input.trashinfo","rb");fixture(verify!=NULL);
+            char bytes[128];FILE *verify=fopen("input.trashinfo","rb");fixture(verify!=nullptr);
             size_t n=fread(bytes,1,sizeof(bytes),verify);
             CHECK(n==strlen(valid_info) && !memcmp(bytes,valid_info,n));
             fixture(fclose(verify)==0);
@@ -359,12 +359,12 @@ static void run_record(const char *name,int wrapper)
         if (xt_fail_at) CHECK(xt_fault_hits==1);
         XtRelease(path);XtRelease(deletion);
         for (size_t i=0;i<32;++i) {
-            CHECK(xt_owned[i]==NULL);
-            if (xt_owned[i]) { free(xt_owned[i]);xt_owned[i]=NULL; }
+            CHECK(xt_owned[i]==nullptr);
+            if (xt_owned[i]) { free(xt_owned[i]);xt_owned[i]=nullptr; }
         }
     } else {
         fp=wrapper_read_error?error_stream("input.trashinfo"):fopen("input.trashinfo","rb");
-        fixture(fp!=NULL);int fd=wrapper_read_error?-1:fileno(fp);
+        fixture(fp!=nullptr);int fd=wrapper_read_error?-1:fileno(fp);
         DtfileXdgTrashInfo result={0};
         int actual=DtfileReadXdgTrashInfo(fp,base,&result);
         fprintf(stderr,"CORE: status=%d expected=%d allocations=%d injected=%d\n",
@@ -388,14 +388,14 @@ int main(int argc,char **argv)
     fixture(argc==3);case_name=argv[1];fixture(chdir(argv[2])==0);
     if (!strcmp(case_name,"core-null-stream")) {
         DtfileXdgTrashInfo result={0};
-        CHECK(DtfileReadXdgTrashInfo(NULL,"/base",&result)==DTFILE_XDG_INFO_INVALID);
+        CHECK(DtfileReadXdgTrashInfo(nullptr,"/base",&result)==DTFILE_XDG_INFO_INVALID);
         CHECK(!result.path && !result.deletion_date);DtfileFreeXdgTrashInfo(&result);
     } else if (!strcmp(case_name,"core-null-result")) {
-        FILE *fp=fopen("null-result.info","w+");fixture(fp!=NULL);put_text(fp,valid_info);rewind(fp);
+        FILE *fp=fopen("null-result.info","w+");fixture(fp!=nullptr);put_text(fp,valid_info);rewind(fp);
         int fd=fileno(fp);
-        CHECK(DtfileReadXdgTrashInfo(fp,"/base",NULL)==DTFILE_XDG_INFO_INVALID);
+        CHECK(DtfileReadXdgTrashInfo(fp,"/base",nullptr)==DTFILE_XDG_INFO_INVALID);
         CHECK(fcntl(fd,F_GETFD)>=0);fixture(fclose(fp)==0);
-    } else if (!strcmp(case_name,"core-free-null")) DtfileFreeXdgTrashInfo(NULL);
+    } else if (!strcmp(case_name,"core-free-null")) DtfileFreeXdgTrashInfo(nullptr);
     else if (!strncmp(case_name,"core-",5)) run_record(case_name+5,0);
     else { fixture(!strncmp(case_name,"wrapper-",8));run_record(case_name+8,1); }
     if (!failed) printf("PASS %s\n",case_name);

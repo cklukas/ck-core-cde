@@ -127,8 +127,8 @@ IL_PRIVATE ilBool _ilInsertCompressedCopyFilter (
             function does all necessary setup.
         */
     return (ilAddPipeElement (pipe, IL_FILTER, 0, 0, 
-        (ilSrcElementData *)NULL, (ilDstElementData *)NULL, 
-        IL_NPF, IL_NPF, IL_NPF, ilCopyCompressedExecute, NULL, 0)) ? TRUE : FALSE;
+        (ilSrcElementData *)nullptr, (ilDstElementData *)nullptr, 
+        IL_NPF, IL_NPF, IL_NPF, ilCopyCompressedExecute, nullptr, 0)) ? TRUE : FALSE;
 
 }
 

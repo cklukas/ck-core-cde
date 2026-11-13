@@ -57,7 +57,7 @@ def main():
         if sys.platform=="darwin":parser.error("--work-dir is required on macOS")
         work=Path.cwd()/"directory-control-check"
     work=work.resolve();work.mkdir(parents=True,exist_ok=False);(work/"tmp").mkdir()
-    texts={name:(source/name).read_text() for name in ("Directory.c","FileOp.c")}
+    texts={name:re.sub(r"\bnullptr\b","NULL",(source/name).read_text()) for name in ("Directory.c","FileOp.c")}
     callback=extract(texts["Directory.c"],"ReaddirPipeCallback")
     read_process=extract(texts["Directory.c"],"ReadDirectoryProcess")
     update_all=extract(texts["Directory.c"],"UpdateAllProcess")
@@ -137,7 +137,7 @@ def main():
     functions="\n\n".join(extract(texts[file],name) for file,name in names)
     fixture=(tests/"directory-control-packets.c").read_text().replace("/* PRODUCTION_FUNCTIONS */",functions)
     generated=work/"directory-control-packets.c";generated.write_text(fixture);binary=work/"directory-control-packets"
-    cc=os.environ.get("CC","cc").split();flags=["-std=c11","-D_DEFAULT_SOURCE","-Wall","-Wextra","-Werror","-O1","-g"]
+    cc=os.environ.get("CC","cc").split();flags=["-std=gnu23","-D_DEFAULT_SOURCE","-Wall","-Wextra","-Werror","-O1","-g"]
     if args.sanitizers!="none":flags += [f"-fsanitize={args.sanitizers}","-fno-omit-frame-pointer"]
     env=dict(os.environ,TMPDIR=str(work/"tmp"),LANG="C",LC_ALL="C")
     env.setdefault("ASAN_OPTIONS",f"detect_leaks={'0' if sys.platform=='darwin' else '1'}:abort_on_error=1")

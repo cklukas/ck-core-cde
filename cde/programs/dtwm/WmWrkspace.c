@@ -93,7 +93,7 @@ static void InsureUniqueWorkspaceHints(
  * by F_AddToAllWorkspaces
  */
 static int numResIDs = 0;
-static WorkspaceID *pResIDs = NULL;
+static WorkspaceID *pResIDs = nullptr;
 
 
 
@@ -340,7 +340,7 @@ UpdateWorkspacePresenceProperty(
         ClientData *pCD )
 
 {
-    static Atom 	*pPresence = NULL;
+    static Atom 	*pPresence = nullptr;
     static unsigned long   cPresence = 0;
     unsigned long i;
 
@@ -475,7 +475,7 @@ CreateWorkspace(
         unsigned char *pchTitle )
 
 {
-    WmWorkspaceData *pWS = NULL;
+    WmWorkspaceData *pWS = nullptr;
     String string;
     int iActiveWS;
 
@@ -683,11 +683,11 @@ DeleteWorkspace(
          */
         if (wmGD.iconAutoPlace)
         {
-           if (pWS->IPData.placeList != NULL)
+           if (pWS->IPData.placeList != nullptr)
                XtFree ((char *) pWS->IPData.placeList);
-           if (pWS->IPData.placementRowY != NULL)
+           if (pWS->IPData.placementRowY != nullptr)
                XtFree ((char *) pWS->IPData.placementRowY);
-           if (pWS->IPData.placementColX != NULL)
+           if (pWS->IPData.placementColX != nullptr)
                XtFree ((char *) pWS->IPData.placementColX);
         }
 
@@ -825,7 +825,7 @@ ProcessDtWmHints (ClientData *pCD)
 	saveFunctions = pCD->dtwmFunctions;
 	pCD->dtwmFunctions |= DtWM_FUNCTION_OCCUPY_WS;
 
-	F_AddToAllWorkspaces (NULL, pCD, NULL);
+	F_AddToAllWorkspaces (nullptr, pCD, nullptr);
 
 	pCD->dtwmFunctions = saveFunctions;
 	pCD->clientFlags |= FRONT_PANEL_BOX ;
@@ -870,13 +870,13 @@ GetClientWorkspaceInfo(
      * fill with NULL IDs
      */
     if ((pCD->pWsList = (WsClientData *) 
-	    XtMalloc(pCD->pSD->numWorkspaces * sizeof(WsClientData))) == NULL)
+	    XtMalloc(pCD->pSD->numWorkspaces * sizeof(WsClientData))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 4, "Insufficient memory for client data")));
 	return (False);
     }
     pCD->currentWsc = 0;
-    pCD->pWorkspaceHints = NULL;
+    pCD->pWorkspaceHints = nullptr;
     pCD->sizeWsList = pCD->pSD->numWorkspaces;
     pCD->numInhabited = 0;		/* no valid ones yet */
     for (i = 0; i < pCD->pSD->numWorkspaces; i++)
@@ -887,7 +887,7 @@ GetClientWorkspaceInfo(
 	pCD->pWsList[i].iconY = 0;
 	pCD->pWsList[i].iconFrameWin = None;
 	pCD->pWsList[i].iconIndicatorWin = None;
-	pCD->pWsList[i].pIconBox = NULL;
+	pCD->pWsList[i].pIconBox = nullptr;
     }
     pCD->putInAll = bAll = False;
 
@@ -977,9 +977,9 @@ WorkspaceIsInCommand(
         unsigned int *pNumIDs )
 {
     int wmcArgc;
-    char **wmcArgv = NULL;
+    char **wmcArgv = nullptr;
     Boolean rval = False;
-    unsigned char *pch = NULL;
+    unsigned char *pch = nullptr;
     XTextProperty clientMachineProp;
 
     if (FindClientDBMatch(pCD, (char **)&pch))
@@ -995,13 +995,13 @@ WorkspaceIsInCommand(
     }
     else if (HasProperty (pCD, XA_WM_COMMAND) &&
 	     XGetCommand (dpy, pCD->client, &wmcArgv, &wmcArgc) &&
-	     (wmcArgv != NULL))
+	     (wmcArgv != nullptr))
     {
 	if (pCD->pSD->remainingSessionItems)
 	{
 	    if(!(XGetWMClientMachine(dpy, pCD->client, &clientMachineProp)))
 	    {
-		clientMachineProp.value = NULL;
+		clientMachineProp.value = nullptr;
 	    }
 	    if (FindDtSessionMatch(wmcArgc, wmcArgv, pCD, pCD->pSD, 
 				    (char **)&pch, 
@@ -1039,7 +1039,7 @@ WorkspaceIsInCommand(
 	    }
 	}
 
-	if (wmcArgv != NULL)
+	if (wmcArgv != nullptr)
 	{
 	    XFreeStringList (wmcArgv);
 	}
@@ -1096,7 +1096,7 @@ ConvertNamesToIDs(
     WorkspaceID *pLocalIDs;
 
     if ((pLocalIDs = (WorkspaceID *) XtMalloc (WS_ALLOC_AMOUNT *
-	sizeof(WorkspaceID))) == NULL)
+	sizeof(WorkspaceID))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 5, "Insufficient Memory (ConvertNamesToIDs)")));
 	ExitWM (WM_ERROR_EXIT_VALUE);
@@ -1151,7 +1151,7 @@ ConvertNamesToIDs(
 		/* list too small */
 		numLocalIDs += WS_ALLOC_AMOUNT;
 		if ((pLocalIDs = (WorkspaceID *) XtRealloc ((char *)pLocalIDs,
-			    numLocalIDs * sizeof(WorkspaceID))) == NULL)
+			    numLocalIDs * sizeof(WorkspaceID))) == nullptr)
 		{
 		    Warning (((char *)GETMESSAGE(76, 6, "Insufficient Memory (ConvertNamesToIDs)")));
 		    ExitWM (WM_ERROR_EXIT_VALUE);
@@ -1317,7 +1317,7 @@ FindWsNameInCommand(
 				(argv[i+1] + (pchValue - pch0));
 			rval = True;
 			XtFree ((char *)pch0);
-			pch0 = NULL;
+			pch0 = nullptr;
 		    }
 		}
 
@@ -1386,7 +1386,7 @@ PutClientIntoWorkspace(
 	    pCD->pWsList[k].iconY = 0;
 	    pCD->pWsList[k].iconFrameWin = (Window) 0;
 	    pCD->pWsList[k].iconIndicatorWin = (Window) 0;
-	    pCD->pWsList[k].pIconBox = NULL;
+	    pCD->pWsList[k].pIconBox = nullptr;
 	}
     }
 
@@ -1465,7 +1465,7 @@ TakeClientOutOfWorkspace(
 	        if ((pWsc->iconPlace != NO_ICON_PLACE) &&
 		    (pWS->IPData.placeList[pWsc->iconPlace].pCD == pCD))
 		{
-		    pWS->IPData.placeList[pWsc->iconPlace].pCD = NULL;
+		    pWS->IPData.placeList[pWsc->iconPlace].pCD = nullptr;
 		    pWsc->iconPlace = NO_ICON_PLACE;
 		}
 	    }
@@ -1537,7 +1537,7 @@ GetWorkspaceData(
         WorkspaceID wsID )
 
 {
-    WmWorkspaceData *pWS = NULL;
+    WmWorkspaceData *pWS = nullptr;
     int i;
 
     for (i=0; i < pSD->numWorkspaces; i++)
@@ -1734,7 +1734,7 @@ GetWsClientData(
 
 {
     int i;
-    WsClientData *pWsc = NULL;
+    WsClientData *pWsc = nullptr;
 
     for (i = 0; (i < pCD->numInhabited) && !pWsc; i++)
     {
@@ -1837,7 +1837,7 @@ ProcessWorkspaceHints(
     Boolean InBoth;
     Boolean bAll;
     int numOld;
-    WorkspaceID *pDiff = NULL;
+    WorkspaceID *pDiff = nullptr;
     int numDiff;
 
     numOld = pCD->numInhabited;
@@ -2179,7 +2179,7 @@ RemoveSingleClientFromWorkspaces(
 	     * transients will get taken care of in there.
 	     */
 	    if ((pWS == pCD->pSD->pActiveWS) &&
-		(pCD->transientLeader == NULL) &&
+		(pCD->transientLeader == nullptr) &&
 		!(pCD->clientState & UNSEEN_STATE))
 	    {
 		SetClientState (pCD, 
@@ -2281,17 +2281,17 @@ GetListOfOccupiedWorkspaces(
 {
     int i;
 
-    WorkspaceID *pLocalIDs = NULL;
+    WorkspaceID *pLocalIDs = nullptr;
 
     WorkspaceID activeWsID = pCD->pSD->pActiveWS->id;
 
     *numIDs = 0;
 
     if ((pLocalIDs = (WorkspaceID *) XtMalloc (pCD->numInhabited *
-	sizeof(WorkspaceID))) == NULL)
+	sizeof(WorkspaceID))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 7, "Insufficient memory")));
-	return (NULL);
+	return (nullptr);
     }
 
     for (i = 0; i < pCD->numInhabited; i++)
@@ -2438,7 +2438,7 @@ AddSingleClientToWorkspaces(
 	    PutClientIntoWorkspace (pWS, pCD);
 
 	    if ((pWS == PSD_FOR_CLIENT(pCD)->pActiveWS) &&
-		(pCD->transientLeader == NULL) &&
+		(pCD->transientLeader == nullptr) &&
 		(pCD->clientState & UNSEEN_STATE))
 	    {
 		SetClientState (pCD, 
@@ -2730,10 +2730,10 @@ F_DeleteWorkspace(
 
 {
     WmScreenData *pSD = ACTIVE_PSD;
-    WmWorkspaceData *pWS = NULL;
+    WmWorkspaceData *pWS = nullptr;
     int i;
 
-    if (args == NULL)
+    if (args == nullptr)
     {
 	pWS= ACTIVE_WS;
     } 
@@ -3141,7 +3141,7 @@ GetLeaderPresence(
     WorkspaceID *pLocalIDs;
 
     if ((pLocalIDs = (WorkspaceID *) XtMalloc (pCD->pSD->numWorkspaces *
-	sizeof(WorkspaceID))) == NULL)
+	sizeof(WorkspaceID))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 10, "Insufficient Memory (GetLeaderPresence)")));
 	ExitWM (WM_ERROR_EXIT_VALUE);
@@ -3278,7 +3278,7 @@ ReserveIdListSpace(
 	numResIDs = (pResIDs)? numIDs : 0;
     }
 
-    if (pResIDs == NULL)
+    if (pResIDs == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 11, "Insufficient memory")));
 	ExitWM (WM_ERROR_EXIT_VALUE);
@@ -3381,7 +3381,7 @@ SaveWorkspaceResources(
         WmWorkspaceData *pWS,
         unsigned long flags)
 {
-    char *buffer = NULL;
+    char *buffer = nullptr;
     int bufferLength = 0;
     char *res_class;
     char *data;
@@ -3401,7 +3401,7 @@ SaveWorkspaceResources(
     int iLen;
 
     /* allocate initial data space */
-    if ((data = (char *) XtMalloc (MAXWMPATH+1)) == NULL)
+    if ((data = (char *) XtMalloc (MAXWMPATH+1)) == nullptr)
     {
 	Warning (((char *)
 		  GETMESSAGE(76,12,"Insufficient memory to save resources")));
@@ -3696,7 +3696,7 @@ SaveWorkspaceResources(
 	if (pWS->iconBoxGeometry)
 	{
 	    XtFree((char *) (pWS->iconBoxGeometry));
-	    pWS->iconBoxGeometry = NULL;
+	    pWS->iconBoxGeometry = nullptr;
 	}
 
 	clientWidth = (pWS->pIconBox->pCD_iconBox->clientWidth - 
@@ -3787,7 +3787,7 @@ AddStringToResourceData(
         char **pdata,
         int *plen )
 {
-    if ((*pdata = (char *) XtRealloc(*pdata, *plen+strlen(string)+1)) == NULL)
+    if ((*pdata = (char *) XtRealloc(*pdata, *plen+strlen(string)+1)) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(76, 13, "Insufficient memory to save resources.")));
 	Do_Quit_Mwm (False);

@@ -442,7 +442,7 @@ _DtHelpCeReturnSdlElement (
     *ret_el_define = SdlElementCdata;
     *ret_end_flag  = False;
     if (ret_data)
-	*ret_data = NULL;
+	*ret_data = nullptr;
 
     /*
      * get the next element
@@ -492,9 +492,9 @@ _DtHelpCeReturnSdlElement (
 
 	lowerChar = (int) _DtHelpCeToLower(*ptr);
 
-        while (different && el_list->element_str != NULL)
+        while (different && el_list->element_str != nullptr)
           {
-	    if (endFlag == True && el_list->element_end_str != NULL &&
+	    if (endFlag == True && el_list->element_end_str != nullptr &&
 		lowerChar == ((int)(el_list->element_end_str[2])) &&
 		_DtHelpCeStrNCaseCmpLatin1(&(el_list->element_end_str[2]),
 					ptr, el_list->end_sig_chars - 2) == 0)
@@ -513,7 +513,7 @@ _DtHelpCeReturnSdlElement (
 	*ret_el_define = el_list->sdl_element;
       }
 
-    if (*ret_el_define == SdlElementCdata && ret_data != NULL)
+    if (*ret_el_define == SdlElementCdata && ret_data != nullptr)
 	*ret_data = strdup(nextEl);
 
     return 0;
@@ -567,9 +567,9 @@ _DtHelpCeGetSdlCdata (
     char       escStr[ESC_STR_LEN];
     char       c;
 
-    if (string == NULL)
+    if (string == nullptr)
 	ignore = True;
-    else if (*string != NULL)
+    else if (*string != nullptr)
       {
 	strSize = strlen(*string);
 	if (*str_max < strSize)
@@ -809,11 +809,11 @@ _DtHelpCeGetSdlAttributeCdata (
     _DtCvValue   firstChar   = True;
     int         strSize     = 0;
     int         strMax      = 0;
-    char       *myStr       = NULL;
+    char       *myStr       = nullptr;
     char        c;
     char        testChar;
 
-    if (string == NULL)
+    if (string == nullptr)
 	ignore = True;
     else if (limit == True)
 	myStr = *string;
@@ -825,7 +825,7 @@ _DtHelpCeGetSdlAttributeCdata (
 	c = BufFileGet(f);
 	if (c == BUFFILEEOF)
 	  {
-	    if (myStr != NULL)
+	    if (myStr != nullptr)
 		free(myStr);
 	    return -1;
 	  }
@@ -839,7 +839,7 @@ _DtHelpCeGetSdlAttributeCdata (
 	      }
 	    else
 	      {
-	        if (myStr != NULL)
+	        if (myStr != nullptr)
 		    free(myStr);
 	        return -1;
 	      }
@@ -853,7 +853,7 @@ _DtHelpCeGetSdlAttributeCdata (
 
 	    if (limit == True && strSize >= DTD_NAMELEN)
 	      {
-		if (myStr != NULL)
+		if (myStr != nullptr)
 		    free(myStr);
 		return -1;
 	      }
@@ -867,12 +867,12 @@ _DtHelpCeGetSdlAttributeCdata (
 		    char *newStr = (char *) realloc (myStr,
 						(sizeof(char)*(strMax+1)));
 
-		    if (newStr == NULL)
+		    if (newStr == nullptr)
 			free(myStr);
 		    myStr = newStr;
 		  }
 
-		if (myStr == NULL)
+		if (myStr == nullptr)
 		    return -1;
 	      }
 
@@ -882,7 +882,7 @@ _DtHelpCeGetSdlAttributeCdata (
 
     if (ignore == False)
       {
-	if (myStr != NULL)
+	if (myStr != nullptr)
             myStr[strSize] = '\0';
 	if (limit == False)
             *string = myStr;
@@ -1030,7 +1030,7 @@ _DtHelpCeGetSdlId (
     BufFilePtr	 f,
     char	**id_value)
 {
-    *id_value = NULL;
+    *id_value = nullptr;
 
     if (_DtHelpCeGetSdlAttributeCdata (f, False, id_value) != 0)
 	return -1;
@@ -1146,7 +1146,7 @@ _DtHelpCeMergeSdlAttribInfo(
     char                *src;
     char                *dst;
 
-    if (src_seg != NULL)
+    if (src_seg != nullptr)
       {
 	tossInfo = _SdlSegPtrToTossInfo(src_seg);
         for (pAttr = _DtHelpCeGetSdlAttributeList();
@@ -1202,7 +1202,7 @@ _DtHelpCeMergeSdlAttribInfo(
 
 	          }
 	      }
-	    else if (NULL != el_info &&
+	    else if (nullptr != el_info &&
 			pAttr->struct_type == SdlElementSpecific &&
 				SDLIsAttrSet(*tossInfo, pAttr->sdl_attr_define))
 	      {
@@ -1247,12 +1247,12 @@ _DtHelpCeAddSegToList(
     _DtCvSegment **seg_list,
     _DtCvSegment **last_seg)
 {
-    if (*seg_list == NULL)
+    if (*seg_list == nullptr)
         *seg_list = seg_ptr;
     else
         (*last_seg)->next_seg = seg_ptr;
 
-    while (NULL != seg_ptr->next_seg)
+    while (nullptr != seg_ptr->next_seg)
 	seg_ptr = seg_ptr->next_seg;
 
     *last_seg = seg_ptr;
@@ -1292,18 +1292,18 @@ _DtHelpCeAllocSegment(
     _DtCvSegment   **seg_ptr)
 {
     int		 cnt    = 0;
-    _DtCvSegment	*newSeg = NULL;
+    _DtCvSegment	*newSeg = nullptr;
 
-    if (next_seg != NULL)
+    if (next_seg != nullptr)
 	newSeg = *next_seg;
 
-    if (alloc_size != NULL && newSeg != NULL)
+    if (alloc_size != nullptr && newSeg != nullptr)
 	cnt = *alloc_size;
 
     if (cnt < 1)
       {
 	newSeg = _DtHelpAllocateSegments(malloc_size);
-        if (newSeg == NULL)
+        if (newSeg == nullptr)
             return -1;
 
         cnt    = --malloc_size;
@@ -1312,13 +1312,13 @@ _DtHelpCeAllocSegment(
 	cnt--;
 
     *seg_ptr    = newSeg++;
-    if (next_seg != NULL)
+    if (next_seg != nullptr)
       {
-	*next_seg = NULL;
+	*next_seg = nullptr;
 	if (cnt > 0)
             *next_seg   = newSeg;
       }
-    if (alloc_size != NULL)
+    if (alloc_size != nullptr)
         *alloc_size = cnt;
 
     return 0;
@@ -1359,9 +1359,9 @@ _DtHelpCeSaveString(
     int        junk    = 0;
     char       tmpChar;
     char         *ptr     = string;
-    _DtCvSegment    *pSeg = NULL;
-    _DtCvSegment    *junkSeg  = NULL;
-    _DtHelpFontHints   *fontSpec = NULL;
+    _DtCvSegment    *pSeg = nullptr;
+    _DtCvSegment    *junkSeg  = nullptr;
+    _DtHelpFontHints   *fontSpec = nullptr;
     _DtCvValue addToList = False;
     _DtCvPointer useFont = (_DtCvPointer) -1;
 
@@ -1389,7 +1389,7 @@ _DtHelpCeSaveString(
 	    if (_SdlFontModeSave == resolve_font)
 	      {
 	        fontSpec = (_DtHelpFontHints *) malloc (sizeof(_DtHelpFontHints));
-	        if (NULL == fontSpec)
+	        if (nullptr == fontSpec)
 	          {
 		    free(pSeg);
 		    return -1;
@@ -1450,7 +1450,7 @@ _DtHelpCeSaveString(
 		 * malloc the memory
 		 */
 		pwcs = (wchar_t *) malloc(sizeof(wchar_t) * numChars);
-		if (NULL != pwcs)
+		if (nullptr != pwcs)
 		  {
 		    /* convert */
 		    convSize = mbstowcs(pwcs, string, ((size_t) numChars));
@@ -1465,7 +1465,7 @@ _DtHelpCeSaveString(
 	    else
 	        _DtCvStringOfStringSeg(pSeg) = (void *) strdup(string);
 
-	    if (NULL == _DtCvStringOfStringSeg(pSeg))
+	    if (nullptr == _DtCvStringOfStringSeg(pSeg))
 		return -1;
 
 	    /*
@@ -1476,7 +1476,7 @@ _DtHelpCeSaveString(
 	    /*
 	     * setup the list pointers
 	     */
-	    if (*prev_seg != NULL)
+	    if (*prev_seg != nullptr)
 		(*prev_seg)->next_disp = pSeg;
     
 	    *prev_seg = pSeg;
@@ -1495,7 +1495,7 @@ _DtHelpCeSaveString(
 
 	if (addToList == True)
 	  {
-	    if (*prev_seg != NULL)
+	    if (*prev_seg != nullptr)
 	        (*prev_seg)->next_disp = pSeg;
 	    *prev_seg = pSeg;
 	    _DtHelpCeAddSegToList(pSeg, seg_list, last_seg);
@@ -1547,7 +1547,7 @@ _DtHelpCeMatchSemanticStyle (
 	     * But don't go past the ones after, because they might match
 	     * too.
              */
-            while (pSeg != NULL &&
+            while (pSeg != nullptr &&
 		_SdlSegPtrToTossType(pSeg) != pClassStyle->style &&
 		_SdlSegPtrToTossType(pSeg) != pClassStyle[1].style)
 	        pSeg = pSeg->next_seg;
@@ -1556,15 +1556,15 @@ _DtHelpCeMatchSemanticStyle (
              * the class matches the style, look for a specific class, ssi and
              * level match.
              */
-            while (pSeg != NULL &&
+            while (pSeg != nullptr &&
 		_SdlSegPtrToTossType(pSeg) == pClassStyle->style)
               {
 	        pEl = _SdlSegPtrToTossInfo(pSeg);
 	        if (_SdlTossInfoPtrClan(pEl) == clan &&
 	            (_SdlTossInfoPtrRlevel(pEl) == -1 ||
 				  _SdlTossInfoPtrRlevel(pEl) == level) &&
-	            (_SdlTossInfoPtrSsi(pEl) == NULL ||
-		       (ssi != NULL &&
+	            (_SdlTossInfoPtrSsi(pEl) == nullptr ||
+		       (ssi != nullptr &&
 		       _DtHelpCeStrCaseCmp(_SdlTossInfoPtrSsi(pEl), ssi) == 0)))
 	            return pSeg;
 
@@ -1581,7 +1581,7 @@ _DtHelpCeMatchSemanticStyle (
           }
       } while (pClassStyle->start != SdlOptionBad);
 
-    return NULL;
+    return nullptr;
 }
 
 /******************************************************************************
@@ -1604,7 +1604,7 @@ _DtHelpCeAllocateFontStruct (
     _DtHelpFontHints *font;
 
     font = (_DtHelpFontHints *) malloc (sizeof (_DtHelpFontHints) * size);
-    if (NULL == font)
+    if (nullptr == font)
 	return -1;
 
     *ret_ptr = font;

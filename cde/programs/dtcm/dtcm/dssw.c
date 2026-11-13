@@ -117,7 +117,7 @@ dssw_set_start_hour(Widget w, XtPointer client_data, XtPointer cbs) {
 	Props		*p = (Props *)dssw->cal->properties;
 	DisplayType	dt = get_int_prop(p, CP_DEFAULTDISP);
 
-	XtVaGetValues(w, XmNuserData, &user_data, NULL);
+	XtVaGetValues(w, XmNuserData, &user_data, nullptr);
 
 	if (user_data == NO_TIME) {
 		dssw->start_val.val[0] = '\0';
@@ -173,7 +173,7 @@ dssw_set_stop_hour(Widget w, XtPointer client_data, XtPointer cbs) {
 	DisplayType	dt = get_int_prop(p, CP_DEFAULTDISP);
 
 	get_dssw_times(dssw);
-	XtVaGetValues(w, XmNuserData, &user_data, NULL);
+	XtVaGetValues(w, XmNuserData, &user_data, nullptr);
 
 	if (user_data == NO_TIME) {
 		dssw->stop_val.val[0] = '\0';
@@ -252,41 +252,41 @@ build_dssw(
 	dssw->dssw_form_mgr = XtVaCreateWidget("dssw_form_mgr",
 		xmFormWidgetClass, 	parent,
 		XmNautoUnmanage, 	False,
-		NULL);
+		nullptr);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 828, "Date:"));
         dssw->date_label = XtVaCreateWidget("date_label",
 		xmLabelGadgetClass, 	dssw->dssw_form_mgr,
 		XmNlabelString,		label_str,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 829, "Start:"));
         dssw->start_label = XtVaCreateWidget("start_label",
 		xmLabelGadgetClass, 	dssw->dssw_form_mgr,
 		XmNlabelString,		label_str,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 832, "End:"));
         dssw->stop_label = XtVaCreateWidget("stop_label",
 		xmLabelGadgetClass, 	dssw->dssw_form_mgr,
 		XmNlabelString,		label_str,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 835, "What:"));
         dssw->what_label = XtVaCreateWidget("what_label",
 		xmLabelGadgetClass, 	dssw->dssw_form_mgr,
 		XmNlabelString,		label_str,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
  
         dssw->date_text = XtVaCreateWidget("date_text",
 		xmTextWidgetClass, 	dssw->dssw_form_mgr,
                 XmNeditMode, 		XmSINGLE_LINE_EDIT,
 		XmNmaxLength, 		DATE_LEN - 1,
-                NULL);
+                nullptr);
  
 	/*
 	**  Radio button behavior for AM/PM selection for start time
@@ -295,16 +295,16 @@ build_dssw(
 		xmTextWidgetClass, 	dssw->dssw_form_mgr,
 		XmNeditMode, 		XmSINGLE_LINE_EDIT,
 		XmNmaxLength, 		START_STOP_LEN - 1,
-		NULL);
+		nullptr);
 
         dssw->start_menu = create_start_stop_time_menu(dssw->dssw_form_mgr,
-		NULL, dssw_set_start_hour, (XtPointer)dssw, p, show_notime, 
+		nullptr, dssw_set_start_hour, (XtPointer)dssw, p, show_notime, 
 		show_allday, &dssw->start_menu_widget_list, 
 		&dssw->start_menu_widget_count);
 
 	XtVaSetValues(dssw->start_menu,
 		XmNnavigationType, 	XmTAB_GROUP,
-		NULL);
+		nullptr);
 
         dssw->start_ampm_rc_mgr = XtVaCreateWidget("start_ampm_rc_mgr",
 		xmRowColumnWidgetClass, dssw->dssw_form_mgr,
@@ -313,14 +313,14 @@ build_dssw(
 		XmNradioBehavior, 	True,
 		XmNisHomogeneous, 	True,
 		XmNentryClass, 		xmToggleButtonGadgetClass,
-		NULL);
+		nullptr);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 830, "AM"));
         child[0] = dssw->start_am = XtVaCreateWidget("start_am",
 		xmToggleButtonGadgetClass, dssw->start_ampm_rc_mgr,
 		XmNlabelString,		label_str,
 		XmNsensitive, 		(dt == HOUR12) ? True : False,
-		NULL);      
+		nullptr);      
 	XmStringFree(label_str);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 831, "PM"));
@@ -328,7 +328,7 @@ build_dssw(
 		xmToggleButtonGadgetClass, dssw->start_ampm_rc_mgr,
 		XmNlabelString,		label_str,
 		XmNsensitive, 		(dt == HOUR12) ? True : False,
-		NULL);      
+		nullptr);      
 	XmStringFree(label_str);
 
 	XtManageChildren(child, 2);
@@ -341,16 +341,16 @@ build_dssw(
 		xmTextWidgetClass, 	dssw->dssw_form_mgr,
 		XmNeditMode, 		XmSINGLE_LINE_EDIT,
 		XmNmaxLength, 		START_STOP_LEN - 1,
-		NULL);
+		nullptr);
 
         dssw->stop_menu = create_start_stop_time_menu(dssw->dssw_form_mgr,
-		NULL, dssw_set_stop_hour, (XtPointer)dssw, p, show_notime, 
+		nullptr, dssw_set_stop_hour, (XtPointer)dssw, p, show_notime, 
 		False, &dssw->stop_menu_widget_list, 
 		&dssw->stop_menu_widget_count);
 
 	XtVaSetValues(dssw->stop_menu,
 		XmNnavigationType, 	XmTAB_GROUP,
-		NULL);
+		nullptr);
 
         dssw->stop_ampm_rc_mgr = XtVaCreateWidget("stop_ampm_rc_mgr",
 		xmRowColumnWidgetClass, dssw->dssw_form_mgr,
@@ -359,14 +359,14 @@ build_dssw(
 		XmNradioBehavior, 	True,
 		XmNisHomogeneous, 	True,
 		XmNentryClass, 		xmToggleButtonGadgetClass,
-		NULL);
+		nullptr);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 833, "AM"));
         child[0] = dssw->stop_am = XtVaCreateWidget("stop_am",
 		xmToggleButtonGadgetClass, dssw->stop_ampm_rc_mgr,
 		XmNlabelString,		label_str,
 		XmNsensitive, 		(dt == HOUR12) ? True : False,
-		NULL);      
+		nullptr);      
 	XmStringFree(label_str);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 834, "PM"));
@@ -374,7 +374,7 @@ build_dssw(
 		xmToggleButtonGadgetClass, dssw->stop_ampm_rc_mgr,
 		XmNlabelString,		label_str,
 		XmNsensitive, 		(dt == HOUR12) ? True : False,
-		NULL);      
+		nullptr);      
 	XmStringFree(label_str);
 
 	XtManageChildren(child, 2);
@@ -416,16 +416,16 @@ build_dssw(
 	XtVaSetValues( curr,
 			XmNtopAttachment, XmATTACH_FORM,
 			XmNtopOffset, GAP,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->date_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toLabel,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->date_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
 			XmNrightAttachment, XmATTACH_FORM,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -444,23 +444,23 @@ build_dssw(
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, GAP,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->start_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toLabel,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->start_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->start_menu,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toMenu,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->start_ampm_rc_mgr,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toRC,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -479,23 +479,23 @@ build_dssw(
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, GAP,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->stop_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toLabel,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->stop_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->stop_menu,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toMenu,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->stop_ampm_rc_mgr,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toRC,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -509,7 +509,7 @@ build_dssw(
 			XmNtopOffset, GAP,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toLabel,
-			NULL );
+			nullptr );
 	XtVaSetValues( dssw->what_scrollwindow,
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
@@ -518,7 +518,7 @@ build_dssw(
 			XmNleftOffset, _toText,
 			XmNrightAttachment, XmATTACH_FORM,
 			XmNbottomAttachment, XmATTACH_FORM,
-			NULL );
+			nullptr );
 }
 
 /*
@@ -527,7 +527,7 @@ build_dssw(
 extern Boolean
 dssw_form_to_appt(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t)
 {
-  return dssw_form_flags_to_appt(dssw, a, name, t, (int *)NULL);
+  return dssw_form_flags_to_appt(dssw, a, name, t, (int *)nullptr);
 }
 
 extern Boolean
@@ -540,7 +540,7 @@ dssw_form_flags_to_appt(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t, int
 	DisplayType	dt = get_int_prop(p, CP_DEFAULTDISP);
 	int		flags = 0;
 
-	if (flagsP == (int *)NULL)
+	if (flagsP == (int *)nullptr)
 	  flagsP = &flags;
 
 	/*
@@ -595,7 +595,7 @@ dssw_form_flags_to_appt(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t, int
 	} else
 		sprintf(buf, "%s 3:41am", dssw->date_val);
 
-	start_tick = cm_getdate(buf, NULL);
+	start_tick = cm_getdate(buf, nullptr);
 	if(start_tick < 0) {
 		editor_err_msg(dssw->parent, name, INVALID_DATE,
 			pu->xm_error_pixmap);
@@ -629,7 +629,7 @@ dssw_form_flags_to_appt(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t, int
 
 		snprintf(buf, sizeof(buf), "%s %s%s", dssw->date_val,
 			dssw->stop_val.val, ampm_buf); 
-		if ((stop_tick = cm_getdate(buf, NULL)) <= 0) {
+		if ((stop_tick = cm_getdate(buf, nullptr)) <= 0) {
 			editor_err_msg(dssw->parent, name, INVALID_DATE,
 				       pu->xm_error_pixmap);
 			return False;
@@ -651,7 +651,7 @@ dssw_form_flags_to_appt(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t, int
 				BUTTON_IDENT, -1, ident1,
 				BUTTON_IDENT, DSSW_NEXT_DAY, ident2,
 				DIALOG_IMAGE, pu->xm_question_pixmap,
-				NULL);
+				nullptr);
 			XtFree(ident2);
 			XtFree(ident1);
 			XtFree(title);
@@ -675,7 +675,7 @@ dssw_form_flags_to_appt(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t, int
 		a->show_time->value->item.sint32_value = False;
 	} else {
 		free(a->end_time->value);
-		a->end_time->value = NULL;
+		a->end_time->value = nullptr;
 	}
 
 	return True;
@@ -731,7 +731,7 @@ dssw_form_to_todo(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t)
 		return False;
 	}
 
-	start_tick = cm_getdate(buf, NULL);
+	start_tick = cm_getdate(buf, nullptr);
 	if(start_tick < 0) {
 		editor_err_msg(dssw->parent, name, INVALID_DATE,
 			pu->xm_error_pixmap);
@@ -744,7 +744,7 @@ dssw_form_to_todo(DSSW *dssw, Dtcm_appointment *a, char *name, Tick t)
 	a->show_time->value->item.sint32_value = True;
 
 	free(a->end_time->value);
-	a->end_time->value = NULL;
+	a->end_time->value = nullptr;
 
 	return True;
 }
@@ -765,7 +765,7 @@ dssw_appt_to_form(DSSW *dssw, CSA_entry_handle entry) {
 				    CSA_ENTRY_ATTR_SUMMARY_I,
 				    CSA_ENTRY_ATTR_END_DATE_I,
 				    CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
-				    NULL);
+				    nullptr);
 	stat = query_appt_struct(dssw->cal->cal_handle, entry, appt);
 	backend_err_msg(dssw->cal->frame, dssw->cal->view->current_calendar,
 		stat, ((Props_pu *)dssw->cal->properties_pu)->xm_error_pixmap);
@@ -884,19 +884,19 @@ set_dssw_times(DSSW *dssw) {
 	DisplayType	dt = get_int_prop(p, CP_DEFAULTDISP);
 
 	XtVaSetValues(dssw->start_text, XmNvalue, dssw->start_val.val,
-		NULL);
+		nullptr);
 	XtVaSetValues(dssw->stop_text, XmNvalue, dssw->stop_val.val,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(dssw->start_val.val);
 	XtVaSetValues(XmOptionButtonGadget(dssw->start_menu),
 		XmNlabelString, xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 	xmstr = XmStringCreateLocalized(dssw->stop_val.val);
 	XtVaSetValues(XmOptionButtonGadget(dssw->stop_menu),
 		XmNlabelString, xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 	if (dt == HOUR12) {

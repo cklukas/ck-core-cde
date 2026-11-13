@@ -123,9 +123,9 @@ void activateCB_filetype_icon (Widget wid, XtPointer client_data,
     printf("In activate_filetype_icon callback.\n");
 #endif
     if (last_filetype_pushed && (last_filetype_pushed != wid)) {
-       XtVaSetValues(XtParent(last_filetype_pushed), XmNborderWidth, 0, NULL);
+       XtVaSetValues(XtParent(last_filetype_pushed), XmNborderWidth, 0, nullptr);
     }
-    XtVaSetValues(XtParent(wid), XmNborderWidth, ICON_BORDER_WIDTH, NULL);
+    XtVaSetValues(XtParent(wid), XmNborderWidth, ICON_BORDER_WIDTH, nullptr);
 
     last_filetype_pushed = wid;
 
@@ -134,7 +134,7 @@ void activateCB_filetype_icon (Widget wid, XtPointer client_data,
     /* to the icon gadgets.  When double-clicked, the icon editor will  */
     /* be launched.                                                     */
     /********************************************************************/
-    XtVaSetValues(wid, XmNpushButtonClickTime, 0, NULL);
+    XtVaSetValues(wid, XmNpushButtonClickTime, 0, nullptr);
 
     lts = XtLastTimestampProcessed(XtDisplay(wid));
     mct = XtGetMultiClickTime(XtDisplay(wid));
@@ -350,7 +350,7 @@ void getAF_PrintCmd (FiletypeData *pFiletypedata)
 /******************************************************************************/
 void init_AddFiletype_dialog_fields(FiletypeData *pFtD)
 {
-  char *pszIconFileName = (char *)NULL;
+  char *pszIconFileName = (char *)nullptr;
   char *pszTmpFile;
 
   if (pFtD->pszName) {
@@ -373,7 +373,7 @@ void init_AddFiletype_dialog_fields(FiletypeData *pFtD)
         if (pFtD->pszMedPmIcon) {
            SET_ICONGADGET_ICON(AF_MED_IconGadget, pFtD->pszMedPmIcon);
         } else {
-           pszIconFileName = (char *)NULL;
+           pszIconFileName = (char *)nullptr;
            FIND_ICONGADGET_ICON(pFtD->pszIcon, pszIconFileName, DtMEDIUM);
            pszTmpFile = GetCorrectIconType(pszIconFileName);
            SET_ICONGADGET_ICON(AF_MED_IconGadget, pszTmpFile);
@@ -387,7 +387,7 @@ void init_AddFiletype_dialog_fields(FiletypeData *pFtD)
         if (pFtD->pszTinyPmIcon) {
            SET_ICONGADGET_ICON(AF_TINY_IconGadget, pFtD->pszTinyPmIcon);
         } else {
-           pszIconFileName = (char *)NULL;
+           pszIconFileName = (char *)nullptr;
            FIND_ICONGADGET_ICON(pFtD->pszIcon, pszIconFileName, DtTINY);
            pszTmpFile = GetCorrectIconType(pszIconFileName);
            SET_ICONGADGET_ICON(AF_TINY_IconGadget, pszTmpFile);
@@ -401,7 +401,7 @@ void init_AddFiletype_dialog_fields(FiletypeData *pFtD)
         if (pFtD->pszMedBmIcon) {
            SET_ICONGADGET_ICON(AF_MED_IconGadget, pFtD->pszMedBmIcon);
         } else {
-           pszIconFileName = (char *)NULL;
+           pszIconFileName = (char *)nullptr;
            FIND_ICONGADGET_ICON(pFtD->pszIcon, pszIconFileName, DtMEDIUM);
            pszTmpFile = GetCorrectIconType(pszIconFileName);
            SET_ICONGADGET_ICON(AF_MED_IconGadget, pszTmpFile);
@@ -415,7 +415,7 @@ void init_AddFiletype_dialog_fields(FiletypeData *pFtD)
         if (pFtD->pszTinyBmIcon) {
            SET_ICONGADGET_ICON(AF_TINY_IconGadget, pFtD->pszTinyBmIcon);
         } else {
-           pszIconFileName = (char *)NULL;
+           pszIconFileName = (char *)nullptr;
            FIND_ICONGADGET_ICON(pFtD->pszIcon, pszIconFileName, DtTINY);
            pszTmpFile = GetCorrectIconType(pszIconFileName);
            SET_ICONGADGET_ICON(AF_TINY_IconGadget, pszTmpFile);
@@ -429,7 +429,7 @@ void init_AddFiletype_dialog_fields(FiletypeData *pFtD)
         /*************************/
         /* Tiny Pixmap           */
         /*************************/
-        pszIconFileName = (char *)NULL;
+        pszIconFileName = (char *)nullptr;
         if (pFtD->pszTinyPmIcon) {
            pszTmpFile = pFtD->pszTinyPmIcon;
         } else {
@@ -444,7 +444,7 @@ void init_AddFiletype_dialog_fields(FiletypeData *pFtD)
         /*************************/
         /* Medium Bitmap         */
         /*************************/
-        pszIconFileName = (char *)NULL;
+        pszIconFileName = (char *)nullptr;
         if (pFtD->pszMedBmIcon) {
            pszTmpFile = pFtD->pszMedBmIcon;
         } else {
@@ -457,7 +457,7 @@ void init_AddFiletype_dialog_fields(FiletypeData *pFtD)
         /*************************/
         /* Tiny Bitmap           */
         /*************************/
-        pszIconFileName = (char *)NULL;
+        pszIconFileName = (char *)nullptr;
         if (pFtD->pszTinyBmIcon) {
            pszTmpFile = pFtD->pszTinyBmIcon;
         } else {
@@ -630,7 +630,7 @@ void UpdateFiletypeDataArray(FiletypeData *pFtD)
 Boolean AddFiletypeCheckFields(void)
 {
 
-  char    *ptr = (char *)NULL;
+  char    *ptr = (char *)nullptr;
   Boolean bError = FALSE;
   char    *msgPtr, *errPtr;
 
@@ -638,7 +638,7 @@ Boolean AddFiletypeCheckFields(void)
   /* Check if filetype name is present.                                     */
   /**************************************************************************/
   if (!bError) {
-     ptr = (char *)NULL;
+     ptr = (char *)nullptr;
      GetWidgetTextString(AF_FileTypeNameTextField, &ptr);
 #ifdef DEBUG
      printf("Filetype Family Name = '%s'\n", ptr);
@@ -660,7 +660,7 @@ Enter a name in the 'Name of Datatype Family' field.");
   /* Check if identifying characteristics are present.                      */
   /**************************************************************************/
   if (!bError) {
-     ptr = (char *)NULL;
+     ptr = (char *)nullptr;
      GetWidgetTextString(AF_IdCharacteristicsText, &ptr);
 #ifdef DEBUG
      printf("Identifying Chars = '%s'\n", ptr);

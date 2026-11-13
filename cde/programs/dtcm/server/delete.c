@@ -83,27 +83,27 @@ _DtCmsDeleteEntry(
 {
 	CSA_return_code	stat;
 	cms_entry	*entry;
-	List_node	*lnode = NULL;
+	List_node	*lnode = nullptr;
 	Tree_node	*tnode;
 
-	if ((entry = (cms_entry *)rb_lookup(cal->tree, (caddr_t)key)) == NULL) {
+	if ((entry = (cms_entry *)rb_lookup(cal->tree, (caddr_t)key)) == nullptr) {
 		/* find entry in the repeating entry list */
-		if ((lnode = hc_lookup_node(cal->list, (caddr_t)key)) == NULL)
+		if ((lnode = hc_lookup_node(cal->list, (caddr_t)key)) == nullptr)
 			return (CSA_X_DT_E_ENTRY_NOT_FOUND);
 		else
 			entry = (cms_entry *)lnode->data;
 	}
 
-	if (entry == NULL)
+	if (entry == nullptr)
 		return (CSA_X_DT_E_ENTRY_NOT_FOUND);
 
 	if (sender && (stat = _DtCmsCheckChangeAccess(sender, access, entry))
 	    != CSA_SUCCESS)
 		return (stat);
 
-	if (lnode == NULL) {
-		if ((tnode = rb_delete(cal->tree, (caddr_t)key)) != NULL) {
-			_DtCmsObsoleteReminder4Entry(cal->remq, entry, NULL,
+	if (lnode == nullptr) {
+		if ((tnode = rb_delete(cal->tree, (caddr_t)key)) != nullptr) {
+			_DtCmsObsoleteReminder4Entry(cal->remq, entry, nullptr,
 				0, B_FALSE);
 			free(tnode);
 		} else
@@ -168,7 +168,7 @@ _DtCmsDeleteInstancesAndLog(
 	cms_attribute	*tmp_attrs, *aptr;
 	boolean_t	delentry = B_FALSE;
 
-	if ((lnode = hc_lookup_node(cal->list, (caddr_t)key)) == NULL)
+	if ((lnode = hc_lookup_node(cal->list, (caddr_t)key)) == nullptr)
 		return (CSA_X_DT_E_ENTRY_NOT_FOUND);
 
 	entry = (cms_entry *)lnode->data;
@@ -228,7 +228,7 @@ _DtCmsDeleteInstancesAndLog(
 
 		aptr = &nentry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I];
 		count = CountEvents(nentry->key.time, lnode->re, (aptr->value ?
-			aptr->value->item.date_time_list_value : NULL));
+			aptr->value->item.date_time_list_value : nullptr));
 	}
 
 	if (count == 0 || delentry) {
@@ -249,7 +249,7 @@ _DtCmsDeleteInstancesAndLog(
 			_DtCm_free_cms_entry(entry);
 
 		if (newe)
-			*newe = NULL;
+			*newe = nullptr;
 
 	} else {
 		/* add new entry in memory and log in file */
@@ -283,7 +283,7 @@ _DtCmsDeleteInstancesAndLog(
 					lnode, 0, B_FALSE);
 				hc_delete_node(cal->list, lnode);
 				free(lnode);
-				_DtCmsAddReminders4Entry(&cal->remq, nentry, NULL);
+				_DtCmsAddReminders4Entry(&cal->remq, nentry, nullptr);
 			} else {
 				/* need to do the swap since the original entry
 				 * pointer is stored in the reminder info
@@ -327,7 +327,7 @@ _InSequence(List_node *node, time_t time)
 {
 	time_t		tick;
 	cms_entry	*entry = (cms_entry *)node->data;
-	RepeatEventState *restate = NULL;
+	RepeatEventState *restate = nullptr;
 
 	for (tick = ClosestTick(time, entry->key.time, node->re, &restate);
 	    tick <= node->lasttick;
@@ -351,25 +351,25 @@ static CSA_return_code
 _AddException(cms_attribute *attr, time_t time)
 {
 	CSA_date_time_entry	*dt, *dlist, *prev;
-	cms_attribute_value	*val = NULL;
+	cms_attribute_value	*val = nullptr;
 	time_t			tick;
 	char			buf[20];
 
 	if ((dt = (CSA_date_time_entry *)calloc(1, sizeof(CSA_date_time_entry)))
-	    == NULL)
+	    == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if (_csa_tick_to_iso8601(time, buf)) {
 		free(dt);
 		return (CSA_E_INVALID_DATE_TIME);
-	} else if ((dt->date_time = strdup(buf)) == NULL) {
+	} else if ((dt->date_time = strdup(buf)) == nullptr) {
 		free(dt);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
-	if (attr->value == NULL) {
+	if (attr->value == nullptr) {
 		if ((val = (cms_attribute_value *)calloc(1,
-		    sizeof(cms_attribute_value))) == NULL) {
+		    sizeof(cms_attribute_value))) == nullptr) {
 			free(dt->date_time);
 			free(dt);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -378,11 +378,11 @@ _AddException(cms_attribute *attr, time_t time)
 		val->type = CSA_VALUE_DATE_TIME_LIST;
 	}
 
-	if (val && (attr->value->item.date_time_list_value == NULL)) {
+	if (val && (attr->value->item.date_time_list_value == nullptr)) {
 		val->item.date_time_list_value = dt;
 	} else {
-		for (dlist = attr->value->item.date_time_list_value, prev=NULL;
-		    dlist != NULL;
+		for (dlist = attr->value->item.date_time_list_value, prev=nullptr;
+		    dlist != nullptr;
 		    prev = dlist, dlist = dlist->next) {
 			_csa_iso8601_to_tick(dlist->date_time, &tick);
 			if (time <= tick)
@@ -390,7 +390,7 @@ _AddException(cms_attribute *attr, time_t time)
 		}
 
 		dt->next = dlist;
-		if (prev == NULL)
+		if (prev == nullptr)
 			attr->value->item.date_time_list_value = dt;
 		else
 			prev->next = dt;
@@ -405,26 +405,26 @@ _TruncateExceptionDates(cms_entry *newe, time_t ltick)
 	time_t			tick;
 	CSA_date_time_list	dt, prev, head;
 
-	if (newe->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value == NULL ||
+	if (newe->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value == nullptr ||
 	    newe->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value->item.\
-	    date_time_list_value == NULL)
+	    date_time_list_value == nullptr)
 		return;
 
 	head = newe->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value->item.\
 		date_time_list_value;
 
-	for (dt = head, prev = NULL; dt != NULL; prev = dt, dt = dt->next) {
+	for (dt = head, prev = nullptr; dt != nullptr; prev = dt, dt = dt->next) {
 		_csa_iso8601_to_tick(dt->date_time, &tick);
 		if (ltick < tick) {
 			if (prev) {
-				prev->next = NULL;
+				prev->next = nullptr;
 				_DtCm_free_date_time_list(dt);
 			} else {
 				free(newe->attrs\
 					[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].\
 					value);
 				newe->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].\
-					value = NULL;
+					value = nullptr;
 			}
 			break;
 		}

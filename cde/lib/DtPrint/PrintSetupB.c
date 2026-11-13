@@ -523,9 +523,9 @@ dtPrintSetupBoxClassRec =
 	/* chained class init */	ClassPartInitialize, 
 	/* class_inited	      */	FALSE, 
 	/* initialize	      */	Initialize, 
-	/* initialize hook    */	NULL, 
+	/* initialize hook    */	nullptr, 
 	/* realize	      */	XtInheritRealize, 
-	/* actions	      */	NULL, 
+	/* actions	      */	nullptr, 
 	/* num_actions	      */	0, 
 	/* resources	      */	resources, 
 	/* num_resources      */	XtNumber(resources), 
@@ -538,16 +538,16 @@ dtPrintSetupBoxClassRec =
 	/* resize	      */	XtInheritResize,
 	/* expose	      */	XtInheritExpose, 
 	/* set_values	      */	SetValues, 
-	/* set_values_hook    */	NULL,			 
+	/* set_values_hook    */	nullptr,			 
 	/* set_values_almost  */	XtInheritSetValuesAlmost,
-	/* get_values_hook    */	NULL, 
-	/* accept_focus	      */	NULL, 
+	/* get_values_hook    */	nullptr, 
+	/* accept_focus	      */	nullptr, 
 	/* version	      */	XtVersion, 
-	/* callback_offsets   */	NULL, 
+	/* callback_offsets   */	nullptr, 
 	/* tm_table	      */	XtInheritTranslations, 
 	/* query_geometry     */	XtInheritGeometryManager,
-	/* display_accelerator*/	NULL, 
-	/* extension	      */	NULL, 
+	/* display_accelerator*/	nullptr, 
+	/* extension	      */	nullptr, 
     }, 
 
     {	/* composite class record */	
@@ -556,39 +556,39 @@ dtPrintSetupBoxClassRec =
 	/* set changed proc	    */	XtInheritChangeManaged,
 	/* insert_child		    */	InsertChild, 
 	/* delete_child		    */	DeleteChild, 
-	/* extension		    */	NULL, 
+	/* extension		    */	nullptr, 
     }, 
 
     {	/* constraint class record */
 
-	/* no additional resources  */	NULL, 
+	/* no additional resources  */	nullptr, 
 	/* num additional resources */	0, 
 	/* size of constraint rec   */	0, 
-	/* constraint_initialize    */	NULL, 
-	/* constraint_destroy	    */	NULL, 
-	/* constraint_setvalue	    */	NULL, 
-	/* extension		    */	NULL, 
+	/* constraint_initialize    */	nullptr, 
+	/* constraint_destroy	    */	nullptr, 
+	/* constraint_setvalue	    */	nullptr, 
+	/* extension		    */	nullptr, 
     }, 
 
     {	/* manager class record */
       XmInheritTranslations,			/* default translations	  */
       syn_resources,				/* syn_resources	  */
       XtNumber (syn_resources),			/* num_syn_resources	  */
-      NULL,					/* syn_cont_resources	  */
+      nullptr,					/* syn_cont_resources	  */
       0,					/* num_syn_cont_resources */
       XmInheritParentProcess,			/* parent_process	  */
-      NULL,					/* extension		  */
+      nullptr,					/* extension		  */
     }, 
 
     {	/* bulletin board class record */     
 	TRUE,					/*always_install_accelerators*/
 	_DtPrintSetupBoxGeoMatrixCreate,	 /* geo_matrix_create */
 	XmInheritFocusMovedProc,		/* focus_moved_proc */
-	NULL,					/* extension */
+	nullptr,					/* extension */
     },	
 
     {	/* print setup box class record */
-	NULL,					/* extension  */
+	nullptr,					/* extension  */
     }, 
 };
 
@@ -612,7 +612,7 @@ ClassInitialize(void)
      * Register a type converter for String to Enum
      */
     XtSetTypeConverter("String", "Enum", ConvertStringToEnum,
-		       NULL, 0, XtCacheAll, NULL);
+		       nullptr, 0, XtCacheAll, nullptr);
 }
 
 /*
@@ -719,7 +719,7 @@ ClosePrintConnection(
      * close the print display
      */
     XtCloseDisplay(PSUB_Display(psub));
-    PSUB_Display(psub) = (Display*)NULL;
+    PSUB_Display(psub) = (Display*)nullptr;
 }
 
 /*
@@ -744,7 +744,7 @@ ClosePrintConnectionCallback(Widget w,
     /*
      * close the Xp connection if open
      */
-    if(PSUB_Display(psub) != (Display*)NULL)
+    if(PSUB_Display(psub) != (Display*)nullptr)
     {
 	ClosePrintConnection(psub, PSUB_PrinterName(psub), True);
     }
@@ -1037,7 +1037,7 @@ ConvertStringToEnum(
 	return False;
     }
 
-    if(to->addr == NULL)
+    if(to->addr == nullptr)
 	to->addr = (caddr_t) &to_value;
     else if(to->size <sizeof(unsigned char))
     {
@@ -1074,15 +1074,15 @@ CopiesTextValueChangedCallback(
     DtPrintSetupBoxWidget psub = (DtPrintSetupBoxWidget)client_data;
     XmAnyCallbackStruct* cbs = (XmAnyCallbackStruct*)call_data;
 
-    if (NULL == psub || NULL == cbs) return;
+    if (nullptr == psub || nullptr == cbs) return;
 
     if(XmCR_VALUE_CHANGED == cbs->reason)
     {
-	char *value = NULL;
+	char *value = nullptr;
 	int value_int = 0;
 	
-	XtVaGetValues(w, XmNvalue, &value, NULL);
-	if (value) value_int = strtol(value, (char**)NULL, 10);
+	XtVaGetValues(w, XmNvalue, &value, nullptr);
+	if (value) value_int = strtol(value, (char**)nullptr, 10);
 
 	if (1 <= value_int || value_int <= MAX_COPIES)
 	{
@@ -1090,7 +1090,7 @@ CopiesTextValueChangedCallback(
 	    XtVaSetValues(
 			PSUB_CopiesSpinBox(psub),
 			XmNposition, value_int,
-			NULL);
+			nullptr);
 	}
 	else
 	{
@@ -1098,18 +1098,18 @@ CopiesTextValueChangedCallback(
 	    XtVaGetValues(
 			PSUB_CopiesSpinBox(psub),
 			XmNposition, &value_int,
-			NULL);
+			nullptr);
 
 	    value = (char*) XtMalloc(64); 
 	    if (value)
 	    {
 	        sprintf(value, "%d", value_int);
-	        XtVaSetValues(w, XmNvalue, value, NULL);
+	        XtVaSetValues(w, XmNvalue, value, nullptr);
 	        XtFree(value);
 	    }
 	}
 
-	if (value) XtVaSetValues(w, XmNcursorPosition, strlen(value), NULL);
+	if (value) XtVaSetValues(w, XmNcursorPosition, strlen(value), nullptr);
     }
 }
 
@@ -1141,7 +1141,7 @@ CreateButton(Widget parent,
 			 parent,
 			 XmNlabelString, label_string,
 			 XmNnavigationType, nav_type,
-			 NULL);
+			 nullptr);
 
     if(label_string) XmStringFree(label_string);
 
@@ -1181,7 +1181,7 @@ CreateButtonGadget(Widget parent,
 			 parent,
 			 XmNlabelString, label_string,
 			 XmNnavigationType, nav_type,
-			 NULL);
+			 nullptr);
 
     if(label_string) XmStringFree(label_string);
 
@@ -1219,7 +1219,7 @@ CreateLabelGadget(
 			 xmLabelGadgetClass,
 			 parent,
 			 XmNlabelString, label_string,
-			 NULL);
+			 nullptr);
 
     if(label_string) XmStringFree(label_string);
 
@@ -1358,81 +1358,81 @@ DeleteChild(
 	 */
 	if(child == PSUB_BottomSeparator(psub))
 	{
-	    PSUB_BottomSeparator(psub) = NULL;
+	    PSUB_BottomSeparator(psub) = nullptr;
 	} 
 	else if(child == PSUB_ButtonSeparator(psub))
 	{
-	    PSUB_ButtonSeparator(psub) = NULL;
+	    PSUB_ButtonSeparator(psub) = nullptr;
 	} 
 	else if(child == PSUB_DescriptionLabel(psub))
 	{
-	    PSUB_DescriptionLabel(psub) = NULL;
+	    PSUB_DescriptionLabel(psub) = nullptr;
 	} 
 	else if(child == PSUB_Description(psub))
 	{
-	    PSUB_Description(psub) = NULL;
+	    PSUB_Description(psub) = nullptr;
 	} 
 	else if(child == PSUB_PrinterNameLabel(psub))
 	{
-	    PSUB_PrinterNameLabel(psub) = NULL;
+	    PSUB_PrinterNameLabel(psub) = nullptr;
 	} 
 	else if(child == PSUB_CopiesControl(psub))
 	{
-	    PSUB_CopiesControl(psub) = NULL;
-	    PSUB_CopiesSpinBox(psub) = NULL;
+	    PSUB_CopiesControl(psub) = nullptr;
+	    PSUB_CopiesSpinBox(psub) = nullptr;
 	} 
 	else if(child == PSUB_TopWorkArea(psub))
 	{
-	    PSUB_TopWorkArea(psub) = NULL;
+	    PSUB_TopWorkArea(psub) = nullptr;
 	} 
 	else if(child == PSUB_BottomWorkArea(psub))
 	{
-	    PSUB_BottomWorkArea(psub) = NULL;
+	    PSUB_BottomWorkArea(psub) = nullptr;
 	} 
 	else if(child == PSUB_PrintButton(psub))
 	{
-	    PSUB_PrintButton(psub) = NULL;
+	    PSUB_PrintButton(psub) = nullptr;
 	} 
 	else if(child == PSUB_PrinterInfoButton(psub))
 	{
-	    PSUB_PrinterInfoButton(psub) = NULL;
+	    PSUB_PrinterInfoButton(psub) = nullptr;
 	}
 	else if(child == PSUB_PrinterNameCombo(psub))
 	{
-	    PSUB_PrinterNameCombo(psub) = NULL;
-	    PSUB_PrinterNameText(psub) = NULL;
+	    PSUB_PrinterNameCombo(psub) = nullptr;
+	    PSUB_PrinterNameText(psub) = nullptr;
 	}
 	else if(child == PSUB_SetupButton(psub))
 	{
-	    PSUB_SetupButton(psub) = NULL;
+	    PSUB_SetupButton(psub) = nullptr;
 	} 
 	else if(child == PSUB_HelpButton(psub))
 	{
-	    PSUB_HelpButton(psub) = NULL;
+	    PSUB_HelpButton(psub) = nullptr;
 	}
 	else if(child == PSUB_TopSeparator(psub))
 	{
-	    PSUB_TopSeparator(psub) = NULL;
+	    PSUB_TopSeparator(psub) = nullptr;
 	}
 	else if(child == PSUB_DestinationRadioBox(psub))
 	{
-	    PSUB_DestinationRadioBox(psub) = NULL;
+	    PSUB_DestinationRadioBox(psub) = nullptr;
 	}
 	else if(child == PSUB_FileNameLabel(psub))
 	{
-	    PSUB_FileNameLabel(psub) = NULL;
+	    PSUB_FileNameLabel(psub) = nullptr;
 	}
 	else if(child == PSUB_FileNameText(psub))
 	{
-	    PSUB_FileNameText(psub) = NULL;
+	    PSUB_FileNameText(psub) = nullptr;
 	}
 	else if(child == PSUB_SelectFileButton(psub))
 	{
-	    PSUB_SelectFileButton(psub) = NULL;
+	    PSUB_SelectFileButton(psub) = nullptr;
 	}
 	else if(child == PSUB_SelectPrinterButton(psub))
 	{
-	    PSUB_SelectPrinterButton(psub) = NULL;
+	    PSUB_SelectPrinterButton(psub) = nullptr;
 	}
     }
     _DtPrintProcessLock();
@@ -1472,7 +1472,7 @@ DestinationChangedCallback(
 	 * set the print destination according to the selected radio
 	 * button
 	 */
-	XtVaGetValues(w, XmNuserData, &user_data, NULL);
+	XtVaGetValues(w, XmNuserData, &user_data, nullptr);
 	PSUB_PrintDestination(psub) = (XtEnum) (intptr_t) user_data;
 	/*
 	 * Update the print setup box controls sensitivity accordingly
@@ -1524,7 +1524,7 @@ Destroy(
      */
     if(PSUB_PrintSetupMode(psub) == DtPRINT_SETUP_XP
        &&
-       PSUB_Display(psub) != (Display*)NULL)
+       PSUB_Display(psub) != (Display*)nullptr)
     {
 	ClosePrintConnection(psub, PSUB_PrinterName(psub), False);
     }
@@ -1579,7 +1579,7 @@ EstablishPrinter(
 	/*
 	 * call the verify printer proc for the new printer
 	 */
-	if(PSUB_VerifyPrinterProc(psub) != NULL)
+	if(PSUB_VerifyPrinterProc(psub) != nullptr)
 	{
 	    int status;
 	    
@@ -1609,7 +1609,7 @@ EstablishPrinter(
 		 * initialize the display for use with Xt
 		 */
 		{
-		    String *argv = NULL, *argv_copy;
+		    String *argv = nullptr, *argv_copy;
 		    int argc = 0, i;
 		    String video_name, video_class;
 		    Widget video_widget = (Widget)psub;
@@ -1633,7 +1633,7 @@ EstablishPrinter(
 		     */
 		    XtVaGetValues(video_widget,
 				  XmNargc, &argc, XmNargv, &argv,
-				  NULL);
+				  nullptr);
 
 		    /* copy argv, modified by XtDisplayInitialize below */
 		    argv_copy =
@@ -1641,7 +1641,7 @@ EstablishPrinter(
 		    for (i = 0; i < argc; i++) {
 			argv_copy[i] = argv[i];
 		    }			
-		    argv_copy[argc] = NULL;
+		    argv_copy[argc] = nullptr;
 
 		    /*
 		     * now add the print display in our app context, so
@@ -1730,7 +1730,7 @@ GetPrintAttributes(
 				   PSUB_Context(psub),
 				   XPPrinterAttr,
 				   XpATTR_DESCRIPTOR);
-    if(attr_value != (char*)NULL)
+    if(attr_value != (char*)nullptr)
     {
 	/*
 	 * convert the description from COMPOUND_TEXT into the
@@ -1753,7 +1753,7 @@ GetPrintAttributes(
 		     * chop the description after the 1st line
 		     */
 		    char* ptr = Dt_strchr(list[0], '\n');
-		    if((char*)NULL != ptr)
+		    if((char*)nullptr != ptr)
 			*ptr = '\0';
 		}
 		description =
@@ -1784,7 +1784,7 @@ GetPrintAttributes(
     PSUB_CopyCountSupported(psub) = False;
     attr_value = XpGetOneAttribute(PSUB_Display(psub), PSUB_Context(psub),
 				   XPPrinterAttr, XpATTR_DOC_ATTRS_SUPPORTED);
-    if(attr_value != (char*)NULL)
+    if(attr_value != (char*)nullptr)
     {
 	int token_len;
 	for(ptr = attr_value + SpanWhitespace(attr_value);
@@ -1884,11 +1884,11 @@ Initialize(
 	 * default to NULL
 	 */
 	if(PSUB_PrinterInfoProc(new_w) == UnspecifiedPrintSetupProc)
-	    PSUB_PrinterInfoProc(new_w) = NULL;
+	    PSUB_PrinterInfoProc(new_w) = nullptr;
 	if(PSUB_SelectPrinterProc(new_w) == UnspecifiedPrintSetupProc)
-	    PSUB_SelectPrinterProc(new_w) = NULL;
+	    PSUB_SelectPrinterProc(new_w) = nullptr;
 	if(PSUB_VerifyPrinterProc(new_w) == UnspecifiedPrintSetupProc)
-	    PSUB_VerifyPrinterProc(new_w) = NULL;
+	    PSUB_VerifyPrinterProc(new_w) = nullptr;
     }
     /*
      * initialize internal flags
@@ -1899,7 +1899,7 @@ Initialize(
      * initialize internal data
      */
     PSUB_ModalPrinterSpec(new_w) = (String)NULL;
-    PSUB_Display(new_w) = (Display*)NULL;
+    PSUB_Display(new_w) = (Display*)nullptr;
 #if 0 && defined(PRINTING_SUPPORTED)
     PSUB_Context(new_w) = (XPContext)NULL;
 #endif /* PRINTING_SUPPORTED */
@@ -1972,7 +1972,7 @@ Initialize(
 	UpdateString(PSUB_Description(new_w), 
 		     PSUB_DescriptionString(new_w),
 		     PSUB_StringDirection(new_w));
-	PSUB_DescriptionString(new_w) = NULL ;
+	PSUB_DescriptionString(new_w) = nullptr ;
     }
     /*
      * Initialize printer information
@@ -2081,7 +2081,7 @@ IsSetupRequired(
 				      PSUB_Context(psub),
 				      XPPrinterAttr,
 				      XpATTR_SETUP_PROVISO);
-    if((char*)NULL != setup_proviso)
+    if((char*)nullptr != setup_proviso)
     {
 	char* ptr;
 	int token_len;
@@ -2098,7 +2098,7 @@ IsSetupRequired(
 					    PSUB_Context(psub),
 					    XPJobAttr,
 					    XpATTR_SETUP_STATE);
-	    if((char*)NULL == setup_state)
+	    if((char*)nullptr == setup_state)
 		required = True;
 	    else
 	    {
@@ -2250,7 +2250,7 @@ PrintSetupBoxCallback(
 	/*
 	 * Invoke the help system. 
 	 */
-	_XmManagerHelp((Widget)psub, callback->event, NULL, NULL) ;
+	_XmManagerHelp((Widget)psub, callback->event, nullptr, nullptr) ;
 	break;
 
     case DtPRINT_INFO_BUTTON:
@@ -2474,7 +2474,7 @@ SetNewPrinterName(
      */
     if(PSUB_PrintSetupMode(psub) == DtPRINT_SETUP_XP
        &&
-       PSUB_Display(psub) != (Display*)NULL)
+       PSUB_Display(psub) != (Display*)nullptr)
     {
 	ClosePrintConnection(psub, old_printer_name, True);
     }
@@ -2520,7 +2520,7 @@ SetPrintAttributes(
 	
 	XtVaGetValues(PSUB_CopiesSpinBox(psub),
 		      XmNposition, &PSUB_Copies(psub),
-		      NULL);
+		      nullptr);
 	sprintf(str, "*%s: %d\n", XpATTR_COPY_COUNT, PSUB_Copies(psub));
 #if 0 && defined(PRINTING_SUPPORTED)
 	XpSetAttributes(PSUB_Display(psub), PSUB_Context(psub),
@@ -2628,7 +2628,7 @@ SetValues(
 	UpdateString(PSUB_Description(new_w), 
 		     PSUB_DescriptionString(new_w),
 		     PSUB_StringDirection(new_w));
-	PSUB_DescriptionString(new_w) = NULL ;
+	PSUB_DescriptionString(new_w) = nullptr ;
     }
     /*
      * Validate print destination / update print to file checkbox
@@ -2650,9 +2650,9 @@ SetValues(
      */
     if(PSUB_PrinterName(new_w) != PSUB_PrinterName(current))
     {
-	if((PSUB_PrinterName(new_w) == NULL
+	if((PSUB_PrinterName(new_w) == nullptr
 	    ||
-	    PSUB_PrinterName(current) == NULL)
+	    PSUB_PrinterName(current) == nullptr)
 	   ? True
 	   : strcmp(PSUB_PrinterName(new_w), PSUB_PrinterName(current)) != 0)
 	{
@@ -2761,7 +2761,7 @@ static void SynthGetFileName(
     if(PSUB_FileNameText(psub) != (Widget)NULL)
 	XtVaGetValues((Widget)PSUB_FileNameText(psub),
 		      XmNvalue, &PSUB_FileName(psub),
-		      NULL);
+		      nullptr);
     else
 	PSUB_FileName(psub) = (String)NULL;
 }
@@ -2798,7 +2798,7 @@ SynthGetPrinterName(
 	previous_modal_spec = PSUB_ModalPrinterSpec(psub);
  	XtVaGetValues((Widget)PSUB_PrinterNameText(psub),
 		      XmNvalue, &PSUB_ModalPrinterSpec(psub),
-		      NULL);
+		      nullptr);
 	/*
 	 * determine if we have a new printer name
 	 */
@@ -2823,7 +2823,7 @@ SynthGetPrinterName(
 	       ||
 	       PSUB_ModalPrinterSpec(psub) == (String)NULL
 	       ||
-	       (Display*)NULL == PSUB_Display(psub)
+	       (Display*)nullptr == PSUB_Display(psub)
 	       ||
 	       strcmp(previous_modal_spec, PSUB_ModalPrinterSpec(psub)) != 0)
 	    {
@@ -2871,7 +2871,7 @@ SynthSetCopies(
     if(PSUB_CopiesSpinBox(new_w) != (Widget)NULL)
 	XtVaSetValues(PSUB_CopiesSpinBox(new_w),
 		      XmNposition, PSUB_Copies(new_w),
-		      NULL);
+		      nullptr);
 }
 
 /*
@@ -3028,7 +3028,7 @@ SynthSetPrinterName(
     {
 	XtVaSetValues(PSUB_PrinterNameText(psub),
 		      XmNvalue, PSUB_ModalPrinterSpec(psub),
-		      NULL);
+		      nullptr);
 	XmComboBoxUpdate(PSUB_PrinterNameCombo(psub));
     }
     /*
@@ -3351,7 +3351,7 @@ _DtPrintSetupBoxCreateCopiesControl(DtPrintSetupBoxWidget psub)
 			 xmRowColumnWidgetClass,
 			 (Widget)psub,
 			 XmNorientation, XmHORIZONTAL,
-			 NULL);
+			 nullptr);
     /*
      * create the label
      */
@@ -3372,15 +3372,15 @@ _DtPrintSetupBoxCreateCopiesControl(DtPrintSetupBoxWidget psub)
 				XmNpositionType, XmPOSITION_VALUE,
 				XmNcolumns, 5,
 				XmNwrap, False,
-				NULL);
+				nullptr);
 
-    copies_text = NULL;
+    copies_text = nullptr;
     copies_text_editable = FALSE;
     XtVaGetValues(
 		PSUB_CopiesSpinBox(psub),
 		XmNtextField, &copies_text,
 		XmNeditable, &copies_text_editable,
-		NULL);
+		nullptr);
 
     if (copies_text && copies_text_editable)
       XtAddCallback(
@@ -3419,12 +3419,12 @@ _DtPrintSetupBoxCreateDescription(
 			 (Widget)psub,
 			 XmNalignment, XmALIGNMENT_BEGINNING,
 			 XmNlabelString, empty_label,
-			 NULL);
+			 nullptr);
     XmStringFree(empty_label);
     /*
      * get the maximum character width for the default font of the gadget
      */
-    XtVaGetValues(PSUB_Description(psub), XmNrenderTable, &render_table, NULL);
+    XtVaGetValues(PSUB_Description(psub), XmNrenderTable, &render_table, nullptr);
     if(XmeRenderTableGetDefaultFont(render_table, &font))
     {
 	Bool success;
@@ -3447,7 +3447,7 @@ _DtPrintSetupBoxCreateDescription(
 	XtVaSetValues(PSUB_Description(psub),
 		      XmNwidth, (Dimension)(DESCRIPTION_COLUMNS*char_width),
 		      XmNrecomputeSize, False,
-		      NULL);
+		      nullptr);
     }
 }
 
@@ -3500,7 +3500,7 @@ _DtPrintSetupBoxCreateDestinationRadioBox(DtPrintSetupBoxWidget psub)
 			 XmNradioBehavior, True,
 			 XmNorientation, XmHORIZONTAL,
 			 XmNpacking, XmPACK_TIGHT,
-			 NULL);
+			 nullptr);
 
     label =
 	XmStringGenerate((XtPointer)PRINT_TO_PRINTER_LABEL, (XmStringTag)NULL,
@@ -3511,7 +3511,7 @@ _DtPrintSetupBoxCreateDestinationRadioBox(DtPrintSetupBoxWidget psub)
 				PSUB_DestinationRadioBox(psub),
 				XmNlabelString, label,
 				XmNuserData, (XtPointer)DtPRINT_TO_PRINTER,
-				NULL);
+				nullptr);
     XmStringFree(label);
     XtAddCallback(button, XmNvalueChangedCallback,
 		  DestinationChangedCallback, (XtPointer)psub);
@@ -3524,7 +3524,7 @@ _DtPrintSetupBoxCreateDestinationRadioBox(DtPrintSetupBoxWidget psub)
 				PSUB_DestinationRadioBox(psub),
 				XmNlabelString, label,
 				XmNuserData, (XtPointer)DtPRINT_TO_FILE,
-				NULL);
+				nullptr);
     XmStringFree(label);
     XtAddCallback(button, XmNvalueChangedCallback,
 		  DestinationChangedCallback, (XtPointer)psub);
@@ -3571,7 +3571,7 @@ _DtPrintSetupBoxCreateFileNameText(DtPrintSetupBoxWidget psub)
 			 xmTextFieldWidgetClass,
 			 (Widget)psub,
 			 XmNcolumns, FILE_NAME_COLUMNS,
-			 NULL);
+			 nullptr);
 }
 
 /*
@@ -3674,7 +3674,7 @@ _DtPrintSetupBoxCreatePrinterNameCombo(DtPrintSetupBoxWidget psub)
 			 XmNcomboBoxType, XmDROP_DOWN_COMBO_BOX,
 			 XmNcolumns, PRINTER_NAME_COLUMNS,
 			 XmNpositionMode, XmZERO_BASED,
-			 NULL);
+			 nullptr);
     PSUB_PrinterNameText(psub) =
 	XtNameToWidget(PSUB_PrinterNameCombo(psub), "*Text");
     /*
@@ -3700,7 +3700,7 @@ _DtPrintSetupBoxCreatePrinterNameCombo(DtPrintSetupBoxWidget psub)
 	 * initialize the combo box list
 	 */
 	printer_list = _DtPrintGetXpPrinterList((Widget)psub);
-	if(printer_list != (String*)NULL)
+	if(printer_list != (String*)nullptr)
 	{
 	    int count;
 	    /*
@@ -3735,7 +3735,7 @@ _DtPrintSetupBoxCreatePrinterNameCombo(DtPrintSetupBoxWidget psub)
 		     */
 		    XtVaGetValues(combo_list,
 				  XmNvisibleItemCount, &visible_item_count,
-				  NULL);
+				  nullptr);
 		    /*
 		     * reduce the visible item count if needed
 		     */
@@ -3748,7 +3748,7 @@ _DtPrintSetupBoxCreatePrinterNameCombo(DtPrintSetupBoxWidget psub)
 				  XmNitemCount, count,
 				  XmNitems, printer_xmstr_list,
 				  XmNvisibleItemCount, visible_item_count,
-				  NULL);
+				  nullptr);
 		    hide_arrow = False;
 		}
 		for(i = 0; i < count; i++)
@@ -3762,17 +3762,17 @@ _DtPrintSetupBoxCreatePrinterNameCombo(DtPrintSetupBoxWidget psub)
 	    Dimension text_shadow_thickness;
 	    XtVaGetValues(PSUB_PrinterNameText(psub),
 			  XmNshadowThickness, &text_shadow_thickness,
-			  NULL);
+			  nullptr);
 	    XtVaSetValues(PSUB_PrinterNameCombo(psub),
 			  XmNarrowSize, 0,
 			  XmNarrowSpacing, 0,
 			  XmNmarginWidth, 0,
 			  XmNmarginHeight, 0,
 			  XmNshadowThickness, 0,
-			  NULL);
+			  nullptr);
 	    XtVaSetValues(PSUB_PrinterNameText(psub),
 			  XmNshadowThickness, text_shadow_thickness,
-			  NULL);
+			  nullptr);
 	}
 
     }
@@ -4261,7 +4261,7 @@ _DtPrintSetupBoxGetCopies(
     {	
 	XtVaGetValues(PSUB_CopiesSpinBox(psub),
 		      XmNposition, &copies,
-		      NULL);
+		      nullptr);
 	*value = (XtArgVal)copies;
     }
     else
@@ -4297,7 +4297,7 @@ _DtPrintSetupBoxGetDescription(
     {	
 	XtVaGetValues((Widget)PSUB_Description(psub),
 		      XmNlabelString, &data,
-		      NULL);
+		      nullptr);
 	*value = (XtArgVal)data;
     }
     else
@@ -4467,9 +4467,9 @@ DtPrintCopySetupData(
 		     DtPrintSetupData* target,
 		     const DtPrintSetupData* source)
 {
-    if(source != (DtPrintSetupData*)NULL
+    if(source != (DtPrintSetupData*)nullptr
        &&
-       target != (DtPrintSetupData*)NULL)
+       target != (DtPrintSetupData*)nullptr)
     {
 	if((source->printer_name == (String)NULL
 	    ||
@@ -4560,7 +4560,7 @@ XtEnum DtPrintFillSetupData(
 {
     DtPrintSetupBoxWidget psub = (DtPrintSetupBoxWidget)w;
     
-    if(print_data == (DtPrintSetupData*)NULL)
+    if(print_data == (DtPrintSetupData*)nullptr)
 	return DtPRINT_BAD_PARM;
     
     if(psub == (DtPrintSetupBoxWidget)NULL)
@@ -4575,7 +4575,7 @@ XtEnum DtPrintFillSetupData(
 	 * GUI-less printing; verify the printer name and establish the
 	 * print connection without involving the print setup box.
 	 */
-	status = _DtPrintVerifyXPrinter(NULL,
+	status = _DtPrintVerifyXPrinter(nullptr,
 					print_data->printer_name,
 					&new_printer_spec,
 					&new_display
@@ -4622,7 +4622,7 @@ XtEnum DtPrintFillSetupData(
 	 */
 	if(print_data->printer_name != (String)NULL)
 	{
-	    if((PSUB_PrinterName(psub) == NULL)
+	    if((PSUB_PrinterName(psub) == nullptr)
 	       ? True
 	       : strcmp(print_data->printer_name, PSUB_PrinterName(psub)) != 0)
 	    {
@@ -4781,7 +4781,7 @@ DtPrintResetConnection(
 	return DtPRINT_BAD_PARM;
     }
 
-    if(PSUB_Display(psub) == (Display*)NULL)
+    if(PSUB_Display(psub) == (Display*)nullptr)
     {
         _DtPrintAppUnlock(app);
 	return DtPRINT_NO_CONNECTION;
@@ -4793,7 +4793,7 @@ DtPrintResetConnection(
 	/*
 	 * simply disavow knowledge of the X print connection
 	 */
-	PSUB_Display(psub) = (Display*)NULL;
+	PSUB_Display(psub) = (Display*)nullptr;
 #if 0 && defined(PRINTING_SUPPORTED)
 	PSUB_Context(psub) = (XPContext)NULL;
 #endif /* PRINTING_SUPPORTED */

@@ -276,10 +276,10 @@ main(int argc, char **argv)
     g.prog_name = argv[0];
     g.alt_selection = "PDM_MANAGER";
     g.default_pdm = DEFAULT_PDM_EXECUTABLE;
-    g.override_pdm = (char *) NULL;
+    g.override_pdm = (char *) nullptr;
     display_str = getenv("DISPLAY");
-    auth_file = (char *) NULL;
-    g.log_file  = (char *) NULL;
+    auth_file = (char *) nullptr;
+    g.log_file  = (char *) nullptr;
     security_flag  = False;
 
     /*
@@ -326,7 +326,7 @@ main(int argc, char **argv)
     g.context = XtCreateApplicationContext();
     if ( (sel_display = XtOpenDisplay( g.context, display_str,
 					"dtpdmd", "Dtpdmd",
-					0, 0, &argc, argv )) == NULL ) {
+					0, 0, &argc, argv )) == nullptr ) {
 	fprintf( stderr , "\n" );
 	fprintf( stderr , PDMD_MSG_2, g.prog_name, display_str );
 	fprintf( stderr , "\n" );
@@ -378,7 +378,7 @@ main(int argc, char **argv)
     sigemptyset(&svec.sa_mask);
     svec.sa_flags   = 0;
     svec.sa_handler = handle_SIGCLD;
-    (void) sigaction(SIGCHLD, &svec, (struct sigaction *) NULL);
+    (void) sigaction(SIGCHLD, &svec, (struct sigaction *) nullptr);
 
     /*
      * After this point, we need to trap all X and XIO errors.

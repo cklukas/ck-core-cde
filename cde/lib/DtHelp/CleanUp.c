@@ -90,11 +90,11 @@ CheckFreePrivInfo(_DtCvSegment *seg)
     /*
      * free the match information
      */
-    if (NULL != MatchInfo(seg))
+    if (nullptr != MatchInfo(seg))
       {
 	SdlMatchData *m = (SdlMatchData *)(MatchInfo(seg));
 
-	if (NULL != m->ssi)
+	if (nullptr != m->ssi)
 	    free(m->ssi);
 	free(m);
       }
@@ -102,19 +102,19 @@ CheckFreePrivInfo(_DtCvSegment *seg)
     /*
      * free any abbreviation
      */
-    if (NULL != AbbrevStr(seg))
+    if (nullptr != AbbrevStr(seg))
 	free(AbbrevStr(seg));
 }
 
 static void
 FreePrivateAndSeg(_DtCvSegment *seg)
 {
-    if (NULL != seg)
+    if (nullptr != seg)
       {
 	/*
 	 * free the private information block
 	 */
-	if (NULL != FrmtPrivInfoPtr(seg))
+	if (nullptr != FrmtPrivInfoPtr(seg))
 	    free(FrmtPrivInfoPtr(seg));
 
 	/*
@@ -151,11 +151,11 @@ _DtHelpFreeSegments (
     char		   dupFlag;
     char		 **strs;
     _DtCvSegment	 *nextSeg;
-    _DtCvSegment	 *topSeg = NULL;
-    _DtCvSegment	 *topTab = NULL;
+    _DtCvSegment	 *topSeg = nullptr;
+    _DtCvSegment	 *topTab = nullptr;
     _DtCvSegment	**tableSeg;
 
-    while (seg_list != NULL)
+    while (seg_list != nullptr)
       {
 	dupFlag = DupFlag(seg_list);
 	nextSeg = seg_list->next_seg;
@@ -166,7 +166,7 @@ _DtHelpFreeSegments (
 			 * free the id block.
 			 */
 			if (False == dupFlag &&
-				      NULL != _DtCvContainerIdOfSeg(seg_list))
+				      nullptr != _DtCvContainerIdOfSeg(seg_list))
 			    free(_DtCvContainerIdOfSeg(seg_list));
 
 			/*
@@ -184,7 +184,7 @@ _DtHelpFreeSegments (
 			break;
 
 	    case _DtCvREGION:
-			if (False == dupFlag && NULL != destroy_region)
+			if (False == dupFlag && nullptr != destroy_region)
 			    (destroy_region)(client_data, 
 						_DtCvInfoOfRegionSeg(seg_list));
 			break;
@@ -194,7 +194,7 @@ _DtHelpFreeSegments (
 			  {
 			    free(_DtCvStringOfStringSeg(seg_list));
 			    if (True == unresolved &&
-					NULL != _DtCvFontOfStringSeg(seg_list))
+					nullptr != _DtCvFontOfStringSeg(seg_list))
 				free(_DtCvFontOfStringSeg(seg_list));
 			  }
 			break;
@@ -207,13 +207,13 @@ _DtHelpFreeSegments (
 			 * free the blocks
 			 */
 			tableSeg = _DtCvCellsOfTableSeg(seg_list);
-			while (NULL != tableSeg && NULL != *tableSeg)
+			while (nullptr != tableSeg && nullptr != *tableSeg)
 			  {
 			    /*
 			     * free the id block.
 			     */
 			    if (False == DupFlag(*tableSeg)
-				   && NULL != _DtCvContainerIdOfSeg(*tableSeg))
+				   && nullptr != _DtCvContainerIdOfSeg(*tableSeg))
 				free(_DtCvContainerIdOfSeg(*tableSeg));
 
 			    /*
@@ -231,7 +231,7 @@ _DtHelpFreeSegments (
 			 * free each of the table cells
 			 */
 			tableSeg = _DtCvCellsOfTableSeg(seg_list);
-			while (NULL != tableSeg && NULL != *tableSeg)
+			while (nullptr != tableSeg && nullptr != *tableSeg)
 			  {
 			    if (True == TopFlag(*tableSeg))
 			      {
@@ -243,7 +243,7 @@ _DtHelpFreeSegments (
 			  }
 
 			FreePrivateAndSeg(topTab);
-			topTab = NULL;
+			topTab = nullptr;
 
 			/*
 			 * free the list of cells
@@ -263,10 +263,10 @@ _DtHelpFreeSegments (
 			free((void *) _DtCvColJustifyOfTableSeg(seg_list));
 			strs = _DtCvColWOfTableSeg(seg_list);
 			for (i = 0;
-			   NULL != strs && i < _DtCvNumColsOfTableSeg(seg_list);
+			   nullptr != strs && i < _DtCvNumColsOfTableSeg(seg_list);
 								i++, strs++)
 			    free((void *) *strs);
-			if (NULL != _DtCvColWOfTableSeg(seg_list))
+			if (nullptr != _DtCvColWOfTableSeg(seg_list))
 			    free((void *) _DtCvColWOfTableSeg(seg_list));
 
 			break;
@@ -302,7 +302,7 @@ _DtHelpDestroyTopicData (
     void		(*destroy_region)(_DtCvPointer, _DtCvPointer),
     _DtCvPointer	 client_data)
 {
-    if (NULL != topic)
+    if (nullptr != topic)
       {
 	/*
 	 * free the segment list
@@ -313,7 +313,7 @@ _DtHelpDestroyTopicData (
 	/*
 	 * free the id string
 	 */
-        if (NULL != topic->id_str)
+        if (nullptr != topic->id_str)
 	    free(topic->id_str);
 
 	/*

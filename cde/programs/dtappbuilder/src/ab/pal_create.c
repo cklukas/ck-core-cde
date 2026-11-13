@@ -167,7 +167,7 @@ ABObj		locate_obj_at_rootxy(
 **       Private Data                                                   **
 **                                                                      **
 **************************************************************************/
-static Widget 	palette_widget = NULL; 
+static Widget 	palette_widget = nullptr; 
 static Cursor	drag_cursor;
 static int	drag_cursor_xhot;
 static int	drag_cursor_yhot;
@@ -217,7 +217,7 @@ pal_enable_item_drag(
      */
     if (!palette_widget)
     {
-	if ((palette_widget = dtb_palette_ab_palette_main.palette_cpanel) == NULL)
+	if ((palette_widget = dtb_palette_ab_palette_main.palette_cpanel) == nullptr)
 	{
 	    if (util_get_verbosity() > 2)
 		fprintf(stderr,"pal_enable_item_drag: couldn't find \"%s\"\n",
@@ -239,7 +239,7 @@ palitem_update_type(
     String	  objname;
     int		  i;
 
-    XtVaGetValues(w, XmNuserData, &palitem, NULL);
+    XtVaGetValues(w, XmNuserData, &palitem, nullptr);
 
     if (event->type == EnterNotify)
     {
@@ -362,11 +362,11 @@ create_obj_action(
 ) 
 { 
     ABObj	  project = proj_get_project();
-    ABObj         obj = NULL;
-    ABObj	  obj_parent = NULL;
+    ABObj         obj = nullptr;
+    ABObj	  obj_parent = nullptr;
     PalItemInfo	  *palitem;
     Display       *dpy;
-    char          *errmsg = NULL;
+    char          *errmsg = nullptr;
     BOOL	  ModuleCreated = FALSE;
     XmString	  xm_buf = (XmString) NULL;
 
@@ -384,7 +384,7 @@ create_obj_action(
         Window	     xy_win;
 	int	     wx, wy;
         XButtonEvent *bevent = (XButtonEvent *)event;
-        XtVaGetValues(widget, XmNuserData, &palitem, NULL);
+        XtVaGetValues(widget, XmNuserData, &palitem, nullptr);
 
    	/* Creation may take awhile, so set busy cursor */
         xy_win = x_xwin_at_rootxy(AB_toplevel, bevent->x_root, 
@@ -392,7 +392,7 @@ create_obj_action(
 	ab_set_busy_cursor(TRUE);
 	ui_set_busy_cursor(xy_win, TRUE);
 
-        obj = obj_create(palitem->type, NULL);
+        obj = obj_create(palitem->type, nullptr);
 
 	if (palitem->type == AB_TYPE_SCALE)
 	    obj_set_read_only(obj, subtype);
@@ -409,7 +409,7 @@ create_obj_action(
 		xm_buf = XmStringCreateLocalized(errmsg);
 		dtb_palette_error_msg_initialize(&dtb_palette_error_msg);
 		(void)dtb_show_modal_message(dtb_get_toplevel_widget(), 
-			&dtb_palette_error_msg, xm_buf, NULL, NULL);
+			&dtb_palette_error_msg, xm_buf, nullptr, nullptr);
 		XmStringFree(xm_buf);
 	    }
         }
@@ -479,10 +479,10 @@ initiate_drag(
     static unsigned int	  max_c_width = 0; /* The maximum cursor size */
     static unsigned int	  max_c_height = 0;
     static Pixmap 	  item_pixmap = 0;/* pixmap for cursor */
-    static GC     	  p_gc = NULL;       /* GC used for pixmap creation */
-    char		  *server_vendor = NULL;
+    static GC     	  p_gc = nullptr;       /* GC used for pixmap creation */
+    char		  *server_vendor = nullptr;
     PalItemInfo   	  *palitem;            /* palette obj */
-    PalSubtypeInfo 	  *palitem_subptr = NULL;
+    PalSubtypeInfo 	  *palitem_subptr = nullptr;
     Widget        	  item_widget = w;   /* widget used for cursor image */
     XRectangle    	  w_rect;            /* widget width,height,x,y */
     int           	  c_width, c_height; /* cursor width & height */
@@ -527,7 +527,7 @@ initiate_drag(
             		XtNheight,      &(w_rect.height), 
         		XtNx,    	&(w_rect.x),
             		XtNy,       	&(w_rect.y), 
-        		NULL);
+        		nullptr);
     /*
      * Create Drag Cursor containing item's image
      */
@@ -566,7 +566,7 @@ initiate_drag(
             		XmNuserData,    (XtArgVal)&palitem,
                         XtNwidth,       (XtArgVal)&(w_rect.width), 
                         XtNheight,      (XtArgVal)&(w_rect.height),  
-            		NULL);
+            		nullptr);
     }
         
     dpy = (Display *)XtDisplay(item_widget);
@@ -622,7 +622,7 @@ initiate_drag(
 	}
 
     /* This should never happen! */
-    if (palitem_subptr == NULL)
+    if (palitem_subptr == nullptr)
     {
 	util_dprintf(0,"initiate_drag: could not find palette object subtype info\n");
 	return FALSE;
@@ -822,7 +822,7 @@ image_copy(
         	XtNforeground,    	&foreground,
         	XmNbottomShadowColor, 	&bshadow,
         	XmNtopShadowColor, 	&tshadow,
-        	NULL);
+        	nullptr);
 
     black = BlackPixelOfScreen(XtScreen(widget));
     white = WhitePixelOfScreen(XtScreen(widget));
@@ -874,7 +874,7 @@ locate_obj_parent(
     	if (x_rootxy_inside_widget(palette_widget, x, y))
             return "";
 
-	if ( module == NULL )
+	if ( module == nullptr )
 	{
 	    obj_parent = obj_create(AB_TYPE_MODULE, project);
 	    obj_set_name(obj_parent, "module");
@@ -901,7 +901,7 @@ locate_obj_parent(
 	/* If not dropped on an object, but is still within
 	 * palette, just ignore the drag...
 	 */
-        if (obj_parent == NULL &&
+        if (obj_parent == nullptr &&
 	    x_rootxy_inside_widget(palette_widget, x, y))
 	    return "";
 
@@ -911,20 +911,20 @@ locate_obj_parent(
 	    ABObj 		winobj;
 	    ABObj		nobj;
 
-	    if (obj_parent != NULL)
+	    if (obj_parent != nullptr)
 	    {
 	    	winobj = obj_parent;
 	    	while(!(obj_is_window(winobj) && !obj_is_sub(winobj)))
 		    winobj = obj_get_parent(winobj);
 
 		if (!obj_is_base_win(winobj))
-		    obj_parent = NULL;
+		    obj_parent = nullptr;
 		else /* Check to make sure there isn't already a Menubar for
 		      * this window
 		      */
 		{
 		    for (trav_open(&trav, winobj, AB_TRAV_UI);
-		        (nobj = trav_next(&trav)) != NULL; )
+		        (nobj = trav_next(&trav)) != nullptr; )
 			if (obj_is_menubar(nobj))
 			{
 			    i18n_msg = CATGETS(Dtb_project_catd, 100, 11,
@@ -942,7 +942,7 @@ locate_obj_parent(
 		    obj_parent = objxm_comp_get_subobj(winobj, AB_CFG_MENU_PARENT_OBJ);
 		}
 	    }
-	    if (obj_parent == NULL)
+	    if (obj_parent == nullptr)
 	    {
                 i18n_msg = CATGETS(Dtb_project_catd, 100, 15,
 			"Menubars must be dropped on a Main Window.");
@@ -959,7 +959,7 @@ locate_obj_parent(
 	}
         else if (obj_is_container(obj) && !obj_is_control_panel(obj))
         {
-            if (obj_parent == NULL ||
+            if (obj_parent == nullptr ||
 		(!(obj_is_container(obj_parent) &&
                 obj_is_sub(obj_parent) &&
                 obj_is_window(obj_get_root(obj_parent)) &&
@@ -978,12 +978,12 @@ locate_obj_parent(
         }
         else if (obj_is_pane(obj))
         {
-	    if (obj_parent != NULL && 
+	    if (obj_parent != nullptr && 
 		(obj_is_pane(obj_parent) &&
 		 !obj_is_window(obj_get_root(obj_parent))))
 	    {
-		ABObj	grandparent = NULL;
-		ABObj	great_grandparent = NULL;
+		ABObj	grandparent = nullptr;
+		ABObj	great_grandparent = nullptr;
 		grandparent = obj_get_parent(obj_get_root(obj_parent));
 		great_grandparent = obj_get_parent(grandparent);
 
@@ -1010,7 +1010,7 @@ locate_obj_parent(
 			answer = dtb_show_modal_message(
 				(Widget)obj_parent->ui_handle,
 				&dtb_palette_chld_layr_pw_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
 			switch(answer)
 			{
 			    /* Create as a child of the control pane */
@@ -1039,7 +1039,7 @@ locate_obj_parent(
                         answer = dtb_show_modal_message(
 				(Widget)obj_parent->ui_handle,
                                 &dtb_palette_chld_or_layr_msg, 
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
     		        switch(answer)
     		        {
 			    case DTB_ANSWER_ACTION1: /* As Child */
@@ -1085,7 +1085,7 @@ locate_obj_parent(
                         answer = dtb_show_modal_message(
                                 (Widget)obj_parent->ui_handle,
                                 &dtb_palette_layr_pw_msg,
-                                NULL, NULL, NULL);
+                                nullptr, nullptr, nullptr);
                         switch(answer)
                         {
                             case DTB_ANSWER_ACTION1: /* Layered Pane */
@@ -1111,7 +1111,7 @@ locate_obj_parent(
                         answer = dtb_show_modal_message(
 				(Widget)obj_parent->ui_handle,
                                 &dtb_palette_layered_pane_msg, 
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                         switch(answer)
                         {
                     	    case DTB_ANSWER_ACTION2: /* Layered Pane */
@@ -1140,7 +1140,7 @@ locate_obj_parent(
 		    answer = dtb_show_modal_message(
 				(Widget)obj_parent->ui_handle,
 				&dtb_palette_layr_pw_msg, 
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                     switch(answer)
                     {
                         case DTB_ANSWER_ACTION1: /* Layered Pane */ 
@@ -1168,7 +1168,7 @@ locate_obj_parent(
 		    answer = dtb_show_modal_message(
 				(Widget)obj_parent->ui_handle,
 				&dtb_palette_chld_layr_pw_msg, 
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                     switch(answer)
                     {
 			/* Create as a child of the control pane */
@@ -1193,7 +1193,7 @@ locate_obj_parent(
 	    /*
 	     * Dropping panes onto a group
 	     */
-	    else if (obj_parent != NULL && obj_is_group(obj_parent))
+	    else if (obj_parent != nullptr && obj_is_group(obj_parent))
 	    {
 		if (obj_is_control_panel(obj))
 		{
@@ -1216,7 +1216,7 @@ locate_obj_parent(
 		    answer = dtb_show_modal_message(
 				(Widget)obj_parent->ui_handle,
 				&dtb_palette_child_of_group_msg, 
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                     switch(answer)
                     {
 			/* OK - Create as a child of group */
@@ -1228,7 +1228,7 @@ locate_obj_parent(
                     }
 		}
 	    }
-            else if (obj_parent == NULL ||
+            else if (obj_parent == nullptr ||
 		(!(obj_is_container(obj_parent) &&
                 !obj_is_menubar(obj_parent))))
 	    {
@@ -1248,7 +1248,7 @@ locate_obj_parent(
         }
         else if (obj_is_control(obj))
         {
-	    if (obj_parent == NULL ||
+	    if (obj_parent == nullptr ||
 		(!obj_is_control_panel(obj_get_root(obj_parent)) && 
 		!obj_is_group(obj_get_root(obj_parent))))
 	    {
@@ -1282,7 +1282,7 @@ locate_obj_parent(
     }
 
     *parentptr = obj_parent;
-    return NULL;
+    return nullptr;
 
 }
 
@@ -1300,19 +1300,19 @@ locate_obj_at_rootxy(
     Window     	    window;
     Widget          widget;
  
-    if (obj == NULL)
-        return NULL;
+    if (obj == nullptr)
+        return nullptr;
 
     window = x_xwin_at_rootxy(AB_toplevel, x, y, p_wx, p_wy);
     if (window == 0)
-    	return NULL;
+    	return nullptr;
 
     for (trav_open(&trav, obj, AB_TRAV_UI);
-        (obj = trav_next(&trav)) != NULL; )
+        (obj = trav_next(&trav)) != nullptr; )
     {
         widget = (Widget)obj->ui_handle;
  
-        if (widget != NULL &&
+        if (widget != nullptr &&
             XtIsRealized(widget) &&
             XtWindow(widget) == window)
         {
@@ -1354,6 +1354,6 @@ locate_obj_at_rootxy(
 	}
     }
 
-    return NULL;
+    return nullptr;
 
 }

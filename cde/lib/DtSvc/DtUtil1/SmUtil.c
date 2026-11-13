@@ -98,7 +98,7 @@ getSessionName(
   int                 actualFormat;
   unsigned long       nitems;
   unsigned long       leftover;
-  char               *property = NULL;
+  char               *property = nullptr;
 
   propStatus = XGetWindowProperty (display, RootWindow(display, 0), 
                                    prop, 0L,
@@ -121,7 +121,7 @@ getSessionName(
     XFree(property);
   }
 
-  return(NULL);
+  return(nullptr);
 }
 
 /*************************************<->*************************************
@@ -161,8 +161,8 @@ getSessionPath(
         char **saveFile )
 {
     Display 		*display;
-    char 		*tmpPath = NULL;
-    char        	*property = NULL;
+    char 		*tmpPath = nullptr;
+    char        	*property = nullptr;
     char                *fileName;
     struct stat  	buf;
     int 		status;
@@ -170,11 +170,11 @@ getSessionPath(
     display = XtDisplay(widget); 
     
     tmpPath = _DtCreateDtDirs(display);
-    if (tmpPath == NULL) goto abort;
+    if (tmpPath == nullptr) goto abort;
     
     property = getSessionName(display, 
                   XInternAtom(display, propstring, False));
-    if (property == NULL) goto abort;
+    if (property == nullptr) goto abort;
 
    /*
     * NOTE: it is assumed that _DtCreateDtDirs() returns a buffer of 
@@ -190,7 +190,7 @@ getSessionPath(
          + 1 /* "/" */
          + strlen(property)
          + 1 /* "/" */
-         + ((*saveFile == NULL) ? strlen("dtXXXXXX") + 1 : strlen(*saveFile))
+         + ((*saveFile == nullptr) ? strlen("dtXXXXXX") + 1 : strlen(*saveFile))
         ) >= MAXPATHLEN)
     {
         goto abort;
@@ -216,7 +216,7 @@ getSessionPath(
 
     (void)strcat(tmpPath, "/");
 
-    if (*saveFile == NULL)
+    if (*saveFile == nullptr)
     {
      /*
       * No saveFile name was provided, so generate a new one.
@@ -235,7 +235,7 @@ getSessionPath(
       (void)close(fd);
 
       *saveFile = (char *) XtMalloc(15 * sizeof(char));
-      if(*saveFile == NULL)
+      if(*saveFile == nullptr)
       {
           (void)unlink(tmpPath);
           goto abort;
@@ -261,7 +261,7 @@ getSessionPath(
     * ObGoto: if it clarifies the logic and reduces code, 
     *         goto's are ok by me.
     */
-    *savePath = NULL;
+    *savePath = nullptr;
     if (tmpPath) XtFree ((char *)tmpPath);
     if (property) XFree ((char *)property);
     return(False);
@@ -301,7 +301,7 @@ DtSessionSavePath(
     _DtSvcWidgetToAppContext(widget);
 
     _DtSvcAppLock(app);
-    *saveFile = NULL;
+    *saveFile = nullptr;
     result = getSessionPath(widget, _XA_DT_SAVE_MODE, savePath, saveFile);
     _DtSvcAppUnlock(app);
     

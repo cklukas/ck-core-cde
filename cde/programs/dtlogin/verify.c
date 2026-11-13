@@ -146,7 +146,7 @@ Verify(
 #ifdef BYPASSLOGIN
 	Debug ("BypassLogin = %d\n",d->bypassLogin);
  	if ( d->bypassLogin ) {
-	    char *s = NULL;
+	    char *s = nullptr;
 	    if ( !strcmp (p->pw_name, "Nobody" ))
 		s = "Greetless login failed; user invalid\n";
 	    else if ( access ( p->pw_dir, F_OK ))
@@ -214,7 +214,7 @@ Verify(
 		goto argument_failure;
               break;
         case NOTIFY_ALT_DTS:
-	    if((argv = setDt(d,argv,notify_dt)) == NULL) {
+	    if((argv = setDt(d,argv,notify_dt)) == nullptr) {
 	       if (errno != ENOENT) goto argument_failure;
 		/*if no startup file, startup the regular desktop*/
 	       if(d->session) {
@@ -229,12 +229,12 @@ Verify(
             if (pathLength < 0 || (size_t)pathLength >= sizeof(last_sess))
                 goto argument_failure;
 
-            if((lastsession = fopen(last_sess,"r")) == NULL)  {
+            if((lastsession = fopen(last_sess,"r")) == nullptr)  {
 	    /* 
 	     * if no lastsession file, execute the logically 
              *		first alternate desktop
 	     */
-		if((argv = setDt(d,argv,notify_dt)) == NULL) {
+		if((argv = setDt(d,argv,notify_dt)) == nullptr) {
 	          if (errno != ENOENT) goto argument_failure;
 	          if(d->session) {
 		    if (!parseArgs (&argv,d->session)) goto argument_failure;
@@ -248,7 +248,7 @@ Verify(
                if (fclose(lastsession) != 0) valid = 0;
 
 	       if(!valid || access(last_sess, X_OK) != 0) {
-		  if((argv = setDt(d,argv,notify_dt)) == NULL) {
+		  if((argv = setDt(d,argv,notify_dt)) == nullptr) {
 		    if (errno != ENOENT) goto argument_failure;
 		    if(d->session){
 		      if (!parseArgs (&argv,d->session)) goto argument_failure;
@@ -292,7 +292,7 @@ setDt(
 	int	dt_type)
 {
 int		i;
-char 		*resources = NULL;
+char 		*resources = nullptr;
 char 		altdts[MAXPATHLEN];
 char 		altdtsclass[MAXPATHLEN];
 char 		altdtstart[MAXPATHLEN];
@@ -324,7 +324,7 @@ int 		altdtrequested;
            if(XrmGetResource(XresourceDB, altdtstart, altdtstartclass,
                &rmtype, &rmvalue) == True){
               Debug ("Start up file is %s\n",rmvalue.addr);
-              if (!parseArgs (&argv, rmvalue.addr)) return NULL;
+              if (!parseArgs (&argv, rmvalue.addr)) return nullptr;
               return argv;
            }
         }
@@ -341,7 +341,7 @@ int 		altdtrequested;
             if(XrmGetResource(XresourceDB, altdtstart, altdtstartclass,
                                         &rmtype, &rmvalue) == True){
                 Debug ("Start up file is %s\n",rmvalue.addr);
-                if (!parseArgs (&argv, rmvalue.addr)) return NULL;
+                if (!parseArgs (&argv, rmvalue.addr)) return nullptr;
                 return argv;
             }
    }
@@ -362,7 +362,7 @@ userEnv(
         char     *value;
         char    **exp;
         char     *Def_path;
-	char 	*langlist = NULL;
+	char 	*langlist = nullptr;
 	
 #ifdef _AIX
        /*
@@ -397,7 +397,7 @@ userEnv(
 	env = setEnv (env, "USER", user);
 
 #ifdef sun
-	if ((Def_path = login_defaults(p,d)) != NULL) {
+	if ((Def_path = login_defaults(p,d)) != nullptr) {
  	  env = setEnv (env, "PATH", Def_path);
 	  free(Def_path);
 	}
@@ -509,13 +509,13 @@ login_defaults(
                 defcntl(DC_SETFLAGS, flags);
  
 	      if ( p->pw_uid == 0 ) {
-                if ((Def_path = defread("SUPATH=")) != NULL)
+                if ((Def_path = defread("SUPATH=")) != nullptr)
                         Def_path = strdup(Def_path);
 		else
                         Def_path = strdup(DEF_SUPATH);
 	      }
 	      else {
-                if ((Def_path = defread("PATH=")) != NULL)
+                if ((Def_path = defread("PATH=")) != nullptr)
                         Def_path = strdup(Def_path);
 		else
 			Def_path = strdup(DEF_PATH);
@@ -525,7 +525,7 @@ login_defaults(
 	/*
 	 * close the file..(/etc/default/login)
 	 */
-	(void) defopen((char *)NULL);
+	(void) defopen((char *)nullptr);
 
 	Debug ("login_defaults():  \n");
  
@@ -538,11 +538,11 @@ login_defaults(
 		strcpy(final_path,d->userPath);
 
 	   while(element) {
-	     if((strstr(d->userPath,element)) == NULL) {
+	     if((strstr(d->userPath,element)) == nullptr) {
 		strcat (final_path,":");
 		strcat (final_path,element);
 	     }
-	     element = strtok(NULL,":");
+	     element = strtok(nullptr,":");
 	   }
 	   return final_path;
          }
@@ -561,7 +561,7 @@ systemEnv( struct display *d, char *user, char *home )
     char    **env;
     char     *value;
     char    **exp;
-    char     *langlist = NULL;
+    char     *langlist = nullptr;
 	
     env = 0;
 
@@ -603,7 +603,7 @@ systemEnv( struct display *d, char *user, char *home )
       env = setEnv (env, XFORCEINTERNET, "True");
 
 #if defined (sun)
-    if (getEnv (env, "OPENWINHOME") == NULL) 
+    if (getEnv (env, "OPENWINHOME") == nullptr) 
       env = setEnv(env, "OPENWINHOME", "/usr/openwin");
 #endif
 
@@ -644,7 +644,7 @@ getGroups(
          * this code...
 	 */
 
-	while ( (g = getgrent()) != NULL ) {
+	while ( (g = getgrent()) != nullptr ) {
 		/*
 		 * make the list unique
 		 */

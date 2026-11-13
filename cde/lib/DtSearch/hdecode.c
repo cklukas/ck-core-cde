@@ -137,14 +137,14 @@ void	hc_decode (
 
 #ifdef EXTERNAL_TREE
     /* Create hctree from external file? */
-    if (hctree == NULL) {
-	if ((hdecode_filebuf = malloc (HDEC_FBUFSZ)) == NULL) {
+    if (hctree == nullptr) {
+	if ((hdecode_filebuf = malloc (HDEC_FBUFSZ)) == nullptr) {
 	    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_huff, 10,
 		"%s Out of Memory.\n"),
 		PROGNAME"076");
 	    DtSearchExit (2);
 	}
-	if ((hdecode_file = fopen (hctree_name, "r")) == NULL) {
+	if ((hdecode_file = fopen (hctree_name, "r")) == nullptr) {
 	    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_huff, 11,
 		"%s Cannot open tree file '%s': %s\n"),
 		PROGNAME"082", hctree_name, strerror (errno));
@@ -165,19 +165,19 @@ void	hc_decode (
 
 	/* allocate space for the hctree and read in the values */
 	if ((hctree = (int *) malloc (
-		sizeof (int) * 2 * (hctree_root + 2))) == NULL) {
+		sizeof (int) * 2 * (hctree_root + 2))) == nullptr) {
 	    fprintf (aa_stderr, "\n" PROGNAME "100 Out of Memory.\7\n");
 	    DtSearchExit (2);
 	}
 	for (i = 0; i <= hctree_root; i++) {
-	    if ((fgets (hdecode_filebuf, HDEC_FBUFSZ, hdecode_file)) == NULL) {
+	    if ((fgets (hdecode_filebuf, HDEC_FBUFSZ, hdecode_file)) == nullptr) {
 		fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_huff, 12,
 		    "%s Invalid format hctree '%s'.\n"),
 		    PROGNAME"106", hctree_name);
 		DtSearchExit (2);
 	    }
 	    hctree[2 * i] = atoi (_XStrtok (hdecode_filebuf, " \t,", strtok_buf));
-	    hctree[2 * i + 1] = atoi (_XStrtok (NULL, " \t,", strtok_buf));
+	    hctree[2 * i + 1] = atoi (_XStrtok (nullptr, " \t,", strtok_buf));
 	}
 	free (hdecode_filebuf);
 	fclose (hdecode_file);
@@ -268,12 +268,12 @@ void            main (int argc, char *argv[])
 	return;
     }
     if (argc >= 3) {
-	hctree = NULL;
+	hctree = nullptr;
 	append_ext (fname_tree, sizeof (fname_tree), argv[1], EXT_HDECODE);
 	hctree_name = fname_tree;
 	argv++;
     }
-    if ((instream = fopen (argv[1], "rb")) == NULL) {
+    if ((instream = fopen (argv[1], "rb")) == nullptr) {
 	fprintf (aa_stderr, "Cannot open cypherfile '%s'.\n", argv[1]);
 	exit (2);
     }

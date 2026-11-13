@@ -252,7 +252,7 @@ static DialogClass modAttrClassRec =
    WriteResourceValues,
    FreeValues,
    _DtGenericMapWindow,
-   NULL,
+   nullptr,
 };
 
 DialogClass * modAttrClass = (DialogClass *) &modAttrClassRec;
@@ -1058,7 +1058,7 @@ InstallClose(
    /* dialog button is pressed (e.g. for DFS?) or you can let the    */
    /* the regular permissions dialog stay on screen along with the   */
    /* fs-specfic dialog.                                             */
-  if (modAttr_rec->fsPushButton != NULL)
+  if (modAttr_rec->fsPushButton != nullptr)
       XtAddCallback (modAttr_rec->fsPushButton,
                      XmNactivateCallback, callback, client_data);
 
@@ -1141,18 +1141,18 @@ GetDefaultValues( void )
    modAttr_data->height = 0;
    modAttr_data->width = 0;
 
-   modAttr_data->name = NULL;
-   modAttr_data->link_name = NULL;
-   modAttr_data->filetype = NULL;
-   modAttr_data->pixmapData = NULL;
-   modAttr_data->owner = NULL;
-   modAttr_data->group = NULL;
+   modAttr_data->name = nullptr;
+   modAttr_data->link_name = nullptr;
+   modAttr_data->filetype = nullptr;
+   modAttr_data->pixmapData = nullptr;
+   modAttr_data->owner = nullptr;
+   modAttr_data->group = nullptr;
    modAttr_data->accessBits = 0;
    modAttr_data->setuidBits = 0;
    modAttr_data->size = 0;
-   modAttr_data->modTime = time(NULL);
-   modAttr_data->host = NULL;
-   modAttr_data->directory = NULL;
+   modAttr_data->modTime = time(nullptr);
+   modAttr_data->host = nullptr;
+   modAttr_data->directory = nullptr;
 
    return ((XtPointer) modAttr_data);
 }
@@ -1259,7 +1259,7 @@ SetValues(
    if (modAttr_data->owner)
       user_data = getpwnam(modAttr_data->owner);
    else
-      user_data = NULL;
+      user_data = nullptr;
    effective_user = geteuid();
 
 
@@ -1335,7 +1335,7 @@ SetValues(
 
         if (modAttr_data->owner)
 	{
-	  if (getpwnam(modAttr_data->owner) == NULL)
+	  if (getpwnam(modAttr_data->owner) == nullptr)
 	  {
             char *newstring =  XtMalloc(strlen(modAttr_data->owner) +
                                      strlen(GETMESSAGE(21,19, "Unknown")) + 10);
@@ -1371,7 +1371,7 @@ SetValues(
 
         if (modAttr_data->owner)
         {
-          if (getpwnam(modAttr_data->owner) == NULL)
+          if (getpwnam(modAttr_data->owner) == nullptr)
           {
             char *newstring =  XtMalloc(strlen(modAttr_data->owner) + 
                                         strlen(GETMESSAGE(21,19, "Unknown")) + 10);
@@ -1396,7 +1396,7 @@ SetValues(
         XtUnmanageChild(modAttr_rec->group);
         if (modAttr_data->group)
         {
-         if (getgrnam(modAttr_data->group) == NULL)
+         if (getgrnam(modAttr_data->group) == nullptr)
          {
             char *newstring =  XtMalloc(strlen(modAttr_data->group) +
                strlen(GETMESSAGE(21,19, "Unknown")) + 10);
@@ -1425,7 +1425,7 @@ SetValues(
 
       if (modAttr_data->group)
       {
-        if(getgrnam(modAttr_data->group) == NULL)
+        if(getgrnam(modAttr_data->group) == nullptr)
         {
           char *newstring =  XtMalloc(strlen(modAttr_data->group) + 
                                       strlen(GETMESSAGE(21,19, "Unknown")) + 10);
@@ -1461,7 +1461,7 @@ SetValues(
 
       if (modAttr_data->owner)
       {
-         if (getpwnam(modAttr_data->owner) == NULL)
+         if (getpwnam(modAttr_data->owner) == nullptr)
          {
             char *newstring =  XtMalloc(strlen(modAttr_data->owner) + 
                strlen(GETMESSAGE(21,19, "Unknown")) + 10);
@@ -1483,7 +1483,7 @@ SetValues(
 
       if (modAttr_data->group)
       {
-         if (getgrnam(modAttr_data->group) == NULL)
+         if (getgrnam(modAttr_data->group) == nullptr)
          {
             char *newstring =  XtMalloc(strlen(modAttr_data->group) + 
                strlen(GETMESSAGE(21,19, "Unknown")) + 10);
@@ -1573,7 +1573,7 @@ SetValues(
 
       if (ptr = (char *)DtDtsDataTypeToAttributeValue(modAttr_data->filetype,
                                                       FM_TYPE_LABEL,
-                                                      NULL))
+                                                      nullptr))
       {
          string = XmStringCreateLocalized(ptr);
          DtDtsFreeAttributeValue(ptr);
@@ -1597,7 +1597,7 @@ SetValues(
                              toplevel,
                              (DtIconGadget) modAttr_rec->fileType,
                              modAttr_data->pixmapData);
-   modAttr_data->pixmapData = NULL;
+   modAttr_data->pixmapData = nullptr;
    XmStringFree(string);
    fullPath = ResolveLocalPathName (modAttr_data->host, 
                                     modAttr_data->directory,
@@ -1880,9 +1880,9 @@ OkCallback(
   old_dialog = _DtGetInstanceData ((XtPointer)modAttr_rec);
   old = (ModAttrData *) old_dialog->data;
 
-  if(RecheckFlag(NULL,w))
+  if(RecheckFlag(nullptr,w))
     return;
-  else if(RecheckFlag(NULL,close))
+  else if(RecheckFlag(nullptr,close))
     return;
 
   new_attr_data = (ModAttrData *) XtCalloc (1, sizeof (ModAttrData));
@@ -1941,15 +1941,15 @@ OkCallback(
       parentDir = XtNewString(old->directory); 
       title = XtNewString(GETMESSAGE(21, 36, "Change Permissions Warning")); 
       message = XtNewString(GETMESSAGE(21, 37, "You are changing the permissions on the Current\nFolder in a way that won't allow you to view\nthis folder any longer.  It will be automatically\nclosed and you will no longer be able to reopen\nthe folder.\n\nIs this what you want to do?"));
-      _DtMessageDialog(modAttr_rec->shell, title, message, NULL, TRUE,
-                       DontChangeCB, ChangeCB, NULL, HelpRequestCB, False,
+      _DtMessageDialog(modAttr_rec->shell, title, message, nullptr, TRUE,
+                       DontChangeCB, ChangeCB, nullptr, HelpRequestCB, False,
                        QUESTION_DIALOG);
       XtFree(title);
       XtFree(message);
     }
     else
       /* Information was valid */
-      (*(apply_data->callback)) (w, apply_data->client_data, NULL);
+      (*(apply_data->callback)) (w, apply_data->client_data, nullptr);
   }
   else if (result == GMA_NO_FILE)
   {
@@ -1961,15 +1961,15 @@ OkCallback(
      old = (ModAttrData *) old_dialog->data;
 
      file_mgr_rec =  (FileMgrRec *) LocateRecordStructure(w);
-     ResetFlag(NULL,w);
-     ResetFlag(NULL,close);
+     ResetFlag(nullptr,w);
+     ResetFlag(nullptr,close);
      title  = XtNewString(GETMESSAGE(21,33, "Permissions Error"));
      tmpmsg = GETMESSAGE(21,35,"The Permissions dialog for the object\n\n%s/%s\n\nhas been closed because this object has been deleted\nfrom your system.");
      msg = XtMalloc(strlen(tmpmsg)+strlen(old->directory)+strlen(old->name)+3);
      sprintf(msg,tmpmsg,old->directory,old->name);
 
-     ModAttrClose ((XtPointer)file_mgr_rec, old_dialog, NULL);
-     _DtMessage(toplevel, title, msg, NULL, HelpRequestCB);
+     ModAttrClose ((XtPointer)file_mgr_rec, old_dialog, nullptr);
+     _DtMessage(toplevel, title, msg, nullptr, HelpRequestCB);
      XtFree(title);
      XtFree(msg);
   }
@@ -2044,7 +2044,7 @@ GetModAttrValues(
    if (old->link_name)
       modAttr_data->link_name = XtNewString(old->link_name);
    else
-      modAttr_data->link_name = NULL;
+      modAttr_data->link_name = nullptr;
 
 
    /* Validate the entry */
@@ -2052,31 +2052,31 @@ GetModAttrValues(
    {
       /* Valid user name */
       error = -1;
-      if (getpwnam(modAttr_data->owner) == NULL)
+      if (getpwnam(modAttr_data->owner) == nullptr)
          error = UNKNOWN_USER;
-      else if (getgrnam(modAttr_data->group) == NULL)
+      else if (getgrnam(modAttr_data->group) == nullptr)
          error = UNKNOWN_GROUP;
 
       if (error != -1)
       {
          /* Bad entry; free up everything allocated so far */
-         ResetFlag(NULL,modAttr_rec->ok);
-         ResetFlag(NULL,modAttr_rec->cancel);
+         ResetFlag(nullptr,modAttr_rec->ok);
+         ResetFlag(nullptr,modAttr_rec->cancel);
          InvalidModAttrMessage(modAttr_rec->shell, error);
          XtFree ((char *) modAttr_data->host);
-          modAttr_data->host = NULL;
+          modAttr_data->host = nullptr;
          XtFree ((char *) modAttr_data->directory);
-          modAttr_data->directory = NULL;
+          modAttr_data->directory = nullptr;
          XtFree ((char *) modAttr_data->name);
-          modAttr_data->name = NULL;
+          modAttr_data->name = nullptr;
          XtFree ((char *) modAttr_data->filetype);
-          modAttr_data->filetype = NULL;
+          modAttr_data->filetype = nullptr;
          XtFree ((char *) modAttr_data->owner);
-          modAttr_data->owner = NULL;
+          modAttr_data->owner = nullptr;
          XtFree ((char *) modAttr_data->group);
-          modAttr_data->group = NULL;
+          modAttr_data->group = nullptr;
          XtFree ((char *) modAttr_data->link_name);
-         modAttr_data->link_name = NULL;
+         modAttr_data->link_name = nullptr;
          XSync(XtDisplay(modAttr_rec->ok), False);
          return ((short)GMA_INVALID);
       }
@@ -2103,10 +2103,10 @@ InvalidModAttrMessage(
    String string;
    char * title;
    char * tmpStr;
-   static String unknownUser = NULL;
-   static String unknownGroup = NULL;
+   static String unknownUser = nullptr;
+   static String unknownGroup = nullptr;
 
-   if (unknownUser == NULL)
+   if (unknownUser == nullptr)
    {
       tmpStr = GETMESSAGE(21,31, "Owner Name is invalid.\nThe specified user does not exist.");
       unknownUser = XtNewString(tmpStr);
@@ -2126,7 +2126,7 @@ InvalidModAttrMessage(
 
    tmpStr = GETMESSAGE(21,33, "Permissions Error");
    title = XtNewString(tmpStr);
-   _DtMessage (w, title, string, NULL, HelpRequestCB);
+   _DtMessage (w, title, string, nullptr, HelpRequestCB);
    XtFree(title);
 }
 
@@ -2151,7 +2151,7 @@ _LoadFileAttributes(
         unsigned long mask )
 {
    String filetype;
-   FileData *file_data=NULL;
+   FileData *file_data=nullptr;
    struct group * group_data;
    struct passwd * user_data;
    Boolean returnStatus=TRUE;
@@ -2167,25 +2167,25 @@ _LoadFileAttributes(
          if (host)
             modAttr_data->host = XtNewString(host);
          else
-            modAttr_data->host = NULL;
+            modAttr_data->host = nullptr;
       }
       else
-         modAttr_data->host = NULL;
+         modAttr_data->host = nullptr;
 
       if (mask & DIR)
       {
          if (dir)
             modAttr_data->directory = XtNewString(dir);
          else
-            modAttr_data->directory = NULL;
+            modAttr_data->directory = nullptr;
       }
       else
-         modAttr_data->directory = NULL;
+         modAttr_data->directory = nullptr;
 
       if (mask & NAME)
          modAttr_data->name = XtNewString(file);
       else
-         modAttr_data->name = NULL;
+         modAttr_data->name = nullptr;
 
       if (mask & FILETYPE)
       {
@@ -2199,20 +2199,20 @@ _LoadFileAttributes(
            DtDtsFreeAttributeValue(modAttr_data->pixmapData->iconName);
            DtDtsFreeAttributeValue(modAttr_data->pixmapData->iconFileName);
            XtFree((char *) modAttr_data->pixmapData);
-           modAttr_data->pixmapData = NULL;
+           modAttr_data->pixmapData = nullptr;
          }
 
          modAttr_data->pixmapData = _DtRetrievePixmapData(
                                        file_data->logical_type,
-                                       NULL,
-                                       NULL,
+                                       nullptr,
+                                       nullptr,
                                        toplevel,
                                        LARGE);
       }
       else
       {
-         modAttr_data->filetype = NULL;
-         modAttr_data->pixmapData = NULL;
+         modAttr_data->filetype = nullptr;
+         modAttr_data->pixmapData = nullptr;
       }
 
       if (file_data->errnum == 0  &&
@@ -2221,7 +2221,7 @@ _LoadFileAttributes(
          if (mask & GROUP)
          {
             group_data = getgrgid(file_data->stat.st_gid);
-            if(group_data != NULL)
+            if(group_data != nullptr)
                modAttr_data->group = XtNewString(group_data->gr_name);
             else
             {
@@ -2230,12 +2230,12 @@ _LoadFileAttributes(
             }
          }
          else
-            modAttr_data->group = NULL;
+            modAttr_data->group = nullptr;
 
          if (mask & OWNER)
          {
             user_data = getpwuid(file_data->stat.st_uid);
-            if(user_data != NULL)
+            if(user_data != nullptr)
                modAttr_data->owner = XtNewString(user_data->pw_name);
             else
             {
@@ -2244,7 +2244,7 @@ _LoadFileAttributes(
             }
          }
          else
-            modAttr_data->owner = NULL;
+            modAttr_data->owner = nullptr;
 
          modAttr_data->setuidBits = file_data->stat.st_mode & 07000;
          if (mask & BITS)
@@ -2256,8 +2256,8 @@ _LoadFileAttributes(
       }
       else
       {
-         modAttr_data->owner = NULL;
-         modAttr_data->group = NULL;
+         modAttr_data->owner = nullptr;
+         modAttr_data->group = nullptr;
          modAttr_data->accessBits = 0;
          modAttr_data->size = 0;
          modAttr_data->modTime = 0;
@@ -2266,14 +2266,14 @@ _LoadFileAttributes(
    else
    {
       /* File did not exist or can't be accessed; use defaults */
-      modAttr_data->host = NULL;
-      modAttr_data->link_name = NULL;
-      modAttr_data->directory = NULL;
-      modAttr_data->name = NULL;
-      modAttr_data->filetype = NULL;
-      modAttr_data->pixmapData = NULL;
-      modAttr_data->owner = NULL;
-      modAttr_data->group = NULL;
+      modAttr_data->host = nullptr;
+      modAttr_data->link_name = nullptr;
+      modAttr_data->directory = nullptr;
+      modAttr_data->name = nullptr;
+      modAttr_data->filetype = nullptr;
+      modAttr_data->pixmapData = nullptr;
+      modAttr_data->owner = nullptr;
+      modAttr_data->group = nullptr;
       modAttr_data->accessBits = 0;
       modAttr_data->size = 0;
       modAttr_data->modTime = 0;
@@ -2304,7 +2304,7 @@ LoadFileAttributes(
         String file,
         ModAttrData *modAttr_data )
 {
-   FileData *file_data=NULL;
+   FileData *file_data=nullptr;
 
    file_data = (FileData *) ReadFileData( dir, file);
 
@@ -2312,7 +2312,7 @@ LoadFileAttributes(
    if (file_data && file_data->link)
       modAttr_data->link_name = XtNewString(file_data->link);
    else
-      modAttr_data->link_name = NULL;
+      modAttr_data->link_name = nullptr;
 
    if(file_data)
      FreeFileData(file_data,True);
@@ -2371,7 +2371,7 @@ displayFSDialog (Widget      w,
          execl(fileSystem->fsDialogProgram,
                fileSystem->fsDialogProgram,   /* argv[0] */
                fileSystem->path,              /* argv[1] */
-               NULL);
+               nullptr);
          /* if the exec fails, build a string and execute a script */
          /*   to display it                                        */
          s = (char *)XtMalloc( 50
@@ -2394,7 +2394,7 @@ displayFSDialog (Widget      w,
          execl(errorScript,
                errorScript,    /* argv[0] */
                s,              /* argv[1] */
-               NULL);
+               nullptr);
 
          XtFree( s );
 
@@ -2432,8 +2432,8 @@ DontChangeCB(
    XmUpdateDisplay((Widget)client_data);
    XtDestroyWidget((Widget)client_data);
 
-   ResetFlag(NULL, ok);
-   ResetFlag(NULL, close);
+   ResetFlag(nullptr, ok);
+   ResetFlag(nullptr, close);
 }
 
 /************************************************************************
@@ -2457,11 +2457,11 @@ ChangeCB(
    /* user says they want to go ahead with the change, so first let's 
     * apply the change.
     */
-   (*(globalApplyData->callback)) (w, globalApplyData->client_data, NULL);
+   (*(globalApplyData->callback)) (w, globalApplyData->client_data, nullptr);
 
    /* Now let's change the directory to the Parent directory */
    ptr = DtStrrchr(parentDir, '/');
-   if(ptr != NULL && strcmp(parentDir, "/") != 0)
+   if(ptr != nullptr && strcmp(parentDir, "/") != 0)
    {
       *ptr = '\0';
       _DtChangeTo(globalApplyData->client_data, parentDir);

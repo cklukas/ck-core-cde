@@ -71,16 +71,16 @@ typedef struct _SUNWHelpProcList {
     SUNWHelpReturnSelectedWidgetIdProc DtHelpReturnSelectedWidgetIdSym;
 } SUNWHelpProcList;
 
-static SUNWHelpProcList		*pmySUNWProcList = NULL;
+static SUNWHelpProcList		*pmySUNWProcList = nullptr;
 
 int SUNWDtHelpdlopen(void)
 {
-    void *libDtHelpHandle = NULL;
+    void *libDtHelpHandle = nullptr;
 
     _DtSvcProcessLock();
     pmySUNWProcList = (SUNWHelpProcList *)malloc(sizeof(SUNWHelpProcList));
     libDtHelpHandle = dlopen("libDtHelp.so.2.1", RTLD_LAZY | RTLD_GLOBAL);
-    if (libDtHelpHandle == NULL) {
+    if (libDtHelpHandle == nullptr) {
 	char *my_err_msg;
 
 	my_err_msg = dlerror();
@@ -116,7 +116,7 @@ Widget _DtCreateHelpDialog(
     _DtSvcProcessUnlock();
 
     if (!status)
-        return(NULL);
+        return(nullptr);
 
     return ((*pmySUNWProcList->DtCreateHelpDialogSym)(parent, name, al, ac));
 }
@@ -134,7 +134,7 @@ Widget _DtCreateHelpQuickDialog(
     _DtSvcProcessUnlock();
 
     if (!status)
-        return(NULL);
+        return(nullptr);
 
     return ((*pmySUNWProcList->DtCreateHelpQuickDialogSym)(parent, name, al, ac));
 }
@@ -150,7 +150,7 @@ Widget _DtHelpQuickDialogGetChild(
     _DtSvcProcessUnlock();
 
     if (!status)
-        return(NULL);
+        return(nullptr);
 
     return ((*pmySUNWProcList->DtHelpQuickDialogGetChildSym)(widget, child));
 }
@@ -167,7 +167,7 @@ int _DtHelpReturnSelectedWidgetId(
     _DtSvcProcessUnlock();
 
     if (!status) {
-	*widget = NULL;
+	*widget = nullptr;
 	return(DtHELP_SELECT_ERROR);
     }
 

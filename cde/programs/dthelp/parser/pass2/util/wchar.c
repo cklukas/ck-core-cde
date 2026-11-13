@@ -132,7 +132,7 @@ while (*where)
 if (!chr)
     return where;
 else
-    return NULL;
+    return nullptr;
 }
 
 
@@ -159,7 +159,7 @@ while (*where1)
 	    }
 	
 	if (!*where2) return string1;
-	if (!*where1) return NULL;
+	if (!*where1) return nullptr;
 
 	where1 = string1;
 	where2 = string2;
@@ -167,7 +167,7 @@ while (*where1)
     where1++;
     }
 
-return NULL;
+return nullptr;
 }
 
 

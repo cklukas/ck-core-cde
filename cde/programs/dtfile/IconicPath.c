@@ -151,10 +151,10 @@ typedef struct
    FileData     *file_data;
 } IconicPathPopupData;
 
-static IconicPathPopupData iconicPathPopupData = { NULL, NULL, NULL };
+static IconicPathPopupData iconicPathPopupData = { nullptr, nullptr, nullptr };
 static Boolean iconicPathPopupUnmapInstalled = False;
 static XtIntervalId iconicPathPopupFreeTimer = (XtIntervalId)0;
-static FileMgrData *iconicPathPopupFileMgrData = NULL;
+static FileMgrData *iconicPathPopupFileMgrData = nullptr;
 
 static void IconicPathButtonPressHandler(
                         Widget wid,
@@ -358,28 +358,28 @@ static XtResource resources[] =
  *------------------------------------------------------------------*/
 
 static XmBaseClassExtRec baseClassExtRec = {
-    NULL,
+    nullptr,
     NULLQUARK,
     XmBaseClassExtVersion,
     sizeof(XmBaseClassExtRec),
-    NULL,				/* InitializePrehook	*/
-    NULL,				/* SetValuesPrehook	*/
-    NULL,				/* InitializePosthook	*/
-    NULL,				/* SetValuesPosthook	*/
-    NULL,				/* secondaryObjectClass	*/
-    NULL,				/* secondaryCreate	*/
-    NULL,               		/* getSecRes data	*/
+    nullptr,				/* InitializePrehook	*/
+    nullptr,				/* SetValuesPrehook	*/
+    nullptr,				/* InitializePosthook	*/
+    nullptr,				/* SetValuesPosthook	*/
+    nullptr,				/* secondaryObjectClass	*/
+    nullptr,				/* secondaryCreate	*/
+    nullptr,               		/* getSecRes data	*/
     { 0 },      			/* fastSubclass flags	*/
-    NULL,				/* getValuesPrehook	*/
-    NULL,				/* getValuesPosthook	*/
-    NULL,                               /* classPartInitPrehook */
-    NULL,                               /* classPartInitPosthook*/
-    NULL,                               /* ext_resources        */
-    NULL,                               /* compiled_ext_resources*/
+    nullptr,				/* getValuesPrehook	*/
+    nullptr,				/* getValuesPosthook	*/
+    nullptr,                               /* classPartInitPrehook */
+    nullptr,                               /* classPartInitPosthook*/
+    nullptr,                               /* ext_resources        */
+    nullptr,                               /* compiled_ext_resources*/
     0,                                  /* num_ext_resources    */
     FALSE,                              /* use_sub_resources    */
     WidgetNavigable,                    /* widgetNavigable      */
-    NULL                                /* focusChange          */
+    nullptr                                /* focusChange          */
 };
 
 externaldef( dticonicpathclassrec) DtIconicPathClassRec dtIconicPathClassRec =
@@ -392,9 +392,9 @@ externaldef( dticonicpathclassrec) DtIconicPathClassRec dtIconicPathClassRec =
       ClassPartInitialize,			/* class_part_init    */
       FALSE,					/* class_inited       */
       Initialize,       			/* initialize         */
-      NULL,					/* initialize_hook    */
+      nullptr,					/* initialize_hook    */
       XtInheritRealize,				/* realize            */
-      NULL,					/* actions	      */
+      nullptr,					/* actions	      */
       0,					/* num_actions	      */
       resources,				/* resources          */
       XtNumber(resources),			/* num_resources      */
@@ -407,15 +407,15 @@ externaldef( dticonicpathclassrec) DtIconicPathClassRec dtIconicPathClassRec =
       Resize,           			/* resize             */
       Redisplay,	        		/* expose             */
       SetValues,                		/* set_values         */
-      NULL,					/* set_values_hook    */
+      nullptr,					/* set_values_hook    */
       XtInheritSetValuesAlmost,	        	/* set_values_almost  */
-      NULL,					/* get_values_hook    */
-      NULL,					/* accept_focus       */
+      nullptr,					/* get_values_hook    */
+      nullptr,					/* accept_focus       */
       XtVersion,				/* version            */
-      NULL,					/* callback_private   */
+      nullptr,					/* callback_private   */
       defaultTranslations,			/* tm_table           */
       QueryGeometry,                    	/* query_geometry     */
-      NULL,             	                /* display_accelerator*/
+      nullptr,             	                /* display_accelerator*/
       (XtPointer)&baseClassExtRec,              /* extension          */
    },
    {		/* composite_class fields */
@@ -423,27 +423,27 @@ externaldef( dticonicpathclassrec) DtIconicPathClassRec dtIconicPathClassRec =
       ChangeManaged,	                	/* change_managed     */
       XtInheritInsertChild,			/* insert_child       */
       XtInheritDeleteChild,     		/* delete_child       */
-      NULL,                                     /* extension          */
+      nullptr,                                     /* extension          */
    },
 
    {		/* constraint_class fields */
-      NULL,					/* resource list        */   
+      nullptr,					/* resource list        */   
       0,					/* num resources        */   
       0,					/* constraint size      */   
-      NULL,					/* init proc            */   
-      NULL,					/* destroy proc         */   
-      NULL,					/* set values proc      */   
-      NULL,                                     /* extension            */
+      nullptr,					/* init proc            */   
+      nullptr,					/* destroy proc         */   
+      nullptr,					/* set values proc      */   
+      nullptr,                                     /* extension            */
    },
 
    {		/* manager_class fields */
       traversalTranslations,			/* translations           */
       syn_resources,				/* syn_resources      	  */
       XtNumber (syn_resources),			/* num_get_resources 	  */
-      NULL,					/* syn_cont_resources     */
+      nullptr,					/* syn_cont_resources     */
       0,					/* num_get_cont_resources */
       XmInheritParentProcess,                   /* parent_process         */
-      NULL,					/* extension           */    
+      nullptr,					/* extension           */    
    },
 
    {		/* drawingArea class - none */     
@@ -478,7 +478,7 @@ ButtonCallback(
          return;
    }
 
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
    strcpy(host_name, file_mgr_data->host);
@@ -503,7 +503,7 @@ ButtonCallback(
       struct stat st;
       /* If we appended a selected file to the iconic path, don't treat it like
        * a directory navigation component. */
-      if (ip->iconic_path.components[i].path != NULL &&
+      if (ip->iconic_path.components[i].path != nullptr &&
           stat(ip->iconic_path.components[i].path, &st) == 0 &&
           !S_ISDIR(st.st_mode))
       {
@@ -533,51 +533,51 @@ GetFilePixmapData(
    unsigned int iw = 0;
    unsigned int ih = 0;
    Boolean render_image = False;
-   const char *ext = NULL;
+   const char *ext = nullptr;
 
    if (logical_type_out)
-      *logical_type_out = NULL;
+      *logical_type_out = nullptr;
    if (image_name_out)
-      *image_name_out = NULL;
+      *image_name_out = nullptr;
 
    IconicPathDebug("GetFilePixmapData: path=%s render_image_icons=%d\n",
                    path ? path : "(null)",
                    file_mgr_data ? (int)file_mgr_data->render_image_icons : -1);
 
-   if (file_mgr_rec == NULL || file_mgr_data == NULL || path == NULL)
-      return NULL;
+   if (file_mgr_rec == nullptr || file_mgr_data == nullptr || path == nullptr)
+      return nullptr;
 
    full_name = ResolveLocalPathName(file_mgr_data->host,
                                     (char *)path,
-                                    NULL,
+                                    nullptr,
                                     home_host_name,
                                     &tt_status);
-   if (tt_status != TT_OK || full_name == NULL)
-      return NULL;
+   if (tt_status != TT_OK || full_name == nullptr)
+      return nullptr;
 
    if (stat(full_name, &st) != 0)
    {
       XtFree(full_name);
-      return NULL;
+      return nullptr;
    }
 
-   logical_type = (char *)DtDtsDataToDataType(full_name, NULL, 0,
-                                              &st, NULL, NULL, NULL);
-   if (logical_type == NULL)
+   logical_type = (char *)DtDtsDataToDataType(full_name, nullptr, 0,
+                                              &st, nullptr, nullptr, nullptr);
+   if (logical_type == nullptr)
    {
       XtFree(full_name);
-      return NULL;
+      return nullptr;
    }
 
    full_path = XtNewString(full_name);
 
    short_name = strrchr(full_name, '/');
-   if (short_name == NULL)
+   if (short_name == nullptr)
    {
       DtDtsFreeDataType(logical_type);
       XtFree(full_name);
       XtFree(full_path);
-      return NULL;
+      return nullptr;
    }
 
    if (strcmp(full_name, "/") == 0)
@@ -648,7 +648,7 @@ IconicPathDebug(const char *fmt, ...)
 {
    static int enabled = -1;
    if (enabled == -1)
-      enabled = (getenv("DTFILE_ICONPATH_DEBUG") != NULL);
+      enabled = (getenv("DTFILE_ICONPATH_DEBUG") != nullptr);
    if (!enabled)
       return;
 
@@ -685,7 +685,7 @@ Update(
    Boolean forbidden;
    Boolean selection_changed = False;
    char selected_path_buf[MAX_PATH];
-   const char *selected_path = NULL;
+   const char *selected_path = nullptr;
    int i, j, n;
    int x, y;
    int n_changes = 0;
@@ -742,7 +742,7 @@ Update(
    }
 
    /* create "..." button, if necessary */
-   if (ip->iconic_path.dotdot_button == NULL)
+   if (ip->iconic_path.dotdot_button == nullptr)
    {
       xm_string = XmStringCreateLocalized("...");
       n = 0;
@@ -791,7 +791,7 @@ Update(
    }
 
    /* create StatuMsg, if necessary */
-   if (ip->iconic_path.status_msg && ip->iconic_path.status_label == NULL)
+   if (ip->iconic_path.status_msg && ip->iconic_path.status_label == nullptr)
    {
       /* create StatuMsg */
       n = 0;
@@ -805,7 +805,7 @@ Update(
    background = ip->core.background_pixel;
 
    /* create DropZone, if necessary */
-   if (ip->iconic_path.dropzone && ip->iconic_path.dropzone_icon == NULL)
+   if (ip->iconic_path.dropzone && ip->iconic_path.dropzone_icon == nullptr)
    {
       /* create DropZone */
       if (change_view_pixmap == XmUNSPECIFIED_PIXMAP)
@@ -834,11 +834,11 @@ Update(
    }
 
    /* Track selected file (single selection, non-dir) so we can append it to the iconic path */
-   if (file_mgr_data != NULL &&
+   if (file_mgr_data != nullptr &&
        file_mgr_data->selected_file_count == 1 &&
-       file_mgr_data->selection_list != NULL &&
-       file_mgr_data->selection_list[0] != NULL &&
-       file_mgr_data->selection_list[0]->file_data != NULL &&
+       file_mgr_data->selection_list != nullptr &&
+       file_mgr_data->selection_list[0] != nullptr &&
+       file_mgr_data->selection_list[0]->file_data != nullptr &&
        !file_mgr_data->selection_list[0]->file_data->is_subdir)
    {
       DirectorySet *ds = (DirectorySet *)file_mgr_data->selection_list[0]->directory_set;
@@ -855,17 +855,17 @@ Update(
       }
    }
 
-   if ((selected_path == NULL) != (ip->iconic_path.selected_file_shown == NULL) ||
-       (selected_path != NULL && ip->iconic_path.selected_file_shown != NULL &&
+   if ((selected_path == nullptr) != (ip->iconic_path.selected_file_shown == nullptr) ||
+       (selected_path != nullptr && ip->iconic_path.selected_file_shown != nullptr &&
         strcmp(selected_path, ip->iconic_path.selected_file_shown) != 0))
    {
       selection_changed = True;
    }
 
    /* if the current directory or selected file changed, update component list */
-   if (file_mgr_data != NULL && ip->iconic_path.current_directory != NULL &&
+   if (file_mgr_data != nullptr && ip->iconic_path.current_directory != nullptr &&
        ip->iconic_path.current_directory[0] == '/' &&
-       (ip->iconic_path.directory_shown == NULL ||
+       (ip->iconic_path.directory_shown == nullptr ||
         strcmp(ip->iconic_path.directory_shown,
                ip->iconic_path.current_directory) != 0 ||
         ip->iconic_path.icon_size_shown != ICON_SIZE(ip) ||
@@ -896,7 +896,7 @@ Update(
       for (;;)
       {
          /* extract the next path component */
-         if (ptr != NULL)
+         if (ptr != nullptr)
             *ptr = '\0';
          if (ip->iconic_path.directory_shown[0] == '\0')
             path = name = "/";
@@ -945,7 +945,7 @@ Update(
             else
             {
               XtSetArg (args[n], XmNimageName, NULL); 
-              ip->iconic_path.components[i].icon_name = NULL;
+              ip->iconic_path.components[i].icon_name = nullptr;
             }
             n++;
 
@@ -989,7 +989,7 @@ Update(
             if (fileLabel = DtDtsDataTypeToAttributeValue(
                             GetDirectoryLogicalType(file_mgr_data, path),
                             DtDTS_DA_LABEL,
-                            NULL))
+                            nullptr))
             {
                xm_string = XmStringCreateLocalized(fileLabel);
                DtDtsFreeAttributeValue(fileLabel);
@@ -1040,7 +1040,7 @@ Update(
             if (fileLabel = DtDtsDataTypeToAttributeValue(
                             GetDirectoryLogicalType(file_mgr_data, path),
                             DtDTS_DA_LABEL,
-                            NULL))
+                            nullptr))
             {
                xm_string = XmStringCreateLocalized(fileLabel);
                DtDtsFreeAttributeValue(fileLabel);
@@ -1067,9 +1067,9 @@ Update(
 
             if (pixmapData)
             {
-               if ((pixmapData->iconFileName == NULL) !=
-                          (ip->iconic_path.components[i].icon_name == NULL) ||
-                   pixmapData->iconFileName != NULL &&
+               if ((pixmapData->iconFileName == nullptr) !=
+                          (ip->iconic_path.components[i].icon_name == nullptr) ||
+                   pixmapData->iconFileName != nullptr &&
                    strcmp(pixmapData->iconFileName,
                           ip->iconic_path.components[i].icon_name) != 0)
                {
@@ -1092,7 +1092,7 @@ Update(
             else
             {
                XtFree(ip->iconic_path.components[i].icon_name);
-               ip->iconic_path.components[i].icon_name = NULL;
+               ip->iconic_path.components[i].icon_name = nullptr;
                XtSetArg (args[0], XmNimageName, NULL);
                XtSetValues(ip->iconic_path.components[i].icon, args, 1);
             }
@@ -1103,7 +1103,7 @@ Update(
 
 next_component:
          /* go to the next path component */
-         if (ptr == NULL)
+         if (ptr == nullptr)
            break;
 
          /* restore '/' */
@@ -1116,7 +1116,7 @@ next_component:
       }
 
       /* Append the selected file as the last component (only for single-selection non-dir) */
-      if (selected_path != NULL)
+      if (selected_path != nullptr)
       {
          const char *sel_name = strrchr(selected_path, '/');
          if (sel_name && *(sel_name + 1) != '\0')
@@ -1135,8 +1135,8 @@ next_component:
 
             ip->iconic_path.components[i].path = XtNewString(selected_path);
             {
-               char *logical_type = NULL;
-               char *image_name = NULL;
+               char *logical_type = nullptr;
+               char *image_name = nullptr;
                pixmapData = GetFilePixmapData(file_mgr_rec,
                                               file_mgr_data,
                                               selected_path,
@@ -1158,10 +1158,10 @@ next_component:
                  (ICON_DTSIZE(ip) == EXTRA_LARGE) ? DtLARGE :
                  (ICON_DTSIZE(ip) == LARGE) ? DtMEDIUM : DtSMALL;
               fallback = _DtGetIconFileName(XtScreen(file_mgr_rec->shell),
-                                            NULL, (String)"Dtdeflt", NULL, dt_size);
+                                            nullptr, (String)"Dtdeflt", nullptr, dt_size);
               XtSetArg (args[n], XmNimageName, fallback);
               ip->iconic_path.components[i].icon_name =
-                 fallback ? XtNewString(fallback) : NULL;
+                 fallback ? XtNewString(fallback) : nullptr;
               if (fallback)
                  XtFree(fallback);
             }
@@ -1251,8 +1251,8 @@ next_component:
             XtSetValues(ip->iconic_path.components[i].icon, args, 2);
 
             {
-               char *logical_type = NULL;
-               char *image_name = NULL;
+               char *logical_type = nullptr;
+               char *image_name = nullptr;
                pixmapData = GetFilePixmapData(file_mgr_rec,
                                               file_mgr_data,
                                               selected_path,
@@ -1261,9 +1261,9 @@ next_component:
                                               &image_name);
             if (image_name)
             {
-               if ((image_name == NULL) !=
-                          (ip->iconic_path.components[i].icon_name == NULL) ||
-                   image_name != NULL &&
+               if ((image_name == nullptr) !=
+                          (ip->iconic_path.components[i].icon_name == nullptr) ||
+                   image_name != nullptr &&
                    strcmp(image_name,
                           ip->iconic_path.components[i].icon_name) != 0)
                {
@@ -1288,7 +1288,7 @@ next_component:
                                  pixmapData);
                }
             }
-            else if (ip->iconic_path.components[i].icon_name == NULL)
+            else if (ip->iconic_path.components[i].icon_name == nullptr)
             {
                /* Ensure icon_name is non-NULL so the iconic path doesn't hide all children. */
                String fallback;
@@ -1296,7 +1296,7 @@ next_component:
                   (ICON_DTSIZE(ip) == EXTRA_LARGE) ? DtLARGE :
                   (ICON_DTSIZE(ip) == LARGE) ? DtMEDIUM : DtSMALL;
                fallback = _DtGetIconFileName(XtScreen(file_mgr_rec->shell),
-                                             NULL, (String)"Dtdeflt", NULL, dt_size);
+                                             nullptr, (String)"Dtdeflt", nullptr, dt_size);
                if (fallback)
                {
                   ip->iconic_path.components[i].icon_name = XtNewString(fallback);
@@ -1319,9 +1319,9 @@ next_component:
          INC_N_CHANGES();
 
          XtFree(ip->iconic_path.components[j].path);
-         ip->iconic_path.components[j].path = NULL;
+         ip->iconic_path.components[j].path = nullptr;
          XtFree(ip->iconic_path.components[j].icon_name);
-         ip->iconic_path.components[j].icon_name = NULL;
+         ip->iconic_path.components[j].icon_name = nullptr;
          XtDestroyWidget(ip->iconic_path.components[j].icon);
          XtDestroyWidget(ip->iconic_path.components[j].button);
       }
@@ -1330,7 +1330,7 @@ next_component:
       ip->iconic_path.icon_size_shown = ICON_SIZE(ip);
 
       XtFree(ip->iconic_path.selected_file_shown);
-      ip->iconic_path.selected_file_shown = selected_path ? XtNewString(selected_path) : NULL;
+      ip->iconic_path.selected_file_shown = selected_path ? XtNewString(selected_path) : nullptr;
    }
 
    /* update component widths */
@@ -1366,7 +1366,7 @@ next_component:
    else
       strcpy(msg_buf, "");
 
-   if (ip->iconic_path.msg_text == NULL ||
+   if (ip->iconic_path.msg_text == nullptr ||
        strcmp(msg_buf, ip->iconic_path.msg_text) != 0)
    {
       /* remember the new status message text */
@@ -1510,9 +1510,9 @@ next_component:
 
    /* if all icons are there, manage the children */
    for (i = 0; i < ip->iconic_path.num_components; i++)
-      if (ip->iconic_path.components[i].icon_name == NULL)
+      if (ip->iconic_path.components[i].icon_name == nullptr)
          break;
-   if (file_mgr_data != NULL && i == ip->iconic_path.num_components)
+   if (file_mgr_data != nullptr && i == ip->iconic_path.num_components)
    {
       DPRINTF2(("IconicPath.Update: manage %d children\n", nmanage));
       XtManageChildren(manage, nmanage);
@@ -1540,7 +1540,7 @@ IconicPathRedraw(
    int i;
    int x, y, l;
 
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -1578,8 +1578,8 @@ IconicPathRedraw(
         i < ip->iconic_path.num_components - 1;
         i++)
    {
-      if (ip->iconic_path.components[i].icon_name != NULL &&
-          ip->iconic_path.components[i+1].icon_name != NULL)
+      if (ip->iconic_path.components[i].icon_name != nullptr &&
+          ip->iconic_path.components[i+1].icon_name != nullptr)
       {
          XDrawLine(XtDisplay(ip), XtWindow(ip), ip->iconic_path.gc,
                    x + SPC(ip) +
@@ -1629,23 +1629,23 @@ Initialize(
     DtIconicPathWidget new_w = (DtIconicPathWidget) nw ;
     FileMgrRec *file_mgr_rec = (FileMgrRec *)new_w->iconic_path.file_mgr_rec;
 
-    new_w->iconic_path.msg_text = NULL;
-    new_w->iconic_path.current_directory = NULL;
-    new_w->iconic_path.directory_shown = NULL;
-    new_w->iconic_path.selected_file_shown = NULL;
+    new_w->iconic_path.msg_text = nullptr;
+    new_w->iconic_path.current_directory = nullptr;
+    new_w->iconic_path.directory_shown = nullptr;
+    new_w->iconic_path.selected_file_shown = nullptr;
     new_w->iconic_path.icon_size_shown = -1;
-    new_w->iconic_path.status_label = NULL;
-    new_w->iconic_path.dotdot_button = NULL;
-    new_w->iconic_path.dropzone_icon = NULL;
+    new_w->iconic_path.status_label = nullptr;
+    new_w->iconic_path.dotdot_button = nullptr;
+    new_w->iconic_path.dropzone_icon = nullptr;
     new_w->iconic_path.num_components = 0;
-    new_w->iconic_path.components = NULL;
+    new_w->iconic_path.components = nullptr;
     new_w->iconic_path.left_component = 0;
     new_w->iconic_path.gc = None;
 
     XtAddEventHandler((Widget)new_w, ButtonReleaseMask, False,
-                      IconicPathButtonPressHandler, NULL);
+                      IconicPathButtonPressHandler, nullptr);
 
-    Update(new_w, file_mgr_rec, NULL);
+    Update(new_w, file_mgr_rec, nullptr);
 
     return;
 }
@@ -1665,22 +1665,22 @@ Destroy(
     /*
     XtFree(ip->iconic_path.current_directory);
     */
-    ip->iconic_path.current_directory = NULL;
+    ip->iconic_path.current_directory = nullptr;
     XtFree(ip->iconic_path.msg_text);
-    ip->iconic_path.msg_text = NULL;
+    ip->iconic_path.msg_text = nullptr;
     XtFree(ip->iconic_path.directory_shown);
-    ip->iconic_path.directory_shown = NULL;
+    ip->iconic_path.directory_shown = nullptr;
     XtFree(ip->iconic_path.selected_file_shown);
-    ip->iconic_path.selected_file_shown = NULL;
+    ip->iconic_path.selected_file_shown = nullptr;
 
     for (i = 0; i < ip->iconic_path.num_components; i++)
     {
        XtFree(ip->iconic_path.components[i].path);
-       ip->iconic_path.components[i].path = NULL;
+       ip->iconic_path.components[i].path = nullptr;
     }
 
     XtFree((char *)ip->iconic_path.components);
-    ip->iconic_path.components = NULL;
+    ip->iconic_path.components = nullptr;
 
     return;
 }
@@ -1712,9 +1712,9 @@ FreeIconicPathPopupData( void )
    if (iconicPathPopupData.file_view_data)
       XtFree((char *)iconicPathPopupData.file_view_data);
 
-   iconicPathPopupData.file_view_data = NULL;
-   iconicPathPopupData.directory_set = NULL;
-   iconicPathPopupData.file_data = NULL;
+   iconicPathPopupData.file_view_data = nullptr;
+   iconicPathPopupData.directory_set = nullptr;
+   iconicPathPopupData.file_data = nullptr;
 }
 
 
@@ -1730,8 +1730,8 @@ FreeIconicPathPopupDataTimeout(
    if (iconicPathPopupFileMgrData &&
        iconicPathPopupFileMgrData->popup_menu_icon ==
           iconicPathPopupData.file_view_data)
-      iconicPathPopupFileMgrData->popup_menu_icon = NULL;
-   iconicPathPopupFileMgrData = NULL;
+      iconicPathPopupFileMgrData->popup_menu_icon = nullptr;
+   iconicPathPopupFileMgrData = nullptr;
    FreeIconicPathPopupData();
 }
 
@@ -1742,7 +1742,7 @@ IconicPathPopupMenuUnmapCB(
         XtPointer client_data,
         XtPointer call_data )
 {
-   FileMgrRec *file_mgr_rec = NULL;
+   FileMgrRec *file_mgr_rec = nullptr;
    DialogData *dialog_data;
    FileMgrData *file_mgr_data;
    Arg args[1];
@@ -1753,7 +1753,7 @@ IconicPathPopupMenuUnmapCB(
    XtSetArg(args[0], XmNuserData, &file_mgr_rec);
    XtGetValues(w, args, 1);
    if (file_mgr_rec &&
-       (dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec)) != NULL)
+       (dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec)) != nullptr)
       iconicPathPopupFileMgrData = (FileMgrData *)dialog_data->data;
 
    /*
@@ -1764,7 +1764,7 @@ IconicPathPopupMenuUnmapCB(
    if (iconicPathPopupFreeTimer == (XtIntervalId)0)
       iconicPathPopupFreeTimer =
          XtAppAddTimeOut(XtWidgetToApplicationContext(w), 0,
-                         FreeIconicPathPopupDataTimeout, NULL);
+                         FreeIconicPathPopupDataTimeout, nullptr);
 }
 
 
@@ -1774,11 +1774,11 @@ EnsureIconicPathPopupUnmapInstalled( void )
    if (iconicPathPopupUnmapInstalled)
       return;
 
-   if (fileMgrPopup.menu == NULL)
+   if (fileMgrPopup.menu == nullptr)
       return;
 
    XtAddCallback(fileMgrPopup.menu, XmNunmapCallback,
-                 IconicPathPopupMenuUnmapCB, NULL);
+                 IconicPathPopupMenuUnmapCB, nullptr);
    iconicPathPopupUnmapInstalled = True;
 }
 
@@ -1796,19 +1796,19 @@ CreateIconicPathPopupFileViewData(
    const char *base;
    const char *slash;
 
-   if (directory_path == NULL || directory_path[0] != '/')
-      return NULL;
+   if (directory_path == nullptr || directory_path[0] != '/')
+      return nullptr;
 
    if (strcmp(directory_path, "/") == 0)
    {
       strcpy(parent, "/");
-      base = NULL;
+      base = nullptr;
    }
    else
    {
       slash = strrchr(directory_path, '/');
-      if (slash == NULL)
-         return NULL;
+      if (slash == nullptr)
+         return nullptr;
       if (slash == directory_path)
       {
          strcpy(parent, "/");
@@ -1818,7 +1818,7 @@ CreateIconicPathPopupFileViewData(
       {
          size_t len = (size_t)(slash - directory_path);
          if (len >= sizeof(parent))
-            return NULL;
+            return nullptr;
          memcpy(parent, directory_path, len);
          parent[len] = '\0';
          base = slash + 1;
@@ -1826,8 +1826,8 @@ CreateIconicPathPopupFileViewData(
    }
 
    fd = ReadFileData(parent, (char *)base);
-   if (fd == NULL)
-      return NULL;
+   if (fd == nullptr)
+      return nullptr;
 
    if (strcmp(directory_path, "/") == 0)
    {
@@ -1884,7 +1884,7 @@ IconicPathButtonPressHandler(
 
    ip = (DtIconicPathWidget)wid;
 
-   if (event == NULL || event->type != ButtonRelease)
+   if (event == nullptr || event->type != ButtonRelease)
       return;
 
    be = (XButtonEvent *)event;
@@ -1892,7 +1892,7 @@ IconicPathButtonPressHandler(
       return;
 
    child = XmObjectAtPoint((Widget)ip, (Position)be->x, (Position)be->y);
-   if (child == NULL)
+   if (child == nullptr)
       return;
 
    if (child == ip->iconic_path.dotdot_button)
@@ -1920,7 +1920,7 @@ IconicPathButtonPressHandler(
       return;
 
    file_mgr_rec = (FileMgrRec *) ip->iconic_path.file_mgr_rec;
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -1934,11 +1934,11 @@ IconicPathButtonPressHandler(
       iconicPathPopupFreeTimer = (XtIntervalId)0;
    }
 
-   if (fileMgrPopup.menu == NULL || !XtIsManaged(fileMgrPopup.menu))
+   if (fileMgrPopup.menu == nullptr || !XtIsManaged(fileMgrPopup.menu))
       FreeIconicPathPopupData();
 
    if (CreateIconicPathPopupFileViewData(file_mgr_data,
-         ip->iconic_path.components[i].path, child) == NULL)
+         ip->iconic_path.components[i].path, child) == nullptr)
       return;
 
    FmPopup(child, (XtPointer)iconicPathPopupData.file_view_data, event,
@@ -1978,7 +1978,7 @@ Resize(
     DialogData  *dialog_data;
     FileMgrData *file_mgr_data;
 
-    if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+    if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
        return;
     file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -2051,7 +2051,7 @@ SetValues(
     Boolean redisplay;
 
     dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
-    file_mgr_data = dialog_data? (FileMgrData *) dialog_data->data: NULL;
+    file_mgr_data = dialog_data? (FileMgrData *) dialog_data->data: nullptr;
 
     redisplay = (Update(ip, file_mgr_rec, file_mgr_data) > 0);
 

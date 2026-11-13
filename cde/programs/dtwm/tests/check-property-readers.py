@@ -176,7 +176,7 @@ with tempfile.TemporaryDirectory(prefix="dtwm-properties-", dir=os.environ["TMPD
     c.write_text(harness)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
                    shlex.split(os.environ.get("CPPFLAGS", "")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-I", str(source.parent),
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-I", str(source.parent),
                     "-Wall", "-Wextra", "-Wno-sign-compare",
                     "-Werror", "-fsanitize=address,undefined", "-g",
                     str(c), "-o", str(binary)], check=True)

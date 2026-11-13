@@ -174,7 +174,7 @@ FileDialogBuildPath(
    size_t separator_length;
    size_t total_length;
 
-   if (path == NULL || path_size == 0 || directory == NULL || name == NULL)
+   if (path == nullptr || path_size == 0 || directory == nullptr || name == nullptr)
       return False;
 
    directory_length = strlen(directory);
@@ -207,7 +207,7 @@ FileDialogSelectedObjectLabel(
    prefix = XmStringCreateLocalized(
          (char *)GETMESSAGE(10, 37, "Selected object:"));
    separator = XmStringCreateLocalized(" ");
-   name = XmStringCreateLocalized((char *)(file_name != NULL ? file_name : ""));
+   name = XmStringCreateLocalized((char *)(file_name != nullptr ? file_name : ""));
    prefix_with_separator = XmStringConcat(prefix, separator);
    label = XmStringConcat(prefix_with_separator, name);
    XmStringFree(prefix);
@@ -259,7 +259,7 @@ ShowRenameFileDialog(
   }
   else
   {
-    file_view_data = NULL;
+    file_view_data = nullptr;
     mbar = XmGetPostedFromWidget(XtParent(w));
   }
 
@@ -273,7 +273,7 @@ ShowRenameFileDialog(
 
   /*  Get the selected file.  */
 
-  if( file_view_data == NULL )
+  if( file_view_data == nullptr )
     file_view_data = file_mgr_data->selection_list[0];
 
   directory_name = ((DirectorySet *) file_view_data->directory_set)->name;
@@ -368,7 +368,7 @@ ShowCopyFileDialog(
    }
    else
    {
-      file_view_data = NULL;
+      file_view_data = nullptr;
       mbar = XmGetPostedFromWidget(XtParent(w));
    }
 
@@ -387,7 +387,7 @@ ShowCopyFileDialog(
 
    /*  Get the selected file.  */
 
-   if(file_view_data == NULL)
+   if(file_view_data == nullptr)
       file_view_data = file_mgr_data->selection_list[0];
    directory_name = ((DirectorySet *) file_view_data->directory_set)->name;
 
@@ -403,7 +403,7 @@ ShowCopyFileDialog(
    XtSetArg (args[n], XmNmwmDecorations, MWM_DECOR_BORDER | MWM_DECOR_TITLE);                       ++n;
 
    file_mgr_rec->menuStates &= ~DUPLICATE;
-   if(file_mgr_data->title != NULL &&
+   if(file_mgr_data->title != nullptr &&
       strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
    {
      tmpStr = GETMESSAGE(10, 44, "Copy Object");
@@ -601,25 +601,25 @@ ShowCopyFileDialog(
    /*  Make the two labels the same length - maximum.  */
    /* ------------------------------------------------ */
 
-   XtVaGetValues(dir_label, XmNwidth, &width, NULL);
+   XtVaGetValues(dir_label, XmNwidth, &width, nullptr);
    d_width = (Dimension)width;
-   XtVaGetValues(file_label, XmNwidth, &width, NULL);
+   XtVaGetValues(file_label, XmNwidth, &width, nullptr);
    f_width = (Dimension)width;
 
    if (d_width > f_width)
-       XtVaSetValues(file_label, XmNwidth, d_width, NULL);
+       XtVaSetValues(file_label, XmNwidth, d_width, nullptr);
    else
-       XtVaSetValues(dir_label, XmNwidth, f_width, NULL);
+       XtVaSetValues(dir_label, XmNwidth, f_width, nullptr);
 
-   XtVaGetValues(dir_text, XmNwidth, &width, NULL);
+   XtVaGetValues(dir_text, XmNwidth, &width, nullptr);
    d_width = (Dimension)width;
-   XtVaGetValues(file_text, XmNwidth, &width, NULL);
+   XtVaGetValues(file_text, XmNwidth, &width, nullptr);
    f_width = (Dimension)width;
 
    if (d_width > f_width)
-       XtVaSetValues(file_text, XmNwidth, d_width, NULL);
+       XtVaSetValues(file_text, XmNwidth, d_width, nullptr);
    else
-       XtVaSetValues(dir_text, XmNwidth, f_width, NULL);
+       XtVaSetValues(dir_text, XmNwidth, f_width, nullptr);
 
 
    /*  The data sent to the Text, Ok and Cancel callbacks  */
@@ -640,7 +640,7 @@ ShowCopyFileDialog(
    call_struct->mode = COPY_FILE;
    call_struct->file_name = XtNewString (file_view_data->file_data->file_name);
    call_struct->original_logical_type =file_view_data->file_data->logical_type;
-   call_struct->previous_file_type = NULL;
+   call_struct->previous_file_type = nullptr;
    call_struct->file_mgr_data = file_mgr_data;
 
 
@@ -737,7 +737,7 @@ ShowCopyFileDialog(
    XtAddCallback(preview, XmNhelpCallback, HelpRequestCB,
                  HELP_COPY_DIALOG_STR);
    tmpStr = XtNewString(file_view_data->file_data->file_name);
-   FileTypePreview (preview, tmpStr, (XtPointer) call_struct, NULL);
+   FileTypePreview (preview, tmpStr, (XtPointer) call_struct, nullptr);
 
    n = 0;
    XtSetArg (args[n], XmNlabelString, helpXmString);              n++;
@@ -841,7 +841,7 @@ ShowMoveFileDialog(
    }
    else
    {
-      file_view_data = NULL;
+      file_view_data = nullptr;
       mbar = XmGetPostedFromWidget(XtParent(w));
    }
 
@@ -859,7 +859,7 @@ ShowMoveFileDialog(
 
    /*  Get the selected file.  */
 
-   if(file_view_data == NULL)
+   if(file_view_data == nullptr)
       file_view_data = file_mgr_data->selection_list[0];
    directory_name = ((DirectorySet *) file_view_data->directory_set)->name;
 
@@ -874,7 +874,7 @@ ShowMoveFileDialog(
    XtSetArg (args[n], XmNmwmDecorations, MWM_DECOR_BORDER | MWM_DECOR_TITLE);                       ++n;
 
    file_mgr_rec->menuStates &= ~MOVE;
-   if(file_mgr_data->title != NULL &&
+   if(file_mgr_data->title != nullptr &&
       strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
    {
      tmpStr = GETMESSAGE(10, 42, "Move Object");
@@ -974,8 +974,8 @@ ShowMoveFileDialog(
    call_struct->dialog_widget = form;
    call_struct->menu_widget = w;
    call_struct->dir_text_widget = new_text;
-   call_struct->file_text_widget = NULL;
-   call_struct->file_type_widget = NULL;
+   call_struct->file_text_widget = nullptr;
+   call_struct->file_type_widget = nullptr;
    call_struct->original_physical_type =
       file_view_data->file_data->physical_type;
    call_struct->file_mgr_rec = file_mgr_rec;
@@ -984,7 +984,7 @@ ShowMoveFileDialog(
    call_struct->file_name = XtNewString (file_view_data->file_data->file_name);
    call_struct->mode = MOVE_FILE;
    call_struct->original_logical_type =file_view_data->file_data->logical_type;
-   call_struct->previous_file_type = NULL;
+   call_struct->previous_file_type = nullptr;
    call_struct->file_mgr_data = file_mgr_data;
 
 
@@ -1164,7 +1164,7 @@ ShowLinkFileDialog(
    }
    else
    {
-      file_view_data = NULL;
+      file_view_data = nullptr;
       mbar = XmGetPostedFromWidget(XtParent(w));
    }
 
@@ -1183,7 +1183,7 @@ ShowLinkFileDialog(
 
    /*  Get the selected file.  */
 
-   if(file_view_data == NULL)
+   if(file_view_data == nullptr)
       file_view_data = file_mgr_data->selection_list[0];
    directory_name = ((DirectorySet *) file_view_data->directory_set)->name;
 
@@ -1194,7 +1194,7 @@ ShowLinkFileDialog(
    XtSetArg (args[n], XmNallowShellResize, True);  n++;
 
    file_mgr_rec->menuStates &= ~LINK;
-   if(file_mgr_data->title != NULL &&
+   if(file_mgr_data->title != nullptr &&
       strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
    {
      tmpStr = GETMESSAGE(10, 46, "Link Object");
@@ -1373,7 +1373,7 @@ ShowLinkFileDialog(
    call_struct->mode = LINK_FILE;
    call_struct->file_name = XtNewString (file_view_data->file_data->file_name);
    call_struct->original_logical_type =file_view_data->file_data->logical_type;
-   call_struct->previous_file_type = NULL;
+   call_struct->previous_file_type = nullptr;
    call_struct->file_mgr_data = file_mgr_data;
 
 
@@ -1471,7 +1471,7 @@ ShowLinkFileDialog(
    XtAddCallback(preview, XmNhelpCallback, HelpRequestCB,
                  HELP_LINK_DIALOG_STR);
    tmpStr = XtNewString(file_view_data->file_data->file_name);
-   FileTypePreview (preview, tmpStr, (XtPointer) call_struct, NULL);
+   FileTypePreview (preview, tmpStr, (XtPointer) call_struct, nullptr);
 
    n = 0;
    XtSetArg (args[n], XmNlabelString, helpXmString);              n++;
@@ -1532,9 +1532,9 @@ RenameOk(
         XtPointer call_data )
 {
    DialogCallbackStruct * call_struct = (DialogCallbackStruct *)client_data;
-   char *title = NULL;
-   char *msg = NULL;
-   char *new_name = NULL, *new_dir = NULL, new[MAX_PATH];
+   char *title = nullptr;
+   char *msg = nullptr;
+   char *new_name = nullptr, *new_dir = nullptr, new[MAX_PATH];
    unsigned int btnMask = 0;
    RenameDoneData *data;
    char to_host[256];
@@ -1546,7 +1546,7 @@ RenameOk(
 
    if(RecheckFlag(call_struct->dialog_widget,w))   /* OK button */
      return;
-   else if(RecheckFlag(NULL,call_struct->Cancel))
+   else if(RecheckFlag(nullptr,call_struct->Cancel))
      return;
 
    /* currently, only one file can be moved/copied/linked using the menu */
@@ -1578,12 +1578,12 @@ RenameOk(
      msg = XtNewString(GETMESSAGE(10, 11,
                                   "A file or folder cannot have a blank name."));
 #ifdef _CHECK_FOR_SPACES
-   else if (DtStrchr (new_dir, ' ') != NULL ||
-            DtStrchr (new_dir, '\t') != NULL)
+   else if (DtStrchr (new_dir, ' ') != nullptr ||
+            DtStrchr (new_dir, '\t') != nullptr)
      msg = XtNewString(GetSharedMessage(NO_SPACES_ALLOWED_ERROR));
 #endif
 
-   if (msg == NULL)
+   if (msg == nullptr)
    {
       switch (call_struct->mode)
       {
@@ -1595,11 +1595,11 @@ RenameOk(
             msg = XtNewString(GETMESSAGE(10, 11,
                                          "A file or folder cannot have a blank name."));
 #ifdef _CHECK_FOR_SPACES
-          else if (DtStrchr (new_name, ' ') != NULL ||
-                   DtStrchr (new_name, '\t') != NULL)
+          else if (DtStrchr (new_name, ' ') != nullptr ||
+                   DtStrchr (new_name, '\t') != nullptr)
             msg = XtNewString(GetSharedMessage(NO_SPACES_ALLOWED_ERROR));
 #endif
-          if (msg == NULL &&
+          if (msg == nullptr &&
               !FileDialogBuildPath(new, sizeof(new), new_dir, new_name))
             msg = XtNewString(GETMESSAGE(10, 13,
                                          "Invalid file or folder name."));
@@ -1613,16 +1613,16 @@ RenameOk(
       }
    }
 
-   if (msg == NULL &&
+   if (msg == nullptr &&
        !GetTarget(call_struct->host_name, call_struct->directory_name, new,
                   to_host, sizeof(to_host), to_dir, sizeof(to_dir),
                   to_file, sizeof(to_file)))
       msg = XtNewString(GETMESSAGE(10, 13,
                                    "Invalid file or folder name."));
 
-   if (msg != NULL)
+   if (msg != nullptr)
    {
-      _DtMessage(XtParent (w), title, msg, NULL, HelpRequestCB);
+      _DtMessage(XtParent (w), title, msg, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree(msg);
       if(new_name) XtFree(new_name);
@@ -1674,7 +1674,7 @@ RenameOk(
                 modifiers, RenameDone, (XtPointer)data);
 
    XtFree(file_set[0]);
-   file_set[0] = NULL;
+   file_set[0] = nullptr;
 }
 
 
@@ -1737,9 +1737,9 @@ GetToPath (
    {
       if ((path = (char *) ResolveLocalPathName (host_in,
                                                  new_name,
-                                                 NULL,
+                                                 nullptr,
                                                  home_host_name,
-                                                 &tt_status )) == NULL)
+                                                 &tt_status )) == nullptr)
          return (False);
    }
    else
@@ -1749,9 +1749,9 @@ GetToPath (
 
       if ((path = (char *) ResolveLocalPathName (host_in,
                                                  to,
-                                                 NULL,
+                                                 nullptr,
                                                  home_host_name,
-                                                 &tt_status )) == NULL)
+                                                 &tt_status )) == nullptr)
          return (False);
    }
 
@@ -1839,7 +1839,7 @@ FileTypePreview(
                                      home_host_name, &tt_status);
 
    /* Check for broken links so we get the proper file_type */
-   if (call_struct->original_logical_type != NULL &&
+   if (call_struct->original_logical_type != nullptr &&
        strcmp(call_struct->original_logical_type, LT_BROKEN_LINK) == 0)
       file_type = XtNewString(call_struct->original_logical_type);
    else if (call_struct->original_physical_type == DtDIRECTORY)
@@ -1850,8 +1850,8 @@ FileTypePreview(
    else if (link_path = _DtFollowLink(whole_name))
    {
       if (strcmp(orig_name, whole_name) == 0)
-        file_type = (char *) DtDtsDataToDataType(orig_name, NULL, 0, NULL,
-                                                 NULL, NULL, NULL);
+        file_type = (char *) DtDtsDataToDataType(orig_name, nullptr, 0, nullptr,
+                                                 nullptr, nullptr, nullptr);
       else
       {
          if (call_struct->menu_widget == *renameBtn)
@@ -1861,8 +1861,8 @@ FileTypePreview(
             if ((link_path = _DtFollowLink(orig_name)) &&
                 (strcmp(link_path, orig_name) == 0))
             {
-               file_type = (char *) DtDtsDataToDataType(new_link_path, NULL, 0,
-                                                   NULL, NULL, NULL, NULL);
+               file_type = (char *) DtDtsDataToDataType(new_link_path, nullptr, 0,
+                                                   nullptr, nullptr, nullptr, nullptr);
             }
             else
             {
@@ -1886,9 +1886,9 @@ FileTypePreview(
            memset( &fileStat, 0, sizeof( struct stat ) );
            fileStat.st_mode = creationMask | S_IFREG;
 
-           file_type = (char *) DtDtsDataToDataType( link_path, NULL, 0,
+           file_type = (char *) DtDtsDataToDataType( link_path, nullptr, 0,
                                                      &fileStat,
-                                                     NULL, NULL, NULL);
+                                                     nullptr, nullptr, nullptr);
            umask( creationMask );
          }
       }
@@ -1898,7 +1898,7 @@ FileTypePreview(
 
 
    n = 0;
-   string = NULL;
+   string = nullptr;
 
    if (file_type)
    {
@@ -1914,7 +1914,7 @@ FileTypePreview(
           tmpStr = GETMESSAGE(10, 41, "The correct icon for this datatype is already shown.");
           msg = XtNewString(tmpStr);
 
-          _DtMessage(XtParent(w), title, msg, NULL, HelpRequestCB);
+          _DtMessage(XtParent(w), title, msg, nullptr, HelpRequestCB);
           XtFree(title);
           XtFree(msg);
 
@@ -1930,7 +1930,7 @@ FileTypePreview(
       if (DtActionExists(file_type))
       {
          char *str = (char *)DtActionLabel(file_type);
-         if(str != NULL)
+         if(str != nullptr)
              string = XmStringCreateLocalized(str);
          else
              string = XmStringCreateLocalized(file_type);
@@ -1940,7 +1940,7 @@ FileTypePreview(
       {
          char *str = (char *)DtDtsDataTypeToAttributeValue(file_type,
                                                            FM_TYPE_LABEL,
-                                                           NULL);
+                                                           nullptr);
          if (str)
          {
             string = XmStringCreateLocalized(str);
@@ -1977,11 +1977,11 @@ FileTypePreview(
       if (call_struct->previous_file_type)
       {
         XtFree((char *)call_struct->previous_file_type );
-        call_struct->previous_file_type = NULL;
+        call_struct->previous_file_type = nullptr;
       }
    }
 
-   if (string != NULL)
+   if (string != nullptr)
       XmStringFree (string);
 
    XtFree ((char *) new_name);
@@ -2008,7 +2008,7 @@ ShowMakeFileDialog(
    DialogData * dialog_data;
    FileMgrData * file_mgr_data;
 
-   Widget shell = NULL;
+   Widget shell = nullptr;
    Widget form;
    Widget new_name;
    Widget new_text;
@@ -2023,8 +2023,8 @@ ShowMakeFileDialog(
    int flag=FLAG_RESET;
 
    DialogCallbackStruct * call_struct;
-   char * tmpStr = NULL, *tempStr = NULL;
-   XmString label_string = NULL;
+   char * tmpStr = nullptr, *tempStr = nullptr;
+   XmString label_string = nullptr;
 
    Arg args[20];
    int n;
@@ -2065,7 +2065,7 @@ ShowMakeFileDialog(
 
       file_mgr_rec->menuStates &= ~CREATE_DIR;
 
-      if(file_mgr_data->title != NULL &&
+      if(file_mgr_data->title != nullptr &&
                strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
       {
          tmpStr = GETMESSAGE(10, 14, "New Folder");
@@ -2096,7 +2096,7 @@ ShowMakeFileDialog(
 
       file_mgr_rec->menuStates &= ~CREATE_FILE;
 
-      if(file_mgr_data->title != NULL &&
+      if(file_mgr_data->title != nullptr &&
                strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
       {
          tmpStr = (GETMESSAGE(10,26, "New File"));
@@ -2225,15 +2225,15 @@ ShowMakeFileDialog(
 
    call_struct->dialog_widget = form;
    call_struct->menu_widget = w;
-   call_struct->dir_text_widget = NULL;
+   call_struct->dir_text_widget = nullptr;
    call_struct->file_text_widget = new_text;
    call_struct->file_type_widget = file_type;
    call_struct->file_mgr_rec = file_mgr_rec;
    call_struct->host_name = XtNewString (file_mgr_data->host);
    call_struct->directory_name =  XtNewString(file_mgr_data->current_directory);
-   call_struct->file_name = NULL;
-   call_struct->original_logical_type = NULL;
-   call_struct->previous_file_type = NULL;
+   call_struct->file_name = nullptr;
+   call_struct->original_logical_type = nullptr;
+   call_struct->previous_file_type = nullptr;
    call_struct->file_mgr_data = file_mgr_data;
 
 
@@ -2340,7 +2340,7 @@ ShowMakeFileDialog(
    XtAddCallback (preview, XmNactivateCallback, FileTypePreviewCB,
                   (XtPointer) call_struct);
 
-   FileTypePreviewCB (preview, (XtPointer) call_struct, NULL);
+   FileTypePreviewCB (preview, (XtPointer) call_struct, nullptr);
 
    n = 0;
    XtSetArg (args[n], XmNlabelString, helpXmString);            n++;
@@ -2458,19 +2458,19 @@ MakeFileOk(
 
    if(RecheckFlag(call_struct->dialog_widget,w))
      return;
-   else if(RecheckFlag(NULL,call_struct->Cancel))
+   else if(RecheckFlag(nullptr,call_struct->Cancel))
      return;
 
    /* see if this is a create file or directory */
    if (call_struct->menu_widget == *create_directoryBtn)
    {
-      call_struct->file_mgr_rec->create_directoryBtn_child = NULL;
+      call_struct->file_mgr_rec->create_directoryBtn_child = nullptr;
       type = DtDIRECTORY;
       btnMask = CREATE_DIR;
    }
    else
    {
-      call_struct->file_mgr_rec->create_dataBtn_child = NULL;
+      call_struct->file_mgr_rec->create_dataBtn_child = nullptr;
       type = DtDATA;
       btnMask = CREATE_FILE;
    }
@@ -2484,7 +2484,7 @@ MakeFileOk(
       new_name = _DtChangeTildeToHome (new_name);
 
    length = strlen (new_name);
-   msg = NULL;
+   msg = nullptr;
    if (length == 0)
    {
       msg = XtNewString(GETMESSAGE(10, 22,
@@ -2508,20 +2508,20 @@ MakeFileOk(
      }
    }
 #ifdef _CHECK_FOR_SPACES
-   else if (DtStrchr (new_name, ' ') != NULL ||
-            DtStrchr (new_name, '\t') != NULL)
+   else if (DtStrchr (new_name, ' ') != nullptr ||
+            DtStrchr (new_name, '\t') != nullptr)
    {
       msg = XtNewString(GetSharedMessage(NO_SPACES_ALLOWED_ERROR));
    }
 #endif
 
-   if (msg != NULL)
+   if (msg != nullptr)
    {
       if (type == DtDIRECTORY)
          title = XtNewString(GETMESSAGE(10, 20, "Create Folder Error"));
       else
          title = XtNewString(GETMESSAGE(10, 21, "Create File Error"));
-      _DtMessage (XtParent (w), title, msg, NULL, HelpRequestCB);
+      _DtMessage (XtParent (w), title, msg, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree(msg);
       XtFree(new_name);
@@ -2594,7 +2594,7 @@ MakeFileDone(
          title = XtNewString(GETMESSAGE(10, 21, "Create File Error"));
          msg = XtNewString(GETMESSAGE(10, 24, "Invalid file name."));
       }
-      _DtMessage (XtParent(data->w), title, msg, NULL, HelpRequestCB);
+      _DtMessage (XtParent(data->w), title, msg, nullptr, HelpRequestCB);
       ResetFlag(call_struct->dialog_widget,call_struct->Ok);
       ResetFlag(call_struct->dialog_widget,call_struct->Cancel);
       XtFree(title);
@@ -2651,7 +2651,7 @@ MakeFileDone(
             break;
       }
 
-      file_view_data = NULL;
+      file_view_data = nullptr;
       for (i = 0; i < directory_set->file_count; i++)
       {
          if (strcmp(directory_set->order_list[i]->file_data->file_name,
@@ -2662,9 +2662,9 @@ MakeFileDone(
          }
       }
 
-      if (file_view_data != NULL)
+      if (file_view_data != nullptr)
       {
-         if (file_view_data->widget != NULL)
+         if (file_view_data->widget != nullptr)
          {
             DeselectAllFiles(file_mgr_data);
             SelectFile (file_mgr_data, file_view_data);
@@ -2709,13 +2709,13 @@ MakeFileApply(
    /* see if this is a create file or directory */
    if (call_struct->menu_widget == *create_directoryBtn)
    {
-      call_struct->file_mgr_rec->create_directoryBtn_child = NULL;
+      call_struct->file_mgr_rec->create_directoryBtn_child = nullptr;
       type = DtDIRECTORY;
       btnMask = CREATE_DIR;
    }
    else
    {
-      call_struct->file_mgr_rec->create_dataBtn_child = NULL;
+      call_struct->file_mgr_rec->create_dataBtn_child = nullptr;
       type = DtDATA;
       btnMask = CREATE_FILE;
    }
@@ -2729,7 +2729,7 @@ MakeFileApply(
       new_name = _DtChangeTildeToHome (new_name);
 
    length = strlen (new_name);
-   msg = NULL;
+   msg = nullptr;
    if (length == 0)
    {
       msg = XtNewString(GETMESSAGE(10, 22,
@@ -2753,20 +2753,20 @@ MakeFileApply(
      }
    }
 #ifdef _CHECK_FOR_SPACES
-   else if (DtStrchr (new_name, ' ') != NULL ||
-            DtStrchr (new_name, '\t') != NULL)
+   else if (DtStrchr (new_name, ' ') != nullptr ||
+            DtStrchr (new_name, '\t') != nullptr)
    {
       msg = XtNewString(GetSharedMessage(NO_SPACES_ALLOWED_ERROR));
    }
 #endif
 
-   if (msg != NULL)
+   if (msg != nullptr)
    {
       if (type == DtDIRECTORY)
          title = XtNewString(GETMESSAGE(10, 20, "Create Folder Error"));
       else
          title = XtNewString(GETMESSAGE(10, 21, "Create File Error"));
-      _DtMessage (XtParent (w), title, msg, NULL, HelpRequestCB);
+      _DtMessage (XtParent (w), title, msg, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree(msg);
       XtFree(new_name);
@@ -2838,7 +2838,7 @@ ApplyFileDone(
          title = XtNewString(GETMESSAGE(10, 21, "Create File Error"));
          msg = XtNewString(GETMESSAGE(10, 24, "Invalid file name."));
       }
-      _DtMessage (XtParent(data->w), title, msg, NULL, HelpRequestCB);
+      _DtMessage (XtParent(data->w), title, msg, nullptr, HelpRequestCB);
       XtFree(title);
       XtFree(msg);
    }
@@ -2874,7 +2874,7 @@ DialogCancel(
    FileMgrData *file_mgr_data;
    unsigned int btnMask = 0;
 
-   if(RecheckFlag(NULL,w))
+   if(RecheckFlag(nullptr,w))
      return;
 
    dialog_data = _DtGetInstanceData ((XtPointer)call_struct->file_mgr_rec);
@@ -2902,25 +2902,25 @@ DialogCancel(
    if (call_struct->menu_widget == *create_directoryBtn)
    {
      btnMask = CREATE_DIR;
-     call_struct->file_mgr_rec->create_directoryBtn_child = NULL;
+     call_struct->file_mgr_rec->create_directoryBtn_child = nullptr;
    }
    else if (call_struct->menu_widget == *create_dataBtn)
    {
      btnMask = CREATE_FILE;
-     call_struct->file_mgr_rec->create_dataBtn_child = NULL;
+     call_struct->file_mgr_rec->create_dataBtn_child = nullptr;
    }
 
    call_struct->file_mgr_rec->menuStates |= btnMask;
 
    /* Clean up
    */
-   if (call_struct->host_name != NULL)
+   if (call_struct->host_name != nullptr)
       XtFree ((char *) call_struct->host_name);
 
-   if (call_struct->directory_name != NULL)
+   if (call_struct->directory_name != nullptr)
       XtFree ((char *) call_struct->directory_name);
 
-   if (call_struct->file_name != NULL)
+   if (call_struct->file_name != nullptr)
       XtFree ((char *) call_struct->file_name);
 
    if (call_struct->previous_file_type)
@@ -2946,7 +2946,7 @@ RecheckFlag(
    flag = FLAG_SET;
    XtSetArg (args[0], XmNuserData, flag);
    XtSetValues(w,args,1);
-   if(parent != NULL)
+   if(parent != nullptr)
     _DtTurnOnHourGlass(parent);
    return False;
 }
@@ -2967,6 +2967,6 @@ ResetFlag(
    flag = FLAG_RESET;
    XtSetArg (args[0], XmNuserData, flag);
    XtSetValues(w,args,1);
-   if(parent != NULL)
+   if(parent != nullptr)
     _DtTurnOffHourGlass(parent);
 }

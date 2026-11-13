@@ -128,14 +128,14 @@ PrintOutputCreate(Widget shell)
 			  xmFormWidgetClass,
 			  pOutput->pShell,
 			  XmNresizePolicy, XmRESIZE_NONE,
-			  NULL);
+			  nullptr);
     pOutput->page = w;
 		 
     w = XtVaCreateWidget("InnerPage",
 			  xmFormWidgetClass,
 			  pOutput->page,
 			  XmNresizePolicy, XmRESIZE_NONE,
-			  NULL);
+			  nullptr);
     pOutput->innerPage = w;
 		 
     w = XtVaCreateManagedWidget("HeaderLeft",
@@ -144,7 +144,7 @@ PrintOutputCreate(Widget shell)
 				  XmNalignment, XmALIGNMENT_BEGINNING,
 				  XmNleftAttachment, XmATTACH_FORM,
 				  XmNtopAttachment, XmATTACH_FORM,
-				  NULL);
+				  nullptr);
     pOutput->headerLeft = w;
 
     w = XtVaCreateManagedWidget("HeaderRight",
@@ -155,7 +155,7 @@ PrintOutputCreate(Widget shell)
 				  XmNleftAttachment, XmATTACH_WIDGET,
 				  XmNleftWidget, pOutput->headerLeft,
 				  XmNtopAttachment, XmATTACH_FORM,
-				  NULL);
+				  nullptr);
     pOutput->headerRight = w;
 		 
     w = XtVaCreateManagedWidget("Editor",
@@ -174,7 +174,7 @@ PrintOutputCreate(Widget shell)
 				  XmNrightAttachment, XmATTACH_FORM,
 				  XmNtopAttachment, XmATTACH_WIDGET,
 				  XmNtopWidget, pOutput->headerLeft,
-				  NULL);
+				  nullptr);
     pOutput->editor = w;
 		 
     w = XtVaCreateManagedWidget("FooterLeft",
@@ -183,7 +183,7 @@ PrintOutputCreate(Widget shell)
 				  XmNalignment, XmALIGNMENT_BEGINNING,
 				  XmNleftAttachment, XmATTACH_FORM,
 				  XmNbottomAttachment, XmATTACH_FORM,
-				  NULL);
+				  nullptr);
     pOutput->footerLeft = w;
 
     w = XtVaCreateManagedWidget("FooterRight",
@@ -194,14 +194,14 @@ PrintOutputCreate(Widget shell)
 				  XmNleftWidget, pOutput->footerLeft,
 				  XmNrightAttachment, XmATTACH_FORM,
 				  XmNbottomAttachment, XmATTACH_FORM,
-				  NULL);
+				  nullptr);
     pOutput->footerRight = w;
 
     XtVaSetValues(
 		pOutput->editor,
 		XmNbottomAttachment, XmATTACH_WIDGET,
 		XmNbottomWidget, pOutput->footerLeft,
-		NULL);
+		nullptr);
 
     XtManageChild(pOutput->innerPage);
     XtManageChild(pOutput->page);
@@ -225,7 +225,7 @@ PrintOutputCreate(Widget shell)
 void
 PrintOutputDestroy(PrintOutput *pOutput)
 {
-    if (pOutput == NULL) return;
+    if (pOutput == nullptr) return;
     XtDestroyWidget(pOutput->page);
     XtFree((char*) pOutput);
 }
@@ -242,7 +242,7 @@ PrintOutputHideFooters(PrintOutput *pOutput)
 {
     XtUnmanageChild(pOutput->footerLeft);
     XtUnmanageChild(pOutput->footerRight);
-    XtVaSetValues(pOutput->editor, XmNbottomAttachment, XmATTACH_FORM, NULL);
+    XtVaSetValues(pOutput->editor, XmNbottomAttachment, XmATTACH_FORM, nullptr);
 }
 
 void
@@ -254,7 +254,7 @@ PrintOutputShowFooters(PrintOutput *pOutput)
                 pOutput->editor,
                 XmNbottomAttachment, XmATTACH_WIDGET,
                 XmNbottomWidget, pOutput->footerLeft,
-                NULL);
+                nullptr);
 }
 
 void
@@ -262,7 +262,7 @@ PrintOutputHideHeaders(PrintOutput *pOutput)
 {
     XtUnmanageChild(pOutput->headerLeft);
     XtUnmanageChild(pOutput->headerRight);
-    XtVaSetValues(pOutput->editor, XmNtopAttachment, XmATTACH_FORM, NULL);
+    XtVaSetValues(pOutput->editor, XmNtopAttachment, XmATTACH_FORM, nullptr);
 }
 
 void
@@ -274,7 +274,7 @@ PrintOutputShowHeaders(PrintOutput *pOutput)
                 pOutput->editor,
                 XmNtopAttachment, XmATTACH_WIDGET,
                 XmNtopWidget, pOutput->headerLeft,
-                NULL);
+                nullptr);
 }
 
 /************************************************************************
@@ -291,7 +291,7 @@ PrintOutputSetHdrFtrString(
     Widget	w;
     XmString	xms;
 
-    if (contents == (char *) NULL)
+    if (contents == (char *) nullptr)
       return;
 
     switch (which)
@@ -313,7 +313,7 @@ PrintOutputSetHdrFtrString(
     }
 
     xms = XmStringCreateLocalized(contents);
-    XtVaSetValues(w, XmNlabelString, xms, NULL);
+    XtVaSetValues(w, XmNlabelString, xms, nullptr);
     XmStringFree(xms);
 }
 
@@ -335,28 +335,28 @@ PrintOutputSetHdrFtrStrings(
     if (hdrLeft)
     {
         xms = XmStringCreateLocalized(hdrLeft);
-        XtVaSetValues(pOutput->headerLeft, XmNlabelString, xms, NULL);
+        XtVaSetValues(pOutput->headerLeft, XmNlabelString, xms, nullptr);
         XmStringFree(xms);
     }
 
     if (hdrRight)
     {
         xms = XmStringCreateLocalized(hdrRight);
-        XtVaSetValues(pOutput->headerRight, XmNlabelString, xms, NULL);
+        XtVaSetValues(pOutput->headerRight, XmNlabelString, xms, nullptr);
         XmStringFree(xms);
     }
 
     if (ftrLeft)
     {
         xms = XmStringCreateLocalized(ftrLeft);
-        XtVaSetValues(pOutput->footerLeft, XmNlabelString, xms, NULL);
+        XtVaSetValues(pOutput->footerLeft, XmNlabelString, xms, nullptr);
         XmStringFree(xms);
     }
 
     if (ftrRight)
     {
         xms = XmStringCreateLocalized(ftrRight);
-        XtVaSetValues(pOutput->footerRight, XmNlabelString, xms, NULL);
+        XtVaSetValues(pOutput->footerRight, XmNlabelString, xms, nullptr);
         XmStringFree(xms);
     }
 }
@@ -548,9 +548,9 @@ void
 PrintOutputSetWordWrap(PrintOutput *pOutput, Boolean onoff)
 {
 #ifdef USE_DTEDITOR
-    XtVaSetValues(pOutput->editor, DtNwordWrap, onoff, NULL);
+    XtVaSetValues(pOutput->editor, DtNwordWrap, onoff, nullptr);
 #else
-    XtVaSetValues(pOutput->editor, XmNwordWrap, onoff, NULL);
+    XtVaSetValues(pOutput->editor, XmNwordWrap, onoff, nullptr);
 #endif
 }
 
@@ -584,7 +584,7 @@ PrintOutputGetNumLines(PrintOutput *pOutput)
     DtEditorGoToLine(pOutput->editor, saveTop);
     pOutput->currentLine = saveTop;
 #else
-    XtVaGetValues(pOutput->editor, XmNtotalLines, &p, NULL);
+    XtVaGetValues(pOutput->editor, XmNtotalLines, &p, nullptr);
     total = (int)p;
 #endif
     return(total);
@@ -651,7 +651,7 @@ void
 PrintOutputFirstPage(PrintOutput *pOutput)
 {
 #ifdef USE_DTEDITOR
-    XtVaSetValues(pOutput->editor, DtNtopCharacter, (XmTextPosition) 0, NULL);
+    XtVaSetValues(pOutput->editor, DtNtopCharacter, (XmTextPosition) 0, nullptr);
     pOutput->currentLine = 1;
 #else
     XmTextSetTopCharacter(pOutput->editor, (XmTextPosition) 0);
@@ -664,14 +664,14 @@ PrintOutputFirstPage(PrintOutput *pOutput)
 DtEditorErrorCode
 PrintOutputLoadFile( PrintOutput *pOutput, char *file)
 {
-    char		*contents = NULL;
+    char		*contents = nullptr;
     DtEditorErrorCode	errorCode;
 
 #ifdef USE_DTEDITOR
     errorCode = DtEditorSetContentsFromFile(pOutput->editor, file);
 #else
     errorCode = _poGetFileContents(&contents, file);
-    if (contents != NULL)
+    if (contents != nullptr)
     {
         XmTextSetString(pOutput->editor, contents);
         free(contents);
@@ -704,7 +704,7 @@ _poDoGetLinesPerPage(PrintOutput *pOutput)
 {
     XtArgVal   lpp;
 
-    XtVaGetValues(pOutput->editor, XmNrows, &lpp, NULL);
+    XtVaGetValues(pOutput->editor, XmNrows, &lpp, nullptr);
     return ((int) lpp);
 }
 
@@ -726,15 +726,15 @@ _poSetInnerPageDimensions(
     XtVaGetValues(pOutput->page,
 		  XmNheight, &outer_height0,
 		  XmNwidth, &outer_width0,
-		  NULL);
+		  nullptr);
 
     XtVaGetValues(pOutput->headerLeft,
 		  XmNheight, &header_height0,
-		  NULL);
+		  nullptr);
 
     XtVaGetValues(pOutput->footerLeft,
 		  XmNheight, &footer_height0,
-		  NULL);
+		  nullptr);
 
     outer_height = (Dimension)outer_height0;
     outer_width = (Dimension)outer_width0;
@@ -754,7 +754,7 @@ _poSetInnerPageDimensions(
 			(inner_height - (header_height + footer_height)) :
 			inner_height;
     
-    XtVaSetValues(pOutput->editor, XmNheight, editor_height, NULL);
+    XtVaSetValues(pOutput->editor, XmNheight, editor_height, nullptr);
 
     XtVaSetValues(pOutput->innerPage,
 		XmNleftAttachment, XmATTACH_NONE,
@@ -763,7 +763,7 @@ _poSetInnerPageDimensions(
 		XmNy, inner_y,
 		XmNheight, inner_height,
 		XmNwidth, inner_width,
-		NULL);
+		nullptr);
 
     pOutput->linesPerPage = _poDoGetLinesPerPage(pOutput);
 }
@@ -777,7 +777,7 @@ _poGetTopPosition(PrintOutput *pOutput)
     XmTextPosition top = (XmTextPosition) 0;
 
 #ifdef USE_DTEDITOR
-    XtVaGetValues(pOutput->editor, DtNtopCharacter, &top, NULL);
+    XtVaGetValues(pOutput->editor, DtNtopCharacter, &top, nullptr);
 #else
     top = XmTextGetTopCharacter(pOutput->editor);
 #endif
@@ -791,9 +791,9 @@ _poGetFileContents(char **contents, char *file)
     struct stat		statbuf;
     char		*buf;
     int			nbytes;
-    FILE		*fp = NULL;
+    FILE		*fp = nullptr;
 
-    if (file == NULL || *file == '\0') return
+    if (file == nullptr || *file == '\0') return
 
     /*
      * Open the file for reading.
@@ -801,7 +801,7 @@ _poGetFileContents(char **contents, char *file)
     error = _poEditorValidateFileAccess(file, READ_ACCESS);
     if (error != DtEDITOR_NO_ERRORS) return error;
 
-    if( (fp = fopen(file, "r")) == NULL )
+    if( (fp = fopen(file, "r")) == nullptr )
       return DtEDITOR_UNREADABLE_FILE;
 
     if(stat(file, &statbuf) == -1) {
@@ -817,7 +817,7 @@ _poGetFileContents(char **contents, char *file)
      * copy of the data before actually putting it into the widget.
      */
     buf = (char *) malloc(nbytes + 1);
-    if (buf == NULL) {
+    if (buf == nullptr) {
 	  fclose(fp);
       return DtEDITOR_INSUFFICIENT_MEMORY;
     }

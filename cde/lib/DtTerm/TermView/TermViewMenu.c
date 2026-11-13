@@ -78,14 +78,14 @@ GetUserResourcePath(void)
     size_t len;
     char *path;
 
-    if (home == NULL)
+    if (home == nullptr)
         home = "";
 
     len = strlen(home) + 1 + strlen(DtPERSONAL_CONFIG_DIRECTORY) + 1 +
           strlen("dttermrc") + 1;
     path = XtMalloc((unsigned)len);
-    if (path == NULL)
-        return NULL;
+    if (path == nullptr)
+        return nullptr;
 
     snprintf(path, len, "%s/%s/%s", home, DtPERSONAL_CONFIG_DIRECTORY,
              "dttermrc");
@@ -99,17 +99,17 @@ SaveUserFontListIndexResource(DtTermViewWidget tw)
     char *path;
     char value[16];
 
-    if (tw == NULL)
+    if (tw == nullptr)
         return;
 
     _DtCreateDtDirs(XtDisplay((Widget)tw));
 
     path = GetUserResourcePath();
-    if (path == NULL)
+    if (path == nullptr)
         return;
 
     db = XrmGetFileDatabase(path);
-    if (db == NULL)
+    if (db == nullptr)
         db = XrmGetStringDatabase("");
 
     snprintf(value, sizeof(value), "%d",
@@ -284,7 +284,7 @@ _DtTermViewCreatePushButton(Widget parent, char *label, KeySym mnemonic,
 	XtCallbackProc callback, XtPointer clientData)
 {
     return(createMenuWidget(xmPushButtonGadgetClass, XmNactivateCallback,
-	parent, NULL, label, mnemonic, accelerator, acceleratorText,
+	parent, nullptr, label, mnemonic, accelerator, acceleratorText,
 	callback, clientData));
 }
 
@@ -294,22 +294,22 @@ _DtTermViewCreateToggleButton(Widget parent, char *label, KeySym mnemonic,
 	XtCallbackProc callback, XtPointer clientData)
 {
     return(createMenuWidget(xmToggleButtonGadgetClass, XmNvalueChangedCallback,
-	parent, NULL, label, mnemonic, accelerator, acceleratorText,
+	parent, nullptr, label, mnemonic, accelerator, acceleratorText,
 	callback, clientData));
 }
 
 Widget
 _DtTermViewCreateLabel(Widget parent, char *label)
 {
-    return(createMenuWidget(xmLabelGadgetClass, NULL,
-	parent, NULL, label, 0, NULL, NULL, NULL, NULL));
+    return(createMenuWidget(xmLabelGadgetClass, nullptr,
+	parent, nullptr, label, 0, nullptr, nullptr, nullptr, nullptr));
 }
 
 Widget
 _DtTermViewCreateSeparator(Widget parent, char *label)
 {
-    return(createMenuWidget(xmSeparatorGadgetClass, NULL,
-	parent, NULL, label, 0, NULL, NULL, NULL, NULL));
+    return(createMenuWidget(xmSeparatorGadgetClass, nullptr,
+	parent, nullptr, label, 0, nullptr, nullptr, nullptr, nullptr));
 }
 
 static Widget
@@ -400,15 +400,15 @@ createSizeMenu
 	    *c1++ = *c2;
 	    ks = XK_A + *c2 - 'A';
 	} else {
-	    ks = NULL;
+	    ks = nullptr;
 	}
 #endif
 #ifdef	WINDOW_SIZE_TOGGLES
 	windowSizeToggles[i1] = _DtTermViewCreateToggleButton(submenu, buffer,
-		0, NULL, NULL, sizeChangeCallback, (XtPointer) i1);
+		0, nullptr, nullptr, sizeChangeCallback, (XtPointer) i1);
 #else	/* WINDOW_SIZE_TOGGLES */
 	button = _DtTermViewCreatePushButton(submenu, buffer,
-		0, NULL, NULL, sizeChangeCallback, (XtPointer) i1);
+		0, nullptr, nullptr, sizeChangeCallback, (XtPointer) i1);
 #endif	/* WINDOW_SIZE_TOGGLES */
     }
 
@@ -424,22 +424,22 @@ createSizeMenu
 	*c1++ = *c2;
 	ks = XK_A + *c2 - 'A';
     } else {
-	ks = NULL;
+	ks = nullptr;
     }
 #endif 
 #ifdef	WINDOW_SIZE_TOGGLES
     windowSizeToggles[i1] = _DtTermViewCreateToggleButton(submenu, buffer,
-	    0, NULL, NULL, defaultSizeCallback, NULL);
+	    0, nullptr, nullptr, defaultSizeCallback, nullptr);
 #else	/* WINDOW_SIZE_TOGGLES */
     button = _DtTermViewCreatePushButton(submenu, buffer,
-	    0, NULL, NULL, defaultSizeCallback, NULL);
+	    0, nullptr, nullptr, defaultSizeCallback, nullptr);
 #endif	/* WINDOW_SIZE_TOGGLES */
 
     ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,3, "W"));
     (void) _DtTermViewCreateCascadeButton(menu,
 	    submenu, (GETMESSAGE(NL_SETN_ViewMenu,2, "Window Size")), 
 	              ks, 
-		      NULL, NULL, NULL, NULL);
+		      nullptr, nullptr, nullptr, nullptr);
 }
 
 extern char _DtTermViewMenuDefaultFonts[];
@@ -612,24 +612,24 @@ createFontMenu
 	    *c1++ = *c2;
 	    ks = XK_A + *c2 - 'A';
 	} else {
-	    ks = NULL;
+	    ks = nullptr;
 	}
 #endif 
 	fontSizeToggles[i1] = _DtTermViewCreateToggleButton(submenu,
 		fontArray[i1].labelName,
-		0, NULL, NULL, fontChangeCallback, (XtPointer) i1);
+		0, nullptr, nullptr, fontChangeCallback, (XtPointer) i1);
     }
 
     snprintf(buffer, sizeof(buffer), "%s", (GETMESSAGE(NL_SETN_ViewMenu,9, "Default")));
     fontSizeToggles[i1] = _DtTermViewCreateToggleButton(submenu, buffer,
-	    0, NULL, NULL, defaultFontCallback, NULL);
+	    0, nullptr, nullptr, defaultFontCallback, nullptr);
     fontSizeTogglesDefault = i1;
 
     ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,11, "F"));
     (void) _DtTermViewCreateCascadeButton(menu, submenu,
 	    (GETMESSAGE(NL_SETN_ViewMenu,10, "Font Size")), 
 	    ks, 
-	    NULL, NULL, NULL, NULL);
+	    nullptr, nullptr, nullptr, nullptr);
 }
 
 #define	numPulldowns	5
@@ -692,19 +692,19 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	newButton = _DtTermViewCreatePushButton(pulldown[pc], 
 	        (GETMESSAGE(NL_SETN_ViewMenu,12, "New")),
 		ks,
-		NULL, NULL, cloneCallback, NULL);
+		nullptr, nullptr, cloneCallback, nullptr);
 #ifdef	NOTDEF
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,15, "P"));
 	button = _DtTermViewCreatePushButton(pulldown[pc], 
 	        (GETMESSAGE(NL_SETN_ViewMenu,14, "Print")),
 		ks,
-		NULL, NULL, NULL, NULL);
+		nullptr, nullptr, nullptr, nullptr);
 	(void) XtSetSensitive(button, False);
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,17, "r"));
 	button = _DtTermViewCreatePushButton(pulldown[pc], 
 	        (GETMESSAGE(NL_SETN_ViewMenu,16, "Print...")),
 		ks,
-		NULL, NULL, NULL, NULL);
+		nullptr, nullptr, nullptr, nullptr);
 	(void) XtSetSensitive(button, False);
 #endif	/* NOTDEF */
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,19, "C"));
@@ -715,7 +715,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 		ks,
 		accelerator,
 		acceleratorText,
-		exitCallback, NULL);
+		exitCallback, nullptr);
 	(void) XtFree(accelerator);
 	(void) XtFree(acceleratorText);
     }
@@ -725,11 +725,11 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	(void) _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	          (GETMESSAGE(NL_SETN_ViewMenu,20, "Window")),
 		  ks,
-		  NULL, NULL, NULL, NULL);
+		  nullptr, nullptr, nullptr, nullptr);
 #else	/* PULLDOWN_ACCELERATORS */
 	(void) _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	        (GETMESSAGE(NL_SETN_ViewMenu,20, "Window")),
-		NoSymbol, NULL, NULL, NULL, NULL);
+		NoSymbol, nullptr, nullptr, nullptr, nullptr);
 #endif	/* PULLDOWN_ACCELERATORS */
 
     (void) pc++;
@@ -745,7 +745,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 		  ks,
 		  accelerator,
 		  acceleratorText,
-                  copyClipboardCallback, NULL);
+                  copyClipboardCallback, nullptr);
 	(void) XtFree(accelerator);
 	(void) XtFree(acceleratorText);
 
@@ -758,7 +758,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 		  ks,
 		  accelerator,
 		  acceleratorText,
-                  pasteClipboardCallback, NULL);
+                  pasteClipboardCallback, nullptr);
 	(void) XtFree(accelerator);
 	(void) XtFree(acceleratorText);
     }
@@ -768,11 +768,11 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	(void) _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	          (GETMESSAGE(NL_SETN_ViewMenu,30, "Edit")),
 		  ks,
-		  NULL, NULL, NULL, NULL);
+		  nullptr, nullptr, nullptr, nullptr);
 #else	/* PULLDOWN_ACCELERATORS */
 	(void) _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	        (GETMESSAGE(NL_SETN_ViewMenu,30, "Edit")),
-		NoSymbol, NULL, NULL, NULL, NULL);
+		NoSymbol, nullptr, nullptr, nullptr, nullptr);
 #endif	/* PULLDOWN_ACCELERATORS */
 
     (void) pc++;
@@ -784,25 +784,25 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	menuBarToggle = _DtTermViewCreateToggleButton(pulldown[pc], 
 	                (GETMESSAGE(NL_SETN_ViewMenu,32, "Menu Bar")), 
 		         ks,
-			 NULL, NULL, menuBarToggleCallback, NULL);
+			 nullptr, nullptr, menuBarToggleCallback, nullptr);
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,35, "S"));
 	scrollBarToggle = _DtTermViewCreateToggleButton(pulldown[pc], 
 	                 (GETMESSAGE(NL_SETN_ViewMenu,34, "Scroll Bar")),
 		          ks,
-			  NULL, NULL, scrollBarToggleCallback, NULL);
+			  nullptr, nullptr, scrollBarToggleCallback, nullptr);
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,37, "G"));
 	(void) _DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,36, "Global...")),
 		  ks,
-		  NULL, NULL, globalOptionsCallback, NULL);
+		  nullptr, nullptr, globalOptionsCallback, nullptr);
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,39, "T"));
 	(void) _DtTermViewCreatePushButton(pulldown[pc], 
 	          (GETMESSAGE(NL_SETN_ViewMenu,38, "Terminal...")),
 		  ks,
-		  NULL, NULL, terminalOptionsCallback, NULL);
+		  nullptr, nullptr, terminalOptionsCallback, nullptr);
 
 	(void) createSizeMenu(termView, pulldown[pc]);
 
@@ -815,19 +815,19 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	(void)_DtTermViewCreatePushButton(submenu, 
 	         (GETMESSAGE(NL_SETN_ViewMenu,40, "Soft Reset")),
 		 ks,
-		NULL, NULL, softResetCallback, NULL);
+		nullptr, nullptr, softResetCallback, nullptr);
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,43, "H"));
 	(void)_DtTermViewCreatePushButton(submenu, 
 	         (GETMESSAGE(NL_SETN_ViewMenu,42, "Hard Reset")),
 		  ks,
-		  NULL, NULL, hardResetCallback, NULL);
+		  nullptr, nullptr, hardResetCallback, nullptr);
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,45, "R"));
 	(void) _DtTermViewCreateCascadeButton(pulldown[pc], submenu, 
 	        (GETMESSAGE(NL_SETN_ViewMenu,44, "Reset")),
 		ks,
-		NULL, NULL, NULL, NULL);
+		nullptr, nullptr, nullptr, nullptr);
     }
     if (menuBar || (!menuBar && firstPopup))
 #ifdef	PULLDOWN_ACCELERATORS
@@ -835,11 +835,11 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	(void) _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	          (GETMESSAGE(NL_SETN_ViewMenu,46, "Options")),
 		   ks,
-		   NULL, NULL, NULL, NULL);
+		   nullptr, nullptr, nullptr, nullptr);
 #else	/* PULLDOWN_ACCELERATORS */
 	(void) _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	          (GETMESSAGE(NL_SETN_ViewMenu,46, "Options")),
-		NoSymbol, NULL, NULL, NULL, NULL);
+		NoSymbol, nullptr, nullptr, nullptr, nullptr);
 #endif	/* PULLDOWN_ACCELERATORS */
 
     (void) pc++;
@@ -852,7 +852,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	button = _DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,48, "Overview")),
 		 ks,
-		 NULL, NULL, helpIntroCallback, NULL);
+		 nullptr, nullptr, helpIntroCallback, nullptr);
 
 	button = _DtTermViewCreateSeparator(pulldown[pc], "Separator");
 
@@ -860,20 +860,20 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	button = _DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,50, "Tasks")),
 		 ks,
-		 NULL, NULL, helpTasksCallback, NULL);
+		 nullptr, nullptr, helpTasksCallback, nullptr);
 	(void) XtSetSensitive(button, False);
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,53,"R"));
 	button = _DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,52, "Reference")),
 		 ks,
-		 NULL, NULL, helpReferenceCallback, NULL) ;
+		 nullptr, nullptr, helpReferenceCallback, nullptr) ;
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,55,"O"));
 	button = _DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,54, "On Item")),
 		 ks,
-		 NULL, NULL, NULL, NULL);
+		 nullptr, nullptr, nullptr, nullptr);
 	(void) XtSetSensitive(button, False);
 
 	button = _DtTermViewCreateSeparator(pulldown[pc], "Separator");
@@ -882,7 +882,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	button = _DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,56, "Using Help")),
 		ks,
-		NULL, NULL, helpOnHelpCallback, NULL);
+		nullptr, nullptr, helpOnHelpCallback, nullptr);
 
 	button = _DtTermViewCreateSeparator(pulldown[pc], "Separator");
 
@@ -890,7 +890,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	button = _DtTermViewCreatePushButton(pulldown[pc], 
 	        (GETMESSAGE(NL_SETN_ViewMenu,82, "About Terminal")),
 		ks,
-		NULL, NULL, helpVersionCallback, NULL);
+		nullptr, nullptr, helpVersionCallback, nullptr);
     }
 
     if (menuBar || (!menuBar && firstPopup))
@@ -899,11 +899,11 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	cascade = _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,60, "Help")),
 		ks,
-		NULL, NULL, NULL, NULL);
+		nullptr, nullptr, nullptr, nullptr);
 #else	/* PULLDOWN_ACCELERATORS */
 	cascade = _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	        (GETMESSAGE(NL_SETN_ViewMenu,60, "Help")),
-		NoSymbol, NULL, NULL, NULL, NULL);
+		NoSymbol, nullptr, nullptr, nullptr, nullptr);
 #endif	/* PULLDOWN_ACCELERATORS */
 
 
@@ -912,7 +912,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	(void)_DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,64, "Overview")),
 		 ks,
-		 NULL, NULL, helpOverviewCallback, NULL);
+		 nullptr, nullptr, helpOverviewCallback, nullptr);
 
 	(void)_DtTermViewCreateSeparator(pulldown[pc], "Separator");
 
@@ -920,25 +920,25 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	(void)_DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,68, "Table Of Contents")),
 		 ks,
-		 NULL, NULL, helpTableOfContentsCallback, NULL);
+		 nullptr, nullptr, helpTableOfContentsCallback, nullptr);
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,71,"T"));
 	(void)_DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,70, "Tasks")),
 		 ks,
-		 NULL, NULL, helpTasksCallback, NULL);
+		 nullptr, nullptr, helpTasksCallback, nullptr);
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,73,"R"));
 	(void)_DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,72, "Reference")),
 		 ks,
-		 NULL, NULL, helpReferenceCallback, NULL) ;
+		 nullptr, nullptr, helpReferenceCallback, nullptr) ;
 
 	ks = XStringToKeysym(GETMESSAGE(NL_SETN_ViewMenu,75,"K"));
 	(void)_DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,74, "Keyboard")),
 		 ks,
-		 NULL, NULL, helpKeyboardCallback, NULL) ;
+		 nullptr, nullptr, helpKeyboardCallback, nullptr) ;
 
 	(void)_DtTermViewCreateSeparator(pulldown[pc], "Separator");
 
@@ -946,7 +946,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	(void)_DtTermViewCreatePushButton(pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,76, "Using Help")),
 		ks,
-		NULL, NULL, helpUsingHelpCallback, NULL);
+		nullptr, nullptr, helpUsingHelpCallback, nullptr);
 
 	(void)_DtTermViewCreateSeparator(pulldown[pc], "Separator");
 
@@ -954,7 +954,7 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	(void)_DtTermViewCreatePushButton(pulldown[pc], 
 	        (GETMESSAGE(NL_SETN_ViewMenu,83, "About Terminal")),
 		ks,
-		NULL, NULL, helpAboutDttermCallback, NULL);
+		nullptr, nullptr, helpAboutDttermCallback, nullptr);
     }
 
     if (menuBar || (!menuBar && firstPopup))
@@ -963,11 +963,11 @@ CreateMenu(Widget termView, Widget parent, Boolean menuBar,
 	cascade = _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	         (GETMESSAGE(NL_SETN_ViewMenu,80, "Help")),
 		ks,
-		NULL, NULL, NULL, NULL);
+		nullptr, nullptr, nullptr, nullptr);
 #else	/* PULLDOWN_ACCELERATORS */
 	cascade = _DtTermViewCreateCascadeButton(menu, pulldown[pc], 
 	        (GETMESSAGE(NL_SETN_ViewMenu,80, "Help")),
-		NoSymbol, NULL, NULL, NULL, NULL);
+		NoSymbol, nullptr, nullptr, nullptr, nullptr);
 #endif	/* PULLDOWN_ACCELERATORS */
 #endif	/* HPVUE */
     if (menuBar) {
@@ -1530,7 +1530,7 @@ fontChangeCallback(Widget w, XtPointer client_data, XtPointer call_data)
 	(void) XtSetValues((Widget) tw, al, ac);
     }
     tw->termview.currentFontToggleButtonIndex = i1;
-    if (call_data != NULL)
+    if (call_data != nullptr)
         SaveUserFontListIndexResource(tw);
     _DtTermProcessUnlock();
 }
@@ -1549,7 +1549,7 @@ defaultFontCallback(Widget w, XtPointer client_data, XtPointer call_data)
 
     if (tw->termview.userFontName)
 	    XtFree(tw->termview.userFontName);
-    tw->termview.userFontName = NULL;
+    tw->termview.userFontName = nullptr;
 
     if (tw->termview.fontList != tw->termview.defaultFontList) {
 	ac = 0;
@@ -1558,7 +1558,7 @@ defaultFontCallback(Widget w, XtPointer client_data, XtPointer call_data)
 	(void) XtSetValues((Widget) tw, al, ac);
     }
     tw->termview.currentFontToggleButtonIndex = fontSizeTogglesDefault;
-    if (call_data != NULL)
+    if (call_data != nullptr)
         SaveUserFontListIndexResource(tw);
 }
 /*ARGSUSED*/

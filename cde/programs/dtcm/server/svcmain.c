@@ -102,7 +102,7 @@ _GetGtime(char *timestr)
 {
 	int	hour, minute, len, i;
 
-	if (timestr == NULL)
+	if (timestr == nullptr)
 		goto error;
 
 	if ((len = strlen(timestr)) > 4)
@@ -286,7 +286,7 @@ init_dir(void)
 static void
 send_hup(void)
 {
-	FILE	*fp = NULL;
+	FILE	*fp = nullptr;
 	char	buf[BUFSIZ];
 	pid_t	pid, mypid = getpid();
 	extern FILE *popen(const char *, const char *);
@@ -294,11 +294,11 @@ send_hup(void)
 
 	sprintf(buf, "ps -e|grep rpc.cmsd|grep -v grep");
 
-	if ((fp = popen(buf, "r")) == NULL) {
+	if ((fp = popen(buf, "r")) == nullptr) {
 		if (debug)
 			fprintf(stderr, "rpc.cmsd: popen failed\n");
 	} else {
-		while (fgets(buf, sizeof(buf), fp) != NULL) {
+		while (fgets(buf, sizeof(buf), fp) != nullptr) {
 			if ((pid = atol(buf)) != mypid) {
 				if (kill(pid, SIGHUP))
 				    perror("rpc.cmsd: failed to send SIGHUP");
@@ -379,7 +379,7 @@ static void
 program(struct svc_req *rqstp, SVCXPRT *transp)
 {
         char *result;
-        char *argument = NULL;
+        char *argument = nullptr;
         program_handle ph = getph();
         struct rpcgen_table *proc;
 
@@ -406,7 +406,7 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
         /* assert - the program number, version and proc numbers are valid */
         proc = &(ph->prog[rqstp->rq_vers].vers[rqstp->rq_proc]);
         argument = (char*)calloc(proc->len_arg, sizeof(char));
-        if (argument == NULL && proc->len_arg != 0) {
+        if (argument == nullptr && proc->len_arg != 0) {
                 svcerr_systemerr(transp);
                 return;
         }
@@ -419,7 +419,7 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
         }
 
         result = (*proc->proc)(argument, rqstp);
-        if (result != NULL && !svc_sendreply(transp, proc->xdr_res, result)) {
+        if (result != nullptr && !svc_sendreply(transp, proc->xdr_res, result)) {
                 svcerr_systemerr(transp);
         }
 
@@ -490,11 +490,11 @@ main(int argc, char **argv)
 
 	pw = (struct passwd *)getpwnam("daemon");
 	gr = (struct group *)getgrnam("daemon");
-	if (pw != NULL) 
+	if (pw != nullptr) 
 		daemon_uid = pw->pw_uid;
 	else
 		daemon_uid = 1;
-	if (gr != NULL)
+	if (gr != nullptr)
 		daemon_gid = gr->gr_gid;
 	else 
 		daemon_gid = 1;
@@ -585,7 +585,7 @@ main(int argc, char **argv)
 		if (ph->prog[version].nproc == 0) continue;
 
 		if (standalone) {
-			rpcb_unset(ph->program_num, version, NULL);
+			rpcb_unset(ph->program_num, version, nullptr);
 			if (debug)
 				fprintf(stderr,
 					"rpc.cmsd: rpcb_unset for version %ld\n",
@@ -595,16 +595,16 @@ main(int argc, char **argv)
 		/* brought up by inetd, use fd 0 which must be a TLI fd */
 		if (udp_transp == (SVCXPRT *)-1) {
 			udp_transp = svc_tli_create(standalone ? RPC_ANYFD : 0,
-				nconf_udp, (struct t_bind*) NULL, 0, 0); 
+				nconf_udp, (struct t_bind*) nullptr, 0, 0); 
 
-			if (udp_transp == NULL) {
+			if (udp_transp == nullptr) {
 				t_error("rtable_main.c: svc_tli_create(udp)");
 				exit(2);
 			}
 		}
 
 		if (svc_reg(udp_transp, ph->program_num, version, program,
-				standalone ? nconf_udp : NULL) == 0) {
+				standalone ? nconf_udp : nullptr) == 0) {
 			t_error("rtable_main.c: svc_reg");
 			exit(3);
 		}
@@ -618,9 +618,9 @@ main(int argc, char **argv)
 
 		if (tcp_transp == (SVCXPRT *)-1) {
 			tcp_transp = svc_tli_create(RPC_ANYFD, nconf_tcp,
-					(struct t_bind *)NULL, 0, 0);
+					(struct t_bind *)nullptr, 0, 0);
 
-			if (tcp_transp == NULL) {
+			if (tcp_transp == nullptr) {
 				t_error("rtable_main.c: svc_til_create(tcp)");
 				exit(2);
 			}
@@ -654,7 +654,7 @@ main(int argc, char **argv)
 #else
 					,0,0);
 #endif
-			if (udp_transp == NULL) {
+			if (udp_transp == nullptr) {
 				(void)fprintf(stderr,
 				"rtable_main.c: cannot create udp service.\n");
 				exit(1);
@@ -674,7 +674,7 @@ main(int argc, char **argv)
 
 		if (tcp_transp == (SVCXPRT *)-1) {
 			tcp_transp = svctcp_create(RPC_ANYSOCK, 0, 0);
-			if (tcp_transp == NULL) {
+			if (tcp_transp == nullptr) {
 				(void)fprintf(stderr,
 				"rtable_main.c: cannot create tcp service.\n");
 				exit(1);

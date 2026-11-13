@@ -1130,7 +1130,7 @@ def main():
     wrapper = work / "sync-retry-ui.c"
     wrapper.write_text(HARNESS.replace("MAIN_SOURCE", json.dumps(str(source / "main.c"))))
     xft_cflags = shlex.split(subprocess.check_output(["pkg-config", "--cflags", "xft"], env=env, text=True))
-    command = [*shlex.split(os.environ.get("CC", "cc")), "-std=c11", "-O0", "-g", "-Wall", "-Wextra", "-Werror", *xft_cflags,
+    command = [*shlex.split(os.environ.get("CC", "cc")), "-std=gnu23", "-O0", "-g", "-Wall", "-Wextra", "-Werror", *xft_cflags,
                "-D_POSIX_C_SOURCE=200809L", "-D_DEFAULT_SOURCE=1", "-D_XOPEN_SOURCE=700",
                f"-I{args.fs_prefix}/include", f"-I{args.motif_prefix}/include", f"-I{source}", str(wrapper),
                str(source / "SyncJob.c"), str(source / "SyncProfiles.c"),

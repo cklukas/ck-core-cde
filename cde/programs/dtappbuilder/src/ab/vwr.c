@@ -81,18 +81,18 @@ vwr_create(
 
     v = (Viewer *) calloc(1, sizeof(Viewer));
 
-    v->obj_data = NULL;
+    v->obj_data = nullptr;
     v->methods = m;
-    v->ui_handle = NULL;
-    v->properties = NULL;
-    v->next = NULL;
-    v->previous = NULL;
+    v->ui_handle = nullptr;
+    v->properties = nullptr;
+    v->next = nullptr;
+    v->previous = nullptr;
 
     /*
      * v->tree == root
      * v->current_tree == 'current' subtree
      */
-    v->tree = v->current_tree = NULL;
+    v->tree = v->current_tree = nullptr;
 
     if (m)
     {
@@ -167,16 +167,16 @@ vwr_create_node(void)
 
     bnode = (VNode) malloc(sizeof(ViewerNode));
     
-    bnode->browser = NULL;
-    bnode->obj_data = NULL;
-    bnode->elm_methods = NULL;
-    bnode->elements = NULL;
+    bnode->browser = nullptr;
+    bnode->obj_data = nullptr;
+    bnode->elm_methods = nullptr;
+    bnode->elements = nullptr;
     bnode->num_elements = 0;
     bnode->boundbox_shown = TRUE;
     bnode->x = bnode->y = bnode->width = bnode->height = -1;
     bnode->state = 0;
-    bnode->next = NULL;
-    bnode->previous = NULL;
+    bnode->next = nullptr;
+    bnode->previous = nullptr;
 
     return (bnode);
 }
@@ -252,12 +252,12 @@ vwr_traverse_tree
 {
     ViewerMethods	*m;
     ViewerNode	*child,
-    			*rtn_node = NULL,
-    			*tmp_node = NULL;
+    			*rtn_node = nullptr,
+    			*tmp_node = nullptr;
     int			i, num_child;
 
     if (!tree)
-	return (NULL);
+	return (nullptr);
 
     m = BNODE_METHODS(tree);
 
@@ -324,11 +324,11 @@ vwr_locate_node
     int		y
 )
 {
-    VNode		selected_node = NULL;
+    VNode		selected_node = nullptr;
     ViewerMethods	*m;
 
     if (!b)
-	return(NULL);
+	return(nullptr);
 
     m = b->methods;
 
@@ -453,7 +453,7 @@ vwr_get_cond(
 {
     VMethods	m;
     VNode	child;
-    VNode	*cur_array = NULL,
+    VNode	*cur_array = nullptr,
     		*child_array;
     int		child_num,
     		cur_num = 0;
@@ -490,7 +490,7 @@ vwr_get_cond(
 	 * Reset child count, array
 	 */
 	child_num = 0;
-	child_array = NULL;
+	child_array = nullptr;
 
 	/*
 	 * Get nodes from current child subtree satisfying 

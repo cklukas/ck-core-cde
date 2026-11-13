@@ -65,8 +65,8 @@ Bool break_locks = False;		/* for error recovery */
  * local data
  */
 
-static char *authfilename = NULL;	/* filename of cookie file */
-static char *defcmds[] = { "source", "-", NULL };  /* default command */
+static char *authfilename = nullptr;	/* filename of cookie file */
+static char *defcmds[] = { "source", "-", nullptr };  /* default command */
 static int ndefcmds = 2;
 static char *defsource = "(stdin)";
 
@@ -87,12 +87,12 @@ usage(void)
 "",
 "and commands have the following syntax:",
 "",
-NULL };
+nullptr };
     static char *suffixmsg[] = {
 "A dash may be used with the \"merge\" and \"source\" to read from the",
 "standard input.  Commands beginning with \"n\" use numeric format.",
 "",
-NULL };
+nullptr };
     char **msg;
 
     fprintf (stderr, "usage:  %s [-options ...] [command arg ...]\n",
@@ -100,7 +100,7 @@ NULL };
     for (msg = prefixmsg; *msg; msg++) {
 	fprintf (stderr, "%s\n", *msg);
     }
-    print_help (stderr, NULL);
+    print_help (stderr, nullptr);
     fprintf (stderr, "\n");
     for (msg = suffixmsg; *msg; msg++) {
 	fprintf (stderr, "%s\n", *msg);

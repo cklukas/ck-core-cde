@@ -133,7 +133,7 @@ static STRING	fmt_strval_for_res_file(STRING string);
 static STRING	nullCStr = "NULL";
 
 /* typed args */
-StringList	typed_arg_names= NULL;
+StringList	typed_arg_names= nullptr;
 
 #ifdef BOGUS
 /* L3 related resources of type INT */
@@ -141,19 +141,19 @@ static char        *IntArray[] =
 {
     "x",
     "y",
-    NULL
+    nullptr
 };
 
 /*
  * L3 related resources for all widgets Arranged in order of freq of access.
  * If we switch to binary search, sort this alphabetically ...
  */
-static StringList   i18nl3_resources = NULL;
+static StringList   i18nl3_resources = nullptr;
 
 /*
  * L3 related resources for list pane
  */
-static StringList   list_i18nl3_resources = NULL;
+static StringList   list_i18nl3_resources = nullptr;
 #endif /* BOGUS */
 
 /*************************************************************************
@@ -166,7 +166,7 @@ int
 abmfP_args_init(void)
 {
     static BOOL         inited = FALSE;
-    ISTRING            *istr_entry = NULL;
+    ISTRING            *istr_entry = nullptr;
     if (inited)
     {
 	return 0;
@@ -282,7 +282,7 @@ abmfP_write_arg_val(
     AB_ARG_TYPE         arg_type = AB_ARG_UNDEF;
     char                dumpWidgetName[MAX_NAME_SIZE];
     char 		strval[MAX_NAME_SIZE+10];
-    STRING		strval2 = NULL;
+    STRING		strval2 = nullptr;
     BOOL		wroteResource= FALSE;
     FILE		*fp= (dumpResource? 
 			        (genCodeInfo->resource_file)
@@ -290,11 +290,11 @@ abmfP_write_arg_val(
     *dumpWidgetName = 0;
     *strval = 0;
 
-    if (fp == NULL)
+    if (fp == nullptr)
     {
 	return ERR_BAD_PARAM;
     }
-    if (dumpResource && (obj != NULL))
+    if (dumpResource && (obj != nullptr))
     {
 	ABObj	resourceObj = obj;
         if (   (util_streq(argName, XmNscrollBarDisplayPolicy))
@@ -426,7 +426,7 @@ abmfP_write_arg_val(
 	    /* widget class */
 	    STRING	wclass_name= abmfP_convert_wclass_ptr_to_name(
 					(WidgetClass)(argValue));
-	    if (wclass_name != NULL)
+	    if (wclass_name != nullptr)
 	    {
 		if (dumpResource)
 		{
@@ -458,7 +458,7 @@ abmfP_write_arg_val(
 	        else
 	    	{
 		    if (obj_is_item(obj) &&
-			abmfP_label_array_var(genCodeInfo) != NULL)
+			abmfP_label_array_var(genCodeInfo) != nullptr)
 		    {
 		    	sprintf(strval, "%s[%s]",
 				istr_string(abmfP_label_array_var(genCodeInfo)),
@@ -505,7 +505,7 @@ abmfP_write_arg_val(
             }
 	    if (!wroteResource)
 	    {
-		if (argValue == NULL)
+		if (argValue == nullptr)
 		{
 		    abio_printf(fp, "%s, %s,\n", c_arg_name, nullCStr);
 		    wroteResource = TRUE;
@@ -558,7 +558,7 @@ abmfP_write_arg_val(
             wroteResource = TRUE;
             abio_printf(fp, "%s, ", c_arg_name);
             if (obj_is_item(obj) && 
-		abmfP_mnemonic_array_var(genCodeInfo) != NULL)
+		abmfP_mnemonic_array_var(genCodeInfo) != nullptr)
 	    {
                 sprintf(strval, "%s[i]", 
 			istr_string(abmfP_mnemonic_array_var(genCodeInfo)));
@@ -584,7 +584,7 @@ abmfP_write_arg_val(
 	    STRING	parentWidgetName = 
 		abmfP_get_widget_parent_name(genCodeInfo, obj);
 
-	    if (parentWidgetName == NULL)
+	    if (parentWidgetName == nullptr)
 	    {
 		parentWidgetName= abmfP_get_c_name(genCodeInfo, obj);
 	    }
@@ -704,13 +704,13 @@ abmfP_write_arg_val(
     case AB_ARG_WIDGET:
     {
 	ABObj	module= obj_get_module(obj);
-	ABObj	attachObj= NULL;
-	if (module != NULL)
+	ABObj	attachObj= nullptr;
+	if (module != nullptr)
 	{
 	    STRING	attachObjName= istr_string((ISTRING)(argValue));
 	    attachObj = obj_scoped_find_by_name(module, attachObjName);
 	}
-	assert(attachObj != NULL);
+	assert(attachObj != nullptr);
 	assert(!dumpResource);		/* can't dump widget resources */
 
 	write_str_literal_resource(c_arg_name, 
@@ -873,10 +873,10 @@ abmfP_obj_spew_one_class_args(
     int			return_value = 0;
     int			objCount = 0;
     ABObj		actualObj = obj_get_actual_obj(obj);
-    ArgList             argList = NULL;
-    Arg                *arg = NULL;
+    ArgList             argList = nullptr;
+    Arg                *arg = nullptr;
     ABObj               project = obj_get_project(obj);
-    ABObj               menu = NULL;
+    ABObj               menu = nullptr;
 
 
     for (objCount = 0; objCount < 2; ++objCount)
@@ -887,7 +887,7 @@ abmfP_obj_spew_one_class_args(
 	}
 	else
 	{
-	    if ((actualObj == NULL) || (actualObj == obj))
+	    if ((actualObj == nullptr) || (actualObj == obj))
 	    {
 		continue;		/* no reference! */
 	    }
@@ -901,7 +901,7 @@ abmfP_obj_spew_one_class_args(
 	}
 
       for (arg = (Arg *) argList;
-	 (arg != NULL) && (arg->name != NULL); ++arg)
+	 (arg != nullptr) && (arg->name != nullptr); ++arg)
       {
 	switch (argClass)
 	{
@@ -1046,7 +1046,7 @@ spew_extra_choice_args(
     {
 	ABObj menuObj = objxm_comp_get_subobj(wholeObj, AB_CFG_PARENT_OBJ);
 	/* this choice has items, which are contained in a menu pane */
-	if (menuObj != NULL)
+	if (menuObj != nullptr)
 	{
 	    #ifdef OBSOLETE
 	    abio_printf(genCodeInfo->code_file, "XtSetArg(args[%s], "
@@ -1141,13 +1141,13 @@ fmt_strval_for_res_file(STRING string)
     BOOL	modified = FALSE;
     int		i = 0;
     int		len = 0;
-    char	*newStr = NULL;
+    char	*newStr = nullptr;
     int		newStrI = 0;
     int		newStrLen = 0;
     
-    if (string == NULL)
+    if (string == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     len = strlen(string);
@@ -1170,9 +1170,9 @@ fmt_strval_for_res_file(STRING string)
     }
     else
     {
-	if ((newStr = (STRING)util_malloc((newStrLen+1)*sizeof(char))) == NULL)
+	if ((newStr = (STRING)util_malloc((newStrLen+1)*sizeof(char))) == nullptr)
 	{
-	    return NULL;
+	    return nullptr;
 	}
 	newStrI = 0;
 	for (i = 0; i < len; ++i)
@@ -1267,7 +1267,7 @@ abmfP_arg_is_widget_ref(STRING argName)
      * layout.
      */
     return 
-	(   (abmfP_get_res_type(argName, NULL) == AB_ARG_WIDGET)
+	(   (abmfP_get_res_type(argName, nullptr) == AB_ARG_WIDGET)
 	 && (!util_streq(argName, XmNsubMenuId)) );
 }
 
@@ -1278,7 +1278,7 @@ abmfP_arg_is_widget_ref(STRING argName)
 BOOL
 abmfP_arg_is_callback(STRING argName)
 {
-    return (abmfP_get_res_type(argName, NULL) == AB_ARG_CALLBACK);
+    return (abmfP_get_res_type(argName, nullptr) == AB_ARG_CALLBACK);
 }
 
 
@@ -1296,7 +1296,7 @@ BOOL
 abmfP_arg_is_typed(STRING argName)
 {
     BOOL	isIt = FALSE;
-    AB_ARG_TYPE	arg_type = abmfP_get_res_type(argName, NULL);
+    AB_ARG_TYPE	arg_type = abmfP_get_res_type(argName, nullptr);
 
     switch (arg_type)
     {
@@ -1331,9 +1331,9 @@ abmfP_get_num_args_of_classes(ABObj obj, ABMF_ARG_CLASS argClasses)
     }
     else
     {
-	Arg	*arg= NULL;
+	Arg	*arg= nullptr;
 	for (arg= objxm_obj_get_ui_args(obj); 
-		(arg != NULL) && (arg->name != NULL); ++arg)
+		(arg != nullptr) && (arg->name != nullptr); ++arg)
 	{
 	    if (countSensitivity && abmfP_arg_is_sensitivity(arg->name))
 	    {
@@ -1373,7 +1373,7 @@ abmfP_get_num_args_of_classes(ABObj obj, ABMF_ARG_CLASS argClasses)
     }
     if (countOther && obj_is_term_pane(obj))
     {
-	if (objxm_comp_get_subobj(obj, AB_CFG_SCROLLBAR_OBJ) != NULL)
+	if (objxm_comp_get_subobj(obj, AB_CFG_SCROLLBAR_OBJ) != nullptr)
 	{
 	    ++num_args;
 	}
@@ -1399,7 +1399,7 @@ AB_ARG_TYPE
 abmfP_get_res_type(STRING res_xmname, ABObj obj)
 {
     AB_ARG_TYPE	arg_type = objxm_get_res_type(res_xmname);
-    if ((arg_type != AB_ARG_VARIABLE) || (obj == NULL))
+    if ((arg_type != AB_ARG_VARIABLE) || (obj == nullptr))
     {
 	return arg_type;
     }
@@ -1461,9 +1461,9 @@ abmfP_comp_get_num_args_of_classes(ABObj obj, ABMF_ARG_CLASS argClasses)
 {
     int			num_args = 0;
     AB_TRAVERSAL	compTrav;
-    ABObj		subobj = NULL;
+    ABObj		subobj = nullptr;
     for (trav_open(&compTrav, obj, AB_TRAV_COMP_SUBOBJS);
-	(subobj = trav_next(&compTrav)) != NULL; )
+	(subobj = trav_next(&compTrav)) != nullptr; )
     {
 	num_args += abmfP_get_num_args_of_classes(obj, argClasses);
     }
@@ -1482,20 +1482,20 @@ get_wclass_and_res_value(
 )
 {
     WidgetClass	wClass = objxm_get_class_ptr(obj_get_class_name(obj));
-    Arg		*arg = NULL;
+    Arg		*arg = nullptr;
     BOOL	foundEm = FALSE;
 
-    *wClassOut = NULL;
+    *wClassOut = nullptr;
     *resValueOut = 0;
 
-    if (wClass == NULL)
+    if (wClass == nullptr)
     {
 	goto epilogue;
     }
     (*wClassOut) = wClass;
 
     for (arg = objxm_obj_get_ui_args(obj);
-		((arg != NULL) && (arg->name != NULL)); ++arg)
+		((arg != nullptr) && (arg->name != nullptr)); ++arg)
     {
 	if (util_streq(argName, arg->name))
 	{
@@ -1513,7 +1513,7 @@ epilogue:
 static BOOL
 arg_has_default_value(ABObj obj, STRING argName)
 {
-    WidgetClass		wClass = NULL;
+    WidgetClass		wClass = nullptr;
     XtArgVal		resValue = (XtArgVal)NULL;
     ABObj		compRoot = obj_get_root(obj);
 

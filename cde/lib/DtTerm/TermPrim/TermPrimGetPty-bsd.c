@@ -185,7 +185,7 @@ static struct _pty_dirs {
     /* malloc error */
     if (!(*ptySlave)) return -1;
 
-    if(!openpty(&master, &slave, *ptySlave, NULL, NULL))
+    if(!openpty(&master, &slave, *ptySlave, nullptr, nullptr))
     {
         /* success */
         close(slave);

@@ -123,7 +123,7 @@ _XtProcessIceMsgProc (
     printf ("_XtProcessIceMsgProc\n");
 #endif /* DEBUG */
 
-    status = IceProcessMessages (ice_conn, NULL, NULL);
+    status = IceProcessMessages (ice_conn, nullptr, nullptr);
 
     if (status == IceProcessMessagesIOError)
     {
@@ -135,7 +135,7 @@ _XtProcessIceMsgProc (
 		IceConnectionNumber (ice_conn));
 #endif /* DEBUG */
 
-	for (pClientRec = connectedList; pClientRec != NULL; 
+	for (pClientRec = connectedList; pClientRec != nullptr; 
 	  	pClientRec = pClientRec->next) 
 	{
 	    if (pClientRec->iceConn == ice_conn) 

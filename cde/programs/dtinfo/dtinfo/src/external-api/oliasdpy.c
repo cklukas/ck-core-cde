@@ -165,11 +165,11 @@ main (int argc, char *argv[])
   XtAppContext app_context;
 
   toplevel =
-   XtVaAppInitialize (&app_context, "OliasDpy", NULL, 0, &argc, argv, NULL, 
-                      XtNmappedWhenManaged, False, NULL);
+   XtVaAppInitialize (&app_context, "OliasDpy", nullptr, 0, &argc, argv, nullptr, 
+                      XtNmappedWhenManaged, False, nullptr);
 
   XtAppAddInput (app_context, fileno(stdin), (XtPointer) XtInputReadMask, 
-                 get_input, NULL);
+                 get_input, nullptr);
 
   XtRealizeWidget (toplevel);
 

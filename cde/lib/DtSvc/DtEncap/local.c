@@ -202,7 +202,7 @@ void local_channel_object_input_handler(void * client_data,
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
   
-  select(max_fds, &read_fd_vect, NULL, &except_fd_vect, &timeout);
+  select(max_fds, &read_fd_vect, nullptr, &except_fd_vect, &timeout);
   if(! (FD_ISSET(fd, &read_fd_vect) || FD_ISSET(fd, &except_fd_vect))) {
     return /* (FALSE) */;
   }
@@ -212,14 +212,14 @@ void local_channel_object_input_handler(void * client_data,
      */
   
   tmp = spc_activation_list;
-  this_ptr = NULL;
+  this_ptr = nullptr;
   while(tmp) {
     if((fd == Stdin(tmp)) || (fd == Stderr(tmp)))
       this_ptr = tmp;
     tmp = tmp->next;
   }
   
-  if(this_ptr == NULL)
+  if(this_ptr == nullptr)
     this_ptr = channel;
   if(this_ptr != channel)
     channel = this_ptr;

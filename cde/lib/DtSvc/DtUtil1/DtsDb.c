@@ -125,11 +125,11 @@ _DtDtsDbPrint(FILE *org_fd)
 		if(fd == 0)
 		{
 			chdir("/tmp");
-			if((fd = fopen(db_ptr->databaseName, "w")) == NULL)
+			if((fd = fopen(db_ptr->databaseName, "w")) == nullptr)
 			{
 			    _DtSimpleError(
-					DtProgName, DtError, NULL,
-					db_ptr->databaseName, NULL);
+					DtProgName, DtError, nullptr,
+					db_ptr->databaseName, nullptr);
 			    continue;
 			}
 		}
@@ -311,13 +311,13 @@ _DtDtsDbGet(char *name)
 		}
 	}
 	_DtSvcProcessUnlock();
-	return(NULL);
+	return(nullptr);
 }
 
 void
 _DtDtsDbFieldSort(DtDtsDbRecord *rec, _DtDtsDbFieldCompare compare)
 {
-	if(compare == NULL)
+	if(compare == nullptr)
 	{
 		compare = _DtDtsDbCompareFieldNames;
 	}
@@ -331,7 +331,7 @@ _DtDtsDbFieldSort(DtDtsDbRecord *rec, _DtDtsDbFieldCompare compare)
 void
 _DtDtsDbRecordSort(DtDtsDbDatabase *db, _DtDtsDbRecordCompare compare)
 {
-	if(compare == NULL)
+	if(compare == nullptr)
 	{
 		compare = _DtDtsDbCompareRecordNames;
 	}
@@ -360,7 +360,7 @@ _DtDtsDbGetField(DtDtsDbRecord *rec, char *name)
 			return (rec->fieldList[i]);
 		}
 	}
-	return(NULL);
+	return(nullptr);
 }
 
 char *
@@ -375,7 +375,7 @@ _DtDtsDbGetFieldByName(DtDtsDbRecord *rec, char *name)
 	}
 	else
 	{
-		return(NULL);
+		return(nullptr);
 	}
 
 }
@@ -404,14 +404,14 @@ _DtDtsDbGetRecordByName(DtDtsDbDatabase *db, char *name)
 				return (db->recordList[i]);
 			}
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	srch.recordName = name_quark;	
 
-	if(db->recordCount == 0 || db->recordList == NULL)
+	if(db->recordCount == 0 || db->recordList == nullptr)
 	{
-		result = NULL;
+		result = nullptr;
 	}
 	else
 	{
@@ -428,7 +428,7 @@ _DtDtsDbGetRecordByName(DtDtsDbDatabase *db, char *name)
 	}
 	else
 	{
-		return(NULL);
+		return(nullptr);
 	}
 
 }

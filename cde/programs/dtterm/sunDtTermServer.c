@@ -54,12 +54,12 @@
 #define VERSION               "1.0"
 
 static char * procId;
-static Tt_pattern * DtTermToolTalkPattern = NULL;
+static Tt_pattern * DtTermToolTalkPattern = nullptr;
 static Boolean sendStopped = False;
 XtInputId ProcessToolTalkInputId = 0;
 static int ttFd;
 char DTTERM_CLASS_NAME[] = "Dtterm";
-char *displayString = NULL;
+char *displayString = nullptr;
 Widget refWidget;
 
 #ifdef  TIMEOUT
@@ -102,12 +102,12 @@ FinalizeToolTalkSession(void)
     int 	i;
 
     if (DtTermToolTalkPattern && tt_ptr_error(DtTermToolTalkPattern) == TT_OK) {
-        ttRc = ttdt_session_quit(NULL, DtTermToolTalkPattern, 1);
+        ttRc = ttdt_session_quit(nullptr, DtTermToolTalkPattern, 1);
         if (ProcessToolTalkInputId)
             XtRemoveInput(ProcessToolTalkInputId);
         return(True);
     }
-    ttRc = ttdt_close(NULL, NULL, sendStopped);
+    ttRc = ttdt_close(nullptr, nullptr, sendStopped);
     return(True);
 }
 
@@ -171,7 +171,7 @@ InitializeToolTalkSession(Widget topLevel, Boolean sendStarted)
      * tttk_Xt_input_handler will process it.  Otherwise,
      * tttk_Xt_input_handler will just return.
      */
-    tttk_Xt_input_handler(NULL, 0, 0);
+    tttk_Xt_input_handler(nullptr, 0, 0);
 
     return(TT_OK);
 }
@@ -186,11 +186,11 @@ FinishToolTalkInit(Widget topLevel)
     DtTermToolTalkPattern = ttdt_session_join(tt_default_session( ),
                                               SessionCallback,
                                               topLevel,
-                                              NULL,
+                                              nullptr,
                                               1,
                                               TTDT_SESSION_NO_REQUESTS);
     if (tt_is_err(tt_ptr_error(DtTermToolTalkPattern))) {
-        ttdt_close(NULL, NULL, sendStopped);
+        ttdt_close(nullptr, nullptr, sendStopped);
         return(0);
     }
     refWidget = topLevel;
@@ -245,7 +245,7 @@ dttermNewHandler(
     char                  *msgFile;
     char                  numArgs;
     int                   i, j, k;
-    char                  *displayEnv, *newDisplayString = NULL;
+    char                  *displayEnv, *newDisplayString = nullptr;
 
     msgFile = tt_message_file(msg);
     if (tt_is_err(tt_ptr_error(msgFile))) msgFile = 0;
@@ -398,7 +398,7 @@ DieFromToolTalkError(Widget parent, char *errfmt, Tt_status status)
     XtManageChild(dialog);
     XtRealizeWidget(dialogShell);
 
-    _DtSimpleError("Dtterm", DtFatalError, NULL, errmsg);
+    _DtSimpleError("Dtterm", DtFatalError, nullptr, errmsg);
 
     XtFree(errmsg);
     XmStringFree(xms_ok);

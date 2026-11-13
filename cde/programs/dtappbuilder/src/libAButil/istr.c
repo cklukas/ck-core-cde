@@ -84,13 +84,13 @@ typedef struct BUCKET
  * Public data
  */
 STRING	Istr_null_string= "(nil)";
-STRN 	*int_array= NULL;	/* unique number array  */
+STRN 	*int_array= nullptr;	/* unique number array  */
 long	num_count  = 1;         /* unique number counter */
 
 static BucketRec	hashtable[NUMBUCKETS];
 
 #ifdef DEBUG
-STRN *debug_istr= NULL;		/* debugging shortcut for clients (see */
+STRN *debug_istr= nullptr;		/* debugging shortcut for clients (see */
 				/* comment at top of this file) */
 #endif /* DEBUG */
 
@@ -148,9 +148,9 @@ istr_create (
     Bucket	entry;
     check_init();
 
-    if (string == NULL)
+    if (string == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
     /* hashval = hashing(string); */
     if ((str_exists = hash_and_lookupstr(string,&hashval )) == -1)     /* new entry */  
@@ -169,7 +169,7 @@ istr_create (
                         fprintf(stderr, "%s",
 			    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                             "ISTR: error in allocating to int array\n") );
-                        return NULL;
+                        return nullptr;
                     }
                     num_count++;
                     hash_count++;
@@ -182,7 +182,7 @@ istr_create (
                         fprintf(stderr, "%s",
 			    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 2,
                             "ISTR: error in allocating space for string\n") );
-                        return NULL;
+                        return nullptr;
                     }
                     entry->values[i] = freelist[freecount-1];
                     if (insert_array(1,freelist[freecount-1], string) == -1)
@@ -190,14 +190,14 @@ istr_create (
                         fprintf(stderr, "%s",
 			    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                             "ISTR: error in allocating to int array\n") );
-                        return NULL; 
+                        return nullptr; 
                     }
                     freecount--;
                     return istrP_int_to_client(freelist[freecount]);
                 } 
             } 
         }
-        while(entry->next != NULL)   /* check next bucket */
+        while(entry->next != nullptr)   /* check next bucket */
         {
             entry = entry->next;
             for (i=0; i< BUCKETSIZE; i++)
@@ -212,7 +212,7 @@ istr_create (
                             fprintf(stderr, "%s",
 			        CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                                 "ISTR: error in allocating to int array\n") );
-                            return NULL;
+                            return nullptr;
                         }
                         num_count++;
                         hash_count++;
@@ -225,7 +225,7 @@ istr_create (
                             fprintf(stderr, "%s",
 			        CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 2,
                                 "ISTR: error in allocating space for string\n") );
-                            return NULL;
+                            return nullptr;
                         }
                         entry->values[i] = freelist[freecount-1];
                         if (insert_array(1, 
@@ -234,7 +234,7 @@ istr_create (
                             fprintf(stderr, "%s",
 			        CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                                 "ISTR: error in allocating to int array\n") );
-                            return NULL;
+                            return nullptr;
                         }
                         freecount--;
                         return istrP_int_to_client(freelist[freecount]);
@@ -245,16 +245,16 @@ istr_create (
 /* if get this far, then no space is available in existing bucket, 
    add new bucket */
         new_bucket = (Bucket)malloc (sizeof(BucketRec));
-        if (new_bucket == NULL)
+        if (new_bucket == nullptr)
         {
             fprintf(stderr, "%s",
 		CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
 		"ISTR: error in allocating memory\n") );
-            return NULL ;
+            return nullptr ;
         }  
         for(i=1;i<BUCKETSIZE; i++)
             new_bucket->values[i] = -1;
-        new_bucket->next = NULL;
+        new_bucket->next = nullptr;
         if (freecount == 0)
         {
             new_bucket->values[0] = num_count;
@@ -264,7 +264,7 @@ istr_create (
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
 		    "ISTR: error in allocating to int array\n") );
-                return NULL;
+                return nullptr;
             }
             num_count++;
             hash_count++;
@@ -277,7 +277,7 @@ istr_create (
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 2,
 		    "ISTR: error in allocating space for string\n") );
-                return NULL;
+                return nullptr;
             }
             new_bucket->values[0] = freelist[freecount-1];
             entry->next = new_bucket;
@@ -286,7 +286,7 @@ istr_create (
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
 		    "ISTR: error in allocating to int array\n") );
-                return NULL;
+                return nullptr;
             }
             freecount--;
             return_istr(freelist[freecount]);
@@ -316,9 +316,9 @@ istrP_create_alloced_impl(
     Bucket	entry;
     check_init();
 
-    if (*string == NULL)
+    if (*string == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     /* hashval = hashing(*string); */
@@ -338,7 +338,7 @@ istrP_create_alloced_impl(
                         fprintf(stderr, "%s",
 			    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                             "ISTR: error in allocating to int array\n") );
-                        return NULL;
+                        return nullptr;
                     }
                     num_count++;
                     hash_count++;
@@ -351,7 +351,7 @@ istrP_create_alloced_impl(
                         fprintf(stderr, "%s",
 			    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 2,
                             "ISTR: error in allocating space for string\n") );
-                        return NULL;
+                        return nullptr;
                     }
                     entry->values[i] = freelist[freecount-1];
                     if (insert_array(3,freelist[freecount-1], *string) == -1)
@@ -359,14 +359,14 @@ istrP_create_alloced_impl(
                         fprintf(stderr, "%s",
 			    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                             "ISTR: error in allocating to int array\n") );
-                        return NULL;
+                        return nullptr;
                     }
                     freecount--;
                     return_istr(freelist[freecount]);
                 } 
             } 
         }
-        while(entry->next != NULL)  /* go to next bucket */
+        while(entry->next != nullptr)  /* go to next bucket */
         {
             entry = entry->next;
             for (i=0; i< BUCKETSIZE; i++)
@@ -381,7 +381,7 @@ istrP_create_alloced_impl(
                             fprintf(stderr, "%s",
 			        CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                                 "ISTR: error in allocating to int array\n") );
-                            return NULL;
+                            return nullptr;
                         }
                         num_count++;
                         hash_count++;
@@ -394,7 +394,7 @@ istrP_create_alloced_impl(
                             fprintf(stderr, "%s",
 			        CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 2,
                                 "ISTR: error in allocating space for string\n") );
-                            return NULL;
+                            return nullptr;
                         }
                         entry->values[i] = freelist[freecount-1];
                         if (insert_array(3, 
@@ -403,7 +403,7 @@ istrP_create_alloced_impl(
                             fprintf(stderr, "%s",
 			        CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                                 "ISTR: error in allocating to int array\n") );
-                            return NULL;
+                            return nullptr;
                         }
                         freecount--;
                         return_istr(freelist[freecount]);
@@ -414,16 +414,16 @@ istrP_create_alloced_impl(
 /* if get this far, then no space is available in existing bucket, 
    add new bucket */
         new_bucket = (Bucket)malloc (sizeof(BucketRec));
-        if (new_bucket == NULL)
+        if (new_bucket == nullptr)
         {
             fprintf(stderr, "%s",
 		CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
 	        "ISTR: error in allocating memory\n") );
-            return NULL ;
+            return nullptr ;
         }  
         for(i=1;i<BUCKETSIZE; i++)
             new_bucket->values[i] = -1;
-        new_bucket->next = NULL;
+        new_bucket->next = nullptr;
         if (freecount == 0)
         {
             new_bucket->values[0] = num_count;
@@ -433,7 +433,7 @@ istrP_create_alloced_impl(
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
 		    "ISTR: error in allocating to int array\n") );
-                return NULL;
+                return nullptr;
             }
             num_count++;
             hash_count++;
@@ -447,7 +447,7 @@ istrP_create_alloced_impl(
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 2,
 		    "ISTR: error in allocating space for string\n") );
 		free(new_bucket);
-                return NULL;
+                return nullptr;
             }
             new_bucket->values[0] = freelist[freecount-1];
             entry->next = new_bucket;
@@ -456,7 +456,7 @@ istrP_create_alloced_impl(
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
 		    "ISTR: error in allocating to int array\n") );
-                return NULL;
+                return nullptr;
             }
             freecount--;
             return_istr(freelist[freecount]);
@@ -470,7 +470,7 @@ istrP_create_alloced_impl(
            (*&string != &(int_array[str_exists].str)))
         {
             free(*string);
-            *string = NULL;
+            *string = nullptr;
         }
         return_istr(str_exists);
     }
@@ -494,9 +494,9 @@ istr_create_const(
     Bucket	entry;
     check_init();
  
-    if (string == NULL)
+    if (string == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     /* hashval = hashing(string); */
@@ -516,7 +516,7 @@ istr_create_const(
                         fprintf(stderr, "%s",
 			    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                             "ISTR: error in allocating to int array\n") );
-                        return NULL;
+                        return nullptr;
                     }
                     num_count++;
                     hash_count++;
@@ -529,7 +529,7 @@ istr_create_const(
                         fprintf(stderr, "%s",
 			    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 2,
                             "ISTR: error in allocating space for string\n") );
-                        return NULL;
+                        return nullptr;
                     }
                     entry->values[i] = freelist[freecount-1];
                     if (insert_array(2, freelist[freecount-1], string) == -1)
@@ -537,14 +537,14 @@ istr_create_const(
                         fprintf(stderr, "%s",
 			    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                             "ISTR: error in allocating to int array\n") );
-                        return NULL;
+                        return nullptr;
                     }
                     freecount--;
                     return_istr(freelist[freecount]);
                 } 
             } 
         }
-        while(entry->next != NULL)
+        while(entry->next != nullptr)
         {                            /* check next bucket */
             entry = entry->next;
             for (i=0; i< BUCKETSIZE; i++)
@@ -559,7 +559,7 @@ istr_create_const(
                             fprintf(stderr, "%s",
 			        CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                                 "ISTR: error in allocating to int array\n") );
-                            return NULL;
+                            return nullptr;
                         }
                         num_count++;
                         hash_count++;
@@ -572,7 +572,7 @@ istr_create_const(
                             fprintf(stderr, "%s",
 			        CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 2,
                                 "ISTR: error in allocating space for string\n") );
-                            return NULL;
+                            return nullptr;
                         }
                         entry->values[i] = freelist[freecount-1];
                         if (insert_array(2, 
@@ -581,7 +581,7 @@ istr_create_const(
                             fprintf(stderr, "%s",
 			        CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
                                 "ISTR: error in allocating to int array\n") );
-                            return NULL;
+                            return nullptr;
                         }
                         freecount--;
                         return_istr(freelist[freecount]);
@@ -592,18 +592,18 @@ istr_create_const(
 /* if get this far, then no space is available in existing bucket, 
    add new bucket */
         new_bucket = (Bucket)malloc (sizeof(BucketRec));
-        if (new_bucket == NULL)
+        if (new_bucket == nullptr)
         {
             fprintf(stderr, "%s",
 		CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
 		"ISTR: error in allocating memory\n") );
-            return NULL ;
+            return nullptr ;
         }  
 	for(i=1;i<BUCKETSIZE; i++)
 	{
             new_bucket->values[i] = -1;
 	}
-        new_bucket->next = NULL;
+        new_bucket->next = nullptr;
         if (freecount == 0)
         {
             new_bucket->values[0] = num_count;
@@ -613,7 +613,7 @@ istr_create_const(
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
 		    "ISTR: error in allocating to int array\n") );
-                return NULL;
+                return nullptr;
             }
             num_count++;
             hash_count++;
@@ -627,7 +627,7 @@ istr_create_const(
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 2,
 		    "ISTR: error in allocating space for string\n") );
 		free(new_bucket);
-                return NULL;
+                return nullptr;
             }
             new_bucket->values[0] = freelist[freecount-1];
             entry->next = new_bucket;
@@ -636,7 +636,7 @@ istr_create_const(
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 1,
 		    "ISTR: error in allocating to int array\n") );
-                return NULL;
+                return nullptr;
             }
             freecount--;
             return_istr(freelist[freecount]);
@@ -672,14 +672,14 @@ istr_dup_existing(
     int hashval;
     long str_exists;
 
-    if (string == NULL)
+    if (string == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
     /* hashval = hashing(string); */
     if ((str_exists = hash_and_lookupstr(string,&hashval)) == -1)    
     {                                          /* string doesn't exist */
-        return NULL;
+        return nullptr;
     }
     else 
     {
@@ -723,7 +723,7 @@ istrP_destroy_impl(
 	{
             int_array[istring].refcount--;
 	}
-        (*istringClientPtr) = NULL;
+        (*istringClientPtr) = nullptr;
         return 0;
     }
     int_array[istring].refcount--;
@@ -738,7 +738,7 @@ istrP_destroy_impl(
                 entry->values[i] = -1;
             } 
         } 
-        while(entry->next != NULL)
+        while(entry->next != nullptr)
         {
             entry = entry->next; 
             for (i =0; i< BUCKETSIZE; i++)
@@ -750,12 +750,12 @@ istrP_destroy_impl(
             } 
         }
         free(int_array[istring].str);
-	int_array[istring].str = NULL;
+	int_array[istring].str = nullptr;
 /* put unused int_array location of the freelist */
         if(free_num == 0)
         {
             freelist = (long *)malloc(ARRAYSIZE * sizeof(long));
-            if (freelist == NULL)
+            if (freelist == nullptr)
             {
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
@@ -775,8 +775,8 @@ istrP_destroy_impl(
             free_num++;
             freelist = (long *)realloc(freelist,
                 (ARRAYSIZE * free_num) * sizeof(long));
-	    assert(freelist != NULL);
-            if (freelist == NULL)
+	    assert(freelist != nullptr);
+            if (freelist == nullptr)
             {
                 fprintf(stderr, "%s",
 		    CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
@@ -817,7 +817,7 @@ istr_dup(
         (int_array[istring].read_const == 0)))
     {
 	istrP_errmsg_noexist(istring);
-        return NULL;
+        return nullptr;
     }
     int_array[istring].refcount++;
     return_istr(istring);
@@ -837,14 +837,14 @@ istrP_get_string_verify(
 
     if(istring == 0) 
     {
-        return NULL;
+        return nullptr;
     }
     if((istring < 0) || (istring >= num_count) || 
        ((int_array[istring].refcount == 0) &&
         (int_array[istring].read_const == 0)))
     {
 	istrP_errmsg_noexist(istring);
-        return NULL;
+        return nullptr;
     }
     return int_array[istring].str;
 }
@@ -898,7 +898,7 @@ hash_and_lookupstr(
     /*
      * Find entry in bucket
      */
-    for (entry = &hashtable[hash_val]; entry != NULL; entry = entry->next)
+    for (entry = &hashtable[hash_val]; entry != nullptr; entry = entry->next)
     {
 	valuePtr = entry->values;
 	valuePtrEnd = valuePtr + BUCKETSIZE;
@@ -935,7 +935,7 @@ insert_array(
     if(hash_count == 0)
     {
         int_array_set((STRN *)calloc(ARRAYSIZE, sizeof(STRN)));
-        if (int_array == NULL)
+        if (int_array == nullptr)
         {
             fprintf(stderr, "%s",
 		CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
@@ -969,8 +969,8 @@ insert_array(
         array_num++;
         int_array_set((STRN *)realloc(int_array,
             (ARRAYSIZE * array_num) * sizeof(STRN)));
-	assert(int_array != NULL);
-        if (int_array == NULL)
+	assert(int_array != nullptr);
+        if (int_array == nullptr)
         {
             fprintf(stderr, "%s",
 		CATGETS(UTIL_MESSAGE_CATD, UTIL_MESSAGE_SET, 3,
@@ -1006,7 +1006,7 @@ hashtable_init(void)
     
     for(i=0; i< NUMBUCKETS; i++)
     {
-        hashtable[i].next = NULL;
+        hashtable[i].next = nullptr;
         for (j=0; j < BUCKETSIZE; j++)
 	{
             hashtable[i].values[j] = -1;

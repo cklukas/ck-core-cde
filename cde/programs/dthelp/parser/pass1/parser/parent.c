@@ -44,5 +44,5 @@ M_WCHAR *m_parent(int n)
       if (! n)
         return(m_nameofelt(stackptr->element)) ;
       }
-    return(NULL) ;
+    return(nullptr) ;
     }

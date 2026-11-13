@@ -337,7 +337,7 @@ ilEFSFileTypePtr   pFileType;
 ilEFSFileType     *pfileType;
 
     *pNFileTypes = 0;
-    *pfileTypes = (ilEFSFileType *)NULL;
+    *pfileTypes = (ilEFSFileType *)nullptr;
 
         /*  Init EFS file types if not already inited. */
     if (!(pPriv = ilInitEFS (context)))

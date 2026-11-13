@@ -434,22 +434,22 @@ static void ShelfSlotDropCB(
                         Widget w,
                         XtPointer client_data,
                         XtPointer call_data );
-static FileMgrRec **shelf_views = NULL;
+static FileMgrRec **shelf_views = nullptr;
 static int shelf_view_count = 0;
 static Boolean shelf_drag_active = False;
 static int shelf_drag_slot = -1;
-static ShelfItemData *shelf_drag_candidate = NULL;
-static Widget shelf_drag_widget = NULL;
-static Widget shelf_drag_context = NULL;
+static ShelfItemData *shelf_drag_candidate = nullptr;
+static Widget shelf_drag_widget = nullptr;
+static Widget shelf_drag_context = nullptr;
 static int shelf_drag_hidden_slot = -1;
 static int shelf_drag_pending_start = -1;
 static int shelf_drag_pending_end = -1;
-static char *shelf_drag_path = NULL;
+static char *shelf_drag_path = nullptr;
 static Boolean shelf_drag_finish_pending = False;
 static int shelf_drag_finish_slot = -1;
 static unsigned char shelf_drag_finish_op = 0;
 static Boolean shelf_rebuild_after_drag = False;
-static FileMgrRec *shelf_rebuild_rec = NULL;
+static FileMgrRec *shelf_rebuild_rec = nullptr;
 static Boolean shelf_rebuild_pending = False;
 static XtIntervalId shelf_rebuild_timer = 0;
 static Dimension shelf_row_height = 0;
@@ -577,13 +577,13 @@ ShelfFitLabel(
         XmFontList font_list,
         int max_px )
 {
-   XmString xm = NULL;
+   XmString xm = nullptr;
    Dimension w = 0, h = 0;
-   char *fit = NULL;
+   char *fit = nullptr;
    int len;
 
-   if (text == NULL)
-      return NULL;
+   if (text == nullptr)
+      return nullptr;
 
    fit = XtNewString(text);
    xm = XmStringCreateLocalized(fit);
@@ -621,19 +621,19 @@ static Dimension shelf_slot_width;
 static Widget
 ShelfGetRowWidget(FileMgrRec *file_mgr_rec)
 {
-   Widget *children = NULL;
+   Widget *children = nullptr;
    Cardinal num_children = 0;
    int i;
 
-   if (file_mgr_rec == NULL || file_mgr_rec->shelf_frame == NULL)
-      return NULL;
+   if (file_mgr_rec == nullptr || file_mgr_rec->shelf_frame == nullptr)
+      return nullptr;
 
    XtVaGetValues(file_mgr_rec->shelf_frame,
                  XmNchildren, &children,
                  XmNnumChildren, &num_children,
-                 NULL);
-   if (children == NULL || num_children == 0)
-      return NULL;
+                 nullptr);
+   if (children == nullptr || num_children == 0)
+      return nullptr;
 
    for (i = 0; i < (int)num_children; i++)
    {
@@ -651,33 +651,33 @@ ShelfFindWidgetForSlot(
         int slot,
         ShelfItemData **item_data_out )
 {
-   Widget *children = NULL;
+   Widget *children = nullptr;
    Cardinal num_children = 0;
    int i;
 
    if (item_data_out)
-      *item_data_out = NULL;
+      *item_data_out = nullptr;
 
-   if (row == NULL)
-      return NULL;
+   if (row == nullptr)
+      return nullptr;
 
    XtVaGetValues(row,
                  XmNchildren, &children,
                  XmNnumChildren, &num_children,
-                 NULL);
-   if (children == NULL || num_children == 0)
-      return NULL;
+                 nullptr);
+   if (children == nullptr || num_children == 0)
+      return nullptr;
 
    for (i = 0; i < (int)num_children; i++)
    {
       Widget child = children[i];
-      ShelfItemData *item_data = NULL;
+      ShelfItemData *item_data = nullptr;
 
-      if (child == NULL)
+      if (child == nullptr)
          continue;
 
-      XtVaGetValues(child, XmNuserData, &item_data, NULL);
-      if (item_data == NULL)
+      XtVaGetValues(child, XmNuserData, &item_data, nullptr);
+      if (item_data == nullptr)
          continue;
       if (item_data->slot != slot)
          continue;
@@ -687,7 +687,7 @@ ShelfFindWidgetForSlot(
       return child;
    }
 
-   return NULL;
+   return nullptr;
 }
 
 static void
@@ -695,7 +695,7 @@ ShelfUpdateSlotWidget(
         FileMgrRec *file_mgr_rec,
         int slot )
 {
-   ShelfUpdateSlotWidgetWithData(file_mgr_rec, NULL, slot);
+   ShelfUpdateSlotWidgetWithData(file_mgr_rec, nullptr, slot);
 }
 
 static void
@@ -708,19 +708,19 @@ ShelfUpdateSlotWidgetWithData(
    FileMgrData *file_mgr_data;
    Widget row;
    Widget item;
-   ShelfItemData *item_data = NULL;
+   ShelfItemData *item_data = nullptr;
    const char *path;
-   XmFontList font_list = NULL;
-   XmString label = NULL;
-   char *label_text = NULL;
-   char *fit_label = NULL;
-   char *resolved_path = NULL;
-   char *resolved_host = NULL;
-   char *data_type = NULL;
-   char *icon_name_owned = NULL;
-   char *icon_name_dup = NULL;
-   const char *icon_name = NULL;
-   PixmapData *pixmapData = NULL;
+   XmFontList font_list = nullptr;
+   XmString label = nullptr;
+   char *label_text = nullptr;
+   char *fit_label = nullptr;
+   char *resolved_path = nullptr;
+   char *resolved_host = nullptr;
+   char *data_type = nullptr;
+   char *icon_name_owned = nullptr;
+   char *icon_name_dup = nullptr;
+   const char *icon_name = nullptr;
+   PixmapData *pixmapData = nullptr;
    Boolean render_image = False;
    unsigned int img_w = 0;
    unsigned int img_h = 0;
@@ -729,39 +729,39 @@ ShelfUpdateSlotWidgetWithData(
    int max_label_px;
    unsigned char icon_alignment;
 
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
       return;
 
    file_mgr_data = file_mgr_data_in;
-   if (file_mgr_data == NULL)
+   if (file_mgr_data == nullptr)
    {
       dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
-      if (dialog_data == NULL)
+      if (dialog_data == nullptr)
          return;
       file_mgr_data = (FileMgrData *) dialog_data->data;
-      if (file_mgr_data == NULL)
+      if (file_mgr_data == nullptr)
          return;
    }
 
    row = ShelfGetRowWidget(file_mgr_rec);
-   if (row == NULL)
+   if (row == nullptr)
       return;
 
    icon_alignment = FileMgrGetIconAlignment(file_mgr_data);
 
    item = ShelfFindWidgetForSlot(row, slot, &item_data);
-   if (item == NULL || item_data == NULL)
+   if (item == nullptr || item_data == nullptr)
       return;
 
    path = ShelfGetPathForSlot(slot);
-   if (getenv("DTFILE_SHELF_DEBUG") != NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") != nullptr)
       ShelfLog("ShelfUpdateSlotWidget: slot %d path=%s\n",
                slot, path ? path : "(null)");
 
    if (shelf_drag_active && shelf_drag_hidden_slot == slot)
-      path = NULL;
+      path = nullptr;
 
-   XtVaGetValues(item, XmNfontList, &font_list, NULL);
+   XtVaGetValues(item, XmNfontList, &font_list, nullptr);
 
    if (shelf_drag_active && shelf_drag_hidden_slot == slot)
    {
@@ -770,29 +770,29 @@ ShelfUpdateSlotWidgetWithData(
                     XmNstring, label,
                     XmNalignment, icon_alignment,
                     XmNimageName, (String)NULL,
-                    NULL);
+                    nullptr);
       XmStringFree(label);
       return;
    }
 
-   if (path == NULL)
+   if (path == nullptr)
    {
       if (item_data->path)
       {
          XtFree(item_data->path);
-         item_data->path = NULL;
+         item_data->path = nullptr;
       }
       if (item_data->icon_name)
       {
          XtFree(item_data->icon_name);
-         item_data->icon_name = NULL;
+         item_data->icon_name = nullptr;
       }
       label = XmStringCreateLocalized("");
       XtVaSetValues(item,
                     XmNstring, label,
                     XmNalignment, icon_alignment,
                     XmNimageName, (String)NULL,
-                    NULL);
+                    nullptr);
       XmStringFree(label);
       return;
    }
@@ -815,7 +815,7 @@ ShelfUpdateSlotWidgetWithData(
    else
       fit_label = XtNewString(label_text);
    XtFree(label_text);
-   label_text = NULL;
+   label_text = nullptr;
 
    resolved_path = ShelfResolvePath(file_mgr_data, path, &resolved_host);
    if (resolved_path)
@@ -845,7 +845,7 @@ ShelfUpdateSlotWidgetWithData(
    else if (pixmapData && pixmapData->iconFileName && *pixmapData->iconFileName)
       icon_name = pixmapData->iconFileName;
 
-   if (icon_name == NULL)
+   if (icon_name == nullptr)
    {
       const char *fallback;
       int dt_size;
@@ -856,7 +856,7 @@ ShelfUpdateSlotWidgetWithData(
       dt_size = (shelf_icon_size == EXTRA_LARGE) ? DtLARGE :
                   (shelf_icon_size == LARGE) ? DtMEDIUM : DtSMALL;
       icon_name_owned = _DtGetIconFileName(XtScreen(file_mgr_rec->shell),
-                                           NULL, (String)fallback, NULL, dt_size);
+                                           nullptr, (String)fallback, nullptr, dt_size);
       if (icon_name_owned && *icon_name_owned)
          icon_name = icon_name_owned;
    }
@@ -880,7 +880,7 @@ ShelfUpdateSlotWidgetWithData(
                  XmNmaxPixmapWidth, shelf_icon_px,
                  XmNmaxPixmapHeight, shelf_icon_px,
                  XmNfillMode, XmFILL_TRANSPARENT,
-                 NULL);
+                 nullptr);
    XmStringFree(label);
    if (fit_label)
       XtFree(fit_label);
@@ -903,7 +903,7 @@ ShelfUpdateSlotsRange(
         int start_slot,
         int end_slot )
 {
-   ShelfUpdateSlotsRangeWithData(file_mgr_rec, NULL, start_slot, end_slot);
+   ShelfUpdateSlotsRangeWithData(file_mgr_rec, nullptr, start_slot, end_slot);
 }
 
 static void
@@ -915,7 +915,7 @@ ShelfUpdateSlotsRangeWithData(
 {
    int i;
 
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
       return;
 
    if (start_slot < 0)
@@ -937,7 +937,7 @@ ShelfUpdateSlotsRangeAllViews(
    for (i = 0; i < shelf_view_count; i++)
    {
       FileMgrRec *view = shelf_views[i];
-      if (view == NULL)
+      if (view == nullptr)
          continue;
       ShelfUpdateSlotsRange(view, start_slot, end_slot);
    }
@@ -975,7 +975,7 @@ ShelfLog(const char *fmt, ...)
 {
    va_list ap;
 
-   if (getenv("DTFILE_SHELF_DEBUG") == NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") == nullptr)
       return;
 
    fprintf(stderr, "dtfile-shelf: ");
@@ -990,7 +990,7 @@ CenterIconLog(const char *fmt, ...)
 {
    va_list ap;
 
-   if (getenv("DTFILE_CENTER_DEBUG") == NULL)
+   if (getenv("DTFILE_CENTER_DEBUG") == nullptr)
       return;
 
    fprintf(stderr, "dtfile-center: ");
@@ -1007,12 +1007,12 @@ ShelfLogWidget(const char *tag, Widget w)
    Dimension height = 0;
    Position x = 0;
    Position y = 0;
-   Widget parent = NULL;
+   Widget parent = nullptr;
 
-   if (getenv("DTFILE_SHELF_DEBUG") == NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") == nullptr)
       return;
 
-   if (w == NULL)
+   if (w == nullptr)
    {
       ShelfLog("%s: (null)\n", tag);
       return;
@@ -1024,7 +1024,7 @@ ShelfLogWidget(const char *tag, Widget w)
                  XmNy, &y,
                  XmNwidth, &width,
                  XmNheight, &height,
-                 NULL);
+                 nullptr);
    ShelfLog("%s: %p name=%s managed=%d realized=%d x=%d y=%d w=%u h=%u parent=%p\n",
             tag, (void *)w, XtName(w) ? XtName(w) : "(null)",
             XtIsManaged(w), XtIsRealized(w),
@@ -1043,10 +1043,10 @@ ShelfWidgetEventEH(
 
    (void) cont;
 
-   if (getenv("DTFILE_SHELF_DEBUG") == NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") == nullptr)
       return;
 
-   if (event == NULL)
+   if (event == nullptr)
       return;
 
    if (event->type == MapNotify)
@@ -1080,10 +1080,10 @@ ShelfItemEventEH(
 
    (void) cont;
 
-   if (getenv("DTFILE_SHELF_DEBUG") == NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") == nullptr)
       return;
 
-   if (event == NULL)
+   if (event == nullptr)
       return;
 
    if (event->type == MapNotify)
@@ -1141,28 +1141,28 @@ ShelfAllowBtn1Transfer(Widget w)
 static ShelfItemData *
 ShelfItemAtPoint(Widget row, int x, int y, Widget *child_out)
 {
-   Widget *children = NULL;
+   Widget *children = nullptr;
    Cardinal num_children = 0;
    int i;
 
    if (child_out)
-      *child_out = NULL;
+      *child_out = nullptr;
 
    XtVaGetValues(row,
                  XmNchildren, &children,
                  XmNnumChildren, &num_children,
-                 NULL);
-   if (children == NULL || num_children == 0)
-      return NULL;
+                 nullptr);
+   if (children == nullptr || num_children == 0)
+      return nullptr;
 
    for (i = 0; i < (int)num_children; i++)
    {
       Widget child = children[i];
       Position cx = 0, cy = 0;
       Dimension cw = 0, ch = 0;
-      ShelfItemData *item_data = NULL;
+      ShelfItemData *item_data = nullptr;
 
-      if (child == NULL)
+      if (child == nullptr)
          continue;
 
       XtVaGetValues(child,
@@ -1171,9 +1171,9 @@ ShelfItemAtPoint(Widget row, int x, int y, Widget *child_out)
                     XmNwidth, &cw,
                     XmNheight, &ch,
                     XmNuserData, &item_data,
-                    NULL);
+                    nullptr);
 
-      if (item_data == NULL || item_data->path == NULL)
+      if (item_data == nullptr || item_data->path == nullptr)
          continue;
 
       if (x < cx || y < cy)
@@ -1186,7 +1186,7 @@ ShelfItemAtPoint(Widget row, int x, int y, Widget *child_out)
       return item_data;
    }
 
-   return NULL;
+   return nullptr;
 }
 
 static void
@@ -1199,14 +1199,14 @@ ShelfRowDragEH(
    (void) client_data;
    (void) cont;
 
-   if (event == NULL)
+   if (event == nullptr)
       return;
 
    if (event->type == ButtonPress)
    {
       XButtonEvent *bev = (XButtonEvent *)event;
-      ShelfItemData *item_data = NULL;
-      Widget child = NULL;
+      ShelfItemData *item_data = nullptr;
+      Widget child = nullptr;
 
       if (bev->button == bMenuButton)
          return;
@@ -1214,7 +1214,7 @@ ShelfRowDragEH(
       if (bev->button == Button1 || bev->button == Button2)
       {
          item_data = ShelfItemAtPoint(w, bev->x, bev->y, &child);
-         if (item_data == NULL || child == NULL)
+         if (item_data == nullptr || child == nullptr)
             return;
 
          item_data->drag_possible = True;
@@ -1233,7 +1233,7 @@ ShelfRowDragEH(
       XMotionEvent *mev = (XMotionEvent *)event;
       int dx, dy;
 
-      if (shelf_drag_candidate == NULL || !shelf_drag_candidate->drag_possible)
+      if (shelf_drag_candidate == nullptr || !shelf_drag_candidate->drag_possible)
          return;
 
       if (shelf_drag_candidate->drag_button == Button1 &&
@@ -1251,10 +1251,10 @@ ShelfRowDragEH(
       {
          shelf_drag_candidate->drag_started = True;
          shelf_drag_candidate->drag_possible = False;
-         if (shelf_drag_widget != NULL)
+         if (shelf_drag_widget != nullptr)
             ShelfStartDrag(shelf_drag_widget, shelf_drag_candidate, event);
-         shelf_drag_candidate = NULL;
-         shelf_drag_widget = NULL;
+         shelf_drag_candidate = nullptr;
+         shelf_drag_widget = nullptr;
       }
       return;
    }
@@ -1262,13 +1262,13 @@ ShelfRowDragEH(
    if (event->type == ButtonRelease)
    {
       XButtonEvent *bev = (XButtonEvent *)event;
-      if (shelf_drag_candidate != NULL &&
+      if (shelf_drag_candidate != nullptr &&
           bev->button == shelf_drag_candidate->drag_button)
       {
          shelf_drag_candidate->drag_possible = False;
          shelf_drag_candidate->drag_button = 0;
-         shelf_drag_candidate = NULL;
-         shelf_drag_widget = NULL;
+         shelf_drag_candidate = nullptr;
+         shelf_drag_widget = nullptr;
       }
       return;
    }
@@ -1286,7 +1286,7 @@ ShelfEnforceSizeEH(
    (void) client_data;
    (void) cont;
 
-   if (event == NULL || event->type != ConfigureNotify)
+   if (event == nullptr || event->type != ConfigureNotify)
       return;
 
    if (shelf_row_height <= 0)
@@ -1415,16 +1415,16 @@ static DialogClass fileMgrClassRec =
    resources,
    XtNumber(resources),
    Create,
-   NULL,
-   NULL,
+   nullptr,
+   nullptr,
    Destroy,
-   NULL,
+   nullptr,
    GetDefaultValues,
    GetResourceValues,
    SetValues,
    WriteResourceValues,
    FreeValues,
-   NULL,
+   nullptr,
    SetFocus,
 };
 
@@ -1507,7 +1507,7 @@ FontListDefaultEntry(XmFontList font_list)
     char *tag;
 
     if (!XmFontListInitFontContext(&context, font_list))
-        return NULL;
+        return nullptr;
 
     entry = first_entry = XmFontListNextEntry(context);
     while (entry) {
@@ -1552,7 +1552,7 @@ Create(
    Widget current_directory_drop;
    Widget current_directory_icon;
    Widget directory_list_form;
-   FileMgrData *file_mgr_data = NULL;
+   FileMgrData *file_mgr_data = nullptr;
    Widget work_frame;
    Widget status_form;
    Widget status_separator;
@@ -1586,11 +1586,11 @@ Create(
    /*  Allocate the change directory dialog instance record.  */
 
    file_mgr_rec = (FileMgrRec *) XtMalloc (sizeof (FileMgrRec));
-   file_mgr_rec->action_pane_file_type = NULL;
-  file_mgr_rec->shelf_frame = NULL;
-   file_mgr_rec->shelf_separator = NULL;
-   file_mgr_rec->shelf_popup = NULL;
-   file_mgr_rec->shelf_popup_data = NULL;
+   file_mgr_rec->action_pane_file_type = nullptr;
+  file_mgr_rec->shelf_frame = nullptr;
+   file_mgr_rec->shelf_separator = nullptr;
+   file_mgr_rec->shelf_popup = nullptr;
+   file_mgr_rec->shelf_popup_data = nullptr;
    ShelfRegisterView(file_mgr_rec);
 
    /* set up translations in main edit widget */
@@ -1602,19 +1602,19 @@ Create(
                                                            (char *)file_mgr_rec );
      trans_table1 = XtParseTranslationTable( resolvedTranslationString );
      XtFree( resolvedTranslationString );
-     resolvedTranslationString  = NULL;
+     resolvedTranslationString  = nullptr;
    }
 
    /*  Create the shell and main window used for the view.  */
 
    XtSetArg (args[0], XmNallowShellResize, True);
-   if(!first && (special_view == True && special_title != NULL && !TrashView))
+   if(!first && (special_view == True && special_title != nullptr && !TrashView))
    {
       file_mgr_rec->shell = shell =
          XtAppCreateShell (special_title, DTFILE_CLASS_NAME,
                         applicationShellWidgetClass, display, args, 1);
       XtFree(special_title);
-      special_title = NULL;
+      special_title = nullptr;
    }
    else
       file_mgr_rec->shell = shell =
@@ -1716,7 +1716,7 @@ Create(
       XtSetArg (args[n], XmNrightAttachment, XmATTACH_FORM);     n++;
       file_mgr_rec->shelf_frame =
          _DtCreateShelf (header_frame, "shelf_frame", args, n);
-      XtVaSetValues(file_mgr_rec->shelf_frame, XmNuserData, file_mgr_rec, NULL);
+      XtVaSetValues(file_mgr_rec->shelf_frame, XmNuserData, file_mgr_rec, nullptr);
       XtManageChild (file_mgr_rec->shelf_frame);
       shelf_row_height = shelf_height;
 
@@ -1801,7 +1801,7 @@ Create(
                         DropOnChangeView, (XtPointer) file_mgr_rec);
       }
       else
-        file_mgr_rec->current_directory_drop = current_directory_drop = NULL;
+        file_mgr_rec->current_directory_drop = current_directory_drop = nullptr;
 
       /* Create the current directory icon. */
       n = 0;
@@ -1892,7 +1892,7 @@ Create(
       }
       curdir_height = font_height + 2*(highlight_thickness + shadow_thickness);
 
-      if (file_mgr_rec->shelf_frame != NULL)
+      if (file_mgr_rec->shelf_frame != nullptr)
       {
          Dimension shelf_h = (Dimension)(shelf_icon_px + font_height +
             2*(highlight_thickness + shadow_thickness) + 8);
@@ -1963,7 +1963,7 @@ Create(
    /*  areas of the main windows.                          */
 
    XmMainWindowSetAreas (mainWidget, menu, file_mgr_rec->header_frame,
-                            NULL, NULL, work_frame);
+                            nullptr, nullptr, work_frame);
    XtSetArg (args[0], XmNmessageWindow, status_form);
    XtSetValues(mainWidget, args, 1);
 
@@ -2031,7 +2031,7 @@ Create(
    XtSetArg (args[0], XmNbackground, select);
    XtSetValues (XtParent (file_mgr_rec->file_window), args, 1);
 
-   if(fileMgrPopup.menu == NULL)
+   if(fileMgrPopup.menu == nullptr)
       CreateFmPopup(file_mgr_rec->file_window);
    else
       XmAddToPostFromList(fileMgrPopup.menu, file_mgr_rec->file_window);
@@ -2102,12 +2102,12 @@ GetDefaultValues( void )
    file_mgr_data->busy_detail = 0;
 
    file_mgr_data->num_objects = 0;
-   file_mgr_data->object_positions = NULL;
+   file_mgr_data->object_positions = nullptr;
    file_mgr_data->grid_height = 0;
    file_mgr_data->grid_width = 0;
-   file_mgr_data->layout_data = NULL;
+   file_mgr_data->layout_data = nullptr;
 
-   file_mgr_data->special_msg = NULL;
+   file_mgr_data->special_msg = nullptr;
    file_mgr_data->msg_timer_id = 0;
 
    file_mgr_data->show_type = SINGLE_DIRECTORY;
@@ -2128,33 +2128,33 @@ GetDefaultValues( void )
    CenterIconLog("init defaults: center_icons=%d\n",
                  file_mgr_data->center_icons ? 1 : 0);
 
-   file_mgr_data->scrollToThisFile = NULL;
-   file_mgr_data->scrollToThisDirectory = NULL;
+   file_mgr_data->scrollToThisFile = nullptr;
+   file_mgr_data->scrollToThisDirectory = nullptr;
 
-   file_mgr_data->renaming = NULL;
+   file_mgr_data->renaming = nullptr;
 
    if(special_view && !TrashView)
    {
-      if(special_title != NULL)
+      if(special_title != nullptr)
       {
          file_mgr_data->title = XtNewString(special_title);
       }
       else
-         file_mgr_data->title = NULL;
+         file_mgr_data->title = nullptr;
 
-      if(special_helpVol != NULL)
+      if(special_helpVol != nullptr)
       {
          file_mgr_data->helpVol = XtNewString(special_helpVol);
          XtFree(special_helpVol);
-         special_helpVol = NULL;
+         special_helpVol = nullptr;
       }
       else
          file_mgr_data->helpVol = XtNewString(fileMgrHelpVol);
 
-      if(special_restricted != NULL)
+      if(special_restricted != nullptr)
         file_mgr_data->restricted_directory = special_restricted;
       else
-        file_mgr_data->restricted_directory = NULL;
+        file_mgr_data->restricted_directory = nullptr;
 
       if(special_treeType == UNSET_VALUE)
          file_mgr_data->show_type = SINGLE_DIRECTORY;
@@ -2193,8 +2193,8 @@ GetDefaultValues( void )
    }
    else
    {
-      if(fileMgrTitle == NULL)
-         file_mgr_data->title = NULL;
+      if(fileMgrTitle == nullptr)
+         file_mgr_data->title = nullptr;
       else
          file_mgr_data->title = XtNewString(fileMgrTitle);
 
@@ -2234,14 +2234,14 @@ GetDefaultValues( void )
       else
          file_mgr_data->positionEnabled = randomType;
 
-      file_mgr_data->restricted_directory = NULL;
+      file_mgr_data->restricted_directory = nullptr;
    }
 
    file_mgr_data->restoreKind = NORMAL_RESTORE;
 
-   file_mgr_data->host = NULL;
-   file_mgr_data->current_directory = NULL;
-   file_mgr_data->branch_list = NULL;
+   file_mgr_data->host = nullptr;
+   file_mgr_data->current_directory = nullptr;
+   file_mgr_data->branch_list = nullptr;
 
    file_mgr_data->toolbox = False;
    file_mgr_data->dropSite = False;
@@ -2250,34 +2250,34 @@ GetDefaultValues( void )
    file_mgr_data->newSize = True;
 
    file_mgr_data->directory_count = 0;
-   file_mgr_data->directory_set = NULL;
-   file_mgr_data->tree_root = NULL;
+   file_mgr_data->directory_set = nullptr;
+   file_mgr_data->tree_root = nullptr;
 
    file_mgr_data->selection_list =
       (FileViewData **) XtMalloc (sizeof (FileViewData *));
-   file_mgr_data->selection_list[0] = NULL;
+   file_mgr_data->selection_list[0] = nullptr;
 
-   file_mgr_data->selection_table = NULL;
+   file_mgr_data->selection_table = nullptr;
    file_mgr_data->selected_file_count = 0;
 
    file_mgr_data->fast_cd_enabled = False;
    file_mgr_data->show_hid_enabled = False;
 
    file_mgr_data->cd_inited = False;
-   file_mgr_data->cd_font = NULL;
-   file_mgr_data->cd_fontset = NULL;
+   file_mgr_data->cd_font = nullptr;
+   file_mgr_data->cd_fontset = nullptr;
    file_mgr_data->cd_normal_gc = 0;
    file_mgr_data->cd_select_gc = 0;
-   file_mgr_data->cd_select = NULL;
+   file_mgr_data->cd_select = nullptr;
 
    file_mgr_data->tree_solid_thin_gc = 0;
    file_mgr_data->tree_solid_thick_gc = 0;
    file_mgr_data->tree_dash_thin_gc = 0;
    file_mgr_data->tree_dash_thick_gc = 0;
 
-   file_mgr_data->file_mgr_rec = NULL;
-   file_mgr_data->popup_menu_icon = NULL;
-   file_mgr_data->drag_file_view_data = NULL;
+   file_mgr_data->file_mgr_rec = nullptr;
+   file_mgr_data->popup_menu_icon = nullptr;
+   file_mgr_data->drag_file_view_data = nullptr;
 
    file_mgr_data->change_dir = _DtGetDefaultDialogData (change_dir_dialog);
    file_mgr_data->preferences = _DtGetDefaultDialogData (preferences_dialog);
@@ -2303,11 +2303,11 @@ GetDefaultValues( void )
    file_mgr_data->filter_edit = _DtGetDefaultDialogData (filter_dialog);
    file_mgr_data->filter_active = _DtGetDefaultDialogData (filter_dialog);
    file_mgr_data->find = _DtGetDefaultDialogData (find_dialog);
-   file_mgr_data->attr_dialog_list = NULL;
+   file_mgr_data->attr_dialog_list = nullptr;
    file_mgr_data->attr_dialog_count = 0;
-   file_mgr_data->secondaryHelpDialogList = NULL;
+   file_mgr_data->secondaryHelpDialogList = nullptr;
    file_mgr_data->secondaryHelpDialogCount = 0;
-   file_mgr_data->primaryHelpDialog = NULL;
+   file_mgr_data->primaryHelpDialog = nullptr;
 
    return ((XtPointer) file_mgr_data);
 }
@@ -2342,23 +2342,23 @@ GetResourceValues(
       first = False;
 
       XtAppAddConverter (XtWidgetToApplicationContext (toplevel), XmRString,
-                         SHOW_TYPE, StringToShowType, NULL, 0);
+                         SHOW_TYPE, StringToShowType, nullptr, 0);
       XtAppAddConverter (XtWidgetToApplicationContext (toplevel), XmRString,
-                         TREE_FILES, StringToTreeFiles, NULL, 0);
+                         TREE_FILES, StringToTreeFiles, nullptr, 0);
       XtAppAddConverter (XtWidgetToApplicationContext (toplevel), XmRString,
-                         VIEW, StringToView, NULL, 0);
+                         VIEW, StringToView, nullptr, 0);
       XtAppAddConverter (XtWidgetToApplicationContext (toplevel), XmRString,
-                         ORDER, StringToOrder, NULL, 0);
+                         ORDER, StringToOrder, nullptr, 0);
       XtAppAddConverter (XtWidgetToApplicationContext (toplevel), XmRString,
-                         DIRECTION_RESRC, StringToDirection, NULL, 0);
+                         DIRECTION_RESRC, StringToDirection, nullptr, 0);
       XtAppAddConverter (XtWidgetToApplicationContext (toplevel), XmRString,
-                         RANDOM, StringToRandom, NULL, 0);
+                         RANDOM, StringToRandom, nullptr, 0);
       XtAppSetTypeConverter (XtWidgetToApplicationContext (toplevel), XmRString,
                              BRANCH_LIST, StringToBranchList,
-                             NULL, 0, XtCacheNone, NULL);
+                             nullptr, 0, XtCacheNone, nullptr);
       XtAppAddConverter (XtWidgetToApplicationContext (toplevel), XmRString,
                          SELECTION_LIST, StringToSelectionList,
-                         NULL, 0);
+                         nullptr, 0);
    }
 
 
@@ -2369,35 +2369,35 @@ GetResourceValues(
    file_mgr_data->busy_status = not_busy;
    file_mgr_data->busy_detail = 0;
    file_mgr_data->num_objects = 0;
-   file_mgr_data->object_positions = NULL;
+   file_mgr_data->object_positions = nullptr;
    file_mgr_data->grid_height = 0;
    file_mgr_data->grid_width = 0;
-   file_mgr_data->layout_data = NULL;
-   file_mgr_data->secondaryHelpDialogList = NULL;
+   file_mgr_data->layout_data = nullptr;
+   file_mgr_data->secondaryHelpDialogList = nullptr;
    file_mgr_data->secondaryHelpDialogCount = 0;
    file_mgr_data->attr_dialog_count = 0;
-   file_mgr_data->attr_dialog_list = NULL;
-   file_mgr_data->primaryHelpDialog = NULL;
-   file_mgr_data->popup_menu_icon = NULL;
-   file_mgr_data->title = NULL;
-   file_mgr_data->helpVol = NULL;
-   file_mgr_data->restricted_directory = NULL;
+   file_mgr_data->attr_dialog_list = nullptr;
+   file_mgr_data->primaryHelpDialog = nullptr;
+   file_mgr_data->popup_menu_icon = nullptr;
+   file_mgr_data->title = nullptr;
+   file_mgr_data->helpVol = nullptr;
+   file_mgr_data->restricted_directory = nullptr;
    file_mgr_data->toolbox = False;
    file_mgr_data->dropSite = False;
    file_mgr_data->shelfDropSite = False;
    file_mgr_data->tree_preread_level = 1;  /* @@@ make these resources? */
    file_mgr_data->tree_show_level = 1;
    file_mgr_data->tree_files = TREE_FILES_NEVER;
-   file_mgr_data->special_msg = NULL;
+   file_mgr_data->special_msg = nullptr;
    file_mgr_data->msg_timer_id = 0;
    file_mgr_data->show_shelf = True;
    file_mgr_data->show_iconic_path = True;
    file_mgr_data->show_current_dir = True;
    file_mgr_data->show_status_line = True;
    file_mgr_data->render_image_icons = True;
-   file_mgr_data->scrollToThisFile = NULL;
-   file_mgr_data->scrollToThisDirectory = NULL;
-   file_mgr_data->renaming = NULL;
+   file_mgr_data->scrollToThisFile = nullptr;
+   file_mgr_data->scrollToThisDirectory = nullptr;
+   file_mgr_data->renaming = nullptr;
 
    _DtDialogGetResources (data_base, name_list, FILEMGR, (char *)file_mgr_data,
                        resources, fileMgrClass->resource_count);
@@ -2415,7 +2415,7 @@ GetResourceValues(
       GetSessionDir(file_mgr_data);
 
       /* Adjust the selected files to null */
-      file_mgr_data->selection_list = NULL;
+      file_mgr_data->selection_list = nullptr;
 
       /* Set the Displayed to false so we do not use the x and y
          values when we place the window in showDialog
@@ -2424,12 +2424,12 @@ GetResourceValues(
 
       if(special_view && !TrashView)
       {
-         if(special_title != NULL)
+         if(special_title != nullptr)
             file_mgr_data->title = XtNewString(special_title);
          else
             file_mgr_data->title = XtNewString(file_mgr_data->title);
 
-         if(special_helpVol != NULL)
+         if(special_helpVol != nullptr)
             file_mgr_data->helpVol = XtNewString(special_helpVol);
          else
             file_mgr_data->helpVol = XtNewString(file_mgr_data->helpVol);
@@ -2474,7 +2474,7 @@ GetResourceValues(
 
    /* The GetSessionDir() function depends on the hostname being set. */
    /* So, we'll do it earlier */
-   if(file_mgr_data->host != NULL)
+   if(file_mgr_data->host != nullptr)
       file_mgr_data->host = XtNewString(file_mgr_data->host);
    else
       file_mgr_data->host = XtNewString(home_host_name);
@@ -2482,24 +2482,24 @@ GetResourceValues(
    file_mgr_data->restoreKind = NORMAL_RESTORE;
 
    file_mgr_data->directory_count = 0;
-   file_mgr_data->directory_set = NULL;
-   file_mgr_data->tree_root = NULL;
+   file_mgr_data->directory_set = nullptr;
+   file_mgr_data->tree_root = nullptr;
 
    file_mgr_data->selected_file_count = 0;
    file_mgr_data->selection_table = (char **) file_mgr_data->selection_list;
    file_mgr_data->selection_list =
       (FileViewData **) XtMalloc (sizeof (FileViewData *));
-   file_mgr_data->selection_list[0] = NULL;
+   file_mgr_data->selection_list[0] = nullptr;
 
    file_mgr_data->cd_inited = False;
-   file_mgr_data->cd_font = NULL;
-   file_mgr_data->cd_fontset = NULL;
+   file_mgr_data->cd_font = nullptr;
+   file_mgr_data->cd_fontset = nullptr;
    file_mgr_data->cd_normal_gc = 0;
    file_mgr_data->cd_select_gc = 0;
-   file_mgr_data->cd_select = NULL;
+   file_mgr_data->cd_select = nullptr;
 
-   file_mgr_data->popup_menu_icon = NULL;
-   file_mgr_data->drag_file_view_data = NULL;
+   file_mgr_data->popup_menu_icon = nullptr;
+   file_mgr_data->drag_file_view_data = nullptr;
 
    file_mgr_data->tree_solid_thin_gc = 0;
    file_mgr_data->tree_solid_thick_gc = 0;
@@ -2512,7 +2512,7 @@ GetResourceValues(
    FileMgrBuildDirectories (file_mgr_data, host_name, directory_name);
 
    XtFree ((char *) host_name);
-   host_name = NULL;
+   host_name = nullptr;
    XtFree ((char *) directory_name);
 
    if (restoreType == NORMAL_RESTORE &&
@@ -2540,13 +2540,13 @@ GetResourceValues(
    }
    else
    {
-      file_mgr_data->secondaryHelpDialogList = NULL;
+      file_mgr_data->secondaryHelpDialogList = nullptr;
       file_mgr_data->secondaryHelpDialogCount = 0;
    }
 
    /* Get primary help dialog */
    new_name_list[name_list_count] = number;
-   new_name_list[name_list_count + 1] = NULL;
+   new_name_list[name_list_count + 1] = nullptr;
    sprintf(number, "%d", 0);
    if (restoreType == NORMAL_RESTORE)
    {
@@ -2556,11 +2556,11 @@ GetResourceValues(
                  (file_mgr_data->primaryHelpDialog->data))->displayed == False)
       {
          _DtFreeDialogData( file_mgr_data->primaryHelpDialog );
-         file_mgr_data->primaryHelpDialog = NULL;
+         file_mgr_data->primaryHelpDialog = nullptr;
       }
    }
    else
-      file_mgr_data->primaryHelpDialog = NULL;
+      file_mgr_data->primaryHelpDialog = nullptr;
 
    if (restoreType == NORMAL_RESTORE &&
                      file_mgr_data->attr_dialog_count > 0)
@@ -2573,10 +2573,10 @@ GetResourceValues(
    }
    else
    {
-      file_mgr_data->attr_dialog_list = NULL;
+      file_mgr_data->attr_dialog_list = nullptr;
       file_mgr_data->attr_dialog_count = 0;
    }
-   new_name_list[name_list_count] = NULL;
+   new_name_list[name_list_count] = nullptr;
 
    file_mgr_data->change_dir =
       _DtGetResourceDialogData (change_dir_dialog, data_base, name_list);
@@ -2615,13 +2615,13 @@ GetResourceValues(
 
    tmpStr = GetSharedMessage(FILTER_EDIT_ID_STRING);
    new_name_list[name_list_count] = XtNewString (tmpStr);
-   new_name_list[name_list_count + 1] = NULL;
+   new_name_list[name_list_count + 1] = nullptr;
 
    file_mgr_data->filter_edit =
       _DtGetResourceDialogData (filter_dialog, data_base, new_name_list);
 
    XtFree ((char *) new_name_list[name_list_count]);
-   new_name_list[name_list_count] = NULL;
+   new_name_list[name_list_count] = nullptr;
 
 
    /*  Build the name list for the filter dialog that is used for the  */
@@ -2630,13 +2630,13 @@ GetResourceValues(
 
    tmpStr = GetSharedMessage(FILTER_ACTIVE_ID_STRING);
    new_name_list[name_list_count] = XtNewString (tmpStr);
-   new_name_list[name_list_count + 1] = NULL;
+   new_name_list[name_list_count + 1] = nullptr;
 
    file_mgr_data->filter_active =
       _DtGetResourceDialogData (filter_dialog, data_base, new_name_list);
 
    XtFree ((char *) new_name_list[name_list_count]);
-   new_name_list[name_list_count] = NULL;
+   new_name_list[name_list_count] = nullptr;
 
    /*  Get the resource data for the find dialog and perform  */
    /*  additional initialization.                             */
@@ -2709,7 +2709,7 @@ SetValues(
 
    /* this is what we did for the ultrix port to get the name of the
       Application dir right, BUT it has some bugs */
-   if(file_mgr_data->title != NULL)
+   if(file_mgr_data->title != nullptr)
    {
       XtSetArg (args[0], XmNtitle, file_mgr_data->title);
       XtSetValues(file_mgr_rec->shell, args, 1);
@@ -2747,7 +2747,7 @@ SetValues(
     */
    XtSetArg(args[0], XmNuserData, file_mgr_rec);
    XtSetValues(file_mgr_rec->menu, args, 1);
-   if(fileMgrPopup.menu != NULL)
+   if(fileMgrPopup.menu != nullptr)
       XtSetValues(fileMgrPopup.menu, args, 1);
 
 
@@ -2835,7 +2835,7 @@ SetValues(
 
       /*  Update the Change Directory host name  */
       change_dir_data = (ChangeDirData *) file_mgr_data->change_dir->data;
-      if (change_dir_data->host_name != NULL)
+      if (change_dir_data->host_name != nullptr)
          XtFree ((char *) change_dir_data->host_name);
       change_dir_data->host_name = XtNewString (file_mgr_data->host);
 
@@ -2857,7 +2857,7 @@ SetValues(
          (DtIconGadget) cdi,
          pixmapData);
 
-      if(file_mgr_data->restricted_directory == NULL)
+      if(file_mgr_data->restricted_directory == nullptr)
           textString = XtNewString(file_mgr_data->current_directory);
       else
       {
@@ -2894,7 +2894,7 @@ SetValues(
 
    /*  Process the selection table into a selection list  */
 
-   if (file_mgr_data->selection_table != NULL)
+   if (file_mgr_data->selection_table != nullptr)
    {
       DeselectAllFiles (file_mgr_data);
 
@@ -2906,7 +2906,7 @@ SetValues(
          directory_count = file_mgr_data->directory_count;
 
       i = 0;
-      while (file_mgr_data->selection_table[i] != NULL)
+      while (file_mgr_data->selection_table[i] != nullptr)
       {
          for (j = 0; j < directory_count; j++)
          {
@@ -2933,7 +2933,7 @@ SetValues(
          i++;
       }
 
-      file_mgr_data->selection_table = NULL;
+      file_mgr_data->selection_table = nullptr;
    }
 
    /* Initially, all menubuttons are sensitive */
@@ -2945,7 +2945,7 @@ SetValues(
                                HOME | CHANGE_DIR | TERMINAL);
 
    if(file_mgr_data != trashFileMgrData
-      && file_mgr_data != NULL )
+      && file_mgr_data != nullptr )
    {
       if (file_mgr_data->selected_file_count == 0)
          ActivateNoSelect (file_mgr_rec);
@@ -3020,15 +3020,15 @@ SetValues(
          ((ModAttrData *) (file_mgr_data->attr_dialog_list[i]->data))->
                                            main_widget = file_mgr_rec->main;
 
-         _DtShowDialog (file_mgr_rec->shell, NULL, (XtPointer)file_mgr_rec,
+         _DtShowDialog (file_mgr_rec->shell, nullptr, (XtPointer)file_mgr_rec,
                      file_mgr_data->attr_dialog_list[i],
                      ModAttrChange, (XtPointer)file_mgr_rec, ModAttrClose,
-                     (XtPointer)file_mgr_rec, NULL, False, False, NULL, NULL);
+                     (XtPointer)file_mgr_rec, nullptr, False, False, nullptr, nullptr);
 
          modAttr_rec = (ModAttrRec *)_DtGetDialogInstance(
                                        file_mgr_data->attr_dialog_list[i]);
 
-         if(file_mgr_data->title != NULL &&
+         if(file_mgr_data->title != nullptr &&
                     strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
          {
             tmpStr = GETMESSAGE(21, 1, "File Permissions");
@@ -3060,7 +3060,7 @@ SetValues(
 	else
 	{
 	   XtFree((char *)file_mgr_data->attr_dialog_list);
-	   file_mgr_data->attr_dialog_list = NULL;
+	   file_mgr_data->attr_dialog_list = nullptr;
 	}
       }
    }
@@ -3070,8 +3070,8 @@ SetValues(
    {
       ShowHelpDialog(file_mgr_rec->shell, (XtPointer)file_mgr_rec,
 		     HYPER_HELP_DIALOG,
-                     file_mgr_data->secondaryHelpDialogList[i], NULL, NULL,
-                     NULL, NULL, 0);
+                     file_mgr_data->secondaryHelpDialogList[i], nullptr, nullptr,
+                     nullptr, nullptr, 0);
    }
 
    /* Display the primary help dialog, if active */
@@ -3080,8 +3080,8 @@ SetValues(
    {
       ShowHelpDialog(file_mgr_rec->shell, (XtPointer)file_mgr_rec,
 		     MAIN_HELP_DIALOG,
-                     file_mgr_data->primaryHelpDialog, NULL, NULL, NULL,
-                     NULL, 0);
+                     file_mgr_data->primaryHelpDialog, nullptr, nullptr, nullptr,
+                     nullptr, 0);
    }
 
 }
@@ -3126,8 +3126,8 @@ WriteResourceValues(
    if ( file_mgr_data->current_directory && file_mgr_data->toolbox )
    {
       char *current_host;
-      char *user_session_str = NULL;
-      char *ptr = NULL;
+      char *user_session_str = nullptr;
+      char *ptr = nullptr;
 
       current_host = file_mgr_data->host;
       user_session_str = getenv("DTUSERSESSION");
@@ -3186,24 +3186,24 @@ WriteResourceValues(
    if (file_mgr_data->primaryHelpDialog)
    {
       new_name_list[name_list_count] = number;
-      new_name_list[name_list_count + 1] = NULL;
+      new_name_list[name_list_count + 1] = nullptr;
       sprintf(number, "%d", 0);
       _DtWriteDialogData(file_mgr_data->primaryHelpDialog, fd, new_name_list);
    }
 
    tmpStr = GetSharedMessage(FILTER_EDIT_ID_STRING);
    new_name_list[name_list_count] = XtNewString (tmpStr);
-   new_name_list[name_list_count + 1] = NULL;
+   new_name_list[name_list_count + 1] = nullptr;
    _DtWriteDialogData (file_mgr_data->filter_edit, fd, new_name_list);
    XtFree ((char *) new_name_list[name_list_count]);
-   new_name_list[name_list_count] = NULL;
+   new_name_list[name_list_count] = nullptr;
 
    tmpStr = GetSharedMessage(FILTER_ACTIVE_ID_STRING);
    new_name_list[name_list_count] = XtNewString (tmpStr);
-   new_name_list[name_list_count + 1] = NULL;
+   new_name_list[name_list_count + 1] = nullptr;
    _DtWriteDialogData (file_mgr_data->filter_active, fd, new_name_list);
    XtFree ((char *) new_name_list[name_list_count]);
-   new_name_list[name_list_count] = NULL;
+   new_name_list[name_list_count] = nullptr;
 
    _DtWriteDialogData (file_mgr_data->find, fd, name_list);
 }
@@ -3232,42 +3232,42 @@ FreeValues(
 
    FileMgrRec *file_mgr_rec;
 
-   if (file_mgr_data == NULL)
+   if (file_mgr_data == nullptr)
       return;
 
    file_mgr_rec = (FileMgrRec *) file_mgr_data->file_mgr_rec;
 
    FreeDirectoryData (file_mgr_data);
 
-   if (file_mgr_data->branch_list != NULL)
+   if (file_mgr_data->branch_list != nullptr)
    {
       for (i = 0; file_mgr_data->branch_list[i]; i++)
         XtFree (file_mgr_data->branch_list[i]);
       XtFree ((char *) file_mgr_data->branch_list);
-      file_mgr_data->branch_list = NULL;
+      file_mgr_data->branch_list = nullptr;
    }
 
-   if (file_mgr_data->selection_list != NULL)
+   if (file_mgr_data->selection_list != nullptr)
    {
       XtFree ((char *) file_mgr_data->selection_list);
-      file_mgr_data->selection_list = NULL;
+      file_mgr_data->selection_list = nullptr;
    }
 
-   if (file_mgr_data->cd_select != NULL)
+   if (file_mgr_data->cd_select != nullptr)
    {
       XtFree ((char *) file_mgr_data->cd_select);
-      file_mgr_data->cd_select = NULL;
+      file_mgr_data->cd_select = nullptr;
    }
 
-   if (file_mgr_data->desktop_file != NULL)
+   if (file_mgr_data->desktop_file != nullptr)
    {
        XtFree ((char *) file_mgr_data->desktop_file);
-       file_mgr_data->desktop_file = NULL;
+       file_mgr_data->desktop_file = nullptr;
    }
 
 
    XtFree(file_mgr_data->special_msg);
-   file_mgr_data->special_msg = NULL;
+   file_mgr_data->special_msg = nullptr;
    if (file_mgr_data->msg_timer_id)
       XtRemoveTimeOut(file_mgr_data->msg_timer_id);
 
@@ -3284,26 +3284,26 @@ FreeValues(
 
    if(showFilesystem
       && file_mgr_data != trashFileMgrData
-      && file_mgr_data != NULL )
+      && file_mgr_data != nullptr )
    {
       /* Free up the GC's we got in SetValues */
-      if(file_mgr_data->cd_normal_gc != NULL)
+      if(file_mgr_data->cd_normal_gc != nullptr)
          XtReleaseGC(file_mgr_rec->current_directory,
                                        file_mgr_data->cd_normal_gc);
-      if(file_mgr_data->cd_select_gc != NULL)
+      if(file_mgr_data->cd_select_gc != nullptr)
          XtReleaseGC(file_mgr_rec->current_directory_icon,
                                        file_mgr_data->cd_select_gc);
 
-      if(file_mgr_data->tree_solid_thin_gc != NULL)
+      if(file_mgr_data->tree_solid_thin_gc != nullptr)
          XtReleaseGC(file_mgr_rec->current_directory_icon,
                                        file_mgr_data->tree_solid_thin_gc);
-      if(file_mgr_data->tree_solid_thick_gc != NULL)
+      if(file_mgr_data->tree_solid_thick_gc != nullptr)
          XtReleaseGC(file_mgr_rec->current_directory_icon,
                                        file_mgr_data->tree_solid_thick_gc);
-      if(file_mgr_data->tree_dash_thin_gc != NULL)
+      if(file_mgr_data->tree_dash_thin_gc != nullptr)
          XtReleaseGC(file_mgr_rec->current_directory_icon,
                                        file_mgr_data->tree_dash_thin_gc);
-      if(file_mgr_data->tree_dash_thick_gc != NULL)
+      if(file_mgr_data->tree_dash_thick_gc != nullptr)
          XtReleaseGC(file_mgr_rec->current_directory_icon,
                                        file_mgr_data->tree_dash_thick_gc);
    }
@@ -3382,7 +3382,7 @@ ActivateClist(
       };
 
       sscanf( params[0], "%p", (void **) &fileMgrRec );
-      _DtMessage(toplevel, title, message, NULL, HelpRequestCB);
+      _DtMessage(toplevel, title, message, nullptr, HelpRequestCB);
       XtFree( title );
       XtFree( message );
     }
@@ -3415,7 +3415,7 @@ GetSessionDir(
       char * homeDir;
 
       /* Set current_directory to the home dir */
-      if ((homeDir = (char *)getenv("HOME")) == NULL)
+      if ((homeDir = (char *)getenv("HOME")) == nullptr)
       {
          pwInfo = getpwuid (getuid());
          homeDir = pwInfo->pw_dir;
@@ -3430,7 +3430,7 @@ GetSessionDir(
          file_mgr_data->restricted_directory =
                    XtNewString(file_mgr_data->restricted_directory);
       else
-         file_mgr_data->restricted_directory = NULL;
+         file_mgr_data->restricted_directory = nullptr;
    }
    else if (restoreType == TOOL_RESTORE)        /* tool settings restore */
    {
@@ -3441,7 +3441,7 @@ GetSessionDir(
          file_mgr_data->restricted_directory =
                    XtNewString(file_mgr_data->restricted_directory);
       else
-         file_mgr_data->restricted_directory = NULL;
+         file_mgr_data->restricted_directory = nullptr;
    }
    else                                         /* session restore */
    {
@@ -3496,10 +3496,10 @@ GetSessionDir(
             file_mgr_data->restricted_directory =
                    XtNewString(file_mgr_data->restricted_directory);
          else
-            file_mgr_data->restricted_directory = NULL;
+            file_mgr_data->restricted_directory = nullptr;
       }
    }
-   file_mgr_data->host = NULL;
+   file_mgr_data->host = nullptr;
 }
 
 
@@ -3526,22 +3526,22 @@ GetPixmapData(
 
    /* Display the correct small directory icon */
    ftype = GetDirectoryLogicalType(file_mgr_data, path);
-   if (ftype == NULL)
-      return NULL;
+   if (ftype == nullptr)
+      return nullptr;
 
    full_name = ResolveLocalPathName(file_mgr_data->host,
                                     path,
-                                    NULL,
+                                    nullptr,
                                     home_host_name,
                                     &tt_status);
    if( TT_OK != tt_status )
-     return( NULL );
-   if (full_name == NULL)
-      return NULL;
+     return( nullptr );
+   if (full_name == nullptr)
+      return nullptr;
 
    short_name = strrchr(full_name, '/');
-   if (short_name == NULL)
-      return NULL;
+   if (short_name == nullptr)
+      return nullptr;
    if (strcmp(short_name, "/.") == 0)
    {
       if (short_name == full_name)
@@ -3587,14 +3587,14 @@ BranchListToString(
    char * branch_name;
    int rv;
 
-   if (*value != NULL)
+   if (*value != nullptr)
    {
       rv = write (fd, out_buf, strlen (out_buf));
 
       i = 0;
       branch_name = (*value)[i];
 
-      while (branch_name != NULL)
+      while (branch_name != nullptr)
       {
          if (!first)
             rv = write (fd, ", ", strlen (", "));
@@ -3633,7 +3633,7 @@ SelectionListToString(
    DirectorySet * directory_set;
    int rv; /* probably should actually check this... */
 
-   if (*value != NULL)
+   if (*value != nullptr)
    {
       rv = write (fd, out_buf, strlen (out_buf));
 
@@ -3641,7 +3641,7 @@ SelectionListToString(
       file_view_data = (*value)[i];
 
 
-      while (file_view_data != NULL)
+      while (file_view_data != nullptr)
       {
          directory_set  = (DirectorySet *) file_view_data->directory_set;
 
@@ -3689,15 +3689,15 @@ StringToBranchList(
    static char ** table_ptr;
    char * start;
    char * current;
-   char ** table = NULL;
+   char ** table = nullptr;
    int table_size = 0;
 
-   table_ptr = NULL;
+   table_ptr = nullptr;
 
    to_val->size = sizeof (char **);
    to_val->addr = (XtPointer) &table_ptr;
 
-   if (from_val->addr == NULL)
+   if (from_val->addr == nullptr)
       return True;
 
 
@@ -3706,10 +3706,10 @@ StringToBranchList(
 
    current = start = (char *) from_val->addr;
 
-   while (start != NULL)
+   while (start != nullptr)
    {
       current = DtStrchr (start, ',');
-      if (current != NULL)
+      if (current != nullptr)
       {
          *current = '\0';
          current += 2;
@@ -3718,7 +3718,7 @@ StringToBranchList(
       table_size++;
       table = (char **) XtRealloc ((char *)table,
                                         sizeof (char *) * (table_size + 1));
-      table[table_size] = NULL;
+      table[table_size] = nullptr;
 
       table[table_size - 1] = XtNewString (start);
       start = current;
@@ -3749,15 +3749,15 @@ StringToSelectionList(
    static char ** table_ptr;
    char * start;
    char * current;
-   char ** table = NULL;
+   char ** table = nullptr;
    int table_size = 0;
 
-   table_ptr = NULL;
+   table_ptr = nullptr;
 
    to_val->size = sizeof (char **);
    to_val->addr = (XtPointer) &table_ptr;
 
-   if (from_val->addr == NULL)
+   if (from_val->addr == nullptr)
       return;
 
 
@@ -3766,10 +3766,10 @@ StringToSelectionList(
 
    current = start = (char *) from_val->addr;
 
-   while (start != NULL)
+   while (start != nullptr)
    {
       current = DtStrchr (start, ',');
-      if (current != NULL)
+      if (current != nullptr)
       {
          *current = '\0';
          current += 2;
@@ -3778,7 +3778,7 @@ StringToSelectionList(
       table_size++;
       table = (char **) XtRealloc ((char *)table,
                                         sizeof (char *) * (table_size + 1));
-      table[table_size] = NULL;
+      table[table_size] = nullptr;
 
       table[table_size - 1] = XtNewString (start);
       start = current;
@@ -3826,7 +3826,7 @@ UpdateStatusLine(
        (file_mgr_data->busy_status == initiating_readdir ||
         file_mgr_data->busy_status == busy_readdir))
    {
-      SetSpecialMsg( file_mgr_rec, file_mgr_data, NULL );
+      SetSpecialMsg( file_mgr_rec, file_mgr_data, nullptr );
    }
 
    if (file_mgr_data->special_msg)
@@ -3865,7 +3865,7 @@ MsgTimerEvent(
    if (file_mgr_data->special_msg)
    {
       XtFree(file_mgr_data->special_msg);
-      file_mgr_data->special_msg = NULL;
+      file_mgr_data->special_msg = nullptr;
       if (file_mgr_data->show_status_line)
       {
          file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
@@ -3890,7 +3890,7 @@ SetSpecialMsg(
    if (file_mgr_data->special_msg)
    {
       XtFree(file_mgr_data->special_msg);
-      file_mgr_data->special_msg = NULL;
+      file_mgr_data->special_msg = nullptr;
    }
    if (file_mgr_data->msg_timer_id)
       XtRemoveTimeOut(file_mgr_data->msg_timer_id);
@@ -3905,7 +3905,7 @@ SetSpecialMsg(
    }
    else
    {
-      file_mgr_data->special_msg = NULL;
+      file_mgr_data->special_msg = nullptr;
       file_mgr_data->msg_timer_id = 0;
    }
 }
@@ -3918,7 +3918,7 @@ SetSpecialMsg(
 static void
 ShelfPopupDataFree(ShelfPopupData *data)
 {
-   if (data == NULL)
+   if (data == nullptr)
       return;
    XtFree(data->path);
    XtFree((char *)data);
@@ -3927,7 +3927,7 @@ ShelfPopupDataFree(ShelfPopupData *data)
 static void
 ShelfPopupDataSet(FileMgrRec *file_mgr_rec, ShelfPopupData *data)
 {
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
    {
       ShelfPopupDataFree(data);
       return;
@@ -3941,8 +3941,8 @@ ShelfPopupDataSet(FileMgrRec *file_mgr_rec, ShelfPopupData *data)
 static ShelfPopupData *
 ShelfPopupDataGet(FileMgrRec *file_mgr_rec)
 {
-   if (file_mgr_rec == NULL)
-      return NULL;
+   if (file_mgr_rec == nullptr)
+      return nullptr;
    return (ShelfPopupData *)file_mgr_rec->shelf_popup_data;
 }
 
@@ -3971,9 +3971,9 @@ ShelfApplyDragRemove(int slot)
 void
 ShelfPrepareDragFinish(DtDndDropCallbackStruct *dropInfo)
 {
-   if (dropInfo == NULL)
+   if (dropInfo == nullptr)
       return;
-   if (!shelf_drag_active || shelf_drag_context == NULL)
+   if (!shelf_drag_active || shelf_drag_context == nullptr)
       return;
    if (dropInfo->dragContext != shelf_drag_context)
       return;
@@ -4005,9 +4005,9 @@ ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
    char **file_set;
    char **host_set;
    Boolean result;
-   FileOpFinishProc finish_cb = NULL;
+   FileOpFinishProc finish_cb = nullptr;
 
-   if (file_mgr_rec == NULL || file_mgr_data == NULL || path == NULL)
+   if (file_mgr_rec == nullptr || file_mgr_data == nullptr || path == nullptr)
       return;
 
    file_set = (char **)XtMalloc(sizeof(char *));
@@ -4022,7 +4022,7 @@ ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
    }
 
    result = FileMoveCopy(file_mgr_data,
-                         NULL,
+                         nullptr,
                          file_mgr_data->current_directory,
                          file_mgr_data->host,
                          host_set,
@@ -4030,7 +4030,7 @@ ShelfMoveCopyLinkToCurrent(FileMgrRec *file_mgr_rec,
                          1,
                          modifiers,
                          finish_cb,
-                         NULL);
+                         nullptr);
 
    if (!result)
       shelf_move_finish_slot = -1;
@@ -4051,23 +4051,23 @@ ShelfOpenFile(FileMgrRec *file_mgr_rec,
    char dir_buf[MAX_PATH];
    char *file_name;
 
-   if (file_mgr_rec == NULL || file_mgr_data == NULL || path == NULL)
+   if (file_mgr_rec == nullptr || file_mgr_data == nullptr || path == nullptr)
       return;
 
-   logical_type = (char *)DtDtsDataToDataType(path, NULL, 0,
-                                              NULL, NULL, NULL, NULL);
-   if (logical_type == NULL)
+   logical_type = (char *)DtDtsDataToDataType(path, nullptr, 0,
+                                              nullptr, nullptr, nullptr, nullptr);
+   if (logical_type == nullptr)
       return;
 
    action = _DtRetrieveDefaultAction(logical_type);
    DtDtsFreeDataType(logical_type);
-   if (action == NULL)
+   if (action == nullptr)
       return;
 
    strncpy(dir_buf, path, MAX_PATH - 1);
    dir_buf[MAX_PATH - 1] = '\0';
    file_name = strrchr(dir_buf, '/');
-   if (file_name == NULL)
+   if (file_name == nullptr)
    {
       XtFree(action);
       return;
@@ -4087,7 +4087,7 @@ ShelfOpenFile(FileMgrRec *file_mgr_rec,
    action_arg.u.file.name = (char *)path;
 
    DtActionInvoke(file_mgr_rec->shell, action, &action_arg, 1,
-                  NULL, NULL, dir_buf, True, NULL, NULL);
+                  nullptr, nullptr, dir_buf, True, nullptr, nullptr);
    XtFree(action);
 }
 
@@ -4095,13 +4095,13 @@ static void
 ShelfOpenNewView(FileMgrData *file_mgr_data, const char *path,
                  const char *host)
 {
-   if (file_mgr_data == NULL || path == NULL)
+   if (file_mgr_data == nullptr || path == nullptr)
       return;
 
    const char *target_host = host ? host : file_mgr_data->host;
 
    initiating_view = (XtPointer) file_mgr_data;
-   if (file_mgr_data->restricted_directory != NULL)
+   if (file_mgr_data->restricted_directory != nullptr)
    {
       special_view = True;
       special_treeType = file_mgr_data->show_type;
@@ -4110,21 +4110,21 @@ ShelfOpenNewView(FileMgrData *file_mgr_data, const char *path,
       special_directionType = file_mgr_data->direction;
       special_randomType = file_mgr_data->positionEnabled;
       special_restricted = XtNewString(file_mgr_data->restricted_directory);
-      if (file_mgr_data->title == NULL)
-         special_title = NULL;
+      if (file_mgr_data->title == nullptr)
+         special_title = nullptr;
       else
          special_title = XtNewString(file_mgr_data->title);
       special_helpVol = XtNewString(file_mgr_data->helpVol);
 
       if (file_mgr_data->toolbox)
          GetNewView((char *)target_host, (char *)path,
-                    file_mgr_data->restricted_directory, NULL, 0);
+                    file_mgr_data->restricted_directory, nullptr, 0);
       else
-         GetNewView((char *)target_host, (char *)path, NULL, NULL, 0);
+         GetNewView((char *)target_host, (char *)path, nullptr, nullptr, 0);
    }
    else
    {
-      GetNewView((char *)target_host, (char *)path, NULL, NULL, 0);
+      GetNewView((char *)target_host, (char *)path, nullptr, nullptr, 0);
    }
    initiating_view = (XtPointer) NULL;
 }
@@ -4138,13 +4138,13 @@ ShelfPopupEnsureMenu(FileMgrRec *file_mgr_rec)
    Arg args[2];
    int n = 0;
 
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
       return;
 
-   if (file_mgr_rec->shelf_popup != NULL)
+   if (file_mgr_rec->shelf_popup != nullptr)
    {
       Widget menushell = XtParent(file_mgr_rec->shelf_popup);
-      Widget parent = menushell ? XtParent(menushell) : NULL;
+      Widget parent = menushell ? XtParent(menushell) : nullptr;
 
       if (parent == file_mgr_rec->shelf_frame)
          return;
@@ -4153,7 +4153,7 @@ ShelfPopupEnsureMenu(FileMgrRec *file_mgr_rec)
          XtDestroyWidget(menushell);
       else
          XtDestroyWidget(file_mgr_rec->shelf_popup);
-      file_mgr_rec->shelf_popup = NULL;
+      file_mgr_rec->shelf_popup = nullptr;
    }
 
    n = 0;
@@ -4169,76 +4169,76 @@ ShelfPopupEnsureMenu(FileMgrRec *file_mgr_rec)
    }
 
    label = XmStringCreateLocalized("");
-  item = XmCreateLabelGadget(menu, "shelfName", NULL, 0);
-   XtVaSetValues(item, XmNlabelString, label, NULL);
+  item = XmCreateLabelGadget(menu, "shelfName", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
    XmStringFree(label);
    XtManageChild(item);
 
-   item = XmCreateSeparatorGadget(menu, "shelfNameSeparator", NULL, 0);
+   item = XmCreateSeparatorGadget(menu, "shelfNameSeparator", nullptr, 0);
    XtManageChild(item);
 
    label = XmStringCreateLocalized("Run");
-   item = XmCreatePushButtonGadget(menu, "shelfRun", NULL, 0);
-   XtVaSetValues(item, XmNlabelString, label, NULL);
+   item = XmCreatePushButtonGadget(menu, "shelfRun", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
    XmStringFree(label);
    XtAddCallback(item, XmNactivateCallback, ShelfPopupRunCB,
                  (XtPointer)file_mgr_rec);
    XtManageChild(item);
 
    label = XmStringCreateLocalized("Run...");
-   item = XmCreatePushButtonGadget(menu, "shelfRunNoPrompt", NULL, 0);
-   XtVaSetValues(item, XmNlabelString, label, NULL);
+   item = XmCreatePushButtonGadget(menu, "shelfRunNoPrompt", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
    XmStringFree(label);
    XtAddCallback(item, XmNactivateCallback, ShelfPopupRunNoPromptCB,
                  (XtPointer)file_mgr_rec);
    XtManageChild(item);
 
    label = XmStringCreateLocalized(GETMESSAGE(40, 3, "Open"));
-   item = XmCreatePushButtonGadget(menu, "shelfOpen", NULL, 0);
-   XtVaSetValues(item, XmNlabelString, label, NULL);
+   item = XmCreatePushButtonGadget(menu, "shelfOpen", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
    XmStringFree(label);
    XtAddCallback(item, XmNactivateCallback, ShelfPopupOpenCB,
                  (XtPointer)file_mgr_rec);
    XtManageChild(item);
 
    label = XmStringCreateLocalized(GETMESSAGE(40, 4, "Open New View"));
-   item = XmCreatePushButtonGadget(menu, "shelfOpenNewView", NULL, 0);
-   XtVaSetValues(item, XmNlabelString, label, NULL);
+   item = XmCreatePushButtonGadget(menu, "shelfOpenNewView", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
    XmStringFree(label);
    XtAddCallback(item, XmNactivateCallback, ShelfPopupOpenNewViewCB,
                  (XtPointer)file_mgr_rec);
    XtManageChild(item);
 
    label = XmStringCreateLocalized(GETMESSAGE(40, 5, "Remove from Shelf"));
-   item = XmCreatePushButtonGadget(menu, "shelfRemove", NULL, 0);
-   XtVaSetValues(item, XmNlabelString, label, NULL);
+   item = XmCreatePushButtonGadget(menu, "shelfRemove", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
    XmStringFree(label);
    XtAddCallback(item, XmNactivateCallback, ShelfPopupRemoveCB,
                  (XtPointer)file_mgr_rec);
    XtManageChild(item);
 
-   item = XmCreateSeparatorGadget(menu, "separator", NULL, 0);
+   item = XmCreateSeparatorGadget(menu, "separator", nullptr, 0);
    XtManageChild(item);
 
    label = XmStringCreateLocalized(GETMESSAGE(40, 6, "Move to Current Directory"));
-   item = XmCreatePushButtonGadget(menu, "shelfMove", NULL, 0);
-   XtVaSetValues(item, XmNlabelString, label, NULL);
+   item = XmCreatePushButtonGadget(menu, "shelfMove", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
    XmStringFree(label);
    XtAddCallback(item, XmNactivateCallback, ShelfPopupMoveCB,
                  (XtPointer)file_mgr_rec);
    XtManageChild(item);
 
    label = XmStringCreateLocalized(GETMESSAGE(40, 7, "Copy to Current Directory"));
-   item = XmCreatePushButtonGadget(menu, "shelfCopy", NULL, 0);
-   XtVaSetValues(item, XmNlabelString, label, NULL);
+   item = XmCreatePushButtonGadget(menu, "shelfCopy", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
    XmStringFree(label);
    XtAddCallback(item, XmNactivateCallback, ShelfPopupCopyCB,
                  (XtPointer)file_mgr_rec);
    XtManageChild(item);
 
    label = XmStringCreateLocalized(GETMESSAGE(40, 8, "Link to Current Directory"));
-   item = XmCreatePushButtonGadget(menu, "shelfLink", NULL, 0);
-   XtVaSetValues(item, XmNlabelString, label, NULL);
+   item = XmCreatePushButtonGadget(menu, "shelfLink", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
    XmStringFree(label);
    XtAddCallback(item, XmNactivateCallback, ShelfPopupLinkCB,
                  (XtPointer)file_mgr_rec);
@@ -4257,12 +4257,12 @@ ShelfPopupUpdate(FileMgrRec *file_mgr_rec, ShelfPopupData *data)
    XmString label;
    const char *name = "";
 
-   if (file_mgr_rec == NULL || file_mgr_rec->shelf_popup == NULL)
+   if (file_mgr_rec == nullptr || file_mgr_rec->shelf_popup == nullptr)
       return;
 
    menu = file_mgr_rec->shelf_popup;
-   is_dir = (data != NULL && data->is_dir);
-   can_remove = (data != NULL && data->slot != 0);
+   is_dir = (data != nullptr && data->is_dir);
+   can_remove = (data != nullptr && data->slot != 0);
 
    child = XtNameToWidget(menu, "shelfName");
    if (child)
@@ -4276,21 +4276,21 @@ ShelfPopupUpdate(FileMgrRec *file_mgr_rec, ShelfPopupData *data)
             name = data->path;
       }
       label = XmStringCreateLocalized((char *)name);
-      XtVaSetValues(child, XmNlabelString, label, NULL);
+      XtVaSetValues(child, XmNlabelString, label, nullptr);
       XmStringFree(label);
    }
 
    child = XtNameToWidget(menu, "shelfRun");
    if (child)
-      XtSetSensitive(child, (data != NULL && data->is_execute));
+      XtSetSensitive(child, (data != nullptr && data->is_execute));
 
    child = XtNameToWidget(menu, "shelfRunNoPrompt");
    if (child)
-      XtSetSensitive(child, (data != NULL && data->is_execute));
+      XtSetSensitive(child, (data != nullptr && data->is_execute));
 
    child = XtNameToWidget(menu, "shelfOpen");
    if (child)
-      XtSetSensitive(child, (data != NULL && !data->is_execute));
+      XtSetSensitive(child, (data != nullptr && !data->is_execute));
 
    child = XtNameToWidget(menu, "shelfOpenNewView");
    if (child)
@@ -4306,18 +4306,18 @@ ShelfCreatePopupFileViewData(
         FileMgrData *file_mgr_data,
         const char *resolved_path )
 {
-   FileViewData *fvd = NULL;
-   DirectorySet *ds = NULL;
-   FileData *fd = NULL;
+   FileViewData *fvd = nullptr;
+   DirectorySet *ds = nullptr;
+   FileData *fd = nullptr;
    char dir[MAX_PATH];
    const char *base;
 
-   if (file_mgr_data == NULL || resolved_path == NULL || *resolved_path == '\0')
-      return NULL;
+   if (file_mgr_data == nullptr || resolved_path == nullptr || *resolved_path == '\0')
+      return nullptr;
 
    base = strrchr(resolved_path, '/');
-   if (base == NULL)
-      return NULL;
+   if (base == nullptr)
+      return nullptr;
 
    if (base == resolved_path)
    {
@@ -4328,15 +4328,15 @@ ShelfCreatePopupFileViewData(
    {
       size_t len = (size_t)(base - resolved_path);
       if (len >= sizeof(dir))
-         return NULL;
+         return nullptr;
       memcpy(dir, resolved_path, len);
       dir[len] = '\0';
       base++;
    }
 
    fd = ReadFileData(dir, (char *)base);
-   if (fd == NULL)
-      return NULL;
+   if (fd == nullptr)
+      return nullptr;
 
    ds = (DirectorySet *)XtNew(DirectorySet);
    memset(ds, 0, sizeof(DirectorySet));
@@ -4363,7 +4363,7 @@ static void
 ShelfFreePopupFileViewData(
         FileViewData *file_view_data )
 {
-   if (file_view_data == NULL)
+   if (file_view_data == nullptr)
       return;
 
    DirectorySet *ds = (DirectorySet *)file_view_data->directory_set;
@@ -4390,20 +4390,20 @@ ShelfRunResolvedPath(
         const char *resolved_host,
         const char *action )
 {
-   char *dir_path = NULL;
-   FileViewData *file_view_data = NULL;
-   char *host_name = NULL;
+   char *dir_path = nullptr;
+   FileViewData *file_view_data = nullptr;
+   char *host_name = nullptr;
 
-   if (file_mgr_data == NULL || resolved_path == NULL || action == NULL)
+   if (file_mgr_data == nullptr || resolved_path == nullptr || action == nullptr)
       return;
 
    file_view_data = ShelfCreatePopupFileViewData(file_mgr_data, resolved_path);
-   if (file_view_data == NULL)
+   if (file_view_data == nullptr)
       return;
 
    dir_path = XtNewString(resolved_path);
    char *slash = strrchr(dir_path, '/');
-   if (slash == NULL)
+   if (slash == nullptr)
       goto cleanup;
    if (slash == dir_path)
       slash[1] = '\0';
@@ -4411,12 +4411,12 @@ ShelfRunResolvedPath(
       *slash = '\0';
 
    host_name = resolved_host ? (char *)resolved_host : file_mgr_data->host;
-   if (host_name == NULL)
+   if (host_name == nullptr)
       host_name = home_host_name;
 
    ProcessAction((char *)action,
                  file_view_data,
-                 NULL,
+                 nullptr,
                  host_name,
                  dir_path,
                  file_mgr_data->restricted_directory,
@@ -4436,21 +4436,21 @@ ShelfRunPath(
 {
    FileMgrData *file_mgr_data;
    DialogData *dialog_data;
-   char *resolved_path = NULL;
-   char *resolved_host = NULL;
+   char *resolved_path = nullptr;
+   char *resolved_host = nullptr;
 
-   if (file_mgr_rec == NULL || path == NULL || action == NULL)
+   if (file_mgr_rec == nullptr || path == nullptr || action == nullptr)
       return;
 
    dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec);
-   if (dialog_data == NULL)
+   if (dialog_data == nullptr)
       return;
    file_mgr_data = (FileMgrData *)dialog_data->data;
-   if (file_mgr_data == NULL)
+   if (file_mgr_data == nullptr)
       return;
 
    resolved_path = ShelfResolvePath(file_mgr_data, path, &resolved_host);
-   if (resolved_path == NULL)
+   if (resolved_path == nullptr)
       return;
 
    ShelfRunResolvedPath(file_mgr_data, resolved_path, resolved_host, action);
@@ -4473,7 +4473,7 @@ ShelfPopupRunCB(
    (void) call_data;
 
    data = ShelfPopupDataGet(file_mgr_rec);
-   if (data == NULL || !data->is_execute)
+   if (data == nullptr || !data->is_execute)
       return;
 
    ShelfRunPath(file_mgr_rec, data->path, "RunNoPrompt");
@@ -4492,7 +4492,7 @@ ShelfPopupRunNoPromptCB(
    (void) call_data;
 
    data = ShelfPopupDataGet(file_mgr_rec);
-   if (data == NULL || !data->is_execute)
+   if (data == nullptr || !data->is_execute)
       return;
 
    ShelfRunPath(file_mgr_rec, data->path, "Run");
@@ -4555,7 +4555,7 @@ ShelfDropContextDestroyCB(
    (void) w;
    (void) call_data;
 
-   if (file_mgr_rec != NULL && file_mgr_rec->shelf_frame != NULL)
+   if (file_mgr_rec != nullptr && file_mgr_rec->shelf_frame != nullptr)
       ShelfRequestRebuild(file_mgr_rec->shelf_frame);
 }
 
@@ -4563,9 +4563,9 @@ static void
 ShelfMarkDragAccepted(
         DtDndDropCallbackStruct *dropInfo )
 {
-   if (dropInfo == NULL)
+   if (dropInfo == nullptr)
       return;
-   if (!shelf_drag_active || shelf_drag_context == NULL)
+   if (!shelf_drag_active || shelf_drag_context == nullptr)
       return;
    if (dropInfo->dragContext != shelf_drag_context)
       return;
@@ -4583,7 +4583,7 @@ ShelfDropIntoSlot(
    int i;
    int first_slot;
 
-   if (file_mgr_rec == NULL || dropInfo == NULL || dropInfo->dropData == NULL)
+   if (file_mgr_rec == nullptr || dropInfo == nullptr || dropInfo->dropData == nullptr)
       return;
 
    if (slot <= 0)
@@ -4603,7 +4603,7 @@ ShelfDropIntoSlot(
          slot++;
       }
    }
-   if (getenv("DTFILE_SHELF_DEBUG") != NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") != nullptr)
    {
       ShelfLog("ShelfDropIntoSlot: dragContext=%p shelf_drag_context=%p active=%d\n",
                (void *)dropInfo->dragContext,
@@ -4645,10 +4645,10 @@ ShelfSlotDropCB(
 
    (void) w;
 
-   if (slot_data == NULL || slot_data->file_mgr_rec == NULL)
+   if (slot_data == nullptr || slot_data->file_mgr_rec == nullptr)
       return;
 
-   if (dropInfo == NULL || dropInfo->dropData == NULL)
+   if (dropInfo == nullptr || dropInfo->dropData == nullptr)
       return;
 
    if (dropInfo->reason == DtCR_DND_DROP_ANIMATE)
@@ -4668,10 +4668,10 @@ ShelfSlotDropCB(
 static void
 ShelfItemRegisterDropSite(Widget item, ShelfItemData *item_data)
 {
-   static XtCallbackRec dropCB[] = { {ShelfItemDropCB, NULL},
-                                     {NULL, NULL} };
+   static XtCallbackRec dropCB[] = { {ShelfItemDropCB, nullptr},
+                                     {nullptr, nullptr} };
 
-   if (item == NULL || item_data == NULL)
+   if (item == nullptr || item_data == nullptr)
       return;
 
    dropCB[0].closure = (XtPointer)item_data;
@@ -4683,7 +4683,7 @@ ShelfItemRegisterDropSite(Widget item, ShelfItemData *item_data)
                           XmDROP_MOVE | XmDROP_COPY | XmDROP_LINK,
                           dropCB,
                           XmNanimationStyle, XmDRAG_UNDER_SHADOW_IN,
-                          NULL);
+                          nullptr);
       item_data->drop_registered = True;
    }
 }
@@ -4691,10 +4691,10 @@ ShelfItemRegisterDropSite(Widget item, ShelfItemData *item_data)
 static void
 ShelfSlotRegisterDropSite(Widget slot, ShelfSlotData *slot_data)
 {
-   static XtCallbackRec dropCB[] = { {ShelfSlotDropCB, NULL},
-                                     {NULL, NULL} };
+   static XtCallbackRec dropCB[] = { {ShelfSlotDropCB, nullptr},
+                                     {nullptr, nullptr} };
 
-   if (slot == NULL || slot_data == NULL)
+   if (slot == nullptr || slot_data == nullptr)
       return;
 
    dropCB[0].closure = (XtPointer)slot_data;
@@ -4703,7 +4703,7 @@ ShelfSlotRegisterDropSite(Widget slot, ShelfSlotData *slot_data)
                        XmDROP_MOVE | XmDROP_COPY | XmDROP_LINK,
                        dropCB,
                        XmNanimationStyle, XmDRAG_UNDER_SHADOW_IN,
-                       NULL);
+                       nullptr);
 }
 
 static void
@@ -4713,16 +4713,16 @@ ShelfDebugDumpTimeout(
 {
    FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
    XmManagerWidget mgr;
-   Widget *children = NULL;
+   Widget *children = nullptr;
    Cardinal num_children = 0;
    int i;
 
    (void) id;
 
-   if (getenv("DTFILE_SHELF_DEBUG") == NULL || file_mgr_rec == NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") == nullptr || file_mgr_rec == nullptr)
       return;
 
-   if (file_mgr_rec->shelf_frame == NULL)
+   if (file_mgr_rec->shelf_frame == nullptr)
       return;
 
    ShelfLogWidget("ShelfDebugDump: shelf_frame", file_mgr_rec->shelf_frame);
@@ -4734,7 +4734,7 @@ ShelfDebugDumpTimeout(
    XtVaGetValues(file_mgr_rec->shelf_frame,
                  XmNchildren, &children,
                  XmNnumChildren, &num_children,
-                 NULL);
+                 nullptr);
    ShelfLog("ShelfDebugDump: shelf_frame children=%u\n",
             (unsigned)num_children);
    for (i = 0; i < (int)num_children; i++)
@@ -4743,13 +4743,13 @@ ShelfDebugDumpTimeout(
       if (XmIsManager(children[i]))
       {
          XmManagerWidget row_mgr = (XmManagerWidget)children[i];
-         Widget *row_children = NULL;
+         Widget *row_children = nullptr;
          Cardinal row_num = 0;
          int j;
          XtVaGetValues(children[i],
                        XmNchildren, &row_children,
                        XmNnumChildren, &row_num,
-                       NULL);
+                       nullptr);
          ShelfLog("ShelfDebugDump: row children=%u\n", (unsigned)row_num);
          for (j = 0; j < (int)row_num && j < 8; j++)
          {
@@ -4777,10 +4777,10 @@ ShelfItemDropCB(
    ShelfLog("ShelfItemDropCB: item=%p data=%p\n",
             (void *)w, (void *)item_data);
 
-   if (item_data == NULL)
+   if (item_data == nullptr)
       return;
 
-   if (dropInfo == NULL || dropInfo->dropData == NULL)
+   if (dropInfo == nullptr || dropInfo->dropData == nullptr)
       return;
 
    if (dropInfo->reason == DtCR_DND_DROP_ANIMATE)
@@ -4801,17 +4801,17 @@ ShelfItemDropCB(
       return;
    }
 
-   if (item_data->path == NULL)
+   if (item_data->path == nullptr)
    {
       ShelfDropIntoSlot(item_data->file_mgr_rec, item_data->slot, dropInfo);
       return;
    }
 
    dialog_data = _DtGetInstanceData ((XtPointer)item_data->file_mgr_rec);
-   if (dialog_data == NULL)
+   if (dialog_data == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
-   if (file_mgr_data == NULL)
+   if (file_mgr_data == nullptr)
       return;
 
    if (stat(item_data->path, &st) != 0)
@@ -4822,12 +4822,12 @@ ShelfItemDropCB(
 
    if (S_ISDIR(st.st_mode))
    {
-      char **file_set = NULL;
-      char **host_set = NULL;
+      char **file_set = nullptr;
+      char **host_set = nullptr;
       unsigned int modifiers = 0;
       Boolean result;
       int i;
-      FileOpFinishProc finish_cb = NULL;
+      FileOpFinishProc finish_cb = nullptr;
 
       if (dropInfo->operation == XmDROP_COPY)
          modifiers = ControlMask;
@@ -4843,7 +4843,7 @@ ShelfItemDropCB(
       }
 
       result = FileMoveCopy(file_mgr_data,
-                            NULL,
+                            nullptr,
                             item_data->path,
                             file_mgr_data->host,
                             host_set,
@@ -4851,7 +4851,7 @@ ShelfItemDropCB(
                             dropInfo->dropData->numItems,
                             modifiers,
                             finish_cb,
-                            NULL);
+                            nullptr);
 
       if (!result)
          shelf_move_finish_slot = -1;
@@ -4876,14 +4876,14 @@ ShelfItemCallback(
         XtPointer call_data)
 {
   ShelfItemData *item_data = (ShelfItemData *) client_data;
-  DtIconCallbackStruct *icon_cb = NULL;
-  XEvent *event = NULL;
+  DtIconCallbackStruct *icon_cb = nullptr;
+  XEvent *event = nullptr;
   int reason = 0;
 
-   if (item_data == NULL || item_data->path == NULL)
+   if (item_data == nullptr || item_data->path == nullptr)
       return;
 
-   if (call_data == NULL)
+   if (call_data == nullptr)
       return;
 
    icon_cb = (DtIconCallbackStruct *)call_data;
@@ -4977,13 +4977,13 @@ ShelfRowButtonEH(
         Boolean *cont)
 {
    XButtonEvent *bev = (XButtonEvent *)event;
-   Widget *children = NULL;
+   Widget *children = nullptr;
    Cardinal num_children = 0;
    int i;
 
    (void) client_data;
 
-   if (event == NULL || event->type != ButtonRelease)
+   if (event == nullptr || event->type != ButtonRelease)
       return;
 
    if (bev->button != bMenuButton)
@@ -4992,8 +4992,8 @@ ShelfRowButtonEH(
    XtVaGetValues(w,
                  XmNchildren, &children,
                  XmNnumChildren, &num_children,
-                 NULL);
-   if (children == NULL || num_children == 0)
+                 nullptr);
+   if (children == nullptr || num_children == 0)
       return;
 
    for (i = 0; i < (int)num_children; i++)
@@ -5001,9 +5001,9 @@ ShelfRowButtonEH(
       Widget child = children[i];
       Position cx = 0, cy = 0;
       Dimension cw = 0, ch = 0;
-      ShelfItemData *item_data = NULL;
+      ShelfItemData *item_data = nullptr;
 
-      if (child == NULL)
+      if (child == nullptr)
          continue;
 
       XtVaGetValues(child,
@@ -5012,9 +5012,9 @@ ShelfRowButtonEH(
                     XmNwidth, &cw,
                     XmNheight, &ch,
                     XmNuserData, &item_data,
-                    NULL);
+                    nullptr);
 
-      if (item_data == NULL)
+      if (item_data == nullptr)
          continue;
 
       if (bev->x < cx || bev->y < cy)
@@ -5042,7 +5042,7 @@ ShelfPopupOpenCB(
    (void) call_data;
 
    data = ShelfPopupDataGet(file_mgr_rec);
-   if (data == NULL || data->item_data == NULL)
+   if (data == nullptr || data->item_data == nullptr)
       return;
 
    ShelfItemActivate(data->item_data);
@@ -5061,18 +5061,18 @@ ShelfPopupOpenNewViewCB(
    (void) call_data;
 
    data = ShelfPopupDataGet(file_mgr_rec);
-   if (data == NULL || data->file_mgr_data == NULL || data->path == NULL)
+   if (data == nullptr || data->file_mgr_data == nullptr || data->path == nullptr)
       return;
 
    if (!data->is_dir)
       return;
 
    {
-      char *resolved_host = NULL;
+      char *resolved_host = nullptr;
       char *resolved_path = ShelfResolvePath(data->file_mgr_data, data->path,
                                              &resolved_host);
 
-      if (resolved_path == NULL)
+      if (resolved_path == nullptr)
          return;
 
       ShelfOpenNewView(data->file_mgr_data, resolved_path, resolved_host);
@@ -5096,7 +5096,7 @@ ShelfPopupRemoveCB(
    (void) call_data;
 
    data = ShelfPopupDataGet(file_mgr_rec);
-   if (data == NULL)
+   if (data == nullptr)
       return;
 
    if (data->slot == 0)
@@ -5119,7 +5119,7 @@ ShelfPopupMoveCB(
    (void) call_data;
 
    data = ShelfPopupDataGet(file_mgr_rec);
-   if (data == NULL || data->file_mgr_data == NULL || data->path == NULL)
+   if (data == nullptr || data->file_mgr_data == nullptr || data->path == nullptr)
       return;
 
    ShelfMoveCopyLinkToCurrent(file_mgr_rec, data->file_mgr_data,
@@ -5139,7 +5139,7 @@ ShelfPopupCopyCB(
    (void) call_data;
 
    data = ShelfPopupDataGet(file_mgr_rec);
-   if (data == NULL || data->file_mgr_data == NULL || data->path == NULL)
+   if (data == nullptr || data->file_mgr_data == nullptr || data->path == nullptr)
       return;
 
    ShelfMoveCopyLinkToCurrent(file_mgr_rec, data->file_mgr_data,
@@ -5159,7 +5159,7 @@ ShelfPopupLinkCB(
    (void) call_data;
 
    data = ShelfPopupDataGet(file_mgr_rec);
-   if (data == NULL || data->file_mgr_data == NULL || data->path == NULL)
+   if (data == nullptr || data->file_mgr_data == nullptr || data->path == nullptr)
       return;
 
    ShelfMoveCopyLinkToCurrent(file_mgr_rec, data->file_mgr_data,
@@ -5206,9 +5206,9 @@ ShelfDragFinishCB(
 
    shelf_drag_active = False;
    shelf_drag_slot = -1;
-   shelf_drag_candidate = NULL;
-   shelf_drag_widget = NULL;
-   shelf_drag_context = NULL;
+   shelf_drag_candidate = nullptr;
+   shelf_drag_widget = nullptr;
+   shelf_drag_context = nullptr;
    if (shelf_drag_hidden_slot >= 0)
    {
       int slot = shelf_drag_hidden_slot;
@@ -5224,17 +5224,17 @@ ShelfDragFinishCB(
    if (shelf_drag_path)
    {
       XtFree(shelf_drag_path);
-      shelf_drag_path = NULL;
+      shelf_drag_path = nullptr;
    }
 
    if (shelf_rebuild_after_drag)
    {
       shelf_rebuild_after_drag = False;
-      if (shelf_rebuild_rec != NULL && shelf_rebuild_rec->shelf_frame != NULL)
+      if (shelf_rebuild_rec != nullptr && shelf_rebuild_rec->shelf_frame != nullptr)
          ShelfRequestRebuild(shelf_rebuild_rec->shelf_frame);
       else
          ShelfRebuildAll();
-      shelf_rebuild_rec = NULL;
+      shelf_rebuild_rec = nullptr;
    }
 
    if (cb->sourceIcon)
@@ -5243,7 +5243,7 @@ ShelfDragFinishCB(
    for (i = 0; i < cb->dragData->numItems; i++)
    {
       XtFree(cb->dragData->data.files[i]);
-      cb->dragData->data.files[i] = NULL;
+      cb->dragData->data.files[i] = nullptr;
    }
 }
 
@@ -5261,8 +5261,8 @@ ShelfConvertCB(
    if (cb->reason == DtCR_DND_CONVERT_DATA)
    {
       const char *drag_path = shelf_drag_path ? shelf_drag_path :
-                              (item_data ? item_data->path : NULL);
-      if (drag_path == NULL)
+                              (item_data ? item_data->path : nullptr);
+      if (drag_path == nullptr)
          return;
       cb->dragData->data.files[0] = XtNewString(drag_path);
       cb->dragData->numItems = 1;
@@ -5287,7 +5287,7 @@ ShelfCreateDragPixmap(
    int x = 0, y = 0;
    unsigned int width = 0, height = 0, border = 0, depth = 0;
 
-   if (w == NULL)
+   if (w == nullptr)
       return None;
 
    dpy = XtDisplay(w);
@@ -5330,17 +5330,17 @@ ShelfCreateDragMask(
    int minX = 0, minY = 0;
    Boolean minXUndefined = True, minYUndefined = True;
 
-   if (w == NULL || width == 0 || height == 0)
+   if (w == nullptr || width == 0 || height == 0)
       return None;
 
    dpy = XtDisplay(w);
-   if (dpy == NULL)
+   if (dpy == nullptr)
       return None;
 
    dragMask = XCreatePixmap(dpy,
                             RootWindowOfScreen(XtScreenOfObject(w)),
                             width, height, 1);
-   fillGC = XCreateGC(dpy, dragMask, 0, (XGCValues *) NULL);
+   fillGC = XCreateGC(dpy, dragMask, 0, (XGCValues *) nullptr);
 
    XFillRectangle(dpy, dragMask, fillGC, 0, 0, width, height);
 
@@ -5403,16 +5403,16 @@ ShelfStartDrag(
         ShelfItemData *item_data,
         XEvent *event)
 {
-   static XtCallbackRec convertCB[] = { {ShelfConvertCB, NULL},
-                                        {NULL, NULL} };
-   static XtCallbackRec dragFinishCB[] = { {ShelfDragFinishCB, NULL},
-                                          {NULL, NULL} };
+   static XtCallbackRec convertCB[] = { {ShelfConvertCB, nullptr},
+                                        {nullptr, nullptr} };
+   static XtCallbackRec dragFinishCB[] = { {ShelfDragFinishCB, nullptr},
+                                          {nullptr, nullptr} };
    Arg args[2];
    int numArgs = 0;
    unsigned char operations;
    Widget drag_context;
-   Widget drag_icon = NULL;
-   Widget state_icon = NULL;
+   Widget drag_icon = nullptr;
+   Widget state_icon = nullptr;
    Dimension drag_w = 0;
    Dimension drag_h = 0;
    Pixmap pm = None;
@@ -5425,7 +5425,7 @@ ShelfStartDrag(
    int hot_x = 0;
    int hot_y = 0;
 
-   if (item_data == NULL || item_data->path == NULL)
+   if (item_data == nullptr || item_data->path == nullptr)
       return;
 
    convertCB[0].closure = (XtPointer) item_data;
@@ -5446,7 +5446,7 @@ ShelfStartDrag(
       XtVaGetValues(w,
                     XmNpixmap, &pm,
                     XmNmask, &mask,
-                    NULL);
+                    nullptr);
       if (pm != None && mask != None)
          drag_icon = DtDndCreateSourceIcon(w, pm, mask);
    }
@@ -5472,11 +5472,11 @@ ShelfStartDrag(
       XtVaGetValues(drag_icon,
                     XmNwidth, &drag_w,
                     XmNheight, &drag_h,
-                    NULL);
+                    nullptr);
       XtVaSetValues(drag_icon,
                     XmNhotX, hot_x,
                     XmNhotY, hot_y,
-                    NULL);
+                    nullptr);
       XtSetArg(args[numArgs], XmNsourcePixmapIcon, drag_icon); numArgs++;
       XtSetArg(args[numArgs], XmNsourceCursorIcon, drag_icon); numArgs++;
    }
@@ -5496,19 +5496,19 @@ ShelfStartDrag(
       XtVaSetValues(drag_icon,
                     XmNhotX, hot_x,
                     XmNhotY, hot_y,
-                    NULL);
+                    nullptr);
    }
 
    drag_context = DtDndDragStart(w, event, DtDND_FILENAME_TRANSFER, 1,
                                  operations,
                                  convertCB, dragFinishCB, args, numArgs);
    shelf_drag_context = drag_context;
-   if (drag_context == NULL)
+   if (drag_context == nullptr)
    {
       item_data->drag_started = False;
       shelf_drag_active = False;
       shelf_drag_slot = -1;
-      shelf_drag_context = NULL;
+      shelf_drag_context = nullptr;
       if (shelf_drag_hidden_slot >= 0)
       {
          int slot = shelf_drag_hidden_slot;
@@ -5522,22 +5522,22 @@ ShelfStartDrag(
       XtVaSetValues(drag_context,
                     XmNhotX, hot_x,
                     XmNhotY, hot_y,
-                    NULL);
+                    nullptr);
       if (drag_icon)
       {
          XtVaSetValues(drag_context,
                        XmNsourcePixmapIcon, drag_icon,
                        XmNsourceCursorIcon, drag_icon,
-                       NULL);
+                       nullptr);
          XtVaSetValues(drag_icon,
                        XmNhotX, hot_x,
                        XmNhotY, hot_y,
-                       NULL);
+                       nullptr);
       }
       if (state_icon)
          XtVaSetValues(drag_context,
                        XmNstateCursorIcon, state_icon,
-                       NULL);
+                       nullptr);
    }
 }
 
@@ -5553,19 +5553,19 @@ ShelfItemPopup(
    Boolean is_dir = False;
    Boolean is_execute = False;
 
-   if (item_data == NULL || item_data->path == NULL || button_event == NULL)
+   if (item_data == nullptr || item_data->path == nullptr || button_event == nullptr)
       return;
 
    file_mgr_rec = item_data->file_mgr_rec;
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
       return;
 
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
-   if (dialog_data == NULL)
+   if (dialog_data == nullptr)
       return;
 
    file_mgr_data = (FileMgrData *) dialog_data->data;
-   if (file_mgr_data == NULL)
+   if (file_mgr_data == nullptr)
       return;
 
    {
@@ -5613,28 +5613,28 @@ ShelfItemActivate(
    DialogData *dialog_data;
    FileMgrData *file_mgr_data;
    struct stat st;
-   char *resolved_path = NULL;
-   char *resolved_host = NULL;
-   char *file_name = NULL;
-   char *dir_path = NULL;
+   char *resolved_path = nullptr;
+   char *resolved_host = nullptr;
+   char *file_name = nullptr;
+   char *dir_path = nullptr;
 
-   if (item_data == NULL || item_data->path == NULL)
+   if (item_data == nullptr || item_data->path == nullptr)
       return;
 
    file_mgr_rec = item_data->file_mgr_rec;
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
       return;
 
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
-   if (dialog_data == NULL)
+   if (dialog_data == nullptr)
       return;
 
    file_mgr_data = (FileMgrData *) dialog_data->data;
-   if (file_mgr_data == NULL)
+   if (file_mgr_data == nullptr)
       return;
 
    resolved_path = ShelfResolvePath(file_mgr_data, item_data->path, &resolved_host);
-   if (resolved_path == NULL)
+   if (resolved_path == nullptr)
    {
       if (resolved_host)
          XtFree(resolved_host);
@@ -5643,7 +5643,7 @@ ShelfItemActivate(
 
    if (resolved_host &&
        (strcmp(resolved_host, home_host_name) != 0) &&
-       (file_mgr_data->host == NULL || strcmp(resolved_host, file_mgr_data->host) != 0))
+       (file_mgr_data->host == nullptr || strcmp(resolved_host, file_mgr_data->host) != 0))
    {
       ShowNewDirectory(file_mgr_data, resolved_host, resolved_path);
       XtFree(resolved_path);
@@ -5672,7 +5672,7 @@ ShelfItemActivate(
 
    {
       char *slash = strrchr(resolved_path, '/');
-      if (slash == NULL)
+      if (slash == nullptr)
       {
          XtFree(resolved_path);
          if (resolved_host)
@@ -5715,23 +5715,23 @@ ShelfItemDefaultAction(
    FileMgrRec *file_mgr_rec;
    DialogData *dialog_data;
    FileMgrData *file_mgr_data;
-   char *resolved_path = NULL;
-   char *resolved_host = NULL;
+   char *resolved_path = nullptr;
+   char *resolved_host = nullptr;
    struct stat st;
    Boolean is_dir = False;
 
-   if (item_data == NULL || item_data->path == NULL)
+   if (item_data == nullptr || item_data->path == nullptr)
       return;
 
    file_mgr_rec = item_data->file_mgr_rec;
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
       return;
 
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
-   if (dialog_data == NULL)
+   if (dialog_data == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
-   if (file_mgr_data == NULL)
+   if (file_mgr_data == nullptr)
       return;
 
    resolved_path = ShelfResolvePath(file_mgr_data, item_data->path, &resolved_host);
@@ -5767,16 +5767,16 @@ ShelfResolvePath(
    const char *host_default = home_host_name;
    const char *path = input_path;
    const char *colon;
-   char *host = NULL;
-   char *path_copy = NULL;
+   char *host = nullptr;
+   char *path_copy = nullptr;
    char *tmp;
    Tt_status tt_status;
 
    if (host_out)
-      *host_out = NULL;
+      *host_out = nullptr;
 
-   if (input_path == NULL || *input_path == '\0')
-      return NULL;
+   if (input_path == nullptr || *input_path == '\0')
+      return nullptr;
 
    ShelfLog("ShelfResolvePath: input=%s cur_dir=%s host=%s\n",
             input_path,
@@ -5802,10 +5802,10 @@ ShelfResolvePath(
       host = XtNewString(host_default);
    }
 
-   if (path == NULL || *path == '\0')
+   if (path == nullptr || *path == '\0')
    {
       XtFree(host);
-      return NULL;
+      return nullptr;
    }
 
    if (*path != '/')
@@ -5817,7 +5817,7 @@ ShelfResolvePath(
       if (base_len == 0 || (base_len == 1 && base[0] == '.'))
       {
          char cwd_buf[MAXPATHLEN];
-         if (getcwd(cwd_buf, sizeof(cwd_buf)) != NULL)
+         if (getcwd(cwd_buf, sizeof(cwd_buf)) != nullptr)
          {
             base_len = strlen(cwd_buf);
             path_copy = (char *)XtMalloc(base_len + path_len + 2);
@@ -5848,11 +5848,11 @@ ShelfResolvePath(
 
    tmp = path_copy;
    path_copy = (char *)DtEliminateDots(path_copy);
-   if (path_copy == NULL)
+   if (path_copy == nullptr)
    {
       XtFree(tmp);
       XtFree(host);
-      return NULL;
+      return nullptr;
    }
    if (path_copy != tmp)
       XtFree(tmp);
@@ -5863,10 +5863,10 @@ ShelfResolvePath(
    {
       char *resolved = ResolveLocalPathName(host,
                                             path_copy,
-                                            NULL,
+                                            nullptr,
                                             home_host_name,
                                             &tt_status);
-      if (tt_status == TT_OK && resolved != NULL)
+      if (tt_status == TT_OK && resolved != nullptr)
       {
          XtFree(path_copy);
          path_copy = resolved;
@@ -5926,42 +5926,42 @@ ShelfGetPixmapData(
         char **data_type_out )
 {
    struct stat st;
-   char *data_type = NULL;
-   char *full_name = NULL;
+   char *data_type = nullptr;
+   char *full_name = nullptr;
    char *short_name;
-   PixmapData *pixmapData = NULL;
+   PixmapData *pixmapData = nullptr;
 
    if (data_type_out)
-      *data_type_out = NULL;
+      *data_type_out = nullptr;
 
-   if (file_mgr_rec == NULL || resolved_path == NULL || *resolved_path == '\0')
-      return NULL;
+   if (file_mgr_rec == nullptr || resolved_path == nullptr || *resolved_path == '\0')
+      return nullptr;
 
    if (stat(resolved_path, &st) != 0)
    {
       if (lstat(resolved_path, &st) != 0)
       {
          ShelfLog("ShelfGetPixmapData: stat failed path=%s\n", resolved_path);
-         return NULL;
+         return nullptr;
       }
    }
 
    data_type = (char *)DtDtsDataToDataType(
-                  resolved_path, NULL, 0, &st, NULL, NULL, NULL);
-   if (data_type == NULL)
+                  resolved_path, nullptr, 0, &st, nullptr, nullptr, nullptr);
+   if (data_type == nullptr)
    {
       ShelfLog("ShelfGetPixmapData: no datatype path=%s\n", resolved_path);
-      return NULL;
+      return nullptr;
    }
 
    full_name = XtNewString(resolved_path);
    short_name = strrchr(full_name, '/');
-   if (short_name == NULL)
+   if (short_name == nullptr)
    {
       ShelfLog("ShelfGetPixmapData: no '/' in path=%s\n", resolved_path);
       DtDtsFreeDataType(data_type);
       XtFree(full_name);
-      return NULL;
+      return nullptr;
    }
 
    if (strcmp(full_name, "/") == 0)
@@ -5989,7 +5989,7 @@ ShelfGetPixmapData(
 
    XtFree(full_name);
 
-   if (pixmapData == NULL)
+   if (pixmapData == nullptr)
       ShelfLog("ShelfGetPixmapData: no pixmapData path=%s type=%s\n",
                resolved_path, data_type);
    else
@@ -6030,8 +6030,8 @@ ShelfRebuild(
         FileMgrData *file_mgr_data)
 {
    XmManagerWidget manager;
-   Widget *children = NULL;
-   Widget *children_copy = NULL;
+   Widget *children = nullptr;
+   Widget *children_copy = nullptr;
    Cardinal num_children = 0;
    Arg args[32];
    int n;
@@ -6050,7 +6050,7 @@ ShelfRebuild(
    XmFontType type;
    int font_height = 0;
    Dimension desired_row_height = 0;
-   IconLayoutData *layout_data = NULL;
+   IconLayoutData *layout_data = nullptr;
    Pixel bg = 0;
    Pixel fg = 0;
    Pixel pix_bg = 0;
@@ -6060,10 +6060,10 @@ ShelfRebuild(
    Pixel select = 0;
    Colormap colormap = 0;
 
-   if (file_mgr_rec == NULL || file_mgr_data == NULL)
+   if (file_mgr_rec == nullptr || file_mgr_data == nullptr)
       return;
 
-   if (file_mgr_rec->shelf_frame == NULL)
+   if (file_mgr_rec->shelf_frame == nullptr)
       return;
 
    if (file_mgr_data->preferences && file_mgr_data->preferences->data)
@@ -6076,20 +6076,20 @@ ShelfRebuild(
    ShelfLog("ShelfRebuild: begin shelf_frame=%p\n", (void *)file_mgr_rec->shelf_frame);
    ShelfLogWidget("ShelfRebuild: shelf_frame(before)", file_mgr_rec->shelf_frame);
    if (file_mgr_rec->shell)
-      XtVaSetValues(file_mgr_rec->shell, XmNallowShellResize, False, NULL);
+      XtVaSetValues(file_mgr_rec->shell, XmNallowShellResize, False, nullptr);
    XtRemoveEventHandler(file_mgr_rec->shelf_frame,
                         StructureNotifyMask, False,
                         ShelfEnforceSizeEH, (XtPointer)file_mgr_rec);
    XtAddEventHandler(file_mgr_rec->shelf_frame,
                      StructureNotifyMask, False,
                      ShelfEnforceSizeEH, (XtPointer)file_mgr_rec);
-   if (getenv("DTFILE_SHELF_DEBUG") != NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") != nullptr)
       XtAddEventHandler(file_mgr_rec->shelf_frame,
                         StructureNotifyMask, False,
                         ShelfWidgetEventEH, (XtPointer)shelf_frame_tag);
    ShelfInit();
    ShelfLoadMounts();
-   if (ShelfGetPathForSlot(0) == NULL)
+   if (ShelfGetPathForSlot(0) == nullptr)
       ShelfSetSlot(0, ShelfGetHomePath());
 
    DPRINTF(("ShelfRebuild: slots=%d\n", ShelfGetSlotCount()));
@@ -6099,13 +6099,13 @@ ShelfRebuild(
    XtVaGetValues(file_mgr_rec->shelf_frame,
                  XmNchildren, &children,
                  XmNnumChildren, &num_children,
-                 NULL);
+                 nullptr);
    ShelfLog("ShelfRebuild: shelf_frame children=%u\n",
             (unsigned)num_children);
-   if (num_children > 0 && children != NULL)
+   if (num_children > 0 && children != nullptr)
    {
-      Widget popup_shell = NULL;
-      if (file_mgr_rec->shelf_popup != NULL)
+      Widget popup_shell = nullptr;
+      if (file_mgr_rec->shelf_popup != nullptr)
          popup_shell = XtParent(file_mgr_rec->shelf_popup);
 
       children_copy = (Widget *)XtMalloc(sizeof(Widget) * num_children);
@@ -6118,7 +6118,7 @@ ShelfRebuild(
          if (children_copy[i] == popup_shell)
             continue;
          if (file_mgr_rec->shelf_popup == children_copy[i])
-            file_mgr_rec->shelf_popup = NULL;
+            file_mgr_rec->shelf_popup = nullptr;
          XtDestroyWidget(children_copy[i]);
       }
       XtFree((char *)children_copy);
@@ -6141,7 +6141,7 @@ ShelfRebuild(
    ShelfLog("ShelfRebuild: created shelf_row=%p\n", (void *)row);
    XtAddEventHandler(row, StructureNotifyMask, False,
                      ShelfEnforceSizeEH, (XtPointer)file_mgr_rec);
-   if (getenv("DTFILE_SHELF_DEBUG") != NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") != nullptr)
       XtAddEventHandler(row, StructureNotifyMask, False,
                         ShelfWidgetEventEH, (XtPointer)shelf_row_tag);
    XtAddEventHandler(row, ButtonReleaseMask, False,
@@ -6156,7 +6156,7 @@ ShelfRebuild(
                  XmNmarginWidth, &shelf_slot_margin_w,
                  XmNmarginHeight, &shelf_slot_margin_h,
                  XmNspacing, &shelf_slot_spacing,
-                 NULL);
+                 nullptr);
    if (shelf_slot_margin_w == 0)
       shelf_slot_margin_w = 4;
    if (shelf_slot_margin_h == 0)
@@ -6194,7 +6194,7 @@ ShelfRebuild(
                  XmNmaxHeight, shelf_row_height,
                  XmNresizeHeight, False,
                  XmNresizeWidth, False,
-                 NULL);
+                 nullptr);
 
    layout_data = (IconLayoutData *)file_mgr_data->layout_data;
    if (layout_data)
@@ -6213,7 +6213,7 @@ ShelfRebuild(
                     XmNbackground, &bg,
                     XmNforeground, &fg,
                     XmNcolormap, &colormap,
-                    NULL);
+                    nullptr);
       if (colormap != 0)
       {
          XmGetColors(XtScreen(file_mgr_rec->shelf_frame), colormap, bg,
@@ -6234,7 +6234,7 @@ ShelfRebuild(
    {
       Dimension sw = 0, sh = 0;
       XtVaGetValues(file_mgr_rec->shelf_frame, XmNwidth, &sw,
-                    XmNheight, &sh, NULL);
+                    XmNheight, &sh, nullptr);
       if (shelf_row_height > 0)
       {
          XtVaSetValues(row,
@@ -6244,7 +6244,7 @@ ShelfRebuild(
                        XmNresizeHeight, False,
                        XmNresizeWidth, True,
                        XmNrecomputeSize, False,
-                       NULL);
+                       nullptr);
          ShelfLog("ShelfRebuild: set shelf_row height=%u\n",
                   (unsigned)shelf_row_height);
       }
@@ -6254,7 +6254,7 @@ ShelfRebuild(
                        XmNheight, sh,
                        XmNresizeHeight, False,
                        XmNresizeWidth, True,
-                       NULL);
+                       nullptr);
          ShelfLog("ShelfRebuild: set shelf_row height=%u\n", (unsigned)sh);
       }
    }
@@ -6270,7 +6270,7 @@ ShelfRebuild(
    shelf_slot_height = slot_height;
 
    {
-      const ShelfSlot *slots = NULL;
+      const ShelfSlot *slots = nullptr;
       int count = 0;
       slots = ShelfGetSlots(&count);
       for (i = 0; i < count; i++)
@@ -6298,7 +6298,7 @@ ShelfRebuild(
          frame_width = (Dimension)max_width;
       }
       if (frame_width == 0)
-         XtVaGetValues(file_mgr_rec->shelf_frame, XmNwidth, &frame_width, NULL);
+         XtVaGetValues(file_mgr_rec->shelf_frame, XmNwidth, &frame_width, nullptr);
       if (frame_width > 0)
       {
          if (frame_width > (shelf_slot_margin_w * 2))
@@ -6355,7 +6355,7 @@ ShelfRebuild(
       XtSetArg (args[n], XmNmaxHeight, slot_height);        n++;
       item = _DtCreateIcon(row, "shelf_item", args, n);
       ShelfLog("ShelfRebuild: created shelf_item=%p slot=%d\n", (void *)item, i);
-      if (item == NULL)
+      if (item == nullptr)
       {
          XmStringFree(label);
          continue;
@@ -6364,10 +6364,10 @@ ShelfRebuild(
       if (XtIsRealized(item))
          XtResizeWidget(item, slot_width, slot_height, 0);
       ShelfLogWidget("ShelfRebuild: shelf_item", item);
-      if (getenv("DTFILE_SHELF_DEBUG") != NULL)
+      if (getenv("DTFILE_SHELF_DEBUG") != nullptr)
       {
-         String image_name = NULL;
-         XmString icon_string = NULL;
+         String image_name = nullptr;
+         XmString icon_string = nullptr;
          Pixmap pm = None;
          unsigned char pix_pos = 0;
          unsigned char str_pos = 0;
@@ -6377,7 +6377,7 @@ ShelfRebuild(
                        XmNpixmap, &pm,
                        XmNpixmapPosition, &pix_pos,
                        XmNstringPosition, &str_pos,
-                       NULL);
+                       nullptr);
          ShelfLog("ShelfRebuild: item=%p imageName=%s pixmap=%lu string=%p pixPos=%u strPos=%u\n",
                   (void *)item,
                   image_name ? image_name : "(null)",
@@ -6390,8 +6390,8 @@ ShelfRebuild(
 
       item_data = (ShelfItemData *)XtMalloc(sizeof(ShelfItemData));
       item_data->file_mgr_rec = file_mgr_rec;
-      item_data->path = NULL;
-      item_data->icon_name = NULL;
+      item_data->path = nullptr;
+      item_data->icon_name = nullptr;
       item_data->slot = i;
       item_data->drag_started = False;
       item_data->drag_possible = False;
@@ -6407,15 +6407,15 @@ ShelfRebuild(
       ShelfLog("ShelfRebuild: add callback handler item=%p\n", (void *)item);
       XtAddCallback(item, XmNcallback, ShelfItemCallback,
                     (XtPointer)item_data);
-      XtVaSetValues(item, XmNuserData, item_data, NULL);
+      XtVaSetValues(item, XmNuserData, item_data, nullptr);
       ShelfLog("ShelfRebuild: add destroy callback item=%p\n", (void *)item);
       XtAddCallback(item, XmNdestroyCallback, ShelfItemDestroyCB,
                     (XtPointer)item_data);
       ShelfItemRegisterDropSite(item, item_data);
-      if (getenv("DTFILE_SHELF_DEBUG") != NULL)
+      if (getenv("DTFILE_SHELF_DEBUG") != nullptr)
       {
          Dimension sw = 0, sh = 0;
-         XtVaGetValues(item, XmNwidth, &sw, XmNheight, &sh, NULL);
+         XtVaGetValues(item, XmNwidth, &sw, XmNheight, &sh, nullptr);
          ShelfLog("ShelfRebuild: slot %d widget=%p w=%u h=%u\n",
                   i, (void *)item, (unsigned)sw, (unsigned)sh);
       }
@@ -6435,14 +6435,14 @@ ShelfRebuild(
                     XmNminHeight, shelf_row_height,
                     XmNmaxHeight, shelf_row_height,
                     XmNresizeHeight, False,
-                    NULL);
+                    nullptr);
       XtVaSetValues(row,
                     XmNheight, shelf_row_height,
                     XmNminHeight, shelf_row_height,
                     XmNmaxHeight, shelf_row_height,
                     XmNresizeHeight, False,
                     XmNrecomputeSize, False,
-                    NULL);
+                    nullptr);
       if (XtIsRealized(row))
          XtResizeWidget(row, XtWidth(row), shelf_row_height, 0);
       if (XtIsRealized(file_mgr_rec->shelf_frame))
@@ -6450,7 +6450,7 @@ ShelfRebuild(
                         XtWidth(file_mgr_rec->shelf_frame),
                         shelf_row_height, 0);
    }
-   if (getenv("DTFILE_SHELF_DEBUG") != NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") != nullptr)
       XtAppAddTimeOut(XtWidgetToApplicationContext(file_mgr_rec->shelf_frame),
                       200, ShelfDebugDumpTimeout, (XtPointer)file_mgr_rec);
 }
@@ -6501,20 +6501,20 @@ ShelfRequestRebuild(Widget widget)
 {
    XtAppContext app;
 
-   if (shelf_drag_active || shelf_drag_context != NULL)
+   if (shelf_drag_active || shelf_drag_context != nullptr)
    {
       shelf_rebuild_after_drag = True;
-      shelf_rebuild_rec = NULL;
+      shelf_rebuild_rec = nullptr;
       return;
    }
 
    if (shelf_rebuild_pending)
       return;
 
-   if (widget == NULL)
+   if (widget == nullptr)
       widget = toplevel;
 
-   if (widget == NULL)
+   if (widget == nullptr)
    {
       ShelfRebuildAll();
       return;
@@ -6524,7 +6524,7 @@ ShelfRequestRebuild(Widget widget)
    shelf_rebuild_pending = True;
    ShelfLog("ShelfRequestRebuild: schedule rebuild widget=%p\n", (void *)widget);
    shelf_rebuild_timer = XtAppAddTimeOut(app, 0,
-                                        ShelfRebuildAllTimeout, NULL);
+                                        ShelfRebuildAllTimeout, nullptr);
 }
 
 void
@@ -6538,14 +6538,14 @@ ShelfRebuildAll(void)
       DialogData *dialog_data;
       FileMgrData *file_mgr_data;
 
-      if (view == NULL)
+      if (view == nullptr)
          continue;
 
       dialog_data = _DtGetInstanceData ((XtPointer)view);
-      if (dialog_data == NULL)
+      if (dialog_data == nullptr)
          continue;
       file_mgr_data = (FileMgrData *) dialog_data->data;
-      if (file_mgr_data == NULL || !file_mgr_data->show_shelf)
+      if (file_mgr_data == nullptr || !file_mgr_data->show_shelf)
          continue;
 
       ShelfRebuild(view, file_mgr_data);
@@ -6592,7 +6592,7 @@ UpdateHeaders(
     * Make sure the iconic path & current directory widgets are
     * correctly managed & attached.
     */
-   shelf_managed = (file_mgr_rec->shelf_frame != NULL &&
+   shelf_managed = (file_mgr_rec->shelf_frame != nullptr &&
                     XtIsManaged(file_mgr_rec->shelf_frame));
 
    if ((file_mgr_data->show_shelf == 0) != (shelf_managed == 0) ||
@@ -6610,7 +6610,7 @@ UpdateHeaders(
                file_mgr_data->show_current_dir,
                file_mgr_data->show_status_line));
 
-      if ((!file_mgr_data->show_shelf || file_mgr_rec->shelf_frame == NULL) &&
+      if ((!file_mgr_data->show_shelf || file_mgr_rec->shelf_frame == nullptr) &&
           !file_mgr_data->show_iconic_path &&
           !file_mgr_data->show_current_dir)
          XtUnmanageChild(file_mgr_rec->header_frame);
@@ -6626,7 +6626,7 @@ UpdateHeaders(
       nmanage = 0;
 
       /* attach the shelf (placeholder container for now) */
-      if (file_mgr_data->show_shelf && file_mgr_rec->shelf_frame != NULL)
+      if (file_mgr_data->show_shelf && file_mgr_rec->shelf_frame != nullptr)
       {
          n = 0;
         XtSetArg (args[n], XmNtopAttachment, XmATTACH_FORM);      n++;
@@ -6650,7 +6650,7 @@ UpdateHeaders(
       if (file_mgr_data->show_iconic_path)
       {
          n = 0;
-         if (file_mgr_data->show_shelf && file_mgr_rec->shelf_frame != NULL)
+         if (file_mgr_data->show_shelf && file_mgr_rec->shelf_frame != nullptr)
          {
             XtSetArg (args[n], XmNtopAttachment, XmATTACH_WIDGET);    n++;
             XtSetArg (args[n], XmNtopWidget,
@@ -6697,7 +6697,7 @@ UpdateHeaders(
             XtSetArg (args[n], XmNtopWidget,
                                file_mgr_rec->header_separator);       n++;
          }
-         else if (file_mgr_data->show_shelf && file_mgr_rec->shelf_frame != NULL)
+         else if (file_mgr_data->show_shelf && file_mgr_rec->shelf_frame != nullptr)
          {
             XtSetArg (args[n], XmNtopAttachment, XmATTACH_WIDGET);    n++;
             XtSetArg (args[n], XmNtopWidget,
@@ -6783,7 +6783,7 @@ UpdateHeaders(
       XtSetValues(file_mgr_rec->shell, args, 1);
    }
 
-   if (file_mgr_data->show_shelf && file_mgr_rec->shelf_frame != NULL)
+   if (file_mgr_data->show_shelf && file_mgr_rec->shelf_frame != nullptr)
    {
       XmManagerWidget shelf_mgr = (XmManagerWidget)file_mgr_rec->shelf_frame;
       if (XtIsManaged(file_mgr_rec->shelf_frame) &&
@@ -6901,8 +6901,8 @@ ShowNewDirectory(
    char *tmp_type;
    char *title;
 
-   tmp_type = DtDtsDataToDataType(directory_name, NULL, 0, NULL, NULL,
-                                  NULL, NULL);
+   tmp_type = DtDtsDataToDataType(directory_name, nullptr, 0, nullptr, nullptr,
+                                  nullptr, nullptr);
    if (( (strcmp(tmp_type, LT_AGROUP) == 0) ||
          (strstr(tmp_type, LT_AGROUP_SUBDIR)) )
        &&
@@ -6921,7 +6921,7 @@ ShowNewDirectory(
       pwd_dir = XtNewString(file_mgr_data->current_directory);
       DtActionInvoke(((FileMgrRec *) file_mgr_data->file_mgr_rec)->shell,
                      "OpenAppGroup", action_args, 1,
-                     NULL, NULL, pwd_dir, True, NULL, NULL);
+                     nullptr, nullptr, pwd_dir, True, nullptr, nullptr);
       DtDtsFreeDataType(tmp_type);
       XtFree(pwd_dir);
       return;
@@ -6933,8 +6933,8 @@ ShowNewDirectory(
 
       pwd_dir = XtNewString(file_mgr_data->current_directory);
       DtActionInvoke(((FileMgrRec *) file_mgr_data->file_mgr_rec)->shell,
-                     "Trash", NULL, 0,
-                     NULL, NULL, pwd_dir, True, NULL, NULL);
+                     "Trash", nullptr, 0,
+                     nullptr, nullptr, pwd_dir, True, nullptr, nullptr);
       DtDtsFreeDataType(tmp_type);
       XtFree(pwd_dir);
       return;
@@ -6947,7 +6947,7 @@ ShowNewDirectory(
       FileMgrData *fileMgrData;
 
       fileMgrData = CheckOpenDir(directory_name, host_name);
-      if(fileMgrData != NULL)
+      if(fileMgrData != nullptr)
       {
          dialog_data = _DtGetInstanceData(fileMgrData->file_mgr_rec);
          CloseView(dialog_data);
@@ -6976,13 +6976,13 @@ ShowNewDirectory(
 
    /* save the current branch list */
    branch_list = file_mgr_data->branch_list;
-   file_mgr_data->branch_list = NULL;
+   file_mgr_data->branch_list = nullptr;
 
    FileMgrBuildDirectories (file_mgr_data, host_name, directory_name);
 
    GetFileData (file_mgr_data, True, branch_list);
 
-   if (branch_list != NULL)
+   if (branch_list != nullptr)
    {
       for (i = 0; branch_list[i]; i++)
         XtFree (branch_list[i]);
@@ -6999,7 +6999,7 @@ ShowNewDirectory(
    if (showFilesystem && file_mgr_data != trashFileMgrData)
       UpdateHeaders (file_mgr_rec, file_mgr_data, True);
    else if(file_mgr_data == trashFileMgrData
-           && file_mgr_data != NULL )
+           && file_mgr_data != nullptr )
       UpdateStatusLine(file_mgr_rec, file_mgr_data);
 
    /* change the title */
@@ -7014,7 +7014,7 @@ ShowNewDirectory(
       LayoutFileIcons(file_mgr_rec, file_mgr_data, False, True);
 
    if (openDirType == NEW)
-      ForceMyIconOpen (file_mgr_data->host, NULL);
+      ForceMyIconOpen (file_mgr_data->host, nullptr);
    XmDropSiteEndUpdate(file_mgr_rec->file_window);
 }
 
@@ -7081,7 +7081,7 @@ FileMgrBuildDirectories(
    /*  Inform Main that the directory is being changed and       */
    /*  free up the data contained in the current directory set.  */
 
-   if (file_mgr_data->current_directory != NULL)
+   if (file_mgr_data->current_directory != nullptr)
    {
       DirectoryChanged ((XtPointer)file_mgr_data, file_mgr_data->host, host_name,
                         file_mgr_data->current_directory, directory_name);
@@ -7106,7 +7106,7 @@ FileMgrBuildDirectories(
       file_mgr_data->restricted_directory = XtNewString( directory_name );
    }
 
-   if (file_mgr_data->host != NULL)
+   if (file_mgr_data->host != nullptr)
       XtFree ((char *) file_mgr_data->host);
 
    file_mgr_data->host = (char *) XtNewString (host_name);
@@ -7118,14 +7118,14 @@ FileMgrBuildDirectories(
       ((DirectorySet **) XtMalloc (2 * sizeof(DirectorySet *))) + 1;
    file_mgr_data->directory_count = 1;
 
-   directory_set[-1] = NULL;
+   directory_set[-1] = nullptr;
 
    directory_set[0] = (DirectorySet *) XtMalloc (sizeof (DirectorySet));
    directory_set[0]->name = (char *) XtNewString (current_directory);
-   directory_set[0]->sub_root = NULL;
+   directory_set[0]->sub_root = nullptr;
    directory_set[0]->file_count = 0;
-   directory_set[0]->file_view_data = NULL;
-   directory_set[0]->order_list = NULL;
+   directory_set[0]->file_view_data = nullptr;
+   directory_set[0]->order_list = nullptr;
    directory_set[0]->filtered_file_count = 0;
    directory_set[0]->invisible_file_count = 0;
    directory_set[0]->file_mgr_data = (XtPointer) file_mgr_data;
@@ -7139,7 +7139,7 @@ DropOnGadget (
    Position x,
    Position y)
 {
-   static Region r = NULL;
+   static Region r = nullptr;
    unsigned char flags;
    XRectangle pRect, lRect;
 
@@ -7157,7 +7157,7 @@ DropOnGadget (
    }
    else
    {
-      if (r == NULL)
+      if (r == nullptr)
          r = XCreateRegion();
       else
          XSubtractRegion(r, r, r);
@@ -7207,7 +7207,7 @@ DropOnPrimaryHotspot (
       {
          file_view_data = top->file_view_data;
 
-         if(file_view_data == NULL)
+         if(file_view_data == nullptr)
          {
             top = top->next;
             continue;
@@ -7255,7 +7255,7 @@ DropOnPrimaryHotspot (
       }
    }
 
-   *directory_data = NULL;
+   *directory_data = nullptr;
    return(False);
 }
 
@@ -7272,7 +7272,7 @@ ProcessDropOnFileWindow (
      DtDndDropCallbackStruct *dropInfo,
      FileMgrData *file_mgr_data)
 {
-   char *command = NULL;
+   char *command = nullptr;
    char *fileType;
 
   /******************/
@@ -7286,7 +7286,7 @@ ProcessDropOnFileWindow (
 
    /* Initiating view not valid when another client initiates drag */
    if (!dragActive)
-      initiating_view = NULL;
+      initiating_view = nullptr;
 
     /* reject the drop if the Protocol is buffer and it was
        dropped on the Trash Can
@@ -7294,7 +7294,7 @@ ProcessDropOnFileWindow (
     if (dropInfo->dropData->protocol == DtDND_BUFFER_TRANSFER)
     {
       if (file_mgr_data == trashFileMgrData
-          && file_mgr_data != NULL )
+          && file_mgr_data != nullptr )
       {
         dropInfo->status = DtDND_FAILURE;
         DPRINTF (("ProcessDropOnFileWindow: Rejecting buffer drop on Trash Can\n"));
@@ -7342,7 +7342,7 @@ ProcessDropOnFileWindow (
                if (strcmp(command, "FILESYSTEM_MOVE") == 0)
                  dropInfo->status = DtDND_FAILURE;
                else
-                 initiating_view = NULL;
+                 initiating_view = nullptr;
             }
          }
       }
@@ -7372,7 +7372,7 @@ ProcessDropOnFileWindow (
   /*****************************/
   else
   {
-    char *command = NULL;
+    char *command = nullptr;
     char *fileType;
 
     DPRINTF(("DropOnFileWindow - Animate Callback."));
@@ -7397,7 +7397,7 @@ ProcessDropOnFileWindow (
             RunCommand( command,
                         file_mgr_data,
                         directory_set->order_list[i],
-                        NULL,
+                        nullptr,
                         dropInfo,
                         w );
             break;
@@ -7459,7 +7459,7 @@ ProcessDropOnObject(
    DirectorySet *directory_data =
                 (DirectorySet *) file_view_data->directory_set;
    FileMgrData *file_mgr_data = (FileMgrData *) directory_data->file_mgr_data;
-   char *command = NULL;
+   char *command = nullptr;
 
    /******************/
    /* transfer phase */
@@ -7470,7 +7470,7 @@ ProcessDropOnObject(
 
       /* Initiating view not valid when another client initiates drag */
       if (!dragActive)
-         initiating_view = NULL;
+         initiating_view = nullptr;
 
       /* check for invalid trash drop */
       if (FileFromTrash(dropInfo->dropData->data.files[0]))
@@ -7511,9 +7511,9 @@ ProcessDropOnObject(
          RunCommand (command,
                      file_mgr_data,
                      file_view_data,
-                     NULL,
+                     nullptr,
                      dropInfo,
-                     NULL);
+                     nullptr);
 
          DtDtsFreeAttributeValue(command);
       }
@@ -7658,7 +7658,7 @@ UpdateBranchList(
         DirectorySet *directory_set)
 {
   int i;
-  char ** table = NULL;
+  char ** table = nullptr;
   int table_size = 0;
   char *branch_name;
   char *branch_entry;
@@ -7679,7 +7679,7 @@ UpdateBranchList(
     for (i = 0; file_mgr_data->branch_list[i]; i++)
       XtFree (file_mgr_data->branch_list[i]);
     XtFree((char *)file_mgr_data->branch_list);
-    file_mgr_data->branch_list = NULL;
+    file_mgr_data->branch_list = nullptr;
   }
 
   /* create new brach list */
@@ -7702,7 +7702,7 @@ UpdateBranchList(
     table = (char **)XtRealloc((char *)table,
                                       sizeof(char *) * (table_size + 1));
     table[table_size - 1] = branch_entry;
-    table[table_size] = NULL;
+    table[table_size] = nullptr;
   }
 
   file_mgr_data->branch_list = table;
@@ -7728,8 +7728,8 @@ GetFileData(
    DirectorySet ** directory_set;
    DirectorySet ** new_dir_set;
    FileViewData ** new_view_data;
-   FileViewData *new_renaming,*new_popup_menu_icon=NULL;
-   FileViewData *file_view_data,*new_drag_file_view_data=NULL;
+   FileViewData *new_renaming,*new_popup_menu_icon=nullptr;
+   FileViewData *file_view_data,*new_drag_file_view_data=nullptr;
    int new_dir_count;
    int new_file_count;
    ObjectPtr position_info;
@@ -7771,7 +7771,7 @@ GetFileData(
     */
 
    /* loop through the old directory set */
-   new_renaming = NULL;
+   new_renaming = nullptr;
    for (i = 0; i < directory_count; i++)
    {
       /* find a directory with same name in the new directory set */
@@ -7872,7 +7872,7 @@ GetFileData(
    SelectVisible(file_mgr_data);
 
    /* update the branch_list */
-   UpdateBranchList(file_mgr_data, NULL);
+   UpdateBranchList(file_mgr_data, nullptr);
 
    /*  Update the selection list */
    j = 0;
@@ -7907,13 +7907,13 @@ GetFileData(
 
    /* free the old directory set */
    FreeLayoutData(file_mgr_data->layout_data);
-   file_mgr_data->layout_data = NULL;
+   file_mgr_data->layout_data = nullptr;
    FreeDirectorySet(directory_set, directory_count);
 
    /*  Set the menu activation to reflect and changes in the selection.  */
 
    if(file_mgr_data != trashFileMgrData
-      && file_mgr_data != NULL )
+      && file_mgr_data != nullptr )
    {
       if (file_mgr_data->selected_file_count == 0)
          ActivateNoSelect ((FileMgrRec *) file_mgr_data->file_mgr_rec);
@@ -7952,7 +7952,7 @@ QueryBranchList(
   int i;
   TreeShow ts;
 
-  if (branch_list == NULL)
+  if (branch_list == nullptr)
     return False;
 
   for (i = 0; branch_list[i]; i++)
@@ -8075,13 +8075,13 @@ NewDirectorySet(
     ds->file_view_data =
       (FileViewData **)XtMalloc(ds->file_count*sizeof(FileViewData *));
   else
-    ds->file_view_data = NULL;
+    ds->file_view_data = nullptr;
 
   for (dp = ip->desc, i = 0; dp; dp = dp->next, i++) {
     ds->file_view_data[i] = dp;
     dp->directory_set = (XtPointer)ds;
   }
-  ds->order_list = NULL;
+  ds->order_list = nullptr;
   ds->filtered_file_count = 0;
   ds->invisible_file_count = 0;
   ds->file_mgr_data = (XtPointer)file_mgr_data;
@@ -8135,7 +8135,7 @@ ReadTreeDirectory(
 
   /* if not in tree mode, clear branch_list (@@@ really?) */
   if (file_mgr_data->show_type != MULTIPLE_DIRECTORY)
-    branch_list = NULL;
+    branch_list = nullptr;
 
   /* get a FileViewData for the tree root */
   file_mgr_data->tree_root = ip =
@@ -8150,7 +8150,7 @@ ReadTreeDirectory(
      XtFree(ip->file_data->file_name);
      XtFree((char *)ip->file_data);
      XtFree((char *)ip);
-     file_mgr_data->tree_root = NULL;
+     file_mgr_data->tree_root = nullptr;
      return;
   }
   if (rc)
@@ -8189,7 +8189,7 @@ ReadTreeDirectory(
     if (p)
       *p = '\0';
     ds->name = XtNewString(fullname);
-    ds->sub_root = NULL;
+    ds->sub_root = nullptr;
     ds->file_count = 1;
     ds->file_view_data =
       (FileViewData **)XtMalloc(sizeof(FileViewData *));
@@ -8438,8 +8438,8 @@ DirTreeExpand(
   Arg args[20];
   Boolean new_branch;
 
-  GetAncestorInfo(file_mgr_data, ip, &level, path, NULL);
-  SetSpecialMsg( file_mgr_rec, file_mgr_data, NULL );
+  GetAncestorInfo(file_mgr_data, ip, &level, path, nullptr);
+  SetSpecialMsg( file_mgr_rec, file_mgr_data, nullptr );
 
   if (expand) {
     /* show more */
@@ -8462,7 +8462,7 @@ DirTreeExpand(
       }
       rc = ReadDir(file_mgr_rec->shell, file_mgr_data,
                    file_mgr_data->host, path, ip,
-                   level, level, NULL);
+                   level, level, nullptr);
 
       /* create new directory set entry */
       directory_set = NewDirectorySet(path, ip, file_mgr_data);
@@ -8485,10 +8485,10 @@ DirTreeExpand(
           if (strcmp(file_mgr_data->directory_set[i]->name, path) == 0)
             break;
         XtFree(file_mgr_data->directory_set[i]->name);
-        file_mgr_data->directory_set[i]->name = NULL;
-	if (file_mgr_data->directory_set[i]->file_view_data != NULL)
+        file_mgr_data->directory_set[i]->name = nullptr;
+	if (file_mgr_data->directory_set[i]->file_view_data != nullptr)
           XtFree((char *)file_mgr_data->directory_set[i]->file_view_data);
-        file_mgr_data->directory_set[i]->file_view_data = NULL;
+        file_mgr_data->directory_set[i]->file_view_data = nullptr;
         XtFree((char *)file_mgr_data->directory_set[i]);
         file_mgr_data->directory_set[i] = directory_set;
       }
@@ -8560,7 +8560,7 @@ FreeDirectorySet(
 
    for (i = -1; i < directory_count; i++)
    {
-      if (directory_set[i] == NULL)
+      if (directory_set[i] == nullptr)
         continue;
 
       XtFree ((char *) directory_set[i]->name);
@@ -8569,12 +8569,12 @@ FreeDirectorySet(
 	 if( (char *) directory_set[i]->file_view_data[j]->label)
 	 {
             XtFree ((char *) directory_set[i]->file_view_data[j]->label);
-            directory_set[i]->file_view_data[j]->label = NULL;
+            directory_set[i]->file_view_data[j]->label = nullptr;
 	 }
          XtFree ((char *) directory_set[i]->file_view_data[j]);
-         directory_set[i]->file_view_data[j] = NULL;
+         directory_set[i]->file_view_data[j] = nullptr;
       }
-      if (directory_set[i]->file_view_data != NULL)
+      if (directory_set[i]->file_view_data != nullptr)
          XtFree ((char *) directory_set[i]->file_view_data);
       XtFree ((char *) directory_set[i]->order_list);
       XtFree ((char *) directory_set[i]);
@@ -8598,19 +8598,19 @@ FreeDirectoryData(
    if(file_mgr_data->object_positions)
       FreePositionInfo(file_mgr_data);
 
-   if (file_mgr_data->current_directory != NULL)
+   if (file_mgr_data->current_directory != nullptr)
       XtFree ((char *) file_mgr_data->current_directory);
-   file_mgr_data->current_directory = NULL;
+   file_mgr_data->current_directory = nullptr;
 
-   if (file_mgr_data->host != NULL)
+   if (file_mgr_data->host != nullptr)
       XtFree ((char *) file_mgr_data->host);
-   file_mgr_data->host = NULL;
+   file_mgr_data->host = nullptr;
 
    FreeLayoutData(file_mgr_data->layout_data);
-   file_mgr_data->layout_data = NULL;
+   file_mgr_data->layout_data = nullptr;
    FreeDirectorySet(file_mgr_data->directory_set,
                     file_mgr_data->directory_count);
-   file_mgr_data->directory_set = NULL;
+   file_mgr_data->directory_set = nullptr;
 }
 
 
@@ -8641,7 +8641,7 @@ Close(
    XtSetArg(args[0], XmNuserData, &file_mgr_rec);
    XtGetValues(mbar, args, 1);
    /* Ignore accelerator received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
 
    CloseView (dialog_data);
@@ -8862,7 +8862,7 @@ ShowChangeDirField (
    }
 
    /* Got an accelerator after we were unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -8922,12 +8922,12 @@ FreePositionInfo (
    {
       XtFree(file_mgr_data->object_positions[i]->name);
       XtFree((char *)file_mgr_data->object_positions[i]);
-      file_mgr_data->object_positions[i] = NULL;
+      file_mgr_data->object_positions[i] = nullptr;
    }
 
    XtFree((char *)file_mgr_data->object_positions);
 
-   file_mgr_data->object_positions = NULL;
+   file_mgr_data->object_positions = nullptr;
    file_mgr_data->num_objects = 0;
 
    /* clear references to object positions in file_view_data */
@@ -8935,7 +8935,7 @@ FreePositionInfo (
    {
       file_view_data = file_mgr_data->directory_set[i]->file_view_data;
       for (j = 0; j < file_mgr_data->directory_set[i]->file_count; j++)
-         file_view_data[j]->position_info = NULL;
+         file_view_data[j]->position_info = nullptr;
    }
 }
 
@@ -9002,7 +9002,7 @@ InheritPositionInfo (
    {
       /* Nothing to inherit */
       dest_file_mgr_data->num_objects = 0;
-      dest_file_mgr_data->object_positions = NULL;
+      dest_file_mgr_data->object_positions = nullptr;
       return;
    }
 
@@ -9020,9 +9020,9 @@ InheritPositionInfo (
 
       *ptr = *(src_file_mgr_data->object_positions[i]);
       ptr->name = XtNewString(ptr->name);
-      ptr->file_view_data = NULL;
-      ptr->next = NULL;
-      ptr->prev = NULL;
+      ptr->file_view_data = nullptr;
+      ptr->next = nullptr;
+      ptr->prev = nullptr;
 
       temp_stack[ptr->stacking_order - 1] = ptr;
    }
@@ -9075,7 +9075,7 @@ SavePositionInfo (
 
    /* Copy object positions into position info array */
    if (file_mgr_data->num_objects <= 0)
-      position_info = NULL;
+      position_info = nullptr;
    else
    {
       position_info = (PositionInfo *)
@@ -9116,7 +9116,7 @@ LoadPositionInfo (
    int i;
 
    /* don't do anything if we already have position information */
-   if (file_mgr_data->object_positions != NULL)
+   if (file_mgr_data->object_positions != nullptr)
       return;
 
    /* Load the number of entries */
@@ -9125,7 +9125,7 @@ LoadPositionInfo (
 
    if (numObjects <= 0)
    {
-      file_mgr_data->object_positions = NULL;
+      file_mgr_data->object_positions = nullptr;
       file_mgr_data->num_objects = 0;
       return;
    }
@@ -9146,9 +9146,9 @@ LoadPositionInfo (
          ptr->in_use = False;
          ptr->late_bind = False;
          ptr->stacking_order = position_info[i].stacking_order;
-         ptr->file_view_data = NULL;
-         ptr->next = NULL;
-         ptr->prev = NULL;
+         ptr->file_view_data = nullptr;
+         ptr->next = nullptr;
+         ptr->prev = nullptr;
       }
 
       /* Repair all of the next and prev pointers */
@@ -9294,18 +9294,18 @@ CheckMoveType(
    Atom     pCurrent;
    Screen   *currentScreen;
    int      screen;
-   char * workspace_name = NULL;
+   char * workspace_name = nullptr;
    Display  *display;
    Boolean value;
-   FileOpFinishProc finish_cb = NULL;
-   XtPointer finish_data = NULL;
+   FileOpFinishProc finish_cb = nullptr;
+   XtPointer finish_data = nullptr;
 
 #ifdef _CHECK_FOR_SPACES
    if (_DtSpacesInFileNames(file_set, file_count))
    {
      char * tmpStr = (GETMESSAGE(27,94, "The File Manager does not support objects\nwith spaces in their names, so we cannot delete them.\nTo delete these objects:\n  - select 'Open Terminal' from the File Manager menu\n  - then issue the remove command to delete them."));
      char * msg = XtNewString(tmpStr);
-     FileOperationError (toplevel, msg, NULL);
+     FileOperationError (toplevel, msg, nullptr);
      XtFree(msg);
      return;
    }
@@ -9344,9 +9344,9 @@ CheckMoveType(
    modifiers &= ~Button1Mask;
    if (number > 0 &&
        modifiers != ControlMask  && modifiers != ShiftMask &&
-       widget_dragged != NULL)
+       widget_dragged != nullptr)
    {
-      char *message = NULL;
+      char *message = nullptr;
       char *title;
       char *from, *to, *filename;
 
@@ -9363,8 +9363,8 @@ CheckMoveType(
           case DESKTOP:
               /* desktop object dropped on a desktop directory */
               dtWindow = desktopWindow;
-              fm = (FileMgrData *)NULL;
-              dd = (DirectorySet *)NULL;
+              fm = (FileMgrData *)nullptr;
+              dd = (DirectorySet *)nullptr;
               to = (char *)XtMalloc(strlen(directory_data->name) +
                                          strlen(fv->file_data->file_name)+ 2);
               sprintf(to, "%s/%s", directory_data->name,
@@ -9373,7 +9373,7 @@ CheckMoveType(
               break;
           case NOT_DESKTOP_DIR:
               /* desktop object dropped on a file view directory icon */
-              dtWindow = (DesktopRec *)NULL;
+              dtWindow = (DesktopRec *)nullptr;
               fm = file_mgr_data;
               dd = directory_data;
               to = (char *)XtMalloc(strlen(dd->name) +
@@ -9383,9 +9383,9 @@ CheckMoveType(
               break;
           default:/* view == NOT_DESKTOP */
               /* desktop object dropped in a file manager view */
-              dtWindow = (DesktopRec *)NULL;
+              dtWindow = (DesktopRec *)nullptr;
               fm = file_mgr_data;
-              dd = (DirectorySet *)NULL;
+              dd = (DirectorySet *)nullptr;
               to = (char *)XtMalloc(strlen(file_mgr_data->current_directory)
                                     + 1);
               strcpy(to, file_mgr_data->current_directory);
@@ -9401,7 +9401,7 @@ CheckMoveType(
             tmpStr =
                   GETMESSAGE(11,16,"A folder cannot be moved into itself.\n%s");
             msg = XtNewString(tmpStr);
-            if(file_view_data == NULL)
+            if(file_view_data == nullptr)
             {
                file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
                FileOperationError(file_mgr_rec->shell, msg, file_set[i]);
@@ -9581,8 +9581,8 @@ CheckMoveType(
 
       if( message )
       {
-        _DtMessageDialog(toplevel, title, message, NULL, TRUE,
-                         MoveCancelCB, MoveOkCB, NULL, HelpRequestCB, False,
+        _DtMessageDialog(toplevel, title, message, nullptr, TRUE,
+                         MoveCancelCB, MoveOkCB, nullptr, HelpRequestCB, False,
                          QUESTION_DIALOG);
 
         XtFree(message);
@@ -9640,7 +9640,7 @@ CheckMoveType(
                     file_view_data->file_data->file_name );
            DtEliminateDots(directory);
            value = FileMoveCopy (file_mgr_data,
-                                 NULL, directory, target_host,
+                                 nullptr, directory, target_host,
                                  host_set, file_set, file_count,
                                  modifiers, finish_cb, finish_data);
            if (finish_cb && !value)
@@ -9668,7 +9668,7 @@ CheckMoveType(
                            drop_y, True);
 */
            value = FileMoveCopy(file_mgr_data,
-                                NULL, directory, target_host,
+                                nullptr, directory, target_host,
                                 host_set, file_set, file_count,
                                 modifiers, finish_cb, finish_data);
            if (finish_cb && !value)
@@ -9737,23 +9737,23 @@ CheckMoveType(
               desktopWin->dir_linked_to = XtNewString(directory);
 
               XtFree(desktopWin->restricted_directory);
-              if(file_mgr_data->restricted_directory != NULL)
+              if(file_mgr_data->restricted_directory != nullptr)
                 desktopWin->restricted_directory =
                   XtNewString(file_mgr_data->restricted_directory);
               else
-                desktopWin->restricted_directory = NULL;
+                desktopWin->restricted_directory = nullptr;
 
               XtFree(desktopWin->title);
-              if(file_mgr_data->title != NULL)
+              if(file_mgr_data->title != nullptr)
                 desktopWin->title = XtNewString(file_mgr_data->title);
               else
-                desktopWin->title = NULL;
+                desktopWin->title = nullptr;
 
               XtFree(desktopWin->helpVol);
-              if(file_mgr_data->helpVol != NULL)
+              if(file_mgr_data->helpVol != nullptr)
                 desktopWin->helpVol = XtNewString(file_mgr_data->helpVol);
               else
-                desktopWin->helpVol = NULL;
+                desktopWin->helpVol = nullptr;
 
               desktopWin->toolbox = file_mgr_data->toolbox;
               XtFree(fileName);
@@ -9788,7 +9788,7 @@ SetPWD(
         char *type )
 
 {
-   if ((strcmp(home_host_name, viewHost) == 0) && type != NULL)
+   if ((strcmp(home_host_name, viewHost) == 0) && type != nullptr)
    {
       char *ptr;
 
@@ -9830,7 +9830,7 @@ CreateFmPopup (Widget w)
    fileMgrPopup.menu = XmCreatePopupMenu(w, "FMPopup", args, n);
    /* Track popdown to release grabs */
    XtAddCallback(XtParent(fileMgrPopup.menu), XmNpopdownCallback,
-                 FilePopupPopdownCB, NULL);
+                 FilePopupPopdownCB, nullptr);
    XtAddCallback(fileMgrPopup.menu, XmNhelpCallback,
                        HelpRequestCB,
                        HELP_POPUP_MENU_STR);
@@ -9838,13 +9838,13 @@ CreateFmPopup (Widget w)
 
    /* Create file manager title */
    fileMgrPopup.title = popupBtns[i] =
-     (Widget)XmCreateLabelGadget(fileMgrPopup.menu, "fmtitle", NULL, 0);
+     (Widget)XmCreateLabelGadget(fileMgrPopup.menu, "fmtitle", nullptr, 0);
    i++;
 
 
    /* Create title separators */
    popupBtns[i++] = XmCreateSeparatorGadget(fileMgrPopup.menu, "sep2",
-                                                                     NULL, 0);
+                                                                     nullptr, 0);
 
 
    /* Create 'Properties' option - white space popup */
@@ -10074,7 +10074,7 @@ CreateFmPopup (Widget w)
 
    /* Create separator -- white space popup and object popup */
    fileMgrPopup.action_separator = popupBtns[i++] =
-       XmCreateSeparatorGadget(fileMgrPopup.menu, "sep2", NULL, 0);
+       XmCreateSeparatorGadget(fileMgrPopup.menu, "sep2", nullptr, 0);
 
 
    /* Manage popup buttons */
@@ -10124,9 +10124,9 @@ DoTheMove(
            RepositionIcons(fm, file_set, file_count, dx, dy, True);
 */
            result = FileMoveCopy(fm,
-                                 NULL, fm->current_directory, fm->host,
+                                 nullptr, fm->current_directory, fm->host,
                                  host_set, file_set, file_count,
-                                 (unsigned int)0, NULL, NULL);
+                                 (unsigned int)0, nullptr, nullptr);
 #ifdef FOO
            CheckDesktop();
            if(type == DESKTOP)
@@ -10177,11 +10177,11 @@ DoTheMove(
                      RemoveDT (desktopWin->shell, (XtPointer) desktopWin,
                                (XtPointer)NULL);
                      XtFree(workspace_name);
-                     workspace_name = NULL;
+                     workspace_name = nullptr;
                      break;
                    }
                    XtFree(workspace_name);
-                   workspace_name = NULL;
+                   workspace_name = nullptr;
                  }
                }
              }
@@ -10193,9 +10193,9 @@ DoTheMove(
            sprintf( directory, "%s/%s", dd->name, fv->file_data->file_name );
 
            result = FileMoveCopy (fm,
-                                  NULL, directory, fm->host,
+                                  nullptr, directory, fm->host,
                                   host_set, file_set, file_count,
-                                  (unsigned int) 0, NULL, NULL);
+                                  (unsigned int) 0, nullptr, nullptr);
 
            CheckDesktop();
            break;
@@ -10209,7 +10209,7 @@ DoTheMove(
 
              result = FileMoveCopyDesktop (fv, directory, host_set, file_set,
                                            file_count, mod, dtWindow,
-                                           NULL, NULL);
+                                           nullptr, nullptr);
            }
            break;
    }

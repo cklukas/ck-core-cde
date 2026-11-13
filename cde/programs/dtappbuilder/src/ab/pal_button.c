@@ -160,10 +160,10 @@ PalItemInfo button_palitem_rec = {
 
     /* type             */  AB_TYPE_BUTTON,
     /* name             */  "Button",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  button_initialize,
     /* is_a_test        */  obj_is_button,
     /* prop_initialize  */  button_prop_init,
@@ -201,8 +201,8 @@ button_initialize(
     obj_set_is_initially_visible(obj, True);
     obj_set_is_initially_active(obj, True);
 
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 
@@ -253,7 +253,7 @@ button_prop_init(
 
     	XtVaSetValues(parent,
 			XmNuserData, pbs->current_obj,
-			NULL);
+			nullptr);
     }
     else /* AB_PROP_FIXED */
     	cgen = &dtb_button_prop_dialog;
@@ -261,12 +261,12 @@ button_prop_init(
     if (dtb_button_prop_dialog_initialize(cgen, parent) == 0)
     {
         pbs->prop_sheet = cgen->attrs_ctrlpanel;
-        pbs->current_obj = NULL;
+        pbs->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pbs->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -341,7 +341,7 @@ button_prop_init(
 	XtVaSetValues(cgen->label_field_label,
 		XmNrecomputeSize, False,
 		XmNuserData,	  (XtArgVal)cgen->graphic_hint,
-		NULL);
+		nullptr);
 
         /* Label Align */
         n = 0;
@@ -374,7 +374,7 @@ button_prop_init(
         /* Menu Name Setting */
         prop_menuname_init(&(pbs->menuname), type, cgen->menu_label,
 			cgen->menu_mbutton, cgen->menu_field,
-                        cgen->name_field, cgen->menu_cb, NULL/*title*/,
+                        cgen->name_field, cgen->menu_cb, nullptr/*title*/,
                         &(pbs->current_obj), True);
 
         /* Size Policy */
@@ -425,7 +425,7 @@ button_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 
@@ -448,7 +448,7 @@ button_prop_clear(
 {
     PropButtonSettingsRec	*pbs = &(prop_button_settings_rec[type]);
 
-    if (pbs->current_obj == NULL)
+    if (pbs->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -493,7 +493,7 @@ button_prop_clear(
     prop_colorfield_set_value(&(pbs->bg_color), "", False);
     prop_colorfield_set_value(&(pbs->fg_color), "", False);
 
-    pbs->current_obj = NULL;
+    pbs->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -511,9 +511,9 @@ button_prop_load(
     PropButtonSettingsRec 	*pbs = &(prop_button_settings_rec[type]);
     BOOL                        load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pbs->current_obj != NULL)
+        if (pbs->current_obj != nullptr)
             obj = pbs->current_obj;
         else
             return ERROR;
@@ -550,7 +550,7 @@ button_prop_load(
 	setup_labeltype_setting(type, btype);
 
 	/* Load Label */
-	prop_setup_label_field(&(pbs->label), NULL,
+	prop_setup_label_field(&(pbs->label), nullptr,
 				obj->label_type, obj_get_label(obj), AB_LINE_UNDEF);
 
 	/* Load Label Alignment */
@@ -633,7 +633,7 @@ button_prop_apply(
             case AB_LABEL_ARROW_LEFT:
                 abobj_set_label(pbs->current_obj,
                     (AB_LABEL_TYPE)prop_options_get_value(&(pbs->arrow_dir)),
-                    NULL);
+                    nullptr);
                 break;
             default:
         	value = prop_field_get_value(&(pbs->label));
@@ -830,7 +830,7 @@ typeCB(
 	PropButtonSettingsRec *pbs = &(prop_button_settings_rec[type]);
 	AB_BUTTON_TYPE btype;
 
-        XtVaGetValues(item, XmNuserData, &value, NULL);
+        XtVaGetValues(item, XmNuserData, &value, nullptr);
 	btype = (AB_BUTTON_TYPE)value;
 
 	if ((btype == AB_BUT_DRAWN) || (btype == AB_BUT_MENU))
@@ -939,7 +939,7 @@ setup_label_field(
            break;
     }
     /* WORKAROUND: for Motif bug */
-    XtVaSetValues(pbs->label.label, XmNalignment, XmALIGNMENT_END, NULL);
+    XtVaSetValues(pbs->label.label, XmNalignment, XmALIGNMENT_END, nullptr);
 
 }
 
@@ -954,7 +954,7 @@ labeltypeCB(
     PropButtonSettingsRec *pbs = &(prop_button_settings_rec[type]);
     AB_LABEL_TYPE	  value = AB_LABEL_UNDEF;
 
-    XtVaGetValues(item, XmNuserData, &value, NULL);
+    XtVaGetValues(item, XmNuserData, &value, nullptr);
     setup_label_field(type, value);
 
     if (value != AB_LABEL_ARROW_DOWN)
@@ -978,7 +978,7 @@ size_policyCB(
      */
     if (state->set)
     {
-    	XtVaGetValues(w, XmNuserData, &value, NULL);
+    	XtVaGetValues(w, XmNuserData, &value, nullptr);
         ui_field_set_editable(pbs->geometry.w_field, value == SIZE_FIXED_KEY);
         ui_field_set_editable(pbs->geometry.h_field, value == SIZE_FIXED_KEY);
     }

@@ -110,22 +110,22 @@ _DtRegisterNewConverters( void )
 	{
 	  /* Register new converters. */
 	  XtAddConverter (XmRString, XmRBehavior,
-			  _DtCvtStringToBehavior, NULL, 0);
+			  _DtCvtStringToBehavior, nullptr, 0);
 
 	  XtAddConverter (XmRString, XmRChildType,
-			  _DtCvtStringToChildType, NULL, 0);
+			  _DtCvtStringToChildType, nullptr, 0);
 
 	  XtAddConverter (XmRString, XmRFillMode,
-			  _DtCvtStringToFillMode, NULL, 0);
+			  _DtCvtStringToFillMode, nullptr, 0);
 
 	  XtAddConverter (XmRString, XmRPixmapPosition,
-			  _DtCvtStringToPixmapPosition, NULL, 0);
+			  _DtCvtStringToPixmapPosition, nullptr, 0);
 
 	  XtAddConverter (XmRString, XmRStringPosition,
-			  _DtCvtStringToStringPosition, NULL, 0);
+			  _DtCvtStringToStringPosition, nullptr, 0);
 
 	  XtAddConverter (XmRString, XmRTitlePosition,
-			  _DtCvtStringToTitlePosition, NULL, 0);
+			  _DtCvtStringToTitlePosition, nullptr, 0);
 
 	  new_converters_registered = True;
 	}
@@ -191,7 +191,7 @@ _DtCvtStringToBehavior(
 	else
 	{
 		to_val->size = 0;
-		to_val->addr = NULL;
+		to_val->addr = nullptr;
 		XtStringConversionWarning ((String) from_val->addr,
 				XmRBehavior);
 	}
@@ -227,7 +227,7 @@ _DtCvtStringToChildType(
 	else
 	{
 		to_val->size = 0;
-		to_val->addr = NULL;
+		to_val->addr = nullptr;
 		XtStringConversionWarning ((String) from_val->addr,
 				XmRChildType);
 	}
@@ -263,7 +263,7 @@ _DtCvtStringToFillMode(
 	else
 	{
 		to_val->size = 0;
-		to_val->addr = NULL;
+		to_val->addr = nullptr;
 		XtStringConversionWarning ((String) from_val->addr,
 				XmRFillMode);
 	}
@@ -301,7 +301,7 @@ _DtCvtStringToPixmapPosition(
 	else
 	{
 		to_val->size = 0;
-		to_val->addr = NULL;
+		to_val->addr = nullptr;
 		XtStringConversionWarning ((String) from_val->addr,
 				XmRPixmapPosition);
 	}
@@ -337,7 +337,7 @@ _DtCvtStringToStringPosition(
 	else
 	{
 		to_val->size = 0;
-		to_val->addr = NULL;
+		to_val->addr = nullptr;
 		XtStringConversionWarning ((String) from_val->addr,
 				XmRStringPosition);
 	}
@@ -369,7 +369,7 @@ _DtCvtStringToTitlePosition(
 	else
 	{
 		to_val->size = 0;
-		to_val->addr = NULL;
+		to_val->addr = nullptr;
 		XtStringConversionWarning ((String) from_val->addr,
 				XmRTitlePosition);
 	}

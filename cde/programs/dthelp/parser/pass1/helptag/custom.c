@@ -195,7 +195,7 @@ mb_entcontent = MakeMByteString(entcontent);
 if (!*mb_entcontent)  /* null file name, don't open a directory */
     {
     m_free(mb_entcontent, "multi-byte string");
-    return NULL;
+    return nullptr;
     }
 
 open = fopen(mb_entcontent, "r");
@@ -223,7 +223,7 @@ for (searchp = path ; searchp ; searchp = searchp->next)
     }
 
 m_free(mb_entcontent, "multi-byte string");
-return(NULL);
+return(nullptr);
 }
 
 /* Open input file */
@@ -320,7 +320,7 @@ else
     while (name = m_cyclent(init, &type, &content, &wheredef))
 	{
 	init = FALSE;
-	qfile = NULL;
+	qfile = nullptr;
 	if (type == M_SYSTEM)
 	    qfile = searchforfile(content);
 	if (qfile)

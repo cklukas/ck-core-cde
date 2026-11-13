@@ -140,7 +140,7 @@ addcharptn(Exc_data *ed)
     char *msg3;
 
     int mask;
-    FalFontDataList	*fulllist = NULL;
+    FalFontDataList	*fulllist = nullptr;
     FalFontID		fontid;
 
     msg = GETMESSAGE(12, 8, "Failed to open the selected font. You have no right to access for the font file, or the format of the file is not consistent.");
@@ -182,7 +182,7 @@ setcodelists(ListData *ld, int code_num, int *code_list)
 
     ld->ed->code_num = code_num;
 
-    if ((c1 = (int *) calloc(code_num, sizeof(int))) == NULL) {
+    if ((c1 = (int *) calloc(code_num, sizeof(int))) == nullptr) {
 	ed = ld->ed;
 	freeld(ld);
 	excerror(ed, EXCERRMALLOC, "setcodelists", "exit");
@@ -196,7 +196,7 @@ setcodelists(ListData *ld, int code_num, int *code_list)
 	c2++;
     }
 
-    if ((c1 = (int *) calloc(code_num, sizeof(int))) == NULL) {
+    if ((c1 = (int *) calloc(code_num, sizeof(int))) == nullptr) {
 	ed = ld->ed;
 	freeld(ld);
 	excerror(ed, EXCERRMALLOC, "setcodelists", "exit");

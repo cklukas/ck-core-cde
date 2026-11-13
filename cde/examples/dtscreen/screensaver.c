@@ -54,7 +54,7 @@ usleep(unsigned long usec)
 int main(int argc, char *argv[])
 {
 Display *dpy;			/* Display connection      */
-Window *winprop = NULL;		/* dtsession cover windows */
+Window *winprop = nullptr;		/* dtsession cover windows */
 int nWindows;			/* number of windows	   */
 WinDataStruct *perWindow;	/* per-window information  */
 int i, j;			/* index variable	   */
@@ -66,7 +66,7 @@ int colorRotate = 0;		/* color rotation counter  */
     /*******************************/
     /** open a display connection **/
     /*******************************/
-    if (!(dpy = XOpenDisplay(NULL)) ) {
+    if (!(dpy = XOpenDisplay(nullptr)) ) {
 	fprintf(stderr, "Unable to open the Display.\n");
 	exit(1);
     }
@@ -84,7 +84,7 @@ int colorRotate = 0;		/* color rotation counter  */
     /** allocate an array to hold per window information **/
     /******************************************************/
     if ( (perWindow = (WinDataStruct *)malloc(nWindows * sizeof(WinDataStruct)))
-	== NULL) {
+	== nullptr) {
 	fprintf(stderr, "Out of memory.\n");
 	XCloseDisplay(dpy);
 	exit(1);

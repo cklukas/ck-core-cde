@@ -89,7 +89,7 @@ FalFontID	fid;
  * parameters
  */
 
-char	*fullPathName	= NULL ;
+char	*fullPathName	= nullptr ;
 
 FalFontDataList		*font_L ;
 FalxCodeList		*CodeList ;
@@ -174,7 +174,7 @@ FalFontID openfont(void)
     int		codeset;
     FalFontID	fontid;
 
-    fontid = NULL;
+    fontid = nullptr;
     codeset = font_L->list[0].cd_set;
     if ((fontid = FalOpenFont(fullPathName, protect_key, codeset))
 	== FAL_ERROR) {
@@ -201,7 +201,7 @@ void makelist(ListData *ld)
     existcode_num = 0;
     for (i = 0; i < ld->allcode_num; i++) {
 	code = *allcodep;
-	pattern = FalReadFont(fid, code, NULL, NULL);
+	pattern = FalReadFont(fid, code, nullptr, nullptr);
 	if (fal_utyexists == 0) {
 	    *existcodep = *allcodep;
 	    existcodep++;
@@ -223,7 +223,7 @@ void setexistcode(ListData *ld)
     makelist(ld);
 
 /* close font */
-    if (fid != NULL)
+    if (fid != nullptr)
 	FalCloseFont(fid);
 }
 
@@ -254,7 +254,7 @@ char *i2s(int code)
     for (i = 0; ; i++) {
 	if (tmp < 16) {
 	    buf[i] = i2c(tmp);
-	    buf[i+1] = NULL;
+	    buf[i+1] = nullptr;
 	    break;
 	}
 	buf[i] = i2c(tmp % 16);
@@ -269,7 +269,7 @@ char *i2s(int code)
 	*cp = buf[i];
 	cp++;
     }
-    *cp = NULL;
+    *cp = nullptr;
     return (number);
 }
 
@@ -483,7 +483,7 @@ void listEH(Widget w, int num, XButtonEvent *event)
 
 	if( num == 0 && ITEM_COUNT == 1 ){
 
-	    str = (char *) _XmStringUngenerate((XmString) xms[0], NULL,
+	    str = (char *) _XmStringUngenerate((XmString) xms[0], nullptr,
 					XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
 	    if (str)
 	       XmTextSetString(slctBText[num], str );
@@ -530,7 +530,7 @@ void listPrintCB(Widget w, int num, XmListCallbackStruct *call_data)
 	ClearButtons( num, slctButton ) ;
 
 
-	str = (char *) _XmStringUngenerate((XmString) call_data->item, NULL,
+	str = (char *) _XmStringUngenerate((XmString) call_data->item, nullptr,
 					XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
 	if (str) {
 	    XmTextSetString(slctBText[num], str);
@@ -569,18 +569,18 @@ void OpenWindow(Widget w, caddr_t client_data, caddr_t *call_data)
 
     /* get font file name (str:  XLFD name)	*/
     str = XmTextGetString( slctBText[0] );
-    if (( str == NULL ) || (strcmp(str, "") == 0)) {
+    if (( str == nullptr ) || (strcmp(str, "") == 0)) {
 	AskUser(w, ed, msg1, &ans, "error");
 	return;
     }
-    if( fullPathName != NULL ){
+    if( fullPathName != nullptr ){
 	free( fullPathName ) ;
     }
     SelectedOffset = FalxSearchFontFileName( str, font_L, buff ) ;
     if( SelectedOffset < 0 ){
         exit(-1) ;
     }
-    if( (fullPathName = strdup( buff )) == NULL ){
+    if( (fullPathName = strdup( buff )) == nullptr ){
         exit(-1) ;
     }
     UdcAreaCount = FalxGetGlyphIndexInfo( str, font_L, &UdcArea ) ;
@@ -588,22 +588,22 @@ void OpenWindow(Widget w, caddr_t client_data, caddr_t *call_data)
         exit(-1) ;
     }
 
-    if( fullPathName != NULL ){
+    if( fullPathName != nullptr ){
 	Dprintf( stderr, "OpenWindow() : full path name = %s\n", fullPathName );
     }
     for( i=0; i<UdcAreaCount; i++ ){
 	Dprintf( stderr, "OpenWindow() : start(%d) = 0x%x\n", i, UdcArea[i].udc_start );
 	Dprintf( stderr, "OpenWindow() : end  (%d) = 0x%x\n", i, UdcArea[i].udc_end );
     }
-    if ((ed->xlfdname = strdup(str)) == NULL) {
+    if ((ed->xlfdname = strdup(str)) == nullptr) {
 	exit (-1);
     }
-    if ((ed->fontfile = strdup(fullPathName)) == NULL) {
+    if ((ed->fontfile = strdup(fullPathName)) == nullptr) {
 	exit (-1);
     }
 /*    getxlfd(ed);*/
 /* initialize ld */
-    if ((ld = (ListData *) malloc(sizeof(ListData))) == NULL) {
+    if ((ld = (ListData *) malloc(sizeof(ListData))) == nullptr) {
 	excerror(ed, EXCERRMALLOC, "selcharcd", "exit");
     }
     memset(ld, 0x00, sizeof(ListData));
@@ -886,7 +886,7 @@ PopupSelectXLFD(Widget top)
     XmString	xms ;
     Dimension	pix, xwidth, kwidth ;
 
-    if( xlfdDialog == NULL ){
+    if( xlfdDialog == nullptr ){
         /*
 	*  create base window
 	*/
@@ -971,7 +971,7 @@ Dprintf( stdout, "(PopupSelectXLFD)CreateOtherLabelAndText : end\n" ) ;
 	n = 0 ;
         XtSetArg( args[n], XmNokLabelString,	"OK" ) ;    n++ ;
         XtSetArg( args[n], XmNcancelLabelString,"Cancel" ) ;    n++ ;
-        errorMD = XmCreateMessageDialog(toplevel, "ed0", NULL, 0);
+        errorMD = XmCreateMessageDialog(toplevel, "ed0", nullptr, 0);
 
         msgBox = XmMessageBoxGetChild(errorMD, XmDIALOG_HELP_BUTTON);
         XtUnmanageChild(msgBox);
@@ -986,11 +986,11 @@ Dprintf( stdout, "(PopupSelectXLFD)CreateOtherLabelAndText : end\n" ) ;
 	for( i=0; i<BUTTONITEMS; i++ )
 	    XtAddCallback(listW[i], XmNsingleSelectionCallback, (XtCallbackProc) listPrintCB, (XtPointer) i );
 
-        XtAddCallback( xlfdDialog, XmNokCallback, (XtCallbackProc) OpenWindow, NULL );
-        XtAddCallback( xlfdDialog, XmNhelpCallback,(XtCallbackProc) quit,NULL );
+        XtAddCallback( xlfdDialog, XmNokCallback, (XtCallbackProc) OpenWindow, nullptr );
+        XtAddCallback( xlfdDialog, XmNhelpCallback,(XtCallbackProc) quit,nullptr );
 
 #if 0
-        XtAddCallback( errorMD,	XmNcancelCallback, (XtCallbackProc) quit, NULL);
+        XtAddCallback( errorMD,	XmNcancelCallback, (XtCallbackProc) quit, nullptr);
 #endif	/* 0 */
 
     }

@@ -124,7 +124,7 @@ char * NetaddrPort(XdmcpNetaddr netaddrp, int *lenp)
 	return (char *)&(((struct sockaddr_in *)netaddrp)->sin_port);
     default:
 	*lenp = 0;
-	return NULL;
+	return nullptr;
     }
 #endif
 }
@@ -160,7 +160,7 @@ char * NetaddrAddress(XdmcpNetaddr netaddrp, int *lenp)
 #endif
     default:
 	*lenp = 0;
-	return NULL;
+	return nullptr;
     }
 #endif /* STREAMSCONN else */
 }
@@ -174,7 +174,7 @@ int ConvertAddr (XdmcpNetaddr saddr, int *len, char **addr)
 {
     int retval;
 
-    if (len == NULL)
+    if (len == nullptr)
         return -1;
     *addr = NetaddrAddress(saddr, len);
 #ifdef STREAMSCONN

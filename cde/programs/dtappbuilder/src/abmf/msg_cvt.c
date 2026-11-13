@@ -70,10 +70,10 @@ abmfP_initialize_msg_file(
     char	msg_file_name[BUFSIZ];
     MsgFile	msg_file;
 
-    if (project == NULL)
+    if (project == nullptr)
         goto cret;
 
-    if (genCodeInfo->msg_file_obj != NULL)
+    if (genCodeInfo->msg_file_obj != nullptr)
     {
         ret_val = TRUE;
         goto cret;
@@ -85,7 +85,7 @@ abmfP_initialize_msg_file(
     sprintf(msg_file_name, "%s%s", obj_get_name(project), ".msg");
 
     if ((msg_file = MsgFile_create(obj_get_name(project), msg_file_name))
-	!= NULL)
+	!= nullptr)
     {
 	genCodeInfo->msg_src_file_name = strdup(msg_file_name);
 	genCodeInfo->msg_file_obj = msg_file;
@@ -109,7 +109,7 @@ abmfP_catgets_prefix_str(
     MsgSet		msg_set;
     int			msg_num;
 
-    if ((msg_set = get_cached_msg_set(genCodeInfo->msg_file_obj, obj))== NULL)
+    if ((msg_set = get_cached_msg_set(genCodeInfo->msg_file_obj, obj))== nullptr)
         goto cret;
 
     if ((msg_num = MsgSet_sure_find_msg(msg_set, msg_string)) <= 0)

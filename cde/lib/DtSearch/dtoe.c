@@ -119,7 +119,7 @@ void ve_delete (void);
  */
 extern int	debugging_jpn;
 extern int	debugging_teskey;
-char           *global_memory_ptr = NULL;	/* shared mem, dynam
+char           *global_memory_ptr = nullptr;	/* shared mem, dynam
 						 * defrag */
 int             shm_id = 0;	/* shared mem, dynam defrag */
 
@@ -129,13 +129,13 @@ int             OE_dbn = 0;	/* dynamic */
 int             OE_enable_markdel = 0;
 int             OE_enable_usernotes = 0;
 int             OE_fastdecode = 0;
-char           *OE_fileio = NULL;
+char           *OE_fileio = nullptr;
 long            OE_flags = 0L;
 long            OE_objsize = 0L;
 char           *OE_prodname = PRODNAME;	/* reset only in main() */
 float           OE_prox_factor = 0.0;
 int             OE_search_type = 0;
-char           *OE_sitecnfg_fname = NULL;
+char           *OE_sitecnfg_fname = nullptr;
 time_t          OE_sitecnfg_mtime = 0L;	/* reset only in oeinitialize() */
 int             OE_uppercase_keys = 0;
 long            OE_words_hitlimit = 0L;
@@ -143,12 +143,12 @@ long            OE_words_hitlimit = 0L;
 static time_t   my_expiration = 0L;
 time_t         *OE_expiration = &my_expiration;
 
-char           *OEF_audit = NULL;
-char           *OEF_discard = NULL;
-char           *OEF_news = NULL;
-char           *OEF_notesnot = NULL;
-char           *OEF_notessem = NULL;
-char           *OEF_readme = NULL;
+char           *OEF_audit = nullptr;
+char           *OEF_discard = nullptr;
+char           *OEF_news = nullptr;
+char           *OEF_notesnot = nullptr;
+char           *OEF_notessem = nullptr;
+char           *OEF_readme = nullptr;
 
 
 /*------------ OTHER GLOBALS -----------*/
@@ -185,7 +185,7 @@ static void     alarm_signal_handler (int sig)
 {
     fprintf (aa_stderr, PROGNAME "32 "
 	"%s %s shutdown due to excessive user idle time.\n",
-	nowstring (NULL), aa_argv0);
+	nowstring (nullptr), aa_argv0);
     DtSearchExit (100 + sig);
 }  /* alarm_signal_handler() */
 
@@ -215,9 +215,9 @@ int	oe_unblob (LLIST *bloblist)
 	mallocsz = 512L;
     else
 	mallocsz = OE_objsize + 4L;
-    if (usrblk.cleartext != NULL)
+    if (usrblk.cleartext != nullptr)
 	free (usrblk.cleartext);
-    usrblk.cleartext = austext_malloc (mallocsz, PROGNAME "188", NULL);
+    usrblk.cleartext = austext_malloc (mallocsz, PROGNAME "188", nullptr);
     usrblk.clearlen = OE_objsize;
 
     /* Uncompress/decipher bloblist into cleartext,
@@ -226,7 +226,7 @@ int	oe_unblob (LLIST *bloblist)
     targ = (UCHAR *) usrblk.cleartext;
     stoploc = targ + OE_objsize;
     lptr = bloblist;
-    while (lptr != NULL) {
+    while (lptr != nullptr) {
 	/* Setup ptrs and counters for decoding */
 	bptr = (struct or_blobrec *) lptr->data;
 	src = (UCHAR *) bptr->or_blob;
@@ -273,9 +273,9 @@ static void     save_query (char *prefix, time_t start_time)
 {
     char           *src, *targ, *end;
 
-    if (saveusr.lastqry != NULL)
+    if (saveusr.lastqry != nullptr)
 	free (saveusr.lastqry);
-    saveusr.lastqry = austext_malloc (MAX_LASTQRY, PROGNAME "500", NULL);
+    saveusr.lastqry = austext_malloc (MAX_LASTQRY, PROGNAME "500", nullptr);
 
     /* First copy prefix and "=" */
     targ = saveusr.lastqry;
@@ -287,7 +287,7 @@ static void     save_query (char *prefix, time_t start_time)
     /* Copy query after '=', replacing any ctrl chars
      * with a displayable funny character (tilde ~).
      */
-    if (usrblk.query == NULL)
+    if (usrblk.query == nullptr)
 	strcpy (targ, CATGETS(dtsearch_catd, MS_misc, 1, "<null>"));
     else {
 	end = saveusr.lastqry + MAX_LASTQRY - 2;
@@ -323,7 +323,7 @@ void            oe_write_audit_rec (long numhits)
     time_t          now_gmt;
     FILE           *stream;
 
-    if ((stream = fopen (OEF_audit, "a ")) == NULL)
+    if ((stream = fopen (OEF_audit, "a ")) == nullptr)
 	/* the blank in "a " works around old aix bug */
     {
 	sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_misc, 1596,
@@ -340,11 +340,11 @@ void            oe_write_audit_rec (long numhits)
 	    now_gmt - saveusr.start_time,	/* elapsed search time */
 	    usrblk.dblk->name,
 	    numhits,
-	    (saveusr.lastqry == NULL) ? \
+	    (saveusr.lastqry == nullptr) ? \
 	    CATGETS(dtsearch_catd, MS_misc, 1, "<null>") : saveusr.lastqry);
-	if (saveusr.lastqry != NULL) {
+	if (saveusr.lastqry != nullptr) {
 	    free (saveusr.lastqry);
-	    saveusr.lastqry = NULL;
+	    saveusr.lastqry = nullptr;
 	}
 	fclose (stream);
     }
@@ -513,12 +513,12 @@ void            Opera_Engine (void)
 	    ,OE_flags, OE_flags, sprintbuf + 100, sprintbuf + 200
 	    );
 	i = 0;
-	for (db = usrblk.dblist; db != NULL; db = db->link) {
+	for (db = usrblk.dblist; db != nullptr; db = db->link) {
 	    if (db == usrblk.dblk)
 		break;
 	    i++;
 	}
-	if (db == NULL)
+	if (db == nullptr)
 	    fprintf (aa_stderr, "  dblk is %s\n",
 		(i) ? "INVALID!" : "null.");
 	else
@@ -568,11 +568,11 @@ void            Opera_Engine (void)
     if (usrblk.request != OE_INITIALIZE) {
 	/* Set OE_dbn to match selected dblk */
 	for (	db = usrblk.dblist,  OE_dbn = 0;
-		db != NULL;
+		db != nullptr;
 		db = db->link,  OE_dbn++)
 	    if (strcmp (usrblk.dblk->name, db->name) == 0)
 		break;
-	if (db == NULL) {
+	if (db == nullptr) {
 	    sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_oe, 48,
 		    PROGNAME "48 Request Aborted: "
 		    "'%s' database not available at this site."),
@@ -639,7 +639,7 @@ void            Opera_Engine (void)
 		    NULLORSTR (usrblk.cleartext));
 		print_stems (usrblk.stemcount, usrblk.stems, " ");
 	    }
-	    if (usrblk.cleartext == NULL  ||  usrblk.clearlen <= 0) {
+	    if (usrblk.cleartext == nullptr  ||  usrblk.clearlen <= 0) {
 NO_TEXT:
 		DtSearchAddMessage (
 		    PROGNAME "839 Client Error: No Text to highlight.");
@@ -718,11 +718,11 @@ NO_TEXT:
 	     * locally and they won't want an "error" msg
 	     * cluttering up the msglist. 
 	     */
-	    if (bloblist == NULL) {
+	    if (bloblist == nullptr) {
 		usrblk.clearlen = 0;
-		if (usrblk.cleartext != NULL) {
+		if (usrblk.cleartext != nullptr) {
 		    free (usrblk.cleartext);
-		    usrblk.cleartext = NULL;
+		    usrblk.cleartext = nullptr;
 		}
 		clear_hitwords ();
 	    }

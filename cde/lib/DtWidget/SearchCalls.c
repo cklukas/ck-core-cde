@@ -111,19 +111,19 @@ CreateTempFile(
     int len;
     int fd;
 
-    if (dir == NULL || *dir == '\0')
+    if (dir == nullptr || *dir == '\0')
        dir = P_tmpdir;
 
     len = snprintf(name, size, "%s/dtXXXXXX", dir);
     if (len < 0 || (size_t) len >= size)
-       return (FILE *) NULL;
+       return (FILE *) nullptr;
 
     fd = mkstemp(name);
     if (fd == -1)
-       return (FILE *) NULL;
+       return (FILE *) nullptr;
 
     fp = fdopen(fd, "w");
-    if (fp == (FILE *) NULL)
+    if (fp == (FILE *) nullptr)
     {
        close(fd);
        unlink(name);
@@ -159,7 +159,7 @@ DtEditorInvokeSpellDialog(
        /* 
         * Write out to a tmp file, getting the name back
         */
-       if((fp = CreateTempFile(fileName, sizeof(fileName))) != (FILE *)NULL) 
+       if((fp = CreateTempFile(fileName, sizeof(fileName))) != (FILE *)nullptr) 
        {
           /* 
 	   * Temporary file created sucessfully so write out contents of
@@ -182,7 +182,7 @@ DtEditorInvokeSpellDialog(
           fp = popen(com, "r");
           XtFree(com);
 
-          if ( fp == (FILE *)NULL )
+          if ( fp == (FILE *)nullptr )
             error = DtEDITOR_SPELL_FILTER_FAILED;
           else {
             error = DtEDITOR_NO_ERRORS;
@@ -256,13 +256,13 @@ DtEditorInvokeSpellDialog(
          sprintf(buf, BAD_FILTER2, M_spellFilter(pPriv));
          msg1 = XmStringGenerate(BAD_FILTER,
                                  XmFONTLIST_DEFAULT_TAG,
-                                 XmCHARSET_TEXT, NULL);
+                                 XmCHARSET_TEXT, nullptr);
 
          msg2 = XmStringSeparatorCreate();
          msg3= XmStringConcatAndFree(msg1, msg2);
          msg1 = XmStringGenerate(buf,
                                 XmFONTLIST_DEFAULT_TAG,
-                                XmCHARSET_TEXT, NULL);
+                                XmCHARSET_TEXT, nullptr);
 
          msg2 = XmStringConcatAndFree(msg3, msg1);
          XtFree(buf);
@@ -281,10 +281,10 @@ DtEditorInvokeSpellDialog(
                   XmDIALOG_HELP_BUTTON));
          XtUnmanageChild(XmMessageBoxGetChild(dialog,
                   XmDIALOG_CANCEL_BUTTON));
-	 XtAddCallback(dialog, XmNokCallback, DestroyThisWidgetCB, NULL);
+	 XtAddCallback(dialog, XmNokCallback, DestroyThisWidgetCB, nullptr);
 	 XtVaSetValues(XtParent(dialog), 
                        XmNdeleteResponse, XmDESTROY, 
-                       NULL);
+                       nullptr);
          XtManageChild(dialog);
 
          XmStringFree(msg2);
@@ -319,7 +319,7 @@ DtEditorFind(
    * If we were passed a string to find, then use it.  Otherwise,
    * use the last find string entered in the Find/Change dialog.
    */
-  if ( find != (char *)NULL )
+  if ( find != (char *)nullptr )
      foundIt = DoSearch(editor, find, CurrentTime);
   else
   {
@@ -354,7 +354,7 @@ _DtEditor_CountCharacters(
 
 	if (mbCurMax <= 1)
 	    return (numBytes < 0)? 0 : numBytes;
-	if (numBytes <=0 || str == NULL || *str == '\0')
+	if (numBytes <=0 || str == nullptr || *str == '\0')
 		return 0;
 
 	for(bptr = str; numBytes > 0; count++, bptr+= char_size)
@@ -517,7 +517,7 @@ SearchForString(
 	     * Either we are not in Spell mode or we have a word
 	     * so return
 	     */
-	    if (word  != (char *)NULL)
+	    if (word  != (char *)nullptr)
 	      XtFree(word);
 
 	    return (int)pos;
@@ -728,10 +728,10 @@ DtEditorChange(
 	    * DtEditorFind to use the last search string value 
 	    * (M_search_string).
 	    */
-	   if ( findChangeStrings != (DtEditorChangeValues *) NULL )
+	   if ( findChangeStrings != (DtEditorChangeValues *) nullptr )
 	     returnVal = DtEditorFind( widget, findChangeStrings->find );
 	   else
-	     returnVal = DtEditorFind( widget, (char *)NULL );
+	     returnVal = DtEditorFind( widget, (char *)nullptr );
 	   
 	   if ( returnVal == False)
 	     break;
@@ -747,7 +747,7 @@ DtEditorChange(
 	    * If we were passed a Change To string use it.  Otherwise, 
 	    * use the last replace string value.
 	    */
-	   if ( findChangeStrings != (DtEditorChangeValues *) NULL )
+	   if ( findChangeStrings != (DtEditorChangeValues *) nullptr )
 	     returnVal = DoReplace( editor, findChangeStrings->changeTo, 
 				    CurrentTime );
 	   else
@@ -761,7 +761,7 @@ DtEditorChange(
     	   _DtTurnOnHourGlass( M_topLevelShell(editor) );
 
 
-	   if ( findChangeStrings != (DtEditorChangeValues *) NULL )
+	   if ( findChangeStrings != (DtEditorChangeValues *) nullptr )
              returnVal = ReplaceAll( editor, findChangeStrings->find, 
 				     findChangeStrings->changeTo );
 	   else
@@ -905,7 +905,7 @@ _DtEditorDialogSearchCB(
            */
           pString = XmTextFieldGetString(M_replaceText(pPriv));
 
-          if( pString != (char *)NULL && *pString != (char)'\0' ) 
+          if( pString != (char *)nullptr && *pString != (char)'\0' ) 
              _DtEditorSetReplaceSensitivity( pPriv, True );
 
           XtFree(pString);
@@ -959,7 +959,7 @@ _DtEditorDialogReplaceCB(
        XtFree(M_replace_string(pPriv));
        M_replace_string(pPriv) = XmTextFieldGetString(M_replaceText(pPriv));
 
-       DtEditorChange( (Widget)pPriv, (DtEditorChangeValues *)NULL, 
+       DtEditorChange( (Widget)pPriv, (DtEditorChangeValues *)nullptr, 
 		       DtEDITOR_CURRENT_SELECTION );
     }
     else {
@@ -969,9 +969,9 @@ _DtEditorDialogReplaceCB(
        DtEditorChangeValues newWord;
 
        newWord.changeTo = XmTextFieldGetString(M_replaceText(pPriv));
-       if (newWord.changeTo != (char *)NULL) {
+       if (newWord.changeTo != (char *)nullptr) {
          /* This field ignored when changing the current selection */
-         newWord.find = (char *)NULL; 
+         newWord.find = (char *)nullptr; 
          DtEditorChange( (Widget)pPriv, &newWord, DtEDITOR_CURRENT_SELECTION );
 
          XtFree(newWord.changeTo);
@@ -1028,7 +1028,7 @@ _DtEditorDialogReplaceAllCB(
        /* 
         * Make the change with the current values (set above).
         */
-       if( !DtEditorChange((Widget)pPriv, (DtEditorChangeValues *)NULL, 
+       if( !DtEditorChange((Widget)pPriv, (DtEditorChangeValues *)nullptr, 
 		       DtEDITOR_ALL_OCCURRENCES) ) {
 	 /* 
 	  * If the replace failed, post a dialog informing the user 
@@ -1098,7 +1098,7 @@ _DtEditorMisspelledSelectCB(
     XtFree(M_misspelled_string(editor));
 
     M_misspelled_string(editor) = 
-	_XmStringUngenerate(cb->item, NULL, XmCHARSET_TEXT, XmCHARSET_TEXT);
+	_XmStringUngenerate(cb->item, nullptr, XmCHARSET_TEXT, XmCHARSET_TEXT);
 
     /*
      * Mark that it has not been found
@@ -1114,7 +1114,7 @@ _DtEditorMisspelledSelectCB(
     /*
      * Clear the "Change To" text field.
      */
-    XmTextFieldSetString(M_replaceText(editor), (char *)NULL);
+    XmTextFieldSetString(M_replaceText(editor), (char *)nullptr);
 
 } /* end _DtEditorMisspelledSelectCB */
 
@@ -1198,7 +1198,7 @@ _DtEditorFindTextChangedCB(
      * Only enable the Find & Change All buttons if there is a 
      * string to search for (i.e. a Find string).
      */
-    if(pString == (char *)NULL || *pString == (char)'\0') {
+    if(pString == (char *)nullptr || *pString == (char)'\0') {
 	_DtEditorSetFindSensitivity(editor, False );
 	_DtEditorSetReplaceAllSensitivity(editor, False );
         /*
@@ -1264,7 +1264,7 @@ _DtEditorReplaceTextChangedCB(
         * Disable the Change & Change All buttons if there is 
         * no Change To string.
         */
-       if( pString == (char *)NULL || *pString == (char)'\0' ) {
+       if( pString == (char *)nullptr || *pString == (char)'\0' ) {
           _DtEditorSetReplaceSensitivity(editor, False );
           _DtEditorSetReplaceAllSensitivity(editor, False );
        }
@@ -1397,12 +1397,12 @@ static Boolean IsValidFilter(DtEditorWidget pPriv)
      * the filter is in the path
      */
     pathstr = getenv("PATH");
-    if (pathstr == NULL)
+    if (pathstr == nullptr)
         return(FALSE);
 
     pathtmp = XtNewString(pathstr);
     pathtok = _XStrtok(pathtmp, ":", strtok_buf);
-    while (pathtok != NULL) {
+    while (pathtok != nullptr) {
         tmp = (char*)XtMalloc((strlen(pathtok)
                                + strlen(M_spellFilter(pPriv))
                                + 2) * sizeof(char));
@@ -1415,7 +1415,7 @@ static Boolean IsValidFilter(DtEditorWidget pPriv)
             return(IsExecutable(statbuf));
         }
         XtFree(tmp);
-        pathtok = _XStrtok(NULL,":", strtok_buf);
+        pathtok = _XStrtok(nullptr,":", strtok_buf);
     }
     XtFree(pathtmp);
     return(False);

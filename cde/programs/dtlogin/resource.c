@@ -85,8 +85,8 @@ char	*accessFile;
 char    **exportList;    /* List of all export env vars */
 char	*sysParmsFile;
 char	*timeZone;
-char	*fpHead = NULL;
-char	*fpTail = NULL;
+char	*fpHead = nullptr;
+char	*fpTail = nullptr;
 int	wakeupInterval;
 int 	langListTimeout;
 #ifdef DEF_NETWORK_DEV
@@ -417,11 +417,11 @@ GetResource( char *name, char *class, int valueType, char **valuep,
      */
      
      if (valueType == DM_STRING && *valuep) {
- 	if (string != NULL && strlen (*valuep) == len && !strncmp (*valuep, string, len))
+ 	if (string != nullptr && strlen (*valuep) == len && !strncmp (*valuep, string, len))
 	    return 0;
  	else {
  	    free (*valuep);
-	    *(valuep) = NULL;
+	    *(valuep) = nullptr;
 	}
      }
  
@@ -459,7 +459,7 @@ GetResource( char *name, char *class, int valueType, char **valuep,
 		*((int *) valuep) = 0;
 	break;
     case DM_ARGV: {
-        char **args = NULL;
+        char **args = nullptr;
         if (!parseArgs(&args, string))
             return 0;
         freeEnv(*((char ***)valuep));
@@ -473,13 +473,13 @@ GetResource( char *name, char *class, int valueType, char **valuep,
 }
 
 XrmOptionDescRec configTable [] = {
-{"-server",	NULL,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-udpPort",	NULL,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-error",	NULL,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-resources",	NULL,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-session",	NULL,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-debug",	NULL,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-xrm",	NULL,			XrmoptionSkipArg,	(caddr_t) NULL },
+{"-server",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
+{"-udpPort",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
+{"-error",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
+{"-resources",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
+{"-session",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
+{"-debug",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
+{"-xrm",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
 {"-config",	".configFile",		XrmoptionSepArg,	(caddr_t) NULL }
 };
 
@@ -490,7 +490,7 @@ XrmOptionDescRec optionTable [] = {
 {"-resources",	"*resources",		XrmoptionSepArg,	(caddr_t) NULL },
 {"-session",	"*session",		XrmoptionSepArg,	(caddr_t) NULL },
 {"-debug",	"*debugLevel",		XrmoptionSepArg,	(caddr_t) NULL },
-{"-xrm",	NULL,			XrmoptionResArg,	(caddr_t) NULL },
+{"-xrm",	nullptr,			XrmoptionResArg,	(caddr_t) NULL },
 {"-daemon",	".daemonMode",		XrmoptionNoArg,		"true"         },
 {"-nodaemon",	".daemonMode",		XrmoptionNoArg,		"false"        },
 {"-quiet",	".quiet",		XrmoptionNoArg,		"true"        }
@@ -549,7 +549,7 @@ ReinitResources( void )
 
 
     
-    newDB = config ? XrmGetFileDatabase ( config ) : NULL;
+    newDB = config ? XrmGetFileDatabase ( config ) : nullptr;
     if (newDB)
     {
 
@@ -597,9 +597,9 @@ LoadDMResources( void )
 	char	name[1024], class[1024];
 	FILE	*fp;
 
-	if (servers) {free(servers); servers=NULL;}
-	if (keyFile) {free(keyFile); keyFile=NULL;}
-	if (accessFile) {free(accessFile); accessFile=NULL;}
+	if (servers) {free(servers); servers=nullptr;}
+	if (keyFile) {free(keyFile); keyFile=nullptr;}
+	if (accessFile) {free(accessFile); accessFile=nullptr;}
 
 	for (i = 0; i < NUM_DM_RESOURCES; i++) {
 		sprintf (name, "%s.%s", AppName, DmResources[i].name);
@@ -609,12 +609,12 @@ LoadDMResources( void )
 			      DmResources[i].default_value);
 	}
 
-	servers = getFullFileName(servers, 1, NULL);
-	keyFile = getFullFileName(keyFile, 0, NULL);
-	accessFile = getFullFileName(accessFile, 0, NULL);
+	servers = getFullFileName(servers, 1, nullptr);
+	keyFile = getFullFileName(keyFile, 0, nullptr);
+	accessFile = getFullFileName(accessFile, 0, nullptr);
 
 	/* set a TZ default */
-        if (timeZone == NULL || strlen(timeZone) == 0)
+        if (timeZone == nullptr || strlen(timeZone) == 0)
         {
 	 /*
           *  dynamically determine the timeZone resource default value...
@@ -654,17 +654,17 @@ LoadDisplayResources( struct display *d )
 
 	Debug("Loading display resources for %s\n", d->name);
 	
-	if (d->resources) {free(d->resources); d->resources=NULL;}
-	if (d->setup)     {free(d->setup); d->setup=NULL;}
-	if (d->startup)   {free(d->startup); d->startup=NULL;}
-	if (d->reset)     {free(d->reset); d->reset=NULL;}
-	if (d->session)   {free(d->session); d->session=NULL;}
-	if (d->failsafeClient) {free(d->failsafeClient); d->failsafeClient=NULL;}
+	if (d->resources) {free(d->resources); d->resources=nullptr;}
+	if (d->setup)     {free(d->setup); d->setup=nullptr;}
+	if (d->startup)   {free(d->startup); d->startup=nullptr;}
+	if (d->reset)     {free(d->reset); d->reset=nullptr;}
+	if (d->session)   {free(d->session); d->session=nullptr;}
+	if (d->failsafeClient) {free(d->failsafeClient); d->failsafeClient=nullptr;}
 
 	CleanUpName (d->name, dpyName, sizeof (dpyName));
 	CleanUpName (d->class ? d->class : d->name, dpyClass, sizeof (dpyClass));
 
-	if((lang = getenv("LANG")) != NULL)
+	if((lang = getenv("LANG")) != nullptr)
 	   for (i = NUM_DISPLAY_RESOURCES - 1; i >= 0; i--)  {
 		if(strcmp(DisplayResources[i].name,"language") == 0){
 		  DisplayResources[i].default_value = lang;
@@ -673,7 +673,7 @@ LoadDisplayResources( struct display *d )
 	   }
 
 	lang = d->language;
-	d->language = NULL;
+	d->language = nullptr;
 
 	for (i = 0; i < NUM_DISPLAY_RESOURCES; i++) {
 		sprintf (name, "%s.%s.%s", AppName,
@@ -692,16 +692,16 @@ LoadDisplayResources( struct display *d )
 	d->language = lang;
 
 #ifdef _AIX
-    if(d->language == NULL || strlen(d->language) == 0)
+    if(d->language == nullptr || strlen(d->language) == 0)
         SetDefaultLanguage(d);
 #endif /* _AIX */
 
 	d->resources = getFullFileName(d->resources, 2, d->language);
-	d->setup = getFullFileName(d->setup, 0, NULL);
-	d->startup = getFullFileName(d->startup, 0, NULL);
-	d->reset = getFullFileName(d->reset, 0, NULL);
-	d->session = getFullFileName(d->session, 0, NULL);
-	d->failsafeClient = getFullFileName(d->failsafeClient, 0, NULL);
+	d->setup = getFullFileName(d->setup, 0, nullptr);
+	d->startup = getFullFileName(d->startup, 0, nullptr);
+	d->reset = getFullFileName(d->reset, 0, nullptr);
+	d->session = getFullFileName(d->session, 0, nullptr);
+	d->failsafeClient = getFullFileName(d->failsafeClient, 0, nullptr);
 
 }
 
@@ -777,14 +777,14 @@ getFullFileName(char *name, int special, char *lang)
 
 char * newname;
 
-    if (name == NULL)
-        return(NULL);
+    if (name == nullptr)
+        return(nullptr);
 
     /** if the file already starts with a '/' **/
     /** then just return a copy of it         **/
     if (name[0] == '/') {
-        if ((newname = (char *)malloc((strlen(name)+1)*sizeof(char))) == NULL) {
-            return (NULL);
+        if ((newname = (char *)malloc((strlen(name)+1)*sizeof(char))) == nullptr) {
+            return (nullptr);
         } else {
             strcpy(newname, name);
             return(newname);
@@ -803,12 +803,12 @@ char * newname;
                  /***************************************/
         case 1:  /** special handling for servers file **/
                  /***************************************/
-            if (strchr(name, ':') != NULL) {
+            if (strchr(name, ':') != nullptr) {
                 /** This is probably a command and not a file name **/
                 /** so just return a copy of it.                   **/
                 if ((newname = (char *)malloc((strlen(name)+1)*sizeof(char)))
-                    == NULL) {
-                    return (NULL);
+                    == nullptr) {
+                    return (nullptr);
                 } else {
                     strcpy(newname, name);
                     return(newname);
@@ -823,7 +823,7 @@ char * newname;
                  /********************************************/
         case 2:  /** special handling for d->resources file **/
                  /********************************************/
-            if (strchr(name, '%') == NULL) {
+            if (strchr(name, '%') == nullptr) {
                 /** no special processing needed **/
                 newname = qualifyWithFirst(name,
                                            CDE_CONFIGURATION_TOP "/config:"
@@ -835,21 +835,21 @@ char * newname;
                 int tempLen;
 
                 /** need to remember the %L **/
-                if (lang == NULL)
+                if (lang == nullptr)
                     lang = "C";
                 langString = _ExpandLang(name, lang);
                 if ( (tempName = qualifyWithFirst(langString,
                                            CDE_CONFIGURATION_TOP "/config:"
                                            CDE_INSTALLATION_TOP "/config") )
-                    == NULL) {
+                    == nullptr) {
                     free(langString);
                     langString = _ExpandLang(name, "C");
                     if ( (tempName = qualifyWithFirst(langString,
                                            CDE_CONFIGURATION_TOP "/config:"
                                            CDE_INSTALLATION_TOP "/config") )
-                        == NULL) {
+                        == nullptr) {
                         free(langString);
-                        return(NULL);
+                        return(nullptr);
                     }
                 }
                 /** We have a fully qualified and expanded file name **/
@@ -857,7 +857,7 @@ char * newname;
                 /** expanded file name.                              **/
                 tempLen = strlen(tempName) - strlen(langString)
                              + strlen(name) + 1;
-                if ((newname = (char *)malloc(tempLen * sizeof(char))) == NULL){
+                if ((newname = (char *)malloc(tempLen * sizeof(char))) == nullptr){
                     free(langString);
                     return(tempName);
                 } else {
@@ -872,7 +872,7 @@ char * newname;
 
         default:
           /* special is of an unknown value */
-          return(NULL);
+          return(nullptr);
     }
 }
 

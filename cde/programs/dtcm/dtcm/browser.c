@@ -129,7 +129,7 @@ reset_ticks(Calendar *c, Boolean use_sel_idx) {
 
 extern void
 br_display(Calendar *c) {
-	int		i, *pos_list = NULL, pos_cnt;
+	int		i, *pos_list = nullptr, pos_cnt;
         Browser		*b = (Browser *)c->browser;
 	BlistData	*bd;
 	Browselist	*bl = (Browselist *)c->browselist;
@@ -147,7 +147,7 @@ br_display(Calendar *c) {
 						    pos_list[i]);
 		if (bd) {
 			destroy_paint_cache(bd->cache, bd->cache_size);
-			bd->cache = NULL;
+			bd->cache = nullptr;
 			bd->cache_size = 0;
 
 			mb_update_array(bd->name, c);
@@ -174,7 +174,7 @@ invalid_date_msg(Calendar *c, Widget widget)
 		DIALOG_TEXT, text,
 		BUTTON_IDENT, 1, ident,
 		DIALOG_IMAGE, ((Props_pu *)c->properties_pu)->xm_error_pixmap,
-		NULL);
+		nullptr);
 
 	XtFree(ident);
 	XtFree(text);
@@ -183,7 +183,7 @@ invalid_date_msg(Calendar *c, Widget widget)
 
 void 
 set_entry_date(Calendar *c) {
-        char *date = NULL;
+        char *date = nullptr;
         Browser *b;
         Props *p;
         OrderingType ot;
@@ -196,12 +196,12 @@ set_entry_date(Calendar *c) {
         st = get_int_prop(p, CP_DATESEPARATOR);
 
         date = get_date_from_widget(c->view->date, b->datetext, ot, st);
-    	if (date == NULL ) {
+    	if (date == nullptr ) {
 		invalid_date_msg(c, b->message_text);
                 return;
         }
 
-        tick = cm_getdate(date, NULL);
+        tick = cm_getdate(date, nullptr);
 	if (!timeok(tick)) {
 		invalid_date_msg(c, b->message_text);
 		return;
@@ -240,7 +240,7 @@ make_browser(Calendar *c)
 	int		upform_min,item_count;
 	char		*title;
 
-	if (c->browser == NULL) {
+	if (c->browser == nullptr) {
                 c->browser = (caddr_t)ckalloc(sizeof(Browser));
                 b = (Browser*)c->browser;
         }
@@ -279,7 +279,7 @@ make_browser(Calendar *c)
                 XmNallowShellResize, True,
                 XmNmappedWhenManaged, False, 
 		XmNdeleteResponse, XmDO_NOTHING,
-                NULL);
+                nullptr);
 	XtFree(title);
 	XtAddCallback(b->frame, XmNpopupCallback, popup_cb, (XtPointer)c);
 
@@ -295,18 +295,18 @@ make_browser(Calendar *c)
 		XmNsashWidth, 1,
 		XmNwidth, outpane_width,
 		XmNheight, outpane_height,
-		NULL);
+		nullptr);
 
 	b->inner_pane = XtVaCreateManagedWidget("innerPane",
 		xmPanedWindowWidgetClass, b->outer_pane,
 		XmNallowResize, True,
-		NULL);
+		nullptr);
 
 	b->upper_form = XtVaCreateManagedWidget("upperForm",
 		xmFormWidgetClass, b->inner_pane,
 		XmNallowResize, True,
 		XmNpaneMinimum, upform_min,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 22, "Browse Menu Items"));
         b->list_label = XtVaCreateWidget("browseMenuLabel", 
@@ -315,7 +315,7 @@ make_browser(Calendar *c)
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNtopAttachment, XmATTACH_FORM,
 		XmNtopOffset, 10,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 21, "Edit List..."));
@@ -327,14 +327,14 @@ make_browser(Calendar *c)
 		XmNleftAttachment, XmATTACH_WIDGET,
 		XmNleftWidget, b->list_label,
 		XmNleftOffset, 80,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	XtAddCallback(b->edit_list, XmNactivateCallback,
 		browselist_from_browser, (XtPointer)c);
 
 	b->browse_list = (Widget)XmCreateScrolledList(b->upper_form,
-                "browseList", NULL, 0);
+                "browseList", nullptr, 0);
         XtAddCallback(b->browse_list,
 		XmNmultipleSelectionCallback, mb_box_notify, (XtPointer)c);
         XtAddCallback(b->browse_list,
@@ -342,7 +342,7 @@ make_browser(Calendar *c)
 	XtVaSetValues(b->browse_list,
 		XmNselectionPolicy, XmMULTIPLE_SELECT,
                	XmNvisibleItemCount, item_count,
-		NULL);
+		nullptr);
 
         b->browse_list_sw = XtParent(b->browse_list);
 	XtVaSetValues(b->browse_list_sw,
@@ -354,7 +354,7 @@ make_browser(Calendar *c)
 		XmNrightOffset, 20,
 		XmNbottomAttachment, XmATTACH_FORM,
                 XmNvisualPolicy, XmVARIABLE,
-		NULL);
+		nullptr);
 
 
 	/*
@@ -378,18 +378,18 @@ make_browser(Calendar *c)
 	 */
 	b->gotomenu = XmVaCreateSimpleOptionMenu(b->upper_form,
                 "goToOptionMenu", goto_label, 0, 0, gotomenu_cb,
-                XmVaPUSHBUTTON, prev_week, NULL, NULL, NULL,
-                XmVaPUSHBUTTON, this_week, NULL, NULL, NULL,
-                XmVaPUSHBUTTON, next_week, NULL, NULL, NULL,
-                XmVaPUSHBUTTON, prev_month, NULL, NULL, NULL,
-                XmVaPUSHBUTTON, next_month, NULL, NULL, NULL,
+                XmVaPUSHBUTTON, prev_week, nullptr, nullptr, nullptr,
+                XmVaPUSHBUTTON, this_week, nullptr, nullptr, nullptr,
+                XmVaPUSHBUTTON, next_week, nullptr, nullptr, nullptr,
+                XmVaPUSHBUTTON, prev_month, nullptr, nullptr, nullptr,
+                XmVaPUSHBUTTON, next_month, nullptr, nullptr, nullptr,
 		XmNbottomAttachment, XmATTACH_FORM,
 		XmNbottomOffset, 5,
                 XmNleftAttachment, XmATTACH_FORM,
 		XmNleftOffset, 20,
 		XmNuserData, c,
 		XmNnavigationType, XmTAB_GROUP,
-                NULL);
+                nullptr);
 	XmStringFree(prev_week);
 	XmStringFree(this_week);
 	XmStringFree(next_week);
@@ -403,11 +403,11 @@ make_browser(Calendar *c)
 		XmNbottomOffset, 5,
                 XmNleftAttachment, XmATTACH_WIDGET,
                 XmNleftWidget, b->gotomenu,
-		NULL);
+		nullptr);
 
 	b->datetext = XtVaCreateWidget("dateText",
 		xmTextWidgetClass, text_field_form,
-                NULL);
+                nullptr);
 	XtAddCallback(b->datetext, XmNactivateCallback, goto_date_cb, 
 								(XtPointer)c);
 
@@ -415,15 +415,15 @@ make_browser(Calendar *c)
 	 * We can now calc the proper offset for the bottom of scrolled
 	 * list - allow for a small margin above and below the text field.
 	 */
-	XtVaGetValues(b->datetext, XmNheight, &height, NULL);
-	XtVaSetValues(b->browse_list_sw, XmNbottomOffset, (height + 10), NULL);
+	XtVaGetValues(b->datetext, XmNheight, &height, nullptr);
+	XtVaSetValues(b->browse_list_sw, XmNbottomOffset, (height + 10), nullptr);
 
 	b->lower_form = XtVaCreateManagedWidget("lowerForm",
 		xmFormWidgetClass, b->inner_pane,
 		XmNallowResize, True,
 		XmNpaneMinimum, 200,
 		XmNtraversalOn, False,
-		NULL);
+		nullptr);
 
 	/*
 	 * create drawing area for chart
@@ -435,11 +435,11 @@ make_browser(Calendar *c)
 		XmNrightAttachment, XmATTACH_FORM,
 		XmNbottomAttachment, XmATTACH_FORM,
 		XmNtraversalOn, False,
-                NULL);
+                nullptr);
        	b->xcontext = gr_create_xcontext(c, b->canvas, gr_color,
 		c->xcontext->app);
 
-        XtVaSetValues(b->canvas, XmNheight, 300, NULL);
+        XtVaSetValues(b->canvas, XmNheight, 300, nullptr);
 
         XtAddCallback(b->canvas, XmNresizeCallback, mb_resize_proc, (XtPointer)c);
         XtAddCallback(b->canvas, XmNinputCallback, bcanvas_event, (XtPointer)c);
@@ -450,7 +450,7 @@ make_browser(Calendar *c)
 	 */
 	b->action = XtVaCreateWidget("action",
 		xmFormWidgetClass, b->outer_pane,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 29, "Schedule..."));
        	b->schedule = XtVaCreateWidget("schedule",
@@ -458,7 +458,7 @@ make_browser(Calendar *c)
 		XmNlabelString, xmstr,
 		XmNtopAttachment, XmATTACH_FORM,
 		XmNleftAttachment, XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(b->schedule, XmNactivateCallback, schedule_cb, (XtPointer)c);
 
@@ -469,11 +469,11 @@ make_browser(Calendar *c)
 		XmNleftAttachment, XmATTACH_WIDGET,
 		XmNleftWidget, b->schedule,
 		XmNtopAttachment, XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(b->mail, XmNactivateCallback, mail_cb, (XtPointer)c);
 
-	XtSetSensitive(b->mail, c->tt_procid == NULL ? False : True);
+	XtSetSensitive(b->mail, c->tt_procid == nullptr ? False : True);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 923, "Cancel"));
        	b->cancel = XtVaCreateWidget("cancel",
@@ -482,7 +482,7 @@ make_browser(Calendar *c)
 		XmNleftAttachment, XmATTACH_WIDGET,
 		XmNleftWidget, b->mail,
 		XmNtopAttachment, XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 	XtAddCallback(b->cancel, XmNactivateCallback, cancel_cb, (XtPointer)c);
 
@@ -493,7 +493,7 @@ make_browser(Calendar *c)
 		XmNleftAttachment, XmATTACH_WIDGET,
 		XmNleftWidget, b->cancel,
 		XmNtopAttachment, XmATTACH_FORM,
-                NULL);
+                nullptr);
         XmStringFree(xmstr);
         XtAddCallback(b->helpbutton, XmNactivateCallback,
                 help_cb, COMPARE_CALS_HELP_BUTTON);
@@ -508,26 +508,26 @@ make_browser(Calendar *c)
 		XmNrightAttachment, XmATTACH_FORM,
 		XmNbottomAttachment, XmATTACH_FORM,
 		XmNalignment, XmALIGNMENT_BEGINNING,
-		NULL);
+		nullptr);
 
 	/*
 	 * Fix the size of action area
 	 */
-	XtVaGetValues(b->schedule, XmNheight, &height, NULL);
+	XtVaGetValues(b->schedule, XmNheight, &height, nullptr);
 	XtVaSetValues(b->action,
 		XmNpaneMaximum, (2*height),
 		XmNpaneMinimum, (2*height),
-		NULL);
+		nullptr);
 
 
 	XtVaGetValues(b->outer_pane,
 		XmNchildren, &children,
 		XmNnumChildren, &num_children,
-		NULL);
+		nullptr);
 
 	while (num_children-- > 0) {
 		if (XmIsSash(children[num_children])) {
-				XtVaSetValues(children[num_children], XmNtraversalOn, False, NULL);
+				XtVaSetValues(children[num_children], XmNtraversalOn, False, nullptr);
 		}
 	}
 
@@ -553,21 +553,21 @@ make_browser(Calendar *c)
         /*
 	 * set default button for dialog
 	 */
-        XtVaSetValues(b->action, XmNdefaultButton, b->schedule, NULL);
-        XtVaSetValues(b->upper_form, XmNdefaultButton, b->schedule, NULL);
+        XtVaSetValues(b->action, XmNdefaultButton, b->schedule, nullptr);
+        XtVaSetValues(b->upper_form, XmNdefaultButton, b->schedule, nullptr);
 
 	/* We don't want a ``return'' in the text field to trigger the
 	 * default action so we create a form around the text field and
 	 * designate the text-field as the default button.
 	 */
-        XtVaSetValues(text_field_form, XmNdefaultButton, b->datetext, NULL);
+        XtVaSetValues(text_field_form, XmNdefaultButton, b->datetext, nullptr);
 
-        XtVaSetValues(b->action, XmNcancelButton, b->cancel, NULL);
-        XtVaSetValues(b->upper_form, XmNcancelButton, b->cancel, NULL);
+        XtVaSetValues(b->action, XmNcancelButton, b->cancel, nullptr);
+        XtVaSetValues(b->upper_form, XmNcancelButton, b->cancel, nullptr);
         XmProcessTraversal(b->schedule, XmTRAVERSE_CURRENT);
-        XtVaSetValues(b->action, XmNinitialFocus, b->schedule, NULL);
+        XtVaSetValues(b->action, XmNinitialFocus, b->schedule, nullptr);
 
-        XtVaSetValues(b->frame, XmNmappedWhenManaged, True, NULL);
+        XtVaSetValues(b->frame, XmNmappedWhenManaged, True, nullptr);
 	XtRealizeWidget(b->frame);
 	/*
 	 * Enforce a "reasonable" size.
@@ -668,12 +668,12 @@ bcanvas_repaint(Widget w, XtPointer client_data, XtPointer call_data)
 	   return;
 
 	b = (Browser *)c->browser;
-        if ((xc = b->xcontext)==NULL)
+        if ((xc = b->xcontext)==nullptr)
                 return;
 
 	clip.x = 0;
 	clip.y = 0;
-	XtVaGetValues(w, XmNwidth, &clip.width, XmNy, &clip.height, NULL);
+	XtVaGetValues(w, XmNwidth, &clip.width, XmNy, &clip.height, nullptr);
 
         gr_set_clip_rectangles(xc, 0, 0, &clip, 1, Unsorted);
 
@@ -690,7 +690,7 @@ mb_display_footermess(Browser *b, Calendar *c)
         int num_cals;
         char buf[BUFSIZ];
 
-	XtVaGetValues(b->browse_list, XmNselectedItemCount, &num_cals, NULL);
+	XtVaGetValues(b->browse_list, XmNselectedItemCount, &num_cals, nullptr);
         if (num_cals == 1)
                 sprintf(buf, "%d %s", num_cals,
 			CATGETS(c->DT_catd, 1, 31, "Calendar Displayed"));
@@ -702,7 +702,7 @@ mb_display_footermess(Browser *b, Calendar *c)
 
 static void
 browser_to_gaccess_list(Calendar *c) {
-	int		i, pos_cnt, *pos_list = NULL;
+	int		i, pos_cnt, *pos_list = nullptr;
 	GEditor		*ge = (GEditor *)c->geditor;
 	Browser		*b = (Browser *)c->browser;
 	BlistData	*bd;
@@ -732,7 +732,7 @@ void mb_update_busystatus(Browser *b, Calendar *c)
 	XmString		xmstr;
         Browselist 		*bl = (Browselist *)c->browselist;
 	time_t			start, stop;
-	CSA_entry_handle	*entries = NULL;
+	CSA_entry_handle	*entries = nullptr;
 	BlistData 		*bd;
 	CSA_return_code		stat;
 	CSA_enum 		*ops;
@@ -748,10 +748,10 @@ void mb_update_busystatus(Browser *b, Calendar *c)
 		start = b->begin_day_tick;
 		stop = b->end_hr_tick;
 
-		if (bd->cache == NULL) {
+		if (bd->cache == nullptr) {
 			setup_range(&range_attrs, &ops, &r_cnt, start, stop, 
 					CSA_TYPE_EVENT, 0, B_FALSE, bd->version);
-	        	stat = csa_list_entries(bd->cal_handle, r_cnt, range_attrs, ops, &num_entries, &entries, NULL);
+	        	stat = csa_list_entries(bd->cal_handle, r_cnt, range_attrs, ops, &num_entries, &entries, nullptr);
         			free_range(&range_attrs, &ops, r_cnt);
         		backend_err_msg(b->frame, bd->name, stat,
                         		((Props_pu *)c->properties_pu)->xm_error_pixmap);
@@ -798,7 +798,7 @@ bcanvas_event(Widget w, XtPointer client_data, XtPointer call_data)
 	int x, y, boxw, boxh;
 	pr_pos xy;
 
-        if ((event == NULL) || (event->type == ButtonRelease))
+        if ((event == nullptr) || (event->type == ButtonRelease))
                 return;
 
 	b = (Browser*)c->browser;
@@ -868,7 +868,7 @@ schedule_cb(Widget w, XtPointer client_data, XtPointer call_data)
 
 static char *
 get_mail_address_list(Calendar *c) {
-	int		i, *pos_list = NULL, pos_cnt;
+	int		i, *pos_list = nullptr, pos_cnt;
         Browser		*b = (Browser *)c->browser;
 	BlistData	*bd;
 	Browselist	*bl = (Browselist *)c->browselist;
@@ -905,7 +905,7 @@ static Tt_message
 reply_cb(Tt_message m, void *c_data, Tttk_op op, unsigned char *contents, int len, char *file)
 {
         char *client_procID = tt_message_handler(m);
-        if ( debug && (client_procID != NULL) ) {
+        if ( debug && (client_procID != nullptr) ) {
                 fprintf(stderr, "DEBUG: reply_cb():client_procID = %s\n", client_procID);
                 fprintf(stderr, "DEBUG: reply_cb():message_op = %s\n", tt_message_op(m));
         }
@@ -929,7 +929,7 @@ mail_cb(Widget w, XtPointer client_data, XtPointer call_data)
         /* Send ToolTalk message to bring up compose GUI with buffer as attachme
 nt */
 
-	appt = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, NULL);
+	appt = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, nullptr);
 	load_appt_defaults(appt, p);
 
 	appt->time->value->item.date_time_value = malloc(BUFSIZ);
@@ -953,7 +953,7 @@ nt */
  
         mime_buf = create_rfc_message(address, "message", address_list, 1);
 
-        msg = ttmedia_load(0, (Ttmedia_load_msg_cb)reply_cb, NULL, TTME_MAIL_EDIT, "RFC_822_MESSAGE", (unsigned char *)mime_buf, strlen(mime_buf), NULL, "dtcm_appointment_attachment", 0);
+        msg = ttmedia_load(0, (Ttmedia_load_msg_cb)reply_cb, nullptr, TTME_MAIL_EDIT, "RFC_822_MESSAGE", (unsigned char *)mime_buf, strlen(mime_buf), nullptr, "dtcm_appointment_attachment", 0);
  
         status = tt_ptr_error(msg);
         if (tt_is_err(status))
@@ -1042,7 +1042,7 @@ mb_update_array(char *entry_text, Calendar *c)
 	int			start_ind, end_ind, i, r_cnt;
 	time_t			start, stop;
         Browser			*b = (Browser *)c->browser;
-        CSA_entry_handle	*entries = NULL;
+        CSA_entry_handle	*entries = nullptr;
 	BlistData		*bd;
         CSA_return_code		stat;
         Browselist		*bl = (Browselist *)c->browselist;
@@ -1063,12 +1063,12 @@ mb_update_array(char *entry_text, Calendar *c)
         start = b->begin_week_tick;
         stop = next_ndays(b->begin_week_tick, 7) - 1;
 
-	if (bd->cache == NULL) {
+	if (bd->cache == nullptr) {
 		setup_range(&range_attrs, &ops, &r_cnt, start, 
 		    	stop, CSA_TYPE_EVENT,
 		    	0, B_FALSE, bd->version);
         	stat = csa_list_entries(bd->cal_handle, r_cnt, range_attrs, 
-					ops, &num_entries, &entries, NULL);
+					ops, &num_entries, &entries, nullptr);
 		free_range(&range_attrs, &ops, r_cnt);
         	backend_err_msg(b->frame, bd->name, stat,
 				((Props_pu *)c->properties_pu)->xm_error_pixmap);
@@ -1099,7 +1099,7 @@ register_names(char *name, Calendar *c)
 	char		*user, *location;
 	Props_pu	*p = (Props_pu *)c->properties_pu;
 	Browser		*b = (Browser*)c->browser;
-	BlistData	*bd = NULL;
+	BlistData	*bd = nullptr;
         Browselist	*bl = (Browselist *)c->browselist;
         CSA_return_code	stat;
 	CSA_session_handle	cal = 0;
@@ -1127,7 +1127,7 @@ register_names(char *name, Calendar *c)
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident);
 		XtFree(text);
 		XtFree(title);
@@ -1147,13 +1147,13 @@ register_names(char *name, Calendar *c)
 		location = cm_target2location(name);
 		csa_user.user_name = name;
 		csa_user.user_type = 0;
-		csa_user.calendar_user_extensions = NULL;
+		csa_user.calendar_user_extensions = nullptr;
 		csa_user.calendar_address = name;
 		logon_ext.item_code = CSA_X_DT_GET_USER_ACCESS_EXT;
 		logon_ext.item_data = 0;
-		logon_ext.item_reference = NULL;
+		logon_ext.item_reference = nullptr;
 		logon_ext.extension_flags = CSA_EXT_LAST_ELEMENT;
-		stat = csa_logon(NULL, &csa_user, NULL, NULL, NULL, &cal,
+		stat = csa_logon(nullptr, &csa_user, nullptr, nullptr, nullptr, &cal,
 			&logon_ext);
 		free(user);
 		free(location);
@@ -1174,7 +1174,7 @@ register_names(char *name, Calendar *c)
 	cb_ext.item_data = (CSA_uint32)c->xcontext->app;
 	cb_ext.extension_flags = CSA_EXT_LAST_ELEMENT;
 
-	stat = csa_register_callback(cal, flags, mb_update_handler, NULL, &cb_ext);
+	stat = csa_register_callback(cal, flags, mb_update_handler, nullptr, &cb_ext);
 	if (stat != CSA_SUCCESS) {
 		backend_err_msg(b->frame, name, stat,
 			((Props_pu *)c->properties_pu)->xm_error_pixmap);
@@ -1209,12 +1209,12 @@ mb_deregister_names(char *name, Calendar *c)
 		return;
 
 	destroy_paint_cache(bd->cache, bd->cache_size);
-	bd->cache = NULL;
+	bd->cache = nullptr;
 	bd->cache_size = 0;
 
 	if (bd->cal_handle != c->my_cal_handle &&
 	    bd->cal_handle != c->cal_handle && bd->cal_handle) {
-		stat = csa_logoff(bd->cal_handle, NULL);
+		stat = csa_logoff(bd->cal_handle, nullptr);
 
 
 		if (stat != CSA_SUCCESS) {
@@ -1255,7 +1255,7 @@ mb_box_notify(Widget widget, XtPointer client_data, XtPointer call_data)
 	b->add_to_array = (i < cbs->selected_item_count) ? True : False;
 
 	if ((bd = (BlistData *)CmDataListGetData(bl->blist_data,
-						   cbs->item_position)) == NULL)
+						   cbs->item_position)) == nullptr)
 		return;
 	/* erase busy status if it was busy because it was deselected */
 	if (!XmListPosSelected(b->browse_list, cbs->item_position)) {
@@ -1365,7 +1365,7 @@ mb_init_datefield(Browser *b, Calendar *c)
 	date = XmTextGetString(b->datetext);
 	if (!date || *date == '\0') {
         	date = get_date_from_widget(c->view->date, b->datetext, ot, st);
-		if (date != NULL)
+		if (date != nullptr)
 			XmTextSetString(b->datetext, date);
 	}
 }
@@ -1382,7 +1382,7 @@ mb_init_browchart(Browser *b, Calendar *c)
 	XtVaGetValues(b->canvas,
 		      XmNwidth, &canvas_width,
 		      XmNheight, &canvas_height,
-		      NULL);
+		      nullptr);
 	b->canvas_w = (int)canvas_width;
 	b->canvas_h = (int)canvas_height;
 	CalFontExtents(c->fonts->labelfont, &fontextents);
@@ -1448,9 +1448,9 @@ mb_draw_chartgrid(Browser *b, Calendar *c)
                 else
                         sprintf(label, "%2d", n);
                 gr_text(xc, c->view->outside_margin-char_width, y+3,
-                        c->fonts->viewfont, label, NULL);
+                        c->fonts->viewfont, label, nullptr);
                 gr_draw_line(xc, x, y, x + b->chart_width,
-                         y, gr_solid, NULL);
+                         y, gr_solid, nullptr);
                 y += b->boxh;
         }
  
@@ -1465,7 +1465,7 @@ mb_draw_chartgrid(Browser *b, Calendar *c)
         /* draw month */
         format_date(b->begin_week_tick+1, get_int_prop(p, CP_DATEORDERING), buf, 0, 0, 0);
         gr_text(xc, c->view->outside_margin+4,
-                 dayy-char_height-4, c->fonts->labelfont, buf, NULL);
+                 dayy-char_height-4, c->fonts->labelfont, buf, nullptr);
  
         for (n = 0; n < 7; n++) {
 		if (daytick >= get_bot() && daytick < get_eot()) {
@@ -1473,25 +1473,25 @@ mb_draw_chartgrid(Browser *b, Calendar *c)
 			CalTextExtents(c->fonts->viewfont, days3[n+1], strlen(days3[n+1]), &nop, &nop, &s_width, &nop);
 
                 	gr_text(xc, b->chart_x + (b->boxw * n) + ((b->boxw - s_width)/2),
-                        	dayy, c->fonts->viewfont, days3[n+1], NULL);
+                        	dayy, c->fonts->viewfont, days3[n+1], nullptr);
 
 			CalTextExtents(c->fonts->viewfont, numbers[dom(daytick)], strlen(numbers[dom(daytick)]), &nop, &nop, &s_width, &nop);
 
                 	gr_text(xc, b->chart_x + (b->boxw * n) + ((b->boxw - s_width)/2),
                         	y - char_height / 2, c->fonts->viewfont,
-                        	numbers[dom(daytick)], NULL);
+                        	numbers[dom(daytick)], nullptr);
 		}
                 daytick += daysec;
                 gr_draw_line(xc, b->chart_x + (b->boxw * n),
                         y, b->chart_x + (b->boxw * n),
-                        y + b->chart_height, gr_solid, NULL);
+                        y + b->chart_height, gr_solid, nullptr);
         }
  
         /*
          * Draw box around the whole thing.
          */
-        gr_draw_box(xc, b->chart_x, b->chart_y, b->chart_width, b->chart_height, NULL);
-        gr_draw_box(xc, b->chart_x-1, b->chart_y-1, b->chart_width+2, b->chart_height+2, NULL);
+        gr_draw_box(xc, b->chart_x, b->chart_y, b->chart_width, b->chart_height, nullptr);
+        gr_draw_box(xc, b->chart_x-1, b->chart_y-1, b->chart_width+2, b->chart_height+2, nullptr);
 }
 
 extern void
@@ -1503,7 +1503,7 @@ mb_draw_appts(Browser *b, int start, int end, Calendar *c)
 
 	if (next_ndays(b->date, 1) > get_eot())
 		outofbounds = True;
-        XtVaGetValues(b->canvas, XmNcolormap, &cms, NULL);
+        XtVaGetValues(b->canvas, XmNcolormap, &cms, nullptr);
 
         h = (b->boxh/BOX_SEG);
         end_of_day = (b->segs_in_array / 7);
@@ -1583,7 +1583,7 @@ mb_draw_appts(Browser *b, int start, int end, Calendar *c)
 		break;
         }
 
-        browser_select(c, b, NULL);
+        browser_select(c, b, nullptr);
 }
 
 extern void
@@ -1601,7 +1601,7 @@ mb_resize_proc(Widget w, XtPointer client_data, XtPointer call)
         Calendar *c = (Calendar *)client_data;
 	Browser *b;
 
-        XtVaGetValues(w, XmNwidth, &width, XmNheight, &height, NULL);
+        XtVaGetValues(w, XmNwidth, &width, XmNheight, &height, nullptr);
         b = (Browser*)c->browser;
         gr_clear_area(b->xcontext, 0, 0, width, height);
         mb_init_browchart(b, c);
@@ -1610,7 +1610,7 @@ mb_resize_proc(Widget w, XtPointer client_data, XtPointer call)
 
 void
 mb_refigure_chart(Calendar *c) {
-	mb_resize_proc(((Browser *)c->browser)->canvas, (XtPointer)c, NULL);
+	mb_resize_proc(((Browser *)c->browser)->canvas, (XtPointer)c, nullptr);
 }
 
 extern void
@@ -1625,14 +1625,14 @@ browser_reset_list(Calendar *c) {
 	XtVaGetValues(b->browse_list,
 		XmNselectedItemCount,	&selected_items_count,
 		XmNselectedItems,	&list_selected_items,
-		NULL);
+		nullptr);
 
 	selected_items = (XmStringTable)calloc(selected_items_count, 
 							sizeof(XmStringTable));
 	for (i = 0; i < selected_items_count; i++)
 		selected_items[i] = XmStringCopy(list_selected_items[i]);
 
-	XtVaSetValues(b->upper_form, XmNresizePolicy, XmRESIZE_NONE, NULL);
+	XtVaSetValues(b->upper_form, XmNresizePolicy, XmRESIZE_NONE, nullptr);
 	/*
 	 * When a user removes a calendar from the menu we remove it
 	 * from the multi-browser.  If the calendar happens to be selected
@@ -1664,7 +1664,7 @@ browser_reset_list(Calendar *c) {
 			XmStringFree(xmstr);
 		}
 	}
-	XtVaSetValues(b->upper_form, XmNresizePolicy, XmRESIZE_ANY, NULL);
+	XtVaSetValues(b->upper_form, XmNresizePolicy, XmRESIZE_ANY, nullptr);
 	
 	/*
 	 * Reselect the items that were selected before we changed the
@@ -1710,7 +1710,7 @@ cancel_cb(Widget w, XtPointer client, XtPointer call)
 
 	XtDestroyWidget(b->frame);
 	XtFree(b->multi_array); 
-	XtFree(c->browser); c->browser = NULL;
+	XtFree(c->browser); c->browser = nullptr;
 }
 
 static void
@@ -1720,8 +1720,8 @@ popup_cb(Widget w, XtPointer client, XtPointer call)
 	Browser *b = (Browser *)c->browser;
 	Position x, y;
 
-	XtVaGetValues(c->frame, XmNx, &x, XmNy, &y, NULL);
-	XtVaSetValues(b->frame, XmNx, x+100, XmNy, y+100, NULL);
+	XtVaGetValues(c->frame, XmNx, &x, XmNy, &y, nullptr);
+	XtVaSetValues(b->frame, XmNx, x+100, XmNy, y+100, nullptr);
 }
 
 /*

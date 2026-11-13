@@ -56,7 +56,7 @@
 ABTrigger
 trigger_create(void)
 {
-	ABTrigger	trigger= NULL;
+	ABTrigger	trigger= nullptr;
 
 	trigger= (ABTrigger)malloc(sizeof(*trigger));
 	trigger_init(trigger);
@@ -79,10 +79,10 @@ trigger_destroy(ABTrigger trigger)
 int
 trigger_init(ABTrigger trigger)
 {
-	trigger->next= NULL;
-	trigger->prev= NULL;
-	trigger->owner= NULL;
-	trigger->from= NULL;
+	trigger->next= nullptr;
+	trigger->prev= nullptr;
+	trigger->owner= nullptr;
+	trigger->from= nullptr;
 	trigger->when= AB_WHEN_UNDEF;
 	return 0;
 }
@@ -105,7 +105,7 @@ trigger_release(ABTrigger trigger)
 int 
 trigger_unlink(ABTrigger trigger)
 {
-	if (trigger->owner != NULL)
+	if (trigger->owner != nullptr)
 	{
 		obj_action_remove_trigger(trigger->owner, trigger);
 	}

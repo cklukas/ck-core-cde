@@ -362,7 +362,7 @@ static Tt_callback_action _DtActReceiveDoneMsg(
    /*
     * Init return args incase there is not a childp.
     */
-   retArgv = NULL;
+   retArgv = nullptr;
    retArgc = 0;
 
    if (childp)
@@ -553,7 +553,7 @@ ResolveTtRequestMessagePieces(
    tt_msgAttr * tt = &(action->u.tt_msg);
    int i;
    Boolean success;
-   Boolean * paramUsed = NULL;
+   Boolean * paramUsed = nullptr;
    int promptDataIndex = 0;
 
    if (_DtCompileMessagePiece(w, request, relPathHost, relPathDir,
@@ -588,17 +588,17 @@ ResolveTtRequestMessagePieces(
    /* ERROR: Free up any intermediate work we've done here */
    XtFree(tt->tt_op.compiledMessage);
    XtFree(tt->tt_file.compiledMessage);
-   tt->tt_op.compiledMessage = NULL;
-   tt->tt_file.compiledMessage = NULL;
+   tt->tt_op.compiledMessage = nullptr;
+   tt->tt_file.compiledMessage = nullptr;
    for (i = 0; i < tt->value_count; i++)
    {
       XtFree(tt->tt_argn_value[i].compiledMessage);
-      tt->tt_argn_value[i].compiledMessage = NULL;
+      tt->tt_argn_value[i].compiledMessage = nullptr;
    }
    for (i = 0; i < tt->vtype_count; i++)
    {
       XtFree(tt->tt_argn_vtype[i].compiledMessage);
-      tt->tt_argn_vtype[i].compiledMessage = NULL;
+      tt->tt_argn_vtype[i].compiledMessage = nullptr;
    }
    XtFree(paramUsed);
    return(False);
@@ -634,7 +634,7 @@ Ttmedia_to_Dt_StatusUpdateCB(
     _DtActChildRecT *childRec;
     _DtActInvRecT *invRec;
     DtActionInvocationID id;
-    DtActionArg *newArgp = NULL;	/* hanger for returned data if any */
+    DtActionArg *newArgp = nullptr;	/* hanger for returned data if any */
     int  newArgc = 0;
     unsigned long evalStatus;
     DtActionStatus userStatus;
@@ -705,7 +705,7 @@ Ttmedia_to_Dt_StatusUpdateCB(
 	    }
 	    else {
 		ReportToolTalkError(data->associatedWidget, 
-					data->actionLabel, NULL);
+					data->actionLabel, nullptr);
 	    }
 	}
     }
@@ -729,7 +729,7 @@ Ttmedia_to_Dt_StatusUpdateCB(
 	 * reply where the arguments go back.
 	 */
 	i = 0;	/* arg 0 */
-	if (file == NULL) {
+	if (file == nullptr) {
 	    /*
 	     * DtACTION_BUFFER - possible update.
 	     */
@@ -879,13 +879,13 @@ TtRequestCallbackHandler(
     DtActionInvocationID id;
     unsigned long evalStatus;
     DtActionStatus userStatus;
-    DtActionArg *newArgp = NULL;	/* hanger for returned data if any */
+    DtActionArg *newArgp = nullptr;	/* hanger for returned data if any */
     int  newArgc = 0, totalArgs, i, j, upIdx;
     int upArgClass;
     int argRepType;
     char *upttbuf;
     int upttbuflen, ivalue;
-    char *upVType = NULL, *upVType2 = NULL;
+    char *upVType = nullptr, *upVType2 = nullptr;
 
 
     status = (Tt_status) tt_message_status(message);
@@ -944,7 +944,7 @@ TtRequestCallbackHandler(
 	    }
 	    else {
 		ReportToolTalkError(data->associatedWidget, 
-					data->actionLabel, NULL);
+					data->actionLabel, nullptr);
 	    }
 	}
     }
@@ -1164,7 +1164,7 @@ _DtTtContractIgnoreMsgCB(
      * Artificially consume unwanted messages.
      */
     tttk_message_abandon(msg);
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1174,7 +1174,7 @@ InitiateTtRequest(
 	ActionRequest  *request )
 
 {
-    CallbackData *data = NULL;
+    CallbackData *data = nullptr;
     ActionPtr action = request->clonedAction;
     tt_msgAttr * tt = &(action->u.tt_msg);
     int i;
@@ -1198,7 +1198,7 @@ InitiateTtRequest(
     unsigned long evalStatus;
     DtActionStatus userStatus;
     int j;
-    char *bufFilename = NULL;
+    char *bufFilename = nullptr;
     int ttmedia_test;
 
 
@@ -1348,7 +1348,7 @@ InitiateTtRequest(
 		break;
 	}
 
-	contents = (unsigned char *) NULL;
+	contents = (unsigned char *) nullptr;
 	length   = (int)             0;
 	/*
 	 * Determine what the data looks like: file or a buffer?
@@ -1390,7 +1390,7 @@ InitiateTtRequest(
 	if (tt->mode_count == 2)
 	    docname  = (char *) tt->tt_argn_value[1].compiledMessage;
 	else
-	    docname  = (char *) NULL;
+	    docname  = (char *) nullptr;
 
 	/*
 	 * Fill out a callback structure.
@@ -1438,7 +1438,7 @@ InitiateTtRequest(
 	     */
 	    subcon_patterns = ttdt_subcontract_manage(message,
 			        (Ttdt_contract_cb) _DtTtContractIgnoreMsgCB,
-			        w, (void *) NULL);
+			        w, (void *) nullptr);
 
 	    status = tt_message_send(message);
 	    destroy_message = 1;
@@ -1464,7 +1464,7 @@ InitiateTtRequest(
 		tt_free(errorMsg);
 	    }
 	    else
-		ReportToolTalkError(w, request->clonedAction->label, NULL);
+		ReportToolTalkError(w, request->clonedAction->label, nullptr);
    
 	    /*
 	     * Free information since no callbacks will be triggered:
@@ -1528,7 +1528,7 @@ InitiateTtRequest(
 	     * some decisions here.
 	     */
 	    length = -1;			/* -1 means not a buffer */
-	    bufFilename = (char *) NULL;	/* possible buffer tmp file */
+	    bufFilename = (char *) nullptr;	/* possible buffer tmp file */
 
 	    if ( actChildRecP->argMap[i].argIdx != -1 ) {
 		if ( IS_BUFFER_OBJ(actInvRecP->
@@ -1599,7 +1599,7 @@ InitiateTtRequest(
 	    else
 	    {
 		/* No value specified; use 'NULL' */
-		value = NULL;
+		value = nullptr;
    
 		/*
 		 * Use the specified vtype setting, if supplied; else
@@ -1690,7 +1690,7 @@ InitiateTtRequest(
 	 */
 	subcon_patterns = ttdt_subcontract_manage(message,
 			(Ttdt_contract_cb) _DtTtContractIgnoreMsgCB,
-			w, (void *) NULL);
+			w, (void *) nullptr);
 
 	status = tt_message_send(message);
    
@@ -1717,7 +1717,7 @@ InitiateTtRequest(
 		tt_free(errorMsg);
 	    }
 	    else
-		ReportToolTalkError(w, request->clonedAction->label, NULL);
+		ReportToolTalkError(w, request->clonedAction->label, nullptr);
    
 	    /*
 	     * Clean up now, cause there will not be a reply coming back
@@ -1806,7 +1806,7 @@ _DtInitializeToolTalk(Widget w)
 
 
    /* The _Dt_context_widget should have been set in DtBigInitialize() */
-   myassert (_DtInitTtContextWidget != NULL);
+   myassert (_DtInitTtContextWidget != nullptr);
 
    if ( (status = _DtSvcInitToolTalk(_DtInitTtContextWidget)) != TT_OK )
 	return status;

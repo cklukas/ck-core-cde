@@ -179,7 +179,7 @@ source    read commands from file\n\
 "\
 ?         list available commands" },
 
-{ NULL, 0, 0, NULL, NULL },
+{ nullptr, 0, 0, nullptr, nullptr },
 };
 
 #define COMMAND_NAMES_PADDED_WIDTH 10	/* wider than anything above */
@@ -237,7 +237,7 @@ copystring(const char *src)
     int len;
     char *cp;
 
-    if (!src) return NULL;
+    if (!src) return nullptr;
     
     len = strlen (src);
     cp = malloc (len + 1);
@@ -270,7 +270,7 @@ badcommandline(const char *cmd)
 static char *
 skip_space(char *s)
 {
-    if (!s) return NULL;
+    if (!s) return nullptr;
 
     for ( ; *s && isascii(*s) && isspace(*s); s++)
 	;
@@ -281,7 +281,7 @@ skip_space(char *s)
 static char *
 skip_nonspace(char *s)
 {
-    if (!s) return NULL;
+    if (!s) return nullptr;
 
     /* put quoting into loop if need be */
     for ( ; *s && isascii(*s) && !isspace(*s); s++)
@@ -301,7 +301,7 @@ split_into_words(char *src, int *argcp)
     *argcp = 0;
 #define WORDSTOALLOC 4			/* most lines are short */
     argv = (char **) malloc (WORDSTOALLOC * sizeof (char *));
-    if (!argv) return NULL;
+    if (!argv) return nullptr;
     cur = 0;
     total = WORDSTOALLOC;
 
@@ -319,13 +319,13 @@ split_into_words(char *src, int *argcp)
 	if (cur == total) {
 	    total += WORDSTOALLOC;
 	    argv = (char **) realloc (argv, total * sizeof (char *));
-	    if (!argv) return NULL;
+	    if (!argv) return nullptr;
 	}
 	argv[cur++] = jword;
 	if (savec) src++;		/* if not last on line advance */
     } while (jword != src);
 
-    argv[--cur] = NULL;			/* smash empty token to end list */
+    argv[--cur] = nullptr;			/* smash empty token to end list */
     *argcp = cur;
     return argv;
 }
@@ -347,7 +347,7 @@ open_file(char **filenamep, char *mode, Bool *usedstdp, char *srcfn, int srcln, 
 	    } else {
 		prefix (srcfn, srcln);
 		fprintf (stderr, "%s:  stdin already in use\n", cmd);
-		return NULL;
+		return nullptr;
 	    }
 	} else {
 	    *filenamep = stdout_filename;
@@ -372,10 +372,10 @@ read_auth_entries(FILE *fp, _tt_AuthFileEntryList **headp,
     _tt_AuthFileEntryList *head, *tail;
     int n;
 
-    head = tail = NULL;
+    head = tail = nullptr;
     n = 0;
 					/* put all records into linked list */
-    while ((entry = tt_ReadAuthFileEntry (fp)) != NULL) {
+    while ((entry = tt_ReadAuthFileEntry (fp)) != nullptr) {
 	_tt_AuthFileEntryList *l =
 	  (_tt_AuthFileEntryList *) malloc (sizeof (_tt_AuthFileEntryList));
 	if (!l) {
@@ -384,7 +384,7 @@ read_auth_entries(FILE *fp, _tt_AuthFileEntryList **headp,
 		     ProgramName);
 	    exit (1);
 	}
-	l->next = NULL;
+	l->next = nullptr;
 	l->entry = entry;
 	if (tail) 			/* if not first time through append */
 	  tail->next = l;
@@ -474,11 +474,11 @@ dispatch_command(char *inputfilename, int lineno, int argc, char **argv,
 }
 
 
-static _tt_AuthFileEntryList *ttauth_head = NULL; /* list of auth entries */
+static _tt_AuthFileEntryList *ttauth_head = nullptr; /* list of auth entries */
 static Bool ttauth_existed = False;	/* if was present at initialize */
 static Bool ttauth_modified = False;	/* if added, removed, or merged */
 static Bool ttauth_allowed = True;	/* if allowed to write auth file */
-static char *ttauth_filename = NULL;
+static char *ttauth_filename = nullptr;
 static Bool dieing = False;
 
 /* ARGSUSED */
@@ -854,7 +854,7 @@ merge_entries(_tt_AuthFileEntryList **firstp, _tt_AuthFileEntryList *second,
 		    a->next = b->next;
 		    tt_FreeAuthFileEntry (b->entry);
 		    free ((char *) b);
-		    b = NULL;
+		    b = nullptr;
 		    tail->next = next;
 		    nrepl++;
 		    nnew--;
@@ -900,7 +900,7 @@ search_and_do(char *inputfilename, int lineno, int start,
     {
 	next = l->next;
 
-	protoname = protodata = netid = authname = NULL;
+	protoname = protodata = netid = authname = nullptr;
 
 	for (i = start; i < argc; i++)
 	{
@@ -1001,7 +1001,7 @@ print_help(FILE *fp, const char *cmd)
 static int
 do_help(char *inputfilename, int lineno, int argc, char *argv[])
 {
-    char *cmd = (argc > 1 ? argv[1] : NULL);
+    char *cmd = (argc > 1 ? argv[1] : nullptr);
     int n;
 
     n = print_help (stdout, cmd);
@@ -1105,7 +1105,7 @@ do_merge(char *inputfilename, int lineno, int argc, char *argv[])
 	return 1;
     }
 
-    listhead = listtail = NULL;
+    listhead = listtail = nullptr;
 
     for (i = 1; i < argc; i++) {
 	char *filename = argv[i];
@@ -1120,7 +1120,7 @@ do_merge(char *inputfilename, int lineno, int argc, char *argv[])
 	    continue;
 	}
 
-	head = tail = NULL;
+	head = tail = nullptr;
 	nentries = read_auth_entries (fp, &head, &tail);
 	if (nentries == 0) {
 	    prefix (inputfilename, lineno);
@@ -1164,7 +1164,7 @@ do_extract(char *inputfilename, int lineno, int argc, char *argv[])
 	return 1;
     }
 
-    ed.fp = NULL;
+    ed.fp = nullptr;
     ed.filename = argv[1];
     ed.nwritten = 0;
     ed.cmd = argv[0];
@@ -1199,13 +1199,13 @@ do_add(char *inputfilename, int lineno, int argc, char *argv[])
     int n, nnew, nrepl, ndup;
     char *protoname;
     char *protodata_hex;
-    char *protodata = NULL; /* not required */
+    char *protodata = nullptr; /* not required */
     char *netid;
     char *authname;
     char *authdata_hex;
-    char *authdata = NULL;
+    char *authdata = nullptr;
     int protodata_len, authdata_len;
-    _tt_AuthFileEntry *entry = NULL;
+    _tt_AuthFileEntry *entry = nullptr;
     _tt_AuthFileEntryList *list;
     int status = 0;
 
@@ -1294,13 +1294,13 @@ do_add(char *inputfilename, int lineno, int argc, char *argv[])
     entry->protocol_data_length = protodata_len;
     entry->protocol_data = protodata;
     /* Avoid a double free later on in the event of an error */
-    protodata = NULL;
+    protodata = nullptr;
     entry->network_id = copystring (netid);
     entry->auth_name = copystring (authname);
     entry->auth_data_length = authdata_len;
     entry->auth_data = authdata;
     /* Avoid a double free later on in the event of an error */
-    authdata = NULL;
+    authdata = nullptr;
 
     if (!entry->protocol_name ||
 	(!entry->protocol_data && entry->protocol_data_length > 0) ||
@@ -1315,7 +1315,7 @@ do_add(char *inputfilename, int lineno, int argc, char *argv[])
     if (!list)
 	goto add_bad_malloc;
 
-    list->next = NULL;
+    list->next = nullptr;
     list->entry = entry;
 
     /*
@@ -1491,7 +1491,7 @@ do_source(char *inputfilename, int lineno, int argc, char *argv[])
 	    printf ("ttauth> ");
 	    fflush (stdout);
 	}
-	if (fgets (buf, sizeof buf, fp) == NULL) break;
+	if (fgets (buf, sizeof buf, fp) == nullptr) break;
 	sublineno++;
 	len = strlen (buf);
 	if (len == 0 || buf[0] == '#') continue;

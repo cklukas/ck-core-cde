@@ -111,7 +111,7 @@ init(int *argc, char **argv)
 	Arg 		args[20];
 
 
-	toplevel = XtInitialize(argv[0], "Dttype", NULL, 0,
+	toplevel = XtInitialize(argv[0], "Dttype", nullptr, 0,
 		(int *) argc, argv);
 
 	XtSetArg(args[0], XmNallowShellResize, 1);
@@ -244,7 +244,7 @@ rec_list(List *l)
 #if defined(CSRG_BASED) || defined(__linux__)
 		if(regexec(&regex_rn,
 			  (char *)_DtDtsMMBosonToString(rec_ptr->recordName),
-			  0, NULL, 0) == 0)
+			  0, nullptr, 0) == 0)
 #else
 		if(advance((char *)_DtDtsMMBosonToString(rec_ptr->recordName), expbuf_rn) != 0)
 #endif
@@ -260,14 +260,14 @@ rec_list(List *l)
 				fv = _DtDtsMMExpandValue(_DtDtsMMBosonToString(fld_ptr->fieldValue));
 
 #if defined(CSRG_BASED) || defined(__linux__)
-				if((regexec(&regex_fn, fn, 0, NULL, 0) == 0) &&
+				if((regexec(&regex_fn, fn, 0, nullptr, 0) == 0) &&
 				   ((fld_ptr->fieldValue==0?
 					regexec(&regex_fv,
 						CATGETS(dtcatd, 1, 4, "NULL"),
-						0, NULL, 0):
+						0, nullptr, 0):
 					regexec(&regex_fv,
 						fv,
-						0, NULL, 0)) == 0))
+						0, nullptr, 0)) == 0))
 #else
 				if((advance(fn, expbuf_fn) != 0) &&
 				   ((fld_ptr->fieldValue==0?advance(CATGETS(dtcatd, 1, 4, "NULL"), expbuf_fv):advance(fv, expbuf_fv)) != 0))
@@ -323,7 +323,7 @@ rec_list(List *l)
 			if(l->display_fld)
 			{
 #if defined(CSRG_BASED) || defined(__linux__)
-				if(regexec(&regex_df, fn, 0, NULL, 0) == 0)
+				if(regexec(&regex_df, fn, 0, nullptr, 0) == 0)
 #else
 				if(advance(fn, expbuf_df) !=0)
 #endif

@@ -107,7 +107,7 @@ weekchart_deselect(Calendar *c)
 	CalFontExtents(w->font, &fontextents);
 	char_height = fontextents.max_ink_extent.height;
 
-        XtVaGetValues(c->canvas, XmNcolormap, &cms, NULL);
+        XtVaGetValues(c->canvas, XmNcolormap, &cms, nullptr);
 
 	if (!selection_active (sel)) return;
 
@@ -128,7 +128,7 @@ weekchart_deselect(Calendar *c)
 	gr_clear_area(c->xcontext, x, y, w->chart_day_width-1, 
 			w->chart_hour_height-1 + w->add_pixels);
 	gr_draw_box(c->xcontext, x - 1, y - 1, w->chart_day_width, 
-			w->chart_hour_height + w->add_pixels, NULL);
+			w->chart_hour_height + w->add_pixels, nullptr);
 	index = j * (w->segs_in_array / 7) + (BOX_SEG * k);
 	for (i = index;  i < (index + BOX_SEG); i++) {
 		/* compensate for the added pixel for displaying chart */
@@ -179,7 +179,7 @@ weekchart_select(Calendar *c)
 	CalFontExtents(w->font, &fontextents);
 	char_height = fontextents.max_ink_extent.height;
 
-        XtVaGetValues(c->canvas, XmNcolormap, &cms, NULL);
+        XtVaGetValues(c->canvas, XmNcolormap, &cms, nullptr);
 	/*
         XtVaGetValues(c->frame, XmNbackground, &background_pixel, NULL);
 	*/
@@ -195,9 +195,9 @@ weekchart_select(Calendar *c)
 			 	w->chart_x + 1, (j * w->chart_hour_height) + 
 				(j * w->add_pixels) + w->chart_y + 1, 
 				w->chart_day_width - 2, 
-				w->chart_hour_height - 2 + w->add_pixels, NULL);
+				w->chart_hour_height - 2 + w->add_pixels, nullptr);
 			gr_draw_box(c->xcontext, chart_x, chart_y, 
-				w->chart_day_width, char_height + 1, NULL);
+				w->chart_day_width, char_height + 1, nullptr);
 		}
 		else  { 
 			/* Select time slot */
@@ -245,12 +245,12 @@ select_weekday(Calendar *c, Boolean select)
         if (select) {
                 if (c->xcontext->screen_depth < 8) {
                         gr_draw_box(xc, x, y, w->day_width - 2,
-                        w->day_height - w->label_height - 2, NULL);
+                        w->day_height - w->label_height - 2, nullptr);
 		}
                 else {
 			Colormap cms;
 
-        		XtVaGetValues(c->canvas, XmNcolormap, &cms, NULL);
+        		XtVaGetValues(c->canvas, XmNcolormap, &cms, nullptr);
                         gr_draw_rgb_box(xc, x - 2, y - 2, w->day_width,
                                         w->day_height - w->label_height, STDTTT,
 				 	foreground_pixel, cms);
@@ -258,7 +258,7 @@ select_weekday(Calendar *c, Boolean select)
                 weekchart_select(c);
         } else {
                 gr_draw_box(xc, x - 2, y - 2, w->day_width,
-                       	    w->day_height - w->label_height, NULL);
+                       	    w->day_height - w->label_height, nullptr);
                 gr_dissolve_box(xc, x - 1, y - 1, w->day_width - 2,
 				 w->day_height - w->label_height - 2, 2);
                 weekchart_deselect(c);
@@ -291,7 +291,7 @@ calendar_select (Calendar *c, Selection_unit unit, caddr_t ref)
 	topoff	= c->view->topoffset;
 	xc	= c->xcontext;
 
-        XtVaGetValues(c->canvas, XmNcolormap, &cms, NULL);
+        XtVaGetValues(c->canvas, XmNcolormap, &cms, nullptr);
 	/*
         XtVaGetValues(c->canvas, XmNforeground, &foreground_pixel, NULL);
 	*/
@@ -309,7 +309,7 @@ calendar_select (Calendar *c, Selection_unit unit, caddr_t ref)
 				if (c->xcontext->screen_depth < 8) 
 					gr_draw_box(xc, (i*boxw)+margin+
 					1, (sel->row*boxh)+topoff+
-					dayname_height+1, boxw-2, boxh-2, NULL);
+					dayname_height+1, boxw-2, boxh-2, nullptr);
 				else {
 					gr_draw_rgb_box(xc, (i*boxw)
 						+margin, 
@@ -333,7 +333,7 @@ calendar_select (Calendar *c, Selection_unit unit, caddr_t ref)
 				if (c->xcontext->screen_depth < 8) 
 					gr_draw_box(xc, i*boxw+margin+1,
 					(int)ref*boxh+margin+topoff+1, 
-					boxw-2, boxh-2, NULL);
+					boxw-2, boxh-2, nullptr);
 				else {
 					gr_draw_rgb_box(xc, i*boxw+margin+2,
 					(int)ref*boxh+margin+topoff+2, 
@@ -351,7 +351,7 @@ calendar_select (Calendar *c, Selection_unit unit, caddr_t ref)
 			break;
 		/* month selection on year glance view */
 		case monthSelect:
-			if (ref != NULL) {
+			if (ref != nullptr) {
 				i=((pr_pos *)ref)->x;
 				j=((pr_pos *)ref)->y;
 			}
@@ -361,7 +361,7 @@ calendar_select (Calendar *c, Selection_unit unit, caddr_t ref)
 			}
 			if (c->xcontext->screen_depth < 8) 
 				gr_draw_box(xc, i*boxw+margin+10,
-					j*boxh+topoff-4, boxw-4, boxh-4, NULL);
+					j*boxh+topoff-4, boxw-4, boxh-4, nullptr);
 			else {
 				if (i == 0)
                                        xpos = margin-5;
@@ -385,14 +385,14 @@ calendar_select (Calendar *c, Selection_unit unit, caddr_t ref)
 			break;
 		/* hour box selection day glance view */
 		case hourSelect:
-			if (ref != NULL)
+			if (ref != nullptr)
 				j=((pr_pos *)ref)->y;
 			else
 				j = sel->row;
 			if (c->xcontext->screen_depth < 8) 
 				gr_draw_box(xc, MOBOX_AREA_WIDTH+5,
 					j*boxh+topoff+1, c->view->boxw-4,
-					c->view->boxh-2, NULL);
+					c->view->boxh-2, nullptr);
 			else {
 				gr_draw_rgb_box(xc, MOBOX_AREA_WIDTH+3,
 					j*boxh+topoff, 
@@ -462,10 +462,10 @@ calendar_deselect (Calendar *c)
 				y = k * boxh + topoff;
 
 				gr_draw_line(xc, x, y, x + boxw, y,
-						gr_solid, NULL);
+						gr_solid, nullptr);
 				y += boxh;
 				gr_draw_line(xc, x, y, x + boxw, y, 
-						gr_solid, NULL);
+						gr_solid, nullptr);
 			}
 
         		if (disp_t == HOUR12)
@@ -479,7 +479,7 @@ calendar_deselect (Calendar *c)
         		gr_draw_line(xc, MOBOX_AREA_WIDTH+2+hrbox_margin,
 			c->view->topoffset, MOBOX_AREA_WIDTH+2+hrbox_margin,
 			c->view->topoffset + num_hrs * c->view->boxh, 
-			gr_solid, NULL);
+			gr_solid, nullptr);
 			break;
 		}
 		case monthGlance:
@@ -494,7 +494,7 @@ calendar_deselect (Calendar *c)
 				gr_draw_box(xc,
 					(j * boxw) + margin, 
 					(k * boxh) + topoff + dayname_height,
-                                        boxw, boxh, NULL);
+                                        boxw, boxh, nullptr);
 				j++;
 			}
 			break;
@@ -556,7 +556,7 @@ monthbox_deselect(Calendar *c)
 	sprintf(buf, "%d", day_info->day_selected);
 	gr_text(c->xcontext, day_info->day_selected_x2+2, 
 			day_info->day_selected_y2, 
-			c->fonts->viewfont, buf, NULL);
+			c->fonts->viewfont, buf, nullptr);
 }
 extern void
 monthbox_select(Calendar *c)
@@ -577,12 +577,12 @@ monthbox_select(Calendar *c)
 			x,
 			y,
 			day_info->col_w,
-			day_info->row_h-3, NULL);
+			day_info->row_h-3, nullptr);
 	buf [0] = '\0';
 	sprintf(buf, "%d", day_info->day_selected);
 	gr_text(c->xcontext, day_info->day_selected_x2+2, 
 			day_info->day_selected_y2, 
-			c->fonts->viewfont, buf, NULL);
+			c->fonts->viewfont, buf, nullptr);
 }
 
 extern void
@@ -592,7 +592,7 @@ browser_deselect (Calendar *c, Browser *b)
 	Selection *sel	= (Selection *) b->current_selection;
 	Colormap cms;
 
-        XtVaGetValues(c->canvas, XmNcolormap, &cms, NULL);
+        XtVaGetValues(c->canvas, XmNcolormap, &cms, nullptr);
 	if (!selection_active (sel))
 		return;
 	j = sel->col;
@@ -646,7 +646,7 @@ browser_select(Calendar *c, Browser *b, pr_pos *xy)
 	Colormap cms;
 	Pixel pixel;
 
-	if (xy != NULL) {
+	if (xy != nullptr) {
 		i = xy->x;
 		j = xy->y;
 	}
@@ -658,11 +658,11 @@ browser_select(Calendar *c, Browser *b, pr_pos *xy)
 		if (c->xcontext->screen_depth < 8) {
 			gr_draw_box(b->xcontext, (i * b->boxw) + 
 				b->chart_x + 2, (j * b->boxh) + b->chart_y 
-				+ 2, b->boxw - 4, b->boxh - 4, NULL);
+				+ 2, b->boxw - 4, b->boxh - 4, nullptr);
 		}
 		else {
 			pixel = c->xcontext->hilight_color;
-        		XtVaGetValues(b->canvas, XmNcolormap, &cms, NULL);
+        		XtVaGetValues(b->canvas, XmNcolormap, &cms, nullptr);
 			gr_draw_rgb_box(b->xcontext, (i * b->boxw) + 
 				b->chart_x + 2, (j * b->boxh) + b->chart_y 
 				+ 2, b->boxw - 4, b->boxh - 4, STDTTT,
@@ -689,8 +689,8 @@ select_weekhotbox(Calendar *c)
 	Colormap 	cms;
 	Pixel background_pixel;
 
-        XtVaGetValues(c->canvas, XmNcolormap, &cms, NULL);
-        XtVaGetValues(c->frame, XmNbackground, &background_pixel, NULL);
+        XtVaGetValues(c->canvas, XmNcolormap, &cms, nullptr);
+        XtVaGetValues(c->frame, XmNbackground, &background_pixel, nullptr);
 
         /* Draw selection feedback on week view */
         if ((n = dow(date)) == 0)
@@ -709,7 +709,7 @@ select_weekhotbox(Calendar *c)
         }
  
 	if (c->xcontext->screen_depth < 8)
-		gr_draw_box(xc, x, y, w->day_width - 4, w->label_height - 4, NULL);
+		gr_draw_box(xc, x, y, w->day_width - 4, w->label_height - 4, nullptr);
 	else {
 		gr_draw_rgb_box(xc, x, y,
 				w->day_width - 4, w->label_height - 4, STDTTT,

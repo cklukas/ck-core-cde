@@ -593,8 +593,8 @@ externaldef(termclassrec) DtTermPrimitiveClassRec dtTermPrimitiveClassRec =
 	/* Primitive border_highlight	*/  XmInheritWidgetProc,
 	/* Primitive border_unhighlight	*/  XmInheritWidgetProc,
 	/* translations			*/  "" /*NULL*/ /*XtInheritTranslations*/,
-	/* arm_and_activate		*/  NULL,
-	/* get resources		*/  (XmSyntheticResource *) NULL,
+	/* arm_and_activate		*/  nullptr,
+	/* get resources		*/  (XmSyntheticResource *) nullptr,
 	/* num get_resources		*/  0,
 	/* extension			*/  (XtPointer) NULL,
     },
@@ -828,8 +828,8 @@ CreateRenderFont
     /* dtterm only supports monospaced fonts; fall back if needed. */
     if (fontSet) {
 	int num_fonts = 0;
-	XFontStruct **fonts = NULL;
-	char **fontNames = NULL;
+	XFontStruct **fonts = nullptr;
+	char **fontNames = nullptr;
 	num_fonts = XFontsOfFontSet(fontSet, &fonts, &fontNames);
 	if (num_fonts > 0 && fonts) {
 	    int i;
@@ -848,7 +848,7 @@ CreateRenderFont
 			    "dtterm: proportional font selected; falling back to \"fixed\".\n");
 		    warnedProportional = True;
 		}
-		char **missing = NULL;
+		char **missing = nullptr;
 		int missingCount = 0;
 		XFontSet fixedSet = XCreateFontSet(XtDisplay(w), "fixed",
 			&missing, &missingCount, (char **)0);
@@ -856,14 +856,14 @@ CreateRenderFont
 		    XFreeStringList(missing);
 		if (fixedSet && missingCount == 0) {
 		    fontSet = fixedSet;
-		    font = NULL;
+		    font = nullptr;
 		    fontSetOwned = True;
 		} else {
 		    if (fixedSet)
 			XFreeFontSet(XtDisplay(w), fixedSet);
 		    font = XLoadQueryFont(XtDisplay(w), "fixed");
-		    fontOwned = font != NULL;
-		    fontSet = NULL;
+		    fontOwned = font != nullptr;
+		    fontSet = nullptr;
 		}
 	    }
 	}
@@ -930,8 +930,8 @@ MeasureFontSetCellWidth(
 	return 0;
 
     int num_fonts = 0;
-    XFontStruct **fonts = NULL;
-    char **fontNames = NULL;
+    XFontStruct **fonts = nullptr;
+    char **fontNames = nullptr;
     int width = 0;
 
     num_fonts = XFontsOfFontSet(fontSet, &fonts, &fontNames);
@@ -1213,7 +1213,7 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
     if (tw->term.backgroundIsSelect) {
 	/* set the background pixel based on the select color... */
 	(void) XmGetColors(XtScreen(w), w->core.colormap,
-		tw->core.background_pixel, NULL, NULL, NULL,
+		tw->core.background_pixel, nullptr, nullptr, nullptr,
 		&tw->core.background_pixel);
     }
 
@@ -1284,12 +1284,12 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
     if (tw->term.boldFontList) {
 	tpd->boldTermFont = CreateRenderFont(w, tw->term.boldFontList,
 		&tw->term.boldFontSet, &tw->term.boldFont,
-		NULL, NULL);
+		nullptr, nullptr);
     } else {
 	/* let's try and build a bold fontlist off of the base fontlist... */
 	int num_fonts;
 	char **fontNames;
-	char *boldFontNames = NULL;
+	char *boldFontNames = nullptr;
 	const char *bold = "bold";
 	size_t boldLen = strlen(bold);
 
@@ -1977,9 +1977,9 @@ InitOrResizeTermBuffer(Widget w)
 		    termClassPart->sizeOfEnh);
 	    (void) _DtTermPrimBufferSetLinks(tpd->termBuffer,
 		    tpd->historyBuffer,
-		    NULL);
+		    nullptr);
 	    (void) _DtTermPrimBufferSetLinks(tpd->historyBuffer,
-		    NULL,
+		    nullptr,
 		    tpd->termBuffer);
 	}
 
@@ -2272,7 +2272,7 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
 	if (tw->term.subprocessPid) {
 	    /* add it old handler... */
 	    tw->term.subprocessId = _DtTermPrimAddSubproc(w,
-		    tw->term.subprocessPid, InvokeTerminationCallback, NULL);
+		    tw->term.subprocessPid, InvokeTerminationCallback, nullptr);
 
 	    /* now that we have a handler, we may need to invoke it... */
 	    if (tw->term.subprocessTerminationCatch) {
@@ -2377,7 +2377,7 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
 	(void) XtMakeGeometryRequest(w, &request, &reply);
         (void) XmImVaSetValues(w,
             XmNfontList, tw->term.fontList,
-            NULL);
+            nullptr);
 	/* clear the cursor position so that we will recalculate the
 	 * im spotLocation with the new font metrics...
 	 */
@@ -2388,7 +2388,7 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
     if (cur_tw->term.boldFontList != tw->term.boldFontList) {
 	/* Our bold font has been changed... */
 	tw->term.tpd->boldTermFont = CreateRenderFont(w, tw->term.boldFontList,
-		(XFontSet *) 0, (XFontStruct **) 0, NULL, NULL);
+		(XFontSet *) 0, (XFontStruct **) 0, nullptr, nullptr);
     }
 
     if (cur_tw->term.charCursorStyle != tw->term.charCursorStyle) {
@@ -2503,10 +2503,10 @@ _mergeEnv
     ** XtRealloc'd, not free'd or realloc'd).)
     */
     newEnv = (char **) malloc((numNew + 1) * sizeof(char *));
-    if (newEnv == NULL)
+    if (newEnv == nullptr)
     {
 	printf("L10n MALLOC ERROR\n");
-	return NULL;
+	return nullptr;
     }
 
     /*
@@ -2514,7 +2514,7 @@ _mergeEnv
     ** newEnv list...
     */
     memcpy(newEnv, oldEnv, numOld * sizeof(char *));
-    newEnv[numNew] = (char *) NULL;
+    newEnv[numNew] = (char *) nullptr;
     
     /*
     ** now merge in the merge strings, the merge string will either replace
@@ -2771,7 +2771,7 @@ Realize(Widget w, XtValueMask *p_valueMask, XSetWindowAttributes *attributes)
     {
 	tw->term.subprocessId = _DtTermPrimAddSubproc(w,
 			            tw->term.subprocessPid,
-				    InvokeTerminationCallback, NULL);
+				    InvokeTerminationCallback, nullptr);
 	if (tw->term.subprocessTerminationCatch)
 	{
 	    (void)_DtTermPrimSetChildSignalHandler();
@@ -2922,12 +2922,12 @@ Destroy(Widget w)
 	/* free up our buffers... */
 	if (tw->term.tpd->historyBuffer) {
 	    _DtTermPrimBufferFreeBuffer(tw->term.tpd->historyBuffer);
-	    tw->term.tpd->historyBuffer = NULL;
+	    tw->term.tpd->historyBuffer = nullptr;
 	}
 
 	if (tw->term.tpd->termBuffer) {
 	    _DtTermPrimBufferFreeBuffer(tw->term.tpd->termBuffer);
-	    tw->term.tpd->termBuffer = NULL;
+	    tw->term.tpd->termBuffer = nullptr;
 	}
 
 	/* free up the scrollRefreshRows... */
@@ -3424,7 +3424,7 @@ _DtTermPrimActionKeyInput(Widget w, XEvent *event, String *params,
             
         /* for pointer blanking                               */
         if (tw->term.pointerBlank && *string != '\r' && *string != 0x0B) 
-            _DtTermPrimPointerOff((Widget)tw,(XtIntervalId *)NULL) ;
+            _DtTermPrimPointerOff((Widget)tw,(XtIntervalId *)nullptr) ;
 
 	for (end = string; nbytes > 0; )  {
 	    for (start = end; (nbytes > 0) && (*end != '\r'); nbytes--, end++)
@@ -3873,7 +3873,7 @@ void _DtTermPrimWarningDialog(Widget w, char *msg)
 	titleString =
 	  XmStringGenerate(
 		GETMESSAGE(NL_SETN_Prim,2,"Terminal - Warning"),
-		XmFONTLIST_DEFAULT_TAG, XmCHARSET_TEXT, NULL);
+		XmFONTLIST_DEFAULT_TAG, XmCHARSET_TEXT, nullptr);
 	(void) XtSetArg(arglist[i], XmNdialogTitle, titleString); i++;
 	tpd->warningDialog = XmCreateWarningDialog(w, "termWarning", arglist, i);
 	(void) XmStringFree(titleString);
@@ -3891,7 +3891,7 @@ void _DtTermPrimWarningDialog(Widget w, char *msg)
 
     i = 0;
     msgString =
-      XmStringGenerate(msg, XmFONTLIST_DEFAULT_TAG, XmCHARSET_TEXT, NULL);
+      XmStringGenerate(msg, XmFONTLIST_DEFAULT_TAG, XmCHARSET_TEXT, nullptr);
     (void) XtSetArg(arglist[i], XmNmessageString, msgString); i++;
     (void) XtSetValues(tpd->warningDialog, arglist, i);
     (void) XmStringFree(msgString);

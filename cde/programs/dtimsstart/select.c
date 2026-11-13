@@ -45,7 +45,7 @@ void	ximsSelect(void)
     sel->iconic = -1;
 
     if (!localList) {
-	if ((ret = get_ims_list(&list, NULL, False)) != NoError) {
+	if ((ret = get_ims_list(&list, nullptr, False)) != NoError) {
 	    OpState = State_Select_Err;
 	    OpErrCode = ret;
 	    return;
@@ -55,14 +55,14 @@ void	ximsSelect(void)
 	list = localList;
 
     use_win = True;
-    def_ims = NULL;
+    def_ims = nullptr;
 
     if (Opt.SelectMode == SEL_MODE_GIVEN) {
 	sel->name = NEWSTR(Opt.ImsName);
 	use_win = False;
     } else {
 
-	if (read_user_selection(&sel->fsel, NULL) == NoError) {
+	if (read_user_selection(&sel->fsel, nullptr) == NoError) {
 	    fsel = sel->fsel;
 #ifdef	DEBUG
 	    if (DebugLvl > 1)	pr_FileSel(sel->fsel);
@@ -219,7 +219,7 @@ static int	setup_remote_selection(UserSelection *sel)
     int		idx;
     ImsList	*new_list;
 
-    ret = get_remote_conf(&new_list, sel->hostname, NULL, sel->name);
+    ret = get_remote_conf(&new_list, sel->hostname, nullptr, sel->name);
 
     if (ret == NoError) {
 	idx = get_ims_idx(new_list, sel->name);

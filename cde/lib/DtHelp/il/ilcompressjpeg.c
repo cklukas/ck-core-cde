@@ -165,11 +165,11 @@ static ilBool ilJIFToRaw (
     dstData.height = pInfo->height;
     dstData.stripHeight = pInfo->height;            /* write one strip = whole image */
     dstData.constantStrip = TRUE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     dstData.pCompData = (ilPtr)pCompData;
 
     pPriv = (ilJIFToRawPrivPtr)ilAddPipeElement (pipe, IL_FILTER,
-            sizeof (ilJIFToRawPrivRec), 0, (ilSrcElementData *)NULL, &dstData,
+            sizeof (ilJIFToRawPrivRec), 0, (ilSrcElementData *)nullptr, &dstData,
             IL_NPF, IL_NPF, ilJIFToRawDestroy, ilJIFToRawExecute, 0);
     if (!pPriv)
         return FALSE;
@@ -339,7 +339,7 @@ static ilBool ilRawToJIF (
     dstData.height = pInfo->height;
     dstData.stripHeight = pInfo->height;            /* write one strip = whole image */
     dstData.constantStrip = TRUE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     dstData.pCompData = (ilPtr)NULL;
 
         /*  Add the filter.  "Hold dst" flag set because filter will write to
@@ -347,7 +347,7 @@ static ilBool ilRawToJIF (
             whole output buffer will be passed to next filter, # lines = height.
         */
     pPriv = (ilRawToJIFPrivPtr)ilAddPipeElement (pipe, IL_FILTER,
-            sizeof (ilRawToJIFPrivRec), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *)NULL, 
+            sizeof (ilRawToJIFPrivRec), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *)nullptr, 
             &dstData, ilRawToJIFInit, IL_NPF, IL_NPF, ilRawToJIFExecute, 0);
     if (!pPriv)
         return FALSE;
@@ -621,7 +621,7 @@ IL_PRIVATE ilBool _ilCompressJPEG (
         /*  Convert to planar format if more than 1 sample/pixel. */
     if ((pDes->nSamplesPerPixel > 1) && (pFormat->sampleOrder != IL_SAMPLE_PLANES)) {
         pFormat->sampleOrder = IL_SAMPLE_PLANES;
-        if (!ilConvert (pipe, (ilImageDes *)NULL, pFormat, 0, (ilPtr)NULL))
+        if (!ilConvert (pipe, (ilImageDes *)nullptr, pFormat, 0, (ilPtr)NULL))
             return FALSE;
         }
 
@@ -649,7 +649,7 @@ IL_PRIVATE ilBool _ilCompressJPEG (
     dstData.height = pInfo->height;
     dstData.stripHeight = stripHeight;
     dstData.constantStrip = TRUE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     dstData.pCompData = (ilPtr)pCompData;
 
     pPriv = (ilCompressJPEGPrivPtr)ilAddPipeElement (pipe, IL_FILTER,

@@ -144,7 +144,7 @@ ConvertSelectionCB (
     Atom  LOCALE;
     int   retStatus  = 0;
     char *testString = "ABC";  /* these are characters in XPCS, so... safe */
-    char *tmpString  = NULL;
+    char *tmpString  = nullptr;
     Arg    args[2];
     DtHelpDispAreaStruct *pDAS;
 
@@ -153,7 +153,7 @@ ConvertSelectionCB (
     XtSetArg(args[0], XmNuserData, &pDAS);
     XtGetValues(widget, args, 1);
 
-    if (pDAS == NULL || pDAS->primary == False || *selection != XA_PRIMARY)
+    if (pDAS == nullptr || pDAS->primary == False || *selection != XA_PRIMARY)
 	return False;
 
     retStatus = XmbTextListToTextProperty(XtDisplay(widget), &testString, 1,
@@ -214,7 +214,7 @@ ConvertSelectionCB (
 				(_DtCvSELECTED_TEXT | _DtCvSELECTED_REGION),
 						(_DtCvPointer *)(&tmpString));
 	retStatus = -1;
-	if (tmpString != NULL && *tmpString != '\0')
+	if (tmpString != nullptr && *tmpString != '\0')
 	    retStatus = XmbTextListToTextProperty(XtDisplay(widget),
 				&tmpString, 1,
 				(XICCEncodingStyle)XStringStyle, &tmpProp);
@@ -222,7 +222,7 @@ ConvertSelectionCB (
 	/*
 	 * free the original copy of the string and check the results
 	 */
-	if (tmpString != NULL)
+	if (tmpString != nullptr)
 	    free(tmpString);
 
 	if (retStatus == Success || retStatus > 0)
@@ -232,7 +232,7 @@ ConvertSelectionCB (
 	  }
 	else
 	  {
-	    *value = NULL;
+	    *value = nullptr;
 	    *length = 0;
 	    return False;
 	  }
@@ -253,7 +253,7 @@ ConvertSelectionCB (
 						(_DtCvPointer *)(&tmpString));
 
 	retStatus = -1;
-	if (tmpString != NULL && *tmpString != '\0')
+	if (tmpString != nullptr && *tmpString != '\0')
 	    retStatus = XmbTextListToTextProperty(XtDisplay(widget),
 				&tmpString, 1,
 				(XICCEncodingStyle)XStdICCTextStyle, &tmpProp);
@@ -261,7 +261,7 @@ ConvertSelectionCB (
 	/*
 	 * free the original copy of the string and check the results
 	 */
-	if (tmpString != NULL)
+	if (tmpString != nullptr)
 	    free(tmpString);
 
 	if (retStatus == Success || retStatus > 0)
@@ -271,7 +271,7 @@ ConvertSelectionCB (
 	  }
 	else
 	  {
-	    *value = NULL;
+	    *value = nullptr;
 	    *length = 0;
 	    return False;
 	  }
@@ -288,7 +288,7 @@ ConvertSelectionCB (
 				(_DtCvSELECTED_TEXT | _DtCvSELECTED_REGION),
 						(_DtCvPointer *)(value));
 	*length = 0;
-	if (*value != NULL)
+	if (*value != nullptr)
 	    *length = strlen((char *)(*value));
       }
     else if (*target == CMP_TEXT)
@@ -304,7 +304,7 @@ ConvertSelectionCB (
 						(_DtCvPointer *)(&tmpString));
 
 	retStatus = -1;
-	if (tmpString != NULL && *tmpString != '\0')
+	if (tmpString != nullptr && *tmpString != '\0')
 	    retStatus = XmbTextListToTextProperty(XtDisplay(widget),
 			&tmpString, 1,
 			(XICCEncodingStyle)XCompoundTextStyle, &tmpProp);
@@ -312,7 +312,7 @@ ConvertSelectionCB (
 	/*
 	 * free the original copy of the string and check the results
 	 */
-	if (tmpString != NULL)
+	if (tmpString != nullptr)
 	    free(tmpString);
 
 	if (retStatus == Success || retStatus > 0)
@@ -322,7 +322,7 @@ ConvertSelectionCB (
 	  }
 	else
 	  {
-	    *value = NULL;
+	    *value = nullptr;
 	    *length = 0;
 	    return False;
 	  }
@@ -429,7 +429,7 @@ ScrollTimerCB (
 			(x + diffX + pDAS->virtualX - pDAS->decorThickness),
 			y, _DtCvSELECTION_UPDATE);
 
-    callData.event = NULL;
+    callData.event = nullptr;
     if (diffX)
       {
 	scrollTimeOut   = pDAS->horz_rep_scr;
@@ -491,14 +491,14 @@ DrawWholeCanvas(
 
     _DtCanvasMoveTraversal(pDAS->canvas,_DtCvTRAVERSAL_OFF, False,
 				(XtIsRealized(pDAS->dispWid) ? True : False),
-				NULL, NULL, NULL, NULL, NULL);
+				nullptr, nullptr, nullptr, nullptr, nullptr);
 
     top     = pDAS->firstVisible;
     bottom  = top + pDAS->dispUseHeight;
     right   = pDAS->virtualX + pDAS->dispUseWidth;
 
     _DtCanvasRender (pDAS->canvas, pDAS->virtualX, top, right, bottom,
-		     pDAS->render_type, _DtCvTRUE, NULL, &next_y);
+		     pDAS->render_type, _DtCvTRUE, nullptr, &next_y);
     pDAS->nextNonVisible =
 	(pDAS->render_type == _DtCvRENDER_PARTIAL) ? bottom : next_y;
 
@@ -507,7 +507,7 @@ DrawWholeCanvas(
      */
     _DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_ON, False,
 				(XtIsRealized(pDAS->dispWid) ? True : False),
-					NULL, NULL, NULL, NULL, NULL);
+					nullptr, nullptr, nullptr, nullptr, nullptr);
     /*
      * if the toc exists within this area, draw it.
      */
@@ -764,7 +764,7 @@ _DtHelpVertScrollCB(
     /*
      * if the policy is XmEXPLICIT, don't want the focus on the scrollbar
      */
-    if (callBack->event != NULL && callBack->event->type == ButtonPress &&
+    if (callBack->event != nullptr && callBack->event->type == ButtonPress &&
 	      _XmGetFocusPolicy(XtParent(XtParent(pDAS->dispWid))) != XmPOINTER)
 	XmProcessTraversal(pDAS->dispWid, XmTRAVERSE_CURRENT);
 
@@ -858,7 +858,7 @@ _DtHelpVertScrollCB(
 
 	    _DtCanvasRender (pDAS->canvas, 0, absTop,
 				pDAS->virtualX + pDAS->dispWidth, absBot,
-				_DtCvRENDER_PARTIAL, _DtCvFALSE, NULL, NULL);
+				_DtCvRENDER_PARTIAL, _DtCvFALSE, nullptr, nullptr);
 	    /*
 	     * if the toc exists within this area, draw it.
 	     */
@@ -900,7 +900,7 @@ _DtHelpHorzScrollCB(
     /*
      * if the policy is XmEXPLICIT, don't want the focus on the scrollbar
      */
-    if (callBack->event != NULL && callBack->event->type == ButtonPress &&
+    if (callBack->event != nullptr && callBack->event->type == ButtonPress &&
 	      _XmGetFocusPolicy(XtParent(XtParent(pDAS->dispWid))) != XmPOINTER)
 	XmProcessTraversal(pDAS->dispWid, XmTRAVERSE_CURRENT);
 
@@ -1000,7 +1000,7 @@ _DtHelpHorzScrollCB(
 
 	    _DtCanvasRender (pDAS->canvas, absLeft, absY,
 				absRight, absY + pDAS->dispHeight,
-				_DtCvRENDER_PARTIAL, _DtCvFALSE, NULL, NULL);
+				_DtCvRENDER_PARTIAL, _DtCvFALSE, nullptr, nullptr);
 
 	    /*
 	     * if the toc exists within this area, draw it.
@@ -1035,7 +1035,7 @@ _DtHelpClickOrSelectCB(
      * If this is not an ARM call or entered through an Arm&Activate
      * (event-type will be keypress or keyrelease) throw it away.
      */
-    if (callBack->reason != XmCR_ARM || callBack->event == NULL ||
+    if (callBack->reason != XmCR_ARM || callBack->event == nullptr ||
 	callBack->event->type == KeyPress ||
 	callBack->event->type == KeyRelease)
 	return;
@@ -1044,7 +1044,7 @@ _DtHelpClickOrSelectCB(
     pDAS->timerY       = callBack->event->xbutton.y;
     pDAS->select_state = _DtHelpCopyOrLink;
 
-    if (NULL != pDAS->armCallback)
+    if (nullptr != pDAS->armCallback)
 	(pDAS->armCallback)(pDAS->clientData);
 
 }  /* End _DtHelpClickOrSelectCB */
@@ -1067,7 +1067,7 @@ _DtHelpEndSelectionCB (
     int    newX;
     int    newY;
 
-    if (callback->reason != XmCR_DISARM || callback->event == NULL ||
+    if (callback->reason != XmCR_DISARM || callback->event == nullptr ||
 	callback->event->type == KeyPress ||
 	callback->event->type == KeyRelease)
         return;
@@ -1125,7 +1125,7 @@ _DtHelpEndSelectionCB (
 		(newY + pDAS->firstVisible - pDAS->decorThickness),
 		_DtCvSELECTION_END);
 	_DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_ON, False, True,
-				NULL, NULL, NULL, NULL, NULL);
+				nullptr, nullptr, nullptr, nullptr, nullptr);
 
       }
 
@@ -1267,7 +1267,7 @@ UpdateLinkCursorFromPointer(
 {
     if (!pDAS || !widget)
         return;
-    if (!XtIsRealized(widget) || pDAS->canvas == NULL || pDAS->hyperCall == NULL)
+    if (!XtIsRealized(widget) || pDAS->canvas == nullptr || pDAS->hyperCall == nullptr)
       {
         SetLinkCursor(widget, pDAS, False);
         return;
@@ -1316,13 +1316,13 @@ _DtHelpLinkCursorCB(
         Boolean   *continue_to_dispatch )
 {
     DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
-    if (!pDAS || event == NULL)
+    if (!pDAS || event == nullptr)
         return;
 
     if (event->type != MotionNotify)
         return;
 
-    if (pDAS->hyperCall == NULL || pDAS->canvas == NULL ||
+    if (pDAS->hyperCall == nullptr || pDAS->canvas == nullptr ||
         pDAS->select_state != _DtHelpNothingDoing)
       {
         SetLinkCursor(widget, pDAS, False);
@@ -1366,7 +1366,7 @@ StartSelection (
     if (pDAS->primary == True)
       {
 	_DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_OFF, False, True,
-				NULL, NULL, NULL, NULL, NULL);
+				nullptr, nullptr, nullptr, nullptr, nullptr);
 	_DtCanvasProcessSelection(pDAS->canvas,
 			pDAS->timerX + pDAS->virtualX - pDAS->decorThickness,
 			pDAS->timerY + pDAS->firstVisible -pDAS->decorThickness,
@@ -1395,7 +1395,7 @@ _DtHelpLoseSelectionCB (
     XtSetArg(args[0], XmNuserData, &pDAS);
     XtGetValues(widget, args, 1);
 
-    if (pDAS != NULL && pDAS->dispWid == widget && *selection == XA_PRIMARY)
+    if (pDAS != nullptr && pDAS->dispWid == widget && *selection == XA_PRIMARY)
       {
 	_DtHelpClearSelection ((XtPointer) pDAS);
 	pDAS->primary       = False;
@@ -1416,13 +1416,13 @@ _DtHelpClearSelection ( XtPointer client_data)
 
     if (pDAS->primary == True)
       {
-	if (NULL != pDAS->canvas)
+	if (nullptr != pDAS->canvas)
 	  {
 	    _DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_OFF, False, True,
-				   NULL, NULL, NULL, NULL, NULL);
+				   nullptr, nullptr, nullptr, nullptr, nullptr);
 	    _DtCanvasProcessSelection(pDAS->canvas, 0, 0, _DtCvSELECTION_CLEAR);
 	    _DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_ON, False, True,
-				   NULL, NULL, NULL, NULL, NULL);
+				   nullptr, nullptr, nullptr, nullptr, nullptr);
 	  }
         pDAS->select_state  = _DtHelpNothingDoing;
         pDAS->text_selected = False;
@@ -1446,7 +1446,7 @@ _DtHelpFocusCB(
     Boolean                newFlag = False;
     DtHelpDispAreaStruct  *pDAS = (DtHelpDispAreaStruct *) client_data;
 
-    if (pDAS->hyperCall == NULL ||
+    if (pDAS->hyperCall == nullptr ||
 		(event->type != FocusIn && event->type != FocusOut) ||
 		!event->xfocus.send_event)
 	return;
@@ -1468,7 +1468,7 @@ _DtHelpFocusCB(
 	  {
             _DtCanvasMoveTraversal (pDAS->canvas, _DtCvTRAVERSAL_OFF, False,
 				(XtIsRealized(widget) ? True : False),
-				NULL, NULL, NULL, NULL, NULL);
+				nullptr, nullptr, nullptr, nullptr, nullptr);
             pDAS->neededFlags = pDAS->neededFlags & ~(_DT_HELP_FOCUS_FLAG);
 	  }
 	else
@@ -1476,7 +1476,7 @@ _DtHelpFocusCB(
             pDAS->neededFlags = pDAS->neededFlags | _DT_HELP_FOCUS_FLAG;
             _DtCanvasMoveTraversal (pDAS->canvas, _DtCvTRAVERSAL_ON, False,
 				(XtIsRealized(widget) ? True : False),
-				NULL, NULL, NULL, NULL, NULL);
+				nullptr, nullptr, nullptr, nullptr, nullptr);
 	  }
       }
 
@@ -1499,7 +1499,7 @@ _DtHelpEnterLeaveCB(
     Boolean                newFlag = False;
     DtHelpDispAreaStruct  *pDAS = (DtHelpDispAreaStruct *) client_data;
 
-    if (pDAS->hyperCall == NULL ||
+    if (pDAS->hyperCall == nullptr ||
                 (event->type != EnterNotify && event->type != LeaveNotify))
         return;
 
@@ -1523,7 +1523,7 @@ _DtHelpEnterLeaveCB(
 	  {
             _DtCanvasMoveTraversal (pDAS->canvas, _DtCvTRAVERSAL_OFF, False,
 				(XtIsRealized(widget) ? True : False),
-				NULL, NULL, NULL, NULL, NULL);
+				nullptr, nullptr, nullptr, nullptr, nullptr);
             pDAS->neededFlags = pDAS->neededFlags & ~(_DT_HELP_FOCUS_FLAG);
 	  }
 	else
@@ -1531,7 +1531,7 @@ _DtHelpEnterLeaveCB(
             pDAS->neededFlags = pDAS->neededFlags | _DT_HELP_FOCUS_FLAG;
             _DtCanvasMoveTraversal (pDAS->canvas, _DtCvTRAVERSAL_ON, False,
 				(XtIsRealized(widget) ? True : False),
-				NULL, NULL, NULL, NULL, NULL);
+				nullptr, nullptr, nullptr, nullptr, nullptr);
 	  }
       }
 } /* End _DtHelpEnterLeaveCB */
@@ -1607,7 +1607,7 @@ _DtHelpInitiateClipboard (
          * Using the Xm clipboard facilities,
          * copy the selected text to the clipboard
          */
-        if (tmpString != NULL)
+        if (tmpString != nullptr)
 	  {
             clipLabel = XmStringCreateLocalized ("DT_HELP");
 
@@ -1616,7 +1616,7 @@ _DtHelpInitiateClipboard (
 	     */
             status = XmClipboardStartCopy(dpy, win, clipLabel,
 					XtLastTimestampProcessed(dpy),
-					pDAS->dispWid, NULL, &itemId);
+					pDAS->dispWid, nullptr, &itemId);
 
 	    /*
 	     * no longer need the label
@@ -1717,7 +1717,7 @@ _DtHelpGetClearSelection (
 			XtLastTimestampProcessed(XtDisplay(widget)),
 			ConvertSelectionCB,
 			_DtHelpLoseSelectionCB,
-			NULL))
+			nullptr))
 	  {
 	    pDAS->primary = True;
 	    pDAS->anchor_time = XtLastTimestampProcessed(XtDisplay(widget));

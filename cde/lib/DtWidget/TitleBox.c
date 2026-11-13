@@ -281,9 +281,9 @@ DtTitleBoxClassRec dtTitleBoxClassRec =
 		ClassPartInitialize,		/* class_part_initialize*/
 		False,				/* class_inited		*/
 		Initialize,		/* initialize		*/
-		NULL,				/* initialize_hook	*/
+		nullptr,				/* initialize_hook	*/
 		XtInheritRealize,		/* realize		*/
-		NULL,				/* actions		*/
+		nullptr,				/* actions		*/
 		0,				/* num_actions		*/
 		resources,			/* resources		*/
 		XtNumber (resources),		/* num_resources	*/
@@ -296,16 +296,16 @@ DtTitleBoxClassRec dtTitleBoxClassRec =
 		Resize,			/* resize		*/
 		Redisplay,		/* expose		*/
 		SetValues,			/* set_values		*/
-		NULL,				/* set_values_hook	*/
+		nullptr,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
-		NULL,				/* get_values_hook	*/
-		NULL,				/* accept_focus		*/	
+		nullptr,				/* get_values_hook	*/
+		nullptr,				/* accept_focus		*/	
 		XtVersion,			/* version		*/
-		NULL,				/* callback private	*/
+		nullptr,				/* callback private	*/
 		XtInheritTranslations,		/* tm_table		*/
 		XtInheritQueryGeometry,		/* query_geometry	*/
-		NULL,				/* display_accelerator	*/
-		NULL,				/* extension		*/
+		nullptr,				/* display_accelerator	*/
+		nullptr,				/* extension		*/
 	},
 
 /*	Composite Part
@@ -315,7 +315,7 @@ DtTitleBoxClassRec dtTitleBoxClassRec =
 		ChangeManaged,			/* change_managed	*/
 		InsertChild,			/* insert_child		*/
 		XtInheritDeleteChild,		/* delete_child		*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	Composite Part
@@ -325,9 +325,9 @@ DtTitleBoxClassRec dtTitleBoxClassRec =
 		XtNumber (constraints),		/* num_constraint_resources */
 		sizeof (DtTitleBoxConstraintRec), /* constraint_record	*/
 		ConstraintInitialize,		/* constraint_initialize */
-		NULL,				/* constraint_destroy	*/
-		NULL,				/* constraint_set_values */
-		NULL,				/* extension		*/
+		nullptr,				/* constraint_destroy	*/
+		nullptr,				/* constraint_set_values */
+		nullptr,				/* extension		*/
 	},
 
 /*	XmManager Part
@@ -336,16 +336,16 @@ DtTitleBoxClassRec dtTitleBoxClassRec =
 		XtInheritTranslations,		/* default_translations	*/
 		syn_resources,			/* syn_resources	*/
 		XtNumber (syn_resources),	/* num_syn_resources	*/
-		NULL,				/* syn_cont_resources	*/
+		nullptr,				/* syn_cont_resources	*/
 		0,				/* num_syn_cont_resources */
 		XmInheritParentProcess,		/* parent_process	*/
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	},
 
 /*	DtTitleBox Part
 */
 	{
-		NULL,				/* extension		*/
+		nullptr,				/* extension		*/
 	}
 };
 
@@ -387,7 +387,7 @@ ConfigureChildren(
 */
 	if (title_area)
 	{
-		XtQueryGeometry (title_area, NULL, &ta_reply);
+		XtQueryGeometry (title_area, nullptr, &ta_reply);
 		ta_w = ta_reply.width;
 		ta_h = ta_reply.height;
 
@@ -472,14 +472,14 @@ GetSize(
 
 		if ((wa_w == 0) && (wa_h == 0))
 		{	
-			XtQueryGeometry (work_area, NULL, &wa_reply);
+			XtQueryGeometry (work_area, nullptr, &wa_reply);
 			wa_w = wa_reply.width;
 			wa_h = wa_reply.height;
 		}
 	}
 	if (title_area && (ta_w == 0) && (ta_h == 0))
 	{
-		XtQueryGeometry (title_area, NULL, &ta_reply);
+		XtQueryGeometry (title_area, nullptr, &ta_reply);
 		ta_w = ta_reply.width;
 		ta_h = ta_reply.height;
 	}
@@ -508,7 +508,7 @@ GetTitleString(
 	Arg		al[10];		/*  arg list		*/
 	int	ac;		/*  arg count		*/
 	Widget		title_area = M_TitleArea (manager);
-	XmString	string = NULL;
+	XmString	string = nullptr;
 
 	if (title_area)
 	{
@@ -574,8 +574,8 @@ Initialize(
 	(void)num_args;
 	Arg		al[10];		/*  arg list		*/
 	int	ac;		/*  arg count		*/
-	Widget		title = NULL;
-	XmString	title_string = NULL;
+	Widget		title = nullptr;
+	XmString	title_string = nullptr;
 
 /*	Check for unspecified dimensions.
 */
@@ -649,14 +649,14 @@ Initialize(
 	M_OldShadowThickness (new) = M_ShadowThickness (new);
 
 
-	M_WorkArea (new) = NULL;
+	M_WorkArea (new) = nullptr;
 
 /*	Create title_area unless title explicitly set to null;
 *	use name if unspecified.
 */
 	if (! M_TitleString (new))
 	{
-		M_TitleArea (new) = NULL;
+		M_TitleArea (new) = nullptr;
 		return;
 	}
 
@@ -686,8 +686,8 @@ Initialize(
 			Max (P_Height (title)/2U, M_ShadowThickness (new));
 
 	M_TitleString (new) = XmUNSPECIFIED_STRING;
-	M_FontList (new) = NULL;
-	if (title_string != NULL)
+	M_FontList (new) = nullptr;
+	if (title_string != nullptr)
 		XmStringFree (title_string);
 }
 
@@ -748,7 +748,7 @@ Resize(
 /*	Draw shadow and title.
 */
 	if (XtIsRealized ((Widget)manager))
-		Redisplay ((Widget)manager, NULL, NULL);
+		Redisplay ((Widget)manager, nullptr, nullptr);
 }
 
 
@@ -1010,7 +1010,7 @@ SetValues(
 		if (new_title)
 			M_TitleString (new) = XmUNSPECIFIED_STRING;
 		if (new_font)
-			M_FontList (new) = NULL;
+			M_FontList (new) = nullptr;
 		redisplay_flag = True;
 	}
 
@@ -1202,7 +1202,7 @@ ChangeManaged(
 		{
 			case XtGeometryAlmost:
 				XtMakeResizeRequest ((Widget) manager, w, h,
-					NULL, NULL);
+					nullptr, nullptr);
 			case XtGeometryYes:
 			case XtGeometryNo:
 			default:

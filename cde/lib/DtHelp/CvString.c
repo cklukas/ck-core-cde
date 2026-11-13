@@ -243,7 +243,7 @@ _DtCvStrcspn (
     const wchar_t *wcp;
     const wchar_t *wcp2;
 
-    if (NULL == s1)
+    if (nullptr == s1)
       {
 	*ret_len = 0;
 	return 0;
@@ -256,7 +256,7 @@ _DtCvStrcspn (
 	return 1;
       }
 
-    if (NULL == s2 || '\0' == *s2)
+    if (nullptr == s2 || '\0' == *s2)
       {
 	*ret_len = _DtCvStrLen (s1, type);
 	return 1;
@@ -373,12 +373,12 @@ _DtCvAddPtrToArray (
        void   *ptr)
 {
 
-    void **nextP = NULL;
+    void **nextP = nullptr;
     int numElements;
 
     /* If this is the first item for the array, malloc the array and set
        nextP to point to the first element. */
-    if (array == NULL || *array == NULL) {
+    if (array == nullptr || *array == nullptr) {
         array = (void **) malloc (REALLOC_INCR * sizeof (void *));
 
         nextP = array;
@@ -388,7 +388,7 @@ _DtCvAddPtrToArray (
 
         /* Find the NULL pointer at the end of the array. */
         numElements = 0;
-        for (nextP = array; *nextP != NULL; nextP++)
+        for (nextP = array; *nextP != nullptr; nextP++)
                 numElements++;
 
         /* The array always grows by chunks of size REALLOC_INCR.  So see if
@@ -397,7 +397,7 @@ _DtCvAddPtrToArray (
            another chunk.  Also remember to move 'nextP' because the array
            will probably move in memory. */
         if ((numElements + 1) % REALLOC_INCR == 0) {
-            void **newArray = NULL;
+            void **newArray = nullptr;
 
             if ((size_t) numElements + 1 + REALLOC_INCR <=
                                                 SIZE_MAX / sizeof (void *))
@@ -405,8 +405,8 @@ _DtCvAddPtrToArray (
                         (numElements + 1 + REALLOC_INCR) * sizeof (void *));
             /* On failure the array is left unchanged, 'ptr' is not added,
                and NULL is returned. */
-            if (newArray == NULL)
-                return NULL;
+            if (newArray == nullptr)
+                return nullptr;
 
             array = newArray;
             nextP = array + numElements;
@@ -416,7 +416,7 @@ _DtCvAddPtrToArray (
     if (nextP)
       {
         *nextP++ = ptr;
-        *nextP = NULL;
+        *nextP = nullptr;
       }
 
     return (array);
@@ -438,10 +438,10 @@ _DtCvFreeArray (void **array)
 {
     void        **next;
 
-    if (array == NULL)
+    if (array == nullptr)
         return -1;
 
-    for (next = array; *next != NULL; next++)
+    for (next = array; *next != nullptr; next++)
         free (*next);
 
     free (array);
@@ -469,8 +469,8 @@ _DtCvStrCaseCmp (
     int   result = 0;
 
     if (s1 == s2)    return  0;
-    if (NULL == s1)  return -1;
-    if (NULL == s2)  return  1;
+    if (nullptr == s1)  return -1;
+    if (nullptr == s2)  return  1;
 
 
     while (result == 0 && *s1 != '\0' && *s2 != '\0')
@@ -528,8 +528,8 @@ _DtCvStrNCaseCmpLatin1 (
     int   result = 0;
 
     if (s1 == s2 || n < 1) return  0;
-    if (NULL == s1)        return -1;
-    if (NULL == s2)        return  1;
+    if (nullptr == s1)        return -1;
+    if (nullptr == s2)        return  1;
 
 
     while (result == 0 && *s1 != '\0' && *s2 != '\0' && n > 0)
@@ -582,8 +582,8 @@ _DtCvStrCaseCmpLatin1 (
     int   result = 0;
 
     if (s1 == s2)    return  0;
-    if (NULL == s1)  return -1;
-    if (NULL == s2)  return  1;
+    if (nullptr == s1)  return -1;
+    if (nullptr == s2)  return  1;
 
 
     while (result == 0 && *s1 != '\0' && *s2 != '\0')

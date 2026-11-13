@@ -192,7 +192,7 @@ _DtDtsMMStringToBoson(const char *string)
 {
 	DtShmStrtab str_table;
 
-	if ((string == (char *)NULL) || (*string == '\0'))
+	if ((string == (char *)nullptr) || (*string == '\0'))
 		return(-1);
 
 	_DtSvcProcessLock();
@@ -289,11 +289,11 @@ _DtDtsMMPrint(FILE *org_fd)
 		{
 			chdir("/tmp");
 			tmp = _DtDtsMMBosonToString(db_ptr->databaseName);
-			if((fd = fopen(tmp, "w")) == NULL)
+			if((fd = fopen(tmp, "w")) == nullptr)
 			{
 			    _DtSimpleError(
-					DtProgName, DtError, NULL,
-					(char*) tmp, NULL);
+					DtProgName, DtError, nullptr,
+					(char*) tmp, nullptr);
 			    continue;
 			}
 		}
@@ -395,7 +395,7 @@ _DtsMMListDb(void)
 	if(!list)
 	{
 		_DtSvcProcessUnlock();
-		return(NULL);
+		return(nullptr);
 	}
 	for ( i = 0; i < head->num_db; i++ )
 	{
@@ -430,7 +430,7 @@ _DtDtsMMGet(const char *name)
 		}
 	}
 	_DtSvcProcessUnlock();
-	return(NULL);
+	return(nullptr);
 }
 
 
@@ -457,7 +457,7 @@ _DtDtsMMGetField(DtDtsMMRecord *rec, const char *name)
 			return (fld_ptr);
 		}
 	}
-	return(NULL);
+	return(nullptr);
 }
 
 const char *
@@ -472,7 +472,7 @@ _DtDtsMMGetFieldByName(DtDtsMMRecord *rec, const char *name)
 	}
 	else
 	{
-		return(NULL);
+		return(nullptr);
 	}
 
 }
@@ -503,14 +503,14 @@ _DtDtsMMGetRecordByName(DtDtsMMDatabase *db, const char *name)
 			return (rec_ptr);
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 int
 _DtDtsMMPathHash(DtDirPaths *dirs)
 {
 	int	pathhash = 0;
 	DIR	*dirp;
-	struct	dirent	*dp = NULL;
+	struct	dirent	*dp = nullptr;
 	int	suffixLen;
 	int	nameLen;
 	char	*file_suffix;
@@ -530,7 +530,7 @@ _DtDtsMMPathHash(DtDirPaths *dirs)
 			continue;
 		}
 		dirp = opendir (".");
-		while ((result = _XReaddir(dirp, dirEntryBuf)) != NULL)
+		while ((result = _XReaddir(dirp, dirEntryBuf)) != nullptr)
 		{
 			if ((int)strlen (result->d_name) >= (int)strlen(suffix))
 			{
@@ -620,7 +620,7 @@ _DtDtsMMCacheName(int override)
 
 		_DtSvcProcessLock();
 		snprintf(unique, sizeof(unique), "%ld_%lu_%lu",
-			(long)getpid(), (unsigned long)time(NULL), ++serial);
+			(long)getpid(), (unsigned long)time(nullptr), ++serial);
 		_DtSvcProcessUnlock();
 		results = (char *)malloc(strlen(_DTDTSMMTEMPDIR) +
 					 strlen(_DTDTSMMTEMPFILE) +
@@ -699,7 +699,7 @@ _DtDtsMMapDB(const char *CacheFile)
 		if(fstat(mmaped_fd, &buf) == 0 && buf.st_uid == getuid() &&
 			cache_size_fits(buf.st_size))
 		{
-			mmaped_db = (char *)mmap(NULL,
+			mmaped_db = (char *)mmap(nullptr,
 					buf.st_size,
 					PROT_READ,
 #if defined(sun)
@@ -731,8 +731,8 @@ _DtDtsMMapDB(const char *CacheFile)
 			else
 			{
 			    _DtSimpleError(
-					DtProgName, DtError, NULL,
-					(char*) CacheFile, NULL);
+					DtProgName, DtError, nullptr,
+					(char*) CacheFile, nullptr);
 			}
 		}
 		if(!success)
@@ -803,7 +803,7 @@ _DtDtsMMExpandValue(const char *value)
 
 	if(!value)
 	{
-		return NULL;
+		return nullptr;
 	}
 	/* A value of any length is copied; _DtDbFillVariables expects room for a
 	   full line of 1024 bytes at least. */
@@ -815,7 +815,7 @@ _DtDtsMMExpandValue(const char *value)
 	newval = (char *)malloc(size);
 	if(!newval)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	memcpy(newval, value, strlen(value) + 1);
@@ -862,14 +862,14 @@ _DtDtsMMUnLoad(void)
 	}
 	if(munmap(mmaped_db, mmaped_size) == -1)
 	{
-		_DtSimpleError(DtProgName, DtError, NULL,
-			       "munmap of dts_cache file", NULL);
+		_DtSimpleError(DtProgName, DtError, nullptr,
+			       "munmap of dts_cache file", nullptr);
 		error = -1;
 	}
 	if(close(mmaped_fd) == -1)
 	{
-		_DtSimpleError(DtProgName, DtError, NULL,
-			       "close of dts_cache file", NULL);
+		_DtSimpleError(DtProgName, DtError, nullptr,
+			       "close of dts_cache file", nullptr);
 	}
 
 	db_list = 0;
@@ -899,7 +899,7 @@ _debug_print_name(char *name, char *label)
 	if(db)
 		_DtSimpleError(db,
 			DtInformation,
-			NULL,
+			nullptr,
 			"%s - db name = %s\n", label,
 			name);
 #endif /* DEBUG */

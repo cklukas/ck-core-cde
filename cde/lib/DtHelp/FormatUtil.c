@@ -148,9 +148,9 @@ _DtHelpCeAddOctalToBuf(
     char    *dstPtr;
     unsigned long value;
 
-    if (src == NULL ||
-		dst == NULL || dst_size == NULL || dst_max == NULL ||
-				(*dst == NULL && (*dst_size || *dst_max)))
+    if (src == nullptr ||
+		dst == nullptr || dst_size == nullptr || dst_max == nullptr ||
+				(*dst == nullptr && (*dst_size || *dst_max)))
       {
 	errno = EINVAL;
 	return -1;
@@ -185,7 +185,7 @@ _DtHelpCeAddOctalToBuf(
 
     tmp = src[4];
     src[4] = '\0';
-    value = strtoul (src, NULL, 16);
+    value = strtoul (src, nullptr, 16);
     src[4] = tmp;
 
     if ((value == ULONG_MAX && errno == ERANGE) || value > 255 || value < 1)
@@ -258,9 +258,9 @@ _DtHelpCeAddCharToBuf(
     char    *srcPtr;
     char    *dstPtr;
 
-    if (src == NULL || *src == NULL ||
-		dst == NULL || dst_size == NULL || dst_max == NULL ||
-				(*dst == NULL && (*dst_size || *dst_max)))
+    if (src == nullptr || *src == nullptr ||
+		dst == nullptr || dst_size == nullptr || dst_max == nullptr ||
+				(*dst == nullptr && (*dst_size || *dst_max)))
       {
 	errno = EINVAL;
 	return -1;
@@ -364,9 +364,9 @@ _DtHelpCeAddStrToBuf (
     /*
      * check the input
      */
-    if (src == NULL || *src == NULL || (((int)strlen(*src)) < copy_size)
-		|| dst == NULL || dst_size == NULL || dst_max == NULL
-		|| (*dst == NULL && (*dst_size || *dst_max)))
+    if (src == nullptr || *src == nullptr || (((int)strlen(*src)) < copy_size)
+		|| dst == nullptr || dst_size == nullptr || dst_max == nullptr
+		|| (*dst == nullptr && (*dst_size || *dst_max)))
       {
 	errno = EINVAL;
 	return -1;
@@ -453,7 +453,7 @@ _DtHelpCeGetNxtBuf(
     int	leftOver;
     int	result;
 
-    if (file == NULL)
+    if (file == nullptr)
       {
 	errno = EINVAL;
 	return -1;
@@ -561,12 +561,12 @@ _DtHelpGetNxtToken (
     short	 quote = False;
     short	 done = False;
 
-    if (retToken) *retToken = NULL;  /* tested in caller code */
+    if (retToken) *retToken = nullptr;  /* tested in caller code */
 
-    if (str == NULL || *str == '\0' || retToken == NULL)
+    if (str == nullptr || *str == '\0' || retToken == nullptr)
       {
 	errno = EINVAL;
-	return NULL;
+	return nullptr;
       }
 
     /* Find the next token in the string.  The parsing rules are:
@@ -688,13 +688,13 @@ _DtHelpAllocateSegments (
      * allocate the block of segments
      */
     newSeg = (_DtCvSegment *) calloc (sizeof(_DtCvSegment), malloc_size);
-    if (NULL != newSeg)
+    if (nullptr != newSeg)
       {
 	/*
 	 * now allocate the same number of private information structures
 	 */
 	p = (FrmtPrivateInfo *) calloc (sizeof(FrmtPrivateInfo), malloc_size);
-	if (NULL != p)
+	if (nullptr != p)
 	  {
 	    /*
 	     * mark the first item as the top block.  Since it will be
@@ -719,7 +719,7 @@ _DtHelpAllocateSegments (
 	     * free the new segment list and return NULL as an error.
 	     */
 	    free(newSeg);
-	    newSeg = NULL;
+	    newSeg = nullptr;
 	  }
       }
 
@@ -798,11 +798,11 @@ _DtHelpLoadMultiInfo (
 	ptr = CATGETS(cat_fd, 1, 1, "");
 	len = strlen (ptr) + 1;
 	*cant_begin_chars = (wchar_t *) malloc (len * sizeof (wchar_t));
-	if (NULL != *cant_begin_chars &&
+	if (nullptr != *cant_begin_chars &&
 				mbstowcs(*cant_begin_chars, ptr, len) == -1)
 	  {
 	    free (*cant_begin_chars);
-	    *cant_begin_chars = NULL;
+	    *cant_begin_chars = nullptr;
 	  }
 
 	/*
@@ -811,11 +811,11 @@ _DtHelpLoadMultiInfo (
 	ptr = CATGETS(cat_fd, 1, 2, "");
 	len = strlen (ptr) + 1;
 	*cant_end_chars = (wchar_t *) malloc (len * sizeof (wchar_t));
-	if (*cant_end_chars != NULL &&
+	if (*cant_end_chars != nullptr &&
 				mbstowcs(*cant_end_chars, ptr, len) == -1)
 	  {
 	    free (*cant_end_chars);
-	    *cant_end_chars = NULL;
+	    *cant_end_chars = nullptr;
 	  }
 
 	/*
@@ -833,8 +833,8 @@ _DtHelpLoadMultiInfo (
     else
 #endif
       {
-	*cant_begin_chars = NULL;
-	*cant_end_chars   = NULL;
+	*cant_begin_chars = nullptr;
+	*cant_end_chars   = nullptr;
 	*nl_to_space      = 1;
       }
 }

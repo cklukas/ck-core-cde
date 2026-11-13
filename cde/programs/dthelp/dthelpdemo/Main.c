@@ -122,12 +122,12 @@ static void CloseAndDestroyCB (
 char   *appName;
 Widget topLevel;
 Widget mainShell;
-Widget manWidget = NULL;
-Widget quickWidget = NULL;
+Widget manWidget = nullptr;
+Widget quickWidget = nullptr;
 
 Widget createSampleWidgetBtn, destroySampleWidgetBtn;
 Widget controlBtn1, controlBtn2, controlBtn3, controlBtn4;
-Widget moreButton=NULL;
+Widget moreButton=nullptr;
 
 
 /* toggle button status flags */
@@ -152,13 +152,13 @@ void main (
    Display  *appDisplay;
    
    appName = strrchr(argv[0], '/');
-   if (appName != NULL)
+   if (appName != nullptr)
      appName++;
    else
      appName = argv[0];
    
    /* Initialize toolkit and open the display */
-   topLevel = XtInitialize(appName, "Dthelpdemo", NULL, 0, &argc, argv);
+   topLevel = XtInitialize(appName, "Dthelpdemo", nullptr, 0, &argc, argv);
    appDisplay = XtDisplay(topLevel);
 
    if (!appDisplay) 
@@ -243,7 +243,7 @@ static void CreateMainWindow(
    manageFrame = XmCreateFrame(form, "manageFrame", args, n);
    XtManageChild (manageFrame);
 
-   manageForm = XmCreateForm (manageFrame,"manageForm", NULL, 0);
+   manageForm = XmCreateForm (manageFrame,"manageForm", nullptr, 0);
    XtManageChild (manageForm);
 
    XtAddCallback(manageForm, XmNhelpCallback, 
@@ -314,7 +314,7 @@ static void CreateMainWindow(
    control1Frame = XmCreateFrame(form, "control1Frame", args, n);
    XtManageChild (control1Frame);
 
-   control1Form = XmCreateForm (control1Frame,"control1Form", NULL, 0);
+   control1Form = XmCreateForm (control1Frame,"control1Form", nullptr, 0);
    XtManageChild (control1Form);
 
 
@@ -401,7 +401,7 @@ static void CreateMainWindow(
    control2Frame = XmCreateFrame(form, "control2Frame", args, n);
    XtManageChild (control2Frame);
 
-   control2Form = XmCreateForm (control2Frame,"control2Form", NULL, 0);
+   control2Form = XmCreateForm (control2Frame,"control2Form", nullptr, 0);
    XtManageChild (control2Form);
 
    XtAddCallback(control2Form, XmNhelpCallback, 
@@ -445,7 +445,7 @@ static void CreateMainWindow(
 
 
   /* Set MainWindow areas */
-  XmMainWindowSetAreas (main_window, menuBar, NULL, NULL, NULL,	frame);
+  XmMainWindowSetAreas (main_window, menuBar, nullptr, nullptr, nullptr,	frame);
       
 
   /* Force a size to the form */
@@ -655,7 +655,7 @@ static void ManageButtonsCB(
       /* Set the state of our toggle buttons */
       XmToggleButtonSetState(destroySampleWidgetBtn, FALSE, FALSE);
 
-     if (quickWidget==NULL)
+     if (quickWidget==nullptr)
         {
             Widget dp = parent;
             while (!XtIsSubclass(dp, applicationShellWidgetClass))
@@ -679,7 +679,7 @@ static void ManageButtonsCB(
  
             /* Add our hypertext callback here */
             XtAddCallback(quickWidget, DtNhyperLinkCallback,
-                       ProcessLinkCB, NULL);
+                       ProcessLinkCB, nullptr);
 
 
 
@@ -721,11 +721,11 @@ static void ManageButtonsCB(
         changeTopic=TRUE;
 
 
-        if (quickWidget != NULL)
+        if (quickWidget != nullptr)
         XtDestroyWidget(quickWidget);
 
-        quickWidget = NULL;
-        moreButton = NULL;
+        quickWidget = nullptr;
+        moreButton = nullptr;
 
         break;
      
@@ -790,7 +790,7 @@ static void Control1ButtonsCB(
 
       case CHANGE_GUI:
     
-        if (moreButton == NULL)
+        if (moreButton == nullptr)
           {
             /* Get the more buttion child */
             moreButton = DtHelpQuickDialogGetChild(quickWidget, 
@@ -884,7 +884,7 @@ static void HelpMenuCB(
     XtPointer callData)
 
 {
-  Widget selWidget=NULL;
+  Widget selWidget=nullptr;
   String name;
   Arg  argList[10];
   Cardinal argCount;
@@ -914,13 +914,13 @@ static void HelpMenuCB(
                       printf("Selection Error, cannot continue\n");
                     break;
 		    case DtHELP_SELECT_VALID:
-                      while (selWidget != NULL)
+                      while (selWidget != nullptr)
                         {
                           if ((XtHasCallbacks(selWidget, XmNhelpCallback) 
                                             == XtCallbackHasSome))
                             {
                                XtCallCallbacks((Widget)selWidget, 
-                                               XmNhelpCallback,NULL);
+                                               XmNhelpCallback,nullptr);
                                break;
                             }
                           else
@@ -1056,8 +1056,8 @@ static void CloseAndDestroyCB (
 
 
   /* reinitialize our global sample widget, and associated moreButton */
-  quickWidget = NULL;
-  moreButton=NULL; 
+  quickWidget = nullptr;
+  moreButton=nullptr; 
   addMoreButton=TRUE;
 
 

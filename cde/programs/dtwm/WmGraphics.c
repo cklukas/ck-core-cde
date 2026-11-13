@@ -939,7 +939,7 @@ Boolean ExtendRList (RList *prl, unsigned int amt)
 
     total = prl->allocated + amt;
     if ( (pNewRect = (XRectangle *) XtMalloc (total * sizeof(XRectangle))) 
-	 == NULL)
+	 == nullptr)
     {
 	Warning (((char *)GETMESSAGE(28, 1, "Insufficient memory for graphics data")));
 	rval = False;
@@ -952,7 +952,7 @@ Boolean ExtendRList (RList *prl, unsigned int amt)
 	if (prl->used != 0) {		/* copy from old structure */
 	    count = prl->used * sizeof(XRectangle);
 	    (void) memcpy ((void *)pNewRect, (void *)prl->prect, count);
-	    if (prl->prect != NULL)
+	    if (prl->prect != nullptr)
 		XtFree ((char *)prl->prect);
 	    prl->prect = pNewRect;
 	}
@@ -989,13 +989,13 @@ RList *AllocateRList (unsigned int amt)
     RList *prl;
 
 
-    if ((prl = (RList *) XtMalloc (sizeof (RList))) != NULL) 
+    if ((prl = (RList *) XtMalloc (sizeof (RList))) != nullptr) 
     {
 	if ( (prl->prect = (XRectangle *) XtMalloc (amt * sizeof(XRectangle))) 
-	     == NULL)
+	     == nullptr)
 	{
 	    XtFree ((char *)prl);
-	    prl = NULL;
+	    prl = nullptr;
 	}
 	else 
 	{
@@ -1228,7 +1228,7 @@ void WmInstallBitmapDataIntoXmCache (WmScreenData *pSD,
 	pImage->bitmap_unit = 8;
 	pImage->depth = 1;
 	pImage->bytes_per_line = (width/8) + ((width%8) != 0 ? 1 : 0);
-	pImage->obdata = NULL;
+	pImage->obdata = nullptr;
 
 	XmInstallImage(pImage, (char *)pchName);
     }

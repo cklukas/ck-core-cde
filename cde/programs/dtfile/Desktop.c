@@ -239,15 +239,15 @@ InitializeDesktopWindows(
    Widget pu_shell, frame, drawA;
    XtTranslations trans_table;
 
-   if(desktop_data == NULL)
+   if(desktop_data == nullptr)
    {
       desktop_data = (DesktopDataPtr)XtMalloc(sizeof(DesktopData));
       desktop_data->desktopWindows =
                (DesktopRec ** )XtMalloc(sizeof(DesktopRec *) * number_cache);
 
       desktop_data->popupMenu = (PopupRec *)XtMalloc(sizeof(PopupRec));
-      desktop_data->popupMenu->popup = NULL;
-      desktop_data->popupMenu->action_pane_file_type = NULL;
+      desktop_data->popupMenu->popup = nullptr;
+      desktop_data->popupMenu->action_pane_file_type = nullptr;
       desktop_data->numCachedIcons = 0;
       desktop_data->popup_name_count = 0;
       desktop_data->numIconsUsed = 0;
@@ -293,7 +293,7 @@ InitializeDesktopWindows(
       XtGetValues(desktop->shell, args, 1);
 
       XtFree(popup_name);
-      popup_name = NULL;
+      popup_name = nullptr;
 
       n = 0;
       XtSetArg (args[n], XmNmarginWidth, 1); n++;
@@ -315,7 +315,7 @@ InitializeDesktopWindows(
       XtManageChild (drawA);
 
 
-      if(desktop_data->popupMenu->popup == NULL)
+      if(desktop_data->popupMenu->popup == nullptr)
       {
          CreatePopupMenu(drawA);
          sacredDesktop = desktop;
@@ -339,7 +339,7 @@ InitializeDesktopWindows(
 
       /* Event handler for detecting drag threshold surpassed */
       XtAddEventHandler(drawA, Button1MotionMask|Button2MotionMask,
-                        False, FileIconMotion, NULL);
+                        False, FileIconMotion, nullptr);
 
       n = 0;
       XtSetArg (args[n], XmNfillMode, XmFILL_TRANSPARENT);            n++;
@@ -371,23 +371,23 @@ InitializeDesktopWindows(
       desktop->iconGadget = _DtCreateIcon (drawA, "desktop_icon", args, n);
       XtManageChild (desktop->iconGadget);
       XtAddCallback (desktop->iconGadget, XmNhelpCallback,
-                     DTHelpRequestCB, NULL);
+                     DTHelpRequestCB, nullptr);
 
       desktop->view = UNSET_VALUE;
       desktop->order = UNSET_VALUE;
       desktop->direction = UNSET_VALUE;
       desktop->positionEnabled = UNSET_VALUE;
-      desktop->restricted_directory = NULL;
-      desktop->title=  NULL;
-      desktop->helpVol = NULL;
+      desktop->restricted_directory = nullptr;
+      desktop->title=  nullptr;
+      desktop->helpVol = nullptr;
       desktop->toolbox = False;
       desktop->registered = False;
-      desktop->text = NULL;
+      desktop->text = nullptr;
       desktop->root_x = -1;
       desktop->root_y = -1;
-      desktop->workspace_name = NULL;
+      desktop->workspace_name = nullptr;
       desktop->workspace_num = 0;
-      desktop->file_name = NULL;
+      desktop->file_name = nullptr;
 
       desktop_data->numCachedIcons++;
       desktop_data->popup_name_count++;
@@ -443,15 +443,15 @@ BuildNewOrderlist(
                       (XtPointer)XtMalloc(sizeof(DirectorySet));
 
    ((DirectorySet *)file_view_data->directory_set)->file_count = 1;
-   ((DirectorySet *)file_view_data->directory_set)->file_view_data = NULL;
-   ((DirectorySet *)file_view_data->directory_set)->order_list = NULL;
+   ((DirectorySet *)file_view_data->directory_set)->file_view_data = nullptr;
+   ((DirectorySet *)file_view_data->directory_set)->order_list = nullptr;
    ((DirectorySet *)file_view_data->directory_set)->filtered_file_count = 0;
    ((DirectorySet *)file_view_data->directory_set)->invisible_file_count = 0;
-   ((DirectorySet *)file_view_data->directory_set)->file_mgr_data = NULL;
+   ((DirectorySet *)file_view_data->directory_set)->file_mgr_data = nullptr;
 
    file_view_data->parent =
      file_view_data->next =
-     file_view_data->desc = NULL;
+     file_view_data->desc = nullptr;
    file_view_data->filtered = False;
    file_view_data->displayed = True;
    file_view_data->registered = is_registered;
@@ -460,16 +460,16 @@ BuildNewOrderlist(
      file_view_data->nfile =
      file_view_data->nnew = 0;
    file_view_data->widget = icon;
-   file_view_data->treebtn = NULL;
-   file_view_data->position_info = NULL;
+   file_view_data->treebtn = nullptr;
+   file_view_data->position_info = nullptr;
 
-   if(order_list != NULL)
+   if(order_list != nullptr)
    {
       file_view_data->file_data = file_data =
          (FileData *)XtMalloc(sizeof(FileData));
 
-      file_data->link = NULL;
-      file_data->next = NULL;
+      file_data->link = nullptr;
+      file_data->next = nullptr;
       file_data->is_subdir = False;
       file_data->is_broken = False;
 
@@ -487,23 +487,23 @@ BuildNewOrderlist(
    {
       Tt_status tt_status;
 
-      full_dir_name = ResolveLocalPathName(hostName, dirName, NULL,
+      full_dir_name = ResolveLocalPathName(hostName, dirName, nullptr,
                                            home_host_name, &tt_status);
       if( TT_OK == tt_status )
       {
         FileData2 file_data2;
         int n;
-        char *entry = strcmp(file, ".") == 0 ? NULL : file;
+        char *entry = strcmp(file, ".") == 0 ? nullptr : file;
 
         DtEliminateDots (full_dir_name);
 
         n = ReadFileData2(&file_data2, full_dir_name, entry, IsToolBox);
-        file_view_data->file_data = n < 0 ? NULL :
+        file_view_data->file_data = n < 0 ? nullptr :
                                              FileData2toFileData(&file_data2, &n);
-        if (file_view_data->file_data == NULL)
+        if (file_view_data->file_data == nullptr)
            file_view_data->file_data = ReadFileData(full_dir_name, entry);
         XtFree(full_dir_name);
-        full_dir_name = NULL;
+        full_dir_name = nullptr;
       }
 
       ((DirectorySet *)file_view_data->directory_set)->name =
@@ -596,7 +596,7 @@ DesktopObjectChanged( DesktopRec *desktopWindow )
   {
     XtUnmanageChild(desktopWindow->text);
     XtDestroyWidget(desktopWindow->text);
-    desktopWindow->text = NULL;
+    desktopWindow->text = nullptr;
   }
 
   /* update icon pixmap */
@@ -665,7 +665,7 @@ MakeDesktopWindow(
    XtSetValues (desktopWindow->drawA, args, 1);
 
    /* set up the icon label and pixmap */
-   if(desktopWindow->file_view_data->file_data->action_name != NULL)
+   if(desktopWindow->file_view_data->file_data->action_name != nullptr)
       icon_label = XmStringCreateLocalized (
                        desktopWindow->file_view_data->file_data->action_name);
    else
@@ -802,17 +802,17 @@ void
 SaveDesktopInfo(
      int session)
 {
-   static char * desktopFileName = NULL;
+   static char * desktopFileName = nullptr;
    char * fileName;
    FILE * fptr;
    int i;
    DesktopRec *desktopWindow;
-   char *full_path = NULL;
+   char *full_path = nullptr;
    char *rDir, *title, *helpVol;
    Tt_status tt_status;
 
    /* Build the name which the desktop data will be saved */
-   if (desktopFileName == NULL)
+   if (desktopFileName == nullptr)
    {
       desktopFileName = XtMalloc(strlen(DESKTOP_SAVE_NAME) + 1);
       sprintf(desktopFileName, "%s", DESKTOP_SAVE_NAME);
@@ -833,7 +833,7 @@ SaveDesktopInfo(
                                            full_path, desktopFileName,
                                            home_host_name, &tt_status);
            XtFree(full_path);
-           full_path = NULL;
+           full_path = nullptr;
            break;
        default:
            full_path = (char *)XtMalloc(strlen(dt_path) + strlen("/current")+1);
@@ -842,7 +842,7 @@ SaveDesktopInfo(
                                            full_path, desktopFileName,
                                            home_host_name, &tt_status);
            XtFree(full_path);
-           full_path = NULL;
+           full_path = nullptr;
            break;
    }
 
@@ -850,20 +850,20 @@ SaveDesktopInfo(
    {
       unlink(fileName);
       XtFree(fileName);
-      fileName = NULL;
+      fileName = nullptr;
       return;
    }
 
    /* Assume read-only directory, if we can't open the file */
-   if ((fptr = fopen(fileName, "w+")) == NULL)
+   if ((fptr = fopen(fileName, "w+")) == nullptr)
    {
       XtFree(fileName);
-      fileName = NULL;
+      fileName = nullptr;
       return;
    }
 
    chmod(fileName, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-   XtFree((char *)fileName);  fileName = NULL;
+   XtFree((char *)fileName);  fileName = nullptr;
 
    fprintf(fptr, "%d\n", desktop_data->numIconsUsed);
 
@@ -871,17 +871,17 @@ SaveDesktopInfo(
    {
       desktopWindow = desktop_data->desktopWindows[i];
 
-      if(desktopWindow->restricted_directory != NULL )
+      if(desktopWindow->restricted_directory != nullptr )
          rDir = XtNewString(desktopWindow->restricted_directory);
       else
          rDir = XtNewString(NULL_STRING);
 
-      if(desktopWindow->title != NULL )
+      if(desktopWindow->title != nullptr )
          title = XtNewString(desktopWindow->title);
       else
          title = XtNewString(NULL_STRING);
 
-      if(desktopWindow->helpVol != NULL )
+      if(desktopWindow->helpVol != nullptr )
          helpVol = XtNewString(desktopWindow->helpVol);
       else
          helpVol = XtNewString(NULL_STRING);
@@ -913,32 +913,32 @@ SaveDesktopInfo(
          XtRemoveAllCallbacks(desktop_data->desktopWindows[i]->iconGadget,
                                                             XmNcallback);
          XtFree((char *)directory_set->file_mgr_data);
-         directory_set->file_mgr_data = NULL;
+         directory_set->file_mgr_data = nullptr;
          XtFree((char *)directory_set->name);
-         directory_set->name = NULL;
+         directory_set->name = nullptr;
          XtFree((char *)directory_set);
-         directory_set = NULL;
+         directory_set = nullptr;
          FreeFileData(file_view_data->file_data, True);
 	 if(file_view_data->label)
 	 {
            XtFree((char *)file_view_data->label);
-           file_view_data->label = NULL;
+           file_view_data->label = nullptr;
 	 }
          XtFree((char *)file_view_data);
-         file_view_data = NULL;
+         file_view_data = nullptr;
          XtFree(desktop_data->desktopWindows[i]->workspace_name);
-         desktop_data->desktopWindows[i]->workspace_name = NULL;
+         desktop_data->desktopWindows[i]->workspace_name = nullptr;
          XtFree(desktop_data->desktopWindows[i]->host);
-         desktop_data->desktopWindows[i]->host = NULL;
+         desktop_data->desktopWindows[i]->host = nullptr;
          XtFree(desktop_data->desktopWindows[i]->dir_linked_to);
-         desktop_data->desktopWindows[i]->dir_linked_to = NULL;
+         desktop_data->desktopWindows[i]->dir_linked_to = nullptr;
          XtFree(desktop_data->desktopWindows[i]->title);
-         desktop_data->desktopWindows[i]->title = NULL;
+         desktop_data->desktopWindows[i]->title = nullptr;
          XtFree(desktop_data->desktopWindows[i]->helpVol);
-         desktop_data->desktopWindows[i]->helpVol = NULL;
+         desktop_data->desktopWindows[i]->helpVol = nullptr;
          XtFree(desktop_data->desktopWindows[i]->restricted_directory);
-         desktop_data->desktopWindows[i]->restricted_directory = NULL;
-         desktop_data->desktopWindows[i]->restricted_directory = NULL;
+         desktop_data->desktopWindows[i]->restricted_directory = nullptr;
+         desktop_data->desktopWindows[i]->restricted_directory = nullptr;
 
          desktop_data->desktopWindows[i]->root_x = -1;
          desktop_data->desktopWindows[i]->root_y = -1;
@@ -948,19 +948,19 @@ SaveDesktopInfo(
          desktop_data->desktopWindows[i]->direction = UNSET_VALUE;
          desktop_data->desktopWindows[i]->positionEnabled = UNSET_VALUE;
          desktop_data->desktopWindows[i]->toolbox = False;
-         desktop_data->desktopWindows[i]->title = NULL;
-         desktop_data->desktopWindows[i]->helpVol = NULL;
-         desktop_data->desktopWindows[i]->restricted_directory = NULL;
+         desktop_data->desktopWindows[i]->title = nullptr;
+         desktop_data->desktopWindows[i]->helpVol = nullptr;
+         desktop_data->desktopWindows[i]->restricted_directory = nullptr;
 
-         desktop_data->desktopWindows[i]->file_view_data = NULL;
+         desktop_data->desktopWindows[i]->file_view_data = nullptr;
       }
 
       XtFree(rDir);
-      rDir = NULL;
+      rDir = nullptr;
       XtFree(title);
-      title = NULL;
+      title = nullptr;
       XtFree(helpVol);
-      helpVol = NULL;
+      helpVol = nullptr;
    }
 
    fclose(fptr);
@@ -976,7 +976,7 @@ SaveDesktopInfo(
       {
         unlink(fileName);
         XtFree(fileName);
-        fileName = NULL;
+        fileName = nullptr;
       }
    }
 }
@@ -986,10 +986,10 @@ void
 LoadDesktopInfo(
      char *session)
 {
-   static char * desktopFileName = NULL;
-   char *fileName = NULL, *full_path = NULL, *ptr = NULL;
-   char *workSpace = NULL;
-   char *message = NULL;
+   static char * desktopFileName = nullptr;
+   char *fileName = nullptr, *full_path = nullptr, *ptr = nullptr;
+   char *workSpace = nullptr;
+   char *message = nullptr;
    int i, j,  numWindows, count, index, bufferSize;
    int rX, rY;
    FILE * fptr;
@@ -1000,13 +1000,13 @@ LoadDesktopInfo(
    struct stat stat_buf;
 
    /* Build the name which the desktop data will be saved */
-   if (desktopFileName == NULL)
+   if (desktopFileName == nullptr)
    {
       desktopFileName = XtMalloc(strlen(DESKTOP_SAVE_NAME) + 1);
       sprintf(desktopFileName, "%s", DESKTOP_SAVE_NAME);
    }
 
-   if(session == NULL)
+   if(session == nullptr)
    {
       /* Construct full filename */
       fileName = ResolveLocalPathName(home_host_name,
@@ -1023,7 +1023,7 @@ LoadDesktopInfo(
       if (stat(full_path, &stat_buf) != 0)
       {
          XtFree(full_path);
-         full_path = NULL;
+         full_path = nullptr;
          return;
       }
 
@@ -1036,15 +1036,15 @@ LoadDesktopInfo(
                                       home_host_name, &tt_status);
 
       XtFree(full_path);
-      full_path = NULL;
+      full_path = nullptr;
    }
 
    /* Assume no file if the open fails */
-   if ((fptr = fopen(fileName, "r")) == NULL)
+   if ((fptr = fopen(fileName, "r")) == nullptr)
    {
      /* do nothing */
       XtFree(fileName);
-      fileName = NULL;
+      fileName = nullptr;
       return;
    }
 
@@ -1054,7 +1054,7 @@ LoadDesktopInfo(
    if (count <= 0)
    {
       XtFree(fileName);
-      fileName = NULL;
+      fileName = nullptr;
       fclose(fptr);
       return;
    }
@@ -1063,7 +1063,7 @@ LoadDesktopInfo(
       amount restored */
    if(numWindows >= desktop_data->numCachedIcons)
       InitializeDesktopWindows(numWindows + 5 - desktop_data->numCachedIcons,
-                                                                         NULL);
+                                                                         nullptr);
 
    count = index = desktop_data->numIconsUsed;
 
@@ -1085,7 +1085,7 @@ LoadDesktopInfo(
           desktopWindow->file_name = XtNewString(message);
       }
       else
-          desktopWindow->file_name = NULL;
+          desktopWindow->file_name = nullptr;
 
       if (fgets(message, bufferSize, fptr))
       {
@@ -1093,7 +1093,7 @@ LoadDesktopInfo(
           workSpace = XtNewString(message);
       }
       else
-          workSpace = NULL;
+          workSpace = nullptr;
 
       if (fgets(message, bufferSize, fptr))
       {
@@ -1101,7 +1101,7 @@ LoadDesktopInfo(
           desktopWindow->dir_linked_to = XtNewString(message);
       }
       else
-          desktopWindow->dir_linked_to = NULL;
+          desktopWindow->dir_linked_to = nullptr;
 
       { /* Construct the full path and check for the file or link
            existence.
@@ -1130,52 +1130,52 @@ LoadDesktopInfo(
             && lstat(path, &stat_buf) != 0 )
         {
           XtFree(desktopWindow->file_name);
-          desktopWindow->file_name = NULL;
+          desktopWindow->file_name = nullptr;
           XtFree(workSpace);
-          workSpace = NULL;
+          workSpace = nullptr;
           XtFree(desktopWindow->dir_linked_to);
-          desktopWindow->dir_linked_to = NULL;
+          desktopWindow->dir_linked_to = nullptr;
           XtFree(path);
-          path = NULL;
+          path = nullptr;
           continue;
         }
 
         XtFree(path);
-        path = NULL;
+        path = nullptr;
       }
 
       if (fgets(message, bufferSize, fptr))
       {
           len = strlen(message); message[len-1] = 0x0;
           if( strcmp(message, NULL_STRING) == 0 )
-              desktopWindow->restricted_directory = NULL;
+              desktopWindow->restricted_directory = nullptr;
           else
               desktopWindow->restricted_directory = XtNewString(message);
       }
       else
-          desktopWindow->restricted_directory = NULL;
+          desktopWindow->restricted_directory = nullptr;
 
       if (fgets(message, bufferSize, fptr))
       {
           len = strlen(message); message[len-1] = 0x0;
           if( strcmp(message, NULL_STRING) == 0 )
-              desktopWindow->title = NULL;
+              desktopWindow->title = nullptr;
           else
               desktopWindow->title = XtNewString(message);
       }
       else
-          desktopWindow->title = NULL;
+          desktopWindow->title = nullptr;
 
       if (fgets(message, bufferSize, fptr))
       {
           len = strlen(message); message[len-1] = 0x0;
           if( strcmp(message, NULL_STRING) == 0 )
-              desktopWindow->helpVol = NULL;
+              desktopWindow->helpVol = nullptr;
           else
               desktopWindow->helpVol = XtNewString(message);
       }
       else
-          desktopWindow->helpVol = NULL;
+          desktopWindow->helpVol = nullptr;
 
       if (fgets(message, bufferSize, fptr))
       {
@@ -1183,7 +1183,7 @@ LoadDesktopInfo(
                   &toolbox, &view, &order, &direction, &positionEnabled, &rX, &rY );
       }
       else
-          message = NULL;
+          message = nullptr;
 
       desktopWindow->toolbox = (char)toolbox;
       desktopWindow->view = (char)view;
@@ -1213,13 +1213,13 @@ LoadDesktopInfo(
          strcpy(desktopWindow->workspace_name,
                 desktop_data->workspaceData[0]->name);
          XtFree(workSpace);
-         workSpace = NULL;
+         workSpace = nullptr;
       }
 
       desktopWindow->host = XtNewString(home_host_name);
 
       desktopWindow->file_view_data =
-             BuildNewOrderlist(NULL, desktopWindow->iconGadget,
+             BuildNewOrderlist(nullptr, desktopWindow->iconGadget,
                                desktopWindow->host,
                                desktopWindow->dir_linked_to,
                                desktopWindow->file_name,
@@ -1234,12 +1234,12 @@ LoadDesktopInfo(
       index++;
    }
    XtFree(message);
-   message = NULL;
+   message = nullptr;
 
    fclose(fptr);
 
    XtFree(fileName);
-   fileName = NULL;
+   fileName = nullptr;
    SaveDesktopInfo(NORMAL_RESTORE);
 }
 
@@ -1266,11 +1266,11 @@ FreeDesktopWindow(
    RegisterInGrid((int)width, (int)height, desktopWindow->root_x,
                    desktopWindow->root_y, desktopWindow->workspace_num, False);
 
-   if(desktopWindow->text != NULL)
+   if(desktopWindow->text != nullptr)
    {
       XtUnmanageChild(desktopWindow->text);
       XtDestroyWidget(desktopWindow->text);
-      desktopWindow->text = NULL;
+      desktopWindow->text = nullptr;
    }
 
    for(i = 0; i < desktop_data->numIconsUsed; i++)
@@ -1289,46 +1289,46 @@ FreeDesktopWindow(
    XtRemoveAllCallbacks(desktop_data->desktopWindows[i]->iconGadget,
                                                             XmNcallback);
    XtFree((char *)directory_set->file_mgr_data);
-   directory_set->file_mgr_data = NULL;
+   directory_set->file_mgr_data = nullptr;
    XtFree((char *)directory_set->name);
-   directory_set->name = NULL;
+   directory_set->name = nullptr;
    XtFree((char *)directory_set);
-   directory_set = NULL;
+   directory_set = nullptr;
    FreeFileData(file_view_data->file_data, True);
    if(file_view_data->label)
    {
       XtFree((char *)file_view_data->label);
-      file_view_data->label = NULL;
+      file_view_data->label = nullptr;
    }
    XtFree((char *)file_view_data);
-   file_view_data = NULL;
+   file_view_data = nullptr;
    XtFree(desktop_data->desktopWindows[i]->restricted_directory);
-   desktop_data->desktopWindows[i]->restricted_directory = NULL;
+   desktop_data->desktopWindows[i]->restricted_directory = nullptr;
    XtFree(desktop_data->desktopWindows[i]->title);
-   desktop_data->desktopWindows[i]->title = NULL;
+   desktop_data->desktopWindows[i]->title = nullptr;
    XtFree(desktop_data->desktopWindows[i]->helpVol);
-   desktop_data->desktopWindows[i]->helpVol = NULL;
+   desktop_data->desktopWindows[i]->helpVol = nullptr;
    XtFree(desktop_data->desktopWindows[i]->workspace_name);
-   desktop_data->desktopWindows[i]->workspace_name = NULL;
+   desktop_data->desktopWindows[i]->workspace_name = nullptr;
    XtFree(desktop_data->desktopWindows[i]->host);
-   desktop_data->desktopWindows[i]->host = NULL;
+   desktop_data->desktopWindows[i]->host = nullptr;
    XtFree(desktop_data->desktopWindows[i]->dir_linked_to);
-   desktop_data->desktopWindows[i]->dir_linked_to = NULL;
+   desktop_data->desktopWindows[i]->dir_linked_to = nullptr;
    XtFree(desktop_data->desktopWindows[i]->file_name);
-   desktop_data->desktopWindows[i]->file_name = NULL;
+   desktop_data->desktopWindows[i]->file_name = nullptr;
 
-   desktop_data->desktopWindows[i]->restricted_directory = NULL;
-   desktop_data->desktopWindows[i]->title = NULL;
-   desktop_data->desktopWindows[i]->helpVol = NULL;
-   desktop_data->desktopWindows[i]->workspace_name = NULL;
-   desktop_data->desktopWindows[i]->host = NULL;
-   desktop_data->desktopWindows[i]->dir_linked_to = NULL;
-   desktop_data->desktopWindows[i]->file_name = NULL;
+   desktop_data->desktopWindows[i]->restricted_directory = nullptr;
+   desktop_data->desktopWindows[i]->title = nullptr;
+   desktop_data->desktopWindows[i]->helpVol = nullptr;
+   desktop_data->desktopWindows[i]->workspace_name = nullptr;
+   desktop_data->desktopWindows[i]->host = nullptr;
+   desktop_data->desktopWindows[i]->dir_linked_to = nullptr;
+   desktop_data->desktopWindows[i]->file_name = nullptr;
 
    desktop_data->desktopWindows[i]->root_x = -1;
    desktop_data->desktopWindows[i]->root_y = -1;
 
-   desktop_data->desktopWindows[i]->file_view_data = NULL;
+   desktop_data->desktopWindows[i]->file_view_data = nullptr;
    desktop_data->numIconsUsed--;
    desktop_data->numCachedIcons++;
 
@@ -1468,11 +1468,11 @@ DrawAInput (
       XtSetSensitive(desktop_data->popupMenu->openFolder, True);
 
       XtFree(desktop_data->popupMenu->action_pane_file_type);
-      desktop_data->popupMenu->action_pane_file_type = NULL;
+      desktop_data->popupMenu->action_pane_file_type = nullptr;
       desktop_data->popupMenu->action_pane_file_type = XtNewString(
                desktopWindow->file_view_data->file_data->logical_type);
 
-      UpdateActionMenuPane ((XtPointer)desktopWindow, (FileMgrRec *)NULL,
+      UpdateActionMenuPane ((XtPointer)desktopWindow, (FileMgrRec *)nullptr,
                             desktop_data->popupMenu->action_pane_file_type,
                             DESKTOP, 7, desktop_data->popupMenu->popup,
                             desktopWindow->file_view_data->file_data->physical_type);
@@ -1483,7 +1483,7 @@ DrawAInput (
          char *ptr;
 
          ptr = DtStrrchr(desktopWindow->title, ':');
-         if(ptr != NULL)
+         if(ptr != nullptr)
          {
             ptr++;
             if(strcmp(root_title, ptr) == 0)
@@ -1497,7 +1497,7 @@ DrawAInput (
       }
    }
 
-   if(event == NULL)
+   if(event == nullptr)
    {
       Position x, y;
       Dimension width, height;
@@ -1699,15 +1699,15 @@ OpenFolder (
 
       pwd_dir = XtNewString(desktopWindow->dir_linked_to);
       DtActionInvoke(desktopWindow->shell, "OpenParentAppGroup", action_args, 1,
-                     NULL, NULL, pwd_dir, True, NULL, NULL);
+                     nullptr, nullptr, pwd_dir, True, nullptr, nullptr);
       XtFree(pwd_dir);
-      pwd_dir = NULL;
+      pwd_dir = nullptr;
    }
    else
    {
       initiating_view = (XtPointer) NULL;
 
-      if(desktopWindow->restricted_directory != NULL)
+      if(desktopWindow->restricted_directory != nullptr)
       {
          special_view = True;
          special_treeType = SINGLE_DIRECTORY;
@@ -1716,8 +1716,8 @@ OpenFolder (
          special_directionType = desktopWindow->direction;
          special_randomType = desktopWindow->positionEnabled;
          special_restricted = XtNewString(desktopWindow->restricted_directory);
-         if(desktopWindow->title == NULL)
-            special_title = NULL;
+         if(desktopWindow->title == nullptr)
+            special_title = nullptr;
          else
             special_title = XtNewString(desktopWindow->title);
          special_helpVol = XtNewString(desktopWindow->helpVol);
@@ -1725,23 +1725,23 @@ OpenFolder (
             dialog_data = GetNewView(desktopWindow->host,
                                      desktopWindow->dir_linked_to,
                                      desktopWindow->restricted_directory,
-				     NULL, 0);
+				     nullptr, 0);
          else
             dialog_data = GetNewView(desktopWindow->host,
                                      desktopWindow->dir_linked_to,
-				     NULL, NULL, 0);
+				     nullptr, nullptr, 0);
       }
       else
       {
          dialog_data = GetNewView(desktopWindow->host,
                                   desktopWindow->dir_linked_to,
-                                  NULL, NULL, 0);
+                                  nullptr, nullptr, 0);
       }
 
-      if (openDirType == NEW && dialog_data == NULL)
+      if (openDirType == NEW && dialog_data == nullptr)
          return;
 
-      if( dialog_data == NULL )
+      if( dialog_data == nullptr )
          return ;
 
       file_mgr_data = (FileMgrData *) dialog_data->data;
@@ -1763,7 +1763,7 @@ OpenFolder (
       if(!directory_data->file_count)
           file_mgr_data->desktop_file = XtNewString(desktopWindow->file_name);
       else
-          file_mgr_data->desktop_file = NULL;
+          file_mgr_data->desktop_file = nullptr;
 
       file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
 
@@ -1873,15 +1873,15 @@ DeselectAllDTFiles (
                             LINK_FILE);
    }
 
-   if (workspaceData->selectedDTWindows != NULL)
+   if (workspaceData->selectedDTWindows != nullptr)
    {
       XtFree ((char *) workspaceData->selectedDTWindows);
-      workspaceData->selectedDTWindows = NULL;
+      workspaceData->selectedDTWindows = nullptr;
    }
 
    workspaceData->selectedDTWindows =
       (DesktopRec **) XtMalloc (sizeof (DesktopRec *));
-   workspaceData->selectedDTWindows[0] = NULL;
+   workspaceData->selectedDTWindows[0] = nullptr;
    workspaceData->files_selected = 0;
 
 }
@@ -1910,7 +1910,7 @@ DeselectDTFile (
    workspaceData->selectedDTWindows = (DesktopRec **)
                    XtRealloc ((char *) workspaceData->selectedDTWindows,
                                sizeof(DesktopRec *) * selection_count);
-   workspaceData->selectedDTWindows[selection_count - 1] = NULL;
+   workspaceData->selectedDTWindows[selection_count - 1] = nullptr;
 
    SetToNormalColors (desktopWindow->iconGadget, desktopWindow->frame,
                                         desktopWindow->frame, LINK_FILE);
@@ -1932,7 +1932,7 @@ DTActionCallback (
    XtSetArg (args[0], XmNuserData, (XtPointer) &command);
    XtGetValues (w, args, 1);
 
-   RunDTCommand(command, desktopWindow, NULL);
+   RunDTCommand(command, desktopWindow, nullptr);
 }
 
 
@@ -1962,11 +1962,11 @@ RunDTCommand(
         sprintf( msg, GETMESSAGE(30, 1, "Cannot read from %s"),
                  desktopWindow->file_view_data->file_data->file_name );
         _DtMessage(desktopWindow->shell,
-                   title, msg, NULL, HelpRequestCB );
+                   title, msg, nullptr, HelpRequestCB );
         XtFree(title);
-        title = NULL;
+        title = nullptr;
         XtFree(msg);
-        msg = NULL;
+        msg = nullptr;
         return;
       }
 
@@ -2031,9 +2031,9 @@ ProcessNewViewDT (
    DtEliminateDots (directory_name);
 
    initiating_view = (XtPointer) NULL;
-   if(desktopWindow->restricted_directory == NULL)
+   if(desktopWindow->restricted_directory == nullptr)
    {
-      GetNewView (desktopWindow->host, directory_name, NULL, NULL, 0);
+      GetNewView (desktopWindow->host, directory_name, nullptr, nullptr, 0);
    }
    else
    {
@@ -2044,16 +2044,16 @@ ProcessNewViewDT (
       special_directionType = desktopWindow->direction;
       special_randomType = desktopWindow->positionEnabled;
       special_restricted = XtNewString(desktopWindow->restricted_directory);
-      if(desktopWindow->title == NULL)
-         special_title = NULL;
+      if(desktopWindow->title == nullptr)
+         special_title = nullptr;
       else
          special_title = XtNewString(desktopWindow->title);
       special_helpVol = XtNewString(desktopWindow->helpVol);
       if(desktopWindow->toolbox)
          GetNewView (desktopWindow->host, directory_name,
-                     desktopWindow->restricted_directory, NULL, 0);
+                     desktopWindow->restricted_directory, nullptr, 0);
       else
-         GetNewView (desktopWindow->host, directory_name, NULL, NULL, 0);
+         GetNewView (desktopWindow->host, directory_name, nullptr, nullptr, 0);
    }
 }
 
@@ -2093,7 +2093,7 @@ ProcessMoveCopyLinkDT (
       /******************************/
       /* set movement modifier mask */
       /******************************/
-   if( (initiating_view != NULL) &&
+   if( (initiating_view != nullptr) &&
        (((FileMgrData *)initiating_view)->toolbox) )
    {
       /* if initiating_view is a toolbox, the transfer must be */
@@ -2143,7 +2143,7 @@ ProcessMoveCopyLinkDT (
       /* Move files */
       /**************/
    if (!error)
-      CheckMoveType((FileMgrData *)NULL, file_view_data,
+      CheckMoveType((FileMgrData *)nullptr, file_view_data,
                     (DirectorySet *)(file_view_data->directory_set),
                     desktopWindow, file_set, host_set, modifiers,
                     numFiles, drop_parameters->x, drop_parameters->y, DESKTOP);
@@ -2168,9 +2168,9 @@ ProcessBufferDropOnFolderDT (
      DtDndDropCallbackStruct *drop_parameters)
 {
    int num_of_buffers;
-   char ** file_set = NULL;
-   char ** host_set = NULL;
-   BufferInfo *buffer_set = NULL;
+   char ** file_set = nullptr;
+   char ** host_set = nullptr;
+   BufferInfo *buffer_set = nullptr;
    char  directory[MAX_PATH];
    FileViewData *file_view_data = desktopWindow->file_view_data;
 
@@ -2184,7 +2184,7 @@ ProcessBufferDropOnFolderDT (
 
    /* if dropped on a folder icon and file_view_data */
    /* is NULL, disallow the drop                     */
-   if (file_view_data == NULL)
+   if (file_view_data == nullptr)
      return;
 
 
@@ -2215,7 +2215,7 @@ ProcessBufferDropOnFolderDT (
    DPRINTF (("Copying buffer to %s\n", directory));
    MakeFilesFromBuffersDT(file_view_data, directory, file_set, host_set,
                           buffer_set, num_of_buffers,
-                          desktopWindow, NULL, NULL);
+                          desktopWindow, nullptr, nullptr);
 
 
   /******************************/
@@ -2240,12 +2240,12 @@ IsAFileOnDesktop2(
    char *filename1,*filename2;
    int newLen, stat_result;
    Tt_status tt_status;
-   static Tt_message dummy_msg = NULL;
+   static Tt_message dummy_msg = nullptr;
    struct stat stat_buf;
 
    *IsToolBox = False;
 
-   if(dummy_msg == NULL)
+   if(dummy_msg == nullptr)
       dummy_msg = tt_message_create();
 
    *number = 0;
@@ -2324,7 +2324,7 @@ IsAFileOnDesktop2(
    if(onDesktop)
      return(filesOnDesktop);
 
-   return(NULL);
+   return(nullptr);
 }
 
 
@@ -2422,7 +2422,7 @@ UnpostDTTextField (void)
          GenerateShape(desktopWindow);
 #endif
          XtDestroyWidget(desktopWindow->text);
-         desktopWindow->text = NULL;
+         desktopWindow->text = nullptr;
          return;
       }
    }
@@ -2613,26 +2613,26 @@ PutOnDTCB (
    XtGetValues(mbar, args, 1);
 
    /* Ignore accelerators when we're insensitive */
-   if(client_data == NULL)
+   if(client_data == nullptr)
       if ((file_mgr_rec->menuStates & PUT_ON_DESKTOP) == 0)
          return;
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
    /* get the file_view_data object from which the menu was invoked */
-   if (client_data == NULL)
-     file_view_data = NULL;
+   if (client_data == nullptr)
+     file_view_data = nullptr;
    else
    {
      file_view_data = file_mgr_data->popup_menu_icon;
-     if (!file_mgr_data->selected_file_count && file_view_data == NULL)
+     if (!file_mgr_data->selected_file_count && file_view_data == nullptr)
        /* the object has gone away (probably deleted) */
        return;
 
-     file_mgr_data->popup_menu_icon = NULL; /* Reset it, we don't need it */
+     file_mgr_data->popup_menu_icon = nullptr; /* Reset it, we don't need it */
 
        /* No need to see the selection_list if file_view_data is NULL */
 
@@ -2643,7 +2643,7 @@ PutOnDTCB (
        {
           if(file_mgr_data->selection_list[i] == file_view_data)
           {
-             file_view_data = NULL;
+             file_view_data = nullptr;
              break;
           }
        }
@@ -2651,7 +2651,7 @@ PutOnDTCB (
    }
 
    EndIndex = desktop_data->numIconsUsed;
-   if(file_view_data == NULL)
+   if(file_view_data == nullptr)
    {
       for (i = 0; i < file_mgr_data->selected_file_count; i++)
       {
@@ -2670,11 +2670,11 @@ PutOnDTCB (
             SetupDesktopWindow (XtDisplay(w), file_mgr_data, file_mgr_rec,
                                 file_name, file_mgr_data->host,
                                 directory,
-                                -1, -1, NULL,EndIndex);
+                                -1, -1, nullptr,EndIndex);
 
             *ptr = '/';
             XtFree(path);
-            path = NULL;
+            path = nullptr;
          }
          else
          {
@@ -2685,7 +2685,7 @@ PutOnDTCB (
             SetupDesktopWindow (XtDisplay(w), file_mgr_data, file_mgr_rec,
                                 file_name, file_mgr_data->host,
                                 directory,
-                                -1, -1, NULL,EndIndex);
+                                -1, -1, nullptr,EndIndex);
          }
       }
    }
@@ -2705,11 +2705,11 @@ PutOnDTCB (
          SetupDesktopWindow (XtDisplay(w), file_mgr_data, file_mgr_rec,
                              file_name, file_mgr_data->host,
                              directory,
-                             -1, -1, NULL,EndIndex);
+                             -1, -1, nullptr,EndIndex);
 
          *ptr = '/';
          XtFree(path);
-         path = NULL;
+         path = nullptr;
       }
       else
       {
@@ -2717,7 +2717,7 @@ PutOnDTCB (
          file_name = file_view_data->file_data->file_name;
          SetupDesktopWindow (XtDisplay(w), file_mgr_data, file_mgr_rec,
                              file_name, file_mgr_data->host,
-                             file_mgr_data->current_directory, -1, -1, NULL,EndIndex);
+                             file_mgr_data->current_directory, -1, -1, nullptr,EndIndex);
       }
    }
 }
@@ -3107,11 +3107,11 @@ SetupDesktopWindow (
          msg = XtNewString(tmpStr);
          FileOperationError(file_mgr_rec->main, msg, title);
          XtFree(msg);
-         msg = NULL;
+         msg = nullptr;
          XtFree(workspace_name);
-         workspace_name = NULL;
+         workspace_name = nullptr;
          XtFree(directory_name);
-         directory_name = NULL;
+         directory_name = nullptr;
          return;
       }
    }
@@ -3134,16 +3134,16 @@ SetupDesktopWindow (
    desktopWindow->workspace_name = workspace_name;
    desktopWindow->workspace_num = ws_num;
 
-   if (file_mgr_data != NULL)
+   if (file_mgr_data != nullptr)
    {
-       if (file_mgr_data->restricted_directory == NULL)
-           desktopWindow->restricted_directory = NULL;
+       if (file_mgr_data->restricted_directory == nullptr)
+           desktopWindow->restricted_directory = nullptr;
        else
          desktopWindow->restricted_directory =
                 XtNewString(file_mgr_data->restricted_directory);
 
-      if (file_mgr_data->helpVol == NULL)
-         desktopWindow->helpVol = NULL;
+      if (file_mgr_data->helpVol == nullptr)
+         desktopWindow->helpVol = nullptr;
       else
          desktopWindow->helpVol = XtNewString(file_mgr_data->helpVol);
 
@@ -3159,11 +3159,11 @@ SetupDesktopWindow (
    {
        /* store the directory the file is linked to */
        /* need to determine the toolbox dir !!!*/
-       if (type == NULL)
-         desktopWindow->restricted_directory = NULL;
+       if (type == nullptr)
+         desktopWindow->restricted_directory = nullptr;
        else
          desktopWindow->restricted_directory = XtNewString(type);
-       desktopWindow->helpVol = NULL;
+       desktopWindow->helpVol = nullptr;
        desktopWindow->toolbox = False;
        desktopWindow->view = UNSET_VALUE;
        desktopWindow->order = UNSET_VALUE;
@@ -3172,7 +3172,7 @@ SetupDesktopWindow (
    }
 
    desktopWindow->file_view_data = BuildNewOrderlist(
-                          NULL /* @@@ use cached info if possible! */,
+                          nullptr /* @@@ use cached info if possible! */,
                           desktopWindow->iconGadget,
                           home_host_name,
                           desktopWindow->dir_linked_to,
@@ -3191,10 +3191,10 @@ SetupDesktopWindow (
    SaveDesktopInfo(NORMAL_RESTORE);
 
    XtFree(directory_name);
-   directory_name = NULL;
+   directory_name = nullptr;
 
    if(openDirType == NEW)
-      ForceMyIconOpen(desktopWindow->host, NULL);
+      ForceMyIconOpen(desktopWindow->host, nullptr);
 
    if( checkBrokenLink != 0 && checkBrokenLinkTimerId == 0 )
    {
@@ -3202,7 +3202,7 @@ SetupDesktopWindow (
                    XtWidgetToApplicationContext( toplevel ),
                    checkBrokenLink * 1000,
                    TimerEventBrokenLinks,
-                   NULL );
+                   nullptr );
    }
 
 }
@@ -3230,7 +3230,7 @@ FreeCachedIcons (
       }
       XtDestroyWidget(desktop->shell);
       XtFree((char *)desktop);
-      desktop = NULL;
+      desktop = nullptr;
 
       desktop_data->numCachedIcons--;
    }
@@ -3274,9 +3274,9 @@ CreatePopupMenu (
    popupBtns[0] = (Widget) XmCreateLabelGadget(desktop_data->popupMenu->popup,
                                                           "title", args, 1);
    popupBtns[1] = XmCreateSeparatorGadget(desktop_data->popupMenu->popup,
-                                                           "sep1", NULL, 0);
+                                                           "sep1", nullptr, 0);
    popupBtns[2] = XmCreateSeparatorGadget(desktop_data->popupMenu->popup,
-                                                           "sep2", NULL, 0);
+                                                           "sep2", nullptr, 0);
    XmStringFree (label_string);
 
    label_string = XmStringCreateLocalized((GETMESSAGE(28,5, "Remove From Workspace")));
@@ -3317,7 +3317,7 @@ CreatePopupMenu (
                   HELP_DESKTOP_POPUP_MENU_STR);
 
    popupBtns[6] = XmCreateSeparatorGadget(desktop_data->popupMenu->popup,
-                                                          "sep1", NULL, 0);
+                                                          "sep1", nullptr, 0);
 
    XtManageChildren(popupBtns, 7);
 }
@@ -3351,7 +3351,7 @@ popupMenu (
    {
       DrawAInput(desktop_data->popupMenu->popup,
                  (XtPointer)desktop_data->desktopWindows[i],
-                 event, (Boolean *)NULL);
+                 event, (Boolean *)nullptr);
    }
 }
 
@@ -3566,10 +3566,10 @@ BuildDesktopLinks (
       workspaceData->files_selected = 0;
       workspaceData->selectedDTWindows =
                          (DesktopRec **) XtMalloc (sizeof (DesktopRec *));
-      workspaceData->selectedDTWindows[0] = NULL;
-      workspaceData->primaryHelpDialog = NULL;
+      workspaceData->selectedDTWindows[0] = nullptr;
+      workspaceData->primaryHelpDialog = nullptr;
       workspaceData->secondaryHelpDialogCount = 0;
-      workspaceData->secondaryHelpDialogList = NULL;
+      workspaceData->secondaryHelpDialogList = nullptr;
 
       desktop_data->workspaceData[i] = workspaceData;
    }
@@ -3577,7 +3577,7 @@ BuildDesktopLinks (
    if (result == Success)
    {
       XFree ((char *) paWS);
-      paWS = NULL;
+      paWS = nullptr;
    }
 }
 
@@ -3641,16 +3641,16 @@ InitializeNewWorkspaces (
          workspaceData->files_selected = 0;
          workspaceData->selectedDTWindows =
                             (DesktopRec **) XtMalloc (sizeof (DesktopRec *));
-         workspaceData->selectedDTWindows[0] = NULL;
-         workspaceData->primaryHelpDialog = NULL;
+         workspaceData->selectedDTWindows[0] = nullptr;
+         workspaceData->primaryHelpDialog = nullptr;
          workspaceData->secondaryHelpDialogCount = 0;
-         workspaceData->secondaryHelpDialogList = NULL;
+         workspaceData->secondaryHelpDialogList = nullptr;
 
          desktop_data->workspaceData[desktop_data->numWorkspaces + i] =
                                                                workspaceData;
       }
       XFree ((char *) paWS);
-      paWS = NULL;
+      paWS = nullptr;
    }
 
    /* now lets add more desktop grids for the new workspaces */
@@ -3718,7 +3718,7 @@ CleanUpWSName(
       First check " "
    */
    ptr = DtStrchr(workspace_name, ' ');
-   while(ptr != NULL)
+   while(ptr != nullptr)
    {
       *ptr = '_';
       ptr = DtStrchr(ptr, ' ');
@@ -3728,7 +3728,7 @@ CleanUpWSName(
      Next check "/"
    */
    ptr = DtStrchr(workspace_name, '/');
-   while(ptr != NULL)
+   while(ptr != nullptr)
    {
       *ptr = '_';
       ptr = DtStrchr(ptr, '/');
@@ -3738,7 +3738,7 @@ CleanUpWSName(
      Next check ":"
    */
    ptr = DtStrchr(workspace_name, ':');
-   while(ptr != NULL)
+   while(ptr != nullptr)
    {
       *ptr = '_';
       ptr = DtStrchr(ptr, ':');
@@ -3748,7 +3748,7 @@ CleanUpWSName(
      Next check "'"
    */
    ptr = DtStrchr(workspace_name, '\'');
-   while(ptr != NULL)
+   while(ptr != nullptr)
    {
       *ptr = '_';
       ptr = DtStrchr(ptr, '\'');
@@ -3783,7 +3783,7 @@ CheckDesktopMarquee(
    XRectangle incoming_rect;
    unsigned char pixmapPosition;
    DtIconGadget g;
-   WorkspaceRec *workspaceData = NULL;
+   WorkspaceRec *workspaceData = nullptr;
    unsigned char flags;
    Region region;
    Display *display;
@@ -3956,7 +3956,7 @@ ProcessDropOnDesktopObject (
      DtDndDropCallbackStruct *dropInfo,
      DesktopRec *desktopWindow)
 {
-   char *command = NULL;
+   char *command = nullptr;
 
    /******************/
    /* transfer phase */
@@ -3967,7 +3967,7 @@ ProcessDropOnDesktopObject (
 
       /* In case when the drag is from non File Manager client */
       if(!dragActive)
-	initiating_view = NULL;
+	initiating_view = nullptr;
 
       /* check for invalid trash drop */
       if (FileFromTrash(dropInfo->dropData->data.files[0]))
@@ -4116,7 +4116,7 @@ WorkSpaceRemoved (
 		       selectedDTWindows[k] == desktop_data->desktopWindows[i])
 		  {
 		    desktop_data->workspaceData[new_index]->
-					selectedDTWindows[k] = NULL;
+					selectedDTWindows[k] = nullptr;
 		    for(;k<desktop_data->workspaceData[new_index]->files_selected;k++)
 		      desktop_data->workspaceData[new_index]->
 	 	       selectedDTWindows[k] = desktop_data->
@@ -4139,7 +4139,7 @@ WorkSpaceRemoved (
 	 {
            desktop_data->desktopWindows[i]->workspace_num  = ws_num;
            XtFree(desktop_data->desktopWindows[i]->workspace_name);
-           desktop_data->desktopWindows[i]->workspace_name = NULL;
+           desktop_data->desktopWindows[i]->workspace_name = nullptr;
            desktop_data->desktopWindows[i]->workspace_name =
                                       XtNewString(workspace_name);
 	 }
@@ -4182,7 +4182,7 @@ FreeUpOldWorkspace(
    int j,numnewfiles,numoldfiles;
 
    if(old_ws_num==-1 || old_index==-1 ||
-      desktop_data->workspaceData[old_index]==NULL) /* Something  is wrong */
+      desktop_data->workspaceData[old_index]==nullptr) /* Something  is wrong */
      return;
    numnewfiles = desktop_data->workspaceData[new_index]->files_selected;
    numoldfiles = desktop_data->workspaceData[old_index]->files_selected;
@@ -4197,7 +4197,7 @@ FreeUpOldWorkspace(
       desktop_data->workspaceData[old_index]->selectedDTWindows[j-numnewfiles];
      }
      XtFree((XtPointer) desktop_data->workspaceData[old_index]->selectedDTWindows);
-      desktop_data->workspaceData[old_index]->selectedDTWindows = NULL;
+      desktop_data->workspaceData[old_index]->selectedDTWindows = nullptr;
      desktop_data->workspaceData[new_index]->files_selected = numnewfiles+numoldfiles;
    }
 
@@ -4217,10 +4217,10 @@ FreeUpOldWorkspace(
    }
    /* Move up the workspaceData */
    XtFree((XtPointer) desktop_data->workspaceData[old_index]);
-    desktop_data->workspaceData[old_index] = NULL;
+    desktop_data->workspaceData[old_index] = nullptr;
    for(j=old_index; j<desktop_data->numWorkspaces;j++)
       desktop_data->workspaceData[j] = desktop_data->workspaceData[j+1];
-   desktop_data->workspaceData[j] = NULL;
+   desktop_data->workspaceData[j] = nullptr;
 }
 /************************************************************************
  *
@@ -4234,8 +4234,8 @@ PutOnWorkspaceHandler(
   struct stat fileInfo;
   char title[256], invalidWorkspace = 0x0;
   int numArgs, i, screen, ws;
-  char * fullName, * fileName = NULL, * dirName = NULL, * workspace = NULL;
-  char * requestWorkspace = NULL;
+  char * fullName, * fileName = nullptr, * dirName = nullptr, * workspace = nullptr;
+  char * requestWorkspace = nullptr;
 
   fullName = tt_message_file( ttMsg );
 
@@ -4246,9 +4246,9 @@ PutOnWorkspaceHandler(
     return;
   }
 
-  if (NULL != fullName) DtEliminateDots( fullName );
+  if (nullptr != fullName) DtEliminateDots( fullName );
 
-  if(NULL==fullName ||
+  if(nullptr==fullName ||
      (stat(fullName, &fileInfo) != 0 && lstat(fullName, &fileInfo) != 0))
   {
     char *template, *errorMsg, *dialogTitle, *errorName;
@@ -4263,17 +4263,17 @@ PutOnWorkspaceHandler(
 		GETMESSAGE(
 		  28, 13,
 		  "Object:\n\n   %s\n\ndoes not exist in the file system."));
-    if (NULL == fullName)
+    if (nullptr == fullName)
       errorName = "";
     else
       errorName = fullName;
     errorMsg = (char *) XtMalloc(strlen(template) + strlen(errorName) + 1);
     sprintf(errorMsg, template, errorName);
-    _DtMessage(toplevel, dialogTitle, errorMsg, NULL, HelpRequestCB);
+    _DtMessage(toplevel, dialogTitle, errorMsg, nullptr, HelpRequestCB);
 
     XtFree(template);
     XtFree(errorMsg);
-    if (NULL != fullName) tt_free(fullName);
+    if (nullptr != fullName) tt_free(fullName);
     return;
   }
 
@@ -4405,7 +4405,7 @@ PutOnWorkspaceHandler(
       errorMsg = (char *) XtMalloc( strlen( template )
                                     + strlen( title ) + 1 );
       sprintf( errorMsg, template, title );
-      _DtMessage( toplevel, dialogTitle, errorMsg, NULL, HelpRequestCB );
+      _DtMessage( toplevel, dialogTitle, errorMsg, nullptr, HelpRequestCB );
 
       XtFree( errorMsg );
       XtFree( workspace );
@@ -4435,8 +4435,8 @@ PutOnWorkspaceHandler(
 
   desktopWindow->workspace_name = XtNewString( desktop_data->workspaceData[ws]->name );
   desktopWindow->workspace_num = desktop_data->workspaceData[ws]->number;
-  desktopWindow->restricted_directory = NULL;
-  desktopWindow->helpVol = NULL;
+  desktopWindow->restricted_directory = nullptr;
+  desktopWindow->helpVol = nullptr;
   desktopWindow->toolbox = False;
   desktopWindow->view = UNSET_VALUE;
   desktopWindow->order = UNSET_VALUE;
@@ -4444,7 +4444,7 @@ PutOnWorkspaceHandler(
   desktopWindow->positionEnabled = UNSET_VALUE;
 
   desktopWindow->file_view_data = BuildNewOrderlist(
-                              NULL /* @@@ use cached info if possible! */,
+                              nullptr /* @@@ use cached info if possible! */,
                               desktopWindow->iconGadget,
                               home_host_name,
                               desktopWindow->dir_linked_to,
@@ -4473,7 +4473,7 @@ PutOnWorkspaceHandler(
                                  XtWidgetToApplicationContext( toplevel ),
                                  checkBrokenLink * 1000,
                                  TimerEventBrokenLinks,
-                                 NULL );
+                                 nullptr );
   }
 
 }

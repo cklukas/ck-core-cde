@@ -164,10 +164,10 @@ PalItemInfo choice_palitem_rec = {
 
     /* type             */  AB_TYPE_CHOICE,
     /* name             */  "Choice",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  choice_initialize,
     /* is_a_test        */  obj_is_choice,
     /* prop_initialize  */  choice_prop_init,
@@ -232,7 +232,7 @@ choice_initialize(
     items[1] = CATGETS(Dtb_project_catd, 6, 71, "itemB");
     for (i=0; i < XtNumber(items); i++)
     {
-        iobj = obj_create(AB_TYPE_ITEM, NULL);
+        iobj = obj_create(AB_TYPE_ITEM, nullptr);
 	obj_append_child(obj, iobj);
 	obj_set_subtype(iobj, AB_ITEM_FOR_CHOICE);
 	iobj->label_type = AB_LABEL_STRING;
@@ -247,8 +247,8 @@ choice_initialize(
         obj_set_label(iobj, items[i]);
     }
 
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 
@@ -311,12 +311,12 @@ choice_prop_init(
     if (dtb_choice_prop_dialog_initialize(cgen, parent) == 0)
     {
         pcs->prop_sheet = cgen->attrs_ctrlpanel;
-        pcs->current_obj = NULL;
+        pcs->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pcs->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -392,14 +392,14 @@ choice_prop_init(
                 n, item, item_ptr,
                 cgen->layout_cb);
 
-        prop_field_init(&(pcs->row_col_count), NULL,
+        prop_field_init(&(pcs->row_col_count), nullptr,
                 cgen->layout_field, cgen->layout_cb);
 
         /* Position */
         prop_geomfield_init(&(pcs->pos), cgen->pos_label,
                 cgen->x_field_label, cgen->x_field,
                 cgen->y_field_label, cgen->y_field,
-                NULL, NULL, NULL, NULL,
+                nullptr, nullptr, nullptr, nullptr,
                 cgen->pos_cb);
 
         /* Initial State */
@@ -481,7 +481,7 @@ choice_prop_init(
 		j, item2, item2_val,/* Edit */
 		&(pcs->item_label), &(pcs->item_label_type), 
 		cgen->graphic_hint3,
-		NULL, NULL, NULL, &(pcs->item_state), NULL,
+		nullptr, nullptr, nullptr, &(pcs->item_state), nullptr,
 		&(pcs->current_obj));
 
         prop_changebars_cleared(pcs->prop_sheet);
@@ -489,7 +489,7 @@ choice_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 static int
@@ -510,7 +510,7 @@ choice_prop_clear(
 {
     PropChoiceSettingsRec	*pcs = &(prop_choice_settings_rec[type]);
 
-    if (pcs->current_obj == NULL)
+    if (pcs->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -546,7 +546,7 @@ choice_prop_clear(
     /* Clear Items */
     prop_item_editor_clear(&(pcs->items));
 
-    pcs->current_obj = NULL;
+    pcs->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -565,9 +565,9 @@ choice_prop_load(
     AB_CHOICE_TYPE		ctype;
     BOOL                        load_all = (loadkey & LoadAll);
  
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pcs->current_obj != NULL)
+        if (pcs->current_obj != nullptr)
             obj = pcs->current_obj;
         else
             return ERROR;
@@ -588,7 +588,7 @@ choice_prop_load(
 	prop_options_set_value(&(pcs->label_pos), (XtPointer)obj_get_label_position(obj), False);
 
 	/* Load Label */
-	prop_setup_label_field(&(pcs->label), NULL,
+	prop_setup_label_field(&(pcs->label), nullptr,
 				obj->label_type, obj_get_label(obj), AB_LINE_UNDEF);
 	/* Load Choice Type */
 	ctype = obj_get_choice_type(obj);
@@ -734,7 +734,7 @@ choice_prop_apply(
 
         /* Need to also reset the Item's colors also */
         for (trav_open(&trav, pcs->current_obj, AB_TRAV_ITEMS);
-            (item = trav_next(&trav)) != NULL; )
+            (item = trav_next(&trav)) != nullptr; )
         {
             abobj_reset_colors(item, reset_bg, reset_fg);
         }
@@ -837,7 +837,7 @@ typeCB(
     AB_PROP_TYPE	type = (AB_PROP_TYPE)clientdata;
     AB_CHOICE_TYPE      choice_type = AB_CHOICE_UNDEF;
 
-    XtVaGetValues(item, XmNuserData, &choice_type, NULL);
+    XtVaGetValues(item, XmNuserData, &choice_type, nullptr);
     setup_type_settings(type, choice_type);
 }
 
@@ -874,11 +874,11 @@ prop_choice_obj_destroy_CB(ObjEvDestroyInfo destroyInfo)
 	pcs = &(prop_choice_settings_rec[i]);
 
 	if (pcs->current_obj == doomedObj)
-	    pcs->current_obj = NULL;
+	    pcs->current_obj = nullptr;
 	if (pcs->items.current_item == doomedObj)
-	    pcs->items.current_item = NULL;
+	    pcs->items.current_item = nullptr;
 	if (pcs->items.clipboard_item == doomedObj)
-	    pcs->items.clipboard_item = NULL;
+	    pcs->items.clipboard_item = nullptr;
     }
     return 0;
 }

@@ -107,11 +107,11 @@ Status GetStandardProperties(
   int				actFormat;
   unsigned long			bytesAfter;
   unsigned long 		nitems;
-  unsigned char 		*data = NULL;
+  unsigned char 		*data = nullptr;
 
   *argc = 0;
-  *argv = NULL;
-  *clientMachine = NULL;
+  *argv = nullptr;
+  *clientMachine = nullptr;
   *xsmpClient = False;
 
   /*
@@ -130,7 +130,7 @@ Status GetStandardProperties(
       {
 	  ClientRecPtr		pClient;
 
-	  for (pClient = connectedList; pClient != NULL; 
+	  for (pClient = connectedList; pClient != nullptr; 
 	       pClient = pClient->next) {
 	       if (pClient->clientId && !strcmp ((char *) data, pClient->clientId)) {
 		   pClient->screenNum = screen;
@@ -158,7 +158,7 @@ Status GetStandardProperties(
   {
       if (*argv)
           XFreeStringList(*argv);
-      *argv = NULL;
+      *argv = nullptr;
       *argc = 0;
       return 0;
   }

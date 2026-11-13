@@ -259,7 +259,7 @@ static  const char    *FontResources[] =
     "*.10.*.*.*.*.UTF-8: -dt-interface user-medium-r-normal-m*-*-*-*-*-*-*-*-*:",
     "*.12.*.*.*.*.UTF-8: -dt-interface user-medium-r-normal-l*-*-*-*-*-*-*-*-*:",
     "*.14.*.*.*.*.UTF-8: -dt-interface user-medium-r-normal-xl*-*-*-*-*-*-*-*-*:",
-    NULL,
+    nullptr,
   };
 
 #define	GROW_SIZE	5
@@ -273,8 +273,8 @@ static	XrmBinding	FontBindings[_DtHelpFontQuarkNumber] =
           XrmBindLoosely, XrmBindLoosely, XrmBindLoosely };
 
 static	DtHelpDAFSMetrics  DefaultMetrics = { FALSE, { 0, 0 } };
-static	DtHelpDAFontInfo   DefFontInfo    = { NULL, NULL, NULL, NULL, NULL,
-					NULL, 0, NULL, 0, 0, 0, 0, 0};
+static	DtHelpDAFontInfo   DefFontInfo    = { nullptr, nullptr, nullptr, nullptr, nullptr,
+					nullptr, 0, nullptr, 0, 0, 0, 0, 0};
 
 /******************************************************************************
  *
@@ -301,7 +301,7 @@ SaveFontStruct (
     if (font_info->struct_cnt >= font_info->max_structs)
       {
 	font_info->max_structs += GROW_SIZE;
-        if (font_info->font_structs != NULL)
+        if (font_info->font_structs != nullptr)
             font_info->font_structs = (XFontStruct **) realloc (
 			    ((char *) font_info->font_structs),
 			(sizeof (XFontStruct *) * font_info->max_structs));
@@ -330,7 +330,7 @@ SaveFontSet (
     if (font_info->set_cnt >= font_info->max_sets)
       {
 	font_info->max_sets += GROW_SIZE;
-        if (font_info->font_sets != NULL)
+        if (font_info->font_sets != nullptr)
           {
 	    font_info->font_sets = (XFontSet *) realloc (
 				((char *) font_info->font_sets),
@@ -375,8 +375,8 @@ LoadFont (
     int		 len;
     char	*junk;
     char	*strPtr;
-    char	**missingFontSet = NULL;
-    XFontStruct	*fontStruct = NULL;
+    char	**missingFontSet = nullptr;
+    XFontStruct	*fontStruct = nullptr;
     XFontSet     fontSet;
 
     strPtr = font_string;
@@ -429,7 +429,7 @@ LoadFont (
     if (colon == False)
       {
 	fontStruct = XLoadQueryFont (dpy, font_string);
-	if (fontStruct != NULL)
+	if (fontStruct != nullptr)
 	  {
 	    *ret_index =  SaveFontStruct (fontStruct, font_info);
 	    found      = True;
@@ -439,8 +439,8 @@ LoadFont (
       {
 	*junk = '\0';
 	fontSet = XCreateFontSet (dpy, font_string, &missingFontSet,
-				&len, NULL);
-	if (fontSet != NULL)
+				&len, nullptr);
+	if (fontSet != nullptr)
 	  {
 	    /*
 	     * want the font sets to go from -1 to -n because 0 is
@@ -508,7 +508,7 @@ __DtHelpFontIndexGet (
 	/*
 	 * Check my parent's data base for an XLFD spec.
 	 */
-	fontSpec = NULL;
+	fontSpec = nullptr;
 	if (XrmQGetResource (XrmGetDatabase(dpy), xrm_list, xrm_list,
 						    &retType, &retValue))
 	  {
@@ -777,7 +777,7 @@ __DtHelpFontDatabaseInit (
     /*
      * if the string_font is null, used the default user's font for strings.
      */
-    if (string_font == NULL)
+    if (string_font == nullptr)
       {
 /*
  * WARNING...what if the user_font is null? And what type is it?
@@ -859,7 +859,7 @@ __DtHelpFontStructGet (
     if (font_index > -1 && font_index < font_info.struct_cnt)
 	return font_info.font_structs[font_index];
 
-    return NULL;
+    return nullptr;
 }
 
 /******************************************************************************
@@ -886,7 +886,7 @@ __DtHelpFontSetGet (
 	    return font_info.font_sets[font_index];
       }
 
-    return NULL;
+    return nullptr;
 }
 
 /******************************************************************************
@@ -1026,13 +1026,13 @@ _DtHelpGetExactFontIndex (
 #define	REALLOC_INCR	10
 #endif
     nameList = fontInfo->exact_fonts;
-    if (NULL != nameList)
+    if (nullptr != nameList)
       {
-        for (i = 0; NULL != *nameList && strcmp(*nameList, xlfd_spec); i++)
+        for (i = 0; nullptr != *nameList && strcmp(*nameList, xlfd_spec); i++)
 	    nameList++;
       }
 
-    if (NULL != nameList && NULL != *nameList)
+    if (nullptr != nameList && nullptr != *nameList)
       {
 	fontIndex = fontInfo->exact_idx[i];
 	result = 0;
@@ -1043,7 +1043,7 @@ _DtHelpGetExactFontIndex (
 	 * make a copy of the font spec
 	 */
 	xlfd_spec = strdup(xlfd_spec);
-	if (NULL != xlfd_spec)
+	if (nullptr != xlfd_spec)
 	  {
 	    /*
 	     * make room in the index list first, so that it never ends up
@@ -1051,41 +1051,41 @@ _DtHelpGetExactFontIndex (
 	     */
 	    int *newIdx = fontInfo->exact_idx;
 
-	    if (NULL == newIdx)
+	    if (nullptr == newIdx)
 		newIdx = (int *) malloc(sizeof(int)*REALLOC_INCR);
 	    else if ((i + 1) % REALLOC_INCR == 0)
 	      {
 		if ((size_t) i + 1 + REALLOC_INCR > SIZE_MAX / sizeof(int))
-		    newIdx = NULL;
+		    newIdx = nullptr;
 		else
 		    newIdx = (int *) realloc(fontInfo->exact_idx,
 				    sizeof(int) * (i + 1 + REALLOC_INCR));
 	      }
 
-	    if (NULL != newIdx)
+	    if (nullptr != newIdx)
 		fontInfo->exact_idx = newIdx;
 	    else
 	      {
 		free(xlfd_spec);
-		xlfd_spec = NULL;
+		xlfd_spec = nullptr;
 	      }
 
 	    /*
 	     * now save it away for later tests.
 	     */
-	    if (NULL != xlfd_spec)
+	    if (nullptr != xlfd_spec)
 	      {
 		fontInfo->exact_fonts = (char **) _DtHelpCeAddPtrToArray(
 					    (void **)fontInfo->exact_fonts,
 					    (void *) xlfd_spec);
-		if (NULL == fontInfo->exact_fonts)
+		if (nullptr == fontInfo->exact_fonts)
 		  {
 		    free(xlfd_spec);
-		    xlfd_spec = NULL;
+		    xlfd_spec = nullptr;
 		  }
 	      }
 
-	    if (NULL != xlfd_spec)
+	    if (nullptr != xlfd_spec)
 		  {
 		    char       buffer[10];
 		    XrmValue   retValue;

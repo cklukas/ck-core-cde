@@ -275,9 +275,9 @@ WillingMsg( void )
      */
     f = popen ("uptime | awk '{printf(\"%s %-.5s  load: %.3s, %.3s, %.3s\","
 	       "$(NF-6),$(NF-5),$(NF-2),$(NF-1),$NF)}'", "r");
-    if (f != (FILE *) NULL) {
-	if (fgets(linebuf,sizeof(linebuf),f) != NULL) {
-	    if ( (cp = strchr(linebuf,'\n')) != NULL)
+    if (f != (FILE *) nullptr) {
+	if (fgets(linebuf,sizeof(linebuf),f) != nullptr) {
+	    if ( (cp = strchr(linebuf,'\n')) != nullptr)
 		*cp = '\0';
 
 	    if (strlen(linebuf) > 10) 	/* seems reasonable? */

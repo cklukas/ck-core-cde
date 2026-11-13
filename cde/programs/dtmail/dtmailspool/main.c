@@ -188,7 +188,7 @@ reset_signals(void)
     int signo;
 
     sigemptyset(&none);
-    if (sigprocmask(SIG_SETMASK, &none, NULL) != 0)
+    if (sigprocmask(SIG_SETMASK, &none, nullptr) != 0)
 	return -1;
     memset(&action, 0, sizeof action);
     sigemptyset(&action.sa_mask);
@@ -196,7 +196,7 @@ reset_signals(void)
     for (signo = 1; signo < 64; signo++) {
 	if (signo == SIGKILL || signo == SIGSTOP)
 	    continue;
-	if (sigaction(signo, &action, NULL) != 0 && errno != EINVAL)
+	if (sigaction(signo, &action, nullptr) != 0 && errno != EINVAL)
 	    return -1;
     }
     /* A write to a closed connection is an error, not a signal; a limit on
@@ -204,23 +204,23 @@ reset_signals(void)
      * of the helper in the middle of a request; the signals of a terminal
      * are for the mailer, which has locks to release through the helper. */
     action.sa_handler = SIG_IGN;
-    if (sigaction(SIGPIPE, &action, NULL) != 0
-	|| sigaction(SIGXFSZ, &action, NULL) != 0
-	|| sigaction(SIGXCPU, &action, NULL) != 0
-	|| sigaction(SIGINT, &action, NULL) != 0
-	|| sigaction(SIGQUIT, &action, NULL) != 0
-	|| sigaction(SIGHUP, &action, NULL) != 0)
+    if (sigaction(SIGPIPE, &action, nullptr) != 0
+	|| sigaction(SIGXFSZ, &action, nullptr) != 0
+	|| sigaction(SIGXCPU, &action, nullptr) != 0
+	|| sigaction(SIGINT, &action, nullptr) != 0
+	|| sigaction(SIGQUIT, &action, nullptr) != 0
+	|| sigaction(SIGHUP, &action, nullptr) != 0)
 	return -1;
     /* A SIGTERM ends the helper. It is blocked except while the helper waits
      * for a request, where it interrupts the wait (no SA_RESTART), so that it
      * can neither be lost between a test and a wait nor cut a request. */
     action.sa_handler = note_signal;
-    if (sigaction(SIGTERM, &action, NULL) != 0)
+    if (sigaction(SIGTERM, &action, nullptr) != 0)
 	return -1;
     sigemptyset(&waiting_mask);
     sigemptyset(&terminate);
     sigaddset(&terminate, SIGTERM);
-    return sigprocmask(SIG_BLOCK, &terminate, NULL);
+    return sigprocmask(SIG_BLOCK, &terminate, nullptr);
 }
 
 /* The limits that the mailer set for itself are not the helper's: it has
@@ -257,7 +257,7 @@ wait_readable(int sock)
 	    return 1;
 	FD_ZERO(&readable);
 	FD_SET(sock, &readable);
-	n = pselect(sock + 1, &readable, NULL, NULL, NULL, &waiting_mask);
+	n = pselect(sock + 1, &readable, nullptr, nullptr, nullptr, &waiting_mask);
 	if (n >= 0 || errno != EINTR)
 	    return 0;
     }
@@ -266,14 +266,14 @@ wait_readable(int sock)
 static int
 name_of_user(uid_t uid, char *name, size_t size)
 {
-    struct passwd entry, *found = NULL;
+    struct passwd entry, *found = nullptr;
     size_t length = 1024;
     char *buffer;
     int result;
 
     while (length <= 65536) {
 	buffer = malloc(length);
-	if (buffer == NULL)
+	if (buffer == nullptr)
 	    return -1;
 	result = getpwuid_r(uid, &entry, buffer, length, &found);
 	if (result == ERANGE) {
@@ -281,8 +281,8 @@ name_of_user(uid_t uid, char *name, size_t size)
 	    length *= 4;
 	    continue;
 	}
-	if (result != 0 || found == NULL || found->pw_uid != uid
-	    || found->pw_name == NULL || strlen(found->pw_name) >= size
+	if (result != 0 || found == nullptr || found->pw_uid != uid
+	    || found->pw_name == nullptr || strlen(found->pw_name) >= size
 	    || !dtsp_valid_user_name(found->pw_name)) {
 	    free(buffer);
 	    return -1;
@@ -302,14 +302,14 @@ name_of_user(uid_t uid, char *name, size_t size)
 static int
 login_exists(const char *name)
 {
-    struct passwd entry, *found = NULL;
+    struct passwd entry, *found = nullptr;
     size_t length = 1024;
 
     while (length <= 65536) {
 	char *buffer = malloc(length);
 	int result;
 
-	if (buffer == NULL)
+	if (buffer == nullptr)
 	    return -1;
 	result = getpwnam_r(name, &entry, buffer, length, &found);
 	free(buffer);
@@ -318,7 +318,7 @@ login_exists(const char *name)
 	    continue;
 	}
 	if (result == 0)
-	    return found != NULL;
+	    return found != nullptr;
 	/* the values that POSIX allows for "there is no such user" */
 	if (result == ENOENT || result == ESRCH || result == EBADF
 	    || result == EPERM)
@@ -414,7 +414,7 @@ reply(int sock, uint32_t status, const unsigned char *payload, uint32_t length,
 static int
 bad_request(int sock)
 {
-    (void) dtsp_send(sock, DTSP_BAD_REQUEST, NULL, 0, -1);
+    (void) dtsp_send(sock, DTSP_BAD_REQUEST, nullptr, 0, -1);
     return EXIT_PROTOCOL;
 }
 
@@ -479,7 +479,7 @@ handle(struct dtsp_spool *spool, int sock, const struct dtsp_frame *request)
 	call.operation = request->code;
 	if (request->code == DTSP_OP_LOCK_TRY
 	    && dtsp_random_suffix(call.suffix) != 0)
-	    return reply(sock, EIO, NULL, 0, -1);
+	    return reply(sock, EIO, nullptr, 0, -1);
 	status = with_group(run_lock, &call);
 	dtsp_put32(payload, call.age);
 	return reply(sock, status, payload, status == DTSP_BUSY ? 4 : 0, -1);
@@ -496,7 +496,7 @@ handle(struct dtsp_spool *spool, int sock, const struct dtsp_frame *request)
 	    return bad_request(sock);
 	call.spool = spool;
 	call.operation = DTSP_OP_LOCK_BREAK;
-	return reply(sock, with_group(run_lock, &call), NULL, 0, -1);
+	return reply(sock, with_group(run_lock, &call), nullptr, 0, -1);
     }
 
     case DTSP_OP_TEMP_CREATE:
@@ -514,9 +514,9 @@ handle(struct dtsp_spool *spool, int sock, const struct dtsp_frame *request)
 	call.fd = -1;
 	if (request->code == DTSP_OP_TEMP_CREATE
 	    && dtsp_random_suffix(call.suffix) != 0)
-	    return reply(sock, EIO, NULL, 0, -1);
+	    return reply(sock, EIO, nullptr, 0, -1);
 	status = with_group(run_temp, &call);
-	result = reply(sock, status, NULL, 0, status == DTSP_OK ? call.fd : -1);
+	result = reply(sock, status, nullptr, 0, status == DTSP_OK ? call.fd : -1);
 	if (call.fd >= 0)
 	    (void) close(call.fd);
 	return result;
@@ -558,7 +558,7 @@ run_discard(void *p)
 int
 main(void)
 {
-    static char *no_environment[] = { NULL };
+    static char *no_environment[] = { nullptr };
     struct dtsp_spool spool;
     struct rlimit no_core = { 0, 0 };
     struct stat sb;

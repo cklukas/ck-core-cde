@@ -103,14 +103,14 @@ Dt_strtok(
       ptr = s1 + Dt_strspn(s1, s2);
 
    /* A Null string pointer has no tokens */
-   if (ptr == NULL)
-      return(NULL);
+   if (ptr == nullptr)
+      return(nullptr);
 
    /* Find out where the first terminator is */
    if ((len = Dt_strcspn(ptr, s2)) <= 0)
    {
       /* No tokens left */
-      return(NULL);
+      return(nullptr);
    }
 
    /* Keep track of where the token started */
@@ -163,14 +163,14 @@ Dt_strtok_r(
       *ptr = s1 + Dt_strspn(s1, s2);
 
    /* A Null string pointer has no tokens */
-   if (*ptr == NULL)
-      return(NULL);
+   if (*ptr == nullptr)
+      return(nullptr);
 
    /* Find out where the first terminator is */
    if ((len = Dt_strcspn(*ptr, s2)) <= 0)
    {
       /* No tokens left */
-      return(NULL);
+      return(nullptr);
    }
 
    /* Keep track of where the token started */
@@ -223,7 +223,7 @@ Dt_strspn(
       return(strspn(s1, s2));
 
    /* A Null string has no spans */
-   if (s1 == NULL)
+   if (s1 == nullptr)
       return(0);
 
    count = 0;
@@ -289,7 +289,7 @@ Dt_strcspn(
       return(strcspn(s1, s2));
 
    /* An empty string has no spans */
-   if (s1 == NULL)
+   if (s1 == nullptr)
       return(0);
 
    count = 0;
@@ -344,8 +344,8 @@ Dt_strchr(
    wchar_t wc;
    char foo[2];
 
-   if (s == NULL)
-      return(NULL);
+   if (s == nullptr)
+      return(nullptr);
 
    /* Use standard libc function if multibyte is not enabled */
    if (!_DtNl_is_multibyte)
@@ -359,7 +359,7 @@ Dt_strchr(
    {
       /* Extract next char from 's'; may be multibyte */
       if ((slen = mbtowc(&schar, s, MB_CUR_MAX)) < 0)
-         return(NULL);
+         return(nullptr);
       s += slen;
 
       /* If we match 'c', then return a pointer to this character */
@@ -368,7 +368,7 @@ Dt_strchr(
    } while (slen > 0);
 
    /* No match was found */
-   return(NULL);
+   return(nullptr);
 }
 
 
@@ -385,12 +385,12 @@ Dt_strrchr(
    wchar_t schar;
    int i;
    int slen;
-   char * last = NULL;
+   char * last = nullptr;
    wchar_t wc;
    char foo[2];
 
-   if (s == NULL)
-      return(NULL);
+   if (s == nullptr)
+      return(nullptr);
 
    /* Use standard libc function if multibyte is not enabled */
    if (!_DtNl_is_multibyte)
@@ -404,7 +404,7 @@ Dt_strrchr(
    {
       /* Extract next char from 's'; may be multibyte */
       if ((slen = mbtowc(&schar, s, MB_CUR_MAX)) < 0)
-         return(NULL);
+         return(nullptr);
       s += slen;
 
       /* If we match 'c', keep track of it, and keep looking */
@@ -429,10 +429,10 @@ Dt_lastChar(
 {
    int len = 0;
 
-   if ((s == NULL) || (*s == '\0'))
+   if ((s == nullptr) || (*s == '\0'))
    {
       *lenptr = 0;
-      *cptr = NULL;
+      *cptr = nullptr;
       return;
    }
 
@@ -450,7 +450,7 @@ Dt_lastChar(
       /*
        * We have to take care of the case when mbtowc() returns -1
        */
-      len = mbtowc(NULL, s, MB_CUR_MAX);
+      len = mbtowc(nullptr, s, MB_CUR_MAX);
       if ( len == -1 )
          len = 1;
       s += len;
@@ -474,7 +474,7 @@ Dt_charCount(
    int count = 0;
    int len;
 
-   if (s == NULL)
+   if (s == nullptr)
       return(0);
 
    if (!_DtNl_is_multibyte)
@@ -627,8 +627,8 @@ _DtGetNthChar(
    int count;
    int len;
 
-   if ((s == NULL) || (n < 0) || (n > Dt_charCount(s)))
-      return(NULL);
+   if ((s == nullptr) || (n < 0) || (n > Dt_charCount(s)))
+      return(nullptr);
 
    count = 0;
    while ((count < n) && (*s))
@@ -678,7 +678,7 @@ _dt_strpbrk(
         }
         cs += len;
     }
-    return(NULL);
+    return(nullptr);
 }
 
 
@@ -716,8 +716,8 @@ _DtGetNthChar(
         char *s,
         int n )
 {
-   if ((s == NULL) || (n < 0) || (n > strlen(s)))
-      return(NULL);
+   if ((s == nullptr) || (n < 0) || (n > strlen(s)))
+      return(nullptr);
 
    return (s + n);
 }

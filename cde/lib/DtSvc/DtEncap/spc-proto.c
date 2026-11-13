@@ -70,8 +70,8 @@ extern SPC_Channel_Ptr spc_activation_list;
 
 /* FILE *SPC_Print_Protocol=NULL; -- now in bmsglob.c */
 
-SPC_Connection_Ptr connection_list = NULL;
-protocol_request_ptr free_protocol_requests = NULL;
+SPC_Connection_Ptr connection_list = nullptr;
+protocol_request_ptr free_protocol_requests = nullptr;
 
 /* Forwards */
 /************/
@@ -110,7 +110,7 @@ void SPC_Reset_Protocol_Ptr (protocol_request_ptr prot,
   prot->seqno        = 0;
   prot->request_type = req;
   prot->channel      = channel;
-  prot->next         = NULL;
+  prot->next         = nullptr;
   memset(dptr->data, (XeChar)' ', REQUEST_HEADER_LENGTH);
 }
 
@@ -155,7 +155,7 @@ SPC_Channel_Ptr SPC_Lookup_Channel(int cid,
   SPC_Channel_Ptr spc;
 
   if(!cid)
-    return(NULL);
+    return(nullptr);
   
   _DtSvcProcessLock();
   for(spc=spc_activation_list; spc; spc=spc->next)
@@ -174,7 +174,7 @@ SPC_Channel_Ptr SPC_Lookup_Channel(int cid,
     }
   
   _DtSvcProcessUnlock();
-  return(NULL);
+  return(nullptr);
 }
 
 /*
@@ -209,7 +209,7 @@ SPC_Connection_Ptr SPC_Lookup_Connection(XeString hostname)
   SPC_Connection_Ptr conn;
 
   _DtSvcProcessLock();
-  for (conn = connection_list; conn != NULL; conn = conn->next) {
+  for (conn = connection_list; conn != nullptr; conn = conn->next) {
 
     /* Look for a connection with the same hostname */
       if (!strcmp(conn->hostname, hostname)) {
@@ -231,7 +231,7 @@ SPC_Connection_Ptr SPC_Lookup_Connection_Fd(int fd)
   SPC_Connection_Ptr conn;
 
   _DtSvcProcessLock();
-  for (conn = connection_list; conn != NULL; conn = conn->next) {
+  for (conn = connection_list; conn != nullptr; conn = conn->next) {
 
     /* Look for a connection with the same hostname */
       if (conn->sid==fd) {
@@ -303,7 +303,7 @@ void SPC_Close_Connection(SPC_Connection_Ptr connection)
     if(channel->connection == connection) {
       if(!IS_SPCIO_DELAY_CLOSE(channel->IOMode))
 	SPC_Channel_Terminated(channel);
-      channel->connection = NULL;
+      channel->connection = nullptr;
     }
     channel=next;
   }
@@ -354,7 +354,7 @@ static void SPC_Free_Vector(XeString *vect)
 {
   XeString *p;
 
-  if(vect == NULL)
+  if(vect == nullptr)
     return;
   for(p = vect; *p; p++)
     free(*p);
@@ -542,7 +542,7 @@ protocol_request_ptr SPC_Read_Protocol(SPC_Connection_Ptr connection)
   if(!connection->connected)
     return(SPC_ERROR);
   
-  if((prot=SPC_New_Protocol_Ptr(NULL, 0, 0))==SPC_ERROR) {
+  if((prot=SPC_New_Protocol_Ptr(nullptr, 0, 0))==SPC_ERROR) {
     SPC_Close_Connection(connection);
     return(SPC_ERROR);
   }
@@ -614,7 +614,7 @@ protocol_request_ptr  SPC_Filter_Connection(SPC_Connection_Ptr connection,
 					    int deletep)
 /*----------------------------------------------------------------------+*/
 {
-  SPC_Connection_Ptr connptr=NULL;
+  SPC_Connection_Ptr connptr=nullptr;
   SPC_Channel_Ptr conn_channel;
   XeQueue   tmpqueue;
   protocol_request_ptr retval;
@@ -783,7 +783,7 @@ int SPC_Write_Protocol_Request (SPC_Connection_Ptr connection,
   protocol_request_ptr 	prot_request;
   buffered_data_ptr    	pdata;
   int 			reply_expected;
-  XeString              prot_name=NULL;
+  XeString              prot_name=nullptr;
   
   prot_request=SPC_New_Protocol_Ptr(channel, request, 0);
   pdata=prot_request->dataptr;
@@ -1213,7 +1213,7 @@ int SPC_Dispatch_Protocol(protocol_request_ptr proto,
   req_type=proto->request_type;
   
   /* The table has NREQS entries and the response-only types have none. */
-  if(req_type<0 || req_type>=NREQS || table[req_type] == NULL)
+  if(req_type<0 || req_type>=NREQS || table[req_type] == nullptr)
     return(FALSE);
 
   return((* table[req_type])(proto));
@@ -1271,7 +1271,7 @@ int SPC_Send_Multi_Packet(SPC_Connection_Ptr connection,
   for(counter=0; counter<num_str; counter++) {
     this_str = str_vect[counter];
     
-    if(this_str == NULL)
+    if(this_str == nullptr)
       this_str = NULL_STR;
     if(*this_str == '\0')
       this_str = EMPTY_STR;
@@ -1295,7 +1295,7 @@ int SPC_Send_Multi_Packet(SPC_Connection_Ptr connection,
 		SPC_BUFSIZ-1);
       SPC_Free_Protocol_Ptr(prot);
       if(this_seqno != current_sequence_number)
-	SPC_Write_Protocol_Request(connection, NULL, ABORT);
+	SPC_Write_Protocol_Request(connection, nullptr, ABORT);
       _DtSvcProcessUnlock();
       return(reply_seqno);
     }
@@ -1333,7 +1333,7 @@ char **SPC_Get_Multi_Packet(SPC_Connection_Ptr connection,
   long num_vars, i, packets = 0;
   XeString bufptr, end, cp, nul;
   size_t len;
-  protocol_request_ptr localprot = NULL;
+  protocol_request_ptr localprot = nullptr;
   protocol_request_ptr next;
   char **out;
 
@@ -1349,7 +1349,7 @@ char **SPC_Get_Multi_Packet(SPC_Connection_Ptr connection,
   bufptr = cp + 1;
 
   out = (char **)calloc((size_t)num_vars + 1, sizeof(char *));
-  if(out == NULL) {
+  if(out == nullptr) {
     SPC_Error(SPC_Out_Of_Memory);
     return(SPC_ERROR);
   }
@@ -1358,7 +1358,7 @@ char **SPC_Get_Multi_Packet(SPC_Connection_Ptr connection,
     for(;;) {
       if(bufptr < end) {
 	nul = memchr(bufptr, '\0', end - bufptr);
-	if(nul == NULL)
+	if(nul == nullptr)
 	  goto malformed;
 	len = nul - bufptr;
       } else
@@ -1370,7 +1370,7 @@ char **SPC_Get_Multi_Packet(SPC_Connection_Ptr connection,
 	 are strings to place. */
       if(packets++ > num_vars)
 	goto malformed;
-      next = SPC_Filter_Connection(connection, NULL, request, TRUE);
+      next = SPC_Filter_Connection(connection, nullptr, request, TRUE);
       if(next == SPC_ERROR)
 	goto failed;
       if(localprot)
@@ -1381,13 +1381,13 @@ char **SPC_Get_Multi_Packet(SPC_Connection_Ptr connection,
       end = PDEND(localprot->dataptr);
     }
     if(strcmp(bufptr, NULL_STR) == 0)
-      out[i] = NULL;
+      out[i] = nullptr;
     else {
       if(strcmp(bufptr, EMPTY_STR) == 0)
 	out[i] = strdup("");
       else
 	out[i] = strdup(bufptr);
-      if(out[i] == NULL) {
+      if(out[i] == nullptr) {
 	SPC_Error(SPC_Out_Of_Memory);
 	goto failed;
       }
@@ -1398,7 +1398,7 @@ char **SPC_Get_Multi_Packet(SPC_Connection_Ptr connection,
     SPC_Free_Protocol_Ptr(localprot);
 
   *outlen = (int)num_vars;
-  out[num_vars] = NULL;
+  out[num_vars] = nullptr;
 
   return(out);
 
@@ -1498,11 +1498,11 @@ XeString *sscan_counted_string(XeString buf,
   size_t slots, len;
   int i;
 
-  if(buf == NULL || end == NULL || buf >= end)
+  if(buf == nullptr || end == nullptr || buf >= end)
     return(SPC_ERROR);
 
   nul = memchr(buf, '\0', end - buf);
-  if(nul == NULL)
+  if(nul == nullptr)
     return(SPC_ERROR);
 
   /* The count is hexadecimal digits followed by blanks. */
@@ -1530,16 +1530,16 @@ XeString *sscan_counted_string(XeString buf,
   if(count > slots)
     slots = count;
   vect = (XeString *)calloc(slots + 1, sizeof(XeString));
-  if(vect == NULL)
+  if(vect == nullptr)
     return(SPC_ERROR);
 
   for(i=0; i<(int)count; i++) {
     nul = memchr(bufptr, '\0', end - bufptr);
-    if(nul == NULL)
+    if(nul == nullptr)
       goto failed;
     len = (size_t)(nul - bufptr) + 1;  /* string SIZE (with room for NULL) */
     vect[i] = (XeString)malloc(len);
-    if(vect[i] == NULL)
+    if(vect[i] == nullptr)
       goto failed;
     memcpy(vect[i], bufptr, len);
     bufptr += len;
@@ -1710,7 +1710,7 @@ sscan_device_data(XeString buf,
   XeString *args;
   int i;
 
-  args=sscan_counted_string(buf, end, 6, 0, NULL);
+  args=sscan_counted_string(buf, end, 6, 0, nullptr);
 
   if(args==SPC_ERROR)
     return(SPC_ERROR);
@@ -1763,7 +1763,7 @@ sscan_logfile_data(XeString buf,
   XeString *args;
   int i;
 
-  args=sscan_counted_string(buf, end, 1, 2, NULL);
+  args=sscan_counted_string(buf, end, 1, 2, nullptr);
 
   if(args==SPC_ERROR)
     return(SPC_ERROR);
@@ -1823,7 +1823,7 @@ sscan_register_data(XeString buf,
   XeString *args;
   int i;
 
-  args=sscan_counted_string(buf, end, 2, 2, NULL);
+  args=sscan_counted_string(buf, end, 2, 2, nullptr);
 
   if(args==SPC_ERROR)
     return(SPC_ERROR);
@@ -1889,7 +1889,7 @@ int SPC_Query_Logfile(SPC_Channel_Ptr channel)
 {
   SPC_Connection_Ptr connection=channel->connection;
   protocol_request_ptr prot;
-  XeString junk1 = NULL, junk2 = NULL;
+  XeString junk1 = nullptr, junk2 = nullptr;
   
   SPC_Write_Protocol_Request(connection, channel, QUERY_LOGFILE);
   prot=SPC_Filter_Connection(connection, channel, LOGFILE_REPLY, TRUE);
@@ -1948,13 +1948,13 @@ SPC_Validate_User(XeString hostname,
 {
   XeString username = XeString_NULL;
   uid_t this_uid;
-  XeString proto_ver = NULL;
+  XeString proto_ver = nullptr;
   XeString hostinfo;
   XeString path;
   protocol_request_ptr prot;
   int open_status, chmod_status;
-  XeString logfile = NULL;
-  XeString junk1 = NULL, junk2 = NULL;
+  XeString logfile = nullptr;
+  XeString junk1 = nullptr, junk2 = nullptr;
   XeString connection_hostname=CONNECTION_HOSTNAME(connection);
   _Xgetpwparams	pwd_buf;
   struct passwd * pwd_ret;
@@ -1967,7 +1967,7 @@ SPC_Validate_User(XeString hostname,
    */
   this_uid=getuid();
 
-  if((pwd_ret = _XGetpwuid(this_uid, pwd_buf)) == NULL) {
+  if((pwd_ret = _XGetpwuid(this_uid, pwd_buf)) == nullptr) {
     /* 
      * Very strange situation - the uid isn't in the passwd file 
      */
@@ -1977,12 +1977,12 @@ SPC_Validate_User(XeString hostname,
     username=(XeString)(pwd_ret->pw_name);
   }
 
-  SPC_Write_Protocol_Request(connection, NULL, REGISTER, 
+  SPC_Write_Protocol_Request(connection, nullptr, REGISTER, 
 			     username, XeString_Empty, 
 			     SPC_PROTOCOL_VERSION_STR, hostinfo);
 
   
-  prot=SPC_Filter_Connection(connection, NULL, LOGFILE_REPLY, TRUE);
+  prot=SPC_Filter_Connection(connection, nullptr, LOGFILE_REPLY, TRUE);
   if(prot==SPC_ERROR) {
     XeFree(connection_hostname);
     return(SPC_ERROR);
@@ -2027,7 +2027,7 @@ SPC_Validate_User(XeString hostname,
   path=tt_netfile_file(logfile);
   
   if(tt_ptr_error (path) != TT_OK) {
-    SPC_Write_Protocol_Request(connection, NULL, ABORT);
+    SPC_Write_Protocol_Request(connection, nullptr, ABORT);
     SPC_Error(SPC_Register_Netrc,
 	      logfile,
 	      connection_hostname);
@@ -2038,7 +2038,7 @@ SPC_Validate_User(XeString hostname,
 
   open_status=open(path, O_CREAT, S_ISUID);
   if(open_status==ERROR) {
-    SPC_Write_Protocol_Request(connection, NULL, ABORT);
+    SPC_Write_Protocol_Request(connection, nullptr, ABORT);
     SPC_Error(SPC_Register_Open,
 	      path,
 	      connection_hostname);
@@ -2054,7 +2054,7 @@ SPC_Validate_User(XeString hostname,
 
   chmod_status=chmod(path, S_ISUID);
   if(chmod_status==ERROR) {
-    SPC_Write_Protocol_Request(connection, NULL, ABORT);
+    SPC_Write_Protocol_Request(connection, nullptr, ABORT);
     SPC_Error(SPC_Register_Open,
 	      path,
 	      connection_hostname);
@@ -2065,8 +2065,8 @@ SPC_Validate_User(XeString hostname,
     return(SPC_ERROR);
   }
   
-  SPC_Write_Protocol_Request(connection, NULL, REGISTER, logfile, NULL, NULL, NULL);
-  prot=SPC_Filter_Connection(connection, NULL, LOGFILE_REPLY, TRUE);
+  SPC_Write_Protocol_Request(connection, nullptr, REGISTER, logfile, nullptr, nullptr, nullptr);
+  prot=SPC_Filter_Connection(connection, nullptr, LOGFILE_REPLY, TRUE);
 
   close(open_status);
   unlink(path);
@@ -2081,7 +2081,7 @@ SPC_Validate_User(XeString hostname,
    * Free logfile before it gets malloc'd again.
    */
   XeFree(logfile);
-  logfile = NULL;
+  logfile = nullptr;
   if(READ_LOGFILE_REPLY(prot->dataptr, &logfile, &junk1, &junk2) != TRUE) {
     SPC_Free_Protocol_Ptr(prot);
     XeFree(connection_hostname);
@@ -2142,7 +2142,7 @@ int SPC_Get_Termios(protocol_request_ptr prot_request)
     int      i;
 
     _DtSvcProcessLock();
-    if(XeTermioStruct == NULL) {
+    if(XeTermioStruct == nullptr) {
 	XeTermioStruct = (struct termios *)XeMalloc(sizeof(struct termios));
 	/* Fields the peer's string does not set must not be indeterminate. */
 	memset(XeTermioStruct, 0, sizeof(struct termios));
@@ -2256,7 +2256,7 @@ static int SPC_Send_B00_Spawn(SPC_Connection_Ptr connection,
   while(envp && envp[this_elt])
     merged_ptr[num_elts++] = envp[this_elt++];
 
-  merged_ptr[num_elts] = NULL;
+  merged_ptr[num_elts] = nullptr;
   
   retval = SPC_Send_Multi_Packet(connection, prot,
 				 merged_ptr, num_elts,

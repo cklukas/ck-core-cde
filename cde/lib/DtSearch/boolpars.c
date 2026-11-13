@@ -110,12 +110,12 @@ int		parser_invalid_wordcount = 0;
 
 static int	debugging_boolpars =	FALSE;
 static unsigned char
-		*final_permutes =	NULL;
+		*final_permutes =	nullptr;
 static int	last_token_was_boolop =	TRUE;
-static char	*msgbuf =		NULL;
-static UCHAR	*next_lex_char =	NULL;
+static char	*msgbuf =		nullptr;
+static UCHAR	*next_lex_char =	nullptr;
 static int	paren_count =		0;
-static TRUTHTAB	*ttlist =		NULL;
+static TRUTHTAB	*ttlist =		nullptr;
 static int	yyerror_count =		0;
 static size_t	yyleng;		/* same as in lex API */
 static char	*yytext;	/* same as in lex API */
@@ -204,7 +204,7 @@ void	add_syntax_errmsg (int msgno)
 static TRUTHTAB	*creatett (int stemno, int pmsz, unsigned char *permutes)
 {
     TRUTHTAB *newtt = austext_malloc (sizeof(TRUTHTAB) + pmsz + 4,
-	PROGNAME"140", NULL);
+	PROGNAME"140", nullptr);
     memset (newtt, 0, sizeof(TRUTHTAB));
     newtt->stemno = stemno;
     newtt->pmsz = pmsz;
@@ -252,7 +252,7 @@ TRUTHTAB	*copy_final_truthtab (TRUTHTAB *tt)
 {
     memset (&final_truthtab, 0, sizeof(TRUTHTAB));
     if (!final_permutes)
-	final_permutes = austext_malloc (300, PROGNAME"788", NULL);
+	final_permutes = austext_malloc (300, PROGNAME"788", nullptr);
     final_truthtab.pmsz =	tt->pmsz;
     final_truthtab.permutes =	final_permutes;
     memcpy (final_permutes, tt->permutes, final_truthtab.pmsz);
@@ -293,7 +293,7 @@ static TRUTHTAB	*get_stem_truthtab (char *newstem, char *origword)
 		PROGNAME"1513");
 	    DtSearchAddMessage (msgbuf);
 	    saveusr.stemcount--;
-	    return NULL;
+	    return nullptr;
 	}
 	strncpy (saveusr.stems[stemno], newstem, DtSrMAXWIDTH_HWORD);
 	saveusr.stems [stemno] [DtSrMAXWIDTH_HWORD - 1] = 0;
@@ -495,7 +495,7 @@ TRUTHTAB	*boolyac_COLLOC (
 	    "only be positioned between two words."),
 	    PROGNAME"371");
 	DtSearchAddMessage (msgbuf);
-	return NULL;
+	return nullptr;
     }
     if (word1tt->stemno == word2tt->stemno) {
 	sprintf (msgbuf, CATGETS(dtsearch_catd, MS_boolpars, 12,
@@ -503,12 +503,12 @@ TRUTHTAB	*boolyac_COLLOC (
 	    "permitted between identical words."),
 	    PROGNAME"377");
 	DtSearchAddMessage (msgbuf);
-	return NULL;
+	return nullptr;
     }
     sprintf (wordbuf, COLLOC_STEM_FORMAT,
 	word1tt->stemno, word2tt->stemno, colloc_val);
-    if ((newtt = get_stem_truthtab (wordbuf, wordbuf)) == NULL)
-	return NULL;
+    if ((newtt = get_stem_truthtab (wordbuf, wordbuf)) == nullptr)
+	return nullptr;
     freett (word1tt);
     freett (word2tt);
     if (debugging_boolpars) {
@@ -557,13 +557,13 @@ void	yyerror (char *msg) {
  */
 static char	*copy_token (UCHAR *tokenp, size_t toklen)
 {
-    static char		*buf =	NULL;
+    static char		*buf =	nullptr;
     static size_t	bufsz =	0;
     if (toklen > bufsz) {
 	if (buf)
 	    free (buf);
 	bufsz = toklen + (toklen >> 1);	/* 1.5 times size needed */
-	buf = austext_malloc (bufsz + 4, PROGNAME"182", NULL);
+	buf = austext_malloc (bufsz + 4, PROGNAME"182", nullptr);
     }
     strncpy (buf, (char *) tokenp, toklen);
     buf [toklen] = 0;
@@ -772,7 +772,7 @@ GET_ANOTHER_TOKEN:
 	     * ignore the token.
 	     * Otherwise report error and quit now.
 	     */
-	    if (stembufp == NULL) {
+	    if (stembufp == nullptr) {
 		parser_invalid_wordcount++;
 		if (qry_is_all_ANDs)
 		    goto GET_ANOTHER_TOKEN;
@@ -863,10 +863,10 @@ int	boolean_parse (void)
     debugging_boolpars = (usrblk.debug & USRDBG_BOOL);
     if (!msgbuf)
 	msgbuf = austext_malloc (300 + DtSrMAXWIDTH_HWORD,
-		PROGNAME"255", NULL);
+		PROGNAME"255", nullptr);
 
     /* Test for empty query */
-    if (usrblk.query == NULL) {
+    if (usrblk.query == nullptr) {
 EMPTY_QUERY:
 	/* Message #2 is called in two places */
 	sprintf (msgbuf, CATGETS(dtsearch_catd, MS_boolpars, 2,
@@ -919,7 +919,7 @@ EMPTY_QUERY:
 	free (tt);
 	tt = ttnext;
     }
-    ttlist = NULL;
+    ttlist = nullptr;
 
     if (debugging_boolpars || (usrblk.debug & USRDBG_SRCHCMPL)) {
 	print_stems (saveusr.stemcount, saveusr.stems,
@@ -1069,7 +1069,7 @@ int	main	(int argc, char *argv[])
     /* Read command line args */
     process_user_args (argc, argv);
 
-    if (!load_language (&dblk, NULL)) {
+    if (!load_language (&dblk, nullptr)) {
 	fprintf (aa_stderr,
 	    PROGNAME"140 load_language() failed.  Msgs:\n%s\n",
 	    DtSearchGetMessages());
@@ -1084,7 +1084,7 @@ int	main	(int argc, char *argv[])
     printf ("Enter an AusText boolean query.  'q' or '.' to quit.\n"
 	"If first char is '$', words will be stemmed:\n> ");
     fflush (stdout);
-    while (fgets (linebuf, sizeof(linebuf), stdin) != NULL) {
+    while (fgets (linebuf, sizeof(linebuf), stdin) != nullptr) {
 
 	linebuf [sizeof(linebuf) - 1] = 0;
 	if (strcmp (linebuf, ".\n") == 0)

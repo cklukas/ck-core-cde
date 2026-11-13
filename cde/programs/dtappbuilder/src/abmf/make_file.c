@@ -269,7 +269,7 @@ determine_obsd_libs(AbmfLibs libs, ABObj project)
 static STRING
 get_string_for_lib(AbmfLibDesc lib, AB_OS_TYPE osType)
 {
-    STRING	libString = NULL;
+    STRING	libString = nullptr;
 
     switch (lib)
     {
@@ -759,14 +759,14 @@ write_local_libraries(
     int		numLibs = libs->numLibs;
     int		i = 0;
     AbmfLibDesc	lib = LibNone;
-    STRING	libString = NULL;
+    STRING	libString = nullptr;
 
     abio_puts(makeFile, "        LOCAL_LIBRARIES =");
     for (i = 0; i < numLibs; ++i)
     {
 	lib = libs->libs[i];
 	libString = get_string_for_lib(lib, osType);
-	if (libString != NULL)
+	if (libString != nullptr)
 	{
 	    abio_printf(makeFile, " %s", libString);
 	}
@@ -787,7 +787,7 @@ write_ab_params(
     int		numModules = trav_count_cond(project, AB_TRAV_MODULES, obj_is_defined_module);
     int		thisModuleNum = 0;
     AB_TRAVERSAL	trav;
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
 
     abio_printf(makeFile, 
     "\n"
@@ -805,7 +805,7 @@ write_ab_params(
     abio_printf(makeFile, "\t%s \\\n", 
 	abmfP_get_utils_header_file_name(project));
     for (thisModuleNum = 0, trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL;
+	(module = trav_next(&trav)) != nullptr;
 	++thisModuleNum)
     {
 	if (!obj_is_defined(module))
@@ -830,7 +830,7 @@ write_ab_params(
     abio_puts(makeFile, "TARGETS.c = \\\n");
     abio_printf(makeFile, "\t%s \\\n", abmfP_get_utils_c_file_name(project));
     for (thisModuleNum = 0, trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL;
+	(module = trav_next(&trav)) != nullptr;
 	++thisModuleNum)
     {
         if (!obj_is_defined(module))
@@ -870,7 +870,7 @@ write_ab_params(
     abio_puts(makeFile, "TARGETS.c.merged = \\\n");
     abio_printf(makeFile, "\t%s \\\n", abmfP_get_project_c_file_name(project));
     for (thisModuleNum = 0, trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL;
+	(module = trav_next(&trav)) != nullptr;
 	++thisModuleNum)
     {
         if (!obj_is_defined(module))
@@ -902,7 +902,7 @@ write_ab_params(
     abio_printf(makeFile, "\t%s \\\n",
 	cvt_to_obj(abmfP_get_utils_c_file_name(project)));
     for (thisModuleNum = 0, trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL;
+	(module = trav_next(&trav)) != nullptr;
 	++thisModuleNum)
     {
         if (!obj_is_defined(module))
@@ -953,18 +953,18 @@ write_targets(
     File	makeFile = genCodeInfo->code_file;
     STRING	prog = util_get_program_name();
     STRING	projFile = obj_get_file(project);
-    STRING	modFile = NULL;
+    STRING	modFile = nullptr;
     char	modName[MAXPATHLEN+1];
-    ABObj	firstModule = NULL;
-    STRING	firstModuleFileName = NULL;
+    ABObj	firstModule = nullptr;
+    STRING	firstModuleFileName = nullptr;
     char	projFlag[1024];
     AB_TRAVERSAL	moduleTrav;
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     *projFlag = 0;
     *modName = 0;
 
     firstModule = obj_get_child_cond(project, 0, obj_is_module_func);
-    if (firstModule != NULL)
+    if (firstModule != nullptr)
     {
         firstModuleFileName = obj_get_file(firstModule);
     }
@@ -993,7 +993,7 @@ write_targets(
 "\n"
 );
 
-    if (! (obj_is_default(project) && (firstModuleFileName == NULL)) )
+    if (! (obj_is_default(project) && (firstModuleFileName == nullptr)) )
     {
 	if (osType == AB_OS_SUNOS)
             abio_printf(makeFile, "%s + %s + %s + %s: %s\n",
@@ -1033,7 +1033,7 @@ write_targets(
         abmfP_get_project_c_file_name(project));
 
     for (trav_open(&moduleTrav, project, AB_TRAV_MODULES);
-	(module = trav_next(&moduleTrav)) != NULL; )
+	(module = trav_next(&moduleTrav)) != nullptr; )
     {
 	if (!obj_is_defined(module))
 	{

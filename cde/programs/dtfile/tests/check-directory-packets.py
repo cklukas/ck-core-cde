@@ -61,7 +61,7 @@ def main():
         if sys.platform=="darwin":parser.error("--work-dir is required on macOS")
         work=Path.cwd()/"directory-packet-check"
     work=work.resolve();work.mkdir(parents=True,exist_ok=False);(work/"tmp").mkdir()
-    directory_path=source/"Directory.c";directory=directory_path.read_text()
+    directory_path=source/"Directory.c";directory=re.sub(r"\bnullptr\b","NULL",directory_path.read_text())
     if args.baseline_control:
         pattern=re.compile(r"(?m)^FileData[ \t]*\*[ \t\r\n]+FileData2toFileData[ \t\r\n]*\(")
         match=pattern.search(directory)
@@ -72,7 +72,7 @@ def main():
         fixture=(tests/"directory-packets-baseline.c").read_text().replace("/* PRODUCTION_FUNCTION */",definition)
         generated=work/"directory-packets-baseline.c";generated.write_text(fixture)
         binary=work/"directory-packets-baseline";cc=os.environ.get("CC","cc").split()
-        flags=["-std=c11","-O1","-g",f"-fsanitize={args.sanitizers}","-fno-omit-frame-pointer"]
+        flags=["-std=gnu23","-O1","-g",f"-fsanitize={args.sanitizers}","-fno-omit-frame-pointer"]
         env=dict(os.environ,TMPDIR=str(work/"tmp"),LANG="C",LC_ALL="C",
                  ASAN_OPTIONS="detect_leaks=0:abort_on_error=1",
                  UBSAN_OPTIONS="halt_on_error=1:print_stacktrace=1")
@@ -87,7 +87,7 @@ def main():
         print("PASS baseline-negative-length-trigger")
         print(f"Receipt: {work/'result.json'}")
         return
-    desktop=(source/"Desktop.c").read_text();fileop=(source/"FileOp.c").read_text()
+    desktop=re.sub(r"\bnullptr\b","NULL",(source/"Desktop.c").read_text());fileop=re.sub(r"\bnullptr\b","NULL",(source/"FileOp.c").read_text())
     desktop_callback=extract_function(directory,"CheckDesktopPipeCallback")
     desktop_process=extract_function(directory,"CheckDesktopProcess")
     update_all=extract_function(directory,"UpdateAllProcess")
@@ -129,7 +129,7 @@ def main():
     generated=work/"directory-packets.c";generated.write_text(fixture)
     binary=work/"directory-packets"
     cc=os.environ.get("CC","cc").split()
-    flags=["-std=c11","-D_DEFAULT_SOURCE","-Wall","-Wextra","-Werror","-O1","-g"]
+    flags=["-std=gnu23","-D_DEFAULT_SOURCE","-Wall","-Wextra","-Werror","-O1","-g"]
     if args.sanitizers!="none":flags += [f"-fsanitize={args.sanitizers}","-fno-omit-frame-pointer"]
     env=dict(os.environ,TMPDIR=str(work/"tmp"),LANG="C",LC_ALL="C")
     env.setdefault("ASAN_OPTIONS",f"detect_leaks={'0' if sys.platform=='darwin' else '1'}:abort_on_error=1")

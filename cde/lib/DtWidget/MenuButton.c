@@ -213,7 +213,7 @@ static XmPartResource resources[] = {
 	sizeof (XtCallbackList),
 	DtOffset(cascading_callback), 
 	XmRCallback,
-	NULL
+	nullptr
 	},
 	{	
 	DtNsubMenuId, 
@@ -278,10 +278,10 @@ externaldef(xmmenubuttonclassrec)
 	"DtMenuButton",				/* class_name	*/
 	sizeof(DtMenuButtonPart),		/* size of Pulldown widget */
 	ClassInitialize,			/* class init proc */
-	NULL,					/* chained class init */
+	nullptr,					/* chained class init */
 	FALSE,					/* class is not init'ed */
 	Initialize,				/* widget init proc */
-	NULL,					/* init_hook proc */
+	nullptr,					/* init_hook proc */
 	XtInheritRealize,			/* widget realize proc */
 	menuButton_actions,			/* class action table */
 	XtNumber (menuButton_actions),		/* num of actions */
@@ -296,15 +296,15 @@ externaldef(xmmenubuttonclassrec)
 	Resize,					/* class resize proc */
 	Redisplay,				/* expose proc */
 	SetValues,				/* set_value proc */
-	NULL,					/* set_value_hook proc */
+	nullptr,					/* set_value_hook proc */
 	XtInheritSetValuesAlmost,		/* set_value_almost proc */
-	NULL,					/* get_values_hook */
-	NULL,					/* class accept focus proc */
+	nullptr,					/* get_values_hook */
+	nullptr,					/* class accept focus proc */
 	XtVersionDontCheck,			/* current version */
-	NULL,					/* callback offset list */
+	nullptr,					/* callback offset list */
 	menuButton_translations,		/* default translation table */
 	XtInheritQueryGeometry,			/* query geo proc */
-	NULL,				        /* display accelerator*/
+	nullptr,				        /* display accelerator*/
 	(XtPointer)NULL,			/* extension */
 	},
 	{
@@ -313,7 +313,7 @@ externaldef(xmmenubuttonclassrec)
 	XmInheritWidgetProc,			/* border_uhighlight */
 	XtInheritTranslations,			/* translations */
 	ArmAndActivate,				/* arm & activate */
-	NULL,					/* get resources */
+	nullptr,					/* get resources */
 	0,					/* num get_resources */
 	(XtPointer)NULL,			/* extension */
 	},
@@ -321,10 +321,10 @@ externaldef(xmmenubuttonclassrec)
 	XmInheritWidgetProc,			/* set override callback */
 	XmInheritMenuProc,			/* menu procedures       */
 	XtInheritTranslations,			/* menu traversal xlation */
-	NULL,					/* extension */
+	nullptr,					/* extension */
 	},
 	{			/* menu_button class record */
-	    NULL,				/* extension */  
+	    nullptr,				/* extension */  
 	}
 };
 	
@@ -426,7 +426,7 @@ ArmAndActivate(
 	DtMenuButtonWidget mb = (DtMenuButtonWidget) wid ;
 	
 	if(MB_SMENU(mb) == (Widget)NULL	||
-		event == (XEvent*) NULL)
+		event == (XEvent*) nullptr)
 		return;
 
 	if (!_XmIsEventUnique(event))
@@ -478,7 +478,7 @@ Select(
 	arm_and_activate = ((DtMenuButtonClassRec *)(mb->core.widget_class))->
 		primitive_class.arm_and_activate;
 	_DtProcessUnlock();
-	(* arm_and_activate) ((Widget) mb, event, NULL, NULL);
+	(* arm_and_activate) ((Widget) mb, event, nullptr, nullptr);
 }
 
 static void
@@ -497,9 +497,9 @@ Boolean *cont_to_dispatch)
 
 	if(event->xbutton.button==Button1||event->xbutton.button==Button3)
 	{
-		String btnstr=NULL;
-		XtVaGetValues(MB_SMENU(mb), XmNmenuPost, &btnstr, NULL);
-		if (btnstr==NULL || !strcmp(btnstr,"") || 
+		String btnstr=nullptr;
+		XtVaGetValues(MB_SMENU(mb), XmNmenuPost, &btnstr, nullptr);
+		if (btnstr==nullptr || !strcmp(btnstr,"") || 
 		    !strcmp(btnstr, "<Btn3Down>"))
 			event->xbutton.button=Button3;
 		else if (!strcmp(btnstr, "<Btn1Down>"))
@@ -757,7 +757,7 @@ Destroy(
 	
 	if(MB_PVT_SMENU(mb) == TRUE) {
 		XtDestroyWidget((Widget)submenu);
-		MB_SMENU(mb) = NULL;
+		MB_SMENU(mb) = nullptr;
 		MB_PVT_SMENU(mb) = FALSE;
 	}
 }
@@ -803,9 +803,9 @@ SetValues(
 	
 	if (MB_SMENU(new_w) != (Widget)NULL) {
 		XtVaGetValues(MB_SMENU(new_w), XmNrowColumnType, 
-					&rowcol_type, NULL);
+					&rowcol_type, nullptr);
 		if(rowcol_type != XmMENU_POPUP) {
-			MB_SMENU(new_w) = NULL;
+			MB_SMENU(new_w) = nullptr;
 			XtError(MB_SUBMENU);
 		}
 	}
@@ -914,11 +914,11 @@ Initialize(
 	Boolean adjustHeight = FALSE;
 	Widget    parent = XtParent(new_w);
 	unsigned char rowcol_type = 0;
-	char *name = NULL;
+	char *name = nullptr;
 	
 	if ((XmIsRowColumn (parent))) {
 		XtVaGetValues(parent, XmNrowColumnType, 
-			&rowcol_type, NULL);
+			&rowcol_type, nullptr);
 		if(rowcol_type != XmWORK_AREA)
 			XtError(MB_PARENT);
 	}
@@ -927,7 +927,7 @@ Initialize(
 	sprintf(name,"submenu_%s",new_w->core.name);
 	
 	GetTopManager(w_new,&topManager);
-	MB_SMENU(new_w) = XmCreatePopupMenu(topManager, name, NULL, 0);
+	MB_SMENU(new_w) = XmCreatePopupMenu(topManager, name, nullptr, 0);
         /* Remove our passive grab */
 	XtUngrabButton(topManager, RC_PostButton(MB_SMENU(new_w)), AnyModifier);
 

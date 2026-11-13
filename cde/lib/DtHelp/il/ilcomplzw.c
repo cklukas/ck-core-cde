@@ -408,7 +408,7 @@ IL_PRIVATE ilBool _ilCompressLZW (
     format = *pFormat;
     if ((pDes->nSamplesPerPixel > 1) && (pFormat->sampleOrder != IL_SAMPLE_PIXELS)) {
         format.sampleOrder = IL_SAMPLE_PIXELS;
-        if (!ilConvert (pipe, (ilImageDes *)NULL, &format, 0, (ilPtr)NULL))
+        if (!ilConvert (pipe, (ilImageDes *)nullptr, &format, 0, (ilPtr)NULL))
             return FALSE;
         ilGetPipeInfo (pipe, FALSE, pInfo, &des, &format);
         }
@@ -419,7 +419,7 @@ IL_PRIVATE ilBool _ilCompressLZW (
     dstData.producerObject = (ilObject)NULL;
     des.compression = IL_LZW;
     dstData.pDes = &des;
-    dstData.pFormat = (ilImageFormat *)NULL;
+    dstData.pFormat = (ilImageFormat *)nullptr;
     dstData.width = pInfo->width;
     dstData.height = pInfo->height;
     dstData.stripHeight = pSrcData->stripHeight;

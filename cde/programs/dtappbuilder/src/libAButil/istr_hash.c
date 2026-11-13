@@ -60,14 +60,14 @@ HASH * hash_create(void)
     int i,j;
 
     table = (HASH *)malloc(HASHSIZE*sizeof(HASH)); 
-    if(table == NULL)
+    if(table == nullptr)
     { 
         fprintf(stderr,"Error in allocating memory\n");
-        return NULL;
+        return nullptr;
     }
     for(i=0; i< HASHSIZE; i++)
     {
-        table[i].next = NULL;
+        table[i].next = nullptr;
         for (j=0; j < BUCKETSIZE; j++)
             table[i].value[j].value = -1;
     }
@@ -77,7 +77,7 @@ HASH * hash_create(void)
 int hash_destroy(HASH *table)
 {
    free(table);
-   table = NULL;
+   table = nullptr;
    return 1;
 }
 
@@ -90,14 +90,14 @@ insert(HASH *hashtable, ISTRING istring, void *str)
     int i,j;
     HASH *entry;
  
-    if (istring == NULL)
+    if (istring == nullptr)
     {
         fprintf(stderr,
             "ISTR: can't create empty string\n");
-        return NULL;
+        return nullptr;
     }
     hashval = hashing(istring);
-    if ((str_exists = hash_lookup(hashtable, istring )) == NULL)
+    if ((str_exists = hash_lookup(hashtable, istring )) == nullptr)
                /* new entry */  
     {     
         entry = &hashtable[hashval];
@@ -111,7 +111,7 @@ insert(HASH *hashtable, ISTRING istring, void *str)
                     return 1;
             } 
         }
-        while(entry->next != NULL)   /* check next bucket */
+        while(entry->next != nullptr)   /* check next bucket */
         {
             entry = entry->next;
             for (i=0; i< BUCKETSIZE; i++)
@@ -128,14 +128,14 @@ insert(HASH *hashtable, ISTRING istring, void *str)
 /* if get this far, then no space is available in existing bucket, 
    add new bucket */
         new_bucket = (HASH *)malloc (sizeof(HASH));
-        if (new_bucket == NULL)
+        if (new_bucket == nullptr)
         {
             fprintf(stderr,"Error in allocating memory\n");
-            return NULL ;
+            return nullptr ;
         }  
         for(i=1;i<BUCKETSIZE; i++)
             new_bucket->value[i].value = -1;
-        new_bucket->next = NULL;
+        new_bucket->next = nullptr;
         new_bucket->value[0].value = istring;
         new_bucket->value[0].entry = str;
         hash_count++;
@@ -168,11 +168,11 @@ delete(HASH *hashtable, ISTRING istring)
         if (entry->value[i].value == istring)
         {
             entry->value[i].value = -1;
-            entry->value[i].entry = NULL;
+            entry->value[i].entry = nullptr;
             return 1;                     
         } 
     } 
-    while(entry->next != NULL)
+    while(entry->next != nullptr)
     {
         entry = entry->next; 
         for (i =0; i< BUCKETSIZE; i++)
@@ -180,7 +180,7 @@ delete(HASH *hashtable, ISTRING istring)
             if (entry->value[i].value == istring)
             {
                 entry->value[i].value = -1;
-                entry->value[i].entry = NULL;
+                entry->value[i].entry = nullptr;
                 return 1;                     
             } 
         } 
@@ -220,7 +220,7 @@ void
             } 
         } 
     } 
-    while(entry.next != NULL)
+    while(entry.next != nullptr)
     {
         entry = *entry.next; 
         for (i =0; i< BUCKETSIZE; i++)
@@ -232,7 +232,7 @@ void
             }
         } 
     }
-    return NULL;
+    return nullptr;
 }
 
 main()
@@ -263,7 +263,7 @@ for (i=0; i<HASHSIZE; i++)
         if (entry.value[j].value != -1)
             printf("%p  value %p ptr \n",entry.value[j].value,
                    entry.value[j].entry);
-    while(entry.next != NULL)
+    while(entry.next != nullptr)
     {
       entry = *entry.next;
       for (j=0; j<BUCKETSIZE; j++)
@@ -282,7 +282,7 @@ for (i=0; i<HASHSIZE; i++)
         if (entry.value[j].value != -1)
             printf("%p  value %p ptr \n",entry.value[j].value,
                    entry.value[j].entry);
-    while(entry.next != NULL)
+    while(entry.next != nullptr)
     {
       entry = *entry.next;
       for (j=0; j<BUCKETSIZE; j++)
@@ -304,7 +304,7 @@ for (i=0; i<HASHSIZE; i++)
         if (entry.value[j].value != -1)
             printf("%p  value %p ptr \n",entry.value[j].value,
                    entry.value[j].entry);
-    while(entry.next != NULL)
+    while(entry.next != nullptr)
     {
       entry = *entry.next;
       for (j=0; j<BUCKETSIZE; j++)
@@ -330,7 +330,7 @@ for (i=0; i<HASHSIZE; i++)
         if (entry.value[j].value != -1)
             printf("%p  value %p ptr \n",entry.value[j].value,
                    entry.value[j].entry);
-    while(entry.next != NULL)
+    while(entry.next != nullptr)
     {
       entry = *entry.next;
       for (j=0; j<BUCKETSIZE; j++)
@@ -353,7 +353,7 @@ for (i=0; i<HASHSIZE; i++)
         if (entry.value[j].value != -1)
             printf("%p  value %p ptr \n",entry.value[j].value,
                    entry.value[j].entry);
-    while(entry.next != NULL)
+    while(entry.next != nullptr)
     {
       entry = *entry.next;
       for (j=0; j<BUCKETSIZE; j++)
@@ -373,7 +373,7 @@ for (i=0; i<HASHSIZE; i++)
         if (entry.value[j].value != -1)
             printf("%p  value %p ptr \n",entry.value[j].value,
                    entry.value[j].entry);
-    while(entry.next != NULL)
+    while(entry.next != nullptr)
     {
       entry = *entry.next;
       for (j=0; j<BUCKETSIZE; j++)
@@ -398,7 +398,7 @@ for (i=0; i<HASHSIZE; i++)
         if (entry.value[j].value != -1)
             printf("%p  value %p ptr \n",entry.value[j].value,
                    entry.value[j].entry);
-    while(entry.next != NULL)
+    while(entry.next != nullptr)
     {
       entry = *entry.next;
       for (j=0; j<BUCKETSIZE; j++)
@@ -415,7 +415,7 @@ for (i=0; i<HASHSIZE; i++)
         if (entry.value[j].value != -1)
             printf("%p  value %p ptr \n",entry.value[j].value,
                    entry.value[j].entry);
-    while(entry.next != NULL)
+    while(entry.next != nullptr)
     {
       entry = *entry.next;
       for (j=0; j<BUCKETSIZE; j++)

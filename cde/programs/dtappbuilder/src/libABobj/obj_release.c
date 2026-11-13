@@ -246,7 +246,7 @@ obj_destruct_window(ABObj obj)
 int
 obj_destruct_type_specific_info(ABObj obj)
 {
-    int                 (*func) (ABObj obj) = NULL;
+    int                 (*func) (ABObj obj) = nullptr;
     int                 retval = 0;
 
     switch (obj->type)
@@ -339,7 +339,7 @@ obj_destruct_type_specific_info(ABObj obj)
 
     case AB_TYPE_LABEL:
     case AB_TYPE_UNKNOWN:
-	func = NULL;
+	func = nullptr;
 	break;
 
     default:
@@ -347,7 +347,7 @@ obj_destruct_type_specific_info(ABObj obj)
 	break;
     }
 
-    if ((retval >= 0) && (func != NULL))
+    if ((retval >= 0) && (func != nullptr))
     {
 	retval = func(obj);
     }

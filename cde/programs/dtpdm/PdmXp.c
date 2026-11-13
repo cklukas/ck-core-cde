@@ -140,7 +140,7 @@ PdmXpOpen(PdmXp* me,
 	    /*
 	     * set the passed print context on the print display
 	     */
-	    me->context = strtoul(context_str, (char**)NULL, 0);
+	    me->context = strtoul(context_str, (char**)nullptr, 0);
 	    /*
 	     * load the resource DB qualifier
 	     */
@@ -150,7 +150,7 @@ PdmXpOpen(PdmXp* me,
 	{
 #endif /* PRINTING_SUPPORTED */
 	    XCloseDisplay(me->display);
-	    me->display = (Display*)NULL;
+	    me->display = (Display*)nullptr;
 #if 0 && defined(PRINTING_SUPPORTED)
 	}
 #endif /* PRINTING_SUPPORTED */
@@ -188,7 +188,7 @@ PdmXpClose(PdmXp* me)
 	    }
 	}
 	XCloseDisplay(me->display);
-	me->display = NULL;
+	me->display = nullptr;
 #if 0 && defined(PRINTING_SUPPORTED)
 	me->context = (XPContext)NULL;
 #endif /* PRINTING_SUPPORTED */
@@ -277,7 +277,7 @@ PdmXpLoadPool(PdmXp* me, XPAttributes type)
 static const char*
 PdmXpGetQualifier(PdmXp* me)
 {
-    if(me->qualifier == (char*)NULL)
+    if(me->qualifier == (char*)nullptr)
     {
 #if 0 && defined(PRINTING_SUPPORTED)
 	if(PdmXpLoadPool(me, XPPrinterAttr) != (XrmDatabase)NULL)
@@ -399,7 +399,7 @@ PdmXpGetStringValue(PdmXp* me,
     
     pool = PdmXpLoadPool(me, type);
     if(pool == (XrmDatabase)NULL)
-	return (const char*)NULL;
+	return (const char*)nullptr;
 
     res_name = PdmXpBuildResourceName(me, id_att);
     found = XrmGetResource(pool, res_name, res_name, &str_type, &value);
@@ -411,7 +411,7 @@ PdmXpGetStringValue(PdmXp* me,
     if(found)
 	return (const char*)value.addr;
     else
-	return (const char*)NULL;
+	return (const char*)nullptr;
 }
 #endif /* PRINTING_SUPPORTED */
 
@@ -511,7 +511,7 @@ PdmXpUpdateAttributes(PdmXp* me)
 	FILE* fp;
 	struct stat stbuf;
 	int retlen;
-	char* data = NULL;
+	char* data = nullptr;
 	int data_size = 0;
 	XTextProperty text_prop;
 

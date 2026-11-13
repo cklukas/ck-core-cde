@@ -132,8 +132,8 @@ cmfns_description(
 	char	*tmp_buf;
 	char	*head;
 	char	*tail;
-	char	*s = NULL;
-	char	*org = NULL;
+	char	*s = nullptr;
+	char	*org = nullptr;
 	char	len;
 	char	*a_user_in = " (in %s)";
 	char	*a_site_in = " (a Site in %s)";
@@ -149,7 +149,7 @@ cmfns_description(
 	buf[size - 1] = '\0';
 	tmp_buf = strdup(name);
 	head = tmp_buf;
-	if ((tail = strchr(head, DTFNS_SEPARATOR)) == NULL) {
+	if ((tail = strchr(head, DTFNS_SEPARATOR)) == nullptr) {
 		/*
 		 * No colon.  Either one of the special FNS names or
 		 * it is not an FNS name
@@ -174,7 +174,7 @@ cmfns_description(
 	if (strcmp(head, DTFNS_ORG_NAME) == 0) {
 		/* Starts with org:.  Get org */
 		head = tail;
-		if ((tail = strchr(head, DTFNS_SEPARATOR)) == NULL) {
+		if ((tail = strchr(head, DTFNS_SEPARATOR)) == nullptr) {
 			/* just org:orgname */
 			strncpy(buf, head, size);
 			size -= strlen(buf);
@@ -186,7 +186,7 @@ cmfns_description(
 		org = head;
 		head = tail + 1;
 
-		if ((tail = strchr(head, DTFNS_SEPARATOR)) == NULL) {
+		if ((tail = strchr(head, DTFNS_SEPARATOR)) == nullptr) {
 			/*
 		 	 * Hmmm... We have "org:orgname:something" 
 			 * Just return the description for an organization
@@ -210,7 +210,7 @@ cmfns_description(
 	}
 	
 
-	if (s != NULL) {
+	if (s != nullptr) {
 		strncpy(buf, tail, size);
 		len = strlen(buf);
 		size -= len;
@@ -288,11 +288,11 @@ cmfns_lookup_calendar(
 	strncpy(addr_buf, name, addr_size);
 
 	addr_buf[addr_size - 1] = '\0';
-	if ((org = strchr(name_buf, '@')) != NULL) {
+	if ((org = strchr(name_buf, '@')) != nullptr) {
 		/* Either a calendar address or FNS shorthand */
 		*org = '\0';
 		org++;
-		if (gethostbyname(org) != NULL) {
+		if (gethostbyname(org) != nullptr) {
 			/* Old style address.  Just return it */
 			free(name_buf);
 			return 1;
@@ -311,24 +311,24 @@ cmfns_lookup_calendar(
 	types[0] = CMFNS_CALENDAR_ADDR_TYPE;
 	types[1] = "SUNW_calendar";
 	types[2] = "SUNW_cal_deskset";
-	types[3] = NULL;
+	types[3] = nullptr;
 
 	/* Get string bound to calendar service name */
 	rcode = dtfns_lookup_str(fns_name, types,  addr_buf, addr_size,
-			NULL, 0);
+			nullptr, 0);
 
 	if (rcode <= 0) {
 		return rcode;
 	}
 
-	if (strchr(addr_buf, '@') == NULL) {
+	if (strchr(addr_buf, '@') == nullptr) {
 		/*
 		 * Just the location (host) is bound in FNS.  Pull
 		 * the name of the object (user) out of the FNS
 		 * name
 		 */
 		tmp = strdup(addr_buf);
-		if ((p = strstr(fns_name, ":service:")) == NULL) {
+		if ((p = strstr(fns_name, ":service:")) == nullptr) {
 			return -1;
 		}
 
@@ -338,14 +338,14 @@ cmfns_lookup_calendar(
 		sprintf(addr_buf, "%s@%s", p + 1, tmp);
 	}
 
-	if (org != NULL) {
+	if (org != nullptr) {
 		/*
 		 * Crossing organizations. Is host qualified
 		 * by domain?
 		 */
 		p = strchr(addr_buf, '@');
 		p++;
-		if (strchr(p, '.') == NULL) {
+		if (strchr(p, '.') == nullptr) {
 			/*
 			 * Host does not appear to have domain
 			 * name.  Add it
@@ -375,14 +375,14 @@ cmfns_register_calendar(const char *username, const char *location)
 
 	user = strdup(username);
 
-	if ((p = strchr(user, '@')) != NULL) {
+	if ((p = strchr(user, '@')) != nullptr) {
 		*p = '\0';
 	}
 
 	DP(("register_calendar: Generating service name for %s\n", user));
 	/* Expand name to point at a calendar service */
 	rcode = dtfns_service_name(user, DTFNS_USER_NAME,
-		CMFNS_CALENDAR_SERVICE, CMFNS_CALENDAR_TYPE, NULL,
+		CMFNS_CALENDAR_SERVICE, CMFNS_CALENDAR_TYPE, nullptr,
 		buf, sizeof(buf));
 
 	free(user);
@@ -393,7 +393,7 @@ cmfns_register_calendar(const char *username, const char *location)
 	types[0] = CMFNS_CALENDAR_ADDR_TYPE;
 	types[1] = "SUNW_calendar";
 	types[2] = "SUNW_cal_deskset";
-	types[3] = NULL;
+	types[3] = nullptr;
 
 	DP(("register_calendar: Binding %s to %s\n", location, buf));
 	return dtfns_bind_str(buf, CMFNS_CALENDAR_TYPE, types, location);

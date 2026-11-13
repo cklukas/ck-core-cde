@@ -54,7 +54,7 @@ char *ResArr;
   int i, j, Len;
   char Resource[50], Value[50];
     
-    if ((ResFile = fopen("res", "w")) == NULL)
+    if ((ResFile = fopen("res", "w")) == nullptr)
        {LogError("Resource File Creation fail"); return(-1);}
     fprintf(ResFile, "%s*%s: %s\n", TERM_EMU, "ttyModes", ResourceArr[0]);
     fclose(ResFile);
@@ -72,8 +72,8 @@ char *argv[];
    int i;
      
 #ifdef LOG
-if ((TermLog = fopen("term.log", "a")) == NULL) {
-   if ((TermLog = fopen("term.log", "w")) == NULL)
+if ((TermLog = fopen("term.log", "a")) == nullptr) {
+   if ((TermLog = fopen("term.log", "w")) == nullptr)
       {printf("Logfile could not be opened \n"); exit(-1);}
 }
 LogError("****************************************************************************");

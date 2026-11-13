@@ -275,7 +275,7 @@ void InitIconPlacement (WmWorkspaceData *pWS)
 
     if ((pWS->IPData.placementRowY =
 	    (int *)XtMalloc ((pWS->IPData.placementRows+2) * sizeof (int)))
-	== NULL)
+	== nullptr)
     {
 	Warning (((char *)GETMESSAGE(34, 1, "Insufficient memory for icon placement")));
 	wmGD.iconAutoPlace = False;
@@ -283,7 +283,7 @@ void InitIconPlacement (WmWorkspaceData *pWS)
     }
     else if ((pWS->IPData.placementColX =
 		(int *)XtMalloc ((pWS->IPData.placementCols+2) * sizeof (int)))
-	     == NULL)
+	     == nullptr)
     {
 	XtFree ((char *)pWS->IPData.placementRowY);
 	Warning (((char *)GETMESSAGE(34, 2, "Insufficient memory for icon placement")));
@@ -325,7 +325,7 @@ void InitIconPlacement (WmWorkspaceData *pWS)
 
     if ((pWS->IPData.placeList =
 	  (IconInfo *)XtMalloc (pWS->IPData.totalPlaces * sizeof (IconInfo)))
-	== NULL)
+	== nullptr)
     {
 	Warning (((char *)GETMESSAGE(34, 3, "Insufficient memory for icon placement")));
 	XtFree ((char *)pWS->IPData.placementRowY);
@@ -367,7 +367,7 @@ int GetNextIconPlace (IconPlacementData *pIPD)
 
     for (i = 0; i < pIPD->totalPlaces; i++)
     {
-	if (pIPD->placeList[i].pCD == (ClientData *)NULL)
+	if (pIPD->placeList[i].pCD == (ClientData *)nullptr)
 	{
 	    return (i);
 	}
@@ -505,7 +505,7 @@ int FindIconPlace (ClientData *pCD, IconPlacementData *pIPD, int x, int y)
 
     if (place < pIPD->totalPlaces)
     {
-	if (pIPD->placeList[place].pCD == (ClientData *)NULL)
+	if (pIPD->placeList[place].pCD == (ClientData *)nullptr)
 	{
 	return (place);
 	}
@@ -681,7 +681,7 @@ int FindIconPlace (ClientData *pCD, IconPlacementData *pIPD, int x, int y)
 	    }
 
 	    place = CvtIconPositionToPlace (pIPD, altX, altY);
-	    if ((pIPD->placeList[place].pCD) == NULL)
+	    if ((pIPD->placeList[place].pCD) == nullptr)
 	    {
 		return (place);
 	    }
@@ -843,7 +843,7 @@ void PackRootIcons (void)
 	for (iOld = iNew = 0; iOld < ACTIVE_WS->IPData.totalPlaces; 
 	    iOld++, iNew++)
 	{
-	    if (ACTIVE_WS->IPData.placeList[iOld].pCD == NULL)
+	    if (ACTIVE_WS->IPData.placeList[iOld].pCD == nullptr)
 	    {
 		/* advance to next non-null entry */
 		while (++iOld < ACTIVE_WS->IPData.totalPlaces && 
@@ -866,7 +866,7 @@ void PackRootIcons (void)
 		if (hasActiveText && (pCD == pCD_active))
 		{
 		    /* hide activeIconTextWin first */
-		    HideActiveIconText ((WmScreenData *)NULL);
+		    HideActiveIconText ((WmScreenData *)nullptr);
 		    XMoveWindow (DISPLAY, pWsc->iconFrameWin, pWsc->iconX, 
 			     pWsc->iconY);
 		    UpdateOpenIconIndicator (pCD, False, -1);
@@ -914,7 +914,7 @@ void MoveIconInfo (IconPlacementData *pIPD, int p1, int p2)
     WsClientData *pWsc;
 
     /* only move if destination is empty */
-    if (pIPD->placeList[p2].pCD == NULL)
+    if (pIPD->placeList[p2].pCD == nullptr)
     {
 	pIPD->placeList[p2].pCD = pIPD->placeList[p1].pCD;
 	pIPD->placeList[p2].theWidget = pIPD->placeList[p1].theWidget;
@@ -923,8 +923,8 @@ void MoveIconInfo (IconPlacementData *pIPD, int p1, int p2)
 				pIPD->placeList[p2].pCD);
 	pWsc->iconPlace = p2;
 
-	pIPD->placeList[p1].pCD =  NULL;
-	pIPD->placeList[p1].theWidget = NULL;
+	pIPD->placeList[p1].pCD =  nullptr;
+	pIPD->placeList[p1].theWidget = nullptr;
     }
 }
 

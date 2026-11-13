@@ -73,7 +73,7 @@ typedef struct {
  * Variables global to this module only
  */
 static int savernum;             /* current screen saver number */
-static void *saverstate = NULL;  /* current running screen saver state */
+static void *saverstate = nullptr;  /* current running screen saver state */
 static int firsttime = 1;        /* first call to StartScreenSaver */
 
 /*
@@ -141,7 +141,7 @@ StartScreenSaver( void )
    /*
     * Load actions database.
     */
-    ProcessReloadActionsDatabase(NULL);
+    ProcessReloadActionsDatabase(nullptr);
     firsttime = 0;
   }
 
@@ -185,7 +185,7 @@ StopScreenSaver( void )
     * Terminate screen saver.
     */
     _DtSaverStop(smGD.display, saverstate);
-    saverstate = NULL;
+    saverstate = nullptr;
   }
 }
 
@@ -246,11 +246,11 @@ SmSaverParseSaverList(
    tmpStr = (char *)XtMalloc(len + 1);
    memcpy(tmpStr, saverList, len+1);
    token = strtok(tmpStr, tokenSep);
-   while(token != NULL)
+   while(token != nullptr)
    {
      i++;
      bytes += sizeof(char *) + strlen(token) + 1;
-     token = strtok(NULL, tokenSep);
+     token = strtok(nullptr, tokenSep);
    }
 
    pstruct = (SmSaverParseStruct *)XtMalloc(bytes);
@@ -262,12 +262,12 @@ SmSaverParseSaverList(
      pstruct->count = 0;
      p = (char *)(pstruct->saver + i);
 
-     while(token != NULL)
+     while(token != nullptr)
      {
        pstruct->saver[pstruct->count] = p;
        strcpy(pstruct->saver[pstruct->count], token);
        p += strlen(token) + 1;
-       token = strtok(NULL, tokenSep);
+       token = strtok(nullptr, tokenSep);
        pstruct->count++;
      }
    }

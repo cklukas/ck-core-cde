@@ -254,7 +254,7 @@ PrintSetupCreate(
     pSetup->pPad = pPad;
 
     pSetup->dtprintSetup = (Widget) NULL;
-    pSetup->widgets = (psWidgets *) NULL;
+    pSetup->widgets = (psWidgets *) nullptr;
 
     /*
      * Get the current default values for the app-specific printing options.
@@ -276,7 +276,7 @@ PrintSetupCreate(
 void
 PrintSetupDestroy(PrintSetup *pSetup)
 {
-    if (pSetup == NULL) return;
+    if (pSetup == nullptr) return;
 
     if (pSetup->docName)
       free(pSetup->docName);
@@ -292,7 +292,7 @@ PrintSetupDestroy(PrintSetup *pSetup)
 void
 PrintSetupDisplay(PrintSetup *pSetup)
 {
-    if (pSetup == NULL) return;
+    if (pSetup == nullptr) return;
 
     /*
      * Initialize the print setup Ui.
@@ -310,8 +310,8 @@ PrintSetupDisplay(PrintSetup *pSetup)
 void
 PrintSetupHide(PrintSetup *pSetup)
 {
-    if (pSetup == NULL) return;
-    if (pSetup->dtprintSetup == NULL) return;
+    if (pSetup == nullptr) return;
+    if (pSetup->dtprintSetup == nullptr) return;
     XtUnmanageChild(pSetup->dtprintSetup);
     XtUnmapWidget(pSetup->dtprintSetup);
 }
@@ -326,7 +326,7 @@ PrintSetupGetHdrFtrSpec(PrintSetup *pSetup, _DtPrintHdrFtrEnum which)
 {
     PrintStringTypeEnum	rtn;
 
-    if (pSetup == NULL) return PRINT_NONE_STRING_TYPE_ENUM;
+    if (pSetup == nullptr) return PRINT_NONE_STRING_TYPE_ENUM;
     switch (which)
     {
         case DTPRINT_OPTION_HEADER_LEFT:
@@ -355,7 +355,7 @@ PrintSetupGetMarginSpec(PrintSetup *pSetup, _DtPrintMarginEnum which)
 {
     char	*rtn;
 
-    if (pSetup == NULL) return _psDefaultMargin;
+    if (pSetup == nullptr) return _psDefaultMargin;
     switch (which)
     {
         case DTPRINT_OPTION_MARGIN_TOP:
@@ -382,7 +382,7 @@ PrintSetupGetMarginSpec(PrintSetup *pSetup, _DtPrintMarginEnum which)
 Boolean
 PrintSetupGetDefaultPrintData(PrintSetup *pSetup, DtPrintSetupData *pData)
 {
-    if (pSetup == NULL || pData == NULL) return FALSE;
+    if (pSetup == nullptr || pData == nullptr) return FALSE;
     return (DtPRINT_SUCCESS == DtPrintFillSetupData(
 						pSetup->dtprintSetup,
 						pData));
@@ -395,7 +395,7 @@ PrintSetupGetDefaultPrintData(PrintSetup *pSetup, DtPrintSetupData *pData)
 Boolean
 PrintSetupUseWordWrap(PrintSetup *pSetup)
 {
-    if (pSetup == NULL) return TRUE;
+    if (pSetup == nullptr) return TRUE;
     return pSetup->options.wordWrap;
 }
 
@@ -418,12 +418,12 @@ _psGetResourceFileName(PrintSetup *pSetup)
 #define BUFFER_SIZE 256
     extern Widget topLevelWithWmCommand;
     static char	buffer[BUFFER_SIZE];
-    static char	*dtpadrc = NULL;
+    static char	*dtpadrc = nullptr;
     char	*savePath, *saveFile;
 
-    if (dtpadrc != NULL) return XtNewString(dtpadrc);
+    if (dtpadrc != nullptr) return XtNewString(dtpadrc);
 
-    savePath = NULL;
+    savePath = nullptr;
     saveFile = PS_DEFAULT_RESOURCE_FILE;
     if (! DtSessionSavePath(topLevelWithWmCommand, &savePath, &saveFile))
     {
@@ -449,7 +449,7 @@ _psSourceToSetup(PrintSetup *pSetup, Boolean wordWrap)
     char		*dtpadrc;
     PrintOptions	pOption;
 
-    if (pSetup == NULL) return;
+    if (pSetup == nullptr) return;
 
     dtpadrc = _psGetResourceFileName(pSetup);
     database = XtDatabase(XtDisplay(pSetup->parent));
@@ -460,7 +460,7 @@ _psSourceToSetup(PrintSetup *pSetup, Boolean wordWrap)
     XtGetApplicationResources(
 			pSetup->parent, &pOption,
 			_psResources, XtNumber(_psResources),
-			NULL, 0);
+			nullptr, 0);
 
     pSetup->options.footerLeft = pOption.footerLeft;
     pSetup->options.footerRight = pOption.footerRight;
@@ -483,12 +483,12 @@ _psSetupToSource(PrintSetup *pSetup)
     FILE		*fp;
     char		*dtpadrc;
 
-    if (pSetup == NULL) return;
+    if (pSetup == nullptr) return;
     pOption = &pSetup->options;
 
     dtpadrc = _psGetResourceFileName(pSetup);
     fp = fopen(dtpadrc, "wb");
-    if (fp == NULL)
+    if (fp == nullptr)
     {
 	/* TBD:  Error message. */
         fprintf(
@@ -568,14 +568,14 @@ _psSetupToUi(PrintSetup *pSetup)
     Widget		frame, w;
     PrintOptions	*pOption;
 
-    if (pSetup == NULL ||
-	pSetup->dtprintSetup == NULL ||
-	pSetup->widgets == NULL)
+    if (pSetup == nullptr ||
+	pSetup->dtprintSetup == nullptr ||
+	pSetup->widgets == nullptr)
       return;
     pOption = &pSetup->options;
 
     isSet = (pOption->wordWrap) ? XmSET : XmUNSET;
-    XtVaSetValues(pSetup->widgets->wordWrapTB, XmNset, isSet, NULL);
+    XtVaSetValues(pSetup->widgets->wordWrapTB, XmNset, isSet, nullptr);
 
     frame = pSetup->widgets->hdrftrFrame;
     w = _DtPrintHdrFtrFrameEnumToWidget(frame, DTPRINT_OPTION_HEADER_LEFT);
@@ -616,13 +616,13 @@ _psUiToSetup(PrintSetup *pSetup)
     char		*marginSpec;
     Boolean		error = FALSE;
 
-    if (pSetup == NULL ||
-	pSetup->dtprintSetup == NULL ||
-	pSetup->widgets == NULL)
+    if (pSetup == nullptr ||
+	pSetup->dtprintSetup == nullptr ||
+	pSetup->widgets == nullptr)
       return;
     pOption = &pSetup->options;
 
-    XtVaGetValues(pSetup->widgets->wordWrapTB, XmNset, &isSet, NULL);
+    XtVaGetValues(pSetup->widgets->wordWrapTB, XmNset, &isSet, nullptr);
     pOption->wordWrap = (isSet == XmUNSET) ? FALSE : TRUE;
 
     frame = pSetup->widgets->hdrftrFrame;
@@ -643,36 +643,36 @@ _psUiToSetup(PrintSetup *pSetup)
 
     w = _DtPrintMarginFrameEnumToWidget(frame, DTPRINT_OPTION_MARGIN_TOP);
     marginSpec = _DtPrintGetMarginSpec(w);
-    if (pOption->marginTop != NULL)
+    if (pOption->marginTop != nullptr)
       XtFree(pOption->marginTop);
-    if (marginSpec == NULL || strcmp("", marginSpec) == 0)
+    if (marginSpec == nullptr || strcmp("", marginSpec) == 0)
       pOption->marginTop = XtNewString(_psDefaultMargin);
     else
       pOption->marginTop = marginSpec;
 
     w = _DtPrintMarginFrameEnumToWidget(frame, DTPRINT_OPTION_MARGIN_RIGHT);
     marginSpec = _DtPrintGetMarginSpec(w);
-    if (pOption->marginRight != NULL)
+    if (pOption->marginRight != nullptr)
       XtFree(pOption->marginRight);
-    if (marginSpec == NULL || strcmp("", marginSpec) == 0)
+    if (marginSpec == nullptr || strcmp("", marginSpec) == 0)
       pOption->marginRight = XtNewString(_psDefaultMargin);
     else
       pOption->marginRight = marginSpec;
 
     w = _DtPrintMarginFrameEnumToWidget(frame, DTPRINT_OPTION_MARGIN_BOTTOM);
     marginSpec = _DtPrintGetMarginSpec(w);
-    if (pOption->marginBottom != NULL)
+    if (pOption->marginBottom != nullptr)
       XtFree(pOption->marginBottom);
-    if (marginSpec == NULL || strcmp("", marginSpec) == 0)
+    if (marginSpec == nullptr || strcmp("", marginSpec) == 0)
       pOption->marginBottom = XtNewString(_psDefaultMargin);
     else
       pOption->marginBottom = marginSpec;
 
     w = _DtPrintMarginFrameEnumToWidget(frame, DTPRINT_OPTION_MARGIN_LEFT);
     marginSpec = _DtPrintGetMarginSpec(w);
-    if (pOption->marginLeft != NULL)
+    if (pOption->marginLeft != nullptr)
       XtFree(pOption->marginLeft);
-    if (marginSpec == NULL || strcmp("", marginSpec) == 0)
+    if (marginSpec == nullptr || strcmp("", marginSpec) == 0)
       pOption->marginLeft = XtNewString(_psDefaultMargin);
     else
       pOption->marginLeft = marginSpec;
@@ -689,9 +689,9 @@ _psUiSpecsAreValid(PrintSetup *pSetup)
     PrintOptions	*pOption;
     char		*marginSpec;
 
-    if (pSetup == NULL ||
-	pSetup->dtprintSetup == NULL ||
-	pSetup->widgets == NULL)
+    if (pSetup == nullptr ||
+	pSetup->dtprintSetup == nullptr ||
+	pSetup->widgets == nullptr)
       return 0;
     pOption = &pSetup->options;
 
@@ -699,7 +699,7 @@ _psUiSpecsAreValid(PrintSetup *pSetup)
 
     w = _DtPrintMarginFrameEnumToWidget(frame, DTPRINT_OPTION_MARGIN_TOP);
     marginSpec = _DtPrintGetMarginSpec(w);
-    if (marginSpec != NULL && strcmp("", marginSpec) != 0)
+    if (marginSpec != nullptr && strcmp("", marginSpec) != 0)
     {
 	XtEnum	parseError = FALSE;
 
@@ -726,7 +726,7 @@ _psUiSpecsAreValid(PrintSetup *pSetup)
 
     w = _DtPrintMarginFrameEnumToWidget(frame, DTPRINT_OPTION_MARGIN_RIGHT);
     marginSpec = _DtPrintGetMarginSpec(w);
-    if (marginSpec != NULL && strcmp("", marginSpec) != 0)
+    if (marginSpec != nullptr && strcmp("", marginSpec) != 0)
     {
 	XtEnum	parseError = FALSE;
 
@@ -754,7 +754,7 @@ _psUiSpecsAreValid(PrintSetup *pSetup)
 
     w = _DtPrintMarginFrameEnumToWidget(frame, DTPRINT_OPTION_MARGIN_BOTTOM);
     marginSpec = _DtPrintGetMarginSpec(w);
-    if (marginSpec != NULL && strcmp("", marginSpec) != 0)
+    if (marginSpec != nullptr && strcmp("", marginSpec) != 0)
     {
 	XtEnum	parseError = FALSE;
 
@@ -782,7 +782,7 @@ _psUiSpecsAreValid(PrintSetup *pSetup)
 
     w = _DtPrintMarginFrameEnumToWidget(frame, DTPRINT_OPTION_MARGIN_LEFT);
     marginSpec = _DtPrintGetMarginSpec(w);
-    if (marginSpec != NULL && strcmp("", marginSpec) != 0)
+    if (marginSpec != nullptr && strcmp("", marginSpec) != 0)
     {
 	XtEnum	parseError = FALSE;
 
@@ -824,13 +824,13 @@ _psAttachPrintSetupDialog(PrintSetup *pSetup, Editor *pPad)
     unsigned char is_set;
 
 #ifdef REUSE_PRINT_SETUP_DIALOGS
-    if (_psDefaultPrintSetupDialog != NULL)
+    if (_psDefaultPrintSetupDialog != nullptr)
     {
 	/*
 	 * Attempt to reuse the last print setup and print display connection.
 	 */
         pSetup->dtprintSetup = _psDefaultPrintSetupDialog;
-	_psDefaultPrintSetupDialog = NULL;
+	_psDefaultPrintSetupDialog = nullptr;
     }
     else
 #endif
@@ -845,19 +845,19 @@ _psAttachPrintSetupDialog(PrintSetup *pSetup, Editor *pPad)
             char        *filename;
 
 	    filename = strrchr(pSetup->docName, '/');
-	    if (NULL == filename)
+	    if (nullptr == filename)
 	      filename = pSetup->docName;
 	    else
 	      filename++;
             snprintf(path, sizeof(path), "%s/%s.ps", dirname, filename);
-            XtVaSetValues(pSetup->dtprintSetup, DtNfileName, path, NULL);
+            XtVaSetValues(pSetup->dtprintSetup, DtNfileName, path, nullptr);
         }
     }
 
     /*
      * Copy the information about the widgets into the setup.
      */
-    XtVaGetValues(pSetup->dtprintSetup, XmNuserData, &pSetup->widgets, NULL);
+    XtVaGetValues(pSetup->dtprintSetup, XmNuserData, &pSetup->widgets, nullptr);
 
     /*
      * Add the setup-specific callbacks.
@@ -884,18 +884,18 @@ _psAttachPrintSetupDialog(PrintSetup *pSetup, Editor *pPad)
 		(XtPointer) pSetup->setupClosure);
 
     xms = XmStringCreateLocalized(pSetup->docName);
-    XtVaSetValues(pSetup->widgets->docNameLabel, XmNlabelString, xms, NULL);
+    XtVaSetValues(pSetup->widgets->docNameLabel, XmNlabelString, xms, nullptr);
     XmStringFree(xms);
 
     dialog = XtParent(pSetup->widgets->dtprintSetup);
-    if (NULL != dialog && XtIsShell(dialog))
+    if (nullptr != dialog && XtIsShell(dialog))
     {
         titleParent = (char*) GETMESSAGE(7, 2, "Text Editor - ");
         titlePrefix = (char*) GETMESSAGE(14, 23, "Print Setup - ");
         title =
           (char*) XtMalloc(strlen(titleParent) + strlen(titlePrefix) + strlen(pSetup->docName) + 1);
         sprintf(title, "%s%s%s", titleParent, titlePrefix, pSetup->docName);
-        XtVaSetValues(dialog, XmNtitle, title, NULL);
+        XtVaSetValues(dialog, XmNtitle, title, nullptr);
         XtFree(title);
     }
     else
@@ -904,7 +904,7 @@ _psAttachPrintSetupDialog(PrintSetup *pSetup, Editor *pPad)
     }
 
     is_set = (pSetup->options.wordWrap) ? XmSET : XmUNSET;
-    XtVaSetValues(pSetup->widgets->wordWrapTB, XmNset, is_set, NULL);
+    XtVaSetValues(pSetup->widgets->wordWrapTB, XmNset, is_set, nullptr);
 }
 
 
@@ -944,7 +944,7 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
 	widgets->dtprintSetup,
 	DtNworkAreaLocation, DtWORK_AREA_BOTTOM,
 	XmNuserData, widgets,
-	NULL);
+	nullptr);
 
     XtAddCallback(
 		widgets->dtprintSetup,
@@ -964,7 +964,7 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
 				"SetupForm",
 				xmFormWidgetClass,
 				widgets->dtprintSetup,
-				NULL);
+				nullptr);
 		 
     XtAddCallback(
 		widgets->form,
@@ -983,7 +983,7 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
 				XmNleftAttachment, XmATTACH_FORM,
 				XmNtopAttachment, XmATTACH_FORM,
 				XmNlabelString, xms,
-			 	NULL);
+			 	nullptr);
     XmStringFree(xms);
 
     /*
@@ -999,7 +999,7 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
 				XmNrightAttachment, XmATTACH_FORM,
 #endif
 				XmNtopAttachment, XmATTACH_FORM,
-			 	NULL);
+			 	nullptr);
 
     xms = XmStringCreateLocalized(GETMESSAGE(14, 13, "Wrap To Fit"));
     widgets->wordWrapTB = XtVaCreateManagedWidget(
@@ -1012,7 +1012,7 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
 				XmNrightAttachment, XmATTACH_FORM,
 				XmNtopAttachment, XmATTACH_WIDGET,
 				XmNtopWidget, widgets->docLabel,
-				NULL);
+				nullptr);
     XmStringFree(xms);
 
     /*
@@ -1042,7 +1042,7 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, widgets->wordWrapTB,
 		XmNleftAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
     XtManageChild(widgets->hdrftrFrame);
 
     /*
@@ -1054,7 +1054,7 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, widgets->hdrftrFrame,
 		XmNleftAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
     XtManageChild(widgets->marginFrame);
 #else
     /*
@@ -1066,7 +1066,7 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, widgets->wordWrapTB,
 		XmNleftAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
     XtManageChild(widgets->marginFrame);
 
     /*
@@ -1080,7 +1080,7 @@ _psCreatePrintSetupDialog(Widget parent, Editor *pPad)
 		XmNtopWidget, widgets->wordWrapTB,
 		XmNtopWidget, widgets->marginFrame,
 		XmNleftAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
     XtManageChild(widgets->hdrftrFrame);
 #endif
 
@@ -1133,13 +1133,13 @@ _psReleasePrintSetupDialog(PrintSetup *pSetup)
 		(XtPointer) pSetup->setupClosure);
 
 #ifdef REUSE_PRINT_SETUP_DIALOGS
-    if (_psDefaultPrintSetupDialog != NULL)
+    if (_psDefaultPrintSetupDialog != nullptr)
     {
 	/*
 	 * Attempt to reuse the last print setup and print display connection.
 	 */
         XtDestroyWidget(_psDefaultPrintSetupDialog);
-	_psDefaultPrintSetupDialog = NULL;
+	_psDefaultPrintSetupDialog = nullptr;
     }
     _psDefaultPrintSetupDialog = pSetup->dtprintSetup;
 #else
@@ -1175,7 +1175,7 @@ _psPrintSetupDestroyCB(
 {
     psWidgets	*widgets;
 
-    XtVaGetValues(dtprintSetup, XmNuserData, &widgets, NULL);
+    XtVaGetValues(dtprintSetup, XmNuserData, &widgets, nullptr);
     XtFree((XtPointer) widgets);
 }
 

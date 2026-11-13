@@ -123,8 +123,8 @@ _DtCreateMenuSystem(
    int i;
    Arg args[20];
    Widget menubar;
-   Widget lastCascadeBtn = NULL;
-   Widget lastMenuPane = NULL;
+   Widget lastCascadeBtn = nullptr;
+   Widget lastMenuPane = nullptr;
    char lastMenuPaneType = MENU_PANE;
    Boolean firstMenuPane = True;
    Widget child;
@@ -132,12 +132,12 @@ _DtCreateMenuSystem(
    int pulldownIndex = 1;
    int menuPaneIndex = 1;
    int menuBtnIndex = 1;
-   MenuDataProc *menuData = NULL;
+   MenuDataProc *menuData = nullptr;
 
    /* Use our own menu control functions, if none specified */
-   if (setMenuSensitivity == NULL)
+   if (setMenuSensitivity == nullptr)
       setMenuSensitivity = _DtGlobalSetMenuSensitivity;
-   if (restoreMenuSensitivity == NULL)
+   if (restoreMenuSensitivity == nullptr)
       restoreMenuSensitivity = _DtGlobalRestoreMenuSensitivity;
 
    /*  Create the pulldown menu  */
@@ -148,7 +148,7 @@ _DtCreateMenuSystem(
    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM);	n++;
    menubar = XmCreateMenuBar(parent, menuBarName, args, n);
    XtManageChild(menubar);
-   if (getMenuDataProc != NULL)
+   if (getMenuDataProc != nullptr)
    {
       menuData = XtNew(MenuDataProc);
       *menuData = getMenuDataProc;
@@ -196,7 +196,7 @@ _DtCreateMenuSystem(
          {
             if (createSharedComponents || (menuDesc[i].type == MENU_PANE))
             {
-               child = XmCreatePulldownMenu(menubar, menuDesc[i].name, NULL, 0);
+               child = XmCreatePulldownMenu(menubar, menuDesc[i].name, nullptr, 0);
 
                if (firstMenuPane)
                {
@@ -249,7 +249,7 @@ _DtCreateMenuSystem(
             if ((createSharedComponents) || (lastMenuPaneType == MENU_PANE))
             {
                child = XmCreateSeparatorGadget(lastMenuPane, menuDesc[i].name, 
-                                               NULL, 0);
+                                               nullptr, 0);
                XtManageChild(child);
                menuDesc[i].widget = child;
             }

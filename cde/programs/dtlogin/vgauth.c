@@ -195,7 +195,7 @@ PasswordAged( struct passwd *pw )
     char *file;		/* help file name */
     char *command;	/* the /bin/passwd command string */
 
-    if (*pw->pw_age == NULL)
+    if (*pw->pw_age == nullptr)
 	return(0);
 
     first_week = last_week = change_week = (long) a64l(pw->pw_age);
@@ -264,7 +264,7 @@ Verify( char *name, char *passwd )
 
 	    if ((++login_attempts % MAXATTEMPTS) == 0 ) {
 
-		if (p->pw_name == NULL )
+		if (p->pw_name == nullptr )
 		    p = &nouser;
 
 		Audit(p, " Failed login (bailout)", 1);
@@ -444,7 +444,7 @@ PasswordAged(char *name, struct passwd *pw )
   * the 'lastupdate' and 'flags' fields are set by this operation.
   */
   setpwdb(S_READ);
-  if ((pupw = getuserpw(name)) != NULL)
+  if ((pupw = getuserpw(name)) != nullptr)
   {
     upw.upw_lastupdate = pupw->upw_lastupdate;
     upw.upw_flags = pupw->upw_flags;
@@ -533,7 +533,7 @@ Verify( char *name, char *passwd )
 
 	    if ((++login_attempts % MAXATTEMPTS) == 0 ) {
 
-		if (p->pw_name == NULL )
+		if (p->pw_name == nullptr )
 		    p = &nouser;
 
 		Audit(p, " Failed login (bailout)", 1);
@@ -751,7 +751,7 @@ Verify( char *name, char *passwd )
 
 	    if ((++login_attempts % MAXATTEMPTS) == 0 ) {
 
-		if (p->pw_name == NULL )
+		if (p->pw_name == nullptr )
 		    p = &nouser;
 
 		Audit(p, " Failed login (bailout)", 1);

@@ -158,7 +158,7 @@ abobj_tree_instantiate_changes(
 	if (!obj_has_flag(sel.list[i], BeingDestroyedFlag))
 	    abobj_deselect(sel.list[i]);
 	else
-	    sel.list[i] = NULL;
+	    sel.list[i] = nullptr;
     }
     objxm_tree_instantiate_changes(root, &new_widgets);
 
@@ -170,7 +170,7 @@ abobj_tree_instantiate_changes(
 
     /* Reselect previously selected objects */
     for (i=0; i < sel.count; i++)
-	if (sel.list[i] != NULL)
+	if (sel.list[i] != nullptr)
 	    abobj_select(sel.list[i]);
 
 }
@@ -182,7 +182,7 @@ abobj_set_name(
 {
     AB_TRAVERSAL 	trav;
     ABObj		project, module, wp_module, ui_obj;
-    STRING		oldname_copy = NULL;
+    STRING		oldname_copy = nullptr;
     STRING		oldname = obj_get_name(obj);
 
     project = proj_get_project();
@@ -192,14 +192,14 @@ abobj_set_name(
     {
 	if (obj_is_module(obj))
 	{
-	    if (obj_find_by_name_and_type(project, name, AB_TYPE_MODULE) != NULL)
+	    if (obj_find_by_name_and_type(project, name, AB_TYPE_MODULE) != nullptr)
 	    {
 		util_dprintf(1, "abobj_set_name: %s: another module already has name \"%s\"\n",
 			obj_get_name(obj), name);
 	    	return;
 	    }
 	}
-	else if (obj_find_by_name(module, name) != NULL)
+	else if (obj_find_by_name(module, name) != nullptr)
 	{
 	    util_dprintf(1, "abobj_set_name: %s: another object already has name \"%s\"\n",
                         obj_get_name(obj), name);
@@ -228,11 +228,11 @@ abobj_set_name(
 	     * modules should also be marked as dirty.
 	     */
 	    for (trav_open(&trav, obj, AB_TRAV_WINDOWS);
-                (ui_obj= trav_next(&trav)) != NULL; )
+                (ui_obj= trav_next(&trav)) != nullptr; )
 		if (obj_is_popup_win(ui_obj))
 		{
 		    wp_module = obj_get_module(obj_get_win_parent(ui_obj));
-		    if (wp_module != NULL && wp_module != obj)
+		    if (wp_module != nullptr && wp_module != obj)
 		        abobj_set_save_needed(wp_module, TRUE);
 		}
             trav_close(&trav);
@@ -243,7 +243,7 @@ abobj_set_name(
 	     * this dialog, then mark that module as dirty also.
 	     */
 	    wp_module = obj_get_module(obj_get_win_parent(obj));
-            if (wp_module != NULL && wp_module != module)
+            if (wp_module != nullptr && wp_module != module)
                 abobj_set_save_needed(wp_module, TRUE);
 	}
 	else if (obj_is_menu(obj)) /* We must change menu-name field for all owners */
@@ -252,7 +252,7 @@ abobj_set_name(
             ABObj 	 ui_obj;
 
             for (trav_open(&trav, module, AB_TRAV_SALIENT);
-                (ui_obj= trav_next(&trav)) != NULL; )
+                (ui_obj= trav_next(&trav)) != nullptr; )
 		if (util_strcmp(obj_get_menu_name(ui_obj), oldname_copy) == 0)
 		    obj_set_menu_name(ui_obj, name);
 
@@ -266,7 +266,7 @@ abobj_set_name(
 
 	    /* Change name-base of all items to be new obj name */
  	    for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-		(iobj = trav_next(&trav)) != NULL; )
+		(iobj = trav_next(&trav)) != nullptr; )
 		if (obj_is_item(iobj))
 		{
 		    STRING	namebase = prop_item_get_namebase(iobj);
@@ -278,7 +278,7 @@ abobj_set_name(
 	    trav_close(&trav);
 	}
 	/* Make sure all SubObjs also get renamed...*/
-	if (oldname_copy != NULL)
+	if (oldname_copy != nullptr)
 	{
  	    abobj_comp_rename(obj, oldname_copy, obj_get_name(obj));
 	    util_free(oldname_copy);
@@ -306,7 +306,7 @@ abobj_construct_item_name(
     if (util_strcmp(name, prefix) == 0)
         name = ab_ident_from_name_and_label(prefix, "nolabel");
 
-    if (suffix != NULL)
+    if (suffix != nullptr)
     {
      	itemname = strdup(name);
 	full_itemname = ab_ident_from_name_and_label(itemname, suffix);
@@ -326,7 +326,7 @@ abobj_set_item_name(
     STRING      namebase
 )
 {
-    STRING	itemName = NULL;
+    STRING	itemName = nullptr;
 
     itemName = abobj_construct_item_name(prefix, namebase, "item");
     obj_set_unique_name(iobj, itemName);
@@ -397,12 +397,12 @@ abobj_set_menu_name(
     STRING	menuname
 )
 {
-    ABObj	menu_ref = NULL;
+    ABObj	menu_ref = nullptr;
     ABObj	subObj;
     STRING	old_menuname = obj_get_menu_name(obj);
-    STRING	new_menuname = NULL;
+    STRING	new_menuname = nullptr;
 
-    new_menuname = (util_strempty(menuname)? NULL : menuname);
+    new_menuname = (util_strempty(menuname)? nullptr : menuname);
 
     if (util_strcmp(old_menuname, new_menuname) != 0)
     {
@@ -414,7 +414,7 @@ abobj_set_menu_name(
 	subObj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ);
 
 	/* If Menu being deleted or changed, destroy old Menu-reference */
-	if (old_menuname != NULL)
+	if (old_menuname != nullptr)
 	{
 	    menu_ref = objxm_comp_get_subobj(obj, AB_CFG_MENU_OBJ);
 	    if (obj_is_ref(menu_ref))
@@ -426,11 +426,11 @@ abobj_set_menu_name(
 	    /* Menu-items w/submenus need to be CascadeButtons */
 	    obj_set_class_name(subObj, _xmCascadeButton);
 
-	if (new_menuname != NULL)
+	if (new_menuname != nullptr)
 	{
 	    /* Menu-Refs ALWAYS parented off RootObj */
 	    /* Create new Menu-reference */
-	    if (objxm_comp_config_menu_ref(obj) == NULL)
+	    if (objxm_comp_config_menu_ref(obj) == nullptr)
 		if (util_get_verbosity() > 2)
 	    	    fprintf(stderr,"abobj_set_menu_name: couldn't find menu obj: %s\n", new_menuname);
 	}
@@ -465,9 +465,9 @@ abobj_set_accelerator(
 )
 {
     ABObj       subObj;
-    STRING      new_accel = NULL;
+    STRING      new_accel = nullptr;
 
-    new_accel = (util_strempty(accel)? NULL : accel);
+    new_accel = (util_strempty(accel)? nullptr : accel);
 
     if (util_strcmp(obj_get_accelerator(obj), new_accel) != 0)
     {
@@ -490,9 +490,9 @@ abobj_set_mnemonic(
 )
 {
     ABObj	subObj;
-    STRING	new_mnemonic = NULL;
+    STRING	new_mnemonic = nullptr;
 
-    new_mnemonic = (util_strempty(mnemonic)? NULL : mnemonic);
+    new_mnemonic = (util_strempty(mnemonic)? nullptr : mnemonic);
 
     if (util_strcmp(obj_get_mnemonic(obj), new_mnemonic) != 0)
     {
@@ -628,7 +628,7 @@ abobj_set_button_type(
 	obj_set_subtype(obj, type);
 
         if (old_type == AB_BUT_MENU) /* Clear Menu field */
-	    abobj_set_menu_name(obj, NULL);
+	    abobj_set_menu_name(obj, nullptr);
 
 	switch (type)
 	{
@@ -685,7 +685,7 @@ abobj_set_label(
     STRING	  label
 )
 {
-    ABObj	  lblObj  = NULL;  /* Label object */
+    ABObj	  lblObj  = nullptr;  /* Label object */
     STRING	  old_label = XtNewString(obj_get_label(obj));
     AB_LABEL_TYPE old_ltype  = obj->label_type;
     BOOL	  type_change = FALSE;
@@ -720,7 +720,7 @@ abobj_set_label(
 
 	    obj_set_label(obj, label? label : "");
 
-	    if (parent != NULL)
+	    if (parent != nullptr)
 	    {
 		xmitem = XmStringCreateLocalized(obj_get_label(obj));
 	    	pos = obj_get_child_num(obj);
@@ -730,9 +730,9 @@ abobj_set_label(
 		    parent = ui_combobox_get_list_widget(parent);
 
 		if (obj_is_list_item(obj) || obj_is_combo_box_item(obj))
-		    XtVaGetValues(parent, XmNitemCount, &num_items, NULL);
+		    XtVaGetValues(parent, XmNitemCount, &num_items, nullptr);
 		else if (obj_is_spin_box_item(obj))
-		    XtVaGetValues(parent, DtNnumValues, &num_items, NULL);
+		    XtVaGetValues(parent, DtNnumValues, &num_items, nullptr);
 
 		if (pos <= num_items)
 		{
@@ -891,14 +891,14 @@ abobj_set_icon(
         abobj_set_save_needed(obj_get_module(obj), TRUE);
         chg = True;
 
-        obj_set_icon_mask(obj, util_strempty(icon_mask)? NULL : icon_mask);
+        obj_set_icon_mask(obj, util_strempty(icon_mask)? nullptr : icon_mask);
     }
     if (util_strcmp(icon, obj_get_icon(obj)) != 0)
     {
         abobj_set_save_needed(obj_get_module(obj), TRUE);
 	chg = True;
 
-        obj_set_icon(obj, util_strempty(icon)? NULL : icon);
+        obj_set_icon(obj, util_strempty(icon)? nullptr : icon);
     }
 
     if (chg)
@@ -938,9 +938,9 @@ abobj_set_initial_value(
 {
     ABObj       subObj;  /* object */
     STRING	old_strval;
-    STRING	new_strval = NULL;
+    STRING	new_strval = nullptr;
 
-    new_strval = (util_strempty(strval)? NULL : strval);
+    new_strval = (util_strempty(strval)? nullptr : strval);
 
     if (obj_is_text(obj))
     {
@@ -1012,7 +1012,7 @@ abobj_set_orientation(
             int     	old_x, old_y, new_x, new_y, new_width, new_height;
 	    Widget  	widget = objxm_get_widget(subObj);
 
-	    if (widget != NULL)
+	    if (widget != nullptr)
 	    {
             	x_get_widget_rect(widget, &rect);
 
@@ -1329,9 +1329,9 @@ abobj_set_background_color(
 )
 {
     STRING 	oldcolor = obj_get_bg_color(obj);
-    STRING 	newcolor = NULL;
+    STRING 	newcolor = nullptr;
 
-    newcolor = (util_strempty(colorname)? NULL : colorname);
+    newcolor = (util_strempty(colorname)? nullptr : colorname);
 
     if (util_strcmp(oldcolor, newcolor) != 0)
     {
@@ -1349,7 +1349,7 @@ abobj_set_background_color(
 	    ABObj item;
 
 	    for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-                (item= trav_next(&trav)) != NULL; )
+                (item= trav_next(&trav)) != nullptr; )
 		abobj_set_background_color(item, newcolor);
 	    trav_close(&trav);
         }
@@ -1363,9 +1363,9 @@ abobj_set_foreground_color(
 )
 {
     STRING oldcolor = obj_get_fg_color(obj);
-    STRING newcolor = NULL;
+    STRING newcolor = nullptr;
 
-    newcolor = (util_strempty(colorname)? NULL : colorname);
+    newcolor = (util_strempty(colorname)? nullptr : colorname);
 
     if (util_strcmp(oldcolor, newcolor) != 0)
     {
@@ -1383,7 +1383,7 @@ abobj_set_foreground_color(
             ABObj item;
 
             for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-                (item= trav_next(&trav)) != NULL; )
+                (item= trav_next(&trav)) != nullptr; )
                 abobj_set_foreground_color(item, newcolor);
             trav_close(&trav);
         }
@@ -1449,10 +1449,10 @@ get_size_params(
     widget = objxm_get_widget(*szObjPtr);
 
     /* If widget has an Xt border, account for it */
-    if (*szObjPtr != NULL && widget != NULL)
+    if (*szObjPtr != nullptr && widget != nullptr)
     	XtVaGetValues(widget,
                 XmNborderWidth, border_w_ptr,
-                NULL);
+                nullptr);
 }
 
 static void
@@ -1488,7 +1488,7 @@ abobj_set_pixel_width(
 )
 {
     ABObj       szObj;  /* Size object */
-    ABObj       bdObj = NULL;
+    ABObj       bdObj = nullptr;
     Dimension   border_w;
 
     if (obj_get_width(obj) != width)
@@ -1544,7 +1544,7 @@ abobj_set_pixel_height(
 )
 {
     ABObj       szObj;  /* Size object */
-    ABObj       bdObj = NULL;
+    ABObj       bdObj = nullptr;
     Dimension   border_w;
 
     if (obj_get_height(obj) != height)
@@ -1567,7 +1567,7 @@ abobj_set_pixel_size(
 )
 {
     ABObj       szObj;  /* Size object */
-    ABObj       bdObj = NULL;
+    ABObj       bdObj = nullptr;
     Dimension   border_w;
 
     if (obj_get_width(obj) != width || obj_get_height(obj) != height)
@@ -1761,7 +1761,7 @@ abobj_set_xy(
         /* A change has occurred in the module so set the save flag */
         abobj_set_save_needed( obj_get_module(obj), TRUE);
 
-	if (x != -1 && obj->attachments == NULL)
+	if (x != -1 && obj->attachments == nullptr)
 	{
 	    objxm_obj_set_ui_arg(posObj, AB_ARG_INT, XmNx, x);
 	    obj_set_flag(posObj, AttrChangedFlag);
@@ -1773,7 +1773,7 @@ abobj_set_xy(
         /* A change has occurred in the module so set the save flag */
         abobj_set_save_needed( obj_get_module(obj), TRUE);
 
-	if (y != -1 && obj->attachments == NULL)
+	if (y != -1 && obj->attachments == nullptr)
 	{
             objxm_obj_set_ui_arg(posObj, AB_ARG_INT, XmNy, y);
             obj_set_flag(posObj, AttrChangedFlag);
@@ -1781,18 +1781,18 @@ abobj_set_xy(
 	move = True;
     }
 
-    if (x != -1 && y != -1 && obj->attachments != NULL)
+    if (x != -1 && y != -1 && obj->attachments != nullptr)
     {
         Dimension	obj_width;
         Dimension	obj_height;
     	Widget		widget = objxm_get_widget(obj);
 
-	if (widget != NULL)
+	if (widget != nullptr)
 	{
             XtVaGetValues(widget,
                         XmNwidth,       &obj_width,
                         XmNheight,      &obj_height,
-                        NULL);
+                        nullptr);
 
 	    abobj_calculate_new_layout(obj, x, y,
 		obj->width < 0 ? obj_width : obj->width,
@@ -2078,7 +2078,7 @@ abobj_set_save_needed(
     BOOL	set
 )
 {
-    ABObj	module = NULL;
+    ABObj	module = nullptr;
     if ((AB_builder_mode != MODE_BUILD) || !abobj_save_needed_enabled())
 	return 0;
 
@@ -2091,7 +2091,7 @@ abobj_set_save_needed(
     if (set)
     {
         module = obj_get_module(obj);
-        if ((module != NULL) && (module != obj))
+        if ((module != nullptr) && (module != obj))
         {
 	    abobj_set_save_needed(module, set);
         }
@@ -2176,9 +2176,9 @@ abobj_set_directory(
 {
     ABObj       subObj;  /* object */
     STRING      oldval;
-    STRING	newval = NULL;
+    STRING	newval = nullptr;
 
-    newval = (util_strempty(val)? NULL : val);
+    newval = (util_strempty(val)? nullptr : val);
 
     if (obj_is_file_chooser(obj))
     {
@@ -2209,9 +2209,9 @@ abobj_set_filter_pattern(
 {
     ABObj       subObj;  /* object */
     STRING      oldval;
-    STRING      newval = NULL;
+    STRING      newval = nullptr;
 
-    newval = (util_strempty(val)? NULL : val);
+    newval = (util_strempty(val)? nullptr : val);
 
     if (obj_is_file_chooser(obj))
     {
@@ -2241,9 +2241,9 @@ abobj_set_ok_label(
 {
     ABObj       subObj;  /* object */
     STRING      oldval;
-    STRING      newval = NULL;
+    STRING      newval = nullptr;
 
-    newval = (util_strempty(val)? NULL : val);
+    newval = (util_strempty(val)? nullptr : val);
 
     if (obj_is_file_chooser(obj))
     {
@@ -2378,7 +2378,7 @@ abobj_set_pane_min(
     int		value
 )
 {
-    ABObj	xyObj = NULL;
+    ABObj	xyObj = nullptr;
 
     if (obj_get_pane_min(obj) != value)
     {
@@ -2398,7 +2398,7 @@ abobj_set_pane_max(
     int         value
 )
 {
-    ABObj       xyObj = NULL;
+    ABObj       xyObj = nullptr;
 
     if (obj_get_pane_max(obj) != value)
     {

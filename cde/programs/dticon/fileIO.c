@@ -134,7 +134,7 @@ Do_FileIO(
   /* get file name */
   if (SaveMeNot){
   tmpSave = (char *) _XmStringUngenerate(
-					callback_data->value, NULL,
+					callback_data->value, nullptr,
 					XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
   }
 
@@ -216,8 +216,8 @@ Boolean
 Read_File(
         char *fnameIn )
 {
-  char *base_name = NULL, *suffix = NULL,
-      fname[MAXPATHLEN], *tmp = NULL, *tmp2 = NULL;
+  char *base_name = nullptr, *suffix = nullptr,
+      fname[MAXPATHLEN], *tmp = nullptr, *tmp2 = nullptr;
   unsigned int mask_width_ret = 0, mask_height_ret = 0;
   int mask_x_hot = 0, mask_y_hot = 0, first = 0;
   struct stat statBuf = {};
@@ -543,7 +543,7 @@ Write_File(
 /*** SECOND, is it a valid suffix? ***/
   if (suffix) {
     if (strcmp(suffix, "bm") && strcmp(suffix, "xbm"))
-      suffix = NULL;
+      suffix = nullptr;
   }
 /*** THIRD, construct the mask filename ***/
     if (suffix) {
@@ -723,7 +723,7 @@ Display_XPMFile(
                                 AllPlanes, format);
   mono_img = XGetImage(dpy, pix_ret, 0, 0, width, height,
                                 AllPlanes, format);
-  mask_img = NULL;
+  mask_img = nullptr;
   if (shape_ret)
     mask_img = XGetImage(dpy, shape_ret, 0, 0, width, height,
                                 AllPlanes, format);
@@ -894,26 +894,26 @@ void
 SetFileIODialogInfo( void )
 {
   static int currentTitle = SAVE_AS;  /* initial title is for Save_As... */
-  static XmString saveTitle = NULL;
-  static XmString openTitle = NULL;
-  static XmString saveLabel = NULL;
-  static XmString openLabel = NULL;
-  static XmString OpenOKLabel = NULL;
-  static XmString SaveOKLabel = NULL;
+  static XmString saveTitle = nullptr;
+  static XmString openTitle = nullptr;
+  static XmString saveLabel = nullptr;
+  static XmString openLabel = nullptr;
+  static XmString OpenOKLabel = nullptr;
+  static XmString SaveOKLabel = nullptr;
 
-  static char *untitledStr = NULL;
-  static Widget textWidget = NULL;
+  static char *untitledStr = nullptr;
+  static Widget textWidget = nullptr;
   static char newName[MAX_FNAME];
   static char dirStr[MAX_FNAME];
   static char tmpStr[MAX_FNAME];
 
   Arg args[10];
   int  n,dirlen=0,filelen=0,tst, ln;
-  char *strOrig = NULL;
+  char *strOrig = nullptr;
   XmString  tmpXmStr;
   char tmp[MAX_FNAME];
-  char *tmp1= NULL;
-  char *tmp2= NULL;
+  char *tmp1= nullptr;
+  char *tmp2= nullptr;
   int c;
   int startSelect, endSelect;
 
@@ -1132,7 +1132,7 @@ Dump_AttribStruct(
   stat_out("  ncolors: %d\n", xpma->ncolors);
   if (xpma->ncolors) {
     for (i=0; i<xpma->ncolors; i++)
-      if (xpma->colorTable[i][0] != NULL)
+      if (xpma->colorTable[i][0] != nullptr)
         stat_out("    %3d \"%1s\" \"%18s\" \"%5s\" \"%5s\" \"%5s\" \"%5s\"\n",
                 i+1,
                 ((xpma->colorTable[i][0])?(xpma->colorTable[i][0]):"(nil)"), 

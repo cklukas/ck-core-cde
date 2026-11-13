@@ -10,7 +10,7 @@ source = Path(__file__).resolve().parents[1]
 with tempfile.TemporaryDirectory(prefix="help-strings-", dir=os.environ["TMPDIR"]) as work:
     binary = Path(work) / "strings"
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
                     "-fsanitize=address,undefined", "-g", "-I", str(source),
                     str(source / "CvString.c"), str(source / "tests/help-strings.c"),
                     "-o", str(binary)], check=True)

@@ -39,7 +39,7 @@ main(int argc, char **argv)
 {
     char *procid;
     Tt_pattern pattern;
-    Tt_message sent = NULL, got;
+    Tt_message sent = nullptr, got;
     int fd, rounds, observe;
 
     if (argc != 4 || (strcmp(argv[1], "observe") != 0 &&
@@ -88,7 +88,7 @@ main(int argc, char **argv)
 
 	if (poll(&pfd, 1, 250) <= 0)
 	    continue;
-	while ((got = tt_message_receive()) != NULL &&
+	while ((got = tt_message_receive()) != nullptr &&
 	       tt_ptr_error(got) == TT_OK) {
 	    printf("%s %s\n", got == sent ? "sender" : "observed",
 		   state_name(tt_message_state(got)));

@@ -138,7 +138,7 @@ load_icons(
 	XtVaGetValues(c->canvas, 
 			XmNforeground,  &fg, 
 			XmNbackground,  &bg,
-			NULL);
+			nullptr);
 
 	resolution = _DtGetDisplayResolution(XtDisplay(c->frame), 
 				XScreenNumberOfScreen(screen));
@@ -203,8 +203,8 @@ load_icon(
 	unsigned int	 border_width;
 	Screen		*screen = XtScreen(c->frame);
 
-	if (!(icon_filename = XmGetIconFileName(screen, NULL, icon_name, 
-								NULL, size))) {
+	if (!(icon_filename = XmGetIconFileName(screen, nullptr, icon_name, 
+								nullptr, size))) {
 		icon->icon = 0;
 		return (FALSE);
 	}
@@ -279,14 +279,14 @@ paint_icon_date(
 	dpy = XtDisplayOfObject(c->frame);
 
         current_time = now();
-        XtVaSetValues(c->frame, XmNiconName, months[month(current_time)], NULL);
+        XtVaSetValues(c->frame, XmNiconName, months[month(current_time)], nullptr);
         xc = c->xcontext;
 
 	if (c->icon->icon_depth == 1) {
 		XtVaGetValues(c->canvas, 
 			XmNforeground,  &fg, 
 			XmNbackground,  &bg,
-			NULL);
+			nullptr);
 	} else {
 		fg = BlackPixelOfScreen(s);
 		bg = WhitePixelOfScreen(s);
@@ -334,11 +334,11 @@ paint_icon(Calendar *c)
 
         paint_icon_date(c);
 
-        XtVaSetValues(c->frame, XmNiconPixmap, NULL, NULL);
+        XtVaSetValues(c->frame, XmNiconPixmap, nullptr, nullptr);
 
 	if (c->icon && c->icon->icon && c->icon->icon_mask)
         	XtVaSetValues(c->frame, 
 			XmNiconPixmap, c->icon->icon,
 			XmNiconMask, c->icon->icon_mask,
-			NULL);
+			nullptr);
 }

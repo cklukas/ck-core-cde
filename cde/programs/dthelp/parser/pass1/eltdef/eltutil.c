@@ -96,7 +96,7 @@ void cvalue(void)
       m_free(new, "parameter value");
     else {
       new->line = 0;
-      new->value = NULL;
+      new->value = nullptr;
       new->cname = (M_WCHAR *) m_malloc(w_strlen(name) + 1, "C name");
       w_strcpy(new->cname, name);
       pval = new;
@@ -285,7 +285,7 @@ void freechain(void)
       chainp = chainp->next;
       m_free(dchainp, "chain");
       }
-    firstchain = NULL;
+    firstchain = nullptr;
     nextchain = &firstchain;
     }     
 
@@ -333,7 +333,7 @@ ACTION *getactstruct(void)
     new = (ACTION *) m_malloc(sizeof(ACTION), "action");
     new->count = ++actlen;
     new->data = M_NULLVAL;
-    new->son = new->next = new->nextact = NULL;
+    new->son = new->next = new->nextact = nullptr;
     *nextact = new;
     nextact = &new->nextact;
     return(new);
@@ -486,7 +486,7 @@ void skiptoend(void)
       cvarp = cvarp->next;
       m_free(dvarp, "C variable");
       }
-    cvarlist = NULL;
+    cvarlist = nullptr;
     freechain();
     if (! errlev++) {
       curcon = ERROR;
@@ -579,7 +579,7 @@ void startelement(void)
       cvarp = cvarp->next;
       m_free(discard, "C variable");
       }
-    cvarlist = NULL;
+    cvarlist = nullptr;
     if ((openelt = m_packedlook(m_entree, name))) {
       if (processed[openelt - 1])
         warning1("Warning: Element %s already processed", name);

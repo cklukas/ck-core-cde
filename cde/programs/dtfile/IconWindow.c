@@ -156,7 +156,7 @@ FileWindowExposeCallback(
 
    /*  Check for the view already being closed  */
 
-   if (dialog_data == NULL) return;
+   if (dialog_data == nullptr) return;
 
    file_mgr_data = (FileMgrData *) dialog_data->data;
    da_cbs = (XmDrawingAreaCallbackStruct * )call_data;
@@ -215,7 +215,7 @@ FileWindowResizeCallback(
       }
 
       dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
-      if(dialog_data != NULL)
+      if(dialog_data != nullptr)
       {
          file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -246,7 +246,7 @@ FileWindowMapCallback(
 
    file_mgr_rec = (FileMgrRec *) client_data;
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
-   if(dialog_data != NULL)
+   if(dialog_data != nullptr)
    {
       file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -292,10 +292,10 @@ FileWindowInputCallback(
    DirectorySet * directoryData;
    XEvent *new_event;
    XButtonPressedEvent *event;
-   XKeyEvent *kevent = NULL;
-   Widget eventIcon = NULL;
+   XKeyEvent *kevent = nullptr;
+   Widget eventIcon = nullptr;
    int i, j;
-   FileViewData * fileViewData = NULL;
+   FileViewData * fileViewData = nullptr;
    Arg args[10];
    DesktopRec * desktopRec;
    KeySym keysym = 0;
@@ -307,8 +307,8 @@ FileWindowInputCallback(
       return;
 
    /* Determine if this is a desktop icon or a regular icon */
-   file_mgr_rec = NULL;
-   desktopRec = NULL;
+   file_mgr_rec = nullptr;
+   desktopRec = nullptr;
    for (i = 0; i < desktop_data->numIconsUsed; i++)
    {
       if (desktop_data->desktopWindows[i] == (DesktopRec *)client_data)
@@ -317,14 +317,14 @@ FileWindowInputCallback(
          break;
       }
    }
-   if (desktopRec == NULL)
+   if (desktopRec == nullptr)
    {
       file_mgr_rec = (FileMgrRec *) client_data;
       dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
       file_mgr_data = (FileMgrData *) dialog_data->data;
    }
    else
-     file_mgr_data = NULL;
+     file_mgr_data = nullptr;
    
    callback = (XmAnyCallbackStruct *) call_data;
    new_event = (XEvent *)callback->event;
@@ -380,7 +380,7 @@ FileWindowInputCallback(
             eventIcon = (Widget) InputForGadget(w, kevent->x, kevent->y);
          }
       }
-      if (eventIcon == NULL)
+      if (eventIcon == nullptr)
          return;
 
       /* find the widget in the file_list */
@@ -475,8 +475,8 @@ FileWindowInputCallback(
          event = (XButtonPressedEvent *)new_event;
          if(event->button != Button1)
          {
-            if(event->button == bMenuButton && desktopRec == NULL)
-               FmPopup (NULL, NULL, (XEvent *)event, file_mgr_data);
+            if(event->button == bMenuButton && desktopRec == nullptr)
+               FmPopup (nullptr, nullptr, (XEvent *)event, file_mgr_data);
             return;
          }
          eventIcon = (Widget) InputForGadget(w, event->x, event->y);
@@ -487,7 +487,7 @@ FileWindowInputCallback(
        * a selection or a drag.  If it started in the file window, then
        * we can only be doing a region selection.
        */
-      if (eventIcon != NULL)
+      if (eventIcon != nullptr)
       {
          /*
           * If this icon is currently selected, then we can't yet tell
@@ -514,7 +514,7 @@ FileWindowInputCallback(
             /* Not a desktop icon */
             XtSetArg(args[0], XmNuserData, (XtPointer) &directoryData);
             XtGetValues(eventIcon, args, 1);
-            if( directoryData != NULL )
+            if( directoryData != nullptr )
             { 
               for (i = 0; i < directoryData->file_count; i++)
               {
@@ -547,15 +547,15 @@ FileWindowInputCallback(
                  FileViewData ** selection_list;
 
                   top = GetTopOfStack(file_mgr_data);
-                  if(top != NULL && top->file_view_data != fileViewData)
+                  if(top != nullptr && top->file_view_data != fileViewData)
                   {
                      ObjectPtr savetop, next, prev;
          
                      savetop = top;
-                     while(top != NULL && top->file_view_data != fileViewData)
+                     while(top != nullptr && top->file_view_data != fileViewData)
                         top = top->next;
 
-                     if(top != NULL)
+                     if(top != nullptr)
                      {
                         prev = top->prev;
                         next = top->next;
@@ -563,21 +563,21 @@ FileWindowInputCallback(
                            prev->next = next;
                         if (next)
                            next->prev = prev;
-                        top->prev = NULL;
+                        top->prev = nullptr;
                         top->next = savetop;
                         top->stacking_order = 1;
                         savetop->prev = top;
                         top = savetop;
-                        for(i = 2; top->prev != NULL; i++)
+                        for(i = 2; top->prev != nullptr; i++)
                         {
                            top->stacking_order = i;
-                           if(top->next == NULL)
+                           if(top->next == nullptr)
                               break;
                            top = top->next;
                         }
 
                         top = GetTopOfStack(file_mgr_data);
-                        RedrawOneGadget(top->file_view_data->widget,NULL,NULL);
+                        RedrawOneGadget(top->file_view_data->widget,nullptr,nullptr);
                      }
                   }
 
@@ -588,7 +588,7 @@ FileWindowInputCallback(
                                     (file_mgr_data->selected_file_count + 1));
 
                   i = 0;
-                  if(top->file_view_data != NULL)
+                  if(top->file_view_data != nullptr)
                      selection_list[i++] = top->file_view_data;
                   for(j = 0;i < file_mgr_data->selected_file_count; j++,i++)
                   {
@@ -598,7 +598,7 @@ FileWindowInputCallback(
                       else
                          i--;
                   }
-                  selection_list[i] = NULL;
+                  selection_list[i] = nullptr;
                   XtFree((char *)file_mgr_data->selection_list);
                   file_mgr_data->selection_list = selection_list;
                }
@@ -628,11 +628,11 @@ FileWindowInputCallback(
             {
               case osfXK_Delete:
                 {
-                  DtActionArg * action_args = NULL;
+                  DtActionArg * action_args = nullptr;
                   int arg_count = 0;
 
-                  if( desktopRec == NULL
-                      && file_mgr_rec != NULL )
+                  if( desktopRec == nullptr
+                      && file_mgr_rec != nullptr )
                   {
                     if( file_mgr_data->selected_file_count
                         && fileViewData
@@ -650,10 +650,10 @@ FileWindowInputCallback(
                                                            &arg_count );
                     }
                     DtActionInvoke( file_mgr_rec->shell, TRASH_ACTION,
-                                    action_args, arg_count, NULL, NULL,
-                                    trash_dir, True, NULL, NULL );
+                                    action_args, arg_count, nullptr, nullptr,
+                                    trash_dir, True, nullptr, nullptr );
                   }
-                  else if( desktopRec != NULL )
+                  else if( desktopRec != nullptr )
                   {
                     int selectedCount = desktop_data->workspaceData[desktopRec->workspace_num - 1]->files_selected;
                     if( selectedCount )
@@ -670,8 +670,8 @@ FileWindowInputCallback(
                                                            &arg_count );
                     }
                     DtActionInvoke( desktopRec->shell, TRASH_ACTION,
-                                    action_args, arg_count, NULL, NULL,
-                                    trash_dir, True, NULL, NULL );
+                                    action_args, arg_count, nullptr, nullptr,
+                                    trash_dir, True, nullptr, nullptr );
                   }
                   if (action_args && arg_count)
                       _DtFreeActionArgs( action_args, arg_count );
@@ -679,19 +679,19 @@ FileWindowInputCallback(
                 break;
               case osfXK_Menu:
                 if(file_mgr_data)  /* if not, then it is a desktop object */
-                  FmPopup( NULL, (XtPointer)fileViewData,
+                  FmPopup( nullptr, (XtPointer)fileViewData,
 			  (XEvent *)event, file_mgr_data );
                 break;
               case osfXK_EndLine:
                 if( !desktopRec
                     && file_mgr_data->show_type != MULTIPLE_DIRECTORY )
                 {
-                  Widget child = NULL;
+                  Widget child = nullptr;
 
                   child = XmGetFocusWidget(file_mgr_rec->file_window);
                   if( child )
                   {
-                    FileViewData * focusIcon = NULL;
+                    FileViewData * focusIcon = nullptr;
                     FileViewData **order_list;
                     int order_count;
 
@@ -732,12 +732,12 @@ FileWindowInputCallback(
                   if( !desktopRec
                       && file_mgr_data->show_type != MULTIPLE_DIRECTORY )
                 {
-                  Widget child = NULL;
+                  Widget child = nullptr;
 
                   child = XmGetFocusWidget(file_mgr_rec->file_window);
                   if( child )
                   {
-                    FileViewData * focusIcon = NULL;
+                    FileViewData * focusIcon = nullptr;
                     FileViewData **order_list;
                     int order_count;
 
@@ -819,9 +819,9 @@ FileWindowInputCallback(
          B1DragPossible = False;
          initialDragX = -1;
          initialDragY = -1;
-         if (desktopRec == NULL)
+         if (desktopRec == nullptr)
          {
-            ProcessSelection(file_mgr_data, NULL,
+            ProcessSelection(file_mgr_data, nullptr,
                              ((event->state & ControlMask) != 0),
                              (XButtonEvent *)event);
          }
@@ -1179,7 +1179,7 @@ GetSelectionRectangle(
           * is slow, then by the time we query the mouse, the button may have
           * been long ago release, and the pointer subsequently moved.
           */
-         if (XPeekIfEvent(display, &btnUpEvent, CheckForBtnUp, NULL))
+         if (XPeekIfEvent(display, &btnUpEvent, CheckForBtnUp, nullptr))
          {
             x2 = btnUpEvent.xbutton.x;
             y2 = btnUpEvent.xbutton.y;
@@ -1596,14 +1596,14 @@ WidgetRectToRegion (
    XRectangle widget_rect;
    XRectangle pRect, lRect;
    unsigned char flags;
-   static Region temp_region = NULL;
+   static Region temp_region = nullptr;
 
    /* Empty the region */
-   if (temp_region == NULL)
+   if (temp_region == nullptr)
       temp_region = XCreateRegion();
    XSubtractRegion(temp_region, temp_region, region);
 
-   if (w == NULL)
+   if (w == nullptr)
       return;
 
    /* Tree mode and attribute views do not support compound icons */
@@ -1662,7 +1662,7 @@ ProcessSelection (
    }
 
    /*  Get the rectangle to be used as the selection area  */
-   if (icon == NULL && event->type == ButtonPress)
+   if (icon == nullptr && event->type == ButtonPress)
    {
       /* User is starting a region select */
       GetSelectionRectangle (XtDisplay(file_mgr_rec->file_window), 
@@ -1731,7 +1731,7 @@ ProcessSelection (
             /* Find set of selected objects */
             while (top)
             {
-               if(top->file_view_data == NULL)
+               if(top->file_view_data == nullptr)
                {
                   top = top->next;
                   continue;
@@ -1787,14 +1787,14 @@ ProcessSelection (
    
                while(top)
                {
-                  if(top->file_view_data != NULL)
+                  if(top->file_view_data != nullptr)
                      SelectFile(file_mgr_data, top->file_view_data);
                   top = top->prev;
                }
             }
    
             if (!XEmptyRegion(redraw_region))
-               RepaintDesktop(file_mgr_data, NULL, redraw_region);
+               RepaintDesktop(file_mgr_data, nullptr, redraw_region);
    
             RegisterDesktopHotspots(file_mgr_data, file_mgr_rec);
    
@@ -1838,7 +1838,7 @@ ProcessSelection (
                         XtVaGetValues( file_view_data->widget,
                                        XmNfontList,
                                        &fontList,
-                                       NULL );
+                                       nullptr );
 
                         fileNameString = XmStringCreateLocalized( file_view_data->file_data->file_name );
                         textExtent.width = XmStringWidth( fontList, fileNameString );
@@ -1934,21 +1934,21 @@ DrawHighlight (
 
    /* in in as placed mode need to cycle the icons so the traversal
       box doesn't chop up the icons */ 
-   if(type == NOT_DESKTOP && file_view_data != NULL)
+   if(type == NOT_DESKTOP && file_view_data != nullptr)
    {
       if (PositioningEnabledInView(file_mgr_data))
       {
          top = GetTopOfStack(file_mgr_data);
-         if(top != NULL && top->file_view_data != file_view_data)
+         if(top != nullptr && top->file_view_data != file_view_data)
          {
             ObjectPtr savetop, next, prev;
             int i;
 
             savetop = top;
-            while(top != NULL && top->file_view_data != file_view_data)
+            while(top != nullptr && top->file_view_data != file_view_data)
                top = top->next;
 
-            if(top != NULL)
+            if(top != nullptr)
             {
                prev = top->prev;
                next = top->next;
@@ -1956,20 +1956,20 @@ DrawHighlight (
                   prev->next = next;
                if (next)
                   next->prev = prev;
-               top->prev = NULL;
+               top->prev = nullptr;
                top->next = savetop;
                top->stacking_order = 1;
                savetop->prev = top;
                top = savetop;
-               for(i = 2; top->prev != NULL; i++)
+               for(i = 2; top->prev != nullptr; i++)
                {
                   top->stacking_order = i;
-                  if(top->next == NULL)
+                  if(top->next == nullptr)
                      break;
                   top = top->next;
                }
 
-               RedrawOneGadget(w, NULL, NULL);
+               RedrawOneGadget(w, nullptr, nullptr);
             }
          }
       }
@@ -2307,7 +2307,7 @@ DrawUnhighlight (
    if(shapeExtension)
       if(type == DESKTOP)
       {
-         DrawShadowTh(w, NULL, DESKTOP);
+         DrawShadowTh(w, nullptr, DESKTOP);
          return;
       }
 #endif
@@ -2673,7 +2673,7 @@ DrawShadowTh (
                                           shadowType == XmSHADOW_ETCHED_OUT)
                 ? True : False;
 
-   if(gc == NULL)
+   if(gc == nullptr)
    {
       if(shadowType == XmSHADOW_ETCHED_OUT)
       {

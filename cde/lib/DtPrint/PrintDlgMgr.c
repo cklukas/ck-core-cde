@@ -62,15 +62,15 @@ Widget _DtCreatePDMJobSetup(Widget parent)
     manager =
 	XtVaCreateManagedWidget("JobSetup", xmFormWidgetClass, parent,
 				XmNallowOverlap, False,
-				NULL);
+				nullptr);
     /*
      * send mail control
      */
     label = XmStringCreateLocalized(SEND_MAIL_LABEL);
     send_mail =
-	XmVaCreateSimpleCheckBox(manager, "SendMail", NULL,
-				 XmVaCHECKBUTTON, label, NULL, NULL, NULL,
-				 NULL);
+	XmVaCreateSimpleCheckBox(manager, "SendMail", nullptr,
+				 XmVaCHECKBUTTON, label, nullptr, nullptr, nullptr,
+				 nullptr);
     XmStringFree(label);
     XtManageChild(send_mail);
     /*
@@ -83,13 +83,13 @@ Widget _DtCreatePDMJobSetup(Widget parent)
 				manager,
 				XmNlabelString, label,
 				XmNalignment, XmALIGNMENT_END,
-				NULL);
+				nullptr);
     XmStringFree(label);
     banner =
 	XtVaCreateManagedWidget("Banner", 
 				xmTextFieldWidgetClass,
 				manager,
-				NULL);
+				nullptr);
     /*
      * spooler command options
      */
@@ -100,30 +100,30 @@ Widget _DtCreatePDMJobSetup(Widget parent)
 				manager,
 				XmNlabelString, label,
 				XmNalignment, XmALIGNMENT_END,
-				NULL);
+				nullptr);
     XmStringFree(label);
     spool_opts =
 	XtVaCreateManagedWidget("Options", 
 				xmTextFieldWidgetClass,
 				manager,
-				NULL);
+				nullptr);
     /*
      * retrieve various dimensions of form children
      */
     XtVaGetValues(banner_label,
 		  XmNwidth, &banner_label_width,
 		  XmNheight, &banner_label_height,
-		  NULL);
+		  nullptr);
     XtVaGetValues(banner,
 		  XmNheight, &banner_height,
-		  NULL);
+		  nullptr);
     XtVaGetValues(spool_opts_label,
 		  XmNwidth, &spool_opts_label_width,
 		  XmNheight, &spool_opts_label_height,
-		  NULL);
+		  nullptr);
     XtVaGetValues(spool_opts,
 		  XmNheight, &spool_opts_height,
-		  NULL);
+		  nullptr);
     /*
      * set the width of the shorter text field to match the longest
      */
@@ -131,26 +131,26 @@ Widget _DtCreatePDMJobSetup(Widget parent)
 	XtVaSetValues(banner_label,
 		      XmNwidth, spool_opts_label_width,
 		      XmNrecomputeSize, False,
-		      NULL);
+		      nullptr);
     else
 	XtVaSetValues(spool_opts_label,
 		      XmNwidth, banner_label_width,
 		      XmNrecomputeSize, False,
-		      NULL);
+		      nullptr);
     /*
      * layout the form children
      */
     XtVaSetValues(send_mail,
 		  XmNleftAttachment,             XmATTACH_FORM,
 		  XmNtopAttachment,              XmATTACH_FORM,
-		  NULL);
+		  nullptr);
     offset = ((Position)banner_height - (Position)banner_label_height) / 2;
     XtVaSetValues(banner_label,
 		  XmNleftAttachment,             XmATTACH_FORM,
 		  XmNtopAttachment,              XmATTACH_WIDGET,
 		  XmNtopWidget,                  send_mail,
 		  XmNtopOffset, vspace + (offset > 0 ? offset : 0),
-		  NULL);
+		  nullptr);
     XtVaSetValues(banner,
 		  XmNleftAttachment,             XmATTACH_WIDGET,
 		  XmNleftWidget,                 banner_label,
@@ -158,7 +158,7 @@ Widget _DtCreatePDMJobSetup(Widget parent)
 		  XmNtopAttachment,              XmATTACH_OPPOSITE_WIDGET,
 		  XmNtopWidget,                  banner_label,
 		  XmNtopOffset,                  -offset,
-		  NULL);
+		  nullptr);
     offset =
 	((Position)spool_opts_height - (Position)spool_opts_label_height) / 2;
     XtVaSetValues(spool_opts_label,
@@ -166,7 +166,7 @@ Widget _DtCreatePDMJobSetup(Widget parent)
 		  XmNtopAttachment,              XmATTACH_WIDGET,
 		  XmNtopWidget,                  banner_label,
 		  XmNtopOffset, vspace + (offset > 0 ? offset : 0),
-		  NULL);
+		  nullptr);
     XtVaSetValues(spool_opts,
 		  XmNleftAttachment,             XmATTACH_WIDGET,
 		  XmNleftWidget,                 spool_opts_label,
@@ -174,7 +174,7 @@ Widget _DtCreatePDMJobSetup(Widget parent)
 		  XmNtopAttachment,              XmATTACH_OPPOSITE_WIDGET,
 		  XmNtopWidget,                  spool_opts_label,
 		  XmNtopOffset,                  -offset,
-		  NULL);
+		  nullptr);
     /*
      * return the new Job Setup Box
      */

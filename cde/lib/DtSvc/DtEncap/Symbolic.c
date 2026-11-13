@@ -53,7 +53,7 @@
 /* --------------------------------------- */
 #define XE_END_OF_HASH_TABLE (XeSymtabList) -1
 
-static XeSymTable D_sym_table = NULL;
+static XeSymTable D_sym_table = nullptr;
 
 typedef struct _unknown_entry_data {
     XeString name;
@@ -74,9 +74,9 @@ keyhash(XeSymTable t, void *key)
     {
 	hash = t->hash_fn( key, t->hashsize );
 	if (hash >= t->hashsize)
-	    _DtSimpleError(XeProgName, XeInternalError, NULL, 
+	    _DtSimpleError(XeProgName, XeInternalError, nullptr, 
 			  (XeString) "Symbolic.c: Hash value from user hash function out of range",
-			  NULL);
+			  nullptr);
 	    /* We don't come back from the error routine */
     }
     else
@@ -95,9 +95,9 @@ static unsigned int
 trap_bad_hash_fn(void * UNUSED_PARM(ptr), unsigned int UNUSED_PARM(size))
 /*------------------------------------------------------------------------+*/
 {
-    _DtSimpleError(XeProgName, XeInternalError, NULL, 
+    _DtSimpleError(XeProgName, XeInternalError, nullptr, 
 		  (XeString) "Symbolic.c: Hash table at must be power of 2",
-		  NULL);
+		  nullptr);
     /* We don't come back from the error routine */
     return 1;
 }
@@ -220,7 +220,7 @@ make_sym(XeString name)
     XeSymbol sym = Xe_make_struct(_XeSymbol);
     
     sym->name  = strdup( name );
-    sym->value = (void*)NULL;
+    sym->value = (void*)nullptr;
     return sym;
 }
 
@@ -254,7 +254,7 @@ intern_something(XeSymTable   t,
    if (bucket)
        *bucket = hash;
    
-   for (l0 = NULL; l; l0 = l, l = l->rest)
+   for (l0 = nullptr; l; l0 = l, l = l->rest)
    {
        void *	cmp_key;
        void *	cmp_key2;
@@ -282,7 +282,7 @@ intern_something(XeSymTable   t,
 
    /* If just doing a lookup, don't add a new symbol */
    /* ---------------------------------------------- */
-   if (lookup_only) return (void *) NULL;
+   if (lookup_only) return (void *) nullptr;
    
    /* There was no match.  We need to create an entry in the hash table. */
    /* ------------------------------------------------------------------ */
@@ -366,7 +366,7 @@ Xe_intern(XeSymTable t, ConstXeString const name)
 
     if (!t) t = Xe_default_symtab();
 
-    return (XeSymbol)intern_something(t, (void *)name, 0, TRUE, FALSE, (int*)NULL);
+    return (XeSymbol)intern_something(t, (void *)name, 0, TRUE, FALSE, (int*)nullptr);
 }
 
 /*------------------------------------------------------------------------+*/
@@ -378,7 +378,7 @@ Xe_lookup(XeSymTable t, ConstXeString const name)
 
     if (!t) t = Xe_default_symtab();
 
-    return (XeSymbol)intern_something(t, (void *)name, 0, TRUE, TRUE, (int*)NULL);
+    return (XeSymbol)intern_something(t, (void *)name, 0, TRUE, TRUE, (int*)nullptr);
 }
 
 /******************************************************************************/

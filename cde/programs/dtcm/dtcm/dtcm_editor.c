@@ -145,7 +145,7 @@ merge_old_values(Dtcm_appointment *original, Dtcm_appointment *new) {
 	int	dest_attr_num = new->count;
 	Boolean found;
 
-	if (original == NULL)
+	if (original == nullptr)
 		return;
 	
 	/* We need to see how much larger the attribute array needs to 
@@ -331,10 +331,10 @@ StandaloneApptDragStart(
         DTCM_editor     *de,
         EditorType      editor_type)
 {
-        static XtCallbackRec convertCBRec[] = { {ApptConvertCB, NULL},
-                                                {NULL, NULL} };
-        static XtCallbackRec dragFinishCBRec[] =  { {DragFinishCB, NULL},
-                                                    {NULL, NULL} };
+        static XtCallbackRec convertCBRec[] = { {ApptConvertCB, nullptr},
+                                                {nullptr, nullptr} };
+        static XtCallbackRec dragFinishCBRec[] =  { {DragFinishCB, nullptr},
+                                                    {nullptr, nullptr} };
  
         Display        *display 	= XtDisplay(widget);
         int             itemCount, selectedPos;
@@ -344,10 +344,10 @@ StandaloneApptDragStart(
 	int		old_attr_count;
         char            *apptstr;
 	int		preDsswFlags, preRfpFlags;
-	char		*attrstring = NULL;
+	char		*attrstring = nullptr;
 
 	/* Convert appointment into string.  If not successful, don't start drag. */
-	appt = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, NULL);
+	appt = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, nullptr);
 	load_appt_defaults(appt, de->p);
 	preDsswFlags = de->dsswFlags;
 	preRfpFlags = de->rfpFlags;
@@ -386,7 +386,7 @@ StandaloneApptDragStart(
         convertCBRec[0].closure = (XtPointer)context;
         dragFinishCBRec[0].closure = (XtPointer)context;
  
-        if (de->drag_icon == NULL) {
+        if (de->drag_icon == nullptr) {
                 de->drag_icon = CreateDragSourceIcon(widget, de->drag_bitmap, de->drag_mask);
         }
  
@@ -394,8 +394,8 @@ StandaloneApptDragStart(
             	XmDROP_COPY, 
 		convertCBRec, dragFinishCBRec,
 		DtNsourceIcon,		de->drag_icon,
-		NULL)
-            == NULL) {
+		nullptr)
+            == nullptr) {
  
                 printf("%s", CATGETS(c->DT_catd, 1, 239, "DragStart returned NULL.\n"));
         }
@@ -430,7 +430,7 @@ EditApptDragMotionHandler(
                                 XmNy, &source_y,
                                 XmNheight, &source_height,
                                 XmNwidth, &source_width,
-                                NULL);
+                                nullptr);
  
                 if ((event->xmotion.x < source_x) ||
                     (event->xmotion.y < source_y) ||
@@ -483,7 +483,7 @@ de_quit_handler(Widget w, XtPointer cdata, XtPointer data) {
                         BUTTON_IDENT, 2, ident2,
                         BUTTON_IDENT, 3, ident3,
                         DIALOG_IMAGE, de->pu->xm_warning_pixmap,
-                        NULL);
+                        nullptr);
 		XtFree(ident3);
 		XtFree(ident2);
 		XtFree(ident1);
@@ -491,12 +491,12 @@ de_quit_handler(Widget w, XtPointer cdata, XtPointer data) {
 		XtFree(title);
 
 		if (answer == 1) {
-			de_apply_proc(NULL, (XtPointer)de, NULL);
+			de_apply_proc(nullptr, (XtPointer)de, nullptr);
 			XtPopdown(de->top_level);
 		}
 		else  if (answer == 2) {
 			if (de->contract)
-				tttk_message_fail(de->contract, TT_DESKTOP_ECANCELED, NULL, True);
+				tttk_message_fail(de->contract, TT_DESKTOP_ECANCELED, nullptr, True);
 			XtPopdown(de->top_level);
 		}
 		else  if (answer == 3) {
@@ -506,7 +506,7 @@ de_quit_handler(Widget w, XtPointer cdata, XtPointer data) {
 	}
 	else {
 		if (de->contract)
-			tttk_message_fail(de->contract, TT_DESKTOP_ECANCELED, NULL, True);
+			tttk_message_fail(de->contract, TT_DESKTOP_ECANCELED, nullptr, True);
 		XtPopdown(de->top_level);
 	}
 
@@ -524,7 +524,7 @@ de_quit_handler(Widget w, XtPointer cdata, XtPointer data) {
 static void
 load_from_file(DTCM_editor *de) {
 	int			i;
-	CmDataList		*list = NULL;
+	CmDataList		*list = nullptr;
 	Dtcm_appointment	*appt;
 
 	list = CmDataListCreate();
@@ -568,11 +568,11 @@ de_apply_proc(Widget w, XtPointer client_data, XtPointer data) {
 	Dtcm_appointment	*appt;
 	int			old_attr_count;
 	Display			*dpy = XtDisplayOfObject(w);
-	char			*attrstring = NULL;
+	char			*attrstring = nullptr;
 
 	appt = allocate_appt_struct(appt_write, 
 				    	DATAVER_ARCHIVE,
-					NULL);
+					nullptr);
 	load_appt_defaults(appt, de->p);
 	de->dsswFlags = 0;
 	dssw_form_to_appt(de->dssw, appt, de->c->calname, now());
@@ -608,14 +608,14 @@ de_apply_proc(Widget w, XtPointer client_data, XtPointer data) {
 
 	/* The first case is from application exit */
 
-	if (w == NULL) {
+	if (w == nullptr) {
 
 		/* if it was a file transfer, we should write out the 
 		   file, and set the buffer to null.  If it came from 
 		   a buffer, we don't bother to write out the file. */
 
 		if (de->read_only) {
-			ttmedia_load_reply(de->contract, NULL, 0, True);
+			ttmedia_load_reply(de->contract, nullptr, 0, True);
 		}
 		else {
 			if (de->init == file_tt) {
@@ -630,7 +630,7 @@ de_apply_proc(Widget w, XtPointer client_data, XtPointer data) {
 
 				fprintf(fp, "%s", str);
 				fclose(fp);
-				ttmedia_load_reply(de->contract, NULL, 0, True);
+				ttmedia_load_reply(de->contract, nullptr, 0, True);
 			}
 			else {
 				ttmedia_load_reply(de->contract, (unsigned char *) str, strlen(str), True);
@@ -659,9 +659,9 @@ de_apply_proc(Widget w, XtPointer client_data, XtPointer data) {
 
 			if (de->init == file_tt)
 				ttmedia_Deposit(de->contract,
-						NULL,
+						nullptr,
 						de->vtype,
-						NULL,
+						nullptr,
 						0,
 						de->file,
 						app,
@@ -669,11 +669,11 @@ de_apply_proc(Widget w, XtPointer client_data, XtPointer data) {
 		}
 		else {
 			ttmedia_Deposit(de->contract,
-					NULL,
+					nullptr,
 					de->vtype,
 					(const unsigned char *)str,
 					strlen(str),
-					NULL,
+					nullptr,
 					app,
 					30000);
 		}
@@ -749,7 +749,7 @@ DieFromToolTalkError(DTCM_editor *de, char *errfmt, Tt_status status)
     XtManageChild(dialog);
     XtRealizeWidget(dialogShell);
 
-    _DtSimpleError("Dtcm", DtWarning, NULL, errmsg);
+    _DtSimpleError("Dtcm", DtWarning, nullptr, errmsg);
 
     XtFree(errmsg);
     XmStringFree(xms_ok);
@@ -797,7 +797,7 @@ cmtt_init(
 	de->c->tt_procid = ttdt_open(&ttfd, toolname, "SunSoft", "%I", 1);
 	status = tt_ptr_error(de->c->tt_procid);
 	if (tt_is_err(status)) {
-		de->c->tt_procid = NULL;
+		de->c->tt_procid = nullptr;
 		return status;
 	}
 
@@ -820,7 +820,7 @@ cmtt_init(
 			tt_status_message(status));
 	}
 
-	ttdt_session_join(0, NULL, shell, de->c, 1, TTDT_SESSION_NO_REQUESTS);
+	ttdt_session_join(0, nullptr, shell, de->c, 1, TTDT_SESSION_NO_REQUESTS);
 
 	XtAppAddInput(context, ttfd, (XtPointer)XtInputReadMask,
 			tttk_Xt_input_handler, de->c->tt_procid);
@@ -839,7 +839,7 @@ reply_cb(Tt_message m,
 	char *file)
 {
         char *client_procID = tt_message_handler(m);
-        if ( debug && (client_procID != NULL) ) {
+        if ( debug && (client_procID != nullptr) ) {
                 fprintf(stderr, "DEBUG: reply_cb():client_procID = %s\n", client_procID);
                 fprintf(stderr, "DEBUG: reply_cb():message_op = %s\n", tt_message_op(m));
         }
@@ -888,7 +888,7 @@ load_cb(
 	FILE		*fp;
 	int		fd;
 	char		filename[20];
-	CmDataList		*list = NULL;
+	CmDataList		*list = nullptr;
 	Dtcm_appointment	*appt;
 	int		i;
 
@@ -943,7 +943,7 @@ load_cb(
 				de->read_only = True;
 			}
 			list = CmDataListCreate();
-			if (file == NULL)
+			if (file == nullptr)
 			{
 				/*
 				 * Save data to a file so we can pass it to parse_appt_from_file
@@ -1085,8 +1085,8 @@ de_register_drop_site(
 	Boolean		registerchildren)
 
 {
-	XtCallbackRec	transfer_cb_rec[] = { {handle_drop_cb, NULL},
-					      {NULL, NULL} };
+	XtCallbackRec	transfer_cb_rec[] = { {handle_drop_cb, nullptr},
+					      {nullptr, nullptr} };
 	Display		*display = XtDisplayOfObject(w);
 
 	transfer_cb_rec[0].closure = (XtPointer)de;
@@ -1095,7 +1095,7 @@ de_register_drop_site(
 			XmDROP_COPY | XmDROP_MOVE,
 			transfer_cb_rec, 
 			DtNregisterChildren, registerchildren,  
-			NULL);
+			nullptr);
 	return;
 }
 
@@ -1120,7 +1120,7 @@ main(int argc, char **argv) {
 	Tt_status	status;
 
 	de = (DTCM_editor *)ckalloc(sizeof(DTCM_editor));
-	de->file = NULL;
+	de->file = nullptr;
 
 	if (argc > 1) {
 		if (strcasecmp(argv[1], "-h") == 0)
@@ -1129,14 +1129,14 @@ main(int argc, char **argv) {
 			de->file = cm_strdup(argv[1]);
 	}
 	
-	XtSetLanguageProc(NULL, NULL, NULL);
+	XtSetLanguageProc(nullptr, nullptr, nullptr);
         _DtEnvControl(DT_ENV_SET); /* set up environment variables */
 
 	de->top_level = XtVaAppInitialize(&app,
-		"Dtcm", NULL, 0, &argc, argv, NULL,
+		"Dtcm", nullptr, 0, &argc, argv, nullptr,
 		XmNallowShellResize, True,
 		XmNdeleteResponse, XmDO_NOTHING,
-		NULL);
+		nullptr);
 	setup_quit_handler(de->top_level, de_quit_handler, (caddr_t)de);
 
 	/*
@@ -1175,7 +1175,7 @@ main(int argc, char **argv) {
 						"Calendar Appointment"));
 	XtVaSetValues(de->top_level, 
 		XmNtitle, title,
-		NULL);
+		nullptr);
 	XtFree(title);
 
 	/*
@@ -1185,7 +1185,7 @@ main(int argc, char **argv) {
 		xmFormWidgetClass, de->top_level,
 		XmNautoUnmanage, True,
 		XmNfractionBase, 5,
-		NULL);
+		nullptr);
 
 	label_str = XmStringCreateLocalized(CATGETS(de->c->DT_catd, 1, 846, "Save"));
 	de->attach_button = XtVaCreateWidget("attach_button",
@@ -1197,7 +1197,7 @@ main(int argc, char **argv) {
 		XmNrightPosition, 2,
 		XmNbottomAttachment, XmATTACH_FORM,
 		XmNbottomOffset, 10,
-		NULL);
+		nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(de->attach_button, XmNactivateCallback, de_apply_proc, (XtPointer)de);
 	if (!de->file)
@@ -1213,7 +1213,7 @@ main(int argc, char **argv) {
 		XmNrightPosition, 4,
 		XmNbottomAttachment, XmATTACH_FORM,
 		XmNbottomOffset, 10,
-		NULL);
+		nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(de->reset_button, XmNactivateCallback, de_reset_proc, de);
 
@@ -1228,11 +1228,11 @@ main(int argc, char **argv) {
 		XmNbottomOffset, 25,
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNleftOffset, 5,
-		NULL);
+		nullptr);
 	XtVaGetValues(de->rfp->rfp_form_mgr,
 		XmNchildren,            &children,
 		XmNnumChildren,         &n,
-		NULL);
+		nullptr);
 	/* We don't want to manage the privacy widgets */
         for (i = 0; i < n; i++) {
                 if ((children[i] == de->rfp->privacy_label) ||
@@ -1260,7 +1260,7 @@ main(int argc, char **argv) {
 		XmNleftWidget, de->rfp->rfp_form_mgr,
 		XmNrightAttachment, XmATTACH_FORM,
 		XmNtraversalOn, False,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
         XtAddEventHandler(XtParent(de->drag_source), Button1MotionMask, False,
@@ -1268,7 +1268,7 @@ main(int argc, char **argv) {
 
         XtVaGetValues((Widget)XmGetXmDisplay(XtDisplay(de->form)),
                 "enableBtn1Transfer",   &btn1_transfer,
-                NULL);
+                nullptr);
 
 	/* btn1_transfer is a tri-state variable - see 1195846 */
 	if ((Boolean)btn1_transfer != True)
@@ -1281,7 +1281,7 @@ main(int argc, char **argv) {
         if (de->pu->drag_icon_xbm)
                 XtVaSetValues(de->drag_source,
                                 XmNpixmap, de->pu->drag_icon_xbm,
-                                NULL);
+                                nullptr);
 
 	de->dsswFlags = 0;
 	de->dssw = (DSSW *)ckalloc(sizeof(DSSW));
@@ -1294,7 +1294,7 @@ main(int argc, char **argv) {
 		XmNbottomOffset, 15,
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNleftOffset, 10,
-		NULL);
+		nullptr);
 	ManageChildren(de->dssw->dssw_form_mgr);
 
 	/* set up callback to detect whether the appointment 
@@ -1365,7 +1365,7 @@ main(int argc, char **argv) {
 	de_register_drop_site(de, de->rfp->rfp_form_mgr, False); 
 
         XmProcessTraversal(de->dssw->what_text, XmTRAVERSE_CURRENT);
-        XtVaSetValues(de->form, XmNinitialFocus, de->dssw->what_text, NULL);
+        XtVaSetValues(de->form, XmNinitialFocus, de->dssw->what_text, nullptr);
 
 
 	status = cmtt_init("AppointmentEditor", de, app, calendar->frame);

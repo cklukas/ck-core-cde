@@ -87,8 +87,8 @@ ApplyFontPathMods( struct display *d, Display *dpy )
 {
     FILE *fin;
     char *s,*t;
-    char *fph = NULL;
-    char *fpt = NULL;
+    char *fph = nullptr;
+    char *fpt = nullptr;
     char **fontPath,**newList;
     int numHeads = 0;
     int numTails = 0;
@@ -117,12 +117,12 @@ ApplyFontPathMods( struct display *d, Display *dpy )
 
     if (fph)          { s = "sys parm file"; }
     else if (fpHead)  { s = "resource"; fph = strdup(fpHead); }
-    if (fph && !*fph) { free(fph); fph = NULL; }
+    if (fph && !*fph) { free(fph); fph = nullptr; }
     if (fph)          Debug("  +fp (%s) %s\n",s,fph);
 
     if (fpt)          { s = "sys parm file"; }
     else if (fpTail)  { s = "resource"; fpt = strdup(fpTail); }
-    if (fpt && !*fpt) { free(fpt); fpt = NULL; }
+    if (fpt && !*fpt) { free(fpt); fpt = nullptr; }
     if (fpt)          Debug("  fp+ (%s) %s\n",s,fpt);
 
     /* 
@@ -263,7 +263,7 @@ SeparateParts( char **path )
     char *t,*s;
     int nparts = 0;
     if (path && *path)
-	for (s=*path; t=strtok(s,","); s=NULL, nparts++);
+	for (s=*path; t=strtok(s,","); s=nullptr, nparts++);
     return nparts;
 }
 
@@ -291,9 +291,9 @@ GetSysParms( char **tzpp, char **fhpp, char **ftpp )
     FILE *fin;
     char *s,*t,buf[256];
 
-    if (tzpp) *tzpp = NULL;
-    if (fhpp) *fhpp = NULL;
-    if (ftpp) *ftpp = NULL;
+    if (tzpp) *tzpp = nullptr;
+    if (fhpp) *fhpp = nullptr;
+    if (ftpp) *ftpp = nullptr;
     if ((*sysParmsFile != '/') || !(fin=fopen(sysParmsFile,"r"))) {
         Debug("(GetSysParms) Can't open sys parms file\n");
         return;

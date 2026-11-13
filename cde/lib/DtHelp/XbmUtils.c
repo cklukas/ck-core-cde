@@ -170,7 +170,7 @@ int _DtGrReadBitmapStreamData (stream, width, height, data, x_hot, y_hot)
     int *x_hot, *y_hot;                 /* RETURNED */
 #endif
 {
-    unsigned char *bits = NULL;		/* working variable */
+    unsigned char *bits = nullptr;		/* working variable */
     char line[MAX_SIZE];		/* input line from file */
     int size;				/* number of bytes of data */
     char name_and_type[MAX_SIZE];	/* an input line */

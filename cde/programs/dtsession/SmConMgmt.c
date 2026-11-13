@@ -121,7 +121,7 @@ WaitForClientMap( void )
     clientTimeout = False;
     clientTimerId = XtAppAddTimeOut(smGD.appCon, 
 				    smRes.waitClientTimeout,
-				    WaitClientTimeout, NULL);
+				    WaitClientTimeout, nullptr);
     
     while((clientRunning == False) && (clientTimeout == False))
     {

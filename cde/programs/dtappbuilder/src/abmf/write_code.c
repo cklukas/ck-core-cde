@@ -102,8 +102,8 @@ char *const abmfP_cmt_user_code_end = "DTB_USER_CODE_END";
 int 
 abmfP_gencode_construct(GenCodeInfo gen)
 {
-    gen->code_file = NULL;
-    gen->resource_file = NULL;
+    gen->code_file = nullptr;
+    gen->resource_file = nullptr;
     gen->prototype_funcs = TRUE;
     gen->dumped_resources = AB_ARG_CLASS_FLAGS_NONE;
     gen->i18n_method = ABMF_I18N_NONE;
@@ -132,54 +132,54 @@ int
 abmfP_gencode_enter_func(GenCodeInfo genCodeInfo)
 {
     genCodeInfo->writing_func= TRUE;
-    genCodeInfo->cur_func.ip_obj = NULL;
-    genCodeInfo->cur_func.create_obj = NULL;
-    genCodeInfo->cur_func.args_var = NULL;
+    genCodeInfo->cur_func.ip_obj = nullptr;
+    genCodeInfo->cur_func.create_obj = nullptr;
+    genCodeInfo->cur_func.args_var = nullptr;
     genCodeInfo->cur_func.args_var_has_value = FALSE;
-    genCodeInfo->cur_func.counter_var = NULL;
+    genCodeInfo->cur_func.counter_var = nullptr;
     genCodeInfo->cur_func.counter_var_has_value = FALSE;
-    genCodeInfo->cur_func.arg_counter_var = NULL;
+    genCodeInfo->cur_func.arg_counter_var = nullptr;
     genCodeInfo->cur_func.arg_counter_var_has_value = FALSE;
-    genCodeInfo->cur_func.display_var = NULL;
+    genCodeInfo->cur_func.display_var = nullptr;
     genCodeInfo->cur_func.display_var_has_value = FALSE;
-    genCodeInfo->cur_func.drawable_var = NULL;
+    genCodeInfo->cur_func.drawable_var = nullptr;
     genCodeInfo->cur_func.drawable_var_has_value = FALSE;
-    genCodeInfo->cur_func.icon_pixmap_var = NULL;
+    genCodeInfo->cur_func.icon_pixmap_var = nullptr;
     genCodeInfo->cur_func.icon_pixmap_var_has_value = FALSE;
-    genCodeInfo->cur_func.icon_mask_pixmap_var = NULL;
+    genCodeInfo->cur_func.icon_mask_pixmap_var = nullptr;
     genCodeInfo->cur_func.icon_mask_pixmap_var_has_value = FALSE;
-    genCodeInfo->cur_func.label_pixmap_var = NULL;
+    genCodeInfo->cur_func.label_pixmap_var = nullptr;
     genCodeInfo->cur_func.label_pixmap_var_has_value = FALSE;
-    genCodeInfo->cur_func.label_str_var = NULL;
+    genCodeInfo->cur_func.label_str_var = nullptr;
     genCodeInfo->cur_func.label_str_var_has_value = FALSE;
-    genCodeInfo->cur_func.label_xmstr_var = NULL;
+    genCodeInfo->cur_func.label_xmstr_var = nullptr;
     genCodeInfo->cur_func.label_xmstr_var_has_value = FALSE;
-    genCodeInfo->cur_func.acceltext_xmstr_var = NULL;
+    genCodeInfo->cur_func.acceltext_xmstr_var = nullptr;
     genCodeInfo->cur_func.acceltext_xmstr_var_has_value = FALSE;
-    genCodeInfo->cur_func.label_array_var = NULL;
+    genCodeInfo->cur_func.label_array_var = nullptr;
     genCodeInfo->cur_func.label_array_has_nulls = FALSE;
-    genCodeInfo->cur_func.mnemonic_array_var = NULL;
+    genCodeInfo->cur_func.mnemonic_array_var = nullptr;
     genCodeInfo->cur_func.mnemonic_array_var_has_value = FALSE;
-    genCodeInfo->cur_func.name_array_var = NULL;
+    genCodeInfo->cur_func.name_array_var = nullptr;
     genCodeInfo->cur_func.name_array_var_has_value = FALSE;
-    genCodeInfo->cur_func.name_param = NULL;
+    genCodeInfo->cur_func.name_param = nullptr;
     genCodeInfo->cur_func.name_param_has_value = FALSE;
-    genCodeInfo->cur_func.parent_param = NULL;
+    genCodeInfo->cur_func.parent_param = nullptr;
     genCodeInfo->cur_func.parent_param_has_value = FALSE;
-    genCodeInfo->cur_func.return_code_var = NULL;
+    genCodeInfo->cur_func.return_code_var = nullptr;
     genCodeInfo->cur_func.return_code_var_has_value = FALSE;
 
-    genCodeInfo->cur_func.title_str_var = NULL;
+    genCodeInfo->cur_func.title_str_var = nullptr;
     genCodeInfo->cur_func.title_str_var_has_value = FALSE;
-    genCodeInfo->cur_func.value_str_var = NULL;
+    genCodeInfo->cur_func.value_str_var = nullptr;
     genCodeInfo->cur_func.value_str_var_has_value = FALSE;
-    genCodeInfo->cur_func.icon_name_str_var = NULL;
+    genCodeInfo->cur_func.icon_name_str_var = nullptr;
     genCodeInfo->cur_func.icon_name_str_var_has_value = FALSE;
-    genCodeInfo->cur_func.ok_label_xmstr_var = NULL;
+    genCodeInfo->cur_func.ok_label_xmstr_var = nullptr;
     genCodeInfo->cur_func.ok_label_xmstr_var_has_value = FALSE;
-    genCodeInfo->cur_func.directory_xmstr_var = NULL;
+    genCodeInfo->cur_func.directory_xmstr_var = nullptr;
     genCodeInfo->cur_func.directory_xmstr_var_has_value = FALSE;
-    genCodeInfo->cur_func.pattern_xmstr_var = NULL;
+    genCodeInfo->cur_func.pattern_xmstr_var = nullptr;
     genCodeInfo->cur_func.pattern_xmstr_var_has_value = FALSE;
 
     strlist_construct(&(genCodeInfo->cur_func.submenu_params));
@@ -287,7 +287,7 @@ abmfP_obj_has_field(ABObj obj)
 BOOL
 abmfP_obj_is_substruct_obj(ABObj obj)
 {
-    ABObj	item = NULL;
+    ABObj	item = nullptr;
     if (mfobj_has_flags(obj, CGenFlagIsSubstructObjValid))
     {
 	goto epilogue;
@@ -295,7 +295,7 @@ abmfP_obj_is_substruct_obj(ABObj obj)
 
     mfobj_set_flags(obj, CGenFlagIsSubstructObjValid);
     item = obj_get_item(obj, 0);
-    if ((item != NULL) && 
+    if ((item != nullptr) && 
 	(obj_get_item_type(item) != AB_ITEM_FOR_LIST) &&
 	(obj_get_item_type(item) != AB_ITEM_FOR_COMBO_BOX) &&
 	(obj_get_item_type(item) != AB_ITEM_FOR_SPIN_BOX))
@@ -348,7 +348,7 @@ abmfP_write_user_long_start_comment(
 )
 {
     File	codeFile = genCodeInfo->code_file;
-    if (desc == NULL)
+    if (desc == nullptr)
     {
 	desc = "Add additional code here";
     }
@@ -381,7 +381,7 @@ abmfP_write_user_long_end_comment(
 )
 {
     File	codeFile = genCodeInfo->code_file;
-    if (desc == NULL)
+    if (desc == nullptr)
     {
 	desc = "End of user code section";
     }
@@ -406,7 +406,7 @@ abmfP_write_user_seg(GenCodeInfo genCodeInfo, STRING desc, STRING contents)
 	desc);
 
     /* contents */
-    if (contents != NULL)
+    if (contents != nullptr)
     {
         abio_puts(codeFile, contents);
     }
@@ -426,7 +426,7 @@ abmfP_write_user_long_seg(GenCodeInfo genCodeInfo, STRING desc)
     abio_puts(genCodeInfo->code_file, nlstr);
     abmfP_write_user_long_start_comment(genCodeInfo, desc);
     abio_puts(genCodeInfo->code_file, nlstr);
-    abmfP_write_user_long_end_comment(genCodeInfo, NULL);
+    abmfP_write_user_long_end_comment(genCodeInfo, nullptr);
     abio_puts(genCodeInfo->code_file, "\n\n");
     return 0;
 }
@@ -437,21 +437,21 @@ int
 abmfP_write_user_type_and_var_seg(GenCodeInfo genCodeInfo)
 {
     return abmfP_write_user_seg(genCodeInfo, 
-		"Add type and variable definitions", NULL);
+		"Add type and variable definitions", nullptr);
 }
 
 
 int	
 abmfP_write_user_struct_fields_seg(GenCodeInfo genCodeInfo)
 {
-    return abmfP_write_user_seg(genCodeInfo, "Add structure fields", NULL);
+    return abmfP_write_user_seg(genCodeInfo, "Add structure fields", nullptr);
 }
 
 
 int
 abmfP_write_user_funcs_seg(GenCodeInfo genCodeInfo)
 {
-    return abmfP_write_user_seg(genCodeInfo, "Add user-defined functions", NULL);
+    return abmfP_write_user_seg(genCodeInfo, "Add user-defined functions", nullptr);
 }
 
 
@@ -465,7 +465,7 @@ abmfP_write_user_code_seg(GenCodeInfo genCodeInfo, STRING contents)
 int	
 abmfP_write_user_var_seg(GenCodeInfo genCodeInfo)
 {
-    return abmfP_write_user_seg(genCodeInfo, "Add C variables", NULL);
+    return abmfP_write_user_seg(genCodeInfo, "Add C variables", nullptr);
 }
 
 
@@ -480,7 +480,7 @@ abmfP_write_user_var_and_code_seg(GenCodeInfo genCodeInfo, STRING contents)
 int	
 abmfP_write_user_header_seg(GenCodeInfo genCodeInfo)
 {
-    return abmfP_write_user_seg(genCodeInfo, "Add file header", NULL);
+    return abmfP_write_user_seg(genCodeInfo, "Add file header", nullptr);
 }
 
 int	
@@ -498,7 +498,7 @@ abio_printf(codeFile, " *** Add include files, types, macros, externs, and user 
 abio_printf(codeFile, " ***/\n");
 
     abio_puts(codeFile, nlstr);
-    abmfP_write_user_long_end_comment(genCodeInfo, NULL);
+    abmfP_write_user_long_end_comment(genCodeInfo, nullptr);
     abio_puts(codeFile, "\n\n");
     return 0;
 }
@@ -518,7 +518,7 @@ abio_printf(codeFile, " ***\n");
 abio_printf(codeFile, " *** Add new functions here, or at the top of the file.\n");
 abio_printf(codeFile, " ***/\n");
 abio_printf(codeFile, nlstr);
-    abmfP_write_user_long_end_comment(genCodeInfo, NULL);
+    abmfP_write_user_long_end_comment(genCodeInfo, nullptr);
     abio_puts(codeFile, "\n\n");
     return 0;
 }

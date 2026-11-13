@@ -58,7 +58,7 @@
 
 static char *const	util_verbosity_env_var_name= "AB_DEBUG_VERBOSITY";
 static char *const	default_program_name=	"AppBuilder";
-static ISTRING		program_name= NULL;
+static ISTRING		program_name= nullptr;
 
 const STRING Util_null_string= "(nil)";
 const STRING Util_empty_string= "";
@@ -78,7 +78,7 @@ util_init(int *argc_in_out, STRING **argv_in_out)
 #define argc (*argc_in_out)
 #define argv (*argv_in_out)
     STRING	argv0 = argv[0];
-    char	*verboseVar= NULL;
+    char	*verboseVar= nullptr;
     int		verboseVarValue= -1;
     int		verbosity= 0;
 
@@ -89,7 +89,7 @@ util_init(int *argc_in_out, STRING **argv_in_out)
      */
 #ifdef DEBUG
     verboseVar= getenv(util_verbosity_env_var_name);
-    if (verboseVar != NULL)
+    if (verboseVar != nullptr)
     {
 	verboseVarValue= atoi(verboseVar);
 	verbosity= verboseVarValue;
@@ -107,7 +107,7 @@ util_init(int *argc_in_out, STRING **argv_in_out)
 	util_unbuffer_file(stderr);
     }
 
-    if (argv0 != NULL)
+    if (argv0 != nullptr)
     {
 	util_set_program_name_from_argv0(argv0);
     }
@@ -168,7 +168,7 @@ int
 util_set_program_name(STRING new_program_name)
 {
     istr_destroy(program_name);
-    if (new_program_name == NULL)
+    if (new_program_name == nullptr)
     {
 	program_name= istr_const(default_program_name);
     }
@@ -206,7 +206,7 @@ util_set_program_name_from_argv0(STRING argv0)
 STRING
 util_get_program_name(void)
 {
-    return (program_name == NULL? 
+    return (program_name == nullptr? 
 		default_program_name
 		:istr_string(program_name));
 }

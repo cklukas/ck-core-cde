@@ -605,11 +605,11 @@ ilBool                      all4Bit, all8Bit;
     dstData.pPalette = pInfo->pPalette;
     dstData.pCompData = pInfo->pCompData;
     pPriv = ilAddPipeElement (pipe, IL_FILTER, 0, 0,
-                (ilSrcElementData *)NULL, &dstData, 
-                IL_NPF, IL_NPF, IL_NPF, executeFunction, NULL, 0);
+                (ilSrcElementData *)nullptr, &dstData, 
+                IL_NPF, IL_NPF, IL_NPF, executeFunction, nullptr, 0);
     if (!pPriv) return FALSE;                               /* EXIT */
 
-    ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+    ilGetPipeInfo (pipe, FALSE, pInfo, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
     return TRUE;
 }
 

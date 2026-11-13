@@ -141,7 +141,7 @@ typedef struct {
     CTInfo ct_info;
 } CTParseRec, *CTParse;
 
-static CTInfo ct_list = NULL;
+static CTInfo ct_list = nullptr;
 
 static CTInfo
 _XlcGetCTInfoFromEncoding(char *encoding, int length)
@@ -347,12 +347,12 @@ _fallcAddCT(char *name, char *encoding)
     }
 
     charset = _fallcCreateDefaultCharSet(name, encoding);
-    if (charset == NULL)
+    if (charset == nullptr)
 	return (XlcCharSet) NULL;
     _fallcAddCharSet(charset);
 
     ct_info = (CTInfo) Xmalloc(sizeof(CTInfoRec));
-    if (ct_info == NULL)
+    if (ct_info == nullptr)
 	return (XlcCharSet) NULL;
 
     ct_info->charset = charset;
@@ -362,7 +362,7 @@ _fallcAddCT(char *name, char *encoding)
 	ct_info->ext_segment = ct_info->encoding + 6;
 	ct_info->ext_segment_len = strlen(ct_info->ext_segment);
     } else {
-	ct_info->ext_segment = NULL;
+	ct_info->ext_segment = nullptr;
 	ct_info->ext_segment_len = 0;
     }
     ct_info->next = ct_list;
@@ -391,7 +391,7 @@ _fallcParseCharSet(XlcCharSet charset)
     unsigned int type;
     int length;
 
-    if (charset->ct_sequence == NULL)
+    if (charset->ct_sequence == nullptr)
 	return False;
 
     ptr = charset->ct_sequence;
@@ -409,7 +409,7 @@ _fallcParseCharSet(XlcCharSet charset)
 	charset->encoding_name = falrmQuarkToString(charset->xrm_encoding_name);
     } else {
 	charset->xrm_name = 0;
-	charset->encoding_name = NULL;
+	charset->encoding_name = nullptr;
 	charset->xrm_encoding_name = 0;
     }
 
@@ -429,11 +429,11 @@ _fallcInitCTInfo(void)
     CTData ct_data;
     int num;
 
-    if (ct_list == NULL) {
+    if (ct_list == nullptr) {
 	num = sizeof(default_ct_data) / sizeof(CTDataRec);
 	for (ct_data = default_ct_data; num-- > 0; ct_data++) {
 	    charset = _fallcAddCT(ct_data->name, ct_data->encoding);
-	    if (charset == NULL)
+	    if (charset == nullptr)
 		continue;
 	}
 	init_converter();
@@ -463,7 +463,7 @@ _XlcCheckCTSequence(State state, char **ctext, int *ctext_len)
 	    state->ext_seg_charset = ct_info->charset;
 	} else {
 	    state->ext_seg_left = parse.ext_seg_length;
-	    state->ext_seg_charset = NULL;
+	    state->ext_seg_charset = nullptr;
 	}
     } else if (ct_info) {
 	if (charset = ct_info->charset) {
@@ -482,17 +482,17 @@ static void
 init_state(XlcConv conv)
 {
     State state = (State) conv->state;
-    static XlcCharSet GL_charset = NULL;
-    static XlcCharSet GR_charset = NULL;
+    static XlcCharSet GL_charset = nullptr;
+    static XlcCharSet GR_charset = nullptr;
 
-    if (GL_charset == NULL) {
+    if (GL_charset == nullptr) {
 	GL_charset = _fallcGetCharSet("ISO8859-1:GL");
 	GR_charset = _fallcGetCharSet("ISO8859-1:GR");
     }
 
     state->GL_charset = state->charset = GL_charset;
     state->GR_charset = GR_charset;
-    state->ext_seg_charset = NULL;
+    state->ext_seg_charset = nullptr;
     state->ext_seg_left = 0;
 }
 
@@ -509,7 +509,7 @@ cttocs(
     State state = (State) conv->state;
     unsigned char ch;
     int length;
-    XlcCharSet charset = NULL;
+    XlcCharSet charset = nullptr;
     char *ctptr, *bufptr;
     int ctext_len, buf_len;
 
@@ -541,7 +541,7 @@ cttocs(
 		}
 
 		if (state->ext_seg_left < 1)
-		    state->ext_seg_charset = NULL;
+		    state->ext_seg_charset = nullptr;
 	    }
 	    break;
 	}
@@ -614,7 +614,7 @@ cstoct(
     charset = (XlcCharSet) args[0];
 
     ct_info = _XlcGetCTInfoFromCharSet(charset);
-    if (ct_info == NULL)
+    if (ct_info == nullptr)
 	return -1;
 
     side = charset->side;
@@ -644,7 +644,7 @@ cstoct(
 	    while (length-- > 0)
 		*ctptr++ = *csptr++;
 	}
-	state->ext_seg_charset = (state->ext_seg_left > 0) ? charset : NULL;
+	state->ext_seg_charset = (state->ext_seg_left > 0) ? charset : nullptr;
     } else {
 	if ((side == XlcGR && charset != state->GR_charset) ||
 	    (side == XlcGL && charset != state->GL_charset)) {
@@ -790,11 +790,11 @@ create_conv(XlcConvMethods methods)
     XlcConv conv;
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
-    if (conv == NULL)
+    if (conv == nullptr)
 	return (XlcConv) NULL;
 
     conv->state = (XPointer) Xmalloc(sizeof(StateRec));
-    if (conv->state == NULL) {
+    if (conv->state == nullptr) {
 	    close_converter(conv);
 	    return (XlcConv) NULL;
     }

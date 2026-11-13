@@ -45,15 +45,15 @@ int main(int argc, char **argv)
     Arg args[20];
     int n;
 
-    toplevel = XtAppInitialize(&appContext, ApplicationClass, NULL, 0,
- 						&argc, argv, NULL, NULL, 0);
+    toplevel = XtAppInitialize(&appContext, ApplicationClass, nullptr, 0,
+ 						&argc, argv, nullptr, nullptr, 0);
 
     if (argc == 1) {
 	printf("%s: No files specified.\n", argv[0]);
 	exit(1);
     }
 
-    form = XmCreateForm(toplevel, "form", NULL, 0);
+    form = XmCreateForm(toplevel, "form", nullptr, 0);
     XtManageChild(form);
     n = 0;
     XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;

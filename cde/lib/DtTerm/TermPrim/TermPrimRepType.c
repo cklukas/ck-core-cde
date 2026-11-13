@@ -99,18 +99,18 @@ void _DtTermPrimInitRepTypes(void)
 	/* register our resource converters... */
 #ifdef NotDefined
 	(void) XtSetTypeConverter(XmRString, DtRDtTermTerminalSize,
-		CvtStringToTerminalSize, NULL, 0, XtCacheNone,
+		CvtStringToTerminalSize, nullptr, 0, XtCacheNone,
 		CvtStringToTerminalSizeDestroy);
 #endif /* NotDefined */
 	(void) XtSetTypeConverter(XmRString, DtRDtTermTerminalSizeList,
-		CvtStringToTerminalSizeList, NULL, 0, XtCacheNone,
+		CvtStringToTerminalSizeList, nullptr, 0, XtCacheNone,
 		CvtStringToTerminalSizeListDestroy);
 	(void) XmRepTypeRegister(DtRDtTermEmulationMode,
 		TermEmulationModeStrings,
-		NULL, (unsigned char ) XtNumber(TermEmulationModeStrings));
+		nullptr, (unsigned char ) XtNumber(TermEmulationModeStrings));
 	(void) XmRepTypeRegister(DtRDtTermCharCursorStyle,
 		CharCursorStyleStrings,
-		NULL, (unsigned char ) XtNumber(CharCursorStyleStrings));
+		nullptr, (unsigned char ) XtNumber(CharCursorStyleStrings));
 
 	_DtTermPrimEmulationMode = XmRepTypeGetId(DtRDtTermEmulationMode);
 	_DtTermPrimCharCursorStyle = XmRepTypeGetId(DtRDtTermCharCursorStyle);

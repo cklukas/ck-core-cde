@@ -94,7 +94,7 @@ long	hilite_cleartext (int parse_type, char *stems, int stemcount)
     PARG		parg;
     char *		(*parser)(PARG *) =	usrblk.dblk->parser;
     char *		(*stemmer)(char *, DBLK *) =	usrblk.dblk->stemmer;
-    DtSrHitword		*hitwords = NULL;
+    DtSrHitword		*hitwords = nullptr;
     size_t		hitwords_size =	0;
     long		hitwcount =	0;
     long		offset;
@@ -113,7 +113,7 @@ long	hilite_cleartext (int parse_type, char *stems, int stemcount)
     /* OUTER LOOP: Parse/stem each word in cleartext */
     for (	textp = parser (&parg);
 		textp;
-		textp = parser (NULL)) {
+		textp = parser (nullptr)) {
 	wordlen = strlen (textp);
 	if (parse_type == 'S')
 	    textp = stemmer (textp, dblk);
@@ -171,7 +171,7 @@ long	hilite_cleartext (int parse_type, char *stems, int stemcount)
     } /* end OUTER parse loop */
 
     usrblk.hitwcount = hitwcount;
-    usrblk.hitwords = (hitwcount)? hitwords : NULL;
+    usrblk.hitwords = (hitwcount)? hitwords : nullptr;
     if (debugging_hilite || (usrblk.debug & USRDBG_RETRVL))
 	fprintf (aa_stderr,
 	    PROGNAME"138 parstyp='%c' stemct=%d hitwcount=%ld\n",

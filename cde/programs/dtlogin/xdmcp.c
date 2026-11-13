@@ -406,7 +406,7 @@ void WaitForSomething (void)
 	    Debug("Setting timer on select() for %d seconds.\n", wakeupTime);
 	}
 	else
-	    ptimeout = NULL;
+	    ptimeout = nullptr;
 
 	/*
 	 * The signal handlers only set flags.  Test the flags with the signals
@@ -419,7 +419,7 @@ void WaitForSomething (void)
 	else
 	    nready = pselect (WellKnownSocketsMax + 1, &reads, 0, 0, ptimeout,
 			      &previous);
-	sigprocmask (SIG_SETMASK, &previous, NULL);
+	sigprocmask (SIG_SETMASK, &previous, nullptr);
 	Debug ("select returns %d.  Rescan: %d  ChildReady: %d\n",
 		nready, Rescan, ChildReady);
 	if (nready > 0)
@@ -508,7 +508,7 @@ NetworkAddressToName(CARD16 connectionType, ARRAY8Ptr connectionAddress, CARD16 
 
 	    /* the address comes from the display; an IPv4 address has 4 bytes */
 	    if (connectionAddress->length != 4)
-		return NULL;
+		return nullptr;
 	    data = connectionAddress->data;
 	    hostent = gethostbyaddr ((char *)data,
 				     connectionAddress->length, AF_INET);
@@ -566,10 +566,10 @@ NetworkAddressToName(CARD16 connectionType, ARRAY8Ptr connectionAddress, CARD16 
 	}
 #ifdef DNET
     case FamilyDECnet:
-	return NULL;
+	return nullptr;
 #endif /* DNET */
     default:
-	return NULL;
+	return nullptr;
     }
 }
 
@@ -580,7 +580,7 @@ forward_respond (struct sockaddr *from, int fromlen, int length)
     ARRAY8	    clientAddress;
     ARRAY8	    clientPort;
     ARRAYofARRAY8   authenticationNames;
-    struct sockaddr *client = NULL;
+    struct sockaddr *client = nullptr;
     int		    clientlen = 0;
     int		    expectedLen;
     int		    i;
@@ -973,8 +973,8 @@ manage (struct sockaddr *from, int fromlen, int length)
     int			expectlen;
     struct protoDisplay	*pdpy;
     struct display	*d;
-    char		*name = NULL;
-    char		*class = NULL;
+    char		*name = nullptr;
+    char		*class = nullptr;
     XdmcpNetaddr	from_save;
     ARRAY8		clientAddress, clientPort;
     CARD16		connectionType;
@@ -1061,7 +1061,7 @@ manage (struct sockaddr *from, int fromlen, int length)
 	    else
 	    {
 		free ((char *) class);
-		class = (char *) NULL;
+		class = (char *) nullptr;
 	    }
 	    from_save = (XdmcpNetaddr) malloc (fromlen);
 	    if (!from_save)

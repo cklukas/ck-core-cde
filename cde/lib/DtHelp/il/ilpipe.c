@@ -256,7 +256,7 @@ ilImagePtr         pImage;
 
     pImage->des = *pDes;
     pImage->format = *pFormat;
-    pImage->pStripOffsets = (long *)NULL;   /* freed if non-null */
+    pImage->pStripOffsets = (long *)nullptr;   /* freed if non-null */
 
     pImage->i.pDes = &pImage->des;
     pImage->i.pFormat = &pImage->format;
@@ -898,7 +898,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
             pPipe->hookHead.pPrev = pElement;
             pElement->elementType = IL_HOOK;
             pElement->exec.pPrivate = (ilPtr)&pElement->clientPrivate;
-            pElement->exec.pSrcImage = pElement->exec.pDstImage = (ilImageInfo *)NULL;
+            pElement->exec.pSrcImage = pElement->exec.pDstImage = (ilImageInfo *)nullptr;
             pElement->Init = Init;
             pElement->Cleanup = Cleanup;
             pElement->Destroy = Destroy;
@@ -1020,7 +1020,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
             }
 
         pPipe->producerCode = IL_PIPE_NOT_IMAGE;    /* not a read from a (feed) image */
-        pPipe->pSrcPipeImage = (ilImageInfo *)NULL;
+        pPipe->pSrcPipeImage = (ilImageInfo *)nullptr;
 
         pPipe->image.des = *pDstData->pDes;
         pPipe->image.format = *pDstData->pFormat;
@@ -1034,12 +1034,12 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
         ilChangeStripHeight (pPipe);
 
         pPipe->image.info.pPalette = (pPipe->image.des.type == IL_PALETTE) ? 
-                                           pDstData->pPalette : (unsigned short *)NULL;
+                                           pDstData->pPalette : (unsigned short *)nullptr;
         pPipe->image.info.pCompData = pDstData->pCompData;
         pPipe->needProducerThrottle = FALSE;        /* producer not an image */
         pPipe->copyToConsumerImage = FALSE;
 
-        pElement->exec.pSrcImage = (ilImageInfo *)NULL;
+        pElement->exec.pSrcImage = (ilImageInfo *)nullptr;
         }
     else  {
             /*  Not a producer.  Create src image to this element, unless a consumer which
@@ -1048,7 +1048,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
             */
         if (pPipe->pSrcPipeImage) {
             pElement->exec.pSrcImage = pPipe->pSrcPipeImage;
-            pPipe->pSrcPipeImage = (ilImageInfo *)NULL;
+            pPipe->pSrcPipeImage = (ilImageInfo *)nullptr;
             }
         else if (haveConsumerImage) {
             pElement->exec.pSrcImage = &((ilImagePtr)pSrcData->consumerImage)->i;
@@ -1109,7 +1109,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
                     if (pDstData->pPalette)
                         pPipe->image.info.pPalette = pDstData->pPalette;
                     }
-                else pPipe->image.info.pPalette = (unsigned short *)NULL;
+                else pPipe->image.info.pPalette = (unsigned short *)nullptr;
                 pPipe->image.des = *pDes;
                 }
             pPipe->image.info.pCompData = pDstData->pCompData;

@@ -212,7 +212,7 @@ void InitEventHandling (void)
 static unsigned int *
 _WmGrabMasks ( unsigned int modifiers, int *pnum_masks )
 {
-    static unsigned int	*pRetMasks = NULL;
+    static unsigned int	*pRetMasks = nullptr;
     static int len_ret_masks = 0;
     int num_masks;
     int num_ret_masks;
@@ -223,9 +223,9 @@ _WmGrabMasks ( unsigned int modifiers, int *pnum_masks )
     for (num_masks=0; wmGD.pLockMaskSequence[num_masks]; num_masks++);
 
     /* insure we have enough space for our returned masks */
-    if ((pRetMasks == NULL) || (len_ret_masks < num_masks+2))
+    if ((pRetMasks == nullptr) || (len_ret_masks < num_masks+2))
     {
-	if (pRetMasks != NULL) 
+	if (pRetMasks != nullptr) 
 			XtFree ((char *)pRetMasks);
 
 	len_ret_masks = num_masks+2;
@@ -607,7 +607,7 @@ Boolean WmDispatchMenuEvent (XButtonEvent *event)
 		HandleKeyPress ((XKeyEvent *)event, 
 				wmGD.menuActive->accelKeySpecs,
 				checkContext, context, 
-				TRUE, (ClientData *)NULL);
+				TRUE, (ClientData *)nullptr);
         }
 
         if (wmGD.menuActive && wmGD.menuUnpostKeySpec)
@@ -741,7 +741,7 @@ Boolean WmDispatchMenuEvent (XButtonEvent *event)
 		     */
 
 		    UnpostMenu (pCD->systemMenuSpec);
-		    F_Kill (NULL, pCD, (XEvent *) event);
+		    F_Kill (nullptr, pCD, (XEvent *) event);
 		    doXtDispatchEvent = False;
 		}
 	    }
@@ -777,7 +777,7 @@ Boolean WmDispatchMenuEvent (XButtonEvent *event)
                  */
 		
                 UnpostMenu (pCD->systemMenuSpec);
-		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
+		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr);
 /*		F_Normalize_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
 */                doXtDispatchEvent = False;
             }
@@ -1090,7 +1090,7 @@ Boolean HandleWsKeyPress (XKeyEvent *keyEvent)
 	     * Get out of the pass keys mode.
 	     */
 
-	    F_Pass_Key (NULL, (ClientData *) NULL, (XEvent *) NULL);
+	    F_Pass_Key (nullptr, (ClientData *) nullptr, (XEvent *) nullptr);
 	    XAllowEvents (DISPLAY, AsyncKeyboard, CurrentTime);
 	}
 	else
@@ -1130,7 +1130,7 @@ Boolean HandleWsKeyPress (XKeyEvent *keyEvent)
         }
 
         if (HandleKeyPress (keyEvent, ACTIVE_PSD->keySpecs, 
-	                    TRUE, context, FALSE, (ClientData *)NULL) &&
+	                    TRUE, context, FALSE, (ClientData *)nullptr) &&
 	    ACTIVE_PSD->acceleratorMenuCount)
 	{
 	    for (n = 0; ((keyEvent->keycode != 0) &&
@@ -1138,7 +1138,7 @@ Boolean HandleWsKeyPress (XKeyEvent *keyEvent)
 	    {
 	        if (!HandleKeyPress (keyEvent,
 		     ACTIVE_PSD->acceleratorMenuSpecs[n]->accelKeySpecs, 
-				 TRUE, context, TRUE,(ClientData *)NULL))
+				 TRUE, context, TRUE,(ClientData *)nullptr))
 	        {
 		    break;
 		}
@@ -1330,7 +1330,7 @@ void HandleWsButtonPress (XButtonEvent *buttonEvent)
 	     (caddr_t *)&pCD)))
     {
 	/* no managed window under the pointer */
-	pCD = NULL;
+	pCD = nullptr;
     }
     
 
@@ -1342,14 +1342,14 @@ void HandleWsButtonPress (XButtonEvent *buttonEvent)
     IdentifyEventContext (buttonEvent, pCD, &context, &partContext);
     subContext = (1L << partContext);
 
-    if (pCD == NULL &&
+    if (pCD == nullptr &&
         buttonEvent->button == 1 &&
         NOLOCKMOD(buttonEvent->state) == 0 &&
         !wmGD.menuActive &&
         wmGD.keyboardFocus)
     {
-        SetKeyboardFocus (NULL, REFRESH_LAST_FOCUS);
-        Do_Focus_Key ((ClientData *)NULL, buttonEvent->time,
+        SetKeyboardFocus (nullptr, REFRESH_LAST_FOCUS);
+        Do_Focus_Key ((ClientData *)nullptr, buttonEvent->time,
             ALWAYS_SET_FOCUS | WORKSPACE_IF_NULL);
         RepairFocus ();
     }
@@ -1415,7 +1415,7 @@ void HandleWsButtonRelease (XButtonEvent *buttonEvent)
 	     (caddr_t *)&pCD)))
     {
 	/* no managed window under the pointer */
-	pCD = NULL;
+	pCD = nullptr;
     }
     
 
@@ -1973,8 +1973,8 @@ void
 HandleDtWmRequest (WmScreenData *pSD, XEvent *pev)
 {
     Boolean more = True;
-    char *pchReq = NULL;
-    String sRequest = NULL;
+    char *pchReq = nullptr;
+    String sRequest = nullptr;
     unsigned char *lineP;
     int iFuncIndex;
     WmFunction   wmFunction;
@@ -1994,7 +1994,7 @@ HandleDtWmRequest (WmScreenData *pSD, XEvent *pev)
 
 	if (pchReq)
 	{
-	    pCD = NULL;
+	    pCD = nullptr;
 	    ctxDisallowed = F_CONTEXT_ROOT;
 	    if (wmGD.requestContextWin != (Window) 0L)
 	    {
@@ -2025,7 +2025,7 @@ HandleDtWmRequest (WmScreenData *pSD, XEvent *pev)
 		     * based on context problems.
 		     */
 		    XtFree ((char *)sRequest);
-		    sRequest = NULL;
+		    sRequest = nullptr;
 		    break;
 		}
 
@@ -2039,7 +2039,7 @@ HandleDtWmRequest (WmScreenData *pSD, XEvent *pev)
 		     * Found it in the function table! 
 		     * Apply the function.
 		     */
-		    wmFunction (wmFuncArgs, pCD, NULL);
+		    wmFunction (wmFuncArgs, pCD, nullptr);
 
 		    /*
 		     * Free up allocated args, if any
@@ -2078,14 +2078,14 @@ HandleDtWmRequest (WmScreenData *pSD, XEvent *pev)
 		Pixmap pixmap = None;
 		DtWsmBackdropImageType imageType = DtWSM_BACKDROP_IMAGETYPE_TILED;
 		char *pch;
-		char *pchFile = NULL;
+		char *pchFile = nullptr;
 
 		/* skip function name */
 		pch = pchReq;
 		(void) strtok (pch, " ");
 
 		/* get path name */
-		pch = strtok (NULL, " ");
+		pch = strtok (nullptr, " ");
 		if (pch)
 		{
 		    pchFile = (char *) XtMalloc (1+strlen(pch));
@@ -2100,12 +2100,12 @@ HandleDtWmRequest (WmScreenData *pSD, XEvent *pev)
 		    strcpy (pchFile, pch);
 
 		    /* get pixmap id */
-		    pch = strtok (NULL, " ");
+		    pch = strtok (nullptr, " ");
 		    if (pch) 
 		    {
 			sscanf (pch, "%lx", &pixmap);  
 
-			pch = strtok (NULL, " ");
+			pch = strtok (nullptr, " ");
 			if (pch)
 			{
 			    sscanf (pch, "%d", (int *) &imageType);
@@ -2189,13 +2189,13 @@ void HandleWsEnterNotify (XEnterWindowEvent *enterEvent)
     {
         if (wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_POINTER)
 	{
-	    Do_Focus_Key ((ClientData *) NULL, enterEvent->time, 
+	    Do_Focus_Key ((ClientData *) nullptr, enterEvent->time, 
 			ALWAYS_SET_FOCUS);
 	}
 	else if ((wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_EXPLICIT) &&
 	         ((enterEvent->detail == NotifyNonlinearVirtual) ||
 	          (enterEvent->detail == NotifyNonlinear)) &&
-		 (wmGD.keyboardFocus == NULL) &&
+		 (wmGD.keyboardFocus == nullptr) &&
 		 enterEvent->focus)
 	{
 	    /*
@@ -2203,13 +2203,13 @@ void HandleWsEnterNotify (XEnterWindowEvent *enterEvent)
 	     * window.
 	     */
 
-	    Do_Focus_Key ((ClientData *) NULL, enterEvent->time, 
+	    Do_Focus_Key ((ClientData *) nullptr, enterEvent->time, 
 	    		ALWAYS_SET_FOCUS);
 	}
 
         if (wmGD.colormapFocusPolicy == CMAP_FOCUS_POINTER)
 	{
-	    SetColormapFocus (ACTIVE_PSD, (ClientData *) NULL);
+	    SetColormapFocus (ACTIVE_PSD, (ClientData *) nullptr);
 	}
     }
 
@@ -2257,12 +2257,12 @@ void HandleWsLeaveNotify (XLeaveWindowEvent *leaveEvent)
 	{
 	    if (wmGD.keyboardFocusPolicy == KEYBOARD_FOCUS_POINTER)
 	    {
-	        Do_Focus_Key ((ClientData *) NULL, leaveEvent->time,
+	        Do_Focus_Key ((ClientData *) nullptr, leaveEvent->time,
 		    (SCREEN_SWITCH_FOCUS | ALWAYS_SET_FOCUS));
 	    }
 	    if (wmGD.colormapFocusPolicy == CMAP_FOCUS_POINTER)
 	    {
-	        SetColormapFocus (ACTIVE_PSD, (ClientData *) NULL);
+	        SetColormapFocus (ACTIVE_PSD, (ClientData *) nullptr);
 	    }
 	}
 
@@ -2464,7 +2464,7 @@ void HandleWsFocusIn (XFocusInEvent *focusEvent)
 	        	Do_Focus_Key (pCD, GetTimestamp (), ALWAYS_SET_FOCUS);
 		    }
 		}
-		SetKeyboardFocus ((ClientData *) NULL, REFRESH_LAST_FOCUS);
+		SetKeyboardFocus ((ClientData *) nullptr, REFRESH_LAST_FOCUS);
 	    }
 	    else
 	    {
@@ -2474,7 +2474,7 @@ void HandleWsFocusIn (XFocusInEvent *focusEvent)
 		 * focus locally.
 	         */
 
-		SetKeyboardFocus ((ClientData *) NULL, REFRESH_LAST_FOCUS);
+		SetKeyboardFocus ((ClientData *) nullptr, REFRESH_LAST_FOCUS);
 	    }
         }
         else

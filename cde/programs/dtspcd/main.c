@@ -120,8 +120,8 @@ void SPCD_Alarm_Handler (void);
 
 protocol_request_handler spcd_protocol_dispatch_table[NREQS]={
   Client_Application_Data,   /* APPLICATION_DATA */
-  NULL,                      /* APPLICATION_STDOUT */
-  NULL,                      /* APPLICATION_STDERR */
+  nullptr,                      /* APPLICATION_STDOUT */
+  nullptr,                      /* APPLICATION_STDERR */
   Client_Abort,              /* ABORT */
   Client_Register,           /* REGISTER */
   Client_Unregister,         /* UNREGISTER */
@@ -131,15 +131,15 @@ protocol_request_handler spcd_protocol_dispatch_table[NREQS]={
   Client_Channel_Attach,     /* CHANNEL_ATTACH */
   Client_Application_Spawn,  /* APPLICATION_SPAWN */
   Client_Application_Signal, /* APPLICATION_SIGNAL */
-  NULL,                      /* APPLICATION_DIED */
-  NULL,                      /* SERVER_ERROR */
-  NULL,                      /* REPLY */
+  nullptr,                      /* APPLICATION_DIED */
+  nullptr,                      /* SERVER_ERROR */
+  nullptr,                      /* REPLY */
   Client_Server_Debug,       /* SERVER_DEBUG */
   Client_Environ_Reset,      /* ENVIRON_RESET */
   Client_Reply_Devices,      /* QUERY_DEVICES */
-  NULL,                      /* DEVICE_REPLY */
+  nullptr,                      /* DEVICE_REPLY */
   Client_Reply_Logfile,      /* QUERY_LOGFILE */
-  NULL,                      /* LOGFILE_REPLY */
+  nullptr,                      /* LOGFILE_REPLY */
   Client_Delete_Logfile,     /* DELETE_LOGFILE */
   Client_Reset_Termios,      /* RESET_TERMIOS */
   Client_Send_EOF,           /* CHANNEL_SEND_EOF */
@@ -194,7 +194,7 @@ int main(int argc, XeString *argv)
 /*----------------------------------------------------------------------+*/
 {
   /* Parse the command line and set globals accordingly. */
-  XeString log_path = NULL;
+  XeString log_path = nullptr;
   Boolean terminate_flag = FALSE;
   int i;
   struct sigaction alarm_vector;
@@ -206,12 +206,12 @@ int main(int argc, XeString *argv)
    * to ensure 'SPC_Initialize()' installs a SIGCLD handler.
    */
   SPC_who_am_i = SPC_I_AM_A_DAEMON;
-  SPCD_Authentication_Dir = NULL;
+  SPCD_Authentication_Dir = nullptr;
 
   /* set up log file path */
   log_path = XeSBTempPath((XeString)"DTSPCD.log");
 
-  if(NULL == freopen("/dev/null", "w", stderr)) {
+  if(nullptr == freopen("/dev/null", "w", stderr)) {
     printf("Unable to open /dev/null\n");
     exit(EXIT_FAILURE);
   }
@@ -230,11 +230,11 @@ int main(int argc, XeString *argv)
       /* Open an error log with whatever name the library wants to use */
       SPC_Open_Log(log_path, FALSE);
       SPC_Print_Protocol = spc_logF;
-      if(NULL == freopen(log_path, "a", stderr)) {
+      if(nullptr == freopen(log_path, "a", stderr)) {
         printf("Unable to reopen '%s' as stderr\n", log_path);
         exit(EXIT_FAILURE);
       }
-      setbuf(stderr, NULL);
+      setbuf(stderr, nullptr);
     }
 
     else if (!strcmp ("-auth_dir", argv[i])) {
@@ -320,7 +320,7 @@ int main(int argc, XeString *argv)
     memset(&alarm_vector, 0, sizeof(struct sigaction));
     alarm_vector.sa_handler = SPCD_Alarm_Handler;
     alarm_vector.sa_flags = 0;
-    (void) sigaction (SIGALRM, &alarm_vector, (struct sigaction *)NULL);
+    (void) sigaction (SIGALRM, &alarm_vector, (struct sigaction *)nullptr);
     (void) alarm (exit_timeout * 60);
   }
 
@@ -330,8 +330,8 @@ int main(int argc, XeString *argv)
    * setting or the mount point specified in any of the environment 
    * files.
    */
-  if (SPC_mount_point_env_var == NULL)
-    if ((pch = getenv (MOUNT_POINT)) != NULL) {
+  if (SPC_mount_point_env_var == nullptr)
+    if ((pch = getenv (MOUNT_POINT)) != nullptr) {
       SPC_mount_point_env_var = (char *) malloc (strlen (pch) + 
 						 strlen (MOUNT_POINT) + 2);
       (void) sprintf (SPC_mount_point_env_var, "%s=%s", MOUNT_POINT, pch);
@@ -395,7 +395,7 @@ void SPCD_Handle_Client_Data(void      *channel,
   }
 
   SPCD_Abort_Okay = TRUE;
-  if(Request_Needs_Channel(prot->request_type) && prot->channel == NULL) {
+  if(Request_Needs_Channel(prot->request_type) && prot->channel == nullptr) {
     /* The channel id names no channel of this client. */
     SPC_Error(SPC_Protocol);
     retval = SPC_ERROR;
@@ -419,7 +419,7 @@ void SPCD_Handle_Client_Data(void      *channel,
 int SPCD_Initialize(void)
 /*----------------------------------------------------------------------+*/
 {
-  XeString sys_env_file = NULL;
+  XeString sys_env_file = nullptr;
   
   /* Do initialization for SPC */
   if(SPC_Initialize()==SPC_ERROR)
@@ -433,14 +433,14 @@ int SPCD_Initialize(void)
 
   default_environment=
     (XeString *) malloc(DEFAULT_ENVP_SIZE * sizeof(XeString));
-  default_environment[0]=NULL;
+  default_environment[0]=nullptr;
 
   /*
    * First add the installed environment file.
    */
   sys_env_file = (XeString) malloc (strlen(SPCD_ENV_INSTALL_DIRECTORY) +
 				    strlen(SPCD_ENV_FILE) + 3);
-  if (sys_env_file != NULL) {
+  if (sys_env_file != nullptr) {
     (void) sprintf (sys_env_file, "%s/%s",
 		    SPCD_ENV_INSTALL_DIRECTORY,
 		    SPCD_ENV_FILE);
@@ -453,7 +453,7 @@ int SPCD_Initialize(void)
   free (sys_env_file);
   sys_env_file = (XeString) malloc (strlen(SPCD_ENV_CONFIG_DIRECTORY) +
 				    strlen(SPCD_ENV_FILE) + 3);
-  if (sys_env_file != NULL) {
+  if (sys_env_file != nullptr) {
     (void) sprintf (sys_env_file, "%s/%s",
 		    SPCD_ENV_CONFIG_DIRECTORY,
 		    SPCD_ENV_FILE);
@@ -471,8 +471,8 @@ void SPCD_Exit(int exitval)
 {
   int i;
 
-  if (SPC_logfile_list != NULL)
-    for (i = 0; SPC_logfile_list[i] != NULL; i++)
+  if (SPC_logfile_list != nullptr)
+    for (i = 0; SPC_logfile_list[i] != nullptr; i++)
       (void) unlink (SPC_logfile_list[i]);
 
   SPC_Format_Log((XeString)"Exiting server.  Retval: %d", exitval);
@@ -601,18 +601,18 @@ static int Become_User(const char *name, uid_t uid, gid_t gid)
 int Client_Register(protocol_request_ptr prot)
 /*----------------------------------------------------------------------+*/
 {
-  XeString username = NULL;
-  XeString passwd = NULL;
-  XeString proto_ver = NULL;
-  XeString hostinfo = NULL;
+  XeString username = nullptr;
+  XeString passwd = nullptr;
+  XeString proto_ver = nullptr;
+  XeString hostinfo = nullptr;
   struct passwd *pwent;
-  XeString tmpfile = NULL, tmppath = NULL;
+  XeString tmpfile = nullptr, tmppath = nullptr;
   int free_tmppath = 0;
   XeChar  buffer[MAXPATHLEN * 2];
   struct stat buf;
-  XeString netfile = NULL;
+  XeString netfile = nullptr;
   int free_netfile = 0;
-  XeString env_file = NULL;
+  XeString env_file = nullptr;
   protocol_request_ptr reply;
   const char *spc_prefix = "/.SPC_";
   char suffix[2 * 8 + 1];
@@ -690,14 +690,14 @@ int Client_Register(protocol_request_ptr prot)
     XeFree(tmppath);
     free_tmppath = 0;
   }
-  tmppath = NULL;
+  tmppath = nullptr;
 
   /*
    * Store info about the client (protocol version & host type)
    * For Pre A.01, this will be defaulted to (hpux 7.0 s300)
    */
   client_connection->hostinfo = hostinfo;
-  hostinfo = NULL;			/* the connection owns it now */
+  hostinfo = nullptr;			/* the connection owns it now */
 
   if (proto_ver) {
       if (sscanf(proto_ver, "%d", &version) == 1)
@@ -725,7 +725,7 @@ int Client_Register(protocol_request_ptr prot)
      if (tt_ptr_error (netfile) != TT_OK) {
        SPC_Format_Log((XeString)"+++> FAILURE: cannot create a cannonical file name for the authentication file.\n     (%s)",
 		      tt_status_message(tt_pointer_error(netfile)));
-       netfile = NULL;
+       netfile = nullptr;
        REFUSE_REGISTRATION(SPC_Bad_Authentication);
      }
      free_netfile = 1;
@@ -736,11 +736,11 @@ int Client_Register(protocol_request_ptr prot)
   /* us (the server).  If going to a pre A.02 client, it will be      */
   /* ignored by it.                                                   */
 
-  SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
+  SPC_Write_Protocol_Request(client_connection, nullptr, LOGFILE_REPLY,
 			     netfile, SPC_PROTOCOL_VERSION_STR,
 			     SPC_LocalHostinfo());
 
-  reply=SPC_Filter_Connection(client_connection, NULL, REGISTER, TRUE);
+  reply=SPC_Filter_Connection(client_connection, nullptr, REGISTER, TRUE);
   if(reply==SPC_ERROR)
     goto done;
   snprintf(buffer, sizeof(buffer), "--> REGISTER (%s)", netfile);
@@ -838,8 +838,8 @@ int Client_Register(protocol_request_ptr prot)
    * daemon must not go on: it may still be root.
    */
   if(!Become_User(username, uid, gid)) {
-    SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-			       FAILED_FILE_NAME, NULL, NULL);
+    SPC_Write_Protocol_Request(client_connection, nullptr, LOGFILE_REPLY,
+			       FAILED_FILE_NAME, nullptr, nullptr);
     SPC_Error(SPC_Bad_Permission);
     SPCD_Exit(1);
   }
@@ -850,12 +850,12 @@ int Client_Register(protocol_request_ptr prot)
   putenv(ShellDir);
 
   spc_user_environment_file = env_file;
-  env_file = NULL;			/* kept for the life of the daemon */
+  env_file = nullptr;			/* kept for the life of the daemon */
   default_environment=
     SPC_Add_Env_File(spc_user_environment_file, default_environment);
 
-  SPC_Write_Protocol_Request(client_connection, NULL, LOGFILE_REPLY,
-			     PASSED_FILE_NAME, NULL, NULL);
+  SPC_Write_Protocol_Request(client_connection, nullptr, LOGFILE_REPLY,
+			     PASSED_FILE_NAME, nullptr, nullptr);
 
   result = TRUE;
 
@@ -907,7 +907,7 @@ int Client_Channel_Open(protocol_request_ptr prot)
 
   iomode |= SPCIO_SYNC_TERMINATOR;
 
-  channel=XeSPCOpen(NULL, iomode);
+  channel=XeSPCOpen(nullptr, iomode);
   if(channel==SPC_ERROR)
     return(SPC_ERROR);
 
@@ -976,7 +976,7 @@ Merge_Lang_Var(SPC_Channel_Ptr channel)
   if ((stdLang = SPC_Getenv((XeString)"LANG", channel->envp))
       != (XeString)NULL)
   {
-    _DtXlateDb db = NULL;
+    _DtXlateDb db = nullptr;
     char platform[_DtPLATFORM_MAX_LEN];
     XeChar *langBuf;
     int execVer;
@@ -987,11 +987,11 @@ Merge_Lang_Var(SPC_Channel_Ptr channel)
     {
       if ((_DtXlateGetXlateEnv(db, platform, &execVer, &compVer) == 0) &&
 	  (_DtLcxXlateStdToOp(db, platform, compVer, DtLCX_OPER_SETLOCALE,
-			      stdLang, NULL, NULL, NULL, &myLang) == 0))
+			      stdLang, nullptr, nullptr, nullptr, &myLang) == 0))
       {
 	if ((langBuf = (XeChar *)malloc((strlen(myLang) + 6)
 					* sizeof(XeChar)))
-	    != (XeChar *)NULL)
+	    != (XeChar *)nullptr)
 	{
 	  sprintf(langBuf, "LANG=%s", myLang);
 	  channel->envp = SPC_Putenv(langBuf, channel->envp);
@@ -1103,7 +1103,7 @@ int Client_Server_Debug(protocol_request_ptr prot)
   if(!SPC_Print_Protocol)
     return(ERROR);
 
-  setbuf(SPC_Print_Protocol, NULL);
+  setbuf(SPC_Print_Protocol, nullptr);
 
   time(&timeval);
   fprintf(SPC_Print_Protocol, (XeString)"Begin protocol filedump: %s", ctime(&timeval));
@@ -1143,7 +1143,7 @@ int Client_Environ_Reset(protocol_request_ptr prot)
 			     &outlen,
 			     ENVIRON_RESET, (XeString)"--> ENVIRON_RESET");
 
-  if(ret == NULL)
+  if(ret == nullptr)
     return(SPC_ERROR);
 
   /* putenv() keeps the strings it is given; the others are released. */
@@ -1194,12 +1194,12 @@ int Client_Reply_Logfile(protocol_request_ptr prot)
     }
 
     SPC_Write_Protocol_Request(client_connection, channel, LOGFILE_REPLY,
-			       netfile, NULL, NULL);
+			       netfile, nullptr, nullptr);
     tt_free (netfile);
   }
   else
     SPC_Write_Protocol_Request(client_connection, channel, LOGFILE_REPLY,
-			       channel->logfile, NULL, NULL);
+			       channel->logfile, nullptr, nullptr);
 
   return(TRUE);
 }
@@ -1275,7 +1275,7 @@ int Client_Enhanced_Spawn(protocol_request_ptr prot)
 			     &outlen,
 			     APP_B00_SPAWN, (XeString)"--> APP_B00_SPAWN");
 
-  if(ret == NULL)
+  if(ret == nullptr)
     return(SPC_ERROR);
 
   /*
@@ -1310,18 +1310,18 @@ int Client_Enhanced_Spawn(protocol_request_ptr prot)
   }
 
   if(numarg == 0)
-    channel->argv = NULL;
+    channel->argv = nullptr;
   else {
     channel->argv = &ret[4];
     free(ret[separator]);
-    ret[separator] = NULL;		/* terminates argv */
+    ret[separator] = nullptr;		/* terminates argv */
   }
 
   if(numenv == 0)
-    channel->envp = NULL;
+    channel->envp = nullptr;
   else {
     channel->envp = (char **)XeMalloc(((size_t)env_count+1)*sizeof(char *));
-    channel->envp[0] = NULL;
+    channel->envp[0] = nullptr;
     channel->envp = SPC_Merge_Envp(channel->envp, &ret[first_env]);
 
     Merge_Lang_Var(channel);
@@ -1333,9 +1333,9 @@ int Client_Enhanced_Spawn(protocol_request_ptr prot)
 
   /* Make the world safe for freeing the channel */
 
-  channel->argv = NULL;
+  channel->argv = nullptr;
   if(channel->envp == &ret[first_env])
-    channel->envp = NULL;
+    channel->envp = nullptr;
 
   for(i=0; i<outlen; i++)
     if(ret[i])
@@ -1387,7 +1387,7 @@ void SPCD_Alarm_Handler()
   if (exit_timeout == SPCD_NO_TIMER) 
     return;
 
-  if (SPC_pid_list != NULL) 
+  if (SPC_pid_list != nullptr) 
     for (i=0; SPC_pid_list[i] != 0; i++) {
       if (SPC_pid_list[i] != SPCD_DEAD_PROCESS) {
 	/*

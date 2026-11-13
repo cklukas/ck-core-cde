@@ -105,10 +105,10 @@ char      *startCommand;
 
 static XrmOptionDescRec option_list[] =
 {
-   {  "-helpVolume",     "helpVolume",     XrmoptionSepArg,  NULL  },
-   {  "-locationId",     "locationId",     XrmoptionSepArg,  NULL  },
-   {  "-file",           "file",           XrmoptionSepArg,  NULL  },
-   {  "-manPage",        "manPage",        XrmoptionSepArg,  NULL  },
+   {  "-helpVolume",     "helpVolume",     XrmoptionSepArg,  nullptr  },
+   {  "-locationId",     "locationId",     XrmoptionSepArg,  nullptr  },
+   {  "-file",           "file",           XrmoptionSepArg,  nullptr  },
+   {  "-manPage",        "manPage",        XrmoptionSepArg,  nullptr  },
    {  "-man",            "man",            XrmoptionNoArg,  "True" },
 
 };
@@ -195,18 +195,18 @@ static void GlobalInit(void)
 
 {
 
-  pCacheListHead   = NULL; 
-  pCacheListTale   = NULL;  
+  pCacheListHead   = nullptr; 
+  pCacheListTale   = nullptr;  
   totalCacheNodes  = 0;
   
   helpClass = XtNewString("Dthelpview");
 
-  viewWidget = NULL;
-  manWidget  = NULL;
-  manBtn = NULL;
-  manText = NULL;
-  manForm = NULL;
-  closeBtn = NULL;
+  viewWidget = nullptr;
+  manWidget  = nullptr;
+  manBtn = nullptr;
+  manText = nullptr;
+  manForm = nullptr;
+  closeBtn = nullptr;
 
 }
 
@@ -225,10 +225,10 @@ int main(
   char            **newArgv;
   int             counter=0;
 
-  XtSetLanguageProc(NULL, NULL, NULL);
+  XtSetLanguageProc(nullptr, nullptr, nullptr);
   startCommand = argv[0];
   appName = strrchr(argv[0], '/');
-  if (appName != NULL)
+  if (appName != nullptr)
     appName++;
   else
     appName = argv[0];
@@ -265,7 +265,7 @@ int main(
   
   /* Get the application resources. */
   XtGetApplicationResources(topLevel, &application_args, 
-                            resources, XtNumber(resources), NULL, 0);
+                            resources, XtNumber(resources), nullptr, 0);
 
   /*  If all of the command line parameters were not processed  */
   /*  out, print out a usage message set and exit.              */
@@ -297,14 +297,14 @@ int main(
     */
 
 
-  if (application_args.file != NULL)
+  if (application_args.file != nullptr)
       DisplayFile(topLevel, application_args.file);    
-  else if (application_args.manPage != NULL)
+  else if (application_args.manPage != nullptr)
       DisplayMan(topLevel, application_args.manPage,
                  EXIT_ON_CLOSE);
-  else if (application_args.man != NULL)
+  else if (application_args.man != nullptr)
       PostManDialog(topLevel, newArgc, newArgv);
-  else if (application_args.helpVolume != NULL)
+  else if (application_args.helpVolume != nullptr)
     {
       /* See if you can expand the helpVolume value */
       ExpandVolume(&(application_args.helpVolume));
@@ -368,7 +368,7 @@ static void ExpandVolume(
     char    **helpVolume)
 {
 
-  char * workingPath=NULL;
+  char * workingPath=nullptr;
 
    /* try to locate file and its entry, if present */
    /* True: search relative to current directory as well */

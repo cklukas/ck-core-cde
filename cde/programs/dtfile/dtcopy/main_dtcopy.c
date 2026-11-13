@@ -88,8 +88,8 @@ Widget G_status_text;
 Widget G_error_count;
 Widget G_error_msgs;
 Widget G_copy_dialog;
-Widget G_error_dialog = NULL;
-Widget G_over_dialog = NULL;
+Widget G_error_dialog = nullptr;
+Widget G_over_dialog = nullptr;
 Widget G_over_confirm;
 Widget G_copy_action_area_pbuttons[4];
 Widget G_help_dialog;
@@ -267,8 +267,8 @@ static XtResource resources[] =
 
 static XrmOptionDescRec option_list[] =
 {
-   {  "-from",           "source",         XrmoptionSepArg,   NULL  },
-   {  "-to",             "target",         XrmoptionSepArg,   NULL  },
+   {  "-from",           "source",         XrmoptionSepArg,   nullptr  },
+   {  "-to",             "target",         XrmoptionSepArg,   nullptr  },
 
    {  "-verbose",        "verbose",        XrmoptionNoArg,   "True"  },
    {  "-v",              "verbose",        XrmoptionNoArg,   "True"  },
@@ -279,8 +279,8 @@ static XrmOptionDescRec option_list[] =
 
    {  "-keepNew",        "keepNew",        XrmoptionNoArg,   "True"  },
    {  "-kn",             "keepNew",        XrmoptionNoArg,   "True"  },
-   {  "-keepOld",        "keepOld",        XrmoptionSepArg,   NULL   },
-   {  "-ko",             "keepOld",        XrmoptionSepArg,   NULL   },
+   {  "-keepOld",        "keepOld",        XrmoptionSepArg,   nullptr   },
+   {  "-ko",             "keepOld",        XrmoptionSepArg,   nullptr   },
    {  "-dontDelete",     "dontDelete",     XrmoptionNoArg,   "True"  },
    {  "-nd",             "dontDelete",     XrmoptionNoArg,   "True"  },
    {  "-dontAdd",        "dontAdd",        XrmoptionNoArg,   "True"  },
@@ -318,7 +318,7 @@ static XrmOptionDescRec option_list[] =
    {  "-confirmErrors",  "confirmErrors",  XrmoptionNoArg,   "True"  },
    {  "-ce",             "confirmErrors",  XrmoptionNoArg,   "True"  },
    {  "-popDown",        "popDown",        XrmoptionNoArg,   "True"  },
-   {  "-delay",          "delay",          XrmoptionSepArg,   NULL   },
+   {  "-delay",          "delay",          XrmoptionSepArg,   nullptr   },
    {  "-slow",           "slow",           XrmoptionNoArg,   "True"  },
    {  "-toggle",         "toggle",         XrmoptionNoArg,   "True"  },
    {  "-notoggle",       "toggle",         XrmoptionNoArg,   "False" },
@@ -358,7 +358,7 @@ UpdateSummary(void)
   xs = XmStringCreateLocalized(msg);
   XtVaSetValues (G_summary_text,
                  XmNlabelString, xs,
-                 NULL);
+                 nullptr);
   XmStringFree(xs);
 }
 
@@ -447,7 +447,7 @@ ShowDetails(void)
 {
   if (!XtIsManaged(XtParent(G_error_msgs)))
   {
-    XtVaSetValues(G_status_text, XmNbottomAttachment, XmATTACH_NONE, NULL);
+    XtVaSetValues(G_status_text, XmNbottomAttachment, XmATTACH_NONE, nullptr);
     XtManageChild(G_error_count);
     XtManageChild(G_error_msgs);
     XtManageChild(XtParent(G_error_msgs));
@@ -471,7 +471,7 @@ UpdateErrorCount(void)
   XtVaSetValues (G_error_count,
                  XmNvalue,   msg,
                  XmNcursorPosition, 0,
-                 NULL);
+                 nullptr);
 }
 
 
@@ -730,10 +730,10 @@ get_command_line(int argc, char *argv[])
 
   /* get source & target directory, if not yet set */
 
-  if (app_args.source_name == NULL && i < argc)
+  if (app_args.source_name == nullptr && i < argc)
     app_args.source_name = argv[i++];
 
-  if (app_args.target_name == NULL && i < argc)
+  if (app_args.target_name == nullptr && i < argc)
     app_args.target_name = argv[i++];
 
   /*
@@ -742,8 +742,8 @@ get_command_line(int argc, char *argv[])
    */
 
   if (i < argc ||
-      app_args.source_name == NULL ||
-      app_args.target_name == NULL)
+      app_args.source_name == nullptr ||
+      app_args.target_name == nullptr)
   {
     fprintf(stderr, GETMESSAGE(2, 10, USAGE), argv[0]);
     exit(1);
@@ -787,11 +787,11 @@ main(int argc, char *argv[])
   Boolean copy_status;
 
   _DtEnvControl(DT_ENV_SET);
-  XtSetLanguageProc(NULL, NULL, NULL);
+  XtSetLanguageProc(nullptr, nullptr, nullptr);
 
    /* initialize debugging flag */
 #ifdef DEBUG
-   if ((tmpStr = getenv("DTFILE_DEBUG")) != NULL)
+   if ((tmpStr = getenv("DTFILE_DEBUG")) != nullptr)
    {
       debug = atoi(tmpStr);
       if (debug <= 0)
@@ -806,12 +806,12 @@ main(int argc, char *argv[])
   G_toplevel = XtAppInitialize(&app_context,
                                "Dtfile", /* Dtcopy is considered part of Dtfile */
                                option_list, XtNumber(option_list),
-                               &argc, argv, NULL, args, n);
+                               &argc, argv, nullptr, args, n);
 
   InitNlsMessage();
 
   XtGetApplicationResources(G_toplevel, &app_args,
-                            resources, XtNumber(resources), NULL, 0);
+                            resources, XtNumber(resources), nullptr, 0);
 
    /* add support for editres debugging tool */
 /* XtAddEventHandler(G_toplevel, (EventMask) 0, True, _XEditResCheckMessages, NULL); */
@@ -850,7 +850,7 @@ main(int argc, char *argv[])
   if(copy_status == False)
   {
       XtRealizeWidget(G_toplevel);
-      XtAppAddTimeOut(app_context, app_args.delay, TimeoutHandler, NULL);
+      XtAppAddTimeOut(app_context, app_args.delay, TimeoutHandler, nullptr);
 
       /* wait for user to close the dialog before exiting */
       while (!G_dialog_closed)
@@ -882,10 +882,10 @@ main(int argc, char *argv[])
    *   (which might generate error or warning messages) before the main window
    *   is mapped.
    */
-  XtAddEventHandler(G_toplevel, StructureNotifyMask, False, CheckForMap, NULL);
+  XtAddEventHandler(G_toplevel, StructureNotifyMask, False, CheckForMap, nullptr);
   while (!is_mapped)
     EventCheck();
-  XtRemoveEventHandler(G_toplevel, XtAllEvents, True, CheckForMap, NULL);
+  XtRemoveEventHandler(G_toplevel, XtAllEvents, True, CheckForMap, nullptr);
 
   /* Set up the Callbacks for the copy operation */
   periodicCallback     =  EventCheck;
@@ -941,14 +941,14 @@ main(int argc, char *argv[])
   XtVaSetValues (G_error_msgs,
                  XmNcursorPosition, 0,
                  XmNtopCharacter,   0,
-                 NULL);
+                 nullptr);
 
   /* desensitize the copy area */
   desensitize_copy_action_area(G_copy_action_area_pbuttons);
 
   /* if successful popdown the window after a delay */
   if (app_args.popdown && outcome == DTCOPY_COMPLETED)
-    XtAppAddTimeOut(app_context, app_args.delay, TimeoutHandler, NULL);
+    XtAppAddTimeOut(app_context, app_args.delay, TimeoutHandler, nullptr);
 
   /* wait for user to close the dialog before exiting */
   while (!G_dialog_closed)

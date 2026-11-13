@@ -116,9 +116,9 @@ filesbcancelCB(Widget widget, XtPointer client_data, XtPointer call_data)
 
 void freeStrings(char * dir, char * file)
 {
-    if (dir != NULL)
+    if (dir != nullptr)
 	XtFree(dir);
-    if (file != NULL)
+    if (file != nullptr)
 	XtFree(file);
 }
 
@@ -127,7 +127,7 @@ filesbokCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
     Exc_data *ed = (Exc_data *)client_data;
     XmFileSelectionBoxCallbackStruct	*ptr;
-    char				*file = NULL, *dir = NULL, *tmpfile;
+    char				*file = nullptr, *dir = nullptr, *tmpfile;
     int					r, ans = 0;
     char				*msg1;
     char				*msg2;
@@ -137,20 +137,20 @@ filesbokCB(Widget widget, XtPointer client_data, XtPointer call_data)
 
     ptr = (XmFileSelectionBoxCallbackStruct *) call_data;
 
-    file = (char *)  _XmStringUngenerate((XmString) ptr->value, NULL,
+    file = (char *)  _XmStringUngenerate((XmString) ptr->value, nullptr,
 					  XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
     if (!file) {
 	return;
     }
 
-    dir = (char *)  _XmStringUngenerate((XmString) ptr->dir, NULL,
+    dir = (char *)  _XmStringUngenerate((XmString) ptr->dir, nullptr,
 					  XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
     if (!dir) {
 	return;
     } else {
 	if (*file != '/') {
 	    if ((tmpfile = XtMalloc(strlen(dir) + 1 + strlen(file) + 1))
-		== NULL) {
+		== nullptr) {
 		excerror(ed, EXCERRMALLOC, "filesbokCB", "exit");
 	    }
 	    sprintf(tmpfile, "%s/%s", dir, file);

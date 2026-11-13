@@ -150,7 +150,7 @@ build_variant_key(const FontDescriptor *desc)
             strlen(setWidth) + strlen(addStyle) + strlen(spacing) + 10;
     char *key = calloc(1, needed);
     if (!key)
-        return NULL;
+        return nullptr;
 
     snprintf(key, needed, "%s|%s|%s|%s|%s|%s|%s",
              foundry, family, weight, slant, setWidth, addStyle, spacing);
@@ -161,19 +161,19 @@ static VariantEntry *
 find_variant(VariantEntry *variants, int count, const char *key)
 {
     if (!variants || count <= 0 || !key)
-        return NULL;
+        return nullptr;
     for (int i = 0; i < count; i++) {
         if (variants[i].key && strcasecmp(variants[i].key, key) == 0)
             return &variants[i];
     }
-    return NULL;
+    return nullptr;
 }
 
 static VariantCharsetEntry *
 find_charset(VariantEntry *variant, const char *registry, const char *encoding)
 {
     if (!variant)
-        return NULL;
+        return nullptr;
     for (int i = 0; i < variant->charsetCount; i++) {
         VariantCharsetEntry *charset = &variant->charsets[i];
         if (registry && encoding &&
@@ -184,7 +184,7 @@ find_charset(VariantEntry *variant, const char *registry, const char *encoding)
             return charset;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 static VariantCharsetEntry *
@@ -195,14 +195,14 @@ add_charset(
         const char *raw)
 {
     if (!variant)
-        return NULL;
+        return nullptr;
 
     if (variant->charsetCount >= variant->charsetCapacity) {
         int newCap = variant->charsetCapacity ? variant->charsetCapacity * 2 : 4;
         VariantCharsetEntry *newEntries =
             realloc(variant->charsets, sizeof(VariantCharsetEntry) * newCap);
         if (!newEntries)
-            return NULL;
+            return nullptr;
         variant->charsets = newEntries;
         variant->charsetCapacity = newCap;
     }
@@ -210,8 +210,8 @@ add_charset(
     VariantCharsetEntry *entry = &variant->charsets[variant->charsetCount++];
     entry->registry = strdup(registry ? registry : "*");
     entry->encoding = strdup(encoding ? encoding : "*");
-    entry->raw = raw ? strdup(raw) : NULL;
-    entry->sizes = NULL;
+    entry->raw = raw ? strdup(raw) : nullptr;
+    entry->sizes = nullptr;
     entry->sizeCount = 0;
     entry->sizeCapacity = 0;
 
@@ -291,7 +291,7 @@ static FamilyEntry *
 find_family(FamilyEntry *families, int count, const char *name)
 {
     if (!families || count <= 0 || !name)
-        return NULL;
+        return nullptr;
     for (int i = 0; i < count; i++) {
         if (families[i].familyName &&
             strcasecmp(families[i].familyName, name) == 0)
@@ -299,17 +299,17 @@ find_family(FamilyEntry *families, int count, const char *name)
             return &families[i];
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 static VariantEntry *
 variant_entry(const FontFaceCatalog *catalog, int familyIndex, int variantIndex)
 {
     if (!catalog || familyIndex < 0 || familyIndex >= catalog->familyCount)
-        return NULL;
+        return nullptr;
     FamilyEntry *family = &catalog->families[familyIndex];
     if (variantIndex < 0 || variantIndex >= family->variantCount)
-        return NULL;
+        return nullptr;
     return family->variants[variantIndex];
 }
 
@@ -322,7 +322,7 @@ variant_charset(
 {
     VariantEntry *variant = variant_entry(catalog, familyIndex, variantIndex);
     if (!variant || charsetIndex < 0 || charsetIndex >= variant->charsetCount)
-        return NULL;
+        return nullptr;
     return &variant->charsets[charsetIndex];
 }
 
@@ -332,8 +332,8 @@ variant_size_entry(
         int sizeValue )
 {
     if (!charset)
-        return NULL;
-    VariantSizeEntry *best = NULL;
+        return nullptr;
+    VariantSizeEntry *best = nullptr;
     int bestDiff = INT_MAX;
     for (int i = 0; i < charset->sizeCount; i++) {
         VariantSizeEntry *entry = &charset->sizes[i];
@@ -378,7 +378,7 @@ add_alias_descriptor(
     if (descriptor->scalable) {
         if (charset->raw)
             free(charset->raw);
-        charset->raw = descriptor->raw ? strdup(descriptor->raw) : NULL;
+        charset->raw = descriptor->raw ? strdup(descriptor->raw) : nullptr;
         variant->scalable = True;
     } else {
         int size = descriptor->pixelSize > 0 ? descriptor->pixelSize : descriptor->pointSize;
@@ -476,20 +476,20 @@ FontFaceCatalog *
 FontFaceCatalogLoad(Display *display)
 {
     if (!display)
-        return NULL;
+        return nullptr;
 
     int count = 0;
     char **font_names = XListFonts(display, FACE_CATALOG_PATTERN, FACE_CATALOG_LIMIT, &count);
     if (!font_names || count <= 0) {
         if (font_names)
             XFreeFontNames(font_names);
-        return NULL;
+        return nullptr;
     }
 
     VariantEntry *variantPool = calloc(count, sizeof(VariantEntry));
     if (!variantPool) {
         XFreeFontNames(font_names);
-        return NULL;
+        return nullptr;
     }
 
     int variantCount = 0;
@@ -513,10 +513,10 @@ FontFaceCatalogLoad(Display *display)
             variant->labelText = build_variant_label_text(desc, variant->scalable);
             variant->label = XmStringCreateLocalized(
                     variant->labelText ? variant->labelText : "unknown");
-            variant->charsets = NULL;
+            variant->charsets = nullptr;
             variant->charsetCount = 0;
             variant->charsetCapacity = 0;
-            desc = NULL;
+            desc = nullptr;
         } else {
             free(key);
             if (desc->scalable)
@@ -526,7 +526,7 @@ FontFaceCatalogLoad(Display *display)
             if (desc->scalable && variant->base && !variant->base->scalable) {
                 FreeFontDescriptor(variant->base);
                 variant->base = desc;
-                desc = NULL;
+                desc = nullptr;
             }
         }
 
@@ -560,7 +560,7 @@ FontFaceCatalogLoad(Display *display)
 
     if (variantCount <= 0) {
         free(variantPool);
-        return NULL;
+        return nullptr;
     }
 
     for (int i = 0; i < variantCount; i++) {
@@ -595,7 +595,7 @@ FontFaceCatalogLoad(Display *display)
             free(variant->charsets);
         }
         free(variantPool);
-        return NULL;
+        return nullptr;
     }
 
     int familyCount = 0;
@@ -660,7 +660,7 @@ FontFaceCatalogLoad(Display *display)
             free(variant->charsets);
         }
         free(variantPool);
-        return NULL;
+        return nullptr;
     }
 
     catalog->families = families;
@@ -726,7 +726,7 @@ XmString
 FontFaceCatalogFamilyLabel(const FontFaceCatalog *catalog, int familyIndex)
 {
     if (!catalog || familyIndex < 0 || familyIndex >= catalog->familyCount)
-        return NULL;
+        return nullptr;
     return catalog->families[familyIndex].label;
 }
 
@@ -745,7 +745,7 @@ FontFaceCatalogVariantLabel(
         int variantIndex)
 {
     VariantEntry *variant = variant_entry(catalog, familyIndex, variantIndex);
-    return variant ? variant->label : NULL;
+    return variant ? variant->label : nullptr;
 }
 
 Boolean
@@ -765,7 +765,7 @@ FontFaceCatalogVariantBase(
         int variantIndex)
 {
     VariantEntry *variant = variant_entry(catalog, familyIndex, variantIndex);
-    return variant ? variant->base : NULL;
+    return variant ? variant->base : nullptr;
 }
 
 int
@@ -787,7 +787,7 @@ FontFaceCatalogVariantCharsetLabel(
 {
     VariantCharsetEntry *charset =
         variant_charset(catalog, familyIndex, variantIndex, charsetIndex);
-    return charset ? charset->label : NULL;
+    return charset ? charset->label : nullptr;
 }
 
 int
@@ -830,7 +830,7 @@ FontFaceCatalogVariantCharsetNearestSize(
     if (!charset || charset->sizeCount <= 0 || desiredSize <= 0)
         return desiredSize;
 
-    VariantSizeEntry *best = NULL;
+    VariantSizeEntry *best = nullptr;
     int bestDiff = INT_MAX;
     for (int i = 0; i < charset->sizeCount; i++) {
         VariantSizeEntry *entry = &charset->sizes[i];
@@ -855,14 +855,14 @@ FontFaceCatalogCreateDescriptorForVariant(
 {
     VariantEntry *variant = variant_entry(catalog, familyIndex, variantIndex);
     if (!variant)
-        return NULL;
+        return nullptr;
 
     VariantCharsetEntry *charset =
         variant_charset(catalog, familyIndex, variantIndex, charsetIndex);
 
     if (variant->scalable) {
-        const char *raw = NULL;
-        FontDescriptor *probe = NULL;
+        const char *raw = nullptr;
+        FontDescriptor *probe = nullptr;
         if (charset && charset->raw)
             probe = ParseXLFD(charset->raw);
         if (probe && probe->scalable)
@@ -870,22 +870,22 @@ FontFaceCatalogCreateDescriptorForVariant(
         if (probe)
             FreeFontDescriptor(probe);
         if (!raw)
-            raw = (variant->base ? variant->base->raw : NULL);
+            raw = (variant->base ? variant->base->raw : nullptr);
         FontDescriptor *desc = ParseXLFD(raw ? raw : "");
         if (!desc)
-            return NULL;
+            return nullptr;
         FontDescriptorSetSize(desc, sizeValue);
         return desc;
     }
 
     if (!charset)
-        return NULL;
+        return nullptr;
 
     if (charset->sizeCount <= 0)
-        return NULL;
+        return nullptr;
 
     int sizeToUse = sizeValue;
-    VariantSizeEntry *sizeEntry = NULL;
+    VariantSizeEntry *sizeEntry = nullptr;
     for (int i = 0; i < charset->sizeCount; i++) {
         if (charset->sizes[i].size == sizeValue) {
             sizeEntry = &charset->sizes[i];
@@ -895,7 +895,7 @@ FontFaceCatalogCreateDescriptorForVariant(
     if (!sizeEntry)
         sizeEntry = variant_size_entry(charset, sizeValue);
     if (!sizeEntry)
-        return NULL;
+        return nullptr;
 
     return ParseXLFD(sizeEntry->raw);
 }

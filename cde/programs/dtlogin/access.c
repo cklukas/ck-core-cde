@@ -283,7 +283,7 @@ ReadWord(
     if (nextIsEOF)
     {
 	nextIsEOF = FALSE;
-	return NULL;
+	return nullptr;
     }
     quoted = FALSE;
     for (;;) {
@@ -303,7 +303,7 @@ ReadWord(
 	    {
 		ungetc (c, file);
 		if (wordp == wordBuffer)
-		    return NULL;
+		    return nullptr;
 		*wordp = '\0';
 		nextIsEOF = TRUE;
 		return wordBuffer;
@@ -342,17 +342,17 @@ ReadHostEntry(
 tryagain:
     hostOrAlias = ReadWord (file, TRUE);
     if (!hostOrAlias)
-	return NULL;
+	return nullptr;
     h = (HostEntry *) malloc (sizeof (HostEntry));
     if (!h)
-	return NULL;
+	return nullptr;
     if (*hostOrAlias == ALIAS_CHARACTER)
     {
 	h->type = HOST_ALIAS;
 	h->entry.aliasName = malloc (strlen (hostOrAlias) + 1);
 	if (!h->entry.aliasName) {
 	    free ((char *) h);
-	    return NULL;
+	    return nullptr;
 	}
 	strcpy (h->entry.aliasName, hostOrAlias);
     }
@@ -383,12 +383,12 @@ tryagain:
 		      "Access file \"%s\", root bypass disallowed\n",
 		      accessFile);
 	    free ((char *) h);
-	    return NULL;
+	    return nullptr;
 	}
  	h->entry.aliasName = malloc (strlen (hostOrAlias) + 1);
  	if (!h->entry.aliasName) {
 	    free ((char *) h);
-	    return NULL;
+	    return nullptr;
  	}
  	strcpy (h->entry.aliasName, hostOrAlias);
     }
@@ -411,7 +411,7 @@ tryagain:
 	    LogOutOfMem(
 		ReadCatalog(MC_LOG_SET,MC_LOG_HOST_ENT,MC_DEF_LOG_HOST_ENT));
 	    free ((char *) h);
-	    return NULL;
+	    return nullptr;
 	}
 	memmove((char *) h->entry.hostAddress.data, hostent->h_addr, hostent->h_length);
     }
@@ -445,10 +445,10 @@ ReadDisplayEntry(
 next:
     displayOrAlias = ReadWord (file, FALSE);
     if (!displayOrAlias)
-    	return NULL;
+    	return nullptr;
     d = (DisplayEntry *) malloc (sizeof (DisplayEntry));
     if (!d)
-	return NULL;
+	return nullptr;
     d->notAllowed = 0;
     d->chooser = 0;
 #ifdef BYPASSLOGIN
@@ -461,7 +461,7 @@ next:
 	if (!d->entry.aliasName)
 	{
 	    free ((char *) d);
-	    return NULL;
+	    return nullptr;
 	}
 	strcpy (d->entry.aliasName, displayOrAlias);
     }
@@ -479,13 +479,13 @@ next:
 	    if (!d->entry.displayPattern)
 	    {
 	    	free ((char *) d);
-	    	return NULL;
+	    	return nullptr;
 	    }
 	    strcpy (d->entry.displayPattern, displayOrAlias);
     	}
     	else
     	{
-	    if ((hostent = gethostbyname (displayOrAlias)) == NULL)
+	    if ((hostent = gethostbyname (displayOrAlias)) == nullptr)
 	    {
 		LogError(
 		  ReadCatalog(MC_LOG_SET,MC_LOG_ACC_DPY,MC_DEF_LOG_ACC_DPY),
@@ -501,7 +501,7 @@ next:
 	    if (!XdmcpAllocARRAY8 (&display->clientAddress, hostent->h_length))
 	    {
 	    	free ((char *) d);
-	    	return NULL;
+	    	return nullptr;
 	    }
 	    memmove((char *) display->clientAddress.data, hostent->h_addr, hostent->h_length);
 	    switch (hostent->h_addrtype)
@@ -545,7 +545,7 @@ next:
 	    prev = &h->next;
 	}
     }
-    *prev = NULL;
+    *prev = nullptr;
     return d;
 }
 
@@ -562,7 +562,7 @@ ReadAccessDatabase(
 	*prev = d;
 	prev = &d->next;
     }
-    *prev = NULL;
+    *prev = nullptr;
 }
 
 int 
@@ -592,7 +592,7 @@ patternMatch(
         char *string,
         char *pattern )
 {
-    char    *star = NULL, *mark = NULL;
+    char    *star = nullptr, *mark = nullptr;
 
     if (!string)
         string = "";
@@ -780,7 +780,7 @@ ForEachMatchingIndirectHost(
 {
     int		    haveLocalhost = 0;
     DisplayEntry    *d;
-    char	    *clientName = NULL;
+    char	    *clientName = nullptr;
 
     for (d = database; d; d = d->next)
     {
@@ -843,7 +843,7 @@ UseChooser(
 #endif /* NeedWidePrototypes */
 {
     DisplayEntry    *d;
-    char	    *clientName = NULL;
+    char	    *clientName = nullptr;
 
     for (d = database; d; d = d->next)
     {
@@ -899,7 +899,7 @@ ForEachChooserHost(
 {
     int		    haveLocalhost = 0;
     DisplayEntry    *d;
-    char	    *clientName = NULL;
+    char	    *clientName = nullptr;
 
     for (d = database; d; d = d->next)
     {
@@ -961,7 +961,7 @@ AcceptableDisplayAddress(
         xdmOpCode type )
 {
     DisplayEntry    *d;
-    char	    *clientName = NULL;
+    char	    *clientName = nullptr;
 
     if (!accessFile || strlen(accessFile) == 0)
 	return 1;
@@ -1010,7 +1010,7 @@ BypassLogin (char *displayName)
     
     if (!NameToNetworkAddress (displayName, &connectionType, &connectionAddress,
 			       &displayNumber))
- 	return NULL;
+ 	return nullptr;
     
     for (d = database; d; d = d->next)
     {
@@ -1039,11 +1039,11 @@ BypassLogin (char *displayName)
  	if (d->bypass)
  	{
  	    h = d->hosts;
- 	    if (h->entry.aliasName != NULL)
+ 	    if (h->entry.aliasName != nullptr)
  		return h->entry.aliasName;
  	}
     }
-    return NULL;
+    return nullptr;
 }
 
 HostnameToNetworkAddress (char *name,

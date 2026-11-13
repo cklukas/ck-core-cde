@@ -101,7 +101,7 @@ extern char    *strdup (const char *s);
 
 /*------------- GLOBALS VISIBLE TO CALLER -------------------*/
 /* see also globals.c */
-char          **ausapi_dbnamesv = NULL;	/* array of database names */
+char          **ausapi_dbnamesv = nullptr;	/* array of database names */
 int             ausapi_dbnamesc = 0;	/* size of dbnames array */
 int             aa_maxhits = DtSrMAXHITS;	/* num hits retnd after
 						 * srch */
@@ -167,7 +167,7 @@ DtSrObjdate     DtSearchValidDateString (char *datestr)
     char            msgbuf[256];
 
     aa_check_initialization();
-    if (datestr == NULL)	/* null string is valid */
+    if (datestr == nullptr)	/* null string is valid */
 	return 0L;
     if (datestr[0] == 0)	/* empty string is valid */
 	return 0L;
@@ -335,21 +335,21 @@ int	DtSearchMergeResults (DtSrResult **targ_list, DtSrResult **src_list)
 {
     DtSrResult     *targ, *src, *nextsrc, **prevtargl;
 
-    if (src_list == NULL || targ_list == NULL)
+    if (src_list == nullptr || targ_list == nullptr)
 	return DtSrERROR;
 
     /* If there's no 'src' list, return with no changes.
      * In other words, merge was successful before we started.
      */
-    if (*src_list == NULL)
+    if (*src_list == nullptr)
 	return DtSrOK;
 
     /* At this point we know there is a src_list.
      * If there's no targ_list, just swap the pointers.
      */
-    if (*targ_list == NULL) {
+    if (*targ_list == nullptr) {
 	*targ_list = *src_list;
-	*src_list = NULL;
+	*src_list = nullptr;
 	return DtSrOK;
     }
 
@@ -362,7 +362,7 @@ int	DtSearchMergeResults (DtSrResult **targ_list, DtSrResult **src_list)
     nextsrc = src->link;	/* next src_list node to compare */
     targ = *targ_list;	/* curr targ_list node to compare */
     prevtargl = targ_list;	/* prev targ_list node link pointer */
-    while (src != NULL && targ != NULL) {
+    while (src != nullptr && targ != nullptr) {
 	if (src->proximity < targ->proximity) {
 	    /* Insert src node into targ list */
 	    *prevtargl = src;
@@ -391,7 +391,7 @@ int	DtSearchMergeResults (DtSrResult **targ_list, DtSrResult **src_list)
 	*prevtargl = src;
     }
 
-    *src_list = NULL;
+    *src_list = nullptr;
     return DtSrOK;
 }  /* DtSearchMergeResults() */
 
@@ -423,7 +423,7 @@ static DtSrResult *ditto_pop (DtSrResult ** lst)
     DtSrResult     *first_node;
 
     first_node = *lst;
-    if (first_node != NULL)
+    if (first_node != nullptr)
 	*lst = first_node->link;
     return first_node;
 }  /* ditto_pop() */
@@ -443,19 +443,19 @@ static DtSrResult *ditto_split (DtSrResult * lst)
 {
     DtSrResult     *tail = lst->link;
 
-    if (lst == NULL || tail == NULL)
+    if (lst == nullptr || tail == nullptr)
 	return lst;
 
     /*
      * Advance 'tail' to end of list, and advance 'lst' only half
      * as often 
      */
-    while ((tail != NULL) && ((tail = tail->link) != NULL)) {
+    while ((tail != nullptr) && ((tail = tail->link) != nullptr)) {
 	lst = lst->link;
 	tail = tail->link;
     }
     tail = lst->link;
-    lst->link = NULL;
+    lst->link = nullptr;
     return tail;
 }  /* ditto_split() */
 
@@ -470,11 +470,11 @@ static DtSrResult *ditto_split (DtSrResult * lst)
  */
 static DtSrResult *merge_by_prox (DtSrResult * l1, DtSrResult * l2)
 {
-    DtSrResult     *myqueue = NULL;
-    DtSrResult     *myend = NULL;
+    DtSrResult     *myqueue = nullptr;
+    DtSrResult     *myend = nullptr;
     DtSrResult     *mynext;
 
-    while ((l1 != NULL) && (l2 != NULL)) {
+    while ((l1 != nullptr) && (l2 != nullptr)) {
 	/*
 	 * Perform ENQUEUE function. Next item popped off a list is
 	 * the next one in sorted order. It is added to END of
@@ -484,8 +484,8 @@ static DtSrResult *merge_by_prox (DtSrResult * l1, DtSrResult * l2)
 	mynext = (l1->proximity < l2->proximity) ?
 	    ditto_pop (&l1) : ditto_pop (&l2);
 
-	mynext->link = NULL;
-	if (myqueue == NULL)
+	mynext->link = nullptr;
+	if (myqueue == nullptr)
 	    myqueue = mynext;
 	else
 	    myend->link = mynext;
@@ -496,9 +496,9 @@ static DtSrResult *merge_by_prox (DtSrResult * l1, DtSrResult * l2)
      * Perform JOIN QUEUE function. Append entire list to end of
      * queue. 
      */
-    if (l1 != NULL)
+    if (l1 != nullptr)
 	myend->link = l1;
-    if (l2 != NULL)
+    if (l2 != nullptr)
 	myend->link = l2;
     return myqueue;
 }  /* merge_by_prox() */
@@ -514,11 +514,11 @@ static DtSrResult *merge_by_prox (DtSrResult * l1, DtSrResult * l2)
  */
 static DtSrResult *merge_by_date (DtSrResult * l1, DtSrResult * l2)
 {
-    DtSrResult     *myqueue = NULL;
-    DtSrResult     *myend = NULL;
+    DtSrResult     *myqueue = nullptr;
+    DtSrResult     *myend = nullptr;
     DtSrResult     *mynext;
 
-    while ((l1 != NULL) && (l2 != NULL)) {
+    while ((l1 != nullptr) && (l2 != nullptr)) {
 	/*
 	 * Perform ENQUEUE function. Next item popped off a list is
 	 * the next one in sorted order. It is added to END of
@@ -532,8 +532,8 @@ static DtSrResult *merge_by_date (DtSrResult * l1, DtSrResult * l2)
 	    mynext = (l1->objdate > l2->objdate) ?
 		ditto_pop (&l1) : ditto_pop (&l2);
 
-	mynext->link = NULL;
-	if (myqueue == NULL)
+	mynext->link = nullptr;
+	if (myqueue == nullptr)
 	    myqueue = mynext;
 	else
 	    myend->link = mynext;
@@ -544,9 +544,9 @@ static DtSrResult *merge_by_date (DtSrResult * l1, DtSrResult * l2)
      * Perform JOIN QUEUE function. Append entire list to end of
      * queue. 
      */
-    if (l1 != NULL)
+    if (l1 != nullptr)
 	myend->link = l1;
-    if (l2 != NULL)
+    if (l2 != nullptr)
 	myend->link = l2;
     return myqueue;
 }  /* merge_by_date() */
@@ -571,7 +571,7 @@ static DtSrResult *ditto_sort (DtSrResult * lst)
 {
     DtSrResult     *lst2;
 
-    if ((lst == NULL) || (lst->link == NULL))
+    if ((lst == nullptr) || (lst->link == nullptr))
 	return lst;
     lst2 = ditto_split (lst);
     switch (ditsort_type) {

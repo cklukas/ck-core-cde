@@ -130,8 +130,8 @@ ShowModAttrDialog(
    ModAttrRec *modAttr_rec;
    int count, i;
    Boolean loadOk=True;
-   char * errorMsg=NULL;
-   char * title=NULL;
+   char * errorMsg=nullptr;
+   char * title=nullptr;
    Arg args[1];
    Widget mbar;
    char * tmpStr, *tempStr;
@@ -147,33 +147,33 @@ ShowModAttrDialog(
    XtGetValues(mbar, args, 1);
 
    /* Ignore accelerators when we're insensitive */
-   if (client_data == NULL)
+   if (client_data == nullptr)
       if ((file_mgr_rec->menuStates & MODIFY) == 0)
          return;
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
    /* get the file_view_data object from which the menu was invoked */
-   if (client_data == NULL)
-     file_view_data = NULL;
+   if (client_data == nullptr)
+     file_view_data = nullptr;
    else
    {
      file_view_data = file_mgr_data->popup_menu_icon;
-     if (file_view_data == NULL)
+     if (file_view_data == nullptr)
        /* the object has gone away (probably deleted) */
        return;
 
-     file_mgr_data->popup_menu_icon = NULL; /* Reset it, we don't need it */
+     file_mgr_data->popup_menu_icon = nullptr; /* Reset it, we don't need it */
    }
 
 
    attr_dialog = _DtGetDefaultDialogData (mod_attr_dialog);
 
    file_mgr_rec->menuStates &= ~MODIFY;
-   if (file_view_data == NULL)
+   if (file_view_data == nullptr)
    {
       directory_set =
          (DirectorySet *) file_mgr_data->selection_list[0]->directory_set;
@@ -205,17 +205,17 @@ ShowModAttrDialog(
       */
      ((ModAttrData *) (attr_dialog->data))->main_widget = file_mgr_rec->main;
 
-     _DtShowDialog (file_mgr_rec->shell, NULL,
+     _DtShowDialog (file_mgr_rec->shell, nullptr,
 		 (XtPointer)file_mgr_rec, attr_dialog,
                  ModAttrChange, (XtPointer)file_mgr_rec, ModAttrClose,
-                 (XtPointer)file_mgr_rec,NULL, False, False, NULL, NULL);
+                 (XtPointer)file_mgr_rec,nullptr, False, False, nullptr, nullptr);
 
      for(i = 0; i < file_mgr_data->attr_dialog_count; i++)
      {
         modAttr_rec = (ModAttrRec *)_DtGetDialogInstance(
                                        file_mgr_data->attr_dialog_list[i]);
 
-        if(file_mgr_data->title != NULL &&
+        if(file_mgr_data->title != nullptr &&
                    strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
         {
            tmpStr = GETMESSAGE(21, 1, "File Permissions");
@@ -244,7 +244,7 @@ ShowModAttrDialog(
      errorMsg = XtNewString(tmpStr);
      tmpStr = GETMESSAGE(22, 5, "Set Permissions Error");
      title = XtNewString(tmpStr);
-     _DtMessage (file_mgr_rec->shell, title, errorMsg, NULL, HelpRequestCB);
+     _DtMessage (file_mgr_rec->shell, title, errorMsg, nullptr, HelpRequestCB);
      XtFree(title);
      XtFree(errorMsg);
    }
@@ -285,7 +285,7 @@ AttrChangeProcess(
   Tt_status tt_status;
 
   /* get directory timestamp */
-  path = ResolveLocalPathName(host, directory, NULL,home_host_name, &tt_status);
+  path = ResolveLocalPathName(host, directory, nullptr,home_host_name, &tt_status);
   if( TT_OK == tt_status )
   {
     if (stat(path, &stat_buf) == 0)
@@ -383,7 +383,7 @@ AttrChangePipeCB(
        if(tmpptr)
        {
            if(tmpptr != cb_data->directory)
-               tmpptr = NULL, dir = cb_data->directory;
+               tmpptr = nullptr, dir = cb_data->directory;
            else
                dir = "/";
            DirectoryBeginModify(cb_data->host,dir);
@@ -405,7 +405,7 @@ AttrChangePipeCB(
            *p++ = '/';
        
        strcpy(p, cb_data->file);
-       UpdateDirectory(NULL,cb_data->host, subdir_name);
+       UpdateDirectory(nullptr,cb_data->host, subdir_name);
    }
 
    /* close the pipe and cancel the callback */

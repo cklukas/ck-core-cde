@@ -148,7 +148,7 @@ main (int argc, char **argv)
     SmPrivDropInstalledIdentity();
 
     setlocale( LC_ALL, "" );
-    XtSetLanguageProc( NULL, NULL, NULL );
+    XtSetLanguageProc( nullptr, nullptr, nullptr );
 
     smGD.smState = IN_PROCESS;
     smGD.programName = strdup (argv[0]);
@@ -167,7 +167,7 @@ main (int argc, char **argv)
     /*
      * Initialize LANG if it isn't defined.
      */
-    if ((lang = getenv ("LANG")) == NULL)
+    if ((lang = getenv ("LANG")) == nullptr)
     {
 	lang = XtMalloc (7);
 	(void) strcpy (lang, "LANG=C");
@@ -187,7 +187,7 @@ main (int argc, char **argv)
     sigemptyset(&stopvec.sa_mask);
     stopvec.sa_flags = 0;
     stopvec.sa_handler = SIG_IGN;
-    (void) sigaction(SIGPIPE, &stopvec, (struct sigaction *) NULL);
+    (void) sigaction(SIGPIPE, &stopvec, (struct sigaction *) nullptr);
 
     smGD.childvec.sa_handler = WaitChildDeath;
     sigemptyset(&smGD.childvec.sa_mask);
@@ -230,9 +230,9 @@ main (int argc, char **argv)
                        "-load",
                        "-system",
                        "-xdefaults",
-                       smGD.resourcePath[0] != '\0' ? "-file" : NULL,
+                       smGD.resourcePath[0] != '\0' ? "-file" : nullptr,
                        smGD.resourcePath,
-                       NULL);
+                       nullptr);
     }
 
     /*
@@ -259,9 +259,9 @@ main (int argc, char **argv)
 	 */
         XtToolkitInitialize();
         smGD.appCon = XtCreateApplicationContext();
-        smGD.display = XtOpenDisplay(smGD.appCon, NULL, argv[0],
+        smGD.display = XtOpenDisplay(smGD.appCon, nullptr, argv[0],
 				SM_RESOURCE_CLASS,
-				NULL, 0, &argc, argv);
+				nullptr, 0, &argc, argv);
     }
 
     /*
@@ -269,8 +269,8 @@ main (int argc, char **argv)
      */
     WatchStopSignal();
 
-    srvDisplay = XtOpenDisplay(smGD.appCon, NULL, argv[0], SM_RESOURCE_CLASS,
-                                 NULL, 0, &argc, argv);
+    srvDisplay = XtOpenDisplay(smGD.appCon, nullptr, argv[0], SM_RESOURCE_CLASS,
+                                 nullptr, 0, &argc, argv);
 
     /*
      * Initialize XSMP
@@ -279,7 +279,7 @@ main (int argc, char **argv)
         SM_EXIT(-1);
 
     /* Added the following check to exit in case of error RK 09.08.93 */
-    if(smGD.display == NULL)
+    if(smGD.display == nullptr)
     {
         PrintError(DtError, GETMESSAGE(4, 1, "Invalid display name - exiting."));
         SM_EXIT(-1);
@@ -300,7 +300,7 @@ main (int argc, char **argv)
     smGD.DtXineramaInfo = _DtXineramaInit(smGD.display);
 
 # ifdef DEBUG
-    if (smGD.DtXineramaInfo == NULL)
+    if (smGD.DtXineramaInfo == nullptr)
       {                         /* No xinerama, how... sad. */
         fprintf(stderr, "### JET SmMain: Xinerama NOT available.\n");
       }
@@ -455,7 +455,7 @@ main (int argc, char **argv)
      */
     XtAddEventHandler(smGD.topLevelWid,
                       PropertyChangeMask,
-                      True, ProcessEvent, NULL);
+                      True, ProcessEvent, nullptr);
 
     smGD.smState = READY;
 
@@ -472,7 +472,7 @@ main (int argc, char **argv)
           * doesn't seem to know how to dispatch a run-time generated
           * event type.
           */
-          ProcessEvent(smGD.topLevelWid, NULL, &next, NULL);
+          ProcessEvent(smGD.topLevelWid, nullptr, &next, nullptr);
         }
         else
         {
@@ -615,7 +615,7 @@ CatchStopSignal(void)
     }
 
     action.sa_handler = (stopPipe[1] != -1) ? StopAll : SIG_DFL;
-    if (sigaction(SIGTERM, &action, (struct sigaction *) NULL) != 0 &&
+    if (sigaction(SIGTERM, &action, (struct sigaction *) nullptr) != 0 &&
         stopPipe[1] != -1)
     {
         StopPipeFailed();
@@ -642,7 +642,7 @@ WatchStopSignal(void)
     if (stopPipe[0] != -1)
     {
         XtAppAddInput(smGD.appCon, stopPipe[0], (XtPointer) XtInputReadMask,
-                      StopRequested, NULL);
+                      StopRequested, nullptr);
     }
 }
 

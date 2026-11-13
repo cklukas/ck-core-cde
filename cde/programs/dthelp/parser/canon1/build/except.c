@@ -38,8 +38,8 @@ void addex(void)
     *nextex = (EXCEPTION *) m_malloc(sizeof(EXCEPTION), "exception") ;
     if (exlist) exlist->next = *nextex ;
     exlist = *nextex ;
-    (*nextex)->next = NULL ;
-    (*nextex)->nextptr = NULL ;
+    (*nextex)->next = nullptr ;
+    (*nextex)->nextptr = nullptr ;
     (*nextex)->element = ntrelt(name)->eltno ;
     nextex = &(*nextex)->nextptr ;
     }

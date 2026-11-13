@@ -125,8 +125,8 @@ void main(int argc, char **argv)
     ad.overstrikeModeOn = False;
 
     /* Initialize the toolkit and open the display */
-    ad.top = XtAppInitialize(&ad.appContext, ApplicationClass, NULL, 0,
-                             &argc, argv, NULL, NULL, 0);
+    ad.top = XtAppInitialize(&ad.appContext, ApplicationClass, nullptr, 0,
+                             &argc, argv, nullptr, nullptr, 0);
     ad.display = XtDisplay(ad.top);
 
     /* Create MainWindow. */
@@ -147,7 +147,7 @@ void main(int argc, char **argv)
     CreatePopupMenu(ad.editor);
 
     /* Set the main window widgets. */
-    XmMainWindowSetAreas(ad.mainWindow, ad.menuBar, NULL, NULL, NULL, ad.editor);
+    XmMainWindowSetAreas(ad.mainWindow, ad.menuBar, nullptr, nullptr, nullptr, ad.editor);
 
     /* Realize toplevel widget */
     XtRealizeWidget (ad.top);
@@ -190,8 +190,8 @@ static void OpenFileCb( Widget w, XtPointer cd, XtPointer cb)
     *  Get the name of the file & pass it to the editor widget
     */
 
-   name = XmStringUnparse(fcb->value, NULL, XmCHARSET_TEXT,
-                          XmCHARSET_TEXT, NULL, 0, XmOUTPUT_ALL);
+   name = XmStringUnparse(fcb->value, nullptr, XmCHARSET_TEXT,
+                          XmCHARSET_TEXT, nullptr, 0, XmOUTPUT_ALL);
 
    /*
     * Load or insert the file, as specified
@@ -430,7 +430,7 @@ static void DisplayFsbCb(Widget w, XtPointer cd, XtPointer cb)
   XtVaSetValues(ad.fileSelectionBox,
 	XmNdialogTitle, tmpStr1,
   	XmNselectionLabelString, tmpStr1,
-	NULL);
+	nullptr);
 
   XmStringFree(tmpStr1);
   XmStringFree(tmpStr2);
@@ -510,13 +510,13 @@ static void SpellCb(Widget w, XtPointer cd, XtPointer cb)
 
 static void FormatAllCb(Widget w, XtPointer cd, XtPointer cb)
 {
-   DtEditorFormat(ad.editor, (DtEditorFormatSettings *) NULL, 
+   DtEditorFormat(ad.editor, (DtEditorFormatSettings *) nullptr, 
 		  DtEDITOR_FORMAT_ALL); 
 }
 
 static void FormatParaCb(Widget w, XtPointer cd, XtPointer cb)
 {
-   DtEditorFormat(ad.editor, (DtEditorFormatSettings *) NULL, 
+   DtEditorFormat(ad.editor, (DtEditorFormatSettings *) nullptr, 
 		  DtEDITOR_FORMAT_PARAGRAPH); 
 }
 
@@ -534,13 +534,13 @@ static void InvokeFormatDlgCb(Widget w, XtPointer cd, XtPointer cb)
 static void OverstrikeCb(Widget w, XtPointer cd, XtPointer cb)
 {
     ad.overstrikeModeOn = ad.overstrikeModeOn ? False : True;
-    XtVaSetValues(ad.editor, DtNoverstrike, ad.overstrikeModeOn, NULL); 
+    XtVaSetValues(ad.editor, DtNoverstrike, ad.overstrikeModeOn, nullptr); 
 }
 
 static void StatusLineCb(Widget w, XtPointer cd, XtPointer cb)
 {
     ad.statusLineOn = ad.statusLineOn ? False : True;
-    XtVaSetValues(ad.editor, DtNshowStatusLine, ad.statusLineOn, NULL); 
+    XtVaSetValues(ad.editor, DtNshowStatusLine, ad.statusLineOn, nullptr); 
 
     /* Reset the resize increment and minimum window size properties. */
    SetResizeHints();
@@ -550,7 +550,7 @@ static void StatusLineCb(Widget w, XtPointer cd, XtPointer cb)
 static void WordWrapCb(Widget w, XtPointer cd, XtPointer cb)
 {
     ad.wordWrapOn = ad.wordWrapOn ? False : True;
-    XtVaSetValues(ad.editor, DtNwordWrap, ad.wordWrapOn, NULL); 
+    XtVaSetValues(ad.editor, DtNwordWrap, ad.wordWrapOn, nullptr); 
 }
 
 /***************************************************** 
@@ -609,7 +609,7 @@ static void SetResizeHints(void)
    /*
     * Add Menu Bar height to the height of the Editor widget
     */
-   XtVaGetValues( ad.menuBar, XmNheight, &MBheight, NULL);
+   XtVaGetValues( ad.menuBar, XmNheight, &MBheight, nullptr);
    sh.min_height += MBheight;
    sh.base_height += MBheight;
 
@@ -637,16 +637,16 @@ static Widget CreateFileMenu(Widget menuBar)
 {
     Widget fileMenu; 
 
-    fileMenu = (Widget) XmCreatePulldownMenu (menuBar, "fileMenu", NULL, 0);
+    fileMenu = (Widget) XmCreatePulldownMenu (menuBar, "fileMenu", nullptr, 0);
     CreateCascade(menuBar, "File", 'F', fileMenu);
-    CreateButton(fileMenu, "New", 'N', ResetEditorCb, NULL);
+    CreateButton(fileMenu, "New", 'N', ResetEditorCb, nullptr);
     CreateButton(fileMenu, "Open...", 'O', DisplayFsbCb, (XtPointer)LOAD_DATA);
     CreateButton(fileMenu, "Include...", 'I', DisplayFsbCb,
 							(XtPointer)INSERT_DATA);
-    XtManageChild(XmCreateSeparatorGadget(fileMenu, "sep1", NULL, 0));
+    XtManageChild(XmCreateSeparatorGadget(fileMenu, "sep1", nullptr, 0));
     CreateButton(fileMenu, "Save As...", 'A', DisplayFsbCb, (XtPointer)SAVE_DATA);
-    XtManageChild(XmCreateSeparatorGadget(fileMenu, "sep2", NULL, 0));
-    CreateButton(fileMenu, "Exit", 'x', ExitCb, NULL);
+    XtManageChild(XmCreateSeparatorGadget(fileMenu, "sep2", nullptr, 0));
+    CreateButton(fileMenu, "Exit", 'x', ExitCb, nullptr);
 
     return (fileMenu);
 }
@@ -661,20 +661,20 @@ static Widget CreateEditMenu(Widget menuBar)
 {
     Widget editMenu;
 
-    editMenu = XmCreatePulldownMenu (menuBar, "editMenu", NULL, 0);
+    editMenu = XmCreatePulldownMenu (menuBar, "editMenu", nullptr, 0);
 
     CreateCascade(menuBar, "Edit", 'E', editMenu);
 
-    CreateButton(editMenu, "Undo", 'U', UndoCb, NULL);
-    XtManageChild(XmCreateSeparatorGadget(editMenu, "sep1", NULL, 0));
-    ad.cutButton = CreateButton(editMenu, "Cut", 't', CutCb, NULL);
-    ad.copyButton = CreateButton(editMenu, "Copy", 'C', CopyCb, NULL);
-    CreateButton(editMenu, "Paste", 'P', PasteCb, NULL);
-    ad.clearButton = CreateButton(editMenu, "Clear", 'e', ClearCb, NULL);
-    ad.deleteButton = CreateButton(editMenu, "Delete", 't', DeleteCb, NULL);
-    CreateButton(editMenu, "Select All", 'S', SelectAllCb, NULL);
-    ad.deselectButton = CreateButton(editMenu, "Deselect", 'D', DeselectCb, NULL);
-    XtManageChild(XmCreateSeparatorGadget(editMenu, "sep2", NULL, 0));
+    CreateButton(editMenu, "Undo", 'U', UndoCb, nullptr);
+    XtManageChild(XmCreateSeparatorGadget(editMenu, "sep1", nullptr, 0));
+    ad.cutButton = CreateButton(editMenu, "Cut", 't', CutCb, nullptr);
+    ad.copyButton = CreateButton(editMenu, "Copy", 'C', CopyCb, nullptr);
+    CreateButton(editMenu, "Paste", 'P', PasteCb, nullptr);
+    ad.clearButton = CreateButton(editMenu, "Clear", 'e', ClearCb, nullptr);
+    ad.deleteButton = CreateButton(editMenu, "Delete", 't', DeleteCb, nullptr);
+    CreateButton(editMenu, "Select All", 'S', SelectAllCb, nullptr);
+    ad.deselectButton = CreateButton(editMenu, "Deselect", 'D', DeselectCb, nullptr);
+    XtManageChild(XmCreateSeparatorGadget(editMenu, "sep2", nullptr, 0));
     CreateButton(editMenu, "Find/Change...", 'F', FindCb, (XtPointer)ad.editor);
     CreateButton(editMenu, "Check Spelling...", 'p', SpellCb, (XtPointer)ad.editor);
 
@@ -692,13 +692,13 @@ static Widget CreateFormatMenu(Widget menuBar)
 {
     Widget formatMenu;
 
-    formatMenu = XmCreatePulldownMenu (menuBar, "formatMenu", NULL, 0);
+    formatMenu = XmCreatePulldownMenu (menuBar, "formatMenu", nullptr, 0);
 
     CreateCascade(menuBar, "Format", 'r', formatMenu);
 
-    CreateButton(formatMenu, "Settings...", 'S', InvokeFormatDlgCb, NULL);
-    CreateButton(formatMenu, "All", 'A', FormatAllCb, NULL);
-    CreateButton(formatMenu, "Paragraph", 'P', FormatParaCb, NULL);
+    CreateButton(formatMenu, "Settings...", 'S', InvokeFormatDlgCb, nullptr);
+    CreateButton(formatMenu, "All", 'A', FormatAllCb, nullptr);
+    CreateButton(formatMenu, "Paragraph", 'P', FormatParaCb, nullptr);
 
     return (formatMenu);
 }
@@ -713,14 +713,14 @@ static Widget CreateOptionsMenu(Widget menuBar)
 {
     Widget optionsMenu;
 
-    optionsMenu = XmCreatePulldownMenu (menuBar, "optionsMenu", NULL, 0);
+    optionsMenu = XmCreatePulldownMenu (menuBar, "optionsMenu", nullptr, 0);
 
     CreateCascade(menuBar, "Options", 'O', optionsMenu);
 
-    CreateToggle(optionsMenu, "Overstrike", 'O', OverstrikeCb, NULL, ad.overstrikeModeOn);
-    CreateToggle(optionsMenu, "Word Wrap", 'W', WordWrapCb, NULL,ad.wordWrapOn);
-    XtManageChild(XmCreateSeparatorGadget(optionsMenu, "sep1", NULL, 0));
-    CreateToggle(optionsMenu, "Status Line", 'S', StatusLineCb, NULL, ad.statusLineOn);
+    CreateToggle(optionsMenu, "Overstrike", 'O', OverstrikeCb, nullptr, ad.overstrikeModeOn);
+    CreateToggle(optionsMenu, "Word Wrap", 'W', WordWrapCb, nullptr,ad.wordWrapOn);
+    XtManageChild(XmCreateSeparatorGadget(optionsMenu, "sep1", nullptr, 0));
+    CreateToggle(optionsMenu, "Status Line", 'S', StatusLineCb, nullptr, ad.statusLineOn);
 
     return (optionsMenu);
 }
@@ -735,25 +735,25 @@ static Widget CreatePopupMenu(Widget parent)
     Widget fileMenu;
     Widget editMenu;
 
-    popupMenu = XmCreatePopupMenu(parent, "popupMenu", NULL, 0);
+    popupMenu = XmCreatePopupMenu(parent, "popupMenu", nullptr, 0);
 
     XtAddEventHandler(parent, ButtonPressMask, False, PopupHandler,
 							(XtPointer)popupMenu);
 
-    fileMenu = XmCreatePulldownMenu (popupMenu, "fileMenu", NULL, 0);
+    fileMenu = XmCreatePulldownMenu (popupMenu, "fileMenu", nullptr, 0);
     CreateCascade(popupMenu, "File", 'F', fileMenu);
     CreateButton(fileMenu, "Open...", 'O', DisplayFsbCb, (XtPointer)LOAD_DATA);
     CreateButton(fileMenu, "Include...", 'I', DisplayFsbCb,
 							(XtPointer)INSERT_DATA);
     CreateButton(fileMenu, "Save As...", 'A', DisplayFsbCb, (XtPointer)SAVE_DATA);
-    CreateButton(fileMenu, "New", 'N', ResetEditorCb, NULL);
+    CreateButton(fileMenu, "New", 'N', ResetEditorCb, nullptr);
 
-    editMenu = XmCreatePulldownMenu (popupMenu, "editMenu", NULL, 0);
+    editMenu = XmCreatePulldownMenu (popupMenu, "editMenu", nullptr, 0);
     CreateCascade(popupMenu, "Edit", 'E', editMenu);
     CreateButton(editMenu, "Undo", 'U', UndoCb, (XtPointer)LOAD_DATA);
-    ad.cutPopupButton = CreateButton(editMenu, "Cut", 't', CutCb, NULL);
-    ad.copyPopupButton = CreateButton(editMenu, "Copy", 'C', CopyCb, NULL);
-    CreateButton(editMenu, "Paste", 'P', PasteCb, NULL);
+    ad.cutPopupButton = CreateButton(editMenu, "Cut", 't', CutCb, nullptr);
+    ad.copyPopupButton = CreateButton(editMenu, "Copy", 'C', CopyCb, nullptr);
+    CreateButton(editMenu, "Paste", 'P', PasteCb, nullptr);
 
     CreateButton(popupMenu, "Find/Change...", 'F', FindCb, (XtPointer)ad.editor);
 
@@ -777,7 +777,7 @@ static Widget CreateMenuBar(Widget parent)
 { 
     Widget menuBar;
 
-    menuBar = XmCreateMenuBar(parent, "menuBar", NULL, 0);
+    menuBar = XmCreateMenuBar(parent, "menuBar", nullptr, 0);
 
     CreateFileMenu(menuBar);
     CreateEditMenu(menuBar);
@@ -813,7 +813,7 @@ static Widget CreateEditor(Widget parent)
 
     XtAddCallback(w, DtNtextSelectCallback, TextSelectedCb, (XtPointer) w);
     XtAddCallback(w, DtNtextDeselectCallback, TextUnselectedCb, (XtPointer) w);
-    XtAddCallback(w, XmNhelpCallback, HelpCb, NULL);
+    XtAddCallback(w, XmNhelpCallback, HelpCb, nullptr);
 
     return(w);
 }

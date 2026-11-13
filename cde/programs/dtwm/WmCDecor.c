@@ -592,7 +592,7 @@ void GenerateFrameDisplayLists (ClientData *pcd)
     unsigned int meTitleBevel, inWidth;
     int x, y, xAdj = 0, yAdj = 0;
     unsigned int width, height;
-    RList *prlTop = NULL, *prlBot = NULL;
+    RList *prlTop = nullptr, *prlBot = nullptr;
 
     int jX, jY;
     unsigned int jW, jH;
@@ -1491,9 +1491,9 @@ Boolean AllocateFrameDisplayLists (ClientData *pcd)
 	(pcd->decor & MWM_DECOR_TITLE))
     {
 	if (((pcd->pclientTitleTopShadows = 
-	      AllocateRList ((unsigned)NUM_TITLE_TS_ELEMENTS(pcd))) == NULL) ||
+	      AllocateRList ((unsigned)NUM_TITLE_TS_ELEMENTS(pcd))) == nullptr) ||
 	    ((pcd->pclientTitleBottomShadows = 
-	      AllocateRList ((unsigned)NUM_TITLE_BS_ELEMENTS(pcd))) == NULL))
+	      AllocateRList ((unsigned)NUM_TITLE_BS_ELEMENTS(pcd))) == nullptr))
 	{
 	    /* out of memory! */
 	    Warning (((char *)GETMESSAGE(8, 1, "Insufficient memory for client window framing")));
@@ -1514,18 +1514,18 @@ Boolean AllocateFrameDisplayLists (ClientData *pcd)
     /* 
      * Allocate the primary lists for the frame
      */
-    if ( (pcd->pclientTopShadows == NULL) &&
+    if ( (pcd->pclientTopShadows == nullptr) &&
 	 ((pcd->pclientTopShadows = 
-		 AllocateRList ((unsigned)frame_top_count)) == NULL) )
+		 AllocateRList ((unsigned)frame_top_count)) == nullptr) )
     {
 	/* out of memory! */
 	Warning (((char *)GETMESSAGE(8, 2, "Insufficient memory for client window framing")));
 	return(FALSE);
     }
 
-    if ( (pcd->pclientBottomShadows == NULL) &&
+    if ( (pcd->pclientBottomShadows == nullptr) &&
 	 ((pcd->pclientBottomShadows = 
-		 AllocateRList ((unsigned)frame_bottom_count)) == NULL) )
+		 AllocateRList ((unsigned)frame_bottom_count)) == nullptr) )
     {
 	/* out of memory! */
 	Warning (((char *)GETMESSAGE(8, 3, "Insufficient memory for client window framing")));
@@ -1536,9 +1536,9 @@ Boolean AllocateFrameDisplayLists (ClientData *pcd)
      * Only allocate matte lists if there is a matte.
      */
     if ( (pcd->matteWidth) &&
-	 (pcd->pclientMatteTopShadows == NULL) &&
+	 (pcd->pclientMatteTopShadows == nullptr) &&
 	 ((pcd->pclientMatteTopShadows = 
-	     AllocateRList ((unsigned)NUM_MATTE_TS_RECTS)) == NULL))
+	     AllocateRList ((unsigned)NUM_MATTE_TS_RECTS)) == nullptr))
     {
 	/* out of memory! */
 	Warning (((char *)GETMESSAGE(8, 4, "Insufficient memory for client window framing")));
@@ -1546,9 +1546,9 @@ Boolean AllocateFrameDisplayLists (ClientData *pcd)
     }
 
     if ( (pcd->matteWidth) &&
-	 (pcd->pclientMatteBottomShadows == NULL) &&
+	 (pcd->pclientMatteBottomShadows == nullptr) &&
 	 ((pcd->pclientMatteBottomShadows = 
-		 AllocateRList ((unsigned)NUM_MATTE_BS_RECTS)) == NULL)) 
+		 AllocateRList ((unsigned)NUM_MATTE_BS_RECTS)) == nullptr)) 
     {
 	/* out of memory! */
 	Warning (((char *)GETMESSAGE(8, 5, "Insufficient memory for client window framing")));
@@ -1628,11 +1628,11 @@ Boolean AllocateGadgetRectangles (ClientData *pcd)
 	if (decor & MWM_DECOR_MAXIMIZE)	num_rects += 1;
     
 	/* allocate memory if no memory is allocated */
-	if ( pcd->pTitleGadgets == NULL) {
+	if ( pcd->pTitleGadgets == nullptr) {
 	    /* allocate memory for these guys */
 	    pgr = (GadgetRectangle *) 
 		   XtMalloc (num_rects * sizeof(GadgetRectangle));
-	    if (pgr == NULL)
+	    if (pgr == nullptr)
 	    {
 		/* out of memory! */
 	        Warning (((char *)GETMESSAGE(8, 6, "Insufficient memory for client window framing")));
@@ -1648,11 +1648,11 @@ Boolean AllocateGadgetRectangles (ClientData *pcd)
     if (decor & MWM_DECOR_RESIZEH) {
 
 	/* allocate memory if no memory is allocated */
-	if ( pcd->pResizeGadgets == NULL) {
+	if ( pcd->pResizeGadgets == nullptr) {
 	    /* allocate memory for these guys */
 	    pgr = (GadgetRectangle *) 
 		  XtMalloc (STRETCH_COUNT * sizeof(GadgetRectangle));
-	    if (pgr == NULL) 
+	    if (pgr == nullptr) 
 	    {
 		/* out of memory! */
 	        Warning (((char *)GETMESSAGE(8, 7, "Insufficient memory for client window framing")));
@@ -1707,7 +1707,7 @@ void ComputeGadgetRectangles (ClientData *pcd)
 
     if (decor & MWM_DECOR_TITLE) {
 
-	if ( (pgr = pcd->pTitleGadgets) == NULL) {
+	if ( (pgr = pcd->pTitleGadgets) == nullptr) {
 	    return;		/* nothing there !!! */
 	}
 
@@ -1803,7 +1803,7 @@ void ComputeGadgetRectangles (ClientData *pcd)
 
     if (decor & MWM_DECOR_RESIZEH) {
 
-	if ( (pgr = pcd->pResizeGadgets) == NULL) {
+	if ( (pgr = pcd->pResizeGadgets) == nullptr) {
 	    return;		/* nothing there !!! */
 	}
 
@@ -2652,8 +2652,8 @@ Boolean DepressGadget (ClientData *pcd, int gadget, Boolean depressed)
 {
     int x, y; 
     unsigned int width, height, invertWidth;
-    static RList *pTopRect = NULL; 
-    static RList *pBotRect = NULL; 
+    static RList *pTopRect = nullptr; 
+    static RList *pBotRect = nullptr; 
     GC topGC, botGC;
     Window win;
 
@@ -2840,7 +2840,7 @@ void PopGadgetOut (ClientData *pcd, int gadget)
     }
     GenerateFrameDisplayLists(pcd);
     (void) DepressGadget (pcd, gadget, FALSE);
-    wmGD.gadgetClient    = NULL;
+    wmGD.gadgetClient    = nullptr;
     wmGD.gadgetDepressed = 0;
 } /* END OF FUNCTION  PopGadgetOut   */
 

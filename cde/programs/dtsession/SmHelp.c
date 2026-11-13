@@ -122,10 +122,10 @@ TopicHelpRequested(
     Widget	  transientShell;
     Arg         setArgs2[5];
     int         n2;
-    Widget printButton = NULL;
-    Widget helpButton = NULL;
-    Widget backButton = NULL;
-    Widget okButton = NULL;
+    Widget printButton = nullptr;
+    Widget helpButton = nullptr;
+    Widget backButton = nullptr;
+    Widget okButton = nullptr;
 
     /*
      * Find the shell to make this a transient for for
@@ -136,7 +136,7 @@ TopicHelpRequested(
 	transientShell = XtParent(transientShell);
     }
 
-    if((smDD.smHelpDialog != NULL) && 
+    if((smDD.smHelpDialog != nullptr) && 
        (XtIsManaged(smDD.smHelpDialog)))
     {
 	return ;
@@ -147,7 +147,7 @@ TopicHelpRequested(
      * Use the help dialog already created if it has been - otherwise
      * create it
      */
-    if (smDD.smHelpDialog != NULL)
+    if (smDD.smHelpDialog != nullptr)
     {
 	i = 0;
 	XtSetArg(uiArgs[i], DtNlocationId,locationId);        	i++;
@@ -176,7 +176,7 @@ TopicHelpRequested(
 	
 	
         XtAddCallback(smDD.smHelpDialog, DtNcloseCallback,
-                      CloseHelpDialog, NULL);
+                      CloseHelpDialog, nullptr);
 
 	okButton = DtHelpQuickDialogGetChild(smDD.smHelpDialog,
 					  DtHELP_QUICK_CLOSE_BUTTON );
@@ -195,7 +195,7 @@ TopicHelpRequested(
         XtUnmanageChild(backButton);
 	
 	XtAddCallback (XtParent(smDD.smHelpDialog), XmNpopupCallback,
-		       DialogUp, NULL);
+		       DialogUp, nullptr);
 
         XtManageChild(smDD.smHelpDialog);
     }

@@ -115,12 +115,12 @@ static int menuItemCount = 54;
 static int menuItemCount = 53;
 #endif
 #if DTFILE_SYNC_FEATURE_ENABLED
-static Widget * synchronizeFoldersBtn = NULL;
+static Widget * synchronizeFoldersBtn = nullptr;
 static Boolean synchronizeLaunchPending = False;
 #endif
-static MenuDesc * mainMenu = NULL;
-static Widget * actionsPaneId = NULL;
-static char * homeDir = NULL;
+static MenuDesc * mainMenu = nullptr;
+static Widget * actionsPaneId = nullptr;
+static char * homeDir = nullptr;
 
 /********    Static Function Declarations    ********/
 #if DTFILE_SYNC_FEATURE_ENABLED
@@ -200,13 +200,13 @@ CreateMenu(
       for (i = 0; i < menuItemCount; i++)
       {
          mainMenu[i].helpCallback = HelpRequestCB;
-         mainMenu[i].helpData = NULL;
-         mainMenu[i].activateCallback = NULL;
-         mainMenu[i].activateData = NULL;
+         mainMenu[i].helpData = nullptr;
+         mainMenu[i].activateCallback = nullptr;
+         mainMenu[i].activateData = nullptr;
          mainMenu[i].maskBit = 0;
          mainMenu[i].isHelpBtn = False;
-         mainMenu[i].label = NULL;
-         mainMenu[i].mnemonic = NULL;
+         mainMenu[i].label = nullptr;
+         mainMenu[i].mnemonic = nullptr;
       }
 
 
@@ -250,7 +250,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       homeBarBtn = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
@@ -306,7 +306,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
 #if defined(ADD_SHOW_TRASH)
       mainMenu[j].type = MENU_BUTTON;
@@ -349,7 +349,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       mainMenu[j].type = MENU_BUTTON;
       mainMenu[j].label = GETMESSAGE(20, 117, "Close");
@@ -413,7 +413,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       mainMenu[j].maskBit = PUT_ON_DESKTOP;
       mainMenu[j].type = MENU_BUTTON;
@@ -458,7 +458,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       mainMenu[j].type = MENU_BUTTON;
       mainMenu[j].label = GETMESSAGE(20, 48, "Select All");
@@ -480,7 +480,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       /*************************************/
       /* Create the 'View' menu components */
@@ -516,7 +516,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       preferencesBtn = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
@@ -572,7 +572,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       cleanUpBtn = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
@@ -623,7 +623,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       mainMenu[j].type = MENU_BUTTON;
       mainMenu[j].label = GETMESSAGE(20, 148, "Table Of Contents");
@@ -667,7 +667,7 @@ CreateMenu(
 
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       usingHelp = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
@@ -682,7 +682,7 @@ CreateMenu(
    
       mainMenu[j].type = MENU_SEPARATOR;
       mainMenu[j].name = "separator";
-      mainMenu[j++].helpCallback = NULL;
+      mainMenu[j++].helpCallback = nullptr;
 
       fileManagerHelp = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
@@ -721,8 +721,8 @@ CreateMenu(
    file_mgr_rec->action_pane = *actionsPaneId;
    file_mgr_rec->directoryBarBtn = *directoryBarBtn;
 
-   file_mgr_rec->create_directoryBtn_child= NULL;
-   file_mgr_rec->create_dataBtn_child= NULL;
+   file_mgr_rec->create_directoryBtn_child= nullptr;
+   file_mgr_rec->create_dataBtn_child= nullptr;
 
    ActivateNoSelect (file_mgr_rec);
 
@@ -761,11 +761,11 @@ GetHomeDir(void)
 {
   struct passwd * pwInfo;
 
-  if( homeDir == NULL )
+  if( homeDir == nullptr )
   {
-    if ((homeDir = getenv("HOME_CLIENT")) == NULL)
+    if ((homeDir = getenv("HOME_CLIENT")) == nullptr)
     {
-      if ((homeDir = getenv("HOME")) == NULL)
+      if ((homeDir = getenv("HOME")) == nullptr)
       {
         pwInfo = getpwuid (getuid());
         homeDir = pwInfo->pw_dir;
@@ -791,7 +791,7 @@ ActivateSingleSelect(
    DialogData * dialog_data;
    FileMgrData * file_mgr_data;
 
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -914,7 +914,7 @@ UnselectAll(
    XtGetValues(mbar, args, 1);
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -957,7 +957,7 @@ SelectAll(
    XtGetValues(mbar, args, 1);
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -996,7 +996,7 @@ RereadDirectoryMenu(
    XtGetValues(mbar, args, 1);
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
 
    UnpostTextPath( (FileMgrData *) dialog_data->data );
@@ -1022,7 +1022,7 @@ ShowTrash(
 {
    XmUpdateDisplay (w);
 
-   TrashDisplayHandler (NULL, NULL, NULL, NULL, 0);
+   TrashDisplayHandler (nullptr, nullptr, nullptr, nullptr, 0);
 }
 #endif
 
@@ -1062,7 +1062,7 @@ TrashFiles(
 
      sprintf( msg, GETMESSAGE(27, 95, "Unable to access the Trash directory:\n   %s\n   All trash operations will not be performed.\n   The most common causes are:\n     - Network authentication.\n     - Insufficient disk space.\n     - Wrong permissions."), trash_dir );
 
-     _DtMessage(toplevel, title, msg, NULL, HelpRequestCB);
+     _DtMessage(toplevel, title, msg, nullptr, HelpRequestCB);
      XtFree(title);
      XtFree(msg);
      return;
@@ -1079,12 +1079,12 @@ TrashFiles(
    XtGetValues(mbar, args, 1);
 
    /* Ignore accelerators when we're insensitive */
-   if(client_data == NULL)
+   if(client_data == nullptr)
       if ((file_mgr_rec->menuStates & TRASH) == 0)
          return;
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -1094,21 +1094,21 @@ TrashFiles(
       TrashRemoveHandler() in Trash.c, it displays an incorrect message,
       So set it to NULL here. */
 
-   widget_dragged = NULL;
+   widget_dragged = nullptr;
 
    /* get the file_view_data object from which the menu was invoked */
-   if (client_data == NULL)
-     file_view_data = NULL;
+   if (client_data == nullptr)
+     file_view_data = nullptr;
    else
    {
      file_view_data = file_mgr_data->popup_menu_icon;
      /* The following test makes sure that the it is not the case of 
         multiple selected files */
-     if (!file_mgr_data->selected_file_count && file_view_data == NULL)
+     if (!file_mgr_data->selected_file_count && file_view_data == nullptr)
        /* the object has gone away (probably deleted) */
        return;
 
-     file_mgr_data->popup_menu_icon = NULL;
+     file_mgr_data->popup_menu_icon = nullptr;
 
      if(file_view_data)
      {
@@ -1116,7 +1116,7 @@ TrashFiles(
        {
           if(file_mgr_data->selection_list[i] == file_view_data)
           {
-             file_view_data = NULL;
+             file_view_data = nullptr;
              break;
           }
        }
@@ -1132,8 +1132,8 @@ TrashFiles(
                                           &action_args, &arg_count);
 
    DtActionInvoke(file_mgr_rec->shell, TRASH_ACTION,
-                  action_args, arg_count, NULL, NULL,
-                  trash_dir, True, NULL, NULL);
+                  action_args, arg_count, nullptr, nullptr,
+                  trash_dir, True, nullptr, nullptr);
 
    _DtFreeActionArgs(action_args, arg_count);
 }
@@ -1166,12 +1166,12 @@ NewView(
    XtGetValues(mbar, args, 1);
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
    initiating_view = (XtPointer) file_mgr_data;
-   if(file_mgr_data->restricted_directory != NULL)
+   if(file_mgr_data->restricted_directory != nullptr)
    {
       special_view = True;
       special_treeType = file_mgr_data->show_type;
@@ -1180,22 +1180,22 @@ NewView(
       special_directionType = file_mgr_data->direction;
       special_randomType = file_mgr_data->positionEnabled;
       special_restricted = XtNewString(file_mgr_data->restricted_directory);
-      if(file_mgr_data->title == NULL)
-         special_title = NULL;
+      if(file_mgr_data->title == nullptr)
+         special_title = nullptr;
       else
          special_title = XtNewString(file_mgr_data->title);
       special_helpVol = XtNewString(file_mgr_data->helpVol);
 
       if(file_mgr_data->toolbox)
          GetNewView (file_mgr_data->host, file_mgr_data->current_directory,
-                     file_mgr_data->restricted_directory, NULL, 0);
+                     file_mgr_data->restricted_directory, nullptr, 0);
       else
          GetNewView (file_mgr_data->host, file_mgr_data->current_directory,
-                     NULL, NULL, 0);
+                     nullptr, nullptr, 0);
    }
    else
-      GetNewView (file_mgr_data->host, file_mgr_data->current_directory, NULL,
-                  NULL, 0);
+      GetNewView (file_mgr_data->host, file_mgr_data->current_directory, nullptr,
+                  nullptr, 0);
    initiating_view = (XtPointer) NULL;
 }
 
@@ -1238,16 +1238,16 @@ ChangeToHome(
       return;
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
    found = False;
 
-   if( homeDir == NULL )
+   if( homeDir == nullptr )
      GetHomeDir( );
 
-   if((ptr = DtStrchr(homeDir, ':')) != NULL)
+   if((ptr = DtStrchr(homeDir, ':')) != nullptr)
    {
       ptr1 = DtStrchr(homeDir, '/');
       if(strlen(ptr) > strlen(ptr1))
@@ -1266,10 +1266,10 @@ ChangeToHome(
    else
       host = home_host_name;
 
-   if (file_mgr_data->cd_select != NULL)
+   if (file_mgr_data->cd_select != nullptr)
    {
       XtFree (file_mgr_data->cd_select);
-      file_mgr_data->cd_select = NULL;
+      file_mgr_data->cd_select = nullptr;
    }
 
    ShowNewDirectory( file_mgr_data, host, homeDir );
@@ -1316,7 +1316,7 @@ ChangeToParent(
       return;
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
 
    focus_widget = XmGetFocusWidget(file_mgr_rec->file_window);
@@ -1347,10 +1347,10 @@ ChangeToParent(
 
    strcpy(host_name, file_mgr_data->host);
 
-   if (file_mgr_data->cd_select != NULL)
+   if (file_mgr_data->cd_select != nullptr)
    {
       XtFree (file_mgr_data->cd_select);
-      file_mgr_data->cd_select = NULL;
+      file_mgr_data->cd_select = nullptr;
    }
 
    ShowNewDirectory (file_mgr_data, host_name,
@@ -1394,24 +1394,24 @@ SetMenuSensitivity(
    FileMgrRec * file_mgr_rec;
    XmMenuShellWidget mshell = (XmMenuShellWidget) w;
    DialogData * dialog_data;
-   FileMgrData * file_mgr_data = NULL;
+   FileMgrData * file_mgr_data = nullptr;
 
    _XmGetActiveTopLevelMenu(mshell->composite.children[0], &mbar);
    XtSetArg(args[0], XmNuserData, &file_mgr_rec);
    XtGetValues(mbar, args, 1);
 
    /* Enable the appropriate menu widgets based on the view type */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) != NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) != nullptr)
    {
       struct stat file_info;
 
       file_mgr_data = (FileMgrData *) dialog_data->data;
 
 #if DTFILE_SYNC_FEATURE_ENABLED
-      if (synchronizeFoldersBtn != NULL)
+      if (synchronizeFoldersBtn != nullptr)
          XtSetSensitive(*synchronizeFoldersBtn,
                         !synchronizeLaunchPending &&
-                        file_mgr_data->restricted_directory == NULL &&
+                        file_mgr_data->restricted_directory == nullptr &&
                         !file_mgr_data->toolbox);
 #endif
 
@@ -1439,7 +1439,7 @@ SetMenuSensitivity(
          file_mgr_rec->menuStates |= CLEAN_UP;
 
       XtManageChild(*defaultEnvBtn);
-      if(file_mgr_data->restricted_directory == NULL)
+      if(file_mgr_data->restricted_directory == nullptr)
       {
         if(strcmp(file_mgr_data->current_directory, "/") == 0)
         {
@@ -1453,10 +1453,10 @@ SetMenuSensitivity(
           _DtGlobalUpdateMenuItemState(*upBarBtn, MOVE_UP, True,&currentMenuStates);
         }
 
-        if( homeDir == NULL )
+        if( homeDir == nullptr )
           GetHomeDir( );
 
-        if( homeDir != NULL
+        if( homeDir != nullptr
             && strcmp( homeDir, file_mgr_data->current_directory ) != 0 )
         {
           file_mgr_rec->menuStates |= HOME;
@@ -1701,23 +1701,23 @@ TerminalCWD (
    FileMgrData * file_mgr_data;
    Arg args[1];
    Widget mbar = XmGetPostedFromWidget(XtParent(w));
-   char * pwd_host = NULL;
-   char * pwd_dir = NULL;
+   char * pwd_host = nullptr;
+   char * pwd_dir = nullptr;
 
    XmUpdateDisplay (w);
    XtSetArg(args[0], XmNuserData, &file_mgr_rec);
    XtGetValues(mbar, args, 1);
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
    pwd_host = XtNewString(file_mgr_data->host);
    pwd_dir = XtNewString(file_mgr_data->current_directory);
 
-   DtActionInvoke(file_mgr_rec->shell, "Terminal", NULL, 0, NULL,
-                  NULL, pwd_dir, True, NULL, NULL);
+   DtActionInvoke(file_mgr_rec->shell, "Terminal", nullptr, 0, nullptr,
+                  nullptr, pwd_dir, True, nullptr, nullptr);
 
    XtFree(pwd_host);
    XtFree(pwd_dir);
@@ -1745,7 +1745,7 @@ SynchronizeLaunchError(Widget shell, int launch_error)
 
    sprintf(detail, "%s\n%s", message, strerror(launch_error));
    _DtMessage(shell, GETMESSAGE(20, 206, "Folder Synchronization"),
-              detail, NULL, HelpRequestCB);
+              detail, nullptr, HelpRequestCB);
    XtFree(detail);
 }
 
@@ -1816,7 +1816,7 @@ SynchronizeLaunchInput(XtPointer client_data, int *fd, XtInputId *input)
 static void
 SynchronizeFolders(Widget w, XtPointer client_data, XtPointer call_data)
 {
-   FileMgrRec *file_mgr_rec = NULL;
+   FileMgrRec *file_mgr_rec = nullptr;
    DialogData *dialog_data;
    FileMgrData *file_mgr_data;
    Widget mbar = XmGetPostedFromWidget(XtParent(w));
@@ -1830,28 +1830,28 @@ SynchronizeFolders(Widget w, XtPointer client_data, XtPointer call_data)
 
    (void)client_data;
    (void)call_data;
-   if (mbar == NULL || restrictMode || synchronizeLaunchPending)
+   if (mbar == nullptr || restrictMode || synchronizeLaunchPending)
       return;
-   XtVaGetValues(mbar, XmNuserData, &file_mgr_rec, NULL);
-   if (file_mgr_rec == NULL ||
-       (dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec)) == NULL)
+   XtVaGetValues(mbar, XmNuserData, &file_mgr_rec, nullptr);
+   if (file_mgr_rec == nullptr ||
+       (dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec)) == nullptr)
       return;
    file_mgr_data = (FileMgrData *)dialog_data->data;
-   if (file_mgr_data->restricted_directory != NULL || file_mgr_data->toolbox)
+   if (file_mgr_data->restricted_directory != nullptr || file_mgr_data->toolbox)
       return;
 
    synchronizeLaunchPending = True;
    source = ResolveLocalPathName(file_mgr_data->host,
-                                file_mgr_data->current_directory, NULL,
+                                file_mgr_data->current_directory, nullptr,
                                 home_host_name, &status);
-   if (status != TT_OK || source == NULL)
+   if (status != TT_OK || source == nullptr)
    {
       synchronizeLaunchPending = False;
       XtFree(source);
       _DtMessage(file_mgr_rec->shell,
                  GETMESSAGE(20, 206, "Folder Synchronization"),
                  GETMESSAGE(20, 207, "Cannot access the current folder on this host."),
-                 NULL, HelpRequestCB);
+                 nullptr, HelpRequestCB);
       return;
    }
 
@@ -1874,7 +1874,7 @@ SynchronizeFolders(Widget w, XtPointer client_data, XtPointer call_data)
 
          close(error_pipe[0]);
          execl(CDE_INSTALLATION_TOP "/bin/dtfile_sync", "dtfile_sync",
-               source, (char *)NULL);
+               source, (char *)nullptr);
          launch_error = errno;
          /* Only async-signal-safe operations are used after fork. */
          while (sent < sizeof(launch_error))
@@ -1929,7 +1929,7 @@ ShelfLog(const char *fmt, ...)
 {
    va_list ap;
 
-   if (getenv("DTFILE_SHELF_DEBUG") == NULL)
+   if (getenv("DTFILE_SHELF_DEBUG") == nullptr)
       return;
 
    fprintf(stderr, "dtfile-shelf: ");
@@ -1944,7 +1944,7 @@ ShelfAddDataFree(ShelfAddData *data)
 {
    int i;
 
-   if (data == NULL)
+   if (data == nullptr)
       return;
 
    if (data->paths)
@@ -1961,7 +1961,7 @@ ShelfAddApply(ShelfAddData *data)
 {
    int i;
 
-   if (data == NULL)
+   if (data == nullptr)
       return;
 
    ShelfInit();
@@ -1973,7 +1973,7 @@ ShelfAddApply(ShelfAddData *data)
       ShelfSetSlot(slot, data->paths[i]);
    }
 
-   ShelfRequestRebuild(data->file_mgr_rec ? data->file_mgr_rec->shell : NULL);
+   ShelfRequestRebuild(data->file_mgr_rec ? data->file_mgr_rec->shell : nullptr);
 }
 
 static char *
@@ -1985,17 +1985,17 @@ ShelfBuildFullPath(FileViewData *file_view_data)
    size_t len;
    char *path;
 
-   if (file_view_data == NULL || file_view_data->file_data == NULL)
-      return NULL;
+   if (file_view_data == nullptr || file_view_data->file_data == nullptr)
+      return nullptr;
 
    directory_set = (DirectorySet *) file_view_data->directory_set;
-   if (directory_set == NULL || directory_set->name == NULL)
-      return NULL;
+   if (directory_set == nullptr || directory_set->name == nullptr)
+      return nullptr;
 
    dir_name = directory_set->name;
    file_name = file_view_data->file_data->file_name;
-   if (file_name == NULL)
-      return NULL;
+   if (file_name == nullptr)
+      return nullptr;
 
    if (strcmp(file_name, ".") == 0)
       return XtNewString(dir_name);
@@ -2044,7 +2044,7 @@ AddToShelfWithConfirm(
    int i;
    int valid_count = 0;
 
-   if (paths != NULL && count > 0)
+   if (paths != nullptr && count > 0)
    {
       for (i = 0; i < count; i++)
       {
@@ -2094,8 +2094,8 @@ AddToShelfWithConfirm(
       message = (char *)XtMalloc(strlen(tmpl) + strlen(buf) + 1);
       sprintf(message, tmpl, count);
 
-      _DtMessageDialog(file_mgr_rec->shell, title, message, NULL, TRUE,
-                       ShelfAddConfirmCancel, ShelfAddConfirmOk, NULL,
+      _DtMessageDialog(file_mgr_rec->shell, title, message, nullptr, TRUE,
+                       ShelfAddConfirmCancel, ShelfAddConfirmOk, nullptr,
                        HelpRequestCB, False, QUESTION_DIALOG);
 
       XtFree(title);
@@ -2124,15 +2124,15 @@ AddToShelfMenuCB(
    mbar = XmGetPostedFromWidget(XtParent(w));
    XtSetArg(args[0], XmNuserData, &file_mgr_rec);
    XtGetValues(mbar, args, 1);
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
       return;
 
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
-   if (dialog_data == NULL)
+   if (dialog_data == nullptr)
       return;
 
    file_mgr_data = (FileMgrData *) dialog_data->data;
-   if (file_mgr_data == NULL || file_mgr_data->selected_file_count <= 0)
+   if (file_mgr_data == nullptr || file_mgr_data->selected_file_count <= 0)
       return;
 
    count = file_mgr_data->selected_file_count;
@@ -2162,16 +2162,16 @@ AddToShelfPopupCB(
    (void) call_data;
 
    file_view_data = (FileViewData *) client_data;
-   if (file_view_data == NULL)
+   if (file_view_data == nullptr)
       return;
 
    directory_set = (DirectorySet *) file_view_data->directory_set;
-   if (directory_set == NULL || directory_set->file_mgr_data == NULL)
+   if (directory_set == nullptr || directory_set->file_mgr_data == nullptr)
       return;
 
    file_mgr_data = (FileMgrData *) directory_set->file_mgr_data;
    file_mgr_rec = (FileMgrRec *) file_mgr_data->file_mgr_rec;
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
       return;
 
    if (file_mgr_data->selected_file_count > 1)

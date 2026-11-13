@@ -90,7 +90,7 @@ make_goto(Calendar *c)
 	Widget		separator, button_form;
 	char		*title;
 
-	if (c->goTo == NULL) {
+	if (c->goTo == nullptr) {
                 c->goTo = (caddr_t)ckalloc(sizeof(Goto));
                 g = (Goto*)c->goTo;
         }
@@ -103,7 +103,7 @@ make_goto(Calendar *c)
                 XmNtitle, title,
                 XmNallowShellResize, True,
 		XmNmappedWhenManaged, False,
-                NULL);
+                nullptr);
 	XtFree(title);
 
         g->form = XtVaCreateWidget("form",
@@ -114,7 +114,7 @@ make_goto(Calendar *c)
                 XmNverticalSpacing, 	4,
 		XmNmarginWidth,         0,
 		XmNmarginHeight,        0,
-                NULL);
+                nullptr);
 
         xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 293, "Date:"));
         g->datelabel = XtVaCreateWidget("Date:", 
@@ -124,7 +124,7 @@ make_goto(Calendar *c)
                 XmNtopAttachment, 	XmATTACH_FORM,
 		XmNtopOffset, 		11,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
         g->datetext = XtVaCreateWidget("text", 
@@ -138,8 +138,8 @@ make_goto(Calendar *c)
 		XmNrightPosition, 	3,
 		XmNrightOffset, 	10,
 		XmNcolumns,		32,
-                NULL);
-        XtAddCallback(g->datetext, XmNactivateCallback, goto_date, NULL);
+                nullptr);
+        XtAddCallback(g->datetext, XmNactivateCallback, goto_date, nullptr);
 
 
 	separator = XtVaCreateWidget("separator",
@@ -150,7 +150,7 @@ make_goto(Calendar *c)
 		XmNtopAttachment, 	XmATTACH_WIDGET,
 		XmNtopWidget, 		g->datetext,
 		XmNtopOffset, 		5,
-                NULL);
+                nullptr);
 
         button_form = XtVaCreateWidget("form",
                 xmFormWidgetClass,      g->form,
@@ -163,7 +163,7 @@ make_goto(Calendar *c)
                 XmNtopWidget,           separator,
                 XmNhorizontalSpacing,   4,
                 XmNfractionBase,        3,
-                NULL);
+                nullptr);
 
         xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 294, "Go To"));
         g->datebutton = XtVaCreateWidget("goTo", 
@@ -176,8 +176,8 @@ make_goto(Calendar *c)
 		XmNleftPosition, 	0,
 		XmNrightAttachment, 	XmATTACH_POSITION,
 		XmNrightPosition, 	1,
-                NULL);
-        XtAddCallback(g->datebutton, XmNactivateCallback, goto_date, NULL);
+                nullptr);
+        XtAddCallback(g->datebutton, XmNactivateCallback, goto_date, nullptr);
 	XmStringFree(xmstr);
 
         xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 680, "Close"));
@@ -190,8 +190,8 @@ make_goto(Calendar *c)
 		XmNrightAttachment, 	XmATTACH_POSITION,
 		XmNrightPosition, 	2,
 		XmNlabelString, 	xmstr,
-                NULL);
-	XtAddCallback(g->cancelbutton, XmNactivateCallback, g_cancel_cb, NULL);
+                nullptr);
+	XtAddCallback(g->cancelbutton, XmNactivateCallback, g_cancel_cb, nullptr);
 	XmStringFree(xmstr);
 
 
@@ -205,7 +205,7 @@ make_goto(Calendar *c)
 		XmNrightAttachment, 	XmATTACH_POSITION,
 		XmNrightPosition, 	3,
 		XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XtAddCallback(g->helpbutton, XmNactivateCallback, 
 				help_cb, GOTO_HELP_BUTTON);
         XtAddCallback(g->form, XmNhelpCallback,
@@ -220,20 +220,20 @@ make_goto(Calendar *c)
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNrightAttachment, XmATTACH_FORM,
 		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
 
         /* set default button */
-        XtVaSetValues(g->form, XmNdefaultButton, g->datebutton, NULL);
-        XtVaSetValues(g->form, XmNcancelButton, g->cancelbutton, NULL);
-        XtVaSetValues(button_form, XmNdefaultButton, g->datebutton, NULL);
-        XtVaSetValues(button_form, XmNcancelButton, g->cancelbutton, NULL);
+        XtVaSetValues(g->form, XmNdefaultButton, g->datebutton, nullptr);
+        XtVaSetValues(g->form, XmNcancelButton, g->cancelbutton, nullptr);
+        XtVaSetValues(button_form, XmNdefaultButton, g->datebutton, nullptr);
+        XtVaSetValues(button_form, XmNcancelButton, g->cancelbutton, nullptr);
         XmProcessTraversal(g->datetext, XmTRAVERSE_CURRENT);
-        XtVaSetValues(g->form, XmNinitialFocus, g->datetext, NULL);
+        XtVaSetValues(g->form, XmNinitialFocus, g->datetext, nullptr);
 
 	ManageChildren(button_form);
 	ManageChildren(g->form);
 	XtManageChild(g->form);
-        XtVaSetValues(g->frame, XmNmappedWhenManaged, True, NULL);
+        XtVaSetValues(g->frame, XmNmappedWhenManaged, True, nullptr);
         XtRealizeWidget(g->frame);
 
 	XtPopup(g->frame, XtGrabNone);
@@ -248,7 +248,7 @@ goto_date(Widget widget, XtPointer client_data, XtPointer call_data)
         Props *p;
         Goto *g;
         Tick gotodate, start, stop;
-        char *date = NULL, today[DATESIZ];
+        char *date = nullptr, today[DATESIZ];
 	char message[40];
 	Dimension w, h;
 	OrderingType ot;
@@ -260,7 +260,7 @@ goto_date(Widget widget, XtPointer client_data, XtPointer call_data)
         g = (Goto*)c->goTo;
  
 	date = XmTextGetString(g->datetext);
-	if ((date == NULL) || (*date == '\0')) {
+	if ((date == nullptr) || (*date == '\0')) {
 		sprintf(message, "%s", CATGETS(c->DT_catd, 1, 297, "Please type in a date"));
 		set_message(g->goto_message, message);
                 return;
@@ -268,10 +268,10 @@ goto_date(Widget widget, XtPointer client_data, XtPointer call_data)
         format_tick(c->view->date, ot, st, today);
 	set_message(g->goto_message, "");
         date = get_date_from_widget(c->view->date, g->datetext, ot, st);
-        if ( date == NULL ) {
+        if ( date == nullptr ) {
 		return;
         } else {
-                gotodate = cm_getdate(date, NULL);
+                gotodate = cm_getdate(date, nullptr);
         }
 	if (!strcmp(today, date)) {
 		sprintf(message, CATGETS(c->DT_catd, 1, 298, "You are already viewing %s"), date);
@@ -311,13 +311,13 @@ goto_date(Widget widget, XtPointer client_data, XtPointer call_data)
                 c->view->olddate = c->view->date;
                 c->view->date = gotodate;
 		c->view->nwks = numwks(c->view->date);
-        	XtVaGetValues(c->canvas, XmNwidth, &w, XmNheight, &h, NULL);
+        	XtVaGetValues(c->canvas, XmNwidth, &w, XmNheight, &h, nullptr);
                 gr_clear_area(c->xcontext, 0, 0, w, h);
                 if (c->view->glance == dayGlance) {
                         init_mo(c);
                         init_dayview(c);
                 }
-                paint_canvas(c, NULL, RENDER_UNMAP);
+                paint_canvas(c, nullptr, RENDER_UNMAP);
         }        
 }
 

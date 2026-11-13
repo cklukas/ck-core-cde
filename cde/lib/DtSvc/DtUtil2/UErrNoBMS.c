@@ -113,7 +113,7 @@ errno_string(
 #endif
     case ENAMETOOLONG	: s = "ENAMETOOLONG"; break;
     case ENOSYS		: s = "ENOSYS"; break;
-    default             : s = NULL;     break;
+    default             : s = nullptr;     break;
     }
     
     if (s)
@@ -136,8 +136,8 @@ log_message(
         DtSeverity severity,
         int errnoset )
 {
-   char			* errmsg = NULL;
-   char			* errname = NULL;
+   char			* errmsg = nullptr;
+   char			* errname = nullptr;
    char			format[25];
    DtMsgLogType 	msg_type;
    char                 buff[40];
@@ -207,7 +207,7 @@ _DtSimpleError(
    va_list         args;
    char            *message = (char*) malloc(MESSAGE_BUFFER);
 
-   if (NULL == message) return;
+   if (nullptr == message) return;
 
    Va_start(args, format);
    (void) vsnprintf(message, MESSAGE_BUFFER, format, args);
@@ -228,7 +228,7 @@ _DtSimpleErrnoError(
    va_list         args;
    char            *message = (char*) malloc(MESSAGE_BUFFER);
 
-   if (NULL == message) return;
+   if (nullptr == message) return;
 
    Va_start(args, format);
    (void) vsnprintf(message, MESSAGE_BUFFER, format, args);

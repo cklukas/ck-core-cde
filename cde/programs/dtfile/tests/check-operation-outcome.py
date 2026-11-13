@@ -69,6 +69,6 @@ with tempfile.TemporaryDirectory(prefix="dtcopy-outcome-", dir=os.environ["TMPDI
     c, binary = Path(work) / "outcome.c", Path(work) / "outcome"
     c.write_text(header + text[start:end] + main)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-Wall", "-Wextra", "-Werror", "-fsanitize=address,undefined",
+                   ["-std=gnu23", "-Wall", "-Wextra", "-Werror", "-fsanitize=address,undefined",
                     "-g", "-I", str(source), str(c), "-o", str(binary)], check=True)
     subprocess.run([str(binary)], check=True)

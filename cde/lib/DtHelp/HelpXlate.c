@@ -48,16 +48,16 @@ $SHAREDBEG$:  This header appears in all appropriate DtXlate topics
 
 void _DtHelpCeGetLcCtype(char **locale, char **lang, char **charset) {
     char *ptr;
-    char *mLang = NULL;
-    char *mCharset = NULL;
-    char *mLocale = setlocale(LC_CTYPE, NULL);
+    char *mLang = nullptr;
+    char *mCharset = nullptr;
+    char *mLocale = setlocale(LC_CTYPE, nullptr);
 
     if (mLocale) mLocale = strdup(mLocale);
 
     if (_DtHelpCeStrchr(mLocale, ".", 1, &ptr) == 0) {
 	*ptr++ = '\0';
-	if (mLocale != NULL && *mLocale != '\0') mLang = strdup(mLocale);
-	if (ptr != NULL && *ptr != '\0') mCharset = strdup(ptr);
+	if (mLocale != nullptr && *mLocale != '\0') mLang = strdup(mLocale);
+	if (ptr != nullptr && *ptr != '\0') mCharset = strdup(ptr);
     }
 
     if (lang) *lang = strdup(mLang ? mLang : "C");

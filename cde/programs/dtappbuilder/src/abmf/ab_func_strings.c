@@ -136,10 +136,10 @@ static COMMENT_TYPE	find_comment_start(BFile file, long *commentOffOut);
 int 
 main (int argc, char *argv[])
 {
-    STRING	inFilename = NULL;
-    FILE	*inFile = NULL;
+    STRING	inFilename = nullptr;
+    FILE	*inFile = nullptr;
     FileFuncInfoRec	funcInfo;
-    FileFuncInfo	funcs = NULL;
+    FileFuncInfo	funcs = nullptr;
     int			numFuncs = 0;
     int			i = 0;
 
@@ -161,7 +161,7 @@ main (int argc, char *argv[])
 
     inFilename = argv[1];
     inFile = util_fopen_locked(inFilename, "r");
-    if (inFile == NULL)
+    if (inFile == nullptr)
     {
 	perror(inFilename);
 	return -1;
@@ -175,7 +175,7 @@ main (int argc, char *argv[])
 	++numFuncs;
 	funcs = (FileFuncInfo)realloc(
 			funcs, numFuncs * sizeof(FileFuncInfoRec));
-	if (funcs == NULL)
+	if (funcs == nullptr)
 	{
 	    fprintf(stderr, "Out of memory!\n");
 	    exit(1);
@@ -210,7 +210,7 @@ static int
 write_func_var_decl(FILE *file, FileFuncInfo funcInfo)
 {
     char	ptrVarName[256];
-    STRING	funcNamePtr = NULL;
+    STRING	funcNamePtr = nullptr;
 
     funcNamePtr = funcInfo->funcName;
     if (strncmp(funcNamePtr, "dtb_", 4) == 0)
@@ -228,7 +228,7 @@ write_func_as_strings(FILE *file, FileFuncInfo funcInfo)
 {
     char	recVarName[256];
     char	ptrVarName[256];
-    char	*funcNamePtr = NULL;
+    char	*funcNamePtr = nullptr;
 
     funcNamePtr = funcInfo->funcName;
     if (strncmp(funcNamePtr, "dtb_", 4) == 0)
@@ -274,7 +274,7 @@ static int
 write_c_string(FILE *file, STRING value)
 {
     BOOL	done = FALSE;
-    char	*nlPtr = NULL;
+    char	*nlPtr = nullptr;
     char	*lineStart = value;
     int		oldNlChar = -1;
 
@@ -282,20 +282,20 @@ write_c_string(FILE *file, STRING value)
     {
 	nlPtr = strchr(lineStart, '\n');
 	oldNlChar = -1;
-	if (nlPtr != NULL)
+	if (nlPtr != nullptr)
 	{
 	    ++nlPtr;
 	    oldNlChar = *nlPtr;
 	    *nlPtr = 0;
 	}
 	abio_put_string(file, lineStart);
-	if (nlPtr != NULL)
+	if (nlPtr != nullptr)
 	{
 	    *nlPtr = (char)oldNlChar;
 	    oldNlChar = -1;
 	}
 
-	if (nlPtr == NULL)
+	if (nlPtr == nullptr)
 	{
 	    done = TRUE;
 	}
@@ -470,7 +470,7 @@ find_func_name(
 	fprintf(stderr, "Syntax error near function name.\n");
 	return -1;
     }
-    if (find_matching(file, '(', NULL) < 0)
+    if (find_matching(file, '(', nullptr) < 0)
     {
 	fprintf(stderr, "Unbalanced parens.\n");
 	return -1;
@@ -713,7 +713,7 @@ find_matching(BFile file, int matchChar, long *matchOffPtr)
 	     break;
 
 	     case '{':
-		 if (find_matching(file, '}', NULL) < 0)
+		 if (find_matching(file, '}', nullptr) < 0)
 		 {
 		     fprintf(stderr, "Unbalanced braces {}.\n");
 		     quit = TRUE;
@@ -722,7 +722,7 @@ find_matching(BFile file, int matchChar, long *matchOffPtr)
 	     break;
 
 	     case '}':
-		 if (find_matching(file, '{', NULL) < 0)
+		 if (find_matching(file, '{', nullptr) < 0)
 		 {
 		     fprintf(stderr, "Unbalanced braces {}\n");
 		     quit = TRUE;
@@ -731,7 +731,7 @@ find_matching(BFile file, int matchChar, long *matchOffPtr)
 	    break;
 
 	    case '(':
-		if (find_matching(file, ')', NULL) < 0)
+		if (find_matching(file, ')', nullptr) < 0)
 		{
 		    fprintf(stderr, "Unbalanced parens ()\n");
 		    quit = TRUE;
@@ -740,7 +740,7 @@ find_matching(BFile file, int matchChar, long *matchOffPtr)
 	    break;
 
 	    case ')':
-		if (find_matching(file, '(', NULL) < 0)
+		if (find_matching(file, '(', nullptr) < 0)
 		{
 		    fprintf(stderr, "Unbalanced parens ()\n");
 		    quit = TRUE;
@@ -754,7 +754,7 @@ find_matching(BFile file, int matchChar, long *matchOffPtr)
     if (foundMatching)
     {
 	/* printf("<<match found(%c) for %ld>>\n", matchChar, startOff); */
-	if (matchOffPtr != NULL)
+	if (matchOffPtr != nullptr)
 	{
 	    *matchOffPtr = bfile_get_off(file);
 	    if (file->reverse)
@@ -1124,7 +1124,7 @@ static BOOL bfileP_set_eof(BFile file);
 static int
 bfile_construct(BFile file, FILE *stream)
 {
-    file->stream = NULL;
+    file->stream = nullptr;
     file->reverse = FALSE;
     file->eof = TRUE;
 
@@ -1135,7 +1135,7 @@ bfile_construct(BFile file, FILE *stream)
 static int
 bfile_destruct(BFile file)
 {
-    return bfile_set_file(file, NULL);
+    return bfile_set_file(file, nullptr);
 }
 
 
@@ -1313,7 +1313,7 @@ bfileP_set_eof(BFile file)
 {
     file->eof = FALSE;
 
-    if (file->stream == NULL)
+    if (file->stream == nullptr)
     {
 	file->eof = TRUE;
 	goto epilogue;

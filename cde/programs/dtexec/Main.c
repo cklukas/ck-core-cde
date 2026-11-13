@@ -142,7 +142,7 @@ int    rediscoverUrgentSigG;	/* if a SIGTERM, SIGHUP or SIGQUIT goes off */
 int    shutdownPhaseG;		/* shutdown progress state variable */
 int    ttfdG;			/* tooltalk fildes */
 int    errorpipeG[2];		/* dtexec <--< child   stderr pipe */
-static char *actionCommandG = NULL;
+static char *actionCommandG = nullptr;
 static Boolean actionIconCacheNotified = False;
 static struct timeval actionIconCacheDeadlineG;
 static Boolean actionIconCacheDeadlineSet = False;
@@ -546,7 +546,7 @@ InitializeSignalHandling( void )
    sigemptyset(&svec.sa_mask);
    svec.sa_flags   = 0;
    svec.sa_handler = SigCld;
-   (void) sigaction(SIGCHLD, &svec, (struct sigaction *) NULL);
+   (void) sigaction(SIGCHLD, &svec, (struct sigaction *) nullptr);
 
    /*
     * "Urgent Signal" handlers
@@ -559,7 +559,7 @@ InitializeSignalHandling( void )
    sigemptyset(&svec.sa_mask);
    svec.sa_flags   = 0;
    svec.sa_handler = UrgentSignal;
-   (void) sigaction(SIGTERM, &svec, (struct sigaction *) NULL);
+   (void) sigaction(SIGTERM, &svec, (struct sigaction *) nullptr);
 
    /*
     * "Panic Signal" handlers.
@@ -568,7 +568,7 @@ InitializeSignalHandling( void )
    sigemptyset(&svec.sa_mask);
    svec.sa_flags   = 0;
    svec.sa_handler = PanicSignal;
-   (void) sigaction(SIGINT, &svec, (struct sigaction *) NULL);
+   (void) sigaction(SIGINT, &svec, (struct sigaction *) nullptr);
 
    /*
     * "Ignore Signal" handlers.
@@ -579,9 +579,9 @@ InitializeSignalHandling( void )
    sigemptyset(&svec.sa_mask);
    svec.sa_flags   = 0;
    svec.sa_handler = IgnoreSignal;
-   (void) sigaction(SIGUSR1, &svec, (struct sigaction *) NULL);
-   (void) sigaction(SIGUSR2, &svec, (struct sigaction *) NULL);
-   (void) sigaction(SIGHUP, &svec, (struct sigaction *) NULL);
+   (void) sigaction(SIGUSR1, &svec, (struct sigaction *) nullptr);
+   (void) sigaction(SIGUSR2, &svec, (struct sigaction *) nullptr);
+   (void) sigaction(SIGHUP, &svec, (struct sigaction *) nullptr);
 
    /*
     * "Default Signal" handlers.
@@ -675,18 +675,18 @@ ExecuteCommand (
       svec.sa_handler = SIG_DFL;
 
       /* Normal */
-      (void) sigaction(SIGCHLD, &svec, (struct sigaction *) NULL);
+      (void) sigaction(SIGCHLD, &svec, (struct sigaction *) nullptr);
 
       /* Urgent */
-      (void) sigaction(SIGTERM, &svec, (struct sigaction *) NULL);
+      (void) sigaction(SIGTERM, &svec, (struct sigaction *) nullptr);
 
       /* Panic */
-      (void) sigaction(SIGINT, &svec, (struct sigaction *) NULL);
+      (void) sigaction(SIGINT, &svec, (struct sigaction *) nullptr);
 
       /* Ignore */
-      (void) sigaction(SIGUSR1, &svec, (struct sigaction *) NULL);
-      (void) sigaction(SIGUSR2, &svec, (struct sigaction *) NULL);
-      (void) sigaction(SIGHUP, &svec, (struct sigaction *) NULL);
+      (void) sigaction(SIGUSR1, &svec, (struct sigaction *) nullptr);
+      (void) sigaction(SIGUSR2, &svec, (struct sigaction *) nullptr);
+      (void) sigaction(SIGHUP, &svec, (struct sigaction *) nullptr);
 
       for (i=3; i < FOPEN_MAX; i++) {
          if ( i != errorpipeG[1] )
@@ -731,7 +731,7 @@ ParseCommandLine(
     argv2 = (char **) argv;
 
     tmpFileCntG = 0;
-    tmpFilesG = (char **) NULL;
+    tmpFilesG = (char **) nullptr;
 
     for (argc--, argv++; argc > 0; argc--, argv++) {
 	if ( ! strcmp(argv[0] , "-open") ) {
@@ -761,7 +761,7 @@ ParseCommandLine(
 	    dtSvcProcIdG = (char *) malloc( tmpi + 1 );
 
 	    memcpy( dtSvcProcIdG, argv[0], tmpi );
-	    dtSvcProcIdG[tmpi] = NULL;
+	    dtSvcProcIdG[tmpi] = nullptr;
 #else
 	    dtSvcProcIdG = (char *) malloc( strlen(argv[0]) + 1 );
 	    strcpy( dtSvcProcIdG, argv[0] );
@@ -798,7 +798,7 @@ ParseCommandLine(
 		     * -ttprocid provided.
 		     */
 		    free(dtSvcProcIdG);
-		    dtSvcProcIdG = (char *) NULL;
+		    dtSvcProcIdG = (char *) nullptr;
 		}
 	    }
 	    else {
@@ -806,7 +806,7 @@ ParseCommandLine(
 		 * Unable to find _ (underscore) separators.
 		 */
 		free(dtSvcProcIdG);
-		dtSvcProcIdG = (char *) NULL;
+		dtSvcProcIdG = (char *) nullptr;
 	    }
 	}
 	else if ( ! strcmp(argv[0] , "-tmp") ) {
@@ -832,7 +832,7 @@ ParseCommandLine(
     /*
      * No arguments to dtexec, so nothing to fork/exec.
      */
-    return( (char **) NULL );
+    return( (char **) nullptr );
 }
 
 /******************************************************************************
@@ -850,7 +850,7 @@ void DetachFromTooltalk(
 	 * NULL the global to indicate that we no longer want to
 	 * chit-chat with Tooltalk.
 	 */
-	dtSvcProcIdG = (char *) NULL;
+	dtSvcProcIdG = (char *) nullptr;
 
 	sessid = tt_default_session();
 	tt_session_quit(sessid);
@@ -896,7 +896,7 @@ input_handler(
 	    /*
 	     * Big time lost.
 	     */
-	    DetachFromTooltalk(NULL);
+	    DetachFromTooltalk(nullptr);
 	}
 	return;
     }
@@ -1024,7 +1024,7 @@ Tt_callback_action IdSelfToCallerReplyCB(
 	    errorMsg = tt_message_status_string(msg);
 
 	dtexec_tttk_message_destroy(msg);
-	DetachFromTooltalk(NULL);
+	DetachFromTooltalk(nullptr);
     }
     else if (state == TT_HANDLED) {
 	dtexec_tttk_message_destroy(msg);
@@ -1065,7 +1065,7 @@ void IdSelfToCallerRequest(void)
 
     if (status != TT_OK) {
 	dtexec_tttk_message_destroy( msg );
-	DetachFromTooltalk(NULL);
+	DetachFromTooltalk(nullptr);
     }
 }
 
@@ -1095,7 +1095,7 @@ Tt_callback_action DoneRequestReplyCB(
 
     if (state == TT_FAILED) {
 	dtexec_tttk_message_destroy(msg);
-	DetachFromTooltalk(NULL);
+	DetachFromTooltalk(nullptr);
 
 	shutdownPhaseG = SDP_DONE_PANIC_CLEANUP;
     }
@@ -1145,7 +1145,7 @@ void DoneRequest(int doneCode)
 
 	if (status != TT_OK) {
 	    dtexec_tttk_message_destroy( msg );
-	    DetachFromTooltalk(NULL);
+	    DetachFromTooltalk(nullptr);
 	}
     }
 }
@@ -1164,7 +1164,7 @@ DtexecLog(const char *fmt, ...)
     if (!fp)
         return;
 
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     struct tm tm;
     localtime_r(&now, &tm);
     char timestr[32];
@@ -1210,7 +1210,7 @@ CommandListInit(CommandList *list)
 {
     if (!list)
         return;
-    list->items = NULL;
+    list->items = nullptr;
     list->count = 0;
     list->capacity = 0;
 }
@@ -1225,7 +1225,7 @@ CommandListFree(CommandList *list)
         free(list->items[i]);
 
     free(list->items);
-    list->items = NULL;
+    list->items = nullptr;
     list->count = 0;
     list->capacity = 0;
 }
@@ -1267,19 +1267,19 @@ static char *
 CommandListJoin(const CommandList *list)
 {
     if (!list || list->count == 0)
-        return NULL;
+        return nullptr;
 
     size_t total = 0;
     for (int i = 0; i < list->count; ++i) {
         size_t length = strlen(list->items[i]);
         if (total == SIZE_MAX || length > SIZE_MAX - total - 1)
-            return NULL;
+            return nullptr;
         total += length + 1;
     }
 
     char *result = (char *)malloc(total);
     if (!result)
-        return NULL;
+        return nullptr;
 
     char *ptr = result;
     for (int i = 0; i < list->count; ++i)
@@ -1300,7 +1300,7 @@ PidSetInit(PidSet *set)
 {
     if (!set)
         return;
-    set->items = NULL;
+    set->items = nullptr;
     set->count = 0;
     set->capacity = 0;
 }
@@ -1311,7 +1311,7 @@ PidSetFree(PidSet *set)
     if (!set)
         return;
     free(set->items);
-    set->items = NULL;
+    set->items = nullptr;
     set->count = 0;
     set->capacity = 0;
 }
@@ -1394,7 +1394,7 @@ GatherChildExecutables(pid_t pid, CommandList *commands, PidSet *visited)
      */
     for (int index = 0; index < visited->count; ++index) {
         char cmdline[PATH_MAX], path[128];
-        char *buffer = NULL;
+        char *buffer = nullptr;
         size_t capacity = 0;
         pid = visited->items[index];
         if (ReadProcCmdline(pid, cmdline, sizeof(cmdline)) && cmdline[0])
@@ -1413,7 +1413,7 @@ GatherChildExecutables(pid_t pid, CommandList *commands, PidSet *visited)
                 if (token[0] >= '0' && token[0] <= '9' && *end == '\0' &&
                     errno == 0 && child > 0 && child <= INT_MAX)
                     PidSetAdd(visited, (pid_t)child);
-                token = strtok_r(NULL, " \t\n", &state);
+                token = strtok_r(nullptr, " \t\n", &state);
             }
         }
         free(buffer);
@@ -1509,7 +1509,7 @@ SendActionIconCacheUpdateNotice(const char *childList)
     Tt_message msg = dtexec_tttk_message_create((Tt_message)NULL,
                                                 TT_NOTICE,
                                                 TT_SESSION,
-                                                (const char *)NULL,
+                                                (const char *)nullptr,
                                                 ACTION_ICON_CACHE_UPDATE_OP,
                                                 (Tt_message_callback)NULL);
     if (tt_ptr_error(msg) != TT_OK)
@@ -1542,7 +1542,7 @@ MaybeSendActionIconCacheUpdate(void)
         return;
 
     struct timeval now;
-    (void) gettimeofday(&now, NULL);
+    (void) gettimeofday(&now, nullptr);
 
     if (now.tv_sec < actionIconCacheDeadlineG.tv_sec ||
         (now.tv_sec == actionIconCacheDeadlineG.tv_sec &&
@@ -1560,7 +1560,7 @@ MaybeSendActionIconCacheUpdate(void)
     if (childList)
     {
         char snippet[128];
-        DescribeChildListForLog(childList, snippet, sizeof(snippet), NULL);
+        DescribeChildListForLog(childList, snippet, sizeof(snippet), nullptr);
         DtexecLog("Collected %d child commands for pid=%d first=%s",
                   childCount, childPidG,
                   snippet[0] ? snippet : "(none)");
@@ -1595,7 +1595,7 @@ main (
     char  *tmpBuffer;
     int    errorBytes;
     int    firstPass, tmpi;
-    char  *tmpProgName = NULL;
+    char  *tmpProgName = nullptr;
 
 
     setlocale( LC_ALL, "" );
@@ -1621,7 +1621,7 @@ main (
      * Note: dtSvcProcIdG is used like a boolean to control whether
      * we are communicating with libDtSvc using Tooltalk.
      */
-    dtSvcProcIdG = (char *) NULL;	/* assume not communicating with TT */
+    dtSvcProcIdG = (char *) nullptr;	/* assume not communicating with TT */
     ttfdG = -1;
 
     cmdLine = ParseCommandLine (argc, argv);
@@ -1686,7 +1686,7 @@ main (
 	    /*
 	     * We have no hope of talking to our caller via Tooltalk.
 	     */
-	    dtSvcProcIdG = (char *) NULL;
+	    dtSvcProcIdG = (char *) nullptr;
 	}
     }
 
@@ -1747,11 +1747,11 @@ main (
 
 
 	if (rediscoverSigCldG || rediscoverUrgentSigG) {
-	    nfound =select(MAXSOCKS, FD_SET_CAST(&readfds), FD_SET_CAST(NULL),
+	    nfound =select(MAXSOCKS, FD_SET_CAST(&readfds), FD_SET_CAST(nullptr),
 				FD_SET_CAST(&exceptfds), &timeoutShort);
  	}
 	else {
-	    nfound =select(MAXSOCKS, FD_SET_CAST(&readfds), FD_SET_CAST(NULL),
+	    nfound =select(MAXSOCKS, FD_SET_CAST(&readfds), FD_SET_CAST(nullptr),
 				FD_SET_CAST(&exceptfds), &timeoutLong);
 	}
 
@@ -1777,7 +1777,7 @@ main (
 			 * Judgement call - when the Tooltalk connection goes
 			 * bad, let dtexec continue rather than doing an exit.
 			 */
-			DetachFromTooltalk(NULL);
+			DetachFromTooltalk(nullptr);
 		    }
 		}
 
@@ -1821,7 +1821,7 @@ main (
 		     * an XtInputHandler() style callback in case Xt is
 		     * ever used.
 		     */
-		    input_handler((char *) NULL, (int *) &junki,
+		    input_handler((char *) nullptr, (int *) &junki,
 					(unsigned long *) &junki);
 		}
 	    }
@@ -1836,13 +1836,13 @@ main (
 		     * block to the errorLog file.
 		     */
 		    errorBytes = 0;		/* what we have so far */
-		    tmpBuffer  = NULL;
+		    tmpBuffer  = nullptr;
 		    firstPass = 1;
 
 		    while (1) {
 			char buf;
-			nfound =select(MAXSOCKS, FD_SET_CAST(&readfds), FD_SET_CAST(NULL),
-			     FD_SET_CAST(NULL), &timeoutShort);
+			nfound =select(MAXSOCKS, FD_SET_CAST(&readfds), FD_SET_CAST(nullptr),
+			     FD_SET_CAST(nullptr), &timeoutShort);
 			if (nfound > 0) {
 			    tmpi = read (errorpipeG[0], &buf, 1);
 			} else {
@@ -1854,7 +1854,7 @@ main (
 			     * Grow buffer to hold entire error stream.
 			     */
 			    firstPass = 0;
-			    if (tmpBuffer == NULL)
+			    if (tmpBuffer == nullptr)
 				tmpBuffer = (char *) malloc(
 						tmpi + 1);
 			    else
@@ -1872,9 +1872,9 @@ main (
 				 * Pause a bit and wait for a continuation of
 				 * the error stream if there is more.
 				 */
-				select(0, FD_SET_CAST(NULL),
-					  FD_SET_CAST(NULL),
-					  FD_SET_CAST(NULL), &timeoutShort);
+				select(0, FD_SET_CAST(nullptr),
+					  FD_SET_CAST(nullptr),
+					  FD_SET_CAST(nullptr), &timeoutShort);
 			    }
 			    else {
 				/*
@@ -2027,7 +2027,7 @@ main (
 			    /*
 			     * Try to detatch from Tooltalk anyway.
 			     */
-			    DetachFromTooltalk(NULL);
+			    DetachFromTooltalk(nullptr);
 			}
 
 			shutdownPhaseG = SDP_DONE_PANIC_CLEANUP;

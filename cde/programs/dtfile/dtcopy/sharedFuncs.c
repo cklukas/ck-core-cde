@@ -131,7 +131,7 @@ split_path(const String path, String folder, String object)
 
    String lastSlash;
 
-   if ( (lastSlash = strrchr(path,'/')) != NULL)
+   if ( (lastSlash = strrchr(path,'/')) != nullptr)
    {
       strcpy(object,lastSlash+1);
       if(lastSlash == path)  /* Must be root Folder */
@@ -154,7 +154,7 @@ get_path(char *path)
 {
     char *rpath, tmppath[MAX_PATH];
     if (!getcwd(tmppath,MAX_PATH))
-        return NULL;
+        return nullptr;
     rpath = _DtCopyPathFromInput(path,tmppath);
     return rpath;
 }
@@ -251,10 +251,10 @@ generate_NewPath(String newPath, String oldPath)
 
    lastDot   = strrchr(oldPath,'.');
    lastSlash = strrchr(oldPath,'/');
-   if (lastSlash == NULL)
+   if (lastSlash == nullptr)
       lastSlash = oldPath - 1;   /* allows for no path and first char is dot */
    len = lastDot - oldPath;
-   if ( lastDot != NULL &&            /* no dot */
+   if ( lastDot != nullptr &&            /* no dot */
         lastDot > lastSlash+1 &&      /* dot is in filename, not directory name */
         len != strlen(oldPath)-1 )    /* dot is not last character of filename */
    {
@@ -362,7 +362,7 @@ CopyCheckDeletePermissionRecur(
   }
 
   dirp = opendir (destinationPath);
-  if (dirp == NULL)
+  if (dirp == nullptr)
     return -1;  /* could not read directory */
 
 
@@ -506,7 +506,7 @@ CheckDeleteAccess(
        }
        perm_status = CopyCheckDeletePermission(tmpptr,source_name);
        free(tmpstring);
-       tmpstring = NULL;
+       tmpstring = nullptr;
      }
      if(!perm_status)  /* Everything is fine just return */
      {
@@ -520,8 +520,8 @@ CheckDeleteAccess(
 
      msg = XtMalloc(strlen(tmpmsg)+strlen(source_name)+2);
      sprintf(msg,tmpmsg,source_name);
-     _DtMessageDialog (G_toplevel, title, msg, 0, FALSE, NULL,
-         CloseTopLevel, NULL, NULL, False, ERROR_DIALOG);
+     _DtMessageDialog (G_toplevel, title, msg, 0, FALSE, nullptr,
+         CloseTopLevel, nullptr, nullptr, False, ERROR_DIALOG);
 /*
      XtAppAddTimeOut(app_context, delay, TimeoutHandler, NULL);
 */
@@ -549,8 +549,8 @@ TimeoutHandler(XtPointer client_data, XtIntervalId *id)
 static char *
 _DtCopyPathFromInput(char *input_string, char *current_dir)
 {
-    char *path = NULL;
-    char *tmp_path = NULL;
+    char *path = nullptr;
+    char *tmp_path = nullptr;
     int dir_len;
 
     /* find relative path */
@@ -567,7 +567,7 @@ _DtCopyPathFromInput(char *input_string, char *current_dir)
         char command[MAX_PATH];
 
         sprintf(command,"echo %s",path);
-        if((pfp=popen(command,"r")) == NULL)
+        if((pfp=popen(command,"r")) == nullptr)
         {
 
         }
@@ -579,14 +579,14 @@ _DtCopyPathFromInput(char *input_string, char *current_dir)
                 path = XtNewString(command);
             }
             else
-                path = NULL;
+                path = nullptr;
 
             pclose(pfp);
         }
     }
 
     if (!path)
-        return NULL;
+        return nullptr;
 
     /* Resolve '~' -- new memory is allocated, old memory is freed */
     if (*path == '~')
@@ -611,13 +611,13 @@ _DtCopyPathFromInput(char *input_string, char *current_dir)
 
             XtFree(path);
             path = tmp_path;
-            tmp_path = NULL;
+            tmp_path = nullptr;
         }
     }
     else if (!path)
     {
         XtFree(tmp_path);
-        return NULL;
+        return nullptr;
     }
 
     /* Resolve '.' or '..' -- input is overwritten, output may be NULL! */
@@ -651,12 +651,12 @@ _DtCopyChangeTildeToHome(char *input_string)
         /* find user */
         if (path)
             *path = '/';
-        if ((pwInfo = getpwnam(input_string + 1)) == NULL)
+        if ((pwInfo = getpwnam(input_string + 1)) == nullptr)
         {
             /* user doesn't exist */
             if (path)
                 *path = '/';
-            return NULL;
+            return nullptr;
         }
 
         if (path)
@@ -723,8 +723,8 @@ Check(char *spth, char *dpth, int mode)
         tmpStr = (GETMESSAGE(4,9, "Cannot open %s"));
         msg = XtMalloc(strlen(tmpStr)+strlen(filename)+1);
         sprintf(msg,tmpStr,filename);
-        _DtMessageDialog (G_toplevel, title, msg, 0, FALSE, NULL,
-                          CloseTopLevel, NULL, NULL, False, ERROR_DIALOG);
+        _DtMessageDialog (G_toplevel, title, msg, 0, FALSE, nullptr,
+                          CloseTopLevel, nullptr, nullptr, False, ERROR_DIALOG);
         XtFree(msg);
         return 0;
     }
@@ -752,8 +752,8 @@ Check(char *spth, char *dpth, int mode)
                 tmpStr = GETMESSAGE(3,20,"Cannot copy folder into itself. %s");
             msg = XtMalloc(strlen(tmpStr)+strlen(dpth)+1);
             sprintf(msg,tmpStr,dpth);
-            _DtMessageDialog (G_toplevel, title, msg, 0, FALSE, NULL,
-                              CloseTopLevel, NULL, NULL, False, ERROR_DIALOG);
+            _DtMessageDialog (G_toplevel, title, msg, 0, FALSE, nullptr,
+                              CloseTopLevel, nullptr, nullptr, False, ERROR_DIALOG);
 
             XtFree(msg);
             return(1);

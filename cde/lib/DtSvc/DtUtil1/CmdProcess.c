@@ -120,7 +120,7 @@ static char
    char *rep_type;
    char *name;
    char *class;
-   char *terminals = NULL;
+   char *terminals = nullptr;
 
    name = XtMalloc (strlen (DtREMOTE_TERMINALS_NAME) + strlen (appName) + 4);
    sprintf (name, "%s*%s", appName, DtREMOTE_TERMINALS_NAME);
@@ -170,12 +170,12 @@ GetRemoteTerminalsResource (
    char *pch, *host;
 
    if ((terminals = _GetRemoteTerminalsResource (display, appClass, appName)) 
-	== NULL) {
+	== nullptr) {
       /*
        * The resource was not specified, and no defaults are set.
        */
-      cmd_Resources.remoteHosts = (char **) NULL;
-      cmd_Resources.remoteTerminals = (char **) NULL;
+      cmd_Resources.remoteHosts = (char **) nullptr;
+      cmd_Resources.remoteTerminals = (char **) nullptr;
       return;
    }
 
@@ -183,8 +183,8 @@ GetRemoteTerminalsResource (
     * Find out how many terminals are specified by counting the number of
     * colons.
     */
-   for (pch=terminals, num=0; pch != NULL ; ) {
-      if ((pch = DtStrchr (pch, ':')) != NULL) {
+   for (pch=terminals, num=0; pch != nullptr ; ) {
+      if ((pch = DtStrchr (pch, ':')) != nullptr) {
 	 /*
 	  * Move past the ':'.
 	  */
@@ -197,8 +197,8 @@ GetRemoteTerminalsResource (
       /*
        * No "host:/terminal" pairs were found.
        */
-      cmd_Resources.remoteHosts = (char **) NULL;
-      cmd_Resources.remoteTerminals = (char **) NULL;
+      cmd_Resources.remoteHosts = (char **) nullptr;
+      cmd_Resources.remoteTerminals = (char **) nullptr;
       return;
    }
 
@@ -213,12 +213,12 @@ GetRemoteTerminalsResource (
    cmd_Resources.remoteHosts = (char **) XtMalloc (num * sizeof(char *));
    cmd_Resources.remoteTerminals = (char **) XtMalloc (num * sizeof(char *));
    
-   for (pch=terminals, j=0; j < num && pch != NULL && *pch != '\0'; j++) 
+   for (pch=terminals, j=0; j < num && pch != nullptr && *pch != '\0'; j++) 
    {
 
       host = pch;
 
-      if ((pch = DtStrchr (pch, ':')) == NULL)
+      if ((pch = DtStrchr (pch, ':')) == nullptr)
 	 break;
 
       /*
@@ -239,7 +239,7 @@ GetRemoteTerminalsResource (
       /*
        * Find the end of this entry and skip past it.
        */
-      if ((pch = DtStrchr (pch, ',')) == NULL) {
+      if ((pch = DtStrchr (pch, ',')) == nullptr) {
 	 /*
 	  * This is the last pair, advance "j" and break the loop.
 	  */
@@ -257,8 +257,8 @@ GetRemoteTerminalsResource (
    /*
     * NULL terminate the arrays.
     */
-   cmd_Resources.remoteHosts[j] = (char *) NULL;
-   cmd_Resources.remoteTerminals[j] = (char *) NULL;
+   cmd_Resources.remoteHosts[j] = (char *) nullptr;
+   cmd_Resources.remoteTerminals[j] = (char *) nullptr;
 }
 
 
@@ -528,15 +528,15 @@ GetRemoteTerminal(
 {
    int i;
 
-   if (cmd_Resources.remoteHosts == NULL)
-      return (NULL);
+   if (cmd_Resources.remoteHosts == nullptr)
+      return (nullptr);
 
-   for (i=0; cmd_Resources.remoteHosts[i] != NULL; i++) {
+   for (i=0; cmd_Resources.remoteHosts[i] != nullptr; i++) {
       if ((strcmp (host, cmd_Resources.remoteHosts[i])) == 0)
 	 return (cmd_Resources.remoteTerminals[i]);
    }
 
-   return (NULL);
+   return (nullptr);
 }
 
 /******************************************************************************
@@ -572,9 +572,9 @@ _DtCmdCreateTerminalCommand(
         char *procId,
         char *tmpFiles)
 {
-   char *pGeom = NULL;
-   char *pName = NULL;
-   char *pTitle = NULL;
+   char *pGeom = nullptr;
+   char *pName = nullptr;
+   char *pTitle = nullptr;
    char options[MAX_BUF_SIZE];
    char *defaultTerminal;
 
@@ -583,7 +583,7 @@ _DtCmdCreateTerminalCommand(
    /*
     * Get the name of the terminal emulator to use.
     */
-   if ((defaultTerminal = GetRemoteTerminal (execHost)) == NULL)
+   if ((defaultTerminal = GetRemoteTerminal (execHost)) == nullptr)
       defaultTerminal = cmd_Resources.localTerminal;
 
    /*
@@ -658,7 +658,7 @@ _DtCmdCheckForExecutable(
     * if that is accessable. 
     */
 
-   for (ppch = cmd_Globals.path_list; *ppch != NULL; ppch++) 
+   for (ppch = cmd_Globals.path_list; *ppch != nullptr; ppch++) 
    {
       char *longName = XtMalloc(MAXPATHLEN);
 
@@ -715,12 +715,12 @@ _DtCmdValidDir(
 {
    int 		retValue = 0;
 
-   if (contextDir == NULL) 
+   if (contextDir == nullptr) 
       /*
        * Stay in the same directory.
        */
       return (True);
-   if (contextHost == NULL)
+   if (contextHost == nullptr)
       /*
        * Change to 'contextDir'.
        */
@@ -786,8 +786,8 @@ void
 _DtCmdGetResources (
 	Display		*display)
 {
-   char *appClass = NULL;
-   char *appName = NULL;
+   char *appClass = nullptr;
+   char *appName = nullptr;
 
    /*
     * Determine the name and class for this client.

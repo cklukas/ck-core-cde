@@ -71,7 +71,7 @@ ReadBdfHeader(struct btophead *head, char *buf)
 	char *p;
 	unsigned int	getstat = 0;
 
-	if (NULL == fgets(buf, BUFSIZE, head->input)) {
+	if (nullptr == fgets(buf, BUFSIZE, head->input)) {
 		return(BDF_INVAL);
 	}
 	p = buf;
@@ -82,7 +82,7 @@ ReadBdfHeader(struct btophead *head, char *buf)
 	}
 
 	while( 1 ) {
-		if (fgets(buf, BUFSIZE, head->input) == NULL) {
+		if (fgets(buf, BUFSIZE, head->input) == nullptr) {
 			return (BDF_INVAL);
 		}
 		p = buf;
@@ -127,7 +127,7 @@ ReadGpfHeader(struct ptobhead *head, char *buf)
 	while(1) {
 		if (getstat == 0x07) break;
 
-		if (fgets(buf, BUFSIZE, head->input) == NULL) {
+		if (fgets(buf, BUFSIZE, head->input) == nullptr) {
 			return	GPF_INVAL;
 		}
 		p = buf;
@@ -165,7 +165,7 @@ WriteBdfHeader( struct ptobhead *head )
 	pid_t	chld_pid = 0;
 	int	chld_stat ;
 
-	if (head->snf_file != NULL) {
+	if (head->snf_file != nullptr) {
 		if (pipe(fd) != 0) {
 			return	PIPE_ERROR;
 		}
@@ -188,14 +188,14 @@ WriteBdfHeader( struct ptobhead *head )
 			break;
 		}
 		close(fd[1]);
-		if((fp = (FILE *)fdopen(fd[0], "r")) == NULL) {
+		if((fp = (FILE *)fdopen(fd[0], "r")) == nullptr) {
 			close( fd[0] );
 			kill( chld_pid, SIGKILL );
 			WaitID( chld_pid, chld_stat ) ;
 			return	FDOPEN_ERROR;
 		}
 	} else {
-		if ((fp = fopen(head->bdf_file, "r")) == NULL) {
+		if ((fp = fopen(head->bdf_file, "r")) == nullptr) {
 			return(BDF_OPEN_HEAD);
 		}
 	}
@@ -203,9 +203,9 @@ WriteBdfHeader( struct ptobhead *head )
 	getstat = 0;
 
 	while ( 1 ) {
-		if (fgets(buf, BUFSIZE, fp) == NULL) {
+		if (fgets(buf, BUFSIZE, fp) == nullptr) {
 		    fclose( fp );
-		    if (head->snf_file != NULL) {
+		    if (head->snf_file != nullptr) {
 			kill( chld_pid, SIGKILL );
 			WaitID( chld_pid, chld_stat ) ;
 		    }
@@ -216,7 +216,7 @@ WriteBdfHeader( struct ptobhead *head )
 
 		if (!strncmp(p, CHARS, CHARSsz)) {
 		    fclose( fp );
-		    if (head->snf_file != NULL) {
+		    if (head->snf_file != nullptr) {
 			kill( chld_pid, SIGKILL );
 			WaitID( chld_pid, chld_stat ) ;
 		    }
@@ -229,7 +229,7 @@ WriteBdfHeader( struct ptobhead *head )
 		    if ((sscanf(p, "SIZE %f%d",
 			&(head->bdf_point), &(head->bdf_xdpi))) != 2) {
 			fclose(fp);
-			if (head->snf_file != NULL) {
+			if (head->snf_file != nullptr) {
 			    kill( chld_pid, SIGKILL );
 			    WaitID( chld_pid, chld_stat ) ;
 			}
@@ -246,7 +246,7 @@ WriteBdfHeader( struct ptobhead *head )
 						    &(head->bdf_y)) != 4
 		    ) {
 			fclose(fp);
-			if (head->snf_file != NULL) {
+			if (head->snf_file != nullptr) {
 			    kill( chld_pid, SIGKILL );
 			    WaitID( chld_pid, chld_stat ) ;
 			}
@@ -291,7 +291,7 @@ WritePtnToBdf( struct ptobhead *head )
 
 	if (head->zoomf) {
 		msize = ((head->bdf_width + 7) / 8) * head->bdf_height;
-		if ((zoomptn = (char *)malloc(msize)) == NULL) {
+		if ((zoomptn = (char *)malloc(msize)) == nullptr) {
 			return(MALLOC_ERROR);
 		}
 	}
@@ -353,7 +353,7 @@ putDefaultChars( struct ptobhead *head )
 	fprintf(head->output, "BITMAP\n");
 
 	bytew = (head->bdf_width + 7) / 8;
-	if ((ptnbuf = (unsigned char *)malloc(bytew * 2)) == NULL) {
+	if ((ptnbuf = (unsigned char *)malloc(bytew * 2)) == nullptr) {
 		return(MALLOC_ERROR);
 	}
 	put_default_bitmap(head, bytew, posbit, i, j, ptnbuf, ptnbuf2, tmp) ;
@@ -373,7 +373,7 @@ WritePtnToGpf( struct btophead *head )
 
 	if (head->zoomf) {
 		msize = ((head->p_width + 7) / 8) * head->p_height;
-		if ((zoomptn = (char *)malloc(msize)) == NULL) {
+		if ((zoomptn = (char *)malloc(msize)) == nullptr) {
 			return(MALLOC_ERROR);
 		}
 	}
@@ -432,7 +432,7 @@ ReadBdfToMemory(struct btophead *head, char *buf)
 			continue;
 		}
 		head->code[num_char] = code;
-		if ( ( ptn = head->ptn[num_char++] = (char *)malloc( bsize ) ) == NULL ) {
+		if ( ( ptn = head->ptn[num_char++] = (char *)malloc( bsize ) ) == nullptr ) {
 			return(MALLOC_ERROR);
 		}
 
@@ -476,7 +476,7 @@ ReadBdfToMemory_with_init(
 
 		head->code[num_char] = code;
 		if ((ptn = head->ptn[num_char++] =
-		    (char *)malloc(bsize)) == NULL) {
+		    (char *)malloc(bsize)) == nullptr) {
 			return(MALLOC_ERROR);
 		}
 
@@ -498,7 +498,7 @@ GetBdfCode(
 	char *p;
 
 	while(1) {
-		if (fgets(buf, BUFSIZE, head->input) == NULL) {
+		if (fgets(buf, BUFSIZE, head->input) == nullptr) {
 			return (BDF_INVAL);
 		}
 		p = buf;
@@ -529,7 +529,7 @@ GetBdfPtn(
 	char    *p;
 
 	while(1) {
-		if (fgets(buf, BUFSIZE, head->input) == NULL) {
+		if (fgets(buf, BUFSIZE, head->input) == nullptr) {
 			return (BDF_INVAL);
 		}
 		p = buf;
@@ -549,7 +549,7 @@ GetBdfPtn(
 			ptn += mwidth;
 			continue;
 		}
-		if (fgets(buf, BUFSIZE, head->input) == NULL) {
+		if (fgets(buf, BUFSIZE, head->input) == nullptr) {
 			return (BDF_INVAL);
 		}
 		p = buf;
@@ -594,7 +594,7 @@ ReadGpfToMemory(struct ptobhead *head, char *buf)
 		}
 		head->code[num_char] = code;
 		if ((ptn = head->ptn[num_char++] =
-		    (char *)malloc(bsize)) == NULL) {
+		    (char *)malloc(bsize)) == nullptr) {
 			return(MALLOC_ERROR);
 		}
 
@@ -619,12 +619,12 @@ GetGpfCode(struct ptobhead *head, char *buf, int *code)
 			return(FILE_END);
 		}
 		if (!strncmp(p, CODE, CODEsz)) {
-			*code = (int)strtol(buf+CODEsz, NULL, 0);
+			*code = (int)strtol(buf+CODEsz, nullptr, 0);
 			CONVGLYPHINDEX( *code ) ;
 			break;
 		}
 
-		if (fgets(buf, BUFSIZE, head->input) == NULL) {
+		if (fgets(buf, BUFSIZE, head->input) == nullptr) {
 			return (GPF_INVAL);
 		}
 	}
@@ -651,7 +651,7 @@ GetGpfPtn(
 			ptn += mwidth;
 			continue;
 		}
-		if (fgets(buf, BUFSIZE, head->input) == NULL) {
+		if (fgets(buf, BUFSIZE, head->input) == nullptr) {
 			return (GPF_INVAL);
 		}
 		p = buf;
@@ -696,12 +696,12 @@ GetBdfLinePtn(char *mem, char *buf, int width)
 	for (i=0; i<iend/2; i++) {
 		str[0] = *buf++;
 		str[1] = *buf++;
-		*mem++ = (char)strtol(str, NULL, 16);
+		*mem++ = (char)strtol(str, nullptr, 16);
 	}
 	if (iend%2) {
 		str[0] = *buf;
 		str[1] = 0;
-		*mem = (char)strtol(str, NULL, 16) << 4;
+		*mem = (char)strtol(str, nullptr, 16) << 4;
 	}
 }
 
@@ -744,11 +744,11 @@ PutBdfPtn(unsigned char *ptn, int width, int height, FILE *fp)
 {
 	int	    i, j, nbyte ;
 	unsigned char    *pbuf, x, c;
-	static unsigned char    *buf=NULL;
+	static unsigned char    *buf=nullptr;
 
-	if (buf==NULL) {
+	if (buf==nullptr) {
 		buf = (unsigned char *)malloc(width*height+2);
-		if ( buf == NULL) {
+		if ( buf == nullptr) {
 			return(MALLOC_ERROR);
 		}
 	}
@@ -776,11 +776,11 @@ PutGpfPtn(char *ptn, int width, int height, FILE *fp)
 {
 	int	    i, j, k, nbyte, tw;
 	unsigned char    p, *pbuf;
-	static unsigned char    *buf=NULL;
+	static unsigned char    *buf=nullptr;
 
-	if (buf==NULL) {
+	if (buf==nullptr) {
 	    buf = (unsigned char *)malloc(((width+1)*height)+1);
-	    if ( buf == NULL) {
+	    if ( buf == nullptr) {
 		return(MALLOC_ERROR);
 	    }
 	}
@@ -819,7 +819,7 @@ PtnZoom(char *dmem, char *smem, int sw, int sh, int dw, int dh)
 	swidth = (sw + 7) / 8;
 	dwidth = (dw + 7) / 8;
 
-	if ((dbuf = (char *)malloc(dwidth)) == NULL) {
+	if ((dbuf = (char *)malloc(dwidth)) == nullptr) {
 		return(MALLOC_ERROR);
 	}
 
@@ -881,7 +881,7 @@ exline(char *sp, char *dbuf, int sw, int dw)
 char *
 GetTmpPath( char *path )
 {
-	char	*p=NULL, *sp, *buf ;
+	char	*p=nullptr, *sp, *buf ;
 	int	len, fd ;
 	struct	stat	statbuf ;
 
@@ -897,8 +897,8 @@ GetTmpPath( char *path )
 	}else{
 	    len += (strlen( TEMPFILEKEY ) +1 + 1) ;
 	}
-	if ((buf = (char *)malloc( len )) == NULL) {
-	    return NULL;
+	if ((buf = (char *)malloc( len )) == nullptr) {
+	    return nullptr;
 	}
 	/* Get temporary file path */
 	strcpy( buf, p ) ;
@@ -912,7 +912,7 @@ GetTmpPath( char *path )
 	 */
 	if ((fd = mkstemp( buf )) == -1) {
 	    free( buf ) ;
-	    return NULL ;
+	    return nullptr ;
 	}
 	close( fd ) ;
 	return buf ;
@@ -1031,63 +1031,63 @@ ErrMsgTable_AndExit(
 	case 0:
 		break;
 	case BDF_OPEN_IN :
-		USAGE2("%s : The input font file cannot be opened.\"%s\"\A1\A5\n", prog_name, (snf_in != NULL)? snf_in : "\0" );
+		USAGE2("%s : The input font file cannot be opened.\"%s\"\A1\A5\n", prog_name, (snf_in != nullptr)? snf_in : "\0" );
 		rtn = OPEN_FAIL ;
 		break;
 
 	case BDF_OPEN_OUT :
-		USAGE2("%s : The output font file cannot be opened.\"%s\"\A1\A5\n", prog_name, (snf_out != NULL)? snf_out : "\0" );
+		USAGE2("%s : The output font file cannot be opened.\"%s\"\A1\A5\n", prog_name, (snf_out != nullptr)? snf_out : "\0" );
 		rtn = OPEN_FAIL ;
 		break;
 
 
 	case BDF_READ :
-		USAGE2("%s : Information from the font file cannot be extracted.\"%s\"\A1\A5 \n", prog_name, (snf_in != NULL) ? snf_in : "\0" );
+		USAGE2("%s : Information from the font file cannot be extracted.\"%s\"\A1\A5 \n", prog_name, (snf_in != nullptr) ? snf_in : "\0" );
 		rtn = READ_FAIL ;
 		break;
 
 	case BDF_WRITE :
-		USAGE2("%s : It is not possible to write to the font file.\"%s\"\A1\A5\n", prog_name, (snf_out != NULL) ? snf_out : "\0" );
+		USAGE2("%s : It is not possible to write to the font file.\"%s\"\A1\A5\n", prog_name, (snf_out != nullptr) ? snf_out : "\0" );
 		rtn = DEVICE_FAIL ;
 		break;
 
 	case BDF_INVAL :
-		USAGE2("%s : The format of the font file is illegal.\"%s\"\A1\A5 \n", prog_name, (snf_in != NULL) ? snf_in : "\0" );
+		USAGE2("%s : The format of the font file is illegal.\"%s\"\A1\A5 \n", prog_name, (snf_in != nullptr) ? snf_in : "\0" );
 		rtn = 1 ;
 		break;
 
 	case BDF_OPEN_HEAD :
-		USAGE2("%s : The BDF file cannot be opened.\"%s\"\A1\A5\n", prog_name, (bdf_in != NULL)? bdf_in : "\0" );
+		USAGE2("%s : The BDF file cannot be opened.\"%s\"\A1\A5\n", prog_name, (bdf_in != nullptr)? bdf_in : "\0" );
 		rtn = OPEN_FAIL ;
 		break;
 
 	case BDF_READ_HEAD :
-		USAGE2("%s : Information of the BDF file cannot be extracted.\"%s\"\A1\A5 \n", prog_name, (bdf_in != NULL) ? bdf_in : "\0" );
+		USAGE2("%s : Information of the BDF file cannot be extracted.\"%s\"\A1\A5 \n", prog_name, (bdf_in != nullptr) ? bdf_in : "\0" );
 		rtn = READ_FAIL ;
 		break;
 
 	case GPF_OPEN_IN :
-		USAGE2("%s : The input character pattern file cannot be opened.\"%s\"\A1\A5\n", prog_name, (gpf_in != NULL) ? gpf_in : "\0" );
+		USAGE2("%s : The input character pattern file cannot be opened.\"%s\"\A1\A5\n", prog_name, (gpf_in != nullptr) ? gpf_in : "\0" );
 		rtn = OPEN_FAIL ;
 		break;
 
 	case GPF_OPEN_OUT :
-		USAGE2("%s : The output character pattern file cannot be opened.\"%s\"\A1\A5\n", prog_name, (gpf_out != NULL) ? gpf_out : "\0" );
+		USAGE2("%s : The output character pattern file cannot be opened.\"%s\"\A1\A5\n", prog_name, (gpf_out != nullptr) ? gpf_out : "\0" );
 		rtn = OPEN_FAIL ;
 		break;
 
 	case GPF_READ :
-		USAGE2("%s : The character pattern file cannot be read.\"%s\"\A1\A5\n", prog_name, (gpf_in != NULL) ? gpf_in : "\0" );
+		USAGE2("%s : The character pattern file cannot be read.\"%s\"\A1\A5\n", prog_name, (gpf_in != nullptr) ? gpf_in : "\0" );
 		rtn = READ_FAIL ;
 		break;
 
 	case GPF_WRITE :
-		USAGE2("%s : It is not possible to write to the character pattern file.\"%s\"\A1\A5\n", prog_name, (gpf_out != NULL) ? gpf_out : "\0" );
+		USAGE2("%s : It is not possible to write to the character pattern file.\"%s\"\A1\A5\n", prog_name, (gpf_out != nullptr) ? gpf_out : "\0" );
 		rtn = DEVICE_FAIL ;
 		break;
 
 	case GPF_INVAL :
-		USAGE2("%s : The format of the character pattern file is illegal.\"%s\"\A1\A5\n", prog_name, (gpf_in != NULL) ? gpf_in : "\0" );
+		USAGE2("%s : The format of the character pattern file is illegal.\"%s\"\A1\A5\n", prog_name, (gpf_in != nullptr) ? gpf_in : "\0" );
 		rtn = 1 ;
 		break;
 
@@ -1207,7 +1207,7 @@ Make_NewFefFile(
 )
 {
 	struct	stat	statbuf;
-	char	*save_name = NULL;
+	char	*save_name = nullptr;
 	int		ret_val;
 	int		msg_level;
 	int		rtn ;
@@ -1225,10 +1225,10 @@ Make_NewFefFile(
 #endif
 
 	errno = 0;
-	if (sig_flg || ((save_name = GetTmpPath( org_name )) == NULL)) {
+	if (sig_flg || ((save_name = GetTmpPath( org_name )) == nullptr)) {
 		msg_level = (sig_flg) ? CATCH_SIGNAL : GPF_BUCK_UP_FAIL;
 		Put_File_Create_Err_Msg( msg_level, org_name, tmp_name,
-							(char *)NULL, com );
+							(char *)nullptr, com );
 		Unlink_Tmpfile ( tmp_name, com );
 		return(put_file_create_err_msg);
 	}
@@ -1348,23 +1348,23 @@ ChkSnfFontFile( char *filename )
 char	*
 get_cmd_path(char *path, char *cmd)
 {
-	char	*cmd_path = NULL;
+	char	*cmd_path = nullptr;
 	struct stat	st;
 	char	*end;
 	char	chr_sv;
 
 	if ( !path || !cmd ) {
-		return	NULL;
+		return	nullptr;
 	}
 
 	for ( ; end = ( char * )strchr( path, ':' ); path = end + 1 ) {
 		chr_sv = *end;
 		*end = 0;
-		AllocString( cmd_path, path, NULL ) ;
+		AllocString( cmd_path, path, nullptr ) ;
 		*end = chr_sv;
 
-		AddString( cmd_path, "/", NULL ) ;
-		AddString( cmd_path, cmd, NULL ) ;
+		AddString( cmd_path, "/", nullptr ) ;
+		AddString( cmd_path, cmd, nullptr ) ;
 
 		if ( stat( cmd_path, &st ) == 0 ) {
 		    if( st.st_mode & S_IFREG ) {
@@ -1375,9 +1375,9 @@ get_cmd_path(char *path, char *cmd)
 		FreeString( cmd_path ) ;
 	}
 	free(cmd_path);
-	AllocString( cmd_path, path, NULL ) ;
-	AddString( cmd_path, "/", NULL ) ;
-	AddString( cmd_path, cmd, NULL ) ;
+	AllocString( cmd_path, path, nullptr ) ;
+	AddString( cmd_path, "/", nullptr ) ;
+	AddString( cmd_path, cmd, nullptr ) ;
 	if ( stat( cmd_path, &st ) == 0 ) {
 	    if( st.st_mode & S_IFREG ) {
 		cmd_path = realloc( cmd_path, strlen( cmd_path ) + 1 );
@@ -1385,7 +1385,7 @@ get_cmd_path(char *path, char *cmd)
 	    }
 	}
 	free( cmd_path );
-	return	NULL;
+	return	nullptr;
 }
 
 int

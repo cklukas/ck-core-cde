@@ -98,13 +98,13 @@ int  *num_codeset)
     fal_utyderror = 0;
     fal_utyerror = 0;
 
-    if((locale == NULL) || (charset_str == NULL)){
+    if((locale == nullptr) || (charset_str == nullptr)){
         fal_utyerror = 5;
         fal_utyderror = 1;
 	fal_utyerrno = 0x04 ;
         return(FAL_ERROR);
     }
-    if(codeset == NULL){
+    if(codeset == nullptr){
         fal_utyerror = 5;
         fal_utyderror = 2;
 	fal_utyerrno = 0x04 ;
@@ -117,7 +117,7 @@ int  *num_codeset)
     lcd = &lcdrec;
         /* create X RDB (X NLS DB) */
     rdb = _fallcCreateLocaleDataBase(lcd);
-    if(rdb == NULL){
+    if(rdb == nullptr){
         fal_utyerror = 1;
 	fal_utyerrno = 0x15 ;
         return(FAL_ERROR);
@@ -142,7 +142,7 @@ int  *num_codeset)
 		    ret =
                         (int *)Xrealloc(ret,num_ret*sizeof(int));
                 }
-                if(ret == NULL){
+                if(ret == nullptr){
 		    fal_utyerrno = 0x03 ;
                     return(FAL_ERROR);
                 }
@@ -153,7 +153,7 @@ int  *num_codeset)
     }
     if(num_ret == 0){
         *num_codeset = 0;
-        *codeset = NULL;
+        *codeset = nullptr;
         return (0xff);
     }
 
@@ -215,21 +215,21 @@ int  *num_gr)
     fal_utyerror = 0;
     fal_utyerrno = 0x00 ;
 
-    if((locale == NULL) || (charset_str == NULL)){
+    if((locale == nullptr) || (charset_str == nullptr)){
         fal_utyerror = 5;
         fal_utyderror = 1;
 	fal_utyerrno = 0x04;
 	fal_utyerrno |= (0x0b<<8) ;
         return(FAL_ERROR);
     }
-    if(gr == NULL){
+    if(gr == nullptr){
         fal_utyerror = 5;
         fal_utyderror = 1;
 	fal_utyerrno = 0x04;
 	fal_utyerrno |= (0x0b<<8) ;
         return(FAL_ERROR);
     }
-    if(num_gr == NULL){
+    if(num_gr == nullptr){
         fal_utyerror = 5;
         fal_utyderror = 2;
 	fal_utyerrno = 0x04;
@@ -243,20 +243,20 @@ int  *num_gr)
     lcd = &lcdrec;
         /* create X RDB (X NLS DB) */
     rdb = _fallcCreateLocaleDataBase(lcd);
-    if(rdb == NULL){
+    if(rdb == nullptr){
         fal_utyerror = 1;
 	fal_utyerrno = 0x15 ;
 	fal_utyerrno |= (0x0b<<8) ;
         return(FAL_ERROR);
     }
-    udc = NULL;
+    udc = nullptr;
 
         /* XLC_FONTSET */
         sprintf(buf, "fs%d.charset.udc_area", codeset-1);
         _fallcGetLocaleDataBase(lcd, "XLC_FONTSET", buf, &value, &count);
         if(count > 0){
             udc = (FalGlyphRegion *)Xmalloc(count * sizeof(FalGlyphRegion));
-            if(udc == NULL){
+            if(udc == nullptr){
 		fal_utyerrno = 0x03 ;
 		fal_utyerrno |= (0x0b<<8) ;
 		return(FAL_ERROR);
@@ -309,7 +309,7 @@ char    *charsetname)
     int num = 0,count,num_ret=0;
     int i,j,k;
     char **value,buf[128],ptr;
-    FontData font_data = NULL;
+    FontData font_data = nullptr;
 
 
     sprintf(buf, "fs%d.charset.name", codeset-1);
@@ -345,7 +345,7 @@ Bool falnon_standard(XLCd lcd, XlcCharSet charset)
     char buf[256];
     int count,i;
     char **value;
-    if(charset->ct_sequence == NULL){
+    if(charset->ct_sequence == nullptr){
             return(False);
     }
     for(i=0;;i++){
@@ -423,7 +423,7 @@ unsigned long 	*codepoint)
     charset_name = strdup(tmp);
 */
     charset = _fallcGetCharSet(charsetname);
-    if(charset == NULL){
+    if(charset == nullptr){
 	fal_utyerrno = 0x16 ;
 	return(FAL_ERROR);
     }
@@ -469,14 +469,14 @@ int  *num_cr)
     fal_utyerror  = 0;
     fal_utyderror = 0;
 
-    if(cr == NULL){
+    if(cr == nullptr){
         fal_utyerror  = 5;
         fal_utyderror = 1;
 	fal_utyerrno = 0x04 ;
 	fal_utyerrno |= (0x0a<<8) ;
         return(FAL_ERROR);
     }
-    if(num_cr == NULL){
+    if(num_cr == nullptr){
         fal_utyerror  = 5;
         fal_utyderror = 2;
 	fal_utyerrno = 0x04 ;
@@ -492,7 +492,7 @@ int  *num_cr)
     }
 
     crr = (FalCodeRegion *)Xmalloc(num_gr*sizeof(FalCodeRegion));
-    if(crr == NULL){
+    if(crr == nullptr){
 	Xfree(gr);
 	fal_utyerrno = 0x03 ;
 	fal_utyerrno |= (0x0a<<8) ;
@@ -564,7 +564,7 @@ char    *charsetname)
     int num = 0,count,num_ret=0;
     int i,j,k;
     char **value,buf[128],ptr;
-    FontData font_data = NULL;
+    FontData font_data = nullptr;
     CodeSet cs;
 
 
@@ -666,7 +666,7 @@ int 		*num_gi)
     _fallcDestroyLC(lcd);
 
     *gi = (FalGIInf *)Xmalloc(sizeof(FalGIInf));
-    if(*gi == NULL){
+    if(*gi == nullptr){
 	fal_utyerrno = 0x03 ;
         return(FAL_ERROR);
     }

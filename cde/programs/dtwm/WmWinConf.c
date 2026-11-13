@@ -975,7 +975,7 @@ void HandleClientFrameResize (ClientData *pcd, XEvent *pev)
 	     * (This only applies to accelerator and keyboard resizing!)
 	     */
 	    if (!wmGD.configSet && !SetPointerResizePart (pcd, pev)) {
-		pev = NULL;
+		pev = nullptr;
 		continue;		/* ignore this event */
 	    }
 	}
@@ -999,7 +999,7 @@ void HandleClientFrameResize (ClientData *pcd, XEvent *pev)
 	    resizeDone = True;
 	}
 	else  {
-	    pev = NULL;
+	    pev = nullptr;
 	    continue;			/* ignore this event */
 	}
 
@@ -1008,7 +1008,7 @@ void HandleClientFrameResize (ClientData *pcd, XEvent *pev)
 	    UpdateAndDrawResize(pcd);
 	}
 
-	pev = NULL;	/* reset event pointer */
+	pev = nullptr;	/* reset event pointer */
 
     }  /* end while */
 
@@ -1568,7 +1568,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			     * Can't find an unoccupied icon place.
 			     */
 
-			    F_Beep (NULL, pcd, (XEvent *)NULL);
+			    F_Beep (nullptr, pcd, (XEvent *)nullptr);
 
 			    if (pcd->pSD->moveOpaque && !inIconBox)
 			    {
@@ -1621,7 +1621,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
 			    }
 			    else
 			    {
-				F_Beep (NULL, pcd, (XEvent *)NULL);
+				F_Beep (nullptr, pcd, (XEvent *)nullptr);
 			    }
 			}
 			else 
@@ -1713,7 +1713,7 @@ void CompleteFrameConfig (ClientData *pcd, XEvent *pev)
     configGrab = FALSE;
     anyMotion = FALSE;
     wmGD.movingIcon = FALSE;
-    wmGD.movingIconClient = NULL;
+    wmGD.movingIconClient = nullptr;
 
     if (pcd)
     {
@@ -3129,7 +3129,7 @@ Boolean StartClientMove (ClientData *pcd, XEvent *pev)
 	if (!grabbed)
 	{
 	    wmGD.movingIcon = False;
-	    wmGD.movingIconClient = NULL;
+	    wmGD.movingIconClient = nullptr;
 	    return (False);
 	}
 	configGrab = TRUE;
@@ -3187,7 +3187,7 @@ Boolean StartClientMove (ClientData *pcd, XEvent *pev)
 		 (ICON_DECORATION(pcd) & ICON_ACTIVE_LABEL_PART) &&
 		 (wmGD.keyboardFocus == pcd))
 	{
-	    HideActiveIconText ((WmScreenData *)NULL);
+	    HideActiveIconText ((WmScreenData *)nullptr);
 	}
 
 	if (ICON_INDICATOR_WIN(pcd))
@@ -3502,7 +3502,7 @@ void CancelFrameConfig (ClientData *pcd)
     wmGD.configSet = False;
     configGrab = FALSE;
     wmGD.movingIcon = FALSE;
-    wmGD.movingIconClient = NULL;
+    wmGD.movingIconClient = nullptr;
     
     /* set the focus back to a reasonable window */
     RepairFocus ();	
@@ -3545,12 +3545,12 @@ CheckEatButtonRelease (ClientData *pcd, XEvent *pev)
     Window grab_win;
     Window root;
 
-    if (pcd != (ClientData *)NULL)
+    if (pcd != (ClientData *)nullptr)
 	root = ROOT_FOR_CLIENT(pcd);
     else
 	root = RootWindow (DISPLAY, ACTIVE_PSD->screen);
 
-    if (pcd == (ClientData *) NULL)
+    if (pcd == (ClientData *) nullptr)
 	grab_win = root;
     else
 	grab_win = GrabWin(pcd, pev);
@@ -4736,11 +4736,11 @@ HandleMarqueeSelect (WmScreenData *pSD, XEvent *pev)
 	    pointerX = pev->xbutton.x_root;
 	    pointerY = pev->xbutton.y_root;
 	    UpdateMarqueeSelectData (pSD);
-	    CompleteFrameConfig ((ClientData *)NULL, pev);
+	    CompleteFrameConfig ((ClientData *)nullptr, pev);
 	    bDone = True;
 	}
 	else  {
-	    pev = NULL;
+	    pev = nullptr;
 	    continue;			/* ignore this event */
 	}
 
@@ -4749,7 +4749,7 @@ HandleMarqueeSelect (WmScreenData *pSD, XEvent *pev)
 	    MoveOutline (marqueeX, marqueeY, marqueeWidth, marqueeHeight);
 	}
 
-	pev = NULL;	/* reset event pointer */
+	pev = nullptr;	/* reset event pointer */
 
     }  /* end while */
 
@@ -4809,12 +4809,12 @@ StartMarqueeSelect(WmScreenData *pSD, XEvent *pev)
 	if (pev)
 	{
 	    grabbed = DoGrabs (grab_win, wmGD.configCursor, 
-			PGRAB_MASK, pev->xbutton.time, NULL, True);
+			PGRAB_MASK, pev->xbutton.time, nullptr, True);
 	}
 	else
 	{
 	    grabbed = DoGrabs (grab_win, wmGD.configCursor, 
-			PGRAB_MASK, CurrentTime, NULL, True);
+			PGRAB_MASK, CurrentTime, nullptr, True);
 	}
 	if (!grabbed)
 	{
@@ -4841,7 +4841,7 @@ StartMarqueeSelect(WmScreenData *pSD, XEvent *pev)
 		   	&pointerX, &pointerY, 
 			&junk, &junk, (unsigned int *)&junk))
     {
-	CancelFrameConfig ((ClientData *)NULL);	/* release grabs */
+	CancelFrameConfig ((ClientData *)nullptr);	/* release grabs */
 	return;
     }
 
@@ -5069,12 +5069,12 @@ Boolean HandleMarqueeKeyPress (WmScreenData *pSD, XEvent *pev)
     switch (keysym) {
 
 	case XK_Return:
-	    CompleteFrameConfig ((ClientData *)NULL, pev);
+	    CompleteFrameConfig ((ClientData *)nullptr, pev);
 	    return (True);
 
 	case XK_Escape:
-	    CancelFrameConfig ((ClientData *)NULL);
-	    CheckEatButtonRelease ((ClientData *)NULL, pev);
+	    CancelFrameConfig ((ClientData *)nullptr);
+	    CheckEatButtonRelease ((ClientData *)nullptr, pev);
 	    return (True);
 
 	default:

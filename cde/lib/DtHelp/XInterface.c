@@ -424,7 +424,7 @@ static	SpecialSymbolTable SpcTable[] =
 			     IsoString   }, /*ISOtech, dbl vertical bar      */ 
  {"[Xi    ]", {'\130','\0'}, SymbolString}, /*ISOgrk3, Greek, large xi       */ 
  {"[Yacute]", {'\335','\0'}, IsoString   }, /*ISOlat1, capital Y,acute accent*/ 
- { NULL     , {' '   ,'\0'}, IsoString   }, /* default character to use      */
+ { nullptr     , {' '   ,'\0'}, IsoString   }, /* default character to use      */
 };
 
 
@@ -445,10 +445,10 @@ static	SpecialSymbolTable SpcTable[] =
  *
  *****************************************************************************/
 static	_DtHelpFontHints	DefFontAttrs = {
-		NULL, NULL,
-		10, 10, NULL,
-		NULL, NULL, NULL, NULL,
-		NULL, NULL, NULL, NULL,
+		nullptr, nullptr,
+		10, 10, nullptr,
+		nullptr, nullptr, nullptr, nullptr,
+		nullptr, nullptr, nullptr, nullptr,
 		_DtHelpFontStyleSerif,
 		_DtHelpFontSpacingProp,
 		_DtHelpFontWeightMedium,
@@ -463,7 +463,7 @@ GetTocIndicator (
 
     pDAS->toc_width  = 0;
     pDAS->toc_height = 0;
-    pDAS->toc_indicator = NULL;
+    pDAS->toc_indicator = nullptr;
     if (_DtHelpDAResolveSpc (pDAS, "C", IsoString, DefFontAttrs, "[rArr  ]",
 			     &(pDAS->toc_indicator), &(pDAS->toc_width),
 			     &(pDAS->toc_height), &ascent))
@@ -825,7 +825,7 @@ DtHelpOverrideXrmGetBoolean(XrmDatabase db, const char *name, const char *clazz,
 {
     if (!db || !name || !clazz)
         return defaultValue;
-    char *type = NULL;
+    char *type = nullptr;
     XrmValue value;
     if (!XrmGetResource(db, name, clazz, &type, &value) || !value.addr)
         return defaultValue;
@@ -845,22 +845,22 @@ static char *
 DtHelpOverrideXrmGetStringCopy(XrmDatabase db, const char *name, const char *clazz)
 {
     if (!db || !name || !clazz)
-        return NULL;
-    char *type = NULL;
+        return nullptr;
+    char *type = nullptr;
     XrmValue value;
     if (!XrmGetResource(db, name, clazz, &type, &value) || !value.addr)
-        return NULL;
+        return nullptr;
     const char *s = (const char *)value.addr;
     if (!s || !*s)
-        return NULL;
+        return nullptr;
     return strdup(s);
 }
 
 static int
 DtHelpOverrideSplitCharset(const char *cs, char **outReg, char **outEnc)
 {
-    *outReg = NULL;
-    *outEnc = NULL;
+    *outReg = nullptr;
+    *outEnc = nullptr;
     if (!cs || !*cs)
         return -1;
     if (strncasecmp(cs, "iso8859-", 8) == 0) {
@@ -886,8 +886,8 @@ DtHelpOverrideSplitCharset(const char *cs, char **outReg, char **outEnc)
     if (!*outReg || !*outEnc) {
         free(*outReg);
         free(*outEnc);
-        *outReg = NULL;
-        *outEnc = NULL;
+        *outReg = nullptr;
+        *outEnc = nullptr;
         return -1;
     }
     return 0;
@@ -919,7 +919,7 @@ DtHelpOverrideBuildXLFDFromFields(const char **fields, int fieldCount)
         len += (fields[i] ? strlen(fields[i]) : 0) + 1;
     char *out = (char *)malloc(len + 1);
     if (!out)
-        return NULL;
+        return nullptr;
     char *w = out;
     *w++ = '-';
     for (int i = 0; i < fieldCount; i++) {
@@ -978,7 +978,7 @@ DtHelpOverrideFindVariantBase(
         const char *wantSpacing)
 {
     if (!dpy || !family || !*family)
-        return NULL;
+        return nullptr;
 
     /* Simple process-wide cache: key -> strdup(xlfd) */
     typedef struct {
@@ -1000,7 +1000,7 @@ DtHelpOverrideFindVariantBase(
 
     for (size_t i = 0; i < cacheCount; i++) {
         if (cache[i].key && strcmp(cache[i].key, key) == 0)
-            return cache[i].xlfd ? strdup(cache[i].xlfd) : NULL;
+            return cache[i].xlfd ? strdup(cache[i].xlfd) : nullptr;
     }
 
     char pattern[512];
@@ -1016,7 +1016,7 @@ DtHelpOverrideFindVariantBase(
 
     int count = 0;
     char **names = XListFonts(dpy, pattern, 2048, &count);
-    char *best = NULL;
+    char *best = nullptr;
     int bestScore = 999;
     if (names && count > 0) {
         for (int i = 0; i < count; i++) {
@@ -1035,7 +1035,7 @@ DtHelpOverrideFindVariantBase(
 
     if (cacheCount < (sizeof(cache) / sizeof(cache[0]))) {
         cache[cacheCount].key = strdup(key);
-        cache[cacheCount].xlfd = best ? strdup(best) : NULL;
+        cache[cacheCount].xlfd = best ? strdup(best) : nullptr;
         cacheCount++;
     }
 
@@ -1054,7 +1054,7 @@ DtHelpOverrideFindMonoFallbackBase(
         "nimbus mono l",
         "courier",
         "fixed",
-        NULL
+        nullptr
     };
 
     for (int i = 0; families[i]; i++) {
@@ -1066,7 +1066,7 @@ DtHelpOverrideFindMonoFallbackBase(
         if (xlfd)
             return xlfd;
     }
-    return NULL;
+    return nullptr;
 }
 
 static int
@@ -1128,7 +1128,7 @@ ResolveFont (
     if (font_attr.slant != _DtHelpFontSlantRoman)
       {
         xrmList[_DT_HELP_FONT_ANGLE]  = XrmStringToQuark("italic");
-	if (font_attr.xlfdi != NULL)
+	if (font_attr.xlfdi != nullptr)
 	    xlfdSpec = font_attr.xlfdi;
       }
 
@@ -1137,10 +1137,10 @@ ResolveFont (
         xrmList[_DT_HELP_FONT_WEIGHT] = XrmStringToQuark("bold");
 	if (xrmList[_DT_HELP_FONT_ANGLE] == XrmStringToQuark("italic"))
 	  {
-	    if (font_attr.xlfdib != NULL)
+	    if (font_attr.xlfdib != nullptr)
 	        xlfdSpec = font_attr.xlfdib;
 	  }
-	else if (font_attr.xlfdb != NULL)
+	else if (font_attr.xlfdb != nullptr)
 	    xlfdSpec = font_attr.xlfdb;
       }
 
@@ -1150,10 +1150,10 @@ ResolveFont (
         xrmList[_DT_HELP_FONT_TYPE] = XrmStringToQuark("symbol");
 
     xrmList[_DT_HELP_FONT_LANG_TER] = XrmStringToQuark ("C");
-    if (lang != NULL)
+    if (lang != nullptr)
 	xrmList[_DT_HELP_FONT_LANG_TER] = XrmStringToQuark(lang);
 
-    if (charset != NULL)
+    if (charset != nullptr)
         xrmList[_DT_HELP_FONT_CHAR_SET] = XrmStringToQuark(charset);
 
     /*
@@ -1161,13 +1161,13 @@ ResolveFont (
      * Help base XLFD (set by dtstyle) and derive the concrete XLFD for this
      * chunk based on the hint's pt size and style.
      */
-    if (NULL == font_attr.xlfd &&
-        NULL == font_attr.xlfdb &&
-        NULL == font_attr.xlfdi &&
-        NULL == font_attr.xlfdib)
+    if (nullptr == font_attr.xlfd &&
+        nullptr == font_attr.xlfdb &&
+        nullptr == font_attr.xlfdi &&
+        nullptr == font_attr.xlfdib)
       {
-        Display *dpy = pDAS ? XtDisplay(pDAS->dispWid) : NULL;
-        XrmDatabase db = dpy ? XrmGetDatabase(dpy) : NULL;
+        Display *dpy = pDAS ? XtDisplay(pDAS->dispWid) : nullptr;
+        XrmDatabase db = dpy ? XrmGetDatabase(dpy) : nullptr;
         int enabled = db ? DtHelpOverrideXrmGetBoolean(db,
                                          "DtHelpDialog.overrideFontList",
                                          "DtHelpDialog.OverrideFontList",
@@ -1188,9 +1188,9 @@ ResolveFont (
                                         "DtHelpDialog.UserFont");
 
             if (base) {
-                char *variantBase = NULL;
+                char *variantBase = nullptr;
                 char *variantFields[14];
-                char *monoBase = NULL;
+                char *monoBase = nullptr;
                 char *monoFields[14];
 
                 char *fields[14];
@@ -1254,8 +1254,8 @@ ResolveFont (
                     const char *baseEncoding = fields[13];
 
                     if ((wantBold || wantItalic || wantMono) && baseFamily && *baseFamily) {
-                        static const char *boldWeights[] = { "bold", "demibold", "semibold", "black", "heavy", NULL };
-                        static const char *italicSlants[] = { "i", "o", NULL };
+                        static const char *boldWeights[] = { "bold", "demibold", "semibold", "black", "heavy", nullptr };
+                        static const char *italicSlants[] = { "i", "o", nullptr };
 
                         const char *weightCand = wantBold ? boldWeights[0] : fields[2];
                         const char *slantCand = wantItalic ? italicSlants[0] : fields[3];
@@ -1278,14 +1278,14 @@ ResolveFont (
                         }
                         if (variantBase && DtHelpOverrideParseXLFDFields(variantBase, variantFields, 14) != 0) {
                             free(variantBase);
-                            variantBase = NULL;
+                            variantBase = nullptr;
                         }
 
                         if (wantMono && !variantBase) {
                             monoBase = DtHelpOverrideFindMonoFallbackBase(dpy, baseRegistry, baseEncoding);
                             if (monoBase && DtHelpOverrideParseXLFDFields(monoBase, monoFields, 14) != 0) {
                                 free(monoBase);
-                                monoBase = NULL;
+                                monoBase = nullptr;
                             }
                         }
                     }
@@ -1298,7 +1298,7 @@ ResolveFont (
                     } tries[] = {
                         { pixelBuf, resBuf, resBuf, "exact px/res" },
                         { "*",      "*",    "*",    "wildcard px/res" },
-                        { NULL,     NULL,   NULL,   "base px/res" },
+                        { nullptr,     nullptr,   nullptr,   "base px/res" },
                     };
 
                     int loaded = 0;
@@ -1307,8 +1307,8 @@ ResolveFont (
                         const char *label;
                     } baseCandidates[] = {
                         { fields,        "dtstyle base" },
-                        { variantBase ? variantFields : NULL, "family variant" },
-                        { monoBase ? monoFields : NULL, "mono fallback" },
+                        { variantBase ? variantFields : nullptr, "family variant" },
+                        { monoBase ? monoFields : nullptr, "mono fallback" },
                     };
 
                     for (size_t b = 0; b < sizeof(baseCandidates)/sizeof(baseCandidates[0]) && !loaded; b++) {
@@ -1356,7 +1356,7 @@ ResolveFont (
 
                                 /* Build both a fontset (trailing ':') and a plain font. */
                                 char *overrideXLFDNoSet = DtHelpOverrideBuildXLFDFromFields(tryFields, 14);
-                                char *overrideXLFDSet = NULL;
+                                char *overrideXLFDSet = nullptr;
                                 if (overrideXLFDNoSet) {
                                     size_t baseLen = strlen(overrideXLFDNoSet);
                                     overrideXLFDSet = (char *)malloc(baseLen + 2);
@@ -1408,9 +1408,9 @@ ResolveFont (
 
                     if (loaded) {
                         free(variantBase);
-                        variantBase = NULL;
+                        variantBase = nullptr;
                         free(monoBase);
-                        monoBase = NULL;
+                        monoBase = nullptr;
                         free(base);
                         return 0;
                     }
@@ -1424,7 +1424,7 @@ ResolveFont (
         }
       }
 
-    if (NULL != xlfdSpec)
+    if (nullptr != xlfdSpec)
 	result = _DtHelpGetExactFontIndex(pDAS,lang,charset,xlfdSpec,ret_idx);
 
     if (result)
@@ -1606,7 +1606,7 @@ DADrawString (
      */
     if (strWidth && pDAS->dtinfo &&
 	((new_flags & _DtCvSEARCH_FLAG) || 
-		(NULL != pSCD && (pSCD->fg_color || pSCD->bg_color))))
+		(nullptr != pSCD && (pSCD->fg_color || pSCD->bg_color))))
       {
 	XColor screen, exact;
 
@@ -1832,7 +1832,7 @@ DADrawString (
 			(long) x, (long) y, string, byte_len,
 			wc, False, pDAS->font_info);
 
-	if (pDAS->dtinfo && NULL != pSCD) {
+	if (pDAS->dtinfo && nullptr != pSCD) {
 	    _DtCvUnit line_y;
 	    if (pSCD->hilite_type & hilite_underline) {
 		line_y = box_y + box_height - pDAS->lineThickness / 2;
@@ -1959,7 +1959,7 @@ DADrawSpc (
 
     spcStr    = SpcTable[pDAS->spc_chars[spcLstIdx].spc_idx].spc_string;
     _DtHelpDAGetFontMetrics(client_data, pDAS->spc_chars[spcLstIdx].font_ptr,
-					&ascent, &descent, NULL, NULL, NULL);
+					&ascent, &descent, nullptr, nullptr, nullptr);
 
     do
       {
@@ -1977,7 +1977,7 @@ DADrawSpc (
 
         DADrawString (client_data, (_DtCvPointer) &strInfo, x, y,
 			spcStr, i, 0,
-			pDAS->spc_chars[spcLstIdx].font_ptr, NULL,
+			pDAS->spc_chars[spcLstIdx].font_ptr, nullptr,
 			box_x, box_y, box_height, old_flags,
 			new_flags);
 
@@ -2181,7 +2181,7 @@ DABuildSelectedString (
 	spaceNum = (int) (spaceLong / pDAS->charWidth +
 		((spaceLong % pDAS->charWidth) < pDAS->charWidth / 2 ? 0 : 1));
 
-    if (string == NULL)
+    if (string == nullptr)
 	byte_len = 0;
 
     /*
@@ -2197,7 +2197,7 @@ DABuildSelectedString (
     /*
      * allocate the string
      */
-    if (myString == NULL)
+    if (myString == nullptr)
 	myString = (char *) malloc (sizeof(char) * totalLen);
     else
       {
@@ -2206,7 +2206,7 @@ DABuildSelectedString (
 				(sizeof(char) * (stringLen + totalLen)));
       }
 
-    if (myString == NULL)
+    if (myString == nullptr)
 	return _DtCvSTATUS_BAD;
 
     /*
@@ -2291,7 +2291,7 @@ DABuildSelectedSpc (
     spcIdx = pDAS->spc_chars[spcIdx].spc_idx;
     spcStr = _DtHelpCeResolveSpcToAscii(SpcTable[spcIdx].symbol);
 
-    if (spcStr == NULL)
+    if (spcStr == nullptr)
 	return _DtCvSTATUS_BAD;
 
     /*
@@ -2305,7 +2305,7 @@ DABuildSelectedSpc (
 
     totalLen = totalLen + spaceNum + 1 + (IsEndOfLine(flags) ? 1 : 0);
 
-    if (myString == NULL)
+    if (myString == nullptr)
 	myString = (char *) malloc (sizeof(char) * totalLen);
     else
       {
@@ -2314,7 +2314,7 @@ DABuildSelectedSpc (
 				(sizeof(char) * (stringLen + totalLen)));
       }
 
-    if (myString == NULL)
+    if (myString == nullptr)
 	return _DtCvSTATUS_BAD;
 
     for (i = stringLen; spaceNum > 0; spaceNum--)
@@ -2413,7 +2413,7 @@ _DtHelpDAResolveSpc (
     DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
     _DtCvStringInfo       strInfo;
 
-    while (SpcTable[spcTbIdx].symbol != NULL &&
+    while (SpcTable[spcTbIdx].symbol != nullptr &&
 			strcmp(SpcTable[spcTbIdx].symbol, spc_symbol) != 0)
 	spcTbIdx++;
 
@@ -2429,7 +2429,7 @@ _DtHelpDAResolveSpc (
 	_DtHelpDARegion *pReg;
 
         pReg = (_DtHelpDARegion *) malloc (sizeof(_DtHelpDARegion));
-	if (NULL == pReg)
+	if (nullptr == pReg)
 	    return -1;
 
 	while (spcLstIdx < pDAS->cur_spc &&
@@ -2449,7 +2449,7 @@ _DtHelpDAResolveSpc (
 		    pDAS->spc_chars = (DtHelpSpecialChars *) malloc(
 				(sizeof(DtHelpSpecialChars)*pDAS->max_spc));
 
-		if (pDAS->spc_chars == NULL)
+		if (pDAS->spc_chars == nullptr)
 		  {
 		    free(pReg);
 		    return -1;
@@ -2484,7 +2484,7 @@ _DtHelpDAResolveSpc (
 	 * ascent.
 	 */
 	_DtHelpDAGetFontMetrics(client_data, (_DtCvPointer)fontIdx,
-					&ascent, &descent, NULL, NULL, NULL);
+					&ascent, &descent, nullptr, nullptr, nullptr);
 	*ret_ascent = ascent;
 
 	/*
@@ -2578,11 +2578,11 @@ _DtHelpDALoadGraphic (
 
     pGS  = (DtHelpGraphicStruct *) malloc (sizeof(DtHelpGraphicStruct));
     pReg = (_DtHelpDARegion     *) malloc (sizeof(_DtHelpDARegion));
-    if (pGS == NULL || NULL == pReg)
+    if (pGS == nullptr || nullptr == pReg)
       {
-	if (NULL != pGS)
+	if (nullptr != pGS)
 	    free(pGS);
-	if (NULL != pReg)
+	if (nullptr != pReg)
 	    free(pReg);
         return -1;
       }
@@ -2591,17 +2591,17 @@ _DtHelpDALoadGraphic (
     retScr = XtScreen(wid);
     screen = XScreenNumberOfScreen(retScr);
 
-    while (!XtIsRealized(wid) && XtParent(wid) != NULL)
+    while (!XtIsRealized(wid) && XtParent(wid) != nullptr)
 	wid = XtParent(wid);
 
     win = XtWindow(wid);
     if (!XtIsRealized(wid))
 	win = RootWindow(XtDisplay(pDAS->dispWid), screen);
 
-    if (fileName != NULL && *fileName != '/')
+    if (fileName != nullptr && *fileName != '/')
       {
 	fileName = (char *) malloc (strlen(vol_xid) + strlen (file_xid) + 2);
-	if (fileName == NULL)
+	if (fileName == nullptr)
 	  {
 	    free(pGS);
 	    return -1;
@@ -2620,15 +2620,15 @@ _DtHelpDALoadGraphic (
      * Find out if this is a X Pixmap graphic and set flag if it is.
      * This will be used later when/if colors need to be freed.
      */
-    if (fileName != NULL && _DtHelpCeStrrchr(fileName, ".", MB_CUR_MAX, &extptr) != -1)
+    if (fileName != nullptr && _DtHelpCeStrrchr(fileName, ".", MB_CUR_MAX, &extptr) != -1)
     	if (strcmp (extptr, ".xpm") == 0 || strcmp (extptr, ".pm") == 0)
 		pGS->used = -1;
 
-    if (pDAS->context == NULL)
+    if (pDAS->context == nullptr)
     {
         pDAS->context = (_DtGrContext *) XtMalloc(sizeof(_DtGrContext));
-        pDAS->context->image_type = NULL;
-        pDAS->context->context = NULL;
+        pDAS->context->image_type = nullptr;
+        pDAS->context->context = nullptr;
     }
 
     pGS->pix = _DtHelpProcessGraphic (XtDisplay(pDAS->dispWid), win,
@@ -2647,10 +2647,10 @@ _DtHelpDALoadGraphic (
 				&(pGS->width), &(pGS->height), &(pGS->mask),
 				&(pGS->pixels), &(pGS->num_pixels));
 
-    if (pDAS->context->image_type == NULL)
+    if (pDAS->context->image_type == nullptr)
     {
         XtFree((char *) pDAS->context);
-        pDAS->context = NULL;
+        pDAS->context = nullptr;
     }
 
     if (fileName != file_xid)

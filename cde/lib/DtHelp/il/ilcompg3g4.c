@@ -1209,7 +1209,7 @@ ilPtr              pCompData
 
 	/*  Validate image bits per pixel */
 	if (pimformat->nBitsPerSample[0] != 1)
-		if (!ilConvert (pipe, (ilImageDes *)NULL, IL_FORMAT_BIT, 0, (ilPtr)NULL))
+		if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BIT, 0, (ilPtr)NULL))
 			return FALSE;
 
 
@@ -1228,7 +1228,7 @@ ilPtr              pCompData
 	dstdata.height          =  pinfo->height;
 	dstdata.stripHeight     =  pSrcData->stripHeight;
 	dstdata.constantStrip   =  pSrcData->constantStrip;
-	dstdata.pPalette        =  (unsigned short *)NULL;
+	dstdata.pPalette        =  (unsigned short *)nullptr;
 
 	dstdata.pCompData       =  (ilPtr)NULL;    /* des.compInfo.g3.flags describes it */
 
@@ -1691,7 +1691,7 @@ ilPtr              pCompData
 
 	/*  Validate image bits per pixel */
 	if (pimformat->nBitsPerSample[0] != 1)
-		if (!ilConvert (pipe, (ilImageDes *)NULL, IL_FORMAT_BIT, 0, (ilPtr)NULL))
+		if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BIT, 0, (ilPtr)NULL))
 			return FALSE;
 
 
@@ -1710,7 +1710,7 @@ ilPtr              pCompData
 	dstdata.height          =  pinfo->height;
 	dstdata.stripHeight     =  pSrcData->stripHeight;
 	dstdata.constantStrip   =  pSrcData->constantStrip;
-	dstdata.pPalette        =  (unsigned short *)NULL;
+	dstdata.pPalette        =  (unsigned short *)nullptr;
 	dstdata.pCompData       =  (ilPtr)NULL;    /* des.compInfo.g4.flags describes it */
 
 

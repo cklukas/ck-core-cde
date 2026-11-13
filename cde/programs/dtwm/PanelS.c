@@ -99,7 +99,7 @@ static XtResource panelResources[]=
 
 static CompositeClassExtensionRec compositeClassExtension =
     {
-    /* next_extension	*/	NULL,
+    /* next_extension	*/	nullptr,
     /* record_type	*/	NULLQUARK,
     /* version		*/	XtCompositeExtensionVersion,
     /* record_size	*/	sizeof(CompositeClassExtensionRec),
@@ -114,13 +114,13 @@ DtPanelShellClassRec dtPanelShellClassRec =
     /* superclass         */    (WidgetClass) &topLevelShellClassRec,
     /* class_name         */    "FrontPanel",
     /* size               */    sizeof(DtPanelShellRec),
-    /* Class Initializer  */	NULL,
-    /* class_part_initialize*/	NULL,
+    /* Class Initializer  */	nullptr,
+    /* class_part_initialize*/	nullptr,
     /* Class init'ed ?    */	FALSE,
-    /* initialize         */    NULL,
-    /* initialize_notify  */	NULL,		
+    /* initialize         */    nullptr,
+    /* initialize_notify  */	nullptr,		
     /* realize            */    XtInheritRealize,
-    /* actions            */    NULL,
+    /* actions            */    nullptr,
     /* num_actions        */    0,
     /* resources          */    panelResources,
     /* resource_count     */	XtNumber(panelResources),
@@ -129,20 +129,20 @@ DtPanelShellClassRec dtPanelShellClassRec =
     /* compress_exposure  */    XtExposeCompressMaximal,
     /* compress_enterleave*/    FALSE,
     /* visible_interest   */    FALSE,
-    /* destroy            */    NULL,
+    /* destroy            */    nullptr,
     /* resize             */    XtInheritResize,
-    /* expose             */    NULL,
-    /* set_values         */    NULL,
-    /* set_values_hook    */	NULL,			
+    /* expose             */    nullptr,
+    /* set_values         */    nullptr,
+    /* set_values_hook    */	nullptr,			
     /* set_values_almost  */	XtInheritSetValuesAlmost,
-    /* get_values_hook    */	NULL,			
-    /* accept_focus       */    NULL,
+    /* get_values_hook    */	nullptr,			
+    /* accept_focus       */    nullptr,
     /* intrinsics version */	XtVersion,
-    /* callback offsets   */    NULL,
+    /* callback offsets   */    nullptr,
     /* tm_table		  */	XtInheritTranslations,
-    /* query_geometry	  */	NULL,
-    /* display_accelerator*/	NULL,
-    /* extension	  */	NULL
+    /* query_geometry	  */	nullptr,
+    /* display_accelerator*/	nullptr,
+    /* extension	  */	nullptr
     },
 /*	Composite Part
  */
@@ -156,16 +156,16 @@ DtPanelShellClassRec dtPanelShellClassRec =
 /*	Constraint Part
  */
     {
-    /* extension	  */	NULL
+    /* extension	  */	nullptr
     },
     {
-    /* extension	  */	NULL
+    /* extension	  */	nullptr
     },
     {
-    /* extension	  */	NULL
+    /* extension	  */	nullptr
     },
     {
-    /* extension	  */	NULL
+    /* extension	  */	nullptr
     }
   };
 

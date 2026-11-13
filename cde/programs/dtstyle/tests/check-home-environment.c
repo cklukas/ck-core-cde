@@ -15,7 +15,7 @@
 static char *XtMalloc(unsigned size)
 {
     char *p = malloc(size ? size : 1);
-    if (p == NULL) { fputs("XtMalloc stub: out of memory\n", stderr); abort(); }
+    if (p == nullptr) { fputs("XtMalloc stub: out of memory\n", stderr); abort(); }
     return p;
 }
 
@@ -31,7 +31,7 @@ static struct {
 static void init_style(char **argv)
 {
     /* Same preceding statements as Main.c, with stubbed values. */
-    style.display   = NULL;
+    style.display   = nullptr;
     style.root      = 0;
     style.execName  = argv[0];
     style.home      = (char *) 0x1;   /* must be overwritten by the block */
@@ -50,7 +50,7 @@ static int fail(const char *msg)
 int main(int argc, char **argv)
 {
     const char *expect;
-    char *argv0[2] = { "dtstyle", NULL };
+    char *argv0[2] = { "dtstyle", nullptr };
     (void) argv;
 
     if (argc == 2 && strcmp(argv[1], "unset") == 0) {
@@ -66,13 +66,13 @@ int main(int argc, char **argv)
 
     init_style(argv0);
 
-    if (style.home == NULL || style.home == (char *) 0x1)
+    if (style.home == nullptr || style.home == (char *) 0x1)
         return fail("style.home was not assigned an allocation");
     if (strcmp(style.home, expect) != 0)
         return fail("style.home does not equal the expected string");
-    if (style.errDialog != NULL || style.tmpXmStr != NULL)
+    if (style.errDialog != nullptr || style.tmpXmStr != nullptr)
         return fail("errDialog/tmpXmStr were not reset to NULL");
-    if (getenv("HOME") != NULL && style.home == getenv("HOME"))
+    if (getenv("HOME") != nullptr && style.home == getenv("HOME"))
         return fail("style.home aliases the environment instead of copying it");
     printf("ok: HOME %s -> style.home \"%s\"\n",
            argc == 2 ? "unset" : "set", style.home);

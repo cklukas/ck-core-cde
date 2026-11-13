@@ -102,7 +102,7 @@ GetNormalHints(
         ClientData *pCD )
 
 {
-    PropSizeHints *property = NULL;
+    PropSizeHints *property = nullptr;
     Atom actualType;
     int actualFormat;
     unsigned long leftover;
@@ -227,7 +227,7 @@ GetNormalHints(
 void ProcessWmProtocols (ClientData *pCD)
 {
     int rValue;
-    Atom *property = NULL;
+    Atom *property = nullptr;
 #ifndef ICCC_COMPLIANT
     Atom actualType;
     int actualFormat;
@@ -242,7 +242,7 @@ void ProcessWmProtocols (ClientData *pCD)
     if (pCD->clientProtocols)
     {
 	XtFree ((char *)pCD->clientProtocols);
-	pCD->clientProtocols = NULL;
+	pCD->clientProtocols = nullptr;
     }
     pCD->clientProtocolCount = 0;
     pCD->protocolFlags = 0;
@@ -277,7 +277,7 @@ void ProcessWmProtocols (ClientData *pCD)
 	 * WM_PROTOCOLS does not exist or it is an invalid type or size.
 	 */
 
-	pCD->clientProtocols = NULL;
+	pCD->clientProtocols = nullptr;
     }
     else
     {
@@ -354,7 +354,7 @@ void ProcessWmProtocols (ClientData *pCD)
 void ProcessMwmMessages (ClientData *pCD)
 {
     int rValue;
-    long *property = NULL;
+    long *property = nullptr;
     Atom actualType;
     int actualFormat;
     unsigned long leftover;
@@ -365,7 +365,7 @@ void ProcessMwmMessages (ClientData *pCD)
     if (pCD->mwmMessages)
     {
 	XtFree ((char *)pCD->mwmMessages);
-	pCD->mwmMessages = NULL;
+	pCD->mwmMessages = nullptr;
     }
     pCD->mwmMessagesCount = 0;
 
@@ -390,7 +390,7 @@ void ProcessMwmMessages (ClientData *pCD)
 	 * _MWM_MESSAGES does not exist or it is an invalid type.
 	 */
 
-	pCD->mwmMessages = NULL;
+	pCD->mwmMessages = nullptr;
     }
     else
     {
@@ -540,7 +540,7 @@ GetWMState(
         Window window )
 {
     int ret_val;
-    PropWMState *property = NULL;
+    PropWMState *property = nullptr;
     Atom actual_type;
     int actual_format;
     unsigned long nitems;
@@ -564,7 +564,7 @@ GetWMState(
         if (property)
         {
 	    XFree ((char *)property);
-	    property = NULL;
+	    property = nullptr;
         }
     }
 
@@ -648,14 +648,14 @@ GetMwmHints(
 
 {
     int ret_val;
-    PropMwmHints *property = NULL;
+    PropMwmHints *property = nullptr;
     Atom actual_type;
     int actual_format;
     unsigned long nitems;
     unsigned long leftover;
 
     if (!pCD)
-        return NULL;
+        return nullptr;
 
     if (!HasProperty(pCD, wmGD.xa_MWM_HINTS))
 	ret_val = ~Success;
@@ -686,7 +686,7 @@ GetMwmHints(
 	XFree ((char *)property);
     }
 
-    return (NULL);			/* indicate failure */
+    return (nullptr);			/* indicate failure */
 
 
 } /* END OF FUNCTION GetMwmHints */
@@ -717,7 +717,7 @@ GetMwmHints(
 PropMwmInfo *GetMwmInfo (Window rootWindowOfScreen)
 {
     int ret_val;
-    PropMwmInfo *property = NULL;
+    PropMwmInfo *property = nullptr;
     Atom actual_type;
     int actual_format;
     unsigned long nitems;
@@ -749,7 +749,7 @@ PropMwmInfo *GetMwmInfo (Window rootWindowOfScreen)
 	XFree ((char *)property);
     }
 
-    return (NULL);			/* indicate failure */
+    return (nullptr);			/* indicate failure */
 
 
 } /* END OF FUNCTION GetMwmInfo */
@@ -781,7 +781,7 @@ PropMwmInfo *GetMwmInfo (Window rootWindowOfScreen)
 void ProcessWmColormapWindows (ClientData *pCD)
 {
     int rValue;
-    Window *property = NULL;
+    Window *property = nullptr;
     Atom actualType;
     int actualFormat;
     unsigned long leftover;
@@ -1039,13 +1039,13 @@ GetMwmMenuItems(
      * Read the _MWM_MENU property.
      */
 
-    textProperty.value = (unsigned char *)NULL;
+    textProperty.value = (unsigned char *)nullptr;
     rValue = XGetTextProperty(DISPLAY, pCD->client, &textProperty,
 			      wmGD.xa_MWM_MENU);
-    if ((rValue == 0) || (textProperty.value == (unsigned char *)NULL))
+    if ((rValue == 0) || (textProperty.value == (unsigned char *)nullptr))
     /* _MWM_MENU does not exist or it is an invalid type.  */
     {
-	menuItems = NULL;
+	menuItems = nullptr;
     }
 
     else
@@ -1057,7 +1057,7 @@ GetMwmMenuItems(
 	if (XmbTextPropertyToTextList(DISPLAY, &textProperty,
 				      &textList, &nItems) != Success)
 	{
-	    menuItems = NULL;
+	    menuItems = nullptr;
 	}
 	else
 	{
@@ -1137,7 +1137,7 @@ Status GetWorkspaceHints (Display *display, Window window,
 	else
 	{
 	    *pCount = 0;
-	    *ppWsAtoms = NULL;
+	    *ppWsAtoms = nullptr;
 	}
 
 	if ((pWsHints->flags & DT_WORKSPACE_HINTS_WSFLAGS) &&
@@ -1582,7 +1582,7 @@ void GetDtSessionHints (WmScreenData *pSD, int sNum)
 {
 
     int           rValue;
-    char          *property = NULL;
+    char          *property = nullptr;
     Atom          actualType;
     int           actualFormat;
     unsigned long leftover;
@@ -1604,7 +1604,7 @@ void GetDtSessionHints (WmScreenData *pSD, int sNum)
     if ((rValue != Success) || (actualType == None) || (actualFormat != 8))
         /* _DT_SESSION_HINTS does not exist or it is an invalid type.  */
     {
-        pSD->pDtSessionItems = NULL;
+        pSD->pDtSessionItems = nullptr;
 
     }
 
@@ -1677,7 +1677,7 @@ GetDtWmRequest (
 
     if (!pszReq || !pmore)
 	return;
-    *pszReq = NULL;
+    *pszReq = nullptr;
     *pmore = False;
     if (!pSD)
 	return;
@@ -1721,7 +1721,7 @@ GetDtWmRequest (
 discard:
     if (pSD->dtWmRequestData)
 	XFree(pSD->dtWmRequestData);
-    pSD->dtWmRequestData = NULL;
+    pSD->dtWmRequestData = nullptr;
     pSD->dtWmRequestLength = pSD->dtWmRequestOffset = 0;
 
 } /* END OF FUNCTION GetDtWmRequest */
@@ -1768,7 +1768,7 @@ GetInitialPropertyList (ClientData *pCD)
     }
     else
     {
-	pCD->paInitialProperties = NULL;
+	pCD->paInitialProperties = nullptr;
 	pCD->numInitialProperties = 0;
     }
 
@@ -1811,7 +1811,7 @@ DiscardInitialPropertyList (ClientData *pCD)
 	 * (see HasProperty() function)
 	 */
 	XFree ((char *) pCD->paInitialProperties);
-	pCD->paInitialProperties = NULL;
+	pCD->paInitialProperties = nullptr;
 	pCD->numInitialProperties = 0;
     }
 } /* END OF FUNCTION DiscardInitialPropertyList */
@@ -1892,7 +1892,7 @@ HasProperty (
 char *GetUtf8String (Display *display, Window w, Atom property)
 {
     int actualFormat;
-    char *propReturn = NULL;
+    char *propReturn = nullptr;
     unsigned long nitems, leftover;
     Atom actualType;
     Atom reqType = wmGD.xa_UTF8_STRING;
@@ -1909,7 +1909,7 @@ char *GetUtf8String (Display *display, Window w, Atom property)
 
 err:
     if (propReturn) XFree (propReturn);
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -1948,8 +1948,8 @@ void UpdateNetWmState (Window window, Atom *states, unsigned long nstates,
     Atom actualType;
     unsigned long nnew = 0;
     Atom type = wmGD.xa__NET_WM_STATE;
-    Atom *oldStates = NULL;
-    Atom *newStates = NULL;
+    Atom *oldStates = nullptr;
+    Atom *newStates = nullptr;
 
     if (!states) nstates = 0;
 

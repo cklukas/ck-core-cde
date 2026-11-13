@@ -309,9 +309,9 @@ _DtHelpCeStrchr (
     int      valLen;
     const char *p1;
 
-    *ret_ptr = NULL;
+    *ret_ptr = nullptr;
 
-    if (s1 == NULL || *s1 == '\0')
+    if (s1 == nullptr || *s1 == '\0')
 	return 1;
 
     if (max_len == 1)
@@ -366,15 +366,15 @@ _DtHelpCeStrrchr (
     int      valLen;
     const char *p1;
 
-    *ret_ptr = NULL;
+    *ret_ptr = nullptr;
 
-    if (s1 == NULL || *s1 == '\0')
+    if (s1 == nullptr || *s1 == '\0')
 	return 1;
 
     if (max_len == 1)
       {
 	*ret_ptr = strrchr (s1, ((int)*value));
-	if (*ret_ptr != NULL)
+	if (*ret_ptr != nullptr)
 	    return 0;
 	return 1;
       }
@@ -395,7 +395,7 @@ _DtHelpCeStrrchr (
 	p1 += len;
       }
 
-    if (*ret_ptr != NULL)
+    if (*ret_ptr != nullptr)
 	return 0;
 
     return 1;
@@ -540,7 +540,7 @@ int _DtHelpCeStrHashToKey(
 #define C_LANG  "C"
 
    /* if locale is C, use the explicit case insensitive compare */
-   locale = setlocale(LC_COLLATE,NULL); /* put locale in buf */
+   locale = setlocale(LC_COLLATE,nullptr); /* put locale in buf */
    if (strcmp(locale,C_LANG) == 0)
      Clang = 1;
 
@@ -572,7 +572,7 @@ char * _DtHelpCeStripSpaces (
    int multiLen = MB_CUR_MAX;
    char * space;
 
-   if (string == NULL)
+   if (string == nullptr)
       return (string);
 
    /* Strip off leading spaces first */
@@ -603,7 +603,7 @@ char * _DtHelpCeStripSpaces (
       int len;
 
       i = 0;
-      space = NULL;
+      space = nullptr;
 
       while (string[i])
       {
@@ -611,11 +611,11 @@ char * _DtHelpCeStripSpaces (
               && isspace((unsigned char) string[i]))
          {
             /* Found a space */
-            if (space == NULL)
+            if (space == nullptr)
                space = string + i;
          }
          else if (space)
-            space = NULL;
+            space = nullptr;
 
          /* if there is an invalid character, treat as a valid one-byte */
          if (len == -1)
@@ -718,7 +718,7 @@ int _DtHelpCeIconvStr1Step(
 
    ret = _DtHelpCeIconvOpen(&iconvContext,fromCode,toCode,dflt1,dflt2);
    if (0 == ret) 
-      ret = _DtHelpCeIconvStr(iconvContext,fromStr, ret_toStr,NULL,NULL,0);
+      ret = _DtHelpCeIconvStr(iconvContext,fromStr, ret_toStr,nullptr,nullptr,0);
    _DtHelpCeIconvClose(&iconvContext);
    return ret;
 }
@@ -777,7 +777,7 @@ int _DtHelpCeIconvOpen(
 
    /* init state */
    ic = *ret_iconvContext = calloc(1,sizeof(_DtHelpCeIconvContextRec));
-   if (NULL == ic) return -3;   /* RETURN error */
+   if (nullptr == ic) return -3;   /* RETURN error */
 
    if ( strcmp(fromCode,toCode) == 0 )
    {
@@ -878,7 +878,7 @@ int _DtHelpCeIconvStr(
    /* just do a straight copy if codesets the same or invalid context */
    if ( iconvContext->cd == (iconv_t) BAD ) 
    {
-      if (NULL == toStrBuf)
+      if (nullptr == toStrBuf)
       {
          *ret_toStr = strdup(fromStr);
       }
@@ -889,7 +889,7 @@ int _DtHelpCeIconvStr(
          {
             char * newBuf = realloc(toStrBuf,len);
 
-            if (NULL == newBuf)
+            if (nullptr == newBuf)
             {
                /* the caller's buffer is still valid and still theirs */
                *ret_toStr = toStrBuf;
@@ -906,18 +906,18 @@ int _DtHelpCeIconvStr(
          strcpy(*ret_toStr,fromStr);
          *ret_toStrLen = len;
       }
-      return (NULL != *ret_toStr ? 0 : -3);    /* RETURN result */
+      return (nullptr != *ret_toStr ? 0 : -3);    /* RETURN result */
    }
 
 
    /* init ptrs: without a caller buffer, the first block is allocated now,
       so that iconv() never receives a NULL output buffer */
-   if (NULL == toStrBuf)
+   if (nullptr == toStrBuf)
    {
       toStr = malloc(MEM_INC);
-      if (NULL == toStr)
+      if (nullptr == toStr)
       {
-         *ret_toStr = NULL;
+         *ret_toStr = nullptr;
          return -3;                       /* RETURN error */
       }
       toStrSize = MEM_INC;
@@ -957,11 +957,11 @@ int _DtHelpCeIconvStr(
             if (outBytesLeft < sizeof(wchar_t))
             {
                size_t offset = outChar - (char *) toStr;
-               char * newStr = NULL;
+               char * newStr = nullptr;
 
                if (toStrSize <= INT_MAX - MEM_INC)
                   newStr = realloc(toStr,(size_t) toStrSize + MEM_INC);
-               if (NULL == newStr)
+               if (nullptr == newStr)
                {
                   /* toStr is still valid and keeps its size */
                   inBytesLeft = 0;       /* end the translation */
@@ -986,10 +986,10 @@ int _DtHelpCeIconvStr(
       hands the caller's own buffer back, as an empty string */
    if (memFailed)
    {
-      if (NULL == toStrBuf)
+      if (nullptr == toStrBuf)
       {
          free(toStr);
-         toStr = NULL;
+         toStr = nullptr;
       }
       else if (toStrSize > 0)
          toStr[0] = EOS;
@@ -1005,7 +1005,7 @@ int _DtHelpCeIconvStr(
    *ret_toStr = (char *) toStr;
    if (toStrBuf) *ret_toStrLen = toStrSize;
 
-   return (NULL != toStr ? 0 : err);    /* RETURN result */
+   return (nullptr != toStr ? 0 : err);    /* RETURN result */
 }
 
 
@@ -1032,7 +1032,7 @@ void _DtHelpCeIconvClose(
 {  /* XPG4-compliant code (args dflt1 & dflt2 are ignored in this code) */
    _DtHelpCeIconvContextRec * ic;
 
-   if (!io_iconvContext || NULL == *io_iconvContext) return;
+   if (!io_iconvContext || nullptr == *io_iconvContext) return;
    ic = *io_iconvContext;
 
    if ( ic->cd != (iconv_t) BAD ) 
@@ -1040,7 +1040,7 @@ void _DtHelpCeIconvClose(
    if (ic->fromCodeset) free(ic->fromCodeset);
    if (ic->toCodeset) free(ic->toCodeset);
    free(ic);
-   *io_iconvContext = NULL;
+   *io_iconvContext = nullptr;
 }
 
 
@@ -1122,10 +1122,10 @@ _DtHelpCeFreeStringArray (char **array)
 {
     char        **next;
 
-    if (array == NULL)
+    if (array == nullptr)
         return -1;
 
-    for (next = array; *next != NULL; next++)
+    for (next = array; *next != nullptr; next++)
         free (*next);
 
     free (array);

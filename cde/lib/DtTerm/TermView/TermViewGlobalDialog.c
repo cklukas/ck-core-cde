@@ -714,13 +714,13 @@ _DtTermViewCreateGlobalOptionsDialog
 	    _DtTermViewCreatePulldown(cursorForm, "cursorTypePulldown");
     options->cursor.type.box =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,7, "Box")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,7, "Box")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->cursor.type.underline =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,8, "Underline")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,8, "Underline")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->cursor.type.invisible =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,14, "Invisible")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,14, "Invisible")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
 
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_FORM);		ac++;
@@ -746,10 +746,10 @@ _DtTermViewCreateGlobalOptionsDialog
 	    CursorBlinkCallback, (XtPointer) options);
     options->cursor.blink.on =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,10, "Enabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,10, "Enabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->cursor.blink.off =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,11, "Disabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,11, "Disabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
 
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_WIDGET);		ac++;
@@ -849,11 +849,11 @@ _DtTermViewCreateGlobalOptionsDialog
     options->background.inverse.off =
 	    _DtTermViewCreatePushButton(pulldown,
 	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,18, "Normal")), NoSymbol,
-	    NULL, NULL, NULL, NULL);
+	    nullptr, nullptr, nullptr, nullptr);
     options->background.inverse.on =
 	    _DtTermViewCreatePushButton(pulldown,
 	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,17, "Inverse")), NoSymbol,
-	    NULL, NULL, NULL, NULL);
+	    nullptr, nullptr, nullptr, nullptr);
     
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_FORM);		ac++;
@@ -908,10 +908,10 @@ _DtTermViewCreateGlobalOptionsDialog
 	    _DtTermViewCreatePulldown(scrollForm, "ScrollTypePulldown");
     options->scroll.type.jump =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,21, "Disabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,21, "Disabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->scroll.type.smooth =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,22, "Enabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,22, "Enabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_FORM);		ac++;
@@ -967,10 +967,10 @@ _DtTermViewCreateGlobalOptionsDialog
 	    _DtTermViewCreatePulldown(bellForm, "typePulldown");
     options->bell.type.audible =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,25, "Audible")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,25, "Audible")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->bell.type.visual =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,26, "Visible")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,26, "Visible")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_FORM);		ac++;
@@ -996,10 +996,10 @@ _DtTermViewCreateGlobalOptionsDialog
 	    BellMarginCallback, (XtPointer) options);
     options->bell.bellMargin.on =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,28, "Enabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,28, "Enabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->bell.bellMargin.off =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,29, "Disabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewGlobalDialog,29, "Disabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_WIDGET);		ac++;

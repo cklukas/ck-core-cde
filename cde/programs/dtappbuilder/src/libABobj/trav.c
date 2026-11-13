@@ -84,7 +84,7 @@ travP_open(
 int 
 travP_close(ABTraversal trav)
 {
-    trav->rootObj= NULL;
+    trav->rootObj= nullptr;
     trav->travType= AB_TRAV_UNDEF;
     return 0;
 }
@@ -96,7 +96,7 @@ travP_close(ABTraversal trav)
 int
 travP_reset(ABTraversal trav)
 {
-	trav->curObj= NULL;
+	trav->curObj= nullptr;
 	trav->done= FALSE;
 	return 0;
 }
@@ -131,26 +131,26 @@ travP_next(ABTraversal trav)
 
 	if (trav->done)
 	{
-	    return NULL;
+	    return nullptr;
 	}
-	else if (trav->curObj == NULL)
+	else if (trav->curObj == nullptr)
 	{
 	    /* starting a new traversal */
 	    travP_find_first(trav);
-	    found_next= ((trav->curObj == NULL) || travP_qualifies(trav));
+	    found_next= ((trav->curObj == nullptr) || travP_qualifies(trav));
 	}
 
 	while (!found_next)
 	{
 		travP_find_next(trav);
-		if (   (trav->curObj == NULL)
+		if (   (trav->curObj == nullptr)
 		    || (travP_qualifies(trav)) )
 		{
 			found_next= TRUE;
 		}
 	} /* while !found_next */
 
-	if (trav->curObj == NULL)
+	if (trav->curObj == nullptr)
 	{
 	    trav->done= TRUE;
 	}
@@ -168,7 +168,7 @@ travP_find_first(ABTraversal trav)
 {
 #define rootObj (trav->rootObj)
 #define curObj (trav->curObj)
-    curObj = NULL;
+    curObj = nullptr;
 
     switch (travP_get_qualifier(trav))
     {
@@ -206,9 +206,9 @@ travP_find_first(ABTraversal trav)
 
 	case AB_TRAV_SIBLINGS:
 	{
-	    ABObj	prevSibling= NULL;
+	    ABObj	prevSibling= nullptr;
 	    curObj= rootObj;
-	    while ((prevSibling= travP_obj_prev_sibling(curObj, trav)) != NULL)
+	    while ((prevSibling= travP_obj_prev_sibling(curObj, trav)) != nullptr)
 	    {
 		curObj= prevSibling;
 	    }
@@ -273,14 +273,14 @@ static int
 travP_find_first_for_parents(ABTraversal trav)
 {
 #define curObj (trav->curObj)
-    ABObj	parent= NULL;
+    ABObj	parent= nullptr;
 
     if (travP_is_parents_first(trav))
     {
 	curObj= travP_obj_parent(trav->rootObj, trav);
-	if (curObj != NULL)
+	if (curObj != nullptr)
 	{
-	    while ((parent= travP_obj_parent(curObj, trav)) != NULL)
+	    while ((parent= travP_obj_parent(curObj, trav)) != nullptr)
 	    {
 		curObj= parent;
 	    }
@@ -306,7 +306,7 @@ travP_find_next_for_parents(ABTraversal trav)
 	curObj= travP_obj_first_child(curObj, trav);
 	if (curObj == trav->rootObj)
 	{
-	    curObj= NULL;
+	    curObj= nullptr;
 	}
     }
     else
@@ -332,7 +332,7 @@ static int
 travP_find_next_parents_first(ABTraversal trav)
 {
     ABObj	curObj= trav->curObj;
-    ABObj	tmpObj= NULL;
+    ABObj	tmpObj= nullptr;
 
     if (curObj == trav->rootObj)
     {
@@ -340,14 +340,14 @@ travP_find_next_parents_first(ABTraversal trav)
     }
     else
     {
-	if ((tmpObj= travP_obj_next_sibling(curObj, trav)) != NULL)
+	if ((tmpObj= travP_obj_next_sibling(curObj, trav)) != nullptr)
 	{
 	    curObj= tmpObj;
 	}
 	else
 	{
 	    tmpObj= find_first_sibling_child(curObj, trav);
-	    if (tmpObj == NULL)
+	    if (tmpObj == nullptr)
 	    {
 	        tmpObj= find_first_ancestor_sibling_child(curObj, trav);
 	    }
@@ -364,16 +364,16 @@ static ABObj
 find_first_item(ABObj obj)
 {
     ABObj	compRoot= obj_get_root(obj);
-    ABObj	child= NULL;
-    ABObj	item= NULL;
+    ABObj	child= nullptr;
+    ABObj	item= nullptr;
 
-    for (child= obj->first_child; child != NULL; child= child->next_sibling)
+    for (child= obj->first_child; child != nullptr; child= child->next_sibling)
     {
 	if (obj_get_root(child) == compRoot)
 	{
 	   /* it's a subobj - look at its children */
 	   item= find_first_item(child);
-	   if (item != NULL)
+	   if (item != nullptr)
 	   {
 	       break;
 	   }
@@ -400,16 +400,16 @@ static ABObj
 find_first_sibling_child(ABObj obj, ABTraversal trav)
 {
     ABObj	sibling= obj;
-    ABObj	child= NULL;
-    ABObj	prevSibling= NULL;
-    ABObj	firstChild= NULL;
+    ABObj	child= nullptr;
+    ABObj	prevSibling= nullptr;
+    ABObj	firstChild= nullptr;
 
-    while ((prevSibling= travP_obj_prev_sibling(sibling, trav)) != NULL)
+    while ((prevSibling= travP_obj_prev_sibling(sibling, trav)) != nullptr)
     {
 	sibling= prevSibling;
     }
 
-    if ((firstChild= travP_obj_first_child(sibling, trav)) != NULL)
+    if ((firstChild= travP_obj_first_child(sibling, trav)) != nullptr)
     {
 	child= firstChild;
     }
@@ -429,16 +429,16 @@ static ABObj
 find_next_sibling_child(ABObj obj, ABTraversal trav)
 {
     ABObj	sibling= travP_obj_next_sibling(obj, trav);
-    ABObj	child= NULL;
-    ABObj	firstChild= NULL;
+    ABObj	child= nullptr;
+    ABObj	firstChild= nullptr;
 
-    while (   (sibling != NULL) 
-	   && ((firstChild= travP_obj_first_child(sibling, trav)) == NULL) )
+    while (   (sibling != nullptr) 
+	   && ((firstChild= travP_obj_first_child(sibling, trav)) == nullptr) )
     {
 	sibling= travP_obj_next_sibling(sibling, trav);
     }
 
-    if (sibling != NULL)
+    if (sibling != nullptr)
     {
 	child= firstChild;
     }
@@ -454,13 +454,13 @@ static ABObj
 find_first_ancestor_sibling_child(ABObj obj, ABTraversal trav)
 {
     ABObj	ancestor= travP_obj_parent(obj, trav);
-    ABObj	child= NULL;
+    ABObj	child= nullptr;
 
-    for (; ((ancestor != NULL) && (ancestor != trav->rootObj));
+    for (; ((ancestor != nullptr) && (ancestor != trav->rootObj));
 	  ancestor= travP_obj_parent(ancestor, trav))
     {
 	child= find_next_sibling_child(ancestor, trav);
-	if (child != NULL)
+	if (child != nullptr)
 	{
 	    break;
 	}
@@ -538,7 +538,7 @@ travP_qualifies(ABTraversal trav)
 			break;
 	}
 
-	if ((qualifies) && (trav->testFunc != NULL))
+	if ((qualifies) && (trav->testFunc != nullptr))
 	{
 	    qualifies = trav->testFunc(curObj);
 	}
@@ -624,14 +624,14 @@ travP_verify_type(ABTraversal trav, BOOL warn)
 static ABObj	
 find_first_child_of_type(ABObj parent, ABTraversal trav, AB_OBJECT_TYPE type)
 {
-    ABObj	child= NULL;
+    ABObj	child= nullptr;
 
-    if (parent == NULL)
+    if (parent == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
     for (child= travP_obj_first_child(parent, trav);
-	    child != NULL; child= travP_obj_next_sibling(child, trav))
+	    child != nullptr; child= travP_obj_next_sibling(child, trav))
     {
         if (child->type == type)
         {
@@ -646,7 +646,7 @@ static ABObj
 find_first_action(ABObj obj, ABTraversal trav)
 {
 	obj= find_first_child_of_type(obj, trav, AB_TYPE_ACTION_LIST);
-	if (obj != NULL)
+	if (obj != nullptr)
 	{
 	    obj= find_first_child_of_type(obj, trav, AB_TYPE_ACTION);
 	}

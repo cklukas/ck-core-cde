@@ -82,7 +82,7 @@ static int write_i18n_declarations(GenCodeInfo genCodeInfo, ABObj project);
 static char        *I18n_Includes[] =
 {
     "<Dt/MsgCatP.h>",
-    NULL,
+    nullptr,
 };
 
 /*
@@ -159,12 +159,12 @@ write_user_or_auto_decls(
 			BOOL auto_named)
 {
     AB_TRAVERSAL        trav;
-    ABObj               action = NULL;
-    AB_ACTION_INFO     *actinfo = NULL;
-    STRING              func_name = NULL;
+    ABObj               action = nullptr;
+    AB_ACTION_INFO     *actinfo = nullptr;
+    STRING              func_name = nullptr;
 
     for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-	 (action = trav_next(&trav)) != NULL;)
+	 (action = trav_next(&trav)) != nullptr;)
     {
 	/* If action is not a cross-module connection AND it
 	 * is not a shared connection, continue.
@@ -271,10 +271,10 @@ write_i18n_declarations(
     )
 {
     File	codeFile;
-    STRING      *p = NULL;
+    STRING      *p = nullptr;
     int		ret_val = 0;
 
-    if (genCodeInfo == NULL)
+    if (genCodeInfo == nullptr)
         goto cret;
 
     codeFile = genCodeInfo->code_file;

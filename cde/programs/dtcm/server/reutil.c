@@ -284,13 +284,13 @@ DeriveNewStartTime(
 	Tick		 end_date;
 	Tick		 an_event;
 	int		 num_events;
-	RepeatEventState *res = NULL;
+	RepeatEventState *res = nullptr;
 
 	/* Count the number of events from the start time to the current time */
 	end_date = old_re->re_end_date;
         old_re->re_end_date = current_time;
 	/* XXX: Need to deal with excluded events */
-        num_events = CountEvents(start_time, old_re, NULL);
+        num_events = CountEvents(start_time, old_re, nullptr);
         old_re->re_end_date = end_date;
  
 	if (!ClosestTick(current_time, start_time, old_re, &res)) {
@@ -383,7 +383,7 @@ RulesMatch(
 	re2->re_end_date = old_end_date;
 
 	/* rules whose text cannot be built are not known to be the same */
-	if (new_rule1 == NULL || new_rule2 == NULL) {
+	if (new_rule1 == nullptr || new_rule2 == nullptr) {
 		free(new_rule1);
 		free(new_rule2);
 		_DtCm_free_re(re1);

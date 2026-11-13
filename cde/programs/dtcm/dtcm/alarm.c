@@ -114,16 +114,16 @@ view_flasher(XtPointer client_data, XtIntervalId *interval_id) {
  
     if (wmState->state == IconicState) {
 
-	XtVaSetValues(c->frame, XmNiconPixmap, NULL, NULL);
+	XtVaSetValues(c->frame, XmNiconPixmap, nullptr, nullptr);
 	if (c->view->flashes % 2) {
 		if (c->icon && c->icon->icon && c->icon->icon_mask)
 			XtVaSetValues(c->frame, 
-				XmNiconPixmap, c->icon->icon, NULL);
+				XmNiconPixmap, c->icon->icon, nullptr);
 	} else {
 		if (c->icon_inverted && c->icon_inverted->icon 
 				     && c->icon_inverted->icon_mask)
 			XtVaSetValues(c->frame, 
-				XmNiconPixmap, c->icon_inverted->icon, NULL);
+				XmNiconPixmap, c->icon_inverted->icon, nullptr);
 	}
 	XFlush(c->xcontext->display);
     }
@@ -158,7 +158,7 @@ view_flasher(XtPointer client_data, XtIntervalId *interval_id) {
 	if (wmState->state == IconicState) {
 		if (c->icon && c->icon->icon && c->icon->icon_mask)
 			XtVaSetValues(c->frame, 
-				XmNiconPixmap, c->icon->icon, NULL);
+				XmNiconPixmap, c->icon->icon, nullptr);
 	}
     }
 }
@@ -181,7 +181,7 @@ extern void
 mail_it(XtPointer client_data, XtIntervalId *interval_id, CSA_reminder_reference *r) {
 	Calendar		*c = (Calendar *)client_data;
 	int			hr;
-	Lines			*lines = NULL, *l = NULL;
+	Lines			*lines = nullptr, *l = nullptr;
 	Props			*p = (Props *)c->properties;
 	Boolean			pm;
 	DisplayType		dt = get_int_prop(p, CP_DEFAULTDISP);
@@ -192,7 +192,7 @@ mail_it(XtPointer client_data, XtIntervalId *interval_id, CSA_reminder_reference
 	char			*to;
 	CSA_return_code		stat;
 	Tick			start, stop;
-	char			*addr_data = NULL;
+	char			*addr_data = nullptr;
 
 	appt = allocate_appt_struct(appt_read,
 				    c->general->version,
@@ -202,7 +202,7 @@ mail_it(XtPointer client_data, XtIntervalId *interval_id, CSA_reminder_reference
 				    CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
 				    CSA_ENTRY_ATTR_END_DATE_I,
 				    CSA_ENTRY_ATTR_MAIL_REMINDER_I,
-				    NULL);
+				    nullptr);
 
 	stat = query_appt_struct(c->cal_handle, r->entry, appt);
 
@@ -214,7 +214,7 @@ mail_it(XtPointer client_data, XtIntervalId *interval_id, CSA_reminder_reference
 	}
 
 	/* compose to field */
-	if (appt->mail->value->item.reminder_value->reminder_data.data == NULL ||
+	if (appt->mail->value->item.reminder_value->reminder_data.data == nullptr ||
 	    (appt->mail->value->item.reminder_value->reminder_data.size == 0)) {
 		/* empty recipient */
 		if (debug)
@@ -270,7 +270,7 @@ mail_it(XtPointer client_data, XtIntervalId *interval_id, CSA_reminder_reference
 	} else
 		whatbuf[0] = '\0';
 
-	while(l != NULL) {
+	while(l != nullptr) {
 		strcat(whatbuf, "\t\t");
 		strcat(whatbuf, l->s);
 		strcat(whatbuf, "\n");
@@ -390,7 +390,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
         int			start_hr, stop_hr;
 	char			text[BUFSIZ];
 	time_t			st, sp = 0;
-	Lines			*lines, *l = NULL;
+	Lines			*lines, *l = nullptr;
 	Props			*p = (Props *)c->properties;
 	Widget			pu_frame, pu_base_form, 
 				pu_text_form, separator, 
@@ -408,7 +408,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 	if (!c->postup)
 		c->postup = XtAppCreateShell("calendar_postup", "Dtcm",
 			xmDialogShellWidgetClass, c->xcontext->display,
-			NULL, 0);
+			nullptr, 0);
 
 	/*
 	**  Create the Motif objects
@@ -419,12 +419,12 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNtitle, title,
 		XmNmwmFunctions, MWM_FUNC_MOVE | MWM_FUNC_CLOSE,
 		XmNdeleteResponse,      XmDESTROY,
-		NULL);
+		nullptr);
 	XtFree(title);
 
 	pu_base_form = XtVaCreateWidget("pu_base_form",
 		xmFormWidgetClass, pu_frame,
-		NULL);
+		nullptr);
 
 	pu_text_form = XtVaCreateWidget("pu_test_form",
 		xmFormWidgetClass, pu_base_form,
@@ -434,7 +434,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNleftOffset, 1,
 		XmNrightOffset, 1,
 		XmNtopOffset, 1,
-		NULL);
+		nullptr);
 
 	pu_image = XtVaCreateWidget("pu_image",
 		xmLabelGadgetClass, pu_text_form,
@@ -443,7 +443,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNtopOffset, 5,
 		XmNlabelType, XmPIXMAP,
 		XmNlabelPixmap, ((Props_pu *)c->properties_pu)->postup_pixmap,
-		NULL);
+		nullptr);
 
 	button_form = XtVaCreateWidget("pu_form",
 		xmFormWidgetClass, pu_base_form,
@@ -454,7 +454,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNrightAttachment, XmATTACH_FORM,
 		XmNfractionBase, 3,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 680, "Close"));
 	pu_close = XtVaCreateManagedWidget("close", 
@@ -467,7 +467,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNrightPosition,	2,
 		XmNbottomOffset, 	1,
                 XmNlabelString, 	xmstr,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	separator = XtVaCreateWidget("separator",
@@ -480,7 +480,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, pu_text_form,
 		XmNtopOffset, 1,
-                NULL);
+                nullptr);
 
 
 	pu_form = XtVaCreateWidget("pu_form",
@@ -490,13 +490,13 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNleftAttachment, XmATTACH_WIDGET,
 		XmNleftWidget, pu_image,
 		XmNverticalSpacing, 10,
-		NULL);
+		nullptr);
 
 	pu_date = XtVaCreateWidget("pu_date",
 		xmLabelGadgetClass, pu_form,
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNtopAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
 
 	pu_range = XtVaCreateWidget("pu_range",
 		xmLabelGadgetClass, pu_form,
@@ -504,7 +504,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, pu_date,
 		XmNtopOffset, 8,
-		NULL);
+		nullptr);
 
 	XtAddCallback(pu_close, XmNactivateCallback, close_cb, pu_frame);
 
@@ -514,7 +514,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 				    CSA_ENTRY_ATTR_END_DATE_I,
 				    CSA_ENTRY_ATTR_SUMMARY_I,
 				    CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
-				    NULL);
+				    nullptr);
 	stat = query_appt_struct(c->cal_handle, r->entry, appt);
 	backend_err_msg(c->frame, c->calname, stat,
 			((Props_pu *)c->properties_pu)->xm_error_pixmap);
@@ -537,7 +537,7 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 			XmNleftAttachment, XmATTACH_WIDGET,
 			XmNleftWidget, pu_form,
 			XmNleftOffset, 15,
-			NULL);
+			nullptr);
 		XmStringFree(xmstr);
 
 		if (last_line)
@@ -545,12 +545,12 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 				XmNtopAttachment, XmATTACH_WIDGET,
 				XmNtopWidget, last_line,
 				XmNtopOffset, 8,
-				NULL);
+				nullptr);
 		else
 			XtVaSetValues(line, 
 				XmNtopAttachment, XmATTACH_FORM,
 				XmNtopOffset, 8,
-				NULL);
+				nullptr);
 
 		last_line = line;
 		l = l->next;
@@ -687,15 +687,15 @@ postup_show_proc(Calendar *c, CSA_reminder_reference *r) {
 	free_appt_struct(&appt);
 	xmstr = XmStringCreateLocalized(text);
 	XtVaSetValues(pu_range, XmNlabelString, xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 	ManageChildren(pu_form);
 	ManageChildren(pu_base_form);
 	ManageChildren(pu_text_form);
 	XtManageChild(pu_base_form);
-	XtVaSetValues(button_form, XmNdefaultButton, pu_close, NULL);
-        XtVaSetValues(button_form, XmNcancelButton, pu_close, NULL);
+	XtVaSetValues(button_form, XmNdefaultButton, pu_close, nullptr);
+        XtVaSetValues(button_form, XmNcancelButton, pu_close, nullptr);
 	XtPopup(pu_frame, XtGrabNone);
 	DtWsmOccupyAllWorkspaces(c->xcontext->display, XtWindow(pu_frame));
 }

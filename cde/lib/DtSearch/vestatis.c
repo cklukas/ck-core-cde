@@ -140,7 +140,7 @@ typedef struct s_a {
     DtSrINT32	num_word_hits;
 }               STAT_STR;
 
-static STAT_STR *stat_array = NULL;
+static STAT_STR *stat_array = nullptr;
 static TREENODE *root_node;
 static TREENODE *top_of_stack;
 static TREENODE *stack;
@@ -148,10 +148,10 @@ static TREENODE *pres;
 static TREENODE *prev;
 static TREENODE *next;
 static TREENODE *avail_node;
-static CNCRD_MEMORY_AREA_LIST *memory_blocks = NULL;
+static CNCRD_MEMORY_AREA_LIST *memory_blocks = nullptr;
 static CNCRD_MEMORY_AREA_LIST *cur_mem_ptr;
-static QUERY_STEM_STR *query_stems = NULL;
-static DB_ADDR *word_addrs = NULL;
+static QUERY_STEM_STR *query_stems = nullptr;
+static DB_ADDR *word_addrs = nullptr;
 static int      num_diff_words = 0;
 static char     begin_search;
 static char     begin_sort;
@@ -181,7 +181,7 @@ static void     stat_search (void);	/* redefined below */
 /********************************/
 void            release_shm_mem (void)
 {
-    if (global_memory_ptr != NULL) {
+    if (global_memory_ptr != nullptr) {
 	if (shmdt (global_memory_ptr) == -1) {
 	    DtSearchAddMessage (CATGETS(dtsearch_catd, MS_vestatis, 104,
 		PROGNAME "104 Cannot detach shared memory "));
@@ -189,14 +189,14 @@ void            release_shm_mem (void)
 	    usrblk.retncode = OE_ABORT;
 	    return;
 	}
-	if (shmctl (shm_id, IPC_RMID, NULL) == -1) {
+	if (shmctl (shm_id, IPC_RMID, nullptr) == -1) {
 	    DtSearchAddMessage (CATGETS(dtsearch_catd, MS_vestatis, 110,
 		    PROGNAME "110 Cannot remove shared memory "));
 	    OE_flags |= OE_PERMERR;
 	    usrblk.retncode = OE_ABORT;
 	    return;
 	}
-	global_memory_ptr = NULL;
+	global_memory_ptr = nullptr;
     }
 
     return;
@@ -272,7 +272,7 @@ int             efim_qsort (void)
 
     for (;;) {
 	/* check iteration loop */
-	time_dif = difftime (time (NULL), start_time);
+	time_dif = difftime (time (nullptr), start_time);
 	if ((time_dif > TIME_ITERATION
 		|| usrblk.debug & USRDBG_ITERATE) &&
 	    !(usrblk.flags & USR_NO_ITERATE)) {
@@ -501,13 +501,13 @@ static void     descend_tree (void)
 
     while (not_done) {
 	/* end of 'descent' subalgorithm? */
-	if ((pres->llink == NULL) && (pres->rlink == NULL)) {
+	if ((pres->llink == nullptr) && (pres->rlink == nullptr)) {
 	    /* Preorder, Symmetric Order and Postorder */
 	    fill_stem (pres);
 	    avail_node = pres;
 	    return;
 	}
-	if (pres->llink != NULL) {
+	if (pres->llink != nullptr) {
 	    /* Preorder */
 	    fill_stem (pres);
 	    next = pres->llink;
@@ -544,8 +544,8 @@ static void     traverse_tree (void)
     /* initialize the variables */
     pres = root_node;
     prev = pres;
-    top_of_stack = NULL;
-    stack = NULL;
+    top_of_stack = nullptr;
+    stack = nullptr;
 
     while (not_done) {
 	if (descend) {
@@ -554,7 +554,7 @@ static void     traverse_tree (void)
 	if (pres == root_node) {
 	    return;
 	}
-	if (prev->rlink == NULL) {
+	if (prev->rlink == nullptr) {
 	    /* Symmetric Order and Postorder */
 	    /***	fill_stem(prev); ***/
 	    next = prev->llink;
@@ -564,7 +564,7 @@ static void     traverse_tree (void)
 	    descend = FALSE;
 	}
 	else {
-	    if (prev->llink == NULL) {
+	    if (prev->llink == nullptr) {
 		/* Postorder */
 		/** fill_stem(prev); **/
 		next = prev->rlink;
@@ -580,8 +580,8 @@ static void     traverse_tree (void)
 		    next = stack;
 		    top_of_stack = stack->rlink;
 		    stack = stack->llink;
-		    next->llink = NULL;
-		    next->rlink = NULL;
+		    next->llink = nullptr;
+		    next->rlink = nullptr;
 		    next = prev->llink;
 		    prev->llink = prev->rlink;
 		    prev->rlink = pres;
@@ -622,13 +622,13 @@ void            get_next_memory_block (size_t node_size)
      * We run out of pre-allocated memory. Allocate additional block of
      * memory 
      */
-    if (cur_mem_ptr == NULL) {
+    if (cur_mem_ptr == nullptr) {
 	total_memory_size += node_size;
 	mem_start = (char *) malloc (total_memory_size);
 	mem_offset = 0L;
 	mem_offset += node_size;
 	cur_pos = mem_start;
-	if (mem_start == NULL) {
+	if (mem_start == nullptr) {
 	    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_vestatis, 310,
 		"%s Out of Memory.  Need %ld bytes.\n"),
 		PROGNAME "310", total_memory_size);
@@ -643,7 +643,7 @@ void            get_next_memory_block (size_t node_size)
 	 */
 	memory_blocks = (CNCRD_MEMORY_AREA_LIST *)
 	    malloc (sizeof (CNCRD_MEMORY_AREA_LIST) + 2);
-	if (memory_blocks == NULL) {
+	if (memory_blocks == nullptr) {
 	    fputs (CATGETS(dtsearch_catd, MS_vestatis, 314,
 		    PROGNAME"314 Out of Memory.\n"), aa_stderr);
 	    OE_flags |= OE_PERMERR;
@@ -715,14 +715,14 @@ static int      build_bin_tree (char *cur_word)
     }
     new = (TREENODE *) cur_pos;
     cur_pos = mem_start + mem_offset;
-    new->llink = NULL;
-    new->rlink = NULL;
+    new->llink = nullptr;
+    new->rlink = nullptr;
     new->word = (char *) new + sizeof (TREENODE);
     new->count = 1;
     strcpy (new->word, cur_word);
 
     /* Insert current word into binary tree */
-    for (this_link = &root_node; *this_link != NULL;) {
+    for (this_link = &root_node; *this_link != nullptr;) {
 	i = strcmp (new->word, (*this_link)->word);
 
 	/* Test for current word already in the binary tree */
@@ -759,7 +759,7 @@ static int      build_bin_tree (char *cur_word)
 void            init_memory (void)
 {
     mem_start = (char *) malloc (MEMORY_SIZE);
-    if (mem_start == NULL) {
+    if (mem_start == nullptr) {
 	fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_vestatis, 310,
 	    "%s Out of Memory.  Need %ld bytes.\n"), PROGNAME "310", MEMORY_SIZE);
 	OE_flags |= OE_PERMERR;
@@ -776,7 +776,7 @@ void            init_memory (void)
      */
     memory_blocks = (CNCRD_MEMORY_AREA_LIST *)
 	malloc (sizeof (CNCRD_MEMORY_AREA_LIST) + 2);
-    if (memory_blocks == NULL) {
+    if (memory_blocks == nullptr) {
 	fputs (CATGETS(dtsearch_catd, MS_vestatis, 314,
 		PROGNAME "314 Out of Memory.\n"), aa_stderr);
 	OE_flags |= OE_PERMERR;
@@ -786,8 +786,8 @@ void            init_memory (void)
     }
     memory_blocks->start_of_mem_block = mem_start;
     memory_blocks->block_size = total_memory_size;
-    memory_blocks->next_block = NULL;
-    cur_mem_ptr = NULL;
+    memory_blocks->next_block = nullptr;
+    cur_mem_ptr = nullptr;
 
     return;
 } /* init_memory() */
@@ -811,12 +811,12 @@ static int      inv_index_bin_tree (void)
     PARG	parg;
 
     /* First time initialize the first block of memory */
-    if (memory_blocks == NULL) {
+    if (memory_blocks == nullptr) {
 	/** INITIALIZE MEMORY **/
 	init_memory ();
 	if (usrblk.retncode == OE_ABORT)
 	    return FALSE;
-	root_node = NULL;
+	root_node = nullptr;
     }
 
     /* WORD LOOP.  Parse and stem each word in query.
@@ -827,7 +827,7 @@ static int      inv_index_bin_tree (void)
     parg.string = usrblk.query;
     for ( cptr = dblk->parser (&parg);
 	  cptr;
-	  cptr = dblk->parser (NULL)) {
+	  cptr = dblk->parser (nullptr)) {
 	build_bin_tree (dblk->stemmer (cptr, dblk));
 	if (usrblk.retncode == OE_ABORT)
 	    return FALSE;
@@ -962,7 +962,7 @@ void            load_ditto_str (void)
 
 	/* Preallocate first hit on ditto_list */
 	ditto_llist = (DtSrResult *) austext_malloc (dittosz,
-	    PROGNAME "449", NULL);
+	    PROGNAME "449", nullptr);
 	j32 = 0;
 	i32_start = 0;
 	d0024 = OR_D00 << 24;
@@ -987,7 +987,7 @@ void            load_ditto_str (void)
     /**** MAIN DtSrResult LIST BUILD LOOP ****/
     for (i32 = i32_start; i32 < num_hits; i32++) {
 	/* check iteration loop */
-	time_dif = difftime (time (NULL), start_time);
+	time_dif = difftime (time (nullptr), start_time);
 	if ((time_dif > TIME_ITERATION
 		|| usrblk.debug & USRDBG_ITERATE) &&
 	    !(usrblk.flags & USR_NO_ITERATE)) {
@@ -1045,7 +1045,7 @@ void            load_ditto_str (void)
 	    cur_ditto_mem = ditto_llist;
 	else {
 	    cur_ditto_mem = malloc (dittosz);
-	    if (cur_ditto_mem == NULL) {
+	    if (cur_ditto_mem == nullptr) {
 		fputs ( CATGETS(dtsearch_catd, MS_vestatis, 504,
 		    PROGNAME "504 Cannot allocate cur_ditto\n"),
 		    aa_stderr);
@@ -1127,7 +1127,7 @@ void            load_ditto_str (void)
 	    }			/* end while-loop */
 	}			/* endif: (abstrsz > 0) */
 
-	cur_ditto_mem->link = NULL;
+	cur_ditto_mem->link = nullptr;
 	temp_ditto = cur_ditto_mem;
 
 	/* Increment to next hit.
@@ -1305,7 +1305,7 @@ static void     stat_search (void)
 	     * interface to allow the gui to respond to button clicks
 	     * (like CANCEL buttons). 
 	     */
-	    time_dif = difftime (time (NULL), start_time);
+	    time_dif = difftime (time (nullptr), start_time);
 	    if ((time_dif > TIME_ITERATION
 		    || usrblk.debug & USRDBG_ITERATE) &&
 		!(usrblk.flags & USR_NO_ITERATE)) {
@@ -1414,7 +1414,7 @@ void            ve_statistical (void)
     usrblk.retncode = OE_OK;
     usrblk = usrblk;
     saveusr.vistano = usrblk.dblk->vistano;
-    saveusr.dittolist = NULL;
+    saveusr.dittolist = nullptr;
     saveusr.dittocount = 0L;
     saveusr.iterations = 1;
 
@@ -1450,13 +1450,13 @@ void            ve_statistical (void)
     }
 
     /***** allocate memory for query_stems array *********/
-    if (query_stems != NULL) {
+    if (query_stems != nullptr) {
 	free (query_stems);
-	query_stems = NULL;
+	query_stems = nullptr;
     }
     query_stems = (QUERY_STEM_STR *) austext_malloc
 	(sizeof (QUERY_STEM_STR) * (num_diff_words + 1),
-	PROGNAME " 371", NULL);
+	PROGNAME " 371", nullptr);
 
     /*
      * Traverse tree to build query_stems array, each array node = tree
@@ -1471,7 +1471,7 @@ void            ve_statistical (void)
      * position, and total size for the available memory. Starts from the
      * first member in the link list of memory blocks. 
      */
-    root_node = NULL;
+    root_node = nullptr;
     mem_start = memory_blocks->start_of_mem_block;
     total_memory_size = memory_blocks->block_size;
     cur_mem_ptr = memory_blocks->next_block;

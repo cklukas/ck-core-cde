@@ -232,18 +232,18 @@ get_when_callback(AB_WHEN	when)
 {
     switch (when)
     {
-      case AB_WHEN_UNDEF:		return NULL;
+      case AB_WHEN_UNDEF:		return nullptr;
       case AB_WHEN_ACTIVATED:		return activate_when_cb;
-      case AB_WHEN_DESTROYED:		return NULL;
-      case AB_WHEN_DROPPED_ON:		return NULL;
-      case AB_WHEN_DOUBLE_CLICKED_ON:	return NULL;
-      case AB_WHEN_ITEM_SELECTED:	return NULL;
-      case AB_WHEN_POPPED_DOWN:		return NULL;
-      case AB_WHEN_POPPED_UP:		return NULL;
-      case AB_WHEN_REPAINT_NEEDED:	return NULL;
-      case AB_WHEN_NUM_VALUES:		return NULL;
+      case AB_WHEN_DESTROYED:		return nullptr;
+      case AB_WHEN_DROPPED_ON:		return nullptr;
+      case AB_WHEN_DOUBLE_CLICKED_ON:	return nullptr;
+      case AB_WHEN_ITEM_SELECTED:	return nullptr;
+      case AB_WHEN_POPPED_DOWN:		return nullptr;
+      case AB_WHEN_POPPED_UP:		return nullptr;
+      case AB_WHEN_REPAINT_NEEDED:	return nullptr;
+      case AB_WHEN_NUM_VALUES:		return nullptr;
     }
-    return NULL;
+    return nullptr;
 }
 
 static INTERPRET_HANDLER
@@ -346,7 +346,7 @@ conn_enable_action_interpret(
     BOOL	to_test_project
 )
 {
-    if (project == NULL || !obj_is_project(project))
+    if (project == nullptr || !obj_is_project(project))
 	return;
 
     ConnP_manage          = util_aset_create();
@@ -361,7 +361,7 @@ conn_enable_action_interpret(
         AB_TRAVERSAL	trav;
 
         for (trav_open(&trav, project, AB_TRAV_MODULES);
-             (mod = trav_next(&trav)) != NULL; )
+             (mod = trav_next(&trav)) != nullptr; )
             if (obj_is_module(mod) && obj_has_flag(mod, MappedFlag))
             	tree_set_initial_state(mod, TRUE);
         trav_close(&trav);
@@ -383,7 +383,7 @@ conn_disable_action_interpret(
     if (!is_enabled)
 	return;
 
-    if (project == NULL || !obj_is_project(project))
+    if (project == nullptr || !obj_is_project(project))
 	return;
 
     tree_restore_build_state(project);
@@ -416,9 +416,9 @@ tree_set_initial_state(
 	ABObj	*ref_list = get_menu_item_refs(obj);
 	ABObj	*cur_obj;
 
-	if (ref_list != NULL)
+	if (ref_list != nullptr)
 	{
-	    for (cur_obj = ref_list; *cur_obj != NULL; cur_obj++)
+	    for (cur_obj = ref_list; *cur_obj != nullptr; cur_obj++)
 		set_initial_state(*cur_obj, ignore_win_visibility);
 	    XtFree((char *)ref_list);
 	}
@@ -427,7 +427,7 @@ tree_set_initial_state(
 	set_initial_state(obj, ignore_win_visibility);
 
     for (trav_open(&trav, obj, AB_TRAV_SALIENT_CHILDREN);
-	 (child = trav_next(&trav)) != NULL; )
+	 (child = trav_next(&trav)) != nullptr; )
 	tree_set_initial_state(child, ignore_win_visibility);
     trav_close(&trav);
 }
@@ -448,9 +448,9 @@ tree_set_obj_initial_state(
 	ABObj	*ref_list = get_menu_item_refs(obj);
 	ABObj	*cur_obj;
 
-	if (ref_list != NULL)
+	if (ref_list != nullptr)
 	{
-	    for (cur_obj = ref_list; *cur_obj != NULL; cur_obj++)
+	    for (cur_obj = ref_list; *cur_obj != nullptr; cur_obj++)
 		set_obj_initial_state(*cur_obj);
 	    XtFree((char *)ref_list);
 	}
@@ -459,7 +459,7 @@ tree_set_obj_initial_state(
 	set_obj_initial_state(obj);
 
     for (trav_open(&trav, obj, AB_TRAV_SALIENT_CHILDREN);
-	 (child = trav_next(&trav)) != NULL; )
+	 (child = trav_next(&trav)) != nullptr; )
 	tree_set_obj_initial_state(child);
     trav_close(&trav);
 }
@@ -476,7 +476,7 @@ tree_restore_build_state(
 	restore_build_state(obj);
 
     for (trav_open(&trav, obj, AB_TRAV_SALIENT_CHILDREN);
-	 (child = trav_next(&trav)) != NULL; )
+	 (child = trav_next(&trav)) != nullptr; )
 	tree_restore_build_state(child);
     trav_close(&trav);
 }
@@ -626,7 +626,7 @@ restore_build_state(
 {
     Widget	trg_w;
 
-    if ((trg_w = objxm_get_widget(trg_obj)) == NULL)
+    if ((trg_w = objxm_get_widget(trg_obj)) == nullptr)
 	return;
 
     /* Going back to Build mode, we need to ensure all windows
@@ -644,7 +644,7 @@ setup_window_for_test_mode(
     int		ret_val = -1;
     ABObj	module = obj_get_module(win);
 
-    if (module == NULL)
+    if (module == nullptr)
         goto cret;
 
     /* Make sure the module is instantiated */
@@ -669,11 +669,11 @@ setup_window_for_test_mode(
 
         /* Setup connections */
         for (trav_open(&trav, obj_get_project(module), AB_TRAV_ACTIONS);
-             (action = trav_next(&trav)) != NULL; )
+             (action = trav_next(&trav)) != nullptr; )
         {
             AB_ACTION_INFO	*info = &(action->info.action);
 
-            if (info == NULL || info->from == NULL ||
+            if (info == nullptr || info->from == nullptr ||
                 obj_get_module(info->from) != module)
                 continue;
             
@@ -733,16 +733,16 @@ disable_modules(
     ABObj		action;
     AB_TRAVERSAL	trav;
 
-    if (mod == NULL || !obj_is_module(mod))
+    if (mod == nullptr || !obj_is_module(mod))
         goto cret;
     
     /* Remove connections */
     for (trav_open(&trav, obj_get_project(mod), AB_TRAV_ACTIONS);
-         (action = trav_next(&trav)) != NULL; )
+         (action = trav_next(&trav)) != nullptr; )
     {
         AB_ACTION_INFO	*info = &(action->info.action);
         
-        if (info == NULL || info->from == NULL ||
+        if (info == nullptr || info->from == nullptr ||
             obj_get_module(info->from) != mod)
             continue;
         
@@ -775,9 +775,9 @@ sensitize_objects(
 {
     ABObj	obj = (ABObj)cl_data;
 
-    if (obj != NULL &&
+    if (obj != nullptr &&
 	!tmodeP_obj_has_flags(obj_get_window(obj), TestModeFlagResizedWindow) &&
-	objxm_get_widget(obj) != NULL)
+	objxm_get_widget(obj) != nullptr)
     {
 	XtSetSensitive(objxm_get_widget(obj), TRUE);
 	
@@ -796,14 +796,14 @@ free_infos(
 {
     AB_ACTION_INFO	*info = (AB_ACTION_INFO *)cl_data;
 
-    if (info != NULL)
+    if (info != nullptr)
     {
 	INTERPRET_HANDLER	handler;
 	AB_WHEN			c_when;
 
 	c_when = info->when;
 	handler = get_when_detach_handler(c_when);
-	if (handler != NULL && info->from != NULL)
+	if (handler != nullptr && info->from != nullptr)
 	    (*handler)(info, get_when_callback(c_when));
 
 	XtFree((char *)info);
@@ -817,7 +817,7 @@ reset_layer(
 {
     ABObj	obj = (ABObj)cl_data;
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
 	if (obj_is_layers(obj))
 	    abobj_layer_manage_visible(obj);
@@ -856,7 +856,7 @@ attach_interpretation(
 
     c_when = info->when;
     handler = get_when_attach_handler(c_when);
-    if (handler == NULL || info->from == NULL)
+    if (handler == nullptr || info->from == nullptr)
 	return;
 
     /* if source is a menu item */
@@ -866,7 +866,7 @@ attach_interpretation(
     if (info->func_type == AB_FUNC_BUILTIN)
     { /* connection is a builtin one and needs a target */
 	/* if target is a menu item */
-	if (info->to != NULL && obj_is_menu_item(info->to))
+	if (info->to != nullptr && obj_is_menu_item(info->to))
 	    needs_to_refs = TRUE;
     }
 
@@ -874,14 +874,14 @@ attach_interpretation(
     {
 	ABObj	*from_refs = get_menu_item_refs(info->from);
 
-	if (from_refs == NULL)
+	if (from_refs == nullptr)
 	    return;
 
 	if (needs_to_refs == TRUE)
 	{
 	    ABObj	*to_refs = get_menu_item_refs(info->to);
 
-	    if (to_refs == NULL)
+	    if (to_refs == nullptr)
 	    {
 		XtFree((char *)from_refs);
 		return;
@@ -899,7 +899,7 @@ attach_interpretation(
     {
 	ABObj	*to_refs = get_menu_item_refs(info->to);
 
-	if (to_refs == NULL)
+	if (to_refs == nullptr)
 	    return;
 
 	attach_for_single_refs(FALSE, to_refs, info,
@@ -921,11 +921,11 @@ attach_for_both_refs(
 {
     ABObj	*trav_from;
 
-    for (trav_from = from_refs; *trav_from != NULL; trav_from++)
+    for (trav_from = from_refs; *trav_from != nullptr; trav_from++)
     {
 	ABObj	*trav_to;
 
-	for (trav_to = to_refs; *trav_to != NULL; trav_to++)
+	for (trav_to = to_refs; *trav_to != nullptr; trav_to++)
 	{
 	    AB_ACTION_INFO	*new_info;
 
@@ -958,7 +958,7 @@ attach_for_single_refs(
 {
     ABObj	*trav_item;
 
-    for (trav_item = item_refs; *trav_item != NULL; trav_item++)
+    for (trav_item = item_refs; *trav_item != nullptr; trav_item++)
     {
 	AB_ACTION_INFO	*new_info;
 
@@ -992,7 +992,7 @@ detach_interpretation(
 
     c_when = info->when;
     handler = get_when_detach_handler(c_when);
-    if (handler == NULL || info->from == NULL)
+    if (handler == nullptr || info->from == nullptr)
 	return;
 
     (*handler)(info, get_when_callback(c_when));
@@ -1020,7 +1020,7 @@ get_action_handler(
 	    ABObj		trg = notify_info->to;
 	    AB_OBJECT_TYPE	trg_type;
 
-	    if (trg == NULL)
+	    if (trg == nullptr)
 		goto cret;
 
 	    trg_type = obj_get_type(trg);
@@ -1049,7 +1049,7 @@ get_action_handler(
 	    {
 		ABObj	win = obj_get_window(trg);
 
-		if (win == NULL)
+		if (win == nullptr)
 		    goto cret;
 		if (!obj_has_flag(win, MappedFlag))
 		    goto cret;
@@ -1087,7 +1087,7 @@ activate_attach_handler(
     Widget	attach_w;
     AB_ITEM_TYPE	item_type;
 
-    if (when_cb == NULL)
+    if (when_cb == nullptr)
 	return;
 
     switch(obj_get_type(c_from))
@@ -1099,14 +1099,14 @@ activate_attach_handler(
 	  case AB_ITEM_FOR_MENU:
 	    if (obj_has_menu(c_from))
 	    {
-		if (objxm_get_widget(c_from) != NULL)
+		if (objxm_get_widget(c_from) != nullptr)
 		    XtAddCallback(objxm_get_widget(c_from),
 				XmNcascadingCallback,
 				when_cb, (XtPointer)notify_info);
 	    }
 	    else
 	    {
-		if (objxm_get_widget(c_from)!= NULL)
+		if (objxm_get_widget(c_from)!= nullptr)
 		    XtAddCallback(objxm_get_widget(c_from),
 				XmNactivateCallback,
 				when_cb, (XtPointer)notify_info);
@@ -1115,7 +1115,7 @@ activate_attach_handler(
 
 	  case AB_ITEM_FOR_CHOICE:
 	    attach_w = objxm_get_widget(c_from);
-	    if (attach_w != NULL)
+	    if (attach_w != nullptr)
 	    {
 		if (obj_is_option_menu(
 			obj_get_root(obj_get_parent(c_from))))
@@ -1130,7 +1130,7 @@ activate_attach_handler(
 	break;
       case AB_TYPE_BUTTON:
 	attach_w = objxm_get_widget(c_from);
-	if (attach_w != NULL)
+	if (attach_w != nullptr)
 	    XtAddCallback(attach_w, XmNactivateCallback,
 			    when_cb, (XtPointer)notify_info);
 	break;
@@ -1150,7 +1150,7 @@ post_menu_attach_handler(
     Widget	attach_w;
     AB_ITEM_TYPE	item_type;
 
-    if (when_cb == NULL)
+    if (when_cb == nullptr)
 	return;
 
     switch(obj_get_type(c_from))
@@ -1163,14 +1163,14 @@ post_menu_attach_handler(
 	    {
 		if (obj_has_menu(c_from))
 		{
-		    if (objxm_get_widget(c_from) != NULL)
+		    if (objxm_get_widget(c_from) != nullptr)
 			XtAddCallback(objxm_get_widget(c_from),
 				    XmNcascadingCallback,
 				    when_cb, (XtPointer)notify_info);
 		}
 		else
 		{
-		    if (objxm_get_widget(c_from) != NULL)
+		    if (objxm_get_widget(c_from) != nullptr)
 			XtAddCallback(objxm_get_widget(c_from),
 				    XmNactivateCallback,
 				    when_cb, (XtPointer)notify_info);
@@ -1194,7 +1194,7 @@ activate_detach_handler(
     Widget	attach_w;
     AB_ITEM_TYPE	item_type;
 
-    if (when_cb == NULL)
+    if (when_cb == nullptr)
 	return;
 
     switch(obj_get_type(c_from))
@@ -1207,14 +1207,14 @@ activate_detach_handler(
 	    {
 		if (obj_has_menu(c_from))
 		{
-		    if (objxm_get_widget(c_from) != NULL)
+		    if (objxm_get_widget(c_from) != nullptr)
 			XtRemoveCallback(objxm_get_widget(c_from),
 				    XmNcascadingCallback,
 				    when_cb, (XtPointer)notify_info);
 		}
 		else
 		{
-		    if (objxm_get_widget(c_from) != NULL)
+		    if (objxm_get_widget(c_from) != nullptr)
 			XtRemoveCallback(objxm_get_widget(c_from),
 				    XmNactivateCallback,
 				    when_cb, (XtPointer)notify_info);
@@ -1224,7 +1224,7 @@ activate_detach_handler(
 
 	  case AB_ITEM_FOR_CHOICE:
 	    attach_w = objxm_get_widget(c_from);
-	    if (attach_w != NULL)
+	    if (attach_w != nullptr)
 	    {
 		if (obj_is_option_menu(
 			obj_get_root(obj_get_parent(c_from))))
@@ -1239,7 +1239,7 @@ activate_detach_handler(
 	break;
       case AB_TYPE_BUTTON:
 	attach_w = objxm_get_widget(c_from);
-	if (attach_w != NULL)
+	if (attach_w != nullptr)
 	    XtRemoveCallback(attach_w, XmNactivateCallback,
 				when_cb, (XtPointer)notify_info);
 	break;
@@ -1258,7 +1258,7 @@ post_menu_detach_handler(
     Widget	attach_w;
     AB_ITEM_TYPE	item_type;
 
-    if (when_cb == NULL)
+    if (when_cb == nullptr)
 	return;
 
     switch(obj_get_type(c_from))
@@ -1271,14 +1271,14 @@ post_menu_detach_handler(
 	    {
 		if (obj_has_menu(c_from))
 		{
-		    if (objxm_get_widget(c_from) != NULL)
+		    if (objxm_get_widget(c_from) != nullptr)
 			XtRemoveCallback(objxm_get_widget(c_from),
 				    XmNcascadingCallback,
 				    when_cb, (XtPointer)notify_info);
 		}
 		else
 		{
-		    if (objxm_get_widget(c_from) != NULL)
+		    if (objxm_get_widget(c_from) != nullptr)
 			XtRemoveCallback(objxm_get_widget(c_from),
 				    XmNactivateCallback,
 				    when_cb, (XtPointer)notify_info);
@@ -1302,7 +1302,7 @@ activate_when_cb(
     AB_ACTION_INFO	*notify_info = (AB_ACTION_INFO *)client_data;
     ACTION_HANDLER	handler;
 
-    if (notify_info == NULL)
+    if (notify_info == nullptr)
 	return;
 
     switch (obj_get_type(notify_info->from))
@@ -1327,7 +1327,7 @@ activate_when_cb(
     }
 
     handler = get_action_handler(notify_info);
-    if (handler != NULL)
+    if (handler != nullptr)
 	(*handler)(notify_info);
 }
 
@@ -1341,12 +1341,12 @@ post_menu_when_cb(
     AB_ACTION_INFO	*notify_info = (AB_ACTION_INFO *)client_data;
     ACTION_HANDLER	handler;
 
-    if (notify_info == NULL)
+    if (notify_info == nullptr)
 	return;
 
     handler = get_action_handler(notify_info);
 
-    if (handler != NULL)
+    if (handler != nullptr)
 	(*handler)(notify_info);
 }
 
@@ -1409,12 +1409,12 @@ show_help_action_handler(
     ABObj		c_to	= action_info->to;
     ABObj		root_obj, help_obj;
     
-    if (c_to == NULL || objxm_get_widget(c_to) == NULL)
+    if (c_to == nullptr || objxm_get_widget(c_to) == nullptr)
 	return;
 
     if(obj_has_help_data(c_to) == True) {
 	help_obj = objxm_comp_get_subobj(c_to,AB_CFG_HELP_OBJ);
-	if(help_obj != NULL) {
+	if(help_obj != nullptr) {
 		XtCallCallbacks(objxm_get_widget(help_obj),XmNhelpCallback,
 			(XtPointer)NULL);
 	}
@@ -1430,7 +1430,7 @@ show_action_handler(
     ABObj		layer;
     
     /* If target object doesn't exist, just return */
-    if (c_to == NULL) return;
+    if (c_to == nullptr) return;
 
     if(obj_is_window(c_to))
     {
@@ -1538,7 +1538,7 @@ enable_action_handler(
 {
     ABObj	c_to	= action_info->to;
     
-    if (c_to == NULL || objxm_get_widget(c_to) == NULL)
+    if (c_to == nullptr || objxm_get_widget(c_to) == nullptr)
 	return;
 
     ui_set_active(objxm_get_widget(c_to), TRUE);
@@ -1554,7 +1554,7 @@ disable_action_handler(
 {
     ABObj	c_to	= action_info->to;
     
-    if (c_to == NULL || objxm_get_widget(c_to) == NULL)
+    if (c_to == nullptr || objxm_get_widget(c_to) == nullptr)
 	return;
 
     ui_set_active(objxm_get_widget(c_to), FALSE);
@@ -1570,18 +1570,18 @@ set_text_action_handler(
 {
     ABObj	c_to	= action_info->to;
     
-    if (c_to == NULL)
+    if (c_to == nullptr)
 	return;
 
     if (obj_is_text(c_to))
     {
-	ABObj   subObj   = NULL;
-	ISTRING	txt_istr = NULL;
-	STRING	txt_str  = NULL;
+	ABObj   subObj   = nullptr;
+	ISTRING	txt_istr = nullptr;
+	STRING	txt_str  = nullptr;
 
 	/* obtain the actual text object */
 	subObj = objxm_comp_get_subobj(c_to, AB_CFG_OBJECT_OBJ);
-	if (subObj == NULL || objxm_get_widget(subObj) == NULL)
+	if (subObj == nullptr || objxm_get_widget(subObj) == nullptr)
 	    return;
 
 	/* obtain the string */
@@ -1606,17 +1606,17 @@ set_value_action_handler(
 {
     ABObj	c_to	= action_info->to;
     
-    if (c_to == NULL)
+    if (c_to == nullptr)
 	return;
 
     if(obj_is_spin_box(c_to) || obj_is_scale(c_to))
     {
-	ABObj   subObj  = NULL;
+	ABObj   subObj  = nullptr;
 	int     val_int = 0;
 	
 	/* get the actual object */
 	subObj = objxm_comp_get_subobj(c_to, AB_CFG_OBJECT_OBJ);
-	if (subObj == NULL || objxm_get_widget(subObj) == NULL)
+	if (subObj == nullptr || objxm_get_widget(subObj) == nullptr)
 	    return;
 	
 	/* get the value */
@@ -1624,9 +1624,9 @@ set_value_action_handler(
     
 	/* set the value */
 	if (obj_is_spin_box(c_to))
-	    XtVaSetValues(objxm_get_widget(subObj), DtNposition, val_int, NULL);
+	    XtVaSetValues(objxm_get_widget(subObj), DtNposition, val_int, nullptr);
 	else
-	    XtVaSetValues(objxm_get_widget(subObj), XmNvalue, val_int, NULL);
+	    XtVaSetValues(objxm_get_widget(subObj), XmNvalue, val_int, nullptr);
 	
 	/* mark this obj's window as dirty */
 	tmodeP_obj_set_flags(obj_get_window(c_to), TestModeFlagDirtyWindow);
@@ -1639,10 +1639,10 @@ set_label_action_handler(
 )
 {
     ABObj	c_to	 = action_info->to;
-    ISTRING	lab_istr = NULL;
-    STRING	lab_str  = NULL;
+    ISTRING	lab_istr = nullptr;
+    STRING	lab_str  = nullptr;
     
-    if (c_to == NULL)
+    if (c_to == nullptr)
 	return;
 
     /* obtain the label */
@@ -1676,21 +1676,21 @@ get_menu_item_refs(
     int			i;
     int			item_index;
 
-    if (menu_item == NULL || !obj_is_menu_item(menu_item))
-	return(NULL);
+    if (menu_item == nullptr || !obj_is_menu_item(menu_item))
+	return(nullptr);
 
     /* Get parent menu of item */
     parent_menu = obj_get_parent(menu_item);
 
-    if (parent_menu == NULL || obj_get_type(parent_menu) != AB_TYPE_MENU)
-	return(NULL);
+    if (parent_menu == nullptr || obj_get_type(parent_menu) != AB_TYPE_MENU)
+	return(nullptr);
 
-    if ((this_module = obj_get_module(parent_menu)) == NULL)
-	return(NULL);
+    if ((this_module = obj_get_module(parent_menu)) == nullptr)
+	return(nullptr);
 
     item_index = -1;
     for (i = 0, trav_open(&trav, parent_menu, AB_TRAV_CHILDREN);
-	 (item_child = trav_next(&trav)) != NULL; i++)
+	 (item_child = trav_next(&trav)) != nullptr; i++)
     {
 	if (obj_get_type(item_child) == AB_TYPE_ITEM &&
 	    util_streq(obj_get_name(item_child), obj_get_name(menu_item)))
@@ -1702,14 +1702,14 @@ get_menu_item_refs(
     trav_close(&trav);
 
     if (item_index == -1)	/* should never happen */
-	return(NULL);
+	return(nullptr);
 
     num_refs = 0; list_size = 1;
     item_ref_list = (ABObj *) XtMalloc(sizeof(ABObj) * (list_size + 1));
 
     /* Traverse module for all menu-references pointing to this menu */
     for (trav_open(&trav, this_module, AB_TRAV_ALL);
-	 (child = trav_next(&trav)) != NULL; )
+	 (child = trav_next(&trav)) != nullptr; )
     {
 	if (obj_is_menu_ref(child) && obj_get_actual_obj(child) == parent_menu)
 	{
@@ -1735,11 +1735,11 @@ get_menu_item_refs(
     trav_close(&trav);
 
     if (num_refs > 0)
-	item_ref_list[num_refs] = NULL;	/* NULL-terminate the array */
+	item_ref_list[num_refs] = nullptr;	/* NULL-terminate the array */
     else
     {
 	XtFree((char *)item_ref_list);
-	item_ref_list = NULL;
+	item_ref_list = nullptr;
     }
     return(item_ref_list);
 }
@@ -1825,7 +1825,7 @@ tree_enable_help(ABObj obj)
     if (!obj_is_virtual(obj)) help_test_enable(obj);
 
     for (trav_open(&trav, obj, AB_TRAV_SALIENT_CHILDREN);
-	 (child = trav_next(&trav)) != NULL; ) {
+	 (child = trav_next(&trav)) != nullptr; ) {
 	    /* Recursively descend through all children */
 	    tree_enable_help(child);
     }
@@ -1842,7 +1842,7 @@ tree_disable_help(ABObj obj)
     if (!obj_is_virtual(obj)) help_test_disable(obj);
 
     for (trav_open(&trav, obj, AB_TRAV_SALIENT_CHILDREN);
-	 (child = trav_next(&trav)) != NULL; ) {
+	 (child = trav_next(&trav)) != nullptr; ) {
 	    /* Recursively descend through all children */
 	    tree_disable_help(child);
     }
@@ -1876,7 +1876,7 @@ win_closeCB(
         AB_TRAVERSAL    trav;
 
         for (trav_open(&trav, project, AB_TRAV_WINDOWS);
-             (win = trav_next(&trav)) != NULL; )
+             (win = trav_next(&trav)) != nullptr; )
 	{
 	    if (obj_has_flag(win, MappedFlag))
 	    	objxm_tree_map(win, False);

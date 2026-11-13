@@ -142,25 +142,25 @@ _DtCmsConvertToOnetime(cms_entry *entry, RepeatEvent *re)
 		_DtCm_set_sint32_attrval(CSA_X_DT_REPEAT_ONETIME,
 			&entry->attrs[CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I].value); 
 
-	_DtCmUpdateDateTimeListAttrVal(NULL, &entry->attrs\
+	_DtCmUpdateDateTimeListAttrVal(nullptr, &entry->attrs\
 		[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value);
 
-	_DtCmUpdateSint32AttrVal(NULL, &entry->attrs\
+	_DtCmUpdateSint32AttrVal(nullptr, &entry->attrs\
 		[CSA_ENTRY_ATTR_NUMBER_RECURRENCES_I].value);
 
-	_DtCmUpdateStringAttrVal(NULL, &entry->attrs\
+	_DtCmUpdateStringAttrVal(nullptr, &entry->attrs\
 		[CSA_ENTRY_ATTR_RECURRENCE_RULE_I].value);
 
-	_DtCmUpdateSint32AttrVal(NULL, &entry->attrs\
+	_DtCmUpdateSint32AttrVal(nullptr, &entry->attrs\
 		[CSA_X_DT_ENTRY_ATTR_REPEAT_TIMES_I].value);
 
-	_DtCmUpdateSint32AttrVal(NULL, &entry->attrs\
+	_DtCmUpdateSint32AttrVal(nullptr, &entry->attrs\
 		[CSA_X_DT_ENTRY_ATTR_REPEAT_INTERVAL_I].value);
 
-	_DtCmUpdateSint32AttrVal(NULL, &entry->attrs\
+	_DtCmUpdateSint32AttrVal(nullptr, &entry->attrs\
 		[CSA_X_DT_ENTRY_ATTR_REPEAT_OCCURRENCE_NUM_I].value);
 
-	_DtCmUpdateStringAttrVal(NULL, &entry->attrs\
+	_DtCmUpdateStringAttrVal(nullptr, &entry->attrs\
 		[CSA_X_DT_ENTRY_ATTR_SEQUENCE_END_DATE_I].value);
 }
 
@@ -188,7 +188,7 @@ _DtCmsCheckInitialAttributes(cms_entry *entry)
 	cms_attribute	*attrs;
 	char		datestr[80];
 
-	if (entry == NULL)
+	if (entry == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	attrs = entry->attrs;
@@ -209,28 +209,28 @@ _DtCmsCheckInitialAttributes(cms_entry *entry)
 		return (stat);
 
 	/* fill in default values when not specified */
-	if (attrs[CSA_ENTRY_ATTR_SUMMARY_I].value == NULL &&
+	if (attrs[CSA_ENTRY_ATTR_SUMMARY_I].value == nullptr &&
 	    (stat = _DtCm_set_string_attrval("",
 	    &attrs[CSA_ENTRY_ATTR_SUMMARY_I].value, CSA_VALUE_STRING))
 	    != CSA_SUCCESS)
 		return (stat);
 
-	if (attrs[CSA_X_DT_ENTRY_ATTR_SHOWTIME_I].value == NULL &&
+	if (attrs[CSA_X_DT_ENTRY_ATTR_SHOWTIME_I].value == nullptr &&
 	    (stat = _DtCm_set_sint32_attrval(1,
 	    &attrs[CSA_X_DT_ENTRY_ATTR_SHOWTIME_I].value)) != CSA_SUCCESS)
 		return (stat);
 
-	if (attrs[CSA_ENTRY_ATTR_CLASSIFICATION_I].value == NULL &&
+	if (attrs[CSA_ENTRY_ATTR_CLASSIFICATION_I].value == nullptr &&
 	    (stat = _DtCm_set_uint32_attrval(CSA_CLASS_PUBLIC,
 	    &attrs[CSA_ENTRY_ATTR_CLASSIFICATION_I].value)) != CSA_SUCCESS)
 		return (stat);
 
-	if (attrs[CSA_ENTRY_ATTR_STATUS_I].value == NULL &&
+	if (attrs[CSA_ENTRY_ATTR_STATUS_I].value == nullptr &&
 	    (stat = _DtCm_set_uint32_attrval(CSA_X_DT_STATUS_ACTIVE,
 	    &attrs[CSA_ENTRY_ATTR_STATUS_I].value)) != CSA_SUCCESS)
 		return (stat);
 
-	if (attrs[CSA_ENTRY_ATTR_SUBTYPE_I].value == NULL &&
+	if (attrs[CSA_ENTRY_ATTR_SUBTYPE_I].value == nullptr &&
 	    attrs[CSA_ENTRY_ATTR_TYPE_I].value->item.uint32_value ==
 	    CSA_TYPE_EVENT &&
 	    (stat = _DtCm_set_string_attrval(CSA_SUBTYPE_APPOINTMENT,
@@ -263,28 +263,28 @@ _DtCmsCleanupExceptionDates(cms_entry *entry, long ftick)
 	time_t			tick;
 	CSA_date_time_list	dt, prev, head;
 
-	if (entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value == NULL ||
+	if (entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value == nullptr ||
 	    entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value->item.\
-	    date_time_list_value == NULL)
+	    date_time_list_value == nullptr)
 		return;
 
 	head = entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value->item.\
 		date_time_list_value;
 
-	for (dt = head, prev = NULL; dt != NULL; prev = dt, dt = dt->next) {
+	for (dt = head, prev = nullptr; dt != nullptr; prev = dt, dt = dt->next) {
 		_csa_iso8601_to_tick(dt->date_time, &tick);
 		if (ftick <= tick) {
 			if (prev) {
-				prev->next = NULL;
+				prev->next = nullptr;
 				_DtCm_free_date_time_list(head);
 			}
 			break;
 		}
 	}
 
-	if (dt == NULL) {
+	if (dt == nullptr) {
 		free(entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value);
-		entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value = NULL;
+		entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value = nullptr;
 	} else
 		entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value->item.\
 			date_time_list_value = dt;
@@ -298,11 +298,11 @@ _DtCmsNumberExceptionDates(cms_entry *entry)
 	int			count;
 
 	if ((vptr = entry->attrs[CSA_ENTRY_ATTR_EXCEPTION_DATES_I].value)
-	    == NULL)
+	    == nullptr)
 		return (0);
 
 	count = 0;
-	for (dt = vptr->item.date_time_list_value; dt != NULL; dt = dt->next)
+	for (dt = vptr->item.date_time_list_value; dt != nullptr; dt = dt->next)
 		count++;
 
 	return (count);
@@ -316,7 +316,7 @@ _DtCmsUpdateDurationInRule(cms_entry *entry, uint remain)
 	cms_attribute_value	*vptr;
 
 	vptr = entry->attrs[CSA_ENTRY_ATTR_RECURRENCE_RULE_I].value;
-	if ((newrule = malloc(strlen(vptr->item.string_value) + 20)) == NULL)
+	if ((newrule = malloc(strlen(vptr->item.string_value) + 20)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	sprintf(buf, "#%d", remain);
@@ -355,7 +355,7 @@ _DtCmsAddEndDateToRule(cms_attribute *attr, RepeatEvent *re, long time)
 		return (CSA_E_INVALID_DATE_TIME);
 
 	if ((newrule = malloc(strlen(attr->value->item.string_value)+20))
-	    == NULL)
+	    == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if (re->re_end_date == 0) {

@@ -136,23 +136,23 @@ choosing Help commands directly within the applications.</>";
  *	global variables.
  *****************************************************************************/
 char	 *myName;
-char	 *Lang        = NULL;
+char	 *Lang        = nullptr;
 char	 *ParentName  = "_HOMETOPIC";
 
-char	**TopicList   = NULL;
+char	**TopicList   = nullptr;
 
 /* The family search list */
-char	**FUserList    = NULL;
-char	**FSysList     = NULL;
+char	**FUserList    = nullptr;
+char	**FSysList     = nullptr;
 
 /* The volume search list */
-char	**VUserList    = NULL;
-char	**VSysList     = NULL;
+char	**VUserList    = nullptr;
+char	**VSysList     = nullptr;
 
-char	**FamilyList     = NULL;	/* the names of the unique families */
-char	**FullFamilyName = NULL;	/* the fully qualified family names */
-char	**VolumeList     = NULL;	/* the names (only) of volume       */
-char	**FullVolName    = NULL;	/* the fully qualified volume names */
+char	**FamilyList     = nullptr;	/* the names of the unique families */
+char	**FullFamilyName = nullptr;	/* the fully qualified family names */
+char	**VolumeList     = nullptr;	/* the names (only) of volume       */
+char	**FullVolName    = nullptr;	/* the fully qualified volume names */
 
 char      TopicName [MAXPATHLEN + 2];
 
@@ -176,9 +176,9 @@ typedef	struct
 
 static	ApplicationArgs	App_args =
   {
-	NULL,
+	nullptr,
 	"browser",
-	NULL,
+	nullptr,
   };
 
 /*****************************************************************************
@@ -206,7 +206,7 @@ GetMessage (
 {
    char *msg;
    char *lang;
-   char  *catFileName=NULL;
+   char  *catFileName=nullptr;
    static nl_catd nlmsg_fd;
    static int first = 1;
 
@@ -251,10 +251,10 @@ GetPath (char *filename, short strip, char ***list )
             filename = "./";
       }
 
-    while (next != NULL && *next != NULL && strcmp (*next, filename))
+    while (next != nullptr && *next != nullptr && strcmp (*next, filename))
 	next++;
 
-    if (next == NULL || *next == NULL)
+    if (next == nullptr || *next == nullptr)
         *list = (char **) _DtHelpCeAddPtrToArray ((void **) (*list),
 							strdup(filename));
 
@@ -298,14 +298,14 @@ CreateVolumeLink (
     char		*volume_name )
 {
     int          result = -1;
-    char	*title      = NULL;
+    char	*title      = nullptr;
     char	*charSet    = (char *) DefCharSet;
-    char	*abstract   = NULL;
-    char        *pathName   = NULL;
-    VolumeHandle volume = NULL;
+    char	*abstract   = nullptr;
+    char        *pathName   = nullptr;
+    VolumeHandle volume = nullptr;
 
     pathName = FindFile (volume_name);
-    if (pathName != NULL && _DtHelpCeOpenVolume(canvas,pathName,&volume) == 0)
+    if (pathName != nullptr && _DtHelpCeOpenVolume(canvas,pathName,&volume) == 0)
       {
 	if (_DtHelpCeGetVolumeTitle (canvas, volume, &title) == 0)
 	    result = 0;
@@ -316,10 +316,10 @@ CreateVolumeLink (
 	if (result == 0)
 	  {
 	    if (_DtHelpCeGetAsciiVolumeAbstract(canvas,volume,&abstract) == -1)
-		abstract = NULL;
+		abstract = nullptr;
 
 	    charSet = _DtHelpCeGetVolumeLocale(volume);
-	    if (charSet == NULL)
+	    if (charSet == nullptr)
 		charSet = (char *) DefCharSet;
 	  }
 	_DtHelpCeCloseVolume (canvas, volume);
@@ -338,7 +338,7 @@ CreateVolumeLink (
 	 */
 	fprintf (outTopic, "%s", GetMessage (3, 3, "<P before 1 first 1 left 1>\n"));
 
-	if (abstract != NULL)
+	if (abstract != nullptr)
 	  {
 	    fprintf (outTopic, (GetMessage (3, 4, "<CHARACTERSET %s>\n")),
 								charSet);
@@ -373,13 +373,13 @@ CreateFamily (
     int		 result = -1;
     int		 count = 0;
     long	 filepos;
-    char	*charSet = NULL;
-    char	*title = NULL;
-    char	*abstract = NULL;
-    char	*list = NULL;
-    char	*token = NULL;
+    char	*charSet = nullptr;
+    char	*title = nullptr;
+    char	*abstract = nullptr;
+    char	*list = nullptr;
+    char	*token = nullptr;
     char	*ptr;
-    char	*bitmap = NULL;
+    char	*bitmap = nullptr;
     char	 familyName [20];	/* FAMILY%d */
     char	 bitmapName [MAXPATHLEN + 2];
     char	 bitmapNameTemp [sizeof(bitmapName)];
@@ -489,7 +489,7 @@ CreateFamily (
 
 	    do 
 	      {
-		token = NULL;
+		token = nullptr;
 		list = _DtHelpCeGetNxtToken(list, &token);
 		if (token && *token != '\0' && *token != '\n' &&
 				CreateVolumeLink (canvas,out_topic, token) == 0)
@@ -498,7 +498,7 @@ CreateFamily (
 		if (token)
                 {
 		    free ((void *) token);
-                    token = NULL;
+                    token = nullptr;
                 }
 
 	      } while (list && *list != '\0');
@@ -523,7 +523,7 @@ CreateFamily (
 		 * put the abstract information about this
 		 * family in the header file
 		 */
-		if (NULL != bitmap && *bitmap != '/')
+		if (nullptr != bitmap && *bitmap != '/')
 		  {
 		    snprintf(bitmapName, sizeof(bitmapName), "%s", family_name);
 		    ptr = strrchr (bitmapName, '/');
@@ -536,10 +536,10 @@ CreateFamily (
 			bitmap = bitmapName;
 		      }
 		    else
-			bitmap = NULL;
+			bitmap = nullptr;
 		  }
 
-		if (NULL != bitmap)
+		if (nullptr != bitmap)
 		  {
 		    fprintf (out_header,
 			(GetMessage (3, 6,
@@ -592,7 +592,7 @@ CheckFamilyList (char    *name )
 {
     char **listPtr = FamilyList;
 
-    while (listPtr != NULL && *listPtr != NULL)
+    while (listPtr != nullptr && *listPtr != nullptr)
       {
 	if (strcmp (*listPtr, name) == 0)
 	    return True;
@@ -644,7 +644,7 @@ ScanDirectory (
     *ret_time = buf.st_mtime;
 
     pDir = opendir (directory);
-    if (pDir == NULL)
+    if (pDir == nullptr)
 	return;
 
     snprintf(fullName, sizeof(fullName), "%s%s", directory, SlashString);
@@ -709,7 +709,7 @@ FindFile (
 	trimExt = 1;
 
     i = 0;
-    while (VolumeList != NULL && VolumeList[i] != NULL)
+    while (VolumeList != nullptr && VolumeList[i] != nullptr)
       {
 	if (trimExt)
 	  {
@@ -729,7 +729,7 @@ FindFile (
 	i++;
       }
 
-    return NULL;
+    return nullptr;
 }
 
 /*****************************************************************************
@@ -754,9 +754,9 @@ ExpandPaths (
     char *searchPath;
 
     searchPath = getenv (env_var);
-    if (searchPath == NULL || *searchPath == '\0')
+    if (searchPath == nullptr || *searchPath == '\0')
       {
-	if (default_str == NULL)
+	if (default_str == nullptr)
 	    return;
 
 	searchPath = default_str;
@@ -764,7 +764,7 @@ ExpandPaths (
 
     searchPath = strdup (searchPath);
 
-    *list = NULL;
+    *list = nullptr;
     src   = searchPath;
     do 
       {
@@ -778,7 +778,7 @@ ExpandPaths (
 	 */
 	strip = False;
 	hPtr  = strrchr (src, '%');
-	if (hPtr != NULL)
+	if (hPtr != nullptr)
 	  {
 	    hPtr++;
 	    if (*hPtr == 'H')
@@ -788,9 +788,9 @@ ExpandPaths (
 	/*
 	 * check to see if the path needs expanding
 	 */
-	if (NULL != strchr (src, '%'))
-	    pathName = _DtHelpCeExpandPathname (src, NULL, type, NULL, lang,
-					(_DtSubstitutionRec *) NULL, 0);
+	if (nullptr != strchr (src, '%'))
+	    pathName = _DtHelpCeExpandPathname (src, nullptr, type, nullptr, lang,
+					(_DtSubstitutionRec *) nullptr, 0);
 	else
 	    pathName = strdup(src);
 
@@ -827,7 +827,7 @@ CheckTimeStamps (
     char        *value;
     struct stat	 buf;
 
-    while (*dir_list != NULL)
+    while (*dir_list != nullptr)
       {
 	if (stat(*dir_list, &buf) == -1)
 	    buf.st_mtime = 0;
@@ -860,60 +860,60 @@ CheckInfo (
     XrmDatabase	db;
 
     db = XrmGetFileDatabase (file);
-    if (db != NULL)
+    if (db != nullptr)
       {
-	volDirList = _DtHelpCeGetResourceStringArray(db, NULL,
+	volDirList = _DtHelpCeGetResourceStringArray(db, nullptr,
 							"DirList", "dirList");
-	if (volDirList != NULL)
+	if (volDirList != nullptr)
 	  {
 	    result = 0;
 	    list1  = volDirList;
 	    list2  = FUserList;
-	    while (result == 0 && *list1 != NULL
-					&& list2 != NULL && *list2 != NULL)
+	    while (result == 0 && *list1 != nullptr
+					&& list2 != nullptr && *list2 != nullptr)
 	      {
 	        result = strcmp(*list1, *list2);
 		list1++;
 		list2++;
 	      }
 
-	    if (list2 != NULL && *list2 != NULL)
+	    if (list2 != nullptr && *list2 != nullptr)
 		result = 1;
 
 	    list2  = FSysList;
-	    while (result == 0 && *list1 != NULL
-					&& list2 != NULL && *list2 != NULL)
+	    while (result == 0 && *list1 != nullptr
+					&& list2 != nullptr && *list2 != nullptr)
 	      {
 	        result = strcmp(*list1, *list2);
 		list1++;
 		list2++;
 	      }
 
-	    if (list2 != NULL && *list2 != NULL)
+	    if (list2 != nullptr && *list2 != nullptr)
 		result = 1;
 
 	    list2  = VUserList;
-	    while (result == 0 && *list1 != NULL
-					&& list2 != NULL && *list2 != NULL)
+	    while (result == 0 && *list1 != nullptr
+					&& list2 != nullptr && *list2 != nullptr)
 	      {
 	        result = strcmp(*list1, *list2);
 		list1++;
 		list2++;
 	      }
 
-	    if (list2 != NULL && *list2 != NULL)
+	    if (list2 != nullptr && *list2 != nullptr)
 		result = 1;
 
 	    list2  = VSysList;
-	    while (result == 0 && *list1 != NULL
-					&& list2 != NULL && *list2 != NULL)
+	    while (result == 0 && *list1 != nullptr
+					&& list2 != nullptr && *list2 != nullptr)
 	      {
 	        result = strcmp(*list1, *list2);
 		list1++;
 		list2++;
 	      }
 
-	    if (*list1 != NULL || (list2 != NULL && *list2 != NULL))
+	    if (*list1 != nullptr || (list2 != nullptr && *list2 != nullptr))
 		result = 1;
 
 	    if (result == 0)
@@ -980,7 +980,7 @@ main(
    /*
     * use the default if no lang is specified.
     */
-   if (Lang == NULL || *Lang == '\0')
+   if (Lang == nullptr || *Lang == '\0')
 	Lang = (char*)C_String;
 
     setlocale(LC_ALL, "");
@@ -1017,7 +1017,7 @@ main(
     /*
      * get the language we are working with.
      */
-    if (App_args.lang != NULL)
+    if (App_args.lang != nullptr)
       {
         /*
          * Set the locale! Since the user has specified a (likely)
@@ -1025,7 +1025,7 @@ main(
 	 * do a setlocale to work with the new language.
          */
 	Lang = App_args.lang;
-        if (setlocale(LC_ALL, Lang) == NULL)
+        if (setlocale(LC_ALL, Lang) == nullptr)
           {
 	    fprintf (stderr, (GetMessage(1, 20,
 			"%s: Invalid system language specified - %s\n")),
@@ -1039,7 +1039,7 @@ main(
     /*
      * get the directory to work in
      */
-    if (NULL == App_args.dir)
+    if (nullptr == App_args.dir)
       {
 	fprintf (stderr, (GetMessage(1,1, ((char*)UsageStr))), myName);
 	exit (1);
@@ -1047,7 +1047,7 @@ main(
 
     if (App_args.dir[0] != '/')
       {
-	if (getcwd (baseName, MAXPATHLEN) == NULL)
+	if (getcwd (baseName, MAXPATHLEN) == nullptr)
 	  {
 	    fprintf (stderr, (GetMessage (1, 18,
  "%s: Unable to access current working directory - error status number %d\n")),
@@ -1063,9 +1063,9 @@ main(
     /*
      * make sure the directory exists
      */
-    ptr = _DtHelpCeExpandPathname (baseName, NULL, "help", NULL, Lang,
-					(_DtSubstitutionRec *) NULL, 0);
-    if (ptr == NULL || *ptr == '\0')
+    ptr = _DtHelpCeExpandPathname (baseName, nullptr, "help", nullptr, Lang,
+					(_DtSubstitutionRec *) nullptr, 0);
+    if (ptr == nullptr || *ptr == '\0')
       {
 	fprintf (stderr,
 		(GetMessage (1, 15, "%s: Destination directory missing\n")),
@@ -1088,7 +1088,7 @@ main(
      *		3) resolve all symbolic links
      */
     endDir = strchr (tmpVolume, '/');
-    if (endDir != NULL)
+    if (endDir != nullptr)
       {
 	endDir++;
 	endDir = strchr (endDir, '/');
@@ -1106,7 +1106,7 @@ main(
 	 * trace the path and copy the new string into the old buffer.
 	 */
 	ptr = _DtHelpCeTracePathName(tmpVolume);
-	if (ptr != NULL)
+	if (ptr != nullptr)
 	  {
 	    snprintf(tmpVolume, sizeof(tmpVolume), "%s", ptr);
 	    free (ptr);
@@ -1231,16 +1231,16 @@ main(
     /*
      * Find out if we have any paths to check.
      */
-    ExpandPaths(Lang, "families", DtUSER_FILE_SEARCH_ENV, NULL, &FUserList);
-    ExpandPaths(Lang, "volumes", DtUSER_FILE_SEARCH_ENV, NULL, &VUserList);
+    ExpandPaths(Lang, "families", DtUSER_FILE_SEARCH_ENV, nullptr, &FUserList);
+    ExpandPaths(Lang, "volumes", DtUSER_FILE_SEARCH_ENV, nullptr, &VUserList);
     ExpandPaths(Lang, "families", DtSYS_FILE_SEARCH_ENV ,
 					DtDEFAULT_SYSTEM_PATH, &FSysList);
     ExpandPaths(Lang, "volumes", DtSYS_FILE_SEARCH_ENV ,
 					DtDEFAULT_SYSTEM_PATH, &VSysList);
-    if (((FUserList == NULL || *FUserList == NULL) &&
-	(FSysList  == NULL || *FSysList  == NULL)) ||
-        ((VUserList == NULL || *VUserList == NULL) &&
-	(VSysList  == NULL || *VSysList  == NULL)))
+    if (((FUserList == nullptr || *FUserList == nullptr) &&
+	(FSysList  == nullptr || *FSysList  == nullptr)) ||
+        ((VUserList == nullptr || *VUserList == nullptr) &&
+	(VSysList  == nullptr || *VSysList  == nullptr)))
       {
 	ptr = GetMessage (1, 10, "%s: Search Path empty\n");
 	fprintf (stderr, ptr, myName);
@@ -1265,7 +1265,7 @@ main(
      * create a canvas for the functions.
      */
     canvasHandle = _DtHelpCeCreateDefCanvas();
-    if (canvasHandle == NULL)
+    if (canvasHandle == nullptr)
       {
 	fprintf (stderr, GetMessage(1, 19,"%s: Unable to allocate memory\n"),
 								myName);
@@ -1277,7 +1277,7 @@ main(
      * <file>.hv
      */
     outVolume = fopen (tmpVolume, "w");
-    if (outVolume == NULL)
+    if (outVolume == nullptr)
       {
 	ptr = GetMessage (1, 9, (char*)WriteInvalid);
 	fprintf (stderr, ptr, myName, tmpVolume, errno);
@@ -1289,7 +1289,7 @@ main(
      * <file>00.ht
      */
     outTopic = fopen (tmpTopic, "w");
-    if (outTopic == NULL)
+    if (outTopic == nullptr)
       {
 	ptr = GetMessage (1, 9, (char*)WriteInvalid);
 	fprintf (stderr, ptr, myName, tmpTopic, errno);
@@ -1302,7 +1302,7 @@ main(
      * <file>01.ht
      */
     outHeader = fopen (tmpHeader, "w");
-    if (outHeader == NULL)
+    if (outHeader == nullptr)
       {
 	ptr = GetMessage (1, 9, (char*)WriteInvalid);
 	fprintf (stderr, ptr, myName, tmpHeader, errno);
@@ -1353,7 +1353,7 @@ main(
      */
 #ifdef _AIX
     {
-	_DtXlateDb db = NULL;
+	_DtXlateDb db = nullptr;
 	int  ret;
 	char plat[_DtPLATFORM_MAX_LEN];
 	int  execver;
@@ -1369,7 +1369,7 @@ main(
 	    if ( !ret ) {
 		ret =  _DtLcxXlateOpToStd( db, plat, execver,
 					DtLCX_OPER_SETLOCALE,
-					setlocale( LC_MESSAGES, NULL ),
+					setlocale( LC_MESSAGES, nullptr ),
 					&ret_stdLocale, &ret_stdLangTerr,
 					&ret_stdCodeset, &ret_stdModifier );
 		if ( !ret ) {
@@ -1406,14 +1406,14 @@ main(
      */
     fprintf (outVolume, "!# Last modification time stamp per directory\n");
     next = FUserList;
-    while (next != NULL && *next != NULL)
+    while (next != nullptr && *next != nullptr)
       {
 	ScanDirectory(*next, &modTime);
 	fprintf (outVolume, "*.%s.timeStamp:   %ld\n" , *next, modTime);
 	next++;
       }
     next = FSysList;
-    while (next != NULL && *next != NULL)
+    while (next != nullptr && *next != nullptr)
       {
 	ScanDirectory(*next, &modTime);
 	fprintf (outVolume, "*.%s.timeStamp:   %ld\n" , *next, modTime);
@@ -1421,14 +1421,14 @@ main(
       }
 
     next = VUserList;
-    while (next != NULL && *next != NULL)
+    while (next != nullptr && *next != nullptr)
       {
 	ScanDirectory(*next, &modTime);
 	fprintf (outVolume, "*.%s.timeStamp:   %ld\n" , *next, modTime);
 	next++;
       }
     next = VSysList;
-    while (next != NULL && *next != NULL)
+    while (next != nullptr && *next != nullptr)
       {
 	ScanDirectory(*next, &modTime);
 	fprintf (outVolume, "*.%s.timeStamp:   %ld\n" , *next, modTime);
@@ -1444,7 +1444,7 @@ main(
      */
     foundVolumes = 0;
     foundFamily  = 0;
-    for (next = FullFamilyName; next != NULL && *next != NULL; next++)
+    for (next = FullFamilyName; next != nullptr && *next != nullptr; next++)
       {
 	result = CreateFamily(canvasHandle,*next,outVolume,outHeader,outTopic);
 	if (result == 0)
@@ -1467,13 +1467,13 @@ main(
     /*
      * Clean up
      */
-    if (FamilyList != NULL)
+    if (FamilyList != nullptr)
 	_DtHelpCeFreeStringArray(FamilyList);
-    if (FullFamilyName != NULL)
+    if (FullFamilyName != nullptr)
 	_DtHelpCeFreeStringArray(FullFamilyName);
-    if (VolumeList != NULL)
+    if (VolumeList != nullptr)
 	_DtHelpCeFreeStringArray(VolumeList);
-    if (FullVolName != NULL)
+    if (FullVolName != nullptr)
 	_DtHelpCeFreeStringArray(FullVolName);
 
     /*
@@ -1536,25 +1536,25 @@ main(
     fprintf (outVolume, "*.dirList: ");
 
     next = FUserList;
-    while (next != NULL && *next != NULL)
+    while (next != nullptr && *next != nullptr)
       {
         fprintf (outVolume, " \\\n	%s", *next);
         next++;
       }
     next = FSysList;
-    while (next != NULL && *next != NULL)
+    while (next != nullptr && *next != nullptr)
       {
         fprintf (outVolume, " \\\n	%s", *next);
         next++;
       }
     next = VUserList;
-    while (next != NULL && *next != NULL)
+    while (next != nullptr && *next != nullptr)
       {
         fprintf (outVolume, " \\\n	%s", *next);
         next++;
       }
     next = VSysList;
-    while (next != NULL && *next != NULL)
+    while (next != nullptr && *next != nullptr)
       {
         fprintf (outVolume, " \\\n	%s", *next);
         next++;
@@ -1568,16 +1568,16 @@ main(
     fclose (outHeader);
     fclose (outTopic);
 
-    if (TopicList != NULL)
+    if (TopicList != nullptr)
         _DtHelpCeFreeStringArray(TopicList);
 
-    if (FUserList != NULL)
+    if (FUserList != nullptr)
         _DtHelpCeFreeStringArray(FUserList);
-    if (FSysList != NULL)
+    if (FSysList != nullptr)
         _DtHelpCeFreeStringArray(FSysList);
-    if (VUserList != NULL)
+    if (VUserList != nullptr)
         _DtHelpCeFreeStringArray(VUserList);
-    if (VSysList != NULL)
+    if (VSysList != nullptr)
         _DtHelpCeFreeStringArray(VSysList);
 
     _DtHelpCeDestroyCanvas(canvasHandle);

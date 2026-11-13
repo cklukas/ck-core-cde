@@ -256,14 +256,14 @@ void putCAwindowType (struct _ActionData *ca_struct)
      /*
      XtVaSetValues(CA_WindowTypeArea,XmNmenuHistory,CA_WinTypeNoOutput,NULL);
      */
-     XtVaSetValues(CA_WindowTypeArea, XmNmenuHistory, CA_WinTypeX, NULL);
+     XtVaSetValues(CA_WindowTypeArea, XmNmenuHistory, CA_WinTypeX, nullptr);
   } else if (ca_struct->fsFlags & CA_WT_TERM) {
-     XtVaSetValues(CA_WindowTypeArea,XmNmenuHistory,CA_WinTypeAutoClose,NULL);
+     XtVaSetValues(CA_WindowTypeArea,XmNmenuHistory,CA_WinTypeAutoClose,nullptr);
   } else if (ca_struct->fsFlags & CA_WT_PERMTERM) {
-     XtVaSetValues(CA_WindowTypeArea,XmNmenuHistory,CA_WinTypeManualClose,NULL);
+     XtVaSetValues(CA_WindowTypeArea,XmNmenuHistory,CA_WinTypeManualClose,nullptr);
   } else {
      /*XtVaSetValues(CA_WindowTypeArea,XmNmenuHistory,CA_WinTypeNoOutput,NULL);*/
-     XtVaSetValues(CA_WindowTypeArea, XmNmenuHistory, CA_WinTypeX, NULL);
+     XtVaSetValues(CA_WindowTypeArea, XmNmenuHistory, CA_WinTypeX, nullptr);
   }
   return;
 }
@@ -276,7 +276,7 @@ void putCAwindowType (struct _ActionData *ca_struct)
 /******************************************************************************/
 void putCAactionIcons (ActionData *pAD)
 {
-  char   *pszIconFileName = (char *)NULL;
+  char   *pszIconFileName = (char *)nullptr;
   char   *ptr;
   char   *msgPtr, *fmtPtr, *errPtr;
 
@@ -370,31 +370,31 @@ void set_ca_dialog_height (void)
   Boolean showExpert = sessiondata.useSession && sessiondata.showExpert;
 
   /* get height of window */
-  XtVaGetValues (CreateActionAppShell, XmNheight, &winheight, NULL);
+  XtVaGetValues (CreateActionAppShell, XmNheight, &winheight, nullptr);
   /* get height of expert option form */
-  XtVaGetValues (XprtOptionForm, XmNheight, &xprtheight, NULL);
+  XtVaGetValues (XprtOptionForm, XmNheight, &xprtheight, nullptr);
   /* calculate height of window without expert option form */
   newheight = winheight - xprtheight;
 
   if (!showExpert)
   {
     /* remove attachment to expert option form */
-    XtVaSetValues (CA_Expand, XmNbottomAttachment, XmATTACH_NONE, NULL);
+    XtVaSetValues (CA_Expand, XmNbottomAttachment, XmATTACH_NONE, nullptr);
     XtUnmanageChild (XprtOptionForm);
 
     if (!sessiondata.useSession)
     {
       /* give window new height */
-      XtVaSetValues (CreateActionAppShell, XmNheight, newheight, NULL);
+      XtVaSetValues (CreateActionAppShell, XmNheight, newheight, nullptr);
     }
 
-    XtVaSetValues (CA_Expand, XmNbottomAttachment, XmATTACH_FORM, NULL);
+    XtVaSetValues (CA_Expand, XmNbottomAttachment, XmATTACH_FORM, nullptr);
   }
   else
   {
     XtVaSetValues (CA_Expand, RES_CONVERT(XmNlabelString,
 					  GETMESSAGE(3, 52, "Basic")),
-		   NULL);
+		   nullptr);
   }
 
   return;
@@ -468,7 +468,7 @@ void clear_CreateActionAppShell_fields(void)
   clear_text_field (ACTION_NAME);
   clear_text_field (DBL_CLK_CMND);
 
-  XtVaSetValues(CA_WindowTypeArea, XmNmenuHistory, CA_WinTypeX, NULL);
+  XtVaSetValues(CA_WindowTypeArea, XmNmenuHistory, CA_WinTypeX, nullptr);
 
   clear_text_field (ACTION_OPENS_TEXT);
   clear_text (ACTION_HELP_TXT);
@@ -505,7 +505,7 @@ void activateCB_FileNew (Widget wid, XtPointer cdata,
   /**************************************************************************/
   /* Clear the pszFileToEdit global variable.                               */
   /**************************************************************************/
-  pszFileToEdit = (char *)NULL;
+  pszFileToEdit = (char *)nullptr;
 
   /**************************************************************************/
   /* Clear the fields within the ActionData structure and free any          */
@@ -548,7 +548,7 @@ void  activateCB_FileOpen(Widget wid, XtPointer cdata,
   XtVaSetValues (OpenFile, RES_CONVERT(XmNdirMask, "~/.dt/types/*.dt"),
                  RES_CONVERT(XmNdirSpec, "~/.dt/types/"),
                  RES_CONVERT(XmNdirectory, "~/.dt/types/"),
-                 NULL);
+                 nullptr);
 
   filter = XmFileSelectionBoxGetChild (OpenFile, XmDIALOG_FILTER_TEXT);
   /*XtVaSetValues (filter, XmNeditable, False, NULL);*/
@@ -665,16 +665,16 @@ void activateCB_ExpertOption (Widget wid, XtPointer client_data,
      /**********************************************************************/
      /* Expand the window to show optional data.                           */
      /**********************************************************************/
-     XtVaGetValues (CA_WindowTypeArea, XmNwidth, &ca_width, NULL);
+     XtVaGetValues (CA_WindowTypeArea, XmNwidth, &ca_width, nullptr);
      XtVaSetValues (CA_Expand,
                     XmNbottomAttachment, XmATTACH_NONE,
-                    NULL);
+                    nullptr);
      XtVaSetValues (XprtOptionForm,
                     XmNbottomAttachment, XmATTACH_FORM,
                     XmNleftAttachment, XmATTACH_FORM,
                     XmNrightAttachment, XmATTACH_FORM,
                     XmNwidth, ca_width,
-                    NULL);
+                    nullptr);
      XtManageChild (XprtOptionForm);
      XtVaSetValues (CA_Expand,
                     XmNbottomAttachment, XmATTACH_WIDGET,
@@ -682,23 +682,23 @@ void activateCB_ExpertOption (Widget wid, XtPointer client_data,
                     XmNbottomOffset, 10,
                   /*XmNlabelString, GETMESSAGE(3, 52, "Basic"),*/
                     RES_CONVERT( XmNlabelString, GETMESSAGE(3, 52, "Basic")),
-                    NULL);
-     XtVaSetValues (CA_HelpTextWindow, XmNheight, wintypeheight, NULL);
+                    nullptr);
+     XtVaSetValues (CA_HelpTextWindow, XmNheight, wintypeheight, nullptr);
      /*XtVaSetValues (CA_WindowTypeArea, XmNheight, wintypeheight, NULL);*/
   } else {
      /**********************************************************************/
      /* Shrink the window to hide optional data.                           */
      /**********************************************************************/
-     XtVaSetValues (CA_Expand, XmNbottomAttachment, XmATTACH_NONE, NULL);
+     XtVaSetValues (CA_Expand, XmNbottomAttachment, XmATTACH_NONE, nullptr);
      XtUnmanageChild (XprtOptionForm);
      XtVaSetValues (CA_Expand,
                     XmNbottomAttachment, XmATTACH_FORM,
                     XmNbottomOffset, 15,
                   /*XmNlabelString, GETMESSAGE(3, 50, "Advanced"),*/
                     RES_CONVERT( XmNlabelString, GETMESSAGE(3, 50, "Advanced")),
-                    NULL);
-     XtVaSetValues (CA_HelpTextWindow, XmNheight, wintypeheight, NULL);
-     XtVaSetValues (CA_WindowTypeArea, XmNheight, wintypeheight, NULL);
+                    nullptr);
+     XtVaSetValues (CA_HelpTextWindow, XmNheight, wintypeheight, nullptr);
+     XtVaSetValues (CA_WindowTypeArea, XmNheight, wintypeheight, nullptr);
   }
   return;
 }
@@ -810,9 +810,9 @@ void activateCB_action_icon (Widget wid, XtPointer client_data,
     printf("In activate_action_icon callback.\n");
 #endif
     if (last_action_pushed && (last_action_pushed != wid)) {
-       XtVaSetValues(XtParent(last_action_pushed), XmNborderWidth, 0, NULL);
+       XtVaSetValues(XtParent(last_action_pushed), XmNborderWidth, 0, nullptr);
     }
-    XtVaSetValues(XtParent(wid), XmNborderWidth, ICON_BORDER_WIDTH, NULL);
+    XtVaSetValues(XtParent(wid), XmNborderWidth, ICON_BORDER_WIDTH, nullptr);
 
     last_action_pushed = wid;
 
@@ -821,7 +821,7 @@ void activateCB_action_icon (Widget wid, XtPointer client_data,
     /* to the icon gadgets.  When double-clicked, the icon editor will  */
     /* be launched.                                                     */
     /********************************************************************/
-    XtVaSetValues(wid, XmNpushButtonClickTime, 0, NULL);
+    XtVaSetValues(wid, XmNpushButtonClickTime, 0, nullptr);
 
     lts = XtLastTimestampProcessed(XtDisplay(wid));
     mct = XtGetMultiClickTime(XtDisplay(wid));
@@ -910,7 +910,7 @@ void activateCB_add_filetype (Widget wid, XtPointer client_data,
     XtVaSetValues (AddFiletype,
                    RES_CONVERT (XmNdialogTitle, title ),
                    XmNuserData, pFtD,
-                   NULL);
+                   nullptr);
 
     XtFree(title);
     UxPopupInterface (AddFiletype, no_grab);
@@ -962,7 +962,7 @@ void activateCB_edit_filetype (Widget wid, XtPointer client_data,
         XtVaSetValues (AddFiletype,
                        RES_CONVERT (XmNdialogTitle, title),
                        XmNuserData, pFtD,
-                       NULL);
+                       nullptr);
         UxPopupInterface (AddFiletype, no_grab);
      }
   } else {
@@ -1023,8 +1023,8 @@ Widget get_selected_action_icon (void)
 Boolean CreateActionAppShellCheckFields(void)
 {
 
-  char    *ptr = (char *)NULL;
-  char    *ptrPrompt = (char *)NULL;
+  char    *ptr = (char *)nullptr;
+  char    *ptrPrompt = (char *)nullptr;
   Boolean bError = FALSE;
   char    *msgPtr, *errPtr;
 
@@ -1032,7 +1032,7 @@ Boolean CreateActionAppShellCheckFields(void)
   /* Check if action name is present.                                       */
   /**************************************************************************/
   if (!bError) {
-     ptr = (char *)NULL;
+     ptr = (char *)nullptr;
      GetWidgetTextString(CA_ActionNameTextField, &ptr);
 #ifdef DEBUG
      printf("Action Name = '%s'\n", ptr);
@@ -1054,7 +1054,7 @@ Please enter a name in the 'Action Name' field.");
   /* Check if execute command is present.                                   */
   /**************************************************************************/
   if (!bError) {
-     ptr = (char *)NULL;
+     ptr = (char *)nullptr;
      GetWidgetTextString(CA_DblClkText, &ptr);
 #ifdef DEBUG
      printf("Exec String = '%s'\n", ptr);
@@ -1132,7 +1132,7 @@ char * copyString(char *string)
      newstring = (char *)XtMalloc(strlen(string) + 1);
      strcpy(newstring, string);
   } else {
-     newstring = (char *)NULL;
+     newstring = (char *)nullptr;
   }
   return(newstring);
 }
@@ -1202,7 +1202,7 @@ ActionData * copyAD(ActionData *pAD)
 
   pcopyAD = (ActionData *)XtMalloc(sizeof(ActionData));
   if (!pcopyAD) {
-     return((ActionData *)NULL);
+     return((ActionData *)nullptr);
   }
   memset(pcopyAD, 0, sizeof(ActionData));
 

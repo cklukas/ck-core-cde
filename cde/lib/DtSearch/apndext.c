@@ -73,7 +73,7 @@ void append_ext(char *buffer,		/* output assy area */
     *(buffer + buflen - 5) = '\0';	/* room for ".xxx" at end */
 
     /* Look for FINAL dot and FINAL slash (directory delim) */
-    dotptr = slashptr = NULL;
+    dotptr = slashptr = nullptr;
     for (endptr = buffer;  *endptr != 0;  endptr++) {
 	if (*endptr == LOCAL_SLASH)
 	    slashptr = endptr;
@@ -86,7 +86,7 @@ void append_ext(char *buffer,		/* output assy area */
      * return immediately:  the dot is a valid extension marker.
      */
     if (dotptr) {	/* extension already exists */
-	if (slashptr == NULL)
+	if (slashptr == nullptr)
 	    return;
 	else if (slashptr < dotptr)
 	    return;
@@ -114,7 +114,7 @@ void	replace_ext (char *buffer,	/* output assy area */
     strncpy(buffer, fname, buflen - 1);
     *(buffer + buflen - 1) = '\0';		/* just in case */
     fnamelen = strlen(buffer);
-    if ((targ = strrchr(buffer, '.')) == NULL) {
+    if ((targ = strrchr(buffer, '.')) == nullptr) {
 	strncpy (buffer + fnamelen, fext, buflen - fnamelen - 1);
 	*(buffer + buflen - 1) = '\0';	/* again just in case */
     }

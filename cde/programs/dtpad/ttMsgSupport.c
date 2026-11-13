@@ -97,7 +97,7 @@ TTdisplayError(
     char *statusMsg = tt_status_message(status);
     char buf[1024];
 
-    if (errorMsg != (char *) NULL) {
+    if (errorMsg != (char *) nullptr) {
 	sprintf(buf, "%s\n(%d: %s)", errorMsg, status, statusMsg);
     } else {
 	sprintf(buf, "(%d: %s)", status, statusMsg);
@@ -130,7 +130,7 @@ TTdt_session_joinCB(
      /* should never get here, if we do, notify sender with a fail */
      tttk_message_fail(m,
                        TT_DESKTOP_ENOTSUP,           /* status */
-                       (char *) NULL,                  /* status str */
+                       (char *) nullptr,                  /* status str */
                        1);                             /* destroy request */
 
     return((Tt_message) 0);     /* we handled this message */
@@ -180,7 +180,7 @@ TTdt_message_acceptCB(
 	 * msg id matching the originating media msg id supplied as the
 	 * 'operation2Quit' (3rd) argument of the TTDT_QUIT msg */
 	if (operation2Quit = tt_message_arg_val(m, 2)) {
-	    for (pPad = pPadList; pPad != (Editor *)NULL; pPad = pPad->pNextPad) {
+	    for (pPad = pPadList; pPad != (Editor *)nullptr; pPad = pPad->pNextPad) {
 		if (pPad->inUse == True && pPad->ttEditReq.msg_id &&
 		  strcmp(pPad->ttEditReq.msg_id, operation2Quit) == 0) {
 		    pPad->ttQuitReq.contract = m;	/* process Quit msg */
@@ -197,14 +197,14 @@ TTdt_message_acceptCB(
 	    /* no Edit window matching the operation2Quit */
 	    tttk_message_fail(m,
 			TT_DESKTOP_ENOMSG,		/* status */
-			(char *) NULL,			/* status str */
+			(char *) nullptr,			/* status str */
 			1);				/* destroy request */
 
 	} else {	/* no operation2Quit - quit all Edit windows */
 	    /* XXX - not currently processing this type of Quit */
 	    tttk_message_fail(m,
 			TT_DESKTOP_ENOTSUP,		/* status */
-			(char *) NULL,			/* status str */
+			(char *) nullptr,			/* status str */
 			1);				/* destroy request */
 	}
 
@@ -254,7 +254,7 @@ TTmedia_ptype_declareCB(
     DtEditorContentRec  contentRec;
     DtEditorErrorCode   errorCode;
     Boolean foundPad = False;
-    char *context = (char *)NULL;
+    char *context = (char *)nullptr;
     Boolean  isCurrentlyVisible = False;
     int mark = tt_mark();
     char *localPath = tt_message_file(m);
@@ -276,7 +276,7 @@ TTmedia_ptype_declareCB(
     if (file) {
       char *pathEnd;
 
-      if (MbStrrchr(localPath, '/') != (char *)NULL) {
+      if (MbStrrchr(localPath, '/') != (char *)nullptr) {
 	char *dir; DIR *pDir;
 
 	dir = (char *) XtMalloc(strlen(localPath) + 1);
@@ -288,16 +288,16 @@ TTmedia_ptype_declareCB(
 	  pathEnd++;
 	}
 	*pathEnd = (char)'\0';
-	if ((pDir = opendir(dir)) != (DIR *)NULL) {
+	if ((pDir = opendir(dir)) != (DIR *)nullptr) {
 	  closedir(pDir);
 	  XtFree(dir);
 	} else {
 	  tt_free(localPath);
-	  localPath = (char *) NULL;
+	  localPath = (char *) nullptr;
 	  XtFree(dir);
 	  tttk_message_fail(m,
 			TT_DESKTOP_ENOENT,		/* status */
-			(char *) NULL,			/* status str */
+			(char *) nullptr,			/* status str */
 			1);				/* destroy request */
 	  tt_release(mark);
 	  return((Tt_message) 0);	/* Message handled by this routine. */
@@ -429,7 +429,7 @@ TTmedia_ptype_declareCB(
 	if (docname) {
 	    pPad->ttEditReq.docName = strdup(docname);
 	} else {
-	    pPad->ttEditReq.docName = (char *) NULL;
+	    pPad->ttEditReq.docName = (char *) nullptr;
 	}
 	if (op == TTME_DISPLAY)
 	    pPad->xrdb.viewOnly = True;
@@ -547,12 +547,12 @@ TTstartDesktopMediaExchange(
         Widget		topLevelWithWmCommand,
 	Editor *	pPad)
 {
-    char	*my_procid = NULL;
+    char	*my_procid = nullptr;
     int		 my_ttfd = 0;
-    Tt_pattern	*tt_pat = NULL;
+    Tt_pattern	*tt_pat = nullptr;
     Tt_status	 status = TT_OK;
     int		 mark = tt_mark();
-    char	*sess = NULL;
+    char	*sess = nullptr;
 
 
     /*
@@ -688,11 +688,11 @@ TTmediaDepositContents(
 
     status = ttmedia_Deposit(
 		pPad->ttEditReq.contract,	/* original request */
-		(char *) NULL,			/* send directly to requestor */
+		(char *) nullptr,			/* send directly to requestor */
 		pPad->ttEditReq.vtype,		/* media type */
  		(unsigned char *) contentRec.value.string, /*new contents */
 		strlen(contentRec.value.string),
-		(char *) NULL,		/* don't use temp file for xfer */
+		(char *) nullptr,		/* don't use temp file for xfer */
 		pPad->app_context,	/* we're the blocking application */
 		10 * TIMEOUT_FACTOR);	/* milliseconds to block for reply */
 
@@ -778,7 +778,7 @@ TTmediaReply(
 		XmDIALOG_ERROR);
 	    tttk_message_fail(pPad->ttEditReq.contract,
 			TT_DESKTOP_ENODATA,		/* status */
-			(char *) NULL,			/* status str */
+			(char *) nullptr,			/* status str */
 			1);				/* destroy request */
 	    return(1);
 	}
@@ -798,7 +798,7 @@ TTmediaReply(
 			addNewlines,
 			True);		/* mark contents as saved */
 	    _DtTurnOffHourGlass(pPad->app_shell);
-	    pPad->ttEditReq.contract = NULL;	/* request has been closed */
+	    pPad->ttEditReq.contract = nullptr;	/* request has been closed */
 	} else {
 	    _DtTurnOffHourGlass(pPad->app_shell);
 	    TTdisplayError(pPad,
@@ -816,11 +816,11 @@ TTmediaReply(
 	status = tttk_message_fail(
 			pPad->ttEditReq.contract,	/* original request */
 			TT_DESKTOP_ECANCELED,		/* status */
-			(char *) NULL,			/* status str */
+			(char *) nullptr,			/* status str */
 			1);				/* destroy request */
 	_DtTurnOffHourGlass(pPad->app_shell);
 	if (status == TT_OK) {
-	    pPad->ttEditReq.contract = NULL;	/* request has been closed */
+	    pPad->ttEditReq.contract = nullptr;	/* request has been closed */
 	} else {
 	    TTdisplayError(pPad,
 		    (char *) GETMESSAGE(13, 2, "Checkpoint reply failed."),
@@ -841,10 +841,10 @@ TTresetQuitArgs(
 {
     if (!pPad->ttQuitReq.contract)
 	return;
-    pPad->ttQuitReq.contract = NULL;
-    if (pPad->ttQuitReq.operation2Quit != (char *) NULL) {
+    pPad->ttQuitReq.contract = nullptr;
+    if (pPad->ttQuitReq.operation2Quit != (char *) nullptr) {
 	XtFree(pPad->ttQuitReq.operation2Quit);
-	pPad->ttQuitReq.operation2Quit = (char *) NULL;
+	pPad->ttQuitReq.operation2Quit = (char *) nullptr;
     }
     pPad->ttQuitReq.silent = 0;
     pPad->ttQuitReq.force = 0;
@@ -862,7 +862,7 @@ TTfailPendingQuit(
     if (pPad->ttQuitReq.contract) {
 	tttk_message_fail(pPad->ttQuitReq.contract,	/* original Quit req */
 			TT_DESKTOP_ECANCELED,		/* status */
-			(char *) NULL,			/* status string */
+			(char *) nullptr,			/* status string */
 			1);				/* destroy request */
 	TTresetQuitArgs(pPad);
     }
@@ -890,7 +890,7 @@ TTdesktopOpen( int *ttFd, Editor *pPad, Boolean sendStarted )
     procId = ttdt_open( ttFd, "dtpad", vendor, "2.1", sendStarted );
     if ( (status = tt_ptr_error( procId )) != TT_OK )
     {
-        ttdt_close( NULL, NULL, sendStarted );
+        ttdt_close( nullptr, nullptr, sendStarted );
         return( status );
     }
 
@@ -920,14 +920,14 @@ TTwarning( Editor *pPad, Tt_status status, char *errsuff )
     char	*statmsg;
     int		 done = 0;
 
-    if (TT_OK == status || NULL == pPad) return;
+    if (TT_OK == status || nullptr == pPad) return;
 
     errfmt =
       GETMESSAGE(7, 13, "Could not connect to ToolTalk service:\n%s\n%s\n");
     statmsg = tt_status_message(status);
     errmsg = XtMalloc(strlen(errfmt) + strlen(statmsg) + strlen(errsuff) + 2);
 
-    if (NULL == errsuff) errsuff = "";
+    if (nullptr == errsuff) errsuff = "";
     fprintf(stderr, errfmt, statmsg, errsuff);
     sprintf(errmsg, errfmt, statmsg, errsuff);
     Warning(pPad, errmsg, XmDIALOG_ERROR);

@@ -86,7 +86,7 @@ void GetPermissionsPattern(char **ppszPermPattern)
 {
   if (*ppszPermPattern) {
      XtFree(*ppszPermPattern);
-     *ppszPermPattern = (char *)NULL;
+     *ppszPermPattern = (char *)nullptr;
   }
 
   *ppszPermPattern = (char *)XtMalloc(20);
@@ -187,7 +187,7 @@ void Save_FileChar_Info(void)
 
 {
   FiletypeData *pFtD;
-  char         *ptr = (char *)NULL;
+  char         *ptr = (char *)nullptr;
   short        sContentsType;
 
   /**************************************************************************/
@@ -201,7 +201,7 @@ void Save_FileChar_Info(void)
   /**************************************************************************/
   XtVaGetValues(FileCharacteristics,
                 XmNuserData, &pFtD,
-                NULL);
+                nullptr);
 
   /**************************************************************************/
   /* Get Name Pattern Info                                                  */
@@ -214,7 +214,7 @@ void Save_FileChar_Info(void)
   } else {
     if (pFtD->pszPattern) {
        XtFree(pFtD->pszPattern);
-       pFtD->pszPattern = (char *)NULL;
+       pFtD->pszPattern = (char *)nullptr;
     }
   }
 
@@ -232,14 +232,14 @@ void Save_FileChar_Info(void)
     /* Save data in structure.                                              */
     /************************************************************************/
     GetWidgetTextString(FC_ContentsPatternText, &(pFtD->pszContents));
-    ptr = (char *)NULL;
+    ptr = (char *)nullptr;
     GetWidgetTextString(FC_StartByteTextField, &ptr);
     if (ptr) {
        pFtD->sStart = atoi(ptr);
        XtFree(ptr);
     }
 #if 0
-    ptr = (char *)NULL;
+    ptr = (char *)nullptr;
     GetWidgetTextString(FC_EndByteTextField, &ptr);
     if (ptr) {
        pFtD->sEnd = atoi(ptr);
@@ -251,7 +251,7 @@ void Save_FileChar_Info(void)
   } else {
     if (pFtD->pszContents) {
        XtFree(pFtD->pszContents);
-       pFtD->pszContents = (char *)NULL;
+       pFtD->pszContents = (char *)nullptr;
     }
     pFtD->sStart = 0;
   }
@@ -275,7 +275,7 @@ void Save_FileChar_Info(void)
 void ParseAndUpdateID(FiletypeData *pFtD)
 
 {
-  char    *ptr = (char *)NULL;
+  char    *ptr = (char *)nullptr;
   int     size;
 
   /**************************************************************************/
@@ -354,9 +354,9 @@ void CalculateAND(void)
   XtArgVal /* Boolean */ set1, set2, set3, set4;
   int     cnt;
 
-  XtVaGetValues(FC_NameOrPathToggle, XmNset, &set1, NULL);
-  XtVaGetValues(FC_PermissionToggle, XmNset, &set2, NULL);
-  XtVaGetValues(FC_ContentsToggle, XmNset, &set3, NULL);
+  XtVaGetValues(FC_NameOrPathToggle, XmNset, &set1, nullptr);
+  XtVaGetValues(FC_PermissionToggle, XmNset, &set2, nullptr);
+  XtVaGetValues(FC_ContentsToggle, XmNset, &set3, nullptr);
   XtSetSensitive(FC_AndLabel1, False);
   XtSetSensitive(FC_AndLabel2, False);
 
@@ -416,7 +416,7 @@ static  void    valueChangedCB_FC_PermissionToggle(Widget UxWidget,
 {
   XtArgVal /* Boolean */ set;
 
-  XtVaGetValues(UxWidget, XmNset, &set, NULL);
+  XtVaGetValues(UxWidget, XmNset, &set, nullptr);
   XtSetSensitive(FC_PermissionLabel, set);
   XtSetSensitive(FC_PermissionForm, set);
   /*
@@ -475,7 +475,7 @@ static  void    valueChangedCB_FC_ContentsToggle( Widget UxWidget,
 {
   XtArgVal /* Boolean */ set;
 
-  XtVaGetValues(UxWidget, XmNset, &set, NULL);
+  XtVaGetValues(UxWidget, XmNset, &set, nullptr);
   XtSetSensitive(FC_ContentsLabel, set);
   XtSetSensitive(FC_ContentsBox, set);
   if (set) {
@@ -491,7 +491,7 @@ static  void    valueChangedCB_FC_NameOrPathToggle(Widget UxWidget,
 {
   XtArgVal /* Boolean */ set;
 
-  XtVaGetValues(UxWidget, XmNset, &set, NULL);
+  XtVaGetValues(UxWidget, XmNset, &set, nullptr);
   XtSetSensitive(FC_NamePatternLabel, set);
   XtSetSensitive(FC_NameOrPathText, set);
   if (set) {
@@ -524,14 +524,14 @@ static Widget   _Uxbuild_FileCharacteristics(void)
         int             nbutton = 0;
 #define TIGHTNESS       20
         Widget          FC_ScrolledWindow;
-        Widget          FC_BigForm = NULL;
+        Widget          FC_BigForm = nullptr;
         char		*dialog_title, *pre, *suf;
 
 
         /* Creation of FileCharacteristics */
 #if 0
         _UxParent = UxParent;
-        if ( _UxParent == NULL )
+        if ( _UxParent == nullptr )
         {
              _UxParent = UxTopLevel;
         }
@@ -553,7 +553,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNheight, 579,
                         XmNshellUnitType, XmPIXELS,
                         XmNtitle, dialog_title,
-                        NULL );
+                        nullptr );
            FC_BigForm = XtVaCreateWidget( "FC_BigForm",
                         xmFormWidgetClass,
                         _UxParent,
@@ -562,7 +562,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         RES_CONVERT( XmNdialogTitle, dialog_title ),
                         XmNautoUnmanage, FALSE,
                         XmNrubberPositioning, FALSE,
-                        NULL );
+                        nullptr );
            FC_ScrolledWindow = XtVaCreateManagedWidget( "FC_ScrolledWindow",
                         xmScrolledWindowWidgetClass,
                         FC_BigForm,
@@ -571,13 +571,13 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNbottomAttachment, XmATTACH_FORM,
                         XmNtopAttachment, XmATTACH_FORM,
-                        NULL );
-           XtVaSetValues(FC_BigForm, XmNuserData, FC_ScrolledWindow, NULL);
+                        nullptr );
+           XtVaSetValues(FC_BigForm, XmNuserData, FC_ScrolledWindow, nullptr);
 
            FileCharacteristics = XtVaCreateManagedWidget( "FileCharacteristics",
                            xmFormWidgetClass,
                            FC_ScrolledWindow,
-                           NULL );
+                           nullptr );
         } else {
            _UxParent = XtVaCreatePopupShell( "FileCharacteristics_shell",
                         xmDialogShellWidgetClass, _UxParent,
@@ -588,7 +588,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNheight, 579,
                         XmNshellUnitType, XmPIXELS,
                         XmNtitle, dialog_title,
-                        NULL );
+                        nullptr );
            FileCharacteristics = XtVaCreateWidget( "FileCharacteristics",
                         xmFormWidgetClass,
                         _UxParent,
@@ -597,7 +597,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         RES_CONVERT( XmNdialogTitle, dialog_title ),
                         XmNautoUnmanage, FALSE,
                         XmNrubberPositioning, FALSE,
-                        NULL );
+                        nullptr );
         }
 	XtFree(dialog_title);
         XtAddCallback( FileCharacteristics, XmNhelpCallback,
@@ -615,7 +615,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNtopOffset, 15,
                         XmNtopAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_TypeFileRowColumn */
         FC_TypeFileRowColumn = XtVaCreateManagedWidget( "FC_TypeFileRowColumn",
@@ -632,7 +632,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 5,
                         XmNtopWidget, FC_MainLabel1,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_FileToggle */
         FC_FileToggle = XtVaCreateManagedWidget( "FC_FileToggle",
@@ -642,7 +642,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 12, "Files")),
                         XmNset, TRUE,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_DirectoryToggle */
         FC_DirectoryToggle = XtVaCreateManagedWidget( "FC_DirectoryToggle",
@@ -651,7 +651,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorType, XmONE_OF_MANY,
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 13, "Folders")),
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_MainLabel2 */
         FC_MainLabel2 = XtVaCreateManagedWidget( "FC_MainLabel2",
@@ -665,7 +665,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 5,
                         XmNtopWidget, FC_TypeFileRowColumn,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_NamePatternLabel */
         FC_NamePatternLabel = XtVaCreateManagedWidget( "FC_NamePatternLabel",
@@ -679,7 +679,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 20,
                         XmNtopWidget, FC_MainLabel2,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_NameOrPathText */
         FC_NameOrPathText = XtVaCreateManagedWidget( "FC_NameOrPathText",
@@ -692,7 +692,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 0,
                         XmNtopWidget, FC_NamePatternLabel,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_AndLabel1 */
         FC_AndLabel1 = XtVaCreateManagedWidget( "FC_AndLabel1",
@@ -707,13 +707,13 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 0,
                         XmNtopWidget, FC_NamePatternLabel,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         XtVaSetValues(FC_NameOrPathText,
                       XmNrightOffset, 30,
                       XmNrightWidget, FC_AndLabel1,
                       XmNrightAttachment, XmATTACH_WIDGET,
-                      NULL);
+                      nullptr);
 
 
         /* Creation of FC_NameOrPathToggle */
@@ -731,7 +731,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopWidget, FC_NameOrPathText,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
                         XmNbottomAttachment, XmATTACH_NONE,
-                        NULL );
+                        nullptr );
         XtAddCallback( FC_NameOrPathToggle, XmNvalueChangedCallback,
                 valueChangedCB_FC_NameOrPathToggle,
                 (XtPointer) NULL );
@@ -756,7 +756,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 15,
                         XmNtopWidget, FC_NameOrPathText,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         FC_PermissionForm = XtVaCreateManagedWidget( "FC_PermissionForm",
                         xmFormWidgetClass,
@@ -769,7 +769,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 0,
                         XmNtopWidget, FC_PermissionLabel,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /******************************************************************/
         /* Creation of FC_ReadRowColumn                                   */
@@ -788,7 +788,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNtopOffset, 10,
                         XmNtopAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ReadOnToggle */
         FC_ReadOnToggle = XtVaCreateManagedWidget( "FC_ReadOnToggle",
@@ -798,7 +798,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 43, "On")),
                         XmNset, FALSE,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ReadOffToggle */
         FC_ReadOffToggle = XtVaCreateManagedWidget( "FC_ReadOffToggle",
@@ -808,7 +808,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 44, "Off")),
                         XmNset, FALSE,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ReadEitherToggle */
         FC_ReadEitherToggle = XtVaCreateManagedWidget( "FC_ReadEitherToggle",
@@ -818,7 +818,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 45, "Either")),
                         XmNset, TRUE,
-                        NULL );
+                        nullptr );
 
         /******************************************************************/
         /* Creation of FC_WriteRowColumn                                  */
@@ -837,7 +837,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNtopWidget, FC_ReadRowColumn,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_WriteOnToggle */
         FC_WriteOnToggle = XtVaCreateManagedWidget( "FC_WriteOnToggle",
@@ -847,7 +847,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 43, "On")),
                         XmNset, FALSE,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_WriteOffToggle */
         FC_WriteOffToggle = XtVaCreateManagedWidget( "FC_WriteOffToggle",
@@ -857,7 +857,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 44, "Off")),
                         XmNset, FALSE,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_WriteEitherToggle */
         FC_WriteEitherToggle = XtVaCreateManagedWidget( "FC_WriteEitherToggle",
@@ -867,7 +867,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 45, "Either")),
                         XmNset, TRUE,
-                        NULL );
+                        nullptr );
 
         /******************************************************************/
         /* Creation of FC_ExecuteRowColumn                                */
@@ -888,7 +888,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopAttachment, XmATTACH_WIDGET,
                         XmNbottomOffset, 10,
                         XmNbottomAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ExecuteOnToggle */
         FC_ExecuteOnToggle = XtVaCreateManagedWidget( "FC_ExecuteOnToggle",
@@ -898,7 +898,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 43, "On")),
                         XmNset, FALSE,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ExecuteOffToggle */
         FC_ExecuteOffToggle = XtVaCreateManagedWidget( "FC_ExecuteOffToggle",
@@ -908,7 +908,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 44, "Off")),
                         XmNset, FALSE,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ExecuteEitherToggle */
         FC_ExecuteEitherToggle = XtVaCreateManagedWidget( "FC_ExecuteEitherToggle",
@@ -918,7 +918,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 45, "Either")),
                         XmNset, TRUE,
-                        NULL );
+                        nullptr );
 
         /******************************************************************/
         /* Creation of Permission Labels                                  */
@@ -934,7 +934,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNtopWidget, FC_ReadRowColumn,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
         FC_WriteLabel = XtVaCreateManagedWidget( "FC_WriteLabel",
                         xmLabelWidgetClass,
                         FC_PermissionForm,
@@ -946,7 +946,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNtopWidget, FC_WriteRowColumn,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
         FC_ExecuteLabel = XtVaCreateManagedWidget( "FC_ExecuteLabel",
                         xmLabelWidgetClass,
                         FC_PermissionForm,
@@ -958,7 +958,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNtopWidget, FC_ExecuteRowColumn,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
 
         /******************************************************************/
         /* Creation of the  AND  label for permissions.                   */
@@ -976,13 +976,13 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 0,
                         XmNtopWidget, FC_PermissionLabel,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         XtVaSetValues(FC_PermissionForm,
                       XmNrightOffset, 30,
                       XmNrightWidget, FC_AndLabel2,
                       XmNrightAttachment, XmATTACH_WIDGET,
-                      NULL);
+                      nullptr);
 
 
         /* Creation of FC_PermissionToggle */
@@ -999,7 +999,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopWidget, FC_PermissionForm,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
                         XmNbottomAttachment, XmATTACH_NONE,
-                        NULL );
+                        nullptr );
         XtAddCallback( FC_PermissionToggle, XmNvalueChangedCallback,
                 valueChangedCB_FC_PermissionToggle,
                 (XtPointer) NULL );
@@ -1016,7 +1016,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 15,
                         XmNtopWidget, FC_PermissionForm,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ContentsBox */
         FC_ContentsBox = XtVaCreateManagedWidget( "FC_ContentsBox",
@@ -1032,7 +1032,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 0,
                         XmNtopWidget, FC_ContentsLabel,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ContentsToggle */
         FC_ContentsToggle = XtVaCreateManagedWidget( "FC_ContentsToggle",
@@ -1048,7 +1048,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopWidget, FC_ContentsBox,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
                         XmNbottomAttachment, XmATTACH_NONE,
-                        NULL );
+                        nullptr );
         XtAddCallback( FC_ContentsToggle, XmNvalueChangedCallback,
                 valueChangedCB_FC_ContentsToggle,
                 (XtPointer) NULL );
@@ -1064,7 +1064,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, XmATTACH_NONE,
                         XmNtopOffset, 10,
                         XmNtopAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ContentsPatternText */
         FC_ContentsPatternText = XtVaCreateManagedWidget( "FC_ContentsPatternText",
@@ -1079,7 +1079,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNbottomAttachment, XmATTACH_NONE,
                         XmNtopWidget, FC_ContentsPatternLabel,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_TypeLabel */
         FC_TypeLabel = XtVaCreateManagedWidget( "FC_TypeLabel",
@@ -1093,7 +1093,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 15,
                         XmNtopWidget, FC_ContentsPatternLabel,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_TypeRowColumn */
         FC_TypeRowColumn = XtVaCreateManagedWidget( "FC_TypeRowColumn",
@@ -1110,7 +1110,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNbottomAttachment, XmATTACH_NONE,
                         XmNtopWidget, FC_TypeLabel,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_StringToggle */
         FC_StringToggle = XtVaCreateManagedWidget( "FC_StringToggle",
@@ -1120,7 +1120,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 31, "String")),
                         XmNset, TRUE,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ByteToggle */
         FC_ByteToggle = XtVaCreateManagedWidget( "FC_ByteToggle",
@@ -1129,7 +1129,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorType, XmONE_OF_MANY,
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 32, "Byte (Hex)")),
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_ShortToggle */
         FC_ShortToggle = XtVaCreateManagedWidget( "FC_ShortToggle",
@@ -1138,7 +1138,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorType, XmONE_OF_MANY,
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 33, "Short (Decimal)")),
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_LongToggle */
         FC_LongToggle = XtVaCreateManagedWidget( "FC_LongToggle",
@@ -1147,7 +1147,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNindicatorType, XmONE_OF_MANY,
                         XmNindicatorSize, 17,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(9, 34, "Long (Decimal)")),
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_StartByteLabel */
         FC_StartByteLabel = XtVaCreateManagedWidget( "FC_StartByteLabel",
@@ -1162,7 +1162,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 15,
                         XmNtopWidget, FC_TypeRowColumn,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_StartByteTextField */
         FC_StartByteTextField = XtVaCreateManagedWidget( "FC_StartByteTextField",
@@ -1175,7 +1175,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNtopWidget, FC_StartByteLabel,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
 #if 0
         /* Creation of FC_EndByteLabel */
         FC_EndByteLabel = XtVaCreateManagedWidget( "FC_EndByteLabel",
@@ -1190,7 +1190,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNleftAttachment, XmATTACH_WIDGET,
                         XmNtopWidget, FC_StartByteTextField,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_EndByteTextField */
         FC_EndByteTextField = XtVaCreateManagedWidget( "FC_EndByteTextField",
@@ -1206,7 +1206,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNtopWidget, FC_EndByteLabel,
                         XmNtopAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
 #endif
 
         FC_ActionAreaForm = XtVaCreateManagedWidget( "FC_ActionAreaForm",
@@ -1223,7 +1223,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNtopOffset, 20,
                         XmNtopWidget, FC_ContentsBox,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of FC_OkButton */
         FC_OkButton = XtVaCreateManagedWidget( "FC_OkButton",
@@ -1236,7 +1236,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, nbutton != (ntotalbuttons - 1) ?
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( FC_OkButton, XmNactivateCallback,
                 activateCB_FC_OkButton,
@@ -1253,7 +1253,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, nbutton != (ntotalbuttons - 1) ?
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( FC_CancelButton, XmNactivateCallback,
                 activateCB_FC_CancelButton,
@@ -1270,7 +1270,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, nbutton != (ntotalbuttons - 1) ?
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( FC_ClearButton, XmNactivateCallback,
                 activateCB_FC_ClearButton,
@@ -1288,7 +1288,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNrightAttachment, nbutton != (ntotalbuttons - 1) ?
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( FC_HelpButton, XmNactivateCallback,
                 helpCB_general,
@@ -1298,7 +1298,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         XmNcancelButton, FC_CancelButton,
                         XmNdefaultButton, FC_OkButton,
                         XmNinitialFocus, FC_NameOrPathText,
-                        NULL );
+                        nullptr );
 
         XtAddCallback( FileCharacteristics, XmNdestroyCallback,
                 UxDestroyContextCB,
@@ -1334,23 +1334,23 @@ Widget  create_FileCharacteristics( swidget _UxUxParent )
            XtVaGetValues (FileCharacteristics,
                           XmNheight, &dimHeight,
                           XmNwidth, &dimWidth,
-                          NULL);
+                          nullptr);
            XtVaGetValues (rtrn,
                           XmNuserData, &widScrolledWindow,
-                          NULL);
+                          nullptr);
            XtVaGetValues (widScrolledWindow,
                           XmNverticalScrollBar, &widTmp,
-                          NULL);
+                          nullptr);
            XtVaGetValues (widTmp,
                           XmNwidth, &dimTmp,
-                          NULL);
+                          nullptr);
            dimHeight += dimTmp;
            dimWidth += dimTmp;
 
            XtVaSetValues (rtrn,
                           XmNheight, dimHeight,
                           XmNwidth, dimWidth,
-                          NULL);
+                          nullptr);
         }
 
         return(rtrn);
@@ -1367,7 +1367,7 @@ Widget  create_FileCharacteristics( swidget _UxUxParent )
 void init_FileCharacteristics_dialog_fields(FiletypeData *pFtD)
 {
   char buffer[MAXBUFSIZE];
-  char *pszPerms = (char *)NULL;
+  char *pszPerms = (char *)nullptr;
 
   /************************************************************************/
   /* Initialize name pattern.                                             */
@@ -1394,7 +1394,7 @@ void init_FileCharacteristics_dialog_fields(FiletypeData *pFtD)
      if (pszPerms) {
         pszPerms++;
         if (!*pszPerms) {
-           pszPerms = (char *)NULL;
+           pszPerms = (char *)nullptr;
         }
      }
   }
@@ -1535,7 +1535,7 @@ void clear_FileCharacteristics_dialog_fields(void)
 /******************************************************************************/
 Boolean FileCharCheckFields(void)
 {
-  char    *ptr = (char *)NULL;
+  char    *ptr = (char *)nullptr;
   Boolean bError = FALSE;
   char    *msgPtr, *errPtr;
 
@@ -1563,7 +1563,7 @@ Select one or more of the characteristics\n\
   /**************************************************************************/
   if (!bError) {
      if (XmToggleButtonGadgetGetState(FC_NameOrPathToggle)) {
-        ptr = (char *)NULL;
+        ptr = (char *)nullptr;
         GetWidgetTextString(FC_NameOrPathText, &ptr);
 #ifdef DEBUG
         printf("Name Pattern = '%s'\n", ptr);
@@ -1588,7 +1588,7 @@ must be entered.");
   /**************************************************************************/
   if (!bError) {
      if (XmToggleButtonGadgetGetState(FC_ContentsToggle)) {
-        ptr = (char *)NULL;
+        ptr = (char *)nullptr;
         GetWidgetTextString(FC_ContentsPatternText, &ptr);
 #ifdef DEBUG
         printf("Name Pattern = '%s'\n", ptr);
@@ -1606,7 +1606,7 @@ under Contents must be filled in.");
            /*****************************************************************/
            /* Now check to make sure there is a start byte value.           */
            /*****************************************************************/
-           ptr = (char *)NULL;
+           ptr = (char *)nullptr;
            GetWidgetTextString(FC_StartByteTextField, &ptr);
            if (!ptr) {
 	      msgPtr = GETMESSAGE(10, 25, "Start byte value is missing.\n\

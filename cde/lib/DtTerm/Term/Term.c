@@ -445,7 +445,7 @@ externaldef(vtclassrec) DtTermClassRec dtTermClassRec =
 	/* Primitive border_highlight	*/  XmInheritWidgetProc,
 	/* Primitive border_unhighlight	*/  XmInheritWidgetProc,
 	/* translations			*/  "" /*NULL*/ /*XtInheritTranslations*/,
-	/* arm_and_activate		*/  NULL,
+	/* arm_and_activate		*/  nullptr,
 	/* get resources		*/  (XmSyntheticResource *) GetResources,
 	/* num get_resources		*/  XtNumber(GetResources),
 	/* extension			*/  (XtPointer) NULL,

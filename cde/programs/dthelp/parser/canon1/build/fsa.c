@@ -159,7 +159,7 @@ void dellist(STATELIST **list)
       p = p->next ;
       m_free(q, "state list") ;
       }
-    *list = NULL ;
+    *list = nullptr ;
     }
 
 /* Delstartarcs deletes the contents of the starta list of arcs from start
@@ -174,7 +174,7 @@ void delstartarcs(void)
       arcptr = arcptr->next ;
       m_free(discard, "arc") ;
       }
-    top->starta = NULL ;
+    top->starta = nullptr ;
     }
 
 /* Getand allocates and initializes a new andgroup structure */
@@ -183,7 +183,7 @@ ANDGROUP *getand(void)
     ANDGROUP *new ;
 
     new = (ANDGROUP *) m_malloc(sizeof(ANDGROUP), "and group") ;
-    new->nextptr = new->next = NULL ;
+    new->nextptr = new->next = nullptr ;
     new->count = ++andused ;
     *nextand = new ;
     nextand = &new->nextptr ;
@@ -199,9 +199,9 @@ STATE *getstate(void)
     new->final = FALSE ;
     new->datacontent = FALSE ;
     new->frompcdata = FALSE ;
-    new->first = NULL ;
+    new->first = nullptr ;
     new->count = ++stateused ;
-    new->next = NULL ;
+    new->next = nullptr ;
     *nextstate = new ;
     nextstate = &new->next ;
     return(new) ;
@@ -213,7 +213,7 @@ void makeand(LOGICAL *canbenull, TREE *root, int optional)
     TREE *child ;
     STATELIST *start, *final ;
     LOGICAL groupbenull ;
-    ANDGROUP *andptr = NULL, *saveand = NULL, *otherand ;
+    ANDGROUP *andptr = nullptr, *saveand = nullptr, *otherand ;
     STATELIST *index ;
     ELTSTRUCT *errelt ;
 
@@ -352,7 +352,7 @@ void makeor(LOGICAL *canbenull, TREE *root)
 void makeseq(LOGICAL *canbenull, TREE *root, int optional)
   {
     LOGICAL branchnull ;
-    STATELIST *keepfinal = NULL, *final ;
+    STATELIST *keepfinal = nullptr, *final ;
     TREE *child ;
 
     push() ;
@@ -474,7 +474,7 @@ void push(void)
     new->oldtop = top ;
     top = new ;
     stacklevels++ ;
-    top->starts = top->finals = top->newfinal = top->allfinal = NULL ;
+    top->starts = top->finals = top->newfinal = top->allfinal = nullptr ;
     top->starta = M_NULLVAL ;
     }
 
@@ -493,7 +493,7 @@ if (start->terminal)
     if (start->value)
 	mb_enptr = MakeMByteString(start->value->enptr);
     else
-	mb_enptr = NULL;
+	mb_enptr = nullptr;
     msg1line("%s", mb_enptr ? mb_enptr : rnicdata) ;
     if (mb_enptr)
 	m_free(mb_enptr,"multi-byte string");
@@ -595,7 +595,7 @@ void savelhs(LOGICAL param)
     ELTSTRUCT *thiselt ;
 
     *nextlhs = (LHS *) m_malloc(sizeof(LHS), "lhs") ;
-    (*nextlhs)->next = NULL ;
+    (*nextlhs)->next = nullptr ;
     thiselt = ntrelt(name) ;
     (*nextlhs)->elt = thiselt ;
     nextlhs = &(*nextlhs)->next ;
@@ -638,7 +638,7 @@ void savestartarcs(void)
 void simplebranch(TREE *root, ELTSTRUCT *value, ANDGROUP *group,
                   int optional)
   {
-    STATE *new = NULL ;
+    STATE *new = nullptr ;
     STATELIST *index ;
     int c ;
     ELTSTRUCT *errelt ;
@@ -666,14 +666,14 @@ void simplebranch(TREE *root, ELTSTRUCT *value, ANDGROUP *group,
       top->finals = (STATELIST *) m_malloc(sizeof(STATELIST), "state list") ;
       top->finals->value = new ;
       top->finals->level = stacklevels ;
-      top->finals->next = NULL ;
+      top->finals->next = nullptr ;
       top->starta = (ARC *) m_malloc(sizeof(ARC), "arc") ;
       top->starta->label = value ;
       top->starta->optional = FALSE ;
       top->starta->minim = root->minim ;
       top->starta->group = group ;
       top->starta->to = new ;
-      top->starta->next = NULL ;
+      top->starta->next = nullptr ;
       top->starta->id = root->eltid ;
       }
     else copyintolist(top->starts, &top->finals) ;
@@ -693,7 +693,7 @@ STATE *startfsa(TREE *root, LOGICAL *canbenull)
     first = getstate() ;
     top->starts->value = first ;
     top->starts->level = stacklevels ;
-    top->starts->next = NULL ;
+    top->starts->next = nullptr ;
     *canbenull = makefsa(root, FALSE) ;
     for (item = top->finals ; item ; item = item->next)
       item->value->final = TRUE ;

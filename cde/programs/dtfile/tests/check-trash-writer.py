@@ -118,7 +118,7 @@ with tempfile.TemporaryDirectory(prefix="trash-writer-", dir=os.environ["TMPDIR"
     c.write_text(header + function("static int\nWriteEntry(") + wrappers +
                  function("static Boolean\nWriteTrashEntries(") + main)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
                     "-Wno-unused-function",
                     "-fsanitize=address,undefined", "-g", str(c), "-o", str(binary)], check=True)
     subprocess.run([str(binary), str(fixture)], check=True)

@@ -70,7 +70,7 @@
  
 PanelData panel;
 static SwitchData * switch1;
-static ElementValue * control_element_values = NULL;
+static ElementValue * control_element_values = nullptr;
 static Boolean control_element_value_found = False;
 
 
@@ -79,7 +79,7 @@ static Boolean control_element_value_found = False;
 
 static char * TYPES_DIR = "/.dt/types/fp_dynamic/";
 static char * TYPES_DIR_NO_SLASH = "/.dt/types/fp_dynamic";
-static char * HOME_DIR = NULL;
+static char * HOME_DIR = nullptr;
 static char * RM = "/bin/rm";
 
 
@@ -121,19 +121,19 @@ static char * panel_keywords[] =
 
 static ParseFunction panel_parse_functions[] =
 {
-   { StringToString,   NULL, 		   FreeString},   /* Name             */
-   { StringToString, NULL,               FreeString},   /* Panel Geometry   */
-   { StringToBoolean,  (void *) True,      NULL},         /* Display Handles  */
-   { StringToBoolean,  (void *) True,      NULL},         /* Display Menu     */
-   { StringToBoolean,  (void *) True,      NULL},         /* Display Minimize */
-   { StringToResolution, (void *) 3,  	   NULL},  	  /* Resolution       */
-   { StringToControlBehavior, (void *) 0,  NULL},         /* Control Behavior */
-   { StringToBoolean,  (void *) False,     NULL},   /* Display Control Labels */
-   { StringToBoolean,  (void *) True,      NULL},         /* Subpanel Unpost  */
-   { StringToBoolean,  (void *) False,     NULL},         /* Locked           */
-   { StringToString,   NULL,               FreeString},   /* Help String      */
-   { StringToString,   NULL,               FreeString},   /* Help Volume      */
-   { StringToString,   NULL,               FreeString},   /* Help Topic       */
+   { StringToString,   nullptr, 		   FreeString},   /* Name             */
+   { StringToString, nullptr,               FreeString},   /* Panel Geometry   */
+   { StringToBoolean,  (void *) True,      nullptr},         /* Display Handles  */
+   { StringToBoolean,  (void *) True,      nullptr},         /* Display Menu     */
+   { StringToBoolean,  (void *) True,      nullptr},         /* Display Minimize */
+   { StringToResolution, (void *) 3,  	   nullptr},  	  /* Resolution       */
+   { StringToControlBehavior, (void *) 0,  nullptr},         /* Control Behavior */
+   { StringToBoolean,  (void *) False,     nullptr},   /* Display Control Labels */
+   { StringToBoolean,  (void *) True,      nullptr},         /* Subpanel Unpost  */
+   { StringToBoolean,  (void *) False,     nullptr},         /* Locked           */
+   { StringToString,   nullptr,               FreeString},   /* Help String      */
+   { StringToString,   nullptr,               FreeString},   /* Help Volume      */
+   { StringToString,   nullptr,               FreeString},   /* Help Topic       */
 };
 
 
@@ -157,14 +157,14 @@ static char * box_keywords[] =
 
 static ParseFunction box_parse_functions[] =
 {
-   {StringToString,	    NULL,              FreeString}, /* Name           */
-   {StringToString,	    NULL,              FreeString}, /* Container Name */
-   {StringToPositionHints, (void *) 0,         NULL},       /* Position Hints */
-   {StringToBoolean,       (void *) False,     NULL},       /* Locked         */
-   {StringToBoolean,       (void *) False,     NULL},       /* Delete         */
-   {StringToString,	    NULL,              FreeString}, /* Help String    */
-   {StringToString,	    NULL,              FreeString}, /* Help Volume    */
-   {StringToString,	    NULL,              FreeString}, /* Help Topic     */
+   {StringToString,	    nullptr,              FreeString}, /* Name           */
+   {StringToString,	    nullptr,              FreeString}, /* Container Name */
+   {StringToPositionHints, (void *) 0,         nullptr},       /* Position Hints */
+   {StringToBoolean,       (void *) False,     nullptr},       /* Locked         */
+   {StringToBoolean,       (void *) False,     nullptr},       /* Delete         */
+   {StringToString,	    nullptr,              FreeString}, /* Help String    */
+   {StringToString,	    nullptr,              FreeString}, /* Help Volume    */
+   {StringToString,	    nullptr,              FreeString}, /* Help Topic     */
 };
 
 
@@ -189,15 +189,15 @@ static char * subpanel_keywords[] =
 
 static ParseFunction subpanel_parse_functions[] =
 {
-   {  StringToString,	NULL,           FreeString},	/*  Name             */
-   {  StringToString,	NULL,           FreeString},	/*  Container Name   */
-   {  StringToBoolean,	(void *) True,  NULL},	        /*  Control Install  */
-   {  StringToString,	NULL,           FreeString},	/*  Title            */
-   {  StringToBoolean,	(void *) False, NULL},	        /*  Locked           */
-   {  StringToBoolean,  (void *) False, NULL},          /*  Delete           */
-   {  StringToString,   NULL,           FreeString},	/*  Help String      */
-   {  StringToString,   NULL,           FreeString},	/*  Help Volume      */
-   {  StringToString,   NULL,           FreeString},	/*  Help Topic       */
+   {  StringToString,	nullptr,           FreeString},	/*  Name             */
+   {  StringToString,	nullptr,           FreeString},	/*  Container Name   */
+   {  StringToBoolean,	(void *) True,  nullptr},	        /*  Control Install  */
+   {  StringToString,	nullptr,           FreeString},	/*  Title            */
+   {  StringToBoolean,	(void *) False, nullptr},	        /*  Locked           */
+   {  StringToBoolean,  (void *) False, nullptr},          /*  Delete           */
+   {  StringToString,   nullptr,           FreeString},	/*  Help String      */
+   {  StringToString,   nullptr,           FreeString},	/*  Help Volume      */
+   {  StringToString,   nullptr,           FreeString},	/*  Help Topic       */
 };
 
 
@@ -223,15 +223,15 @@ static char * switch_keywords[] =
 
 static ParseFunction switch_parse_functions[] =
 {
-   { StringToString,	    NULL,            FreeString}, /* Name            */
-   { StringToString,	    NULL,            FreeString}, /* Container Name  */
-   { StringToPositionHints, (void *) 0,      NULL},       /* Position Hints  */
-   { StringToInt,           (void *) 2,      NULL},       /* Number of Rows  */
-   { StringToBoolean,	    (void *) False,  NULL},       /* Locked          */
-   { StringToBoolean,       (void *) False,  NULL},       /* Delete          */
-   { StringToString,	    NULL,            FreeString}, /* Help String     */
-   { StringToString,	    NULL,            FreeString}, /* Help Volume     */
-   { StringToString,	    NULL,            FreeString}, /* Help Topic      */
+   { StringToString,	    nullptr,            FreeString}, /* Name            */
+   { StringToString,	    nullptr,            FreeString}, /* Container Name  */
+   { StringToPositionHints, (void *) 0,      nullptr},       /* Position Hints  */
+   { StringToInt,           (void *) 2,      nullptr},       /* Number of Rows  */
+   { StringToBoolean,	    (void *) False,  nullptr},       /* Locked          */
+   { StringToBoolean,       (void *) False,  nullptr},       /* Delete          */
+   { StringToString,	    nullptr,            FreeString}, /* Help String     */
+   { StringToString,	    nullptr,            FreeString}, /* Help Volume     */
+   { StringToString,	    nullptr,            FreeString}, /* Help Topic      */
 };
 
 
@@ -270,29 +270,29 @@ static char * control_keywords[] =
 
 static ParseFunction control_parse_functions[] =
 {
-   {StringToString,	          NULL,   FreeString},   /* Name            */
-   {StringToControlType,  (void *)CONTROL_ICON, NULL},   /* Type            */
-   {StringToControlContainerType, NULL,   NULL},         /* Container Type  */
-   {StringToString,	          NULL,   FreeString},   /* Container Name  */
-   {StringToPositionHints,(void *) 0,     NULL},         /* Position Hints  */
-   {StringToString,               NULL,   FreeString},   /* Image           */
-   {StringToString,	          NULL,   FreeString},   /* Altername Image */
-   {StringToString,               NULL,   FreeString},   /* Label           */
-   {StringToAction,               NULL,   FreeAction},   /* Push Action     */
-   {StringToString,               NULL,   FreeString},   /* Push Animation  */
-   {StringToAction,               NULL,   FreeAction},   /* Drop Action     */
-   {StringToString,               NULL,   FreeString},   /* Drop Animation  */
-   {StringToBoolean,      (void *) False, NULL},         /* Push Recall     */
-   {StringToMonitorType,  (void *) MONITOR_NONE,NULL},   /* Monitor Type    */
-   {StringToString,               NULL,   FreeString},   /* Client Name     */
-   {StringToGeometry,		  NULL,   FreeGeometry}, /* Client Geometry */
-   {StringToFileName,             NULL,   FreeString},   /* File Name       */
-   {StringToString,               NULL,   FreeString},   /* Date Format     */
-   {StringToBoolean,	  (void *) False, NULL},         /* Locked          */
-   {StringToBoolean,      (void *) False, NULL},         /* Delete          */
-   {StringToString,               NULL,   FreeString},   /* Help String     */
-   {StringToString,               NULL,   FreeString},   /* Help Volume     */
-   {StringToString,               NULL,   FreeString},   /* Help Topic      */
+   {StringToString,	          nullptr,   FreeString},   /* Name            */
+   {StringToControlType,  (void *)CONTROL_ICON, nullptr},   /* Type            */
+   {StringToControlContainerType, nullptr,   nullptr},         /* Container Type  */
+   {StringToString,	          nullptr,   FreeString},   /* Container Name  */
+   {StringToPositionHints,(void *) 0,     nullptr},         /* Position Hints  */
+   {StringToString,               nullptr,   FreeString},   /* Image           */
+   {StringToString,	          nullptr,   FreeString},   /* Altername Image */
+   {StringToString,               nullptr,   FreeString},   /* Label           */
+   {StringToAction,               nullptr,   FreeAction},   /* Push Action     */
+   {StringToString,               nullptr,   FreeString},   /* Push Animation  */
+   {StringToAction,               nullptr,   FreeAction},   /* Drop Action     */
+   {StringToString,               nullptr,   FreeString},   /* Drop Animation  */
+   {StringToBoolean,      (void *) False, nullptr},         /* Push Recall     */
+   {StringToMonitorType,  (void *) MONITOR_NONE,nullptr},   /* Monitor Type    */
+   {StringToString,               nullptr,   FreeString},   /* Client Name     */
+   {StringToGeometry,		  nullptr,   FreeGeometry}, /* Client Geometry */
+   {StringToFileName,             nullptr,   FreeString},   /* File Name       */
+   {StringToString,               nullptr,   FreeString},   /* Date Format     */
+   {StringToBoolean,	  (void *) False, nullptr},         /* Locked          */
+   {StringToBoolean,      (void *) False, nullptr},         /* Delete          */
+   {StringToString,               nullptr,   FreeString},   /* Help String     */
+   {StringToString,               nullptr,   FreeString},   /* Help Volume     */
+   {StringToString,               nullptr,   FreeString},   /* Help Topic      */
 };
 
 
@@ -420,38 +420,38 @@ static void InitializeFileControlFields (ElementValue *, char *);
 
 static int panel_count = 0;
 static int panel_data_count = 0;
-static RecordData * panel_data = NULL;
+static RecordData * panel_data = nullptr;
 
 static int box_count = 0;
 static int box_data_count = 0;
-static RecordData * box_data = NULL;
+static RecordData * box_data = nullptr;
 
 static int subpanel_count = 0;
 static int subpanel_data_count = 0;
-static RecordData * subpanel_data = NULL;
+static RecordData * subpanel_data = nullptr;
 
 static int switch_count = 0;
 static int switch_data_count = 0;
-static RecordData * switch_data = NULL;
+static RecordData * switch_data = nullptr;
 
 static int control_count = 0;
 static int control_data_count = 0;
-static RecordData * control_data = NULL;
+static RecordData * control_data = nullptr;
 
 
 
 static DtDbConverter panel_converter[] =    {  (DtDbConverter) PanelParseCB,
-                                               NULL  };
+                                               nullptr  };
 static DtDbConverter box_converter[] =      {  (DtDbConverter) BoxParseCB,
-                                               NULL  };
+                                               nullptr  };
 static DtDbConverter subpanel_converter[] = {  (DtDbConverter) SubpanelParseCB,
-                                               NULL  };
+                                               nullptr  };
 static DtDbConverter switch_converter[] =   {  (DtDbConverter) SwitchParseCB,
-                                               NULL  };
+                                               nullptr  };
 static DtDbConverter control_converter[] =  {  (DtDbConverter) ControlParseCB,
-                                               NULL  };
+                                               nullptr  };
 static DtDbConverter animation_converter[] ={  (DtDbConverter) AnimationParseCB,
-                                               NULL  };
+                                               nullptr  };
 
 static DtDbRecordDesc record_descriptor[] =
 {
@@ -464,7 +464,7 @@ static DtDbRecordDesc record_descriptor[] =
 };
 
 static DtDbConverter control_single_converter[] =
-                               { (DtDbConverter) ControlSingleParseCB, NULL};
+                               { (DtDbConverter) ControlSingleParseCB, nullptr};
 
 static DtDbRecordDesc control_record_descriptor[] =
 {
@@ -533,7 +533,7 @@ FrontPanelReadDatabases (void)
    DtDirPaths * dir_paths;
 
 
-   panel.animation_data = NULL;
+   panel.animation_data = nullptr;
    panel.animation_count = 0;
 
 
@@ -543,7 +543,7 @@ FrontPanelReadDatabases (void)
    
    search_paths = _DtDbGetDataBaseEnv();
 
-   if ((HOME_DIR = (char *) getenv ("HOME")) == NULL)
+   if ((HOME_DIR = (char *) getenv ("HOME")) == nullptr)
    {
       pw_info = getpwuid (getuid());
       HOME_DIR = pw_info->pw_dir;
@@ -639,7 +639,7 @@ _DtPerfChkpntMsgSend("End   Front panel database read");
    
    name_list = (char **) XtMalloc (sizeof (char **) * 2);
    name_list[0] = panel.element_values[PANEL_NAME].parsed_value;
-   name_list[1] = NULL;
+   name_list[1] = nullptr;
    EliminateUnused (box_data, &box_count, name_list, BOX_CONTAINER_NAME,
 		    ANY_CONTAINER_TYPE, PANEL, BOX);
    XtFree ((char *) name_list);
@@ -686,15 +686,15 @@ _DtPerfChkpntMsgSend("End   Front panel database read");
 
      switch1 = (SwitchData *) XtMalloc (sizeof (SwitchData));
      switch1->element_values = switch_data[i].element_values;
-     switch1->control_data = NULL;
+     switch1->control_data = nullptr;
      switch1->control_data_count = 0;
-     switch1->rc = NULL;
-     switch1->buttons = NULL;
-     switch1->atom_names = NULL;
-     switch1->switch_names = NULL;
+     switch1->rc = nullptr;
+     switch1->buttons = nullptr;
+     switch1->atom_names = nullptr;
+     switch1->switch_names = nullptr;
      switch1->switch_count = 0;
      switch1->active_switch = 0;
-     switch1->popup_data = NULL;
+     switch1->popup_data = nullptr;
 
 
       /*  Parse the remaining database values for the switch  */
@@ -715,8 +715,8 @@ _DtPerfChkpntMsgSend("End   Front panel database read");
    if (switch_count != 0)
       name_list[0] = switch1->element_values[SWITCH_NAME].parsed_value;
    else
-      name_list[0] = NULL;
-   name_list[1] = NULL;
+      name_list[0] = nullptr;
+   name_list[1] = nullptr;
    EliminateUnused (control_data, &control_count, name_list,
 		    CONTROL_CONTAINER_NAME, CONTROL_CONTAINER_TYPE,
 		    SWITCH, CONTROL);
@@ -809,7 +809,7 @@ _DtPerfChkpntMsgSend("End   Front panel database read");
    for (i = 0; i < control_count; i++)
    {
       InitializeSecondaryControlFields (control_data[i].element_values);
-      InitializeFileControlFields (control_data[i].element_values, NULL);
+      InitializeFileControlFields (control_data[i].element_values, nullptr);
    }
 
 #ifdef DEBUG
@@ -869,16 +869,16 @@ _DtPerfChkpntMsgSend("End   Front panel database read");
        box = panel.box_data[i];
        
        box->element_values = box_data[i].element_values;
-       box->control_data = NULL;
+       box->control_data = nullptr;
        box->control_data_count = 0;
-       box->form = NULL;
-       box->left_arrow_form = NULL;
-       box->left_control_form = NULL;
-       box->right_arrow_form = NULL;
-       box->right_control_form = NULL;
-       box->switch_data = NULL;
-       box->switch_form = NULL;
-       box->switch_edit = NULL;
+       box->form = nullptr;
+       box->left_arrow_form = nullptr;
+       box->left_control_form = nullptr;
+       box->right_arrow_form = nullptr;
+       box->right_control_form = nullptr;
+       box->switch_data = nullptr;
+       box->switch_form = nullptr;
+       box->switch_edit = nullptr;
        box->subpanel_count = 0;
 
        
@@ -1142,11 +1142,11 @@ AnimationParseCB (DtDtsDbField  * fields,
         head_ptr = source =
 		 (unsigned char *) strdup((char *)fields[i+1].fieldValue);
 
-        if ((string = _DtWmParseNextTokenC(&source, False)) != NULL)
+        if ((string = _DtWmParseNextTokenC(&source, False)) != nullptr)
 	{
 	   panel.animation_data[count].items[i].image_name =
 						 strdup((char *) string);
-	   if ((string = _DtWmParseNextTokenC(&source, False)) != NULL)
+	   if ((string = _DtWmParseNextTokenC(&source, False)) != nullptr)
 	   {
 	      StringToInt((char *)string, &val_rtn);
 	      panel.animation_data[count].items[i].delay = (int) (intptr_t) val_rtn;
@@ -1194,7 +1194,7 @@ ControlSingleParseCB (DtDtsDbField  * fields,
 
    ProcessRecord (fields, control_element_values);
 
-   InitializeControlFields(control_element_values, NULL);
+   InitializeControlFields(control_element_values, nullptr);
 
    return (True);
 }
@@ -1242,8 +1242,8 @@ ProcessRecord (DtDtsDbField   * fields,
    for (i = 0; i < keyword_count; i++)
    {
       (element_values + i)->use_default = True;
-      (element_values + i)->string_value = NULL;
-      (element_values + i)->parsed_value = NULL;
+      (element_values + i)->string_value = nullptr;
+      (element_values + i)->parsed_value = nullptr;
    }
 
 
@@ -1271,7 +1271,7 @@ ProcessRecord (DtDtsDbField   * fields,
       }
 
       if (j == keyword_count)
-         _DtSimpleError (panel.app_name, DtWarning, NULL,
+         _DtSimpleError (panel.app_name, DtWarning, nullptr,
                          "Invalid keyword -- %s", XrmQuarkToString(field1));
    }
 }
@@ -1713,8 +1713,8 @@ RemoveEntry (RecordData * record_data,
    for (i = 0; i < record_descriptor[record_type].maxFields; i++)
    {
        if (record_keywords[record_type].parse_functions[i].free_function
-							     != NULL &&
-	   record_data->element_values[i].parsed_value != NULL &&
+							     != nullptr &&
+	   record_data->element_values[i].parsed_value != nullptr &&
 	   record_data->element_values[i].use_default == False)
        {
 	  (*(record_keywords[record_type].parse_functions[i].free_function))
@@ -1722,7 +1722,7 @@ RemoveEntry (RecordData * record_data,
        }
 
        if (record_data->element_values[i].use_default == False &&
-           record_data->element_values[i].string_value != NULL)
+           record_data->element_values[i].string_value != nullptr)
           free(record_data->element_values[i].string_value);
    }
 		    
@@ -1796,7 +1796,7 @@ ResolveDuplicates (RecordData * record_data,
    int i, start_index, lock_index, last_index;
    ElementValue * element_values;
    int cont_type;
-   char *cont_name = NULL, *record_name;
+   char *cont_name = nullptr, *record_name;
    int count = *record_count;
    Boolean locked;
 
@@ -1935,7 +1935,7 @@ GetNameList (RecordData * record_data,
 {
    int i;
 
-   char ** name_list = NULL;
+   char ** name_list = nullptr;
    int     name_list_count = 0;
    int     found_count = 0;
 
@@ -1958,8 +1958,8 @@ GetNameList (RecordData * record_data,
       }
    }
 
-   if (name_list != NULL)
-      name_list [found_count] = NULL;
+   if (name_list != nullptr)
+      name_list [found_count] = nullptr;
 
    return (name_list);
 }
@@ -2001,9 +2001,9 @@ EliminateUnused (RecordData    * record_data,
        if (cont_type == ANY_CONTAINER_TYPE ||
            (intptr_t)(element_values[cont_type].parsed_value) == container)
        {
-          if (cont_name_list != NULL)
+          if (cont_name_list != nullptr)
           {
-             for (j = 0; cont_name_list[j] != NULL; j++)
+             for (j = 0; cont_name_list[j] != nullptr; j++)
 	     {
 	       container_name = cont_name_list[j];
 	       if (strcmp((char *)element_values[cont_name].parsed_value,
@@ -2144,7 +2144,7 @@ InitializeField (ElementValue  * element_values,
                  ParseFunction * parse_functions)
 
 {
-   if (element_values[keyword].string_value != NULL)
+   if (element_values[keyword].string_value != nullptr)
    {
       element_values[keyword].use_default = False;
 
@@ -2153,7 +2153,7 @@ InitializeField (ElementValue  * element_values,
                                       &(element_values[keyword].parsed_value)))
       {
          XtFree(element_values[keyword].string_value);
-         element_values[keyword].string_value = NULL;
+         element_values[keyword].string_value = nullptr;
 
          element_values[keyword].use_default = True;
          element_values[keyword].parsed_value = 
@@ -2223,19 +2223,19 @@ DeleteControlActionList (ControlData * control_data)
 {
    int i;
 
-   if (control_data->move_action != NULL)
+   if (control_data->move_action != nullptr)
       free(control_data->move_action);
-   if (control_data->copy_action != NULL)
+   if (control_data->copy_action != nullptr)
       free(control_data->copy_action);
-   if (control_data->link_action != NULL)
+   if (control_data->link_action != nullptr)
       free(control_data->link_action);
 
-   if (control_data->actions != NULL)
+   if (control_data->actions != nullptr)
    {
-       for (i = 0; control_data->actions[i] != NULL; i++)
+       for (i = 0; control_data->actions[i] != nullptr; i++)
        {
 	  free (control_data->actions[i]->action_name);
-	  if (control_data->actions[i]->action_label != NULL)
+	  if (control_data->actions[i]->action_label != nullptr)
 	     free (control_data->actions[i]->action_label);
 	  XtFree ((char *) control_data->actions[i]);
        }
@@ -2259,11 +2259,11 @@ AddControlActionList (ControlData * control_data)
 
 
 {
-   char * data_type = NULL;
-   char * act_list = NULL;
-   char * file_name = NULL;
+   char * data_type = nullptr;
+   char * act_list = nullptr;
+   char * file_name = nullptr;
    char * file_str;
-   char ** action_list = NULL;
+   char ** action_list = nullptr;
    int num_actions = 0;
    int i = 0;
    int result;
@@ -2283,7 +2283,7 @@ AddControlActionList (ControlData * control_data)
       is_file_control = True;   
    }
       
-   if (data_type != NULL)
+   if (data_type != nullptr)
    {
       DtDtsAttribute  ** attr_list;
       char * attr[5];
@@ -2301,9 +2301,9 @@ AddControlActionList (ControlData * control_data)
       attr[2] = DtDTS_DA_LINK_TO_ACTION;
       attr[3] = DtDTS_DA_MOVE_TO_ACTION;
 
-      if (attr_list != NULL)
+      if (attr_list != nullptr)
       {
-         for (i = 0; attr_list[i] != NULL; i++)
+         for (i = 0; attr_list[i] != nullptr; i++)
          {
             for (j = 0; j < 4; j++)
 	       if (strcmp (attr_list[i]->name, attr[j]) == 0)
@@ -2349,26 +2349,26 @@ AddControlActionList (ControlData * control_data)
       if (act_list)
       {
 	 action_list = _DtVectorizeInPlace (act_list, ',');
-	 for (i = 0; action_list[i] != NULL; i++)
+	 for (i = 0; action_list[i] != nullptr; i++)
 	     num_actions++;
       }
 
       if (DtDtsDataTypeIsAction(data_type) && is_file_control)
 	 control_data->is_action = True;
 
-      if (attr_list != NULL)
+      if (attr_list != nullptr)
          DtDtsFreeAttributeList(attr_list);
    }
 
-   if (action_list == NULL)
+   if (action_list == nullptr)
    {
-      if (control_data->element_values[CONTROL_PUSH_ACTION].string_value != NULL)
+      if (control_data->element_values[CONTROL_PUSH_ACTION].string_value != nullptr)
       {
          action_list = (char **) XtMalloc(sizeof(char *) * 2);
 
          action_list[0] = 
             control_data->element_values[CONTROL_PUSH_ACTION].string_value;
-         action_list[1] = NULL;
+         action_list[1] = nullptr;
          num_actions = 1;
       }
       else
@@ -2393,12 +2393,12 @@ AddControlActionList (ControlData * control_data)
 
        control_data->actions[i]->action_name = strdup(action_list[j]);
 
-       control_data->actions[i]->aap = NULL;
+       control_data->actions[i]->aap = nullptr;
        control_data->actions[i]->count = 0;
 
        label = DtActionLabel (action_list[j]);
 
-       if (label != NULL)
+       if (label != nullptr)
 	  control_data->actions[i]->action_label = label;
        else
 	  control_data->actions[i]->action_label = strdup (action_list[j]);
@@ -2406,7 +2406,7 @@ AddControlActionList (ControlData * control_data)
 
    }
 
-   control_data->actions[i] = NULL;
+   control_data->actions[i] = nullptr;
 
    if (act_list)
        free (act_list);
@@ -2414,7 +2414,7 @@ AddControlActionList (ControlData * control_data)
    if (action_list)
        XtFree ((char *) action_list);
 
-   if ((data_type != NULL) && is_file_control)
+   if ((data_type != nullptr) && is_file_control)
       DtDtsFreeDataType (data_type);
 }
 
@@ -2509,16 +2509,16 @@ ProcessControl (XtPointer       parent,
    control->element_values = element_values;
    control->parent_data = parent;
    control->parent_type = parent_type;
-   control->subpanel_data = NULL;
-   control->icon = NULL;
-   control->arrow = NULL;
-   control->arrow_separator = NULL;
-   control->indicator = NULL;
-   control->actions = NULL;
+   control->subpanel_data = nullptr;
+   control->icon = nullptr;
+   control->arrow = nullptr;
+   control->arrow_separator = nullptr;
+   control->indicator = nullptr;
+   control->actions = nullptr;
    control->is_action = False;
-   control->move_action = NULL;
-   control->copy_action = NULL;
-   control->link_action = NULL;
+   control->move_action = nullptr;
+   control->copy_action = nullptr;
+   control->link_action = nullptr;
    control->operation = 0;
 
    AddControlActionList (control);
@@ -2568,15 +2568,15 @@ ProcessBoxControl (ControlData * control_data)
 
          subpanel = control_data->subpanel_data;
          subpanel->element_values = element_values;
-         subpanel->control_data = NULL;
+         subpanel->control_data = nullptr;
          subpanel->control_data_count = 0;
          subpanel->parent_control_data = control_data;
-	 subpanel->default_control = NULL;
-	 subpanel->shell = NULL;
-	 subpanel->form = NULL;
-	 subpanel->dropzone = NULL;
-	 subpanel->separator = NULL;
-	 subpanel->main_panel_icon_copy = NULL;
+	 subpanel->default_control = nullptr;
+	 subpanel->shell = nullptr;
+	 subpanel->form = nullptr;
+	 subpanel->dropzone = nullptr;
+	 subpanel->separator = nullptr;
+	 subpanel->main_panel_icon_copy = nullptr;
 	 subpanel->torn = False;
 
          ProcessSubpanel (subpanel);
@@ -2758,7 +2758,7 @@ WriteComponentToFile (RecordData * record_data,
    char * file_name = CreateComponentFileName (record_data);
    int k;
 
-   if ((fd = fopen(file_name, "w")) != NULL)
+   if ((fd = fopen(file_name, "w")) != nullptr)
    {
       fprintf (fd, "%s	%s\n{\n", keywords[0],
                record_data->element_values[0].string_value);
@@ -2781,7 +2781,7 @@ WriteComponentToFile (RecordData * record_data,
       {
          for (k = 1; k < record_descriptor[record_type].maxFields; k++)
          {
-             if (record_data->element_values[k].string_value != NULL &&
+             if (record_data->element_values[k].string_value != nullptr &&
 		 record_data->element_values[k].use_default == False)
              {
                 if (record_type == CONTROL &&
@@ -2846,7 +2846,7 @@ RemoveComponentFile (RecordData * record_data,
       SessionFileNameLookup (record_data->element_values[0].string_value, 
                              record_type, container_name, container_type);
 
-   if (file_name == NULL || unlink (file_name) < 0)
+   if (file_name == nullptr || unlink (file_name) < 0)
       WriteComponentToFile (record_data, record_type, keywords,
 		            container_name, container_type, True);
    else
@@ -2987,7 +2987,7 @@ _WriteControlElementValues (ElementValue * element_values)
 
    for (k = 1; k < record_descriptor[CONTROL].maxFields; k++)
    {
-       if (element_values[k].string_value != NULL)
+       if (element_values[k].string_value != nullptr)
           printf("   %s	%s\n", 
 	         control_keywords[k], element_values[k].string_value);
    }
@@ -3046,9 +3046,9 @@ InitParse (char          * file_name,
    dirPath->paths = (char **) XtMalloc(sizeof(char *) * 2);
 
    dirPath->dirs[0] = tmpDir;
-   dirPath->dirs[1] = NULL;
+   dirPath->dirs[1] = nullptr;
    dirPath->paths[0] = tmpPath;
-   dirPath->paths[1] = NULL;
+   dirPath->paths[1] = nullptr;
 
    _DtDbRead (dirPath, FILE_TYPE_SUFFIX, control_record_descriptor, 2);
 
@@ -3087,20 +3087,20 @@ FreeFileControlField (ElementValue * element_values,
 
 
 {
-   if (control_parse_functions[indx].free_function != NULL &&
-       element_values[indx].parsed_value != NULL &&
+   if (control_parse_functions[indx].free_function != nullptr &&
+       element_values[indx].parsed_value != nullptr &&
        element_values[indx].use_default == False)
    {
       (*(control_parse_functions[indx].free_function))
          (&(element_values[indx].parsed_value));
-      element_values[indx].parsed_value = NULL;
+      element_values[indx].parsed_value = nullptr;
    }
 
    if (element_values[indx].use_default == False &&
-       element_values[indx].string_value != NULL)
+       element_values[indx].string_value != nullptr)
    {
       free(element_values[indx].string_value);
-      element_values[indx].string_value = NULL;
+      element_values[indx].string_value = nullptr;
    }
 }
 		    
@@ -3198,12 +3198,12 @@ InitializeFileControlFields (ElementValue * element_values,
    {
       Boolean free_data_type = False;
       char * act_list;
-      char ** action_list = NULL;
+      char ** action_list = nullptr;
       char * icon_name;
       char * file_name;
       char * description;
       char * file_str;
-      char * label = NULL;
+      char * label = nullptr;
       int i, j, result;
 
       struct stat stat_info;
@@ -3215,23 +3215,23 @@ InitializeFileControlFields (ElementValue * element_values,
       if (lstat (file_name, &stat_info) != 0)
          valid_file = False;
 
-      if (data_type == NULL && file_name != NULL)
+      if (data_type == nullptr && file_name != nullptr)
       {
          data_type = DtDtsFileToDataType (file_name);
          free_data_type = True;
       }
 
-      if (data_type != NULL)
+      if (data_type != nullptr)
       {
          if (valid_file)
          {
             icon_name = DtDtsDataTypeToAttributeValue (data_type,
-                                                       DtDTS_DA_ICON, NULL);
+                                                       DtDTS_DA_ICON, nullptr);
 
-            if (element_values[CONTROL_NORMAL_ICON].string_value != NULL)
+            if (element_values[CONTROL_NORMAL_ICON].string_value != nullptr)
             {
                XtFree (element_values[CONTROL_NORMAL_ICON].string_value);
-	       element_values[CONTROL_NORMAL_ICON].string_value = NULL;
+	       element_values[CONTROL_NORMAL_ICON].string_value = nullptr;
             }
 
             element_values[CONTROL_NORMAL_ICON].string_value =
@@ -3241,12 +3241,12 @@ InitializeFileControlFields (ElementValue * element_values,
          }
 
          description = 
-           DtDtsDataTypeToAttributeValue(data_type, DtDTS_DA_DESCRIPTION, NULL);
+           DtDtsDataTypeToAttributeValue(data_type, DtDTS_DA_DESCRIPTION, nullptr);
 
-         if (element_values[CONTROL_HELP_STRING].string_value != NULL)
+         if (element_values[CONTROL_HELP_STRING].string_value != nullptr)
          {
             XtFree (element_values[CONTROL_HELP_STRING].string_value);
-            element_values[CONTROL_HELP_STRING].string_value = NULL;
+            element_values[CONTROL_HELP_STRING].string_value = nullptr;
          }
 
          element_values[CONTROL_HELP_STRING].string_value = XtNewString (description);
@@ -3255,11 +3255,11 @@ InitializeFileControlFields (ElementValue * element_values,
 
          act_list = DtDtsDataTypeToAttributeValue (data_type,
 						   DtDTS_DA_ACTION_LIST,
-						   NULL);
+						   nullptr);
          if (act_list)
             action_list = _DtVectorizeInPlace (act_list, ',');
 
-	 if (action_list && action_list[0] != NULL)
+	 if (action_list && action_list[0] != nullptr)
 	 {
 	    element_values[CONTROL_PUSH_ACTION].string_value =
 					      strdup (action_list[0]);
@@ -3271,9 +3271,9 @@ InitializeFileControlFields (ElementValue * element_values,
 	 }
 
 	 /* try to set it to the name of the type */
-	 if (label == NULL) {
+	 if (label == nullptr) {
 	     label = DtDtsDataTypeToAttributeValue (data_type,
-						    DtDTS_DA_LABEL, NULL);
+						    DtDTS_DA_LABEL, nullptr);
 
 	     /* copy & correctly free the memory */
 	     if (label) {
@@ -3286,20 +3286,20 @@ InitializeFileControlFields (ElementValue * element_values,
 	 }
 	 
 
-         if (label == NULL && file_name != NULL)
+         if (label == nullptr && file_name != nullptr)
          {
-            if ((file_str = (char *)strrchr(file_name, '/')) == NULL)
+            if ((file_str = (char *)strrchr(file_name, '/')) == nullptr)
                 file_str = file_name;
             else
                 file_str++;
             label = XtNewString(file_str);
          }
 
-         if (label != NULL)
+         if (label != nullptr)
 	    element_values[CONTROL_LABEL].string_value = label;
 
 
-	 if (data_type != NULL)
+	 if (data_type != nullptr)
 	 {
 	    if (act_list)
 	    {
@@ -3370,7 +3370,7 @@ UpdateFileType (ControlData * control_data)
    FreeFileControlField (control_data->element_values, CONTROL_PUSH_ACTION);
    FreeFileControlField (control_data->element_values, CONTROL_DROP_ACTION);
    FreeFileControlField (control_data->element_values, CONTROL_LABEL);
-   InitializeFileControlFields (control_data->element_values, NULL);
+   InitializeFileControlFields (control_data->element_values, nullptr);
 
    DeleteControlActionList (control_data);
    AddControlActionList (control_data);
@@ -3387,7 +3387,7 @@ UpdateFileType (ControlData * control_data)
    {
       icon_name = GetIconName (icon_name, panel.main_icon_size);
 
-      if (icon_name == NULL)
+      if (icon_name == nullptr)
          icon_name = GetIconName (icon_name, panel.sub_icon_size);
    }
 
@@ -3436,7 +3436,7 @@ UpdateFileTypeControlFields (void)
 								 CONTROL_FILE)
             UpdateFileType(control_data);
 
-         if (control_data->subpanel_data != NULL)
+         if (control_data->subpanel_data != nullptr)
          {
             subpanel_data = control_data->subpanel_data;
 
@@ -3451,7 +3451,7 @@ UpdateFileTypeControlFields (void)
          }
       }
 
-      if (box_data->switch_data != NULL)
+      if (box_data->switch_data != nullptr)
       {
          switch_data = box_data->switch_data;
          for (j = 0; j < switch_data->control_data_count; j++)

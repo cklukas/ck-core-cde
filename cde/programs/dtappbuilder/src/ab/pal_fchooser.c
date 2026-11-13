@@ -126,10 +126,10 @@ PalItemInfo fchooser_palitem_rec = {
 
     /* type             */  AB_TYPE_FILE_CHOOSER,
     /* name             */  "File Selection",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  fchooser_initialize,
     /* is_a_test        */  obj_is_file_chooser,
     /* prop_initialize  */  fchooser_prop_init,
@@ -237,12 +237,12 @@ fchooser_prop_init(
     if (dtb_fchooser_prop_dialog_initialize(cgen, parent) == 0)
     {
         pcs->prop_sheet = cgen->attrs_ctrlpanel;
-        pcs->current_obj = NULL;
+        pcs->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pcs->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -257,7 +257,7 @@ fchooser_prop_init(
 
         /* Alternate Editor Buttons */
         prop_editors_panel_init(type, ab_fchooser_palitem,
-            NULL, cgen->conn_button, cgen->help_txt_button);
+            nullptr, cgen->conn_button, cgen->help_txt_button);
 
         /*
           * Prop Sheet Settings....
@@ -329,7 +329,7 @@ fchooser_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 
@@ -352,7 +352,7 @@ fchooser_prop_clear(
 {
     PropFchooserSettingsRec	*pcs = &(prop_fchooser_settings_rec[type]);
 
-    if (pcs->current_obj == NULL)
+    if (pcs->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -386,7 +386,7 @@ fchooser_prop_clear(
     prop_colorfield_set_value(&(pcs->bg_color), "", False);
     prop_colorfield_set_value(&(pcs->fg_color), "", False);
 
-    pcs->current_obj = NULL;
+    pcs->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -405,9 +405,9 @@ fchooser_prop_load(
     PropFchooserSettingsRec 	*pcs = &(prop_fchooser_settings_rec[type]);
     BOOL                        load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pcs->current_obj != NULL)
+        if (pcs->current_obj != nullptr)
             obj = pcs->current_obj;
         else
             return ERROR;
@@ -424,7 +424,7 @@ fchooser_prop_load(
     if (load_all)
     {
 	/* Load Window Parent */
-	if ((win_parent = obj_get_win_parent(obj)) != NULL)
+	if ((win_parent = obj_get_win_parent(obj)) != nullptr)
 	{
 		name = abobj_get_moduled_name(win_parent);
 		prop_field_set_value(&(pcs->win_parent), name, False);
@@ -491,7 +491,7 @@ fchooser_prop_apply(
         value = prop_field_get_value(&(pcs->win_parent));
         if (util_strcmp(value, "") == 0)
         {
-            abobj_set_win_parent(pcs->current_obj, NULL);
+            abobj_set_win_parent(pcs->current_obj, nullptr);
             util_free(value);
         }
         else

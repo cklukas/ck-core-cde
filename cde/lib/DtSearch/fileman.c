@@ -191,7 +191,7 @@ FREE_SPACE_STR *find_free_space (DtSrINT32 req_size, FILE_HEADER * flh)
 
     /* if big enough free space not found, return NULL */
     if (j < 0) {
-	return NULL;
+	return nullptr;
     }
 
     if (flh->hole_array[k][j].hole_size == req_size) {

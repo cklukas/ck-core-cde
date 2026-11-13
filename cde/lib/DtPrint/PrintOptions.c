@@ -131,8 +131,8 @@ _DtPrintDestroyHdrFtrFrameCB(
 {
     DtpoHdrFtrFrame	*info = (DtpoHdrFtrFrame *) client_data;
 
-    if (info == NULL) return;
-    if (info->specs != NULL)
+    if (info == nullptr) return;
+    if (info->specs != nullptr)
       XtFree((char*) info->specs);
     XtFree((char*) info);
 }
@@ -178,10 +178,10 @@ _DtPrintCreateHdrFtrFrame(
     for (i=0; i<nspecs; i++)
     {
         info->specs[i].string = spec_strings[i];
-	if (spec_data != (void*) NULL)
+	if (spec_data != (void*) nullptr)
           info->specs[i].data = spec_data[i];
 	else
-	  info->specs[i].data = (void*) NULL;
+	  info->specs[i].data = (void*) nullptr;
 	info->specs[i].button = (Widget) NULL;
     }
 
@@ -228,7 +228,7 @@ _DtPrintCreateHdrFtrFrame(
      * Create the pulldown menu for the option menus.
      * Store the button index in the userData resource of each button.
      */
-    info->menu = XmCreatePulldownMenu(parent, "HdrFtrMenu", NULL, 0);
+    info->menu = XmCreatePulldownMenu(parent, "HdrFtrMenu", nullptr, 0);
     for (i=0; i<info->nspecs; i++)
     {
 	static char	button_label[32];
@@ -357,10 +357,10 @@ _DtPrintHdrFtrFrameEnumToWidget(
 	)
 {
     DtpoHdrFtrFrame	*info;
-    Widget		widget = NULL;
+    Widget		widget = nullptr;
 
-    XtVaGetValues(frame, XmNuserData, &info, NULL);
-    if (info == NULL)
+    XtVaGetValues(frame, XmNuserData, &info, nullptr);
+    if (info == nullptr)
       return widget;
 
     switch (which)
@@ -374,7 +374,7 @@ _DtPrintHdrFtrFrameEnumToWidget(
 	case DTPRINT_OPTION_FOOTER_RIGHT:
 	  widget = info->bottom_right; break;
 	default:
-	  widget = NULL;
+	  widget = nullptr;
     }
 
     return widget;
@@ -398,20 +398,20 @@ _DtPrintHdrFtrFrameMenuWidgets(
     int			i;
     DtpoHdrFtrFrame	*info;
 
-    if (frame == NULL) return;
+    if (frame == nullptr) return;
 
-    XtVaGetValues(frame, XmNuserData, &info, NULL);
-    if (info == NULL) return;
+    XtVaGetValues(frame, XmNuserData, &info, nullptr);
+    if (info == nullptr) return;
 
-    if (menu != NULL)
+    if (menu != nullptr)
       *menu = info->menu;
 
-    if (nmenu_buttons != NULL)
+    if (nmenu_buttons != nullptr)
       *nmenu_buttons = info->nspecs;
 
-    if (menu_buttons != NULL)
+    if (menu_buttons != nullptr)
     {
-	if (*menu_buttons == NULL)
+	if (*menu_buttons == nullptr)
           *menu_buttons = (Widget *) XtMalloc( info->nspecs * sizeof(Widget) );
     
         for (i=0; i<info->nspecs; i++)
@@ -437,8 +437,8 @@ _DtPrintGetHdrFtrIndex(
 
     if (! option) return index;
 
-    XtVaGetValues(option, XmNmenuHistory, &selected, NULL);
-    XtVaGetValues(selected, XmNuserData, &index, NULL);
+    XtVaGetValues(option, XmNmenuHistory, &selected, nullptr);
+    XtVaGetValues(selected, XmNuserData, &index, nullptr);
     return index;
 }
 
@@ -456,11 +456,11 @@ _DtPrintGetHdrFtrData(
 	)
 {
     int			index = 0;
-    DtpoHdrFtrFrame	*info = NULL;
+    DtpoHdrFtrFrame	*info = nullptr;
 
-    if (! option) return (void*) NULL;
-    XtVaGetValues(option, XmNuserData, &info, NULL);
-    if (info == NULL) return 0;
+    if (! option) return (void*) nullptr;
+    XtVaGetValues(option, XmNuserData, &info, nullptr);
+    if (info == nullptr) return 0;
 
     index = _DtPrintGetHdrFtrIndex(option);
     return info->specs[index].data;
@@ -480,11 +480,11 @@ _DtPrintGetHdrFtrString(
 	)
 {
     int			index = 0;
-    DtpoHdrFtrFrame	*info = NULL;
+    DtpoHdrFtrFrame	*info = nullptr;
 
-    if (! option) return (void*) NULL;
-    XtVaGetValues(option, XmNuserData, &info, NULL);
-    if (info == NULL) return 0;
+    if (! option) return (void*) nullptr;
+    XtVaGetValues(option, XmNuserData, &info, nullptr);
+    if (info == nullptr) return 0;
 
     index = _DtPrintGetHdrFtrIndex(option);
     return info->specs[index].string;
@@ -507,14 +507,14 @@ _DtPrintSetHdrFtrByData(
     int			i;
     DtpoHdrFtrFrame	*info;
 
-    if (option == NULL) return;
-    XtVaGetValues(option, XmNuserData, &info, NULL);
-    if (info == NULL) return;
+    if (option == nullptr) return;
+    XtVaGetValues(option, XmNuserData, &info, nullptr);
+    if (info == nullptr) return;
 
     for (i=0; i<info->nspecs; i++)
       if (info->specs[i].data == data)
       {
-          XtVaSetValues(option, XmNmenuHistory, info->specs[i].button, NULL);
+          XtVaSetValues(option, XmNmenuHistory, info->specs[i].button, nullptr);
 	  return;
       }
 }
@@ -535,11 +535,11 @@ _DtPrintSetHdrFtrByIndex(
 {
     DtpoHdrFtrFrame	*info;
 
-    if (option == NULL) return;
-    XtVaGetValues(option, XmNuserData, &info, NULL);
-    if (info == NULL) return;
+    if (option == nullptr) return;
+    XtVaGetValues(option, XmNuserData, &info, nullptr);
+    if (info == nullptr) return;
 
-    XtVaSetValues(option, XmNmenuHistory, info->specs[index].button, NULL);
+    XtVaSetValues(option, XmNmenuHistory, info->specs[index].button, nullptr);
 }
 
 /*
@@ -559,14 +559,14 @@ _DtPrintSetHdrFtrByString(
     int			i;
     DtpoHdrFtrFrame	*info;
 
-    if (option == NULL) return;
-    XtVaGetValues(option, XmNuserData, &info, NULL);
-    if (info == NULL) return;
+    if (option == nullptr) return;
+    XtVaGetValues(option, XmNuserData, &info, nullptr);
+    if (info == nullptr) return;
 
     for (i=0; i<info->nspecs; i++)
       if (strcmp(info->specs[i].string,string) == 0)
       {
-          XtVaSetValues(option, XmNmenuHistory, info->specs[i].button, NULL);
+          XtVaSetValues(option, XmNmenuHistory, info->specs[i].button, nullptr);
 	  return;
       }
 }
@@ -604,7 +604,7 @@ _DtPrintDestroyMarginFrameCB(
 {
     DtpoHdrFtrFrame	*info = (DtpoHdrFtrFrame *) client_data;
 
-    if (info == NULL) return;
+    if (info == nullptr) return;
     XtFree((char*) info);
 }
 
@@ -789,10 +789,10 @@ _DtPrintMarginFrameEnumToWidget(
 	)
 {
     DtpoMarginFrame	*info;
-    Widget		widget = NULL;
+    Widget		widget = nullptr;
 
-    XtVaGetValues(frame, XmNuserData, &info, NULL);
-    if (info == NULL)
+    XtVaGetValues(frame, XmNuserData, &info, nullptr);
+    if (info == nullptr)
       return widget;
 
     switch (which)
@@ -825,7 +825,7 @@ _DtPrintGetMarginSpec(
 	Widget			margin
 	)
 {
-    char		*spec = NULL;
+    char		*spec = nullptr;
 
     if (margin)
 	spec = XmTextFieldGetString(margin);

@@ -308,7 +308,7 @@ PrintError(
         DtSeverity severity,
         char *help )
 {
-    _DtSimpleError(DtProgName, severity, NULL, "%.2000s", help);
+    _DtSimpleError(DtProgName, severity, nullptr, "%.2000s", help);
 }
 
 
@@ -343,5 +343,5 @@ PrintErrnoError(
         DtSeverity severity,
         char *help )
 {
-    _DtSimpleErrnoError(DtProgName, severity, NULL, "%s", help);
+    _DtSimpleErrnoError(DtProgName, severity, nullptr, "%s", help);
 }

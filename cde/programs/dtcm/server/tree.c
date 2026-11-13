@@ -63,7 +63,7 @@ balance(Tree_node *gg, Tree_node *g, Tree_node *f, Tree_node *x)
 {
 	Tree_node *t;
 	Color tc;
-	if (gg == NULL || g == NULL) exit (-1);
+	if (gg == nullptr || g == nullptr) exit (-1);
 	if (f == g->llink) {
 	  	if (x == f->rlink) {
 	    		f->rlink = x->llink;
@@ -104,10 +104,10 @@ doit(Rb_tree *tree, Action_proc proc)
 	Private *private;
 	Tree_node *root;
 
-	if (tree==NULL) return;
+	if (tree==nullptr) return;
 	private = (Private *) tree->private;
 	root = tree->root;
-	if (root == NULL || root->llink != NULL) {
+	if (root == nullptr || root->llink != nullptr) {
 		private->status = rb_badtable;
 		return;
 	}
@@ -125,14 +125,14 @@ rb_create (_DtCmsGetKeyProc get, _DtCmsCompareProc compare)
 	p->size = 0;
 	p->count = 0;
 	p->status = rb_ok;
-	p->data = NULL;
-	p->i = NULL;
+	p->data = nullptr;
+	p->i = nullptr;
 	p->key = 0;
-	p->d = NULL;
+	p->d = nullptr;
 	p->y = (Tree_node *) calloc (1, sizeof(Tree_node));
 	p->z = (Tree_node *) calloc (1, sizeof(Tree_node));
 	p->get = get;
-	p->enumerate = NULL;
+	p->enumerate = nullptr;
 	p->compare = compare;
 
 	root = (Tree_node *) calloc (1, sizeof(Tree_node));
@@ -143,10 +143,10 @@ rb_create (_DtCmsGetKeyProc get, _DtCmsCompareProc compare)
 	tree->private = (caddr_t) p;
 	p->tree = tree;   /* link back so callbacks can access */
 	root->color = black;
-	root->llink = NULL;
+	root->llink = nullptr;
 	root->rlink = z;
 	y->color = red;
-	y->llink = y->rlink = NULL;
+	y->llink = y->rlink = nullptr;
 	z->color = black;
 	z->llink = z->rlink = y;
 
@@ -157,21 +157,21 @@ rb_create (_DtCmsGetKeyProc get, _DtCmsCompareProc compare)
 extern void
 rb_destroy(Rb_tree *tree, _DtCmsDestroyProc destroy)
 {
-	Private *p = NULL;
-	caddr_t data = NULL;
-	Tree_node *node = NULL;
+	Private *p = nullptr;
+	caddr_t data = nullptr;
+	Tree_node *node = nullptr;
 	caddr_t key;
 
 	/* NOTE:there is a client data field
 		associated with the tree struct.
 		It is up to the client to destroy
 		these.				*/
-	if (tree==NULL) return;
+	if (tree==nullptr) return;
 	p = (Private *) tree->private;
 	data = rb_lookup_smallest(tree);
 
 	/* enumerate tree, destroying data */
-	while(data != NULL) {
+	while(data != nullptr) {
 		key = p->get(data);
 		node = rb_delete(tree, key);
 		if (destroy)
@@ -203,9 +203,9 @@ extern int
 rb_size(Rb_tree *tree)
 {
 	Private *p;
-	if (tree==NULL) return(0);
+	if (tree==nullptr) return(0);
 	p = (Private *) tree->private;
-	if (tree != NULL) {
+	if (tree != nullptr) {
 		doit(tree, size_callback);
 		return(p->size);
 	}
@@ -216,7 +216,7 @@ rb_size(Rb_tree *tree)
 static void
 insert_callback(Private *private, Tree_node *y, Tree_node *z, Tree_node *root)
 {
-	Tree_node *x=NULL, *gg=NULL, *g=NULL, *f=NULL;
+	Tree_node *x=nullptr, *gg=nullptr, *g=nullptr, *f=nullptr;
 	_DtCmsComparisonResult c = _DtCmsIsGreater;
 
 	f = root;
@@ -262,7 +262,7 @@ rb_insert_node(Rb_tree *tree, Tree_node *node, caddr_t key)
 {
 	Private *private;
 
-	if (tree==NULL) return(rb_notable);
+	if (tree==nullptr) return(rb_notable);
 	private = (Private *) tree->private;
 	private->status = rb_ok;
 	private->i = node;
@@ -276,7 +276,7 @@ rb_insert(Rb_tree *tree, caddr_t data, caddr_t key)
 {
 	Tree_node *node;
 
-	if (tree==NULL) return(rb_notable);
+	if (tree==nullptr) return(rb_notable);
 	node = (Tree_node *)calloc(1, sizeof(Tree_node));
 	node->data = data;
 	return(rb_insert_node(tree, node, key));
@@ -291,7 +291,7 @@ delete_callback(Private *private, Tree_node *y, Tree_node *z, Tree_node *root)
 
 	f = root;
 	x = f->rlink;
-	result = NULL;
+	result = nullptr;
 
 	if (x == z) return;
 	y->color = black;
@@ -359,7 +359,7 @@ delete_callback(Private *private, Tree_node *y, Tree_node *z, Tree_node *root)
 	root->rlink->color = black;
 	z->color = black;
 	y->color = red;
-	if (result != NULL) {
+	if (result != nullptr) {
 		if (g->llink == f) g->llink = z;
 	  	else g->rlink = z;
 	  	if (f != result) {
@@ -378,10 +378,10 @@ extern Tree_node *
 rb_delete(Rb_tree *tree, caddr_t key)
 {
 	Private *p;
-	if (tree==NULL) return((Tree_node *)NULL);
+	if (tree==nullptr) return((Tree_node *)nullptr);
 	p = (Private *) tree->private;
 	p->key = key;
-	p->d = NULL;	/* in case the key is not found */
+	p->d = nullptr;	/* in case the key is not found */
 	doit (tree, delete_callback);
 	return(p->d);
 }
@@ -415,10 +415,10 @@ extern caddr_t
 rb_lookup(Rb_tree *tree, caddr_t key)
 {
 	Private *private;
-	if (tree==NULL) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)NULL);
 	private = (Private *)tree->private;
 	private->key = key;
-	private->data = NULL; /* might have been previously used */
+	private->data = nullptr; /* might have been previously used */
 	doit (tree, lookup_callback);
 	return (private->data);
 }
@@ -439,9 +439,9 @@ extern caddr_t
 rb_lookup_smallest(Rb_tree *tree)
 {
 	Private *private;
-	if (tree==NULL) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)NULL);
 	private = (Private *)tree->private;
-	private->data = NULL; /* might have been previously used */
+	private->data = nullptr; /* might have been previously used */
 	doit (tree, lookup_smallest_callback);
 	return (private->data);
 }
@@ -450,7 +450,7 @@ rb_lookup_smallest(Rb_tree *tree)
 static void
 next_larger_callback(Private *private, Tree_node *y, Tree_node *z, Tree_node *root)
 {
-	Tree_node *larger = NULL;
+	Tree_node *larger = nullptr;
 	Tree_node *x = root->rlink;
 	while (x != z) {
 		if (private->compare (private->key, x->data) == _DtCmsIsLess) {
@@ -459,17 +459,17 @@ next_larger_callback(Private *private, Tree_node *y, Tree_node *z, Tree_node *ro
 		}
 		else x= x->rlink;
 	}
-	if (larger != NULL) private->data = larger->data;
+	if (larger != nullptr) private->data = larger->data;
 }
 
 extern caddr_t
 rb_lookup_next_larger(Rb_tree *tree, caddr_t key)
 {
 	Private *private;
-	if (tree==NULL) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)NULL);
 	private = (Private *) tree->private;
 	private->key = key;
-	private->data = NULL; /* might have been previously used */
+	private->data = nullptr; /* might have been previously used */
 	doit (tree, next_larger_callback);
 	return(private->data);
 }
@@ -491,9 +491,9 @@ rb_lookup_largest(Rb_tree *tree)
 {
 	Private *private;
 
-	if (tree==NULL) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)NULL);
 	private = (Private *) tree->private;
-	private->data = NULL; /* might have been previously used */
+	private->data = nullptr; /* might have been previously used */
 	doit (tree, lookup_largest_callback);
 	return (private->data);
 }
@@ -503,7 +503,7 @@ static void
 next_smaller_callback(Private *private, Tree_node *y, Tree_node *z, Tree_node *root)
 {
 
-	Tree_node *smaller = NULL;
+	Tree_node *smaller = nullptr;
 	Tree_node *x = root->rlink;
 	while (x != z) {
 		if (private->compare(private->key, x->data) == _DtCmsIsGreater) {
@@ -512,17 +512,17 @@ next_smaller_callback(Private *private, Tree_node *y, Tree_node *z, Tree_node *r
 		}
 		else x = x->llink;
 	}
-	if (smaller != NULL) private->data = smaller->data;
+	if (smaller != nullptr) private->data = smaller->data;
 }
 
 extern caddr_t
 rb_lookup_next_smaller(Rb_tree *tree, caddr_t key)
 {
 	Private *private;
-	if (tree==NULL) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)NULL);
 	private = (Private *) tree->private;
 	private->key = key;
-	private->data = NULL; /* might have been previously used */
+	private->data = nullptr; /* might have been previously used */
 	doit (tree, next_smaller_callback);
 	return(private->data);
 }
@@ -545,7 +545,7 @@ visit_subtree(Tree_node *node, Private *p, Tree_node *z, Direction dir)
 static boolean_t
 enumerate_up_callback(Private *private, Tree_node *y, Tree_node *z, Tree_node *root)
 {
-	if (root == NULL || root->rlink == z) return (B_FALSE);
+	if (root == nullptr || root->rlink == z) return (B_FALSE);
 	return (visit_subtree(root->rlink, private, z, up));
 }
 
@@ -553,10 +553,10 @@ extern Rb_Status
 rb_enumerate_up(Rb_tree *tree, _DtCmsEnumerateProc proc)
 {
 	Private *private;
-	if (tree==NULL) return (rb_badtable);
+	if (tree==nullptr) return (rb_badtable);
 	private = (Private *) tree->private;
 	private->enumerate = proc;
-	if (tree->root == NULL || tree->root->llink != NULL)
+	if (tree->root == nullptr || tree->root->llink != nullptr)
 		return rb_badtable;
 
 	if (enumerate_up_callback(private, private->y, private->z, tree->root))
@@ -569,7 +569,7 @@ rb_enumerate_up(Rb_tree *tree, _DtCmsEnumerateProc proc)
 static void
 enumerate_down_callback(Private *private, Tree_node *y, Tree_node *z, Tree_node *root)
 {
-	if (root == NULL || root->rlink == z) return;
+	if (root == nullptr || root->rlink == z) return;
 	(void) visit_subtree(root->rlink, private, z, down);
 }
 
@@ -577,7 +577,7 @@ extern void
 rb_enumerate_down(Rb_tree *tree, _DtCmsEnumerateProc proc)
 {
 	Private *private;
-	if (tree==NULL) return;
+	if (tree==nullptr) return;
 	private = (Private *) tree->private;
 	private->enumerate = proc;
 	doit (tree, enumerate_down_callback);
@@ -665,7 +665,7 @@ extern Rb_Status
 rb_check_tree(Rb_tree *tree)
 {
 	Private *p;
-	if (tree==NULL) return(rb_notable);
+	if (tree==nullptr) return(rb_notable);
 	p = (Private *) tree->private;
 	p->status = rb_ok;
 	p->count = 0;

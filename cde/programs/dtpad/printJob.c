@@ -112,8 +112,8 @@ static void	_pjPrintOnePageCB(Widget, XtPointer, XtPointer);
 static void	_pjRegisterActivePrintDisplay(Display*);
 static void	_pjUnregisterActivePrintDisplay(Display*);
 
-static Display	*_pjErrorPrintDisplay = NULL;
-static Display	**_pjActivePrintDisplay = NULL;
+static Display	*_pjErrorPrintDisplay = nullptr;
+static Display	**_pjActivePrintDisplay = nullptr;
 static int	_pjMaxActivePrintDisplay = 0;
 
 /************************************************************************
@@ -139,17 +139,17 @@ PrintJobCreate(
     pJob->tempFileName = strdup(tempFileName);
     pJob->silent = silent;
 
-    pJob->pOutput = NULL;
-    pJob->pSetup = NULL;
-    pJob->pShell = NULL;
+    pJob->pOutput = nullptr;
+    pJob->pSetup = nullptr;
+    pJob->pShell = nullptr;
     pJob->printData = (DtPrintSetupData*) XtMalloc(sizeof(DtPrintSetupData));
     memset(pJob->printData, 0, sizeof(DtPrintSetupData));
 
     pJob->npagesDone = 0;
     pJob->npagesTotal = 0;
 
-    pJob->nextpageShell = NULL;
-    pJob->nextpageButton = NULL;
+    pJob->nextpageShell = nullptr;
+    pJob->nextpageButton = nullptr;
 
     return pJob;
 }
@@ -161,7 +161,7 @@ PrintJobCreate(
 void
 PrintJobDestroy(PrintJob *pJob)
 {
-    if (pJob == NULL)
+    if (pJob == nullptr)
       return;
 
     if (pJob->pPad)
@@ -173,22 +173,22 @@ PrintJobDestroy(PrintJob *pJob)
         XtSetSensitive(pJob->pPad->fileStuff.fileWidgets.silentPrintBtn, True);
         */
     }
-    if (pJob->documentName != NULL)
+    if (pJob->documentName != nullptr)
     {
         free((char*) pJob->documentName);
-	pJob->documentName = NULL;
+	pJob->documentName = nullptr;
     }
-    if (pJob->tempFileName != NULL)
+    if (pJob->tempFileName != nullptr)
     {
         free((char*) pJob->tempFileName);
-	pJob->tempFileName = NULL;
+	pJob->tempFileName = nullptr;
     }
-    if (pJob->pOutput != NULL)
+    if (pJob->pOutput != nullptr)
     {
         PrintOutputDestroy(pJob->pOutput);
-	pJob->pOutput = NULL;
+	pJob->pOutput = nullptr;
     }
-    if (pJob->pShell != NULL)
+    if (pJob->pShell != nullptr)
     {
         _pjRegisterActivePrintDisplay(XtDisplay(pJob->pShell));
 	if (XtDisplay(pJob->pShell) == PrintJobGetErrorPrintDisplay())
@@ -204,27 +204,27 @@ PrintJobDestroy(PrintJob *pJob)
 		"The X Print Server is temporarily out of resources.");
 
 	    Warning(pJob->pPad, (char *) errMsg, XmDIALOG_ERROR);
-	    PrintJobSetErrorPrintDisplay(NULL);
+	    PrintJobSetErrorPrintDisplay(nullptr);
 	}
 
         XtDestroyWidget(pJob->pShell);
-	pJob->pShell = NULL;
+	pJob->pShell = nullptr;
     }
-    if (pJob->pSetup != NULL)
+    if (pJob->pSetup != nullptr)
     {
         PrintSetupDestroy(pJob->pSetup);
-	pJob->pSetup = NULL;
+	pJob->pSetup = nullptr;
     }
     if (pJob->printData)
     {
         DtPrintFreeSetupData(pJob->printData);
         XtFree((XtPointer) pJob->printData);
-	pJob->printData = NULL;
+	pJob->printData = nullptr;
     }
     if (pJob->nextpageShell)
     {
         XtDestroyWidget(pJob->nextpageShell);
-	pJob->nextpageShell = NULL;
+	pJob->nextpageShell = nullptr;
     }
 
     XtFree((char *) pJob);
@@ -237,7 +237,7 @@ PrintJobDestroy(PrintJob *pJob)
 void
 PrintJobExecute(PrintJob *pJob)
 {
-    if (pJob == NULL) return;
+    if (pJob == nullptr) return;
 
     pJob->pSetup = PrintSetupCreate(
 				pJob->parentShell,
@@ -333,7 +333,7 @@ _pjRegisterActivePrintDisplay(Display *display)
 
     for (i = 0; i < _pjMaxActivePrintDisplay; i++)
     {
-	if (NULL == _pjActivePrintDisplay[i])
+	if (nullptr == _pjActivePrintDisplay[i])
 	{
 	    _pjActivePrintDisplay[i] = display;
 	    return;
@@ -359,7 +359,7 @@ _pjUnregisterActivePrintDisplay(Display *display)
 
     for (i = 0; i < _pjMaxActivePrintDisplay; i++)
       if (display == _pjActivePrintDisplay[i])
-	_pjActivePrintDisplay[i] = NULL;
+	_pjActivePrintDisplay[i] = nullptr;
 }
 
 
@@ -371,12 +371,12 @@ _pjUnregisterActivePrintDisplay(Display *display)
 static void
 _pjCreatePrintShell(PrintJob *pJob)
 {
-    DtPrintSetupData    *psd = NULL;
+    DtPrintSetupData    *psd = nullptr;
 
-    if (pJob == NULL ||
-	pJob->pShell != NULL ||
-	pJob->parentShell == NULL ||
-	pJob->pSetup == NULL) return;
+    if (pJob == nullptr ||
+	pJob->pShell != nullptr ||
+	pJob->parentShell == nullptr ||
+	pJob->pSetup == nullptr) return;
 
 #if 0 && defined(PRINTING_SUPPORTED)
     
@@ -391,14 +391,14 @@ _pjCreatePrintShell(PrintJob *pJob)
     pJob->pShell = XmCreateDialogShell(
 				pJob->parentShell,
 				"PrintVideo",
-				NULL, 0);
+				nullptr, 0);
     {
         XmString    xms;
 
         pJob->nextpageShell = XmCreateDialogShell(
 					pJob->parentShell,
 					"PrintNextPage",
-					NULL, 0);
+					nullptr, 0);
 
         xms = XmStringCreateLocalized("Push for Next Page");
         pJob->nextpageButton = XtVaCreateManagedWidget(
@@ -408,7 +408,7 @@ _pjCreatePrintShell(PrintJob *pJob)
                                 	XmNlabelString, xms,
                                 	XmNwidth, 200,
                                 	XmNheight, 200,
-                                	NULL);
+                                	nullptr);
         XmStringFree(xms);
 
         XtAddCallback(
@@ -426,12 +426,12 @@ _pjCreatePrintShell(PrintJob *pJob)
      * Create an XmPrintShell widget on the print display.  
      */ 
     psd = pJob->printData;
-    if (psd != NULL)
+    if (psd != nullptr)
       pJob->pShell = XmPrintSetup(
 		pJob->parentShell,
 		XpGetScreenOfContext(psd->print_display, psd->print_context),
 		"Print",
-		NULL, 0);
+		nullptr, 0);
 
     XtAddCallback(
                 pJob->pShell,
@@ -445,7 +445,7 @@ _pjCreatePrintShell(PrintJob *pJob)
                 (XtPointer) pJob);
 #endif
 
-    if (pJob->pShell == NULL) return;
+    if (pJob->pShell == nullptr) return;
 #endif  /* PRINTING_SUPPORTED */
 
 }
@@ -464,7 +464,7 @@ _pjCreateOutputWidgets(PrintJob *pJob)
 {
     DtEditorErrorCode	errorCode;
     Boolean		parseError;
-    DtPrintSetupData    *psd = NULL;
+    DtPrintSetupData    *psd = nullptr;
     int                 save_data;
 
     /*
@@ -472,7 +472,7 @@ _pjCreateOutputWidgets(PrintJob *pJob)
      */
     /* TBD:  Is there a status bar on pPad? */
 
-    if (pJob->pShell == NULL)
+    if (pJob->pShell == nullptr)
     {
         {/* TBD error dialog */}
         PrintJobDestroy(pJob);
@@ -597,13 +597,13 @@ _pjDoPrint(PrintJob *pJob)
 
     static char		buf[1024];
     static char 	*format;
-    DtPrintSetupData    *psd = NULL;
+    DtPrintSetupData    *psd = nullptr;
     int			dest = XPSpool;
 
     /*
      * Notify the user that we're printing
      */
-    if (pJob->pPad != NULL) {
+    if (pJob->pPad != nullptr) {
 	pJob->pPad->numPendingTasks++;
         format = GETMESSAGE(14, 21, "Printing %s ...");
         sprintf(buf, format, pJob->documentName);
@@ -631,14 +631,14 @@ _pjDoPrint(PrintJob *pJob)
 	{
             char	*fmt = "%s\n%s:  %s";
             char	*message;
-            char	*appmessage = NULL;
+            char	*appmessage = nullptr;
 	    char	*sysmessage = strerror(errno);
 
 	    appmessage = (char *) GETMESSAGE(
 			    14, 14,
 			    "'Print to File' was unsuccessful.");
 	    
-	    if (NULL == sysmessage)
+	    if (nullptr == sysmessage)
 	    {
 		message = XtMalloc(strlen(appmessage) + 1);
 	        sprintf(message, "%s", appmessage);
@@ -684,7 +684,7 @@ _pjUpdatePageHeaders(
          *fl_string,
          *fr_string;
 
-    if (pJob == (PrintJob *) NULL) return;
+    if (pJob == (PrintJob *) nullptr) return;
 
     hl_string = _pjGetPageHeaderString(pJob, hl_type);
     hr_string = _pjGetPageHeaderString(pJob, hr_type);
@@ -725,7 +725,7 @@ static char *
 _pjGetPageHeaderString(PrintJob *pJob, PrintStringTypeEnum type)
 {
     char *format,
-         *buf = (char *) NULL;
+         *buf = (char *) nullptr;
 
     switch (type)
     {
@@ -737,13 +737,13 @@ _pjGetPageHeaderString(PrintJob *pJob, PrintStringTypeEnum type)
 		time_t	clock;
                 char    *date;
 
-		clock = time((time_t*) NULL);
+		clock = time((time_t*) nullptr);
 		date = ctime(&clock);
 		/* Strip off the trailing newline. */
 		date[strlen(date)-1] = '\0';
                 format = GETMESSAGE(14, 8, "Date:  %s");
                 buf = (char *) malloc(strlen(format) + strlen(date) + 1);
-                if (buf != (char *) NULL)
+                if (buf != (char *) nullptr)
                   sprintf(buf, format, date);
             }
             break;
@@ -754,7 +754,7 @@ _pjGetPageHeaderString(PrintJob *pJob, PrintStringTypeEnum type)
                 format = GETMESSAGE(14, 9, "Document:  %s");
                 buflen = strlen(format) + strlen(pJob->documentName) + 1;
                 buf = (char *) malloc(buflen);
-                if (buf != (char *) NULL)
+                if (buf != (char *) nullptr)
                   sprintf(buf, format, pJob->documentName);
             }
             break;
@@ -765,7 +765,7 @@ _pjGetPageHeaderString(PrintJob *pJob, PrintStringTypeEnum type)
             {
                 format = GETMESSAGE(14, 10, "Page %d of %d");
                 buf = (char *) malloc(strlen(format) + 16);
-                if (buf != (char *) NULL)
+                if (buf != (char *) nullptr)
                   sprintf(buf, format, pJob->npagesDone, pJob->npagesTotal);
             }
             break;
@@ -779,7 +779,7 @@ _pjGetPageHeaderString(PrintJob *pJob, PrintStringTypeEnum type)
                 format = GETMESSAGE(14, 11, "Document For:  %s");
 		pw = getpwuid(getuid());
 	        buf = (char *) malloc(strlen(format) + strlen(pw->pw_name) + 1);
-	        if (buf != (char *) NULL)
+	        if (buf != (char *) nullptr)
 	          sprintf(buf, format, pw->pw_name);
             }
             break;
@@ -807,7 +807,7 @@ static void _pjFinishedPrintToFile(
 			XPGetDocStatus	status,
 			XPointer	client_data)
 {
-    char	*message = NULL;
+    char	*message = nullptr;
     PrintJob	*pJob = (PrintJob *) client_data;
     Editor	*pPad = pJob->pPad;
 
@@ -858,10 +858,10 @@ _pjCloseDisplayCB (Widget widget, XtPointer client_data, XtPointer call_data)
     PrintJob *pJob = (PrintJob *) client_data;
     DtPrintSetupCallbackStruct *pbs = (DtPrintSetupCallbackStruct *) call_data;
 
-    if (pJob->pShell != NULL)
+    if (pJob->pShell != nullptr)
     {
 	XtDestroyWidget(pJob->pShell);
-	pJob->pShell = NULL;
+	pJob->pShell = nullptr;
     }
     DtPrintFreeSetupData(pJob->printData);
 }
@@ -907,7 +907,7 @@ _pjPdmSetupCB(Widget print_setup, XtPointer client_data, XtPointer call_data)
     {
 	Widget	shell = print_setup;
 
-	while (! (shell == NULL || XtIsShell(shell)) )
+	while (! (shell == nullptr || XtIsShell(shell)) )
 	  shell = XtParent(shell);
 
 	if (shell)
@@ -929,7 +929,7 @@ _pjPdmNotificationCB (Widget widget, XtPointer client_data, XtPointer call_data)
 #if 0 && defined(PRINTING_SUPPORTED)
     PrintJob			*pJob = (PrintJob*) client_data;
     XmPrintShellCallbackStruct	*pscbs = (XmPrintShellCallbackStruct*)call_data;
-    char			*message = NULL;
+    char			*message = nullptr;
 
     switch (pscbs->reason)
     {
@@ -943,11 +943,11 @@ _pjPdmNotificationCB (Widget widget, XtPointer client_data, XtPointer call_data)
 			"Print Dialog Manager error - setup failed.");
 	    break;
 	default:
-	    message = NULL;
+	    message = nullptr;
 	    break;
     }
 
-    if (message != NULL)
+    if (message != nullptr)
       Warning( pJob->pPad, message, XmDIALOG_WARNING);
 #endif  /* PRINTING_SUPPORTED */
 }
@@ -971,7 +971,7 @@ _pjPrintOnePageCB(
     XmPrintShellCallbackStruct  *pscbs = (XmPrintShellCallbackStruct*)call_data;
     int                         top = 0;
 
-    if (pJob->pOutput == NULL)
+    if (pJob->pOutput == nullptr)
     {
         XtArgVal	width0, height0;
         Dimension	width, height;
@@ -981,7 +981,7 @@ _pjPrintOnePageCB(
                 pJob->pShell,
                 XmNwidth, &width0,
                 XmNheight, &height0,
-                NULL);
+                nullptr);
         width = (Dimension)width0;
         height = (Dimension)height0;
 
@@ -996,13 +996,13 @@ _pjPrintOnePageCB(
                 pJob->pShell,
                 XmNwidth, width,
                 XmNheight, height,
-                NULL);
+                nullptr);
             width = 0; height=0;
             XtVaGetValues(
                 pJob->pShell,
                 XmNwidth, &width,
                 XmNheight, &height,
-                NULL);
+                nullptr);
 #if defined(PRINT_TO_VIDEO)
             printf(
 	      "PrintShell in _pjPrintOnePageCB: <W %d - H %d>\n",width,height);
@@ -1052,7 +1052,7 @@ _pjPrintOnePageCB(
     /*
      * Notify the user that we're printing
      */
-    if (pJob->pPad != NULL)
+    if (pJob->pPad != nullptr)
     {
         static char	buf[1024];
         char 		*format;

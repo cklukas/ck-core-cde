@@ -189,12 +189,12 @@ Pixmap MakeNamedIconPixmap (ClientData *pCD, String iconName)
 
        sIconFileName = XmGetIconFileName( 
 			XtScreen(PSD_FOR_CLIENT(pCD)->screenTopLevelW1),
-			NULL,
+			nullptr,
 			iconName,
-			NULL,
+			nullptr,
 			iconSizeDesired);
 
-       if (sIconFileName != NULL)
+       if (sIconFileName != nullptr)
        {
 	   pixmap = XmGetPixmap (
 			XtScreen (PSD_FOR_CLIENT(pCD)->screenTopLevelW1), 
@@ -219,13 +219,13 @@ Pixmap MakeNamedIconPixmap (ClientData *pCD, String iconName)
        else
        {
 	   mask = XmeGetMask (XtScreen(PSD_FOR_CLIENT(pCD)->screenTopLevelW1), 
-			(sIconFileName == NULL) ? iconName : sIconFileName);
+			(sIconFileName == nullptr) ? iconName : sIconFileName);
 	   if (mask == XmUNSPECIFIED_PIXMAP) 
 	   {
 	       mask = (Pixmap) NULL;
 	   }
 
-	   if (sIconFileName != NULL)
+	   if (sIconFileName != nullptr)
 	       XtFree(sIconFileName);
 
 	   /*
@@ -252,7 +252,7 @@ Pixmap MakeNamedIconPixmap (ClientData *pCD, String iconName)
 	   return (pixmap_r);
        }
 
-       if (sIconFileName != NULL)
+       if (sIconFileName != nullptr)
 	   XtFree (sIconFileName);
 	return ((Pixmap)NULL);
     }
@@ -457,7 +457,7 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
     GC           imageGC, topGC, botGC;
     XGCValues    gcv;
     unsigned long gc_mask;
-    XmPixelSet   *pPS = NULL;
+    XmPixelSet   *pPS = nullptr;
     unsigned int imageWidth;
     unsigned int imageHeight;
     int          dest_x, dest_y;
@@ -466,8 +466,8 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
 #endif /* NO_CLIP_CENTER */
     Pixel        fg;
     Pixel        bg;
-    static RList *top_rects = NULL;
-    static RList *bot_rects = NULL;
+    static RList *top_rects = nullptr;
+    static RList *bot_rects = nullptr;
     WmScreenData	*pSD;
     Pixmap       scaledBitmap = (Pixmap)NULL;
     Pixmap       scaledMask = (Pixmap)NULL;
@@ -481,18 +481,18 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
     unsigned int copyHeight = height;
     unsigned int scale = 1;
 
-    if ((top_rects == NULL) && 
+    if ((top_rects == nullptr) && 
 	(top_rects = AllocateRList 
-	((unsigned)2 * ICON_INTERNAL_SHADOW_WIDTH)) == NULL)
+	((unsigned)2 * ICON_INTERNAL_SHADOW_WIDTH)) == nullptr)
     {
 	/* Out of memory! */
 	Warning (((char *)GETMESSAGE(38, 3, "Insufficient memory to bevel icon image")));
 	return ((Pixmap)NULL);
     }
 
-    if ((bot_rects == NULL) &&
+    if ((bot_rects == nullptr) &&
 	(bot_rects = AllocateRList 
-	((unsigned)2 * ICON_INTERNAL_SHADOW_WIDTH)) == NULL)
+	((unsigned)2 * ICON_INTERNAL_SHADOW_WIDTH)) == nullptr)
     {
 	/* Out of memory! */
 	Warning (((char *)GETMESSAGE(38, 4, "Insufficient memory to bevel icon image")));
@@ -624,7 +624,7 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
     gc_mask = GCForeground | GCBackground | GCGraphicsExposures;
     if (mask)
     {
-	if (pSD->pPrimaryPixelSet != NULL)
+	if (pSD->pPrimaryPixelSet != nullptr)
 	{
 	    pPS = pSD->pPrimaryPixelSet;
 	    gcv.background = pPS->bg;
@@ -673,7 +673,7 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
 
     if (mask)
     {
-	if (pPS != NULL)
+	if (pPS != nullptr)
 	{
 	    gcv.foreground = pPS->fg;
 	}
@@ -737,7 +737,7 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
 	 * Shadowing
 	 */
 
-        if (mask && (pPS != NULL))
+        if (mask && (pPS != nullptr))
 	{
 	topGC = GetHighlightGC (pSD, pPS->ts, pPS->bg,
 				  pCD->iconImageTopShadowPixmap);
@@ -897,7 +897,7 @@ Pixmap MakeCachedLabelPixmap (WmScreenData *pSD, Widget menuW, int bitmapIndex)
 	 * If have sufficient memory, save the pixmap info in the pixmapCache.
 	 */
 
-	if ((pixmapc = (PixmapCache *) XtMalloc(sizeof(PixmapCache))) != NULL)
+	if ((pixmapc = (PixmapCache *) XtMalloc(sizeof(PixmapCache))) != nullptr)
 	{
 	    pixmapc->pixmapType = LABEL_PIXMAP;
 	    pixmapc->foreground = fg;
@@ -994,7 +994,7 @@ int GetBitmapIndex (WmScreenData *pSD, char *name, Boolean bReportError)
 		     pSD->bitmapCacheSize * sizeof (BitmapCache));
     }
 
-    if (pSD->bitmapCache == NULL)
+    if (pSD->bitmapCache == nullptr)
     {
         MWarning (((char *)GETMESSAGE(38, 5, "Insufficient memory for bitmap %s\n")), name);
 	pSD->bitmapCacheSize = 0;
@@ -1013,7 +1013,7 @@ int GetBitmapIndex (WmScreenData *pSD, char *name, Boolean bReportError)
     if (path)
     {
         if ((bitmapc->path = (String)
-                 XtMalloc ((unsigned int)(strlen (path) + 1))) == NULL)
+                 XtMalloc ((unsigned int)(strlen (path) + 1))) == nullptr)
         {
             MWarning (((char *)GETMESSAGE(38, 6, "Insufficient memory for bitmap %s\n")), name);
 	    return (-1);
@@ -1042,13 +1042,13 @@ int GetBitmapIndex (WmScreenData *pSD, char *name, Boolean bReportError)
     else
     /* builtin icon bitmap */
     {
-        bitmapc->path   = NULL;
+        bitmapc->path   = nullptr;
         bitmapc->bitmap = pSD->builtinIconPixmap;
         bitmapc->width  = iImage_width;
         bitmapc->height = iImage_height;
     }
 
-    bitmapc->pixmapCache = NULL;
+    bitmapc->pixmapCache = nullptr;
 
     return (pSD->bitmapCacheCount++);
 
@@ -1097,7 +1097,7 @@ char *BitmapPathName (char *string)
 
     if (!string || !*string)
     {
-	return (NULL);
+	return (nullptr);
     }
 
     /*
@@ -1143,7 +1143,7 @@ char *BitmapPathName (char *string)
 
 	subs[0].substitution = "";
 	if ((retname = XtFindFile(fileName, subs, 0,
-				  (XtFilePredicate) NULL)) != NULL) {
+				  (XtFilePredicate) NULL)) != nullptr) {
 	  XtFree(retname);
 	  return (fileName);
 	}
@@ -1158,7 +1158,7 @@ char *BitmapPathName (char *string)
 	search_path = _XmOSInitPath(string, MATCH_PATH, &user_path);
 	subs[0].match = user_path ? MATCH_XBM : MATCH_CHAR;
 	subs[0].substitution = string;
-	retname = XtResolvePathname(DISPLAY, "bitmaps", NULL, NULL,
+	retname = XtResolvePathname(DISPLAY, "bitmaps", nullptr, nullptr,
 				    search_path, subs, XtNumber(subs), 
 					(XtFilePredicate)NULL);
 	XtFree(search_path);

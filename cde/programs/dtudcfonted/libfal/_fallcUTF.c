@@ -98,10 +98,10 @@ static void	init_ksc5601tab(long *tbl, long fb_default);
 static void	init_gb2312tab(long *tbl, long fb_default);
 
 
-static char	*int_locale = NULL;
-static long	*tabkuten = NULL;
-static long	*tabksc5601 = NULL;
-static long	*tabgb = NULL;
+static char	*int_locale = nullptr;
+static long	*tabkuten = nullptr;
+static long	*tabksc5601 = nullptr;
+static long	*tabgb = nullptr;
 
 static UtfData utfdata_list = (UtfData)NULL;
 
@@ -171,7 +171,7 @@ extern int _fallcResolveI18NPath(char *path_name);
 static void
 init_latin1tab(long *tbl, long fb_default)
 {
-    FILE	*fp = NULL;
+    FILE	*fp = nullptr;
     char	dirname[BUFSIZE];
     char	filename[BUFSIZE];
     char	*p, *q;
@@ -522,7 +522,7 @@ init_jis0208tab(long *tbl, long fb_default)
     char	filename[BUFSIZE];
     char	*p, *q;
 
-    if((tabkuten = (long *)Xmalloc(KUTENMAX * sizeof(long))) == NULL) {
+    if((tabkuten = (long *)Xmalloc(KUTENMAX * sizeof(long))) == nullptr) {
 	return;
     }
     _fallcResolveI18NPath(dirname);
@@ -558,7 +558,7 @@ init_ksc5601tab(long *tbl, long fb_default)
     char	filename[BUFSIZE];
     char	*p, *q;
 
-    if((tabksc5601 = (long *)Xmalloc(KSCMAX * sizeof(long))) == NULL) {
+    if((tabksc5601 = (long *)Xmalloc(KSCMAX * sizeof(long))) == nullptr) {
 	return;
     }
     _fallcResolveI18NPath(dirname);
@@ -594,7 +594,7 @@ init_gb2312tab(long *tbl, long fb_default)
     char	filename[BUFSIZE];
     char	*p, *q;
 
-    if((tabgb = (long *)Xmalloc(GBMAX * sizeof(long))) == NULL) {
+    if((tabgb = (long *)Xmalloc(GBMAX * sizeof(long))) == nullptr) {
 	return;
     }
     _fallcResolveI18NPath(dirname);
@@ -696,7 +696,7 @@ utftocs(
     XlcCharSet	tmpcharset = (XlcCharSet)NULL;
     UtfData	pdata = utfdata_list;
 
-    if (from == NULL || *from == NULL)
+    if (from == nullptr || *from == nullptr)
 	return 0;
 
     utfptr = *from;
@@ -775,12 +775,12 @@ utf1tocs(
     XPointer	*args,
     int		num_args)
 {
-    char	**ptr = NULL;
+    char	**ptr = nullptr;
     char	char_ptr[UTFmax];
     int		i = 0;
     unsigned long	dummy = (unsigned long)0;
 
-    if (from == NULL || *from == NULL)
+    if (from == nullptr || *from == nullptr)
 	return utftocs(conv, from, from_left, to, to_left, args, num_args);
 
     ptr = from;
@@ -807,7 +807,7 @@ ucstocs(
     XlcCharSet	tmpcharset = (XlcCharSet)NULL;
     UtfData	pdata = utfdata_list;
 
-    if (from == NULL || *from == NULL)
+    if (from == nullptr || *from == nullptr)
 	return 0;
 
     ucsptr = (wchar_t *)*from;
@@ -914,11 +914,11 @@ cstoutf(
     void	(*putrune)(
                             unsigned char c,
                             Rune *r
-			   ) = NULL;
+			   ) = nullptr;
     Rune	r = (Rune)0;
     UtfData	pdata = utfdata_list;
 
-    if (from == NULL || *from == NULL)
+    if (from == nullptr || *from == nullptr)
 	return 0;
 
     if (num_args < 1)
@@ -978,11 +978,11 @@ cstoucs(
     void	(*putrune)(
                             unsigned char c,
                             Rune *r
-			   ) = NULL;
+			   ) = nullptr;
     Rune	r = (Rune)0;
     UtfData	pdata = utfdata_list;
 
-    if (from == NULL || *from == NULL)
+    if (from == nullptr || *from == nullptr)
 	return 0;
 
     if (num_args < 1)
@@ -1348,7 +1348,7 @@ create_conv(XLCd lcd, XlcConvMethods methods)
 
     conv->methods = methods;
 
-    conv->state = NULL;
+    conv->state = nullptr;
     _XlcInitUTFInfo(lcd);
 
     return conv;
@@ -1362,7 +1362,7 @@ create_conv(XLCd lcd, XlcConvMethods methods)
 static XlcConvMethodsRec mbtocs_methods = {
     close_converter,
     utf1tocs,
-    NULL
+    nullptr
 };
 
 static XlcConv
@@ -1374,7 +1374,7 @@ open_mbtocs(XLCd from_lcd, char *from, XLCd to_lcd, char *to)
 static XlcConvMethodsRec mbstocs_methods = {
     close_converter,
     utftocs,
-    NULL
+    nullptr
 };
 
 static XlcConv
@@ -1386,7 +1386,7 @@ open_mbstocs(XLCd from_lcd, char *from, XLCd to_lcd, char *to)
 static XlcConvMethodsRec wcstocs_methods = {
     close_converter,
     ucstocs,
-    NULL
+    nullptr
 };
 
 static XlcConv
@@ -1398,7 +1398,7 @@ open_wcstocs(XLCd from_lcd, char *from, XLCd to_lcd, char *to)
 static XlcConvMethodsRec cstombs_methods = {
     close_converter,
     cstoutf,
-    NULL
+    nullptr
 };
 
 static XlcConv
@@ -1410,7 +1410,7 @@ open_cstombs(XLCd from_lcd, char *from, XLCd to_lcd, char *to)
 static XlcConvMethodsRec cstowcs_methods = {
     close_converter,
     cstoucs,
-    NULL
+    nullptr
 };
 
 static XlcConv

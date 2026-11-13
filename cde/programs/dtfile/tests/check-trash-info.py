@@ -168,7 +168,7 @@ def qualify(args):
             '#define malloc TrashInfoTestMalloc\n#define strdup TrashInfoTestStrdup\n'
             f'#include {json.dumps(str(source / "XdgTrashInfo.c"))}\n')
         cc = shlex.split(env.get("CC", "cc"))
-        flags = ["-std=c11", "-D_GNU_SOURCE", "-D_DEFAULT_SOURCE", "-D_DARWIN_C_SOURCE",
+        flags = ["-std=gnu23", "-D_GNU_SOURCE", "-D_DEFAULT_SOURCE", "-D_DARWIN_C_SOURCE",
                  "-D_POSIX_C_SOURCE=200809L", "-O0", "-g", "-Wall", "-Wextra", "-Werror", "-Wno-unused-function",
                  "-I", str(source), "-I", str(work)]
         if args.sanitizers != "none":

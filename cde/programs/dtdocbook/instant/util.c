@@ -123,7 +123,7 @@ Split(
     static char	*local_tokens[100];
 
     /* Figure max number of tokens (maxnt) to find.  0 means find them all. */
-    if (ntok == NULL)
+    if (ntok == nullptr)
 	maxnt = 100;
     else {
 	if (*ntok <= 0 || *ntok > 100) maxnt = 100;	/* arbitrary size */
@@ -221,10 +221,10 @@ FindMapping(
     int		i;
     Mapping_t	*m;
 
-    if (!M || M->n_used == 0) return NULL;
+    if (!M || M->n_used == 0) return nullptr;
     for (m=M->maps,i=0; i<M->n_used; i++)
 	if (m[i].name[0] == name[0] && !strcmp(m[i].name, name)) return &m[i];
-    return NULL;
+    return nullptr;
 
 }
 
@@ -242,9 +242,9 @@ FindMappingVal(
 )
 {
     Mapping_t	*m;
-    if (!M || M->n_used == 0) return NULL;
+    if (!M || M->n_used == 0) return nullptr;
     if ((m = FindMapping(M, name))) return m->sval;
-    return NULL;
+    return nullptr;
 
 }
 
@@ -289,7 +289,7 @@ SetMappingNV(
 	free(m->sval);
 	m->sval = strdup(value);
 	if (value) m->sval = strdup(value);
-	else m->sval = NULL;
+	else m->sval = nullptr;
     }
     else {
 	if (name) {		/* just in case */
@@ -297,7 +297,7 @@ SetMappingNV(
 	    M->n_used++;
 	    m->name = strdup(name);
 	    if (value) m->sval = strdup(value);
-	    else m->sval = NULL;
+	    else m->sval = nullptr;
 	}
     }
 
@@ -385,7 +385,7 @@ OpenFile(
 
     if ((fp=fopen(filename, "r"))) return fp;
 
-    if (*filename == '/') return NULL;		/* full path specified? */
+    if (*filename == '/') return nullptr;		/* full path specified? */
 
     if (nlibdirs < 0) {
 	char *cp, *s;
@@ -401,7 +401,7 @@ OpenFile(
 	sprintf(buf, "%s/%s", libdirs[i], filename);
 	if ((fp=fopen(buf, "r"))) return fp;
     }
-    return NULL;
+    return nullptr;
 }
 
 /* ______________________________________________________________________ */
@@ -500,7 +500,7 @@ NearestOlderElem(
 			ep->econt[i]->dcont[0] : "-empty-";
 	}
 
-    return NULL;
+    return nullptr;
 }
 
 /* ______________________________________________________________________ */
@@ -657,7 +657,7 @@ static int CheckOutputBuffer(
 	    outputBuffer.base ?
 		realloc(outputBuffer.base, outputBuffer.size) :
 		malloc(outputBuffer.size);
-	if (outputBuffer.base == NULL) {
+	if (outputBuffer.base == nullptr) {
 	    outputBuffer.base = oldBase;
 	    outputBuffer.size = oldSize;
 	    return 0;
@@ -710,7 +710,7 @@ int Putc(
     if (stream) {
 	argBuf[i++] = c;
 
-	mblen(NULL, 0);
+	mblen(nullptr, 0);
 
 	if (mblen(argBuf, i) == -1) {
 	    if (i < MB_CUR_MAX) {
@@ -739,7 +739,7 @@ int Putc(
 	for (j = 0; j < i; ++j) *pc++ = argBuf[j]; i = 0;
 	*pc++ = '"';
 	*pc++ = 0;
-	tcl_enc = Tcl_GetEncoding(NULL, NULL);
+	tcl_enc = Tcl_GetEncoding(nullptr, nullptr);
 	tcl_str = Tcl_ExternalToUtfDString(tcl_enc, commandBuf, -1, &tcl_dstr);
 	result = Tcl_Eval(interpreter, tcl_str);
 	Tcl_DStringFree(&tcl_dstr);
@@ -810,7 +810,7 @@ int FPuts(
 	} while (*ps);
 	*pb++ = '"';
 	*pb = 0;
-	tcl_enc = Tcl_GetEncoding(NULL, NULL);
+	tcl_enc = Tcl_GetEncoding(nullptr, nullptr);
 	tcl_str = Tcl_ExternalToUtfDString(tcl_enc, pBuff, -1, &tcl_dstr);
 	result = Tcl_Eval(interpreter, tcl_str);
 	Tcl_DStringFree(&tcl_dstr);
@@ -895,7 +895,7 @@ LookupSDATA(
     }
 
     fprintf(stderr, "Error: Could not find SDATA substitution '%s'.\n", s);
-    return NULL;
+    return nullptr;
 }
 
 /* ______________________________________________________________________ */
@@ -1006,11 +1006,11 @@ FindAttValByName(
 )
 {
     int		i;
-    if (!e) return NULL;
+    if (!e) return nullptr;
     for (i=0; i<e->natts; i++)
 	if (e->atts[i].name[0] == name[0] && !strcmp(e->atts[i].name, name))
 	    return e->atts[i].sval;
-    return NULL;
+    return nullptr;
 }
 
 /* ______________________________________________________________________ */
@@ -1035,7 +1035,7 @@ FindContext(
     Element_t	*ep;
     int		i;
 
-    if (!e) return NULL;
+    if (!e) return nullptr;
     s = con;
     *s = EOS;
     for (i=0,ep=e->parent; ep && levels; ep=ep->parent,i++,levels--) {
@@ -1151,7 +1151,7 @@ QRelation(
 	    fprintf(stderr, "You cannot query 'REL_None' or 'REL_Unknown'.\n");
 	    break;
     }
-    return NULL;
+    return nullptr;
 }
 
 /*  Given a relationship name (string), determine enum symbol for it.

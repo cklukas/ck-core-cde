@@ -62,23 +62,23 @@ obj_init_attachments(
     ABObj	obj
 )
 {
-    if (obj->attachments == NULL)
+    if (obj->attachments == nullptr)
 	abo_attachments_create(obj);
 
     obj->attachments->north.type   = AB_ATTACH_NONE;
-    obj->attachments->north.value  = (void*)NULL;
+    obj->attachments->north.value  = (void*)nullptr;
     obj->attachments->north.offset = 0;
 
     obj->attachments->south.type   = AB_ATTACH_NONE;
-    obj->attachments->south.value  = (void*)NULL;
+    obj->attachments->south.value  = (void*)nullptr;
     obj->attachments->south.offset = 0;
 
     obj->attachments->east.type    = AB_ATTACH_NONE;
-    obj->attachments->east.value   = (void*)NULL;
+    obj->attachments->east.value   = (void*)nullptr;
     obj->attachments->east.offset  = 0;
  
     obj->attachments->west.type    = AB_ATTACH_NONE; 
-    obj->attachments->west.value   = (void*)NULL; 
+    obj->attachments->west.value   = (void*)nullptr; 
     obj->attachments->west.offset  = 0; 
 
     return 0;
@@ -162,7 +162,7 @@ obj_construct_drawing_area(ABObj obj)
 	info->vscrollbar = AB_SCROLLBAR_ALWAYS;
         info->pane_min = 1;
         info->pane_max = 1000;
-    	info->menu_title = NULL;
+    	info->menu_title = nullptr;
 	return 0;
 }
 
@@ -194,7 +194,7 @@ obj_construct_container(ABObj obj)
 	info->vspacing= 0;
 	info->pane_min = 1;
 	info->pane_max = 1000;
-    	info->menu_title = NULL;
+    	info->menu_title = nullptr;
 	return 0;
 }
 
@@ -209,11 +209,11 @@ obj_construct_file_chooser(ABObj obj)
 	 */
 	obj_set_is_initially_visible(obj, FALSE);
 
-        info->win_parent = NULL;
-	info->filter_pattern= NULL;
-	info->ok_label = NULL;
+        info->win_parent = nullptr;
+	info->filter_pattern= nullptr;
+	info->ok_label = nullptr;
 	info->auto_dismiss = TRUE;
-	info->directory = NULL;
+	info->directory = nullptr;
 	info->file_type_mask = AB_FILE_REGULAR;  
 	return 0;
 }
@@ -224,10 +224,10 @@ obj_construct_msg(ABObj obj)
         AB_MESSAGE_INFO	*info = &(obj->info.message);
 
         info->type = AB_MSG_UNDEF;
-        info->msg_string = NULL;
-	info->action1_label = NULL;
-	info->action2_label = NULL;
-	info->action3_label = NULL;
+        info->msg_string = nullptr;
+	info->action1_label = nullptr;
+	info->action2_label = nullptr;
+	info->action3_label = nullptr;
 	info->cancel_button = TRUE;
 	info->help_button = TRUE;
 	info->default_btn = AB_DEFAULT_BTN_UNDEF;
@@ -239,9 +239,9 @@ obj_construct_module(ABObj obj)
 {
 	AB_MODULE_INFO	*info= &(obj->info.module);
 
-	info->file = NULL;
-	info->stubs_file = NULL;
-	info->ui_file = NULL;
+	info->file = nullptr;
+	info->stubs_file = nullptr;
+	info->ui_file = nullptr;
 	info->obj_names_list = strlist_create();
 	strlist_set_sort_order(info->obj_names_list, STRLIST_SORT_BEST);
 	info->write_me = FALSE;
@@ -256,8 +256,8 @@ obj_construct_item(ABObj obj)
 	info->type = AB_ITEM_FOR_UNDEF;
 	info->is_initially_selected= FALSE;
 	info->is_help_item= FALSE;
-	info->accelerator= NULL;
-	info->mnemonic = NULL;
+	info->accelerator= nullptr;
+	info->mnemonic = nullptr;
 	info->line_style = AB_LINE_UNDEF;
 	return 0;
 }
@@ -297,16 +297,16 @@ obj_construct_project(ABObj obj)
 {
 	AB_PROJECT_INFO	*info= &(obj->info.project);
 
-	info->file = NULL;
-	info->stubs_file = NULL;
-	info->vendor= NULL;
-	info->version= NULL;
-	info->root_window= NULL;
+	info->file = nullptr;
+	info->stubs_file = nullptr;
+	info->vendor= nullptr;
+	info->version= nullptr;
+	info->root_window= nullptr;
 	info->obj_names_list = strlist_create();
 	strlist_set_sort_order(info->obj_names_list, STRLIST_SORT_BEST);
 	info->is_default= FALSE;
 	info->res_file_arg_classes = AB_ARG_CLASS_FLAGS_NONE;
-	info->browsers= NULL;
+	info->browsers= nullptr;
 	info->session_mgmt.sessioning_method= AB_SESSIONING_NONE;
 	info->tooltalk.level= AB_TOOLTALK_NONE;
 	info->session_mgmt.sessioning_method= AB_SESSIONING_NONE;
@@ -378,7 +378,7 @@ obj_construct_list(ABObj obj)
 	info->vscrollbar  = AB_SCROLLBAR_ALWAYS;
 	info->hscrollbar  = AB_SCROLLBAR_NEVER;
         info->label_position = AB_CP_WEST;
-    	info->menu_title = NULL;
+    	info->menu_title = nullptr;
 	return 0;
 }
 
@@ -392,10 +392,10 @@ obj_construct_term_pane(
     info->num_rows = 1;
     info->num_columns = 0;
     info->vscrollbar  = AB_SCROLLBAR_NEVER;
-    info->process_string = NULL;
+    info->process_string = nullptr;
     info->pane_min = 1;
     info->pane_max = 1000;
-    info->menu_title = NULL;
+    info->menu_title = nullptr;
     return 0;
 }
 
@@ -408,7 +408,7 @@ obj_construct_text(ABObj obj)
 	info->num_rows= 1;
 	info->num_columns= 0;
 	info->max_length= 0;
-	info->initial_value_string= NULL;
+	info->initial_value_string= nullptr;
 	info->initial_value_int= 0;
 	info->word_wrap=FALSE;
 	info->has_border= FALSE;
@@ -417,7 +417,7 @@ obj_construct_text(ABObj obj)
 	info->hscrollbar  = AB_SCROLLBAR_NEVER;
         info->pane_min = 1;
         info->pane_max = 1000;
-    	info->menu_title = NULL;
+    	info->menu_title = nullptr;
 	return 0;
 }
 
@@ -426,14 +426,14 @@ obj_construct_window(ABObj obj)
 {
 	AB_WINDOW_INFO	*info= &(obj->info.window);
 
-	info->win_parent = NULL;
-	info->default_act_button = NULL;
-	info->help_act_button = NULL;
+	info->win_parent = nullptr;
+	info->default_act_button = nullptr;
+	info->help_act_button = nullptr;
 	info->resizable = TRUE;
 	info->is_initially_iconic = FALSE;
-	info->icon = NULL;
-	info->icon_mask = NULL;
-	info->icon_label = NULL;
+	info->icon = nullptr;
+	info->icon_mask = nullptr;
+	info->icon_label = nullptr;
 	return 0;
 }
 
@@ -441,7 +441,7 @@ obj_construct_window(ABObj obj)
 int
 obj_construct_type_specific_info(ABObj obj)
 {
-	int	(*func)(ABObj obj)= NULL;
+	int	(*func)(ABObj obj)= nullptr;
 	int	retval= 0;
 
 	if (obj_is_item(obj))
@@ -452,7 +452,7 @@ obj_construct_type_specific_info(ABObj obj)
 	{
 		func = obj_construct_window;
 	}
-	if (func == NULL)
+	if (func == nullptr)
 	{
 		switch (obj->type)
 		{
@@ -545,7 +545,7 @@ obj_construct_type_specific_info(ABObj obj)
 		} /* switch */
 	} /* if func */
 
-	if ((retval >= 0) && (func != NULL))
+	if ((retval >= 0) && (func != nullptr))
 	{
 		retval= func(obj);
 	}

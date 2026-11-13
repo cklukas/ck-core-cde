@@ -215,18 +215,18 @@ else switch(thisopt + 1)
 	break;
     case TOC:
 	toc = TRUE;
-	if (tocfile!=NULL)
+	if (tocfile!=nullptr)
 	    {
 	    m_free(tocfile, "TOC option");
-	    tocfile = NULL;
+	    tocfile = nullptr;
 	    }
 	break;
     case NOTOC:
 	toc = FALSE;
-	if (tocfile!=NULL)
+	if (tocfile!=nullptr)
 	    {
 	    m_free(tocfile, "NOTOC option");
-	    tocfile = NULL;
+	    tocfile = nullptr;
 	    }
 	break;
     case INDEX:
@@ -251,7 +251,7 @@ else switch(thisopt + 1)
 	    m_free(searchq->directory, "search directory");
 	    m_free(searchq, "search path");
 	    }
-	path = NULL;
+	path = nullptr;
 	endpath = &path;
 	break;
 	}
@@ -325,7 +325,7 @@ switch (thisopt)
 						    "search directory");
 	    strcpy((*endpath)->directory, tempstr);
 	    }
-	(*endpath)->next = NULL;
+	(*endpath)->next = nullptr;
 	endpath = &(*endpath)->next;
 	m_free(tempstr, "tempstr search");
 	return(TRUE);

@@ -109,7 +109,7 @@ int	austext_dopen (
     char           *d2xptr, *ptr, *src;
 
     /* Test dbname */
-    if (dbname == NULL) {
+    if (dbname == nullptr) {
 INVALID_DBNAME:
 	sprintf (sprintbuf, CATGETS(dtsearch_catd, 13, 348,
 	    "%s Invalid database name '%s'."),
@@ -157,7 +157,7 @@ INVALID_DBNAME:
      * where the dbdname should be appended.
      */
     ptr = dbdbuf;
-    if (path != NULL) {
+    if (path != nullptr) {
 	for (i = 0; i < sizeof (dbdbuf) - 14; i++) {
 	    if (path[i] == 0)
 		break;
@@ -193,7 +193,7 @@ INVALID_DBNAME:
     austext_exit_dbms = close_database_on_exit;
 
     /* If requested, read the dbrec into caller's buffer. */
-    if (dbrec != NULL) {
+    if (dbrec != nullptr) {
 	RECFRST (PROGNAME "285", OR_DBREC, 0);	/* seqtl retrieval */
 	if (db_status != S_OKAY) {
 NO_DBREC:

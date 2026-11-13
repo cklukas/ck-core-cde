@@ -44,24 +44,24 @@ _DtCm_make_name_table(int size, char **names)
 	_DtCmNameTable *tbl;
 	int i;
 
-	if ((tbl = (_DtCmNameTable *)calloc(1, sizeof(_DtCmNameTable))) == NULL)
-		return (NULL);
+	if ((tbl = (_DtCmNameTable *)calloc(1, sizeof(_DtCmNameTable))) == nullptr)
+		return (nullptr);
 
-	if ((tbl->tbl = _DtCmMakeHash(MAX_CAL_TBL_SIZE)) == NULL) {
+	if ((tbl->tbl = _DtCmMakeHash(MAX_CAL_TBL_SIZE)) == nullptr) {
 		free(tbl);
-		return (NULL);
+		return (nullptr);
 	}
 
-	if ((tbl->names = (char **)malloc(sizeof(char *) * (size+1))) == NULL) {
+	if ((tbl->names = (char **)malloc(sizeof(char *) * (size+1))) == nullptr) {
 		_DtCm_free_name_table(tbl);
-		return (NULL);
+		return (nullptr);
 	}
 
 	for (i = 1; i <= size; i++) {
-		if ((tbl->names[i] = strdup(names[i])) == NULL) {
+		if ((tbl->names[i] = strdup(names[i])) == nullptr) {
 			tbl->size = i;
 			_DtCm_free_name_table(tbl);
-			return (NULL);
+			return (nullptr);
 		}
 
 		*(int *)_DtCmGetHash(tbl->tbl, (unsigned char *)names[i]) = i;
@@ -77,10 +77,10 @@ _DtCm_free_name_table(_DtCmNameTable *tbl)
 {
 	int	i;
 
-	if (tbl == NULL) return;
+	if (tbl == nullptr) return;
 
 	if (tbl->tbl)
-		_DtCmDestroyHash(tbl->tbl, NULL, NULL);
+		_DtCmDestroyHash(tbl->tbl, nullptr, nullptr);
 
 	for (i = 1; i <= tbl->size; i++)
 		free(tbl->names[i]);
@@ -115,7 +115,7 @@ _DtCm_add_name_to_table(_DtCmNameTable *tbl, int index, char *newname)
 
 	if (index > tbl->size) {
 		if ((newptr = (char **)realloc(tbl->names,
-		    sizeof(char *)*(index + 1))) == NULL) {
+		    sizeof(char *)*(index + 1))) == nullptr) {
 			*ptr = -1;
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else {
@@ -125,7 +125,7 @@ _DtCm_add_name_to_table(_DtCmNameTable *tbl, int index, char *newname)
 		}
 	}
 
-	if ((tbl->names[index] = strdup(newname)) == NULL) {
+	if ((tbl->names[index] = strdup(newname)) == nullptr) {
 
 		*ptr = -1;
 		return (CSA_E_INSUFFICIENT_MEMORY);
@@ -175,7 +175,7 @@ _DtCmExtendNameTable(
 		return (CSA_E_INVALID_PARAMETER);
 
 	if (*tbl == base) {
-		if ((ntbl = _DtCm_make_name_table(basesize, basenames)) == NULL)
+		if ((ntbl = _DtCm_make_name_table(basesize, basenames)) == nullptr)
 		{
 
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -186,7 +186,7 @@ _DtCmExtendNameTable(
 	if (types) {
 		newindex = (index == 0) ? (*tbl)->size+1 : index;
 		if ((newarray = (int *)realloc(*types,
-		    sizeof(int) * (newindex+1))) == NULL) {
+		    sizeof(int) * (newindex+1))) == nullptr) {
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else {
 			*types = newarray;

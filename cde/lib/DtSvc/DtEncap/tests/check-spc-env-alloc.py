@@ -59,7 +59,7 @@ tag = "control" if args.source_revision else "fixed"
 c, binary = scratch / f"spc-env-alloc-{tag}.c", scratch / f"spc-env-alloc-{tag}"
 c.write_text(prologue + func + "\n" + body)
 subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-               ["-std=gnu99", "-Wall", "-Wno-unused-function", "-Wno-unused-variable",
+               ["-std=gnu23", "-Wall", "-Wno-unused-function", "-Wno-unused-variable",
                 "-Wno-deprecated-declarations", "-Wno-unused-value",
                 "-fsanitize=address,undefined", "-fno-sanitize-recover=all",
                 "-fno-omit-frame-pointer", "-g", str(c), "-o", str(binary)], check=True)

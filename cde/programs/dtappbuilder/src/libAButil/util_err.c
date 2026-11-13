@@ -70,7 +70,7 @@
 STRING
 util_err_string(int errCode)
 {
-    STRING	err = NULL;
+    STRING	err = nullptr;
 
     switch (errCode)
     {
@@ -155,7 +155,7 @@ util_err_string(int errCode)
      * An error has already occurred. Don't return NULL and cause a 
      * core dump!
      */
-    return err == NULL?"":err;
+    return err == nullptr?"":err;
 }
 
 int
@@ -164,7 +164,7 @@ util_print_error(
     STRING 	string
 )
 {
-    STRING	errmsg = NULL;
+    STRING	errmsg = nullptr;
 
     errmsg = util_err_string(errCode);
     if (string)

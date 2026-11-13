@@ -151,9 +151,9 @@ int
 ab_string_list_count(STRING * list)
 {
     int                 i = 0;
-    if (list != NULL)
+    if (list != nullptr)
     {
-	while (list[i] != NULL)
+	while (list[i] != nullptr)
 	{
 	    ++i;
 	}
@@ -192,7 +192,7 @@ BOOL
 ab_ident_is_ok(STRING ident)
 {
     char               *cp;
-    if (ident == NULL)
+    if (ident == nullptr)
     {
 	return FALSE;
     }
@@ -214,7 +214,7 @@ ab_c_ident_is_ok(STRING ident)
     int                 len = 0;
     char                ch;
 
-    if (ident == NULL)
+    if (ident == nullptr)
     {
 	return TRUE;
     }
@@ -254,12 +254,12 @@ obj_get_file(ABObj obj)
     {
 	return obj_get_name(obj);	/* stored as name */
     }
-    while ((obj != NULL) && (obj->type != AB_TYPE_MODULE)
+    while ((obj != nullptr) && (obj->type != AB_TYPE_MODULE)
 	   && (obj->type != AB_TYPE_PROJECT))
     {
 	obj = obj->parent;
     }
-    if (obj != NULL)
+    if (obj != nullptr)
     {
 	if (obj->type == AB_TYPE_MODULE)
 	{
@@ -270,7 +270,7 @@ obj_get_file(ABObj obj)
 	    return istr_string(obj->info.project.file);
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -279,7 +279,7 @@ obj_get_file(ABObj obj)
 ABObj
 obj_get_project(ABObj obj)
 {
-    while ((obj != NULL) && (obj->type != AB_TYPE_PROJECT))
+    while ((obj != nullptr) && (obj->type != AB_TYPE_PROJECT))
     {
 	obj = obj->parent;
     }
@@ -292,7 +292,7 @@ obj_get_project(ABObj obj)
 ABObj
 obj_get_module(ABObj obj)
 {
-    while ((obj != NULL) && (obj->type != AB_TYPE_MODULE))
+    while ((obj != nullptr) && (obj->type != AB_TYPE_MODULE))
     {
 	obj = obj->parent;
     }
@@ -305,7 +305,7 @@ obj_get_module(ABObj obj)
 ABObj
 obj_get_window(ABObj obj)
 {
-    while ((obj != NULL) && !obj_is_window(obj))
+    while ((obj != nullptr) && !obj_is_window(obj))
     {
 	obj = obj->parent;
     }
@@ -327,7 +327,7 @@ obj_get_num_siblings(ABObj obj)
     AB_TRAVERSAL        trav;
     int                 num_sibs = 0;
     for (trav_open(&trav, obj, AB_TRAV_SIBLINGS);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	++num_sibs;
     }
@@ -346,12 +346,12 @@ obj_ensure_num_children(ABObj obj, int requested_num_children)
     AB_OBJECT_TYPE      child_type = ab_get_proper_subobj_type(obj->type);
     AB_ITEM_TYPE        child_item_type = ab_get_proper_item_type(obj->type);
     int                 num_children = obj_get_num_children(obj);
-    ABObj               child = NULL;
+    ABObj               child = nullptr;
 
     while (num_children < requested_num_children)
     {
-	child = obj_create(child_type, NULL);
-	if (child == NULL)
+	child = obj_create(child_type, nullptr);
+	if (child == nullptr)
 	{
 	    return -1;
 	}
@@ -372,7 +372,7 @@ obj_find_child_by_label(ABObj root, STRING label)
     ABObj               child;
 
     for (child = root->first_child;
-	 child != NULL; child = child->next_sibling)
+	 child != nullptr; child = child->next_sibling)
     {
 	if (istr_equalstr(child->label, label))
 	{
@@ -388,7 +388,7 @@ obj_find_child_by_type(ABObj obj, AB_OBJECT_TYPE childType)
 {
     ABObj	child;
     for (child = obj->first_child; 
-	(child != NULL); child = child->next_sibling)
+	(child != nullptr); child = child->next_sibling)
     {
 	if (child->type == childType)
 	{
@@ -406,21 +406,21 @@ obj_find_by_name(ABObj root, STRING name)
     StringList		names = objP_get_names_scope_for_children(root);
     ISTRING		istr_name = istr_dup_existing(name);
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
 
-    if ((name == NULL) || (istr_name == NULL))
+    if ((name == nullptr) || (istr_name == nullptr))
     {
-	return NULL;
+	return nullptr;
     }
 
-    if (names != NULL)
+    if (names != nullptr)
     {
 	obj = (ABObj)strlist_get_istr_data(names, istr_name);
     }
     else
     {
         for (trav_open(&trav, root, AB_TRAV_ALL);
-	     (obj = trav_next(&trav)) != NULL;)
+	     (obj = trav_next(&trav)) != nullptr;)
         {
 	    if (!(obj_is_project(obj) || obj_is_module(obj)))
 	    {
@@ -440,12 +440,12 @@ obj_find_by_name_and_type(ABObj root, STRING name, AB_OBJECT_TYPE type)
     ABObj               obj;
     AB_TRAVERSAL        trav;
 
-    if (name == NULL)
+    if (name == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     for (trav_open(&trav, root, AB_TRAV_ALL);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	if ((obj->type == type)
 	    && (istr_equalstr(obj->name, name)))
@@ -462,10 +462,10 @@ ABObj
 obj_find_by_type(ABObj root, AB_OBJECT_TYPE type)
 {
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
 
     for (trav_open(&trav, root, AB_TRAV_UI | AB_TRAV_MOD_PARENTS_FIRST);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	if (obj->type == type)
 	{
@@ -474,7 +474,7 @@ obj_find_by_type(ABObj root, AB_OBJECT_TYPE type)
     }
     trav_close(&trav);
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -482,19 +482,19 @@ ABObj
 obj_find_child_by_name(ABObj obj, STRING name)
 {
     ABObj               child;
-    if (name == NULL)
+    if (name == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     for (child = obj->first_child;
-	 child != NULL; child = child->next_sibling)
+	 child != nullptr; child = child->next_sibling)
     {
 	if (istr_equalstr(child->name, name))
 	{
 	    return child;
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -509,10 +509,10 @@ ABObj
 obj_find_module_by_name(ABObj root, STRING name)
 {
     AB_TRAVERSAL        trav;
-    ABObj               module = NULL;
+    ABObj               module = nullptr;
 
     for (trav_open(&trav, root, AB_TRAV_MODULES);
-	 (module = trav_next(&trav)) != NULL;)
+	 (module = trav_next(&trav)) != nullptr;)
     {
 	if (util_streq(obj_get_name(module), name))
 	{
@@ -531,16 +531,16 @@ obj_scoped_find_or_create_undef(ABObj parent,
 {
     ABObj               obj = obj_scoped_find_by_name(parent, scopedName);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	STRING              moduleName = obj_scoped_name_get_module_name(
 								scopedName);
 	STRING              objName = obj_scoped_name_get_obj_name(
 								scopedName);
-	ABObj               project = NULL;
-	ABObj               module = NULL;
+	ABObj               project = nullptr;
+	ABObj               module = nullptr;
 
-	if (moduleName == NULL)
+	if (moduleName == nullptr)
 	{
 	    /* simple name - create as child of the "parent" object */
 	    obj = obj_create(objType, parent);
@@ -549,10 +549,10 @@ obj_scoped_find_or_create_undef(ABObj parent,
 	{
 	    /* complex name - find module to create under */
 	    project = obj_get_project(parent);
-	    if (project != NULL)
+	    if (project != nullptr)
 	    {
 		module = obj_find_module_by_name(project, moduleName);
-		if (module == NULL)
+		if (module == nullptr)
 		{
 		    /* damn! module don't exist!! */
 		    module = obj_create(AB_TYPE_MODULE, project);
@@ -560,7 +560,7 @@ obj_scoped_find_or_create_undef(ABObj parent,
 		    obj_set_name(module, moduleName);
 		}
 	    }
-	    if (module != NULL)
+	    if (module != nullptr)
 	    {
 		/* actually create the object under the correct module */
 		obj = obj_create(objType, module);
@@ -572,7 +572,7 @@ obj_scoped_find_or_create_undef(ABObj parent,
 	 * reference to an undefined object). Set the attributes that we know
 	 * about the object
 	 */
-	if (obj != NULL)
+	if (obj != nullptr)
 	{
 	    obj_set_is_defined(obj, FALSE);
 	    obj_set_name(obj, objName);
@@ -615,14 +615,14 @@ indent(int spaces)
 BOOL
 obj_is_project_action_target(ABObj obj)
 {
-    ABObj               project = NULL;
+    ABObj               project = nullptr;
     BOOL                is_project_target = FALSE;
-    ABObj               action = NULL;
+    ABObj               action = nullptr;
     AB_TRAVERSAL        trav;
 
     project = obj_get_project(obj);
     for (trav_open(&trav, project, AB_TRAV_ACTIONS_FOR_OBJ);
-	 (action = trav_next(&trav)) != NULL;)
+	 (action = trav_next(&trav)) != nullptr;)
     {
 	if (action->info.action.to == obj)
 	{
@@ -712,7 +712,7 @@ ab_ident_from_file_name(STRING filename)
     static char         buf[MAXPATHLEN];
     char               *p;
 
-    if (filename != NULL)
+    if (filename != nullptr)
     {
 	if (p = (char *) strrchr(filename, '/'))
 	    snprintf(buf, sizeof(buf), "%s", p + 1);
@@ -752,18 +752,18 @@ obj_scoped_name_split(
 )
 {
     int                 return_value = 0;
-    char               *dot_ptr = NULL;
-    char               *module_name_ptr = NULL;
+    char               *dot_ptr = nullptr;
+    char               *module_name_ptr = nullptr;
     char               *obj_name_ptr = complex_name;
-    char               *module_name_end_ptr = NULL;
+    char               *module_name_end_ptr = nullptr;
     int                 moduleNameEndChar = -1;
 
-    if ((dot_ptr = strchr(complex_name, '.')) != NULL)
+    if ((dot_ptr = strchr(complex_name, '.')) != nullptr)
     {
 	module_name_ptr = complex_name;
 	obj_name_ptr = dot_ptr + 1;
     }
-    else if ((dot_ptr = strstr(complex_name, "::")) != NULL)
+    else if ((dot_ptr = strstr(complex_name, "::")) != nullptr)
     {
 	module_name_ptr = complex_name;
 	obj_name_ptr = dot_ptr + 2;
@@ -772,7 +772,7 @@ obj_scoped_name_split(
     /*
      * Remove white space on either side of the separator
      */
-    if (dot_ptr != NULL)
+    if (dot_ptr != nullptr)
     {
 	/* put a 0 at the end of the module name */
 	for (module_name_end_ptr = dot_ptr - 1;
@@ -797,9 +797,9 @@ obj_scoped_name_split(
     /*
      * We now now the substrings' locations. grab them
      */
-    if (module_name_buf != NULL)
+    if (module_name_buf != nullptr)
     {
-	if (module_name_ptr == NULL)
+	if (module_name_ptr == nullptr)
 	{
 	    /* no module name! */
 	    *module_name_buf = 0;
@@ -810,7 +810,7 @@ obj_scoped_name_split(
 	    module_name_buf[module_name_buf_size - 1] = 0;
 	}
     }
-    if (obj_name_buf != NULL)
+    if (obj_name_buf != nullptr)
     {
 	strncpy(obj_name_buf, obj_name_ptr, obj_name_buf_size);
 	obj_name_buf[obj_name_buf_size - 1] = 0;
@@ -818,7 +818,7 @@ obj_scoped_name_split(
 
 /* epilogue: */
     /* replace the 0 we inserted with the char that was there */
-    if (module_name_end_ptr != NULL)
+    if (module_name_end_ptr != nullptr)
     {
 	*module_name_end_ptr = moduleNameEndChar;
     }
@@ -835,10 +835,10 @@ obj_scoped_name_get_module_name(STRING complexName)
 {
     static char         module_name[256] = "";
     int                 rc;
-    rc = obj_scoped_name_split(complexName, module_name, 256, NULL, 0);
+    rc = obj_scoped_name_split(complexName, module_name, 256, nullptr, 0);
     if ((rc < 0) || (*module_name == 0))
     {
-	return NULL;
+	return nullptr;
     }
     return module_name;
 }
@@ -853,10 +853,10 @@ obj_scoped_name_get_obj_name(STRING complexName)
 {
     static char         simple_name[256] = "";
     int                 rc;
-    rc = obj_scoped_name_split(complexName, NULL, 0, simple_name, 256);
+    rc = obj_scoped_name_split(complexName, nullptr, 0, simple_name, 256);
     if ((rc < 0) || (*simple_name == 0))
     {
-	return NULL;
+	return nullptr;
     }
     return simple_name;
 }
@@ -893,7 +893,7 @@ obj_print_indented(ABObj obj, int spaces, int verbosity)
     char                namebuf[256];
 
     *namebuf = 0;
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	util_dprintf(0, "NULL Object\n");
 	return 0;
@@ -919,11 +919,11 @@ obj_print_indented(ABObj obj, int spaces, int verbosity)
 	sprintf(namebuf, "name:'%s'", istr_string_safe(obj->name));
     }
     indent(spaces);
-    if ((obj != NULL) && (obj_has_impl_flags(obj, ObjFlagDestroyed)))
+    if ((obj != nullptr) && (obj_has_impl_flags(obj, ObjFlagDestroyed)))
     {
 	util_dprintf(1, "**DESTROYED** ");
     }
-    if ((obj != NULL) && (!obj_is_defined(obj)))
+    if ((obj != nullptr) && (!obj_is_defined(obj)))
     {
 	util_dprintf(0, "**UNDEF** ");
     }
@@ -952,12 +952,12 @@ obj_print_indented(ABObj obj, int spaces, int verbosity)
 	}
 	if (obj_is_action(obj))
 	{
-	    ABObj               thisModule = NULL;
-	    ABObj               thatModule = NULL;
-	    ABObj               thatObj = NULL;
+	    ABObj               thisModule = nullptr;
+	    ABObj               thatModule = nullptr;
+	    ABObj               thatObj = nullptr;
 	    AB_WHEN		when = AB_WHEN_UNDEF;
 
-	    if (obj != NULL)
+	    if (obj != nullptr)
 	    {
 		thisModule = obj_get_module(obj);
 	    }
@@ -966,13 +966,13 @@ obj_print_indented(ABObj obj, int spaces, int verbosity)
 	     * To value
 	     */
 	    thatObj = obj->info.action.to;
-	    if (thatObj != NULL)
+	    if (thatObj != nullptr)
 	    {
 		thatModule = obj_get_module(thatObj);
 	    }
 	    indent(spaces);
 	    util_dprintf(0, "to: ");
-	    if ((thatModule != NULL) && (thatModule != thisModule))
+	    if ((thatModule != nullptr) && (thatModule != thisModule))
 	    {
 		util_dprintf(0, "%s.", obj_get_safe_name(thatModule, namebuf, 256));
 	    }
@@ -983,13 +983,13 @@ obj_print_indented(ABObj obj, int spaces, int verbosity)
 	     * From value
 	     */
 	    thatObj = obj->info.action.from;
-	    if (thatObj != NULL)
+	    if (thatObj != nullptr)
 	    {
 		thatModule = obj_get_module(thatObj);
 	    }
 	    indent(spaces);
 	    util_dprintf(0, "from: ");
-	    if ((thatModule != NULL) && (thatModule != thisModule))
+	    if ((thatModule != nullptr) && (thatModule != thisModule))
 	    {
 		util_dprintf(0, "%s.", obj_get_safe_name(thatModule, namebuf, 256));
 	    }
@@ -1009,13 +1009,13 @@ obj_print_indented(ABObj obj, int spaces, int verbosity)
 	    indent(spaces);
 	    util_dprintf(0, "[parent: %s]\n",
 			 obj_get_safe_name(obj->parent, namebuf, 256));
-	    if (obj->ref_to != NULL)
+	    if (obj->ref_to != nullptr)
 	    {
 	        indent(spaces);
 	        util_dprintf(0, "[ref_to: %s]\n",
 			 obj_get_safe_name(obj->ref_to, namebuf, 256));
 	    }
-	    if (obj->part_of != NULL)
+	    if (obj->part_of != nullptr)
 	    {
 	        indent(spaces);
 	        util_dprintf(0, "[part_of: %s]\n",
@@ -1060,9 +1060,9 @@ static int
 obj_tree_print_indented(ABObj obj, int spaces, int verbosity)
 {
     AB_TRAVERSAL        trav;
-    ABObj               child = NULL;
+    ABObj               child = nullptr;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	util_dprintf(0, "NULL Tree\n");
 	return 0;
@@ -1073,7 +1073,7 @@ obj_tree_print_indented(ABObj obj, int spaces, int verbosity)
 	util_dprintf(0, "\n");
     }
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-	 (child = trav_next(&trav)) != NULL;)
+	 (child = trav_next(&trav)) != nullptr;)
     {
 	obj_tree_print_indented(child, spaces + 4, verbosity);
     }
@@ -1097,7 +1097,7 @@ objP_update_verify(ABObj obj)
     return 0;
 #else
     int			return_value = 0;
-    static ABObj	lastObj = NULL;
+    static ABObj	lastObj = nullptr;
     static int		lastObjCount = 0;
     time_t		curTime = 0;
 
@@ -1105,7 +1105,7 @@ objP_update_verify(ABObj obj)
      * time() can be rather slow, so let multiple references to the 
      * same object slide...
      */
-    if (   (obj != NULL)
+    if (   (obj != nullptr)
         && (   (debug_level() >= 5)
 	    || ((   (obj != lastObj) || (++lastObjCount > 10))
 	         && (curTime > (obj->debug_last_verify_time+1))) )
@@ -1155,19 +1155,19 @@ obj_verify(ABObj obj)
     volatile BOOL	objIsAccessible = FALSE;
     volatile int	return_value = 0;
     volatile char	obj_name[1024] = "";
-    volatile STRING	obj_str_ptr_name = NULL;
-    volatile ABObj	parent = NULL;
-    volatile ABObj	next_sibling = NULL;
-    volatile ABObj	prev_sibling = NULL;
+    volatile STRING	obj_str_ptr_name = nullptr;
+    volatile ABObj	parent = nullptr;
+    volatile ABObj	next_sibling = nullptr;
+    volatile ABObj	prev_sibling = nullptr;
     volatile BOOL	ok = FALSE;
     volatile BOOL	data_access_ok = TRUE;
-    volatile STRING	last_field = NULL;
-    volatile ABObj	tmpObj = NULL;
-    volatile StringList	namesList = NULL;
+    volatile STRING	last_field = nullptr;
+    volatile ABObj	tmpObj = nullptr;
+    volatile StringList	namesList = nullptr;
 
     sig_fault_handler_install();
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	return_value = -1;
 	goto epilogue;
@@ -1192,12 +1192,12 @@ obj_verify(ABObj obj)
     mem_fault_occurred = FALSE;
     if (sigsetjmp(sigjmp_env, TRUE) == 0)
     {
-	obj_str_ptr_name = NULL;
+	obj_str_ptr_name = nullptr;
 	ok = (istr_verify(obj->name) >= 0);
 	if (ok)
 	{
 	    obj_str_ptr_name = istr_string(obj->name);
-	    if (obj_str_ptr_name != NULL)
+	    if (obj_str_ptr_name != nullptr)
 	    {
 	        snprintf((STRING)obj_name, sizeof(obj_name),
 	                 "(ABObj %#lx = %s)", (unsigned long) obj, obj_str_ptr_name);
@@ -1233,12 +1233,12 @@ obj_verify(ABObj obj)
      * next_sibling
      */
     next_sibling = obj->next_sibling;
-    if ((next_sibling != NULL) && (!objP_is_accessible(next_sibling)))
+    if ((next_sibling != nullptr) && (!objP_is_accessible(next_sibling)))
     {
-	next_sibling = NULL;
+	next_sibling = nullptr;
 	field_err("next_sibling");
     }
-    if (next_sibling != NULL)
+    if (next_sibling != nullptr)
     {
 	safe_data_access(ok = (next_sibling->prev_sibling == obj));
 	if ((!data_access_ok) || (!ok))
@@ -1252,12 +1252,12 @@ obj_verify(ABObj obj)
      * parent
      */
     prev_sibling = obj->prev_sibling;
-    if ((prev_sibling != NULL) && (!objP_is_accessible(prev_sibling)))
+    if ((prev_sibling != nullptr) && (!objP_is_accessible(prev_sibling)))
     {
-	prev_sibling = NULL;
+	prev_sibling = nullptr;
 	field_err("prev_sibling");
     }
-    if (prev_sibling != NULL)
+    if (prev_sibling != nullptr)
     {
 	safe_data_access(ok = (prev_sibling->next_sibling == obj));
 	if ((!data_access_ok) || (!ok))
@@ -1271,12 +1271,12 @@ obj_verify(ABObj obj)
      * parent
      */
     parent = obj->parent;
-    if ((parent != NULL) && (!objP_is_accessible(parent)))
+    if ((parent != nullptr) && (!objP_is_accessible(parent)))
     {
-	parent = NULL;
+	parent = nullptr;
 	field_err("parent");
     }
-    if (parent != NULL)
+    if (parent != nullptr)
     {
 	volatile ABObj	child;
 	volatile BOOL	found = FALSE;
@@ -1289,7 +1289,7 @@ obj_verify(ABObj obj)
 	}
 	else
 	{
-	    while ((!found) && (child != NULL))
+	    while ((!found) && (child != nullptr))
 	    {
 	        if (child == obj)
 	        {
@@ -1328,7 +1328,7 @@ obj_verify(ABObj obj)
     if (sigsetjmp(sigjmp_env, TRUE) != 0)
     {
 	return_value = -1;
-	if (last_field != NULL)
+	if (last_field != nullptr)
 	{
 	    field_err(last_field);
 	}
@@ -1421,10 +1421,10 @@ obj_verify(ABObj obj)
      * Check names index (we know the strings are valid, now)
      * project name doesn't go in an index
      */
-    if ((obj->type != AB_TYPE_PROJECT) && (obj->name != NULL))
+    if ((obj->type != AB_TYPE_PROJECT) && (obj->name != nullptr))
     {
-        namesList = NULL;
-        for (parent = obj->parent; parent != NULL; parent = parent->parent)
+        namesList = nullptr;
+        for (parent = obj->parent; parent != nullptr; parent = parent->parent)
         {
 	    if (   (parent->type == AB_TYPE_MODULE)
 		|| (parent->type == AB_TYPE_PROJECT) )
@@ -1432,7 +1432,7 @@ obj_verify(ABObj obj)
 		break;
 	    }
         }
-	if (parent != NULL)
+	if (parent != nullptr)
 	{
 	    switch (parent->type)
 	    {
@@ -1444,7 +1444,7 @@ obj_verify(ABObj obj)
 	        break;
 	    }
 
-	    if (namesList == NULL)
+	    if (namesList == nullptr)
 	    {
 	        util_dprintf(1, 
 		    "No names index found containing %s\n", obj_name);
@@ -1460,7 +1460,7 @@ obj_verify(ABObj obj)
 	        tmpObj = (ABObj)strlist_get_istr_data(namesList, obj->name);
 		if (obj_has_impl_flags(obj, ObjFlagDestroyed))
 		{
-		    if (tmpObj != NULL)
+		    if (tmpObj != nullptr)
 		    {
 			util_dprintf(1, 
 			    "Destroyed object is in names index: %s\n",
@@ -1487,7 +1487,7 @@ epilogue:
 #ifdef DEBUG
     if (objIsAccessible)
     {
-        obj->debug_last_verify_time = time(NULL); /*only exists in debug build*/
+        obj->debug_last_verify_time = time(nullptr); /*only exists in debug build*/
     }
 #endif /* DEBUG */
     sig_fault_handler_uninstall();
@@ -1541,7 +1541,7 @@ sig_fault_handler_install(void)
 	return 0;
     }
 
-    if (sigaction(SIGSEGV, NULL, &org_sig_segv_handler) < 0)
+    if (sigaction(SIGSEGV, nullptr, &org_sig_segv_handler) < 0)
     {
 	return -1;
     }
@@ -1549,7 +1549,7 @@ sig_fault_handler_install(void)
     new_action.sa_handler = sig_fault_handler;
     sigemptyset(&(new_action.sa_mask));
     new_action.sa_flags = 0;
-    if (sigaction(SIGSEGV, &new_action, NULL) < 0)
+    if (sigaction(SIGSEGV, &new_action, nullptr) < 0)
     {
 	return -1;
     }
@@ -1557,7 +1557,7 @@ sig_fault_handler_install(void)
     sig_fault_handler_installed = TRUE;
 
 #ifdef SIGBUS
-    if (sigaction(SIGBUS, NULL, &org_sig_bus_handler) < 0)
+    if (sigaction(SIGBUS, nullptr, &org_sig_bus_handler) < 0)
     {
 	return -1;
     }
@@ -1565,7 +1565,7 @@ sig_fault_handler_install(void)
     new_action.sa_handler = sig_fault_handler;
     sigemptyset(&(new_action.sa_mask));
     new_action.sa_flags = 0;
-    if (sigaction(SIGBUS, &new_action, NULL) < 0)
+    if (sigaction(SIGBUS, &new_action, nullptr) < 0)
     {
 	return -1;
     }
@@ -1584,14 +1584,14 @@ sig_fault_handler_uninstall(void)
 	return 0;
     }
 
-    if (sigaction(SIGSEGV, &org_sig_segv_handler, NULL) < 0)
+    if (sigaction(SIGSEGV, &org_sig_segv_handler, nullptr) < 0)
     {
 	return -1;
     }
     sig_fault_handler_installed = FALSE;
 
 #ifdef SIGBUS
-    if (sigaction(SIGBUS, &org_sig_bus_handler, NULL) < 0)
+    if (sigaction(SIGBUS, &org_sig_bus_handler, nullptr) < 0)
     {
 	return -1;
     }
@@ -1610,7 +1610,7 @@ sig_fault_handler(int signal_number)
     {
 	/* We should have cleared this to prepare for a mem fault */
 	/* If not, then something has gone haywire */
-        static STRING msg = NULL;
+        static STRING msg = nullptr;
 	msg = "MEMORY ACCESS VIOLATION OCCURRED. ABORTING.\n";
 	write(2, msg, strlen(msg));
 	abort();
@@ -1625,13 +1625,13 @@ obj_tree_verify(ABObj root)
 {
     int                 return_value = 0;
     int			rc = 0;		/* return code */
-    ABObj		*objArray = NULL;
+    ABObj		*objArray = nullptr;
     int			objArraySize = 0;
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     AB_TRAVERSAL	moduleTrav;
     int			i = 0;
 
-    if (root == NULL)
+    if (root == nullptr)
     {
 	/* empty tree is valid (I guess) */
 	return 0;
@@ -1671,7 +1671,7 @@ obj_tree_verify(ABObj root)
      * check the modules' name lists
      */
     for (trav_open(&moduleTrav, root, AB_TRAV_MODULES);
-	(module = trav_next(&moduleTrav)) != NULL; )
+	(module = trav_next(&moduleTrav)) != nullptr; )
     {
 	rc = verify_the_silly_index(module, objArray, objArraySize);
 	if (rc < 0)
@@ -1696,16 +1696,16 @@ verify_the_silly_index(
 )
 {
     int		return_value = 0;
-    StringList	names = NULL;
+    StringList	names = nullptr;
     int		numNames = 0;
     int		nameCount = 0;
     int		objCount = 0;
-    ABObj	namedObj = NULL;
-    ABObj	namesObj = NULL;
-    ISTRING	curName = NULL;
-    ABObj	curObj = NULL;
-    ABObj	curScopeObj = NULL;
-    StringList	curNames = NULL;
+    ABObj	namedObj = nullptr;
+    ABObj	namesObj = nullptr;
+    ISTRING	curName = nullptr;
+    ABObj	curObj = nullptr;
+    ABObj	curScopeObj = nullptr;
+    StringList	curNames = nullptr;
     BOOL	namedObjFound = FALSE;
     char	nameBuf1[1024];
     char	nameBuf2[1024];
@@ -1716,7 +1716,7 @@ verify_the_silly_index(
 
 
     names = objP_get_names_list(nameScopeObj);
-    if (names == NULL)
+    if (names == nullptr)
     {
 	return 0;
     }
@@ -1743,13 +1743,13 @@ verify_the_silly_index(
 	     * We've found the object that goes with this name. Check
 	     * to see if it is in the right scope.
 	     */
-	    curNames = NULL;
+	    curNames = nullptr;
 	    curScopeObj = objP_get_names_scope_obj(curObj);
-	    if (curScopeObj != NULL)
+	    if (curScopeObj != nullptr)
 	    {
 	        curNames = objP_get_names_list(curScopeObj);
 	    }
-	    if (curNames == NULL)
+	    if (curNames == nullptr)
 	    {
 		util_dprintf(1, 
 		    "No names list found for object %s in module %s!\n",
@@ -1803,8 +1803,8 @@ build_obj_array(ABObj **objArrayPtr, int *objArraySizePtr, ABObj root)
 #define objArray (*objArrayPtr)
 #define objArraySize (*objArraySizePtr)
     int		rc = 0;			/* return code */
-    ABObj	*newObjArray = NULL;
-    ABObj	child = NULL;
+    ABObj	*newObjArray = nullptr;
+    ABObj	child = nullptr;
 
     /*
      * If this object is already in the list, we've detected some sort
@@ -1831,7 +1831,7 @@ build_obj_array(ABObj **objArrayPtr, int *objArraySizePtr, ABObj root)
      */
     ++objArraySize;
     newObjArray = (ABObj*)realloc(objArray, objArraySize*sizeof(ABObj*));
-    if (newObjArray == NULL)
+    if (newObjArray == nullptr)
     {
 	util_dprintf(1, "Out of memory in build_obj_array\n");
 	return ERR_NO_MEMORY;
@@ -1842,7 +1842,7 @@ build_obj_array(ABObj **objArrayPtr, int *objArraySizePtr, ABObj root)
     /*
      * Add the children to the list
      */
-    for (child = root->first_child; child != NULL; child = child->next_sibling)
+    for (child = root->first_child; child != nullptr; child = child->next_sibling)
     {
 	if ((rc = build_obj_array(&objArray, &objArraySize, child)) < 0)
 	{
@@ -1860,7 +1860,7 @@ ABObj
 obj_get_parent_of_type(ABObj obj, AB_OBJECT_TYPE type)
 {
     ABObj               ancestor = obj->parent;
-    while ((ancestor != NULL) && (obj_get_type(ancestor) != type))
+    while ((ancestor != nullptr) && (obj_get_type(ancestor) != type))
     {
 	ancestor = ancestor->parent;
     }

@@ -140,7 +140,7 @@ _DtWsmSetWorkspaceTitle (
     if (status != TT_OK) {
 	return DT_SVC_FAIL;
     }
-    status = tt_message_arg_add(msg, TT_IN, "integer", NULL);
+    status = tt_message_arg_add(msg, TT_IN, "integer", nullptr);
     if (status != TT_OK) {
 	return DT_SVC_FAIL;
     }

@@ -287,7 +287,7 @@ SymValue g_HeadFootSymsList[] =
   { "$VOLDATE", "%5$s" },     /* date on the help volume file */
   { "$SECTNUM", "%6$s" },     /* section number or name */
   { "$LMARGIN", "%8$*7$c" },      /* left margin blanks; args 7 & 8 */
-  { NULL, NULL }
+  { nullptr, nullptr }
 };
 #define  UNUSED_ARGREF   "%%9$n"    /* arg to hold the num of unused args */
 /*$END$*/
@@ -302,8 +302,8 @@ $1LINER$:  Get next entry in the toc
 $DESCRIPT$:
 $ARGS$:
 $RETURNS$:
-!= NULL:   next entry
-NULL:      no more entires
+!= nullptr:   next entry
+nullptr:      no more entires
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
 
@@ -312,7 +312,7 @@ TocEntry * TocNextEntry(
   Toc *      toc,
   TocEntry * entry)
 {       /*$CODE$*/
-  if (NULL == entry) return toc->linearEntries;
+  if (nullptr == entry) return toc->linearEntries;
   return entry->nextEntry;
 }       /*$END$*/
 
@@ -340,15 +340,15 @@ int TocFindSortedEntry(
    TocEntry * cur;
    TocEntry * tmp;
 
-   if (NULL == ret_parent) ret_parent = &tmp;
-   if (NULL == ret_entry) ret_entry = &tmp;
+   if (nullptr == ret_parent) ret_parent = &tmp;
+   if (nullptr == ret_entry) ret_entry = &tmp;
 
-   *ret_parent = NULL;
-   *ret_entry = NULL;
+   *ret_parent = nullptr;
+   *ret_entry = nullptr;
 
    prev = toc->sortedEntries;
    cur = prev;
-   while ( NULL != cur )
+   while ( nullptr != cur )
    {
       int cmp;
       cmp = _DtHelpCeStrCaseCmp(locationId,cur->locationId);
@@ -391,7 +391,7 @@ int TocNewEntry(
    TocEntry * new;
 
    new = calloc(1,sizeof(TocEntry));
-   if (NULL == new) return -1;        /* RETURN: mem alloc err */
+   if (nullptr == new) return -1;        /* RETURN: mem alloc err */
 
    /* init contents */
    new->locationId = strdup(locationId);
@@ -400,13 +400,13 @@ int TocNewEntry(
    new->sectStr = sectStr;
    memcpy(new->sectNums, sectNums, sizeof(new->sectNums));
 
-   if (NULL == new->locationId)
+   if (nullptr == new->locationId)
       { free(new); return -1; }       /* RETURN: mem alloc err */
 
    /*** insert into toc ***/
 
    /* if first in list */
-   if (NULL == toc->linearEntries)
+   if (nullptr == toc->linearEntries)
    {
       toc->linearEntries = new;
       toc->lastLinearEntry = new;
@@ -461,31 +461,31 @@ int IconvFile(
    int    ret;
    int    i;
    char * loc[NUMSTRS];
-   char * destFile = NULL;
+   char * destFile = nullptr;
    char * codeset;
    char   buf[1000];
 
-   for (i=0; i<NUMSTRS; i++) loc[i] = NULL;
+   for (i=0; i<NUMSTRS; i++) loc[i] = nullptr;
    
    /* get the normalized current codeset */
-   _DtHelpCeGetLcCtype(&loc[CUR_LOCALE], NULL, &loc[CUR_CODESET]);
+   _DtHelpCeGetLcCtype(&loc[CUR_LOCALE], nullptr, &loc[CUR_CODESET]);
 
    /* get the normalized volume codeset */
    loc[VOL_LOCALE] = _DtHelpCeGetVolumeLocale(helpVolumeHandle);
 
    /* codeset begins after the '.'; find it */
-   codeset = NULL;
+   codeset = nullptr;
    if (    loc[VOL_LOCALE]
         && _DtHelpCeStrchr(loc[VOL_LOCALE], ".", 1, &codeset) == 0)
    {
        codeset++;
    }
-   loc[VOL_CODESET] = (NULL != codeset ? strdup(codeset) : NULL);
+   loc[VOL_CODESET] = (nullptr != codeset ? strdup(codeset) : nullptr);
 
    /* if either locale is NULL or if they are the same string
       then don't iconv the file */
-   if (   NULL == loc[CUR_CODESET]
-       || NULL == loc[VOL_CODESET]
+   if (   nullptr == loc[CUR_CODESET]
+       || nullptr == loc[VOL_CODESET]
        || strcmp(loc[CUR_CODESET],loc[VOL_CODESET]) == 0 )
    {
        ret = 0;                   /* RETURN:  no iconv needed/possible */
@@ -500,7 +500,7 @@ int IconvFile(
 
    /* construct the command line */
    destFile = _DtHPrCreateTmpFile(TMPFILE_PREFIX,TMPFILE_SUFFIX);
-   if (NULL == destFile)
+   if (nullptr == destFile)
    {
        ret = -1;                   /* error */
        goto cleanup;
@@ -542,7 +542,7 @@ cleanup:
  * in _converter_().
  *
  */
-static void           *_i18nwork1 = NULL;
+static void           *_i18nwork1 = nullptr;
 static unsigned long  _i18nsize1 = 0;
 static int            shouldAlloc1 = ~0;
 
@@ -553,7 +553,7 @@ static void _converter_( iconv_t CD,
 {
     char          *InBuf;
     size_t        InBytesLeft;
-    char          *OutBuf = NULL;
+    char          *OutBuf = nullptr;
     size_t        OutBytesLeft = 0;
     size_t        _OutBytesLeft = 0;
     size_t        iconv_ret;
@@ -561,14 +561,14 @@ static void _converter_( iconv_t CD,
     unsigned long to_len;
 
 
-    *to = NULL;
+    *to = nullptr;
     to_len = 0;
 
     if ( shouldAlloc1 ) {
         /* Obtain work area */
         _i18nwork1 = (size_t *)malloc( WORKSIZE );
         if ( !_i18nwork1 ) {
-            _i18nwork1 = NULL;
+            _i18nwork1 = nullptr;
             return;
         }
         _i18nsize1 = WORKSIZE; 
@@ -584,7 +584,7 @@ static void _converter_( iconv_t CD,
      * Need to place iconv state to the initial one by
      * setting inbuf to NULL of iconv().
      */
-    iconv( CD, (ICONV_INBUF_TYPE)NULL, 0, NULL, 0 );
+    iconv( CD, (ICONV_INBUF_TYPE)NULL, 0, nullptr, 0 );
     while( 1 ) {
 	/*
 	 * InBuf
@@ -661,10 +661,10 @@ static void _converter_( iconv_t CD,
 		_i18nsize1 += WORKSIZE;
 		_p = realloc( _i18nwork1, _i18nsize1 );
 		if ( !_p ) {
-		    *to = NULL;
+		    *to = nullptr;
 		    to_len = 0;
 		    free( _i18nwork1 );
-		    _i18nwork1 = NULL;
+		    _i18nwork1 = nullptr;
 		    _i18nsize1 = 0;
 		    shouldAlloc1 = ~0;
 		    break;
@@ -674,7 +674,7 @@ static void _converter_( iconv_t CD,
 		    OutBytesLeft += WORKSIZE;
 		}  
 	    } else {
-		*to = NULL;
+		*to = nullptr;
 		to_len = 0;
 		break;
 	    }
@@ -685,7 +685,7 @@ static void _converter_( iconv_t CD,
      * Null terminate
      */
 
-    if ( *to != NULL ) {
+    if ( *to != nullptr ) {
         if ( _i18nsize1 >= to_len + 1 ) {
             ((char *)_i18nwork1)[to_len] = '\0';
         } else {
@@ -694,10 +694,10 @@ static void _converter_( iconv_t CD,
             _i18nsize1++;
             _p = realloc( _i18nwork1, _i18nsize1 );
 	    if ( !_p ) {
-	        *to = NULL;
+	        *to = nullptr;
 	        to_len = 0;
 	        free( _i18nwork1 );
-	        _i18nwork1 = NULL;
+	        _i18nwork1 = nullptr;
 	        _i18nsize1 = 0;
 	        shouldAlloc1 = ~0;
 	    } else {
@@ -733,27 +733,27 @@ int IconvBuffer(
    static int isFirst = ~0;
    static iconv_t CD = (iconv_t)-1;
 
-   for (i=0; i<NUMSTRS; i++) loc[i] = NULL;
+   for (i=0; i<NUMSTRS; i++) loc[i] = nullptr;
    
    /* get the normalized current codeset */
-   _DtHelpCeGetLcCtype(&loc[CUR_LOCALE], NULL, &loc[CUR_CODESET]);
+   _DtHelpCeGetLcCtype(&loc[CUR_LOCALE], nullptr, &loc[CUR_CODESET]);
 
    /* get the normalized volume codeset */
    loc[VOL_LOCALE] = _DtHelpCeGetVolumeLocale(helpVolumeHandle);
 
    /* codeset begins after the '.'; find it */
-   codeset = NULL;
+   codeset = nullptr;
    if (    loc[VOL_LOCALE]
         && _DtHelpCeStrchr(loc[VOL_LOCALE], ".", 1, &codeset) == 0)
    {
        codeset++;
    }
-   loc[VOL_CODESET] = (NULL != codeset ? strdup(codeset) : NULL);
+   loc[VOL_CODESET] = (nullptr != codeset ? strdup(codeset) : nullptr);
 
    /* if either locale is NULL or if they are the same string
       then don't iconv the file */
-   if (   NULL == loc[CUR_CODESET]
-       || NULL == loc[VOL_CODESET]
+   if (   nullptr == loc[CUR_CODESET]
+       || nullptr == loc[VOL_CODESET]
        || strcmp(loc[CUR_CODESET],loc[VOL_CODESET]) == 0 )
    {
        ret = 0;                   /* RETURN:  no iconv needed/possible */
@@ -776,7 +776,7 @@ int IconvBuffer(
       ret = 1;
        _converter_( CD, (void *)src, (unsigned long)strlen( src ),
 		(void **)dest );
-       if ( *dest == NULL )
+       if ( *dest == nullptr )
            ret = 0;
    }
 cleanup:
@@ -810,10 +810,10 @@ FILE * OpenTmpFile(
       of a remote system, it can get to the (local) temp file. 
       This would not be possible if the file were put in /tmp */
    *ret_tmpFile = _DtHPrCreateTmpFile(TMPFILE_PREFIX,TMPFILE_SUFFIX);
-   if (NULL == *ret_tmpFile) return NULL;     /* RETURN: error */
+   if (nullptr == *ret_tmpFile) return nullptr;     /* RETURN: error */
 
    fp = fopen(*ret_tmpFile,"w");
-   if (NULL == fp)
+   if (nullptr == fp)
    {
       fprintf(stderr,_DTGETMESSAGE(PTSET,6,
                            "%s Error: unable to open temporary file %s\n"),
@@ -931,7 +931,7 @@ $DESCRIPT$:
 Outputs blank Spaces
 $RETURNS$:
 $ARGS$:
-topicsFP:  pointer to output stream.  If NULL, do nothing
+topicsFP:  pointer to output stream.  If nullptr, do nothing
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
 
@@ -940,7 +940,7 @@ void OutputBlankSpaces(
   FILE *  topicsFP,
   int     spaceCount)
 {       /*$CODE$*/
-     if (NULL == topicsFP || spaceCount < 0) return;
+     if (nullptr == topicsFP || spaceCount < 0) return;
      while (spaceCount--) fprintf(topicsFP," "); 
 } /* $END$ */
 
@@ -953,7 +953,7 @@ $DESCRIPT$:
 Outputs blank lines
 $RETURNS$:
 $ARGS$:
-topicsFP:  pointer to output stream.  If NULL, do nothing
+topicsFP:  pointer to output stream.  If nullptr, do nothing
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
 
@@ -965,7 +965,7 @@ void OutputBlankLines(
 {       /*$CODE$*/
      if (lineCount < 0) return;			/* RETURN */
      state->curLineNumber += lineCount;
-     if (NULL == topicsFP) return;		/* RETURN */
+     if (nullptr == topicsFP) return;		/* RETURN */
      while (lineCount--) fprintf(topicsFP,"\n"); 
 } /* $END$ */
 
@@ -1043,12 +1043,12 @@ void GenHeadFootFormatArgs(
    char   buf[100];
 
     /* get the volume title and its size */
-    if (NULL == state->hffArgs.volumeTitle)
+    if (nullptr == state->hffArgs.volumeTitle)
     {
        /* get the volume title */
-       str = NULL;
+       str = nullptr;
        _DtHelpCeGetVolumeTitle(state->canvasHandle,state->volHandle,&str);
-       if (NULL == str) str = strdup("");
+       if (nullptr == str) str = strdup("");
 
        width = DoStrColsWidth(str,MAXVOLTITLEWIDTH,True);
 
@@ -1058,22 +1058,22 @@ void GenHeadFootFormatArgs(
     }
 
     /* get the volume's date */
-    if (NULL == state->hffArgs.volumeDate)
+    if (nullptr == state->hffArgs.volumeDate)
     {
-       char * locDocId = NULL;
-       char * locDateStamp = NULL;
+       char * locDocId = nullptr;
+       char * locDateStamp = nullptr;
        long long_date = 0;
 
        /* locDocId & locDateStamp will point to private memory; do not modify */
        _DtHelpCeGetDocStamp(state->volHandle,&locDocId, &locDateStamp);
-       if (    NULL != locDateStamp
+       if (    nullptr != locDateStamp
             && sscanf(locDateStamp, "%ld", &long_date) != 1 )
-          locDateStamp = NULL;     /* make invalid */
+          locDateStamp = nullptr;     /* make invalid */
        else
 	 date = (time_t)long_date;
 
        /* if no vol date, try getting from the help volume file */
-       if ( NULL == locDateStamp )
+       if ( nullptr == locDateStamp )
        {
           struct stat stats;
           date = 0;
@@ -1096,10 +1096,10 @@ void GenHeadFootFormatArgs(
     }
 
     /* get today's date */
-    if (NULL == state->hffArgs.todaysDate)
+    if (nullptr == state->hffArgs.todaysDate)
     {
        /* convert the int into a string */
-       date = time(NULL);
+       date = time(nullptr);
        pTm = localtime(&date);
        strftime(buf,sizeof(buf),"%x",pTm);
 
@@ -1114,10 +1114,10 @@ void GenHeadFootFormatArgs(
     if (updateTopicTitle)
     {
        /* get the topic title */
-       str = NULL;
+       str = nullptr;
        _DtHelpCeGetTopicTitle(state->canvasHandle, state->volHandle,
                               state->currentLocId, &str);
-       if (NULL == str) str = strdup("");
+       if (nullptr == str) str = strdup("");
 
        width = DoStrColsWidth(str,MAXTOPICTITLEWIDTH,True);
 
@@ -1178,9 +1178,9 @@ void GenHeadFootFormatStr(
     char * substr;
     char   unusedSyms[60];
 
-    if (NULL == specStr) 
+    if (nullptr == specStr) 
     {
-       *io_formattedStr = NULL;
+       *io_formattedStr = nullptr;
        *io_lineCnt = 0;
        return;                        /* RETURN */
     }
@@ -1190,17 +1190,17 @@ void GenHeadFootFormatStr(
     /* Make a working copy of the string; I assume that the
        values of 'argref' string always be shorter than 'symbol'. */
     lowLevelFormatStr = malloc(strlen(specStr) + sizeof(unusedSyms) + 10);
-    if (NULL == lowLevelFormatStr) return;
+    if (nullptr == lowLevelFormatStr) return;
     strcpy(lowLevelFormatStr,specStr);
 
     /* replace the symbolic names with printf argument refs */
     strcpy(unusedSyms,UNUSED_ARGREF);
-    for ( sym = g_HeadFootSymsList; sym->symbol != NULL; sym++ )
+    for ( sym = g_HeadFootSymsList; sym->symbol != nullptr; sym++ )
     {
        Boolean unused = True;
 
        /* look for the symbol string */
-       while ( (substr = strstr(lowLevelFormatStr,sym->symbol)) != NULL )
+       while ( (substr = strstr(lowLevelFormatStr,sym->symbol)) != nullptr )
        {  /* and replace it with the argref */
           unused = False;
           strcpy(substr, sym->argref);
@@ -1286,9 +1286,9 @@ before output.
 $RETURNS$:
 number of lines in the header or footer
 $ARGS$:
-topicsFP:  pointer to output stream.  If NULL, increment
+topicsFP:  pointer to output stream.  If nullptr, increment
            page and reset line number), but do not output;
-           If not NULL, request new page as well
+           If not nullptr, request new page as well
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
 
@@ -1305,8 +1305,8 @@ int PrintHeadFootStr(
     char   sectNumStr[MAXSECTS * 4 + 5];	/* $SECTNUM */
     char   buf[3000];
 
-    if (NULL == formattedStr) return 0;        /* RETURN */
-    if (NULL == topicsFP) return lineCnt;      /* RETURN */
+    if (nullptr == formattedStr) return 0;        /* RETURN */
+    if (nullptr == topicsFP) return lineCnt;      /* RETURN */
 
     /*** generate dynamic data ***/
 
@@ -1344,7 +1344,7 @@ int PrintHeadFootStr(
 
     /* move the format string for the second set into new memory */
     formattedStr = strdup(buf);
-    if(NULL == formattedStr) return 0;            /* RETURN */
+    if(nullptr == formattedStr) return 0;            /* RETURN */
 
     /* print the second set */
     sprintf(buf, formattedStr,
@@ -1372,7 +1372,7 @@ $DESCRIPT$:
 Print footer and use right form for odd/even pages
 $RETURNS$:
 $ARGS$:
-topicsFP:  pointer to output stream.  If NULL, increment
+topicsFP:  pointer to output stream.  If nullptr, increment
            lines), but do not output;
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
@@ -1412,7 +1412,7 @@ $DESCRIPT$:
 Print footer and use right form for odd/even pages
 $RETURNS$:
 $ARGS$:
-topicsFP:  pointer to output stream.  If NULL, increment
+topicsFP:  pointer to output stream.  If nullptr, increment
            lines), but do not output;
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
@@ -1445,9 +1445,9 @@ $DESCRIPT$:
 Outputs paper form feed, increments page count, resets line cnt
 $RETURNS$:
 $ARGS$:
-topicsFP:  pointer to output stream.  If NULL, increment
+topicsFP:  pointer to output stream.  If nullptr, increment
            page and reset line number), but do not output;
-           If not NULL, request new page as well
+           If not nullptr, request new page as well
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
 
@@ -1484,9 +1484,9 @@ $RETURNS$:
  0:  The number of lines output.
 -2:  could not get topic information
 $ARGS$:
-topicsFP:  pointer to output stream.  If NULL, process topic
+topicsFP:  pointer to output stream.  If nullptr, process topic
            (e.g. count lines and inc page numbers), but do not output;
-           If not NULL, output lines and page headers
+           If not nullptr, output lines and page headers
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
 
@@ -1497,7 +1497,7 @@ int ProcessOneTopic(
   PrintState *    state,
   Boolean         printHeaderFooter)
 {       /*$CODE$*/
-   char * * helpList = NULL;
+   char * * helpList = nullptr;
    char * * ptrToLst;
    int      lineCount;
    int      availLines;
@@ -1505,7 +1505,7 @@ int ProcessOneTopic(
 
    /* retrieve the text (but not the hyperlinks) from the volume */
    if ( _DtHelpTermGetTopicData(state->canvasHandle, state->volHandle,
-                       state->currentLocId, &helpList, NULL) != 0 )
+                       state->currentLocId, &helpList, nullptr) != 0 )
    {
       fprintf(stderr,_DTGETMESSAGE(PTSET,5,
                            "%s Error: unable to get topic information:\n"
@@ -1551,7 +1551,7 @@ int ProcessOneTopic(
    availLines = AvailContentLines(options,state,&state->bodyHFF);
 
    /* cycle through the lines; add new pages where necessary */
-   for ( ; *helpList != NULL; helpList++ )
+   for ( ; *helpList != nullptr; helpList++ )
    {
       /* NOTE: it's impt to calc the final line before outputting it,
          as the line may contain embedded newlines */
@@ -1598,7 +1598,7 @@ int ProcessOneTopic(
    }
 
    /* free the memory of helpList */
-   _DtHelpFreeTopicData(ptrToLst,NULL);
+   _DtHelpFreeTopicData(ptrToLst,nullptr);
 
    return 0;
 }       /*$END$*/
@@ -1632,7 +1632,7 @@ int ProcessSubTopics(
   int             level,
   PrintState *    state)
 {       /*$CODE$*/
-   char * * children = NULL;
+   char * * children = nullptr;
    int      ret = 0;
    int      firstSubSectNum;
    int      subSectNumIndex;
@@ -1658,7 +1658,7 @@ int ProcessSubTopics(
    }
 
    /* init file ptr */
-   curFP = (state->inhibitOutput ? (FILE *) NULL : topicsFP);
+   curFP = (state->inhibitOutput ? (FILE *) nullptr : topicsFP);
 
    /* init according to level */
    if(level == 0)   /* the top topic? */
@@ -1691,7 +1691,7 @@ int ProcessSubTopics(
       Boolean  initSubSect = True;
 
       /* cycle through the topics and output each one */
-      for (topic = children; *topic != NULL && (*topic)[0]; topic++ )
+      for (topic = children; *topic != nullptr && (*topic)[0]; topic++ )
       {
          /* start level 0 & 1 topics on a new page */
          if ( subSectNumIndex < 2 )
@@ -1782,7 +1782,7 @@ int ProcessFrontMatter(
 
    /* open file */
    fp = OpenTmpFile(options,ret_resultsFile);
-   if (NULL == fp) return -1;               /* RETURN: error */
+   if (nullptr == fp) return -1;               /* RETURN: error */
 
    /*** process text ***/
    /* setup the state */
@@ -1790,7 +1790,7 @@ int ProcessFrontMatter(
    state->curPageNumber = 1;
    state->curLineNumber = 1;
    state->sectNums[0] = 0;      /* inhibit section num printing */
-   state->sectStr = NULL;       /* inhibit section string printing */
+   state->sectStr = nullptr;       /* inhibit section string printing */
 
    OutputBlankLines(fp,state, options->rowsTextHeight / 3);
 
@@ -1862,7 +1862,7 @@ int ProcessIndex(
    char *   entryStr;
    int      entriesCnt;
 
-   *ret_resultsFile = NULL;
+   *ret_resultsFile = nullptr;
 
    /* Get the index.  Recall that the array and strings pointed to by
       the indexEntriesList is owned by the open volume */
@@ -1871,7 +1871,7 @@ int ProcessIndex(
 
    /* open file */
    fp = OpenTmpFile(options,ret_resultsFile);
-   if (NULL == fp) return -1;               /* RETURN: error */
+   if (nullptr == fp) return -1;               /* RETURN: error */
 
    /*** process index ***/
 
@@ -1895,7 +1895,7 @@ int ProcessIndex(
 
    /*** loop through the entries ***/
    for ( entryStr = *indexEntriesList++;
-         NULL != entryStr;
+         nullptr != entryStr;
          entryStr = *indexEntriesList++ )
    {
       char * * topicIdsList;
@@ -1913,7 +1913,7 @@ int ProcessIndex(
       if (topicCnt == 1)
       {
          /* find the toc entry of the topic */
-         ret = TocFindSortedEntry(toc, *topicIdsList, NULL, &tocEntry);
+         ret = TocFindSortedEntry(toc, *topicIdsList, nullptr, &tocEntry);
          if (ret < 0) continue;                 /* CONTINUE */
 
          /* output the entry */
@@ -1979,16 +1979,16 @@ int ProcessIndex(
       {
          char * topicTitle;
 
-         if (NULL == *topicIdsList) continue;   /* CONTINUE */
+         if (nullptr == *topicIdsList) continue;   /* CONTINUE */
 
          /* find the toc entry of the topic */
-         ret = TocFindSortedEntry(toc, *topicIdsList, NULL, &tocEntry);
+         ret = TocFindSortedEntry(toc, *topicIdsList, nullptr, &tocEntry);
          if (ret < 0) continue;                 /* CONTINUE */
 
          /* get the topic title */
          _DtHelpCeGetTopicTitle(state->canvasHandle, state->volHandle,
                               tocEntry->locationId, &topicTitle);
-         if (NULL == topicTitle) 
+         if (nullptr == topicTitle) 
             topicTitle = _DTGETMESSAGE(PTSET,31,EMPTY_STR);
 
          /* output the entry */
@@ -2058,7 +2058,7 @@ int ProcessToc(
 
    /* open file */
    fp = OpenTmpFile(options,ret_resultsFile);
-   if (NULL == fp) return -1;               /* RETURN: error */
+   if (nullptr == fp) return -1;               /* RETURN: error */
 
    /*** process toc ***/
 
@@ -2077,12 +2077,12 @@ int ProcessToc(
    availLines = AvailContentLines(options,state,&state->tocHFF);
 
    /* walk through the toc; output the label, title string, and page num */
-   for ( entry = TocNextEntry(toc,NULL);
-         NULL != entry;
+   for ( entry = TocNextEntry(toc,nullptr);
+         nullptr != entry;
          entry = TocNextEntry(toc,entry) )
    {
        char   sectNumStr[MAXSECTS * 4 + 5];	/* $SECTNUM */
-       char * title = NULL;
+       char * title = nullptr;
        wchar_t * wctitle;
        int    lhsWidth;
        int    titlelen;
@@ -2093,7 +2093,7 @@ int ProcessToc(
        SectNumStr(entry->sectNums,entry->sectStr,sectNumStr);
        _DtHelpCeGetTopicTitle(state->canvasHandle, state->volHandle,
                               entry->locationId, &title);
-       if (NULL == title) title = EMPTY_STR;
+       if (nullptr == title) title = EMPTY_STR;
 
        /* set max length of title and calc num blanks needed */
        lhsWidth = strlen(sectNumStr) + 1;   /* 1=blank after sect num */
@@ -2221,18 +2221,18 @@ $RETURNS$:
 $ARGS$:
 outputFromLocId:  output of topics occurs for this topic and all its
                   subtopics.  This topic Id is strcasecmp()ed against the
-                  current Id to determine a match.  If NULL, the volume
+                  current Id to determine a match.  If nullptr, the volume
                   top topic is used.
 inhibitTopicsOutput:    if true, output only starts when outputFromLocId is found
 
 outputFromLocId  inhibitOutput   action
 ---------------  -------------   -------------------------------------
-NULL              True            no output is generated
-NULL              False           output begins with the top topic
-!= NULL           True            output begins with outputFromLocId
+nullptr              True            no output is generated
+nullptr              False           output begins with the top topic
+!= nullptr           True            output begins with outputFromLocId
                                     and stops after last subtopic of
                                     outputFromLocId
-!= NULL           False           output begins with the top topic
+!= nullptr           False           output begins with the top topic
                                     and stops after last subtopic of
                                     outputFromLocId
 ========================================================$SKIP$=====*/
@@ -2253,16 +2253,16 @@ int ProcessTopics(
 
    /* don't print a single topic with no locId */
    if (    processSubTopics == False
-        && (outputFromLocId == NULL || *outputFromLocId == EOS) )
+        && (outputFromLocId == nullptr || *outputFromLocId == EOS) )
        return 0;                                /* RETURN: ok */
 
    /* if no output is desired, set ptr to NULL */
-   if ( NULL == outputFromLocId && inhibitTopicsOutput )
-       fp = NULL;
+   if ( nullptr == outputFromLocId && inhibitTopicsOutput )
+       fp = nullptr;
    else
    {  /* output is desired...open file */
       fp = OpenTmpFile(options,ret_resultsFile);
-      if (NULL == fp) return -1;               /* RETURN: error */
+      if (nullptr == fp) return -1;               /* RETURN: error */
    }
 
    /*** process text ***/
@@ -2282,7 +2282,7 @@ int ProcessTopics(
    }
 
    /* set the other state values */
-   if (   NULL != outputFromLocId
+   if (   nullptr != outputFromLocId
        && (ret = _DtHelpCeIsTopTopic(state->volHandle,outputFromLocId)) != 0 )
       state->outputFromLocId = outputFromLocId;
    else
@@ -2330,7 +2330,7 @@ int ProcessTopics(
       {
          unlink(*ret_resultsFile);
          free(*ret_resultsFile);
-         *ret_resultsFile = NULL;
+         *ret_resultsFile = nullptr;
       }
    }
 
@@ -2344,7 +2344,7 @@ $PFUNBEG$:  MakePageBreakFile()
 $1LINER$:  Creates a file with only a page break char in it
 $DESCRIPT$:
 Creates a file with only a page break char in it.
-If fails, file ptr is NULL
+If fails, file ptr is nullptr
 $RETURNS$:
 $ARGS$:
 ========================================================$SKIP$=====*/
@@ -2358,10 +2358,10 @@ void MakePageBreakFile(
    FILE * fp;
 
    fp = OpenTmpFile(options,ret_resultsFile);
-   if (NULL == fp) 
+   if (nullptr == fp) 
    { 
       free(*ret_resultsFile); 
-      *ret_resultsFile = NULL; 
+      *ret_resultsFile = nullptr; 
       return; 
    }
    fprintf(fp,"\n");
@@ -2408,7 +2408,7 @@ int DoHelpTopicsProcessing(
    char *      buf;
    char *      start;
    char *      next;
-   char *      pgbrkFile = NULL;
+   char *      pgbrkFile = nullptr;
    char *      partFiles[NUMPARTS];
    Boolean     validFile = False;
 
@@ -2459,10 +2459,10 @@ int DoHelpTopicsProcessing(
       of a remote system, it can get to the (local) temp file. 
       This would not be possible if the file were put in /tmp */
    *ret_resultsFile = _DtHPrCreateTmpFile(TMPFILE_PREFIX,TMPFILE_SUFFIX);
-   if (NULL == *ret_resultsFile) { ret = -1; goto cleanup; } /* RETURN: error */
+   if (nullptr == *ret_resultsFile) { ret = -1; goto cleanup; } /* RETURN: error */
 
    buf = malloc(3000 * sizeof(char));
-   if (NULL == buf) { ret = -3; goto cleanup; }      /* RETURN: error */
+   if (nullptr == buf) { ret = -3; goto cleanup; }      /* RETURN: error */
 
    /* cat together the part files that got created in the array order */
    /* separate them with a file containing only a page break */
@@ -2538,12 +2538,12 @@ int GenerateTopicsFile(
   char * *        ret_resultsFile)
 {       /*$CODE$*/
    int ret = 0;
-   Boolean allTopics = (options->allTopics != NULL);
-   Boolean subTopics = (options->subTopics != NULL);
-   Boolean toc = (options->toc != NULL);
-   Boolean index = (options->index != NULL);
-   Boolean frontMatter = (options->frontMatter != NULL);
-   Boolean oneTopic = (options->oneTopic != NULL);
+   Boolean allTopics = (options->allTopics != nullptr);
+   Boolean subTopics = (options->subTopics != nullptr);
+   Boolean toc = (options->toc != nullptr);
+   Boolean index = (options->index != nullptr);
+   Boolean frontMatter = (options->frontMatter != nullptr);
+   Boolean oneTopic = (options->oneTopic != nullptr);
    Boolean dfltOneTopic;
    char *  locationId = options->locationId;
 
@@ -2554,7 +2554,7 @@ int GenerateTopicsFile(
       this keeps the _Hometopic from being printed along with 
       the front matter, when only front matter was specified */
    if (frontMatter && !oneTopic && dfltOneTopic)
-      locationId = NULL;   /* prevent printing the hometopic */
+      locationId = nullptr;   /* prevent printing the hometopic */
 
    /* to generate a toc or index, we need to process all topics; if
       processing all or subtopics wasn't requested, request it;
@@ -2577,7 +2577,7 @@ int GenerateTopicsFile(
       ret = DoHelpTopicsProcessing(
                    options, ret_resultsFile, 
                    True, True, True,
-                   True, NULL, False);
+                   True, nullptr, False);
    else
       ret = DoHelpTopicsProcessing(
                    options, ret_resultsFile, 
@@ -2612,7 +2612,7 @@ int _DtHPrPrintHelpTopic(
    char * path;
 
 
-    if ( NULL == options->helpVolume )
+    if ( nullptr == options->helpVolume )
     {
          fprintf(stderr, _DTGETMESSAGE(PTSET,1,
                              "%s: Error: helpType is topic, "
@@ -2625,7 +2625,7 @@ int _DtHPrPrintHelpTopic(
    /* try to locate the volume */
    path = _DtHelpFileLocate(DtHelpVOLUME_TYPE, options->helpVolume,
                                _DtHelpFileSuffixList,False,R_OK);
-   if (path == NULL)
+   if (path == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PTSET,2,
                              "%s Error: unable to locate help volume '%s'\n"),
@@ -2648,7 +2648,7 @@ int _DtHPrPrintHelpTopic(
 
    /* Alloc max shell command line len */
    printCommand = malloc(MAX_COMMAND_LENGTH*sizeof(char));
-   if (printCommand == NULL)
+   if (printCommand == nullptr)
    {
          fprintf(stderr, _DTGETMESSAGE(PTSET,4,
                              "%s Error: memory allocation failed\n"),
@@ -2752,7 +2752,7 @@ int _DtHPrPrintHelpTopicWithXvp(
    else
       lpDocName = DFLT_JOB_TITLE_STR;
    
-   status = XvpEscape(dpy, STARTDOC, strlen(lpDocName), lpDocName, NULL);
+   status = XvpEscape(dpy, STARTDOC, strlen(lpDocName), lpDocName, nullptr);
    screen = DefaultScreen(dpy);
    
   /*	Calculate application page size		*/
@@ -2769,10 +2769,10 @@ int _DtHPrPrintHelpTopicWithXvp(
 
   XSelectInput (dpy, main_window, ExposureMask);
   XMapWindow (dpy, main_window);
-  XvpEscape(dpy, SET_IMAGE_RESOLUTION, 4, 100, NULL);
+  XvpEscape(dpy, SET_IMAGE_RESOLUTION, 4, 100, nullptr);
 
   defaultFont = XLoadQueryFont (dpy, DEFAULT_FONT);
-  if (defaultFont == NULL)
+  if (defaultFont == nullptr)
     {
 	printf ("Unable to get a font\n");
 	exit (1);
@@ -2788,13 +2788,13 @@ int _DtHPrPrintHelpTopicWithXvp(
   pageNumberFont = 
      XLoadQueryFont (dpy, 
 	     "-agfa-univers-normal-r-normal-94021-0-100-300-300-p-0-iso8859-1");
-  if (pageNumberFont == NULL)
+  if (pageNumberFont == nullptr)
     {
 	printf ("Unable to get a font\n");
 	exit (1);
     }
 
-  pageNumberGC = XCreateGC(dpy, RootWindow(dpy, screen), NULL, NULL);
+  pageNumberGC = XCreateGC(dpy, RootWindow(dpy, screen), nullptr, nullptr);
   XSetForeground (dpy, pageNumberGC, XBlackPixel (dpy, screen));
   XSetBackground (dpy, pageNumberGC, XWhitePixel (dpy, screen));
   XSetFont(dpy, pageNumberGC, pageNumberFont->fid);
@@ -2813,7 +2813,7 @@ int _DtHPrPrintHelpTopicWithXvp(
 #else
   pDAS = Spoof (dpy, gc, gc, defaultFont, width, height, lineLeading);
 #endif
-  if (pDAS == NULL)
+  if (pDAS == nullptr)
   {
      fprintf(stderr, "%s: Internal error.\n");
      exit(1);
@@ -2849,7 +2849,7 @@ int _DtHPrPrintHelpTopicWithXvp(
      RenderLinesX (dpyX, main_windowX, pDAS, widthX, heightX, &image);
      XvpPutImage(dpy, main_window, gcX, image, 0, 0, 0, 0, 
 		 (image->width)*3, (image->height*3) );
-     status = XvpEscape(dpy, NEWFRAME, NULL, NULL, NULL);
+     status = XvpEscape(dpy, NEWFRAME, nullptr, nullptr, nullptr);
      if (status > 0) ;
   else if (status < 0)
      fprintf (stdout, "XvpEscape(NEWFRAME) not implemented.\n");
@@ -2876,7 +2876,7 @@ int _DtHPrPrintHelpTopicWithXvp(
      exit(1);
   }
 
-  status = XvpEscape(dpy, ENDDOC, NULL, NULL, NULL);
+  status = XvpEscape(dpy, ENDDOC, nullptr, nullptr, nullptr);
   if (status == -1)
   {
      fprintf (stdout, "Error occurred in XvpEscape(ENDDOC)\n");

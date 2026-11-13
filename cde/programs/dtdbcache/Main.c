@@ -92,15 +92,15 @@ main(int argc, char **argv)
 			status);
 	}
 
-	toplevel = XtAppInitialize(&appContext, ApplicationClass, NULL, 0,
-				   &argc, argv, NULL, NULL, 0);
+	toplevel = XtAppInitialize(&appContext, ApplicationClass, nullptr, 0,
+				   &argc, argv, nullptr, nullptr, 0);
 
 	if (DtAppInitialize(appContext, XtDisplay(toplevel), toplevel, argv[0],
 			    ApplicationClass) == False)
 	{
 		_DtSimpleError(ApplicationClass,
 				DtFatalError,
-				NULL ,
+				nullptr ,
 				"%s: Couldn't initialize Dt\n",
 				argv[0]);
 	}
@@ -164,7 +164,7 @@ main(int argc, char **argv)
 		 * Log an error message.  Cannot post a dialog because
 		 * there is a good chance system is starting up.
 		 */
-		_DtSimpleError(ApplicationClass, DtFatalError, NULL,
+		_DtSimpleError(ApplicationClass, DtFatalError, nullptr,
 		  "Couldn't create the Desktop Action/DataTypes Database.\n\
 Check disk space and/or permissions.\n");
 	    }
@@ -178,7 +178,7 @@ DbCacheCreateErrorCallback(Widget w, XtPointer userData, XtPointer callData)
     XtUnmanageChild(w);
     XFlush(XtDisplay(w));
     XmUpdateDisplay(w);
-    _DtSimpleError(ApplicationClass, DtFatalError, NULL,
+    _DtSimpleError(ApplicationClass, DtFatalError, nullptr,
 		   "Couldn't recreate the Desktop Action/DataTypes Database.\n\
 Check disk space and/or permissions.\n");
 }
@@ -223,7 +223,7 @@ Check disk space and/or permissions.";
 
     /* Center the dialog */
     XtRealizeWidget(err);
-    XtVaGetValues(err, XmNwidth, &dialogWd, XmNheight, &dialogHt, NULL);
+    XtVaGetValues(err, XmNwidth, &dialogWd, XmNheight, &dialogHt, nullptr);
     XtSetArg(args[0], XmNx,
 	     (WidthOfScreen(XtScreen(err)) - dialogWd) / 2);
     XtSetArg(args[1], XmNy,
@@ -246,6 +246,6 @@ DieFromToolTalkError(char *errfmt, Tt_status status)
     if (! tt_is_err(status)) return;
 
     statmsg = tt_status_message(status);
-    _DtSimpleError(ApplicationClass, DtFatalError, NULL, errfmt, statmsg);
+    _DtSimpleError(ApplicationClass, DtFatalError, nullptr, errfmt, statmsg);
     exit(status);
 }

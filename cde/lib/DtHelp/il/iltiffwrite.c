@@ -565,7 +565,7 @@ int            tagNumber;
         return IL_ERROR_MALLOC;
     ppLastTag = ppTagsInit + tagArraySize - 1;
     for (ppTag = ppTagsInit; ppTag <= ppLastTag; ppTag++)
-        *ppTag = (ilFileTag *)NULL;
+        *ppTag = (ilFileTag *)nullptr;
 
         /*  Fill in array with ptrs to tags, sorted in ascending numeric order (required
             by TIFF!), with duplicates eliminated.  Do the user tags, then the std tags,
@@ -773,7 +773,7 @@ ilJPEGEncodeControl         jpegEncode;
       case IL_BITONAL:
         if (pFormat->nBitsPerSample[0] != 1) {
             pFormat->nBitsPerSample[0] = 1;
-            if (!ilConvert (pipe, (ilImageDes *)NULL, pFormat, 0, NULL))
+            if (!ilConvert (pipe, (ilImageDes *)nullptr, pFormat, 0, nullptr))
                 return FALSE;
             }
         break;
@@ -800,7 +800,7 @@ ilJPEGEncodeControl         jpegEncode;
         pFormat->sampleOrder = IL_SAMPLE_PIXELS;
     else if ((pFormat->sampleOrder != IL_SAMPLE_PIXELS) && (compression != IL_JPEG)) {
         pFormat->sampleOrder = IL_SAMPLE_PIXELS;
-        if (!ilConvert (pipe, (ilImageDes *)NULL, pFormat, 0, NULL))
+        if (!ilConvert (pipe, (ilImageDes *)nullptr, pFormat, 0, nullptr))
             return FALSE;
         ilGetPipeInfo (pipe, FALSE, pInfo, pDes, pFormat);
         }
@@ -815,7 +815,7 @@ ilJPEGEncodeControl         jpegEncode;
         ilGetPipeInfo (pipe, TRUE, pInfo, pDes, pFormat);   /* force decompression */
         if (pFormat->rowBitAlign != 8) {
             pFormat->rowBitAlign = 8;
-            if (!ilConvert (pipe, (ilImageDes *)NULL, pFormat, 0, (ilPtr)NULL))
+            if (!ilConvert (pipe, (ilImageDes *)nullptr, pFormat, 0, (ilPtr)NULL))
                 return FALSE;
             ilGetPipeInfo (pipe, FALSE, pInfo, pDes, pFormat);
             }
@@ -1080,12 +1080,12 @@ char                    versionName [VERSION_LENGTH];
       case IL_JPEG:
         jpegProc = 1;           /* baseline sequential process */
         TW_ADD_TAG (IL_TAG_JPEG_PROC, IL_TAG_SHORT, 1, &jpegProc)
-        TW_ADD_TAG (IL_TAG_JPEG_INTERCHANGE_FORMAT, IL_TAG_LONG, 1, NULL)
-        TW_ADD_TAG (IL_TAG_JPEG_INTERCHANGE_FORMAT_LENGTH, IL_TAG_LONG, 1, NULL)
-        TW_ADD_TAG (IL_TAG_JPEG_RESTART_INTERVAL, IL_TAG_SHORT, 1, NULL)
-        TW_ADD_TAG (IL_TAG_JPEG_Q_TABLES, IL_TAG_LONG, des.nSamplesPerPixel, NULL)
-        TW_ADD_TAG (IL_TAG_JPEG_DC_TABLES, IL_TAG_LONG, des.nSamplesPerPixel, NULL)
-        TW_ADD_TAG (IL_TAG_JPEG_AC_TABLES, IL_TAG_LONG, des.nSamplesPerPixel, NULL)
+        TW_ADD_TAG (IL_TAG_JPEG_INTERCHANGE_FORMAT, IL_TAG_LONG, 1, nullptr)
+        TW_ADD_TAG (IL_TAG_JPEG_INTERCHANGE_FORMAT_LENGTH, IL_TAG_LONG, 1, nullptr)
+        TW_ADD_TAG (IL_TAG_JPEG_RESTART_INTERVAL, IL_TAG_SHORT, 1, nullptr)
+        TW_ADD_TAG (IL_TAG_JPEG_Q_TABLES, IL_TAG_LONG, des.nSamplesPerPixel, nullptr)
+        TW_ADD_TAG (IL_TAG_JPEG_DC_TABLES, IL_TAG_LONG, des.nSamplesPerPixel, nullptr)
+        TW_ADD_TAG (IL_TAG_JPEG_AC_TABLES, IL_TAG_LONG, des.nSamplesPerPixel, nullptr)
 
         TIFFcompression = 6;
         break;
@@ -1160,8 +1160,8 @@ char                    versionName [VERSION_LENGTH];
             function handles these specially and creates blank space, filled in later.
         */
     nStripsPerImage = (info.height + stripHeight - 1) / stripHeight;
-    TW_ADD_TAG (IL_TAG_STRIP_OFFSETS, IL_TAG_LONG, nStripsPerImage, NULL)
-    TW_ADD_TAG (IL_TAG_STRIP_BYTE_COUNTS, IL_TAG_LONG, nStripsPerImage, NULL)
+    TW_ADD_TAG (IL_TAG_STRIP_OFFSETS, IL_TAG_LONG, nStripsPerImage, nullptr)
+    TW_ADD_TAG (IL_TAG_STRIP_BYTE_COUNTS, IL_TAG_LONG, nStripsPerImage, nullptr)
 
     nSamplesPerPixel = des.nSamplesPerPixel;
     TW_ADD_TAG (IL_TAG_SAMPLES_PER_PIXEL, IL_TAG_SHORT, 1, &nSamplesPerPixel)
@@ -1202,7 +1202,7 @@ char                    versionName [VERSION_LENGTH];
         */
     if (des.type == IL_PALETTE) {
         tagInfo.nPaletteColors = 1 << format.nBitsPerSample [0];
-        TW_ADD_TAG (IL_TAG_COLOR_MAP, IL_TAG_SHORT, 3 * tagInfo.nPaletteColors, NULL)
+        TW_ADD_TAG (IL_TAG_COLOR_MAP, IL_TAG_SHORT, 3 * tagInfo.nPaletteColors, nullptr)
 
        if (des.flags & IL_DITHERED_PALETTE) {
             ditherLevels[0] = IL_TAG_P0_FLAG_DITHER_LEVELS;
@@ -1213,7 +1213,7 @@ char                    versionName [VERSION_LENGTH];
                      ditherLevels)
             }
         }
-    else tagInfo.pPalette = (unsigned short *)NULL;
+    else tagInfo.pPalette = (unsigned short *)nullptr;
 
         /*  Merge the user tags with the tags formed above, convert the data to
             the proper byte order and return the allocated info to "tagInfo" or error.
@@ -1231,7 +1231,7 @@ char                    versionName [VERSION_LENGTH];
     srcData.constantStrip = TRUE;
     srcData.minBufferHeight = 0;
     pPriv = (ilWriteFilePrivPtr)ilAddPipeElement (pipe, IL_CONSUMER, 
-        sizeof(ilWriteFilePrivRec), 0, &srcData, (ilDstElementData *)NULL,
+        sizeof(ilWriteFilePrivRec), 0, &srcData, (ilDstElementData *)nullptr,
         ilWriteFileInit, ilWriteFileCleanup, ilWriteFileDestroy, 
         (des.compression == IL_JPEG) ? ilWriteJPEGExecute : ilWriteFileExecute, 0);
     if (!pPriv)

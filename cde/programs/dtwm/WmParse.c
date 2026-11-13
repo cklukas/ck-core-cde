@@ -211,13 +211,13 @@ _DtWmParseNextTokenExpand (
     )
 {
     unsigned char *pch;
-    unsigned char *pchReturn = NULL;
+    unsigned char *pchReturn = nullptr;
 
     /* isolate the next token */
     pch = _DtWmParseNextTokenC (&(pWmPB->pchNext), False);
 
     /* expand environment variables, a copy of the string is returned */
-    pchReturn = _DtWmParseExpandEnvironmentVariables (pch, NULL);
+    pchReturn = _DtWmParseExpandEnvironmentVariables (pch, nullptr);
 
     /* 
      * If a token was found, but no copy returned, there were no 
@@ -432,7 +432,7 @@ _DtWmParseNextTokenC (
        )
     {
         *linePP = lineP;
-        return (NULL);
+        return (nullptr);
     }
 
     if ((chlen == 1) && (*lineP == '"'))
@@ -651,7 +651,7 @@ _DtWmParseNewBuf ( void )
 	if (!pWmPB->pchLine)
 	{
 	    XtFree ((char *)pWmPB);
-	    pWmPB = NULL;
+	    pWmPB = nullptr;
 	}
     }
 
@@ -660,7 +660,7 @@ _DtWmParseNewBuf ( void )
 	pWmPB->lineNumber = 0;
 	pWmPB->pchNext = pWmPB->pchLine;
 	pWmPB->cLineSize = MAXLINE+1;
-	pWmPB->pFile = NULL;
+	pWmPB->pFile = nullptr;
 	*(pWmPB->pchLine) = '\0';
     }
 
@@ -814,7 +814,7 @@ _DtWmParseSetLine (
     {
 	pWmPB->pchLine = pch;
 	pWmPB->pchNext = pWmPB->pchLine;
-	pWmPB->pFile = NULL;
+	pWmPB->pFile = nullptr;
 	pWmPB->lineNumber = 0;
     }
 
@@ -861,7 +861,7 @@ _DtWmParseSetFile (
     if (pWmPB)
     {
 	pWmPB->pchLine[0] = '\0';
-	pWmPB->pchNext = NULL;
+	pWmPB->pchNext = nullptr;
 	pWmPB->pFile = pFile;
 	pWmPB->lineNumber = 0;
     }
@@ -916,11 +916,11 @@ _DtWmParseNextLine (
     char delim;
     int lastlen;
 
-    if (cfileP != NULL)
+    if (cfileP != nullptr)
     /* read fopened file */
     {
 	if ((string = (unsigned char *) 
-		      fgets ((char *)line, MAXLINE, cfileP)) != NULL)
+		      fgets ((char *)line, MAXLINE, cfileP)) != nullptr)
 	{
 #ifdef PARSE_LIB
 	    if (strlen((char *)string) > (size_t)pWmPB->cLineSize)
@@ -967,7 +967,7 @@ _DtWmParseNextLine (
 	    string = line;
 	}
     }
-    else if ((parseP != NULL) && (*parseP != '\0'))
+    else if ((parseP != nullptr) && (*parseP != '\0'))
     /* read parse string */
     {
 #ifdef PARSE_LIB
@@ -1007,7 +1007,7 @@ _DtWmParseNextLine (
     }
     else
     {
-	string = NULL;
+	string = nullptr;
     }
 
     linec++;
@@ -1058,7 +1058,7 @@ _DtWmParseCurrentChar (
     )
 
 {
-    return (pWmPB ? pWmPB->pchNext : (unsigned char *)NULL);
+    return (pWmPB ? pWmPB->pchNext : (unsigned char *)nullptr);
 
 } /* END OF FUNCTION _DtWmParseCurrentChar */
 
@@ -1096,7 +1096,7 @@ _DtWmParseNextChar (
     )
 
 {
-    unsigned char *pch = NULL;
+    unsigned char *pch = nullptr;
     int chlen;
 
     if (pWmPB &&
@@ -1468,7 +1468,7 @@ _DtWmParseExpandEnvironmentVariables (
     unsigned char chSave;
     unsigned char *pchEnvStart;
     unsigned char *pchEnvValue;
-    unsigned char *pchReturn = NULL;
+    unsigned char *pchReturn = nullptr;
     unsigned char *pchNext;
     unsigned char *pchBreak;
     Boolean bEatBreak;
@@ -1496,7 +1496,7 @@ _DtWmParseExpandEnvironmentVariables (
 
     /* There needs to be something to look at */
     if (!pch)
-	return (NULL);
+	return (nullptr);
 
     pchStart = pch;
     lenOriginal = strlen ((char *)pch);

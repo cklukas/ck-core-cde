@@ -28,16 +28,16 @@ ConflictOperationValid(DtfileConflictOperation operation)
 static int
 ConflictPathValid(const char *bytes, size_t length)
 {
-    return bytes != NULL && length != 0 &&
+    return bytes != nullptr && length != 0 &&
            length <= DTFILE_CONFLICT_PATH_LIMIT && bytes[0] == '/' &&
-           memchr(bytes, 0, length) == NULL;
+           memchr(bytes, 0, length) == nullptr;
 }
 
 static int
 ConflictNameValid(const char *name)
 {
     size_t length;
-    if (name == NULL || name[0] == 0 || strchr(name, '/') != NULL ||
+    if (name == nullptr || name[0] == 0 || strchr(name, '/') != nullptr ||
         strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
         return 0;
     length = strnlen(name, DTFILE_CONFLICT_PATH_LIMIT + 1);
@@ -49,7 +49,7 @@ DtfileConflictBatchInit(DtfileConflictBatch *batch,
                         DtfileConflictOperation operation,
                         size_t selected_count, size_t count)
 {
-    if (batch == NULL) { errno = EINVAL; return -1; }
+    if (batch == nullptr) { errno = EINVAL; return -1; }
     memset(batch, 0, sizeof(*batch));
     if (!ConflictOperationValid(operation) || count == 0 ||
         selected_count < count || selected_count > INT_MAX)
@@ -58,7 +58,7 @@ DtfileConflictBatchInit(DtfileConflictBatch *batch,
         count > SIZE_MAX / sizeof(*batch->items))
     { errno = E2BIG; return -1; }
     batch->items = calloc(count, sizeof(*batch->items));
-    if (batch->items == NULL) return -1;
+    if (batch->items == nullptr) return -1;
     batch->operation = operation;
     batch->selected_count = selected_count;
     batch->count = count;
@@ -69,7 +69,7 @@ void
 DtfileConflictBatchFree(DtfileConflictBatch *batch)
 {
     size_t i;
-    if (batch == NULL) return;
+    if (batch == nullptr) return;
     for (i = 0; i < batch->count; ++i)
     {
         free(batch->items[i].source);
@@ -85,11 +85,11 @@ DtfileConflictSetItem(DtfileConflictBatch *batch, size_t slot,
                       const char *source, size_t source_length,
                       const char *target, size_t target_length)
 {
-    char *source_copy = NULL, *target_copy;
+    char *source_copy = nullptr, *target_copy;
     size_t bytes;
-    if (batch == NULL || batch->items == NULL || slot >= batch->count ||
+    if (batch == nullptr || batch->items == nullptr || slot >= batch->count ||
         request_index >= batch->selected_count ||
-        batch->items[slot].target != NULL ||
+        batch->items[slot].target != nullptr ||
         (flags & ~(DTFILE_CONFLICT_SAME_ENTRY | DTFILE_CONFLICT_CAN_MERGE)) != 0 ||
         ((flags & DTFILE_CONFLICT_SAME_ENTRY) && (flags & DTFILE_CONFLICT_CAN_MERGE)) ||
         ((flags & DTFILE_CONFLICT_CAN_MERGE) && batch->operation != DTFILE_CONFLICT_COPY) ||
@@ -97,7 +97,7 @@ DtfileConflictSetItem(DtfileConflictBatch *batch, size_t slot,
     { errno = EINVAL; return -1; }
     if (batch->operation == DTFILE_CONFLICT_BUFFER)
     {
-        if (source != NULL || source_length != 0 || flags != 0)
+        if (source != nullptr || source_length != 0 || flags != 0)
         { errno = EINVAL; return -1; }
     }
     else if (!ConflictPathValid(source, source_length))
@@ -107,15 +107,15 @@ DtfileConflictSetItem(DtfileConflictBatch *batch, size_t slot,
     if (batch->native_bytes > DTFILE_CONFLICT_BYTES_LIMIT ||
         bytes > DTFILE_CONFLICT_BYTES_LIMIT - batch->native_bytes)
     { errno = E2BIG; return -1; }
-    if (source != NULL)
+    if (source != nullptr)
     {
         source_copy = malloc(source_length + 1);
-        if (source_copy == NULL) return -1;
+        if (source_copy == nullptr) return -1;
         memcpy(source_copy, source, source_length);
         source_copy[source_length] = 0;
     }
     target_copy = malloc(target_length + 1);
-    if (target_copy == NULL) { free(source_copy); return -1; }
+    if (target_copy == nullptr) { free(source_copy); return -1; }
     memcpy(target_copy, target, target_length);
     target_copy[target_length] = 0;
     batch->items[slot].request_index = request_index;
@@ -139,25 +139,25 @@ DtfileConflictBatchValidate(const DtfileConflictBatch *batch)
     uint32_t *indices;
     size_t i, bytes = 0;
     int valid = 1;
-    if (batch == NULL || !ConflictOperationValid(batch->operation) ||
-        batch->items == NULL || batch->count == 0 ||
+    if (batch == nullptr || !ConflictOperationValid(batch->operation) ||
+        batch->items == nullptr || batch->count == 0 ||
         batch->count > DTFILE_CONFLICT_ITEM_LIMIT ||
         batch->selected_count < batch->count || batch->selected_count > INT_MAX ||
         batch->native_bytes > DTFILE_CONFLICT_BYTES_LIMIT)
     { errno = EINVAL; return -1; }
     indices = malloc(batch->count * sizeof(*indices));
-    if (indices == NULL) return -1;
+    if (indices == nullptr) return -1;
     for (i = 0; i < batch->count; ++i)
     {
         const DtfileConflictItem *item = &batch->items[i];
-        size_t source_length = item->source == NULL ? 0 :
+        size_t source_length = item->source == nullptr ? 0 :
                  strnlen(item->source, DTFILE_CONFLICT_PATH_LIMIT + 1);
-        size_t target_length = item->target == NULL ? 0 :
+        size_t target_length = item->target == nullptr ? 0 :
                  strnlen(item->target, DTFILE_CONFLICT_PATH_LIMIT + 1);
-        if (item->target == NULL || item->request_index >= batch->selected_count ||
+        if (item->target == nullptr || item->request_index >= batch->selected_count ||
             !ConflictPathValid(item->target, target_length) ||
             (batch->operation == DTFILE_CONFLICT_BUFFER
-              ? item->source != NULL || item->flags != 0
+              ? item->source != nullptr || item->flags != 0
               : !ConflictPathValid(item->source, source_length)) ||
             (item->flags & ~(DTFILE_CONFLICT_SAME_ENTRY | DTFILE_CONFLICT_CAN_MERGE)) != 0 ||
             ((item->flags & DTFILE_CONFLICT_CAN_MERGE) &&
@@ -184,7 +184,7 @@ DtfileConflictBatchValidate(const DtfileConflictBatch *batch)
 DtfileConflictAction
 DtfileConflictDefaultAction(const DtfileConflictBatch *batch, size_t slot)
 {
-    if (batch == NULL || batch->items == NULL || slot >= batch->count)
+    if (batch == nullptr || batch->items == nullptr || slot >= batch->count)
         return DTFILE_CONFLICT_SKIP;
     if (!(batch->items[slot].flags & DTFILE_CONFLICT_SAME_ENTRY))
         return DTFILE_CONFLICT_REPLACE;
@@ -197,7 +197,7 @@ DtfileConflictActionAllowed(const DtfileConflictBatch *batch, size_t slot,
                             DtfileConflictAction action)
 {
     const DtfileConflictItem *item;
-    if (batch == NULL || batch->items == NULL || slot >= batch->count ||
+    if (batch == nullptr || batch->items == nullptr || slot >= batch->count ||
         !ConflictOperationValid(batch->operation) ||
         action < DTFILE_CONFLICT_REPLACE || action > DTFILE_CONFLICT_SKIP)
         return 0;
@@ -223,14 +223,14 @@ DtfileConflictDecisionValidate(const DtfileConflictBatch *batch, size_t slot,
                                const DtfileConflictDecision *decision)
 {
     int manual;
-    if (decision == NULL || batch == NULL || batch->items == NULL || slot >= batch->count)
+    if (decision == nullptr || batch == nullptr || batch->items == nullptr || slot >= batch->count)
     { errno = EINVAL; return -1; }
     manual = decision->action == DTFILE_CONFLICT_RENAME_EXISTING ||
              decision->action == DTFILE_CONFLICT_RENAME_INCOMING;
     if (decision->request_index != batch->items[slot].request_index ||
         !DtfileConflictActionAllowed(batch, slot, decision->action) ||
         (manual && !ConflictNameValid(decision->name)) ||
-        (!manual && decision->name != NULL))
+        (!manual && decision->name != nullptr))
     { errno = EINVAL; return -1; }
     return 0;
 }
@@ -239,7 +239,7 @@ void
 DtfileConflictDecisionsFree(DtfileConflictDecision *decisions, size_t count)
 {
     size_t i;
-    if (decisions == NULL) return;
+    if (decisions == nullptr) return;
     for (i = 0; i < count; ++i) free(decisions[i].name);
     free(decisions);
 }
@@ -250,12 +250,12 @@ DtfileConflictDisplayPath(const char *path)
     static const char hex[] = "0123456789ABCDEF";
     size_t length, i, used = 0;
     char *display;
-    if (path == NULL) { errno = EINVAL; return NULL; }
+    if (path == nullptr) { errno = EINVAL; return nullptr; }
     length = strnlen(path, DTFILE_CONFLICT_PATH_LIMIT + 1);
     if (length > DTFILE_CONFLICT_PATH_LIMIT || length > (SIZE_MAX - 1) / 4)
-    { errno = E2BIG; return NULL; }
+    { errno = E2BIG; return nullptr; }
     display = malloc(length * 4 + 1);
-    if (display == NULL) return NULL;
+    if (display == nullptr) return nullptr;
     for (i = 0; i < length; ++i)
     {
         unsigned char ch = (unsigned char)path[i];

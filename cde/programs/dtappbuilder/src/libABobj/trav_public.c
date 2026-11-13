@@ -79,7 +79,7 @@ trav_open(
 			unsigned travType
 )
 {
-    return trav_open_cond(trav, root, travType, NULL);
+    return trav_open_cond(trav, root, travType, nullptr);
 }
 
 
@@ -106,7 +106,7 @@ trav_close(ABTraversal trav)
 ABObj
 trav_next(ABTraversal trav)
 {
-    ABObj	obj= NULL;
+    ABObj	obj= nullptr;
     if (travP_is_safe(trav))
     {
 	obj= travP_next_safe(trav);
@@ -139,7 +139,7 @@ trav_reset(ABTraversal trav)
 ABObj
 trav_goto(ABTraversal trav, int nodeNum)
 {
-    ABObj	obj= NULL;
+    ABObj	obj= nullptr;
     if (travP_is_safe(trav))
     {
 	obj= travP_goto_safe(trav, nodeNum);
@@ -166,7 +166,7 @@ trav_perform(ABObj root, int trav_type, ABTraversalCB clientfunc)
 	int		retval= 0;
 
 	for (trav_open(&trav, root, trav_type);
-		(obj= trav_next(&trav)) != NULL; )
+		(obj= trav_next(&trav)) != nullptr; )
 	{
 		if ((retval= clientfunc(obj)) < 0)
 		{
@@ -185,11 +185,11 @@ int
 trav_count_cond(ABObj root, int trav_type, ABObjTestFunc testFunc)
 {
     AB_TRAVERSAL	trav;
-    ABObj		obj= NULL;
+    ABObj		obj= nullptr;
     int			objCount= 0;
 
     for (trav_open_cond(&trav, root, trav_type, testFunc);
-	(obj= trav_next(&trav)) != NULL; )
+	(obj= trav_next(&trav)) != nullptr; )
     {
 	++objCount;
     }
@@ -202,7 +202,7 @@ trav_count_cond(ABObj root, int trav_type, ABObjTestFunc testFunc)
 int
 trav_count(ABObj root, int trav_type)
 {
-    return trav_count_cond(root, trav_type, NULL);
+    return trav_count_cond(root, trav_type, nullptr);
 }
 
 

@@ -93,7 +93,7 @@ LOGICAL m_ckend(M_ELEMENT val, LOGICAL neednet)
     M_MIN *minend ;
     M_MIN *discard ;
 
-    m_minend = NULL ;
+    m_minend = nullptr ;
     m_nextme = &m_minend ;
     /* Go down the stack, checking that each element can end until
        element val occurs */       
@@ -128,7 +128,7 @@ LOGICAL m_ckend(M_ELEMENT val, LOGICAL neednet)
       /* Have confirmed that the element indicated by stackptr can end now */
       if (stackptr->element == val) break ;
       *m_nextme = (M_MIN *) m_malloc(sizeof(M_MIN), "end-tag minimization") ;
-      (*m_nextme)->next = NULL ;
+      (*m_nextme)->next = nullptr ;
       (*m_nextme)->val = stackptr->element ;
       m_nextme = &(*m_nextme)->next ;
       } /* End for stackptr */
@@ -197,7 +197,7 @@ M_PARSE *m_copystackelt(void)
 
     copy = (M_PARSE *) m_malloc(sizeof(M_PARSE), "stack element") ;
     memcpy((char *) copy, (char *) m_stacktop, sizeof(M_PARSE)) ;
-    copy->param = NULL ;
+    copy->param = nullptr ;
     for (oldfsa = m_stacktop->fsastack, newfsa = &copy->fsastack ;
          oldfsa ;
          oldfsa = oldfsa->oldtop, newfsa = &(*newfsa)->oldtop) {
@@ -208,7 +208,7 @@ M_PARSE *m_copystackelt(void)
            oldand = oldand->next, newand = &(*newand)->next) {
         *newand = (M_ANDLIST *) m_malloc(sizeof(M_ANDLIST), "and list") ;
         (*newand)->group = oldand->group ;
-        (*newand)->next = NULL ;
+        (*newand)->next = nullptr ;
         }
       }
     return(copy) ;
@@ -322,7 +322,7 @@ LOGICAL m_nextand(M_OPENFSA *thisfsa, M_ELEMENT label)
       (M_OPENFSA *) m_malloc(sizeof(M_OPENFSA), "FSA") ;
     m_stacktop->fsastack->oldtop = thisfsa->oldtop ;
     m_stacktop->fsastack->andgroup = M_NULLVAL ;
-    m_stacktop->fsastack->usedand = NULL ;
+    m_stacktop->fsastack->usedand = nullptr ;
     newgroup = (M_ANDLIST *) m_malloc(sizeof(M_ANDLIST), "and list") ;
     newgroup->next = thisfsa->oldtop->usedand ;
     thisfsa->oldtop->usedand = newgroup ;
@@ -365,7 +365,7 @@ LOGICAL m_nextand(M_OPENFSA *thisfsa, M_ELEMENT label)
       (M_OPENFSA *) m_malloc(sizeof(M_OPENFSA), "FSA") ;
     m_stacktop->fsastack->oldtop = thisfsa->oldtop->oldtop ;
     m_stacktop->fsastack->andgroup = M_NULLVAL ;
-    m_stacktop->fsastack->usedand = NULL ;
+    m_stacktop->fsastack->usedand = nullptr ;
     m_stacktop->fsastack->current = thisfsa->oldtop->current ;
     if (m_transition(label, FALSE)) {
       /* Free temporary FSA storage used to test transition */
@@ -417,15 +417,15 @@ void m_push(M_ELEMENT elt, M_STATE current, LOGICAL need)
     newstack = (M_PARSE *) m_malloc(sizeof(M_PARSE), "stack element") ;
     newstack->oldtop = m_stacktop ;
     newstack->element = elt ;
-    newstack->param = NULL ;
+    newstack->param = nullptr ;
     if (m_element[elt - 1].content == M_REGEXP) {
       newstack->fsastack = (M_OPENFSA *) m_malloc(sizeof(M_OPENFSA), "FSA") ;
-      newstack->fsastack->oldtop = NULL ;
+      newstack->fsastack->oldtop = nullptr ;
       newstack->fsastack->current = current ;
       newstack->fsastack->andgroup = M_NULLVAL ;
-      newstack->fsastack->usedand = NULL ;
+      newstack->fsastack->usedand = nullptr ;
       }
-    else newstack->fsastack = NULL ;
+    else newstack->fsastack = nullptr ;
     newstack->thisent = 0 ;
     newstack->neednet = need ;
     newstack->firstre = FALSE ;
@@ -442,7 +442,7 @@ void m_push(M_ELEMENT elt, M_STATE current, LOGICAL need)
     newstack->stparam = m_stacktop->stparam ;
     newstack->file = m_stacktop->file ;
     newstack->line = m_stacktop->line ;
-    newstack->ifdata = NULL ;
+    newstack->ifdata = nullptr ;
     m_stacktop = newstack ;
     if (m_element[elt - 1].srefptr)
       m_setmap(m_element[elt - 1].srefptr,
@@ -532,7 +532,7 @@ LOGICAL m_strtproc(M_ELEMENT scanval)
     /* Check for start- and end-tag omission */
     savecontext = m_curcon ;
     savenet = m_netlevel ;
-    m_minstart = m_minend = NULL ;
+    m_minstart = m_minend = nullptr ;
     m_nextms = &m_minstart ;
     m_nextme = &m_minend ;
     starttagomit = m_stacktop ;
@@ -542,7 +542,7 @@ LOGICAL m_strtproc(M_ELEMENT scanval)
         else continue ;
         }
       m_freemin(m_minstart, "start-tag minimization") ;
-      m_minstart = NULL ;
+      m_minstart = nullptr ;
       m_nextms = &m_minstart ;
       while (m_stacktop != starttagomit) m_pop() ;
       m_freeFSA(m_stacktop) ;
@@ -710,7 +710,7 @@ LOGICAL m_transition(M_ELEMENT label, LOGICAL recur)
         newfsa = (M_OPENFSA *) m_malloc(sizeof(M_OPENFSA), "FSA") ;
         newfsa->oldtop = m_stacktop->fsastack ;
         newfsa->andgroup = M_NULLVAL ;
-        newfsa->usedand = NULL ;
+        newfsa->usedand = nullptr ;
         m_stacktop->fsastack = newfsa ;
         for (pand = m_arc[parc - 1].group ; pand ;
              pand = m_andgroup[pand - 1].next) {
@@ -720,7 +720,7 @@ LOGICAL m_transition(M_ELEMENT label, LOGICAL recur)
             newfsa->oldtop->usedand =
               (M_ANDLIST *) m_malloc(sizeof(M_ANDLIST), "and list") ;
             newfsa->oldtop->usedand->group = pand ;
-            newfsa->oldtop->usedand->next = NULL ;
+            newfsa->oldtop->usedand->next = nullptr ;
             newfsa->oldtop->current = m_arc[parc - 1].to ;
             return(TRUE) ;
             }

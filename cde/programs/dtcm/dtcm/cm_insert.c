@@ -201,7 +201,7 @@ prompt_for_insert(Props *p) {
 	}
 
 	snprintf(buf, sizeof(buf), "%s %s", date_str, cm_start);
-	next = (int) cm_getdate(buf, NULL);
+	next = (int) cm_getdate(buf, nullptr);
         next = next + hrsec;
 
 	format_time(next, dt, cm_end);
@@ -250,10 +250,10 @@ int
 main(int argc, char **argv)
 {
 	int		cnt, status = 0;
-	char		*date = NULL, *view = NULL, *target = NULL,
-			*start = NULL, *end = NULL, *repeat = NULL,
-			*numrepeat = NULL, *what = NULL, *uname, *loc;
-	Props		*p = NULL;
+	char		*date = nullptr, *view = nullptr, *target = nullptr,
+			*start = nullptr, *end = nullptr, *repeat = nullptr,
+			*numrepeat = nullptr, *what = nullptr, *uname, *loc;
+	Props		*p = nullptr;
 	CSA_entry_handle	*list;
 	CSA_session_handle	c_handle;
 	CSA_return_code		stat;
@@ -293,9 +293,9 @@ main(int argc, char **argv)
 
 		csa_user.user_name = target;
 		csa_user.user_type = 0;
-		csa_user.calendar_user_extensions = NULL;
+		csa_user.calendar_user_extensions = nullptr;
 		csa_user.calendar_address = target;
-		stat = csa_logon(NULL, &csa_user, NULL, NULL, NULL, &c_handle, NULL);
+		stat = csa_logon(nullptr, &csa_user, nullptr, nullptr, nullptr, &c_handle, nullptr);
 		if (stat != CSA_SUCCESS) {
 			char *format = cm_strdup(CATGETS(DT_catd, 1, 206,
 					   "\nCould not open calendar %s\n"));
@@ -316,7 +316,7 @@ main(int argc, char **argv)
 		if (cm_strlen(cm_start)) start = cm_start;
 
 		if (!cm_end[0] && cm_start[0]) {
-			format_time((int)cm_getdate(cm_start, NULL) + hrsec,
+			format_time((int)cm_getdate(cm_start, nullptr) + hrsec,
 				    dt, cm_end);
 		}
 
@@ -327,7 +327,7 @@ main(int argc, char **argv)
 		if (!cm_appt_file[0])
 			status = cm_tty_insert(DT_catd, c_handle, version, 
 				      date, start, end, repeat, numrepeat,
-				      what, NULL, p);
+				      what, nullptr, p);
 		else
 			status = cm_tty_insert(DT_catd, c_handle, version, date,
 				      start, end, repeat, numrepeat,
@@ -340,9 +340,9 @@ main(int argc, char **argv)
 
 		csa_user.user_name = target;
 		csa_user.user_type = 0;
-		csa_user.calendar_user_extensions = NULL;
+		csa_user.calendar_user_extensions = nullptr;
 		csa_user.calendar_address = target;
-		stat = csa_logon(NULL, &csa_user, NULL, NULL, NULL, &c_handle, NULL);
+		stat = csa_logon(nullptr, &csa_user, nullptr, nullptr, nullptr, &c_handle, nullptr);
 		if (stat !=CSA_SUCCESS) {
 			char *format = cm_strdup(CATGETS(DT_catd, 1, 206,
 					   "\nCould not open calendar %s\n"));
@@ -363,12 +363,12 @@ main(int argc, char **argv)
 		if (cm_strlen(cm_for)) numrepeat = cm_for;
 		if (cm_strlen(cm_what)) what = cm_what;
 		status = cm_tty_insert(DT_catd, c_handle, version, date, 
-			      start, end, repeat, numrepeat, what, NULL, p);
+			      start, end, repeat, numrepeat, what, nullptr, p);
 	}
 	if ((cnt = cm_tty_lookup(DT_catd, c_handle, version, date, view, 
 					&list, p)) > 0)
 		csa_free(list);
-	csa_logoff(c_handle, NULL);
+	csa_logoff(c_handle, nullptr);
 	props_clean_up(p);
 	free(p);
 	free(uname);

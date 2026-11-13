@@ -105,7 +105,7 @@ _DtCmsLookupEntriesById(
 {
 	CSA_return_code	stat = CSA_SUCCESS;
 	CSA_return_code	stat2 = CSA_SUCCESS;
-	cms_entry	*eptr, *head = NULL, *tail = NULL;
+	cms_entry	*eptr, *head = nullptr, *tail = nullptr;
 	cms_key		key;
 	time_t		endtick;
 	cms_attribute	*aptr;
@@ -128,7 +128,7 @@ _DtCmsLookupEntriesById(
 
 	key.time = start1;
 	key.id = id;
-	*entries = NULL;
+	*entries = nullptr;
 	while ((eptr = (cms_entry *)rb_lookup_next_larger(cal->tree,
 	    (caddr_t)&key)) && eptr->key.time < start2) {
 		if (eptr->key.id != id) {
@@ -137,7 +137,7 @@ _DtCmsLookupEntriesById(
 		} else {
 			aptr = &eptr->attrs[CSA_ENTRY_ATTR_END_DATE_I];
 			if (!no_end_time_range) {
-				if (aptr->value == NULL)
+				if (aptr->value == nullptr)
 					return (CSA_SUCCESS);
 
 				_csa_iso8601_to_tick(
@@ -178,7 +178,7 @@ _DtCmsLookupEntries(
 {
 	CSA_return_code	stat = CSA_SUCCESS;
 	CSA_return_code	stat2 = CSA_SUCCESS;
-	cms_entry	*eptr, *head = NULL, *tail = NULL;
+	cms_entry	*eptr, *head = nullptr, *tail = nullptr;
 	cms_key		key;
 	List_node	*lnode;
 	time_t		endtick;
@@ -193,7 +193,7 @@ _DtCmsLookupEntries(
 		aptr = &eptr->attrs[CSA_ENTRY_ATTR_END_DATE_I];
 
 		if (!no_end_time_range) {
-			if (aptr->value == NULL)
+			if (aptr->value == nullptr)
 				goto nextone;
 
 			_csa_iso8601_to_tick(aptr->value->item.date_time_value,
@@ -223,7 +223,7 @@ nextone:
 
 	/* do lookup on repeating entries */	
 	lnode = cal->list->root;
-	while (lnode != NULL && stat == CSA_SUCCESS) {
+	while (lnode != nullptr && stat == CSA_SUCCESS) {
 
 		stat = _EnumerateSequence(sender, access, lnode, start1, start2,
 			no_end_time_range, end1, end2, num_attrs, attrs,
@@ -258,20 +258,20 @@ _DtCmsEnumerateSequenceById(
 	cms_entry	**entries)
 {
 	CSA_return_code	stat;
-	cms_entry	*head = NULL, *tail = NULL;
+	cms_entry	*head = nullptr, *tail = nullptr;
 	cms_key		key;
 	List_node	*lnode;
 
 	key.id = id;
 	lnode = hc_lookup_node(cal->list, (caddr_t)&key);
-	if (lnode == NULL)
+	if (lnode == nullptr)
 		return (CSA_X_DT_E_ENTRY_NOT_FOUND);
 
 	if ( ((stat = _DtCmsCheckViewAccess(sender, access,
 	    (cms_entry *)lnode->data)) != CSA_SUCCESS) && (stat != CSA_E_TIME_ONLY) )
 		return (stat);
 
-	*entries = NULL;
+	*entries = nullptr;
 	if (no_start_time_range && no_end_time_range) {
 		if (_DtCmsMatchAttributes((cms_entry *)lnode->data, num_attrs,
 		    attrs, ops)) {
@@ -307,9 +307,9 @@ _DtCmsLookupEntriesByKey(
 	cms_get_entry_attr_res_item	*eptr, *head;
 	int				i;
 
-	for (i = 0, head = NULL; i < num_keys; i++) {
+	for (i = 0, head = nullptr; i < num_keys; i++) {
 		if ((stat = _DtCmsGetEntryAttrByKey(cal, user, access, keys[i],
-		    num_names, names, NULL, &eptr)) == CSA_SUCCESS) {
+		    num_names, names, nullptr, &eptr)) == CSA_SUCCESS) {
 			eptr->next = head;
 			head = eptr;
 		} else {
@@ -340,34 +340,34 @@ _DtCmsGetEntryAttrByKey(
 {
 	CSA_return_code	stat;
 	CSA_return_code	stat2;
-	cms_entry	*entry = NULL;
-	char		*stime, *etime = NULL;
+	cms_entry	*entry = nullptr;
+	char		*stime, *etime = nullptr;
 	char		sbuf[TIME_BUF_LEN], ebuf[TIME_BUF_LEN];
 	time_t		firsttick = 0;
-	List_node	*lnode = NULL;
-	cms_get_entry_attr_res_item *res = NULL;
+	List_node	*lnode = nullptr;
+	cms_get_entry_attr_res_item *res = nullptr;
 
-	if (entry_r == NULL && res_r == NULL)
+	if (entry_r == nullptr && res_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if (res_r && (res = (cms_get_entry_attr_res_item *)calloc(1,
-	    sizeof(cms_get_entry_attr_res_item))) == NULL)
+	    sizeof(cms_get_entry_attr_res_item))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* do lookup on one-time entries first */
-	if ((entry = (cms_entry *)rb_lookup(cal->tree, (caddr_t)&key)) == NULL)
+	if ((entry = (cms_entry *)rb_lookup(cal->tree, (caddr_t)&key)) == nullptr)
 	{
 		if ((lnode = (List_node *)hc_lookup_node(cal->list,
-		    (caddr_t)&key)) != NULL)
+		    (caddr_t)&key)) != nullptr)
 		{
 			entry = (cms_entry *)lnode->data;
 			if (_DtCmsInExceptionList(entry, key.time))
-				entry = NULL;
+				entry = nullptr;
 		}
 	}
 
-	if ( (entry == NULL) || ( ((stat2 = _DtCmsCheckViewAccess(user, access, entry)) != CSA_SUCCESS) && (stat2 != CSA_E_TIME_ONLY)) ) {
-		if (entry == NULL)
+	if ( (entry == nullptr) || ( ((stat2 = _DtCmsCheckViewAccess(user, access, entry)) != CSA_SUCCESS) && (stat2 != CSA_E_TIME_ONLY)) ) {
+		if (entry == nullptr)
 			stat = CSA_X_DT_E_ENTRY_NOT_FOUND;
 		else
 			stat = CSA_E_NO_AUTHORITY;
@@ -453,7 +453,7 @@ _AddToLinkedEntries(
 	if (sort == B_FALSE) {
 		/* just add to the end of the list */
 
-		if ((*head) == NULL)
+		if ((*head) == nullptr)
 			*head = newptr;
 		else
 			(*tail)->next = newptr;
@@ -461,14 +461,14 @@ _AddToLinkedEntries(
 		*tail = newptr;
 	} else {
 		/* add item in ascending order */
-		for (prev = NULL, ptr = *head; ptr != NULL;
+		for (prev = nullptr, ptr = *head; ptr != nullptr;
 		    prev = ptr, ptr = ptr->next) {
 			if (eptr->key.time <= ptr->key.time)
 				break;
 		}
 
 		newptr->next = ptr;
-		if (prev == NULL)
+		if (prev == nullptr)
 			*head = newptr;
 		else
 			prev->next = newptr;
@@ -500,7 +500,7 @@ _EnumerateSequence(
 	CSA_return_code	stat2 = CSA_SUCCESS;
 	cms_entry	*eptr;
 	time_t		fsttick, tick;
-	RepeatEventState *restate = NULL;
+	RepeatEventState *restate = nullptr;
 
 	eptr = (cms_entry *)lnode->data;
 	fsttick = eptr->key.time;
@@ -512,7 +512,7 @@ _EnumerateSequence(
 
 	if (lnode->lasttick <= start1 || fsttick >= start2 ||
 	    (!no_end_time_range &&
-	     eptr->attrs[CSA_ENTRY_ATTR_END_DATE_I].value == NULL) ||
+	     eptr->attrs[CSA_ENTRY_ATTR_END_DATE_I].value == nullptr) ||
 	    (!no_end_time_range && (lnode->lasttick+lnode->duration) <= end1) ||
 	    (!no_end_time_range && (fsttick + lnode->duration) >= end2) ||
 	    _DtCmsCheckViewAccess(sender, access, eptr) ||
@@ -529,7 +529,7 @@ _EnumerateSequence(
 	    stat == CSA_SUCCESS && tick < start2;
 	    tick = NextTick(tick, fsttick, lnode->re, restate))
 	{
-		char *stime, *etime = NULL;
+		char *stime, *etime = nullptr;
 		char sbuf[TIME_BUF_LEN], ebuf[TIME_BUF_LEN];
 
 		if (tick <= 0 || tick > lnode->lasttick)
@@ -582,7 +582,7 @@ _GetEntryAttrsByName(
 	cms_attribute	*attrs;
 	int		i;
 
-	if ((attrs = calloc(1, sizeof(cms_attribute)*num_names)) == NULL)
+	if ((attrs = calloc(1, sizeof(cms_attribute)*num_names)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* return all attrs names with hash number
@@ -590,7 +590,7 @@ _GetEntryAttrsByName(
 	 * have value and which one does not even exist
 	 */
 	for (i = 0; i < num_names && stat == CSA_SUCCESS; i++) {
-		if (names[i].name == NULL)
+		if (names[i].name == nullptr)
 			continue;
 
 		/* the number from the client is not trusted, and an entry
@@ -604,7 +604,7 @@ _GetEntryAttrsByName(
 			    &entry->attrs[names[i].num], B_TRUE);
 		} else {
 			attrs[i].name.num = (names[i].num > 0 ? names[i].num : -1);
-			if ((attrs[i].name.name = strdup(names[i].name))==NULL)
+			if ((attrs[i].name.name = strdup(names[i].name))==nullptr)
 				stat = CSA_E_INSUFFICIENT_MEMORY;
 		}
 	}
@@ -630,7 +630,7 @@ _GetAllEntryAttrs(
 	cms_attribute	*attrs;
 	int		i, j;
 
-	if ((attrs = calloc(1, sizeof(cms_attribute)*entry->num_attrs)) == NULL)
+	if ((attrs = calloc(1, sizeof(cms_attribute)*entry->num_attrs)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* first element is not used */
@@ -651,7 +651,7 @@ _GetAllEntryAttrs(
 			*attrs_r = attrs;
 		} else {
 			*num_attrs_r = 0;
-			*attrs_r = NULL;
+			*attrs_r = nullptr;
 			free(attrs);
 		}
 	} else {

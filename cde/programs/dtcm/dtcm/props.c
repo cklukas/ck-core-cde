@@ -86,7 +86,7 @@ p_create_v5_group_access_pane(
 	Props_pu *p)
 {
 	Calendar *c = 	 calendar;
-        XmString    	 xstr = NULL;
+        XmString    	 xstr = nullptr;
         int 		 i = 0;
         Widget 		 gap2_form_mgr;
 	Dimension	 max_left_label_width,
@@ -107,7 +107,7 @@ p_create_v5_group_access_pane(
 		XmNbottomAttachment, 		XmATTACH_WIDGET,
 		XmNbottomOffset, 		GAP,
 		XmNbottomWidget, 		p->separator2,
-		NULL);
+		nullptr);
 
 	p->pane_list[GROUP_ACCESS_PANE] = gap2_form_mgr;
 
@@ -124,7 +124,7 @@ p_create_v5_group_access_pane(
 		gap2_form_mgr,
 		XmNlabelType, 			XmSTRING,
 		XmNlabelString, 		xstr,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 
@@ -136,7 +136,7 @@ p_create_v5_group_access_pane(
 		gap2_form_mgr,
 		XmNlabelType, 			XmSTRING,
 		XmNlabelString, 		xstr,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 
@@ -148,14 +148,14 @@ p_create_v5_group_access_pane(
 		gap2_form_mgr,
 		XmNlabelType, 			XmSTRING,
 		XmNlabelString, 		xstr,
-		NULL);
+		nullptr);
 
 	XmStringFree(xstr);
 
 	max_left_label_width = ComputeMaxWidth(p->gap2_user_label,
 					       p->gap2_access_label,
 					       p->gap2_permissions_label,
-					       NULL)
+					       nullptr)
 					       + 2 * GAP;
 
 	p->gap2_user_text =
@@ -168,7 +168,7 @@ p_create_v5_group_access_pane(
 		XmNleftOffset, 			max_left_label_width,
 		XmNtopAttachment, 		XmATTACH_FORM,
                 XmNtopOffset, 			GAP,
-		NULL);
+		nullptr);
 	p->gap_user_text = p->gap2_user_text;
 
 	XtAddCallback(p->gap_user_text, XmNvalueChangedCallback, 
@@ -187,7 +187,7 @@ p_create_v5_group_access_pane(
 		XmNtopOffset, 			GAP,
 		XmNrightAttachment, 		XmATTACH_FORM,
 		XmNrightOffset, 		GAP,
-		NULL);
+		nullptr);
 
         xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 740, "Add"));
         p->gap2_add_button =
@@ -201,7 +201,7 @@ p_create_v5_group_access_pane(
                 XmNalignment, 			XmALIGNMENT_CENTER,
                 XmNlabelType, 			XmSTRING,
                 XmNlabelString, 		xstr,
-                NULL);
+                nullptr);
 
 	XmStringFree(xstr);
 	XtAddCallback(p->gap2_add_button, XmNactivateCallback, GAPAddProc, p);
@@ -219,7 +219,7 @@ p_create_v5_group_access_pane(
                 XmNalignment, 			XmALIGNMENT_CENTER,
                 XmNlabelType, 			XmSTRING,
                 XmNlabelString, 		xstr,
-                NULL);
+                nullptr);
         p->gap_remove_button = p->gap2_delete_button; 
 
 	XmStringFree(xstr);
@@ -239,7 +239,7 @@ p_create_v5_group_access_pane(
                 XmNalignment, 			XmALIGNMENT_CENTER,
                 XmNlabelType, 			XmSTRING,
                 XmNlabelString, 		xstr,
-                NULL);
+                nullptr);
 
 	XmStringFree(xstr);
 	XtAddCallback(p->gap2_change_button, XmNactivateCallback, GAPChangeProc,
@@ -248,22 +248,22 @@ p_create_v5_group_access_pane(
 	max_button_label_width = ComputeMaxWidth(p->gap2_add_button,
 						 p->gap2_delete_button,
 						 p->gap2_change_button,
-						 NULL);
+						 nullptr);
 
 	XtVaSetValues(p->gap2_add_button,
 		XmNrightAttachment,		XmATTACH_OPPOSITE_FORM,
 		XmNrightOffset,			-max_button_label_width,
-		NULL);
+		nullptr);
 	XtVaSetValues(p->gap2_delete_button,
 		XmNrightAttachment,		XmATTACH_OPPOSITE_FORM,
 		XmNrightOffset,			-max_button_label_width,
-		NULL);
+		nullptr);
 	XtVaSetValues(p->gap2_change_button,
 		XmNrightAttachment,		XmATTACH_OPPOSITE_FORM,
 		XmNrightOffset,			-max_button_label_width,
-		NULL);
+		nullptr);
 
-	p->gap_list = NULL;
+	p->gap_list = nullptr;
         XtSetArg(args[i], XmNscrollBarDisplayPolicy, 	XmAUTOMATIC);  	    ++i;
         XtSetArg(args[i], XmNlistSizePolicy, 		XmVARIABLE);        ++i;
         XtSetArg(args[i], XmNvisibleItemCount, 		10);  		    ++i;
@@ -290,16 +290,16 @@ p_create_v5_group_access_pane(
 
 	XtManageChild(p->gap2_access_list);
 
-	XtQueryGeometry( p->gap2_button_form, NULL, &geo );
+	XtQueryGeometry( p->gap2_button_form, nullptr, &geo );
 
 	XtVaSetValues( p->gap2_user_text,
 			XmNrightAttachment, XmATTACH_FORM,
 			XmNrightOffset, geo.width + GAP + GAP,
-			NULL );
+			nullptr );
 	XtVaSetValues( p->gap2_perm_form,
 			XmNrightAttachment, XmATTACH_FORM,
 			XmNrightOffset, geo.width + GAP + GAP,
-			NULL );
+			nullptr );
 
 
 	ManageChildren(p->gap2_button_form);
@@ -310,7 +310,7 @@ p_create_v5_group_access_pane(
 		XmNrightAttachment,		XmATTACH_WIDGET,
 		XmNrightWidget,			p->gap2_user_text,
 		XmNrightOffset,			5,
-		NULL);
+		nullptr);
 
 	XtVaSetValues(p->gap2_permissions_label,
 		XmNtopAttachment, 		XmATTACH_WIDGET,
@@ -319,7 +319,7 @@ p_create_v5_group_access_pane(
 		XmNrightAttachment,		XmATTACH_WIDGET,
 		XmNrightWidget,			p->gap2_perm_form,
 		XmNrightOffset,			5,
-		NULL);
+		nullptr);
 
 	XtVaSetValues(p->gap2_access_label,
 		XmNtopAttachment, 		XmATTACH_WIDGET,
@@ -328,7 +328,7 @@ p_create_v5_group_access_pane(
 		XmNrightAttachment,		XmATTACH_WIDGET,
 		XmNrightWidget,			p->gap2_access_list,
 		XmNrightOffset,			5,
-		NULL);
+		nullptr);
 
 	ManageChildren(gap2_form_mgr);
 }
@@ -350,8 +350,8 @@ CreatePermissions(
 			 view_label_width,
 			 insert_label_width,
 			 change_label_width;
-        XmString    	 xstr = NULL,
-			 xstr_empty = NULL;
+        XmString    	 xstr = nullptr,
+			 xstr_empty = nullptr;
 
 	/* Create the box containing the permission settings */
 
@@ -366,7 +366,7 @@ CreatePermissions(
 		XmNtopOffset, 			GAP,
 		XmNshadowThickness,             1,
 		XmNshadowType,                  XmSHADOW_IN,
-		NULL);
+		nullptr);
 
 	xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 743, "Public:"));
 	p->gap2_public_label =
@@ -374,7 +374,7 @@ CreatePermissions(
 		xmLabelGadgetClass,
 		perm_form,
 		XmNlabelString, 		xstr,
-		NULL);
+		nullptr);
 
 	XmStringFree (xstr);
 
@@ -387,7 +387,7 @@ CreatePermissions(
 		XmNlabelString, 		xstr,
 		XmNleftAttachment,		XmATTACH_FORM,
 		XmNleftOffset,			10,
-		NULL);
+		nullptr);
 
 	XmStringFree (xstr);
 
@@ -397,7 +397,7 @@ CreatePermissions(
 		xmLabelGadgetClass,
 		perm_form,
 		XmNlabelString, 		xstr,
-		NULL);
+		nullptr);
 
 	XmStringFree (xstr);
 
@@ -405,7 +405,7 @@ CreatePermissions(
 	max_label_width = ComputeMaxWidth(p->gap2_public_label,
 					  p->gap2_semi_label,
 					  p->gap2_private_label,
-					  NULL) + 2 * GAP;
+					  nullptr) + 2 * GAP;
 
 	/* Create the labels and toggles for the permissions */
 
@@ -419,13 +419,13 @@ CreatePermissions(
 		XmNleftOffset, 			max_label_width,
 		XmNtopAttachment, 		XmATTACH_FORM,
 		XmNtopOffset, 			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree (xstr);
 
 	XtVaGetValues(p->gap2_view_label,
 		XmNwidth,	&view_label_width,
-		NULL);
+		nullptr);
 
 	/* 
 	 * If label is greater than the allocated space for the
@@ -451,13 +451,13 @@ CreatePermissions(
 		XmNleftOffset, 			label_offset,
 		XmNtopAttachment, 		XmATTACH_FORM,
 		XmNtopOffset, 			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree (xstr);
 
 	XtVaGetValues(p->gap2_insert_label,
 		XmNwidth,	&insert_label_width,
-		NULL);
+		nullptr);
 
 	xstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 343, "Change"));
 
@@ -483,13 +483,13 @@ CreatePermissions(
 		XmNleftOffset, 			label_offset,
 		XmNtopAttachment, 		XmATTACH_FORM,
 		XmNtopOffset, 			GAP,
-		NULL);
+		nullptr);
 
 	XmStringFree (xstr);
 
 	XtVaGetValues(p->gap2_change_label,
 		XmNwidth,	&change_label_width,
-		NULL);
+		nullptr);
 
 	xstr_empty = XmStringCreateLocalized("");
 	p->gap2_public_tog[GAP_VIEW] =
@@ -503,11 +503,11 @@ CreatePermissions(
 		XmNtopWidget, 			p->gap2_view_label,
 		XmNtopOffset, 			TOG_GAP,
 		XmNindicatorSize, 		INDICATOR_SIZE,
-		NULL);
+		nullptr);
 
 	XtVaGetValues(p->gap2_public_tog[GAP_VIEW],
 		XmNwidth,			&tog_width,
-		NULL);
+		nullptr);
 
 	/*
 	 * Center the toggle item under the label above it.
@@ -515,7 +515,7 @@ CreatePermissions(
 	XtVaSetValues(p->gap2_public_tog[GAP_VIEW],
 		XmNleftOffset, 			view_label_width/2 -
 							(int)(tog_width * 3)/8,
-		NULL);
+		nullptr);
 
 	p->gap2_public_tog[GAP_INSERT] =
 	    XtVaCreateWidget("gap2_public_insert_tog",
@@ -530,7 +530,7 @@ CreatePermissions(
 		XmNtopWidget, 			p->gap2_insert_label,
 		XmNtopOffset, 			TOG_GAP,
 		XmNindicatorSize, 		INDICATOR_SIZE,
-		NULL);
+		nullptr);
 
 	p->gap2_public_tog[GAP_CHANGE] =
 	    XtVaCreateWidget("gap2_public_change_tog",
@@ -545,7 +545,7 @@ CreatePermissions(
 		XmNtopWidget, 			p->gap2_change_label,
 		XmNtopOffset, 			TOG_GAP,
 		XmNindicatorSize, 		INDICATOR_SIZE,
-		NULL);
+		nullptr);
 
 	p->gap2_semi_tog[GAP_VIEW] =
 	    XtVaCreateWidget("gap2_semi_view_tog",
@@ -558,7 +558,7 @@ CreatePermissions(
 		XmNtopWidget, 			p->gap2_public_tog[GAP_VIEW],
 		XmNtopOffset, 			TOG_GAP,
 		XmNindicatorSize, 		INDICATOR_SIZE,
-		NULL);
+		nullptr);
 
 	p->gap2_semi_tog[GAP_INSERT] =
 	    XtVaCreateWidget("gap2_semi_insert_tog",
@@ -571,7 +571,7 @@ CreatePermissions(
 		XmNtopWidget, 			p->gap2_public_tog[GAP_INSERT],
 		XmNtopOffset, 			TOG_GAP,
 		XmNindicatorSize, 		INDICATOR_SIZE,
-		NULL);
+		nullptr);
 		
 	p->gap2_semi_tog[GAP_CHANGE] =
 	    XtVaCreateWidget("gap2_semi_change_tog",
@@ -584,7 +584,7 @@ CreatePermissions(
 		XmNtopWidget, 			p->gap2_public_tog[GAP_CHANGE],
 		XmNtopOffset, 			TOG_GAP,
 		XmNindicatorSize, 		INDICATOR_SIZE,
-		NULL);
+		nullptr);
 
 	p->gap2_private_tog[GAP_VIEW] =
 	    XtVaCreateWidget("gap2_private_view_tog",
@@ -597,7 +597,7 @@ CreatePermissions(
 		XmNtopWidget, 			p->gap2_semi_tog[GAP_VIEW],
 		XmNtopOffset, 			TOG_GAP,
 		XmNindicatorSize, 		INDICATOR_SIZE,
-		NULL);
+		nullptr);
 
 	p->gap2_private_tog[GAP_INSERT] =
 	    XtVaCreateWidget("gap2_private_insert_tog",
@@ -610,7 +610,7 @@ CreatePermissions(
 		XmNtopWidget, 			p->gap2_semi_tog[GAP_INSERT],
 		XmNtopOffset, 			TOG_GAP,
 		XmNindicatorSize, 		INDICATOR_SIZE,
-		NULL);
+		nullptr);
 		
 	p->gap2_private_tog[GAP_CHANGE] =
 	    XtVaCreateWidget("gap2_private_change_tog",
@@ -623,7 +623,7 @@ CreatePermissions(
 		XmNtopWidget, 			p->gap2_semi_tog[GAP_CHANGE],
 		XmNtopOffset, 			TOG_GAP,
 		XmNindicatorSize, 		INDICATOR_SIZE,
-		NULL);
+		nullptr);
 
 	XmStringFree (xstr_empty);
 
@@ -633,7 +633,7 @@ CreatePermissions(
 		XmNrightAttachment,		XmATTACH_WIDGET,
 		XmNrightWidget,			p->gap2_public_tog[GAP_VIEW],
 		XmNrightOffset,			2 * GAP,
-		NULL);
+		nullptr);
 
 	XtVaSetValues(p->gap2_semi_label,
 		XmNtopAttachment, 		XmATTACH_OPPOSITE_WIDGET,
@@ -641,7 +641,7 @@ CreatePermissions(
 		XmNrightAttachment,		XmATTACH_WIDGET,
 		XmNrightWidget,			p->gap2_public_tog[GAP_VIEW],
 		XmNrightOffset,			2 * GAP,
-		NULL);
+		nullptr);
 
 	XtVaSetValues(p->gap2_private_label,
 		XmNtopAttachment, 		XmATTACH_OPPOSITE_WIDGET,
@@ -651,12 +651,12 @@ CreatePermissions(
 		XmNrightOffset,			2 * GAP,
 		XmNbottomAttachment,		XmATTACH_FORM,
 		XmNbottomOffset,		GAP,
-		NULL);
+		nullptr);
 
 	/* Margin to the right of the Change label */
 	XtVaSetValues(p->gap2_change_label,
 		XmNmarginRight,			GAP,
-		NULL);
+		nullptr);
 
 	ManageChildren(perm_form);
 	return (perm_form);
@@ -699,7 +699,7 @@ GAPAddProc(
                         BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, ACCESS_RIGHTS_ERROR_HELP,
                         DIALOG_IMAGE, p->xm_error_pixmap,
-                        NULL);
+                        nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -749,7 +749,7 @@ GAPAddProc(
 		(CSA_calendar_user *)ckalloc(sizeof(CSA_calendar_user));
 	access_entry->user->user_name = cm_strdup(user_name);
 	access_entry->rights = access_rights;
-	access_entry->next = NULL;
+	access_entry->next = nullptr;
 
 	if (!p->gap_list) { 
 		p->gap_list = access_entry;
@@ -788,7 +788,7 @@ ChangeExistingGAPEntry(
 		DIALOG_TEXT, text,
 		BUTTON_IDENT, 2, ident2,
 		BUTTON_IDENT, 1, ident1,
-		NULL);
+		nullptr);
 	XtFree(ident2);
 	XtFree(ident1);
 	XtFree(text);
@@ -808,8 +808,8 @@ GAPChangeProc(
 	Calendar 		*c = calendar;
 	Props_pu        	*p = (Props_pu *)client_data;
 	CSA_access_list 	 step = p->gap_list, 
-				 last = NULL;
-	int			*item_list = NULL,
+				 last = nullptr;
+	int			*item_list = nullptr,
 				 item_cnt = 0;
 	CSA_flags	 	 access_rights;
 	CSA_access_rights	*access_entry;
@@ -829,7 +829,7 @@ GAPChangeProc(
 			DIALOG_TEXT, text,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p->xm_error_pixmap,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -857,7 +857,7 @@ GAPChangeProc(
                         DIALOG_TEXT, text,
                         BUTTON_IDENT, 1, ident1,
                         DIALOG_IMAGE, p->xm_error_pixmap,
-                        NULL);
+                        nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -873,7 +873,7 @@ GAPChangeProc(
 		(CSA_calendar_user *)ckalloc(sizeof(CSA_calendar_user));
 	access_entry->user->user_name = cm_strdup(user_name);
 	access_entry->rights = access_rights;
-	access_entry->next = NULL;
+	access_entry->next = nullptr;
 
 	/*
 	 * Find and change the Access_Entry/name from the list.

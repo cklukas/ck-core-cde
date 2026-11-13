@@ -44,7 +44,7 @@ if (nohometopic)
     sprintf(id, "%s%s", sdlReservedName, hometopic);
     mb_starthelpnode("_HOMETOPIC", id, 1);
     nohometopic = FALSE;
-    pc = NULL;
+    pc = nullptr;
     if (savedtitle)
 	pc = MakeMByteString(savedtitle);
     fprintf(outfile,
@@ -65,7 +65,7 @@ int n;
 char save;
 char fileListErr[] = "filelist.err";
 
-m_errfile = NULL;
+m_errfile = nullptr;
 if (m_argc < 2)
     {
     m_error("Specify input file");
@@ -129,7 +129,7 @@ else
     while(1)
 	{
 	cp = strchr(path, ':');
-	if (cp == NULL)
+	if (cp == nullptr)
 	quit++;
 	else
 	*cp = '\0';
@@ -178,7 +178,7 @@ if (p > m_argv[1])
     }
 else
     {
-    indir = NULL;
+    indir = nullptr;
     }
 
 /* Build base name */
@@ -399,17 +399,17 @@ else
 
 strcpy(tokstr, " \r\n\t");
 strcat(tokstr, SSEP);
-p = NULL;
+p = nullptr;
 do  {
-    p = strtok(( p == NULL ) ? fnp : NULL, tokstr);
-    if ( p == NULL ) break;
+    p = strtok(( p == nullptr ) ? fnp : nullptr, tokstr);
+    if ( p == nullptr ) break;
     if ( *p == '.' ) /* alias */
 	{
 	if ( *(p+1) == '.' ) /* parent */
 	    {
 	    *strrchr(qualname, CSEP) = '\0';
 	    pp = strrchr(qualname, CSEP);
-	    if (pp == NULL) /* FAIL */
+	    if (pp == nullptr) /* FAIL */
 		{
 		m_mberr1("Internal error. Failed in qualifying %s", unqualname);
 		return ( -1 );
@@ -483,7 +483,7 @@ empty[0] = M_EOS;
   f_content nonNULL
 */
 file_ent = FALSE;
-f_content = NULL;
+f_content = nullptr;
 f_contqual[0] = M_EOS;
 
 /* get the position, default to left */
@@ -646,7 +646,7 @@ int	 count, metaCount;
 char	*item_id;
 char	 label_id[SDLNAMESIZ+10];
 int	 listtype;
-char	*type = NULL;
+char	*type = nullptr;
 char	*loose;
 char	*first;
 LOGICAL  isBullet, isLoose, isFirst;
@@ -745,7 +745,7 @@ if ((listtype != PLAIN) && (listtype != MILSPEC))
 	}
     }
 
-item_id = NULL;
+item_id = nullptr;
 if (listtype == ORDER)
     {
     orderString[0] = '\0';
@@ -813,7 +813,7 @@ if (listtype == ORDER)
 
 	xstrlen = w_strlen(xrefstring);
 	m_getline(&xrffile, &xrfline);
-	if (xrffile == NULL)
+	if (xrffile == nullptr)
 	    {
 	    /* set to primary input */
 	    xrffile = inputname;
@@ -918,7 +918,7 @@ for (searchp = path; searchp ; searchp = searchp->next)
     }
 
 m_free(mb_file,"multi-byte string");
-return(NULL);
+return(nullptr);
 }
 
 
@@ -953,7 +953,7 @@ firstLooseBulletId = 0;
 bulletIdIndex      = 1;
 looseBulletIdIndex = 1;
 
-if ((id == NULL) || (*id == 0))
+if ((id == nullptr) || (*id == 0))
     {
     strcpy(mb_nodeid, sdlReservedName);
     m_itoa(NextId(), nodenum);
@@ -985,10 +985,10 @@ void mb_starthelpnode(char   *ssi,
 {
 M_WCHAR *wc_ssi, *wc_id;
 
-wc_ssi = NULL;
+wc_ssi = nullptr;
 if (ssi)
     wc_ssi = MakeWideCharString(ssi);
-wc_id = NULL;
+wc_id = nullptr;
 if (id)
     wc_id  = MakeWideCharString(id);
 starthelpnode(wc_ssi, wc_id, level);
@@ -1015,7 +1015,7 @@ else
     mb_spacing = def_spacing;
 
 sprintf(ssi, "LABELED-%s", mb_spacing);
-PushForm("LIST", ssi, NULL);
+PushForm("LIST", ssi, nullptr);
 
 if (mb_spacing != def_spacing)
     mb_free(&mb_spacing);
@@ -1071,7 +1071,7 @@ if (list > MAXLISTLEV)
 if (! lastlist->started && cont)
     {
     m_error("No previous list to continue");
-    cont = NULL;
+    cont = nullptr;
     }
 
 if (cont)
@@ -1079,13 +1079,13 @@ if (cont)
     if (order && (vordertype(order) != lastlist->order))
 	{
 	m_error("Unable to continue a list and change the numbering scheme");
-	cont = NULL;
+	cont = nullptr;
 	}
 
     if (type && (vtype(type) != lastlist->type))
 	{
 	m_error("Unable to continue a list and change its type");
-	cont = NULL;
+	cont = nullptr;
 	}
     }
 
@@ -1096,17 +1096,17 @@ if (! cont)
 	xchain = chain->next;
 	m_free(chain, "list chain");
 	}
-    lastlist->chain = NULL;
+    lastlist->chain = nullptr;
     lastlist->count = 0;
     }
 
 /* If outermost list, initialize according to current defaults */
 if (! cont && lastlist == &outlist)
     {
-    outlist.type       = vtype(NULL);
-    outlist.order      = vordertype(NULL);
+    outlist.type       = vtype(nullptr);
+    outlist.order      = vordertype(nullptr);
     outlist.count      = 0;
-    outlist.space      = vspacing(NULL);
+    outlist.space      = vspacing(nullptr);
     outlist.punct      = DOTPUNCT;
     }
 
@@ -1136,7 +1136,7 @@ switch (lastlist->type)
     }
 sprintf(ssi, "%s-%s", list_type, mb_spacing);
 
-PushForm("LIST", ssi, NULL);
+PushForm("LIST", ssi, nullptr);
 
 if (mb_spacing != def_spacing)
     m_free(mb_spacing, "multi-byte string");
@@ -1178,7 +1178,7 @@ nextlist->count = 0;
 nextlist->space = lastlist->space;
 nextlist->started = FALSE;
 nextlist->where = FIRST;
-nextlist->chain = NULL;
+nextlist->chain = nullptr;
 lastlist = nextlist;
 }
 
@@ -1249,7 +1249,7 @@ else
 	    m_errline(
 	"Output files from different version of Tag, regenerating. . .\n");
 	    fclose(xrf);
-	    xrf = NULL;
+	    xrf = nullptr;
 	    rebuild = TRUE;
 	    break;
 	    }
@@ -1283,7 +1283,7 @@ m_openchk(&snbfp, helpbase, "wb");
 while (name = m_cyclent(init, &type, &content, &wheredef))
     {
     init = FALSE;
-    qfile = NULL;
+    qfile = nullptr;
     icon = FALSE;
 
     if (type == M_SYSTEM)
@@ -1406,9 +1406,9 @@ char    *tmpStr;
 char     stdLang[256];    /* arbitrarily large */
 char     stdCharset[256]; /* arbitrarily large */
 
-locale        = NULL;
-charset       = NULL;
-dotPtr        = NULL;
+locale        = nullptr;
+charset       = nullptr;
+dotPtr        = nullptr;
 stdLang[0]    = 0;
 stdCharset[0] = 0;
 
@@ -1424,7 +1424,7 @@ m_free(elementName,"wide character string");
 
 if (!locale)
     {
-    if ((tmpStr = setlocale(LC_CTYPE, NULL)) == NULL) tmpStr = "C.UTF-8";
+    if ((tmpStr = setlocale(LC_CTYPE, nullptr)) == nullptr) tmpStr = "C.UTF-8";
     locale = mb_malloc(strlen(tmpStr)+1);
     strcpy(locale, tmpStr);
     }
@@ -1435,7 +1435,7 @@ if (helpcharset)
     {
     charset = MakeMByteString(helpcharset);
     m_free(helpcharset, "help charset");
-    helpcharset = NULL;
+    helpcharset = nullptr;
     }
 else
     {
@@ -1491,7 +1491,7 @@ if (id)
 chapst = TRUE;
 inSdlP = TRUE;
 if (!inBlock)
-    StartBlock(NULL, NULL, NULL);
+    StartBlock(nullptr, nullptr, nullptr);
 fputs("<P", outfile);
 if (id)
     {
@@ -1548,7 +1548,7 @@ if (needFData)
     needFData = FALSE;
     }
 if (!inBlock)
-    StartBlock(NULL, NULL, NULL);
+    StartBlock(nullptr, nullptr, nullptr);
 
 inSdlP = TRUE;
 fputs("<P SSI=\"FIGURE\">\n", outfile);
@@ -1619,7 +1619,7 @@ if (id)
     mbstowcs(xrefstring, mb_xrefstring, 400);
     xstrlen = w_strlen(xrefstring);
     m_getline(&xrffile, &xrfline);
-    if (xrffile == NULL)
+    if (xrffile == nullptr)
 	{
 	/* set to primary input source */
 	xrffile = inputname;
@@ -1636,7 +1636,7 @@ used only if f_content nonNULL
 f_content nonNULL
 */
 file_ent = FALSE;
-f_content = NULL;
+f_content = nullptr;
 f_contqual[0] = M_EOS;
 
 /* check ENTITY and determine the figure type  */
@@ -1921,7 +1921,7 @@ return ++id;
 
 char *GetLanguage(void)
 {
-static char *pLang = NULL;
+static char *pLang = nullptr;
 
 if (!pLang)
     {
@@ -1933,7 +1933,7 @@ return pLang;
 
 char *GetCharset(void)
 {
-static char *pCharset = NULL;
+static char *pCharset = nullptr;
 
 if (!pCharset)
     {
@@ -2147,7 +2147,7 @@ fflush(stdout);
 #endif
 
 free((void *) *pptr);
-*pptr = NULL;
+*pptr = nullptr;
 }
 
 static void AddToRowVec(int *length, char **rowvec, char *id)
@@ -2181,7 +2181,7 @@ void StartEx(M_WCHAR *notes, M_WCHAR *lines, M_WCHAR *textsize)
 exTextSize = vextextsize(textsize);
 stackex = vstack(notes);
 
-StartBlock(NULL, "EX", NULL);
+StartBlock(nullptr, "EX", nullptr);
 
 tonumexlines = (LOGICAL) (vnumber(lines) == NUMBER);
 firstAnnot   = TRUE;
@@ -2260,7 +2260,7 @@ if (saveexseg)
 void StartNCW(char *which)
 {
 notehead = FALSE;
-PushForm(NULL, which, NULL);
+PushForm(nullptr, which, nullptr);
 }
 
 
@@ -2366,7 +2366,7 @@ int	 tryleng = sizeof(pathbuf);
 int	 pathleng;
 int	 fileleng;
 SEARCH	*thispath;
-char	*mb_inputname = NULL;
+char	*mb_inputname = nullptr;
 M_WCHAR *wc_try, *wc_outputname;
 int	 tossfile;
 char	 filebuf[BIGBUF];
@@ -2459,7 +2459,7 @@ if (init)
     length = 0 ;
     }
 
-if (length < 0) return(NULL) ;
+if (length < 0) return(nullptr) ;
 
 while (current->symbol)
     {
@@ -2698,7 +2698,7 @@ void PopFormMaybe(void)
 {
 if ((formStackTop >= formStackBase) && (formStackTop->vecLen == 1))
     {
-    StartBlock(NULL, NULL, NULL);
+    StartBlock(nullptr, nullptr, nullptr);
     PopForm();
     }
 }

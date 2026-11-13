@@ -184,7 +184,7 @@ static void ck_request(const char *data, int len)
 {
     ck_buf = (unsigned char *)data;
     ck_blen = len;
-    assert(ProcessToolTalkMediaMessage(1, NULL, TTME_EDIT, TT_OK, NULL, 0, NULL, NULL) == 0);
+    assert(ProcessToolTalkMediaMessage(1, nullptr, TTME_EDIT, TT_OK, nullptr, 0, nullptr, nullptr) == 0);
 }
 
 /* The file is ours: a plain file, mode 0600, one link, with this content. */
@@ -246,9 +246,9 @@ int main(int argc, char **argv)
 
     /* Icon data in a file: no temp file is made. */
     ck_reset();
-    ck_buf = NULL;
+    ck_buf = nullptr;
     ck_blen = 0;
-    assert(ProcessToolTalkMediaMessage(1, NULL, TTME_EDIT, TT_OK, NULL, 0, "icon.pm", NULL) == 0);
+    assert(ProcessToolTalkMediaMessage(1, nullptr, TTME_EDIT, TT_OK, nullptr, 0, "icon.pm", nullptr) == 0);
     assert(ck_mk_calls == 0 && strcmp(start_file, "icon.pm") == 0);
 
     /*

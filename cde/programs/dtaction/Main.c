@@ -82,10 +82,10 @@
 /* Command line options */
 XrmOptionDescRec option_list[] =
 {
-   {  "-user",     "user",          XrmoptionSepArg,   NULL},
-   {  "-contextDir", "contextDir",  XrmoptionSepArg,   NULL},
-   {  "-execHost", "execHost",      XrmoptionSepArg,   NULL},
-   {  "-termOpts", "termOpts",      XrmoptionSepArg,   NULL},
+   {  "-user",     "user",          XrmoptionSepArg,   nullptr},
+   {  "-contextDir", "contextDir",  XrmoptionSepArg,   nullptr},
+   {  "-execHost", "execHost",      XrmoptionSepArg,   nullptr},
+   {  "-termOpts", "termOpts",      XrmoptionSepArg,   nullptr},
 };
 
 typedef struct {
@@ -105,8 +105,8 @@ int  passwordLength = 0;
 
 Boolean finished = False;
 Boolean rootRequest = False;
-char * toPword = NULL;
-char * rootPword = NULL;
+char * toPword = nullptr;
+char * rootPword = nullptr;
 char * origName = "Unknown";
 int basegid = -1;
 int newuid = -1;
@@ -266,7 +266,7 @@ CheckForDone(
     if ( toplevel->core.num_popups ==  0 ) 
 	exit(exitStatus);
 
-    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
+    XtAppAddTimeOut(appContext, 10, CheckForDone, nullptr);
 }
 
 
@@ -280,16 +280,16 @@ main(
     int n=0;
     char *actionName;
     int numArgs = 0;
-    DtActionArg *ap = NULL;
+    DtActionArg *ap = nullptr;
   
-    XtSetLanguageProc(NULL, NULL, NULL);
+    XtSetLanguageProc(nullptr, nullptr, nullptr);
     _DtEnvControl(DT_ENV_SET);
     (void) signal(SIGCHLD, SIG_IGN);
 
     /*  Initialize the toolkit and open the display  */
     XtToolkitInitialize() ;
     appContext = XtCreateApplicationContext() ;
-    if ( !(display = XtOpenDisplay( appContext, NULL, argv[0], "Dtaction", 
+    if ( !(display = XtOpenDisplay( appContext, nullptr, argv[0], "Dtaction", 
                              option_list, 
 			     sizeof(option_list)/sizeof(XrmOptionDescRec),
 			     &argc, argv)) )
@@ -310,7 +310,7 @@ main(
 
     display = XtDisplay (toplevel);
     XtGetApplicationResources(toplevel, &appArgs, 
-	resources, XtNumber(resources), NULL, 0);
+	resources, XtNumber(resources), nullptr, 0);
 
     password = XtMalloc(1);
     password[0] = '\0';
@@ -338,7 +338,7 @@ main(
    /*
     * Get the requested action name
     */
-    if ( (actionName = argv[1]) == NULL)
+    if ( (actionName = argv[1]) == nullptr)
     {
 	fprintf(stderr, "%s", GETMESSAGE(1,10,"No action name specified.\n"));
 	exit(-1);
@@ -371,7 +371,7 @@ main(
         appArgs.contextDir,
         True,			/* use indicator */
         actionStatusCallback,
-        NULL);
+        nullptr);
 
     /*
      * Set up a timer if we didn't get a valid procId -- since there will
@@ -380,7 +380,7 @@ main(
      * error dialogs to get posted.
      */
     if ( !actionId)
-	    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
+	    XtAppAddTimeOut(appContext, 10, CheckForDone, nullptr);
 
     XtAppMainLoop(appContext);
 
@@ -444,7 +444,7 @@ CheckUserRequest( void )
    ruid = getuid();
 
       /* See if the user wants to run as himself */
-   if (appArgs.user == NULL)
+   if (appArgs.user == nullptr)
    {
       SetGidUid(rgid,ruid);
       return;
@@ -520,7 +520,7 @@ CheckUserRequest( void )
        UnknownUser();
    }
    else if ((alreadySetToRoot) ||  /* requested users passwd is null */
-      ((toPword && (toPword[0] == '\0')) || (toPword == NULL)))
+      ((toPword && (toPword[0] == '\0')) || (toPword == nullptr)))
    {
        /* Already there -- no need to check a passwd */
           LogSuccess();
@@ -582,7 +582,7 @@ AddSuLog(
 
     char * SULog = "/var/adm/sulog";
 
-    if ((f = fopen (SULog, "a")) == NULL)
+    if ((f = fopen (SULog, "a")) == nullptr)
 	return;
 
     (void) time (&timenow);
@@ -736,7 +736,7 @@ OkCallback(
    {
       valid = True;
    }
-   else if (((rootPword == NULL) || (*rootPword == '\0')) &&
+   else if (((rootPword == nullptr) || (*rootPword == '\0')) &&
             (*password == '\0'))
    {
       /* No root password, and the user entered no password */
@@ -901,15 +901,15 @@ GetUserPrompt( void )
    XmStringFree(xmString2);
    XmStringFree(okLabel);
    XmStringFree(cancelLabel);
-   XtAddCallback(dlog, XmNokCallback, OkCallback, NULL);
-   XtAddCallback(dlog, XmNcancelCallback, CancelCallback, NULL);
+   XtAddCallback(dlog, XmNokCallback, OkCallback, nullptr);
+   XtAddCallback(dlog, XmNcancelCallback, CancelCallback, nullptr);
 
    text = XmSelectionBoxGetChild(dlog, XmDIALOG_TEXT);
    n = 0;
    XtSetArg(args[n], XmNtranslations, textTable); n++;
    XtSetArg(args[n], XmNverifyBell, False);       n++;
    XtSetValues(text, args, n);
-   XtAddCallback(text, XmNmodifyVerifyCallback, EditPasswdCB, NULL);
+   XtAddCallback(text, XmNmodifyVerifyCallback, EditPasswdCB, nullptr);
 
    /* Add callback for forcing traversal to the text field */
    XtAddCallback (XtParent(dlog), XmNpopupCallback, MapCallback, dlog);
@@ -1026,7 +1026,7 @@ MyInsert(
     int            n;
 
     n = XLookupString((XKeyEvent *)event, str, sizeof(str),
-                      (KeySym *)NULL, &compstatus);
+                      (KeySym *)nullptr, &compstatus);
 
     if (n > 0) {
        str[n] = '\0';
@@ -1051,7 +1051,7 @@ MyCancel(
         char **params,
         Cardinal *num_params )
 {
-   CancelCallback(w, NULL, NULL);
+   CancelCallback(w, nullptr, nullptr);
 }
 
 
@@ -1243,17 +1243,17 @@ void actionStatusCallback(
 	     * to mainLoop before exiting.
 	     */
             if ( exitAfterInvoked )
-		    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
+		    XtAppAddTimeOut(appContext, 10, CheckForDone, nullptr);
             break;
 
         case DtACTION_DONE:
-	    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
+	    XtAppAddTimeOut(appContext, 10, CheckForDone, nullptr);
             break;
 
         case DtACTION_FAILED:
         case DtACTION_CANCELED:
 	    exitStatus = 1;
-	    XtAppAddTimeOut(appContext, 10, CheckForDone, NULL);
+	    XtAppAddTimeOut(appContext, 10, CheckForDone, nullptr);
             break;
 
         default:

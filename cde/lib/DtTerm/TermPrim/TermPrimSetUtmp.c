@@ -239,18 +239,18 @@ _DtTermPrimUtmpInit(Widget w)
    variable.
 */
 #if defined(XTHREADS) && defined(XUSE_MTSAFE_API) && defined(AIXV3)
-      if ((c = getenv("USER")) == NULL) {
+      if ((c = getenv("USER")) == nullptr) {
 #endif
 	/* get the user's name from:
 	 *	-/etc/utmp if possible,
 	 *	-/etc/passwd if not.
 	 */
-	if ((((namebuf = _XGetlogin(login_buf))) != NULL)
-	    && (((pw_ret = _XGetpwnam(namebuf, pw_buf))) != NULL) 
+	if ((((namebuf = _XGetlogin(login_buf))) != nullptr)
+	    && (((pw_ret = _XGetpwnam(namebuf, pw_buf))) != nullptr) 
 	    && (pw_ret->pw_uid == getuid())) {
 	    userName = XtMalloc(strlen(namebuf) + 1);
 	    (void) strcpy(userName, namebuf);
-	} else if (((pw_ret = _XGetpwuid(getuid(), pw_buf))) != NULL) {
+	} else if (((pw_ret = _XGetpwuid(getuid(), pw_buf))) != nullptr) {
 	    userName = XtMalloc(strlen(pw_ret->pw_name) + 1);
 	    (void) strcpy(userName, pw_ret->pw_name);
 	}
@@ -269,7 +269,7 @@ _DtTermPrimUtmpInit(Widget w)
 	
 #ifdef	UT_ADDR
     if (!localHostname && !gethostname(buffer, sizeof(buffer)) &&
-	(name_ret = _XGethostbyname(buffer, name_buf)) != NULL) {
+	(name_ret = _XGethostbyname(buffer, name_buf)) != nullptr) {
 	localHostname = XtMalloc(strlen(buffer) + 1);
 	(void) strcpy(localHostname, buffer);
     }
@@ -351,7 +351,7 @@ UtmpEntryCreate(Widget w, pid_t pid, char *utmpLine)
 
     /* position to entry in utmp file... */
     (void) setutent();
-    if (NULL == (utPtr = getutline(&ut))) {
+    if (nullptr == (utPtr = getutline(&ut))) {
 	/* build a base utmp entry... */
 	utPtr = &ut;
 #if defined(__AIX)

@@ -160,7 +160,7 @@ _DtTermPrimSubprocRemoveSubproc(Widget w, _termSubprocId id)
      */
     /* there will always be a head, so we can always update it... */
     _DtTermProcessLock();
-    subprocTmp->w = NULL;
+    subprocTmp->w = nullptr;
     subprocTmp->prev->next = subprocTmp->next;
     if (subprocTmp->next) {
 	subprocTmp->next->prev = subprocTmp->prev;
@@ -210,7 +210,7 @@ _DtTermPrimSetChildSignalHandler(void)
 #endif
 
     /* Use new sigaction() signal handling semantics, not signal(). */
-    (void) sigaction(SIGCHLD, &new_action, (struct sigaction*) NULL);
+    (void) sigaction(SIGCHLD, &new_action, (struct sigaction*) nullptr);
 }
 
 void
@@ -263,7 +263,7 @@ DtTermSubprocReap(pid_t pid, int *stat_loc)
     }
 
     /* Restore SIGCHLD handling to its original state. */
-    (void) sigprocmask(SIG_SETMASK, &old_sigs, NULL);
+    (void) sigprocmask(SIG_SETMASK, &old_sigs, nullptr);
 }
 
 pid_t
@@ -320,13 +320,13 @@ _DtTermPrimSubprocExec(Widget		  w,
 		/* get the /etc/passwd entry for the username associated with
 		 * /etc/utmp...
 		 */
-		if ((namebuf = _XGetlogin(login_buf)) != NULL) {
+		if ((namebuf = _XGetlogin(login_buf)) != nullptr) {
 		    /* get the user's passwd entry... */
 		    pw = _XGetpwnam(namebuf, pw_buf);
 		    /* if we weren't able to come up with one for the
 		     * username...
 		     */
-		    if (pw != NULL)
+		    if (pw != nullptr)
 			c = pw->pw_shell;
 		}
 	    }
@@ -337,7 +337,7 @@ _DtTermPrimSubprocExec(Widget		  w,
 	    if (!c || !*c) {
 		/* if we weren't able to come up with one for the userid... */
 		pw = _XGetpwuid(getuid(), pw_buf);
-		if (pw != NULL) {
+		if (pw != nullptr) {
 		    c = pw->pw_shell;
 		}
 	    }
@@ -470,7 +470,7 @@ _DtTermPrimSubprocExec(Widget		  w,
 
 #if defined(CSRG_BASED) || defined(__linux__)
         /* BSD needs to do this to acquire pty as controlling terminal */
-        if (ioctl(pty, TIOCSCTTY, (char *)NULL) < 0) {
+        if (ioctl(pty, TIOCSCTTY, (char *)nullptr) < 0) {
 	    (void) close(pty);
 	    (void) perror("Error acquiring pty slave as controlling terminal");
 	    /* exit the subprocess */

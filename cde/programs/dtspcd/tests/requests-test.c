@@ -86,7 +86,7 @@ static void send_request(int fd, unsigned cid, unsigned type,
 static protocol_request_ptr make_request(int type, const void *payload,
 					 size_t size)
 {
-  protocol_request_ptr prot = SPC_New_Protocol_Ptr(NULL, (XeChar)type, (int)size);
+  protocol_request_ptr prot = SPC_New_Protocol_Ptr(nullptr, (XeChar)type, (int)size);
 
   memcpy(PDRP(prot->dataptr), payload, size);
   prot->dataptr->data[REQUEST_HEADER_LENGTH + size] = '\0';
@@ -158,7 +158,7 @@ static void case_max_payload(void)
   memset(payload, 'A', sizeof(payload));
   send_request(peer, 0, APPLICATION_DATA, payload, sizeof(payload));
   prot = SPC_Read_Protocol(conn);
-  CHECK(prot != NULL);
+  CHECK(prot != nullptr);
   if(prot) {
     CHECK(prot->dataptr->len == SPC_BUFSIZ);
     CHECK(prot->dataptr->offset == REQUEST_HEADER_LENGTH);
@@ -185,7 +185,7 @@ static void oversize(size_t size)
   }
   send_request(peer, 0, APPLICATION_DATA, payload, size);
   prot = SPC_Read_Protocol(conn);
-  CHECK(prot == NULL);
+  CHECK(prot == nullptr);
   free(payload);
 }
 
@@ -201,9 +201,9 @@ static void bad_header(const char *header20, const char *what)
 
   write_all(peer, header20, REQUEST_HEADER_LENGTH);
   prot = SPC_Read_Protocol(conn);
-  if(prot != NULL)
+  if(prot != nullptr)
     fprintf(stderr, "a header with %s was accepted\n", what);
-  CHECK(prot == NULL);
+  CHECK(prot == nullptr);
 }
 
 static void case_bad_header(void)
@@ -254,7 +254,7 @@ static int read_register(const void *payload, size_t size, XeString *user,
 			 XeString *pass, XeString *ver, XeString *host)
 {
   protocol_request_ptr prot = make_request(REGISTER, payload, size);
-  XeString username = NULL, passwd = NULL, proto_ver = NULL, hostinfo = NULL;
+  XeString username = nullptr, passwd = nullptr, proto_ver = nullptr, hostinfo = nullptr;
   int ok = READ_REGISTER(prot->dataptr, username, passwd, proto_ver, hostinfo);
 
   *user = username; *pass = passwd; *ver = proto_ver; *host = hostinfo;
@@ -269,7 +269,7 @@ static void case_register_valid(void)
   CHECK(read_register(PAYLOAD("2 \0alice\0\0"), &user, &pass, &ver, &host) == TRUE);
   CHECK(user && strcmp(user, "alice") == 0);
   CHECK(pass && strcmp(pass, "") == 0);
-  CHECK(ver == NULL);
+  CHECK(ver == nullptr);
   CHECK(host && strcmp(host, SPC_UNKNOWN_HOSTINFO_STR) == 0);
 
   /* the NUL stored after the payload ends the last string, as a sender that
@@ -320,7 +320,7 @@ static void case_device_and_logfile(void)
 
   prot = make_request(LOGFILE_REPLY, PAYLOAD("1 \0/tmp/x\0"));
   CHECK(READ_LOGFILE_REPLY(prot->dataptr, &logfile, &ver, &host) == TRUE);
-  CHECK(logfile && strcmp(logfile, "/tmp/x") == 0 && ver == NULL);
+  CHECK(logfile && strcmp(logfile, "/tmp/x") == 0 && ver == nullptr);
   CHECK(host && strcmp(host, SPC_UNKNOWN_HOSTINFO_STR) == 0);
 
   prot = make_request(LOGFILE_REPLY, PAYLOAD("3 \0/tmp/x\0" "2\0hh\0"));
@@ -400,8 +400,8 @@ static void case_spawn_bad_counts(void)
   SPC_Channel_Ptr channel;
 
   connect_server(&peer);
-  channel = XeSPCOpen(NULL, SPCIO_NOIO);
-  CHECK(channel != NULL);
+  channel = XeSPCOpen(nullptr, SPCIO_NOIO);
+  CHECK(channel != nullptr);
   prot = make_request(APP_B00_SPAWN,
 		      PAYLOAD("5 /bin/true\0/\0" "1000000\0" "1\0x\0"));
   prot->channel = channel;
@@ -447,7 +447,7 @@ static void case_unknown_channel(void)
 
   connect_server(&peer);
   send_request(peer, 0x12345, CHANNEL_CLOSE, "", 0);
-  SPCD_Handle_Client_Data(&client_channel, NULL, NULL);
+  SPCD_Handle_Client_Data(&client_channel, nullptr, nullptr);
   CHECK(read_reply(peer, &type, reply, sizeof(reply)) == TRUE);
   CHECK(type == REPLY);
   CHECK(sscanf(reply, "%x %x", &retval, &errval) == 2);
@@ -463,7 +463,7 @@ static void case_register_refused(void)
   connect_server(&peer);
   client_validated = 0;
   send_request(peer, 0, REGISTER, PAYLOAD("0 \0"));
-  SPCD_Handle_Client_Data(&client_channel, NULL, NULL);
+  SPCD_Handle_Client_Data(&client_channel, nullptr, nullptr);
   CHECK(read_reply(peer, &type, reply, sizeof(reply)) == TRUE);
   CHECK(type == LOGFILE_REPLY);
   CHECK(payload_has(reply, reply_length, "<!failed>!"));
@@ -479,7 +479,7 @@ static void case_register_refused(void)
     send_request(peer, 0, REGISTER, PAYLOAD("2 \0\0\0"));
     child = fork();
     if(child == 0) {
-      SPCD_Handle_Client_Data(&client_channel, NULL, NULL);
+      SPCD_Handle_Client_Data(&client_channel, nullptr, nullptr);
       _exit(0);
     }
     CHECK(child > 0 && waitpid(child, &status, 0) == child);
@@ -511,7 +511,7 @@ static void case_become_user(void)
   struct passwd *me = getpwuid(getuid());
   char name[256];
 
-  CHECK(me != NULL);
+  CHECK(me != nullptr);
   snprintf(name, sizeof(name), "%s", me->pw_name);
   CHECK(Become_User(name, getuid(), getgid()) == TRUE);
   if(geteuid() != 0) {

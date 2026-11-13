@@ -68,8 +68,8 @@ _DtCm_get_libentry(CSA_entry_handle entryhandle)
 {
 	_DtCm_libentry *entry = (_DtCm_libentry *)entryhandle;
 
-	if (entry == NULL || entry->handle != (void *)entry)
-		return (NULL);
+	if (entry == nullptr || entry->handle != (void *)entry)
+		return (nullptr);
 	else
 		return(entry);
 }
@@ -80,16 +80,16 @@ _DtCm_make_libentry(cms_entry *e, _DtCm_libentry **entry_r)
 	_DtCm_libentry	*ptr;
 	CSA_return_code	stat = CSA_SUCCESS;
 
-	if (entry_r == NULL)
+	if (entry_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((ptr = (_DtCm_libentry *)calloc(1, sizeof(_DtCm_libentry)))
-	    == NULL)
+	    == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if (e == NULL) {
+	if (e == nullptr) {
 		if ((ptr->e = _DtCm_make_cms_entry(_DtCm_entry_name_tbl))
-		    == NULL)
+		    == nullptr)
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 	} else
 		stat = _DtCm_copy_cms_entry(e, &ptr->e);
@@ -132,19 +132,19 @@ _DtCm_get_entry_attr_names(
 	char	**names;
 	int	i, j;
 
-	*names_r = NULL;
+	*names_r = nullptr;
 	*num_names_r = 0;
 
 	if ((names = _DtCm_alloc_character_pointers(entry->e->num_attrs))
-	    == NULL)
+	    == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* first element in attr array is not used */
 	for (i = 1, j = 0; i <= entry->e->num_attrs; i++) {
 		/* there should not be any NULL names in the attr array */
-		if (entry->e->attrs[i].value != NULL) {
+		if (entry->e->attrs[i].value != nullptr) {
 			if ((names[j] = strdup(entry->e->attrs[i].name.name))
-			    == NULL) {
+			    == nullptr) {
 				_DtCm_free(names);
 				return (CSA_E_INSUFFICIENT_MEMORY);
 			} else
@@ -168,15 +168,15 @@ _DtCm_get_all_entry_attrs(
 	CSA_return_code	stat = CSA_SUCCESS;
 	CSA_attribute	*attrs_r;
 
-	if (num_attrs == NULL || attrs == NULL)
+	if (num_attrs == nullptr || attrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	if ((attrs_r = _DtCm_alloc_attributes(entry->e->num_attrs)) == NULL)
+	if ((attrs_r = _DtCm_alloc_attributes(entry->e->num_attrs)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* first element in attr array is not used */
 	for (i = 1, j = 0; i <= entry->e->num_attrs; i++) {
-		if (entry->e->attrs[i].value != NULL) {
+		if (entry->e->attrs[i].value != nullptr) {
 
 			if ((stat = _DtCm_cms2csa_attribute(entry->e->attrs[i],
 			    &attrs_r[j])) != CSA_SUCCESS) {
@@ -210,15 +210,15 @@ _DtCm_get_entry_attrs_by_name(
 	CSA_return_code	stat = CSA_SUCCESS;
 	CSA_attribute	*attrs_r;
 
-	if (num_attrs == NULL || attrs == NULL)
+	if (num_attrs == nullptr || attrs == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	if ((attrs_r = _DtCm_alloc_attributes(num_names)) == NULL)
+	if ((attrs_r = _DtCm_alloc_attributes(num_names)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* get attributes */
 	for (i = 0, j = 0; i < num_names; i++) {
-		if (names[i] != NULL) {
+		if (names[i] != nullptr) {
 			index = _DtCm_get_index_from_table(
 				entry->cal->entry_tbl, names[i]);
 
@@ -261,13 +261,13 @@ _DtCm_libentry_to_entryh(
 	_DtCm_libentry	*ptr;
 	int		i, j;
 
-	if (elist == NULL || size == NULL || entries_r == NULL)
+	if (elist == nullptr || size == nullptr || entries_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
-	for (i = 0, ptr = elist; ptr != NULL; ptr = ptr->next)
+	for (i = 0, ptr = elist; ptr != nullptr; ptr = ptr->next)
 		i++;
 
-	if ((eh = _DtCm_alloc_entry_handles(i)) == NULL)
+	if ((eh = _DtCm_alloc_entry_handles(i)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (j = 0; j < i; j++, elist = elist->next)
@@ -288,17 +288,17 @@ _DtCmCmsentriesToLibentries(
 	CSA_return_code	stat = CSA_SUCCESS;
         _DtCm_libentry	*entry, *head, *prev;
 
-	if (libentries == NULL)
+	if (libentries == nullptr)
 		return(CSA_E_INVALID_PARAMETER);
 
-	prev = head = NULL;
-	while (entries != NULL) {
+	prev = head = nullptr;
+	while (entries != nullptr) {
 
 		if ((stat = _CmsentryToLibentry(tbl, entries, &entry))
 		    != CSA_SUCCESS)
 			break;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = entry;
 		else {
 			prev->next = entry;
@@ -312,7 +312,7 @@ _DtCmCmsentriesToLibentries(
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_libentries(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*libentries = head;
@@ -328,13 +328,13 @@ _DtCm_appt4_to_libentries(
 	CSA_return_code	stat = CSA_SUCCESS;
         _DtCm_libentry	*entry, *head, *prev;
 
-	if (libentries == NULL)
+	if (libentries == nullptr)
 		return(CSA_E_INVALID_PARAMETER);
 
-	prev = head = NULL;
-	while (appt4 != NULL) {
+	prev = head = nullptr;
+	while (appt4 != nullptr) {
 
-		if ((stat = _DtCm_make_libentry(NULL, &entry)) != CSA_SUCCESS)
+		if ((stat = _DtCm_make_libentry(nullptr, &entry)) != CSA_SUCCESS)
 			break;
 
 		if ((stat = _DtCm_appt4_to_attrs(calname, appt4,
@@ -346,7 +346,7 @@ _DtCm_appt4_to_libentries(
 		entry->e->key.id = appt4->appt_id.key;
 		entry->filled = B_TRUE;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = entry;
 		else {
 			prev->next = entry;
@@ -360,7 +360,7 @@ _DtCm_appt4_to_libentries(
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_libentries(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*libentries = head;
@@ -373,16 +373,16 @@ _DtCm_libentries_to_appt4(_DtCm_libentry *entries, Appt_4 **appt4)
 	CSA_return_code	stat = CSA_SUCCESS;
 	Appt_4		*a4, *head, *prev;
 
-	if (appt4 == NULL)
+	if (appt4 == nullptr)
 		return(CSA_E_INVALID_PARAMETER);
 
-	prev = head = NULL;
-	while (entries != NULL) {
+	prev = head = nullptr;
+	while (entries != nullptr) {
 
 		if ((stat = _DtCm_cms_entry_to_appt4(entries->e, &a4)) != CSA_SUCCESS)
 			break;
 
-		if (head == NULL)
+		if (head == nullptr)
 			head = a4;
 		else {
 			prev->next = a4;
@@ -395,7 +395,7 @@ _DtCm_libentries_to_appt4(_DtCm_libentry *entries, Appt_4 **appt4)
 
 	if (stat != CSA_SUCCESS) {
 		_DtCm_free_appt4(head);
-		head = NULL;
+		head = nullptr;
 	}
 
 	*appt4 = head;
@@ -415,38 +415,38 @@ _DtCm_reminder4_to_csareminder(
 	Reminder_4 *rptr = r4;
 	char	isotime[BUFSIZ];
 
-	if (num_rems == NULL || rems == NULL)
+	if (num_rems == nullptr || rems == nullptr)
 		return(CSA_E_INVALID_PARAMETER);
 
-	if (r4 == NULL) {
+	if (r4 == nullptr) {
 		*num_rems = 0;
-		*rems = NULL;
+		*rems = nullptr;
 		return (CSA_SUCCESS);
 	}
 
-	for (count = 0, rptr = r4; rptr != NULL; count++, rptr = rptr->next)
+	for (count = 0, rptr = r4; rptr != nullptr; count++, rptr = rptr->next)
 		;
 
-	if ((rem_r = _DtCm_alloc_reminder_references(count)) == NULL) {
+	if ((rem_r = _DtCm_alloc_reminder_references(count)) == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	i = 0;
-	while (r4 != NULL && r4->attr.attr != NULL) {
+	while (r4 != nullptr && r4->attr.attr != nullptr) {
 
 		(void)_csa_tick_to_iso8601(r4->tick, isotime);
-		if ((rem_r[i].run_time = strdup(isotime)) == NULL) {
+		if ((rem_r[i].run_time = strdup(isotime)) == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
 		if ((rem_r[i].attribute_name = strdup(
-		    _DtCm_old_reminder_name_to_name(r4->attr.attr))) == NULL) {
+		    _DtCm_old_reminder_name_to_name(r4->attr.attr))) == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
-		if ((stat = _DtCm_make_libentry(NULL, &entry)) == CSA_SUCCESS) {
+		if ((stat = _DtCm_make_libentry(nullptr, &entry)) == CSA_SUCCESS) {
 			entry->e->key.id = r4->appt_id.key;
 			entry->e->key.time = r4->appt_id.tick;
 			rem_r[i].entry = (CSA_entry_handle)entry;
@@ -481,38 +481,38 @@ _DtCm_cms2csa_reminder_ref(
 	char			isotime[BUFSIZ];
 	CSA_opaque_data		opq;
 
-	if (num_rems == NULL || csarems == NULL)
+	if (num_rems == nullptr || csarems == nullptr)
 		return(CSA_E_INVALID_PARAMETER);
 
-	if (cmsrems == NULL) {
+	if (cmsrems == nullptr) {
 		*num_rems = 0;
-		*csarems = NULL;
+		*csarems = nullptr;
 		return (CSA_SUCCESS);
 	}
 
-	for (count = 0, rptr = cmsrems; rptr != NULL; rptr = rptr->next)
+	for (count = 0, rptr = cmsrems; rptr != nullptr; rptr = rptr->next)
 		count++;
 
-	if ((rem_r = _DtCm_alloc_reminder_references(count)) == NULL) {
+	if ((rem_r = _DtCm_alloc_reminder_references(count)) == nullptr) {
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	i = 0;
-	while (cmsrems != NULL && stat == CSA_SUCCESS) {
+	while (cmsrems != nullptr && stat == CSA_SUCCESS) {
 
 		(void)_csa_tick_to_iso8601(cmsrems->runtime, isotime);
-		if ((rem_r[i].run_time = strdup(isotime)) == NULL) {
+		if ((rem_r[i].run_time = strdup(isotime)) == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
 		if ((rem_r[i].attribute_name = strdup(cmsrems->reminder_name))
-		    == NULL) {
+		    == nullptr) {
 			stat = CSA_E_INSUFFICIENT_MEMORY;
 			break;
 		}
 
-		if ((stat = _DtCm_make_libentry(NULL, &entry)) == CSA_SUCCESS) {
+		if ((stat = _DtCm_make_libentry(nullptr, &entry)) == CSA_SUCCESS) {
 			opq.size = strlen(cmsrems->entryid);
 			opq.data = (unsigned char *)cmsrems->entryid;
 
@@ -553,9 +553,9 @@ _DtCm_convert_entry_wheader(_DtCm_libentry *entry)
 	_DtCm_libentry *pentry;
 
 	if ((pentry = (_DtCm_libentry *)_DtCm_alloc_entry(
-	    sizeof(_DtCm_libentry))) == NULL) {
+	    sizeof(_DtCm_libentry))) == nullptr) {
 		_DtCm_free_libentries(entry);
-		return (NULL);
+		return (nullptr);
 	}
 
 	pentry->handle = (void *)pentry;
@@ -586,7 +586,7 @@ _DtCm_free_entry_content(uint dummy, _DtCm_libentry *entry)
 extern void
 _DtCm_free_libentries_from_list(_DtCm_libentry *head, _DtCm_libentry *tail)
 {
-	if (head == NULL || tail == NULL)
+	if (head == nullptr || tail == nullptr)
 		return;
 
 	_DtCm_remove_from_entry_list(head->cal, (caddr_t)head, (caddr_t)tail);
@@ -605,7 +605,7 @@ _DtCm_free_libentries(_DtCm_libentry *entry)
 {
 	_DtCm_libentry *nptr;
 
-	while (entry != NULL) {
+	while (entry != nullptr) {
 		nptr = entry->next;
 
 		if (entry->e) _DtCm_free_cms_entry(entry->e);
@@ -627,12 +627,12 @@ _DtCm_free_reminder_references(uint num_rems, CSA_reminder_reference *rems)
 	_DtCm_libentry	*entry, *head, *cptr;
 	int i;
 
-	head = cptr = NULL;
+	head = cptr = nullptr;
 	for (i = 0; i < num_rems; i++) {
 
 		entry = (_DtCm_libentry *)rems[i].entry;
 		if (entry && entry->handle == (void *)entry) {
-			if (head == NULL) {
+			if (head == nullptr) {
 				head = cptr = entry;
 			} else if (cptr->next == entry) {
 				cptr = cptr->next;
@@ -664,18 +664,18 @@ _DtCm_free_entry_handles(uint num_entries, CSA_entry_handle *entries)
 
 	DP(("api.c: _DtCm_free_entry_handles\n"));
 
-	head = cptr = NULL;
-	for (i = 0, head = cptr = NULL; i < num_entries; i++) {
+	head = cptr = nullptr;
+	for (i = 0, head = cptr = nullptr; i < num_entries; i++) {
 
 		/* in case it is a bad appointment handle */
-		if ((entry = _DtCm_get_libentry(entries[i])) != NULL) {
+		if ((entry = _DtCm_get_libentry(entries[i])) != nullptr) {
 			/*
 			 * rather than freeing one appointment at a time,
 			 * check to see if the appointments are linked to
 			 * each other and free each consecutive chunk together
 			 */
 
-			if (head == NULL) {
+			if (head == nullptr) {
 				head = cptr = entry;
 			} else if (cptr->next == entry) {
 				cptr = cptr->next;
@@ -702,12 +702,12 @@ _CmsentryToLibentry(
 	_DtCm_libentry *entry;
 	CSA_return_code stat;
 
-	if ((stat = _DtCm_make_libentry(NULL, &entry)) != CSA_SUCCESS)
+	if ((stat = _DtCm_make_libentry(nullptr, &entry)) != CSA_SUCCESS)
 		return (stat); 
 
 	if ((stat = _DtCmUpdateAttributes(e->num_attrs, e->attrs,
 	    &entry->e->num_attrs, &entry->e->attrs, tbl, B_FALSE,
-	    NULL, B_FALSE)) != CSA_SUCCESS) {
+	    nullptr, B_FALSE)) != CSA_SUCCESS) {
 		_DtCm_free_libentries(entry);
 	} else {
 		entry->e->key = e->key;

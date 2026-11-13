@@ -123,8 +123,8 @@ gilP_load_att_done_handler(FILE * inFile, ABObj obj, ABObj module)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             handler = NULL;
-    ABObj               action = NULL;
+    ISTRING             handler = nullptr;
+    ABObj               action = nullptr;
 
     if ((rc = gilP_load_handler(inFile, &handler)) < 0)
     {
@@ -146,7 +146,7 @@ gilP_load_att_event_handler(FILE * inFile, ABObj obj, ABObj module)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             event_handler = NULL;
+    ISTRING             event_handler = nullptr;
 
     if ((rc = gilP_load_handler(inFile, &event_handler)) < 0)
     {
@@ -170,7 +170,7 @@ gilP_load_att_menu_handler(FILE * inFile, ABObj obj, ABObj module)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             handler = NULL;
+    ISTRING             handler = nullptr;
 
     if ((rc = gilP_load_handler(inFile, &handler)) < 0)
     {
@@ -190,7 +190,7 @@ gilP_load_att_menu_item_handlers(FILE * inFile, ABObj obj, ABObj module)
     int                 rc = 0; /* r turn code */
     ISTRING_ARRAY       handlers;
     AB_TRAVERSAL        trav;
-    ABObj               item = NULL;
+    ABObj               item = nullptr;
     int                 i = 0;
 
     istr_array_init(&handlers);
@@ -200,11 +200,11 @@ gilP_load_att_menu_item_handlers(FILE * inFile, ABObj obj, ABObj module)
     }
     obj_ensure_num_children(obj, handlers.count);
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ), i = 0;
-         (item = trav_next(&trav)) != NULL; ++i)
+         (item = trav_next(&trav)) != nullptr; ++i)
     {
         add_user_handler(item, module,
                          handlers.strings[i], AB_WHEN_ACTIVATED);
-        handlers.strings[i] = NULL;
+        handlers.strings[i] = nullptr;
     }
     trav_close(&trav);
     istr_array_uninit(&handlers);
@@ -218,7 +218,7 @@ gilP_load_att_notify_handler(FILE * inFile, ABObj obj, ABObj module)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             handler = NULL;
+    ISTRING             handler = nullptr;
 
     if ((rc = gilP_load_handler(inFile, &handler)) < 0)
     {
@@ -237,7 +237,7 @@ gilP_load_att_repaint_proc(FILE * inFile, ABObj obj, ABObj module)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             repaint = NULL;
+    ISTRING             repaint = nullptr;
 
     if ((rc = gilP_load_handler(inFile, &repaint)) < 0)
     {
@@ -267,14 +267,14 @@ gilP_load_att_actions(FILE * inFile, ABObj obj, ABObj module)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ABObj               action = NULL;
+    ABObj               action = nullptr;
 
     if (!abio_get_list_begin(inFile))
         return (abil_print_load_err(ERR_WANT_LIST), -1);
 
     while (!abio_get_list_end(inFile))
     {
-        action = obj_create(AB_TYPE_ACTION, NULL);
+        action = obj_create(AB_TYPE_ACTION, nullptr);
 
         if ((rc = get_action(inFile, obj, module, action)) < 0)
         {
@@ -339,9 +339,9 @@ get_action(
             return_value = rc;
             break;
         }
-        abil_loadmsg_set_action_att(NULL);
+        abil_loadmsg_set_action_att(nullptr);
     }
-    abil_loadmsg_set_action_att(NULL);
+    abil_loadmsg_set_action_att(nullptr);
 
     return return_value;
 }
@@ -402,15 +402,15 @@ get_from(FILE * inFile, ABObj obj, ABObj module, ABObj action)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             interface_name = NULL;
-    ISTRING             parent_name = NULL;
-    ISTRING		name = NULL;
-    ISTRING		item_name = NULL;
-    ABObj               from = NULL;
+    ISTRING             interface_name = nullptr;
+    ISTRING             parent_name = nullptr;
+    ISTRING		name = nullptr;
+    ISTRING		item_name = nullptr;
+    ABObj               from = nullptr;
 
     if (   (abio_gil_get_full_name(inFile, 
 		&interface_name, &parent_name, &name, &item_name) < 0)
-	|| (name == NULL) )
+	|| (name == nullptr) )
     {
         abil_print_load_err(ERR_WANT_FULL_NAME);
 	return_value = -1;
@@ -420,7 +420,7 @@ get_from(FILE * inFile, ABObj obj, ABObj module, ABObj action)
     from = find_or_create_target(obj, module,
            		interface_name, parent_name, name, item_name);
 
-    if (from == NULL)
+    if (from == nullptr)
     {
         rc = abil_print_load_err(ERR_UNKNOWN_OBJECT);
         goto abort;
@@ -444,15 +444,15 @@ get_to(FILE * inFile, ABObj obj, ABObj module, ABObj action)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             interface_name = NULL;
-    ISTRING             parent_name = NULL;
-    ISTRING             name = NULL;
-    ISTRING             item_name = NULL;
-    ABObj               to = NULL;
+    ISTRING             interface_name = nullptr;
+    ISTRING             parent_name = nullptr;
+    ISTRING             name = nullptr;
+    ISTRING             item_name = nullptr;
+    ABObj               to = nullptr;
 
     if (   (abio_gil_get_full_name(inFile,
                   &interface_name, &parent_name, &name, &item_name) < 0)
-	|| (name == NULL) )
+	|| (name == nullptr) )
     {
         abil_print_load_err(ERR_WANT_FULL_NAME);
 	return_value = -1;
@@ -462,7 +462,7 @@ get_to(FILE * inFile, ABObj obj, ABObj module, ABObj action)
     to = find_or_create_target(obj, module, 
 			interface_name, parent_name, name, item_name);
 
-    if (to == NULL)
+    if (to == nullptr)
     {
         rc = abil_print_load_err(ERR_UNKNOWN_OBJECT);
         goto abort;
@@ -486,8 +486,8 @@ get_operation(FILE * inFile, ABObj action)
 {
     int                 return_value = 0;
     int                 rc = 0; /* r turn code */
-    ISTRING             string = NULL;
-    ISTRING             name = NULL;
+    ISTRING             string = nullptr;
+    ISTRING             name = nullptr;
     int                 intval;
 
     if (!abio_get_list_begin(inFile))
@@ -580,7 +580,7 @@ static int
 get_when(FILE * inFile, ABObj obj, ABObj action)
 {
     int                 return_value = 0;
-    ISTRING             string = NULL;
+    ISTRING             string = nullptr;
     AB_WHEN             when = AB_WHEN_UNDEF;
     int			numWhens = 0;
 
@@ -624,7 +624,7 @@ static int
 get_function_type(FILE * inFile, ABObj action)
 {
     int                 return_value = 0;
-    ISTRING             type_name = NULL;
+    ISTRING             type_name = nullptr;
 
     if (!abio_gil_get_name(inFile, &type_name))
     {
@@ -661,7 +661,7 @@ static int
 get_arg_type(FILE * inFile, ABObj action)
 {
     int                 return_value = 0;
-    ISTRING             type_name = NULL;
+    ISTRING             type_name = nullptr;
 
     obj_set_arg_type(action, AB_ARG_VOID_PTR);
 
@@ -691,10 +691,10 @@ add_user_handler(ABObj obj, ABObj module,
                  ISTRING handler, AB_WHEN when)
 {
     int                 retval = 0;
-    ABObj               project = NULL;
-    ABObj               action = NULL;
+    ABObj               project = nullptr;
+    ABObj               action = nullptr;
 
-    if (handler == NULL)
+    if (handler == nullptr)
     {
         return 0;
     }
@@ -706,11 +706,11 @@ add_user_handler(ABObj obj, ABObj module,
      * so that this action may be used by multiple widgets.  I.e., if the
      * function type, name and to fields match, an action will be shared.
      */
-    action = obj_create(AB_TYPE_ACTION, NULL);
+    action = obj_create(AB_TYPE_ACTION, nullptr);
     obj_set_func_type(action, AB_FUNC_USER_DEF);
     obj_set_func_name(action, istr_string(handler));
     obj_set_arg_type(action, AB_ARG_VOID_PTR);
-    action->info.action.to = NULL;
+    action->info.action.to = nullptr;
 
     obj_set_from(action, obj);
     obj_set_when(action, when);
@@ -754,17 +754,17 @@ find_or_create_target(
                       	ISTRING	item_label
 )
 {
-    ABObj               target = NULL;	/* the real thing, baby! */
-    ABObj		target_project = NULL;
+    ABObj               target = nullptr;	/* the real thing, baby! */
+    ABObj		target_project = nullptr;
     char		target_interface_file[MAXPATHLEN+1];
     char		target_interface_name[GIL_MAX_NAME_SIZE];
-    ABObj		target_module = NULL;
+    ABObj		target_module = nullptr;
     char		target_parent_name[GIL_MAX_NAME_SIZE];
-    ABObj		target_parent = NULL;
+    ABObj		target_parent = nullptr;
     char		target_obj_name[GIL_MAX_NAME_SIZE];
-    ABObj		target_obj = NULL;
+    ABObj		target_obj = nullptr;
     char		target_item_label[GIL_MAX_NAME_SIZE];
-    ABObj		target_item = NULL;
+    ABObj		target_item = nullptr;
     AB_TRAVERSAL	trav;
     *target_interface_file = 0;
     *target_interface_name = 0;
@@ -775,24 +775,24 @@ find_or_create_target(
     /* must have object name */
     if (debugging()) 
     {
-	assert(   (obj_name != NULL)
+	assert(   (obj_name != nullptr)
 	       && (obj_is_project(module) || obj_is_module(module)));
     }
 
     if (obj_is_project(module))
     {
 	/* The first string must be an interface file name */
-	if (interface_name != NULL)
+	if (interface_name != nullptr)
 	{
 	    util_strncpy(target_interface_file, istr_string(interface_name),
 			GIL_MAX_NAME_SIZE);
-	    if (parent_name != NULL)
+	    if (parent_name != nullptr)
 	    {
 		util_strncpy(target_parent_name, istr_string(parent_name),
 			GIL_MAX_NAME_SIZE);
 	    }
 	}
-	else if (parent_name != NULL)
+	else if (parent_name != nullptr)
 	{
 	    util_strncpy(target_interface_file, istr_string(parent_name),
 			GIL_MAX_NAME_SIZE);
@@ -817,7 +817,7 @@ find_or_create_target(
 
 	util_strncpy(target_obj_name, istr_string(obj_name), 
 			GIL_MAX_NAME_SIZE);
-	if (item_label != NULL)
+	if (item_label != nullptr)
 	{
 	    util_strncpy(target_item_label, istr_string(item_label), 
 			GIL_MAX_NAME_SIZE);
@@ -825,7 +825,7 @@ find_or_create_target(
     }
     else 	/* ! obj_is_project() */
     {
-        if (parent_name != NULL)
+        if (parent_name != nullptr)
         {
             /* we have parent name and object name */
             util_strncpy(target_parent_name, istr_string(parent_name), 
@@ -834,7 +834,7 @@ find_or_create_target(
 
 	util_strncpy(target_obj_name, istr_string(obj_name), 
 			GIL_MAX_NAME_SIZE);
-        if (item_label != NULL)
+        if (item_label != nullptr)
         {
             /* we have object name and item_label */
             util_strncpy(target_item_label, istr_string(item_label),
@@ -867,7 +867,7 @@ find_or_create_target(
     {
 	/* find specified intefarce (module) */
 	for (trav_open(&trav, target_project, AB_TRAV_MODULES);
-		(target_module = trav_next(&trav)) != NULL; )
+		(target_module = trav_next(&trav)) != nullptr; )
 	{
 	    if (   (target_module != target_project)
 		&& (util_streq(
@@ -877,7 +877,7 @@ find_or_create_target(
 	    }
 	}
 	trav_close(&trav);
-	if (target_module == NULL)
+	if (target_module == nullptr)
 	{
 	    target_module = obj_create(AB_TYPE_MODULE, target_project);
 	    obj_set_is_defined(target_module, FALSE);
@@ -897,7 +897,7 @@ find_or_create_target(
     {
 	for (trav_open(&trav, target_module, 
 			AB_TRAV_ALL | AB_TRAV_MOD_PARENTS_FIRST);
-	    	(target_parent = trav_next(&trav)) != NULL; )
+	    	(target_parent = trav_next(&trav)) != nullptr; )
 	{
 	    if (   (target_parent != target_module)
 		&& (util_streq(
@@ -907,7 +907,7 @@ find_or_create_target(
 	    }
 	}
 	trav_close(&trav);
-	if (target_parent == NULL)
+	if (target_parent == nullptr)
 	{
 	    target_parent = obj_create(AB_TYPE_UNDEF, target_module);
 	    obj_set_is_defined(target_parent, FALSE);
@@ -921,7 +921,7 @@ find_or_create_target(
      */
     for (trav_open(&trav, target_parent,
 			AB_TRAV_ALL | AB_TRAV_MOD_PARENTS_FIRST);
-		(target_obj = trav_next(&trav)) != NULL; )
+		(target_obj = trav_next(&trav)) != nullptr; )
     {
 	if (   (target_obj != target_parent)
 	   && util_streq(target_obj_name, obj_get_name(target_obj)))
@@ -930,7 +930,7 @@ find_or_create_target(
 	}
     }
     trav_close(&trav);
-    if (target_obj == NULL)
+    if (target_obj == nullptr)
     {
         target_obj = obj_create(AB_TYPE_UNDEF, target_parent);
         obj_set_is_defined(target_obj, FALSE);
@@ -943,12 +943,12 @@ find_or_create_target(
      */
     if (util_strempty(target_item_label))
     {
-	target_item = NULL;
+	target_item = nullptr;
     }
     else
     {
 	for (trav_open(&trav, target_obj, AB_TRAV_ITEMS);
-		(target_item = trav_next(&trav)) != NULL; )
+		(target_item = trav_next(&trav)) != nullptr; )
 	{
 	    if (   (target_item != target_obj)
 		&& util_streq(obj_get_label(target_item), target_item_label))
@@ -957,7 +957,7 @@ find_or_create_target(
 	    }
 	}
 	trav_close(&trav);
-	if (target_item == NULL)
+	if (target_item == nullptr)
 	{
 	    target_item = obj_create(AB_TYPE_ITEM, target_obj);
 	    obj_set_is_defined(target_item, FALSE);
@@ -968,7 +968,7 @@ find_or_create_target(
 	}
     }
 
-    if (target_item != NULL)
+    if (target_item != nullptr)
     {
 	target = target_item;
     }

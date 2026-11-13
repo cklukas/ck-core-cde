@@ -329,7 +329,7 @@ static	SpecialSymbolTable SpcTable[] =
         {"[Verbar]", "||"        }, /*ISOtech, dbl vertical bar      */ 
       /*{"[Xi    ]", " "         },  *ISOgrk3, Greek, large xi       */
       /*{"[Yacute]", " "         },  *ISOlat1, capital Y,acute accent*/
-        { NULL     , " "         }, /* default character to use      */
+        { nullptr     , " "         }, /* default character to use      */
 };
 
 /******************************************************************************
@@ -353,15 +353,15 @@ _DtHelpCeResolveSpcToAscii (
 {
     int          i = 0;
 
-    if (NULL == spc_symbol)
-      return NULL;
+    if (nullptr == spc_symbol)
+      return nullptr;
 
-    while (NULL != SpcTable[i].symbol &&
+    while (nullptr != SpcTable[i].symbol &&
 	   0 != strcmp(SpcTable[i].symbol, spc_symbol))
       i++;
 
-    if (SpcTable[i].symbol != NULL)
+    if (SpcTable[i].symbol != nullptr)
       return (SpcTable[i].spc_string);
 
-    return NULL;
+    return nullptr;
 }

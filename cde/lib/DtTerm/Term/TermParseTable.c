@@ -49,18 +49,18 @@ static StateTableRec stateStart;
 static StateEntryRec
 pre_parse_table[] =
 {
-  { 0x00, 0x00, NULL,	NULL,		/* null chars -- ignore */ },
+  { 0x00, 0x00, nullptr,	nullptr,		/* null chars -- ignore */ },
 #ifdef	NOTDEF
-  { 0x05, 0x05, NULL,	enquire,	/* send answer back	*/ },
+  { 0x05, 0x05, nullptr,	enquire,	/* send answer back	*/ },
 #endif	/* NOTDEF */
-  { 0x07, 0x07, NULL,	_DtTermPrimParseBell,   /* ring the bell  */ },
-  { 0x08, 0x08, NULL,	_DtTermParseBackspace,  /* backspace  */ },
-  { 0x09, 0x09, NULL,	_DtTermParseTab,         /* horizontal tab */ },
-  { 0x0A, 0x0A, NULL,	_DtTermParseLF,          /* newline       */ },
-  { 0x0B, 0x0B, NULL,	_DtTermParseLF,    /* Vertical Tab (Ctrl-k) */ },
-  { 0x0C, 0x0C, NULL,	_DtTermParseLF,    /* Form Feed or New Page */ },
-  { 0x0D, 0x0D, NULL,	_DtTermPrimParseCR,  /* carriage return   */ },
-  { 0x0E, 0x0F, NULL,	_DtTermParseFontShift, /* font shift in/out */ },
+  { 0x07, 0x07, nullptr,	_DtTermPrimParseBell,   /* ring the bell  */ },
+  { 0x08, 0x08, nullptr,	_DtTermParseBackspace,  /* backspace  */ },
+  { 0x09, 0x09, nullptr,	_DtTermParseTab,         /* horizontal tab */ },
+  { 0x0A, 0x0A, nullptr,	_DtTermParseLF,          /* newline       */ },
+  { 0x0B, 0x0B, nullptr,	_DtTermParseLF,    /* Vertical Tab (Ctrl-k) */ },
+  { 0x0C, 0x0C, nullptr,	_DtTermParseLF,    /* Form Feed or New Page */ },
+  { 0x0D, 0x0D, nullptr,	_DtTermPrimParseCR,  /* carriage return   */ },
+  { 0x0E, 0x0F, nullptr,	_DtTermParseFontShift, /* font shift in/out */ },
   { 0x1B, 0x1B, &_DtTermStateEscape, _DtTermClearParam, /*   Esc        */ },
   { 0x84, 0x84, &stateStart,_DtTermIndex,     /* Index                 */ },
   { 0x85, 0x85, &stateStart,_DtTermNextLine,  /* Next Line             */ },
@@ -70,7 +70,7 @@ pre_parse_table[] =
   { 0x8F, 0x8F, &stateStart,_DtTermSingleShiftG3, /* Single Shift G3   */ },
   { 0x90, 0x90, &_DtTermStateP,  _DtTermPrimParserNextState, /* DCS     */ },
   { 0x9B, 0x9B, &_DtTermStateLeftBracket, _DtTermClearParam,/*CSI*/ },
-  { 0x00, 0xFF, NULL,	NULL,		    /* end of table */ },
+  { 0x00, 0xFF, nullptr,	nullptr,		    /* end of table */ },
 };
 
 /*

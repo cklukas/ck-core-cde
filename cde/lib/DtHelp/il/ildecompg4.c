@@ -622,7 +622,7 @@ ilImageDes         *pimdes
 	dstdata.pFormat         =  IL_FORMAT_BIT;
 	dstdata.width           =  pinfo->width;
 	dstdata.height          =  pinfo->height;
-	dstdata.pPalette        =  (unsigned short *)NULL;
+	dstdata.pPalette        =  (unsigned short *)nullptr;
 
 	/* set output strip height */
 	dstdata.stripHeight     =  pinfo->stripHeight;
@@ -632,9 +632,9 @@ ilImageDes         *pimdes
 
 	pPriv = (ilDecompG3G4PrivPtr) ilAddPipeElement(pipe, IL_FILTER, 
 	    sizeof(ilDecompG3G4PrivRec), 0,
-	    (ilSrcElementData *)NULL,
+	    (ilSrcElementData *)nullptr,
 	    &dstdata, _ilDecompG4Init,_ilDecompG4Cleanup,
-	    IL_NPF, _ilDecompG4Execute, NULL, 0);
+	    IL_NPF, _ilDecompG4Execute, nullptr, 0);
 
 	if (!pPriv) return FALSE; /* EXIT */
 

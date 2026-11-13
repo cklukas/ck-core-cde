@@ -296,7 +296,7 @@ SaveState(
   /*
    * Notify XSMP clients of the save
    */
-  SaveYourselfReqProc (NULL, NULL, saveType, shutdown, interactStyle, 
+  SaveYourselfReqProc (nullptr, nullptr, saveType, shutdown, interactStyle, 
 			fast, global);
 }
 
@@ -344,7 +344,7 @@ CompleteSave (void)
   EnterWaitState();
   
   resSpec = (char *) SM_MALLOC(resSize * sizeof(char));
-  if (resSpec==NULL)
+  if (resSpec==nullptr)
   {
       PrintErrnoError(DtError, smNLS.cantMallocErrorString);
       return(-1);
@@ -430,7 +430,7 @@ PruneSessionDirectory (void)
 	char			*saveDir;
 	char			*tmpDir;
 
-	if ((dirp = opendir (smGD.savePath)) == NULL)
+	if ((dirp = opendir (smGD.savePath)) == nullptr)
 		return;
 
 	clientDB = (char*) XtMalloc((2*MAXPATHLEN) + 1);
@@ -451,7 +451,7 @@ PruneSessionDirectory (void)
 
 	(void) time (&oldestTime);
 
-	while ((dp = readdir (dirp)) != NULL) {
+	while ((dp = readdir (dirp)) != nullptr) {
 		/*
 		 * Do some sanity checks to limit the number of * stat() 
 		 * calls.  Note that for backward compatibility with CDE 
@@ -508,7 +508,7 @@ PruneSessionDirectory (void)
 
 		tmpName = SmMakeTempDirectory (smGD.savePath,
 					       smGD.restoreSession);
-		if (tmpName == NULL) {
+		if (tmpName == nullptr) {
 			PrintErrnoError(DtError, smNLS.cantCreateDirsString);
 		} else {
 			sprintf (saveDir, "%s/%s", 
@@ -606,7 +606,7 @@ WriteClientDatabase (void)
 			SM_CLIENT_FILE2);
 
 	if ((outputDB = OpenOutputClientDB (db, smXSMP.dbVersion,
-					    smXSMP.dbSessionId)) == NULL) {
+					    smXSMP.dbSessionId)) == nullptr) {
 		char		* str;
 
 		str = strdup ((char *) GETMESSAGE (40, 18,
@@ -672,7 +672,7 @@ OutputXSMPClients (
 	XSMPClientDBRec		dbRec;
 	ClientRecPtr            pClientRec;
 
-	for (pClientRec = connectedList; pClientRec != NULL;
+	for (pClientRec = connectedList; pClientRec != nullptr;
 		pClientRec = pClientRec->next) {
 
 		dbRec.restartHint = pClientRec->restartHint;
@@ -752,9 +752,9 @@ CheckRequiredProperties (
 {
 	PropertyRecPtr		pPropRec;
 	char			* str;
-	char			* program = NULL;
+	char			* program = nullptr;
 
-	if ((program = GetArrayPropertyValue (pClientRec, SmProgram)) == NULL){
+	if ((program = GetArrayPropertyValue (pClientRec, SmProgram)) == nullptr){
 
 		str = strdup ((char *) GETMESSAGE (40, 23,
 			"The following application did not set the required\nproperty '%s':\n\n   %s\n\nThis application will not be saved."));
@@ -767,7 +767,7 @@ CheckRequiredProperties (
 		return (False);
 	}
 
-	if ((pPropRec = GetPropertyRec (pClientRec, SmRestartCommand)) == NULL){
+	if ((pPropRec = GetPropertyRec (pClientRec, SmRestartCommand)) == nullptr){
 
 		str = strdup ((char *) GETMESSAGE (40, 24,
 			"24 Application '%s' will not be saved because it did not set\nthe required property '%s'."));
@@ -780,7 +780,7 @@ CheckRequiredProperties (
 		return (False);
 	}
 
-	if ((pPropRec = GetPropertyRec (pClientRec, SmCloneCommand)) == NULL) {
+	if ((pPropRec = GetPropertyRec (pClientRec, SmCloneCommand)) == nullptr) {
 		/*
 		 * This is a warning - still want to save the client
 		 */
@@ -825,7 +825,7 @@ NotifyProxyClients (void)
   int 			actualFormat;
   unsigned long 	nitems;
   unsigned long 	leftover;
-  unsigned char 	* data = NULL;
+  unsigned char 	* data = nullptr;
   Boolean		containedClient;
   int 			i, j;
   int			numClients = 0;
@@ -1021,18 +1021,18 @@ PrintStartupInfo(
   if (wargc == 1) {
      ptr = wargv[0];
      /* check for foreground */
-     if ((ptr = strstr (ptr, "fg \"")) != NULL) {
+     if ((ptr = strstr (ptr, "fg \"")) != nullptr) {
         if (strlen (ptr) > 3)
            ptr[3] = ' ';
-        if ((ptr = strchr (ptr, '"')) != NULL)
+        if ((ptr = strchr (ptr, '"')) != nullptr)
            ptr[0] = ' ';
      }
 
      /* check for background */
-     if ((ptr = strstr (wargv[0], "bg \"")) != NULL) {
+     if ((ptr = strstr (wargv[0], "bg \"")) != nullptr) {
         if (strlen (ptr) > 3)
            ptr[3] = ' ';
-        if ((ptr = strchr (ptr, '"')) != NULL)
+        if ((ptr = strchr (ptr, '"')) != nullptr)
            ptr[0] = ' ';
      }
   }
@@ -1041,8 +1041,8 @@ PrintStartupInfo(
   /*
    * Find out if the client is running locally
    */
-  dbRec.clientHost = NULL;
-  if(clientMachine != NULL)
+  dbRec.clientHost = nullptr;
+  if(clientMachine != nullptr)
   {
       if(DtIsLocalHostP(clientMachine) == FALSE)
       {
@@ -1069,7 +1069,7 @@ PrintStartupInfo(
 
   for (i = 0; i < wargc; i++)
       argv[i] = wargv[i];
-  argv[wargc] = NULL;
+  argv[wargc] = nullptr;
 
   dbRec.command = argv;
   dbRec.screenNum = screen;
@@ -1144,12 +1144,12 @@ QueryServerSettings( void )
     char		*buttonRet;
     int			numButton, numPaths;
     int			buttonSize = 128;
-    XrmDatabase 	smBase = NULL;
+    XrmDatabase 	smBase = nullptr;
     char		tmpChar[35];
 
 
     buttonRet = (char *) SM_MALLOC(buttonSize * sizeof(char));
-    if (buttonRet==NULL)
+    if (buttonRet==nullptr)
     {
 	PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 	return(-1);
@@ -1182,7 +1182,7 @@ QueryServerSettings( void )
      *  Write out all the paths one by one concatenated by commas.
      */
     fontPath = XGetFontPath(smGD.display, &numPaths);
-    if(fontPath != NULL)
+    if(fontPath != nullptr)
     {
 	if(PrintFontPaths(&smBase, fontPath, numPaths) != 0)
 	{
@@ -1212,7 +1212,7 @@ QueryServerSettings( void )
     if(numButton > 128)
     {
 	buttonRet = (char *) SM_REALLOC(buttonRet, numButton * sizeof(char));
-	if (buttonRet==NULL)
+	if (buttonRet==nullptr)
 	{
 	    if (fontPath)
 		XFreeFontPath(fontPath);
@@ -1241,7 +1241,7 @@ QueryServerSettings( void )
 				  (KeyCode) smGD.display->min_keycode,
 				  smSettings.numKeyCode,
 				  &smSettings.keySymPerCode);
-    if(tmpSyms == NULL)
+    if(tmpSyms == nullptr)
     {
 	if (fontPath)
 	    XFreeFontPath(fontPath);
@@ -1279,7 +1279,7 @@ QueryServerSettings( void )
 	{
 	    resSize += 5000;
 	    resSpec = (char *) SM_REALLOC(resSpec, resSize * sizeof(char));
-	    if (resSpec==NULL)
+	    if (resSpec==nullptr)
 	    {
 		SM_FREE((char *)tmpSyms);
 		if (fontPath)
@@ -1304,7 +1304,7 @@ QueryServerSettings( void )
      * version.
      */
     modMap = XGetModifierMapping(smGD.display);
-    if(modMap == NULL)
+    if(modMap == nullptr)
     {
 	SM_FREE((char *)tmpSyms);
 	if (fontPath)
@@ -1333,7 +1333,7 @@ QueryServerSettings( void )
 	{
 	    resSize += 5000;
 	    resSpec = (char *) SM_REALLOC(resSpec, resSize * sizeof(char));
-	    if (resSpec==NULL)
+	    if (resSpec==nullptr)
 	    {
 		SM_FREE((char *)tmpSyms);
 		XFreeModifiermap(modMap);
@@ -1411,8 +1411,8 @@ SaveCustomizeSettings( void )
 {
     int			i,numPaths;
     char		**fontPath;
-    XrmDatabase 	smBase = NULL;
-    char		*tmpChar[20], *ptrRet = NULL, *tmpKey;
+    XrmDatabase 	smBase = nullptr;
+    char		*tmpChar[20], *ptrRet = nullptr, *tmpKey;
     Status		newStat;
 	char		tmpMap[128];
 
@@ -1438,11 +1438,11 @@ SaveCustomizeSettings( void )
 
 	    tmpKey = strtok(tmpMap, "_");
 	    i = 0;
-	    while(tmpKey != NULL)
+	    while(tmpKey != nullptr)
 	    {
 		smToSet.pointerMap[i] = (char) atoi(tmpKey);
 		i++;
-		tmpKey = strtok(NULL, "_");
+		tmpKey = strtok(nullptr, "_");
 	    }
 
 
@@ -1558,7 +1558,7 @@ SaveCustomizeSettings( void )
      */
 
     fontPath = XGetFontPath(smGD.display, &numPaths);
-    if(fontPath != NULL) {
+    if(fontPath != nullptr) {
 	if(PrintFontPaths(&smBase,  fontPath, numPaths) != 0) {
 	    XFreeFontPath(fontPath);
 	    return(-1);
@@ -1617,13 +1617,13 @@ OutputResource( void )
     Atom 		actualType;
     int	 		actualFormat;
     unsigned long	nitems, leftover; 
-    char	 	*data = NULL;
+    char	 	*data = nullptr;
     XrmDatabase		db;
     Status		newStat;
-    char		*fontBuf = NULL, *langPtr, tmpChar[20], *sessionRes;
+    char		*fontBuf = nullptr, *langPtr, tmpChar[20], *sessionRes;
     float		fltYRes;
     int			intYRes;
-    char                *preeditBuf = NULL;
+    char                *preeditBuf = nullptr;
 
     /*
      * Add anything to the Resource Manager property that needs to be added
@@ -1634,7 +1634,7 @@ OutputResource( void )
      */
     *resSpec = 0;
     langPtr = getenv("LANG");
-    if((langPtr != NULL) && (*langPtr != 0))
+    if((langPtr != nullptr) && (*langPtr != 0))
     {
 	snprintf(resSpec, resSize, "%s*%s: %s\n", SM_RESOURCE_NAME, SmNsessionLang,
 		langPtr);
@@ -1994,7 +1994,7 @@ PrintFontPaths(
 	{
 	    resSize += 5000;
 	    resSpec = (char *) SM_REALLOC(resSpec, resSize * sizeof(char));
-	    if (resSpec==NULL)
+	    if (resSpec==nullptr)
 	    {
 		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 		return(-1);
@@ -2124,7 +2124,7 @@ PrintKeyboardControl(
 			resSize += 5000;
 			resSpec = (char *) SM_REALLOC(resSpec,
 						   resSize * sizeof(char));
-			if (resSpec==NULL)
+			if (resSpec==nullptr)
 			{
 			    PrintErrnoError(DtError,
 					    smNLS.cantMallocErrorString);
@@ -2200,7 +2200,7 @@ PrintPointerMapping(
 	{
 	    resSize += 5000;
 	    resSpec = (char *) SM_REALLOC(resSpec, resSize * sizeof(char));
-	    if (resSpec==NULL)
+	    if (resSpec==nullptr)
 	    {
 		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 		return(-1);

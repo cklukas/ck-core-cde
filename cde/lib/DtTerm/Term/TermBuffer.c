@@ -322,7 +322,7 @@ _DtTermBufferResize
 	    newLineBuffer = (termChar *) malloc((unsigned) 
 					*newCols * BYTES_PER_CHAR(tb));
 	    
-	    if (newLineBuffer == NULL)
+	    if (newLineBuffer == nullptr)
 	    {
 		/*
 		** line buffer malloc failed, we can only increase the
@@ -351,7 +351,7 @@ _DtTermBufferResize
 	** the number of rows is increasing
 	*/
 	lines = (DtLine *) malloc((unsigned) *newRows * sizeof(DtLine));
-	if (lines != NULL)
+	if (lines != nullptr)
 	{
 	    /*
 	    ** the malloc succeeded, copy the old information, and then
@@ -373,7 +373,7 @@ _DtTermBufferResize
 		lines[i] = (DtLine) malloc(SIZE_OF_LINE(tb));
 		if (lines[i])
 		{
-		    DT_ENH(lines[i])    = NULL;
+		    DT_ENH(lines[i])    = nullptr;
 		    BUFFER(lines[i]) = (termChar *) malloc((unsigned) COLS(tb) *
 							   BYTES_PER_CHAR(tb));
 		    if (BUFFER(lines[i]))
@@ -526,9 +526,9 @@ _DtTermInsertEnhancements
     ** the dirty bit is clear and there are no ehancements on
     ** this line...
     */
-    if ((col < WIDTH(line)) && ((DT_ENH_DIRTY(tb)) || (enh != NULL)))
+    if ((col < WIDTH(line)) && ((DT_ENH_DIRTY(tb)) || (enh != nullptr)))
     {
-        if ((enh == NULL))
+        if ((enh == nullptr))
         {
             /* 
             ** there are currently no enhancements on this line, 
@@ -592,7 +592,7 @@ _DtTermBufferDelete
     short      *count        /* number of columns to delete     */
 )
 {
-    _DtTermPrimBufferDelete(tb, row, col, count, NULL, NULL);
+    _DtTermPrimBufferDelete(tb, row, col, count, nullptr, nullptr);
 }
 
 /* 
@@ -615,7 +615,7 @@ _DtTermDeleteEnhancement
     line = DT_LINE_OF_TBUF(tb, row);
     enh  = DT_ENH(line);
 
-    if ((enh == NULL) || (WIDTH(line) <= col))
+    if ((enh == nullptr) || (WIDTH(line) <= col))
     {
         /* 
         ** no enhancements, or at (or past) the end of the line, return
@@ -664,13 +664,13 @@ _DtTermBufferCreateEnhancement
     /*
     ** If this row already has enhancement blocks allocated, return.
     */
-    if (*enh == NULL)
+    if (*enh == nullptr)
     {
         /*
         ** Otherwise, allocate and initialize a row of enhancement blocks.
         */
         *enh = (DtEnh) malloc(MAX_COLS(tb) * sizeof(DtTermEnhPart));
-        if (*enh == NULL)
+        if (*enh == nullptr)
         {
             return(False);
         }
@@ -815,7 +815,7 @@ _DtTermGetEnhancement
     /*
     ** point to the correct enhancement chunk.
     */
-    if (DT_ENH(line) == NULL || (WIDTH(line) <= col))
+    if (DT_ENH(line) == nullptr || (WIDTH(line) <= col))
     {
         /*
         ** There are either no enhancements allocated for this line, 
@@ -845,7 +845,7 @@ _DtTermGetEnhancement
     /*
     ** Now count how many characters are affected by the enhancements.
     */
-    if (DT_ENH(line) == NULL)
+    if (DT_ENH(line) == nullptr)
     {
         /*
         ** There no enhancements allocated for this line, the default
@@ -941,7 +941,7 @@ _DtTermClearLine
     line = DT_LINE_OF_TBUF(tb, row);
     enh  = DT_ENH(line);
     
-    if (enh != NULL)
+    if (enh != nullptr)
     {
         /*
         ** We have enhancements, clear all those between the current
@@ -1248,7 +1248,7 @@ _DtTermPrintBuffer
     short j;
     short k;
 
-    if (tb == NULL) {
+    if (tb == nullptr) {
         printf("TermBuffer has been freed.\n");
         return;
     }

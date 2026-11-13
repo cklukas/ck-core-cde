@@ -296,7 +296,7 @@ with tempfile.TemporaryDirectory(prefix="suid-root-", dir=os.environ.get("TMPDIR
     env = dict(os.environ, ASAN_OPTIONS="detect_leaks=0:" + os.environ.get("ASAN_OPTIONS", ""))
     for variant, defines in variants.items():
         binary = work / ("test-" + variant.replace("+", "-"))
-        subprocess.run(cc + ["-std=gnu11", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
+        subprocess.run(cc + ["-std=gnu23", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
                              "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined",
                              "-Wno-unused-function", "-Wno-unused-variable"] + defines
                        + [str(work / "test.c"), "-o", str(binary)], check=True)

@@ -86,7 +86,7 @@ main(int argc, char **argv)
             errno = 0;
             VERIFY(DtfileProcessWriteAll(-1, data, sizeof(data)) == -1 && errno == EINVAL);
             errno = 0;
-            VERIFY(DtfileProcessWriteAll(1, NULL, 1) == -1 && errno == EINVAL);
+            VERIFY(DtfileProcessWriteAll(1, nullptr, 1) == -1 && errno == EINVAL);
         }
         else
         {
@@ -119,7 +119,7 @@ main(int argc, char **argv)
     }
     else if (strcmp(case_name, "null") == 0)
     {
-        errno = 0; VERIFY(DtfileProcessPipe(NULL) == -1 && errno == EINVAL);
+        errno = 0; VERIFY(DtfileProcessPipe(nullptr) == -1 && errno == EINVAL);
     }
     else
     {

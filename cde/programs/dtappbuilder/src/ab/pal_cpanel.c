@@ -124,10 +124,10 @@ PalItemInfo cpanel_palitem_rec = {
 
     /* type             */  AB_TYPE_CONTAINER,
     /* name             */  "Control Pane",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  cpanel_initialize,
     /* is_a_test        */  obj_is_control_panel,
     /* prop_initialize  */  cpanel_prop_init,
@@ -249,12 +249,12 @@ cpanel_prop_init(
     if (dtb_cpanel_prop_dialog_initialize(cgen, parent) == 0)
     {
 	pcs->prop_sheet = cgen->attrs_ctrlpanel;
-        pcs->current_obj = NULL;
+        pcs->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pcs->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -349,7 +349,7 @@ cpanel_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-	return NULL;
+	return nullptr;
 
 }  
 
@@ -372,7 +372,7 @@ cpanel_prop_clear(
 {
     PropCPanelSettingsRec	*pcs = &(prop_cpanel_settings_rec[type]);
 
-    if (pcs->current_obj == NULL)
+    if (pcs->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -401,7 +401,7 @@ cpanel_prop_clear(
     /* Clear Color */
     prop_colorfield_set_value(&(pcs->bg_color), "", False);
 
-    pcs->current_obj = NULL;
+    pcs->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -420,9 +420,9 @@ cpanel_prop_load(
     BOOL		   	editable;
     BOOL                        load_all = (loadkey & LoadAll);
  
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pcs->current_obj != NULL)
+        if (pcs->current_obj != nullptr)
             obj = pcs->current_obj;
         else
             return ERROR;

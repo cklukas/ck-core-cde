@@ -108,7 +108,7 @@ DtkshCvtWindowToString(
             "DtkshCvtWindowToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -138,7 +138,7 @@ DtkshCvtScreenToString(
             "DtkshCvtScreenToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -159,9 +159,9 @@ DtkshCvtStringToScreen(
    char * errmsg;
    char * p;
 
-   if (fval->size <= 0 || fval->addr == NULL) 
+   if (fval->size <= 0 || fval->addr == nullptr) 
    {
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -174,7 +174,7 @@ DtkshCvtStringToScreen(
    }
    else
    {
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -190,9 +190,9 @@ DtkshCvtStringToTopItemPosition(
    static int topItemPosition;
    char * p;
 
-   if (fval->size <= 0 || fval->addr == NULL) 
+   if (fval->size <= 0 || fval->addr == nullptr) 
    {
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -205,7 +205,7 @@ DtkshCvtStringToTopItemPosition(
    }
    else
    {
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -228,7 +228,7 @@ DtkshCvtHexIntToString(
            "DtkshCvtHexIntToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -260,7 +260,7 @@ DtkshCvtIntToString(
              "DtkshCvtIntToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -289,7 +289,7 @@ DtkshCvtBooleanToString(
              "DtkshCvtBooleanToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -318,9 +318,9 @@ DtkshCvtStringToPointer(
 {
    static XtPointer ret;
 
-   if (fval->size <= 0 || fval->addr == NULL) 
+   if (fval->size <= 0 || fval->addr == nullptr) 
    {
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -350,20 +350,20 @@ DtkshCvtStringToWidget(
              "DtkshCvtStringToWidget: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
    wname = (char *)fval->addr;
-   if (wname == NULL || wname[0] == '\0' || strcmp(wname, "NULL") == 0) 
+   if (wname == nullptr || wname[0] == '\0' || strcmp(wname, "NULL") == 0) 
    {
-      static Widget NullWidget = NULL;
+      static Widget NullWidget = nullptr;
 
       toval->addr = (XtPointer)&NullWidget;
       toval->size = sizeof(Widget);
       return;
    }
-   if ((w = str_to_wtab("DtkshCvtStringToWidget", wname)) != NULL) 
+   if ((w = str_to_wtab("DtkshCvtStringToWidget", wname)) != nullptr) 
    {
       wid= w->w;
       toval->addr = (XtPointer)&wid;
@@ -374,7 +374,7 @@ DtkshCvtStringToWidget(
     * If we couldn't find it in our table, try looking up the
     * name in standard resource format.
     */
-   if ((wid = DtkshNameToWidget(wname)) != NULL) 
+   if ((wid = DtkshNameToWidget(wname)) != nullptr) 
    {
       toval->addr = (XtPointer)&wid;
       toval->size = sizeof(Widget);
@@ -392,7 +392,7 @@ DtkshCvtStringToWidget(
       XtWarning(errbuf);
       free(errmsg);
    }
-   toval->addr = NULL;
+   toval->addr = nullptr;
    toval->size = 0;
 }
 
@@ -417,7 +417,7 @@ DtkshCvtStringToCallback(
              "DtkshCvtStringToCallback: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -428,7 +428,7 @@ DtkshCvtStringToCallback(
    cdata = GetNewCBData((String)fval->addr, w, DTKSHConversionResource, None);
 
    cb[0].closure = (caddr_t)cdata;
-   cb[1].callback = NULL;
+   cb[1].callback = nullptr;
    toval->addr = (XtPointer)&cb;
    toval->size = sizeof(XtCallbackList);
 }
@@ -454,11 +454,11 @@ DtkshCvtCallbackToString(
           "DtkshCvtCallbackToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
-   if (fval->addr == NULL) 
+   if (fval->addr == nullptr) 
    {
       toval->addr = ": ;";
       toval->size = 1;
@@ -466,7 +466,7 @@ DtkshCvtCallbackToString(
    }
    p = &buf[0];
    *p = '\0';
-   for (cb = ((XtCallbackList *)(fval->addr))[0]; cb->callback != NULL; cb++) 
+   for (cb = ((XtCallbackList *)(fval->addr))[0]; cb->callback != nullptr; cb++) 
    {
       if (cb->callback == stdCB)
       {
@@ -505,30 +505,30 @@ DtkshCvtWidgetToString(
    wtab_t *w;
    char * errmsg;
 
-   if (fval->size != sizeof(Widget) || fval->addr == NULL) 
+   if (fval->size != sizeof(Widget) || fval->addr == nullptr) 
    {
       errmsg = strdup(GETMESSAGE(
            "DtkshCvtWidgetToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
    widget = ((Widget *)fval->addr)[0];
-   if (widget == NULL) 
+   if (widget == nullptr) 
    {
       toval->addr = (XtPointer)("NULL");
       toval->size = 5;
       return;
    }
-   if ((w = widget_to_wtab(widget)) == NULL) 
+   if ((w = widget_to_wtab(widget)) == nullptr) 
    {
       errmsg = strdup(GETMESSAGE(
           "DtkshCvtWidgetToString: Unable to find a name for the widget"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -567,7 +567,7 @@ static EventMaskTable eventMasks[] = {
    {"PropertyChangeMask", PropertyChangeMask},
    {"ColormapChangeMask", ColormapChangeMask},
    {"OwnerGrabButtonMask", OwnerGrabButtonMask},
-   {NULL, NoEventMask},
+   {nullptr, NoEventMask},
 };
 
 
@@ -588,7 +588,7 @@ DtkshCvtStringToEventMask(
    toval->addr = (XtPointer)&eventMask;
    toval->size = sizeof(EventMask);
 
-   if (fval->size <= 0 || fval->addr == NULL) 
+   if (fval->size <= 0 || fval->addr == nullptr) 
       return;
 
    ptr = eventMaskString = strdup(fval->addr);
@@ -609,7 +609,7 @@ DtkshCvtStringToEventMask(
             break;
          }
       }
-      ptr = strtok(NULL, "|");
+      ptr = strtok(nullptr, "|");
    }
 
    XtFree(eventMaskString);
@@ -649,19 +649,19 @@ DtkshCvtWidgetClassToString(
            "DtkshCvtWidgetClassToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
 
-   if ((wc = ((WidgetClass *)(fval->addr))[0]) == NULL)
+   if ((wc = ((WidgetClass *)(fval->addr))[0]) == nullptr)
    {
       toval->addr = "";
       toval->size = 1;
       return;
    }
 
-   for (i = 0; C[i].cname != NULL; i++)
+   for (i = 0; C[i].cname != nullptr; i++)
    {
       if (C[i].class == wc)
       {
@@ -676,7 +676,7 @@ DtkshCvtWidgetClassToString(
           "DtkshCvtWidgetClassToString: Unknown widget class"));
    XtWarning(errmsg);
    free(errmsg);
-   toval->addr = NULL;
+   toval->addr = nullptr;
    toval->size = 0;
    return;
 }
@@ -697,15 +697,15 @@ DtkshCvtStringToWidgetClass(
    char * wcName;
    classtab_t * classtab;
 
-   if (fval->size <= 0 || fval->addr == NULL) 
+   if (fval->size <= 0 || fval->addr == nullptr) 
    {
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
 
    wcName = (char *)(fval->addr);
-   if ((classtab = dtksh_lookup_class(wcName)) != NULL)
+   if ((classtab = dtksh_lookup_class(wcName)) != nullptr)
    {
       wc = classtab->class;
       toval->addr = (caddr_t)&wc;
@@ -718,7 +718,7 @@ DtkshCvtStringToWidgetClass(
           "DtkshCvtStringToWidgetClass: Unknown widget class name"));
    XtWarning(errmsg);
    free(errmsg);
-   toval->addr = NULL;
+   toval->addr = nullptr;
    toval->size = 0;
    return;
 }
@@ -732,7 +732,7 @@ static MWMTable mwmDecorations[] = {
    {"MWM_DECOR_MENU", MWM_DECOR_MENU},
    {"MWM_DECOR_MINIMIZE", MWM_DECOR_MINIMIZE},
    {"MWM_DECOR_MAXIMIZE", MWM_DECOR_MAXIMIZE},
-   {NULL, 0},
+   {nullptr, 0},
 };
 
 static MWMTable mwmFunctions[] = {
@@ -742,7 +742,7 @@ static MWMTable mwmFunctions[] = {
    {"MWM_FUNC_MINIMIZE", MWM_FUNC_MINIMIZE},
    {"MWM_FUNC_MAXIMIZE", MWM_FUNC_MAXIMIZE},
    {"MWM_FUNC_CLOSE", MWM_FUNC_CLOSE},
-   {NULL, 0},
+   {nullptr, 0},
 };
 
 static void
@@ -766,7 +766,7 @@ CvtStringToMWMValue(
    toval->addr = (XtPointer)&value;
    toval->size = sizeof(int);
 
-   if (fval->size <= 0 || fval->addr == NULL) 
+   if (fval->size <= 0 || fval->addr == nullptr) 
       return;
 
    ptr = valueString = strdup(fval->addr);
@@ -795,7 +795,7 @@ CvtStringToMWMValue(
             break;
          }
       }
-      ptr = strtok(NULL, "|");
+      ptr = strtok(nullptr, "|");
    }
 
    XtFree(valueString);
@@ -812,7 +812,7 @@ CvtMWMValueToString(
         XrmValuePtr toval,
         XtPointer data )
 {
-   static char *string = NULL;
+   static char *string = nullptr;
    int value;
    int i = 0;
    Boolean firstOne = True;
@@ -919,9 +919,9 @@ DtkshCvtStringToPanedWinPosIndex(
    char * pos;
    char * p;
 
-   if (fval->size <= 0 || fval->addr == NULL) 
+   if (fval->size <= 0 || fval->addr == nullptr) 
    {
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -950,7 +950,7 @@ DtkshCvtPanedWinPosIndexToString(
 
    if (fval->size != sizeof(short))
    {
-      toval->addr = NULL;
+      toval->addr = nullptr;
       toval->size = 0;
       return;
    }
@@ -979,48 +979,48 @@ DtkshCvtStringToPrintSetupProc(
 	extern char *DTKSHConversionResource;
 	ProcInfo_t *pinfo;
 
-	if (w != NULL) {
-		if (w->info == NULL) {
+	if (w != nullptr) {
+		if (w->info == nullptr) {
 			w->info = (XtPointer)XtMalloc(sizeof(ProcInfo_t));
 			memset(w->info, '\0', sizeof(ProcInfo_t));
 		}
 		pinfo = (ProcInfo_t *)w->info;
 		if (strcmp(DTKSHConversionResource, CONSTCHAR "printerInfoProc") == 0) {
-			if (pinfo->printerInfoProcCommand != NULL)
+			if (pinfo->printerInfoProcCommand != nullptr)
 				XtFree(pinfo->printerInfoProcCommand);
 			pinfo->printerInfoProcCommand = strdup((String)fval->addr);
 			proc = stdPrinterInfoProc;
 		} else if (strcmp(DTKSHConversionResource, CONSTCHAR "selectFileProc") == 0) {
-			if (pinfo->selectFileProcCommand != NULL)
+			if (pinfo->selectFileProcCommand != nullptr)
 				XtFree(pinfo->selectFileProcCommand);
 			pinfo->selectFileProcCommand = strdup((String)fval->addr);
 			proc = stdSelectFileProc;
 		}
 		else if (strcmp(DTKSHConversionResource, CONSTCHAR "selectPrinterProc") == 0) {
-			if (pinfo->selectPrinterProcCommand != NULL)
+			if (pinfo->selectPrinterProcCommand != nullptr)
 				XtFree(pinfo->selectPrinterProcCommand);
 			pinfo->selectPrinterProcCommand = strdup((String)fval->addr);
 			proc = stdSelectPrinterProc;
 		}
 		else if (strcmp(DTKSHConversionResource, CONSTCHAR "setupProc") == 0) {
-			if (pinfo->setupProcCommand != NULL)
+			if (pinfo->setupProcCommand != nullptr)
 				XtFree(pinfo->setupProcCommand);
 			pinfo->setupProcCommand = strdup((String)fval->addr);
 			proc = stdSetupProc;
 		}
 		else if (strcmp(DTKSHConversionResource, CONSTCHAR "verifyPrinterProc") == 0) {
-			if (pinfo->verifyPrinterProcCommand != NULL)
+			if (pinfo->verifyPrinterProcCommand != nullptr)
 				XtFree(pinfo->verifyPrinterProcCommand);
 			pinfo->verifyPrinterProcCommand = strdup((String)fval->addr);
 			proc = stdVerifyPrinterProc;
 		}
 		else {
-			XtWarningMsg(CONSTCHAR "CvtStringToPrintSetupProc", CONSTCHAR "unsupported DtPrintSetupBox resource.", CONSTCHAR "XtToolkitError", "This resource is not currently supported by dtksh.", NULL, 0);
+			XtWarningMsg(CONSTCHAR "CvtStringToPrintSetupProc", CONSTCHAR "unsupported DtPrintSetupBox resource.", CONSTCHAR "XtToolkitError", "This resource is not currently supported by dtksh.", nullptr, 0);
 		}
 	} else {
-		XtWarningMsg(CONSTCHAR "CvtStringToPrintSetupProc", CONSTCHAR "widget must exist.", CONSTCHAR "XtToolkitError", "This resource cannot be set at creation time by dtksh, use XtSetValues after creation instead.", NULL, 0);
+		XtWarningMsg(CONSTCHAR "CvtStringToPrintSetupProc", CONSTCHAR "widget must exist.", CONSTCHAR "XtToolkitError", "This resource cannot be set at creation time by dtksh, use XtSetValues after creation instead.", nullptr, 0);
 		toval->size = 0;
-		toval->addr = NULL;
+		toval->addr = nullptr;
 		return;
 	}
 

@@ -449,7 +449,7 @@ static void     init_treebase (void)
     total_count = 0L;
 
     /* .huf table file does not exist--zero all counts */
-    if ((instream_huf = fopen (filename_huf, "r")) == NULL) {
+    if ((instream_huf = fopen (filename_huf, "r")) == nullptr) {
 	no_huffcode_file = TRUE;
 	for (i = 0; i < 257; i++) {
 	    hctree1[i].bit = LAST_BIT;
@@ -467,13 +467,13 @@ static void     init_treebase (void)
      */
     else {
 	no_huffcode_file = FALSE;
-	if(NULL == fgets (filebuf, sizeof (filebuf) - 1, instream_huf)) {
+	if(nullptr == fgets (filebuf, sizeof (filebuf) - 1, instream_huf)) {
 		fprintf (stderr, "No first line in file\n");
 		exit(2);
 	}
 	/* discard this first line (don't need id stamp) */
 	while (fgets (filebuf, sizeof (filebuf) - 1, instream_huf)
-	    != NULL) {
+	    != nullptr) {
 	    i = atoi (strtok (filebuf, DELIMITERS));	/* char */
 	    if (i < 0 || i > 256) {
 		fprintf (stderr, CATGETS(dtsearch_catd, MS_huff, 33,
@@ -481,10 +481,10 @@ static void     init_treebase (void)
 		    filename_huf);
 		exit (2);
 	    }
-	    strtok (NULL, DELIMITERS);	/* skip over current huff
+	    strtok (nullptr, DELIMITERS);	/* skip over current huff
 					 * code */
 	    hctree1[i].count = (i == 256) ?
-		0L : atol (strtok (NULL, DELIMITERS));
+		0L : atol (strtok (nullptr, DELIMITERS));
 	    hctree1[i].bit = LAST_BIT;
 	    hctree1[i].father = -1;
 	    hctree1[i].son0 = -1;
@@ -533,13 +533,13 @@ static void     huffman_code (time_t idstamp)
      * we are ready to write.  
      * Open both output files and verify they are not write protected.
      */
-    if ((outstream_huc = fopen (filename_huc, "w")) == NULL) {
+    if ((outstream_huc = fopen (filename_huc, "w")) == nullptr) {
 	fprintf (stderr, CATGETS(dtsearch_catd, MS_huff, 34,
 	    "424 File '%s' failed to open for write.  Is it read-only?\n"),
 	    filename_huc);
 	exit (2);
     }
-    if ((outstream_huf = fopen (filename_huf, "w")) == NULL) {
+    if ((outstream_huf = fopen (filename_huf, "w")) == nullptr) {
 	fprintf (stderr, CATGETS(dtsearch_catd, MS_huff, 34,
 	    "439 File '%s' failed to open for write.  Is it read-only?\n"),
 	    filename_huf);
@@ -693,7 +693,7 @@ static void     user_args_processor (int argc, char **argv)
      * blow away the old file.
      */
     if (!OK_to_overwrite)
-	if ((stream = fopen (filename_huc, "r")) != NULL) {
+	if ((stream = fopen (filename_huc, "r")) != nullptr) {
 	    fclose (stream);
 	    printf (CATGETS(dtsearch_catd, MS_huff, 38,
 		"Decode file '%s' already exists.  "
@@ -757,7 +757,7 @@ int             main (int argc, char *argv[])
 
     /* read the input file and count its bytes */
     if (input_file_specified) {
-	if ((instream = fopen (filename_input, "rb")) == NULL) {
+	if ((instream = fopen (filename_input, "rb")) == nullptr) {
     BAD_INPUT_FILE:
 	    fprintf (stderr, CATGETS(dtsearch_catd, MS_huff, 44,
 		"Could not open input file '%s' or access status: %s\n"),
@@ -783,7 +783,7 @@ int             main (int argc, char *argv[])
 		    (bytes_in * 100L) / fstat_input.st_size,
 		    bytes_in / 1000L,
 		    (fstat_input.st_size - bytes_in) *
-		    (time (NULL) - start_stamp) / bytes_in);
+		    (time (nullptr) - start_stamp) / bytes_in);
 	}	/* end read loop for each char in input file */
 
 	putchar ('\n');

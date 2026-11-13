@@ -26,12 +26,12 @@ import sys
 import tempfile
 
 source = Path(os.environ.get("DTSESSION_SOURCE") or Path(__file__).resolve().parents[1])
-text = (source / "SmLock.c").read_text(errors="replace")
+text = re.sub(r"\bnullptr\b", "NULL", (source / "SmLock.c").read_text(errors="replace"))
 
 # --- source guard: the only way to unlock is the password of the session's user, through PAM ---
 problems = []
 sources = sorted(source.glob("*.c")) + sorted(source.glob("*.h"))
-code = {p.name: re.sub(r"/\*.*?\*/", "", p.read_text(errors="replace"), flags=re.S) for p in sources}
+code = {p.name: re.sub(r"/\*.*?\*/", "", re.sub(r"\bnullptr\b", "NULL", p.read_text(errors="replace")), flags=re.S) for p in sources}
 
 # 1. no other way to check a password and no other account: not in the lock, not anywhere in the program
 forbidden = [r"\bcrypt\s*\(", r"<crypt\.h>", r"<shadow\.h>", r"\bgetspnam\b", r"\bgetpwnam\w*\s*\(",

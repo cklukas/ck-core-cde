@@ -100,7 +100,7 @@
 
 static char* RESTRICTED_HEADER = "-restricted";
 
-static Tt_pattern * FileManagerToolTalkPattern = NULL;
+static Tt_pattern * FileManagerToolTalkPattern = nullptr;
 static Boolean sendStopped = False;
 XtInputId ProcessToolTalkInputId = 0;
 
@@ -172,13 +172,13 @@ FinalizeToolTalkSession(void)
   if( FileManagerToolTalkPattern &&
       tt_ptr_error( FileManagerToolTalkPattern ) == TT_OK )
   {
-    ttRc = ttdt_session_quit( NULL,
+    ttRc = ttdt_session_quit( nullptr,
                               FileManagerToolTalkPattern,
                               1 );
     if( ProcessToolTalkInputId )
       XtRemoveInput( ProcessToolTalkInputId );
   }
-  ttRc = ttdt_close( NULL, NULL, sendStopped );
+  ttRc = ttdt_close( nullptr, nullptr, sendStopped );
 }
 
 void
@@ -296,7 +296,7 @@ InitializeToolTalkProcid( int *ttFd, Widget topLevel, Boolean sendStarted )
 
 #ifdef DT_PERFORMANCE
    printf("  InitializeToolTalkProcid\n");
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
 #endif
   sendStopped = sendStarted;
   procId = ttdt_open( ttFd,
@@ -306,7 +306,7 @@ InitializeToolTalkProcid( int *ttFd, Widget topLevel, Boolean sendStarted )
                       sendStarted );
 
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -324,7 +324,7 @@ InitializeToolTalkProcid( int *ttFd, Widget topLevel, Boolean sendStarted )
   }
   else
   {
-    ttdt_close( NULL, NULL, sendStopped );
+    ttdt_close( nullptr, nullptr, sendStopped );
     return( ttstat );
   }
 }
@@ -354,23 +354,23 @@ InitializeToolTalkSession( Widget topLevel, int ttFd )
      * tttk_Xt_input_handler will process it.  Otherwise,
      * tttk_Xt_input_handler will just return.
      */
-    tttk_Xt_input_handler( NULL, 0, 0 );
+    tttk_Xt_input_handler( nullptr, 0, 0 );
 
     FileManagerToolTalkPattern = ttdt_session_join( tt_default_session( ),
                                                     SessionCallback,
                                                     topLevel,
-                                                    NULL,
+                                                    nullptr,
                                                     1,
                                                     TTDT_SESSION_NO_REQUESTS );
     if( tt_is_err( tt_ptr_error( FileManagerToolTalkPattern )))
     {
-      ttdt_close( NULL, NULL, sendStopped );
+      ttdt_close( nullptr, nullptr, sendStopped );
       return( 0 );
     }
   }
   else
   {
-    ttdt_close( NULL, NULL, sendStopped );
+    ttdt_close( nullptr, nullptr, sendStopped );
     return( 0 );
   }
   return( TT_OK );

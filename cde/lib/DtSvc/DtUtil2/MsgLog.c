@@ -66,14 +66,14 @@
 /* 
  * Static variables
  */
-static char 		* information_string = NULL;
-static char 		* stderr_string = NULL;
-static char 		* debug_string = NULL;
-static char 		* warning_string = NULL;
-static char 		* error_string = NULL;
-static char 		* unknown_string = NULL;
+static char 		* information_string = nullptr;
+static char 		* stderr_string = nullptr;
+static char 		* debug_string = nullptr;
+static char 		* warning_string = nullptr;
+static char 		* error_string = nullptr;
+static char 		* unknown_string = nullptr;
 #ifndef MSGLOG_CLIENT_ONLY
-static DtMsgLogHandler 	saved_msglog_handler 	= NULL;
+static DtMsgLogHandler 	saved_msglog_handler 	= nullptr;
 #endif /* MSGLOG_CLIENT_ONLY */
 
 
@@ -150,17 +150,17 @@ static char * get_file_name (
 	va_list		args;
 
 	file = malloc(MAXPATHLEN+1);
-	if (! file) return NULL;
+	if (! file) return nullptr;
 
 	Va_start (args, format);
 
 	(void) vsprintf (file, format, args);
 	va_end (args);
 
-	if ((*fp = fopen (file, type)) == NULL)
+	if ((*fp = fopen (file, type)) == nullptr)
         {
             free(file);
-            return (NULL);
+            return (nullptr);
         }
 
 	return file;
@@ -204,50 +204,50 @@ static char * check_possible_files (
 				   "%s/%s/%s",
 				   getenv("HOME"),
 				   DtPERSONAL_CONFIG_DIRECTORY,
-				   LOGFILE_NAME)) != NULL)
+				   LOGFILE_NAME)) != nullptr)
 		return (file);
 
-	if ((env = getenv ("DTUSERSESSION")) != NULL) {
+	if ((env = getenv ("DTUSERSESSION")) != nullptr) {
 		if ((file = get_file_name (type,
 					   fp,
 					   "%s/%s/%s",
 					   CDE_VAR_TMP_DIR,
 					   env,
-					   LOGFILE_NAME)) != NULL)
+					   LOGFILE_NAME)) != nullptr)
 			return (file);
 	}
 
-	if ((env = getenv ("LOGNAME")) != NULL) {
+	if ((env = getenv ("LOGNAME")) != nullptr) {
 		if ((file = get_file_name (type,
 					   fp,
 					   "%s/%s.%s",
 					   TMP_DIR,
 					   env,
-					   LOGFILE_NAME)) != NULL)
+					   LOGFILE_NAME)) != nullptr)
 			return (file);
 	}
 
-	if ((env = getenv ("USER")) != NULL) {
+	if ((env = getenv ("USER")) != nullptr) {
 		if ((file = get_file_name (type,
 					   fp,
 					   "%s/%s.%s",
 					   TMP_DIR,
 					   env,
-					   LOGFILE_NAME)) != NULL)
+					   LOGFILE_NAME)) != nullptr)
 			return (file);
 	}
 
-	if ((pwd_ret = _XGetpwuid (getuid(), pwd_buf)) != NULL) {
+	if ((pwd_ret = _XGetpwuid (getuid(), pwd_buf)) != nullptr) {
 		if ((file = get_file_name (type,
 					   fp,
 					   "%s/%s.%s",
 					   TMP_DIR,
 					   pwd_ret->pw_name,
-					   LOGFILE_NAME)) != NULL)
+					   LOGFILE_NAME)) != nullptr)
 			return (file);
 	}
 
-	return (NULL);
+	return (nullptr);
 }
 
 /*
@@ -262,8 +262,8 @@ static void DtMsgLogDefaultHandler (
 	const char 		* format,
 	va_list			args )
 {
-	FILE 			* fp = NULL;
-	char			* file = NULL;
+	FILE 			* fp = nullptr;
+	char			* file = nullptr;
 	time_t 			now;
 	char			* msg_string;  /* temp msg type string */
 	int			num_bytes;
@@ -320,7 +320,7 @@ static void DtMsgLogDefaultHandler (
 	 * Write to stderr if a log file cannot be determined
 	 * or if it isn't writeable.
 	 */
-	if ((fp = DtMsgLogOpenFile (OPEN_FLAG, &file)) == NULL)
+	if ((fp = DtMsgLogOpenFile (OPEN_FLAG, &file)) == nullptr)
 		fp = stderr;
 #ifdef NLS16
 
@@ -387,7 +387,7 @@ void DtMsgLogMessage (
 	Va_start (args, format);
 #ifndef MSGLOG_CLIENT_ONLY
 	_DtSvcProcessLock();
-	if (saved_msglog_handler != NULL) {
+	if (saved_msglog_handler != nullptr) {
 		(*saved_msglog_handler) (program_name ? program_name : DtProgName,
 					 msg_type, format, args);
 		_DtSvcProcessUnlock();
@@ -421,15 +421,15 @@ DtMsgLogHandler DtMsgLogSetHandler (
 	DtMsgLogHandler 	previous_handler;
 
 	_DtSvcProcessLock();
-	if (handler == NULL) {
+	if (handler == nullptr) {
 		if (saved_msglog_handler) {
 			previous_handler = saved_msglog_handler;
-			saved_msglog_handler = NULL;
+			saved_msglog_handler = nullptr;
 			_DtSvcProcessUnlock();
 			return (previous_handler);
 		}
 		else {
-			saved_msglog_handler = NULL;
+			saved_msglog_handler = nullptr;
 			_DtSvcProcessUnlock();
 			return DtMsgLogDefaultHandler;
 		}
@@ -466,7 +466,7 @@ FILE * DtMsgLogOpenFile (
 	const char		* type,
 	char			** filename_return)	/* MODIFIED */
 {
-	FILE		* fp = NULL;
+	FILE		* fp = nullptr;
 	char		* pch;
 
 	pch = check_possible_files (type, &fp);

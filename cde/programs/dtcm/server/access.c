@@ -55,7 +55,7 @@ typedef struct uname_cache {
 	struct	uname_cache *next;
 } Uname_cache;
 
-static	Uname_cache	*ucache_list = NULL;
+static	Uname_cache	*ucache_list = nullptr;
 
 /******************************************************************************
  * forward declaration of static functions used within the file
@@ -87,7 +87,7 @@ _DtCmsV4LoadAndCheckAccess(
 {
 	CSA_return_code	stat;
 
-	if (target == NULL || sender == NULL || cal == NULL)
+	if (target == nullptr || sender == nullptr || cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCmsGetClientInfo(svcrq, sender)) != CSA_SUCCESS)
@@ -122,7 +122,7 @@ _DtCmsV5LoadAndCheckAccess(
 	boolean_t		isowner;
 
 
-	if (target == NULL || sender == NULL || cal == NULL)
+	if (target == nullptr || sender == nullptr || cal == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
 
 	if ((stat = _DtCmsGetClientInfo(svcrq, sender)) != CSA_SUCCESS)
@@ -162,9 +162,9 @@ _DtCmsGetClientInfo(struct svc_req *svcrq, char **source)
 	 * The caller gets no ownership of the name: it stays valid until the
 	 * next request asks for its client, so that no request leaks it.
 	 */
-	static char *client = NULL;
+	static char *client = nullptr;
 
-	if (source == NULL)
+	if (source == nullptr)
 	{
 		return (CSA_E_INVALID_PARAMETER);
 	}
@@ -172,12 +172,12 @@ _DtCmsGetClientInfo(struct svc_req *svcrq, char **source)
 	switch (svcrq->rq_cred.oa_flavor) {
 	case AUTH_UNIX:
 		unix_cred = (struct authunix_parms *) svcrq->rq_clntcred;
-		if (unix_cred == NULL)
+		if (unix_cred == nullptr)
 			return (CSA_E_NO_AUTHORITY);
-		if ((name = get_uname (unix_cred->aup_uid)) == NULL)
+		if ((name = get_uname (unix_cred->aup_uid)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		if ((uname = malloc(strlen(name) +
-		    strlen(unix_cred->aup_machname) + 2)) == NULL) {
+		    strlen(unix_cred->aup_machname) + 2)) == nullptr) {
 			free(name);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else {
@@ -209,12 +209,12 @@ _DtCmsIsFileOwner(char *owner, char *user, char *target)
 	if (debug) {
 		fprintf(stderr, "rpc.cmsd: %s, %s = %s, %s = %s, %s = %s\n",
 			"check file owner",
-			"owner", ((owner == NULL) ? "NULL" : owner),
-			"user", ((user == NULL) ? "NULL" : user),
-			"target", ((target == NULL) ? "NULL" : target));
+			"owner", ((owner == nullptr) ? "NULL" : owner),
+			"user", ((user == nullptr) ? "NULL" : user),
+			"target", ((target == nullptr) ? "NULL" : target));
 	}
 
-	if (owner == NULL || user == NULL || target == NULL)
+	if (owner == nullptr || user == nullptr || target == nullptr)
 		return (B_FALSE);
 
 	ptr1 = _DtCmGetPrefix(owner, '@');
@@ -234,9 +234,9 @@ _DtCmsIsFileOwner(char *owner, char *user, char *target)
 	if (ptr2)
 		ptr3 = strchr(ptr2, '.');
 	else
-		ptr3 = NULL;
+		ptr3 = nullptr;
 
-	if (ptr1 == NULL || ptr3 == NULL)
+	if (ptr1 == nullptr || ptr3 == nullptr)
 		/* assume that user is in the local domain */
 		return B_TRUE;
 	else
@@ -246,7 +246,7 @@ _DtCmsIsFileOwner(char *owner, char *user, char *target)
 extern void
 _DtCmsShowAccessList(Access_Entry_4 *l)
 {
-	while (l!=NULL) {
+	while (l!=nullptr) {
 		fprintf(stderr, "Access: %s(%c%c%c)\n", l->who,
 			l->access_type & access_read_4   ? 'r' : '_',
 			l->access_type & access_write_4  ? 'w' : '_',
@@ -260,7 +260,7 @@ _DtCmsCalendarAccessList(_DtCmsCalendar *cal)
 {
 	int		world = access_none_4;
 	Access_Entry_4	*a;
-	Access_Entry_4	*l = NULL;
+	Access_Entry_4	*l = nullptr;
 
 	l = combine_access_list(GET_R_ACCESS(cal), l, access_read_4, &world);
 	l = combine_access_list(GET_W_ACCESS(cal), l, access_write_4, &world);
@@ -280,16 +280,16 @@ _DtCmsCalendarAccessList(_DtCmsCalendar *cal)
 extern Privacy_Level_4
 _DtCmCheckPrivacyLevel(char **p_src, Appt_4 *p_appt)
 {
-	if (*p_src == NULL)
+	if (*p_src == nullptr)
 		return(public_4);
 
-	if (p_appt != NULL) {
+	if (p_appt != nullptr) {
 		/*
 		 * if p_src is the author of the appointment,
 		 * it should see everything.
 		 */
 		if (_DtCmIsSameUser(*p_src, p_appt->author)) {
-			*p_src = NULL;
+			*p_src = nullptr;
 			return(public_4);
 		} else
 			return(p_appt->privacy);
@@ -420,9 +420,9 @@ in_u_cache(uid_t uid)
 	Uname_cache *p_prev;
 	Uname_cache *p_cache;
 
-	p_prev = NULL;
+	p_prev = nullptr;
 	p_cache = ucache_list;
-	while (p_cache != NULL)
+	while (p_cache != nullptr)
 	{
 		if (p_cache->uid == uid)
 			return (p_cache);
@@ -440,7 +440,7 @@ in_u_cache(uid_t uid)
 			p_cache = p_cache->next;
 		}
 	}
-	return (NULL);
+	return (nullptr);
 }
 
 static char *
@@ -450,21 +450,21 @@ get_uname(uid_t uid)
 	char buff[16];
 	Uname_cache *ucache, *prev;
 
-	if ((ucache = in_u_cache(uid)) == NULL)
+	if ((ucache = in_u_cache(uid)) == nullptr)
 	{
-		if ((pw = getpwuid (uid)) == NULL) {
+		if ((pw = getpwuid (uid)) == nullptr) {
 			/* Can't map uid to name.  Don't cache the uid. */
 			sprintf (buff, "%ld", (long)uid);
 			return (strdup(buff));
 		}
 
 		if ((ucache = (Uname_cache *)malloc(sizeof(Uname_cache)))
-		    == NULL)
-			return (NULL);
+		    == nullptr)
+			return (nullptr);
 
-		if ((ucache->name = strdup(pw->pw_name)) == NULL) {
+		if ((ucache->name = strdup(pw->pw_name)) == nullptr) {
 			free(ucache);
-			return (NULL);
+			return (nullptr);
 		}
 		ucache->uid = uid;
 		ucache->next = ucache_list;
@@ -479,8 +479,8 @@ in_access_list(Access_Entry_4 *l, char *s)
 {
 	char	*name;
 
-	if (l==NULL || s==NULL) return(NULL);
-	while(l != NULL) {
+	if (l==nullptr || s==nullptr) return(nullptr);
+	while(l != nullptr) {
 		/* only for combining lists, not for authentication */
 		if (strcmp(l->who, s) == 0)
 			break;
@@ -499,7 +499,7 @@ combine_access_list(
 	Access_Entry_4	*a;
 	Access_Entry_4	*h = p_head;
 
-	while (p_list != NULL)
+	while (p_list != nullptr)
 	{
 		/* Delay to put the WORLD into the combined list because 
 		 * in_access_list() may return wrong result.
@@ -509,7 +509,7 @@ combine_access_list(
 		else
 		{
 			/* The user is not in the combined list, add to list. */
-			if ((a = in_access_list (h, p_list->who)) == NULL)
+			if ((a = in_access_list (h, p_list->who)) == nullptr)
 			{
 				a = _DtCm_make_access_entry4(p_list->who, type);
 				a->next = p_head;
@@ -538,7 +538,7 @@ _GetV4AccessRights(
 		return (CSA_SUCCESS);
 	}
 
-	for (alist = cal->alist; alist != NULL; alist = alist->next) {
+	for (alist = cal->alist; alist != nullptr; alist = alist->next) {
 		if (strcmp(alist->who, WORLD) == 0)
 			worldaccess = alist->access_type;
 		else if (_DtCmIsSameUser(sender, alist->who)) {
@@ -576,12 +576,12 @@ _GetV5AccessRights(
 	alist = cal->attrs[CSA_CAL_ATTR_ACCESS_LIST_I].value->\
 			item.access_list_value;
 
-	if (alist == NULL) {
+	if (alist == nullptr) {
 		*access = worldaccess | useraccess;
 		return (CSA_E_NO_AUTHORITY);
 	}
 
-	for (; alist != NULL; alist = alist->next) {
+	for (; alist != nullptr; alist = alist->next) {
 		if (strcmp(alist->user, WORLD) == 0)
 			worldaccess = alist->rights;
 		else if (_DtCmIsSameUser(sender, alist->user)) {

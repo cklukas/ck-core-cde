@@ -181,15 +181,15 @@ main(int argc, STRING *argv)
     int                 iRC= 0;         /* int return code */
     CmdlineArgsRec      cmdlineRec;
     CmdlineArgs         cmdline = &cmdlineRec;
-    ABObj               project = NULL;
-    ABObj               module = NULL;
+    ABObj               project = nullptr;
+    ABObj               module = nullptr;
     int                 num_modules_processed = 0;
     BOOL		genAllFiles = FALSE;
     BOOL		genMain = FALSE;
     BOOL		genMainOnly = FALSE;
     BOOL		useDefaultProject = FALSE;
     BOOL		showAllWindows = FALSE;
-    STRING		errmsg = NULL;
+    STRING		errmsg = nullptr;
 
 #ifdef DEBUG	/* performance testing */
     double		progStartSeconds = 0.0;
@@ -235,7 +235,7 @@ main(int argc, STRING *argv)
 
     util_init(&argc, &argv);
     dtb_save_command(argv[0]);
-    objxm_init(NULL);
+    objxm_init(nullptr);
     abmf_init();
 
     if ((iRC = parse_args(argc, argv, cmdline)) < 0)
@@ -257,10 +257,10 @@ main(int argc, STRING *argv)
     {
 	useDefaultProject = TRUE;
     }
-    else if (cmdline->proj_file == NULL)
+    else if (cmdline->proj_file == nullptr)
     {
         int numProjFiles = find_proj_file(cmdline);
-	if (cmdline->proj_file == NULL)
+	if (cmdline->proj_file == nullptr)
 	{
 	    if (!strlist_is_empty(cmdline->files))
 	    {
@@ -340,7 +340,7 @@ main(int argc, STRING *argv)
     util_dprintf(1, "main:%d mainonly:%d all:%d defaultproj:%d showall:%d\n",
 	genMain, genMainOnly, genAllFiles, useDefaultProject, showAllWindows);
 
-    if ((!util_be_silent()) && (cmdline->proj_file != NULL))
+    if ((!util_be_silent()) && (cmdline->proj_file != nullptr))
     {
 	char *proj_file_name = istr_string_safe(cmdline->proj_file);
         util_printf(
@@ -358,13 +358,13 @@ main(int argc, STRING *argv)
      **									**
      *********************************************************************/
 
-    if (cmdline->proj_file != NULL)
+    if (cmdline->proj_file != nullptr)
     {
 	/* project = bil_load_file(istr_string(cmdline->proj_file), NULL, project);
 	assert(project != NULL); */
 
         iRC = bil_load_file_and_resolve_all(
-				istr_string(cmdline->proj_file), NULL, &project);
+				istr_string(cmdline->proj_file), nullptr, &project);
 	if (iRC < 0)
 	{
 	    exitValue = 1;
@@ -376,35 +376,35 @@ main(int argc, STRING *argv)
     {
 	int	i = 0;
 	int	numModuleFiles = 0;
-	STRING	moduleFileName = NULL;
-	ABObj	fileObj = NULL;
-	char	*dotPtr = NULL;
+	STRING	moduleFileName = nullptr;
+	ABObj	fileObj = nullptr;
+	char	*dotPtr = nullptr;
 	char	projNameBuf[1024];
 	*projNameBuf = 0;
 
 	/*
 	 * Create the default project
 	 */
-	if (project != NULL)
+	if (project != nullptr)
 	{
 	    ABObj oldProject = project;
-	    project = obj_create(AB_TYPE_PROJECT, NULL);
+	    project = obj_create(AB_TYPE_PROJECT, nullptr);
 	    obj_move_children(project, oldProject);
 	    obj_destroy(oldProject);
 	}
 	else
 	{
-	    project = obj_create(AB_TYPE_PROJECT, NULL);
+	    project = obj_create(AB_TYPE_PROJECT, nullptr);
 	}
 	util_strncpy(projNameBuf, 
-			strlist_get_str(cmdline->files, 0, NULL), 1024);
+			strlist_get_str(cmdline->files, 0, nullptr), 1024);
 	dotPtr = strrchr(projNameBuf, '.');
-	if (dotPtr != NULL)
+	if (dotPtr != nullptr)
 	{
 	    *dotPtr = 0;
 	}
 	obj_set_name(project, projNameBuf);
-	obj_set_file(project, strlist_get_str(cmdline->files, 0, NULL));
+	obj_set_file(project, strlist_get_str(cmdline->files, 0, nullptr));
 	obj_set_is_default(project, TRUE);
 
 	/*
@@ -413,7 +413,7 @@ main(int argc, STRING *argv)
 	numModuleFiles = strlist_get_num_strs(cmdline->files);
 	for (i = 0; i < numModuleFiles; ++i)
 	{
-	    moduleFileName = strlist_get_str(cmdline->files, i, NULL);
+	    moduleFileName = strlist_get_str(cmdline->files, i, nullptr);
 	    fileObj = obj_create(AB_TYPE_FILE, project);
 	    obj_set_file(fileObj, moduleFileName);
 	}
@@ -471,10 +471,10 @@ main(int argc, STRING *argv)
      */
     if (showAllWindows)
     {
-	ABObj	window = NULL;
+	ABObj	window = nullptr;
 	AB_TRAVERSAL	trav;
 	for (trav_open(&trav, project, AB_TRAV_WINDOWS);
-	    (window = trav_next(&trav)) != NULL; )
+	    (window = trav_next(&trav)) != nullptr; )
 	{
 	    obj_set_is_initially_visible(window, TRUE);
 	}
@@ -593,7 +593,7 @@ parse_args(int argc, char *argv[], CmdlineArgs cmdline)
     cmdline->show_all_windows_set = FALSE;
     cmdline->write_main = FALSE;
     cmdline->merge_files = TRUE;
-    cmdline->proj_file = NULL;
+    cmdline->proj_file = nullptr;
     cmdline->prototype_funcs = TRUE;
     cmdline->source_browser = FALSE;
     cmdline->use_default_project = FALSE;
@@ -777,7 +777,7 @@ parse_args(int argc, char *argv[], CmdlineArgs cmdline)
             if (   util_file_name_has_extension(arg, "bip")
                 || util_file_name_has_extension(arg, "bix") )
             {
-                if (cmdline->proj_file != NULL)
+                if (cmdline->proj_file != nullptr)
                 {
                     util_error(
 			CATGETS(Dtb_project_catd, 1, 8,
@@ -791,7 +791,7 @@ parse_args(int argc, char *argv[], CmdlineArgs cmdline)
             }
             else
             {
-                ISTRING             newFile = NULL;
+                ISTRING             newFile = nullptr;
 
                 if (util_file_name_has_ab_extension(arg))
                 {
@@ -804,7 +804,7 @@ parse_args(int argc, char *argv[], CmdlineArgs cmdline)
                     newFile = istr_create(fileName);
                 }
 
-		strlist_add_istr(cmdline->files, newFile, NULL);
+		strlist_add_istr(cmdline->files, newFile, nullptr);
             }                   /* not project file */
         }                       /* ! flag arg */
     } /* for argCount */
@@ -813,7 +813,7 @@ parse_args(int argc, char *argv[], CmdlineArgs cmdline)
     /*
      * Make the comand-line args consistent
      */
-    if (cmdline->use_default_project && (cmdline->proj_file != NULL))
+    if (cmdline->use_default_project && (cmdline->proj_file != nullptr))
     {
 	char *proj_file_name = istr_string_safe(cmdline->proj_file);
 
@@ -839,36 +839,36 @@ mark_modules_to_load_and_write(
 {
     int			return_value = 0;
     AB_TRAVERSAL	fileTrav;
-    ABObj		file = NULL;
-    ISTRING		fileName = NULL;
+    ABObj		file = nullptr;
+    ISTRING		fileName = nullptr;
     char		newModuleName[1024];
-    STRING		dotPtr = NULL;
+    STRING		dotPtr = nullptr;
     AB_TRAVERSAL	allTrav;
-    ABObj		obj = NULL;
-    ABObj		obj1 = NULL;
-    ABObj		obj2 = NULL;
+    ABObj		obj = nullptr;
+    ABObj		obj1 = nullptr;
+    ABObj		obj2 = nullptr;
     AB_TRAVERSAL	moduleTrav;
-    ABObj		module = NULL;
-    ABObj		winParent = NULL;
+    ABObj		module = nullptr;
+    ABObj		winParent = nullptr;
     *newModuleName = 0;
 
     /*
      * Convert remaining files into undefined modules
      */
     for (trav_open(&fileTrav, project, AB_TRAV_FILES | AB_TRAV_MOD_SAFE);
-	(file = trav_next(&fileTrav)) != NULL; )
+	(file = trav_next(&fileTrav)) != nullptr; )
     {
 	fileName = istr_create(obj_get_file(file));
 	util_get_file_name_from_path(
 			istr_string(fileName), newModuleName, 1024);
 	dotPtr = strrchr(newModuleName, '.');
-	if (dotPtr != NULL)
+	if (dotPtr != nullptr)
 	{
 	    *dotPtr = 0;
 	}
 
 	module = obj_find_module_by_name(project, newModuleName);
-	if (module != NULL)
+	if (module != nullptr)
 	{
 	    /* this module already exists, probably because of a forward */
 	    /* reference */
@@ -877,7 +877,7 @@ mark_modules_to_load_and_write(
 	else
 	{
 	    obj_set_type(file, AB_TYPE_MODULE);
-	    module = file; file = NULL;
+	    module = file; file = nullptr;
 	    obj_set_name(module, newModuleName);
 	    obj_set_is_defined(module, FALSE);
 	    mfobj_set_flags(module, CGenFlagLoadMe|CGenFlagIsReferenced);
@@ -888,7 +888,7 @@ mark_modules_to_load_and_write(
 	 * not have their file names set, so we're going to
 	 * check it.
 	 */
-	if (obj_get_file(module) == NULL)
+	if (obj_get_file(module) == nullptr)
 	{
 	    obj_set_file(module, istr_string(fileName));
 	}
@@ -907,7 +907,7 @@ mark_modules_to_load_and_write(
 	*explodedModuleFile = 0;
 
         for (trav_open(&moduleTrav, project, AB_TRAV_MODULES|AB_TRAV_MOD_SAFE);
-	    (module = trav_next(&moduleTrav)) != NULL; )
+	    (module = trav_next(&moduleTrav)) != nullptr; )
         {
 	    sprintf(explodedModuleFile, "%s.bil", obj_get_name(module));
 
@@ -931,14 +931,14 @@ mark_modules_to_load_and_write(
     {
 	int	i = 0;
 	int	numFiles = strlist_get_num_strs(fileNames);
-	STRING	fileName = NULL;
+	STRING	fileName = nullptr;
 	BOOL	wasFound = FALSE;
 	void	*wasFoundVoidPtr;
 	BOOL	errOccurred = FALSE;
         for (i = 0; i < numFiles; ++i)
 	{
 	    fileName = strlist_get_str(fileNames, i, &wasFoundVoidPtr);
-	    assert(fileName != NULL);
+	    assert(fileName != nullptr);
 	    wasFound = (BOOL)(unsigned long)wasFoundVoidPtr;
 	    if (!wasFound)
 	    {
@@ -958,7 +958,7 @@ mark_modules_to_load_and_write(
     /* if loadAll... */
     {
         for (trav_open(&allTrav, project, AB_TRAV_ALL | AB_TRAV_MOD_SAFE);
-	    (obj = trav_next(&allTrav)) != NULL; )
+	    (obj = trav_next(&allTrav)) != nullptr; )
         {
 	    switch (obj_get_type(obj))
 	    {
@@ -978,7 +978,7 @@ mark_modules_to_load_and_write(
 		    && obj_is_popup(obj)
 		    && obj_get_write_me(obj_get_module(obj)))
 	        {
-		    if ((winParent = obj_get_win_parent(obj)) != NULL)
+		    if ((winParent = obj_get_win_parent(obj)) != nullptr)
 		    {
 		        mfobj_set_flags(obj_get_module(winParent), 
 					CGenFlagIsReferenced);
@@ -1002,10 +1002,10 @@ mark_modules_to_load_and_write(
 		if (obj_is_project(obj1))
 		    break;
 		obj2 = obj_get_to(obj);
-		if (  (   (obj1 != NULL) 
+		if (  (   (obj1 != nullptr) 
 		       && obj_is_defined(obj1)
 		       && obj_get_write_me(obj_get_module(obj1)))
-		    ||(   (obj2 != NULL) 
+		    ||(   (obj2 != nullptr) 
 		       && obj_is_defined(obj2)
 		       && obj_get_write_me(obj_get_module(obj2)))
 		   )
@@ -1014,12 +1014,12 @@ mark_modules_to_load_and_write(
 		         * At least one object will be written, make sure
 		         * both have data.
 		         */
-			if (obj1 != NULL)
+			if (obj1 != nullptr)
 			{
 		            mfobj_set_flags((obj_get_module(obj1)), 
 					CGenFlagIsReferenced);
 			}
-			if (obj2 != NULL)
+			if (obj2 != nullptr)
 			{
 		            mfobj_set_flags((obj_get_module(obj2)), 
 			   		 CGenFlagIsReferenced);
@@ -1034,12 +1034,12 @@ mark_modules_to_load_and_write(
 		    && obj_is_defined(obj)
 		    && obj_is_cross_module(obj))
 		{
-			if ((obj1 != NULL) && obj_is_defined(obj1))
+			if ((obj1 != nullptr) && obj_is_defined(obj1))
 			{
 		            mfobj_set_flags((obj_get_module(obj1)), 
 					CGenFlagIsReferenced);
 			}
-			if ((obj2 != NULL) && obj_is_defined(obj2))
+			if ((obj2 != nullptr) && obj_is_defined(obj2))
 			{
 		            mfobj_set_flags((obj_get_module(obj2)), 
 			   		 CGenFlagIsReferenced);
@@ -1058,12 +1058,12 @@ mark_modules_to_load_and_write(
 static int
 load_marked_modules(ABObj project)
 {
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     AB_TRAVERSAL	moduleTrav;
     char	fileName[MAXPATHLEN+1] = "";
 
     for (trav_open(&moduleTrav, project, AB_TRAV_MODULES|AB_TRAV_MOD_SAFE);
-	(module = trav_next(&moduleTrav)) != NULL; )
+	(module = trav_next(&moduleTrav)) != nullptr; )
     {
 	if (   mfobj_has_flags(module, CGenFlagLoadMe) 
 	    && (!obj_is_defined(module)))
@@ -1081,11 +1081,11 @@ static int
 load_module(ABObj module)
 {
     char	fileName[MAXPATHLEN+1];
-    ABObj	newProject = NULL;
+    ABObj	newProject = nullptr;
     ABObj	project = obj_get_project(module);
     *fileName = 0;
 
-	if (obj_get_file(module) != NULL)
+	if (obj_get_file(module) != nullptr)
 	{
 	    snprintf(fileName, sizeof(fileName), "%s", obj_get_file(module));
 	}
@@ -1098,8 +1098,8 @@ load_module(ABObj module)
 	    }
 	}
 
-	newProject = bil_load_file(fileName, NULL, project, NULL);
-	if (newProject == NULL)
+	newProject = bil_load_file(fileName, nullptr, project, nullptr);
+	if (newProject == nullptr)
 	{
 	    /* a failure ocurred. The error has already been reported */
 	    exit(1);
@@ -1202,25 +1202,25 @@ abmf_usage(void)
 static int
 find_proj_file(CmdlineArgs cmdline)
 {
-    DIR                 *dir= NULL;
-    struct dirent       *dirEntry= NULL;
+    DIR                 *dir= nullptr;
+    struct dirent       *dirEntry= nullptr;
     int			numProjectFiles = 0;
     StringListRec	projFiles;
     strlist_construct(&projFiles);
 
     dir= opendir(".");
-    if (dir == NULL)
+    if (dir == nullptr)
     {
         perror(CATGETS(Dtb_project_catd,1,32,"Couldn't open '.'"));
         return -1;
     }
 
-    while ((dirEntry= readdir(dir)) != NULL)
+    while ((dirEntry= readdir(dir)) != nullptr)
     {
         if (util_file_name_has_extension(dirEntry->d_name, "bip"))
         {
             /* found a project file! */
-	    strlist_add_str(&projFiles, dirEntry->d_name, NULL);
+	    strlist_add_str(&projFiles, dirEntry->d_name, nullptr);
         }
     }
 
@@ -1229,11 +1229,11 @@ find_proj_file(CmdlineArgs cmdline)
     {
 	int	num_strings = strlist_get_num_strs(&projFiles);
 	int	i = 0;
-	STRING	fileName = NULL;
+	STRING	fileName = nullptr;
 
 	for (i = 0; i < strlist_get_num_strs(&projFiles); ++i)
 	{
-	    fileName = strlist_get_str(&projFiles, i, NULL);
+	    fileName = strlist_get_str(&projFiles, i, nullptr);
 	    if (!proj_file_has_modules(fileName, cmdline->files))
 	    {
 		strlist_remove_index(&projFiles, i);
@@ -1244,7 +1244,7 @@ find_proj_file(CmdlineArgs cmdline)
 
     if (strlist_get_num_strs(&projFiles) == 1)
     {
-	cmdline->proj_file = istr_create(strlist_get_str(&projFiles, 0, NULL));
+	cmdline->proj_file = istr_create(strlist_get_str(&projFiles, 0, nullptr));
     }
     else if (strlist_get_num_strs(&projFiles) > 1)
     {
@@ -1255,7 +1255,7 @@ find_proj_file(CmdlineArgs cmdline)
 	    "%s: Please specify project file (e.g."), prog_name_string);
   	for (i = 0; i < strlist_get_num_strs(&projFiles); ++i)
 	{
-	    fprintf(stderr, ", %s", strlist_get_str(&projFiles, i, NULL));
+	    fprintf(stderr, ", %s", strlist_get_str(&projFiles, i, nullptr));
 	}
 	fprintf(stderr, "%s", CATGETS(Dtb_project_catd, 1, 34, ")\n"));
 	if (!strlist_is_empty(cmdline->files))
@@ -1267,7 +1267,7 @@ find_proj_file(CmdlineArgs cmdline)
 	}
     }
 
-    closedir(dir); dir= NULL;
+    closedir(dir); dir= nullptr;
 
     strlist_destruct(&projFiles);
     return numProjectFiles;
@@ -1281,7 +1281,7 @@ proj_file_has_modules(STRING projFileName, StringList moduleFileNames)
     char	word[1024] = "";
     int		modulesFound = 0;
     int		wordLen = 0;
-    File	file = NULL;
+    File	file = nullptr;
     int		c = 0;
     fpos_t	fpos;
     int		numFiles = strlist_get_num_strs(moduleFileNames);
@@ -1292,7 +1292,7 @@ proj_file_has_modules(STRING projFileName, StringList moduleFileNames)
     }
 
     file = util_fopen_locked(projFileName, "r");
-    if (file == NULL)
+    if (file == nullptr)
     {
 	perror(projFileName);
 	return FALSE;
@@ -1304,7 +1304,7 @@ proj_file_has_modules(STRING projFileName, StringList moduleFileNames)
 	{
 	    fgetpos(file, &fpos);
 	    *word = 0;
-	    if (   (fgets(word, 6, file) != NULL) 
+	    if (   (fgets(word, 6, file) != nullptr) 
 		&& (strncmp(word, "files", 5) == 0))
 	    {
 		/* :files <file-list> */
@@ -1339,7 +1339,7 @@ proj_file_has_modules(STRING projFileName, StringList moduleFileNames)
 			for (i = 0; i < numFiles; ++i)
 			{
 			    if (istr_equal(temp_istr, 
-				    strlist_get_istr(moduleFileNames, i, NULL)))
+				    strlist_get_istr(moduleFileNames, i, nullptr)))
 			    {
 				++modulesFound;
 				break;
@@ -1350,7 +1350,7 @@ proj_file_has_modules(STRING projFileName, StringList moduleFileNames)
 		}
 	    }
 	    else if (   (strncmp(word, "modul", 5) == 0)
-		     && (fgets(word, 2, file) != NULL)
+		     && (fgets(word, 2, file) != nullptr)
 		     && (strncmp(word, "e", 1) == 0) )
 	    {
 		/* :module <module-name */
@@ -1382,10 +1382,10 @@ write_required(ABObj tree)
     else
     {
         AB_TRAVERSAL    trav;
-        ABObj           module= NULL;
+        ABObj           module= nullptr;
 
         for(trav_open(&trav, tree, AB_TRAV_MODULES);
-            (module= trav_next(&trav)) != NULL; )
+            (module= trav_next(&trav)) != nullptr; )
         {
             if (obj_get_write_me(module))
             {
@@ -1406,7 +1406,7 @@ write_required(ABObj tree)
 static int
 abmf_init(void)
 {
-    STRING	templateFuncName = NULL;
+    STRING	templateFuncName = nullptr;
 
     abmfP_motifdefs_init();
     abmfP_ui_header_file_init();
@@ -1448,7 +1448,7 @@ replace_string_shorter(STRING buf, STRING subStr, STRING replaceStr)
 
     assert(strlen(subStr) >= (size_t)strlen(replaceStr));
 
-    while ((subStrPtr = strstr(bufPtr, subStr)) != NULL)
+    while ((subStrPtr = strstr(bufPtr, subStr)) != nullptr)
     {
 	memmove(subStrPtr+replaceStrLen, 
 		subStrPtr+subStrLen,
@@ -1471,17 +1471,17 @@ examine_tree(ABObj project)
     int                 returnValue = 0;
     AB_TRAVERSAL        moduleTrav;
     AB_TRAVERSAL        uiTrav;
-    ABObj               module = NULL;
-    ABObj               obj = NULL;
-    ABObj		parent = NULL;
-    StringList		proj_callbacks = NULL;
-    ABObj		callbackScopeObj = NULL;
-    STRING		funcName = NULL;
+    ABObj               module = nullptr;
+    ABObj               obj = nullptr;
+    ABObj		parent = nullptr;
+    StringList		proj_callbacks = nullptr;
+    ABObj		callbackScopeObj = nullptr;
+    STRING		funcName = nullptr;
 
     objxm_obj_configure(project, OBJXM_CONFIG_CODEGEN, TRUE);
 
     for (trav_open(&moduleTrav, project, AB_TRAV_MODULES);
-        (module = trav_next(&moduleTrav)) != NULL; )
+        (module = trav_next(&moduleTrav)) != nullptr; )
     {
 	if (!mfobj_has_flags(module, CGenFlagIsReferenced))
 	{
@@ -1501,9 +1501,9 @@ examine_tree(ABObj project)
 
         for (trav_open(&uiTrav, module, 
                 AB_TRAV_UI | AB_TRAV_MOD_PARENTS_FIRST | AB_TRAV_MOD_SAFE);
-            (obj = trav_next(&uiTrav)) != NULL; )
+            (obj = trav_next(&uiTrav)) != nullptr; )
         {
-            if (   (obj_get_class_name(obj) == NULL)
+            if (   (obj_get_class_name(obj) == nullptr)
                 && (!obj_has_flag(obj, NoCodeGenFlag)) ) 
             { 
                 #ifdef DEBUG
@@ -1543,7 +1543,7 @@ munge_ensure_win_parent(ABObj win)
 	return 0;
     }
 
-    if ((obj_get_win_parent(win) == NULL) && (win != root_window))
+    if ((obj_get_win_parent(win) == nullptr) && (win != root_window))
     {
 	obj_set_win_parent(win, root_window);
     }
@@ -1563,7 +1563,7 @@ munge_liberate_menu(ABObj menu)
 	ABObj		compRoot = obj_get_root(menu);
 	AB_OBJECT_TYPE	compType = AB_TYPE_UNDEF;
 	
-	if (compRoot != NULL)
+	if (compRoot != nullptr)
 	{
 	    compType = obj_get_type(compRoot);
 	}
@@ -1571,7 +1571,7 @@ munge_liberate_menu(ABObj menu)
 	    && (   (compType == AB_TYPE_ITEM)
 	        || (compType == AB_TYPE_BUTTON)) )
 	{
-	    menu->part_of = NULL;
+	    menu->part_of = nullptr;
 	}
     }
 
@@ -1584,18 +1584,18 @@ dup_all_menu_refs(ABObj project)
 {
     AB_TRAVERSAL	moduleTrav;
     AB_TRAVERSAL	menuTrav;
-    ABObj		module = NULL;
-    ABObj		menu = NULL;
+    ABObj		module = nullptr;
+    ABObj		menu = nullptr;
 
     for (trav_open(&moduleTrav, project, AB_TRAV_MODULES);
-	(module = trav_next(&moduleTrav)) != NULL; )
+	(module = trav_next(&moduleTrav)) != nullptr; )
     {
 	if (!obj_get_write_me(module))
 	{
 	    continue;
 	}
         for (trav_open(&menuTrav, module, AB_TRAV_MENUS);
-	    (menu = trav_next(&menuTrav)) != NULL; )
+	    (menu = trav_next(&menuTrav)) != nullptr; )
         {
     	    if (obj_is_ref(menu))
 	    {
@@ -1622,7 +1622,7 @@ abmfP_dup_menu_ref_tree(ABObj obj)
 {
     int		rc = 0;		/* return code */
     int			return_value = 0;
-    ABObj	refObj = NULL;
+    ABObj	refObj = nullptr;
     AB_TRAVERSAL	trav;
 
     if (!obj_is_menu_ref(obj))
@@ -1640,10 +1640,10 @@ abmfP_dup_menu_ref_tree(ABObj obj)
      * any reference lists to only reference the final (actual) object.
      */
     for (trav_open(&trav, obj, AB_TRAV_UI);
-	(obj = trav_next(&trav)) != NULL; )
+	(obj = trav_next(&trav)) != nullptr; )
     {
 	refObj = obj_get_actual_obj(obj);
-	if (refObj != NULL)
+	if (refObj != nullptr)
 	{
 	    while (obj_is_ref(refObj))
 	    {
@@ -1662,13 +1662,13 @@ abmfP_do_dup_menu_ref_tree(ABObj obj)
 {
     int		return_value = 0;
     int		rc = 0;
-    ABObj	actualMenu = NULL;
+    ABObj	actualMenu = nullptr;
     if (!obj_is_menu_ref(obj))
     {
 	return 0;
     }
     actualMenu = obj_get_actual_obj(obj);
-    if (actualMenu == NULL)
+    if (actualMenu == nullptr)
     {
 	return -1;
     }
@@ -1676,7 +1676,7 @@ abmfP_do_dup_menu_ref_tree(ABObj obj)
     if (obj_get_num_items(obj) != obj_get_num_items(actualMenu))
     {
 	ABObj dupTree = obj_tree_create_ref(actualMenu);
-	if (dupTree == NULL)
+	if (dupTree == nullptr)
 	{
 	    return_value = -1;
 	    goto epilogue;
@@ -1690,11 +1690,11 @@ abmfP_do_dup_menu_ref_tree(ABObj obj)
 
 	{
 	    AB_TRAVERSAL	trav;
-	    ABObj		descendant = NULL;
+	    ABObj		descendant = nullptr;
 
 	    for (trav_open(&trav, obj, 
 			AB_TRAV_UI|AB_TRAV_MOD_PARENTS_FIRST|AB_TRAV_MOD_SAFE);
-		(descendant = trav_next(&trav)) != NULL; )
+		(descendant = trav_next(&trav)) != nullptr; )
 	    {
 		if (descendant == obj)
 		{
@@ -1741,7 +1741,7 @@ static int
 print_tree(ABObj root, int indent)
 {
     AB_TRAVERSAL	trav;
-    ABObj		child = NULL;
+    ABObj		child = nullptr;
     int			numPrinted = 0;
     int			travType = AB_TRAV_SALIENT_CHILDREN;
 
@@ -1762,7 +1762,7 @@ print_tree(ABObj root, int indent)
 	goto epilogue;
     }
     for (trav_open(&trav, root, travType);
-	(child = trav_next(&trav)) != NULL; )
+	(child = trav_next(&trav)) != nullptr; )
     {
 	numPrinted += print_tree(child, indent+4);
     }
@@ -1774,7 +1774,7 @@ print_tree(ABObj root, int indent)
     if (travType == AB_TRAV_SALIENT_CHILDREN)
     {
 	for (trav_open(&trav, root, AB_TRAV_CHILDREN);
-	    (child = trav_next(&trav)) != NULL; )
+	    (child = trav_next(&trav)) != nullptr; )
 	{
 	    if ((!obj_is_salient(child)) && (obj_get_root(child) != root))
 	    {
@@ -1794,7 +1794,7 @@ time_traversal(ABObj root)
 {
 	int		return_value = 0;
 	AB_TRAVERSAL	trav;
-	ABObj		obj = NULL;
+	ABObj		obj = nullptr;
 	int		i = 0;
 	double		startTime = 0;
 	double		endTime = 0;
@@ -1821,7 +1821,7 @@ time_traversal(ABObj root)
 	for (i = 0; i < numTravs; ++i)
 	{
 	    for (trav_open(&trav, root, AB_TRAV_ALL);
-		(obj = trav_next(&trav)) != NULL; )
+		(obj = trav_next(&trav)) != nullptr; )
 	    {
 	    }
 	    trav_close(&trav);
@@ -1839,7 +1839,7 @@ time_traversal(ABObj root)
 	for (i = 0; i < numTravs; ++i)
 	{
 	    for (trav_open(&trav, root, AB_TRAV_SALIENT);
-		(obj = trav_next(&trav)) != NULL; )
+		(obj = trav_next(&trav)) != nullptr; )
 	    {
 	    }
 	    trav_close(&trav);
@@ -1863,21 +1863,21 @@ epilogue:
 static int
 abmfP_prepare_tree(ABObj project)
 {
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     AB_TRAVERSAL	trav;
-    StringList		proj_callbacks = NULL;
-    ABObj		obj = NULL;
+    StringList		proj_callbacks = nullptr;
+    ABObj		obj = nullptr;
     AB_TRAVERSAL	allTrav;
     ABObj		callbackScopeObj;
-    STRING		funcName = NULL;
-    ABObj		parent = NULL;
+    STRING		funcName = nullptr;
+    ABObj		parent = nullptr;
 
     /*
      * Create extra cgen data for each object
      */
     abmfP_create_obj_data_for_project(project);
     for(trav_open(&trav, project, AB_TRAV_MODULES);
-	(module = trav_next(&trav)) != NULL; )
+	(module = trav_next(&trav)) != nullptr; )
     {
 	abmfP_create_obj_data_for_module(module);
     }
@@ -1887,7 +1887,7 @@ abmfP_prepare_tree(ABObj project)
 
     for (trav_open(&allTrav, project, 
                 AB_TRAV_ALL | AB_TRAV_MOD_PARENTS_FIRST | AB_TRAV_MOD_SAFE);
-	(obj = trav_next(&allTrav)) != NULL; )
+	(obj = trav_next(&allTrav)) != nullptr; )
     {
 	module = obj_get_module(obj);
 
@@ -1898,7 +1898,7 @@ abmfP_prepare_tree(ABObj project)
 	     */
 	    funcName = obj_get_func_name(obj);
 	    callbackScopeObj = abmfP_find_callback_scope(project, funcName);
-	    if (callbackScopeObj == NULL)
+	    if (callbackScopeObj == nullptr)
 	    {
 		/* doesn't exist */
 		if (obj_is_intra_module(obj) &&
@@ -1928,7 +1928,7 @@ abmfP_prepare_tree(ABObj project)
 		     * it's in more than one module - put it in the project
 		     */
 		    int		str_index = 0;
-		    ABObj	originalConn = NULL;
+		    ABObj	originalConn = nullptr;
 		    StringList	moduleCallbacks = 
 				    mfobj_get_module_data(callbackScopeObj)
 					->callbacks;
@@ -1937,7 +1937,7 @@ abmfP_prepare_tree(ABObj project)
 			strlist_get_str_index(moduleCallbacks, funcName);
 		    strlist_get_str(moduleCallbacks, str_index, 
 			(void **)&originalConn);
-		    if (originalConn != NULL)
+		    if (originalConn != nullptr)
 		    {
 			mfobj_set_flags(originalConn, 
 				CGenFlagWriteDefToProjFile);
@@ -1955,7 +1955,7 @@ abmfP_prepare_tree(ABObj project)
 		mfobj_set_flags(obj, CGenFlagIsDuplicateDef);
 	    }
 	} /* action */
-	else if ((module != NULL) && (obj_get_write_me(module)))
+	else if ((module != nullptr) && (obj_get_write_me(module)))
         {
 	    /*
 	     * For some reason, menu titles are of type menu and not label
@@ -1973,7 +1973,7 @@ abmfP_prepare_tree(ABObj project)
 	    }
 
 	    if (   (obj_is_menu(obj) || (obj_is_menu_ref(obj)))
-		&& (obj_get_class_name(obj) == NULL))
+		&& (obj_get_class_name(obj) == nullptr))
 	    {
 		obj_set_class_name(obj, istr_string(abmfP_xmMenuShell));
 	    }
@@ -1996,7 +1996,7 @@ abmfP_prepare_tree(ABObj project)
 static BOOL
 abmfP_obj_has_no_module(ABObj obj)
 {
-    return ((obj == NULL) || (obj_get_module(obj) == NULL));
+    return ((obj == nullptr) || (obj_get_module(obj) == nullptr));
 }
 
 
@@ -2010,9 +2010,9 @@ static int
 abmfP_create_obj_data_for_project(ABObj project)
 {
     AB_TRAVERSAL	trav;
-    ABObj		obj = NULL;
-    CGenProjData	projData = NULL;
-    CGenData		objData = NULL;
+    ABObj		obj = nullptr;
+    CGenProjData	projData = nullptr;
+    CGenData		objData = nullptr;
     size_t		objDataNumBytes = 0;
     int			numObjects = 0;
     int			objCount = 0;
@@ -2020,7 +2020,7 @@ abmfP_create_obj_data_for_project(ABObj project)
     numObjects = 0;
     for (trav_open_cond(&trav, project, AB_TRAV_ALL|AB_TRAV_MOD_SAFE, 
 						abmfP_obj_has_no_module);
-	(obj = trav_next(&trav)) != NULL; )
+	(obj = trav_next(&trav)) != nullptr; )
     {
 	++numObjects;
     }
@@ -2037,7 +2037,7 @@ abmfP_create_obj_data_for_project(ABObj project)
      * Assign each obj it's own struct
      */
     for (trav_reset(&trav), objCount = 0; 
-	(obj = trav_next(&trav)) != NULL; )
+	(obj = trav_next(&trav)) != nullptr; )
     {
 	obj->cgen_data = (CGenData)&(objData[objCount++]);
 	mfobj_set_flags(obj, CGenFlagDataIsObj);
@@ -2062,17 +2062,17 @@ abmfP_create_obj_data_for_project(ABObj project)
 static int
 abmfP_create_obj_data_for_module(ABObj objInModule)
 {
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     int			numObjects = 0;
-    CGenData		objData = NULL;
+    CGenData		objData = nullptr;
     size_t		objDataBytes = 0;
-    ABObj		obj = NULL;
+    ABObj		obj = nullptr;
     AB_TRAVERSAL	trav;
     int			objCount = 0;
 
-    if (   (objInModule == NULL) 
+    if (   (objInModule == nullptr) 
 	|| (mfobj_has_data(objInModule))
-	|| ((module = obj_get_module(objInModule)) == NULL)
+	|| ((module = obj_get_module(objInModule)) == nullptr)
        )
     {
 	return 0;
@@ -2086,7 +2086,7 @@ abmfP_create_obj_data_for_module(ABObj objInModule)
     objDataBytes = numObjects * sizeof(CGenDataRec);
     objData = (CGenData)util_malloc(objDataBytes);
     memset(objData, 0, objDataBytes);
-    if (objData == NULL)
+    if (objData == nullptr)
     {
 	util_printf_err(CATGETS(Dtb_project_catd, 1, 36,
 	    "Could not allocate cgen data\n"));
@@ -2097,9 +2097,9 @@ abmfP_create_obj_data_for_module(ABObj objInModule)
      * Assign a structure to each object
      */
     for (trav_open(&trav, module, AB_TRAV_ALL), objCount = 0;
-	(obj = trav_next(&trav)) != NULL; )
+	(obj = trav_next(&trav)) != nullptr; )
     {
-	if (obj->cgen_data == NULL)
+	if (obj->cgen_data == nullptr)
 	{
 	    obj->cgen_data = (CGenData)&(objData[objCount++]);
 	    mfobj_set_flags(obj, CGenFlagDataIsObj);
@@ -2125,21 +2125,21 @@ abmfP_create_obj_data_for_module(ABObj objInModule)
 static int
 ensure_data_for_module_obj(ABObj module)
 {
-    CGenModuleData	moduleData = NULL;
-    ABObj		project = NULL;
-    ABObj		newProject = NULL;
+    CGenModuleData	moduleData = nullptr;
+    ABObj		project = nullptr;
+    ABObj		newProject = nullptr;
 
     if (!obj_is_module(module))
     {
 	return -1;
     }
     project = obj_get_project(module);
-    if (module->cgen_data == NULL)
+    if (module->cgen_data == nullptr)
     {
         module->cgen_data = (CGenData)calloc(sizeof(CGenDataRec), 1);
     }
 
-    if (mfobj_get_module_data(module) == NULL)
+    if (mfobj_get_module_data(module) == nullptr)
     {
 	moduleData = (CGenModuleData)calloc(sizeof(CGenModuleDataRec), 1);
         moduleData->callbacks = strlist_create();
@@ -2155,23 +2155,23 @@ ensure_data_for_module_obj(ABObj module)
 static int
 dump_callbacks(ABObj project)
 {
-    ABObj		module = NULL;
+    ABObj		module = nullptr;
     AB_TRAVERSAL	moduleTrav;
-    StringList		callbacks = NULL;
+    StringList		callbacks = nullptr;
 
     util_dprintf(0, "\n***** CALLBACKS *****\n");
     util_dprintf(0, "project callbacks\n");
     callbacks = mfobj_get_proj_data(project)->callbacks;
-    if (callbacks != NULL)
+    if (callbacks != nullptr)
     {
         strlist_dump(callbacks);
     }
     for (trav_open(&moduleTrav, project, AB_TRAV_MODULES);
-	(module = trav_next(&moduleTrav)) != NULL; )
+	(module = trav_next(&moduleTrav)) != nullptr; )
     {
 	util_dprintf(0, "module '%s' callbacks\n", util_strsafe(obj_get_name(module)));
 	callbacks = mfobj_get_module_data(module)->callbacks;
-        if (callbacks != NULL)
+        if (callbacks != nullptr)
         {
             strlist_dump(callbacks);
         }
@@ -2189,7 +2189,7 @@ debug_verify_tree(ABObj root)
 {
     AB_TRAVERSAL	trav;
     char		name[256];
-    ABObj		obj = NULL;
+    ABObj		obj = nullptr;
     *name = 0;
 
     if (!debugging())
@@ -2212,12 +2212,12 @@ debug_verify_tree(ABObj root)
      * Perform more code-generator specific checks
      */
     for (trav_open(&trav, root, AB_TRAV_ALL);
-	(obj = trav_next(&trav)) != NULL; )
+	(obj = trav_next(&trav)) != nullptr; )
     {
 	if (obj_is_ui(obj))
 	{
 	    if (   (obj_get_write_me(obj_get_module(obj)))
-		&& (obj_get_name(obj) == NULL) )
+		&& (obj_get_name(obj) == nullptr) )
 	    {
 		util_dprintf(1, "Object has no name: %s\n",
 			obj_get_safe_name(obj, name, 256));

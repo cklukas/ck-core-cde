@@ -1,4 +1,15 @@
 2026-11-13
+- C23 null pointer constant: the 1,100 non-generated C sources use `nullptr`
+  in place of `NULL` (37,000 uses). Headers keep `NULL` because C++ and
+  pre-C23 consumers include them. `NULL` stays where C23 does not allow
+  `nullptr`: in `XtSetArg()` and `objxm_obj_set_ui_arg()` arguments (they
+  convert the value to an integer) and in casts to non-pointer types such as
+  `(XtArgVal) NULL`. The test runners that compile or match production text
+  use `-std=gnu23` and read the source with `nullptr` read back as `NULL`, so
+  they still match the older revisions of the negative controls. A test fixture
+  named `unreachable` was renamed because C23 defines a macro of that name.
+
+2026-11-13
 - Legacy C syntax: the BSD calls `bcopy()`, `bzero()`, `bcmp()` and `index()` of
   the C sources are replaced by `memmove()`, `memset()`, `memcmp()` and
   `strchr()`, and the compatibility declarations and macros for them are

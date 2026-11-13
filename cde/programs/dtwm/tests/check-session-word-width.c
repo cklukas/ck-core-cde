@@ -125,10 +125,10 @@ static void write_session(const char *dir, const char *head, const char *tail)
 static void reset(void)
 {
     manage_calls = toggle_calls = iconify_calls = 0;
-    toggled_subpanel = NULL; toggled_control = NULL;
+    toggled_subpanel = nullptr; toggled_control = nullptr;
     subpanel_x = subpanel_y = subpanel_torn = 0;
     panel.dynamic_data_count = panel.max_dynamic_data_count = 0;
-    panel.dynamic_data_list = NULL;
+    panel.dynamic_data_list = nullptr;
 }
 
 int main(int argc, char **argv)
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
     ControlData control = {{{0}}};
     control.element_values[CONTROL_NAME].parsed_value = ctl_name;
     ControlData *controls[1] = { &control };
-    WidgetRec icon = { 10, NULL }, parent = { 100, NULL };
+    WidgetRec icon = { 10, nullptr }, parent = { 100, nullptr };
     icon.parent = &parent;
     ControlData owner = {{{0}}};
     owner.icon = &icon;
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
     box.control_data = box_controls; box.control_data_count = 1;
     BoxData *boxes[1] = { &box };
     panel.box_data = boxes; panel.box_data_count = 1;
-    WidgetRec shell = { 0, NULL };
+    WidgetRec shell = { 0, nullptr };
     panel.shell = &shell;
 
     /* 1. Posted-subpanel record: the name is cut at 255 characters, so it

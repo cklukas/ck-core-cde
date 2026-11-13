@@ -130,12 +130,12 @@ static void
 tempbr_sundex_cb(Widget w, XtPointer data, XtPointer cbs)
 {
 	Tempbr	*tb = (Tempbr *)data;
-	Tt_message	msg = NULL;
+	Tt_message	msg = nullptr;
 	Tt_status	status;
 
 	msg = ttmedia_load(0, (Ttmedia_load_msg_cb)tempbr_sundex_ttedit_cb,
 			tb, TTME_EDIT, "Sun_Info", data, strlen(data) + 1,
-			NULL, "calendar-address", 0);
+			nullptr, "calendar-address", 0);
 
 	status = tt_ptr_error(msg);
 	if (tt_is_err(status)) {
@@ -163,7 +163,7 @@ tempbr_show_cb(Widget w, XtPointer data, XtPointer cbs)
 	char msg_buf[256];
 	char buf[256];
 
-	if ((name = XmTextGetString(tb->name_text)) == NULL) {
+	if ((name = XmTextGetString(tb->name_text)) == nullptr) {
 		return;
 	}
 
@@ -199,7 +199,7 @@ make_std_tempbr(Calendar *c)
 	Widget		separator, button_form;
 	char		*title;
 
-	if (c->tempbr == NULL) {
+	if (c->tempbr == nullptr) {
                 c->tempbr = (caddr_t)ckalloc(sizeof(Tempbr));
                 tb = (Tempbr*)c->tempbr;
         }
@@ -212,7 +212,7 @@ make_std_tempbr(Calendar *c)
                 XmNtitle, 		title,
 		XmNallowShellResize, 	True,
                 XmNmappedWhenManaged, 	False,
-                NULL);
+                nullptr);
 	XtFree(title);
 
         tb->form = XtVaCreateWidget("form",
@@ -224,7 +224,7 @@ make_std_tempbr(Calendar *c)
                 XmNverticalSpacing, 	4,
 		XmNmarginWidth,         0,
 		XmNmarginHeight,        0,
-                NULL);
+                nullptr);
 
 	label_str = XmStringCreateLocalized(
 				CATGETS(c->DT_catd, 1, 410, "User Name:"));
@@ -236,7 +236,7 @@ make_std_tempbr(Calendar *c)
 		XmNleftOffset, 		5,
                 XmNtopAttachment, 	XmATTACH_FORM,
 		XmNtopOffset, 		11,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 
         tb->name_text = XtVaCreateWidget("show_text",
@@ -251,7 +251,7 @@ make_std_tempbr(Calendar *c)
 		XmNrightPosition, 	3,
 		XmNrightOffset, 	10,
 		XmNcolumns,		30,
-                NULL);
+                nullptr);
 
 	separator = XtVaCreateWidget("separator",
                 xmSeparatorGadgetClass,
@@ -261,7 +261,7 @@ make_std_tempbr(Calendar *c)
 		XmNtopAttachment, 	XmATTACH_WIDGET,
 		XmNtopWidget, 		tb->name_text,
 		XmNtopOffset, 		5,
-                NULL);
+                nullptr);
 
         button_form = XtVaCreateWidget("form",
                 xmFormWidgetClass, 	
@@ -275,7 +275,7 @@ make_std_tempbr(Calendar *c)
 		XmNtopWidget, 		separator,
                 XmNhorizontalSpacing, 	4,
 		XmNfractionBase, 	3,
-                NULL);
+                nullptr);
  
         label_str = XmStringCreateLocalized(
 				CATGETS(c->DT_catd, 1, 562, "Show"));
@@ -290,7 +290,7 @@ make_std_tempbr(Calendar *c)
 		XmNrightAttachment, XmATTACH_POSITION,
 		XmNrightPosition, 1,
 		XmNnavigationType, XmTAB_GROUP,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 
         label_str = XmStringCreateLocalized(
@@ -306,10 +306,10 @@ make_std_tempbr(Calendar *c)
 		XmNrightAttachment, XmATTACH_POSITION,
 		XmNrightPosition, 2,
 		XmNuserData, c,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
         XtAddCallback(tb->cancel_button, 
-			XmNactivateCallback, tb_cancel_cb, NULL);
+			XmNactivateCallback, tb_cancel_cb, nullptr);
 
         label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 77, "Help"));
         tb->help_button = XtVaCreateWidget("helpButton",
@@ -321,7 +321,7 @@ make_std_tempbr(Calendar *c)
 		XmNleftPosition, 2,
 		XmNrightAttachment, XmATTACH_POSITION,
 		XmNrightPosition, 3,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
         XtAddCallback(tb->help_button, XmNactivateCallback,
                 help_cb, SHOW_OTHER_CAL_HELP_BUTTON);
@@ -339,7 +339,7 @@ make_std_tempbr(Calendar *c)
 		XmNleftAttachment, XmATTACH_WIDGET,
 		XmNleftWidget,	tb->name_text,
 		XmNleftOffset, 5,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(tb->show_button, XmNactivateCallback,
 		tempbr_sundex_cb, tb);
@@ -353,7 +353,7 @@ make_std_tempbr(Calendar *c)
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNrightAttachment, XmATTACH_FORM,
 		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
 
 	set_message(tb->show_message, "");
 
@@ -365,19 +365,19 @@ make_std_tempbr(Calendar *c)
         XtVaSetValues(button_form, 
 			XmNdefaultButton, 	tb->show_button, 
 			XmNcancelButton, 	tb->show_button, 
-			NULL);
+			nullptr);
         XtVaSetValues(tb->form, 
 			XmNdefaultButton, 	tb->show_button, 
 			XmNcancelButton, 	tb->show_button, 
-			NULL);
+			nullptr);
 
         XmProcessTraversal(tb->name_text, XmTRAVERSE_CURRENT);
-        XtVaSetValues(tb->form, XmNinitialFocus, tb->name_text, NULL);
+        XtVaSetValues(tb->form, XmNinitialFocus, tb->name_text, nullptr);
 
 	ManageChildren(button_form);
 	ManageChildren(tb->form);
 	XtManageChild(tb->form);
-        XtVaSetValues(tb->frame, XmNmappedWhenManaged, True, NULL);
+        XtVaSetValues(tb->frame, XmNmappedWhenManaged, True, nullptr);
 	XtRealizeWidget(tb->frame);
 
 	XtPopup(tb->frame, XtGrabNone);
@@ -405,7 +405,7 @@ tb_cancel_cb(
         Calendar *c;
         Tempbr      *tb;
 
-        XtVaGetValues(widget, XmNuserData, &c, NULL);
+        XtVaGetValues(widget, XmNuserData, &c, nullptr);
         tb = (Tempbr *)c->tempbr;
 
 	XmTextSetString(tb->name_text, "");

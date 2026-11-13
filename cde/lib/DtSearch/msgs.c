@@ -59,7 +59,7 @@
 /*					*/
 /****************************************/
 int	DtSearchHasMessages (void)
-{ return (ausapi_msglist != NULL); }
+{ return (ausapi_msglist != nullptr); }
 
 
 /****************************************/
@@ -87,11 +87,11 @@ void	DtSearchAddMessage (char *msg)
     LLIST	*new;
     LLIST	**pp;
     new = austext_malloc (strlen(msg) + sizeof(LLIST) + 2,
-	PROGNAME"47", NULL);
-    new->link = NULL;
+	PROGNAME"47", nullptr);
+    new->link = nullptr;
     new->data = new + 1;	/* hop over exactly 1 LLIST structure */
     strcpy (new->data, msg);
-    for ( pp = &ausapi_msglist;  *pp != NULL;  pp = &((*pp)->link) ) ;
+    for ( pp = &ausapi_msglist;  *pp != nullptr;  pp = &((*pp)->link) ) ;
     *pp = new;
     return;
 } /* DtSearchAddMessage() */
@@ -111,24 +111,24 @@ char	*DtSearchGetMessages (void)
     char		*targ, *src;
     size_t		totlen = 0L;
     LLIST		*llptr;
-    static char		*flatbuf = NULL;
+    static char		*flatbuf = nullptr;
     static size_t	flatbufsz = 0L;
 
     /* Since function is often used as an arg in printf,
      * be sure to return something safe when there are no msgs.
      */
-    if (ausapi_msglist == NULL)
+    if (ausapi_msglist == nullptr)
 	return "";
 
     /* First Pass: Get the total length.
      * including room for inserted \n's.
      */
-    for (llptr = ausapi_msglist;  llptr != NULL;  llptr = llptr->link)
+    for (llptr = ausapi_msglist;  llptr != nullptr;  llptr = llptr->link)
         totlen += strlen(llptr->data) + 2;
     if (totlen > flatbufsz) {
 	if (flatbuf)
 	    free (flatbuf);
-	flatbuf = austext_malloc (totlen + 4, PROGNAME"73", NULL);
+	flatbuf = austext_malloc (totlen + 4, PROGNAME"73", nullptr);
 	flatbufsz = totlen;
     }
 
@@ -138,7 +138,7 @@ char	*DtSearchGetMessages (void)
      * msg string) and an added one to separate from the next msg.
      */
     targ = flatbuf;
-    for (llptr = ausapi_msglist;  llptr != NULL;  llptr = llptr->link) {
+    for (llptr = ausapi_msglist;  llptr != nullptr;  llptr = llptr->link) {
 	src = (char *) llptr->data;
 	while (*src != 0)
 	    *targ++ = *src++;

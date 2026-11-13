@@ -286,7 +286,7 @@ static XtResource resources[] =
 
 
 static XmBaseClassExtRec       controlBaseClassExtRec = {
-    NULL,                                     /* Next extension       */
+    nullptr,                                     /* Next extension       */
     NULLQUARK,                                /* record type XmQmotif */
     XmBaseClassExtVersion,                    /* version              */
     sizeof(XmBaseClassExtRec),                /* size                 */
@@ -300,10 +300,10 @@ static XmBaseClassExtRec       controlBaseClassExtRec = {
     {0},                                      /* fast subclass        */
     XmInheritGetValuesPrehook,                /* get_values prehook   */
     XmInheritGetValuesPosthook,               /* get_values posthook  */
-    NULL,                                     /* classPartInitPrehook */
-    NULL,                                     /* classPartInitPosthook*/
-    NULL,                                     /* ext_resources        */
-    NULL,                                     /* compiled_ext_resources*/
+    nullptr,                                     /* classPartInitPrehook */
+    nullptr,                                     /* classPartInitPosthook*/
+    nullptr,                                     /* ext_resources        */
+    nullptr,                                     /* compiled_ext_resources*/
     0,                                        /* num_ext_resources    */
     FALSE,                                    /* use_sub_resources    */
     XmInheritWidgetNavigable,                 /* widgetNavigable      */
@@ -318,41 +318,41 @@ DtControlCacheObjClassRec dtControlCacheObjClassRec =
       /* superclass         */    (WidgetClass) &xmExtClassRec,
       /* class_name         */    "DtControl",
       /* widget_size        */    sizeof(DtControlCacheObjRec),
-      /* class_initialize   */    NULL,
-      /* chained class init */    NULL,
+      /* class_initialize   */    nullptr,
+      /* chained class init */    nullptr,
       /* class_inited       */    False,
-      /* initialize         */    NULL,
-      /* initialize hook    */    NULL,
-      /* realize            */    NULL,
-      /* actions            */    NULL,
+      /* initialize         */    nullptr,
+      /* initialize hook    */    nullptr,
+      /* realize            */    nullptr,
+      /* actions            */    nullptr,
       /* num_actions        */    0,
-      /* resources          */    NULL,
+      /* resources          */    nullptr,
       /* num_resources      */    0,
       /* xrm_class          */    NULLQUARK,
       /* compress_motion    */    False,
       /* compress_exposure  */    False,
       /* compress enter/exit*/    False,
       /* visible_interest   */    False,
-      /* destroy            */    NULL,
-      /* resize             */    NULL,
-      /* expose             */    NULL,
-      /* set_values         */    NULL,
-      /* set values hook    */    NULL,
-      /* set values almost  */    NULL,
-      /* get values hook    */    NULL,
-      /* accept_focus       */    NULL,
+      /* destroy            */    nullptr,
+      /* resize             */    nullptr,
+      /* expose             */    nullptr,
+      /* set_values         */    nullptr,
+      /* set values hook    */    nullptr,
+      /* set values almost  */    nullptr,
+      /* get values hook    */    nullptr,
+      /* accept_focus       */    nullptr,
       /* version            */    XtVersion,
-      /* callback offsetlst */    NULL,
-      /* default trans      */    NULL,
-      /* query geo proc     */    NULL,
-      /* display accelerator*/    NULL,
+      /* callback offsetlst */    nullptr,
+      /* default trans      */    nullptr,
+      /* query geo proc     */    nullptr,
+      /* display accelerator*/    nullptr,
       /* extension record   */    (XtPointer)NULL,
    },
 
    {
-      /* synthetic resources */   NULL,
+      /* synthetic resources */   nullptr,
       /* num_syn_resources   */   0,
-      /* extension           */   NULL,
+      /* extension           */   nullptr,
    }
 };
 	
@@ -372,9 +372,9 @@ DtControlClassRec dtControlClassRec =
 		ClassPartInitialize,		/* class_part_initialize*/
 		False,				/* class_inited		*/
 		Initialize,		/* initialize		*/
-		NULL,				/* initialize_hook	*/
-		NULL,				/* realize		*/
-		NULL,				/* actions		*/
+		nullptr,				/* initialize_hook	*/
+		nullptr,				/* realize		*/
+		nullptr,				/* actions		*/
 		0,				/* num_actions		*/
 		resources,			/* resources		*/
 		XtNumber (resources),		/* num_resources	*/
@@ -388,15 +388,15 @@ DtControlClassRec dtControlClassRec =
 		XtInheritResize,		/* resize		*/
 		XtInheritExpose,		/* expose		*/	
 		SetValues,			/* set_values		*/
-		NULL,				/* set_values_hook	*/
+		nullptr,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
-		NULL,				/* get_values_hook	*/
-		NULL,				/* accept_focus		*/	
+		nullptr,				/* get_values_hook	*/
+		nullptr,				/* accept_focus		*/	
 		XtVersion,			/* version		*/
-		NULL,				/* callback private	*/
-		NULL,				/* tm_table		*/
-		NULL,				/* query_geometry	*/
-		NULL,				/* display_accelerator	*/
+		nullptr,				/* callback private	*/
+		nullptr,				/* tm_table		*/
+		nullptr,				/* query_geometry	*/
+		nullptr,				/* display_accelerator	*/
 		(XtPointer)&controlBaseClassExtRec, /* extension	*/
 
 	},
@@ -409,10 +409,10 @@ DtControlClassRec dtControlClassRec =
 (XtActionProc)	XmInheritArmAndActivate,	/* arm_and_activate	*/
 (XmWidgetDispatchProc)	XmInheritInputDispatch,	/* input_dispatch	*/
 (XmVisualChangeProc)	XmInheritVisualChange,	/* visual_change	*/
-		NULL,				/* get_resources	*/
+		nullptr,				/* get_resources	*/
 		0,				/* num_get_resources	*/
 		XmInheritCachePart,		/* class_cache_part	*/
-		NULL,	 			/* extension		*/
+		nullptr,	 			/* extension		*/
 	},
 
 	/*	DtIcon Part
@@ -424,15 +424,15 @@ DtControlClassRec dtControlClassRec =
 		CallCallback,			/* call_callback	*/
 		UpdateGCs,			/* update_gcs		*/
 		True,				/* optimize_redraw	*/
-		NULL,				/* class_cache_part	*/
-		NULL,				/* extension		*/
+		nullptr,				/* class_cache_part	*/
+		nullptr,				/* extension		*/
 	},
 
 	/*	DtControl Part
 	*/
 	{
-		NULL,				/* class_cache_part	*/
-		NULL,				/* extension		*/
+		nullptr,				/* class_cache_part	*/
+		nullptr,				/* extension		*/
 	}
 };
 
@@ -481,7 +481,7 @@ PathHasContent(const char *path)
   DIR *dir;
   struct dirent *entry;
 
-  if (path == NULL || *path == '\0')
+  if (path == nullptr || *path == '\0')
     return False;
 
   if (stat(path, &stat_buf) != 0)
@@ -490,9 +490,9 @@ PathHasContent(const char *path)
   if (S_ISDIR(stat_buf.st_mode))
   {
     dir = opendir(path);
-    if (dir == NULL)
+    if (dir == nullptr)
       return False;
-    while ((entry = readdir(dir)) != NULL)
+    while ((entry = readdir(dir)) != nullptr)
     {
       if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         continue;
@@ -514,7 +514,7 @@ PathListHasContent(const char *path_list)
   char *start;
   Boolean has_content = False;
 
-  if (path_list == NULL || *path_list == '\0')
+  if (path_list == nullptr || *path_list == '\0')
     return False;
 
   copy = XtNewString(path_list);
@@ -590,8 +590,8 @@ CheckFile(
       _DtProcessUnlock();
 
       G_FileChanged (g) = file_changed;
-      (*call_callback) ((DtIconGadget) g, G_Callback (g), XmCR_MONITOR, NULL);
-      (*expose)((Widget)g, NULL, NULL);
+      (*call_callback) ((DtIconGadget) g, G_Callback (g), XmCR_MONITOR, nullptr);
+      (*expose)((Widget)g, nullptr, nullptr);
       XmUpdateDisplay ((Widget) g);
     }
 }
@@ -649,10 +649,10 @@ BusyTimeout(
       G_BlinkTimer (g) = 0;
       G_BlinkElapsed (g) = 0;
       G_Busy (g) = 0;
-      (*call_callback) ((DtIconGadget) g, G_Callback (g), XmCR_BUSY_STOP, NULL);
+      (*call_callback) ((DtIconGadget) g, G_Callback (g), XmCR_BUSY_STOP, nullptr);
     }
   
-  (*expose) ((Widget) g, NULL, False);
+  (*expose) ((Widget) g, nullptr, False);
 }
 
 
@@ -679,10 +679,10 @@ DateTimeout(
   
   /*	Get time string.
    */
-  tse = time (NULL);
+  tse = time (nullptr);
   timeptr = _XLocaltime(&tse, localtime_buf);
   strftime ((char*) sTime, 128, G_Format (g), timeptr);
-  if (g->control.format_jp != NULL && strlen(g->control.format_jp) != 0)
+  if (g->control.format_jp != nullptr && strlen(g->control.format_jp) != 0)
     ReplaceJPDate(sTime, g->control.format_jp, timeptr->tm_wday);
 
   /*	Break time string between date and day of week.
@@ -690,13 +690,13 @@ DateTimeout(
   s1 = sTime;
   s2 = strchr (sTime, '\n');
   
-  if (s2 == NULL)
-    s3 = NULL;
+  if (s2 == nullptr)
+    s3 = nullptr;
   else
     {
       s3 = strchr (s2+1, '\n');
 
-      if (s3 != NULL)
+      if (s3 != nullptr)
 	{
 	  s2[0] = ' ';
 	  s2 = s3;
@@ -708,19 +708,19 @@ DateTimeout(
   
   /*	Create date string.
    */
-  if (s1 != NULL)
+  if (s1 != nullptr)
     {
-      if (s2 == NULL)
+      if (s2 == nullptr)
 	{
 	  XmStringFree(G_String(g));
 	  G_String (g) = XmStringCreate (s1, XmFONTLIST_DEFAULT_TAG);
 	  XmStringExtent (G_FontList (g), G_String (g),
 			  &(G_StringWidth (g)), &(G_StringHeight (g)));
 
-	  if (G_AltString (g) != NULL)
+	  if (G_AltString (g) != nullptr)
 	    {
 	      XmStringFree (G_AltString (g));
-	      G_AltString (g) = NULL;
+	      G_AltString (g) = nullptr;
 	      G_AltStringHeight (g) = 0;
 	      G_AltStringWidth (g) = 0;
 	    }
@@ -734,7 +734,7 @@ DateTimeout(
 	      s1 = s2;
 	      s2 = s3;
 	    }
-	  if (G_AltString (g) != NULL)
+	  if (G_AltString (g) != nullptr)
 	    XmStringFree (G_AltString (g));
 	  G_AltString (g) =  XmStringCreate (s1, XmFONTLIST_DEFAULT_TAG);
 	  XmStringExtent (G_FontList (g), G_AltString (g),
@@ -751,7 +751,7 @@ DateTimeout(
   _DtProcessLock();
   expose = XtCoreProc((Widget)g, expose);
   _DtProcessUnlock();
-  (*expose) ((Widget) g, NULL, False);
+  (*expose) ((Widget) g, nullptr, False);
   XmUpdateDisplay ((Widget) g);
   
   /*	Compute milliseconds until midnight:
@@ -764,7 +764,7 @@ DateTimeout(
 				 (60 * timeptr->tm_min) +
 				 (timeptr->tm_sec)));
   
-  if (G_Format (g) != NULL)
+  if (G_Format (g) != nullptr)
     {
       G_DateTimer (g) = 
 	XtAppAddTimeOut (app_context, tilMidnight, 
@@ -851,7 +851,7 @@ Initialize(
   G_FileChanged (new) = False;
   
   G_Busy (new) = 0;
-  G_AltString (new) = NULL;
+  G_AltString (new) = nullptr;
   G_AltStringWidth (new) = 0;
   G_AltStringHeight (new) = 0;
   
@@ -860,27 +860,27 @@ Initialize(
   G_NumPushImages (new) = 0;
   G_MaxPushImages (new) = 0;
   G_PushImagePosition (new) = 0;
-  G_PushDelays (new) = NULL;
-  G_PushPixmaps (new) = NULL;
-  G_PushMasks (new) = NULL;
+  G_PushDelays (new) = nullptr;
+  G_PushPixmaps (new) = nullptr;
+  G_PushMasks (new) = nullptr;
   
   G_NumDropImages (new) = 0;
   G_MaxDropImages (new) = 0;
   G_DropImagePosition (new) = 0;
-  G_DropDelays (new) = NULL;
-  G_DropPixmaps (new) = NULL;
-  G_DropMasks (new) = NULL;
+  G_DropDelays (new) = nullptr;
+  G_DropPixmaps (new) = nullptr;
+  G_DropMasks (new) = nullptr;
   
   /*	Copy drop argument.
    */
-  if (G_DropAction (new) != NULL)
+  if (G_DropAction (new) != nullptr)
     {
       String	str = G_DropAction (new);
       G_DropAction (new) = XtMalloc (strlen (str) + 1);
       strcpy (G_DropAction (new), str);
     }
   
-  if (G_PushAction (new) != NULL)
+  if (G_PushAction (new) != nullptr)
     {
       String    str = G_PushAction (new);
       G_PushAction (new) = XtMalloc (strlen (str) + 1);
@@ -908,7 +908,7 @@ Initialize(
   if ( ((G_ControlType (new) == XmCONTROL_MONITOR) ||
 	(G_ControlType (new) == XmCONTROL_MAIL) ||
 	(G_ControlType (new) == XmCONTROL_BUSY)) &&
-      (G_AltImage (new) != NULL))
+      (G_AltImage (new) != nullptr))
     {
 
       /*	Copy string or default to user mail directory.
@@ -916,11 +916,11 @@ Initialize(
       if ((G_ControlType (new) == XmCONTROL_MONITOR) ||
 	  (G_ControlType (new) == XmCONTROL_MAIL))
 	{
-	  if (G_FileName (new) == NULL)
+	  if (G_FileName (new) == nullptr)
 	    {
 	      if (G_ControlType (new) == XmCONTROL_MAIL)
 		{
-		  if ((str = getenv ("MAIL")) == NULL)
+		  if ((str = getenv ("MAIL")) == nullptr)
 		    {
 		      str = getenv ("LOGNAME");
 		      G_FileName (new) = 
@@ -953,7 +953,7 @@ Initialize(
 		     G_PixmapBackground (new));
       G_AltMask (new) =
 	_DtGetMask (XtScreen (new), G_AltImage (new));
-      G_AltImage (new) = NULL;
+      G_AltImage (new) = nullptr;
 
       if ((G_AltPix (new) != XmUNSPECIFIED_PIXMAP) &&
 	  ((G_ControlType (new) == XmCONTROL_MONITOR) ||
@@ -973,14 +973,14 @@ Initialize(
       G_AltPix (new) = XmUNSPECIFIED_PIXMAP;
       G_AltMask (new) = XmUNSPECIFIED_PIXMAP;
       G_MonitorTimer (new) = 0;
-      G_FileName (new) = NULL;
+      G_FileName (new) = nullptr;
     }
   
   if (G_ControlType (new) == XmCONTROL_DATE)
     {
       Dimension	w, h;
 
-      DateTimeout ((XtPointer) new_w, NULL);
+      DateTimeout ((XtPointer) new_w, nullptr);
 
       if (G_Width (request) == 0 || G_Height (request) == 0)
         {
@@ -997,10 +997,10 @@ Initialize(
         }
     }
   
-  G_ArmedGC (new) = NULL;
+  G_ArmedGC (new) = nullptr;
   
-  G_TopShadowGC (new) = NULL;
-  G_BottomShadowGC (new) = NULL;
+  G_TopShadowGC (new) = nullptr;
+  G_BottomShadowGC (new) = nullptr;
   G__DoUpdate (new) = True;
   _DtProcessLock();
   update_gcs = C_UpdateGCs(XtClass(new));
@@ -1022,7 +1022,7 @@ Destroy(
 {
   DtControlGadget	g =	(DtControlGadget) w;
   
-  if (G_FileName (g) != NULL)
+  if (G_FileName (g) != nullptr)
     XtFree (G_FileName (g));
   
   if (G_NumPushImages (g) > 0)
@@ -1037,12 +1037,12 @@ Destroy(
       XtFree ((char*) G_DropPixmaps (g));
       XtFree ((char*) G_DropMasks (g));
     }
-  if (G_DropAction (g) != NULL)
+  if (G_DropAction (g) != nullptr)
     XtFree (G_DropAction (g));
-  if (G_PushAction (g) != NULL)
+  if (G_PushAction (g) != nullptr)
     XtFree (G_PushAction (g));
   
-  if (G_AltString (g) != NULL)
+  if (G_AltString (g) != nullptr)
     XmStringFree (G_AltString (g));
   
   if (G_ClickTimer (g))
@@ -1093,8 +1093,8 @@ SetValues(
        if (G_DateTimer (new_c))
     	  XtRemoveTimeOut (G_DateTimer (new_c));
 
-       if (G_Format(new_c) != NULL)
-          DateTimeout ((XtPointer) new_w, NULL);
+       if (G_Format(new_c) != nullptr)
+          DateTimeout ((XtPointer) new_w, nullptr);
     }
 
     if (G_ImageName (new_c) && (G_ImageName (current_c) != G_ImageName (new_c)))
@@ -1109,7 +1109,7 @@ SetValues(
 if (G_DropAction (new) != G_DropAction (current))
     {
     String	str = G_DropAction (new);
-    if (G_DropAction (current) != NULL)
+    if (G_DropAction (current) != nullptr)
 	XtFree (G_DropAction (current));
     G_DropAction (new) = XtMalloc (strlen (str) + 1);
     strcpy (G_DropAction (new), str);
@@ -1118,7 +1118,7 @@ if (G_DropAction (new) != G_DropAction (current))
 if (G_PushAction (new) != G_PushAction (current))
     {
     String    str = G_PushAction (new);
-    if (G_PushAction (current) != NULL)
+    if (G_PushAction (current) != nullptr)
       XtFree (G_PushAction (current));
     G_PushAction (new) = XtMalloc (strlen (str) + 1);
     strcpy (G_PushAction (new), str);
@@ -1131,9 +1131,9 @@ if ((G_ControlType (new) == XmCONTROL_MONITOR) ||
     {
 	if (G_FileName (new) != G_FileName (current))
 	{
-		if (G_FileName (current) != NULL)
+		if (G_FileName (current) != nullptr)
 			XtFree (G_FileName (current));
-		if (G_FileName (new) != NULL)
+		if (G_FileName (new) != nullptr)
 		{
 			file_name_size = strlen (G_FileName (new));
 			G_FileName (new) = XtMalloc (file_name_size);
@@ -1521,7 +1521,7 @@ Draw(
       /*	Paint pixmap.
        */
       if ((width > 0 && height > 0) &&
-	  (gc != NULL) && (pix != XmUNSPECIFIED_PIXMAP))
+	  (gc != nullptr) && (pix != XmUNSPECIFIED_PIXMAP))
 	XCopyArea (d, pix, drawable, gc, 0, 0,
 		   width, height, x + p_x, y + p_y);
     }
@@ -1770,7 +1770,7 @@ CallCallback(
 			   ClickTimeout, (XtPointer) g);
     }
   
-  if (cb != NULL)
+  if (cb != nullptr)
     {
       cb_data.reason = reason;
       cb_data.event = event;
@@ -1910,7 +1910,7 @@ PushAnimationTimeout(
       _DtProcessLock();
       expose = XtCoreProc((Widget)g, expose);
       _DtProcessUnlock();
-      (*expose) ((Widget) g, NULL, NULL);
+      (*expose) ((Widget) g, nullptr, nullptr);
     }
 }
 
@@ -1929,7 +1929,7 @@ _DtControlDoPushAnimation(
   if ((G_NumPushImages (g) > 0) && (G_PushImagePosition (g) == 0))
     {
       G_PushImagePosition (g) = 1;
-      PushAnimationTimeout ((XtPointer) g, NULL);
+      PushAnimationTimeout ((XtPointer) g, nullptr);
     }
 }
 
@@ -2000,7 +2000,7 @@ DropAnimationTimeout(
   _DtProcessLock();
   expose = XtCoreProc((Widget)g, expose);
   _DtProcessUnlock();
-  (*expose) ((Widget) g, NULL, NULL);
+  (*expose) ((Widget) g, nullptr, nullptr);
 }
 
 
@@ -2018,7 +2018,7 @@ _DtControlDoDropAnimation(
   if ((G_NumDropImages (g) > 0) && (G_DropImagePosition (g) == 0))
     {
       G_DropImagePosition (g) = 1;
-      DropAnimationTimeout ((XtPointer) g, NULL);
+      DropAnimationTimeout ((XtPointer) g, nullptr);
     }
 }
 
@@ -2084,7 +2084,7 @@ _DtControlSetFileChanged(
       _DtProcessLock();
       expose = XtCoreProc((Widget)g, expose);
       _DtProcessUnlock();
-      (*expose) ((Widget) g, NULL, False);
+      (*expose) ((Widget) g, nullptr, False);
     }
 }
 
@@ -2116,8 +2116,8 @@ _DtControlSetBusy(
 	  call_callback = C_CallCallback(XtClass(g));
 	  _DtProcessUnlock();
 	  (*call_callback) ((DtIconGadget) g, G_Callback (g), XmCR_BUSY_START,
-			    NULL);
-	  BusyTimeout ((XtPointer) w, NULL);
+			    nullptr);
+	  BusyTimeout ((XtPointer) w, nullptr);
 	}
     }
   else
@@ -2148,7 +2148,7 @@ static void
 ReplaceJPDate(char *date, char *jpstr, int wday)
 {
     char *s, *rp, *sp;
-    char *p = NULL;
+    char *p = nullptr;
     char abday[5];
     char newdate[128];
     int i, j;
@@ -2158,15 +2158,15 @@ ReplaceJPDate(char *date, char *jpstr, int wday)
     s = (char *)malloc((strlen(jpstr) + 1) * sizeof(char));
     strcpy(s, jpstr);
     for(p = _XStrtok(s, ",", strtok_buf), i = 0; 
-	p != NULL && i < wday ;
-        p = _XStrtok(NULL, ",", strtok_buf), i++)
+	p != nullptr && i < wday ;
+        p = _XStrtok(nullptr, ",", strtok_buf), i++)
       /* EMPTY */;
-    if(p == NULL) {
+    if(p == nullptr) {
         free(s);
         return;
     }
     snprintf(abday, sizeof(abday), "%s", nl_langinfo(ABDAY_1 + wday));
-    if((rp = strstr(date, abday)) != NULL) {
+    if((rp = strstr(date, abday)) != nullptr) {
         for(i = 0, j = 0, sp = date; date[j] != '\0'; sp++) {
             if(sp == rp) {
                 for(k = 0; k < strlen(p); k++)

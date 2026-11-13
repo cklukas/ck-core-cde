@@ -73,20 +73,20 @@ static void
 rfp_toggle_for_grey(RFP *rfp, Boolean status) {
 	Widget	list, text;
 
-	XtVaSetValues(rfp->for_label, XmNsensitive, status, NULL);
-	XtVaGetValues(rfp->for_menu, XmNlist, &list, XmNtextField, &text, NULL);
-	XtVaSetValues(list, XmNsensitive, status, NULL);
-	XtVaSetValues(text, XmNsensitive, status, NULL);
-	XtVaSetValues(rfp->for_scope, XmNsensitive, status, NULL);
+	XtVaSetValues(rfp->for_label, XmNsensitive, status, nullptr);
+	XtVaGetValues(rfp->for_menu, XmNlist, &list, XmNtextField, &text, nullptr);
+	XtVaSetValues(list, XmNsensitive, status, nullptr);
+	XtVaSetValues(text, XmNsensitive, status, nullptr);
+	XtVaSetValues(rfp->for_scope, XmNsensitive, status, nullptr);
 }
 
 static void
 rfp_toggle_repeat_grey(RFP *rfp, Boolean status) {
 	Widget	list;
 
-	XtVaSetValues(rfp->repeat_label, XmNsensitive, status, NULL);
-	XtVaGetValues(rfp->repeat_menu, XmNlist, &list, NULL);
-	XtVaSetValues(list, XmNsensitive, status, NULL);
+	XtVaSetValues(rfp->repeat_label, XmNsensitive, status, nullptr);
+	XtVaGetValues(rfp->repeat_menu, XmNlist, &list, nullptr);
+	XtVaSetValues(list, XmNsensitive, status, nullptr);
 }
 
 
@@ -104,8 +104,8 @@ rfp_set_repeat_values(RFP *rfp)
 
 	/* delete all the old items. */
 
-	XtVaGetValues(rfp->repeat_menu, XmNlist, &list, NULL);
-	XtVaGetValues(list, XmNitemCount, &limit, NULL);
+	XtVaGetValues(rfp->repeat_menu, XmNlist, &list, nullptr);
+	XtVaGetValues(list, XmNitemCount, &limit, nullptr);
 
 	if ((limit == 11) && (rfp->cal->general->version >= DATAVER3))
 		return;
@@ -165,13 +165,13 @@ rfp_set_default_for(RFP *rfp, Repeat_menu_op op, Boolean status) {
 	XmString	new_scope_str;
         Calendar	*c = rfp->cal;
 
-	XtVaGetValues(rfp->for_menu, XmNtextField, &text, NULL);
+	XtVaGetValues(rfp->for_menu, XmNtextField, &text, nullptr);
 	XmTextFieldSetString(text, default_repeat_cnt_str(op));
 
 	new_scope_str = XmStringCreateLocalized(
 				default_repeat_scope_str(c->DT_catd, op));
 	XtVaSetValues(rfp->for_scope, XmNlabelString, new_scope_str,
-		NULL);
+		nullptr);
 	XmStringFree(new_scope_str);
 
 	rfp_toggle_for_grey(rfp, status);
@@ -188,8 +188,8 @@ rfp_repeat_scope_proc(Widget w, XtPointer client_data, XtPointer cbs) {
 	if (!rfp)
 		return;
 
-	XtVaGetValues(w, XmNuserData, &op, NULL);
-	XtVaSetValues(rfp->repeat_popup_menu, XmNuserData, op, NULL);
+	XtVaGetValues(w, XmNuserData, &op, nullptr);
+	XtVaSetValues(rfp->repeat_popup_menu, XmNuserData, op, nullptr);
 }
 
 static Boolean
@@ -239,7 +239,7 @@ rfp_apply_proc(Widget w, XtPointer client_data, XtPointer cbs) {
                         DIALOG_TEXT, text,
                         BUTTON_IDENT, 1, ident1,
                         DIALOG_IMAGE, pu->xm_error_pixmap,
-                        NULL);
+                        nullptr);
 		XtFree(ident1);
 		XtFree(text);
 		XtFree(title);
@@ -256,7 +256,7 @@ rfp_apply_proc(Widget w, XtPointer client_data, XtPointer cbs) {
 	/*
 	 * Change the string to be more informative.
 	 */
-	XtVaGetValues(rfp->repeat_popup_menu, XmNuserData, &op, NULL);
+	XtVaGetValues(rfp->repeat_popup_menu, XmNuserData, &op, nullptr);
 
 	switch (op) {
 
@@ -281,7 +281,7 @@ rfp_apply_proc(Widget w, XtPointer client_data, XtPointer cbs) {
 	}
 
 	xmstr = XmStringCreateLocalized(buf);
-	XtVaSetValues(rfp->repeat_menu, XmNlabelString, xmstr, NULL);
+	XtVaSetValues(rfp->repeat_menu, XmNlabelString, xmstr, nullptr);
 	XmStringFree(xmstr);
 
 	switch(op) {
@@ -317,7 +317,7 @@ rfp_cancel_proc(Widget w, XtPointer client_data, XtPointer cbs) {
 	 * down the popup.
 	 */
 	XtVaSetValues(rfp->repeat_menu,
-		      XmNselectedPosition, ONE_TIME + 1, NULL);
+		      XmNselectedPosition, ONE_TIME + 1, nullptr);
 }
 
 /*
@@ -339,7 +339,7 @@ rfp_repeat_every_popup(RFP *rfp) {
 		XmNallowShellResize, True,
 		XmNmwmFunctions, MWM_FUNC_MOVE | MWM_FUNC_CLOSE,
 		XmNdeleteResponse, XmDO_NOTHING,
-		NULL);
+		nullptr);
 	XtFree(title);
 
 	setup_quit_handler(rfp->repeat_popup_frame, rfp_cancel_proc,
@@ -351,7 +351,7 @@ rfp_repeat_every_popup(RFP *rfp) {
                 XmNhorizontalSpacing, 0,
                 XmNverticalSpacing, 5,
 		XmNfractionBase, 2,
-		NULL);
+		nullptr);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 460, "Apply"));
         rfp->repeat_apply_button = XtVaCreateWidget("repeat_apply_button",
@@ -363,7 +363,7 @@ rfp_repeat_every_popup(RFP *rfp) {
 		XmNrightAttachment, XmATTACH_POSITION,
 		XmNrightPosition, 1,
 		XmNbottomAttachment, XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(rfp->repeat_apply_button, 
 			XmNactivateCallback, rfp_apply_proc, rfp);
@@ -378,7 +378,7 @@ rfp_repeat_every_popup(RFP *rfp) {
 		XmNrightPosition, 2,
 		XmNrightOffset, 10,
 		XmNbottomAttachment, XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(rfp->repeat_cancel_button, 
 			XmNactivateCallback, rfp_cancel_proc, rfp);
@@ -391,7 +391,7 @@ rfp_repeat_every_popup(RFP *rfp) {
 		XmNbottomAttachment, 	XmATTACH_WIDGET,
 		XmNbottomWidget, 	rfp->repeat_apply_button,
 		XmNbottomOffset, 	5,
-                NULL);
+                nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 533,
 						"Repeat Every:"));
@@ -404,7 +404,7 @@ rfp_repeat_every_popup(RFP *rfp) {
 		XmNleftOffset, 5,
 		XmNbottomAttachment, XmATTACH_WIDGET,
 		XmNbottomWidget, separator,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
         rfp->repeat_popup_text = XtVaCreateWidget("text_field",
@@ -419,10 +419,10 @@ rfp_repeat_every_popup(RFP *rfp) {
 		XmNleftOffset, 5,
 		XmNbottomAttachment, XmATTACH_WIDGET,
 		XmNbottomWidget, separator,
-                NULL);
+                nullptr);
  
 	rfp->repeat_popup_menu = 
-		create_repeat_scope_menu(rfp->repeat_form_mgr, NULL,
+		create_repeat_scope_menu(rfp->repeat_form_mgr, nullptr,
 					 rfp_repeat_scope_proc, (XtPointer)rfp);
 
 
@@ -435,12 +435,12 @@ rfp_repeat_every_popup(RFP *rfp) {
 		XmNleftOffset, 5,
 		XmNbottomAttachment, XmATTACH_WIDGET,
 		XmNbottomWidget, separator,
-		NULL);
+		nullptr);
 
 	XtVaSetValues(rfp->repeat_form_mgr, XmNdefaultButton,
-		      rfp->repeat_apply_button, NULL);
+		      rfp->repeat_apply_button, nullptr);
 	XtVaSetValues(rfp->repeat_form_mgr, XmNcancelButton,
-		      rfp->repeat_cancel_button, NULL);
+		      rfp->repeat_cancel_button, nullptr);
 
 	ManageChildren(rfp->repeat_form_mgr);
 }
@@ -480,7 +480,7 @@ rfp_repeat_menu_proc(Widget w, XtPointer data, XtPointer cbs) {
 
 	XtVaGetValues(rfp->repeat_menu,
 		      XmNselectedPosition, &item_no,
-		      NULL);
+		      nullptr);
 	--item_no;
 
 	/*
@@ -525,7 +525,7 @@ build_rfp(
 		xmFormWidgetClass, rfp->parent,
 		XmNautoUnmanage, False,
 		XmNuserData, rfp,
-		NULL);
+		nullptr);
 
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 836, "Frequency"));
         rfp->frequency_label = XtVaCreateWidget("frequency_label",
@@ -533,7 +533,7 @@ build_rfp(
 		XmNlabelString,		label_str,
 		XmNtopAttachment, 	XmATTACH_FORM,
 		XmNtopOffset, 		GAP,
-		NULL);
+		nullptr);
 	XmStringFree(label_str);
  
 	tmp = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 534, "Occurs:"));
@@ -541,7 +541,7 @@ build_rfp(
 		xmLabelGadgetClass, 	rfp->rfp_form_mgr,
 		XmNlabelString,		label_str,
         	XmNlabelString, 	tmp,
-		NULL);
+		nullptr);
 	XmStringFree(tmp);
 
 	tmp = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 535, "For:"));
@@ -549,14 +549,14 @@ build_rfp(
 		xmLabelGadgetClass, 	rfp->rfp_form_mgr,
         	XmNlabelString, 	tmp,
 		XmNsensitive, 		False,
-                NULL);
+                nullptr);
 	XmStringFree(tmp);
 
 	tmp = XmStringCreateLocalized( CATGETS(c->DT_catd, 1, 536, "Privacy:"));
        	rfp->privacy_label = XtVaCreateWidget("privacy",
 		xmLabelGadgetClass, 	rfp->rfp_form_mgr,
        		XmNlabelString, 	tmp,
-               	NULL);
+               	nullptr);
 	XmStringFree(tmp);
 
         max_left_label_width = ComputeMaxWidth(rfp->frequency_label,
@@ -567,7 +567,7 @@ build_rfp(
 
         XtVaGetValues(rfp->frequency_label,
                 XmNheight,       	&freq_label_height,
-                NULL);
+                nullptr);
 
 	rfp->repeat_menu = create_repeat_menu(rfp->rfp_form_mgr,
 		rfp_repeat_menu_proc, (XtPointer)rfp);
@@ -579,7 +579,7 @@ build_rfp(
 		XmNleftOffset, 		max_left_label_width,
 		XmNtopAttachment, 	XmATTACH_FORM,
 		XmNtopOffset, 		freq_label_height + 3 * GAP,
-		NULL);
+		nullptr);
 	tmp = XmStringCreateLocalized("\0");
 
 	rfp->for_menu = create_for_menu(rfp->rfp_form_mgr);
@@ -589,7 +589,7 @@ build_rfp(
 		XmNtopAttachment, 	XmATTACH_WIDGET,
 		XmNtopWidget, 		rfp->repeat_menu,
 		XmNtopOffset, 		2 * GAP,
-		NULL);
+		nullptr);
 
         rfp->for_scope = XtVaCreateWidget("for_scope",
 		xmLabelGadgetClass, 	rfp->rfp_form_mgr,
@@ -599,7 +599,7 @@ build_rfp(
 		XmNleftAttachment, 	XmATTACH_WIDGET,
 		XmNleftWidget, 		rfp->for_menu,
 		XmNleftOffset, 		GAP,
-                NULL);
+                nullptr);
 
 	XmStringFree(tmp);
 
@@ -610,13 +610,13 @@ build_rfp(
 		XmNtopAttachment, 	XmATTACH_WIDGET,
 		XmNtopWidget, 		rfp->for_menu,
 		XmNtopOffset, 		2 * GAP,
-		NULL);
+		nullptr);
 
         XtVaSetValues(rfp->frequency_label,
                 XmNrightAttachment,     XmATTACH_WIDGET,
                 XmNrightWidget,         rfp->repeat_menu,
                 XmNrightOffset,         GAP,
-                NULL);
+                nullptr);
 
         XtVaSetValues(rfp->repeat_label,
 		XmNbottomAttachment,    XmATTACH_OPPOSITE_WIDGET,
@@ -625,7 +625,7 @@ build_rfp(
                 XmNrightAttachment,     XmATTACH_WIDGET,
                 XmNrightWidget,         rfp->repeat_menu,
                 XmNrightOffset,         GAP,
-                NULL);
+                nullptr);
 
         XtVaSetValues(rfp->for_label,
 		XmNbottomAttachment,	XmATTACH_OPPOSITE_WIDGET,
@@ -634,7 +634,7 @@ build_rfp(
                 XmNrightAttachment,     XmATTACH_WIDGET,
                 XmNrightWidget,         rfp->for_menu,
                 XmNrightOffset,         GAP,
-                NULL);
+                nullptr);
 
         XtVaSetValues(rfp->privacy_label,
 		XmNbottomAttachment,    XmATTACH_OPPOSITE_WIDGET,
@@ -643,7 +643,7 @@ build_rfp(
                 XmNrightAttachment,     XmATTACH_WIDGET,
                 XmNrightWidget,         rfp->privacy_menu,
                 XmNrightOffset,         GAP,
-                NULL);
+                nullptr);
 }
 
 /*
@@ -673,7 +673,7 @@ get_rfp_repeat_val(
 	/*
 	**  First, get the value on the repeat menu
 	*/
-	XtVaGetValues(rfp->repeat_menu, XmNselectedPosition, &op, NULL);
+	XtVaGetValues(rfp->repeat_menu, XmNselectedPosition, &op, nullptr);
 	--op;
 
 	switch(op) {
@@ -755,10 +755,10 @@ get_rfp_repeat_val(
 	*/
 	XtVaGetValues(rfp->for_menu, 
 			XmNtextField, 	&tf, 
-			NULL);
+			nullptr);
 	XtVaGetValues(tf,
 			XmNsensitive,	&sensitive,
-			NULL);
+			nullptr);
 
 	if (sensitive) {
 		char	*forever_str = CATGETS(calendar->DT_catd, 1, 876,
@@ -807,7 +807,7 @@ extern void
 get_rfp_privacy_val(RFP *rfp) {
 	int	i;
 
-	XtVaGetValues(rfp->privacy_menu, XmNselectedPosition, &i, NULL);
+	XtVaGetValues(rfp->privacy_menu, XmNselectedPosition, &i, nullptr);
 	--i;
 
 	switch (i) {
@@ -836,7 +836,7 @@ get_rfp_vals(RFP *rfp, time_t tick) {
 extern Boolean
 rfp_form_to_appt(RFP *rfp, Dtcm_appointment *a, char *name)
 {
-  return rfp_form_flags_to_appt(rfp, a, name, (int *)NULL);
+  return rfp_form_flags_to_appt(rfp, a, name, (int *)nullptr);
 }
 
 extern Boolean
@@ -849,7 +849,7 @@ rfp_form_flags_to_appt(RFP *rfp, Dtcm_appointment *a, char *name, int *flagsP)
 	Props_pu	*p = (Props_pu *)rfp->cal->properties_pu;
 	int		flags = 0;
 
-	if (flagsP == (int *)NULL)
+	if (flagsP == (int *)nullptr)
 	  flagsP = &flags;
 
 	_csa_iso8601_to_tick(a->time->value->item.date_time_value, &tick);
@@ -904,7 +904,7 @@ rfp_form_flags_to_appt(RFP *rfp, Dtcm_appointment *a, char *name, int *flagsP)
 					BUTTON_IDENT, RFP_MBW_LAST, ident2,
 					BUTTON_IDENT, RFP_MBW_4TH, ident3,
 					DIALOG_IMAGE, p->xm_question_pixmap,
-					NULL);
+					nullptr);
 				XtFree(ident3);
 				XtFree(ident2);
 				XtFree(ident1);
@@ -932,10 +932,10 @@ rfp_form_flags_to_appt(RFP *rfp, Dtcm_appointment *a, char *name, int *flagsP)
 		}
 		else
                 {
-                        if (a->repeat_type == NULL) {
+                        if (a->repeat_type == nullptr) {
                                 if ((a->repeat_type =
 				      (CSA_attribute *)ckalloc(sizeof(CSA_attribute)))
-				    == NULL)
+				    == nullptr)
 				  /* return (CSA_E_INSUFFICIENT_MEMORY); */
 				  return False;
 
@@ -949,10 +949,10 @@ rfp_form_flags_to_appt(RFP *rfp, Dtcm_appointment *a, char *name, int *flagsP)
         }
         else
         {
-                if (a->repeat_type == NULL) {
+                if (a->repeat_type == nullptr) {
                         if ((a->repeat_type =
 			     (CSA_attribute *)ckalloc(sizeof(CSA_attribute)))
-			    == NULL)
+			    == nullptr)
 			  /* return (CSA_E_INSUFFICIENT_MEMORY); */
 			  return False;
 
@@ -1025,7 +1025,7 @@ rfp_appt_to_form(RFP *rfp, CSA_entry_handle entry) {
 				    CSA_ENTRY_ATTR_NUMBER_RECURRENCES_I,
 				    CSA_ENTRY_ATTR_CLASSIFICATION_I,
 				    CSA_ENTRY_ATTR_RECURRENCE_RULE_I,
-				    NULL);
+				    nullptr);
 	stat = query_appt_struct(rfp->cal->cal_handle, entry, appt);
 	backend_err_msg(rfp->cal->frame, rfp->cal->view->current_calendar,
 		stat, ((Props_pu *)rfp->cal->properties_pu)->xm_error_pixmap);
@@ -1157,8 +1157,8 @@ set_rfp_repeat_val(RFP *rfp) {
 	 * Set the Repeat combo box
 	 */
 	xmstr = XmStringCreateLocalized(buf);
-	XtVaSetValues(rfp->repeat_menu, XmNselectedPosition, op + 1, NULL);
-	XtVaSetValues(rfp->repeat_menu, XmNlabelString, xmstr, NULL);
+	XtVaSetValues(rfp->repeat_menu, XmNselectedPosition, op + 1, nullptr);
+	XtVaSetValues(rfp->repeat_menu, XmNlabelString, xmstr, nullptr);
 	XmStringFree(xmstr);
 
 	/*
@@ -1177,7 +1177,7 @@ set_rfp_repeat_val(RFP *rfp) {
 			Widget text;
 			buf[0]= '\0';
 			XtVaGetValues(rfp->for_menu, XmNtextField,
-				      &text, NULL);
+				      &text, nullptr);
 			XmTextFieldSetString(text, buf);
 		}
 		repeat_scope = "\0";
@@ -1189,13 +1189,13 @@ set_rfp_repeat_val(RFP *rfp) {
 	} else {
 		Widget		text;
 		sprintf(buf, "%d", rfp->for_val);
-		XtVaGetValues(rfp->for_menu, XmNtextField, &text, NULL);
+		XtVaGetValues(rfp->for_menu, XmNtextField, &text, nullptr);
 		XmTextFieldSetString(text, buf);
 	}
 
 	xmstr = XmStringCreateLocalized((char *)repeat_scope);
 	XtVaSetValues(rfp->for_scope, XmNlabelString, xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 	rfp_toggle_for_grey(rfp, status);
@@ -1212,7 +1212,7 @@ set_rfp_privacy_val(RFP *rfp) {
 	else
 		i = 2;
 
-	XtVaSetValues(rfp->privacy_menu, XmNselectedPosition, i + 1, NULL);
+	XtVaSetValues(rfp->privacy_menu, XmNselectedPosition, i + 1, nullptr);
 }
 
 extern void

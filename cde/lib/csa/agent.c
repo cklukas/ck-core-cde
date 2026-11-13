@@ -76,7 +76,7 @@ typedef struct cb_info {
 	struct cb_info *next;
 } _CallbackInfo;
 
-static _CallbackInfo *cb_head = NULL, *cb_tail = NULL;
+static _CallbackInfo *cb_head = nullptr, *cb_tail = nullptr;
 
 u_long	_DtCm_transient = 0;
 
@@ -104,7 +104,7 @@ static char *
 UpdateCallback1Rpc(char *argument)
 {
 	return ((char *)(void *)_DtCm_update_callback_1(
-	    (Table_Res_4 *)(void *)argument, NULL));
+	    (Table_Res_4 *)(void *)argument, nullptr));
 }
 
 
@@ -112,8 +112,8 @@ static char *
 UpdateCallback2Rpc(char *argument)
 {
 	(void)cmcb_update_callback_2_svc(
-	    (cmcb_update_callback_args *)(void *)argument, NULL);
-	return (NULL);
+	    (cmcb_update_callback_args *)(void *)argument, nullptr);
+	return (nullptr);
 }
 
 /*****************************************************************************
@@ -141,7 +141,7 @@ _DtCm_init_agent(void)
 	DP(("libdtcm: _DtCm_init_agent\n"));
 
 #if defined(SunOS)
-	(void)rpcb_unset(_DtCm_transient, AGENTVERS, NULL);
+	(void)rpcb_unset(_DtCm_transient, AGENTVERS, nullptr);
 	if ((_DtCm_transient = gettransient((u_long)1)) == 0) {
 		_DtCm_print_errmsg("Cannot get transient program number\n");
 		_DtCm_print_errmsg("Callback cannot be enabled.\n");
@@ -204,8 +204,8 @@ _DtCm_destroy_agent(void)
 	DP(("libdtcm: _DtCm_destroy_agent\n"));
 
 #if defined(SunOS)
-        (void) rpcb_unset(_DtCm_transient, AGENTVERS, NULL);
-        (void) rpcb_unset(_DtCm_transient, AGENTVERS_2, NULL);
+        (void) rpcb_unset(_DtCm_transient, AGENTVERS, nullptr);
+        (void) rpcb_unset(_DtCm_transient, AGENTVERS_2, nullptr);
 #else
         (void) pmap_unset(_DtCm_transient, AGENTVERS);
         (void) pmap_unset(_DtCm_transient, AGENTVERS_2);
@@ -225,7 +225,7 @@ _DtCm_process_updates(void)
         while (B_TRUE) {
           rpc_bits = svc_fdset;
 
-          nfd = select(FD_SETSIZE, &rpc_bits, NULL, NULL, NULL);
+          nfd = select(FD_SETSIZE, &rpc_bits, nullptr, nullptr, nullptr);
 
           if (nfd <= 0)
             /* done */
@@ -329,7 +329,7 @@ _DtCm_update_callback_1(Table_Res_4 *t, _DtCm_Connection *conn)
 	if (cbi = (_CallbackInfo *)calloc(1, sizeof(_CallbackInfo))) {
 		cbi->vers = AGENTVERS;
 
-		if (cb_tail == NULL)
+		if (cb_tail == nullptr)
 			cb_head = cbi;
 		else
 			cb_tail->next = cbi;
@@ -353,13 +353,13 @@ cmcb_update_callback_2_svc(cmcb_update_callback_args *args, struct svc_req *d)
 
 	DP(("agent.c: cmcb_update_callback_2_svc()\n"));
 
-	if (args == NULL)
-		return (NULL);
+	if (args == nullptr)
+		return (nullptr);
 
 	if (_ConvertCallbackData(args, &cbi) == CSA_SUCCESS) {
 		cbi->vers = AGENTVERS_2;
 
-		if (cb_tail == NULL)
+		if (cb_tail == nullptr)
 			cb_head = cbi;
 		else
 			cb_tail->next = cbi;
@@ -370,7 +370,7 @@ cmcb_update_callback_2_svc(cmcb_update_callback_args *args, struct svc_req *d)
 		_DtCm_handle_callback();
 	}
 
-	return (NULL);
+	return (nullptr);
 }
 
 /******************************************************************************
@@ -485,7 +485,7 @@ _DtCm_handle_callback(void)
 
 	DP(("agent.c: _DtCm_handle_callback()\n"));
 
-	for (ptr = cb_head, prev = NULL; ptr != NULL; ) {
+	for (ptr = cb_head, prev = nullptr; ptr != nullptr; ) {
 		/* we only handle version 1 and version 2 */
 		if (ptr->vers == AGENTVERS)
 			keep = _ProcessV1Callback(ptr);
@@ -493,13 +493,13 @@ _DtCm_handle_callback(void)
 			keep = _ProcessV2Callback(ptr);
 
 		if (!keep) {
-			if (prev == NULL)
+			if (prev == nullptr)
 				cb_head = ptr->next;
 			else
 				prev->next = ptr->next;
 
 			_FreeCallbackInfo(ptr);
-                        ptr = NULL; /* freed by _FreeCallbackInfo() */
+                        ptr = nullptr; /* freed by _FreeCallbackInfo() */
 
 		} else {
 			prev = ptr;
@@ -523,21 +523,21 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 	CSA_update_entry_callback_data			*udata;
 	char						timebuf[BUFSIZ];
 	
-	if ((ncbi = (_CallbackInfo *)calloc(1, sizeof(_CallbackInfo))) == NULL)
+	if ((ncbi = (_CallbackInfo *)calloc(1, sizeof(_CallbackInfo))) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if (args->calendar && (ncbi->cal = strdup(args->calendar)) == NULL) {
+	if (args->calendar && (ncbi->cal = strdup(args->calendar)) == nullptr) {
 		free(ncbi);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
-	if (args->user && (ncbi->user = strdup(args->user)) == NULL) {
+	if (args->user && (ncbi->user = strdup(args->user)) == nullptr) {
 		_FreeCallbackInfo(ncbi);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
 	if ((user = (CSA_calendar_user *)calloc(1, sizeof(CSA_calendar_user)))
-	    == NULL) {
+	    == nullptr) {
 		_FreeCallbackInfo(ncbi);
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	} else
@@ -547,7 +547,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 	switch (ncbi->reason) {
 	case CSA_CB_CALENDAR_LOGON:
 		if ((ldata = (CSA_logon_callback_data *)calloc(1,
-		    sizeof(CSA_logon_callback_data))) == NULL) {
+		    sizeof(CSA_logon_callback_data))) == nullptr) {
 			free(user);
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -558,7 +558,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 
 	case CSA_CB_CALENDAR_DELETED:
 		if ((rdata = (CSA_calendar_deleted_callback_data *)calloc(1,
-		    sizeof(CSA_calendar_deleted_callback_data))) == NULL) {
+		    sizeof(CSA_calendar_deleted_callback_data))) == nullptr) {
 			free(user);
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -570,7 +570,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 	case CSA_CB_CALENDAR_ATTRIBUTE_UPDATED:
 		if ((cdata = (CSA_calendar_attr_update_callback_data *)
 		    calloc(1, sizeof(
-		    CSA_calendar_attr_update_callback_data))) == NULL) {
+		    CSA_calendar_attr_update_callback_data))) == nullptr) {
 			free(user);
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -589,7 +589,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 
 	case CSA_CB_ENTRY_ADDED:
 		if ((adata = (CSA_add_entry_callback_data *)calloc(1,
-		    sizeof(CSA_add_entry_callback_data))) == NULL) {
+		    sizeof(CSA_add_entry_callback_data))) == nullptr) {
 			free(user);
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -599,7 +599,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 
 		if (args->data.data.adata->id && (adata->added_entry_id.data =
 		    (unsigned char *)strdup(args->data.data.adata->id))
-		    == NULL) {
+		    == nullptr) {
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else
@@ -610,7 +610,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 
 	case CSA_CB_ENTRY_DELETED:
 		if ((ddata = (CSA_delete_entry_callback_data *)calloc(1,
-		    sizeof(CSA_delete_entry_callback_data))) == NULL) {
+		    sizeof(CSA_delete_entry_callback_data))) == nullptr) {
 			free(user);
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -620,7 +620,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 
 		if (args->data.data.ddata->id && (ddata->deleted_entry_id.data =
 		    (unsigned char *)strdup(args->data.data.ddata->id))
-		    == NULL) {
+		    == nullptr) {
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else
@@ -628,7 +628,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 				strlen((char *)ddata->deleted_entry_id.data);
 
 		_csa_tick_to_iso8601(args->data.data.ddata->time, timebuf);
-		if ((ddata->date_and_time = strdup(timebuf)) == NULL) {
+		if ((ddata->date_and_time = strdup(timebuf)) == nullptr) {
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
@@ -638,7 +638,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 
 	case CSA_CB_ENTRY_UPDATED:
 		if ((udata = (CSA_update_entry_callback_data *)calloc(1,
-		    sizeof(CSA_update_entry_callback_data))) == NULL) {
+		    sizeof(CSA_update_entry_callback_data))) == nullptr) {
 			free(user);
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -648,7 +648,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 
 		if (args->data.data.udata->newid && (udata->new_entry_id.data =
 		    (unsigned char *)strdup(args->data.data.udata->newid))
-		    == NULL) {
+		    == nullptr) {
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else
@@ -657,7 +657,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 
 		if (args->data.data.udata->oldid && (udata->old_entry_id.data =
 		    (unsigned char *)strdup(args->data.data.udata->oldid))
-		    == NULL) {
+		    == nullptr) {
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else
@@ -665,7 +665,7 @@ _ConvertCallbackData(cmcb_update_callback_args *args, _CallbackInfo **cbi)
 				strlen((char *)udata->old_entry_id.data);
 
 		_csa_tick_to_iso8601(args->data.data.udata->time, timebuf);
-		if ((udata->date_and_time = strdup(timebuf)) == NULL) {
+		if ((udata->date_and_time = strdup(timebuf)) == nullptr) {
 			_FreeCallbackInfo(ncbi);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		}
@@ -686,15 +686,15 @@ _CopyAttributeNames(uint fnum, char **fnames, CSA_uint32 *tnum, char ***tnames)
 
 	if (fnum == 0) {
 		*tnum = 0;
-		*tnames = NULL;
+		*tnames = nullptr;
 		return (CSA_SUCCESS);
 	}
 
-	if ((nnames = calloc(1, sizeof(char *) * fnum)) == NULL)
+	if ((nnames = calloc(1, sizeof(char *) * fnum)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	for (i = 0; i < fnum; i++) {
-		if ((nnames[i] = strdup(fnames[i])) == NULL)
+		if ((nnames[i] = strdup(fnames[i])) == nullptr)
 			break;
 	}
 
@@ -722,7 +722,7 @@ _ProcessV1Callback(_CallbackInfo *ptr)
 	_DtCmCallbackEntry	*cb;
 	boolean_t		keep = B_FALSE;
 
-	for (cal = _DtCm_active_cal_list; cal != NULL; cal = cal->next) {
+	for (cal = _DtCm_active_cal_list; cal != nullptr; cal = cal->next) {
 		if (cal->rpc_version >= _DtCM_FIRST_EXTENSIBLE_SERVER_VERSION)
 			continue;
 
@@ -731,13 +731,13 @@ _ProcessV1Callback(_CallbackInfo *ptr)
 		    CSA_CB_ENTRY_UPDATED))
 		{
 			/* only do dumb processing if it was a V4 server */
-			for (cb = cal->cb_list; cb != NULL; cb = cb->next) {
+			for (cb = cal->cb_list; cb != nullptr; cb = cb->next) {
 				if (cal->do_reasons & cb->reason) {
 					cb->handler((CSA_session_handle)cal,
 						cal->do_reasons & cb->reason,
 						(CSA_buffer) NULL,
 						cb->client_data,
-						(CSA_extension*) NULL);
+						(CSA_extension*) nullptr);
 				}
 			}
 		} else if (cal->all_reasons & (CSA_CB_ENTRY_ADDED |
@@ -755,7 +755,7 @@ _ProcessV2Callback(_CallbackInfo *ptr)
 	_DtCmCallbackEntry	*cb;
 	boolean_t		keep = B_FALSE;
 
-	for (cal = _DtCm_active_cal_list; cal != NULL; cal = cal->next) {
+	for (cal = _DtCm_active_cal_list; cal != nullptr; cal = cal->next) {
 		if (cal->rpc_version < _DtCM_FIRST_EXTENSIBLE_SERVER_VERSION ||
 		    strcmp(ptr->cal, cal->name))
 			continue;
@@ -763,13 +763,13 @@ _ProcessV2Callback(_CallbackInfo *ptr)
 		if (cal->do_reasons & ptr->reason) {
 
 			/* only do dumb processing if it was a V4 server */
-			for (cb = cal->cb_list; cb != NULL; cb = cb->next) {
+			for (cb = cal->cb_list; cb != nullptr; cb = cb->next) {
 				if (ptr->reason & cb->reason) {
 					cb->handler((CSA_session_handle)cal,
 						ptr->reason,
 						(CSA_buffer)ptr->data,
 						cb->client_data,
-						(CSA_extension*) NULL);
+						(CSA_extension*) nullptr);
 				}
 			}
 		} else if (cal->all_reasons & ptr->reason)

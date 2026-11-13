@@ -103,14 +103,14 @@ cm_register_calendar(const char *username, const char *location)
 
 	data = (Registration_data *)malloc(sizeof(Registration_data));
 
-	if (data == NULL) {
+	if (data == nullptr) {
 		return -1;
 	}
 
 	data->username = strdup(username);
 	data->location = strdup(location);
 
-	error = thr_create(NULL, 0, registration_thr, data, THR_DETACHED, NULL);
+	error = thr_create(nullptr, 0, registration_thr, data, THR_DETACHED, nullptr);
 
 	if (error > 0) {
 		printf("Could not create registration thread\n");
@@ -131,7 +131,7 @@ registration_thr(void *data)
 	Registration_data *reg_data; 
 
 	DP(("registration_thr: THREAD ENTER\n"));
-	if (data == NULL) {
+	if (data == nullptr) {
 		return (void *)-1;
 	}
 
@@ -197,24 +197,24 @@ cmfns_name_from_file(
 		/* path points to a directory.  Look for .FNSName file */
 		close(fd);
 		newpath = (char *)malloc(strlen(path) + strlen(FNS_FILE) + 2);
-		if (newpath == NULL) {
+		if (newpath == nullptr) {
 			return -1;
 		}
 		sprintf(newpath, "%s/%s", path, FNS_FILE);
-		if ((fp = fopen(newpath, "r")) == NULL) {
+		if ((fp = fopen(newpath, "r")) == nullptr) {
 			free(newpath);
 			return 0;
 		}
 		free(newpath);
 	} else {
-		if ((fp = fdopen(fd, "r")) == NULL) {
+		if ((fp = fdopen(fd, "r")) == nullptr) {
 			return 0;
 		}
 	}
 
 	do {
 		/* Get line from file */
-		if (fgets(name, len, fp) == NULL) {
+		if (fgets(name, len, fp) == nullptr) {
 			fclose(fp);
 			return -1;
 		}
@@ -226,7 +226,7 @@ cmfns_name_from_file(
 		 * If it is a comment line or we got a partial line
 		 * try again
 		 */
-	} while (*name == '#' || p == NULL);
+	} while (*name == '#' || p == nullptr);
 
 	/* Should have the name.  Wipe out newline */
 	*p = '\0';

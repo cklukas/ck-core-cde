@@ -278,7 +278,7 @@ String btn3_menu_translations =
 String btn2_menu_translations =
      "<Btn2Down>:		ObjectPopupMenu()";
 
-static XtTranslations build_transtbl = NULL;
+static XtTranslations build_transtbl = nullptr;
 
 
 
@@ -312,14 +312,14 @@ abobj_tree_set_build_actions(
     AB_TRAVERSAL    	trav;
     ABObj       	obj;
  
-    if (root == NULL)
+    if (root == nullptr)
 	return ERROR;
 
     /* set the appropriate build actions */
     for (trav_open(&trav, root, AB_TRAV_UI);
-        (obj = trav_next(&trav)) != NULL; )
+        (obj = trav_next(&trav)) != nullptr; )
     {
-	if (objxm_get_widget(obj) != NULL)
+	if (objxm_get_widget(obj) != nullptr)
 	{
 	    if (AB_builder_mode == MODE_BUILD)
 	    	abobjP_enable_build_actions(obj, objxm_get_widget(obj));
@@ -361,7 +361,7 @@ enable_on_internal_widgets(
     XtVaGetValues(widget,
                    XtNnumChildren,    &num_children,
                    XtNchildren,       &children,
-                   NULL);
+                   nullptr);
 
     for (i = 0; i < num_children; ++i)
     {
@@ -375,7 +375,7 @@ enable_on_internal_widgets(
 
         XtVaSetValues(children[i],
                 XtNtranslations,	build_transtbl,
-                NULL);
+                nullptr);
 
         XtAddEventHandler(children[i], Button1MotionMask | Button2MotionMask,
                 False, object_button_drag, (XtPointer)root);
@@ -401,7 +401,7 @@ disable_on_internal_widgets(
     XtVaGetValues(widget,
                    XtNnumChildren,    &num_children,
                    XtNchildren,       &children,
-                   NULL);
+                   nullptr);
 
     for (i = 0; i < num_children; ++i)
     {
@@ -421,7 +421,7 @@ disable_on_internal_widgets(
         if (orig_trans)
             XtVaSetValues(children[i],
                         XtNtranslations, orig_trans,
-                        NULL);
+                        nullptr);
         else
             XtUninstallTranslations(children[i]);
 
@@ -454,7 +454,7 @@ abobjP_enable_build_actions(
     if (obj_is_window(obj) && XtIsSubclass(widget, shellWidgetClass))
     {
  	/* Prevent the user from "Quitting" a window in build-mode*/
-	ui_add_window_close_callback(widget, prevent_closeCB, NULL, XmDO_NOTHING);
+	ui_add_window_close_callback(widget, prevent_closeCB, nullptr, XmDO_NOTHING);
 
    	/* Track when a window is iconified */
 	if (obj_is_base_win(obj))
@@ -469,7 +469,7 @@ abobjP_enable_build_actions(
         return;
     }
 
-    if (build_transtbl == NULL)
+    if (build_transtbl == nullptr)
     {
 	int        len;
   	String	   build_translations, menu_translations;
@@ -487,7 +487,7 @@ abobjP_enable_build_actions(
 	    len += strlen(btn2_adjust_translations);
 
 	build_translations = (String)util_malloc(len*sizeof(char));
-	if (build_translations == NULL)
+	if (build_translations == nullptr)
 	    return; /* ouch */
 
 	/* Build Translation table */
@@ -504,7 +504,7 @@ abobjP_enable_build_actions(
     /* Enable build mode behavior */
     XtVaSetValues(widget, 
 		XtNtranslations, build_transtbl,
-        	NULL);
+        	nullptr);
 
     if (obj_is_item(obj))
 	evObj = obj_get_parent(obj);
@@ -559,7 +559,7 @@ abobjP_disable_build_actions(
 
     if (obj_is_window(obj) && XtIsSubclass(widget, shellWidgetClass))
     {
-	ui_remove_window_close_callback(widget, prevent_closeCB, NULL);
+	ui_remove_window_close_callback(widget, prevent_closeCB, nullptr);
 
         if (obj_is_base_win(obj))
             ui_remove_window_iconify_handler(widget, object_track_iconify, (XtPointer)obj); 
@@ -605,7 +605,7 @@ abobjP_disable_build_actions(
      * effect
      */
     if (orig_trans)
-        XtVaSetValues(widget, XtNtranslations, orig_trans, NULL);
+        XtVaSetValues(widget, XtNtranslations, orig_trans, nullptr);
     else
 	XtUninstallTranslations(widget);
 
@@ -631,14 +631,14 @@ object_mouse_enter(
     Cardinal 	*num_params
 )
 {
-    ABObj obj = NULL;
+    ABObj obj = nullptr;
     ABObj rootObj;
     char  pos_str[12];
     char  sz_str[16];
 
     obj = objxm_get_obj_from_widget(widget);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
 	rootObj = obj_is_item(obj)? obj_get_parent(obj) : obj;
 
@@ -685,14 +685,14 @@ object_mouse_motion(
     Cardinal 	*num_params
 ) 
 {  
-    ABObj	 obj = NULL, rootObj;
+    ABObj	 obj = nullptr, rootObj;
     XMotionEvent *mevent = (XMotionEvent*)event;
     char         motionstr[16];
     int		 rx, ry;
 
     obj = objxm_get_obj_from_widget(widget);
 
-    if (obj != NULL)
+    if (obj != nullptr)
     {
 	/* Make sure the x,y position is relative to the ROOT obj
 	 * of a given obj or CompositeObj
@@ -724,7 +724,7 @@ object_select(
     Cardinal 	*num_params
 )
 {
-    ABObj obj = NULL;
+    ABObj obj = nullptr;
 
     obj = objxm_get_obj_from_widget(widget);
 
@@ -803,7 +803,7 @@ object_invoke_props(
     Cardinal 	*num_params
 )
 {
-    ABObj         obj = NULL;
+    ABObj         obj = nullptr;
 
     obj = objxm_get_obj_from_widget(widget);
 
@@ -822,7 +822,7 @@ object_popup_menu(
     Cardinal 	*num_params
 )
 {
-    ABObj	  obj = NULL;
+    ABObj	  obj = nullptr;
     ABSelectedRec sel;
 
     obj = objxm_get_obj_from_widget(widget); 
@@ -848,7 +848,7 @@ objects_pixel_move(
 )
 {
     XKeyEvent	  *kevent;
-    ABObj         obj = NULL;
+    ABObj         obj = nullptr;
     ABSelectedRec sel;
     KeySym	  keysym;
     Modifiers	  mod;
@@ -909,7 +909,7 @@ initiate_move(
     geomObj    = objxm_comp_get_subobj(rootObj, AB_CFG_POSITION_OBJ);
     geomWidget = objxm_get_widget(geomObj);
 
-    if (geomWidget == NULL)
+    if (geomWidget == nullptr)
     {
         util_dprintf(0,"initiate_move: no geometry widget\n");
         return ERROR;
@@ -951,7 +951,7 @@ initiate_resize(
     geomObj    = objxm_comp_get_subobj(rootObj, AB_CFG_SIZE_OBJ);
     geomWidget = objxm_get_widget(geomObj);
 
-    if (geomWidget == NULL)
+    if (geomWidget == nullptr)
     {
         util_dprintf(0,"initiate_resize: no geometry widget\n");
         return ERROR;
@@ -985,7 +985,7 @@ object_button_press(
 )
 {
     XButtonEvent 	*bevent;
-    ABObj       	obj = NULL;
+    ABObj       	obj = nullptr;
     ABObj		rootObj;
 
     potential_move = False;
@@ -1077,7 +1077,7 @@ wait_for_double(
      * Go ahead and process the single-click...
      */
     d_click->waiting = False;
-    object_button_press(d_click->widget, d_click->event, NULL, 0);
+    object_button_press(d_click->widget, d_click->event, nullptr, 0);
 
 }
 
@@ -1098,7 +1098,7 @@ interpose_button_event(
     XButtonEvent 		*bevent;
     XMotionEvent        	*mevent;
     static XEvent		event_cpy;
-    static DoubleClickInfo	*d_click = NULL;
+    static DoubleClickInfo	*d_click = nullptr;
     static XtIntervalId		timer_id = 0;
     ABObj               	obj = (ABObj)client_data;
     ABObj               	moveObj;
@@ -1117,17 +1117,17 @@ interpose_button_event(
 		{
 		    if (bevent->state & ControlMask) /* Connections Accelerator */
 		    {
-			conn_drag_chord(widget, event, NULL, 0);
+			conn_drag_chord(widget, event, nullptr, 0);
 			return;
 		    }
 
-    		    if (d_click == NULL) /* Init DoubleClick structure */
+    		    if (d_click == nullptr) /* Init DoubleClick structure */
     		    {
         		d_click = (DoubleClickInfo*)util_malloc(sizeof(DoubleClickInfo));
-        		if (d_click == NULL)
+        		if (d_click == nullptr)
             		    return; /* yikes! */
-        		d_click->widget = NULL;
-        		d_click->event = NULL;
+        		d_click->widget = nullptr;
+        		d_click->event = nullptr;
 			d_click->interval = XtGetMultiClickTime(XtDisplay(widget));
         		d_click->waiting = False;
     		    }   
@@ -1136,7 +1136,7 @@ interpose_button_event(
 		    {
 			XtRemoveTimeOut(timer_id);
 			d_click->waiting = False;
-			object_invoke_props(widget, event, NULL, 0);
+			object_invoke_props(widget, event, nullptr, 0);
 		    }
 		    else if ((bevent->state & ControlMask) == 0)
 		    {
@@ -1164,28 +1164,28 @@ interpose_button_event(
 		    object_move_release(widget, client_data, event, cont_dispatch);
 
                 else if (bevent->state & ShiftMask)
-                    object_toggle_select(widget, event, NULL, 0);
+                    object_toggle_select(widget, event, nullptr, 0);
 
 	    	else
-	    	    object_select(widget, event, NULL, 0);
+	    	    object_select(widget, event, nullptr, 0);
 		break;
 
 	    case 2:
 		if (event->type == ButtonPress && AB_btn1_transfer != True) /* BUTTON2 TRANSFER */
-		    object_button_press(widget, event, NULL, 0);
+		    object_button_press(widget, event, nullptr, 0);
 
 	    	else if (event->type == ButtonRelease)
 		{
 		    if (AB_btn1_transfer != True && move_in_progress) /* BUTTON2 TRANSFER */
 			object_move_release(widget, client_data, event, cont_dispatch);
 		    else
-	    	        object_toggle_select(widget, event, NULL, 0);
+	    	        object_toggle_select(widget, event, nullptr, 0);
 		}
 		break;
 
 	    case 3:
 		if (event->type == ButtonPress)
-		    object_popup_menu(widget, event, NULL, 0);
+		    object_popup_menu(widget, event, nullptr, 0);
 		break;
 	}
     }
@@ -1206,7 +1206,7 @@ interpose_button_event(
 	    	{
                      XtRemoveTimeOut(timer_id);
                      d_click->waiting = False;
-    	             object_button_press(d_click->widget, d_click->event, NULL, 0);
+    	             object_button_press(d_click->widget, d_click->event, nullptr, 0);
 		}
 	    }
 	    else /* call the generic drag event-handler to process the drag */
@@ -1281,7 +1281,7 @@ object_button_drag(
 		if (!move_in_progress) /* Initialize Move operation */
 		{
                     if (!obj_is_selected(moveObj))
-                        object_select(widget, NULL, NULL, 0);
+                        object_select(widget, nullptr, nullptr, 0);
  
                     if (initiate_move(widget, obj) == ERROR)
                     {
@@ -1372,7 +1372,7 @@ object_mselect(
     ABObj      	control,
 		pobj,
 		xyobj,
-		obj = NULL;
+		obj = nullptr;
     ABSelectedRec old_sel, new_sel;
     int   	num_controls; 
     XRectangle 	c_rect;
@@ -1412,7 +1412,7 @@ object_mselect(
         {
             xyobj = objxm_comp_get_subobj(control, AB_CFG_POSITION_OBJ);
 
-            if (objxm_get_widget(xyobj) != NULL)
+            if (objxm_get_widget(xyobj) != nullptr)
             {
                 x_get_widget_rect(objxm_get_widget(xyobj), &c_rect);
 
@@ -1460,7 +1460,7 @@ prevent_closeCB(
 {
    dtb_palette_prevent_close_msg_initialize(
 		&dtb_palette_prevent_close_msg); 
-    dtb_show_message(widget, &dtb_palette_prevent_close_msg, NULL, NULL);
+    dtb_show_message(widget, &dtb_palette_prevent_close_msg, nullptr, nullptr);
 }
 
 static void
@@ -1516,7 +1516,7 @@ object_track_iconify(
 		!ab_window_leader_iconified())
 	    {
 	    	obj_clear_flag(winobj, IconifiedFlag);
-		XtVaSetValues(widget, XtNinitialState, NormalState, NULL);
+		XtVaSetValues(widget, XtNinitialState, NormalState, nullptr);
 	    }
             break;
  
@@ -1543,7 +1543,7 @@ object_track_iconify(
 		!ab_window_leader_iconified())
 	    {
 	    	obj_set_flag(winobj, IconifiedFlag);
-		XtVaSetValues(widget, XtNinitialState, IconicState, NULL);
+		XtVaSetValues(widget, XtNinitialState, IconicState, nullptr);
 	    }
             break;
     }

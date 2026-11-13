@@ -65,7 +65,7 @@ int countItems (char **items)
 /********************************************************************************/
 XmStringTable TextStringsToXmStrings (char **text_strings)
 {
-XmStringTable xmstrings = NULL;
+XmStringTable xmstrings = nullptr;
 int count, lcv;
 
 if (text_strings) {
@@ -88,21 +88,21 @@ XmStringContext   context;
 XmStringCharSet   charset;
 XmStringDirection direction;
 Boolean           separator;
-char              *text_string = NULL, *temp = NULL;
+char              *text_string = nullptr, *temp = nullptr;
 
 text_string = (char *)calloc (1, sizeof (char));
 
 if (xmstring) {
     if (!XmStringInitContext (&context, xmstring)) {
       printf("Can't convert compound string.\n");
-      return (NULL);
+      return (nullptr);
     }
     while  (XmStringGetNextSegment (context, &temp, &charset,
                                     &direction, &separator)) {
       text_string = (char *)realloc (text_string, strlen (temp)+1);
-      if (text_string == NULL) {
+      if (text_string == nullptr) {
         printf("Can't allocate space for file name.\n");
-        return (NULL);
+        return (nullptr);
       }
       text_string = strcpy(text_string, temp);
     }
@@ -122,7 +122,7 @@ void delete_all_list_items (Widget list)
 {
 XtArgVal /* int */ item_count = 0;
 
-XtVaGetValues (list, XmNitemCount, &item_count, NULL);
+XtVaGetValues (list, XmNitemCount, &item_count, nullptr);
 if (item_count > 0) {
   XmListDeleteItemsPos (list, item_count, 1);
 }

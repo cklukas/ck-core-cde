@@ -97,7 +97,7 @@ static void  questionCB_CancelSave(Widget UxWidget,
 static char * GetDefinitionFileName( char *pszName)
 {
   char     *pszEnvVar;
-  char     *defname = (char *)NULL;
+  char     *defname = (char *)nullptr;
   int      bytesneeded = 0;
   char     *msgPtr, *errPtr;
   char     *newName;
@@ -176,7 +176,7 @@ static void  CreateFiles(void)
         DbInitDone = TRUE;
      }
      DtActionInvoke(UxTopLevel, "ReloadActions",
-                      NULL, 0, NULL, NULL, NULL, 0, NULL, NULL);
+                      nullptr, 0, nullptr, nullptr, nullptr, 0, nullptr, nullptr);
 
      _DtTurnOffHourGlass(CreateActionAppShell);
 
@@ -249,7 +249,7 @@ void  activateCB_CA_MB_FileSave(Widget UxWidget,
 
 {
   ushort   usRc = 0;
-  char     *pszActionFile = NULL;
+  char     *pszActionFile = nullptr;
   char     *msgPtr, *bufPtr;
   Boolean  bHaveError = FALSE;
   struct   stat statbuf;
@@ -279,7 +279,7 @@ void  activateCB_CA_MB_FileSave(Widget UxWidget,
        /* Create Action file name.                                     */
        /****************************************************************/
        newName = ReplaceSpaces(AD.pszName);
-       pszActionFile = NULL;
+       pszActionFile = nullptr;
        pszEnvVar = getenv("HOME");
        if ( pszEnvVar && strlen(pszEnvVar) ) {
 	  pszActionFile = malloc(strlen(pszEnvVar)+strlen(newName)+10);
@@ -317,7 +317,7 @@ What do you want to do?";
           display_question_message(CreateActionAppShell, bufPtr,
                               "Replace", questionCB_ReplaceFile,
                               "Cancel Save", questionCB_CancelSave,
-                              (char *)NULL, NULL);
+                              (char *)nullptr, nullptr);
 	  XtFree(bufPtr);
           bHaveError = True;
        }
@@ -357,7 +357,7 @@ static  void    activateCB_CA_FiletypesDelete( Widget UxWidget,
   /**************************************************************************/
   /* Determine the filetypes to delete and delete them.                     */
   /**************************************************************************/
-  XtVaGetValues(FileTypes, XmNitems, &items, NULL);
+  XtVaGetValues(FileTypes, XmNitems, &items, nullptr);
   if (XmListGetSelectedPos(FileTypes, &poslist, &poscnt)) {
      n = poscnt;
      p = poslist + (n-1);
@@ -409,7 +409,7 @@ static  void    activateCB_CA_FiletypesDelete( Widget UxWidget,
         for (i = 0; i < AD.cFiletypes; i++) {
           free_Filetypedata(AD.papFiletypes[i]);
         }
-        AD.papFiletypes = (FiletypeData **)NULL;
+        AD.papFiletypes = (FiletypeData **)nullptr;
         AD.cFiletypes = 0;
      }
   } else {
@@ -536,7 +536,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
 
         /* Creation of CreateActionAppShell */
         _UxParent = UxParent;
-        if ( _UxParent == NULL )
+        if ( _UxParent == nullptr )
         {
             _UxParent = UxTopLevel;
         }
@@ -556,7 +556,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNallowShellResize, TRUE,
                         XmNheight, 550,
 			XmNdeleteResponse, XmDO_NOTHING, /* CDExc19440 */
-                        NULL );
+                        nullptr );
 
 	/* CDExc19440 - make sure user doesn't accidentally lose work. */
 	XmAddWMProtocolCallback(CreateActionAppShell,
@@ -575,7 +575,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNx, 0,
                         XmNy, 0,
                         XmNscrollingPolicy, XmAUTOMATIC,
-                        NULL );
+                        nullptr );
         } else {
            /* Creation of CreateActionMainWindow */
            CreateActionMainWindow = XtVaCreateManagedWidget( "CreateActionMainWindow",
@@ -584,7 +584,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNunitType, XmPIXELS,
                         XmNx, 0,
                         XmNy, 0,
-                        NULL );
+                        nullptr );
         }
         XtAddCallback( CreateActionMainWindow, XmNhelpCallback,
                 helpCB_general,
@@ -604,7 +604,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNpacking, XmPACK_TIGHT,
                         XmNentryAlignment, XmALIGNMENT_BEGINNING,
                         XmNorientation, XmHORIZONTAL,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_MB_FileOption */
         CA_MB_FileOption_shell = XtVaCreatePopupShell ("CA_MB_FileOption_shell",
@@ -613,13 +613,13 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNheight, 1,
                         XmNallowShellResize, TRUE,
                         XmNoverrideRedirect, TRUE,
-                        NULL );
+                        nullptr );
 
         CA_MB_FileOption = XtVaCreateWidget( "CA_MB_FileOption",
                         xmRowColumnWidgetClass,
                         CA_MB_FileOption_shell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_MB_FileNew */
         /*
@@ -631,7 +631,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         CA_MB_FileOption,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 20, "New")),
                         XmNmnemonic, mnemonic[0],
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_MB_FileNew, XmNactivateCallback,
                 activateCB_FileNew,
                 (XtPointer) NULL );
@@ -646,7 +646,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         CA_MB_FileOption,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 15, "Open...")),
                         XmNmnemonic, mnemonic[0],
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_MB_FileOpen, XmNactivateCallback,
                 activateCB_FileOpen,
                 (XtPointer) NULL );
@@ -661,7 +661,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         CA_MB_FileOption,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 25, "Save")),
                         XmNmnemonic, mnemonic[0],
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_MB_FileSave, XmNactivateCallback,
                 activateCB_CA_MB_FileSave,
                 (XtPointer) NULL );
@@ -670,7 +670,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
         CA_MB_Sep = XtVaCreateManagedWidget( "CA_MB_Sep",
                         xmSeparatorWidgetClass,
                         CA_MB_FileOption,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_MB_FileExit */
         /*
@@ -682,7 +682,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         CA_MB_FileOption,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 30, "Exit")),
                         XmNmnemonic, mnemonic[0],
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_MB_FileExit, XmNactivateCallback,
                 activateCB_FileQuit,
                 (XtPointer) NULL );
@@ -698,7 +698,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 10, "File")),
                         XmNmnemonic, mnemonic[0],
                         XmNsubMenuId, CA_MB_FileOption,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_MB_HelpOption */
         CA_MB_HelpOption_shell = XtVaCreatePopupShell ("CA_MB_HelpOption_shell",
@@ -707,13 +707,13 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNheight, 1,
                         XmNallowShellResize, TRUE,
                         XmNoverrideRedirect, TRUE,
-                        NULL );
+                        nullptr );
 
         CA_MB_HelpOption = XtVaCreateWidget( "CA_MB_HelpOption",
                         xmRowColumnWidgetClass,
                         CA_MB_HelpOption_shell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL );
+                        nullptr );
 
         /*
          * Creation of CA_MB_HelpOverview
@@ -725,7 +725,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 60, "Overview")),
                         XmNmnemonic, mnemonic[0],
                         XmNuserData, CreateActionAppShell,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_MB_HelpOverview, XmNactivateCallback,
                 helpCB_general,
                 (XtPointer) HELP_OVERVIEW );
@@ -740,7 +740,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 70, "Tasks")),
                         XmNmnemonic, mnemonic[0],
                         XmNuserData, CreateActionAppShell,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_MB_HelpTasks, XmNactivateCallback,
                 helpCB_general,
                 (XtPointer) HELP_TASKS );
@@ -757,7 +757,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 65, "Table Of Contents...")),
                         XmNmnemonic, mnemonic[0],
                         XmNuserData, CreateActionAppShell,
-                        NULL );
+                        nullptr );
 #endif
         /*
         * Creation of CA_MB_HelpReference
@@ -769,7 +769,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 75, "Reference")),
                         XmNmnemonic, mnemonic[0],
                         XmNuserData, CreateActionAppShell,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_MB_HelpReference, XmNactivateCallback,
                 helpCB_general,
                 (XtPointer) HELP_REFERENCE );
@@ -780,7 +780,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
         CA_MB_Help_Sep1 = XtVaCreateManagedWidget( "CA_MB_Help_Sep1",
                         xmSeparatorWidgetClass,
                         CA_MB_HelpOption,
-                        NULL );
+                        nullptr );
 
         /*
          * Creation of CA_MB_HelpUsing
@@ -792,7 +792,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 80, "Using Help")),
                         XmNmnemonic, mnemonic[0],
                         XmNuserData, CreateActionAppShell,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_MB_HelpUsing, XmNactivateCallback,
                 helpCB_general,
                 (XtPointer) HELP_USING );
@@ -803,7 +803,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
         CA_MB_Help_Sep2 = XtVaCreateManagedWidget( "CA_MB_Help_Sep2",
                         xmSeparatorWidgetClass,
                         CA_MB_HelpOption,
-                        NULL );
+                        nullptr );
 
         /*
          * Creation of CA_MB_HelpAbout
@@ -815,7 +815,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 85, "About Create Action")),
                         XmNmnemonic, mnemonic[0],
                         XmNuserData, CreateActionAppShell,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_MB_HelpAbout, XmNactivateCallback,
                 helpCB_general,
                 (XtPointer) HELP_ABOUT );
@@ -831,7 +831,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNmnemonic, mnemonic[0],
                         XmNsubMenuId, CA_MB_HelpOption,
                         XmNuserData, CreateActionAppShell,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_MB_OptionsOption */
         CA_MB_OptionsOption_shell = XtVaCreatePopupShell ("CA_MB_OptionsOption_shell",
@@ -840,13 +840,13 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNheight, 1,
                         XmNallowShellResize, TRUE,
                         XmNoverrideRedirect, TRUE,
-                        NULL );
+                        nullptr );
 
         CA_MB_OptionsOption = XtVaCreateWidget( "CA_MB_OptionsOption",
                         xmRowColumnWidgetClass,
                         CA_MB_OptionsOption_shell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL );
+                        nullptr );
 
         /* Creation of ColorMonoOption */
         snprintf(mnemonic, sizeof(mnemonic), "%s", GETMESSAGE(2, 50, "M"));
@@ -857,7 +857,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNmnemonic, mnemonic[0],
                         XmNindicatorSize, 20,
                         XmNhighlightThickness, 0,
-                        NULL );
+                        nullptr );
         XtAddCallback( ColorMonoOption, XmNvalueChangedCallback,
                 valueChangedCB_ColorMonoOption,
                 (XtPointer) NULL );
@@ -872,7 +872,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         RES_CONVERT( XmNlabelString, GETMESSAGE(2, 35, "Options")),
                         XmNmnemonic, mnemonic[0],
                         XmNsubMenuId, CA_MB_OptionsOption,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_Form */
         CA_Form = XtVaCreateManagedWidget( "CA_Form",
@@ -880,7 +880,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         CreateActionMainWindow,
                         XmNnoResize, FALSE,
                         XmNresizePolicy, XmRESIZE_ANY,
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -901,7 +901,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_ActionNameTextField */
         CA_ActionNameTextField = XtVaCreateManagedWidget( "CA_ActionNameTextField",
@@ -916,7 +916,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 #if 0
         XtAddCallback( CA_ActionNameTextField, XmNvalueChangedCallback,
                 valueChangedCB_CA_ActionNameTextField,
@@ -943,7 +943,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_WIDGET,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_ActionIconForm */
         CA_ActionIconForm = XtVaCreateManagedWidget( "CA_ActionIconForm",
@@ -968,7 +968,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNallowOverlap, TRUE,
                         XmNmarginHeight, 0,
                         XmNverticalSpacing, 5,
-                        NULL );
+                        nullptr );
 
         CA_MED_IconForm = XtVaCreateManagedWidget( "CA_MED_IconForm",
                         xmFormWidgetClass,
@@ -981,7 +981,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomPosition, 88,
                         XmNbottomOffset, 0,
                         XmNbottomAttachment, XmATTACH_POSITION,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_MED_IconGadget */
 	emptyString = XmStringCreateLocalized("");
@@ -1011,7 +1011,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomOffset, 0,
                         XmNbottomAttachment, XmATTACH_POSITION,
                         */
-                        NULL );
+                        nullptr );
         pIconData->wid = CA_MED_IconGadget;
         pIconData->size = Medium_Icon;
         XtAddCallback( CA_MED_IconGadget, XmNcallback,
@@ -1031,7 +1031,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomPosition, 88,
                         XmNbottomOffset, 0,
                         XmNbottomAttachment, XmATTACH_POSITION,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_TINY_IconGadget */
         pIconData = (IconData *)XtMalloc(sizeof(IconData));
@@ -1052,7 +1052,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNbottomOffset, BORDER_OFFSET,
                         XmNbottomAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         pIconData->wid = CA_TINY_IconGadget;
         pIconData->size = Tiny_Icon;
         XtAddCallback( CA_TINY_IconGadget, XmNcallback,
@@ -1071,7 +1071,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomPosition, 88,
                         XmNbottomOffset, 0,
                         XmNbottomAttachment, XmATTACH_POSITION,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_LRG_IconGadget */
         pIconData = (IconData *)XtMalloc(sizeof(IconData));
@@ -1092,7 +1092,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNbottomOffset, BORDER_OFFSET,
                         XmNbottomAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         pIconData->wid = CA_LRG_IconGadget;
         pIconData->size = Large_Icon;
         XtAddCallback( CA_LRG_IconGadget, XmNcallback,
@@ -1114,7 +1114,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopPosition, 50,
                         XmNtopOffset, (int)(FINDEDIT_SPACING / 2),
                         XmNtopAttachment, XmATTACH_POSITION,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_EditIcon_button, XmNactivateCallback,
                 activateCB_edit_icon,
                 (XtPointer) CA_ACTION_ICONS );
@@ -1132,7 +1132,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomPosition, 50,
                         XmNbottomOffset, (int)(FINDEDIT_SPACING / 2),
                         XmNbottomAttachment, XmATTACH_POSITION,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_FindSet_button, XmNactivateCallback,
                 activateCB_open_FindSet,
                 (XtPointer) CA_ACTION_ICONS );
@@ -1140,34 +1140,34 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
         /******************************************************************/
         /* Determine which button is wider, and attach the short on to it */
         /******************************************************************/
-        XtVaGetValues(CA_EditIcon_button, XmNwidth, &dim1, NULL);
-        XtVaGetValues(CA_FindSet_button, XmNwidth, &dim2, NULL);
+        XtVaGetValues(CA_EditIcon_button, XmNwidth, &dim1, nullptr);
+        XtVaGetValues(CA_FindSet_button, XmNwidth, &dim2, nullptr);
         if (dim1 > dim2) {
            XtVaSetValues(CA_FindSet_button,
                          XmNwidth, dim1,
-                         NULL);
+                         nullptr);
         } else {
            XtVaSetValues(CA_EditIcon_button,
                          XmNwidth, dim2,
-                         NULL);
+                         nullptr);
         }
         /******************************************************************/
         /* Determine vertical positioning for findset and edit buttons    */
         /******************************************************************/
-        XtVaGetValues(CA_EditIcon_button, XmNheight, &dim1, NULL);
-        XtVaGetValues(CA_FindSet_button, XmNheight, &dim2, NULL);
+        XtVaGetValues(CA_EditIcon_button, XmNheight, &dim1, nullptr);
+        XtVaGetValues(CA_FindSet_button, XmNheight, &dim2, nullptr);
         if ((int)(dim1 + dim2) + (3*(FINDEDIT_SPACING)) > ICON_MIN_HEIGHT) {
            XtVaSetValues(CA_EditIcon_button,
                          XmNbottomOffset, FINDEDIT_SPACING,
                          XmNbottomAttachment, XmATTACH_FORM,
-                         NULL);
+                         nullptr);
            XtVaSetValues(CA_FindSet_button,
                          XmNbottomOffset, FINDEDIT_SPACING,
                          XmNbottomWidget, CA_EditIcon_button,
                          XmNbottomAttachment, XmATTACH_WIDGET,
                          XmNtopOffset, FINDEDIT_SPACING,
                          XmNtopAttachment, XmATTACH_FORM,
-                         NULL);
+                         nullptr);
         }
 
 
@@ -1187,7 +1187,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNbottomOffset, 5,
                         XmNbottomAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -1207,7 +1207,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_WIDGET,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_DblClkText */
         CA_DblClkText = XtVaCreateManagedWidget( "CA_DblClkText",
@@ -1222,7 +1222,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNrows, 1,
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -1242,7 +1242,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_WIDGET,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -1260,7 +1260,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNbottomOffset, 0,
                         XmNbottomAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -1278,7 +1278,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNtopOffset, 0,
                         XmNtopAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -1298,7 +1298,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopOffset, 15,
                         XmNtopWidget, CA_XprtSep1,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_XprtActionOpenText */
         CA_XprtActionOpenText = XtVaCreateManagedWidget( "CA_XprtActionOpenText",
@@ -1315,7 +1315,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_WIDGET,
                       /*XmNeditMode, XmMULTI_LINE_EDIT,*/
                       /*XmNwordWrap, TRUE,*/
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -1337,7 +1337,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopOffset, 15,
                         XmNtopWidget, CA_XprtActionOpenText,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -1354,7 +1354,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopAttachment, XmATTACH_WIDGET,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_FiletypesAdd */
         CA_FiletypesAdd = XtVaCreateManagedWidget( "CA_FiletypesAdd",
@@ -1364,7 +1364,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNalignment, XmALIGNMENT_BEGINNING,
                         XmNmarginLeft, 5,
                         XmNmarginRight, 5,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_FiletypesAdd, XmNactivateCallback,
                 activateCB_add_filetype,
                 (XtPointer) NULL );
@@ -1377,7 +1377,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNalignment, XmALIGNMENT_BEGINNING,
                         XmNmarginLeft, 5,
                         XmNmarginRight, 5,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_FiletypesDelete, XmNactivateCallback,
                 activateCB_CA_FiletypesDelete,
                 (XtPointer) NULL );
@@ -1390,7 +1390,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNalignment, XmALIGNMENT_BEGINNING,
                         XmNmarginLeft, 5,
                         XmNmarginRight, 5,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_FiletypesEdit, XmNactivateCallback,
                 activateCB_edit_filetype,
                 (XtPointer) NULL );
@@ -1418,7 +1418,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNrightOffset, 10,
                         XmNrightWidget, rowColumn1,
                         XmNrightAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_FiletypesList */
         CA_FiletypesList = XtVaCreateManagedWidget( "CA_FiletypesList",
@@ -1426,7 +1426,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         CA_FiletypesWindow,
                         XmNselectionPolicy, XmSINGLE_SELECT,
                         XmNshadowThickness, 0,
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -1446,7 +1446,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNtopOffset, 15,
                         XmNtopWidget, rowColumn1,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         if (bLowRes) {
            /* Creation of CA_DroppableFiletypesRowColumn */
@@ -1470,7 +1470,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                            XmNleftAttachment, XmATTACH_FORM,
                            XmNrightOffset, 10,
                            XmNrightAttachment, XmATTACH_FORM,
-                           NULL );
+                           nullptr );
         } else {
            /* Creation of CA_DroppableFiletypesRowColumn */
            CA_DroppableFiletypesRowColumn = XtVaCreateManagedWidget( "CA_DroppableFiletypesRowColumn",
@@ -1492,7 +1492,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                            XmNleftAttachment, XmATTACH_WIDGET,
                            XmNrightOffset, 10,
                            XmNrightAttachment, XmATTACH_FORM,
-                           NULL );
+                           nullptr );
         }
 
         /* Creation of CA_AllFiletypesToggle */
@@ -1501,14 +1501,14 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         CA_DroppableFiletypesRowColumn,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(4, 17, "All Datatypes")),
                         XmNset, TRUE,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_FiletypesInListToggle */
         CA_FiletypesInListToggle = XtVaCreateManagedWidget( "CA_FiletypesInListToggle",
                         xmToggleButtonWidgetClass,
                         CA_DroppableFiletypesRowColumn,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(4, 18, "Only Above List")),
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_FiletypesInListToggle, XmNvalueChangedCallback,
                 valueChangedCB_DroppableFiletypes,
                 (XtPointer) CA_DF_ONLYFTFILES );
@@ -1532,7 +1532,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomOffset, 20,
                         XmNbottomWidget, XprtOptionForm,
                         XmNbottomAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_Expand, XmNactivateCallback,
                 activateCB_ExpertOption,
                 (XtPointer) NULL );
@@ -1549,20 +1549,20 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNheight, 1,
                         XmNallowShellResize, TRUE,
                         XmNoverrideRedirect, TRUE,
-                        NULL );
+                        nullptr );
 
         CA_WindowType_Pane = XtVaCreateWidget( "CA_WindowType_Pane",
                         xmRowColumnWidgetClass,
                       /*CA_WindowType,*/
                         CA_WindowType_OptionMenuShell,
                         XmNrowColumnType, XmMENU_PULLDOWN,
-                        NULL );
+                        nullptr );
 
         CA_WinTypeX = XtVaCreateManagedWidget( "CA_WinTypeX",
                         xmPushButtonWidgetClass,
                         CA_WindowType_Pane,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(3, 34, "Graphical (X-Window)")),
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_WinTypeX, XmNactivateCallback,
                 activateCB_WindowTypeOptionMenu,
                 (XtPointer) CA_WT_XWINDOWS );
@@ -1571,7 +1571,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         xmPushButtonWidgetClass,
                         CA_WindowType_Pane,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(3, 36, "Terminal (Auto-Close)")),
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_WinTypeAutoClose, XmNactivateCallback,
                 activateCB_WindowTypeOptionMenu,
                 (XtPointer) CA_WT_TERM );
@@ -1580,7 +1580,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         xmPushButtonWidgetClass,
                         CA_WindowType_Pane,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(3, 38, "Terminal (Manual Close)")),
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_WinTypeManualClose, XmNactivateCallback,
                 activateCB_WindowTypeOptionMenu,
                 (XtPointer) CA_WT_PERMTERM );
@@ -1589,7 +1589,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         xmPushButtonWidgetClass,
                         CA_WindowType_Pane,
                         RES_CONVERT( XmNlabelString, GETMESSAGE(3, 40, "No Output")),
-                        NULL );
+                        nullptr );
         XtAddCallback( CA_WinTypeNoOutput, XmNactivateCallback,
                 activateCB_WindowTypeOptionMenu,
                 (XtPointer) CA_WT_XWINDOWS );
@@ -1608,7 +1608,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomOffset, 15,
                         XmNbottomWidget, CA_Expand,
                         XmNbottomAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
         CA_WindowTypeArea = CA_WindowType_OptionMenu;
 
         /*********************************************************************/
@@ -1633,7 +1633,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNbottomOffset, 15,
                         XmNbottomWidget, CA_WindowTypeArea,
                         XmNbottomAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of CA_HelpText */
         CA_HelpText = XtVaCreateManagedWidget( "CA_HelpText",
@@ -1646,7 +1646,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
                         XmNx, 12,
                         XmNy, 0,
                         XmNrows, 3,
-                        NULL );
+                        nullptr );
 
         /*********************************************************************/
         /*                                                                   */
@@ -1655,7 +1655,7 @@ static Widget   _Uxbuild_CreateActionAppShell(void)
         /*********************************************************************/
         XtVaSetValues(CA_MenuBar,
                         XmNmenuHelpWidget, CA_MB_HelpTop,
-                        NULL );
+                        nullptr );
 
         XtAddCallback( CreateActionAppShell, XmNdestroyCallback,
                 UxDestroyContextCB,
@@ -1710,7 +1710,7 @@ Widget  create_applicationShell1(swidget _UxUxParent)
 			  XmNwidth, sessiondata.width,
 			  XmNheight, sessiondata.height,
                           XmNinitialState, sessiondata.iconicState,
-                          NULL);
+                          nullptr);
 
 	   /* display in workspace */
 
@@ -1718,12 +1718,12 @@ Widget  create_applicationShell1(swidget _UxUxParent)
 	   {
 	       char *workspaces = sessiondata.workspaces;
 	       char *ptr;
-	       Atom * workspace_atoms = NULL;
+	       Atom * workspace_atoms = nullptr;
 	       int num_workspaces = 0;
 	       do
 	       {
 		   ptr = strchr (workspaces, '*');
-		   if (ptr != NULL) *ptr = '\0';
+		   if (ptr != nullptr) *ptr = '\0';
 
 		   workspace_atoms = (Atom *) XtRealloc (
 				(char *)workspace_atoms, 
@@ -1733,43 +1733,43 @@ Widget  create_applicationShell1(swidget _UxUxParent)
 					workspaces, True);
 
 		   num_workspaces++;				
-		   if (ptr != NULL)
+		   if (ptr != nullptr)
 		   {
 		       *ptr = '*';
 		       workspaces = ptr + 1;
 		   }
-	       } while (ptr != NULL);
+	       } while (ptr != nullptr);
 	       DtWsmSetWorkspacesOccupied( XtDisplay(CreateActionAppShell),
 					   XtWindow(CreateActionAppShell),
 					   workspace_atoms,
 					   num_workspaces);
 	       XtFree ((char *) workspace_atoms);
-	       workspace_atoms = NULL;
+	       workspace_atoms = nullptr;
 	   }
 	}
 	else if (bLowRes) {
            XtVaGetValues (CA_Form,
                           XmNheight, &dimHeight,
                           XmNwidth, &dimWidth,
-                          NULL);
+                          nullptr);
            XtVaGetValues (CreateActionMainWindow,
                           XmNverticalScrollBar, &widTmp,
-                          NULL);
+                          nullptr);
            XtVaGetValues (widTmp,
                           XmNwidth, &dimTmp,
-                          NULL);
+                          nullptr);
            dimHeight += dimTmp;
            dimWidth += dimTmp;
 
            XtVaGetValues (CA_MenuBar,
                           XmNheight, &dimTmp,
-                          NULL);
+                          nullptr);
            dimHeight += dimTmp;
 
            XtVaSetValues (CreateActionAppShell,
                           XmNheight, dimHeight,
                           XmNwidth, dimWidth,
-                          NULL);
+                          nullptr);
         }
 
 	XtSetMappedWhenManaged(rtrn, True);

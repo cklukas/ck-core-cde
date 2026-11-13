@@ -98,7 +98,7 @@ _DtStripSpaces(
    int i;
    String space;
 
-   if (string == NULL)
+   if (string == nullptr)
       return (string);
 
 
@@ -137,18 +137,18 @@ _DtStripSpaces(
       int len;
 
       i = 0;
-      space = NULL;
+      space = nullptr;
 
       while (string[i])
       {
          if (((len = mblen(string + i, MB_CUR_MAX)) == 1) && isspace((u_char)string[i]))
          {
             /* Found a space */
-            if (space == NULL)
+            if (space == nullptr)
                space = string + i;
          }
          else if (space)
-            space = NULL;
+            space = nullptr;
 
          /* if there is an invalid character, treat as a valid one-byte */
          if (len == -1)
@@ -183,7 +183,7 @@ _DtMessage(
 
 {
    _DtMessageDialog(w, title, message_text, helpIdStr, False,
-                 NULL, _DtMessageOK, _DtMessageClose, helpCallback, True, 
+                 nullptr, _DtMessageOK, _DtMessageClose, helpCallback, True, 
                  ERROR_DIALOG);
 }
 
@@ -209,7 +209,7 @@ _DtMessageDialog(
         int dialogType )
 
 {
-   Widget message = NULL;
+   Widget message = nullptr;
    Widget widget;
    XmString message_string;
    XWindowAttributes attributes;
@@ -228,7 +228,7 @@ _DtMessageDialog(
 
    /*  Search up to get the topmost shell  */
 
-   while (XtParent (w) != NULL && !(XtIsSubclass (w, shellWidgetClass)))
+   while (XtParent (w) != nullptr && !(XtIsSubclass (w, shellWidgetClass)))
       w = XtParent (w);
 
    switch (dialogType)
@@ -282,7 +282,7 @@ _DtMessageDialog(
    XtAddCallback(widget, XmNactivateCallback, ok_callback, (caddr_t) message);
   
    widget = XmMessageBoxGetChild(message, XmDIALOG_HELP_BUTTON);
-   if (helpIdStr != NULL)
+   if (helpIdStr != nullptr)
    {
       if (help_callback)
       {
@@ -304,7 +304,7 @@ _DtMessageDialog(
 
    if (deleteOnClose)
    {
-      if (close_callback == NULL)
+      if (close_callback == nullptr)
          close_callback = _DtMessageClose;
 
       XtAddEventHandler(XtParent (message), StructureNotifyMask, True,

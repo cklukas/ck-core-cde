@@ -134,7 +134,7 @@ ReadCatalog( int set_num, int msg_num, char *def_str )
       curNlsPath = getenv("NLSPATH");
       if (curNlsPath && strlen(curNlsPath) == 0)
       {
-        curNlsPath = NULL;
+        curNlsPath = nullptr;
       }
 
      /*
@@ -145,7 +145,7 @@ ReadCatalog( int set_num, int msg_num, char *def_str )
       */
       newNlsPathLen = 7 + 1 + strlen(NLS_PATH_STRING) + 1;
 
-      if (curNlsPath != NULL)
+      if (curNlsPath != nullptr)
       {
        /*
         * 1 is ":"
@@ -158,7 +158,7 @@ ReadCatalog( int set_num, int msg_num, char *def_str )
           newNlsPathLen += length + 1;
       }
 
-      newNlsPath = newNlsPathLen ? malloc(newNlsPathLen) : NULL;
+      newNlsPath = newNlsPathLen ? malloc(newNlsPathLen) : nullptr;
 
       if (newNlsPath)
       {
@@ -208,7 +208,7 @@ makeEnv( char *name, char *value )
 	size_t size;
 
 	if (!name || !value || !EnvAllocationSize(strlen(name), strlen(value), &size))
-	    return NULL;
+	    return nullptr;
 	result = malloc (size);
 	if (!result) {
 		LogOutOfMem(
@@ -230,7 +230,7 @@ char *
 getEnv( char **e, char *name )
 {
     size_t l;
-    if (!e || !name) return NULL;
+    if (!e || !name) return nullptr;
     l = strlen(name);
 
     while (*e) {
@@ -332,7 +332,7 @@ appendArg(char ***argv, const char *word)
 	goto failed;
     }
     if (count) memcpy(result, *argv, count * sizeof(char *));
-    result[count + 1] = NULL;
+    result[count + 1] = nullptr;
     free(*argv);
     *argv = result;
     return 1;
@@ -388,7 +388,7 @@ parseArgs(char ***argv, const char *string)
 	memcpy(result[used], word, cursor - word);
 	result[used++][cursor - word] = '\0';
     }
-    result[used] = NULL;
+    result[used] = nullptr;
     free(*argv);
     *argv = result;
     return 1;
@@ -438,13 +438,13 @@ parseEnv( char **e, char *string )
     if (!s2)
         return e;
 
-    while ((t1 = strtok_r(s1," \t", &state)) != NULL ) {
-	if ( (t2 = strchr(t1,'=')) != NULL ) {
+    while ((t1 = strtok_r(s1," \t", &state)) != nullptr ) {
+	if ( (t2 = strchr(t1,'=')) != nullptr ) {
 	    *t2++ = '\0';
 	    e = setEnv(e, t1, t2);
 	}
 
-	s1 = NULL;
+	s1 = nullptr;
     }
 
     free(s2);
@@ -533,7 +533,7 @@ BoundedCallThread( void *data )
     pthread_mutex_unlock (&call->lock);
     if (abandoned)
 	free (call);
-    return NULL;
+    return nullptr;
 }
 
 int
@@ -549,11 +549,11 @@ BoundedCall( unsigned seconds, void *(*job)(void *), void *argument,
     int			started, status = 0;
 
     call = calloc (1, sizeof (*call));
-    if (call == NULL)
+    if (call == nullptr)
 	return -1;
     call->job = job;
     call->argument = argument;
-    pthread_mutex_init (&call->lock, NULL);
+    pthread_mutex_init (&call->lock, nullptr);
     pthread_condattr_init (&condition);
     pthread_condattr_setclock (&condition, CLOCK_MONOTONIC);
     pthread_cond_init (&call->finished, &condition);
@@ -565,7 +565,7 @@ BoundedCall( unsigned seconds, void *(*job)(void *), void *argument,
     sigfillset (&all);
     pthread_sigmask (SIG_SETMASK, &all, &previous);
     started = pthread_create (&thread, &attributes, BoundedCallThread, call);
-    pthread_sigmask (SIG_SETMASK, &previous, NULL);
+    pthread_sigmask (SIG_SETMASK, &previous, nullptr);
     pthread_attr_destroy (&attributes);
     if (started != 0)
     {
@@ -658,7 +658,7 @@ MakeLangList( void )
     p = savelist = strdup(languageList);
     nlang = 0;
 
-    while ( (s = strtok(p, DELIM)) != NULL ) {
+    while ( (s = strtok(p, DELIM)) != nullptr ) {
 
         /* the sort array holds 500 languages */
         if ( nlang >= (int)(sizeof(lang) / sizeof(lang[0])) - 1 )
@@ -667,7 +667,7 @@ MakeLangList( void )
         if ( nlang == 0 ) {
             lang[0] = s;
             lang[++nlang] = 0;
-            p = NULL;
+            p = nullptr;
             continue;
         }
 
@@ -681,7 +681,7 @@ MakeLangList( void )
             lang[++nlang] = 0;
         }
 
-        p = NULL;
+        p = nullptr;
     }
 
 
@@ -715,7 +715,7 @@ MatchesFileSuffix(const char *filename, const char *suffix)
 
     return (different == 0);
 #else
-    return (strrstr(filename, suffix) != NULL);
+    return (strrstr(filename, suffix) != nullptr);
 #endif
 }
 
@@ -746,9 +746,9 @@ ScanNLSDir(char *dirname)
      *  /usr/lib/nls/loc.
      *  File name is "??_??" which can be used as LANG variable.
      */
-    if((dirp = opendir(dirname)) != NULL)
+    if((dirp = opendir(dirname)) != nullptr)
     {
-        while((dp = readdir(dirp)) != NULL && !ScanExpired())
+        while((dp = readdir(dirp)) != nullptr && !ScanExpired())
 	{
             if(strlen(dp->d_name) == 5 && dp->d_name[2] == '_')
 	    {
@@ -778,9 +778,9 @@ ScanNLSDir(char *dirname)
     /*
      * To determin the fully installed locale list, check several locations.
      */
-    if(NULL != (dirp = opendir(dirname)))
+    if(nullptr != (dirp = opendir(dirname)))
     {
-        while((dp = readdir(dirp)) != NULL && !ScanExpired())
+        while((dp = readdir(dirp)) != nullptr && !ScanExpired())
 	{
 	    locale = dp->d_name;
 
@@ -824,16 +824,16 @@ SetDefaultLanguage(struct display *d)
     char lineBuf[160];
     int n;
     char *p;
-    char *lang = NULL;
+    char *lang = nullptr;
 
-    if((lang = getenv( "LANG" )) == NULL ) {
-	if((file = fopen(ENVFILE, "r")) != NULL) {
+    if((lang = getenv( "LANG" )) == nullptr ) {
+	if((file = fopen(ENVFILE, "r")) != nullptr) {
 	    while(fgets(lineBuf, sizeof(lineBuf) - 1, file)) {
 		n = strlen(lineBuf);
 		if(n > 1 && lineBuf[0] != '#') {
 		    if(lineBuf[n - 1] == '\n')
 			lineBuf[n - 1] = '\0';
-		    if((p = strstr(lineBuf, "LANG=")) != NULL) {
+		    if((p = strstr(lineBuf, "LANG=")) != nullptr) {
 			p += 5;
 			if(strlen(p) == 5 && p[2] == '_') {
 			    lang = p;
@@ -845,7 +845,7 @@ SetDefaultLanguage(struct display *d)
 	    fclose(file);
 	}
     }
-    if(lang != NULL && strlen(lang) > 0) {
+    if(lang != nullptr && strlen(lang) > 0) {
     /*
      * If LANG is set for hft, we need to change it for X.
      * Currently there are four hft LANG variables.
@@ -870,11 +870,11 @@ setLang( struct display *d, char **env , char *langptr)
 {
     char  langlist[LANGLISTSIZE];
     int   s = 0;
-    char *element = NULL;
+    char *element = nullptr;
     int   set_def_lang = FALSE;
 
 
-    if (NULL != langptr)
+    if (nullptr != langptr)
       Debug("setLang():  langlist = %s\n", langptr);
     else
       Debug("setLang():  langlist = NULL\n");

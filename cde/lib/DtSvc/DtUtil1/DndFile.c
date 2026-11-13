@@ -288,7 +288,7 @@ dndFileConvert(
 		if (dragData->numItems > 1)
 			return False;
 
-		if ((name = strrchr(dragData->data.files[0],'/')) != NULL)
+		if ((name = strrchr(dragData->data.files[0],'/')) != nullptr)
 			name++;
 		else
 			name = dragData->data.files[0];
@@ -331,7 +331,7 @@ dndFileConvertFinish(
 
 	if (dragData->data.files) {
 		XtFree((char *)dragData->data.files);
-		dragData->data.files = NULL;
+		dragData->data.files = nullptr;
 	}
 	if (dtDragInfo->clientData)
 		XtFree((char *)dtDragInfo->clientData);
@@ -373,7 +373,7 @@ dndFileTransferTargets(
 		target = XA_FILE_NAME;
 	} else {
 		*numTransferTargets	= 0;
-		*transferTargets	= NULL;
+		*transferTargets	= nullptr;
 		return;
 	}
  
@@ -435,7 +435,7 @@ dndFileTransfer(
 		}
 	}
 
-	if (value != NULL)
+	if (value != nullptr)
 		XtFree(value);
 }
 
@@ -629,7 +629,7 @@ dndFileEncode(
 		char	cwd[MAXPATHLEN];
 		char	*realPath;
 
-		if (getcwd(cwd,MAXPATHLEN) == NULL) {
+		if (getcwd(cwd,MAXPATHLEN) == nullptr) {
 			strcpy(cwd,"/");
 		}
 		realPath = XtMalloc(strlen(cwd) + strlen(fileName) + 2);

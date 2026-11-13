@@ -74,7 +74,7 @@ static char *ck_mkdtemp(char *t)
     ++ck_mk_calls;
     if (ck_mk_fail) {
         errno = EACCES;
-        return NULL;
+        return nullptr;
     }
     assert(n >= 6 && strcmp(t + n - 6, "XXXXXX") == 0);
     x = t + n - 6;
@@ -84,10 +84,10 @@ static char *ck_mkdtemp(char *t)
         if (mkdir(t, 0700) == 0)
             return t;
         if (errno != EEXIST)
-            return NULL;
+            return nullptr;
     }
     errno = EEXIST;
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -98,9 +98,9 @@ static char *ck_mkdtemp(char *t)
 static char *ck_tempnam(const char *dir, const char *prefix)
 {
     char path[PATH_MAX];
-    if (dir == NULL)
+    if (dir == nullptr)
         dir = getenv("TMPDIR");
-    if (dir == NULL)
+    if (dir == nullptr)
         dir = "/tmp";
     snprintf(path, sizeof path, "%s/%sAAAAAA", dir, prefix);
     return strdup(path);
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
     ck_mk_fail = 1;
     c = fileStoreBuffer("doc", "fourth\n", 7);
     ck_mk_fail = 0;
-    assert(c == NULL);
+    assert(c == nullptr);
     assert(strcmp(ck_slurp(a), DOC_TEXT) == 0);
     ck_victim_intact();
 
@@ -285,11 +285,11 @@ int main(int argc, char **argv)
         char longname[PATH_MAX + 8];
         memset(longname, 'n', sizeof longname - 1);
         longname[sizeof longname - 1] = '\0';
-        assert(fileStoreBuffer(longname, "x", 1) == NULL);
+        assert(fileStoreBuffer(longname, "x", 1) == nullptr);
     }
 
     /* No name: "unnamed". */
-    c = fileStoreBuffer(NULL, "u", 1);
+    c = fileStoreBuffer(nullptr, "u", 1);
     assert(c);
     snprintf(path, sizeof path, "%s/unnamed", dir);
     assert(strcmp(c, path) == 0);

@@ -285,7 +285,7 @@ void GetSessionInfo( void )
 #ifdef DEBUG
     printf("session file = %s\n", path);
 #endif
-    if ((db = XrmGetFileDatabase (path)) == NULL)
+    if ((db = XrmGetFileDatabase (path)) == nullptr)
     {
        msgPtr = GETMESSAGE(5, 162, "Could not restore session from file:");
        fmtPtr = "%s\n %s\n";
@@ -359,7 +359,7 @@ void GetSessionInfo( void )
     xrm_name[0] = XrmStringToQuark ("iconic");
     if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value))
     {
-        if ( value.addr!=NULL && strcmp((char *)value.addr, "True")==0 )
+        if ( value.addr!=nullptr && strcmp((char *)value.addr, "True")==0 )
             sessiondata.iconicState = IconicState;
         else
             sessiondata.iconicState = NormalState;
@@ -371,7 +371,7 @@ void GetSessionInfo( void )
     xrm_name[0] = XrmStringToQuark ("expert");
     if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value))
     {
-	sessiondata.showExpert = ((value.addr != NULL) &&
+	sessiondata.showExpert = ((value.addr != nullptr) &&
 				  (strcmp((char *)value.addr, "True") == 0));
     }
 
@@ -381,7 +381,7 @@ void GetSessionInfo( void )
     xrm_name[0] = XrmStringToQuark ("workspace");
     if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value))
     {
-        if ( value.addr!=NULL)
+        if ( value.addr!=nullptr)
             strcpy(sessiondata.workspaces, value.addr);
         else
             sessiondata.workspaces[0] = '\0';
@@ -419,7 +419,7 @@ void SaveSession( void )
     XmWidgetExtData         extData;
     WM_STATE                *wmState;
     Atom                    wmStateAtom, actualType;
-    Atom		    *ws_presence = NULL;
+    Atom		    *ws_presence = nullptr;
     int                     actualFormat, j;
     unsigned long           nitems, leftover, num_workspaces=0;
     char		    all_workspace_names[256];
@@ -435,7 +435,7 @@ void SaveSession( void )
 
     /*  Create the session file  */
     if (((fd = creat(path, S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP)) == -1) ||
-	((fp = fdopen(fd, "w")) == (FILE *)NULL))
+	((fp = fdopen(fd, "w")) == (FILE *)nullptr))
     {
        msgPtr = GETMESSAGE(5, 160, "Could not save session to file:");
        fmtPtr = "%s\n %s\n";
@@ -526,7 +526,7 @@ void SaveSession( void )
     }
 
     /*  This will be used to indicate what file is currently being edited. */
-    if (pszFileToEdit != NULL) {
+    if (pszFileToEdit != nullptr) {
         fprintf(fp, "*file: %s\n", pszFileToEdit);
     }
 
@@ -586,7 +586,7 @@ IconData *GetIconDataFromWid( Widget wid )
         return(IconDataList[i]);
      }
   }
-  return((IconData *)NULL);
+  return((IconData *)nullptr);
 }
 
 /*****************************************************************************/
@@ -622,7 +622,7 @@ IconData *GetIconDataFromMsgID( char *msgID )
      }
   }
   */
-  return((IconData *)NULL);
+  return((IconData *)nullptr);
 }
 
 /*****************************************************************************/
@@ -731,7 +731,7 @@ DieFromToolTalkError(Widget parent, char *errfmt, Tt_status status)
     XtManageChild(dialog);
     XtRealizeWidget(dialogShell);
 
-    _DtSimpleError(CLASS_NAME, DtFatalError, NULL, errmsg);
+    _DtSimpleError(CLASS_NAME, DtFatalError, nullptr, errmsg);
 
     XtFree(errmsg);
     XmStringFree(xms_ok);
@@ -838,8 +838,8 @@ Tt_callback_action IconEdit_tt_handler( Tt_message m, Tt_pattern p )
   IconData        *pIconData;
   Boolean         bIsNewFile = False;
 
-  char            *tmp = (char *)NULL;
-  char            *tmp1 = (char *)NULL;
+  char            *tmp = (char *)nullptr;
+  char            *tmp1 = (char *)nullptr;
   int             tmplen;
 
   ttMark = tt_mark( );
@@ -1101,7 +1101,7 @@ Tt_callback_action IconEdit_tt_handler( Tt_message m, Tt_pattern p )
              ( (pIconData->bmMsgID) &&
                (!strcmp(pIconData->bmMsgID, msgID)) &&
                (!bShowPixmaps) ) ) {
-           XmeFlushIconFileCache(NULL);
+           XmeFlushIconFileCache(nullptr);
 #ifdef DEBUG
            printf("Change icon image for widget = %p\n", pIconData->wid); /* debug */
 #endif
@@ -1152,7 +1152,7 @@ void UxDoEditPixmap(Widget wid, char *fname)
   char           *errPtr;
   char           *msgPtr;
   char           *fmtPtr;
-  char           *mname = (char *)NULL;
+  char           *mname = (char *)nullptr;
   char           *type_name, *size_name;
 
 
@@ -1318,7 +1318,7 @@ void UxDoEditPixmap(Widget wid, char *fname)
         }
      }
   } else {
-     tt_message_barg_add( m, TT_INOUT, "XPM", (const unsigned char *)NULL, 0);
+     tt_message_barg_add( m, TT_INOUT, "XPM", (const unsigned char *)nullptr, 0);
   }
   tt_message_arg_add(m, TT_IN, "messageID", msgID);
 
@@ -1390,7 +1390,7 @@ main(int argc, char *argv[])
          * Interface function declaration
          *--------------------------------*/
         Widget  create_applicationShell1(swidget);
-        swidget UxParent = NULL;
+        swidget UxParent = nullptr;
         int i;
 
         /*---------------------
@@ -1398,8 +1398,8 @@ main(int argc, char *argv[])
          *--------------------*/
 
         _DtEnvControl(DT_ENV_SET);
-        XtSetLanguageProc(NULL, NULL, NULL);
-        pszFileToEdit = (char *)NULL;
+        XtSetLanguageProc(nullptr, nullptr, nullptr);
+        pszFileToEdit = (char *)nullptr;
         memset(&sessiondata, 0, sizeof(SessionData));
         memset(IconDataList, 0, sizeof(IconDataList));
 
@@ -1436,7 +1436,7 @@ main(int argc, char *argv[])
 
 
         UxTopLevel = XtAppInitialize(&UxAppContext, CLASS_NAME,
-                                     NULL, 0, &argc, argv, NULL, NULL, 0);
+                                     nullptr, 0, &argc, argv, nullptr, nullptr, 0);
 
         nlmsg_fd = CATOPEN("dtcreate", NL_CAT_LOCALE);
 
@@ -1486,7 +1486,7 @@ main(int argc, char *argv[])
               writeCAToGUI(&AD);
            }
         }
-        XtVaGetValues (CA_WindowTypeArea, XmNheight, &wintypeheight, NULL);
+        XtVaGetValues (CA_WindowTypeArea, XmNheight, &wintypeheight, nullptr);
 
         /*------------------------------------------------------------------*/
         /*   Register for save and restore.                                 */
@@ -1509,7 +1509,7 @@ main(int argc, char *argv[])
         DtDbLoad();
         ttMark = tt_mark( );
 	ttsession = getenv("TT_SESSION");
-	if (ttsession == NULL || ttsession[0] == '\0') {
+	if (ttsession == nullptr || ttsession[0] == '\0') {
 	   char *ttxsession = tt_X_session(XDisplayString(UxDisplay));
 	   ttRc = tt_default_session_set(ttxsession);
 	   tt_free(ttxsession);

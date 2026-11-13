@@ -155,8 +155,8 @@ typedef enum {
 
 nl_catd catd_global;
 
-static char *new_appt_begin_delimiter = NULL;
-static char *new_appt_end_delimiter = NULL;
+static char *new_appt_begin_delimiter = nullptr;
+static char *new_appt_end_delimiter = nullptr;
 
 /*******************************************************************************
 **
@@ -174,7 +174,7 @@ static int
 count_newlines(char *string) {
 	int count = 0;
 
-	if (string == NULL)
+	if (string == nullptr)
 		return(0);
 	while (*string)
 		if (*string++ == '\n')
@@ -286,7 +286,7 @@ cm_tty_delete(
 				    version,
 				    CSA_ENTRY_ATTR_SUMMARY_I,
 				    CSA_X_DT_ENTRY_ATTR_REPEAT_TYPE_I,
-				    NULL);
+				    nullptr);
 
 	if (query_appt_struct(session, list[index], appt) != CSA_SUCCESS) {
 		mini_err_msg(catd, appt->what->value->item.string_value, 
@@ -327,20 +327,20 @@ cm_tty_delete(
 
 	switch(*ans) {
 	case '1':
-		if (csa_delete_entry(session, list[index], CSA_SCOPE_ALL, NULL)
+		if (csa_delete_entry(session, list[index], CSA_SCOPE_ALL, nullptr)
 		    != CSA_SUCCESS)
 			mini_err_msg(catd, appt->what->value->item.string_value,
 				TTY_Delete);
 		break;
 	case '2':
-		if (csa_delete_entry(session, list[index], CSA_SCOPE_ONE, NULL)
+		if (csa_delete_entry(session, list[index], CSA_SCOPE_ONE, nullptr)
 		    != CSA_SUCCESS)
 			mini_err_msg(catd, appt->what->value->item.string_value,
 				TTY_Delete);
 		break;
 	case '3':
 		if (csa_delete_entry(session, list[index], CSA_SCOPE_FORWARD,
-		    NULL) != CSA_SUCCESS)
+		    nullptr) != CSA_SUCCESS)
 			mini_err_msg(catd, appt->what->value->item.string_value,
 				TTY_Delete);
 		break;
@@ -393,23 +393,23 @@ scrub_attr_list(Dtcm_appointment *appt) {
 
 	for (i = 0; i < appt->count; i++) {
 		if (appt->attrs[i].value->type == CSA_VALUE_REMINDER) {
-			if ((appt->attrs[i].value->item.reminder_value->lead_time == NULL) || 
+			if ((appt->attrs[i].value->item.reminder_value->lead_time == nullptr) || 
 			     (appt->attrs[i].value->item.reminder_value->lead_time[0] == '\0')) {
 				free(appt->attrs[i].name);
-				appt->attrs[i].name = NULL;
+				appt->attrs[i].name = nullptr;
 			}
 		}
-		else if ((appt->attrs[i].value->type == CSA_VALUE_ACCESS_LIST) && (appt->attrs[i].value->item.access_list_value == NULL)) {
+		else if ((appt->attrs[i].value->type == CSA_VALUE_ACCESS_LIST) && (appt->attrs[i].value->item.access_list_value == nullptr)) {
 			free(appt->attrs[i].name);
-			appt->attrs[i].name = NULL;
+			appt->attrs[i].name = nullptr;
 		}
-		else if ((appt->attrs[i].value->type == CSA_VALUE_STRING) && (appt->attrs[i].value->item.string_value == NULL)) {
+		else if ((appt->attrs[i].value->type == CSA_VALUE_STRING) && (appt->attrs[i].value->item.string_value == nullptr)) {
 			free(appt->attrs[i].name);
-			appt->attrs[i].name = NULL;
+			appt->attrs[i].name = nullptr;
 		}
-		else if ((appt->attrs[i].value->type == CSA_VALUE_DATE_TIME) && (appt->attrs[i].value->item.date_time_value == NULL)) {
+		else if ((appt->attrs[i].value->type == CSA_VALUE_DATE_TIME) && (appt->attrs[i].value->item.date_time_value == nullptr)) {
 			free(appt->attrs[i].name);
-			appt->attrs[i].name = NULL;
+			appt->attrs[i].name = nullptr;
 		}
 	}
 }
@@ -423,7 +423,7 @@ cm_tty_insert(nl_catd catd, CSA_session_handle target, int version,
 	      char *repeat, char *repeatfor, char *what, char *filename,
 	      Props *p) {
 	int			ret_stat = 0, cnt;
-	char			*t1 = NULL;
+	char			*t1 = nullptr;
 	CSA_entry_handle	new_entry;
 	CmDataList		*list = CmDataListCreate();
 	Validate_op		op;
@@ -438,10 +438,10 @@ cm_tty_insert(nl_catd catd, CSA_session_handle target, int version,
 
 	if (filename) {
 		op = parse_appt_from_file(catd, filename, list, p, query_user, 
-					  NULL, version);
+					  nullptr, version);
 		appt = (Dtcm_appointment *)CmDataListGetData(list, 1);
 	} else {
-		appt = allocate_appt_struct(appt_write, version, NULL);
+		appt = allocate_appt_struct(appt_write, version, nullptr);
 		load_appt_defaults(appt, p);
 
 		op = validate_appt(catd, appt, start, end, date, 0, what,
@@ -450,7 +450,7 @@ cm_tty_insert(nl_catd catd, CSA_session_handle target, int version,
 		CmDataListAdd(list, (void *)appt, 0);
 	}
 	for (cnt = 1; cnt <= list->count; cnt++) {
-		if ((appt = (Dtcm_appointment *)CmDataListGetData(list, cnt)) == NULL)
+		if ((appt = (Dtcm_appointment *)CmDataListGetData(list, cnt)) == nullptr)
 			continue;
 	
 		switch(op) {
@@ -501,7 +501,7 @@ cm_tty_insert(nl_catd catd, CSA_session_handle target, int version,
 		if (op == VALID_APPT) {
 			scrub_attr_list(appt);
 	
-			if ((status = csa_add_entry(target, appt->count, appt->attrs, &new_entry, NULL)) != CSA_SUCCESS) {
+			if ((status = csa_add_entry(target, appt->count, appt->attrs, &new_entry, nullptr)) != CSA_SUCCESS) {
 				mini_err_msg(catd, 
 					appt->what->value->item.string_value, 
 					TTY_Insert);
@@ -559,7 +559,7 @@ cm_tty_lookup(nl_catd catd, CSA_session_handle target, int version, char *date, 
 	char			start_buf[MAXNAMELEN], end_buf[MAXNAMELEN];
 	char			buf[MAXNAMELEN], date_str[MAXNAMELEN], *what;
 	time_t			tick, start, stop;
-	Lines			*lines = NULL, *next_line;
+	Lines			*lines = nullptr, *next_line;
 	DisplayType		dt;
 	CSA_enum		*ops;
 	CSA_attribute		*range_attrs;
@@ -585,7 +585,7 @@ cm_tty_lookup(nl_catd catd, CSA_session_handle target, int version, char *date, 
 	}
 	if (!date)
 		tick = now();
-	else if ((tick = cm_getdate(date, NULL)) < 0) {
+	else if ((tick = cm_getdate(date, nullptr)) < 0) {
 		fprintf(stdout,	"\n%s %s\n\n", 
 				CATGETS(catd, 1, 1067, "Invalid date specified:"),
 				date);
@@ -610,7 +610,7 @@ cm_tty_lookup(nl_catd catd, CSA_session_handle target, int version, char *date, 
 	stop = next_ndays(start, span) - 1;
 	setup_range(&range_attrs, &ops, &i, start, stop, CSA_TYPE_EVENT,
 		    0, B_FALSE, version);
-	status = csa_list_entries(target, i, range_attrs, ops, &a_total, list, NULL);
+	status = csa_list_entries(target, i, range_attrs, ops, &a_total, list, nullptr);
 	free_range(&range_attrs, &ops, i);
 
 	appt = allocate_appt_struct(appt_read,
@@ -619,7 +619,7 @@ cm_tty_lookup(nl_catd catd, CSA_session_handle target, int version, char *date, 
 				    CSA_ENTRY_ATTR_SUMMARY_I,
 				    CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
 				    CSA_ENTRY_ATTR_END_DATE_I,
-				    NULL);
+				    nullptr);
 	for (i = 0; i < a_total; i++) {
 
 		if (query_appt_struct(target, (*list)[i], appt) != CSA_SUCCESS) {
@@ -672,7 +672,7 @@ cm_tty_lookup(nl_catd catd, CSA_session_handle target, int version, char *date, 
 	}
 	free_appt_struct(&appt);
 
-	if (*list == NULL) {
+	if (*list == nullptr) {
 		cm_tty_format_header(p, start + 1, date_str);
 		fprintf(stdout,	"\n%s %s\n\n", 
 				CATGETS(catd, 1, 1069, "No Appointments for"),
@@ -756,7 +756,7 @@ extern char*
 day_str(Days_op op) {
 	if (op >= SUNDAY && op <= SATURDAY)
 		return day_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 extern char*
@@ -764,7 +764,7 @@ default_repeat_cnt_str(Repeat_menu_op  op) {
 
 	if (op >= ONE_TIME && op <= REPEAT_EVERY)
 		return default_repeat_cnt_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 extern char*
@@ -797,14 +797,14 @@ default_repeat_scope_str(
 
 	if (op >= ONE_TIME && op <= REPEAT_EVERY)
 		return default_repeat_scope_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 extern char*
 for_str(For_menu_op op) {
 	if (op >= TWO && op <= FOR_EVER)
 		return for_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 /*
@@ -898,7 +898,7 @@ load_reminder_props(Dtcm_appointment *a, Props *p) {
 		_csa_duration_to_iso8601(get_int_prop(p, CP_BEEPADV) *
 			timescopestring_to_tick(get_char_prop(p, CP_BEEPUNIT)),
 		a->beep->value->item.reminder_value->lead_time);
-		a->beep->value->item.reminder_value->reminder_data.data = NULL;
+		a->beep->value->item.reminder_value->reminder_data.data = nullptr;
 		a->beep->value->item.reminder_value->reminder_data.size = 0;
 	}
 	if (convert_boolean_str(get_char_prop(p, CP_FLASHON))) {
@@ -906,7 +906,7 @@ load_reminder_props(Dtcm_appointment *a, Props *p) {
 		_csa_duration_to_iso8601(get_int_prop(p, CP_FLASHADV) *
 			timescopestring_to_tick(get_char_prop(p, CP_FLASHUNIT)),
 		a->flash->value->item.reminder_value->lead_time);
-		a->flash->value->item.reminder_value->reminder_data.data = NULL;
+		a->flash->value->item.reminder_value->reminder_data.data = nullptr;
 		a->flash->value->item.reminder_value->reminder_data.size = 0;
 	}
 	if (convert_boolean_str(get_char_prop(p, CP_OPENON))) {
@@ -914,7 +914,7 @@ load_reminder_props(Dtcm_appointment *a, Props *p) {
 		_csa_duration_to_iso8601(get_int_prop(p, CP_OPENADV) *
 			timescopestring_to_tick(get_char_prop(p, CP_OPENUNIT)),
 		a->popup->value->item.reminder_value->lead_time);
-		a->popup->value->item.reminder_value->reminder_data.data = NULL;
+		a->popup->value->item.reminder_value->reminder_data.data = nullptr;
 		a->popup->value->item.reminder_value->reminder_data.size = 0;
 	}
 	if (convert_boolean_str(get_char_prop(p, CP_MAILON))) {
@@ -931,7 +931,7 @@ extern char*
 month_str(Months_op op) {
 	if (op >= JANUARY && op <= DECEMBER)
 		return month_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 void
@@ -1038,7 +1038,7 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 {
 	int			attrs_allocated, attrs_written = 0;
 	char			line[MAXNAMELEN], *b_ptr, *c_ptr;
-	char			*a_name = NULL, *a_tag = NULL, *a_value = NULL;
+	char			*a_name = nullptr, *a_tag = nullptr, *a_value = nullptr;
 	Dtcm_appointment	*avlist;
 
 	if (!new_appt_end_delimiter) {
@@ -1047,7 +1047,7 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 			CSA_X_DT_ENTRY_ATTR_ENTRY_DELIMITER, 
 			":string:end");
 	}
-	avlist = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, NULL);
+	avlist = allocate_appt_struct(appt_write, DATAVER_ARCHIVE, nullptr);
 	load_appt_defaults(avlist, p);
 
 	/* At this point, we really want to negate all of the links set 
@@ -1055,26 +1055,26 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 	   almost certain to invalidate them, and some trailing links would 
 	   be harmful */
 
-	avlist->identifier = NULL;
-	avlist->modified_time = NULL;
-	avlist->author = NULL;
-	avlist->time = NULL;
-	avlist->type = NULL;
-	avlist->subtype = NULL;
-	avlist->private = NULL;
-	avlist->end_time = NULL;
-	avlist->show_time = NULL;
-	avlist->what = NULL;
-	avlist->state = NULL;
-	avlist->repeat_type = NULL;
-	avlist->repeat_times = NULL;
-	avlist->repeat_interval = NULL;
-	avlist->repeat_week_num = NULL;
-	avlist->recurrence_rule = NULL;
-	avlist->beep = NULL;
-	avlist->flash = NULL;
-	avlist->mail = NULL;
-	avlist->popup = NULL;
+	avlist->identifier = nullptr;
+	avlist->modified_time = nullptr;
+	avlist->author = nullptr;
+	avlist->time = nullptr;
+	avlist->type = nullptr;
+	avlist->subtype = nullptr;
+	avlist->private = nullptr;
+	avlist->end_time = nullptr;
+	avlist->show_time = nullptr;
+	avlist->what = nullptr;
+	avlist->state = nullptr;
+	avlist->repeat_type = nullptr;
+	avlist->repeat_times = nullptr;
+	avlist->repeat_interval = nullptr;
+	avlist->repeat_week_num = nullptr;
+	avlist->recurrence_rule = nullptr;
+	avlist->beep = nullptr;
+	avlist->flash = nullptr;
+	avlist->mail = nullptr;
+	avlist->popup = nullptr;
 
 	attrs_allocated = avlist->count;
 
@@ -1152,7 +1152,7 @@ read_new_appt(FILE *fp, Dtcm_appointment **appt, Props *p, int version)
 
 		/* this should pull off the new attribute name */
 
-		a_name = a_tag = a_value = NULL;
+		a_name = a_tag = a_value = nullptr;
 
 		b_ptr = line;
 		if (c_ptr = strchr(line, ':'))
@@ -1366,22 +1366,22 @@ generate_recurrence_rule(Dtcm_appointment *appt, int version) {
 
 	if (appt->repeat_type && appt->repeat_type->name) {
 		free(appt->repeat_type->name);
-		appt->repeat_type->name = NULL;
+		appt->repeat_type->name = nullptr;
 	}
 
 	if (appt->repeat_times && appt->repeat_times->name) {
 		free(appt->repeat_times->name);
-		appt->repeat_times->name = NULL;
+		appt->repeat_times->name = nullptr;
 	}
 
 	if (appt->repeat_interval && appt->repeat_interval->name) {
 		free(appt->repeat_interval->name);
-		appt->repeat_interval->name = NULL;
+		appt->repeat_interval->name = nullptr;
 	}
 
 	if (appt->repeat_week_num && appt->repeat_week_num->name) {
 		free(appt->repeat_week_num->name);
-		appt->repeat_week_num->name = NULL;
+		appt->repeat_week_num->name = nullptr;
 	}
 		
 }
@@ -1403,7 +1403,7 @@ parse_appt_from_file(nl_catd catd, char *file, CmDataList *list, Props *p,
 	char			line[MAXNAMELEN], *tmp, *key_str, *val_str,
 				s_buf[MAXNAMELEN], e_buf[MAXNAMELEN],
 				d_buf[MAXNAMELEN], r_buf[MAXNAMELEN],
-				f_buf[MAXNAMELEN], *w_buf = NULL;
+				f_buf[MAXNAMELEN], *w_buf = nullptr;
 	FILE			*fp;
 	boolean_t		processing_appt = B_FALSE,
 				processing_what = B_FALSE;
@@ -1413,10 +1413,10 @@ parse_appt_from_file(nl_catd catd, char *file, CmDataList *list, Props *p,
 	Dtcm_appointment	*appt;
 	boolean_t		found_appt = B_FALSE;
 
-	if (!file || *file == '\0' || (fp = fopen(file, "r")) == NULL)
+	if (!file || *file == '\0' || (fp = fopen(file, "r")) == nullptr)
 		return COULD_NOT_OPEN_FILE;
 
-	appt = allocate_appt_struct(appt_write, version, NULL);
+	appt = allocate_appt_struct(appt_write, version, nullptr);
 	load_appt_defaults(appt, p);
 	while (valid_op == VALID_APPT && fgets(line, MAXNAMELEN - 1, fp)) {
 		/*
@@ -1496,7 +1496,7 @@ parse_appt_from_file(nl_catd catd, char *file, CmDataList *list, Props *p,
 					e_buf, d_buf, dur, w_buf, r_buf, f_buf,
 					query, key_data, version);
 				if (valid_op == VALID_APPT) {
-					appt = allocate_appt_struct(appt_write, version, NULL);
+					appt = allocate_appt_struct(appt_write, version, nullptr);
 					load_appt_defaults(appt, p);
 				}
 				else
@@ -1514,7 +1514,7 @@ parse_appt_from_file(nl_catd catd, char *file, CmDataList *list, Props *p,
 			memset(f_buf, '\0', MAXNAMELEN);
 			if (w_buf)
 				free(w_buf);
-			w_buf = NULL;
+			w_buf = nullptr;
 			break;
 		case DATE_KEY:
 			cm_strcpy(d_buf, val_str);
@@ -1572,7 +1572,7 @@ parse_appt_from_file(nl_catd catd, char *file, CmDataList *list, Props *p,
 			 * concatinate the new string to the end of the last.
 			 */
 			if (!processing_what) {
-				if (w_buf != NULL)
+				if (w_buf != nullptr)
 					free(w_buf);
 				w_buf = cm_strdup(val_str);
 				what_lines = 1;
@@ -1684,7 +1684,7 @@ attrs_to_string(CSA_attribute * attrs, int num_attrs)
 
 	buffer[0] = '\0';
         for (i = 0; i < num_attrs; i++) {
-		if (!attrs[i].name || (attrs[i].value == NULL))
+		if (!attrs[i].name || (attrs[i].value == nullptr))
 			continue;
 
 		tmp_buf[0] = '\0';
@@ -1705,7 +1705,7 @@ attrs_to_string(CSA_attribute * attrs, int num_attrs)
 				break;
 
 		case CSA_VALUE_DATE_TIME: 
-				if (attrs[i].value->item.string_value == NULL)
+				if (attrs[i].value->item.string_value == nullptr)
 					continue;
 
 				growcat(&buffer, tmp_buf);
@@ -1717,7 +1717,7 @@ attrs_to_string(CSA_attribute * attrs, int num_attrs)
 				break;
 
 		case CSA_VALUE_STRING: 
-				if (attrs[i].value->item.string_value == NULL)
+				if (attrs[i].value->item.string_value == nullptr)
 					continue;
 
 				growcat(&buffer, tmp_buf);
@@ -1728,7 +1728,7 @@ attrs_to_string(CSA_attribute * attrs, int num_attrs)
 				growcat(&buffer, "\n");
 				break;
 		case CSA_VALUE_CALENDAR_USER: 
-				if (attrs[i].value->item.calendar_user_value == NULL)
+				if (attrs[i].value->item.calendar_user_value == nullptr)
 					continue;
 
 				growcat(&buffer, tmp_buf);
@@ -1742,7 +1742,7 @@ attrs_to_string(CSA_attribute * attrs, int num_attrs)
 				break;
 
 		case CSA_VALUE_REMINDER: 
-				if (attrs[i].value->item.reminder_value->lead_time == NULL)
+				if (attrs[i].value->item.reminder_value->lead_time == nullptr)
 					continue;
 
 				growcat(&buffer, tmp_buf);
@@ -1756,7 +1756,7 @@ attrs_to_string(CSA_attribute * attrs, int num_attrs)
 				break;
 
 		case CSA_VALUE_ACCESS_LIST: 
-				if (attrs[i].value->item.access_list_value == NULL)
+				if (attrs[i].value->item.access_list_value == nullptr)
 					continue;
 
 				growcat(&buffer, tmp_buf);
@@ -1784,9 +1784,9 @@ entry_to_attrval_string(CSA_session_handle target, CSA_entry_handle entry)
 	CSA_attribute   	*attrs_ret;
 	CSA_uint32		num_attrs, num_attrs_ret;
 
-	csa_list_entry_attributes(target, entry, &num_attrs, &names, NULL);
+	csa_list_entry_attributes(target, entry, &num_attrs, &names, nullptr);
 	csa_read_entry_attributes(target, entry, num_attrs, names, &num_attrs_ret,
-		&attrs_ret, NULL);
+		&attrs_ret, nullptr);
 
 	ptr = attrs_to_string(attrs_ret, num_attrs_ret);
 
@@ -1812,9 +1812,9 @@ calendar_to_attrval_string(CSA_session_handle cal)
 	char			*ptr;
 	CSA_attribute 		*attrs_ret;
 
-	csa_list_calendar_attributes(cal, &num_attrs, &names, NULL);
+	csa_list_calendar_attributes(cal, &num_attrs, &names, nullptr);
 	csa_read_calendar_attributes(cal, num_attrs, names, &num_attrs_ret,
-		&attrs_ret, NULL);
+		&attrs_ret, nullptr);
 
 	ptr = attrs_to_string(attrs_ret, num_attrs_ret);
 
@@ -1842,7 +1842,7 @@ parse_appt_to_string(CSA_session_handle target, CSA_entry_handle entry, Props *p
 	 */
 	appt = allocate_appt_struct(appt_read,
 					version,
-				    	NULL);
+				    	nullptr);
 
 	query_appt_struct(target, entry, appt);
 	ret_val = parse_attrs_to_string(appt, p, attr_string);
@@ -1872,7 +1872,7 @@ parse_attrs_to_string(Dtcm_appointment *appt, Props *p, char *attr_string) {
 
 	_csa_iso8601_to_tick(appt->time->value->item.date_time_value, &tick);
 	if (appt->end_time) 
-		if (appt->end_time->value != NULL)
+		if (appt->end_time->value != nullptr)
 			_csa_iso8601_to_tick(appt->end_time->value->item.\
 				date_time_value, &end_tick);
 	
@@ -2011,7 +2011,7 @@ create_rfc_message(char *address_list,
 		done = B_TRUE;
 
 		for (i = 0; i < num_objects; i++) {
-			if (strstr(appointment_objects[i], divider_string) != NULL)
+			if (strstr(appointment_objects[i], divider_string) != nullptr)
 				done = B_FALSE;
 		}
 	}
@@ -2091,7 +2091,7 @@ appointments_to_file(CSA_session_handle target, CSA_entry_handle *appointment_li
 
 	FILE *f_ptr = fopen(file_name,  "w");
 
-	if (f_ptr == NULL)
+	if (f_ptr == nullptr)
 		return(B_FALSE);
 
 	if (num_appts == 0) {
@@ -2147,7 +2147,7 @@ str_to_period(char *ps, CSA_sint32 *repeat_type, int *repeat_nth) {
  
 	*repeat_type = '\0';
 	*repeat_nth = 0;
-        if (ps == NULL)
+        if (ps == nullptr)
 		return;
 
         if (strcasecmp(ps, periodstrings[0]) == 0)
@@ -2186,7 +2186,7 @@ str_to_period(char *ps, CSA_sint32 *repeat_type, int *repeat_nth) {
 			unit++;
                 ps2 = cm_strdup(unit);
                 ptr = strchr(ps2, ' ');
-		if (ptr != NULL) {
+		if (ptr != nullptr) {
                 	*ptr = '\0';
 		} else {
 			free(ps2);
@@ -2297,14 +2297,14 @@ extern char*
 privacy_str_old(int op) {
 	if (op >= 0 && op <= 2)
 		return privacy_strs_old[op];
-	return NULL;
+	return nullptr;
 }
 
 extern char*
 privacy_str(int op) {
 	if (op >= 0 && op <= 2)
 		return privacy_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 static void
@@ -2343,14 +2343,14 @@ repeat_str(
 
 	if (op >= ONE_TIME && op <= REPEAT_EVERY)
 		return repeat_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 extern char*
 privacy_str_411(int op) {
 	if (op >= 0 && op <= 2)
 		return privacy_strs_411[op];
-	return NULL;
+	return nullptr;
 }
 
 extern char*
@@ -2369,14 +2369,14 @@ repeat_scope_str(
 
 	if (op >= REPEAT_DAYS && op <= REPEAT_MONTHS)
 		return repeat_scope_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 extern char*
 separator_str(SeparatorType op) {
 	if (op >= SEPARATOR_BLANK && op <= SEPARATOR_DASH)
 		return separator_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 extern int
@@ -2392,7 +2392,7 @@ extern char*
 time_scope_str(Time_scope_menu_op op) {
 	if (op >= TIME_MINS && op <= TIME_DAYS)
 		return time_scope_strs[op];
-	return NULL;
+	return nullptr;
 }
 
 extern char*
@@ -2411,7 +2411,7 @@ time_scope_str_i18n(
 
 	if (op >= TIME_MINS && op <= TIME_DAYS)
 		return time_scope_strs_i18n[op];
-	return NULL;
+	return nullptr;
 }
 
 /*
@@ -2424,7 +2424,7 @@ valid_time(Props *p, char *time_str) {
 	boolean_t	after_colon = B_FALSE;
 	DisplayType	dt = get_int_prop(p, CP_DEFAULTDISP);
  
-	for (ptr = time_str; ptr != NULL && *ptr != '\0'; ptr++) {
+	for (ptr = time_str; ptr != nullptr && *ptr != '\0'; ptr++) {
 		if (dt == HOUR12) {
 			if (*ptr == ':') {
 				after_colon = B_TRUE;
@@ -2517,14 +2517,14 @@ validate_dssw(Dtcm_appointment *a, char *s_buf, char *e_buf, char *d_buf,
 		a->what->value->item.string_value = cm_strdup(w_buf);
 		expand_esc_chars(a->what->value->item.string_value);
 	} else
-		a->what->value->item.string_value = NULL;
+		a->what->value->item.string_value = nullptr;
 
 	if (!blank_buf(s_buf)) {
 		/*
 		 * We have something in the start buffer, is it valid?
 		 */
 		sprintf(buf, "%s %s", d_buf, s_buf);
-		if ((appt_time = cm_getdate(buf, NULL)) < 0)
+		if ((appt_time = cm_getdate(buf, nullptr)) < 0)
 			return INVALID_START;
 
 		_csa_tick_to_iso8601(appt_time, a->time->value->item.date_time_value);
@@ -2545,7 +2545,7 @@ validate_dssw(Dtcm_appointment *a, char *s_buf, char *e_buf, char *d_buf,
 			 * it's valid set the end tick to it's value.
 			 */
 			sprintf(buf, "%s %s", d_buf, e_buf);
-			if ((end_tick = cm_getdate(buf, NULL)) < 0)
+			if ((end_tick = cm_getdate(buf, nullptr)) < 0)
 				return INVALID_STOP;
 			a->end_time->value->item.date_time_value = malloc(BUFSIZ);
 			_csa_tick_to_iso8601(end_tick, a->end_time->value->item.date_time_value);
@@ -2572,7 +2572,7 @@ validate_dssw(Dtcm_appointment *a, char *s_buf, char *e_buf, char *d_buf,
 		 */
 		sprintf(buf, "%s 3:41am", d_buf);
 
-		if ((appt_time = cm_getdate(buf, NULL)) < 0)
+		if ((appt_time = cm_getdate(buf, nullptr)) < 0)
 			return INVALID_DATE;
 
                 a->time->value->item.date_time_value = malloc(BUFSIZ);

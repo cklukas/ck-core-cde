@@ -116,13 +116,13 @@ obj_unparent(ABObj obj)
     verify_obj_write(obj);
 
     /* get permission... */
-    if ((iRC = objP_notify_send_allow_reparent(obj, NULL)) < 0)
+    if ((iRC = objP_notify_send_allow_reparent(obj, nullptr)) < 0)
     {
 	iReturn = iRC;
 	goto epilogue;
     }
 
-    if (parent == NULL)
+    if (parent == nullptr)
     {
 	goto epilogue;
     }
@@ -132,18 +132,18 @@ obj_unparent(ABObj obj)
     {
 	parent->first_child = next_sibling;
     }
-    if (next_sibling != NULL)
+    if (next_sibling != nullptr)
     {
 	next_sibling->prev_sibling = prev_sibling;
     }
-    if (prev_sibling != NULL)
+    if (prev_sibling != nullptr)
     {
 	prev_sibling->next_sibling = next_sibling;
     }
 
-    objP_set_parent(obj, NULL);
-    obj->prev_sibling = NULL;
-    obj->next_sibling = NULL;
+    objP_set_parent(obj, nullptr);
+    obj->prev_sibling = nullptr;
+    obj->next_sibling = nullptr;
 
     iReturn = iRC = objP_notify_send_reparent(obj, oldParent);
 
@@ -161,7 +161,7 @@ obj_reparent(ABObj obj, ABObj new_parent)
 {
     int                 iReturn = 0;
 
-    if (new_parent == NULL)
+    if (new_parent == nullptr)
     {
 	iReturn = obj_unparent(obj);
     }
@@ -183,7 +183,7 @@ obj_insert_child(ABObj obj, ABObj new_child, int new_child_num)
     int                 iRC;	/* return code */
     int                 child_num = 0;
     ABObj               oldChildParent = new_child->parent;
-    ABObj               old_child = NULL;
+    ABObj               old_child = nullptr;
 
     verify_obj_write(obj);
     verify_obj_write(new_child);
@@ -217,8 +217,8 @@ obj_insert_child(ABObj obj, ABObj new_child, int new_child_num)
     {
 	new_child->next_sibling = obj->first_child;
 	obj->first_child = new_child;
-	new_child->prev_sibling = NULL;
-	if (new_child->next_sibling != NULL)
+	new_child->prev_sibling = nullptr;
+	if (new_child->next_sibling != nullptr)
 	{
 	    new_child->next_sibling->prev_sibling = new_child;
 	}
@@ -227,7 +227,7 @@ obj_insert_child(ABObj obj, ABObj new_child, int new_child_num)
     {
 	BOOL                child_inserted = FALSE;
 	for (child_num = 0, old_child = obj->first_child;
-	     old_child != NULL;
+	     old_child != nullptr;
 	     ++child_num, old_child = old_child->next_sibling)
 	{
 	    if (child_num == (new_child_num - 1))
@@ -235,7 +235,7 @@ obj_insert_child(ABObj obj, ABObj new_child, int new_child_num)
 		new_child->next_sibling = old_child->next_sibling;
 		old_child->next_sibling = new_child;
 		new_child->prev_sibling = old_child;
-		if (new_child->next_sibling != NULL)
+		if (new_child->next_sibling != nullptr)
 		{
 		    new_child->next_sibling->prev_sibling =
 			new_child;
@@ -269,7 +269,7 @@ obj_append_child(ABObj obj, ABObj new_child_obj)
     int                 iRC = 0;/* return code */
     int                 iReturn = 0;
     ABObj               oldParent = new_child_obj->parent;
-    ABObj		child_obj = NULL;
+    ABObj		child_obj = nullptr;
     verify_obj_write(obj);
     verify_obj_write(new_child_obj);
 
@@ -277,10 +277,10 @@ obj_append_child(ABObj obj, ABObj new_child_obj)
      * See if this is already our last child.  If so, ignore.
      */
     for (child_obj = obj->first_child; 
-	(child_obj != NULL) && (child_obj->next_sibling != NULL);
+	(child_obj != nullptr) && (child_obj->next_sibling != nullptr);
 	child_obj= child_obj->next_sibling)
     { /* null */ }
-    if ((child_obj != NULL) && (child_obj == new_child_obj))
+    if ((child_obj != nullptr) && (child_obj == new_child_obj))
     {
 	return 0;
     }
@@ -307,13 +307,13 @@ obj_append_child(ABObj obj, ABObj new_child_obj)
      * changed obj children. 
      */
     child_obj = obj->first_child;
-    if (child_obj == NULL)
+    if (child_obj == nullptr)
     {
 	obj->first_child = new_child_obj;
     }
     else
     {
-	while (child_obj->next_sibling != NULL)
+	while (child_obj->next_sibling != nullptr)
 	{
 	    child_obj = child_obj->next_sibling;
 	}
@@ -322,7 +322,7 @@ obj_append_child(ABObj obj, ABObj new_child_obj)
     }
 
     objP_set_parent(new_child_obj, obj);
-    new_child_obj->next_sibling = NULL;
+    new_child_obj->next_sibling = nullptr;
 
     objP_notify_send_reparent(new_child_obj, oldParent);
 
@@ -334,7 +334,7 @@ epilogue:
 ABObj
 obj_get_parent(ABObj obj)
 {
-    ABObj	parent = NULL;
+    ABObj	parent = nullptr;
     verify_obj_read(obj);
 
     parent = obj->parent;
@@ -347,7 +347,7 @@ obj_get_parent(ABObj obj)
 ABObj
 obj_get_child(ABObj obj, int child_num)
 {
-    ABObj               child_obj = NULL;
+    ABObj               child_obj = nullptr;
     AB_TRAVERSAL        trav;
     verify_obj_read(obj);
 
@@ -391,12 +391,12 @@ ABObj
 obj_get_salient_child(ABObj obj, int child_num)
 {
     AB_TRAVERSAL        trav;
-    ABObj               child = NULL;
+    ABObj               child = nullptr;
     verify_obj_read(obj);
 
     if (trav_open(&trav, obj, AB_TRAV_SALIENT_CHILDREN) < 0)
     {
-	return NULL;
+	return nullptr;
     }
     trav_goto(&trav, child_num);
     child = trav_obj(&trav);
@@ -411,12 +411,12 @@ ABObj
 obj_get_salient_ui_child(ABObj obj, int child_num)
 {
     AB_TRAVERSAL        trav;
-    ABObj               child = NULL;
+    ABObj               child = nullptr;
     verify_obj_read(obj);
 
     if (trav_open(&trav, obj, AB_TRAV_SALIENT_UI_CHILDREN) < 0)
     {
-	return NULL;
+	return nullptr;
     }
     trav_goto(&trav, child_num);
     child = trav_obj(&trav);
@@ -440,7 +440,7 @@ obj_get_child_cond(ABObj obj, int child_num, BOOL(*fn) (ABObj))
     ABObj               child_obj;
     verify_obj_read(obj);
 
-    for (child_obj = obj->first_child, i = 0; child_obj != NULL;
+    for (child_obj = obj->first_child, i = 0; child_obj != nullptr;
 	 child_obj = child_obj->next_sibling)
     {
 	if ((*fn) (child_obj))
@@ -452,7 +452,7 @@ obj_get_child_cond(ABObj obj, int child_num, BOOL(*fn) (ABObj))
 	}
 
     }
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -471,7 +471,7 @@ obj_get_num_children_cond(ABObj obj, BOOL(*fn) (ABObj))
     ABObj               child_obj;
     verify_obj_read(obj);
 
-    for (child_obj = obj->first_child; child_obj != NULL;
+    for (child_obj = obj->first_child; child_obj != nullptr;
 	 child_obj = child_obj->next_sibling)
     {
 	if ((*fn) (child_obj))
@@ -498,14 +498,14 @@ obj_replace(ABObj obj, ABObj replacement)
     int			objChildNum = obj_get_child_num(obj);
     int			numObjRefs = 0;
     int			i = 0;
-    void		*voidRefType = NULL;
-    ABObjList		refList = NULL;
+    void		*voidRefType = nullptr;
+    ABObjList		refList = nullptr;
     AB_OBJ_REF_TYPE	refType = AB_REF_UNDEF;
-    ABObj		refObj = NULL;
+    ABObj		refObj = nullptr;
 
 #ifdef DEBUG
     verify_obj_write(obj);
-    if (replacement != NULL)
+    if (replacement != nullptr)
     {
         verify_obj_write(replacement);
     }
@@ -514,15 +514,15 @@ obj_replace(ABObj obj, ABObj replacement)
     /*
      * Insert the new object into the tree, or remove it
      */
-    if (objParent != NULL)
+    if (objParent != nullptr)
     {
         obj_unparent(obj);
-	if (replacement != NULL)
+	if (replacement != nullptr)
 	{
             obj_insert_child(objParent, replacement, objChildNum);
 	}
     }
-    if (replacement != NULL)
+    if (replacement != nullptr)
     {
 	obj_move_children(replacement, obj);
     }
@@ -541,7 +541,7 @@ obj_replace(ABObj obj, ABObj replacement)
 	switch (refType)
 	{
 	    case AB_REF_ATTACH_EAST:
-		if (replacement == NULL)
+		if (replacement == nullptr)
 		{
 	            refObj->attachments->east.type = AB_ATTACH_UNDEF;
 	            refObj->attachments->east.offset = 0;
@@ -549,7 +549,7 @@ obj_replace(ABObj obj, ABObj replacement)
 	        refObj->attachments->east.value = (void*)replacement;
 	    break;
 	    case AB_REF_ATTACH_NORTH:
-		if (replacement == NULL)
+		if (replacement == nullptr)
 		{
 	            refObj->attachments->north.type = AB_ATTACH_UNDEF;
 	            refObj->attachments->north.offset = 0;
@@ -557,7 +557,7 @@ obj_replace(ABObj obj, ABObj replacement)
 	        refObj->attachments->north.value = (void*)replacement;
 	    break;
 	    case AB_REF_ATTACH_SOUTH:
-		if (replacement == NULL)
+		if (replacement == nullptr)
 		{
 	            refObj->attachments->north.type = AB_ATTACH_UNDEF;
 	            refObj->attachments->north.offset = 0;
@@ -565,7 +565,7 @@ obj_replace(ABObj obj, ABObj replacement)
 	        refObj->attachments->north.value = (void*)replacement;
 	    break;
 	    case AB_REF_ATTACH_WEST:
-		if (replacement == NULL)
+		if (replacement == nullptr)
 		{
 	            refObj->attachments->north.type = AB_ATTACH_UNDEF;
 	            refObj->attachments->north.offset = 0;
@@ -609,20 +609,20 @@ obj_tree_replace(ABObj obj, ABObj replacement)
 {
     AB_TRAVERSAL        trav;
     ABObj               parent = obj->parent;
-    ABObj               child = NULL;
+    ABObj               child = nullptr;
     ABObj               project = obj_get_project(obj);
-    ABObj               action = NULL;
-    AB_ACTION_INFO     *actinfo = NULL;
+    ABObj               action = nullptr;
+    AB_ACTION_INFO     *actinfo = nullptr;
 
     /*
      * Child pointers
      */
-    if (parent != NULL)
+    if (parent != nullptr)
     {
 	ABObj              *lastnext;
 	lastnext = &(parent->first_child);
 	child = *lastnext;
-	for (; child != NULL;
+	for (; child != nullptr;
 	     lastnext = &(child->next_sibling), child = *lastnext)
 	{
 	    if ((child) == obj)
@@ -630,7 +630,7 @@ obj_tree_replace(ABObj obj, ABObj replacement)
 		*lastnext = replacement;
 		replacement->prev_sibling = child->prev_sibling;
 		replacement->next_sibling = child->next_sibling;
-		if (replacement->next_sibling != NULL)
+		if (replacement->next_sibling != nullptr)
 		{
 		    replacement->next_sibling->prev_sibling =
 			replacement;
@@ -639,15 +639,15 @@ obj_tree_replace(ABObj obj, ABObj replacement)
 		break;
 	    }
 	}
-	objP_set_parent(obj, NULL);
-	obj->next_sibling = NULL;
+	objP_set_parent(obj, nullptr);
+	obj->next_sibling = nullptr;
     }
 
     /*
      * Action sources and destinations
      */
     for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-	 (action = trav_next(&trav)) != NULL;)
+	 (action = trav_next(&trav)) != nullptr;)
     {
 	actinfo = &(action->info.action);
 	if (actinfo->to == obj)
@@ -670,7 +670,7 @@ obj_tree_destroy_flagged_impl(ABObj *rootPtr)
 {
 #define root (*rootPtr)
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
     BOOL                destroyedOne = FALSE;
     int                 numDestroyed = 0;
 
@@ -690,7 +690,7 @@ obj_tree_destroy_flagged_impl(ABObj *rootPtr)
     {
 	destroyedOne = FALSE;
 	for (trav_open(&trav, root, AB_TRAV_ALL);
-	     (obj = trav_next(&trav)) != NULL;)
+	     (obj = trav_next(&trav)) != nullptr;)
 	{
 	    if (obj_has_flag(obj, BeingDestroyedFlag))
 	    {
@@ -715,9 +715,9 @@ int
 obj_tree_set_flag(ABObj root, unsigned flags)
 {
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
     for (trav_open(&trav, root, AB_TRAV_ALL);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	obj_set_flag(obj, flags);
     }
@@ -729,9 +729,9 @@ int
 obj_tree_clear_flag(ABObj root, unsigned flags)
 {
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
     for (trav_open(&trav, root, AB_TRAV_ALL);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	obj_clear_flag(obj, flags);
     }
@@ -772,22 +772,22 @@ comp_change_flag(
 )
 {
     AB_TRAVERSAL        trav;
-    static ABObj        comp_root = NULL;
-    ABObj               comp_sub = NULL;
+    static ABObj        comp_root = nullptr;
+    ABObj               comp_sub = nullptr;
 
     if (clear)
 	obj_clear_flag(root, flags);
     else
 	obj_set_flag(root, flags);
 
-    if (root->part_of == NULL)	/* No SubObjs */
+    if (root->part_of == nullptr)	/* No SubObjs */
 	return 0;
 
-    if (comp_root == NULL)	/* Set Root */
+    if (comp_root == nullptr)	/* Set Root */
 	comp_root = root;
 
     for (trav_open(&trav, root, AB_TRAV_CHILDREN);
-	 (comp_sub = trav_next(&trav)) != NULL;)
+	 (comp_sub = trav_next(&trav)) != nullptr;)
     {
 	if (comp_sub->part_of == comp_root)
 	    comp_change_flag(comp_sub, flags, clear);
@@ -795,7 +795,7 @@ comp_change_flag(
     trav_close(&trav);
 
     if (root == comp_root)
-	comp_root = NULL;	/* Reset */
+	comp_root = nullptr;	/* Reset */
 
     return 0;
 }
@@ -808,7 +808,7 @@ obj_prepend_sibling(ABObj obj, ABObj newsib)
 {
     ABObj               parent = obj->parent;
 
-    return ((parent == NULL) ?
+    return ((parent == nullptr) ?
 	    -1 :
 	    obj_insert_child(parent, newsib,
 			     obj_get_child_num(obj)));
@@ -822,7 +822,7 @@ obj_append_sibling(ABObj obj, ABObj newsib)
 {
     ABObj               parent = obj->parent;
 
-    return ((parent == NULL) ?
+    return ((parent == nullptr) ?
 	    -1 :
 	    obj_insert_child(parent, newsib,
 			     obj_get_child_num(obj) + 1));
@@ -890,10 +890,10 @@ int
 objP_set_parent(ABObj obj, ABObj newParent)
 {
     StringList		oldNames = objP_get_names_scope(obj);
-    StringList		newNames = NULL;
+    StringList		newNames = nullptr;
     BOOL		updateNamesLists = FALSE;
     
-    if (newParent != NULL)
+    if (newParent != nullptr)
     {
         newNames = objP_get_names_scope_for_children(newParent);
     }
@@ -903,7 +903,7 @@ objP_set_parent(ABObj obj, ABObj newParent)
      */
     updateNamesLists = 
 	(   (oldNames != newNames)
-	 && ((obj->name != NULL) || (obj->first_child != NULL)) );
+	 && ((obj->name != nullptr) || (obj->first_child != nullptr)) );
 
     obj->parent = newParent;
 
@@ -950,9 +950,9 @@ obj_get_refs_to(ABObj obj)
 {
     int		num_objs = objlist_get_num_objs(objP_all_objs_list);
     int		i;
-    ABObjList	refList = NULL;
-    ABObj	*internalObjList = NULL;
-    ABObj	refObj = NULL;
+    ABObjList	refList = nullptr;
+    ABObj	*internalObjList = nullptr;
+    ABObj	refObj = nullptr;
 
     /* this is a speed hack - we grab the internal object array from
      * the object list to speed up this function, 'cause it gets
@@ -1000,7 +1000,7 @@ obj_get_refs_to(ABObj obj)
 	/*
 	 * Attachments
 	 */
-        if (refObj->attachments != NULL)
+        if (refObj->attachments != nullptr)
         {
 	    if (   (refObj->attachments->north.type == AB_ATTACH_OBJ)
 	        && (refObj->attachments->north.value == (void*)obj) )
@@ -1069,7 +1069,7 @@ add_to_ref_list(
 )
 {
 #define refList (*refListInOutPtr)
-    if (refList == NULL)
+    if (refList == nullptr)
     {
 	refList = objlist_create();
     }
@@ -1093,10 +1093,10 @@ update_names_lists(
 			StringList	newNamesList
 )
 {
-    ABObj	child = NULL;
-    ISTRING	newName = NULL;
+    ABObj	child = nullptr;
+    ISTRING	newName = nullptr;
 
-    if (obj->name != NULL)
+    if (obj->name != nullptr)
     {
         newName = obj_alloc_unique_name_istr(obj, obj->name, -1);
         if (!istr_equal(newName, obj->name))
@@ -1108,11 +1108,11 @@ update_names_lists(
 	    /* The name has not changed, so set_name() would ignore us */
 	    /* need to update names lists */
     
-	    if (oldNamesList != NULL)
+	    if (oldNamesList != nullptr)
 	    {
 	        strlist_remove_istr(oldNamesList, obj->name);
 	    }
-	    if (newNamesList != NULL)
+	    if (newNamesList != nullptr)
 	    {
 	        strlist_add_istr(newNamesList, obj->name, obj);
 	    }
@@ -1123,7 +1123,7 @@ update_names_lists(
     /*
      * Update all the children of this obj
      */
-    for (child = obj->first_child; child != NULL; child = child->next_sibling)
+    for (child = obj->first_child; child != nullptr; child = child->next_sibling)
     {
         update_names_lists(child, oldNamesList, newNamesList);
     }
@@ -1141,7 +1141,7 @@ verify_obj_read_impl(ABObj obj, STRING file, int line)
     {
 	return 0;
     }
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	return 0;
     }
@@ -1171,7 +1171,7 @@ verify_obj_write_impl(ABObj obj, STRING file, int line)
     {
 	return 0;
     }
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	return 0;
     }

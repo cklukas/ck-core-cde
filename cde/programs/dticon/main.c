@@ -113,9 +113,9 @@ static XtResource resources[] = {
 static XrmOptionDescRec option_list[] =
 {
    {"-noMessaging", "useMessaging", XrmoptionNoArg, (caddr_t)"FALSE"},
-   {"-session", "session", XrmoptionSepArg, NULL},
-   {"-bmSuffix", "bmSuffix", XrmoptionSepArg, NULL},
-   {"-pmSuffix", "pmSuffix", XrmoptionSepArg, NULL},
+   {"-session", "session", XrmoptionSepArg, nullptr},
+   {"-bmSuffix", "bmSuffix", XrmoptionSepArg, nullptr},
+   {"-pmSuffix", "pmSuffix", XrmoptionSepArg, nullptr},
    {"-maxIconWidth", "maxIconWidth", XrmoptionSepArg, (caddr_t)MAX_ICON_WIDTH},
    {"-maxIconHeight", "maxIconHeight",XrmoptionSepArg,(caddr_t)MAX_ICON_HEIGHT},
    {"-noFileFilter", "useFileFilter", XrmoptionNoArg, (caddr_t)"FALSE"},
@@ -160,7 +160,7 @@ CloseCB (
         XtPointer callbackArg )
 {
     DialogFlag = QUIT;
-    XtCallCallbacks (fileMenu_quit_pb, XmNactivateCallback, NULL);
+    XtCallCallbacks (fileMenu_quit_pb, XmNactivateCallback, nullptr);
 }
 
 
@@ -200,10 +200,10 @@ main(
         int n;
         Arg args[20];
         Atom xa_WM_DELETE_WINDOW, xa_WM_SAVE_YOURSELF;
-        char *tmpPtr=NULL;
-        static char *untitledStr = NULL;
-        char *p=NULL;
-        char *tmpp=NULL;
+        char *tmpPtr=nullptr;
+        static char *untitledStr = nullptr;
+        char *p=nullptr;
+        char *tmpp=nullptr;
 
 #ifdef __TOOLTALK
     int ttFd;
@@ -217,7 +217,7 @@ main(
         /*------------------------------*/
         _DtEnvControl(DT_ENV_SET); /* set up environment variables */
 
-        XtSetLanguageProc(NULL, NULL, NULL);
+        XtSetLanguageProc(nullptr, nullptr, nullptr);
 
         execName = argv[0];
         if (progName=strrchr(argv[0], '/'))
@@ -228,10 +228,10 @@ main(
 
         TopLevel = XtAppInitialize(&AppContext, CLASS_NAME,
                                 option_list, XtNumber(option_list),
-                                &argc, argv, NULL, NULL, 0);
+                                &argc, argv, nullptr, nullptr, 0);
 
         XtGetApplicationResources(TopLevel, &xrdb, resources,
-                                      XtNumber(resources), NULL, 0);
+                                      XtNumber(resources), nullptr, 0);
 
         GetSessionInfo();
 
@@ -277,7 +277,7 @@ main(
         {
            /* strip off path portion of name if there is one */
            tmpPtr = strrchr(start_file,'/');
-           if (tmpPtr != NULL)
+           if (tmpPtr != nullptr)
 	       XtSetArg(args[0], XmNiconName, tmpPtr+1);
            else
 	       XtSetArg(args[0], XmNiconName, start_file);
@@ -293,14 +293,14 @@ main(
         /*------------------------------------------------------------------*/
         xa_WM_DELETE_WINDOW = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
         XmAddWMProtocolCallback(dtIconShell, xa_WM_DELETE_WINDOW, CloseCB,
-                                NULL);
+                                nullptr);
 
         /*------------------------------------------------------------------*/
         /*   Register for save and restore.                                 */
         /*------------------------------------------------------------------*/
         xa_WM_SAVE_YOURSELF = XInternAtom(dpy, "WM_SAVE_YOURSELF", False);
         XmAddWMProtocolCallback(dtIconShell, xa_WM_SAVE_YOURSELF,
-                                SaveSessionCB, NULL);
+                                SaveSessionCB, nullptr);
 
 #ifdef __TOOLTALK
     ttMark = tt_mark( );
@@ -314,22 +314,22 @@ main(
     DieFromToolTalkError( dticonShell, tmpPtr, ttRc );
 
     ttRc = ttmedia_ptype_declare( dticon_ptype, 0,
-                                  ProcessToolTalkMediaMessage, NULL, 0);
+                                  ProcessToolTalkMediaMessage, nullptr, 0);
     DieFromToolTalkError( dticonShell, "ttmedia_ptype_declare: %s", ttRc );
 
     ttRc = ttmedia_ptype_declare( dticon_ptype, 1000,
-                                  ProcessToolTalkMediaMessage, NULL, 0);
+                                  ProcessToolTalkMediaMessage, nullptr, 0);
     DieFromToolTalkError( dticonShell, "ttmedia_ptype_declare: %s", ttRc );
 
     ttRc = ttmedia_ptype_declare( dticon_ptype, 2000,
-                                  ProcessToolTalkMediaMessage, NULL, 1);
+                                  ProcessToolTalkMediaMessage, nullptr, 1);
     DieFromToolTalkError( dticonShell, "ttmedia_ptype_declare: %s", ttRc );
 
-    tttk_Xt_input_handler(NULL, 0, 0);
+    tttk_Xt_input_handler(nullptr, 0, 0);
 
     ttRc = tt_ptr_error(ttdt_session_join( tt_default_session( ),
                                           ProcessToolTalkMessage,
-                                          (Widget) 0, NULL, 1,
+                                          (Widget) 0, nullptr, 1,
                                           TTDT_SESSION_NO_REQUESTS));
     DieFromToolTalkError( dticonShell, "ttdt_session_join: %s", ttRc );
 
@@ -417,7 +417,7 @@ DieFromToolTalkError(Widget parent, char *errfmt, Tt_status status)
     XtManageChild(dialog);
     XtRealizeWidget(dialogShell);
 
-    _DtSimpleError(CLASS_NAME, DtFatalError, NULL, errmsg);
+    _DtSimpleError(CLASS_NAME, DtFatalError, nullptr, errmsg);
 
     XtFree(errmsg);
     XmStringFree(xms_ok);
@@ -466,8 +466,8 @@ int mark = tt_mark();
 int tmplen=0;
 int tt_tmpMaskfile_fd = -1;
 char mask_file[MAX_FNAME];
-char *tmp = NULL;
-char *tmp1 = NULL;
+char *tmp = nullptr;
+char *tmp1 = nullptr;
 
 if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
 
@@ -509,7 +509,7 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
 
           tt_message_reject(msg);
         }
-        else if (edit_notifier(NULL, msg, 0))
+        else if (edit_notifier(nullptr, msg, 0))
         {
            strcpy( msgID, tt_message_arg_val(msg, 1) );
 
@@ -534,12 +534,12 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
                                      &buf, &blen) != TT_OK)
              {
                 tt_message_fail(msg);
-                edit_notifier(NULL, 0, 1);
+                edit_notifier(nullptr, 0, 1);
              }
              else if ((tt_tmpfile_fd = create_start_file()) == -1)
              {
                 tt_message_fail(msg);
-                edit_notifier(NULL, 0, 1);
+                edit_notifier(nullptr, 0, 1);
              }
              else
              {
@@ -557,7 +557,7 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
                    }
                    else {
                            tt_message_fail(msg);
-                           edit_notifier(NULL, 0, 1);
+                           edit_notifier(nullptr, 0, 1);
                         }
                 }
                 else
@@ -581,7 +581,7 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
                      else
                      {
                              tt_message_fail(msg);
-                            edit_notifier(NULL, 0, 1);
+                            edit_notifier(nullptr, 0, 1);
                      }
 
                    /* Try to find the second buffer. */
@@ -609,7 +609,7 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
                       }
                       else {
                               tt_message_fail(msg);
-                              edit_notifier(NULL, 0, 1);
+                              edit_notifier(nullptr, 0, 1);
                            }
                    }
                 } /* else XBM Format */
@@ -694,9 +694,9 @@ send_tt_saved(void)
         int len=0;
         int Mlen=0;
         int rlen=0;
-        char* buffer=NULL;
-        char* Fbuffer=NULL;
-        char* Mbuffer=NULL;
+        char* buffer=nullptr;
+        char* Fbuffer=nullptr;
+        char* Mbuffer=nullptr;
         struct stat statbuf;        /* Information on a file. */
         Tt_status ttstat;
         Tt_message msg;
@@ -833,7 +833,7 @@ handle_dialog_child(Widget wgt, void (*manage_func)(Widget))
         XtVaGetValues( wgt,
                        XmNnumChildren, &num_children,
                        XmNchildren, &children,
-                       NULL );
+                       nullptr );
 
         /* We manage/unmanage the first rectObj child in the list.
          * Note that the check for rectObjClass is necessary since some

@@ -298,7 +298,7 @@ int main(int argc, char **argv)
     ck_blen = (int)strlen(pm1);
     assert(IconEdit_tt_handler(1, 0) == TT_CALLBACK_CONTINUE);
     ck_mk_fail = 0;
-    assert(ck_error_calls == 1 && strstr(ck_error_text, ck_work) != NULL);
+    assert(ck_error_calls == 1 && strstr(ck_error_text, ck_work) != nullptr);
     assert(ck_icon.pmFileName[0] == '\0' && !ck_icon.pmDirtyBit);
     assert(ck_icon_set_calls == 0 && ck_count(ck_work) == before);
     assert(ck_xtmalloc_live == 0 && ck_next_fd() == fd0);

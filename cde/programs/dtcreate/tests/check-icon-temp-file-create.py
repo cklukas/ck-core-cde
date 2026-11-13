@@ -84,7 +84,7 @@ def main(scratch):
     c, binary = scratch / f"{tag}.c", scratch / tag
     c.write_text(template)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=gnu99", "-Wall", "-Wno-unused-function", "-Wno-unused-variable",
+                   ["-std=gnu23", "-Wall", "-Wno-unused-function", "-Wno-unused-variable",
                     "-Wno-deprecated-declarations", "-Wno-unused-value",
                     "-Wno-unused-but-set-variable", "-Wno-format-security",
                     "-Wno-unused-parameter",

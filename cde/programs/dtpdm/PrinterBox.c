@@ -447,7 +447,7 @@ PdmPrinterBoxNew(void)
 static void
 PdmPrinterBoxDelete(PdmSetupBox* me)
 {
-    if(me != (PdmSetupBox*)NULL)
+    if(me != (PdmSetupBox*)nullptr)
     {
 	PdmPrinterBoxData* data = (PdmPrinterBoxData*)me->subclass_data;
 
@@ -530,7 +530,7 @@ PdmPrinterBoxGetAttr(PdmSetupBox* me, PdmXp* pdm_xp)
     PdmPrinterBoxData* data = (PdmPrinterBoxData*)me->subclass_data;
     const char* strval;
     PdmOidMediumSS* medium_ss_supported;
-    PdmOidTrayMediumList* input_trays_medium = NULL;
+    PdmOidTrayMediumList* input_trays_medium = nullptr;
 #if 0 && defined(PRINTING_SUPPORTED)
     /*
      * printer model description
@@ -544,7 +544,7 @@ PdmPrinterBoxGetAttr(PdmSetupBox* me, PdmXp* pdm_xp)
 				 pdmoid_att_document_format);
     data->document_format = PdmOidDocumentFormatParse(strval);
 #endif /* PRINTING_SUPPORTED */
-    if((char*)NULL == data->document_format)
+    if((char*)nullptr == data->document_format)
     {
 	/*
 	 * document format not specified, try to obtain
@@ -690,11 +690,11 @@ PdmPrinterBoxCreateWindow(PdmSetupBox* me, Widget parent)
 				      "PrinterSetup",
 				      xmRowColumnWidgetClass,
 				      parent,
-				      NULL);
+				      nullptr);
     /*
      * create the printer model row
      */
-    if(data->printer_model != (const char*)NULL)
+    if(data->printer_model != (const char*)nullptr)
     {
 	char* desc;
 	char* ptr;
@@ -704,20 +704,20 @@ PdmPrinterBoxCreateWindow(PdmSetupBox* me, Widget parent)
 				      xmRowColumnWidgetClass,
 				      manager,
 				      XmNorientation, XmHORIZONTAL,
-				      NULL);
+				      nullptr);
 	/*
 	 * create the printer model label
 	 */
 	w = XtVaCreateManagedWidget("PrinterModelLabel",
 				    xmLabelGadgetClass,
 				    row,
-				    NULL);
+				    nullptr);
 	/*
 	 * create the printer model using just the 1st line
 	 */
 	desc = XtNewString(data->printer_model);
 	ptr = Dt_strchr(desc, '\n');
-	if(ptr != NULL)
+	if(ptr != nullptr)
 	    *ptr = '\0';
 	label = XmStringCreateLocalized(desc);
 	XtFree(desc);
@@ -725,13 +725,13 @@ PdmPrinterBoxCreateWindow(PdmSetupBox* me, Widget parent)
 				    xmLabelGadgetClass,
 				    row,
 				    XmNlabelString, label,
-				    NULL);
+				    nullptr);
 	XmStringFree(label);
     }
     /*
      * create the document format row
      */
-    if((char*)NULL != data->document_format)
+    if((char*)nullptr != data->document_format)
     {
 	/*
 	 * create the document format row
@@ -741,14 +741,14 @@ PdmPrinterBoxCreateWindow(PdmSetupBox* me, Widget parent)
 				      xmRowColumnWidgetClass,
 				      manager,
 				      XmNorientation, XmHORIZONTAL,
-				      NULL);
+				      nullptr);
 	/*
 	 * create the document format label
 	 */
 	w = XtVaCreateManagedWidget("DocumentFormatLabel",
 				    xmLabelGadgetClass,
 				    row,
-				    NULL);
+				    nullptr);
 	/*
 	 * create the document format
 	 */
@@ -757,7 +757,7 @@ PdmPrinterBoxCreateWindow(PdmSetupBox* me, Widget parent)
 				    xmLabelGadgetClass,
 				    row,
 				    XmNlabelString, label,
-				    NULL);
+				    nullptr);
 	XmStringFree(label);
     }
     /*
@@ -766,7 +766,7 @@ PdmPrinterBoxCreateWindow(PdmSetupBox* me, Widget parent)
     draw_area = XtVaCreateWidget("PrinterSetupControls",
 				 xmDrawingAreaWidgetClass,
 				 manager,
-				 NULL);
+				 nullptr);
     XtAddCallback(draw_area, XmNresizeCallback,
 		  PdmPrinterBoxResizeCB, (XtPointer)me);
     /*
@@ -845,25 +845,25 @@ PdmPrinterBoxResizeCB(Widget w,
 		  XmNy, &rt.y,
 		  XmNwidth, &rt.width,
 		  XmNheight, &rt.height,
-		  NULL);
+		  nullptr);
     XtVaGetValues(SizeCtlGetWidget(data->size_ctl),
 		  XmNx, &rs.x,
 		  XmNy, &rs.y,
 		  XmNwidth, &rs.width,
 		  XmNheight, &rs.height,
-		  NULL);
+		  nullptr);
     XtVaGetValues(OrientCtlGetWidget(data->orient_ctl),
 		  XmNx, &ro.x,
 		  XmNy, &ro.y,
 		  XmNwidth, &ro.width,
 		  XmNheight, &ro.height,
-		  NULL);
+		  nullptr);
     XtVaGetValues(PlexCtlGetWidget(data->plex_ctl),
 		  XmNx, &rp.x,
 		  XmNy, &rp.y,
 		  XmNwidth, &rp.width,
 		  XmNheight, &rp.height,
-		  NULL);
+		  nullptr);
     /*
      * calculate rows and columns dimensions
      */
@@ -885,32 +885,32 @@ PdmPrinterBoxResizeCB(Widget w,
 		  XmNy, r1.y,
 		  XmNwidth, c1.width,
 		  XmNheight, r1.height,
-		  NULL);
+		  nullptr);
     XtVaSetValues(PlexCtlGetWidget(data->plex_ctl),
 		  XmNx, c2.x,
 		  XmNy, r1.y,
 		  XmNwidth, c2.width,
 		  XmNheight, r1.height,
-		  NULL);
+		  nullptr);
     XtVaSetValues(SizeCtlGetWidget(data->size_ctl),
 		  XmNx, c1.x,
 		  XmNy, r2.y,
 		  XmNwidth, c1.width,
 		  XmNheight, r2.height,
-		  NULL);
+		  nullptr);
     XtVaSetValues(TrayCtlGetWidget(data->tray_ctl),
 		  XmNx, c2.x,
 		  XmNy, r2.y,
 		  XmNwidth, c2.width,
 		  XmNheight, r2.height,
-		  NULL);
+		  nullptr);
     /*
      * resize the drawing area to accommodate the new layout
      */
     XtVaSetValues(w,
 		  XmNwidth, r1.width,
 		  XmNheight, c1.height,
-		  NULL);
+		  nullptr);
 }
 
 /*
@@ -1049,7 +1049,7 @@ OrientCtlCreateWindow(OrientCtl* me,
 					 xmFrameWidgetClass,
 					 parent,
 					 XmNshadowType, XmSHADOW_ETCHED_IN,
-					 NULL);
+					 nullptr);
     /*
      * orientation label
      */
@@ -1058,7 +1058,7 @@ OrientCtlCreateWindow(OrientCtl* me,
 				xmLabelWidgetClass,
 				me->widget,
 				XmNframeChildType, XmFRAME_TITLE_CHILD,
-				NULL);
+				nullptr);
     /*
      * orientation controls manager
      */
@@ -1067,7 +1067,7 @@ OrientCtlCreateWindow(OrientCtl* me,
 				xmDrawingAreaWidgetClass,
 				me->widget,
 				XmNframeChildType, XmFRAME_WORKAREA_CHILD,
-				NULL);
+				nullptr);
     XtAddCallback(control_manager, XmNresizeCallback, OrientCtlResizeCB, me);
     /*
      * orientations option menu
@@ -1078,7 +1078,7 @@ OrientCtlCreateWindow(OrientCtl* me,
 				control_manager,
 				XmNmarginHeight, 0,
 				XmNrowColumnType, XmMENU_OPTION,
-				NULL);
+				nullptr);
     /*
      * orientation icon
      */
@@ -1088,7 +1088,7 @@ OrientCtlCreateWindow(OrientCtl* me,
 				control_manager,
 				XmNlabelType, XmPIXMAP,
 				XmNalignment, XmALIGNMENT_CENTER,
-				NULL);
+				nullptr);
 }
 
 /*
@@ -1137,11 +1137,11 @@ OrientCtlResizeCB(Widget w, XtPointer client_data, XtPointer call_data)
      */
     XtVaGetValues(w, XmNheight, &height, XmNwidth, &width,
 		  XmNmarginWidth, &margin_width,
-		  NULL);
+		  nullptr);
     XtVaGetValues(me->option_menu, XmNheight, &menu_h, XmNwidth, &menu_w,
-		  NULL);
+		  nullptr);
     XtVaGetValues(me->icon_label, XmNheight, &icon_h, XmNwidth, &icon_w,
-		  NULL);
+		  nullptr);
     /*
      * position controls side by side
      */
@@ -1155,14 +1155,14 @@ OrientCtlResizeCB(Widget w, XtPointer client_data, XtPointer call_data)
     /*
      * set new positions
      */
-    XtVaSetValues(me->option_menu, XmNx, menu_x, XmNy, menu_y, NULL);
-    XtVaSetValues(me->icon_label, XmNx, icon_x, XmNy, icon_y, NULL);
+    XtVaSetValues(me->option_menu, XmNx, menu_x, XmNy, menu_y, nullptr);
+    XtVaSetValues(me->icon_label, XmNx, icon_x, XmNy, icon_y, nullptr);
     /*
      * update drawing area width
      */
     new_width = menu_x + menu_w + icon_w + margin_width;
     if(new_width > width)
-	XtVaSetValues(w, XmNwidth, new_width, NULL);
+	XtVaSetValues(w, XmNwidth, new_width, nullptr);
 }
 
 /*
@@ -1222,7 +1222,7 @@ OrientCtlSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
     OrientCtl* me;
     XtArgVal /* int */ selected_item = (XtArgVal)client_data;
 
-    XtVaGetValues(w, XmNuserData, &me, NULL);
+    XtVaGetValues(w, XmNuserData, &me, nullptr);
     OrientCtlSetSelectedItem(me, selected_item);
     OrientCtlUpdateIcon(me);
 }
@@ -1286,7 +1286,7 @@ OrientCtlInitPixmapList(OrientCtl* me)
 		  XmNwidth, max_width,
 		  XmNheight, max_height,
 		  XmNrecomputeSize, False,
-		  NULL);
+		  nullptr);
 }
 
 /*
@@ -1310,7 +1310,7 @@ OrientCtlSetSelectedItem(OrientCtl* me, int selected_item)
     else
 	me->selected_item = selected_item;
 
-    if(me->plex_ctl != (PlexCtl*)NULL)
+    if(me->plex_ctl != (PlexCtl*)nullptr)
 	PlexCtlSetOrientation(me->plex_ctl, OrientCtlGetOrientation(me));
 }
 
@@ -1339,7 +1339,7 @@ OrientCtlUpdateIcon(OrientCtl* me)
 		      XmNlabelInsensitivePixmap,
 		      PdmPixmapListGetPixmap(me->i_pixmap_list,
 					     me->selected_item),
-		      NULL);
+		      nullptr);
 }
 
 /*
@@ -1501,7 +1501,7 @@ PlexCtlCreateWindow(PlexCtl* me,
 					 xmFrameWidgetClass,
 					 parent,
 					 XmNshadowType, XmSHADOW_ETCHED_IN,
-					 NULL);
+					 nullptr);
     /*
      * plex label
      */
@@ -1510,7 +1510,7 @@ PlexCtlCreateWindow(PlexCtl* me,
 				xmLabelGadgetClass,
 				me->widget,
 				XmNframeChildType, XmFRAME_TITLE_CHILD,
-				NULL);
+				nullptr);
     /*
      * plex controls manager
      */
@@ -1520,7 +1520,7 @@ PlexCtlCreateWindow(PlexCtl* me,
 				xmDrawingAreaWidgetClass,
 				me->widget,
 				XmNframeChildType, XmFRAME_WORKAREA_CHILD,
-				NULL);
+				nullptr);
     XtAddCallback(control_manager, XmNresizeCallback, PlexCtlResizeCB, me);
     /*
      * plexes option menu
@@ -1531,7 +1531,7 @@ PlexCtlCreateWindow(PlexCtl* me,
 				control_manager,
 				XmNrowColumnType, XmMENU_OPTION,
 				XmNmarginHeight, 0,
-				NULL);
+				nullptr);
     /*
      * plex icon
      */
@@ -1541,7 +1541,7 @@ PlexCtlCreateWindow(PlexCtl* me,
 				control_manager,
 				XmNlabelType, XmPIXMAP,
 				XmNalignment, XmALIGNMENT_CENTER,
-				NULL);
+				nullptr);
 }
 
 /*
@@ -1590,11 +1590,11 @@ PlexCtlResizeCB(Widget w, XtPointer client_data, XtPointer call_data)
      */
     XtVaGetValues(w, XmNheight, &height, XmNwidth, &width,
 		  XmNmarginWidth, &margin_width,
-		  NULL);
+		  nullptr);
     XtVaGetValues(me->option_menu, XmNheight, &menu_h, XmNwidth, &menu_w,
-		  NULL);
+		  nullptr);
     XtVaGetValues(me->icon_label, XmNheight, &icon_h, XmNwidth, &icon_w,
-		  NULL);
+		  nullptr);
     /*
      * position controls side by side
      */
@@ -1608,14 +1608,14 @@ PlexCtlResizeCB(Widget w, XtPointer client_data, XtPointer call_data)
     /*
      * set new positions
      */
-    XtVaSetValues(me->option_menu, XmNx, menu_x, XmNy, menu_y, NULL);
-    XtVaSetValues(me->icon_label, XmNx, icon_x, XmNy, icon_y, NULL);
+    XtVaSetValues(me->option_menu, XmNx, menu_x, XmNy, menu_y, nullptr);
+    XtVaSetValues(me->icon_label, XmNx, icon_x, XmNy, icon_y, nullptr);
     /*
      * update drawing area width
      */
     new_width = menu_x + menu_w + icon_w + margin_width;
     if(new_width > width)
-	XtVaSetValues(w, XmNwidth, new_width, NULL);
+	XtVaSetValues(w, XmNwidth, new_width, nullptr);
 }
 
 /*
@@ -1675,7 +1675,7 @@ PlexCtlSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
     PlexCtl* me;
     XtArgVal /* int */ selected_item = (XtArgVal)client_data;
 
-    XtVaGetValues(w, XmNuserData, &me, NULL);
+    XtVaGetValues(w, XmNuserData, &me, nullptr);
     PlexCtlSetSelectedItem(me, selected_item);
     PlexCtlUpdateIcon(me);
 }
@@ -1787,7 +1787,7 @@ PlexCtlInitPixmapLists(PlexCtl* me)
 		  XmNwidth, max_width,
 		  XmNheight, max_height,
 		  XmNrecomputeSize, False,
-		  NULL);
+		  nullptr);
 }
 
 /*
@@ -1836,7 +1836,7 @@ PlexCtlUpdateIcon(PlexCtl* me)
 		      XmNlabelInsensitivePixmap,
 		      PdmPixmapListGetPixmap(*me->i_pixmap_list_ptr,
 					     me->selected_item),
-		      NULL);
+		      nullptr);
 }
 
 /*
@@ -2011,7 +2011,7 @@ TrayCtlCreateWindow(TrayCtl* me, Widget parent)
 					 xmFrameWidgetClass,
 					 parent,
 					 XmNshadowType, XmSHADOW_ETCHED_IN,
-					 NULL);
+					 nullptr);
     /*
      * tray label
      */
@@ -2020,7 +2020,7 @@ TrayCtlCreateWindow(TrayCtl* me, Widget parent)
 				  xmLabelGadgetClass,
 				  me->widget,
 				  XmNframeChildType, XmFRAME_TITLE_CHILD,
-				  NULL);
+				  nullptr);
     /*
      * tray controls manager
      */
@@ -2029,7 +2029,7 @@ TrayCtlCreateWindow(TrayCtl* me, Widget parent)
 				xmDrawingAreaWidgetClass,
 				me->widget,
 				XmNframeChildType, XmFRAME_WORKAREA_CHILD,
-				NULL);
+				nullptr);
     XtAddCallback(control_manager, XmNresizeCallback, TrayCtlResizeCB, me);
     /*
      * trays option menu
@@ -2040,7 +2040,7 @@ TrayCtlCreateWindow(TrayCtl* me, Widget parent)
 				control_manager,
 				XmNmarginHeight, 0,
 				XmNrowColumnType, XmMENU_OPTION,
-				NULL);
+				nullptr);
 }
 
 /*
@@ -2085,8 +2085,8 @@ TrayCtlResizeCB(Widget w, XtPointer client_data, XtPointer call_data)
     /*
      * get current layout info
      */
-    XtVaGetValues(w, XmNheight, &height, NULL);
-    XtVaGetValues(me->option_menu, XmNheight, &menu_h, NULL);
+    XtVaGetValues(w, XmNheight, &height, nullptr);
+    XtVaGetValues(me->option_menu, XmNheight, &menu_h, nullptr);
     /*
      * center vertically
      */
@@ -2094,7 +2094,7 @@ TrayCtlResizeCB(Widget w, XtPointer client_data, XtPointer call_data)
     /*
      * set new position
      */
-    XtVaSetValues(me->option_menu, XmNx, 0, XmNy, menu_y, NULL);
+    XtVaSetValues(me->option_menu, XmNx, 0, XmNy, menu_y, nullptr);
 }
 
 /*
@@ -2227,7 +2227,7 @@ TrayCtlSelectCB(Widget w, XtPointer client_data, XtPointer call_data)
     TrayCtl* me;
     XtArgVal /* int */ selected_item = (XtArgVal)client_data;
 
-    XtVaGetValues(w, XmNuserData, &me, NULL);
+    XtVaGetValues(w, XmNuserData, &me, nullptr);
     TrayCtlSetSelectedItem(me, selected_item);
 }
 
@@ -2268,12 +2268,12 @@ SizeCtlNew(void)
 static void
 SizeCtlDelete(SizeCtl* me)
 {
-    if(me != (SizeCtl*)NULL)
+    if(me != (SizeCtl*)nullptr)
     {
-	if(me->sizes_ready_xmstr != (XmString*)NULL)
+	if(me->sizes_ready_xmstr != (XmString*)nullptr)
 	    FreeXmStringList(me->sizes_ready_xmstr,
 			     PdmOidListCount(me->sizes_ready));
-	if(me->sizes_supported_xmstr != (XmString*)NULL)
+	if(me->sizes_supported_xmstr != (XmString*)nullptr)
 	    FreeXmStringList(me->sizes_supported_xmstr,
 			     PdmOidListCount(me->sizes_supported));
 	PdmOidListDelete(me->sizes_ready);
@@ -2329,7 +2329,7 @@ SizeCtlSetSizeLists(PdmOidList** oid_list,
     count = PdmOidLinkedListCount(oid_ll);
     if(count == 0)
     {
-	*oid_list = (PdmOidList*)NULL;
+	*oid_list = (PdmOidList*)nullptr;
 	*xmstrs = (XmStringTable)NULL;
     }
     else
@@ -2472,7 +2472,7 @@ SizeCtlCreateWindow(SizeCtl* me, Widget parent)
 					 xmFrameWidgetClass,
 					 parent,
 					 XmNshadowType, XmSHADOW_ETCHED_IN,
-					 NULL);
+					 nullptr);
     /*
      * page size label
      */
@@ -2481,7 +2481,7 @@ SizeCtlCreateWindow(SizeCtl* me, Widget parent)
 				  xmLabelGadgetClass,
 				  me->widget,
 				  XmNframeChildType, XmFRAME_TITLE_CHILD,
-				  NULL);
+				  nullptr);
 
     /*
      * page size controls manager
@@ -2491,7 +2491,7 @@ SizeCtlCreateWindow(SizeCtl* me, Widget parent)
 				xmDrawingAreaWidgetClass,
 				me->widget,
 				XmNframeChildType, XmFRAME_WORKAREA_CHILD,
-				NULL);
+				nullptr);
     XtAddCallback(control_manager, XmNresizeCallback, SizeCtlResizeCB, me);
     /*
      * page sizes list box
@@ -2535,7 +2535,7 @@ SizeCtlCreateWindow(SizeCtl* me, Widget parent)
     XtVaSetValues(hscroll,
 		  XmNmappedWhenManaged, False,
 		  XmNx, 0, XmNy, 0, XmNwidth, 1, XmNheight, 1,
-		  NULL);
+		  nullptr);
     /*
      * manage the scrolled list
      */
@@ -2549,17 +2549,17 @@ SizeCtlCreateWindow(SizeCtl* me, Widget parent)
 				     xmRowColumnWidgetClass,
 				     control_manager,
 				     XmNradioBehavior, True,
-				     NULL);
+				     nullptr);
     me->ready_radio = XtVaCreateManagedWidget("button_0",
 					      xmToggleButtonWidgetClass,
 					      me->radio_box,
-					      NULL);
+					      nullptr);
     XtAddCallback(me->ready_radio, XmNvalueChangedCallback,
 		  SizeCtlReadyChangedCB, (XtPointer)me);
     me->supported_radio = XtVaCreateManagedWidget("button_1",
 					      xmToggleButtonWidgetClass,
 					      me->radio_box,
-					      NULL);
+					      nullptr);
     XtAddCallback(me->supported_radio, XmNvalueChangedCallback,
 		  SizeCtlSupportedChangedCB, (XtPointer)me);
     
@@ -2711,7 +2711,7 @@ SizeCtlUpdate(SizeCtl* me)
      */
     XtSetSensitive(me->frame_label, frame_label_sensitive);
     XtSetSensitive(me->list_box, list_box_sensitive);
-    XtVaSetValues(me->list_box, XmNtraversalOn, list_box_traverse, NULL);
+    XtVaSetValues(me->list_box, XmNtraversalOn, list_box_traverse, nullptr);
     XtSetSensitive(me->ready_radio, ready_radio_sensitive);
     XtSetSensitive(me->supported_radio, supported_radio_sensitive);
 }
@@ -2742,10 +2742,10 @@ SizeCtlResizeCB(Widget w, XtPointer client_data, XtPointer call_data)
      */
     XtVaGetValues(w, XmNheight, &height, XmNwidth, &width,
 		  XmNmarginWidth, &margin_width,
-		  NULL);
-    XtVaGetValues(scrolled_list, XmNheight, &list_h, XmNwidth, &list_w, NULL);
+		  nullptr);
+    XtVaGetValues(scrolled_list, XmNheight, &list_h, XmNwidth, &list_w, nullptr);
     XtVaGetValues(me->radio_box, XmNheight, &radio_h, XmNwidth, &radio_w,
-		  NULL);
+		  nullptr);
     /*
      * position controls side by side
      */
@@ -2759,14 +2759,14 @@ SizeCtlResizeCB(Widget w, XtPointer client_data, XtPointer call_data)
     /*
      * set new positions
      */
-    XtVaSetValues(scrolled_list, XmNx, list_x, XmNy, list_y, NULL);
-    XtVaSetValues(me->radio_box, XmNx, radio_x, XmNy, radio_y, NULL);
+    XtVaSetValues(scrolled_list, XmNx, list_x, XmNy, list_y, nullptr);
+    XtVaSetValues(me->radio_box, XmNx, radio_x, XmNy, radio_y, nullptr);
     /*
      * update drawing area width and height
      */
     new_width = list_x + list_w + radio_w;
     if(new_width > width)
-	XtVaSetValues(w, XmNwidth, new_width, NULL);
+	XtVaSetValues(w, XmNwidth, new_width, nullptr);
 }
 
 /*
@@ -2964,7 +2964,7 @@ CreateOptionMenuPulldown(String pulldown_name,
     int i;
 
     pulldown =
-	XmCreatePulldownMenu(XtParent(option_menu), pulldown_name, NULL, 0);
+	XmCreatePulldownMenu(XtParent(option_menu), pulldown_name, nullptr, 0);
 
     for(i = 0; i < item_count; i++)
     {
@@ -2974,8 +2974,8 @@ CreateOptionMenuPulldown(String pulldown_name,
 					 pulldown,
 					 XmNuserData, user_data,
 					 XmNlabelString, item_list[i],
-					 NULL);
-	if(activate_proc != NULL)
+					 nullptr);
+	if(activate_proc != nullptr)
 	    XtAddCallback(button, XmNactivateCallback,
 			  activate_proc, (XtPointer)(XtArgVal)i);
 	if(i == initial_item)
@@ -2984,7 +2984,7 @@ CreateOptionMenuPulldown(String pulldown_name,
     XtVaSetValues(option_menu,
 		  XmNsubMenuId, pulldown,
 		  XmNmenuHistory, initial_selected,
-		  NULL);
+		  nullptr);
 
     return pulldown;
 }
@@ -3006,7 +3006,7 @@ static XmString*
 CreateXmStringsFromOidList(const PdmOidList* list)
 {
     int count = PdmOidListCount(list);
-    XmString* xmstr_list = (XmString*)NULL;
+    XmString* xmstr_list = (XmString*)nullptr;
     
     if(count > 0)
     {
@@ -3077,14 +3077,14 @@ IconMaxDimension(Widget icon_label,
      */
     XtVaSetValues(icon_label,
 		  XmNlabelPixmap, PdmPixmapListGetPixmap(pixmap_list, i),
-		  NULL);
+		  nullptr);
     /*
      * get the label dimensions
      */
     XtVaGetValues(icon_label,
 		  XmNwidth, &width0,
 		  XmNheight, &height0,
-		  NULL);
+		  nullptr);
     width  = (Dimension)width0;
     height = (Dimension)height0;
     /*
@@ -3123,7 +3123,7 @@ PdmPixmapListNew(int count,
     if(stipple)
     {
 	Widget xmscr = XmGetXmScreen(me->screen);
-	XtVaGetValues(xmscr, XmNinsensitiveStippleBitmap, &me->stipple, NULL);
+	XtVaGetValues(xmscr, XmNinsensitiveStippleBitmap, &me->stipple, nullptr);
     }
     else
     {
@@ -3132,7 +3132,7 @@ PdmPixmapListNew(int count,
     XtVaGetValues(w,
 		  XmNforeground, &fg,
 		  XmNbackground, &bg,
-		  NULL);
+		  nullptr);
     me->foreground = (Pixel)fg;
     me->background = (Pixel)bg;
 
@@ -3155,7 +3155,7 @@ PdmPixmapListNew(int count,
 static void
 PdmPixmapListDelete(PdmPixmapList* me)
 {
-    if(me != (PdmPixmapList*)NULL)
+    if(me != (PdmPixmapList*)nullptr)
     {
 	int i;
 	for(i = 0; i < PdmPixmapListCount(me); i++)
@@ -3290,7 +3290,7 @@ SetListBoxSelection(Widget list_box, int position)
     XtVaGetValues(list_box,
 		  XmNitemCount, &item_count0,
 		  XmNvisibleItemCount, &visible_item_count0,
-		  NULL);
+		  nullptr);
     item_count = (int)item_count0;
     visible_item_count = (int)visible_item_count0;
 

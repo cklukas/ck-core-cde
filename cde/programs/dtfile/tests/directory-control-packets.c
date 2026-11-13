@@ -82,12 +82,12 @@ static void path_case(const char *name)
     else if(!strcmp(name,"path-over-limit"))encoded=DIRECTORY_PATH_LIMIT+1;
     else encoded=2;
     must_write(p[1],&encoded,sizeof(encoded));
-    if(encoded==2){send_string(p[1],"TYPE1");send_string(p[1],!strcmp(name,"path-null-type")?NULL:"TYPE2");
+    if(encoded==2){send_string(p[1],"TYPE1");send_string(p[1],!strcmp(name,"path-null-type")?nullptr:"TYPE2");
         if(strcmp(name,"path-truncated"))send_string(p[1],"tt:/path");}
     close(p[1]);
     int rc=DirectoryReadPathInfo(p[0],&count,&types,&tt);close(p[0]);
     if(!strcmp(name,"path-valid")){CHECK(rc==0&&count==2&&!strcmp(types[1],"TYPE2")&&!strcmp(tt,"tt:/path"));DirectoryFreeStrings(types,count);free(tt);}
-    else CHECK(rc==-1&&count==0&&types==NULL&&tt==NULL);
+    else CHECK(rc==-1&&count==0&&types==nullptr&&tt==nullptr);
 }
 
 static void position_case(const char *name)
@@ -104,13 +104,13 @@ static void position_case(const char *name)
     close(p[1]);
     int rc=DirectoryReadPositionInfo(p[0],&count,&values);close(p[0]);
     if(!strcmp(name,"position-valid")){CHECK(rc==0&&count==1&&!strcmp(values[0].name,"icon")&&values[0].x==7&&values[0].stacking_order==11);free_positions(values,count);}
-    else CHECK(rc==-1&&count==0&&values==NULL);
+    else CHECK(rc==-1&&count==0&&values==nullptr);
 }
 
 static void position_file_case(const char *name)
 {
     FILE *fp=tmpfile();PositionInfo *values=(PositionInfo *)1;int count,i;
-    CHECK(fp!=NULL);
+    CHECK(fp!=nullptr);
     if(!strcmp(name,"position-file-negative"))fputs("-1\n",fp);
     else if(!strcmp(name,"position-file-over-limit"))fprintf(fp,"%d\n",DIRECTORY_POSITION_LIMIT+1);
     else if(!strcmp(name,"position-file-long-name")){fputs("1\n",fp);for(i=0;i<MAX_PATH;i++)fputc('x',fp);fputs("\n1 2 3\n",fp);}
@@ -119,15 +119,15 @@ static void position_file_case(const char *name)
     else fputs("2\none\n1 2 3\ntwo\n4 5 6\n",fp);
     rewind(fp);count=DirectoryLoadPositionInfo(fp,&values);fclose(fp);
     if(!strcmp(name,"position-file-valid")){CHECK(count==2&&!strcmp(values[1].name,"two")&&values[1].y==5);free_positions(values,count);}
-    else CHECK(count==-1&&values==NULL);
+    else CHECK(count==-1&&values==nullptr);
 }
 
 static void position_path_case(const char *name)
 {
     char path[MAX_PATH];char directory[MAX_PATH+1];int rc;
     if(!strcmp(name,"file-path-long")){memset(directory,'a',MAX_PATH);directory[MAX_PATH]='\0';rc=DirectoryBuildChildPath(path,sizeof(path),directory,"positions");CHECK(rc==-1&&errno==ENAMETOOLONG&&path[0]=='\0');}
-    else if(!strcmp(name,"file-path-copy")){rc=DirectoryBuildFilePath(path,sizeof(path),"relative",NULL);CHECK(rc==0&&!strcmp(path,"relative"));}
-    else if(!strcmp(name,"file-path-copy-long")){memset(directory,'a',MAX_PATH);directory[MAX_PATH]='\0';rc=DirectoryBuildFilePath(path,sizeof(path),directory,NULL);CHECK(rc==-1&&errno==ENAMETOOLONG&&path[0]=='\0');}
+    else if(!strcmp(name,"file-path-copy")){rc=DirectoryBuildFilePath(path,sizeof(path),"relative",nullptr);CHECK(rc==0&&!strcmp(path,"relative"));}
+    else if(!strcmp(name,"file-path-copy-long")){memset(directory,'a',MAX_PATH);directory[MAX_PATH]='\0';rc=DirectoryBuildFilePath(path,sizeof(path),directory,nullptr);CHECK(rc==-1&&errno==ENAMETOOLONG&&path[0]=='\0');}
     else if(!strcmp(name,"file-path-link-relative")){strcpy(path,"/one/two/link");rc=DirectoryResolveLinkPath(path,sizeof(path),"../target");CHECK(rc==0&&!strcmp(path,"/one/two/../target"));}
     else if(!strcmp(name,"file-path-link-no-parent")){strcpy(path,"link");rc=DirectoryResolveLinkPath(path,sizeof(path),"target");CHECK(rc==0&&!strcmp(path,"target"));}
     else if(!strcmp(name,"file-path-link-absolute")){strcpy(path,"/old/link");rc=DirectoryResolveLinkPath(path,sizeof(path),"/new/target");CHECK(rc==0&&!strcmp(path,"/new/target"));}
@@ -138,7 +138,7 @@ static void position_path_case(const char *name)
 
 static void writer_case(const char *name)
 {
-    int p[2];short tag;long time_value=17,decoded_time=0;int error=23,decoded_error=0,count=0;char **types=NULL,*tt=NULL;
+    int p[2];short tag;long time_value=17,decoded_time=0;int error=23,decoded_error=0,count=0;char **types=nullptr,*tt=nullptr;
     CHECK(pipe(p)==0);
     if(!strcmp(name,"write-done"))CHECK(DirectoryWriteDone(p[1],time_value)==0);
     else if(!strcmp(name,"write-error"))CHECK(DirectoryWriteError(p[1],error,time_value)==0);
@@ -157,7 +157,7 @@ static void time_case(void)
 {
     char value[100];time_t stamp=0;
     DirectoryFormatFileTime(stamp,value,sizeof(value));
-    CHECK(value[0]!='\0'&&value[0]!='?'&&strchr(value,'\n')==NULL);
+    CHECK(value[0]!='\0'&&value[0]!='?'&&strchr(value,'\n')==nullptr);
 }
 
 static void timer_case(const char *name)

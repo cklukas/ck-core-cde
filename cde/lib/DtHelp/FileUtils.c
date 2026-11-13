@@ -78,7 +78,7 @@
 const char * _DtHelpFileSuffixList[3] = {
                     DtHelpSDL_VOL_SUFFIX,
                     DtHelpCCDF_VOL_SUFFIX,
-                    NULL };
+                    nullptr };
 
 /******** variables *********/
 #ifdef	not_used
@@ -86,9 +86,9 @@ static const char * PeriodStr = ".";
 #endif
 static const char * DirSlashStr = "/";
 static const char * PathSeparator = ":";
-static const _DtHelpCeDirStruct DefCacheDir = { NULL, ENOTDIR, 0, NULL };
+static const _DtHelpCeDirStruct DefCacheDir = { nullptr, ENOTDIR, 0, nullptr };
 
-static	_DtHelpCeDirStruct *CachedDirs = NULL;
+static	_DtHelpCeDirStruct *CachedDirs = nullptr;
 
 /******** functions *********/
 #define MyNewString(s) (NULL != s ? strdup((char *)s) : NULL)
@@ -138,12 +138,12 @@ static int SpecialStrcmp(
     const char *    str1,
     const char *    str2)
 {
-           if(NULL == str1)
+           if(nullptr == str1)
            {
-              if(NULL == str2) return 0;   /* str1 == str2 */
+              if(nullptr == str2) return 0;   /* str1 == str2 */
               return -1;                   /* str1 < str2 */
            }
-           if(NULL == str2) return 1;      /* str1 > str2 */
+           if(nullptr == str2) return 1;      /* str1 > str2 */
            return(strcmp(str1,str2));      /* str1 ? str2 */
 }
 #endif
@@ -176,7 +176,7 @@ _DtHelpFileTraceLinks (
    char * filePath;
    char   buf [2][MAXPATHLEN+2];      /* 2K+ bytes on stack */
 
-   if ( NULL == *pPathName ) return False;         /* RETURN */
+   if ( nullptr == *pPathName ) return False;         /* RETURN */
 
    /* init */
    snprintf(buf[0], sizeof(buf[0]), "%s", *pPathName);
@@ -227,7 +227,7 @@ _DtHelpFileTraceLinks (
         /* is path relative to current directory? */
         if ( linkPath[0] != DIR_SLASH )
         {
-           char * slash = NULL;
+           char * slash = nullptr;
 
            /* get last slash in the current file path */
            if(_DtHelpCeStrrchr(filePath,DirSlashStr,MB_CUR_MAX,&slash) == 0)
@@ -266,8 +266,8 @@ _DtHelpFileTraceToFile (
    struct stat status;
    char * pathName = *pPathName;  /* avoid indirection */
 
-   *pFoundPath = NULL;
-   if ( pathName == NULL || pathName[0] == EOS )
+   *pFoundPath = nullptr;
+   if ( pathName == nullptr || pathName[0] == EOS )
       return False;
  
    /* if it's a file, trace its links */
@@ -284,7 +284,7 @@ _DtHelpFileTraceToFile (
       pathName = *pPathName;
       
       /* find out if its an accessible file */
-      if (   pathName != NULL 
+      if (   pathName != nullptr 
           && pathName[0] != EOS
           && access (pathName, accessMode) == 0 
           && stat (pathName, &status) == 0
@@ -306,7 +306,7 @@ _DtHelpFileTraceToFile (
 #endif
 
    /* its not a file */
-   *pFoundPath = NULL;
+   *pFoundPath = nullptr;
    return False;
 }
 
@@ -336,7 +336,7 @@ static char * pathsSet[_DtHELP_FILE_NUM_PATHS];
     char tmpPath[MAXPATHLEN + 2];
 
     /* get user's home directory; is used in _DtHELP_FILE_USER_PATH as well */
-    if (NULL == pathsSet[_DtHELP_FILE_HOME_PATH])
+    if (nullptr == pathsSet[_DtHELP_FILE_HOME_PATH])
     {
        _DtHelpOSGetHomeDirName(tmpPath, sizeof(tmpPath));
        pathsSet[_DtHELP_FILE_HOME_PATH] = strdup(tmpPath);
@@ -344,15 +344,15 @@ static char * pathsSet[_DtHELP_FILE_NUM_PATHS];
     if (searchHomeDir) 
        paths[_DtHELP_FILE_HOME_PATH] = pathsSet[_DtHELP_FILE_HOME_PATH];
     else 
-       paths[_DtHELP_FILE_HOME_PATH] = NULL;
+       paths[_DtHELP_FILE_HOME_PATH] = nullptr;
 
     /* generate the user path */
-    if (NULL == pathsSet[_DtHELP_FILE_USER_PATH])
+    if (nullptr == pathsSet[_DtHELP_FILE_USER_PATH])
        pathsSet[_DtHELP_FILE_USER_PATH] = _DtHelpGetUserSearchPath();
     paths[_DtHELP_FILE_USER_PATH] = pathsSet[_DtHELP_FILE_USER_PATH];
 
     /* get the system search path */
-    if (NULL == pathsSet[_DtHELP_FILE_SYS_PATH])
+    if (nullptr == pathsSet[_DtHELP_FILE_SYS_PATH])
        pathsSet[_DtHELP_FILE_SYS_PATH] = _DtHelpGetSystemSearchPath();
     paths[_DtHELP_FILE_SYS_PATH] = pathsSet[_DtHELP_FILE_SYS_PATH];
 }
@@ -401,17 +401,17 @@ char * _DtHelpFileLocate (
     char * paths[_DtHELP_FILE_NUM_PATHS];
     char tmpPath[MAXPATHLEN + 2];
     const char * * pSuffix;
-    char * eos = NULL;
-    char * slash = NULL;
+    char * eos = nullptr;
+    char * slash = nullptr;
 
     /* test args */
-    if (NULL == filespec) return NULL;
+    if (nullptr == filespec) return nullptr;
 
     /* init suffix list to empty if not specified */
-    if (suffixList == NULL) 
+    if (suffixList == nullptr) 
     { 
        sufList[0] = &empty; 
-       sufList[1] = NULL;
+       sufList[1] = nullptr;
        suffixList = sufList; /* override initial argument setting */
     }
 
@@ -431,7 +431,7 @@ char * _DtHelpFileLocate (
 
        /* test all suffixes */
        eos = pathName + strlen(pathName);
-       for ( pSuffix = suffixList; NULL != *pSuffix; pSuffix++ )
+       for ( pSuffix = suffixList; nullptr != *pSuffix; pSuffix++ )
        {
           strcpy(eos,(char *) *pSuffix);
           /*recall: _DtHelpFileTraceToFile() requires pathName to be malloc'd*/
@@ -453,7 +453,7 @@ char * _DtHelpFileLocate (
 
        /* get user's current working directory */
        /* JET - CERT VU#575804 */
-       if (getcwd(tmpPath, MAXPATHLEN - 1) == NULL) return NULL; /* RETURN: error */
+       if (getcwd(tmpPath, MAXPATHLEN - 1) == nullptr) return nullptr; /* RETURN: error */
        
        /* make path end in a slash */
        eos = tmpPath + strlen(tmpPath);
@@ -464,7 +464,7 @@ char * _DtHelpFileLocate (
        slash = filespec + strlen(filespec);
        pathName = malloc(sizeof(char) * 
                     ((eos-tmpPath) + (slash-filespec) + 50) ); /* 50: arbitrary */
-       if (NULL == pathName) return NULL;		/* RETURN: error */
+       if (nullptr == pathName) return nullptr;		/* RETURN: error */
        strcpy(pathName,tmpPath);
 
        /* cat on the relative path */
@@ -480,7 +480,7 @@ char * _DtHelpFileLocate (
 
        /* test all suffixes */
        eos = pathName + strlen(pathName);
-       for ( pSuffix = suffixList; NULL != *pSuffix; pSuffix++ )
+       for ( pSuffix = suffixList; nullptr != *pSuffix; pSuffix++ )
        {
          strcpy(eos,(char *) *pSuffix);
          /* recall: _DtHelpFileTraceToFile() requires pathName to be malloc'd */
@@ -488,7 +488,7 @@ char * _DtHelpFileLocate (
             return foundPath;                           /* RETURN: found */
        } /* for all suffixes */
        MyFree(pathName);
-       return NULL;					/* RETURN: error */
+       return nullptr;					/* RETURN: error */
     }  /* filespec is a relative path or search cur dir */
 
     /*** third look in search path directories ***/
@@ -511,19 +511,19 @@ char * _DtHelpFileLocate (
 
     /* get the LANG value */
     loc = _DtHelpGetLocale();
-    if (NULL == loc || EOS == loc[0]) loc = strdup(LANG_C_STR);
+    if (nullptr == loc || EOS == loc[0]) loc = strdup(LANG_C_STR);
 
     /* outer loop is once for each path */
-    foundPath = NULL;
+    foundPath = nullptr;
     for ( curPathIndex = 0;
-          curPathIndex < _DtHELP_FILE_NUM_PATHS && NULL == foundPath; 
+          curPathIndex < _DtHELP_FILE_NUM_PATHS && nullptr == foundPath; 
           curPathIndex++ )
     {
        curPath = paths[curPathIndex];
-       if (NULL == curPath) continue;			/* continue */
+       if (nullptr == curPath) continue;			/* continue */
     
        /* look for the file in that path */
-       if (NULL != curPath) do
+       if (nullptr != curPath) do
        {
           /* look for next subpath separator and insert and EOS if found */
 	  if (_DtHelpCeStrchr(curPath,PathSeparator,MB_CUR_MAX,&ptr)==0)
@@ -536,8 +536,8 @@ char * _DtHelpFileLocate (
           _DtHelpCeCompressPathname(tmpPath);
 
           /* test all suffixes */
-          for ( pSuffix = suffixList, foundPath = NULL;
-                NULL == foundPath && NULL != *pSuffix; 
+          for ( pSuffix = suffixList, foundPath = nullptr;
+                nullptr == foundPath && nullptr != *pSuffix; 
                 pSuffix++ )
           {
              /* generate the (directory) path using all the variables and fix 
@@ -546,7 +546,7 @@ char * _DtHelpFileLocate (
                             (char *) *pSuffix, loc, bugFixSubs, NUM_BUGS);
   
              if (   _DtHelpFileTraceToFile(&pathName,accessMode,&foundPath)==False
-                 && NULL != pathName)
+                 && nullptr != pathName)
                 free(pathName);
 
           } /* for all suffixes */
@@ -555,7 +555,7 @@ char * _DtHelpFileLocate (
           if (ptr) *ptr++ = *PathSeparator;
 
 	  curPath = ptr;
-       } while (curPath && *curPath && NULL == foundPath); 
+       } while (curPath && *curPath && nullptr == foundPath); 
         /* do while more subpaths */
 
    }  /* for all paths */
@@ -581,18 +581,18 @@ _DtHelpCeCheckAndCacheDir (char *dir)
 {
     int		         result  = ENOTDIR;
     _DtHelpCeDirStruct	*curDir  = CachedDirs;
-    _DtHelpCeDirStruct	*prevDir = NULL;
+    _DtHelpCeDirStruct	*prevDir = nullptr;
     struct stat		 buf;
 
     _DtHelpProcessLock();
 
-    if (dir == NULL || *dir == '\0')
+    if (dir == nullptr || *dir == '\0')
 	return ENOTDIR;
 
     /*
      * search the cached directories
      */
-    while (curDir != NULL && strcmp(curDir->dir_name, dir))
+    while (curDir != nullptr && strcmp(curDir->dir_name, dir))
       {
 	prevDir = curDir;
 	curDir  = curDir->next_dir;
@@ -601,7 +601,7 @@ _DtHelpCeCheckAndCacheDir (char *dir)
     /*
      * was the directory found in the cache? If so, return the type.
      */
-    if (curDir != NULL)
+    if (curDir != nullptr)
 	result = curDir->type;
     else
       {
@@ -610,19 +610,19 @@ _DtHelpCeCheckAndCacheDir (char *dir)
 	 */
 	result = ENOMEM;
 	curDir = (_DtHelpCeDirStruct *) malloc(sizeof(_DtHelpCeDirStruct));
-	if (curDir != NULL)
+	if (curDir != nullptr)
 	  {
 	    /*
 	     * initialize the new entry. I.E. type starts out ENOTDIR.
 	     */
 	    *curDir = DefCacheDir;
 	    curDir->dir_name = strdup(dir);
-	    if (curDir->dir_name != NULL)
+	    if (curDir->dir_name != nullptr)
 	      {
 		/*
 		 * put this entry in the list
 		 */
-		if (prevDir != NULL)
+		if (prevDir != nullptr)
 		    prevDir->next_dir = curDir;
 		else
 		    CachedDirs = curDir;

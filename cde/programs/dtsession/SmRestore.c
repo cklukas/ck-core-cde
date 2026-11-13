@@ -119,7 +119,7 @@
  */
 static const char * DISPLAY_NAME_EQUAL	= "DISPLAY=";
 static const char * DISPLAY_NAME	= "DISPLAY";
-static char * savedDisplay = NULL;
+static char * savedDisplay = nullptr;
 
 /*
  * #define statements
@@ -233,11 +233,11 @@ static XtResource settingsResources[] =
 
 static unsigned char  fallBackLine[MAXLINE+2]; /* line buffer */
 static unsigned char  *line;  /* line buffer */
-static FILE *cfileP = NULL;   /* fopen'ed configuration file or NULL */
+static FILE *cfileP = nullptr;   /* fopen'ed configuration file or NULL */
 static int   linec = 0;       /* line counter for parser */
-static unsigned char *parseP = NULL;   /* pointer to parse string */
+static unsigned char *parseP = nullptr;   /* pointer to parse string */
 static int fileSize = 0;
-char **smExecArray = NULL;
+char **smExecArray = nullptr;
 
 /*
  * Variables used for remote execution
@@ -247,7 +247,7 @@ unsigned char 	*remoteBuf[MAX_SCREENS_SAVED];
 unsigned int  	actRemoteSize[MAX_SCREENS_SAVED];
 RemoteReq	remoteBufPtr[MAX_REMOTE_CLIENTS];
 static char	localHost[MAXHOSTNAMELEN];
-static char	** ignoreEnvPtr = NULL;
+static char	** ignoreEnvPtr = nullptr;
 
 /*
  * Timeout for workspace manager handshake
@@ -526,7 +526,7 @@ RestoreState( void )
      * Check the session database and either parse it as an
      * Xrm-database or the CDE1.0 format
      */
-    if ((pchar = strrchr (smGD.clientPath, '/')) != NULL) 
+    if ((pchar = strrchr (smGD.clientPath, '/')) != nullptr) 
     {
 	 pchar ++;
 	 if ((*pchar != '\0') && (!strcmp (pchar, SM_CLIENT_FILE2)))
@@ -553,14 +553,14 @@ RestoreState( void )
 	  }
 
 	  line = malloc(fileSize + 1);
-	  if (line == NULL)
+	  if (line == nullptr)
 	  {
 	      line = fallBackLine;
 	      fileSize = MAXLINE + 1;
 	      fixedBuffer = True;
 	  }
 	  cfileP = fopen(smGD.clientPath, "r");
-	  if (cfileP == NULL)
+	  if (cfileP == nullptr)
 	  {
 	      PrintErrnoError(DtError, smNLS.cantOpenFileString);
 	      if (!fixedBuffer && line)
@@ -616,7 +616,7 @@ StartWM( void )
     Boolean goodWmStartup = True;
     int status;
   
-    if((smGD.wmStartup == NULL) || (*smGD.wmStartup == 0))
+    if((smGD.wmStartup == nullptr) || (*smGD.wmStartup == 0))
     {
 	ForkWM();
     }
@@ -635,10 +635,10 @@ StartWM( void )
 	    CreateExecString(CDE_INSTALLATION_TOP "/bin/dtwm");	    
 	}
 	
-	if(smExecArray[0] != NULL)
+	if(smExecArray[0] != nullptr)
 	{
-	    (void) StartClient(smExecArray[0], smExecArray, NULL, NULL, 
-				NULL, False, False, -1);
+	    (void) StartClient(smExecArray[0], smExecArray, nullptr, nullptr, 
+				nullptr, False, False, -1);
 	}
     }
     
@@ -686,10 +686,10 @@ StartWM( void )
 	 */
 	
 	CreateExecString(CDE_INSTALLATION_TOP "/bin/dtwm");	    
-	if(smExecArray[0] != NULL)
+	if(smExecArray[0] != nullptr)
 	{
-	    (void) StartClient(smExecArray[0], smExecArray, NULL, 
-				NULL, NULL, False, False, -1);
+	    (void) StartClient(smExecArray[0], smExecArray, nullptr, 
+				nullptr, nullptr, False, False, -1);
 	}
 	WaitForWM();
 	sprintf(localWmErrorString, GETMESSAGE(16, 9,
@@ -745,12 +745,12 @@ ReloadResources(void)
                    "-system",
                    "-xdefaults",
                    "-xresources",
-                   NULL);
+                   nullptr);
 
  /*
   * Merge _DT_SM_PREFERENCES
   */
-  RestorePreferences(NULL);
+  RestorePreferences(nullptr);
 
   SetSystemReady();
 }
@@ -796,7 +796,7 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
     /*
      * Check for alternate resource loader.
      */
-     if ((pgrm = getenv("DTLOADRESOURCES")) == NULL)
+     if ((pgrm = getenv("DTLOADRESOURCES")) == nullptr)
      {
        pgrm = CDE_INSTALLATION_TOP "/bin/dtsession_res";
      }
@@ -809,7 +809,7 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
      * is /usr/dt/bin/dtsession_res, the program name is dtsession_res.
      * If all else fails, use pgrm.
      */
-     argv[0] = (p = strrchr(pgrm, '/')) != NULL && *(p+1) != '\0' ? p+1 : pgrm;
+     argv[0] = (p = strrchr(pgrm, '/')) != nullptr && *(p+1) != '\0' ? p+1 : pgrm;
 
      i = 0;
      Va_start(args,errorHandlerInstalled);
@@ -826,7 +826,7 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
      */
     if(errorHandlerInstalled)
     {
-	sigaction(SIGCHLD, &smGD.defvec, (struct sigaction *) NULL);
+	sigaction(SIGCHLD, &smGD.defvec, (struct sigaction *) nullptr);
     }
     
     /*
@@ -886,7 +886,7 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
      */
     if(errorHandlerInstalled)
     {
-	sigaction(SIGCHLD, &smGD.childvec, (struct sigaction *) NULL);
+	sigaction(SIGCHLD, &smGD.childvec, (struct sigaction *) nullptr);
     }
 
     return(0);
@@ -952,7 +952,7 @@ RestorePreferences(
    /*
     * Get some memory.
     */
-    if ((data = (char *)SM_MALLOC(statinfo.st_size + 1)) == NULL)
+    if ((data = (char *)SM_MALLOC(statinfo.st_size + 1)) == nullptr)
     {
       return(0);
     }
@@ -960,7 +960,7 @@ RestorePreferences(
    /*
     * Read file into memory.
     */
-    if ((fp = fopen(filename, "r")) == NULL)
+    if ((fp = fopen(filename, "r")) == nullptr)
     {
       SM_FREE(data);
       return(0);
@@ -1030,7 +1030,7 @@ RestorePreferences(
 static int 
 RestoreSettings( void )
 {
-    XrmDatabase 	smBase = NULL;
+    XrmDatabase 	smBase = nullptr;
     XKeyboardControl	kbdControl;
     int			kbdControlMask;
     char		**restorePtrArray;
@@ -1047,17 +1047,17 @@ RestoreSettings( void )
     charSize = 5000;
     restorePtrArray = (char **) SM_MALLOC (ptrSize * sizeof(char *));
     restoreCharArray = (char *) SM_MALLOC (charSize * sizeof(char));
-    if((restorePtrArray == NULL) || (restoreCharArray == NULL))
+    if((restorePtrArray == nullptr) || (restoreCharArray == nullptr))
     {
 	PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 
-	if(restorePtrArray != NULL)
+	if(restorePtrArray != nullptr)
 	{
 	    SM_FREE((char *) restorePtrArray);
 	}
 	else
 	{
-	    if(restoreCharArray != NULL)
+	    if(restoreCharArray != nullptr)
 	    {
 		SM_FREE(restoreCharArray);
 	    }
@@ -1072,7 +1072,7 @@ RestoreSettings( void )
     {
        smBase = XrmGetFileDatabase(smGD.settingPath);
 
-       if(smBase == NULL)
+       if(smBase == nullptr)
        {
 	   PrintError(DtError, GETMESSAGE(16, 2, "Invalid client settings file.  No settings restored."));
 	   return(-1);
@@ -1088,7 +1088,7 @@ RestoreSettings( void )
      */
     XtGetApplicationResources(smGD.topLevelWid, (XtPointer) &smSettings,
 			      settingsResources, XtNumber(settingsResources),
-			      NULL, 0);
+			      nullptr, 0);
 
     /*
      * Copy any string resources since they may be overwritten in
@@ -1232,8 +1232,8 @@ RestoreSettings( void )
      */
     numArgs = 0;
     for(tmpKey = strtok(smGD.fontDirs, ",");
-	tmpKey != NULL;
-	tmpKey = strtok(NULL, ","))
+	tmpKey != nullptr;
+	tmpKey = strtok(nullptr, ","))
     {
 	if(numArgs == ptrSize)
 	{
@@ -1242,7 +1242,7 @@ RestoreSettings( void )
 	    ptrSize += 50;
 	    grown = (char **)SM_REALLOC((char *) restorePtrArray,
 					ptrSize * sizeof(char *));
-	    if(grown == NULL)
+	    if(grown == nullptr)
 	    {
 		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 		SM_FREE((char *) restorePtrArray);
@@ -1312,7 +1312,7 @@ RestoreSettings( void )
 	 * Set the auto repeat stuff
 	 */
 	tmpKey = strtok(smGD.autoRepeats, ",");
-	if((tmpKey == NULL) &&
+	if((tmpKey == nullptr) &&
 	    ((smSettings.kbdState.global_auto_repeat == AutoRepeatModeOff) ||
 	     (smSettings.kbdState.global_auto_repeat == AutoRepeatModeOn)))
 	{
@@ -1326,7 +1326,7 @@ RestoreSettings( void )
 	}
 	else
 	{
-	    if(tmpKey != NULL)
+	    if(tmpKey != nullptr)
 	    {
 		smToSet.keyboardChange = True;
 		kbdControl.auto_repeat_mode = smSettings.kbdState.global_auto_repeat;
@@ -1340,12 +1340,12 @@ RestoreSettings( void )
 		 * specific keys only.  It is VERY SLOW code so unless you
 		 * have to save off auto repeats for single keys - DON'T
 		 */
-		while(tmpKey != NULL)
+		while(tmpKey != nullptr)
 		{
 		    kbdControl.key = atoi(tmpKey);
 		    XChangeKeyboardControl(smGD.display,
 					   kbdControlMask, &kbdControl);
-		    tmpKey = strtok(NULL, ",");
+		    tmpKey = strtok(nullptr, ",");
 		}
 	    }
 	    else
@@ -1370,7 +1370,7 @@ RestoreSettings( void )
     numArgs = 0;
     tmpKey = strtok(smGD.buttonMap, ",");
     
-    if(tmpKey != NULL)
+    if(tmpKey != nullptr)
     {
 	smToSet.pointerMapChange = True;
     }
@@ -1379,17 +1379,17 @@ RestoreSettings( void )
 	smToSet.pointerMapChange = False;
     }
 	
-    while(tmpKey != NULL)
+    while(tmpKey != nullptr)
     {
 	restoreCharArray[numArgs] = (char) atoi(tmpKey);
 	numArgs++;
-	tmpKey = strtok(NULL, ",");
-	if((numArgs >= charSize) && (tmpKey != NULL))
+	tmpKey = strtok(nullptr, ",");
+	if((numArgs >= charSize) && (tmpKey != nullptr))
 	{
 	    charSize += 500;
 	    restoreCharArray = (char *) SM_REALLOC(restoreCharArray,
 						charSize * sizeof(char));
-	    if(restoreCharArray == NULL)
+	    if(restoreCharArray == nullptr)
 	    {
 		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 		SM_FREE((char *)restorePtrArray);
@@ -1421,18 +1421,18 @@ RestoreSettings( void )
 	symSize = (charSize * sizeof(char)) / sizeof(KeySym);
 	numArgs = 0;
 	tmpKey = strtok(smGD.keySyms, ",");
-	for(i = 0;tmpKey != NULL;i++)
+	for(i = 0;tmpKey != nullptr;i++)
 	{
 	    tmpSyms[i] = (KeySym) atol(tmpKey);
-	    tmpKey = strtok(NULL, ",");
+	    tmpKey = strtok(nullptr, ",");
 	    numArgs = i + 1;
-	    if((numArgs >= symSize) && (tmpKey != NULL))
+	    if((numArgs >= symSize) && (tmpKey != nullptr))
 	    {
 		charSize += 1000;
 		symSize = (charSize * sizeof(char))/sizeof(KeySym);
 		restoreCharArray = (char *) SM_REALLOC(restoreCharArray,
 				     (charSize * sizeof(char)));
-		if(restoreCharArray == NULL)
+		if(restoreCharArray == nullptr)
 		{
 		    PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 		    SM_FREE((char *) restorePtrArray);
@@ -1455,7 +1455,7 @@ RestoreSettings( void )
      * Restore the modifier mappings
      */
     tmpKey = strtok(smGD.modSyms, ",");
-    if(tmpKey != NULL && smSettings.maxKeyPerMod > 0 &&
+    if(tmpKey != nullptr && smSettings.maxKeyPerMod > 0 &&
        smSettings.maxKeyPerMod <= 255)
     {
 	/*
@@ -1466,7 +1466,7 @@ RestoreSettings( void )
 	tmpCode = (KeyCode *) restoreCharArray; 
 	for(i = 0;i < modEntries;i++)
 	{
-	    if(tmpKey != NULL)
+	    if(tmpKey != nullptr)
 	    {
 		codeSym = (KeySym) atol(tmpKey);
 		if(codeSym != 0)
@@ -1482,7 +1482,7 @@ RestoreSettings( void )
 	    {
 		tmpCode[i] = (KeyCode) 0;
 	    }
-	    tmpKey = strtok(NULL, ",");
+	    tmpKey = strtok(nullptr, ",");
 	}
 	restoreMod.max_keypermod = smSettings.maxKeyPerMod;
 	restoreMod.modifiermap = tmpCode;
@@ -1528,7 +1528,7 @@ RestoreIndependentResources( void )
     Atom        actualType;
     int         actualFormat;
     unsigned long   nitems, leftover;
-    unsigned char   *data = NULL;
+    unsigned char   *data = nullptr;
     XrmDatabase 	smBase;
     XrmValue		fontResourceReturn;
     char *currentLangPtr, *sessionLang, *resValRet, *sessionType;
@@ -1539,7 +1539,7 @@ RestoreIndependentResources( void )
     Boolean resIndep = False, resRet;
     char *resdata;
 
-    if(((smGD.sessionLang == NULL) || (*smGD.sessionLang == 0)) &&
+    if(((smGD.sessionLang == nullptr) || (*smGD.sessionLang == 0)) &&
        (smRes.displayResolution == 0))
     {
 	/*
@@ -1552,11 +1552,11 @@ RestoreIndependentResources( void )
      * No language is the same as an empty one
      */
     currentLangPtr = getenv("LANG");
-    if(currentLangPtr == NULL)
+    if(currentLangPtr == nullptr)
     {
 	currentLangPtr = "";
     }
-    sessionLang = (smGD.sessionLang != NULL) ? smGD.sessionLang : "";
+    sessionLang = (smGD.sessionLang != nullptr) ? smGD.sessionLang : "";
 
     fltYRes = ((float) DisplayHeight(smGD.display, 0) /
 	       (float) DisplayHeightMM(smGD.display, 0)) * 1000;
@@ -1621,7 +1621,7 @@ RestoreIndependentResources( void )
 	 * A name that does not fit the buffer (a language name of any length
 	 * can come from the environment) names no file: the search goes on
 	 */
-	if((smGD.savePath == NULL) ||
+	if((smGD.savePath == nullptr) ||
 	   (snprintf(fontPath, MAXPATHLEN + 1, "%s/%s/%s/%s.%s",
 		     smGD.savePath, sessionType,
 		     currentLangPtr, SM_FONT_FILE, sessionRes) > MAXPATHLEN))
@@ -1689,7 +1689,7 @@ RestoreIndependentResources( void )
 	    /*
 	     * add the auxillary resources onto the root window
 	     */
-	    RestoreResources(True, "-merge", "-file", smGD.fontPath, NULL);
+	    RestoreResources(True, "-merge", "-file", smGD.fontPath, nullptr);
 
 	    /*
 	     * Load the resources from the RESOURCE_MANAGER
@@ -1700,16 +1700,16 @@ RestoreIndependentResources( void )
 			       100000000L,False,XA_STRING,&actualType,
 			       &actualFormat,&nitems,&leftover,
 			       (unsigned char**) &data) == Success &&
-	       data != NULL)
+	       data != nullptr)
 	    {
 		smBase = XrmGetStringDatabase((char *)data);
 	    }
 	    else
 	    {
-		smBase = NULL;
+		smBase = nullptr;
 	    }
 	    
-	    if(smBase == NULL)
+	    if(smBase == nullptr)
 	    {
 		PrintError(DtError, GETMESSAGE(16, 6, "Invalid display/language independent resource file.  No display/language independent resources will be restored."));
 		SM_FREE((char *)data);
@@ -1725,7 +1725,7 @@ RestoreIndependentResources( void )
 		resRet = XrmGetResource(smBase,  "*fontList", "*FontList",
 					&resValRet, &fontResourceReturn);
 
-		if(resRet && fontResourceReturn.addr != NULL)
+		if(resRet && fontResourceReturn.addr != nullptr)
 		{
 		    i = 0;
 		    XtSetArg(uiArgs[i], XmNdefaultFontList,
@@ -1745,7 +1745,7 @@ RestoreIndependentResources( void )
                 {
                     resRet = XrmGetResource(smBase, fonttype[i], fontclass[i],
                                             &resValRet, &fontResourceReturn);
-                    if (resRet && fontResourceReturn.addr != NULL)
+                    if (resRet && fontResourceReturn.addr != nullptr)
                     {
                         size_t length = strlen(fonttype[i]) + 2 +
                             strnlen(fontResourceReturn.addr,
@@ -1792,20 +1792,20 @@ FreeClientBuffers(
 
     for(i = 0;i < smGD.numSavedScreens;i++)
     {
-	if(hintsBuf[i] != NULL)
+	if(hintsBuf[i] != nullptr)
 	{
 	    SM_FREE((char *) hintsBuf[i]);
-	    hintsBuf[i] = NULL;
+	    hintsBuf[i] = nullptr;
 	}
-	if(cmdBuf[i] != NULL)
+	if(cmdBuf[i] != nullptr)
 	{
 	    SM_FREE((char *) cmdBuf[i]);
-	    cmdBuf[i] = NULL;
+	    cmdBuf[i] = nullptr;
 	}
-	if(remoteBuf[i] != NULL)
+	if(remoteBuf[i] != nullptr)
 	{
 	    SM_FREE((char *) remoteBuf[i]);
-	    remoteBuf[i] = NULL;
+	    remoteBuf[i] = nullptr;
 	}
     }
 }
@@ -1846,17 +1846,17 @@ ParseClientFile(
     unsigned int  ignoredCount;
     int		  screenNum = 0;
 
-    while(GetNextLine() != NULL)
+    while(GetNextLine() != nullptr)
     {
 	lineP = line;
 	string = GetSmartString(&lineP);
-	if( string == NULL || strcmp((char *)string, "dtsmcmd"))
+	if( string == nullptr || strcmp((char *)string, "dtsmcmd"))
 	{
 	    continue;
 	}
 
-	hostPtr = cmdPtr = hintPtr = NULL;
-	while((string = GetSmartString(&lineP)) != NULL )
+	hostPtr = cmdPtr = hintPtr = nullptr;
+	while((string = GetSmartString(&lineP)) != nullptr )
 	{
 	    if(!strcmp((char *)string, "-host"))
 	    {
@@ -1880,7 +1880,7 @@ ParseClientFile(
 		 * Extract the screen number from the command
 		 */
 		string = GetSmartString(&lineP);
-		if(string != NULL)
+		if(string != nullptr)
 		{
 		    screenNum = atoi((char *)string);
 		}
@@ -1897,7 +1897,7 @@ ParseClientFile(
 	/*
 	 * Now put our information in buffers
 	 */
-	if(hintPtr != NULL)
+	if(hintPtr != nullptr)
 	{
 	    if(FillHintBuf(hintPtr, hintsBuf, maxHintsSize, actHintsSize,
 			   screenNum, numHints) != 0)
@@ -1906,9 +1906,9 @@ ParseClientFile(
 	    }
 	}
 
-	if(cmdPtr != NULL)
+	if(cmdPtr != nullptr)
 	{
-	    if(hostPtr == NULL)
+	    if(hostPtr == nullptr)
 	    {
 		if(FillCmdBuf(cmdPtr, cmdBuf, maxCmdSize, actCmdSize, screenNum,
 			      (screenNum >= 0 && screenNum < MAX_SCREENS_SAVED) ?
@@ -1967,9 +1967,9 @@ static int
 RestoreClients( void )
 {
     unsigned char *lineP, *string;
-    char *pch, *dispPtr = NULL;
+    char *pch, *dispPtr = nullptr;
     char *dispEnv, *dispSav, *dispEnvHelpview, *dispSavHelpview;
-    unsigned char *hostPtr=NULL, *cmdPtr=NULL;
+    unsigned char *hostPtr=nullptr, *cmdPtr=nullptr;
     unsigned char *remoteDisplay;
     char *displayName;
     char *envVal;
@@ -2001,9 +2001,9 @@ RestoreClients( void )
      */
     for(i = 0;i<smGD.numSavedScreens;i++)
     {
-	hintsBuf[i] = NULL;
-	cmdBuf[i] = NULL;
-	remoteBuf[i] = NULL;
+	hintsBuf[i] = nullptr;
+	cmdBuf[i] = nullptr;
+	remoteBuf[i] = nullptr;
 	maxHintsSize[i] = 0;
 	actHintsSize[i] = 0;
 	numHints[i] = 0;
@@ -2019,7 +2019,7 @@ RestoreClients( void )
      * can be restored when we're through
      */
     dispEnv = getenv(DISPLAY_NAME);
-    if(dispEnv != NULL)
+    if(dispEnv != nullptr)
     {
 	dispSav = (char *) SM_MALLOC(((strlen(dispEnv) + 
 				       strlen(DISPLAY_NAME_EQUAL)) * sizeof(char) + 1));
@@ -2027,7 +2027,7 @@ RestoreClients( void )
     }
     else
     {
-	dispSav = NULL;
+	dispSav = nullptr;
     }
     
     linec = 0;
@@ -2071,7 +2071,7 @@ RestoreClients( void )
      * Add the display qualifications to the host name
      * screen is added at execution time
      */
-    if (dispPtr != NULL)
+    if (dispPtr != nullptr)
     {
 	strcat((char *)remoteDisplay, (char *)dispPtr);
     }
@@ -2088,10 +2088,10 @@ RestoreClients( void )
     {
 	FreeClientBuffers(hintsBuf, cmdBuf);
 	fclose(cfileP);
-	cfileP = NULL;
+	cfileP = nullptr;
 	free(displayName);
 	SM_FREE((char *) remoteDisplay);
-	if(dispSav != NULL)
+	if(dispSav != nullptr)
 	{
 	    SM_FREE(dispSav);
 	}
@@ -2103,7 +2103,7 @@ RestoreClients( void )
      * This is done so that parsing routines can be used with a buffer later
      */
     fclose(cfileP);
-    cfileP = NULL;
+    cfileP = nullptr;
 
     /*
      * Now execute all the buffers, put all hints on the root windows
@@ -2198,10 +2198,10 @@ RestoreClients( void )
 	    GetNextLine();
 	    lineP = line;
 	    CreateExecString((char *) lineP);
-	    if(smExecArray[0] != NULL)
+	    if(smExecArray[0] != nullptr)
 	    {
 		(void) StartClient(smExecArray[0], smExecArray, 
-					NULL, NULL, NULL, False, False, -1);
+					nullptr, nullptr, nullptr, False, False, -1);
 	    }
 
 	    /*
@@ -2267,7 +2267,7 @@ RestoreClients( void )
 		_DtInitializeCommandInvoker(smGD.display,
 					   DtSM_TOOL_CLASS,
 					   SM_RESOURCE_CLASS,
-					   NULL, smGD.appCon);
+					   nullptr, smGD.appCon);
 		cmdInvInit = True;
 	    }
 	    
@@ -2280,7 +2280,7 @@ RestoreClients( void )
 	    
 	    linec = 0;
 	    parseP = remoteBuf[i];
-	    while(numRemoteExecs > 0 && GetNextLine() != NULL)
+	    while(numRemoteExecs > 0 && GetNextLine() != nullptr)
 	    {
 		/*
 		 * Get the host and the command and send them off
@@ -2295,9 +2295,9 @@ RestoreClients( void )
 		remoteBufPtr[numRemoteDone].cmdPtr = cmdPtr;
 		remoteBufPtr[numRemoteDone].hostPtr = hostPtr;
 		
-		_DtCommandInvokerExecute(DtSTART_SESSION, NULL, NULL, NULL,
+		_DtCommandInvokerExecute(DtSTART_SESSION, nullptr, nullptr, nullptr,
 					"-", (char *) hostPtr, (char *) cmdPtr,
-					RemoteRequestSucceeded, NULL,
+					RemoteRequestSucceeded, nullptr,
 					RemoteRequestFailed,
 					&remoteBufPtr[numRemoteDone]);
 		numRemoteDone++;
@@ -2321,7 +2321,7 @@ RestoreClients( void )
      * Now return the display variable back to the display that was
      * originally opened (the default display)
      */
-    if(dispSav != NULL)
+    if(dispSav != nullptr)
     {
 	putenv(dispSav);
     }
@@ -2375,7 +2375,7 @@ StartEtc( Boolean exiting )
 
     if ((status=stat(execArray[0], &buf)) != -1)
     {
-        StartClient(execArray[0], execArray, NULL, NULL, NULL, False, False, -1);
+        StartClient(execArray[0], execArray, nullptr, nullptr, nullptr, False, False, -1);
     }
 }
 
@@ -2423,12 +2423,12 @@ GetNextLine( void )
     int   chlen;
 #endif
 
-    if (cfileP != NULL)
+    if (cfileP != nullptr)
     /* read fopened file */
     {
 	string = (unsigned char *) fgets((char *)line, fileSize, cfileP);
     }
-    else if ((parseP != NULL) && (*parseP != 0))
+    else if ((parseP != nullptr) && (*parseP != 0))
     /* read parse string */
     {
 	string = line;
@@ -2444,7 +2444,7 @@ GetNextLine( void )
 	    }
         }
 #else
-	while ((*parseP != NULL) && (*parseP != '\n'))
+	while ((*parseP != nullptr) && (*parseP != '\n'))
 	/* copy all but NULL and newlines to line buffer */
 	{
 	    *(string++) = *(parseP++);
@@ -2458,7 +2458,7 @@ GetNextLine( void )
     }
     else
     {
-	string = NULL;
+	string = nullptr;
     }
 
     linec++;
@@ -2525,11 +2525,11 @@ PeekAhead(
 	}
     }
 #else
-    while((*currentChar != NULL) && (done == False) &&
+    while((*currentChar != nullptr) && (done == False) &&
 	  ((*currentChar == '"') || (*currentChar == '\\')))
     {
 	currentChar++;
-	if((*currentChar != NULL) &&
+	if((*currentChar != nullptr) &&
 	   ((*currentChar == '"') || (*currentChar == '\\')))
 	{
 	    tmpLev++;
@@ -2618,7 +2618,7 @@ GetSmartString(
     if((chlen = mblen ((char *) lineP, MB_CUR_MAX)) < 1)
     {
         *linePP = lineP;
-        return (NULL);
+        return (nullptr);
     }
 
     if ((chlen == 1) && (*lineP == '"'))
@@ -2710,10 +2710,10 @@ GetSmartString(
     ScanWhitespace (&lineP);
 
     /* Return NULL if line is empty, or whitespace */
-    if(*lineP == NULL)
+    if(*lineP == nullptr)
     {
         *linePP = lineP;
-        return (NULL);
+        return (nullptr);
     }
 
     if (*lineP == '"')
@@ -2741,7 +2741,7 @@ GetSmartString(
         {
 	    /* point curP to next character */
 	    curP++;
-	    if ((*endP == '\\') && (*curP != NULL))
+	    if ((*endP == '\\') && (*curP != nullptr))
 	    /* shift quoted nonNULL character down and curP ahead */
 	    {
 		/*
@@ -2837,7 +2837,7 @@ GetSmartString(
         {
 	    /* point curP to next character */
 	    curP++;
-	    if ((*endP == '\\') && (*curP != NULL))
+	    if ((*endP == '\\') && (*curP != nullptr))
 	    /* shift quoted nonNULL character down and curP ahead */
 	    {
 		*endP = *curP++;
@@ -2959,7 +2959,7 @@ EnsureBufferRoom(
     size_t size = *maxSize ? *maxSize : chunk;
     unsigned char *grown;
 
-    if (*buffer != NULL && need <= *maxSize)
+    if (*buffer != nullptr && need <= *maxSize)
     {
 	return(0);
     }
@@ -2972,7 +2972,7 @@ EnsureBufferRoom(
 	return(-1);
     }
     grown = (unsigned char *) SM_REALLOC((char *) *buffer, size);
-    if (grown == NULL)
+    if (grown == nullptr)
     {
 	return(-1);
     }
@@ -3216,7 +3216,7 @@ FillRemoteBuf(
      */
     strcat((char *)remoteBuf[screen], " \"");
     string = GetSmartString(&newCmd);
-    if(string != NULL)
+    if(string != nullptr)
     {
 	strcat((char *)remoteBuf[screen], (char *)string);
     }
@@ -3226,7 +3226,7 @@ FillRemoteBuf(
      * Once display name has been put in place - concatenate the
      * rest of the command
      */
-    while((string = GetSmartString(&newCmd)) != NULL )
+    while((string = GetSmartString(&newCmd)) != nullptr )
     {
 	strcat((char *)remoteBuf[screen], " ");
 	strcat((char *)remoteBuf[screen], (char *)string);
@@ -3284,12 +3284,12 @@ CreateExecString(
     char *string;
     int  argc = 0;
 
-    if (smExecArray == NULL)
+    if (smExecArray == nullptr)
     {
 	smExecArray = (char **) XtMalloc (ARG_AMT * sizeof(char *));
     }
     string = (char *) GetSmartString((unsigned char **) &execString);
-    while(string != NULL)
+    while(string != nullptr)
     {
 	smExecArray[argc] = string; 
 	argc++;
@@ -3330,7 +3330,7 @@ static void
 SetTemporaryDisplay (
 	int			screenNum)
 {
-	static char		* tmpDisplay = NULL;
+	static char		* tmpDisplay = nullptr;
 	static int		lastScreen = -1;
 	char			* pch;
 
@@ -3340,7 +3340,7 @@ SetTemporaryDisplay (
 	if (!savedDisplay) {
 		char		* dispEnv;
 
-		if ((dispEnv = getenv (DISPLAY_NAME)) == NULL)
+		if ((dispEnv = getenv (DISPLAY_NAME)) == nullptr)
 			return;
 		savedDisplay = XtMalloc (strlen (DISPLAY_NAME_EQUAL) +
 					 strlen (dispEnv) + 2);
@@ -3349,7 +3349,7 @@ SetTemporaryDisplay (
 		sprintf (savedDisplay, "%s%s", DISPLAY_NAME_EQUAL, dispEnv);
 	}
 
-	if (lastScreen == screenNum && tmpDisplay != NULL) {
+	if (lastScreen == screenNum && tmpDisplay != nullptr) {
 		putenv (tmpDisplay);
 		return;
 	}
@@ -3438,7 +3438,7 @@ StartClient(
 	Boolean 		useIgnoreEnvironmentResource,
 	int			screen)
 {
-	static char		* defaultCwd = NULL;
+	static char		* defaultCwd = nullptr;
 	Boolean			cwdNull = False;
 	Boolean			startStatus;
 
@@ -3460,7 +3460,7 @@ StartClient(
                 snprintf(defaultCwd, slen, "%s", tstr);
               }
             else
-              defaultCwd = getcwd (NULL, MAXPATHLEN + 1);
+              defaultCwd = getcwd (nullptr, MAXPATHLEN + 1);
             
             (void) gethostname (localHost, MAXHOSTNAMELEN);
           }
@@ -3540,7 +3540,7 @@ StartLocalClient (
 	    {
 		char 	*tmpCwd;
 
-		tmpCwd = getcwd (NULL, MAXPATHLEN + 1);
+		tmpCwd = getcwd (nullptr, MAXPATHLEN + 1);
 
 		LogCWDMessage (cwd, program, tmpCwd);
 	    }
@@ -3618,7 +3618,7 @@ StartRemoteClient (
 		_DtInitializeCommandInvoker(smGD.display,
 					   DtSM_TOOL_CLASS,
 					   SM_RESOURCE_CLASS,
-					   NULL, smGD.appCon);
+					   nullptr, smGD.appCon);
 		cmdInvokerInitialized = True;
 	}
 
@@ -3661,7 +3661,7 @@ StartRemoteClient (
 		tmpEnv = RemoveEnvironmentVars (envp);
 
 	if ((_DtSPCSpawn (program, netfile, execArray, tmpEnv, channel, 
-			hostName, NULL, cwd, errorMessage)) == SPC_ERROR) {
+			hostName, nullptr, cwd, errorMessage)) == SPC_ERROR) {
 		DtMsgLogMessage (smGD.programName, DtMsgLogError, errorMessage);
 		if (tmpEnv)
 			XtFree ((char *) tmpEnv);
@@ -3870,7 +3870,7 @@ WaitForWM( void )
     wmTimeout = False;
     wmTimerId = XtAppAddTimeOut(smGD.appCon, 
 				smRes.waitWmTimeout,
-				WaitWMTimeout, NULL);
+				WaitWMTimeout, nullptr);
     
     while((smGD.dtwmRunning == False) && (wmTimeout == False))
     {
@@ -4083,9 +4083,9 @@ static void
 RemoteRequestFailed(char *message,
 		    void *client_data)
 {
-    static char *cmdBuf = NULL;
-    static char *tmpCmdBuf = NULL;
-    char *errorString = NULL;
+    static char *cmdBuf = nullptr;
+    static char *tmpCmdBuf = nullptr;
+    char *errorString = nullptr;
     String tmpString;
 
     static int	cmdBufSize = 0;
@@ -4096,10 +4096,10 @@ RemoteRequestFailed(char *message,
     /*
      * If the memory for the buffer has not been malloced - do so
      */
-    if(cmdBuf == NULL)
+    if(cmdBuf == nullptr)
     {
 	cmdBuf = SM_MALLOC((200 * sizeof(char)) + 1 );
-	if(cmdBuf == NULL)
+	if(cmdBuf == nullptr)
 	{
 	    PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 	    return;
@@ -4107,7 +4107,7 @@ RemoteRequestFailed(char *message,
 	cmdBufSize = 200 + 1;
 
 	tmpCmdBuf = SM_MALLOC((200 * sizeof(char)) + 1 );
-	if(tmpCmdBuf == NULL)
+	if(tmpCmdBuf == nullptr)
 	{
 	    PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 	}
@@ -4125,7 +4125,7 @@ RemoteRequestFailed(char *message,
     {
 	cmdBuf =  SM_REALLOC(cmdBuf, (tmpSize) * sizeof(char));
 
-	if(cmdBuf == NULL)
+	if(cmdBuf == nullptr)
 	{
 	    PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 	    cmdBufSize = 0;
@@ -4133,10 +4133,10 @@ RemoteRequestFailed(char *message,
 	}
 	cmdBufSize = tmpSize;
 
-	if(tmpCmdBuf != NULL)
+	if(tmpCmdBuf != nullptr)
 	{
 	    tmpCmdBuf =  SM_REALLOC(tmpCmdBuf, (tmpSize) * sizeof(char));
-	    if(tmpCmdBuf == NULL)
+	    if(tmpCmdBuf == nullptr)
 	    {
 		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 	    }
@@ -4149,18 +4149,18 @@ RemoteRequestFailed(char *message,
      * save cmdBuf for error message, cmdBuf is changed
      * by CreateExecString
      */
-    if (tmpCmdBuf != NULL)
+    if (tmpCmdBuf != nullptr)
     {
 	strcpy(tmpCmdBuf,cmdBuf);
     }
 
     CreateExecString(cmdBuf);
-    if(smExecArray[0] != NULL)
+    if(smExecArray[0] != nullptr)
     {
-	(void) StartClient(smExecArray[0], smExecArray, NULL, NULL, 
-				NULL, False, False, -1);
+	(void) StartClient(smExecArray[0], smExecArray, nullptr, nullptr, 
+				nullptr, False, False, -1);
 
-	if (tmpCmdBuf != NULL)
+	if (tmpCmdBuf != nullptr)
 	{
 	   tmpString = GETMESSAGE(16, 8, 
 "An attempt to restore the following\ncommand (using the DT remote execution process)\non host \"%s\" failed:\n\n      %s\n\nThe following execution string will be tried:\n\n   %s\n\n");
@@ -4172,7 +4172,7 @@ RemoteRequestFailed(char *message,
 				       strlen(tmpCmdBuf) + 1 ) * 
 				      sizeof(char));
 		
-	   if(errorString == NULL)
+	   if(errorString == nullptr)
 	   {
 		    PrintErrnoError(DtError, smNLS.cantMallocErrorString);
 	   }
@@ -4269,7 +4269,7 @@ StartXSMPSession (
 
    	if ((inputDB = OpenInputClientDB (databaseName, 
 					  &smXSMP.dbVersion, 
-					  &smXSMP.dbSessionId)) == NULL) {
+					  &smXSMP.dbSessionId)) == nullptr) {
 		LogXSMPOpenDatabaseFailure (databaseName, DtMsgLogError, 1);
 		return (False);
 	}
@@ -4289,7 +4289,7 @@ StartXSMPSession (
 	 */
 	for (;;) {
       
-		if ((pXSMPRec = GetXSMPClientDBRec (inputDB)) == NULL)
+		if ((pXSMPRec = GetXSMPClientDBRec (inputDB)) == nullptr)
 			break;
 
 		if (!CheckRequiredProperties (pXSMPRec, databaseName)) {
@@ -4301,7 +4301,7 @@ StartXSMPSession (
 
 			XSMPClientDBRecPtr	tmpRecPtr;
 			
-			pXSMPRec->next = NULL;
+			pXSMPRec->next = nullptr;
 
 			if (!smXSMP.xsmpDbList) {
 				smXSMP.xsmpDbList = pXSMPRec;
@@ -4312,7 +4312,7 @@ StartXSMPSession (
 	 		 * Find the end of the list
 	 		 */
 			for (tmpRecPtr = smXSMP.xsmpDbList; 
-				tmpRecPtr && tmpRecPtr->next != NULL; 
+				tmpRecPtr && tmpRecPtr->next != nullptr; 
 				tmpRecPtr = tmpRecPtr->next);
 
 			tmpRecPtr->next = pXSMPRec;
@@ -4326,7 +4326,7 @@ StartXSMPSession (
 	 */
 	for (i = 0; ; i++) {
       
-		if ((pProxyRec = GetProxyClientDBRec (inputDB)) == NULL)
+		if ((pProxyRec = GetProxyClientDBRec (inputDB)) == nullptr)
 			break;
 
 		if (!CheckRequiredFields (pProxyRec, databaseName, i)) {
@@ -4368,8 +4368,8 @@ StartProxyClient (
 	return (StartClient (pDbRec->command[0], 
 			     pDbRec->command,
 			     pDbRec->clientHost, 
-			     NULL, 
-			     NULL, 
+			     nullptr, 
+			     nullptr, 
 			     False, 
 			     False,
 			     pDbRec->screenNum));
@@ -4382,13 +4382,13 @@ ExecuteCommandProperty (
 	ClientRecPtr            pClientRec)
 {
 	char			** argv;
-	char			** envp = NULL;
+	char			** envp = nullptr;
 	char			* cwd;
 	PropertyRecPtr		pPropRec;
 	int			i;
 	Boolean			retValue;
 
-	if ((pPropRec = GetPropertyRec (pClientRec, commandName)) == NULL)
+	if ((pPropRec = GetPropertyRec (pClientRec, commandName)) == nullptr)
 		return (False);
 
 	argv = (char **) XtMalloc ((pPropRec->prop.num_vals + 1) *
@@ -4398,12 +4398,12 @@ ExecuteCommandProperty (
 
 	for (i = 0; i < pPropRec->prop.num_vals; i++)
 		argv[i] = pPropRec->prop.vals[i].value;
-	argv[pPropRec->prop.num_vals] = NULL;
+	argv[pPropRec->prop.num_vals] = nullptr;
 	
 	cwd = GetArrayPropertyValue (pClientRec, SmCurrentDirectory);
 
 
-	if ((pPropRec = GetPropertyRec (pClientRec, SmEnvironment)) != NULL) {
+	if ((pPropRec = GetPropertyRec (pClientRec, SmEnvironment)) != nullptr) {
 		envp = (char **) XtMalloc ((pPropRec->prop.num_vals + 1) *
 				   	   sizeof (char *));
 		if (!envp) 
@@ -4411,7 +4411,7 @@ ExecuteCommandProperty (
 		
 		for (i = 0; i < pPropRec->prop.num_vals; i++)
 			envp[i] = pPropRec->prop.vals[i].value;
-		envp[pPropRec->prop.num_vals] = NULL;
+		envp[pPropRec->prop.num_vals] = nullptr;
 	}
 
 	retValue = StartClient (argv[0], argv,
@@ -4444,11 +4444,11 @@ ExecuteDiscardCommands (
 {
 	ClientDB                inputDB;
 	XSMPClientDBRecPtr      pXSMPRec;
-	char			* version = NULL;
-	char			* id = NULL;
+	char			* version = nullptr;
+	char			* id = nullptr;
 	char			* str;
 
-	if ((inputDB = OpenInputClientDB (db, &version, &id )) == NULL) {
+	if ((inputDB = OpenInputClientDB (db, &version, &id )) == nullptr) {
 		str = strdup ((char *) GETMESSAGE (40, 26,
 				"The following client database cannot be opened:\n\n   %s\n\nThe 'DiscardCommand' properties cannot be run."));
 		if (!str) 
@@ -4464,7 +4464,7 @@ ExecuteDiscardCommands (
 		XtFree ((char *) id);
 
 	for (;;) {
-		if ((pXSMPRec = GetXSMPClientDBRec (inputDB)) == NULL)
+		if ((pXSMPRec = GetXSMPClientDBRec (inputDB)) == nullptr)
 			break;
 		
 		if (!pXSMPRec->discardCommand)
@@ -4551,7 +4551,7 @@ LogXSMPOpenDatabaseFailure (
 	DtMsgLogType		msgType,
 	int			errorNum)
 {
-	char			* message = NULL;
+	char			* message = nullptr;
 	char			* data;
 	int			msgNum;
 
@@ -4636,26 +4636,26 @@ char ** RemoveEnvironmentVars (
 	char			**envp)
 {
 
-	char			** retEnv = NULL;
+	char			** retEnv = nullptr;
 	char			**ppchar, **ppchar2;
 	int			count;
 	Boolean		found;
 
 	if (!envp)
-		return (NULL);
+		return (nullptr);
 
 	for (count = 0, ppchar = envp; ppchar && *ppchar; count++, ppchar++) ;
 
 	retEnv = (char **) XtMalloc ((count + 1) * sizeof (char *));
 	if (!retEnv)
-		return (NULL);
+		return (nullptr);
 
 	if (!ignoreEnvPtr) {
 		for (count = 0, ppchar = envp; ppchar && *ppchar; 
 			count++, ppchar++) {
 			retEnv[count] = *ppchar;
 		}
-		retEnv[count] = NULL;
+		retEnv[count] = nullptr;
 
 		return (retEnv);
 	}
@@ -4677,7 +4677,7 @@ char ** RemoveEnvironmentVars (
 			count++;
 		}
 	}
-	retEnv[count] = NULL;
+	retEnv[count] = nullptr;
 
 	return (retEnv);
 }

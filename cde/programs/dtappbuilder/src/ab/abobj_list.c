@@ -88,7 +88,7 @@ abobj_list_load(
 {
     int		return_value = 0;
 
-    if ((root == NULL) || (list == NULL)) return(0);
+    if ((root == nullptr) || (list == nullptr)) return(0);
 
     /* Clear out the list so we can start afresh */
     XmListDeleteAllItems(list);
@@ -105,18 +105,18 @@ abobj_list_update(
 	ABObjTestFunc	list_obj_func
 )
 {
-    ABObj		obj = NULL;
+    ABObj		obj = nullptr;
     AB_TRAVERSAL    trav;
     STRING	    modname;
     int		    item_count = 0;
     int			item_pos = 0;
 
-    if ((root == NULL) || (list == NULL)) return(0);
+    if ((root == nullptr) || (list == nullptr)) return(0);
 
     for( (trav_open(&trav,root,AB_TRAV_SALIENT));
-	 (obj = trav_next(&trav)) != NULL; ) 
+	 (obj = trav_next(&trav)) != nullptr; ) 
 	{
-	    if (obj_get_name(obj) != NULL)
+	    if (obj_get_name(obj) != nullptr)
 	    {
 		modname = abobj_get_moduled_name(obj);
 	        if((*list_obj_func)(obj))
@@ -157,14 +157,14 @@ abobj_list_obj_created(
     int		return_value = 0;
     int		rc = 0;			/* return code */
 
-    if ((obj == NULL) || (list == NULL)) return(0);
+    if ((obj == nullptr) || (list == nullptr)) return(0);
 
     if (!list_obj_test(obj))
     {
 	return_value = 0;
 	goto epilogue;
     }
-    if (obj_get_name(obj) != NULL)
+    if (obj_get_name(obj) != nullptr)
     {
 	STRING	modname = abobj_get_moduled_name(obj);
         rc = ui_list_add_item(list, modname, 0);
@@ -177,7 +177,7 @@ abobj_list_obj_created(
 	    return_value = rc;
 	}
 
-	XtFree(modname); modname = NULL;
+	XtFree(modname); modname = nullptr;
     }
 
 epilogue:
@@ -197,9 +197,9 @@ abobj_list_obj_destroyed(
     ABObjTestFunc	list_obj_test
 )
 {
-    STRING	modname = NULL;
+    STRING	modname = nullptr;
 
-    if ((obj == NULL) || (list == NULL)) return(0);
+    if ((obj == nullptr) || (list == nullptr)) return(0);
 
     /* 
     ** Check to make sure this is an object we'd have in the list to 
@@ -227,18 +227,18 @@ abobj_list_obj_renamed(
 )
 {
     int		rc = 0;		/* return code */
-    STRING	new_modname = NULL;
-    STRING	old_modname = NULL;
+    STRING	new_modname = nullptr;
+    STRING	old_modname = nullptr;
     ABObj	module = obj_get_module(obj);
 
-    if ((obj == NULL) || (list == NULL)) return(0);
+    if ((obj == nullptr) || (list == nullptr)) return(0);
 
     if (obj_is_module(obj))
     {
 	ui_list_replace_item_prefix(
 	    list, old_name, obj_get_name(obj));
     }
-    else if ((module != NULL) && list_obj_test(obj)) {
+    else if ((module != nullptr) && list_obj_test(obj)) {
 
 	new_modname = abobj_get_moduled_name(obj);
 	old_modname = abobj_alloc_moduled_name(
@@ -276,16 +276,16 @@ abobj_list_obj_reparented(
 )
 {
     static char full_name[BUFSIZ];
-    STRING      moduled_name = NULL,
-		module = NULL,
-		name = NULL;
-    ABObj	obj = NULL;
+    STRING      moduled_name = nullptr,
+		module = nullptr,
+		name = nullptr;
+    ABObj	obj = nullptr;
     int		ret = 0;
 
     obj = info->obj; 
-    if ((obj == NULL) || (list == NULL)) return(0);
+    if ((obj == nullptr) || (list == nullptr)) return(0);
 
-    if (obj_get_parent(obj) == NULL)
+    if (obj_get_parent(obj) == nullptr)
     {
 	module = obj_get_name(obj_get_module(info->old_parent));
 	snprintf(full_name, sizeof(full_name), "%s :: %s", module, obj_get_name(obj));

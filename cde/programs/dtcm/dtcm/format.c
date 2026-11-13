@@ -194,7 +194,7 @@ format_line(Tick tick,
 	Boolean	pad = FALSE;
 	_Xltimeparams localtime_buf;
 
-        if (buf==NULL) return pad;
+        if (buf==nullptr) return pad;
         buf[0] = '\0';
 	tm = _XLocaltime(&tick, localtime_buf);
         hr = tm->tm_hour;
@@ -264,7 +264,7 @@ format_maxchars(Dtcm_appointment *appt, char *buf1, int maxchars,
 		_csa_iso8601_to_tick(appt->end_time->value->item.string_value,
 			&end_tick);
         *buf1 = '\0';
-        if (appt == NULL || appt->what->value->item.string_value == NULL) return;
+        if (appt == nullptr || appt->what->value->item.string_value == nullptr) return;
         tm = _XLocaltime(&tick, localtime_buf);
         hour1 = tm->tm_hour;
         min1  = tm->tm_min;
@@ -299,11 +299,11 @@ format_maxchars(Dtcm_appointment *appt, char *buf1, int maxchars,
  
         lines = (Lines *) text_to_lines(appt->what->value->item.string_value, 10);
  
-	while (lines != NULL) {
+	while (lines != nullptr) {
 		if ((cm_strlen(buf1) + cm_strlen(lines->s)) < (maxchars-2)) {
                 	cm_strcat(buf1, lines->s);
 			lines = lines->next;
-			if (lines != NULL) 
+			if (lines != nullptr) 
                 		cm_strcat(buf1, " - ");
 		}
 		else {
@@ -338,14 +338,14 @@ format_line2(Dtcm_appointment *appt, char *buf1, char *buf2,
          * then maxchars
          */
         *buf1 = *buf2 = '\0';
-        if (appt == NULL || appt->what->value->item.string_value == NULL) return;
+        if (appt == nullptr || appt->what->value->item.string_value == nullptr) return;
         tm = _XLocaltime(&tick, localtime_buf);
         hour1 = tm->tm_hour;
         min1  = tm->tm_min;
  
         if (!showtime_set(appt) || magic_time(tick)) {
                 lines = (Lines *) text_to_lines(appt->what->value->item.string_value, 1);           
-                if (lines==NULL) return;
+                if (lines==nullptr) return;
                 strncpy(buf2, lines->s, 256);
                 destroy_lines(lines);
                 return;
@@ -381,7 +381,7 @@ format_line2(Dtcm_appointment *appt, char *buf1, char *buf2,
           
         lines = (Lines *) text_to_lines(appt->what->value->item.string_value, 1);
          
-        if (lines == NULL || lines->s == NULL ||                        
+        if (lines == nullptr || lines->s == nullptr ||                        
                 (cm_strlen(lines->s) == 1 && lines->s[0] == ' '))
                 buf2[0] = '\0';
         else
@@ -396,12 +396,12 @@ format_abbrev_appt(Dtcm_appointment *appt, char *b, Boolean show_am,
 {
         int hr, mn;
 	Tick tick;
-        Lines *lines=NULL;
+        Lines *lines=nullptr;
         Boolean am = True;
 	struct tm *tm;
 	_Xltimeparams localtime_buf;
  
-        if(appt==NULL || b==NULL) return;
+        if(appt==nullptr || b==nullptr) return;
 	_csa_iso8601_to_tick(appt->time->value->item.string_value, &tick);
         tm = _XLocaltime(&tick, localtime_buf);
         hr = tm->tm_hour;
@@ -419,11 +419,11 @@ format_abbrev_appt(Dtcm_appointment *appt, char *b, Boolean show_am,
 			sprintf(b, "%02d%02d ", hr, mn);
         }
         lines = text_to_lines(appt->what->value->item.string_value, 1);
-        if (lines != NULL && lines->s != NULL) {
+        if (lines != nullptr && lines->s != nullptr) {
                 (void) cm_strcat(b, lines->s);
         }
 
-        if(lines != NULL) {
+        if(lines != nullptr) {
                 destroy_lines(lines);
         }
 }

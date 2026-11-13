@@ -140,7 +140,7 @@ static void
 SetLabelText(Widget widget, const char *text)
 {
     XmString str = XmStringCreateLocalized((String)(text ? text : ""));
-    XtVaSetValues(widget, XmNlabelString, str, NULL);
+    XtVaSetValues(widget, XmNlabelString, str, nullptr);
     XmStringFree(str);
 }
 
@@ -158,7 +158,7 @@ StorageSizeSetError(StorageSizeData *data, const char *path, const char *reason)
     else if (reason)
         data->error_message = XtNewString(reason);
     else
-        data->error_message = NULL;
+        data->error_message = nullptr;
 }
 
 static void
@@ -325,24 +325,24 @@ CreateInfoRow(Widget parent, Widget prev_row, const char *row_name,
 
     Widget row_form = XmCreateForm(parent, (String)row_name, args, n);
 
-    *desc_label = XmCreateLabelGadget(row_form, (String)desc_name, NULL, 0);
+    *desc_label = XmCreateLabelGadget(row_form, (String)desc_name, nullptr, 0);
     XtVaSetValues(*desc_label,
                   XmNalignment, XmALIGNMENT_END,
                   XmNtopAttachment, XmATTACH_FORM,
                   XmNleftAttachment, XmATTACH_FORM,
                   XmNrightAttachment, XmATTACH_POSITION,
                   XmNrightPosition, desc_right_pos,
-                  NULL);
+                  nullptr);
     XtManageChild(*desc_label);
 
-    *value_label = XmCreateLabelGadget(row_form, (String)value_name, NULL, 0);
+    *value_label = XmCreateLabelGadget(row_form, (String)value_name, nullptr, 0);
     XtVaSetValues(*value_label,
                   XmNalignment, XmALIGNMENT_BEGINNING,
                   XmNtopAttachment, XmATTACH_FORM,
                   XmNleftAttachment, XmATTACH_POSITION,
                   XmNleftPosition, value_left_pos,
                   XmNrightAttachment, XmATTACH_FORM,
-                  NULL);
+                  nullptr);
     XtManageChild(*value_label);
 
     XtManageChild(row_form);
@@ -399,7 +399,7 @@ StorageSizeProcessBatch(StorageSizeData *data)
         if (!direntp)
         {
             closedir(entry->dir);
-            entry->dir = NULL;
+            entry->dir = nullptr;
             data->stack = entry->next;
             XtFree(entry->path);
             XtFree((char *)entry);
@@ -647,8 +647,8 @@ StorageSizeClose(StorageSizeData *data)
     {
         XtPopdown(data->dialog_shell);
         XtDestroyWidget(data->dialog_shell);
-        data->dialog_shell = NULL;
-        data->form = NULL;
+        data->dialog_shell = nullptr;
+        data->form = nullptr;
     }
 
     XtFree(data->path);
@@ -793,17 +793,17 @@ ShowStorageSizeDialog(Widget w, XtPointer client_data, XtPointer call_data)
                               StorageSizeMotifWMCloseCB, data);
     }
 
-    data->status_label = XmCreateLabelGadget(data->form, "storageSizeStatus", NULL, 0);
+    data->status_label = XmCreateLabelGadget(data->form, "storageSizeStatus", nullptr, 0);
     XtVaSetValues(data->status_label,
                   XmNalignment, XmALIGNMENT_BEGINNING,
                   XmNtopAttachment, XmATTACH_FORM,
                   XmNleftAttachment, XmATTACH_FORM,
                   XmNrightAttachment, XmATTACH_FORM,
                   XmNtopOffset, 4,
-                  NULL);
+                  nullptr);
     XtManageChild(data->status_label);
 
-    Widget info_form = XmCreateForm(data->form, "storageSizeInfoForm", NULL, 0);
+    Widget info_form = XmCreateForm(data->form, "storageSizeInfoForm", nullptr, 0);
     XtVaSetValues(info_form,
                   XmNtopAttachment, XmATTACH_WIDGET,
                   XmNtopWidget, data->status_label,
@@ -811,12 +811,12 @@ ShowStorageSizeDialog(Widget w, XtPointer client_data, XtPointer call_data)
                   XmNleftAttachment, XmATTACH_FORM,
                   XmNrightAttachment, XmATTACH_FORM,
                   XmNfractionBase, 100,
-                  NULL);
+                  nullptr);
 
     const int desc_right_pos = 40;
     const int value_left_pos = 42;
     const int row_spacing = 6;
-    Widget prev_row = NULL;
+    Widget prev_row = nullptr;
     Widget row_form;
 
     row_form = CreateInfoRow(info_form, prev_row, "storageSizeSizeRow",
@@ -883,7 +883,7 @@ ShowStorageSizeDialog(Widget w, XtPointer client_data, XtPointer call_data)
 
     XtManageChild(info_form);
 
-    Widget button_row = XmCreateRowColumn(data->form, "storageSizeButtonRow", NULL, 0);
+    Widget button_row = XmCreateRowColumn(data->form, "storageSizeButtonRow", nullptr, 0);
     XtVaSetValues(button_row,
                   XmNorientation, XmHORIZONTAL,
                   XmNpacking, XmPACK_COLUMN,
@@ -895,18 +895,18 @@ ShowStorageSizeDialog(Widget w, XtPointer client_data, XtPointer call_data)
                   XmNleftAttachment, XmATTACH_FORM,
                   XmNrightAttachment, XmATTACH_FORM,
                   XmNbottomAttachment, XmATTACH_FORM,
-                  NULL);
+                  nullptr);
 
-    data->action_button = XmCreatePushButtonGadget(button_row, "storageSizeAction", NULL, 0);
+    data->action_button = XmCreatePushButtonGadget(button_row, "storageSizeAction", nullptr, 0);
     XmString button_label = XmStringCreateLocalized(GETMESSAGE(35, 10, "Cancel"));
-    XtVaSetValues(data->action_button, XmNlabelString, button_label, NULL);
+    XtVaSetValues(data->action_button, XmNlabelString, button_label, nullptr);
     XmStringFree(button_label);
     XtAddCallback(data->action_button, XmNactivateCallback, StorageSizeCancelCB, data);
 
     XtManageChild(data->action_button);
     XtManageChild(button_row);
 
-    StorageSizeTimer(data, NULL);
+    StorageSizeTimer(data, nullptr);
 
     XtManageChild(data->form);
 }

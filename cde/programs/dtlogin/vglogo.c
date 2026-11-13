@@ -136,7 +136,7 @@ MakeLogo( void )
      */
      
     XtGetSubresources(table, &logoInfo, "logo", "Logo",
-	logoResources, XtNumber(logoResources), NULL, 0);
+	logoResources, XtNumber(logoResources), nullptr, 0);
 
     /*
      *  create the logo frame...
@@ -182,14 +182,14 @@ MakeLogo( void )
 #endif
     
     logoName = _DtGetIconFileName(DefaultScreenOfDisplay(dpyinfo.dpy), 
-        logoFile, NULL, NULL, LOGO_TYPE);
+        logoFile, nullptr, nullptr, LOGO_TYPE);
 
-    if (logoName == NULL)
+    if (logoName == nullptr)
     {
 	LogError(
 		ReadCatalog(MC_LOG_SET,MC_LOG_NO_LOGOBIT,MC_DEF_LOG_NO_LOGOBIT),
 		logoFile);
-	logoFile = NULL;
+	logoFile = nullptr;
     }
 
 
@@ -204,7 +204,7 @@ MakeLogo( void )
     XtSetArg(argt[i], XmNbehavior, XmICON_LABEL); i++;
     XtSetArg(argt[i], XmNfillMode, XmFILL_TRANSPARENT); i++;
     XtSetArg(argt[i], XmNstring, NULL); i++;
-    if (logoName != NULL)
+    if (logoName != nullptr)
     {
         XtSetArg(argt[i], XmNpixmapForeground, fg); i++;
         XtSetArg(argt[i], XmNpixmapBackground, bg); i++;

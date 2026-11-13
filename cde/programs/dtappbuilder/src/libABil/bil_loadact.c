@@ -82,8 +82,8 @@ static ABObj    find_or_create_target(ABObj obj, ABObj module,
 STRING
 bilP_load_att_from(BIL_TOKEN valueToken)
 {
-    ABObj       newObj = NULL;
-    ABObj       src_module = NULL;
+    ABObj       newObj = nullptr;
+    ABObj       src_module = nullptr;
     STRING      stringValue = bilP_load_get_value();
  
 #ifdef DEBUG
@@ -125,7 +125,7 @@ bilP_load_att_from(BIL_TOKEN valueToken)
     {
 	abil_print_load_err(ERR_WANT_NAME);
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -135,7 +135,7 @@ bilP_load_att_from(BIL_TOKEN valueToken)
 STRING
 bilP_load_att_to(BIL_TOKEN valueToken)
 {
-    ABObj       toObj= NULL; 
+    ABObj       toObj= nullptr; 
     STRING      stringValue= bilP_load_get_value(); 
  
 #ifdef DEBUG
@@ -168,7 +168,7 @@ bilP_load_att_to(BIL_TOKEN valueToken)
     {  
         abil_print_load_err(ERR_WANT_NAME);
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -211,7 +211,7 @@ bilP_load_att_when(BIL_TOKEN valueToken)
 	}
 	bilP_load.obj->info.action.when = when;
 
-	return NULL;
+	return nullptr;
 }
 
 /*
@@ -230,10 +230,10 @@ bilP_load_att_action_type(BIL_TOKEN valueToken)
     if (func_type == AB_FUNC_UNDEF)
     {
 	abil_print_load_err(ERR_UNKNOWN_OBJ);
-	return NULL;
+	return nullptr;
     }
     obj_set_func_type(bilP_load.obj, func_type);
-    return NULL;
+    return nullptr;
 }
 
 STRING
@@ -266,7 +266,7 @@ bilP_load_att_action(BIL_TOKEN valueToken)
 		action = bilP_token_to_builtin_action(valueToken);
 		obj_set_func_builtin(bilP_load.obj, action);
     	    }
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -288,17 +288,17 @@ bilP_load_att_arg_type(BIL_TOKEN valueToken)
     if (arg_type == AB_ARG_UNDEF)
     {
         abil_print_load_err(ERR_UNKNOWN_OBJ);
-        return NULL;
+        return nullptr;
     }
     obj_set_arg_type(bilP_load.obj, arg_type);
-    return NULL;
+    return nullptr;
 }
 
 
 static int
 install_action(ABObj obj, ABObj module, ABObj action)
 {
-	ABObj	oldaction= NULL;
+	ABObj	oldaction= nullptr;
 	ABObj	project= obj_get_project(module);
 
 	/*
@@ -307,12 +307,12 @@ install_action(ABObj obj, ABObj module, ABObj action)
 	 */
 
 	oldaction= obj_find_action(module, action);
-	if (oldaction == NULL)
+	if (oldaction == nullptr)
 	{
 		oldaction= obj_find_action(project, action);
 	}
 
-	if (oldaction != NULL)
+	if (oldaction != nullptr)
 	{
 		/* we've seen this action, before */
 		obj_destroy(action);
@@ -357,8 +357,8 @@ find_or_create_target(ABObj obj, ABObj module,
 {
 	STRING	target_parent_name[256];
 	STRING	target_name[256];
-	ABObj	target_parent= NULL;
-	ABObj	target= NULL;
+	ABObj	target_parent= nullptr;
+	ABObj	target= nullptr;
 
 	/* util_dprintf(3, "find_or_create_target('%s' '%s' '%s')\n",
 			nullstr(parent_name),
@@ -366,11 +366,11 @@ find_or_create_target(ABObj obj, ABObj module,
 
 	*target_parent_name= 0;
 	*target_name= 0;
-	if (obj_name == NULL)
+	if (obj_name == nullptr)
 	{
-		return NULL;
+		return nullptr;
 	}
-	if (parent_name != NULL)
+	if (parent_name != nullptr)
 	{
 		/* we have parent name and object name */
 		strcpy((STRING)target_parent_name, istr_string(parent_name));
@@ -460,5 +460,5 @@ util_dprintf(3, "\targ is an istring = %s\n", istr_string(istringValue));
 #endif
 		obj_set_arg_string(bilP_load.obj, stringValue);
             }
-    return NULL;
+    return nullptr;
 }

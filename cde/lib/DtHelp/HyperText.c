@@ -300,7 +300,7 @@ _DtHelpProcessHyperSelection (
     DtHelpHyperTextStruct callData;
     DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
 
-    if (pDAS->hyperCall == NULL)
+    if (pDAS->hyperCall == nullptr)
 	return;
 
     downY = downY + pDAS->firstVisible - pDAS->decorThickness;
@@ -316,7 +316,7 @@ _DtHelpProcessHyperSelection (
         pDAS->toc_flag |= _DT_HELP_DRAW_TOC_IND;
         _DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_OFF, False,
 				(XtIsRealized(pDAS->dispWid) ? True : False),
-					NULL, NULL, NULL, NULL, NULL);
+					nullptr, nullptr, nullptr, nullptr, nullptr);
       }
 
     if (_DtCvSTATUS_OK ==
@@ -331,7 +331,7 @@ _DtHelpProcessHyperSelection (
             _DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_ID, False,
 				(XtIsRealized(pDAS->dispWid) ? True : False),
 					ceHyper.specification,
-					NULL, NULL, NULL, NULL);
+					nullptr, nullptr, nullptr, nullptr);
           }
 
 	callData.reason        = XmCR_ACTIVATE;
@@ -349,6 +349,6 @@ _DtHelpProcessHyperSelection (
 	 */
         _DtCanvasMoveTraversal(pDAS->canvas, _DtCvTRAVERSAL_ON, False,
 				(XtIsRealized(pDAS->dispWid) ? True : False),
-					NULL, NULL, NULL, NULL, NULL);
+					nullptr, nullptr, nullptr, nullptr, nullptr);
 
 }  /* End _DtHelpProcessHyperSelection */

@@ -93,10 +93,10 @@ ab_dnd_register_drop_file
     Widget	dropFile
 )
 {
-    static XtCallbackRec transferCBRec[] = { {textTransferCB, NULL},
-						{NULL, NULL} };
-    static XtCallbackRec animateCBRec[]  = { {textAnimateCB, NULL},
-						{NULL, NULL} };
+    static XtCallbackRec transferCBRec[] = { {textTransferCB, nullptr},
+						{nullptr, nullptr} };
+    static XtCallbackRec animateCBRec[]  = { {textAnimateCB, nullptr},
+						{nullptr, nullptr} };
     Arg			arg[1];
 
     if (!dropFile)
@@ -129,7 +129,7 @@ textTransferCB
 {
     DtDndTransferCallbackStruct *transferInfo = 
 			(DtDndTransferCallbackStruct *) callData;
-    String		newString = NULL;
+    String		newString = nullptr;
     int			iRet = 0;
 
     switch (transferInfo->dropData->protocol) 
@@ -158,22 +158,22 @@ dnd_load_buffer(
     DtDndBuffer	dropBuf
 )
 {
-    char	*dataType = NULL;
-    FILE	*inFile = NULL;
+    char	*dataType = nullptr;
+    FILE	*inFile = nullptr;
     int		iRet = 0;
     ABObj	project = proj_get_project();
-    STRING	fmtStr = NULL, fileName = NULL, msg = NULL;
-    XmString	xm_str = NULL;
+    STRING	fmtStr = nullptr, fileName = nullptr, msg = nullptr;
+    XmString	xm_str = nullptr;
     DTB_MODAL_ANSWER	answer = DTB_ANSWER_NONE;
 
     dataType = (char *) DtDtsBufferToDataType(
 		dropBuf.bp, dropBuf.size, dropBuf.name);
 
     inFile = util_create_tmp_file((char *) dropBuf.bp);
-    if (inFile == NULL)
+    if (inFile == nullptr)
     {
         (void)dtb_show_modal_message(dtb_get_toplevel_widget(),
-                &dtb_palette_drop_err_msg, NULL, NULL, NULL);
+                &dtb_palette_drop_err_msg, nullptr, nullptr, nullptr);
         iRet = -1;
 	goto epilogue;
     }
@@ -193,7 +193,7 @@ dnd_load_buffer(
 	{  
             answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
                 &dtb_proj_open_proj_warn_msg,
-                NULL, NULL, NULL);
+                nullptr, nullptr, nullptr);
  
             switch (answer)
             {
@@ -227,7 +227,7 @@ dnd_load_buffer(
 	xm_str = XmStringCreateLocalized(msg);
 
 	answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-		&dtb_proj_ld_as_bip_or_bil_msg, xm_str, NULL, NULL);
+		&dtb_proj_ld_as_bip_or_bil_msg, xm_str, nullptr, nullptr);
 
 	XtFree(fmtStr);
 	util_free(msg);
@@ -240,7 +240,7 @@ dnd_load_buffer(
 		{
 		    answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
 			     &dtb_proj_open_proj_warn_msg,
-			     NULL, NULL, NULL);
+			     nullptr, nullptr, nullptr);
 
 		    switch (answer)
 		    {
@@ -283,10 +283,10 @@ dnd_load_file(
     STRING	fileName
 )
 {
-    char		*dataType = NULL;
+    char		*dataType = nullptr;
     ABObj		project = proj_get_project();
-    STRING      	fmtStr = NULL, msg = NULL;
-    XmString    	xm_str = NULL;
+    STRING      	fmtStr = nullptr, msg = nullptr;
+    XmString    	xm_str = nullptr;
     int			iRet = 0;
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
 
@@ -308,7 +308,7 @@ dnd_load_file(
             {
             	answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
                 	&dtb_proj_open_proj_warn_msg,
-                	NULL, NULL, NULL);
+                	nullptr, nullptr, nullptr);
 
             	switch (answer)        
             	{
@@ -331,7 +331,7 @@ dnd_load_file(
 	else if (strcmp(dataType, BIL) == 0)
 	{
 	    answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-			&dtb_palette_import_by_msg, NULL, NULL, NULL);
+			&dtb_palette_import_by_msg, nullptr, nullptr, nullptr);
 	    switch (answer)
 	    {
 		case DTB_ANSWER_ACTION1:	/* Copy */
@@ -356,7 +356,7 @@ dnd_load_file(
             xm_str = XmStringCreateLocalized(msg);
  
             answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-                &dtb_proj_ld_as_bip_or_bil_msg, xm_str, NULL, NULL);
+                &dtb_proj_ld_as_bip_or_bil_msg, xm_str, nullptr, nullptr);
  
             XtFree(fmtStr);
             util_free(msg);
@@ -370,7 +370,7 @@ dnd_load_file(
 			answer = dtb_show_modal_message(
 				dtb_get_toplevel_widget(),
                              	&dtb_proj_open_proj_warn_msg,
-                             	NULL, NULL, NULL);
+                             	nullptr, nullptr, nullptr);
  
 			switch (answer)
                     	{
@@ -393,7 +393,7 @@ dnd_load_file(
  
 		case DTB_ANSWER_ACTION2:    /*Load as Module */
             	    answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-                        &dtb_palette_import_by_msg, NULL, NULL, NULL);
+                        &dtb_palette_import_by_msg, nullptr, nullptr, nullptr);
             	    switch (answer)
             	    {
                 	case DTB_ANSWER_ACTION1:        /* Copy */

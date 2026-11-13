@@ -137,12 +137,12 @@ ProcessSaveSessionMessage (
 
 		type  = tt_message_arg_type  (saveMsg, i);
   		status = tt_ptr_error (type);
-  		if (status != TT_OK || type == NULL)
+  		if (status != TT_OK || type == nullptr)
 			continue;
 
 		value = tt_message_arg_val (saveMsg, i);
   		status = tt_ptr_error (value);
-  		if (status != TT_OK || value == NULL)
+  		if (status != TT_OK || value == nullptr)
 			continue;
 
 		if (!strcmp (type, SAVE_TYPE)) {
@@ -820,7 +820,7 @@ ProcessClientMessage(
       if (smGD.saverListParse)
       {
         SM_FREE(smGD.saverListParse);
-        smGD.saverListParse = NULL; 
+        smGD.saverListParse = nullptr; 
       }
     }
   }
@@ -930,7 +930,7 @@ ProcessReloadActionsDatabase(XtPointer client_data)
     * Have not yet registered with the actions database to call this
     * callback when the database changes. Do so.
     */
-    DtDbReloadNotify(ProcessReloadActionsDatabase, NULL);
+    DtDbReloadNotify(ProcessReloadActionsDatabase, nullptr);
     needtoregister = 0;
   }
 

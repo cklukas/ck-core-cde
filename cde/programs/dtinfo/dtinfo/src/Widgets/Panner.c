@@ -184,10 +184,10 @@ PannerClassRec pannerClassRec = {
     /* class_name		*/	"Panner",
     /* widget_size		*/	sizeof(PannerRec),
     /* class_initialize		*/	XawInitializeWidgetSet,
-    /* class_part_initialize	*/	NULL,
+    /* class_part_initialize	*/	nullptr,
     /* class_inited		*/	FALSE,
     /* initialize		*/	Initialize,
-    /* initialize_hook		*/	NULL,
+    /* initialize_hook		*/	nullptr,
     /* realize			*/	Realize,
     /* actions			*/	actions,
     /* num_actions		*/	XtNumber(actions),
@@ -202,16 +202,16 @@ PannerClassRec pannerClassRec = {
     /* resize			*/	Resize,
     /* expose			*/	Redisplay,
     /* set_values		*/	SetValues,
-    /* set_values_hook		*/	NULL,
+    /* set_values_hook		*/	nullptr,
     /* set_values_almost	*/	SetValuesAlmost,
-    /* get_values_hook		*/	NULL,
-    /* accept_focus		*/	NULL,
+    /* get_values_hook		*/	nullptr,
+    /* accept_focus		*/	nullptr,
     /* version			*/	XtVersion,
-    /* callback_private		*/	NULL,
+    /* callback_private		*/	nullptr,
     /* tm_table			*/	defaultTranslations,
     /* query_geometry		*/	QueryGeometry,
     /* display_accelerator	*/	XtInheritDisplayAccelerator,
-    /* extension		*/	NULL
+    /* extension		*/	nullptr
   },
   { /* simple fields */
     /* change_sensitive		*/	XtInheritChangeSensitive
@@ -302,7 +302,7 @@ static void reset_xor_gc (PannerWidget pw)		/* used when resources change */
 	}
 	pw->panner.xor_gc = XtGetGC ((Widget) pw, valuemask, &values);
     } else {
-	pw->panner.xor_gc = NULL;
+	pw->panner.xor_gc = nullptr;
     }
 }
 
@@ -541,11 +541,11 @@ static void Initialize (Widget greq, Widget gnew, ArgList args,
     if (req->core.height < 1) new->core.height = defheight;
 
     new->panner.foreground = new->core.background_pixel;
-    new->panner.shadow_gc = NULL;
+    new->panner.shadow_gc = nullptr;
     reset_shadow_gc (new);		/* shadowColor */
-    new->panner.slider_gc = NULL;
+    new->panner.slider_gc = nullptr;
     reset_slider_gc (new);		/* foreground */
-    new->panner.xor_gc = NULL;
+    new->panner.xor_gc = nullptr;
     reset_xor_gc (new);			/* foreground ^ background */
 
     rescale (new);			/* does a position check */
@@ -558,7 +558,7 @@ static void Initialize (Widget greq, Widget gnew, ArgList args,
       Pixel trough;
       XmGetColors (new->core.screen, new->core.colormap,
 		   new->core.background_pixel,
-		   NULL, NULL, NULL, &trough);
+		   nullptr, nullptr, nullptr, &trough);
       new->core.background_pixel = trough;
     }
 }
@@ -906,12 +906,12 @@ static void ActionPage (Widget gw, XEvent *event /* unused */, String *params, C
 	ev.xbutton.type = ButtonPress;
 	ev.xbutton.x = x;
 	ev.xbutton.y = y;
-	ActionMove (gw, &ev, (String *) NULL, &zero);
+	ActionMove (gw, &ev, (String *) nullptr, &zero);
     } else {				/* else just do it */
 	pw->panner.tmp.doing = TRUE;
 	pw->panner.tmp.x = x;
 	pw->panner.tmp.y = y;
-	ActionNotify (gw, event, (String *) NULL, &zero);
+	ActionNotify (gw, event, (String *) nullptr, &zero);
 	pw->panner.tmp.doing = FALSE;
     }
 }
@@ -952,7 +952,7 @@ static void ActionNotify (Widget gw, XEvent *event /* unused */, String *params 
 	pw->panner.last_y != pw->panner.knob_y) {
 	XawPannerReport rep;
 
-	Redisplay (gw, (XEvent*) NULL, (Region) NULL);
+	Redisplay (gw, (XEvent*) nullptr, (Region) NULL);
 	rep.changed = (XawPRSliderX | XawPRSliderY);
 	rep.slider_x = pw->panner.slider_x;
 	rep.slider_y = pw->panner.slider_y;

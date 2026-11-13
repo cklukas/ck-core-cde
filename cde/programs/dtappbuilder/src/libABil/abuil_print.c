@@ -189,21 +189,21 @@ fix_prefix_suffix(
     int		n;
     int		cl_len = strlen(CLASS_SUFFIX);
     
-    if (widget_class_name == NULL)
+    if (widget_class_name == nullptr)
 	return(util_strsafe(widget_class_name));
 
     if (!strcmp(widget_class_name, GROUP_CLASS))
 	return(GROUP_SUBSTITUTE);
     
     /* Search for class suffix */
-    p = NULL;
+    p = nullptr;
     m = strstr(widget_class_name, CLASS_SUFFIX);
-    while (m != NULL)
+    while (m != nullptr)
     {
 	p = m;
 	m = strstr(m+cl_len, CLASS_SUFFIX);
     }
-    if (p != NULL && *(p+cl_len) == '\0')
+    if (p != nullptr && *(p+cl_len) == '\0')
 	n = p - widget_class_name;
     else
 	n = strlen(widget_class_name);
@@ -224,7 +224,7 @@ suffixed(
 {
     static char buf[1024];
 
-    if (widget_instance_name == NULL)
+    if (widget_instance_name == nullptr)
 	return(util_strsafe(widget_instance_name));
     
     snprintf(buf, sizeof(buf), "%s%s", widget_instance_name, INSTANCE_SUFFIX);
@@ -238,13 +238,13 @@ print_indented(
 )
 {
     AB_TRAVERSAL	trav;
-    ABObjPtr		child_obj	= NULL;
+    ABObjPtr		child_obj	= nullptr;
     ArgList		argList;
-    Arg			*arg = NULL;
+    Arg			*arg = nullptr;
     ABObj		menu_ref, obj_obj, root_obj;
     char 		*child_class;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	fprintf(fp,"! NULL Object");
 	return(0);
@@ -313,7 +313,7 @@ print_indented(
     argList = objxm_obj_get_ui_args(obj);
 
     indent(fp,TABSP); fprintf(fp,"arguments {\n");
-    for(arg=(Arg *)argList; (arg != NULL) && (arg->name != NULL); arg++) {
+    for(arg=(Arg *)argList; (arg != nullptr) && (arg->name != nullptr); arg++) {
 	output_ui_arg(fp,obj,arg);
     }
     
@@ -339,7 +339,7 @@ print_indented(
 
 
     trav_open(&trav, obj, AB_TRAV_CHILDREN);
-    if ((child_obj = trav_next(&trav)) != NULL)
+    if ((child_obj = trav_next(&trav)) != nullptr)
     {
 	/*
 	 * Write out controls section
@@ -368,7 +368,7 @@ print_indented(
 	    fprintf(fp,"%s %s;\n", child_class,
 			  suffixed(obj_get_name(child_obj)));
 	}
-	while ((child_obj = trav_next(&trav)) != NULL);
+	while ((child_obj = trav_next(&trav)) != nullptr);
 
 	indent(fp,DBLSP); fprintf(fp,"};\n");
     }
@@ -413,9 +413,9 @@ print_tree_indented(
 )
 {
     AB_TRAVERSAL	trav;
-    ABObjPtr		child_obj	= NULL;
+    ABObjPtr		child_obj	= nullptr;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	fprintf(fp,"! NULL Tree\n");
 	return(0);
@@ -425,7 +425,7 @@ print_tree_indented(
     {
       case AB_TYPE_PROJECT:
 	for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-	     (child_obj = trav_next(&trav)) != NULL; )
+	     (child_obj = trav_next(&trav)) != nullptr; )
 	{
 	    print_tree_indented(fp,child_obj);
 	}
@@ -435,7 +435,7 @@ print_tree_indented(
 	fprintf(fp,"names = case_sensitive\n");
 	
 	for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-	     (child_obj = trav_next(&trav)) != NULL; )
+	     (child_obj = trav_next(&trav)) != nullptr; )
 	{
 	    print_tree_indented(fp,child_obj);
 	}
@@ -444,7 +444,7 @@ print_tree_indented(
       default:
 	print_indented(fp,obj);
 	for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-	     (child_obj = trav_next(&trav)) != NULL; )
+	     (child_obj = trav_next(&trav)) != nullptr; )
 	{
 	    print_tree_indented(fp,child_obj);
 	}
@@ -462,25 +462,25 @@ verify_tree(
 {
     int			ret_val		= 0;
     AB_TRAVERSAL	trav;
-    ABObjPtr		obj		= NULL;
-    ABObjPtr		next_sibling	= NULL;
-    ABObjPtr		prev_sibling	= NULL;
-    ABObjPtr		parent		= NULL;
+    ABObjPtr		obj		= nullptr;
+    ABObjPtr		next_sibling	= nullptr;
+    ABObjPtr		prev_sibling	= nullptr;
+    ABObjPtr		parent		= nullptr;
 
-    if (root == NULL)
+    if (root == nullptr)
     {
 	/* empty tree is valid (I guess) */
 	return(0);
     }
 
     for (trav_open(&trav, root, AB_TRAV_ALL); 
-	 (obj = trav_next(&trav)) != NULL; )
+	 (obj = trav_next(&trav)) != nullptr; )
     {
 	next_sibling = obj->next_sibling;
 	prev_sibling = obj->prev_sibling;
 	parent = obj->parent;
 
-	if (next_sibling != NULL)
+	if (next_sibling != nullptr)
 	{
 	    if (next_sibling->prev_sibling != obj)
 	    {
@@ -490,7 +490,7 @@ verify_tree(
 	    }
 	}
 
-	if (prev_sibling != NULL)
+	if (prev_sibling != nullptr)
 	{
 	    if (prev_sibling->next_sibling != obj)
 	    {
@@ -500,14 +500,14 @@ verify_tree(
 	    }
 	}
 
-	if (parent != NULL)
+	if (parent != nullptr)
 	{
 	    AB_TRAVERSAL	trav;
 	    ABObjPtr		child;
 	    BOOL		found	= FALSE;
 	    
 	    for (trav_open(&trav, parent, AB_TRAV_CHILDREN);
-		 (child = trav_next(&trav)) != NULL; )
+		 (child = trav_next(&trav)) != nullptr; )
 	    {
 		if (child == obj)
 		{
@@ -579,13 +579,13 @@ output_ui_arg(FILE *fp, ABObj obj, Arg *arg)
 	       fprintf(fp,"!Couldn't get module for arg %s\n",arg->name);
 	       break;
 	    }
-	    if((attachObjName = istr_string((ISTRING)arg->value)) == NULL) {
+	    if((attachObjName = istr_string((ISTRING)arg->value)) == nullptr) {
 	       fprintf(fp,"!Couldn't get attach obj name for %s\n",
 	    	arg->name);
 	       break;
 	    }
 	    if( (attachObj=obj_scoped_find_by_name(module,attachObjName)) ==
-	    	NULL) {
+	    	nullptr) {
 	       fprintf(fp,"!Couldn't get attach obj for %s\n", arg->name);
 	       break;
 	    }
@@ -629,9 +629,9 @@ output_ui_arg(FILE *fp, ABObj obj, Arg *arg)
 static int
 handle_dtterm(FILE *fp, ABObj obj)
 {
-    ABObjPtr		child_obj	= NULL;
+    ABObjPtr		child_obj	= nullptr;
     ArgList		argList;
-    Arg			*arg = NULL;
+    Arg			*arg = nullptr;
 
     /*
      * Write object instance declaration, substituting XmText
@@ -658,7 +658,7 @@ handle_dtterm(FILE *fp, ABObj obj)
 
     /* Process/filter the DtTerm ui_arg list */
     indent(fp,TABSP); fprintf(fp,"arguments {\n");
-    for(arg=(Arg *)argList; (arg != NULL) && (arg->name != NULL); arg++) {
+    for(arg=(Arg *)argList; (arg != nullptr) && (arg->name != nullptr); arg++) {
 	/* Skip DtNsubprocessCmd resource */
 	if(util_streq(arg->name, DtNsubprocessCmd)) continue;
 
@@ -694,9 +694,9 @@ handle_dtterm(FILE *fp, ABObj obj)
 static int
 handle_combo_box(FILE *fp, ABObj obj)
 {
-    ABObjPtr		child_obj	= NULL;
+    ABObjPtr		child_obj	= nullptr;
     ArgList		argList;
-    Arg			*arg = NULL;
+    Arg			*arg = nullptr;
     AB_TRAVERSAL	trav;
     char   		child_base_name[64], child_name_buf[64], *child_name;
 
@@ -715,7 +715,7 @@ handle_combo_box(FILE *fp, ABObj obj)
 
     /* Process/filter the ui_arg list */
     indent(fp,TABSP); fprintf(fp,"arguments {\n");
-    for(arg=(Arg *)argList; (arg != NULL) && (arg->name != NULL); arg++) {
+    for(arg=(Arg *)argList; (arg != nullptr) && (arg->name != nullptr); arg++) {
 	if(util_streq(arg->name, DtNcomboBoxType))   continue;
 
 	output_ui_arg(fp,obj,arg);
@@ -754,13 +754,13 @@ handle_combo_box(FILE *fp, ABObj obj)
     */
     indent(fp,TABSP); fprintf(fp,"controls {\n");
     trav_open(&trav, obj, AB_TRAV_CHILDREN);
-    if ((child_obj = trav_next(&trav)) != NULL)
+    if ((child_obj = trav_next(&trav)) != nullptr)
     {
 	do {
 	    indent(fp,DBLSP); fprintf(fp,"XmPushButton %s ;\n",
 		suffixed(obj_get_name(child_obj)));
 	}
-	while ((child_obj = trav_next(&trav)) != NULL);
+	while ((child_obj = trav_next(&trav)) != nullptr);
     }
     trav_close(&trav);
     indent(fp,DBLSP); fprintf(fp,"};\n");
@@ -777,7 +777,7 @@ handle_combo_box(FILE *fp, ABObj obj)
 
     /* Now generate the menu items themselves */
     trav_open(&trav, obj, AB_TRAV_CHILDREN);
-    if ((child_obj = trav_next(&trav)) != NULL)
+    if ((child_obj = trav_next(&trav)) != nullptr)
     {
 	do {
 	    fprintf(fp,"\n! DtComboBox list item transformed into menu item\n");
@@ -797,7 +797,7 @@ handle_combo_box(FILE *fp, ABObj obj)
 
     	    fprintf(fp,"};\n");
 	}
-	while ((child_obj = trav_next(&trav)) != NULL);
+	while ((child_obj = trav_next(&trav)) != nullptr);
     }
     trav_close(&trav);
 
@@ -811,9 +811,9 @@ handle_combo_box(FILE *fp, ABObj obj)
 static int
 handle_spin_box(FILE *fp, ABObj obj)
 {
-    ABObjPtr		child_obj	= NULL;
+    ABObjPtr		child_obj	= nullptr;
     ArgList		argList;
-    Arg			*arg = NULL;
+    Arg			*arg = nullptr;
 
     /*
      * Write object instance declaration, substituting TextField
@@ -826,7 +826,7 @@ handle_spin_box(FILE *fp, ABObj obj)
 
     /* Process/filter the ui_arg list */
     indent(fp,TABSP); fprintf(fp,"arguments {\n");
-    for(arg=(Arg *)argList; (arg != NULL) && (arg->name != NULL); arg++) {
+    for(arg=(Arg *)argList; (arg != nullptr) && (arg->name != nullptr); arg++) {
 	if(util_streq(arg->name, DtNspinBoxChildType))   continue;
 	if(util_streq(arg->name, DtNminimumValue))       continue;
 	if(util_streq(arg->name, DtNmaximumValue))       continue;
@@ -859,9 +859,9 @@ handle_spin_box(FILE *fp, ABObj obj)
 static int
 handle_menu_button(FILE *fp, ABObj obj)
 {
-    ABObjPtr		child_obj	= NULL;
+    ABObjPtr		child_obj	= nullptr;
     ArgList		argList;
-    Arg			*arg = NULL;
+    Arg			*arg = nullptr;
 
     /*
      * Write object instance declaration, substituting OptionMenu
@@ -874,7 +874,7 @@ handle_menu_button(FILE *fp, ABObj obj)
 
     /* Process/filter the ui_arg list */
     indent(fp,TABSP); fprintf(fp,"arguments {\n");
-    for(arg=(Arg *)argList; (arg != NULL) && (arg->name != NULL); arg++) {
+    for(arg=(Arg *)argList; (arg != nullptr) && (arg->name != nullptr); arg++) {
 
 	output_ui_arg(fp,obj,arg);
     }

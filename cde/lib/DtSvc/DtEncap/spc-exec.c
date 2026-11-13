@@ -57,7 +57,7 @@
 
 /* Global vars. */
 
-SPC_Connection_Ptr write_terminator=NULL, read_terminator=NULL;
+SPC_Connection_Ptr write_terminator=nullptr, read_terminator=nullptr;
 
 /*
  * Forward declarations
@@ -79,7 +79,7 @@ Boolean _path_search (
  * is kept beause when the exit timer expires, if the daemon
  * has no sub-processes running, it will exit.
  */
-pid_t *SPC_pid_list = NULL;
+pid_t *SPC_pid_list = nullptr;
 
 /*
  * This global variable is set by the daemon when the client
@@ -92,7 +92,7 @@ int SPC_client_version_number = SPC_PROTOCOL_VERSION;
  * the mount point environment variable plus its value thus it
  * ready for 'putenv'.
  */
-char *SPC_mount_point_env_var = NULL;
+char *SPC_mount_point_env_var = nullptr;
 
 /* External definitions */
 
@@ -145,7 +145,7 @@ SPC_Setup_Synchronous_Terminator(void)
 
   read_terminator->sid=pipes[READ_SIDE];
   read_terminator->connected=TRUE;
-  SPC_XtAddInput(NULL, &read_terminator->termination_id, read_terminator->sid,
+  SPC_XtAddInput(nullptr, &read_terminator->termination_id, read_terminator->sid,
 		 SPC_Conditional_Packet_Handler, SPC_Terminator);
   
   _DtSvcProcessUnlock();
@@ -233,7 +233,7 @@ SPC_MakeSystemCommand(SPC_Channel_Ptr channel)
   argv[0]=SPC_copy_string(shell);
   argv[1]=SPC_copy_string((XeString)"-c");
   argv[2]=SPC_copy_string(newargtwo);
-  argv[3]=NULL;
+  argv[3]=nullptr;
   channel->argv = argv;
   channel->IOMode |= SPCIO_DEALLOC_ARGV;
   
@@ -292,7 +292,7 @@ void SPC_Child_Terminated(int i)
      * Look for this process in the pid list.  If found, mark it
      * as done.
      */
-    if (SPC_pid_list != NULL) {
+    if (SPC_pid_list != nullptr) {
       for (indx=0; SPC_pid_list[indx] != 0; indx++)
         if (SPC_pid_list[indx] == pid) {
 	   SPC_pid_list[indx] = SPCD_DEAD_PROCESS;
@@ -387,12 +387,12 @@ reserve_pid_slot(int *slot)
   pid_t *list;
   int i = 0;
 
-  if (SPC_pid_list == NULL) {
+  if (SPC_pid_list == nullptr) {
     /*
      * Create the first block plus the NULL terminator.
      */
     list = (pid_t *) malloc (2 * sizeof (pid_t));
-    if (list == NULL)
+    if (list == nullptr)
       return 0;
     list[1] = 0;
   }
@@ -408,7 +408,7 @@ reserve_pid_slot(int *slot)
       if ((size_t) i > SIZE_MAX / sizeof (pid_t) - 2)
 	return 0;
       list = (pid_t *) realloc (SPC_pid_list, (i+2) * sizeof (pid_t));
-      if (list == NULL)
+      if (list == nullptr)
 	return 0;
       list[i+1] = 0;
     }
@@ -471,11 +471,11 @@ int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
 	    */
 	   dir = (char *) tt_netfile_file (channel->context_dir);
 	   if (tt_ptr_error (dir) != TT_OK) 
-	      dir = NULL;
+	      dir = nullptr;
 	}
 	_DtSvcProcessUnlock();
 
-	if (dir == NULL)
+	if (dir == nullptr)
 	    /* can't make connection ... */;
 	else if (stat(dir,&stat_info) != 0)	
 	    /* directory not there */;
@@ -486,7 +486,7 @@ int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
 	    ok = TRUE;
 	
 	if (!ok && IS_SPCIO_FORCE_CONTEXT(channel->IOMode)) {
-	    if (dir != NULL && (strcmp (dir, channel->context_dir) != 0))
+	    if (dir != nullptr && (strcmp (dir, channel->context_dir) != 0))
 	       SPC_Error(SPC_cannot_Chdir, dir);
 	    SPC_Error(SPC_cannot_Chdir, channel->context_dir);
 	    XeFree(dir);
@@ -531,7 +531,7 @@ int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
       _DtSvcProcessUnlock();
       SPC_Error(SPC_Out_Of_Memory);
       XeFree(dir);
-      sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)NULL);
+      sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)nullptr);
       return(SPC_ERROR);
     }
     _DtSvcProcessUnlock();
@@ -557,13 +557,13 @@ int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
 	
 	/* Reinstate the old signal mask (unblock SIGCLD). */
 	
-	sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)NULL);
+	sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)nullptr);
 	return(retval);
     }
     else {
 	/* Child process: connect wires, make environment and exec sub-process */
 	
-	sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)NULL);
+	sigprocmask(SIG_SETMASK, &oldsigmask, (sigset_t *)nullptr);
 	
 	/* Make sure the child is the process group leader.  In the case of
 	   ptys, we also want to break the current terminal affiliation.
@@ -613,7 +613,7 @@ int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
 		* setlocale failed - log a message but execute 
 		* the command anyway.
 		*/ 
-	       if (SPC_Print_Protocol != NULL)
+	       if (SPC_Print_Protocol != nullptr)
 		  (void) fprintf(SPC_Print_Protocol,
 		      "+++> Failed to 'setlocale'; LANG = %s\n",
 		      getenv("LANG"));
@@ -622,7 +622,7 @@ int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
 	    for(envp=channel->envp; *envp; envp++)
 		resolve_variable_reference(&*envp);
 
-	    if (SPC_mount_point_env_var != NULL)
+	    if (SPC_mount_point_env_var != nullptr)
 		/*
 		 * The mount point environment variable was 
 		 * inherited by the daemon or was given to the
@@ -680,23 +680,23 @@ int exec_proc_local_channel_object(SPC_Channel_Ptr channel)
 static char *get_path_from_context (
 	char 		*context)
 {
-   char			*host = NULL;
-   char			*file = NULL;
-   char			*netfile = NULL;
-   char			*path = NULL;
+   char			*host = nullptr;
+   char			*file = nullptr;
+   char			*netfile = nullptr;
+   char			*path = nullptr;
    char			tmp[MAXPATHLEN];
    char			*pch;
 
    /*
     * Break context into its host and file parts.
     */
-   if (context == NULL)
-      return (NULL);
+   if (context == nullptr)
+      return (nullptr);
 
    (void) strcpy (tmp, context);
    file = tmp;
 
-   if ((pch = (char *) strchr (tmp, ':')) != NULL) {
+   if ((pch = (char *) strchr (tmp, ':')) != nullptr) {
       host = tmp;
       file = pch + 1;
       *pch = '\000';
@@ -708,14 +708,14 @@ static char *get_path_from_context (
    netfile = (char *) tt_host_file_netfile (host, file);
    if (tt_ptr_error (netfile) != TT_OK) {
       SPC_Error (SPC_Cannot_Create_Netfilename, context, host);
-      return (NULL);
+      return (nullptr);
    }
 
    path = (char *) tt_netfile_file (netfile);
    tt_free (netfile);
    if (tt_ptr_error (path) != TT_OK) {
       SPC_Error (SPC_Cannot_Create_Netfilename, context, host);
-      return (NULL);
+      return (nullptr);
    }
 
    return (path);
@@ -874,7 +874,7 @@ resolve_variable_reference(
    int		len;
    int		found_brace;
    char		variable[256];
-   char		*buf = NULL;
+   char		*buf = nullptr;
    char		*pbeg = *string;
    char		*string_start = *string;
 
@@ -913,7 +913,7 @@ resolve_variable_reference(
       pch = strchr (pch, '$');
 #endif /* NLS16 */
 
-      if (pch == NULL || *pch == '\000')
+      if (pch == nullptr || *pch == '\000')
 	 /*
 	  * The string doesn't contain any (more) variables
 	  */
@@ -996,7 +996,7 @@ resolve_variable_reference(
       (void) strncpy (variable, var_start, n);
       variable[n] = '\0';
 
-      if ((value = getenv (variable)) == NULL) {
+      if ((value = getenv (variable)) == nullptr) {
 	 /*
 	  * Leave what looks like an environment variable in place.
 	  */
@@ -1036,7 +1036,7 @@ resolve_variable_reference(
       {
 	 char *grown = realloc (*string, strlen (buf) + 1);
 
-	 if (grown == NULL)
+	 if (grown == nullptr)
 	    /* Keep the value as it was: *string has not been changed. */
 	    break;
 	 *string = grown;

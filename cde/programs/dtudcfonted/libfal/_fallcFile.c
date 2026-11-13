@@ -97,7 +97,7 @@ xlocaledir(char *path)
     int len;
 
     dir = getenv("XLOCALEDIR");
-    if(dir != NULL){
+    if(dir != nullptr){
 	len = strlen(dir);
 	strcpy(p, dir);
 	p[len++] = ':';
@@ -112,7 +112,7 @@ parse_path(char *path, char **argv, int argsize)
     char *p = path;
     int i, n;
 
-    while((p = strchr(p, ':')) != NULL){
+    while((p = strchr(p, ':')) != nullptr){
 	*p = ' ';	/* place space on delimter */
     }
     n = parse_line(path, argv, argsize);
@@ -137,14 +137,14 @@ static char *
 _XlcResolveName(char *lc_name, char *file_name, int direction)/*mapping direction*/
 {
     FILE *fp;
-    char buf[BUFSIZE], *name = NULL;
+    char buf[BUFSIZE], *name = nullptr;
 
     fp = fopen(file_name, "r");
-    if(fp == (FILE *)NULL){
-	return NULL;
+    if(fp == (FILE *)nullptr){
+	return nullptr;
     }
 
-    while(fgets(buf, BUFSIZE, fp) != NULL){
+    while(fgets(buf, BUFSIZE, fp) != nullptr){
 	char *p = buf;
 	int n;
 	char *args[2], *from, *to;
@@ -165,13 +165,13 @@ _XlcResolveName(char *lc_name, char *file_name, int direction)/*mapping directio
 	}
 	if(! strcmp(from, lc_name)){
 	    name = Xmalloc(strlen(to) + 1);
-	    if(name != NULL){
+	    if(name != nullptr){
 		strcpy(name, to);
 	    }
 	    break;
 	}
     }
-    if(fp != (FILE *)NULL){
+    if(fp != (FILE *)nullptr){
 	fclose(fp);
     }
     return name;
@@ -201,15 +201,15 @@ _fallcFileName(XLCd lcd, char *category)
     char cat[BUFSIZE], dir[BUFSIZE];
     int i, n;
     char *args[256];
-    char *file_name = NULL;
+    char *file_name = nullptr;
 
     if(lcd == (XLCd)NULL){
-	return NULL;
+	return nullptr;
     }
 
     if(! _fallcResolveLocaleName(XLC_PUBLIC(lcd, siname), lc_name,
-			       NULL, NULL, NULL)){
-	return NULL;
+			       nullptr, nullptr, nullptr)){
+	return nullptr;
     }
 
     lowercase(cat, category);
@@ -219,7 +219,7 @@ _fallcFileName(XLCd lcd, char *category)
 	char buf[BUFSIZE], *name;
 	sprintf(buf, "%s/%s.dir", args[i], cat);
 	name = _XlcResolveName(lc_name, buf, RtoL);
-	if(name == NULL){
+	if(name == nullptr){
 	    continue;
 	}
 	if(*name == '/'){
@@ -229,7 +229,7 @@ _fallcFileName(XLCd lcd, char *category)
 	    sprintf(buf, "%s/%s", args[i], name);
 	    Xfree(name);
 	    file_name = Xmalloc(strlen(buf) + 1);
-	    if(file_name == NULL){
+	    if(file_name == nullptr){
 		break;
 	    }
 	    strcpy(file_name, buf);
@@ -238,7 +238,7 @@ _fallcFileName(XLCd lcd, char *category)
 	    break;
 	}
 	Xfree(file_name);
-	file_name = NULL;
+	file_name = nullptr;
 	/* Then, try with next dir */
     }
     return file_name;
@@ -257,7 +257,7 @@ _fallcResolveLocaleName(
     char *territory,
     char *codeset)
 {
-    char dir[BUFSIZE], buf[BUFSIZE], *name = NULL;
+    char dir[BUFSIZE], buf[BUFSIZE], *name = nullptr;
     int i, n;
     char *args[256];
 
@@ -266,18 +266,18 @@ _fallcResolveLocaleName(
     for(i = 0; i < n; ++i){
 	sprintf(buf, "%s/%s", args[i], LOCALE_ALIAS);
 	name = _XlcResolveName(lc_name, buf, LtoR);
-	if(name != NULL){
+	if(name != nullptr){
 	    break;
 	}
     }
 
-    if(name != NULL){
+    if(name != nullptr){
 	snprintf(buf, sizeof(buf), "%s", name);
 	Xfree(name);
     }else{
 	snprintf(buf, sizeof(buf), "%s", lc_name);
     }
-    if(full_name != NULL){
+    if(full_name != nullptr){
 	strcpy(full_name, buf);
     }
 
@@ -322,7 +322,7 @@ _fallcResolveLocaleName(
 int
 _fallcResolveDBName(char *lc_name, char *file_name)
 {
-    char dir[BUFSIZE], buf[BUFSIZE], *name = NULL;
+    char dir[BUFSIZE], buf[BUFSIZE], *name = nullptr;
     int i, n;
     char *args[256];
 
@@ -331,16 +331,16 @@ _fallcResolveDBName(char *lc_name, char *file_name)
     for(i = 0; i < n; ++i){
 	sprintf(buf, "%s/%s", args[i], LOCALE_DIR);
 	name = _XlcResolveName(lc_name, buf, RtoL);
-	if(name != NULL){
+	if(name != nullptr){
 	    break;
 	}
     }
-    if(name == NULL){
+    if(name == nullptr){
 	return 0;
     }
     strcpy(buf, name);
     Xfree(name);
-    if(file_name != NULL){
+    if(file_name != nullptr){
 	strcpy(file_name, buf);
     }
     return 1;
@@ -350,7 +350,7 @@ _fallcResolveDBName(char *lc_name, char *file_name)
 int
 _fallcResolveI18NPath(char *path_name)
 {
-    if(path_name != NULL){
+    if(path_name != nullptr){
 	xlocaledir(path_name);
     }
     return 1;

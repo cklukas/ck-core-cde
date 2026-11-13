@@ -69,7 +69,7 @@ static ABObj find_obj_in_list(ABObj *list, ABObj obj);
 **                                                                      **
 **************************************************************************/
 
-ABObjList	objP_all_objs_list = NULL;
+ABObjList	objP_all_objs_list = nullptr;
 
 /*************************************************************************
 **                                                                      **
@@ -82,17 +82,17 @@ objP_lists_add(ABObj obj)
 {
     int		return_value = 0;
 
-    if (objP_all_objs_list == NULL)
+    if (objP_all_objs_list == nullptr)
     {
 	objP_all_objs_list = objlist_create();
 	objlist_set_is_unique(objP_all_objs_list, TRUE);
-	if (objP_all_objs_list == NULL)
+	if (objP_all_objs_list == nullptr)
 	{
 	    return ERR_NO_MEMORY;
 	}
     }
 
-    return_value = objlist_add_obj(objP_all_objs_list, obj, NULL);
+    return_value = objlist_add_obj(objP_all_objs_list, obj, nullptr);
 
     return return_value;
 }
@@ -103,7 +103,7 @@ objP_lists_remove(ABObj obj)
 {
     int		return_value = 0;
 
-    if (objP_all_objs_list == NULL)
+    if (objP_all_objs_list == nullptr)
     {
 	return 0;
     }

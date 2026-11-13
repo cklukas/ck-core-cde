@@ -40,7 +40,7 @@
 #include "DtSvcLock.h"
 
 /* The application's SPC activation list */
-SPC_Channel_Ptr spc_activation_list = NULL;
+SPC_Channel_Ptr spc_activation_list = nullptr;
 
 /* Allocate us up a wire */
 
@@ -84,7 +84,7 @@ SPC_Channel_Ptr SPC_Find_PID(int pid)
   SPC_Channel_Ptr spc;
 
   _DtSvcProcessLock();
-  for (spc = spc_activation_list; spc != NULL; spc = spc->next) {
+  for (spc = spc_activation_list; spc != nullptr; spc = spc->next) {
     if (spc->pid == pid) break;
   }
   _DtSvcProcessUnlock();
@@ -237,7 +237,7 @@ Boolean _path_search (XeString path, XeString filename, path_search_predicate p)
 /*----------------------------------------------------------------------+*/
 {
 
-  XeString path_rest, next_colon=NULL;
+  XeString path_rest, next_colon=nullptr;
   XeChar buffer[MAXPATHLEN+1];
   XeChar path_component[MAXPATHLEN+1];
   int path_component_len;
@@ -248,7 +248,7 @@ Boolean _path_search (XeString path, XeString filename, path_search_predicate p)
     return(FALSE);
   
   if(*filename == '/')
-    return((*p)(filename, NULL, filename));
+    return((*p)(filename, nullptr, filename));
 
   filename_len = strlen(filename);
   if(!path)
@@ -275,7 +275,7 @@ Boolean _path_search (XeString path, XeString filename, path_search_predicate p)
     } else {         /* no colon */
       path_component_len = strlen(path_rest);
       strcpy(buffer, path_rest);
-      path_rest=NULL;
+      path_rest=nullptr;
     }
 
     /*

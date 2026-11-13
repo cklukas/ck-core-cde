@@ -116,7 +116,7 @@ DoTranslate(
     }
 
     /* Translate topmost/first element.  This is recursive. */
-    TransElement(e, fp, NULL);
+    TransElement(e, fp, nullptr);
 
     /* Stuff to do at end of processing */
     if ((t = FindTransByName("_End"))) {
@@ -327,7 +327,7 @@ CallInterpreter(
 
     ProcesOutputSpec(ib, e, 0, 1);
     if (!recursive) {
-	tcl_enc = Tcl_GetEncoding(NULL, NULL);
+	tcl_enc = Tcl_GetEncoding(nullptr, nullptr);
 	tcl_str = Tcl_ExternalToUtfDString(
 			tcl_enc, GetOutputBuffer(), -1, &tcl_dstr);
 	result = Tcl_Eval(interpreter, tcl_str);
@@ -478,7 +478,7 @@ FindTrans(
 	if (t->context) {	/* no context specified -> a match */
 	    FindContext(e, t->depth, context);
 
-	    if (regexec(&t->context_re, context, 0, NULL, 0)) continue;
+	    if (regexec(&t->context_re, context, 0, nullptr, 0)) continue;
 
 	    /* Is depth of spec deeper than element's depth? */
 	    if (t->depth > e->depth) continue;
@@ -496,7 +496,7 @@ FindTrans(
 		    match = 0;
 		    break;
 		}
-		if (regexec(&t->attpair[a].rex, atval, 0, NULL, 0))
+		if (regexec(&t->attpair[a].rex, atval, 0, nullptr, 0))
 		    match = 0;
 	    }
 	    if (!match) continue;
@@ -556,7 +556,7 @@ FindTrans(
 	/* check content */
 	if (t->content) {		/* no att specified -> a match */
 	    for (match=0,i=0; i<e->ndcont; i++) {
-		if (!regexec(&t->content_re, e->dcont[i], 0, NULL, 0)) {
+		if (!regexec(&t->content_re, e->dcont[i], 0, nullptr, 0)) {
 		    match = 1;
 		    break;
 		}
@@ -620,7 +620,7 @@ FindTransByName(
 	    if (!strcmp(t->gi, s)) return t;
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 /*  Find translation spec by its ID (SpecID).
@@ -636,7 +636,7 @@ FindTranByID(int n)
 
     for (t=TrSpecs; t; t=t->next)
 	if (n == t->my_id) return t;
-    return NULL;
+    return nullptr;
 }
 
 /* ______________________________________________________________________ */
@@ -826,7 +826,7 @@ TransElement(
 	for (i=0; i<e->ncont; i++) {
 	    if (IsContElem(e,i)) {
 		if (t->ignore != IGN_CHILDREN)	/* skip child nodes? */
-		    TransElement(ContElem(e,i), fp, NULL);
+		    TransElement(ContElem(e,i), fp, nullptr);
 	    }
 	    else if (IsContData(e,i)) {
 		if (t->ignore != IGN_DATA)	/* skip data nodes? */

@@ -228,7 +228,7 @@ int main( int argc, char *argv[] )
 	/*
 	 *  read to fontfile
 	 */
-	if ( ( tmpfname = GetRealFileName( fname ) ) == NULL ) {
+	if ( ( tmpfname = GetRealFileName( fname ) ) == nullptr ) {
 		USAGE("dtgpftobdf: cannot refer to substance file.\n" );
 		exit( -1 );
 	}
@@ -374,7 +374,7 @@ int main( int argc, char *argv[] )
 static	char	*readfontfile( char *fname )
 {
 	int 	fd;
-	char	*fp = NULL;
+	char	*fp = nullptr;
 	struct stat stat;
 
 	fd = open( fname,O_RDONLY );
@@ -386,7 +386,7 @@ static	char	*readfontfile( char *fname )
 	if ( fstat( fd,&stat ) == 0 ) {
 		fp = (char *)mmap( 0, stat.st_size, PROT_READ, MAP_SHARED, fd, 0 );
 		if ( fp == (char *)-1 ) {
-			if ( ( fp = ( char * )malloc( stat.st_size ) ) == NULL ) {
+			if ( ( fp = ( char * )malloc( stat.st_size ) ) == nullptr ) {
 				USAGE("dtgpftobdf: malloc error.\n" );
 				close( fd );
 				return	( char * )-1;
@@ -406,7 +406,7 @@ static	char	*readfontfile( char *fname )
 	close( fd );
 #else	/* pfa */
 	if ( fstat(fd,&stat) == 0 ) {
-		if ( ( fp = (char *)malloc(stat.st_size) ) == NULL ) {
+		if ( ( fp = (char *)malloc(stat.st_size) ) == nullptr ) {
 			USAGE("dtgpftobdf: malloc error.\n" );
 			close( fd );
 			return	( char * )-1;
@@ -839,7 +839,7 @@ openPcfFont(char *fontname)
     if ( pcf_tmp ) {
         free( pcf_tmp );
     }
-    return  NULL;
+    return  nullptr;
 }
 
 
@@ -1306,8 +1306,8 @@ invertBits(char *src, CARD32 format, int width, int height, char *dest)
 static	void
 pCHARS_pcf (PcfTmp *pcf, int fix)
 {
-	char    *bmp_ptn = NULL;
-	char    *bitmap = NULL;
+	char    *bmp_ptn = nullptr;
+	char    *bitmap = nullptr;
 	int     ptn_width = 0, ptn_height = 0;
 	int     bmp_width = 0, bmp_height = 0;
 	int     cpy_height = 0;

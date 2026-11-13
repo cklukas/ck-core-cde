@@ -40,27 +40,27 @@
 
 DtXineramaInfo_t *_DtXineramaInit(Display *dpy)
 {
-  DtXineramaInfo_t *tmpDtXI = NULL;
-  XineramaScreenInfo *XinerScrnInfo = NULL;
+  DtXineramaInfo_t *tmpDtXI = nullptr;
+  XineramaScreenInfo *XinerScrnInfo = nullptr;
   int number = 0;
 
   if (!dpy)
-    return(NULL);
+    return(nullptr);
 
   XinerScrnInfo = XineramaQueryScreens(dpy, &number);
 
-  if (number <= 0 || XinerScrnInfo == NULL) /* then we don't have it */
-    return(NULL);
+  if (number <= 0 || XinerScrnInfo == nullptr) /* then we don't have it */
+    return(nullptr);
 
 				/* allocate some space for it */
-  if ((tmpDtXI = (DtXineramaInfo_t *)malloc(sizeof(DtXineramaInfo_t))) == NULL)
+  if ((tmpDtXI = (DtXineramaInfo_t *)malloc(sizeof(DtXineramaInfo_t))) == nullptr)
     {				/* malloc failure */
 #ifdef DEBUG
       fprintf(stderr, "_DtXineramaInit: malloc failed\n");
 #endif
       
       free(XinerScrnInfo);
-      return(NULL);
+      return(nullptr);
     }
 
   tmpDtXI->numscreens = number;
@@ -77,7 +77,7 @@ Bool _DtXineramaGetScreen(DtXineramaInfo_t *DtXI, unsigned int screen,
 			  unsigned int *xorg, unsigned int *yorg)
 {
 
-  if (DtXI == NULL)
+  if (DtXI == nullptr)
     return(False);
 
   if (DtXI->numscreens == 0)
@@ -89,13 +89,13 @@ Bool _DtXineramaGetScreen(DtXineramaInfo_t *DtXI, unsigned int screen,
 				/* now get the info from the XinerInfo */
 				/* struct and return it */
 
-  if (w != NULL)
+  if (w != nullptr)
     *w = (DtXI->ScreenInfo[screen]).width;
-  if (h != NULL)
+  if (h != nullptr)
     *h = (DtXI->ScreenInfo[screen]).height;
-  if (xorg != NULL)
+  if (xorg != nullptr)
     *xorg = (DtXI->ScreenInfo[screen]).x_org;
-  if (yorg != NULL)
+  if (yorg != nullptr)
     *yorg = (DtXI->ScreenInfo[screen]).y_org;
 
   return(True);

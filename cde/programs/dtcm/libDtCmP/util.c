@@ -105,12 +105,12 @@ cm_def_printer(void)
 {
         FILE *fp;
         char message[257];
-	char *tmp=NULL;
-        char *printer_name=NULL;
+	char *tmp=nullptr;
+        char *printer_name=nullptr;
 
 #ifdef SVR4
 	tmp = (char*)getenv("LPDEST");
-	if (tmp != NULL && *tmp != NULL) {
+	if (tmp != nullptr && *tmp != nullptr) {
 		printer_name = (char*)malloc(strlen(tmp)+1);
 		strcpy(printer_name, tmp);
 	}
@@ -125,8 +125,8 @@ cm_def_printer(void)
         	fp = (FILE *)popen("lpstat -d", "r");
         	fread(message, 256, 1, fp);
         	tmp = (char *)_XStrtok(message, ":", strtok_buf);
-        	tmp = (char *)_XStrtok((char *)NULL, "\n", strtok_buf);
-		if (tmp != NULL && *tmp != NULL) {
+        	tmp = (char *)_XStrtok((char *)nullptr, "\n", strtok_buf);
+		if (tmp != nullptr && *tmp != nullptr) {
 			printer_name = (char*)malloc(strlen(tmp)+1);
 			strcpy(printer_name, tmp);
 		}
@@ -144,7 +144,7 @@ cm_def_printer(void)
 	}
 #else
 	tmp = (char*)getenv("PRINTER");
-	if (tmp != NULL && *tmp != '\0') {
+	if (tmp != nullptr && *tmp != '\0') {
 		printer_name = (char*)malloc(strlen(tmp)+1);
 		strcpy(printer_name, tmp);
 	}
@@ -175,7 +175,7 @@ cm_def_printer(void)
 extern char *
 cm_strcpy(char *s1, char *s2)
 {
-	if (s1==NULL || s2==NULL) return(NULL);
+	if (s1==nullptr || s2==nullptr) return(nullptr);
 	strcpy(s1, s2); 
         return (s1);
 }
@@ -185,7 +185,7 @@ cm_strlen(char *s)
 {
         int n;
  
-	if (s==NULL) return 0;
+	if (s==nullptr) return 0;
 	return (strlen(s));
 }
 
@@ -193,7 +193,7 @@ extern char *
 cm_strdup (char *s1)
 {
 	char *s2;
-	if (s1 == NULL) return NULL;
+	if (s1 == nullptr) return nullptr;
         s2 = (char *) strdup(s1);
 	return (s2);
 }
@@ -201,7 +201,7 @@ cm_strdup (char *s1)
 extern char *
 cm_strcat(char *s1, char *s2)
 {
-	if (s1==NULL || s2==NULL) return(s1);
+	if (s1==nullptr || s2==nullptr) return(s1);
 	strcat(s1, s2);
 	return s1;
 }
@@ -216,7 +216,7 @@ str_to_cr(char *s)
         int i, j, k;
         char *newstr;
 
-        if (s==NULL) return(NULL);
+        if (s==nullptr) return(nullptr);
         i = cm_strlen(s);
 
         newstr= (char *) ckalloc((unsigned)i + 1);
@@ -258,7 +258,7 @@ cr_to_str(char *s)
 	int i, j, k;
 	char *newstr;
 
-        if (s==NULL) return(NULL);
+        if (s==nullptr) return(nullptr);
 	i = cm_strlen(s);
 
 	newstr = (char *) ckalloc((unsigned)((2 * i) + 1));
@@ -330,17 +330,17 @@ ckalloc(unsigned int size)
 	p = (char *)calloc(1, size);
 
 	/* if it worked, return the memory directly */
-	if (p != NULL) return(p);
+	if (p != nullptr) return(p);
 
 	/* try allocation again */
 	p = (char *)calloc(1, size);
 
 	/* see if it worked the second time */
-	if (p != NULL) return(p);
+	if (p != nullptr) return(p);
 
 	/* no recovery available */
 	syserr("ckalloc: cannot allocate %d bytes", size, 0, 0);
-	return((char *)NULL);
+	return((char *)nullptr);
 }
 
 	
@@ -374,12 +374,12 @@ extern Lines *
 text_to_lines(char *s, int n)
 {
 	char *string, *line;
-	Lines *prev_l = NULL, *l = NULL, *head= NULL;
+	Lines *prev_l = nullptr, *l = nullptr, *head= nullptr;
 	int i = 0;
 	char *_p;
 	int clen = 0;
 
-	if (s == NULL || n <= 0) return NULL;
+	if (s == nullptr || n <= 0) return nullptr;
 
 	string = cm_strdup(s);
 	/*
@@ -400,10 +400,10 @@ text_to_lines(char *s, int n)
 	}
 	line = string;
 	do {
-		if (line == NULL) break;
+		if (line == nullptr) break;
 		l = (Lines*)ckalloc(sizeof(Lines));
-		if (head == NULL) head = l;
-		if (prev_l != NULL) prev_l->next = l;
+		if (head == nullptr) head = l;
+		if (prev_l != nullptr) prev_l->next = l;
 		l->s = cm_strdup(line);
 		prev_l = l;
 		i++;
@@ -434,11 +434,11 @@ destroy_lines(Lines *l)
 {
         Lines *p;
 
-        while (l != NULL) {
-                free(l->s); l->s=NULL;
+        while (l != nullptr) {
+                free(l->s); l->s=nullptr;
                 p = l;
                 l = l->next;
-                free((char *)p); p=NULL;
+                free((char *)p); p=nullptr;
         }
 }
 
@@ -489,14 +489,14 @@ get_head(char *str, char sep)
         static char buf[BUFSIZ];
         char *ptr;
 
-        if (str == NULL)
-                return(NULL);
+        if (str == nullptr)
+                return(nullptr);
 
         ptr = buf;
         while (*str && *str != sep)
                 *ptr++ = *str++;
         if (ptr == buf)
-                return(NULL);
+                return(nullptr);
         else {
                 *ptr = '\0';
                 return(cm_strdup(buf));
@@ -508,24 +508,24 @@ get_tail(char *str, char sep)
 {
         char *ptr;
  
-        if (str == NULL)
-                return(NULL);
+        if (str == nullptr)
+                return(nullptr);
  
         while (*str && *str != sep)
                 str++;
         if (*str)
                 return(cm_strdup(++str));
         else
-                return(NULL);
+                return(nullptr);
 }
 
 extern char *
 cm_get_credentials(void)
 {
 	char *name, *host;
-	static char *login = NULL;
+	static char *login = nullptr;
 
-	if (login==NULL)
+	if (login==nullptr)
 	{
 		name = (char*)cm_get_uname();
 		host = (char*)cm_get_local_host();
@@ -540,7 +540,7 @@ cm_get_local_host(void)
 {
 	static char *local_host;
 
-        if (local_host == NULL) {
+        if (local_host == nullptr) {
 #if defined(sun)
                 local_host = (char *)ckalloc(MAXHOSTNAMELEN);
                 (void) sysinfo(SI_HOSTNAME, local_host, MAXHOSTNAMELEN);
@@ -558,8 +558,8 @@ cm_get_uname(void)
         static char *name;
         struct passwd *pw; 
 
-        if (name == NULL) {
-                if ((pw = (struct passwd *)getpwuid(geteuid())) == NULL)
+        if (name == nullptr) {
+                if ((pw = (struct passwd *)getpwuid(geteuid())) == nullptr)
                          name = (char *) cm_strdup("nobody");
                 else
                         name = (char *) cm_strdup(pw->pw_name);
@@ -573,7 +573,7 @@ cm_get_local_domain(void)
 {
 	static char *local_domain;
 
-        if (local_domain == NULL) {
+        if (local_domain == nullptr) {
                 local_domain = ckalloc(BUFSIZ);
 #if defined(sun)
                 sysinfo(SI_SRPC_DOMAIN, local_domain, DOM_NM_LN);
@@ -591,10 +591,10 @@ cm_get_local_domain(void)
 extern char*
 cm_pqtarget(char *name)
 {
-        char *host, *target=NULL;
+        char *host, *target=nullptr;
  
         host = (char*)strchr(name, '@');
-        if (host == NULL) {
+        if (host == nullptr) {
                 host = (char*)cm_get_local_host();
                 target = (char *)ckalloc(cm_strlen(name) +
                                 cm_strlen(host) + 2);
@@ -632,12 +632,12 @@ cm_target2host(char *target)
         char *location, *host;
  
         location = get_tail(target, '@');
-        if (location != NULL) {
+        if (location != nullptr) {
                 host = get_head(location, '.');
                 free(location);
                 return(host);
         } else
-                return(NULL);
+                return(nullptr);
 }
 /*
  * calendar_name@host[.domain] -> domain
@@ -648,12 +648,12 @@ cm_target2domain(char *target)
         char *location, *domain;
  
         location = get_tail(target, '@');
-        if (location != NULL) {
+        if (location != nullptr) {
                 domain = get_tail(location, '.');
                 free(location);
                 return(domain);
         } else
-                return(NULL);
+                return(nullptr);
 }
 
 /*
@@ -669,7 +669,7 @@ get_component(char **str, char *comp, char token)
 
 	*comp = 0;
 
-	if (str == NULL)
+	if (str == nullptr)
 		return;
 	else
 		ptr = *str;
@@ -696,7 +696,7 @@ get_last_component(char *head, char **tail, char *comp, char token)
 
 	*comp = 0;
 
-	if (tail == NULL)
+	if (tail == nullptr)
 		return;
 	else
 		cptr = *tail;
@@ -722,7 +722,7 @@ match_forward(char *str1, char *str2)
 {
 	char com1[BUFSIZ], com2[BUFSIZ];
 
-	if (str1 == NULL || str2 == NULL)
+	if (str1 == nullptr || str2 == nullptr)
 		return (B_FALSE);
 
 	while (B_TRUE) {
@@ -769,7 +769,7 @@ match_backward(char *str1, char *str2)
 	char *ptr1, *ptr2;
 	char com1[BUFSIZ], com2[BUFSIZ];
 
-	if (str1 == NULL || str2 == NULL)
+	if (str1 == nullptr || str2 == nullptr)
 		return (B_FALSE);
 
 	len1 = strlen(str1);
@@ -835,7 +835,7 @@ same_path(char *str1, char *str2)
 	char *user;
 	int res, n;
 
-	if (str1 == NULL || str2 == NULL)
+	if (str1 == nullptr || str2 == nullptr)
 		return(B_FALSE);
 
 	/* check format */
@@ -861,14 +861,14 @@ same_user(char *user1, char *user2)
 	char buf[BUFSIZ];
 	boolean_t res;
 
-	if (user1 == NULL || user2 == NULL)
+	if (user1 == nullptr || user2 == nullptr)
 		return B_FALSE;
 
 	/* compare user name */
 	str1 = get_head(user1, '@');
 	str2 = get_head(user2, '@');
 
-	if (str1 == NULL || str2 == NULL) {
+	if (str1 == nullptr || str2 == nullptr) {
 		free(str1);
 		free(str2); /* Handle if only one alloc success */
 		return(B_FALSE);
@@ -884,12 +884,12 @@ same_user(char *user1, char *user2)
 
 	/* if only user name is specified, don't need to check domain */
 	str2 = strchr(user2, '@');
-	if (str2 == NULL)
+	if (str2 == nullptr)
 		return(B_TRUE);
 
 	/* first assume user2=user@domain */
 	str1 = strchr(user1, '.');
-	if (str1 == NULL) {
+	if (str1 == nullptr) {
 		if (same_path(cm_get_local_domain(), ++str2))
 			return(B_TRUE);
 	} else {
@@ -898,7 +898,7 @@ same_user(char *user1, char *user2)
 	}
 
 	/* assume user2=user@host[.domain] */
-	if (str1 == NULL) {
+	if (str1 == nullptr) {
 		str1 = strchr(user1, '@');
 		sprintf(buf, "%s.%s", ++str1, cm_get_local_domain());
 		str1 = buf;
@@ -921,7 +921,7 @@ blank_buf(char *buf)
 {
 	char *ptr = buf;
 
-	if (ptr == NULL) return B_TRUE;
+	if (ptr == nullptr) return B_TRUE;
 	while (ptr && (*ptr == ' ' || *ptr == '\t' || *ptr == '\n'))
 		ptr++;
 	if (*ptr == '\0')
@@ -935,7 +935,7 @@ embedded_blank(char *buf)
 {
         char *ptr = buf;
  
-        if (ptr == NULL) return B_TRUE;
+        if (ptr == nullptr) return B_TRUE;
         while (ptr && *ptr) {
                 if ((*ptr == ' ') || (*ptr == '\t'))
                         return B_TRUE;
@@ -961,7 +961,7 @@ get_data_version(CSA_session_handle session) {
 					 names, 
 					 &number_attrs_returned, 
 					 &attrs_returned, 
-					 NULL) == CSA_SUCCESS) {
+					 nullptr) == CSA_SUCCESS) {
 		ver = attrs_returned[0].value->item.uint32_value;
 		csa_free(attrs_returned);
 	}
@@ -984,7 +984,7 @@ get_server_version(CSA_session_handle session) {
 					 names, 
 					 &number_attrs_returned, 
 					 &attrs_returned, 
-					 NULL) == CSA_SUCCESS) {
+					 nullptr) == CSA_SUCCESS) {
 		ver = attrs_returned[0].value->item.uint32_value;
 		csa_free(attrs_returned);
 	}
@@ -1045,7 +1045,7 @@ parse_date(OrderingType order, SeparatorType sep, char *datestr, char *m,
         d[0] = '\0';
         y[0] = '\0';
  
-        if (datestr == NULL)
+        if (datestr == nullptr)
                 return 0;
  
         tmp_date = cm_strdup(datestr);
@@ -1057,8 +1057,8 @@ parse_date(OrderingType order, SeparatorType sep, char *datestr, char *m,
                         free(tmp_date);
                         return 0;
                 }
-        second = _XStrtok(NULL, str, strtok_buf);
-        third = _XStrtok(NULL, str, strtok_buf);
+        second = _XStrtok(nullptr, str, strtok_buf);
+        third = _XStrtok(nullptr, str, strtok_buf);
  
         switch (order) {
         case ORDER_DMY:
@@ -1099,7 +1099,7 @@ datestr2mdy(char *datestr, OrderingType order, SeparatorType sep, char *buf) {
         char m[3], d[3], y[5];
  
         buf[0] = '\0';
-        if (datestr == NULL)
+        if (datestr == nullptr)
                 return 0;
  
         if (order == ORDER_MDY && sep == SEPARATOR_SLASH)
@@ -1328,7 +1328,7 @@ query_appt_struct(CSA_session_handle session,
 					 appt->names, 
 					 &appt->count, 
 					 &appt->attrs, 
-					 NULL)) == CSA_SUCCESS) {
+					 nullptr)) == CSA_SUCCESS) {
 		set_appt_links(appt);
 		appt->filled = True;
 	}
@@ -1439,7 +1439,7 @@ query_cal_struct(CSA_session_handle session,
 					 cal->names, 
 					 &cal->count, 
 					 &cal->attrs, 
-					 NULL)) == CSA_SUCCESS) {
+					 nullptr)) == CSA_SUCCESS) {
 		set_cal_links(cal);
 		cal->filled = True;
 	}
@@ -1454,23 +1454,23 @@ scrub_cal_attr_list(Dtcm_calendar *cal) {
 
 	for (i = 0; i < cal->count; i++) {
 		if (cal->attrs[i].value->type == CSA_VALUE_REMINDER) {
-			if ((cal->attrs[i].value->item.reminder_value->lead_time == NULL) || 
+			if ((cal->attrs[i].value->item.reminder_value->lead_time == nullptr) || 
 			     (cal->attrs[i].value->item.reminder_value->lead_time[0] == '\0')) {
 				free(cal->attrs[i].name);
-				cal->attrs[i].name = NULL;
+				cal->attrs[i].name = nullptr;
 			}
 		}
-		else if ((cal->attrs[i].value->type == CSA_VALUE_ACCESS_LIST) && (cal->attrs[i].value->item.access_list_value == NULL)) {
+		else if ((cal->attrs[i].value->type == CSA_VALUE_ACCESS_LIST) && (cal->attrs[i].value->item.access_list_value == nullptr)) {
 			free(cal->attrs[i].name);
-			cal->attrs[i].name = NULL;
+			cal->attrs[i].name = nullptr;
 		}
-		else if ((cal->attrs[i].value->type == CSA_VALUE_STRING) && (cal->attrs[i].value->item.string_value == NULL)) {
+		else if ((cal->attrs[i].value->type == CSA_VALUE_STRING) && (cal->attrs[i].value->item.string_value == nullptr)) {
 			free(cal->attrs[i].name);
-			cal->attrs[i].name = NULL;
+			cal->attrs[i].name = nullptr;
 		}
-		else if ((cal->attrs[i].value->type == CSA_VALUE_DATE_TIME) && (cal->attrs[i].value->item.date_time_value == NULL)) {
+		else if ((cal->attrs[i].value->type == CSA_VALUE_DATE_TIME) && (cal->attrs[i].value->item.date_time_value == nullptr)) {
 			free(cal->attrs[i].name);
-			cal->attrs[i].name = NULL;
+			cal->attrs[i].name = nullptr;
 		}
 	}
 }
@@ -1675,7 +1675,7 @@ initialize_cal_attr(int id, CSA_attribute *attrs, Allocation_reason reason, int 
 static void
 free_attr(CSA_attribute *attr) {
 
-	if (attr == NULL)
+	if (attr == nullptr)
 		return;
 
 	if (attr->name)
@@ -1683,11 +1683,11 @@ free_attr(CSA_attribute *attr) {
 
 
 	if (attr->value){
-		if ((attr->value->type == CSA_VALUE_STRING) && attr->value->item.string_value != NULL)
+		if ((attr->value->type == CSA_VALUE_STRING) && attr->value->item.string_value != nullptr)
 			free(attr->value->item.string_value);
-		else if ((attr->value->type == CSA_VALUE_DATE_TIME) && attr->value->item.date_time_value != NULL)
+		else if ((attr->value->type == CSA_VALUE_DATE_TIME) && attr->value->item.date_time_value != nullptr)
 			free(attr->value->item.date_time_value);
-		else if ((attr->value->type == CSA_VALUE_REMINDER) && attr->value->item.reminder_value != NULL) {
+		else if ((attr->value->type == CSA_VALUE_REMINDER) && attr->value->item.reminder_value != nullptr) {
 			if (attr->value->item.reminder_value->lead_time)
 				free(attr->value->item.reminder_value->lead_time);
 			if (attr->value->item.reminder_value->reminder_data.data)
@@ -1747,7 +1747,7 @@ free_appt_struct(Dtcm_appointment **appt) {
 		}
 
 	free(*appt);
-	*appt = NULL;
+	*appt = nullptr;
 }
 
 extern void
@@ -1780,7 +1780,7 @@ free_cal_struct(Dtcm_calendar **cal) {
 		}
 
 	free(*cal);
-	*cal = NULL;
+	*cal = nullptr;
 }
 
 extern void
@@ -1788,28 +1788,28 @@ set_appt_links(Dtcm_appointment *appt) {
 	int	idx;
 	char	*idx_name;
 
-        appt->identifier = NULL;
-        appt->modified_time = NULL;
-        appt->author = NULL;
-	appt->number_recurrence = NULL;
-        appt->time = NULL;
-        appt->type = NULL;
-        appt->subtype = NULL;
-        appt->private = NULL;
-        appt->end_time = NULL;
-        appt->show_time = NULL;
-        appt->what = NULL;
-        appt->state = NULL;
-        appt->repeat_type = NULL;
-        appt->repeat_times = NULL;
-        appt->repeat_interval = NULL;
-        appt->repeat_week_num = NULL;
-        appt->recurrence_rule = NULL;
-        appt->beep = NULL;
-        appt->flash = NULL;
-        appt->mail = NULL;
-        appt->popup = NULL;
-	appt->sequence_end_date = NULL;
+        appt->identifier = nullptr;
+        appt->modified_time = nullptr;
+        appt->author = nullptr;
+	appt->number_recurrence = nullptr;
+        appt->time = nullptr;
+        appt->type = nullptr;
+        appt->subtype = nullptr;
+        appt->private = nullptr;
+        appt->end_time = nullptr;
+        appt->show_time = nullptr;
+        appt->what = nullptr;
+        appt->state = nullptr;
+        appt->repeat_type = nullptr;
+        appt->repeat_times = nullptr;
+        appt->repeat_interval = nullptr;
+        appt->repeat_week_num = nullptr;
+        appt->recurrence_rule = nullptr;
+        appt->beep = nullptr;
+        appt->flash = nullptr;
+        appt->mail = nullptr;
+        appt->popup = nullptr;
+	appt->sequence_end_date = nullptr;
 
 	for (idx = 0; idx < appt->count; idx++) {
 		idx_name = appt->attrs[idx].name;
@@ -1950,10 +1950,10 @@ free_range(CSA_attribute **attrs, CSA_enum **ops, int count) {
 
 	free(*attrs);
 
-	*attrs = NULL;
+	*attrs = nullptr;
 
 	free(*ops);
-	*ops = NULL;
+	*ops = nullptr;
 }
 
 /*
@@ -2020,7 +2020,7 @@ CmDataListAdd(CmDataList *list, void *data, int position)
 	item->data = data;
 
 	/* Insert node into list at appropriate spot */
-	if (list->head == NULL) {
+	if (list->head == nullptr) {
 		list->head = item;
 	} else if (position == 0) {
 		/* Special case.  0 means append to end */
@@ -2029,11 +2029,11 @@ CmDataListAdd(CmDataList *list, void *data, int position)
 		item->next = list->head;
 		list->head = item;
 	} else {
-		for (n = 2, p = list->head; p != NULL && n < position;
+		for (n = 2, p = list->head; p != nullptr && n < position;
 		     p = p->next, n++)
 			;
 
-		if (p == NULL) {
+		if (p == nullptr) {
 			return -1;
 		}
 
@@ -2042,7 +2042,7 @@ CmDataListAdd(CmDataList *list, void *data, int position)
 	}
 
 	/* If new item is at the end of the list, update tail */
-	if (item->next == NULL) {
+	if (item->next == nullptr) {
 		list->tail = item;
 	}
 
@@ -2083,8 +2083,8 @@ CmDataListDeletePos(CmDataList *list, int position, int free_data)
 		position = list->count;
 	}
 
-	if (list->head == NULL) {
-		return NULL;
+	if (list->head == nullptr) {
+		return nullptr;
 	} else if (position == 1) {
 		item = list->head;
 		list->head = item->next;
@@ -2092,12 +2092,12 @@ CmDataListDeletePos(CmDataList *list, int position, int free_data)
 			list->tail = item->next;
 		}
 	} else {
-		for (n = 2, p = list->head; p->next != NULL && n < position;
+		for (n = 2, p = list->head; p->next != nullptr && n < position;
 		     p = p->next, n++)
 			;
 		
-		if (p->next == NULL) {
-			return NULL;
+		if (p->next == nullptr) {
+			return nullptr;
 		}
 
 		item = p->next;
@@ -2113,7 +2113,7 @@ CmDataListDeletePos(CmDataList *list, int position, int free_data)
 	free(item);
 
 	if (free_data) {
-		if (data != NULL) 
+		if (data != nullptr) 
 			free(data);
 		return (void *)1;
 	} else {
@@ -2135,8 +2135,8 @@ CmDataListDeleteAll(CmDataList *list, int free_data)
 	CmDataItem	*p, *tmp;
 
 	p = list->head;
-	while (p != NULL) {
-		if (free_data && p->data != NULL) {
+	while (p != nullptr) {
+		if (free_data && p->data != nullptr) {
 			free(p->data);
 		}
 
@@ -2146,8 +2146,8 @@ CmDataListDeleteAll(CmDataList *list, int free_data)
 	}
 
 	list->count = 0;
-	list->head = NULL;
-	list->tail = NULL;
+	list->head = nullptr;
+	list->tail = nullptr;
 
 	return;
 }
@@ -2163,16 +2163,16 @@ CmDataListGetData(CmDataList *list, int position)
 	CmDataItem	*p, *item;
 	int		n;
 
-	if (list->head == NULL) {
-		return NULL;
+	if (list->head == nullptr) {
+		return nullptr;
 	} else if (position == 0) {
 		data = list->tail->data;
 	} else {
-		for (n = 1, p = list->head; p != NULL && n < position;
+		for (n = 1, p = list->head; p != nullptr && n < position;
 		     p = p->next, n++)
 			;
-		if (p == NULL) {
-			return NULL;
+		if (p == nullptr) {
+			return nullptr;
 		}
 		data = p->data;
 	}
@@ -2193,7 +2193,7 @@ CmDataListDump(CmDataList *list)
 
 	printf("***** %d items:\n", list->count);
 
-	for (p = list->head, n = 1; p != NULL; p = p->next, n++) {
+	for (p = list->head, n = 1; p != nullptr; p = p->next, n++) {
 		printf("%3d: %s\n", n, p->data ? (char *)p->data : "<nil>");
 	}
 

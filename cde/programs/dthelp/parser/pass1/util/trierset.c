@@ -51,7 +51,7 @@ void *m_resettrie(M_TRIE *xtrie, M_WCHAR *p, void *value)
         currentnode = currentnode->next ;
         continue ;
         }
-      else return(NULL) ;
+      else return(nullptr) ;
       }
     }
 

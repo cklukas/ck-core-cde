@@ -89,7 +89,7 @@ util_unbuffer_file(FILE *fp)
     int		iRC= 0;		/* return code */
     int		fileMode= 0;
 
-    setbuf(fp, NULL);
+    setbuf(fp, nullptr);
     /* this is too much - actually waits for sync to disk, and runs
      * RIDICULOUSLY SLOW.
      */
@@ -140,20 +140,20 @@ util_file_name_has_extension(STRING fileName, STRING extension)
 {
     BOOL	hasExtension= FALSE;
 
-    if (extension == NULL)
+    if (extension == nullptr)
     {
-	hasExtension = ( (fileName == NULL) || (strlen(fileName) == 0) );
+	hasExtension = ( (fileName == nullptr) || (strlen(fileName) == 0) );
     }
     else
     {
-	if (fileName == NULL)
+	if (fileName == nullptr)
 	{
 	    hasExtension= FALSE;
 	}
 	else
 	{
 	    char *dotPtr= strrchr(fileName, '.');
-	    if (dotPtr == NULL)
+	    if (dotPtr == nullptr)
 	    {
 		hasExtension= FALSE;
 	    }
@@ -174,7 +174,7 @@ util_file_name_has_ab_extension(STRING fileName)
     BOOL	hasExtension= FALSE;
     char	*dotPtr= strrchr(fileName, '.');
 
-    if (dotPtr != NULL)
+    if (dotPtr != nullptr)
     {
 	hasExtension= (strncmp(dotPtr, ".bi", 3) == 0);
     }
@@ -190,7 +190,7 @@ util_get_file_name_from_path(
 )
 {
     char	*slashPtr= strrchr(path, '/');
-    if (slashPtr == NULL)
+    if (slashPtr == nullptr)
     {
 	strncpy(fileNameBuf, path, fileNameBufSize);
     }
@@ -218,7 +218,7 @@ util_get_dir_name_from_path(
 {
     char	*slashPtr= strrchr(path, '/');
     assert(dirNameBufSize > 1);
-    if (slashPtr == NULL)
+    if (slashPtr == nullptr)
     {
 	/* no directory name */
 	strcpy(dirNameBuf, ".");
@@ -332,12 +332,12 @@ util_cvt_path_to_relative(
 	
     int		return_value = 0;
     BOOL	found_relative= FALSE;
-    STRING	path = NULL;
+    STRING	path = nullptr;
     BOOL	more_path = TRUE;
     char	cwd[MAXPATHLEN]= "";
-    STRING	from= NULL;
-    char	*rightmost_slash= NULL;
-    char	*last_rightmost_slash= NULL;
+    STRING	from= nullptr;
+    char	*rightmost_slash= nullptr;
+    char	*last_rightmost_slash= nullptr;
 
     if (   (path_is_dot(from_dir) && path_is_dot(path_in))
 	|| (util_streq(from_dir, path_in))
@@ -365,7 +365,7 @@ util_cvt_path_to_relative(
      */
     if (path_is_dot(path_in))
     {
-	if (getcwd(cwd, MAXPATHLEN) == NULL)
+	if (getcwd(cwd, MAXPATHLEN) == nullptr)
 	{
 	    return_value = ERR;
 	    goto epilogue;
@@ -383,8 +383,8 @@ util_cvt_path_to_relative(
 	goto epilogue;
     }
 
-    rightmost_slash = NULL;
-    last_rightmost_slash = NULL;
+    rightmost_slash = nullptr;
+    last_rightmost_slash = nullptr;
     more_path = TRUE;
     while ((!found_relative) && more_path)
     {
@@ -398,7 +398,7 @@ util_cvt_path_to_relative(
 	 * Get the name of the next dir up
 	 */
 	rightmost_slash= strrchr(path, '/');
- 	if (last_rightmost_slash != NULL)
+ 	if (last_rightmost_slash != nullptr)
 	{
 	    *last_rightmost_slash = '/';
 	}
@@ -407,7 +407,7 @@ util_cvt_path_to_relative(
 	/*
 	 * Put in a NULL, so that util_paths_are_same_file is happy
 	 */
-	if (rightmost_slash == NULL)
+	if (rightmost_slash == nullptr)
 	{
 	    more_path = FALSE;
 	}
@@ -417,14 +417,14 @@ util_cvt_path_to_relative(
 	}
     }
 
-    if (rightmost_slash != NULL)
+    if (rightmost_slash != nullptr)
     {
 	*rightmost_slash = '/';
     }
 
     if (found_relative)
     {
-	if (rightmost_slash == NULL)
+	if (rightmost_slash == nullptr)
 	{
 	    /* they are the same damn file (directory)! */
 	    strncpy(buf, ".", buf_size);
@@ -461,14 +461,14 @@ util_mkdir_hier(
     STRING path 
 ) 
 {
-    STRING	slash_ptr = NULL;
+    STRING	slash_ptr = nullptr;
     int		ret = 0;	
 
     /* As an example: path -> "x/y/z", so slash_ptr points
      * to the same string.
      */
     slash_ptr = path;
-    while (slash_ptr != NULL)
+    while (slash_ptr != nullptr)
     {
 	/* 1) x/y/z	2) x/y/z	3) x/y/z
 	 *     ^	      ^		       ^	
@@ -482,7 +482,7 @@ util_mkdir_hier(
          *       | 		  |
          *    slash_ptr 	slash_ptr
          */ 
-	if (slash_ptr != NULL) 
+	if (slash_ptr != nullptr) 
 	{
 	   *slash_ptr = 0; 
 	}
@@ -499,7 +499,7 @@ util_mkdir_hier(
 	    return ret;
 	}
 	
-	if ( slash_ptr != NULL )
+	if ( slash_ptr != nullptr )
 	{
             /* 1) x/y/z	     2) x/y/z	   3) slash_ptr == NULL
              *     ^   		   ^
@@ -657,7 +657,7 @@ epilogue:
 FILE *
 util_fopen_locked(const char *filename, const char *accessType)
 {
-    FILE	*file = NULL;
+    FILE	*file = nullptr;
     char	char1 = accessType[0];
     BOOL	charPlus = 
 		    (   (accessType[1] != 0) 
@@ -687,7 +687,7 @@ util_fopen_locked(const char *filename, const char *accessType)
 	case 'w':
 	    errno = 0;
 	    file = fopen(filename, "r+");	/* use existing, first! */
-	    if ((file == NULL) && (errno == ENOENT))
+	    if ((file == nullptr) && (errno == ENOENT))
 	    {
 		file = fopen(filename, accessType);
 	    }
@@ -709,7 +709,7 @@ util_fopen_locked(const char *filename, const char *accessType)
      * Get the appropriate lock on the file.
      * Truncate the file, if necessary.
      */
-    if ((file != NULL) && (lockType != -1))
+    if ((file != nullptr) && (lockType != -1))
     {
 	if (   (util_flock(file, TRUE, lockType, 0, 0) >= 0)
 	    && truncateFile)

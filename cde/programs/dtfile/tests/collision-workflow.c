@@ -43,9 +43,9 @@ static void codec_word(unsigned char *bytes,size_t word,uint32_t value)
 static int codec_case(const char *name)
 {
     DtfileConflictBatch b={0},out={0};
-    DtfileConflictDecision choices[2]={{3,DTFILE_CONFLICT_SKIP,NULL},
+    DtfileConflictDecision choices[2]={{3,DTFILE_CONFLICT_SKIP,nullptr},
                                       {1,DTFILE_CONFLICT_RENAME_INCOMING,"new\n\\\303\251"}};
-    DtfileConflictDecision *answer=NULL;
+    DtfileConflictDecision *answer=nullptr;
     unsigned char bytes[4096];int p[2];size_t n;
     VERIFY(codec_batch(&b)==0);
     if(!strcmp(name,"codec-request-budget") || !strcmp(name,"codec-tagged-request") ||
@@ -59,7 +59,7 @@ static int codec_case(const char *name)
         close(p[1]);
         n=codec_capture(p[0],bytes,sizeof(bytes));close(p[0]);VERIFY(n>40);
         VERIFY(pipe(p)==0);
-        DtfileConflictReader *r=DtfileConflictReaderNew();VERIFY(r!=NULL);
+        DtfileConflictReader *r=DtfileConflictReaderNew();VERIFY(r!=nullptr);
         if(!strcmp(name,"codec-partial-header")) {
             VERIFY(write(p[1],bytes,3)==3);
             VERIFY(DtfileConflictReadAvailable(r,p[0],65536)==0); /* writer ALIVE */
@@ -77,7 +77,7 @@ static int codec_case(const char *name)
         VERIFY(result==1);
         DtfileConflictBatch occupied={0};
         VERIFY(DtfileConflictBatchInit(&occupied,DTFILE_CONFLICT_COPY,1,1)==0);
-        VERIFY(DtfileConflictReaderTake(r,&occupied)<0 && occupied.items!=NULL);
+        VERIFY(DtfileConflictReaderTake(r,&occupied)<0 && occupied.items!=nullptr);
         DtfileConflictBatchFree(&occupied);
         VERIFY(DtfileConflictReaderTake(r,&out)==0);
         VERIFY(out.count==2 && out.items[0].request_index==3 && out.items[1].request_index==1);
@@ -100,7 +100,7 @@ static int codec_case(const char *name)
         else if(!strcmp(fault,"truncated"))--n;
         else { VERIFY(0); }
         VERIFY(pipe(p)==0);VERIFY(write(p[1],bytes,n)==(ssize_t)n);close(p[1]);
-        DtfileConflictReader *r=DtfileConflictReaderNew();VERIFY(r!=NULL);
+        DtfileConflictReader *r=DtfileConflictReaderNew();VERIFY(r!=nullptr);
         int result=0;size_t calls=0;
         while(result==0 && calls++<n+2)result=DtfileConflictReadAvailable(r,p[0],7);
         VERIFY(result<0);int saved=errno;
@@ -113,7 +113,7 @@ static int codec_case(const char *name)
         VERIFY((cancel?DtfileConflictWriteCancel(p[1]):DtfileConflictWriteDecisions(p[1],&b,choices))==0);
         close(p[1]);
         VERIFY(DtfileConflictReadDecisions(p[0],getppid(),&b,&answer)==(cancel?0:1));close(p[0]);
-        if(cancel)VERIFY(answer==NULL);
+        if(cancel)VERIFY(answer==nullptr);
         else {
             VERIFY(answer && answer[0].request_index==3 && answer[1].request_index==1);
             VERIFY(answer[0].action==DTFILE_CONFLICT_SKIP && !answer[0].name);
@@ -138,25 +138,25 @@ static int codec_case(const char *name)
         VERIFY(pipe(p)==0);VERIFY(write(p[1],bytes,n)==(ssize_t)n);close(p[1]);
         answer=(DtfileConflictDecision *)(uintptr_t)1;
         VERIFY(DtfileConflictReadDecisions(p[0],getppid(),&b,&answer)<0);
-        VERIFY(answer==NULL);close(p[0]); /* complete invalid packet publishes NOTHING */
+        VERIFY(answer==nullptr);close(p[0]); /* complete invalid packet publishes NOTHING */
     } else if(!strcmp(name,"codec-owner-mismatch")) {
         VERIFY(pipe(p)==0); /* open writer, no first byte: owner check must abort */
         answer=(DtfileConflictDecision *)(uintptr_t)1;
         VERIFY(DtfileConflictReadDecisions(p[0],getppid()+1,&b,&answer)<0 && errno==ECANCELED);
-        VERIFY(answer==NULL);close(p[0]);close(p[1]);
+        VERIFY(answer==nullptr);close(p[0]);close(p[1]);
     } else if(!strcmp(name,"codec-closed-peer") || !strcmp(name,"codec-pending-sigpipe")) {
         struct sigaction original,action={0},after;
         action.sa_handler=SIG_DFL;sigemptyset(&action.sa_mask);
         VERIFY(sigaction(SIGPIPE,&action,&original)==0);
         sigset_t mask,oldmask,current,pending;sigemptyset(&mask);sigaddset(&mask,SIGPIPE);
-        VERIFY(pthread_sigmask(SIG_SETMASK,NULL,&oldmask)==0);
+        VERIFY(pthread_sigmask(SIG_SETMASK,nullptr,&oldmask)==0);
         int was_pending=!strcmp(name,"codec-pending-sigpipe");
         if(was_pending) {
-            VERIFY(pthread_sigmask(SIG_BLOCK,&mask,NULL)==0);
+            VERIFY(pthread_sigmask(SIG_BLOCK,&mask,nullptr)==0);
             VERIFY(pthread_kill(pthread_self(),SIGPIPE)==0);
             VERIFY(sigpending(&pending)==0 && sigismember(&pending,SIGPIPE)==1);
         } else {
-            VERIFY(pthread_sigmask(SIG_UNBLOCK,&mask,NULL)==0);
+            VERIFY(pthread_sigmask(SIG_UNBLOCK,&mask,nullptr)==0);
         }
         for(int which=0;which<4;++which) {
             VERIFY(pipe(p)==0);close(p[0]);errno=0;
@@ -165,14 +165,14 @@ static int codec_case(const char *name)
                    DtfileConflictWriteTaggedRequest(p[1],14,&b):
                    DtfileConflictWriteDecisions(p[1],&b,choices);
             VERIFY(rc<0 && errno==EPIPE);close(p[1]);
-            VERIFY(sigaction(SIGPIPE,NULL,&after)==0 && after.sa_handler==SIG_DFL);
-            VERIFY(pthread_sigmask(SIG_SETMASK,NULL,&current)==0);
+            VERIFY(sigaction(SIGPIPE,nullptr,&after)==0 && after.sa_handler==SIG_DFL);
+            VERIFY(pthread_sigmask(SIG_SETMASK,nullptr,&current)==0);
             VERIFY(sigismember(&current,SIGPIPE)==was_pending);
             VERIFY(sigpending(&pending)==0 && sigismember(&pending,SIGPIPE)==was_pending);
         }
         if(was_pending) { int sig=0;VERIFY(sigwait(&mask,&sig)==0 && sig==SIGPIPE); }
-        VERIFY(pthread_sigmask(SIG_SETMASK,&oldmask,NULL)==0);
-        VERIFY(sigaction(SIGPIPE,&original,NULL)==0);
+        VERIFY(pthread_sigmask(SIG_SETMASK,&oldmask,nullptr)==0);
+        VERIFY(sigaction(SIGPIPE,&original,nullptr)==0);
     } else { fprintf(stderr,"Unknown codec case %s\n",name);return 2; }
     DtfileConflictBatchFree(&b);printf("PASS %s\n",name);return 0;
 }
@@ -244,7 +244,7 @@ static int model_case(const char *name)
             VERIFY(DtfileConflictDefaultAction(&b,0)==DTFILE_CONFLICT_KEEP_BOTH);
             VERIFY(DtfileConflictActionAllowed(&b,0,DTFILE_CONFLICT_KEEP_BOTH));
             VERIFY(!DtfileConflictChangesExisting(&b,0,DTFILE_CONFLICT_KEEP_BOTH));
-            d.request_index=0;d.action=DTFILE_CONFLICT_KEEP_BOTH;d.name=NULL;
+            d.request_index=0;d.action=DTFILE_CONFLICT_KEEP_BOTH;d.name=nullptr;
             VERIFY(DtfileConflictDecisionValidate(&b,0,&d)==0);
             DtfileConflictBatchFree(&b);
         }
@@ -252,8 +252,8 @@ static int model_case(const char *name)
         VERIFY(DtfileConflictBatchInit(&b,DTFILE_CONFLICT_BUFFER,1,1)==0);
         VERIFY(DtfileConflictSetItem(&b,0,0,0,"/s",2,"/t",2)<0);
         VERIFY(!b.items[0].target);
-        VERIFY(DtfileConflictSetItem(&b,0,0,DTFILE_CONFLICT_SAME_ENTRY,NULL,0,"/t",2)<0);
-        VERIFY(DtfileConflictSetItem(&b,0,0,0,NULL,0,"/t",2)==0);
+        VERIFY(DtfileConflictSetItem(&b,0,0,DTFILE_CONFLICT_SAME_ENTRY,nullptr,0,"/t",2)<0);
+        VERIFY(DtfileConflictSetItem(&b,0,0,0,nullptr,0,"/t",2)==0);
         VERIFY(DtfileConflictBatchValidate(&b)==0 && !b.items[0].source);
     } else if(!strcmp(name,"model-manual-name-and-merge")) {
         VERIFY(DtfileConflictBatchInit(&b,DTFILE_CONFLICT_COPY,2,2)==0);
@@ -270,9 +270,9 @@ static int model_case(const char *name)
         d.name=".";VERIFY(DtfileConflictDecisionValidate(&b,1,&d)<0);
         d.name="..";VERIFY(DtfileConflictDecisionValidate(&b,1,&d)<0);
         d.action=DTFILE_CONFLICT_SKIP;VERIFY(DtfileConflictDecisionValidate(&b,1,&d)<0);
-        d.name=NULL;VERIFY(DtfileConflictDecisionValidate(&b,1,&d)==0);
+        d.name=nullptr;VERIFY(DtfileConflictDecisionValidate(&b,1,&d)==0);
     } else if(!strcmp(name,"model-path-bound")) {
-        char *path=malloc(DTFILE_CONFLICT_PATH_LIMIT+2u);VERIFY(path!=NULL);
+        char *path=malloc(DTFILE_CONFLICT_PATH_LIMIT+2u);VERIFY(path!=nullptr);
         memset(path,'a',DTFILE_CONFLICT_PATH_LIMIT+1u);path[0]='/';path[DTFILE_CONFLICT_PATH_LIMIT+1u]=0;
         VERIFY(DtfileConflictBatchInit(&b,DTFILE_CONFLICT_COPY,1,1)==0);
         VERIFY(DtfileConflictSetItem(&b,0,0,0,path,DTFILE_CONFLICT_PATH_LIMIT+1u,"/t",2)<0);
@@ -283,7 +283,7 @@ static int model_case(const char *name)
     } else { fprintf(stderr,"Unknown model case %s\n",name);return 2; }
     DtfileConflictBatchFree(&b);
     VERIFY(!b.items && !b.count && !b.native_bytes);
-    DtfileConflictBatchFree(&b);DtfileConflictBatchFree(NULL);
+    DtfileConflictBatchFree(&b);DtfileConflictBatchFree(nullptr);
     printf("PASS %s\n",name);return 0;
 }
 int main(int argc,char **argv)
@@ -309,7 +309,7 @@ static int helper_case(const char *name)
     if(!strcmp(name,"helper-paths")) {
         char *path=FileOpPathJoin("/","item");
         VERIFY(path && !strcmp(path,"/item"));XtFree(path);
-        errno=0;VERIFY(FileOpPathJoin("/target","sub/item")==NULL && errno==EINVAL);
+        errno=0;VERIFY(FileOpPathJoin("/target","sub/item")==nullptr && errno==EINVAL);
         path=FileOpDecisionPath("/target/item","renamed");
         VERIFY(path && !strcmp(path,"/target/renamed"));XtFree(path);
         VERIFY(symlink("missing","item_1")==0);

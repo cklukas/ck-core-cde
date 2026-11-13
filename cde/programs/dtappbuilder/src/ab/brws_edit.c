@@ -73,11 +73,11 @@ browser_textf_activate(
     XtPointer call_data
 )
 {
-    ABObj	textf_obj = NULL;
-    VNode	textf_node = NULL;
-    char	*newName = NULL;
+    ABObj	textf_obj = nullptr;
+    VNode	textf_node = nullptr;
+    char	*newName = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &textf_node, NULL); 
+    XtVaGetValues(widget, XmNuserData, &textf_node, nullptr); 
 
     if (!textf_node)
 	return;
@@ -90,7 +90,7 @@ browser_textf_activate(
 	return;
 
     XtUnmanageChild(widget);
-    XtVaSetValues(widget, XmNuserData, NULL, NULL); 
+    XtVaSetValues(widget, XmNuserData, nullptr, nullptr); 
 
     if (!util_streq(obj_get_name(textf_obj), newName))
     {
@@ -133,7 +133,7 @@ brwsP_create_textf(
                                 XmFONT_IS_FONT,
                                 ui->sm_font);
 
-        font_list = XmFontListAppendEntry(NULL, font_list_entry);
+        font_list = XmFontListAppendEntry(nullptr, font_list_entry);
 
         ui->textf = XtVaCreateWidget("change_name",
 			xmTextFieldWidgetClass, 
@@ -148,7 +148,7 @@ brwsP_create_textf(
 			    BlackPixelOfScreen(XtScreen(ui->shell)),
 			XmNforeground,		
 			    WhitePixelOfScreen(XtScreen(ui->shell)),
-			NULL);
+			nullptr);
 		
         XtAddCallback(ui->textf, XmNactivateCallback,
                 browser_textf_activate,
@@ -174,7 +174,7 @@ brwsP_destroy_textf(
     if (ui->textf)
     {
 	XtDestroyWidget(ui->textf);
-	ui->textf = NULL;
+	ui->textf = nullptr;
     }
 }
 
@@ -241,7 +241,7 @@ brwsP_show_textf(
             XmNheight,	elm[elm_pos].height +
 			(2 * BRWS_ELM_BBOX_MARGIN),
             XmNuserData,vnode,
-            NULL);
+            nullptr);
 
         XtManageChild(ui->textf);
     }

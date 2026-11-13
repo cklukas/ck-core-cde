@@ -120,7 +120,7 @@ bl_list_is_changed(Browselist *bl) {
 		XtSetSensitive(bl->ok_button, True);
 		XtSetSensitive(bl->apply_button, True);
 		XtSetSensitive(bl->reset_button, True);
-        	XtVaSetValues(bl->form, XmNdefaultButton, bl->apply_button, NULL);
+        	XtVaSetValues(bl->form, XmNdefaultButton, bl->apply_button, nullptr);
 	}
 }
 
@@ -131,7 +131,7 @@ bl_list_not_changed(Browselist *bl) {
 	XtSetSensitive(bl->ok_button, False);
 	XtSetSensitive(bl->apply_button, False);
 	XtSetSensitive(bl->reset_button, False);
-       	XtVaSetValues(bl->form, XmNdefaultButton, bl->cancel_button, NULL);
+       	XtVaSetValues(bl->form, XmNdefaultButton, bl->cancel_button, nullptr);
 }
 
 static void
@@ -156,7 +156,7 @@ static void
 blist_removenames(Widget widget, XtPointer client_data, XtPointer call_data) {
 	int		i, idx, valid_cnt, *pos_list, pos_cnt;
 	Calendar	*c = (Calendar *)client_data;
-	BlistData	*bd = NULL;
+	BlistData	*bd = nullptr;
 	Browselist	*bl = (Browselist *)c->browselist;
 	int		rejected_name = 0;
 
@@ -269,7 +269,7 @@ blist_addname(Widget widget, XtPointer client_data, XtPointer cbs) {
 	int		insert_location;
 
 
-	XtVaSetValues(bl->form, XmNresizePolicy, XmRESIZE_NONE, NULL);
+	XtVaSetValues(bl->form, XmNresizePolicy, XmRESIZE_NONE, nullptr);
 	bl_clear_pending_change(bl);
 	bl_list_is_changed(bl);
 	set_message(bl->message, " ");
@@ -316,7 +316,7 @@ blist_addname(Widget widget, XtPointer client_data, XtPointer cbs) {
 			CATGETS(c->DT_catd, 1, 604, "is already in the list"));
 		set_message(bl->message, buf);
 	}
-	XtVaSetValues(bl->form, XmNresizePolicy, XmRESIZE_ANY, NULL);
+	XtVaSetValues(bl->form, XmNresizePolicy, XmRESIZE_ANY, nullptr);
 }
 
 /*
@@ -376,9 +376,9 @@ blist_ok(Widget widget, XtPointer client_data, XtPointer call_data) {
 	set_message(bl->message, " ");
 	blist_write_list(bl, p);
 
-	XtVaSetValues(c->browse_button, XmNsubMenuId, NULL, NULL);
+	XtVaSetValues(c->browse_button, XmNsubMenuId, nullptr, nullptr);
 	update_browse_menu_names(c);
-	XtVaSetValues(c->browse_button, XmNsubMenuId, c->browse_menu, NULL);
+	XtVaSetValues(c->browse_button, XmNsubMenuId, c->browse_menu, nullptr);
 	if (b && b->frame)
 		browser_reset_list(c);
 
@@ -402,9 +402,9 @@ blist_apply(Widget widget, XtPointer client_data, XtPointer call_data) {
 	set_message(bl->message, " ");
 	blist_write_list(bl, p);
 
-	XtVaSetValues(c->browse_button, XmNsubMenuId, NULL, NULL);
+	XtVaSetValues(c->browse_button, XmNsubMenuId, nullptr, nullptr);
 	update_browse_menu_names(c);
-	XtVaSetValues(c->browse_button, XmNsubMenuId, c->browse_menu, NULL);
+	XtVaSetValues(c->browse_button, XmNsubMenuId, c->browse_menu, nullptr);
 	if (b && b->frame)
 		browser_reset_list(c);
 }
@@ -453,7 +453,7 @@ blist_init_names(Calendar *c) {
 	blist_name_append(c, get_char_prop(p, CP_DEFAULTCAL), BLIST_ACTIVE);
 
         namelist = cm_strdup(get_char_prop(p, CP_DAYCALLIST));
-	if(namelist == NULL) {
+	if(namelist == nullptr) {
 		return;
 	}
 
@@ -465,7 +465,7 @@ blist_init_names(Calendar *c) {
 	name = strtok(namelist, " ");
 	while (name) {
 		blist_name_append(c, name, BLIST_ACTIVE);
-		name = strtok(NULL, " ");
+		name = strtok(nullptr, " ");
 	}
 	free(namelist);
 }
@@ -477,7 +477,7 @@ blist_init_ui(Calendar *c) {
 	BlistData	*bd;
 	Browselist	*bl = (Browselist *)c->browselist;
 
-	XtVaSetValues(bl->form, XmNresizePolicy, XmRESIZE_NONE, NULL);
+	XtVaSetValues(bl->form, XmNresizePolicy, XmRESIZE_NONE, nullptr);
 	XmListDeleteAllItems(bl->browse_list);
 	for (i = 1; i <= bl->blist_data->count; i++) {
 		bd = (BlistData *)CmDataListGetData(bl->blist_data, i);
@@ -489,7 +489,7 @@ blist_init_ui(Calendar *c) {
 		}
 	}
 	XmTextFieldSetString(bl->username, "");
-	XtVaSetValues(bl->form, XmNresizePolicy, XmRESIZE_ANY, NULL);
+	XtVaSetValues(bl->form, XmNresizePolicy, XmRESIZE_ANY, nullptr);
 }
 
 extern void
@@ -497,7 +497,7 @@ blist_clean(Browselist *bl, Boolean clean_all) {
 	int		i, left_cnt = 1, cnt;
 	BlistData	*bd;
 
-	if (NULL == bl->blist_data) return;
+	if (nullptr == bl->blist_data) return;
 
 	cnt = bl->blist_data->count;
 	for (i = 1; i <= cnt; i++) {
@@ -554,7 +554,7 @@ make_browselist(Calendar *c)
                 XmNtitle, title,
                 XmNallowShellResize, 	True,
 		XmNmappedWhenManaged, 	False,
-		NULL);
+		nullptr);
 	setup_quit_handler(bl->frame, blist_quit_handler, (caddr_t)bl);
 	XtFree(title);
 
@@ -562,14 +562,14 @@ make_browselist(Calendar *c)
                 xmFormWidgetClass, bl->frame,
                 XmNautoUnmanage, 	False,
                 XmNfractionBase, 	5,
-                NULL);
+                nullptr);
 
 	label_str = XmStringCreateLocalized(
 				CATGETS(c->DT_catd, 1, 410, "User Name:"));
        	bl->username_label = XtVaCreateWidget("name_label",
 		xmLabelGadgetClass, bl->form,
 		XmNlabelString, 	label_str,
-               	NULL);
+               	nullptr);
 	XmStringFree(label_str);
 
 	ac = 0;
@@ -587,7 +587,7 @@ make_browselist(Calendar *c)
 		xmPushButtonWidgetClass, bl->edit_rc_mgr,
 		XmNlabelString, 	label_str,
 		XmNnavigationType, 	XmTAB_GROUP,
-               	NULL);
+               	nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(bl->add_button, XmNactivateCallback,
 				blist_addname, (XtPointer)c);
@@ -598,13 +598,13 @@ make_browselist(Calendar *c)
 		xmPushButtonWidgetClass, bl->edit_rc_mgr,
 		XmNlabelString, 	label_str,
 		XmNnavigationType, 	XmTAB_GROUP,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
         XtAddCallback(bl->remove_button, XmNactivateCallback, 
 				blist_removenames, (XtPointer)c);
 	ManageChildren(bl->edit_rc_mgr);
 
-	XtVaGetValues(bl->username_label, XmNwidth, &label_width, NULL);
+	XtVaGetValues(bl->username_label, XmNwidth, &label_width, nullptr);
 
        	bl->username = XtVaCreateWidget("username",
 		xmTextFieldWidgetClass, bl->form,
@@ -616,7 +616,7 @@ make_browselist(Calendar *c)
 		XmNtopAttachment,	XmATTACH_FORM,
 		XmNtopOffset, 		5,
 		XmNcolumns, 		40,
-               	NULL);
+               	nullptr);
 	XtAddCallback(bl->username, XmNactivateCallback, blist_addname,
 				(XtPointer)c);
 	XtAddCallback(bl->username, XmNvalueChangedCallback, 
@@ -629,7 +629,7 @@ make_browselist(Calendar *c)
                 XmNrightAttachment,     XmATTACH_WIDGET,
                 XmNrightWidget,         bl->username,
                 XmNrightOffset,         5,
-                NULL);
+                nullptr);
 
 	label_str = XmStringCreateLocalized(
 			CATGETS(c->DT_catd, 1, 688, "Browse Menu Items"));
@@ -641,7 +641,7 @@ make_browselist(Calendar *c)
 		XmNtopOffset, 		10,
 		XmNleftAttachment, 	XmATTACH_FORM,
 		XmNleftOffset, 		5,
-               	NULL);
+               	nullptr);
 	XmStringFree(label_str);
 
 	bl->message = XtVaCreateWidget("message_text",
@@ -654,7 +654,7 @@ make_browselist(Calendar *c)
 		XmNrightOffset, 	5,
                 XmNbottomAttachment, 	XmATTACH_FORM,
 		XmNbottomOffset, 	5,
-                NULL);
+                nullptr);
 
 	button_form = XtVaCreateWidget("menu_editor_button_form_mgr",
                 xmFormWidgetClass,
@@ -669,7 +669,7 @@ make_browselist(Calendar *c)
                 XmNbottomAttachment,    XmATTACH_WIDGET,
                 XmNbottomWidget,        bl->message,
                 XmNbottomOffset,        5,
-                NULL);
+                nullptr);
 	
 	label_str = XmStringCreateLocalized(CATGETS(c->DT_catd, 1, 655, "OK"));
 	bl->ok_button = XtVaCreateWidget("ok_button",
@@ -683,7 +683,7 @@ make_browselist(Calendar *c)
 		XmNrightPosition, 	1,
 		XmNrightOffset, 	5,
 		XmNbottomAttachment, 	XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(bl->ok_button, XmNactivateCallback, blist_ok,
 		      		(XtPointer)c);
@@ -701,7 +701,7 @@ make_browselist(Calendar *c)
 		XmNrightPosition, 	2,
 		XmNrightOffset, 	5,
 		XmNbottomAttachment, 	XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(bl->apply_button, XmNactivateCallback, blist_apply,
 		      		(XtPointer)c);
@@ -719,7 +719,7 @@ make_browselist(Calendar *c)
 		XmNrightPosition, 	3,
 		XmNrightOffset, 	5,
 		XmNbottomAttachment, 	XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(bl->reset_button, XmNactivateCallback,
 			blist_reset_cb, (XtPointer)c);
@@ -737,7 +737,7 @@ make_browselist(Calendar *c)
 		XmNrightPosition, 	4,
 		XmNrightOffset, 	5,
 		XmNbottomAttachment, 	XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
 	XtAddCallback(bl->cancel_button, XmNactivateCallback, blist_cancel_cb,
 				(XtPointer)c);
@@ -754,7 +754,7 @@ make_browselist(Calendar *c)
 		XmNrightPosition, 	5,
 		XmNrightOffset, 	5,
 		XmNbottomAttachment, 	XmATTACH_FORM,
-                NULL);
+                nullptr);
 	XmStringFree(label_str);
         XtAddCallback(bl->help_button, XmNactivateCallback, 
 		help_cb, MENU_EDITOR_HELP_BUTTON);
@@ -771,7 +771,7 @@ make_browselist(Calendar *c)
                 XmNbottomAttachment,   	XmATTACH_WIDGET,
                 XmNbottomWidget,        button_form,
 		XmNbottomOffset, 	5,
-                NULL);
+                nullptr);
 	ac = 0;
 	XtSetArg(args[ac], XmNvisibleItemCount, 8); ++ac;
 	XtSetArg(args[ac], XmNselectionPolicy, XmMULTIPLE_SELECT); ++ac;
@@ -794,7 +794,7 @@ make_browselist(Calendar *c)
 		XmNbottomWidget, 	separator,
 		XmNbottomOffset,	5,
 		XmNwidth, 50,
-		NULL);
+		nullptr);
 	XtManageChild(bl->browse_list);
 
         XtAddCallback(bl->browse_list, XmNmultipleSelectionCallback, 
@@ -806,9 +806,9 @@ make_browselist(Calendar *c)
         /*
 	 * Set default button
 	 */
-        XtVaSetValues(bl->form, XmNcancelButton, bl->cancel_button, NULL);
+        XtVaSetValues(bl->form, XmNcancelButton, bl->cancel_button, nullptr);
         XmProcessTraversal(bl->username, XmTRAVERSE_CURRENT);
-        XtVaSetValues(bl->form, XmNinitialFocus, bl->username, NULL);
+        XtVaSetValues(bl->form, XmNinitialFocus, bl->username, nullptr);
 
 	/*
 	 * For storing the list of names
@@ -821,20 +821,20 @@ extern void
 show_browselist(Calendar *c) {
 	Browselist	*bl;
 
-	if (c->browselist == NULL)
+	if (c->browselist == nullptr)
 		c->browselist = (caddr_t)ckalloc(sizeof(Browselist));
 	bl = (Browselist *)c->browselist;
 
 	if (!bl->frame)
 		make_browselist(c);
 	blist_reset(c);
-        XtVaSetValues(bl->frame, XmNmappedWhenManaged, True, NULL);
+        XtVaSetValues(bl->frame, XmNmappedWhenManaged, True, nullptr);
         /*
 	 * Set default button
 	 */
-        XtVaSetValues(bl->form, XmNcancelButton, bl->cancel_button, NULL);
+        XtVaSetValues(bl->form, XmNcancelButton, bl->cancel_button, nullptr);
         XmProcessTraversal(bl->username, XmTRAVERSE_CURRENT);
-        XtVaSetValues(bl->form, XmNinitialFocus, bl->username, NULL);
+        XtVaSetValues(bl->form, XmNinitialFocus, bl->username, nullptr);
 
 	XtPopup(bl->frame, XtGrabNone);
 	set_message(bl->message, "\0");

@@ -108,7 +108,7 @@ def main(argv=None):
     try:
         record["transfer_extraction"] = extraction["extract"](source, work, include_workers=False)
         raw = (source / "Trash.c").read_bytes()
-        text = raw.decode("utf-8")
+        text = re.sub(r"\bnullptr\b", "NULL", raw.decode("utf-8"))
         record["trash_sha256"] = sha(raw)
         record["metadata_sources"] = {name: sha((source / name).read_bytes())
                                       for name in ("TrashMetadata.c", "TrashMetadata.h", "dtcopy/fsrtns.c", "dtcopy/fsrtns.h")}
@@ -145,7 +145,7 @@ def main(argv=None):
         for original, name in ((base, "transfer-base.c"), (harness, harness.name)):
             (work / name).write_bytes(original.read_bytes())
         binary = work / "restore-workflow"
-        command = [*shlex.split(env.get("CC", "cc")), "-std=c11", "-D_POSIX_C_SOURCE=200809L",
+        command = [*shlex.split(env.get("CC", "cc")), "-std=gnu23", "-D_POSIX_C_SOURCE=200809L",
                    "-D_DEFAULT_SOURCE", "-D_XOPEN_SOURCE=700", "-O0", "-g", "-Wall", "-Wextra", "-Werror",
                    "-Wno-unused-parameter", "-Wno-unused-variable", "-Wno-unused-function",
                    "-Wno-unused-but-set-variable",

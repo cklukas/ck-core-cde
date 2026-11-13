@@ -62,9 +62,9 @@ TREE *gettreenode(void)
     TREE *new ;
 
     new = (TREE *) m_malloc(sizeof(TREE), "tree node") ;
-    new->first = new->right = new->parent = NULL ;
+    new->first = new->right = new->parent = nullptr ;
     new->connector = new->occurrence = M_NULLVAL ;
-    new->value = NULL ;
+    new->value = nullptr ;
     new->terminal = FALSE ;
     new->minim = FALSE ;
     new->eltid = eltsinrule++ ;

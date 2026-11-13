@@ -324,7 +324,7 @@ void m_getline(M_WCHAR **file, int *line)
         if (m_opene[i - 1]->type == M_SYSTEM) break;
       *file = m_opene[i - 1]->content;
       }
-    else *file = NULL;
+    else *file = nullptr;
     *line = m_line[m_sysecnt];
     }
 
@@ -403,7 +403,7 @@ M_WCHAR *m_thisfile(void)
         if (m_opene[i - 1]->type == M_SYSTEM)
           return(m_opene[i - 1]->content);
       }
-    return(NULL);
+    return(nullptr);
     }
 
 /* Return the line number in the current input file */

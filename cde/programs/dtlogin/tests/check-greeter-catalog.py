@@ -118,7 +118,7 @@ with tempfile.TemporaryDirectory(prefix="greeter-catalog-", dir=os.environ.get("
     c, binary = Path(work) / "catalog.c", Path(work) / "catalog"
     c.write_text(header + decl + text[start:end] + main)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=gnu99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Wno-unused-function",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Wno-unused-function",
                     "-fsanitize=address,undefined", "-g", str(c), "-o", str(binary)], check=True)
     for name in scenarios:
         r = subprocess.run([str(binary), name], capture_output=True, text=True)

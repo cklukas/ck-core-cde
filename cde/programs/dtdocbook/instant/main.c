@@ -236,8 +236,8 @@ static int DefaultOutputString(ClientData clientData,
 			       int argc,
 			       const char *argv[])
 {
-    char *string = NULL, *pString = NULL;
-    const char *pArgv = NULL;
+    char *string = nullptr, *pString = nullptr;
+    const char *pArgv = nullptr;
     int retCode = 0, stringLength = 0;
 
     if (argc < 2) {
@@ -281,7 +281,7 @@ static int DefaultOutputString(ClientData clientData,
 
     /* put the string to the output */
     retCode = Tcl_VarEval(interpreter, "puts -nonewline ", string,
-                          (char *)NULL);
+                          (char *)nullptr);
 #if 0
     /* JET*/
     if (retCode != TCL_OK)
@@ -560,7 +560,7 @@ static char *help_msg[] = {
   "  -Dvar=val Set variable 'var' to value 'val'",
   "  file      Take input from named file.  If not specified, assume stdin.",
   "            File should be output from the 'sgmls' program (ESIS).",
-  NULL
+  nullptr
 };
 
 static void
@@ -854,7 +854,7 @@ ReadESIS(
     }
     fprintf(stderr, "Error: End of ReadESIS - should not be here: %s\n", e->gi);
     free(buf);
-    return NULL;
+    return nullptr;
 }
 
 /* ______________________________________________________________________ */
@@ -873,7 +873,7 @@ ReadInstance(
     char	*idatt;
 
     if (filename) {	/* if we specified input file.  else stdin */
-	if ((fp=fopen(filename, "r")) == NULL) {
+	if ((fp=fopen(filename, "r")) == nullptr) {
 	    perror(filename);
 	    exit(1);
 	}

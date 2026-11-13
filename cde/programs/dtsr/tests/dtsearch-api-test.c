@@ -31,9 +31,9 @@ split_keys(char *list, char **keys, int max)
     int count = 0;
     char *key = strtok(list, " \n");
 
-    while (key != NULL && count < max) {
+    while (key != nullptr && count < max) {
 	keys[count++] = key;
-	key = strtok(NULL, " \n");
+	key = strtok(nullptr, " \n");
     }
     qsort(keys, (size_t) count, sizeof(keys[0]), compare_keys);
     return count;
@@ -46,7 +46,7 @@ check_query(char *dbname, char type, char *query, char *expected_list)
     static char *expected[MAX_KEYS];
     static char *found[MAX_KEYS];
     static char stems[DtSrMAX_STEMCOUNT * DtSrMAXWIDTH_HWORD + 8];
-    DtSrResult *results = NULL, *result;
+    DtSrResult *results = nullptr, *result;
     long resultscount = 0;
     int stemcount = 0;
     int must_fail = (expected_list[0] == '!');
@@ -62,14 +62,14 @@ check_query(char *dbname, char type, char *query, char *expected_list)
     }
     expected_count = split_keys(expected_list, expected, MAX_KEYS);
 
-    rc = DtSearchQuery(query, dbname, type, NULL, NULL, &results,
+    rc = DtSearchQuery(query, dbname, type, nullptr, nullptr, &results,
 		       &resultscount, stems, &stemcount);
     if (must_fail) {
 	/* a damaged index: the search ends with an error and says why */
 	const char *messages = DtSearchGetMessages();
 
 	if ((rc == DtSrOK || rc == DtSrNOTAVAIL) ||
-	    messages == NULL || strstr(messages, reason) == NULL) {
+	    messages == nullptr || strstr(messages, reason) == nullptr) {
 	    fprintf(stderr, "FAIL %c '%s': the search returned %d: %s\n", type,
 		    query, rc, messages ? messages : "(no message)");
 	    DtSearchFreeMessages();
@@ -87,7 +87,7 @@ check_query(char *dbname, char type, char *query, char *expected_list)
 	DtSearchFreeMessages();
 	return 1;
     }
-    for (result = results; result != NULL && found_count < MAX_KEYS;
+    for (result = results; result != nullptr && found_count < MAX_KEYS;
 	 result = result->link)
 	found[found_count++] = result->reckey;
     qsort(found, (size_t) found_count, sizeof(found[0]), compare_keys);
@@ -117,7 +117,7 @@ check_query(char *dbname, char type, char *query, char *expected_list)
 int
 main(int argc, char **argv)
 {
-    char **dbnames = NULL;
+    char **dbnames = nullptr;
     int dbcount = 0;
     FILE *queries;
     static char line[1 << 17];
@@ -127,7 +127,7 @@ main(int argc, char **argv)
 	fprintf(stderr, "usage: %s OCF-FILE QUERY-FILE\n", argv[0]);
 	return 2;
     }
-    if (DtSearchInit(argv[0], "apitest", DtSrInNOLOCALE, argv[1], NULL,
+    if (DtSearchInit(argv[0], "apitest", DtSrInNOLOCALE, argv[1], nullptr,
 		     &dbnames, &dbcount) != DtSrOK || dbcount < 1) {
 	fprintf(stderr, "cannot start the engine: %s\n",
 		DtSearchGetMessages());
@@ -135,19 +135,19 @@ main(int argc, char **argv)
     }
     DtSearchSetMaxResults(100000);
 
-    if ((queries = fopen(argv[2], "r")) == NULL) {
+    if ((queries = fopen(argv[2], "r")) == nullptr) {
 	perror(argv[2]);
 	return 2;
     }
-    while (fgets(line, sizeof(line), queries) != NULL) {
+    while (fgets(line, sizeof(line), queries) != nullptr) {
 	char *query = strchr(line, '\t');
 	char *expected;
 
-	if (query == NULL)
+	if (query == nullptr)
 	    continue;
 	*query++ = '\0';
 	expected = strchr(query, '\t');
-	if (expected == NULL)
+	if (expected == nullptr)
 	    continue;
 	*expected++ = '\0';
 	failures += check_query(dbnames[0], line[0], query, expected);

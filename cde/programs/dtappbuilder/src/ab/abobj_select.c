@@ -161,7 +161,7 @@ abobj_select(
 
     selObj = objxm_comp_get_subobj(rootObj, AB_CFG_SELECT_OBJ);
 
-    if (selObj == NULL)
+    if (selObj == nullptr)
     {
         if (util_get_verbosity() > 0)
             fprintf(stderr, "abobj_select: %s :no selection object\n",
@@ -205,7 +205,7 @@ abobj_deselect(
 
     selObj = objxm_comp_get_subobj(rootObj, AB_CFG_SELECT_OBJ);
 
-    if (selObj == NULL)
+    if (selObj == nullptr)
     {
         if (util_get_verbosity() > 0)
             fprintf(stderr, "abobj_deselect: %s :no selection object\n",
@@ -228,11 +228,11 @@ abobj_deselect_all(
     ABObj           obj = root;
     AB_TRAVERSAL    trav;
  
-    if (obj == NULL)
+    if (obj == nullptr)
         return;
  
     for (trav_open(&trav, obj, AB_TRAV_UI);
-        (obj = trav_next(&trav)) != NULL; )
+        (obj = trav_next(&trav)) != nullptr; )
     {
         if (obj_is_selected(obj))
             abobj_deselect(obj);
@@ -247,7 +247,7 @@ abobj_deselect_all(
     if (obj_is_project(root))
     {
         for (trav_open(&trav, root, AB_TRAV_MODULES);
-            (obj = trav_next(&trav)) != NULL; )
+            (obj = trav_next(&trav)) != nullptr; )
         {
             if (obj_is_selected(obj))
                 abobj_deselect(obj);
@@ -281,14 +281,14 @@ abobj_get_selected(
     AB_TRAVERSAL    trav;
 
     sel->count = 0;
-    sel->list  = NULL;
+    sel->list  = nullptr;
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return -1;
 
     /* First count up all selected objs */
     for (trav_open(&trav, obj, AB_TRAV_SALIENT_UI);
-        (obj = trav_next(&trav)) != NULL; )
+        (obj = trav_next(&trav)) != nullptr; )
     {
     	if (obj_is_selected(obj) && 
 	    !(obj_is_item(obj) && !include_items) &&
@@ -305,7 +305,7 @@ abobj_get_selected(
 	sel->list = (ABObj*)XtMalloc(sel->count * sizeof(ABObj));
 
         for (trav_open(&trav, obj, AB_TRAV_SALIENT_UI);
-	    (obj = trav_next(&trav)) != NULL; )
+	    (obj = trav_next(&trav)) != nullptr; )
 	{
 	    if (obj_is_selected(obj) && 
 		!(obj_is_item(obj) && !include_items) &&
@@ -377,7 +377,7 @@ select_feedback(
 
     selWidget = (Widget)selObj->ui_handle;
 
-    if (selWidget == NULL)
+    if (selWidget == nullptr)
     {
         if (util_get_verbosity() > 0)
             fprintf(stderr, "select_feedback: %s :no selection widget\n",
@@ -391,10 +391,10 @@ select_feedback(
         XtVaSetValues(selWidget, 
 			XmNborderWidth,   (XtArgVal)2, 
 			XmNborderColor,	  contrast,
-			NULL);
+			nullptr);
     }
     else
-        XtVaSetValues(selWidget, XmNborderWidth,   (XtArgVal)0, NULL);
+        XtVaSetValues(selWidget, XmNborderWidth,   (XtArgVal)0, nullptr);
  
 }
 
@@ -419,7 +419,7 @@ select_footer(
 	XtVaSetValues(selWidget,
 		XmNlabelString,		xmstr,
 		XmNforeground,		contrast,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
     }
     else /* off */
@@ -427,7 +427,7 @@ select_footer(
         xmstr = XmStringCreateLocalized("         "); 
         XtVaSetValues(selWidget, 
                 XmNlabelString,         xmstr, 
-                NULL);
+                nullptr);
         XmStringFree(xmstr); 
     }
 
@@ -448,7 +448,7 @@ turnon_select_feedback(
 
     selWidget = (Widget)selObj->ui_handle;
 
-    if (selWidget == NULL)
+    if (selWidget == nullptr)
         return;
 
     draw_select_feedback(selObj, resizable);
@@ -476,7 +476,7 @@ turnoff_select_feedback(
  
     selWidget = (Widget)selObj->ui_handle;
  
-    if (selWidget == NULL)
+    if (selWidget == nullptr)
         return;
 
     x_get_widget_rect(selWidget, &w_rect);
@@ -488,7 +488,7 @@ turnoff_select_feedback(
                 monitor_cursor, (XtPointer)selObj);
 	
     /* Make sure cursor is reset to normal */
-    monitor_cursor(selWidget, selObj, NULL, NULL); 
+    monitor_cursor(selWidget, selObj, nullptr, nullptr); 
 
     ui_refresh_widget_tree(selWidget);
 
@@ -527,18 +527,18 @@ draw_select_feedback(
 
 	XtVaGetValues((Widget)swobj->ui_handle,
 		XmNclipWindow,	&cwidget,
-		NULL);
+		nullptr);
 
 	if (cwidget)
 	{
 	    XtVaGetValues(cwidget,
                 XtNwidth,     &width,
                 XtNheight,    &height,
-		NULL);
+		nullptr);
 
 	    XtVaGetValues(selWidget,
 		XtNbackground, &bg,
-		NULL);
+		nullptr);
 	}
     }
 
@@ -547,7 +547,7 @@ draw_select_feedback(
             	XtNwidth,     &width, 
             	XtNheight,    &height, 
             	XtNbackground,&bg,
-            	NULL);
+            	nullptr);
 
 /*
     if (obj_is_control(obj))
@@ -644,7 +644,7 @@ monitor_cursor(
     Display          *dpy;
 
 
-    if (event != NULL)
+    if (event != nullptr)
     {
     	if (event->type != MotionNotify)
             return;
@@ -689,7 +689,7 @@ select_feedback_redraw(
     Boolean   *cont_dispatch
 )
 {
-    ABObj	selObj = NULL;
+    ABObj	selObj = nullptr;
     BOOL	resizable = (BOOL)((uintptr_t) clientdata);
     Boolean     redraw = FALSE;
 

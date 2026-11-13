@@ -225,7 +225,7 @@ BuildPrinterLists(
      * get the list of servers
      */
     server_list = _DtPrintGetXpServerList(w);
-    if((String*)NULL == server_list)
+    if((String*)nullptr == server_list)
 	return DtPRINT_FAILURE;
     /*
      * get the printer list for each valid Xp server
@@ -245,7 +245,7 @@ BuildPrinterLists(
 	 * ensure the server is a valid Xp server
 	 */
 	display = XOpenDisplay(server_list[i]);
-	if((Display*)NULL == display)
+	if((Display*)nullptr == display)
 	    continue;
 #if 0 && defined(PRINTING_SUPPORTED)
 	if(!XpQueryExtension(display, &event_base, &error_base))
@@ -266,7 +266,7 @@ BuildPrinterLists(
 	 */
 #if 0 && defined(PRINTING_SUPPORTED)
 	xp_printer_list =
-	    XpGetPrinterList(display, (char*)NULL,
+	    XpGetPrinterList(display, (char*)nullptr,
 			     &dpd->printer_counts[dpd->xp_server_count]);
 #endif /* PRINTING_SUPPORTED */
 	/*
@@ -338,7 +338,7 @@ BuildPrinterSelectionItems(
 {
     XmStringTable items;
     int i, j;
-    char* buf = (char*)NULL;
+    char* buf = (char*)nullptr;
     Cardinal buf_size = 0;
     Cardinal new_size;
     int current_item;
@@ -382,7 +382,7 @@ BuildPrinterSelectionItems(
 		 * chop the description after the 1st line
 		 */
 		char* ptr = Dt_strchr(desc, '\n');
-		if((char*)NULL != ptr)
+		if((char*)nullptr != ptr)
 		    *ptr = '\0';
 	    }
 	    /*
@@ -432,7 +432,7 @@ static void
 CloseSelectPrinterInfoConnection(
 				 DtPrintDefaultProcData* dpd)
 {
-    if((Display*)NULL != dpd->select_printer_info_display)
+    if((Display*)nullptr != dpd->select_printer_info_display)
     {
 #if 0 && defined(PRINTING_SUPPORTED)
 	if((XPContext)None != dpd->select_printer_info_context)
@@ -443,7 +443,7 @@ CloseSelectPrinterInfoConnection(
 	}
 #endif /* PRINTING_SUPPORTED */
 	XCloseDisplay(dpd->select_printer_info_display);
-	dpd->select_printer_info_display = (Display*)NULL;
+	dpd->select_printer_info_display = (Display*)nullptr;
     }
 }
 
@@ -490,7 +490,7 @@ CompoundTextToString(
 {
     String str = (String)NULL;
 
-    if((unsigned char*)NULL != compound_text)
+    if((unsigned char*)nullptr != compound_text)
     {
 	XTextProperty text_prop;
 	char** list;
@@ -646,7 +646,7 @@ CreatePrinterInfoBox(
 	XtVaCreateManagedWidget("PrinterInfoForm", xmFormWidgetClass,
 				dpd->printer_info_box,
 				XmNallowOverlap, False,
-				NULL);
+				nullptr);
     /*
      * printer description
      */
@@ -659,7 +659,7 @@ CreatePrinterInfoBox(
 				XmNleftAttachment,   XmATTACH_FORM,
 				XmNtopAttachment,    XmATTACH_FORM,
 				XmNtopOffset,        5,
-				NULL);
+				nullptr);
     XmStringFree(label);
     description = 
 	XtVaCreateManagedWidget("Description",
@@ -671,7 +671,7 @@ CreatePrinterInfoBox(
 				XmNleftOffset,       10,
 				XmNtopAttachment,    XmATTACH_OPPOSITE_WIDGET,
 				XmNtopWidget,        description_label,
-				NULL);
+				nullptr);
     /*
      * printer name
      */
@@ -685,7 +685,7 @@ CreatePrinterInfoBox(
 				XmNtopAttachment,    XmATTACH_WIDGET,
 				XmNtopWidget,        description,
 				XmNtopOffset,        5,
-				NULL);
+				nullptr);
     XmStringFree(label);
     name = 
 	XtVaCreateManagedWidget("Name",
@@ -696,7 +696,7 @@ CreatePrinterInfoBox(
 				XmNleftOffset,       10,
 				XmNtopAttachment,    XmATTACH_OPPOSITE_WIDGET,
 				XmNtopWidget,        name_label,
-				NULL);
+				nullptr);
     /*
      * printer format
      */
@@ -710,7 +710,7 @@ CreatePrinterInfoBox(
 				XmNtopAttachment,    XmATTACH_WIDGET,
 				XmNtopWidget,        name_label,
 				XmNtopOffset,        5,
-				NULL);
+				nullptr);
     XmStringFree(label);
     format = 
 	XtVaCreateManagedWidget("Format",
@@ -721,7 +721,7 @@ CreatePrinterInfoBox(
 				XmNleftOffset,       10,
 				XmNtopAttachment,    XmATTACH_OPPOSITE_WIDGET,
 				XmNtopWidget,        format_label,
-				NULL);
+				nullptr);
     /*
      * printer model
      */
@@ -735,7 +735,7 @@ CreatePrinterInfoBox(
 				XmNtopAttachment,    XmATTACH_WIDGET,
 				XmNtopWidget,        format_label,
 				XmNtopOffset,        5,
-				NULL);
+				nullptr);
     XmStringFree(label);
     model = 
 	XtVaCreateManagedWidget("Model",
@@ -747,7 +747,7 @@ CreatePrinterInfoBox(
 				XmNleftOffset,       10,
 				XmNtopAttachment,    XmATTACH_OPPOSITE_WIDGET,
 				XmNtopWidget,        model_label,
-				NULL);
+				nullptr);
     /*
      * return
      */
@@ -1000,11 +1000,11 @@ FindSelectedPrinter(
     /*
      * return if any of the structures are not in place
      */
-    if(dpd->xp_server_list == (String*)NULL
+    if(dpd->xp_server_list == (String*)nullptr
        ||
-       dpd->printer_counts == (int*)NULL
+       dpd->printer_counts == (int*)nullptr
        ||
-       dpd->printer_lists == (DtPrintSelectPrinterList*)NULL)
+       dpd->printer_lists == (DtPrintSelectPrinterList*)nullptr)
     {
 	return (String)NULL;
     }
@@ -1084,9 +1084,9 @@ FreeSelectPrinterData(
 	XtFree((char*)printer_list);
     }
     XtFree((char*)dpd->printer_lists);
-    dpd->printer_lists = (DtPrintSelectPrinterList*)NULL;
+    dpd->printer_lists = (DtPrintSelectPrinterList*)nullptr;
     XtFree((char*)dpd->xp_server_list);
-    dpd->xp_server_list = (String*)NULL;
+    dpd->xp_server_list = (String*)nullptr;
     dpd->xp_server_count = 0;
     dpd->selected_printer = 0;
 }
@@ -1192,7 +1192,7 @@ InfoBoxLayoutCB(
      */
     for(i = 0, widest = 0, max_width = 0; i < 4; i++)
     {
-	XtVaGetValues(w[i], XmNwidth, &width, NULL);
+	XtVaGetValues(w[i], XmNwidth, &width, nullptr);
 	if(width > max_width)
 	{
 	    widest = i;
@@ -1205,7 +1205,7 @@ InfoBoxLayoutCB(
      * widget's many talents is the inability to manage the vertical and
      * horizontal attachments independently...
      */
-    XtVaSetValues(w[widest], XmNtopAttachment, XmATTACH_SELF, NULL);
+    XtVaSetValues(w[widest], XmNtopAttachment, XmATTACH_SELF, nullptr);
     /*
      * attach the right side of the smaller labels to the right side of
      * the widest label
@@ -1216,7 +1216,7 @@ InfoBoxLayoutCB(
 			  XmNleftAttachment, XmATTACH_NONE,
 			  XmNrightAttachment, XmATTACH_OPPOSITE_WIDGET,
 			  XmNrightWidget, w[widest],
-			  NULL);
+			  nullptr);
 }
 
 /*
@@ -1471,7 +1471,7 @@ static void PresentHelp(
 		  DtNhelpVolume, help_volume,
 		  DtNlocationId, location_id,
 		  DtNhelpType, DtHELP_TYPE_TOPIC,
-		  NULL);
+		  nullptr);
     /*
      * pop up the help dialog
      */
@@ -1689,7 +1689,7 @@ SelectPrinterCB(
 	printer_spec = FindSelectedPrinter(XtDisplay(psub), dpd);
 	if((String)NULL != printer_spec)
 	{
-	    XtVaSetValues(psub, DtNprinterName, printer_spec, NULL);
+	    XtVaSetValues(psub, DtNprinterName, printer_spec, nullptr);
 	    XtFree(printer_spec);
 	}
 	/*
@@ -1790,8 +1790,8 @@ SelectPrinterInfoCB(
     DtPrintSetupProc info_proc;
 
     CloseSelectPrinterInfoConnection(dpd);
-    XtVaGetValues(psub, DtNprinterInfoProc, &info_proc, NULL);
-    if(info_proc != NULL)
+    XtVaGetValues(psub, DtNprinterInfoProc, &info_proc, nullptr);
+    if(info_proc != nullptr)
     {
 	String printer_spec;
 	
@@ -1912,7 +1912,7 @@ SetListBoxSelection(Widget list_box, int position)
     XtVaGetValues(list_box,
 		  XmNitemCount, &item_count,
 		  XmNvisibleItemCount, &visible_item_count,
-		  NULL);
+		  nullptr);
 
     if(item_count > visible_item_count)
     {
@@ -1962,13 +1962,13 @@ UpdateFileNameCB(
     text_field = XtNameToWidget(w, "Text");
     if(text_field)
     {
-	XtVaGetValues(text_field, XmNvalue, &file_name, NULL);
+	XtVaGetValues(text_field, XmNvalue, &file_name, nullptr);
 	if(file_name)
 	{
 	    /*
 	     * set the file name in the print setup box
 	     */
-	    XtVaSetValues(psub, DtNfileName, file_name, NULL);
+	    XtVaSetValues(psub, DtNfileName, file_name, nullptr);
 	    /*
 	     * free the file name retrieved from the text field
 	     */
@@ -2000,11 +2000,11 @@ _DtPrintDefProcInitialize(Widget w)
     dpd->file_selection_box = (Widget)NULL;
     dpd->printer_selection_box = (Widget)NULL;
     dpd->printer_list_box = (Widget)NULL;
-    dpd->xp_server_list = (String*)NULL;
+    dpd->xp_server_list = (String*)nullptr;
     dpd->xp_server_count = 0;
-    dpd->printer_lists = (DtPrintSelectPrinterList*)NULL;
+    dpd->printer_lists = (DtPrintSelectPrinterList*)nullptr;
     dpd->selected_printer = 0;
-    dpd->select_printer_info_display = (Display*)NULL;
+    dpd->select_printer_info_display = (Display*)nullptr;
 #if 0 && defined(PRINTING_SUPPORTED)
     dpd->select_printer_info_context = (XPContext)None;
 #endif /* PRINTING_SUPPORTED */
@@ -2055,13 +2055,13 @@ _DtPrintSetupBoxXPrinterInfoProc(
     Widget wmshell_ancestor;
     Widget ctl;
     XmString label;
-    char* attr_value_ct = NULL;
-    String attr_value = NULL;
+    char* attr_value_ct = nullptr;
+    String attr_value = nullptr;
     XmString empty_label;
     Widget name_label_top;
     Position max_y, y;
     Dimension height;
-    Widget manager = NULL;
+    Widget manager = nullptr;
     Widget dialog_shell;
     
     wmshell_ancestor = GetWMShellAncestor(w);
@@ -2088,21 +2088,21 @@ _DtPrintSetupBoxXPrinterInfoProc(
 	manager = XtNameToWidget(dpd->printer_info_box, "*PrinterInfoForm");
 	XtUnmapWidget(dpd->printer_info_box);
 	dialog_shell = XtParent(dpd->printer_info_box);
-	XtVaSetValues(dialog_shell, XmNallowShellResize, False, NULL);
+	XtVaSetValues(dialog_shell, XmNallowShellResize, False, nullptr);
 	XtUnmanageChild(manager);
     }
     /*
      * description
      */
     ctl = XtNameToWidget(dpd->printer_info_box, "*Description");
-    XtVaSetValues(ctl, XmNlabelString, empty_label, NULL);
+    XtVaSetValues(ctl, XmNlabelString, empty_label, nullptr);
 #if 0 && defined(PRINTING_SUPPORTED)
     attr_value_ct = XpGetOneAttribute(print_data->print_display,
 				      print_data->print_context,
 				      XPPrinterAttr,
 				      "descriptor");
 #endif /* PRINTING_SUPPORTED */
-    if((char*)NULL != attr_value_ct)
+    if((char*)nullptr != attr_value_ct)
     {
 	attr_value =
 	    CompoundTextToString(XtDisplay(w), (unsigned char*)attr_value_ct);
@@ -2112,34 +2112,34 @@ _DtPrintSetupBoxXPrinterInfoProc(
 	    label = XmStringGenerate((XtPointer)attr_value, (XmStringTag)NULL,
 				     XmMULTIBYTE_TEXT, (XmStringTag)NULL);
 	    XtFree(attr_value);
-	    XtVaSetValues(ctl, XmNlabelString, label, NULL);
+	    XtVaSetValues(ctl, XmNlabelString, label, nullptr);
 	    XmStringFree(label);
 	}
     }
     /*
      * set the top attachment for the name label
      */
-    XtVaGetValues(ctl, XmNy, &y, XmNheight, &height, NULL);
+    XtVaGetValues(ctl, XmNy, &y, XmNheight, &height, nullptr);
     max_y = y + height;
     name_label_top = ctl;
     ctl = XtNameToWidget(dpd->printer_info_box, "*DescriptionLabel");
-    XtVaGetValues(ctl, XmNy, &y, XmNheight, &height, NULL);
+    XtVaGetValues(ctl, XmNy, &y, XmNheight, &height, nullptr);
     if(y+height > max_y)
 	name_label_top = ctl;
     ctl = XtNameToWidget(dpd->printer_info_box, "*NameLabel");
-    XtVaSetValues(ctl, XmNtopWidget, name_label_top, NULL);
+    XtVaSetValues(ctl, XmNtopWidget, name_label_top, nullptr);
     /*
      * printer name
      */
     ctl = XtNameToWidget(dpd->printer_info_box, "*Name");
     label = XmStringCreateLocalized(print_data->printer_name);
-    XtVaSetValues(ctl, XmNlabelString, label, NULL);
+    XtVaSetValues(ctl, XmNlabelString, label, nullptr);
     XmStringFree(label);
     /*
      * document format
      */
     ctl = XtNameToWidget(dpd->printer_info_box, "*Format");
-    XtVaSetValues(ctl, XmNlabelString, empty_label, NULL);
+    XtVaSetValues(ctl, XmNlabelString, empty_label, nullptr);
 #if 0 && defined(PRINTING_SUPPORTED)
     attr_value = XpGetOneAttribute(print_data->print_display,
 				   print_data->print_context,
@@ -2150,16 +2150,16 @@ _DtPrintSetupBoxXPrinterInfoProc(
     {
 	char* format_start;
 	format_start = strchr(attr_value, '{');
-	if((char*)NULL != format_start)
+	if((char*)nullptr != format_start)
 	{
 	    char* format_end;
 	    ++format_start;
 	    format_end = strchr(format_start, '}');
-	    if((char*)NULL != format_end)
+	    if((char*)nullptr != format_end)
 	    {
 		*format_end = '\0';
 		label = XmStringCreateLocalized(format_start);
-		XtVaSetValues(ctl, XmNlabelString, label, NULL);
+		XtVaSetValues(ctl, XmNlabelString, label, nullptr);
 		XmStringFree(label);
 	    }
 	}
@@ -2169,14 +2169,14 @@ _DtPrintSetupBoxXPrinterInfoProc(
      * printer model
      */
     ctl = XtNameToWidget(dpd->printer_info_box, "*Model");
-    XtVaSetValues(ctl, XmNlabelString, empty_label, NULL);
+    XtVaSetValues(ctl, XmNlabelString, empty_label, nullptr);
 #if 0 && defined(PRINTING_SUPPORTED)
     attr_value_ct = XpGetOneAttribute(print_data->print_display,
 				      print_data->print_context,
 				      XPPrinterAttr,
 				      "printer-model");
 #endif /* PRINTING_SUPPORTED */
-    if((char*)NULL != attr_value_ct)
+    if((char*)nullptr != attr_value_ct)
     {
 	attr_value =
 	    CompoundTextToString(XtDisplay(w), (unsigned char*)attr_value_ct);
@@ -2186,7 +2186,7 @@ _DtPrintSetupBoxXPrinterInfoProc(
 	    label = XmStringGenerate((XtPointer)attr_value, (XmStringTag)NULL,
 				     XmCHARSET_TEXT, (XmStringTag)NULL);
 	    XtFree(attr_value);
-	    XtVaSetValues(ctl, XmNlabelString, label, NULL);
+	    XtVaSetValues(ctl, XmNlabelString, label, nullptr);
 	    XmStringFree(label);
 	}
     }
@@ -2196,7 +2196,7 @@ _DtPrintSetupBoxXPrinterInfoProc(
     XmStringFree(empty_label);
     if(manager)
     {
-	XtVaSetValues(dialog_shell, XmNallowShellResize, True, NULL);
+	XtVaSetValues(dialog_shell, XmNallowShellResize, True, nullptr);
 	XtManageChild(manager);
 	XtMapWidget(dpd->printer_info_box);
     }
@@ -2258,7 +2258,7 @@ _DtPrintSetupBoxSelectFileProc(
     /*
      * set the filter pattern in the file selection box
      */
-    XtVaSetValues(dpd->file_selection_box, XmNpattern, pattern, NULL);
+    XtVaSetValues(dpd->file_selection_box, XmNpattern, pattern, nullptr);
     if(pattern != (XmString)NULL)
 	XmStringFree(pattern);
     /*
@@ -2283,7 +2283,7 @@ _DtPrintSetupBoxSelectFileProc(
 	     * concatenation of XmStrings causes XmListItemPos to fail
 	     * even though the file name is actually in the list.
 	     */
-	    XtVaGetValues(text_field, XmNvalue, &dir_spec, NULL);
+	    XtVaGetValues(text_field, XmNvalue, &dir_spec, nullptr);
 	    file_name = XtMalloc(strlen(dir_spec)+strlen(name_only)+1);
 	    strcpy(file_name, dir_spec);
 	    strcat(file_name, name_only);
@@ -2306,7 +2306,7 @@ _DtPrintSetupBoxSelectFileProc(
 	     */
 	    XtVaSetValues(dpd->file_selection_box,
 			  XmNdirSpec, file_name_xmstr,
-			  NULL);
+			  nullptr);
 	}
 	XmStringFree(file_name_xmstr);
     }
@@ -2379,8 +2379,8 @@ _DtPrintSetupBoxSelectXPrinterProc(
      */
     XtVaGetValues(dpd->printer_list_box,
 		  XmNrenderTable, &render_table,
-		  NULL);
-    render_table = XmRenderTableCopy(render_table, (XmStringTag*)NULL, 0);
+		  nullptr);
+    render_table = XmRenderTableCopy(render_table, (XmStringTag*)nullptr, 0);
     /*
      * build the item list for the list box
      */
@@ -2421,7 +2421,7 @@ _DtPrintSetupBoxSelectXPrinterProc(
 		  XmNrenderTable, new_render_table,
 		  XmNitems, items,
 		  XmNitemCount, item_count,
-		  NULL);
+		  nullptr);
     XmRenderTableFree(new_render_table);
     for(i = 0; i < item_count; i++)
 	XmStringFree(items[i]);
@@ -2552,7 +2552,7 @@ _DtPrintSetupBoxVerifyXPrinterProc(
 	 */
 	XtVaSetValues(w,
 		      DtNprinterName, new_printer_spec,
-		      NULL);
+		      nullptr);
 	XtFree(new_printer_spec);
     }
     /*

@@ -12,7 +12,7 @@
 /* enumToName(): a failed growth of the name buffer must not crash. */
 int main(void)
 {
-    enumName names[] = { { "Known", 1 }, { NULL, 0 } };
+    enumName names[] = { { "Known", 1 }, { nullptr, 0 } };
     char *s;
 
     ck_arm(0);
@@ -24,7 +24,7 @@ int main(void)
     /* the buffer cannot be enlarged for the next value */
     ck_arm(1);
     s = enumToName(names, 4711);
-    assert(s != NULL);
+    assert(s != nullptr);
     assert(strcmp(s, "Unknown Value") == 0);
 
     /* and works again afterwards */
@@ -45,7 +45,7 @@ int main(void)
     ck_open_succeeds = 0;
     for (call = 1; call <= 4; call++) {
 	ck_arm(call);
-	slave = master = NULL;
+	slave = master = nullptr;
 	assert(GetPty(&slave, &master) == -1);
 	assert(ck_realloc_calls >= call);
 	assert(ck_live == 0);

@@ -93,7 +93,7 @@ HelpMenubarCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, MENUBAR_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -103,7 +103,7 @@ HelpFileCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_MENU_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -113,7 +113,7 @@ HelpEditCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, EDIT_MENU_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -123,7 +123,7 @@ HelpFormatCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FORMAT_MENU_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -133,7 +133,7 @@ HelpOptionsCB(
         XtPointer call_data)
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, OPTIONS_MENU_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -143,7 +143,7 @@ HelpHelpCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 
@@ -160,7 +160,7 @@ HelpOpenDialogCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_OPEN_DIALOG_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -170,7 +170,7 @@ HelpIncludeDialogCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_INCLUDE_DIALOG_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -183,10 +183,10 @@ HelpSaveAsDialogCB(
 
     if (pPad->xrdb.nameChange) {
 	SetHelpVolAndDisplayHelp(pPad, FILE_SAVEAS_DIALOG_HELP,
-				 (char *) NULL);
+				 (char *) nullptr);
     } else {
 	SetHelpVolAndDisplayHelp(pPad, FILE_COPYTOFILE_DIALOG_HELP,
-				 (char *) NULL);
+				 (char *) nullptr);
     }
 }
 
@@ -197,7 +197,7 @@ HelpAskIfSaveDialogCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_ASKIFSAVE_DIALOG_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -207,7 +207,7 @@ HelpFileAlreadyExistsCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, FILE_EXISTS_DIALOG_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 
@@ -233,90 +233,90 @@ HelpEditorWidgetCB(
 	case DtEDITOR_HELP_EDIT_WINDOW:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     EDIT_AREA_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 
 	/* -----> status line area and fields */
 	case DtEDITOR_HELP_STATUS_LINE:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     STATUS_LINE_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_STATUS_CURRENT_LINE:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     STATUS_CURRENT_LINE_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_STATUS_TOTAL_LINES:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     STATUS_TOTAL_LINES_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_STATUS_MESSAGE:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     STATUS_MESSAGE_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_STATUS_OVERSTRIKE:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     STATUS_OVERSTRIKE_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 
 	/* -----> Format Settings dialog and dialog fields */
 	case DtEDITOR_HELP_FORMAT_DIALOG:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     FORMAT_SETTINGS_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_FORMAT_LEFT_MARGIN:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     FORMAT_LEFT_MARGIN_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_FORMAT_RIGHT_MARGIN:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     FORMAT_RIGHT_MARGIN_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_FORMAT_ALIGNMENT:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     FORMAT_ALIGNMENT_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 
 	/* -----> Find/Change dialog and dialog fields */
 	case DtEDITOR_HELP_CHANGE_DIALOG:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     FINDCHANGE_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_CHANGE_FIND:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     FINDCHANGE_FIND_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_CHANGE_CHANGE:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     FINDCHANGE_CHANGETO_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 
 	/* -----> Check Spelling dialog and dialog fields */
 	case DtEDITOR_HELP_SPELL_DIALOG:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     SPELL_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_SPELL_MISSPELLED_WORDS:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     SPELL_MISSPELLED_WORDS_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 	case DtEDITOR_HELP_SPELL_CHANGE:
 	    SetHelpVolAndDisplayHelp((Editor *)client_data,
 				     SPELL_CHANGETO_HELP,
-				     (char *) NULL);
+				     (char *) nullptr);
 	    break;
 
  	default:
@@ -339,7 +339,7 @@ HelpPrintSetupDialogCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, PRINT_SETUP_DIALOG_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -349,7 +349,7 @@ HelpPrintSetupAppSpecificCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, PRINT_APP_SPECIFIC_OPTIONS,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -359,7 +359,7 @@ HelpPrintSetupGenericCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, PRINT_GENERIC_OPTIONS,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -369,7 +369,7 @@ HelpPrintSetupPageHeadersFootersCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, PRINT_PAGE_HEADERS_FOOTERS,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -379,7 +379,7 @@ HelpPrintSetupPageMargins(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, PRINT_PAGE_MARGINS,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 
@@ -408,7 +408,7 @@ HelpOverviewCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_OVERVIEW_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -418,7 +418,7 @@ HelpTasksCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_TASKS_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -428,7 +428,7 @@ HelpTOCCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_TOC_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -438,7 +438,7 @@ HelpReferenceCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *)client_data, HELP_MENU_REFERENCE_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 void
@@ -490,7 +490,7 @@ HelpAboutCB(
         XtPointer call_data )
 {
     SetHelpVolAndDisplayHelp((Editor *) client_data, HELP_MENU_ABOUT_HELP,
-			     (char *) NULL);
+			     (char *) nullptr);
 }
 
 
@@ -543,11 +543,11 @@ HelpCloseCB(
          * empty for loop just marches pHelp to the right place
          */
         for(pHelp = pPad->pHelpCache; 
-	    pHelp != (HelpStruct *)NULL && pHelp->dialog != w;
+	    pHelp != (HelpStruct *)nullptr && pHelp->dialog != w;
 	    pHelp = pHelp->pNext)
 	    ;
 
-        if(pHelp != (HelpStruct *)NULL)
+        if(pHelp != (HelpStruct *)nullptr)
         {
 	    /* this should always happen */
             pHelp->inUse = False;

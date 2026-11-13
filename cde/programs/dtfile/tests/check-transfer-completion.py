@@ -159,7 +159,7 @@ def extract(source, work, include_workers=True):
                  "Main.h", "FileMgr.h", "Common.h", "SharedMsgs.h", "Trash.c",
                  "ModAttrP.c")
     raw = {name: (source / name).read_bytes() for name in filenames}
-    text = {name: data.decode("utf-8") for name, data in raw.items()}
+    text = {name: re.sub(r"\bnullptr\b", "NULL", data.decode("utf-8")) for name, data in raw.items()}
     definitions = [
         constant(text["Main.h"], name)
         for name in ("MAX_PATH", "BLOCK_SIZE", "MOVE_FILE", "COPY_FILE",
@@ -364,7 +364,7 @@ def main(argv=None):
     try:
         workers = any(name.startswith("worker-") for name in (args.cases or CASES))
         record["extraction"] = extract(source, work, include_workers=workers)
-        command = [*shlex.split(env.get("CC", "cc")), "-std=c11",
+        command = [*shlex.split(env.get("CC", "cc")), "-std=gnu23",
                    "-D_POSIX_C_SOURCE=200809L", "-D_DEFAULT_SOURCE", "-D_XOPEN_SOURCE=700",
                    "-O0", "-g", "-Wall", "-Wextra", "-Werror",
                    # Unchanged legacy whole-function declarations/branches:

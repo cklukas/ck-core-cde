@@ -83,7 +83,7 @@ static  char *OneByteCantEndList   = "[({`\"";
 
 static	_DtCvLayoutInfo	DefLayInfo =
     {
-	NULL, 		/* _DtCvSegmentI *line_seg;		*/
+	nullptr, 		/* _DtCvSegmentI *line_seg;		*/
 	 0,		/* unsigned int	 line_start;		*/
 	 0,		/* unsigned int	 line_bytes;		*/
 	 0,		/* _DtCvUnit	 cur_len;		*/
@@ -98,7 +98,7 @@ static	_DtCvLayoutInfo	DefLayInfo =
 	FALSE,		/* _DtCvValue	 lst_vis;		*/
 	FALSE,		/* _DtCvValue	 join;			*/
 	FALSE,		/* _DtCvValue	 align_flag;		*/
-	NULL,		/* const char	*align_char;		*/
+	nullptr,		/* const char	*align_char;		*/
 	-1,		/* _DtCvUnit	 align_pos;		*/
 	0,		/* int		 delayed_search_saves	*/
     };
@@ -113,7 +113,7 @@ static const _DtCvTraversalInfo DefTravData =
     0			/* y_pos    */,
     0			/* width    */,
     0			/* height   */,
-    NULL		/* *seg_ptr */
+    nullptr		/* *seg_ptr */
   };
 
 /******************************************************************************
@@ -159,7 +159,7 @@ CheckList (
     /*
      * check the multibyte list for the character
      */
-    if (list != NULL)
+    if (list != nullptr)
       {
         while ('\0' != *list)
 	  {
@@ -399,7 +399,7 @@ _DtCvCheckLineSyntax (
 {
     int     myStrLen = 0;
     int     wcFlag = 0;
-    void    *pChar = NULL;
+    void    *pChar = nullptr;
     wchar_t  nextChar;
     wchar_t  lastChar = 0;
     _DtCvValue lstCharMb = False;
@@ -409,7 +409,7 @@ _DtCvCheckLineSyntax (
      * while this is a marker or a noop without a end-of-line, go to the
      * next segment.
      */
-    while (NULL != pSeg && (_DtCvIsSegMarker(pSeg) ||
+    while (nullptr != pSeg && (_DtCvIsSegMarker(pSeg) ||
 				(_DtCvIsSegNoop(pSeg) && !_DtCvIsSegNewLine(pSeg))))
 	pSeg = pSeg->next_seg;
 
@@ -417,7 +417,7 @@ _DtCvCheckLineSyntax (
      * if this segment is null or not a string or region, stop the
      * test right now.
      */
-    if (pSeg == NULL || !(_DtCvIsSegString(pSeg) || _DtCvIsSegRegion(pSeg)))
+    if (pSeg == nullptr || !(_DtCvIsSegString(pSeg) || _DtCvIsSegRegion(pSeg)))
         return True;
 
     /*
@@ -436,7 +436,7 @@ _DtCvCheckLineSyntax (
      */
     if ((_DtCvIsSegRegion(pSeg) ||
 			(_DtCvIsSegString(pSeg) && myStrLen == str_len))
-		&& (_DtCvIsSegNewLine (pSeg) || pSeg->next_seg == NULL))
+		&& (_DtCvIsSegNewLine (pSeg) || pSeg->next_seg == nullptr))
         return True;
 
     /*
@@ -558,13 +558,13 @@ _DtCvCheckLineSyntax (
     do
       {
         pSeg = pSeg->next_seg;
-      } while (pSeg != NULL && (_DtCvIsSegMarker(pSeg) ||
+      } while (pSeg != nullptr && (_DtCvIsSegMarker(pSeg) ||
 			(_DtCvIsSegNoop (pSeg) && !(_DtCvIsSegNewLine(pSeg)))));
     /*
      * If there isn't another valid segment, then the original segment
      * can end the line.
      */
-    if (pSeg == NULL || !(_DtCvIsSegString(pSeg) || _DtCvIsSegRegion(pSeg)))
+    if (pSeg == nullptr || !(_DtCvIsSegString(pSeg) || _DtCvIsSegRegion(pSeg)))
         return True;
 
     /*
@@ -678,23 +678,23 @@ _DtCvGetNextWidth (
     /*
      * pass over noops that don't have newlines and markers
      */
-    while (pSeg != NULL && (_DtCvIsSegMarker(pSeg) ||
+    while (pSeg != nullptr && (_DtCvIsSegMarker(pSeg) ||
 			(_DtCvIsSegNoop (pSeg) && !(_DtCvIsSegNewLine(pSeg)))))
       {
 	pSeg = pSeg->next_seg;
 	start = 0;
       }
 
-    if (nextSeg != NULL)
+    if (nextSeg != nullptr)
         *nextSeg = pSeg;
-    if (nextStart != NULL)
+    if (nextStart != nullptr)
         *nextStart = start;
 
     /*
      * if the next segment is null or anything else but a string or region;
      * return that there is no more after this segment.
      */
-    if (pSeg == NULL || !(_DtCvIsSegString(pSeg) || _DtCvIsSegRegion(pSeg)))
+    if (pSeg == nullptr || !(_DtCvIsSegString(pSeg) || _DtCvIsSegRegion(pSeg)))
 	return 0;
 
     /*
@@ -775,7 +775,7 @@ _DtCvGetNextWidth (
 		 * test string was found.
 		 */
 		if (0 == result && '-' == tChar[tLen] && 0 == len &&
-		    NULL == prev_seg &&
+		    nullptr == prev_seg &&
 		    _DtCvCheckLineSyntax(canvas,pSeg,start,1,True) == False)
 		  {
 		    len++;
@@ -802,11 +802,11 @@ _DtCvGetNextWidth (
 	    if (result == 0 ||
 		    _DtCvCheckLineSyntax(canvas,pSeg,start,len,False) == True)
 	      {
-		if (nextSeg != NULL)
+		if (nextSeg != nullptr)
 		    *nextSeg   = pSeg;
-		if (nextStart != NULL)
+		if (nextStart != nullptr)
 		    *nextStart = start + len;
-		if (widthCount != NULL)
+		if (widthCount != nullptr)
 		    *widthCount = len;
 		 return curWidth;
 	      }
@@ -840,11 +840,11 @@ _DtCvGetNextWidth (
 		    curWidth = _DtCvGetStringWidth(canvas,pSeg,pChar,len)
 			    + _DtCvGetTraversalWidth(canvas,pSeg,lst_hyper);
     
-		    if (nextSeg != NULL)
+		    if (nextSeg != nullptr)
 		        *nextSeg    = pSeg;
-		    if (nextStart != NULL)
+		    if (nextStart != nullptr)
 		        *nextStart  = start + len;
-		    if (widthCount != NULL)
+		    if (widthCount != nullptr)
 		        *widthCount = len;
 		    return curWidth;
 		  }
@@ -866,7 +866,7 @@ _DtCvGetNextWidth (
      */
     prev_seg = pSeg;
     pSeg = pSeg->next_seg;
-    if (pSeg != NULL)
+    if (pSeg != nullptr)
       {
         start = 0;
         curWidth += _DtCvGetNextWidth (canvas, 
@@ -876,7 +876,7 @@ _DtCvGetNextWidth (
 
       }
 
-    if (widthCount != NULL)
+    if (widthCount != nullptr)
         *widthCount = len + nextLen;
     return (curWidth);
 }
@@ -935,7 +935,7 @@ _DtCvSaveInfo (
  * NOTE....should this routine return a value?
  * If (re)alloc error occurs, this simply ignores the problem.
  */
-	if (canvas->txt_lst == NULL)
+	if (canvas->txt_lst == nullptr)
 	  {
 	    canvas->txt_max = 0;
 	    canvas->txt_cnt = 0;
@@ -943,7 +943,7 @@ _DtCvSaveInfo (
 	  }
       }
 
-    while (pSeg != NULL && count > 0)
+    while (pSeg != nullptr && count > 0)
       {
 	/*
 	 * set which line will this segment sit on, iff this is the
@@ -972,7 +972,7 @@ _DtCvSaveInfo (
 	if (_DtCvIsSegString(pSeg))
 	  {
 	    _DtCvFontMetrics(canvas,_DtCvFontOfStringSeg(pSeg),
-			&fontAscent, &fontDescent, NULL, NULL, NULL);
+			&fontAscent, &fontDescent, nullptr, nullptr, nullptr);
 
 	    pChar = _DtCvStrPtr(_DtCvStringOfStringSeg(pSeg),
 					_DtCvIsSegWideChar(pSeg), start);
@@ -1024,7 +1024,7 @@ _DtCvSaveInfo (
 	     */
 	    if (_DtCvIsSegString (pSeg))
 	        _DtCvFontMetrics(canvas,_DtCvFontOfStringSeg(pSeg),
-					NULL, NULL, NULL, &superY, &subY);
+					nullptr, nullptr, nullptr, &superY, &subY);
 	    else if (_DtCvIsSegRegion(pSeg))
 	      {
 		superY = _DtCvHeightOfRegionSeg(pSeg) * 4 / 10;
@@ -1241,7 +1241,7 @@ _DtCvProcessStringSegment(
     _DtCvValue    done    = False;
     _DtCvSegmentI *retSeg;
 
-    if (NULL != _DtCvStringOfStringSeg(cur_seg))
+    if (nullptr != _DtCvStringOfStringSeg(cur_seg))
       {
 	if (lay_info->cur_len == 0)
 	  {
@@ -1491,7 +1491,7 @@ _DtCvProcessStringSegment(
 	      {
 		nWidth = _DtCvGetNextWidth (canvas, oldType,
 				lay_info->lst_hyper,
-				cur_seg, *cur_start, NULL,
+				cur_seg, *cur_start, nullptr,
 				&retSeg, &retStart, &retCount);
 
 		if (retSeg == cur_seg && textWidth + nWidth <= workWidth)
@@ -1746,7 +1746,7 @@ _DtCvGetNextTravEntry (
 	/*
 	 * realloc or malloc?
 	 */
-	if (NULL != canvas->trav_lst)
+	if (nullptr != canvas->trav_lst)
 	    canvas->trav_lst = (_DtCvTraversalInfo *) realloc (
 			(char *) canvas->trav_lst,
 			((sizeof(_DtCvTraversalInfo)) * canvas->trav_max));
@@ -1757,7 +1757,7 @@ _DtCvGetNextTravEntry (
 	/*
 	 * did the memory allocation work? if not return error code.
 	 */
-	if (NULL == canvas->trav_lst)
+	if (nullptr == canvas->trav_lst)
 	  {
 	    canvas->trav_max = 0;
 	    canvas->trav_cnt = 0;
@@ -2019,7 +2019,7 @@ _DtCvCvtSegsToPts (
     /*
      * go through each segment and determine the starting positions.
      */
-    while (NULL != *segs)
+    while (nullptr != *segs)
       {
 	result = _DtCvSTATUS_OK;
 
@@ -2039,7 +2039,7 @@ _DtCvCvtSegsToPts (
 	/*
 	 * now skip the segments on this line that aren't in the data pt.
 	 */
-	while (NULL != pSeg && pSeg != (*segs)->segment)
+	while (nullptr != pSeg && pSeg != (*segs)->segment)
 	  {
 	    /*
 	     * advance past any hypertext link offsets.
@@ -2052,7 +2052,7 @@ _DtCvCvtSegsToPts (
 	     * so go past it.
 	     */
 	    _DtCvGetWidthOfSegment(canvas, pSeg, start, length,
-							&cnt, &segWidth, NULL);
+							&cnt, &segWidth, nullptr);
 
 	    /*
 	     * skip the segment's width, decrease the overall length by
@@ -2068,7 +2068,7 @@ _DtCvCvtSegsToPts (
 	/*
 	 * This segment should be all or partially selected.
 	 */
-	if (NULL == pSeg)
+	if (nullptr == pSeg)
 	    return _DtCvSTATUS_BAD;
 
 	/*
@@ -2106,7 +2106,7 @@ _DtCvCvtSegsToPts (
 	segWidth = 0;
 	if (0 < count)
             _DtCvGetWidthOfSegment(canvas, pSeg, start, count,
-							&cnt, &segWidth, NULL);
+							&cnt, &segWidth, nullptr);
 	/*
 	 * adjust the info by the width of the skipped characters.
 	 */
@@ -2137,7 +2137,7 @@ _DtCvCvtSegsToPts (
 	    tmpBeg->y        = lines[lineIdx].baseline;
 	    tmpBeg->line_idx = lineIdx;
 	    tmpBeg->char_idx = lines[lineIdx].length - length;
-	    if (NULL != retSeg)
+	    if (nullptr != retSeg)
 		*retSeg = (*segs)->segment;
 	  }
 
@@ -2206,7 +2206,7 @@ _DtCvCvtSegsToPts (
 	     * findout how many characters are in the next segment, and its
 	     * width.
 	     */
-	    _DtCvGetWidthOfSegment(canvas,pSeg,start,count,&cnt,&segWidth,NULL);
+	    _DtCvGetWidthOfSegment(canvas,pSeg,start,count,&cnt,&segWidth,nullptr);
 
 	    /*
 	     * there are less than in the count, go to the next segment.
@@ -2265,7 +2265,7 @@ _DtCvCvtSegsToPts (
 	if (-1 == beg->x)
 	  {
 	    *beg = bReg;
-	    if (NULL != ret_seg)
+	    if (nullptr != ret_seg)
 		*ret_seg = saveSeg;
 	  }
 	/*
@@ -2286,7 +2286,7 @@ _DtCvCvtSegsToPts (
 	  {
 	    beg->x = bReg.x;
 
-	    if (NULL != ret_seg)
+	    if (nullptr != ret_seg)
 		*ret_seg = saveSeg;
 	  }
       }
@@ -2321,9 +2321,9 @@ _DtCvCvtSegsToPts (
 	    end->x = eReg.x;
 
       }
-    if (NULL != ret_y1)
+    if (nullptr != ret_y1)
 	*ret_y1 = minY;
-    if (NULL != ret_y2)
+    if (nullptr != ret_y2)
 	*ret_y2 = maxY;
 
     return result;
@@ -2352,7 +2352,7 @@ _DtCvAddToMarkList (
       {
 	canvas->mark_max += GROW_SIZE;
 
-        if (NULL == canvas->marks)
+        if (nullptr == canvas->marks)
 	    canvas->marks = (_DtCvMarkData *) malloc(
 				sizeof(_DtCvMarkData) * canvas->mark_max);
         else
@@ -2362,7 +2362,7 @@ _DtCvAddToMarkList (
 	/*
 	 * memory loss - bail
 	 */
-	if (NULL == canvas->marks)
+	if (nullptr == canvas->marks)
 	    return -1;
       }
 

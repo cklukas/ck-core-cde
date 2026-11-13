@@ -237,7 +237,7 @@ static XtResource resources[] =
 
 XmPrimitiveClassExtRec tabButtonPrimClassExtRec =
 {
-  NULL,
+  nullptr,
   NULLQUARK,
   XmPrimitiveClassExtVersion,
   sizeof (XmPrimitiveClassExtRec),
@@ -252,11 +252,11 @@ XyzTabButtonClassRec xyzTabButtonClassRec =
     /* superclass	  */	(WidgetClass) &xmLabelClassRec,
     /* class_name	  */	"XyzTabButton",
     /* widget_size	  */	sizeof (XyzTabButtonRec),
-    /* class_initialize   */    NULL,
-    /* class_part_init    */    NULL,
+    /* class_initialize   */    nullptr,
+    /* class_part_init    */    nullptr,
     /* class_inited       */	False,
     /* initialize	  */	Initialize,
-    /* initialize_hook    */    NULL,
+    /* initialize_hook    */    nullptr,
     /* realize		  */	XtInheritRealize,
     /* actions		  */	actions,
     /* num_actions	  */	XtNumber (actions),
@@ -271,16 +271,16 @@ XyzTabButtonClassRec xyzTabButtonClassRec =
     /* resize		  */	Resize,
     /* expose		  */	Redisplay,
     /* set_values	  */	SetValues,
-    /* set_values_hook    */    NULL,
+    /* set_values_hook    */    nullptr,
     /* set_values_almost  */    XtInheritSetValuesAlmost,
-    /* get_values_hook    */	NULL,
-    /* accept_focus	  */	NULL,
+    /* get_values_hook    */	nullptr,
+    /* accept_focus	  */	nullptr,
     /* version            */	XtVersion,
-    /* callback_private   */    NULL,
+    /* callback_private   */    nullptr,
     /* tm_table           */    translations,
     /* query_geometry     */	XtInheritQueryGeometry, 
-    /* display_accelerator */   NULL,
-    /* extension record   */    NULL,
+    /* display_accelerator */   nullptr,
+    /* extension record   */    nullptr,
   },
 
   {
@@ -289,7 +289,7 @@ XyzTabButtonClassRec xyzTabButtonClassRec =
     /* Primitive border_unhighlight */	undraw_highlight,
     /* translations		    */  XtInheritTranslations,
     /* arm_and_activate		    */  ArmAndActivate,
-    /* get resources		    */  NULL,
+    /* get resources		    */  nullptr,
     /* num get_resources	    */  0,
     /* extension		    */  (XtPointer)&tabButtonPrimClassExtRec,
   },
@@ -299,7 +299,7 @@ XyzTabButtonClassRec xyzTabButtonClassRec =
     /* setOverrideCallback     */	   XmInheritWidgetProc,
     /* menu procedures         */	   XmInheritMenuProc,
     /* menu traversal xlation  */	   XtInheritTranslations,
-    /* extension	       */	   NULL,
+    /* extension	       */	   nullptr,
   }
 };
 
@@ -316,11 +316,11 @@ Arm (Widget w, XEvent *event,  String *params, Cardinal *num_params)
 {
   /* Don't traverse to here if no event was provided on the assumption
      that it was a program, rather than user, initiated action. */
-  if (!tabw->primitive.have_traversal && event != NULL)
+  if (!tabw->primitive.have_traversal && event != nullptr)
     XmProcessTraversal (w, XmTRAVERSE_CURRENT);
 
   tabw->tab.armed = True;
-  if (event != NULL && event->type == ButtonPress)
+  if (event != nullptr && event->type == ButtonPress)
     tabw->tab.last_arm_time = event->xbutton.time;
   else
     tabw->tab.last_arm_time = 0;
@@ -347,7 +347,7 @@ static void
 MultiArm (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
   if (tabw->tab.multi_click == XmMULTICLICK_KEEP)
-    Arm (w, event, NULL, NULL);
+    Arm (w, event, nullptr, nullptr);
 }
 
 
@@ -490,7 +490,7 @@ arm_timeout (XtPointer data, XtIntervalId *id)
   if (XtIsRealized (w) && XtIsManaged (w))
     {
       internal_expose = True;
-      (*XtClass(w)->core_class.expose)(w, NULL, (Region) NULL);
+      (*XtClass(w)->core_class.expose)(w, nullptr, (Region) NULL);
     }
 
   XFlush (XtDisplay (w));
@@ -509,7 +509,7 @@ Disarm (Widget w, XEvent *event, String *params, Cardinal *num_params)
     {
       tabw->tab.armed = False;
       internal_expose = True;
-      (*XtClass(w)->core_class.expose) (w, NULL, (Region) NULL);
+      (*XtClass(w)->core_class.expose) (w, nullptr, (Region) NULL);
     }
 
   if (tabw->tab.disarm_callback)
@@ -528,7 +528,7 @@ Disarm (Widget w, XEvent *event, String *params, Cardinal *num_params)
 static void 
 Enter (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
-  _XmPrimitiveEnter (w, event, NULL, NULL);
+  _XmPrimitiveEnter (w, event, nullptr, nullptr);
 
   if (tabw->tab.armed)
     {
@@ -545,7 +545,7 @@ Enter (Widget w, XEvent *event, String *params, Cardinal *num_params)
 static void 
 Leave (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
-  _XmPrimitiveLeave (w, event, NULL, NULL);
+  _XmPrimitiveLeave (w, event, nullptr, nullptr);
 
   if (tabw->tab.armed)
     {
@@ -589,7 +589,7 @@ Initialize (Widget rw, Widget nw, ArgList args, Cardinal *num_args)
 
   tabw->tab.unarm_pixmap = tabw->label.pixmap;
 
-  tabw->tab.background_gc = tabw->tab.arm_gc = tabw->tab.parent_bg_gc = NULL;
+  tabw->tab.background_gc = tabw->tab.arm_gc = tabw->tab.parent_bg_gc = nullptr;
   
   get_arm_gc (nw);
   get_background_gc (nw);
@@ -637,7 +637,7 @@ get_background_gc (Widget w)
   values.background = tabw->primitive.foreground;
   values.graphics_exposures = False;
 
-  if (fs != NULL)
+  if (fs != nullptr)
     {
       value_mask |= GCFont;
       values.font = fs->fid;
@@ -826,7 +826,7 @@ Destroy (Widget w)
 
   XtReleaseGC (w, tabw->tab.arm_gc);
   XtReleaseGC (w, tabw->tab.background_gc);
-  if (tabw->tab.parent_bg_gc != NULL)
+  if (tabw->tab.parent_bg_gc != nullptr)
     XtReleaseGC (w, tabw->tab.parent_bg_gc);
 
   XtRemoveAllCallbacks (w, XmNactivateCallback);
@@ -975,7 +975,7 @@ draw_background (Widget w)
 static void 
 draw_label (Widget w, XEvent *event, Region region)
 {  
-  GC tmp_gc = NULL;
+  GC tmp_gc = nullptr;
   Boolean swap_gcs = False;
 
   /* If the arm color is the same as the foreground,
@@ -1098,7 +1098,7 @@ draw_rounded_shadow (Display *display, Drawable drawable,
 		     Dimension thickness, Dimension radius,
 		     unsigned int type)
 {
-  static XSegment *segs= NULL;
+  static XSegment *segs= nullptr;
   static int seg_count = 0;
   int i, segs_needed = thickness * 4;
   /* precompute array indicies */ 

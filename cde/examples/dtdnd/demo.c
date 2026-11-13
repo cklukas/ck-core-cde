@@ -237,7 +237,7 @@ void demoProcessPress(Widget w, XEvent *event, String *parms, Cardinal *nparms)
         XtVaGetValues(w,
 		XmNselectedPositions, &selected_positions,
 		XmNselectedPositionCount, &nselected_positions,
-		NULL);
+		nullptr);
 
 	for (i=0; i<nselected_positions; i++)
 	{
@@ -291,7 +291,7 @@ demoDrawAnimateCallback(
 	Window          window = XtWindow(dropDraw);
 	int		expandWidth, expandHeight,
 			sourceX, sourceY;
-	static GC	graphicsContext = NULL;
+	static GC	graphicsContext = nullptr;
 	XGCValues	gcValues;
 	IconInfo        *iconPtr;
 	
@@ -299,7 +299,7 @@ demoDrawAnimateCallback(
 	 * Create graphics context if it doesn't yet exist
 	 */
 
-	if (graphicsContext == NULL) {
+	if (graphicsContext == nullptr) {
 		gcValues.foreground = BlackPixelOfScreen(screen);
 		gcValues.background = WhitePixelOfScreen(screen);
 		graphicsContext = XCreateGC(display, window,
@@ -310,9 +310,9 @@ demoDrawAnimateCallback(
 	 * Get the dragged icon from the dropDraw area
 	 */
 
-	XtVaGetValues(dropDraw, XmNuserData, &iconPtr, NULL);
+	XtVaGetValues(dropDraw, XmNuserData, &iconPtr, nullptr);
 
-	if (iconPtr == NULL) {
+	if (iconPtr == nullptr) {
 		return;
 	}
 
@@ -362,9 +362,9 @@ demoDrawExposeCallback(
 {
 	IconInfo       *iconPtr;
 
-	XtVaGetValues(widget, XmNuserData, &iconPtr, NULL);
+	XtVaGetValues(widget, XmNuserData, &iconPtr, nullptr);
 
-	while (iconPtr != NULL) {
+	while (iconPtr != nullptr) {
 		IconDraw(widget, iconPtr);
 		iconPtr = iconPtr->next;
 	}
@@ -379,10 +379,10 @@ void
 demoDropSetup(
 	Widget		dropDraw)
 {
-	static XtCallbackRec transferCBRec[] = { {demoTransferCallback, NULL},
-					         {NULL, NULL} };
-	static XtCallbackRec animateCBRec[] = { {demoDrawAnimateCallback, NULL},
-					        {NULL, NULL} };
+	static XtCallbackRec transferCBRec[] = { {demoTransferCallback, nullptr},
+					         {nullptr, nullptr} };
+	static XtCallbackRec animateCBRec[] = { {demoDrawAnimateCallback, nullptr},
+					        {nullptr, nullptr} };
 
 	animateCBRec[0].closure = (XtPointer)dropDraw;
 
@@ -392,7 +392,7 @@ demoDropSetup(
 		DtNdropAnimateCallback,		animateCBRec,
 		DtNtextIsBuffer, 		True,
 		DtNpreserveRegistration, 	False,
-		NULL);
+		nullptr);
 }
 
 /*
@@ -411,7 +411,7 @@ demoTransferCallback(
         DtDndTransferCallbackStruct *transferInfo =
                                 (DtDndTransferCallbackStruct *) callData;
 
-	if (transferInfo == NULL) {
+	if (transferInfo == nullptr) {
 		return;
 	}
 
@@ -469,7 +469,7 @@ String	fallbackResources[] = {
 
 	"*dropDraw.height:			100",
 	"*dropDraw.resizePolicy:		RESIZE_NONE",
-	NULL
+	nullptr
 };
 
 /*
@@ -487,15 +487,15 @@ demoCreateDropSite(
 
 	dropFrame = XtVaCreateManagedWidget("dropFrame",
 		xmFrameWidgetClass, parent,
-		NULL);
+		nullptr);
 
 	dropDraw = XtVaCreateManagedWidget("dropDraw",
 		xmDrawingAreaWidgetClass, dropFrame,
-		NULL);
+		nullptr);
 
 	XtAddCallback(dropDraw,
 		XmNexposeCallback, demoDrawExposeCallback,
-		NULL);
+		nullptr);
 
 	return dropDraw;
 }
@@ -524,7 +524,7 @@ main(
 	 * Create basic widgets and layout widgets
 	 */
 
-	XtSetLanguageProc(NULL, NULL, NULL);
+	XtSetLanguageProc(nullptr, nullptr, nullptr);
 
 	demoTopLevel = XtAppInitialize(&demoAppContext, "Dtdnddemo", 
 		(XrmOptionDescList)NULL, 0, &argc, argv, 
@@ -535,11 +535,11 @@ main(
 
 	outerRowColumn = XtVaCreateManagedWidget("outerRowColumn",
 		xmRowColumnWidgetClass, demoTopLevel,
-		NULL);
+		nullptr);
 
 	upperRowColumn = XtVaCreateManagedWidget("upperRowColumn",
 		xmRowColumnWidgetClass, outerRowColumn,
-		NULL);
+		nullptr);
 
 	/*
 	 * Create the drag sources
@@ -555,7 +555,7 @@ main(
 
 	separator = XtVaCreateManagedWidget("separator",
 		xmSeparatorWidgetClass, outerRowColumn,
-		NULL);
+		nullptr);
 	
 	/*
 	 * Create the drop sites

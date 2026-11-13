@@ -788,9 +788,9 @@ unsigned int              rtype;
 
 
        if(convert) {
-            if (!ilConvert(pipe, &imdes, &imformat, 0, NULL))
+            if (!ilConvert(pipe, &imdes, &imformat, 0, nullptr))
                 return FALSE;
-            ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)NULL, (ilImageFormat *)NULL);
+            ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
        }
          
 
@@ -812,8 +812,8 @@ unsigned int              rtype;
 
 
        dstdata.producerObject = (ilObject) NULL;
-       dstdata.pDes           = (ilImageDes *) NULL;
-       dstdata.pFormat        = (ilImageFormat *) NULL;
+       dstdata.pDes           = (ilImageDes *) nullptr;
+       dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.pPalette       = info.pPalette;
 
        /* flip-flop image if necessary */
@@ -835,15 +835,15 @@ unsigned int              rtype;
             case 3:
                      switch (rtype) {
                            case ROT90:
-                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) NULL,
+                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilRotateInit, IL_NPF, IL_NPF, ilRotate903ByteExecute, 0);
                                break;
                            case ROT180:
-                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) NULL,
+                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilRotateInit, IL_NPF, IL_NPF, ilRotate1803ByteExecute, 0);
                                break;
                            case ROT270:
-                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) NULL,
+                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilRotateInit, IL_NPF, IL_NPF, ilRotate2703ByteExecute, 0);
                                break;
                      }
@@ -853,15 +853,15 @@ unsigned int              rtype;
                      if(bitonal) {
                         switch (rtype) {
                            case ROT90:
-                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) NULL,
+                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilRotateInit, IL_NPF, IL_NPF, ilRotate90BitonalExecute, 0);
                                break;
                            case ROT180:
-                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) NULL,
+                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilRotateInit, IL_NPF, IL_NPF, ilRotate180BitonalExecute, 0);
                                break;
                            case ROT270:
-                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) NULL,
+                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilRotateInit, IL_NPF, IL_NPF, ilRotate270BitonalExecute, 0);  
                                break;
                         }
@@ -869,15 +869,15 @@ unsigned int              rtype;
                      else {
                         switch (rtype) {
                            case ROT90:
-                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) NULL,
+                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilRotateInit, IL_NPF, IL_NPF, ilRotate90ByteExecute, 0);
                                break;
                            case ROT180:
-                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) NULL,
+                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilRotateInit, IL_NPF, IL_NPF, ilRotate180ByteExecute, 0);
                                break;
                            case ROT270:
-                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) NULL,
+                               pPriv = (ilRotatePrivptr) ilAddPipeElement(pipe, IL_FILTER, sizeof(ilRotatePriv), IL_ADD_PIPE_HOLD_DST, (ilSrcElementData *) nullptr,
                                                                           &dstdata, ilRotateInit, IL_NPF, IL_NPF, ilRotate270ByteExecute, 0);
                                break;
                         }

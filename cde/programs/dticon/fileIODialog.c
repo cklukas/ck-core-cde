@@ -92,26 +92,26 @@ create_fileIODialog( void )
     struct stat sbuf;
 
     userIconPath = getenv("XMICONSEARCHPATH");
-    if (NULL == userIconPath)
+    if (nullptr == userIconPath)
       userIconPath = getenv("XMICONBMSEARCHPATH");
-    if (NULL == userIconPath)
+    if (nullptr == userIconPath)
       userIconPath = getenv("HOME");
 
-    if (NULL != userIconPath)
+    if (nullptr != userIconPath)
     {
 	char *s;
 
 	userIconPath = XtNewString(userIconPath);
 	s = strchr(userIconPath, ':');
-	if (NULL != s) *s = '\0';
+	if (nullptr != s) *s = '\0';
 	s = strrchr(userIconPath, '/');
-	if (NULL != s) *s = '\0';
+	if (nullptr != s) *s = '\0';
     }
 
     fileIODialog_shell = XtVaCreatePopupShell( "fileIODialog_shell",
                         xmDialogShellWidgetClass, mainWindow,
                         XmNtitle, GETSTR(2,2, "Icon Editor - File I/O"),
-                        NULL );
+                        nullptr );
 
     tmpXmStr  = GETXMSTR(2,6,  "Icon Editor - Save As");
     tmpXmStr1 = GETXMSTR(2,10, "Filter");
@@ -131,46 +131,46 @@ create_fileIODialog( void )
                         XmNapplyLabelString, tmpXmStr1,
                         XmNcancelLabelString, tmpXmStr6,
                         XmNhelpLabelString, tmpXmStr7,
-                        NULL );
+                        nullptr );
 
     userIconPath = getenv("XMICONSEARCHPATH");
-    if (NULL != userIconPath)
+    if (nullptr != userIconPath)
     {
 	userIconPath = XtNewString(userIconPath);
 	s = strchr(userIconPath, ':');
-	if (NULL != s) *s = '\0';
+	if (nullptr != s) *s = '\0';
 	s = strrchr(userIconPath, '/');
-	if (NULL != s && userIconPath != s) *s = '\0';
+	if (nullptr != s && userIconPath != s) *s = '\0';
 
         if (0 != stat(userIconPath, &sbuf) ||
 	    0 == (S_IFDIR & sbuf.st_mode) ||
 	    0 == (S_IWUSR & sbuf.st_mode))
 	{
 	    XtFree(userIconPath);
-	    userIconPath = NULL;
+	    userIconPath = nullptr;
 	}
     }
-    if (NULL == userIconPath)
+    if (nullptr == userIconPath)
     {
 	userIconPath = getenv("XMICONBMSEARCHPATH");
-        if (NULL != userIconPath)
+        if (nullptr != userIconPath)
         {
 	    userIconPath = XtNewString(userIconPath);
 	    s = strchr(userIconPath, ':');
-	    if (NULL != s) *s = '\0';
+	    if (nullptr != s) *s = '\0';
 	    s = strrchr(userIconPath, '/');
-	    if (NULL != s && userIconPath != s) *s = '\0';
+	    if (nullptr != s && userIconPath != s) *s = '\0';
 
             if (0 != stat(userIconPath, &sbuf) ||
 	        0 == (S_IFDIR & sbuf.st_mode) ||
 	        0 == (S_IWUSR & sbuf.st_mode))
 	    {
 	        XtFree(userIconPath);
-	        userIconPath = NULL;
+	        userIconPath = nullptr;
 	    }
 	}
     }
-    if (NULL == userIconPath)
+    if (nullptr == userIconPath)
     {
 	char	buf[MAXPATHLEN+1];
 	char	*home;
@@ -185,10 +185,10 @@ create_fileIODialog( void )
 	    userIconPath = XtNewString(buf);
 	}
     }
-    if (NULL != userIconPath)
+    if (nullptr != userIconPath)
     {
         tmpXmStr8 = XmStringCreateLocalized(userIconPath);
-	XtVaSetValues(fileIODialog, XmNdirectory, tmpXmStr8, NULL);
+	XtVaSetValues(fileIODialog, XmNdirectory, tmpXmStr8, nullptr);
 	XmStringFree(tmpXmStr8);
     }
 
@@ -200,8 +200,8 @@ create_fileIODialog( void )
     XmStringFree(tmpXmStr6);
     XmStringFree(tmpXmStr7);
 
-    XtAddCallback(fileIODialog, XmNcancelCallback, cancelCB_fileIODialog, NULL);
-    XtAddCallback(fileIODialog, XmNokCallback, Do_FileIO, NULL);
+    XtAddCallback(fileIODialog, XmNcancelCallback, cancelCB_fileIODialog, nullptr);
+    XtAddCallback(fileIODialog, XmNokCallback, Do_FileIO, nullptr);
 
     n = 0;
     XtSetArg (args[n], XmNuseAsyncGeometry, True);                          n++;

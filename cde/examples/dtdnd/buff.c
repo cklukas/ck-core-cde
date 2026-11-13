@@ -94,7 +94,7 @@ Appointment todaysApptList[] = {
         { today, " 4:00pm", " 4:30pm", "Pick up Dogs" },
         { today, " 5:00pm", " 6:30pm", "Beer Bust" },
         { today, " 7:00pm", " 9:00pm", "Dinner - Stuart" },
-        { NULL, NULL, NULL, NULL }
+        { nullptr, nullptr, nullptr, nullptr }
 };
 
 /*
@@ -151,7 +151,7 @@ apptConvertCallback(
         String          labelString;
         Appointment     *appt;
 
-	if (convertInfo == NULL) {
+	if (convertInfo == nullptr) {
 		return;
 	}
 
@@ -173,7 +173,7 @@ apptConvertCallback(
                 XmNuserData,            &selectedPos,
                 XmNselectedItemCount,   &selectedItemCount,
                 XmNselectedItems,       &selectedItems,
-                NULL);
+                nullptr);
 
         for (ii = 0; ii < convertInfo->dragData->numItems; ii++) {
 
@@ -203,8 +203,8 @@ apptConvertCallback(
                         /* Supply the name for the appointment */
 
                         labelString = apptGetLabel(apptString);
-			if (labelString == NULL) {
-                        	buffers[ii].name = (char *)NULL;
+			if (labelString == nullptr) {
+                        	buffers[ii].name = (char *)nullptr;
 			} else {
                         	buffers[ii].name = XtNewString(labelString);
                         	XtFree(labelString);
@@ -238,7 +238,7 @@ apptDragFinishCallback(
 
 	for (ii = 0; ii < dragData->numItems; ii++) {
 		XtFree(dragData->data.buffers[ii].bp);
-		if (dragData->data.buffers[ii].name != NULL)
+		if (dragData->data.buffers[ii].name != nullptr)
 			XtFree(dragData->data.buffers[ii].name);
 	}
 }
@@ -263,7 +263,7 @@ apptTransferCallback(
 	char		*filename;
 	int		ii;
 
-	if (transferInfo == NULL) {
+	if (transferInfo == nullptr) {
 		return;
 	}
 
@@ -280,7 +280,7 @@ apptTransferCallback(
 	 * Use abbreviated method of reffering to the data buffers.
 	 */
 
-	if (transferInfo != NULL && transferInfo->dropData != NULL) {
+	if (transferInfo != nullptr && transferInfo->dropData != nullptr) {
         	buffers = transferInfo->dropData->data.buffers;
 	} else {
 		return;
@@ -290,7 +290,7 @@ apptTransferCallback(
 	 * Process each item being transfered.
 	 */
 
-        XtVaGetValues(widget, XmNuserData, &iconList, NULL);
+        XtVaGetValues(widget, XmNuserData, &iconList, nullptr);
         for (ii = 0; ii < transferInfo->dropData->numItems; ii++) {
 
 		/*
@@ -304,7 +304,7 @@ apptTransferCallback(
 		 */
 
                 name = buffers[ii].name;
-		if (name == NULL)
+		if (name == nullptr)
 			name = "unnamed";
 
 		/* Create file from buffer */
@@ -325,11 +325,11 @@ apptTransferCallback(
 		/* Add to icon list on drop site */
 
                 iconPtr->next = iconList;
-		if (iconList != NULL) {
+		if (iconList != nullptr) {
 			iconList->prev = iconPtr;
 		}
 		iconList = iconPtr;
-                XtVaSetValues(widget, XmNuserData, iconList, NULL);
+                XtVaSetValues(widget, XmNuserData, iconList, nullptr);
 	}
 }
 
@@ -372,7 +372,7 @@ void apptDragSetup(Widget apptDragSource)
     XtVaGetValues(
 	(Widget) XmGetXmDisplay(XtDisplayOfObject(apptDragSource)),
 	"enableBtn1Transfer", &btn1_transfer,
-	NULL);
+	nullptr);
     
     if (btn1_transfer != True)
     {
@@ -405,13 +405,13 @@ apptDragStart(
         Widget          widget,
         XEvent          *event)
 {
-        static XtCallbackRec convertCBRec[] = { {apptConvertCallback, NULL},
-                                                {NULL, NULL} };
+        static XtCallbackRec convertCBRec[] = { {apptConvertCallback, nullptr},
+                                                {nullptr, nullptr} };
         static XtCallbackRec dragFinishCBRec[] = 
-					      { {demoDragFinishCallback, NULL},
-					        {apptDragFinishCallback, NULL},
-                                                {NULL, NULL} };
-        static IconInfo *iconPtr = NULL;
+					      { {demoDragFinishCallback, nullptr},
+					        {apptDragFinishCallback, nullptr},
+                                                {nullptr, nullptr} };
+        static IconInfo *iconPtr = nullptr;
         Widget          dragIcon;
         Display         *display = XtDisplay(widget);
         int             itemCount,
@@ -428,7 +428,7 @@ apptDragStart(
         XtVaGetValues(widget,
                 XmNitemCount, &itemCount,
                 XmNselectedItemCount, &selectedItemCount,
-                NULL);
+                nullptr);
 
 	/*
 	 * Find out which item the pointer was over when the drag began
@@ -440,7 +440,7 @@ apptDragStart(
                 return;
         }
 
-        XtVaSetValues(widget, XmNuserData, selectedPos, NULL);
+        XtVaSetValues(widget, XmNuserData, selectedPos, nullptr);
 
 	/*
 	 * Copy the appointment information into an appointment string
@@ -454,18 +454,18 @@ apptDragStart(
 	 * Create drag icon for appointment buffer drag
 	 */
 
-        if (iconPtr == NULL) {
+        if (iconPtr == nullptr) {
                 iconPtr = IconNew();
                 IconInitialize(widget, iconPtr, 0, 0,
-			apptString, strlen(apptString), NULL, IconByData);
+			apptString, strlen(apptString), nullptr, IconByData);
         }
 
-        if (iconPtr->dragIcon == NULL) {
+        if (iconPtr->dragIcon == nullptr) {
                 iconPtr->dragIcon = DtDndCreateSourceIcon(widget,
                         iconPtr->bitmap, iconPtr->mask);
         }
         if (selectedItemCount > 1) {
-                dragIcon = NULL;
+                dragIcon = nullptr;
                 itemCount = selectedItemCount;
         } else {
                 dragIcon = iconPtr->dragIcon;
@@ -481,8 +481,8 @@ apptDragStart(
                         convertCBRec, dragFinishCBRec,
                         DtNsourceIcon, dragIcon,
 			DtNbufferIsText, True,
-                        NULL)
-            == NULL) {
+                        nullptr)
+            == nullptr) {
 
                 printf("DragStart returned NULL.\n");
         }
@@ -522,7 +522,7 @@ apptCreateDragSource(
                 /* XmNselectionPolicy, XmMULTIPLE_SELECT, */
                 XmNitems, apptListItems,
                 XmNitemCount, apptCount,
-                NULL);
+                nullptr);
 
 	apptDestroyList(apptListItems, apptCount);
         
@@ -614,18 +614,18 @@ apptFromListEntry(
          * Get text string from XmString for use in comparisons
          */
 
-	entryText = XmStringUnparse(listEntry, NULL, XmCHARSET_TEXT,
-                        XmCHARSET_TEXT, NULL, 0, XmOUTPUT_ALL);
+	entryText = XmStringUnparse(listEntry, nullptr, XmCHARSET_TEXT,
+                        XmCHARSET_TEXT, nullptr, 0, XmOUTPUT_ALL);
 
-        for (ii = 0; todaysApptList[ii].what != NULL; ii++) {
+        for (ii = 0; todaysApptList[ii].what != nullptr; ii++) {
                 string = strstr(entryText, todaysApptList[ii].what);
-                if (string != NULL) {
+                if (string != nullptr) {
                         XtFree(entryText);
                         return(&todaysApptList[ii]);
                 }
         }
         XtFree(entryText);
-        return NULL;
+        return nullptr;
 }
 
 /*
@@ -640,14 +640,14 @@ apptGetLabel(
         char            start[128];
         int             count;
 
-        if (appt == NULL) {
-                return NULL;
+        if (appt == nullptr) {
+                return nullptr;
         }
         appt = strstr(appt, "Start:");
         count = sscanf(appt, "Start:%*[ \t]%[^\n]", start);
 
         if (count != 1) {
-                return NULL;
+                return nullptr;
         }
 
         return XtNewString(start);

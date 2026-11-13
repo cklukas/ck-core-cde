@@ -53,7 +53,7 @@ static void put_bytes(Message *m, const void *bytes, size_t n)
   if(m->length + n > m->size) {
     m->size = (m->length + n) * 2 + 64;
     m->data = realloc(m->data, m->size);
-    if(m->data == NULL)
+    if(m->data == nullptr)
       abort();
   }
   memcpy(m->data + m->length, bytes, n);
@@ -97,7 +97,7 @@ static void release(xdrproc_t proc, void *obj)
 {
   XDR xdrs;
 
-  xdrmem_create(&xdrs, NULL, 0, XDR_FREE);
+  xdrmem_create(&xdrs, nullptr, 0, XDR_FREE);
   proc(&xdrs, obj);
 }
 
@@ -428,7 +428,7 @@ static void case_enumerations(void)
 /* A list of N nodes in a result of version 4, built by hand. */
 static Uid_4 *make_uids(size_t n)
 {
-  Uid_4 *head = NULL;
+  Uid_4 *head = nullptr;
   size_t i;
 
   for(i = 0; i < n; i++) {
@@ -444,7 +444,7 @@ static Uid_4 *make_uids(size_t n)
 
 static void free_uids(Uid_4 *head)
 {
-  while(head != NULL) {
+  while(head != nullptr) {
     Uid_4 *next = head->next;
 
     free(head);
@@ -456,7 +456,7 @@ static size_t count_uids(Uid_4 *head)
 {
   size_t n = 0;
 
-  for(; head != NULL; head = head->next)
+  for(; head != nullptr; head = head->next)
     n++;
   return(n);
 }
@@ -486,7 +486,7 @@ static void case_long_list(void)
     CHECK(node->appt_id.key == LONG_LIST - 1);
   }
   release((xdrproc_t)_DtCm_xdr_Table_Res_4, &copy);
-  CHECK(copy.res.Table_Res_List_4_u.i == NULL);
+  CHECK(copy.res.Table_Res_List_4_u.i == nullptr);
   free(m.data);
   free_uids(res.res.Table_Res_List_4_u.i);
 }
@@ -494,7 +494,7 @@ static void case_long_list(void)
 /* Freeing a list of the extensible protocol. */
 static void case_free_long_list(void)
 {
-  cms_entry *head = NULL, *e;
+  cms_entry *head = nullptr, *e;
   size_t i;
   cms_entries_res res;
 
@@ -507,7 +507,7 @@ static void case_free_long_list(void)
   memset(&res, 0, sizeof(res));
   res.entries = head;
   release((xdrproc_t)xdr_cms_entries_res, &res);
-  CHECK(res.entries == NULL);
+  CHECK(res.entries == nullptr);
 }
 
 /* Lists have a longest length, and a longer one is refused on both sides. */
@@ -516,14 +516,14 @@ static void case_list_limits(void)
   Table_Res_4 res, copy;
   Message m;
   size_t i;
-  Tag_4 *tags = NULL, *t;
+  Tag_4 *tags = nullptr, *t;
   Appt_4 appt, back;
   size_t counts[] = { _DtCM_LIMIT_TAGS, _DtCM_LIMIT_TAGS + 1 };
 
   for(i = 0; i < 2; i++) {
     size_t n;
 
-    tags = NULL;
+    tags = nullptr;
     for(n = 0; n < counts[i]; n++) {
       t = calloc(1, sizeof(*t));
       t->tag = appointment_4;
@@ -545,7 +545,7 @@ static void case_list_limits(void)
       memset(&copy, 0, sizeof(copy));
       CHECK(decode(&m, (xdrproc_t)_DtCm_xdr_Table_Res_4, &copy));
       back = *copy.res.Table_Res_List_4_u.a;
-      CHECK(back.tag != NULL);
+      CHECK(back.tag != nullptr);
       release((xdrproc_t)_DtCm_xdr_Table_Res_4, &copy);
     } else {
       /* too long to send */
@@ -569,7 +569,7 @@ static void case_list_limits(void)
       release((xdrproc_t)_DtCm_xdr_Table_Res_4, &copy);
     }
     free(m.data);
-    while(tags != NULL) {
+    while(tags != nullptr) {
       t = tags->next;
       free(tags);
       tags = t;
@@ -585,7 +585,7 @@ static void put_u32_at_end(Message *m, uint32_t v) { put_u32(m, v); }
 static void case_wire_format(void)
 {
   Message got, want;
-  Tag_4 t3 = { appointment_4, 33, NULL }, t2 = { reminder_4, 22, &t3 },
+  Tag_4 t3 = { appointment_4, 33, nullptr }, t2 = { reminder_4, 22, &t3 },
 	t1 = { otherTag_4, 11, &t2 };
   Abb_Appt_4 b2, b1;
   Attribute_4 a3, a2, a1;
@@ -754,14 +754,14 @@ static void case_null_strings(void)
 {
   Appt_4 appt, copy;
   Message m;
-  cms_name name = NULL;
+  cms_name name = nullptr;
   Table_Args_4 args;
 
   memset(&appt, 0, sizeof(appt));
   CHECK(encode(&m, (xdrproc_t)_DtCm_xdr_Appt_4, &appt, 4096));
   memset(&copy, 0, sizeof(copy));
   CHECK(decode(&m, (xdrproc_t)_DtCm_xdr_Appt_4, &copy));
-  CHECK(copy.what != NULL && copy.what[0] == '\0');
+  CHECK(copy.what != nullptr && copy.what[0] == '\0');
   release((xdrproc_t)_DtCm_xdr_Appt_4, &copy);
   free(m.data);
 

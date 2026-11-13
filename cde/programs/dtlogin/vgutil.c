@@ -687,9 +687,9 @@ GetBiggest( Widget widget, Dimension *width, Dimension *height )
 
     XtGetValues(widget, argt, 2);
 
-    if (width != NULL && new_width > *width)
+    if (width != nullptr && new_width > *width)
 	*width = new_width;
-    if (height != NULL && new_height > *height)
+    if (height != nullptr && new_height > *height)
 	*height = new_height;
 }
 
@@ -713,9 +713,9 @@ LogError( unsigned char *fmt, ...)
     Va_start(args,fmt);
     
     if (errorLogFile && errorLogFile[0] && 
-        (freopen(errorLogFile, "a", stderr) != NULL)) {
+        (freopen(errorLogFile, "a", stderr) != nullptr)) {
 
-	timer = time(NULL);
+	timer = time(nullptr);
 	fprintf(stderr, "\n%s", ctime(&timer));
 	fprintf (stderr, "error (pid %ld): ", (long)getpid());
 
@@ -816,7 +816,7 @@ OpenCatalog(void)
 
     nlspath = getenv("NLSPATH");
  
-    if (NULL == nlspath || 0 == strlen(nlspath))
+    if (nullptr == nlspath || 0 == strlen(nlspath))
     {
         newnlspath = malloc(8 + strlen(NLSPATH_ENV) + 1);
         sprintf(newnlspath, "NLSPATH=%s", NLSPATH_ENV);
@@ -833,7 +833,7 @@ OpenCatalog(void)
      * open the message catalog. If the language_specific version cannot
      * be opened, try the default...
      */
-    if (NULL != langenv)
+    if (nullptr != langenv)
     {
 	nl_fd = CATOPEN(NLS_CATALOG, NL_CAT_LOCALE);
 	if (0 > (long) nl_fd)
@@ -853,7 +853,7 @@ unsigned char *
 ReadCatalog(int setn, int msgn, char *dflt)
 {
     OpenCatalog();
-    if ((0 > (long) nl_fd) || (NULL == langenv))
+    if ((0 > (long) nl_fd) || (nullptr == langenv))
       return (unsigned char*) dflt;
     else
       return (unsigned char*) CATGETS(nl_fd, setn, msgn, dflt);
@@ -906,8 +906,8 @@ SecureDisplay( void )
      *  get grab values from the environment...
      */
 
-    grabServer  = ((t = (char *)getenv(GRABSERVER))  == NULL ? 0 : atoi(t));
-    grabTimeout = ((t = (char *)getenv(GRABTIMEOUT)) == NULL ? 0 : atoi(t));
+    grabServer  = ((t = (char *)getenv(GRABSERVER))  == nullptr ? 0 : atoi(t));
+    grabTimeout = ((t = (char *)getenv(GRABTIMEOUT)) == nullptr ? 0 : atoi(t));
 
 
     /*

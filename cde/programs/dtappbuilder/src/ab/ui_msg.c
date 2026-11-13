@@ -138,9 +138,9 @@ ui_popup_info_message(
 )
 {
     ui_popup_message(parent, XmDIALOG_INFORMATION, title, msg, 
-			"OK", NULL, 
-			NULL, NULL,
-			"Help", NULL,
+			"OK", nullptr, 
+			nullptr, nullptr,
+			"Help", nullptr,
 			XmDIALOG_OK_BUTTON);
 }
 
@@ -170,12 +170,12 @@ ui_popup_message(
 				 default_button_type);
 
     /* Add Callbacks if necessary */
-    if (ok_callback != NULL)
-	XtAddCallback(msg_dlg, XmNokCallback, ok_callback, NULL);
-    if (cancel_callback != NULL)
-	XtAddCallback(msg_dlg, XmNcancelCallback, cancel_callback, NULL);
-    if (help_callback != NULL)
-	XtAddCallback(msg_dlg, XmNhelpCallback, help_callback, NULL);
+    if (ok_callback != nullptr)
+	XtAddCallback(msg_dlg, XmNokCallback, ok_callback, nullptr);
+    if (cancel_callback != nullptr)
+	XtAddCallback(msg_dlg, XmNcancelCallback, cancel_callback, nullptr);
+    if (help_callback != nullptr)
+	XtAddCallback(msg_dlg, XmNhelpCallback, help_callback, nullptr);
 
     XtManageChild(msg_dlg);
     ui_win_front(msg_dlg);
@@ -202,19 +202,19 @@ ui_popup_modal_message(
 )
 {
     XtAppContext           app;
-    Widget		   modal_dlg_pane = NULL;
+    Widget		   modal_dlg_pane = nullptr;
     UI_MODAL_ANSWER        answer;
     XtCallbackRec ok_callback[] = {
             {modal_dlgCB, (XtPointer) UI_ANSWER_OK},
-            {NULL, (XtPointer) NULL}
+            {nullptr, (XtPointer) NULL}
     };
     XtCallbackRec cancel_callback[] = { 
             {modal_dlgCB, (XtPointer) UI_ANSWER_CANCEL},
-            {NULL, (XtPointer) NULL}
+            {nullptr, (XtPointer) NULL}
     };
     XtCallbackRec help_callback[] = {
             {modal_dlgCB, (XtPointer) UI_ANSWER_HELP},
-            {NULL, (XtPointer) NULL}
+            {nullptr, (XtPointer) NULL}
     };
 
 
@@ -228,7 +228,7 @@ ui_popup_modal_message(
 		XmNcancelCallback, &cancel_callback,
 		XmNhelpCallback,   &help_callback,
 		XmNuserData,	   &answer,
-		NULL);
+		nullptr);
 
     answer = UI_ANSWER_NONE;
 
@@ -240,7 +240,7 @@ ui_popup_modal_message(
         XtAppProcessEvent(app, XtIMAll);
 
 
-    if (modal_dlg_pane_out_ptr != NULL)
+    if (modal_dlg_pane_out_ptr != nullptr)
     {
 	(*modal_dlg_pane_out_ptr) = modal_dlg_pane;
     }
@@ -256,9 +256,9 @@ modal_dlgCB(
 )
 {
     UI_MODAL_ANSWER	op = (UI_MODAL_ANSWER)client_data;
-    UI_MODAL_ANSWER	*answerp = NULL;
+    UI_MODAL_ANSWER	*answerp = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &answerp, NULL);
+    XtVaGetValues(widget, XmNuserData, &answerp, nullptr);
 
     /* Will cause Modal dialog to return */
     *answerp = op;
@@ -292,10 +292,10 @@ create_message_dlg(
 
     msg_dlg = XmCreateMessageDialog(shell,
                         "ab_message_dialog",
-                        NULL, 0);
+                        nullptr, 0);
 
     /* We don't want a "Cancel" button */
-    if (cancel_label == NULL)
+    if (cancel_label == nullptr)
     {
         button = XmMessageBoxGetChild(msg_dlg, XmDIALOG_CANCEL_BUTTON);
         XtUnmanageChild(button);
@@ -305,7 +305,7 @@ create_message_dlg(
         c_xmlabel = XmStringCreateLocalized(cancel_label);
         XtSetArg(arg[n], XmNcancelLabelString, c_xmlabel); n++;
     }   
-    if (ok_label == NULL)
+    if (ok_label == nullptr)
     {
         button = XmMessageBoxGetChild(msg_dlg, XmDIALOG_OK_BUTTON);
         XtUnmanageChild(button);
@@ -315,7 +315,7 @@ create_message_dlg(
         ok_xmlabel = XmStringCreateLocalized(ok_label);
         XtSetArg(arg[n], XmNokLabelString, ok_xmlabel); n++;
     }   
-    if (help_label == NULL)
+    if (help_label == nullptr)
     {
         button = XmMessageBoxGetChild(msg_dlg, XmDIALOG_HELP_BUTTON);
         XtUnmanageChild(button);
@@ -330,11 +330,11 @@ create_message_dlg(
     XtSetValues(msg_dlg, arg, n);
  
     /* Free XmStrings if they were allocated */
-    if (cancel_label != NULL)
+    if (cancel_label != nullptr)
         XmStringFree(c_xmlabel);
-    if (ok_label != NULL)
+    if (ok_label != nullptr)
         XmStringFree(ok_xmlabel);
-    if (help_label != NULL)
+    if (help_label != nullptr)
         XmStringFree(h_xmlabel);
  
     /* In case there are newlines in message, we must use the built-in
@@ -347,7 +347,7 @@ create_message_dlg(
                         XtRString, msg, strlen(msg)+1,
             XmNmessageAlignment,  XmALIGNMENT_CENTER,
 	    XmNdefaultButtonType, default_button_type,
-            NULL);
+            nullptr);
  
     XtAddCallback(XtParent(msg_dlg), XtNpopdownCallback, destroyCB, (XtPointer)1);
  
@@ -402,7 +402,7 @@ create_prompt_dlg(
  
     n = 0;
     /* We don't want a "Cancel" button */
-    if (cancel_label == NULL)
+    if (cancel_label == nullptr)
     {
         button = XmSelectionBoxGetChild(prompt_dlg, XmDIALOG_CANCEL_BUTTON);
         XtUnmanageChild(button);
@@ -412,7 +412,7 @@ create_prompt_dlg(
         c_xmlabel = XmStringCreateLocalized(cancel_label);
         XtSetArg(arg[n], XmNcancelLabelString, c_xmlabel); n++;
     }
-    if (ok_label == NULL)
+    if (ok_label == nullptr)
     {
         button = XmSelectionBoxGetChild(prompt_dlg, XmDIALOG_OK_BUTTON);
         XtUnmanageChild(button);
@@ -422,7 +422,7 @@ create_prompt_dlg(
         ok_xmlabel = XmStringCreateLocalized(ok_label);
         XtSetArg(arg[n], XmNokLabelString, ok_xmlabel); n++;
     }
-    if (help_label == NULL)
+    if (help_label == nullptr)
     {    
         button = XmSelectionBoxGetChild(prompt_dlg, XmDIALOG_HELP_BUTTON);
         XtUnmanageChild(button);
@@ -435,11 +435,11 @@ create_prompt_dlg(
     XtSetValues(prompt_dlg, arg, n);
 
     /* Free XmStrings if they were allocated */
-    if (cancel_label != NULL)
+    if (cancel_label != nullptr)
         XmStringFree(c_xmlabel);
-    if (ok_label != NULL)
+    if (ok_label != nullptr)
         XmStringFree(ok_xmlabel);
-    if (help_label != NULL)
+    if (help_label != nullptr)
         XmStringFree(h_xmlabel);
  
     switch (default_button_type)
@@ -457,7 +457,7 @@ create_prompt_dlg(
 				XmDIALOG_HELP_BUTTON);
 	    break;
 	default:
-	    default_button = NULL;
+	    default_button = nullptr;
 	    break;
     }
 
@@ -470,7 +470,7 @@ create_prompt_dlg(
 	    XtVaTypedArg, XmNselectionLabelString,
 			XtRString, label, strlen(label),
             XmNdefaultButton, default_button,
-            NULL);
+            nullptr);
 
     return(prompt_dlg);
 }
@@ -506,11 +506,11 @@ ui_popup_prompt(
                                  default_button_type);
 
     /* Add Callbacks if necessary */
-    if (ok_callback != NULL)
+    if (ok_callback != nullptr)
         XtAddCallback(prompt_dlg, XmNokCallback, ok_callback, ok_clientData);
-    if (cancel_callback != NULL)
+    if (cancel_callback != nullptr)
         XtAddCallback(prompt_dlg, XmNcancelCallback, cancel_callback, cancel_clientData);
-    if (help_callback != NULL)
+    if (help_callback != nullptr)
         XtAddCallback(prompt_dlg, XmNhelpCallback, help_callback, help_clientData);
     /* destroy the dialog after popdown */
     XtAddCallback(XtParent(prompt_dlg), XtNpopdownCallback, destroyCB, (XtPointer)1);
@@ -518,7 +518,7 @@ ui_popup_prompt(
     XtManageChild(prompt_dlg);
     ui_win_front(prompt_dlg);
 
-    if ( initial_text != NULL )
+    if ( initial_text != nullptr )
     {
 	textf = XmSelectionBoxGetChild(prompt_dlg, XmDIALOG_TEXT);
 	XmTextFieldSetString(textf, initial_text);
@@ -535,11 +535,11 @@ prompt_ok_modal_dlgCB(
 )
 {
     XmSelectionBoxCallbackStruct *selection_data = call_data;
-    UI_MODAL_ANSWER	*answerp = NULL;
-    Prompt_Info_Rec	*prompt_info = NULL;
-    Widget		textf = NULL;
+    UI_MODAL_ANSWER	*answerp = nullptr;
+    Prompt_Info_Rec	*prompt_info = nullptr;
+    Widget		textf = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &prompt_info, NULL);
+    XtVaGetValues(widget, XmNuserData, &prompt_info, nullptr);
     *(prompt_info->seln_str) =(STRING)objxm_xmstr_to_str(selection_data->value);
     answerp = (UI_MODAL_ANSWER *)client_data;
 
@@ -563,10 +563,10 @@ prompt_cancel_modal_dlgCB(
 )
 {
     XmSelectionBoxCallbackStruct *selection_data = call_data;
-    UI_MODAL_ANSWER     *answerp = NULL;
-    Prompt_Info_Rec     *prompt_info = NULL;
+    UI_MODAL_ANSWER     *answerp = nullptr;
+    Prompt_Info_Rec     *prompt_info = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &prompt_info, NULL);
+    XtVaGetValues(widget, XmNuserData, &prompt_info, nullptr);
     *(prompt_info->seln_str) =(STRING)objxm_xmstr_to_str(selection_data->value);
     answerp = (UI_MODAL_ANSWER *)client_data;
 
@@ -589,7 +589,7 @@ prompt_close_modal_dlg(
     XtPointer  	call_data
 )
 {
-    UI_MODAL_ANSWER     *answerp = NULL;
+    UI_MODAL_ANSWER     *answerp = nullptr;
 
     answerp = (UI_MODAL_ANSWER *)client_data;
     *answerp = UI_ANSWER_CANCEL;
@@ -613,16 +613,16 @@ ui_popup_modal_prompt(
 {
     XtAppContext        	app;
     static UI_MODAL_ANSWER	answer;
-    Prompt_Info_Rec		prompt_info = {NULL, NULL, NULL};
-    Widget			modal_prompt = NULL;
+    Prompt_Info_Rec		prompt_info = {nullptr, nullptr, nullptr};
+    Widget			modal_prompt = nullptr;
     
     XtCallbackRec ok_callback[] = {
             {prompt_ok_modal_dlgCB, (XtPointer) NULL},
-            {NULL, (XtPointer) NULL}
+            {nullptr, (XtPointer) NULL}
     };   
     XtCallbackRec cancel_callback[] = {
             {prompt_cancel_modal_dlgCB, (XtPointer) NULL},
-            {NULL, (XtPointer) NULL}
+            {nullptr, (XtPointer) NULL}
     };
  
     modal_prompt = create_prompt_dlg(parent, title, label, ok_label, 
@@ -646,8 +646,8 @@ ui_popup_modal_prompt(
                 XmNokCallback,     &ok_callback,
                 XmNcancelCallback, &cancel_callback,
                 XmNuserData,       &prompt_info,
-                NULL);
-    if (!util_strempty(help_label) && (help_data != NULL))
+                nullptr);
+    if (!util_strempty(help_label) && (help_data != nullptr))
     {
 	XtAddCallback(modal_prompt, 
 		XmNhelpCallback, dtb_help_dispatch, 
@@ -659,7 +659,7 @@ ui_popup_modal_prompt(
     ui_win_front(modal_prompt);
 
     /* Set the initial text for the prompt dialog */
-    if ( initial_text != NULL )
+    if ( initial_text != nullptr )
     {
 	Widget	textf;
 	

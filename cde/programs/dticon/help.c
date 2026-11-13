@@ -375,7 +375,7 @@ HelpOnItemCB(
                 if ( (XtHasCallbacks(selWidget, XmNhelpCallback)
                       == XtCallbackHasSome) )
                 {
-                    XtCallCallbacks(selWidget, XmNhelpCallback, NULL);
+                    XtCallCallbacks(selWidget, XmNhelpCallback, nullptr);
                     break;
                 }
                 else
@@ -431,7 +431,7 @@ HelpCloseCB(
     stat_out("Entering HelpCloseCB\n");
 #endif
 
-    if(pHelp != (HelpStruct *)NULL)
+    if(pHelp != (HelpStruct *)nullptr)
     {
       /* this is a "cached" help dialog */
       pHelp->inUse = False;
@@ -458,10 +458,10 @@ GetHelpDialog( void )
     stat_out("Entering GetHelpDialog\n");
 #endif
 
-  if(help_head == (HelpStruct *)NULL) {
+  if(help_head == (HelpStruct *)nullptr) {
     pHelp = (HelpStruct *)XtMalloc(sizeof(HelpStruct));
-    pHelp->pNext = (HelpStruct *)NULL;
-    pHelp->pPrev = (HelpStruct *)NULL;
+    pHelp->pNext = (HelpStruct *)nullptr;
+    pHelp->pPrev = (HelpStruct *)nullptr;
     pHelp->inUse = True;
     pHelp->dialog = CreateHelpDialog(pHelp);
     help_head = pHelp;
@@ -487,7 +487,7 @@ GetHelpDialog( void )
 
         return pHelp->dialog;
        } /* if */
-      if(pHelp->pNext != (HelpStruct *)NULL)
+      if(pHelp->pNext != (HelpStruct *)nullptr)
         pHelp = pHelp->pNext;
       else
         done = True;
@@ -495,7 +495,7 @@ GetHelpDialog( void )
     pHelp->pNext = (HelpStruct *) XtMalloc(sizeof(HelpStruct));
     pHelp->pNext->pPrev = pHelp;
     pHelp = pHelp->pNext;
-    pHelp->pNext = (HelpStruct *)NULL;
+    pHelp->pNext = (HelpStruct *)nullptr;
     pHelp->inUse = True;
     pHelp->dialog = CreateHelpDialog(pHelp);
 
@@ -735,15 +735,15 @@ DisplayHelp(
         char *helpVolume,
         char *locationId)
 {
-  static Widget mainHelpDialog = NULL;
+  static Widget mainHelpDialog = nullptr;
 
 #ifdef DEBUG
   if (debug)
     stat_out("Entering DisplayHelp\n");
 #endif
 
-  if (mainHelpDialog == NULL)
-      mainHelpDialog = CreateHelpDialog(NULL);
+  if (mainHelpDialog == nullptr)
+      mainHelpDialog = CreateHelpDialog(nullptr);
 
   DisplayHelpDialog (mainHelpDialog, helpVolume, locationId);
 
@@ -822,7 +822,7 @@ CreateHelpDialog (HelpStruct *pHelp)
     helpDialog = DtCreateHelpDialog(dtIconShell, "helpDlg",
                                             args, i);
     XtAddCallback(helpDialog, DtNhyperLinkCallback,
-                      HelpHyperlinkCB, NULL);
+                      HelpHyperlinkCB, nullptr);
     XtAddCallback(helpDialog, DtNcloseCallback,
                       HelpCloseCB, pHelp);
 

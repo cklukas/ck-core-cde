@@ -200,7 +200,7 @@ static iljpgError build_huffman_tables (
                 lookup_size,
                 code, mask;
         tree_node *tree_nodes,          /* pointer to pool of tree nodes */
-                  *nodep, *leafp = NULL, **followp;  /* misc aux. tree pointers */
+                  *nodep, *leafp = nullptr, **followp;  /* misc aux. tree pointers */
         LOOKUP    *lookup_symb, *lookup_len; /* pointers to lookup tables */
         int       absize; /* actual number of Huffman-encoded symbols */
         int      *hufvals, *hufcodes, *huflen; /* intermediate tables */
@@ -210,9 +210,9 @@ static iljpgError build_huffman_tables (
             /*  Init all ptrs to allocated data to null. If any allocation fails 
                 deallocate all and return malloc error.
             */
-        hufvals = hufcodes = huflen = (int *)NULL;
-        lookup_symb = lookup_len = (LOOKUP *)NULL;
-        tree_nodes = (tree_node *)NULL;
+        hufvals = hufcodes = huflen = (int *)nullptr;
+        lookup_symb = lookup_len = (LOOKUP *)nullptr;
+        tree_nodes = (tree_node *)nullptr;
 
         error = ILJPG_ERROR_DECODE_MALLOC;             /* assumed malloc error for now */
         if (!(hufvals = (int *)ILJPG_MALLOC_ZERO ((ABSIZE+1) * sizeof(int))))
@@ -305,8 +305,8 @@ static iljpgError build_huffman_tables (
                             }
                             lookup_symb[lookup_index] = next_node;
                             nodep = tree_nodes + next_node;
-                            nodep->left = NULL;
-                            nodep->right = NULL;
+                            nodep->left = nullptr;
+                            nodep->right = nullptr;
                             next_node ++;
                             lookup_len[lookup_index] = NOLEN;
                         }
@@ -317,7 +317,7 @@ static iljpgError build_huffman_tables (
                         /* now go down the tree branch, building as needed */
                         for ( i = lookup_bits; i < len; i++ ) {
                             followp = (code & mask) ? &nodep->left : &nodep->right;
-                            if ( *followp == NULL ) {
+                            if ( *followp == nullptr ) {
                                 /* build a new node */
                                 /* check that there are available nodes
                                    (this should never fail) */
@@ -331,8 +331,8 @@ static iljpgError build_huffman_tables (
                                 *followp = &tree_nodes[next_node++];
                                 leafp = *followp;     /* remember leaf */
 
-                                (*followp)->left = NULL;
-                                (*followp)->right= NULL;
+                                (*followp)->left = nullptr;
+                                (*followp)->right= nullptr;
                                 (*followp)->c    = -1;
                             }
                             nodep = *followp;

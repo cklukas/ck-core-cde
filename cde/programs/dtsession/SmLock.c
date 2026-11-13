@@ -176,13 +176,13 @@ LockIsAvailable( void )
             file = SmPamServiceFile();
             message = (char *) malloc(strlen(smNLS.pamServiceErrorString) +
                                       strlen(file) + 1);
-            if (message == NULL)
+            if (message == nullptr)
             {
                 PrintErrnoError(DtError, smNLS.cantMallocErrorString);
                 break;
             }
             insert = strstr(smNLS.pamServiceErrorString, "%s");
-            if (insert == NULL)
+            if (insert == nullptr)
             {
                 strcpy(message, smNLS.pamServiceErrorString);
             }
@@ -240,7 +240,7 @@ LockDisplay(
 {
     int i;
     int	     screenNum;
-    Widget   parent = NULL, lockDlg;
+    Widget   parent = nullptr, lockDlg;
     XColor   xcolors[2];
     Boolean  secure;
     int lockDelay;
@@ -305,13 +305,13 @@ LockDisplay(
 	return;
     }
      
-    if(((smDD.lockCoverDialog == NULL) && (smGD.coverScreen == True)) ||
-       ((smDD.lockDialog == NULL) && (smGD.coverScreen == False)))
+    if(((smDD.lockCoverDialog == nullptr) && (smGD.coverScreen == True)) ||
+       ((smDD.lockDialog == nullptr) && (smGD.coverScreen == False)))
     {
 	/*
 	 * Set up the grab widget in here
 	 */
-	grabWidget = NULL;
+	grabWidget = nullptr;
 
 	/*
 	 * If the user has specified cover - create the cover dialog
@@ -337,7 +337,7 @@ LockDisplay(
 	/*
 	 * Create the lock dialog if the user has specified that
 	 */
-	if((smDD.lockDialog == NULL) && (smGD.coverScreen == False))
+	if((smDD.lockDialog == nullptr) && (smGD.coverScreen == False))
 	{
 	    smDD.lockDialog = CreateLockDialog();
 
@@ -386,7 +386,7 @@ LockDisplay(
     * is lost. Ah X.
     */
     XtAddEventHandler(grabWidget, VisibilityChangeMask,
-                      False, FinishLocking, NULL);
+                      False, FinishLocking, nullptr);
 
     XtManageChild(lockDlg);
 
@@ -405,7 +405,7 @@ LockDisplay(
       * Wait for 'lockDelay' seconds before requiring a password. 
       */
       lockDelayId = XtAppAddTimeOut(smGD.appCon,
-                               lockDelay*1000, RequirePassword, NULL);
+                               lockDelay*1000, RequirePassword, nullptr);
   
     }
     else if (lockDelay == 0)
@@ -423,7 +423,7 @@ LockDisplay(
       * Cycle to next saver in 'cycleTimeout' seconds.
       */
       cycleId = XtAppAddTimeOut(smGD.appCon,
-                               smSaverRes.cycleTimeout*1000, CycleSaver, NULL);
+                               smSaverRes.cycleTimeout*1000, CycleSaver, nullptr);
     }
     
     if(smGD.coverScreen == True)
@@ -439,7 +439,7 @@ LockDisplay(
     */
     XtAddEventHandler(grabWidget,
                       (KeyPressMask | ButtonPressMask | PointerMotionMask),
-                      False, EventDetected, NULL);
+                      False, EventDetected, nullptr);
 
     /** wait 90 seconds for lock dialog to come up **/
     lockTimeId = XtAppAddTimeOut(smGD.appCon,
@@ -485,7 +485,7 @@ FinishLocking(Widget		wid,
         XtRemoveTimeOut(lockTimeId); 
         lockTimeId = (XtIntervalId)0;
         XtRemoveEventHandler(wid, VisibilityChangeMask,
-                             False, FinishLocking, NULL);
+                             False, FinishLocking, nullptr);
         XSync(smGD.display, 0);
 
         i = 0;
@@ -885,10 +885,10 @@ EventDetected(
      * pressing the shift key or an arrow key), process it.
      */
 #ifdef USE_HP_SPECIFIC_XLIB
-    if (len = XHPConvertLookup(event, str, sizeof(str), NULL, NULL,
+    if (len = XHPConvertLookup(event, str, sizeof(str), nullptr, nullptr,
 			       XHPGetEurasianCvt(smGD.display)))
 #else /* USE_HP_SPECIFIC_XLIB */
-    if (len = XLookupString (event, str, sizeof(str), NULL, NULL))
+    if (len = XLookupString (event, str, sizeof(str), nullptr, nullptr))
 #endif /* USE_HP_SPECIFIC_XLIB */
     {
 	if (smGD.lockedState == LOCKED)
@@ -957,14 +957,14 @@ CheckString(
      *	  accept any more.
      *	- An ESC kills the line.
      */
-    static char *passwd = NULL;                            /* password space */
+    static char *passwd = nullptr;                            /* password space */
     static int pw_buf_length = 0;                          /* length of allocated password buffer */
     static int pw_length = 0;		                   /* password length */
     char * tmpptr;
     int checked;
     Boolean correct;
 
-    if (s == NULL)
+    if (s == nullptr)
     {
      /*
       * Clear password.
@@ -1090,7 +1090,7 @@ UnlockDisplay(
      */
     XtRemoveEventHandler(grabWidget,
 			 (KeyPressMask | ButtonPressMask | PointerMotionMask),
-			 False, EventDetected, NULL);
+			 False, EventDetected, nullptr);
 
     /*
      * Turn off alarms
@@ -1145,7 +1145,7 @@ UnlockDisplay(
         }
 #else
         XtDestroyWidget(smDD.lockDialog);
-        smDD.lockDialog = NULL;
+        smDD.lockDialog = nullptr;
 #endif
     }
     else
@@ -1164,9 +1164,9 @@ UnlockDisplay(
         for(i = (smGD.numSavedScreens - 1);i >= 0;i--)
         {
             XtDestroyWidget(smDD.coverDialog[i]);
-            smDD.coverDialog[i] = NULL;
+            smDD.coverDialog[i] = nullptr;
         }
-	smDD.lockCoverDialog = NULL;
+	smDD.lockCoverDialog = nullptr;
 #endif
     }
 
@@ -1242,7 +1242,7 @@ TakeDownLogin(
    /*
     * Clear partially entered password if any.
     */
-    CheckString(NULL, 0);
+    CheckString(nullptr, 0);
     lockDlgVisible = False;
 
     XSync(smGD.display, 0);
@@ -1306,7 +1306,7 @@ PutUpLogin(
     {
 	timerId = XtAppAddTimeOut(smGD.appCon,
 				  (smRes.alarmTime * 1000),
-				  TakeDownLogin,NULL);
+				  TakeDownLogin,nullptr);
     }
   }
   XSync(smGD.display, 0);
@@ -1344,7 +1344,7 @@ LockAttemptFailed(XtPointer	ptr,
     PrintError(DtError, smNLS.cantLockErrorString);
     smGD.lockedState = UNLOCKED;
     XtRemoveEventHandler(lockWid, VisibilityChangeMask,
-			 False, FinishLocking, NULL);
+			 False, FinishLocking, nullptr);
     UnlockDisplay(False, False);
     XSync(smGD.display, 0);
 }
@@ -1469,7 +1469,7 @@ CycleSaver(XtPointer	ptr,
   StopScreenSaver();
   StartScreenSaver();  
   cycleId = XtAppAddTimeOut(smGD.appCon, smSaverRes.cycleTimeout*1000,
-                            CycleSaver, NULL);
+                            CycleSaver, nullptr);
 }
 
 

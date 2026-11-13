@@ -136,7 +136,7 @@ StartServerOnce( struct display *d )
 
     Debug ("Starting server for %s\n", d->name);
     receivedUsr1 = 0;
-    CatchSignal (SIGUSR1, CatchUsr1, NULL);
+    CatchSignal (SIGUSR1, CatchUsr1, nullptr);
     argv = d->argv;
     switch (pid = fork ()) {
     case 0:
@@ -187,11 +187,11 @@ StartServerOnce( struct display *d )
 	if (d->environStr && strlen(d->environStr) > 0)
 	    env = parseEnv(env, d->environStr);
 #ifdef sun
-	if (getEnv (env, "OPENWINHOME") == NULL) 
+	if (getEnv (env, "OPENWINHOME") == nullptr) 
 	    env = setEnv(env, "OPENWINHOME", "/usr/openwin");
 #endif
 #ifdef _AIX
-	if (getEnv (env, "ODMDIR") == NULL)
+	if (getEnv (env, "ODMDIR") == nullptr)
 	    env = setEnv(env, "ODMDIR", "/etc/objrepos");
 #ifdef _POWER
 	env = setEnv(env, "XTOEXEC", "true");		/* flag for xserverrc */
@@ -271,7 +271,7 @@ serverPause( unsigned t, int serverPid )
 	Debug ("ServerPause(): already received USR1\n");
 
     for (;;) {
-	pid = waitpid ((pid_t) -1, NULL, WNOHANG);
+	pid = waitpid ((pid_t) -1, nullptr, WNOHANG);
 	if (pid == serverPid || (pid == -1 && errno == ECHILD)) {
 	    dead = 1;
 	    break;
@@ -286,9 +286,9 @@ serverPause( unsigned t, int serverPid )
     }
 
     alarm ((unsigned) 0);
-    sigaction (SIGALRM, &oldAlarm, NULL);
-    sigaction (SIGCHLD, &oldChild, NULL);
-    sigprocmask (SIG_SETMASK, &previous, NULL);
+    sigaction (SIGALRM, &oldAlarm, nullptr);
+    sigaction (SIGCHLD, &oldChild, nullptr);
+    sigprocmask (SIG_SETMASK, &previous, nullptr);
     if (dead) {
 	Debug ("Server dead\n");
 	Debug ("Server died\n");
@@ -370,7 +370,7 @@ WaitForServer( struct display *d )
     int	    i;
 
     for (i = 0; i < (d->openRepeat > 0 ? d->openRepeat : 1); i++) {
-	void	*opened = NULL;
+	void	*opened = nullptr;
 	char	*name = strdup (d->name);
 	int	completed;
 

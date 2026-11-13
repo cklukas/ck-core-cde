@@ -75,7 +75,7 @@ void selcharokCB(Widget widget, ListData * ld, XtPointer call_data)
 
     msg = GETMESSAGE(10, 4, "No indexes are selected");
 
-    XtVaGetValues(ld->list, XmNselectedItemCount, &num, NULL);
+    XtVaGetValues(ld->list, XmNselectedItemCount, &num, nullptr);
     if (num == 0) {
 /*	AskUser(widget, ld->ed, msg, &ans, "error");*/
 	return;
@@ -103,7 +103,7 @@ XmString * setxmslist(ListData * ld)
     int		i;
 
     if ((xmslist = (XmString *) calloc(ld->existcode_num, sizeof(XmString *)))
-	== NULL) {
+	== nullptr) {
 	excerror(ld->ed, EXCERRMALLOC, "setxmslist", "exit");
     }
     cp = ld->existcode_c;
@@ -121,7 +121,7 @@ void freexmslist(ListData * ld, XmString * xmslist)
     XmString	*xmsp;
     int		i;
 
-    if (xmslist != NULL) {
+    if (xmslist != nullptr) {
 	xmsp = xmslist;
 	for (i = 0; i < ld->existcode_num; i++) {
 	    XmStringFree(*xmsp);

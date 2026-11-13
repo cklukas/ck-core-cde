@@ -45,12 +45,12 @@ typedef struct
    int entry_count;
 } MountsDialog;
 
-static MountsDialog *mounts_dialog = NULL;
+static MountsDialog *mounts_dialog = nullptr;
 
 static int
 MountsGetSelectedIndex(MountsDialog *dlg)
 {
-   int *positions = NULL;
+   int *positions = nullptr;
    int count = 0;
    int index = -1;
 
@@ -71,7 +71,7 @@ MountsGetSelectedIndex(MountsDialog *dlg)
 static Boolean
 IsLocalFsType(const char *fs_type)
 {
-   if (fs_type == NULL || *fs_type == '\0')
+   if (fs_type == nullptr || *fs_type == '\0')
       return False;
 
    if (strcmp(fs_type, "nfs") == 0 ||
@@ -109,7 +109,7 @@ FreeEntries(MountsDialog *dlg)
          XtFree(dlg->entries[i].device);
       }
       XtFree((char *)dlg->entries);
-      dlg->entries = NULL;
+      dlg->entries = nullptr;
       dlg->entry_count = 0;
    }
 }
@@ -232,7 +232,7 @@ MountsOpenCB(Widget w, XtPointer client_data, XtPointer call_data)
       return;
 
    dialog_data = _DtGetInstanceData ((XtPointer)dlg->file_mgr_rec);
-   if (dialog_data == NULL)
+   if (dialog_data == nullptr)
       return;
 
    file_mgr_data = (FileMgrData *) dialog_data->data;
@@ -263,12 +263,12 @@ MountsRefresh(MountsDialog *dlg)
    FreeEntries(dlg);
 
    fp = setmntent("/proc/mounts", "r");
-   if (fp == NULL)
+   if (fp == nullptr)
       fp = setmntent("/etc/mtab", "r");
-   if (fp == NULL)
+   if (fp == nullptr)
       return;
 
-   while ((ent = getmntent(fp)) != NULL)
+   while ((ent = getmntent(fp)) != nullptr)
    {
       MountEntry entry;
 
@@ -347,14 +347,14 @@ CreateMountsDialog(Widget parent, FileMgrRec *file_mgr_rec)
    dlg = (MountsDialog *)XtCalloc(1, sizeof(MountsDialog));
    dlg->file_mgr_rec = file_mgr_rec;
 
-   dlg->dialog = XmCreateFormDialog(parent, "mountsDialog", NULL, 0);
+   dlg->dialog = XmCreateFormDialog(parent, "mountsDialog", nullptr, 0);
    XtVaSetValues(XtParent(dlg->dialog),
                  XmNtitle, GETMESSAGE(41, 1, "Mounts"),
-                 NULL);
+                 nullptr);
    XtVaSetValues(dlg->dialog,
                  XmNmarginWidth, 10,
                  XmNmarginHeight, 10,
-                 NULL);
+                 nullptr);
 
    form = dlg->dialog;
 
@@ -372,7 +372,7 @@ CreateMountsDialog(Widget parent, FileMgrRec *file_mgr_rec)
    XtAddCallback(list, XmNsingleSelectionCallback, MountsListCB, dlg);
    XtAddCallback(list, XmNbrowseSelectionCallback, MountsListCB, dlg);
 
-   sep = XmCreateSeparatorGadget(form, "sep", NULL, 0);
+   sep = XmCreateSeparatorGadget(form, "sep", nullptr, 0);
    XtVaSetValues(sep,
                  XmNtopAttachment, XmATTACH_WIDGET,
                  XmNtopWidget, XtParent(list),
@@ -380,103 +380,103 @@ CreateMountsDialog(Widget parent, FileMgrRec *file_mgr_rec)
                  XmNrightAttachment, XmATTACH_FORM,
                  XmNleftOffset, 10,
                  XmNrightOffset, 10,
-                 NULL);
+                 nullptr);
    XtManageChild(sep);
 
    str = XmStringCreateLocalized(GETMESSAGE(41, 2, "File system:"));
-   label = XmCreateLabelGadget(form, "fsLabel", NULL, 0);
+   label = XmCreateLabelGadget(form, "fsLabel", nullptr, 0);
    XtVaSetValues(label,
                  XmNlabelString, str,
                  XmNtopAttachment, XmATTACH_WIDGET,
                  XmNtopWidget, sep,
                  XmNleftAttachment, XmATTACH_FORM,
                  XmNleftOffset, 10,
-                 NULL);
+                 nullptr);
    XmStringFree(str);
    XtManageChild(label);
 
-   fs_label = XmCreateLabelGadget(form, "fsValue", NULL, 0);
+   fs_label = XmCreateLabelGadget(form, "fsValue", nullptr, 0);
    XtVaSetValues(fs_label,
                  XmNtopAttachment, XmATTACH_WIDGET,
                  XmNtopWidget, sep,
                  XmNleftAttachment, XmATTACH_WIDGET,
                  XmNleftWidget, label,
                  XmNleftOffset, 6,
-                 NULL);
+                 nullptr);
    XtManageChild(fs_label);
    dlg->fs_label = fs_label;
 
    str = XmStringCreateLocalized(GETMESSAGE(41, 3, "Device:"));
-   label = XmCreateLabelGadget(form, "devLabel", NULL, 0);
+   label = XmCreateLabelGadget(form, "devLabel", nullptr, 0);
    XtVaSetValues(label,
                  XmNlabelString, str,
                  XmNtopAttachment, XmATTACH_WIDGET,
                  XmNtopWidget, fs_label,
                  XmNleftAttachment, XmATTACH_FORM,
                  XmNleftOffset, 10,
-                 NULL);
+                 nullptr);
    XmStringFree(str);
    XtManageChild(label);
 
-   dev_label = XmCreateLabelGadget(form, "devValue", NULL, 0);
+   dev_label = XmCreateLabelGadget(form, "devValue", nullptr, 0);
    XtVaSetValues(dev_label,
                  XmNtopAttachment, XmATTACH_WIDGET,
                  XmNtopWidget, fs_label,
                  XmNleftAttachment, XmATTACH_WIDGET,
                  XmNleftWidget, label,
                  XmNleftOffset, 6,
-                 NULL);
+                 nullptr);
    XtManageChild(dev_label);
    dlg->dev_label = dev_label;
 
    str = XmStringCreateLocalized(GETMESSAGE(41, 4, "Size:"));
-   label = XmCreateLabelGadget(form, "sizeLabel", NULL, 0);
+   label = XmCreateLabelGadget(form, "sizeLabel", nullptr, 0);
    XtVaSetValues(label,
                  XmNlabelString, str,
                  XmNtopAttachment, XmATTACH_WIDGET,
                  XmNtopWidget, dev_label,
                  XmNleftAttachment, XmATTACH_FORM,
                  XmNleftOffset, 10,
-                 NULL);
+                 nullptr);
    XmStringFree(str);
    XtManageChild(label);
 
-   size_label = XmCreateLabelGadget(form, "sizeValue", NULL, 0);
+   size_label = XmCreateLabelGadget(form, "sizeValue", nullptr, 0);
    XtVaSetValues(size_label,
                  XmNtopAttachment, XmATTACH_WIDGET,
                  XmNtopWidget, dev_label,
                  XmNleftAttachment, XmATTACH_WIDGET,
                  XmNleftWidget, label,
                  XmNleftOffset, 6,
-                 NULL);
+                 nullptr);
    XtManageChild(size_label);
    dlg->size_label = size_label;
 
    str = XmStringCreateLocalized(GETMESSAGE(41, 5, "Free:"));
-   label = XmCreateLabelGadget(form, "freeLabel", NULL, 0);
+   label = XmCreateLabelGadget(form, "freeLabel", nullptr, 0);
    XtVaSetValues(label,
                  XmNlabelString, str,
                  XmNtopAttachment, XmATTACH_WIDGET,
                  XmNtopWidget, size_label,
                  XmNleftAttachment, XmATTACH_FORM,
                  XmNleftOffset, 10,
-                 NULL);
+                 nullptr);
    XmStringFree(str);
    XtManageChild(label);
 
-   free_label = XmCreateLabelGadget(form, "freeValue", NULL, 0);
+   free_label = XmCreateLabelGadget(form, "freeValue", nullptr, 0);
    XtVaSetValues(free_label,
                  XmNtopAttachment, XmATTACH_WIDGET,
                  XmNtopWidget, size_label,
                  XmNleftAttachment, XmATTACH_WIDGET,
                  XmNleftWidget, label,
                  XmNleftOffset, 6,
-                 NULL);
+                 nullptr);
    XtManageChild(free_label);
    dlg->free_label = free_label;
 
    str = XmStringCreateLocalized(GETMESSAGE(41, 6, "Don't show this mountpoint on Shelf"));
-   ignore_toggle = XmCreateToggleButtonGadget(form, "ignoreToggle", NULL, 0);
+   ignore_toggle = XmCreateToggleButtonGadget(form, "ignoreToggle", nullptr, 0);
    XtVaSetValues(ignore_toggle,
                  XmNlabelString, str,
                  XmNtopAttachment, XmATTACH_WIDGET,
@@ -485,13 +485,13 @@ CreateMountsDialog(Widget parent, FileMgrRec *file_mgr_rec)
                  XmNleftOffset, 10,
                  XmNrightAttachment, XmATTACH_FORM,
                  XmNrightOffset, 10,
-                 NULL);
+                 nullptr);
    XmStringFree(str);
    XtManageChild(ignore_toggle);
    dlg->ignore_toggle = ignore_toggle;
    XtAddCallback(ignore_toggle, XmNvalueChangedCallback, MountsIgnoreToggleCB, dlg);
 
-   Widget btn_sep = XmCreateSeparatorGadget(form, "btnSep", NULL, 0);
+   Widget btn_sep = XmCreateSeparatorGadget(form, "btnSep", nullptr, 0);
 
    XtVaSetValues(btn_sep,
                XmNtopAttachment,   XmATTACH_WIDGET,
@@ -502,11 +502,11 @@ CreateMountsDialog(Widget parent, FileMgrRec *file_mgr_rec)
                XmNrightAttachment, XmATTACH_FORM,
                XmNrightOffset,     0,
                XmNseparatorType,   XmSHADOW_ETCHED_IN,
-               NULL);
+               nullptr);
 
    XtManageChild(btn_sep);
 
-   open_btn = XmCreatePushButtonGadget(form, "openBtn", NULL, 0);
+   open_btn = XmCreatePushButtonGadget(form, "openBtn", nullptr, 0);
    XtVaSetValues(open_btn,
                  XmNlabelString, XmStringCreateLocalized(GETMESSAGE(41, 7, "Open")),
                  XmNtopAttachment, XmATTACH_WIDGET,
@@ -516,12 +516,12 @@ CreateMountsDialog(Widget parent, FileMgrRec *file_mgr_rec)
                  XmNleftOffset, 10,
                  XmNbottomAttachment, XmATTACH_FORM,
                  XmNbottomOffset, 10,
-                 NULL);
+                 nullptr);
    XtManageChild(open_btn);
    dlg->open_btn = open_btn;
    XtAddCallback(open_btn, XmNactivateCallback, MountsOpenCB, dlg);
 
-   close_btn = XmCreatePushButtonGadget(form, "closeBtn", NULL, 0);
+   close_btn = XmCreatePushButtonGadget(form, "closeBtn", nullptr, 0);
    XtVaSetValues(close_btn,
                  XmNlabelString, XmStringCreateLocalized(GETMESSAGE(41, 8, "Close")),
                  XmNtopAttachment, XmATTACH_WIDGET,
@@ -532,29 +532,29 @@ CreateMountsDialog(Widget parent, FileMgrRec *file_mgr_rec)
                  XmNleftOffset, 10,
                  XmNbottomAttachment, XmATTACH_FORM,
                  XmNbottomOffset, 10,
-                 NULL);
+                 nullptr);
    XtManageChild(close_btn);
    XtAddCallback(close_btn, XmNactivateCallback, MountsCloseCB, dlg);
 
    /* Make Open the default button for the dialog */
    XtVaSetValues(form,
                XmNdefaultButton, open_btn,
-               NULL);
+               nullptr);
 
    /* Give it the default-button look */
    XtVaSetValues(open_btn,
                XmNshowAsDefault, 1,   /* thickness in pixels */
-               NULL);
+               nullptr);
 
    /* allow Return to activate it even when focus is elsewhere */
    XtVaSetValues(open_btn,
                XmNdefaultButtonShadowThickness, 1,
-               NULL);
+               nullptr);
 
    /* Make Close the cancel button for the dialog */
    XtVaSetValues(form,
               XmNcancelButton, close_btn,
-              NULL);
+              nullptr);
 
    return dlg;
 }
@@ -571,7 +571,7 @@ ShowMountsDialog(
 
    (void) call_data;
 
-   if (w != NULL)
+   if (w != nullptr)
    {
       mbar = XmGetPostedFromWidget(XtParent(w));
       XtSetArg(args[0], XmNuserData, &file_mgr_rec);
@@ -582,10 +582,10 @@ ShowMountsDialog(
       file_mgr_rec = (FileMgrRec *) client_data;
    }
 
-   if (file_mgr_rec == NULL)
+   if (file_mgr_rec == nullptr)
       return;
 
-   if (mounts_dialog == NULL || mounts_dialog->dialog == NULL)
+   if (mounts_dialog == nullptr || mounts_dialog->dialog == nullptr)
       mounts_dialog = CreateMountsDialog(file_mgr_rec->shell, file_mgr_rec);
 
    mounts_dialog->file_mgr_rec = file_mgr_rec;

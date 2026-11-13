@@ -109,13 +109,13 @@ Boolean G_initImages          = True;
 int     G_filop_confirm_fd    = -1;
 char    G_directory[MAX_PATH];
 char    G_file[MAX_PATH];
-String  *G_fileList           = NULL;
+String  *G_fileList           = nullptr;
 int     G_nCollisions         = 0;
-Widget  G_dialogShell         = NULL;
-Widget  G_rename_text         = NULL;
-Widget  G_rename_toggle       = NULL;
-Widget  G_merge_toggle        = NULL;
-Widget  G_multi_rename_toggle = NULL;
+Widget  G_dialogShell         = nullptr;
+Widget  G_rename_text         = nullptr;
+Widget  G_rename_toggle       = nullptr;
+Widget  G_merge_toggle        = nullptr;
+Widget  G_multi_rename_toggle = nullptr;
 int     G_mode;
 
 /* types */
@@ -171,8 +171,8 @@ replace_rename_ok_callback(
    int          saveError = 0;
    static char  msg[30+(3*MAX_PATH)];
    String       title;
-   char         *newFileDir = NULL;
-   char         *newFileName = NULL;
+   char         *newFileDir = nullptr;
+   char         *newFileName = nullptr;
    int          newFileDirLen;
    int          rename_rc;
    Boolean      same = (Boolean)(XtArgVal)client_data;
@@ -196,8 +196,8 @@ replace_rename_ok_callback(
                  GETMESSAGE(9, 38, "%s\nalready exists: choose another name."),
                  renameNewName);
          title = XtNewString(GETMESSAGE(9, 37, "Object Rename - Error"));
-         _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, NULL,
-                           renameError_ok_callback, NULL, NULL, False, ERROR_DIALOG);
+         _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, nullptr,
+                           renameError_ok_callback, nullptr, nullptr, False, ERROR_DIALOG);
          XtFree(title);
          XtFree(renameNewName);
          XtFree(destinationName);
@@ -210,7 +210,7 @@ replace_rename_ok_callback(
           /* only allows renames within the same filesystem */
 
           DirectoryFileModified(home_host_name, G_directory, G_file);
-          if (DtStrchr(newFile, '/') == NULL)
+          if (DtStrchr(newFile, '/') == nullptr)
               DirectoryFileModified(home_host_name, G_directory, newFile);
           else
           {
@@ -229,7 +229,7 @@ replace_rename_ok_callback(
           errno = 0;
           rename_rc = rename(destinationName, renameNewName);
 
-          if (newFileDir != NULL)
+          if (newFileDir != nullptr)
           {
               DirectoryEndModify(home_host_name, newFileDir);
               XtFree(newFileDir);
@@ -242,8 +242,8 @@ replace_rename_ok_callback(
                       GETMESSAGE(9, 39, "%s\ncannot be renamed to\n%s\n%s"),
                       destinationName, renameNewName, strerror(saveError));
               title = XtNewString(GETMESSAGE(9, 37, "Object Rename - Error"));
-              _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, NULL,
-                                renameError_ok_callback, NULL, NULL, False, ERROR_DIALOG);
+              _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, nullptr,
+                                renameError_ok_callback, nullptr, nullptr, False, ERROR_DIALOG);
               XtFree(title);
               XtFree(renameNewName);
               XtFree(destinationName);
@@ -286,8 +286,8 @@ replace_rename_ok_callback(
                     destinationName);
          }
 
-         _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, NULL,
-                           replaceError_ok_callback, NULL, NULL, False, ERROR_DIALOG);
+         _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, nullptr,
+                           replaceError_ok_callback, nullptr, nullptr, False, ERROR_DIALOG);
          XtFree(title);
          XtFree(destinationName);
          return;
@@ -296,7 +296,7 @@ replace_rename_ok_callback(
 
    /* close the dialog */
    XtDestroyWidget(G_dialogShell);
-   G_dialogShell = NULL;
+   G_dialogShell = nullptr;
 
    /* send return code through the pipe to the background proc */
    write(G_filop_confirm_fd, &rc, sizeof(int));
@@ -312,7 +312,7 @@ buffer_replace_rename_ok_callback(
         XtPointer call_data)
 {
    int          rc = 0;
-   String       newFile = NULL, renameNewName, destinationName;
+   String       newFile = nullptr, renameNewName, destinationName;
    struct stat  buf;
    int          saveError = 0;
    static char  msg[38+MAX_PATH];
@@ -333,8 +333,8 @@ buffer_replace_rename_ok_callback(
                  GETMESSAGE(9, 38, "%s\nalready exists: choose another name."),
                  renameNewName);
          title = XtNewString(GETMESSAGE(9, 37, "Object Rename - Error"));
-         _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, NULL,
-                           renameError_ok_callback, NULL, NULL, False, ERROR_DIALOG);
+         _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, nullptr,
+                           renameError_ok_callback, nullptr, nullptr, False, ERROR_DIALOG);
          XtFree(title);
          XtFree(renameNewName);
          XtFree(destinationName);
@@ -385,8 +385,8 @@ buffer_replace_rename_ok_callback(
          }
 
 
-         _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, NULL,
-                           replaceError_ok_callback, NULL, NULL, False, ERROR_DIALOG);
+         _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, nullptr,
+                           replaceError_ok_callback, nullptr, nullptr, False, ERROR_DIALOG);
          XtFree(title);
          XtFree(destinationName);
          return;
@@ -395,7 +395,7 @@ buffer_replace_rename_ok_callback(
 
    /* close the dialog */
    XtDestroyWidget(G_dialogShell);
-   G_dialogShell = NULL;
+   G_dialogShell = nullptr;
 
    /* send return code through the pipe to the background proc */
    write(G_filop_confirm_fd, &rc, sizeof(int));
@@ -422,7 +422,7 @@ replace_rename_cancel_callback(
 
    /* close the dialog */
    XtDestroyWidget(G_dialogShell);
-   G_dialogShell = NULL;
+   G_dialogShell = nullptr;
 
    /* send negative return code through the pipe to the background proc */
    write(G_filop_confirm_fd, &rc, sizeof(int));
@@ -446,13 +446,13 @@ replace_rename_radio_callback(
         case RADIO_REPLACE:
            XtVaSetValues (G_rename_text,
                           XmNsensitive, FALSE,
-                          NULL);
+                          nullptr);
         break;
 
         case RADIO_RENAME:
            XtVaSetValues (G_rename_text,
                           XmNsensitive, TRUE,
-                          NULL);
+                          nullptr);
            XmProcessTraversal(G_rename_text, XmTRAVERSE_CURRENT);
         break;
 
@@ -485,7 +485,7 @@ replace_merge_ok_callback(
         XtPointer call_data)
 {
    int          rc;
-   String       newFile=NULL, renameNewName, renameOldName;
+   String       newFile=nullptr, renameNewName, renameOldName;
    struct stat  buf;
    int          saveError = 0;
    char         msg[128];
@@ -508,7 +508,7 @@ must be closed before a folder can be moved or renamed.");
          errmsg = XtMalloc(strlen(msg)+strlen(destinationPath)+1);
          sprintf(errmsg,msg,destinationPath);
          title = XtNewString(GETMESSAGE(9, 40, "Object Replace - Error"));
-         _DtMessage(toplevel, title, errmsg, NULL, HelpRequestCB);
+         _DtMessage(toplevel, title, errmsg, nullptr, HelpRequestCB);
          XtFree(errmsg);
          XtFree(title);
          XtFree(destinationPath);
@@ -518,7 +518,7 @@ must be closed before a folder can be moved or renamed.");
 
    /* close the dialog */
    XtDestroyWidget(G_dialogShell);
-   G_dialogShell = NULL;
+   G_dialogShell = nullptr;
 
    /* send return code through the pipe to the background proc */
    write(G_filop_confirm_fd, &rc, sizeof(int));
@@ -538,7 +538,7 @@ replace_merge_cancel_callback(
 
    /* close the dialog */
    XtDestroyWidget(G_dialogShell);
-   G_dialogShell = NULL;
+   G_dialogShell = nullptr;
 
    /* send negative return code through the pipe to the background proc */
    write(G_filop_confirm_fd, &rc, sizeof(int));
@@ -559,13 +559,13 @@ multicollide_cancel_callback(
 
    /* close the dialog */
    XtDestroyWidget(G_dialogShell);
-   G_dialogShell = NULL;
+   G_dialogShell = nullptr;
 
    /* de-allocate the file list */
    for ( i = 0; i < G_nCollisions; i++)
       XtFree((char *)G_fileList[i]);
    XtFree((char *)G_fileList);
-   G_fileList = NULL;
+   G_fileList = nullptr;
 
    /* send return code through the pipe to the background proc */
    write(G_filop_confirm_fd, &rc, sizeof(int));
@@ -598,7 +598,7 @@ multicollide_ok_callback(
 
    if (XmToggleButtonGetState(G_multi_rename_toggle))
    {
-      char *names = NULL;
+      char *names = nullptr;
       title = XtNewString(GETMESSAGE(9, 37, "Object Rename - Error"));
 
       write(G_filop_confirm_fd, &rc, sizeof(int));
@@ -644,7 +644,7 @@ multicollide_ok_callback(
               int bufsize;
               buf = XtMalloc(strlen(GETMESSAGE(9,138, "Failed to rename the following object(s)\n\n%s\n\nThe most likely cause is that you do not have\npermission to rename these objects(s)"))+strlen(names)+10);
               sprintf(buf,GETMESSAGE(9,138, "Failed to rename the following object(s)\n\n%s\n\nThe most likely cause is that you do not have\npermission to rename these object(s)"),names);
-              _DtMessage(toplevel, title, buf, NULL, HelpRequestCB);
+              _DtMessage(toplevel, title, buf, nullptr, HelpRequestCB);
               XtFree(buf);
           }
           XtFree(names);
@@ -653,7 +653,7 @@ multicollide_ok_callback(
    }
    else
    {
-      char *names = NULL;
+      char *names = nullptr;
 
       title = XtNewString(GETMESSAGE(9, 40, "Object Replace - Error"));
       write(G_filop_confirm_fd, &rc, sizeof(int));
@@ -672,7 +672,7 @@ multicollide_ok_callback(
 
 	     errmsg = XtMalloc(strlen(msg)+strlen(destinationPath)+1);
 	     sprintf(errmsg,msg,destinationPath);
-             _DtMessage(toplevel, title, errmsg, NULL, HelpRequestCB);
+             _DtMessage(toplevel, title, errmsg, nullptr, HelpRequestCB);
              XtFree(errmsg);
              XtFree(destinationPath);
 	     continue;
@@ -703,7 +703,7 @@ multicollide_ok_callback(
 	int bufsize;
         buf = XtMalloc(strlen(GETMESSAGE(9,139, "Failed to replace the following object(s)\n\n%s\n\nThe most likely cause is that you do not have\npermission to replace these object(s)"))+strlen(names)+10);
         sprintf(buf,GETMESSAGE(9,139, "Failed to replace the following object(s)\n\n%s\n\nThe most likely cause is that you do not have\npermission to replace these object(s)"),names);
-        _DtMessage(toplevel, title, buf, NULL, HelpRequestCB);
+        _DtMessage(toplevel, title, buf, nullptr, HelpRequestCB);
 	XtFree(buf);
       }
       XtFree(names);
@@ -713,13 +713,13 @@ multicollide_ok_callback(
 
    /* close the dialog */
    XtDestroyWidget(G_dialogShell);
-   G_dialogShell = NULL;
+   G_dialogShell = nullptr;
 
    /* de-allocate the file list */
    for ( i = 0; i < G_nCollisions; i++)
       XtFree((char *)G_fileList[i]);
    XtFree((char *)G_fileList);
-   G_fileList = NULL;
+   G_fileList = nullptr;
 
    /* send return code through the pipe to the background proc */
 /*
@@ -810,8 +810,8 @@ buffer_multicollide_ok_callback(
                        getVariableMessage(vm_multiCannotDeleteFileOne, COPY_FILE),
                        destinationPath);
             }
-            _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, NULL,
-                              multiReplaceError_ok_callback, NULL, NULL, False, ERROR_DIALOG);
+            _DtMessageDialog (G_dialogShell, title, msg, 0, FALSE, nullptr,
+                              multiReplaceError_ok_callback, nullptr, nullptr, False, ERROR_DIALOG);
             XtFree(destinationPath);
             return;
          }
@@ -829,13 +829,13 @@ buffer_multicollide_ok_callback(
 
    /* close the dialog */
    XtDestroyWidget(G_dialogShell);
-   G_dialogShell = NULL;
+   G_dialogShell = nullptr;
 
    /* de-allocate the file list */
    for ( i = 0; i < G_nCollisions; i++)
       XtFree((char *)G_fileList[i]);
    XtFree((char *)G_fileList);
-   G_fileList = NULL;
+   G_fileList = nullptr;
 
    G_filop_confirm_fd = -1;
 
@@ -978,7 +978,7 @@ create_replace_rename_dialog(Widget         parent_widget,
                              XmNverticalSpacing,   VERTICAL_SPACING,
                              XmNhorizontalSpacing, HORIZONTAL_SPACING,
                              XmNdialogStyle,       XmDIALOG_FULL_APPLICATION_MODAL,
-                             NULL);
+                             nullptr);
 
   /* Create a question dialog icon */
   n = 0;
@@ -998,7 +998,7 @@ create_replace_rename_dialog(Widget         parent_widget,
                              XmNlabelPixmap,      px,
                              XmNtopAttachment,    XmATTACH_FORM,
                              XmNleftAttachment,   XmATTACH_FORM,
-                             NULL);
+                             nullptr);
 
   /* Create the message label */
   s = XtMalloc( 1
@@ -1020,7 +1020,7 @@ create_replace_rename_dialog(Widget         parent_widget,
                              XmNleftWidget,       icon,
                              XmNleftOffset,       HORIZONTAL_SPACING,
                              XmNrightAttachment,  XmATTACH_FORM,
-                             NULL);
+                             nullptr);
   XmStringFree(xs);
   XtFree(s);
 
@@ -1037,7 +1037,7 @@ create_replace_rename_dialog(Widget         parent_widget,
                              XmNleftAttachment,   XmATTACH_OPPOSITE_WIDGET,
                              XmNleftWidget,       msg_label,
                              XmNleftOffset,       0,
-                             NULL);
+                             nullptr);
   XmStringFree(xs);
 
   /* create radio box */
@@ -1072,7 +1072,7 @@ create_replace_rename_dialog(Widget         parent_widget,
                                          XmNalignment,   XmALIGNMENT_BEGINNING,
                                          XmNlabelString, xs,
                                          XmNset,         set,
-                                         NULL);
+                                         nullptr);
   XmStringFree(xs);
   if(!Same)
   {
@@ -1105,7 +1105,7 @@ create_replace_rename_dialog(Widget         parent_widget,
                                             XmNalignment,   XmALIGNMENT_BEGINNING,
                                             XmNlabelString, xs,
                                             XmNset,         set,
-                                            NULL);
+                                            nullptr);
   XmStringFree(xs);
   XtAddCallback(G_rename_toggle, XmNvalueChangedCallback, replace_rename_radio_callback, (XtPointer) RADIO_RENAME);
 
@@ -1128,10 +1128,10 @@ create_replace_rename_dialog(Widget         parent_widget,
                                        XmNsensitive,        set,
                                        XmNvalue,            newFile,
                                        XmNcursorPosition,   strlen(newFile),
-                                       NULL);
+                                       nullptr);
 
   /* create the action area  */
-  actionArea = Create_Action_Area(form, actions,  NULL);
+  actionArea = Create_Action_Area(form, actions,  nullptr);
   separator  =  XtVaCreateManagedWidget("separator",
                                         xmSeparatorWidgetClass, form,
                                         XmNtopAttachment,     XmATTACH_WIDGET,
@@ -1140,13 +1140,13 @@ create_replace_rename_dialog(Widget         parent_widget,
                                         XmNbottomWidget,      actionArea,
                                         XmNleftAttachment,    XmATTACH_FORM,
                                         XmNrightAttachment,   XmATTACH_FORM,
-                                        NULL);
+                                        nullptr);
 
 
   /* set initial keyborad focus to the action button area */
   XtVaSetValues(form,
                 XmNinitialFocus, actionArea,
-                NULL);
+                nullptr);
 
   /* Manage the dialog */
   XtManageChild(form);
@@ -1261,7 +1261,7 @@ create_replace_merge_dialog(Widget parent_widget,
                              XmNverticalSpacing,   VERTICAL_SPACING,
                              XmNhorizontalSpacing, HORIZONTAL_SPACING,
                              XmNdialogStyle,       XmDIALOG_FULL_APPLICATION_MODAL,
-                             NULL);
+                             nullptr);
 
   /* Create a question dialog icon */
   n = 0;
@@ -1281,7 +1281,7 @@ create_replace_merge_dialog(Widget parent_widget,
                              XmNlabelPixmap,      px,
                              XmNtopAttachment,    XmATTACH_FORM,
                              XmNleftAttachment,   XmATTACH_FORM,
-                             NULL);
+                             nullptr);
 
   /* Create the message label */
   s = XtMalloc( 1
@@ -1301,7 +1301,7 @@ create_replace_merge_dialog(Widget parent_widget,
                              XmNleftWidget,       icon,
                              XmNleftOffset,       HORIZONTAL_SPACING,
                              XmNrightAttachment,  XmATTACH_FORM,
-                             NULL);
+                             nullptr);
   XmStringFree(xs);
   XtFree(s);
 
@@ -1318,7 +1318,7 @@ create_replace_merge_dialog(Widget parent_widget,
                              XmNleftAttachment,   XmATTACH_OPPOSITE_WIDGET,
                              XmNleftWidget,       msg_label,
                              XmNleftOffset,       0,
-                             NULL);
+                             nullptr);
   XmStringFree(xs);
 
   /* create radio box */
@@ -1339,7 +1339,7 @@ create_replace_merge_dialog(Widget parent_widget,
                                          XmNalignment,   XmALIGNMENT_BEGINNING,
                                          XmNlabelString, xs,
                                          XmNset,         TRUE,
-                                         NULL);
+                                         nullptr);
   XmStringFree(xs);
 
   xs = XmStringCreateLocalized(GETMESSAGE(9, 24, "Merge contents of the two folders"));
@@ -1347,14 +1347,14 @@ create_replace_merge_dialog(Widget parent_widget,
                                             xmToggleButtonWidgetClass, radio,
                                             XmNalignment,   XmALIGNMENT_BEGINNING,
                                             XmNlabelString, xs,
-                                            NULL);
+                                            nullptr);
   XmStringFree(xs);
 
   XtManageChild(radio);
 
 
   /* create the action area  */
-  actionArea = Create_Action_Area(form, actions, NULL);
+  actionArea = Create_Action_Area(form, actions, nullptr);
   separator  =  XtVaCreateManagedWidget("separator",
                                         xmSeparatorWidgetClass, form,
                                         XmNtopAttachment,     XmATTACH_WIDGET,
@@ -1363,13 +1363,13 @@ create_replace_merge_dialog(Widget parent_widget,
                                         XmNbottomWidget,      actionArea,
                                         XmNleftAttachment,    XmATTACH_FORM,
                                         XmNrightAttachment,   XmATTACH_FORM,
-                                        NULL);
+                                        nullptr);
 
 
   /* set initial keyborad focus to the action button area */
   XtVaSetValues(form,
                 XmNinitialFocus, actionArea,
-                NULL);
+                nullptr);
 
   /* Manage the dialog */
   XtManageChild(form);
@@ -1496,7 +1496,7 @@ create_multicollide_dialog(Widget           parent_widget,
                              XmNverticalSpacing,   VERTICAL_SPACING,
                              XmNhorizontalSpacing, HORIZONTAL_SPACING,
                              XmNdialogStyle,       XmDIALOG_FULL_APPLICATION_MODAL,
-                             NULL);
+                             nullptr);
 
   /* Create a question dialog icon */
   n = 0;
@@ -1516,7 +1516,7 @@ create_multicollide_dialog(Widget           parent_widget,
                              XmNlabelPixmap,      px,
                              XmNtopAttachment,    XmATTACH_FORM,
                              XmNleftAttachment,   XmATTACH_FORM,
-                             NULL);
+                             nullptr);
 
   /* Create the message label */
 
@@ -1540,7 +1540,7 @@ create_multicollide_dialog(Widget           parent_widget,
   if (nCollisions > 1)
   {
     int tmp_len = (s1)?strlen(s1):0;
-    char *tmpmsg,*filemsg=NULL;
+    char *tmpmsg,*filemsg=nullptr;
     int i;
 
     filemsg = XtMalloc(strlen(destination)+3);
@@ -1593,7 +1593,7 @@ create_multicollide_dialog(Widget           parent_widget,
                              XmNleftWidget,       icon,
                              XmNleftOffset,       HORIZONTAL_SPACING,
                              XmNrightAttachment,  XmATTACH_FORM,
-                             NULL);
+                             nullptr);
   XmStringFree(xs);
   XtFree(s);
   XtFree(s1);
@@ -1613,7 +1613,7 @@ create_multicollide_dialog(Widget           parent_widget,
                              XmNleftAttachment,   XmATTACH_OPPOSITE_WIDGET,
                              XmNleftWidget,       msg_label,
                              XmNleftOffset,       0,
-                             NULL);
+                             nullptr);
   XmStringFree(xs);
 
   /* create radio box */
@@ -1640,7 +1640,7 @@ create_multicollide_dialog(Widget           parent_widget,
                                          XmNalignment,   XmALIGNMENT_BEGINNING,
                                          XmNlabelString, xs,
                                          XmNset,         set,
-                                         NULL);
+                                         nullptr);
   XmStringFree(xs);
   if(Same)
   {
@@ -1660,14 +1660,14 @@ create_multicollide_dialog(Widget           parent_widget,
                                                   XmNalignment,   XmALIGNMENT_BEGINNING,
                                                   XmNset,         set,
                                                   XmNlabelString, xs,
-                                                  NULL);
+                                                  nullptr);
   XmStringFree(xs);
 
   XtManageChild(radio);
 
 
   /* create the action area  */
-  actionArea = Create_Action_Area(form, actions, NULL);
+  actionArea = Create_Action_Area(form, actions, nullptr);
   separator  =  XtVaCreateManagedWidget("separator",
                                         xmSeparatorWidgetClass, form,
                                         XmNtopAttachment,     XmATTACH_WIDGET,
@@ -1676,13 +1676,13 @@ create_multicollide_dialog(Widget           parent_widget,
                                         XmNbottomWidget,      actionArea,
                                         XmNleftAttachment,    XmATTACH_FORM,
                                         XmNrightAttachment,   XmATTACH_FORM,
-                                        NULL);
+                                        nullptr);
 
 
   /* set initial keyborad focus to the action button area */
   XtVaSetValues(form,
                 XmNinitialFocus, actionArea,
-                NULL);
+                nullptr);
 
   /* Manage the dialog */
   XtManageChild(form);
@@ -1730,7 +1730,7 @@ Create_Action_Area(
                                 XmNleftAttachment, XmATTACH_FORM,
                                 XmNrightAttachment, XmATTACH_FORM,
                                 XmNbottomAttachment, XmATTACH_FORM,
-                                NULL);
+                                nullptr);
 
   for (i=0; i < actions.numActions ;i++ )
     {
@@ -1749,7 +1749,7 @@ Create_Action_Area(
                XmNshowAsDefault,      (i == actions.defaultAction),
                XmNdefaultButtonShadowThickness, 1,
                XmNlabelString,         xm_string,
-               NULL);
+               nullptr);
       XmStringFree(xm_string);
 
 
@@ -1764,9 +1764,9 @@ Create_Action_Area(
          {
             XtArgVal heightptr;
             Dimension height, h;
-            XtVaGetValues (action_area, XmNmarginHeight, &heightptr, NULL);
+            XtVaGetValues (action_area, XmNmarginHeight, &heightptr, nullptr);
             height = (Dimension)heightptr;
-            XtVaGetValues (widget, XmNheight, &heightptr, NULL);
+            XtVaGetValues (widget, XmNheight, &heightptr, nullptr);
             h = (Dimension)heightptr;
 
             height +=2 * h;
@@ -1774,11 +1774,11 @@ Create_Action_Area(
                            XmNdefaultButton, widget,
                            XmNpaneMaximum,   height,
                            XmNpaneMinimum,   height,
-                           NULL);
+                           nullptr);
 
          }
 
-       if (pushbutton_array != NULL)
+       if (pushbutton_array != nullptr)
            pushbutton_array[i] = widget;
 
     } /* endfor */

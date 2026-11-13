@@ -112,12 +112,12 @@ GetIconName (String       image_name,
 
    /*  Get name.  */
 
-   return_name = _DtGetIconFileName (screen, image_name, NULL, NULL, icon_size);
+   return_name = _DtGetIconFileName (screen, image_name, nullptr, nullptr, icon_size);
 
-   if (return_name == NULL)
-       return_name = _DtGetIconFileName (screen, image_name, NULL, NULL,
+   if (return_name == nullptr)
+       return_name = _DtGetIconFileName (screen, image_name, nullptr, nullptr,
 		                         DtUNSPECIFIED);
-   if (return_name == NULL)
+   if (return_name == nullptr)
        return_name = XtNewString (image_name);
 
 
@@ -158,13 +158,13 @@ PrintFrontPanelContents(void)
    {
       box_data = panel.box_data[i];
 
-      if (box_data->switch_data != NULL)
+      if (box_data->switch_data != nullptr)
       {
          switch_data = box_data->switch_data;
          switch_position = (int) (intptr_t) box_data->switch_data->element_values[SWITCH_POSITION_HINTS].parsed_value;
       }
       else
-         switch_data = NULL;
+         switch_data = nullptr;
 
 
       printf ("   BOX	%s\n", 
@@ -174,7 +174,7 @@ PrintFrontPanelContents(void)
       {
          control_data = box_data->control_data[j];
 
-         if (switch_data != NULL &&
+         if (switch_data != nullptr &&
              switch_position < (int) (intptr_t) (control_data->element_values[CONTROL_POSITION_HINTS].parsed_value))
          {
             printf ("      SWITCH	%s\n",
@@ -195,7 +195,7 @@ PrintFrontPanelContents(void)
 	 printf ("      CONTROL	%s\n",
                  (char *) control_data->element_values[0].parsed_value);
 
-         if (control_data->subpanel_data != NULL)
+         if (control_data->subpanel_data != nullptr)
 	 {
             subpanel_data = control_data->subpanel_data;
 
@@ -234,7 +234,7 @@ main (int argc,
 
    /* This call is required to have values to pass to DtAppInitialize */
     widget = XtAppInitialize( &appContext, "Dtfplist",
-                              NULL, 0, &argc, argv, NULL, NULL, 0);
+                              nullptr, 0, &argc, argv, nullptr, nullptr, 0);
 
    /* This is required initialization so that FrontPanelReadDatabases()
     * procedure complete successfully.

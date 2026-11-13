@@ -150,7 +150,7 @@ char           *vista_msg (char *location)
     char           *msgtarg;
 
     /* Assemble standard Raima err msg */
-    if (location == NULL)
+    if (location == nullptr)
 	location = CATGETS(dtsearch_catd, MS_vista, 303,
 	    "(unspecified location)");
     sprintf (vista_errmsg, CATGETS(dtsearch_catd, MS_vista, 311,

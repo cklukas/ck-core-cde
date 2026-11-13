@@ -422,10 +422,10 @@ _DtTermViewCreateTerminalOptionsDialog
 #endif
     options->keyboard_control.cursor_key_mode.normal =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,6, "Normal")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,6, "Normal")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->keyboard_control.cursor_key_mode.application =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,7, "Application")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,7, "Application")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
 
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_FORM);		ac++;
@@ -453,10 +453,10 @@ _DtTermViewCreateTerminalOptionsDialog
 #endif
     options->keyboard_control.keypad_mode.numeric =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,9, "Numeric")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,9, "Numeric")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->keyboard_control.keypad_mode.application =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,10, "Application")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,10, "Application")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
 
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_WIDGET);		ac++;
@@ -484,10 +484,10 @@ _DtTermViewCreateTerminalOptionsDialog
 #endif
     options->keyboard_control.newline_sequence.cr_return =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,12, "Return Only")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,12, "Return Only")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->keyboard_control.newline_sequence.return_lf =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,13, "Return/Line Feed")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,13, "Return/Line Feed")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
 
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_WIDGET);		ac++;
@@ -515,10 +515,10 @@ _DtTermViewCreateTerminalOptionsDialog
 #endif
     options->keyboard_control.key_lock.locked =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,15, "Locked")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,15, "Locked")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->keyboard_control.key_lock.unlocked =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,16, "Unlocked")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,16, "Unlocked")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
 
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_WIDGET);		ac++;
@@ -584,11 +584,11 @@ _DtTermViewCreateTerminalOptionsDialog
     options->screen_control.columns.enabled =
 	    _DtTermViewCreatePushButton(pulldown,
 	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,19, "Enabled")), NoSymbol,
-	    NULL, NULL, NULL, NULL);
+	    nullptr, nullptr, nullptr, nullptr);
     options->screen_control.columns.disabled =
 	    _DtTermViewCreatePushButton(pulldown,
 	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,20, "Disabled")), NoSymbol,
-	    NULL, NULL, NULL, NULL);
+	    nullptr, nullptr, nullptr, nullptr);
     
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_FORM);		ac++;
@@ -615,10 +615,10 @@ _DtTermViewCreateTerminalOptionsDialog
 #endif
     options->screen_control.autowrap.enabled =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,19, "Enabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,19, "Enabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->screen_control.autowrap.disabled =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,20, "Disabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,20, "Disabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
 
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_WIDGET);		ac++;
@@ -646,10 +646,10 @@ _DtTermViewCreateTerminalOptionsDialog
 #endif
     options->screen_control.reversewrap.enabled =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,19, "Enabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,19, "Enabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
     options->screen_control.reversewrap.disabled =
 	    _DtTermViewCreatePushButton(pulldown,
-	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,20, "Disabled")), NoSymbol, NULL, NULL, NULL, NULL);
+	    (GETMESSAGE(NL_SETN_ViewTerminalDialog,20, "Disabled")), NoSymbol, nullptr, nullptr, nullptr, nullptr);
 
     ac = 0;
     (void) XtSetArg(al[ac], XmNtopAttachment, XmATTACH_WIDGET);		ac++;

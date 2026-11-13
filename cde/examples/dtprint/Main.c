@@ -76,14 +76,14 @@ VideoShell_new(Display* display)
 {
     VideoShell* me = (VideoShell*)XtCalloc(1, sizeof(VideoShell));
 
-    me->widget = XtVaAppCreateShell(NULL, APP_CLASS,
+    me->widget = XtVaAppCreateShell(nullptr, APP_CLASS,
 				    applicationShellWidgetClass,
 				    display,
 				    XmNtitle, "DtPrint Demo",
-				    NULL);
+				    nullptr);
     XtGetApplicationResources(me->widget, me,
 			      VideoResources, XtNumber(VideoResources),
-			      NULL, 0);
+			      nullptr, 0);
     return me;
 }
 
@@ -128,7 +128,7 @@ static String fallbacks[] = {
 "Dtprint.Print*pform.marginHeight: 1in",
 "Dtprint.Print*pform.marginWidth: 1in",
 "Dtprint.Print*ptext.Attachment:attach_form",
-NULL
+nullptr
 };
 
 /*
@@ -151,14 +151,14 @@ int main(int argc, char* argv[])
     /*
      * attempt to open the X video display
      */
-    XtSetLanguageProc(NULL, (XtLanguageProc)NULL, NULL);
+    XtSetLanguageProc(nullptr, (XtLanguageProc)NULL, nullptr);
     XtToolkitInitialize();
     app_context = XtCreateApplicationContext();
-    video_display = XtOpenDisplay(app_context, NULL, NULL, APP_CLASS,
+    video_display = XtOpenDisplay(app_context, nullptr, nullptr, APP_CLASS,
 				  XrmOptions, XtNumber(XrmOptions),
 				  &argc, argv);
     XtAppSetFallbackResources(app_context, fallbacks);
-    if(video_display == (Display*)NULL)
+    if(video_display == (Display*)nullptr)
     {
 	/*
 	 * parse command line and determine if "GUI-less" printing is

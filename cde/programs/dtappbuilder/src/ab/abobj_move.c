@@ -129,7 +129,7 @@ abobjP_move_object_outline(
 	xy_obj = objxm_comp_get_subobj(obj, AB_CFG_POSITION_OBJ);
         xy_widget = (Widget)xy_obj->ui_handle;
 
-        if (xy_widget == NULL)
+        if (xy_widget == nullptr)
         {
             if (util_get_verbosity() > 2)
                 fprintf(stderr,"abobjP_move_object_outline: %s :no POSITION widget\n",
@@ -150,7 +150,7 @@ abobjP_move_object_outline(
 	else
 	{
 	    orig_rect = widget_rect;
-	    XtVaGetValues(xy_widget, XtNborderWidth, &border_w, NULL);
+	    XtVaGetValues(xy_widget, XtNborderWidth, &border_w, nullptr);
 	    orig_rect.width  += (2*border_w);
 	    orig_rect.height += (2*border_w);
 	    orig_rect.width--;

@@ -223,7 +223,7 @@ NewDisplay( char *name, char *class )
     char *language;
     struct display	*d;
 
-    language = mmap (NULL, LANGUAGESIZE + 1, PROT_READ | PROT_WRITE,
+    language = mmap (nullptr, LANGUAGESIZE + 1, PROT_READ | PROT_WRITE,
 		    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
     if (language == MAP_FAILED) {
@@ -269,27 +269,27 @@ NewDisplay( char *name, char *class )
     d->pid = -1;
     d->serverPid = -1;
     d->state = NewEntry;
-    d->resources = NULL;
-    d->xrdb = NULL;
-    d->cpp = NULL;
-    d->setup = NULL;
-    d->startup = NULL;
-    d->reset = NULL;
-    d->session = NULL;
-    d->userPath = NULL;
-    d->systemPath = NULL;
-    d->systemShell = NULL;
-    d->failsafeClient = NULL;
-    d->chooser = NULL;
+    d->resources = nullptr;
+    d->xrdb = nullptr;
+    d->cpp = nullptr;
+    d->setup = nullptr;
+    d->startup = nullptr;
+    d->reset = nullptr;
+    d->session = nullptr;
+    d->userPath = nullptr;
+    d->systemPath = nullptr;
+    d->systemShell = nullptr;
+    d->failsafeClient = nullptr;
+    d->chooser = nullptr;
     d->authorize = FALSE;
-    d->authorizations = NULL;
+    d->authorizations = nullptr;
     d->authNum = 0;
     d->authNameNum = 0;
-    d->clientAuthFile = NULL;
-    d->authFile = NULL;
-    d->userAuthDir = NULL;
-    d->authNames = NULL;
-    d->authNameLens = NULL;
+    d->clientAuthFile = nullptr;
+    d->authFile = nullptr;
+    d->userAuthDir = nullptr;
+    d->authNames = nullptr;
+    d->authNameLens = nullptr;
     d->openDelay = 0;
     d->openRepeat = 0;
     d->openTimeout = 0;
@@ -304,18 +304,18 @@ NewDisplay( char *name, char *class )
     d->fromlen = 0;
     d->displayNumber = 0;
     d->useChooser = 0;
-    d->clientAddr.data = NULL;
+    d->clientAddr.data = nullptr;
     d->clientAddr.length = 0;
     d->language = language;
-    d->langList = NULL;
-    d->utmpId = NULL;
-    d->gettyLine = NULL;
-    d->gettySpeed = NULL;
-    d->environStr = NULL;
+    d->langList = nullptr;
+    d->utmpId = nullptr;
+    d->gettyLine = nullptr;
+    d->gettySpeed = nullptr;
+    d->environStr = nullptr;
     d->dtlite = FALSE;
-    d->verifyName = NULL;
-    d->pmSearchPath = NULL;
-    d->bmSearchPath = NULL;
+    d->verifyName = nullptr;
+    d->pmSearchPath = nullptr;
+    d->bmSearchPath = nullptr;
     displays = d;
     return d;
 }

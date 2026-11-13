@@ -118,10 +118,10 @@ _DtDndTextTransferProtocolInitialize(
         _DtSvcProcessLock();
 	if (XA_COMPOUND_TEXT == 0) {
 		XA_COMPOUND_TEXT = DtGetAtom(display, "COMPOUND_TEXT");
-		dndPreferString  = (strcmp(setlocale(LC_CTYPE,NULL),"C") == 0);
+		dndPreferString  = (strcmp(setlocale(LC_CTYPE,nullptr),"C") == 0);
 #ifdef DEBUG
 	printf("locale = %s, dndPreferString = %d\n",
-			setlocale(LC_CTYPE,NULL), dndPreferString);
+			setlocale(LC_CTYPE,nullptr), dndPreferString);
 #endif
 	}
 	_DtSvcProcessUnlock();
@@ -269,7 +269,7 @@ dndTextConvertFinish(
 
 	if (dragData->data.strings) {
 		XtFree((char *)dragData->data.strings);
-		dragData->data.strings = NULL;
+		dragData->data.strings = nullptr;
 	}
 }
 
@@ -310,7 +310,7 @@ dndTextTransferTargets(
 		target = XA_STRING;
 	} else {
 		*numTransferTargets	= 0;
-		*transferTargets	= NULL;
+		*transferTargets	= nullptr;
 		return;
 	}
  
@@ -346,11 +346,11 @@ dndTextTransfer(
 	 * Ignore transfers we don't understand or if we've already transferred
 	 */
 
-	if (value == NULL || dropData->data.strings || 
+	if (value == nullptr || dropData->data.strings || 
 	   (*target != XA_COMPOUND_TEXT && 
 	    *target != XA_TEXT && 
 	    *target != XA_STRING) ) {
-		if (value != NULL)
+		if (value != nullptr)
 			XtFree(value);
 		return;
 	}

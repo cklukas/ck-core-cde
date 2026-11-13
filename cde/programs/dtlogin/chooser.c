@@ -161,18 +161,18 @@ static int FromHex (char *s, char *d, int len);
 
 static XtResource  resources[] = {
     {"xdmAddress",	"XdmAddress",  XtRARRAY8,	sizeof (ARRAY8Ptr),
-	offset (xdmAddress),	    XtRString,	NULL },
+	offset (xdmAddress),	    XtRString,	nullptr },
     {"clientAddress",	"ClientAddress",  XtRARRAY8,	sizeof (ARRAY8Ptr),
-	offset (clientAddress),	    XtRString,	NULL },
+	offset (clientAddress),	    XtRString,	nullptr },
     {"connectionType",	"ConnectionType",   XtRInt,	sizeof (int),
 	offset (connectionType),    XtRImmediate,	(XtPointer) 0 }
 };
 #undef offset
 
 static XrmOptionDescRec options[] = {
-    "-xdmaddress",	"*xdmAddress",	    XrmoptionSepArg,	NULL,
-    "-clientaddress",	"*clientAddress",   XrmoptionSepArg,	NULL,
-    "-connectionType",	"*connectionType",  XrmoptionSepArg,	NULL,
+    "-xdmaddress",	"*xdmAddress",	    XrmoptionSepArg,	nullptr,
+    "-clientaddress",	"*clientAddress",   XrmoptionSepArg,	nullptr,
+    "-connectionType",	"*connectionType",  XrmoptionSepArg,	nullptr,
 };
 
 typedef struct _hostAddr {
@@ -565,7 +565,7 @@ RegisterHostaddr (struct sockaddr *addr, int len, xdmOpCode type)
     for (prev = &hostAddrdb; *prev; prev = &(*prev)->next)
 	;
     *prev = host;
-    host->next = NULL;
+    host->next = nullptr;
     return 1;
 }
 
@@ -726,7 +726,7 @@ InitXDMCP (char **argv)
 	++argv;
     }
     pingTry = 0;
-    PingHosts ((XtPointer)NULL, (XtIntervalId *)NULL);
+    PingHosts ((XtPointer)NULL, (XtIntervalId *)nullptr);
     return 1;
 }
 
@@ -832,16 +832,16 @@ DoAccept (Widget w, XEvent *event, String *params, Cardinal *num_params)
     XtSetArg(chooserArgs[i], XmNselectedItems, &selectedItem); i++;
     XtGetValues(chooser_list, chooserArgs, i);
     text = (char*) _XmStringUngenerate(
-			selectedItem[0], NULL,
+			selectedItem[0], nullptr,
 			XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
-    if (NULL == text) return;
+    if (nullptr == text) return;
     
     for (h = hostNamedb; h; h = h->next)
 	if (!strcmp (text, h->fullname))
 	{
 	    Choose (h);
 	}
-    if (NULL != text) XtFree(text);
+    if (nullptr != text) XtFree(text);
     exit (OBEYSESS_DISPLAY);
 }
 
@@ -872,16 +872,16 @@ DoCheckWilling (Widget w, XEvent *event, String *params, Cardinal *num_params)
     XtSetArg(chooserArgs[i], XmNselectedItems, &selectedItem); i++;
     XtGetValues(chooser_list, chooserArgs, i);
     text = (char*) _XmStringUngenerate(
-			selectedItem[0], NULL,
+			selectedItem[0], nullptr,
 			XmMULTIBYTE_TEXT, XmMULTIBYTE_TEXT);
-    if (NULL == text) return;
+    if (nullptr == text) return;
     
     for (h = hostNamedb; h; h = h->next)
 	if (!strcmp (text, h->fullname))
 	    if (!h->willing)
 		XmListDeselectAllItems (chooser_list);
 
-    if (NULL != text) XtFree(text);
+    if (nullptr != text) XtFree(text);
 }
 
 /* ARGSUSED */
@@ -897,7 +897,7 @@ DoPing (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     EmptyHostnames ();
     pingTry = 0;
-    PingHosts ((XtPointer)NULL, (XtIntervalId *)NULL);
+    PingHosts ((XtPointer)NULL, (XtIntervalId *)nullptr);
 }
 
 static XtActionsRec app_actions[] = {
@@ -922,13 +922,13 @@ main (int argc, char **argv)
     /******************************/
 
     setlocale(LC_ALL, "");
-    XtSetLanguageProc( NULL, NULL, NULL );
+    XtSetLanguageProc( nullptr, nullptr, nullptr );
     langenv = getenv("LANG");
 
     /******************************************/
     /** set the font paths		     **/
     /******************************************/
-    if ( (xsetup = getenv("XSETUP")) != NULL)
+    if ( (xsetup = getenv("XSETUP")) != nullptr)
       if(system(xsetup) == -1)
 	    fprintf (stderr, "dtchooser: Cannot source %s\n",xsetup);
 
@@ -941,19 +941,19 @@ main (int argc, char **argv)
     for (i = 0; i < orig_argc; i++) {
 	orig_argv[i] = argv[i];
     }
-    orig_argv[orig_argc] = NULL;
+    orig_argv[orig_argc] = nullptr;
 
     toplevel = XtInitialize (argv[0], "Dtlogin", options, XtNumber(options),
 			     &argc, argv);
 
     XtVaSetValues(XmGetXmDisplay(XtDisplay(toplevel)),
                 XmNdragInitiatorProtocolStyle, XmDRAG_NONE,
-                NULL);
+                nullptr);
 
-    XtAddConverter(XtRString, XtRARRAY8, CvtStringToARRAY8, NULL, 0);
+    XtAddConverter(XtRString, XtRARRAY8, CvtStringToARRAY8, nullptr, 0);
 
     XtGetApplicationResources (toplevel, (XtPointer) &app_resources, resources,
-			       XtNumber (resources), NULL, (Cardinal) 0);
+			       XtNumber (resources), nullptr, (Cardinal) 0);
 
     dpyinfo.dpy         = XtDisplay(toplevel);
 /*    dpyinfo.name      = "";*/
@@ -977,7 +977,7 @@ main (int argc, char **argv)
     if (appInfo.optionsDelay == 0 )
         MakeOptionsMenu();      /* make option_button pop-up menu         */
     else
-        XtAddTimeOut((unsigned long) appInfo.optionsDelay * 1000, MakeOptionsProc, NULL);
+        XtAddTimeOut((unsigned long) appInfo.optionsDelay * 1000, MakeOptionsProc, nullptr);
 
 #if 0
     /*

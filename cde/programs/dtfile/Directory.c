@@ -306,10 +306,10 @@ int maxRereadProcsPerTick = 1;
 
 XtIntervalId checkBrokenLinkTimerId = None;
 
-static Directory ** directory_set = NULL;
+static Directory ** directory_set = nullptr;
 static int          directory_count = 0;
 static int          directory_set_size = 0;
-static char       * positionFileName = NULL;
+static char       * positionFileName = nullptr;
 static XtAppContext app_context = None;
 static int          tickTime = 0;
 static int          ticksBetweenLinkChecks = 0;
@@ -321,7 +321,7 @@ static Directory  dummy_dir_struct =
   "dummy_host",
   "dummy_directory",
   "dummy_path",
-  NULL,
+  nullptr,
   False,
   activity_idle
 };
@@ -335,14 +335,14 @@ static struct
    StickyProcDesc *sticky_procs;
 } ActivityTable[] =
 {
-  { WritePosInfoProcess,  WritePosInfoPipeCallback, False,NULL },/* writing_posinfo*/
-  { ReadDirectoryProcess, ReaddirPipeCallback, False,NULL },     /* reading */
-  { UpdateAllProcess,     ReaddirPipeCallback, False,NULL },     /* update_all */
-  { UpdateSomeProcess,    ReaddirPipeCallback, False,NULL },     /* update_some */
-  { TimerEventProcess,    TimerPipeCallback, False,NULL },       /* checking_links */
-  { CheckDesktopProcess,  CheckDesktopPipeCallback, False,NULL },/* checking_desktop */
-  { TimerEventProcess,    TimerPipeCallback, True, NULL },  /* checking_dir */
-  { NULL,                 NULL, False, NULL }               /* idle */
+  { WritePosInfoProcess,  WritePosInfoPipeCallback, False,nullptr },/* writing_posinfo*/
+  { ReadDirectoryProcess, ReaddirPipeCallback, False,nullptr },     /* reading */
+  { UpdateAllProcess,     ReaddirPipeCallback, False,nullptr },     /* update_all */
+  { UpdateSomeProcess,    ReaddirPipeCallback, False,nullptr },     /* update_some */
+  { TimerEventProcess,    TimerPipeCallback, False,nullptr },       /* checking_links */
+  { CheckDesktopProcess,  CheckDesktopPipeCallback, False,nullptr },/* checking_desktop */
+  { TimerEventProcess,    TimerPipeCallback, True, nullptr },  /* checking_dir */
+  { nullptr,                 nullptr, False, nullptr }               /* idle */
 };
 
 
@@ -366,11 +366,11 @@ InitializePositionFileName(void)
    size_t length;
 
    /* Determine the name under which the position info is stored */
-   if (positionFileName == NULL)
+   if (positionFileName == nullptr)
    {
 
       pwInfo = getpwuid(getuid());
-      if (pwInfo != NULL && pwInfo->pw_name != NULL)
+      if (pwInfo != nullptr && pwInfo->pw_name != nullptr)
          name = pwInfo->pw_name;
       else
       {
@@ -415,7 +415,7 @@ InitializeDirectoryRead(
      tickTime = 0;
 
    if (tickTime != 0)
-      XtAppAddTimeOut (app_context, tickTime * 1000, TimerEvent, NULL);
+      XtAppAddTimeOut (app_context, tickTime * 1000, TimerEvent, nullptr);
 
    /* start timer to check for broken desktop objects */
    if( desktop_data->numIconsUsed > 0
@@ -425,7 +425,7 @@ InitializeDirectoryRead(
      checkBrokenLinkTimerId = XtAppAddTimeOut( app_context,
                                                checkBrokenLink * 1000,
                                                TimerEventBrokenLinks,
-                                               NULL);
+                                               nullptr);
    }
    else
    {
@@ -477,7 +477,7 @@ FindDirectory(
 
    for (i = 0; i < directory_count; i++)
    {
-      if (directory_set[i]->tt_path_name != NULL &&
+      if (directory_set[i]->tt_path_name != nullptr &&
           strcmp (host_name, home_host_name) == 0 &&
           strcmp (directory_name, directory_set[i]->tt_path_name) == 0)
       {
@@ -486,7 +486,7 @@ FindDirectory(
    }
 
    /* not found */
-   return NULL;
+   return nullptr;
 }
 
 
@@ -520,25 +520,25 @@ FreeFileData(
         Boolean free_all)
 {
    XtFree(file_data->file_name);
-   file_data->file_name = NULL;
+   file_data->file_name = nullptr;
 
    XtFree(file_data->action_name);
-   file_data->action_name = NULL;
+   file_data->action_name = nullptr;
 
    DtDtsFreeDataType(file_data->logical_type);
-   file_data->logical_type = NULL;
+   file_data->logical_type = nullptr;
 
-   if ( file_data->final_link != NULL &&
+   if ( file_data->final_link != nullptr &&
         file_data->final_link != file_data->link)
    {
       XtFree(file_data->final_link);
-      file_data->final_link = NULL;
+      file_data->final_link = nullptr;
    }
 
-   if (file_data->link != NULL )
+   if (file_data->link != nullptr )
    {
      XtFree(file_data->link);
-     file_data->link = NULL;
+     file_data->link = nullptr;
    }
 
    if (free_all)
@@ -558,53 +558,53 @@ FreeDirectory(
    int i;
    FileData *file_data, *next_file_data;
 
-   if( directory == NULL )
+   if( directory == nullptr )
      return;
 
    XtFree (directory->host_name);
-   directory->host_name = NULL;
+   directory->host_name = nullptr;
 
    XtFree (directory->directory_name);
-   directory->directory_name = NULL;
+   directory->directory_name = nullptr;
 
    XtFree (directory->path_name);
-   directory->path_name = NULL;
+   directory->path_name = nullptr;
 
    XtFree (directory->tt_path_name);
-   directory->tt_path_name = NULL;
+   directory->tt_path_name = nullptr;
 
    for (i=0; i < directory->path_count; i++)
       DtDtsFreeDataType(directory->path_logical_types[i]);
    XtFree ((char *) directory->path_logical_types);
-   directory->path_logical_types = NULL;
+   directory->path_logical_types = nullptr;
 
    for (i = 0; i < directory->position_count; i++)
       XtFree(directory->position_info[i].name);
    XtFree ((char *) directory->position_info);
-   directory->position_info = NULL;
+   directory->position_info = nullptr;
 
    for (i = 0; i < directory->modified_count; i++)
       XtFree(directory->modified_list[i]);
    XtFree ((char *) directory->modified_list);
-   directory->modified_list = NULL;
+   directory->modified_list = nullptr;
 
    XtFree ((char *) directory->directoryView);
-   directory->directoryView = NULL;
+   directory->directoryView = nullptr;
 
    if (directory->dir_data)
    {
       FreeFileData(directory->dir_data, True);
-      directory->dir_data = NULL;
+      directory->dir_data = nullptr;
    }
 
    file_data = directory->file_data;
-   while (file_data != NULL)
+   while (file_data != nullptr)
    {
       next_file_data = file_data->next;
       FreeFileData(file_data, True);
       file_data = next_file_data;
    }
-   directory->file_data = NULL;
+   directory->file_data = nullptr;
 
    XtFree((char *) directory);
 }
@@ -661,9 +661,9 @@ FileData2Decode(const void *record, size_t available, FileData **result,
    char **fields[5];
    int i;
 
-   if (result != NULL) *result = NULL;
-   if (used != NULL) *used = 0;
-   if (record == NULL || result == NULL || used == NULL || available < fixed)
+   if (result != nullptr) *result = nullptr;
+   if (used != nullptr) *used = 0;
+   if (record == nullptr || result == nullptr || used == nullptr || available < fixed)
    {
       errno = EPROTO;
       return -1;
@@ -709,7 +709,7 @@ FileData2Decode(const void *record, size_t available, FileData **result,
       }
       textptr += lengths[i];
    }
-   file_data->next		= NULL;
+   file_data->next		= nullptr;
    file_data->physical_type	= packed.physical_type;
    file_data->errnum		= packed.errnum;
    file_data->stat		= packed.stat;
@@ -728,11 +728,11 @@ FileData2DecodePacket(const void *packet, size_t length, size_t count,
    size_t remaining = length;
    size_t used;
    size_t i;
-   FileData *head = NULL;
+   FileData *head = nullptr;
    FileData **tail = &head;
 
-   if (result != NULL) *result = NULL;
-   if (packet == NULL || result == NULL || count == 0 || count > FILEDATABUF)
+   if (result != nullptr) *result = nullptr;
+   if (packet == nullptr || result == nullptr || count == 0 || count > FILEDATABUF)
    {
       errno = EPROTO;
       return -1;
@@ -754,7 +754,7 @@ FileData2DecodePacket(const void *packet, size_t length, size_t count,
    return 0;
 
 malformed:
-   while (head != NULL)
+   while (head != nullptr)
    {
       FileData *discard = head;
       head = head->next;
@@ -768,14 +768,14 @@ FileData2toFileData(
 	FileData2 *file_data2,
 	int *l)
 {
-   FileData *file_data = NULL;
+   FileData *file_data = nullptr;
    size_t used = 0;
 
-   if (l == NULL || FileData2Decode(file_data2, sizeof(*file_data2),
+   if (l == nullptr || FileData2Decode(file_data2, sizeof(*file_data2),
                                     &file_data, &used) != 0 || used > INT_MAX)
    {
-      if (l != NULL) *l = 0;
-      return NULL;
+      if (l != nullptr) *l = 0;
+      return nullptr;
    }
    *l = (int)used;
    return file_data;
@@ -790,16 +790,16 @@ DirectoryWriteDesktopRecord(int fd, short message, char *host,
 
    if ((message != PIPEMSG_DESKTOP_REMOVED &&
         message != PIPEMSG_DESKTOP_CHANGED) ||
-       host == NULL || directory_name == NULL || file_name == NULL ||
-       (message == PIPEMSG_DESKTOP_CHANGED && file_data == NULL))
+       host == nullptr || directory_name == nullptr || file_name == nullptr ||
+       (message == PIPEMSG_DESKTOP_CHANGED && file_data == nullptr))
    {
       errno = EINVAL;
       return -1;
    }
-   if (file_data != NULL)
+   if (file_data != nullptr)
    {
       packed = *file_data;
-      packed.next = NULL;
+      packed.next = nullptr;
    }
    if (DtfileProcessWriteAll(fd, &message, sizeof(message)) != 0 ||
        PipeWriteString(fd, host) < 0 ||
@@ -819,29 +819,29 @@ DirectoryReadDesktopRecord(int fd, short message, char **host,
    FileData2 packed;
    int used;
 
-   if (host == NULL || directory_name == NULL || file_name == NULL ||
-       file_data == NULL)
+   if (host == nullptr || directory_name == nullptr || file_name == nullptr ||
+       file_data == nullptr)
    {
       errno = EINVAL;
       return -1;
    }
-   *host = NULL;
-   *directory_name = NULL;
-   *file_name = NULL;
-   *file_data = NULL;
+   *host = nullptr;
+   *directory_name = nullptr;
+   *file_name = nullptr;
+   *file_data = nullptr;
    if ((message != PIPEMSG_DESKTOP_REMOVED &&
         message != PIPEMSG_DESKTOP_CHANGED) ||
-       PipeReadStringField(fd, host) != 0 || *host == NULL ||
+       PipeReadStringField(fd, host) != 0 || *host == nullptr ||
        PipeReadStringField(fd, directory_name) != 0 ||
-       *directory_name == NULL ||
-       PipeReadStringField(fd, file_name) != 0 || *file_name == NULL)
+       *directory_name == nullptr ||
+       PipeReadStringField(fd, file_name) != 0 || *file_name == nullptr)
       goto malformed;
    if (message == PIPEMSG_DESKTOP_CHANGED)
    {
       if (PipeReadExact(fd, &packed, sizeof(packed)) != 0)
          goto malformed;
       *file_data = FileData2toFileData(&packed, &used);
-      if (*file_data == NULL ||
+      if (*file_data == nullptr ||
           strcmp((*file_data)->file_name, *file_name) != 0)
          goto malformed;
    }
@@ -851,11 +851,11 @@ malformed:
    XtFree(*host);
    XtFree(*directory_name);
    XtFree(*file_name);
-   if (*file_data != NULL) FreeFileData(*file_data, True);
-   *host = NULL;
-   *directory_name = NULL;
-   *file_name = NULL;
-   *file_data = NULL;
+   if (*file_data != nullptr) FreeFileData(*file_data, True);
+   *host = nullptr;
+   *directory_name = nullptr;
+   *file_name = nullptr;
+   *file_data = nullptr;
    errno = EPROTO;
    return -1;
 }
@@ -863,7 +863,7 @@ malformed:
 static Boolean
 FileDataStatIsLink(int stat_result, const struct stat *stat_data)
 {
-   return stat_result == 0 && stat_data != NULL && S_ISLNK(stat_data->st_mode);
+   return stat_result == 0 && stat_data != nullptr && S_ISLNK(stat_data->st_mode);
 }
 
 static void
@@ -871,7 +871,7 @@ DirectoryFreeStrings(char **values, int count)
 {
    int i;
 
-   if (values == NULL) return;
+   if (values == nullptr) return;
    for (i = 0; i < count; i++) XtFree(values[i]);
    XtFree((char *)values);
 }
@@ -879,7 +879,7 @@ DirectoryFreeStrings(char **values, int count)
 static int
 DirectoryArrayBytes(int count, size_t item_size, int limit, size_t *bytes)
 {
-   if (bytes == NULL || count < 0 || count > limit ||
+   if (bytes == nullptr || count < 0 || count > limit ||
        (count != 0 && item_size > SIZE_MAX / (size_t)count))
    {
       errno = EPROTO;
@@ -892,27 +892,27 @@ DirectoryArrayBytes(int count, size_t item_size, int limit, size_t *bytes)
 static int
 DirectoryReadPathInfo(int fd, int *count, char ***logical_types, char **tt_path)
 {
-   char **values = NULL;
-   char *path = NULL;
+   char **values = nullptr;
+   char *path = nullptr;
    size_t bytes;
    int decoded_count;
    int i;
 
-   if (count == NULL || logical_types == NULL || tt_path == NULL)
+   if (count == nullptr || logical_types == nullptr || tt_path == nullptr)
    {
       errno = EINVAL;
       return -1;
    }
    *count = 0;
-   *logical_types = NULL;
-   *tt_path = NULL;
+   *logical_types = nullptr;
+   *tt_path = nullptr;
    if (PipeReadExact(fd, &decoded_count, sizeof(decoded_count)) != 0 ||
        DirectoryArrayBytes(decoded_count, sizeof(*values),
                            DIRECTORY_PATH_LIMIT, &bytes) != 0)
       return -1;
    if (decoded_count != 0) values = (char **)XtCalloc(1, bytes);
    for (i = 0; i < decoded_count; i++)
-      if (PipeReadStringField(fd, &values[i]) != 0 || values[i] == NULL)
+      if (PipeReadStringField(fd, &values[i]) != 0 || values[i] == nullptr)
          goto malformed;
    if (PipeReadStringField(fd, &path) != 0) goto malformed;
    *count = decoded_count;
@@ -936,14 +936,14 @@ DirectoryWritePathInfo(int fd, int count, char *const *logical_types,
 
    if (DirectoryArrayBytes(count, sizeof(*logical_types),
                            DIRECTORY_PATH_LIMIT, &bytes) != 0 ||
-       (count != 0 && logical_types == NULL))
+       (count != 0 && logical_types == nullptr))
       return -1;
    (void)bytes;
    if (DtfileProcessWriteAll(fd, &message, sizeof(message)) != 0 ||
        DtfileProcessWriteAll(fd, &count, sizeof(count)) != 0)
       return -1;
    for (i = 0; i < count; i++)
-      if (logical_types[i] == NULL || PipeWriteString(fd, logical_types[i]) < 0)
+      if (logical_types[i] == nullptr || PipeWriteString(fd, logical_types[i]) < 0)
          return -1;
    return PipeWriteString(fd, (char *)tt_path) < 0 ? -1 : 0;
 }
@@ -975,7 +975,7 @@ PipeWritePositionInfo(
 	int fd,
 	PositionInfo *position_info)
 {
-   if (position_info == NULL || position_info->name == NULL)
+   if (position_info == nullptr || position_info->name == nullptr)
    {
       errno = EINVAL;
       return -1;
@@ -997,17 +997,17 @@ PipeReadPositionInfo(
 	int fd,
 	PositionInfo *position_info)
 {
-   if (position_info == NULL) { errno = EINVAL; return -1; }
+   if (position_info == nullptr) { errno = EINVAL; return -1; }
    memset(position_info, 0, sizeof(*position_info));
    if (PipeReadStringField(fd, &position_info->name) != 0 ||
-       position_info->name == NULL ||
+       position_info->name == nullptr ||
        PipeReadExact(fd, &position_info->x, sizeof(position_info->x)) != 0 ||
        PipeReadExact(fd, &position_info->y, sizeof(position_info->y)) != 0 ||
        PipeReadExact(fd, &position_info->stacking_order,
                      sizeof(position_info->stacking_order)) != 0)
    {
       XtFree(position_info->name);
-      position_info->name = NULL;
+      position_info->name = nullptr;
       return -1;
    }
    return 0;
@@ -1016,14 +1016,14 @@ PipeReadPositionInfo(
 static int
 DirectoryReadPositionInfo(int fd, int *count, PositionInfo **positions)
 {
-   PositionInfo *values = NULL;
+   PositionInfo *values = nullptr;
    size_t bytes;
    int decoded_count;
    int i;
 
-   if (count == NULL || positions == NULL) { errno = EINVAL; return -1; }
+   if (count == nullptr || positions == nullptr) { errno = EINVAL; return -1; }
    *count = 0;
-   *positions = NULL;
+   *positions = nullptr;
    if (PipeReadExact(fd, &decoded_count, sizeof(decoded_count)) != 0 ||
        DirectoryArrayBytes(decoded_count, sizeof(*values),
                            DIRECTORY_POSITION_LIMIT, &bytes) != 0)
@@ -1048,8 +1048,8 @@ DirectoryBuildChildPath(char *buffer, size_t buffer_size,
    const char *separator;
    int length;
 
-   if (buffer == NULL || buffer_size == 0 || directory_name == NULL ||
-       file_name == NULL)
+   if (buffer == nullptr || buffer_size == 0 || directory_name == nullptr ||
+       file_name == nullptr)
    {
       errno = EINVAL;
       return -1;
@@ -1071,7 +1071,7 @@ DirectoryCopyText(char *buffer, size_t buffer_size, const char *text)
 {
    size_t length;
 
-   if (buffer == NULL || buffer_size == 0 || text == NULL)
+   if (buffer == nullptr || buffer_size == 0 || text == nullptr)
    {
       errno = EINVAL;
       return -1;
@@ -1091,7 +1091,7 @@ static int
 DirectoryBuildFilePath(char *buffer, size_t buffer_size,
                        const char *directory_name, const char *file_name)
 {
-   return file_name == NULL
+   return file_name == nullptr
              ? DirectoryCopyText(buffer, buffer_size, directory_name)
              : DirectoryBuildChildPath(buffer, buffer_size, directory_name,
                                        file_name);
@@ -1105,7 +1105,7 @@ DirectoryResolveLinkPath(char *path, size_t path_size, const char *target)
    size_t prefix_length;
    size_t target_length;
 
-   if (path == NULL || path_size == 0 || target == NULL)
+   if (path == nullptr || path_size == 0 || target == nullptr)
    {
       errno = EINVAL;
       return -1;
@@ -1113,7 +1113,7 @@ DirectoryResolveLinkPath(char *path, size_t path_size, const char *target)
    if (target[0] == '/') return DirectoryCopyText(path, path_size, target);
 
    separator = strrchr(path, '/');
-   prefix_length = separator == NULL ? 0 : (size_t)(separator - path) + 1;
+   prefix_length = separator == nullptr ? 0 : (size_t)(separator - path) + 1;
    target_length = strlen(target);
    if (prefix_length > sizeof(resolved) - 1 ||
        target_length > sizeof(resolved) - 1 - prefix_length ||
@@ -1152,7 +1152,7 @@ DirectoryReadTimerResult(int fd, int *status, long *modify_time,
    long new_modify_time;
    Boolean new_link_changed;
 
-   if (status == NULL || modify_time == NULL || link_changed == NULL)
+   if (status == nullptr || modify_time == nullptr || link_changed == nullptr)
    {
       errno = EINVAL;
       return -1;
@@ -1174,7 +1174,7 @@ DirectoryReadTimerResult(int fd, int *status, long *modify_time,
 static int
 DirectoryLoadPositionInfo(FILE *stream, PositionInfo **positions)
 {
-   PositionInfo *values = NULL;
+   PositionInfo *values = nullptr;
    char name[MAX_PATH];
    size_t bytes;
    size_t length;
@@ -1182,8 +1182,8 @@ DirectoryLoadPositionInfo(FILE *stream, PositionInfo **positions)
    int count = 0;
    int x, y, stacking_order;
 
-   if (stream == NULL || positions == NULL) { errno = EINVAL; return -1; }
-   *positions = NULL;
+   if (stream == nullptr || positions == nullptr) { errno = EINVAL; return -1; }
+   *positions = nullptr;
    if (fscanf(stream, "%d\n", &requested) != 1 ||
        DirectoryArrayBytes(requested, sizeof(*values),
                            DIRECTORY_POSITION_LIMIT, &bytes) != 0)
@@ -1191,7 +1191,7 @@ DirectoryLoadPositionInfo(FILE *stream, PositionInfo **positions)
    if (requested != 0) values = (PositionInfo *)XtCalloc(1, bytes);
    while (count < requested)
    {
-      if (fgets(name, sizeof(name), stream) == NULL) goto malformed;
+      if (fgets(name, sizeof(name), stream) == nullptr) goto malformed;
       length = strlen(name);
       if (length <= 1 || name[length - 1] != '\n' ||
           fscanf(stream, "%d %d %d\n", &x, &y, &stacking_order) != 3 ||
@@ -1242,20 +1242,20 @@ ReadFileData(
    file_data = (FileData *)XtMalloc(sizeof(FileData));
    full_file_name[0] = NILL;
    link_count = 0;
-   link_list = NULL;
+   link_list = nullptr;
 
    /* get the full name of the file */
    if (DirectoryBuildFilePath(full_file_name, sizeof(full_file_name),
                               full_directory_name, file_name) != 0)
       goto path_failed;
-   if (file_name == NULL)
+   if (file_name == nullptr)
    {
       /* no file name passed: use last component of directory */
       file_name = strrchr(full_file_name, '/');
       if (file_name > full_file_name)
          file_name++;
       else
-         file_name = NULL;
+         file_name = nullptr;
    }
 
    /* Follow symbolic links to their ultimate destination */
@@ -1296,7 +1296,7 @@ ReadFileData(
          break;
 
        link_list[link_count++] = XtNewString(link_file_name);
-       link_list[link_count] = NULL;
+       link_list[link_count] = nullptr;
      }
 
      /* try to stat the file that the link points to */
@@ -1314,15 +1314,15 @@ path_failed:
    stat_result = -1;
    for (i = 0; i < link_count; i++) XtFree(link_list[i]);
    XtFree((char *)link_list);
-   link_list = NULL;
+   link_list = nullptr;
 
 fill_data:
    /* fill in the FileData structure with the information we found */
-   file_data->next = NULL;
+   file_data->next = nullptr;
    file_data->file_name = XtNewString(file_name? file_name: ".");
-   file_data->logical_type = NULL;
+   file_data->logical_type = nullptr;
    file_data->is_subdir = False;
-   file_data->action_name = NULL;
+   file_data->action_name = nullptr;
 
    if (link_list)
    {
@@ -1332,7 +1332,7 @@ fill_data:
          XtFree(link_list[i]);
       XtFree((char *)link_list);
    } else
-      file_data->link = file_data->final_link = NULL;
+      file_data->link = file_data->final_link = nullptr;
 
    if (stat_result == 0)
    {
@@ -1344,7 +1344,7 @@ fill_data:
       if ((stat_buf.st_mode & S_IFMT) == S_IFDIR)
       {
          file_data->physical_type = DtDIRECTORY;
-         if (file_name == NULL ||
+         if (file_name == nullptr ||
              strcmp(file_name, ".") != 0 && strcmp(file_name, "..") != 0)
          {
             file_data->is_subdir = True;
@@ -1377,16 +1377,16 @@ fill_data:
          if (file_data->link)
             file_data->logical_type = (char *) DtDtsDataToDataType(
                                                  file_data->link,
-                                                 NULL, 0, &stat_buf,
-                                                 file_data->final_link, NULL,
-                                                 NULL);
+                                                 nullptr, 0, &stat_buf,
+                                                 file_data->final_link, nullptr,
+                                                 nullptr);
          else
             file_data->logical_type = (char *) DtDtsDataToDataType(
                                                  full_file_name,
-                                                 NULL, 0, &stat_buf,
-                                                 NULL, NULL,
-                                                 NULL);
-         if (file_data->logical_type == NULL)
+                                                 nullptr, 0, &stat_buf,
+                                                 nullptr, nullptr,
+                                                 nullptr);
+         if (file_data->logical_type == nullptr)
             file_data->logical_type = XtNewString(DtDEFAULT_DATA_FT_NAME);
 #if defined( DATATYPE_IS_FIXED )
 #else
@@ -1403,7 +1403,7 @@ fill_data:
          if( S_ISDIR( stat_buf.st_mode ) &&
 	    (strcmp (file_data->logical_type, LT_DIRECTORY) == 0))
          {
-           if( file_name != NULL && strcmp( file_name, ".." ) != 0
+           if( file_name != nullptr && strcmp( file_name, ".." ) != 0
                && strcmp( file_name, "." ) != 0 )
            {
              char * fullPathName;
@@ -1436,7 +1436,7 @@ fill_data:
       {
          char *ptr = DtDtsDataTypeToAttributeValue(file_data->logical_type,
                                                    DtDTS_DA_LABEL,
-                                                   NULL);
+                                                   nullptr);
          if (ptr)
          {
             file_data->action_name = XtNewString(ptr);
@@ -1479,10 +1479,10 @@ FileData2PackText(FileData2 *file_data2, const char *file_name,
    size_t record_length;
    int i;
 
-   if (file_data2 == NULL) { errno = EINVAL; return -1; }
+   if (file_data2 == nullptr) { errno = EINVAL; return -1; }
    for (i = 0; i < 5; i++)
    {
-      if (fields[i] == NULL) fields[i] = "";
+      if (fields[i] == nullptr) fields[i] = "";
       length = strlen(fields[i]);
       if (length > SHRT_MAX || length > sizeof(file_data2->text) - total)
       {
@@ -1512,8 +1512,8 @@ FileData2PackText(FileData2 *file_data2, const char *file_name,
 static int
 FileData2PackFileData(FileData2 *packed, const FileData *file_data)
 {
-   if (packed == NULL || file_data == NULL || file_data->file_name == NULL ||
-       file_data->logical_type == NULL)
+   if (packed == nullptr || file_data == nullptr || file_data->file_name == nullptr ||
+       file_data->logical_type == nullptr)
    {
       errno = EINVAL;
       return -1;
@@ -1554,7 +1554,7 @@ ReadFileData2(
    int stat_errno;
    int i;
 
-   if (file_data2 == NULL || full_directory_name == NULL)
+   if (file_data2 == nullptr || full_directory_name == nullptr)
    {
       errno = EINVAL;
       return -1;
@@ -1568,19 +1568,19 @@ ReadFileData2(
                               full_directory_name, file_name) != 0)
       return -1;
 
-   if (file_name == NULL)
+   if (file_name == nullptr)
    {
       /* no file name passed: use last component of directory */
       file_name = strrchr(full_file_name, '/');
       if (file_name > full_file_name)
          file_name++;
       else
-         file_name = NULL;
+         file_name = nullptr;
    }
 
    /* Follow symbolic links to their ultimate destination */
    link_count = 0;
-   link_list = NULL;
+   link_list = nullptr;
    recursive_link_found = False;
    if (DirectoryCopyText(link_file_name, sizeof(link_file_name),
                          full_file_name) != 0)
@@ -1618,7 +1618,7 @@ ReadFileData2(
          break;
 
        link_list[link_count++] = XtNewString(link_file_name);
-       link_list[link_count] = NULL;
+       link_list[link_count] = nullptr;
      }
 
      if ((stat_result = stat (link_file_name, &stat_buf)) != 0)
@@ -1633,7 +1633,7 @@ ReadFileData2(
    stat_errno = errno;
 
    /* fill in the FileData2 structure with the information we found */
-   file_data2->next = NULL;
+   file_data2->next = nullptr;
    if (DirectoryCopyText(file_name_buf, sizeof(file_name_buf),
                          (file_name ? file_name : ".")) != 0)
       goto encode_failed;
@@ -1651,7 +1651,7 @@ ReadFileData2(
          XtFree(link_list[i]);
       }
       XtFree((char *)link_list);
-      link_list = NULL;
+      link_list = nullptr;
    } else {
       final_link_buf[0] = NILL;
       link_buf[0] = NILL;
@@ -1667,7 +1667,7 @@ ReadFileData2(
       if ((stat_buf.st_mode & S_IFMT) == S_IFDIR)
       {
          file_data2->physical_type = DtDIRECTORY;
-         if (file_name == NULL ||
+         if (file_name == nullptr ||
              strcmp(file_name, ".") != 0 && strcmp(file_name, "..") != 0)
          {
             file_data2->is_subdir = True;
@@ -1704,17 +1704,17 @@ ReadFileData2(
          file_data2->is_broken = False;
          if (link_buf[0] == NILL)
             ptr = (char *) DtDtsDataToDataType(  full_file_name,
-                                                 NULL, 0, &stat_buf,
-                                                 NULL, NULL,
-                                                 NULL);
+                                                 nullptr, 0, &stat_buf,
+                                                 nullptr, nullptr,
+                                                 nullptr);
          else
             ptr = (char *) DtDtsDataToDataType(  link_buf,
-                                                 NULL, 0, &stat_buf,
-                                                 final_link_buf, NULL,
-                                                 NULL);
+                                                 nullptr, 0, &stat_buf,
+                                                 final_link_buf, nullptr,
+                                                 nullptr);
 
 #if defined( DATATYPE_IS_FIXED )
-         if (ptr == NULL)
+         if (ptr == nullptr)
          {
             errno = EPROTO;
             goto encode_failed;
@@ -1737,7 +1737,7 @@ ReadFileData2(
             The work around is manually checking it ourselves.
             When the data typing code is fixed, please remove this check.
          */
-         if( ptr == NULL )
+         if( ptr == nullptr )
          {
             errno = EPROTO;
             goto encode_failed;
@@ -1745,7 +1745,7 @@ ReadFileData2(
          if( !IsToolBox && S_ISDIR( stat_buf.st_mode ) &&
 	    (strcmp (ptr, LT_DIRECTORY) == 0))
          {
-           if( file_name != NULL && strcmp( file_name, ".." ) != 0
+           if( file_name != nullptr && strcmp( file_name, ".." ) != 0
                && strcmp( file_name, "." ) != 0 )
            {
              char * fullPathName;
@@ -1803,7 +1803,7 @@ ReadFileData2(
       if( DtActionExists(logical_type_buf) )
       {
         char *ptr = (char *)DtActionLabel(file_name_buf);
-        if (ptr == NULL)
+        if (ptr == nullptr)
         {
           errno = EPROTO;
           goto encode_failed;
@@ -1820,7 +1820,7 @@ ReadFileData2(
       {
         char *ptr = DtDtsDataTypeToAttributeValue(logical_type_buf,
                                                   DtDTS_DA_LABEL,
-                                                  NULL);
+                                                  nullptr);
         if (ptr)
         {
           if (DirectoryCopyText(action_name_buf, sizeof(action_name_buf),
@@ -1849,7 +1849,7 @@ ReadFileData2(
 	                         logical_type_buf, link_buf, final_link_buf);
 
 encode_failed:
-   if (link_list != NULL)
+   if (link_list != nullptr)
    {
       for (i = 0; i < link_count; i++) XtFree(link_list[i]);
       XtFree((char *)link_list);
@@ -1939,14 +1939,14 @@ ReadDirectoryProcess(
     * are needed for the iconic path icons.
     */
    path_count = 0;
-   path_logical_types = NULL;
+   path_logical_types = nullptr;
 
    /* Don't muck with original string */
    ptrOrig = ptr = XtNewString(directory_name);
 
    for (;;)
    {
-      if (ptr != NULL)
+      if (ptr != nullptr)
          *ptr = '\0';
 
       if (ptrOrig[0] == '\0')
@@ -1957,10 +1957,10 @@ ReadDirectoryProcess(
       /* get logical type of next path component */
       full_directory_name = ResolveLocalPathName( host_name,
                                                   namePtr,
-                                                  NULL,
+                                                  nullptr,
                                                   home_host_name,
                                                   &component_status );
-      if (component_status != TT_OK || full_directory_name == NULL)
+      if (component_status != TT_OK || full_directory_name == nullptr)
       {
          XtFree(full_directory_name);
          XtFree(ptrOrig);
@@ -1973,8 +1973,8 @@ ReadDirectoryProcess(
       path_logical_types = (char **) XtRealloc((char *)path_logical_types,
                                                (path_count + 1)*sizeof(char *));
       path_logical_types[path_count] =
-         (char *) DtDtsDataToDataType(full_directory_name, NULL, 0, NULL, NULL,
-                                      NULL, NULL);
+         (char *) DtDtsDataToDataType(full_directory_name, nullptr, 0, nullptr, nullptr,
+                                      nullptr, nullptr);
 #if defined( DATATYPE_IS_FIXED )
 #else
       {
@@ -2003,7 +2003,7 @@ ReadDirectoryProcess(
       XtFree( full_directory_name );
       path_count++;
 
-      if (ptr == NULL)
+      if (ptr == nullptr)
         break;
 
       /* restore '/' */
@@ -2019,10 +2019,10 @@ ReadDirectoryProcess(
    /* get the full name of the current directory */
    full_directory_name = ResolveLocalPathName( host_name,
                                                directory_name,
-                                               NULL,
+                                               nullptr,
                                                home_host_name,
                                                &directory_status );
-   if (directory_status != TT_OK || full_directory_name == NULL)
+   if (directory_status != TT_OK || full_directory_name == nullptr)
    {
       DirectoryFreeStrings(path_logical_types, path_count);
       (void)DirectoryWriteError(pipe_fd, -1, 0);
@@ -2077,7 +2077,7 @@ ReadDirectoryProcess(
 
    /* try to open the directory */
    dirp = opendir (full_directory_name);
-   if (dirp == NULL)
+   if (dirp == nullptr)
    {
       /* send an error code back through the pipe */
       rc = errno;
@@ -2092,7 +2092,7 @@ ReadDirectoryProcess(
 
 #ifdef DT_PERFORMANCE
    printf("  begin reading directory: %s\n", full_directory_name);
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
 #endif
 
 	/*
@@ -2110,14 +2110,14 @@ ReadDirectoryProcess(
    file_data_buf_ptr = file_data_buffer + PIPEMSG_HDR_LEN;
 
    /* get current time */
-   gettimeofday(&time1, NULL);
+   gettimeofday(&time1, nullptr);
 
    done = False;
    do
    {
      int len = 0;
 
-     if ((dp = readdir (dirp)) != NULL)
+     if ((dp = readdir (dirp)) != nullptr)
      {
        Boolean IsToolBox;
        /* if Desktop skip */
@@ -2146,7 +2146,7 @@ ReadDirectoryProcess(
        done = True;
 
      /* check if 0.4 seconds have passed since the last status line update */
-     gettimeofday(&time2, NULL);
+     gettimeofday(&time2, nullptr);
      diff = 1024*(time2.tv_sec - time1.tv_sec);
      diff += time2.tv_usec/1024;
      diff -= time1.tv_usec/1024;
@@ -2185,7 +2185,7 @@ ReadDirectoryProcess(
    } while (!done);
 
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -2201,9 +2201,9 @@ ReadDirectoryProcess(
    position_count = 0;
    if (DirectoryBuildChildPath(file_name, sizeof(file_name),
                                full_directory_name, positionFileName) == 0 &&
-       (fptr = fopen(file_name, "r")) != NULL)
+       (fptr = fopen(file_name, "r")) != nullptr)
    {
-     PositionInfo * position_info = NULL;
+     PositionInfo * position_info = nullptr;
      position_count = DirectoryLoadPositionInfo(fptr, &position_info);
 
      fclose(fptr);
@@ -2300,13 +2300,13 @@ UpdateAllProcess(
       char *tt_path;
 
       path_count = 0;
-      path_logical_types = NULL;
+      path_logical_types = nullptr;
       ptrOrig = ptr = XtNewString(directory_name);
       for (;;)
       {
          char *namePtr;
 
-         if (ptr != NULL)
+         if (ptr != nullptr)
             *ptr = '\0';
 
          if (ptrOrig[0] == '\0')
@@ -2317,10 +2317,10 @@ UpdateAllProcess(
          /* get logical type of next path component */
          full_directory_name = ResolveLocalPathName( host_name,
                                                   namePtr,
-                                                  NULL,
+                                                  nullptr,
                                                   home_host_name,
                                                   &component_status );
-         if (component_status != TT_OK || full_directory_name == NULL)
+         if (component_status != TT_OK || full_directory_name == nullptr)
          {
             XtFree(full_directory_name);
             XtFree(ptrOrig);
@@ -2333,8 +2333,8 @@ UpdateAllProcess(
          path_logical_types = (char **) XtRealloc((char *)path_logical_types,
                                                (path_count + 1)*sizeof(char *));
          path_logical_types[path_count] =
-           (char *)DtDtsDataToDataType(full_directory_name, NULL, 0, NULL, NULL,
-                                      NULL, NULL);
+           (char *)DtDtsDataToDataType(full_directory_name, nullptr, 0, nullptr, nullptr,
+                                      nullptr, nullptr);
 #if defined( DATATYPE_IS_FIXED )
 #else
       {
@@ -2364,7 +2364,7 @@ UpdateAllProcess(
          XtFree(full_directory_name);
          path_count++;
 
-         if (ptr == NULL)
+         if (ptr == nullptr)
            break;
 
          /* restore '/' */
@@ -2380,14 +2380,14 @@ UpdateAllProcess(
       /* get the full name of the current directory */
       full_directory_name = ResolveLocalPathName( host_name,
                                                  directory_name,
-                                                 NULL,
+                                                 nullptr,
                                                  home_host_name,
                                                  &tt_status );
       /* It's ok not to check for tt_status.
          The code below will handle it properly.
       */
 
-      if (tt_status != TT_OK || full_directory_name == NULL)
+      if (tt_status != TT_OK || full_directory_name == nullptr)
       {
          DirectoryFreeStrings(path_logical_types, path_count);
          XtFree(full_directory_name);
@@ -2413,12 +2413,12 @@ UpdateAllProcess(
    {
         full_directory_name = ResolveLocalPathName( host_name,
                                                  directory_name,
-                                                 NULL,
+                                                 nullptr,
                                                  home_host_name,
                                                  &tt_status );
    }
 
-   if (tt_status != TT_OK || full_directory_name == NULL)
+   if (tt_status != TT_OK || full_directory_name == nullptr)
    {
       rc = -1;
       modify_time = 0;
@@ -2457,7 +2457,7 @@ UpdateAllProcess(
 
    /* try to open the directory */
    dirp = opendir (full_directory_name);
-   if (dirp == NULL)
+   if (dirp == nullptr)
    {
       /* send an error code back through the pipe */
       rc = errno;
@@ -2476,7 +2476,7 @@ UpdateAllProcess(
 
       /* check if we already know this file */
       for (old_pp = &directory->file_data;
-           (old_data = *old_pp) != NULL;
+           (old_data = *old_pp) != nullptr;
            old_pp = &old_data->next)
       {
          if (strcmp(dp->d_name, old_data->file_name) == 0)
@@ -2490,8 +2490,8 @@ UpdateAllProcess(
                                          dp->d_name) != 0 ||
                  ((lstat(tname, &sbuf) >= 0) &&
                   sbuf.st_mtime != old_data->stat.st_mtime))
-                 old_data = NULL;
-             if(old_data == NULL)
+                 old_data = nullptr;
+             if(old_data == nullptr)
                  break;
 
             /* check if this file appears on the modified list */
@@ -2502,7 +2502,7 @@ UpdateAllProcess(
                   * This file is on the modified list.
                   * Pretend we didn't find it to force a refresh of this file.
                   */
-                 old_data = NULL;
+                 old_data = nullptr;
                  break;
                }
             break;
@@ -2510,7 +2510,7 @@ UpdateAllProcess(
       }
 
       /* If this is a known file, remember we saw it and continue. */
-      if (old_data != NULL)
+      if (old_data != nullptr)
       {
          /*
           * We remove the file from the old file list; thus, when we are done,
@@ -2618,10 +2618,10 @@ UpdateSomeProcess(
 
      full_directory_name = ResolveLocalPathName( host_name,
                                                  directory_name,
-                                                 NULL,
+                                                 nullptr,
                                                  home_host_name,
                                                  &tt_status );
-     if (tt_status != TT_OK || full_directory_name == NULL)
+     if (tt_status != TT_OK || full_directory_name == nullptr)
      {
        rc = -1;
        modify_time = 0;
@@ -2711,7 +2711,7 @@ ReaddirPipeCallback(
    Boolean done;
    short msg;
    Boolean update_due;
-   FileData *new_data = NULL, **new_nextp;
+   FileData *new_data = nullptr, **new_nextp;
    FileData *old_data, **old_nextp;
    char *ptr;
    char *err_msg;
@@ -2733,7 +2733,7 @@ ReaddirPipeCallback(
       XtRemoveInput(*id);
       kill(pipe_data->child, SIGKILL);
       XtFree( client_data );
-      ScheduleActivity(NULL);
+      ScheduleActivity(nullptr);
       return;
    }
 
@@ -2789,7 +2789,7 @@ ReaddirPipeCallback(
              goto malformed_response;
 
            new_data = FileData2toFileData(&file_data2, &n);
-           if (new_data == NULL) goto malformed_response;
+           if (new_data == nullptr) goto malformed_response;
            }
 
          if (msg == PIPEMSG_FILEDATA3)
@@ -2840,7 +2840,7 @@ ReaddirPipeCallback(
              ;
            *new_nextp = new_data;
            if(new_data ) {
-             new_data->next = NULL;
+             new_data->next = nullptr;
            }
          }
 
@@ -2941,7 +2941,7 @@ malformed_response:
       close(*fd);
       XtRemoveInput(*id);
       kill(pipe_data->child, SIGKILL);
-      while (directory->new_data != NULL)
+      while (directory->new_data != nullptr)
       {
          discard = directory->new_data;
          directory->new_data = discard->next;
@@ -2985,11 +2985,11 @@ decoded:
        * and replaces entries that also exist in the old list.
        */
       for (new_nextp = &directory->new_data;
-           (new_data = *new_nextp) != NULL;
+           (new_data = *new_nextp) != nullptr;
            new_nextp = &new_data->next)
       {
          for (old_nextp = &directory->file_data;
-              (old_data = *old_nextp) != NULL;
+              (old_data = *old_nextp) != nullptr;
               old_nextp = &old_data->next)
          {
            if( strcmp(old_data->file_name, new_data->file_name) == 0 )
@@ -3025,17 +3025,17 @@ decoded:
 
          /* replace the old list by the new list */
          directory->file_data = directory->new_data;
-         directory->new_data = NULL;
+         directory->new_data = nullptr;
       }
       else
       {
-         FileData * tmp_ptr = NULL;
+         FileData * tmp_ptr = nullptr;
 
          /* remove any directory entries that no longer exist
             in the new list.
          */
          new_nextp = &directory->new_data;
-         while ((new_data = *new_nextp) != NULL)
+         while ((new_data = *new_nextp) != nullptr)
          {
             if (new_data->errnum == ENOENT)
             {
@@ -3053,7 +3053,7 @@ decoded:
             in the old list.
          */
          old_nextp = &directory->file_data;
-         while ((old_data = *old_nextp) != NULL)
+         while ((old_data = *old_nextp) != nullptr)
          {
             if (old_data->errnum == ENOENT)
             {
@@ -3067,11 +3067,11 @@ decoded:
          /* Append the old list to the end of the new list
             Replace the old list pointer with the new list pointer
          */
-         if( tmp_ptr != NULL )
+         if( tmp_ptr != nullptr )
          {
             tmp_ptr->next = directory->file_data;
             directory->file_data = directory->new_data;
-            directory->new_data = NULL;
+            directory->new_data = nullptr;
          }
       }
 
@@ -3110,7 +3110,7 @@ decoded:
        * if the parent directory isn't already cached (tree mode)
        */
       for (new_data = directory->file_data;
-           new_data != NULL;
+           new_data != nullptr;
            new_data = new_data->next)
         if (strcmp(new_data->file_name, ".") == 0)
         {
@@ -3121,7 +3121,7 @@ decoded:
 	     */
 
 	    /* If we already have allocated space for dir_data free it */
-	    if ( directory->dir_data != NULL )
+	    if ( directory->dir_data != nullptr )
 	      FreeFileData(directory->dir_data, True);
 
 	    directory->dir_data = (FileData *)XtMalloc(sizeof(FileData));
@@ -3132,19 +3132,19 @@ decoded:
 	     * Doctor up some of the information fields so that this doesn't
 	     * seem to be a "." entry
 	     */
-	    directory->dir_data->next = NULL;
+	    directory->dir_data->next = nullptr;
 	    directory->dir_data->file_name =
 	                         XtNewString(DName(directory->directory_name));
-	    directory->dir_data->action_name = NULL;
+	    directory->dir_data->action_name = nullptr;
 	    if (directory->path_count > 0)
 	    {
 	      directory->dir_data->logical_type = XtNewString(
 	             directory->path_logical_types[directory->path_count - 1]);
 	    }
 	    else
-	      directory->dir_data->logical_type = NULL;
-	    directory->dir_data->link = NULL;
-	    directory->dir_data->final_link = NULL;
+	      directory->dir_data->logical_type = nullptr;
+	    directory->dir_data->link = nullptr;
+	    directory->dir_data->final_link = nullptr;
 	    directory->dir_data->is_subdir = True;
 
 	    break;
@@ -3160,7 +3160,7 @@ decoded:
  	 {
              SelectDesktopFile(file_mgr_data);
              XtFree(file_mgr_data->desktop_file);
-             file_mgr_data->desktop_file = NULL;
+             file_mgr_data->desktop_file = nullptr;
          }
       }
       XtFree(client_data);
@@ -3194,7 +3194,7 @@ ReadDirectoryFiles(
 #endif
 
    /* make sure positionFileName is initialized */
-   if (positionFileName == NULL)
+   if (positionFileName == nullptr)
       InitializePositionFileName();
 
    /* mark the directory busy reading */
@@ -3240,16 +3240,16 @@ ReadDirectory(
    char *err_msg;
 
    /* initialize return values */
-   if (file_data != NULL)
+   if (file_data != nullptr)
    {
       *file_count = 0;
-      *file_data = NULL;
+      *file_data = nullptr;
    }
 
    /* see if the directory is already in the cache */
    directory = FindDirectory(host_name, directory_name);
 
-   if ((directory != NULL) &&
+   if ((directory != nullptr) &&
        (strcmp(directory_name, directory->directory_name) == 0))
    {
       /* The directory is already in the cache. */
@@ -3276,7 +3276,7 @@ ReadDirectory(
       /* check if we need to popup an error message */
       if (directory->errmsg_needed &&
           !directory->busy[activity_reading] &&
-          w != NULL)
+          w != nullptr)
       {
          err_msg = XtNewString(GetSharedMessage(CANNOT_READ_DIRECTORY_ERROR));
          FileOperationError (w, err_msg, directory_name);
@@ -3312,15 +3312,15 @@ ReadDirectory(
       directory->directory_name = XtNewString (directory_name);
       directory->path_name = ResolveLocalPathName (host_name,
                                                    directory_name,
-                                                   NULL,
+                                                   nullptr,
                                                    home_host_name,
                                                    &tt_status );
-      if (directory->path_name == NULL)
+      if (directory->path_name == nullptr)
       {
          directory->path_name = (char *) XtMalloc(sizeof(char));
          directory->path_name[0]='\0';
       }
-      directory->tt_path_name = NULL;
+      directory->tt_path_name = nullptr;
       directory->viewed = True;
       directory->file_count = 0;
       directory->numOfViews = 1;
@@ -3329,17 +3329,17 @@ ReadDirectory(
       directory->last_check = 0;
       directory->link_check_needed = False;
       directory->file_count = 0;
-      directory->file_data = NULL;
-      directory->new_data = NULL;
-      directory->dir_data = NULL;
+      directory->file_data = nullptr;
+      directory->new_data = nullptr;
+      directory->dir_data = nullptr;
       directory->path_count = 0;
-      directory->path_logical_types = NULL;
+      directory->path_logical_types = nullptr;
       directory->position_count = 0;
-      directory->position_info = NULL;
+      directory->position_info = nullptr;
       directory->modify_begin = 0;
       directory->modified_count = 0;
       directory->was_up_to_date = True;
-      directory->modified_list = NULL;
+      directory->modified_list = nullptr;
       directory->activity = activity_idle;
       for (i = 0; i < activity_idle; i++)
         directory->busy[i] = False;
@@ -3356,12 +3356,12 @@ ReadDirectory(
    /* Restart refresh timer, if necessary */
    if (file_mgr_data->mapped && timer_suspended)
    {
-      XtAppAddTimeOut(app_context, tickTime * 1000, TimerEvent, NULL);
+      XtAppAddTimeOut(app_context, tickTime * 1000, TimerEvent, nullptr);
       timer_suspended = False;
    }
 
    /* return the file data */
-   if (file_data != NULL && !directory->busy[activity_reading])
+   if (file_data != nullptr && !directory->busy[activity_reading])
    {
       *file_count = directory->file_count;
       *file_data = directory->file_data;
@@ -3394,7 +3394,7 @@ _ReadDir(
 {
   char subdir_name[MAX_PATH];
   FileData *fp, *file_data;
-  FileViewData **lp = NULL, *ip;
+  FileViewData **lp = nullptr, *ip;
   int i, j, n, rc;
   TreeShow ts;
   Boolean busy_reading;
@@ -3405,11 +3405,11 @@ _ReadDir(
   /* initialize list of descendents and counts */
   if (dp)
   {
-    dp->desc = NULL;
+    dp->desc = nullptr;
     dp->ndir = dp->nfile = 0;
     lp = &dp->desc;
   } else
-    ip = NULL;
+    ip = nullptr;
 
   /* Read the directory content */
   busy_reading = ReadDirectory(w, host_name, directory_name,
@@ -3458,7 +3458,7 @@ _ReadDir(
 
         rc = _ReadDir(w, file_mgr_data, host_name, subdir_name, ip,
                       level, read_level, branch_list);
-        if (ip == NULL)
+        if (ip == nullptr)
          ;
         else if (rc)
           ip->ts = tsError;
@@ -3508,7 +3508,7 @@ ReadDir(
    file_mgr_data->busy_status = initiating_readdir;
 
    /* first pass: just check if any directory we need is busy */
-   _ReadDir(w, file_mgr_data, host_name, directory_name, NULL, level,
+   _ReadDir(w, file_mgr_data, host_name, directory_name, nullptr, level,
             read_level, branch_list);
 
    /* if a directory we need is busy, return now */
@@ -3557,7 +3557,7 @@ FileWindowMapUnmap(
 
    if (file_mgr_data->mapped && timer_suspended)
    {
-      XtAppAddTimeOut(app_context, tickTime * 1000, TimerEvent, NULL);
+      XtAppAddTimeOut(app_context, tickTime * 1000, TimerEvent, nullptr);
       timer_suspended = False;
    }
 }
@@ -3580,7 +3580,7 @@ RereadDirectory(
 
    /*  Find the directory set entry.  */
    directory = FindDirectory(host_name, directory_name);
-   if (directory != NULL)
+   if (directory != nullptr)
    {
       /* reset errnum to make sure we'll get an error message */
       directory->errnum = 0;
@@ -3610,7 +3610,7 @@ UpdateDirectory(
 
    /*  Find the directory set entry.  */
    directory = FindDirectory(host_name, directory_name);
-   if (directory != NULL)
+   if (directory != nullptr)
    {
       /* arrange for directory contents to be checked */
       if (!directory->busy[activity_update_all])
@@ -3681,7 +3681,7 @@ DirectoryAbortModify(
 
    /*  Find the directory set entry.  */
    directory = FindDirectory(host_name, directory_name);
-   if (directory != NULL)
+   if (directory != nullptr)
    {
       directory->modify_begin--;
 
@@ -3711,7 +3711,7 @@ DirectoryBeginModify(
 
    /*  Find the directory set entry.  */
    directory = FindDirectory(host_name, directory_name);
-   if (directory != NULL)
+   if (directory != nullptr)
    {
       if (directory->modify_begin == 0)
          /* until we know better, assume the directory changed */
@@ -3756,7 +3756,7 @@ DirectoryModifyTime(
    /*  Find the directory set entry.  */
    directory = FindDirectory(host_name, directory_name);
 
-   if (directory != NULL)
+   if (directory != nullptr)
    {
       /* mark directory up-to-date if unchanged since last read */
       if (modify_time <= directory->modify_time)
@@ -3791,7 +3791,7 @@ DirectoryFileModified(
 
    /*  Find the directory set entry.  */
    directory = FindDirectory(host_name, directory_name);
-   if (directory != NULL)
+   if (directory != nullptr)
    {
       /* see if the file is already on the list */
       for( i = 0; i < directory->modified_count; ++i )
@@ -3826,7 +3826,7 @@ DirectoryEndModify(
    directory = FindDirectory(host_name, directory_name);
 
    /* arrange for an update background process to be scheduled */
-   if (directory != NULL)
+   if (directory != nullptr)
    {
       directory->modify_begin--;
       DPRINTF(("   modify_begin %d, up_to_date %d, modified_count %d\n",
@@ -3849,7 +3849,7 @@ DirectoryEndModify(
             if (DirectoryBuildChildPath(subdir_name, sizeof(subdir_name),
                                         directory_name,
                                         directory->modified_list[i]) != 0)
-               subdir = NULL;
+               subdir = nullptr;
             else
                subdir = FindDirectory(host_name, subdir_name);
             if (subdir)
@@ -3892,7 +3892,7 @@ UpdateDirectorySet( void )
 
    for (i = 0; i < directory_count; i++)
       if (!directory_set[i]->busy[activity_reading])
-         ReadDirectoryFiles (NULL, directory_set[i]);
+         ReadDirectoryFiles (nullptr, directory_set[i]);
 }
 
 
@@ -3923,7 +3923,7 @@ UpdateCachedDirectories(
       {
          XtFree ((char *) directory_set[i]->directoryView);
          directory_set[i]->numOfViews = 0;
-         directory_set[i]->directoryView = NULL;
+         directory_set[i]->directoryView = nullptr;
          directory_set[i]->viewed = False;
       }
    }
@@ -3947,7 +3947,7 @@ UpdateCachedDirectories(
                                    file_mgr_data->directory_set[k]->name);
 
          /* we expect the directory to be found; if not, something is wrong */
-         if (directory == NULL)
+         if (directory == nullptr)
          {
             fprintf(stderr, "Warning: %s:%s not found in directory set.\n",
                     view_set[j]->host_name,
@@ -4001,7 +4001,7 @@ UpdateCachedDirectories(
    /* Restart refresh timer, if necessary */
    if (timer_suspended && SomeWindowMapped())
    {
-      XtAppAddTimeOut(app_context, tickTime * 1000, TimerEvent, NULL);
+      XtAppAddTimeOut(app_context, tickTime * 1000, TimerEvent, nullptr);
       timer_suspended = False;
    }
 }
@@ -4030,7 +4030,7 @@ DirectoryFormatFileTime(time_t value, char *buffer, size_t buffer_size)
 #ifdef NLS16
    struct tm *tms = localtime(&value);
 
-   if (tms == NULL ||
+   if (tms == nullptr ||
        strftime(buffer, buffer_size,
                 GetSharedMessage(DIRECTORY_DATE_FORMAT), tms) == 0)
       snprintf(buffer, buffer_size, "%s", "?");
@@ -4038,7 +4038,7 @@ DirectoryFormatFileTime(time_t value, char *buffer, size_t buffer_size)
    char *text = ctime(&value);
    size_t length;
 
-   if (text == NULL)
+   if (text == nullptr)
    {
       snprintf(buffer, buffer_size, "%s", "?");
       return;
@@ -4325,7 +4325,7 @@ DirectoryBusy(
            strncmp (directory_set[i]->path_name, path,len) == 0 &&
              directory_set[i]->path_name[len] == '/'
            ||
-           directory_set[i]->tt_path_name != NULL &&
+           directory_set[i]->tt_path_name != nullptr &&
            (strcmp (directory_set[i]->tt_path_name, path) == 0 ||
             strncmp (directory_set[i]->tt_path_name, path,len) == 0 &&
               directory_set[i]->tt_path_name[len] == '/')))
@@ -4397,19 +4397,19 @@ GetDirectoryLogicalType(
    {
       DPRINTF(("GetDirectoryLogicalType(%s): len %d, cur_dir %s\n",
                 path, len, file_mgr_data->current_directory));
-      return NULL;
+      return nullptr;
    }
 
    /*  Find the directory set entry.  */
    directory = FindDirectory(file_mgr_data->host,
                              file_mgr_data->current_directory);
-   if ((directory != NULL) &&
+   if ((directory != nullptr) &&
        (strcmp(file_mgr_data->current_directory,
                directory->directory_name) == 0))
    {
       /* if we don't have path_logical_types yet, we don't know */
-      if (directory->path_logical_types == NULL)
-         return NULL;
+      if (directory->path_logical_types == nullptr)
+         return nullptr;
 
       /* count the number of components in path */
       if (strcmp(path, "/") == 0)
@@ -4418,7 +4418,7 @@ GetDirectoryLogicalType(
       {
          n = 1;
          ptr = path + 1;
-         while ((ptr = DtStrchr(ptr, '/')) != NULL)
+         while ((ptr = DtStrchr(ptr, '/')) != nullptr)
          {
             ptr = ptr + 1;
             if (*ptr == '\0')
@@ -4437,7 +4437,7 @@ GetDirectoryLogicalType(
 
    /* directory not found in directory_set */
 
-   return NULL;
+   return nullptr;
 }
 
 
@@ -4461,7 +4461,7 @@ GetDirectoryPositionInfo(
    Directory *directory;
 
    directory = FindDirectory(host_name, directory_name);
-   if (directory == NULL)
+   if (directory == nullptr)
       return -1;
 
    *position_info = directory->position_info;
@@ -4493,7 +4493,7 @@ WritePosInfoProcess(
    fileName = ResolveLocalPathName( directory->host_name,
                                     directory->directory_name, positionFileName,
                                     home_host_name, &tt_status );
-   if (tt_status != TT_OK || fileName == NULL)
+   if (tt_status != TT_OK || fileName == nullptr)
    {
       rc = EIO;
       (void)DirectoryWriteStatus(pipe_fd, rc);
@@ -4517,7 +4517,7 @@ WritePosInfoProcess(
       /* open the file for writing */
       f = fopen(fileName, "w");
 
-      if (f == NULL)
+      if (f == nullptr)
       {
          /* Assume read-only directory, if we can't open the file */
          rc = 0;
@@ -4585,7 +4585,7 @@ WritePosInfoPipeCallback(
          ScheduleActivity(directory);
       }
       else
-         ScheduleActivity(NULL);
+         ScheduleActivity(nullptr);
       XtFree(client_data);
       return;
    }
@@ -4598,7 +4598,7 @@ WritePosInfoPipeCallback(
    /* verify that the directory still exists */
    if (DirectoryGone(directory))
    {
-      ScheduleActivity(NULL);
+      ScheduleActivity(nullptr);
       return;
    }
 
@@ -4631,7 +4631,7 @@ SetDirectoryPositionInfo(
 
    /* find the directory */
    directory = FindDirectory(host_name, directory_name);
-   if (directory == NULL)
+   if (directory == nullptr)
       return -1;
 
    /* check if anything has changed */
@@ -4686,7 +4686,7 @@ SetDirectoryPositionInfo(
    }
 
    /* make sure positionFileName is initialized */
-   if (positionFileName == NULL)
+   if (positionFileName == nullptr)
       InitializePositionFileName();
 
    /* start background process that writes the position info file */
@@ -4808,7 +4808,7 @@ TimerEventProcess(
            file_data = file_data->next)
       {
          /* Only worry about links */
-         if (file_data->link == NULL)
+         if (file_data->link == nullptr)
             continue;
 
          /* Check if the file is still a symbolic link */
@@ -4838,7 +4838,7 @@ TimerEventProcess(
             prev_link_kind = 1;
 
          /* Check what kind of link it is now */
-         if (_DtFollowLink(full_name) == NULL)
+         if (_DtFollowLink(full_name) == nullptr)
             cur_link_kind = 2;  /* recursive link */
          else if (stat(full_name, &stat_buf) != 0)
             cur_link_kind = 3;  /* broken link */
@@ -4890,7 +4890,7 @@ StickyProcIdle(
       else
       {
          DPRINTF2(("StickyProcIdle: end sticky proc %ld\n", (long)p->child));
-         PipeWriteString(p->pipe_m2s_fd, NULL);
+         PipeWriteString(p->pipe_m2s_fd, nullptr);
          close(p->pipe_s2m_fd);
          close(p->pipe_m2s_fd);
          *lp = p->next;
@@ -4904,9 +4904,9 @@ StickyProcDiscard(ActivityStatus activity, StickyProcDesc *sticky_proc)
 {
    StickyProcDesc **entry;
 
-   if (sticky_proc == NULL) return;
+   if (sticky_proc == nullptr) return;
    entry = &ActivityTable[activity].sticky_procs;
-   while (*entry != NULL && *entry != sticky_proc)
+   while (*entry != nullptr && *entry != sticky_proc)
       entry = &(*entry)->next;
    if (*entry == sticky_proc) *entry = sticky_proc->next;
    close(sticky_proc->pipe_s2m_fd);
@@ -4940,7 +4940,7 @@ TimerPipeCallback(
    {
       FileOpProtocolError(toplevel);
       XtRemoveInput(*id);
-      if (pipe_data->sticky_proc != NULL)
+      if (pipe_data->sticky_proc != nullptr)
          StickyProcDiscard(activity, pipe_data->sticky_proc);
       else
       {
@@ -4955,7 +4955,7 @@ TimerPipeCallback(
          ScheduleActivity(directory);
       }
       else
-         ScheduleActivity(NULL);
+         ScheduleActivity(nullptr);
       XtFree(client_data);
       return;
    }
@@ -4972,7 +4972,7 @@ TimerPipeCallback(
    /* verify that the directory still exists */
    if (DirectoryGone(directory))
    {
-      ScheduleActivity(NULL);
+      ScheduleActivity(nullptr);
       return;
    }
 
@@ -5001,7 +5001,7 @@ TimerPipeCallback(
       {
          DPRINTF(("TimerPipeCallback: %s link changed\n",
                   directory->directory_name));
-         ReadDirectoryFiles(NULL, directory);
+         ReadDirectoryFiles(nullptr, directory);
       }
       else if (modify_time != directory->modify_time || directory->errnum != 0)
       {
@@ -5017,7 +5017,7 @@ TimerPipeCallback(
       {
          directory->errnum = rc;
          directory->errmsg_needed = True;
-         ReadDirectoryFiles(NULL, directory);
+         ReadDirectoryFiles(nullptr, directory);
       }
    }
 }
@@ -5055,7 +5055,7 @@ CheckDesktopProcess(
                                         desktopWindow->dir_linked_to,
                                         desktopWindow->file_name,
                                         home_host_name, &tt_status);
-      if (tt_status != TT_OK || full_path == NULL)
+      if (tt_status != TT_OK || full_path == nullptr)
       {
          XtFree(full_path);
          return 1;
@@ -5073,7 +5073,7 @@ CheckDesktopProcess(
                                          desktopWindow->host,
                                          desktopWindow->dir_linked_to,
                                          desktopWindow->file_name,
-                                         NULL) != 0)
+                                         nullptr) != 0)
          {
             XtFree(full_path);
             return 1;
@@ -5090,10 +5090,10 @@ CheckDesktopProcess(
          else
              IsToolBox = False;
 
-         n = ReadFileData2(&file_data2, full_path, NULL, IsToolBox);
-         new_data = n < 0 ? ReadFileData(full_path, NULL) :
+         n = ReadFileData2(&file_data2, full_path, nullptr, IsToolBox);
+         new_data = n < 0 ? ReadFileData(full_path, nullptr) :
                             FileData2toFileData(&file_data2, &n);
-         if (new_data == NULL)
+         if (new_data == nullptr)
          {
             XtFree(full_path);
             return 1;
@@ -5127,7 +5127,7 @@ CheckDesktopProcess(
          FreeFileData(new_data, True);
       }
       XtFree(full_path);
-      full_path = NULL;
+      full_path = nullptr;
    }
 
    /* send a 'done' msg through the pipe */
@@ -5160,10 +5160,10 @@ CheckDesktopPipeCallback(
    ActivityStatus activity = pipe_data->activity;
    int i;
 
-   host = NULL;
-   dir_linked_to = NULL;
-   file_name = NULL;
-   new_data = NULL;
+   host = nullptr;
+   dir_linked_to = nullptr;
+   file_name = nullptr;
+   new_data = nullptr;
 
    if (DirectoryGone(directory))
    {
@@ -5171,7 +5171,7 @@ CheckDesktopPipeCallback(
       XtRemoveInput(*id);
       kill(pipe_data->child, SIGKILL);
       XtFree(client_data);
-      ScheduleActivity(NULL);
+      ScheduleActivity(nullptr);
       return;
    }
 
@@ -5225,7 +5225,7 @@ CheckDesktopPipeCallback(
          FreeFileData(old_data, False);
          memcpy(old_data, new_data, sizeof(FileData));
          XtFree((char *)new_data);
-         new_data = NULL;
+         new_data = nullptr;
 
          /* update the desktop object */
          DesktopObjectChanged(desktopWindow);
@@ -5259,7 +5259,7 @@ malformed_response:
    XtFree(host);
    XtFree(dir_linked_to);
    XtFree(file_name);
-   if (new_data != NULL) FreeFileData(new_data, True);
+   if (new_data != nullptr) FreeFileData(new_data, True);
    FileOpProtocolError(toplevel);
    close(*fd);
    XtRemoveInput(*id);
@@ -5271,7 +5271,7 @@ malformed_response:
       ScheduleActivity(directory);
    }
    else
-      ScheduleActivity(NULL);
+      ScheduleActivity(nullptr);
    XtFree(client_data);
 }
 
@@ -5318,7 +5318,7 @@ TimerEvent(
         XtPointer client_data,
         XtIntervalId *id )
 {
-   static int *check_list = NULL;
+   static int *check_list = nullptr;
    static int check_alloc = 0;
    int i, j, n;
 
@@ -5337,7 +5337,7 @@ TimerEvent(
        * Schedule the next TimerEvent in 1/2 second, so that check will
        * be done soon after the drag is finished.
        */
-      XtAppAddTimeOut (app_context, 500, TimerEvent, NULL);
+      XtAppAddTimeOut (app_context, 500, TimerEvent, nullptr);
       return;
    }
 
@@ -5420,7 +5420,7 @@ TimerEvent(
 
    /*  Reset the timeout for the next interval.  */
    if (SomeWindowMapped())
-      XtAppAddTimeOut(app_context, tickTime * 1000, TimerEvent, NULL);
+      XtAppAddTimeOut(app_context, tickTime * 1000, TimerEvent, nullptr);
    else
       timer_suspended = True;
 }
@@ -5455,7 +5455,7 @@ TimerEventBrokenLinks(
      checkBrokenLinkTimerId = XtAppAddTimeOut( app_context,
                                                checkBrokenLink * 1000,
                                                TimerEventBrokenLinks,
-                                               NULL );
+                                               nullptr );
    }
    else
    {
@@ -5628,7 +5628,7 @@ ScheduleDirectoryActivity(
             break;
    }
    else
-      p = NULL;
+      p = nullptr;
 
    if (p)
    {
@@ -5647,14 +5647,14 @@ ScheduleDirectoryActivity(
             /* the proc listed 1st is dead, remove it */
             ActivityTable[activity].sticky_procs = p->next;
             XtFree((void *)p);
-            p = NULL;
+            p = nullptr;
           }
           else if (d->next == p)
           {
             /* the process "p" is dead, remove it */
             d->next = p->next;
             XtFree((void *)p);
-            p = NULL;
+            p = nullptr;
           }
         }
       }
@@ -5741,7 +5741,7 @@ ScheduleDirectoryActivity(
 
             /* wait for a message in the pipe */
             s = PipeReadString(pipe_m2s_fd[0]);
-            if (s == NULL)
+            if (s == nullptr)
                break;
 
             XtFree(directory->path_name);
@@ -5781,7 +5781,7 @@ ScheduleDirectoryActivity(
          XtFree((char *)directory->modified_list);
 
          directory->modified_count = 0;
-         directory->modified_list = NULL;
+         directory->modified_list = nullptr;
       }
 
       /* close unused pipe connections */
@@ -5817,11 +5817,11 @@ ScheduleActivity(
    int i;
 
    /* first try to schedule new activity for this directory */
-   if (directory != NULL)
+   if (directory != nullptr)
      ScheduleDirectoryActivity(directory);
 
    /* see if there is anything else we can schedule now */
-   if (directory == NULL || directory->activity == activity_idle)
+   if (directory == nullptr || directory->activity == activity_idle)
    {
       for (i = 0; i < directory_count; i++)
          if (directory_set[i] != directory)
@@ -5835,7 +5835,7 @@ SelectDesktopFile(
 FileMgrData *file_mgr_data)
 {
     DirectorySet *directory_data;
-    FileViewData *file_view_data = NULL;
+    FileViewData *file_view_data = nullptr;
     int j;
 
     directory_data = file_mgr_data->directory_set[0];

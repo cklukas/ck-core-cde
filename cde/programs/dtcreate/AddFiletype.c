@@ -109,13 +109,13 @@ void activateCB_edit_id_characteristics (Widget filesel, XtPointer cdata,
 
   XtVaGetValues (AddFiletype,
                  XmNuserData, &pFtD,
-                 NULL);
+                 nullptr);
 
 /*FileCharacteristics = create_FileCharacteristics();*/
 
   XtVaSetValues (FileCharacteristics,
                  XmNuserData, pFtD,
-                 NULL);
+                 nullptr);
   clear_FileCharacteristics_dialog_fields();
   init_FileCharacteristics_dialog_fields(pFtD);
   UxPopupInterface (FILE_CHARACTERISTICS, no_grab);
@@ -139,7 +139,7 @@ static  void    activateCB_AF_OkButton( Widget  UxWidget,
      /* Get FiletypeData structure that was allocated when Add button on    */
      /* the CreateActionAppShell interface was activated.                   */
      /***********************************************************************/
-     XtVaGetValues(AddFiletype, XmNuserData, &pFtD, NULL);
+     XtVaGetValues(AddFiletype, XmNuserData, &pFtD, nullptr);
 
      /***********************************************************************/
      /* Get all values from gui                                             */
@@ -191,7 +191,7 @@ static  void    activateCB_AF_ApplyButton( Widget UxWidget,
      /* Get FiletypeData structure that was allocated when Add button on    */
      /* the CreateActionAppShell interface was activated.                   */
      /***********************************************************************/
-     XtVaGetValues(AddFiletype, XmNuserData, &pFtD, NULL);
+     XtVaGetValues(AddFiletype, XmNuserData, &pFtD, nullptr);
 
      /***********************************************************************/
      /* Get all values from gui                                             */
@@ -232,7 +232,7 @@ static  void    activateCB_AF_CancelButton( Widget UxWidget,
    FiletypeData *pFtD;
 
    UxPopdownInterface(AddFiletype);
-   XtVaGetValues(AddFiletype, XmNuserData, &pFtD, NULL);
+   XtVaGetValues(AddFiletype, XmNuserData, &pFtD, nullptr);
    if (!((pFtD->fsInternal & CA_FT_APPLY) || (pFtD->fsInternal & CA_FT_EDIT))) {
       free_Filetypedata(pFtD);
    } else {
@@ -255,7 +255,7 @@ static Widget   _Uxbuild_AddFiletype(void)
         int                   ntotalbuttons = 4;
         int                   nbutton = 0;
         Widget                AF_ScrolledWindow;
-        Widget                AF_BigForm = NULL;
+        Widget                AF_BigForm = nullptr;
         XtArgVal /* Dimension */             dim1, dim2, dim3;
         Widget                AF_MED_IconForm, AF_TINY_IconForm;
         IconData             *pIconData;
@@ -271,7 +271,7 @@ static Widget   _Uxbuild_AddFiletype(void)
 
         /* Creation of AddFiletype */
         _UxParent = UxParent;
-        if ( _UxParent == NULL )
+        if ( _UxParent == nullptr )
         {
              _UxParent = UxTopLevel;
         }
@@ -288,7 +288,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNy, 148,
                         XmNshellUnitType, XmPIXELS,
                         XmNtitle, title,
-                        NULL );
+                        nullptr );
         /*
         XtAddCallback(_UxParent, XmNpopupCallback, LayoutCB_AddFiletype, NULL);
         */
@@ -301,7 +301,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                            XmNdialogStyle, XmDIALOG_APPLICATION_MODAL,
                            RES_CONVERT( XmNdialogTitle, title ),
                            XmNautoUnmanage, FALSE,
-                           NULL );
+                           nullptr );
            AF_ScrolledWindow = XtVaCreateManagedWidget( "AF_ScrolledWindow",
                            xmScrolledWindowWidgetClass,
                            AF_BigForm,
@@ -310,13 +310,13 @@ static Widget   _Uxbuild_AddFiletype(void)
                            XmNrightAttachment, XmATTACH_FORM,
                            XmNbottomAttachment, XmATTACH_FORM,
                            XmNtopAttachment, XmATTACH_FORM,
-                           NULL );
-           XtVaSetValues(AF_BigForm, XmNuserData, AF_ScrolledWindow, NULL);
+                           nullptr );
+           XtVaSetValues(AF_BigForm, XmNuserData, AF_ScrolledWindow, nullptr);
 
            AddFiletype = XtVaCreateManagedWidget( "AddFiletype",
                            xmFormWidgetClass,
                            AF_ScrolledWindow,
-                           NULL );
+                           nullptr );
         } else {
            AddFiletype = XtVaCreateWidget( "AddFiletype",
                            xmFormWidgetClass,
@@ -325,7 +325,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                            XmNdialogStyle, XmDIALOG_APPLICATION_MODAL,
                            RES_CONVERT( XmNdialogTitle, title ),
                            XmNautoUnmanage, FALSE,
-                           NULL );
+                           nullptr );
         }
 
 	XtFree(title);
@@ -346,7 +346,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_FileTypeNameTextField */
         AF_FileTypeNameTextField = XtVaCreateManagedWidget( "AF_FileTypeNameTextField",
@@ -359,7 +359,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         ActionAreaForm = XtVaCreateManagedWidget( "ActionAreaForm",
                         xmFormWidgetClass,
@@ -373,7 +373,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNbottomOffset, 20,
                         XmNbottomAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_OkButton */
         AF_OkButton = XtVaCreateManagedWidget( "AF_OkButton",
@@ -387,7 +387,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNrightAttachment, nbutton != (ntotalbuttons - 1) ?
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( AF_OkButton, XmNactivateCallback,
                 activateCB_AF_OkButton,
@@ -404,7 +404,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNrightAttachment, nbutton != (ntotalbuttons - 1) ?
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( AF_ApplyButton, XmNactivateCallback,
                 activateCB_AF_ApplyButton,
@@ -421,7 +421,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNrightAttachment, nbutton != (ntotalbuttons - 1) ?
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( AF_CancelButton, XmNactivateCallback,
                 activateCB_AF_CancelButton,
@@ -439,7 +439,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNrightAttachment, nbutton != (ntotalbuttons - 1) ?
                                              XmATTACH_POSITION : XmATTACH_FORM,
                         XmNrightPosition, (TIGHTNESS * nbutton)+(TIGHTNESS - 1),
-                        NULL );
+                        nullptr );
         nbutton++;
         XtAddCallback( AF_HelpButton, XmNactivateCallback,
                 helpCB_general,
@@ -458,7 +458,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_IdCharacteristicsText */
         AF_IdCharacteristicsText = XtVaCreateManagedWidget( "AF_IdCharacteristicsText",
@@ -473,7 +473,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNtopOffset, 0,
                         XmNtopWidget, AF_IdCharacteristicsLabel,
                         XmNtopAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 #ifdef DEBUG
         printf("AF_IdCharacteristicsText = %p\n", AF_IdCharacteristicsText);
 #endif
@@ -491,17 +491,17 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNbottomWidget, AF_IdCharacteristicsText,
                         XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
         XtAddCallback( AF_IdCharacteristicsEdit, XmNactivateCallback,
                 activateCB_edit_id_characteristics,
                 (XtPointer) NULL );
         XtRealizeWidget(AF_IdCharacteristicsEdit);
-        XtVaGetValues(AF_IdCharacteristicsEdit, XmNwidth, &dim1, NULL);
+        XtVaGetValues(AF_IdCharacteristicsEdit, XmNwidth, &dim1, nullptr);
 
         XtVaSetValues(AF_IdCharacteristicsText,
                       XmNrightOffset, dim1 + 25,
                       XmNrightAttachment, XmATTACH_FORM,
-                      NULL);
+                      nullptr);
 
         /* Creation of AF_FiletypeIconHelpLabel */
         AF_FiletypeIconHelpLabel = XtVaCreateManagedWidget( "AF_FiletypeIconHelpLabel",
@@ -516,7 +516,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                       XmNtopOffset, 10,
                       XmNtopWidget, AF_IdCharacteristicsText,
                       XmNtopAttachment, XmATTACH_WIDGET,
-                      NULL );
+                      nullptr );
 
         /*
         XtVaSetValues(AF_IdCharacteristicsText,
@@ -536,7 +536,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_FiletypePrintCmdLabel */
         AF_FiletypePrintCmdLabel = XtVaCreateManagedWidget( "AF_FiletypePrintCmdLabel",
@@ -551,7 +551,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_OpenCmdText */
         AF_OpenCmdText = XtVaCreateManagedWidget( "AF_OpenCmdText",
@@ -567,7 +567,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNrows, 1,
                         XmNeditMode, XmMULTI_LINE_EDIT ,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_OpenFiletypeCmdLabel */
         AF_OpenFiletypeCmdLabel = XtVaCreateManagedWidget( "AF_OpenFiletypeCmdLabel",
@@ -582,7 +582,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_CommandsLabel */
         AF_CommandsLabel = XtVaCreateManagedWidget( "AF_CommandsLabel",
@@ -595,7 +595,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNbottomOffset, 15,
                         XmNbottomWidget, AF_OpenFiletypeCmdLabel,
                         XmNbottomAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_FiletypeIconForm */
         AF_FiletypeIconForm = XtVaCreateManagedWidget( "AF_FiletypeIconForm",
@@ -613,7 +613,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNshadowType, XmSHADOW_ETCHED_IN,
                         XmNshadowThickness, 3,
                         XmNheight, 90,
-                        NULL );
+                        nullptr );
 
         AF_MED_IconForm = XtVaCreateManagedWidget( "AF_MED_IconForm",
                         xmFormWidgetClass,
@@ -626,7 +626,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNbottomPosition, 88,
                         XmNbottomOffset, 0,
                         XmNbottomAttachment, XmATTACH_POSITION,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_MED_IconGadget */
 	emptyString = XmStringCreateLocalized("");
@@ -649,7 +649,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNbottomOffset, BORDER_OFFSET,
                         XmNbottomAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         pIconData->wid = AF_MED_IconGadget;
         pIconData->size = Medium_Icon;
         XtAddCallback( AF_MED_IconGadget, XmNcallback,
@@ -668,7 +668,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNbottomPosition, 86,
                         XmNbottomOffset, 0,
                         XmNbottomAttachment, XmATTACH_POSITION,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_TINY_IconGadget */
         pIconData = (IconData *)XtMalloc(sizeof(IconData));
@@ -689,7 +689,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNtopAttachment, XmATTACH_FORM,
                         XmNbottomOffset, BORDER_OFFSET,
                         XmNbottomAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
         pIconData->wid = AF_TINY_IconGadget;
         pIconData->size = Tiny_Icon;
         XtAddCallback( AF_TINY_IconGadget, XmNcallback,
@@ -710,7 +710,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftPosition, 64,
                         XmNleftOffset, -1,
                         XmNleftAttachment, XmATTACH_POSITION,
-                        NULL );
+                        nullptr );
         XtAddCallback( AF_FiletypeIconsEditButton, XmNactivateCallback,
                 activateCB_edit_icon,
                 (XtPointer) CA_FILETYPE_ICONS );
@@ -728,7 +728,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftPosition, 64,
                         XmNleftOffset, -1,
                         XmNleftAttachment, XmATTACH_POSITION,
-                        NULL );
+                        nullptr );
         XtAddCallback( AF_FiletypeIconFindSetButton, XmNactivateCallback,
                 activateCB_open_FindSet,
                 (XtPointer) CA_FILETYPE_ICONS );
@@ -736,24 +736,24 @@ static Widget   _Uxbuild_AddFiletype(void)
         /******************************************************************/
         /* Determine which button is wider, attach the short one onto it  */
         /******************************************************************/
-        XtVaGetValues(AF_FiletypeIconsEditButton, XmNwidth, &dim1, NULL);
-        XtVaGetValues(AF_FiletypeIconFindSetButton, XmNwidth, &dim2, NULL);
+        XtVaGetValues(AF_FiletypeIconsEditButton, XmNwidth, &dim1, nullptr);
+        XtVaGetValues(AF_FiletypeIconFindSetButton, XmNwidth, &dim2, nullptr);
         if (dim1 > dim2) {
            XtVaSetValues(AF_FiletypeIconFindSetButton,
                          XmNwidth, dim1,
-                         NULL);
+                         nullptr);
         } else {
            XtVaSetValues(AF_FiletypeIconsEditButton,
                          XmNwidth, dim2,
-                         NULL);
+                         nullptr);
         }
         /******************************************************************/
         /* Determine vertical positioning for findset and edit buttons    */
         /******************************************************************/
         /*XtRealizeWidget(AF_FiletypeIconForm);*/
-        XtVaGetValues(AF_FiletypeIconForm, XmNheight, &dim3, NULL);
-        XtVaGetValues(AF_FiletypeIconsEditButton, XmNheight, &dim1, NULL);
-        XtVaGetValues(AF_FiletypeIconFindSetButton, XmNheight, &dim2, NULL);
+        XtVaGetValues(AF_FiletypeIconForm, XmNheight, &dim3, nullptr);
+        XtVaGetValues(AF_FiletypeIconsEditButton, XmNheight, &dim1, nullptr);
+        XtVaGetValues(AF_FiletypeIconFindSetButton, XmNheight, &dim2, nullptr);
 #ifdef DEBUG
         printf("find set size = %d\n", dim2);
         printf("edit size = %d\n", dim1);
@@ -763,25 +763,25 @@ static Widget   _Uxbuild_AddFiletype(void)
            XtVaSetValues(AF_FiletypeIconsEditButton,
                          XmNbottomOffset, FINDEDIT_SPACING,
                          XmNbottomAttachment, XmATTACH_FORM,
-                         NULL);
+                         nullptr);
            XtVaSetValues(AF_FiletypeIconFindSetButton,
                          XmNbottomOffset, FINDEDIT_SPACING,
                          XmNbottomWidget, AF_FiletypeIconsEditButton,
                          XmNbottomAttachment, XmATTACH_WIDGET,
                          XmNtopOffset, FINDEDIT_SPACING,
                          XmNtopAttachment, XmATTACH_FORM,
-                         NULL);
+                         nullptr);
         } else {
            XtVaSetValues(AF_FiletypeIconsEditButton,
                          XmNtopPosition, 50,
                          XmNtopOffset, (int)(FINDEDIT_SPACING / 2),
                          XmNtopAttachment, XmATTACH_POSITION,
-                         NULL);
+                         nullptr);
            XtVaSetValues(AF_FiletypeIconFindSetButton,
                          XmNbottomPosition, 50,
                          XmNbottomOffset, (int)(FINDEDIT_SPACING / 2),
                          XmNbottomAttachment, XmATTACH_POSITION,
-                         NULL);
+                         nullptr);
         }
 
         /******************************************************************/
@@ -799,7 +799,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNleftAttachment, XmATTACH_FORM,
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_FiletypeHelpScrolledWindow */
         AF_FiletypeHelpScrolledWindow = XtVaCreateManagedWidget( "AF_FiletypeHelpScrolledWindow",
@@ -822,7 +822,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNrightOffset, 10,
                         XmNrightAttachment, XmATTACH_FORM,
                         XmNheight, 94,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_FiletypeHelpText */
         AF_FiletypeHelpText = XtVaCreateManagedWidget( "AF_FiletypeHelpText",
@@ -835,7 +835,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNx, 19,
                         XmNy, 0,
                         XmNheight, 80,
-                        NULL );
+                        nullptr );
 
         /* Creation of AF_separator2 */
         AF_separator2 = XtVaCreateManagedWidget( "AF_separator2",
@@ -849,7 +849,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNbottomOffset, 10,
                         XmNbottomWidget, AF_CommandsLabel,
                         XmNbottomAttachment, XmATTACH_OPPOSITE_WIDGET,
-                        NULL );
+                        nullptr );
 
 #if 0
         /* Creation of AF_separator1 */
@@ -864,14 +864,14 @@ static Widget   _Uxbuild_AddFiletype(void)
                         XmNrightOffset, 0,
                         XmNrightWidget, AF_CommandsLabel,
                         XmNrightAttachment, XmATTACH_WIDGET,
-                        NULL );
+                        nullptr );
 #endif
 
         XtVaSetValues(AddFiletype,
                         XmNcancelButton, AF_CancelButton,
                         XmNdefaultButton, AF_OkButton,
                         XmNinitialFocus, AF_FileTypeNameTextField,
-                        NULL );
+                        nullptr );
 
         XtAddCallback( AddFiletype, XmNdestroyCallback,
                 UxDestroyContextCB,
@@ -912,23 +912,23 @@ Widget  create_AddFiletype(swidget _UxUxParent)
            XtVaGetValues (AddFiletype,
                           XmNheight, &dimHeight,
                           XmNwidth, &dimWidth,
-                          NULL);
+                          nullptr);
            XtVaGetValues (rtrn,
                           XmNuserData, &widScrolledWindow,
-                          NULL);
+                          nullptr);
            XtVaGetValues (widScrolledWindow,
                           XmNverticalScrollBar, &widTmp,
-                          NULL);
+                          nullptr);
            XtVaGetValues (widTmp,
                           XmNwidth, &dimTmp,
-                          NULL);
+                          nullptr);
            dimHeight += dimTmp;
            dimWidth += dimTmp;
 
            XtVaSetValues (rtrn,
                           XmNheight, dimHeight,
                           XmNwidth, dimWidth,
-                          NULL);
+                          nullptr);
         }
         return(rtrn);
 }

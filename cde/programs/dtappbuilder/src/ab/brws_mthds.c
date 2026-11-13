@@ -368,21 +368,21 @@ static void		compute_collapsed_feedback(
 
 static ViewerMethods proj_view_methods = {
     init_proj_props,		/* init_prop */
-    NULL,			/* init_ui */
+    nullptr,			/* init_ui */
     init_toplevel_node,		/* init_node */
     init_elements,		/* init_elements */
     free_prop,			/* free_prop */
-    NULL,			/* free_ui */
+    nullptr,			/* free_ui */
     free_node,			/* free_node */
     free_elements,		/* free_elements */
     insert_projview_tree,	/* insert_tree */
     insert_node,		/* insert_node */
     remove_tree,		/* remove_tree */
     remove_node,		/* remove_node */
-    NULL,			/* get_obj_data */
+    nullptr,			/* get_obj_data */
     get_browser_data,		/* get_viewer_data */
     set_browser_data,		/* set_viewer_data */
-    NULL,			/* get_sibling */
+    nullptr,			/* get_sibling */
     get_parent,			/* get_parent */
     get_num_children_of_mod,	/* get_num_children */
     get_child_of_mod,		/* get_child */
@@ -392,28 +392,28 @@ static ViewerMethods proj_view_methods = {
     render_mod_tree,		/* render_tree */
     render_node,		/* render_node */
     render_line,		/* render_line */
-    NULL,			/* preview_node */
+    nullptr,			/* preview_node */
     locate_node,		/* locate_node */
     locate_elements		/* locate_elements */
 };
 
 static ViewerMethods mod_view_methods = {
     init_mod_props,		/* init_prop */
-    NULL,			/* init_ui */
+    nullptr,			/* init_ui */
     init_vnode,			/* init_node */
     init_elements,		/* init_elements */
     free_prop,			/* free_prop */
-    NULL,			/* free_ui */
+    nullptr,			/* free_ui */
     free_node,			/* free_node */
     free_elements,		/* free_elements */
     insert_entire_tree,		/* insert_tree */
     insert_node,		/* insert_node */
     remove_tree,		/* remove_tree */
     remove_node,		/* remove_node */
-    NULL,			/* get_obj_data */
+    nullptr,			/* get_obj_data */
     get_browser_data,		/* get_viewer_data */
     set_browser_data,		/* set_viewer_data */
-    NULL,			/* get_sibling */
+    nullptr,			/* get_sibling */
     get_parent,			/* get_parent */
     get_num_salient_children,	/* get_num_children */
     get_salient_child,		/* get_child */
@@ -423,28 +423,28 @@ static ViewerMethods mod_view_methods = {
     render_salient_tree,	/* render_tree */
     render_node,		/* render_node */
     render_line,		/* render_line */
-    NULL,			/* preview_node */
+    nullptr,			/* preview_node */
     locate_node,		/* locate_node */
     locate_elements		/* locate_elements */
 };
 
 static ViewerMethods proj_methods = {
     init_proj_props,		/* init_prop */
-    NULL,			/* init_ui */
+    nullptr,			/* init_ui */
     init_proj_vnode,		/* init_node */
     init_elements,		/* init_elements */
     free_prop,			/* free_prop */
-    NULL,			/* free_ui */
+    nullptr,			/* free_ui */
     free_node,			/* free_node */
     free_elements,		/* free_elements */
     insert_proj_tree,		/* insert_tree */
     insert_node,		/* insert_node */
     remove_tree,		/* remove_tree */
     remove_node,		/* remove_node */
-    NULL,			/* get_obj_data */
+    nullptr,			/* get_obj_data */
     get_projwin_data,		/* get_viewer_data */
     set_projwin_data,		/* set_viewer_data */
-    NULL,			/* get_sibling */
+    nullptr,			/* get_sibling */
     get_parent,			/* get_parent */
     get_num_children_of_proj,	/* get_num_children */
     get_child_of_proj,		/* get_child */
@@ -454,7 +454,7 @@ static ViewerMethods proj_methods = {
     render_proj_tree,		/* render_tree */
     render_node,		/* render_node */
     render_line,		/* render_line */
-    NULL,			/* preview_node */
+    nullptr,			/* preview_node */
     locate_node,		/* locate_node */
     locate_elements		/* locate_elements */
 };
@@ -463,7 +463,7 @@ static ViewerElmMethods glyphElmMethods = {
     init_glyph_elm,
     compute_glyph_elm,
     render_glyph_elm,
-    NULL
+    nullptr
 };
 
 static ViewerElmMethods nameElmMethods = {
@@ -513,7 +513,7 @@ init_vnode(
     ViewerMethods	*m;
 
     if (!b)
-	return (NULL);
+	return (nullptr);
 
     props = aob_browser_properties(b);
 
@@ -522,7 +522,7 @@ init_vnode(
     node->browser = b;
     node->obj_data = (void *) obj;
     node->elm_methods = elmMethods;
-    node->elements = NULL;
+    node->elements = nullptr;
     node->num_elements = 0;
     node->boundbox_shown = TRUE;
     node->x = node->y = node->width = node->height = -1;
@@ -576,7 +576,7 @@ init_toplevel_node(
     ViewerMethods	*m;
 
     if (!b)
-	return (NULL);
+	return (nullptr);
 
     props = aob_browser_properties(b);
 
@@ -585,7 +585,7 @@ init_toplevel_node(
     node->browser = b;
     node->obj_data = (void *) obj;
     node->elm_methods = elmMethods;
-    node->elements = NULL;
+    node->elements = nullptr;
     node->num_elements = 0;
     node->boundbox_shown = TRUE;
     node->x = node->y = node->width = node->height = -1;
@@ -635,7 +635,7 @@ init_proj_vnode(
     ViewerMethods	*m;
 
     if (!b)
-	return (NULL);
+	return (nullptr);
 
     m = b->methods;
 
@@ -652,11 +652,11 @@ init_proj_vnode(
     node->browser = b;
     node->obj_data = (void *) obj;
     node->elm_methods = elmMethods;
-    node->elements = NULL;
+    node->elements = nullptr;
     node->num_elements = 0;
     node->boundbox_shown = TRUE;
     node->x = node->y = node->width = node->height = -1;
-    node->next = NULL;
+    node->next = nullptr;
 
     /*
      * Use initial state as stored in browser object
@@ -708,7 +708,7 @@ init_name_elm(
     if (elm->data)
 	free(elm->data);
 #ifdef BRWS_NO_FILE_NAMES
-    if (obj_is_module(obj) && (obj->info.module.file != NULL))
+    if (obj_is_module(obj) && (obj->info.module.file != nullptr))
     {
 	char	*fullpath, *filename;
 
@@ -737,10 +737,10 @@ init_class_elm(
     void	*client_data
 )
 {
-    PalEditableObjInfo	*editable_obj_info = NULL;
+    PalEditableObjInfo	*editable_obj_info = nullptr;
     AB_OBJ		*obj = (AB_OBJ *)client_data;
     int			subtype;
-    char		*tmp = NULL;
+    char		*tmp = nullptr;
 
     if (!elm || !obj)
 	return;
@@ -876,7 +876,7 @@ free_str_elm(
     if (elm->data)
     {
 	free(elm->data);
-	elm->data = NULL;
+	elm->data = nullptr;
     }
     elm->x = elm->y = elm->width = elm->height = -1;
 }
@@ -904,7 +904,7 @@ init_elements(
 
 	for (i=0; i < vnode->num_elements; ++i)
 	{
-	    elm[i].data = NULL;
+	    elm[i].data = nullptr;
             elm[i].x = elm[0].y =
 		elm[i].width = elm[i].height = -1;
 	}
@@ -934,7 +934,7 @@ free_prop(
 
     free(v->properties);
 
-    v->properties = NULL;
+    v->properties = nullptr;
 }
 
 /*
@@ -959,7 +959,7 @@ free_node(
 	return;
 
     viewer = vnode->browser;
-    m = viewer ? viewer->methods : NULL;
+    m = viewer ? viewer->methods : nullptr;
 
     if (!m)
 	return;
@@ -1011,7 +1011,7 @@ free_elements(
 
     free(elm);
 
-    vnode->elements = NULL;
+    vnode->elements = nullptr;
     vnode->num_elements = 0;
 }
 
@@ -1071,10 +1071,10 @@ first_module_of_project(
 )
 {
     AB_TRAVERSAL	trav;
-    ABObj		first_mod = NULL;
+    ABObj		first_mod = nullptr;
 
     if (!project || !obj_is_project(project))
-	return (NULL);
+	return (nullptr);
 
     trav_open(&trav, project, AB_TRAV_MODULES);
     first_mod = trav_next(&trav);
@@ -1109,8 +1109,8 @@ insert_projview_tree
 )
 {
     ABObj		root = (ABObj)obj_data,
-    			browsed_module = NULL,
-        		insert_module = NULL,
+    			browsed_module = nullptr,
+        		insert_module = nullptr,
     			cur_obj;
     Vwr			b_list;
     AB_TRAVERSAL	trav;
@@ -1195,8 +1195,8 @@ insert_projview_tree
 	if (browsed_module != root)
 	{
 	    (*m->remove_tree)(viewer, browsed_module);
-	    viewer->tree = viewer->current_tree = NULL;
-            viewer->obj_data = (void *)NULL;
+	    viewer->tree = viewer->current_tree = nullptr;
+            viewer->obj_data = (void *)nullptr;
 	}
 
         bnode = (*m->insert_node)(viewer, root);
@@ -1209,7 +1209,7 @@ insert_projview_tree
 	 * actions
 	 */
         for (trav_open(&trav, root, AB_TRAV_WINDOWS);
-	    (cur_obj = trav_next(&trav)) != NULL; )
+	    (cur_obj = trav_next(&trav)) != nullptr; )
 	{
 	    insert_projview_tree(viewer, cur_obj);
         }
@@ -1219,7 +1219,7 @@ insert_projview_tree
 	 * Insert all menus of this module.
 	 */
         for (trav_open(&trav, root, AB_TRAV_MENUS);
-	    (cur_obj = trav_next(&trav)) != NULL; )  {
+	    (cur_obj = trav_next(&trav)) != nullptr; )  {
 	    insert_projview_tree(viewer, cur_obj);
         }
         trav_close(&trav);
@@ -1228,7 +1228,7 @@ insert_projview_tree
 	 * Insert all message objects of this module.
 	 */
         for (trav_open(&trav, root, AB_TRAV_CHILDREN);
-	    (cur_obj = trav_next(&trav)) != NULL; )
+	    (cur_obj = trav_next(&trav)) != nullptr; )
 	{
 	    if (obj_is_message(cur_obj))
 	        insert_projview_tree(viewer, cur_obj);
@@ -1307,7 +1307,7 @@ insert_proj_tree
         viewer->obj_data = (void *)root;
 
         for (trav_open(&trav, root, AB_TRAV_MODULES);
-	    (cur_obj = trav_next(&trav)) != NULL; )
+	    (cur_obj = trav_next(&trav)) != nullptr; )
 	{
 	    /* Don't show any undefined modules.
 	     * Undefined modules can occur if a module
@@ -1335,8 +1335,8 @@ insert_entire_tree
 )
 {
     ABObj		root = (ABObj)obj_data,
-    			browsed_module = NULL,
-    			insert_module = NULL,
+    			browsed_module = nullptr,
+    			insert_module = nullptr,
     			cur_obj;
     Viewer		*b_list;
     VNode		bnode,
@@ -1407,8 +1407,8 @@ insert_entire_tree
 	if (browsed_module != root)
 	{
 	    (*m->remove_tree)(viewer, browsed_module);
-	    viewer->tree = viewer->current_tree = NULL;
-	    viewer->obj_data = (void *)NULL;
+	    viewer->tree = viewer->current_tree = nullptr;
+	    viewer->obj_data = (void *)nullptr;
 	}
 
         bnode = (*m->insert_node)(viewer, root);
@@ -1452,7 +1452,7 @@ insert_entire_tree
      * an infinite loop.
      */
     for (trav_open(&trav, root, AB_TRAV_CHILDREN);
-	(cur_obj = trav_next(&trav)) != NULL; )  {
+	(cur_obj = trav_next(&trav)) != nullptr; )  {
 	insert_entire_tree(viewer, cur_obj);
     }
 
@@ -1474,7 +1474,7 @@ insert_node(
     ViewerNode		*node;
 
     if (!viewer || !obj)
-	return (NULL);
+	return (nullptr);
 
     m = viewer->methods;
 
@@ -1511,7 +1511,7 @@ remove_tree
 	return;
 
     for (trav_open(&trav, root, AB_TRAV_CHILDREN);
-	(cur_obj = trav_next(&trav)) != NULL; )  {
+	(cur_obj = trav_next(&trav)) != nullptr; )  {
 	remove_tree(viewer, cur_obj);
     }
 
@@ -1550,7 +1550,7 @@ remove_node(
 	    viewer->current_tree = viewer->tree;
 
 	if (viewer->tree == node)
-	    viewer->tree = viewer->current_tree = NULL;
+	    viewer->tree = viewer->current_tree = nullptr;
 
 	/*
 	 * Free elements of node
@@ -1618,15 +1618,15 @@ get_parent
     Viewer	*browser;
 
     if (!bnode)
-	return(NULL);
+	return(nullptr);
 
     obj = (AB_OBJ *)bnode->obj_data;
 
     if (!obj)
-	return(NULL);
+	return(nullptr);
 
     tmp_parent = obj_get_parent(obj);
-    parent_obj = tmp_parent ? obj_get_root(tmp_parent) : NULL;
+    parent_obj = tmp_parent ? obj_get_root(tmp_parent) : nullptr;
 
     browser = bnode->browser;
 
@@ -1703,13 +1703,13 @@ get_child_of_mod
     ViewerNode	*child_bnode;
 
     if (!bnode)
-	return(NULL);
+	return(nullptr);
 
     obj = (AB_OBJ *)bnode->obj_data;
     browser = bnode->browser;
 
     if (!obj || !browser || !obj_is_module(obj))
-	return (NULL);
+	return (nullptr);
 
     child = obj_get_child(obj, which_child);
 
@@ -1731,13 +1731,13 @@ get_child_of_proj
     ViewerNode	*child_bnode;
 
     if (!bnode)
-	return(NULL);
+	return(nullptr);
 
     obj = (AB_OBJ *)bnode->obj_data;
     browser = bnode->browser;
 
     if (!obj || !browser || !obj_is_project(obj))
-	return (NULL);
+	return (nullptr);
 
     child = obj_get_child_cond(obj, which_child, obj_is_defined_module);
 
@@ -1758,13 +1758,13 @@ get_salient_child(
     ViewerNode	*child_bnode;
 
     if (!bnode)
-	return(NULL);
+	return(nullptr);
 
     obj = (AB_OBJ *)bnode->obj_data;
     browser = bnode->browser;
 
     if (!obj || !browser)
-	return (NULL);
+	return (nullptr);
 
     /*
     child = obj_get_child(obj, which_child);
@@ -1816,16 +1816,16 @@ get_child_ui(
     AB_OBJ		*obj,
 			*child;
     Viewer		*browser;
-    ViewerNode	*child_bnode = NULL;
+    ViewerNode	*child_bnode = nullptr;
 
     if (!bnode)
-	return(NULL);
+	return(nullptr);
 
     obj = (AB_OBJ *)bnode->obj_data;
     browser = bnode->browser;
 
     if (!obj || !browser)
-	return (NULL);
+	return (nullptr);
 
     child = obj_get_child_cond(obj, which_child, has_ui);
 
@@ -2009,7 +2009,7 @@ compute_matrix
     XtVaGetValues(draw_area,
             	XtNwidth,       &(w_rect.width),
             	XtNheight,      &(w_rect.height),
-		NULL);
+		nullptr);
 
     *end_x = w_rect.width;
     *end_y = w_rect.height;
@@ -3111,10 +3111,10 @@ locate_node
     int			i, num_child;
 
     if (!tree)
-	return (NULL);
+	return (nullptr);
 
     if (!BRWS_NODE_STATE_IS_SET(tree, BRWS_NODE_VISIBLE))
-	return (NULL);
+	return (nullptr);
 
     /*
      * Return the root if (x,y) is within the root
@@ -3131,7 +3131,7 @@ locate_node
      * traversing it's children
      */
     if (!BRWS_NODE_STATE_IS_SET(tree, BRWS_NODE_EXPANDED))
-	return (NULL);
+	return (nullptr);
 
     m = BNODE_METHODS(tree);
 
@@ -3151,7 +3151,7 @@ locate_node
             return tmp;
     }
 
-    return (NULL);
+    return (nullptr);
 }
 
 static unsigned long
@@ -3222,7 +3222,7 @@ draw_zoom_out
                     XtNy, &y,
                     XtNwidth, &width,
                     XtNheight, &height,
-                    NULL);
+                    nullptr);
 
     ui_handle = aob_ui_from_browser(b);
 
@@ -3270,7 +3270,7 @@ draw_zoom_in
 		XtNy, &canvas_y,
 		XtNwidth, &canvas_width,
 		XtNheight, &canvas_height,
-		NULL);
+		nullptr);
 
     x = node->x + node->width/2;
     y = node->y + node->height/2;
@@ -3345,7 +3345,7 @@ render_node_bbox
             XmNbackground, &bg,
             XmNhighlightColor, &hc,
             XmNhighlightPixmap, &hp,
-            NULL);
+            nullptr);
 
     gcm = GCForeground | GCBackground | GCLineWidth;
     gcv.line_width = BRWS_ELM_BORDER_WIDTH;
@@ -3382,7 +3382,7 @@ erase_viewer(Viewer *v)
     XtVaGetValues(draw_area,
             		XtNwidth,       &(w_rect.width),
             		XtNheight,      &(w_rect.height),
-		        NULL);
+		        nullptr);
 
     XClearArea(XtDisplay(draw_area), XtWindow(draw_area),
 		0, 0,

@@ -114,7 +114,7 @@ with tempfile.TemporaryDirectory(prefix="terminal-parser-", dir=os.environ["TMPD
     c, binary = Path(work) / "parser.c", Path(work) / "parser"
     c.write_text(header + body + main)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
                     "-fsanitize=address,undefined", "-g", "-I", str(source / "TermPrim"),
                     str(c), "-o", str(binary)], check=True)
     subprocess.run([str(binary)], check=True)

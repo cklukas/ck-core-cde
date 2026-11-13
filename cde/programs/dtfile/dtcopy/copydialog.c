@@ -171,22 +171,22 @@ sensitize_copy_action_area(
                  XmNlabelPixmap, pxWorking,
                  XmNmarginLeft, pxWorkingMargin/2,
                  XmNmarginRight, (pxWorkingMargin + 1)/2,
-                 NULL);
+                 nullptr);
 
   /* Desensitize the OK button */
   XtVaSetValues (pushbutton_array[0],
                  XmNsensitive, FALSE,
-                 NULL);
+                 nullptr);
 
   /* Sensitize the Pause button */
   XtVaSetValues (pushbutton_array[1],
                  XmNsensitive, TRUE,
-                 NULL);
+                 nullptr);
 
   /* Sensitize the Cancel button */
   XtVaSetValues (pushbutton_array[2],
                  XmNsensitive, TRUE,
-                 NULL);
+                 nullptr);
 }
 
 
@@ -199,22 +199,22 @@ desensitize_copy_action_area(
                  XmNlabelPixmap, pxStopped,
                  XmNmarginLeft, pxStoppedMargin/2,
                  XmNmarginRight, (pxStoppedMargin + 1)/2,
-                 NULL);
+                 nullptr);
 
   /* Sensitize the OK button */
   XtVaSetValues (pushbutton_array[0],
                  XmNsensitive, TRUE,
-                 NULL);
+                 nullptr);
 
   /* Desensitize the Pause button */
   XtVaSetValues (pushbutton_array[1],
                  XmNsensitive, FALSE,
-                 NULL);
+                 nullptr);
 
   /* Desensitize the Cancel button */
   XtVaSetValues (pushbutton_array[2],
                  XmNsensitive, FALSE,
-                 NULL);
+                 nullptr);
 }
 
 
@@ -235,14 +235,14 @@ warning_yes_callback(
 {
    request_copy_cancel();
    G_wait_on_input = FALSE;
-   if (G_over_dialog != NULL) {
+   if (G_over_dialog != nullptr) {
      G_overwrite_selection = G_SKIP;
      XtDestroyWidget(G_over_dialog);
-     G_over_dialog = NULL;
+     G_over_dialog = nullptr;
    }
-   if (G_error_dialog != NULL) {
+   if (G_error_dialog != nullptr) {
      XtDestroyWidget(G_error_dialog);
-     G_error_dialog = NULL;
+     G_error_dialog = nullptr;
    }
    G_pause_copy = FALSE;
 }
@@ -390,12 +390,12 @@ pause_callback(Widget w, XtPointer client_data, XtPointer call_data)
 
   XtVaSetValues(w,
                 XmNlabelString, xm_string,
-                NULL);
+                nullptr);
   XtVaSetValues(icon,
                 XmNlabelPixmap, px,
                 XmNmarginLeft, margin/2,
                 XmNmarginRight, (margin + 1)/2,
-                NULL);
+                nullptr);
 
   return;
 }
@@ -466,9 +466,9 @@ create_copydir_dialog(
   Dimension width_target, width_source;
 
   static ActionAreaItem action_items[] = {
-    {"Ok",          6, 1, ok_callback,     NULL},
-    {"Pause",       6, 2, pause_callback,  NULL},
-    {"Cancel Copy", 6, 7, cancel_callback, NULL},  /* possibly changed below to Cancel Move*/
+    {"Ok",          6, 1, ok_callback,     nullptr},
+    {"Pause",       6, 2, pause_callback,  nullptr},
+    {"Cancel Copy", 6, 7, cancel_callback, nullptr},  /* possibly changed below to Cancel Move*/
     {"Help",        6, 4, help_callback,   (XtPointer) HELP_DIR_COPY},
   };
 
@@ -503,7 +503,7 @@ create_copydir_dialog(
 		     parent_widget,
 		     XmNshadowThickness, 3,
 		     XmNshadowType,      XmSHADOW_ETCHED_IN,
-		     NULL);
+		     nullptr);
 
   /* Create the Manager Widget, form, for the copy dialog */
   form = XtVaCreateManagedWidget ("dialog_form",
@@ -512,7 +512,7 @@ create_copydir_dialog(
 				  XmNverticalSpacing,   VERTICAL_SPACING,
 				  XmNwidth,             500,
 				  XmNhorizontalSpacing, HORIZONTAL_SPACING,
-				  NULL);
+				  nullptr);
 
    /* create the toggle button */
    xm_string = XmStringCreateLocalized(GETMESSAGE(4, 2, "Pause for errors"));
@@ -526,8 +526,8 @@ create_copydir_dialog(
                               XmNrightAttachment,  XmATTACH_FORM,
 			      XmNrightOffset,      INDENTED_SPACING,
                               XmNalignment,        XmALIGNMENT_BEGINNING,
-                              NULL);
-   XtAddCallback(G_toggle_main, XmNvalueChangedCallback, toggle_callback, NULL);
+                              nullptr);
+   XtAddCallback(G_toggle_main, XmNvalueChangedCallback, toggle_callback, nullptr);
    XmStringFree(xm_string);
 
   /* Create a form for the working/stopped icon, from/to path names, and summary lines */
@@ -539,7 +539,7 @@ create_copydir_dialog(
 				   XmNtopOffset,       TOP_SPACING,
 				   XmNleftAttachment,  XmATTACH_FORM,
 				   XmNrightAttachment, XmATTACH_FORM,
-				   NULL);
+				   nullptr);
 
   /* Create the working/stopped icon */
   get_icons(form1);
@@ -554,7 +554,7 @@ create_copydir_dialog(
 				 XmNtopAttachment,    XmATTACH_FORM,
 				 XmNbottomAttachment, XmATTACH_FORM,
 				 XmNleftAttachment,   XmATTACH_FORM,
-				 NULL);
+				 nullptr);
 
   /* MJT Get color map from this particular spot in the
    widget hierarchy.  This is being done because of a strange
@@ -582,7 +582,7 @@ create_copydir_dialog(
 			    XmNleftAttachment, XmATTACH_WIDGET,
 			    XmNleftWidget,     icon,
 			    XmNleftOffset,     HORIZONTAL_SPACING,
-			    NULL);
+			    nullptr);
   XmStringFree(xm_string);
 
   xm_string = XmStringCreateLocalized(tsource);
@@ -599,7 +599,7 @@ create_copydir_dialog(
 			    XmNleftAttachment,  XmATTACH_WIDGET,
 			    XmNleftWidget,      source_label,
 			    XmNrightAttachment, XmATTACH_FORM,
-			    NULL);
+			    nullptr);
   XmStringFree(xm_string);
 
   /* Create the Target Directory Widgets */
@@ -615,30 +615,30 @@ create_copydir_dialog(
 			    XmNleftAttachment,  XmATTACH_WIDGET,
 			    XmNleftWidget,      icon,
 			    XmNleftOffset,      HORIZONTAL_SPACING,
-			    NULL);
+			    nullptr);
   XmStringFree(xm_string);
 
   /* modify width of shorter label so the labels are right-aligned */
   XtVaGetValues(target_label,
                 XmNwidth, &width_target,
-                NULL);
+                nullptr);
   XtVaGetValues(source_label,
                 XmNwidth, &width_source,
-                NULL);
+                nullptr);
 
   if (width_target < width_source)
   {
      XtVaSetValues(target_label,
                    XmNwidth,     width_source,
                    XmNalignment, XmALIGNMENT_END,
-                   NULL);
+                   nullptr);
   }
   else if (width_target > width_source)  /* do nothing if widths are the same */
   {
      XtVaSetValues(source_label,
                    XmNwidth,     width_target,
                    XmNalignment, XmALIGNMENT_END,
-                   NULL);
+                   nullptr);
   }
 
   xm_string = XmStringCreateLocalized(target_folder);
@@ -654,7 +654,7 @@ create_copydir_dialog(
 			    XmNleftAttachment,  XmATTACH_WIDGET,
 			    XmNleftWidget,      target_label,
 			    XmNrightAttachment, XmATTACH_FORM,
-			    NULL);
+			    nullptr);
 
 
   /* create copy-summary text field */
@@ -677,7 +677,7 @@ create_copydir_dialog(
 			    XmNrightOffset,     0,
 			    XmNleftAttachment,  XmATTACH_WIDGET,
 			    XmNleftWidget,      icon,
-			    NULL);
+			    nullptr);
   XmStringFree(xm_string);
 
   G_summary_text =
@@ -691,7 +691,7 @@ create_copydir_dialog(
 			    XmNleftWidget,       summary_label,
 			    XmNrightAttachment,  XmATTACH_FORM,
 			    XmNalignment,        XmALIGNMENT_BEGINNING,
-			    NULL);
+			    nullptr);
 			
 			
    /* that is all that goes in form1 */
@@ -710,7 +710,7 @@ create_copydir_dialog(
 			    XmNbottomWidget,      action_area,
 			    XmNleftAttachment,    XmATTACH_FORM,
 			    XmNrightAttachment,   XmATTACH_FORM,
-			    NULL);
+			    nullptr);
 
    /* create copy-status text field */
   G_status_text =
@@ -737,7 +737,7 @@ create_copydir_dialog(
 			    XmNleftOffset,            INDENTED_SPACING,
 			    XmNbottomAttachment,      XmATTACH_WIDGET,
 			    XmNbottomWidget,          separator2,
-			    NULL);
+			    nullptr);
 
   /* create copy-status text field */
 /*
@@ -780,7 +780,7 @@ create_copydir_dialog(
 			    XmNtopOffset,             TOP_SPACING,
 			    XmNleftAttachment,        XmATTACH_FORM,
 			    XmNrightAttachment,       XmATTACH_FORM,
-			    NULL);
+			    nullptr);
 
   /* create error-message scroll window ... not managed until there is an error */
   G_error_msgs = create_error_text_window (form,

@@ -129,7 +129,7 @@ static const char *reason_label(unsigned n)
 static void label(Widget widget, const char *text)
 {
     XmString value=XmStringCreateLocalized((char *)text);
-    XtVaSetValues(widget,XmNlabelString,value,NULL); XmStringFree(value);
+    XtVaSetValues(widget,XmNlabelString,value,nullptr); XmStringFree(value);
 }
 static void notify(SyncWindow *w, const char *text) { label(w->status,text); }
 /* Local feedback may replace ordinary idle status, not an in-flight command,
@@ -220,19 +220,19 @@ static void swap_folders(Widget widget,XtPointer data,XtPointer call)
     w->setting_paths=1;
     char *native=w->native_source; w->native_source=w->native_destination; w->native_destination=native;
     XmTextFieldSetString(w->source,destination); XmTextFieldSetString(w->destination,source);
-    w->setting_paths=0; XtFree(source); XtFree(destination); setup_changed(NULL,w,NULL);
+    w->setting_paths=0; XtFree(source); XtFree(destination); setup_changed(nullptr,w,nullptr);
 }
 static void clear_filters(Widget widget,XtPointer data,XtPointer call)
 {
     (void)widget;(void)call; SyncWindow *w=data;
     XmTextFieldSetString(w->size_min,""); XmTextFieldSetString(w->size_max,"");
     XmTextFieldSetString(w->date_after,""); XmTextFieldSetString(w->date_before,"");
-    setup_changed(NULL,w,NULL);
+    setup_changed(nullptr,w,nullptr);
 }
 typedef struct { char *native, *display; } PreparedPath;
 static void clear_prepared_path(PreparedPath *path)
 {
-    free(path->native); free(path->display); path->native=path->display=NULL;
+    free(path->native); free(path->display); path->native=path->display=nullptr;
 }
 static int prepare_native_path(SyncWindow *w,const char *path,PreparedPath *prepared)
 {
@@ -255,7 +255,7 @@ static int prepare_native_path(SyncWindow *w,const char *path,PreparedPath *prep
 static void commit_native_path(SyncWindow *w,Widget field,PreparedPath *prepared)
 {
     char **owned=field==w->source?&w->native_source:&w->native_destination;
-    free(*owned); *owned=prepared->native; prepared->native=NULL;
+    free(*owned); *owned=prepared->native; prepared->native=nullptr;
     unsigned setting=w->setting_paths; w->setting_paths=1;
     XmTextFieldSetString(field,prepared->display); w->setting_paths=setting;
 }
@@ -264,14 +264,14 @@ static int set_native_path(SyncWindow *w,Widget field,const char *path)
     PreparedPath prepared={0};
     if (!prepare_native_path(w,path,&prepared)) return 0;
     commit_native_path(w,field,&prepared); clear_prepared_path(&prepared);
-    setup_changed(field,w,NULL); return 1;
+    setup_changed(field,w,nullptr); return 1;
 }
 static void path_edited(Widget field,XtPointer data,XtPointer call)
 {
     (void)call; SyncWindow *w=data; if (w->setting_paths) return;
     char **owned=field==w->source?&w->native_source:&w->native_destination;
-    free(*owned); *owned=NULL;
-    setup_changed(field,w,NULL);
+    free(*owned); *owned=nullptr;
+    setup_changed(field,w,nullptr);
 }
 static void mark_dirty(SyncWindow *w)
 {
@@ -288,14 +288,14 @@ static void name_changed(Widget widget,XtPointer data,XtPointer call)
 }
 static Widget button(Widget parent,const char *name,const char *text,XtCallbackProc callback,SyncWindow *w)
 {
-    Widget b=XtVaCreateManagedWidget(name,xmPushButtonWidgetClass,parent,NULL);
+    Widget b=XtVaCreateManagedWidget(name,xmPushButtonWidgetClass,parent,nullptr);
     label(b,text); if (callback) XtAddCallback(b,XmNactivateCallback,callback,w); return b;
 }
 static Widget field(Widget parent,const char *name,const char *title,const char *initial,int columns)
 {
-    Widget row=XtVaCreateManagedWidget(name,xmRowColumnWidgetClass,parent,XmNorientation,XmHORIZONTAL,NULL);
-    Widget l=XtVaCreateManagedWidget("label",xmLabelWidgetClass,row,NULL); label(l,title);
-    return XtVaCreateManagedWidget(name,xmTextFieldWidgetClass,row,XmNcolumns,columns,XmNvalue,initial,NULL);
+    Widget row=XtVaCreateManagedWidget(name,xmRowColumnWidgetClass,parent,XmNorientation,XmHORIZONTAL,nullptr);
+    Widget l=XtVaCreateManagedWidget("label",xmLabelWidgetClass,row,nullptr); label(l,title);
+    return XtVaCreateManagedWidget(name,xmTextFieldWidgetClass,row,XmNcolumns,columns,XmNvalue,initial,nullptr);
 }
 typedef struct { SyncWindow *window; Widget target; } FolderChoice;
 static void folder_choice_destroyed(Widget dialog,XtPointer data,XtPointer call)
@@ -303,7 +303,7 @@ static void folder_choice_destroyed(Widget dialog,XtPointer data,XtPointer call)
 static void folder_chosen(Widget dialog,XtPointer data,XtPointer call)
 {
     FolderChoice *choice=data;
-    XmFileSelectionBoxCallbackStruct *selection=call; char *path=NULL;
+    XmFileSelectionBoxCallbackStruct *selection=call; char *path=nullptr;
     if (XmStringGetLtoR(selection->value,XmFONTLIST_DEFAULT_TAG,&path) && path) {
         int accepted=set_native_path(choice->window,choice->target,path); XtFree(path);
         if (!accepted) return;
@@ -316,18 +316,18 @@ static void folder_cancelled(Widget dialog,XtPointer data,XtPointer call)
 { (void)data;(void)call; XtDestroyWidget(XtParent(dialog)); }
 static void choose_folder(Widget button,XtPointer data,XtPointer call)
 {
-    (void)call; SyncWindow *w=data; Widget target=NULL;
-    XtVaGetValues(button,XmNuserData,&target,NULL);
+    (void)call; SyncWindow *w=data; Widget target=nullptr;
+    XtVaGetValues(button,XmNuserData,&target,nullptr);
     FolderChoice *choice=malloc(sizeof(*choice)); if (!choice) { command_notice(w,M(223,"Not enough memory.")); return; }
     choice->window=w; choice->target=target;
-    Widget dialog=XmCreateFileSelectionDialog(w->shell,"chooseFolder",NULL,0);
+    Widget dialog=XmCreateFileSelectionDialog(w->shell,"chooseFolder",nullptr,0);
     XmString title=XmStringCreateLocalized((char *)M(96,"Choose a folder"));
     XtVaSetValues(dialog,XmNdialogTitle,title,XmNfileTypeMask,XmFILE_DIRECTORY,XmNautoUnmanage,False,
-        XmNdialogStyle,XmDIALOG_FULL_APPLICATION_MODAL,NULL);
+        XmNdialogStyle,XmDIALOG_FULL_APPLICATION_MODAL,nullptr);
     XmStringFree(title);
     XtAddCallback(dialog,XmNokCallback,folder_chosen,choice);
     XtAddCallback(dialog,XmNdestroyCallback,folder_choice_destroyed,choice);
-    XtAddCallback(dialog,XmNcancelCallback,folder_cancelled,NULL);
+    XtAddCallback(dialog,XmNcancelCallback,folder_cancelled,nullptr);
     XtUnmanageChild(XmFileSelectionBoxGetChild(dialog,XmDIALOG_HELP_BUTTON));
     XtManageChild(dialog);
 }
@@ -335,44 +335,44 @@ static Widget folder_field(SyncWindow *w,const char *name,const char *title,cons
 {
     Widget text=field(w->setup,name,title,initial,45);
     Widget browse=button(XtParent(text),"browse",M(97,"Browse..."),choose_folder,w);
-    XtVaSetValues(browse,XmNuserData,text,NULL); return text;
+    XtVaSetValues(browse,XmNuserData,text,nullptr); return text;
 }
 static void option_callback(Widget widget,XtPointer data,XtPointer call)
 {
-    (void)call; unsigned *value=data; XtPointer index=NULL;
-    XtVaGetValues(widget,XmNuserData,&index,NULL); *value=(unsigned)(uintptr_t)index;
+    (void)call; unsigned *value=data; XtPointer index=nullptr;
+    XtVaGetValues(widget,XmNuserData,&index,nullptr); *value=(unsigned)(uintptr_t)index;
 }
 static Widget option(Widget parent,const char *name,const char *title,const char *const *names,
                       unsigned n,unsigned *selected,Widget *items)
 {
-    Widget pulldown=XmCreatePulldownMenu(parent,(char *)name,NULL,0);
+    Widget pulldown=XmCreatePulldownMenu(parent,(char *)name,nullptr,0);
     for (unsigned i=0;i<n;++i) {
-        Widget item=XtVaCreateManagedWidget(names[i],xmPushButtonWidgetClass,pulldown,XmNuserData,(XtPointer)(uintptr_t)i,NULL);
+        Widget item=XtVaCreateManagedWidget(names[i],xmPushButtonWidgetClass,pulldown,XmNuserData,(XtPointer)(uintptr_t)i,nullptr);
         label(item,names[i]); XtAddCallback(item,XmNactivateCallback,option_callback,selected);
         if (items) items[i]=item;
     }
     XmString text=XmStringCreateLocalized((char *)title);
     Widget menu=XtVaCreateManagedWidget(name,xmRowColumnWidgetClass,parent,XmNrowColumnType,XmMENU_OPTION,
-        XmNsubMenuId,pulldown,XmNlabelString,text,NULL);
+        XmNsubMenuId,pulldown,XmNlabelString,text,nullptr);
     XmStringFree(text); return menu;
 }
 static void option_selected(Widget menu,unsigned index)
 {
-    Widget pane=NULL; WidgetList children=NULL; Cardinal count=0;
-    XtVaGetValues(menu,XmNsubMenuId,&pane,NULL);
-    XtVaGetValues(pane,XmNchildren,&children,XmNnumChildren,&count,NULL);
-    if (index<count) XtVaSetValues(menu,XmNmenuHistory,children[index],NULL);
+    Widget pane=nullptr; WidgetList children=nullptr; Cardinal count=0;
+    XtVaGetValues(menu,XmNsubMenuId,&pane,nullptr);
+    XtVaGetValues(pane,XmNchildren,&children,XmNnumChildren,&count,nullptr);
+    if (index<count) XtVaSetValues(menu,XmNmenuHistory,children[index],nullptr);
 }
 static void observe_setup_option(Widget menu,SyncWindow *w)
 {
-    Widget pane=NULL; WidgetList children=NULL; Cardinal count=0;
-    XtVaGetValues(menu,XmNsubMenuId,&pane,NULL); XtVaGetValues(pane,XmNchildren,&children,XmNnumChildren,&count,NULL);
+    Widget pane=nullptr; WidgetList children=nullptr; Cardinal count=0;
+    XtVaGetValues(menu,XmNsubMenuId,&pane,nullptr); XtVaGetValues(pane,XmNchildren,&children,XmNnumChildren,&count,nullptr);
     for (Cardinal i=0;i<count;++i)
         XtAddCallback(children[i],XmNactivateCallback,menu==w->operation_option?operation_changed:setup_changed,w);
 }
 static unsigned selected_rows(SyncWindow *w,uint64_t ids[SYNC_PAGE_SIZE],int *first)
 {
-    int *positions=NULL,count=0; *first=-1;
+    int *positions=nullptr,count=0; *first=-1;
     if (!XmListGetSelectedPos(w->list,&positions,&count)) return 0;
     unsigned n=0;
     for (int i=0;i<count && n<SYNC_PAGE_SIZE;++i) {
@@ -529,11 +529,11 @@ static void selection_changed(Widget widget,XtPointer data,XtPointer call)
     XmTextSetString(w->details,text);
 }
 static void choice_context_changed(Widget widget,XtPointer data,XtPointer call)
-{ (void)call; clear_command_notice((SyncWindow *)data); selection_changed(widget,data,NULL); }
+{ (void)call; clear_command_notice((SyncWindow *)data); selection_changed(widget,data,nullptr); }
 static void observe_choice_option(Widget menu,SyncWindow *w)
 {
-    Widget pane=NULL; WidgetList children=NULL; Cardinal count=0;
-    XtVaGetValues(menu,XmNsubMenuId,&pane,NULL); XtVaGetValues(pane,XmNchildren,&children,XmNnumChildren,&count,NULL);
+    Widget pane=nullptr; WidgetList children=nullptr; Cardinal count=0;
+    XtVaGetValues(menu,XmNsubMenuId,&pane,nullptr); XtVaGetValues(pane,XmNchildren,&children,XmNnumChildren,&count,nullptr);
     for (Cardinal i=0;i<count;++i) XtAddCallback(children[i],XmNactivateCallback,choice_context_changed,w);
 }
 static void render_rows(SyncWindow *w)
@@ -550,7 +550,7 @@ static void render_rows(SyncWindow *w)
         XmString item=XmStringCreateLocalized(text); XmListAddItemUnselected(w->list,item,0); XmStringFree(item);
         for (unsigned j=0;j<n;++j) if (selected[j]==r->observed.row_id) XmListSelectPos(w->list,(int)i+1,False);
     }
-    selection_changed(NULL,w,NULL);
+    selection_changed(nullptr,w,nullptr);
     char range[128]; snprintf(range,sizeof(range),M(259,"Objects %llu-%llu of %llu"),
         (unsigned long long)(w->view->row_count?w->view->offset+1:0),
         (unsigned long long)(w->view->offset+w->view->row_count),(unsigned long long)w->view->total_rows);
@@ -601,7 +601,7 @@ static int date_bound(Widget field,ckfsp_timestamp *out,int *present)
 }
 static int setup_error(SyncWindow *w,Widget field,const char *message)
 {
-    command_notice(w,message); XtVaSetValues(w->notebook,XmNcurrentPageNumber,1,NULL);
+    command_notice(w,message); XtVaSetValues(w->notebook,XmNcurrentPageNumber,1,nullptr);
     XmScrollVisible(w->setup_viewport,field,8,8);
     XmProcessTraversal(field,XmTRAVERSE_CURRENT);
     XmTextFieldSetInsertionPosition(field,0);
@@ -610,7 +610,7 @@ static int setup_error(SyncWindow *w,Widget field,const char *message)
 }
 static int setup_fields(SyncWindow *w,SyncSetup *setup,char **source,char **destination)
 {
-    *source=NULL; *destination=NULL; memset(setup,0,sizeof(*setup));
+    *source=nullptr; *destination=nullptr; memset(setup,0,sizeof(*setup));
     *source=w->native_source?XtNewString(w->native_source):XmTextFieldGetString(w->source);
     if (!*source) return setup_error(w,w->source,M(223,"Not enough memory."));
     if (!**source) return setup_error(w,w->source,M(297,"Choose a source folder."));
@@ -687,10 +687,10 @@ static void compare(Widget widget,XtPointer data,XtPointer call)
             else command_notice(w,M(24,"Cancel or finish the current operation before comparing again."));
             return;
         }
-        w->job=NULL;
+        w->job=nullptr;
     }
     reset_result_view(w);
-    char *source=NULL,*destination=NULL; SyncSetup setup;
+    char *source=nullptr,*destination=nullptr; SyncSetup setup;
     if (!setup_fields(w,&setup,&source,&destination)) {
         XtFree(source); XtFree(destination); return;
     }
@@ -702,7 +702,7 @@ static void compare(Widget widget,XtPointer data,XtPointer call)
     label(w->compared_roots,roots); XtFree(shown_source); XtFree(shown_target);
     notify(w,state_label(CKFET_INVENTORY));
     XtSetSensitive(w->setup,False);
-    XtVaSetValues(w->notebook,XmNcurrentPageNumber,2,NULL);
+    XtVaSetValues(w->notebook,XmNcurrentPageNumber,2,nullptr);
 }
 static void rule_name_side(SyncWindow *w,uint32_t choice)
 {
@@ -760,7 +760,7 @@ static void remove_rule(Widget widget,XtPointer data,XtPointer call)
     SyncWindow *w=data;
     if (w->closing || w->cancel_requested) return;
     if (w->view->snapshot.recovery_required || w->view->finished || w->view->stopped) return;
-    int *positions=NULL,n=0;
+    int *positions=nullptr,n=0;
     clear_command_notice(w);
     if (!XmListGetSelectedPos(w->rules_list,&positions,&n) || n!=1) {
         XtFree((char *)positions); command_notice(w,M(311,"Select one rule to remove.")); return;
@@ -774,7 +774,7 @@ static void remove_rule(Widget widget,XtPointer data,XtPointer call)
  * Save name. Copy the identity before callbacks or a new snapshot replace it. */
 static int selected_profile(SyncWindow *w,char name[SYNC_PROFILE_NAME_MAX+1])
 {
-    int *positions=NULL,count=0,found=0;
+    int *positions=nullptr,count=0,found=0;
     if (w->profile_list && XmListGetSelectedPos(w->profile_list,&positions,&count) && count==1 &&
         positions[0]>0 && (unsigned)positions[0]<=w->preferences_view.count) {
         memcpy(name,w->preferences_view.names[positions[0]-1],SYNC_PROFILE_NAME_MAX+1);
@@ -820,7 +820,7 @@ static void save_profile(Widget widget,XtPointer data,XtPointer call)
     clear_command_notice(w);
     if (!w->preferences) return;
     SyncProfile *profile=calloc(1,sizeof(*profile)); if (!profile) { command_notice(w,M(223,"Not enough memory.")); return; }
-    char *name=XmTextFieldGetString(w->profile_name),*source=NULL,*destination=NULL; SyncSetup setup;
+    char *name=XmTextFieldGetString(w->profile_name),*source=nullptr,*destination=nullptr; SyncSetup setup;
     if (!name || !*name || strlen(name)>SYNC_PROFILE_NAME_MAX) {
         label(w->profile_status,M(224,"Enter a profile name (1-64 bytes).")); goto done;
     }
@@ -886,7 +886,7 @@ static void load_profile(Widget widget,XtPointer data,XtPointer call)
         out->kind=in->kind; out->choice=in->choice; out->tie=in->tie; out->protect_nonempty=in->protect_nonempty;
         out->retain_replaced=in->retain_replaced; out->scope=CKFET_SCOPE_JOB;
     }
-    mark_dirty(w); setup_changed(NULL,w,NULL); render_rules(w); free(profile);
+    mark_dirty(w); setup_changed(nullptr,w,nullptr); render_rules(w); free(profile);
     label(w->profile_status,M(230,"Profile loaded. Compare and review again before applying changes."));
 }
 typedef struct { SyncWindow *window; char *name; } ProfileDeletion;
@@ -918,14 +918,14 @@ static void delete_profile(Widget widget,XtPointer data,XtPointer call)
     if (!choice || !choice->name) { if (choice) free(choice); command_notice(w,M(223,"Not enough memory.")); return; }
     choice->window=w;
     char question[256]; snprintf(question,sizeof(question),M(252,"Delete saved profile '%s'?\nThis removes preferences only."),choice->name);
-    Widget dialog=XmCreateQuestionDialog(w->shell,"deleteProfile",NULL,0);
+    Widget dialog=XmCreateQuestionDialog(w->shell,"deleteProfile",nullptr,0);
     XmString text=XmStringCreateLocalized(question),ok=XmStringCreateLocalized((char *)M(253,"Delete profile"));
     XtVaSetValues(dialog,XmNdialogTitle,ok,XmNmessageString,text,XmNokLabelString,ok,XmNdialogStyle,XmDIALOG_FULL_APPLICATION_MODAL,
-        XmNdefaultButtonType,XmDIALOG_CANCEL_BUTTON,XmNautoUnmanage,False,NULL);
+        XmNdefaultButtonType,XmDIALOG_CANCEL_BUTTON,XmNautoUnmanage,False,nullptr);
     XmStringFree(text); XmStringFree(ok);
     XtUnmanageChild(XmMessageBoxGetChild(dialog,XmDIALOG_HELP_BUTTON));
     XtAddCallback(dialog,XmNokCallback,profile_deletion_ok,choice);
-    XtAddCallback(dialog,XmNcancelCallback,folder_cancelled,NULL);
+    XtAddCallback(dialog,XmNcancelCallback,folder_cancelled,nullptr);
     XtAddCallback(dialog,XmNdestroyCallback,profile_deletion_free,choice);
     XtManageChild(dialog);
 }
@@ -945,8 +945,8 @@ static void review(Widget widget,XtPointer data,XtPointer call)
         command_notice(w,M(31,"For a reviewed rename, select one row and enter one basename.")); XtFree(name); return;
     }
     w->rename_selection_count=n; w->rename_row=n==1?ids[0]:0;
-    uint64_t serial=SyncJobReview(w->job,w->view->snapshot.plan_generation,w->rules,w->rule_count,NULL,0,
-        n==1?ids[0]:0,*name?name:NULL,w->name_side?CKFET_NAME_TARGET:CKFET_NAME_INCOMING);
+    uint64_t serial=SyncJobReview(w->job,w->view->snapshot.plan_generation,w->rules,w->rule_count,nullptr,0,
+        n==1?ids[0]:0,*name?name:nullptr,w->name_side?CKFET_NAME_TARGET:CKFET_NAME_INCOMING);
     XtFree(name); w->dirty=1; w->review_pending=serial!=0; w->review_serial=serial;
     w->previous_receipt=w->view->snapshot.receipt_id;
     w->reviewed_rules_revision=w->local_rules_revision;
@@ -997,15 +997,15 @@ static void cancel_job(Widget widget,XtPointer data,XtPointer call)
 static void help(Widget widget,XtPointer data,XtPointer call)
 {
     (void)widget;(void)call; SyncWindow *w=data;
-    Widget dialog=XmCreateInformationDialog(w->shell,"folderHelp",NULL,0);
+    Widget dialog=XmCreateInformationDialog(w->shell,"folderHelp",nullptr,0);
     XmString title=XmStringCreateLocalized((char *)M(281,"Help"));
-    XtVaSetValues(dialog,XmNdialogTitle,title,NULL); XmStringFree(title);
+    XtVaSetValues(dialog,XmNdialogTitle,title,nullptr); XmStringFree(title);
     const char *body=M(280,"Choose two folders and an operation, then Compare. Inspect the plan totals\nand select rows to see both versions and the proposed names.\n\nUse matching rules for one item, selected rows, a subtree or the whole job.\nReview rules after every edit. Saved profiles store preferences only;\nloading one always requires a fresh comparison and review.\n\nDisplayed \\xNN escapes retain original folder bytes until the field is edited.\nDate-only bounds use local midnight; UTC timestamps preserve exact bounds.\nOperation diagnostics keeps operation messages and the journal location separate\nfrom row details. Pause and Cancel are requests. Closing waits for safe shutdown.");
     XmString text=XmStringCreateLocalized((char *)body);
-    XtVaSetValues(dialog,XmNmessageString,text,XmNautoUnmanage,False,NULL); XmStringFree(text);
+    XtVaSetValues(dialog,XmNmessageString,text,XmNautoUnmanage,False,nullptr); XmStringFree(text);
     XtUnmanageChild(XmMessageBoxGetChild(dialog,XmDIALOG_HELP_BUTTON));
     XtUnmanageChild(XmMessageBoxGetChild(dialog,XmDIALOG_CANCEL_BUTTON));
-    XtAddCallback(dialog,XmNokCallback,folder_cancelled,NULL); XtManageChild(dialog);
+    XtAddCallback(dialog,XmNokCallback,folder_cancelled,nullptr); XtManageChild(dialog);
 }
 static void close_window(Widget widget,XtPointer data,XtPointer call)
 {
@@ -1113,13 +1113,13 @@ static void tick(XtPointer data,XtIntervalId *id)
             v->snapshot.unresolved_rows,M(23,"unresolved"),v->snapshot.copied_bytes,v->snapshot.known_copy_bytes,M(4,"bytes"),
             v->snapshot.counts_complete?"":M(41," (totals incomplete)"));
         notify(w,text);
-        if (w->recompare && !w->closing && v->stopped) { SyncJobDestroy(w->job); w->job=NULL; w->recompare=0; compare(NULL,w,NULL); }
+        if (w->recompare && !w->closing && v->stopped) { SyncJobDestroy(w->job); w->job=nullptr; w->recompare=0; compare(nullptr,w,nullptr); }
     }
     render_diagnostics(w);
     profile_controls(w);
     if (w->closing) {
-        if (w->job && SyncJobDestroy(w->job)) w->job=NULL;
-        if (w->preferences && SyncProfilesDestroy(w->preferences)) w->preferences=NULL;
+        if (w->job && SyncJobDestroy(w->job)) w->job=nullptr;
+        if (w->preferences && SyncProfilesDestroy(w->preferences)) w->preferences=nullptr;
         if (!w->job && !w->preferences) { XtAppSetExitFlag(w->context); return; }
     }
     XtAppAddTimeOut(w->context,100,tick,w);
@@ -1129,14 +1129,14 @@ int main(int argc,char **argv)
     /* File Manager owns its cache and IPC descriptors. Do this after exec,
      * before opening our catalog, display or worker resources. */
     closefrom(3);
-    setlocale(LC_ALL,""); XtSetLanguageProc(NULL,NULL,NULL); catalog=catopen("dtfile_sync",NL_CAT_LOCALE);
+    setlocale(LC_ALL,""); XtSetLanguageProc(nullptr,nullptr,nullptr); catalog=catopen("dtfile_sync",NL_CAT_LOCALE);
     SyncWindow w; memset(&w,0,sizeof(w)); w.view=calloc(1,sizeof(*w.view)); if (!w.view) return 1;
     const char *source=argc>1?argv[1]:"",*destination=argc>2?argv[2]:"";
     if (argc>3) { fprintf(stderr,"Usage: %s [source-folder [destination-folder]]\n",argv[0]); free(w.view); return 2; }
-    int xt_argc=1; char *xt_argv[]={argv[0],NULL};
-    w.shell=XtVaAppInitialize(&w.context,"DtfileSync",NULL,0,&xt_argc,xt_argv,NULL,XmNtitle,M(42,"File Manager - Synchronize Folders"),
+    int xt_argc=1; char *xt_argv[]={argv[0],nullptr};
+    w.shell=XtVaAppInitialize(&w.context,"DtfileSync",nullptr,0,&xt_argc,xt_argv,nullptr,XmNtitle,M(42,"File Manager - Synchronize Folders"),
         XmNwidth,1100,XmNheight,760,
-        XmNdeleteResponse,XmDO_NOTHING,NULL);
+        XmNdeleteResponse,XmDO_NOTHING,nullptr);
     /* Keep the actions visible on smaller desktops. Page content scrolls
      * independently instead of forcing controls outside the screen. */
     Screen *screen=XtScreen(w.shell);
@@ -1145,27 +1145,27 @@ int main(int argc,char **argv)
     if (height>760) height=760;
     if (width<1) width=1;
     if (height<1) height=1;
-    XtVaSetValues(w.shell,XmNwidth,(Dimension)width,XmNheight,(Dimension)height,NULL);
-    Widget root=XtVaCreateManagedWidget("operations",xmFormWidgetClass,w.shell,XmNmarginWidth,10,XmNmarginHeight,10,NULL);
+    XtVaSetValues(w.shell,XmNwidth,(Dimension)width,XmNheight,(Dimension)height,nullptr);
+    Widget root=XtVaCreateManagedWidget("operations",xmFormWidgetClass,w.shell,XmNmarginWidth,10,XmNmarginHeight,10,nullptr);
     Widget profile_bar=XtVaCreateManagedWidget("profileBar",xmRowColumnWidgetClass,root,
-        XmNtopAttachment,XmATTACH_FORM,XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,NULL);
-    Widget profile_entry=XtVaCreateManagedWidget("profileEntry",xmRowColumnWidgetClass,profile_bar,XmNorientation,XmHORIZONTAL,NULL);
+        XmNtopAttachment,XmATTACH_FORM,XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,nullptr);
+    Widget profile_entry=XtVaCreateManagedWidget("profileEntry",xmRowColumnWidgetClass,profile_bar,XmNorientation,XmHORIZONTAL,nullptr);
     w.profile_name=field(profile_entry,"profileName",M(314,"Save as profile:"),"",28);
-    XtVaSetValues(w.profile_name,XmNmaxLength,SYNC_PROFILE_NAME_MAX,NULL);
+    XtVaSetValues(w.profile_name,XmNmaxLength,SYNC_PROFILE_NAME_MAX,nullptr);
     XtAddCallback(w.profile_name,XmNvalueChangedCallback,rule_input_changed,&w);
     w.profile_save=button(profile_entry,"saveProfile",M(233,"Save preferences"),save_profile,&w);
     w.profile_status=XtVaCreateManagedWidget("profileStatus",xmLabelWidgetClass,profile_bar,
-        XmNalignment,XmALIGNMENT_BEGINNING,XmNrecomputeSize,False,XmNheight,24,XmNwidth,1000,NULL);
+        XmNalignment,XmALIGNMENT_BEGINNING,XmNrecomputeSize,False,XmNheight,24,XmNwidth,1000,nullptr);
     label(w.profile_status,M(234,"Loading saved preferences...")); XtSetSensitive(w.profile_save,False);
     Widget actions=XtVaCreateManagedWidget("actions",xmRowColumnWidgetClass,root,XmNorientation,XmHORIZONTAL,
-        XmNbottomAttachment,XmATTACH_FORM,XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,NULL);
+        XmNbottomAttachment,XmATTACH_FORM,XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,nullptr);
     w.status=XtVaCreateManagedWidget("status",xmLabelWidgetClass,root,XmNalignment,XmALIGNMENT_BEGINNING,
         XmNrecomputeSize,False,XmNheight,42,
-        XmNbottomAttachment,XmATTACH_WIDGET,XmNbottomWidget,actions,XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,NULL);
+        XmNbottomAttachment,XmATTACH_WIDGET,XmNbottomWidget,actions,XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,nullptr);
     w.notebook=XtVaCreateManagedWidget("workflow",xmNotebookWidgetClass,root,
         XmNtopAttachment,XmATTACH_WIDGET,XmNtopWidget,profile_bar,XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,
         XmNbottomAttachment,XmATTACH_WIDGET,XmNbottomWidget,w.status,XmNbackPagePlacement,XmTOP_RIGHT,
-        XmNorientation,XmVERTICAL,XmNbindingType,XmNONE,XmNcurrentPageNumber,1,NULL);
+        XmNorientation,XmVERTICAL,XmNbindingType,XmNONE,XmNcurrentPageNumber,1,nullptr);
     const char *tabs[]={M(86,"Folders and options"),M(87,"Comparison and results"),M(88,"Matching rules"),M(316,"Operation diagnostics")};
     Widget pages_widgets[4];
     for (int page=1;page<=4;++page) {
@@ -1173,16 +1173,16 @@ int main(int argc,char **argv)
             /* The report uses its own scrollbars and fills the available page,
              * rather than nesting a small preferred-size text inside a viewport. */
             pages_widgets[page-1]=XtVaCreateManagedWidget("diagnosticsPage",xmFormWidgetClass,w.notebook,
-                XmNnotebookChildType,XmPAGE,XmNpageNumber,page,XmNmarginWidth,8,XmNmarginHeight,8,NULL);
+                XmNnotebookChildType,XmPAGE,XmNpageNumber,page,XmNmarginWidth,8,XmNmarginHeight,8,nullptr);
         } else {
             Widget viewport=XtVaCreateManagedWidget("pageViewport",xmScrolledWindowWidgetClass,w.notebook,
                 XmNnotebookChildType,XmPAGE,XmNpageNumber,page,XmNscrollingPolicy,XmAUTOMATIC,
-                XmNvisualPolicy,XmCONSTANT,XmNscrollBarDisplayPolicy,XmAS_NEEDED,NULL);
+                XmNvisualPolicy,XmCONSTANT,XmNscrollBarDisplayPolicy,XmAS_NEEDED,nullptr);
             if (page==1) w.setup_viewport=viewport;
             pages_widgets[page-1]=XtVaCreateManagedWidget("page",xmRowColumnWidgetClass,viewport,
-                XmNmarginWidth,8,XmNmarginHeight,8,NULL);
+                XmNmarginWidth,8,XmNmarginHeight,8,nullptr);
         }
-        Widget tab=XtVaCreateManagedWidget("tab",xmPushButtonWidgetClass,w.notebook,XmNnotebookChildType,XmMAJOR_TAB,XmNpageNumber,page,NULL);
+        Widget tab=XtVaCreateManagedWidget("tab",xmPushButtonWidgetClass,w.notebook,XmNnotebookChildType,XmMAJOR_TAB,XmNpageNumber,page,nullptr);
         label(tab,tabs[page-1]);
     }
     w.setup=pages_widgets[0]; Widget comparison=pages_widgets[1],rule_page=pages_widgets[2]; w.rule_page=rule_page;
@@ -1190,7 +1190,7 @@ int main(int argc,char **argv)
     w.profile_list=XmCreateScrolledList(w.setup,"savedProfiles",args,n); XtManageChild(w.profile_list);
     XtAddCallback(w.profile_list,XmNbrowseSelectionCallback,profile_selected,&w);
     XtAddCallback(w.profile_list,XmNdefaultActionCallback,load_profile,&w);
-    Widget profile_buttons=XtVaCreateManagedWidget("profileButtons",xmRowColumnWidgetClass,w.setup,XmNorientation,XmHORIZONTAL,NULL);
+    Widget profile_buttons=XtVaCreateManagedWidget("profileButtons",xmRowColumnWidgetClass,w.setup,XmNorientation,XmHORIZONTAL,nullptr);
     w.profile_load=button(profile_buttons,"loadProfile",M(235,"Load selected preferences"),load_profile,&w); XtSetSensitive(w.profile_load,False);
     w.profile_delete=button(profile_buttons,"deleteProfile",M(315,"Delete selected profile"),delete_profile,&w);
     XtSetSensitive(w.profile_delete,False);
@@ -1198,21 +1198,21 @@ int main(int argc,char **argv)
     w.destination=folder_field(&w,"destination",M(44,"Destination folder:"),"");
     XtAddCallback(w.source,XmNvalueChangedCallback,path_edited,&w); XtAddCallback(w.destination,XmNvalueChangedCallback,path_edited,&w);
     button(w.setup,"swapFolders",M(294,"Swap folders"),swap_folders,&w);
-    Widget modes=XtVaCreateManagedWidget("modes",xmRowColumnWidgetClass,w.setup,NULL);
+    Widget modes=XtVaCreateManagedWidget("modes",xmRowColumnWidgetClass,w.setup,nullptr);
     const char *mode_names[]={M(45,"Compare only"),M(46,"Copy"),M(47,"Update: protect destination-newer"),M(48,"Copy missing only"),M(49,"Synchronize one way"),M(50,"Mirror - deletion review required")};
-    w.operation_option=option(modes,"operation",M(51,"Operation:"),mode_names,6,&w.profile_index,NULL);
+    w.operation_option=option(modes,"operation",M(51,"Operation:"),mode_names,6,&w.profile_index,nullptr);
     w.operation_explanation=XtVaCreateManagedWidget("operationExplanation",xmLabelWidgetClass,modes,
-        XmNalignment,XmALIGNMENT_BEGINNING,NULL);
+        XmNalignment,XmALIGNMENT_BEGINNING,nullptr);
     operation_explanation(&w);
     observe_setup_option(w.operation_option,&w);
     const char *metadata[]={M(52,"Complete preservation"),M(53,"Ordinary mode/times; new caller ownership")};
-    w.metadata_option=option(modes,"metadata",M(54,"Metadata:"),metadata,2,&w.metadata,NULL);
+    w.metadata_option=option(modes,"metadata",M(54,"Metadata:"),metadata,2,&w.metadata,nullptr);
     observe_setup_option(w.metadata_option,&w);
-    Widget warning=XtVaCreateManagedWidget("capabilities",xmLabelWidgetClass,w.setup,NULL);
+    Widget warning=XtVaCreateManagedWidget("capabilities",xmLabelWidgetClass,w.setup,nullptr);
     label(warning,M(55,"Compare and rule review are available. Applying changes awaits native backend qualification.\nTwo-way sync, move and mirror execution require further qualification."));
-    Widget comparison_note=XtVaCreateManagedWidget("comparisonPolicy",xmLabelWidgetClass,w.setup,NULL);
+    Widget comparison_note=XtVaCreateManagedWidget("comparisonPolicy",xmLabelWidgetClass,w.setup,nullptr);
     label(comparison_note,M(309,"Byte and date bounds filter regular files only; comparison reads contents.\nUnknown required size, time or precision stays unknown; it is not excluded."));
-    Widget filters=XtVaCreateManagedWidget("filters",xmRowColumnWidgetClass,w.setup,NULL);
+    Widget filters=XtVaCreateManagedWidget("filters",xmRowColumnWidgetClass,w.setup,nullptr);
     w.size_min=field(filters,"minimumBytes",M(56,"Minimum bytes:"),"",9); w.size_max=field(filters,"maximumBytes",M(57,"Maximum bytes:"),"",9);
     w.date_after=field(filters,"modifiedAfter",M(58,"Modified on/after (local YYYY-MM-DD or UTC time):"),"",30);
     w.date_before=field(filters,"modifiedBefore",M(59,"Modified before (local YYYY-MM-DD or UTC time):"),"",30);
@@ -1220,20 +1220,20 @@ int main(int argc,char **argv)
     XtAddCallback(w.date_after,XmNvalueChangedCallback,setup_changed,&w); XtAddCallback(w.date_before,XmNvalueChangedCallback,setup_changed,&w);
     button(filters,"clearFilters",M(295,"Clear filters"),clear_filters,&w);
     w.setup_notice=XtVaCreateManagedWidget("setupNotice",xmLabelWidgetClass,comparison,
-        XmNalignment,XmALIGNMENT_BEGINNING,NULL); label(w.setup_notice,"");
+        XmNalignment,XmALIGNMENT_BEGINNING,nullptr); label(w.setup_notice,"");
     w.compared_roots=XtVaCreateManagedWidget("comparedFolders",xmLabelWidgetClass,comparison,
-        XmNalignment,XmALIGNMENT_BEGINNING,XmNrecomputeSize,False,XmNheight,44,XmNwidth,970,NULL);
+        XmNalignment,XmALIGNMENT_BEGINNING,XmNrecomputeSize,False,XmNheight,44,XmNwidth,970,nullptr);
     label(w.compared_roots,"");
     w.plan_summary=XtVaCreateManagedWidget("planSummary",xmLabelWidgetClass,comparison,
-        XmNalignment,XmALIGNMENT_BEGINNING,XmNrecomputeSize,False,XmNheight,42,XmNwidth,970,NULL);
+        XmNalignment,XmALIGNMENT_BEGINNING,XmNrecomputeSize,False,XmNheight,42,XmNwidth,970,nullptr);
     label(w.plan_summary,M(275,"Plan totals are not yet available."));
-    Widget heading=XtVaCreateManagedWidget("columns",xmLabelWidgetClass,comparison,NULL);
+    Widget heading=XtVaCreateManagedWidget("columns",xmLabelWidgetClass,comparison,nullptr);
     char headings[256]; snprintf(headings,sizeof(headings),"%-32s  %-15s  %-11s  %s",M(61,"Path"),M(277,"Action"),M(278,"Result"),M(9,"Reason"));
     label(heading,headings);
     w.font=XLoadQueryFont(XtDisplay(w.shell),"9x15");
     if (!w.font) w.font=XLoadQueryFont(XtDisplay(w.shell),"fixed");
     if (w.font) w.mono=XmFontListCreate(w.font,XmFONTLIST_DEFAULT_TAG);
-    if (w.mono) XtVaSetValues(heading,XmNfontList,w.mono,XmNalignment,XmALIGNMENT_BEGINNING,NULL);
+    if (w.mono) XtVaSetValues(heading,XmNfontList,w.mono,XmNalignment,XmALIGNMENT_BEGINNING,nullptr);
     n=0; XtSetArg(args[n],XmNvisibleItemCount,14);++n;
     XtSetArg(args[n],XmNselectionPolicy,XmEXTENDED_SELECT);++n;
     XtSetArg(args[n],XmNscrollBarDisplayPolicy,XmSTATIC);++n;
@@ -1241,35 +1241,35 @@ int main(int argc,char **argv)
     if (w.mono) { XtSetArg(args[n],XmNfontList,w.mono);++n; }
     w.list=XmCreateScrolledList(comparison,"comparison",args,n); XtManageChild(w.list);
     XtAddCallback(w.list,XmNextendedSelectionCallback,selection_changed,&w);
-    Widget pages=XtVaCreateManagedWidget("pages",xmRowColumnWidgetClass,comparison,XmNorientation,XmHORIZONTAL,NULL);
+    Widget pages=XtVaCreateManagedWidget("pages",xmRowColumnWidgetClass,comparison,XmNorientation,XmHORIZONTAL,nullptr);
     w.previous=button(pages,"previous",M(62,"Previous page"),previous,&w); w.next=button(pages,"next",M(63,"Next page"),next,&w);
-    w.page_info=XtVaCreateManagedWidget("pageRange",xmLabelWidgetClass,pages,NULL); label(w.page_info,"");
-    Widget editor=XtVaCreateManagedWidget("ruleEditor",xmRowColumnWidgetClass,rule_page,NULL);
+    w.page_info=XtVaCreateManagedWidget("pageRange",xmLabelWidgetClass,pages,nullptr); label(w.page_info,"");
+    Widget editor=XtVaCreateManagedWidget("ruleEditor",xmRowColumnWidgetClass,rule_page,nullptr);
     const char *classes[15],*choices[23]; for (unsigned i=0;i<15;++i) classes[i]=kind_label(i); for (unsigned i=0;i<23;++i) choices[i]=choice_label(i);
     w.class_option=option(editor,"conflictClass",M(64,"Matching class:"),classes,15,&w.kind,w.class_menu);
     observe_choice_option(w.class_option,&w);
     Widget choice_option=option(editor,"choice",M(65,"Action:"),choices,23,&w.choice,w.choice_menu);
     observe_choice_option(choice_option,&w);
     const char *scopes[]={M(66,"All matching in job"),M(67,"Selected matching rows"),M(89,"This item"),M(90,"Matching in selected subtree")};
-    Widget scope_option=option(editor,"scope",M(68,"Scope:"),scopes,4,&w.scope,NULL); observe_choice_option(scope_option,&w);
-    Widget policies=XtVaCreateManagedWidget("policies",xmRowColumnWidgetClass,rule_page,NULL);
+    Widget scope_option=option(editor,"scope",M(68,"Scope:"),scopes,4,&w.scope,nullptr); observe_choice_option(scope_option,&w);
+    Widget policies=XtVaCreateManagedWidget("policies",xmRowColumnWidgetClass,rule_page,nullptr);
     const char *fallbacks[]={M(69,"Ask"),M(70,"Keep target"),M(71,"Keep both incoming")};
-    Widget fallback_option=option(policies,"fallback",M(72,"Tie / unknown fallback:"),fallbacks,3,&w.fallback,NULL);
+    Widget fallback_option=option(policies,"fallback",M(72,"Tie / unknown fallback:"),fallbacks,3,&w.fallback,nullptr);
     observe_choice_option(fallback_option,&w);
-    w.zero=XtVaCreateManagedWidget("protectNonempty",xmToggleButtonWidgetClass,policies,XmNset,True,NULL);
+    w.zero=XtVaCreateManagedWidget("protectNonempty",xmToggleButtonWidgetClass,policies,XmNset,True,nullptr);
     label(w.zero,M(73,"Do not replace nonempty with empty"));
     XtAddCallback(w.zero,XmNvalueChangedCallback,rule_input_changed,&w);
-    w.retain=XtVaCreateManagedWidget("retainReplaced",xmToggleButtonWidgetClass,policies,XmNset,True,NULL); label(w.retain,M(74,"Preserve replaced versions"));
+    w.retain=XtVaCreateManagedWidget("retainReplaced",xmToggleButtonWidgetClass,policies,XmNset,True,nullptr); label(w.retain,M(74,"Preserve replaced versions"));
     XtAddCallback(w.retain,XmNvalueChangedCallback,rule_input_changed,&w);
     w.new_name=field(rule_page,"newName",M(75,"Exact reviewed basename (one row):"),"",40);
     XtAddCallback(w.new_name,XmNvalueChangedCallback,name_changed,&w);
     const char *name_sides[]={M(254,"Incoming object"),M(255,"Existing target")};
-    w.name_side_option=option(rule_page,"nameSide",M(256,"Name applies to:"),name_sides,2,&w.name_side,NULL);
-    Widget name_pane=NULL; WidgetList name_items=NULL; Cardinal name_count=0;
-    XtVaGetValues(w.name_side_option,XmNsubMenuId,&name_pane,NULL);
-    XtVaGetValues(name_pane,XmNchildren,&name_items,XmNnumChildren,&name_count,NULL);
+    w.name_side_option=option(rule_page,"nameSide",M(256,"Name applies to:"),name_sides,2,&w.name_side,nullptr);
+    Widget name_pane=nullptr; WidgetList name_items=nullptr; Cardinal name_count=0;
+    XtVaGetValues(w.name_side_option,XmNsubMenuId,&name_pane,nullptr);
+    XtVaGetValues(name_pane,XmNchildren,&name_items,XmNnumChildren,&name_count,nullptr);
     for (Cardinal i=0;i<name_count;++i) XtAddCallback(name_items[i],XmNactivateCallback,name_changed,&w);
-    Widget rule_buttons=XtVaCreateManagedWidget("ruleButtons",xmRowColumnWidgetClass,rule_page,XmNorientation,XmHORIZONTAL,NULL);
+    Widget rule_buttons=XtVaCreateManagedWidget("ruleButtons",xmRowColumnWidgetClass,rule_page,XmNorientation,XmHORIZONTAL,nullptr);
     button(rule_buttons,"addRule",M(76,"Add / update matching rule"),add_rule,&w);
     w.remove_rule=button(rule_buttons,"removeRule",M(77,"Remove selected rule"),remove_rule,&w);
     n=0; XtSetArg(args[n],XmNvisibleItemCount,5);++n; w.rules_list=XmCreateScrolledList(rule_page,"activeRules",args,n); XtManageChild(w.rules_list);
@@ -1284,7 +1284,7 @@ int main(int argc,char **argv)
     XtSetArg(args[n],XmNwordWrap,True);++n; XtSetArg(args[n],XmNscrollHorizontal,False);++n;
     w.diagnostics=XmCreateScrolledText(pages_widgets[3],"operationDiagnostics",args,n);
     XtVaSetValues(XtParent(w.diagnostics),XmNtopAttachment,XmATTACH_FORM,XmNbottomAttachment,XmATTACH_FORM,
-        XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,NULL);
+        XmNleftAttachment,XmATTACH_FORM,XmNrightAttachment,XmATTACH_FORM,nullptr);
     XtManageChild(w.diagnostics);
     render_diagnostics(&w);
     notify(&w,M(78,"Choose folders and an operation, then compare. Review matching rules before applying changes."));

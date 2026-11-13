@@ -217,7 +217,7 @@ IL_PRIVATE ilBool _ilSubsampleYCbCr (
      || (pFormat->nBitsPerSample[1] != 8)
      || (pFormat->nBitsPerSample[2] != 8)) {
         *pFormat = *IL_FORMAT_3BYTE_PLANE;
-        if (!ilConvert (pipe, (ilImageDes *)NULL, pFormat, 0, NULL))
+        if (!ilConvert (pipe, (ilImageDes *)nullptr, pFormat, 0, nullptr))
             return FALSE;
         }
 
@@ -247,7 +247,7 @@ IL_PRIVATE ilBool _ilSubsampleYCbCr (
     dstData.height = pInfo->height;
     dstData.stripHeight = 0;
     dstData.constantStrip = FALSE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
  
         /*  Demand constant strips, a multiple of maximum subsample (4). */
     srcData.consumerImage = (ilObject)NULL;
@@ -257,7 +257,7 @@ IL_PRIVATE ilBool _ilSubsampleYCbCr (
 
     pSubPriv = (ilSubsamplePrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
                  sizeof (ilSubsamplePrivRec), 0, &srcData,
-                 &dstData, IL_NPF, IL_NPF, IL_NPF, ilExecuteSubsample, NULL, 0);
+                 &dstData, IL_NPF, IL_NPF, IL_NPF, ilExecuteSubsample, nullptr, 0);
     if (!pSubPriv)
         return FALSE;
     *pSubPriv = priv;                   /* copy priv to priv ptr */
@@ -643,10 +643,10 @@ IL_PRIVATE ilBool _ilConvertYCbCrToRGB (
     dstData.height = pInfo->height;
     dstData.stripHeight = 0;
     dstData.constantStrip = FALSE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     pPriv = (ilYCbCrToRGBPrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
-            sizeof(ilYCbCrToRGBPrivRec), 0, (ilSrcElementData *)NULL, &dstData, 
-            IL_NPF, IL_NPF, destroyFunction, executeFunction, NULL, 0);
+            sizeof(ilYCbCrToRGBPrivRec), 0, (ilSrcElementData *)nullptr, &dstData, 
+            IL_NPF, IL_NPF, destroyFunction, executeFunction, nullptr, 0);
     if (!pPriv) {
         if (destroyFunction)        /* local copy of pTrans; free it */
             IL_FREE (pTrans);
@@ -1039,7 +1039,7 @@ IL_PRIVATE ilBool _ilDitherYCbCr (
         }
 
         /*  alloc pPalette unless not palette dst; init with ramp if not choosing */
-    pPalette = (unsigned short *)NULL;
+    pPalette = (unsigned short *)nullptr;
     if (pData->dstType == IL_PALETTE) {
         int            red, green, blue;
         int            redLevel, greenLevel, blueLevel;
@@ -1091,7 +1091,7 @@ IL_PRIVATE ilBool _ilDitherYCbCr (
 
     pPriv = (ilYCbCr2DitherPrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
             sizeof(ilYCbCr2DitherPrivRec), 0, &srcData, &dstData, 
-            ilYCbCr2DitherInit, IL_NPF, ilYCbCr2DitherDestroy, ilYCbCr2DitherExecute, NULL, 0);
+            ilYCbCr2DitherInit, IL_NPF, ilYCbCr2DitherDestroy, ilYCbCr2DitherExecute, nullptr, 0);
     if (!pPriv) {
         return FALSE;
         }
@@ -1272,7 +1272,7 @@ IL_PRIVATE ilBool _ilConvertRGBToYCbCr (
      || (pFormat->nBitsPerSample[1] != 8)
      || (pFormat->nBitsPerSample[2] != 8)
      || (pFormat->sampleOrder != IL_SAMPLE_PIXELS)) {
-        if (!ilConvert (pipe, (ilImageDes *)NULL, IL_FORMAT_3BYTE_PIXEL, 0, NULL))
+        if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_3BYTE_PIXEL, 0, nullptr))
             return FALSE;
         }
 
@@ -1298,10 +1298,10 @@ IL_PRIVATE ilBool _ilConvertRGBToYCbCr (
     dstData.height = pInfo->height;
     dstData.stripHeight = 0;
     dstData.constantStrip = FALSE;
-    dstData.pPalette = (unsigned short *)NULL;
+    dstData.pPalette = (unsigned short *)nullptr;
     pPriv = (ilRGBToYCbCrPrivPtr)ilAddPipeElement (pipe, IL_FILTER, 
-            sizeof(ilRGBToYCbCrPrivRec), 0, (ilSrcElementData *)NULL, &dstData, 
-            IL_NPF, IL_NPF, IL_NPF, ilExecuteRGBToYCbCr, NULL, 0);
+            sizeof(ilRGBToYCbCrPrivRec), 0, (ilSrcElementData *)nullptr, &dstData, 
+            IL_NPF, IL_NPF, IL_NPF, ilExecuteRGBToYCbCr, nullptr, 0);
     if (!pPriv)
         return FALSE;
 

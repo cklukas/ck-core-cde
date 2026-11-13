@@ -639,7 +639,7 @@ x_print_string(CMGraphicsInfo *gInfo, char *str, int x, int y, int flags)
   XtGetValues(w, args, nargs);
 
   if ((gInfo->nFonts == 0) ||
-      (gInfo->curFont == (CMFontInfo *)NULL))
+      (gInfo->curFont == (CMFontInfo *)nullptr))
   {
     nargs = 0;
     XtSetArg(args[nargs], XmNlabelFontList, &fontList); nargs++;
@@ -693,7 +693,7 @@ x_print_string(CMGraphicsInfo *gInfo, char *str, int x, int y, int flags)
   XSetForeground(XtDisplay(w), gc, gInfo->fg);
   XmStringDraw(XtDisplay(w), XtWindow(w), fontList, xmString,
 	       gc, textX, textY, textWd, XmALIGNMENT_BEGINNING,
-	       xmStringDirection, NULL);
+	       xmStringDirection, nullptr);
   XmStringFree(xmString);
 }
 
@@ -982,13 +982,13 @@ cm_load_font(CMGraphicsInfo *gInfo, CMFontEnum fontEnum,
   int i;
   CMFontInfo *fInfo = cm_find_font(gInfo, fontEnum);
 
-  if (fInfo != (CMFontInfo *)NULL)
+  if (fInfo != (CMFontInfo *)nullptr)
     /* It's a no-no to try to load a font more than once! */
     return False;
 
   fInfo = (CMFontInfo *)XtRealloc((char *)gInfo->fontInfo,
 				  sizeof(CMFontInfo) * (gInfo->nFonts + 1));
-  if (fInfo == (CMFontInfo *)NULL)
+  if (fInfo == (CMFontInfo *)nullptr)
     return False;
   gInfo->fontInfo = fInfo;
 
@@ -1030,7 +1030,7 @@ cm_load_font_error(CMGraphicsInfo *gInfo, char *fontPattern)
 	       DIALOG_TEXT, errText,
 	       BUTTON_IDENT, 1, label,
 	       DIALOG_IMAGE, pu->xm_warning_pixmap,
-	       NULL);
+	       nullptr);
 
   XtFree(label);
   XtFree(title);
@@ -1041,7 +1041,7 @@ static void
 cm_release_fonts(CMGraphicsInfo *gInfo)
 {
   XtFree((char *)gInfo->fontInfo);
-  gInfo->fontInfo = (CMFontInfo *)NULL;
+  gInfo->fontInfo = (CMFontInfo *)nullptr;
   gInfo->nFonts = 0;
 }
 
@@ -1050,10 +1050,10 @@ cm_set_font(CMGraphicsInfo *gInfo, CMFontEnum fontEnum)
 {
   CMFontInfo *fInfo;
 
-  if ((gInfo->curFont == (CMFontInfo *)NULL) ||
+  if ((gInfo->curFont == (CMFontInfo *)nullptr) ||
       (gInfo->curFont->fontEnum != fontEnum))
   {
-    if ((fInfo = cm_find_font(gInfo, fontEnum)) == (CMFontInfo *)NULL)
+    if ((fInfo = cm_find_font(gInfo, fontEnum)) == (CMFontInfo *)nullptr)
       return False;
 
     gInfo->curFont = fInfo;
@@ -1073,7 +1073,7 @@ cm_find_font(CMGraphicsInfo *gInfo, CMFontEnum fontEnum)
       return &(gInfo->fontInfo[i]);
   }
 
-  return (CMFontInfo *)NULL;
+  return (CMFontInfo *)nullptr;
 }
 
 static void
@@ -1082,8 +1082,8 @@ cm_font_extents(CMGraphicsInfo *gInfo, CMFontInfo *fInfo, int *wd, int *ht)
   int maxHt = 0;
   int maxWd = 0;
 
-  if ((gInfo != (CMGraphicsInfo *)NULL) &&
-      (fInfo != (CMFontInfo *)NULL))
+  if ((gInfo != (CMGraphicsInfo *)nullptr) &&
+      (fInfo != (CMFontInfo *)nullptr))
   {
     XmFontContext fontContext;
 
@@ -1152,9 +1152,9 @@ cm_font_width(CMGraphicsInfo *gInfo, CMFontInfo *fInfo)
 static int
 cm_string_width(CMGraphicsInfo *gInfo, CMFontInfo *fInfo, char *str)
 {
-  if ((gInfo != (CMGraphicsInfo *)NULL) &&
-      (fInfo != (CMFontInfo *)NULL) &&
-      (str != (char *)NULL))
+  if ((gInfo != (CMGraphicsInfo *)nullptr) &&
+      (fInfo != (CMFontInfo *)nullptr) &&
+      (str != (char *)nullptr))
   {
     XmString xmStr;
     Dimension textWd;
@@ -1311,10 +1311,10 @@ cm_adjust_margins(CMGraphicsInfo *gInfo)
    * Assume MonthFont and StampFont have been
    * set as required for header and footer.
    */
-  if ((fInfo = cm_find_font(gInfo, titleFont)) != (CMFontInfo *)NULL)
+  if ((fInfo = cm_find_font(gInfo, titleFont)) != (CMFontInfo *)nullptr)
     gInfo->topMarginY += cm_font_height(gInfo, fInfo);
 
-  if ((fInfo = cm_find_font(gInfo, headerFont)) != (CMFontInfo *)NULL)
+  if ((fInfo = cm_find_font(gInfo, headerFont)) != (CMFontInfo *)nullptr)
     gInfo->bottomMarginY -= VMARGIN(gInfo) + cm_font_height(gInfo, fInfo);
 }
 
@@ -1346,13 +1346,13 @@ static void
 cm_print_appt_text(CMGraphicsInfo *gInfo, char *str,
 		   int indentAmt, Glance view)
 {
-  char *to = NULL;
+  char *to = nullptr;
   unsigned long to_len = 0;
   unsigned long _len;
 
   _len = strlen(str);
   _converter_( str, _len, (void **) &to, &to_len );
-  if ( ( to != NULL ) && ( to_len != 0 ) )
+  if ( ( to != nullptr ) && ( to_len != 0 ) )
     str = to;
 
   cm_print_text(gInfo, str, indentAmt, view);
@@ -1573,13 +1573,13 @@ cm_print_todo_text(CMGraphicsInfo *gInfo, char *str1, CSA_sint32 as,
   }
 
   {
-    char *to = NULL;
+    char *to = nullptr;
     unsigned long to_len = 0;
     unsigned long _len;
 
     _len = strlen(str1);
     _converter_( str1, _len, (void **) &to, &to_len );
-    if ( ( to != NULL ) && ( to_len != 0 ) )
+    if ( ( to != nullptr ) && ( to_len != 0 ) )
       str1 = to;
   }
 
@@ -1682,7 +1682,7 @@ cm_count_appts(CMGraphicsInfo *gInfo, CSA_entry_handle *list, int a_total,
 			      CSA_ENTRY_ATTR_SUMMARY_I,
 			      CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
 			      CSA_ENTRY_ATTR_END_DATE_I,
-			      NULL);
+			      nullptr);
   for (i = 0; i < a_total; i++)
   {
     stat = query_appt_struct(c->cal_handle, list[i], appt);
@@ -1993,7 +1993,7 @@ local_dayname(Calendar *c, char **array_place, int dayNum)
 {
   char *source;
   char *str;
-  char *to = NULL;
+  char *to = nullptr;
   unsigned long to_len = 0;
   unsigned long _len;
   static char *defaultDays[DAYS_IN_WEEK] =
@@ -2010,7 +2010,7 @@ local_dayname(Calendar *c, char **array_place, int dayNum)
 
   _len = strlen( source );
   _converter_( source, _len, (void **) &to, &to_len );
-  if ( ( to != NULL ) && ( to_len != 0 ) ) {
+  if ( ( to != nullptr ) && ( to_len != 0 ) ) {
     str = euc_to_octal(to);
   } else {
     str = euc_to_octal(source);
@@ -2025,7 +2025,7 @@ local_dayname3(Calendar *c, char **array_place, int dayNum)
 {
   char *source;
   char *str;
-  char *to = NULL;
+  char *to = nullptr;
   unsigned long to_len = 0;
   unsigned long _len;
   static char *defaultDays[DAYS_IN_WEEK] =
@@ -2042,7 +2042,7 @@ local_dayname3(Calendar *c, char **array_place, int dayNum)
 
   _len = strlen( source );
   _converter_( source, _len, (void **) &to, &to_len );
-  if ( ( to != NULL ) && ( to_len != 0 ) ) {
+  if ( ( to != nullptr ) && ( to_len != 0 ) ) {
     str = euc_to_octal(to);
   } else {
     str = euc_to_octal(source);
@@ -2072,16 +2072,16 @@ get_report_type_string(CMGraphicsInfo *gInfo)
   };
   static char *reportStrs[] =
   {
-    NULL, NULL, NULL, NULL, NULL, NULL
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
   };
 
   if ((reportType < 0) || (reportType >= XtNumber(defaultStrs)))
     return "";
 
-  if (reportStrs[reportType] == (char *)NULL)
+  if (reportStrs[reportType] == (char *)nullptr)
   {
     char *str;
-    char *to = NULL;
+    char *to = nullptr;
     unsigned long to_len = 0;
     unsigned long _len;
 
@@ -2090,7 +2090,7 @@ get_report_type_string(CMGraphicsInfo *gInfo)
 
     _len = strlen( str );
     _converter_( str, _len, (void **) &to, &to_len );
-    if ( ( to != NULL ) && ( to_len != 0 ) ) {
+    if ( ( to != nullptr ) && ( to_len != 0 ) ) {
       str = to;
     }
     str = euc_to_octal(str);
@@ -2150,7 +2150,7 @@ filePrintReportStatus(Calendar *c, Boolean ok)
 	       DIALOG_TEXT, errText,
 	       BUTTON_IDENT, 1, label,
 	       DIALOG_IMAGE, pixmap,
-	       NULL);
+	       nullptr);
 
   XtFree(label);
   XtFree(title);
@@ -2179,7 +2179,7 @@ The X Print Server is temporarily out of resources."));
 	       DIALOG_TEXT, errText,
 	       BUTTON_IDENT, 1, label,
 	       DIALOG_IMAGE, pixmap,
-	       NULL);
+	       nullptr);
 
   XtFree(label);
   XtFree(title);
@@ -2210,36 +2210,36 @@ x_open_file(Calendar *c)
   {
     XtGetApplicationResources(c->frame, (XtPointer)&dvFonts,
 			      dvDefaultResources, XtNumber(dvDefaultResources),
-			      NULL, 0);
+			      nullptr, 0);
     XtGetApplicationResources(c->frame, (XtPointer)&wvFonts,
 			      wvDefaultResources, XtNumber(wvDefaultResources),
-			      NULL, 0);
+			      nullptr, 0);
     XtGetApplicationResources(c->frame, (XtPointer)&mvFonts,
 			      mvDefaultResources, XtNumber(mvDefaultResources),
-			      NULL, 0);
+			      nullptr, 0);
     XtGetApplicationResources(c->frame, (XtPointer)&yvFonts,
 			      yvDefaultResources, XtNumber(yvDefaultResources),
-			      NULL, 0);
+			      nullptr, 0);
     XtGetApplicationResources(c->frame, (XtPointer)&avFonts,
 			      avDefaultResources, XtNumber(avDefaultResources),
-			      NULL, 0);
+			      nullptr, 0);
     XtGetApplicationResources(c->frame, (XtPointer)&tvFonts,
 			      tvDefaultResources, XtNumber(tvDefaultResources),
-			      NULL, 0);
+			      nullptr, 0);
     getResources = False;
   }
 
   if ((printShell = pd_get_print_shell(c)) == (Widget)NULL)
-    return (void *)NULL;
+    return (void *)nullptr;
 
   if ((gInfo = (CMGraphicsInfo *)XtMalloc(sizeof(CMGraphicsInfo)))
-      == (CMGraphicsInfo *)NULL)
-    return (void *)NULL;
+      == (CMGraphicsInfo *)nullptr)
+    return (void *)nullptr;
 
 #ifdef GR_DEBUG
   XtGetApplicationResources(printShell, (XtPointer)&printResources,
 			    displayResources, XtNumber(displayResources),
-			    NULL, 0);
+			    nullptr, 0);
 #endif
 
 #if 0 && defined(PRINTING_SUPPORTED)
@@ -2267,7 +2267,7 @@ x_open_file(Calendar *c)
 
 	  filePrintReportStatus(c, False);
 
-	  return (void *)NULL;
+	  return (void *)nullptr;
       }
       XtFree(fileName);
     }
@@ -2331,11 +2331,11 @@ x_open_file(Calendar *c)
 #endif
 
   gInfo->drawingArea = drawingArea;
-  gInfo->gc = XtAllocateGC(drawingArea, 0, 0, NULL, gcMask, 0);
+  gInfo->gc = XtAllocateGC(drawingArea, 0, 0, nullptr, gcMask, 0);
   gInfo->c = c;
   gInfo->reportType = PR_MONTH_VIEW; /* Set properly in x_init_*() */
 
-  gInfo->fontInfo = gInfo->curFont = (CMFontInfo *)NULL;
+  gInfo->fontInfo = gInfo->curFont = (CMFontInfo *)nullptr;
   gInfo->nFonts = 0;
 
   gInfo->reverseVideo = False;
@@ -2362,13 +2362,13 @@ x_open_file(Calendar *c)
   strftime(gInfo->timestamp, BUFFERSIZE, "%x %I:%M %p", tm);
 
   {
-    char *to = NULL;
+    char *to = nullptr;
     unsigned long to_len = 0;
     unsigned long _len;
 
     _len = strlen( gInfo->timestamp );
     _converter_( gInfo->timestamp, _len, (void **) &to, &to_len );
-    if ( ( to != NULL ) && ( to_len != 0 ) )
+    if ( ( to != nullptr ) && ( to_len != 0 ) )
       strncpy( gInfo->timestamp, to,
 	      ( BUFFERSIZE > to_len ) ? to_len : BUFFERSIZE - 1 );
   }
@@ -2601,17 +2601,17 @@ x_print_header(void *gInfoP, char *buf, int pageNum, int numPages)
   char *reportTypeStr;
 
   /* --- print header info at top --- */
-  if (buf != (char *)NULL)
+  if (buf != (char *)nullptr)
   {
     cm_set_font(gInfo, cm_get_title_enum(gInfo));
     {
-      char *to = NULL;
+      char *to = nullptr;
       unsigned long to_len = 0;
       unsigned long _len;
 
       _len = strlen( buf );
       _converter_( buf, _len, (void **) &to, &to_len );
-      if ( ( to != NULL ) && ( to_len != 0 ) ) {
+      if ( ( to != nullptr ) && ( to_len != 0 ) ) {
 	str = euc_to_octal(to);
       } else {
 	str = euc_to_octal(buf);
@@ -2634,13 +2634,13 @@ x_print_header(void *gInfoP, char *buf, int pageNum, int numPages)
   /* print creation notice at bottom */ 
   cm_strcpy(str2, CATGETS(c->DT_catd, 1, 468, "Page"));
   {
-    char *to = NULL;
+    char *to = nullptr;
     unsigned long to_len = 0;
     unsigned long _len;
 
     _len = strlen( str2 );
     _converter_( str2, _len, (void **) &to, &to_len );
-    if ( ( to != NULL ) && ( to_len != 0 ) ) {
+    if ( ( to != nullptr ) && ( to_len != 0 ) ) {
       strncpy( str2, to,
 	      ( BUFFERSIZE > to_len ) ? to_len : BUFFERSIZE );
     }
@@ -2649,13 +2649,13 @@ x_print_header(void *gInfoP, char *buf, int pageNum, int numPages)
 
   str = CATGETS(c->DT_catd, 1, 476, "of");
   {
-    char *to = NULL;
+    char *to = nullptr;
     unsigned long to_len = 0;
     unsigned long _len;
 
     _len = strlen( str );
     _converter_( str, _len, (void **) &to, &to_len );
-    if ( ( to != NULL ) && ( to_len != 0 ) ) {
+    if ( ( to != nullptr ) && ( to_len != 0 ) ) {
       str = to;
     }
   }
@@ -2712,13 +2712,13 @@ x_day_header (void *gInfoP)
   str = CATGETS(c->DT_catd, 1, 470, "Morning");
 
   {
-    char *to = NULL;
+    char *to = nullptr;
     unsigned long to_len = 0;
     unsigned long _len;
 
     _len = strlen( str );
     _converter_( str, _len, (void **) &to, &to_len );
-    if ( ( to != NULL ) && ( to_len != 0 ) ) {
+    if ( ( to != nullptr ) && ( to_len != 0 ) ) {
       str = to;
     }
   }
@@ -2732,13 +2732,13 @@ x_day_header (void *gInfoP)
   str = CATGETS(c->DT_catd, 1, 471, "Afternoon");
 
   {
-    char *to = NULL;
+    char *to = nullptr;
     unsigned long to_len = 0;
     unsigned long _len;
 
     _len = strlen( str );
     _converter_( str, _len, (void **) &to, &to_len );
-    if ( ( to != NULL ) && ( to_len != 0 ) ) {
+    if ( ( to != nullptr ) && ( to_len != 0 ) ) {
       str = to;
     }
   }
@@ -2828,7 +2828,7 @@ x_print_multi_appts(void *gInfoP,
 
   CMGraphicsInfo *gInfo = (CMGraphicsInfo *)gInfoP;
   int		indented, indentAmt, multlines=TRUE;
-  Lines		*lines = NULL, *lp = NULL;
+  Lines		*lines = nullptr, *lp = nullptr;
   char		buf1[128], buf2[257];
   Calendar	*c = gInfo->c;  
   Props		*pr = (Props*)c->properties;
@@ -2854,7 +2854,7 @@ x_print_multi_appts(void *gInfoP,
 			      CSA_ENTRY_ATTR_SUMMARY_I,
 			      CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
 			      CSA_ENTRY_ATTR_END_DATE_I,
-			      NULL);
+			      nullptr);
   for (j = 0; j < a_total; j++) {
     stat = query_appt_struct(c->cal_handle, list[j], appt);
     if (stat != CSA_SUCCESS) {
@@ -2885,7 +2885,7 @@ x_print_multi_appts(void *gInfoP,
 	      start--;
 	pos++;
       }
-      while ((lines != NULL) && (pos < start)) {
+      while ((lines != nullptr) && (pos < start)) {
 	pos++;
 	new_appt = FALSE;
 	lines = lines->next;
@@ -2913,10 +2913,10 @@ x_print_multi_appts(void *gInfoP,
       indentAmt += 2;
 
     /* only print if appt text found */
-    if (lines != NULL && lines->s != NULL) {
+    if (lines != nullptr && lines->s != nullptr) {
       if ((indented) && (new_appt)) {
 	line_counter++;
-	if ((line_counter > maxlines) && (lines != NULL)) {
+	if ((line_counter > maxlines) && (lines != nullptr)) {
 	  free_appt_struct(&appt);
 	  destroy_lines(lp);
 	  return(FALSE);
@@ -2927,16 +2927,16 @@ x_print_multi_appts(void *gInfoP,
 
       cm_print_appt_text (gInfo, lines->s, indentAmt, view);
       line_counter++;
-      if ((line_counter > maxlines) && (lines != NULL)) {
+      if ((line_counter > maxlines) && (lines != nullptr)) {
 	free_appt_struct(&appt);
 	destroy_lines(lp);
 	return(FALSE);
       }
 
       lines = lines->next;
-      while (lines != NULL) {
+      while (lines != nullptr) {
 	line_counter++;
-	if ((line_counter > maxlines) && (lines != NULL)) {
+	if ((line_counter > maxlines) && (lines != nullptr)) {
 	  free_appt_struct(&appt);
 	  destroy_lines(lp);
 	  return(FALSE);
@@ -2985,12 +2985,12 @@ x_print_list_range(Calendar *c, CSA_sint32 appt_type, int item_data,
 	time_t 		start, end;
         CSA_return_code stat;
         CSA_entry_handle *list;
-        CSA_attribute *range_attrs = NULL;
-	CSA_enum *ops = NULL;
+        CSA_attribute *range_attrs = nullptr;
+	CSA_enum *ops = nullptr;
         int i;
 	CSA_uint32 a_total;
 
-	if ((xp = x_open_file(c)) == (void *)NULL)
+	if ((xp = x_open_file(c)) == (void *)nullptr)
 	  return;
 
 	if (appt_type ==  CSA_TYPE_TODO) {
@@ -3020,7 +3020,7 @@ x_print_list_range(Calendar *c, CSA_sint32 appt_type, int item_data,
 	setup_range(&range_attrs, &ops, &i, start, end, appt_type,
 		    0, B_FALSE, c->general->version);
 	stat = csa_list_entries(c->cal_handle, i, range_attrs,
-				ops, &a_total, &list, NULL);
+				ops, &a_total, &list, nullptr);
 	free(ops);
 	free(range_attrs);
 	if (stat != CSA_SUCCESS) {
@@ -3141,7 +3141,7 @@ x_print_todo(void *gInfoP, CSA_entry_handle *list, int a_total,
 				    CSA_ENTRY_ATTR_SUMMARY_I,
 				    CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
 				    CSA_ENTRY_ATTR_END_DATE_I,
-				    NULL);
+				    nullptr);
         for (i = 0; i < a_total; i++)
 	{
 	  stat = query_appt_struct(c->cal_handle, list[i], appt);
@@ -3244,13 +3244,13 @@ x_print_month(void *gInfoP, int mon, int yr, int x1,
   cm_strcpy(str, months[mon]);
 
   {
-    char *to = NULL;
+    char *to = nullptr;
     unsigned long to_len = 0;
     unsigned long _len;
 
     _len = strlen(str);
     _converter_( str, _len, (void **) &to, &to_len );
-    if ( ( to != NULL ) && ( to_len != 0 ) ) {
+    if ( ( to != nullptr ) && ( to_len != 0 ) ) {
       cm_strcpy(str, to);
     }
   }
@@ -3569,13 +3569,13 @@ x_week_daynames(void *gInfoP, char *dayName, int dayIndex, Boolean more)
     (((dayIndex + 1) * innerWd) / WEEK_DAYS);
 
   {
-    char *to = NULL;
+    char *to = nullptr;
     unsigned long to_len = 0;
     unsigned long _len;
 
     _len = strlen(dayName);
     _converter_( dayName, _len, (void **) &to, &to_len );
-    if ( ( to != NULL ) && ( to_len != 0 ) ) {
+    if ( ( to != nullptr ) && ( to_len != 0 ) ) {
       dayName = to;
     }
   }
@@ -3932,7 +3932,7 @@ x_print_month_appts(void *gInfoP, CSA_entry_handle *list,
 			      CSA_ENTRY_ATTR_START_DATE_I,
 			      CSA_ENTRY_ATTR_SUMMARY_I,
 			      CSA_X_DT_ENTRY_ATTR_SHOWTIME_I,
-			      NULL);
+			      nullptr);
   for (i = 0; i < a_total; i++)
   {
     stat = query_appt_struct(c->cal_handle, list[i], appt);
@@ -3971,14 +3971,14 @@ x_print_month_appts(void *gInfoP, CSA_entry_handle *list,
 
       lines = text_to_lines(appt->what->value->item.string_value, 1);
       line_counter++;
-      if ((line_counter > lines_per_box) && (lines != NULL))
+      if ((line_counter > lines_per_box) && (lines != nullptr))
       {
 	free_appt_struct(&appt);
 	return(False);
       }
 
       /* only print if appt text found */ 
-      if ((lines != NULL) && (lines->s != NULL))
+      if ((lines != nullptr) && (lines->s != nullptr))
       {
 	if (indented)  	/* time found so print it */
 	  cm_print_month_time(gInfo, buf1);

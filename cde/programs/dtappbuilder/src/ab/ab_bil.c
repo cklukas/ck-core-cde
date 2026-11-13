@@ -105,10 +105,10 @@ ab_load_bil_file(
 )
 {
     int				rc = 0;		/* return code */
-    ABObj			newProject = NULL;
-    ABObj			mod = NULL;
-    STRING			init_msg = NULL;
-    STRING			modfile = NULL;
+    ABObj			newProject = nullptr;
+    ABObj			mod = nullptr;
+    STRING			init_msg = nullptr;
+    STRING			modfile = nullptr;
     int				pLinesRead = 0;
     ABProfiledIntervalRec	totalTime;
     ABProfiledIntervalRec	loadTime;
@@ -116,7 +116,7 @@ ab_load_bil_file(
     XmString			xm_buf = (XmString) NULL;
     int                 	NoWrite = 0;
     int          		len = 0;
-    STRING       		errmsg = NULL;
+    STRING       		errmsg = nullptr;
     BOOL			read_OK, write_OK;
     AB_TRAVERSAL		trav;
 
@@ -124,7 +124,7 @@ ab_load_bil_file(
 
     get_start_times(&loadTime);
     rc = bil_load_file_and_resolve_all(fileName, inFile, &newProject);
-    if (newProject == NULL)
+    if (newProject == nullptr)
     {
         return rc;
     }
@@ -142,7 +142,7 @@ ab_load_bil_file(
          * a message.
          */
 	for (trav_open(&trav, newProject, AB_TRAV_MODULES);
-	    (mod = trav_next(&trav)) != NULL; )
+	    (mod = trav_next(&trav)) != nullptr; )
 	{
 	    if (!obj_is_defined(mod))
 	    {
@@ -196,7 +196,7 @@ ab_load_bil_file(
     {
 	util_set_help_data(CATGETS(Dtb_project_catd, 100, 92,
 	    "Any changes made to a read-only module cannot be saved,\nunless you save the module to a different file name."),
-	    NULL, NULL);
+	    nullptr, nullptr);
 	util_puts(errmsg);
 	util_free(errmsg);
     }
@@ -209,7 +209,7 @@ ab_load_bil_file(
 	xm_buf = XmStringCreateLocalized(Buf);
 	dtb_palette_empty_proj_msg_initialize(&dtb_palette_empty_proj_msg);
 	(void)dtb_show_modal_message(dtb_get_toplevel_widget(),
-		&dtb_palette_empty_proj_msg, xm_buf, NULL, NULL);
+		&dtb_palette_empty_proj_msg, xm_buf, nullptr, nullptr);
 	XmStringFree(xm_buf);
     }
 
@@ -254,24 +254,24 @@ ab_import_bil_file(
     int			return_value = 0;
     AB_TRAVERSAL	trav;
     ABObj		project = proj_get_project();
-    ABObj		module = NULL;
-    ABObjList		loaded_comp_objs = NULL;
-    ABObj		loaded_module = NULL;
-    STRING		file = NULL;
+    ABObj		module = nullptr;
+    ABObjList		loaded_comp_objs = nullptr;
+    ABObj		loaded_module = nullptr;
+    STRING		file = nullptr;
 
     /*
      * XmConfigured flags is not getting set properly.  If it's already
      * here, we'll assume it's configured.
      */
     for (trav_open(&trav, project, AB_TRAV_MODULES);
-	(module= trav_next(&trav)) != NULL; )
+	(module= trav_next(&trav)) != nullptr; )
     {
 	obj_set_flag(module, XmConfiguredFlag);
     }
     trav_close(&trav);
 
     if (bil_load_file(fileName, inFile, project, &loaded_comp_objs)
-	== NULL)
+	== nullptr)
     {
 	return_value = -1;
 	goto epilogue;
@@ -280,13 +280,13 @@ ab_import_bil_file(
     /* loaded_module will point to the module that was
      * created.
      */
-    loaded_module = NULL;
+    loaded_module = nullptr;
     if (objlist_get_num_objs(loaded_comp_objs) >= 1)
     {
-        loaded_module = objlist_get_obj(loaded_comp_objs, 0, NULL);
+        loaded_module = objlist_get_obj(loaded_comp_objs, 0, nullptr);
     }
 
-    if (loaded_module != NULL)
+    if (loaded_module != nullptr)
     {
 	if (ImportByCopy)
 	{
@@ -432,14 +432,14 @@ ab_check_and_open_bip(
     BOOL                read_OK, write_OK;
     int			iRet = 0;
     XmString		xm_buf = (XmString) NULL;
-    DtbObjectHelpData   help_data = NULL;
+    DtbObjectHelpData   help_data = nullptr;
 
     abio_access_file(fileName, &read_OK, &write_OK);
     if (read_OK)
     {
 	if (write_OK)
 	{
-	    iRet = ab_load_project(fileName, NULL, FALSE);
+	    iRet = ab_load_project(fileName, nullptr, FALSE);
 	}
 	else	/* Read-only file */
 	{
@@ -457,14 +457,14 @@ ab_check_and_open_bip(
             help_data->help_locationID = "";
 	    
             answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-                &dtb_palette_open_ro_proj_msg, xm_buf, help_data, NULL);
+                &dtb_palette_open_ro_proj_msg, xm_buf, help_data, nullptr);
 
 	    util_free(help_data);
 	    XmStringFree(xm_buf);
 	    switch (answer)
 	    {
 		    case DTB_ANSWER_ACTION1:
-			iRet = ab_load_project(fileName, NULL, FALSE);
+			iRet = ab_load_project(fileName, nullptr, FALSE);
 			break;
 
         	    case DTB_ANSWER_CANCEL:
@@ -482,7 +482,7 @@ ab_check_and_open_bip(
         xm_buf = XmStringCreateLocalized(Buf);
         dtb_palette_error_msg_initialize(&dtb_palette_error_msg);
 	(void)dtb_show_modal_message(dtb_get_toplevel_widget(),
-			&dtb_palette_error_msg, xm_buf, NULL, NULL);
+			&dtb_palette_error_msg, xm_buf, nullptr, nullptr);
 	XmStringFree(xm_buf);
 	iRet = -1;
     }
@@ -530,14 +530,14 @@ ab_check_and_import_bil(
     ABObj       	project = proj_get_project();
     int			iRet = 0;
     XmString		xm_buf = (XmString) NULL;
-    DtbObjectHelpData	help_data = NULL;
+    DtbObjectHelpData	help_data = nullptr;
 
     abio_access_file(fileName, &read_OK, &write_OK);
     if (read_OK)
     {
 	if (ImportByCopy)
 	{
-		iRet = ab_import_module(fileName, NULL, TRUE);
+		iRet = ab_import_module(fileName, nullptr, TRUE);
 	}
 	else	/* Importing by Reference. Have to check permissions. */
 	{
@@ -546,7 +546,7 @@ ab_check_and_import_bil(
 		/* The file is readable and writable, can be opened, 
 		 * and is a valid module file, so import it.
 		 */
-		iRet = ab_import_module(fileName, NULL, FALSE);
+		iRet = ab_import_module(fileName, nullptr, FALSE);
 	    }
 	    else
 	    {
@@ -567,14 +567,14 @@ ab_check_and_import_bil(
                 help_data->help_locationID = "";
 
         	answer = dtb_show_modal_message(dtb_get_toplevel_widget(),
-			&dtb_palette_import_ro_msg, xm_buf, help_data, NULL);
+			&dtb_palette_import_ro_msg, xm_buf, help_data, nullptr);
 
 		util_free(help_data);
 		XmStringFree(xm_buf);
 		switch (answer)
 		{
 		    case DTB_ANSWER_ACTION1:
-			iRet = ab_import_module(fileName, NULL, ImportByCopy);
+			iRet = ab_import_module(fileName, nullptr, ImportByCopy);
 			break;
 
         	    case DTB_ANSWER_CANCEL:
@@ -591,7 +591,7 @@ ab_check_and_import_bil(
         xm_buf = XmStringCreateLocalized(Buf);  
         dtb_palette_error_msg_initialize(&dtb_palette_error_msg);
 	(void)dtb_show_modal_message(dtb_get_toplevel_widget(),
-			&dtb_palette_error_msg, xm_buf, NULL, NULL);
+			&dtb_palette_error_msg, xm_buf, nullptr, nullptr);
         XmStringFree(xm_buf);
 	iRet = -1;
     }

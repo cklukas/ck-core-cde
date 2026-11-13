@@ -119,7 +119,7 @@ static	int	  VolumeUnload (
 * Private variables used within this file.
 *
 *******************************************************************************/
-static _DtHelpVolume volChain = NULL;	/* Pointer to the head of the chain */
+static _DtHelpVolume volChain = nullptr;	/* Pointer to the head of the chain */
 					/* of all the open volumes. */
 static const char *Slash  = "/";
 static const char *Period = ".";
@@ -147,12 +147,12 @@ CheckVolList (
     _DtHelpVolume	*ret_prev )
 {
     _DtHelpVolume	myVol;
-    _DtHelpVolume	prevVol = NULL;
+    _DtHelpVolume	prevVol = nullptr;
 
     _DtHelpProcessLock();
     myVol = volChain;
 
-    while (myVol != NULL && myVol != vol)
+    while (myVol != nullptr && myVol != vol)
       {
 	prevVol = myVol;
 	myVol = myVol->nextVol;
@@ -201,11 +201,11 @@ VolumeLoad (
       {
         (*retVol)->sdl_flag      = False;
         (*retVol)->volFile       = volFile;
-        (*retVol)->keywords      = NULL;
-        (*retVol)->keywordTopics = NULL;
+        (*retVol)->keywords      = nullptr;
+        (*retVol)->keywordTopics = nullptr;
         (*retVol)->openCount     = 1;
-        (*retVol)->nextVol       = NULL;
-        (*retVol)->vols.ccdf_vol = NULL;
+        (*retVol)->nextVol       = nullptr;
+        (*retVol)->vols.ccdf_vol = nullptr;
 
 	if (_DtHelpCeOpenSdlVolume ((*retVol)) == 0)
 	    return 0;
@@ -222,7 +222,7 @@ VolumeLoad (
 	 */
 	free ((char *) ((*retVol)->volFile));
 	free ((char *) (*retVol));
-	*retVol = NULL;
+	*retVol = nullptr;
       }
     else
 	errno = CEErrorMalloc;
@@ -251,7 +251,7 @@ VolumeUnload (
 {
     char	***topicList;
     
-    if (vol != NULL)
+    if (vol != nullptr)
       {
 
 	if (vol->sdl_flag == True)
@@ -259,16 +259,16 @@ VolumeUnload (
 	else
 	    _DtHelpCeCloseCcdfVolume(vol);
 
-	if (vol->volFile != NULL)
+	if (vol->volFile != nullptr)
 	    free (vol->volFile);
 
-	if (vol->keywords != NULL)
+	if (vol->keywords != nullptr)
 	    _DtHelpCeFreeStringArray (vol->keywords);
 
-	if (vol->keywordTopics != NULL)
+	if (vol->keywordTopics != nullptr)
 	  {
 	    for (topicList = vol->keywordTopics;
-					*topicList != NULL; topicList++)
+					*topicList != nullptr; topicList++)
 		_DtHelpCeFreeStringArray (*topicList);
 
 	    free (vol->keywordTopics);
@@ -301,19 +301,19 @@ RereadVolume (
     int            result;
     char	***topicList;
     
-    if (vol->keywords != NULL)
+    if (vol->keywords != nullptr)
       {
         _DtHelpCeFreeStringArray (vol->keywords);
-        vol->keywords = NULL;
+        vol->keywords = nullptr;
       }
 
-    if (vol->keywordTopics != NULL)
+    if (vol->keywordTopics != nullptr)
       {
-        for (topicList = vol->keywordTopics; *topicList != NULL; topicList++)
+        for (topicList = vol->keywordTopics; *topicList != nullptr; topicList++)
 	    _DtHelpCeFreeStringArray (*topicList);
 
         free (vol->keywordTopics);
-	vol->keywordTopics = NULL;
+	vol->keywordTopics = nullptr;
       }
 
     if (vol->sdl_flag == False)
@@ -367,7 +367,7 @@ GetKeywordTopics (
     int index;
 
     _DtHelpProcessLock();
-    *retTopics = NULL;
+    *retTopics = nullptr;
 
     /* Get the list of keywords. */
     if (GetVolumeKeywords (vol, &keywords) != 0)
@@ -376,7 +376,7 @@ GetKeywordTopics (
 	return -1;
       }
 
-    if (keywords == NULL || vol->keywordTopics == NULL)
+    if (keywords == nullptr || vol->keywordTopics == nullptr)
       {
 	errno = CEErrorNoKeywordList;
 	_DtHelpProcessUnlock();
@@ -385,10 +385,10 @@ GetKeywordTopics (
 
     /* Search the list of keywords for the current one. */
     nextKey = keywords;
-    while (*nextKey != NULL && strcmp (*nextKey, keyword))
+    while (*nextKey != nullptr && strcmp (*nextKey, keyword))
 	nextKey++;
 
-    if (*nextKey == NULL)
+    if (*nextKey == nullptr)
       {
 	errno = CEErrorIllegalKeyword;
 	_DtHelpProcessUnlock();
@@ -437,7 +437,7 @@ GetVolumeKeywords (
 
     /* Keywords aren't loaded until they are needed, so see if they have
        been loaded yet. */
-    if (vol->keywords == NULL)
+    if (vol->keywords == nullptr)
       {
         /*
          * What type of volume is it?
@@ -465,7 +465,7 @@ GetVolumeKeywords (
     /* All of the keyword processing is done when they are loaded. */
      *retKeywords = vol->keywords;
 
-    if (*retKeywords == NULL)
+    if (*retKeywords == nullptr)
       {
 	_DtHelpProcessUnlock();
 	return (-1);
@@ -502,7 +502,7 @@ GetTopicTitleAndAbbrev (
     int         offset;
     char        buffer[BUFF_SIZE];
     char       *bufPtr;
-    char       *filename = NULL;
+    char       *filename = nullptr;
     BufFilePtr  file;
     _DtHelpCeLockInfo lockInfo;
 
@@ -519,7 +519,7 @@ GetTopicTitleAndAbbrev (
       {
 	if (0 == _DtHelpCeGetVolumeFlag(volume))
           {
-            result = _DtHelpCeFileOpenAndSeek(filename,offset,-1,&file,NULL);
+            result = _DtHelpCeFileOpenAndSeek(filename,offset,-1,&file,nullptr);
             if (result == 0)
               {
 		result = -1;
@@ -527,9 +527,9 @@ GetTopicTitleAndAbbrev (
                   {
 		    result = 0;
                     bufPtr = buffer;
-                    if (_DtHelpCeGetCcdfTopicAbbrev (NULL, file,
+                    if (_DtHelpCeGetCcdfTopicAbbrev (nullptr, file,
                                 buffer, &bufPtr, BUFF_SIZE, MB_CUR_MAX,
-                                        ret_name, NULL, ret_abbrev) != 0)
+                                        ret_name, nullptr, ret_abbrev) != 0)
 		        result = -3;
                   }
                 _DtHelpCeBufFileClose(file, True);
@@ -545,7 +545,7 @@ GetTopicTitleAndAbbrev (
 	  }
       }
 
-    if (filename != NULL)
+    if (filename != nullptr)
         free(filename);
 
     _DtHelpCeUnlockVolume(lockInfo);
@@ -577,7 +577,7 @@ CreateTempFileName (
     int   len;
     int   fd;
 
-    if (dir == NULL || *dir == '\0')
+    if (dir == nullptr || *dir == '\0')
 	dir = P_tmpdir;
 
     len = snprintf (name, size, "%s/dthXXXXXX", dir);
@@ -616,7 +616,7 @@ FileOpenRtnFd (
     char	*name,
     int		*ret_fd )
 {
-    char *inFile = NULL;
+    char *inFile = nullptr;
     char  tmpName[MAXPATHLEN + 1];
     int   result = 1;
 
@@ -639,7 +639,7 @@ FileOpenRtnFd (
 	 * malloc memory for the dot Z file name.
 	 */
 	inFile = (char *) malloc (strlen (name) + 3);
-	if (inFile != NULL)
+	if (inFile != nullptr)
 	  {
 	    /*
 	     * make the dot Z file
@@ -740,17 +740,17 @@ _DtHelpCeExpandPathname (
 #define	MY_NUM 7
     _DtSubstitutionRec mySubs [MY_NUM];
 
-    if (spec == NULL || *spec == '\0')
+    if (spec == nullptr || *spec == '\0')
       {
 	errno = EINVAL;
-	return NULL;
+	return nullptr;
       }
 
     /*
      * fill in the language sub parts
      */
     if (_DtHelpCeGetLangSubParts (lang, &partLang, &partTer, &partCodeSet))
-	return NULL;
+	return nullptr;
 
     mySubs[0].match = 'N';
     mySubs[0].substitution = filename;
@@ -810,14 +810,14 @@ _DtHelpCeExpandPathname (
 
 			if (i < MY_NUM)
 			  {
-			    if (mySubs[i].substitution != NULL)
+			    if (mySubs[i].substitution != nullptr)
 			      {
 			        subString = mySubs[i].substitution;
 				if (((int)(ptr - pathName + strlen(subString)))
 						> MAXPATHLEN)
 				  {
 				    errno = CEErrorExceedMaxSize;
-				    return NULL;
+				    return nullptr;
 				  }
 			        while (subString && *subString)
 				    *ptr++ = *subString++;
@@ -834,14 +834,14 @@ _DtHelpCeExpandPathname (
 			     */
 			    if (i >= num)
 			        *ptr++ = *spec;
-			    else if (subs[i].substitution != NULL)
+			    else if (subs[i].substitution != nullptr)
 			      {
 			        subString = subs[i].substitution;
 				if (((int)(ptr - pathName + strlen(subString)))
 						> MAXPATHLEN)
 				  {
 				    errno = CEErrorExceedMaxSize;
-				    return NULL;
+				    return nullptr;
 				  }
 			        while (subString && *subString)
 				    *ptr++ = *subString++;
@@ -865,7 +865,7 @@ _DtHelpCeExpandPathname (
 	if (ptr - pathName > MAXPATHLEN)
 	  {
 	    errno = CEErrorExceedMaxSize;
-	    return NULL;
+	    return nullptr;
 	  }
       }
 
@@ -878,7 +878,7 @@ _DtHelpCeExpandPathname (
 
     *ptr = '\0';
     ptr = strdup (pathName);
-    if (ptr == NULL)
+    if (ptr == nullptr)
 	errno = CEErrorMalloc;
 
     return ptr;
@@ -920,17 +920,17 @@ _DtHelpCeGetLangSubParts (
 {
     int   len;
     char *ptr;
-    char *sLang = NULL;
-    char *sTer  = NULL;
-    char *sCode = NULL;
+    char *sLang = nullptr;
+    char *sTer  = nullptr;
+    char *sCode = nullptr;
 
-    if (subLang == NULL || subTer == NULL || subCodeSet == NULL)
+    if (subLang == nullptr || subTer == nullptr || subCodeSet == nullptr)
       {
 	errno = EINVAL;
 	return -1;
       }
 
-    if (lang != NULL && *lang != '\0')
+    if (lang != nullptr && *lang != '\0')
       {
 	/*
 	 * look for lang_ter
@@ -941,11 +941,11 @@ _DtHelpCeGetLangSubParts (
 	    /*
 	     * do we want this string?
 	     */
-	    if (subLang != NULL)
+	    if (subLang != nullptr)
 	      {
 		len = ptr - lang;
 		sLang = (char *) malloc (len + 1);
-		if (sLang != NULL)
+		if (sLang != nullptr)
 		  {
 		    strncpy (sLang, lang, len);
 		    sLang[len] = '\0';
@@ -976,15 +976,15 @@ _DtHelpCeGetLangSubParts (
 	    /*
 	     * if it was in the form lang_ter.codeset, sLang will non-null
 	     */
-	    if (sLang != NULL)
+	    if (sLang != nullptr)
 	      {
 		/*
 		 * do we want to save the territory?
 		 */
-		if (subTer != NULL)
+		if (subTer != nullptr)
 		  {
 		    sTer = (char *) malloc (len + 1);
-		    if (sTer != NULL)
+		    if (sTer != nullptr)
 		      {
 			strncpy (sTer, lang, len);
 			sTer[len] = '\0';
@@ -1006,10 +1006,10 @@ _DtHelpCeGetLangSubParts (
 	     * the lang was in the form lang.codeset.
 	     * now check to see if want to save the lang portion.
 	     */
-	    else if (subLang != NULL)
+	    else if (subLang != nullptr)
 	      {
 		sLang = (char *) malloc (len + 1);
-		if (sLang != NULL)
+		if (sLang != nullptr)
 		  {
 		    strncpy (sLang, lang, len);
 		    sLang[len] = '\0';
@@ -1036,10 +1036,10 @@ _DtHelpCeGetLangSubParts (
 	     * yes save the code set
 	     */
 	    ptr++;
-	    if (subCodeSet != NULL)
+	    if (subCodeSet != nullptr)
 	      {
 		sCode = strdup (ptr);
-		if (sCode == NULL)
+		if (sCode == nullptr)
 		  {
 		    errno = CEErrorMalloc;
 		    return -1;
@@ -1056,12 +1056,12 @@ _DtHelpCeGetLangSubParts (
 	* If we haven't already processed a lang portion, save as the
 	* lang.
 	*/
-       else if (sLang == NULL)
+       else if (sLang == nullptr)
 	 {
-	    if (subLang != NULL)
+	    if (subLang != nullptr)
 	      {
 		sLang = strdup (lang);
-		if (sLang == NULL)
+		if (sLang == nullptr)
 		  {
 		    errno = CEErrorMalloc;
 		    return -1;
@@ -1073,10 +1073,10 @@ _DtHelpCeGetLangSubParts (
        /*
 	* otherwise this is the territory of the language. Save if desired
 	*/
-       else if (subTer != NULL)
+       else if (subTer != nullptr)
 	 {
 	    sTer = strdup (lang);
-	    if (sTer == NULL)
+	    if (sTer == nullptr)
 	      {
 		errno = CEErrorMalloc;
 		return -1;
@@ -1120,7 +1120,7 @@ _DtHelpCeGetUncompressedFileName (
 	char	 *name,
 	char		**ret_name )
 {
-    char *inFile = NULL;
+    char *inFile = nullptr;
     char  tmpName[MAXPATHLEN + 1];
     int   result = 1;
 
@@ -1143,7 +1143,7 @@ _DtHelpCeGetUncompressedFileName (
 	 * malloc memory for the dot Z file name.
 	 */
 	inFile = (char *) malloc (strlen (name) + 3);
-	if (inFile != NULL)
+	if (inFile != nullptr)
 	  {
 	    /*
 	     * make the dot Z file
@@ -1165,7 +1165,7 @@ _DtHelpCeGetUncompressedFileName (
 	      }
 
 	    *ret_name = strdup (tmpName);
-	    if (*ret_name == NULL)
+	    if (*ret_name == nullptr)
 	      {
 		unlink (tmpName);
 		errno = CEErrorMalloc;
@@ -1209,9 +1209,9 @@ _DtHelpCeCompressPathname ( char	*basePath )
     short  char2;
     short  char3;
     char  *ptr     = basePath;
-    char  *prevPtr = NULL;
+    char  *prevPtr = nullptr;
 
-    if (basePath == NULL || *basePath != '/')
+    if (basePath == nullptr || *basePath != '/')
       {
 	errno = EINVAL;
 	return -1;
@@ -1257,7 +1257,7 @@ _DtHelpCeCompressPathname ( char	*basePath )
 	     * if at the top of the path, just ignore the extra
 	     * directory change.
 	     */
-	    if (prevPtr == NULL)
+	    if (prevPtr == nullptr)
 	        strcpy (ptr, (ptr + 3));
 	    else
 	      {
@@ -1284,7 +1284,7 @@ _DtHelpCeCompressPathname ( char	*basePath )
 		 * indicate that we're at the top of the path (NULL).
 		 */
 		if (result != 0)
-		    prevPtr = NULL;
+		    prevPtr = nullptr;
 
 		/*
 		 * restore the slash (or null byte)
@@ -1356,10 +1356,10 @@ _DtHelpCeTracePathName (char *path)
     char    linkPath [MAXPATHLEN + 2];
     char    tempPath [MAXPATHLEN + 2];
 
-    if (path == NULL || *path == '\0')
+    if (path == nullptr || *path == '\0')
       {
 	errno = EINVAL;
-	return NULL;
+	return nullptr;
       }
 
     /*
@@ -1373,8 +1373,8 @@ _DtHelpCeTracePathName (char *path)
      */
     if ((MB_CUR_MAX == 1 || mblen(path, MB_CUR_MAX) == 1) && *path != '/')
       {
-	if (getcwd (newPath, MAXPATHLEN) == NULL)
-	    return NULL;
+	if (getcwd (newPath, MAXPATHLEN) == nullptr)
+	    return nullptr;
 
 	strcat (newPath, "/");
       }
@@ -1389,7 +1389,7 @@ _DtHelpCeTracePathName (char *path)
      * Compress out the slashes and directory changes.
      */
     if (_DtHelpCeCompressPathname (newPath) != 0)
-	return NULL;
+	return nullptr;
 
     ptr = newPath;
     do
@@ -1404,7 +1404,7 @@ _DtHelpCeTracePathName (char *path)
 	 */
 	result = _DtHelpCeStrcspn (prev, "/", MB_CUR_MAX, &len);
 	if (result == -1)
-	    return NULL;
+	    return nullptr;
 
 	/*
 	 * Found either a slash or a null byte.
@@ -1433,7 +1433,7 @@ _DtHelpCeTracePathName (char *path)
 	     * if this was NOT a symbolic link, errno should be EINVAL
 	     */
 	    if (errno != EINVAL)
-		return NULL;
+		return nullptr;
 	  }
 	else
 	  {
@@ -1474,7 +1474,7 @@ _DtHelpCeTracePathName (char *path)
 	     * compress out the directory changes.
 	     */
 	    if (_DtHelpCeCompressPathname (newPath) != 0)
-		return NULL;
+		return nullptr;
 
 	    /*
 	     * start again from the top, until we have a clean path
@@ -1524,18 +1524,18 @@ _DtHelpCeTraceFilenamePath (char *file_path)
     char    newName  [MAXPATHLEN + 2];
     char    linkName [MAXPATHLEN + 2];
 
-    if (file_path == NULL || *file_path == '\0')
+    if (file_path == nullptr || *file_path == '\0')
       {
 	errno = EINVAL;
-	return NULL;
+	return nullptr;
       }
 
     workName[0] = '\0';
     if ((MB_CUR_MAX == 1 || mblen(file_path, MB_CUR_MAX) == 1)
 							&& *file_path != '/')
       {
-	if (getcwd(workName, MAXPATHLEN) == NULL)
-	   return NULL;
+	if (getcwd(workName, MAXPATHLEN) == nullptr)
+	   return nullptr;
 
 	strcat(workName, "/");
       }
@@ -1549,7 +1549,7 @@ _DtHelpCeTraceFilenamePath (char *file_path)
          */
         result = _DtHelpCeStrrchr(workName, Slash, MB_CUR_MAX, &oldName);
         if (result == -1)
-	    return NULL;
+	    return nullptr;
 
 	/*
 	 * terminate the path
@@ -1565,8 +1565,8 @@ _DtHelpCeTraceFilenamePath (char *file_path)
 	if (workName[0] != '\0')
 	  {
 	    newPath = _DtHelpCeTracePathName(workName);
-	    if (newPath == NULL)
-	        return NULL;
+	    if (newPath == nullptr)
+	        return nullptr;
 
 	    /*
 	     * copy the new path and free the allocated copy
@@ -1594,7 +1594,7 @@ _DtHelpCeTraceFilenamePath (char *file_path)
 	if (result == -1)
 	  {
 	    if (errno != EINVAL)
-		return NULL;
+		return nullptr;
 
 	    done = True;
 	  }
@@ -1695,7 +1695,7 @@ _DtHelpCeFileOpenAndSeek (
 	    return -1;
       }
 
-    if (ret_time != NULL)
+    if (ret_time != nullptr)
       {
 	(void) fstat(tmpFd, &buf);
 	*ret_time = buf.st_mtime;
@@ -1741,7 +1741,7 @@ _DtHelpCeFileOpenAndSeek (
 	 * allocate the private information
 	 */
 	myInfo = (CECompressInfoPtr) malloc(sizeof(CECompressInfo));
-	if (myInfo == NULL)
+	if (myInfo == nullptr)
 	  {
 	    if (fd == -1)
 	        close (tmpFd);
@@ -1762,7 +1762,7 @@ _DtHelpCeFileOpenAndSeek (
 	 * start with raw functionality
 	 */
 	inputRaw = _DtHelpCeBufFileRdRawZ(myInfo);
-	if (inputRaw == NULL)
+	if (inputRaw == nullptr)
 	  {
 	    if (fd == -1)
 	        close (tmpFd);
@@ -1770,7 +1770,7 @@ _DtHelpCeFileOpenAndSeek (
 	  }
 
 	*ret_file = _DtHelpCeBufFilePushZ(inputRaw);
-	if (*ret_file == NULL)
+	if (*ret_file == nullptr)
 	  {
 	    _DtHelpCeBufFileClose(inputRaw, (fd == -1 ? True : False));
 	    return -1;
@@ -1793,7 +1793,7 @@ _DtHelpCeFileOpenAndSeek (
 	 * read with raw functionality
 	 */
 	*ret_file = _DtHelpCeBufFileRdWithFd(tmpFd);
-	if (*ret_file == NULL)
+	if (*ret_file == nullptr)
 	  {
 	    if (fd == -1)
 	        close (tmpFd);
@@ -1849,7 +1849,7 @@ _DtHelpOpenVolume (
 
     _DtHelpProcessLock();
 
-    if (volFile == NULL || retVol == NULL)
+    if (volFile == nullptr || retVol == nullptr)
       {
 	errno = EINVAL;
 	_DtHelpProcessUnlock();
@@ -1860,16 +1860,16 @@ _DtHelpOpenVolume (
      * follow all the symbolic links and get the absolute path and filename.
      */
     volFile = _DtHelpCeTraceFilenamePath(volFile);
-    if (volFile == NULL)
+    if (volFile == nullptr)
       {
 	_DtHelpProcessUnlock();
 	return -1;
       }
 
     /* Search the volume chain to see if it is already open. */
-    prevVol = NULL;
+    prevVol = nullptr;
     vol = volChain; 
-    while (vol != NULL && strcmp (vol->volFile, volFile))
+    while (vol != nullptr && strcmp (vol->volFile, volFile))
       {
 	prevVol = vol;
 	vol     = vol->nextVol;
@@ -1886,7 +1886,7 @@ _DtHelpOpenVolume (
 	result = VolumeLoad (volFile, &vol);
 	if (result == 0)
 	  {
-	    if (prevVol == NULL)
+	    if (prevVol == nullptr)
 	        volChain = vol;
 	    else
 	        prevVol->nextVol = vol;
@@ -1926,7 +1926,7 @@ _DtHelpCeUpVolumeOpenCnt (
 
     _DtHelpProcessLock();
 
-    if (vol == NULL || volChain == NULL)
+    if (vol == nullptr || volChain == nullptr)
       {
 	errno = EINVAL;
 	_DtHelpProcessUnlock();
@@ -1981,7 +1981,7 @@ _DtHelpCloseVolume (
 
     _DtHelpProcessLock();
 
-    if (vol == NULL || volChain == NULL)
+    if (vol == nullptr || volChain == nullptr)
       {
 	errno = EINVAL;
 	_DtHelpProcessUnlock();
@@ -2056,7 +2056,7 @@ _DtHelpCeGetTopTopicId (
 
     _DtHelpProcessLock();
 
-    if (vol == NULL || ret_idString == NULL || CheckVolList(vol, NULL) == -1)
+    if (vol == nullptr || ret_idString == nullptr || CheckVolList(vol, nullptr) == -1)
 	errno = EINVAL;
     else
       {
@@ -2068,10 +2068,10 @@ _DtHelpCeGetTopTopicId (
 	else
 	    *ret_idString = _DtHelpCeGetSdlHomeTopicId((_DtHelpVolumeHdl) vol);
 
-	if (*ret_idString != NULL)
+	if (*ret_idString != nullptr)
 	    *ret_idString = strdup(*ret_idString);
 
-	if (*ret_idString != NULL)
+	if (*ret_idString != nullptr)
 	    found = True;
       }
 
@@ -2131,8 +2131,8 @@ _DtHelpCeFindId (
     /*
      * check the parameters
      */
-    if (vol == NULL || target_id == NULL || ret_name == NULL ||
-			ret_offset == NULL || CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || target_id == nullptr || ret_name == nullptr ||
+			ret_offset == nullptr || CheckVolList (vol, nullptr) == -1)
       {
 	errno = EINVAL;
 	_DtHelpProcessUnlock();
@@ -2190,7 +2190,7 @@ _DtHelpCeGetKeywordList (
     int       nameCount = -1;
     _DtHelpVolume vol = (_DtHelpVolume)volume;
 
-    if (vol == NULL || ret_keywords == NULL || CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || ret_keywords == nullptr || CheckVolList (vol, nullptr) == -1)
 	errno = EINVAL;
     else if (GetVolumeKeywords (vol, ret_keywords) == 0)
       {
@@ -2243,8 +2243,8 @@ _DtHelpCeFindKeyword (
     int       nameCount = -1;
     _DtHelpVolume vol = (_DtHelpVolume)volume;
 
-    if (vol == NULL || target == NULL || ret_ids == NULL ||
-					CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || target == nullptr || ret_ids == nullptr ||
+					CheckVolList (vol, nullptr) == -1)
 	errno = EINVAL;
     else if (GetKeywordTopics (vol, target, ret_ids) == 0)
       {
@@ -2289,8 +2289,8 @@ _DtHelpGetTopicTitle (
     char          *abbrevTitle;
     _DtHelpVolume  vol = (_DtHelpVolume)volume;
 
-    if (volume == NULL || id == NULL ||
-			CheckVolList (vol, NULL) == -1 || ret_title == NULL)
+    if (volume == nullptr || id == nullptr ||
+			CheckVolList (vol, nullptr) == -1 || ret_title == nullptr)
       {
         errno = EINVAL;
         return -1;
@@ -2346,8 +2346,8 @@ _DtHelpCeMapTargetToId (
     /*
      * check the parameters
      */
-    if (vol == NULL || target_id == NULL || ret_id == NULL ||
-					CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || target_id == nullptr || ret_id == nullptr ||
+					CheckVolList (vol, nullptr) == -1)
       {
 	errno = EINVAL;
 	_DtHelpProcessUnlock();
@@ -2397,11 +2397,11 @@ _DtHelpGetVolumeLocale (
     /*
      * check the parameters
      */
-    if (vol == NULL || CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || CheckVolList (vol, nullptr) == -1)
       {
 	errno = EINVAL;
 	_DtHelpProcessUnlock();
-	return NULL;
+	return nullptr;
       }
 
     /*
@@ -2451,7 +2451,7 @@ _DtHelpCeGetDocStamp (
     /*
      * check the parameters
      */
-    if (vol == NULL || CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || CheckVolList (vol, nullptr) == -1)
       {
 	errno = EINVAL;
 	_DtHelpProcessUnlock();
@@ -2504,7 +2504,7 @@ _DtHelpCeGetTopicChildren (
     /*
      * check the parameters
      */
-    if (vol == NULL || CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || CheckVolList (vol, nullptr) == -1)
       {
 	errno = EINVAL;
 	_DtHelpProcessUnlock();
@@ -2547,7 +2547,7 @@ _DtHelpCeGetVolumeFlag (
     /*
      * check the parameters
      */
-    if (vol == NULL || CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || CheckVolList (vol, nullptr) == -1)
       {
 	errno = EINVAL;
 	return -1;
@@ -2584,7 +2584,7 @@ _DtHelpCeLockVolume (
     /*
      * check the parameters
      */
-    if (vol == NULL || CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || CheckVolList (vol, nullptr) == -1)
       {
 	_DtHelpProcessUnlock();
 	return -1;
@@ -2644,7 +2644,7 @@ _DtHelpCeUnlockVolume (
     /*
      * check the parameters
      */
-    if (vol == NULL || CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || CheckVolList (vol, nullptr) == -1)
       {
 	_DtHelpProcessUnlock();
 	return -1;
@@ -2683,15 +2683,15 @@ _DtHelpCeIsTopTopic (
     const char		*id)
 {
     int		   result  = -1;
-    char          *topicId = NULL;
-    char          *topId   = NULL;
+    char          *topicId = nullptr;
+    char          *topId   = nullptr;
     _DtHelpVolume  vol = (_DtHelpVolume) volume;
 
     _DtHelpProcessLock();
     /*
      * check the parameters
      */
-    if (vol == NULL || CheckVolList (vol, NULL) == -1)
+    if (vol == nullptr || CheckVolList (vol, nullptr) == -1)
       {
 	_DtHelpProcessUnlock();
 	return -1;
@@ -2709,7 +2709,7 @@ _DtHelpCeIsTopTopic (
     else if (_DtHelpCeMapIdToSdlTopicId(vol, id, &topicId) == 0)
       {
 	topId = _DtHelpCeGetSdlHomeTopicId(volume);
-	if (topId != NULL)
+	if (topId != nullptr)
 	    result = _DtHelpCeStrCaseCmpLatin1(topId, topicId);
       }
 

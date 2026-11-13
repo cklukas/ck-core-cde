@@ -267,13 +267,13 @@ wc_to_gi(XLCd lcd, wchar_t wc, unsigned long *glyph_index, CodeSet *codeset)
     CodeSet *codeset_list = XLC_GENERIC(lcd, codeset_list);
 
     wc_encoding = wc & wc_encode_mask;
-    for (*codeset = NULL, i = 0; i < codeset_num; i++) {
+    for (*codeset = nullptr, i = 0; i < codeset_num; i++) {
 	if (wc_encoding == codeset_list[i]->wc_encoding) {
 	    *codeset = codeset_list[i];
 	    break;
         }
     }
-    if (*codeset == NULL)
+    if (*codeset == nullptr)
 	return(False);
 
     for (i = wc_shift_bits; i > 0; i--)
@@ -305,7 +305,7 @@ byteM_parse_codeset(XLCd lcd, XPointer inbufptr)
     for (i = 0; i < codeset_num; i++) {
         codeset = codeset_list[i];
         byteM = codeset->byteM;
-        if (codeset->side != XlcNONE || byteM == NULL)
+        if (codeset->side != XlcNONE || byteM == nullptr)
 	    continue;
 
         for (j = 0; j < codeset->length; j++) {
@@ -329,7 +329,7 @@ byteM_parse_codeset(XLCd lcd, XPointer inbufptr)
 	    return(codeset);
     }
 
-    return(NULL);
+    return(nullptr);
 }
 
 static CodeSet
@@ -358,7 +358,7 @@ GLGR_parse_codeset(XLCd lcd, unsigned char ch)
 	    return(codeset);
     }
 
-    return(NULL);
+    return(nullptr);
 }
 
 static XlcCharSet
@@ -380,7 +380,7 @@ gi_parse_charset(unsigned long glyph_index, CodeSet codeset)
 	    break;
     }
     if (i >= num_charsets)
-	return(NULL);
+	return(nullptr);
 
     /* Standard Character Set Encoding ? */
     for (i = 0; i < table_size; i++){
@@ -399,7 +399,7 @@ gi_parse_charset(unsigned long glyph_index, CodeSet codeset)
 			charset = ctextseg->charset;
 
 			if (*charset->ct_sequence == '\0')
-			return(NULL);
+			return(nullptr);
 
 		break;
 		}
@@ -599,7 +599,7 @@ _fallcGetCodeSetFromName(XLCd lcd, char *name)
         }
     }
 
-    return(NULL);
+    return(nullptr);
 }
 
 static Bool
@@ -704,7 +704,7 @@ init_state(XlcConv conv)
     State state = (State) conv->state;
 
     /* for CT */
-    state->charset = NULL;
+    state->charset = nullptr;
     state->GL_charset = _fallcGetCharSet("ISO8859-1:GL");
     state->GR_charset = _fallcGetCharSet("ISO8859-1:GR");
 }
@@ -735,7 +735,7 @@ mbstowcs_org(
     int num;
     Bool ss_flag = 0;
 
-    CodeSet codeset = NULL;
+    CodeSet codeset = nullptr;
     ParseInfo parse_info;
 
     XPointer inbufptr = *from;
@@ -940,7 +940,7 @@ wcstocts(
     XlcSide side;
 
     CodeSet codeset;
-    XlcCharSet charset, old_charset = NULL;
+    XlcCharSet charset, old_charset = nullptr;
     char *ct_sequence;
     XPointer p;
 
@@ -1086,7 +1086,7 @@ ctstowcs(
     int ctr_seq_len = 0, gi_len_left = 0, gi_len = 0;
     int unconv_num = 0;
 
-    CodeSet codeset = NULL;
+    CodeSet codeset = nullptr;
     XlcCharSet charset_tmp;
 
     XPointer inbufptr = *from;
@@ -1096,7 +1096,7 @@ ctstowcs(
 
     init_state(conv);
 
-    if (from == NULL || *from == NULL) {
+    if (from == nullptr || *from == nullptr) {
 	init_state(conv);
         return( 0 );
     }
@@ -1313,7 +1313,7 @@ mbstostr(
     int num;
     Bool ss_flag = 0;
 
-    CodeSet codeset = NULL;
+    CodeSet codeset = nullptr;
     ParseInfo parse_info;
 
     XPointer inbufptr = *from;
@@ -1427,8 +1427,8 @@ mbtocs(
     int i, num;
     XlcSide side;
 
-    CodeSet codeset = NULL;
-    XlcCharSet charset = NULL;
+    CodeSet codeset = nullptr;
+    XlcCharSet charset = nullptr;
     ParseInfo parse_info;
     XPointer p;
 
@@ -1555,7 +1555,7 @@ mbstocs(
     int num_args)
 {
     int ret;
-    XlcCharSet charset_old, charset = NULL;
+    XlcCharSet charset_old, charset = nullptr;
     XPointer tmp_args[1];
 
     XPointer inbufptr;
@@ -1804,7 +1804,7 @@ wcstocs(
     int num_args)
 {
     int ret;
-    XlcCharSet charset_old, charset = NULL;
+    XlcCharSet charset_old, charset = nullptr;
     XPointer tmp_args[1];
 
     wchar_t *inbufptr;
@@ -2065,11 +2065,11 @@ create_conv(XLCd lcd, XlcConvMethods methods)
     State state;
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
-    if (conv == NULL)
+    if (conv == nullptr)
 	return (XlcConv) NULL;
 
     conv->methods = (XlcConvMethods) Xmalloc(sizeof(XlcConvMethodsRec));
-    if (conv->methods == NULL){
+    if (conv->methods == nullptr){
 	close_converter(conv);
         return (XlcConv) NULL;
     }
@@ -2078,7 +2078,7 @@ create_conv(XLCd lcd, XlcConvMethods methods)
 	conv->methods->reset = init_state;
 
     conv->state = (XPointer) Xmalloc(sizeof(StateRec));
-    if (conv->state == NULL){
+    if (conv->state == nullptr){
 	close_converter(conv);
         return (XlcConv) NULL;
     }
@@ -2094,7 +2094,7 @@ create_conv(XLCd lcd, XlcConvMethods methods)
 static XlcConvMethodsRec mbstowcs_methods = {
     close_converter,
     mbstowcs_org,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2106,7 +2106,7 @@ open_mbstowcs(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec mbstocts_methods = {
     close_converter,
     mbstocts,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2118,7 +2118,7 @@ open_mbstocts(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec mbstostr_methods = {
     close_converter,
     mbstostr,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2130,7 +2130,7 @@ open_mbstostr(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec mbstocs_methods = {
     close_converter,
     mbstocs,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2142,7 +2142,7 @@ open_mbstocs(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec mbtocs_methods = {
     close_converter,
     mbtocs,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2154,7 +2154,7 @@ open_mbtocs(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec wcstombs_methods = {
     close_converter,
     wcstombs_org,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2166,7 +2166,7 @@ open_wcstombs(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec wcstocts_methods = {
     close_converter,
     wcstocts,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2178,7 +2178,7 @@ open_wcstocts(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec wcstostr_methods = {
     close_converter,
     wcstostr,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2190,7 +2190,7 @@ open_wcstostr(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec wcstocs_methods = {
     close_converter,
     wcstocs,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2202,7 +2202,7 @@ open_wcstocs(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec wctocs_methods = {
     close_converter,
     wctocs,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2214,7 +2214,7 @@ open_wctocs(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec ctstombs_methods = {
     close_converter,
     ctstombs,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2226,7 +2226,7 @@ open_ctstombs(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec ctstowcs_methods = {
     close_converter,
     ctstowcs,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2238,7 +2238,7 @@ open_ctstowcs(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec strtombs_methods = {
     close_converter,
     strtombs,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2250,7 +2250,7 @@ open_strtombs(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static XlcConvMethodsRec strtowcs_methods = {
     close_converter,
     strtowcs,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -2269,7 +2269,7 @@ _fallcGenericLoader(char *name)
     XLCd lcd;
 
     lcd = _fallcCreateLC(name, _fallcGenericMethods);
-    if (lcd == NULL)
+    if (lcd == nullptr)
 	return lcd;
 
     _fallcSetConverter(lcd, XlcNMultiByte, lcd, XlcNWideChar,     open_mbstowcs);

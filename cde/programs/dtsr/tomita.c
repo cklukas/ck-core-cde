@@ -182,7 +182,7 @@ static int      change_database (char *newname)
 {
     DBLK           *db;
 
-    for (db = usrblk.dblist; db != NULL; db = db->link)
+    for (db = usrblk.dblist; db != nullptr; db = db->link)
 	if (strcmp (db->name, newname) == 0) {
 	    usrblk.dblk = db;
 	    return TRUE;
@@ -199,7 +199,7 @@ static int      change_database (char *newname)
     /* If browsing, tell user his options */
     fprintf (aa_stderr, "%s", CATGETS(dtsearch_catd, MS_tomita, 5,
 	"Available choices are:") );
-    for (db = usrblk.dblist; db != NULL; db = db->link)
+    for (db = usrblk.dblist; db != nullptr; db = db->link)
 	fprintf (aa_stderr, "   '%s'", db->name);
     fputc ('\n', aa_stderr);
     return FALSE;
@@ -231,7 +231,7 @@ static int      parse_infbuf (char *infbuf)
     mybuf[sizeof (mybuf) - 1] = 0;
 
     /* Parse first token (database name) */
-    if ((ptr = strtok (mybuf, " \t")) == NULL) {
+    if ((ptr = strtok (mybuf, " \t")) == nullptr) {
 	/* Msg #8 is used in two places */
 	fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_tomita, 8,
 	    "%s Invalid input format: %.30s...\n") ,
@@ -257,7 +257,7 @@ static int      parse_infbuf (char *infbuf)
      * on whether token begins with a double quote.
      */
     ptr = strtok (ptr, (*ptr == '\"') ? "\"" : " \t");
-    if (ptr == NULL) {
+    if (ptr == nullptr) {
 	/* Msg #8 is used in two places */
 	fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_tomita, 8,
 	    "%s Invalid input format: %.30s...\n") ,
@@ -326,7 +326,7 @@ static int      browser (void)
 
 	/* Read user's response.  Remove user's \n. */
 	*userbuf = '\0';
-	if ((fgets (userbuf, sizeof (userbuf), stdin)) == NULL) break;
+	if ((fgets (userbuf, sizeof (userbuf), stdin)) == nullptr) break;
         if (strlen(userbuf) && userbuf[strlen(userbuf)-1] == '\n')
           userbuf[strlen(userbuf)-1] = '\0';
 
@@ -367,7 +367,7 @@ static int      browser (void)
 		break;
 
 	    case 'n':
-		if (inf == NULL) {
+		if (inf == nullptr) {
 		    fprintf (aa_stderr,
 			CATGETS(dtsearch_catd, MS_tomita, 12,
 			"%s Input file unavailable.\n"),
@@ -375,14 +375,14 @@ static int      browser (void)
 		    continue;
 		}
 		*infbuf = '\0';
-		if ((fgets (infbuf, sizeof (infbuf), inf)) == NULL)
+		if ((fgets (infbuf, sizeof (infbuf), inf)) == nullptr)
 		{
 		    fprintf (aa_stderr,
 			CATGETS(dtsearch_catd, MS_tomita, 13,
 			"%s No more records in input file.\n"),
 			PROGNAME"288");
 		    fclose (inf);
-		    inf = NULL;
+		    inf = nullptr;
 		    continue;
 		}
 
@@ -398,7 +398,7 @@ static int      browser (void)
 
 	    case '\"':
 		ptr = strtok (userbuf, "\"");
-		if (ptr == NULL || *ptr == 0) {
+		if (ptr == nullptr || *ptr == 0) {
 		    fprintf (aa_stderr,
 			CATGETS(dtsearch_catd, MS_tomita, 14,
 			"%s Invalid Record ID.\n"),
@@ -476,7 +476,7 @@ DISPLAY_RECORD:
 			"\n...push ENTER to continue... ") );
 
 		    *userbuf = '\0';
-		    if(NULL == fgets (userbuf, sizeof (userbuf), stdin)) {
+		    if(nullptr == fgets (userbuf, sizeof (userbuf), stdin)) {
 			fprintf(stderr, "Failed to read from stdin\n");
 			exit(EXIT_FAILURE);    
 		    }
@@ -490,7 +490,7 @@ DISPLAY_RECORD:
 	}	/* end of cleartext printing */
 
 	/* display the user notes if any, character by character */
-	if (usrblk.notes != NULL) {
+	if (usrblk.notes != nullptr) {
 	    printf ( CATGETS(dtsearch_catd, MS_tomita, 20,
 		"--------------------------------------\n"
 		"End of Text Blob for '%s':\n\n"
@@ -498,7 +498,7 @@ DISPLAY_RECORD:
 		"--------------------------------------\n") ,
 		usrblk.objrec.or_objkey);
 	    pause_counter += 5;
-	    for (llptr = usrblk.notes; llptr != NULL; llptr = llptr->link) {
+	    for (llptr = usrblk.notes; llptr != nullptr; llptr = llptr->link) {
 		for (ptr = llptr->data; *ptr != '\0'; ptr++) {
 		    putchar (*ptr);
 		    if (pausing && *ptr == '\n')
@@ -508,7 +508,7 @@ DISPLAY_RECORD:
 				"\n...push ENTER to continue... ") );
 
 		            *userbuf = '\0';
-		            if(NULL == fgets (userbuf, sizeof (userbuf), stdin)) {
+		            if(nullptr == fgets (userbuf, sizeof (userbuf), stdin)) {
 				fprintf(stderr, "Failed to read from stdin 2\n");
 				exit(EXIT_FAILURE);    
 			    }
@@ -552,7 +552,7 @@ static int      load_dbatab (void)
     char            buf[1024];
     int             first_err = TRUE;
 
-    if (inf == NULL)
+    if (inf == nullptr)
 	return 0;
 
     usrblk.dbacount = 0;
@@ -574,10 +574,10 @@ KEEP_READING:
 	}
 	else {
 	    *buf = '\0';
-	    if (fgets (buf, sizeof (buf), inf) == NULL)
+	    if (fgets (buf, sizeof (buf), inf) == nullptr)
 	    {
 		fclose (inf);
-		inf = NULL;
+		inf = nullptr;
 		break;
 	    }
 	    records_read++;
@@ -653,7 +653,7 @@ KEEP_READING:
      * If there are still records to be read from the input file,
      * go back and try another pass.
      */
-    if (inf != NULL && usrblk.dbacount == 0)
+    if (inf != nullptr && usrblk.dbacount == 0)
 	goto KEEP_READING;
 
     return usrblk.dbacount;
@@ -685,7 +685,7 @@ static void     deleter (char *infname)
     "If you are sure you are ready to start deleting, enter 'y' now... ") ,
 	    infname, OE_prodname);
 
-	if(NULL == fgets (buf, sizeof(buf)-1, stdin)) {
+	if(nullptr == fgets (buf, sizeof(buf)-1, stdin)) {
 		fprintf(stderr, "no input\n");
 		return;
 	}
@@ -700,7 +700,7 @@ static void     deleter (char *infname)
 
     /* Init table of db addrs */
     usrblk.dbatab = austext_malloc
-	(sizeof (DB_ADDR) * (max_dbacount + 2), PROGNAME "531", NULL);
+	(sizeof (DB_ADDR) * (max_dbacount + 2), PROGNAME "531", nullptr);
     usrblk.dbacount = 0;	/* number of recs currently in table */
 
     /* Init status msg stuff */
@@ -729,7 +729,7 @@ static void     deleter (char *infname)
 	 */
 	if (shutdown_now)
 	    break;
-	elapsed = time (NULL) - start_time;
+	elapsed = time (nullptr) - start_time;
 	if (maxtime > 0L && elapsed >= maxtime)
 	    break;
 
@@ -762,7 +762,7 @@ static void     deleter (char *infname)
 
 
     /* Print final status messages */
-    elapsed = time (NULL) - start_time;	/* total elapsed time */
+    elapsed = time (nullptr) - start_time;	/* total elapsed time */
 
     hours = elapsed / 3600L;
     seconds = elapsed - (3600L * hours);	/* remaining after hours */
@@ -891,7 +891,7 @@ BAD_ARGS:
      * For the Browse program, file ptr 'inf' == NULL
      * means the file is not open.
      */
-    if ((inf = fopen (infname, "r")) == NULL) {
+    if ((inf = fopen (infname, "r")) == nullptr) {
 	if (prog == 'D') {
 	    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_tomita, 32,
 		"%s Unable to open input file '%s'.\n") ,
@@ -904,7 +904,7 @@ BAD_ARGS:
      * open it to test for write permission.
      */
     if (prog == 'B') {
-	if ((outf = fopen (outfname, "a ")) == NULL)
+	if ((outf = fopen (outfname, "a ")) == nullptr)
 	    /* the blank in "a " works around old aix bug */
 	{
 	    fprintf (aa_stderr,  CATGETS(dtsearch_catd, MS_tomita, 33,

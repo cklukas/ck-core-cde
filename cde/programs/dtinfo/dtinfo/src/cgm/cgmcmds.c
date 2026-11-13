@@ -544,7 +544,7 @@ static int bpicbody(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr,
   clearGC = XCreateGC(display, win, mask, &myStruct);
   XFillRectangle(display, P, clearGC, 0, 0, *ret_width, *ret_height);
   /* no text yet to set */
-  textPtr = NULL;
+  textPtr = nullptr;
   return(1);
 }
 /* End Picture */
@@ -722,7 +722,7 @@ static int mfdefrep(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_ty
 static int fontlist(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_type *cgm_s)
 {
   int i;
-  unsigned char *my_ptr = NULL;
+  unsigned char *my_ptr = nullptr;
   
   my_ptr = dat_ptr;
   for (i=0; (i<MAX_FONTS) && (my_ptr < (dat_ptr + cmd_ptr->p_len - 3));
@@ -733,7 +733,7 @@ static int fontlist(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_ty
     }
   }
   /* zero out the rest of the fonts */
-  for (; i<MAX_FONTS; ++i) cgm_s->fontlist[i] = NULL;
+  for (; i<MAX_FONTS; ++i) cgm_s->fontlist[i] = nullptr;
   
   return 1;
 }
@@ -741,7 +741,7 @@ static int fontlist(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_ty
 static int charlist(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_type *cgm_s)
 {
   int i;
-  unsigned char *my_ptr = NULL;
+  unsigned char *my_ptr = nullptr;
   
   my_ptr = dat_ptr;
   for (i=0; (i<MAX_FONTS) && (my_ptr < (dat_ptr + cmd_ptr->p_len - 3));
@@ -754,7 +754,7 @@ static int charlist(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_ty
   }
   /* zero out the rest */
   for (; i<MAX_FONTS; ++i) {
-    cgm_s->charlist[i] = NULL;
+    cgm_s->charlist[i] = nullptr;
     cgm_s->chartype[i] = 0;
   }
   return 1;
@@ -866,7 +866,7 @@ unsigned int getXPoints(unsigned char *dat_ptr,
 			XPoint **inPtr)
 {
   int i, noPts;
-  static XPoint *myPtr = NULL;
+  static XPoint *myPtr = nullptr;
   static int mySize = 0;
   if (cgm_s->vdctype == VDC_INT) {
     noPts = (8 * cmd_ptr->p_len) / (2 * cgm_s->vdcintprec);
@@ -894,7 +894,7 @@ static int cliprect(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr,
 		    cgm_s_type *cgm_s)
 {
   int noPts;
-  XPoint *myPtr = NULL, myClipRect[4];
+  XPoint *myPtr = nullptr, myClipRect[4];
   noPts = getXPoints(dat_ptr, cmd_ptr, cgm_s, &myPtr);
   if ((noPts < 2 ) || !myPtr) return 0;
   /* have to get clipping rectangle set up correctly */
@@ -954,7 +954,7 @@ unsigned int getXSegments(unsigned char *dat_ptr,
 			  XSegment **inPtr)
 {
   int i, noSegments;
-  XSegment *myPtr = NULL; 
+  XSegment *myPtr = nullptr; 
   /* figure out how many segments we have */
   if (cgm_s->vdctype == VDC_INT) {
     noSegments = (8 * cmd_ptr->p_len)  / (4 * cgm_s->vdcintprec);
@@ -980,7 +980,7 @@ unsigned int getXSegments(unsigned char *dat_ptr,
 static int polyline(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_type *cgm_s)
 {
   int noPts;
-  XPoint *myPtr = NULL;
+  XPoint *myPtr = nullptr;
   noPts = getXPoints(dat_ptr, cmd_ptr, cgm_s, &myPtr);
   if ((noPts < 1) || !myPtr) return 0;
   XDrawLines(display, P, lineGC, myPtr, noPts, CoordModeOrigin);  
@@ -990,7 +990,7 @@ static int polyline(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_ty
 static int dispoly(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_type *cgm_s)
 {
   int noSegments;
-  XSegment *myPtr = NULL;
+  XSegment *myPtr = nullptr;
 
   noSegments = getXSegments(dat_ptr, cmd_ptr, cgm_s, &myPtr);
   if ((noSegments < 1) || !myPtr) return 0;
@@ -1061,7 +1061,7 @@ void doText(cgm_s_type *cgm_s)
     free(myPtr->text);
     free(myPtr);
   }
-  textPtr = NULL;
+  textPtr = nullptr;
   textX = textY = textW = textH = 0;
 }
 /* Regular Text */
@@ -1077,8 +1077,8 @@ static int text(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_type *
   textY = max_y - getY(&dat_ptr, cgm_s);
   /* make some memory */
   newPtr = (partialText *) malloc(sizeof(partialText));
-  newPtr->text = NULL;
-  newPtr->next = NULL;
+  newPtr->text = nullptr;
+  newPtr->next = nullptr;
   newPtr->tcolr = cgm_s->tPixel;
   newPtr->cexpfac = cgm_s->cexpfac;
   newPtr->cspace = cgm_s->cspace;
@@ -1117,8 +1117,8 @@ static int restext(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_typ
   final_flag = b_gsint(&dat_ptr, 16);
   /* make some memory */
   newPtr = (partialText *) malloc(sizeof(partialText));
-  newPtr->text = NULL;
-  newPtr->next = NULL;
+  newPtr->text = nullptr;
+  newPtr->next = nullptr;
   newPtr->tcolr = cgm_s->tPixel;
   newPtr->cexpfac = cgm_s->cexpfac;
   newPtr->cspace = cgm_s->cspace;
@@ -1146,8 +1146,8 @@ static int apptext(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_typ
   
   /* make some memory */
   newPtr = (partialText *) malloc(sizeof(partialText));
-  newPtr->text = NULL;
-  newPtr->next = NULL;
+  newPtr->text = nullptr;
+  newPtr->next = nullptr;
   newPtr->tcolr = cgm_s->tPixel;
   newPtr->cexpfac = cgm_s->cexpfac;
   newPtr->cspace = cgm_s->cspace;
@@ -1168,7 +1168,7 @@ static int apptext(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_typ
 static int polygon(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_type *cgm_s)
 {
   int noPts;
-  XPoint *myPtr = NULL;
+  XPoint *myPtr = nullptr;
   noPts = getXPoints(dat_ptr, cmd_ptr, cgm_s, &myPtr);
   if ((noPts < 2) || !myPtr) return 0;
   /* fill the polygon */
@@ -1369,7 +1369,7 @@ static Pixel *getPixels(unsigned char *dat_ptr, cgm_s_type *cgm_s,
 {
   Pixel *retPtr;
   retPtr = (Pixel *) malloc(nx * ny * sizeof(Pixel));
-  if (!retPtr) return NULL;
+  if (!retPtr) return nullptr;
   /* get the local colour precision */
   if (!localPrec) localPrec =
 		    (cgm_s->colselmode) ? cgm_s->colprec :cgm_s->cindprec;
@@ -1844,7 +1844,7 @@ static int getEllipseXPoints(int x1, int y1, int x2, int y2,
   dtheta = delta / nSteps;
   /* make the points memory, always add two so it can be closed */
   myPtr = (XPoint *) malloc(sizeof(XPoint) * (nSteps + 2));
-  if (myPtr == NULL)
+  if (myPtr == nullptr)
     return 0;
   /* and fill it out */
   c0 = cos(theta1);
@@ -1868,7 +1868,7 @@ static int getEllipseXPoints(int x1, int y1, int x2, int y2,
 static int ellipse(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_type *cgm_s)
 {
   int xc, yc, cdx0, cdy0, cdx1, cdy1, noPts, i;
-  XPoint *myPtr = NULL;
+  XPoint *myPtr = nullptr;
   static float dxy[4] = {1, 0, 1, 0}; /* make a full ellipse */
   /* get the Ellipse centre */
   xc = getX(&dat_ptr, cgm_s);
@@ -1904,7 +1904,7 @@ static int elarc(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_type 
 {
   int xc, yc, cdx0, cdy0, cdx1, cdy1, i, noPts;
   float dxy[4];
-  XPoint *myPtr = NULL;
+  XPoint *myPtr = nullptr;
   /* get the Ellipse centre */
   xc = getX(&dat_ptr, cgm_s);
   yc = getY(&dat_ptr, cgm_s);
@@ -1937,7 +1937,7 @@ static int elarcclose(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_
 {
   int xc, yc, cdx0, cdy0, cdx1, cdy1, i, close_type, noPts;
   float dxy[4];
-  XPoint *myPtr = NULL;
+  XPoint *myPtr = nullptr;
   /* get the Ellipse centre */
   xc = getX(&dat_ptr, cgm_s);
   yc = getY(&dat_ptr, cgm_s);

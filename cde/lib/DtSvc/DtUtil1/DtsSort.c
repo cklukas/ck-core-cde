@@ -75,7 +75,7 @@ get_value(DtDtsDbRecord *ce_entry, char *value)
 			return(ce_entry->fieldList[i]->fieldValue);
 		}
 	}
-	return(NULL);
+	return(nullptr);
 }
 
 void
@@ -233,12 +233,12 @@ static int check_content(char *val1, char *val2)
 	_Xstrtokparams	strtok_buf;
 
 	loc1 = _XStrtok(v1, "\t \n", strtok_buf);
-	type1 = _XStrtok(NULL, "\t \n", strtok_buf);
+	type1 = _XStrtok(nullptr, "\t \n", strtok_buf);
 	cnt1 = &type1[strlen(type1)+1];
 	while(isspace((u_char)*cnt1))cnt1++;
 
 	loc2 = _XStrtok(v2, "\t \n", strtok_buf);
-	type2 = _XStrtok(NULL, "\t \n", strtok_buf);
+	type2 = _XStrtok(nullptr, "\t \n", strtok_buf);
 	cnt2 = &type2[strlen(type2)+1];
 	while(isspace((u_char)*cnt2))cnt2++;
 

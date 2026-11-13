@@ -158,7 +158,7 @@ create_for_menu(Widget parent) {
 	 * To get it to size correctly, you must managed it and then reset
 	 * the width.
 	 */
-	XtVaSetValues(cb, XmNwidth, 80, NULL);
+	XtVaSetValues(cb, XmNwidth, 80, nullptr);
 
 	xmstr = XmStringCreateLocalized(CATGETS(calendar->DT_catd, 1, 863, "2"));
 	XmComboBoxAddItem((Widget)cb, xmstr, 0, False);
@@ -216,9 +216,9 @@ create_for_menu(Widget parent) {
 	XmComboBoxAddItem((Widget)cb, xmstr, 0, False);
 	XmStringFree(xmstr);
 
-	XtVaGetValues(cb, XmNlist, &list, XmNtextField, &text, NULL);
-	XtVaSetValues(list, XmNsensitive, False, NULL);
-	XtVaSetValues(text, XmNsensitive, False, NULL);
+	XtVaGetValues(cb, XmNlist, &list, XmNtextField, &text, nullptr);
+	XtVaSetValues(list, XmNsensitive, False, nullptr);
+	XtVaSetValues(text, XmNsensitive, False, nullptr);
 
 	return cb;
 }
@@ -273,7 +273,7 @@ set_time_submenu(Widget parent,
 	int		end = get_int_prop(p, CP_DAYEND);
 	Calendar	*c = calendar;
 
-	XtVaGetValues(option_menu, XmNsubMenuId, &menu, NULL);
+	XtVaGetValues(option_menu, XmNsubMenuId, &menu, nullptr);
 
 	for (i = 0; i < *widget_count; i++)
 		XtDestroyWidget((*widget_list)[i]);
@@ -315,7 +315,7 @@ set_time_submenu(Widget parent,
 				menuitem = XtVaCreateWidget(buf2,
 				xmPushButtonGadgetClass, menu,
 				XmNuserData, (i * hrsec) + (j * minsec),
-				NULL);
+				nullptr);
 			if (callback)
 				XtAddCallback(menuitem, XmNactivateCallback,
 					callback, client_data);
@@ -330,7 +330,7 @@ set_time_submenu(Widget parent,
 			xmPushButtonGadgetClass, menu,
 			XmNlabelString, xmstr,
 			XmNuserData, NO_TIME,
-			NULL);
+			nullptr);
 		XmStringFree(xmstr);
 		if (callback)
 			XtAddCallback(menuitem, XmNactivateCallback,
@@ -345,7 +345,7 @@ set_time_submenu(Widget parent,
 			xmPushButtonGadgetClass, menu,
 			XmNlabelString, xmstr,
 			XmNuserData, ALL_DAY,
-			NULL);
+			nullptr);
 		XmStringFree(xmstr);
 		if (callback)
 			XtAddCallback(menuitem, XmNactivateCallback,
@@ -372,12 +372,12 @@ create_start_stop_time_menu(Widget parent,
 	int		beg = get_int_prop(p, CP_DAYBEGIN);
 	int		end = get_int_prop(p, CP_DAYEND);
 
-	menu = XmCreatePulldownMenu(parent, "pulldown", NULL, 0);
+	menu = XmCreatePulldownMenu(parent, "pulldown", nullptr, 0);
 	XtVaSetValues(menu,
 		XmNpacking, XmPACK_COLUMN,
 		XmNorientation, XmHORIZONTAL,
 		XmNnumColumns, (end - beg) + 1,
-		NULL); 
+		nullptr); 
 	ac = 0;
 	XtSetArg(args[ac], XmNsubMenuId, menu); ++ac;
 	XtSetArg(args[ac], XmNlabelString, label); ++ac;
@@ -400,12 +400,12 @@ create_time_scope_menu(Widget parent,
 	XmString		xmstr;
 	Calendar		*c = calendar;
 
-	menu = XmCreatePulldownMenu(parent, "pulldown", NULL, 0);
+	menu = XmCreatePulldownMenu(parent, "pulldown", nullptr, 0);
 	XtVaSetValues(menu,
 		XmNpacking, XmPACK_COLUMN,
 		XmNorientation, XmHORIZONTAL,
 		XmNnumColumns, TIME_DAYS + 1,
-		NULL);
+		nullptr);
 
 	ac = 0;
 	XtSetArg(args[ac], XmNsubMenuId, menu); ++ac;
@@ -418,7 +418,7 @@ create_time_scope_menu(Widget parent,
 		xmPushButtonGadgetClass, menu,
 		XmNlabelString, xmstr,
 		XmNuserData, 0,
-		NULL);
+		nullptr);
 	if (callback)
 		XtAddCallback(menuitems[0], XmNactivateCallback,
 			      callback, client_data);
@@ -429,7 +429,7 @@ create_time_scope_menu(Widget parent,
 		xmPushButtonGadgetClass, menu,
 		XmNlabelString, xmstr,
 		XmNuserData, 1,
-		NULL);
+		nullptr);
 	if (callback)
 		XtAddCallback(menuitems[1], XmNactivateCallback,
 			      callback, client_data);
@@ -440,14 +440,14 @@ create_time_scope_menu(Widget parent,
 		xmPushButtonGadgetClass, menu,
 		XmNlabelString, xmstr,
 		XmNuserData, 2,
-		NULL);
+		nullptr);
 	if (callback)
 		XtAddCallback(menuitems[2], XmNactivateCallback,
 			      callback, client_data);
 	XmStringFree(xmstr);
 
 	XtVaSetValues(XmOptionButtonGadget(option_m), XmNsensitive, False,
-		NULL);
+		nullptr);
 
 	XtManageChildren((WidgetList)menuitems, 3);
 
@@ -465,12 +465,12 @@ create_repeat_scope_menu(Widget parent, XmString label,
 	Repeat_scope_menu_op	i;
 	Calendar		*c = calendar;
 
-	menu = XmCreatePulldownMenu(parent, "pulldown", NULL, 0);
+	menu = XmCreatePulldownMenu(parent, "pulldown", nullptr, 0);
 	XtVaSetValues(menu,
 		XmNpacking, XmPACK_COLUMN,
 		XmNorientation, XmHORIZONTAL,
 		XmNnumColumns, REPEAT_MONTHS + 1,
-		NULL);
+		nullptr);
 
 	ac = 0;
 	XtSetArg(args[ac], XmNsubMenuId, menu); ++ac;
@@ -484,7 +484,7 @@ create_repeat_scope_menu(Widget parent, XmString label,
 		xmPushButtonGadgetClass, menu,
 		XmNlabelString, xmstr,
 		XmNuserData, REPEAT_DAYS,
-		NULL);
+		nullptr);
 	if (callback)
 		XtAddCallback(menuitems[0], XmNactivateCallback,
 			      callback, client_data);
@@ -496,7 +496,7 @@ create_repeat_scope_menu(Widget parent, XmString label,
 		xmPushButtonGadgetClass, menu,
 		XmNlabelString, xmstr,
 		XmNuserData, REPEAT_WEEKS,
-		NULL);
+		nullptr);
 	if (callback)
 		XtAddCallback(menuitems[1], XmNactivateCallback,
 			      callback, client_data);
@@ -508,7 +508,7 @@ create_repeat_scope_menu(Widget parent, XmString label,
 		xmPushButtonGadgetClass, menu,
 		XmNlabelString, xmstr,
 		XmNuserData, REPEAT_MONTHS,
-		NULL);
+		nullptr);
 	if (callback)
 		XtAddCallback(menuitems[2], XmNactivateCallback,
 			      callback, client_data);
@@ -533,7 +533,7 @@ fill_pixmap(XImage *xi, int w, int h, unsigned char *data)
         xi->bitmap_unit = 8;
         xi->depth = 1;
         xi->bytes_per_line = (int)((w - 1) / 8) + 1;
-        xi->obdata = NULL;
+        xi->obdata = nullptr;
 }
 
 extern void
@@ -545,7 +545,7 @@ create_all_pixmaps(Props_pu *p, Widget w)
 
         s = XtScreen(w);
         XtVaGetValues(w, XmNforeground, &fg, XmNbackground, &bg,
-                NULL);
+                nullptr);
 
         fill_pixmap(&ei,
                 expand_xbm_width, expand_xbm_height, expand_xbm_bits);
@@ -621,29 +621,29 @@ cm_mbstrlen(char *s) {
 */
 extern char *
 cm_mbchar(char *str) {
-     static char *string = NULL;
-     static char *string_head = NULL;
-     static char *buf = NULL;
+     static char *string = nullptr;
+     static char *string_head = nullptr;
+     static char *buf = nullptr;
      int num_byte = 0;
  
-     if ( str != NULL ) {
-          if ( string != NULL ) {
+     if ( str != nullptr ) {
+          if ( string != nullptr ) {
                free(string_head);
-               string_head = NULL;
-               string = NULL;
+               string_head = nullptr;
+               string = nullptr;
           }
           string = (char *)cm_strdup(str);
           string_head = string;
      }
-     if ( buf != NULL ) {
+     if ( buf != nullptr ) {
           free(buf);
-          buf = NULL;
+          buf = nullptr;
      }
-     if ( string != NULL && *string == '\0' ) {
+     if ( string != nullptr && *string == '\0' ) {
           free(string_head);
-          string_head = NULL;
-          string      = NULL;
-     } else if (string != NULL) {
+          string_head = nullptr;
+          string      = nullptr;
+     } else if (string != nullptr) {
           num_byte = mblen(string, MB_LEN_MAX);
           if(num_byte > 0) {
                buf = (char *)malloc(num_byte+1);
@@ -669,7 +669,7 @@ response(Widget w, XtPointer client_data, XtPointer cbs) {
 	XtPointer userData = (XtPointer)0;
 	int *answerP = (int *) (intptr_t)client_data;
 
-	XtVaGetValues(w, XmNuserData, &userData, NULL);
+	XtVaGetValues(w, XmNuserData, &userData, nullptr);
 	*answerP = (intptr_t)userData;
 }
 
@@ -679,10 +679,10 @@ response(Widget w, XtPointer client_data, XtPointer cbs) {
 extern int
 dialog_popup(Widget parent, ...) {
 	int			button_id, t_cnt = 0, b_cnt = 0;
-	char			*text_str = NULL, *ptr, buf[MAXNAMELEN], *help_str;
+	char			*text_str = nullptr, *ptr, buf[MAXNAMELEN], *help_str;
 	Pixmap			px;
 	va_list			pvar;
-	Widget			frame, form, image, sep, text, last_text = NULL, button;
+	Widget			frame, form, image, sep, text, last_text = nullptr, button;
 	Display			*dpy = XtDisplayOfObject(parent);
 	XmString		xmstr;
 	Dialog_create_op	op;
@@ -695,7 +695,7 @@ dialog_popup(Widget parent, ...) {
 		xmDialogShellWidgetClass, parent,
 		XmNallowShellResize, True,
 		XmNmwmFunctions, MWM_FUNC_MOVE | MWM_FUNC_CLOSE,
-		NULL);
+		nullptr);
 
 	form = XtVaCreateWidget("form",
 		xmFormWidgetClass, frame,
@@ -705,21 +705,21 @@ dialog_popup(Widget parent, ...) {
 		XmNfractionBase, 100,
 		XmNautoUnmanage, False,
 		XmNdialogStyle, XmDIALOG_FULL_APPLICATION_MODAL,
-		NULL);
+		nullptr);
 
 	image = XtVaCreateWidget("image",
 		xmLabelGadgetClass, form,
 		XmNlabelType, XmPIXMAP,
 		XmNtopAttachment, XmATTACH_FORM,
 		XmNleftAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
 
 	sep = XtVaCreateWidget("sep",
 		xmSeparatorGadgetClass, form,
        		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNrightAttachment, XmATTACH_FORM,
-		NULL);
+		nullptr);
 
 	va_start(pvar, parent);
 	op = va_arg(pvar, Dialog_create_op);
@@ -728,7 +728,7 @@ dialog_popup(Widget parent, ...) {
 		case DIALOG_TITLE:
 			ptr = va_arg(pvar, char *);
 			XtVaSetValues(frame, XtNtitle, ptr,
-				NULL);
+				nullptr);
 			break;
 		case DIALOG_TEXT:
 			ptr = va_arg(pvar, char *);
@@ -757,7 +757,7 @@ dialog_popup(Widget parent, ...) {
 				XmNtopOffset, 10,
 				XmNbottomAttachment, XmATTACH_FORM,
 				XmNbottomOffset, 10,
-				NULL);
+				nullptr);
 			++b_cnt;
 			if (op == BUTTON_INSENSITIVE)
 				XtSetSensitive(button, False);
@@ -782,7 +782,7 @@ dialog_popup(Widget parent, ...) {
 				XmNtopOffset, 10,
 				XmNbottomAttachment, XmATTACH_FORM,
 				XmNbottomOffset, 10,
-				NULL);
+				nullptr);
 			++b_cnt;
 			XtAddCallback(button, XmNactivateCallback,
 				      help_cb, help_str);
@@ -791,7 +791,7 @@ dialog_popup(Widget parent, ...) {
 		case DIALOG_IMAGE:
 			px = va_arg(pvar, Pixmap);
 			XtVaSetValues(image, XmNlabelPixmap, px,
-				NULL);
+				nullptr);
 			break;
 		default:
 			break;
@@ -800,7 +800,7 @@ dialog_popup(Widget parent, ...) {
 	}
 	va_end(pvar);
 	XtVaSetValues(form, XmNfractionBase, b_cnt * 2,
-		NULL);
+		nullptr);
 
 	ptr = strtok(text_str, "\n");
 	while (ptr) {
@@ -814,26 +814,26 @@ dialog_popup(Widget parent, ...) {
 			XmNleftAttachment, XmATTACH_WIDGET,
 			XmNleftWidget, image,
 			XmNrightAttachment, XmATTACH_FORM,
-			NULL);
+			nullptr);
 		XmStringFree(xmstr);
 
 		if (t_cnt == 1)
 			XtVaSetValues(text, XmNtopAttachment, XmATTACH_FORM,
-				NULL);
+				nullptr);
 		else
 			XtVaSetValues(text, XmNtopAttachment, XmATTACH_WIDGET,
 				XmNtopWidget, last_text,
-				NULL);
+				nullptr);
 		last_text = text;
 
-		ptr = strtok(NULL, "\n");
+		ptr = strtok(nullptr, "\n");
 	}
 	free(text_str);
 
 	XtVaSetValues(sep,
 		      XmNtopWidget, last_text,
 		      XmNtopOffset, 10,
-		      NULL);
+		      nullptr);
 	ManageChildren(form);
 	XtManageChild(form);
 
@@ -958,7 +958,7 @@ editor_err_msg(Widget frame, char *name, Validate_op op, Pixmap p) {
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, error_buf,
 			DIALOG_IMAGE, p,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(title);
 	}
@@ -971,7 +971,7 @@ editor_err_msg(Widget frame, char *name, Validate_op op, Pixmap p) {
 			DIALOG_TEXT, buf2,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(title);
 	}
@@ -1077,7 +1077,7 @@ backend_err_msg(
 			BUTTON_IDENT, 1, ident1,
 			BUTTON_HELP, error_buf,
 			DIALOG_IMAGE, p,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(title);
 	}
@@ -1090,7 +1090,7 @@ backend_err_msg(
 			DIALOG_TEXT, buf2,
 			BUTTON_IDENT, 1, ident1,
 			DIALOG_IMAGE, p,
-			NULL);
+			nullptr);
 		XtFree(ident1);
 		XtFree(title);
 	}
@@ -1123,7 +1123,7 @@ query_user(void *user_data) {
 		BUTTON_IDENT, 1, ident1,
 		BUTTON_IDENT, 2, ident2,
 		DIALOG_IMAGE, p->xm_question_pixmap,
-		NULL);
+		nullptr);
 	XtFree(ident2);
 	XtFree(ident1);
 	XtFree(title);
@@ -1142,13 +1142,13 @@ set_message(Widget w, char *msg) {
 	 * prevents label widgets from shrinking (which they do when they
 	 * have no text
 	 */
-	if (msg == NULL || *msg == '\0') {
+	if (msg == nullptr || *msg == '\0') {
 		msg = " ";
 	}
 
 	if (w) {
 		xmstr = XmStringCreateLocalized(msg);
-		XtVaSetValues(w, XmNlabelString, xmstr, NULL);
+		XtVaSetValues(w, XmNlabelString, xmstr, nullptr);
 		XmStringFree(xmstr);
 	}
 
@@ -1173,7 +1173,7 @@ ds_is_double_click(XEvent *last_event, XEvent *event)
         int                     delta_time;
         int                     delta_x, delta_y;
 
-        if (last_event == NULL || event == NULL)
+        if (last_event == nullptr || event == nullptr)
                 return ret_value;
 
         /* first time this is called init the thresholds */
@@ -1253,13 +1253,13 @@ ComputeMaxWidth(
 
 	XtVaGetValues(w1,
 		XmNwidth,		&width1,
-		NULL);
+		nullptr);
 
 	for (i = 1; w[i]; i++) {
 
 		XtVaGetValues(w[i],
 			XmNwidth,	&width2,
-			NULL);
+			nullptr);
 
 		if ((int)width2 > (int)width1) width1 = width2;
 	}
@@ -1277,7 +1277,7 @@ ManageChildren(
 	XtVaGetValues(w,
 		XmNchildren,            &children,
 		XmNnumChildren,         &n,
-		NULL);
+		nullptr);
 	XtManageChildren(children, n);
 }
 
@@ -1328,11 +1328,11 @@ Dimension *dim,
 	 */
 	if  (XmIsManager (_widget[i])) {
 	    _targetW =  _widget[i];
-	    XtQueryGeometry( _targetW, NULL, &geo );
+	    XtQueryGeometry( _targetW, nullptr, &geo );
 	    _height[i] = geo.height;
 	} else {
 	    _targetW =  _widget[i];
-	    XtVaGetValues( _targetW, XmNheight, &(_height[i]), NULL );
+	    XtVaGetValues( _targetW, XmNheight, &(_height[i]), nullptr );
 	}
 	if ( _height[i] >= _max ) {
 	    _max = _height[i];
@@ -1381,11 +1381,11 @@ Dimension *dim,
 	 */
 	if  (XmIsManager (_widget[i])) {
 	    _targetW = _widget[i];
-	    XtQueryGeometry( _targetW, NULL, &geo );
+	    XtQueryGeometry( _targetW, nullptr, &geo );
 	    _width[i] = geo.width;
 	} else {
 	    _targetW = _widget[i];
-	    XtVaGetValues( _targetW, XmNwidth, &(_width[i]), NULL );
+	    XtVaGetValues( _targetW, XmNwidth, &(_width[i]), nullptr );
 	} if ( _width[i] >= _max ) {
 	    _max = _width[i];
 	    _wide = i;
@@ -1452,11 +1452,11 @@ Dimension *dim,
 	 */
 	if  (XmIsManager (_widget[i])) {
 	    _targetW =  _widget[i];
-	    XtQueryGeometry( _targetW, NULL, &geo );
+	    XtQueryGeometry( _targetW, nullptr, &geo );
 	    _height[i] = geo.height;
 	} else {
 	    _targetW =  _widget[i];
-	    XtVaGetValues( _targetW, XmNheight, &(_height[i]), NULL );
+	    XtVaGetValues( _targetW, XmNheight, &(_height[i]), nullptr );
 	}
 	if ( _height[i] >= _max ) {
 	    _max = _height[i];

@@ -198,7 +198,7 @@ int main(int argc, char **argv)
      */
     before = ck_count(ck_work);
     ck_mk_fail = 1;
-    assert(GetTmpPath("target-file") == NULL);
+    assert(GetTmpPath("target-file") == nullptr);
     ck_mk_fail = 0;
     assert(ck_live == 0);
     assert(ck_count(ck_work) == before);
@@ -206,10 +206,10 @@ int main(int argc, char **argv)
     /* An empty or unset TMPDIR selects the default directory. */
     ck_mk_fail = 1;
     assert(setenv("TMPDIR", "", 1) == 0);
-    assert(GetTmpPath("target-file") == NULL);
+    assert(GetTmpPath("target-file") == nullptr);
     assert(strcmp(ck_mk_template, "/var/tmp/XXXXXX") == 0);
     unsetenv("TMPDIR");
-    assert(GetTmpPath("target-file") == NULL);
+    assert(GetTmpPath("target-file") == nullptr);
     assert(strcmp(ck_mk_template, "/var/tmp/XXXXXX") == 0);
     ck_mk_fail = 0;
     assert(ck_live == 0);

@@ -152,10 +152,10 @@ PalItemInfo custdlg_palitem_rec = {
 
     /* type             */  AB_TYPE_DIALOG,
     /* name             */  "Custom Dialog",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  custdlg_initialize,
     /* is_a_test        */  obj_is_popup_win,
     /* prop_initialize  */  custdlg_prop_init,
@@ -270,12 +270,12 @@ custdlg_prop_init(
     if (dtb_custdlg_prop_dialog_initialize(cgen, parent) == 0)
     {
         pcs->prop_sheet = cgen->attrs_ctrlpanel;
-        pcs->current_obj = NULL;
+        pcs->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pcs->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -290,7 +290,7 @@ custdlg_prop_init(
 
         /* Alternate Editor Buttons */
         prop_editors_panel_init(type, ab_custdlg_palitem,
-            NULL, cgen->conn_button, cgen->helptxt_button);
+            nullptr, cgen->conn_button, cgen->helptxt_button);
 
         /*
           * Prop Sheet Settings....
@@ -371,7 +371,7 @@ custdlg_prop_init(
 
         /* Geometry */
         prop_geomfield_init(&(pcs->geometry), cgen->geom_label,
-		NULL, NULL, NULL, NULL,
+		nullptr, nullptr, nullptr, nullptr,
                 cgen->width_field_label, cgen->width_field,
                 cgen->height_field_label, cgen->height_field,
                 cgen->geom_cb);
@@ -400,7 +400,7 @@ custdlg_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 
@@ -423,14 +423,14 @@ custdlg_prop_clear(
 {
     PropCustdlgSettingsRec	*pcs = &(prop_custdlg_settings_rec[type]);
 
-    if (pcs->current_obj == NULL)
+    if (pcs->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
     prop_field_set_value(&(pcs->name), "", False);
 
     /* Clear Window Parent */
-    prop_obj_options_load(&(pcs->win_parent), NULL);
+    prop_obj_options_load(&(pcs->win_parent), nullptr);
 
     /* Clear Title */
     prop_field_set_value(&(pcs->title), "", False);
@@ -443,10 +443,10 @@ custdlg_prop_clear(
     prop_checkbox_set_value(&(pcs->areas), AB_CONT_FOOTER, False, False);
 
     /* Clear Default Button */
-    prop_obj_options_load(&(pcs->default_but), NULL);
+    prop_obj_options_load(&(pcs->default_but), nullptr);
 
     /* Clear Help Button */
-    prop_obj_options_load(&(pcs->help_but), NULL);
+    prop_obj_options_load(&(pcs->help_but), nullptr);
 
     /* Clear Size Policy */
     prop_radiobox_set_value(&(pcs->size_policy), (XtPointer)SIZE_FIXED_KEY, False);
@@ -462,7 +462,7 @@ custdlg_prop_clear(
     prop_colorfield_set_value(&(pcs->bg_color), "", False);
     prop_colorfield_set_value(&(pcs->fg_color), "", False);
 
-    pcs->current_obj = NULL;
+    pcs->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -481,9 +481,9 @@ custdlg_prop_load(
     PropCustdlgSettingsRec 	*pcs = &(prop_custdlg_settings_rec[type]);
     BOOL                        load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pcs->current_obj != NULL)
+        if (pcs->current_obj != nullptr)
             obj = pcs->current_obj;
         else
             return ERROR;
@@ -514,11 +514,11 @@ custdlg_prop_load(
 	/* Load Window Areas */
 	area = objxm_comp_custdlg_get_area(obj, AB_CONT_BUTTON_PANEL);
 	prop_checkbox_set_value(&(pcs->areas), AB_CONT_BUTTON_PANEL,
-	area != NULL, False);
+	area != nullptr, False);
 
 	area = objxm_comp_custdlg_get_area(obj, AB_CONT_FOOTER);
 	prop_checkbox_set_value(&(pcs->areas), AB_CONT_FOOTER,
-		area != NULL, False);
+		area != nullptr, False);
 
 	/* Load Default Button */
 	prop_obj_options_load(&(pcs->default_but),
@@ -606,20 +606,20 @@ custdlg_prop_apply(
 	area = objxm_comp_custdlg_get_area(pcs->current_obj, AB_CONT_BUTTON_PANEL);
 	area_set = prop_checkbox_get_value(&(pcs->areas), AB_CONT_BUTTON_PANEL);
 
-	if (area != NULL && !area_set) /* Remove Button Panel */
+	if (area != nullptr && !area_set) /* Remove Button Panel */
 	    custdlg_remove_area(pcs->current_obj, area);
 
-	else if (area == NULL && area_set) /* Add Button Panel */
+	else if (area == nullptr && area_set) /* Add Button Panel */
 	    custdlg_create_area(pcs->current_obj, AB_CONT_BUTTON_PANEL);
 
         /* Footer */
         area = objxm_comp_custdlg_get_area(pcs->current_obj, AB_CONT_FOOTER);
         area_set = prop_checkbox_get_value(&(pcs->areas), AB_CONT_FOOTER);
 
-        if (area != NULL && !area_set) /* Remove Footer */
+        if (area != nullptr && !area_set) /* Remove Footer */
             custdlg_remove_area(pcs->current_obj, area);
 
-        else if (area == NULL && area_set) /* Add Footer */
+        else if (area == nullptr && area_set) /* Add Footer */
             custdlg_create_area(pcs->current_obj, AB_CONT_FOOTER);
     }
     if (prop_changed(pcs->default_but.options.changebar))
@@ -716,7 +716,7 @@ verify_props(
 	/* Check Button Panel */
         area = objxm_comp_custdlg_get_area(pcs->current_obj, AB_CONT_BUTTON_PANEL);
         area_set = prop_checkbox_get_value(&(pcs->areas), AB_CONT_BUTTON_PANEL);
-        if (area != NULL && !area_set) /* Remove Menubar */
+        if (area != nullptr && !area_set) /* Remove Menubar */
         {
 	    pobj = objxm_comp_get_subobj(area, AB_CFG_PARENT_OBJ);
 
@@ -727,7 +727,7 @@ verify_props(
 			&dtb_custdlg_remove_bpanel_msg);
                 answer = dtb_show_modal_message(pcs->areas.checkbox,
 				&dtb_custdlg_remove_bpanel_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                 if (answer == DTB_ANSWER_CANCEL)
                     return False;
 	    }
@@ -735,7 +735,7 @@ verify_props(
 
         area = objxm_comp_custdlg_get_area(pcs->current_obj, AB_CONT_FOOTER);
         area_set = prop_checkbox_get_value(&(pcs->areas), AB_CONT_FOOTER);
-        if (area != NULL && !area_set) /* Remove Footer */
+        if (area != nullptr && !area_set) /* Remove Footer */
         {
             pobj = objxm_comp_get_subobj(area, AB_CFG_PARENT_OBJ);
 
@@ -746,7 +746,7 @@ verify_props(
 			&dtb_custdlg_remove_footer_msg);
                 answer = dtb_show_modal_message(pcs->areas.checkbox,
 				&dtb_custdlg_remove_footer_msg,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
                 if (answer == DTB_ANSWER_CANCEL)
                     return False;
 	    }
@@ -826,7 +826,7 @@ custdlg_create_area(
 	 */
 	XtVaGetValues(objxm_get_widget(workobj),
 		XmNheight,	&height,
-		NULL);
+		nullptr);
     }
     else if (area_type == AB_CONT_BUTTON_PANEL)
 	custdlg_create_buttons(obj, area);
@@ -837,7 +837,7 @@ custdlg_create_area(
     if (area_type == AB_CONT_FOOTER)
 	XtVaSetValues(objxm_get_widget(workobj),
 		XmNheight,	height,
-		NULL);
+		nullptr);
 
     abobj_set_save_needed(obj_get_module(obj), True);
 
@@ -873,7 +873,7 @@ custdlg_create_buttons(
         obj_set_attachment(bobj, AB_CP_WEST, AB_ATTACH_GRIDLINE, (void*)(intptr_t) startpos, 0);
         endpos = startpos + 20;
         obj_set_attachment(bobj, AB_CP_EAST, AB_ATTACH_GRIDLINE, (void*)(intptr_t) endpos, 0);
-	obj_set_attachment(bobj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, 5);
+	obj_set_attachment(bobj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, 5);
     }
 
 }

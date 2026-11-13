@@ -55,12 +55,12 @@ ELTSTRUCT *ntrelt(M_WCHAR *p)
     new->model = M_NULLVAL ;
     new->content = M_NULLVAL ;
     new->inptr = new->exptr = 0 ;
-    new->parptr = NULL ;
+    new->parptr = nullptr ;
     new->parindex = M_NULLVAL ;
     new->paramcount = M_NULLVAL ;
     new->stmin = new->etmin = FALSE ;
     new->srefptr = M_NULLVAL ;
     new->useoradd = TRUE ; 
-    new->next = NULL ;
+    new->next = nullptr ;
     return(new) ;
     }

@@ -130,7 +130,7 @@ ClosestTick(
 	if ((!closest_tick) ||
 	    (re->re_end_date && re->re_end_date < closest_tick)) { 
 		free (*res);
-		*res = NULL;
+		*res = nullptr;
 		return (Tick)0;
 	}
 
@@ -911,7 +911,7 @@ InitRepeatEventState(
 	RepeatEventState	*res;
 
 	if (!(res = (RepeatEventState *)calloc(1, sizeof(RepeatEventState))))
-		return (RepeatEventState *)NULL;
+		return (RepeatEventState *)nullptr;
 
 	res->res_re = re;
 	res->res_duration = re->re_duration;

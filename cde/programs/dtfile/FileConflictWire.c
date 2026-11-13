@@ -46,7 +46,7 @@ ConflictBeginWrite(ConflictWriteScope *scope)
     if (sigpending(&pending) != 0)
     {
         int saved = errno;
-        (void)pthread_sigmask(SIG_SETMASK, &scope->previous, NULL);
+        (void)pthread_sigmask(SIG_SETMASK, &scope->previous, nullptr);
         errno = saved;
         return -1;
     }
@@ -72,7 +72,7 @@ ConflictEndWrite(ConflictWriteScope *scope, int result)
             while (error == EINTR);
         }
     }
-    error = pthread_sigmask(SIG_SETMASK, &scope->previous, NULL);
+    error = pthread_sigmask(SIG_SETMASK, &scope->previous, nullptr);
     if (error != 0 && result == 0) { errno = error; return -1; }
     errno = saved;
     return result;
@@ -122,7 +122,7 @@ ConflictWriteRequestPacket(int fd, const DtfileConflictBatch *batch)
         const DtfileConflictItem *item = &batch->items[i];
         words[0] = item->request_index;
         words[1] = item->flags;
-        words[2] = item->source == NULL ? 0 : (uint32_t)strlen(item->source);
+        words[2] = item->source == nullptr ? 0 : (uint32_t)strlen(item->source);
         words[3] = (uint32_t)strlen(item->target);
         result = ConflictWriteWords(fd, words, 4);
         if (result == 0 && words[2] != 0)
@@ -169,7 +169,7 @@ DtfileConflictWriteDecisions(int fd, const DtfileConflictBatch *batch,
     uint32_t words[3];
     size_t i, bytes = 0;
     int result;
-    if (decisions == NULL) { errno = EINVAL; return -1; }
+    if (decisions == nullptr) { errno = EINVAL; return -1; }
     if (DtfileConflictBatchValidate(batch) != 0) return -1;
     /* Finish all validation before writing the first byte. The worker likewise
      * waits for every indexed decision and the trailer before changing files.
@@ -178,7 +178,7 @@ DtfileConflictWriteDecisions(int fd, const DtfileConflictBatch *batch,
     {
         size_t length;
         if (DtfileConflictDecisionValidate(batch, i, &decisions[i]) != 0) return -1;
-        length = decisions[i].name == NULL ? 0 : strlen(decisions[i].name);
+        length = decisions[i].name == nullptr ? 0 : strlen(decisions[i].name);
         if (length > DTFILE_CONFLICT_BYTES_LIMIT - bytes)
         { errno = E2BIG; return -1; }
         bytes += length;
@@ -192,7 +192,7 @@ DtfileConflictWriteDecisions(int fd, const DtfileConflictBatch *batch,
     {
         words[0] = decisions[i].request_index;
         words[1] = (uint32_t)decisions[i].action;
-        words[2] = decisions[i].name == NULL ? 0 : (uint32_t)strlen(decisions[i].name);
+        words[2] = decisions[i].name == nullptr ? 0 : (uint32_t)strlen(decisions[i].name);
         result = ConflictWriteWords(fd, words, 3);
         if (result == 0 && words[2] != 0)
             result = ConflictWriteAll(fd, decisions[i].name, words[2]);
@@ -272,12 +272,12 @@ DtfileConflictReadDecisions(int fd, pid_t owner, const DtfileConflictBatch *batc
                            DtfileConflictDecision **decisions)
 {
     ConflictReadWatch watch = {0};
-    DtfileConflictDecision *items = NULL;
+    DtfileConflictDecision *items = nullptr;
     uint32_t words[3], declared_bytes;
     size_t i, bytes = 0;
     int saved;
-    if (decisions == NULL) { errno = EINVAL; return -1; }
-    *decisions = NULL;
+    if (decisions == nullptr) { errno = EINVAL; return -1; }
+    *decisions = nullptr;
     if (owner <= 0) { errno = EINVAL; return -1; }
     if (DtfileConflictBatchValidate(batch) != 0) return -1;
     watch.owner = owner;
@@ -295,7 +295,7 @@ DtfileConflictReadDecisions(int fd, pid_t owner, const DtfileConflictBatch *batc
     }
     declared_bytes = words[2];
     items = calloc(batch->count, sizeof(*items));
-    if (items == NULL) return -1;
+    if (items == nullptr) return -1;
     for (i = 0; i < batch->count; ++i)
     {
         if (ConflictReadWords(fd, words, 3, &watch) != 0) goto failed;
@@ -306,9 +306,9 @@ DtfileConflictReadDecisions(int fd, pid_t owner, const DtfileConflictBatch *batc
         if (words[2] != 0)
         {
             items[i].name = malloc((size_t)words[2] + 1);
-            if (items[i].name == NULL) goto failed;
+            if (items[i].name == nullptr) goto failed;
             if (ConflictReadAll(fd, items[i].name, words[2], &watch) != 0) goto failed;
-            if (memchr(items[i].name, 0, words[2]) != NULL) { errno = EINVAL; goto failed; }
+            if (memchr(items[i].name, 0, words[2]) != nullptr) { errno = EINVAL; goto failed; }
             items[i].name[words[2]] = 0;
         }
         bytes += words[2];
@@ -346,14 +346,14 @@ DtfileConflictReader *
 DtfileConflictReaderNew(void)
 {
     DtfileConflictReader *reader = calloc(1, sizeof(*reader));
-    if (reader != NULL) reader->needed = 5 * sizeof(uint32_t);
+    if (reader != nullptr) reader->needed = 5 * sizeof(uint32_t);
     return reader;
 }
 
 void
 DtfileConflictReaderFree(DtfileConflictReader *reader)
 {
-    if (reader == NULL) return;
+    if (reader == nullptr) return;
     free(reader->source);
     free(reader->target);
     DtfileConflictBatchFree(&reader->batch);
@@ -398,11 +398,11 @@ ConflictReaderAdvance(DtfileConflictReader *reader)
         if (reader->source_length != 0)
         {
             reader->source = malloc((size_t)reader->source_length + 1);
-            if (reader->source == NULL) return -1;
+            if (reader->source == nullptr) return -1;
             reader->source[reader->source_length] = 0;
         }
         reader->target = malloc((size_t)reader->target_length + 1);
-        if (reader->target == NULL) return -1;
+        if (reader->target == nullptr) return -1;
         reader->target[reader->target_length] = 0;
         reader->stage = reader->source_length == 0 ? CONFLICT_TARGET : CONFLICT_SOURCE;
         reader->needed = reader->source_length == 0 ? reader->target_length : reader->source_length;
@@ -417,8 +417,8 @@ ConflictReaderAdvance(DtfileConflictReader *reader)
         if (DtfileConflictSetItem(&reader->batch, reader->row, reader->index,
                                   reader->flags, reader->source, reader->source_length,
                                   reader->target, reader->target_length) != 0) return -1;
-        free(reader->source); reader->source = NULL;
-        free(reader->target); reader->target = NULL;
+        free(reader->source); reader->source = nullptr;
+        free(reader->target); reader->target = nullptr;
         ++reader->row;
         reader->stage = reader->row == reader->batch.count ? CONFLICT_TRAILER : CONFLICT_ITEM_HEADER;
         reader->needed = reader->stage == CONFLICT_TRAILER ? sizeof(uint32_t) : 4 * sizeof(uint32_t);
@@ -440,7 +440,7 @@ int
 DtfileConflictReadAvailable(DtfileConflictReader *reader, int fd, size_t byte_budget)
 {
     size_t attempts = 128;
-    if (reader == NULL || byte_budget == 0 || reader->stage == CONFLICT_TAKEN)
+    if (reader == nullptr || byte_budget == 0 || reader->stage == CONFLICT_TAKEN)
     { errno = EINVAL; return -1; }
     if (reader->stage == CONFLICT_FAILED) { errno = reader->error; return -1; }
     if (reader->stage == CONFLICT_READY) return 1;
@@ -483,9 +483,9 @@ failed:
 int
 DtfileConflictReaderTake(DtfileConflictReader *reader, DtfileConflictBatch *batch)
 {
-    if (reader == NULL || batch == NULL || reader->stage != CONFLICT_READY ||
+    if (reader == nullptr || batch == nullptr || reader->stage != CONFLICT_READY ||
         batch->operation != 0 || batch->selected_count != 0 ||
-        batch->count != 0 || batch->native_bytes != 0 || batch->items != NULL)
+        batch->count != 0 || batch->native_bytes != 0 || batch->items != nullptr)
     { errno = EINVAL; return -1; }
     *batch = reader->batch;
     memset(&reader->batch, 0, sizeof(reader->batch));

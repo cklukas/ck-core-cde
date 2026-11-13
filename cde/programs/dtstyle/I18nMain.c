@@ -179,7 +179,7 @@ popup_i18nBB(
 {
     int ret = NoError;
 
-    if (style.i18nDialog == NULL) {
+    if (style.i18nDialog == nullptr) {
       _DtTurnOnHourGlass(shell);  
       BuildI18nDlg(shell);
       ret = InitI18nValues(shell);
@@ -241,7 +241,7 @@ SetImServerHosts(I18nEnv *env)
     /* Set the TextField of the ComboBox with the value found in 
        the IMS selection file */
     XtVaSetValues(XtNameToWidget(i18n.serverHostCB,"Text"), 
-		  XmNvalue, env->file_sel->hostname, NULL);
+		  XmNvalue, env->file_sel->hostname, nullptr);
     
     /* update ComboBox with list of server hostnames found in
        "imServerHosts" resource */
@@ -254,7 +254,7 @@ SetImServerHosts(I18nEnv *env)
 
     XtVaSetValues(i18n.serverHostCB,
 		  XmNitemCount, num_hosts,
-		  XmNitems, style.xrdb.imServerHosts, NULL);
+		  XmNitems, style.xrdb.imServerHosts, nullptr);
 }
 
 static void 
@@ -262,7 +262,7 @@ SetImsToggleList(I18nEnv *env)
 {
     Cardinal n,i;
     XmString string;
-    Widget *im_tog = NULL;
+    Widget *im_tog = nullptr;
     Arg args[5];
     Boolean found = FALSE;
     Cardinal default_index = 0;
@@ -344,7 +344,7 @@ SetPreeditType(
 		  XmNitemCount, preeditTableNum,
 		  XmNitems, loc_preeditTable,
 		  XmNselectedItemCount, 1,
-		  XmNselectedItems, loc_preeditTable, NULL);
+		  XmNselectedItems, loc_preeditTable, nullptr);
 
     /* set the last item position - This is the number of items in the list. */
     i18n.preeditTypeListLastPos = preeditTableNum;
@@ -352,9 +352,9 @@ SetPreeditType(
     /* If more than one item in the list, set the Button MoveDown sentivity to 
        True. */
     if (preeditTableNum > 1)
-	XtVaSetValues(i18n.buttonMoveDown, XmNsensitive, True, NULL);
+	XtVaSetValues(i18n.buttonMoveDown, XmNsensitive, True, nullptr);
 
-    XtVaSetValues(i18n.buttonMoveUp, XmNsensitive, False, NULL);
+    XtVaSetValues(i18n.buttonMoveUp, XmNsensitive, False, nullptr);
 }
 
 
@@ -386,22 +386,22 @@ BuildI18nDlg(
     /* Create toplevel DialogBox */
 
     /* Initialize the i18n structure */
-    i18n.pictLabel = NULL;
-    i18n.systemDefault = NULL;
-    i18n.inputMethodTB = NULL;
-    i18n.serverHostLabel = NULL;
-    i18n.serverHostCB = NULL;
-    i18n.inputMethodLabel = NULL;
-    i18n.inputMethodRC = NULL;
-    i18n.imStartModeTB = NULL;
-    i18n.imStartModeRC = NULL;
-    i18n.askAtLoginTG = NULL;
-    i18n.resumeCurrentImTG = NULL;
-    i18n.preeditTypeTB = NULL;
-    i18n.preeditTypeList = NULL;
-    i18n.buttonMoveUp = NULL;
-    i18n.buttonMoveDown = NULL;
-    i18n.warnDialog = NULL;
+    i18n.pictLabel = nullptr;
+    i18n.systemDefault = nullptr;
+    i18n.inputMethodTB = nullptr;
+    i18n.serverHostLabel = nullptr;
+    i18n.serverHostCB = nullptr;
+    i18n.inputMethodLabel = nullptr;
+    i18n.inputMethodRC = nullptr;
+    i18n.imStartModeTB = nullptr;
+    i18n.imStartModeRC = nullptr;
+    i18n.askAtLoginTG = nullptr;
+    i18n.resumeCurrentImTG = nullptr;
+    i18n.preeditTypeTB = nullptr;
+    i18n.preeditTypeList = nullptr;
+    i18n.buttonMoveUp = nullptr;
+    i18n.buttonMoveDown = nullptr;
+    i18n.warnDialog = nullptr;
 
     /* saveRestore
      * Note that save.poscnt has been initialized elsewhere.  
@@ -515,11 +515,11 @@ BuildI18nDlg(
   	(Widget) (intptr_t) XmCreateComboBox(inputMethodForm, "serverHostCB", args, n);
 
     XtAddCallback(XtNameToWidget(i18n.serverHostCB, "Text"),
-		  XmNactivateCallback, ServerHostCB, NULL);
+		  XmNactivateCallback, ServerHostCB, nullptr);
     XtAddCallback(XtNameToWidget(i18n.serverHostCB, "Text"),
-		  XmNfocusCallback, TextFocusCB, NULL);
+		  XmNfocusCallback, TextFocusCB, nullptr);
     XtAddCallback(XtNameToWidget(i18n.serverHostCB, "Text"),
-		  XmNlosingFocusCallback, TextLosingFocusCB, NULL);
+		  XmNlosingFocusCallback, TextLosingFocusCB, nullptr);
     
 
     n = 0;
@@ -581,17 +581,17 @@ BuildI18nDlg(
 	XmCreatePushButtonGadget(preeditTypeForm, "buttonMoveDown", args, n);
     XmStringFree(string);
 
-    XtAddCallback(style.i18nDialog, XmNmapCallback, FormLayoutCB, NULL);
+    XtAddCallback(style.i18nDialog, XmNmapCallback, FormLayoutCB, nullptr);
     XtAddCallback(style.i18nDialog, XmNmapCallback, MapCB, shell);
-    XtAddCallback(style.i18nDialog, XmNcallback, ButtonCB, NULL);
+    XtAddCallback(style.i18nDialog, XmNcallback, ButtonCB, nullptr);
     XtAddCallback(i18n.systemDefault, XmNactivateCallback, 
-		  SystemDefaultCB, NULL);
+		  SystemDefaultCB, nullptr);
     XtAddCallback(i18n.preeditTypeList, XmNbrowseSelectionCallback, 
-		  ListItemSelectCB, NULL);
+		  ListItemSelectCB, nullptr);
     XtAddCallback(i18n.buttonMoveUp, XmNactivateCallback, 
-		  MoveUpCB, NULL);
+		  MoveUpCB, nullptr);
     XtAddCallback(i18n.buttonMoveDown, XmNactivateCallback, 
-		  MoveDownCB, NULL);
+		  MoveDownCB, nullptr);
 
     XtManageChild(form);
     XtManageChildren(widgetList1,count); 
@@ -773,7 +773,7 @@ FormLayoutCB(
     XtSetArg(args[n], XmNleftOffset,         style.horizontalSpacing);  n++;
     XtSetValues (i18n.buttonMoveDown, args, n);
 
-    XtRemoveCallback(style.i18nDialog, XmNmapCallback, FormLayoutCB, NULL);
+    XtRemoveCallback(style.i18nDialog, XmNmapCallback, FormLayoutCB, nullptr);
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -796,7 +796,7 @@ MapCB(
     if (!save.restoreFlag)
         putDialog ((Widget)client_data, w);
    
-    XtRemoveCallback(style.i18nDialog, XmNmapCallback, MapCB, NULL);
+    XtRemoveCallback(style.i18nDialog, XmNmapCallback, MapCB, nullptr);
   
 }
 
@@ -817,7 +817,7 @@ ServerHostCB(
     /* Get the current hostname in the TextField of the ComboBox, 
        as string */
     XtVaGetValues(XtNameToWidget(i18n.serverHostCB,"Text"), 
-		  XmNvalue, &hostname, NULL);
+		  XmNvalue, &hostname, nullptr);
 
     /* Update the display and query for new IM on this host. */
     UpdateImList(&i18n_env, hostname);
@@ -830,24 +830,24 @@ UpdateImList(
 {
     Cardinal i;
     XtArgVal n;
-    Widget *im_tog = NULL;
+    Widget *im_tog = nullptr;
     int ret = NoError;
 
     /* Clean first the existing list */
     
     /* destroy toggle in radio box is any */
     XtVaGetValues(i18n.inputMethodRC, XmNchildren, &im_tog,
-		  XmNnumChildren, &n, NULL);
+		  XmNnumChildren, &n, nullptr);
     if (n) {
 	XtUnmanageChildren(im_tog, n);
 	for (i=0; i<n; i++) XtDestroyWidget(im_tog[i]);
-	im_tog = NULL;
+	im_tog = nullptr;
     }    
 
     /* Empty what we used to have here */
     if (env->ims_sel->ims_list_size) {
 	XtFree((char *) env->ims_sel->ims_list);
-	env->ims_sel->ims_list = NULL;
+	env->ims_sel->ims_list = nullptr;
 	env->ims_sel->ims_list_size = 0 ;
     }
 
@@ -869,7 +869,7 @@ SystemDefaultCB(
         XtPointer client_data,
         XtPointer call_data )
 {
-    static XmStringTable preeditTable = NULL ;
+    static XmStringTable preeditTable = nullptr ;
     Cardinal i;
     I18nEnv *env;
 
@@ -877,7 +877,7 @@ SystemDefaultCB(
 
     /* Set the Server Host to local, that is use the NULL string */
     XtVaSetValues(XtNameToWidget(i18n.serverHostCB,"Text"), 
-		  XmNvalue, "local", NULL);  
+		  XmNvalue, "local", nullptr);  
 
     UpdateImList(env, "local");
 
@@ -914,8 +914,8 @@ TextFocusCB(
         XtPointer call_data )
 {
     XtVaGetValues(style.i18nDialog, XmNdefaultButton, &i18n.defaultButton,
-		  NULL);
-    XtVaSetValues(style.i18nDialog, XmNdefaultButton, NULL, NULL);
+		  nullptr);
+    XtVaSetValues(style.i18nDialog, XmNdefaultButton, nullptr, nullptr);
 
     return;
 
@@ -933,7 +933,7 @@ TextLosingFocusCB(
         XtPointer call_data )
 {
     XtVaSetValues(style.i18nDialog, XmNdefaultButton, i18n.defaultButton,
-		  NULL);
+		  nullptr);
     
     return;
 
@@ -995,7 +995,7 @@ SaveSelectedValues(
       I18nEnv *env)
 {
     int ret = NoError;
-    char *preeditStr = NULL, *tmpStr;
+    char *preeditStr = nullptr, *tmpStr;
     int i;
     XtArgVal num_preedit = 0;
     XmStringTable list_preedit;
@@ -1018,7 +1018,7 @@ SaveSelectedValues(
 	/* generate a string from the list to set the resource */
 	XtVaGetValues(i18n.preeditTypeList,
 		      XmNitemCount, &num_preedit,
-		      XmNitems, &list_preedit, NULL);
+		      XmNitems, &list_preedit, nullptr);
 
 	/* Save this value in case of a Cancel */
 	if (i18n.preeditSavedVal) {
@@ -1030,8 +1030,8 @@ SaveSelectedValues(
 
 	for (i = 0; i < num_preedit; i++) {
 	    /* get the text of the XmString */
-	    tmpStr = XmStringUnparse(list_preedit[i], NULL, XmCHARSET_TEXT, 
-				     XmCHARSET_TEXT, NULL, 0, XmOUTPUT_ALL);
+	    tmpStr = XmStringUnparse(list_preedit[i], nullptr, XmCHARSET_TEXT, 
+				     XmCHARSET_TEXT, nullptr, 0, XmOUTPUT_ALL);
 	    /* realloc mallocs the first time */
 	    preeditStr = XtRealloc(preeditStr, 
 				   strlen(preeditStr) + strlen(tmpStr) + 2);
@@ -1082,19 +1082,19 @@ SetFileSelValues(
 
     /* Get the selected IM from the selected Toggle button */
     XtVaGetValues(i18n.inputMethodRC, XmNchildren, &im_tog,
-		  XmNnumChildren, &n, NULL);
+		  XmNnumChildren, &n, nullptr);
     if (n) {
 	for (i=0; i<n; i++) {
 	    if (XmToggleButtonGadgetGetState(im_tog[i]) == TRUE) {
 		XtVaGetValues(im_tog[i], XmNuserData, 
 			      &(env->file_sel->im_name),
-			      NULL);
+			      nullptr);
 		break;
 	    }
 	}
     }
     else
-	env->file_sel->im_name = NULL;
+	env->file_sel->im_name = nullptr;
 
     /* Get the start mode from the askAtLoginTG state */
     if (XmToggleButtonGadgetGetState(i18n.askAtLoginTG) == TRUE)
@@ -1112,7 +1112,7 @@ ResetLastSavedValues(
 
     /* Reset the TextField of the ComboBox to the last saved hostname. */
     XtVaSetValues(XtNameToWidget(i18n.serverHostCB,"Text"), 
-		  XmNvalue, env->file_sel->hostname, NULL);  
+		  XmNvalue, env->file_sel->hostname, nullptr);  
 
     UpdateImList(env, env->file_sel->hostname);
 
@@ -1182,7 +1182,7 @@ saveI18n(
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
 
-    if (style.i18nDialog != NULL) 
+    if (style.i18nDialog != nullptr) 
     {
         if (XtIsManaged(style.i18nDialog))
             sprintf(bufr, "*i18nDlg.ismapped: True\n");
@@ -1406,7 +1406,7 @@ MoveUpCB(
 	    int sel_pos = position_list[0];
 	    int sel_index = sel_pos - 1;
 
-	    XtVaGetValues(i18n.preeditTypeList, XmNitems, &list_items, NULL);
+	    XtVaGetValues(i18n.preeditTypeList, XmNitems, &list_items, nullptr);
 
 	    /* makes an array of two XmStrings by reversing the selected
 	       one and the item preceding it */
@@ -1465,7 +1465,7 @@ MoveDownCB(
 	    int sel_pos = position_list[0];
 	    int sel_index = sel_pos - 1;
 
-	    XtVaGetValues(i18n.preeditTypeList, XmNitems, &list_items, NULL);
+	    XtVaGetValues(i18n.preeditTypeList, XmNitems, &list_items, nullptr);
 
 	    /* makes an array of two XmStrings by reversing the selected
 	       one and the item succeeding it */

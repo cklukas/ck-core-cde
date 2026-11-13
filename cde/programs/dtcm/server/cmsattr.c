@@ -59,9 +59,9 @@ _DtCmsUpdateSint32AttrVal(
 	cms_attribute_value	*val;
 
 	if (newval) {
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				return (CSA_E_INSUFFICIENT_MEMORY);
 			}
 
@@ -74,7 +74,7 @@ _DtCmsUpdateSint32AttrVal(
 	} else if (*attrval) {
 
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);
@@ -88,9 +88,9 @@ _DtCmsUpdateUint32AttrVal(
 	cms_attribute_value	*val;
 
 	if (newval) {
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				return (CSA_E_INSUFFICIENT_MEMORY);
 			}
 
@@ -103,7 +103,7 @@ _DtCmsUpdateUint32AttrVal(
 	} else if (*attrval) {
 
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);
@@ -115,16 +115,16 @@ _DtCmsUpdateStringAttrVal(
 	cms_attribute_value **attrval)
 {
 	cms_attribute_value	*val;
-	char *newstring = NULL;
+	char *newstring = nullptr;
 
 	if (newval) {
 		if (newval->item.string_value &&
-		    (newstring = strdup(newval->item.string_value)) == NULL)
+		    (newstring = strdup(newval->item.string_value)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				if (newstring)
 					free(newstring);
 				return (CSA_E_INSUFFICIENT_MEMORY);
@@ -145,7 +145,7 @@ _DtCmsUpdateStringAttrVal(
 
 		free((*attrval)->item.string_value);
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);
@@ -157,16 +157,16 @@ _DtCmsUpdateAccessListAttrVal(
 	cms_attribute_value **attrval)
 {
 	cms_attribute_value *val;
-	cms_access_entry *newlist = NULL;
+	cms_access_entry *newlist = nullptr;
 
 	if (newval && newval->item.access_list_value &&
 	    (newlist = _DtCm_copy_cms_access_list(
-	    newval->item.access_list_value)) == NULL)
+	    newval->item.access_list_value)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if (*attrval == NULL) {
+	if (*attrval == nullptr) {
 		if ((val = (cms_attribute_value *)malloc(
-		    sizeof(cms_attribute_value))) == NULL) {
+		    sizeof(cms_attribute_value))) == nullptr) {
 			if (newlist)
 				_DtCm_free_cms_access_entry(newlist);
 			return (CSA_E_INSUFFICIENT_MEMORY);
@@ -193,16 +193,16 @@ _DtCmsUpdateReminderAttrVal(
 {
 	CSA_return_code		stat;
 	cms_attribute_value	*val;
-	CSA_reminder		*rem = NULL;
+	CSA_reminder		*rem = nullptr;
 
 	if (newval && newval->item.reminder_value) {
 		if ((stat = _DtCm_copy_reminder(newval->item.reminder_value,
 		    &rem)) != CSA_SUCCESS)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				if (rem)
 					_DtCm_free_reminder(rem);
 				return (CSA_E_INSUFFICIENT_MEMORY);
@@ -223,7 +223,7 @@ _DtCmsUpdateReminderAttrVal(
 
 		_DtCm_free_reminder((*attrval)->item.reminder_value);
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);
@@ -235,16 +235,16 @@ _DtCmsUpdateDateTimeListAttrVal(
 	cms_attribute_value **attrval)
 {
 	cms_attribute_value	*val;
-	CSA_date_time_list	dtlist = NULL;
+	CSA_date_time_list	dtlist = nullptr;
 
 	if (newval && newval->item.date_time_list_value) {
 		if ((dtlist = _DtCm_copy_date_time_list(
-		    newval->item.date_time_list_value)) == NULL)
+		    newval->item.date_time_list_value)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				if (dtlist)
 					_DtCm_free_date_time_list(dtlist);
 				return (CSA_E_INSUFFICIENT_MEMORY);
@@ -266,7 +266,7 @@ _DtCmsUpdateDateTimeListAttrVal(
 
 		_DtCm_free_date_time_list((*attrval)->item.date_time_list_value);
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);
@@ -279,16 +279,16 @@ _DtCmsUpdateOpaqueDataAttrVal(
 {
 	CSA_return_code		stat;
 	cms_attribute_value	*val;
-	CSA_opaque_data		*opq = NULL;
+	CSA_opaque_data		*opq = nullptr;
 
 	if (newval && newval->item.opaque_data_value) {
 		if ((stat = _DtCm_copy_opaque_data(
 		    newval->item.opaque_data_value, &opq)) != CSA_SUCCESS)
 			return (CSA_E_INSUFFICIENT_MEMORY);
 
-		if (*attrval == NULL) {
+		if (*attrval == nullptr) {
 			if ((val = (cms_attribute_value *)malloc(
-			    sizeof(cms_attribute_value))) == NULL) {
+			    sizeof(cms_attribute_value))) == nullptr) {
 				if (opq) _DtCm_free_opaque_data(opq);
 				return (CSA_E_INSUFFICIENT_MEMORY);
 			}
@@ -309,7 +309,7 @@ _DtCmsUpdateOpaqueDataAttrVal(
 
 		_DtCm_free_opaque_data((*attrval)->item.opaque_data_value);
 		free(*attrval);
-		*attrval = NULL;
+		*attrval = nullptr;
 	}
 
 	return (CSA_SUCCESS);

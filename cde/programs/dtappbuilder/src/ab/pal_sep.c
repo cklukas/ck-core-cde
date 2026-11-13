@@ -127,10 +127,10 @@ PalItemInfo separator_palitem_rec = {
 
     /* type             */  AB_TYPE_SEPARATOR,
     /* name             */  "Separator",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  separator_initialize,
     /* is_a_test        */  obj_is_separator,
     /* prop_initialize  */  separator_prop_init,
@@ -166,8 +166,8 @@ separator_initialize(
     obj_set_width(obj, separator_init_width);
     obj_set_height(obj, separator_init_height);
 
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 
@@ -222,12 +222,12 @@ separator_prop_init(
     if (dtb_sep_prop_dialog_initialize(cgen, parent) == 0)
     {
         pss->prop_sheet = cgen->attrs_ctrlpanel;
-        pss->current_obj = NULL;
+        pss->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pss->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -320,7 +320,7 @@ separator_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 }
 
 static int
@@ -342,7 +342,7 @@ separator_prop_clear(
 {
     PropSepSettingsRec	*pss = &(prop_sep_settings_rec[type]);
 
-    if (pss->current_obj == NULL)
+    if (pss->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -370,7 +370,7 @@ separator_prop_clear(
     /* Clear Foreground Color */
     prop_colorfield_set_value(&(pss->fg_color), "", False);
 
-    pss->current_obj = NULL;
+    pss->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -388,9 +388,9 @@ separator_prop_load(
     PropSepSettingsRec *pss = &(prop_sep_settings_rec[type]);
     BOOL		load_all = (loadkey & LoadAll);
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pss->current_obj != NULL)
+        if (pss->current_obj != nullptr)
             obj = pss->current_obj;
         else
             return ERROR;
@@ -544,11 +544,11 @@ separator_prop_apply(
 	if (orient == AB_ORIENT_HORIZONTAL)
 	    XtVaSetValues(objxm_get_widget(pss->current_obj),
 		XmNheight, prop_geomfield_get_value(&(pss->geometry), GEOM_HEIGHT),
-		NULL);
+		nullptr);
 	else /* AB_ORIENT_VERTICAL */
 	    XtVaSetValues(objxm_get_widget(pss->current_obj),
                 XmNwidth, prop_geomfield_get_value(&(pss->geometry), GEOM_WIDTH),
-                NULL);
+                nullptr);
     }
     turnoff_changebars(type);
 

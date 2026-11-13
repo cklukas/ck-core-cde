@@ -130,7 +130,7 @@ static Boolean  allocated(Calendar *);
 static Boolean
 allocated(Calendar *c)
 {
-	return (c->view->year_info != NULL);
+	return (c->view->year_info != nullptr);
 }
 
 
@@ -177,7 +177,7 @@ deallocator(Calendar *c)
 
 	/* free memory stored in calendar for year stuff */
 	free(y);
-	c->view->year_info = NULL;
+	c->view->year_info = nullptr;
 
 }
 
@@ -256,7 +256,7 @@ print_std_year_range(int start_year, int end_year)
         int n, year;
 	Calendar *c = calendar;
 
-	if ((xp = x_open_file(c)) == (void *)NULL)
+	if ((xp = x_open_file(c)) == (void *)nullptr)
 	  return;
 
         n = end_year - start_year + 1;
@@ -309,15 +309,15 @@ update_year(Calendar *c)
 	*/
 	strftime(buf, 100, CATGETS(c->DT_catd, 1, 1092, "%Y"),
 		 _XLocaltime(&c->view->date, localtime_buf));
-	XtVaGetValues(y->year_label, XmNlabelString, &str, NULL);
+	XtVaGetValues(y->year_label, XmNlabelString, &str, nullptr);
 	XmStringFree(str);
 	str = XmStringCreateLocalized(buf);
-	XtVaSetValues(y->year_label, XmNlabelString, str, NULL);
+	XtVaSetValues(y->year_label, XmNlabelString, str, nullptr);
 
 	/* update each panel */
 	for (i=0; i<12; i++) {
 		XtVaSetValues(y->month_panels[i], XmNyear, year_num,
-				XmNmonth, i+1, NULL);
+				XmNmonth, i+1, nullptr);
 	}
 
 	/* record the year that's been displayed */
@@ -394,7 +394,7 @@ static int anchors[] = {
 	XtSetArg(al[ac], XmNbottomAttachment, XmATTACH_POSITION); ac++;
 	XtSetArg(al[ac], XmNbottomPosition, 95); ac++;
 	y->form = XmCreateForm(c->form, "yearForm", al, ac);
-	XtVaSetValues(c->message_text, XmNtopWidget, y->form, NULL);
+	XtVaSetValues(c->message_text, XmNtopWidget, y->form, nullptr);
 	XtManageChild(y->label_form);
 	XtUnmapWidget(y->label_form);
 	XtManageChild(y->form);
@@ -452,7 +452,7 @@ year_btn_cb(Widget w, XtPointer client, XtPointer call)
 	Calendar *c = (Calendar *)client;
 	int monthno, year;
  
-	XtVaGetValues(w, XmNmonth, &monthno, XmNyear, &year, NULL);
+	XtVaGetValues(w, XmNmonth, &monthno, XmNyear, &year, nullptr);
 
         if (cbs->type == MONTH_SELECTION) {
 		/*
@@ -466,14 +466,14 @@ year_btn_cb(Widget w, XtPointer client, XtPointer call)
 			c->view->olddate = c->view->date;
 			c->view->date = monthdayyear(monthno, 1, year);
 			c->view->nwks = numwks(c->view->date);
-			calendar_select (c, monthSelect, NULL);
+			calendar_select (c, monthSelect, nullptr);
 		}
  
 
 		/* switch to month view */
 		cleanup_after_yearview(c);
 		c->view->glance = monthGlance;
-		prepare_to_paint_monthview(c, NULL);
+		prepare_to_paint_monthview(c, nullptr);
 		XtMapWidget(c->canvas);
 	}
         else {	/* type == DAY_SELECTION */

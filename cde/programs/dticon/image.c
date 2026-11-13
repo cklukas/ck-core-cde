@@ -92,25 +92,25 @@ Mirror_Image(
 
   old_image = XGetImage(dpy, color_icon, select_box.x, select_box.y,
 		select_box.width, select_box.height, AllPlanes, format);
-  if (old_image == NULL)
+  if (old_image == nullptr)
     return (False);
   new_image  = XGetImage(dpy, color_icon, select_box.x, select_box.y,
 		select_box.width, select_box.height, AllPlanes, format);
-  if (new_image == NULL) {
+  if (new_image == nullptr) {
     XDestroyImage(old_image);
     return (False);
    }
 
   old_mono = XGetImage(dpy, mono_icon, select_box.x, select_box.y,
 		select_box.width, select_box.height, AllPlanes, format);
-  if (old_mono == NULL) {
+  if (old_mono == nullptr) {
     XDestroyImage(old_image);
     XDestroyImage(new_image);
     return (False);
    }
   new_mono  = XGetImage(dpy, mono_icon, select_box.x, select_box.y,
 		select_box.width, select_box.height, AllPlanes, format);
-  if (new_mono == NULL) {
+  if (new_mono == nullptr) {
     XDestroyImage(old_image);
     XDestroyImage(new_image);
     XDestroyImage(old_mono);
@@ -329,11 +329,11 @@ Flood_Region(
 
   ImagePix = XGetImage(dpy, color_icon, 0, 0, icon_width, icon_height,
 		AllPlanes, format);
-  if (ImagePix == NULL)
+  if (ImagePix == nullptr)
     return (False);
   MonoPix = XGetImage(dpy, mono_icon, 0, 0, icon_width, icon_height,
 		AllPlanes, format);
-  if (MonoPix == NULL)
+  if (MonoPix == nullptr)
     return (False);
 
 #ifdef DEBUG

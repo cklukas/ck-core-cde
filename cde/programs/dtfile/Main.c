@@ -491,10 +491,10 @@ Widget * cleanUpBtn;
 Widget * separator1;
 Widget * separator2;
 Widget * terminalBtn;
-Widget * usingHelp = NULL;
-Widget * fileManagerHelp = NULL;
-Widget * applicationManagerHelp = NULL;
-Widget * usingHelpTrash = NULL;
+Widget * usingHelp = nullptr;
+Widget * fileManagerHelp = nullptr;
+Widget * applicationManagerHelp = nullptr;
+Widget * usingHelpTrash = nullptr;
 
 
 /* Bitmask used to indicate the current sensitivity state of shared menu btns */
@@ -516,7 +516,7 @@ int numRows;
 
 /*  Globally referenced application name.  Set to argv[0] in main  */
 
-char * application_name = NULL;
+char * application_name = nullptr;
 
 
 /*  uid for root user; used when we are checking access permissions  */
@@ -532,9 +532,9 @@ char users_home_dir[MAX_PATH];
 
 /*  Toolbox directory  */
 
-char * desktop_dir = NULL;
-char * trash_dir = NULL;
-char * remote_sys_dir = NULL;
+char * desktop_dir = nullptr;
+char * trash_dir = nullptr;
+char * remote_sys_dir = nullptr;
 
 /* Restor type */
 
@@ -551,7 +551,7 @@ Pixel white_pixel;
 /*  used to propagate visual attributes from the initiating  */
 /*  view to the new view.                                    */
 
-XtPointer initiating_view = NULL;
+XtPointer initiating_view = nullptr;
 Boolean special_view = False;
 Boolean TrashView = False;
 
@@ -649,14 +649,14 @@ int xErrorDetected = False;
 /* BMenu button binding */
 int bMenuButton;
 
-View ** view_set = NULL;
+View ** view_set = nullptr;
 int view_count = 0;
 int view_set_size = 0;
 
 /*  Globals used within this file.  */
 
 static Display * display;
-char * dt_path = NULL;
+char * dt_path = nullptr;
 static Boolean message_display_enabled = True;
 
 
@@ -678,26 +678,26 @@ typedef struct
 
 static XrmOptionDescRec option_list[] =
 {
-   {  "-noview",            "noView",          XrmoptionIsArg,   NULL  },
-   {  "-session",           "session",         XrmoptionSepArg,  NULL  },
-   {  "-dir",               "folder",          XrmoptionSepArg,  NULL  },
-   {  "-folder",            "folder",          XrmoptionSepArg,  NULL  },
-   {  "-tree",              "treeView",        XrmoptionSepArg,  NULL  },
-   {  "-tree_files",        "treeFiles",       XrmoptionSepArg,  NULL  },
-   {  VIEW_HEADER,          "view",            XrmoptionSepArg,  NULL  },
-   {  "-order",             "order",           XrmoptionSepArg,  NULL  },
-   {  "-direction",         "direction",       XrmoptionSepArg,  NULL  },
-   {  "-grid",              "grid",            XrmoptionSepArg,  NULL  },
-   {  RESTRICTED_HEADER,    "restricted",      XrmoptionIsArg,   NULL  },
-   {  "-title",             "title",           XrmoptionSepArg,  NULL  },
-   {  "-help_volume",       "help_volume",     XrmoptionSepArg,  NULL  },
+   {  "-noview",            "noView",          XrmoptionIsArg,   nullptr  },
+   {  "-session",           "session",         XrmoptionSepArg,  nullptr  },
+   {  "-dir",               "folder",          XrmoptionSepArg,  nullptr  },
+   {  "-folder",            "folder",          XrmoptionSepArg,  nullptr  },
+   {  "-tree",              "treeView",        XrmoptionSepArg,  nullptr  },
+   {  "-tree_files",        "treeFiles",       XrmoptionSepArg,  nullptr  },
+   {  VIEW_HEADER,          "view",            XrmoptionSepArg,  nullptr  },
+   {  "-order",             "order",           XrmoptionSepArg,  nullptr  },
+   {  "-direction",         "direction",       XrmoptionSepArg,  nullptr  },
+   {  "-grid",              "grid",            XrmoptionSepArg,  nullptr  },
+   {  RESTRICTED_HEADER,    "restricted",      XrmoptionIsArg,   nullptr  },
+   {  "-title",             "title",           XrmoptionSepArg,  nullptr  },
+   {  "-help_volume",       "help_volume",     XrmoptionSepArg,  nullptr  },
    {  "-noprompt",          "promptUser",      XrmoptionNoArg,  "False"  },
-   {  "-small_icon_width",  "smallIconWidth",  XrmoptionSepArg,  NULL  },
-   {  "-small_icon_height", "smallIconHeight", XrmoptionSepArg,  NULL  },
-   {  "-large_icon_width",  "largeIconWidth",  XrmoptionSepArg,  NULL  },
-   {  "-large_icon_height", "largeIconHeight", XrmoptionSepArg,  NULL  },
-   {  "-extra_large_icon_width",  "extraLargeIconWidth",  XrmoptionSepArg,  NULL  },
-   {  "-extra_large_icon_height", "extraLargeIconHeight", XrmoptionSepArg,  NULL  },
+   {  "-small_icon_width",  "smallIconWidth",  XrmoptionSepArg,  nullptr  },
+   {  "-small_icon_height", "smallIconHeight", XrmoptionSepArg,  nullptr  },
+   {  "-large_icon_width",  "largeIconWidth",  XrmoptionSepArg,  nullptr  },
+   {  "-large_icon_height", "largeIconHeight", XrmoptionSepArg,  nullptr  },
+   {  "-extra_large_icon_width",  "extraLargeIconWidth",  XrmoptionSepArg,  nullptr  },
+   {  "-extra_large_icon_height", "extraLargeIconHeight", XrmoptionSepArg,  nullptr  },
 };
 
 
@@ -1051,7 +1051,7 @@ main(
 
 #ifdef DT_PERFORMANCE
    printf("  Start\n");
-   gettimeofday(&update_time_ss, NULL);
+   gettimeofday(&update_time_ss, nullptr);
 #endif
    (void) signal (SIGINT, Stop);
 
@@ -1067,7 +1067,7 @@ main(
 #else
    (void) signal (SIGCHLD, SIG_IGN);
 #endif /* CSRG_BASED */
-   XtSetLanguageProc( NULL, NULL, NULL );
+   XtSetLanguageProc( nullptr, nullptr, nullptr );
 
 #ifdef DT_PERFORMANCE
 { /* Initialize the checkpoint protocol  - Aloke Gupta */
@@ -1083,7 +1083,7 @@ _DtPerfChkpntInit(display, RootWindow(display, DefaultScreen(display)),
 
 #ifdef DT_PERFORMANCE
    printf("  XtInitalize\n");
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
 
    /* Added by Aloke Gupta */
 _DtPerfChkpntMsgSend("Begin XtInitialize");
@@ -1095,7 +1095,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
                             (int *)&argc, argv);
 
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -1116,7 +1116,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
    /* set application name for later */
    str = strrchr(argv[0], '/');
-   if(str != NULL)
+   if(str != nullptr)
       application_name = XtNewString (str + 1);
    else
       application_name = XtNewString (argv[0]);
@@ -1138,19 +1138,19 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    /* Initialize BMenu button binding */
    {
 	int numMouseButtons = XGetPointerMapping(display,
-					(unsigned char *)NULL, 0);
+					(unsigned char *)nullptr, 0);
 	bMenuButton = (numMouseButtons < 3) ? Button2 : Button3;
    }
 
    /* initialize debugging flag */
 #ifdef DEBUG
-   if ((tmpStr = getenv("DTFILE_DEBUG")) != NULL)
+   if ((tmpStr = getenv("DTFILE_DEBUG")) != nullptr)
    {
       debug = atoi(tmpStr);
       if (debug <= 0)
          debug = 1;
    }
-   if (getenv("DTFILE_XSYNC") != NULL)
+   if (getenv("DTFILE_XSYNC") != nullptr)
    {
       XSynchronize(display, True);
    }
@@ -1158,13 +1158,13 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
    /* initialize performance flag */
 #ifdef DT_PERFORMANCE
-   if ((tmpStr = getenv("DTFILE_PERFORM")) != NULL)
+   if ((tmpStr = getenv("DTFILE_PERFORM")) != nullptr)
    {
       perform = atoi(tmpStr);
       if (perform <= 0)
          perform = 1;
    }
-   if (getenv("DTFILE_XSYNC") != NULL)
+   if (getenv("DTFILE_XSYNC") != nullptr)
    {
       XSynchronize(display, True);
    }
@@ -1181,7 +1181,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    /* Set session property on the top level window */
    XmAddWMProtocols(toplevel, &save_yourself_atom, 1);
    XmAddWMProtocolCallback(toplevel, save_yourself_atom, SaveSessionCallback,
-                           NULL);
+                           nullptr);
 
    XSetErrorHandler (ErrorHandler);
    XtAppSetErrorHandler (XtWidgetToApplicationContext(toplevel),
@@ -1211,7 +1211,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
 #ifdef DT_PERFORMANCE
    printf("  Setup Converters and get resources\n");
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
 
    /* Added by Aloke Gupta */
    _DtPerfChkpntMsgSend("Begin Setup Converters");
@@ -1221,40 +1221,40 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    /* First lets add the resource converters needed */
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "ObjectPlacement",
-                       DtfileCvtStringToObjPlace, NULL, 0);
+                       DtfileCvtStringToObjPlace, nullptr, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "OpenFolder",
-                       DtfileCvtStringToOpenDir, NULL, 0);
+                       DtfileCvtStringToOpenDir, nullptr, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "DesktopIcon",
-                       DtfileCvtStringToDTIcon, NULL, 0);
+                       DtfileCvtStringToDTIcon, nullptr, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "Tree",
-                       DtfileCvtStringToTree, NULL, 0);
+                       DtfileCvtStringToTree, nullptr, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "TreeFiles",
-                       DtfileCvtStringToTreeFiles, NULL, 0);
+                       DtfileCvtStringToTreeFiles, nullptr, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "View",
-                       DtfileCvtStringToView, NULL, 0);
+                       DtfileCvtStringToView, nullptr, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "Order",
-                       DtfileCvtStringToOrder, NULL, 0);
+                       DtfileCvtStringToOrder, nullptr, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "Direction",
-                       DtfileCvtStringToDirection, NULL, 0);
+                       DtfileCvtStringToDirection, nullptr, 0);
    XtAppAddConverter (XtWidgetToApplicationContext (toplevel),
                        XtRString, "Grid",
-                       DtfileCvtStringToGrid, NULL, 0);
+                       DtfileCvtStringToGrid, nullptr, 0);
 
    /*  Get the application defined resources of session and  */
    /*  directory, and get the processes host.                */
 
    XtGetApplicationResources(toplevel, &application_args,
-                             resources, XtNumber(resources), NULL,0);
+                             resources, XtNumber(resources), nullptr,0);
 
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -1267,7 +1267,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
 #ifdef DT_PERFORMANCE
    printf("  DtDbLoad\n");
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
    /* Added by Aloke Gupta */
    _DtPerfChkpntMsgSend("Begin DtDbLoad");
 
@@ -1277,7 +1277,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
    DtDbLoad();
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -1297,8 +1297,8 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
                        &resource_value))
    {
      string = XtNewString(resource_value.addr);
-     for(str = DtStrtok(string, ",") ,i = 0; str != NULL && i < 2 ;
-     str = DtStrtok(NULL, ","), i++) {
+     for(str = DtStrtok(string, ",") ,i = 0; str != nullptr && i < 2 ;
+     str = DtStrtok(nullptr, ","), i++) {
        if(i == 0)
          openInPlace = XtNewString(str);
        else
@@ -1306,9 +1306,9 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
      }
      XtFree(string);
    }
-   if(openInPlace == NULL || strlen(openInPlace) == 0)
+   if(openInPlace == nullptr || strlen(openInPlace) == 0)
        openInPlace = XtNewString("OpenInPlace");
-   if(openNewView == NULL || strlen(openNewView) == 0)
+   if(openNewView == nullptr || strlen(openNewView) == 0)
        openNewView = XtNewString("OpenNewView");
 
    DtGetShortHostname (home_host_name, MAX_PATH);
@@ -1336,7 +1336,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
           post_dialog(toplevel, title, errmsg, DtErrExitCB); 
       }
 
-      if (application_args.session != NULL)
+      if (application_args.session != nullptr)
       {
 	 msg = tttk_message_create( 0, TT_REQUEST, TT_SESSION, 0,
 				    "DtFileSession_Run",
@@ -1344,7 +1344,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 	 tt_message_file_set( msg, application_args.session );
 	 tt_message_send( msg );
       }
-      else if (application_args.directories != NULL)
+      else if (application_args.directories != nullptr)
       {
 	 msg = tttk_message_create( 0, TT_REQUEST, TT_SESSION, 0,
 				    "DtFolder_Show",
@@ -1405,7 +1405,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
 #ifdef DT_PERFORMANCE
    printf("  Setup Callbacks (messaging)\n");
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
 
    /* Added by Aloke Gupta */
    _DtPerfChkpntMsgSend("Begin Setup Callbacks");
@@ -1450,10 +1450,10 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
    _DtWsmAddMarqueeSelectionCallback(toplevel,
                                      MarqueeSelect,
-                                     NULL);
+                                     nullptr);
 
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -1499,14 +1499,14 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    trashIcon = application_args.trashIcon;
    trashFullIcon = application_args.trashFullIcon;
    retryLoadDesktopInfo = application_args.retryLoadDesktop;
-   if( application_args.directories != NULL
+   if( application_args.directories != nullptr
        || (strcmp (application_args.restricted, RESTRICTED_HEADER) == 0)
        || restrictMode )
    {
       special_view = True;
       if(strcmp (application_args.restricted, RESTRICTED_HEADER) == 0)
       {
-         if(application_args.directories != NULL)
+         if(application_args.directories != nullptr)
             special_restricted = XtNewString(application_args.directories);
          else
          {
@@ -1522,7 +1522,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
       else if( restrictMode )
          special_restricted = XtNewString("~");
       else
-         special_restricted = NULL;
+         special_restricted = nullptr;
       special_treeType = treeType = application_args.tree_view;
       special_treeFiles = treeFiles = application_args.tree_files;
       special_viewType = viewType = application_args.view;
@@ -1530,7 +1530,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
       special_directionType = directionType = application_args.direction;
       special_randomType = randomType = application_args.grid;
       special_title = XtNewString(application_args.title);
-      if(application_args.help_volume == NULL)
+      if(application_args.help_volume == nullptr)
       {
          special_helpVol = XtNewString(DTFILE_HELP_NAME);
          fileMgrHelpVol = XtNewString(DTFILE_HELP_NAME);
@@ -1552,7 +1552,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
       directionType = application_args.direction;
       randomType = application_args.grid;
       fileMgrTitle = application_args.title;
-      if(application_args.help_volume == NULL)
+      if(application_args.help_volume == nullptr)
          fileMgrHelpVol = XtNewString(DTFILE_HELP_NAME);
       else
          fileMgrHelpVol = XtNewString(application_args.help_volume);
@@ -1582,7 +1582,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    root_title = (char *)XtMalloc(strlen(application_args.root_title) + 1);
    strcpy(root_title, application_args.root_title);
 
-   if ((homeDir = getenv("HOME")) == NULL || strlen (homeDir) == 0)
+   if ((homeDir = getenv("HOME")) == nullptr || strlen (homeDir) == 0)
    {
       pwInfo = getpwuid (getuid());
       homeDir = pwInfo->pw_dir;
@@ -1590,14 +1590,14 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    strncpy(users_home_dir, homeDir, MAX_PATH - 1);
    if(restrictMode)
    {
-      if(application_args.directories != NULL &&
+      if(application_args.directories != nullptr &&
                            strncmp(application_args.directories, "~", 1) != 0 )
       {
          if(strncmp(application_args.directories, users_home_dir,
                                                   strlen(users_home_dir)) != 0)
             RestrictModeUsage (argv);
       }
-      else if (application_args.directories == NULL)
+      else if (application_args.directories == nullptr)
           application_args.directories = XtNewString("~");
    }
    if (strcmp(users_home_dir, "/") != 0)
@@ -1617,7 +1617,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
    dt_path = _DtCreateDtDirs (display);
 
-   if (dt_path == NULL)
+   if (dt_path == nullptr)
    {
       Widget dialog;
       char *msg, *title;
@@ -1653,7 +1653,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
    /* Get the root user id */
 
-   if ((pw = getpwnam("root")) == NULL)
+   if ((pw = getpwnam("root")) == nullptr)
       root_user = 0;          /* Assume root is uid 0 */
    else
       root_user = pw->pw_uid;
@@ -1667,7 +1667,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    mod_attr_dialog = _DtInstallDialog (modAttrClass, True, True);
    help_dialog = _DtInstallDialog (helpClass, False, False);
 
-   if(special_view == True && special_restricted != NULL) {
+   if(special_view == True && special_restricted != nullptr) {
       if(strncmp(special_restricted, "~", 1) == 0)
       {
          char *ptr, *ptr1;
@@ -1685,7 +1685,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
 #ifdef DT_PERFORMANCE
    printf("  TrashCreateDialog\n");
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
 
    /* Added by Aloke Gupta */
    _DtPerfChkpntMsgSend("Begin TrashCreateDialog");
@@ -1700,7 +1700,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 #endif
 
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -1718,13 +1718,13 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
 #ifdef DT_PERFORMANCE
    printf("  Setup Desktop\n");
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
    /* Added by Aloke Gupta */
    _DtPerfChkpntMsgSend("Begin Setup Desktop");
 
 #endif
    /* go build 10 desktop windows */
-   desktop_data = NULL;
+   desktop_data = nullptr;
    InitializeDesktopWindows(10, display);
    InitializeDesktopGrid(displayWidth, displayHeight);
 
@@ -1734,10 +1734,10 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
       This handler will be called when a workspace is being removed
       so File Manager can go through its desktop icons and clean up.
    */
-   DtWsmAddWorkspaceModifiedCallback( toplevel, WorkSpaceRemoved, NULL );
+   DtWsmAddWorkspaceModifiedCallback( toplevel, WorkSpaceRemoved, nullptr );
 
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -1754,7 +1754,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
 #ifdef DT_PERFORMANCE
    printf("  Bring up View\n");
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
 
    /* Added by Aloke Gupta */
    _DtPerfChkpntMsgSend("Begin Bring up View");
@@ -1763,18 +1763,18 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
    if (strcmp (application_args.no_view, "-noview") != 0)
    {
-     if (application_args.session != NULL)
+     if (application_args.session != nullptr)
         session_flag =
-          RestoreSession (application_args.session, NORMAL_RESTORE, NULL);
-     else if (application_args.directories != NULL)
+          RestoreSession (application_args.session, NORMAL_RESTORE, nullptr);
+     else if (application_args.directories != nullptr)
      {
         restoreType = CURRENT_DIR_RESTORE;
-        OpenDirectories (application_args.directories, NULL);
+        OpenDirectories (application_args.directories, nullptr);
      }
    }
 
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -1790,7 +1790,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    /*  current directory.                                    */
 
    if ( (strcmp (application_args.no_view, "-noview") != 0) &&
-        ((application_args.session == NULL) ||
+        ((application_args.session == nullptr) ||
          (session_flag != 0)) )
    {
       if (view_count == 0)
@@ -1800,7 +1800,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 
          if (current_directory[0] != '\0')
          {
-           if (!GetNewView (home_host_name, current_directory, NULL, NULL, 0))
+           if (!GetNewView (home_host_name, current_directory, nullptr, nullptr, 0))
               ViewHomeDirectoryHandler (0);
          }
          else
@@ -1815,15 +1815,15 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    InitializeDirectoryRead (toplevel);
 
    /* Process and dispatch incoming events */
-   eventDebugging = getenv("EVENT_DEBUGGING") != NULL;
+   eventDebugging = getenv("EVENT_DEBUGGING") != nullptr;
 
 #ifdef DT_PERFORMANCE
    printf("  InitializeToolTalkSession\n");
-   gettimeofday(&update_time_s, NULL);
+   gettimeofday(&update_time_s, nullptr);
 #endif
    (void) InitializeToolTalkSession( toplevel, ttFd );
 #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_f, NULL);
+   gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {
       update_time_f.tv_usec += 1000000;
       update_time_f.tv_sec--;
@@ -1832,7 +1832,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 #endif
 
  #ifdef DT_PERFORMANCE
-   gettimeofday(&update_time_fs, NULL);
+   gettimeofday(&update_time_fs, nullptr);
    if (update_time_ss.tv_usec > update_time_fs.tv_usec) {
       update_time_fs.tv_usec += 1000000;
       update_time_fs.tv_sec--;
@@ -1868,7 +1868,7 @@ ErrorHandler(
   char errmsg[_DTFILE_BUFSIZE];
 
   _DtPrintDefaultErrorSafe (disp, event, errmsg, _DTFILE_BUFSIZE);
-  _DtSimpleError(application_name, DtWarning, NULL, errmsg, NULL);
+  _DtSimpleError(application_name, DtWarning, nullptr, errmsg, nullptr);
   xErrorDetected = True;
 
   /* We do not want to exit here lets try to continue... */
@@ -1888,7 +1888,7 @@ ToolkitErrorHandler(
     strcpy(msg, message);
     strcat(msg, "\n");
     strcat(msg, tmpStr);
-    _DtSimpleError (application_name, DtError, NULL, msg);
+    _DtSimpleError (application_name, DtError, nullptr, msg);
     printf ("%s",msg);
     XtFree(msg);
     FinalizeToolTalkSession( );
@@ -2029,17 +2029,17 @@ static void
 RestoreSettingsFile( void )
 {
    int             status, fd;
-   char            *dtPath=NULL;
-   char            *homeSavePath=NULL;
-   char            *homeHomePath=NULL;
-   char            *toolSavePath=NULL;
-   char            *toolHomePath=NULL;
-   char            *dirName=NULL;
+   char            *dtPath=nullptr;
+   char            *homeSavePath=nullptr;
+   char            *homeHomePath=nullptr;
+   char            *toolSavePath=nullptr;
+   char            *toolHomePath=nullptr;
+   char            *dirName=nullptr;
    Atom            actualType;
    int             actualFormat;
    unsigned long   nitems;
    unsigned long   leftover;
-   unsigned char   *data = NULL;
+   unsigned char   *data = nullptr;
 
 
   /* go get the dt path */
@@ -2103,7 +2103,7 @@ RestoreSettingsFile( void )
 
         tmpStr = GETMESSAGE(18,27, "Unable to recover the saved default home settings file, will use default.\n");
         msg = XtNewString(tmpStr);
-        _DtSimpleErrnoError(application_name, DtWarning, NULL, msg, NULL);
+        _DtSimpleErrnoError(application_name, DtWarning, nullptr, msg, nullptr);
         XtFree(msg);
       }
 
@@ -2132,7 +2132,7 @@ RestoreSettingsFile( void )
 
         tmpStr = GETMESSAGE(18,28, "Unable to recover the saved default tool settings file, will use default.\n");
         msg = XtNewString(tmpStr);
-        _DtSimpleErrnoError(application_name, DtWarning, NULL, msg, NULL);
+        _DtSimpleErrnoError(application_name, DtWarning, nullptr, msg, nullptr);
         XtFree(msg);
       }
    }
@@ -2168,11 +2168,11 @@ MoveDefaultSettings(
         int mode )
 {
    int status;
-   char *toolSavePath=NULL;
-   char *homeSavePath=NULL;
-   char *dirName=NULL;
-   char *toolMovePath=NULL;
-   char *homeMovePath=NULL;
+   char *toolSavePath=nullptr;
+   char *homeSavePath=nullptr;
+   char *dirName=nullptr;
+   char *toolMovePath=nullptr;
+   char *homeMovePath=nullptr;
    char *dtPath;
 
    /* determine whether home or current */
@@ -2289,7 +2289,7 @@ SaveSettingsCB(
 
 
    /* Get the file_mgr_rec dialog data info */
-   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec)) == nullptr)
      return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
 
@@ -2297,7 +2297,7 @@ SaveSettingsCB(
    /* Based on the path we must determine if we are saving a Tools or
     * HomeDir dtfile view.
     */
-   if (file_mgr_data->restricted_directory != NULL && file_mgr_data->toolbox)
+   if (file_mgr_data->restricted_directory != nullptr && file_mgr_data->toolbox)
      file_mgr_data->restoreKind = TOOL_RESTORE;
    else
      file_mgr_data->restoreKind = HOME_RESTORE;
@@ -2315,7 +2315,7 @@ SaveSettingsCB(
    }
    message = XtNewString(tmpStr);
 
-   if(file_mgr_data->title != NULL &&
+   if(file_mgr_data->title != nullptr &&
                strcmp(file_mgr_data->helpVol, DTFILE_HELP_NAME) != 0)
    {
       tmpStr = GETMESSAGE(18, 16, "Save As Default Options");
@@ -2328,8 +2328,8 @@ SaveSettingsCB(
       tmpStr = GETMESSAGE(18, 32, "File Manager - Save As Default Options");
       title = XtNewString(tmpStr);
    }
-   dlog = (Widget)_DtMessageDialog(mbar, title, message, NULL, TRUE,
-                                   SaveDefaultCancelCB, SaveDefaultOkCB, NULL,
+   dlog = (Widget)_DtMessageDialog(mbar, title, message, nullptr, TRUE,
+                                   SaveDefaultCancelCB, SaveDefaultOkCB, nullptr,
                                    HelpRequestCB, False, QUESTION_DIALOG);
    file_mgr_rec->defaultEnvBtn_child=dlog;
    XtFree (message);
@@ -2389,7 +2389,7 @@ SaveDefaultOkCB(
 {
 
    FileMgrRec * file_mgr_rec;
-   static char * name_list[] = { DTFILE_CLASS_NAME, NULL, NULL };
+   static char * name_list[] = { DTFILE_CLASS_NAME, nullptr, nullptr };
    char view_number[5];
    int fd;
    Arg args[1];
@@ -2427,7 +2427,7 @@ SaveDefaultOkCB(
    /* Build the path for our env file */
 
    tmp_path = _DtCreateDtDirs(display);
-   if (tmp_path == NULL)
+   if (tmp_path == nullptr)
      {
        XtDestroyWidget(client_data);
        return;
@@ -2459,7 +2459,7 @@ SaveDefaultOkCB(
       tmpStr = GETMESSAGE(18, 17, "Unable to create a file to store the default options.");
       title = XtNewString((GETMESSAGE(21,38,"Object Create Error")));
       msg = XtNewString(tmpStr);
-      _DtMessage (toplevel, title, msg, NULL, HelpRequestCB);
+      _DtMessage (toplevel, title, msg, nullptr, HelpRequestCB);
       XtFree(msg);
       XtFree(title);
       return;
@@ -2485,10 +2485,10 @@ SaveDefaultOkCB(
    save_branch_list = file_mgr_data->branch_list;
    save_selection_list = file_mgr_data->selection_list;
    save_selected_file_count = file_mgr_data->selected_file_count;
-   file_mgr_data->host = NULL;
-   file_mgr_data->current_directory = NULL;
-   file_mgr_data->branch_list = NULL;
-   file_mgr_data->selection_list = NULL;
+   file_mgr_data->host = nullptr;
+   file_mgr_data->current_directory = nullptr;
+   file_mgr_data->branch_list = nullptr;
+   file_mgr_data->selection_list = nullptr;
    file_mgr_data->selected_file_count = 0;
 
    /*  Call the encapsulation mechanism to write each dialog  */
@@ -2526,8 +2526,8 @@ SaveSessionCallback(
         XtPointer client_data,
         XtPointer call_data )
 {
-   char * full_path=NULL;
-   char * file_name=NULL;
+   char * full_path=nullptr;
+   char * file_name=nullptr;
    char * strPtr;
    int restore=NORMAL_RESTORE;
    Boolean status=FALSE;
@@ -2537,7 +2537,7 @@ SaveSessionCallback(
    if(view_count == 0 && desktop_data->numIconsUsed == 0)
    {
       XChangeProperty (display, XtWindow (toplevel), command_atom,
-                    XA_STRING, 8, PropModeReplace, (unsigned char *)NULL, 0);
+                    XA_STRING, 8, PropModeReplace, (unsigned char *)nullptr, 0);
       XSync(display, False);
       FinalizeToolTalkSession( );
       exit(0);
@@ -2570,9 +2570,9 @@ SaveSessionCallback(
         else if ((strncmp(strPtr, "/current", 8) == 0))
            restore = CURRENT_DIR_RESTORE;
 
-        if (strPtr != NULL)
+        if (strPtr != nullptr)
           *strPtr = '\0';
-   } while ((strPtr != NULL) && (restore == NORMAL_RESTORE));
+   } while ((strPtr != nullptr) && (restore == NORMAL_RESTORE));
 
    SaveDesktopInfo(restore);
 
@@ -2608,14 +2608,14 @@ SaveSession(
         char *path
         )
 {
-   static char * name_list[] = { DTFILE_CLASS_NAME, NULL, NULL, NULL,
-                                 NULL, NULL};
+   static char * name_list[] = { DTFILE_CLASS_NAME, nullptr, nullptr, nullptr,
+                                 nullptr, nullptr};
    char view_number[12];
    char number[5];
    char workspaceNumber[11];
    int fd;
-   Atom * ws_presence = NULL;
-   char * workspace_name=NULL;
+   Atom * ws_presence = nullptr;
+   char * workspace_name=nullptr;
    unsigned long num_workspaces = 0;
 
    Atom actual_type;
@@ -2639,11 +2639,11 @@ SaveSession(
    /* This needs to be done because name_list is static and the values
       can be changed during the routine.  This means that they need to be
       NULL'd out each pass */
-   name_list[1] = NULL;
-   name_list[2] = NULL;
-   name_list[3] = NULL;
-   name_list[4] = NULL;
-   name_list[5] = NULL;
+   name_list[1] = nullptr;
+   name_list[2] = nullptr;
+   name_list[3] = nullptr;
+   name_list[4] = nullptr;
+   name_list[5] = nullptr;
 
    /*  Disable any message box display during save session  */
 
@@ -2656,7 +2656,7 @@ SaveSession(
    {
       tmpStr = GETMESSAGE(18, 18, "Could not open the session file.");
       msg = XtNewString(tmpStr);
-      _DtSimpleError (application_name, DtError, NULL, msg);
+      _DtSimpleError (application_name, DtError, nullptr, msg);
       XtFree(msg);
       message_display_enabled = True;
 
@@ -2740,7 +2740,7 @@ SaveSession(
       if(i == -1 && trashDialogData)
           file_mgr_data->IsTrashCan = True;
       file_mgr_rec = (FileMgrRec *) file_mgr_data->file_mgr_rec;
-      if(file_mgr_rec == NULL)
+      if(file_mgr_rec == nullptr)
          continue;
 
       /* This is a bug fix ... We don't want to save the title if the
@@ -2754,7 +2754,7 @@ SaveSession(
       {
          /* the Trash Can or toolbox (i.e. Application Manager) */
          actualSavedTitle = file_mgr_data->title;
-         file_mgr_data->title = NULL;
+         file_mgr_data->title = nullptr;
          saveTitle = True;
       }
 
@@ -2888,7 +2888,7 @@ ForceMyIconOpen (
    char * host_name,
    char * directory_name)
 {
-   FileViewData * file_view_data = NULL;
+   FileViewData * file_view_data = nullptr;
    DesktopRec *desktopWindow;
    DialogData * dd;
    FileMgrData * fmd;
@@ -2904,7 +2904,7 @@ ForceMyIconOpen (
       existing open directories and check to see if there are any open
       directories in each of them. This is used at the end of OpenNewView
       and the end of ShowNewDirectory */
-   if (directory_name == NULL)
+   if (directory_name == nullptr)
    {
       for (i = 0; i < view_count; i++)
       {
@@ -2943,7 +2943,7 @@ ForceMyIconOpen (
                   file_view_data = fmd->directory_set[j]->file_view_data[k];
                   if (strcmp(file_view_data->file_data->file_name, fname) == 0)
                      break;
-                  file_view_data = NULL;
+                  file_view_data = nullptr;
                }
                break;
             }
@@ -3007,16 +3007,16 @@ RestoreSession(
         int type_of_restore,
         char *directory)
 {
-   static char * name_list[] = { DTFILE_CLASS_NAME, NULL, NULL, NULL,
-                                 NULL, NULL };
+   static char * name_list[] = { DTFILE_CLASS_NAME, nullptr, nullptr, nullptr,
+                                 nullptr, nullptr };
    XrmDatabase db;
    XrmName xrm_name[10];
    XrmRepresentation rep_type;
    XrmValue value;
    int num_views = 0;
-   char * full_path = NULL;
+   char * full_path = nullptr;
    Boolean status=False;
-   char * temp = NULL;
+   char * temp = nullptr;
    char wsNum[11];
    char dialogNum[11];
    int num_sec_help_dialogs;
@@ -3043,11 +3043,11 @@ RestoreSession(
         tmpStr = GETMESSAGE(18, 18, "Could not open the session file.");
         msg = XtNewString(tmpStr);
         title = XtNewString((GETMESSAGE(21,39,"File Open Error")));
-        _DtMessage (toplevel, title, msg, NULL, HelpRequestCB);
+        _DtMessage (toplevel, title, msg, nullptr, HelpRequestCB);
         XtFree(msg);
         XtFree(title);
         XtFree(full_path);
-        full_path = NULL;
+        full_path = nullptr;
         return(-1);
       }
 
@@ -3070,7 +3070,7 @@ RestoreSession(
       xrm_name [2] = 0;
       if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value))
       {
-         if ((temp = (char *) value.addr) != NULL &&
+         if ((temp = (char *) value.addr) != nullptr &&
                  strcmp (temp, "True") == 0)
          {
             showFilesystem = True;
@@ -3087,7 +3087,7 @@ RestoreSession(
       xrm_name [2] = 0;
       if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value))
       {
-         if ((temp = (char *) value.addr) != NULL &&
+         if ((temp = (char *) value.addr) != nullptr &&
                  strcmp (temp, "True") == 0)
          {
             restrictMode = True;
@@ -3104,7 +3104,7 @@ RestoreSession(
       xrm_name [2] = 0;
       if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value))
       {
-         if ((temp = (char *) value.addr) != NULL &&
+         if ((temp = (char *) value.addr) != nullptr &&
                  strcmp (temp, "NEW") == 0)
          {
             openDirType = NEW;
@@ -3125,7 +3125,7 @@ RestoreSession(
    {
       num_views = atoi (value.addr);
       if (num_views > 0)
-         LoadViews(num_views, db, NULL, directory, special_restricted, 0);
+         LoadViews(num_views, db, nullptr, directory, special_restricted, 0);
    }
 
    /* Restore any desktop help dialogs */
@@ -3158,14 +3158,14 @@ RestoreSession(
                   name_list[1] = WS_LOAD_RES_HEADER;
                   name_list[2] = wsNum;
                   name_list[3] = dialogNum;
-                  name_list[4] = NULL;
+                  name_list[4] = nullptr;
                   sprintf(dialogNum, "%d", j + 1);
                   dialogData =
                        _DtGetResourceDialogData(help_dialog, db, name_list);
                   desktop_data->workspaceData[i]->secondaryHelpDialogList[j]=
                      dialogData;
-                  ShowDTHelpDialog(NULL, i, HYPER_HELP_DIALOG,
-                                   dialogData, NULL, NULL, NULL, NULL,
+                  ShowDTHelpDialog(nullptr, i, HYPER_HELP_DIALOG,
+                                   dialogData, nullptr, nullptr, nullptr, nullptr,
                                    DtHELP_TYPE_TOPIC);
                }
             }
@@ -3176,7 +3176,7 @@ RestoreSession(
          name_list[1] = WS_LOAD_RES_HEADER;
          name_list[2] = wsNum;
          name_list[3] = dialogNum;
-         name_list[4] = NULL;
+         name_list[4] = nullptr;
          sprintf(dialogNum, "%d", 0);
          dialogData = _DtGetResourceDialogData(help_dialog, db, name_list);
 
@@ -3185,20 +3185,20 @@ RestoreSession(
          {
             /* Not currently displayed */
             _DtFreeDialogData(dialogData);
-            dialogData = NULL;
+            dialogData = nullptr;
          }
          desktop_data->workspaceData[i]->primaryHelpDialog = dialogData;
          if (dialogData)
          {
-            ShowDTHelpDialog(NULL, i, MAIN_HELP_DIALOG,
-                             dialogData, NULL, DTFILE_HELP_NAME,
-                             NULL, NULL, 0);
+            ShowDTHelpDialog(nullptr, i, MAIN_HELP_DIALOG,
+                             dialogData, nullptr, DTFILE_HELP_NAME,
+                             nullptr, nullptr, 0);
          }
       }
    }
 
    XtFree(full_path);
-   full_path = NULL;
+   full_path = nullptr;
 
    /* Free the Xrm Database */
    XrmDestroyDatabase(db);
@@ -3248,13 +3248,13 @@ LoadViews (
    XrmName xrm_name[5];
    XrmRepresentation rep_type;
    XrmValue value;
-   static char * name_list[] = { DTFILE_CLASS_NAME, NULL, NULL };
+   static char * name_list[] = { DTFILE_CLASS_NAME, nullptr, nullptr };
    char view_number[11];
    DialogData * dialog_data;
-   FileMgrData * file_mgr_data = NULL;
+   FileMgrData * file_mgr_data = nullptr;
    char * workspaces;
    XClassHint classHints;
-   char * iconify = NULL;
+   char * iconify = nullptr;
    Boolean iconify_window;
    int i;
    char *title, *tmpTitle;
@@ -3277,7 +3277,7 @@ LoadViews (
       dialog_data = _DtGetResourceDialogData (file_mgr_dialog, db, name_list);
       file_mgr_data = (FileMgrData *) dialog_data->data;
 
-      if(file_mgr_data->toolbox && file_mgr_data->title == NULL)
+      if(file_mgr_data->toolbox && file_mgr_data->title == nullptr)
          file_mgr_data->title = DtActionLabel("Dtappmgr");
 
       if (stat(file_mgr_data->current_directory, &stat_buf) != 0)
@@ -3295,7 +3295,7 @@ LoadViews (
          trashFileMgrData->direction = file_mgr_data->direction;
          trashFileMgrData->positionEnabled = file_mgr_data->positionEnabled;
          trashFileMgrData->preferences = file_mgr_data->preferences;
-         file_mgr_data->preferences = NULL;
+         file_mgr_data->preferences = nullptr;
          _DtFreeDialogData(dialog_data);
          continue;
       }
@@ -3317,7 +3317,7 @@ LoadViews (
       if(restoreType == TOOL_RESTORE)
          file_mgr_data->toolbox = True;
 
-      if(directory_name == NULL)
+      if(directory_name == nullptr)
       {
          view_set[view_count]->host_name = XtNewString (file_mgr_data->host);
          view_set[view_count]->directory_name =
@@ -3326,18 +3326,18 @@ LoadViews (
       else
       {
          XtFree(file_mgr_data->current_directory);
-         file_mgr_data->current_directory = NULL;
+         file_mgr_data->current_directory = nullptr;
          XtFree(file_mgr_data->restricted_directory);
-         file_mgr_data->restricted_directory = NULL;
+         file_mgr_data->restricted_directory = nullptr;
 
          view_set[view_count]->directory_name = XtNewString(directory_name);
          XtFree((char *)file_mgr_data->selection_list);
-         file_mgr_data->selection_list = NULL;
-         if(host_name == NULL)
+         file_mgr_data->selection_list = nullptr;
+         if(host_name == nullptr)
          {
             view_set[view_count]->host_name = XtNewString (file_mgr_data->host);
             file_mgr_data->current_directory = XtNewString(directory_name);
-            if(type == NULL)
+            if(type == nullptr)
               file_mgr_data->restricted_directory =
                                               XtNewString(directory_name);
             else
@@ -3350,11 +3350,11 @@ LoadViews (
             XtFree(file_mgr_data->host);
             file_mgr_data->host = XtNewString(host_name);
             file_mgr_data->current_directory = XtNewString(directory_name);
-            if(special_view && special_restricted != NULL)
+            if(special_view && special_restricted != nullptr)
                file_mgr_data->restricted_directory =
                                      XtNewString(special_restricted);
             else
-               file_mgr_data->restricted_directory = NULL;
+               file_mgr_data->restricted_directory = nullptr;
          }
          FileMgrBuildDirectories (file_mgr_data,
                           view_set[view_count]->host_name, directory_name);
@@ -3375,7 +3375,7 @@ LoadViews (
       }
       else
         /* we have no workspace resource so use default */
-        workspaces = NULL;
+        workspaces = nullptr;
 
       /*  Get and set whether the view is iconic  */
 
@@ -3387,7 +3387,7 @@ LoadViews (
          /*  If there is an iconify resource and its value is True,  */
          /*  then mark the window as iconified.                      */
 
-         if ((iconify = (char *) value.addr) != NULL &&
+         if ((iconify = (char *) value.addr) != nullptr &&
               strcmp (iconify, "True") == 0)
          {
            iconify_window = True;
@@ -3400,7 +3400,7 @@ LoadViews (
          iconify_window = False;
 
      if(file_mgr_data->positionEnabled == RANDOM_ON &&
-                        (file_mgr_data->object_positions == NULL))
+                        (file_mgr_data->object_positions == nullptr))
         LoadPositionInfo(file_mgr_data);
 
       /* Call _DtShowDialog to create and manage the new window */
@@ -3414,8 +3414,8 @@ LoadViews (
      classHints.res_name = title;
      classHints.res_class = DTFILE_CLASS_NAME;
 
-     _DtShowDialog (NULL, NULL, NULL, dialog_data, NULL, NULL,
-                    RemoveTextFields, NULL, workspaces, iconify_window,
+     _DtShowDialog (nullptr, nullptr, nullptr, dialog_data, nullptr, nullptr,
+                    RemoveTextFields, nullptr, workspaces, iconify_window,
                     special_view, title, &classHints);
 
      XtFree(title);
@@ -3430,7 +3430,7 @@ LoadViews (
    }
 
    if (openDirType == NEW && file_mgr_data)
-      ForceMyIconOpen(file_mgr_data->host, NULL);
+      ForceMyIconOpen(file_mgr_data->host, nullptr);
 }
 
 
@@ -3443,7 +3443,7 @@ static void
 GetPWD(
         char current_directory[] )
 {
-   FILE * pwd_file = NULL;
+   FILE * pwd_file = nullptr;
    int i = 0;
 
     /*  Open a pwd process and read the current working directory  */
@@ -3503,14 +3503,14 @@ OpenDirectories(
    while (1)
    {
       separator = DtStrchr (directory_set, ',');
-      if (separator != NULL)
+      if (separator != nullptr)
          *separator = '\0';
 
-      _DtPathFromInput(directory_set, NULL, &host, &path);
+      _DtPathFromInput(directory_set, nullptr, &host, &path);
 
       if (path)
       {
-         GetNewView (host, path, type, NULL, 0);
+         GetNewView (host, path, type, nullptr, 0);
       }
       else
       {
@@ -3522,7 +3522,7 @@ OpenDirectories(
          errMsg = XtNewString(tmpStr);
          dmsg = XtMalloc(strlen(errMsg)+strlen(directory_set)+1);
          sprintf(dmsg, errMsg, directory_set);
-         _DtMessage(toplevel, errTitle, dmsg, NULL, HelpRequestCB);
+         _DtMessage(toplevel, errTitle, dmsg, nullptr, HelpRequestCB);
 
          XtFree(errTitle);
          XtFree(errMsg);
@@ -3537,7 +3537,7 @@ OpenDirectories(
 
       /*  Set the starting position of the next host:path  */
 
-      if (separator != NULL)
+      if (separator != nullptr)
          directory_set = separator + 1;
       else
          break;
@@ -3572,7 +3572,7 @@ GetNewView(
    char *title, *tmpTitle;
    struct stat stat_buf;
    char *tmpStr;
-   char *errMsg = NULL;
+   char *errMsg = nullptr;
 
    DtEliminateDots( directory_name );
 
@@ -3601,12 +3601,12 @@ GetNewView(
       dmsg = XtMalloc(strlen(errMsg) +
                       strlen(directory_name) + 1);
       sprintf(dmsg, errMsg, directory_name);
-      _DtMessage(toplevel, title, dmsg, NULL, HelpRequestCB);
+      _DtMessage(toplevel, title, dmsg, nullptr, HelpRequestCB);
 
       XtFree(errMsg);
       XtFree(title);
       XtFree(dmsg);
-      return(NULL);
+      return(nullptr);
    }
 
    /*
@@ -3642,7 +3642,7 @@ GetNewView(
              if (DtWsmGetCurrentWorkspace(display, rootWindow, &pCurrent)
                                                                    == Success)
              {
-                Atom * ws_presence = NULL;
+                Atom * ws_presence = nullptr;
                 unsigned long num_workspaces = 0;
                 int k;
 
@@ -3692,7 +3692,7 @@ GetNewView(
 		tttk_message_destroy(msg);
 	     }
 
-             return(NULL);
+             return(nullptr);
          }
       }
    }
@@ -3715,7 +3715,7 @@ GetNewView(
    view_set[view_count]->msg = 0;
    view_set[view_count]->pats = 0;
 
-   if (initiating_view != NULL)
+   if (initiating_view != nullptr)
       dialog_data = _DtGetDefaultDialogData (file_mgr_dialog);
    else
    {
@@ -3724,23 +3724,23 @@ GetNewView(
       XrmDatabase db;
 
       tmp_path = _DtCreateDtDirs(display);
-      if(type != NULL)
+      if(type != nullptr)
          sprintf(full_path, "%s/%s", tmp_path, TOOL_SETTINGS_FILENAME);
       else
          sprintf(full_path, "%s/%s", tmp_path, HOME_SETTINGS_FILENAME);
       XtFree(tmp_path);
       db = XrmGetFileDatabase (full_path);
-      if(db != NULL)
+      if(db != nullptr)
       {
-         if(type != NULL)
+         if(type != nullptr)
          {
             restoreType = TOOL_RESTORE;
-            LoadViews(1, db, NULL, directory_name, type, msg);
+            LoadViews(1, db, nullptr, directory_name, type, msg);
          }
          else
          {
             restoreType = HOME_RESTORE;
-            LoadViews(1, db, host_name, directory_name, NULL, msg);
+            LoadViews(1, db, host_name, directory_name, nullptr, msg);
          }
 
          /*
@@ -3749,7 +3749,7 @@ GetNewView(
          XrmDestroyDatabase(db);
          dialog_data = (DialogData *)view_set[view_count - 1]->dialog_data;
          file_mgr_data = (FileMgrData *) dialog_data->data;
-         if(type != NULL)
+         if(type != nullptr)
          {
             application_args.tool_width = file_mgr_data->width;
             application_args.tool_height = file_mgr_data->height;
@@ -3759,8 +3759,8 @@ GetNewView(
             application_args.dir_width = file_mgr_data->width;
             application_args.dir_height = file_mgr_data->height;
          }
-         if(file_mgr_data->find != NULL &&
-                                file_mgr_data->current_directory != NULL)
+         if(file_mgr_data->find != nullptr &&
+                                file_mgr_data->current_directory != nullptr)
          {
             DialogData * dialog_data;
             FindData * find_data;
@@ -3769,7 +3769,7 @@ GetNewView(
             find_data = (FindData *)dialog_data->data;
 
             XtFree(find_data->directories);
-            if(file_mgr_data->restricted_directory == NULL)
+            if(file_mgr_data->restricted_directory == nullptr)
             {
                if(restrictMode)
                   find_data->directories = XtNewString(users_home_dir);
@@ -3792,7 +3792,7 @@ GetNewView(
          /* If in novice mode, force the icon for all the dir's to the
             'Open' state */
          if (openDirType == NEW)
-            ForceMyIconOpen(host_name, NULL);
+            ForceMyIconOpen(host_name, nullptr);
 
          return((DialogData *)view_set[view_count - 1]->dialog_data);
       }
@@ -3805,7 +3805,7 @@ GetNewView(
    /*  Adjust the view settings if this new view was created  */
    /*  because of an action on a previous view.               */
 
-   if (initiating_view != NULL)
+   if (initiating_view != nullptr)
    {
       FileMgrPropagateSettings ((FileMgrData *)initiating_view, file_mgr_data);
       /* force new window to come up in flat mode */
@@ -3819,7 +3819,7 @@ GetNewView(
       /*  the directory name.                                        */
    FileMgrBuildDirectories (file_mgr_data, host_name, real_directory_name);
 
-   if(type != NULL)
+   if(type != nullptr)
    {
       PreferencesData *preferences_data;
 
@@ -3852,7 +3852,7 @@ GetNewView(
    }
 
 
-   if(file_mgr_data->find != NULL && file_mgr_data->current_directory != NULL)
+   if(file_mgr_data->find != nullptr && file_mgr_data->current_directory != nullptr)
    {
       DialogData * dialog_data;
       FindData * find_data;
@@ -3861,7 +3861,7 @@ GetNewView(
       find_data = (FindData *)dialog_data->data;
 
       XtFree(find_data->directories);
-      if(file_mgr_data->restricted_directory == NULL)
+      if(file_mgr_data->restricted_directory == nullptr)
       {
          if(restrictMode)
             find_data->directories = XtNewString(users_home_dir);
@@ -3915,10 +3915,10 @@ GetNewView(
 
    classHints.res_name = title;
    classHints.res_class = DTFILE_CLASS_NAME;
-   initiating_view = NULL;
+   initiating_view = nullptr;
 
-   _DtShowDialog (NULL, NULL, NULL, dialog_data, NULL, NULL, RemoveTextFields,
-               NULL, NULL, False, special_view, title, &classHints);
+   _DtShowDialog (nullptr, nullptr, nullptr, dialog_data, nullptr, nullptr, RemoveTextFields,
+               nullptr, nullptr, False, special_view, title, &classHints);
 
    XtFree(title);
    file_mgr_data->title = tmpTitle;
@@ -3932,7 +3932,7 @@ GetNewView(
 
    /* If in novice mode, force the icon for all the dir's to the 'Open' state */
    if (openDirType == NEW)
-      ForceMyIconOpen(host_name, NULL);
+      ForceMyIconOpen(host_name, nullptr);
 
    return(dialog_data);
 }
@@ -3957,12 +3957,12 @@ CloseView(
    DialogData * tmpDialog_data;
    FileMgrRec * file_mgr_rec;
    XmManagerWidget file_window;
-   char *directory_name = NULL;
-   char *host_name = NULL;
+   char *directory_name = nullptr;
+   char *host_name = nullptr;
 
    if(dialog_data == trashDialogData)
    {
-      CloseTrash(NULL, NULL, NULL);
+      CloseTrash(nullptr, nullptr, nullptr);
       return;
    }
 
@@ -3991,7 +3991,7 @@ CloseView(
          XtFree ((char *) view_set[i]->directory_name);
          XtFree ((char *) view_set[i]->host_name);
          XtFree ((char *) view_set[i]);
-         view_set[i] = NULL;
+         view_set[i] = nullptr;
 
          for (j = i; j < view_count - 1; j++)
             view_set[j] = view_set[j + 1];
@@ -4205,7 +4205,7 @@ ViewSessionHandler(
            session_name = strrchr(file, '/');
            session_name++;
            LoadDesktopInfo(session_name);
-           session_flag = RestoreSession (session_name, NORMAL_RESTORE, NULL);
+           session_flag = RestoreSession (session_name, NORMAL_RESTORE, nullptr);
            if ((session_flag != 0) && (view_count == 0))
            {
               char current_directory[MAX_PATH];
@@ -4214,7 +4214,7 @@ ViewSessionHandler(
               if (current_directory[0] != '\0')
               {
                  if (!GetNewView
-                      (home_host_name, current_directory, NULL, NULL, 0))
+                      (home_host_name, current_directory, nullptr, nullptr, 0))
                     ViewHomeDirectoryHandler (0);
               }
               else
@@ -4230,7 +4230,7 @@ ViewSessionHandler(
            tmpStr = GETMESSAGE(18, 39, "Cannot start a second File Manager session because a File Manager\nsession is already open on the desktop.  If you want to start a new File\nManager session, you must first close all current File Manager windows\nand remove all File Manager objects from the workspaces.");
            msg = XtNewString(tmpStr);
            title = XtNewString((GETMESSAGE(18,40,"Session Error")));
-	   _DtMessage (toplevel, title, msg, NULL, HelpRequestCB);
+	   _DtMessage (toplevel, title, msg, nullptr, HelpRequestCB);
            XtFree(msg);
 	   XtFree(title);
       }
@@ -4259,7 +4259,7 @@ ViewDirectoryHandler(
    char *msgFile;
    int numArgs;
 
-   initiating_view = NULL;
+   initiating_view = nullptr;
    msgFile = tt_message_file( msg );
    if (tt_is_err( tt_ptr_error( msgFile ))) msgFile = 0;
 
@@ -4278,7 +4278,7 @@ ViewDirectoryHandler(
             errMsg = XtNewString(tmpStr);
             dmsg = XtMalloc(strlen(errMsg)+strlen(msgFile)+1);
             sprintf(dmsg, errMsg, msgFile);
-            _DtMessage(toplevel, errTitle, dmsg, NULL, HelpRequestCB);
+            _DtMessage(toplevel, errTitle, dmsg, nullptr, HelpRequestCB);
 
             XtFree(errTitle);
             XtFree(errMsg);
@@ -4303,8 +4303,8 @@ ViewDirectoryHandler(
       special_orderType = UNSET_VALUE;
       special_directionType = UNSET_VALUE;
       special_randomType = UNSET_VALUE;
-      special_restricted = NULL;
-      special_title = NULL;
+      special_restricted = nullptr;
+      special_title = nullptr;
       special_helpVol = XtNewString(DTFILE_HELP_NAME);
       for(i = 0; i < numArgs; i++)
       {
@@ -4382,14 +4382,14 @@ ViewDirectoryHandler(
      special_restricted = XtNewString(users_home_dir);
      *ptr = '/';
 
-     special_title = NULL;
+     special_title = nullptr;
      special_helpVol = XtNewString(DTFILE_HELP_NAME);
 
    }
    else
       special_view = False;
 
-   OpenDirectories (msgFile, NULL);
+   OpenDirectories (msgFile, nullptr);
 
    tt_free( msgFile );
    tt_message_reply( msg );
@@ -4434,17 +4434,17 @@ ViewDirectoryProc(
             errMsg = XtNewString(tmpStr);
             dmsg = XtMalloc(strlen(errMsg)+strlen(root_dir)+1);
             sprintf(dmsg, errMsg, root_dir);
-            _DtMessage(toplevel, errTitle, dmsg, NULL, HelpRequestCB);
+            _DtMessage(toplevel, errTitle, dmsg, nullptr, HelpRequestCB);
 
             XtFree(errTitle);
             XtFree(errMsg);
             XtFree(dmsg);
-            return NULL;
+            return nullptr;
          }
       }
    }
 
-   initiating_view = NULL;
+   initiating_view = nullptr;
    special_view = True;
    special_treeType = treeType;
    special_treeFiles = treeFiles;
@@ -4457,7 +4457,7 @@ ViewDirectoryProc(
      special_restricted = XtNewString(root_dir);
    }
    else {
-     special_restricted = NULL;
+     special_restricted = nullptr;
    }
 
    if ((restrictMode) && (!special_restricted))
@@ -4470,10 +4470,10 @@ ViewDirectoryProc(
       *ptr = '/';
    }
 
-   special_title = NULL;
+   special_title = nullptr;
    special_helpVol = XtNewString(DTFILE_HELP_NAME);
 
-   return_data = GetNewView (home_host_name, root_dir, NULL, NULL, msg);
+   return_data = GetNewView (home_host_name, root_dir, nullptr, nullptr, msg);
 
    if ((!return_data) && msg)
    {
@@ -4509,9 +4509,9 @@ ViewHomeDirectoryHandler(
    int numArgs;
 
    /* We have a new view so set initiating_view to null */
-   initiating_view = NULL;
+   initiating_view = nullptr;
 
-   if ((homeDir = getenv("HOME")) == NULL || strlen (homeDir) == 0)
+   if ((homeDir = getenv("HOME")) == nullptr || strlen (homeDir) == 0)
    {
       pwInfo = getpwuid (getuid());
       homeDir = pwInfo->pw_dir;
@@ -4532,8 +4532,8 @@ ViewHomeDirectoryHandler(
       special_orderType = UNSET_VALUE;
       special_directionType = UNSET_VALUE;
       special_randomType = UNSET_VALUE;
-      special_restricted = NULL;
-      special_title = NULL;
+      special_restricted = nullptr;
+      special_title = nullptr;
       special_helpVol = XtNewString(DTFILE_HELP_NAME);
       for(i = 0; i < numArgs; i++)
       {
@@ -4601,14 +4601,14 @@ ViewHomeDirectoryHandler(
      special_restricted = XtNewString(users_home_dir);
      *ptr = '/';
 
-     special_title = NULL;
+     special_title = nullptr;
      special_helpVol = XtNewString(DTFILE_HELP_NAME);
    }
    else
       special_view = False;
 
-   if (tmp_path == NULL)
-      OpenDirectories (homeDir, NULL);
+   if (tmp_path == nullptr)
+      OpenDirectories (homeDir, nullptr);
    else
    {
      sprintf(full_path, "%s/%s", tmp_path, HOME_SETTINGS_FILENAME);
@@ -4620,7 +4620,7 @@ ViewHomeDirectoryHandler(
         if (stat (full_path, &stat_buf) == 0 && numArgs < 1)
         {
            restoreType = HOME_RESTORE;
-           RestoreSession(full_path, HOME_RESTORE, NULL);
+           RestoreSession(full_path, HOME_RESTORE, nullptr);
            restoreType = NORMAL_RESTORE;
         }
         else
@@ -4631,13 +4631,13 @@ ViewHomeDirectoryHandler(
            *ptr = '\0';
            strcpy(full_path, users_home_dir);
            *ptr = '/';
-           OpenDirectories (full_path, NULL);
+           OpenDirectories (full_path, nullptr);
         }
      }
      else if (numArgs < 1 && stat (full_path, &stat_buf) == 0)
      {
         restoreType = HOME_RESTORE;
-        RestoreSession(full_path, HOME_RESTORE, NULL);
+        RestoreSession(full_path, HOME_RESTORE, nullptr);
         restoreType = NORMAL_RESTORE;
      }
      else
@@ -4652,7 +4652,7 @@ ViewHomeDirectoryHandler(
        strcpy(full_path, users_home_dir);
        *ptr = '/';
 
-       OpenDirectories (full_path, NULL);
+       OpenDirectories (full_path, nullptr);
      }
    }
 
@@ -4679,13 +4679,13 @@ ViewToolsDirectoryHandler(
    Tt_message msg)
 {
    int i;
-   char * tmp_path = NULL;
-   char * tool_dir = NULL;
-   char * msgFile = NULL;
+   char * tmp_path = nullptr;
+   char * tool_dir = nullptr;
+   char * msgFile = nullptr;
    int numArgs = 0;
 
    /* We have a new view so set initiating_view to null */
-   initiating_view = NULL;
+   initiating_view = nullptr;
 
    /* Look and see if we have a default environment file present */
    tmp_path = _DtCreateDtDirs(display);
@@ -4696,13 +4696,13 @@ ViewToolsDirectoryHandler(
    if (msg) numArgs = tt_message_args_count(msg);
    if (tt_is_err(tt_int_error( numArgs ))) numArgs = 0;
 
-   if(msgFile != NULL)
+   if(msgFile != nullptr)
    {
       if(numArgs > 0)
       {
-         char *link_point = NULL;
-         char *root_toolbox = NULL;
-         char *user_install_point = NULL;
+         char *link_point = nullptr;
+         char *root_toolbox = nullptr;
+         char *user_install_point = nullptr;
 
          special_view = True;
          special_treeType = treeType;
@@ -4712,7 +4712,7 @@ ViewToolsDirectoryHandler(
          special_directionType = directionType;
          special_randomType = randomType;
          special_restricted = XtNewString(msgFile);
-         special_title = NULL;
+         special_title = nullptr;
          special_helpVol = XtNewString(DTFILE_HELP_NAME);
          for(i = 0; i < numArgs; i++)
          {
@@ -4885,11 +4885,11 @@ ViewToolsDirectoryHandler(
          special_view = False;
    }
 
-   if (tmp_path == NULL)
+   if (tmp_path == nullptr)
    {
       if (tool_dir)
          OpenDirectories (tool_dir, special_restricted);
-      else if (msgFile != NULL)
+      else if (msgFile != nullptr)
          OpenDirectories (msgFile, special_restricted);
    }
    else
@@ -4921,7 +4921,7 @@ ViewToolsDirectoryHandler(
       {
          if (tool_dir)
             OpenDirectories (tool_dir, special_restricted);
-         else if (msgFile != NULL)
+         else if (msgFile != nullptr)
             OpenDirectories (msgFile, special_restricted);
       }
    }
@@ -4979,16 +4979,16 @@ ReloadDatabases(void)
 
    DtDbLoad();
 
-   XmeFlushIconFileCache ( NULL );
+   XmeFlushIconFileCache ( nullptr );
 
    /* Update each directory_set view, both mapped and not */
    UpdateDirectorySet();
 
    /* Force action menus to update the next time they're posted */
    XtFree(fileMgrPopup.action_pane_file_type);
-   fileMgrPopup.action_pane_file_type = NULL;
+   fileMgrPopup.action_pane_file_type = nullptr;
    XtFree(desktop_data->popupMenu->action_pane_file_type);
-   desktop_data->popupMenu->action_pane_file_type = NULL;
+   desktop_data->popupMenu->action_pane_file_type = nullptr;
 
    /* Update each view */
    for (i = 0; i < view_count; i++)
@@ -4997,7 +4997,7 @@ ReloadDatabases(void)
       file_mgr_data = (FileMgrData *) dialog_data->data;
       file_mgr_rec = (FileMgrRec *) file_mgr_data->file_mgr_rec;
       XtFree(file_mgr_rec->action_pane_file_type);
-      file_mgr_rec->action_pane_file_type = NULL;
+      file_mgr_rec->action_pane_file_type = nullptr;
       UpdateFilterAfterDBReread(file_mgr_data->filter_active);
       UpdateFilterAfterDBReread(file_mgr_data->filter_edit);
       FileMgrRedisplayFiles(file_mgr_rec, file_mgr_data, False);
@@ -5012,7 +5012,7 @@ ReloadDatabases(void)
       desktopWindow = desktop_data->desktopWindows[i];
       file_view_data = desktopWindow->file_view_data;
 
-      file_view_data->file_data->logical_type = NULL;
+      file_view_data->file_data->logical_type = nullptr;
    }
    CheckDesktop();
 }
@@ -5072,7 +5072,7 @@ ReturnDesktopPtr (
          return(file_mgr_data);
    }
 
-   return(NULL);
+   return(nullptr);
 }
 
 
@@ -5090,7 +5090,7 @@ CheckForOpenDirectory(
    char * real_dir_name;
    FileMgrRec *file_mgr_rec;
    int icon_size;
-   PixmapData *pixmapData = NULL;
+   PixmapData *pixmapData = nullptr;
 
    if (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON)
      icon_size = EXTRA_LARGE;
@@ -5119,8 +5119,8 @@ CheckForOpenDirectory(
                                                + strlen(ICON_OPEN_PREFIX) + 1);
          sprintf(new_file_type_name, "%s%s", ICON_OPEN_PREFIX, file_type_name);
          pixmapData = _DtRetrievePixmapData(new_file_type_name,
-                                            NULL,
-                                            NULL,
+                                            nullptr,
+                                            nullptr,
                                             file_mgr_rec->file_window,
                                             icon_size);
          XtFree(new_file_type_name);
@@ -5129,9 +5129,9 @@ CheckForOpenDirectory(
    }
    XtFree(real_dir_name);
 
-   if(pixmapData == NULL || pixmapData->iconFileName == NULL)
+   if(pixmapData == nullptr || pixmapData->iconFileName == nullptr)
    {
-     if( pixmapData != NULL )
+     if( pixmapData != nullptr )
      {
        DtDtsFreeAttributeValue(pixmapData->hostPrefix);
        DtDtsFreeAttributeValue(pixmapData->instanceIconName);
@@ -5140,8 +5140,8 @@ CheckForOpenDirectory(
      }
 
        pixmapData = _DtRetrievePixmapData(logical_type,
-                                          NULL,
-                                          NULL,
+                                          nullptr,
+                                          nullptr,
                                           file_mgr_rec->file_window,
                                           icon_size);
    }
@@ -5186,7 +5186,7 @@ CleanUp (
       return;
 
    /* Ignore accelerators received after we're unposted */
-   if ((dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec)) == NULL)
+   if ((dialog_data = _DtGetInstanceData((XtPointer)file_mgr_rec)) == nullptr)
       return;
 
    file_mgr_data = (FileMgrData *)dialog_data->data;
@@ -5493,7 +5493,7 @@ static unsigned char
     }
     else
     {
-       return(NULL);
+       return(nullptr);
     }
 
 } /* END OF FUNCTION _DtNextToken */
@@ -5723,7 +5723,7 @@ CheckOpenDir (
          return(file_mgr_data);
       }
    }
-   return(NULL);
+   return(nullptr);
 }
 
 char *
@@ -5746,7 +5746,7 @@ GetRestrictedDirectory (
          return(file_mgr_data->restricted_directory);
       }
    }
-   return((char *)NULL);
+   return((char *)nullptr);
 }
 
 static void
@@ -5850,11 +5850,11 @@ SetupSendRequestArgs(
    Tt_message msg)
 {
    char *vtype;
-   if(application_args.title != NULL)
+   if(application_args.title != nullptr)
    {
       tt_message_arg_add( msg, TT_IN, "-title", application_args.title );
    }
-   if(application_args.restricted != NULL)
+   if(application_args.restricted != nullptr)
    {
       tt_message_arg_add( msg, TT_IN, RESTRICTED_HEADER, 0 );
    }
@@ -5959,7 +5959,7 @@ SetupSendRequestArgs(
            break;
    }
 
-   if(application_args.help_volume != NULL)
+   if(application_args.help_volume != nullptr)
    {
       tt_message_arg_add( msg, TT_IN, "-help_volume",
 			  application_args.help_volume );
@@ -5991,28 +5991,28 @@ BuildAndShowIconName(
    {
       if (view == BY_NAME_AND_EXTRA_LARGE_ICON)
          pixmapData = _DtRetrievePixmapData(new_file_type_name,
-                                            NULL,
-                                            NULL,
+                                            nullptr,
+                                            nullptr,
                                             widget,
                                             EXTRA_LARGE);
       else if (view == BY_NAME_AND_ICON)
          pixmapData = _DtRetrievePixmapData(new_file_type_name,
-                                            NULL,
-                                            NULL,
+                                            nullptr,
+                                            nullptr,
                                             widget,
                                             LARGE);
       else
          pixmapData = _DtRetrievePixmapData(new_file_type_name,
-                                            NULL,
-                                            NULL,
+                                            nullptr,
+                                            nullptr,
                                             widget,
                                             SMALL);
    }
    else
    {
       pixmapData = _DtRetrievePixmapData(new_file_type_name,
-                                         NULL,
-                                         NULL,
+                                         nullptr,
+                                         nullptr,
                                          widget,
                                          SMALL);
    }
@@ -6055,7 +6055,7 @@ ForceMyIconClosed (
    int j;
    int k;
    Arg args[1];
-   FileViewData * file_view_data = NULL;
+   FileViewData * file_view_data = nullptr;
    DialogData *dialog_data;
    FileMgrData *file_mgr_data;
    DesktopRec *desktopWindow;
@@ -6160,7 +6160,7 @@ ForceMyIconClosed (
          pixmapData = _DtRetrievePixmapData(
               file_view_data->file_data->logical_type,
               fname,
-              NULL,
+              nullptr,
               desktopWindow->shell,
               desktopIconType);
 
@@ -6201,7 +6201,7 @@ MarqueeSelect (
    Atom     pCurrent;
    Screen   *currentScreen;
    int      screen;
-   char     *workspace_name=NULL;
+   char     *workspace_name=nullptr;
    Display *display;
 
 
@@ -6302,7 +6302,7 @@ post_dialog(Widget parent, char *title, char *msg, XtCallbackProc callback)
    XtSetArg(args[n], XmNuseAsyncGeometry, True); n++;
 
    dialog = XmCreateErrorDialog (parent, title, args, n);
-   XtAddCallback (dialog, XmNokCallback, callback, NULL);
+   XtAddCallback (dialog, XmNokCallback, callback, nullptr);
    XtUnmanageChild (XmMessageBoxGetChild (dialog, XmDIALOG_CANCEL_BUTTON));
    XtUnmanageChild (XmMessageBoxGetChild (dialog, XmDIALOG_HELP_BUTTON));
 

@@ -202,7 +202,7 @@ Widget logo_shadow;		/* drop shadow under the Corporate logo	   */
 
 Widget login_matte;		/* bulletin board for login/password	   */
 Widget dt_label;                /* desktop label showing the current session */
-Widget login_form = NULL;	/* form containing the login widgets	   */
+Widget login_form = nullptr;	/* form containing the login widgets	   */
 Widget login_label;		/* label to left of login text widget	   */
 Widget login_text;		/* login text widget			   */
 
@@ -211,13 +211,13 @@ Widget clear_button;		/* clear name/password text button	   */
 Widget options_button;		/* login options button			   */
 Widget help_button;		/* help button				   */
 
-Widget copyright_msg    = NULL;	/* copyright notice widget		   */
-Widget help_message     = NULL;	/* the help message box			   */
-Widget error_message    = NULL;	/* the error message box		   */
-Widget hostname_message = NULL;	/* the invalid hostname message box	   */
-Widget passwd_message   = NULL;	/* the expired password message box	   */
+Widget copyright_msg    = nullptr;	/* copyright notice widget		   */
+Widget help_message     = nullptr;	/* the help message box			   */
+Widget error_message    = nullptr;	/* the error message box		   */
+Widget hostname_message = nullptr;	/* the invalid hostname message box	   */
+Widget passwd_message   = nullptr;	/* the expired password message box	   */
 
-Widget options_menu = NULL;	/* pop-up menu on options button	   */
+Widget options_menu = nullptr;	/* pop-up menu on options button	   */
 Widget options_item[10];	/* items on options pop_up menu	  	   */
 Widget options_nowindows;	/* nowindows pane on options pop_up menu   */
 Widget options_failsafe;	/* failsafe pane on options pop_up menu	   */
@@ -230,8 +230,8 @@ Widget options_last_dt;         /* user's last dt                         */
 
 
 
-Widget lang_menu = NULL;	/* cascading menu on "Language" option	   */
-Widget session_menu = NULL;     /* cascading menu on "Session" option      */
+Widget lang_menu = nullptr;	/* cascading menu on "Language" option	   */
+Widget session_menu = nullptr;     /* cascading menu on "Session" option      */
 
 Widget chooser_list;		/* list of hosts displayed by chooser      */
 Widget list_head;		/* the heading for the chooser list        */
@@ -262,7 +262,7 @@ static
 
     {"languageList", "LanguageList",
 	XtRString, sizeof(char *), XtOffset(AppInfoPtr, languageList),
-	XtRString, NULL							},
+	XtRString, nullptr							},
 
 #if defined(USE_XINERAMA)
     { "xineramaPreferredScreen",        "XineramaPreferredScreen",
@@ -274,7 +274,7 @@ static
 #if defined (ENABLE_DYNAMIC_LANGLIST)
     {"languageListCmd", "LanguageListCmd",
         XtRString, sizeof(char *), XtOffset(AppInfoPtr, languageListCmd),
-        XtRString, NULL                                                 },
+        XtRString, nullptr                                                 },
 #endif /* ENABLE_DYNAMIC_LANGLIST */
 
     };
@@ -322,7 +322,7 @@ MakeBackground( void )
      */
     SetResourceDatabase();
     XtGetApplicationResources(toplevel, &appInfo, AppResources,
-                                XtNumber(AppResources), NULL, 0);
+                                XtNumber(AppResources), nullptr, 0);
     
     
     /* 
@@ -353,7 +353,7 @@ MakeBackground( void )
 
     login_shell = XtCreatePopupShell("login_shell", transientShellWidgetClass,
 				     toplevel, argt, i);
-    XtAddCallback(login_shell, XmNpopupCallback, LayoutCB, NULL);
+    XtAddCallback(login_shell, XmNpopupCallback, LayoutCB, nullptr);
 
     /* Fix to display Input Method's status area. */
     XtSetArg(argt[0], XmNheight, dpyinfo.height);
@@ -372,7 +372,7 @@ MakeBackground( void )
     table = XtCreateManagedWidget("table", xmDrawingAreaWidgetClass,
 				   login_shell, argt, i);
 
-    XtAddEventHandler(table, ButtonPressMask, False, RefreshEH, NULL);
+    XtAddEventHandler(table, ButtonPressMask, False, RefreshEH, nullptr);
 
 
 
@@ -460,7 +460,7 @@ MakeButtons( void )
     XmStringFree(xmstr);
     XtManageChild(ok_button);
 
-    XtAddCallback(ok_button, XmNactivateCallback, DoAccept, NULL);    
+    XtAddCallback(ok_button, XmNactivateCallback, DoAccept, nullptr);    
 
 
     /* clear button */
@@ -564,7 +564,7 @@ static GreetInfo greetInfo;
 static  XtResource greetResources[] = {
     {XmNfontList, XmCFontList,
         XmRFontList, sizeof(XmFontList),
-        XtOffset(GreetInfoPtr, fontList), XtRString, NULL               }
+        XtOffset(GreetInfoPtr, fontList), XtRString, nullptr               }
 };
 
 void
@@ -574,7 +574,7 @@ MakeChooser( void )
 
     /** greeting **/
     XtGetSubresources(table, &greetInfo, "greeting", "Greeting",
-                      greetResources, XtNumber(greetResources), NULL, 0);
+                      greetResources, XtNumber(greetResources), nullptr, 0);
     i = InitArg(LabelG);
     xmstr = ReadCatalogXms(MC_CHOOSER_SET, MC_CHOOSER_TITLE, MC_DEF_CHOOSER_TITLE);
     XtSetArg(argt[i], XmNtraversalOn,      False); i++;
@@ -584,7 +584,7 @@ MakeChooser( void )
     XtSetArg(argt[i], XmNleftAttachment,   XmATTACH_FORM); i++;
     XtSetArg(argt[i], XmNrightAttachment,  XmATTACH_FORM); i++;
     XtSetArg(argt[i], XmNalignment,        XmALIGNMENT_CENTER); i++;
-    if ( greetInfo.fontList != NULL ) {
+    if ( greetInfo.fontList != nullptr ) {
         XtSetArg(argt[i], XmNfontList,     greetInfo.fontList); i++;
     }
     greeting = XmCreateLabel(matte1, "greeting", argt, i);
@@ -602,7 +602,7 @@ MakeChooser( void )
     XtSetArg(argt[i], XmNtopOffset,        10); i++;
     XtSetArg(argt[i], XmNleftAttachment,   XmATTACH_FORM); i++;
     XtSetArg(argt[i], XmNleftOffset,       13); i++;
-    if (appInfo.chlistFont != NULL) {
+    if (appInfo.chlistFont != nullptr) {
 	XtSetArg(argt[i], XmNfontList,     appInfo.chlistFont); i++;
     }
     list_head = XmCreateLabelGadget(matte1, "list_head", argt, i);
@@ -629,11 +629,11 @@ MakeChooser( void )
     XtSetArg(argt[i], XmNallowShellResize, True); i++;
     XtSetArg(argt[i], XmNlistSizePolicy,   XmCONSTANT); i++;
     XtSetArg(argt[i], XmNscrollBarDisplayPolicy, XmSTATIC); i++;
-    if (appInfo.chlistFont != NULL) {
+    if (appInfo.chlistFont != nullptr) {
         XtSetArg(argt[i], XmNfontList,     appInfo.chlistFont); i++;
     }
     chooser_list = XmCreateScrolledList(matte1, "chooser_list", argt, i);
-    XtAddCallback(chooser_list, XmNdefaultActionCallback, DoAccept, NULL);
+    XtAddCallback(chooser_list, XmNdefaultActionCallback, DoAccept, nullptr);
     XtManageChild(chooser_list);
 
     if (appInfo.workspaceCursor)
@@ -662,11 +662,11 @@ MakeDialog( DialogType dtype )
 
     int		width;
     
-    FILE	*fp = NULL;
+    FILE	*fp = nullptr;
     char	buffer[128];
     char	*str;
 
-    Widget	w = NULL, text;
+    Widget	w = nullptr, text;
     Dimension	txt_width, txt_height;
     XmString	ok, cancel, nw, sv;
 
@@ -747,17 +747,17 @@ MakeDialog( DialogType dtype )
 
 
     case copyright:
-	if ((fp = fopen(COPYRIGHT,"r")) == NULL)
+	if ((fp = fopen(COPYRIGHT,"r")) == nullptr)
 	    xmstr = XmStringCreate("Cannot open copyright file '/etc/copyright'.",
 				XmFONTLIST_DEFAULT_TAG);
 	else {
 	    xmstr = (XmString) NULL;
 	
-	    while (fgets(buffer, 128, fp) != NULL) {
+	    while (fgets(buffer, 128, fp) != nullptr) {
 		j = strlen(buffer);
 		if ( buffer[j-1] == '\n' ) buffer[j-1] = '\0';
 	    
-		if ( xmstr != NULL )
+		if ( xmstr != nullptr )
 		    xmstr = XmStringConcat(xmstr, XmStringSeparatorCreate());
 
 		xmstr = XmStringConcat(xmstr,
@@ -853,8 +853,8 @@ MakeDialog( DialogType dtype )
       case error:
       case hostname:
       case expassword:
-        XtAddCallback(w, XmNokCallback,     RespondDialogCB, NULL);
-        XtAddCallback(w, XmNcancelCallback, RespondDialogCB, NULL);
+        XtAddCallback(w, XmNokCallback,     RespondDialogCB, nullptr);
+        XtAddCallback(w, XmNcancelCallback, RespondDialogCB, nullptr);
         break;
     }
 
@@ -902,13 +902,13 @@ MakeOptionsMenu( void )
      * get the built-in pop_up menu from the DtMenuButton...
      */
      
-    XtVaGetValues(options_button, DtNsubMenuId, &options_menu, NULL);
+    XtVaGetValues(options_button, DtNsubMenuId, &options_menu, nullptr);
 
     /*
      *  create language cascade menus...
      */
 
-    if ( lang_menu == NULL )
+    if ( lang_menu == nullptr )
 	MakeLangMenu();
 
 
@@ -920,7 +920,7 @@ MakeOptionsMenu( void )
     /*
      *  build [ Language ] menu pane if there are languages to choose from...
      */
-    if ( lang_menu != NULL ) {
+    if ( lang_menu != nullptr ) {
         /*
          *  [ Language ] menu pane...
          *  attach language cascade menu to this pane
@@ -1006,7 +1006,7 @@ MakeOptionsMenu( void )
 */
     }
 
-    if ( getenv(PINGINTERVAL) != NULL )
+    if ( getenv(PINGINTERVAL) != nullptr )
 	XtUnmanageChild(options_nowindows);
 	
 
@@ -1043,7 +1043,7 @@ void
 MakeOptionsProc( XtPointer data, XtIntervalId *id )
 {
 
-    if (options_menu == NULL)
+    if (options_menu == nullptr)
 	MakeOptionsMenu();
     
     return;
@@ -1064,7 +1064,7 @@ Terminate( int arg )
 
 {
     write(1, "terminate", 9);
-    CleanupAndExit(NULL, NOTIFY_ABORT);
+    CleanupAndExit(nullptr, NOTIFY_ABORT);
 }
 
 #ifdef SIA

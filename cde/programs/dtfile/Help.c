@@ -151,7 +151,7 @@ static DialogClass helpClassRec =
    resources,
    XtNumber(resources),
    Create,
-   NULL,
+   nullptr,
    InstallClose,
    _DtGenericDestroy,
    GetValues,
@@ -161,7 +161,7 @@ static DialogClass helpClassRec =
    WriteResourceValues,
    FreeValues,
    _DtGenericMapWindow,
-   NULL,
+   nullptr,
 };
 
 DialogClass * helpClass = (DialogClass *) &helpClassRec;
@@ -294,10 +294,10 @@ GetDefaultValues( void )
    helpData->height = 0;
    helpData->width = 0;
 
-   helpData->idString = NULL;
-   helpData->volString = NULL;
-   helpData->topicTitle = NULL;
-   helpData->fileType = NULL;
+   helpData->idString = nullptr;
+   helpData->volString = nullptr;
+   helpData->topicTitle = nullptr;
+   helpData->fileType = nullptr;
    helpData->helpType = 0;
 
    return((XtPointer) helpData);
@@ -357,7 +357,7 @@ SetValues(
    HelpData *helpData = values;
    Arg args[10];
    int n;
-   String helpString = NULL;
+   String helpString = nullptr;
    DtHelpDialogWidget diaShell;
 
    diaShell = (DtHelpDialogWidget)helpRec->helpDialog;
@@ -431,7 +431,7 @@ WriteResourceValues(
          XtFree(helpData->idString);
          XtFree(helpData->topicTitle);
          helpData->idString = XtNewString(idString);
-         helpData->topicTitle = NULL;
+         helpData->topicTitle = nullptr;
       }
 
       _DtDialogPutResources(fd, name_list, HELP_DIALOG, values->data,
@@ -478,7 +478,7 @@ MapFileTypeToHelpString(
    char * desc;
    Boolean isAction;
    char * tmpStr;
-   char * label = NULL;
+   char * label = nullptr;
 
    /* Special case for the 2 built in directory commands */
    if (strcmp(filetype, openNewView) == 0)
@@ -505,7 +505,7 @@ MapFileTypeToHelpString(
 
    desc = DtDtsDataTypeToAttributeValue(filetype,
                                         DtDTS_DA_DESCRIPTION,
-                                        NULL);
+                                        nullptr);
 
    isAction = DtDtsDataTypeIsAction(filetype);
 
@@ -516,7 +516,7 @@ MapFileTypeToHelpString(
       if (descptr)
          return descptr;
       else
-         return NULL;
+         return nullptr;
    }
 
    /* No description found for this filetype */
@@ -534,13 +534,13 @@ MapFileTypeToHelpString(
 
    label = DtDtsDataTypeToAttributeValue(filetype,
                                          DtDTS_DA_LABEL,
-                                         NULL);
+                                         nullptr);
    if(label)
    {
        buf = XtMalloc(strlen(label) + strlen(helpPattern) + 100);
        sprintf(buf, helpPattern, label);
        DtDtsFreeAttributeValue(label);
-       label = NULL;
+       label = nullptr;
    }
    else
    {

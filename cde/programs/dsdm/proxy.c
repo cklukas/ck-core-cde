@@ -284,7 +284,7 @@ GetDropInfo(Window proxy_sel_req_win)
 	if (drop_table[i].proxy_sel_req_win == proxy_sel_req_win) {
 	    return drop_table+i;
 	}
-    return NULL;
+    return nullptr;
 }
 
 /* Search for a drop record using the proxy_handle as the key */
@@ -297,7 +297,7 @@ GetDropInfoUsingProxyHandle(Atom proxy_handle)
 	if (drop_table[i].proxy_handle == proxy_handle
 	    && drop_table[i].source_handle)
 	    return drop_table+i;
-    return NULL;
+    return nullptr;
 }
 
 /* Delete a drop record */
@@ -350,7 +350,7 @@ GetPropertyWindow(Display *dpy, Window in_win, Atom atom)
     int             format;
     unsigned long   lengthRtn;
     unsigned long   bytesafter;
-    Window         *property = NULL;
+    Window         *property = nullptr;
     Window          win = None;
 
     if ((XGetWindowProperty (dpy,
@@ -497,7 +497,7 @@ AdvertiseMotifDropSite(Display *dpy, Window win)
 #define MOTIF_RECEIVER_FLAG	0x80000000
     /* make sure receiver is not a Motif application */
     data = (CARD32 *) GetInterestProperty(dpy, win, &nitems);
-    if (data != NULL) {
+    if (data != nullptr) {
 	if (nitems > OL_PREVIEW_INDEX &&
 	    (data[OL_PREVIEW_INDEX] & MOTIF_RECEIVER_FLAG))
 	    motif_receiver = True;
@@ -566,7 +566,7 @@ GetOlitDropSite(Display *dpy, Window top_level_win, INT16 drop_x, INT16 drop_y,
 
     *ret_event_win = *ret_site_id = 0;
     data = (unsigned long *) GetInterestProperty(dpy, top_level_win, &nitems);
-    if (data == NULL)	return;
+    if (data == nullptr)	return;
 
     /* get root window */
     if (XGetGeometry(dpy, top_level_win, &root_win, &junk, &junk,
@@ -777,7 +777,7 @@ HandleOlitTrigger(Display *dpy, XClientMessageEvent *event)
        receiver is motif */
     
     /* map site_id to site_window */
-    for (site = MasterSiteList; site != NULL; site = site->next) {
+    for (site = MasterSiteList; site != nullptr; site = site->next) {
 	if (site->site_id == event->data.l[OLIT_DROP_SITE_ID]) {
 	    drop_info_t *drop_info = NewDropInfo();
 	    
@@ -1041,7 +1041,7 @@ ProcessOlitInitiatorConversion(XSelectionEvent *event, drop_info_t *drop_info)
     /* XView needs this */
     if (event->target == ATOM_SUN_DND_ACK)
 	XChangeProperty(event->display, event->requestor, event->property,
-		  event->target, 32, PropModeReplace, NULL, 0);
+		  event->target, 32, PropModeReplace, nullptr, 0);
 
     /* get OLIT targets
        sometimes type is TARGETS and sometimes type is ATOM so don't bother
@@ -1318,7 +1318,7 @@ ProxyMain(Display *dpy, XEvent *event)
 #endif
 	drop_info = GetDropInfoUsingProxyHandle
 	    (event->xselectionrequest.selection);
-	if (drop_info == NULL)
+	if (drop_info == nullptr)
 	    /* unknown selection, ignore the SelectionRequest */
 	    break;
 	if (event->xselectionrequest.target == ATOM_SUN_DND_DONE ||
@@ -1381,7 +1381,7 @@ ProxyMain(Display *dpy, XEvent *event)
     {
 	drop_info_t *drop_info = GetDropInfo(event->xselection.requestor);
 
-	if (drop_info == NULL || 
+	if (drop_info == nullptr || 
 	    (event->xselection.time < drop_info->time_stamp))
 	    /* got SelectionNotify of unknown selection (source) */
 	    break;

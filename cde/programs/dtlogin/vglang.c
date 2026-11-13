@@ -85,7 +85,7 @@ GetLangName( char *label )
         return(rmvalue.addr);
     }
     else
-        return(NULL);
+        return(nullptr);
 }
 
 #if defined (ENABLE_DYNAMIC_LANGLIST)
@@ -108,7 +108,7 @@ _enumLangCmdStart(void)
   {
     return((void *)popen(appInfo.languageListCmd, "r"));
   }
-  return(NULL);
+  return(nullptr);
 }
 
 /*
@@ -127,7 +127,7 @@ _enumLangCmdNext(
   char buf[200];
   Boolean rc = False;
 
-  if (fgets(buf, sizeof(buf), (FILE *)state) != NULL)
+  if (fgets(buf, sizeof(buf), (FILE *)state) != nullptr)
   {
    /*
     * The buf format is "locale desc ...\n". For example:
@@ -136,10 +136,10 @@ _enumLangCmdNext(
     * pt_BR Portuguese (Brazil) ISO8859-1
     */
     char *loclang = strtok(buf, " ");  /* lang name from system */
-    char *locdesc = strtok(NULL, "\n"); /* description from system */
+    char *locdesc = strtok(nullptr, "\n"); /* description from system */
     char *userdesc; /* user provided description from Xresources */
 
-    if ((userdesc = GetLangName(loclang)) != NULL)
+    if ((userdesc = GetLangName(loclang)) != nullptr)
     {
       locdesc = userdesc; /* use user provided description */
     }
@@ -192,10 +192,10 @@ _enumLanglistStart(void)
  
   if (state)
   { 
-    if ((p = (char *)getenv(LANGLIST)) == NULL )
+    if ((p = (char *)getenv(LANGLIST)) == nullptr )
     {
       free(state);
-      state = NULL;
+      state = nullptr;
     }
     else
     {
@@ -227,12 +227,12 @@ _enumLanglistNext(
   loclang = strtok(enumstate->tokstr, DELIM);
   if (enumstate->tokstr)
   {
-    enumstate->tokstr = NULL;
+    enumstate->tokstr = nullptr;
   }
 
-  if (loclang != NULL)
+  if (loclang != nullptr)
   {
-    if ((locdesc = GetLangName(loclang)) == NULL)
+    if ((locdesc = GetLangName(loclang)) == nullptr)
     {
       locdesc = loclang;
     }
@@ -293,17 +293,17 @@ _enumLangStart(void)
   if (state)
   { 
     state->enumstate = _enumLanglistStart();
-    if (state->enumstate != NULL)
+    if (state->enumstate != nullptr)
     {
       state->methodNext = _enumLanglistNext;
       state->methodEnd = _enumLanglistEnd;
     }
 
     #if defined (ENABLE_DYNAMIC_LANGLIST)
-    if (state->enumstate == NULL)
+    if (state->enumstate == nullptr)
     {
       state->enumstate = _enumLangCmdStart(); 
-      if (state->enumstate != NULL)
+      if (state->enumstate != nullptr)
       {
         state->methodNext = _enumLangCmdNext;
         state->methodEnd = _enumLangCmdEnd;
@@ -311,10 +311,10 @@ _enumLangStart(void)
     }
     #endif /* ENABLE_DYNAMIC_LANGLIST */
 
-    if (state->enumstate == NULL)
+    if (state->enumstate == nullptr)
     {
       free(state);
-      state = NULL; 
+      state = nullptr; 
     }
   }
 

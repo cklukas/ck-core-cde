@@ -177,7 +177,7 @@ static	void		TermRenderElem(
 /*
  * My private values
  */
-static	_DtHelpVolumeHdl	 MyVolume     = NULL;
+static	_DtHelpVolumeHdl	 MyVolume     = nullptr;
 static	int		 HyperErr     = 0;
 static	wchar_t		 WcSpace      = 0;
 
@@ -196,19 +196,19 @@ typedef	struct {
 } TerminalInfo;
 
 /* default values */
-static TerminalInfo	DfltTermInfo   = {NULL, NULL, 0, 1, 100000, 1, NULL, NULL};
+static TerminalInfo	DfltTermInfo   = {nullptr, nullptr, 0, 1, 100000, 1, nullptr, nullptr};
 static _DtCvVirtualInfo	TermVirtInfo =
   {
 	TermMetrics,		/* void      (*_DtCvGetMetrics)(); */
 	TermRenderElem,		/* void      (*_DtCvRenderElem)(); */
 	TermStrWidth,		/* _DtCvUnit (*_DtCvGetElemWidth)(); */
 	TermFontMetrics,	/* void      (*_DtCvGetFontMetrics)(); */
-	NULL,			/* _DtCvStatus   (*_DtCvBuildSelection)(); */
-	NULL,			/* _DtCvStatus   (*_DtCvFilterExecCmd)(); */
+	nullptr,			/* _DtCvStatus   (*_DtCvBuildSelection)(); */
+	nullptr,			/* _DtCvStatus   (*_DtCvFilterExecCmd)(); */
   };
 
-static TerminalInfo	MyInfo   = {NULL, NULL, 0, 1, 100000, 1, NULL, NULL};
-static _DtCvHandle	MyCanvas = NULL;
+static TerminalInfo	MyInfo   = {nullptr, nullptr, 0, 1, 100000, 1, nullptr, nullptr};
+static _DtCvHandle	MyCanvas = nullptr;
 
 #ifdef  XTAG
 int     missingGraphics = 0;  /* Counter used by cdewalk */
@@ -248,10 +248,10 @@ TermFindGraphic (
     char		 *ptr;
     char		 *fileName = file_xid;
 
-    if (fileName != NULL && *fileName != '/')
+    if (fileName != nullptr && *fileName != '/')
       {
 	fileName = (char *) malloc (strlen(vol_xid) + strlen (file_xid) + 2);
-	if (fileName == NULL)
+	if (fileName == nullptr)
 	    return -1;
 
 	strcpy(fileName, vol_xid);
@@ -312,10 +312,10 @@ TermStrDraw (
     size_t	    length = 1;
 
     length = x + byte_len;
-    if (wcStr == NULL)
+    if (wcStr == nullptr)
       {
 	pTerm->lines[y] = (wchar_t *) malloc (sizeof(wchar_t) * (length + 1));
-	if (pTerm->lines[y] != NULL)
+	if (pTerm->lines[y] != nullptr)
 	  {
 	    int i;
 
@@ -338,7 +338,7 @@ TermStrDraw (
           {
 	    pTerm->lines[y] = (wchar_t *) realloc (wcStr,
 					(sizeof(wchar_t) * (length + 1)));
-	    if (pTerm->lines[y] != NULL)
+	    if (pTerm->lines[y] != nullptr)
 	      {
 	        int i;
 	        wcStr = pTerm->lines[y];
@@ -506,14 +506,14 @@ TermResolveSpc (
     /*
      * initialize the returned information to nothing.
      */
-    *ret_handle = NULL;
+    *ret_handle = nullptr;
     *ret_height = 0;
     *ret_width  = 0;
     *ret_ascent = 0;
 
     spcStr = _DtHelpCeResolveSpcToAscii (spc_symbol);
 
-    if (spcStr != NULL)
+    if (spcStr != nullptr)
       {
 	*ret_handle = ((_DtCvPointer)(spcStr));
 	*ret_height = 1;
@@ -621,7 +621,7 @@ AddHyperToArray(
 
     if (array_ptr)
       {
-	for (next = array_ptr; next->specification != NULL; next++)
+	for (next = array_ptr; next->specification != nullptr; next++)
 		num++;
 
 	if (((num + 1) % GROW_SIZE) == 0)
@@ -632,7 +632,7 @@ AddHyperToArray(
 	array_ptr = (DtHelpHyperLines *) malloc (
 					sizeof (DtHelpHyperLines) * GROW_SIZE);
 
-    if (array_ptr == NULL)
+    if (array_ptr == nullptr)
 	errno = DtErrorMalloc;
     else
       {
@@ -644,8 +644,8 @@ AddHyperToArray(
         next->title         = title;
         next++;
 
-        next->specification = NULL;
-        next->title         = NULL;
+        next->specification = nullptr;
+        next->title         = nullptr;
       }
 
     return array_ptr;
@@ -719,12 +719,12 @@ AddHyperToList(
 {
     _DtCanvasStruct	*myCanvas = (_DtCanvasStruct *)canvas;
     _DtCvLinkInfo	 hyperInfo;
-    _DtHelpVolumeHdl     newVol    = NULL;
+    _DtHelpVolumeHdl     newVol    = nullptr;
     _DtHelpVolumeHdl     useVol    = volume;
-    char		*volName   = NULL;
-    char		*title     = NULL;
-    char		*allocName = NULL;
-    char		*spec      = NULL;
+    char		*volName   = nullptr;
+    char		*title     = nullptr;
+    char		*allocName = nullptr;
+    char		*spec      = nullptr;
     char		*id;
     int                 result    = -3;
 
@@ -733,19 +733,19 @@ AddHyperToList(
 				myCanvas->client_data, &hyperInfo) == 0)
       {
 	result = 0;
-	if (hyperInfo.description == NULL)
+	if (hyperInfo.description == nullptr)
 	  {
 	    id = hyperInfo.specification;
 	    switch (hyperInfo.hyper_type)
 	      {
 	        case _DtCvLinkType_CrossLink:
 			spec = strdup (id);
-			if (spec != NULL)
+			if (spec != nullptr)
 			  {
 			    volName = spec;
-                            id = NULL;
+                            id = nullptr;
                             _DtHelpCeStrchr (spec," ",MB_CUR_MAX,&id);
-			    if (id != NULL)
+			    if (id != nullptr)
 			      {
 				*id = '\0';
 				id++;
@@ -753,7 +753,7 @@ AddHyperToList(
                                 /* find the volume (volName is malloc'd) */
                                 allocName = _DtHelpFileLocate(DtHelpVOLUME_TYPE, volName,
                                                  _DtHelpFileSuffixList,False,R_OK);
-                                if (allocName == NULL) 
+                                if (allocName == nullptr) 
                                      result = -2;
 
 				if (_DtHelpOpenVolume(allocName, &newVol)==0)
@@ -775,11 +775,11 @@ AddHyperToList(
 				HyperErr = DtErrorLocIdNotFound;
 			  }
 
-			if (newVol != NULL)
+			if (newVol != nullptr)
 			    _DtHelpCloseVolume(newVol);
-			if (spec != NULL)
+			if (spec != nullptr)
 			    free(spec);
-			if (allocName != NULL)
+			if (allocName != nullptr)
 			    free(allocName);
 
 			break;
@@ -832,7 +832,7 @@ AddHyperToList(
     if (result == -2)
 	return -2;
 
-    if (result == -1 || *ret_list == NULL)
+    if (result == -1 || *ret_list == nullptr)
 	return -1;
 
     return (0);
@@ -892,14 +892,14 @@ _DtHelpTermCreateCanvas (
     /*
      * check the parameters
      */
-    if (maxColumns < 1 || ret_canvas == NULL)
+    if (maxColumns < 1 || ret_canvas == nullptr)
       {
 	errno = EINVAL;
 	return -1;
       }
 
     termInfo = (TerminalInfo *) malloc(sizeof(TerminalInfo));
-    if (termInfo == NULL)
+    if (termInfo == nullptr)
     {
 	errno = ENOMEM;
 	return -1;
@@ -915,7 +915,7 @@ _DtHelpTermCreateCanvas (
 
     *ret_canvas  = _DtCanvasCreate (TermVirtInfo, (_DtCvPointer) termInfo);
 
-    if (*ret_canvas == NULL)
+    if (*ret_canvas == nullptr)
 	    return -1;
 
     return 0;
@@ -1000,9 +1000,9 @@ _DtHelpTermGetTopicData(
     _DtCvUnit	 maxRows;
     _DtCvUnit	 maxWidth;
     char * *     strList;
-    char*        fileName = NULL;
+    char*        fileName = nullptr;
     _DtHelpCeLockInfo lockInfo;
-    _DtCvTopicPtr	 topic = NULL;
+    _DtCvTopicPtr	 topic = nullptr;
     TerminalInfo * termInfo;
     _FrmtUiInfo     myUiInfo;
 
@@ -1033,12 +1033,12 @@ _DtHelpTermGetTopicData(
 #ifdef	XTAG
     myUiInfo.load_graphic = TermFindGraphic;
 #else
-    myUiInfo.load_graphic = NULL;
+    myUiInfo.load_graphic = nullptr;
 #endif /* XTAG */
     myUiInfo.resolve_spc  = TermResolveSpc;
     myUiInfo.load_font    = TermGetFont;
-    myUiInfo.destroy_region = NULL;
-    myUiInfo.exec_filter  = NULL;
+    myUiInfo.destroy_region = nullptr;
+    myUiInfo.exec_filter  = nullptr;
     myUiInfo.client_data  = (_DtCvPointer) termInfo;
     myUiInfo.line_width   = 0;
     myUiInfo.line_height  = 1;
@@ -1056,10 +1056,10 @@ _DtHelpTermGetTopicData(
 	result = _DtHelpCeParseSdlTopic(volHandle,
 						&myUiInfo,
 						lockInfo.fd,
-						offset, NULL, True, &topic);
+						offset, nullptr, True, &topic);
     else if (result == 0)
 	result = _DtHelpCeFrmtCcdfTopic(volHandle, fileName,
-						offset, NULL, &myUiInfo,
+						offset, nullptr, &myUiInfo,
 						&topic);
     _DtHelpProcessUnlock();
 
@@ -1072,10 +1072,10 @@ _DtHelpTermGetTopicData(
         _DtCanvasStruct *myCStruct = (_DtCanvasStruct *)canvasHandle;
 
         /* build the help text list, if requested */
-        if (NULL != helpList)
+        if (nullptr != helpList)
         {
            _DtCanvasSetTopic(canvasHandle, topic, _DtCvIGNORE_BOUNDARY,
-						&maxWidth, &maxRows, NULL);
+						&maxWidth, &maxRows, nullptr);
    
 	   /*
 	    * The 'maxRows' variable is really misnamed; it's really the
@@ -1087,15 +1087,15 @@ _DtHelpTermGetTopicData(
            termInfo->lines = (wchar_t **)malloc(sizeof(wchar_t *) *(maxRows+1));
            termInfo->wc_num = (size_t   *)malloc(sizeof(size_t) * (maxRows+1));
            strList          = (char **)   malloc(sizeof(char *) * (maxRows+2));
-   	   if (termInfo->lines == NULL || termInfo->wc_num == NULL ||
-							strList == NULL)
+   	   if (termInfo->lines == nullptr || termInfo->wc_num == nullptr ||
+							strList == nullptr)
            {
    	      free(fileName);
-	      if (termInfo->lines != NULL)
+	      if (termInfo->lines != nullptr)
 		free(termInfo->lines);
-	      if (termInfo->wc_num != NULL)
+	      if (termInfo->wc_num != nullptr)
 		free(termInfo->wc_num);
-	      if (strList != NULL)
+	      if (strList != nullptr)
 		free(strList);
    	      _DtHelpCeUnlockVolume(lockInfo);
    	      return -1;
@@ -1103,18 +1103,18 @@ _DtHelpTermGetTopicData(
    
    	   for (i = 0; i <= maxRows; i++)
 	     {
-   	       termInfo->lines[i]  = NULL;
+   	       termInfo->lines[i]  = nullptr;
    	       termInfo->wc_num[i] = 0;
 	     }
    
    	   _DtCanvasRender(canvasHandle, 0, 0, maxWidth, maxRows,
-				_DtCvRENDER_PARTIAL, _DtCvFALSE, NULL, NULL);
+				_DtCvRENDER_PARTIAL, _DtCvFALSE, nullptr, nullptr);
    
    	   *helpList = strList;
    	   wcList    = termInfo->lines;
    	   for (i = 0; i <= maxRows; i++, wcList++, strList++)
    	   {
-   	      if (*wcList == NULL)
+   	      if (*wcList == nullptr)
    	      {
    	  	 *strList  = (char *) malloc (1);
    		 **strList = '\0';
@@ -1123,18 +1123,18 @@ _DtHelpTermGetTopicData(
 	      {
 		len      = (termInfo->wc_num[i] + 1) * MB_CUR_MAX;
 		*strList = (char *) malloc (sizeof (char) * len);
-		if (*strList != NULL)
+		if (*strList != nullptr)
 		    wcstombs(*strList, *wcList, len);
 	      }
    	   }
    
-	  *strList = NULL;
+	  *strList = nullptr;
 
 	   /*
 	    * free the allocated memory
 	    */
 	   for (i = 0, wcList = termInfo->lines; i <= maxRows; i++, wcList++)
-	       if (*wcList != NULL)
+	       if (*wcList != nullptr)
 		   free(*wcList);
 	   free(termInfo->lines);
 	   free(termInfo->wc_num);
@@ -1144,16 +1144,16 @@ _DtHelpTermGetTopicData(
 	/*
 	 * build the hyperlinks list, if requested
 	 */
-        if ( NULL != hyperList )
+        if ( nullptr != hyperList )
         {
-	   *hyperList = NULL;
+	   *hyperList = nullptr;
 	   for (i = 0; result != -1 && i < myCStruct->link_data->max; i++)
 	       result = AddHyperToList(volHandle, canvasHandle, i, hyperList);
         }
     }  /* if successfully formatted topic */
 
     _DtCanvasClean(canvasHandle);
-    _DtHelpDestroyTopicData(topic, NULL, NULL);
+    _DtHelpDestroyTopicData(topic, nullptr, nullptr);
 
     free(fileName);
     _DtHelpCeUnlockVolume(lockInfo);
@@ -1180,7 +1180,7 @@ _DtHelpGetTopicDataHandles(
    _DtHelpProcessLock();
    *ret_canvasHandle = MyCanvas;
    *ret_volHandle = MyVolume;
-   if (MyCanvas != NULL && MyVolume != NULL)
+   if (MyCanvas != nullptr && MyVolume != nullptr)
      {
        _DtHelpProcessUnlock();
        return 0;
@@ -1267,20 +1267,20 @@ _DtHelpGetTopicData (
 	DtHelpHyperLines * * hyperList )
 {
     int           result = -1;
-    _DtHelpVolumeHdl  volume = NULL;
-    char *        path = NULL;
+    _DtHelpVolumeHdl  volume = nullptr;
+    char *        path = nullptr;
 
     /* find the volume (path is malloc'd) */
     path = _DtHelpFileLocate(DtHelpVOLUME_TYPE, helpVolume,
                                   _DtHelpFileSuffixList,False,R_OK);
-    if (path == NULL) { errno = EINVAL; return -1; }          /* RETURN */
+    if (path == nullptr) { errno = EINVAL; return -1; }          /* RETURN */
 
     /* open new canvas or reuse old one with new size */
     _DtHelpProcessLock();
-    if (MyCanvas == NULL)
+    if (MyCanvas == nullptr)
     {
        _DtHelpTermCreateCanvas(maxColumns,&MyCanvas);
-       if (MyCanvas == NULL)
+       if (MyCanvas == nullptr)
        {
           free(path);
 	  _DtHelpProcessUnlock();
@@ -1290,7 +1290,7 @@ _DtHelpGetTopicData (
     else
     {
        MyInfo.max_columns = maxColumns;
-       _DtCanvasResize (MyCanvas, _DtCvFALSE, NULL, NULL);
+       _DtCanvasResize (MyCanvas, _DtCvFALSE, nullptr, nullptr);
     }
 
     if (_DtHelpOpenVolume (helpVolume, &volume) == -1)
@@ -1355,13 +1355,13 @@ _DtHelpProcessLinkData (
     char * *            ret_helpVolume,
     char * *            ret_locationId )
 {
-    char * linkSpec   = NULL;
-    char * volumeName = NULL;
-    char * idToken    = NULL;
+    char * linkSpec   = nullptr;
+    char * volumeName = nullptr;
+    char * idToken    = nullptr;
 
     /* check params */
-    if (ref_volume == NULL || hyperLine == NULL ||
-			ret_helpVolume == NULL || ret_locationId == NULL)
+    if (ref_volume == nullptr || hyperLine == nullptr ||
+			ret_helpVolume == nullptr || ret_locationId == nullptr)
     {
 	errno = EINVAL;
 	return -1;
@@ -1380,19 +1380,19 @@ _DtHelpProcessLinkData (
     }
 
     /* Initialize the pointers. */
-    *ret_helpVolume  = NULL;
-    *ret_locationId = NULL;
+    *ret_helpVolume  = nullptr;
+    *ret_locationId = nullptr;
 
     /* get working copy of spec */
     linkSpec = strdup (hyperLine->specification);
-    if (linkSpec == NULL)
+    if (linkSpec == nullptr)
     {
 	errno = DtErrorMalloc;
         return -1;
     }
 
     /* parse the link spec.  Syntax is: "[volume] locationId" */
-    if (linkSpec == NULL || *linkSpec == EOS)
+    if (linkSpec == nullptr || *linkSpec == EOS)
     {
         errno = DtErrorHyperSpec;      /* no spec */
     }
@@ -1401,7 +1401,7 @@ _DtHelpProcessLinkData (
         volumeName = linkSpec;  /* posit that first token is the volume */
 
         /* look for another possible token */
-        idToken = NULL;
+        idToken = nullptr;
         _DtHelpCeStrchr (linkSpec," ",MB_CUR_MAX,&idToken);
 
         /* second token? */
@@ -1413,7 +1413,7 @@ _DtHelpProcessLinkData (
             /* find the fully qualified volume (volName is malloc'd) */
             volumeName = _DtHelpFileLocate(DtHelpVOLUME_TYPE, volumeName,
                               _DtHelpFileSuffixList,False,R_OK);
-            if (volumeName == NULL)
+            if (volumeName == nullptr)
                 errno = DtErrorIllegalPath;
         }
         else /* no second token */
@@ -1422,7 +1422,7 @@ _DtHelpProcessLinkData (
             /* find the fully qualified volume (volName is malloc'd) */
             volumeName = _DtHelpFileLocate(DtHelpVOLUME_TYPE, ref_volume,
                               _DtHelpFileSuffixList,False,R_OK);
-	    if (volumeName == NULL)
+	    if (volumeName == nullptr)
 	        errno = DtErrorIllegalPath;
 	}
 
@@ -1430,7 +1430,7 @@ _DtHelpProcessLinkData (
 	{
             *ret_helpVolume = volumeName;  /* already allocd by _DtHelpFileLocate */
             *ret_locationId = strdup (idToken);
-	    if (*ret_locationId == NULL)
+	    if (*ret_locationId == nullptr)
 	        errno = DtErrorMalloc;
         }
     } /* if at least one token exists */
@@ -1461,10 +1461,10 @@ _DtHelpFreeTopicData (
 	char	         **helpList,
 	DtHelpHyperLines     *hyperList)
 {
-    if (helpList != NULL)
+    if (helpList != nullptr)
         _DtHelpCeFreeStringArray (helpList);
 
-    if (hyperList != NULL)
+    if (hyperList != nullptr)
         DeallocateHyperArray (hyperList);
 
 }  /* End _DtHelpFreeTopicData */
@@ -1496,23 +1496,23 @@ _DtHelpGetTopicChildren (
 	char		***ret_children)
 {
     int           result = -1;
-    _DtHelpVolumeHdl  volume = NULL;
+    _DtHelpVolumeHdl  volume = nullptr;
     char *        path;
 
     /* Initialize the pointer */
-    *ret_children  = NULL;
+    *ret_children  = nullptr;
 
     /* find the volume (path is malloc'd) */
     path = _DtHelpFileLocate(DtHelpVOLUME_TYPE, helpVolume,
                                   _DtHelpFileSuffixList,False,R_OK);
-    if (path == NULL) { errno = EINVAL; return -1; }          /* RETURN */
+    if (path == nullptr) { errno = EINVAL; return -1; }          /* RETURN */
 
     /* open new canvas or reuse old one with new size */
     _DtHelpProcessLock();
-    if (MyCanvas == NULL)
+    if (MyCanvas == nullptr)
     {
        _DtHelpTermCreateCanvas(72,&MyCanvas);  /* 72: arbitary value for max columns */
-       if (MyCanvas == NULL)
+       if (MyCanvas == nullptr)
        {
           free(path);
 	  _DtHelpProcessUnlock();

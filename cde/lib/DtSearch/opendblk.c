@@ -140,7 +140,7 @@ int             open_dblk (DBLK ** dblist, int numpages, int debugging)
 	fprintf (aa_stderr, PROGNAME"76 "
 	    "Entering open_dblks().  db_oflag==%d.\n",
 	    db_oflag);
-    if (dblist == NULL || numpages < 8) {
+    if (dblist == nullptr || numpages < 8) {
 BAD_INPUT:
 	sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_oeinit, 99,
 		"%s Programming Error: Invalid input to open_dblk()."),
@@ -148,12 +148,12 @@ BAD_INPUT:
 	DtSearchAddMessage (sprintbuf);
 	return FALSE;
     }
-    if (*dblist == NULL)	/* empty list of dblks */
+    if (*dblist == nullptr)	/* empty list of dblks */
 	goto BAD_INPUT;
 
     if (debugging) {
 	fprintf (aa_stderr, PROGNAME "96 Current list of dblks:\n");
-	for (db = *dblist; db != NULL; db = db->link) {
+	for (db = *dblist; db != nullptr; db = db->link) {
 	    targptr = sprintbuf;
 	    for (i = 0; i < db->ktcount; i++) {
 		*targptr++ = db->keytypes[i].ktchar;
@@ -189,13 +189,13 @@ BAD_INPUT:
 	strcpy (open_mode, "r+b");
     db = *dblist;
     lastlink = dblist;
-    while (db != NULL) {
-	if (db->path == NULL)
+    while (db != nullptr) {
+	if (db->path == nullptr)
 	    db->path = strdup ("");
 	strcpy (temp_file_name, db->path);
 	strcat (temp_file_name, db->name);
 	strcat (temp_file_name, EXT_DTBS);
-	if ((db->iifile = fopen (temp_file_name, open_mode)) == NULL) {
+	if ((db->iifile = fopen (temp_file_name, open_mode)) == nullptr) {
 	    if (debugging)
 		fprintf (aa_stderr, PROGNAME "129 UNLINK: cant open '%s'.\n",
 		    temp_file_name);
@@ -265,13 +265,13 @@ DELETE_DB:
 	return FALSE;
     }
 
-    allnames = austext_malloc (totlen + 512, PROGNAME "66", NULL);
+    allnames = austext_malloc (totlen + 512, PROGNAME "66", nullptr);
 
     /* ---- PASS #2 ------------------------------------------
      * Build string of accumulated path and database names.
      */
     targptr = allnames;
-    for (db = *dblist; db != NULL; db = db->link) {
+    for (db = *dblist; db != nullptr; db = db->link) {
 	srcptr = db->path;
 	while (*srcptr != 0)
 	    *targptr++ = *srcptr++;
@@ -289,7 +289,7 @@ DELETE_DB:
     d_open (allnames, "o");	/* replaces OPEN() call from dmacros.h */
 
     if (db_status != S_OKAY) {
-	targptr = austext_malloc (totlen + 128, PROGNAME"239", NULL);
+	targptr = austext_malloc (totlen + 128, PROGNAME"239", nullptr);
 	sprintf (targptr, CATGETS(dtsearch_catd, MS_vista, 378,
 	    "%s Could not open following database name string:\n  '%s'"),
 	    PROGNAME"378", allnames);

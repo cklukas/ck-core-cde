@@ -60,7 +60,7 @@ get_buf_size(Bool is_wide_char, XPointer list, int count)
     char **mb_list;
     wchar_t **wc_list;
 
-    if (list == NULL)
+    if (list == nullptr)
 	return 0;
 
     if (is_wide_char) {
@@ -107,7 +107,7 @@ _XTextListToTextProperty(
 	is_wide_char = True;
 
     buf_len = get_buf_size(is_wide_char, list, count);
-    if ((buf = (char *) Xmalloc(buf_len)) == NULL)
+    if ((buf = (char *) Xmalloc(buf_len)) == nullptr)
 	return XNoMemory;
 
     switch (style) {
@@ -152,7 +152,7 @@ _XTextListToTextProperty(
 	if (nitems <= 0)
 		nitems = 1;
 	value = (char *) Xmalloc(nitems);
-	if (value == NULL) {
+	if (value == nullptr) {
 	    Xfree(buf);
 	    return XNoMemory;
 	}
@@ -174,7 +174,7 @@ _XTextListToTextProperty(
     do{
 	retry = 0;
 	conv = _fallcOpenConverter(lcd, from_type, lcd, to_type);
-	if (conv == NULL) {
+	if (conv == nullptr) {
 	    Xfree(buf);
 	    return XConverterNotFound;
 	}
@@ -201,7 +201,7 @@ _XTextListToTextProperty(
 	    }
 
 	    ret = _fallcConvert(conv, &from, &from_left, (XPointer *) &to, &to_left,
-			  NULL, 0);
+			  nullptr, 0);
 
 	    if (ret < 0)
 		continue;

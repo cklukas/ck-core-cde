@@ -18,6 +18,7 @@ With --source-revision REV: negative control; REV must FAIL the same test
 """
 import argparse
 import os
+import re
 from pathlib import Path
 import shlex
 import subprocess
@@ -41,10 +42,12 @@ label = args.source_revision or "working tree"
 def source(relative):
     """Text of a source file: the working tree, or the revision of the control."""
     if args.source_revision:
-        return subprocess.run(["git", "-C", str(args.worktree), "show",
+        text = subprocess.run(["git", "-C", str(args.worktree), "show",
                                f"{args.source_revision}:{relative}"],
                               check=True, capture_output=True, text=True).stdout
-    return (args.worktree / relative).read_text()
+    else:
+        text = (args.worktree / relative).read_text()
+    return re.sub(r"\bnullptr\b", "NULL", text)
 
 
 def extract(text, relative, start_anchor, end_anchor, required=True):
@@ -96,7 +99,7 @@ def main(scratch):
     c, binary = scratch / f"{tag}.c", scratch / tag
     c.write_text(template)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=gnu99", "-Wall", "-Wno-unused-function", "-Wno-unused-variable",
+                   ["-std=gnu23", "-Wall", "-Wno-unused-function", "-Wno-unused-variable",
                     "-Wno-deprecated-declarations", "-Wno-unused-value",
                     "-Wno-unused-but-set-variable", "-Wno-format-security",
                     "-Wno-unused-parameter",

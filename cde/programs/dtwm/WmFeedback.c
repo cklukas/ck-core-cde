@@ -114,7 +114,7 @@ static int taskSwitchDragStartX = 0;
 static int taskSwitchDragStartY = 0;
 static int taskSwitchDragWinX = 0;
 static int taskSwitchDragWinY = 0;
-static WmScreenData *taskSwitchDragSD = NULL;
+static WmScreenData *taskSwitchDragSD = nullptr;
 static Cursor taskSwitchCursorNormal = (Cursor)0L;
 static Cursor taskSwitchCursorHand = (Cursor)0L;
 static Cursor taskSwitchCursorDrag = (Cursor)0L;
@@ -208,7 +208,7 @@ TaskSwitcherActivateSelection (WmScreenData *pSD, ClientData *pCD, Time time)
 
     memset(&ev, 0, sizeof(ev));
     ev.xbutton.time = time;
-    F_Normalize_And_Raise (NULL, pCD, &ev);
+    F_Normalize_And_Raise (nullptr, pCD, &ev);
     Do_Focus_Key (pCD, time, ALWAYS_SET_FOCUS);
 }
 
@@ -234,7 +234,7 @@ TaskSwitcherLog (const char *fmt, ...)
     if (!logPath || logPath[0] == '\0')
         return;
 
-    static FILE *fp = NULL;
+    static FILE *fp = nullptr;
     static Boolean triedOpen = False;
     if (!fp && !triedOpen)
     {
@@ -245,7 +245,7 @@ TaskSwitcherLog (const char *fmt, ...)
         return;
 
     static Boolean wroteHeader = False;
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     struct tm tm;
     localtime_r(&now, &tm);
     char timestr[32];
@@ -514,7 +514,7 @@ initMesg(void)
 
     tmpString = ((char *)GETMESSAGE(22, 12, "Switch to Default Behavior?"));
     if ((confirm_mesg[0] =
-         (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+         (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
         Warning (((char *)GETMESSAGE(22, 2, "Insufficient memory for local message string")));
 	confirm_mesg[0] = "Switch to Default Behavior?";
@@ -526,7 +526,7 @@ initMesg(void)
 
     tmpString = ((char *)GETMESSAGE(22, 13, "Switch to Custom Behavior?"));
     if ((confirm_mesg[1] =
-         (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+         (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
         Warning (((char *)GETMESSAGE(22, 2, "Insufficient memory for local message string")));
 	confirm_mesg[1] = "Switch to Custom Behavior?";
@@ -545,7 +545,7 @@ initMesg(void)
 	tmpString = ((char *)GETMESSAGE(22, 10, "Restart Workspace Manager?"));
     }
     if ((confirm_mesg[2] =
-         (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+         (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
         Warning (((char *)GETMESSAGE(22, 5, "Insufficient memory for local message string")));
 	if (MwmBehavior)
@@ -581,7 +581,7 @@ initMesg(void)
     }
     
     if ((confirm_mesg[3] =
-         (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == NULL)
+         (char *)XtMalloc ((unsigned int) (strlen(tmpString) + 1))) == nullptr)
     {
         Warning (((char *)GETMESSAGE(22, 8, "Insufficient memory for local message string")));
 	if (MwmBehavior)
@@ -687,7 +687,7 @@ TaskSwitchBodyHeight (WmScreenData *pSD)
 static XmString
 TaskSwitchEllipsize (XmFontList fontList, XmString src, int maxWidth, Boolean *needsFree)
 {
-    char *text = NULL;
+    char *text = nullptr;
     int len;
     int lo;
     int hi;
@@ -1240,7 +1240,7 @@ GetFeedbackSnapGC (WmScreenData *pSD, Boolean active)
 	if (*gcPtr)
 	{
 	    XFreeGC (DISPLAY, *gcPtr);
-	    *gcPtr = NULL;
+	    *gcPtr = nullptr;
 	}
 
 	values.foreground = color;
@@ -1265,7 +1265,7 @@ GetFeedbackSnapBgGC (WmScreenData *pSD)
 	if (pSD->fbSnapBgGC)
 	{
 	    XFreeGC (DISPLAY, pSD->fbSnapBgGC);
-	    pSD->fbSnapBgGC = NULL;
+	    pSD->fbSnapBgGC = nullptr;
 	}
 
 	values.foreground = color;
@@ -1824,7 +1824,7 @@ void HideFeedbackWindow (WmScreenData *pSD)
     pSD->fbSnapHover = FB_SNAP_NONE;
     pSD->fbSnapEnabled = False;
     pSD->fbSnapFullScreen = False;
-    pSD->fbSnapClient = NULL;
+    pSD->fbSnapClient = nullptr;
 }
 
 
@@ -2156,9 +2156,9 @@ void ConfirmAction (WmScreenData *pSD, int nbr)
     int  n;
     int           x, y;
     Dimension     width, height;
-    Widget        dialogShellW = NULL;
+    Widget        dialogShellW = nullptr;
     XmString	  messageString;
-    static XmString	  defaultMessageString = NULL;
+    static XmString	  defaultMessageString = nullptr;
 
 
     /*
@@ -2173,7 +2173,7 @@ void ConfirmAction (WmScreenData *pSD, int nbr)
 	return ;
     }
 
-    if (pSD->confirmboxW[nbr] == NULL)
+    if (pSD->confirmboxW[nbr] == nullptr)
     /* First time for this one */
     {
 #ifndef NO_MESSAGE_CATALOG
@@ -2231,7 +2231,7 @@ void ConfirmAction (WmScreenData *pSD, int nbr)
         XtSetArg(args[n], XmNmessageString, &messageString); n++;
         XtGetValues(pSD->confirmboxW[nbr], (ArgList) args, n);
 
-	if (defaultMessageString == NULL)
+	if (defaultMessageString == nullptr)
 	{
 	    defaultMessageString = XmStringCreateLocalized ("");
 	}
@@ -2411,12 +2411,12 @@ FreeTaskSwitchList (WmScreenData *pSD)
                 XmStringFree (pSD->taskSwitchTitles[i]);
         }
         XtFree ((char *)pSD->taskSwitchTitles);
-        pSD->taskSwitchTitles = NULL;
+        pSD->taskSwitchTitles = nullptr;
     }
     if (pSD->taskSwitchList)
     {
         XtFree ((char *)pSD->taskSwitchList);
-        pSD->taskSwitchList = NULL;
+        pSD->taskSwitchList = nullptr;
     }
     pSD->taskSwitchCount = 0;
     pSD->taskSwitchIndex = -1;
@@ -2728,7 +2728,7 @@ TaskSwitcherTimeout (XtPointer client_data, XtIntervalId *id)
 Boolean
 TaskSwitcherActive (WmScreenData *pSD)
 {
-    static WmScreenData *lastPsd = NULL;
+    static WmScreenData *lastPsd = nullptr;
     static int lastActive = -1;
     int active = (pSD && pSD->taskSwitchActive) ? 1 : 0;
 
@@ -2747,8 +2747,8 @@ PaintTaskSwitcher (WmScreenData *pSD)
 {
     XRectangle titleBox;
     XRectangle bodyBox;
-    XmString titleString = NULL;
-    XmString bodyString = NULL;
+    XmString titleString = nullptr;
+    XmString bodyString = nullptr;
     Boolean bodyNeedsFree = False;
     Boolean bodyEllipsized = False;
     int bodyTextH = TaskSwitchBodyHeight (pSD);
@@ -2867,7 +2867,7 @@ PaintTaskSwitcher (WmScreenData *pSD)
             bodyIndex < pSD->taskSwitchCount)
         {
             bodyString = pSD->taskSwitchTitles ?
-                pSD->taskSwitchTitles[bodyIndex] : NULL;
+                pSD->taskSwitchTitles[bodyIndex] : nullptr;
         }
 
         if (!bodyString)
@@ -2928,7 +2928,7 @@ PaintTaskSwitcher (WmScreenData *pSD)
             int frameY = cellY + IB_MARGIN_HEIGHT;
             int frameW = pSD->taskSwitchIconW + ICON_GRID_EXTRA(pSD);
             int frameH = pSD->taskSwitchIconH;
-            ClientData *tsCD = (pSD->taskSwitchList) ? pSD->taskSwitchList[i] : NULL;
+            ClientData *tsCD = (pSD->taskSwitchList) ? pSD->taskSwitchList[i] : nullptr;
             Boolean isOpen = (tsCD && tsCD->clientState != MINIMIZED_STATE);
             GC frameFillGC = (GC)0L;
 
@@ -3078,7 +3078,7 @@ static void
 PaintTaskSwitcherBody (WmScreenData *pSD)
 {
     XRectangle bodyBox;
-    XmString bodyString = NULL;
+    XmString bodyString = nullptr;
     Boolean bodyNeedsFree = False;
     Boolean bodyEllipsized = False;
     int bodyTextH = TaskSwitchBodyHeight (pSD);
@@ -3113,7 +3113,7 @@ PaintTaskSwitcherBody (WmScreenData *pSD)
             bodyIndex < pSD->taskSwitchCount)
         {
             bodyString = pSD->taskSwitchTitles ?
-                pSD->taskSwitchTitles[bodyIndex] : NULL;
+                pSD->taskSwitchTitles[bodyIndex] : nullptr;
         }
 
         if (!bodyString)
@@ -3206,7 +3206,7 @@ PaintTaskSwitcherIcon (WmScreenData *pSD, int index, int startX, int startY,
     XWindowAttributes attr;
     int depth;
     GC backgroundGC;
-    ClientData *tsCD = NULL;
+    ClientData *tsCD = nullptr;
     Boolean isOpen = False;
     GC frameFillGC = (GC)0L;
     GC inactiveBorderGC = taskSwitchInactiveBorderGC ?
@@ -3384,7 +3384,7 @@ PaintTaskSwitcherIconOnly (WmScreenData *pSD, int index, int startX, int startY,
     XWindowAttributes attr;
     int depth;
     GC backgroundGC;
-    ClientData *tsCD = NULL;
+    ClientData *tsCD = nullptr;
     Boolean isOpen = False;
     GC frameFillGC = (GC)0L;
     GC inactiveBorderGC = taskSwitchInactiveBorderGC ?
@@ -3478,7 +3478,7 @@ TaskSwitcherIconUpdated (WmScreenData *pSD, ClientData *pCD)
     int frameH;
     int iconAreaH;
     Boolean labelChanged = False;
-    XmString newTitle = NULL;
+    XmString newTitle = nullptr;
 
     if (!pSD || !pCD || !TaskSwitcherActive (pSD))
         return;
@@ -3493,7 +3493,7 @@ TaskSwitcherIconUpdated (WmScreenData *pSD, ClientData *pCD)
     if (i >= pSD->taskSwitchCount)
         return;
 
-    TaskSwitcherComputeGeometry (pSD, &startX, &startY, &labelH, NULL);
+    TaskSwitcherComputeGeometry (pSD, &startX, &startY, &labelH, nullptr);
     if (!TaskSwitcherIconRect (pSD, i, startX, startY, labelH,
                                &frameX, &frameY, &frameW, &frameH, &iconAreaH))
         return;
@@ -3800,7 +3800,7 @@ AdvanceTaskSwitcher (WmScreenData *pSD, int direction)
     if (taskSwitchDragging && taskSwitchDragSD == pSD)
     {
         taskSwitchDragging = False;
-        taskSwitchDragSD = NULL;
+        taskSwitchDragSD = nullptr;
         XUngrabPointer (DISPLAY, CurrentTime);
         TaskSwitcherLog("AdvanceTaskSwitcher drag cancelled");
         TaskSwitcherEnsureCursors ();
@@ -3826,7 +3826,7 @@ AdvanceTaskSwitcher (WmScreenData *pSD, int direction)
         int iconAreaH;
         XEvent ev;
 
-        TaskSwitcherComputeGeometry (pSD, &startX, &startY, &labelH, NULL);
+        TaskSwitcherComputeGeometry (pSD, &startX, &startY, &labelH, nullptr);
 
         if (oldIndex >= 0 &&
             TaskSwitcherIconRect (pSD, oldIndex, startX, startY, labelH,
@@ -3891,7 +3891,7 @@ AdvanceTaskSwitcher (WmScreenData *pSD, int direction)
 void
 FinishTaskSwitcher (WmScreenData *pSD, Time time, Boolean activate)
 {
-    ClientData *pCD = NULL;
+    ClientData *pCD = nullptr;
 
     if (!pSD || !pSD->taskSwitchActive)
         return;
@@ -3918,7 +3918,7 @@ FinishTaskSwitcher (WmScreenData *pSD, Time time, Boolean activate)
     if (taskSwitchDragging && taskSwitchDragSD == pSD)
     {
         taskSwitchDragging = False;
-        taskSwitchDragSD = NULL;
+        taskSwitchDragSD = nullptr;
     }
 
     if (pSD->taskSwitchWin)
@@ -4057,7 +4057,7 @@ HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event)
             if (taskSwitchDragging && taskSwitchDragSD == pSD)
             {
                 taskSwitchDragging = False;
-                taskSwitchDragSD = NULL;
+                taskSwitchDragSD = nullptr;
                 XUngrabPointer (DISPLAY, event->time);
             }
             FinishTaskSwitcher (pSD, event->time, True);
@@ -4070,7 +4070,7 @@ HandleTaskSwitcherButtonPress (WmScreenData *pSD, XButtonEvent *event)
             if (taskSwitchDragging && taskSwitchDragSD == pSD)
             {
                 taskSwitchDragging = False;
-                taskSwitchDragSD = NULL;
+                taskSwitchDragSD = nullptr;
                 XUngrabPointer (DISPLAY, event->time);
             }
             FinishTaskSwitcher (pSD, event->time, True);
@@ -4091,7 +4091,7 @@ HandleTaskSwitcherButtonRelease (WmScreenData *pSD, XButtonEvent *event)
         event->button == Button1)
     {
         taskSwitchDragging = False;
-        taskSwitchDragSD = NULL;
+        taskSwitchDragSD = nullptr;
         XUngrabPointer (DISPLAY, event->time);
         TaskSwitcherLog("HandleTaskSwitcherButtonRelease drag end");
         TaskSwitcherEnsureCursors ();

@@ -91,7 +91,7 @@ _DtTermPrimCursorChangeFocus(Widget w)
 		    "XmImVaSetFocusValues()"));
 	    (void) XmImVaSetFocusValues(w,
 		    XmNspotLocation, &point,
-		    NULL);
+		    nullptr);
 	}
 
 	/* we want to blink now... */
@@ -258,7 +258,7 @@ _DtTermPrimCursorOn(Widget w)
 		"XmImVaSetValues()"));
 	(void) XmImVaSetValues(w,
 		XmNspotLocation, &point,
-		NULL);
+		nullptr);
     }
 #ifdef	NOT_NEEDED
     if (!tw->term.hasFocus) {

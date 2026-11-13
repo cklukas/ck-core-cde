@@ -289,9 +289,9 @@ Get_Help_Dialog(void)
         dialog = DtCreateHelpDialog(G_toplevel, "helpDlg",  args, n);
 
         XtAddCallback(dialog, DtNhyperLinkCallback,
-                      help_hyperyperlink_callback, NULL);
+                      help_hyperyperlink_callback, nullptr);
         XtAddCallback(dialog, DtNcloseCallback,
-                      help_close_callback, NULL);
+                      help_close_callback, nullptr);
         return dialog;
 }
 
@@ -323,7 +323,7 @@ Help(
     Arg args[10];
     int n;
 
-    if(G_help_dialog == NULL)
+    if(G_help_dialog == nullptr)
     {
         n = 0;
         XtSetArg(args[n], DtNhelpType, DtHELP_TYPE_TOPIC); n++;
@@ -334,9 +334,9 @@ Help(
         G_help_dialog = DtCreateHelpDialog(G_toplevel, "helpDlg", args, n);
 
         XtAddCallback(G_help_dialog, DtNhyperLinkCallback,
-                      help_hyperyperlink_callback, NULL);
+                      help_hyperyperlink_callback, nullptr);
         XtAddCallback(G_help_dialog, DtNcloseCallback,
-                      help_close_callback, NULL);
+                      help_close_callback, nullptr);
 
         XtManageChild(G_help_dialog);
     }
@@ -386,7 +386,7 @@ Create_Action_Area(
                                 XmNleftAttachment, XmATTACH_FORM,
                                 XmNrightAttachment, XmATTACH_FORM,
                                 XmNbottomAttachment, XmATTACH_FORM,
-                                NULL);
+                                nullptr);
 
   for (i=0; i < actions.numActions ;i++ )
     {
@@ -405,7 +405,7 @@ Create_Action_Area(
                XmNshowAsDefault,      (i == actions.defaultAction),
                XmNdefaultButtonShadowThickness, 1,
                XmNlabelString,         xm_string,
-               NULL);
+               nullptr);
       XmStringFree(xm_string);
 
 
@@ -420,9 +420,9 @@ Create_Action_Area(
          {
             XtArgVal arg;
             Dimension height, h;
-            XtVaGetValues (action_area, XmNmarginHeight, &arg, NULL);
+            XtVaGetValues (action_area, XmNmarginHeight, &arg, nullptr);
             h = (Dimension)arg;
-            XtVaGetValues (widget, XmNheight, &arg, NULL);
+            XtVaGetValues (widget, XmNheight, &arg, nullptr);
             height = (Dimension)arg;
 
             height +=2 * h;
@@ -430,11 +430,11 @@ Create_Action_Area(
                            XmNdefaultButton, widget,
                            XmNpaneMaximum,   height,
                            XmNpaneMinimum,   height,
-                           NULL);
+                           nullptr);
 
          }
 
-       if (pushbutton_array != NULL)
+       if (pushbutton_array != nullptr)
            pushbutton_array[i] = widget;
 
     } /* endfor */

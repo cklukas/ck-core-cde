@@ -59,8 +59,8 @@ _DtCm_alloc_calendar_users(uint num_elem)
 	_DtCmMemHeader	*hptr;
 
 	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(CSA_calendar_user) * num_elem)) == NULL)
-		return (NULL);
+	    sizeof(CSA_calendar_user) * num_elem)) == nullptr)
+		return (nullptr);
 	else {
 		hptr = (_DtCmMemHeader *)ptr;
 		hptr->mark = _DtCM_OUR_MEMORY;
@@ -77,8 +77,8 @@ _DtCm_alloc_character_pointers(uint num_elem)
 	_DtCmMemHeader	*hptr;
 
 	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(char *) * num_elem)) == NULL)
-		return (NULL);
+	    sizeof(char *) * num_elem)) == nullptr)
+		return (nullptr);
 	else {
 		hptr = (_DtCmMemHeader *)ptr;
 		hptr->mark = _DtCM_OUR_MEMORY;
@@ -96,8 +96,8 @@ _DtCm_alloc_attributes(uint num_elem)
 	extern void _DtCm_free_attributes(uint size, void *attrs);
 
 	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(CSA_attribute) * num_elem)) == NULL)
-		return (NULL);
+	    sizeof(CSA_attribute) * num_elem)) == nullptr)
+		return (nullptr);
 	else {
 		hptr = (_DtCmMemHeader *)ptr;
 		hptr->mark = _DtCM_OUR_MEMORY;
@@ -115,8 +115,8 @@ _DtCm_alloc_entry_handles(uint num_elem)
 	extern void _DtCm_free_entry_handles(uint num_entries, void *entries);
 
 	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(CSA_entry_handle) * num_elem)) == NULL)
-		return (NULL);
+	    sizeof(CSA_entry_handle) * num_elem)) == nullptr)
+		return (nullptr);
 	else {
 		hptr = (_DtCmMemHeader *)ptr;
 		hptr->mark = _DtCM_OUR_MEMORY;
@@ -133,8 +133,8 @@ _DtCm_alloc_entry(uint size)
 	_DtCmMemHeader	*hptr;
 	extern void _DtCm_free_entry_content(uint dummy, void *entry);
 
-	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) + size)) == NULL)
-		return (NULL);
+	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) + size)) == nullptr)
+		return (nullptr);
 	else {
 		hptr = (_DtCmMemHeader *)ptr;
 		hptr->mark = _DtCM_OUR_MEMORY;
@@ -152,8 +152,8 @@ _DtCm_alloc_reminder_references(uint num_elem)
 	extern void _DtCm_free_reminder_references(uint num_rems, void *rems);
 
 	if ((ptr = calloc(1, sizeof(_DtCmMemHeader) +
-	    sizeof(CSA_reminder_reference) * num_elem)) == NULL)
-		return (NULL);
+	    sizeof(CSA_reminder_reference) * num_elem)) == nullptr)
+		return (nullptr);
 	else {
 		hptr = (_DtCmMemHeader *)ptr;
 		hptr->mark = _DtCM_OUR_MEMORY;
@@ -169,7 +169,7 @@ _DtCm_free(void *ptr)
 {
 	_DtCmMemHeader *hptr;
 
-	if (ptr == NULL)
+	if (ptr == nullptr)
 		return (CSA_E_INVALID_MEMORY);
 
 	hptr = (_DtCmMemHeader *)(((char *)ptr) - sizeof(_DtCmMemHeader));

@@ -190,7 +190,7 @@ clear_parse_info(void)
     char *ptr;
     int size;
     parse_info.pre_state = S_NULL;
-    if(parse_info.category != NULL){
+    if(parse_info.category != nullptr){
 	Xfree(parse_info.category);
     }
     for(i = 0; i <= parse_info.nest_depth; ++i){
@@ -220,7 +220,7 @@ realloc_parse_info(int len)
     parse_info.bufMaxSize = BUFSIZE *
 	    ((parse_info.bufsize + len)/BUFSIZE + 1);
     p = (char *)Xrealloc(parse_info.buf, parse_info.bufMaxSize);
-    if(p == NULL){
+    if(p == nullptr){
         return(False);
     }
     parse_info.buf = p;
@@ -238,7 +238,7 @@ typedef struct _Line {
 static void
 free_line(Line *line)
 {
-    if(line->str != NULL){
+    if(line->str != nullptr){
 	Xfree(line->str);
     }
     memset(line, 0, sizeof(Line));
@@ -249,12 +249,12 @@ realloc_line(Line *line, int size)
 {
     char *str = line->str;
 
-    if(str != NULL){
+    if(str != nullptr){
 	str = (char *)Xrealloc(str, size);
     }else{
 	str = (char *)Xmalloc(size);
     }
-    if(str == NULL){
+    if(str == nullptr){
 	/* malloc error */
 	memset(line, 0, sizeof(Line));
 	return 0;
@@ -309,7 +309,7 @@ read_line(FILE *fd, Line *line)
     str = line->str;
     cur = line->cursize = 0;
 
-    while((p = fgets(buf, BUFSIZE, fd)) != NULL){
+    while((p = fgets(buf, BUFSIZE, fd)) != nullptr){
 	++line->seq;
 	zap_comment(p, &quoted);	/* remove comment line */
 	len = strlen(p);
@@ -442,7 +442,7 @@ static int
 append_value_list(void)
 {
     char **value_list = parse_info.value;
-    char *value = NULL;
+    char *value = nullptr;
     int value_num = parse_info.value_num;
     int value_len = parse_info.value_len;
     char *str = parse_info.buf;
@@ -453,24 +453,24 @@ append_value_list(void)
 	return 1; /* return with no error */
     }
 
-    if(value_list == (char **)NULL){
+    if(value_list == (char **)nullptr){
 	value_list = (char **)Xmalloc(sizeof(char *) * 2);
-	*value_list = NULL;
+	*value_list = nullptr;
     }else{
 	value_list = (char **)
 	    Xrealloc(value_list, sizeof(char *) * (value_num + 2));
     }
-    if(value_list == (char **)NULL){
+    if(value_list == (char **)nullptr){
 	goto err;
     }
 
     value = *value_list;
-    if(value == NULL){
+    if(value == nullptr){
 	value = (char *)Xmalloc(value_len + len + 1);
     }else{
 	value = (char *)Xrealloc(value, value_len + len + 1);
     }
-    if(value == NULL){
+    if(value == nullptr){
 	goto err;
     }
     if(value != *value_list){
@@ -483,7 +483,7 @@ append_value_list(void)
     }
 
     value_list[value_num] = p = &value[value_len];
-    value_list[value_num + 1] = NULL;
+    value_list[value_num + 1] = nullptr;
     strncpy(p, str, len);
     p[len] = 0;
 
@@ -500,7 +500,7 @@ append_value_list(void)
 
     Xfree(value);
 
-    parse_info.value = (char **)NULL;
+    parse_info.value = (char **)nullptr;
     parse_info.value_num = 0;
     parse_info.value_len = 0;
     parse_info.bufsize = 0;
@@ -541,7 +541,7 @@ store_to_database(Database *db)
 	    }
 	}
 
-	if(parse_info.name[parse_info.nest_depth] == NULL){
+	if(parse_info.name[parse_info.nest_depth] == nullptr){
 	    break;
 	}
 
@@ -552,7 +552,7 @@ store_to_database(Database *db)
 	memset(new, 0, sizeof(DatabaseRec));
 
 	new->category = (char *)Xmalloc(strlen(parse_info.category) + 1);
-	if(new->category == NULL){
+	if(new->category == nullptr){
 	    break;
 	}
 	strcpy(new->category, parse_info.category);
@@ -561,7 +561,7 @@ store_to_database(Database *db)
 	    break;
 	}
 	new->name = (char *)Xmalloc(strlen(name) + 1);
-	if(new->name == NULL){
+	if(new->name == nullptr){
 	    break;
 	}
 	strcpy(new->name, name);
@@ -571,9 +571,9 @@ store_to_database(Database *db)
 	*db = new;
 
 	Xfree(parse_info.name[parse_info.nest_depth]);
-	parse_info.name[parse_info.nest_depth] = NULL;
+	parse_info.name[parse_info.nest_depth] = nullptr;
 
-	parse_info.value = (char **)NULL;
+	parse_info.value = (char **)nullptr;
 	parse_info.value_num = 0;
 	parse_info.value_len = 0;
 
@@ -594,7 +594,7 @@ store_to_database(Database *db)
 	    Xfree(*parse_info.value);
 	}
 	Xfree((char **)parse_info.value);
-	parse_info.value = (char **)NULL;
+	parse_info.value = (char **)nullptr;
 	parse_info.value_num = 0;
 	parse_info.value_len = 0;
     }
@@ -703,7 +703,7 @@ f_left_brace(char *str, Token token, Database *db)
     case S_CATEGORY:
 	return 0;
     case S_NAME:
-	if(parse_info.name[parse_info.nest_depth] == NULL ||
+	if(parse_info.name[parse_info.nest_depth] == nullptr ||
 	   parse_info.nest_depth + 1 > MAX_NAME_NEST){
 	    return 0;
 	}
@@ -734,9 +734,9 @@ f_right_brace(char *str, Token token, Database *db)
 	}
 	/* fall into next case */
     case S_CATEGORY:
-	if(parse_info.name[parse_info.nest_depth] != NULL){
+	if(parse_info.name[parse_info.nest_depth] != nullptr){
 	    Xfree(parse_info.name[parse_info.nest_depth]);
-	    parse_info.name[parse_info.nest_depth] = NULL;
+	    parse_info.name[parse_info.nest_depth] = nullptr;
 	}
 	--parse_info.nest_depth;
 	parse_info.pre_state = S_CATEGORY;
@@ -834,11 +834,11 @@ f_default(char *str, Token token, Database *db)
 
     switch(parse_info.pre_state){
     case S_NULL:
-	if(parse_info.category != NULL){
+	if(parse_info.category != nullptr){
 	    return 0;
 	}
 	p = (char *)Xmalloc(strlen(word) + 1);
-	if(p == NULL){
+	if(p == nullptr){
 	    return 0;
 	}
 	strcpy(p, word);
@@ -856,11 +856,11 @@ f_default(char *str, Token token, Database *db)
 	    }
 	}
 	p = (char *)Xmalloc(strlen(word) + 1);
-	if(p == NULL){
+	if(p == nullptr){
 	    return 0;
 	}
 	strcpy(p, word);
-	if(parse_info.name[parse_info.nest_depth] != NULL){
+	if(parse_info.name[parse_info.nest_depth] != nullptr){
 	    Xfree(parse_info.name[parse_info.nest_depth]);
 	}
 	parse_info.name[parse_info.nest_depth] = p;
@@ -914,14 +914,14 @@ DestroyDatabase(Database db)
     Database p = db;
 
     while(p){
-	if(p->category != NULL){
+	if(p->category != nullptr){
 	    Xfree(p->category);
 	}
-	if(p->name != NULL){
+	if(p->name != nullptr){
 	    Xfree(p->name);
 	}
-	if(p->value != (char **)NULL){
-	    if(*p->value != NULL){
+	if(p->value != (char **)nullptr){
+	    if(*p->value != nullptr){
 		Xfree(*p->value);
 	    }
 	    Xfree((char *)p->value);
@@ -958,8 +958,8 @@ CreateDatabase(char *dbfile)
     int error = 0;
 
     fd = fopen(dbfile, "r");
-    if(fd == (FILE *)NULL){
-	return NULL;
+    if(fd == (FILE *)nullptr){
+	return nullptr;
     }
 
     memset(&line, 0, sizeof(Line));
@@ -1073,7 +1073,7 @@ _fallcGetLocaleDataBase(
 	    return;
 	}
     }
-    *value = (char **)NULL;
+    *value = (char **)nullptr;
     *count = 0;
 }
 
@@ -1130,7 +1130,7 @@ _fallcCreateLocaleDataBase(XLCd lcd)
     int i, n;
 
     name = _fallcFileName(lcd, "locale");
-    if(name == NULL){
+    if(name == nullptr){
 	return (XPointer)NULL;
     }
     strcpy(pathname, name);

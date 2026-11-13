@@ -43,9 +43,9 @@ int cgm_defs(cgm_s_type *cgm_s)
     cgm_s->cvextent[3 + i] = 255;
   }
   for (i=0; i<MAX_FONTS; ++i) {
-    cgm_s->fontlist[i] 	= NULL;
+    cgm_s->fontlist[i] 	= nullptr;
     cgm_s->chartype[i]	= 0;
-    cgm_s->charlist[i]	= NULL;
+    cgm_s->charlist[i]	= nullptr;
   }
   cgm_s->charannounce	= 0;
   /* picture descriptors */
@@ -127,7 +127,7 @@ int cgm_defs(cgm_s_type *cgm_s)
     cgm_s->fillref[i].i	= cgm_s->vdcextent[i].i;
     cgm_s->fillref[i].r	= cgm_s->vdcextent[i].r;
   }
-  cgm_s->pattab		= NULL;
+  cgm_s->pattab		= nullptr;
   for (i=0; i<4; ++i) {
     cgm_s->patsize[i].i	= cgm_s->vdcextent[i].i;
     cgm_s->patsize[i].r	= cgm_s->vdcextent[i].r;

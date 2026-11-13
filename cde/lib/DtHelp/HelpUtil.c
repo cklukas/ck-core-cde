@@ -543,7 +543,7 @@ Boolean _DtHelpFilterExecCmdStr(
    char * token;
    char * tokenEnd;
    char   tokenEndChar;
-   char * aliasCommand = NULL;
+   char * aliasCommand = nullptr;
    Boolean ret;
 
 #define RN_execAlias "executionAlias"
@@ -551,12 +551,12 @@ Boolean _DtHelpFilterExecCmdStr(
 #define ExecAliasCmd "DtHelpExecAlias"
 
    /* default values */
-   *ret_cmdStr = NULL;
+   *ret_cmdStr = nullptr;
    *ret_invalidAlias = False;
    *ret_execPermitted = False;
    *ret_queryNeeded = False;
 
-   if (NULL == commandStr) 
+   if (nullptr == commandStr) 
       return False;
 
   /** ------------------------------------------------------------- *
@@ -589,7 +589,7 @@ Boolean _DtHelpFilterExecCmdStr(
    tokenEndChar = *tokenEnd;
    if (tokenEnd) *tokenEnd = EOS;
 
-   if ( NULL == token || _DtHelpCeStrCaseCmpLatin1(token, ExecAliasCmd) != 0 )
+   if ( nullptr == token || _DtHelpCeStrCaseCmpLatin1(token, ExecAliasCmd) != 0 )
    {
       /*** the command is not an alias; proceed using execution Policy ***/
    
@@ -863,7 +863,7 @@ int _DtHelpFilterExecCmd(
    Boolean execPermitted;
    Boolean queryNeeded;
    Widget  msgDlg;
-   char *  filteredCmdStr = NULL;
+   char *  filteredCmdStr = nullptr;
    Arg	   args[5];
    int     n;
    XmString labelString;
@@ -884,7 +884,7 @@ int _DtHelpFilterExecCmd(
 
    if (False == useQueryDialog)
    {
-      *ret_filteredCmdStr = NULL;
+      *ret_filteredCmdStr = nullptr;
       XtFree(filteredCmdStr);
       return -1;                          /* RETURN error */
    }
@@ -898,7 +898,7 @@ int _DtHelpFilterExecCmd(
    if (False == execPermitted || False == queryNeeded)  
    {
       XtManageChild(msgDlg);                 /* manage modeless dialog */
-      *ret_filteredCmdStr = NULL;            /* don't execute */
+      *ret_filteredCmdStr = nullptr;            /* don't execute */
       XtFree(filteredCmdStr);
       return -1;                            /* RETURN error */
    }
@@ -965,7 +965,7 @@ int _DtHelpFilterExecCmd(
    }
    else
    {
-      *ret_filteredCmdStr = NULL;            /* don't execute */
+      *ret_filteredCmdStr = nullptr;            /* don't execute */
       XtFree(filteredCmdStr);
       return -1;                            /* RETURN error */
    }
@@ -1006,7 +1006,7 @@ void _DtHelpExecFilteredCmd(
    Boolean invalidAlias;
    Boolean execPermitted;
    Boolean queryNeeded;
-   char *  filteredCmdStr = NULL;
+   char *  filteredCmdStr = nullptr;
    ExecContext * execContext;
    XmString labelString;
    XmString labelString2;
@@ -1014,7 +1014,7 @@ void _DtHelpExecFilteredCmd(
    Widget   btn;
    int     n;	
    Arg	   args[5];
-   char    *hv_path=NULL;
+   char    *hv_path=nullptr;
 
    uid_t         user;
    char          *home_dir;
@@ -1045,9 +1045,9 @@ void _DtHelpExecFilteredCmd(
    {
       home_dir = getenv ("HOME");
 
-      if (home_dir != NULL && strlen(home_dir) >= (size_t) 1)
+      if (home_dir != nullptr && strlen(home_dir) >= (size_t) 1)
       {
-         if (((pwd_ret = _XGetpwuid(user, pwd_buf)) != NULL)
+         if (((pwd_ret = _XGetpwuid(user, pwd_buf)) != nullptr)
                          && (strcmp(home_dir, pwd_ret->pw_dir)))
          {
             diff_home_dirs = True;
@@ -1089,7 +1089,7 @@ void _DtHelpExecFilteredCmd(
    }
 
    /* this traps bad cmds and also use of the synchronous filter call */
-   if (NULL == filteredCmdStr) return;       /* RETURN */
+   if (nullptr == filteredCmdStr) return;       /* RETURN */
 
    /*** Create a modeless dialog to inform the user of the problem
         and possibly allow them to execute the command anyway. ***/
@@ -1250,7 +1250,7 @@ static Widget  LocateWidgetId(
         XmeWarning(shellWidget,(char *)_DTGETMESSAGE(HUSET, 3,
               "Internal Error: Could not grab the mouse\nDtHelpReturnSelectedWidget aborted.\n"));
         *statusRet = DtHELP_SELECT_ERROR;
-        return(NULL);
+        return(nullptr);
       }
 
 
@@ -1265,7 +1265,7 @@ static Widget  LocateWidgetId(
         XmeWarning(shellWidget,(char *)_DTGETMESSAGE(HUSET, 4,
         "Internal Error: Could not grab the keyboard\nDtHelpReturnSelectedWidget() aborted.\n"));
         *statusRet = DtHELP_SELECT_ERROR;
-        return(NULL);
+        return(nullptr);
       }
 
     /* We are ok so let the user select a window... */
@@ -1311,7 +1311,7 @@ static Widget  LocateWidgetId(
                     XtUngrabKeyboard (shellWidget, CurrentTime);
                     XtUngrabPointer (shellWidget, CurrentTime);
                     *statusRet = DtHELP_SELECT_ABORT;
-                    return(NULL);
+                    return(nullptr);
 		  }
             default:
                   XtDispatchEvent(&event);
@@ -1328,7 +1328,7 @@ static Widget  LocateWidgetId(
     if (widget == shellWidget)
       {
         *statusRet = DtHELP_SELECT_INVALID;
-        return (NULL);
+        return (nullptr);
       }
     if (!XtIsComposite (widget))
       {
@@ -1387,7 +1387,7 @@ RememberDir(String path)
     char        *ptr;
     struct stat  buf;
 
-    if (path == NULL || *path == '\0')
+    if (path == nullptr || *path == '\0')
 	return False;
 
     if (_DtHelpCeStrrchr(path, "/", MB_CUR_MAX, &ptr) == 0 && ptr != path)
@@ -1423,7 +1423,7 @@ Boolean _DtHelpResolvePathname(
    char *	sysVolumeSearchPath,
    char *	userVolumeSearchPath)
 {
-   String           newPath = NULL;
+   String           newPath = nullptr;
 
    /* try to locate file and its entry, if present */
    newPath = _DtHelpFileLocate(DtHelpVOLUME_TYPE, *io_fileName,
@@ -1431,10 +1431,10 @@ Boolean _DtHelpResolvePathname(
 
    /* If we found a valid file let's do some set up here */
 
-   if (newPath != NULL)       /* We have a valid volume file so open it */
+   if (newPath != nullptr)       /* We have a valid volume file so open it */
    {
        /* Close the current one if we have one open */
-       if (*io_volumeHandle != NULL)
+       if (*io_volumeHandle != nullptr)
            _DtHelpCloseVolume(*io_volumeHandle);
 
        /* Open the help volume file and save the handle id */
@@ -1499,7 +1499,7 @@ Boolean _DtHelpExpandHelpVolume(
   char  *topLevelId;
 
   /* Free the old, and Copy the new volumeHandle to printVolume varialbe */
-  if (print->printVolume != NULL)
+  if (print->printVolume != nullptr)
      XtFree(print->printVolume);
 
   print->printVolume = XtNewString(display->helpVolume);     
@@ -1528,7 +1528,7 @@ Boolean _DtHelpExpandHelpVolume(
        if (!validTopic)
          {
            /* Bad top level topic */
-           help->topLevelId = NULL;
+           help->topLevelId = nullptr;
            return(FALSE);
          }
        else   
@@ -1557,10 +1557,10 @@ char *_DtHelpParseIdString(
    char *specification)
 {
 
-  char *pAccessFile = NULL;
-  char *tmpSpec=NULL;
-  char *returnStr=NULL;
-  char *strtok_ptr=NULL;
+  char *pAccessFile = nullptr;
+  char *tmpSpec=nullptr;
+  char *returnStr=nullptr;
+  char *strtok_ptr=nullptr;
 
   tmpSpec = XtNewString(specification);
 
@@ -1574,9 +1574,9 @@ char *_DtHelpParseIdString(
   returnStr = XtNewString(pAccessFile);
 
   /* The second call will return true only if we have another string */
-  pAccessFile = DtStrtok_r(NULL, " ", &strtok_ptr);
+  pAccessFile = DtStrtok_r(nullptr, " ", &strtok_ptr);
 
-  if (pAccessFile != NULL)
+  if (pAccessFile != nullptr)
     {
       /* We have a helpAccessFile in our specification */
            
@@ -1615,10 +1615,10 @@ char *_DtHelpParseIdString(
 char *_DtHelpParseAccessFile(
    char *specification)
 {
-  char *pAccessFile = NULL;
-  char *tmpSpec=NULL;
-  char *returnStr=NULL;
-  char *strtok_ptr=NULL;
+  char *pAccessFile = nullptr;
+  char *tmpSpec=nullptr;
+  char *returnStr=nullptr;
+  char *strtok_ptr=nullptr;
 
   tmpSpec = XtNewString(specification);
 
@@ -1632,9 +1632,9 @@ char *_DtHelpParseAccessFile(
   returnStr = XtNewString(pAccessFile);
 
   /* The second call will return true only if we have another string */
-  pAccessFile = DtStrtok_r(NULL, " ", &strtok_ptr);
+  pAccessFile = DtStrtok_r(nullptr, " ", &strtok_ptr);
 
-  if (pAccessFile != NULL)
+  if (pAccessFile != nullptr)
     {
       /* We have a helpAccessFile in our specification */
            
@@ -1653,7 +1653,7 @@ char *_DtHelpParseAccessFile(
        */
        XtFree(returnStr);
        XtFree(tmpSpec);
-       return (NULL);
+       return (nullptr);
      }
 
 }
@@ -1723,18 +1723,18 @@ int DtHelpReturnSelectedWidgetId(
 	break;
      
       case DtHELP_SELECT_ABORT:
-        *widget = NULL;
+        *widget = nullptr;
         result = DtHELP_SELECT_ABORT;
 	break;
 
       case DtHELP_SELECT_ERROR:
-        *widget = NULL;
+        *widget = nullptr;
         result = DtHELP_SELECT_ERROR;
 	break;
  
       case DtHELP_SELECT_INVALID:
       default:
-        *widget = NULL;
+        *widget = nullptr;
         result = DtHELP_SELECT_INVALID;
 	break;
     }
@@ -1778,25 +1778,25 @@ void _DtHelpTopicListAddToHead(
     int *totalNodes,
     int scrollPosition)
 {
-  DtTopicListStruct *pTemp=NULL;
+  DtTopicListStruct *pTemp=nullptr;
 
   /* add the new topic to the top */
   pTemp = (DtTopicListStruct *) XtMalloc((sizeof(DtTopicListStruct)));
 
   pTemp->pNext            = (*pHead);
-  pTemp->pPrevious        = NULL;
+  pTemp->pPrevious        = nullptr;
 
   /* Assign the passed in values to our first element */
   pTemp->locationId       = XtNewString(locationId);
-  pTemp->topicTitleLbl    = NULL;
-  if (topicTitle != NULL)
+  pTemp->topicTitleLbl    = nullptr;
+  if (topicTitle != nullptr)
       pTemp->topicTitleLbl= XmStringCopy(topicTitle);
   pTemp->topicType        = topicType;
   pTemp->helpVolume       = XtNewString(accessPath);
   pTemp->scrollPosition   = scrollPosition; 
 
   /* Add locationId as first element if pHead = NULL */
-  if (*pHead == NULL)
+  if (*pHead == nullptr)
     {
       /* Assign our tale pointer */
       (*pTale) = (*pHead);
@@ -1827,13 +1827,13 @@ void _DtHelpTopicListAddToHead(
      {
        pTemp            = (*pTale);
        (*pTale)         = (*pTale)->pPrevious;
-       (*pTale)->pNext  = NULL;
-       pTemp->pPrevious = NULL;
+       (*pTale)->pNext  = nullptr;
+       pTemp->pPrevious = nullptr;
                
        /* Free the id String and AccessPath elements */
        XtFree(pTemp->locationId);
        XtFree(pTemp->helpVolume);
-       if (pTemp->topicTitleLbl != NULL)
+       if (pTemp->topicTitleLbl != nullptr)
            XmStringFree(pTemp->topicTitleLbl);
 
        /* Now, free the whole node */
@@ -1867,17 +1867,17 @@ void _DtHelpTopicListDeleteHead(
     DtTopicListStruct **pTale,
     int *totalNodes)
 {
-  DtTopicListStruct *pTemp=NULL;
+  DtTopicListStruct *pTemp=nullptr;
 
   /* Delete the top node in our topic list */
-  if (*pHead != NULL)
+  if (*pHead != nullptr)
     {
       pTemp = (*pHead);
       if(pTemp != (*pTale))        /* (e.g. more than one node in list) */
 	{
            (*pHead)            = pTemp->pNext;
-           pTemp->pNext        = NULL; 
-           (*pHead)->pPrevious = NULL;
+           pTemp->pNext        = nullptr; 
+           (*pHead)->pPrevious = nullptr;
 
            /* Free the id String and accessPath elements */
            XtFree(pTemp->locationId);
@@ -2066,7 +2066,7 @@ void _DtHelpDisplayDefinitionBox(
   XtGetValues (XtParent(parent), args, n);
 
 
-  if (*definitionBox == NULL)
+  if (*definitionBox == nullptr)
     {
 
       /* Create the QuickHelpDialog widget to use as the definition box */
@@ -2204,7 +2204,7 @@ void _DtHelpDisplayFormatError(
    
    _DtHelpDisplayAreaSetList (displayArea, topicHandle, FALSE, -1);
 
-   if (systemError != NULL)  
+   if (systemError != nullptr)  
      XmeWarning((Widget)widget, systemError);
   
 }
@@ -2224,17 +2224,17 @@ void _DtHelpDisplayFormatError(
 void _DtHelpCommonHelpInit(
     _DtHelpCommonHelpStuff * help)
 {
-   help->topLevelId          = NULL;
-   help->currentHelpFile     = NULL;
+   help->topLevelId          = nullptr;
+   help->currentHelpFile     = nullptr;
 
    /* for help on help */
    if ( help->helpOnHelpVolume != _DtHelpDefaultHelp4HelpVolume)
        help->helpOnHelpVolume = XtNewString(help->helpOnHelpVolume);
-   if ( NULL == help->helpOnHelpVolume ) 
+   if ( nullptr == help->helpOnHelpVolume ) 
        help->helpOnHelpVolume = (char *)_DtHelpDefaultHelp4HelpVolume;
-   help->pHelpListHead = NULL;		/* Help List Pointer */
-   help->onHelpDialog = NULL;		/* help on help dialog */
-   help->pDisplayArea = NULL;		/* Display widget handle */
+   help->pHelpListHead = nullptr;		/* Help List Pointer */
+   help->onHelpDialog = nullptr;		/* help on help dialog */
+   help->pDisplayArea = nullptr;		/* Display widget handle */
 
    /* get the search paths used by the widget */
    help->userVolumeSearchPath = _DtHelpGetUserSearchPath();
@@ -2260,8 +2260,8 @@ void _DtHelpCommonHelpClean(
    free(help->topLevelId);
    XtFree(help->currentHelpFile);
 
-   help->topLevelId          = NULL;
-   help->currentHelpFile     = NULL;
+   help->topLevelId          = nullptr;
+   help->currentHelpFile     = nullptr;
 
    if (destroy)
    {
@@ -2319,12 +2319,12 @@ void _DtHelpSetButtonPositions(
    Dimension btnWidth;
    Dimension maxBtnWidth = 0;
    float scale = 0.0;
-   XmFontList fontList = NULL;
+   XmFontList fontList = nullptr;
    int        i;
    int        n;
    Arg        args[5];
 
-   if (numBtns <= 0 || NULL == btnList[0]) return;
+   if (numBtns <= 0 || nullptr == btnList[0]) return;
 
    /* get the fontList for the button */
    XtSetArg (args[0], XmNborderWidth, &borderWidth);
@@ -2333,7 +2333,7 @@ void _DtHelpSetButtonPositions(
    /* assumption: the fontList that is returned is not owned by me; don't free */
 
    /* cycle through all buttons */
-   for (i=0; i<numBtns && NULL!=btnList[i]; i++)
+   for (i=0; i<numBtns && nullptr!=btnList[i]; i++)
    {
       XmString labelString;
 
@@ -2405,12 +2405,12 @@ _DtHelpXmFontListGetPropertyMax(
     XmFontListEntry entry;
     XtPointer fontData;
 
-    if (NULL == fontList) return False;           /* RETURN on error */
+    if (nullptr == fontList) return False;           /* RETURN on error */
 
     /* walk through the fontList entries and add them in */
     XmFontListInitFontContext(&context,fontList);
     for ( entry = XmFontListNextEntry(context);
-          NULL != entry;
+          nullptr != entry;
           entry = XmFontListNextEntry(context) )
     {
        unsigned long value;

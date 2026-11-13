@@ -127,7 +127,7 @@ main (
 	int 			i = 0;
 	Tt_status		status;
   
-	XtSetLanguageProc (NULL, NULL, NULL);
+	XtSetLanguageProc (nullptr, nullptr, nullptr);
 
 	_DtEnvControl (DT_ENV_SET);
 
@@ -135,8 +135,8 @@ main (
 
 	app_context = XtCreateApplicationContext ();
 
-	if (!(display = XtOpenDisplay (app_context, NULL, NULL, name,
-				       NULL, 0, &argc, argv))) {
+	if (!(display = XtOpenDisplay (app_context, nullptr, nullptr, name,
+				       nullptr, 0, &argc, argv))) {
 		DtMsgLogMessage (argv[0], DtMsgLogError, 
 			(char *) GETMESSAGE (SET_NUM, 7, "XtOpenDisplay() failed.  Perhaps the DISPLAY environment\nvariable is not set or is invalid."));
 		exit (1);
@@ -234,9 +234,9 @@ InvokeAction (
 				    (char *) action_name,
 				    args,
 				    num_args,
-				    NULL,
+				    nullptr,
 				    exec_host,
-				    NULL,
+				    nullptr,
 				    True,
 				    ActionDoneCallback,
 				    prog_name);
@@ -256,7 +256,7 @@ InvokeAction (
 		XtAppAddTimeOut (app_context,
 				 10, 
 				 Exit,
-				 NULL);
+				 nullptr);
 	}
 
 	return (1);
@@ -311,7 +311,7 @@ ActionDoneCallback (
 #endif
 			XtAppAddTimeOut(app_context, 10 * time_out, 
 					Exit,
-	      				NULL);
+	      				nullptr);
 
         	case DtACTION_INVOKED:
 		case DtACTION_FAILED:
@@ -325,7 +325,7 @@ ActionDoneCallback (
 #endif
 			XtAppAddTimeOut(app_context, 10 * time_out, 
 					Exit,
-	      				NULL);
+	      				nullptr);
 	}
 }
 
@@ -398,11 +398,11 @@ ReceiveMessage (
 	const char 		* action_name;
 	char 			* exec_host;
 	char 			* locale;
-	char 			* topic = NULL;
+	char 			* topic = nullptr;
 	char			* prog_name = (char *) client_data;
 	static			char lang[200];
 	const char		* op_name;
-	char			* info_lib = NULL;
+	char			* info_lib = nullptr;
 
 	message = tt_message_receive();
 
@@ -462,11 +462,11 @@ ReceiveMessage (
 	 * Check for an info lib
 	 */
 	info_lib = tt_message_file (message);
-	if ((tt_ptr_error (info_lib) != TT_OK) || info_lib == NULL) {
+	if ((tt_ptr_error (info_lib) != TT_OK) || info_lib == nullptr) {
 		/*
 		 * Use DTINFOLIBDEFAULT if it is defined
 		 */
-		if ((info_lib = getenv ("DTINFOLIBDEFAULT")) == NULL) {
+		if ((info_lib = getenv ("DTINFOLIBDEFAULT")) == nullptr) {
 			DtMsgLogMessage (prog_name, DtMsgLogError, 
 				(char *) GETMESSAGE (SET_NUM, 10, "An InfoLib was not provided in the '%s' message\nand the environment variable DTINFOLIBDEFAULT was not defined."),
 				op_name);
@@ -474,7 +474,7 @@ ReceiveMessage (
 		}
 	}
 
-	if ((action_name = tt_message_arg_val (message, 0)) == NULL) {
+	if ((action_name = tt_message_arg_val (message, 0)) == nullptr) {
 
 		action_name = (op_num == LOAD_INFO_LIB) ? 
 			LOAD_INFO_LIB_ACTION : SHOW_INFO_LIB_SECTION_ACTION;
@@ -485,14 +485,14 @@ ReceiveMessage (
 			action_name);
 	}
 
-	if ((exec_host = tt_message_arg_val (message, 1)) == NULL) {
+	if ((exec_host = tt_message_arg_val (message, 1)) == nullptr) {
 
 		DtMsgLogMessage (prog_name, DtMsgLogWarning, 
 			(char *) GETMESSAGE (SET_NUM, 14, "Message '%s' specified a NULL execution host."),
 			op_name);
 	}
 
-	if ((locale = tt_message_arg_val (message, 2)) == NULL) {
+	if ((locale = tt_message_arg_val (message, 2)) == nullptr) {
 
 		DtMsgLogMessage (prog_name, DtMsgLogWarning,
 			(char *) GETMESSAGE (SET_NUM, 15, "Message '%s' specified a NULL locale."),
@@ -508,7 +508,7 @@ ReceiveMessage (
 	}
 
 	if (op_num == SHOW_INFO_AT_LOC) {
-		if ((topic = tt_message_arg_val (message, 3)) == NULL) {
+		if ((topic = tt_message_arg_val (message, 3)) == nullptr) {
 
 			DtMsgLogMessage (prog_name, DtMsgLogError, 
 				(char *) GETMESSAGE (SET_NUM, 16, "Message '%s' specified a NULL topic."),
@@ -643,6 +643,6 @@ Exit (
 	XtAppAddTimeOut (app_context, 
 			 time_out, 
 			 Exit,
-			 NULL);
+			 nullptr);
 
 }

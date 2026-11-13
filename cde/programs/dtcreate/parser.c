@@ -165,7 +165,7 @@ char        linebuf[1024],**wordPairs,**execstr;
            /* On return, wordPairs[0] = keyword like ICON
               and        wordPairs[1] = value for the keyword
            */
-           if( (wordPairs = GetKeywordValuePairs(linebuf,&fldid,ACTION_TABLE)) != NULL)
+           if( (wordPairs = GetKeywordValuePairs(linebuf,&fldid,ACTION_TABLE)) != nullptr)
            {
               if( first && strcmp(wordPairs[0],"ACTION") )
               {
@@ -271,7 +271,7 @@ char        linebuf[1024],**wordPairs,**execstr;
             /* Everything looks right so process the exec_string */
             if( !(execstr = ProcessExecString(ActionDataptr->pszCmd)) )
             {
-                ActionDataptr->pszCmd = NULL;
+                ActionDataptr->pszCmd = nullptr;
                 ActionDataptr->pszPrompt = 0;
             }
             else
@@ -348,13 +348,13 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                if( previous == DATA_ATTRIBUTES && manflds != 1 )
                {
                    printf("Error in DATA_ATTR stanza of the FiletypeData\n");
-                   return NULL;
+                   return nullptr;
                }
                /* Check for atleast one field in DATA_CRITERIA stanza */
                else if( previous == DATA_CRITERIA && manflds != 1 )
                {
                    printf("Error in DATA_CRITERIA stanza of the FiletypeData\n");
-                   return NULL;
+                   return nullptr;
                }
                /* Check for atleast two fields in ACTION_OPEN or ACTION_PRINT stanza */
                else if( (previous == ACTION_OPEN || previous == ACTION_PRINT) )
@@ -362,14 +362,14 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                    if( manflds != 4)
                    {
                       printf("Error in ACTION_OPEN/PRINT stanza of the FiletypeData\n");
-                      return NULL;
+                      return nullptr;
                    }
                }
                /* Check for atleast three fields in ACTION_PRINT_FTYPE stanza */
                else if( previous == ACTION_PRINT_FTYPE && manflds != 3 )
                {
                    printf("Error in ACTION_PRINT_FTYPE stanza of the FiletypeData\n");
-                   return NULL;
+                   return nullptr;
                }
                continue;
            }
@@ -377,7 +377,7 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
            if (linebuf[len-1] == '\n')
               linebuf[len-1] = '\0';
 
-           if( (wordPairs = GetKeywordValuePairs(linebuf,&fldid,FILETYPE_TABLE)) != NULL)
+           if( (wordPairs = GetKeywordValuePairs(linebuf,&fldid,FILETYPE_TABLE)) != nullptr)
            {
               if( !strcmp(wordPairs[0],"DATA_ATTRIBUTES") )
               {
@@ -388,20 +388,20 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                      if( !ppFiletypeData)
                      {
                          if( (ppFiletypeData = (FiletypeData **)calloc(1,sizeof(FiletypeData *)))
-                                                  == NULL )
+                                                  == nullptr )
                          {
                                  printf("\n Cannot allocate memory\n");
-                                 return NULL;
+                                 return nullptr;
                          }
                          /* Allocate a filetypedata record   */
                          else
                          {
                                  if( (ppFiletypeData[nfiletypes] =
                                  (FiletypeData *)calloc(1,sizeof(FiletypeData)) )
-                                                   == NULL )
+                                                   == nullptr )
                                  {
                                        printf("\n Cannot allocate memory\n");
-                                       return NULL;
+                                       return nullptr;
                                  }
                           }
                      }
@@ -416,10 +416,10 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                      if( (ppnewFiletypeData =
                         (FiletypeData **)realloc((FiletypeData *)ppFiletypeData,
                         nfiletypes+2 * sizeof(FiletypeData *)))
-                                              == NULL )
+                                              == nullptr )
                      {
                           printf("\n Cannot allocate memory\n");
-                          return NULL;
+                          return nullptr;
                      }
                      else if(ppFiletypeData)
                      {
@@ -428,11 +428,11 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                           if(ProcessContents((FiletypeData *)ppFiletypeData[nfiletypes]) < 0 )
                           {
                                 printf("\n Error in Contents Data\n");
-                                return NULL;
+                                return nullptr;
                           }
                          /* Everything looks right so process the exec_string */
                           if( !(execstr = ProcessExecString((char *)ppFiletypeData[nfiletypes]->pszPrintCmd)) )
-                              ppFiletypeData[nfiletypes]->pszPrintCmd=NULL;
+                              ppFiletypeData[nfiletypes]->pszPrintCmd=nullptr;
                           else {
                               ppFiletypeData[nfiletypes]->pszPrintCmd=execstr[0];
                               free(execstr);
@@ -441,10 +441,10 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                           /* Allocate a new filetypedata record */
                           if( (ppFiletypeData[nfiletypes] =
                                 (FiletypeData *)calloc(1,sizeof(FiletypeData)) )
-                                                  == NULL )
+                                                  == nullptr )
                           {
                               printf("\n Cannot allocate memory\n");
-                              return NULL;
+                              return nullptr;
                           }
                           ppFiletypeData[nfiletypes]->pszOpenCmd = pszOpenCmd;
                           previous = DATA_ATTRIBUTES;
@@ -455,7 +455,7 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                 else
                 {
                      printf("Error in filetypedata \n");
-                     return NULL;
+                     return nullptr;
                 }
            }
            else if( !strcmp(wordPairs[0],"DATA_CRITERIA") )
@@ -468,7 +468,7 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                   else
                   {
                       printf("Error in filetypedata \n");
-                      return NULL;
+                      return nullptr;
                   }
               }
               else if( !strcmp(wordPairs[0],"ACTION") && !strcmp(wordPairs[1],"Open") )
@@ -481,7 +481,7 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                   else
                   {
                       printf("Error in filetypedata \n");
-                      return NULL;
+                      return nullptr;
                   }
               }
            else if( !strcmp(wordPairs[0],"ACTION") && strcmp(wordPairs[1],"Open") &&
@@ -495,7 +495,7 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                   else
                   {
                       printf("Error in filetypedata \n");
-                      return NULL;
+                      return nullptr;
                   }
            }
            else if( !strcmp(wordPairs[0],"ACTION") && !strcmp(wordPairs[1],"Print") )
@@ -508,7 +508,7 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
                   else
                   {
                       printf("Error in filetypedata \n");
-                      return NULL;
+                      return nullptr;
                   }
            }
 
@@ -628,19 +628,19 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
         /* Check if we got all the mandatory fields data */
         if( (previous == ACTION_OPEN  && manflds != 4) ||
             (previous == ACTION_PRINT  && manflds != 4)   )
-            return NULL;
+            return nullptr;
         else if(ppFiletypeData)
         {
             /* Process Contents for the last file filetype if any */
             if(ProcessContents((FiletypeData *)ppFiletypeData[nfiletypes]) < 0)
                           {
                                 printf("\n Error in Contents Data\n");
-                                return NULL;
+                                return nullptr;
                           }
             /* Everything looks right so process the exec_string */
             if(!(execstr =
                     ProcessExecString((char *)ppFiletypeData[nfiletypes]->pszPrintCmd)) )
-                ppFiletypeData[nfiletypes]->pszPrintCmd=NULL;
+                ppFiletypeData[nfiletypes]->pszPrintCmd=nullptr;
             else
                 ppFiletypeData[nfiletypes]->pszPrintCmd=execstr[0];
             if( !ppFiletypeData[nfiletypes])
@@ -652,7 +652,7 @@ FiletypeData  **ppFiletypeData,**ppnewFiletypeData;
 
         }
         else
-            return NULL;
+            return nullptr;
 
 }
 
@@ -685,13 +685,13 @@ GetKeywordValuePairs(char *s, int *id, int table)
     static int fldid=-1;
     int        idx;
 
-        args[0] = args[1] = args[2] = NULL;
+        args[0] = args[1] = args[2] = nullptr;
         /* Skip all leading spaces */
         while (*s && isspace (*s))
             ++s;
         /* Skip the complete line if a '#' character is found (comments)  */
         if (!*s || *s == '#')
-            return NULL;
+            return nullptr;
         wordStart = s;
         while (*s && *s != '#' && !isspace (*s))
             ++s;
@@ -700,7 +700,7 @@ GetKeywordValuePairs(char *s, int *id, int table)
             int szArgs0 = s - wordStart + 1;
             args[0] = (char *)malloc (szArgs0);
             if (!args[0])
-                return NULL;
+                return nullptr;
             memset(args[0],0,szArgs0);
         }
         strncpy (args[0], wordStart, s - wordStart);
@@ -713,7 +713,7 @@ GetKeywordValuePairs(char *s, int *id, int table)
             {
                 if(args[0])
                 free(args[0]);
-                return NULL;
+                return nullptr;
             }
             memset(args[1],0,szArgs1);
         }
@@ -721,7 +721,7 @@ GetKeywordValuePairs(char *s, int *id, int table)
         while (*s && isspace (*s))
             ++s;
         strcpy (args[1], s);
-        args[2]=NULL;
+        args[2]=nullptr;
         /* Check for whether args[0] is a keyword or not */
         idx=0;
         if( table == ACTION_TABLE )
@@ -746,10 +746,10 @@ GetKeywordValuePairs(char *s, int *id, int table)
         {
            char *temp4;
 
-           if( (temp4 = (char *)realloc(args[0],strlen(args[0])+strlen(args[1])+2) ) == NULL )
+           if( (temp4 = (char *)realloc(args[0],strlen(args[0])+strlen(args[1])+2) ) == nullptr )
            {
                 printf("Cannot Allocate memory\n");
-                return NULL;
+                return nullptr;
            }
            args[0] = temp4;
            strcat(args[0]," ");
@@ -758,14 +758,14 @@ GetKeywordValuePairs(char *s, int *id, int table)
            if(args[1])
            {
               free(args[1]);
-              args[1]=NULL;
+              args[1]=nullptr;
            }
            if( IsLastSingle(args[0]) && args[0][strlen(args[0])-1] == '\\' )
                args[0][strlen(args[0])-1] = '\0';
-           if( (temp4 = (char *)realloc(fline,flinesize+strlen(args[0])+1)) == NULL)
+           if( (temp4 = (char *)realloc(fline,flinesize+strlen(args[0])+1)) == nullptr)
            {
                 printf("Cannot Allocate memory\n");
-                return NULL;
+                return nullptr;
            }
           strcat(temp4,args[0]);
           free(args[0]);
@@ -831,20 +831,20 @@ char *s1, *s2,*s3,*s4,*argbuf,**exec_args;
 int  done=FALSE, argfound=FALSE,promptfound=FALSE;
 
         if (!cmd) {
-           return((char **)NULL);
+           return((char **)nullptr);
         }
-        s1=s2=s3=s4=argbuf=NULL;
+        s1=s2=s3=s4=argbuf=nullptr;
         exec_args = calloc(3, sizeof(char*));
-        if (!exec_args) return NULL;
+        if (!exec_args) return nullptr;
         /* Allocate buffer for the cmd string */
         exec_args[0] = (char *)calloc(1,strlen(cmd)+1);
-        exec_args[1] = exec_args[2] = NULL;
+        exec_args[1] = exec_args[2] = nullptr;
         /* check if any Args present */
         s1=cmd;
         while( !done )
         {
                 char *tmp;
-                tmp=NULL;
+                tmp=nullptr;
                 s4 = strstr(s1,"%Arg");
                 if(s4)
                 {
@@ -858,7 +858,7 @@ int  done=FALSE, argfound=FALSE,promptfound=FALSE;
                                              covers the complete string
                                              between %'s
                                             */
-                      if(argbuf) { free(argbuf); argbuf = NULL; }
+                      if(argbuf) { free(argbuf); argbuf = nullptr; }
                       if(s2)
                       {
                          argbuf = (char *)calloc(1,(s2-s1)+2);
@@ -884,7 +884,7 @@ int  done=FALSE, argfound=FALSE,promptfound=FALSE;
                 else if (*s1)
                 {
                      strcat(exec_args[0],s1);
-                     if(argbuf)   { free(argbuf); argbuf = NULL; }
+                     if(argbuf)   { free(argbuf); argbuf = nullptr; }
                      done = TRUE;
                      continue;
                 }
@@ -941,7 +941,7 @@ int  done=FALSE, argfound=FALSE,promptfound=FALSE;
                 argfound = FALSE;
                 s1=s2;
          }
-         if(argbuf) { free(argbuf); argbuf = NULL; }
+         if(argbuf) { free(argbuf); argbuf = nullptr; }
    return exec_args;
 }
 
@@ -974,7 +974,7 @@ ProcessContents(FiletypeData *pFtD)
 
 char    *s1,*tmp,*s2,buf[10],*cts;
 
-        s1=s2=tmp=cts=NULL;
+        s1=s2=tmp=cts=nullptr;
         memset(buf, 0, sizeof(buf));
         /* simply return if there is no data in contents field */
         if(!pFtD->pszContents)
@@ -983,7 +983,7 @@ char    *s1,*tmp,*s2,buf[10],*cts;
         strcpy(cts,pFtD->pszContents);
         s1=cts;
         free(pFtD->pszContents);
-        pFtD->pszContents=NULL;
+        pFtD->pszContents=nullptr;
         /* Skip all leading spaces */
         while( *s1 && isspace(*s1) )  s1++;
         /* Get the sStart value if any */

@@ -79,7 +79,7 @@ convert_string_to_int(STRING s_value,
 	int	i;
 	int	int_value= default_value;
 	ISTRING	is_value= istr_create(s_value);
-	if (s_value == NULL)
+	if (s_value == nullptr)
 	{
 		istr_destroy(is_value);
 		return int_value;
@@ -115,7 +115,7 @@ convert_fill_table(ISTRING *table, int num_values, ISTRING value)
 **************************************************************************/
 
 static BOOL	builtin_action_table_inited= FALSE;
-static ISTRING	builtin_action_table[AB_BUILTIN_ACTION_NUM_VALUES]= {NULL};
+static ISTRING	builtin_action_table[AB_BUILTIN_ACTION_NUM_VALUES]= {nullptr};
 
 #define check_builtin_action_table_init() \
 	(builtin_action_table_inited? 0:builtin_action_table_init())
@@ -170,7 +170,7 @@ util_builtin_action_to_string(AB_BUILTIN_ACTION action)
  * REMIND: move type conversion stuff to guide 
  */
 static BOOL	obj_type_table_inited= FALSE;
-static ISTRING obj_type_table[AB_OBJECT_TYPE_NUM_VALUES+1]= {NULL};
+static ISTRING obj_type_table[AB_OBJECT_TYPE_NUM_VALUES+1]= {nullptr};
 
 #define check_obj_type_table_init() \
 	(obj_type_table_inited? 0:obj_type_table_init())
@@ -242,7 +242,7 @@ util_object_type_to_string(AB_OBJECT_TYPE type)
  * REMIND: move type conversion stuff to guide 
  */
 static BOOL	browser_obj_type_table_inited= FALSE;
-static ISTRING browser_obj_type_table[AB_OBJECT_TYPE_NUM_VALUES+1]= {NULL};
+static ISTRING browser_obj_type_table[AB_OBJECT_TYPE_NUM_VALUES+1]= {nullptr};
 
 #define check_browser_obj_type_table_init() \
 	(browser_obj_type_table_inited? 0:browser_obj_type_table_init())
@@ -393,7 +393,7 @@ align_tab_init(void)
 {
 #define at align_tab
     align_tab_inited= TRUE;
-    convert_fill_table(at, ARRAY_SIZE(at), istr_const(NULL));
+    convert_fill_table(at, ARRAY_SIZE(at), istr_const(nullptr));
 
     at[AB_ALIGN_TOP]=		istr_const(":top");
     at[AB_ALIGN_LEFT]=		istr_const(":left");
@@ -419,7 +419,7 @@ util_alignment_to_string(AB_ALIGNMENT align)
 {
     align_tab_check_init();
     return convert_int_to_string(align,
-		align_tab, ARRAY_SIZE(align_tab), istr_const(NULL));
+		align_tab, ARRAY_SIZE(align_tab), istr_const(nullptr));
 }
 
 /******************* AB_LABEL_TYPE **************************************/
@@ -459,7 +459,7 @@ util_label_type_to_string(AB_LABEL_TYPE label_type)
 {
     label_type_tab_check_init();
     return convert_int_to_string(label_type,
-		label_type_tab, ARRAY_SIZE(label_type_tab), NULL);
+		label_type_tab, ARRAY_SIZE(label_type_tab), nullptr);
 }
 
 /******************* AB_BUTTON_TYPE **************************************/
@@ -493,7 +493,7 @@ util_button_type_to_string(AB_BUTTON_TYPE type)
 {
     button_type_tab_check_init();
     return convert_int_to_string(type,
-		button_type_tab, ARRAY_SIZE(button_type_tab), NULL);
+		button_type_tab, ARRAY_SIZE(button_type_tab), nullptr);
 }
 
 
@@ -536,7 +536,7 @@ util_arg_class_to_string(AB_ARG_CLASS arg_class)
 {
     arg_class_tab_check_init();
     return convert_int_to_string(arg_class,
-		arg_class_tab, ARRAY_SIZE(arg_class_tab), NULL);
+		arg_class_tab, ARRAY_SIZE(arg_class_tab), nullptr);
 }
 
 
@@ -615,7 +615,7 @@ util_arg_type_to_string(AB_ARG_TYPE arg_type)
 {
     arg_type_tab_check_init();
     return convert_int_to_string(arg_type,
-		arg_type_tab, ARRAY_SIZE(arg_type_tab), NULL);
+		arg_type_tab, ARRAY_SIZE(arg_type_tab), nullptr);
 }
 
 /******************* AB_TEXT_TYPE **************************************/
@@ -707,7 +707,7 @@ container_tab_init(void)
 {
 #define cont container_tab
     container_tab_inited= TRUE;
-    convert_fill_table(cont, ARRAY_SIZE(cont), istr_const(NULL));
+    convert_fill_table(cont, ARRAY_SIZE(cont), istr_const(nullptr));
  
     cont[AB_CONT_ABSOLUTE]= istr_const(":absolute");
     cont[AB_CONT_GROUP]= istr_const(":group");
@@ -736,7 +736,7 @@ util_container_type_to_string(AB_CONTAINER_TYPE type)
 {
     container_tab_check_init();
     return convert_int_to_string(type,
-		container_tab, ARRAY_SIZE(container_tab), istr_const(NULL));
+		container_tab, ARRAY_SIZE(container_tab), istr_const(nullptr));
 }
 
 
@@ -751,7 +751,7 @@ item_tab_init(void)
 {
 #define it item_tab
     item_tab_inited= TRUE;
-    convert_fill_table(it, ARRAY_SIZE(it), istr_const(NULL));
+    convert_fill_table(it, ARRAY_SIZE(it), istr_const(nullptr));
  
     it[AB_ITEM_FOR_CHOICE]= istr_const(":choice_item");
     it[AB_ITEM_FOR_LIST]= istr_const(":list_item");
@@ -774,7 +774,7 @@ util_item_type_to_string(AB_ITEM_TYPE type)
 {
     item_tab_check_init();
     return convert_int_to_string(type,
-		item_tab, ARRAY_SIZE(item_tab), istr_const(NULL));
+		item_tab, ARRAY_SIZE(item_tab), istr_const(nullptr));
 }
 
 /******************* AB_LABEL_ALIGN_TYPE **************************************/
@@ -847,7 +847,7 @@ epilogue:
 STRING	
 util_os_type_to_ident(AB_OS_TYPE osType)
 {
-    STRING	typeString = NULL;
+    STRING	typeString = nullptr;
 
     switch (osType)
     {
@@ -869,7 +869,7 @@ util_os_type_to_ident(AB_OS_TYPE osType)
 STRING
 util_os_type_to_string(AB_OS_TYPE osType)
 {
-    STRING	nameString = NULL;
+    STRING	nameString = nullptr;
 
     switch (osType)
     {

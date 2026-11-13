@@ -37,7 +37,7 @@ ProcessWriteBegin(ProcessWriteScope *scope)
     if (sigpending(&pending) != 0)
     {
         int saved = errno;
-        (void)pthread_sigmask(SIG_SETMASK, &scope->previous, NULL);
+        (void)pthread_sigmask(SIG_SETMASK, &scope->previous, nullptr);
         errno = saved;
         return -1;
     }
@@ -59,7 +59,7 @@ ProcessWriteEnd(ProcessWriteScope *scope, int result)
             while (error == EINTR);
         }
     }
-    error = pthread_sigmask(SIG_SETMASK, &scope->previous, NULL);
+    error = pthread_sigmask(SIG_SETMASK, &scope->previous, nullptr);
     if (error != 0 && result == 0) { errno = error; return -1; }
     errno = saved;
     return result;
@@ -71,7 +71,7 @@ DtfileProcessWriteAll(int descriptor, const void *bytes, size_t length)
     ProcessWriteScope scope;
     const unsigned char *next = bytes;
     int result = 0;
-    if (descriptor < 0 || (bytes == NULL && length != 0))
+    if (descriptor < 0 || (bytes == nullptr && length != 0))
     { errno = EINVAL; return -1; }
     if (ProcessWriteBegin(&scope) != 0) return -1;
     while (length != 0)
@@ -94,7 +94,7 @@ void
 DtfileProcessClose(int *descriptor)
 {
     int fd;
-    if (descriptor == NULL || *descriptor < 0) return;
+    if (descriptor == nullptr || *descriptor < 0) return;
     fd = *descriptor;
     *descriptor = -1;
     (void)close(fd);
@@ -103,7 +103,7 @@ DtfileProcessClose(int *descriptor)
 void
 DtfileProcessClosePipe(int descriptors[2])
 {
-    if (descriptors == NULL) return;
+    if (descriptors == nullptr) return;
     DtfileProcessClose(&descriptors[0]);
     DtfileProcessClose(&descriptors[1]);
 }
@@ -123,7 +123,7 @@ int
 DtfileProcessPipe(int descriptors[2])
 {
     int saved;
-    if (descriptors == NULL) { errno = EINVAL; return -1; }
+    if (descriptors == nullptr) { errno = EINVAL; return -1; }
     descriptors[0] = descriptors[1] = -1;
     while (pipe(descriptors) != 0)
         if (errno != EINTR) return -1;

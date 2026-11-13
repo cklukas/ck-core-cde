@@ -267,7 +267,7 @@ char *_DtEnv_tt_file_netfile(
      */
     if (!filename) {
 	_DtSvcProcessUnlock();
-	return( (char *) NULL );
+	return( (char *) nullptr );
     }
 
     /*
@@ -475,7 +475,7 @@ char *_DtEnv_tt_host_netfile_file(
      */
     if (!filename) {
 	_DtSvcProcessUnlock();
-	return( (char *) NULL );
+	return( (char *) nullptr );
     }
 
     if (!host) {
@@ -691,7 +691,7 @@ static char **_DtEnvGetMapList(
      */
     *mapListCount = 0;
     if ( !mapListStr ) {
-	return( (char **) NULL );
+	return( (char **) nullptr );
     }
 
     /*
@@ -712,7 +712,7 @@ static char **_DtEnvGetMapList(
 	    firstTime = 0;
 	}
 	else
-	    tmpPtr2 = _XStrtok( (char *) NULL, ":", strtok_buf );
+	    tmpPtr2 = _XStrtok( (char *) nullptr, ":", strtok_buf );
 
 	if (tmpPtr2) {
 	    /*
@@ -790,7 +790,7 @@ static cacheForTargetHost *_DtEnvGetTargetCache(
      * Handle obvious.
      */
     if (!targetHost) {
-	return( (cacheForTargetHost *) NULL );
+	return( (cacheForTargetHost *) nullptr );
     }
 
     _DtSvcProcessLock();
@@ -818,7 +818,7 @@ static cacheForTargetHost *_DtEnvGetTargetCache(
 	 * No cache slot for, and we shouldn't create one either.
 	 */
 	_DtSvcProcessUnlock();
-	return( (cacheForTargetHost *) NULL );
+	return( (cacheForTargetHost *) nullptr );
     }
     else {
 	/*
@@ -905,8 +905,8 @@ static void _DtEnvMapIt(
 	/*
 	 * Nothing to map.   Punt.
 	 */
-	envVarCache->localEnvVarCopy = (char *) NULL;
-	envVarCache->localEnvVarPtr  = (char *) NULL;
+	envVarCache->localEnvVarCopy = (char *) nullptr;
+	envVarCache->localEnvVarPtr  = (char *) nullptr;
 	return;
     }
 
@@ -947,7 +947,7 @@ static void _DtEnvMapIt(
 	if (!pathListCount)
 	    tmpPtr2 = _XStrtok( tmpPtr, separator, strtok_buf );
 	else
-	    tmpPtr2 = _XStrtok( (char *) NULL, separator, strtok_buf );
+	    tmpPtr2 = _XStrtok( (char *) nullptr, separator, strtok_buf );
 
 	if (tmpPtr2) {
 	    pathListCount++;
@@ -977,8 +977,8 @@ static void _DtEnvMapIt(
      */
     for ( i = 0; i < pathListCount; i++ ) {
 	prePend  = pathList[i];
-	postPend = (char *) NULL;
-	newPrePend = (char *) NULL;
+	postPend = (char *) nullptr;
+	newPrePend = (char *) nullptr;
 
 	/*
 	 * Assume we need to map this path element.
@@ -1061,7 +1061,7 @@ static void _DtEnvMapIt(
 	    netpath = _DtEnv_tt_file_netfile( prePend );
 #endif /* DTENV_PERF_HOOK */
 	    if ( tt_ptr_error(netpath) != TT_OK ) {
-		newPrePend = (char *) NULL;
+		newPrePend = (char *) nullptr;
 	    }
 	    else {
 #ifdef DTENV_PERF_HOOK
@@ -1097,7 +1097,7 @@ static void _DtEnvMapIt(
 		newPrePend = _DtEnv_tt_host_netfile_file (targetHost, netpath);
 #endif /* DTENV_PERF_HOOK */
 		if ( tt_ptr_error(newPrePend) != TT_OK ) {
-		    newPrePend = (char *) NULL;
+		    newPrePend = (char *) nullptr;
 		}
 		ttfreeAndNull( netpath );
 	    }
@@ -1206,7 +1206,7 @@ static char *_DtEnvGetMapInformation( void )
    if (XrmGetResource (db, nameBuf, classBuf, &rep_type, &resource_value))
       mapInfo = (char *) resource_value.addr;
    else
-      mapInfo = (char *) NULL;
+      mapInfo = (char *) nullptr;
 
    if ( name != nameBuf )
         XtFree(name);
@@ -1216,7 +1216,7 @@ static char *_DtEnvGetMapInformation( void )
    if (mapInfo)
 	return( XtNewString( mapInfo ) );
    else
-	return( (char *) NULL );
+	return( (char *) nullptr );
 }
 
 /******************************************************************************
@@ -1445,7 +1445,7 @@ void _DtEnvRestoreLocal (void)
 	 * If localhost, then nothing to restore.
 	 */
 	if ( !strcmp(mostRecentRemoteHostG, "localhost") ) {
-	    mostRecentRemoteHostG = (char *) NULL;
+	    mostRecentRemoteHostG = (char *) nullptr;
 	    _DtSvcProcessUnlock();
 	    return;
 	}

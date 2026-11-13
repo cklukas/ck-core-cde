@@ -348,7 +348,7 @@ void MakeShell (WmWorkspaceData *pWS, IconBoxData *pIBD)
 
     Arg setArgs[20];
     int i;
-    char *pchIBTitle = NULL;
+    char *pchIBTitle = nullptr;
 
     /*
      * Create top level application shell for icon box
@@ -381,7 +381,7 @@ void MakeShell (WmWorkspaceData *pWS, IconBoxData *pIBD)
                                         pWS->workspaceTopLevelW,
 				        (ArgList)setArgs, i);
 
-    if (pchIBTitle != NULL) XtFree (pchIBTitle);
+    if (pchIBTitle != nullptr) XtFree (pchIBTitle);
 
 } /* END OF FUNCTION MakeShell */
 
@@ -785,11 +785,11 @@ void InitializeIconBoxData (WmWorkspaceData *pWS, IconBoxData *pIBD)
     pIBD->currentCol = 0;
     pIBD->lastRow = 0;
     pIBD->lastCol = 0;
-    pIBD->IPD.placeList = NULL;
+    pIBD->IPD.placeList = nullptr;
 
-    pIBD->scrolledWidget = NULL;
-    pIBD->bBoardWidget = NULL;
-    pIBD->clipWidget = NULL; 
+    pIBD->scrolledWidget = nullptr;
+    pIBD->bBoardWidget = nullptr;
+    pIBD->clipWidget = nullptr; 
     pIBD->wsID = pWS->id;
 
     ToLower (pWS->pSD->iconBoxSBDisplayPolicy);
@@ -808,7 +808,7 @@ void InitializeIconBoxData (WmWorkspaceData *pWS, IconBoxData *pIBD)
      * iconBoxGeometry width and height are not specified
      */
 
-    if (pWS->iconBoxGeometry == NULL) /* not set by user */
+    if (pWS->iconBoxGeometry == nullptr) /* not set by user */
     {
 	/*
 	 * Use the iconPlacement resource 
@@ -899,7 +899,7 @@ void InitializeIconBoxData (WmWorkspaceData *pWS, IconBoxData *pIBD)
      * The icon box does not live in an icon box in this version
      */
 
-    pIBD->pNextIconBox =NULL;
+    pIBD->pNextIconBox =nullptr;
     
 
 } /* END OF FUNCTION InitializeIconBoxData */   
@@ -1043,7 +1043,7 @@ void MakeShrinkWrapIconsGC (WmScreenData *pSD, Pixmap bgPixmap)
     if (!pSD->shrinkWrapGC)
     {
 	pSD->shrinkWrapGC = XCreateGC (DISPLAY, pSD->rootWindow, 0, 
-		(XGCValues *) NULL);
+		(XGCValues *) nullptr);
 
 	copyMask = ~0L;
 
@@ -1099,9 +1099,9 @@ void MakeFadeIconGC (WmScreenData *pSD)
    
 
     pSD->fadeIconGC = XCreateGC (DISPLAY, pSD->rootWindow, 0, 
-				(XGCValues *) NULL);
+				(XGCValues *) nullptr);
     pSD->fadeIconTextGC = XCreateGC (DISPLAY, pSD->rootWindow, 0, 
-				(XGCValues *) NULL);
+				(XGCValues *) nullptr);
 
     copyMask = ~0L;
 
@@ -1781,7 +1781,7 @@ IconBoxPopUp (WmWorkspaceData *pWS, Boolean up)
 	    {
 		if (ClientInWorkspace(pWS, pibd->pCD_iconBox))
 		{
-		    F_Raise (NULL, pibd->pCD_iconBox, (XEvent *)NULL);
+		    F_Raise (nullptr, pibd->pCD_iconBox, (XEvent *)nullptr);
 		}
 		else
 		{ 
@@ -1830,7 +1830,7 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
     IconBoxData  *tmpPointerToIconBox;
     Widget iconWidget;
     IconInfo *pIconInfo;
-    static XmString dummyString = NULL;
+    static XmString dummyString = nullptr;
     WsClientData *pWsc;
     WmWorkspaceData *pWS = GetWorkspaceData (pCD->pSD, pIBD->wsID);
 
@@ -1898,7 +1898,7 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
 					   pWsc->pIconBox->bBoardWidget,
 					   (ArgList)setArgs, i);
 
-	    if (dummyString == NULL)
+	    if (dummyString == nullptr)
 	    {
 	        dummyString = 
 		    XmStringCreateLocalized("");
@@ -2021,7 +2021,7 @@ IconInfo *InsertIconInfo (IconBoxData *pIBD, ClientData *pCD, Widget theWidget)
 	if (!ExtendIconList (pIBD, amt))
 	{
 	    Warning (((char *)GETMESSAGE(36, 4, "Insufficient memory to create icon box data")));
-	    return (NULL);
+	    return (nullptr);
 	}
 
 	if (pIBD->IPD.iconPlacement & ICON_PLACE_LEFT_PRIMARY)
@@ -2174,7 +2174,7 @@ void DeleteIconFromBox (IconBoxData *pIBD, ClientData *pCD)
 	if (pCD == pCD_tmp)
 	{
 	    /* hide activeIconTextWin */
-	    HideActiveIconText ((WmScreenData *)NULL);
+	    HideActiveIconText ((WmScreenData *)nullptr);
 	}
     }
 
@@ -2184,7 +2184,7 @@ void DeleteIconFromBox (IconBoxData *pIBD, ClientData *pCD)
 
     theChild = XtWindowToWidget (DISPLAY, pWsc->iconFrameWin);
 
-    pWsc->pIconBox = NULL;
+    pWsc->pIconBox = nullptr;
     pWsc->iconPlace = NO_ICON_PLACE;
     XtUnmanageChild (theChild);
 
@@ -2285,8 +2285,8 @@ void DeleteIconInfo (IconBoxData *pIBD, ClientData *pCD)
     if (ix < count)
     {
 	/* found it, zero the entry out */
-	pII->theWidget = NULL;
-	pII->pCD = NULL;
+	pII->theWidget = nullptr;
+	pII->pCD = nullptr;
     }
 
 
@@ -2646,7 +2646,7 @@ Boolean ExtendIconList (IconBoxData *pIBD, int incr)
 
     newSize = pIBD->IPD.totalPlaces + incr;
 
-    if ((pTmp = (IconInfo *) XtMalloc (newSize*sizeof(IconInfo))) != NULL)
+    if ((pTmp = (IconInfo *) XtMalloc (newSize*sizeof(IconInfo))) != nullptr)
     {
 	/* copy data */
 	memcpy (pTmp, pIBD->IPD.placeList, 
@@ -2698,7 +2698,7 @@ void PackIconBox (IconBoxData *pIBD, Boolean packVert, Boolean packHorz, int pas
     int ix1, ix2;
     int count;
     int newX, newY;
-    ClientData *pCD_tmp = NULL, *pMyCD;
+    ClientData *pCD_tmp = nullptr, *pMyCD;
     int hasActiveText = 1;
     Arg args[4];
     Dimension majorDimension, minorDimension;
@@ -2776,7 +2776,7 @@ void PackIconBox (IconBoxData *pIBD, Boolean packVert, Boolean packHorz, int pas
 
     while (ix1 < count)
     {
-	if (!rippling && (pII_2->pCD != NULL))
+	if (!rippling && (pII_2->pCD != nullptr))
 	{
 	    /* 
 	     * We need to start rippling the icons into new positions if
@@ -2791,16 +2791,16 @@ void PackIconBox (IconBoxData *pIBD, Boolean packVert, Boolean packHorz, int pas
 		        (newY != pWsc->iconY));
 	}
 
-	if ((pII_2->pCD == NULL) || rippling)
+	if ((pII_2->pCD == nullptr) || rippling)
 	{
 	    /* find next one to move */
-	    while ((ix1 < count) && (pII_1->pCD == NULL))
+	    while ((ix1 < count) && (pII_1->pCD == nullptr))
 	    {
 		ix1++;
 		pII_1++;
 	    }
 
-	    if ((ix1 < count) && (pII_1->pCD != NULL))
+	    if ((ix1 < count) && (pII_1->pCD != nullptr))
 	    {
 		if (ix1 != ix2)
 		{
@@ -2817,7 +2817,7 @@ void PackIconBox (IconBoxData *pIBD, Boolean packVert, Boolean packHorz, int pas
 		if (hasActiveText && (pII_2->pCD == pCD_tmp))
 		{
 		    /* hide activeIconTextWin first */
-		    HideActiveIconText ((WmScreenData *)NULL);
+		    HideActiveIconText ((WmScreenData *)nullptr);
 		    XtMoveWidget (pII_2->theWidget, newX, newY);
 		    UpdateOpenIconIndicator (pII_2->pCD, False, -1);
 		    ShowActiveIconText (pII_2->pCD);
@@ -2974,7 +2974,7 @@ void RealignIconList (IconBoxData *pIBD, int newCols, int newRows)
 	for (ix1 = pIBD->IPD.totalPlaces - 1, 
 		 pII = &pIBD->IPD.placeList[ix1]; ix1 >= 0; ix1--, pII--)
 	{
-	    if (pII->pCD != NULL)
+	    if (pII->pCD != nullptr)
 	    {
 		CvtIconPlaceToPosition (&pIBD->IPD, ix1, &c1, &c2);
 		ix2 = CvtIconPositionToPlace (&ipdNew, c1, c2);
@@ -2997,7 +2997,7 @@ void RealignIconList (IconBoxData *pIBD, int newCols, int newRows)
 	for (ix1 = 0, pII = &pIBD->IPD.placeList[ix1]; 
 		ix1 < pIBD->IPD.totalPlaces; ix1++, pII++)
 	{
-	    if (pII->pCD != NULL)
+	    if (pII->pCD != nullptr)
 	    {
 		CvtIconPlaceToPosition (&pIBD->IPD, ix1, &c1, &c2);
 		ix2 = CvtIconPositionToPlace (&ipdNew, c1, c2);
@@ -3210,7 +3210,7 @@ void IconActivateCallback (Widget w, XtPointer client_data, XtPointer call_data)
     if (!(XFindContext (DISPLAY, theIcon,
 			wmGD.windowContextType, (caddr_t *)&pCD)))
     {
-	F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)NULL );
+	F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr );
 /*	F_Normalize_And_Raise ((String)NULL, pCD, (XEvent *)NULL );
 */    }
 
@@ -3563,7 +3563,7 @@ Boolean IconVisible (ClientData *pCD)
 String WmXmStringToString (XmString xmString)
 { 
     XmStringContext       xmStrContext;
-    char                 *asciiString = NULL; 
+    char                 *asciiString = nullptr; 
     XmStringCharSet      ibTitleCharset; 
     XmStringDirection    ibTitleDirection; 
     Boolean              separator; 
@@ -3576,7 +3576,7 @@ String WmXmStringToString (XmString xmString)
 				&ibTitleCharset, &ibTitleDirection, 
 				&separator);
 
-	if (ibTitleCharset != NULL) 
+	if (ibTitleCharset != nullptr) 
 	{
 	    XtFree ((char *)ibTitleCharset);
 	}

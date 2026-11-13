@@ -69,7 +69,7 @@ static void *t_malloc(size_t size)
 
 	if (fail_now()) {
 		errno = ENOMEM;
-		return NULL;
+		return nullptr;
 	}
 	p = malloc(size);
 	if (p)
@@ -83,7 +83,7 @@ static void *t_calloc(size_t count, size_t size)
 
 	if (fail_now()) {
 		errno = ENOMEM;
-		return NULL;
+		return nullptr;
 	}
 	p = calloc(count, size);
 	if (p)
@@ -97,7 +97,7 @@ static void *t_realloc(void *old, size_t size)
 
 	if (fail_now()) {
 		errno = ENOMEM;
-		return NULL;
+		return nullptr;
 	}
 	p = realloc(old, size);
 	if (p && !old)
@@ -129,7 +129,7 @@ static FILE *t_popen(const char *command, const char *mode)
 
 	if (strstr(command, "popen-fails")) {
 		errno = EAGAIN;
-		return NULL;
+		return nullptr;
 	}
 	f = popen(command, mode);
 	if (f)
@@ -275,13 +275,13 @@ static DtShmBoson _DtDtsMMStringToBoson(const char *s)
 
 static const char *_DtDtsMMBosonToString(DtShmBoson boson)
 {
-	return (boson > 0 && boson <= boson_count) ? boson_text[boson - 1] : NULL;
+	return (boson > 0 && boson <= boson_count) ? boson_text[boson - 1] : nullptr;
 }
 
 /* Not the library's version: that one copies into a fixed 1024 byte block. */
 static char *_DtDtsMMExpandValue(const char *value)
 {
-	return value ? plain_strdup(value) : NULL;
+	return value ? plain_strdup(value) : nullptr;
 }
 
 static void _DtDtsMMSafeFree(char *value)
@@ -303,7 +303,7 @@ static DtDtsMMRecord *_DtDtsMMGetRecordByName(DtDtsMMDatabase *db, const char *n
 	for (i = 0; i < db->recordCount; ++i)
 		if (record_table[i].recordName == boson)
 			return &record_table[i];
-	return NULL;
+	return nullptr;
 }
 
 static const char *_DtDtsMMGetFieldByName(DtDtsMMRecord *record, const char *name)
@@ -315,7 +315,7 @@ static const char *_DtDtsMMGetFieldByName(DtDtsMMRecord *record, const char *nam
 	for (i = 0; i < record->fieldCount; ++i)
 		if (fields[i].fieldName == boson)
 			return _DtDtsMMBosonToString(fields[i].fieldValue);
-	return NULL;
+	return nullptr;
 }
 
 static int da_database_loaded = 1;
@@ -327,7 +327,7 @@ static DtDtsMMDatabase *get_dc_db(void)
 
 static DtDtsMMDatabase *get_da_db(void)
 {
-	return da_database_loaded ? &fake_db : NULL;
+	return da_database_loaded ? &fake_db : nullptr;
 }
 
 static DtDtsMMRecord *name_list(type_info_t *linfo, DtDtsMMDatabase *db, DtDtsMMRecord *rec_ptr)
@@ -335,8 +335,8 @@ static DtDtsMMRecord *name_list(type_info_t *linfo, DtDtsMMDatabase *db, DtDtsMM
 	(void)linfo;
 	(void)db;
 	if (!rec_ptr)
-		return record_count ? &record_table[0] : NULL;
-	return (rec_ptr + 1 < record_table + record_count) ? rec_ptr + 1 : NULL;
+		return record_count ? &record_table[0] : nullptr;
+	return (rec_ptr + 1 < record_table + record_count) ? rec_ptr + 1 : nullptr;
 }
 
 #ifndef REAL_PROBES
@@ -354,13 +354,13 @@ static const char *get_buff(type_info_t *info)
 static const char *get_link_name(type_info_t *info)
 {
 	(void)info;
-	return NULL;
+	return nullptr;
 }
 
 static const char *get_link_path(type_info_t *info)
 {
 	(void)info;
-	return NULL;
+	return nullptr;
 }
 #endif
 
@@ -509,7 +509,7 @@ static void scenario_max_buf(const char *arena)
 	old = info.mb;
 	old_size = info.mb_size;
 	arm(1);
-	assert(max_buf(10 * MB_SIZE, &info) == NULL);
+	assert(max_buf(10 * MB_SIZE, &info) == nullptr);
 	assert(disarm() == 1);
 	assert(info.mb == old && info.mb_size == old_size && strcmp(info.mb, "keep") == 0);
 	memset(info.mb, 'k', info.mb_size);
@@ -522,9 +522,9 @@ static void scenario_max_buf(const char *arena)
 	memset(&info, 0, sizeof info);
 	for (i = 0; i < 2; ++i) {
 		arm(1);
-		assert(max_buf(i ? 0 : 5 * MB_SIZE, &info) == NULL);
+		assert(max_buf(i ? 0 : 5 * MB_SIZE, &info) == nullptr);
 		assert(disarm() == 1);
-		assert(info.mb == NULL && info.mb_size == 0);
+		assert(info.mb == nullptr && info.mb_size == 0);
 	}
 	b = max_buf(5 * MB_SIZE, &info);
 	assert(b && info.mb_size >= 5 * MB_SIZE);
@@ -533,16 +533,16 @@ static void scenario_max_buf(const char *arena)
 	/* sizes no object can have are refused without touching the allocator */
 	memset(&info, 0, sizeof info);
 	arm(0);
-	assert(max_buf(SIZE_MAX, &info) == NULL);
-	assert(max_buf((size_t)PTRDIFF_MAX + 1, &info) == NULL);
+	assert(max_buf(SIZE_MAX, &info) == nullptr);
+	assert(max_buf((size_t)PTRDIFF_MAX + 1, &info) == nullptr);
 	assert(disarm() == 0);
-	assert(info.mb == NULL && info.mb_size == 0);
+	assert(info.mb == nullptr && info.mb_size == 0);
 	b = max_buf(0, &info);
 	old = info.mb;
 	old_size = info.mb_size;
 	assert(b && b == old);
 	arm(0);
-	assert(max_buf(SIZE_MAX, &info) == NULL);
+	assert(max_buf(SIZE_MAX, &info) == nullptr);
 	assert(disarm() == 0);
 	assert(info.mb == old && info.mb_size == old_size);
 	free(info.mb);
@@ -580,16 +580,16 @@ static void scenario_data_to_data_type(const char *arena)
 	add_field(record, DtDTS_CONTENT, content);
 	add_field(record, DtDTS_DATA_ATTRIBUTES_NAME, "LONGCONTENT");
 	record = add_record("NOVALUE");
-	add_field(record, DtDTS_NAME_PATTERN, NULL);
+	add_field(record, DtDTS_NAME_PATTERN, nullptr);
 	add_field(record, DtDTS_DATA_ATTRIBUTES_NAME, "NOVALUE");
 
-	type = DtDtsDataToDataType(name, NULL, -1, NULL, NULL, NULL, NULL);
+	type = DtDtsDataToDataType(name, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 	assert(type && strcmp(type, "LONGNAME") == 0);
 	free(type);
-	type = DtDtsDataToDataType(NULL, buffer, sizeof buffer, NULL, NULL, NULL, "plain");
+	type = DtDtsDataToDataType(nullptr, buffer, sizeof buffer, nullptr, nullptr, nullptr, "plain");
 	assert(type && strcmp(type, "LONGCONTENT") == 0);
 	free(type);
-	type = DtDtsDataToDataType("short-name", NULL, -1, NULL, NULL, NULL, NULL);
+	type = DtDtsDataToDataType("short-name", nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 	assert(type && strcmp(type, DtDTS_DT_UNKNOWN) == 0);
 	free(type);
 
@@ -599,9 +599,9 @@ static void scenario_data_to_data_type(const char *arena)
 			before = live;
 			arm(k);
 			if (pass)
-				type = DtDtsDataToDataType(NULL, buffer, sizeof buffer, NULL, NULL, NULL, "plain");
+				type = DtDtsDataToDataType(nullptr, buffer, sizeof buffer, nullptr, nullptr, nullptr, "plain");
 			else
-				type = DtDtsDataToDataType(name, NULL, -1, NULL, NULL, NULL, NULL);
+				type = DtDtsDataToDataType(name, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 			used = disarm();
 			if (type) {
 				if (strcmp(type, pass ? "LONGCONTENT" : "LONGNAME") != 0 &&
@@ -671,7 +671,7 @@ static int content(const char *attr)
 {
 	static const char data[] = "HELLO world";
 
-	return run_content(data, sizeof data - 1, S_IFREG | 0644, NULL, attr, 0);
+	return run_content(data, sizeof data - 1, S_IFREG | 0644, nullptr, attr, 0);
 }
 
 static void scenario_type_content(const char *arena)
@@ -704,7 +704,7 @@ static void scenario_type_content(const char *arena)
 	assert(run_content("", 0, S_IFDIR | 0755, arena, "filename present", 0) == 1);
 	assert(run_content("", 0, S_IFDIR | 0755, arena, "filename absent", 0) == 0);
 	assert(run_content("", 0, S_IFDIR | 0755, arena, "filename", 0) == 0);
-	assert(run_content("", 0, S_IFDIR | 0755, NULL, "filename present", 0) == 0);
+	assert(run_content("", 0, S_IFDIR | 0755, nullptr, "filename present", 0) == 0);
 
 	/* every allocation of a match failing in turn is a mismatch, not a crash */
 	for (i = 0; i < 2; ++i) {
@@ -713,7 +713,7 @@ static void scenario_type_content(const char *arena)
 			if (i)
 				match = run_content("", 0, S_IFDIR | 0755, arena, "filename present", k);
 			else
-				match = run_content("HELLO", 5, S_IFREG | 0644, NULL, "0 string HELLO", k);
+				match = run_content("HELLO", 5, S_IFREG | 0644, nullptr, "0 string HELLO", k);
 			assert(match == 0 || match == 1);
 			assert(live == before);
 			if (last_used < k) {
@@ -740,10 +740,10 @@ static void scenario_directory_type(const char *arena)
 		{ "DIR_INFO\n{\n\tDATA_ATTRIBUTES_NAME\tfoo bar\n}\n", "foo" },
 		{ "DATA_ATTRIBUTES_NAME mytype", "mytype" },
 		{ "DATA_ATTRIBUTES_NAME\ttwo\twords", "two" },
-		{ "DATA_ATTRIBUTES_NAME", NULL },
-		{ "DATA_ATTRIBUTES_NAME  \n", NULL },
-		{ "no keyword here\n", NULL },
-		{ "", NULL },
+		{ "DATA_ATTRIBUTES_NAME", nullptr },
+		{ "DATA_ATTRIBUTES_NAME  \n", nullptr },
+		{ "no keyword here\n", nullptr },
+		{ "", nullptr },
 	};
 	char dir[MAXPATHLEN + 32], file[MAXPATHLEN + 64], *type, *longer;
 	size_t i;
@@ -754,17 +754,17 @@ static void scenario_directory_type(const char *arena)
 	assert(mkdir(dir, 0700) == 0);
 	snprintf(file, sizeof file, "%s/%s", dir, DtDTS_DT_DIR);
 
-	assert(_DtDtsGetDataType(dir) == NULL);		/* no type file */
+	assert(_DtDtsGetDataType(dir) == nullptr);		/* no type file */
 	for (i = 0; i < sizeof files / sizeof files[0]; ++i) {
 		write_file(file, files[i].text);
 		type = _DtDtsGetDataType(dir);
-		assert(files[i].type ? (type && strcmp(type, files[i].type) == 0) : type == NULL);
+		assert(files[i].type ? (type && strcmp(type, files[i].type) == 0) : type == nullptr);
 		free(type);
 	}
 
 	/* a directory name longer than any path */
 	longer = repeat('a', 2 * MAXPATHLEN);
-	assert(_DtDtsGetDataType(longer) == NULL);
+	assert(_DtDtsGetDataType(longer) == nullptr);
 	free(longer);
 
 	write_file(file, "DATA_ATTRIBUTES_NAME mytype");
@@ -773,7 +773,7 @@ static void scenario_directory_type(const char *arena)
 		arm(k);
 		type = _DtDtsGetDataType(dir);
 		used = disarm();
-		assert(type == NULL || strcmp(type, "mytype") == 0);
+		assert(type == nullptr || strcmp(type, "mytype") == 0);
 		free(type);
 		assert(live == before);
 		if (used < k)
@@ -806,7 +806,7 @@ static void scenario_directory_type(const char *arena)
 		arm(k);
 		type = DtDtsSetDataType(dir, "swept", 1);
 		used = disarm();
-		assert(type == NULL || strcmp(type, "swept") == 0);
+		assert(type == nullptr || strcmp(type, "swept") == 0);
 		free(type);
 		assert(live == before);
 		if (used < k)
@@ -847,8 +847,8 @@ static void scenario_expand_keyword(const char *arena)
 	expect_expansion("%unknown% %file%", "/a/b.txt", "%unknown% /a/b.txt");
 	expect_expansion("%file%%file%%file%", "x", "xxx");
 	expect_expansion("%file%", "", "");
-	expect_expansion("%file%", NULL, "%file%");
-	assert(expand_keyword(NULL, "/a/b.txt") == NULL);
+	expect_expansion("%file%", nullptr, "%file%");
+	assert(expand_keyword(nullptr, "/a/b.txt") == nullptr);
 
 	/* the suffix and the base are those of the name, not of the whole path */
 	expect_expansion("%suffix%", "/a.d/README", "");
@@ -871,7 +871,7 @@ static void scenario_expand_keyword(const char *arena)
 		arm(k);
 		result = expand_keyword(all, "/a/b.txt");
 		used = disarm();
-		assert(result == NULL || strcmp(result, "</a|b.txt|b|txt|/a/b.txt>") == 0);
+		assert(result == nullptr || strcmp(result, "</a|b.txt|b|txt|/a/b.txt>") == 0);
 		free(result);
 		assert(live == before);
 		if (used < k)
@@ -901,7 +901,7 @@ static void scenario_expand_shell(const char *arena)
 	long before;
 
 	(void)arena;
-	result = append(NULL, "ab");
+	result = append(nullptr, "ab");
 	assert(result && strcmp(result, "ab") == 0);
 	result = append(result, "cd");
 	assert(result && strcmp(result, "abcd") == 0);
@@ -911,41 +911,41 @@ static void scenario_expand_shell(const char *arena)
 	result = strdup("old");
 	before = live;
 	arm(1);
-	assert(append(result, "more") == NULL);
+	assert(append(result, "more") == nullptr);
 	assert(disarm() == 1);
 	assert(live == before - 1);
 	arm(1);
-	assert(append(NULL, "more") == NULL);
+	assert(append(nullptr, "more") == nullptr);
 	assert(disarm() == 1);
 
-	result = shell_expand("plain", NULL);
+	result = shell_expand("plain", nullptr);
 	assert(result && strcmp(result, "plain") == 0);
 	free(result);
-	result = shell_expand("a`printf XY`b", NULL);
+	result = shell_expand("a`printf XY`b", nullptr);
 	assert(result && strcmp(result, "aXYb") == 0);
 	free(result);
-	result = shell_expand("`printf 1`+`printf 2`", NULL);
+	result = shell_expand("`printf 1`+`printf 2`", nullptr);
 	assert(result && strcmp(result, "1+2") == 0);
 	free(result);
 	zeros = repeat('0', 300);
-	result = shell_expand("<`printf '%0300d' 0`>", NULL);
+	result = shell_expand("<`printf '%0300d' 0`>", nullptr);
 	assert(result && strlen(result) == 302 && strncmp(result + 1, zeros, 300) == 0);
 	free(result);
 	free(zeros);
-	assert(shell_expand(NULL, NULL) == NULL);
+	assert(shell_expand(nullptr, nullptr) == nullptr);
 	assert(open_pipes == 0);		/* every pipe was closed */
 
 	/* a command that cannot be started is reported as text, not as a format */
-	assert(shell_expand("x`popen-fails %s%n`y", NULL) == NULL);
+	assert(shell_expand("x`popen-fails %s%n`y", nullptr) == nullptr);
 	assert(strcmp(reported_format, "%s") == 0);
 	assert(strcmp(reported_argument, "popen-fails %s%n") == 0);
 
 	for (k = 1; k < 30; ++k) {
 		before = live;
 		arm(k);
-		result = shell_expand("x`printf ab`y`printf cd`z", NULL);
+		result = shell_expand("x`printf ab`y`printf cd`z", nullptr);
 		used = disarm();
-		assert(result == NULL || strcmp(result, "xabycdz") == 0);
+		assert(result == nullptr || strcmp(result, "xabycdz") == 0);
 		free(result);
 		assert(live == before && open_pipes == 0);
 		if (used < k)
@@ -1007,8 +1007,8 @@ static void scenario_attribute_lists(const char *arena)
 	assert(strcmp(attributes[0]->name, "MIME") == 0 && strcmp(attributes[0]->value, "text/plain") == 0);
 	assert(strcmp(attributes[1]->name, "ICON") == 0 && strcmp(attributes[1]->value, "y.txt.pm") == 0);
 	DtDtsFreeAttributeList(attributes);
-	assert(DtDtsDataTypeToAttributeList("nope", NULL) == NULL);
-	assert(DtDtsDataTypeToAttributeList(NULL, NULL) == NULL);
+	assert(DtDtsDataTypeToAttributeList("nope", nullptr) == nullptr);
+	assert(DtDtsDataTypeToAttributeList(nullptr, nullptr) == nullptr);
 
 	/* each allocation failing in turn */
 	for (pass = 0; pass < 3; ++pass) {
@@ -1042,9 +1042,9 @@ static void scenario_attribute_lists(const char *arena)
 
 	/* without a loaded database there is nothing to list */
 	da_database_loaded = 0;
-	assert(DtDtsDataTypeToAttributeList("T1", NULL) == NULL);
-	assert(DtDtsDataTypeNames() == NULL);
-	assert(DtDtsFindAttribute("MIME", "text/plain") == NULL);
+	assert(DtDtsDataTypeToAttributeList("T1", nullptr) == nullptr);
+	assert(DtDtsDataTypeNames() == nullptr);
+	assert(DtDtsFindAttribute("MIME", "text/plain") == nullptr);
 	assert(live == 0);
 }
 
@@ -1070,9 +1070,9 @@ static void scenario_set_vals(const char *arena)
 			before = live;
 			arm(k);
 			if (form)
-				info = set_vals(NULL, "data", 4, NULL, NULL, NULL, "opt");
+				info = set_vals(nullptr, "data", 4, nullptr, nullptr, nullptr, "opt");
 			else
-				info = set_vals("rel.txt", NULL, -1, &st, "/l/target", &st, "opt");
+				info = set_vals("rel.txt", nullptr, -1, &st, "/l/target", &st, "opt");
 			used = disarm();
 			if (info)
 				free(cleanup(0, info));
@@ -1090,7 +1090,7 @@ static void scenario_set_vals(const char *arena)
 	assert(getcwd(here, sizeof here));
 	snprintf(cwd, sizeof cwd, "%s/dts-name-test", arena);
 	assert(mkdir(cwd, 0700) == 0 && chdir(cwd) == 0);
-	info = set_vals("dts-name-test", NULL, -1, NULL, NULL, NULL, NULL);
+	info = set_vals("dts-name-test", nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 	assert(info);
 	length = strlen(info->file_path);
 	assert(strcmp(info->name, "dts-name-test") == 0);
@@ -1122,7 +1122,7 @@ static void scenario_set_vals(const char *arena)
 	}
 	assert(getcwd(cwd, sizeof cwd) && strlen(cwd) == MAXPATHLEN - 12);
 	name = repeat('n', 40);
-	info = set_vals(name, NULL, -1, NULL, NULL, NULL, NULL);
+	info = set_vals(name, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 	assert(info);
 	expected = concat(cwd, "/", name);
 	assert(strcmp(info->file_path, expected) == 0);
@@ -1146,13 +1146,13 @@ static void scenario_shell_text(const char *arena)
 
 	(void)arena;
 	/* a backquote without a partner is text */
-	result = shell_expand("a`b", NULL);
+	result = shell_expand("a`b", nullptr);
 	assert(result && strcmp(result, "a`b") == 0);
 	free(result);
-	result = shell_expand("x`printf 1`y`z", NULL);
+	result = shell_expand("x`printf 1`y`z", nullptr);
 	assert(result && strcmp(result, "x1y`z") == 0);
 	free(result);
-	result = shell_expand("`", NULL);
+	result = shell_expand("`", nullptr);
 	assert(result && strcmp(result, "`") == 0);
 	free(result);
 
@@ -1224,7 +1224,7 @@ static char *make_path(const char *arena, const char *name)
 
 static const char *link_of(const char *path, type_info_t **info)
 {
-	*info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	*info = set_vals(path, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 	assert(*info);
 	get_link_info(*info);
 	return (*info)->link_path;
@@ -1358,7 +1358,7 @@ static void scenario_contents(const char *arena)
 	write_file(path, text);
 
 	/* mapped */
-	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	info = set_vals(path, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 	buffer = get_buff(info);
 	assert(buffer && get_buff_size(info) == 100 && memcmp(buffer, text, 100) == 0);
 	free(cleanup(0, info));
@@ -1366,7 +1366,7 @@ static void scenario_contents(const char *arena)
 	/* read, and the file ends early: what was not read is zeros */
 	mapping_fails = 1;
 	read_mode = 1;
-	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	info = set_vals(path, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 	buffer = get_buff(info);
 	assert(buffer);
 	assert(get_buff_size(info) == 40);
@@ -1376,19 +1376,19 @@ static void scenario_contents(const char *arena)
 	read_mode = 0;
 
 	/* read completely */
-	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+	info = set_vals(path, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 	buffer = get_buff(info);
 	assert(buffer && get_buff_size(info) == 100 && memcmp(buffer, text, 100) == 0);
 	free(cleanup(0, info));
 
 	/* a read that fails gives nothing, now and when asked again */
 	read_mode = 2;
-	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
-	assert(get_buff(info) == NULL);
+	info = set_vals(path, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
+	assert(get_buff(info) == nullptr);
 	assert(info->error == EIO);
-	assert(info->buffer == NULL);
+	assert(info->buffer == nullptr);
 	info->error = 0;
-	assert(get_buff(info) == NULL);
+	assert(get_buff(info) == nullptr);
 	free(cleanup(0, info));
 	read_mode = 0;
 
@@ -1396,12 +1396,12 @@ static void scenario_contents(const char *arena)
 	for (k = 1; k < 20; ++k) {
 		long before = live;
 
-		info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
+		info = set_vals(path, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
 		assert(info);
 		arm(k);
 		buffer = get_buff(info);
 		used = disarm();
-		assert(buffer == NULL || get_buff_size(info) == 100);
+		assert(buffer == nullptr || get_buff_size(info) == 100);
 		free(cleanup(0, info));
 		assert(live == before);
 		if (used < k)
@@ -1412,8 +1412,8 @@ static void scenario_contents(const char *arena)
 
 	/* an empty file has nothing */
 	write_file(path, "");
-	info = set_vals(path, NULL, -1, NULL, NULL, NULL, NULL);
-	assert(get_buff(info) == NULL);
+	info = set_vals(path, nullptr, -1, nullptr, nullptr, nullptr, nullptr);
+	assert(get_buff(info) == nullptr);
 	free(cleanup(0, info));
 
 	unlink(path);
@@ -1453,7 +1453,7 @@ static void scenario_buffer_sizes(const char *arena)
 
 		assert(buffer && attr);
 		memcpy(buffer, "HELLO world", length);
-		info = set_vals(NULL, buffer, tests[i].size, NULL, NULL, NULL, NULL);
+		info = set_vals(nullptr, buffer, tests[i].size, nullptr, nullptr, nullptr, nullptr);
 		assert(info);
 		assert(type_content(attr, info) == tests[i].match);
 		free(cleanup(0, info));

@@ -154,20 +154,20 @@ do  {
     /*  in future releases of AIX. Hopefully this comment would help  */
     /*  to identify the problem quickly in case it appears again.     */
     /* -------------------------------------------------------------- */
-    fflush(NULL);
+    fflush(nullptr);
 #endif
 
     if ((c = getc((FILE *)m_ptr)) == EOF) return(EOF);
 
 #ifdef NO_IBM_PATCH_U446072
-    fflush(NULL);
+    fflush(nullptr);
 #endif
 
     while (1)
     {
 	mbyte[length++] = c;
 	mbyte[length]   = 0;
-	mblen(NULL, 0);
+	mblen(nullptr, 0);
 	if (mblen(mbyte,length) != -1) break; /* hurray! */
 	if (length == MB_CUR_MAX)
         { /* reached max without a hit */
@@ -186,7 +186,7 @@ do  {
         /*  in future releases of AIX. Hopefully this comment would help  */
         /*  to identify the problem quickly in case it appears again.     */
         /* -------------------------------------------------------------- */
-        fflush(NULL);
+        fflush(nullptr);
 #endif
 
         if ((c = getc((FILE *) m_ptr)) == EOF)
@@ -216,7 +216,7 @@ char *mb_entcontent;
 mb_entcontent = MakeMByteString(entcontent);
 if (!mb_entcontent || !*mb_entcontent) {
     m_free(mb_entcontent, "multi-byte string");
-    return NULL; /* null file name, don't open a directory */
+    return nullptr; /* null file name, don't open a directory */
 }
 
 open = fopen(mb_entcontent, "r");
@@ -244,7 +244,7 @@ for (searchp = path ; searchp ; searchp = searchp->next)
     }
 
 m_free(mb_entcontent, "multi-byte string");
-return(NULL);
+return(nullptr);
 }
 
 /* Open input file */

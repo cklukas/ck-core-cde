@@ -143,8 +143,8 @@ load_resources(Resource **r, char *file_name) {
 		*c_ptr = '\0';
 		new_resource = (Resource *)ckalloc(sizeof(Resource));
 		new_resource->resource_name = (char *)cm_strdup(buffer);
-		new_resource->resource_value = NULL;
-		new_resource->next = NULL;
+		new_resource->resource_value = nullptr;
+		new_resource->next = nullptr;
 		if (last)
 			last->next = new_resource;
 		else
@@ -265,7 +265,7 @@ set_resource_by_val(Resource **r, char *name, char *value) {
 	else {
 		step = (Resource *)ckalloc(sizeof(Resource));
 		step->resource_name = (char *)cm_strdup(name);
-		step->next = NULL;
+		step->next = nullptr;
 
 		while(last && last->next)
 			last = last->next;

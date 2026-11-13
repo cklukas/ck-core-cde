@@ -78,7 +78,7 @@ XmString xms;	/* button label pointer for compound string */
 Widget	toplevel; /*  Shell widget	*/
 Widget wChildren [20];
 Widget *wWs;
-Atom *paWsSet = NULL;
+Atom *paWsSet = nullptr;
 Boolean *pbOccupy;
 unsigned long numWorkspaces;
 Atom *paWs;
@@ -110,8 +110,8 @@ int main (int argc, char **argv)
      */
     n = 0;
     XtSetArg (args[n], XmNallowShellResize, True);  n++;
-    toplevel = XtAppInitialize (&app_context, "XMDemos", NULL, 0, 
-	    &argc, argv, NULL, args, n);
+    toplevel = XtAppInitialize (&app_context, "XMDemos", nullptr, 0, 
+	    &argc, argv, nullptr, args, n);
 
     /*  
      * manager widget 
@@ -141,7 +141,7 @@ int main (int argc, char **argv)
     /*  
      * add callback  
      */
-    XtAddCallback (QUIT_BUTTON, XmNactivateCallback, quitCB, NULL);
+    XtAddCallback (QUIT_BUTTON, XmNactivateCallback, quitCB, nullptr);
 
     /*  
      * create compound string for the button text  
@@ -165,7 +165,7 @@ int main (int argc, char **argv)
     /*  
      * add callback  
      */
-    XtAddCallback (SET_BUTTON, XmNactivateCallback, setCB, NULL);
+    XtAddCallback (SET_BUTTON, XmNactivateCallback, setCB, nullptr);
 
     /*  
      * create compound string for the button text  
@@ -189,7 +189,7 @@ int main (int argc, char **argv)
     /*  
      * add callback  
      */
-    XtAddCallback (ALL_WS_BUTTON, XmNactivateCallback, allWsCB, NULL);
+    XtAddCallback (ALL_WS_BUTTON, XmNactivateCallback, allWsCB, nullptr);
 
     /*  
      * create compound string for the button text  
@@ -213,7 +213,7 @@ int main (int argc, char **argv)
     /*  
      * add callback  
      */
-    XtAddCallback (SHOW_BUTTON, XmNactivateCallback, showCB, NULL);
+    XtAddCallback (SHOW_BUTTON, XmNactivateCallback, showCB, nullptr);
 
     /*  
      * set up arglist  
@@ -343,7 +343,7 @@ void ShowWorkspaceOccupancy ()
     Arg	args[10]; /*  arg list		*/
     int n;	/*  arg count		*/
     int i,j;
-    Atom *paWsIn = NULL;
+    Atom *paWsIn = nullptr;
     unsigned long numWsIn;
     int rval;
 

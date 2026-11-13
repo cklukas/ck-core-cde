@@ -174,12 +174,12 @@ static int getspec1170ptypair(Wire *wire)
   }
 
   /* SIGCHLD handler, if any, must be disabled during grantpt! */
-  sigaction(SIGCHLD, (struct sigaction *)NULL, &oldAction);
+  sigaction(SIGCHLD, (struct sigaction *)nullptr, &oldAction);
   if (oldAction.sa_handler != SIG_DFL)
   {
     newAction = oldAction;
     newAction.sa_handler = SIG_DFL;
-    sigaction(SIGCHLD, &newAction, (struct sigaction *)NULL);
+    sigaction(SIGCHLD, &newAction, (struct sigaction *)nullptr);
   }
 
   if (grantpt(wire->fd[MASTER_SIDE]) != OK)
@@ -191,10 +191,10 @@ static int getspec1170ptypair(Wire *wire)
 
   /* Restore SIGCHLD handler. */
   if (oldAction.sa_handler != SIG_DFL)
-    sigaction(SIGCHLD, &oldAction, (struct sigaction *)NULL);
+    sigaction(SIGCHLD, &oldAction, (struct sigaction *)nullptr);
 
   if ((unlockpt(wire->fd[MASTER_SIDE]) != OK) ||
-      ((slaveName = ptsname(wire->fd[MASTER_SIDE])) == (char *)NULL) ||
+      ((slaveName = ptsname(wire->fd[MASTER_SIDE])) == (char *)nullptr) ||
       (access(slaveName, R_OK | W_OK) == ERROR))
   {
     /* cannot access the slave pty. */
@@ -420,7 +420,7 @@ SPC_Channel_Ptr open_pty_channel_object(SPC_Channel_Ptr channel,
      (or else we would be a NOIO channel), so allocate at least one
      pty pair */
 
-  if(!(tmpwire=getpty(NULL)))
+  if(!(tmpwire=getpty(nullptr)))
     return(SPC_ERROR);
 
   if (IS_SPCIO_STDIN(iomode)) {
@@ -491,7 +491,7 @@ int read_pty_channel_object(SPC_Channel_Ptr channel,
        ** this clause of the ifdef is not compiled on HPUX.
        **
       */ 
-      result=select(fd+1, &read_mask, NULL, NULL, &tv);
+      result=select(fd+1, &read_mask, nullptr, nullptr, &tv);
       if((result == -1) && (errno != EINTR)) {
 	SPC_XtRemoveInput(&channel->wires[connector]->read_toolkit_id, SPC_Input);
 	SPC_Change_State(channel, connector, 0, -1);
@@ -575,7 +575,7 @@ int post_fork_pty_channel_object(SPC_Channel_Ptr channel,
     close(channel->sync_pipe[READ_SIDE]);
     channel->sync_pipe[READ_SIDE] = -1;
     channel->sync_pipe[WRITE_SIDE] = -1;
-    XeSPCAddInput(channel, NULL, NULL);    
+    XeSPCAddInput(channel, nullptr, nullptr);    
   } else {			/* Slave process */
 
     /* Open the slave pty. Do it up to three times to set up
@@ -736,9 +736,9 @@ int add_input_pty_channel_object(SPC_Channel_Ptr channel,
   
 }
 
-Wire *setpgrp_wire = NULL;
+Wire *setpgrp_wire = nullptr;
 
-struct termios *XeTermioStruct = NULL;
+struct termios *XeTermioStruct = nullptr;
 struct termios XeDefaultTermioStruct;
 
 /*----------------------------------------------------------------------+*/
@@ -825,10 +825,10 @@ int SPC_Setpgrp(int read_current_termio)
 /*----------------------------------------------------------------------+*/
 {
   _DtSvcProcessLock();
-  if(setpgrp_wire == NULL)
+  if(setpgrp_wire == nullptr)
     setpgrp_wire = get_new_wire();
   
-  if(read_current_termio || XeTermioStruct == NULL) {
+  if(read_current_termio || XeTermioStruct == nullptr) {
     
     if(XeTermioStruct)
       free((char *)XeTermioStruct);
@@ -899,7 +899,7 @@ static int send_eof_pty_channel_object(SPC_Channel_Ptr channel)
   char output_char;
   int fd, ret;
 
-  if(wire == NULL)
+  if(wire == nullptr)
     return(TRUE);
 
   if((wire->slave_termio.c_lflag & ~ICANON) == 0)

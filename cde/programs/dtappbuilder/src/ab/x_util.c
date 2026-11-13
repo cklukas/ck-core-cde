@@ -170,7 +170,7 @@ x_create_stencil_cursor(
     unsigned short    	c_width, c_height;
     unsigned int	c_xhot, c_yhot;
     unsigned int	max_width, max_height;
-    static GC       	c_gc = NULL;
+    static GC       	c_gc = nullptr;
     static XColor    	fg_color, bg_color;
     int        		i, j;
 
@@ -303,7 +303,7 @@ x_get_widget_rect(
             XtNheight,      (XtArgVal)&(rect->height),
             XtNx,           (XtArgVal)&(rect->x),
             XtNy,           (XtArgVal)&(rect->y),
-            NULL);
+            nullptr);
 }
 
 /*
@@ -513,7 +513,7 @@ x_contrast_color(
     unsigned int    bg_pixel;
     XColor    bg_color;
 
-    XtVaGetValues(widget, XtNbackground, &bg_pixel, NULL);
+    XtVaGetValues(widget, XtNbackground, &bg_pixel, nullptr);
 
     src.size = sizeof(Pixel);
     src.addr = (XPointer)&bg_pixel;
@@ -594,7 +594,7 @@ box_gc_init(
     unsigned long    cc_pixel = x_contrast_color(widget);
     unsigned long   bg_pixel;
 
-    XtVaGetValues(widget, XtNbackground, &bg_pixel, NULL);
+    XtVaGetValues(widget, XtNbackground, &bg_pixel, nullptr);
 
     /* If gc doesn't exist yet, create it */
     if (!box_gc) 
@@ -623,7 +623,7 @@ fullscreen_gc_init(
     unsigned long   cc_pixel = x_contrast_color(widget);
     unsigned long   bg_pixel;
 
-    XtVaGetValues(widget, XtNbackground, &bg_pixel, NULL);
+    XtVaGetValues(widget, XtNbackground, &bg_pixel, nullptr);
 
     /* If gc doesn't exist yet, create it */
     if (!fullscreen_gc) 

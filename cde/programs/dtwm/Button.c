@@ -180,13 +180,13 @@ externaldef (dtbuttongadgetclassrec)
       (WidgetClass) &xmGadgetClassRec,  /* superclass            */	
       "DtButton",                       /* class_name	         */	
       sizeof(DtButtonGadgetRec),        /* widget_size	         */	
-      NULL,                             /* class_initialize      */    
-      NULL,                             /* class_part_initialize */
+      nullptr,                             /* class_initialize      */    
+      nullptr,                             /* class_part_initialize */
       FALSE,                            /* class_inited          */	
       Initialize,                       /* initialize	         */
-      NULL,                             /* initialize_hook       */
-      NULL,                             /* realize	         */	
-      NULL,                             /* actions               */	
+      nullptr,                             /* initialize_hook       */
+      nullptr,                             /* realize	         */	
+      nullptr,                             /* actions               */	
       0,                                /* num_actions    	 */	
       resources,                        /* resources	         */	
       XtNumber(resources),              /* num_resources         */	
@@ -195,20 +195,20 @@ externaldef (dtbuttongadgetclassrec)
       XtExposeCompressMaximal,          /* compress_exposure     */	
       TRUE,                             /* compress_enterleave   */
       FALSE,                            /* visible_interest      */	
-      NULL,                             /* destroy               */	
-      NULL,                             /* resize                */
+      nullptr,                             /* destroy               */	
+      nullptr,                             /* resize                */
       Redisplay,                        /* expose                */
       SetValues,                        /* set_values	         */
-      NULL,                             /* set_values_hook       */
+      nullptr,                             /* set_values_hook       */
       XtInheritSetValuesAlmost,         /* set_values_almost     */
-      NULL,                             /* get_values_hook       */
-      NULL,                             /* accept_focus	         */	
+      nullptr,                             /* get_values_hook       */
+      nullptr,                             /* accept_focus	         */	
       XtVersion,                        /* version               */
-      NULL,                             /* callback private      */
-      NULL,                             /* tm_table              */
-      NULL,                             /* query_geometry        */
-      NULL,				/* display_accelerator   */
-      NULL,				/* extension             */
+      nullptr,                             /* callback private      */
+      nullptr,                             /* tm_table              */
+      nullptr,                             /* query_geometry        */
+      nullptr,				/* display_accelerator   */
+      nullptr,				/* extension             */
    },
 
    /*      XmGadget Part     */
@@ -218,10 +218,10 @@ externaldef (dtbuttongadgetclassrec)
       ArmAndActivate,    		   /* arm_and_activate          */
       InputDispatch,                       /* input_dispatch       	*/
       VisualChange,                        /* visual_change        	*/
-      NULL,				   /* get resources      	*/
+      nullptr,				   /* get resources      	*/
       0,				   /* num get_resources  	*/
-      NULL,                                /* class_cache_part     	*/
-      NULL,         			   /* extension                 */
+      nullptr,                                /* class_cache_part     	*/
+      nullptr,         			   /* extension                 */
    }
 
 };
@@ -264,7 +264,7 @@ Initialize(
 
 /*	Get pixmap and mask, get pixmap geometry, get gcs.
  */
-   if (B_ImageName (new_g) != NULL)
+   if (B_ImageName (new_g) != nullptr)
    {
        String str = B_ImageName (new_g);
        B_ImageName (new_g) = XtMalloc (strlen (str) + 1);
@@ -370,7 +370,7 @@ if (B_Mask(bg) != XmUNSPECIFIED_PIXMAP)
     bg->button.gc_clip = XtGetGC ((Widget) mw, valueMask, &values);
     }
 else
-    bg->button.gc_clip = NULL;
+    bg->button.gc_clip = nullptr;
 }
 
 
@@ -385,7 +385,7 @@ UpdateGCs(
    XtReleaseGC ((Widget) mw, bg->button.gc_background);
    XtReleaseGC ((Widget) mw, bg->button.gc_armed_bg);
 
-   if (bg->button.gc_clip != NULL) 
+   if (bg->button.gc_clip != nullptr) 
       XtReleaseGC ((Widget) mw, bg->button.gc_clip);
 
    GetGCs (w);
@@ -452,7 +452,7 @@ else
     gc = bg->button.gc_normal;
 
 pix = B_Pixmap (bg);
-if ((gc != NULL) && (pix != XmUNSPECIFIED_PIXMAP))
+if ((gc != nullptr) && (pix != XmUNSPECIFIED_PIXMAP))
     {   
     XCopyArea (XtDisplay ((Widget) bg), pix, XtWindow ((Widget) bg), gc, 0, 0,
 		B_PixmapWidth (bg), B_PixmapHeight (bg),
@@ -484,7 +484,7 @@ if (bg->button.timer)
 XtReleaseGC (w, bg -> button.gc_normal);
 XtReleaseGC (w, bg -> button.gc_background);
 XtReleaseGC (w, bg -> button.gc_armed_bg);
-if (bg -> button.gc_clip != NULL) 
+if (bg -> button.gc_clip != nullptr) 
     XtReleaseGC (w, bg -> button.gc_clip);
 
 XtRemoveAllCallbacks (w, "callback");
@@ -604,7 +604,7 @@ Arm(
        XtGetMultiClickTime(XtDisplay(bg)))
    {
       bg -> button.armTimeStamp = event->xbutton.time;
-      B_Expose ( w, event, NULL);
+      B_Expose ( w, event, nullptr);
    }
 }
 
@@ -627,7 +627,7 @@ Disarm(
 
    B_Armed (bg) = False;
 
-   B_Expose (w, event, NULL);
+   B_Expose (w, event, nullptr);
 }
 
 
@@ -736,7 +736,7 @@ ArmTimeout(
 
     bg -> button.timer = 0;
     if (XtIsRealized ((Widget)bg) && XtIsManaged ((Widget)bg)) {
-       Redisplay ((Widget) bg, NULL, FALSE);
+       Redisplay ((Widget) bg, nullptr, FALSE);
        XFlush (XtDisplay (bg));
     }
     return;
@@ -760,7 +760,7 @@ InputDispatch(
             event_mask & XmMULTI_ARM_EVENT)
         {
 	   if (button_event->button == Button1)
-	     Arm (w, event, (String *)NULL, (Cardinal*)NULL);
+	     Arm (w, event, (String *)nullptr, (Cardinal*)nullptr);
         }
         else if (event_mask & XmACTIVATE_EVENT ||
                  event_mask & XmMULTI_ACTIVATE_EVENT)
@@ -773,28 +773,28 @@ InputDispatch(
 			 button_event->y <= (Position)(G_Y (bg) + G_Height (bg)))
                    {
 			Activate (w, event,
-                                  (String *)NULL, (Cardinal*)NULL);
+                                  (String *)nullptr, (Cardinal*)nullptr);
 			Disarm (w, event,
-				  (String *)NULL, (Cardinal*)NULL);
+				  (String *)nullptr, (Cardinal*)nullptr);
                    }
                    else
 			Disarm (w, event,
-				  (String *)NULL, (Cardinal*)NULL);
+				  (String *)nullptr, (Cardinal*)nullptr);
                 }
         }
         else if (event_mask & XmHELP_EVENT)
 		_XmSocorro (w, event,
-                                     (String *)NULL,(Cardinal*)NULL);
+                                     (String *)nullptr,(Cardinal*)nullptr);
         else if (event_mask & XmENTER_EVENT)
-		Enter (w, event, (String *)NULL,(Cardinal*)NULL);
+		Enter (w, event, (String *)nullptr,(Cardinal*)nullptr);
         else if (event_mask & XmLEAVE_EVENT)
-		Leave (w, event, (String *)NULL,(Cardinal*)NULL);
+		Leave (w, event, (String *)nullptr,(Cardinal*)nullptr);
         else if (event_mask & XmFOCUS_IN_EVENT)
 		_XmFocusInGadget (w, event,
-                                    (String *)NULL,(Cardinal*)NULL);
+                                    (String *)nullptr,(Cardinal*)nullptr);
         else if (event_mask & XmFOCUS_OUT_EVENT)
 		_XmFocusOutGadget (w, event,
-                                    (String *)NULL,(Cardinal*)NULL);
+                                    (String *)nullptr,(Cardinal*)nullptr);
 }
 
 
@@ -825,7 +825,7 @@ VisualChange(
 
     if (update)
     {
-       if (B_ImageName (bg) != NULL)
+       if (B_ImageName (bg) != nullptr)
        {
 	     if (B_Mask(bg) != XmUNSPECIFIED_PIXMAP)
 		XmDestroyPixmap (XtScreen(bg), B_Mask(bg));
@@ -863,10 +863,10 @@ Enter(
 {
    DtButtonGadget bg = (DtButtonGadget) wid ;
 
-   _XmEnterGadget (wid, (XEvent *)event, (String *)NULL,(Cardinal *)NULL);
+   _XmEnterGadget (wid, (XEvent *)event, (String *)nullptr,(Cardinal *)nullptr);
 
    if (B_Armed (bg))
-      B_Expose (wid, event, NULL);
+      B_Expose (wid, event, nullptr);
 }
 
 
@@ -887,12 +887,12 @@ Leave(
 {
    DtButtonGadget bg = (DtButtonGadget) wid ;
 
-   _XmLeaveGadget (wid, (XEvent *)event, (String *)NULL,  (Cardinal *)0);
+   _XmLeaveGadget (wid, (XEvent *)event, (String *)nullptr,  (Cardinal *)0);
 
    if (B_Armed (bg))
    {
       B_Armed (bg) = False;
-      B_Expose (wid, event, NULL);
+      B_Expose (wid, event, nullptr);
       B_Armed (bg) = True;
    }
 }
@@ -911,7 +911,7 @@ CallCallback(
 {
     DtControlCallbackStruct	cb_data;
 
-    if (cb != NULL)
+    if (cb != nullptr)
     {
        cb_data.reason = reason;
        cb_data.event = event;

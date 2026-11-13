@@ -838,7 +838,7 @@ _GetSmWindow(
     int actualFormat;
     unsigned long nitems;
     unsigned long leftover;
-    PropDtSmWindowInfo *pSmInfo = NULL;
+    PropDtSmWindowInfo *pSmInfo = nullptr;
     int rcode;
     Window wroot, wparent, *pchildren;
     unsigned int nchildren;

@@ -53,7 +53,7 @@ cc = shlex.split(os.environ.get("CC", "cc"))
 with tempfile.TemporaryDirectory(prefix="dts-mm-", dir=os.environ.get("TMPDIR")) as work:
     work = Path(work)
     (work / "test.c").write_text(program)
-    subprocess.run(cc + ["-std=c99", "-D_DEFAULT_SOURCE", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
+    subprocess.run(cc + ["-std=gnu23", "-D_DEFAULT_SOURCE", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
                          "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined",
                          str(work / "test.c"), "-o", str(work / "test")], check=True)
     env = dict(os.environ, ASAN_OPTIONS="detect_leaks=0:" + os.environ.get("ASAN_OPTIONS", ""))
@@ -201,7 +201,7 @@ for name, program in (("cache name", cache_name), ("cache header", cache_header)
     with tempfile.TemporaryDirectory(prefix="dts-mm-", dir=os.environ.get("TMPDIR")) as work:
         work = Path(work)
         (work / "test.c").write_text(program)
-        build = subprocess.run(cc + ["-std=gnu99", "-D_DEFAULT_SOURCE", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
+        build = subprocess.run(cc + ["-std=gnu23", "-D_DEFAULT_SOURCE", "-UNDEBUG", "-g", "-O1", "-fno-omit-frame-pointer",
                                      "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined",
                                      str(work / "test.c"), "-o", str(work / "test")], stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT, text=True)

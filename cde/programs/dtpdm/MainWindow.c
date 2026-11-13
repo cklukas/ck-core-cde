@@ -115,7 +115,7 @@ PdmMainWinDelete(PdmMainWin* me)
     /*
      * close the print server connection
      */
-    if(me->pdm_xp != (PdmXp*)NULL)
+    if(me->pdm_xp != (PdmXp*)nullptr)
 	PdmXpDelete(me->pdm_xp);
     /*
      * destroy the help dialog
@@ -127,7 +127,7 @@ PdmMainWinDelete(PdmMainWin* me)
     /*
      * clean up the child setup box list
      */
-    while((node = me->box_list_head) != (PdmBoxNode*)NULL)
+    while((node = me->box_list_head) != (PdmBoxNode*)nullptr)
     {
 	me->box_list_head = node->next;
 	XtFree((char*)node);
@@ -200,7 +200,7 @@ String* PdmMainWinMergeFallbacks(PdmMainWin* me,
     
     res_count = count;
     res_count += XtNumber(PdmMainWinFallbackResources);
-    for(node = me->box_list_head; node != (PdmBoxNode*)NULL; node = node->next)
+    for(node = me->box_list_head; node != (PdmBoxNode*)nullptr; node = node->next)
 	res_count += node->box->fallback_resources_count;
     
     new_fallbacks = (String*)XtCalloc(res_count+1, sizeof(String));
@@ -211,7 +211,7 @@ String* PdmMainWinMergeFallbacks(PdmMainWin* me,
     memcpy(ptr, PdmMainWinFallbackResources,
 	   XtNumber(PdmMainWinFallbackResources)*sizeof(String));
     ptr += XtNumber(PdmMainWinFallbackResources);
-    for(node = me->box_list_head; node != (PdmBoxNode*)NULL; node = node->next)
+    for(node = me->box_list_head; node != (PdmBoxNode*)nullptr; node = node->next)
     {
 	memcpy(ptr, node->box->fallback_resources,
 	       node->box->fallback_resources_count*sizeof(String));
@@ -242,7 +242,7 @@ PdmMainWinCreateSetupBoxes(PdmMainWin* me)
 {
     PdmBoxNode* node;
     
-    for(node = me->box_list_head; node != (PdmBoxNode*)NULL; node = node->next)
+    for(node = me->box_list_head; node != (PdmBoxNode*)nullptr; node = node->next)
     {
 	PdmSetupBox* box = node->box;
 	/*
@@ -257,13 +257,13 @@ PdmMainWinCreateSetupBoxes(PdmMainWin* me)
 	    XtVaCreateManagedWidget(box->tab_name,
 				    exmTabButtonWidgetClass,
 				    me->notebook,
-				    NULL);
+				    nullptr);
 #else
 	node->tab =
 	    XtVaCreateManagedWidget(box->tab_name,
 				    xmPushButtonWidgetClass,
 				    me->notebook,
-				    NULL);
+				    nullptr);
 #endif /* USE_EXM_TABS */
     }
 }
@@ -300,7 +300,7 @@ PdmMainWinGetAttributes(PdmMainWin* me)
     /*
      * call the get attributes proc for each setup box child
      */
-    for(node = me->box_list_head; node != (PdmBoxNode*)NULL; node = node->next)
+    for(node = me->box_list_head; node != (PdmBoxNode*)nullptr; node = node->next)
     {
 	PdmSetupBox* box = node->box;
 	
@@ -342,7 +342,7 @@ PdmMainWinOkCB(
      * call the verify values proc for each setup box child
      */
     for(node = me->box_list_head, page = 1;
-	node != (PdmBoxNode*)NULL;
+	node != (PdmBoxNode*)nullptr;
 	node = node->next, page++)
     {
 	PdmSetupBox* box = node->box;
@@ -361,7 +361,7 @@ PdmMainWinOkCB(
 	     *                 first shell ancestor (or even the parent)
 	     *                 of the setup box instead
 	     */
-	    XtVaSetValues(me->notebook, XmNcurrentPageNumber, page, NULL);
+	    XtVaSetValues(me->notebook, XmNcurrentPageNumber, page, nullptr);
 	    /*
 	     * stop verifying and return
 	     */
@@ -371,7 +371,7 @@ PdmMainWinOkCB(
     /*
      * call the set attributes proc for each setup box child
      */
-    for(node = me->box_list_head; node != (PdmBoxNode*)NULL; node = node->next)
+    for(node = me->box_list_head; node != (PdmBoxNode*)nullptr; node = node->next)
     {
 	PdmSetupBox* box = node->box;
 	
@@ -441,7 +441,7 @@ PdmMainWinHelpCB(Widget w, XtPointer client_data, XtPointer call_data)
     if((Widget)NULL == me->help_dialog)
     {
 	me->help_dialog =
-	    DtCreateHelpDialog(XtParent(me->widget), "HelpDialog", NULL, 0);
+	    DtCreateHelpDialog(XtParent(me->widget), "HelpDialog", nullptr, 0);
 	XtAddCallback(me->help_dialog, XmNdestroyCallback,
 		      PdmMainWinHelpDestroyCB, (XtPointer)me);
     }
@@ -453,7 +453,7 @@ PdmMainWinHelpCB(Widget w, XtPointer client_data, XtPointer call_data)
 	int i;
 	PdmBoxNode* node;
 	
-	XtVaGetValues(me->notebook, XmNcurrentPageNumber, &current_page, NULL);
+	XtVaGetValues(me->notebook, XmNcurrentPageNumber, &current_page, nullptr);
 	node = me->box_list_head;
 	for(i = 1; i < (int)current_page; i++)
 	    node = node->next;
@@ -501,7 +501,7 @@ PdmMainWinHelpCB(Widget w, XtPointer client_data, XtPointer call_data)
 		  DtNhelpVolume, box_resources.help_volume,
 		  DtNlocationId, box_resources.location_id,
 		  DtNhelpType, DtHELP_TYPE_TOPIC,
-		  NULL);
+		  nullptr);
     /*
      * pop up the help dialog
      */
@@ -552,7 +552,7 @@ PdmMainWinCreate(PdmMainWin* me,
      * establish the print server connection
      */
     if(PdmXpOpen(me->pdm_xp, print_display_spec, print_context_str)
-       == (Display*)NULL)
+       == (Display*)nullptr)
     {
 	/*
 	 * unable to open the print display
@@ -613,7 +613,7 @@ PdmMainWinCreateWindow(PdmMainWin* me,
 				xmMessageBoxWidgetClass,
 				parent,
 				XmNdialogType, XmDIALOG_MESSAGE,
-				NULL);
+				nullptr);
     XtUnmanageChild(XtNameToWidget(me->widget, "Message"));
     XtUnmanageChild(XtNameToWidget(me->widget, "Symbol"));
     /*
@@ -631,11 +631,11 @@ PdmMainWinCreateWindow(PdmMainWin* me,
     manager = XtVaCreateManagedWidget("Manager",
 				      xmRowColumnWidgetClass,
 				      me->widget,
-				      NULL);
+				      nullptr);
     /*
      * create the printer description row
      */
-    if(me->printer_descriptor != (const char*)NULL)
+    if(me->printer_descriptor != (const char*)nullptr)
     {
 	char* desc;
 	char* ptr;
@@ -645,20 +645,20 @@ PdmMainWinCreateWindow(PdmMainWin* me,
 				      xmRowColumnWidgetClass,
 				      manager,
 				      XmNorientation, XmHORIZONTAL,
-				      NULL);
+				      nullptr);
 	/*
 	 * create the printer description label
 	 */
 	w = XtVaCreateManagedWidget("PrinterDescriptionLabel",
 				    xmLabelGadgetClass,
 				    row,
-				    NULL);
+				    nullptr);
 	/*
 	 * create the printer description using just the 1st line
 	 */
 	desc = XtNewString(me->printer_descriptor);
 	ptr = Dt_strchr(desc, '\n');
-	if(ptr != NULL)
+	if(ptr != nullptr)
 	    *ptr = '\0';
 	label = XmStringCreateLocalized(desc);
 	XtFree(desc);
@@ -666,13 +666,13 @@ PdmMainWinCreateWindow(PdmMainWin* me,
 				    xmLabelGadgetClass,
 				    row,
 				    XmNlabelString, label,
-				    NULL);
+				    nullptr);
 	XmStringFree(label);
     }
     /*
      * create the printer name row
      */
-    if(me->printer_name != (const char*)NULL)
+    if(me->printer_name != (const char*)nullptr)
     {
 	char* printer_spec;
 	int printer_spec_len;
@@ -682,23 +682,23 @@ PdmMainWinCreateWindow(PdmMainWin* me,
 				      xmRowColumnWidgetClass,
 				      manager,
 				      XmNorientation, XmHORIZONTAL,
-				      NULL);
+				      nullptr);
 	/*
 	 * create the printer name label
 	 */
 	w = XtVaCreateManagedWidget("PrinterNameLabel",
 				    xmLabelGadgetClass,
 				    row,
-				    NULL);
+				    nullptr);
 	/*
 	 * build the X printer specifier
 	 */
 	printer_spec_len = strlen(me->printer_name);
-	if(me->print_display_spec != (char*)NULL)
+	if(me->print_display_spec != (char*)nullptr)
 	    printer_spec_len += strlen(me->print_display_spec) + 1;
 	printer_spec = XtMalloc(printer_spec_len + 1);
 	strcpy(printer_spec, me->printer_name);
-	if(me->print_display_spec != (char*)NULL)
+	if(me->print_display_spec != (char*)nullptr)
 	{
 	    strcat(printer_spec, "@");
 	    strcat(printer_spec, me->print_display_spec);
@@ -712,7 +712,7 @@ PdmMainWinCreateWindow(PdmMainWin* me,
 				    xmLabelGadgetClass,
 				    row,
 				    XmNlabelString, label,
-				    NULL);
+				    nullptr);
 	XmStringFree(label);
     }
     /*
@@ -721,7 +721,7 @@ PdmMainWinCreateWindow(PdmMainWin* me,
     w = XtVaCreateManagedWidget("TopSeparator",
 				xmSeparatorGadgetClass,
 				manager,
-				NULL);
+				nullptr);
     /*
      * notebook label
      */
@@ -730,11 +730,11 @@ PdmMainWinCreateWindow(PdmMainWin* me,
 				  xmRowColumnWidgetClass,
 				  manager,
 				  XmNorientation, XmHORIZONTAL,
-				  NULL);
+				  nullptr);
     w = XtVaCreateManagedWidget("NotebookLabel",
 				xmLabelGadgetClass,
 				row,
-				NULL);
+				nullptr);
     /*
      * create the notebook
      */
@@ -743,13 +743,13 @@ PdmMainWinCreateWindow(PdmMainWin* me,
 				  xmRowColumnWidgetClass,
 				  manager,
 				  XmNorientation, XmHORIZONTAL,
-				  NULL);
+				  nullptr);
     me->notebook =
 	XtVaCreateManagedWidget(
 				"Notebook",
 				xmNotebookWidgetClass,
 				row,
-				NULL);
+				nullptr);
     /*
      * Create an unmanaged notebook page scroller (i.e. a widget that has
      * the XmQTnavigator trait), otherwise the notebook widget will
@@ -761,7 +761,7 @@ PdmMainWinCreateWindow(PdmMainWin* me,
     XtVaCreateWidget("DummyPageScroller",
 		     xmScrollBarWidgetClass,
 		     me->notebook,
-		     NULL);
+		     nullptr);
     /*
      * return
      */

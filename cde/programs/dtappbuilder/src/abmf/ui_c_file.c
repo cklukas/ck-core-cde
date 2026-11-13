@@ -154,13 +154,13 @@ write_all_shared_var_decls(GenCodeInfo genCodeInfo, ABObj module)
 {
     File                codeFile = genCodeInfo->code_file;
     AB_TRAVERSAL        trav;
-    ABObj               ui_obj = NULL;
+    ABObj               ui_obj = nullptr;
 
     /*
      * Define the widgets in this module
      */
     for (trav_open(&trav, module, AB_TRAV_UI);
-	 (ui_obj = trav_next(&trav)) != NULL;)
+	 (ui_obj = trav_next(&trav)) != nullptr;)
     {
 	if (obj_is_window(ui_obj))
 	{
@@ -187,14 +187,14 @@ write_call_create_proc(GenCodeInfo genCodeInfo, ABObj obj)
 {
     File codeFile= genCodeInfo->code_file;
     char	createProc[1024];
-    ABObj	structObj = NULL;
-    ABObj	item = NULL;
+    ABObj	structObj = nullptr;
+    ABObj	item = nullptr;
 
     strcpy(createProc, abmfP_get_create_proc_name(obj));
 
     abio_printf(codeFile, "%s(", createProc);
     structObj = abmfP_obj_get_struct_obj(obj);
-    if ((structObj != NULL) && (structObj == abmfP_ip_obj(genCodeInfo)))
+    if ((structObj != nullptr) && (structObj == abmfP_ip_obj(genCodeInfo)))
     {
 	abio_printf(codeFile, "instance");
     }
@@ -207,7 +207,7 @@ write_call_create_proc(GenCodeInfo genCodeInfo, ABObj obj)
 
     if (abmfP_obj_create_proc_has_parent_param(obj))
     {
-	STRING	parentName = NULL;
+	STRING	parentName = nullptr;
 
 	/*
 	if (   (obj == abmfP_ip_obj(genCodeInfo))
@@ -230,12 +230,12 @@ write_call_create_proc(GenCodeInfo genCodeInfo, ABObj obj)
     {
 	int	num_submenus = abmfP_get_num_cp_submenu_params(obj);
 	int	submenu_num = 0;
-	ABObj	submenuObj = NULL;
+	ABObj	submenuObj = nullptr;
 
 	for (submenu_num = 0; submenu_num < num_submenus; ++submenu_num)
 	{
 	    submenuObj = abmfP_get_cp_submenu_param_obj(obj, submenu_num);
-	    if (submenuObj == NULL)
+	    if (submenuObj == nullptr)
 	    {
 		break;
 	    }
@@ -262,7 +262,7 @@ write_all_call_create_procs(GenCodeInfo genCodeInfo, ABObj root)
     int		inst= 0;
 
     for (trav_open(&trav, root, AB_TRAV_UI | AB_TRAV_MOD_PARENTS_FIRST);
-	(obj= trav_next(&trav)) != NULL; )
+	(obj= trav_next(&trav)) != nullptr; )
     {
 	if (abmfP_obj_has_create_proc(obj))
 	{
@@ -286,17 +286,17 @@ write_add_widget_ref_resources(GenCodeInfo genCodeInfo, ABObj root)
     File		codeFile= genCodeInfo->code_file;
     AB_TRAVERSAL	trav;
     ABObj		obj;
-    STRING		c_name= NULL;
-    ABObj		menu = NULL;
+    STRING		c_name= nullptr;
+    ABObj		menu = nullptr;
 
     abio_printf(codeFile, "\n");
     abmfP_write_c_comment(genCodeInfo, FALSE, 
 	"Add widget-reference resources.");
     for (trav_open(&trav, root, AB_TRAV_UI | AB_TRAV_MOD_PARENTS_FIRST);
-	(obj= trav_next(&trav)) != NULL; )
+	(obj= trav_next(&trav)) != nullptr; )
     {
 	menu = obj_get_menu(obj);
-	if (obj_is_item(obj) && (menu != NULL))
+	if (obj_is_item(obj) && (menu != nullptr))
 	{
 	    c_name= abmfP_get_c_name(genCodeInfo, obj);
 	    abio_printf(codeFile, "XtVaSetValues(%s,\n", c_name);
@@ -310,7 +310,7 @@ write_add_widget_ref_resources(GenCodeInfo genCodeInfo, ABObj root)
 	/*
 	 * Register popup menus
 	 */
-	if ((menu != NULL) && (obj_is_root(obj)) && (obj_is_popup(menu)))
+	if ((menu != nullptr) && (obj_is_root(obj)) && (obj_is_popup(menu)))
 	{
 	    ABObj menuParent = 
 			objxm_comp_get_subobj(obj, AB_CFG_MENU_PARENT_OBJ);
@@ -349,13 +349,13 @@ write_manage_widgets(
 )
 {
     AB_TRAVERSAL	trav;
-    ABObj		obj = NULL;
+    ABObj		obj = nullptr;
 
     /*
      * Manage the windows
      */
     for (trav_open(&trav, tree, AB_TRAV_WINDOWS);
-	(obj = trav_next(&trav)) != NULL; )
+	(obj = trav_next(&trav)) != nullptr; )
     {
 	write_manage_one_tree(genCodeInfo, obj);
     }
@@ -392,10 +392,10 @@ write_manage_descendants(
 )
 {
     AB_TRAVERSAL	childTrav;
-    ABObj		child = NULL;
+    ABObj		child = nullptr;
 
     for (trav_open(&childTrav, obj, AB_TRAV_CHILDREN);
-	(child = trav_next(&childTrav)) != NULL; )
+	(child = trav_next(&childTrav)) != nullptr; )
     {
 	if (obj_is_ui(child))
 	{
@@ -431,9 +431,9 @@ write_manage_descendants(
 	     * ScrolledWindow), and we can't rely on XmNchildren.
 	     */
 	    AB_TRAVERSAL	unmanagedTrav;
-	    ABObj		child = NULL;
+	    ABObj		child = nullptr;
 	    for (trav_open(&unmanagedTrav, obj, AB_TRAV_CHILDREN);
-		(child = trav_next(&unmanagedTrav)) != NULL; )
+		(child = trav_next(&unmanagedTrav)) != nullptr; )
 	    {
 		if (obj_should_be_managed_when_initialized(child))
 		{
@@ -588,7 +588,7 @@ static BOOL
 obj_should_be_managed_when_initialized(ABObj obj)
 {
     ABObj	wholeObj = obj_get_root(obj);
-    ABObj	itemParentObj = NULL;
+    ABObj	itemParentObj = nullptr;
 
     if (!abmfP_obj_has_field(obj))
     {
@@ -609,7 +609,7 @@ obj_should_be_managed_when_initialized(ABObj obj)
      *     will not become visible until needed.
      */
     if (    ObjWClassIsShellSubclass(obj)
-	|| (   (abmfP_parent(obj) != NULL) 
+	|| (   (abmfP_parent(obj) != nullptr) 
 	    && (((abmfP_parent(obj))->type == AB_TYPE_DIALOG)
 		|| ((abmfP_parent(obj))->type == AB_TYPE_FILE_CHOOSER))
 	    && (ObjWClassIsDialogShell(abmfP_parent(obj)))) )
@@ -620,7 +620,7 @@ obj_should_be_managed_when_initialized(ABObj obj)
     /*
      * The item parent for an option menu is really a menu pane
      */
-    if (wholeObj != NULL)
+    if (wholeObj != nullptr)
     {
 	itemParentObj = objxm_comp_get_subobj(wholeObj, AB_CFG_PARENT_OBJ);
     }
@@ -641,11 +641,11 @@ static BOOL
 abmfP_obj_has_unmanaged_child(ABObj obj)
 {
     AB_TRAVERSAL	trav;
-    ABObj		child = NULL;
+    ABObj		child = nullptr;
     BOOL		doesIt = FALSE;
 
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-	(child = trav_next(&trav)) != NULL; )
+	(child = trav_next(&trav)) != nullptr; )
     {
 	/* menus don't show up in XmNchildren list, so we need to ignore them
 	 */
@@ -694,7 +694,7 @@ write_obj_init_proc(GenCodeInfo genCodeInfo, ABObj parent)
     int			return_value= 0;
     File                codeFile = genCodeInfo->code_file;
     ABObj               obj;
-    ABObj               whole_obj = NULL;
+    ABObj               whole_obj = nullptr;
     int                 inst = FALSE;
     AB_TRAVERSAL        trav;
 
@@ -726,7 +726,7 @@ write_obj_init_proc(GenCodeInfo genCodeInfo, ABObj parent)
     abmfP_write_c_comment(genCodeInfo, FALSE, 
 	"Call utility functions to do group layout");
     for (trav_open(&trav, parent, AB_TRAV_GROUPS);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
         if (abmfP_obj_needs_align_handler(obj))
         {
@@ -781,7 +781,7 @@ write_obj_init_proc(GenCodeInfo genCodeInfo, ABObj parent)
     abmfP_write_c_comment(genCodeInfo, FALSE, 
 	"Add User and Connection callbacks");
     for (trav_open(&trav, parent, AB_TRAV_UI);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	if ( ((abmfP_get_window_parent(obj) == parent) || (obj == parent))
 	    && (abmfP_write_add_callbacks_and_actions(genCodeInfo, obj) < 0)
@@ -809,7 +809,7 @@ write_all_obj_init_procs(GenCodeInfo genCodeInfo, ABObj module)
 
     abmfP_tree_set_written(module, FALSE);
     for (trav_open(&trav, module, AB_TRAV_SALIENT_UI);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 /*
 	if (obj_is_message(obj) && !MsgClearWritten)
@@ -844,7 +844,7 @@ write_create_proc_decls(GenCodeInfo genCodeInfo, ABObj module)
     File                codeFile = genCodeInfo->code_file;
     AB_TRAVERSAL        trav;
     ABObj               obj;
-    char               *parent = NULL;
+    char               *parent = nullptr;
 
     abmfP_tree_set_written(module, FALSE);
     abio_puts(codeFile, "\n");
@@ -852,7 +852,7 @@ write_create_proc_decls(GenCodeInfo genCodeInfo, ABObj module)
 	"Widget create procedure decls");
 
     for (trav_open(&trav, module, AB_TRAV_UI);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	if (!abmfP_obj_has_create_proc(obj))
 	{
@@ -869,7 +869,7 @@ write_create_proc_decls(GenCodeInfo genCodeInfo, ABObj module)
 static void
 set_parent_for_submenu(ABObj obj)
 {
-    ABObj               child = NULL;
+    ABObj               child = nullptr;
 
     if (obj_has_child(obj))
     {
@@ -896,7 +896,7 @@ check_for_submenus(ABObj obj)
     ABObj               child;
 
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-	 (child = trav_next(&trav)) != NULL;)
+	 (child = trav_next(&trav)) != nullptr;)
     {
 	if (item_has_children(child))
 	{
@@ -915,7 +915,7 @@ assign_parent_to_submenus(ABObj project)
     ABObj               obj;
 
     for (trav_open(&trav, project, AB_TRAV_UI);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	if (obj_is_menu(obj))
 	    check_for_submenus(obj);
@@ -927,9 +927,9 @@ int
 write_obj_create_proc(GenCodeInfo genCodeInfo, ABObj obj)
 {
     File                codeFile = genCodeInfo->code_file;
-    ABObj               top_obj = NULL;
+    ABObj               top_obj = nullptr;
     ABObj		ip_obj = abmfP_obj_get_struct_obj(obj);
-    ABObj               help_obj = NULL;
+    ABObj               help_obj = nullptr;
     int			num_post_create_procs = 0;
     STRING 		help_volume, help_location, help_text;
 
@@ -976,13 +976,13 @@ write_call_all_user_post_create_procs(
 {
     int			return_value = 0;
     int 		total_post_create_procs = 0;
-    ABObj		item = NULL;
+    ABObj		item = nullptr;
     AB_TRAVERSAL	itemTrav;
 
     total_post_create_procs += 
 	    abmfP_obj_get_num_conns_by_when(obj, AB_WHEN_AFTER_CREATED);
     for (trav_open(&itemTrav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-	(item = trav_next(&itemTrav)) != NULL; )
+	(item = trav_next(&itemTrav)) != nullptr; )
     {
         total_post_create_procs += 
 	    abmfP_obj_get_num_conns_by_when(item, AB_WHEN_AFTER_CREATED);
@@ -995,7 +995,7 @@ write_call_all_user_post_create_procs(
         abmfP_write_c_comment(genCodeInfo, FALSE,
 		"Call user (Post-)Create procs");
         for (trav_reset(&itemTrav);
-	    (item = trav_next(&itemTrav)) != NULL; )
+	    (item = trav_next(&itemTrav)) != nullptr; )
         {
             write_call_user_post_create_procs(genCodeInfo, item);
 	}
@@ -1016,11 +1016,11 @@ write_call_user_post_create_procs(GenCodeInfo genCodeInfo, ABObj subObj)
 {
     int 	return_value = 0;
     int		num_post_create_procs = 0;
-    ABObj	action = NULL;
+    ABObj	action = nullptr;
     ABObj	compObj = obj_get_root(subObj);
     ABObj	sourceObj = objxm_comp_get_source_for_when(
 				compObj, AB_WHEN_AFTER_CREATED);
-    ABObj	targetObj = NULL;
+    ABObj	targetObj = nullptr;
     char	targetStructPtrName[MAX_NAME_SIZE];
     char	sourceName[MAX_NAME_SIZE];
     *targetStructPtrName = 0;
@@ -1044,7 +1044,7 @@ write_call_user_post_create_procs(GenCodeInfo genCodeInfo, ABObj subObj)
 		util_strncpy(sourceName, abmfP_get_c_name(
 				genCodeInfo, sourceObj), MAX_NAME_SIZE);
 
-		if (targetObj == NULL)
+		if (targetObj == nullptr)
 		{
 		    snprintf(targetStructPtrName, sizeof(targetStructPtrName), "%s", abmfP_str_null);
 		}
@@ -1076,10 +1076,10 @@ write_all_obj_create_procs(GenCodeInfo genCodeInfo, ABObj rootObj)
     int			return_value = 0;
     int			rc = 0;		/* return code */
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
 
     for (trav_open(&trav, rootObj, AB_TRAV_UI | AB_TRAV_MOD_PARENTS_FIRST);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	if (!abmfP_obj_has_create_proc(obj))
 	{
@@ -1107,9 +1107,9 @@ write_includes(GenCodeInfo genCodeInfo, ABObj module)
     File	codeFile = genCodeInfo->code_file;
     int		num_written = 0;
     AB_TRAVERSAL	trav;
-    ABObj		obj = NULL;
+    ABObj		obj = nullptr;
     BOOL		includeGlyphFiles = FALSE;
-    STRING		glyphFile = NULL;
+    STRING		glyphFile = nullptr;
     StringListRec	glyphIncludesRec;
     StringList		glyphIncludes= &(glyphIncludesRec);
     strlist_construct(glyphIncludes);
@@ -1130,7 +1130,7 @@ write_includes(GenCodeInfo genCodeInfo, ABObj module)
     if (includeGlyphFiles)
     {
         for (trav_open(&trav, module, AB_TRAV_SALIENT_UI); 
-		(obj = trav_next(&trav)) != NULL; )
+		(obj = trav_next(&trav)) != nullptr; )
         {
             ++num_written;
 	    if (abmfP_obj_has_glyph_label(obj))
@@ -1138,7 +1138,7 @@ write_includes(GenCodeInfo genCodeInfo, ABObj module)
 	        glyphFile = obj_get_label(obj);
 	        if (!strlist_str_exists(glyphIncludes, glyphFile))
 	        {
-	            strlist_add_str(glyphIncludes, glyphFile, NULL);
+	            strlist_add_str(glyphIncludes, glyphFile, nullptr);
 	            abmfP_write_c_local_include(genCodeInfo, glyphFile);
 	        }
 	    }
@@ -1156,13 +1156,13 @@ write_action_target_includes(GenCodeInfo genCodeInfo, ABObj module)
 {
     int		numIncludes = 0;
     ABObj	project = obj_get_project(module);
-    ABObj	action = NULL;
+    ABObj	action = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj	fromObj = NULL;
-    ABObj	fromModule = NULL;
-    ABObj	toObj = NULL;
-    ABObj	toModule = NULL;
-    STRING	headerFile = NULL;
+    ABObj	fromObj = nullptr;
+    ABObj	fromModule = nullptr;
+    ABObj	toObj = nullptr;
+    ABObj	toModule = nullptr;
+    STRING	headerFile = nullptr;
     StringListRec	targetIncludes;
     strlist_construct(&targetIncludes);
 
@@ -1172,29 +1172,29 @@ write_action_target_includes(GenCodeInfo genCodeInfo, ABObj module)
      *		connection under the module, rather than the project
      */
     for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-	(action = trav_next(&trav)) != NULL; )
+	(action = trav_next(&trav)) != nullptr; )
     {
 	fromObj = obj_get_from(action);
-	fromModule = NULL;
-	if (fromObj != NULL)
+	fromModule = nullptr;
+	if (fromObj != nullptr)
 	{
 	    fromModule = obj_get_module(fromObj);
 	}
 	toObj = obj_get_to(action);
-	toModule = NULL;
-	if (toObj != NULL)
+	toModule = nullptr;
+	if (toObj != nullptr)
 	{
 	    toModule= obj_get_module(toObj);
 	}
 
-	if ((fromModule != NULL) && (fromModule == module)
-	    && (toModule != NULL) && (toModule != module))
+	if ((fromModule != nullptr) && (fromModule == module)
+	    && (toModule != nullptr) && (toModule != module))
 	{
 	    /* cross-module connection from this module */
 	    headerFile = abmfP_get_ui_header_file_name(toModule);
 	    if (!strlist_str_exists(&targetIncludes, headerFile))
 	    {    
-		strlist_add_str(&targetIncludes, headerFile, NULL);
+		strlist_add_str(&targetIncludes, headerFile, nullptr);
 		abmfP_write_c_local_include(genCodeInfo, headerFile);
 	    }
 
@@ -1220,8 +1220,8 @@ abmfP_write_ui_c_file(
 {
     File                codeFile = genCodeInfo->code_file;
     char		moduleName[1024];
-    ABObj               obj = NULL;
-    char               *errmsg = NULL;
+    ABObj               obj = nullptr;
+    char               *errmsg = nullptr;
     *moduleName = 0;
 
     /*
@@ -1263,7 +1263,7 @@ abmfP_write_ui_c_file(
 }
 
 
-static ABObj	connFromObj = NULL;
+static ABObj	connFromObj = nullptr;
 static AB_WHEN	connWhen = AB_WHEN_UNDEF;
 
 static BOOL
@@ -1282,14 +1282,14 @@ abmfP_obj_get_num_conns_by_when(
 {
     ABObj	project = obj_get_project(obj);
     int		numConns = 0;
-    if (project == NULL)
+    if (project == nullptr)
     {
 	return -1;
     }
 
     connFromObj = obj_get_actual_obj(obj); connWhen = when;
     numConns = trav_count_cond(project, AB_TRAV_ACTIONS, action_from_pred);
-    connFromObj = NULL; connWhen = AB_WHEN_UNDEF;
+    connFromObj = nullptr; connWhen = AB_WHEN_UNDEF;
     return numConns;
 }
 
@@ -1303,10 +1303,10 @@ abmfP_obj_get_conn_by_when(
 {
     ABObj		project = obj_get_project(obj);
     AB_TRAVERSAL	trav;
-    ABObj		action = NULL;
-    if (project == NULL)
+    ABObj		action = nullptr;
+    if (project == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
 
     connFromObj = obj_get_actual_obj(obj); connWhen = when;
@@ -1314,7 +1314,7 @@ abmfP_obj_get_conn_by_when(
     trav_goto(&trav, which_conn);
     action = trav_obj(&trav);
     trav_close(&trav);
-    connFromObj = NULL; connWhen = AB_WHEN_UNDEF;
+    connFromObj = nullptr; connWhen = AB_WHEN_UNDEF;
 
     return action;
 }
@@ -1324,20 +1324,20 @@ abmfP_get_msg_action_list(
     ABObj   msg_obj
 )
 {
-    ABObj	module = NULL;
-    ABObj       action = NULL;
-    ABObj       fromObj = NULL; 
+    ABObj	module = nullptr;
+    ABObj       action = nullptr;
+    ABObj       fromObj = nullptr; 
     AB_TRAVERSAL        trav;
-    StringList	callback_funcs = NULL;
+    StringList	callback_funcs = nullptr;
 
     if (!obj_is_message(msg_obj))
-	return NULL;
+	return nullptr;
 
     callback_funcs = strlist_create();
 
     module = obj_get_module(msg_obj);
     for (trav_open(&trav, module, AB_TRAV_ACTIONS);
-	(action = trav_next(&trav)) != NULL; )
+	(action = trav_next(&trav)) != nullptr; )
     { 
 	fromObj = obj_get_from(action);
 	if (fromObj == msg_obj)
@@ -1351,7 +1351,7 @@ abmfP_get_msg_action_list(
     if (strlist_get_num_strs(callback_funcs) == 0)
     {
 	strlist_destroy(callback_funcs);
-	callback_funcs = NULL;
+	callback_funcs = nullptr;
     }
 
     return (callback_funcs);
@@ -1478,7 +1478,7 @@ write_msg_init_proc(GenCodeInfo genCodeInfo, ABObj parent)
 
     /* Get callback function names */
     callback_funcs = abmfP_get_msg_action_list(parent);
-    if (callback_funcs != NULL)
+    if (callback_funcs != nullptr)
     {
         for (i = 0; i < strlist_get_num_strs(callback_funcs); i++)
         {
@@ -1723,7 +1723,7 @@ write_msg_clear_proc(
             abmfP_get_msg_clear_proc_name(module), /* function name */
             "DtbMessageData",                     /* Argument type */
             abmfP_instance_ptr_var_name,           /* Argument name */
-            NULL);
+            nullptr);
 
     abio_printf(file,
         "memset((void *)(%s), 0, sizeof(*%s));\n",

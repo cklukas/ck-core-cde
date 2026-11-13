@@ -184,16 +184,16 @@ ProcessBackdropResources(
 {
     XSetWindowAttributes xswa;
     unsigned int xswamask;
-    unsigned char *pchImageName = NULL;
-    unsigned char *pchL = NULL;
+    unsigned char *pchImageName = nullptr;
+    unsigned char *pchL = nullptr;
     unsigned char *pch, *pLine;
     Pixmap tmpPix;
     int x, y;
     unsigned int w, h, bw, depth;
     Window root;
     unsigned long oldFlags;
-    static String none_string = NULL;
-    static String no_backdrop_string = NULL;
+    static String none_string = nullptr;
+    static String no_backdrop_string = nullptr;
     Boolean bNone = False;
     unsigned int chlen;
     
@@ -300,7 +300,7 @@ ProcessBackdropResources(
 		        XGetGeometry(
 			    display, tmpPix,
 			    &win, &x, &y, &w, &h, &bw, &depth);
-		        gc = XCreateGC(display, tmpPix, 0, NULL);
+		        gc = XCreateGC(display, tmpPix, 0, nullptr);
 
 			if(pWS->backdrop.imageType == DtWSM_BACKDROP_IMAGETYPE_CENTER)
 			{
@@ -543,10 +543,10 @@ ProcessBackdropResources(
 
 		    Warning(msg);
 		}
-		pch = NULL;
+		pch = nullptr;
 	    }
 	    free (pchImageName);	/* temporary string */
-	    pchImageName = NULL;
+	    pchImageName = nullptr;
 	    free (pchL);	/* temporary string */
 	}
     }
@@ -700,7 +700,7 @@ SetNewBackdrop(
         String bitmapFile,
         DtWsmBackdropImageType imageType )
 {
-    String pchNewBitmap = NULL;
+    String pchNewBitmap = nullptr;
 
     if (!bitmapFile || !strlen(bitmapFile) || 
 	!strcmp(bitmapFile, DTWM_REQP_BACKDROP_NONE))

@@ -87,7 +87,7 @@ FindLauncherEntry (WmScreenData *pSD, Window win)
 
     if (!pSD)
     {
-	return NULL;
+	return nullptr;
     }
 
     for (entry = pSD->launcherList; entry; entry = entry->next)
@@ -98,7 +98,7 @@ FindLauncherEntry (WmScreenData *pSD, Window win)
 	}
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void RegisterLauncherWindow (WmScreenData *pSD, Window win)
@@ -122,7 +122,7 @@ void RegisterLauncherWindow (WmScreenData *pSD, Window win)
     }
 
     entry->win = win;
-    entry->pCD = NULL;
+    entry->pCD = nullptr;
     entry->next = pSD->launcherList;
     pSD->launcherList = entry;
 
@@ -141,7 +141,7 @@ void UnregisterLauncherWindow (WmScreenData *pSD, Window win)
     }
 
     ppEntry = &pSD->launcherList;
-    while ((entry = *ppEntry) != NULL)
+    while ((entry = *ppEntry) != nullptr)
     {
 	if (entry->win == win)
 	{
@@ -164,7 +164,7 @@ void UnregisterLauncherClient (WmScreenData *pSD, ClientData *pCD)
     }
 
     ppEntry = &pSD->launcherList;
-    while ((entry = *ppEntry) != NULL)
+    while ((entry = *ppEntry) != nullptr)
     {
 	if (entry->pCD == pCD)
 	{
@@ -255,7 +255,7 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     {
 	/* unable to allocate space */
 	Warning (((char *)GETMESSAGE(70, 1, "Insufficient memory for client data")));
-	return (NULL);
+	return (nullptr);
     }
 
 
@@ -267,15 +267,15 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     pCD->clientID = ++(pSD->clientCounter);
     pCD->clientFlags = WM_INITIALIZATION;
     pCD->iconFlags = 0;
-    pCD->thisIconBox = NULL;
-    pCD->pECD = NULL;
-    pCD->pPRCD = NULL;
-    pCD->pSOR = NULL;
+    pCD->thisIconBox = nullptr;
+    pCD->pECD = nullptr;
+    pCD->pPRCD = nullptr;
+    pCD->pSOR = nullptr;
     pCD->wmUnmapCount = 0;
     pCD->transientFor = (Window)0L;
-    pCD->transientLeader = NULL;
-    pCD->transientChildren = NULL;
-    pCD->transientSiblings = NULL;
+    pCD->transientLeader = nullptr;
+    pCD->transientChildren = nullptr;
+    pCD->transientSiblings = nullptr;
     pCD->primaryStackPosition = 0;
     pCD->fullModalCount = 0;
     pCD->primaryModalCount = 0;
@@ -283,41 +283,41 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     pCD->focusAutoRaiseDisabled = False;
     pCD->focusAutoRaiseDisablePending = False;
 
-    pCD->clientClass = NULL;
-    pCD->clientName = NULL;
+    pCD->clientClass = nullptr;
+    pCD->clientName = nullptr;
     pCD->clientFrameWin = (Window)0L;
     pCD->iconWindow = (Window)0L;
     pCD->iconPixmap = (Pixmap)0L;
-    pCD->clientProtocols = NULL;
+    pCD->clientProtocols = nullptr;
     pCD->clientProtocolCount = 0;
-    pCD->mwmMessages = NULL;
+    pCD->mwmMessages = nullptr;
     pCD->mwmMessagesCount = 0;
     pCD->clientCmapCount = 0;
     pCD->clientCmapIndex = 0;
     pCD->clientCmapFlagsInitialized = FALSE;
-    pCD->systemMenuSpec = NULL;
+    pCD->systemMenuSpec = nullptr;
     pCD->putInAll = False;
-    pCD->pWorkspaceHints = NULL;
+    pCD->pWorkspaceHints = nullptr;
     pCD->numInhabited = 0;
-    pCD->pWsList = NULL;
+    pCD->pWsList = nullptr;
     pCD->dtwmFunctions = DtWM_FUNCTION_OCCUPY_WS;
     pCD->dtwmBehaviors = 0L;
-    pCD->paInitialProperties = NULL;
+    pCD->paInitialProperties = nullptr;
     pCD->numInitialProperties = 0;
 
     pCD->decorFlags = 0L;
-    pCD->pTitleGadgets = NULL;
+    pCD->pTitleGadgets = nullptr;
     pCD->cTitleGadgets = 0;
-    pCD->pResizeGadgets = NULL;
+    pCD->pResizeGadgets = nullptr;
     pCD->clientTitleWin = (Window)0L;
-    pCD->pclientTopShadows = NULL;
-    pCD->pclientBottomShadows = NULL;
-    pCD->pclientTitleTopShadows = NULL;
-    pCD->pclientTitleBottomShadows = NULL;
-    pCD->pclientMatteTopShadows = NULL;
-    pCD->pclientMatteBottomShadows = NULL;
-    pCD->piconTopShadows = NULL;
-    pCD->piconBottomShadows = NULL;
+    pCD->pclientTopShadows = nullptr;
+    pCD->pclientBottomShadows = nullptr;
+    pCD->pclientTitleTopShadows = nullptr;
+    pCD->pclientTitleBottomShadows = nullptr;
+    pCD->pclientMatteTopShadows = nullptr;
+    pCD->pclientMatteBottomShadows = nullptr;
+    pCD->piconTopShadows = nullptr;
+    pCD->piconBottomShadows = nullptr;
     pCD->internalBevel = (wmGD.frameStyle == WmSLAB) ? 0 : 
 						FRAME_INTERNAL_SHADOW_WIDTH;
     pCD->bPseudoTransient = False;
@@ -329,16 +329,16 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     pCD->dataType = CLIENT_DATA_TYPE;
     pCD->window_status = 0L;
 
-    pCD->clientEntry.nextSibling = NULL;
-    pCD->clientEntry.prevSibling = NULL;
-    pCD->clientEntry.pCD = NULL;
+    pCD->clientEntry.nextSibling = nullptr;
+    pCD->clientEntry.prevSibling = nullptr;
+    pCD->clientEntry.pCD = nullptr;
 
     pCD->smClientID = (String)NULL;
 
     pCD->fullscreen = False;
     pCD->fullscreenAuto = True;
 
-    pCD->instantTitle = NULL;
+    pCD->instantTitle = nullptr;
     pCD->snapRestoreWidth = 0;
     pCD->snapRestoreHeight = 0;
     pCD->snapRestoreValid = False;
@@ -396,7 +396,7 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
 	 */
 
 	UnManageWindow (pCD);
-	return (NULL);
+	return (nullptr);
     }
     pCD->xBorderWidth = wmGD.windowAttributes.border_width;
 
@@ -444,7 +444,7 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     if (!GetClientWorkspaceInfo (pCD, manageFlags))
     {
 	XtFree ((char *)pCD);
-	return (NULL);
+	return (nullptr);
     }
 
     /*
@@ -529,7 +529,7 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     }
     else
     {
-	pCD->systemMenuSpec = NULL;
+	pCD->systemMenuSpec = nullptr;
     }
 
 
@@ -600,7 +600,7 @@ GetWmClientInfo (WmWorkspaceData *pWS,
     {
 	pCD->clientClass = WmCConfirmbox;
 	pCD->clientName = WmNconfirmbox;
-	pCD->iconImage = NULL;
+	pCD->iconImage = nullptr;
 	pCD->useClientIcon = False;
 	pCD->focusAutoRaise = True;
 	pCD->internalBevel = (wmGD.frameStyle == WmSLAB) ? 0 : 
@@ -608,7 +608,7 @@ GetWmClientInfo (WmWorkspaceData *pWS,
 	pCD->matteWidth = 0;
 	pCD->maximumClientSize.width = 0;
 	pCD->maximumClientSize.height = 0;
-	pCD->systemMenu = NULL;
+	pCD->systemMenu = nullptr;
     }
 
 
@@ -676,10 +676,10 @@ GetWmClientInfo (WmWorkspaceData *pWS,
      * fill with NULL IDs
      */
     if ((pCD->pWsList = (WsClientData *) 
-	    XtMalloc(pCD->pSD->numWorkspaces * sizeof(WsClientData))) == NULL)
+	    XtMalloc(pCD->pSD->numWorkspaces * sizeof(WsClientData))) == nullptr)
     {
 	Warning (((char *)GETMESSAGE(70, 2, "Insufficient memory for client data")));
-	return (NULL);
+	return (nullptr);
     }
     pCD->sizeWsList = pCD->pSD->numWorkspaces;
     for (i = 0; i < pCD->pSD->numWorkspaces; i++)
@@ -690,7 +690,7 @@ GetWmClientInfo (WmWorkspaceData *pWS,
 	pCD->pWsList[i].iconY = 0;
 	pCD->pWsList[i].iconFrameWin = (Window)0L;
 	pCD->pWsList[i].iconIndicatorWin = (Window)0L;
-	pCD->pWsList[i].pIconBox = NULL;
+	pCD->pWsList[i].pIconBox = nullptr;
     }
     /* 
      * Internally managed clients must be specifically inserted
@@ -817,7 +817,7 @@ GetWmClientInfo (WmWorkspaceData *pWS,
              */
 
             Warning (((char *)GETMESSAGE(70, 3, "Couldn't make icon box")));
-	    return (NULL);
+	    return (nullptr);
         }
 	PutClientIntoWorkspace (pWS, pCD);
     }
@@ -1000,8 +1000,8 @@ static char *
 GetClientCommand(ClientData *pCD)
 {
     int argc;
-    char **argv = NULL;
-    char *command = NULL;
+    char **argv = nullptr;
+    char *command = nullptr;
 
     if (XGetCommand(DISPLAY, pCD->client, &argv, &argc) &&
         argv && argc > 0 && argv[0])
@@ -1074,7 +1074,7 @@ TrySetActionIconFromProcessHierarchy(ClientData *pCD)
 
         if (strcmp(name, "dtexec") == 0)
         {
-            char *lastArg = NULL;
+            char *lastArg = nullptr;
             char *cur = cmdline;
 
             while (*cur)
@@ -1119,7 +1119,7 @@ GetWindowPid(ClientData *pCD)
     int actualFormat;
     unsigned long nitems;
     unsigned long leftover;
-    unsigned char *data = NULL;
+    unsigned char *data = nullptr;
     pid_t pid = 0;
 
     if (XGetWindowProperty(DISPLAY, pCD->client, wmGD.xa__NET_WM_PID, 0L, 1L,
@@ -1208,7 +1208,7 @@ ProcessWmSaveHint (ClientData *pCD)
     Atom actualType;
     int actualFormat;
     unsigned long nitems, leftover;
-    BITS32 *saveHintFlags = (BITS32 *)NULL;
+    BITS32 *saveHintFlags = (BITS32 *)nullptr;
 
     if ((XGetWindowProperty(DISPLAY, pCD->client, wmGD.xa_WMSAVE_HINT,
 			    0L, (long)1000000, False, AnyPropertyType,
@@ -1276,7 +1276,7 @@ ProcessWmHints (ClientData *pCD, Boolean firstTime)
      */
 
     if (firstTime && !HasProperty (pCD, XA_WM_HINTS))
-	pXWMHints = NULL;
+	pXWMHints = nullptr;
     else
 	pXWMHints = XGetWMHints (DISPLAY, pCD->client);
 
@@ -1405,7 +1405,7 @@ ProcessWmHints (ClientData *pCD, Boolean firstTime)
          */
 
 	if ((pCD->clientFunctions & MWM_FUNC_MINIMIZE) &&
-	    (pCD->transientLeader == NULL))
+	    (pCD->transientLeader == nullptr))
 	{
             if ((ICON_DECORATION(pCD) & ICON_IMAGE_PART) &&
 	        (pCD->useClientIcon || !pCD->iconImage))
@@ -1486,7 +1486,7 @@ ProcessWmHints (ClientData *pCD, Boolean firstTime)
 
 		    if (!TrySetActionIcon(pCD))
 		    {
-			pCD->iconPixmap = MakeNamedIconPixmap (pCD, NULL);
+			pCD->iconPixmap = MakeNamedIconPixmap (pCD, nullptr);
 		    }
 		}
 	    }
@@ -1892,7 +1892,7 @@ ProcessWmNormalHints (ClientData *pCD, Boolean firstTime, long manageFlags)
      * maximumClientSize is either set to 'horizontal' or 'vertical'.
      */
 
-    GetMaxInfo (pCD, NULL, NULL, &maxWidth, &maxHeight);
+    GetMaxInfo (pCD, nullptr, nullptr, &maxWidth, &maxHeight);
 
     pCD->oldMaxWidth = pCD->maxWidth;
     if (pCD->maximumClientSize.width)
@@ -2396,7 +2396,7 @@ WmICCCMToXmString (XTextProperty *wmNameProp)
 	  if ((wmNameProp->encoding == XA_STRING) ||
 	      (wmNameProp->encoding == wmGD.xa_COMPOUND_TEXT))
 	  {
-	      sprintf(msg, LOCALE_MSG, setlocale(LC_ALL, NULL));
+	      sprintf(msg, LOCALE_MSG, setlocale(LC_ALL, nullptr));
 	  }
 	  else
 	  {
@@ -2453,7 +2453,7 @@ ProcessWmWindowTitle (ClientData *pCD, Boolean firstTime)
 {
     char *netStr;
     XTextProperty wmNameProp;
-    XmString title_xms = NULL;
+    XmString title_xms = nullptr;
     Window win = pCD->client;
     Boolean hasWmName = HasProperty (pCD, XA_WM_NAME);
     Boolean hasNetWmName = HasProperty (pCD, wmGD.xa__NET_WM_NAME);
@@ -2518,7 +2518,7 @@ ProcessWmWindowTitle (ClientData *pCD, Boolean firstTime)
         }
     }
 
-    if (firstTime && pCD->instantTitle == NULL &&
+    if (firstTime && pCD->instantTitle == nullptr &&
 	HasProperty (pCD, wmGD.xa__NET_WM_VISIBLE_NAME) &&
 	(netStr = GetUtf8String (DISPLAY, win, wmGD.xa__NET_WM_VISIBLE_NAME)))
     {
@@ -2687,13 +2687,13 @@ ProcessWmIconTitle (ClientData *pCD, Boolean firstTime)
 {
   char *netStr;
   XTextProperty wmIconNameProp;
-  XmString icon_xms = NULL;
+  XmString icon_xms = nullptr;
   Window win = pCD->client;
   Boolean hasWmIconName = HasProperty (pCD, XA_WM_ICON_NAME);
   Boolean hasNetWmIconName = HasProperty (pCD, wmGD.xa__NET_WM_ICON_NAME);
 
   if ((pCD->clientFunctions & MWM_FUNC_MINIMIZE) &&
-      (pCD->transientLeader == NULL) &&
+      (pCD->transientLeader == nullptr) &&
       (!firstTime || hasWmIconName || hasNetWmIconName))
   {
     if ((!firstTime || hasNetWmIconName) &&
@@ -2742,7 +2742,7 @@ ProcessWmIconTitle (ClientData *pCD, Boolean firstTime)
     }
   }
 
-  if (firstTime && pCD->instantTitle == NULL &&
+  if (firstTime && pCD->instantTitle == nullptr &&
       HasProperty (pCD, wmGD.xa__NET_WM_VISIBLE_ICON_NAME) &&
       (netStr = GetUtf8String (DISPLAY, win,
 			       wmGD.xa__NET_WM_VISIBLE_ICON_NAME)))
@@ -2806,7 +2806,7 @@ ProcessWmTransientFor (ClientData *pCD)
     else {    /* else this is not a transient window */
 	pCD->clientFlags &= ~CLIENT_TRANSIENT;
 	pCD->transientFor = (Window)0L;
-	pCD->transientLeader = NULL;
+	pCD->transientLeader = nullptr;
     }
 
 
@@ -2848,7 +2848,7 @@ MakeSystemMenu (ClientData *pCD)
 	         F_CONTEXT_WINDOW|F_CONTEXT_ICON, pCD->mwmMenuItems, TRUE);
 
 #ifdef NO_MESSAGE_CATALOG
-    if (pCD->systemMenuSpec == NULL)
+    if (pCD->systemMenuSpec == nullptr)
     {
         /*
 	 * As the lookup has failed, let's try just one more time.
@@ -3246,7 +3246,7 @@ InitClientPlacement (ClientData *pCD, long manageFlags)
 static void 
 AdjustSlideOutGeometry ( ClientData *pCD)
 {
-    ClientData  *pCD_FP = NULL;
+    ClientData  *pCD_FP = nullptr;
     WmPanelistObject  pPanelist;
 
     pCD->slideDirection = SLIDE_NORTH;	/* assume up for now */
@@ -3775,7 +3775,7 @@ FindClientPlacement (ClientData *pCD)
     int borderWidth = 0;
     Boolean offScreenX;
     Boolean offScreenY;
-    WmHeadInfo_t *WmHI = NULL;
+    WmHeadInfo_t *WmHI = nullptr;
 
 
     if (!clientPlacementInitialized)
@@ -4141,7 +4141,7 @@ ProcessMwmHints (ClientData *pCD)
 
     pCD->inputMode = MWM_INPUT_MODELESS;
 
-    if ((pHints = GetMwmHints (pCD)) != NULL)
+    if ((pHints = GetMwmHints (pCD)) != nullptr)
     {
 	if (pHints->flags & MWM_HINTS_FUNCTIONS)
 	{
@@ -4237,7 +4237,7 @@ ProcessMwmHints (ClientData *pCD)
 
 	    if (pCD->inputMode == MWM_INPUT_SYSTEM_MODAL)
 	    {
-		pCD->transientLeader = NULL;
+		pCD->transientLeader = nullptr;
 		if (pCD->clientFunctions & MWM_FUNC_MINIMIZE)
 		{
 		    pCD->clientFunctions &= ~(MWM_FUNC_MINIMIZE);

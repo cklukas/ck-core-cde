@@ -141,7 +141,7 @@ ExpandSpecialVar(
     if (StrEq(tok[0], "include")) {
 	name = tok[1];
 	if (ntok > 1 ) {
-	    if ((infile=OpenFile(name)) == NULL) {
+	    if ((infile=OpenFile(name)) == nullptr) {
 		sprintf(buf, "Can not open included file '%s'", name);
 		perror(buf);
 		return CONT_CONTINUE;

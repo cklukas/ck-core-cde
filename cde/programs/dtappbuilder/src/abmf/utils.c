@@ -100,7 +100,7 @@ abmfP_capitalize_first_char(STRING str)
 {
     static char         name[MAXPATHLEN] = "";
 
-    if (str == NULL)
+    if (str == nullptr)
 	return str;
 
     if (isupper(str[0]))
@@ -124,7 +124,7 @@ abmfP_uncapitalize_first_char(STRING str)
 {
     static char         name[MAXPATHLEN] = "";
 
-    if (str == NULL)
+    if (str == nullptr)
 	return str;
 
     if (islower(str[0]))
@@ -144,7 +144,7 @@ ABObj
 abmfP_obj_find_codegen_parent(ABObj obj)
 {
     ABObj	cgParent = obj->parent;
-    while ((cgParent != NULL) && obj_has_flag(cgParent, NoCodeGenFlag))
+    while ((cgParent != nullptr) && obj_has_flag(cgParent, NoCodeGenFlag))
     {
 	cgParent = cgParent->parent;
     }
@@ -166,10 +166,10 @@ abmfP_items_are_homogeneous(
 
     trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
     item = trav_next(&trav);
-    if (item != NULL)
+    if (item != nullptr)
     {
     	ref_classname = obj_get_class_name(item);
-    	for (;(item = trav_next(&trav)) != NULL; )
+    	for (;(item = trav_next(&trav)) != nullptr; )
 	    if (util_strcmp(ref_classname, obj_get_class_name(item)) != 0)
             {
 		same = FALSE;
@@ -190,8 +190,8 @@ abmfP_items_have_mnemonics(
     BOOL		has_mnemonics = False;
 
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-        (item = trav_next(&trav)) != NULL;)
-	if (obj_get_mnemonic(item) != NULL)
+        (item = trav_next(&trav)) != nullptr;)
+	if (obj_get_mnemonic(item) != nullptr)
 	{
 	    has_mnemonics = True;
 	    break;
@@ -210,8 +210,8 @@ abmfP_items_have_accelerators(
     BOOL		has_accel = False;
  
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ); 
-        (item = trav_next(&trav)) != NULL;)
-        if (obj_get_accelerator(item) != NULL)
+        (item = trav_next(&trav)) != nullptr;)
+        if (obj_get_accelerator(item) != nullptr)
         { 
             has_accel = True; 
             break; 
@@ -237,9 +237,9 @@ abmfP_obj_is_duplicate(ABObj obj, ABObj dupObj)
 BOOL
 abmfP_parent_is_class(ABObj obj, STRING classname)
 {
-    if ((abmfP_parent(obj) == NULL)
-	|| (obj_get_class_name(obj) == NULL)
-	|| (obj_get_class_name(abmfP_parent(obj)) == NULL))
+    if ((abmfP_parent(obj) == nullptr)
+	|| (obj_get_class_name(obj) == nullptr)
+	|| (obj_get_class_name(abmfP_parent(obj)) == nullptr))
     {
 	return FALSE;
     }
@@ -298,14 +298,14 @@ abmfP_get_whole_object(ABObj obj)
 ABObj
 abmfP_find_callback_scope(ABObj obj, STRING callbackName)
 {
-    ABObj	scopeObj = NULL;
+    ABObj	scopeObj = nullptr;
     ABObj 	objModule = obj_get_module(obj);
     ABObj	objProject= obj_get_project(obj);
-    StringList	callbackList = NULL;
+    StringList	callbackList = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj	curModule= NULL;
+    ABObj	curModule= nullptr;
 
-    if ((objModule != NULL) && (mfobj_get_module_data(objModule) != NULL))
+    if ((objModule != nullptr) && (mfobj_get_module_data(objModule) != nullptr))
     {
 	callbackList = mfobj_get_module_data(objModule)->callbacks;
 	if (strlist_str_exists(callbackList, callbackName))
@@ -314,12 +314,12 @@ abmfP_find_callback_scope(ABObj obj, STRING callbackName)
 	}
     }
 
-    if ((scopeObj == NULL) && (objProject != NULL))
+    if ((scopeObj == nullptr) && (objProject != nullptr))
     {
 	for (trav_open(&trav, objProject, AB_TRAV_MODULES);
-	    (scopeObj == NULL) && ((curModule = trav_next(&trav)) != NULL); )
+	    (scopeObj == nullptr) && ((curModule = trav_next(&trav)) != nullptr); )
 	{
-	    if (mfobj_get_module_data(curModule) != NULL)
+	    if (mfobj_get_module_data(curModule) != nullptr)
 	    {
 	        callbackList = mfobj_get_module_data(curModule)->callbacks;
 	        if (strlist_str_exists(callbackList, callbackName))
@@ -330,12 +330,12 @@ abmfP_find_callback_scope(ABObj obj, STRING callbackName)
 	}
 	trav_close(&trav);
 
-	if (scopeObj == NULL)
+	if (scopeObj == nullptr)
 	{
 	   callbackList = mfobj_get_proj_data(objProject)->callbacks;
 	   if (strlist_str_exists(callbackList, callbackName))
 	   {
-	       scopeObj = NULL;
+	       scopeObj = nullptr;
 	   }
 	}
     }
@@ -381,7 +381,7 @@ abmfP_calloc(size_t n, size_t size)
     if (p = (STRING) calloc(n, size))
 	return p;
     util_error(CATGETS(Dtb_project_catd, 1, 83, "calloc: out of memory"));
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -395,7 +395,7 @@ abmfP_malloc(size_t size)
     if (p = malloc(size))
 	return p;
     util_error(CATGETS(Dtb_project_catd, 1, 84, "malloc: out of memory"));
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -409,7 +409,7 @@ abmfP_realloc(void *buf, unsigned int size)
     if (p = realloc(buf, size))
 	return p;
     util_error(CATGETS(Dtb_project_catd, 1, 85, "realloc: out of memory"));
-    return NULL;
+    return nullptr;
 }
 
 
@@ -420,7 +420,7 @@ ABObj
 abmfP_get_window_parent(ABObj obj)
 {
     if (obj_is_top_level(obj))
-	return NULL;
+	return nullptr;
     else if (abmfP_parent(obj) && obj_is_top_level(abmfP_parent(obj)))
 	return abmfP_parent(obj);
     else if (abmfP_parent(obj))
@@ -435,12 +435,12 @@ abmfP_get_window_parent(ABObj obj)
 ABObj
 abmfP_get_window_pane(ABObj obj)
 {
-    if (abmfP_parent(obj) == NULL)
+    if (abmfP_parent(obj) == nullptr)
     {
 	return ((ABObj) NULL);
     }
     if (obj_is_top_level(obj))
-	return NULL;
+	return nullptr;
     else if (obj_is_pane(abmfP_parent(obj)) || obj_is_top_level(abmfP_parent(obj)))
 	return abmfP_parent(obj);
 
@@ -458,8 +458,8 @@ abmfP_filecopy(STRING file1, STRING file2)
     FILE               *outp;
     int                 c;
 
-    if ((inp = util_fopen_locked(file1, "r")) == NULL ||
-	(outp = util_fopen_locked(file2, "w")) == NULL)
+    if ((inp = util_fopen_locked(file1, "r")) == nullptr ||
+	(outp = util_fopen_locked(file2, "w")) == nullptr)
 	return ERROR;
 
     while ((c = fgetc(inp)) != EOF)
@@ -486,9 +486,9 @@ abmfP_assign_widget_names(ABObj root)
      * Base windows
      */
     for (trav_open(&trav, root, AB_TRAV_WINDOWS), i = 1;
-	 (win_obj = trav_next(&trav)) != NULL;)
+	 (win_obj = trav_next(&trav)) != nullptr;)
     {
-	if (obj_get_name(win_obj) == NULL)
+	if (obj_get_name(win_obj) == nullptr)
 	{			/* Only assign once */
 	    sprintf(Buf, "%s%d", "widget", i);
 	    obj_set_name(win_obj, Buf);
@@ -504,10 +504,10 @@ int
 abmfP_tree_set_written(ABObj root, BOOL written)
 {
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
 
     for (trav_open(&trav, root, AB_TRAV_ALL);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	obj_set_was_written(obj, written);
     }
@@ -520,10 +520,10 @@ int
 abmfP_obj_set_items_written(ABObj rootObj, BOOL written)
 {
     AB_TRAVERSAL        trav;
-    ABObj               obj = NULL;
+    ABObj               obj = nullptr;
 
     for (trav_open(&trav, rootObj, AB_TRAV_ITEMS_FOR_OBJ);
-	 (obj = trav_next(&trav)) != NULL;)
+	 (obj = trav_next(&trav)) != nullptr;)
     {
 	obj_set_was_written(obj, written);
     }
@@ -601,9 +601,9 @@ abmfP_cvt_file_name_to_bitmap_data_vars(
     static char bitsVarBuf[256];
     int		baseIndex = -1;
     int		baseLen = -1;
-    char	*nameStart = NULL;
+    char	*nameStart = nullptr;
 
-    widthVar = heightVar = bitsVar = NULL;
+    widthVar = heightVar = bitsVar = nullptr;
 
     find_base_file_name(path, &baseIndex, &baseLen);
     nameStart = &(path[baseIndex]);
@@ -656,10 +656,10 @@ int
 abmfP_obj_set_subobjs_written(ABObj obj, BOOL written)
 {
     AB_TRAVERSAL	trav;
-    ABObj		subObj= NULL;
+    ABObj		subObj= nullptr;
 
     for (trav_open(&trav, obj, AB_TRAV_ALL);
-	(subObj= trav_next(&trav)) != NULL; )
+	(subObj= trav_next(&trav)) != nullptr; )
     {
 	if (   (subObj == obj)
 	    || (obj_get_root(subObj) != obj))
@@ -678,7 +678,7 @@ abmfP_objs_in_same_struct(ABObj obj1, ABObj obj2)
 {
     ABObj	structObj1= abmfP_obj_get_struct_obj(obj1);
     ABObj	structObj2= abmfP_obj_get_struct_obj(obj2);
-    return ((structObj1 != NULL) && (structObj1 == structObj2));
+    return ((structObj1 != nullptr) && (structObj1 == structObj2));
 }
 
 
@@ -687,7 +687,7 @@ abmfP_objs_in_same_substruct(ABObj obj1, ABObj obj2)
 {
    ABObj	structObj1 = abmfP_obj_get_substruct_obj(obj1);
    ABObj	structObj2 = abmfP_obj_get_substruct_obj(obj2);
-   return ((structObj1 != NULL) && (structObj1 == structObj2));
+   return ((structObj1 != nullptr) && (structObj1 == structObj2));
 }
 
 
@@ -699,7 +699,7 @@ abmfP_objs_in_same_substruct(ABObj obj1, ABObj obj2)
 ABObj
 abmfP_obj_get_struct_obj(ABObj obj)
 {
-    ABObj	structObj = NULL;
+    ABObj	structObj = nullptr;
 
     if (mfobj_has_flags(obj, CGenFlagStructObjValid))
     {
@@ -707,7 +707,7 @@ abmfP_obj_get_struct_obj(ABObj obj)
     }
 
     for (structObj = obj; 
-	 structObj != NULL && !abmfP_obj_is_struct_obj(structObj); 
+	 structObj != nullptr && !abmfP_obj_is_struct_obj(structObj); 
 	 structObj = abmfP_parent(structObj)
 	) ;
 
@@ -729,7 +729,7 @@ epilogue:
 ABObj
 abmfP_obj_get_substruct_obj(ABObj obj)
 {
-    ABObj	substructObj = NULL;
+    ABObj	substructObj = nullptr;
 
     if (mfobj_has_flags(obj, CGenFlagSubstructObjValid))
     {
@@ -739,14 +739,14 @@ abmfP_obj_get_substruct_obj(ABObj obj)
     if (obj_is_item(obj))
     {
 	ABObj	parent = abmfP_parent(obj);
-	if (parent != NULL)
+	if (parent != nullptr)
 	{
 	    substructObj = obj_get_root(parent);
 	}
-	if (   (substructObj != NULL) 
+	if (   (substructObj != nullptr) 
 	    && (!abmfP_obj_is_substruct_obj(substructObj)) )
 	{
-	    substructObj = NULL;
+	    substructObj = nullptr;
 	}
     }
 
@@ -767,13 +767,13 @@ abmfP_get_num_substruct_fields(ABObj obj)
     int		numFields = 0;
     ABObj	substruct = abmfP_obj_get_substruct_obj(obj);
     AB_TRAVERSAL	trav;
-    ABObj		subobj = NULL;
+    ABObj		subobj = nullptr;
 
     /*
      * Don't
      */
     for (trav_open(&trav, substruct, AB_TRAV_UI);
-	(subobj = trav_next(&trav)) != NULL; )
+	(subobj = trav_next(&trav)) != nullptr; )
     {
 	if (abmfP_obj_has_substruct_field(subobj))
 	{
@@ -795,7 +795,7 @@ abmfP_get_num_substruct_fields(ABObj obj)
 STRING          
 abmfP_convert_wclass_ptr_to_name(WidgetClass wclass)
 {
-    STRING	wclass_name= NULL;
+    STRING	wclass_name= nullptr;
 
     if (wclass == xmCascadeButtonWidgetClass)
     {
@@ -821,25 +821,25 @@ abmfP_convert_wclass_ptr_to_name(WidgetClass wclass)
 ABObj
 abmfP_get_root_window(ABObj project)
 {
-    static ABObj	root_window= NULL;
+    static ABObj	root_window= nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		window= NULL;
+    ABObj		window= nullptr;
 
-    if (root_window != NULL)
+    if (root_window != nullptr)
     {
 	return root_window;
     }
 
-    if (obj_get_root_window(project) == NULL)
+    if (obj_get_root_window(project) == nullptr)
     {
         for (trav_open(&trav, project, AB_TRAV_WINDOWS);
-	    (window= trav_next(&trav)) != NULL; )
+	    (window= trav_next(&trav)) != nullptr; )
         {
 	    if (!obj_is_base_win(window))
 	    {
 	        continue;
 	    }
-	    if (root_window == NULL)
+	    if (root_window == nullptr)
 	    {
 	        root_window = window;
 	    }
@@ -860,7 +860,7 @@ abmfP_get_root_window(ABObj project)
         trav_close(&trav);
     } /* root_window == NULL */
 
-    if (obj_get_root_window(project) != NULL)
+    if (obj_get_root_window(project) != nullptr)
     {
 	root_window= obj_get_root_window(project);
     }
@@ -887,7 +887,7 @@ abmfP_obj_has_create_proc(ABObj obj)
 	 * actually exist - the menu references do.  We write a create
 	 * proc for each menu reference.
 	 */
-	return (obj_is_ref(obj) && (abmfP_obj_get_struct_obj(obj) != NULL));
+	return (obj_is_ref(obj) && (abmfP_obj_get_struct_obj(obj) != nullptr));
     }
     if (obj_is_virtual(obj))
     {
@@ -909,10 +909,10 @@ abmfP_obj_has_create_proc(ABObj obj)
 STRING
 abmfP_obj_get_create_proc_instance_param_type(ABObj obj)
 {
-    ABObj	structObj = NULL;
+    ABObj	structObj = nullptr;
 
     structObj = abmfP_obj_get_struct_obj(obj);
-    if (structObj == NULL)
+    if (structObj == nullptr)
     {
 	return "Widget *";
     }
@@ -964,11 +964,11 @@ abmfP_obj_get_num_create_proc_return_widgets(ABObj obj)
 STRING
 abmfP_obj_get_create_proc_return_widget_name(ABObj obj, int which_param)
 {
-    STRING	paramName = NULL;
+    STRING	paramName = nullptr;
 
     if (which_param > 0)
     {
-	return NULL;
+	return nullptr;
     }
 
     if (abmfP_obj_is_substruct_obj(obj))
@@ -1025,9 +1025,9 @@ STRING
 abmfP_get_cp_submenu_param_name(ABObj obj, int whichParam)
 {
     ABObj	paramObj = abmfP_get_cp_submenu_param_obj(obj, whichParam);
-    if (paramObj == NULL)
+    if (paramObj == nullptr)
     {
-	return NULL;
+	return nullptr;
     }
     return abmfP_get_c_field_name(paramObj);
 }
@@ -1044,12 +1044,12 @@ ABObj
 abmfP_get_cp_submenu_param_obj(ABObj obj, int whichParam)
 {
     int			curParam = -1;
-    ABObj		menu = NULL;
-    ABObj		paramObj = NULL;
+    ABObj		menu = nullptr;
+    ABObj		paramObj = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		item = NULL;
+    ABObj		item = nullptr;
 
-    if ((menu = obj_get_menu(obj)) != NULL)
+    if ((menu = obj_get_menu(obj)) != nullptr)
     {
 	++curParam;
 	if (curParam == whichParam)
@@ -1060,9 +1060,9 @@ abmfP_get_cp_submenu_param_obj(ABObj obj, int whichParam)
     }
 
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-	(item = trav_next(&trav)) != NULL; )
+	(item = trav_next(&trav)) != nullptr; )
     {
-	if ((menu = obj_get_menu(item)) != NULL)
+	if ((menu = obj_get_menu(item)) != nullptr)
 	{
 	    ++curParam;
 	    if (curParam == whichParam)
@@ -1082,7 +1082,7 @@ epilogue:
 BOOL
 abmfP_obj_has_menu(ABObj obj)
 {
-    return (obj_get_menu(obj) != NULL);
+    return (obj_get_menu(obj) != nullptr);
 }
 
 
@@ -1094,7 +1094,7 @@ abmfP_obj_has_item_with_menu(ABObj obj)
     ABObj		item;
 
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-	(item = trav_next(&trav)) != NULL; )
+	(item = trav_next(&trav)) != nullptr; )
     {
 	if (abmfP_obj_has_menu(item))
 	{
@@ -1111,7 +1111,7 @@ abmfP_obj_has_item_with_menu(ABObj obj)
 BOOL
 abmfP_module_has_menu_struct(ABObj obj)
 {
-    static ABObj	lastModule = NULL;
+    static ABObj	lastModule = nullptr;
     static BOOL		lastModuleHadMenuStruct = FALSE;
     ABObj		module = obj_get_module(obj);
     BOOL		hasMenuStruct = FALSE;
@@ -1135,7 +1135,7 @@ abmfP_module_has_menu_struct(ABObj obj)
 BOOL
 abmfP_obj_has_glyph_label(ABObj obj)
 {
-    return (   (obj_get_label(obj) != NULL)
+    return (   (obj_get_label(obj) != nullptr)
 	    && (obj_get_label_type(obj) == AB_LABEL_GLYPH));
 }
 
@@ -1144,11 +1144,11 @@ BOOL
 abmfP_obj_has_item_with_glyph_label(ABObj obj)
 {
     AB_TRAVERSAL	trav;
-    ABObj		item = NULL;
+    ABObj		item = nullptr;
     BOOL		doesIt = FALSE;
 
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-	(item = trav_next(&trav)) != NULL; )
+	(item = trav_next(&trav)) != nullptr; )
     {
 	if (abmfP_obj_has_glyph_label(item))
 	{
@@ -1165,7 +1165,7 @@ abmfP_obj_has_item_with_glyph_label(ABObj obj)
 BOOL
 abmfP_obj_has_string_label(ABObj obj)
 {
-    return (   (obj_get_label(obj) != NULL)
+    return (   (obj_get_label(obj) != nullptr)
 	    && (obj_get_label_type(obj) == AB_LABEL_STRING));
 }
 
@@ -1174,11 +1174,11 @@ BOOL
 abmfP_obj_has_item_with_string_label(ABObj obj)
 {
     AB_TRAVERSAL	trav;
-    ABObj		item = NULL;
+    ABObj		item = nullptr;
     BOOL		doesIt = FALSE;
 
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-	(item = trav_next(&trav)) != NULL; )
+	(item = trav_next(&trav)) != nullptr; )
     {
 	if (abmfP_obj_has_string_label(item))
 	{
@@ -1414,13 +1414,13 @@ find_base_file_name(STRING path, int *startPtr, int *lenPtr)
 {
 #define start (*startPtr)
 #define len (*lenPtr)
-    char	*slashPtr = NULL;
-    char	*dotPtr = NULL;
+    char	*slashPtr = nullptr;
+    char	*dotPtr = nullptr;
     int		slashChar = -1;
     int		dotChar = -1;
 
     slashPtr = strrchr(path, '/');
-    if (slashPtr != NULL)
+    if (slashPtr != nullptr)
     {
 	/*
 	 * handle strings of the form subdir//x.ext
@@ -1435,13 +1435,13 @@ find_base_file_name(STRING path, int *startPtr, int *lenPtr)
     }
 
     start = 0;
-    if (slashPtr != NULL)
+    if (slashPtr != nullptr)
     {
 	start = ((int)(slashPtr - path)) + 1;
     }
 
     dotPtr = strrchr(&(path[start]), '.');
-    if (dotPtr != NULL)
+    if (dotPtr != nullptr)
     {
 	dotChar = *dotPtr;
 	*dotPtr = 0;
@@ -1452,11 +1452,11 @@ find_base_file_name(STRING path, int *startPtr, int *lenPtr)
     /*
      * Restore the string
      */
-    if (slashPtr != NULL)
+    if (slashPtr != nullptr)
     {
 	*slashPtr = (char)slashChar;
     }
-    if (dotPtr != NULL)
+    if (dotPtr != nullptr)
     {
 	*dotPtr = (char)dotChar;
     }
@@ -1486,7 +1486,7 @@ abmfP_proj_has_message(ABObj proj)
     }
 
     for (trav_open(&trav, proj, AB_TRAV_SALIENT_UI); 
-	((obj = trav_next(&trav)) != NULL) && !hasMsg; )
+	((obj = trav_next(&trav)) != nullptr) && !hasMsg; )
     {
 	if (obj_is_message(obj))
 	  hasMsg = TRUE;
@@ -1530,20 +1530,20 @@ ABObjList
 abmfP_find_refs_to(ABObj obj)
 {
     AB_TRAVERSAL  moduleTrav;
-    ABObjList     refList = NULL;
-    ABObj         refObj  = NULL;
+    ABObjList     refList = nullptr;
+    ABObj         refObj  = nullptr;
     
-    if (obj == NULL)
-	return NULL;
+    if (obj == nullptr)
+	return nullptr;
 
     refList = objlist_create();
     
     for (trav_open(&moduleTrav, obj_get_module(obj), AB_TRAV_UI);
-	 ((refObj = trav_next(&moduleTrav)) != NULL); )
+	 ((refObj = trav_next(&moduleTrav)) != nullptr); )
     {
 	if (obj_is_ref(refObj) && (refObj->ref_to == obj))
 	{
-	    objlist_add_obj(refList, refObj, NULL);
+	    objlist_add_obj(refList, refObj, nullptr);
 	}
     }
     trav_close(&moduleTrav);

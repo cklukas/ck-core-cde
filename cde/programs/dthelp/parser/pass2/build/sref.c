@@ -31,7 +31,7 @@
 #include "sref.h"
 #include "entdef.h"
 
-static M_WCHAR *wc_prefix = NULL;
+static M_WCHAR *wc_prefix = nullptr;
 
 /* Add an entity with the default name constructed by adding a suffix
    to the name of the short reference map in which it is invoked, and
@@ -90,10 +90,10 @@ else firstent = entity;
 lastent = entity;
 entity->type = M_GENERAL;
 entity->wheredef = FALSE;
-entity->content = NULL;
+entity->content = nullptr;
 entity->name = (M_WCHAR *) m_malloc(w_strlen(name) + 1, "entity name");
 entity->index = ++m_entcnt;
-entity->next = NULL;
+entity->next = nullptr;
 w_strcpy(entity->name, name);
 return(TRUE);
 }
@@ -119,7 +119,7 @@ new->map = mapcnt;
 new->mapname = (M_WCHAR *) m_malloc(w_strlen(p) + 1, "map name");
 w_strcpy(new->mapname, p);
 new->defined = define;
-new->nextptr = NULL;
+new->nextptr = nullptr;
 *nextmap = new;
 nextmap = &new->nextptr;
 return(TRUE);
@@ -172,8 +172,8 @@ else
     delim->srefcnt = ++sreflen;
     *nextsref = delim;
     nextsref = &delim->next;
-    delim->next = NULL;
-    delim->data = NULL;
+    delim->next = nullptr;
+    delim->data = nullptr;
     }
 
 /* Add the delimiter to this map and prepare for the associated

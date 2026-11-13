@@ -103,8 +103,8 @@ char *FileOpNames[] = {
 int (*syncConfirmCallback)(FileOp op,
                            char *sname, int stype,
                            char *tname, int ttype,
-                           char *link) = NULL;
-int (*syncErrorCallback)(FileOp op, char *fname, int errnum) = NULL;
+                           char *link) = nullptr;
+int (*syncErrorCallback)(FileOp op, char *fname, int errnum) = nullptr;
 
 
 static SyncParams *SP;
@@ -208,7 +208,7 @@ SortDir(DirEntry *dP, int (*cmp)(const void*, const void*))
     *linkPP = daP[i];
     linkPP = &(*linkPP)->next;
   }
-  *linkPP = NULL;
+  *linkPP = nullptr;
 
   /* free pointer array */
   if (daP != da)
@@ -299,7 +299,7 @@ GetDirEntry(char *fname, FileOp *op, int *rc)
 static int
 GetDir(char *dirname, PatternList *xl, PatternList *sl, DirEntry **listPP)
 {
-  DIR *dirP = NULL;                      /* open directory */
+  DIR *dirP = nullptr;                      /* open directory */
   struct dirent *entryP;          /* directory entry */
   DirEntry *deP, *firstP, **linkPP;
   char fname[1024], *fnP;
@@ -310,7 +310,7 @@ GetDir(char *dirname, PatternList *xl, PatternList *sl, DirEntry **listPP)
 
   /* open directory */
   dirP = opendir(dirname);
-  if (dirP == NULL) {
+  if (dirP == nullptr) {
     rc = errno;
     if (syncErrorCallback &&
         syncErrorCallback(op_opendir, dirname, rc) < 0)
@@ -326,11 +326,11 @@ GetDir(char *dirname, PatternList *xl, PatternList *sl, DirEntry **listPP)
   *fnP++ = '/';
 
   /* initialize linked list */
-  firstP = NULL;
+  firstP = nullptr;
   linkPP = &firstP;
 
   /* read the directory */
-  while ((entryP = readdir(dirP)) != NULL) {
+  while ((entryP = readdir(dirP)) != nullptr) {
     /* skip . and .. */
     if (strcmp(entryP->d_name, ".") == 0 || strcmp(entryP->d_name, "..") == 0)
       continue;
@@ -425,8 +425,8 @@ doUnlink(char *fname, DirEntry *fP, int confirm)
     if (rc < 0 && erase_rc)
       rc = ENOTEMPTY;
 
-    errorCallback = NULL;
-    progressCallback = NULL;
+    errorCallback = nullptr;
+    progressCallback = nullptr;
 
   } else
     rc = (unlink(fname) != 0)? errno: 0;
@@ -843,7 +843,7 @@ SyncDirRecur(char *sdir, char *tdir)
   /* read source and target directories */
   if ((rc = GetDir(sdir, SP->exclude, SP->skip, &sP)) != 0)
     return -1;
-  if ((rc = GetDir(tdir, NULL, SP->skip, &tP)) != 0) {
+  if ((rc = GetDir(tdir, nullptr, SP->skip, &tP)) != 0) {
     FreeDir(sP);
     return -1;
   }
@@ -859,9 +859,9 @@ SyncDirRecur(char *sdir, char *tdir)
   teP = tP;
   while (teP) {
     /* compare directory entries */
-    rc = (seP != NULL)? strcmp(seP->name, teP->name): 1;
+    rc = (seP != nullptr)? strcmp(seP->name, teP->name): 1;
 
-    if ((seP != NULL) && seP->exclude) {
+    if ((seP != nullptr) && seP->exclude) {
       /* skip excluded files */
       seP = seP->next;
 
@@ -935,8 +935,8 @@ SyncDirectory(SyncParams *p)
   int rc;
 
   /* the lower-level error and progress callbacks are not used */
-  errorCallback = NULL;
-  progressCallback = NULL;
+  errorCallback = nullptr;
+  progressCallback = nullptr;
 
   /* save pointer to params; copy source & target names */
   SP = p;
@@ -966,7 +966,7 @@ SyncDirectory(SyncParams *p)
     if (op == op_lstat && rc == ENOENT) {
       /* target does not yet exist; that's ok */
       FreeDir(tP);
-      tP = NULL;
+      tP = nullptr;
 
     } else {
       /* we'll try to procede anyway ... unless the error callback says no */

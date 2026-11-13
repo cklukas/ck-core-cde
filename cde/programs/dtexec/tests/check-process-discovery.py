@@ -104,6 +104,6 @@ with tempfile.TemporaryDirectory(prefix="dtexec-processes-", dir=os.environ["TMP
     c, binary = root / "discovery.c", root / "discovery"
     c.write_text(header + text[start:end] + main)
     subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
-                   ["-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
+                   ["-std=gnu23", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror",
                     "-fsanitize=address,undefined", "-g", str(c), "-o", str(binary)], check=True)
     subprocess.run([str(binary), str(root)], check=True)

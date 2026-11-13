@@ -97,7 +97,7 @@ objxm_tree_set_ui_args(
      * so we're going to skip the others to improve speed
      */
     for (trav_open(&trav, root, AB_TRAV_SALIENT);
-        (obj= trav_next(&trav)) != NULL; )
+        (obj= trav_next(&trav)) != nullptr; )
     {
 	if (!obj_has_flag(obj, CreateAttrsFlag))
             objxm_comp_set_ui_args(obj, ctype, replace);
@@ -124,7 +124,7 @@ objxm_tree_remove_ui_args(
      * so we're going to skip the others to improve speed
      */
     for (trav_open(&trav, root, AB_TRAV_SALIENT);
-        (obj= trav_next(&trav)) != NULL; )
+        (obj= trav_next(&trav)) != nullptr; )
     {
         objxm_obj_remove_all_ui_args(obj, ctype);
 	obj_clear_flag(obj, CreateAttrsFlag);
@@ -145,8 +145,8 @@ objxm_comp_set_ui_args(
     BOOL 	replace
 )
 {
-    ABObj	xy_obj = NULL, /* position object */
-	        s_obj = NULL; /* size object */
+    ABObj	xy_obj = nullptr, /* position object */
+	        s_obj = nullptr; /* size object */
     assert(obj_is_root(obj));
 
     /* projects, modules and composite-subobjs not allowed */
@@ -168,7 +168,7 @@ objxm_comp_set_ui_args(
     if (obj->y >= 0)
         objxm_obj_set_ui_arg(xy_obj, AB_ARG_INT, XmNy, obj->y); 
 
-    if (obj->width >= 0 && s_obj != NULL)
+    if (obj->width >= 0 && s_obj != nullptr)
         objxm_obj_set_ui_arg(s_obj, AB_ARG_INT, XmNwidth, (Dimension)obj->width);
 
     if (obj->height >= 0)
@@ -178,7 +178,7 @@ objxm_comp_set_ui_args(
      * the post-instantiate phase so that the correct widget-id gets associated
      * with the allocated colors in the Xt resource cache.
      */
-    if (objxm_get_widget(obj) != NULL)
+    if (objxm_get_widget(obj) != nullptr)
     	objxm_comp_set_color_args(obj, ctype, ObjxmBackground | ObjxmForeground);
 
     /* Only Set XmNsensitive if it is False */
@@ -231,7 +231,7 @@ objxm_tree_set_post_inst_args(
     ABObj        obj;
 
     for (trav_open(&trav, root, AB_TRAV_UI);
-        (obj= trav_next(&trav)) != NULL; )
+        (obj= trav_next(&trav)) != nullptr; )
     {
         objxm_obj_set_post_inst_args(obj, ctype);
     }
@@ -256,7 +256,7 @@ objxm_obj_set_post_inst_args(
         objxm_comp_set_color_args(obj, ctype, ObjxmBackground | ObjxmForeground);
     }
  
-    if (obj->attachments != NULL)
+    if (obj->attachments != nullptr)
         objxm_obj_set_attachment_args(obj, ctype);
 
     return 0;
@@ -270,7 +270,7 @@ objxm_get_arg(
 {
     int        num_args;
     int        i;
-    Arg                 *argptr = NULL;
+    Arg                 *argptr = nullptr;
 
     num_args = objxm_get_num_args(arglist);
 
@@ -320,7 +320,7 @@ objxm_set_widget_arg(
      */
     w_value = (ctype == OBJXM_CONFIG_CODEGEN?
                   (XtArgVal)(istr_create(w_obj? obj_get_name(w_obj) : "NULL")):
-                  (XtArgVal)(w_obj? w_obj->ui_handle : NULL));
+                  (XtArgVal)(w_obj? w_obj->ui_handle : nullptr));
 
     objxm_set_arg(p_arglist, AB_ARG_WIDGET, name, w_value);
 
@@ -344,7 +344,7 @@ objxm_set_arg(
 
     XtSetArg(newarg, name, (XtArgVal)value);
 
-    if ((oldarg = objxm_get_arg(*p_arglist, name)) != NULL)
+    if ((oldarg = objxm_get_arg(*p_arglist, name)) != nullptr)
     {
         /* replace existing arg */
         *oldarg = newarg;
@@ -373,7 +373,7 @@ objxm_set_arg_if_new(
 
     old_arg = objxm_get_arg(*p_arglist, name);
 
-    if (old_arg != NULL)
+    if (old_arg != nullptr)
     {
 	return 1;
     }
@@ -393,7 +393,7 @@ objxm_remove_all_args(
     int i;
 
     /* Free any allocated XmStrings... */
-    if (*p_arglist != NULL)
+    if (*p_arglist != nullptr)
     {
 	args     = *p_arglist;
 	num_args = objxm_get_num_args(args);
@@ -413,7 +413,7 @@ objxm_remove_all_args(
 	    }
 	}
 	XtFree((char *)*p_arglist);
-        *p_arglist = NULL;
+        *p_arglist = nullptr;
     }
 }
 
@@ -425,7 +425,7 @@ objxm_get_num_args(
     ArgList args = arglist;
     int     n = 0;
 
-    for ( ; (args != (ArgList)NULL) && (args->name != NULL);
+    for ( ; (args != (ArgList)NULL) && (args->name != nullptr);
              args++, n++)
         ;
 
@@ -445,7 +445,7 @@ objxm_remove_arg(
     ArgList   args;
     int       nargs;
 
-    if (*p_arglist == NULL)
+    if (*p_arglist == nullptr)
     {
         return 0;
     }
@@ -482,19 +482,19 @@ objxm_comp_set_attachment_args(
 )
 {
     AB_TRAVERSAL        trav;
-    static ABObj        comp_root = NULL;
-    ABObj               comp_sub = NULL;
+    static ABObj        comp_root = nullptr;
+    ABObj               comp_sub = nullptr;
  
     objxm_obj_set_attachment_args(obj, ctype);
  
-    if (obj->part_of == NULL) /* No SubObjs */
+    if (obj->part_of == nullptr) /* No SubObjs */
         return 0;
  
-    if (comp_root == NULL) /* Set Root */
+    if (comp_root == nullptr) /* Set Root */
         comp_root = obj;
     
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-        (comp_sub= trav_next(&trav)) != NULL; )
+        (comp_sub= trav_next(&trav)) != nullptr; )
     {
         if (comp_sub->part_of == comp_root)
             objxm_comp_set_attachment_args(comp_sub, ctype);
@@ -502,7 +502,7 @@ objxm_comp_set_attachment_args(
     trav_close(&trav);
  
     if (obj == comp_root)
-        comp_root = NULL; /* Reset */
+        comp_root = nullptr; /* Reset */
  
     return 0;
 
@@ -515,19 +515,19 @@ objxm_comp_set_color_args(
     unsigned int      flag
 )
 {
-    static ABObj 	rootObj = NULL;
+    static ABObj 	rootObj = nullptr;
     static XtArgVal	fgvalue;
     static XtArgVal	bgvalue;
     static BOOL		cgen_args;
     AB_TRAVERSAL 	trav;
-    Widget		widget = NULL;
+    Widget		widget = nullptr;
     Pixel		pixel;
     ABObj	 	subObj;
     int			status;
     char		name[256];
     int			iRet = 0;
 
-    if (rootObj == NULL) /* First time */
+    if (rootObj == nullptr) /* First time */
     {
 	rootObj = obj;
 	cgen_args = (ctype == OBJXM_CONFIG_CODEGEN? TRUE : FALSE);
@@ -588,7 +588,7 @@ Object's Foreground will default to black."),
         }
 	if (flag == ObjxmNone) /* No Colors to Set */
   	{
-	    rootObj = NULL;
+	    rootObj = nullptr;
 	    return iRet;
 	}
     }
@@ -618,7 +618,7 @@ Object's Foreground will default to black."),
      * set args recursively for any "sub-objs" of this obj
      */
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-         (subObj = trav_next(&trav)) != NULL; )
+         (subObj = trav_next(&trav)) != nullptr; )
     {
         if (subObj->part_of == rootObj)  
             objxm_comp_set_color_args(subObj, ctype, flag);
@@ -628,7 +628,7 @@ Object's Foreground will default to black."),
     /* If we've recursed back up to the root obj, then we're done.
      */
     if (obj == rootObj)
-        rootObj = NULL;
+        rootObj = nullptr;
 
     return iRet;
 }
@@ -646,7 +646,7 @@ objxm_comp_set_default_button_args(
 
     defaultb = obj_get_default_act_button(obj);
 
-    if (defaultb == NULL) /* No Default Button specified */
+    if (defaultb == nullptr) /* No Default Button specified */
     {
 	thickness = 0;
 	if (ctype == OBJXM_CONFIG_CODEGEN)
@@ -660,10 +660,10 @@ objxm_comp_set_default_button_args(
     button_panel = objxm_comp_custdlg_get_area(obj, AB_CONT_BUTTON_PANEL);
 
     /* If Dialog has a Button Panel, set all it's button DefaultShadowThickness */
-    if (button_panel != NULL)
+    if (button_panel != nullptr)
     {
     	for (trav_open(&trav, button_panel, AB_TRAV_SALIENT_UI);
-        	(child= trav_next(&trav)) != NULL; )
+        	(child= trav_next(&trav)) != nullptr; )
     	{
 	    if (obj_is_button(child))
 	    {
@@ -690,7 +690,7 @@ objxm_comp_set_label_args(
     int		status = OK;
     BOOL	cgen_args;
 
-    if (subObj == NULL)
+    if (subObj == nullptr)
 	return 0;
 
     cgen_args = (ctype == OBJXM_CONFIG_CODEGEN? TRUE : FALSE);
@@ -852,7 +852,7 @@ objxm_comp_set_icon_args(
 		obj_is_initially_iconic(obj)? IconicState : NormalState);
 
     /* Setup Icon Pixmap */
-    if ((icon = obj_get_icon(obj)) != NULL)
+    if ((icon = obj_get_icon(obj)) != nullptr)
     {
         if (ctype != OBJXM_CONFIG_CODEGEN)
         {
@@ -867,7 +867,7 @@ objxm_comp_set_icon_args(
     else if (ctype == OBJXM_CONFIG_BUILD)
 	objxm_obj_set_ui_arg(shobj, AB_ARG_PIXMAP, XmNiconPixmap, NULL);
 
-    if ((mask = obj_get_icon_mask(obj)) != NULL)
+    if ((mask = obj_get_icon_mask(obj)) != nullptr)
     {
         if (ctype != OBJXM_CONFIG_CODEGEN)
         {
@@ -883,7 +883,7 @@ objxm_comp_set_icon_args(
         objxm_obj_set_ui_arg(shobj, AB_ARG_PIXMAP, XmNiconMask, NULL); 
 
     /* Setup Icon Label */
-    if ((icon_label = obj_get_icon_label(obj)) != NULL)
+    if ((icon_label = obj_get_icon_label(obj)) != nullptr)
         objxm_obj_set_ui_arg(shobj, AB_ARG_STRING, XmNiconName, icon_label);
 
     obj_set_flag(shobj, AttrChangedFlag);
@@ -938,7 +938,7 @@ objxm_comp_set_border_args(
     ABObj	   b_obj;
     int		   bstyle;
 
-    if ((b_obj = objxm_comp_get_subobj(obj, AB_CFG_BORDER_OBJ)) == NULL)
+    if ((b_obj = objxm_comp_get_subobj(obj, AB_CFG_BORDER_OBJ)) == nullptr)
 	return OK;
 
     switch(obj_get_border_frame(obj))
@@ -977,7 +977,7 @@ objxm_comp_set_msgbox_button_arg(
     ABObj       msgbox_obj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ);
     BOOL        cgen_args;
     Widget	msgbox, button;
-    BOOL     	(*func)(ABObj obj)= NULL;
+    BOOL     	(*func)(ABObj obj)= nullptr;
 
     msgbox = objxm_get_widget(msgbox_obj);
     switch(which_btn)
@@ -1059,10 +1059,10 @@ objxm_obj_set_attachment_args(
 {
     ABObj         parent_obj;
 
-    if (obj == NULL)
+    if (obj == nullptr)
         return -1;
 
-    if (obj->attachments != NULL)
+    if (obj->attachments != nullptr)
     {
         parent_obj = obj_get_parent(obj);
 
@@ -1184,7 +1184,7 @@ objxm_obj_get_default_motif_class(
     ABObj obj
 )
 {
-    STRING    cn= NULL;
+    STRING    cn= nullptr;
     AB_BUTTON_TYPE btype;
 
     switch (obj->type)
@@ -1229,7 +1229,7 @@ objxm_obj_get_default_motif_class(
             switch (obj->info.item.type)
             {
             case AB_ITEM_FOR_MENU:
-                if (obj_get_label(obj) == NULL)
+                if (obj_get_label(obj) == nullptr)
                 {
                     cn= _xmSeparator;
                 }
@@ -1274,7 +1274,7 @@ objxm_obj_get_default_motif_class(
             cn= _dtSpinBox;
             break;
         case AB_TYPE_LAYERS:
-            cn= NULL;
+            cn= nullptr;
             break;
         case AB_TYPE_TERM_PANE:
             cn= _dtTerm;
@@ -1324,9 +1324,9 @@ objxm_dump_arglist_indented(
 {
     int		space_count= 0;
     int		i= 0;
-    String	valstr= NULL;
+    String	valstr= nullptr;
     AB_ARG_TYPE	arg_type= AB_ARG_UNDEF;
-    Arg		*arg= NULL;
+    Arg		*arg= nullptr;
     BOOL	cgen_args = FALSE;
 
     if (obj_has_flag(obj, XmCfgForCodeFlag))
@@ -1444,7 +1444,7 @@ objxm_dump_widget_geometry(
     char	*offset_str[] = {"XmNtopOffset",        "XmNbottomOffset",
 				 "XmNleftOffset",       "XmNrightOffset"};
 
-    if (w == NULL)
+    if (w == nullptr)
 	return -1;
 
     parent_is_form = XtIsSubclass(XtParent(w), xmFormWidgetClass);
@@ -1472,7 +1472,7 @@ objxm_dump_widget_geometry(
 		XmNbottomOffset,	&(offset[A_BOTTOM]),
 		XmNleftOffset,		&(offset[A_LEFT]),
 		XmNrightOffset,		&(offset[A_RIGHT]),
-		NULL);
+		nullptr);
 
     }
     else
@@ -1482,7 +1482,7 @@ objxm_dump_widget_geometry(
 		XmNy,			&y,
 		XmNwidth,		&width,
 		XmNheight,		&height,
-		NULL);
+		nullptr);
     }
 
     util_dprintf(0,"Widget %s is %s\n", 
@@ -1573,7 +1573,7 @@ objxmP_merge_arglists(
 )
 {
 	ArgList result, args;
-	Arg     nullarg = {NULL, 0};
+	Arg     nullarg = {nullptr, 0};
 
 	result = (ArgList)XtMalloc((unsigned) (num_args1 + num_args2 + 1) *
 				sizeof(Arg));

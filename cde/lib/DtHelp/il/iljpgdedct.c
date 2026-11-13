@@ -113,7 +113,7 @@ iljpgError _iljpgDeDCTInit (
 
         /*  Build a "rev scale" table for each QTable; store into private */
     for (i = 0; i < 4; i++)
-        pPriv->DCTRevScaleTables[i] = (float *)NULL;
+        pPriv->DCTRevScaleTables[i] = (float *)nullptr;
 
     for (i = 0; i < 4; i++) {
         if (pData->QTables[i]) {

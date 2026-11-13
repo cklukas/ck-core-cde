@@ -112,10 +112,10 @@ PalItemInfo glyph_palitem_rec = {
 
     /* type             */  AB_TYPE_GLYPH,
     /* name             */  "Glyph",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  glyph_initialize,
     /* is_a_test        */  obj_is_glyph,
     /* prop_initialize  */  glyph_prop_init,
@@ -196,14 +196,14 @@ glyph_prop_init(
             		xmFormWidgetClass,
             		parent,
             		XmNresizePolicy, XmRESIZE_ANY,
-            		NULL);
+            		nullptr);
 
     /* Set record of changebars currently "ON" to 0 */
     prop_init_change_count(prop_pane);
 
     XtVaGetValues(prop_pane,
 			XmNbackground,	&parent_bg,
-			NULL);
+			nullptr);
 
     /********************************************************************
      *  Create Name Setting					   	*
@@ -221,7 +221,7 @@ glyph_prop_init(
                         XmNrightPosition,       prop_setting_end, 
 			XmNtopAttachment,	XmATTACH_FORM,
 			XmNtopOffset,		prop_setting_offset,
-			NULL);
+			nullptr);
     setting = name_field[type];
 
     xmlabel = XmStringCreateLocalized("Object Name:");
@@ -238,7 +238,7 @@ glyph_prop_init(
                         XmNtopWidget,         	setting,  
 			XmNbottomAttachment,	XmATTACH_OPPOSITE_WIDGET,
 			XmNbottomWidget,	setting,
-                        NULL);
+                        nullptr);
     XmStringFree(xmlabel);
 
     name_cb[type] = XtVaCreateManagedWidget("changebar",
@@ -258,9 +258,9 @@ glyph_prop_init(
                         XmNbottomAttachment,    XmATTACH_OPPOSITE_WIDGET,
                         XmNbottomWidget,        setting,
                         XmNuserData,            PROP_CB_OFF,
-                        NULL);
+                        nullptr);
     XtAddCallback(name_field[type], XmNvalueChangedCallback, prop_field_chgCB, name_cb[type]); 
-    XtVaSetValues(name_field[type], XmNuserData, PROP_EDIT, NULL);
+    XtVaSetValues(name_field[type], XmNuserData, PROP_EDIT, nullptr);
 
 
     /******************************************************************** 
@@ -280,7 +280,7 @@ glyph_prop_init(
                         XmNtopOffset,           prop_setting_offset,
 			XmNrightAttachment,	XmATTACH_POSITION,
 			XmNrightPosition,	prop_setting_end,
-                        NULL);
+                        nullptr);
 
     setting = colorf_field[type];
     xmlabel = XmStringCreateLocalized("Color Filename:");
@@ -297,7 +297,7 @@ glyph_prop_init(
                         XmNtopWidget,           setting,
                         XmNbottomAttachment,    XmATTACH_OPPOSITE_WIDGET,
                         XmNbottomWidget,        setting,
-                        NULL);
+                        nullptr);
     XmStringFree(xmlabel); 
 
     colorf_cb[type] = XtVaCreateManagedWidget("changebar",
@@ -317,9 +317,9 @@ glyph_prop_init(
                         XmNbottomAttachment,    XmATTACH_OPPOSITE_WIDGET,
                         XmNbottomWidget,        setting,
                         XmNuserData,            PROP_CB_OFF,
-                        NULL);
+                        nullptr);
     XtAddCallback(colorf_field[type], XmNvalueChangedCallback, prop_field_chgCB, colorf_cb[type]);  
-    XtVaSetValues(colorf_field[type], XmNuserData,      PROP_EDIT, NULL); 
+    XtVaSetValues(colorf_field[type], XmNuserData,      PROP_EDIT, nullptr); 
 
 
     /********************************************************************
@@ -339,7 +339,7 @@ glyph_prop_init(
                         XmNtopOffset,           prop_setting_offset,
                         XmNrightAttachment,     XmATTACH_POSITION,
                         XmNrightPosition,       prop_setting_end,
-                        NULL);
+                        nullptr);
 
     setting = monof_field[type];
     xmlabel = XmStringCreateLocalized("Color Filename:");
@@ -356,7 +356,7 @@ glyph_prop_init(
                         XmNtopWidget,           setting,
                         XmNbottomAttachment,    XmATTACH_OPPOSITE_WIDGET,
                         XmNbottomWidget,        setting,
-                        NULL);
+                        nullptr);
     XmStringFree(xmlabel);
 
     monof_cb[type] = XtVaCreateManagedWidget("changebar",
@@ -376,10 +376,10 @@ glyph_prop_init(
                         XmNbottomAttachment,    XmATTACH_OPPOSITE_WIDGET,
                         XmNbottomWidget,        setting,
                         XmNuserData,            PROP_CB_OFF,
-                        NULL);
+                        nullptr);
     XtAddCallback(monof_field[type], XmNvalueChangedCallback, prop_field_chgCB,
 			monof_cb[type]);
-    XtVaSetValues(monof_field[type], XmNuserData,      PROP_EDIT, NULL);
+    XtVaSetValues(monof_field[type], XmNuserData,      PROP_EDIT, nullptr);
 
 
 
@@ -587,11 +587,11 @@ glyph_prop_init(
      * Prop Init done.
      */
 
-    current_obj[type] = NULL;
+    current_obj[type] = nullptr;
     if (type == AB_PROP_REVOLVING)
         XtVaSetValues(parent, 
 			XmNuserData, current_obj[type], 
-			NULL);
+			nullptr);
 
     return(prop_pane);
 
@@ -629,7 +629,7 @@ glyph_prop_clear(
     AB_PROP_TYPE type
 )
 {
-    if (current_obj[type] == NULL)
+    if (current_obj[type] == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -654,11 +654,11 @@ glyph_prop_clear(
 */
     turnoff_changebars(type);
 
-    current_obj[type] = NULL;
+    current_obj[type] = nullptr;
     if (type == AB_PROP_REVOLVING)
 	XtVaSetValues(ab_glyph_palitem->rev_prop_frame, 
 			XmNuserData, current_obj[type], 
-			NULL);
+			nullptr);
 
     return OK;
 
@@ -672,9 +672,9 @@ glyph_prop_load(
 {
     BOOL	   reset = FALSE;
 
-    if (obj == NULL) 
+    if (obj == nullptr) 
     {
-	if (current_obj[type] != NULL) 
+	if (current_obj[type] != nullptr) 
 	{
 	    /* Reset props for current object */
 	    obj = current_obj[type];
@@ -692,7 +692,7 @@ glyph_prop_load(
 	if (type == AB_PROP_REVOLVING)
 	    XtVaSetValues(ab_glyph_palitem->rev_prop_frame, 
 			XmNuserData, current_obj[type], 
-			NULL);
+			nullptr);
     }
 
     /* Load Name */
@@ -733,7 +733,7 @@ glyph_prop_apply(
 {
     STRING		value;
 
-    if (current_obj[type] == NULL)
+    if (current_obj[type] == nullptr)
 	return ERROR;
 
     if (!verify_props(type))

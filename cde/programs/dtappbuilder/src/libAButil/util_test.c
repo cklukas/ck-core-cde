@@ -129,8 +129,8 @@ test_cvt_path_to_relative(void)
     cvt_it( "/net/fuggit/local/home/dunn", "/local/home/dunn/tmp");
     cvt_it("///usr//dt", "/usr///dt/include");
     cvt_it("/usr///dt/include", "///usr//dt");
-    cvt_it("TEST", NULL);
-    cvt_it("../libAButil/TEST", NULL);
+    cvt_it("TEST", nullptr);
+    cvt_it("../libAButil/TEST", nullptr);
     cvt_it("/home/marth", "/home/marth");
     rmdir("TEST");
     return 0;
@@ -139,13 +139,13 @@ test_cvt_path_to_relative(void)
 static int
 cvt_it(STRING path, STRING from)
 {
-    STRING	s1= NULL;
-    STRING	s2= NULL;
-    if (path != NULL)
+    STRING	s1= nullptr;
+    STRING	s2= nullptr;
+    if (path != nullptr)
     {
         s1= strdup(path);
     }
-    if (from != NULL)
+    if (from != nullptr)
     {
         s2= strdup(from);
     }

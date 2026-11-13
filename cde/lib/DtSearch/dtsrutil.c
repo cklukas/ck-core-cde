@@ -117,15 +117,15 @@ void            print_dittolist (DtSrResult * dittolist, char *prefix)
     char            datebuf[48];
     int             maxcount = 10;
 
-    if (prefix == NULL)
+    if (prefix == nullptr)
 	prefix = "HITLIST";
-    if (dittolist == NULL) {
+    if (dittolist == nullptr) {
 	fprintf (aa_stderr, "%s Dittolist is empty.\n", prefix);
 	return;
     }
     fprintf (aa_stderr, "%s First %d hits on dittolist at %p:\n",
 	prefix, maxcount, (void *) dittolist);
-    for (dit = dittolist; dit != NULL && maxcount-- > 0; dit = dit->link) {
+    for (dit = dittolist; dit != nullptr && maxcount-- > 0; dit = dit->link) {
 	if (dit->objdate == 0)
 	    strcpy (datebuf, "0");
 	else
@@ -158,7 +158,7 @@ void            print_dittolist (DtSrResult * dittolist, char *prefix)
  */
 char           *get_hitlist_text (int maxlen)
 {
-    static char    *text = NULL;
+    static char    *text = nullptr;
     int             sofar;
     char           *src, *targ, *eol;
     DtSrResult     *dit;
@@ -169,24 +169,24 @@ char           *get_hitlist_text (int maxlen)
 	sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_misc, 96,
 		"%s Hitlist is empty."), PROGNAME"96");
 	DtSearchAddMessage (sprintbuf);
-	return NULL;
+	return nullptr;
     }
     if (maxlen > 0 && maxlen < DtSrMAX_DB_KEYSIZE + 7) {
 	sprintf (sprintbuf, PROGNAME "97 maxlen = %d is too small.", maxlen);
 	DtSearchAddMessage (sprintbuf);
-	return NULL;
+	return nullptr;
     }
 
 /* Allocate enough memory for each item in ditto list */
     mallocsz = usrblk.dittocount *
 	(usrblk.abstrbufsz + DtSrMAX_DB_KEYSIZE + 80L);
-    if (text != NULL)
+    if (text != nullptr)
 	free (text);
-    text = austext_malloc (mallocsz, PROGNAME "103", NULL);
+    text = austext_malloc (mallocsz, PROGNAME "103", nullptr);
 
 /* Loop thru ditto list, creating text out of hitlist */
     targ = text;
-    for (dit = usrblk.dittolist; dit != NULL; dit = dit->link) {
+    for (dit = usrblk.dittolist; dit != nullptr; dit = dit->link) {
 	if (maxlen == 0) {
 	    sprintf (targ, "%5d %-*s %s\n%n",
 		dit->proximity,
@@ -275,9 +275,9 @@ void	print_usrblk_record (char *prefix)
 void            clear_usrblk_record (void)
 {
     usrblk.clearlen = 0;
-    if (usrblk.cleartext != NULL) {
+    if (usrblk.cleartext != nullptr) {
 	free (usrblk.cleartext);
-	usrblk.cleartext = NULL;
+	usrblk.cleartext = nullptr;
     }
     free_llist (&usrblk.notes);
     usrblk.objrec.or_objkey[0] = '\0';
@@ -298,9 +298,9 @@ void            clear_usrblk_record (void)
 void            clear_hitwords (void)
 {
     usrblk.hitwcount = 0;
-    if (usrblk.hitwords != NULL) {
+    if (usrblk.hitwords != nullptr) {
 	free (usrblk.hitwords);
-	usrblk.hitwords = NULL;
+	usrblk.hitwords = nullptr;
     }
     return;
 }  /* clear_hitwords() */

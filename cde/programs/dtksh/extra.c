@@ -62,7 +62,7 @@ env_get(
 	np = nv_search(var,sh.var_tree,0);
 	if (np && (val = nv_getval(np)))
 		return(val);
-	return(NULL);
+	return(nullptr);
 }
 
 
@@ -107,9 +107,9 @@ printerr(
         char *msg1,
         char *msg2 )
 {
-	if (msg1 == NULL)
+	if (msg1 == nullptr)
 		msg1 = "";
-	if (msg2 == NULL)
+	if (msg2 == nullptr)
 		msg2 = "";
         if (cmd && (strlen(cmd) > 0))
 	   printf( "%s: %s %s\n", cmd, msg1, msg2);
@@ -131,21 +131,21 @@ printerrf(
         char *arg7 )
 {
 	char buf[2048];
-	if (arg0 == NULL)
+	if (arg0 == nullptr)
 		arg0 = "";
-	if (arg1 == NULL)
+	if (arg1 == nullptr)
 		arg1 = "";
-	if (arg2 == NULL)
+	if (arg2 == nullptr)
 		arg2 = "";
-	if (arg3 == NULL)
+	if (arg3 == nullptr)
 		arg3 = "";
-	if (arg4 == NULL)
+	if (arg4 == nullptr)
 		arg4 = "";
-	if (arg5 == NULL)
+	if (arg5 == nullptr)
 		arg5 = "";
-	if (arg6 == NULL)
+	if (arg6 == nullptr)
 		arg6 = "";
-	if (arg7 == NULL)
+	if (arg7 == nullptr)
 		arg7 = "";
 
 	sprintf(buf, fmt, arg0, arg1, arg2, arg3,arg4, arg5, arg6, arg7);

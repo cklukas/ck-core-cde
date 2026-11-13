@@ -76,17 +76,17 @@ static int exact(const char *name,const void *bytes,size_t size)
     fixture(close(fd)==0); return result;
 }
 static int absent(const char *name) { struct stat st; errno=0; return lstat(name,&st)<0 && errno==ENOENT; }
-static void unreachable(void) { fputs("Unexpected directory/UI branch\n",stderr); abort(); }
+static void fixture_unreachable(void) { fputs("Unexpected directory/UI branch\n",stderr); abort(); }
 static int CheckAccess(const char *path,int flags) { return access(path,flags); }
-static int DirectoryBusy(char *path) { (void)path; unreachable(); return 0; }
+static int DirectoryBusy(char *path) { (void)path; fixture_unreachable(); return 0; }
 static Boolean CopyDir(Widget w,int mode,char *from,char *to,Boolean container,struct stat *st,
                        FileOperationErrorProc handler,Boolean busy,int type)
-{ (void)w;(void)mode;(void)from;(void)to;(void)container;(void)st;(void)handler;(void)busy;(void)type;unreachable();return False; }
+{ (void)w;(void)mode;(void)from;(void)to;(void)container;(void)st;(void)handler;(void)busy;(void)type;fixture_unreachable();return False; }
 static Boolean MoveDir(Widget w,char *from,char *to,Boolean container,struct stat *st,
                        FileOperationErrorProc handler,int type)
-{ (void)w;(void)from;(void)to;(void)container;(void)st;(void)handler;(void)type;unreachable();return False; }
+{ (void)w;(void)from;(void)to;(void)container;(void)st;(void)handler;(void)type;fixture_unreachable();return False; }
 static int RunFileCommand(char *cmd,char *a,char *b,char *c)
-{ (void)cmd;(void)a;(void)b;(void)c;unreachable();return -1; }
+{ (void)cmd;(void)a;(void)b;(void)c;fixture_unreachable();return -1; }
 #ifdef TRANSFER_INCLUDE_WORKERS
 static void fsErase(char *path,int *result,int force)
 { (void)force;*result=unlink(path)==0?0:errno; }
@@ -95,8 +95,8 @@ static void DtLastChar(char *text,char **last,int *length)
 { *last=text+strlen(text)-1;*length=1; }
 static char *_DtFollowLink(char *text) { return text; } /* Regular-file fixtures only. */
 static char *DName(char *text) { char *p=strrchr(text,'/'); return p?p+1:text; }
-static char *_DtPName(char *text) { (void)text; unreachable();return NULL; }
-static char *_DtResolveAppManPath(char *text,char *app) { (void)app;unreachable();return text; }
+static char *_DtPName(char *text) { (void)text; fixture_unreachable();return nullptr; }
+static char *_DtResolveAppManPath(char *text,char *app) { (void)app;fixture_unreachable();return text; }
 static void DtEliminateDots(char *path) { (void)path; } /* Adapter inputs are canonical private paths. */
 /* Deterministic name-plumbing only; the production Same branch still owns
  * dispatch, transfer, completion and allocation lifetimes. */
@@ -109,7 +109,7 @@ static void generate_NewPath(char *a,char *b)
 static void split_path(char *a,char *b,char *c)
 {
     fixture(!strcmp(case_name,"worker-normal-same-copy"));
-    char *slash=strrchr(a,'/');fixture(slash!=NULL);
+    char *slash=strrchr(a,'/');fixture(slash!=nullptr);
     size_t length=(size_t)(slash-a);memcpy(b,a,length);b[length]=0;
     strcpy(c,slash+1);++same_path_splits;
 }
@@ -126,11 +126,11 @@ static char *ResolveLocalPathName(char *host,char *directory,char *file,char *lo
     if ((!file && resolve_target_error) ||
         (file && resolve_first_error && !strcmp(file,"first")) ||
         (file && resolve_collision_error && !strcmp(file,"first") && ++resolve_first_calls==2)) {
-        *status=1;return NULL;
+        *status=1;return nullptr;
     }
     *status=TT_OK;
     size_t n=strlen(directory)+(file?strlen(file)+1:0)+1;
-    char *path=malloc(n);fixture(path!=NULL);
+    char *path=malloc(n);fixture(path!=nullptr);
     if (file) snprintf(path,n,"%s/%s",directory,file); else strcpy(path,directory);
     return path;
 }
@@ -225,9 +225,9 @@ static void copy_case(void)
     write_error=strstr(case_name,"write-error") || strstr(case_name,"first-error");
     close_error=strstr(case_name,"close-target")?1:strstr(case_name,"close-source")?2:
         strstr(case_name,"first-error")?3:0;
-    target_collision=strstr(case_name,"collision")!=NULL;
-    Boolean result=FileManip(NULL,move?MOVE_FILE:COPY_FILE,"./source","./target",False,
-                            strstr(case_name,"null-handler")?NULL:Error,False,NOT_DESKTOP);
+    target_collision=strstr(case_name,"collision")!=nullptr;
+    Boolean result=FileManip(nullptr,move?MOVE_FILE:COPY_FILE,"./source","./target",False,
+                            strstr(case_name,"null-handler")?nullptr:Error,False,NOT_DESKTOP);
     int success=!strcmp(case_name,"copy-success") || !strcmp(case_name,"move-success") ||
         strstr(case_name,"short") || strstr(case_name,"write-eintr") || strstr(case_name,"read-eintr");
     CHECK(!!result==!!success);
@@ -237,7 +237,7 @@ static void copy_case(void)
     } else {
         CHECK(exact("./source",payload,sizeof(payload)));
         if (strstr(case_name,"collision")) CHECK(exact("./target","other owner",11));
-        if (strstr(case_name,"first-error")) CHECK(strstr(message,strerror(EIO))!=NULL);
+        if (strstr(case_name,"first-error")) CHECK(strstr(message,strerror(EIO))!=nullptr);
     }
     CHECK(source_closes==1);
     CHECK(target_closes==(strstr(case_name,"collision")?0:1));
@@ -310,15 +310,15 @@ static void buffer_case(void)
 {
     int channel[2];fixture(pipe(channel)==0);
     int size=(int)sizeof(payload);void *buffer=payload;
-    int occupied=strstr(case_name,"occupied")!=NULL,symlink_case=strstr(case_name,"symlink")!=NULL;
+    int occupied=strstr(case_name,"occupied")!=nullptr,symlink_case=strstr(case_name,"symlink")!=nullptr;
     if (occupied) put("./target","existing",8);
     if (symlink_case) { put("./victim","keep victim",11);fixture(symlink("victim","./target")==0); }
     if (strstr(case_name,"negative")) size=-1;
-    if (strstr(case_name,"null-positive")) buffer=NULL;
-    if (strstr(case_name,"empty")) { buffer=NULL;size=0; }
+    if (strstr(case_name,"null-positive")) buffer=nullptr;
+    if (strstr(case_name,"empty")) { buffer=nullptr;size=0; }
     write_error=strstr(case_name,"write-error") || strstr(case_name,"first-error");
     close_error=strstr(case_name,"close-error")?1:strstr(case_name,"first-error")?3:0;
-    cleanup_error=strstr(case_name,"cleanup-error")!=NULL;
+    cleanup_error=strstr(case_name,"cleanup-error")!=nullptr;
     if (cleanup_error) write_error=1;
     Boolean result=CreateFileFromBuffer(channel[1],".","./target",buffer,size);
     fixture(close(channel[1])==0);
@@ -349,7 +349,7 @@ static void buffer_case(void)
             CHECK(length>0 && offset+(size_t)length<=bytes);
             if (length>0 && offset+(size_t)length<=bytes) {
                 char text[4096];size_t n=(size_t)length<sizeof(text)-1?(size_t)length:sizeof(text)-1;
-                memcpy(text,wire+offset,n);text[n]=0;CHECK(strstr(text,strerror(EIO))!=NULL);
+                memcpy(text,wire+offset,n);text[n]=0;CHECK(strstr(text,strerror(EIO))!=nullptr);
             }
         } else CHECK(0);
     }
@@ -360,7 +360,7 @@ static void pipe_case(void)
     if (!strcmp(case_name,"pipe-read-invalid")) {
         char byte;
         errno=0;CHECK(PipeRead(-1,&byte,-1)==-1 && errno==EINVAL);
-        errno=0;CHECK(PipeRead(-1,NULL,1)==-1 && errno==EINVAL);
+        errno=0;CHECK(PipeRead(-1,nullptr,1)==-1 && errno==EINVAL);
         return;
     }
     fixture(pipe(channel)==0);
@@ -369,7 +369,7 @@ static void pipe_case(void)
         const int result=-7;const long timestamp=123456;
         CHECK(FileOpWriteTaggedInt(channel[1],first,result)==0);
         CHECK(FileOpWriteTaggedLong(channel[1],second,timestamp)==0);
-        CHECK(PipeWriteErrmsg(channel[1],-1,"message",NULL)==0);
+        CHECK(PipeWriteErrmsg(channel[1],-1,"message",nullptr)==0);
         fixture(close(channel[1])==0);
         unsigned char wire[128];size_t bytes=drain(channel[0],wire,sizeof(wire)),at=0;
         short tag;int encoded_result;long encoded_time;
@@ -386,7 +386,7 @@ static void pipe_case(void)
         CHECK(FileOpWriteTag(channel[1],PIPEMSG_DONE)==-1 && errno==EPIPE);
         errno=0;CHECK(FileOpWriteTaggedInt(channel[1],PIPEMSG_DONE,0)==-1 && errno==EPIPE);
         errno=0;CHECK(FileOpWriteTaggedLong(channel[1],PIPEMSG_TARGET_TIME,0)==-1 && errno==EPIPE);
-        errno=0;CHECK(PipeWriteErrmsg(channel[1],-1,"message",NULL)==-1 && errno==EPIPE);
+        errno=0;CHECK(PipeWriteErrmsg(channel[1],-1,"message",nullptr)==-1 && errno==EPIPE);
         fixture(close(channel[1])==0);return;
     } else if (!strcmp(case_name,"pipe-modify-unresolved-source")) {
         DirUpdate update;memset(&update,0,sizeof(update));
@@ -417,7 +417,7 @@ static void pipe_case(void)
         if (!strcmp(case_name,"trash-results-negative")) {
             errno=0;CHECK(TrashReadResults(channel[0],decoded,-1)==-1 && errno==EINVAL);
         } else if (!strcmp(case_name,"trash-results-null")) {
-            errno=0;CHECK(TrashReadResults(channel[0],NULL,1)==-1 && errno==EINVAL);
+            errno=0;CHECK(TrashReadResults(channel[0],nullptr,1)==-1 && errno==EINVAL);
         } else if (!strcmp(case_name,"trash-results-oversize")) {
             errno=0;CHECK(TrashReadResults(channel[0],decoded,INT_MAX)==-1 && errno==EINVAL);
         } else {
@@ -433,26 +433,26 @@ static void pipe_case(void)
         short length=0;char *value=(char *)1;
         fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
         fixture(close(channel[1])==0);
-        CHECK(PipeReadStringField(channel[0],&value)==0 && value==NULL);
+        CHECK(PipeReadStringField(channel[0],&value)==0 && value==nullptr);
     } else if (!strcmp(case_name,"pipe-string-field-truncated")) {
         short length=3;char *value=(char *)1;
         fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
         fixture(write(channel[1],"x",1)==1);fixture(close(channel[1])==0);
-        CHECK(PipeReadStringField(channel[0],&value)==-1 && value==NULL);
+        CHECK(PipeReadStringField(channel[0],&value)==-1 && value==nullptr);
     } else if (!strcmp(case_name,"pipe-string-negative")) {
         short length=-1;fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
         fixture(close(channel[1])==0);errno=0;
-        CHECK(PipeReadString(channel[0])==NULL && errno==EPROTO);
+        CHECK(PipeReadString(channel[0])==nullptr && errno==EPROTO);
     } else if (!strcmp(case_name,"pipe-string-truncated")) {
         short length=5;fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
         fixture(write(channel[1],"xy",2)==2);fixture(close(channel[1])==0);
-        CHECK(PipeReadString(channel[0])==NULL);
+        CHECK(PipeReadString(channel[0])==nullptr);
     } else if (!strcmp(case_name,"pipe-string-valid")) {
         short length=3;fixture(write(channel[1],&length,sizeof(length))==sizeof(length));
         fixture(write(channel[1],"abc",3)==3);fixture(close(channel[1])==0);
         char *value=PipeReadString(channel[0]);CHECK(value && !strcmp(value,"abc"));XtFree(value);
     } else {
-        size_t length=(size_t)SHRT_MAX+1;char *value=malloc(length+1);fixture(value!=NULL);
+        size_t length=(size_t)SHRT_MAX+1;char *value=malloc(length+1);fixture(value!=nullptr);
         memset(value,'x',length);value[length]=0;errno=0;
         CHECK(PipeWriteString(channel[1],value)==-1 && errno==EOVERFLOW);
         free(value);fixture(close(channel[1])==0);
@@ -464,14 +464,14 @@ static void pipe_case(void)
 static void worker_case(void)
 {
     char cwd[PATH_MAX],source[PATH_MAX],target[PATH_MAX];
-    fixture(getcwd(cwd,sizeof(cwd))!=NULL);
+    fixture(getcwd(cwd,sizeof(cwd))!=nullptr);
     fixture(mkdir("sources",0700)==0 && mkdir("targets",0700)==0);
     fixture(strlen(cwd)+9<sizeof(source));
     strcpy(source,cwd);strcat(source,"/sources");strcpy(target,cwd);strcat(target,"/targets");
-    int desktop=strstr(case_name,"desktop")!=NULL;
+    int desktop=strstr(case_name,"desktop")!=nullptr;
     int same_copy=!strcmp(case_name,"worker-normal-same-copy");
-    int collision=same_copy || strstr(case_name,"collision")!=NULL;
-    int copy=collision || strstr(case_name,"resolve")!=NULL || strstr(case_name,"regular")!=NULL;
+    int collision=same_copy || strstr(case_name,"collision")!=nullptr;
+    int copy=collision || strstr(case_name,"resolve")!=nullptr || strstr(case_name,"regular")!=nullptr;
     if (same_copy) strcpy(target,source); /* Both actual source paths collide with themselves. */
     DirUpdate updates[2];memset(updates,0,sizeof(updates));
     for (int i=0;i<2;++i) {
@@ -486,11 +486,11 @@ static void worker_case(void)
         put("targets/first","occupied first",14);
         put("targets/second","occupied second",15);
     }
-    resolve_target_error=strstr(case_name,"target-resolve")!=NULL;
+    resolve_target_error=strstr(case_name,"target-resolve")!=nullptr;
     resolve_first_error=copy && !collision && !resolve_target_error;
     resolve_collision_error=0;
-    worker_fault=strstr(case_name,"first-fails")!=NULL;
-    worker_last_fault=strstr(case_name,"last-fails")!=NULL;
+    worker_fault=strstr(case_name,"first-fails")!=nullptr;
+    worker_last_fault=strstr(case_name,"last-fails")!=nullptr;
     int output[2],reply[2];fixture(pipe(output)==0 && pipe(reply)==0);
     if (collision) {
         DtfileConflictBatch batch={0};
@@ -517,8 +517,8 @@ static void worker_case(void)
     }
     fixture(close(reply[1])==0);
     errno=0;
-    int rc=desktop?FileMoveCopyProcessDesktop(output[1],reply[0],target,"local",updates,2,copy?COPY_FILE:MAKE_BUFFER,NULL):
-        FileMoveCopyProcess(output[1],reply[0],NULL,target,"local",updates,2,copy?COPY_FILE:MAKE_BUFFER,NULL);
+    int rc=desktop?FileMoveCopyProcessDesktop(output[1],reply[0],target,"local",updates,2,copy?COPY_FILE:MAKE_BUFFER,nullptr):
+        FileMoveCopyProcess(output[1],reply[0],nullptr,target,"local",updates,2,copy?COPY_FILE:MAKE_BUFFER,nullptr);
     int operation_errno=errno;
     fixture(close(reply[0])==0 && close(output[1])==0);
     unsigned char wire[16384];size_t bytes=drain(output[0],wire,sizeof(wire));
@@ -528,7 +528,7 @@ static void worker_case(void)
         memcpy(&reported,wire+bytes-sizeof(reported),sizeof(reported));
     }
     CHECK(wire_valid(wire,bytes,1,rc));
-    int success=(collision && !strstr(case_name,"cancel")) || strstr(case_name,"success")!=NULL;
+    int success=(collision && !strstr(case_name,"cancel")) || strstr(case_name,"success")!=nullptr;
     CHECK(tag==PIPEMSG_DONE && reported==rc && rc==(success?0:-1));
     if (!collision && !resolve_target_error) {
         if (!worker_last_fault) CHECK(exact("targets/second",payload,sizeof(payload)));

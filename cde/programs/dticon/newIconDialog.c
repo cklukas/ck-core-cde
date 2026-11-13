@@ -98,7 +98,7 @@ ButtonCB(
           break;
 
       case 3:                    /* HELP button */
-          XtCallCallbacks(w, XmNhelpCallback, NULL);
+          XtCallCallbacks(w, XmNhelpCallback, nullptr);
           break;
 
       default:
@@ -138,7 +138,7 @@ build_newIconDialog( void )
     XmStringFree (tmpXmStrings[1]);
     XmStringFree (tmpXmStrings[2]);
 
-    XtAddCallback(newIconDialog, XmNcallback, ButtonCB, NULL);
+    XtAddCallback(newIconDialog, XmNcallback, ButtonCB, nullptr);
 
     n = 0;
     workForm = _DtDialogBoxGetButton(newIconDialog, 2);
@@ -158,7 +158,7 @@ build_newIconDialog( void )
                 xmFormWidgetClass, newIconDialog,
                 XmNchildType, XmWORK_AREA,
                 XmNallowOverlap, False,
-                NULL );
+                nullptr );
 
     newWidthText = XtVaCreateManagedWidget( "newWidthText",
                 xmTextFieldWidgetClass, workForm,
@@ -166,7 +166,7 @@ build_newIconDialog( void )
                 XmNtopAttachment, XmATTACH_FORM,
                 XmNrightOffset, 5,
                 XmNrightAttachment, XmATTACH_FORM,
-                NULL );
+                nullptr );
 
     tmpXmStrings[0] = GETXMSTR(4,12, "New Width:");
     newWidthLabel = XtVaCreateManagedWidget( "newWidthLabel",
@@ -179,7 +179,7 @@ build_newIconDialog( void )
                 XmNrightAttachment, XmATTACH_WIDGET,
                 XmNleftOffset, 5,
                 XmNleftAttachment, XmATTACH_FORM,
-                NULL );
+                nullptr );
     XmStringFree(tmpXmStrings[0]);
 
     newHeightText = XtVaCreateManagedWidget( "newHeightText",
@@ -190,7 +190,7 @@ build_newIconDialog( void )
                 XmNrightAttachment, XmATTACH_FORM,
                 XmNbottomOffset, 5,
                 XmNbottomAttachment, XmATTACH_FORM,
-                NULL );
+                nullptr );
 
     tmpXmStrings[0] = GETXMSTR(4,14, "New Height:");
     newHeightLabel = XtVaCreateManagedWidget( "newHeightLabel",
@@ -205,7 +205,7 @@ build_newIconDialog( void )
                 XmNbottomAttachment, XmATTACH_FORM,
                 XmNleftOffset, 5,
                 XmNleftAttachment, XmATTACH_FORM,
-                NULL );
+                nullptr );
     XmStringFree(tmpXmStrings[0]);
 
     return ( newIconDialog );

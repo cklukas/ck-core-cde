@@ -124,7 +124,7 @@ Check4EnoughMemory(
     if (numBytes > 0) {
        char *tmpString = (char *)malloc((2 * numBytes) + (numBytes/10));
 
-       if(tmpString == (char *)NULL)
+       if(tmpString == (char *)nullptr)
     	 returnVal = DtEDITOR_INSUFFICIENT_MEMORY;  
        else {
          returnVal = DtEDITOR_NO_ERRORS;
@@ -293,7 +293,7 @@ setDataValue(
    /*
     * Validate input
     */
-   if (rawData != (void *)NULL)
+   if (rawData != (void *)nullptr)
    {
 
       /* 
@@ -348,7 +348,7 @@ setWcharValue(
    DtEditorErrorCode status;
    wchar_t *tmp_wc;
    int result, num_chars=0;
-   char *mb_value = (char *)NULL;
+   char *mb_value = (char *)nullptr;
 
 
    /* 
@@ -455,7 +455,7 @@ insertDataValue(
    /*
     * Validate input
     */
-   if (rawData != (void *) NULL)
+   if (rawData != (void *) nullptr)
    {
 
       /* 
@@ -514,7 +514,7 @@ insertWcharValue(
 
    wchar_t *tmp_wc;
    int result, num_chars=0;
-   char *mb_value = (char *)NULL;
+   char *mb_value = (char *)nullptr;
    DtEditorErrorCode status;
 
 
@@ -1192,7 +1192,7 @@ LoadFile(
     DtEditorContentRec cr;	/* Structure for passing data to widget */
     struct stat statbuf;	/* Information on a file. */
     int file_length;            /* Length of file. */
-    FILE *fp = NULL;		/* Pointer to open file */
+    FILE *fp = nullptr;		/* Pointer to open file */
     DtEditorErrorCode returnVal = DtEDITOR_NONEXISTENT_FILE; 
 		                /* Error accessing file & reading contents */
     DtEditorErrorCode loadError=DtEDITOR_NO_ERRORS;
@@ -1217,13 +1217,13 @@ LoadFile(
 	 * cool, otherwise we might need to tell the user that the
 	 * file's read-only, or that we can't even read from it.
 	 */
-	if( (fp = fopen(fileName, "r+")) == NULL ) 
+	if( (fp = fopen(fileName, "r+")) == nullptr ) 
 	{
 	  /*
 	   * We can't update (read/write) the file so try opening read-
 	   * only
 	   */
-	  if( (fp = fopen(fileName, "r")) == NULL )
+	  if( (fp = fopen(fileName, "r")) == nullptr )
 	  {
 	    /*
 	     * We can't read from the file.
@@ -1419,7 +1419,7 @@ CopySubstring(
 	char *bptr;
 
 	mb_str_loc = (int *) XtMalloc(sizeof(int) * ((endPos-startPos)+1));
-	if (NULL == mb_str_loc)
+	if (nullptr == mb_str_loc)
 	{
 	    /* Should figure out some way to pass back an error code. */
 	    buf = CopySubstring(widget, startPos, endPos, buf, False);
@@ -1788,7 +1788,7 @@ DtEditorSaveContentsToFile(
 	/*
 	 * Open the file for writing
 	 */
-        if ( (pFile = fopen(fileName, "w")) == NULL ) 
+        if ( (pFile = fopen(fileName, "w")) == nullptr ) 
 	  {
 	    _DtAppUnlock(app);
 	    return( DtEDITOR_UNWRITABLE_FILE );

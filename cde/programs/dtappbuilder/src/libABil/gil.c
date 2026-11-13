@@ -52,7 +52,7 @@ convert_string_to_int(STRING s_value,
     int                 i;
     int                 int_value = default_value;
     ISTRING             is_value = istr_create(s_value);
-    if (s_value == NULL)
+    if (s_value == nullptr)
     {
 	istr_destroy(is_value);
 	return int_value;
@@ -93,7 +93,7 @@ align_tab_init(void)
 {
 #define at align_tab
     align_tab_inited = TRUE;
-    convert_fill_table(at, ARRAY_NENTS(at), istr_const(NULL));
+    convert_fill_table(at, ARRAY_NENTS(at), istr_const(nullptr));
 
     /* sorted on string values */
     at[AB_ALIGN_BOTTOM] = istr_const(":bottom-edges");
@@ -154,7 +154,7 @@ static BOOL         gat_inited = FALSE;
 static int
 gat_init(void)
 {
-    convert_fill_table(gat, AB_GIL_ATTRIBUTE_NUM_VALUES, istr_const(NULL));
+    convert_fill_table(gat, AB_GIL_ATTRIBUTE_NUM_VALUES, istr_const(nullptr));
 
     gat[AB_GIL_ABBREVIATED] = istr_const(":abbreviated");
     gat[AB_GIL_ACTION] = istr_const(":action");
@@ -310,7 +310,7 @@ gilP_string_to_att(STRING s_att)
 **************************************************************************/
 
 static BOOL         builtin_action_table_inited = FALSE;
-static ISTRING      builtin_action_table[AB_BUILTIN_ACTION_NUM_VALUES] = {NULL};
+static ISTRING      builtin_action_table[AB_BUILTIN_ACTION_NUM_VALUES] = {nullptr};
 
 #define check_builtin_action_table_init() \
 	(builtin_action_table_inited? 0:builtin_action_table_init())
@@ -415,7 +415,7 @@ compass_tab_init(void)
 {
 #define cpt compass_tab
     compass_tab_inited = TRUE;
-    convert_fill_table(cpt, ARRAY_NENTS(cpt), istr_const(NULL));
+    convert_fill_table(cpt, ARRAY_NENTS(cpt), istr_const(nullptr));
 
     /* sorted in clockwise order */
     cpt[AB_CP_NORTH] = istr_const(":north");
@@ -584,7 +584,7 @@ gilP_string_to_object_state(STRING s_state)
  * REMIND: move type conversion stuff to guide
  */
 static BOOL         obj_type_table_inited = FALSE;
-static ISTRING      obj_type_table[AB_OBJECT_TYPE_NUM_VALUES + 1] = {NULL};
+static ISTRING      obj_type_table[AB_OBJECT_TYPE_NUM_VALUES + 1] = {nullptr};
 
 #define check_obj_type_table_init() \
 	(obj_type_table_inited? 0:obj_type_table_init())

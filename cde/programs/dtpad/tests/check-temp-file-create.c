@@ -63,8 +63,10 @@ static char ck_tmpdir[PATH_MAX];
 #define P_tmpdir ck_tmpdir
 static char *ck_tmpnam(char *buf)
 {
-    assert(strlen(ck_tmpdir) + 8 < L_tmpnam);
-    snprintf(buf, L_tmpnam, "%s/AAAAAA", ck_tmpdir);
+    char name[PATH_MAX + 8];
+    int length = snprintf(name, sizeof name, "%s/AAAAAA", ck_tmpdir);
+    assert(length > 0 && (size_t)length < L_tmpnam);
+    memcpy(buf, name, (size_t)length + 1);
     return buf;
 }
 #define tmpnam ck_tmpnam
@@ -123,7 +125,7 @@ static int ck_count(const char *dir)
 
 int main(int argc, char **argv)
 {
-    char link[PATH_MAX], victim[PATH_MAX], own[64], *name;
+    char link[PATH_MAX + 16], victim[PATH_MAX + 16], own[64], *name;
     struct stat st;
     FILE *f;
     int before;
@@ -172,7 +174,7 @@ int main(int argc, char **argv)
      */
     before = ck_count(ck_work);
     ck_mk_fail = 1;
-    assert(GetTempFile() == NULL);
+    assert(GetTempFile() == nullptr);
     ck_mk_fail = 0;
     assert(ck_xtmalloc_live == 0);
     assert(ck_count(ck_work) == before);

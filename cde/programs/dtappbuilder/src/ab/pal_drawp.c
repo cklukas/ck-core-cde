@@ -138,10 +138,10 @@ PalItemInfo drawp_palitem_rec = {
 
     /* type             */  AB_TYPE_DRAWING_AREA,
     /* name             */  "Draw Area Pane",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  drawp_initialize,
     /* is_a_test        */  obj_is_drawing_area,
     /* prop_initialize  */  drawp_prop_init,
@@ -240,12 +240,12 @@ drawp_prop_init(
     if (dtb_drawp_prop_dialog_initialize(cgen, parent) == 0)
     {
         pds->prop_sheet = cgen->attrs_ctrlpanel;
-        pds->current_obj = NULL;
+        pds->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pds->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -325,7 +325,7 @@ drawp_prop_init(
 
         /* Canvas Size */ 
         prop_geomfield_init(&(pds->size), cgen->tsize_label, 
-                            NULL, NULL, NULL, NULL,
+                            nullptr, nullptr, nullptr, nullptr,
                             cgen->twidth_field_label, cgen->twidth_field, 
                             cgen->theight_field_label, cgen->theight_field, 
                             cgen->tsize_cb);
@@ -357,7 +357,7 @@ drawp_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-	return NULL;
+	return nullptr;
 }
 
 static int
@@ -379,7 +379,7 @@ drawp_prop_clear(
 {
     PropDrawpSettingsRec	*pds = &(prop_drawp_settings_rec[type]);
 
-    if (pds->current_obj == NULL)
+    if (pds->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -414,7 +414,7 @@ drawp_prop_clear(
     prop_colorfield_set_value(&(pds->bg_color), "", False);
     prop_colorfield_set_value(&(pds->fg_color), "", False);
 
-    pds->current_obj = NULL;
+    pds->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -432,9 +432,9 @@ drawp_prop_load(
     AB_SCROLLBAR_POLICY		sb_policy = AB_SCROLLBAR_UNDEF;
     BOOL			load_all = (loadkey & LoadAll);
  
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pds->current_obj != NULL)
+        if (pds->current_obj != nullptr)
             obj = pds->current_obj;
         else
             return ERROR;
@@ -724,7 +724,7 @@ scroll_stateCB(
 
     if (state->set)
     {
-	XtVaGetValues(widget, XmNuserData, &value, NULL);
+	XtVaGetValues(widget, XmNuserData, &value, nullptr);
 	setup_scroll_settings(type, (AB_SCROLLBAR_POLICY)value);
 
     }

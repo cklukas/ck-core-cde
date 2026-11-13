@@ -141,7 +141,7 @@ void  _DtHelpCB(
   _DtHelpCommonHelpStuff * help = pHelpInfo->help;
 
   /* If helpOnHelp resource is set use it, else post an error dialog */
-  if (help->helpOnHelpVolume != NULL)
+  if (help->helpOnHelpVolume != nullptr)
     {
        SetupHelpDialog((Widget)pHelpInfo->widget, help->helpOnHelpVolume,
                      &(help->onHelpDialog), pHelpInfo->locationId);
@@ -188,7 +188,7 @@ static void SetupHelpDialog(
   char *title;
 
 
-      if (*helpDialog ==  NULL) 
+      if (*helpDialog ==  nullptr) 
         {
           /* Create the QuickHelpDialog widget for help on help */
           title = XtNewString(((char *)_DTGETMESSAGE(6, 1, "Help On Help")));
@@ -261,15 +261,15 @@ static void SetupHelpDialog(
 void _DtHelpListFree(
     DtHelpListStruct * * pHead)
 {
-  DtHelpListStruct *pTemp = NULL;
+  DtHelpListStruct *pTemp = nullptr;
   DtHelpListStruct *pTmpHead = *pHead;
 
-   while (pTmpHead != NULL)
+   while (pTmpHead != nullptr)
      {
        /* Free up each element in the current node */
        pTemp            = pTmpHead;
        pTmpHead         = pTmpHead->pNext;
-       pTemp->pNext     = NULL;
+       pTemp->pNext     = nullptr;
       
        /* Free the id String */
        XtFree(pTemp->locationId);
@@ -277,7 +277,7 @@ void _DtHelpListFree(
        /* Now, free the whole node */
        XtFree((char *)pTemp);
     }
-    *pHead = NULL;   /* reset pointer */
+    *pHead = nullptr;   /* reset pointer */
 }
 
 
@@ -310,10 +310,10 @@ DtHelpListStruct * _DtHelpListAdd(
     _DtHelpCommonHelpStuff * help,
     DtHelpListStruct **pHead)
 {
-  DtHelpListStruct *pTemp=NULL;
+  DtHelpListStruct *pTemp=nullptr;
 
   /* Add locationId as first element if pHead = NULL */
-  if (*pHead == NULL)
+  if (*pHead == nullptr)
     {
       *pHead = (DtHelpListStruct *) XtMalloc((sizeof(DtHelpListStruct)));
       
@@ -321,8 +321,8 @@ DtHelpListStruct * _DtHelpListAdd(
       (*pHead)->locationId      = XtNewString(locationId);
       (*pHead)->widget          = widget;
       (*pHead)->help            = help;
-      (*pHead)->pNext           = NULL;
-      (*pHead)->pPrevious       = NULL;
+      (*pHead)->pNext           = nullptr;
+      (*pHead)->pPrevious       = nullptr;
        
     }
   else 
@@ -330,7 +330,7 @@ DtHelpListStruct * _DtHelpListAdd(
      pTemp = (DtHelpListStruct *) XtMalloc((sizeof(DtHelpListStruct)));
     
      pTemp->pNext            = (*pHead);
-     pTemp->pPrevious        = NULL;
+     pTemp->pPrevious        = nullptr;
 
      (*pHead)->pPrevious     = pTemp;
 

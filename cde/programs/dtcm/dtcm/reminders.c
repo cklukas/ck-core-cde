@@ -200,17 +200,17 @@ r_set_bfpm_vals(
 
 	XtVaGetValues(menu,
 		XmNsubMenuId, 	&submenu,
-		NULL);
+		nullptr);
 	
 	XtVaGetValues(submenu,
 		XmNchildren,	&option_items,
 		XmNnumChildren,	&n,
-		NULL);
+		nullptr);
 
 	if (!val->selected) {
 		XmToggleButtonSetState(toggle, False, True);
 		XtVaSetValues(text, XmNvalue, "\0",
-			NULL);
+			nullptr);
 
 		switch ( scope ) {
 		  case TIME_MINS :
@@ -229,7 +229,7 @@ r_set_bfpm_vals(
 		      xmstr = XmStringCreateLocalized(time_scope_str(scope));
 		}
 		XtVaSetValues(XmOptionButtonGadget(menu), XmNlabelString, xmstr,
-			NULL);
+			nullptr);
 		XmStringFree(xmstr);
 
 		return;
@@ -266,18 +266,18 @@ r_set_bfpm_vals(
 	      xmstr = XmStringCreateLocalized(time_scope_str(scope));
 	}
 	XtVaSetValues(XmOptionButtonGadget(menu), XmNlabelString, xmstr,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 	XmToggleButtonSetState(toggle, True, True);
 	XtVaSetValues(text, XmNvalue, buf,
-		NULL);
+		nullptr);
 }
 
 static void
 r_set_mailto_val(Reminders *r) {
 	XtVaSetValues(r->mailto_text, XmNvalue, r->mailto_val,
-		NULL);
+		nullptr);
 }
 
 /*
@@ -291,7 +291,7 @@ r_scope_menu_proc(Widget item, XtPointer client_data, XtPointer cbs) {
 	Time_scope_menu_op	scope;
 
 	XtVaGetValues(item, XmNuserData, &val->scope,
-		NULL);
+		nullptr);
 }
 
 /*
@@ -310,32 +310,32 @@ r_alarm_toggle_proc(Widget toggle_w, XtPointer client_data, XtPointer cbs) {
 
 	if (toggle_w == r->beep_toggle) {
 		XtVaSetValues(r->beep_text, XmNsensitive, status,
-			NULL);
+			nullptr);
 		XtVaSetValues(XmOptionButtonGadget(r->beep_menu),
 			XmNsensitive, status,
-			NULL);
+			nullptr);
 	} else if (toggle_w == r->flash_toggle) {
 		XtVaSetValues(r->flash_text, XmNsensitive, status,
-			NULL);
+			nullptr);
 		XtVaSetValues(XmOptionButtonGadget(r->flash_menu),
 			XmNsensitive, status,
-			NULL);
+			nullptr);
 	} else if (toggle_w == r->popup_toggle) {
 		XtVaSetValues(r->popup_text, XmNsensitive, status,
-			NULL);
+			nullptr);
 		XtVaSetValues(XmOptionButtonGadget(r->popup_menu),
 			XmNsensitive, status,
-			NULL);
+			nullptr);
 	} else if (toggle_w == r->mail_toggle) {
 		XtVaSetValues(r->mail_text, XmNsensitive, status,
-			NULL);
+			nullptr);
 		XtVaSetValues(XmOptionButtonGadget(r->mail_menu),
 			XmNsensitive, status,
-			NULL);
+			nullptr);
 		XtVaSetValues(r->mailto_label, XmNsensitive, status,
-			NULL);
+			nullptr);
 		XtVaSetValues(r->mailto_text, XmNsensitive, status,
-			NULL);
+			nullptr);
 	}
 }
 
@@ -362,7 +362,7 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 	r->bfpm_form_mgr = XtVaCreateWidget("bfpm_form_mgr",
 		xmFormWidgetClass, parent,
 		XmNautoUnmanage, False,
-		NULL);
+		nullptr);
 
 	xmstr = XmStringCreateLocalized(
 				CATGETS(c->DT_catd, 1, 985, "Reminders"));
@@ -373,7 +373,7 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 		XmNtopOffset, 5,
 		XmNleftAttachment, XmATTACH_FORM,
 		XmNleftOffset, 5,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 	/* Create the 4 toggle items to see which one is the longest */
@@ -384,7 +384,7 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 		xmToggleButtonGadgetClass, r->bfpm_form_mgr,
 		XmNlabelString,         xmstr,
 		XmNnavigationType, XmTAB_GROUP,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 
@@ -394,7 +394,7 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 		xmToggleButtonGadgetClass, r->bfpm_form_mgr,
 		XmNlabelString,         xmstr,
 		XmNnavigationType, XmTAB_GROUP,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 
@@ -404,7 +404,7 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 		xmToggleButtonGadgetClass, r->bfpm_form_mgr,
 		XmNlabelString,         xmstr,
 		XmNnavigationType, XmTAB_GROUP,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 
@@ -414,7 +414,7 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 		xmToggleButtonGadgetClass, r->bfpm_form_mgr,
 		XmNlabelString,         xmstr,
 		XmNnavigationType, XmTAB_GROUP,
-		NULL);
+		nullptr);
 	XmStringFree(xmstr);
 
 
@@ -424,7 +424,7 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
                 xmLabelGadgetClass, r->bfpm_form_mgr,
                 XmNlabelString, xmstr,
                 XmNsensitive, False,
-                NULL);
+                nullptr);
 	XmStringFree(xmstr);
 
 
@@ -439,13 +439,13 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
                 XmNeditMode, XmSINGLE_LINE_EDIT,
 		XmNsensitive, False,
 		XmNmaxLength, REMINDER_SCOPE_LEN - 1,
-                NULL);
+                nullptr);
 
         r->beep_menu = (Widget)create_time_scope_menu(r->bfpm_form_mgr,
-		NULL, r_scope_menu_proc, (XtPointer)&r->beep_val);
+		nullptr, r_scope_menu_proc, (XtPointer)&r->beep_val);
 	XtVaSetValues(r->beep_menu,
 		XmNnavigationType, XmTAB_GROUP,
-		NULL);
+		nullptr);
 
 	/*
 	**  Flash toggle, text, and menu
@@ -458,13 +458,13 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
                 XmNeditMode, XmSINGLE_LINE_EDIT,
 		XmNsensitive, False,
 		XmNmaxLength, REMINDER_SCOPE_LEN - 1,
-                NULL);
+                nullptr);
 
         r->flash_menu = (Widget)create_time_scope_menu(r->bfpm_form_mgr,
-		NULL, r_scope_menu_proc, (XtPointer)&r->flash_val);
+		nullptr, r_scope_menu_proc, (XtPointer)&r->flash_val);
 	XtVaSetValues(r->flash_menu,
 		XmNnavigationType, XmTAB_GROUP,
-		NULL);
+		nullptr);
 
 	/*
 	**  Popup toggle, text, and menu
@@ -477,13 +477,13 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
                 XmNeditMode, XmSINGLE_LINE_EDIT,
 		XmNsensitive, False,
 		XmNmaxLength, REMINDER_SCOPE_LEN - 1,
-                NULL);
+                nullptr);
 
         r->popup_menu = (Widget)create_time_scope_menu(r->bfpm_form_mgr,
-		NULL, r_scope_menu_proc, (XtPointer)&r->popup_val);
+		nullptr, r_scope_menu_proc, (XtPointer)&r->popup_val);
 	XtVaSetValues(r->popup_menu,
 		XmNnavigationType, XmTAB_GROUP,
-		NULL);
+		nullptr);
 
 	/*
 	**  Mail toggle, text, and menu
@@ -496,13 +496,13 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
                 XmNeditMode, XmSINGLE_LINE_EDIT,
 		XmNsensitive, False,
 		XmNmaxLength, REMINDER_SCOPE_LEN - 1,
-                NULL);
+                nullptr);
 
         r->mail_menu = (Widget)create_time_scope_menu(r->bfpm_form_mgr,
-		NULL, r_scope_menu_proc, (XtPointer)&r->mail_val);
+		nullptr, r_scope_menu_proc, (XtPointer)&r->mail_val);
 	XtVaSetValues(r->mail_menu,
 		XmNnavigationType, XmTAB_GROUP,
-		NULL);
+		nullptr);
 
 	/*
         **  Mailto text
@@ -512,7 +512,7 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 		XmNeditMode, XmSINGLE_LINE_EDIT,
 		XmNsensitive, False,
 		XmNmaxLength, MAILTO_LEN - 1,
-		NULL);
+		nullptr);
 	/*
 	 * Here, we do a layout.
 	 */
@@ -535,19 +535,19 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->beep_toggle,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 5 + 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->beep_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->beep_menu,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toOption,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -559,19 +559,19 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->flash_toggle,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 5 + 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->flash_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->flash_menu,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toOption,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -583,19 +583,19 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->popup_toggle,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 5 + 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->popup_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->popup_menu,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toOption,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -607,19 +607,19 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->mail_toggle,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 5 + 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->mail_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->mail_menu,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toOption,
-			NULL );
+			nullptr );
 	prev = curr;
 
 	/*
@@ -631,15 +631,15 @@ build_reminders(Reminders *r, Calendar *c, Widget parent) {
 			XmNtopAttachment, XmATTACH_WIDGET,
 			XmNtopWidget, prev,
 			XmNtopOffset, 20,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->mailto_label,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, 5 + 10,
-			NULL );
+			nullptr );
 	XtVaSetValues( r->mailto_text,
 			XmNleftAttachment, XmATTACH_FORM,
 			XmNleftOffset, _toText,
-			NULL );
+			nullptr );
 }
 
 extern Reminder_val_op
@@ -701,7 +701,7 @@ reminder_err_msg(Widget frame, char *name, Reminder_val_op op, Pixmap p)
                 BUTTON_IDENT, 1, ident1,
                 BUTTON_HELP, ADVANCE_ERROR_HELP,
                 DIALOG_IMAGE, p,
-                NULL);
+                nullptr);
 	XtFree(ident1);
 	XtFree(title);
 }
@@ -726,37 +726,37 @@ reminders_form_to_appt(Reminders *r, Dtcm_appointment *appt, char *name) {
 
 	if (!r->beep_val.selected) {
 		free(appt->beep->value);
-		appt->beep->value = NULL;
+		appt->beep->value = nullptr;
 	} else {
 		appt->beep->value->item.reminder_value->lead_time = (char *) malloc(BUFSIZ);
 		_csa_duration_to_iso8601(r->beep_val.scope_val, appt->beep->value->item.reminder_value->lead_time);
-		appt->beep->value->item.reminder_value->reminder_data.data = NULL;
+		appt->beep->value->item.reminder_value->reminder_data.data = nullptr;
 		appt->beep->value->item.reminder_value->reminder_data.size = 0;
 	}
 
 	if (!r->flash_val.selected) {
 		free(appt->flash->value);
-		appt->flash->value = NULL;
+		appt->flash->value = nullptr;
 	} else { 
 		appt->flash->value->item.reminder_value->lead_time = (char *) malloc(BUFSIZ);
 		_csa_duration_to_iso8601(r->flash_val.scope_val, appt->flash->value->item.reminder_value->lead_time);
-		appt->flash->value->item.reminder_value->reminder_data.data = NULL;
+		appt->flash->value->item.reminder_value->reminder_data.data = nullptr;
 		appt->flash->value->item.reminder_value->reminder_data.size = 0;
 	}
 
 	if (!r->popup_val.selected) {
 		free(appt->popup->value);
-		appt->popup->value = NULL;
+		appt->popup->value = nullptr;
 	} else {
 		appt->popup->value->item.reminder_value->lead_time = (char *) malloc(BUFSIZ);
 		_csa_duration_to_iso8601(r->popup_val.scope_val, appt->popup->value->item.reminder_value->lead_time);
-		appt->popup->value->item.reminder_value->reminder_data.data = NULL;
+		appt->popup->value->item.reminder_value->reminder_data.data = nullptr;
 		appt->popup->value->item.reminder_value->reminder_data.size = 0;
 	}
 
 	if (!r->mail_val.selected) {
 		free(appt->mail->value);
-		appt->mail->value = NULL;
+		appt->mail->value = nullptr;
 	} else {
 		appt->mail->value->item.reminder_value->lead_time = (char *) malloc(BUFSIZ);
 		_csa_duration_to_iso8601(r->mail_val.scope_val, appt->mail->value->item.reminder_value->lead_time);
@@ -782,7 +782,7 @@ reminders_appt_to_form(Reminders *r, CSA_entry_handle entry) {
 				    CSA_ENTRY_ATTR_FLASHING_REMINDER_I,
 				    CSA_ENTRY_ATTR_POPUP_REMINDER_I,
 				    CSA_ENTRY_ATTR_MAIL_REMINDER_I,
-				    NULL);
+				    nullptr);
 	stat = query_appt_struct(r->cal->cal_handle, entry, appt);
 	backend_err_msg(r->cal->frame, r->cal->view->current_calendar, stat,
 		((Props_pu *)r->cal->properties_pu)->xm_error_pixmap);

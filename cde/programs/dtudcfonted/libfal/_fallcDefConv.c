@@ -72,7 +72,7 @@ strtostr(
     unsigned char side;
     int length;
 
-    if (from == NULL || *from == NULL)
+    if (from == nullptr || *from == nullptr)
 	return 0;
 
     src = (char *) *from;
@@ -117,7 +117,7 @@ wcstostr(
     char *dst;
     int length;
 
-    if (from == NULL || *from == NULL)
+    if (from == nullptr || *from == nullptr)
 	return 0;
 
     src = (wchar_t *) *from;
@@ -162,7 +162,7 @@ cstostr(
     unsigned char side;
     int length;
 
-    if (from == NULL || *from == NULL)
+    if (from == nullptr || *from == nullptr)
 	return 0;
 
     if (num_args > 0) {
@@ -215,7 +215,7 @@ strtowcs(
     wchar_t *dst;
     int length;
 
-    if (from == NULL || *from == NULL)
+    if (from == nullptr || *from == nullptr)
 	return 0;
 
     if (num_args > 0) {
@@ -257,22 +257,22 @@ create_conv(XlcConvMethods methods)
 {
     XlcConv conv;
     State state;
-    static XlcCharSet GL_charset = NULL;
-    static XlcCharSet GR_charset = NULL;
+    static XlcCharSet GL_charset = nullptr;
+    static XlcCharSet GR_charset = nullptr;
 
-    if (GL_charset == NULL) {
+    if (GL_charset == nullptr) {
 	GL_charset = _fallcGetCharSet("ISO8859-1:GL");
 	GR_charset = _fallcGetCharSet("ISO8859-1:GR");
     }
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
-    if (conv == NULL)
+    if (conv == nullptr)
 	return (XlcConv) NULL;
 
-    conv->state = NULL;
+    conv->state = nullptr;
 
     state = (State) Xmalloc(sizeof(StateRec));
-    if (state == NULL){
+    if (state == nullptr){
 	close_converter(conv);
 	return (XlcConv) NULL;
     }
@@ -289,7 +289,7 @@ create_conv(XlcConvMethods methods)
 static XlcConvMethodsRec strtostr_methods = {
     close_converter,
     strtostr,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -301,7 +301,7 @@ open_strtostr( XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type )
 static XlcConvMethodsRec wcstostr_methods = {
     close_converter,
     wcstostr,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -313,7 +313,7 @@ open_wcstostr( XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type )
 static XlcConvMethodsRec cstostr_methods = {
     close_converter,
     cstostr,
-    NULL
+    nullptr
 } ;
 
 static XlcConv
@@ -325,7 +325,7 @@ open_cstostr( XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type )
 static XlcConvMethodsRec strtowcs_methods = {
     close_converter,
     strtowcs,
-    NULL
+    nullptr
 } ;
 
 static XlcConv

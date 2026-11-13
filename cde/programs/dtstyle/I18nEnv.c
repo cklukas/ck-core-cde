@@ -146,9 +146,9 @@ _DtI18nGetEnvValues(
 
     /* Alloc the user selection */
     env->ims_sel = (ImsSel *) XtMalloc(sizeof(ImsSel)); 
-    env->ims_sel->ims_list = NULL;
+    env->ims_sel->ims_list = nullptr;
     env->ims_sel->ims_list_size = 0 ;
-    env->ims_sel->host_name = NULL ;
+    env->ims_sel->host_name = nullptr ;
 
     /* Get the Input Method available on the selected host.
      * The selected host is the one stored in the IMS Selection File.
@@ -176,7 +176,7 @@ GetUserEnv(
     uenv->localhostname = XtNewString(buf);
 
     /* get the user name */
-    if ((p = getlogin()) == NULL) {
+    if ((p = getlogin()) == nullptr) {
       struct passwd *pw;
 
       pw = getpwuid(getuid());
@@ -212,7 +212,7 @@ FindCDELocaleName(
     UserEnv *uenv
 )
 {
-   _DtXlateDb db = NULL;
+   _DtXlateDb db = nullptr;
    int  ret = NoError;
    char plat[_DtPLATFORM_MAX_LEN];
    int  execver;
@@ -226,7 +226,7 @@ FindCDELocaleName(
    if (ret == NoError)
        ret = _DtLcxXlateOpToStd(db, plat, compver, DtLCX_OPER_SETLOCALE,
 				uenv->locale, &uenv->CDE_locale,
-				NULL, NULL, NULL);
+				nullptr, nullptr, nullptr);
    if (ret == NoError)
        ret = _DtLcxCloseDb(&db);
 
@@ -239,13 +239,13 @@ GetUserIMSelectionFile(
 )
 {
     int         ret = NoError;
-    FILE	*fp = NULL;
+    FILE	*fp = nullptr;
 
     ret = GetUserFileName(env);
     
 	if (ret == NoError) {
 		/* Look if this file is readable */
-		if ((fp = fopen(env->file_sel->fname, "r")) == NULL) {
+		if ((fp = fopen(env->file_sel->fname, "r")) == nullptr) {
 			env->file_sel->start_mode = -1;
 			return ErrNoSelectionFile;
 		}
@@ -317,7 +317,7 @@ ReadImSelectionFile(
     char        *imsname, *hostname;
     int         line_num, i;
 
-    imsname = hostname = NULL;
+    imsname = hostname = nullptr;
 
 	while ((line_num = read_tag_line(fp, &lp, &valp)) > 0) {
 		if (!valp) {
@@ -463,7 +463,7 @@ ReadPipe (
     char      buf[512];
     int       i, nbytes;
     int       status = NoError;
-    static    char * savebuf = NULL; 
+    static    char * savebuf = nullptr; 
     static    int savebuf_bytes = 0 ;
     I18nEnv   *env = (I18nEnv *) client_data;
 	
@@ -480,7 +480,7 @@ ReadPipe (
 	savebuf_bytes = 0;
 	if (savebuf) {
 	    XtFree(savebuf);
-	    savebuf = NULL;
+	    savebuf = nullptr;
 	}
 
 	pclose(env->pipe_info->pipe);
@@ -624,7 +624,7 @@ _DtI18nWriteImSelectionFile(
 
     
     /* Look if this file is writable */
-    if ((fp = fopen(env->file_sel->fname, "w")) == NULL)
+    if ((fp = fopen(env->file_sel->fname, "w")) == nullptr)
 	return ErrFileCreate;
 
     /* Write the select mode */

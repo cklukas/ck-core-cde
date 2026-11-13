@@ -80,7 +80,7 @@ static char ToASCII[ToASCII_NUM] = { 0x1b, 0x28, 0x42 };
  * in _converter_().
  *
  */
-static void           *_i18nwork1 = NULL;
+static void           *_i18nwork1 = nullptr;
 static unsigned long  _i18nsize1 = 0;
 static int            shouldAlloc1 = ~0;
 
@@ -89,7 +89,7 @@ static int            shouldAlloc1 = ~0;
  * in CvtStr().
  *
  */
-static void           *_i18nwork2 = NULL;
+static void           *_i18nwork2 = nullptr;
 static unsigned long  _i18nsize2 = 0;
 static int            shouldAlloc2 = ~0;
 
@@ -133,7 +133,7 @@ DtXlateOpToStdLocale (
      char       **ret_stdLang,
      char       **ret_stdSet)
 {
-     _DtXlateDb MyDb = NULL;
+     _DtXlateDb MyDb = nullptr;
      char MyPlatform[_DtPLATFORM_MAX_LEN + 1];
      int	ExecVer;
      int	CompVer;	
@@ -142,26 +142,26 @@ DtXlateOpToStdLocale (
          _DtXlateGetXlateEnv(MyDb,MyPlatform,&ExecVer,&CompVer) != 0)
      {
           _DtLcxCloseDb(&MyDb);
-          MyDb = NULL;
+          MyDb = nullptr;
      }
 
 
-    if (MyDb != NULL)	
+    if (MyDb != nullptr)	
 	{
 	(void) _DtLcxXlateOpToStd(MyDb, MyPlatform, ExecVer,
 				operation,opLocale,
-				ret_stdLocale, ret_stdLang, ret_stdSet, NULL);
+				ret_stdLocale, ret_stdLang, ret_stdSet, nullptr);
 	}
 
     /* if failed, give default values */
-    if (ret_stdLocale != NULL && *ret_stdLocale == NULL)
+    if (ret_stdLocale != nullptr && *ret_stdLocale == nullptr)
     {
         *ret_stdLocale = (char *)malloc(strlen(DfltStdLang)+strlen(DfltStdCharset)+3);
 	sprintf(*ret_stdLocale,"%s.%s",DfltStdLang,DfltStdCharset);
     }
-    if (ret_stdLang != NULL && *ret_stdLang == NULL)
+    if (ret_stdLang != nullptr && *ret_stdLang == nullptr)
 	*ret_stdLang = (char *)strdup(DfltStdLang);
-    if (ret_stdSet != NULL && *ret_stdSet == NULL)
+    if (ret_stdSet != nullptr && *ret_stdSet == nullptr)
 	*ret_stdSet = (char *)strdup(DfltStdCharset);
 }
 
@@ -194,7 +194,7 @@ DtXlateStdToOpLocale (
      char       *dflt_opLocale,
      char       **ret_opLocale)
 {
-     _DtXlateDb MyDb = NULL;
+     _DtXlateDb MyDb = nullptr;
      char MyPlatform[_DtPLATFORM_MAX_LEN + 1];
      int        ExecVer;
      int        CompVer;
@@ -203,19 +203,19 @@ DtXlateStdToOpLocale (
          _DtXlateGetXlateEnv(MyDb,MyPlatform,&ExecVer,&CompVer) != 0)
      {
           _DtLcxCloseDb(&MyDb);
-          MyDb = NULL;
+          MyDb = nullptr;
      }
 
 
-    if (MyDb != NULL)
+    if (MyDb != nullptr)
     {
 	(void) _DtLcxXlateStdToOp(MyDb, MyPlatform, ExecVer,
-			operation, stdLocale, stdLang, stdCodeSet, NULL,
+			operation, stdLocale, stdLang, stdCodeSet, nullptr,
 			ret_opLocale);
     }
 
     /* if translation fails, use a default value */
-    if (ret_opLocale && *ret_opLocale == NULL)
+    if (ret_opLocale && *ret_opLocale == nullptr)
     {
        if (dflt_opLocale) *ret_opLocale = (char *)strdup(dflt_opLocale);
        else if (stdLocale) *ret_opLocale = (char *)strdup(stdLocale);
@@ -224,27 +224,27 @@ DtXlateStdToOpLocale (
 char *
 targetTagName(void)
 {
-   char *ret_locale = NULL;
-   char *ret_lang = NULL;
-   char *ret_codeset = NULL;
-   char *ret_target = NULL;
+   char *ret_locale = nullptr;
+   char *ret_lang = nullptr;
+   char *ret_codeset = nullptr;
+   char *ret_target = nullptr;
 
    DtXlateOpToStdLocale(DtLCX_OPER_SETLOCALE,
-          setlocale(LC_CTYPE, NULL),
+          setlocale(LC_CTYPE, nullptr),
           &ret_locale,
           &ret_lang,
           &ret_codeset);
    DtXlateStdToOpLocale(DtLCX_OPER_INTERCHANGE_CODESET,
-          NULL,
-          NULL,
+          nullptr,
+          nullptr,
           ret_codeset,
-          NULL,
+          nullptr,
           &ret_target);
    DtXlateStdToOpLocale(DtLCX_OPER_MIME,
-          NULL,
-          NULL,
+          nullptr,
+          nullptr,
           ret_target,
-          NULL,
+          nullptr,
           &ret_codeset);
 
    free(ret_locale);
@@ -257,7 +257,7 @@ targetTagName(void)
 void
 getCharSet(char * charset)
 {
-        char *mimeCS = NULL;
+        char *mimeCS = nullptr;
 
      mimeCS = targetTagName();
 
@@ -318,21 +318,21 @@ static void _converter_( iconv_t CD,
 {
     char          *InBuf;
     size_t        InBytesLeft;
-    char          *OutBuf = NULL;
+    char          *OutBuf = nullptr;
     size_t        OutBytesLeft = 0;
     size_t        _OutBytesLeft = 0;
     size_t        iconv_ret;
     size_t        converted_num = 0;
 
 
-    *to = NULL;
+    *to = nullptr;
     *to_len = 0;
 
     if ( shouldAlloc1 ) {
         /* Obtain work area */
         _i18nwork1 = (size_t *)malloc( WORKSIZE );
         if ( !_i18nwork1 ) {
-            _i18nwork1 = NULL;
+            _i18nwork1 = nullptr;
             return;
         }
         _i18nsize1 = WORKSIZE; 
@@ -348,7 +348,7 @@ static void _converter_( iconv_t CD,
      * Need to place iconv state to the initial one by
      * setting inbuf to NULL of iconv().
      */
-    iconv( CD, (ICONV_INBUF_TYPE)NULL, 0, NULL, 0 );
+    iconv( CD, (ICONV_INBUF_TYPE)NULL, 0, nullptr, 0 );
     while( 1 ) {
 	/*
 	 * InBuf
@@ -426,10 +426,10 @@ static void _converter_( iconv_t CD,
 		_i18nsize1 += WORKSIZE;
 		_p = realloc( _i18nwork1, _i18nsize1 );
 		if ( !_p ) {
-		    *to = NULL;
+		    *to = nullptr;
 		    *to_len = 0;
 		    free( _i18nwork1 );
-		    _i18nwork1 = NULL;
+		    _i18nwork1 = nullptr;
 		    _i18nsize1 = 0;
 		    shouldAlloc1 = ~0;
 		    break;
@@ -439,7 +439,7 @@ static void _converter_( iconv_t CD,
 		    OutBytesLeft += WORKSIZE;
 		}  
 	    } else {
-		*to = NULL;
+		*to = nullptr;
 		*to_len = 0;
 		break;
 	    }
@@ -452,14 +452,14 @@ int
 CvtStr( char *charSet, void *from, unsigned long from_len,
                  void **to, unsigned long *to_len, Direction dir )
 {
-    char	*ret_locale = NULL;
-    char	*ret_lang = NULL;
-    char	*ret_codeset = NULL;
-    char	*from_codeset = NULL;
-    char	*to_codeset = NULL;
-    char	*CuStdCodeSet = NULL;
-    char	*InterChCodeSet = NULL;
-    char	*StdCodeSet = NULL;
+    char	*ret_locale = nullptr;
+    char	*ret_lang = nullptr;
+    char	*ret_codeset = nullptr;
+    char	*from_codeset = nullptr;
+    char	*to_codeset = nullptr;
+    char	*CuStdCodeSet = nullptr;
+    char	*InterChCodeSet = nullptr;
+    char	*StdCodeSet = nullptr;
     iconv_t	CD;
     int		isASCII=~0;
     int		isStopASCII = ~0;
@@ -467,7 +467,7 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 
 /* Get CuStdCodeSet */
     DtXlateOpToStdLocale( DtLCX_OPER_SETLOCALE,
-                          setlocale( LC_CTYPE, NULL ),
+                          setlocale( LC_CTYPE, nullptr ),
                           &ret_locale,
                           &ret_lang,
                           &CuStdCodeSet );
@@ -506,20 +506,20 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 	/*
 	 * As for from_codeset
 	 */
-	if ( ( charSet == NULL ) || ( *charSet == '\0' ) ) {
+	if ( ( charSet == nullptr ) || ( *charSet == '\0' ) ) {
 	    /* Convert CuStdCodeSet to StdInterChangeCodeSet */
 	    DtXlateStdToOpLocale( DtLCX_OPER_INTERCHANGE_CODESET,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				CuStdCodeSet,
-				NULL,
+				nullptr,
 				&InterChCodeSet );
 	} else {
 	    /* Convert charSet to StdInterChangeCodeSet */
 	    free(ret_locale);
 	    free(ret_lang);
 	    free(ret_codeset);
-	    ret_locale = ret_lang = ret_codeset = NULL;
+	    ret_locale = ret_lang = ret_codeset = nullptr;
 	    DtXlateOpToStdLocale( DtLCX_OPER_MIME,
 				charSet,
 				&ret_locale,
@@ -529,21 +529,21 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 
 	/* Convert StdInterChangeCodeSet to OpIVONC3 codeset */
 	DtXlateStdToOpLocale( DtLCX_OPER_ICONV3,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				InterChCodeSet,
-				NULL,
+				nullptr,
 				&from_codeset );
 	/*
 	 * As for to_codeset
 	 */
-	if ( ( charSet == NULL ) || ( *charSet == '\0' ) ) {
+	if ( ( charSet == nullptr ) || ( *charSet == '\0' ) ) {
 	    /* Convert CuStdCodeSet to OpIVONC3 codeset */
 	    DtXlateStdToOpLocale( DtLCX_OPER_ICONV3,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				CuStdCodeSet,
-				NULL,
+				nullptr,
 				&to_codeset );
 	} else {
 #ifdef _AIX
@@ -559,7 +559,7 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 		free(ret_locale);
 		free(ret_lang);
 		free(ret_codeset);
-		ret_locale = ret_lang = ret_codeset = NULL;
+		ret_locale = ret_lang = ret_codeset = nullptr;
 		DtXlateOpToStdLocale( DtLCX_OPER_INTERCHANGE_CODESET,
 				InterChCodeSet,
 				&ret_locale,
@@ -567,30 +567,30 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 				&ret_codeset );
 	    }
 	    DtXlateStdToOpLocale( DtLCX_OPER_ICONV3,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				ret_codeset,
-				NULL,
+				nullptr,
 				&to_codeset );
 	}
     } else { /* dir == CURRENT_TO_INTERNET */
 	/*
 	 * As for from_codeset
 	 */
-	if ( ( charSet == NULL ) || ( *charSet == '\0' ) ) {
+	if ( ( charSet == nullptr ) || ( *charSet == '\0' ) ) {
 	    /* Convert CuStdCodeSet to OpICONV3 codeset */
 	    DtXlateStdToOpLocale( DtLCX_OPER_ICONV3,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				CuStdCodeSet,
-				NULL,
+				nullptr,
 				&from_codeset );
 	} else {
 	    /* Convert charSet to StdInterChangeCodeSet */
 	    free(ret_locale);
 	    free(ret_lang);
 	    free(ret_codeset);
-	    ret_locale = ret_lang = ret_codeset = NULL;
+	    ret_locale = ret_lang = ret_codeset = nullptr;
 	    DtXlateOpToStdLocale( DtLCX_OPER_MIME,
 				charSet,
 				&ret_locale,
@@ -598,29 +598,29 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 				&ret_codeset );
 	    /* Convert StdInterChangeCodeSet to OpIVONC3 codeset */
 	    DtXlateStdToOpLocale( DtLCX_OPER_ICONV3,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				ret_codeset,
-				NULL,
+				nullptr,
 				&from_codeset );
 	}
 	/*
 	 * As for to_codeset
 	 */
-	if ( ( charSet == NULL ) || ( *charSet == '\0' ) ) {
+	if ( ( charSet == nullptr ) || ( *charSet == '\0' ) ) {
 	    /* Convert CuStdCodeSet to StdInterChangeCodeSet */
 	    DtXlateStdToOpLocale( DtLCX_OPER_INTERCHANGE_CODESET,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				CuStdCodeSet,
-				NULL,
+				nullptr,
 				&InterChCodeSet );
 	} else {
 	    /* Convert charSet to StdInterChangeCodeSet */
 	    free(ret_locale);
 	    free(ret_lang);
 	    free(ret_codeset);
-	    ret_locale = ret_lang = ret_codeset = NULL;
+	    ret_locale = ret_lang = ret_codeset = nullptr;
 	    DtXlateOpToStdLocale( DtLCX_OPER_MIME,
 				charSet,
 				&ret_locale,
@@ -630,10 +630,10 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 
 	/* Convert StdInterChangeCodeSet to OpIVONC3 codeset */
 	DtXlateStdToOpLocale( DtLCX_OPER_ICONV3,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				InterChCodeSet,
-				NULL,
+				nullptr,
 				&to_codeset );
     }
 
@@ -641,21 +641,21 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
     free(ret_lang);
     free(ret_codeset);
 
-    *to = NULL;
+    *to = nullptr;
     *to_len = 0;
 
     if ( shouldAlloc2 ) {
         /* Obtain work area */
         _i18nwork2 = (size_t *)malloc( WORKSIZE );
         if ( !_i18nwork2 ) {
-            _i18nwork2 = NULL;
+            _i18nwork2 = nullptr;
             return( isASCII );
         }
         _i18nsize2 = WORKSIZE; 
         shouldAlloc2 = 0;
     }
 
-    if (NULL == to_codeset || NULL == from_codeset)
+    if (nullptr == to_codeset || nullptr == from_codeset)
       return( isASCII );
 
     if ( ( CD = iconv_open( to_codeset, from_codeset ) ) != (iconv_t)-1 ) {
@@ -672,7 +672,7 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 	    unsigned long new_from_len = from_len;
 	    unsigned long _passed = 0;
 	    size_t clen;
-	    void *_tmp = NULL;
+	    void *_tmp = nullptr;
 	    unsigned long _tmp_len = 0;
 
 	    while ( _passed < from_len ) {
@@ -721,12 +721,12 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 		/*
 		 *      ********** DO 1 LINE CONVERSION **********
 		 */
-		_tmp = NULL; _tmp_len = 0;
+		_tmp = nullptr; _tmp_len = 0;
 		_converter_( CD, new_from, new_from_len, &_tmp, &_tmp_len );
 
-		if ( ( _tmp == NULL ) && ( _tmp_len == 0 ) ) {
+		if ( ( _tmp == nullptr ) && ( _tmp_len == 0 ) ) {
 		    /* Conversion fail */
-		    *to = NULL;
+		    *to = nullptr;
 		    *to_len = 0;
 		    break;
 		}
@@ -745,14 +745,14 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 		/* Append _tmp to target */
 		if ( converted_num + _tmp_len > _i18nsize2 ) {
 		    /* Need much memory..... */
-		    void *_i18n = NULL;
+		    void *_i18n = nullptr;
 
 		    _i18nsize2 += WORKSIZE;
 		    _i18n = realloc( _i18nwork2, _i18nsize2  ); 
 		    if ( !_i18n ) {
-			*to = NULL;
+			*to = nullptr;
 			*to_len = 0;
-			_i18nwork2 = NULL;
+			_i18nwork2 = nullptr;
 			_i18nsize2 = 0;
 			shouldAlloc2 = ~0;
 			break;
@@ -815,12 +815,12 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 
 			    if ( converted_num + ToASCII_NUM > _i18nsize2 ) {
 				/* Need much memory..... */
-				void *_i18n = NULL;
+				void *_i18n = nullptr;
 
 				_i18nsize2 += WORKSIZE;
 				_i18n=realloc(_i18nwork2,_i18nsize2); 
 				if ( !_i18n ) {
-				    *to = NULL;
+				    *to = nullptr;
 				    *to_len = 0;
 				    shouldAlloc2 = ~0;
 				    break;
@@ -845,12 +845,12 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 			    // Append ToASCII
 			    */
 			    if ( converted_num + ToASCII_NUM > _i18nsize2 ) {
-				void *_i18n = NULL;
+				void *_i18n = nullptr;
 
 				_i18nsize2 += WORKSIZE;
 				_i18n=realloc(_i18nwork2,_i18nsize2); 
 				if ( !_i18n ) {
-				    *to = NULL;
+				    *to = nullptr;
 				    *to_len = 0;
 				    shouldAlloc2 = ~0;
 				    break;
@@ -871,7 +871,7 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 	    /*
 	     * Again........
 	     */
-	    if( ( *to != NULL ) && ( *to_len != 0 ) ) {
+	    if( ( *to != nullptr ) && ( *to_len != 0 ) ) {
 		if ( !isStopASCII ) {
 		    if ( (((char *)_i18nwork2)[converted_num-1] == '\n') ||
 		         (((char *)_i18nwork2)[converted_num-1] == '\0')    ) {
@@ -886,12 +886,12 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 			    */
 
 			    if ( converted_num + ToASCII_NUM > _i18nsize2 ) {
-				void *_i18n = NULL;
+				void *_i18n = nullptr;
 
 				_i18nsize2 += WORKSIZE;
 				_i18n=realloc(_i18nwork2,_i18nsize2); 
 				if ( !_i18n ) {
-				    *to = NULL;
+				    *to = nullptr;
 				    *to_len = 0;
 				    shouldAlloc2 = ~0;
 				} else {
@@ -915,12 +915,12 @@ CvtStr( char *charSet, void *from, unsigned long from_len,
 			    */
 
 			    if ( converted_num + ToASCII_NUM > _i18nsize2 ) {
-				void *_i18n = NULL;
+				void *_i18n = nullptr;
 
 				_i18nsize2 += WORKSIZE;
 				_i18n=realloc(_i18nwork2,_i18nsize2); 
 				if ( !_i18n ) {
-				    *to = NULL;
+				    *to = nullptr;
 				    *to_len = 0;
 				    shouldAlloc2 = ~0;
 				} else {
@@ -1011,7 +1011,7 @@ getEncodingType(const char * body,
     const char * last_nl = body;
     const char * cur;
 
-    if (body == NULL || len == 0) {
+    if (body == nullptr || len == 0) {
         return(MIME_7BIT);
     }
     if (strncmp(body, "From ", 5) == 0) {
@@ -1161,7 +1161,7 @@ writeBase64(char * buf, const char * bp, const unsigned long len)
 
     int block;
 
-    if (bp == NULL || len == 0) {
+    if (bp == nullptr || len == 0) {
 	crlf(buf);
 	return;
     }
@@ -1236,7 +1236,7 @@ writeQPrint(char *buf, const char * bp, const unsigned long bp_len,
     char prev;
     char tmpbuf[20];
 
-    if (bp == NULL || bp_len == 0) {
+    if (bp == nullptr || bp_len == 0) {
 	crlf(buf);
 	return;
     }
@@ -1469,11 +1469,11 @@ rfc1522cpy(char * buf, const char * value)
     const char * scan_c;
     boolean_t eight_bit = B_FALSE;
     char charset[64];
-    char *ret_locale = NULL;
-    char *ret_lang = NULL;
-    char *ret_codeset = NULL;
+    char *ret_locale = nullptr;
+    char *ret_lang = nullptr;
+    char *ret_codeset = nullptr;
     char  tmp[1024];
-    char *NewBuf = NULL;
+    char *NewBuf = nullptr;
     unsigned long _len = 0;
     /*
     // We are going to encode 8 bit data, one word at a time. This may
@@ -1520,18 +1520,18 @@ rfc1522cpy(char * buf, const char * value)
 		char *_tmp2_;
 		free(ret_locale);
 		free(ret_lang);
-		ret_locale = ret_lang = _tmp1_ = NULL;
+		ret_locale = ret_lang = _tmp1_ = nullptr;
 		DtXlateOpToStdLocale( DtLCX_OPER_INTERCHANGE_CODESET,
 					ret_codeset,
 					&ret_locale,
 					&ret_lang,
 					&_tmp1_ );
-		_tmp2_ = NULL;
+		_tmp2_ = nullptr;
 		DtXlateStdToOpLocale( DtLCX_OPER_MIME,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				_tmp1_,
-				NULL,
+				nullptr,
 				&_tmp2_ );
 		strncat(buf,"=?", 2);
 		strncat(buf,_tmp2_, strlen(_tmp2_));
@@ -1561,9 +1561,9 @@ rfc1522cpy(char * buf, const char * value)
 	    memset(tmp, '\0', 1024);
 	    if (!( !strncasecmp( ret_codeset, "ISO-2022-KR", 11 ) ||
 		   !strncasecmp( charset, "us-ascii", 8 ) )          )
-		(void)CvtStr( (char *)NULL, (void *)cur, scan_c - cur,
+		(void)CvtStr( (char *)nullptr, (void *)cur, scan_c - cur,
 				(void **)&NewBuf, &_len, CURRENT_TO_INTERNET );
-	    if ( ( NewBuf != NULL ) && ( _len != 0 ) ) {
+	    if ( ( NewBuf != nullptr ) && ( _len != 0 ) ) {
 		/*
 		 * if ret_codeset == ISO-2022-KR, we don't come here.
 		 */

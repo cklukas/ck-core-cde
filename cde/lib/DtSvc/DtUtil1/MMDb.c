@@ -156,11 +156,11 @@ grow_file_lists(DtShmBoson **boson_list, time_t **mtime_list, int count)
 		return 0;
 	new_bosons = (DtShmBoson *)realloc(*boson_list,
 					   count*sizeof(DtShmBoson));
-	if (new_bosons == NULL)
+	if (new_bosons == nullptr)
 		return 0;
 	*boson_list = new_bosons;
 	new_mtimes = (time_t *)realloc(*mtime_list, count*sizeof(time_t));
-	if (new_mtimes == NULL)
+	if (new_mtimes == nullptr)
 		return 0;
 	*mtime_list = new_mtimes;
 	return 1;
@@ -177,7 +177,7 @@ grow_record_list(int **list, int count)
 	if (count < 1 || (size_t)count > SIZE_MAX / sizeof(int))
 		return 0;
 	new_list = (int *)realloc(*list, count*sizeof(int));
-	if (new_list == NULL)
+	if (new_list == nullptr)
 		return 0;
 	*list = new_list;
 	return 1;
@@ -188,8 +188,8 @@ static int
 build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 		DtDtsMMHeader *header, const char *suffix)
 {
-	DIR 			*dirp = NULL;
-	struct dirent		*dp = NULL;
+	DIR 			*dirp = nullptr;
+	struct dirent		*dp = nullptr;
 	struct stat		buf;
 	char			cur_path[MAXPATHLEN+1];
 	void			*data;
@@ -220,7 +220,7 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 		mtime_list[count-1] = buf.st_mtime;
 		boson_list[count-1] = _DtShmProtoAddStrtab(shm_handle, dirs->paths[i], &isnew);
 		dirp = opendir(".");
-		while ((result = _XReaddir(dirp, dirEntryBuf)) != NULL)
+		while ((result = _XReaddir(dirp, dirEntryBuf)) != nullptr)
 		{
 			char	*c = strrchr(result->d_name, suffix[0]);
 			if(c && strcmp(c, suffix) == 0)
@@ -242,7 +242,7 @@ build_file_list(DtShmProtoIntList int_handle, DtDirPaths *dirs,
 			}
 		}
 		(void)closedir( dirp );
-		dirp = NULL;
+		dirp = nullptr;
 	}
 	chdir(cur_path);
 	data = _DtShmProtoAddIntLst(int_handle, count, &header->files_offset);
@@ -757,8 +757,8 @@ write_db(DtDtsMMHeader *header, void *index, int size, const char *CacheFile)
 	char	*tmpfile;
 
 	if ((tmpfile = malloc(sizeof(_DTDTSMMTEMPDIR) +
-	    sizeof(_DTDTSMMTEMPFILE) + 7)) == NULL) {
-		_DtSimpleError(DtProgName, DtError, NULL, tmpfile, NULL);
+	    sizeof(_DTDTSMMTEMPFILE) + 7)) == nullptr) {
+		_DtSimpleError(DtProgName, DtError, nullptr, tmpfile, nullptr);
 		return 0;
 	}
 
@@ -770,8 +770,8 @@ write_db(DtDtsMMHeader *header, void *index, int size, const char *CacheFile)
 	if(fd ==  -1)
 	{
 		_DtSimpleError(
-			DtProgName, DtError, NULL,
-			(char*) tmpfile, NULL);
+			DtProgName, DtError, nullptr,
+			(char*) tmpfile, nullptr);
 		free(tmpfile);
 		return(0);
 	}
@@ -793,8 +793,8 @@ write_db(DtDtsMMHeader *header, void *index, int size, const char *CacheFile)
 	if(rename((const char *)tmpfile, CacheFile) == -1)
 	{
 		_DtSimpleError(
-			DtProgName, DtError, NULL,
-			(char*) CacheFile, NULL);
+			DtProgName, DtError, nullptr,
+			(char*) CacheFile, nullptr);
 		unlink(CacheFile); /* Just in case? */
 		unlink(tmpfile);
 		free(tmpfile);

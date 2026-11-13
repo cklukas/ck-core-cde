@@ -116,11 +116,11 @@ int main(int argc, char *argv[])
 	char	*start_code, *end_code ;
 
 	/* format */
-	if( (locale = (char *)getenv( "LANG" )) == NULL ){
+	if( (locale = (char *)getenv( "LANG" )) == nullptr ){
 	    locale = "C" ;
 	}
 
-	Head.in_file = Head.out_file = Head.text_file = NULL;
+	Head.in_file = Head.out_file = Head.text_file = nullptr;
 	Head.p_width = Head.p_height = USE_ORG_SIZE;
 
 	Head.code_category = ALL_CODE ;
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	help = code_area = 0;
 	COMM_SETDEFAULTSTYLE( style ) ;
 	xlfdname = cbuf = start_code = end_code = ep = '\0' ;
-	spacing = char_set = NULL ;
+	spacing = char_set = nullptr ;
 	gr = '\0' ;
 	num_gr = 0 ;
 
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if ( Head.in_file == NULL && xlfdname == NULL ) {
+	if ( Head.in_file == nullptr && xlfdname == nullptr ) {
 		if ( code_area & SYSTM ) {
 			USAGE1("%s : The GPF output file name cannot be omitted.\n", argv[0] );
 		} else {
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
 	    }
 	} else {
 	    num_gr = 1 ;
-	    if( (gr = (FalGlyphRegion *)malloc( sizeof(FalGlyphRegion) * num_gr )) == NULL ) {
+	    if( (gr = (FalGlyphRegion *)malloc( sizeof(FalGlyphRegion) * num_gr )) == nullptr ) {
 		USAGE1("%s : malloc error occurred. Terminates abnormally.\n", argv[0]);
 		exit(1) ;
 	    }
@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
 	/*
 	 * refuse proportional fonts
 	 */
-	if ( GetUdcFontName( Head.in_file, NULL, &xlfdname ) ) {
+	if ( GetUdcFontName( Head.in_file, nullptr, &xlfdname ) ) {
 	    USAGE1("%s : This font cannot get XLFD. Terminates abnormally.\n", argv[0]);
 	    exit( 1 );
 	}
@@ -361,19 +361,19 @@ int main(int argc, char *argv[])
 	COMM_SBFNT_CONVCODETOGI( char_set, Head ) ;
 
 	/* open to output file */
-	if ( Head.out_file == NULL ) {
+	if ( Head.out_file == nullptr ) {
 		Head.output = stdout;
 	} else {
 		if ( stat(Head.out_file, &st) != 0 ) {
-			if ((Head.output = fopen(Head.out_file, "w")) == NULL) {
+			if ((Head.output = fopen(Head.out_file, "w")) == nullptr) {
 				put_error_and_exit( &Head, GPF_OPEN_OUT, argv[0] );
 			}
 		} else {
 			Head.text_file = Head.out_file;
-			if ( ( Head.out_file = GetTmpPath( Head.out_file ) ) == NULL ) {
+			if ( ( Head.out_file = GetTmpPath( Head.out_file ) ) == nullptr ) {
 				put_error_and_exit( &Head, MKTMP_ERROR, argv[0] );
 			}
-			if ( ( Head.output = fopen( Head.out_file, "w" ) ) == NULL ) {
+			if ( ( Head.output = fopen( Head.out_file, "w" ) ) == nullptr ) {
 				put_error_and_exit( &Head, GPF_OPEN_OUT, argv[0] );
 			}
 		}
@@ -455,11 +455,11 @@ int code_area)
 		head->zoomf = 0;
 	}
 
-	if ((head->code = (int *)malloc(sizeof(int)*head->num_chars)) == NULL) {
+	if ((head->code = (int *)malloc(sizeof(int)*head->num_chars)) == nullptr) {
 		return(MALLOC_ERROR);
 	}
 
-	if ((head->ptn = (char **)malloc(sizeof(char *)*head->num_chars)) == NULL) {
+	if ((head->ptn = (char **)malloc(sizeof(char *)*head->num_chars)) == nullptr) {
 		return(MALLOC_ERROR);
 	}
 
@@ -480,9 +480,9 @@ int code_area)
 static	void
 put_error_and_exit(struct btophead *btop, int er_no, char *prog_name)
 {
-	ErrMsgTable_AndExit( er_no, btop->in_file, NULL,
-	    NULL,          btop->out_file,
-	    NULL,
+	ErrMsgTable_AndExit( er_no, btop->in_file, nullptr,
+	    nullptr,          btop->out_file,
+	    nullptr,
 	    prog_name
 	    );
 	return;
@@ -574,7 +574,7 @@ FalGlyphRegion	*gr)
 	int		err_flg = 0;
 	int		code_num;
 	char	*tmp;
-	FalGIInf	*gi = NULL;
+	FalGIInf	*gi = nullptr;
 	int		num_gi ;
 	int		i, code ;
 
@@ -665,7 +665,7 @@ int	code_area)
 	    }
 
 	    head->code[num_char] = code;
-	    if ( ( ptn = head->ptn[num_char++] = (char *)malloc( bsize ) ) == NULL ) {
+	    if ( ( ptn = head->ptn[num_char++] = (char *)malloc( bsize ) ) == nullptr ) {
 		return(MALLOC_ERROR);
 	    }
 	    if ((rtn = GetBdfPtn(head, buf, ptn, mwidth, bsize)) != 0) {

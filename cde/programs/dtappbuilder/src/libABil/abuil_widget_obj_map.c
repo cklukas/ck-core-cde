@@ -285,7 +285,7 @@ abuilP_entry_for_uil_widget(
 	    if (!strcmp(widget_abobj_map[i].widget_name, widget_class_name))
 		return(&(widget_abobj_map[i]));
     }
-    return((WidgetABObjMap *)NULL);
+    return((WidgetABObjMap *)nullptr);
 }
 
 
@@ -360,7 +360,7 @@ childp_type_choice(
      */
     if (obj_get_subtype(object) == AB_CHOICE_OPTION_MENU &&
 	obj_is_menu(child))
-	return(NULL);
+	return(nullptr);
 
     obj_set_type(child, AB_TYPE_ITEM);
     obj_set_subtype(child, AB_ITEM_FOR_CHOICE);

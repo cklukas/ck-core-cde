@@ -449,7 +449,7 @@ static void RespondSiaFormCB( Widget w, XtPointer client_data,
 	    if (XmToggleButtonGadgetGetState(siaFormInfo->answer_widgets[i]))
 		siaFormInfo->answers[i] = "X";
 	    else
-		siaFormInfo->answers[i] = NULL;
+		siaFormInfo->answers[i] = nullptr;
 	    }
 	else if (siaFormInfo->visible[i])
 	    siaFormInfo->answers[i] =

@@ -86,7 +86,7 @@ static int      vistano;
 static FILE    *dtbs_addr_fp;
 static int      debugging = FALSE;
 static int      verbose_debugging = FALSE;
-static char    *keyptr = NULL;
+static char    *keyptr = nullptr;
 static long     updated_words, deleted_words, skipped_words;
 static long     freed_bytes;
 static DtSrINT16
@@ -271,7 +271,7 @@ static int      delete_addrs (void)
 		sizeof (DB_ADDR),	/* size of each elem */
 		compare_dba);	/* my compare function */
 
-	    if (dba_eq != NULL) {
+	    if (dba_eq != nullptr) {
 		/*
 		 * HIT! the passed word links to this dba. Don't copy the dba
 		 * to copy array. 
@@ -381,7 +381,7 @@ static void     print_counters (char *wordtype)
     static long     totupdwords, totdelwords, totskipwords;
     static long     totfreedbytes;
 
-    if (wordtype == NULL) {
+    if (wordtype == nullptr) {
 	/* initialize buckets */
 	totupdwords = totdelwords = totskipwords = 0L;
 	updated_words = deleted_words = skipped_words = 0L;
@@ -469,7 +469,7 @@ NOTHING_TO_DO:
     debugging = ((usrblk.debug & USRDBG_DELETE) != 0L);
     verbose_debugging = ((usrblk.debug & USRDBG_VERBOSE) != 0L);
 
-    print_counters (NULL);	/* initialize all counters */
+    print_counters (nullptr);	/* initialize all counters */
     if (debugging) {
 	fprintf (aa_stderr, PROGNAME "185 "
 	    "db='%s' vistano=%d maxwordsz=%d dbacount=%d.\n",

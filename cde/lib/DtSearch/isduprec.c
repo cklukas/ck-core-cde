@@ -118,7 +118,7 @@ static void     dump_hashtab (HASHNODE ** hashtab)
 	if (*hpp) {
 	    printf ("  %4d:", i);
 	    fflush (stdout);
-	    for (hp = *hpp; hp != NULL; hp = hp->link)
+	    for (hp = *hpp; hp != nullptr; hp = hp->link)
 		printf (" '%s'", hp->recid);
 	    putchar ('\n');
 	    fflush (stdout);
@@ -144,7 +144,7 @@ static void     dump_hashtab (HASHNODE ** hashtab)
  */
 int             is_duprec (char *recid)
 {
-    static HASHNODE **hashtab = NULL;
+    static HASHNODE **hashtab = nullptr;
     static unsigned long primes[10] =
     {1013, 1511, 2203, 3511, 5003, 10007, 15013, 20011, 25013, 30001};
 
@@ -157,7 +157,7 @@ int             is_duprec (char *recid)
 	return NOT_A_DUP;
 
 /* Generate hash table at first call only */
-    if (hashtab == NULL) {
+    if (hashtab == nullptr) {
 	/*
 	 * adjust table size upward to nearest preordained prime
 	 * number 
@@ -170,13 +170,13 @@ int             is_duprec (char *recid)
 #endif
 
 	hashtab = malloc ((duprec_hashsize + 2L) * sizeof (HASHNODE *));
-	if (hashtab == NULL)
+	if (hashtab == nullptr)
 	    return OUT_OF_MEM;
 
 	/* init table to all NULL pointers. */
 	hpp = hashtab;
 	for (i = duprec_hashsize + 2L; i > 0L; i--)
-	    *hpp++ = NULL;
+	    *hpp++ = nullptr;
     }
 
     /*****dump_hashtab(hashtab);******/
@@ -206,7 +206,7 @@ int             is_duprec (char *recid)
 #endif
 
     /* Search linked list (if any) for hashnode containing recid */
-    for (hp = *hpp; hp != NULL; hp = hp->link) {
+    for (hp = *hpp; hp != nullptr; hp = hp->link) {
 #ifdef TEST
 	i++;
 #endif
@@ -224,10 +224,10 @@ int             is_duprec (char *recid)
 #endif
 
     /* Not a duplicate.  Add current recid to hash table. */
-    if ((hp = malloc (sizeof (HASHNODE) + strlen (recid) + 2)) == NULL)
+    if ((hp = malloc (sizeof (HASHNODE) + strlen (recid) + 2)) == nullptr)
 	return OUT_OF_MEM;
     strcpy (hp->recid, recid);
-    hp->link = NULL;
+    hp->link = nullptr;
     /*****hp->link = *hpp;******/
     *hpp = hp;
     return NOT_A_DUP;
@@ -253,14 +253,14 @@ main (int argc, char *argv[])
 	    argv[0]);
 	return;
     }
-    if ((f = fopen (argv[1], "r")) == NULL) {
+    if ((f = fopen (argv[1], "r")) == nullptr) {
 	printf ("Can't open %s: %s\n", argv[1], strerror (errno));
 	return;
     }
     if (argc >= 3)
 	duprec_hashsize = atol (argv[2]);
 
-    while (fgets (buf, sizeof (buf), f) != NULL) {
+    while (fgets (buf, sizeof (buf), f) != nullptr) {
 	buf[sizeof (buf) - 1] = 0;
 	i = is_duprec (buf);
 	printf ("%s", buf);	/* each buf should end in \n */

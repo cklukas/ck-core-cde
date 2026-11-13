@@ -180,7 +180,7 @@ write_assign_local_vars_for_icon(GenCodeInfo genCodeInfo, ABObj obj)
      * Use the parent as the reference widget to create the pixmaps.
      * This is because this widget doesn't exist, yet!
      */
-    if ((obj_get_icon(obj) != NULL) || (obj_get_icon_mask(obj) != NULL))
+    if ((obj_get_icon(obj) != nullptr) || (obj_get_icon_mask(obj) != nullptr))
     {
 	/*
         if (obj_is_base_win(obj))
@@ -194,7 +194,7 @@ write_assign_local_vars_for_icon(GenCodeInfo genCodeInfo, ABObj obj)
 	}
     }
 
-    if (obj_get_icon(obj) != NULL)
+    if (obj_get_icon(obj) != nullptr)
     {
         abio_printf(codeFile, "%s(%s,\n", 
             abmfP_lib_cvt_image_file_to_pixmap->name, parentName);
@@ -205,7 +205,7 @@ write_assign_local_vars_for_icon(GenCodeInfo genCodeInfo, ABObj obj)
         abio_outdent(codeFile);
         abmfP_icon_pixmap_var_has_value(genCodeInfo) = TRUE;
     }
-    if (obj_get_icon_mask(obj) != NULL)
+    if (obj_get_icon_mask(obj) != nullptr)
     {
         abio_printf(codeFile, "%s(%s,\n", 
             abmfP_lib_cvt_image_file_to_pixmap->name, parentName);
@@ -217,8 +217,8 @@ write_assign_local_vars_for_icon(GenCodeInfo genCodeInfo, ABObj obj)
         abmfP_icon_mask_pixmap_var_has_value(genCodeInfo) = TRUE;
     }
 
-    if ( (obj_get_icon_label(obj) != NULL) &&
-    	(abmfP_icon_name_str_var(genCodeInfo) != NULL) &&
+    if ( (obj_get_icon_label(obj) != nullptr) &&
+    	(abmfP_icon_name_str_var(genCodeInfo) != nullptr) &&
     	(!abmfP_icon_name_str_var_has_value(genCodeInfo)) )
     {
         if (genCodeInfo->i18n_method == ABMF_I18N_XPG4_API)
@@ -250,8 +250,8 @@ static int
 write_assign_local_vars_for_label(GenCodeInfo genCodeInfo, ABObj obj)
 {
     File        codeFile = genCodeInfo->code_file;
-    ABObj       wholeObj = NULL;
-    ABObj       labelObj = NULL;
+    ABObj       wholeObj = nullptr;
+    ABObj       labelObj = nullptr;
 
     wholeObj = obj_get_root(obj);
     labelObj = objxm_comp_get_subobj(wholeObj, AB_CFG_LABEL_OBJ);
@@ -260,7 +260,7 @@ write_assign_local_vars_for_label(GenCodeInfo genCodeInfo, ABObj obj)
      * REMIND: fix libABobjXm - the title obj of a popup menu should be
      * the CFG_LABEL_OBJ.
      */
-    if ((labelObj == NULL) && obj_is_label(obj) && obj_is_menu(wholeObj))
+    if ((labelObj == nullptr) && obj_is_label(obj) && obj_is_menu(wholeObj))
     {
 	labelObj = obj;
     }
@@ -269,7 +269,7 @@ write_assign_local_vars_for_label(GenCodeInfo genCodeInfo, ABObj obj)
      * If this isn't the label obj, or there is no label, then there's
      * nothing to do.
      */
-    if( (labelObj != obj) || (obj_get_label(wholeObj) == NULL)) return 0;
+    if( (labelObj != obj) || (obj_get_label(wholeObj) == nullptr)) return 0;
 
     /*
      * Windows use ascii strings for titles, rather than compound strings
@@ -277,7 +277,7 @@ write_assign_local_vars_for_label(GenCodeInfo genCodeInfo, ABObj obj)
     if (obj_is_window(wholeObj))
     {
 	/* Handle window title string */
-        if ( (abmfP_title_str_var(genCodeInfo) != NULL)
+        if ( (abmfP_title_str_var(genCodeInfo) != nullptr)
                     && (!abmfP_title_str_var_has_value(genCodeInfo)) )
         {
             if (genCodeInfo->i18n_method == ABMF_I18N_XPG4_API)
@@ -302,11 +302,11 @@ write_assign_local_vars_for_label(GenCodeInfo genCodeInfo, ABObj obj)
         switch (obj_get_label_type(obj))
         {
             case AB_LABEL_STRING:
-                if ( (abmfP_label_xmstr_var(genCodeInfo) != NULL)
+                if ( (abmfP_label_xmstr_var(genCodeInfo) != nullptr)
                     && (!abmfP_label_xmstr_var_has_value(genCodeInfo)) )
                 {
                     if (obj_is_item(obj) &&
-                        abmfP_label_array_var(genCodeInfo) != NULL &&
+                        abmfP_label_array_var(genCodeInfo) != nullptr &&
                         abmfP_label_array_has_nulls(genCodeInfo))
                     {
                         abio_printf(codeFile,
@@ -319,7 +319,7 @@ write_assign_local_vars_for_label(GenCodeInfo genCodeInfo, ABObj obj)
                         istr_string(abmfP_label_xmstr_var(genCodeInfo)));
 
                     if (obj_is_item(obj) &&
-                        abmfP_label_array_var(genCodeInfo) != NULL)
+                        abmfP_label_array_var(genCodeInfo) != nullptr)
                     {
                         abio_printf(codeFile, "%s[i]",
                             istr_string(abmfP_label_array_var(genCodeInfo)));
@@ -351,7 +351,7 @@ write_assign_local_vars_for_label(GenCodeInfo genCodeInfo, ABObj obj)
                     }
                     abio_puts(codeFile, ");\n");
                     if (obj_is_item(obj) &&
-                        abmfP_label_array_var(genCodeInfo) != NULL &&
+                        abmfP_label_array_var(genCodeInfo) != nullptr &&
                         abmfP_label_array_has_nulls(genCodeInfo))
                         abio_outdent(codeFile);
                     abmfP_label_xmstr_var_has_value(genCodeInfo) = TRUE;
@@ -376,9 +376,9 @@ write_assign_local_vars_for_acceltext(GenCodeInfo genCodeInfo, ABObj obj)
     STRING      accel, acceltext;
 
     if (obj_is_menu_item(obj) &&
-        (accel = obj_get_accelerator(obj)) != NULL)
+        (accel = obj_get_accelerator(obj)) != nullptr)
     {
-        if ( (abmfP_acceltext_xmstr_var(genCodeInfo) != NULL)
+        if ( (abmfP_acceltext_xmstr_var(genCodeInfo) != nullptr)
               && (!abmfP_acceltext_xmstr_var_has_value(genCodeInfo)) )
         {
             acceltext = objxm_accel_to_acceltext(accel);
@@ -414,13 +414,13 @@ write_assign_local_vars_for_value(GenCodeInfo genCodeInfo, ABObj obj)
 {
     File        codeFile = genCodeInfo->code_file;
     ABObj       wholeObj = obj_get_root(obj);
-    ABObj       text_obj = NULL;
+    ABObj       text_obj = nullptr;
     
     if(!obj_is_text(wholeObj)) return 0;
     text_obj = objxm_comp_get_subobj(wholeObj, AB_CFG_OBJECT_OBJ);
-    if((obj == text_obj) && (obj_get_initial_value_string(wholeObj) != NULL) )
+    if((obj == text_obj) && (obj_get_initial_value_string(wholeObj) != nullptr) )
     {
-        if ( (abmfP_value_str_var(genCodeInfo) != NULL)
+        if ( (abmfP_value_str_var(genCodeInfo) != nullptr)
                     && (!abmfP_value_str_var_has_value(genCodeInfo)) )
         {
             if (genCodeInfo->i18n_method == ABMF_I18N_XPG4_API)
@@ -452,15 +452,15 @@ write_assign_local_vars_for_fchooser(GenCodeInfo genCodeInfo, ABObj obj)
 {
     File        codeFile = genCodeInfo->code_file;
     ABObj	wholeObj = obj_get_root(obj);
-    ABObj	fsb_obj  = NULL;
+    ABObj	fsb_obj  = nullptr;
 
     if (!obj_is_file_chooser(wholeObj)) 
 	return 0;
     fsb_obj = objxm_comp_get_subobj(wholeObj,AB_CFG_OBJECT_OBJ);
     if (obj == fsb_obj)
     {
-        if ((obj_get_ok_label(wholeObj) != NULL) &&
-	    (abmfP_ok_label_xmstr_var(genCodeInfo) != NULL) &&
+        if ((obj_get_ok_label(wholeObj) != nullptr) &&
+	    (abmfP_ok_label_xmstr_var(genCodeInfo) != nullptr) &&
 	    (!abmfP_ok_label_xmstr_var_has_value(genCodeInfo)))
 	{
 	    char *ok_label = obj_get_ok_label(wholeObj);
@@ -484,8 +484,8 @@ write_assign_local_vars_for_fchooser(GenCodeInfo genCodeInfo, ABObj obj)
             abmfP_ok_label_xmstr_var_has_value(genCodeInfo) = TRUE;
 	}
 
-        if ((obj_get_directory(wholeObj) != NULL) &&
-	    (abmfP_directory_xmstr_var(genCodeInfo) != NULL) &&
+        if ((obj_get_directory(wholeObj) != nullptr) &&
+	    (abmfP_directory_xmstr_var(genCodeInfo) != nullptr) &&
 	    (!abmfP_directory_xmstr_var_has_value(genCodeInfo)))      
         {
             char *dirString = obj_get_directory(wholeObj);
@@ -499,8 +499,8 @@ write_assign_local_vars_for_fchooser(GenCodeInfo genCodeInfo, ABObj obj)
             abmfP_directory_xmstr_var_has_value(genCodeInfo) = TRUE;
         }
 
-        if ((obj_get_filter_pattern(wholeObj) != NULL) &&
-            (abmfP_pattern_xmstr_var(genCodeInfo) != NULL) &&
+        if ((obj_get_filter_pattern(wholeObj) != nullptr) &&
+            (abmfP_pattern_xmstr_var(genCodeInfo) != nullptr) &&
 	    (!abmfP_pattern_xmstr_var_has_value(genCodeInfo)))
         {
             char *patString = obj_get_filter_pattern(wholeObj);
@@ -538,7 +538,7 @@ write_free_local_vars_for_label(GenCodeInfo genCodeInfo, ABObj obj)
     if (abmfP_label_xmstr_var_has_value(genCodeInfo))
     {
         if (obj_is_item(obj) &&
-            abmfP_label_array_var(genCodeInfo) != NULL &&
+            abmfP_label_array_var(genCodeInfo) != nullptr &&
             abmfP_label_array_has_nulls(genCodeInfo))
         {
             abio_printf(codeFile, "if (%s != NULL)\n", 
@@ -553,7 +553,7 @@ write_free_local_vars_for_label(GenCodeInfo genCodeInfo, ABObj obj)
             istr_string(
                 abmfP_label_xmstr_var(genCodeInfo)));
         if (obj_is_item(obj) &&
-            abmfP_label_array_var(genCodeInfo) != NULL &&
+            abmfP_label_array_var(genCodeInfo) != nullptr &&
             abmfP_label_array_has_nulls(genCodeInfo))
         {
             abio_outdent(codeFile);
@@ -696,7 +696,7 @@ abmfP_strip_item_name(char *item_name)
 
     snprintf(new_name, sizeof(new_name), "%s", item_name);
     p = (char *) strrchr(new_name, '_');
-    if (p != NULL)
+    if (p != nullptr)
         *p = '\0';
     return new_name;
 }
@@ -715,20 +715,20 @@ abmfP_write_add_callbacks_and_actions(
     AB_TRAVERSAL        trav;
     ABObj               project = obj_get_project(srcObj);
     ABObj               module = obj_get_module(srcObj);
-    ABObj               action = NULL;
-    ABObj               dest = NULL;
-    Arg                *arg = NULL;
-    STRING              resource = NULL;
+    ABObj               action = nullptr;
+    ABObj               dest = nullptr;
+    Arg                *arg = nullptr;
+    STRING              resource = nullptr;
     ABObj               commonSrcObj = obj_get_actual_obj(srcObj);
-    ISTRING             istr_resource = NULL;
-    ABObj               from = NULL;
-    ABObj               to = NULL;
+    ISTRING             istr_resource = nullptr;
+    ABObj               from = nullptr;
+    ABObj               to = nullptr;
     AB_WHEN             when = AB_WHEN_UNDEF;
     AB_BUILTIN_ACTION   builtin_action = AB_STDACT_UNDEF;
-    ABObj               actualSrcSubobj = NULL;
-    ABObj               actualTargetSubobj = NULL;
+    ABObj               actualSrcSubobj = nullptr;
+    ABObj               actualTargetSubobj = nullptr;
     int                 actionObjCount = 0;
-    ABObj               actionObj = NULL;
+    ABObj               actionObj = nullptr;
     ABObj               win_parent, help_btn, help_obj;
 
     /* 
@@ -745,12 +745,12 @@ abmfP_write_add_callbacks_and_actions(
                 actionObj = project;
                 break;
         }
-        if (actionObj == NULL)
+        if (actionObj == nullptr)
         {
             continue;
         }
         for (trav_open(&trav, actionObj, AB_TRAV_ACTIONS_FOR_OBJ);
-             (action = trav_next(&trav)) != NULL;)
+             (action = trav_next(&trav)) != nullptr;)
         {
 
         from = obj_get_from(action);
@@ -764,7 +764,7 @@ abmfP_write_add_callbacks_and_actions(
         builtin_action = obj_get_func_builtin(action);
 
         /* post-create procs are not implemented using resources */
-        if (from != NULL) switch (when)
+        if (from != nullptr) switch (when)
         {
         case AB_WHEN_AFTER_CREATED:
                 /* not implemented, here */
@@ -921,7 +921,7 @@ abmfP_write_add_callbacks_and_actions(
             if (from == commonSrcObj)
             {
                 resource = objxm_get_resource_for_when(srcObj, when);
-                if (resource == NULL)
+                if (resource == nullptr)
                 { 
                     /* this when value is unsupported */
                     if (!util_be_silent())
@@ -930,7 +930,7 @@ abmfP_write_add_callbacks_and_actions(
                         char *when_string  = 
                             util_strsafe(util_when_to_string(when));
 
-                        if(src_obj_name == NULL) {
+                        if(src_obj_name == nullptr) {
                             util_printf_err(CATGETS(Dtb_project_catd, 1, 74,
                                "Ignoring unsupported WHEN - obj:<unnamed> when:%s\n"),
                                when_string);
@@ -945,7 +945,7 @@ abmfP_write_add_callbacks_and_actions(
                 else
                 {
                     istr_resource = objxm_get_res_strname(resource);
-                    if ((dest = to) == NULL)
+                    if ((dest = to) == nullptr)
                     {
                         dest = srcObj;
                     }
@@ -954,7 +954,7 @@ abmfP_write_add_callbacks_and_actions(
                     actualTargetSubobj = 
                         objxm_comp_get_target_for_builtin_action(
                                         dest, builtin_action);
-		    if (actualTargetSubobj == NULL)
+		    if (actualTargetSubobj == nullptr)
 		    {
 			/* Although the individual widget is not correct,
 			 * this will give us the correct struct.
@@ -1005,21 +1005,21 @@ abmfP_write_add_callback(
     ** if we are unable to obtain the c name for the destination, we are on
     ** a virtual object and should search for the refs to it.
     */
-    if (abmfP_get_c_name(genCodeInfo, dest) == NULL)
+    if (abmfP_get_c_name(genCodeInfo, dest) == nullptr)
     {
 	ABObjList            refList = abmfP_find_refs_to(dest);
-	ABObj                refObj  = NULL;
+	ABObj                refObj  = nullptr;
 	int                  numRefs = objlist_get_num_objs(refList);
 	int                        i = 0;
 	BOOL                 handled = FALSE;
 	
-	if ((refList != NULL) && (numRefs > 0))
+	if ((refList != nullptr) && (numRefs > 0))
 	{
 	    for (i = 0; i < numRefs; ++i)
 	    {
-		refObj = objlist_get_obj(refList, i, NULL);
+		refObj = objlist_get_obj(refList, i, nullptr);
 
-		if (abmfP_get_c_struct_name(genCodeInfo, refObj) != NULL)
+		if (abmfP_get_c_struct_name(genCodeInfo, refObj) != nullptr)
 		{
 		    abio_printf(codeFile, "\t\t(XtPointer)&%s);\n",
 			abmfP_get_c_struct_name(genCodeInfo, refObj));
@@ -1137,7 +1137,7 @@ static int
 write_set_items_glyph_labels(GenCodeInfo genCodeInfo, ABObj obj)
 {
     AB_TRAVERSAL        trav;
-    ABObj               item = NULL;
+    ABObj               item = nullptr;
 
     if (!abmfP_obj_has_item_with_glyph_label(obj))
     {
@@ -1145,7 +1145,7 @@ write_set_items_glyph_labels(GenCodeInfo genCodeInfo, ABObj obj)
     }
 
     for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-        (item = trav_next(&trav)) != NULL; )
+        (item = trav_next(&trav)) != nullptr; )
     {
         write_set_glyph_labels(genCodeInfo, item);
     }
@@ -1165,7 +1165,7 @@ write_set_glyph_labels(GenCodeInfo genCodeInfo, ABObj obj)
     {					/* obj is not an item */
 	if (abmfP_obj_has_glyph_label(rootObj))
 	{
-	    ABObj       labelObj = NULL;
+	    ABObj       labelObj = nullptr;
 	    
 	    labelObj = objxm_comp_get_subobj(rootObj, AB_CFG_LABEL_OBJ);
 	    if (obj == labelObj)
@@ -1258,9 +1258,9 @@ write_create_widget_by_non_va_conv_func(
         {
             ABObj               compRoot = obj_get_root(obj);
             AB_TRAVERSAL        compTrav;
-            ABObj               subobj = NULL;
+            ABObj               subobj = nullptr;
             for (trav_open(&compTrav, compRoot, AB_TRAV_COMP_SUBOBJS);
-                (subobj = trav_next(&compTrav)) != NULL; )
+                (subobj = trav_next(&compTrav)) != nullptr; )
             {
                 abmfP_obj_spew_args(genCodeInfo, subobj, 
                         ABMF_ARGCLASS_ALL_BUT_WIDGET_REF, ABMF_ARGFMT_ARRAY);
@@ -1393,7 +1393,7 @@ write_comp_create_menu_button(GenCodeInfo genCodeInfo, ABObj obj)
     File        codeFile = genCodeInfo->code_file;
     int         return_value = 0;
     int         rc = 0;
-    ABObj       menuObj = NULL;
+    ABObj       menuObj = nullptr;
     
     rc = write_create_widget_by_non_va_conv_func(genCodeInfo,
                 obj, "DtCreateMenuButton", FALSE);
@@ -1403,7 +1403,7 @@ write_comp_create_menu_button(GenCodeInfo genCodeInfo, ABObj obj)
      * Grab the menu pane from the menu button
      */
     menuObj = obj_find_child_by_type(obj, AB_TYPE_MENU);
-    if (menuObj == NULL)
+    if (menuObj == nullptr)
     {
         return_code(-1);
     }
@@ -1461,9 +1461,9 @@ write_comp_create_choice(GenCodeInfo genCodeInfo, ABObj obj)
          * control.  If there is no label, the menu object is a child
          * of the actual control.
          */
-        if (itemParentObj != NULL) 
+        if (itemParentObj != nullptr) 
         {
-            if (   (actualObj != NULL)
+            if (   (actualObj != nullptr)
                 && (!obj_is_descendant_of(itemParentObj, actualObj)) )
             {
                 write_comp_parents_of_obj(genCodeInfo, itemParentObj);
@@ -1550,7 +1550,7 @@ write_comp_create_text(GenCodeInfo genCodeInfo, ABObj obj)
     ABObj       scrollingObj = objxm_comp_get_subobj(obj, AB_CFG_SCROLLING_OBJ);
     ABObj       objectObj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ);
 
-    if (scrollingObj != NULL)
+    if (scrollingObj != nullptr)
     {
         write_comp_except_for_subtree(genCodeInfo, obj, scrollingObj);
         write_create_widget_by_non_va_conv_func(
@@ -1592,7 +1592,7 @@ write_obj_create_base_win(GenCodeInfo genCodeInfo, ABObj obj)
     File        codeFile = genCodeInfo->code_file;
     ABObj       project = obj_get_project(obj); 
     BOOL	wasAppShell = mfobj_has_flags(obj, CGenFlagTreatAsAppShell);
-    STRING	className = NULL;
+    STRING	className = nullptr;
 
     /* always treat as non-primary shell, so that any other instances
      * created by the application programmer will pick up the proper
@@ -1693,8 +1693,8 @@ write_obj_create_dialog(GenCodeInfo genCodeInfo, ABObj dialog)
 static int
 write_list(GenCodeInfo genCodeInfo, ABObj list)
 {
-    ABObj       wholeObj = NULL;
-    ABObj       scrollObj = NULL;
+    ABObj       wholeObj = nullptr;
+    ABObj       scrollObj = nullptr;
     ABObj       item;
     int		num_items= obj_get_num_items(list);
     int		i;
@@ -1724,7 +1724,7 @@ write_list(GenCodeInfo genCodeInfo, ABObj list)
 
     wholeObj= obj_get_root(list);
     scrollObj= objxm_comp_get_subobj(wholeObj, AB_CFG_SCROLLING_OBJ);
-    if (scrollObj != NULL)
+    if (scrollObj != nullptr)
     {
         /* can't use get_c_name twice in the same printf! (static buf) */
         genCodeInfo->cur_func.create_obj = scrollObj;
@@ -1796,7 +1796,7 @@ write_create_all_items(GenCodeInfo genCodeInfo, ABObj obj)
     File                codeFile = genCodeInfo->code_file;
     ABObj               firstItem= obj_get_item(obj, 0);
 
-    if ((firstItem == NULL) || (obj_was_written(firstItem)))
+    if ((firstItem == nullptr) || (obj_was_written(firstItem)))
     {
         return 0;               /* no kids! */
     }
@@ -1811,7 +1811,7 @@ write_create_all_items(GenCodeInfo genCodeInfo, ABObj obj)
     else
     {
         AB_TRAVERSAL    trav;
-        ABObj           item = NULL;
+        ABObj           item = nullptr;
         char            widgetArrayName[256] = "";
 
 	/*
@@ -1820,13 +1820,13 @@ write_create_all_items(GenCodeInfo genCodeInfo, ABObj obj)
 	if (obj_is_menu(obj))
 	{
 	    ABObj	itemParent = obj_get_parent(firstItem);
-	    ABObj	child = NULL;
+	    ABObj	child = nullptr;
 
-	    if (itemParent != NULL)
+	    if (itemParent != nullptr)
 	    {
 		/* we'll just create widgets up to the first item */
 		for (trav_open(&trav, itemParent, AB_TRAV_CHILDREN);
-			(((child = trav_next(&trav)) != NULL) 
+			(((child = trav_next(&trav)) != nullptr) 
 			    && (!obj_is_item(child))); )
 		{
 		    abmfP_write_create_widgets_for_one_obj(genCodeInfo, child);
@@ -1857,7 +1857,7 @@ write_create_all_items(GenCodeInfo genCodeInfo, ABObj obj)
 	     */
 	    for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ), 
 		item = trav_next(&trav);	/* skip first */
-		    (item = trav_next(&trav)) != NULL; )
+		    (item = trav_next(&trav)) != nullptr; )
 	    {
 		abmfP_obj_spew_args(genCodeInfo, item, 
 		    ABMF_ARGCLASS_ALL, ABMF_ARGFMT_UNDEF);
@@ -1871,7 +1871,7 @@ write_create_all_items(GenCodeInfo genCodeInfo, ABObj obj)
                  * widget variables
                  */
                 for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-                     (item = trav_next(&trav)) != NULL; )
+                     (item = trav_next(&trav)) != nullptr; )
                 {
                     abio_printf(codeFile, "%s = %s[%d];\n",
                         abmfP_get_c_name(genCodeInfo, item),
@@ -1886,7 +1886,7 @@ write_create_all_items(GenCodeInfo genCodeInfo, ABObj obj)
             if (!obj_is_combo_box_item(firstItem))
             {
                 for (trav_open(&trav, obj, AB_TRAV_ITEMS_FOR_OBJ);
-                    (item = trav_next(&trav)) != NULL; )
+                    (item = trav_next(&trav)) != nullptr; )
                 {   
                     abmfP_write_create_widgets_for_one_obj(genCodeInfo, item);
                 }
@@ -1900,7 +1900,7 @@ write_create_all_items(GenCodeInfo genCodeInfo, ABObj obj)
                     ABObj       item = obj_get_item(obj, i);
 
                     abio_printf(codeFile, "\n");
-                    write_create_one_item(genCodeInfo, item, NULL);
+                    write_create_one_item(genCodeInfo, item, nullptr);
                 }
             }
         }
@@ -1919,7 +1919,7 @@ write_create_all_items(GenCodeInfo genCodeInfo, ABObj obj)
 static int
 write_create_and_attach_all_item_menus(GenCodeInfo genCodeInfo, ABObj obj)
 {
-    ABObj       item = NULL;
+    ABObj       item = nullptr;
     AB_TRAVERSAL        trav;
     int                 num_items = obj_get_num_items(obj);
     int                 num_written = 0;
@@ -1932,7 +1932,7 @@ write_create_and_attach_all_item_menus(GenCodeInfo genCodeInfo, ABObj obj)
     abio_puts(genCodeInfo->code_file, nlstr);
     abmfP_write_c_comment(genCodeInfo, FALSE, "Create and attach the submenus");
     for (trav_open(&trav, obj, AB_TRAV_ITEMS);
-        (item = trav_next(&trav)) != NULL; )
+        (item = trav_next(&trav)) != nullptr; )
     {
         write_create_and_attach_item_menu(genCodeInfo, item);
         ++num_written;
@@ -1956,7 +1956,7 @@ write_create_and_attach_item_menu(GenCodeInfo genCodeInfo, ABObj item)
     char                menuVar[256];
     char                parentVar[256];
 
-    if ((menu_ref == NULL) || (menu == NULL))
+    if ((menu_ref == nullptr) || (menu == nullptr))
     {
         /* this item does not have a menu */
         return 0;
@@ -1982,7 +1982,7 @@ write_create_and_attach_item_menu(GenCodeInfo genCodeInfo, ABObj item)
      */
     {
         AB_TRAVERSAL    trav;
-        ABObj           item = NULL;
+        ABObj           item = nullptr;
         int             numItems= obj_get_num_items(menu);
         int             thisItemNum = -1;
 
@@ -1994,7 +1994,7 @@ write_create_and_attach_item_menu(GenCodeInfo genCodeInfo, ABObj item)
         abio_puts(codeFile, "\n");
 
         for (trav_open(&trav, menu, AB_TRAV_ITEMS_FOR_OBJ);
-            (item = trav_next(&trav)) != NULL; )
+            (item = trav_next(&trav)) != nullptr; )
         {
             abio_printf(codeFile, "&(%s)",
                 abmfP_get_c_name(genCodeInfo, item));
@@ -2040,7 +2040,7 @@ ancestor_is_menu(ABObj obj)
     if (!obj_is_choice(obj) || obj_is_group(abmfP_parent(obj)))
         return FALSE;
     for (trav_open(&trav, obj, AB_TRAV_PARENTS);
-         (ancestor = trav_next(&trav)) != NULL;)
+         (ancestor = trav_next(&trav)) != nullptr;)
     {
         if (ObjWClassIsMenuShell(ancestor))
         {
@@ -2071,17 +2071,17 @@ write_comp_parents_of_obj(
 #define MAX_ANCESTORS 100
     ABObj       compRoot = obj_get_root(obj);
     ABObj       ancestors[MAX_ANCESTORS];
-    ABObj       ancestor = NULL;
+    ABObj       ancestor = nullptr;
     int         numAncestors = 0;
     int         i = 0;
 
-    if (compRoot == NULL)
+    if (compRoot == nullptr)
     {
         return -1;
     }
 
     for (ancestor = abmfP_parent(obj); 
-         ancestor != NULL; ancestor = abmfP_parent(ancestor))
+         ancestor != nullptr; ancestor = abmfP_parent(ancestor))
     {
         assert(numAncestors < (MAX_ANCESTORS-1));
         ancestors[numAncestors++] = ancestor;
@@ -2134,13 +2134,13 @@ write_comp_except_for_subtree(
 )
 {
     AB_TRAVERSAL        trav;
-    ABObj               subobj= NULL;
+    ABObj               subobj= nullptr;
     ABObj               comp_root= obj_get_root(obj);
 
     /*
      * Skip the subtree entirely
      */
-    if (   (subtree != NULL)
+    if (   (subtree != nullptr)
         && (   (obj == subtree)
             || (obj_is_descendant_of(obj, subtree))))
     {
@@ -2158,12 +2158,12 @@ write_comp_except_for_subtree(
     /*
      * Write out each child that is also part of this composite object.
      */
-    if (comp_root == NULL)
+    if (comp_root == nullptr)
     {
         return 0;
     }
     for (trav_open(&trav, obj, AB_TRAV_CHILDREN);
-        (subobj= trav_next(&trav)) != NULL; )
+        (subobj= trav_next(&trav)) != nullptr; )
     {
         if ((subobj != obj) && (obj_get_root(subobj) == comp_root) )
         {
@@ -2184,7 +2184,7 @@ write_comp_create_all_subobjs(GenCodeInfo genCodeInfo, ABObj obj)
     int         return_value = 0;
     int         rc = 0;         /* return code */
 
-    rc = write_comp_except_for_subtree(genCodeInfo, obj, NULL);
+    rc = write_comp_except_for_subtree(genCodeInfo, obj, nullptr);
     return_if_err(rc,rc);
 
     rc = write_create_all_items(genCodeInfo, obj);
@@ -2208,12 +2208,12 @@ write_create_one_item(
 {
     File                codeFile = genCodeInfo->code_file;
     AB_TRAVERSAL	itemTrav;
-    ABObj		itemParent = NULL;
+    ABObj		itemParent = nullptr;
     StringListRec	inactiveItemsRec;
     StringList		inactiveItems = &inactiveItemsRec;
     int			selectedIndex = 0;
     int			numInactiveItems = 0;
-    ABObj		siblingItem = NULL;
+    ABObj		siblingItem = nullptr;
     int			i = 0;
     char		buf[256];
     char		widgetArrayVarName[MAX_NAME_SIZE];
@@ -2223,7 +2223,7 @@ write_create_one_item(
     strlist_construct(&inactiveItemsRec);
 
     itemParent = obj_get_parent(obj_get_root(item));
-    if (itemParent != NULL)
+    if (itemParent != nullptr)
     {
 	itemParent = obj_get_root(itemParent);
     }
@@ -2304,7 +2304,7 @@ write_create_one_item(
          * Arguments
          */
 	argClasses = ABMF_ARGCLASS_ALL_BUT_WIDGET_REF;
-	if (counterVarName != NULL)
+	if (counterVarName != nullptr)
 	{
 	    /* don't set sensitivity inside a loop */
 	    argClasses &= ~ABMF_ARGCLASS_SENSITIVITY;
@@ -2313,19 +2313,19 @@ write_create_one_item(
                 item, argClasses, ABMF_ARGFMT_VA_LIST);
         abmfP_xt_va_list_close(genCodeInfo);
 
-	if ((counterVarName != NULL) && (!util_strempty(widgetArrayVarName)))
+	if ((counterVarName != nullptr) && (!util_strempty(widgetArrayVarName)))
 	{
 	    /*
 	     * Set additional arguments
 	     * REMIND: This should probably be put into a local array, as well
 	     */
 	    for (i = 0, trav_open(&itemTrav, itemParent, AB_TRAV_ITEMS);
-		    (siblingItem = trav_next(&itemTrav)) != NULL; ++i)
+		    (siblingItem = trav_next(&itemTrav)) != nullptr; ++i)
 	    {
 	        if (!obj_is_initially_active(siblingItem))
 	        {
 		    sprintf(buf, "%d", i);
-		    strlist_add_str(inactiveItems, buf, NULL);
+		    strlist_add_str(inactiveItems, buf, nullptr);
 	        }
 		if (obj_is_initially_selected(siblingItem))
 		    selectedIndex = i;
@@ -2351,7 +2351,7 @@ write_create_one_item(
 	            }
 	            abio_printf(codeFile, "%s == %s",
                         counterVarName,
-		        strlist_get_str(inactiveItems, i, NULL));
+		        strlist_get_str(inactiveItems, i, nullptr));
 	            if (numInactiveItems > 1)
 	            {
 		        abio_printf(codeFile, ")");
@@ -2426,7 +2426,7 @@ abmfP_get_widget_parent_name(GenCodeInfo genCodeInfo, ABObj obj)
     ABObj       parent = abmfP_parent(obj);
     ABObj       wholeObj = obj_get_root(obj);
     ABObj       createObj = abmfP_create_obj(genCodeInfo);
-    ABObj       topAncestorObj = NULL;
+    ABObj       topAncestorObj = nullptr;
     BOOL        parentParamExists = abmfP_parent_param_has_value(genCodeInfo);
     BOOL        parentFound = FALSE;
     *parentName = 0;
@@ -2434,7 +2434,7 @@ abmfP_get_widget_parent_name(GenCodeInfo genCodeInfo, ABObj obj)
     /*
      * Don't search above the parent param
      */
-    if ((createObj != NULL) && parentParamExists)
+    if ((createObj != nullptr) && parentParamExists)
     {
         topAncestorObj = abmfP_parent(createObj);
     }
@@ -2456,7 +2456,7 @@ abmfP_get_widget_parent_name(GenCodeInfo genCodeInfo, ABObj obj)
      */
     if ((!parentFound) && (obj_is_choice(wholeObj)))
     {
-        if (   (wholeObj != NULL) 
+        if (   (wholeObj != nullptr) 
             && (obj_get_choice_type(wholeObj) == AB_CHOICE_OPTION_MENU))
         {
             ABObj itemParentObj = 
@@ -2465,13 +2465,13 @@ abmfP_get_widget_parent_name(GenCodeInfo genCodeInfo, ABObj obj)
             {
                 ABObj   actualObj = objxm_comp_get_subobj(
                                         wholeObj, AB_CFG_OBJECT_OBJ);
-                ABObj   widgetParent = NULL;
+                ABObj   widgetParent = nullptr;
                 
-                if (actualObj != NULL)
+                if (actualObj != nullptr)
                 {
                     widgetParent = abmfP_parent(actualObj);
                 }
-                if (widgetParent != NULL)
+                if (widgetParent != nullptr)
                 {
                     snprintf(parentName, sizeof(parentName), "%s", 
                         abmfP_get_c_name(genCodeInfo, widgetParent));
@@ -2484,11 +2484,11 @@ abmfP_get_widget_parent_name(GenCodeInfo genCodeInfo, ABObj obj)
     /*
      * Look for a parent that exists in the generated code.
      */
-    if ((!parentFound) && (parent != NULL))
+    if ((!parentFound) && (parent != nullptr))
     {
         ABObj   ancestor= parent;
 
-        while (   ((ancestor != NULL) 
+        while (   ((ancestor != nullptr) 
                && (ancestor != topAncestorObj)
                && (!abmfP_subobj_should_be_written(ancestor))) )
         {
@@ -2498,14 +2498,14 @@ abmfP_get_widget_parent_name(GenCodeInfo genCodeInfo, ABObj obj)
         /*
          * Menus are not parented to items - parent to the item's parent
          */
-        while (   (ancestor != NULL) 
+        while (   (ancestor != nullptr) 
                && (ancestor != topAncestorObj)
                && (obj_is_item(ancestor)) )
         {
             ancestor = abmfP_parent(ancestor);
         }
 
-        if (ancestor != NULL)
+        if (ancestor != nullptr)
         {
             if (ancestor == topAncestorObj)
             {
@@ -2523,7 +2523,7 @@ abmfP_get_widget_parent_name(GenCodeInfo genCodeInfo, ABObj obj)
         }
     }
 
-    return (parentFound? parentName:NULL);
+    return (parentFound? parentName:nullptr);
 }
 
 
@@ -2589,12 +2589,12 @@ static void
 write_help_setup_for_obj(GenCodeInfo genCodeInfo, ABObj	obj)
 {
     File	codeFile = genCodeInfo->code_file;
-    ABObj	wholeObj = NULL;
-    ABObj	helpObj  = NULL;
-    ABObj	actualObj  = NULL;
-    ABObj	testObj  = NULL;
-    ABObj	win_parent = NULL;
-    ABObj	help_btn = NULL;
+    ABObj	wholeObj = nullptr;
+    ABObj	helpObj  = nullptr;
+    ABObj	actualObj  = nullptr;
+    ABObj	testObj  = nullptr;
+    ABObj	win_parent = nullptr;
+    ABObj	help_btn = nullptr;
     STRING	help_volume, help_location, help_text;
 
     /* 
@@ -2733,12 +2733,12 @@ abmfP_write_create_widgets_for_one_obj(GenCodeInfo genCodeInfo, ABObj obj)
     int                 return_value= 0;
     File                codeFile = genCodeInfo->code_file;
     int                 iRC= 0;         /* int return code */
-    STRING              glyph_file_name = NULL; /* For messages that are
+    STRING              glyph_file_name = nullptr; /* For messages that are
                                                  * glyphs, */
-    ABObj               wholeObj = NULL;
-    ABObj               actualObj= NULL;
-    ABObj               parentObj = NULL;
-    ABObj               item= NULL;
+    ABObj               wholeObj = nullptr;
+    ABObj               actualObj= nullptr;
+    ABObj               parentObj = nullptr;
+    ABObj               item= nullptr;
     BOOL                objIsActualObj = FALSE;
     BOOL                objIsParentObj = FALSE;
     int                 startingIndent = abio_get_indent(codeFile);
@@ -2751,7 +2751,7 @@ abmfP_write_create_widgets_for_one_obj(GenCodeInfo genCodeInfo, ABObj obj)
     }
 
     wholeObj = obj_get_root(obj);
-    if (wholeObj != NULL)
+    if (wholeObj != nullptr)
     {
         actualObj = objxm_comp_get_subobj(wholeObj, AB_CFG_OBJECT_OBJ);
         parentObj = objxm_comp_get_subobj(wholeObj, AB_CFG_PARENT_OBJ);
@@ -2821,7 +2821,7 @@ abmfP_write_create_widgets_for_one_obj(GenCodeInfo genCodeInfo, ABObj obj)
     }
     if ((!handledIt) && obj_is_text(obj))
     {
-        STRING          convFunc = NULL;
+        STRING          convFunc = nullptr;
         if (ObjWClassIsTextField(obj))
         {
             convFunc = "XmCreateTextField";
@@ -2830,7 +2830,7 @@ abmfP_write_create_widgets_for_one_obj(GenCodeInfo genCodeInfo, ABObj obj)
         {
             convFunc = "XmCreateText";
         }
-        if (convFunc != NULL)
+        if (convFunc != nullptr)
         {
             handledIt = TRUE;
             write_create_widget_by_non_va_conv_func(

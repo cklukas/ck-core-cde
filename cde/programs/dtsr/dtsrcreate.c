@@ -142,7 +142,7 @@ static char	*exttab[] = {
 	/* Must be in same order as model .dbd file tables */
 	".d00", ".d01", ".d21", ".d22", ".d23",
 	".k00", ".k01", ".k21", ".k22", ".k23",
-	NULL };
+	nullptr };
 
 /* Same as MS_initausd, 213... */
 static char	default_unable_to_open_msg[] =
@@ -175,7 +175,7 @@ static void	confirm_ok_to_overwrite (char *fname)
 
     if (ok_to_overwrite)
 	return;
-    if ((fptr = fopen (newpath, "r")) == NULL)
+    if ((fptr = fopen (newpath, "r")) == nullptr)
 	return;
     fclose (fptr);
 
@@ -578,7 +578,7 @@ static void     create_new_dbd (FILE *f)
 	}
     }
 
-    if ((g = fopen (newpath, "w+b")) == NULL) {
+    if ((g = fopen (newpath, "w+b")) == nullptr) {
 	printf (CATGETS(dtsearch_catd, MS_initausd, 214, nocopy_msg),
 	    PROGNAME"509", modelpath, newpath, strerror(errno));
 	DtSearchExit (4);
@@ -596,7 +596,7 @@ static void     create_new_dbd (FILE *f)
      * to rename the filenames.  Rename each internal file
      * name to '<newdbname>.xxx'.
      */
-    for (i = 0;  exttab[i] != NULL;  i++) {
+    for (i = 0;  exttab[i] != nullptr;  i++) {
 	fseek (g, START_OF_FT + (i * SIZEOF_FILE_ENTRY), SEEK_SET);	
 	fprintf (g, "%s%s", dbname, exttab[i]);
 	fwrite (zeros, sizeof(char), sizeof(zeros), g);
@@ -656,7 +656,7 @@ int             main (int argc, char *argv[])
     if (modelpath[0] != 0) {
 	if (debug_mode)
 	    printf (PROGNAME"628 Try opening '%s' (-d dir).\n", modelpath);
-	if ((f = fopen (modelpath, "rb")) != NULL) {
+	if ((f = fopen (modelpath, "rb")) != nullptr) {
 	    if (debug_mode)
 		puts (PROGNAME"638 Found it!");
 	    create_new_dbd (f);
@@ -677,7 +677,7 @@ int             main (int argc, char *argv[])
      */
     if (debug_mode)
 	printf (PROGNAME"649 Try opening '%s' (curr dir).\n", FNAME_MODEL);
-    if ((f = fopen (FNAME_MODEL, "rb")) != NULL) {
+    if ((f = fopen (FNAME_MODEL, "rb")) != nullptr) {
 	if (debug_mode)
 	    puts (PROGNAME"660 Found it!");
 	create_new_dbd (f);
@@ -699,7 +699,7 @@ int             main (int argc, char *argv[])
     strcpy (modelpath + path_offset, FNAME_MODEL);
     if (debug_mode)
 	printf (PROGNAME"672 Try opening '%s' (new dir).\n", modelpath);
-    if ((f = fopen (modelpath, "rb")) != NULL) {
+    if ((f = fopen (modelpath, "rb")) != nullptr) {
 	if (debug_mode)
 	    puts (PROGNAME"675 Found it!");
 	create_new_dbd (f);
@@ -818,7 +818,7 @@ DBD_OKAY:
 
     /* Close the database */
     d_close ();
-    austext_exit_dbms = NULL;	/* emerg exit no longer required */
+    austext_exit_dbms = nullptr;	/* emerg exit no longer required */
 
     /* Delete all nonvista (inverted index) database files (.d9x) */
     remove_d9x_file (".d97");

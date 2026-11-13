@@ -167,8 +167,8 @@ int
 main (int argc, char *argv[])
 {
     int		iRC= 0;		/* return code */
-    ABObj	project= NULL;
-    ABObj	module1= NULL;
+    ABObj	project= nullptr;
+    ABObj	module1= nullptr;
     int		objCount= 0;
     int		fileMode= 0;
 
@@ -329,7 +329,7 @@ main (int argc, char *argv[])
 static int
 err_exit_impl(STRING msg, STRING file, int line)
 {
-    if (msg != NULL)
+    if (msg != nullptr)
     {
 	fprintf(stderr, "ERROR. %s  %s:%d\n", msg, file, line);
     }
@@ -625,7 +625,7 @@ test_destroy(ABObj *treePtr, int *objCountPtr)
 
     verify_count(tree, objCount);	/* be sure objCount is up-to-date */
     iRC= obj_destroy(tree); destroyCount+= objCount; objCount= 0;
-    tree= NULL;
+    tree= nullptr;
     verify_count(tree, objCount);
 
     if (destroyCount != destroyEventCount)
@@ -643,7 +643,7 @@ static int
 check_find_impl(ABObj obj, STRING file, int line)
 {
     int		iReturn= 0;
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	fprintf(stderr, "Bad find %s:%d\n", file, line);
 	exit(1);
@@ -657,7 +657,7 @@ verify_count_impl(ABObj tree, int count, STRING file, int line)
 {
     int 	localCount= 0;
 
-    if (tree != NULL)
+    if (tree != nullptr)
     {
         if (obj_tree_verify(tree) < 0) 
         {
@@ -692,12 +692,12 @@ static int
 print_selected(ABObj tree)
 {
     AB_TRAVERSAL	trav;
-    ABObj		obj= NULL;
+    ABObj		obj= nullptr;
     int			selCount= 0;
 
     printf("Selected: ");
     for (trav_open(&trav, tree, AB_TRAV_ALL | AB_TRAV_MOD_PARENTS_FIRST);
-	(obj= trav_next(&trav)) != NULL; )
+	(obj= trav_next(&trav)) != nullptr; )
     {
 	if (obj_is_selected(obj))
 	{
@@ -725,10 +725,10 @@ count_selected(ABObj tree)
 {
     int		selectCount= 0;
     AB_TRAVERSAL	trav;
-    ABObj		obj= NULL;
+    ABObj		obj= nullptr;
 
     for (trav_open(&trav, tree, AB_TRAV_ALL);
-	(obj= trav_next(&trav)) != NULL; )
+	(obj= trav_next(&trav)) != nullptr; )
     {
 	if (obj_is_selected(obj))
 	{
@@ -744,15 +744,15 @@ count_selected(ABObj tree)
 static ABObj
 create_test_project(void)
 {
-    ABObj	project= NULL;
-    ABObj	module1= NULL;
-    ABObj	module2= NULL;
-    ABObj	module3= NULL;
-    ABObj	obj= NULL;
-    ABObj	button= NULL;
-    ABObj	parent= NULL;
+    ABObj	project= nullptr;
+    ABObj	module1= nullptr;
+    ABObj	module2= nullptr;
+    ABObj	module3= nullptr;
+    ABObj	obj= nullptr;
+    ABObj	button= nullptr;
+    ABObj	parent= nullptr;
 
-    project= obj_create(AB_TYPE_PROJECT, NULL);
+    project= obj_create(AB_TYPE_PROJECT, nullptr);
     create_test_module(project);
     create_test_module(project);
     create_test_module(project);
@@ -764,15 +764,15 @@ create_test_project(void)
     module3= obj_find_module_by_name(project, "module301");
     check_find(module3);
 
-    if (module1 != NULL)
+    if (module1 != nullptr)
     {
 	obj_set_name(module1, "module1"); ++renameCount;
     }
-    if (module2 != NULL)
+    if (module2 != nullptr)
     {
 	obj_set_name(module2, "module2"); ++renameCount;
     }
-    if (module3 != NULL)
+    if (module3 != nullptr)
     {
 	obj_set_name(module3, "module3"); ++renameCount;
     }
@@ -786,27 +786,27 @@ create_test_module(ABObj project)
 {
     static	int module_number= 0;
     int		baseNumber = 0;
-    ABObj	button1= NULL;
-    ABObj	module= NULL;
-    ABObj	tf1= NULL;
+    ABObj	button1= nullptr;
+    ABObj	module= nullptr;
+    ABObj	tf1= nullptr;
     char	tf1Name[256] = "";
-    ABObj	container3= NULL;
+    ABObj	container3= nullptr;
     char	container3Name[256] = "";
-    ABObj	container5= NULL;
+    ABObj	container5= nullptr;
     char	container5Name[256] = "";
-    ABObj	container6= NULL;
+    ABObj	container6= nullptr;
     char	container6Name[256] = "";
-    ABObj	item3= NULL;
+    ABObj	item3= nullptr;
     char	item3Name[256] = "";
-    ABObj	slider1= NULL;
+    ABObj	slider1= nullptr;
     char	slider1Name[256] = "";
-    ABObj	list1= NULL;
+    ABObj	list1= nullptr;
     char	list1Name[256] = "";
-    ABObj	list2= NULL;
+    ABObj	list2= nullptr;
     char	list2Name[256] = "";
-    ABObj	list4= NULL;
+    ABObj	list4= nullptr;
     char	list4Name[256] = "";
-    ABObj	list5= NULL;
+    ABObj	list5= nullptr;
     char	list5Name[256] = "";
 
     ++module_number;
@@ -878,7 +878,7 @@ set_next_name_number(int number)
 static STRING
 safe_obj_name(ABObj obj)
 {
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	return "NULL";
     }
@@ -961,13 +961,13 @@ composite_create_module(ABObj module)
 {
     static int	module_number= 0;
     int		iReturn= 0;
-    ABObj	tf1= NULL;
-    ABObj	tf2= NULL;
-    ABObj	list1= NULL;
-    ABObj	list2= NULL;
-    ABObj	cont1= NULL;
-    ABObj	cont2= NULL;
-    ABObj	cont3= NULL;
+    ABObj	tf1= nullptr;
+    ABObj	tf2= nullptr;
+    ABObj	list1= nullptr;
+    ABObj	list2= nullptr;
+    ABObj	cont1= nullptr;
+    ABObj	cont2= nullptr;
+    ABObj	cont3= nullptr;
 
     module->part_of= module;
     obj_set_flag(module, XmConfiguredFlag);
@@ -1009,9 +1009,9 @@ composite_create_list(ABObj list)
 {
     ABObj	parent= obj_get_parent(list);
 
-    if ((parent != NULL) && obj_is_list(parent))
+    if ((parent != nullptr) && obj_is_list(parent))
     {
-	ABObj	obj= NULL;
+	ABObj	obj= nullptr;
 	list->part_of= list;		/* composite root */
         obj= obj_create(AB_TYPE_CONTAINER, list);
         obj->part_of= list;
@@ -1029,7 +1029,7 @@ composite_create_list(ABObj list)
 static int
 composite_create_slider(ABObj slider)
 {
-    ABObj	obj= NULL;
+    ABObj	obj= nullptr;
 
     slider->part_of= slider;
 
@@ -1172,7 +1172,7 @@ static int
 composite_select_callback(ObjEvAttChangeInfo info)
 {
     AB_TRAVERSAL	trav;
-    ABObj		curObj= NULL;
+    ABObj		curObj= nullptr;
     ABObj		obj= info->obj;
     BOOL		selected= obj_is_selected(obj);
 
@@ -1185,7 +1185,7 @@ composite_select_callback(ObjEvAttChangeInfo info)
     }
 
     for (trav_open(&trav, obj, AB_TRAV_ALL);
-	(curObj= trav_next(&trav)) != NULL; )
+	(curObj= trav_next(&trav)) != nullptr; )
     {
 	if (curObj->part_of == obj)
 	{
@@ -1211,9 +1211,9 @@ composite_select_callback(ObjEvAttChangeInfo info)
 static int
 exclusive_select_callback(ObjEvAttChangeInfo info)
 {
-    static ABObj	currentSelection= NULL;
+    static ABObj	currentSelection= nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		curObj= NULL;
+    ABObj		curObj= nullptr;
     ABObj		obj= info->obj;
     ABObj		project= obj_get_project(obj);
 
@@ -1248,7 +1248,7 @@ exclusive_select_callback(ObjEvAttChangeInfo info)
      * Kill the old selection
      */
     for (trav_open(&trav, project, AB_TRAV_ALL | AB_TRAV_MOD_PARENTS_FIRST);
-	(curObj= trav_next(&trav)) != NULL; )
+	(curObj= trav_next(&trav)) != nullptr; )
     {
 	if ((curObj != currentSelection) && 
 	     (curObj->part_of != currentSelection))
@@ -1364,7 +1364,7 @@ composite_destroy_callback(ObjEvDestroyInfo info)
 {
     ABObj	obj= info->obj;
     AB_TRAVERSAL	trav;
-    ABObj		subobj= NULL;
+    ABObj		subobj= nullptr;
 
     if (!obj_is_root(obj))
     {
@@ -1372,7 +1372,7 @@ composite_destroy_callback(ObjEvDestroyInfo info)
     }
 
     for (trav_open(&trav, obj, AB_TRAV_ALL | AB_TRAV_MOD_SAFE);
-	(subobj= trav_next(&trav)) != NULL; )
+	(subobj= trav_next(&trav)) != nullptr; )
     {
 	if (subobj->part_of == obj)
 	{
@@ -1422,7 +1422,7 @@ composite_update_callback(ObjEvUpdateInfo info)
 {
     AB_TRAVERSAL	trav;
     ABObj		obj= info->obj;
-    ABObj		subobj= NULL;
+    ABObj		subobj= nullptr;
 
     if (!obj_is_root(obj))
     {
@@ -1430,7 +1430,7 @@ composite_update_callback(ObjEvUpdateInfo info)
     }
 
     for (trav_open(&trav, obj, AB_TRAV_ALL);
-	(subobj= trav_next(&trav)) != NULL; )
+	(subobj= trav_next(&trav)) != nullptr; )
     {
        if ((subobj != obj) && (subobj->part_of == obj))
        {
@@ -1455,7 +1455,7 @@ composite_update_with_data_callback(ObjEvUpdateWithDataInfo info)
 {
     ABObj		obj= info->obj;
     AB_TRAVERSAL	trav;
-    ABObj		subobj= NULL;
+    ABObj		subobj= nullptr;
 
     if (!obj_is_root(obj))
     {
@@ -1463,7 +1463,7 @@ composite_update_with_data_callback(ObjEvUpdateWithDataInfo info)
     }
 
     for (trav_open(&trav, obj, AB_TRAV_ALL);
-	(subobj= trav_next(&trav)) != NULL; )
+	(subobj= trav_next(&trav)) != nullptr; )
     {
 	if ((subobj != obj) && (subobj->part_of == obj))
 	{

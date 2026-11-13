@@ -147,10 +147,10 @@ PalItemInfo scale_palitem_rec = {
 
     /* type             */  AB_TYPE_SCALE,
     /* name             */  "Scale",
-    /* animation pixmaps*/  NULL,
+    /* animation pixmaps*/  nullptr,
     /* number of pixmaps*/  0,
-    /* rev_prop_frame   */  NULL,
-    /* fix_prop_dialog  */  NULL,
+    /* rev_prop_frame   */  nullptr,
+    /* fix_prop_dialog  */  nullptr,
     /* initialize       */  scale_initialize,
     /* is_a_test        */  obj_is_scale,
     /* prop_initialize  */  scale_prop_init,
@@ -201,8 +201,8 @@ scale_initialize(
     obj_set_width(obj, 90);
     obj_set_height(obj, 18);
 
-    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, NULL, obj->y);
-    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, NULL, obj->x);
+    obj_set_attachment(obj, AB_CP_NORTH, AB_ATTACH_POINT, nullptr, obj->y);
+    obj_set_attachment(obj, AB_CP_WEST,  AB_ATTACH_POINT, nullptr, obj->x);
 
     return OK;
 
@@ -259,12 +259,12 @@ scale_prop_init(
     if (dtb_scale_prop_dialog_initialize(cgen, parent) == 0)
     {
         pss->prop_sheet = cgen->attrs_ctrlpanel;
-        pss->current_obj = NULL;
+        pss->current_obj = nullptr;
 
 	if (type == AB_PROP_REVOLVING)
         	XtVaSetValues(parent,
                         XmNuserData, pss->current_obj,
-                        NULL);
+                        nullptr);
 
         /* Dialog/Object List */
 	if (type == AB_PROP_FIXED)
@@ -385,7 +385,7 @@ scale_prop_init(
         n = 0;
         item[n] = cgen->showval_ckbox_items.Show_Value_item;
         item_val[n] = SHOW_VALUE_KEY; n++;
-        prop_checkbox_init(&(pss->show_value), NULL,
+        prop_checkbox_init(&(pss->show_value), nullptr,
                 cgen->showval_ckbox, n, item, item_val,
                 cgen->ivalue_cb);
 
@@ -415,7 +415,7 @@ scale_prop_init(
 	return (cgen->prop_dialog_shellform);
     }
     else
-    	return NULL;
+    	return nullptr;
 
 }
 
@@ -438,7 +438,7 @@ scale_prop_clear(
 {
     PropScaleSettingsRec	*pss = &(prop_scale_settings_rec[type]);
 
-    if (pss->current_obj == NULL)
+    if (pss->current_obj == nullptr)
 	return OK;
 
     /* Clear Name */
@@ -488,7 +488,7 @@ scale_prop_clear(
     prop_colorfield_set_value(&(pss->bg_color), "", False);
     prop_colorfield_set_value(&(pss->fg_color), "", False);
 
-    pss->current_obj = NULL;
+    pss->current_obj = nullptr;
 
     turnoff_changebars(type);
 
@@ -506,9 +506,9 @@ scale_prop_load(
     AB_ORIENTATION		orient;
     BOOL			load_all = (loadkey & LoadAll);
  
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pss->current_obj != NULL)
+        if (pss->current_obj != nullptr)
             obj = pss->current_obj;
         else
             return ERROR;
@@ -529,7 +529,7 @@ scale_prop_load(
 	prop_options_set_value(&(pss->label_pos), (XtPointer)obj_get_label_position(obj), False);
 
 	/* Load Label */
-	prop_setup_label_field(&(pss->label), NULL,
+	prop_setup_label_field(&(pss->label), nullptr,
 				obj->label_type, obj_get_label(obj), AB_LINE_UNDEF);
 
 	/* Load Scale Type */
@@ -647,7 +647,7 @@ scale_prop_apply(
     }
     if (prop_changed(pss->ivalue.changebar))
     {
-	abobj_set_initial_value(pss->current_obj, NULL,
+	abobj_set_initial_value(pss->current_obj, nullptr,
 		prop_field_get_numeric_value(&(pss->ivalue)));
 	abobj_set_show_value(pss->current_obj,
 	        prop_checkbox_get_value(&(pss->show_value), SHOW_VALUE_KEY));
@@ -811,7 +811,7 @@ orientCB(
 
     if (state->set)
     {
-        XtVaGetValues(item, XmNuserData, &value, NULL); 
+        XtVaGetValues(item, XmNuserData, &value, nullptr); 
 	setup_direction_setting(type, (AB_ORIENTATION)value);
 
 	if (value == AB_ORIENT_HORIZONTAL)

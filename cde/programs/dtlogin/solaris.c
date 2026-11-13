@@ -86,7 +86,7 @@ static int login_conv(int conv_id, int num_msg, struct ia_message **msg,
     		      struct ia_response **response, void *appdata_ptr);
 static void end_conv(void);
 
-static struct ia_conv ia_conv = {login_conv, login_conv, end_conv, NULL};
+static struct ia_conv ia_conv = {login_conv, login_conv, end_conv, nullptr};
 static char *saved_user_passwd;
 #endif SUNAUTH
 
@@ -102,7 +102,7 @@ solaris_setdevperm(char* gettyLine, uid_t uid, gid_t gid)
 {
 	char *devname = create_devname(gettyLine);
 
-	if (devname == NULL) { 
+	if (devname == nullptr) { 
 	    Debug ("solaris_setdevperm:  NULL devname\n");
 	    return(0);
 	};
@@ -124,7 +124,7 @@ solaris_resetdevperm(char* gettyLine)
 {
 	char *devname = create_devname(gettyLine);
 
-	if (devname == NULL) {
+	if (devname == nullptr) {
 	    Debug ("solaris_resetdevperm:  NULL devname\n");
 	    return(0);
 	}
@@ -347,7 +347,7 @@ solaris_setcred(char* prog_name, char* user, uid_t uid, gid_t gid)
 
 	/* Open PAM connection */	
 
-	status = ia_start(prog_name, user, NULL, NULL, &ia_conv, &iah);
+	status = ia_start(prog_name, user, nullptr, nullptr, &ia_conv, &iah);
 	if (status != 0) {
             Debug("solaris_setcred: PAM start error=%d\n", status);
 	    return(status);
@@ -358,7 +358,7 @@ solaris_setcred(char* prog_name, char* user, uid_t uid, gid_t gid)
         ia_set_item(iah, IA_AUTHTOK, saved_user_passwd);
 
 	cred_type = SC_INITGPS|SC_SETRID;
-	status = ia_setcred(iah, cred_type, uid, gid, 0, NULL, &out);
+	status = ia_setcred(iah, cred_type, uid, gid, 0, nullptr, &out);
 
 	if (status != 0) {
             Debug("solaris_setcred: user=%s, err=%d)\n", user, status);
@@ -385,13 +385,13 @@ create_devname(char* short_devname)
 {
        char* long_devname;
 
-       if (short_devname == NULL)
+       if (short_devname == nullptr)
 	  short_devname = "";
 
        long_devname = (char *) malloc (strlen(short_devname) + 5);
 
-       if (long_devname == NULL)
-	  return(NULL); 
+       if (long_devname == nullptr)
+	  return(nullptr); 
 
        strcpy(long_devname,"/dev/");
        strcat(long_devname, short_devname);
@@ -430,24 +430,24 @@ logindevperm(char *ttyn, uid_t uid, gid_t gid)
 	size_t l;
 	int lineno;
 
-	if ((fp = fopen(permfile, "r")) == NULL)
+	if ((fp = fopen(permfile, "r")) == nullptr)
 		return;
 
 	lineno = 0;
-	while (fgets(line, MAXPATHLEN, fp) != NULL) {
+	while (fgets(line, MAXPATHLEN, fp) != nullptr) {
 		lineno++;
 
-		if ((ptr = strchr(line, '#')) != NULL)
+		if ((ptr = strchr(line, '#')) != nullptr)
 			*ptr = '\0';	/* handle comments */
 
-		if ((console = strtok(line, field_delims)) == NULL)
+		if ((console = strtok(line, field_delims)) == nullptr)
 			continue;	/* ignore blank lines */
 
 		if (strcmp(console, ttyn) != 0)
 			continue;	/* not our tty, skip */
 
-		mode_str = strtok((char *)NULL, field_delims);
-		if (mode_str == NULL) {
+		mode_str = strtok((char *)nullptr, field_delims);
+		if (mode_str == nullptr) {
 			(void) fprintf(stderr,
 			    "%s: line %d, invalid entry -- %s\n", permfile,
 			    lineno, line);
@@ -463,8 +463,8 @@ logindevperm(char *ttyn, uid_t uid, gid_t gid)
 			continue;
 		}
 
-		dev_list = strtok((char *)NULL, field_delims);
-		if (dev_list == NULL) {
+		dev_list = strtok((char *)nullptr, field_delims);
+		if (dev_list == nullptr) {
 			(void) fprintf(stderr,
 			    "%s: line %d, %s -- empty device list\n",
 			    permfile, lineno, console);
@@ -472,7 +472,7 @@ logindevperm(char *ttyn, uid_t uid, gid_t gid)
 		}
 
 		device = strtok(dev_list, ":");
-		while (device != NULL) {
+		while (device != nullptr) {
 			l = strlen(device);
 			ptr = &device[l - DIRWLDLEN];
 			if ((l > DIRWLDLEN) && (strcmp(ptr, DIRWILD) == 0)) {
@@ -498,7 +498,7 @@ logindevperm(char *ttyn, uid_t uid, gid_t gid)
 					}
 				}
 			}
-			device = strtok((char *)NULL, ":");
+			device = strtok((char *)nullptr, ":");
 		}
 	}
 	(void) fclose(fp);
@@ -521,10 +521,10 @@ dir_dev_acc(char *dir, uid_t uid, gid_t gid, mode_t mode, char *permfile)
 	char *name, path[MAXPATHLEN];
 
 	dirp = opendir(dir);
-	if (dirp == NULL)
+	if (dirp == nullptr)
 		return;
 
-	while ((direntp = readdir(dirp)) != NULL) {
+	while ((direntp = readdir(dirp)) != nullptr) {
 		name = direntp->d_name;
 		if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
 			continue;
@@ -588,7 +588,7 @@ login_conv(int conv_id, int num_msg, struct ia_message **msg,
 
 	*response = (struct ia_response*) 
 				calloc(num_msg, sizeof (struct ia_response));
-	if (*response == NULL)
+	if (*response == nullptr)
 		return (IA_CONV_FAILURE);
 
 	(void) memset(*response, 0, sizeof (struct ia_response));
@@ -601,11 +601,11 @@ login_conv(int conv_id, int num_msg, struct ia_message **msg,
 		switch (m->msg_style) {
 
 		case IA_PROMPT_ECHO_OFF:
-                    if (saved_user_passwd != NULL) {
+                    if (saved_user_passwd != nullptr) {
                         r->resp = (char *) malloc(strlen(saved_user_passwd)+1);
-                        if (r->resp == NULL) {
+                        if (r->resp == nullptr) {
                      	    free_resp(num_msg, *response);
-                            *response = NULL;
+                            *response = nullptr;
                             return (IA_CONV_FAILURE);
                         }
                         (void) strcpy(r->resp, saved_user_passwd);
@@ -618,7 +618,7 @@ login_conv(int conv_id, int num_msg, struct ia_message **msg,
 
 
 		case IA_ERROR_MSG:
-			if (m->msg != NULL) { 
+			if (m->msg != nullptr) { 
 	    	 	    Debug ("login_conv: %s\n", m->msg); 
 			}
 			m++;
@@ -757,7 +757,7 @@ solaris_setutmp_mgmt(
 
 	(void) time(&utmp.ut_tv.tv_sec);
 	utmp.ut_pid = getpid();
-	if (rhost != NULL && rhost[0] != '\0') {
+	if (rhost != nullptr && rhost[0] != '\0') {
 		(void) strcpy(utmp.ut_host, rhost);
 		tmplen = strlen(rhost) + 1;
 		if (tmplen < sizeof (utmp.ut_host))
@@ -782,7 +782,7 @@ solaris_setutmp_mgmt(
 
 	utmp.ut_type = type;
 
-	if (id != NULL)
+	if (id != nullptr)
 		(void) memcpy(utmp.ut_id, id, sizeof (utmp.ut_id));
 
 	if ((flags & SOLARIS_NOLOG) == SOLARIS_NOLOG) {
@@ -798,18 +798,18 @@ solaris_setutmp_mgmt(
 		 */
 
 		if (flags & SOLARIS_LOGIN) {
-		    while ((u = getutxent()) != NULL) {
+		    while ((u = getutxent()) != nullptr) {
 			if ((u->ut_type == INIT_PROCESS ||
 			    u->ut_type == LOGIN_PROCESS ||
 			    u->ut_type == USER_PROCESS) &&
-			    ((flags == SOLARIS_LOGIN && ttyn != NULL &&
+			    ((flags == SOLARIS_LOGIN && ttyn != nullptr &&
 					strncmp(u->ut_line, ttyntail,
 						sizeof (u->ut_line)) == 0) ||
 			    u->ut_pid == utmp.ut_pid)) {
 				if (ttyn)
 					SCPYN(utmp.ut_line,
 					    (ttyn + sizeof ("/dev/") - 1));
-				if (id == NULL) {
+				if (id == nullptr) {
 					(void) memcpy(utmp.ut_id, u->ut_id,
 						    sizeof (utmp.ut_id));
 				}
@@ -820,7 +820,7 @@ solaris_setutmp_mgmt(
 		    endutxent();		/* Close utmp file */
 		}
 
-		if (u == (struct utmpx *)NULL) {
+		if (u == (struct utmpx *)nullptr) {
 			/* audit_login_main11(); */
 			if (flags & SOLARIS_UPDATE_ENTRY)
 				err =  SOLARIS_NOENTRY;
@@ -881,11 +881,11 @@ solaris_reset_utmp_mgmt(
 			/* clear utmpx entry */
 		(void) memset((char *)&ut, 0, sizeof (ut));
 
-		if (id != NULL)
+		if (id != nullptr)
 			(void) memcpy(ut.ut_id, id, sizeof (ut.ut_id));
 
-		if (*ttyn != NULL && **ttyn != '\0') {
-			if (strstr(*ttyn, "/dev/") != NULL)
+		if (*ttyn != nullptr && **ttyn != '\0') {
+			if (strstr(*ttyn, "/dev/") != nullptr)
 			(void) strncpy(ut.ut_line, (*ttyn+sizeof ("/dev/")-1),
 							sizeof (ut.ut_line));
 			else
@@ -897,7 +897,7 @@ solaris_reset_utmp_mgmt(
 		ut.ut_exit.e_termination = 0;
 		ut.ut_exit.e_exit = 0;
 		ut.ut_syslen = 1;
-		(void) gettimeofday(&ut.ut_tv, NULL);
+		(void) gettimeofday(&ut.ut_tv, nullptr);
 		updwtmpx(WTMPX_FILE, &ut);
 
 		return (PAM_SUCCESS);
@@ -913,17 +913,17 @@ solaris_reset_utmp_mgmt(
 					return (0);
 				}
 				if ((*user = (char *) strdup (up->ut_user))
-							== NULL ||
+							== nullptr ||
 				    (*ttyn = (char *) strdup (up->ut_line))
-							== NULL ||
+							== nullptr ||
 				    (*rhost = (char *) strdup (up->ut_host))
-							== NULL)
+							== nullptr)
 					return (PAM_BUF_ERR);
 
 				up->ut_type = DEAD_PROCESS;
 				up->ut_exit.e_termination = status & 0xff;
 				up->ut_exit.e_exit = (status >> 8) & 0xff;
-				if (id != NULL)
+				if (id != nullptr)
 					(void) memcpy(up->ut_id, id,
 						sizeof (up->ut_id));
 				(void) time(&up->ut_tv.tv_sec);
@@ -941,7 +941,7 @@ solaris_reset_utmp_mgmt(
 					 */
 					updwtmpx("wtmpx", up);
 				} else {
-					if (modutx(up) == NULL) {
+					if (modutx(up) == nullptr) {
 						Debug("modutx failed\n");
 						/*
 						 * Since modutx failed we'll
