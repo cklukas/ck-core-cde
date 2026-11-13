@@ -145,8 +145,12 @@ main(
 	return 1;
     }
 
-    lc_all = strdup(locale);
-    lc_all = realloc(lc_all, 7 + strlen(locale));
+    lc_all = malloc(7 + strlen(locale));
+    if (!lc_all) {
+	perror("Error: Can not allocate locale name");
+	return 1;
+    }
+    strcpy(lc_all, locale);
 
     s = strchr(lc_all, '.'); if (s) *s = 0;
 

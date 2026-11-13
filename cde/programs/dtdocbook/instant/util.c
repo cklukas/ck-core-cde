@@ -391,6 +391,7 @@ OpenFile(
 	char *cp, *s;
 	if (tpt_lib) {
 	    s = strdup(tpt_lib);
+	    if (!s) return nullptr;
 	    for (cp=s; *cp; cp++) if (*cp == ':') *cp = ' ';
 	    nlibdirs = 0;
 	    libdirs = Split(s, &nlibdirs, S_ALVEC);
@@ -789,6 +790,10 @@ int FPuts(
     if (stream) {
 	if (sLength > 100/2) { /* assume that every char must be escaped */
 	    pBuff = malloc(sLength + 14 + 1);
+	    if (!pBuff) {
+		perror("FPuts");
+		return EOF;
+	    }
 	    commandBuf[14] = 0;
 	    strcpy(pBuff, commandBuf);
 	} else

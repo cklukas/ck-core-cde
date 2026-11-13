@@ -249,10 +249,18 @@ Browse(void)
 	}
 	else if (!strcmp(cmd, "sdata")){
 	    sdatafile = strdup(av[1]);
+	    if (!sdatafile) {
+		perror("Can not allocate file name");
+		continue;
+	    }
 	    ReadSDATA(sdatafile);
 	}
 	else if (!strcmp(cmd, "cmap")){
 	    cmapfile = strdup(av[1]);
+	    if (!cmapfile) {
+		perror("Can not allocate file name");
+		continue;
+	    }
 	    ReadCharMap(cmapfile);
 	}
 
