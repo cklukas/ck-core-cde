@@ -481,6 +481,11 @@ int IconvFile(
        codeset++;
    }
    loc[VOL_CODESET] = (nullptr != codeset ? strdup(codeset) : nullptr);
+   if (nullptr != codeset && nullptr == loc[VOL_CODESET])
+   {
+       ret = -1;
+       goto cleanup;
+   }
 
    /* if either locale is NULL or if they are the same string
       then don't iconv the file */
@@ -497,6 +502,11 @@ int IconvFile(
 
    /* get the target codeset */
    loc[TO_CODESET] = strdup(loc[CUR_LOCALE]);
+   if (nullptr == loc[FROM_CODESET] || nullptr == loc[TO_CODESET])
+   {
+       ret = -1;
+       goto cleanup;
+   }
 
    /* construct the command line */
    destFile = _DtHPrCreateTmpFile(TMPFILE_PREFIX,TMPFILE_SUFFIX);
@@ -749,6 +759,11 @@ int IconvBuffer(
        codeset++;
    }
    loc[VOL_CODESET] = (nullptr != codeset ? strdup(codeset) : nullptr);
+   if (nullptr != codeset && nullptr == loc[VOL_CODESET])
+   {
+       ret = 0;
+       goto cleanup;
+   }
 
    /* if either locale is NULL or if they are the same string
       then don't iconv the file */
@@ -765,6 +780,11 @@ int IconvBuffer(
 
    /* get the target codeset */
    loc[TO_CODESET] = strdup(loc[CUR_LOCALE]);
+   if (nullptr == loc[FROM_CODESET] || nullptr == loc[TO_CODESET])
+   {
+       ret = 0;
+       goto cleanup;
+   }
 
    if ( isFirst ) {
       CD = iconv_open( loc[TO_CODESET], loc[FROM_CODESET] );
@@ -990,26 +1010,42 @@ int DoStrColsWidth(
       int      maxWidth,
       Boolean  truncateStr)
 {       /*$CODE$*/
-   int len;
-   wchar_t * wcstr;
-   int wclen;
-   int width;
+   mbstate_t state = {};
+   size_t    len = strlen(str);
+   size_t    pos = 0;
+   size_t    cutPos = 0;
+   int       wclen = 0;
+   int       cutLen = 0;
+   int       width = 0;
+   Boolean   printable = True;
 
-   /* alloc memory for the wchar_t string */
-   len = strlen(str);
-   wcstr = calloc((len+1), sizeof(wchar_t));
+   /* walk the characters, summing their column widths and remembering the
+      longest prefix that fits in maxWidth columns */
+   while (pos < len)
+   {
+      wchar_t wc;
+      int     cw;
+      size_t  n = mbrtowc(&wc, str + pos, len - pos, &state);
 
-   /* convert str to wchar_t and get width in chars */
-   mbstowcs(wcstr,str,len+1);
-   wclen = wcslen(wcstr);
+      if (n == (size_t)-1 || n == (size_t)-2 || n == 0) break;
+      cw = wcwidth(wc);
+      if (cw < 0) printable = False;
+      else width += cw;
+      pos += n;
+      wclen++;
+      if (printable && width <= maxWidth)
+      {
+         cutPos = pos;
+         cutLen = wclen;
+      }
+   }
 
-   /* get col width of the string and truncate if necessary */
-   while (    (width = wcswidth(wcstr,wclen+1)) > maxWidth 
-           && truncateStr == True)
-      wcstr[--wclen] = EOS;
-   wcstombs(str,wcstr,len+1);
-
-   free(wcstr);
+   /* truncate if necessary */
+   if (truncateStr == True && printable && width > maxWidth)
+   {
+      str[cutPos] = EOS;
+      wclen = cutLen;
+   }
 
    return wclen;
 }       /*$END$*/
@@ -1024,12 +1060,13 @@ $DESCRIPT$:
 Generates args used by a header/footer format string
 $NOTE$:
 $RETURNS$:
+0 on success; -1 if memory could not be allocated
 $ARGS$:
 ========================================================$SKIP$=====*/
 #endif /*DOC*/
 
 static
-void GenHeadFootFormatArgs(
+int GenHeadFootFormatArgs(
   _DtHPrOptions * options,
   PrintState *    state,
   Boolean         updateTopicTitle,
@@ -1049,6 +1086,7 @@ void GenHeadFootFormatArgs(
        str = nullptr;
        _DtHelpCeGetVolumeTitle(state->canvasHandle,state->volHandle,&str);
        if (nullptr == str) str = strdup("");
+       if (nullptr == str) return -1;                /* RETURN: error */
 
        width = DoStrColsWidth(str,MAXVOLTITLEWIDTH,True);
 
@@ -1087,12 +1125,13 @@ void GenHeadFootFormatArgs(
 
        width = DoStrColsWidth(buf,0,False);
 
-       /* put into state data */
-       state->hffArgs.volumeDate = strdup(buf);
-       state->hffArgs.volumeDateColsWidth = width;
-       
        free(locDocId);
        free(locDateStamp);
+
+       /* put into state data */
+       state->hffArgs.volumeDate = strdup(buf);
+       if (nullptr == state->hffArgs.volumeDate) return -1;   /* RETURN: error */
+       state->hffArgs.volumeDateColsWidth = width;
     }
 
     /* get today's date */
@@ -1107,6 +1146,7 @@ void GenHeadFootFormatArgs(
 
        /* put into state data */
        state->hffArgs.todaysDate = strdup(buf);
+       if (nullptr == state->hffArgs.todaysDate) return -1;   /* RETURN: error */
        state->hffArgs.todaysDateColsWidth = width;
     }
 
@@ -1118,6 +1158,7 @@ void GenHeadFootFormatArgs(
        _DtHelpCeGetTopicTitle(state->canvasHandle, state->volHandle,
                               state->currentLocId, &str);
        if (nullptr == str) str = strdup("");
+       if (nullptr == str) return -1;                /* RETURN: error */
 
        width = DoStrColsWidth(str,MAXTOPICTITLEWIDTH,True);
 
@@ -1144,6 +1185,8 @@ void GenHeadFootFormatArgs(
        { /* do nothing */ }
        state->hffArgs.pageNumColsWidth = width;
     }
+
+    return 0;
 }       /*$END$*/
 
 
@@ -1314,7 +1357,8 @@ int PrintHeadFootStr(
     SectNumStr(state->sectNums,state->sectStr,sectNumStr);
 
     /* update args; FIX: impove efficiency by processing topic title only when needed */
-    GenHeadFootFormatArgs(options,state,True,sectNumStr,True);
+    if (GenHeadFootFormatArgs(options,state,True,sectNumStr,True) != 0)
+       return 0;                                  /* RETURN: error */
 
     /* guidelines on string size and construction: 
        The objective is to allow one set of headers & footers to apply
@@ -1765,7 +1809,7 @@ $DESCRIPT$:
 Process the help volume to generate a file of front matter
 $RETURNS$:
  0:  success
--1:  could not create or open a temp file
+-1:  could not create or open a temp file, or allocate memory
 -2:  could not get help topic info
 $ARGS$:
 ========================================================$SKIP$=====*/
@@ -1799,6 +1843,11 @@ int ProcessFrontMatter(
 
    /* generate volume title */
    state->currentLocId = strdup("_TITLE");
+   if (nullptr == state->currentLocId)
+   {
+      fclose(fp);
+      return -1;                               /* RETURN: error */
+   }
    state->outputFromLocId = state->currentLocId;
    ret = ProcessOneTopic(options,fp,state,False);
    /*free(state->currentLocId);*/
@@ -1807,6 +1856,11 @@ int ProcessFrontMatter(
 
    /* generate abstract */
    state->currentLocId = strdup("_ABSTRACT");
+   if (nullptr == state->currentLocId)
+   {
+      fclose(fp);
+      return -1;                               /* RETURN: error */
+   }
    state->outputFromLocId = state->currentLocId;
    ret = ProcessOneTopic(options,fp,state,False);
    /*free(state->currentLocId);*/ 
@@ -1819,6 +1873,11 @@ int ProcessFrontMatter(
 
    /* generate copyright */
    state->currentLocId = strdup("_COPYRIGHT");
+   if (nullptr == state->currentLocId)
+   {
+      fclose(fp);
+      return -1;                               /* RETURN: error */
+   }
    state->outputFromLocId = state->currentLocId;
    ret = ProcessOneTopic(options,fp,state,False);
    /*free(state->currentLocId);*/
@@ -2279,6 +2338,11 @@ int ProcessTopics(
    else
    {   /* otherwise, process only where needed */
        state->currentLocId = strdup(outputFromLocId);
+   }
+   if (nullptr == state->currentLocId)
+   {
+      if (fp) fclose(fp);
+      return -1;                                  /* RETURN: error */
    }
 
    /* set the other state values */

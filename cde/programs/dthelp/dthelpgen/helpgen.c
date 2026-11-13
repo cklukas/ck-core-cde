@@ -1035,6 +1035,11 @@ main(
         _DtEnvControl(DT_ENV_SET);
       }
     Lang = strdup(Lang);
+    if (Lang == nullptr)
+      {
+	perror (myName);
+	exit (1);
+      }
 
     /*
      * get the directory to work in
@@ -1374,6 +1379,10 @@ main(
 					&ret_stdCodeset, &ret_stdModifier );
 		if ( !ret ) {
 		    charSet = strdup( ret_stdLocale );
+		    if (charSet == nullptr) {
+			perror (myName);
+			exit (1);
+		    }
 		} else {
 		    charSet = "C.ISO-8859-1";
 		}
@@ -1388,8 +1397,18 @@ main(
     }
 #else /* _AIX */
     charSet    = strdup (GetMessage (2, 1, "C.ISO-8859-1"));
+    if (charSet == nullptr)
+      {
+	perror (myName);
+	exit (1);
+      }
 #endif /* _AIX */
     topicTitle = strdup (GetMessage (2, 2, "Welcome to Help Manager"));
+    if (topicTitle == nullptr)
+      {
+	perror (myName);
+	exit (1);
+      }
 
     fprintf (outHeader, (GetMessage (3, 1, (char*)defaultTopic)),
 						charSet, topicTitle);

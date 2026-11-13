@@ -181,6 +181,8 @@ int _DtHPrGenFileOrPrint(
    /* put into private tmp file */
    strcat(printCommand," ");
    tmpfile = _DtHPrCreateTmpFile(TMPFILE_PREFIX,TMPFILE_SUFFIX);
+   if (nullptr == tmpfile)
+      return -1;                               /* RETURN */
    sprintf(&printCommand[strlen(printCommand)],
                       options->redirectCmdAndArgs,
                       tmpfile );                          /* file */
@@ -200,6 +202,12 @@ int _DtHPrGenFileOrPrint(
    {
        char *dispfmt = "DISPLAY=%s";
        char *dispenv = malloc(strlen(dispfmt) + strlen(options->display) + 1);
+       if (nullptr == dispenv)
+       {
+          unlink(tmpfile);
+          free(tmpfile);
+          return -1;                           /* RETURN */
+       }
        sprintf(dispenv, dispfmt, options->display);
        putenv(dispenv);
    }
@@ -258,6 +266,8 @@ char * _DtHPrGetMessage(
       {
          /* Setup the short and long versions */
          s_CatFileName = strdup(HELPPRINT_CAT);
+         if (nullptr == s_CatFileName)
+            return (char *) s;
       }
       s_First = 0;
       s_Nlmsg_fd = CATOPEN(s_CatFileName, 0);

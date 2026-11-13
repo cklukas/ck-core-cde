@@ -1269,9 +1269,8 @@ void _DtHPrBuildResourceDb(
    if ((tmp_string = getenv("DISPLAY")) != nullptr) 
    {
       i = strlen(tmp_string);
-      value.addr=malloc(i+1);    /* FIX: use tmp_string here directly? */
+      value.addr = tmp_string;
       value.size = i+1;
-      strcpy(value.addr, tmp_string);
       strcpy(resource_name, name_prefix);
       strcat(resource_name, RN_display);   /* e.g. dthelpprint.display */
       strcpy(resource_class, class_prefix);
@@ -1283,9 +1282,8 @@ void _DtHPrBuildResourceDb(
    if ((tmp_string = getenv("PRINTER")) != nullptr) 
    {
       i = strlen(tmp_string);
-      value.addr=malloc(i+1);     /* FIX: use tmp_string here directly? */
+      value.addr = tmp_string;
       value.size = i+1;
-      strcpy(value.addr, tmp_string);
       strcpy(resource_name, name_prefix);
       strcat(resource_name, RN_printer);    /* e.g. dthelpprint.printer */
       strcpy(resource_class, class_prefix);

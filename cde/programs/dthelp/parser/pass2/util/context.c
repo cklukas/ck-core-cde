@@ -199,6 +199,11 @@ contree = (M_TRIE **) calloc(NUMCON, sizeof(M_TRIE *)) ;
 xtransit = (int *) calloc(NUMCON * NUMDELIM, sizeof(int)) ;
 contexts = (M_WCHAR **) calloc(NUMCON, sizeof(char *)) ;
 dlmptr = (char**) calloc(NUMDELIM, sizeof(char*)) ;
+if (! contree || ! xtransit || ! contexts || ! dlmptr)
+    {
+    m_error("Out of memory for contexts and delimiters") ;
+    exit(TRUE) ;
+    }
 
 loaddelim() ;
 while (getdname())

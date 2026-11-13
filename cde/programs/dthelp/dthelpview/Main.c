@@ -375,7 +375,7 @@ static void ExpandVolume(
    workingPath = _DtHelpFileLocate("volumes", *helpVolume,
                                   _DtHelpFileSuffixList,True,R_OK);
    if (workingPath) *helpVolume = workingPath;
-   else *helpVolume = strdup(*helpVolume);
+   else *helpVolume = XtNewString(*helpVolume);
 }
 
 
