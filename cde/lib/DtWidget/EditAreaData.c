@@ -51,6 +51,9 @@
 #include "EditorP.h" 
 #include <X11/Xutil.h>
 #include <Xm/TextP.h>
+#include <limits.h>
+#include <stdckdint.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include "DtWidgetI.h"
 
@@ -122,7 +125,14 @@ Check4EnoughMemory(
     DtEditorErrorCode returnVal = DtEDITOR_ILLEGAL_SIZE;
 
     if (numBytes > 0) {
-       char *tmpString = (char *)malloc((2 * numBytes) + (numBytes/10));
+       size_t estimate;
+       char *tmpString;
+
+       if (ckd_mul(&estimate, (size_t)numBytes, (size_t)2) ||
+           ckd_add(&estimate, estimate, (size_t)(numBytes/10)))
+         return( DtEDITOR_INSUFFICIENT_MEMORY );
+
+       tmpString = (char *)malloc(estimate);
 
        if(tmpString == (char *)nullptr)
     	 returnVal = DtEDITOR_INSUFFICIENT_MEMORY;  
@@ -348,6 +358,7 @@ setWcharValue(
    DtEditorErrorCode status;
    wchar_t *tmp_wc;
    int result, num_chars=0;
+   size_t mb_size;
    char *mb_value = (char *)nullptr;
 
 
@@ -368,16 +379,19 @@ setWcharValue(
     * status will be set to DtEDITOR_NO_ERRORS, DtEDITOR_ILLEGAL_SIZE, or 
     * DtEDITOR_INSUFFICIENT_MEMORY.
     */
-   status = Check4EnoughMemory( (num_chars + 1) * MB_CUR_MAX );
+   if (ckd_mul(&mb_size, (size_t)num_chars + 1, (size_t)MB_CUR_MAX) ||
+       mb_size > INT_MAX)
+     return DtEDITOR_INSUFFICIENT_MEMORY;
+   status = Check4EnoughMemory( (int)mb_size );
    if (status != DtEDITOR_NO_ERRORS) return status;	  
-   mb_value = XtMalloc( (unsigned)(num_chars + 1) * MB_CUR_MAX );
+   mb_value = XtMalloc( (Cardinal)mb_size );
 
    /*
     * Convert the wchar string
     * If wcstombs fails it returns (size_t) -1, so pass in empty
     * string.
     */
-   result = wcstombs( mb_value, data, (num_chars + 1) * MB_CUR_MAX );
+   result = wcstombs( mb_value, data, mb_size );
    if (result == (size_t)-1) 
      result = 0;
 
@@ -514,6 +528,7 @@ insertWcharValue(
 
    wchar_t *tmp_wc;
    int result, num_chars=0;
+   size_t mb_size;
    char *mb_value = (char *)nullptr;
    DtEditorErrorCode status;
 
@@ -536,16 +551,19 @@ insertWcharValue(
     * DtEDITOR_INSUFFICIENT_MEMORY.
     */
 
-   status = Check4EnoughMemory( (num_chars + 1) * MB_CUR_MAX );
+   if (ckd_mul(&mb_size, (size_t)num_chars + 1, (size_t)MB_CUR_MAX) ||
+       mb_size > INT_MAX)
+     return DtEDITOR_INSUFFICIENT_MEMORY;
+   status = Check4EnoughMemory( (int)mb_size );
    if(status != DtEDITOR_NO_ERRORS) return status;	  
-   mb_value = XtMalloc( (unsigned)(num_chars + 1) * MB_CUR_MAX );
+   mb_value = XtMalloc( (Cardinal)mb_size );
 
    /*
     * Convert the wchar string.
     * If wcstombs fails it returns (size_t) -1, so pass in empty
     * string.
     */
-   result = wcstombs( mb_value, data, (num_chars + 1) * MB_CUR_MAX );
+   result = wcstombs( mb_value, data, mb_size );
    if (result == (size_t)-1) 
      result = 0;
 
