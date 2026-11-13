@@ -29,6 +29,8 @@
   shared memory database routines
   */
 
+#include <stddef.h>
+
 typedef void * 	DtShmProtoStrtab;
 typedef void * 	DtShmProtoInttab;
 typedef void * 	DtShmProtoIntList;
@@ -71,6 +73,19 @@ int		       _DtShmProtoDestroyIntLst (DtShmProtoIntList protolist);
 DtShmBoson		       _DtShmStringToBoson (DtShmStrtab tab, const char * string);
 const char * 		       _DtShmBosonToString (DtShmStrtab tab, DtShmBoson boson);
 const int *	          _DtShmFindIntTabEntry (DtShmInttab tab, unsigned int key);
+
+/*
+  checks for tables that come from a file: SIZE is the number of bytes of the
+  area that holds the table.  They return 1 when every index, offset and
+  chain of the table lies inside the area and ends, and 0 otherwise.
+  _DtShmStrtabHasString is true for 0 and for the offset of a string that ends
+  inside the area; _DtShmValidateInttab also calls CHECK, if it is not null,
+  with the data of every entry and fails when CHECK returns 0.
+  */
+int		       _DtShmValidateStrtab (DtShmStrtab tab, size_t size);
+int		       _DtShmStrtabHasString (DtShmStrtab tab, size_t size, int boson);
+int		       _DtShmValidateInttab (DtShmInttab tab, size_t size,
+					     int (*check)(int data, void * arg), void * arg);
 
 #endif /* DtShmDb_h */
 

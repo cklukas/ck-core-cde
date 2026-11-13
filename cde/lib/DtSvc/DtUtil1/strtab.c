@@ -103,7 +103,7 @@ DtShmBoson _DtShmStringToBoson(DtShmStrtab strtab, const char * string)
   s = (unsigned const char *) string;
 
   while(*s!=0)
-    j += (*s++ << i++); 
+    j += ((unsigned) *s++ << (i++ & 31));
   
   i = j % ((strtab_t *) strtab)->st_count;
   
@@ -128,6 +128,76 @@ DtShmBoson _DtShmStringToBoson(DtShmStrtab strtab, const char * string)
   return(ptr[i].key);
 }
 
+
+
+/*
+  checks of a string table that was read from a file, before it is used.
+
+  BYTES is the size of the area that holds the table.  A table is valid when
+  the hash table and the strings lie inside the area, there is at least one
+  bucket, the chains of the hash table stay inside the table and end, and
+  the key of every entry leads to a string that ends inside the area.
+  */
+
+int _DtShmValidateStrtab(DtShmStrtab strtab, size_t bytes)
+{
+  const strtab_t * head = (const strtab_t *) strtab;
+  const strtab_entry_t * entries;
+  /* the indexes of a table are 16 bit numbers, 0xffff ends a chain */
+  static const size_t max_entries = NOT_AN_INDEX;
+  unsigned char * seen;
+  size_t i, j, count;
+  int valid = 1;
+
+  if(bytes < sizeof(strtab_t))
+    return(0);
+  count = head->st_count;
+  if(count == 0 || count >= max_entries ||
+     head->st_stroffset < sizeof(strtab_t) || head->st_stroffset > bytes ||
+     head->st_taboffset > bytes ||
+     head->st_taboffset % sizeof(unsigned int) != 0 ||
+     (bytes - head->st_taboffset) / sizeof(strtab_entry_t) < count)
+    return(0);
+
+  entries = (const strtab_entry_t *) ((const unsigned char *) strtab + head->st_taboffset);
+  seen = (unsigned char *) calloc(count, 1);
+  if(!seen)
+    return(0);
+
+  for(i = 0; valid && i < count; i++) {
+    for(j = entries[i].first; j != NOT_AN_INDEX; j = entries[j].next) {
+      /* each entry belongs to one chain: a repeated one is a loop */
+      if(j >= count || seen[j] ||
+         !_DtShmStrtabHasString(strtab, bytes, (int) entries[j].key)) {
+        valid = 0;
+        break;
+      }
+      seen[j] = 1;
+    }
+  }
+  free(seen);
+  return(valid);
+}
+
+/*
+  true when BOSON is 0 (no string) or the offset of a string that ends inside
+  the area of BYTES bytes
+  */
+
+int _DtShmStrtabHasString(DtShmStrtab strtab, size_t bytes, int boson)
+{
+  const strtab_t * head = (const strtab_t *) strtab;
+  size_t room;
+
+  if(boson == 0)
+    return(1);
+  if(boson < 0 || bytes < sizeof(strtab_t) || head->st_stroffset > bytes)
+    return(0);
+  room = bytes - head->st_stroffset;
+  return((size_t) boson < room &&
+         memchr((const char *) strtab + head->st_stroffset + boson, '\0',
+                room - boson) != nullptr);
+}
 
 
 DtShmProtoStrtab
@@ -275,7 +345,7 @@ static void build_it(void *data, void *usr_arg, const unsigned char *key)
   s = key;
 
   while(*s!=0)
-    j += (*s++ << i++); 
+    j += ((unsigned) *s++ << (i++ & 31));
   
   i = j % ((strtab_t *) ptr->strtab)->st_count;
   

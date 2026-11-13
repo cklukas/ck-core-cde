@@ -5149,18 +5149,40 @@ ProcessSDLAttribute(
 		    result = _DtHelpCeGetSdlAttributeCdata(my_struct->my_file,
 						    False, &attrValue);
 		    if (result != -1)
-			result = CheckFontList (attr_list->sdl_attr_define,
+		      {
+			/* an empty value leaves attrValue unallocated */
+			if (attrValue == nullptr)
+			    result = -1;
+			else
+			    result = CheckFontList (attr_list->sdl_attr_define,
 						     attrValue, &fontNum);
+			if (result == -1)
+			  {
+			    free(attrValue);
+			    attrValue = nullptr;
+			  }
+		      }
 		    break;
 
 	    case SdlAttrDataTypeEnum:
 		    result = _DtHelpCeGetSdlAttributeCdata(my_struct->my_file,
 						    False, &attrValue);
 		    if (result != -1)
-			result = CheckOptionList (attr_list->sdl_attr_define,
+		      {
+			/* an empty value leaves attrValue unallocated */
+			if (attrValue == nullptr)
+			    result = -1;
+			else
+			    result = CheckOptionList (attr_list->sdl_attr_define,
 						    attrValue, False,
 						    (SdlOption) _DtCvOPTION_BAD,
 						    &attrNum);
+			if (result == -1)
+			  {
+			    free(attrValue);
+			    attrValue = nullptr;
+			  }
+		      }
 		    break;
 
 	    default:

@@ -64,6 +64,7 @@ int main(void)
     char text[130];
     char *str = nullptr;
     int live;
+    int growths;
 
     /* a quoted value of 100 characters needs one growth beyond 64 */
     text[0] = '"';
@@ -79,7 +80,8 @@ int main(void)
     ck_arm(0);
     live = ck_live;
     assert(_DtHelpCeGetSdlAttributeCdata(&file, False, &str) == 0);
-    assert(ck_realloc_calls == 1);
+    growths = ck_realloc_calls;		/* the last call is the growth beyond 64 */
+    assert(growths >= 1);
     assert(str != nullptr && strlen(str) == 100);
     free(str);
     assert(ck_live == live);
@@ -88,9 +90,9 @@ int main(void)
     file.bufp = (BufChar *) text;
     file.left = 102;
     str = nullptr;
-    ck_arm(1);
+    ck_arm(growths);
     assert(_DtHelpCeGetSdlAttributeCdata(&file, False, &str) == -1);
-    assert(ck_realloc_calls == 1);
+    assert(ck_realloc_calls == growths);
     assert(str == nullptr);
     assert(ck_live == live);
     puts("UtilSDL: a failed string growth fails the call and frees the string");

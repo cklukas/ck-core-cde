@@ -90,6 +90,53 @@ _DtShmFindIntTabEntry(DtShmInttab inttab, unsigned int key)
   return(i?(&ptr[i].data):(const int *)nullptr);
 }
 
+/*
+  check of an integer table that was read from a file, before it is used.
+
+  BYTES is the size of the area that holds the table.  A table is valid when
+  its entries lie inside the area, its chains stay inside the table and end,
+  and CHECK, called with the data of every entry, accepts it (CHECK may be
+  null).
+  */
+
+int
+_DtShmValidateInttab(DtShmInttab inttab, size_t bytes,
+                     int (*check)(int data, void * arg), void * arg)
+{
+  const inttab_t * ptr = (const inttab_t *) inttab;
+  /* the indexes are 16 bit numbers, 0 ends a chain */
+  static const size_t max_entries = 0xffff;
+  unsigned char * seen;
+  size_t i, j, count;
+  int valid = 1;
+
+  if(bytes < sizeof(inttab_t) || ptr->key < 0)
+    return(0);
+  count = (size_t) ptr->key;
+  if(count > max_entries || (bytes / sizeof(inttab_t)) - 1 < count)
+    return(0);
+  if(count == 0)
+    return(1);
+
+  seen = (unsigned char *) calloc(count + 1, 1);
+  if(!seen)
+    return(0);
+
+  /* the entries 1 to count are the buckets and the items of the chains */
+  for(i = 1; valid && i <= count; i++) {
+    for(j = ptr[i].first; j != NOT_AN_INDEX; j = ptr[j].next) {
+      if(j > count || seen[j] || (check && !check(ptr[j].data, arg))) {
+        valid = 0;
+        break;
+      }
+      seen[j] = 1;
+    }
+  }
+  free(seen);
+  return(valid);
+}
+
+
 DtShmProtoInttab
 _DtShmProtoInitInttab(int sizeguess)
 {

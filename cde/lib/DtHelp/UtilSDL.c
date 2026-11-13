@@ -155,7 +155,7 @@ static int
 SkipWhiteSpace (
     BufFilePtr	 f)
 {
-    char   c;
+    int    c;
 
     do {
         c = BufFileGet(f);
@@ -219,7 +219,7 @@ GetSDLElement (
     _DtCvValue     nonWhite = False;
     _DtCvValue     startEl  = False;
     int           len      = 0;
-    char    c;
+    int     c;
 
     do {
 	c = BufFileGet(f);
@@ -297,7 +297,7 @@ _DtHelpCeMatchSdlElement (
     int   different = False;
     char  nextEl[MAX_ELEMENT_SIZE + 2];
     char *ptr;
-    char  c;
+    int   c;
 
     /*
      * get the next element in the stream
@@ -367,7 +367,7 @@ _DtHelpCeGetSdlAttribute (
     char	*attribute_name)
 {
     int   len = 0;
-    char  c;
+    int   c;
 
     if (SkipWhiteSpace(f) != 0)
 	return -1;
@@ -807,12 +807,18 @@ _DtHelpCeGetSdlAttributeCdata (
     _DtCvValue   ignore      = False;
     _DtCvValue   done        = False;
     _DtCvValue   firstChar   = True;
+    _DtCvValue   owned       = False;
     int         strSize     = 0;
     int         strMax      = 0;
     char       *myStr       = nullptr;
-    char        c;
-    char        testChar;
+    int         c;		/* an int: BUFFILEEOF is -1, and char may be unsigned */
+    char        testChar    = '\0';
 
+    /*
+     * With 'limit' the value goes into the caller's buffer of DTD_NAMELEN+1
+     * characters, which is never freed here.  Without it the value is
+     * allocated here ('owned') and freed on every error return.
+     */
     if (string == nullptr)
 	ignore = True;
     else if (limit == True)
@@ -825,7 +831,7 @@ _DtHelpCeGetSdlAttributeCdata (
 	c = BufFileGet(f);
 	if (c == BUFFILEEOF)
 	  {
-	    if (myStr != nullptr)
+	    if (owned)
 		free(myStr);
 	    return -1;
 	  }
@@ -839,7 +845,7 @@ _DtHelpCeGetSdlAttributeCdata (
 	      }
 	    else
 	      {
-	        if (myStr != nullptr)
+	        if (owned)
 		    free(myStr);
 	        return -1;
 	      }
@@ -852,28 +858,21 @@ _DtHelpCeGetSdlAttributeCdata (
 		c = ' ';
 
 	    if (limit == True && strSize >= DTD_NAMELEN)
-	      {
-		if (myStr != nullptr)
-		    free(myStr);
 		return -1;
-	      }
 	    else if (limit == False && strSize >= strMax)
 	      {
+		char *newStr;
+
 		strMax += 64;
-		if (strSize == 0)
-		    myStr = (char *) malloc (sizeof(char) * 65);
-		else
+		newStr = (char *) realloc (myStr, sizeof(char)*(strMax+1));
+		if (newStr == nullptr)
 		  {
-		    char *newStr = (char *) realloc (myStr,
-						(sizeof(char)*(strMax+1)));
-
-		    if (newStr == nullptr)
+		    if (owned)
 			free(myStr);
-		    myStr = newStr;
-		  }
-
-		if (myStr == nullptr)
 		    return -1;
+		  }
+		myStr = newStr;
+		owned = True;
 	      }
 
 	    myStr[strSize++] = c;
@@ -919,7 +918,7 @@ _DtHelpCeSkipCdata (
     _DtCvValue   element     = False;
     _DtCvValue   bracket     = False;
     _DtCvValue   processing  = True;
-    char        c;
+    int         c;
 
     do {
 	c = BufFileGet(f);
@@ -1036,10 +1035,15 @@ _DtHelpCeGetSdlId (
 	return -1;
 
     /*
-     * check that the attribute name starts correctly
+     * An empty value leaves the string unallocated: it is no id, like a
+     * missing attribute.  Check that the attribute name starts correctly.
      */
-    if (CheckSDLAttributeNameStart(**id_value) != 0)
+    if (*id_value == nullptr || CheckSDLAttributeNameStart(**id_value) != 0)
+      {
+	free(*id_value);
+	*id_value = nullptr;
 	return -1;
+      }
 
     return 0;
 }
@@ -1097,7 +1101,7 @@ int
 _DtHelpCeFindSkipSdlElementEnd (
     BufFilePtr	 f)
 {
-    char  c;
+    int   c;
 
     if (SkipWhiteSpace(f) != 0)
 	return -1;

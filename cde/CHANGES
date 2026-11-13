@@ -1,4 +1,44 @@
 2026-11-13
+- libDtSvc, found by fuzzing the type database reader and the cache file
+  reader. Three defects are fixed. (1) A database file that began with
+  `set DtDbVersion=` and a value longer than 12 bytes overran the heap: the
+  version check expanded `$DtDbVersion` in a 13 byte copy, but
+  `_DtDbFillVariables()` expects a buffer of `MAX_LINE_LENGTH` bytes. The
+  copy now has that size, so a long version is expanded and the file is
+  rejected with the message for an invalid version. (2) An invalid multibyte
+  sequence in the name of a `set` line made `DefineVariable()` step back for
+  ever (`mblen()` returned -1), and in the name of a `${...}` reference made
+  `_DtDbFillVariables()` do the same. The sequence now ends the name. (3) The
+  check of a type database cache file looked only at the indexes of its
+  header; the string table, the integer tables, the records and the fields
+  were trusted, so a damaged cache was read outside the mapped file. Before a
+  cache is used, every table, count, index, string offset and chain is now
+  checked to lie inside the file, and the strings to end inside it
+  (`_DtShmValidateStrtab()`, `_DtShmValidateInttab()` and the new
+  `cache_tables_valid()`); a cache that fails is ignored and rebuilt. The hash
+  of a long name shifted by 32 bits or more (undefined behavior); the shift
+  count now wraps at 32, which gives the hash values the hardware gave. Tests:
+  `tests/check-dbreader-variables.py` and `tests/check-dtsmm-cache-bounds.py`,
+  with the three inputs as seeds of the dtsvc-dbreader and dtsvc-mmcache fuzz
+  targets.
+
+2026-11-13
+- DtHelp, dtlogin: three defects found by fuzzing. The attribute reader of the
+  SDL parser (`_DtHelpCeGetSdlAttributeCdata()`) freed the caller's stack
+  buffer when a number attribute had no closing quote or was cut off by the
+  end of the file; it now frees only what it allocated, and reads the
+  end-of-file value as an `int`. `_DtHelpCeGetSdlId()` dereferenced the
+  missing string of an empty `id=""`; an empty id now fails like a missing
+  one, and so do an empty enumeration or font value in `FormatSDL.c`, which
+  also release the value on failure. The alias expansion of the dtlogin
+  Xaccess reader repeated entries that were being expanded already and had
+  no total limit, so aliases that list each other took exponential time; an
+  entry on the current expansion chain is now skipped, and one lookup expands
+  at most `MAX_ALIAS_EXPANSIONS` (1024) entries, logging when it stops.
+  Tests: `lib/DtHelp/tests/check-sdl-attributes.py` and
+  `programs/dtlogin/tests/check-xaccess-alias-cycle.py`.
+
+2026-11-13
 - dtexec, dtimsstart, dtpad: three programs ran non-async-signal-safe code
   from signal handlers. dtexec called ToolTalk (`tt_message_send()` and
   more) from the SIGINT handler: the handler now sets a flag and writes one

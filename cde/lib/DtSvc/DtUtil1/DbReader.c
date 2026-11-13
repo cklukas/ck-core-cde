@@ -775,7 +775,9 @@ char)*head)))
  *
  *	(void) = _DtDbFillVariables (line)
  *
- *	char **line;  	The string to scan and replace.
+ *	char **line;  	The string to scan and replace.  It is a buffer
+ *			from XtMalloc or malloc of MAX_LINE_LENGTH bytes at
+ *			least; it is grown when an expansion needs room.
  *
  *      MODIFIED:	line
  *
@@ -802,7 +804,7 @@ _DtDbFillVariables (
 
    start = *line;
    lineLen = strlen (*line)+1;
-   lineSize = MAX_LINE_LENGTH;
+   lineSize = MAX_LINE_LENGTH;	/* the caller's buffer has this size at least */
 
    while (*start != '\0') 
    {
@@ -882,8 +884,9 @@ _DtDbFillVariables (
 	    while (1)
 	    {
 	       len = mblen(replacementEnd, MB_CUR_MAX);
-	       if ((len == 0) || 
-		   ((len == 1) && !isalnum(*replacementEnd) &&
+	       /* An invalid sequence (-1) ends the name like a NUL does. */
+	       if ((len <= 0) || 
+		   ((len == 1) && !isalnum((unsigned char)*replacementEnd) &&
 		    (*replacementEnd != '_')))
 	       {
 		  break;
@@ -1072,7 +1075,13 @@ ReadNextEntry(
          if (*versionCanBeSet)
          {
             *versionCanBeSet = False;
-            version = XtNewString(VERSION_QUERY_STR);
+            /*
+             * _DtDbFillVariables expands in place and assumes a buffer of
+             * MAX_LINE_LENGTH bytes at least, so the string is not a bare
+             * copy of the query text.
+             */
+            version = XtMalloc(MAX_LINE_LENGTH);
+            strcpy(version, VERSION_QUERY_STR);
 	    if (strchr (version, '$'))
 	       _DtDbFillVariables(&version);
             if ((strlen(version) > 0) && (strcmp(version, VERSION_ID))) 
@@ -1587,9 +1596,20 @@ DefineVariable(
          len = mblen(valStart, MB_CUR_MAX);
 #endif
 
+      if (len < 0)
+      {
+         /*
+          * An invalid multibyte sequence: reset the shift state and take
+          * the byte as one character of its own, so that the scan always
+          * moves forward.  It is not a name character and ends the name.
+          */
+         (void)mblen(nullptr, 0);
+         len = 1;
+      }
+
       if ((len == 0) ||
           ((len == 1) && 
-           ((*valStart == '=') || (!isalnum(*valStart) &&(*valStart != '_')))))
+           ((*valStart == '=') || (!isalnum((unsigned char)*valStart) &&(*valStart != '_')))))
       {
          break;
       }

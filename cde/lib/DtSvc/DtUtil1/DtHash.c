@@ -317,7 +317,9 @@ static int hash_string(const unsigned char * s, int modulo)
 	int i=1;
 
  	while(*s!=0)
-	  result += (*s++ << i++);
+	  /* the shift count wraps at 32, as the hardware does: a count of 32 or
+	   more is undefined and the cache files hold hashes of long names */
+	  result += ((unsigned)*s++ << (i++ & 31));
 
  	return(result % modulo); 
 }

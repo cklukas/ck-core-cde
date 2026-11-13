@@ -118,6 +118,18 @@ typedef struct _displayEntry {
 } DisplayEntry;
 
 
+/*
+ * The alias entries that are being expanded, innermost first.  Every call of
+ * indirectAlias() adds one link on its own stack frame, so the chain is the
+ * path from the entry of the lookup to the alias that is expanded now.
+ */
+typedef struct _aliasChain {
+    const struct _aliasChain	*outer;
+    const DisplayEntry		*entry;
+    int				 depth;
+} AliasChain;
+
+
 /***************************************************************************
  *
  *  Local procedure declarations
@@ -150,7 +162,8 @@ static int scanHostlist(
 #endif /* NeedWidePrototypes */
                         void (*function)(CARD16, struct _ARRAY8 *, char *),
                         char *closure,
-                        int depth,
+                        const AliasChain *chain,
+                        int *budget,
                         int broadcast) ;
 static int patternMatch( 
                         char *string,
@@ -165,7 +178,8 @@ static int indirectAlias(
 #endif /* NeedWidePrototypes */
                         void (*function)(CARD16, struct _ARRAY8 *, char *),
                         char *closure,
-                        int depth,
+                        const AliasChain *chain,
+                        int *budget,
                         int broadcast) ;
 
 
@@ -684,6 +698,15 @@ getLocalAddress( void )
 
 #define MAX_DEPTH   32
 
+/*
+ * The most alias entries one lookup expands.  Aliases may list other aliases,
+ * so a file of N entries that each list the others, or a ladder of entries
+ * that each list the next one twice, would otherwise expand an exponential
+ * number of times.  A cycle is cut at once (see indirectAlias); this limit
+ * bounds the acyclic fan-out.  Real files use a few dozen entries.
+ */
+#define MAX_ALIAS_EXPANSIONS   1024
+
 static int 
 scanHostlist(
         HostEntry *h,
@@ -695,7 +718,8 @@ scanHostlist(
 #endif /* NeedWidePrototypes */
         void (*function)(CARD16, struct _ARRAY8 *, char *),
         char *closure,
-        int depth,
+        const AliasChain *chain,
+        int *budget,
         int broadcast )
 {
     int	haveLocalhost = 0;
@@ -705,8 +729,8 @@ scanHostlist(
 	switch (h->type) {
 	case HOST_ALIAS:
 	    if (indirectAlias (h->entry.aliasName, clientAddress,
-			       connectionType, function, closure, depth,
-			       broadcast))
+			       connectionType, function, closure, chain,
+			       budget, broadcast))
 		haveLocalhost = 1;
 	    break;
 	case HOST_ADDRESS:
@@ -745,10 +769,14 @@ indirectAlias(
 #endif /* NeedWidePrototypes */
         void (*function)(CARD16, struct _ARRAY8 *, char *),
         char *closure,
-        int depth,
+        const AliasChain *chain,
+        int *budget,
         int broadcast )
 {
     DisplayEntry    *d;
+    const AliasChain *link;
+    AliasChain	    inner;
+    int		    depth = chain ? chain->depth : 0;
     int		    haveLocalhost = 0;
 
     if (depth == MAX_DEPTH)
@@ -757,8 +785,32 @@ indirectAlias(
     {
 	if (d->type != DISPLAY_ALIAS || !patternMatch (alias, d->entry.aliasName))
 	    continue;
+	/*
+	 * An entry that is being expanded already is a cycle: it adds nothing
+	 * that the outer expansion does not add.
+	 */
+	for (link = chain; link; link = link->outer)
+	    if (link->entry == d)
+		break;
+	if (link)
+	    continue;
+	if (*budget <= 0)
+	{
+	    if (*budget == 0)
+	    {
+		*budget = -1;
+		LogError ((unsigned char *) "Access file \"%s\", alias "
+			  "expansion stopped after %d entries\n",
+			  accessFile, MAX_ALIAS_EXPANSIONS);
+	    }
+	    return haveLocalhost;
+	}
+	--*budget;
+	inner.outer = chain;
+	inner.entry = d;
+	inner.depth = depth + 1;
 	if (scanHostlist (d->hosts, clientAddress, connectionType,
-			  function, closure, depth + 1, broadcast))
+			  function, closure, &inner, budget, broadcast))
 	{
 	    haveLocalhost = 1;
 	}
@@ -781,6 +833,7 @@ ForEachMatchingIndirectHost(
     int		    haveLocalhost = 0;
     DisplayEntry    *d;
     char	    *clientName = nullptr;
+    int		    budget = MAX_ALIAS_EXPANSIONS;
 
     for (d = database; d; d = d->next)
     {
@@ -822,7 +875,7 @@ ForEachMatchingIndirectHost(
 		(*function) (connectionType, choice, closure);
 	}
 	else if (scanHostlist (d->hosts, clientAddress, connectionType,
-			  function, closure, 0, FALSE))
+			  function, closure, nullptr, &budget, FALSE))
 	{
 	    haveLocalhost = 1;
 	}
@@ -900,6 +953,7 @@ ForEachChooserHost(
     int		    haveLocalhost = 0;
     DisplayEntry    *d;
     char	    *clientName = nullptr;
+    int		    budget = MAX_ALIAS_EXPANSIONS;
 
     for (d = database; d; d = d->next)
     {
@@ -933,7 +987,7 @@ ForEachChooserHost(
 	if (!d->chooser)
 	    break;
 	if (scanHostlist (d->hosts, clientAddress, connectionType,
-			  function, closure, 0, TRUE))
+			  function, closure, nullptr, &budget, TRUE))
 	{
 	    haveLocalhost = 1;
 	}
