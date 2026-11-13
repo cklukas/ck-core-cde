@@ -1,0 +1,3 @@
+pc1# comment
+10.0.0.2 serverA serverB
+*.example.org CHOOSER BROADCAST

@@ -95,4 +95,101 @@ request = (struct.pack(">H", 0) + bytes([1]) + struct.pack(">H", 0) + aa8([bytes
 put("dtlogin-xdmcp", "request", b"\x00" + xdmcp(7, request))
 put("dtlogin-xdmcp", "manage", b"\x04" + xdmcp(10, struct.pack(">IH", 1, 0) + a8(b"MyDisplay")))
 put("dtlogin-xdmcp", "keepalive", b"\x24" + xdmcp(13, struct.pack(">HI", 0, 1)))
+# ---- dtsvc-dbreader: byte 0 flags (bit 0 multibyte locale, bit 1 version fixed), then the file ----
+put("dtsvc-dbreader", "attributes",
+    b"\x00DATA_ATTRIBUTES TextFile\n{\n\tICON\t\ttext\n\tDESCRIPTION\tA text \\\n\t\t\tfile\n}\n")
+put("dtsvc-dbreader", "criteria",
+    b"\x00set DtDbVersion=1.0\nset T=/usr/dt\nDATA_CRITERIA TextFileCriteria1\n{\n\tDATA_ATTRIBUTES_NAME\tTextFile\n"
+    b"\tMODE\t\t!d\n\tNAME_PATTERN\t*.txt\n}\n")
+put("dtsvc-dbreader", "action",
+    b"\x00# comment\nACTION Open\n{\n\tLABEL\tOpen\n\tTYPE\tCOMMAND\n"
+    b"\tEXEC_STRING\t${HOME}/bin/open %(File)Arg_1\"Name:\"%\n}\n")
+put("dtsvc-dbreader", "multibyte",
+    b"\x01set A=caf\xc3\xa9\nACTION \xc3\xa9x\n{\n\tLABEL ${A} $A ${FUZZVAR}\n}\n")
+
+# ---- dtsvc-mmcache: a type database cache file: header, then 32-bit integers ---------------------
+def mm_cache(strings, db_name, records):
+    """records: [(name, [(field, value), ...])]; one database of that name."""
+    sdata, off = b"", {}
+    for t in strings:
+        off[t] = len(sdata)
+        sdata += t.encode() + b"\0"
+    sdata += b"\0" * (-len(sdata) % 4)
+    count = 8
+    entries = []
+    for t in strings:
+        h, i = 0, 1
+        for c in t.encode():
+            h += c << i
+            i += 1
+        h &= 0xffffffff
+        entries.append((off[t], h % count))
+    buckets = [0xffff] * count
+    chain = []
+    for n, (key, b) in enumerate(entries):
+        chain.append([key, 0xffff, 0xffff])
+        if buckets[b] == 0xffff:
+            buckets[b] = n
+        else:
+            j = buckets[b]
+            while chain[j][2] != 0xffff:
+                j = chain[j][2]
+            chain[j][2] = n
+    # table: count bucket entries (key unused) then the chained entries; "first" indexes the whole array
+    tab = [struct.pack("<IHH", 0, buckets[b] + count if buckets[b] != 0xffff else 0xffff, 0xffff) for b in range(count)]
+    for key, _, nxt in chain:
+        tab.append(struct.pack("<IHH", key, 0xffff, nxt + count if nxt != 0xffff else 0xffff))
+    strtab = struct.pack("<IIII", 16 + len(sdata) + 8 * (count + len(chain)), 16, 16 + len(sdata), count) + sdata + b"".join(tab)
+    ints = []
+
+    def add(b):
+        b += b"\0" * (-len(b) % 4)
+        ints.extend(struct.unpack("<%di" % (len(b) // 4), b))
+        return len(ints) - len(b) // 4
+    names = [r[0] for r in records]
+    fields_at = []
+    for _, fl in records:
+        fields_at.append(add(b"".join(struct.pack("<ii", off[a], off[v]) for a, v in fl)))
+    recs_at = add(b"".join(struct.pack("<iiiii", off[n], off[strings[0]], i, len(fl), fields_at[i])
+                           for i, (n, fl) in enumerate(records)))
+    # the integer table of the database: an empty one (key 0 in its header)
+    name_tab = add(struct.pack("<iiHH", 0, 0, 0, 0))
+    db_at = add(struct.pack("<iiii", off[db_name], name_tab, len(records), recs_at))
+    size_at = add(struct.pack("<i", 0))               # an empty name list preceded by its size
+    str_at = add(strtab)
+    files_at = add(struct.pack("<i", 0))
+    mtime_at = add(struct.pack("<q", 1))
+    header = struct.pack("<iiiiiiiiii", 0x1234, 1, db_at, size_at + 1, -1, 0, str_at, 1, files_at, mtime_at)
+    return header + struct.pack("<%di" % len(ints), *ints)
+
+
+put("dtsvc-mmcache", "one-action",
+    mm_cache(["ACTION", "Open", "LABEL", "Open it", "ICON", "x"], "ACTION",
+             [("Open", [("LABEL", "Open it"), ("ICON", "x")])]))
+put("dtsvc-mmcache", "two-records",
+    mm_cache(["DATA_ATTRIBUTES", "TextFile", "ICON", "text", "Binary", "bin"], "DATA_ATTRIBUTES",
+             [("TextFile", [("ICON", "text")]), ("Binary", [("ICON", "bin")])]))
+put("dtsvc-mmcache", "header-only", struct.pack("<iiiiiiiiii", 0, 0, 0, 0, -1, 0, 0, 0, 0, 0))
+
+# ---- dthelp-sdl: flags, operation count, operations, then the SDL text ---------------------------
+def sdl(flags, ops, text):
+    return bytes([flags, len(ops)]) + bytes(ops) + text
+
+
+put("dthelp-sdl", "elements", sdl(0x02, [0], b'<block id="b1" class="table">text <anchor id=a1> more</block>'))
+put("dthelp-sdl", "attributes", sdl(0x00, [1, 3, 1, 4, 7], b' id="x1" class=\'a b\' length="12">'))
+put("dthelp-sdl", "cdata", sdl(0x08, [2], b"Tom &#38; Jerry\nsecond line &#233; end<"))
+put("dthelp-sdl", "multibyte", sdl(0x01, [2, 6], "caf\u00e9 \u65e5\u672c\u8a9e text<".encode()))
+put("dthelp-sdl", "declaration", sdl(0x00, [6, 8], b'<!DOCTYPE sdl [ <!ENTITY a "x"> ]> <block>'))
+
+# ---- dtlogin-xaccess: client name length, client name, then the Xaccess file ------------------------
+def xaccess(name, text):
+    return bytes([len(name)]) + name + text
+
+
+put("dtlogin-xaccess", "hosts", xaccess(b"pc1", b"# comment\n10.0.0.2 serverA serverB\n*.example.org CHOOSER BROADCAST\n"))
+put("dtlogin-xaccess", "alias", xaccess(b"x.example.org", b"%servers serverA serverB \\\n  serverC\n10.0.0.2 %servers\n"))
+put("dtlogin-xaccess", "pattern", xaccess(b"term7.lab", b"term?.lab CHOOSER %hosts\n%hosts hostA hostB\n!bad.lab\n"))
+put("dtlogin-xaccess", "direct", xaccess(b"pc2", b"pc2\n127.0.0.1 CHOOSER BROADCAST\n"))
+
 print("seeds written below", root)

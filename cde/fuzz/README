@@ -24,8 +24,8 @@ Requirements on the host:
   - the Homebrew clang, /opt/homebrew/opt/llvm/bin/clang (environment
     variable CLANG overrides the path); it must accept -fsanitize=fuzzer
   - the XQuartz headers in /opt/X11/include (XINCLUDE overrides), used by
-    dtsession-palette, dtwm-property and dtlogin-xdmcp
-  - for dtlogin-xdmcp also libXdmcp and libXau in /opt/X11/lib (XLIB overrides)
+    dtsession-palette, dtwm-property, dtlogin-xdmcp, dtlogin-xaccess and dthelp-sdl
+  - for dtlogin-xdmcp and dtlogin-xaccess also libXdmcp and libXau in /opt/X11/lib (XLIB overrides)
 
 Running
 -------
@@ -94,6 +94,25 @@ Targets
   dtwm-property      dtwm window property readers (WmProperty.c): normal hints,
                      WM_STATE, motif hints and info, UTF8 strings, colormap
                      windows, WM_PROTOCOLS and _MWM_MESSAGES
+  dtsvc-dbreader     libDtSvc reader of the data-type and action database files
+                     (*.dt; DtUtil1/DbReader.c): line reader, $variable
+                     expansion, "set" statements, field splitter, ReadNextEntry;
+                     byte 0 of the input: bit 0 multibyte locale, bit 1 version
+                     fixed
+  dtsvc-mmcache      libDtSvc memory-mapped type database cache file
+                     (DtUtil1/DtsMM.c with the table readers of strtab.c and
+                     inttab.c): header check, then a walk of every database,
+                     record, field and index; mmap() is a malloc()ed copy of the
+                     file so that every access past its end is seen
+  dthelp-sdl         DtHelp SDL token layer (UtilSDL.c over bufio.c): elements,
+                     attributes, cdata with entities and multibyte characters,
+                     declarations, ids and numbers; the input starts with the
+                     flags and the list of operations (see the harness); the
+                     environment variable FUZZ_SKIP_OPS is a bit mask of
+                     operations not to call, to go on past a reported bug
+  dtlogin-xaccess    dtlogin Xaccess file reader and the XDMCP access checks
+                     over it (access.c, compiled whole); the input starts with
+                     the client host name
 
 What a finding means
 --------------------

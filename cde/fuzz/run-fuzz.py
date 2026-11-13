@@ -74,6 +74,53 @@ def function(text, name, source="source"):
     return text[start:end if end >= 0 else len(text)] + "\n"
 
 
+def c_function(text, name, source="source"):
+    """Return the definition of the function NAME for files in the old K&R-era
+    layout (return type, qualifiers and name on separate lines, arguments over
+    many lines): the type lines above the name, the argument list, and the
+    body up to its matching brace.  Strings, characters and comments are
+    skipped when braces are counted.  The definition must be unique."""
+    def skip(i):
+        if text.startswith("/*", i):
+            return text.index("*/", i + 2) + 2
+        if text.startswith("//", i):
+            return text.index("\n", i)
+        quote = text[i]
+        i += 1
+        while text[i] != quote:
+            i += 2 if text[i] == "\\" else 1
+        return i + 1
+
+    def close(i, opener, closer):
+        depth = 1
+        while depth:
+            if text[i] in "\"'" or text.startswith(("/*", "//"), i):
+                i = skip(i)
+                continue
+            depth += (text[i] == opener) - (text[i] == closer)
+            i += 1
+        return i
+
+    found = []
+    for m in re.finditer(r"^(?:[\w \t\*]*[ \t\*])?" + re.escape(name) + r"\s*\(", text, re.M):
+        i = close(m.end(), "(", ")")
+        if not re.match(r"\s*\{", text[i:]):
+            continue                                   # a prototype or a call
+        start = m.start()
+        while True:                                    # the type lines above the name
+            previous = text.rfind("\n", 0, start - 1) + 1
+            line = text[previous:start - 1]
+            if (not line.strip() or line.lstrip().startswith(("*", "/*", "#", "}"))
+                    or line.rstrip().endswith((";", "*/", "}"))):
+                break
+            start = previous
+        end = close(text.index("{", i) + 1, "{", "}")
+        found.append(text[start:end] + "\n")
+    if len(found) != 1:
+        sys.exit(f"{source}: definition of {name} found {len(found)} times, expected 1")
+    return found[0]
+
+
 def functions(text, names, source):
     return "\n".join(function(text, n, source) for n in names)
 
@@ -207,7 +254,117 @@ def build_dtwm_property(wt):
     return {"types.h": "", "production.h": prod}, {"include": [str(root)]}
 
 
+def build_dtsvc_dbreader(wt):
+    base = wt / "cde"
+    text = (base / "lib/DtSvc/DtUtil1/DbReader.c").read_text()
+    reader_h = (base / "include/Dt/DbReader.h").read_text()
+    src = "DbReader.c"
+    types = typedef(reader_h, r"typedef\s+struct\s*\{[^{}]*\}\s*DtDtsDbField;", "DbReader.h")
+    types += typedef(reader_h, r"typedef\s+Boolean\s*\(\*DtDbConverter\)[^;]*;", "DbReader.h")
+    types += typedef(reader_h, r"typedef\s+struct\s*\{[^{}]*DtDbConverter\s*\*\s*converters;[^{}]*\}\s*DtDbRecordDesc;",
+                     "DbReader.h")
+    for pattern in (r"^#define\s+MAX_LINE_LENGTH\s+\d+\s*$", r"^#define\s+NUMBER_FIELDS_DEFAULT\s+\d+\s*$",
+                    r"^#define\s+NUMBER_FIELDS_INCREMENT\s+\d+\s*$", r"^#define\s+DTUNLIMITEDFIELDS\s+\d+\s*$",
+                    r"^#define\s+AT_START\s+\d+", r"^#define\s+NO_START_SYMBOL\s+\d+",
+                    r"^#define\s+START_SYMBOL\s+\d+", r"^#define\s+VERSION_\w+\s+.*$",
+                    r"^#define\s+MAX_VARIABLE_REPLACEMENTS\s+\d+\s*$",
+                    r"^#define\s+MAX_EXPANDED_LINE_LENGTH\s+.*$"):
+        found = [m.group(0) + "\n" for m in re.finditer(pattern, text + reader_h, re.M)]
+        if not found:
+            sys.exit(f"{src}: definition /{pattern}/ not found")
+        types += "".join(found)
+    types += typedef(text, r"typedef struct \{\s*char \* varName;\s*char \* value;\s*\} VariableEntry;", src)
+    types += "static int variableCount;\nstatic int variableCapacity;\nstatic VariableEntry * variableSet;\n"
+    decl = between(text, "/********    Static Function Declarations", "/********    End Static Function Declarations", src)
+    names = ["report_error", "read_line", "clean_line", "get_variable", "ResolveVariableReference",
+             "_DtDbFillVariables", "DefineVariable", "ClearVariables", "SplitField", "MatchKeyword",
+             "ReadNextEntry", "FreeDbField"]
+    prod = decl + "\n".join(c_function(text, n, src) for n in names)
+    return {"types.h": types, "production.h": prod}, {}
+
+
+def build_dtsvc_mmcache(wt):
+    base = wt / "cde"
+    root = base / "lib/DtSvc/DtUtil1"
+    mm = (root / "DtsMM.c").read_text()
+    strtab = (root / "strtab.c").read_text()
+    inttab = (root / "inttab.c").read_text()
+    mm_h = (base / "include/Dt/DtsMM.h").read_text()
+    shm_h = (base / "include/Dt/DtShmDb.h").read_text()
+    types = between(shm_h, "typedef const void * \tDtShmStrtab;", "/*\n  routines used while building", "DtShmDb.h")
+    types += between(mm_h, "typedef\tint\tDtDtsMMSeqNo;", "/* Db Internal pointers */", "DtsMM.h")
+    types += typedef(strtab, r"typedef struct strtab \{.*?\} strtab_t;", "strtab.c")
+    types += typedef(strtab, r"typedef struct strtab_entry \{.*?\} strtab_entry_t;", "strtab.c")
+    types += defines(strtab, ["NOT_AN_INDEX"], "strtab.c")
+    types += typedef(inttab, r"typedef struct inttab \{.*?\} inttab_t;", "inttab.c")
+    types += '#define DtDTS_DC_NAME "DATA_CRITERIA"\n'
+    types += typedef(mm, r"struct cache_view\s*\{.*?\n\};", "DtsMM.c")
+    prod = between(mm, "static\tDtDtsMMDatabase\t*db_list;", "int _DtDtsMMUnLoad(void);", "DtsMM.c")
+    prod += c_function(strtab, "_DtShmBosonToString", "strtab.c")
+    prod += c_function(strtab, "_DtShmStringToBoson", "strtab.c")
+    prod += c_function(strtab, "_DtShmStrtabHasString", "strtab.c")
+    prod += c_function(strtab, "_DtShmValidateStrtab", "strtab.c")
+    prod += c_function(inttab, "_DtShmFindIntTabEntry", "inttab.c")
+    prod += c_function(inttab, "_DtShmValidateInttab", "inttab.c")
+    prod += "\n".join(c_function(mm, n, "DtsMM.c") for n in [
+        "_DtDtsMMGetPtr", "_DtDtsMMGetPtrSize", "_DtDtsMMGetDCNameIndex", "_DtDtsMMGetDbName",
+        "_DtDtsMMGetNoNameIndex", "_DtDtsMMGetBufferIndex", "_DtDtsMMGetFileList", "_DtDtsMMBosonToString",
+        "_DtDtsMMStringToBoson", "_DtDtsMMGet", "_DtDtsMMGetField", "_DtDtsMMGetFieldByName",
+        "_DtDtsMMGetRecordByName", "cache_size_fits", "index_inside", "cache_header_valid",
+        "cache_block", "cache_ints", "cache_string", "cache_records_below", "cache_record_entry",
+        "cache_name_entry", "cache_inttab", "cache_database_valid", "cache_tables_valid", "_DtDtsMMapDB",
+        "_DtDtsMMUnLoad"])
+    return {"types.h": types, "production.h": prod}, {}
+
+
+def build_dthelp_sdl(wt):
+    base = wt / "cde"
+    root = base / "lib/DtHelp"
+    src = "UtilSDL.c"
+    util = (root / src).read_text()
+    for name in ("SkipWhiteSpace", "GetSDLElement", "_DtHelpCeMatchSdlElement", "_DtHelpCeGetSdlAttribute",
+                 "_DtHelpCeReturnSdlElement", "_DtHelpCeGetSdlCdata", "_DtHelpCeGetSdlAttributeCdata",
+                 "_DtHelpCeSkipCdata", "_DtHelpCeGetSdlId", "_DtHelpCeGetSdlNumber",
+                 "_DtHelpCeFindSkipSdlElementEnd"):
+        c_function(util, name, src)                       # the anchors must exist exactly once
+    # whole production files: the SDL token layer, the buffered reader it reads through, and the
+    # two buffer-append helpers and the case-insensitive compare it calls (over CvString.c)
+    prod = f'#include "{root / src}"\n#include "{root / "bufio.c"}"\n#include "{root / "CvString.c"}"\n'
+    fmt = (root / "FormatUtil.c").read_text()
+    strf = (root / "StringFuncs.c").read_text()
+    prod += c_function(fmt, "_DtHelpCeAddCharToBuf", "FormatUtil.c")
+    prod += c_function(fmt, "_DtHelpCeAddStrToBuf", "FormatUtil.c")
+    prod += c_function(strf, "_DtHelpCeStrNCaseCmpLatin1", "StringFuncs.c")
+    return {"types.h": "", "production.h": prod}, {
+        "define": ["DTLIB"],
+        "include": [str(root), str(base / "include/Dt"), str(base / "include/DtI"), str(base / "include")]}
+
+
+def build_dtlogin_xaccess(wt):
+    root = wt / "cde/programs/dtlogin"
+    text = (root / "access.c").read_text()
+    for name in ("ReadWord", "ReadHostEntry", "ReadDisplayEntry", "ReadAccessDatabase", "ScanAccessDatabase",
+                 "patternMatch", "scanHostlist", "indirectAlias", "ForEachMatchingIndirectHost",
+                 "ForEachChooserHost", "AcceptableDisplayAddress"):
+        c_function(text, name, "access.c")                  # the anchors must exist exactly once
+    # the whole production file, as check-config.py compiles it; gethostbyname goes to the harness
+    prod = '#define gethostbyname fuzz_gethostbyname\n#include "%s"\n' % (root / "access.c")
+    return {"types.h": "", "production.h": prod}, {
+        "define": ["UNIXCONN", "TCPCONN", "XDMCP", "HASXDMAUTH", "ANSICPP", "NeedWidePrototypes=0"],
+        "include": [str(root), str(wt / "cde/include")],
+        "link": ["-L" + os.environ.get("XLIB", DEFAULT_XLIB), "-lXdmcp", "-lXau",
+                 "-Wl,-rpath," + os.environ.get("XLIB", DEFAULT_XLIB)]}
+
+
 TARGETS = {
+    "dtlogin-xaccess": ("dtlogin Xaccess file reader and the XDMCP access checks over it: hosts, patterns, "
+                        "aliases, chooser and broadcast entries (dtlogin/access.c)", build_dtlogin_xaccess),
+    "dthelp-sdl": ("DtHelp SDL token layer: elements, attributes, cdata with entities and multibyte "
+                   "characters, skipped declarations (DtHelp/UtilSDL.c over bufio.c)", build_dthelp_sdl),
+    "dtsvc-mmcache": ("libDtSvc memory-mapped type database cache: header check, string and integer tables, "
+                      "record and field lookup (DtUtil1/DtsMM.c, strtab.c, inttab.c)", build_dtsvc_mmcache),
+    "dtsvc-dbreader": ("libDtSvc data-type and action database (.dt) file reader: lines, variables, fields, "
+                       "records (DtUtil1/DbReader.c)", build_dtsvc_dbreader),
     "spc-proto": ("dtspcd request wire layer: header decode, request read, multi-packet and counted-string "
                   "decoders (DtEncap/spc-proto.c)", build_spc_proto),
     "dtwm-session": ("dtwm front panel session file reader (dtwm/Session.c)", build_dtwm_session),

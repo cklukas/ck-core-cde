@@ -1,0 +1,5 @@
+set A=café
+ACTION éx
+{
+	LABEL ${A} $A ${FUZZVAR}
+}
