@@ -193,6 +193,11 @@ GetOLWinAttr(
 	 *     define an inverse function of XFree(). !!!
 	 */
 	prop_new = (OLWinAttr *) malloc (sizeof(OLWinAttr));
+	if (prop_new == nullptr)
+	{
+	    XFree ((char *) property);
+	    return (nullptr);
+	}
 
 	prop_new->flags = WA_WINTYPE | WA_MENUTYPE | WA_PINSTATE;
 	prop_new->win_type = ((old_OLWinAttr *)property)->win_type;

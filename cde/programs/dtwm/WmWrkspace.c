@@ -3719,7 +3719,7 @@ SaveWorkspaceResources(
 	sprintf (buffer, "%dx%d+%d+%d", clientWidth, clientHeight,
 		 clientX, clientY);
 
-	pWS->iconBoxGeometry  = strdup( buffer);
+	pWS->iconBoxGeometry  = XtNewString(buffer);
 
 	iLen = strlen (res_class) + strlen (screenName) +
 	       strlen (pWS->name) + strlen (WmNiconBoxGeometry) + 

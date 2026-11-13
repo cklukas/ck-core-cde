@@ -255,7 +255,7 @@ ProcessBackdropResources(
 			    strdup (pWS->backdrop.image)) &&
 	    (pch = GetString(&pLine)))
 	{
-	    pchL = (unsigned char *) strdup ((char *)pch);
+	    pchL = (unsigned char *) XtNewString ((char *)pch);
 
             if (*pchL) 
 		ToLower((char *)pchL);
@@ -547,7 +547,7 @@ ProcessBackdropResources(
 	    }
 	    free (pchImageName);	/* temporary string */
 	    pchImageName = nullptr;
-	    free (pchL);	/* temporary string */
+	    XtFree ((char *)pchL);	/* temporary string */
 	}
     }
 

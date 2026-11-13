@@ -248,7 +248,7 @@ main (int argc,
     */
     DtDbLoad();
 
-    panel.app_name = strdup(argv[0]);
+    panel.app_name = XtNewString(argv[0]);
     if (FrontPanelReadDatabases ())
     {
       /* Print out the contents of the .fp database */

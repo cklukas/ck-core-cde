@@ -57,7 +57,7 @@ StringToString (char * parse_source,
                 void ** parse_return)
 
 {
-   *parse_return = (void *) strdup (parse_source);
+   *parse_return = (void *) XtNewString(parse_source);
 
    return (True);
 }
@@ -262,13 +262,13 @@ StringToAction (char * parse_source,
    unsigned char * string, * source, * head_ptr;
 
 
-   head_ptr = source = (unsigned char *) strdup (parse_source);
+   head_ptr = source = (unsigned char *) XtNewString(parse_source);
 
    if ((string = _DtWmParseNextTokenC (&source, False)) != nullptr)
    {
       action_data = (PanelActionData *) XtMalloc (sizeof (PanelActionData));
 
-      action_data->action_name = strdup ((char *) string);
+      action_data->action_name = XtNewString((char *) string);
       action_data->action_label = nullptr;
       action_data->aap = nullptr;
       action_data->count = 0;
@@ -282,18 +282,18 @@ StringToAction (char * parse_source,
          action_data->aap[action_data->count-1].argClass = DtACTION_FILE;
 
          action_data->aap[action_data->count-1].u.file.name =
-						 strdup((char *)string);
+						 XtNewString((char *)string);
       }
    }
    else
    {
       _DtSimpleError (panel.app_name, DtError, nullptr, 
                      "Invalid Action -- %s", parse_source);
-      free (head_ptr);
+      XtFree ((char *) head_ptr);
       return (False);
    }
 
-   free ((char *) head_ptr);
+   XtFree ((char *) head_ptr);
    *parse_return = (void *) action_data;
    return (True);
 }

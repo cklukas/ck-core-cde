@@ -625,8 +625,14 @@ AddOrUpdateActionEntry(const char *command, const char *icon, const char *source
         {
             if (strcmp(actionEntries[i].icon, icon) != 0)
             {
+                char *newIcon = strdup(icon);
+                if (!newIcon)
+                {
+                    ActionIconCacheLog("Failed to update icon for action entry command=%s", command);
+                    return;
+                }
                 free(actionEntries[i].icon);
-                actionEntries[i].icon = strdup(icon);
+                actionEntries[i].icon = newIcon;
                 ActionIconCacheLog("Updated action entry command=%s icon=%s source=%s",
                                    command, icon, source ? source : "(unknown)");
             }
@@ -896,8 +902,11 @@ AddCacheEntryInternal(const char *command, const char *action, Boolean markDirty
             if (strcmp(cacheEntries[i].action, action) == 0)
                 return False;
 
+            char *newAction = strdup(action);
+            if (!newAction)
+                return False;
             free(cacheEntries[i].action);
-            cacheEntries[i].action = strdup(action);
+            cacheEntries[i].action = newAction;
             if (markDirty)
                 cacheDirty = True;
             return True;

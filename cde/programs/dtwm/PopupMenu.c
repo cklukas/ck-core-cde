@@ -1598,15 +1598,15 @@ ShowWorkspaceItems (SwitchData * switch_data,
 
    /*  Set the title of the menu  */
    
-   format = strdup (FPGETMESSAGE(82, 20, "%1$s %2$s"));
-   ws = strdup (FPGETMESSAGE(82, 21, "Workspace"));
+   format = XtNewString(FPGETMESSAGE(82, 20, "%1$s %2$s"));
+   ws = XtNewString(FPGETMESSAGE(82, 21, "Workspace"));
    ws_name = switch_data->switch_names[i];
 
    control_label = XtCalloc((strlen(ws) + strlen(ws_name) + 4), sizeof(char));
 
    sprintf (control_label, format, ws, ws_name);
-   free (format);
-   free (ws);
+   XtFree (format);
+   XtFree (ws);
 
    label_string = XmStringCreateLocalized (control_label);
    XtSetArg (args[0], XmNlabelString, label_string);

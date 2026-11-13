@@ -1121,7 +1121,7 @@ AnimationParseCB (DtDtsDbField  * fields,
                           XtRealloc ((char *) panel.animation_data, 
                                      sizeof (AnimationData) * (count + 1));
 
-   panel.animation_data[count].name = strdup(fields[0].fieldValue);
+   panel.animation_data[count].name = XtNewString(fields[0].fieldValue);
 
 
    for (i = 1; fields[i].fieldName != NULLQUARK; i++)
@@ -1140,12 +1140,12 @@ AnimationParseCB (DtDtsDbField  * fields,
      if (fields[i+1].fieldName == animation_quark)
      {
         head_ptr = source =
-		 (unsigned char *) strdup((char *)fields[i+1].fieldValue);
+		 (unsigned char *) XtNewString((char *)fields[i+1].fieldValue);
 
         if ((string = _DtWmParseNextTokenC(&source, False)) != nullptr)
 	{
 	   panel.animation_data[count].items[i].image_name =
-						 strdup((char *) string);
+						 XtNewString((char *) string);
 	   if ((string = _DtWmParseNextTokenC(&source, False)) != nullptr)
 	   {
 	      StringToInt((char *)string, &val_rtn);
@@ -1157,7 +1157,7 @@ AnimationParseCB (DtDtsDbField  * fields,
 	   }
 	}
 
-	free((char *)head_ptr);
+	XtFree((char *)head_ptr);
      }
    }
      
@@ -1264,7 +1264,7 @@ ProcessRecord (DtDtsDbField   * fields,
 	 if (field1 == XrmStringToQuark(field_keywords[j]))
 	 {
             (element_values + j)->use_default = False;
-            (element_values + j)->string_value = strdup (field2);
+            (element_values + j)->string_value = XtNewString(field2);
             break;
 	 }
       }
@@ -1722,7 +1722,7 @@ RemoveEntry (RecordData * record_data,
 
        if (record_data->element_values[i].use_default == False &&
            record_data->element_values[i].string_value != nullptr)
-          free(record_data->element_values[i].string_value);
+          XtFree(record_data->element_values[i].string_value);
    }
 		    
    XtFree((char *)record_data->element_values);
@@ -2223,19 +2223,19 @@ DeleteControlActionList (ControlData * control_data)
    int i;
 
    if (control_data->move_action != nullptr)
-      free(control_data->move_action);
+      XtFree(control_data->move_action);
    if (control_data->copy_action != nullptr)
-      free(control_data->copy_action);
+      XtFree(control_data->copy_action);
    if (control_data->link_action != nullptr)
-      free(control_data->link_action);
+      XtFree(control_data->link_action);
 
    if (control_data->actions != nullptr)
    {
        for (i = 0; control_data->actions[i] != nullptr; i++)
        {
-	  free (control_data->actions[i]->action_name);
+	  XtFree (control_data->actions[i]->action_name);
 	  if (control_data->actions[i]->action_label != nullptr)
-	     free (control_data->actions[i]->action_label);
+	     XtFree (control_data->actions[i]->action_label);
 	  XtFree ((char *) control_data->actions[i]);
        }
 
@@ -2316,26 +2316,26 @@ AddControlActionList (ControlData * control_data)
             {
                /* DtDTS_DA_ACTION_LIST */
                case 0:
-                  free(act_list); /* Remove any previous loop run through */
-                  act_list = (char *) strdup(attr_list[i]->value);
+                  XtFree(act_list); /* Remove any previous loop run through */
+                  act_list = (char *) XtNewString(attr_list[i]->value);
                break;
 
                /* DtDTS_DA_COPY_TO_ACTION */
                case 1:
                   control_data->copy_action =
-				 (char *) strdup(attr_list[i]->value);
+				 (char *) XtNewString(attr_list[i]->value);
                break;
 
                /* DtDTS_DA_LINK_TO_ACTION */
                case 2:
                   control_data->link_action = 
-		                 (char *) strdup(attr_list[i]->value);
+		                 (char *) XtNewString(attr_list[i]->value);
                break;
 
 	       /* DtDTS_DA_MOVE_TO_ACTION */
                case 3:
                   control_data->move_action =
-				 (char *) strdup(attr_list[i]->value);
+				 (char *) XtNewString(attr_list[i]->value);
                break;
 
 	       /* No Match */
@@ -2389,7 +2389,7 @@ AddControlActionList (ControlData * control_data)
        control_data->actions[i] = (PanelActionData *)
 				       XtMalloc(sizeof(PanelActionData));
 
-       control_data->actions[i]->action_name = strdup(action_list[j]);
+       control_data->actions[i]->action_name = XtNewString(action_list[j]);
 
        control_data->actions[i]->aap = nullptr;
        control_data->actions[i]->count = 0;
@@ -2399,7 +2399,7 @@ AddControlActionList (ControlData * control_data)
        if (label != nullptr)
 	  control_data->actions[i]->action_label = label;
        else
-	  control_data->actions[i]->action_label = strdup (action_list[j]);
+	  control_data->actions[i]->action_label = XtNewString(action_list[j]);
 
 
    }
@@ -2407,7 +2407,7 @@ AddControlActionList (ControlData * control_data)
    control_data->actions[i] = nullptr;
 
    if (act_list)
-       free (act_list);
+       XtFree (act_list);
 
    if (action_list)
        XtFree ((char *) action_list);
@@ -3097,7 +3097,7 @@ FreeFileControlField (ElementValue * element_values,
    if (element_values[indx].use_default == False &&
        element_values[indx].string_value != nullptr)
    {
-      free(element_values[indx].string_value);
+      XtFree(element_values[indx].string_value);
       element_values[indx].string_value = nullptr;
    }
 }
@@ -3260,9 +3260,9 @@ InitializeFileControlFields (ElementValue * element_values,
 	 if (action_list && action_list[0] != nullptr)
 	 {
 	    element_values[CONTROL_PUSH_ACTION].string_value =
-					      strdup (action_list[0]);
+					      XtNewString(action_list[0]);
 	    element_values[CONTROL_DROP_ACTION].string_value =
-					      strdup (action_list[0]);
+					      XtNewString(action_list[0]);
 
             if (DtDtsDataTypeIsAction (data_type))
                label = DtActionLabel (action_list[0]);
