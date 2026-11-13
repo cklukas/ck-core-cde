@@ -64,8 +64,10 @@
 
 
 #include <errno.h>
+#include <limits.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <time.h>
@@ -321,6 +323,7 @@ static void
 _pjRegisterActivePrintDisplay(Display *display)
 {
     size_t size;
+    Display **grown;
     int i;
 
     if (0 == _pjMaxActivePrintDisplay)
@@ -340,10 +343,16 @@ _pjRegisterActivePrintDisplay(Display *display)
 	}
     }
 
-    size = _pjMaxActivePrintDisplay * sizeof(Display*);
-    _pjActivePrintDisplay =
-	(Display**) realloc((void*) _pjActivePrintDisplay, 2*size);
-    memset((char*) (_pjActivePrintDisplay + size), 0, size);
+    if (_pjMaxActivePrintDisplay > INT_MAX / 2)
+	return;
+    grown = (Display**) reallocarray((void*) _pjActivePrintDisplay,
+				     2 * _pjMaxActivePrintDisplay,
+				     sizeof(Display*));
+    if (nullptr == grown)
+	return;
+    _pjActivePrintDisplay = grown;
+    memset((char*) (_pjActivePrintDisplay + _pjMaxActivePrintDisplay), 0,
+	   _pjMaxActivePrintDisplay * sizeof(Display*));
     _pjActivePrintDisplay[_pjMaxActivePrintDisplay] = display;
     _pjMaxActivePrintDisplay *= 2;
 }
