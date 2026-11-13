@@ -1870,7 +1870,10 @@ HostCB(Tt_message m, Tt_pattern p)
   if (state == TT_HANDLED) {
     value = tt_message_arg_val(m, 1);
     waitCB = 0;
+    return TT_CALLBACK_PROCESSED;
   }
+
+  return TT_CALLBACK_CONTINUE;
 }
 
 /************************************************************************

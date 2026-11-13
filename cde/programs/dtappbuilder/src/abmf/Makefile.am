@@ -4,6 +4,11 @@ ABINCLUDES = $(top_srcdir)/programs/dtappbuilder/src/include
 
 EXTRA_DEFINES =  -D_POSIX_SOURCE=1
 
+EXTRA_DIST = tests/check-user-seg-begin.py tests/check-user-seg-begin.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-user-seg-begin.py
+
 if BSD
 UTILLIB = -lutil
 endif

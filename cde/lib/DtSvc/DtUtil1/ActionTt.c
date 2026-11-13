@@ -854,8 +854,12 @@ static int _DtAct_tt_message_arg_reptype( Tt_message message, int arg )
 
     if (status == TT_OK)
 	return( DtACT_TT_REP_INT);
-    else if (status == TT_ERR_NUM)
-	return( DtACT_TT_REP_BUFFER );
+
+    /*
+     * TT_ERR_NUM means the argument is not an integer; any other status
+     * is treated the same way, the later buffer fetch reports the failure.
+     */
+    return( DtACT_TT_REP_BUFFER );
 }
 
 /******************************************************************************

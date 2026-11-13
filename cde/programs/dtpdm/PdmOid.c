@@ -1662,6 +1662,7 @@ const char* PdmOidNotifyString(PdmOidNotify notify)
 	return NOTIFY_EMAIL_STR;
 	break;
     }
+    return (const char*)nullptr;
 }
 
 /*

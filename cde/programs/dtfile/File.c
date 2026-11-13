@@ -3815,7 +3815,7 @@ UnpostTextField (
 {
    XmManagerWidget file_window;
    int i;
-   FileMgrRec * file_mgr_rec;
+   FileMgrRec * file_mgr_rec = nullptr;
 
    file_mgr_data->renaming = nullptr;
 

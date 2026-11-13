@@ -1303,6 +1303,8 @@ TblGetAlign(short col,			/* column number */
 	case Char:	return 'd';
 	case Span:	return 's';
 	}
+
+	return 'l';
 }
 
 /*	TblGetWidth()  --  get width spec, if any, for a entry

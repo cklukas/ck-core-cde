@@ -284,7 +284,7 @@ ProcessBackdropResources(
 		    GC gc;
 		    Display *display;
 		    Window win;
-		    int status, x, y;
+		    int status = Success, x, y;
 		    unsigned int bw, depth, h, w, junk;
 
 		    /*

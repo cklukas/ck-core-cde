@@ -699,7 +699,7 @@ get_stdact_label(
 	(stdact_type <= AB_BUILTIN_ACTION_NUM_VALUES))
 	ret_val = stdact_labels[stdact_type];
     else
-	ret_val = stdact_labels[stdact_type];
+	ret_val = stdact_labels[AB_STDACT_UNDEF];
 
     /*
      * This returns the "invalid" string

@@ -8781,7 +8781,7 @@ FormatSDLTitle(
  * Purpose:
  *
  ******************************************************************************/
-static	int
+static	void
 SetGhostLink(
     _DtCvLinkDb		 link_data,
     _DtCvSegment	*segments,

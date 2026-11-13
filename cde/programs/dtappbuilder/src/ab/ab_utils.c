@@ -1105,7 +1105,7 @@ format_dir_name_for_user(
             if (!util_streq(home_relative, "."))
             {
                 strcat(pretty_dir, "/");
-                strncat(pretty_dir, home_relative, pretty_dir_size-2);
+                strncat(pretty_dir, home_relative, pretty_dir_size-3);
             }
             pretty_dir[pretty_dir_size-1]= 0;
         }    

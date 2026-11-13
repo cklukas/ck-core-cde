@@ -252,8 +252,8 @@ _DtCm_clnt_call(
 	caddr_t out,
 	struct timeval tout)
 {
-	_DtCm_Client_Info	*ci;
-	_DtCm_Transport_Type	ttype;
+	_DtCm_Client_Info	*ci = nullptr;
+	_DtCm_Transport_Type	ttype = udp_transport;
 	enum clnt_stat status = RPC_FAILED;
 	int retry = conn->retry;
 
@@ -301,8 +301,11 @@ _DtCm_clnt_call(
 	}
 
 	if (status != RPC_SUCCESS && conn->ci != nullptr) {
-		_DtCm_print_errmsg(clnt_sperror((ttype == tcp_transport ? ci->tcpcl :
-				ci->udpcl), ci->host));
+		/* a failed handle refresh can leave the tcp handle unset */
+		ci = conn->ci;
+		_DtCm_print_errmsg(clnt_sperror(
+				(ttype == tcp_transport && ci->tcpcl != nullptr ?
+				ci->tcpcl : ci->udpcl), ci->host));
 	}
 	conn->stat = status;
 	return status;

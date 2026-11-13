@@ -39,9 +39,11 @@ parser.c parser.h: parser.y
 # and the libcsa sources they exercise with the sanitizers, and link them with
 # the built rpc.cmsd, so they check the code that is shipped.
 EXTRA_DIST = tests/check-requests.py tests/requests-test.c \
-	     tests/check-loop.py tests/loop-test.c
+	     tests/check-loop.py tests/loop-test.c \
+	     tests/check-rb-status.py tests/check-rb-status.c
 
 check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-rb-status.py
 	CMSD_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rpc_cmsd_CFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
 	CMSD_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
 	CMSD_LIBS='$(rpc_cmsd_LDADD) $(LIBS)' \

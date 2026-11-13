@@ -1794,7 +1794,7 @@ ResolveDuplicates (RecordData * record_data,
 {
    int i, start_index, lock_index, last_index;
    ElementValue * element_values;
-   int cont_type;
+   int cont_type = 0;
    char *cont_name = nullptr, *record_name;
    int count = *record_count;
    Boolean locked;

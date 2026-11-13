@@ -830,6 +830,7 @@ Tt_callback_action IconEdit_tt_handler( Tt_message m, Tt_pattern p )
   Tt_state        mstate;
   char            *msgPtr, *fmtPtr, *errPtr;
   char            tmpbuf[MAXBUFSIZE];
+  Boolean         tmpbufTruncated = False;
   char*           ttbuf;
   char*           op;
   char            *tmpIconFile;
@@ -1033,13 +1034,16 @@ Tt_callback_action IconEdit_tt_handler( Tt_message m, Tt_pattern p )
            if (tmp) {
               tmp1 = strstr(tmp, "};");
            }
-           snprintf(tmpbuf, sizeof(tmpbuf), "%s_m", tmpIconFile);
+           /* a truncated mask name would create/remove the wrong file */
+           tmpbufTruncated = (snprintf(tmpbuf, sizeof(tmpbuf), "%s_m",
+                                       tmpIconFile) >= (int) sizeof(tmpbuf));
            if (tmp1) {
               tmp1 += 2;                       /* Go one char past the ";" */
 #ifdef DEBUG
               printf("Mask file name = '%s'\n", tmpbuf); /* debug */
 #endif
-              tmpfd = open(tmpbuf, O_CREAT | O_WRONLY | O_NDELAY, 0666);
+              tmpfd = tmpbufTruncated ? -1 :
+                 open(tmpbuf, O_CREAT | O_WRONLY | O_NDELAY, 0666);
               if (tmpfd == -1) {
 		 msgPtr =
 		     GETMESSAGE(5, 60, "Could not open the following file:");

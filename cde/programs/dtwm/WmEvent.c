@@ -2556,7 +2556,7 @@ Time GetTimestamp (void)
     Time timestamp;
     WmScreenData *pSD = ACTIVE_PSD;
     XEvent event;
-    long property;
+    long property = 0;	/* zero-length append: contents never read */
 
     /*
      * Do zero-length append to our own WM_STATE

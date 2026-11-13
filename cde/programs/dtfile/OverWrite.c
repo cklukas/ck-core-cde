@@ -2160,6 +2160,8 @@ rename the file you are changing so it no longer has the same name.");
 
    }  /* end switch (message) */
 
+   return "";	/* unknown message kind */
+
 }  /* end getVariableMessage */
 
 static Boolean

@@ -451,7 +451,6 @@ find_user_seg_begin(File modifiedResFile)
 	    userSegOff = ERR_EOF;
 	}
     }
-    else if (userSegOff >= 0)
 
     return userSegOff;
 }

@@ -13,12 +13,14 @@ EXTRA_DIST = tests/check-help-strings.py tests/help-strings.c \
 	     tests/realloc-inject.h \
 	     tests/check-access-uncompress-temp.py tests/check-access-uncompress-temp.c \
 	     tests/check-canvas-interp-temp.py tests/check-canvas-interp-temp.c \
-	     tests/check-sdl-attributes.py tests/check-sdl-attributes.c
+	     tests/check-sdl-attributes.py tests/check-sdl-attributes.c \
+	     tests/check-stream-end.py tests/check-stream-end.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-help-strings.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-access-uncompress-temp.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-canvas-interp-temp.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-stream-end.py
 	CC="$(CC)" LDFLAGS="$(LDFLAGS)" python3 $(srcdir)/tests/check-realloc-failures.py \
 	    --library-dir .libs --library-dir ../DtSearch/.libs \
 	    --library-dir ../DtSvc/.libs --library-dir ../tt/lib/.libs \

@@ -2913,6 +2913,8 @@ size_t _DtGrRead(
                 return (num_items);
         }
     }
+
+    return(0); /* unknown stream type */
 }
 
 /******************************************************************************
@@ -2966,6 +2968,8 @@ int _DtGrSeek(
         else
             return(-1); /* Failure */
     }
+
+    return(-1); /* Failure: unknown stream type */
 }
 
 /******************************************************************************
@@ -2994,6 +2998,8 @@ int _DtGrGetChar(
         else
 	    return ((unsigned char) *(stream->source.buffer.current++));
     }
+
+    return(EOF); /* unknown stream type */
 }
 
 /******************************************************************************
@@ -3055,4 +3061,6 @@ char *_DtGrGetString(
         *buffer = '\0';
         return (save);
     }
+
+    return(nullptr); /* Failure: unknown stream type */
 }

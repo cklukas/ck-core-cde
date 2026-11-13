@@ -364,7 +364,7 @@ LoadFont (
     short	 found = False;
     short	 colon = False;
     int		 len;
-    char	*junk;
+    char	*junk = nullptr;
     char	*strPtr;
     char	**missingFontSet = nullptr;
     XFontStruct	*fontStruct = nullptr;

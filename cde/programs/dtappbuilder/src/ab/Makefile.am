@@ -2,6 +2,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 .NOTPARALLEL:
 
+EXTRA_DIST = tests/check-pretty-dir.py tests/check-pretty-dir.c
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-pretty-dir.py
+
 appdefaultsdir = $(CDE_INSTALLATION_TOP)/app-defaults/C
 
 ABINCLUDES = -I$(top_srcdir)/programs/dtappbuilder/src/include \

@@ -625,7 +625,7 @@ void m_litproc(int delim)
         }
       } /* End for i */
     m_error("Literal too long") ;
-    m_literal[i] = wc_null ;
+    m_literal[M_LITLEN] = wc_null ;
     m_curcon = savecon ;
     }
 

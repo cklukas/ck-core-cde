@@ -5407,7 +5407,7 @@ ShelfStartDrag(
                                         {nullptr, nullptr} };
    static XtCallbackRec dragFinishCB[] = { {ShelfDragFinishCB, nullptr},
                                           {nullptr, nullptr} };
-   Arg args[2];
+   Arg args[6];	/* source icon, hot X/Y, pixmap/cursor icons, state icon */
    int numArgs = 0;
    unsigned char operations;
    Widget drag_context;

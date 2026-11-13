@@ -614,6 +614,8 @@ _DtCmsRbToCsaStat(Rb_Status rb_stat)
 	case rb_other:
 		return (CSA_E_FAILURE);
 	}
+
+	return (CSA_E_FAILURE);
 }
 
 /*

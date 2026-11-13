@@ -292,7 +292,10 @@ PreferenceRecord::write_prefs()
   backup[0] = '\0';
   if (status == 0)
     {
-      snprintf (backup, sizeof(backup), "%s.bak", filename);
+      // A truncated backup name would unlink and overwrite a different file.
+      if (snprintf (backup, sizeof(backup), "%s.bak", filename)
+	  >= (int) sizeof(backup))
+	throw (CASTEXCEPT Exception());
       unlink (backup);
       if (rename (filename, backup) == -1)
 	throw (CASTEXCEPT Exception());

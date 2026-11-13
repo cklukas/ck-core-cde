@@ -172,7 +172,8 @@ ushort GetContentsType(void)
   } else if (XmToggleButtonGadgetGetState(FC_LongToggle)) {
     return((ushort)CA_FT_CNTLONG);
   }
-  /* NOTREACHED */
+  /* no toggle set: fall back to the string type */
+  return((ushort)CA_FT_CNTSTRING);
 }
 
 /******************************************************************************/

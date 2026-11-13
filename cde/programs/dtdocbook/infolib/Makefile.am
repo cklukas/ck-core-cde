@@ -2,6 +2,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 include ../dtdocbook.am
 
+EXTRA_DIST = tests/check-posix-error-msg.py tests/check-posix-error-msg.cc
+
+check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-posix-error-msg.py
+
 infolibdir = $(dtdocbooklibexecdir)/infolib
 
 infolib_PROGRAMS = \

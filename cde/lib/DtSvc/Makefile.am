@@ -15,7 +15,8 @@ EXTRA_DIST = tests/check-dts-buffers.py tests/dts-buffers.c tests/check-dts-mm.p
              tests/check-mmdb-alloc.py tests/mmdb-alloc-test.c \
              tests/check-addtores-alloc.py tests/addtores-alloc-test.c \
              tests/check-dbreader-variables.py tests/check-dbreader-variables.c \
-             tests/check-dtsmm-cache-bounds.py tests/check-dtsmm-cache-bounds.c
+             tests/check-dtsmm-cache-bounds.py tests/check-dtsmm-cache-bounds.c \
+             tests/check-action-tt-reptype.py tests/check-action-tt-reptype.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-dts-buffers.py
@@ -33,6 +34,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-dbreader.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dbreader-variables.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtsmm-cache-bounds.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-action-tt-reptype.py
 	DTSVC_COMPILE='$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(libDtSvc_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)' \
 	DTSVC_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
 	DTSVC_LIBS='libDtSvc.la $(libDtSvc_la_LIBADD) $(DTCLIENTLIBS) $(XTOOLLIB) $(LIBS)' \

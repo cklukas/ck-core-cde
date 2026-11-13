@@ -379,7 +379,7 @@ SkipOtherLines(
  * Function: CheckAndSwitchPoints
  *
  *****************************************************************************/
-static int
+static void
 CheckAndSwitchPoints(
     _DtCvSelectData *pt1,
     _DtCvSelectData *pt2)

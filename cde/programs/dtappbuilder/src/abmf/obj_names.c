@@ -462,7 +462,8 @@ abmfP_get_c_struct_or_ptr_name(
 			BOOL		wantPtr
 )
 {
-    static char	nameBuf[MAX_NAME_SIZE] = "";
+    /* room for the longest name (MAX_NAME_SIZE) and the "&(" ")" around it */
+    static char	nameBuf[MAX_NAME_SIZE + 8] = "";
     STRING	name = nullptr;
     ABObj	structObj = abmfP_obj_get_struct_obj(obj);
 
@@ -473,7 +474,7 @@ abmfP_get_c_struct_or_ptr_name(
 	    name = abmfP_instance_ptr_var_name;
 	    if (!wantPtr)
 	    {
-		sprintf(nameBuf, "(*%s)", name);
+		snprintf(nameBuf, sizeof(nameBuf), "(*%s)", name);
 		name = nameBuf;
 	    }
 	}
@@ -484,7 +485,7 @@ abmfP_get_c_struct_or_ptr_name(
         name = abmfP_get_c_struct_global_name(structObj);
 	if (wantPtr)
 	{
-	    sprintf(nameBuf, "&(%s)", name);
+	    snprintf(nameBuf, sizeof(nameBuf), "&(%s)", name);
 	    name = nameBuf;
 	}
     }
@@ -638,7 +639,8 @@ abmfP_get_c_substruct_name(GenCodeInfo genCodeInfo, ABObj obj)
 STRING
 abmfP_get_c_substruct_global_name(ABObj obj)
 {
-    static char	name[256];
+    /* "variable.field": two names of up to MAX_NAME_SIZE and the dot */
+    static char	name[2 * MAX_NAME_SIZE + 2];
     ABObj	subsObj = abmfP_obj_get_substruct_obj(obj);
     ABObj	structObj = nullptr;
     STRING	structVar = nullptr;
@@ -660,7 +662,7 @@ abmfP_get_c_substruct_global_name(ABObj obj)
     {
 	return nullptr;
     }
-    sprintf(name, "%s.%s", structVar, structField);
+    snprintf(name, sizeof(name), "%s.%s", structVar, structField);
     return name;
 }
 

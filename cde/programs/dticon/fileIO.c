@@ -244,7 +244,7 @@ Read_File(
     netfile = tt_host_file_netfile(fnameIn, tmp+1);
     localfile = tt_netfile_file(netfile);
 
-    strncpy(fname, localfile, MAXPATHLEN);
+    snprintf(fname, sizeof(fname), "%s", localfile ? localfile : "");
     tmp[0] = ':';
 
     tt_free(netfile);

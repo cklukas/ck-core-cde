@@ -213,6 +213,7 @@ class BaseObj {
    // These messages are sent to all parents
    virtual void NotifyCreate(BaseObj *) { } ;
    virtual void NotifyDelete(BaseObj *) { } ;
+   void RecordUnknownAction(const char *actionName);
 
  public:
 

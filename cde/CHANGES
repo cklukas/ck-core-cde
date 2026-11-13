@@ -1,4 +1,40 @@
 2026-11-13
+- Compiler warnings of the hardened gcc 14 build, triaged; the real defects
+  are fixed. Missing return values: the fifteen XDraw/XCopyArea/XFill command
+  wrappers of dtksh returned garbage as their exit status
+  (`invokeXDrawFunction()` is now returned), the stream functions of DtHelp
+  `Graphics.c`, `_DtAct_tt_message_arg_reptype()`, `GetContentsType()` of
+  dtcreate, `Flood_Fill()` of dticon, `max()` and `min()` of dtstyle for NaN,
+  `PdmOidNotifyString()`, `_DtCmsRbToCsaStat()`, `HostCB()` of dtpad,
+  `getVariableMessage()` of dtfile, `TblGetAlign()` and
+  `find_user_seg_begin()` of dtcodegen (a stray `else if` made the `return`
+  conditional). `match_this_attribute()` of libcsa had a misspelled `defalut:` label,
+  so unknown attributes ended the function. The unused result of
+  `CheckAndSwitchPoints()` and `SetGhostLink()` is gone (both are now
+  `void`). Overruns: `ShelfStartDrag()` of dtfile filled six entries of a
+  two-entry `Arg` array, the literal reader of the three helptag parsers
+  wrote one entry past `m_literal`, `format_dir_name_for_user()` of dtbuilder
+  wrote one byte past the buffer, `get_stdact_label()` indexed its table with
+  an invalid value, `PosixError` left a message of 201 or more bytes
+  unterminated, the `sprintf()` calls of dtcodegen's `obj_names.c` are
+  bounded, and `Read_File()` of dticon copied a network file name without a
+  terminator. Uninitialized values: `search_and_do()` of ttauth (empty entry
+  list), `GetTimestamp()`, `DropOnRootCB()` and the status
+  of the backdrop code of dtwm (the first two are quieted only), `_DtCm_clnt_call()` of libcsa (an error
+  message used the stale TCP handle after a failed refresh), the display
+  of `test_fonts_alias`, and `BaseObj::SendAction()` of dtprintinfo (an
+  unknown action name dereferenced an unset pointer; the message of an
+  unknown action also had its two arguments swapped). Truncated paths that
+  were used anyway: the backup of the user preferences of dtinfo (a name of
+  256 bytes or more unlinked and renamed to a truncated file), the mask file
+  of dtcreate and the temporary file of dtimsstart are now refused when the
+  name does not fit. Tests: `check-stream-end.py` (DtHelp),
+  `check-action-tt-reptype.py` (DtSvc), `check-color-minmax.py` (dtstyle),
+  `check-notify-string.py` (dtpdm), `check-rb-status.py` (dtcm server),
+  `check-posix-error-msg.py` (dtdocbook), `check-user-seg-begin.py` and
+  `check-pretty-dir.py` (dtappbuilder).
+
+2026-11-13
 - libDtSvc, found by fuzzing the type database reader and the cache file
   reader. Three defects are fixed. (1) A database file that began with
   `set DtDbVersion=` and a value longer than 12 bytes overran the heap: the

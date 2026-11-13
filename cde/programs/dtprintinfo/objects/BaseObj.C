@@ -401,36 +401,49 @@ boolean BaseObj::HasAction(const char *actionName)
    return HasAction(actionName, &dummy);
 }
 
+void BaseObj::RecordUnknownAction(const char *actionName)
+{
+   char *name = strdup(actionName);	// actionName may alias _lastActionName
+
+   delete [] _lastActionOutput;
+   free(_lastActionName);
+   _lastActionName = name;
+   _lastActionStatus = -1;
+   int len = strlen("'%s' is not an action of %s") +
+	     strlen(actionName) + strlen(ObjectClassName()) + 1;
+   _lastActionOutput = new char [len];
+   snprintf(_lastActionOutput, len, "'%s' is not an action of %s",
+	    actionName, ObjectClassName());
+}
+
 boolean BaseObj::SendAction(Action *action,
 		            BaseObj *requestor)
 {
-   boolean status;
+   if (action == NULL || !HasAction(action))
+    {
+      RecordUnknownAction(action ? action->ReferenceName : "");
+      return false;
+    }
 
    delete [] _lastActionOutput;
    free(_lastActionName);
    _lastActionOutput = NULL;
    _lastActionName = strdup(action->ReferenceName);
-   if ((status = HasAction(action)) == true)
-      _lastActionStatus = (*action->Handler)(this, &_lastActionOutput,
-					     requestor);
-   else
-    {
-      _lastActionStatus = -1;
-      int len = strlen("'%s' is not an action of %s") +
-		strlen(ObjectClassName()) + strlen(action->ReferenceName) + 1;
-      _lastActionOutput = new char [len];
-      sprintf(_lastActionOutput, "'%s' is not an action of %s", 
-	      ObjectClassName(), action->ReferenceName);
-    }
-   return status;
+   _lastActionStatus = (*action->Handler)(this, &_lastActionOutput,
+					  requestor);
+   return true;
 }
 
 boolean BaseObj::SendAction(const char *actionName,
 		            BaseObj *requestor)
 {
-   Action *action;
+   Action *action = NULL;
 
-   (void) HasAction(actionName, &action);
+   if (!HasAction(actionName, &action))
+    {
+      RecordUnknownAction(actionName);
+      return false;
+    }
    return SendAction(action, requestor);
 }
 

@@ -460,7 +460,7 @@ _DtShowDialog(
    Arg args[5];
    Boolean doCenter = False;
    Boolean doParentRelativePositioning = False;
-   int availableDialogCount;
+   int availableDialogCount = 0;
 
 
    /*  See if there is a cached, unused dialog of the correct type.  */

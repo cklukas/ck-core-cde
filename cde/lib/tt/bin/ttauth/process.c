@@ -892,7 +892,7 @@ search_and_do(char *inputfilename, int lineno, int start,
               int argc, char *argv[], EntryHandler do_func, char *data)
 {
     int i;
-    int status;
+    int status = 0;
     int errors = 0;
     _tt_AuthFileEntryList *l, *next;
     char *protoname, *protodata, *netid, *authname;

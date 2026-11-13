@@ -488,8 +488,9 @@ Flood_Fill(
   unsigned long old_pixel;
   struct seg stack[MAX], *sp = stack;
 
+  if (x<0 || x>=width || y<0 || y>=height) return 0;
   old_pixel = XGetPixel(color_image, x, y);	/* read pv at seed point */
-  if (old_pixel==new_pixel || x<0 || x>width || y<0 || y>height) return 0;
+  if (old_pixel==new_pixel) return 0;
   PUSH(y, x, x, 1);			/* needed in some cases */
   PUSH(y+1, x, x, -1);		/* seed segment (popped 1st) */
 
@@ -555,4 +556,5 @@ skip:   for (x++; x<=x2 && XGetPixel(color_image, x, y)!=old_pixel; x++)
         l = x;
     } while (x<=x2);
   }
+  return 1;
 }

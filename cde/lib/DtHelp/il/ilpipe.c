@@ -1365,6 +1365,9 @@ ilError                 error;
 
             }   /* END while true: execute strips */
         }       /* END switch pipe state */
+
+    pPipe->o.p.context->error = IL_ERROR_PIPE_STATE;   /* unknown pipe state */
+    return IL_EXECUTE_ERROR;
 }
 
 
