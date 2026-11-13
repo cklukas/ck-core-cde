@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "utility/c_filebuf.h"
@@ -36,7 +37,7 @@
 filebuf::~filebuf() 
 {
    close();
-   delete _name;
+   free(_name);
 }
 
 /////////////////////////////////////////////
@@ -79,7 +80,7 @@ int filebuf::open(const char* name, int mode, int protect)
 
    close();
 
-   delete _name; _name = strdup(name);
+   free(_name); _name = strdup(name);
 
    _mode = mode;
 
