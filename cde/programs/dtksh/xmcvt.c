@@ -102,7 +102,7 @@ XmStringToString(
 				buf = XtRealloc(buf, strlen(buf) + strlen(text) + 2);
 				strcat(buf, text);
 			} else
-				buf = strdup(text);
+				buf = DtkStrDup(text);
 			XtFree(text);
 		} else
 			break;
@@ -355,7 +355,7 @@ DtkshCvtStringToNamedValue(
 			return;
 		}
 	}
-	errmsg =strdup(GETMESSAGE(
+	errmsg =DtkStrDup(GETMESSAGE(
              "DtkshCvtStringToNamedValue: Unable to convert the string '%s'"));
         errbuf = XtMalloc(strlen(errmsg) + strlen(value) + 10);
         sprintf(errbuf, errmsg, value);

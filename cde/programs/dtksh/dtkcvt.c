@@ -104,7 +104,7 @@ DtkshCvtWindowToString(
 
    if (fval->size != sizeof(Window))
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
             "DtkshCvtWindowToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -134,7 +134,7 @@ DtkshCvtScreenToString(
 
    if (fval->size != sizeof(Screen *))
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
             "DtkshCvtScreenToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -224,7 +224,7 @@ DtkshCvtHexIntToString(
    if (fval->size != sizeof(long) && fval->size != sizeof(int) && 
        fval->size != sizeof(short) && fval->size != sizeof(char)) 
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
            "DtkshCvtHexIntToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -256,7 +256,7 @@ DtkshCvtIntToString(
 
    if (fval->size != sizeof(int) && fval->size != sizeof(short)) 
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
              "DtkshCvtIntToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -285,7 +285,7 @@ DtkshCvtBooleanToString(
    if (fval->size != sizeof(int) && fval->size != sizeof(short) &&
        fval->size != sizeof(char)) 
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
              "DtkshCvtBooleanToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -324,7 +324,7 @@ DtkshCvtStringToPointer(
       toval->size = 0;
       return;
    }
-   ret = (XtPointer)strdup(fval->addr);
+   ret = (XtPointer)DtkStrDup(fval->addr);
    toval->addr = (XtPointer)&ret;
    toval->size = sizeof(XtPointer);
    return;
@@ -346,7 +346,7 @@ DtkshCvtStringToWidget(
 
    if (fval->size <= 0) 
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
              "DtkshCvtStringToWidget: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -386,7 +386,7 @@ DtkshCvtStringToWidget(
    {
       char errbuf[1024];
 
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
                "DtkshCvtStringToWidget: Unable to find a widget named '%s'"));
       sprintf(errbuf, errmsg, wname);
       XtWarning(errbuf);
@@ -413,7 +413,7 @@ DtkshCvtStringToCallback(
 
    if (fval->size <= 0) 
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
              "DtkshCvtStringToCallback: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -450,7 +450,7 @@ DtkshCvtCallbackToString(
 
    if (fval->size != sizeof(XtCallbackList)) 
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
           "DtkshCvtCallbackToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -474,7 +474,7 @@ DtkshCvtCallbackToString(
 
          if (p + strlen((String)cdata->ksh_cmd) + 1 - buf > sizeof(buf)) 
          {
-            errmsg = strdup(GetSharedMsg(DT_CONV_BUF_OVFL));
+            errmsg = DtkStrDup(GetSharedMsg(DT_CONV_BUF_OVFL));
             XtWarning(errmsg);
             free(errmsg);
             break;
@@ -486,7 +486,7 @@ DtkshCvtCallbackToString(
          count++;
       }
    }
-   toval->addr = (XtPointer)strdup(buf);
+   toval->addr = (XtPointer)DtkStrDup(buf);
    toval->size = strlen(buf) + 1;
 }
 
@@ -507,7 +507,7 @@ DtkshCvtWidgetToString(
 
    if (fval->size != sizeof(Widget) || fval->addr == nullptr) 
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
            "DtkshCvtWidgetToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -524,7 +524,7 @@ DtkshCvtWidgetToString(
    }
    if ((w = widget_to_wtab(widget)) == nullptr) 
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
           "DtkshCvtWidgetToString: Unable to find a name for the widget"));
       XtWarning(errmsg);
       free(errmsg);
@@ -591,7 +591,7 @@ DtkshCvtStringToEventMask(
    if (fval->size <= 0 || fval->addr == nullptr) 
       return;
 
-   ptr = eventMaskString = strdup(fval->addr);
+   ptr = eventMaskString = DtkStrDup(fval->addr);
 
    /*  Skip any leading whitespace.  */
    while (isspace(*ptr) && (*ptr != '\0'))
@@ -645,7 +645,7 @@ DtkshCvtWidgetClassToString(
 
    if (fval->size != sizeof(WidgetClass))
    {
-      errmsg = strdup(GETMESSAGE(
+      errmsg = DtkStrDup(GETMESSAGE(
            "DtkshCvtWidgetClassToString: The 'from' value is an invalid size"));
       XtWarning(errmsg);
       free(errmsg);
@@ -672,7 +672,7 @@ DtkshCvtWidgetClassToString(
    }
 
    /* No match found */
-   errmsg = strdup(GETMESSAGE(
+   errmsg = DtkStrDup(GETMESSAGE(
           "DtkshCvtWidgetClassToString: Unknown widget class"));
    XtWarning(errmsg);
    free(errmsg);
@@ -714,7 +714,7 @@ DtkshCvtStringToWidgetClass(
    }
 
    /* No match found */
-   errmsg = strdup(GETMESSAGE(
+   errmsg = DtkStrDup(GETMESSAGE(
           "DtkshCvtStringToWidgetClass: Unknown widget class name"));
    XtWarning(errmsg);
    free(errmsg);
@@ -769,7 +769,7 @@ CvtStringToMWMValue(
    if (fval->size <= 0 || fval->addr == nullptr) 
       return;
 
-   ptr = valueString = strdup(fval->addr);
+   ptr = valueString = DtkStrDup(fval->addr);
 
    /*  Skip any leading whitespace.  */
    while (isspace(*ptr) && (*ptr != '\0'))
@@ -988,30 +988,30 @@ DtkshCvtStringToPrintSetupProc(
 		if (strcmp(DTKSHConversionResource, CONSTCHAR "printerInfoProc") == 0) {
 			if (pinfo->printerInfoProcCommand != nullptr)
 				XtFree(pinfo->printerInfoProcCommand);
-			pinfo->printerInfoProcCommand = strdup((String)fval->addr);
+			pinfo->printerInfoProcCommand = DtkStrDup((String)fval->addr);
 			proc = stdPrinterInfoProc;
 		} else if (strcmp(DTKSHConversionResource, CONSTCHAR "selectFileProc") == 0) {
 			if (pinfo->selectFileProcCommand != nullptr)
 				XtFree(pinfo->selectFileProcCommand);
-			pinfo->selectFileProcCommand = strdup((String)fval->addr);
+			pinfo->selectFileProcCommand = DtkStrDup((String)fval->addr);
 			proc = stdSelectFileProc;
 		}
 		else if (strcmp(DTKSHConversionResource, CONSTCHAR "selectPrinterProc") == 0) {
 			if (pinfo->selectPrinterProcCommand != nullptr)
 				XtFree(pinfo->selectPrinterProcCommand);
-			pinfo->selectPrinterProcCommand = strdup((String)fval->addr);
+			pinfo->selectPrinterProcCommand = DtkStrDup((String)fval->addr);
 			proc = stdSelectPrinterProc;
 		}
 		else if (strcmp(DTKSHConversionResource, CONSTCHAR "setupProc") == 0) {
 			if (pinfo->setupProcCommand != nullptr)
 				XtFree(pinfo->setupProcCommand);
-			pinfo->setupProcCommand = strdup((String)fval->addr);
+			pinfo->setupProcCommand = DtkStrDup((String)fval->addr);
 			proc = stdSetupProc;
 		}
 		else if (strcmp(DTKSHConversionResource, CONSTCHAR "verifyPrinterProc") == 0) {
 			if (pinfo->verifyPrinterProcCommand != nullptr)
 				XtFree(pinfo->verifyPrinterProcCommand);
-			pinfo->verifyPrinterProcCommand = strdup((String)fval->addr);
+			pinfo->verifyPrinterProcCommand = DtkStrDup((String)fval->addr);
 			proc = stdVerifyPrinterProc;
 		}
 		else {

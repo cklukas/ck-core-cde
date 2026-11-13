@@ -157,5 +157,10 @@ typedef struct {
 
 void dtksh_init(void);
 
+/* A copy of a string in memory from the Xt allocator: allocation failure ends
+   the program with Xt's error message, as it does for every other Xt
+   allocation in dtksh.  A null string gives a null result. */
+char *DtkStrDup(const char *);
+
 #endif /* _Dtksh_dtksh_h */
 /* DON'T ADD ANYTHING AFTER THIS #endif */

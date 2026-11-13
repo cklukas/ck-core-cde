@@ -381,11 +381,11 @@ setArrowDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(4, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNactivateCallback);
+   info[0].callbackName = DtkStrDup(XmNactivateCallback);
    info[0].discipline = (void *)&arrowDisc;
-   info[1].callbackName = strdup(XmNarmCallback);
+   info[1].callbackName = DtkStrDup(XmNarmCallback);
    info[1].discipline = (void *)&arrowDisc;
-   info[2].callbackName = strdup(XmNdisarmCallback);
+   info[2].callbackName = DtkStrDup(XmNdisarmCallback);
    info[2].discipline = (void *)&arrowDisc;
    info[3].callbackName = nullptr;
    info[3].discipline = nullptr;
@@ -397,7 +397,7 @@ setComboDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(2, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNselectionCallback);
+   info[0].callbackName = DtkStrDup(XmNselectionCallback);
    info[0].discipline = (void *)&comboDisc;
    info[1].callbackName = nullptr;
    info[1].discipline = nullptr;
@@ -409,9 +409,9 @@ setCmdDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(3, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNcommandChangedCallback);
+   info[0].callbackName = DtkStrDup(XmNcommandChangedCallback);
    info[0].discipline = (void *)&cmdDisc;
-   info[1].callbackName = strdup(XmNcommandEnteredCallback);
+   info[1].callbackName = DtkStrDup(XmNcommandEnteredCallback);
    info[1].discipline = (void *)&cmdDisc;
    info[2].callbackName = nullptr;
    info[2].discipline = nullptr;
@@ -424,11 +424,11 @@ setDAreaDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(4, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNexposeCallback);
+   info[0].callbackName = DtkStrDup(XmNexposeCallback);
    info[0].discipline = (void *)&dAreaDisc;
-   info[1].callbackName = strdup(XmNinputCallback);
+   info[1].callbackName = DtkStrDup(XmNinputCallback);
    info[1].discipline = (void *)&dAreaDisc;
-   info[2].callbackName = strdup(XmNresizeCallback);
+   info[2].callbackName = DtkStrDup(XmNresizeCallback);
    info[2].discipline = (void *)&dAreaDisc;
    info[3].callbackName = nullptr;
    info[3].discipline = nullptr;
@@ -440,15 +440,15 @@ setDBtnDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(6, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNactivateCallback);
+   info[0].callbackName = DtkStrDup(XmNactivateCallback);
    info[0].discipline = (void *)&dbtnDisc;
-   info[1].callbackName = strdup(XmNarmCallback);
+   info[1].callbackName = DtkStrDup(XmNarmCallback);
    info[1].discipline = (void *)&dbtnDisc;
-   info[2].callbackName = strdup(XmNdisarmCallback);
+   info[2].callbackName = DtkStrDup(XmNdisarmCallback);
    info[2].discipline = (void *)&dbtnDisc;
-   info[3].callbackName = strdup(XmNexposeCallback);
+   info[3].callbackName = DtkStrDup(XmNexposeCallback);
    info[3].discipline = (void *)&dbtnDisc;
-   info[4].callbackName = strdup(XmNresizeCallback);
+   info[4].callbackName = DtkStrDup(XmNresizeCallback);
    info[4].discipline = (void *)&dbtnDisc;
    info[5].callbackName = nullptr;
    info[5].discipline = nullptr;
@@ -464,7 +464,7 @@ setDtPrintSetupProcDisciplines( void )
 	 * DtPrintSetupProcs, we can use DtRPrintSetupProc for all of them
 	 * to avoid defining unnecessary info entries.
 	 */
-   info[0].callbackName = strdup(DtRPrintSetupProc);
+   info[0].callbackName = DtkStrDup(DtRPrintSetupProc);
    info[0].discipline = (void *)&dtPrintDisc;
    info[1].callbackName = nullptr;
    info[1].discipline = nullptr;
@@ -476,13 +476,13 @@ setFSelDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(5, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNapplyCallback);
+   info[0].callbackName = DtkStrDup(XmNapplyCallback);
    info[0].discipline = (void *)&fselDisc;
-   info[1].callbackName = strdup(XmNcancelCallback);
+   info[1].callbackName = DtkStrDup(XmNcancelCallback);
    info[1].discipline = (void *)&fselDisc;
-   info[2].callbackName = strdup(XmNnoMatchCallback);
+   info[2].callbackName = DtkStrDup(XmNnoMatchCallback);
    info[2].discipline = (void *)&fselDisc;
-   info[3].callbackName = strdup(XmNokCallback);
+   info[3].callbackName = DtkStrDup(XmNokCallback);
    info[3].discipline = (void *)&fselDisc;
    info[4].callbackName = nullptr;
    info[4].discipline = nullptr;
@@ -494,15 +494,15 @@ setListDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(6, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNbrowseSelectionCallback);
+   info[0].callbackName = DtkStrDup(XmNbrowseSelectionCallback);
    info[0].discipline = (void *)&listDisc;
-   info[1].callbackName = strdup(XmNdefaultActionCallback);
+   info[1].callbackName = DtkStrDup(XmNdefaultActionCallback);
    info[1].discipline = (void *)&listDisc;
-   info[2].callbackName = strdup(XmNextendedSelectionCallback);
+   info[2].callbackName = DtkStrDup(XmNextendedSelectionCallback);
    info[2].discipline = (void *)&listDisc;
-   info[3].callbackName = strdup(XmNmultipleSelectionCallback);
+   info[3].callbackName = DtkStrDup(XmNmultipleSelectionCallback);
    info[3].discipline = (void *)&listDisc;
-   info[4].callbackName = strdup(XmNsingleSelectionCallback);
+   info[4].callbackName = DtkStrDup(XmNsingleSelectionCallback);
    info[4].discipline = (void *)&listDisc;
    info[5].callbackName = nullptr;
    info[5].discipline = nullptr;
@@ -514,11 +514,11 @@ setPBtnDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(4, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNactivateCallback);
+   info[0].callbackName = DtkStrDup(XmNactivateCallback);
    info[0].discipline = (void *)&pbtnDisc;
-   info[1].callbackName = strdup(XmNarmCallback);
+   info[1].callbackName = DtkStrDup(XmNarmCallback);
    info[1].discipline = (void *)&pbtnDisc;
-   info[2].callbackName = strdup(XmNdisarmCallback);
+   info[2].callbackName = DtkStrDup(XmNdisarmCallback);
    info[2].discipline = (void *)&pbtnDisc;
    info[3].callbackName = nullptr;
    info[3].discipline = nullptr;
@@ -530,15 +530,15 @@ setRCDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(6, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNentryCallback);
+   info[0].callbackName = DtkStrDup(XmNentryCallback);
    info[0].discipline = (void *)&rcDisc;
-   info[1].callbackName = strdup(XmNmapCallback);
+   info[1].callbackName = DtkStrDup(XmNmapCallback);
    info[1].discipline = (void *)&rcDisc;
-   info[2].callbackName = strdup(XmNtearOffMenuActivateCallback);
+   info[2].callbackName = DtkStrDup(XmNtearOffMenuActivateCallback);
    info[2].discipline = (void *)&rcDisc;
-   info[3].callbackName = strdup(XmNtearOffMenuDeactivateCallback);
+   info[3].callbackName = DtkStrDup(XmNtearOffMenuDeactivateCallback);
    info[3].discipline = (void *)&rcDisc;
-   info[4].callbackName = strdup(XmNunmapCallback);
+   info[4].callbackName = DtkStrDup(XmNunmapCallback);
    info[4].discipline = (void *)&rcDisc;
    info[5].callbackName = nullptr;
    info[5].discipline = nullptr;
@@ -550,9 +550,9 @@ setScaleDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(3, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNdragCallback);
+   info[0].callbackName = DtkStrDup(XmNdragCallback);
    info[0].discipline = (void *)&scaleDisc;
-   info[1].callbackName = strdup(XmNvalueChangedCallback);
+   info[1].callbackName = DtkStrDup(XmNvalueChangedCallback);
    info[1].discipline = (void *)&scaleDisc;
    info[2].callbackName = nullptr;
    info[2].discipline = nullptr;
@@ -564,21 +564,21 @@ setSBarDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(9, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNdecrementCallback);
+   info[0].callbackName = DtkStrDup(XmNdecrementCallback);
    info[0].discipline = (void *)&sbarDisc;
-   info[1].callbackName = strdup(XmNdragCallback);
+   info[1].callbackName = DtkStrDup(XmNdragCallback);
    info[1].discipline = (void *)&sbarDisc;
-   info[2].callbackName = strdup(XmNincrementCallback);
+   info[2].callbackName = DtkStrDup(XmNincrementCallback);
    info[2].discipline = (void *)&sbarDisc;
-   info[3].callbackName = strdup(XmNpageDecrementCallback);
+   info[3].callbackName = DtkStrDup(XmNpageDecrementCallback);
    info[3].discipline = (void *)&sbarDisc;
-   info[4].callbackName = strdup(XmNpageIncrementCallback);
+   info[4].callbackName = DtkStrDup(XmNpageIncrementCallback);
    info[4].discipline = (void *)&sbarDisc;
-   info[5].callbackName = strdup(XmNtoBottomCallback);
+   info[5].callbackName = DtkStrDup(XmNtoBottomCallback);
    info[5].discipline = (void *)&sbarDisc;
-   info[6].callbackName = strdup(XmNtoTopCallback);
+   info[6].callbackName = DtkStrDup(XmNtoTopCallback);
    info[6].discipline = (void *)&sbarDisc;
-   info[7].callbackName = strdup(XmNvalueChangedCallback);
+   info[7].callbackName = DtkStrDup(XmNvalueChangedCallback);
    info[7].discipline = (void *)&sbarDisc;
    info[8].callbackName = nullptr;
    info[8].discipline = nullptr;
@@ -590,7 +590,7 @@ setSWinDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(2, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNtraverseObscuredCallback);
+   info[0].callbackName = DtkStrDup(XmNtraverseObscuredCallback);
    info[0].discipline = (void *)&swinDisc;
    info[1].callbackName = nullptr;
    info[1].discipline = nullptr;
@@ -602,13 +602,13 @@ setSBoxDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(5, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNapplyCallback);
+   info[0].callbackName = DtkStrDup(XmNapplyCallback);
    info[0].discipline = (void *)&sboxDisc;
-   info[1].callbackName = strdup(XmNcancelCallback);
+   info[1].callbackName = DtkStrDup(XmNcancelCallback);
    info[1].discipline = (void *)&sboxDisc;
-   info[2].callbackName = strdup(XmNnoMatchCallback);
+   info[2].callbackName = DtkStrDup(XmNnoMatchCallback);
    info[2].discipline = (void *)&sboxDisc;
-   info[3].callbackName = strdup(XmNokCallback);
+   info[3].callbackName = DtkStrDup(XmNokCallback);
    info[3].discipline = (void *)&sboxDisc;
    info[4].callbackName = nullptr;
    info[4].discipline = nullptr;
@@ -620,23 +620,23 @@ setTextDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(10, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNactivateCallback);
+   info[0].callbackName = DtkStrDup(XmNactivateCallback);
    info[0].discipline = (void *)&dftDisc;
-   info[1].callbackName = strdup(XmNfocusCallback);
+   info[1].callbackName = DtkStrDup(XmNfocusCallback);
    info[1].discipline = (void *)&dftDisc;
-   info[2].callbackName = strdup(XmNgainPrimaryCallback);
+   info[2].callbackName = DtkStrDup(XmNgainPrimaryCallback);
    info[2].discipline = (void *)&dftDisc;
-   info[3].callbackName = strdup(XmNlosePrimaryCallback);
+   info[3].callbackName = DtkStrDup(XmNlosePrimaryCallback);
    info[3].discipline = (void *)&dftDisc;
-   info[4].callbackName = strdup(XmNlosingFocusCallback);
+   info[4].callbackName = DtkStrDup(XmNlosingFocusCallback);
    info[4].discipline = (void *)&textDisc;
-   info[5].callbackName = strdup(XmNmodifyVerifyCallback);
+   info[5].callbackName = DtkStrDup(XmNmodifyVerifyCallback);
    info[5].discipline = (void *)&textDisc;
-   info[6].callbackName = strdup(XmNmodifyVerifyCallbackWcs);
+   info[6].callbackName = DtkStrDup(XmNmodifyVerifyCallbackWcs);
    info[6].discipline = (void *)&textDisc2;
-   info[7].callbackName = strdup(XmNmotionVerifyCallback);
+   info[7].callbackName = DtkStrDup(XmNmotionVerifyCallback);
    info[7].discipline = (void *)&textDisc;
-   info[8].callbackName = strdup(XmNvalueChangedCallback);
+   info[8].callbackName = DtkStrDup(XmNvalueChangedCallback);
    info[8].discipline = (void *)&dftDisc;
    info[9].callbackName = nullptr;
    info[9].discipline = nullptr;
@@ -648,11 +648,11 @@ setTBtnDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(4, sizeof(discInfo));
 
-   info[0].callbackName = strdup(XmNarmCallback);
+   info[0].callbackName = DtkStrDup(XmNarmCallback);
    info[0].discipline = (void *)&tbtnDisc;
-   info[1].callbackName = strdup(XmNdisarmCallback);
+   info[1].callbackName = DtkStrDup(XmNdisarmCallback);
    info[1].discipline = (void *)&tbtnDisc;
-   info[2].callbackName = strdup(XmNvalueChangedCallback);
+   info[2].callbackName = DtkStrDup(XmNvalueChangedCallback);
    info[2].discipline = (void *)&tbtnDisc;
    info[3].callbackName = nullptr;
    info[3].discipline = nullptr;
@@ -664,9 +664,9 @@ setHelpDisciplines( void )
 {
    discInfo * info = (discInfo *)XtCalloc(3, sizeof(discInfo));
 
-   info[0].callbackName = strdup(DtNhyperLinkCallback);
+   info[0].callbackName = DtkStrDup(DtNhyperLinkCallback);
    info[0].discipline = (void *)&helpDisc;
-   info[1].callbackName = strdup(DtNcloseCallback);
+   info[1].callbackName = DtkStrDup(DtNcloseCallback);
    info[1].discipline = (void *)&helpDisc;
    info[2].callbackName = nullptr;
    info[2].discipline = nullptr;
