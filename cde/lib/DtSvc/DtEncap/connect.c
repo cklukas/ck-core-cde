@@ -287,8 +287,14 @@ GetDomainName(XeString buffer, unsigned int bufsize)
    _DtSvcProcessLock();
    if (domainname && ptr && strcmp(domainname, ptr)) /* domains are different */
       _DtSimpleError(XeProgName, XeWarning, nullptr, (XeString) "><Domain configured in hostname and domain server are different: '%s', '%s'", domainname, ptr);
-   if (!domainname && ptr)
+   if (!domainname && ptr) {
       domainname = strdup(ptr);
+      if (!domainname) {
+	 XeFree(tmpbuf);
+	 _DtSvcProcessUnlock();
+	 return -1;
+      }
+   }
    if (ptr) { /* "." in hostname */
       strncpy(buffer, tmpbuf, bufsize);
       XeFree(tmpbuf);
@@ -305,8 +311,14 @@ GetDomainName(XeString buffer, unsigned int bufsize)
 	 _DtSvcProcessUnlock();
 	 return -1;
       }
-      if ((ptr = strstr(host_ret->h_name, (XeString)"."))) /* if dot in canonical name */
+      if ((ptr = strstr(host_ret->h_name, (XeString)"."))) { /* if dot in canonical name */
 	 domainname = strdup(ptr);
+	 if (!domainname) {
+	    XeFree(tmpbuf);
+	    _DtSvcProcessUnlock();
+	    return -1;
+	 }
+      }
    }
 
    /* construct full domain name for return */
