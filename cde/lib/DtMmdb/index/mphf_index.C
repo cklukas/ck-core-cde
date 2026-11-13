@@ -81,7 +81,7 @@ debug(cerr, (void*)(v_mphf->operator->()));
    
 mphf_index::~mphf_index()
 {
-   delete f_key_file_name;
+   free(f_key_file_name);
 
 ////////////////////////////////////////////////////////
 // Need not to delete index object handlers, as they 
