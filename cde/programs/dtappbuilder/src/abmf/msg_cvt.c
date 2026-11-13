@@ -88,6 +88,11 @@ abmfP_initialize_msg_file(
 	!= nullptr)
     {
 	genCodeInfo->msg_src_file_name = strdup(msg_file_name);
+	if (genCodeInfo->msg_src_file_name == nullptr)
+	{
+	    MsgFile_destroy(msg_file);
+	    goto cret;
+	}
 	genCodeInfo->msg_file_obj = msg_file;
         ret_val = (BOOL)TRUE;
     }

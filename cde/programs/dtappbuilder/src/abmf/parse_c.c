@@ -821,6 +821,11 @@ get_seg(BFile file, CSeg cseg)
      */
     cseg->type = segType;
     cseg->name = strdup(segName);
+    if (cseg->name == nullptr)
+    {
+	return_value = ERR_NO_MEMORY;
+	goto epilogue;
+    }
     cseg->offset = segOff;
     cseg->length = segLen;
     cseg->text = nullptr;
@@ -828,10 +833,21 @@ get_seg(BFile file, CSeg cseg)
     cseg->userSegs = userSegs;
     for (i = 0; i < cseg->userSegs.numSegs; ++i)
     {
-        grab_string_from_file(&(cseg->userSegs.segs[i].text),
+        if (grab_string_from_file(&(cseg->userSegs.segs[i].text),
 		file, 
 		cseg->userSegs.segs[i].offset, 
-		cseg->userSegs.segs[i].length);
+		cseg->userSegs.segs[i].length) < 0)
+	{
+	    int		j = 0;
+
+	    for (j = 0; j < i; ++j)
+	    {
+		util_free(cseg->userSegs.segs[j].text);
+	    }
+	    util_free(cseg->name);
+	    return_value = ERR_NO_MEMORY;
+	    goto epilogue;
+	}
     }
 
 epilogue:
@@ -853,6 +869,10 @@ grab_string_from_file(
     if (stringLen < 1)
     {
 	string = strdup("");
+	if (string == nullptr)
+	{
+	    returnValue = -1;
+	}
     }
     else
     {
@@ -860,8 +880,15 @@ grab_string_from_file(
 
 	bfile_save_state(file, &fileState);
         string = (STRING)util_malloc((size_t)(stringLen + 1));
-        bfile_set_off(file, stringOff);
-        string[fread(string, 1, (size_t)stringLen, file->stream)]= 0;
+	if (string == nullptr)
+	{
+	    returnValue = -1;
+	}
+	else
+	{
+            bfile_set_off(file, stringOff);
+            string[fread(string, 1, (size_t)stringLen, file->stream)]= 0;
+	}
 	bfile_restore_state(file, &fileState);
     }
 

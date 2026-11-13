@@ -833,6 +833,11 @@ msgSet_create_new(
     if (comment != nullptr)
     {
         new_msg_set->set_comment = strdup(comment);
+        if (new_msg_set->set_comment == nullptr)
+        {
+            free(new_msg_set);
+            goto cret;
+        }
     }
     new_msg_set->msgs = (Msg *)nullptr;
     new_msg_set->num_msgs = 0;
@@ -1164,10 +1169,19 @@ in_str_dup(
 
     buf_sz = inc;
     dup_str = (char *)malloc(buf_sz);
+    if (dup_str == nullptr)
+        return nullptr;
     for(c = string,len=0;*c!=0;c++) {
         if(len+2 >= buf_sz) {
+    	    char *grown;
+
     	    buf_sz += inc;
-    	    dup_str = (char *)realloc(dup_str, buf_sz);
+    	    grown = (char *)realloc(dup_str, buf_sz);
+    	    if (grown == nullptr) {
+    	        free(dup_str);
+    	        return nullptr;
+    	    }
+    	    dup_str = grown;
         }
 	/* Transform "\n" into '\n' and "\"" into '"' */
 	if(*c == '\\') {
@@ -1499,6 +1513,8 @@ get_message(
     
     /* dup after converting \ n sequence into newline */
     *msg_str = in_str_dup(trav);	
+    if (*msg_str == nullptr)
+        goto fret;
 
     ret_val = TRUE;
 fret:

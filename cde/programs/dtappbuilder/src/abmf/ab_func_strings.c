@@ -89,6 +89,7 @@ typedef struct
 
 static int	write_func_var_decl(FILE *file, FileFuncInfo funcInfo);
 static int	write_func_as_strings(FILE *file, FileFuncInfo funcInfo);
+#define GET_FUNC_NO_MEMORY	(-2)
 static int	get_func(FILE *file, FileFuncInfo funcInfo);
 static int	skip_white(BFile file);
 static int	skip_white_and_comment(BFile file);
@@ -142,6 +143,7 @@ main (int argc, char *argv[])
     FileFuncInfo	funcs = nullptr;
     int			numFuncs = 0;
     int			i = 0;
+    int			rc = 0;
 
     /* 
     ** We haven't internationalized this utility program, but it uses
@@ -168,7 +170,7 @@ main (int argc, char *argv[])
     }
 
     memset(&funcInfo, 0, sizeof(funcInfo));
-    while (get_func(inFile, &funcInfo) >= 0)
+    while ((rc = get_func(inFile, &funcInfo)) >= 0)
     {
         fprintf(stderr, "Function: %s\n", util_strsafe(funcInfo.funcName));
 
@@ -181,6 +183,11 @@ main (int argc, char *argv[])
 	}
 	funcs[numFuncs-1] = funcInfo;
         memset(&funcInfo, 0, sizeof(funcInfo));
+    }
+    if (rc == GET_FUNC_NO_MEMORY)
+    {
+	fprintf(stderr, "Out of memory!\n");
+	exit(1);
     }
     fprintf(stderr, "Functions found in file: %d\n", numFuncs);
     if (numFuncs < 1)
@@ -651,11 +658,21 @@ get_func(FILE *file, FileFuncInfo funcInfo)
 	
     if (foundFunc)
     {
-        grab_string_from_file(&(funcInfo->funcName), bfile, nameOff, nameLen);
+        if (   (grab_string_from_file(&(funcInfo->funcName), bfile, nameOff, nameLen) < 0)
+	    || (grab_string_from_file(&(funcInfo->funcProto), bfile, protoOff, protoLen) < 0)
+	    || (grab_string_from_file(&(funcInfo->funcCode), bfile, funcOff, funcLen) < 0)
+	    || (format_func_proto(&(funcInfo->funcProto)) < 0) )
+	{
+	    free(funcInfo->funcName);
+	    free(funcInfo->funcProto);
+	    free(funcInfo->funcCode);
+	    funcInfo->funcName = nullptr;
+	    funcInfo->funcProto = nullptr;
+	    funcInfo->funcCode = nullptr;
+	    bfile_destruct(bfile);
+	    return GET_FUNC_NO_MEMORY;
+	}
 	format_func_name(&(funcInfo->funcName));
-        grab_string_from_file(&(funcInfo->funcProto), bfile, protoOff, protoLen);
-	format_func_proto(&(funcInfo->funcProto));
-        grab_string_from_file(&(funcInfo->funcCode), bfile, funcOff, funcLen);
 	format_func_def(&(funcInfo->funcCode));
     }
 
@@ -675,7 +692,11 @@ grab_string_from_file(
 #define string (*stringPtr)
     int		returnValue = 0;
 
-    string = (STRING)util_malloc((size_t)(stringLen + 1));
+    string = (STRING)malloc((size_t)(stringLen + 1));
+    if (string == nullptr)
+    {
+	return -1;
+    }
     bfile_set_off(file, stringOff);
     fread(string, 1, (size_t)stringLen, file->stream);
     string[stringLen]= 0;
@@ -827,7 +848,13 @@ format_func_proto(STRING *protoPtr)
     /*
      * Add ;
      */
-    proto = (STRING)realloc(proto, protoLen+2);
+    STRING	grown = (STRING)realloc(proto, protoLen+2);
+
+    if (grown == nullptr)
+    {
+	return -1;
+    }
+    proto = grown;
     strcat(proto, ";");
     ++protoLen;
 

@@ -485,7 +485,10 @@ main(int argc, STRING *argv)
     get_cur_time(&configStartSeconds, &configStartCPUSeconds);
 #endif
 
-    examine_tree(project);
+    if (examine_tree(project) < 0)
+    {
+	exit(1);
+    }
 
 #ifdef DEBUG	/* performance testing */
     get_cur_time(&configEndSeconds, &configEndCPUSeconds);
@@ -1528,7 +1531,10 @@ examine_tree(ABObj project)
     } /* trav modules */
     trav_close(&moduleTrav);
 
-    abmfP_prepare_tree(project);	/* creates extra data for each obj */
+    if (abmfP_prepare_tree(project) < 0)	/* creates extra data for each obj */
+    {
+	returnValue = -1;
+    }
 
     return returnValue;
 }
@@ -1875,11 +1881,18 @@ abmfP_prepare_tree(ABObj project)
     /*
      * Create extra cgen data for each object
      */
-    abmfP_create_obj_data_for_project(project);
+    if (abmfP_create_obj_data_for_project(project) < 0)
+    {
+	return -1;
+    }
     for(trav_open(&trav, project, AB_TRAV_MODULES);
 	(module = trav_next(&trav)) != nullptr; )
     {
-	abmfP_create_obj_data_for_module(module);
+	if (abmfP_create_obj_data_for_module(module) < 0)
+	{
+	    trav_close(&trav);
+	    return -1;
+	}
     }
     trav_close(&trav);
 
@@ -2013,7 +2026,6 @@ abmfP_create_obj_data_for_project(ABObj project)
     ABObj		obj = nullptr;
     CGenProjData	projData = nullptr;
     CGenData		objData = nullptr;
-    size_t		objDataNumBytes = 0;
     int			numObjects = 0;
     int			objCount = 0;
 
@@ -2029,9 +2041,22 @@ abmfP_create_obj_data_for_project(ABObj project)
     /*
      * Create data space for all children
      */
-    objDataNumBytes = numObjects * sizeof(CGenDataRec);
-    objData= (CGenData)util_malloc(objDataNumBytes);
-    memset(objData, 0, objDataNumBytes);
+    objData= (CGenData)calloc(numObjects + 1, sizeof(CGenDataRec));
+    projData = (CGenProjData)calloc(1, sizeof(CGenProjDataRec));
+    if (projData != nullptr)
+    {
+	projData->callbacks = strlist_create();
+    }
+    if ((objData == nullptr) || (projData == nullptr) 
+	|| (projData->callbacks == nullptr))
+    {
+	trav_close(&trav);
+	free(objData);
+	free(projData);
+	util_printf_err(CATGETS(Dtb_project_catd, 1, 36,
+	    "Could not allocate cgen data\n"));
+	return -1;
+    }
 
     /*
      * Assign each obj it's own struct
@@ -2048,8 +2073,6 @@ abmfP_create_obj_data_for_project(ABObj project)
     /*
      * Create project-specific data
      */
-    projData = (CGenProjData)calloc(1, sizeof(CGenProjDataRec));
-    projData->callbacks = strlist_create();
     projData->children_data = objData;
     mfobj_set_proj_data(project, projData);
 
@@ -2065,7 +2088,6 @@ abmfP_create_obj_data_for_module(ABObj objInModule)
     ABObj		module = nullptr;
     int			numObjects = 0;
     CGenData		objData = nullptr;
-    size_t		objDataBytes = 0;
     ABObj		obj = nullptr;
     AB_TRAVERSAL	trav;
     int			objCount = 0;
@@ -2083,9 +2105,7 @@ abmfP_create_obj_data_for_module(ABObj objInModule)
      * object data is an array of all data for the module.
      */
     numObjects = trav_count(module, AB_TRAV_ALL);
-    objDataBytes = numObjects * sizeof(CGenDataRec);
-    objData = (CGenData)util_malloc(objDataBytes);
-    memset(objData, 0, objDataBytes);
+    objData = (CGenData)calloc(numObjects + 1, sizeof(CGenDataRec));
     if (objData == nullptr)
     {
 	util_printf_err(CATGETS(Dtb_project_catd, 1, 36,
@@ -2111,7 +2131,10 @@ abmfP_create_obj_data_for_module(ABObj objInModule)
     /*
      * Create module-specific data
      */
-    ensure_data_for_module_obj(module);
+    if (ensure_data_for_module_obj(module) < 0)
+    {
+	return -1;
+    }
     mfobj_get_module_data(module)->children_data = objData;
 
     return 0;
@@ -2136,13 +2159,26 @@ ensure_data_for_module_obj(ABObj module)
     project = obj_get_project(module);
     if (module->cgen_data == nullptr)
     {
-        module->cgen_data = (CGenData)calloc(sizeof(CGenDataRec), 1);
+        module->cgen_data = (CGenData)calloc(1, sizeof(CGenDataRec));
+	if (module->cgen_data == nullptr)
+	{
+	    return -1;
+	}
     }
 
     if (mfobj_get_module_data(module) == nullptr)
     {
-	moduleData = (CGenModuleData)calloc(sizeof(CGenModuleDataRec), 1);
+	moduleData = (CGenModuleData)calloc(1, sizeof(CGenModuleDataRec));
+	if (moduleData == nullptr)
+	{
+	    return -1;
+	}
         moduleData->callbacks = strlist_create();
+	if (moduleData->callbacks == nullptr)
+	{
+	    free(moduleData);
+	    return -1;
+	}
         mfobj_set_module_data(module, moduleData);
     }
 
