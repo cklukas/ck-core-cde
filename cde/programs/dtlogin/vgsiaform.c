@@ -260,8 +260,8 @@ SiaForm(SiaFormInfo *siaFormInfo)
 	char label_name[81];
 	char answer_name[81];
 
-	sprintf(label_name,"Prompt %d",j);
-	sprintf(answer_name,"Answer %d",j);
+	snprintf(label_name, sizeof label_name, "Prompt %d", j);
+	snprintf(answer_name, sizeof answer_name, "Answer %d", j);
 	xmstr = multiline_xmstring(siaFormInfo->prompts[j]);
 
 	switch (siaFormInfo->rendition)
@@ -402,9 +402,19 @@ static void NoEchoCB( Widget w, XtPointer client_data, XtPointer call_data )
 	if (w == siaFormInfo->answer_widgets[i])
 	    {
 	    if (call->text->ptr)
-		strcat(siaFormInfo->answers[i], call->text->ptr);
+		{
+		size_t have = strlen(siaFormInfo->answers[i]);
+		size_t add = strlen(call->text->ptr);
 
-	    call->text->ptr[0] = '\0';
+		/* An answer longer than the buffer is refused. */
+		if (add > (size_t) SIAMXPASSWORD - have)
+		    {
+		    call->doit = False;
+		    return;
+		    }
+		memcpy(siaFormInfo->answers[i] + have, call->text->ptr, add + 1);
+		call->text->ptr[0] = '\0';
+		}
 	    return;
 	    }
 	}
@@ -456,17 +466,21 @@ static void RespondSiaFormCB( Widget w, XtPointer client_data,
 			XmTextFieldGetString(siaFormInfo->answer_widgets[i]);
 	if (!siaFormInfo->answers[i] || (siaFormInfo->answers[i])[0] == '\0')
 	    {
-	    *answer_ptr = '\0';
-	    *answer_ptr++;
+	    if (answer_ptr >= buf + sizeof buf)
+		return;
+	    *answer_ptr++ = '\0';
 	    r->hdr.length++;
 	    }
 	else
 	    {
 	    int tmp;
+	    size_t alen = strlen(siaFormInfo->answers[i]);
 
+	    if (alen >= sizeof buf - (size_t) (answer_ptr - buf))
+		return;
 	    r->hdr.length += strlen(siaFormInfo->answers[i]) + 1;
-	    strcpy(answer_ptr, siaFormInfo->answers[i]);
-	    tmp = strlen(answer_ptr) + 1;
+	    memcpy(answer_ptr, siaFormInfo->answers[i], alen + 1);
+	    tmp = alen + 1;
 	    answer_ptr+= tmp;
 	    r->hdr.length += tmp;
 	    }

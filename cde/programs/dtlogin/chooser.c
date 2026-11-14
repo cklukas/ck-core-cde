@@ -340,6 +340,7 @@ AddHostname (ARRAY8Ptr hostname, ARRAY8Ptr status, struct sockaddr *addr, int wi
     ARRAY8	hostAddr;
     CARD16	connectionType;
     int		fulllen;
+    size_t	fullsize;
     int         update = 0;
 
     switch (addr->sa_family)
@@ -421,14 +422,15 @@ AddHostname (ARRAY8Ptr hostname, ARRAY8Ptr status, struct sockaddr *addr, int wi
     fulllen = hostname->length;
     if (fulllen < 30)
 	fulllen = 30;
-    new->fullname = malloc (fulllen + status->length + 10);
+    fullsize = fulllen + status->length + 10;
+    new->fullname = malloc (fullsize);
     if (!new->fullname)
     {
 	new->fullname = "Unknown";
     }
     else
     {
-	sprintf (new->fullname, "%-30.*s %*.*s",
+	snprintf (new->fullname, fullsize, "%-30.*s %*.*s",
 		 hostname->length, hostname->data,
 		 status->length, status->length, status->data);
     }

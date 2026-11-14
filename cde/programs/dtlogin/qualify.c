@@ -56,6 +56,7 @@ char * paths = nullptr;
 char * savepaths = nullptr;
 char * path;
 char * chance;
+size_t chancesize;
 struct stat st;
 
   /* assert that the arguments cannot be NULL */
@@ -77,12 +78,13 @@ struct stat st;
 
     /* allocate space and create the qualified filename */
 
-    chance = (char *)malloc(strlen(paths) + strlen(filename) + 2);
+    chancesize = strlen(paths) + strlen(filename) + 2;
+    chance = (char *)malloc(chancesize);
     if (chance == nullptr) {
       free(savepaths);
       return nullptr;
     }
-    sprintf(chance,"%s/%s",paths,filename);
+    snprintf(chance, chancesize, "%s/%s", paths, filename);
 
     /* see if it is there: a file that can be read (it is not opened, so a pipe cannot block) */
 

@@ -274,12 +274,12 @@ Authenticate( struct display *d, char *name, char *passwd, char **msg )
  *
  ***************************************************************************/
 void
-GetLoginInfo(struct display *d, int *loginType, char *ttyName, char **hostname)
+GetLoginInfo(struct display *d, int *loginType, char *ttyName, size_t ttySize, char **hostname)
 {
   char workarea[128];
 
   CleanUpName(d->name, workarea, 128);
-  sprintf(ttyName, "/dev/dtlogin/%s", workarea);
+  snprintf(ttyName, ttySize, "/dev/dtlogin/%s", workarea);
 
   if (d->displayType.location == Foreign) {
     *loginType = S_RLOGIN;
@@ -311,7 +311,7 @@ Authenticate( struct display *d, char *name, char *passwd, char **msg )
   char tty[128];
   char *hostname;
 
-  GetLoginInfo(d, &loginType, tty, &hostname);
+  GetLoginInfo(d, &loginType, tty, sizeof tty, &hostname);
 
   if (name == nullptr)
   {
@@ -661,7 +661,7 @@ Authenticate( struct display *d, char *name, char *passwd, char **msg )
     if(strlen(name) > S_NAMELEN)
          return(VF_INVALID);
 
-    GetLoginInfo(d, &loginType, tty, &hostname);
+    GetLoginInfo(d, &loginType, tty, sizeof tty, &hostname);
 
     p = getpwnam(name);
      

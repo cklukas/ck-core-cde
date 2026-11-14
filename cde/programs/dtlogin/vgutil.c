@@ -817,15 +817,19 @@ OpenCatalog(void)
  
     if (nullptr == nlspath || 0 == strlen(nlspath))
     {
-        newnlspath = malloc(8 + strlen(NLSPATH_ENV) + 1);
+        size_t size = 8 + strlen(NLSPATH_ENV) + 1;
+
+        newnlspath = malloc(size);
         if (newnlspath != nullptr)
-            sprintf(newnlspath, "NLSPATH=%s", NLSPATH_ENV);
+            snprintf(newnlspath, size, "NLSPATH=%s", NLSPATH_ENV);
     }
     else
     {
-        newnlspath = malloc(8 + strlen(nlspath) + 1 + strlen(NLSPATH_ENV) + 1);
+        size_t size = 8 + strlen(nlspath) + 1 + strlen(NLSPATH_ENV) + 1;
+
+        newnlspath = malloc(size);
         if (newnlspath != nullptr)
-            sprintf(newnlspath, "NLSPATH=%s:%s", nlspath, NLSPATH_ENV);
+            snprintf(newnlspath, size, "NLSPATH=%s:%s", nlspath, NLSPATH_ENV);
     }
 
     /* Out of memory: the message catalog is looked up with the old path. */

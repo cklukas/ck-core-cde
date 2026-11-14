@@ -388,13 +388,14 @@ create_devname(char* short_devname)
        if (short_devname == nullptr)
 	  short_devname = "";
 
-       long_devname = (char *) malloc (strlen(short_devname) + 5);
+       size_t size = strlen(short_devname) + sizeof "/dev/";
+
+       long_devname = (char *) malloc (size);
 
        if (long_devname == nullptr)
 	  return(nullptr); 
 
-       strcpy(long_devname,"/dev/");
-       strcat(long_devname, short_devname);
+       snprintf(long_devname, size, "/dev/%s", short_devname);
 	
        return(long_devname);
 }
@@ -529,7 +530,8 @@ dir_dev_acc(char *dir, uid_t uid, gid_t gid, mode_t mode, char *permfile)
 		if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
 			continue;
 
-		(void) sprintf(path, "%s/%s", dir, name);
+		if (snprintf(path, sizeof path, "%s/%s", dir, name) >= (int) sizeof path)
+			continue;
 		if (chown(path, uid, gid) == -1) {
 			if (errno != ENOENT) {
 				(void) fprintf(stderr, "%s: ", permfile);
@@ -602,13 +604,14 @@ login_conv(int conv_id, int num_msg, struct ia_message **msg,
 
 		case IA_PROMPT_ECHO_OFF:
                     if (saved_user_passwd != nullptr) {
-                        r->resp = (char *) malloc(strlen(saved_user_passwd)+1);
+                        size_t pwsize = strlen(saved_user_passwd)+1;
+                        r->resp = (char *) malloc(pwsize);
                         if (r->resp == nullptr) {
                      	    free_resp(num_msg, *response);
                             *response = nullptr;
                             return (IA_CONV_FAILURE);
                         }
-                        (void) strcpy(r->resp, saved_user_passwd);
+                        memcpy(r->resp, saved_user_passwd, pwsize);
                         r->resp_len = strlen(r->resp);
                     }
 
@@ -758,7 +761,7 @@ solaris_setutmp_mgmt(
 	(void) time(&utmp.ut_tv.tv_sec);
 	utmp.ut_pid = getpid();
 	if (rhost != nullptr && rhost[0] != '\0') {
-		(void) strcpy(utmp.ut_host, rhost);
+		(void) strncpy(utmp.ut_host, rhost, sizeof (utmp.ut_host));
 		tmplen = strlen(rhost) + 1;
 		if (tmplen < sizeof (utmp.ut_host))
 			utmp.ut_syslen = tmplen;
@@ -769,7 +772,7 @@ solaris_setutmp_mgmt(
 		utmp.ut_syslen = 0;
 	}
 
-	(void) strcpy(utmp.ut_user, user);
+	(void) strncpy(utmp.ut_user, user, sizeof (utmp.ut_user));
 	/*
 	 * Copy in the name of the tty minus the "/dev/" if a /dev/ is
 	 * in the path name.

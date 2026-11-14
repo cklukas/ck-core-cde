@@ -360,7 +360,7 @@ static char authdir2[] = "authfiles";
 static int
 MakeServerAuthFile (struct display *d)
 {
-    int len;
+    size_t len;
     int fd;
 #ifdef SYSV
 #define NAMELEN	14
@@ -376,19 +376,23 @@ MakeServerAuthFile (struct display *d)
     else
     {
     	CleanUpFileName (d->name, cleanname, NAMELEN - 8);
-    	len = strlen (authDir) + strlen (authdir1) + strlen (authdir2)
-	    + strlen (cleanname) + 14;
+	int need = snprintf (nullptr, 0, "%s/%s/%s/A%s-XXXXXX",
+			     authDir, authdir1, authdir2, cleanname);
+
+	if (need < 0)
+	    return FALSE;
+	len = (size_t) need + 1;
     }
     if (d->authFile)
 	free (d->authFile);
-    d->authFile = malloc ((unsigned) len);
+    d->authFile = malloc (len);
     if (!d->authFile)
 	return FALSE;
     if (d->clientAuthFile && *d->clientAuthFile)
-	strcpy (d->authFile, d->clientAuthFile);
+	memcpy (d->authFile, d->clientAuthFile, len);
     else
     {
-	sprintf (d->authFile, "%s/%s", authDir, authdir1);
+	snprintf (d->authFile, len, "%s/%s", authDir, authdir1);
 	r = stat(d->authFile, &statb);
 	if (r == 0) {
 	    if (statb.st_uid != 0) {
@@ -416,15 +420,15 @@ MakeServerAuthFile (struct display *d)
 		return FALSE;
 	    }
 	}
-	sprintf (d->authFile, "%s/%s/%s", authDir, authdir1, authdir2);
+	snprintf (d->authFile, len, "%s/%s/%s", authDir, authdir1, authdir2);
 	r = mkdir(d->authFile, 0700);
 	if (r < 0  &&  errno != EEXIST) {
 	    free (d->authFile);
 	    d->authFile = nullptr;
 	    return FALSE;
 	}
-    	sprintf (d->authFile, "%s/%s/%s/A%s-XXXXXX",
-		 authDir, authdir1, authdir2, cleanname);
+	snprintf (d->authFile, len, "%s/%s/%s/A%s-XXXXXX",
+		  authDir, authdir1, authdir2, cleanname);
 	fd = mkstemp (d->authFile);
 	if (fd < 0) {
 	    free (d->authFile);
@@ -806,7 +810,7 @@ DefineLocal (FILE *file, Xauth *auth)
 	struct utsname name;
 
 	uname(&name);
-	strcpy(displayname, name.nodename);
+	snprintf(displayname, sizeof displayname, "%s", name.nodename);
 	}
 	writeAddr (FamilyLocal, strlen (displayname), displayname, file, auth);
 #else

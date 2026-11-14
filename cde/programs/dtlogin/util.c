@@ -218,10 +218,10 @@ makeEnv( char *name, char *value )
 	}
 
         if (*value) {
-	           sprintf (result, "%s=%s", name, value);
+	           snprintf (result, size, "%s=%s", name, value);
         }
         else {
-                sprintf (result, "%s", name);
+                snprintf (result, size, "%s", name);
         }
 
 	return result;
@@ -527,6 +527,7 @@ MakeLangList( void )
     int         nlang;                  /* total number of languages       */
     char        *p, *s;
     char        *savelist;
+    size_t      used;
 
     /*
      *  build language list from set of languages installed on the host...
@@ -534,8 +535,7 @@ MakeLangList( void )
      *  langListTimeout resource  by default is 30 seconds to scan NLS dir.
      */
 
-    p = languageList;
-    strcpy( p, "C");
+    snprintf(languageList, sizeof languageList, "C");
 
     scanTimedOut = 0;
     scanDeadline = langListTimeout > 0 ? time (0) + langListTimeout : 0;
@@ -582,12 +582,18 @@ MakeLangList( void )
     }
 
 
-    p = languageList;
-    strcpy(p,"");
+    used = 0;
+    languageList[0] = '\0';
 
     for ( i = 0; i < nlang; i++) {
-        strcat(p, lang[i]);
-        strcat(p, " ");
+        size_t n = strlen(lang[i]);
+
+        if (n + 1 >= sizeof languageList - used)
+            break;
+        memcpy(languageList + used, lang[i], n);
+        used += n;
+        languageList[used++] = ' ';
+        languageList[used] = '\0';
     }
 
     free(savelist);
@@ -614,6 +620,19 @@ MatchesFileSuffix(const char *filename, const char *suffix)
 #else
     return (strrstr(filename, suffix) != nullptr);
 #endif
+}
+
+/* Appends " name" to the global language list; a name that does not fit is left out. */
+static void
+AppendLanguage(const char *name)
+{
+    size_t used = strlen(languageList);
+    size_t n = strlen(name);
+
+    if (n + 2 > sizeof languageList - used)
+        return;
+    languageList[used] = ' ';
+    memcpy(languageList + used + 1, name, n + 1);
 }
 
 /***************************************************************************
@@ -651,8 +670,7 @@ ScanNLSDir(char *dirname)
 	    {
                 if((int) strlen(languageList) + 7 < LANGLISTSIZE )
 		{
-                    strcat(languageList, " ");
-                    strcat(languageList, dp->d_name);
+                    AppendLanguage(dp->d_name);
                 }
             }
         }
@@ -694,8 +712,7 @@ ScanNLSDir(char *dirname)
 
 	    	if (0 == retval && S_ISDIR(locale_stat.st_mode))
 		{
-		    strcat(languageList, " ");
-		    strcat(languageList, locale);
+		    AppendLanguage(locale);
 		}
             }
         }
@@ -748,13 +765,13 @@ SetDefaultLanguage(struct display *d)
      * Currently there are four hft LANG variables.
      */
         if(strcmp(lang, "En_JP") == 0)
-            strcpy(d->language, "Ja_JP");
+            snprintf(d->language, LANGUAGESIZE + 1, "Ja_JP");
         else if(strcmp(lang, "en_JP") == 0)
-            strcpy(d->language, "ja_JP");
+            snprintf(d->language, LANGUAGESIZE + 1, "ja_JP");
         else if(strcmp(lang, "en_KR") == 0)
-            strcpy(d->language, "ko_KR");
+            snprintf(d->language, LANGUAGESIZE + 1, "ko_KR");
         else if(strcmp(lang, "en_TW") == 0)
-            strcpy(d->language, "zh_TW");
+            snprintf(d->language, LANGUAGESIZE + 1, "zh_TW");
         else
             *(strncpy(d->language, lang, LANGUAGESIZE) + LANGUAGESIZE) = '\0';
     }
@@ -800,7 +817,7 @@ setLang( struct display *d, char **env , char *langptr)
 
     if (set_def_lang) {
         env = setEnv(env, "LANG", "C");
-        strcpy(d->language, "C");
+        snprintf(d->language, LANGUAGESIZE + 1, "C");
     }
     return env;
 }

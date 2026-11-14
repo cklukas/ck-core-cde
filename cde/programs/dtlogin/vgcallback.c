@@ -421,7 +421,7 @@ EditPasswdCB(Widget w, XtPointer client, XtPointer call_data)
     XmTextVerifyPtr	cbs = (XmTextVerifyPtr) call_data;
     int			i;
     static char		buffer[MAXPATHLEN];
-    char	*s, *t;
+    char	*s;
 
 #ifdef VG_TRACE
     vg_TRACE_EXECUTION("main:  entered EditPasswdCB ...");
@@ -436,27 +436,28 @@ EditPasswdCB(Widget w, XtPointer client, XtPointer call_data)
     if (nullptr == textdata || textdata->bEcho) return;
     if (cbs->reason == XmCR_MOVING_INSERT_CURSOR) return;
 
-    for (i=0, s=buffer, t=textdata->noechobuf;
-	 (*t && i<cbs->startPos);
-	 i++, s++, t++)
-      *s = *t;
-
-    if (cbs->text->ptr)
     {
-        snprintf(s, sizeof(buffer) - (s - buffer), "%s", cbs->text->ptr);
-	s += cbs->text->length;
-    }
-    else
-      *s = '\0';
+	size_t	have = strlen(textdata->noechobuf);
+	size_t	head = have < (size_t) cbs->startPos ? have : (size_t) cbs->startPos;
+	size_t	mid = cbs->text->ptr ? strnlen(cbs->text->ptr, cbs->text->length) : 0;
+	size_t	tail = have >= (size_t) cbs->endPos ? have - cbs->endPos : 0;
 
-    if (strlen(textdata->noechobuf) >= cbs->endPos)
-    {
-        t = textdata->noechobuf+cbs->endPos;
-	if (strlen(t))
-          strcpy(s, t);
+	/* An edit that would not fit the buffer is refused. */
+	if (head + mid + tail >= sizeof buffer)
+	{
+	    cbs->doit = False;
+	    return;
+	}
+
+	memcpy(buffer, textdata->noechobuf, head);
+	if (mid)
+	    memcpy(buffer + head, cbs->text->ptr, mid);
+	if (tail)
+	    memcpy(buffer + head + mid, textdata->noechobuf + cbs->endPos, tail);
+	buffer[head + mid + tail] = '\0';
     }
 
-    strcpy(textdata->noechobuf, buffer);
+    memcpy(textdata->noechobuf, buffer, strlen(buffer) + 1);
 
     if (cbs->text->ptr)
       for (i=0, s=cbs->text->ptr; i<cbs->text->length; i++, s++)
@@ -1368,7 +1369,7 @@ RequestCB(
            }
            else
            {
-             sprintf(buf, textdata->offGreetingFormat,
+             snprintf(buf, sizeof buf, textdata->offGreetingFormat,
                      textdata->offGreetingUname ?
                      textdata->offGreetingUname : "");
              string = XmStringCreate(buf, XmFONTLIST_DEFAULT_TAG);
@@ -1401,17 +1402,15 @@ RequestCB(
 #endif /* VG_TRACE */
       siaFormInfo.num_prompts = r->num_prompts;
       siaFormInfo.rendition = r->rendition;
-      siaFormInfo.title = XtMalloc(strlen(buf + r->offTitle));
-      strcpy(siaFormInfo.title, buf + r->offTitle);
+      siaFormInfo.title = XtNewString(buf + r->offTitle);
 
       prompt_ptr = buf + r->offPrompts;
 
       for (i=0; i < siaFormInfo.num_prompts; i++)
           {
           siaFormInfo.visible[i] = r->visible[i];
-          siaFormInfo.prompts[i] = XtMalloc(strlen(prompt_ptr));
+          siaFormInfo.prompts[i] = XtNewString(prompt_ptr);
           siaFormInfo.answers[i] = nullptr;
-          strcpy(siaFormInfo.prompts[i], prompt_ptr);
           prompt_ptr += strlen(prompt_ptr) + 1;
           }
 
@@ -1445,7 +1444,7 @@ RequestCB(
     rdebug->hdr.reserved = 0;
     rdebug->offString = sizeof(*rdebug);
     p = ((char *)(rdebug)) + rdebug->offString;
-    strcpy(p, "This is my debug string");
+    snprintf(p, sizeof outbuf - rdebug->offString, "This is my debug string");
     rdebug->hdr.length = sizeof(*rdebug) + strlen(p) + 1;
     
     TellRequester(outbuf, (size_t) rdebug->hdr.length);
@@ -1517,13 +1516,19 @@ RespondLangCB( Widget w, XtPointer client, XtPointer call)
     char buf[REQUEST_LIM_MAXLEN];
     ResponseLang *r = (ResponseLang *)buf;
     char *p;
+    const char *lang;
+    size_t langlen;
   
     r->hdr.opcode = REQUEST_OP_LANG;
     r->hdr.reserved = 0;
     r->offLang = sizeof(*r);
     p = ((char *)(r)) + r->offLang;
-    strcpy(p, XmToggleButtonGadgetGetState(w) ? client : "default");
-    r->hdr.length = sizeof(*r) + strlen(p) + 1;
+    lang = XmToggleButtonGadgetGetState(w) ? (const char *) client : "default";
+    langlen = strlen(lang);
+    if (langlen >= sizeof(buf) - sizeof(*r))
+      return;
+    memcpy(p, lang, langlen + 1);
+    r->hdr.length = sizeof(*r) + langlen + 1;
 
     TellRequester(buf, (size_t) r->hdr.length);
  
@@ -1548,6 +1553,7 @@ RespondChallengeCB(
   ResponseChallenge *r = (ResponseChallenge *)buf;
   char *value;
   char *p;
+  size_t valuelen;
   LoginTextPtr textdata;
 
 #ifdef VG_TRACE
@@ -1598,8 +1604,27 @@ RespondChallengeCB(
   r->hdr.reserved = 0;
   r->offResponse = sizeof(*r);
   p = buf + r->offResponse;
-  strcpy(p, value);
-  r->hdr.length = r->offResponse + strlen(p) + 1; 
+  valuelen = strlen(value);
+  if (valuelen >= sizeof(buf) - r->offResponse)
+  {
+    /* The response does not fit the request buffer: nothing is sent. */
+    if (textdata->bEcho)
+    {
+      XtFree(value);
+      XmTextFieldSetString(login_text, "");
+    }
+    else
+    {
+      memset(textdata->noechobuf, 0, strlen(textdata->noechobuf));
+    }
+    XtSetSensitive(ok_button, True);
+    XtSetSensitive(clear_button, True);
+    XtSetSensitive(options_button, True);
+    XtSetSensitive(help_button, True);
+    return;
+  }
+  memcpy(p, value, valuelen + 1);
+  r->hdr.length = r->offResponse + valuelen + 1; 
 
   if (textdata->bEcho)
   {
@@ -1766,7 +1791,7 @@ SetDtLabelAndIcon(void)
    * entering the login .. 
    */
    if (strcmp(userName,"\0") != 0)
-     strcpy(userName,"\0");  
+     userName[0] = '\0';
 #endif
 
   i = 0;

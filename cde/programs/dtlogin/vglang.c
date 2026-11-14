@@ -78,8 +78,9 @@ GetLangName( char *label )
     char *rmtype;
     XrmValue rmvalue;
 
-    sprintf(rmname, "Dtlogin*%s*languageName", label);
-    sprintf(rmclass, "Dtlogin*%s*LanguageName", label);
+    if (snprintf(rmname, sizeof rmname, "Dtlogin*%s*languageName", label) >= (int) sizeof rmname ||
+        snprintf(rmclass, sizeof rmclass, "Dtlogin*%s*LanguageName", label) >= (int) sizeof rmclass)
+        return(nullptr);
     if(XrmGetResource(XtDatabase(dpyinfo.dpy), rmname, rmclass, &rmtype,
                       &rmvalue)) {
         return(rmvalue.addr);
@@ -559,7 +560,7 @@ MakeLangMenu( void )
 
 		i = InitArg(CascadeBG);
 
-		sprintf(cblab, "%s %s %s", 
+		snprintf(cblab, sizeof cblab, "%s %s %s", 
 			list[first].desc, tostr, list[last].desc);
 
 		xmstr = XmStringCreateLocalized(cblab);

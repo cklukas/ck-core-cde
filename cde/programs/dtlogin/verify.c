@@ -496,6 +496,7 @@ login_defaults(
         char *ptr;
 	char *Def_path;
 	char *final_path;
+	size_t pathlen;
 	char *element;
  
 
@@ -538,12 +539,23 @@ login_defaults(
 	    final_path = malloc(MAXPATHLEN);
 	    if (final_path == nullptr)
 		return d->userPath;
-	    snprintf(final_path, MAXPATHLEN, "%s", d->userPath);
+	    pathlen = snprintf(final_path, MAXPATHLEN, "%s", d->userPath);
+	    if (pathlen >= MAXPATHLEN) {
+		free(final_path);
+		return d->userPath;
+	    }
 
 	   while(element) {
 	     if((strstr(d->userPath,element)) == nullptr) {
-		strcat (final_path,":");
-		strcat (final_path,element);
+		size_t elen = strlen(element);
+
+		if (elen >= MAXPATHLEN - pathlen - 1) {
+		    free(final_path);
+		    return d->userPath;
+		}
+		final_path[pathlen] = ':';
+		memcpy(final_path + pathlen + 1, element, elen + 1);
+		pathlen += elen + 1;
 	     }
 	     element = strtok(nullptr,":");
 	   }

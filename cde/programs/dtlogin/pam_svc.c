@@ -368,13 +368,14 @@ create_devname(char* short_devname)
        if (short_devname == nullptr)
 	  short_devname = "";
 
-       long_devname = (char *) malloc (strlen(short_devname) + 5);
+       size_t size = strlen(short_devname) + sizeof "/dev/";
+
+       long_devname = (char *) malloc (size);
 
        if (long_devname == nullptr)
 	  return(nullptr); 
 
-       strcpy(long_devname,"/dev/");
-       strcat(long_devname, short_devname);
+       snprintf(long_devname, size, "/dev/%s", short_devname);
 	
        return(long_devname);
 }
@@ -420,13 +421,14 @@ login_conv(int num_msg, struct pam_message **msg,
 
 		case PAM_PROMPT_ECHO_OFF:
                     if (saved_user_passwd != nullptr) {
-                        r->resp = (char *) malloc(strlen(saved_user_passwd)+1);
+                        size_t pwsize = strlen(saved_user_passwd)+1;
+                        r->resp = (char *) malloc(pwsize);
                         if (r->resp == nullptr) {
 			  /* __pam_free_resp(num_msg, *response); */
                             *response = nullptr;
                             return (PAM_CONV_ERR);
                         }
-                        (void) strcpy(r->resp, saved_user_passwd);
+                        memcpy(r->resp, saved_user_passwd, pwsize);
                         r->resp_retcode=0;
                     }
 

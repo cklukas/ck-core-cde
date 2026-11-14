@@ -348,11 +348,13 @@ ParseDisplay( char *source,
 	{
 	    char    *newclass;
 
-	    newclass = malloc ((unsigned) (strlen (class) + 1));
+	    size_t classsize = strlen (class) + 1;
+
+	    newclass = malloc (classsize);
 	    if (newclass)
 	    {
 		free (d->class);
-		strcpy (newclass, class);
+		memcpy (newclass, class, classsize);
 		d->class = newclass;
 	    }
 	}
@@ -399,7 +401,7 @@ ParseDisplay( char *source,
         (strcmp(d->gettyLine, "None") == 0 ||
          strcmp(d->gettyLine, "none") == 0   ) ) {
 
-	strcpy(d->gettyLine,"??");
+	memcpy(d->gettyLine, "??", 3);	/* the name "None" or "none" is longer */
     }
 
 

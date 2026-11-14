@@ -200,7 +200,7 @@ CreateChooserSocket (void)
     }
     memset((char *) &sock_addr, 0, sizeof (sock_addr));
     sock_addr.sun_family = AF_UNIX;
-    strcpy (sock_addr.sun_path, chooserPath);
+    snprintf (sock_addr.sun_path, sizeof (sock_addr.sun_path), "%s", chooserPath);
     (void) unlink (chooserPath);
     oldmask = umask (077);
     status = bind (chooserFd, (struct sockaddr *) &sock_addr, sizeof (sock_addr));

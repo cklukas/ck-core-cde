@@ -345,6 +345,17 @@ ReadWord(
     }
 }
 
+static char *
+CopyString(const char *string)
+{
+    size_t size = strlen (string) + 1;
+    char *copy = malloc (size);
+
+    if (copy)
+	memcpy (copy, string, size);
+    return copy;
+}
+
 static HostEntry * 
 ReadHostEntry(
         FILE *file )
@@ -363,12 +374,11 @@ tryagain:
     if (*hostOrAlias == ALIAS_CHARACTER)
     {
 	h->type = HOST_ALIAS;
-	h->entry.aliasName = malloc (strlen (hostOrAlias) + 1);
+	h->entry.aliasName = CopyString (hostOrAlias);
 	if (!h->entry.aliasName) {
 	    free ((char *) h);
 	    return nullptr;
 	}
-	strcpy (h->entry.aliasName, hostOrAlias);
     }
     else if (!strcmp (hostOrAlias, CHOOSER_STRING))
     {
@@ -399,12 +409,11 @@ tryagain:
 	    free ((char *) h);
 	    return nullptr;
 	}
- 	h->entry.aliasName = malloc (strlen (hostOrAlias) + 1);
+ 	h->entry.aliasName = CopyString (hostOrAlias);
  	if (!h->entry.aliasName) {
 	    free ((char *) h);
 	    return nullptr;
  	}
- 	strcpy (h->entry.aliasName, hostOrAlias);
     }
 #endif	/* BYPASSLOGIN */
     else
@@ -471,13 +480,12 @@ next:
     if (*displayOrAlias == ALIAS_CHARACTER)
     {
 	d->type = DISPLAY_ALIAS;
-	d->entry.aliasName = malloc (strlen (displayOrAlias) + 1);
+	d->entry.aliasName = CopyString (displayOrAlias);
 	if (!d->entry.aliasName)
 	{
 	    free ((char *) d);
 	    return nullptr;
 	}
-	strcpy (d->entry.aliasName, displayOrAlias);
     }
     else
     {
@@ -489,13 +497,12 @@ next:
     	if (HasGlobCharacters (displayOrAlias))
     	{
 	    d->type = DISPLAY_PATTERN;
-	    d->entry.displayPattern = malloc (strlen (displayOrAlias) + 1);
+	    d->entry.displayPattern = CopyString (displayOrAlias);
 	    if (!d->entry.displayPattern)
 	    {
 	    	free ((char *) d);
 	    	return nullptr;
 	    }
-	    strcpy (d->entry.displayPattern, displayOrAlias);
     	}
     	else
     	{
@@ -1151,7 +1158,7 @@ NameToNetworkAddress(char        *name,
  	strncpy (hostname, name, colon - name);
  	hostname[colon - name] = '\0';
     } else {
- 	strcpy (hostname, localHostname ());
+ 	snprintf (hostname, sizeof (hostname), "%s", localHostname ());
     }
 
     if (colon[1] == ':') {

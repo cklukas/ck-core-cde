@@ -1495,7 +1495,7 @@ MakeGreeting( void )
     disp[127] = '\0';
     p = strchr(disp, '.');
     t = strchr(disp, ':');
-    if (p && t) strcpy(p,t);
+    if (p && t) memmove(p, t, strlen(t) + 1);
     
 
     /*
@@ -2265,6 +2265,7 @@ GetDisplayName (void)
     char		* pch;
     char		* col;
     char		* dot;
+    size_t		len;
 
     pch = XDisplayString(dpyinfo.dpy);
 
@@ -2281,22 +2282,17 @@ GetDisplayName (void)
     dot = strchr (pch, '.');
 
     if (!col) {
-	if (dot) {
-            strncpy (tmp, pch, dot - pch);	/* case #2 above */
-	    tmp[dot - pch] = '\000';
-	} else {
-	    strcpy (tmp, pch);			/* case #1 above */
-	}
+	len = dot ? (size_t) (dot - pch) : strlen (pch);	/* case #1 and #2 above */
     } else {
-	if (!dot || (dot > col)) {		/* case #3 and 4 above */
-	    strncpy (tmp, pch, col - pch);
-	    tmp[col - pch] = '\000';
-	} else {				/* case # 5 and 6 above */
-	    strncpy (tmp, pch, dot - pch);
-	    tmp[dot - pch] = '\000';
-	}
+	if (!dot || (dot > col))		/* case #3 and 4 above */
+	    len = col - pch;
+	else					/* case # 5 and 6 above */
+	    len = dot - pch;
     }
-    
-    strcat (tmp, ":0");
+
+    /* A name longer than the buffer is cut. */
+    if (len > sizeof (tmp) - 3)
+	len = sizeof (tmp) - 3;
+    snprintf (tmp, sizeof (tmp), "%.*s:0", (int) len, pch);
     return (tmp);
 }

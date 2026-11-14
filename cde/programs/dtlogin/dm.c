@@ -1023,7 +1023,7 @@ StartDisplay(
 
 	    d->gettySpeed = (char *) malloc(8);
 	    if (d->gettySpeed)
-		strcpy(d->gettySpeed, "console");
+		snprintf(d->gettySpeed, 8, "console");
 	}
 		    
 
@@ -1121,7 +1121,7 @@ StartDisplay(
 	    
 	    if ( (s = strchr(p,':')) != nullptr )
 		if ( (t = strchr(p,'.')) != nullptr )
-		    strcpy(t,s);
+		    memmove(t, s, strlen(s) + 1);	/* the strings overlap */
 	}
 
 	
@@ -1173,13 +1173,15 @@ StartDisplay(
 #ifdef sun
  	if (d->displayType.location==Local) {
             if (d->authFile && strlen(d->authFile) > 0 ) {
-		strcpy(buff, "XAUTHORITY=");
-		strcat(buff, d->authFile);
-		putenv(buff);
+		if (snprintf(buff, sizeof buff, "XAUTHORITY=%s", d->authFile) < (int) sizeof buff)
+		    putenv(buff);
+		else
+		    LogError((unsigned char *)"Authority file name too long for fbconsole on %s\n", d->name);
 	    }
-	    sprintf(start_fbconsole,"%s -d %s &",FBCONSOLE, d->name);
-
-            if(system(start_fbconsole) == -1)
+	    if (snprintf(start_fbconsole, sizeof start_fbconsole, "%s -d %s &", FBCONSOLE, d->name)
+		>= (int) sizeof start_fbconsole)
+		LogError((unsigned char *)"Display name too long for fbconsole on %s\n", d->name);
+	    else if (system(start_fbconsole) == -1)
 	       Debug("Failed to start the fallback console - %s\n",FBCONSOLE);
 	}
 #endif
@@ -1410,8 +1412,10 @@ SetTitle( char *name, char *ptr )
      *  remove domain qualifiers and screens from name...
      */
 
-    if ( (p = malloc(strlen(name) + 1)) == nullptr) return 0;
-    strcpy(p, name);
+    size_t	namesize = strlen(name) + 1;
+
+    if ( (p = malloc(namesize)) == nullptr) return 0;
+    memcpy(p, name, namesize);
 
     if ( (s = strchr(p,':')) == nullptr ) {
 	free(p);
@@ -1436,10 +1440,14 @@ SetTitle( char *name, char *ptr )
     if ( (t != nullptr) && ((t-s+1) >= (strlen(p) + 3)) ) {
 	t++;
 
-	memmove(s, t, strlen(t) + 1);		/* "program"			   */
-	strcat(s," <");		/* "program <"			   */
-	strcat(s,p);		/* "program <displayName"	   */
-	strcat(s,">");		/* "program <displayName>"	   */
+	/* the room check above guarantees that "program <displayName>" fits */
+	size_t	programLength = strlen(t);
+	size_t	displayLength = strlen(p);
+
+	memmove(s, t, programLength + 1);			/* "program"	*/
+	memcpy(s + programLength, " <", 2);			/* "program <"	*/
+	memcpy(s + programLength + 2, p, displayLength);	/* "program <displayName" */
+	memcpy(s + programLength + 2 + displayLength, ">", 2);	/* "program <displayName>" */
 
 	t = s + strlen(s);
 	length = length - strlen(s);
@@ -1527,11 +1535,15 @@ StartGetty( struct display *d )
            and so the following logic
            Raghu krovvidi 07.07.93
          */
-         strcpy(tynm,"/dev/");
-         strcat(tynm,d->gettyLine); 
+         int tynmLength = snprintf(tynm, sizeof tynm, "/dev/%s", d->gettyLine);
         #else
-         strcpy(tynm, d->gettyLine);
+         int tynmLength = snprintf(tynm, sizeof tynm, "%s", d->gettyLine);
         #endif
+
+        if (tynmLength < 0 || (size_t) tynmLength >= sizeof tynm) {
+	    LogError ((unsigned char *)"Getty line name too long for %s\n", d->name);
+	    exit (UNMANAGE_DISPLAY);
+        }
 
         Debug(" execing getty on %s\n",tynm);
 	execl(GETTYPATH, "getty", tynm, d->gettySpeed, (char *)0);

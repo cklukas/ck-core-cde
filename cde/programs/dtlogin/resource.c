@@ -55,6 +55,7 @@
 # include <X11/Xresource.h>
 # include <X11/Xmu/CharSet.h>
 # include <string.h>
+# include <stdckdint.h>
 
 
 void CleanUpName( char *src, char *dst, int len) ;
@@ -602,8 +603,8 @@ LoadDMResources( void )
 	if (accessFile) {free(accessFile); accessFile=nullptr;}
 
 	for (i = 0; i < NUM_DM_RESOURCES; i++) {
-		sprintf (name, "%s.%s", AppName, DmResources[i].name);
-		sprintf (class, "%s.%s", AppName, DmResources[i].class);
+		snprintf (name, sizeof (name), "%s.%s", AppName, DmResources[i].name);
+		snprintf (class, sizeof (class), "%s.%s", AppName, DmResources[i].class);
 		GetResource (name, class, DmResources[i].type,
 			      (char **) DmResources[i].dm_value,
 			      DmResources[i].default_value);
@@ -676,9 +677,9 @@ LoadDisplayResources( struct display *d )
 	d->language = nullptr;
 
 	for (i = 0; i < NUM_DISPLAY_RESOURCES; i++) {
-		sprintf (name, "%s.%s.%s", AppName,
+		snprintf (name, sizeof (name), "%s.%s.%s", AppName,
 			dpyName, DisplayResources[i].name);
-		sprintf (class, "%s.%s.%s", AppName,
+		snprintf (class, sizeof (class), "%s.%s.%s", AppName,
 			dpyClass, DisplayResources[i].class);
 		GetResource (name, class, DisplayResources[i].type,
 			      (char **) (((char *) d) + DisplayResources[i].offset), DisplayResources[i].default_value);
@@ -731,13 +732,13 @@ SetAppName( void )
          *  try "Dtlogin" (default) ...
          */
 
-        sprintf (name, "%s.%s", DTLOGIN, DmResources[i].name);
-        sprintf (class, "%s.%s", DTLOGIN, DmResources[i].class);
+        snprintf (name, sizeof (name), "%s.%s", DTLOGIN, DmResources[i].name);
+        snprintf (class, sizeof (class), "%s.%s", DTLOGIN, DmResources[i].class);
 
         if (DmResourceDB && XrmGetResource (DmResourceDB, name, class,
 	    &type, &value)) {
 
-	    strcpy(AppName, DTLOGIN);
+	    snprintf(AppName, sizeof (AppName), "%s", DTLOGIN);
 	    break;
         }
 
@@ -746,13 +747,13 @@ SetAppName( void )
          *  try "DisplayManager" ...
          */
 
-        sprintf (name, "%s.%s", DISPLAYMANAGER, DmResources[i].name);
-        sprintf (class, "%s.%s", DISPLAYMANAGER, DmResources[i].class);
+        snprintf (name, sizeof (name), "%s.%s", DISPLAYMANAGER, DmResources[i].name);
+        snprintf (class, sizeof (class), "%s.%s", DISPLAYMANAGER, DmResources[i].class);
 
         if (DmResourceDB && XrmGetResource (DmResourceDB, name, class,
 	    &type, &value)) {
 
-	    strcpy(AppName, DISPLAYMANAGER);
+	    snprintf(AppName, sizeof (AppName), "%s", DISPLAYMANAGER);
 	    break;
         }
         
@@ -772,6 +773,17 @@ SetAppName( void )
 extern char *_ExpandLang( char *string, char *lang );
 
 static char *
+CopyName(const char *name)
+{
+    size_t size = strlen(name) + 1;
+    char *copy = malloc(size);
+
+    if (copy != nullptr)
+        memcpy(copy, name, size);
+    return copy;
+}
+
+static char *
 getFullFileName(char *name, int special, char *lang)
 {
 
@@ -783,10 +795,9 @@ char * newname;
     /** if the file already starts with a '/' **/
     /** then just return a copy of it         **/
     if (name[0] == '/') {
-        if ((newname = (char *)malloc((strlen(name)+1)*sizeof(char))) == nullptr) {
+        if ((newname = CopyName(name)) == nullptr) {
             return (nullptr);
         } else {
-            strcpy(newname, name);
             return(newname);
         }
     }
@@ -806,11 +817,9 @@ char * newname;
             if (strchr(name, ':') != nullptr) {
                 /** This is probably a command and not a file name **/
                 /** so just return a copy of it.                   **/
-                if ((newname = (char *)malloc((strlen(name)+1)*sizeof(char)))
-                    == nullptr) {
+                if ((newname = CopyName(name)) == nullptr) {
                     return (nullptr);
                 } else {
-                    strcpy(newname, name);
                     return(newname);
                 }
             } else {
@@ -832,7 +841,7 @@ char * newname;
             } else {
                 char *langString;
                 char *tempName;
-                int tempLen;
+                size_t tempLen, prefixLen, nameLen;
 
                 /** need to remember the %L **/
                 if (lang == nullptr)
@@ -855,15 +864,15 @@ char * newname;
                 /** We have a fully qualified and expanded file name **/
                 /** but we need to return a fully qualified but NOT  **/
                 /** expanded file name.                              **/
-                tempLen = strlen(tempName) - strlen(langString)
-                             + strlen(name) + 1;
-                if ((newname = (char *)malloc(tempLen * sizeof(char))) == nullptr){
+                prefixLen = strlen(tempName) - strlen(langString);
+                nameLen = strlen(name) + 1;
+                if (ckd_add(&tempLen, prefixLen, nameLen) ||
+                    (newname = (char *)malloc(tempLen)) == nullptr){
                     free(langString);
                     return(tempName);
                 } else {
-                    tempLen = strlen(tempName) - strlen(langString);
-                    strncpy(newname, tempName, tempLen);
-                    strcpy(newname+tempLen, name);
+                    memcpy(newname, tempName, prefixLen);
+                    memcpy(newname + prefixLen, name, nameLen);
                     free (langString);
                     free (tempName);
                     return(newname);

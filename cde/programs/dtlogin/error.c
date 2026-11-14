@@ -77,8 +77,7 @@ InitErrorLog( void )
 	 */
 	 
 	if (timeZone != nullptr && strlen(timeZone) < 29) {
-	    strcpy(tz,"TZ=");
-	    strcat(tz,timeZone);
+	    snprintf(tz, sizeof tz, "TZ=%s", timeZone);
 	    putenv(tz);
 	}
 

@@ -525,7 +525,7 @@ NetworkAddressToName(CARD16 connectionType, ARRAY8Ptr connectionAddress, CARD16 
 		{
 		    if (!getString (name, 10))
 			return 0;
-		    sprintf (name, ":%d", displayNumber);
+		    snprintf (name, 11, ":%d", displayNumber);
 		}
 		else
 		{
@@ -550,16 +550,18 @@ NetworkAddressToName(CARD16 connectionType, ARRAY8Ptr connectionAddress, CARD16 
 			}
 		    }
 
-		    if (!getString (name, strlen (hostent->h_name) + 10))
+		    size_t	length = strlen (hostent->h_name) + 10;
+
+		    if (!getString (name, length))
 			return 0;
-		    sprintf (name, "%s:%d", hostent->h_name, displayNumber);
+		    snprintf (name, length + 1, "%s:%d", hostent->h_name, displayNumber);
 		}
 	    }
 	    else
 	    {
 		if (!getString (name, 25))
 		    return 0;
-		sprintf(name, "%d.%d.%d.%d:%d",
+		snprintf(name, 26, "%d.%d.%d.%d:%d",
 			data[0], data[1], data[2], data[3], displayNumber);
 	    }
 	    return name;
@@ -1148,8 +1150,8 @@ send_failed (struct sockaddr *from, int fromlen, char *name, CARD32 sessionID, c
     XdmcpHeader	header;
     ARRAY8	status;
 
-    sprintf (buf, "Session %d failed for display %s: %s",
-	     sessionID, name, reason);
+    snprintf (buf, sizeof (buf), "Session %d failed for display %s: %s",
+	      sessionID, name, reason);
     Debug ("Send failed %d %s\n", sessionID, buf);
     status.length = strlen (buf);
     status.data = (CARD8Ptr) buf;
@@ -1342,7 +1344,7 @@ NetworkAddressToHostname (CARD16 connectionType, ARRAY8Ptr connectionAddress)
 		local_name = resolved;
 	    else {
 		/* can't get name, so use emergency fallback */
-		sprintf(dotted, "%d.%d.%d.%d",
+		snprintf(dotted, sizeof (dotted), "%d.%d.%d.%d",
 			connectionAddress->data[0],
 			connectionAddress->data[1],
 			connectionAddress->data[2],
@@ -1352,9 +1354,11 @@ NetworkAddressToHostname (CARD16 connectionType, ARRAY8Ptr connectionAddress)
 		LogError ((unsigned char *)"Cannot convert Internet address %s to host name\n",
 			  dotted);
 	    }
-	    if (!getString (name, strlen (local_name)))
+	    size_t	length = strlen (local_name);
+
+	    if (!getString (name, length))
 		break;
-	    strcpy (name, local_name);
+	    memcpy (name, local_name, length + 1);
 	    break;
 	}
 #ifdef DNET
@@ -1411,14 +1415,14 @@ NameToNetworkAddress(char *name, CARD16Ptr connectionTypep, ARRAY8Ptr connection
 	return FALSE;
     if (colon != name)
     {
-	if (colon - name > sizeof (hostname))
+	if (colon - name >= sizeof (hostname))
 	    return FALSE;
 	strncpy (hostname, name, colon - name);
 	hostname[colon - name] = '\0';
     }
     else
     {
-	strcpy (hostname, localHostname ());
+	snprintf (hostname, sizeof (hostname), "%s", localHostname ());
     }
     if (colon[1] == ':')
     {

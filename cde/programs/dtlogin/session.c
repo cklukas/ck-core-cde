@@ -919,8 +919,8 @@ LoadAltDtsResources(struct display *d)
 		}
     }
 
-    strcpy(dirname[0],CDE_INSTALLATION_TOP "/config/%L/Xresources.d/");
-    strcpy(dirname[1],CDE_CONFIGURATION_TOP "/config/%L/Xresources.d/");
+    snprintf(dirname[0], sizeof(dirname[0]), "%s", CDE_INSTALLATION_TOP "/config/%L/Xresources.d/");
+    snprintf(dirname[1], sizeof(dirname[1]), "%s", CDE_CONFIGURATION_TOP "/config/%L/Xresources.d/");
 
     for(j = 0; j < 2 ; ++j)
     {
@@ -1105,9 +1105,10 @@ _ExpandLang(
    char         *pch;
    char         *trail;
    int          n = 0;
-   int          lang_len = 0;
-   int          tmp_len;
-   int          i = 0;
+   size_t       lang_len = 0;
+   size_t       tmp_len;
+   size_t       used = 0;
+   size_t       i = 0;
 
    if (string == nullptr)
       return (nullptr);
@@ -1144,7 +1145,9 @@ _ExpandLang(
    /*
     * Create the space needed.
     */
-   tmp_len = strlen (string) + (n * lang_len) + n + 1;
+   if ((size_t) n * (lang_len + 1) > (size_t) -1 - strlen (string) - 1)
+      return (nullptr);
+   tmp_len = strlen (string) + ((size_t) n * lang_len) + n + 1;
    tmp = (char *) malloc (tmp_len);
    if (tmp == nullptr)
       return (nullptr);
@@ -1159,38 +1162,51 @@ _ExpandLang(
          /*
           * A '%' was not found.
           */
-         (void) strcat (tmp, trail);
+         size_t rest = strlen (trail);
+
+         memcpy (tmp + used, trail, rest);
+         used += rest;
          break;
       }
 
       /* pch is at the '%'; the character after it decides what it stands for */
       if (pch[1] == 'L') {
+         size_t head = pch - trail;
+
          if (lang_len == 0) {
             if (pch > trail && pch[-1] == '/')
                /*
                 * Remove the "/" as well as the "%L".
                 */
-               (void) strncat (tmp, trail, (pch - trail) - 1);
-            else
-               (void) strncat (tmp, trail, pch - trail);
+               head--;
+            memcpy (tmp + used, trail, head);
+            used += head;
          }
          else {
             /*
              * Remove the "%L" and then append the LANG.
              */
-            (void) strncat (tmp, trail, pch - trail);
-            (void) strcat (tmp, lang);
+            memcpy (tmp + used, trail, head);
+            used += head;
+            memcpy (tmp + used, lang, lang_len);
+            used += lang_len;
          }
          pch += 2;
       }
       else if (pch[1] == '\0') {
          /* a '%' that ends the string stands for itself */
-         (void) strcat (tmp, trail);
+         size_t rest = strlen (trail);
+
+         memcpy (tmp + used, trail, rest);
+         used += rest;
          break;
       }
       else {
          /* any other escape is kept as it is */
-         (void) strncat (tmp, trail, (pch - trail) + 2);
+         size_t kept = (pch - trail) + 2;
+
+         memcpy (tmp + used, trail, kept);
+         used += kept;
          pch += 2;
       }
    }
@@ -1683,9 +1699,11 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 						     "HOME", "/");
 		}
 		else if(!failsafe) {
-			strcpy(lastsessfile,home); 			/* save user's last session */
-			strcat(lastsessfile,LAST_SESSION_FILE);
-                	if((lastsession = fopen(lastsessfile,"w")) == nullptr)
+			/* save user's last session */
+			if (snprintf(lastsessfile, sizeof(lastsessfile), "%s%s", home, LAST_SESSION_FILE)
+			    >= (int) sizeof(lastsessfile))
+				Debug("Last session file name too long: %s\n", home);
+                	else if((lastsession = fopen(lastsessfile,"w")) == nullptr)
                         	Debug("Unable to open file for writing: %s\n",lastsessfile);
                 	else{
                    		fputs(verify->argv[0],lastsession);
@@ -2186,8 +2204,10 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	     * figure out path to dtgreet...
 	     */
 
-	    snprintf(msg, sizeof(msg), "%s", progPath);
-	    strcat(msg,"dtgreet");
+	    if (snprintf(msg, sizeof(msg), "%sdtgreet", progPath) >= (int) sizeof(msg)) {
+		LogError((unsigned char *)"Path to dtgreet too long: %s\n", progPath);
+		exit (NOTIFY_ABORT_DISPLAY);
+	    }
 
 	    execle(msg, "dtgreet", "-display", d->name, (char *)0, env);
 	    LogError(ReadCatalog(
@@ -2511,6 +2531,26 @@ ResponseString(
   return(base + offset);
 }
 
+/*
+ * Copy as much of TEXT as fits behind the header of a request of the greeter,
+ * starting at OFFSET (less than REQUEST_LIM_MAXLEN).  Returns the length of the
+ * request up to the end of the text.
+ */
+static unsigned short
+PutRequestText(
+  RequestHeader *r,
+  size_t offset,
+  const char *text)
+{
+  size_t room = REQUEST_LIM_MAXLEN - offset - 1;
+  size_t length = text ? strnlen(text, room) : 0;
+
+  if (length)
+    memcpy((char *)r + offset, text, length);
+  ((char *)r)[offset + length] = '\0';
+  return((unsigned short)(offset + length + 1));
+}
+
 #ifdef HAS_PAM_LIBRARY
 
 /*****************************************************************************
@@ -2554,21 +2594,6 @@ WaitForGreeter(
     }
     Debug("Password change: ignored response opcode %d\n", r->opcode);
   }
-}
-
-/* Copy as much of TEXT as fits behind the header of a request of the greeter. */
-static unsigned short
-PutRequestText(
-  RequestHeader *r,
-  size_t offset,
-  const char *text)
-{
-  size_t room = REQUEST_LIM_MAXLEN - offset - 1;
-  size_t length = text ? strnlen(text, room) : 0;
-
-  memcpy((char *)r + offset, text, length);
-  ((char *)r)[offset + length] = '\0';
-  return((unsigned short)(offset + length + 1));
 }
 
 /* Ask the user a question; the answer is a copy for PAM, NULL if there is none. */
@@ -2905,14 +2930,12 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         r->hdr.length = sizeof(*r);
 
         r->offChallenge = sizeof(*r);
-        strcpy(((char *)r) + r->offChallenge, msg.def);
-        r->hdr.length += strlen(msg.def) + 1;
+        r->hdr.length = PutRequestText(&r->hdr, r->offChallenge, msg.def);
 
-        if (greet->name)
+        if (greet->name && r->hdr.length < REQUEST_LIM_MAXLEN - 1)
         {
           r->offUserNameSeed = r->hdr.length;
-          strcpy(((char *)r) + r->offUserNameSeed, greet->name);
-          r->hdr.length += strlen(greet->name) + 1;
+          r->hdr.length = PutRequestText(&r->hdr, r->offUserNameSeed, greet->name);
           Debug("Greet name:  %s\n", greet->name);
         }
         else
@@ -2959,8 +2982,7 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         r->idMC = msg.id;
         r->offUserNameSeed = 0;
         r->offChallenge = sizeof(*r);
-        strcpy(((char *)r) + r->offChallenge, msg.def);
-        r->hdr.length = sizeof(*r) + strlen(msg.def) + 1;
+        r->hdr.length = PutRequestText(&r->hdr, r->offChallenge, msg.def);
 
         TellGreeter((RequestHeader *)r);
         state->waitForResponse = TRUE;
@@ -3103,8 +3125,7 @@ ManageGreeter( struct display *d, struct greet_info *greet,
         r->hdr.reserved = 0;
         r->idMC = msg.id;
         r->offMessage = sizeof(*r);
-        strcpy(((char *)r) + r->offMessage, msg.def);
-        r->hdr.length = sizeof(*r) + strlen(msg.def) + 1;
+        r->hdr.length = PutRequestText(&r->hdr, r->offMessage, msg.def);
 
         TellGreeter((RequestHeader *)r);
         state->waitForResponse = TRUE;
@@ -3385,11 +3406,11 @@ SetTicketFileName(uid_t uid)
     } else {
         if (gethostname(lhost, sizeof(lhost)) != -1) {
 	    if (p = strchr(lhost, '.')) *p = '\0';
-	    (void)sprintf(krb_ticket_string, "%s%ld.%s", TKT_ROOT, (long)uid, lhost);
+	    (void)snprintf(krb_ticket_string, sizeof(krb_ticket_string), "%s%ld.%s", TKT_ROOT, (long)uid, lhost);
         } else {
             /* 32 bits of signed integer will always fit in 11 characters
                (including the sign), so no need to worry about overflow */
-	    (void) sprintf(krb_ticket_string, "%s%ld", TKT_ROOT, (long)uid);
+	    (void) snprintf(krb_ticket_string, sizeof(krb_ticket_string), "%s%ld", TKT_ROOT, (long)uid);
 	}
     }
 }
@@ -3538,8 +3559,8 @@ static int SiaManageGreeter(
               request_form->offTitle = sizeof(RequestForm);
               request_form->offPrompts = sizeof(RequestForm) +
                                           strlen((const char *)title) + 1;
-              strcpy((char *)request_form + request_form->offTitle, 
-                      (const char *)title);
+              memcpy((char *)request_form + request_form->offTitle,
+                      (const char *)title, strlen((const char *)title) + 1);
 
               pmpt_ptr = (char *)request_form + request_form->offPrompts;
               for (i=0; i<num_prompts; i++)
@@ -3549,8 +3570,10 @@ static int SiaManageGreeter(
                   else
                       {
                       Debug("  prompt[%d]: %s\n", i, prompt[i].prompt);
-                      strcpy(pmpt_ptr, (const char *)prompt[i].prompt);
-                      pmpt_ptr += strlen((const char *)prompt[i].prompt);
+                      size_t plen = strlen((const char *)prompt[i].prompt);
+
+                      memcpy(pmpt_ptr, (const char *)prompt[i].prompt, plen + 1);
+                      pmpt_ptr += plen;
                       }
                   request_form->visible[i] = 
                       (prompt[i].control_flags & SIARESINVIS) ? False : True;
@@ -3574,7 +3597,8 @@ static int SiaManageGreeter(
                       }
                   else
                       {
-                      strcpy((char *)prompt[0].result, res_ptr);
+                      snprintf((char *)prompt[0].result, prompt[0].max_result_length,
+                               "%s", res_ptr);
                       }
                   res_ptr += strlen(res_ptr) + 1;
                   }
@@ -3610,11 +3634,16 @@ static int SiaManageGreeter(
 static CopySiaInfo(SIAENTITY *siaHandle, struct greet_info *greet)
 {
 
-    greet->name = malloc(strlen(siaHandle->name) + 1);
-    strcpy (greet->name, siaHandle->name);
+    size_t nameSize = strlen(siaHandle->name) + 1;
+    size_t passwordSize = strlen(siaHandle->password) + 1;
 
-    greet->password = malloc(strlen(siaHandle->password) + 1);
-    strcpy (greet->password, siaHandle->password);
+    greet->name = malloc(nameSize);
+    if (greet->name != nullptr)
+        memcpy (greet->name, siaHandle->name, nameSize);
+
+    greet->password = malloc(passwordSize);
+    if (greet->password != nullptr)
+        memcpy (greet->password, siaHandle->password, passwordSize);
     
 
 }
