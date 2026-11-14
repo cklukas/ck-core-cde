@@ -257,11 +257,16 @@ buildNCF(BookCaseDB& db, const char *base_name, int compressed)
       
       
       stylesheet_smart_ptr sheet(base_ptr, style);
-      char oid_buf[BUFSIZE];
+      char oid_buf[BUFSIZE] = {};
       ostringstream strout(oid_buf);
       sheet.its_oid().asciiOut(strout);
       strout << ends;
-      memcpy(oid_buf, strout.str().c_str(), BUFSIZE);
+      const string oid_text = strout.str();
+      size_t oid_len = oid_text.size();
+      if ( oid_len > BUFSIZE ) {
+        oid_len = BUFSIZE;
+      }
+      memcpy(oid_buf, oid_text.data(), oid_len);
       
       ncf->insert(STRING_CODE, nodeLocator,
 		  STRING_CODE, title,

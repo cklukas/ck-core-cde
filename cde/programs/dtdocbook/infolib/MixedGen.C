@@ -986,7 +986,12 @@ int main(int argc, char **argv)
 	    form("%s.%s", bcname, "ps.dict"));
 
 	x->its_oid().asciiOut(str_buf);
-	memcpy(comp_agent, str_buf.str().c_str(), COMPRESSED_AGENT_SIZE);
+	const std::string agent_text = str_buf.str();
+	size_t agent_len = agent_text.size();
+	if ( agent_len > COMPRESSED_AGENT_SIZE ) {
+	  agent_len = COMPRESSED_AGENT_SIZE;
+	}
+	memcpy(comp_agent, agent_text.data(), agent_len);
       }
 
       hashTable<CC_String, BTCollectable> hd(hash_func);
