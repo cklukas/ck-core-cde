@@ -64,7 +64,7 @@ container_desc::~container_desc()
 
       idx_nm = (char*)index_nms[ind];
 
-      delete idx_nm;
+      delete [] idx_nm;
 
       index_nms.next(ind);
    }
