@@ -187,13 +187,13 @@ boolean ([Bb][Oo][Oo][Ll][Ee][Aa][Nn])
 
 "&"[^ \t\n\";.=@+*\/\.\*:?\^,{}\[\]()]+	{
 		defParserlval.charPtrData =
-                  (unsigned char*)strdup((const char*)(yytext+1));
+                  new_copy((const unsigned char*)(yytext+1), yyleng-1);
 		return(REF_NAME);
 		}
 
 [^ \t\n\";.=@+*\/\.\*:?\^,{}\[\]()]+	{
 		defParserlval.charPtrData =
-                  (unsigned char*)strdup((const char*)yytext);
+                  new_copy((const unsigned char*)yytext, yyleng);
 		return(NORMAL_STRING);
 		}
 
