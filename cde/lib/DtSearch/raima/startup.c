@@ -46,7 +46,7 @@
 
 /* Called once at the beginning of each external function
 */
-int startup(int dbn)
+int startup(int)
 {
    db_status = S_OKAY;
    if ( ! db_glob_init ) {

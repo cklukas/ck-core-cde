@@ -59,7 +59,7 @@ d_dbfpath(const char *path)
    else if (strlen(path) >= FILENMLEN - 1)
       dberr(S_NAMELEN);
    else {
-      strcpy(dbfpath, path);
+      memcpy(dbfpath, path, strlen(path) + 1);
       db_status = S_OKAY;
    }
    RETURN( db_status );

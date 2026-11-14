@@ -71,7 +71,7 @@ d_destroy(const char *dbname)
 
    /* remove db files in file_table */
    for (ft_lc = size_ft, file_ptr = file_table; --ft_lc >= 0; ++file_ptr) {
-      unlink(file_ptr->ft_name);
+      (void)unlink(file_ptr->ft_name);	/* a missing file is fine */
    }
 
    /* free all residual memory */

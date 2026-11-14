@@ -73,8 +73,8 @@ const char *fnm   /* new file name */
    if ( ! r.ptr->Ren_db_name.ptr || ! r.ptr->File_name.ptr )
       RETURN( dberr(S_NOMEMORY) );
 
-   strcpy(r.ptr->Ren_db_name.ptr, dbn);
-   strcpy(r.ptr->File_name.ptr, fnm);
+   memcpy(r.ptr->Ren_db_name.ptr, dbn, strlen(dbn) + 1);
+   memcpy(r.ptr->File_name.ptr, fnm, strlen(fnm) + 1);
    r.ptr->file_no = fno;
 
    MEM_UNLOCK(&r.ptr->Ren_db_name);

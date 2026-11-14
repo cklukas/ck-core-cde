@@ -195,7 +195,7 @@ d_setfiles(int num)
 int
 d_setpages(
 int dbpgs, /* # of db cache pages */
-int ixpgs  /* # of index cache pages - ignored in single-user version */
+int  /* # of index cache pages - ignored in single-user version */
 )
 {
    if ( dbpg_table ) return( dberr(S_SETPAGES) );
@@ -973,8 +973,9 @@ LOOKUP_ENTRY *lu_ptr   /* corresponding lookup table entry */
    if ( dio_open(fno) == S_OKAY ) {
       swab_page (pg_ptr->buff, &file_table[fno], HTON);
       desc = file_table[fno].ft_desc;
-      DB_LSEEK( desc, (off_t)addr, 0 );
-      if (DB_WRITE( desc, pg_ptr->buff, pgsize ) != pgsize) dberr(S_BADWRITE);
+      if (DB_LSEEK( desc, (off_t)addr, 0 ) < 0 ||
+	  DB_WRITE( desc, pg_ptr->buff, pgsize ) != pgsize)
+	 dberr(S_BADWRITE);
    }
    MEM_UNLOCK(&pg_ptr->Buff);
    return( db_status );
@@ -1007,15 +1008,17 @@ LOOKUP_ENTRY *lu_ptr  /* corresponding to pg_ptr */
    addr = lu_ptr->pageno*pgsize;
    if ( dio_open(fno) == S_OKAY ) {
       desc = file_ptr->ft_desc;
-      DB_LSEEK(desc, (off_t)addr, 0);
       MEM_LOCK(&pg_ptr->Buff);
+      if (DB_LSEEK(desc, (off_t)addr, 0) < 0) {
+	 MEM_UNLOCK(&pg_ptr->Buff);
+	 return( dberr(S_BADREAD) );
+      }
       if ((r = DB_READ( desc, pg_ptr->buff, pgsize )) < pgsize) {
+	 if (r < 0) r = 0;
 	 memset(&pg_ptr->buff[r], '\0', pgsize - r);
-	 DB_LSEEK(desc, (off_t)addr, 0);
-	 if (DB_WRITE( desc, pg_ptr->buff, pgsize ) != pgsize) {
+	 if (DB_LSEEK(desc, (off_t)addr, 0) < 0 ||
+	     DB_WRITE( desc, pg_ptr->buff, pgsize ) != pgsize) {
 	    /* clean up and return out of space */
-	    DB_LSEEK(desc, (off_t)addr, 0);
-	    DB_WRITE(desc, "", 0);
 	    pgzero_ptr = &pgzero[fno];
 	    pgzero_ptr->pz_next--;
 	    pgzero_ptr->pz_modified = TRUE;
@@ -1105,15 +1108,15 @@ static int dio_pzflush(void)
 	     * on a page zero are the first 5 LONG integers.
 	     */
 	    for (j = 0, cptr = (char *) pgzero_ptr;
-		 j < PGZEROSZ/sizeof(LONG);
+		 j < (int)(PGZEROSZ/sizeof(LONG));
 		 ++j, cptr += sizeof(LONG)) {
 		memcpy (&align_LONG, cptr, sizeof(LONG));
 		HTONL (align_LONG);
 		memcpy (cptr, &align_LONG, sizeof(LONG));
 	    }
 	    desc = file_ptr->ft_desc;
-	    DB_LSEEK(desc, (off_t)0L, 0);
-	    if (DB_WRITE(desc, (char *)pgzero_ptr, PGZEROSZ) != PGZEROSZ) 
+	    if (DB_LSEEK(desc, (off_t)0L, 0) < 0 ||
+		DB_WRITE(desc, (char *)pgzero_ptr, PGZEROSZ) != PGZEROSZ)
 	       return( dberr(S_BADWRITE) );
 	    pgzero_ptr->pz_modified = FALSE;
 	 }
@@ -1154,8 +1157,8 @@ FILE_NO fno  /* file number */
    }
 
    /* seek to and read page zero */
-   DB_LSEEK(file_ptr->ft_desc, (off_t)0L, 0);
-   if ( DB_READ(file_ptr->ft_desc, (char *)pgzero_ptr, PGZEROSZ) 
+   if ( DB_LSEEK(file_ptr->ft_desc, (off_t)0L, 0) < 0 ||
+	DB_READ(file_ptr->ft_desc, (char *)pgzero_ptr, PGZEROSZ)
 							!= PGZEROSZ ) {
       return( dberr(S_BADREAD) );
    }

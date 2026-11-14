@@ -56,7 +56,7 @@ int
 d_dbtaf(const char *taf)
 {
    char dbtaf[FILENMLEN];
-   int len;
+   size_t len;
 
    DB_ENTER(NO_DB_ID TASK_ID LOCK_SET(LOCK_NONE));
    if (dbopen)
@@ -64,20 +64,21 @@ d_dbtaf(const char *taf)
    else {
       len = strlen(taf);
       if (len > (FILENMLEN - 1)) {
-	 strncpy(dbtaf, taf, FILENMLEN - 1);
+	 memcpy(dbtaf, taf, FILENMLEN - 1);
 	 dbtaf[FILENMLEN - 1] = '\0';
       }
-      else if (taf[len - 1] == DIRCHAR) {
+      else if (len > 0 && taf[len - 1] == DIRCHAR) {
 	 if (len > (FILENMLEN - sizeof(VISTATAF))) {
-	    strncpy(dbtaf, taf, FILENMLEN - sizeof(VISTATAF) - 1);
-	    dbtaf[(len = (FILENMLEN - sizeof(VISTATAF))) - 1] = DIRCHAR;
+	    memcpy(dbtaf, taf, FILENMLEN - sizeof(VISTATAF) - 1);
+	    len = FILENMLEN - sizeof(VISTATAF);
+	    dbtaf[len - 1] = DIRCHAR;
 	 }
 	 else
-	    strcpy(dbtaf, taf);
-	 strcpy(&dbtaf[len], VISTATAF);
+	    memcpy(dbtaf, taf, len);
+	 memcpy(&dbtaf[len], VISTATAF, sizeof(VISTATAF));
       }
       else
-	 strcpy(dbtaf, taf);
+	 memcpy(dbtaf, taf, len + 1);
       db_status = S_OKAY;
    }
    RETURN (db_status = S_OKAY);

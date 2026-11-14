@@ -117,8 +117,9 @@ int ctb_init(void)
    short subs_i;
    char ctb_name[FILENMLEN*2];
 
-   strcpy( ctb_name, db_global.ctbpath );
-   strcat( ctb_name, CTBNAME );
+   if ( snprintf(ctb_name, sizeof(ctb_name), "%s%s", db_global.ctbpath,
+		 CTBNAME) >= (int)sizeof(ctb_name) )
+      return( db_status = S_NAMELEN );
 
    if ( (map_fd = open_b(ctb_name,O_RDONLY)) != -1 ) {
       while(bgets(loc_buf,20,map_fd), *loc_buf) {
@@ -127,7 +128,9 @@ int ctb_init(void)
 	       break;
 	 }
 	 else {
-	    sscanf(loc_buf,"%c,%c,%hd,%2s",&inchar,&outchar,&subs_i,&sortas[0]);
+	    if ( sscanf(loc_buf,"%c,%c,%hd,%2s",&inchar,&outchar,&subs_i,
+			&sortas[0]) != 4 )
+	       continue;		/* ignore a malformed line */
 	    subsort = (unsigned char) subs_i;
 	    if (d_mapchar(inchar,outchar,sortas,subsort CURRTASK_PARM) != S_OKAY )
 	       break;
@@ -164,8 +167,8 @@ static int nextc(int fd)
     int n;
 
     if ( cptr < 0 || cptr >= buflen ) {
-	n = read( fd, buf, 30 );
-	if ( n == 0 ) {
+	n = read( fd, buf, sizeof(buf) );
+	if ( n <= 0 ) {
 	    cptr = -1;
 	    return( -1 );
 	}

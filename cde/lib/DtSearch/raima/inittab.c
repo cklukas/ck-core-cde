@@ -75,6 +75,8 @@
 
 #include <stdio.h>
 #include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 #include "vista.h"
 #include "dbtype.h"
 #include "inittab.h"
@@ -86,11 +88,29 @@ int	dump_init_tables =	FALSE;
 
 
 /* Internal function prototypes */
+static int dbd_read(int, void *, size_t);
 static int alloc_dict(void);
 static int initcurr(void);
 
 
 
+
+/* Read len bytes of the dictionary file.  A short file is an invalid
+   dictionary; the file is closed in that case.
+*/
+static int dbd_read(int dbf, void *buf, size_t len)
+{
+   ssize_t n;
+
+   if ( len == 0 )
+      return( S_OKAY );
+   n = read(dbf, buf, len);
+   if ( n < 0 || (size_t)n != len ) {
+      close(dbf);
+      return( dberr(S_INVDB) );
+   }
+   return( S_OKAY );
+}
 
 /* Initialize database tables
 */
@@ -123,7 +143,7 @@ inittab(void)
 
       /* form database dictionary name */
       if ( DB_REF(db_path[0]) )
-	 strcpy(dbname, DB_REF(db_path));
+	 memcpy(dbname, DB_REF(db_path), strlen(DB_REF(db_path)) + 1);
       else
 	 dbname[0] = '\0';
 
@@ -134,9 +154,9 @@ inittab(void)
 	    fflush (stdout);
       }
 #endif
-      if (strlen(dbname) + strlen(DB_REF(db_name)) >= FILENMLEN+4)
+      if (strlen(dbname) + strlen(DB_REF(db_name)) >= FILENMLEN)
 	 return( dberr(S_NAMELEN) );
-      strcat(dbname, DB_REF(db_name));
+      memcpy(dbname + strlen(dbname), DB_REF(db_name), strlen(DB_REF(db_name)) + 1);
       if (con_dbd(dbfile, dbname, get_element(dbdpath, dbt_lc)) != S_OKAY)
 	 return( dberr(db_status) );
 
@@ -148,7 +168,9 @@ inittab(void)
 	 return( dberr( S_INVDB ) );
 
       /* Read in and verify the dictionary version */
-      DB_READ(dbf, dbd_ver, DBD_COMPAT_LEN);
+      if ( dbd_read(dbf, dbd_ver,
+		     DBD_COMPAT_LEN) != S_OKAY )
+	 return( db_status );
       dbd_ver[DBD_COMPAT_LEN] = '\0';
       for ( i=0; i<size_compat; i++ ) {
 	 if ( strcmp( dbd_ver, compat_dbd[i] ) == 0 ) goto goodver;
@@ -160,25 +182,46 @@ inittab(void)
 goodver:
 
       /* Read in database page size */
-      DB_READ(dbf, (char *)&DB_REF(Page_size), sizeof(INT));
+      if ( dbd_read(dbf, (char *)&DB_REF(Page_size),
+		     sizeof(INT)) != S_OKAY )
+	 return( db_status );
       NTOHS (DB_REF(Page_size));
 
       /* Read in table sizes */
-      DB_READ(dbf, (char *)&DB_REF(Size_ft), sizeof(INT));
+      if ( dbd_read(dbf, (char *)&DB_REF(Size_ft),
+		     sizeof(INT)) != S_OKAY )
+	 return( db_status );
       NTOHS (DB_REF(Size_ft));
-      DB_READ(dbf, (char *)&DB_REF(Size_rt), sizeof(INT));
+      if ( dbd_read(dbf, (char *)&DB_REF(Size_rt),
+		     sizeof(INT)) != S_OKAY )
+	 return( db_status );
       NTOHS (DB_REF(Size_rt));
-      DB_READ(dbf, (char *)&DB_REF(Size_fd), sizeof(INT));
+      if ( dbd_read(dbf, (char *)&DB_REF(Size_fd),
+		     sizeof(INT)) != S_OKAY )
+	 return( db_status );
       NTOHS (DB_REF(Size_fd));
-      DB_READ(dbf, (char *)&DB_REF(Size_st), sizeof(INT));
+      if ( dbd_read(dbf, (char *)&DB_REF(Size_st),
+		     sizeof(INT)) != S_OKAY )
+	 return( db_status );
       NTOHS (DB_REF(Size_st));
-      DB_READ(dbf, (char *)&DB_REF(Size_mt), sizeof(INT));
+      if ( dbd_read(dbf, (char *)&DB_REF(Size_mt),
+		     sizeof(INT)) != S_OKAY )
+	 return( db_status );
       NTOHS (DB_REF(Size_mt));
-      DB_READ(dbf, (char *)&DB_REF(Size_srt), sizeof(INT));
+      if ( dbd_read(dbf, (char *)&DB_REF(Size_srt),
+		     sizeof(INT)) != S_OKAY )
+	 return( db_status );
       NTOHS (DB_REF(Size_srt));
-      DB_READ(dbf, (char *)&DB_REF(Size_kt), sizeof(INT));
+      if ( dbd_read(dbf, (char *)&DB_REF(Size_kt),
+		     sizeof(INT)) != S_OKAY )
+	 return( db_status );
       NTOHS (DB_REF(Size_kt));
       close(dbf);	/* end of PASS 1 */
+      if ( DB_REF(Page_size) < 0 || DB_REF(Size_ft) < 0 ||
+	   DB_REF(Size_rt) < 0 || DB_REF(Size_fd) < 0 ||
+	   DB_REF(Size_st) < 0 || DB_REF(Size_mt) < 0 ||
+	   DB_REF(Size_srt) < 0 || DB_REF(Size_kt) < 0 )
+	 return( dberr(S_INVDB) );
 
 #ifdef DEBUG_INITTAB
       if (debugging_inittab) {
@@ -236,12 +279,12 @@ goodver:
 
       /* form database dictionary name */
       if ( DB_REF(db_path[0]) )
-	 strcpy(dbname, DB_REF(db_path));
+	 memcpy(dbname, DB_REF(db_path), strlen(DB_REF(db_path)) + 1);
       else
 	 dbname[0] = '\0';
-      if (strlen(dbname) + strlen(DB_REF(db_name)) >= FILENMLEN+4)
+      if (strlen(dbname) + strlen(DB_REF(db_name)) >= FILENMLEN)
 	 return( dberr(S_NAMELEN) );
-      strcat(dbname,DB_REF(db_name));
+      memcpy(dbname + strlen(dbname), DB_REF(db_name), strlen(DB_REF(db_name)) + 1);
       if (con_dbd(dbfile,dbname,get_element(dbdpath, dbt_lc)) != S_OKAY)
 	 return( dberr(db_status) );
 #ifdef DEBUG_INITTAB
@@ -255,12 +298,17 @@ goodver:
        * Second pass just loads allocated tables,
        * so opening .dbd file read-only is still ok.
        */
-      dbf = open_b (dbfile, O_RDONLY);
-      DB_LSEEK(dbf, (off_t)(DBD_COMPAT_LEN + 8L*sizeof(INT)), 0);
+      if ( (dbf = open_b(dbfile, O_RDONLY)) < 0 )
+	 return( dberr(S_INVDB) );
+      if ( DB_LSEEK(dbf, (off_t)(DBD_COMPAT_LEN + 8L*sizeof(INT)), 0) < 0 ) {
+	 close(dbf);
+	 return( dberr(S_INVDB) );
+      }
 
       /*----------------- FILE TABLE -------------------*/
-      DB_READ(dbf, (char *)&file_table[ORIGIN(ft_offset)],
-	    (DB_REF(Size_ft)*sizeof(FILE_ENTRY)));
+      if ( dbd_read(dbf, (char *)&file_table[ORIGIN(ft_offset)],
+		     (DB_REF(Size_ft)*sizeof(FILE_ENTRY))) != S_OKAY )
+	 return( db_status );
       /* Invalid if sizeof(xxxx_ENTRY) diff on each machine */
       for (	i = 0, file_ptr = &file_table[ORIGIN(ft_offset)];
 		i < DB_REF(Size_ft);
@@ -270,6 +318,7 @@ goodver:
 	    NTOHS (file_ptr->ft_slsize);
 	    NTOHS (file_ptr->ft_pgsize);
 	    NTOHS (file_ptr->ft_flags);
+	    file_ptr->ft_name[FILENMLEN - 1] = '\0';
 #ifdef DEBUG_INITTAB
 	    if (dump_init_tables) {
 		printf (" FILE#%d: ty=%c slts=%2d slsz=%3d pgsz=%d '%s'\n",
@@ -285,8 +334,9 @@ goodver:
       }
 
       /*----------------- RECORD TABLE -------------------*/
-      DB_READ(dbf, (char *)&record_table[ORIGIN(rt_offset)],
-	   (DB_REF(Size_rt)*sizeof(RECORD_ENTRY)));
+      if ( dbd_read(dbf, (char *)&record_table[ORIGIN(rt_offset)],
+		     (DB_REF(Size_rt)*sizeof(RECORD_ENTRY))) != S_OKAY )
+	 return( db_status );
       for (	i = 0, rec_ptr = &record_table[ORIGIN(rt_offset)];
 		i < DB_REF(Size_rt);
 		i++, rec_ptr++) {
@@ -313,8 +363,9 @@ goodver:
       }
 
       /*----------------- FIELD TABLE -------------------*/
-      DB_READ(dbf, (char *)&field_table[ORIGIN(fd_offset)],
-	   (DB_REF(Size_fd)*sizeof(FIELD_ENTRY)));
+      if ( dbd_read(dbf, (char *)&field_table[ORIGIN(fd_offset)],
+		     (DB_REF(Size_fd)*sizeof(FIELD_ENTRY))) != S_OKAY )
+	 return( db_status );
       for (	i = 0, fld_ptr = &field_table[ORIGIN(fd_offset)];
 		i < DB_REF(Size_fd);
 		i++, fld_ptr++) {
@@ -352,8 +403,9 @@ goodver:
       }
 
       /*----------------- SET TABLE -------------------*/
-      DB_READ(dbf, (char *)&set_table[ORIGIN(st_offset)],
-	   (DB_REF(Size_st)*sizeof(SET_ENTRY)));
+      if ( dbd_read(dbf, (char *)&set_table[ORIGIN(st_offset)],
+		     (DB_REF(Size_st)*sizeof(SET_ENTRY))) != S_OKAY )
+	 return( db_status );
       for (	i = 0, set_ptr = &set_table[ORIGIN(st_offset)];
 		i < DB_REF(Size_st);
 		i++, set_ptr++) {
@@ -380,8 +432,9 @@ goodver:
       }
 
       /*----------------- MEMBER TABLE -------------------*/
-      DB_READ(dbf, (char *)&member_table[ORIGIN(mt_offset)],
-	   (DB_REF(Size_mt)*sizeof(MEMBER_ENTRY)));
+      if ( dbd_read(dbf, (char *)&member_table[ORIGIN(mt_offset)],
+		     (DB_REF(Size_mt)*sizeof(MEMBER_ENTRY))) != S_OKAY )
+	 return( db_status );
       for (	i = 0, mem_ptr = &member_table[ORIGIN(mt_offset)];
 		i < DB_REF(Size_mt);
 		i++, mem_ptr++) {
@@ -405,8 +458,9 @@ goodver:
       }
 
 
-      DB_READ(dbf, (char *)&sort_table[ORIGIN(srt_offset)],
-	   (DB_REF(Size_srt)*sizeof(SORT_ENTRY)));
+      if ( dbd_read(dbf, (char *)&sort_table[ORIGIN(srt_offset)],
+		     (DB_REF(Size_srt)*sizeof(SORT_ENTRY))) != S_OKAY )
+	 return( db_status );
       /* Member sort tables not used by DtSearch @@@ */
       if (DB_REF(Size_srt)) {
     	    /* Byte swap each INT on LITTLE_ENDIAN machines */
@@ -415,8 +469,9 @@ goodver:
 	    NTOHS (srt_ptr->se_set);
       }
 
-      DB_READ(dbf, (char *)&key_table[ORIGIN(kt_offset)],
-	   (DB_REF(Size_kt)*sizeof(KEY_ENTRY)));
+      if ( dbd_read(dbf, (char *)&key_table[ORIGIN(kt_offset)],
+		     (DB_REF(Size_kt)*sizeof(KEY_ENTRY))) != S_OKAY )
+	 return( db_status );
       /* Compound key tables not used by DtSearch @@@ */
       if (DB_REF(Size_kt)) {
 	    /* Byte swap each INT on LITTLE_ENDIAN machines */
@@ -441,18 +496,18 @@ goodver:
 
 	    /* Construct the data/key file name */
 	    if ( DB_REF(db_path[0]) )
-	       strcpy(dbname, DB_REF(db_path));
+	       memcpy(dbname, DB_REF(db_path), strlen(DB_REF(db_path)) + 1);
 	    else
 	       dbname[0] = '\0';
-	    if (strlen(dbname) + strlen(DB_REF(db_name)) >= FILENMLEN+4)
+	    if (strlen(dbname) + strlen(DB_REF(db_name)) >= FILENMLEN)
 	       return( dberr(S_NAMELEN) );
-	    strcat(dbname, DB_REF(db_name));
+	    memcpy(dbname + strlen(dbname), DB_REF(db_name), strlen(DB_REF(db_name)) + 1);
 	    if (con_dbf(dbfile, file_ptr->ft_name, dbname,
 	       get_element(dbfpath, dbt_lc)) != S_OKAY)
 	       return( dberr(db_status) );
 
 	    /* Save new name in dictionary */
-	    strcpy(file_ptr->ft_name, dbfile);
+	    memcpy(file_ptr->ft_name, dbfile, strlen(dbfile) + 1);
 	 } 
       }
 #if   DB_ENABLE | TS_ENABLE

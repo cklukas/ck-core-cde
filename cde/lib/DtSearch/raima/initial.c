@@ -52,6 +52,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <time.h>
+#include <unistd.h>
 #include "vista.h"
 #include "dbtype.h"
 #include "dbswab.h"
@@ -109,6 +110,15 @@ d_initialize(int dbn)
 
 
 
+/* Write one page to a new database file
+*/
+static int write_page(int dbfile, const void *page, size_t pgsize)
+{
+   if ( DB_WRITE(dbfile, page, pgsize) != (ssize_t)pgsize )
+      return( dberr(S_BADWRITE) );
+   return( S_OKAY );
+}
+
 /* Initialize database file
 */
 int
@@ -152,14 +162,17 @@ int dbn
       RETURN( dberr(S_NOFILE) );
    
    page = (INIT_PAGE *)ALLOC(&Page, file_ptr->ft_pgsize, "page");
-   if ( page == nullptr ) RETURN( dberr(S_NOMEMORY) );
+   if ( page == nullptr ) {
+      DB_CLOSE(dbfile);
+      RETURN( dberr(S_NOMEMORY) );
+   }
 
    /*--------- Init PAGE 0 ---------*/
    memset(page, '\0', file_ptr->ft_pgsize);
    /**time(&page->pg0.cdate);***/
    page->pg0.cdate =		extern_timestamp;
-   strcpy(page->pg0.vdb_id,	"db_VISTA Version ");
-   strcat(page->pg0.vdb_id,	db_VERSION);
+   snprintf(page->pg0.vdb_id, sizeof(page->pg0.vdb_id),
+	    "db_VISTA Version %s", db_VERSION);
    page->pg0.bdate =		0;
    if (file_ptr->ft_type == KEY) {
       /*--------- Write KEY FILE PAGE 0 ---------*/
@@ -168,7 +181,8 @@ int dbn
       page->pg0.next =		2;
       HTONL (page->pg0.next);
       page->pg0.timestamp =	0; /* not really used by key file */
-      DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
+      if ( write_page(dbfile, page, file_ptr->ft_pgsize) != S_OKAY )
+	 goto done;
 
       /*--------- Write KEY FILE PAGE 1 ---------*/
       memset(page, '\0', file_ptr->ft_pgsize);
@@ -178,7 +192,8 @@ int dbn
       /* node 1, NONE page pointer */
       addr =			-1;
       memcpy(page->pg1.init_addr, &addr, sizeof(F_ADDR));
-      DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
+      if ( write_page(dbfile, page, file_ptr->ft_pgsize) != S_OKAY )
+	 goto done;
    }
    else {
       /*--------- Init DATA PAGE 0 ---------
@@ -195,7 +210,8 @@ int dbn
 	    /*---Write special DATA FILE PAGE 0 for system record file ---*/
 	    page->pg0.next =	2;
 	    HTONL (page->pg0.next);
-	    DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
+	    if ( write_page(dbfile, page, file_ptr->ft_pgsize) != S_OKAY )
+	 goto done;
 
 	    /*--------- Write DATA FILE PAGE 1 for system record ---------*/
 	    memset(page, '\0', file_ptr->ft_pgsize);
@@ -219,7 +235,8 @@ int dbn
 	       memcpy(page->pg1.init_crts, &ts, sizeof(ULONG));
 	       memcpy(page->pg1.init_upts, &ts, sizeof(ULONG));
 	    }
-	    DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
+	    if ( write_page(dbfile, page, file_ptr->ft_pgsize) != S_OKAY )
+	 goto done;
 	    break;
 	 }
       }
@@ -230,12 +247,16 @@ int dbn
       if (rec == size_rt) {
 	 page->pg0.next =	1;
 	 HTONL (page->pg0.next);
-	 DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
+	 if ( write_page(dbfile, page, file_ptr->ft_pgsize) != S_OKAY )
+	 goto done;
       }
    }
+done:
    /* close database file */
-   DB_CLOSE(dbfile);
-   dio_pzread(fno);  /* re-read file header */
+   if ( DB_CLOSE(dbfile) != 0 && db_status == S_OKAY )
+      dberr(S_BADWRITE);
+   if ( db_status == S_OKAY )
+      dio_pzread(fno);  /* re-read file header */
    MEM_UNLOCK(&Page);
    FREE(&Page);
    RETURN( db_status );

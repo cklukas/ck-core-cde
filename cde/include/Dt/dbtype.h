@@ -386,8 +386,10 @@ typedef struct OBJNAMES_S {
 */
 #ifdef HHS
 #define DIRCHAR '*'
+#define DIRSTR "*"
 #else
 #define DIRCHAR '/'
+#define DIRSTR "/"
 #endif
 
 /* The following define aid in the use of a set of routines which use RMS

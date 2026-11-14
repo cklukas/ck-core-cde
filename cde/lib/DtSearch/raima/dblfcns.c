@@ -193,7 +193,7 @@ int db_txtest = 0;          /* transaction commit failure testing flag */
 /* Open db_VISTA database
 */
 int
-d_open(const char *dbnames, const char *opentype)
+d_open(const char *dbnames, const char *)
 {
    DB_ENTER(NO_DB_ID TASK_ID LOCK_SET(LOCK_ALL));
 #ifdef DEBUG_DBLF
@@ -318,21 +318,24 @@ initdbt(const char *dbnames)
 	--dbt_lc >= 0; 
 	++cp, ++curr_db_table) {
       /* extract database name */
-      for ( i = 0; *cp && *cp != ';'; ++cp, ++i )
+      for ( i = 0; *cp && *cp != ';'; ++cp, ++i ) {
+	 if ( i >= (int)sizeof(dbfile) - 1 ) RETURN( dberr(S_NAMELEN) );
 	 dbfile[i] = *cp;
+      }
       dbfile[i] = '\0';
       if ( (ptr = strrchr(dbfile, DIRCHAR)) == nullptr ) 
 	 ptr = strrchr(dbfile, ':');
       if ( ptr ) {
 	 if ( strlen(ptr+1) >= DBNMLEN ) RETURN( dberr(S_NAMELEN) );
-	 strcpy(DB_REF(db_name), ptr+1);
+	 memcpy(DB_REF(db_name), ptr+1, strlen(ptr+1) + 1);
 	 *(ptr+1) = '\0';
 	 if ( strlen(dbfile) >= PATHLEN ) RETURN( dberr(S_NAMELEN) );
-	 strcpy(DB_REF(db_path), dbfile);
+	 memcpy(DB_REF(db_path), dbfile, strlen(dbfile) + 1);
       }
       else {
-	 strcpy(DB_REF(db_path), "");
-	 strcpy(DB_REF(db_name), dbfile);
+	 if ( strlen(dbfile) >= DBNMLEN ) RETURN( dberr(S_NAMELEN) );
+	 DB_REF(db_path)[0] = '\0';
+	 memcpy(DB_REF(db_name), dbfile, strlen(dbfile) + 1);
       }
    }
    return( db_status = S_OKAY );

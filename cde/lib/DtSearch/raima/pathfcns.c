@@ -107,36 +107,26 @@ char *dbdpath	/* contains one element of the environment variable
 		  to add a DIRCHAR if it isn't in there.
 */
 
-   int i;				/* Trusty loop counter / index */
+   int len;				/* Length of the constructed path */
 
-   /* We stop constructing the string when we find an absolute path */
-   if (isabs(dbname)) {
-      strcpy(path_str,dbname);
-   }
+   /* We stop constructing the string when we find an absolute path.
+      Otherwise dbdpath, if defined, is put in front of the name; it
+      must end with a DIRCHAR or ':' */
+   if (isabs(dbname) || dbdpath == nullptr || dbdpath[0] == '\0')
+      len = snprintf(path_str, FILENMLEN, "%s", dbname);
    else {
-
-      /* See if dbdpath was defined.  Make sure it ends with a DIRCHAR
-	 or ':' */
-      if (dbdpath) {
-	 i = strlen(dbdpath);
-	 if (dbdpath[i-1] != DIRCHAR && dbdpath[i-1] != ':') {
-	    dbdpath[i++] = DIRCHAR;
-	    dbdpath[i]   = '\0';
-	 }
-	 if (i >= FILENMLEN - 4) return (db_status = S_NAMELEN);
-
-	 /*  Now construct the path with dbdpath + dbname */
-	 strcpy(path_str,dbdpath);
-	 if (strlen(path_str) + strlen(remdrv(dbname)) >= FILENMLEN - 4)
-	    return (db_status = S_NAMELEN);
-	 strcat(path_str,remdrv(dbname));
-      }
-      else                           /* dbdpath not defined */
-	 strcpy(path_str,dbname);
+      size_t n = strlen(dbdpath);
+      const char *sep = (dbdpath[n-1] != DIRCHAR && dbdpath[n-1] != ':')
+			? DIRSTR : "";
+      len = snprintf(path_str, FILENMLEN, "%s%s%s", dbdpath, sep,
+		     remdrv(dbname));
    }
+
+   /* Leave room for the .dbd extension */
+   if (len < 0 || len >= FILENMLEN - 4) return (db_status = S_NAMELEN);
 
    /* Now add the .dbd extension */
-   strcat(path_str,".dbd");
+   memcpy(path_str + len, ".dbd", sizeof(".dbd"));
    return (db_status = S_OKAY);
 
 }
@@ -155,11 +145,12 @@ char *dbfpath	/* one element from DBFPATH, or NULL for no path */
    ASSUMES: None.
 */
    char filespec[FILENMLEN];		/* Scratch work space */
-   int i;				/* Trusty loop counter/index */
+   int len;
 
    /* Stop construction when we get to an absolute path.  If we prepend
       then remove the previous drive specifier */
-   strcpy(path_str,dbfile);
+   if (snprintf(path_str, FILENMLEN, "%s", dbfile) >= FILENMLEN)
+      return (db_status = S_NAMELEN);
    if (isabs(dbfile)) return (db_status = S_OKAY);
 
    /* Add only the drive specification and directory component of the
@@ -167,23 +158,24 @@ char *dbfpath	/* one element from DBFPATH, or NULL for no path */
    if ((dbname = remfile(dbname)) != nullptr) {
       if (strlen(path_str) + strlen(dbname) >= FILENMLEN)
 	 return(db_status = S_NAMELEN);
-      strcpy(filespec,dbname);		/* Copy to working space */
-      strcat(filespec,remdrv(path_str));/* Construct dbname + schema */
-      strcpy(path_str,filespec);	/* Place in o/p string */
+      /* Construct dbname + schema and place it in the o/p string */
+      snprintf(filespec, sizeof(filespec), "%s%s", dbname, remdrv(path_str));
+      memcpy(path_str, filespec, strlen(filespec) + 1);
       if (isabs(dbname)) return (db_status = S_OKAY);
    }
 
    /* Now add the path specification from DBFPATH, if defined */
    if (dbfpath == nullptr) return (db_status = S_OKAY);
-   i = strlen(dbfpath);			/* Make sure it ends with DIRCHAR */
-   if (dbfpath[i-1] != DIRCHAR && dbfpath[i-1] != ';') {
-      dbfpath[i++] = DIRCHAR;
-      dbfpath[i]   = '\0';
-   }
-   if (strlen(path_str) + strlen(dbfpath) >= FILENMLEN)
+   len = strlen(dbfpath);		/* Make sure it ends with DIRCHAR */
+   if (len > 0 && dbfpath[len-1] != DIRCHAR && dbfpath[len-1] != ';')
+      len = snprintf(filespec, sizeof(filespec), "%s%s%s", dbfpath, DIRSTR,
+		     remdrv(path_str));
+   else
+      len = snprintf(filespec, sizeof(filespec), "%s%s", dbfpath,
+		     remdrv(path_str));
+   if (len < 0 || len >= (int)sizeof(filespec))
       return (db_status = S_NAMELEN);
-   snprintf(filespec, sizeof(filespec), "%s%s", dbfpath, remdrv(path_str));
-   strcpy(path_str,filespec);
+   memcpy(path_str, filespec, len + 1);
    return (db_status = S_OKAY);
 
 }
@@ -205,13 +197,13 @@ int num			/* Element to extract (0 = first) */
    ASSUMES: dbxpath cannot exceed FILENMLEN chars.
 */
 
-   static char element[FILENMLEN+1];	/* return value */
+   static char element[FILENMLEN+2];	/* return value */
    int i;
    char *save;
 
    if (dbxpath == nullptr) return (nullptr);
    if (dbxpath[0] == '\0') return (nullptr);	/* NULL string? */
-   snprintf(element, sizeof(element), "%s", dbxpath);
+   snprintf(element, FILENMLEN + 1, "%s", dbxpath);
 
    /* If there is only one element, always return that */
    if (strchr(element,';') == nullptr) {
@@ -230,7 +222,7 @@ int num			/* Element to extract (0 = first) */
    dbxpath++;
    if ((save = strchr(dbxpath+1,';')) != nullptr) *save = '\0';
    i = (dbxpath - (char *)element) + strlen((const char *)dbxpath);
-   if (element[i-1] != DIRCHAR && element[i-1] != ':') {
+   if (i > 0 && element[i-1] != DIRCHAR && element[i-1] != ':') {
       element[i++] = DIRCHAR;
       element[i] = '\0';
    }
@@ -311,16 +303,12 @@ int d_ctbpath(const char *ctb)
    if ( dbopen )
       dberr(S_DBOPEN);
    else {
-      strncpy(db_global.ctbpath, ctb, FILENMLEN - 1);
-      db_global.ctbpath[FILENMLEN - 1] = '\0';
-      if ( db_global.ctbpath[0] ) {
-	 i = strlen(db_global.ctbpath);
-	 if ( db_global.ctbpath[i-1] != DIRCHAR &&
-	    db_global.ctbpath[i-1] != ':' ) {
-	    db_global.ctbpath[i++] = DIRCHAR;
-	    db_global.ctbpath[i] = '\0';
-	 }
-	 if ( i >= FILENMLEN-1 ) RETURN( dberr(S_NAMELEN) );
+      i = strlen(ctb);
+      if ( i >= FILENMLEN - 1 ) RETURN( dberr(S_NAMELEN) );
+      memcpy(db_global.ctbpath, ctb, i + 1);
+      if ( i > 0 && ctb[i-1] != DIRCHAR && ctb[i-1] != ':' ) {
+	 db_global.ctbpath[i++] = DIRCHAR;
+	 db_global.ctbpath[i] = '\0';
       }
 
       db_status = S_OKAY;
