@@ -29,6 +29,7 @@
  */
 
 
+#include <Dt/DtSigP.h>
 #include  <sys/types.h>
 #include  <stdio.h>
 #include  <stdlib.h>
@@ -1150,7 +1151,7 @@ fatal_err_msg(int er_no, char *prog_name)
 
 
 
-static	int	sig_flg=0;
+static	volatile sig_atomic_t	sig_flg = 0;
 
 #define	GPF_BUCK_UP_FAIL	1
 #define	GPF_MODIFY_FAIL		2
@@ -1158,8 +1159,9 @@ static	int	sig_flg=0;
 #define	CATCH_SIGNAL		10
 
 void
-ChatchSig(void)
+ChatchSig(int sig)
 {
+	(void) sig;
 	sig_flg = 1;
 }
 
@@ -1212,17 +1214,10 @@ Make_NewFefFile(
 	int		msg_level;
 	int		rtn ;
 
-#ifndef SVR4
-	signal( SIGHUP , (void(*)())ChatchSig);
-	signal( SIGINT , (void(*)())ChatchSig);
-	signal( SIGQUIT, (void(*)())ChatchSig);
-	signal( SIGTERM, (void(*)())ChatchSig);
-#else
-	sigset( SIGHUP , (void(*)())ChatchSig);
-	sigset( SIGINT , (void(*)())ChatchSig);
-	sigset( SIGQUIT, (void(*)())ChatchSig);
-	sigset( SIGTERM, (void(*)())ChatchSig);
-#endif
+	_DtSignal(SIGHUP, ChatchSig);
+	_DtSignal(SIGINT, ChatchSig);
+	_DtSignal(SIGQUIT, ChatchSig);
+	_DtSignal(SIGTERM, ChatchSig);
 
 	errno = 0;
 	if (sig_flg || ((save_name = GetTmpPath( org_name )) == nullptr)) {
