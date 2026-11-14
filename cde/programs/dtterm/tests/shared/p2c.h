@@ -68,15 +68,7 @@
 #endif
 
 
-#ifdef BSD
-# include <strings.h>
-# define memcpy(a,b,n) (bcopy(b,a,n),a)
-# define memcmp(a,b,n) bcmp(a,b,n)
-# define strchr(s,c) index(s,c)
-# define strrchr(s,c) rindex(s,c)
-#else
-# include <string.h>
-#endif
+#include <string.h>
 
 #include <ctype.h>
 #include <math.h>
