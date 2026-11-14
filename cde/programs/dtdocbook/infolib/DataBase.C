@@ -188,7 +188,9 @@ void DBTable::insert(int typecode, ...)
 	const char *str = va_arg(ap, const char*);
 	size_t len = va_arg(ap, size_t);
 	fprintf(out, "%d\n%ld\t", STRING_CODE, (long)len );
-	fwrite ( str, len, 1, out );
+	if ( len > 0 ) {
+	  fwrite ( str, len, 1, out );
+	}
 	fputc( '\n', out);
       }
       break;
@@ -355,7 +357,9 @@ void DBTable::insert_untagged(int typecode, ...)
 	const char *str = va_arg(ap, const char*);
 	size_t len = va_arg(ap, size_t);
 	fprintf(out, "%ld\t", (long)len );
-	fwrite ( str, len, 1, out );
+	if ( len > 0 ) {
+	  fwrite ( str, len, 1, out );
+	}
 	fputc( '\n', out);
       }
       break;

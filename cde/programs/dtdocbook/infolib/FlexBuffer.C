@@ -62,7 +62,9 @@ void
 FlexBuffer::write(const char *d, size_t n)
 {
   grow(pos + n);
-  memcpy(HeadPtr + pos, d, n);
+  if ( n > 0 ) {
+    memcpy(HeadPtr + pos, d, n);
+  }
   pos += n;
 }
 
@@ -72,7 +74,9 @@ FlexBuffer::writeStr(const char *str )
 {
   size_t n = strlen(str);
   grow( pos + n );
-  memcpy ( HeadPtr + pos, str, n );
+  if ( n > 0 ) {
+    memcpy ( HeadPtr + pos, str, n );
+  }
   pos += n;
 }
 
@@ -82,7 +86,9 @@ FlexBuffer::operator+( FlexBuffer & fb )
 {
 
   grow( pos + fb.GetSize() );
-  memcpy(HeadPtr + pos , fb.HeadPtr, fb.GetSize() );
+  if ( fb.GetSize() > 0 ) {
+    memcpy(HeadPtr + pos , fb.HeadPtr, fb.GetSize() );
+  }
   pos += fb.GetSize();
   return ( *this );
 }

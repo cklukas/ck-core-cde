@@ -78,7 +78,7 @@ void StringList::add(char *str)
 void StringList::reset()
 {
   for(size_t i = 0; i < used; i++){
-    delete items[i]; 
+    delete [] items[i]; 
     items[i] = 0;     /* This is to prevent the item[i] from being deleted
                        * again, ie free memory freed.
                        */
