@@ -27,6 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdckdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -210,14 +211,17 @@ file_read(const struct placefile *pf, int fd, const char *name, bool toplevel)
 			}
 			if (bufend >= bufmax) {
 				/* need bigger buffer */
-				buf = dorealloc(buf, bufmax, bufmax*2);
-				bufmax = bufmax*2;
+				size_t newmax;
+
 				/* just in case someone's screwing around */
-				if (bufmax > 0xffffffff) {
+				if (ckd_mul(&newmax, bufmax, (size_t)2) ||
+				    newmax > 0xffffffff) {
 					complain(&places.current,
 						 "Input line too long");
 					die();
 				}
+				buf = dorealloc(buf, bufmax, newmax);
+				bufmax = newmax;
 			}
 
 			if (ateof) {
@@ -317,7 +321,7 @@ static
 char *
 mkfilename(struct place *place, const char *dir, const char *file)
 {
-	size_t dlen, flen, rlen;
+	size_t dlen, flen, rlen, pos;
 	char *ret;
 	bool needslash = false;
 
@@ -331,13 +335,18 @@ mkfilename(struct place *place, const char *dir, const char *file)
 		needslash = true;
 	}
 
-	rlen = dlen + (needslash ? 1 : 0) + flen;
-	ret = domalloc(rlen + 1);
-	strcpy(ret, dir);
-	if (needslash) {
-		strcat(ret, "/");
+	if (ckd_add(&rlen, dlen, flen) ||
+	    ckd_add(&rlen, rlen, (size_t)(needslash ? 2 : 1))) {
+		complain(nullptr, "Out of memory");
+		die();
 	}
-	strcat(ret, file);
+	ret = domalloc(rlen);
+	memcpy(ret, dir, dlen);
+	pos = dlen;
+	if (needslash) {
+		ret[pos++] = '/';
+	}
+	memcpy(ret + pos, file, flen + 1);
 	return ret;
 }
 

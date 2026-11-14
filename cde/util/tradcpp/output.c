@@ -27,6 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdckdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -160,15 +161,22 @@ filter_output(const char *buf, size_t len)
 void
 output(const struct place *p, const char *buf, size_t len)
 {
-	size_t oldmax;
+	size_t oldmax, needed;
 
-	if (linebufpos + len > linebufmax) {
+	if (ckd_add(&needed, linebufpos, len)) {
+		complain(nullptr, "Out of memory");
+		die();
+	}
+	if (needed > linebufmax) {
 		oldmax = linebufmax;
 		if (linebufmax == 0) {
 			linebufmax = 64;
 		}
-		while (linebufpos + len > linebufmax) {
-			linebufmax *= 2;
+		while (needed > linebufmax) {
+			if (ckd_mul(&linebufmax, linebufmax, (size_t)2)) {
+				complain(nullptr, "Out of memory");
+				die();
+			}
 		}
 		linebuf = dorealloc(linebuf, oldmax, linebufmax);
 	}

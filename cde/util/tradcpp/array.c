@@ -27,8 +27,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdckdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #define ARRAYINLINE
 #include "array.h"
@@ -71,15 +73,24 @@ void
 array_setsize(struct array *a, unsigned num)
 {
 	unsigned newmax;
+	size_t oldsize, newsize;
 	void **newptr;
 
 	if (num > a->max) {
 		newmax = a->max;
 		while (num > newmax) {
+			if (newmax > UINT_MAX / 2) {
+				complain(nullptr, "Out of memory");
+				die();
+			}
 			newmax = newmax ? newmax*2 : 4;
 		}
-		newptr = dorealloc(a->v, a->max * sizeof(a->v[0]),
-				   newmax * sizeof(a->v[0]));
+		if (ckd_mul(&newsize, (size_t)newmax, sizeof(a->v[0]))) {
+			complain(nullptr, "Out of memory");
+			die();
+		}
+		oldsize = (size_t)a->max * sizeof(a->v[0]);
+		newptr = dorealloc(a->v, oldsize, newsize);
 		a->v = newptr;
 		a->max = newmax;
 	}

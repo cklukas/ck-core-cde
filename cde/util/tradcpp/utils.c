@@ -27,6 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdckdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -162,6 +163,23 @@ dofree(void *ptr, size_t len)
 ////////////////////////////////////////////////////////////
 // string allocators
 
+/*
+ * Size of the buffer needed for a string of the given length, including
+ * the terminating NUL.  Dies if the size does not fit in size_t.
+ */
+static
+size_t
+strbufsize(size_t len)
+{
+	size_t size;
+
+	if (ckd_add(&size, len, (size_t)1)) {
+		complain(nullptr, "Out of memory");
+		die();
+	}
+	return size;
+}
+
 char *
 dostrdup(const char *s)
 {
@@ -169,8 +187,8 @@ dostrdup(const char *s)
 	size_t len;
 
 	len = strlen(s);
-	ret = domalloc(len+1);
-	strcpy(ret, s);
+	ret = domalloc(strbufsize(len));
+	memcpy(ret, s, len + 1);
 	return ret;
 }
 
@@ -178,12 +196,17 @@ char *
 dostrdup2(const char *s, const char *t)
 {
 	char *ret;
-	size_t len;
+	size_t slen, tlen, len;
 
-	len = strlen(s) + strlen(t);
-	ret = domalloc(len+1);
-	strcpy(ret, s);
-	strcat(ret, t);
+	slen = strlen(s);
+	tlen = strlen(t);
+	if (ckd_add(&len, slen, tlen)) {
+		complain(nullptr, "Out of memory");
+		die();
+	}
+	ret = domalloc(strbufsize(len));
+	memcpy(ret, s, slen);
+	memcpy(ret + slen, t, tlen + 1);
 	return ret;
 }
 
@@ -191,13 +214,19 @@ char *
 dostrdup3(const char *s, const char *t, const char *u)
 {
 	char *ret;
-	size_t len;
+	size_t slen, tlen, ulen, len;
 
-	len = strlen(s) + strlen(t) + strlen(u);
-	ret = domalloc(len+1);
-	strcpy(ret, s);
-	strcat(ret, t);
-	strcat(ret, u);
+	slen = strlen(s);
+	tlen = strlen(t);
+	ulen = strlen(u);
+	if (ckd_add(&len, slen, tlen) || ckd_add(&len, len, ulen)) {
+		complain(nullptr, "Out of memory");
+		die();
+	}
+	ret = domalloc(strbufsize(len));
+	memcpy(ret, s, slen);
+	memcpy(ret + slen, t, tlen);
+	memcpy(ret + slen + tlen, u, ulen + 1);
 	return ret;
 }
 
@@ -206,7 +235,7 @@ dostrndup(const char *s, size_t len)
 {
 	char *ret;
 
-	ret = domalloc(len+1);
+	ret = domalloc(strbufsize(len));
 	memcpy(ret, s, len);
 	ret[len] = '\0';
 	return ret;

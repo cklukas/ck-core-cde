@@ -27,6 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdckdint.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -725,21 +726,54 @@ expstate_destroyargs(struct expstate *es)
 	stringarray_setsize(&es->args, 0);
 }
 
+/*
+ * Copy a string without its terminating NUL; returns its length.
+ */
+static
+size_t
+copystr(char *dst, const char *src)
+{
+	size_t len;
+
+	len = strlen(src);
+	memcpy(dst, src, len);
+	return len;
+}
+
+/*
+ * Add n to a buffer size, dying if the sum does not fit in size_t.
+ */
+static
+void
+addlen(size_t *total, size_t n)
+{
+	if (ckd_add(total, *total, n)) {
+		complain(nullptr, "Out of memory");
+		die();
+	}
+}
+
 static
 void
 expand_send(struct expstate *es, struct place *p, const char *buf, size_t len)
 {
-	size_t oldmax;
+	size_t oldmax, needed;
 
 	if (es->tobuf) {
 		assert(es->bufpos <= es->bufmax);
-		if (es->bufpos + len > es->bufmax) {
+		needed = es->bufpos;
+		addlen(&needed, len);
+		if (needed > es->bufmax) {
 			oldmax = es->bufmax;
 			if (es->bufmax == 0) {
 				es->bufmax = 64;
 			}
-			while (es->bufpos + len > es->bufmax) {
-				es->bufmax *= 2;
+			while (needed > es->bufmax) {
+				if (ckd_mul(&es->bufmax, es->bufmax,
+					    (size_t)2)) {
+					complain(nullptr, "Out of memory");
+					die();
+				}
 			}
 			es->buf = dorealloc(es->buf, oldmax, es->bufmax);
 		}
@@ -779,14 +813,17 @@ expand_appendarg(struct expstate *es, const char *buf, size_t len)
 {
 	unsigned num;
 	char *text;
-	size_t oldlen;
+	size_t oldlen, newlen;
 
 	num = stringarray_num(&es->args);
 	assert(num > 0);
 
 	text = stringarray_get(&es->args, num - 1);
 	oldlen = strlen(text);
-	text = dorealloc(text, oldlen + 1, oldlen + len + 1);
+	newlen = oldlen;
+	addlen(&newlen, len);
+	addlen(&newlen, 1);
+	text = dorealloc(text, oldlen + 1, newlen);
 	memcpy(text + oldlen, buf, len);
 	text[oldlen+len] = '\0';
 	stringarray_set(&es->args, num - 1, text);
@@ -798,7 +835,7 @@ expand_substitute(struct place *p, struct expstate *es)
 {
 	struct expansionitem *ei;
 	unsigned i, num;
-	size_t len;
+	size_t len, pos;
 	char *arg;
 	char *ret;
 	unsigned numargs, numparams;
@@ -829,44 +866,49 @@ expand_substitute(struct place *p, struct expstate *es)
 		ei = expansionitemarray_get(&es->curmacro->expansion, i);
 		switch (ei->itemtype) {
 		    case EI_STRING:
-			len += strlen(ei->ei_string);
+			addlen(&len, strlen(ei->ei_string));
 			break;
 		    case EI_PARAM:
 			arg = stringarray_get(&es->args, ei->ei_param);
-			len += strlen(arg);
+			addlen(&len, strlen(arg));
 			break;
 		    case EI_FILE:
-			len += strlen(place_getname(p)) + 2;
+			addlen(&len, strlen(place_getname(p)));
+			addlen(&len, 2);
 			break;
 		    case EI_LINE:
-			len += snprintf(numbuf, sizeof(numbuf), "%u", p->line);
+			addlen(&len, (size_t)snprintf(numbuf, sizeof(numbuf),
+						      "%u", p->line));
 			break;
 		}
 	}
+	addlen(&len, 1);
 
-	ret = domalloc(len+1);
-	*ret = '\0';
+	ret = domalloc(len);
+	pos = 0;
 	for (i=0; i<num; i++) {
 		ei = expansionitemarray_get(&es->curmacro->expansion, i);
 		switch (ei->itemtype) {
 		    case EI_STRING:
-			strcat(ret, ei->ei_string);
+			pos += copystr(ret + pos, ei->ei_string);
 			break;
 		    case EI_PARAM:
 			arg = stringarray_get(&es->args, ei->ei_param);
-			strcat(ret, arg);
+			pos += copystr(ret + pos, arg);
 			break;
 		    case EI_FILE:
-			strcat(ret, "\"");
-			strcat(ret, place_getname(p));
-			strcat(ret, "\"");
+			ret[pos++] = '"';
+			pos += copystr(ret + pos, place_getname(p));
+			ret[pos++] = '"';
 			break;
 		    case EI_LINE:
-			snprintf(numbuf, sizeof(numbuf), "%u", p->line);
-			strcat(ret, numbuf);
+			pos += (size_t)snprintf(ret + pos, len - pos, "%u",
+						p->line);
 			break;
 		}
 	}
+	ret[pos] = '\0';
+	assert(pos + 1 == len);
 
 	return ret;
 }
