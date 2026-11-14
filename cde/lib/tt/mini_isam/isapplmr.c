@@ -86,7 +86,8 @@ _isapplmr(int isfd, char *buffer)
     }
 
     _isseekpg(fcb->datfd, ISCNTLPGOFF);
-    (void)read(fcb->datfd, cntl_page, sizeof(cntl_page));
+    if (read(fcb->datfd, cntl_page, sizeof(cntl_page)) != (ssize_t)sizeof(cntl_page))
+	_isfatal_error("read failed");
     strncpy(buffer, cntl_page + CP_APPLMAGIC_OFF, CP_APPLMAGIC_LEN);
 
     _amseterrcode(&fab->errcode, ISOK);

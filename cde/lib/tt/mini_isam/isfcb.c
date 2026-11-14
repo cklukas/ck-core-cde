@@ -53,6 +53,19 @@ Static int _open_indfile(char *isfname, Bool rdonly);
 Static int _open_varfile(char *isfname, Bool rdonly);
 
 /*
+ * Give the file the owner and group of the requesting client.
+ * Only a privileged process (the netisamd daemon) may do that; any other
+ * process keeps its own ownership, so a failure is not an error.
+ */
+static void
+_set_file_owner(int fd, uid_t owner, gid_t group)
+{
+    if (fchown(fd, owner, group) < 0) {
+	/* Unprivileged caller: the file stays owned by the caller. */
+    }
+}
+
+/*
  * _isfcb_create(isfname, crdat, crind, crvar, owner, group, u_mask, errcode)
  *
  * Create ISAM file: create UNIX files (dat/ind/var), 
@@ -105,11 +118,11 @@ _isfcb_create(char *isfname, int crdat, int crind, int crvar,
      * This has affect only when executed by the netisamd daemon.
      */
     if (dat_fd != -1)
-	(void) fchown(dat_fd, owner, group);
+	_set_file_owner(dat_fd, owner, group);
     if (ind_fd != -1)
-	(void) fchown(ind_fd, owner, group);
+	_set_file_owner(ind_fd, owner, group);
     if (var_fd != -1)
-	(void) fchown(var_fd, owner, group);
+	_set_file_owner(var_fd, owner, group);
 
     /*
      * Allocate File Control Block.
@@ -406,7 +419,8 @@ _isfcb_cntlpg_w2(Fcb *fcb)
      * Read the page from disk.
      */
     _isseekpg(dat_fd, ISCNTLPGOFF);
-    (void)read(dat_fd, cntl_page, sizeof(cntl_page));
+    if (read(dat_fd, cntl_page, sizeof(cntl_page)) != (ssize_t)sizeof(cntl_page))
+	_isfatal_error("read failed");
 
     /* .rec file size in blocks. */
     stlong((long)fcb->datsize, cntl_page + CP_DATSIZE_OFF);
@@ -441,7 +455,8 @@ _isfcb_cntlpg_w2(Fcb *fcb)
      * Write the buffer to the disk.
      */
     _isseekpg(dat_fd, ISCNTLPGOFF);
-    (void)write(dat_fd, cntl_page, sizeof(cntl_page));
+    if (write(dat_fd, cntl_page, sizeof(cntl_page)) != (ssize_t)sizeof(cntl_page))
+	_isfatal_error("write failed");
 
     return (ISOK);
 }
@@ -565,7 +580,8 @@ _isfcb_cntlpg_r2(Fcb *fcb)
      * Read the page from disk.
      */
     _isseekpg(dat_fd, ISCNTLPGOFF);
-    (void)read(dat_fd, cntl_page, sizeof(cntl_page));
+    if (read(dat_fd, cntl_page, sizeof(cntl_page)) != (ssize_t)sizeof(cntl_page))
+	_isfatal_error("read failed");
 
     /*
      * Check changestamp1. If the stamp has changed, we must read the entire
@@ -901,7 +917,7 @@ _open2_indfile(Fcb *fcb)
 
     if (fcb->indfd != -1) {
 	(void) _watchfd_incr(1);
-	(void)fchown(fcb->indfd, buf.st_uid, buf.st_gid);
+	_set_file_owner(fcb->indfd, buf.st_uid, buf.st_gid);
     }
 
     return ((fcb->indfd == -1) ? ISERROR : ISOK);

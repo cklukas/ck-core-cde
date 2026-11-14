@@ -96,10 +96,12 @@ _isapplmw(int isfd, char *magicstring)
     /* Write the new data */
     
     _isseekpg(fcb->datfd, ISCNTLPGOFF);
-    (void)read(fcb->datfd, cntl_page, sizeof(cntl_page));
+    if (read(fcb->datfd, cntl_page, sizeof(cntl_page)) != (ssize_t)sizeof(cntl_page))
+	_isfatal_error("read failed");
     strncpy(cntl_page + CP_APPLMAGIC_OFF, magicstring, CP_APPLMAGIC_LEN);
     _isseekpg(fcb->datfd, ISCNTLPGOFF);
-    (void)write(fcb->datfd, cntl_page, sizeof(cntl_page));
+    if (write(fcb->datfd, cntl_page, sizeof(cntl_page)) != (ssize_t)sizeof(cntl_page))
+	_isfatal_error("write failed");
 
     _amseterrcode(&fab->errcode, ISOK);
     _isam_exithook();
