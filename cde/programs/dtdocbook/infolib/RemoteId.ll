@@ -91,7 +91,7 @@ static char *current_file_name;
 		  }
 
 		  // cleanup and reset
-		  delete current_file_name; current_file_name = 0;
+		  free(current_file_name); current_file_name = 0;
 		  idref_buffer->reset();
 
 		  NodeBuffer->writeStr("</#OL-IDREF>");
