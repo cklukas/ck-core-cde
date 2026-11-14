@@ -115,7 +115,8 @@ void            gen_vec (char *fname_huffcode_tab)
      * it separately. First token on first line is hufid. Save it
      * in a global for optional use by caller. 
      */
-    fgets (tab_filebuf, sizeof (tab_filebuf) - 1, tab_stream);
+    if (fgets (tab_filebuf, sizeof (tab_filebuf) - 1, tab_stream) == nullptr)
+	tab_filebuf[0] = '\0';	/* empty file: no time stamp, no codes */
     gen_vec_hufid = atol (tab_filebuf);
 
     /*-------------- READ IN HUFFMAN FILE ------------*/

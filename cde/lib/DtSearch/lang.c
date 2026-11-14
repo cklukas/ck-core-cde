@@ -287,7 +287,11 @@ done:
 static char *euro_wctomb (int c, char *outp, int len)
 {
     wchar_t wc = c & 0xFF;
-    if (len > 1) wctomb (outp, wc);
+    if (len > 1) {
+	if (wctomb (outp, wc) < 0) {
+	    /* No multibyte form: the bytes already read stay in place. */
+	}
+    }
     else *outp = wc;
     return outp + len;
 }
@@ -1664,7 +1668,9 @@ static char	*euro_lstrupr (char *string, DBLK *dblk)
     for (s = string;  *s;  s++) {
 	len = euro_mbtowc (&wc, s, string);
 	*s = charmap[wc] & 0xFF;
-	if (len > 1) wctomb (s - 1, *s);
+	if (len > 1 && wctomb (s - 1, *s) < 0) {
+	    /* No multibyte form: the single-byte value stays. */
+	}
     }
     return string;
 }

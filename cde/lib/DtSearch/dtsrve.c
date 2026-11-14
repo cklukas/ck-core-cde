@@ -458,7 +458,8 @@ int             ve_append_notes (void)
 	    DtSearchAddMessage (mybuf);
 	    return OE_TIMEOUT;
 	}
-	fread (mybuf, 1, 1, semaphore_file);
+	if (fread (mybuf, 1, 1, semaphore_file) != 1)
+	    *mybuf = '\0';	/* unreadable counts as not available */
 
 	/*
 	 * If semaphore is available, grab it and enter critical
