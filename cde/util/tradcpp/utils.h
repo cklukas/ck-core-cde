@@ -28,7 +28,6 @@
  */
 
 #include <stddef.h>
-#include "bool.h"
 
 struct place;
 

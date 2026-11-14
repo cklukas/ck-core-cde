@@ -30,7 +30,6 @@
 #ifndef PLACE_H
 #define PLACE_H
 
-#include "bool.h"
 
 enum places {
 	P_NOWHERE,

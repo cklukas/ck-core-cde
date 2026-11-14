@@ -27,6 +27,5 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "bool.h"
 
 bool eval(struct place *p, char *expr);

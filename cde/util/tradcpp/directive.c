@@ -33,7 +33,6 @@
 #include <limits.h>
 #include <errno.h>
 
-#include "bool.h"
 #include "utils.h"
 #include "mode.h"
 #include "place.h"

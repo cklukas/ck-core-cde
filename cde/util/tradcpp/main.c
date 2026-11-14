@@ -33,7 +33,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include "bool.h"
 #include "version.h"
 #include "config.h"
 #include "utils.h"

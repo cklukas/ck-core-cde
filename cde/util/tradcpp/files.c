@@ -34,7 +34,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "bool.h"
 #include "array.h"
 #include "mode.h"
 #include "place.h"
@@ -124,7 +123,7 @@ size_t
 findeol(const char *buf, size_t start, size_t limit)
 {
 	size_t i;
-	int incomment = 0;
+	bool incomment = false;
 	bool inquote = false;
 	char quote = '\0';
 
@@ -132,12 +131,12 @@ findeol(const char *buf, size_t start, size_t limit)
 		if (incomment) {
 			if (i+1 < limit && buf[i] == '*' && buf[i+1] == '/') {
 				i++;
-				incomment = 0;
+				incomment = false;
 			}
 		} else if (!inquote && i+1 < limit &&
 			   buf[i] == '/' && buf[i+1] == '*') {
 			i++;
-			incomment = 1;
+			incomment = true;
 		} else if (i+1 < limit &&
 			   buf[i] == '\\' && buf[i+1] != '\n') {
 			i++;

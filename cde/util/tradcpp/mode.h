@@ -27,7 +27,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "bool.h"
 
 struct mode {
 	bool werror;
