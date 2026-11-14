@@ -103,7 +103,7 @@ void quit_MMDB()
    delete data_t::larson_convertor_ptr;
    delete data_t::pearson_convertor_ptr;
 
-   delete ostring::input_buf;
+   delete [] ostring::input_buf;
 
    delete page_storage::f_global_pcache_ptr;
 
