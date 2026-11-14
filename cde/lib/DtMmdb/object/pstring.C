@@ -205,10 +205,10 @@ Boolean pstring::value_LS(root& x, Boolean safe) const
        ok = false;
 
     if ( get_mode(PERSISTENT) == true )
-       delete this_v_str_ptr;
+       delete [] this_v_str_ptr;
 
     if ( casted_x.get_mode(PERSISTENT) == true )
-       delete x_v_str_ptr;
+       delete [] x_v_str_ptr;
 
     return ok;
 }
@@ -248,10 +248,10 @@ Boolean pstring::value_EQ(root& x, Boolean safe) const
    ok = ( memcmp(this_v_str_ptr, x_v_str_ptr, v_sz) == 0 ) ? true : false;
 
    if ( get_mode(PERSISTENT) == true )
-      delete this_v_str_ptr;
+      delete [] this_v_str_ptr;
 
    if ( casted_x.get_mode(PERSISTENT) == true )
-      delete x_v_str_ptr;
+      delete [] x_v_str_ptr;
 
     return ok;
 }

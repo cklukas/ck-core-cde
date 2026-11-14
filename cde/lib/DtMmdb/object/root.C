@@ -235,7 +235,7 @@ ostream& root::memory_layout(root* rt, ostream& out)
 
 void* root::heap_alloc( size_t sz )
 {
-   return (void*) new char[sz];
+   return ::operator new(sz);
 }
 
 
