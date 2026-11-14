@@ -35,6 +35,7 @@
 char	*ProgramRevision = "dtimsstart $Revision: /main/10 $";
 
 #define	_EXTERN_DEFINE_
+#include <Dt/DtSigP.h>
 #include	"xims.h"
 #undef	_EXTERN_DEFINE_
 
@@ -103,10 +104,10 @@ int main (int argc, char **argv)
 #endif
 
     /* set signal handler */
-    if (signal(SIGINT, SIG_IGN) != SIG_IGN)	signal(SIGINT, sigExit);
-    signal(SIGTERM, sigExit);
-    signal(SIGHUP, sigExit);
-    signal(SIGQUIT, sigExit);
+    if (_DtSignal(SIGINT, SIG_IGN) != SIG_IGN)	_DtSignal(SIGINT, sigExit);
+    _DtSignal(SIGTERM, sigExit);
+    _DtSignal(SIGHUP, sigExit);
+    _DtSignal(SIGQUIT, sigExit);
     ximsHandleDeferredSignals();	/* one that came in before */
 
 	/* create $HOME/.xims if needed */
