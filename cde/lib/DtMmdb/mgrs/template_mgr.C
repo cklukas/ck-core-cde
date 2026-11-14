@@ -124,7 +124,7 @@ template_mgr_t::template_mgr_t() : v_template_objs(32801, 20)
 template_mgr_t::~template_mgr_t()
 {
    for ( int i=0; i<TEMP_OBJ_NUMS; i++ ) {
-      ::delete template_obj_table[i];
+      delete template_obj_table[i];
    }
 
 #ifdef C_API
