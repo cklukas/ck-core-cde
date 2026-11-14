@@ -148,19 +148,16 @@ Boolean spointer_t::get_mode(spointer_mode m)
 }
 
    
-static int align_offset;
 
 page::page(int buf_sz, int pid,  Boolean swap_order) : 
     buffer( buf_sz ),  pageid(pid), dirty(false), num_locks(0), 
     v_swap_order(swap_order)
 {
-   v_memalign_offset = align_offset;
    clean_all();
 }
 
 page::~page()
 {
-   align_offset = v_memalign_offset;
 }
 
 
@@ -613,23 +610,12 @@ ostream& operator<<(ostream&s, page& p)
 
 void* page::operator new( size_t sz )
 {
-   int alignment_overhead = sizeof(char*);
-
-   char* p = ::new char[alignment_overhead+sz];
-
-   if ( p ) {
-       align_offset = int(alignment_overhead - long(p) % alignment_overhead);
-       return (void*)(p + align_offset);
-   } else {
-      MESSAGE(cerr, "page::new() memalign call failed");
-      throw(systemException(errno));
-   }
+   return ::operator new(sz);
 }
 
 void page::operator delete( void* p, size_t )
 {
-   if ( p ) 
-      free((char*)((char*)p - align_offset));
+   ::operator delete(p);
 }
 
 /*

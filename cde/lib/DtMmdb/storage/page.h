@@ -134,7 +134,6 @@ protected:
    unsigned int pageid ;   // page id
    Boolean dirty ;         // = false: page has not been written;
    int num_locks;          // no. of locks
-   int v_memalign_offset;  // align offset of the memory
                            // chunk for this page
 
    Boolean v_swap_order;
