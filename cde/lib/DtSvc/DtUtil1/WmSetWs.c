@@ -91,7 +91,7 @@ DtWsmSetCurrentWorkspace (
     _DtSvcWidgetToAppContext(widget);
 
     _DtSvcAppLock(app);
-    sprintf (pch, "0x%lx", aWs);
+    snprintf (pch, sizeof pch, "0x%lx", aWs);
     pStr[0] = (String) &pch[0];
     pStr[1] = nullptr;
     msg = tttk_message_create(0, TT_REQUEST, TT_SESSION, 0,

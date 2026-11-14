@@ -53,7 +53,7 @@
 
 
 static char * errno_string( 
-                        unsigned int errn, char *buff) ;
+                        unsigned int errn, char *buff, size_t size) ;
 static void log_message( 
                         char *progName,
                         char *help,
@@ -64,7 +64,7 @@ static void log_message(
 
 static char * 
 errno_string(
-        unsigned int errn, char *buff)
+        unsigned int errn, char *buff, size_t size)
 {
     char * s;
     
@@ -117,9 +117,9 @@ errno_string(
     }
     
     if (s)
-	sprintf(buff, "%s (%d)",s,errn);
+	snprintf(buff, size, "%s (%d)",s,errn);
     else
-	sprintf(buff, "(%d)",errn);
+	snprintf(buff, size, "(%d)",errn);
     
     return (buff);
 }
@@ -142,11 +142,6 @@ log_message(
    DtMsgLogType 	msg_type;
    char                 buff[40];
    
-   (void) strcpy (format, "%s");
-
-   if (help)
-      (void) strcat (format, "\n  %s");
-
    if (errnoset) {
       unsigned int	errn;
 
@@ -155,7 +150,7 @@ log_message(
       else
 	 errn = errnoset;		/* No, not the magic value, use parm */
 
-      errname = errno_string(errn, buff);
+      errname = errno_string(errn, buff, sizeof buff);
 
       if (!(errmsg = strerror(errn)))
  	 errmsg = "unknown";
@@ -178,8 +173,8 @@ log_message(
 		msg_type = DtMsgLogError;
    }
 
-   if (errmsg)
-      (void) strcat (format, "\n  [%s] %s");
+   (void) snprintf (format, sizeof format, "%%s%s%s",
+		    help ? "\n  %s" : "", errmsg ? "\n  [%s] %s" : "");
 
    if (help) {
       if (errmsg)

@@ -87,7 +87,7 @@ _DtPerfChkpntListenInit(Display *display, Window parentwin)
 	    Atom aProperty;
 	    char   propname[80];	/* Temp buffer for property name */
 
-	    sprintf(propname, "%s_%x", DT_PERF_CLIENT_CHKPNT_PROP, 0);
+	    snprintf(propname, sizeof propname, "%s_%x", DT_PERF_CLIENT_CHKPNT_PROP, 0);
 	    aProperty  = XInternAtom(dtsvc_info.display, propname,False);
 	    XSelectInput(dtsvc_info.display,
 				    dtsvc_info.window, PropertyChangeMask);

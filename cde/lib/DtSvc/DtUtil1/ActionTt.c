@@ -466,8 +466,10 @@ ReportToolTalkError(
 
    if (errorMsg)
    {
-      buf = XtMalloc(strlen(ToolTalkErrorMsg2) + strlen(errorMsg) + 10);
-      sprintf(buf, ToolTalkErrorMsg2, errorMsg);
+      size_t bufSize = strlen(ToolTalkErrorMsg2) + strlen(errorMsg) + 10;
+
+      buf = XtMalloc(bufSize);
+      snprintf(buf, bufSize, ToolTalkErrorMsg2, errorMsg);
    }
    else
       buf = XtNewString(ToolTalkErrorMsg);
@@ -650,7 +652,7 @@ Ttmedia_to_Dt_StatusUpdateCB(
 	 * Handler is just getting started.  Eat it.
 	 */
 	tttk_message_destroy( message );
-	return( (Tt_message) NULL );           /* like TT_CALLBACK_PROCESSED */
+	return( (Tt_message) nullptr );           /* like TT_CALLBACK_PROCESSED */
     }
 
     if ( (state != TT_HANDLED) && (state != TT_FAILED) &&
@@ -833,7 +835,7 @@ Ttmedia_to_Dt_StatusUpdateCB(
 
     _DtActExecutionLeafNodeCleanup( id, newArgp, newArgc, 1 );
 
-    return( (Tt_message) NULL );	/* message consumed */
+    return( (Tt_message) nullptr );	/* message consumed */
 }
 
 
@@ -1050,7 +1052,7 @@ TtRequestCallbackHandler(
 				     */
 				    upttbuflen = 64;
 				    upttbuf = XtMalloc( upttbuflen );
-				    sprintf( upttbuf, "%u", ivalue );
+				    snprintf( upttbuf, upttbuflen, "%u", ivalue );
 				}
 				break;
 			    case DtACT_TT_REP_UNDEFINED:
@@ -1763,7 +1765,7 @@ InitiateTtRequest(
 		actChildRecP->u.tt.TTProcId   = tt_message_sender( message );
 		actChildRecP->u.tt.reqMessage = message;
 		actChildRecP->u.tt.isTtMedia  = 0;
-		actChildRecP->u.tt.TtMediaOp  = (Tttk_op) NULL;
+		actChildRecP->u.tt.TtMediaOp  = (Tttk_op) 0;
 		actChildRecP->u.tt.subConPats = subcon_patterns;
 	    }
 	}

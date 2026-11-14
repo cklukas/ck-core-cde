@@ -88,6 +88,22 @@ static char *GetRemoteTerminal(
 
 /********    End Static Function Declarations    ********/
 
+/*
+ * "app*resource" for the resource lookups below; the result must be freed
+ * with XtFree.
+ */
+static char *
+MakeResourceString (
+	const char	*app,
+	const char	*resource)
+{
+   size_t size = strlen (app) + strlen (resource) + 2;
+   char *str = XtMalloc (size);
+
+   snprintf (str, size, "%s*%s", app, resource);
+   return str;
+}
+
 /******************************************************************************
  *
  * _GetRemoteTerminalsResource - gets the value of the "remoteTerminals"
@@ -122,11 +138,9 @@ static char
    char *class;
    char *terminals = nullptr;
 
-   name = XtMalloc (strlen (DtREMOTE_TERMINALS_NAME) + strlen (appName) + 4);
-   sprintf (name, "%s*%s", appName, DtREMOTE_TERMINALS_NAME);
+   name = MakeResourceString (appName, DtREMOTE_TERMINALS_NAME);
 
-   class = XtMalloc (strlen (DtREMOTE_TERMINALS_CLASS) + strlen (appClass) + 4);
-   sprintf (class, "%s*%s", appClass, DtREMOTE_TERMINALS_CLASS);
+   class = MakeResourceString (appClass, DtREMOTE_TERMINALS_CLASS);
 
    db = XtDatabase (display);
    if (XrmGetResource (db, name, class, &rep_type, &resource_value)) 
@@ -297,11 +311,9 @@ GetLocalTerminalResource (
    char *class;
    XrmDatabase db = XtDatabase (display);
 
-   name = XtMalloc (strlen (DtLOCAL_TERMINAL_NAME) + strlen (appName) + 4);
-   sprintf (name, "%s*%s", appName, DtLOCAL_TERMINAL_NAME);
+   name = MakeResourceString (appName, DtLOCAL_TERMINAL_NAME);
 
-   class = XtMalloc (strlen (DtLOCAL_TERMINAL_CLASS) + strlen (appClass) + 4);
-   sprintf (class, "%s*%s", appClass, DtLOCAL_TERMINAL_CLASS);
+   class = MakeResourceString (appClass, DtLOCAL_TERMINAL_CLASS);
 
    if (XrmGetResource (db, name, class, &rep_type, &resource_value)) 
       cmd_Resources.localTerminal = (char *) XtNewString (resource_value.addr);
@@ -320,7 +332,7 @@ GetLocalTerminalResource (
       cmd_Globals.terminal_ok = False;
       if (errorMessage)
       {
-          (void) sprintf (errorMessage, 
+          (void) snprintf (errorMessage, MAX_BUF_SIZE, 
 	                  cmd_Globals.error_terminal, 
                           cmd_Resources.localTerminal);
           _DtCmdLogErrorMessage (errorMessage);
@@ -365,11 +377,9 @@ GetWaitTimeResource (
 
    cmd_Resources.waitTime = DtWAIT_TIME_DEFAULT;
 
-   name = XtMalloc (strlen (DtWAIT_TIME_NAME) + strlen (appName) + 4);
-   sprintf (name, "%s*%s", appName, DtWAIT_TIME_NAME);
+   name = MakeResourceString (appName, DtWAIT_TIME_NAME);
 
-   class = XtMalloc (strlen (DtWAIT_TIME_CLASS) + strlen (appClass) + 4);
-   sprintf (class, "%s*%s", appClass, DtWAIT_TIME_CLASS);
+   class = MakeResourceString (appClass, DtWAIT_TIME_CLASS);
 
    if (XrmGetResource (db, name, class, &rep_type, &resource_value)) {
       cmd_Resources.waitTime = atoi (resource_value.addr);
@@ -413,11 +423,9 @@ GetDtexecPath (
    char *class;
    XrmDatabase db = XtDatabase (display);
 
-   name = XtMalloc (strlen (DtDTEXEC_PATH_NAME) + strlen (appName) + 4);
-   sprintf (name, "%s*%s", appName, DtDTEXEC_PATH_NAME);
+   name = MakeResourceString (appName, DtDTEXEC_PATH_NAME);
 
-   class = XtMalloc (strlen (DtDTEXEC_PATH_CLASS) + strlen (appClass) + 4);
-   sprintf (class, "%s*%s", appClass, DtDTEXEC_PATH_CLASS);
+   class = MakeResourceString (appClass, DtDTEXEC_PATH_CLASS);
 
    if (XrmGetResource (db, name, class, &rep_type, &resource_value)) 
       cmd_Resources.dtexecPath = (char *) XtNewString (resource_value.addr);
@@ -436,7 +444,7 @@ GetDtexecPath (
       cmd_Globals.subprocess_ok = False;
       if (errorMessage)
       {
-          (void) sprintf (errorMessage, 
+          (void) snprintf (errorMessage, MAX_BUF_SIZE, 
                           cmd_Globals.error_subprocess, 
                           cmd_Resources.dtexecPath);
           _DtCmdLogErrorMessage (errorMessage);
@@ -483,13 +491,9 @@ GetExecutionHostLoggingResource (
 
    cmd_Resources.executionHostLogging = False;
 
-   name = XtMalloc (strlen (DtEXECUTION_HOST_LOGGING_NAME) + 
-		    strlen (appName) + 4);
-   sprintf (name, "%s*%s", appName, DtEXECUTION_HOST_LOGGING_NAME);
+   name = MakeResourceString (appName, DtEXECUTION_HOST_LOGGING_NAME);
 
-   class = XtMalloc (strlen (DtEXECUTION_HOST_LOGGING_CLASS) + 
-		     strlen (appClass) + 4);
-   sprintf (class, "%s*%s", appClass, DtEXECUTION_HOST_LOGGING_CLASS);
+   class = MakeResourceString (appClass, DtEXECUTION_HOST_LOGGING_CLASS);
 
    if (XrmGetResource (db, name, class, &rep_type, &resource_value)) {
       if (((strcmp (resource_value.addr, "True")) == 0) ||
@@ -575,10 +579,9 @@ _DtCmdCreateTerminalCommand(
    char *pGeom = nullptr;
    char *pName = nullptr;
    char *pTitle = nullptr;
-   char options[MAX_BUF_SIZE];
+   char *options = execParms;
    char *defaultTerminal;
-
-   strcpy(options,execParms);
+   size_t commandSize;
    
    /*
     * Get the name of the terminal emulator to use.
@@ -589,16 +592,17 @@ _DtCmdCreateTerminalCommand(
    /*
     * Create space for the expanded command line.
     */
-   *theCommand = (char *) XtMalloc ( strlen (defaultTerminal) 
+   commandSize = strlen (defaultTerminal) 
          + strlen(options) 
 	 + strlen(cmd_Resources.dtexecPath)
          + strlen(" -open ") + 4 /* max waitTime len */
          + strlen(" -ttprocid ") + strlen(_DtActNULL_GUARD(procId))
          + strlen(_DtActNULL_GUARD(tmpFiles))
-         + strlen(execString) + 9 /* 2 quotes, "-e", 7 blanks, null */ );
+         + strlen(execString) + 9 /* 2 quotes, "-e", 7 blanks, null */;
+   *theCommand = (char *) XtMalloc (commandSize);
 
    if (windowType == TERMINAL) {
-      (void) sprintf (*theCommand, "%s %s -e %s -open %d -ttprocid '%s' %s %s",
+      (void) snprintf (*theCommand, commandSize, "%s %s -e %s -open %d -ttprocid '%s' %s %s",
 	              defaultTerminal, options, cmd_Resources.dtexecPath, 
                       cmd_Resources.waitTime, 
                       _DtActNULL_GUARD(procId),
@@ -606,7 +610,7 @@ _DtCmdCreateTerminalCommand(
                       execString);
    }
    else {
-      (void) sprintf (*theCommand, "%s %s -e %s -open -1 -ttprocid '%s' %s %s",
+      (void) snprintf (*theCommand, commandSize, "%s %s -e %s -open -1 -ttprocid '%s' %s %s",
 	              defaultTerminal, options, cmd_Resources.dtexecPath, 
                       _DtActNULL_GUARD(procId),
                       _DtActNULL_GUARD(tmpFiles),
@@ -660,11 +664,12 @@ _DtCmdCheckForExecutable(
 
    for (ppch = cmd_Globals.path_list; *ppch != nullptr; ppch++) 
    {
-      char *longName = XtMalloc(MAXPATHLEN);
+      size_t longSize = strlen(*ppch) + strlen(fileName) + 2;
+      char *longName = XtMalloc(longSize);
 
       if (longName)
       {
-          (void) sprintf (longName, "%s/%s", *ppch, fileName);
+          (void) snprintf (longName, longSize, "%s/%s", *ppch, fileName);
           switch (access = _DtExecuteAccess(longName)) 
           {
                /* execution access allowed for this process */
@@ -742,7 +747,7 @@ _DtCmdValidDir(
       myassert( *contextHost != '*' && *contextDir != '*' );
       netfile = (char *) tt_host_file_netfile (contextHost, contextDir);
       if (tt_pointer_error (netfile) != TT_OK) {
-	 (void) sprintf (errorMessage, cmd_Globals.error_directory_name_map, 
+	 (void) snprintf (errorMessage, MAX_BUF_SIZE, cmd_Globals.error_directory_name_map, 
 			 contextDir, contextHost,
 			 tt_status_message (tt_pointer_error(netfile)));
 	 _DtCmdLogErrorMessage (errorMessage);
@@ -752,7 +757,7 @@ _DtCmdValidDir(
       path = (char *) tt_netfile_file (netfile);
       tt_free (netfile);
       if (tt_pointer_error (path) != TT_OK) {
-	 (void) sprintf (errorMessage, cmd_Globals.error_directory_name_map, 
+	 (void) snprintf (errorMessage, MAX_BUF_SIZE, cmd_Globals.error_directory_name_map, 
 			 contextDir, contextHost,
 			 tt_status_message (tt_pointer_error(path)));
 	 _DtCmdLogErrorMessage (errorMessage);

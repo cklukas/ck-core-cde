@@ -71,6 +71,7 @@ char * _DtQualifyWithFirst
 char * paths = searchPath;
 char * path;
 char * chance;
+size_t chanceSize;
 FILE * f;
 
   /* assert that the arguments cannot be NULL and cannot be empty */
@@ -88,16 +89,17 @@ FILE * f;
 
     /* allocate space and create the qualified filename */
 
-    chance = (char *)malloc(strlen(paths) + strlen(filename) + 2);
+    chanceSize = strlen(paths) + strlen(filename) + 2;
+    chance = (char *)malloc(chanceSize);
     if (chance == nullptr) {
       if (path)                         /* restore the colon and give up */
 	*path = ':';
       return nullptr;
     }
     if (filename[0] == '/')
-      sprintf(chance,"%s%s",paths,filename);
+      snprintf(chance,chanceSize,"%s%s",paths,filename);
     else
-      sprintf(chance,"%s/%s",paths,filename);
+      snprintf(chance,chanceSize,"%s/%s",paths,filename);
 
     /* see if it is there by opening it for reading */
 

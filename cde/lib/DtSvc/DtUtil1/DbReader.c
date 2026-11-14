@@ -358,9 +358,11 @@ _DtDbRead (
                DtLastChar(hpx, &lastChar, &charLen);
                if ((charLen != 1) || (*lastChar != '/'))
                {
-                  host_prefix = XtMalloc(strlen(hpx) + 2);
-                  strcpy(host_prefix, hpx);
-                  strcat(host_prefix, "/");
+                  size_t hpxLen = strlen(hpx);
+
+                  host_prefix = XtMalloc(hpxLen + 2);
+                  memcpy(host_prefix, hpx, hpxLen);
+                  memcpy(host_prefix + hpxLen, "/", 2);
                }
                else
                   host_prefix = XtNewString(hpx);

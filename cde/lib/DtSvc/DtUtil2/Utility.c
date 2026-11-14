@@ -197,6 +197,7 @@ RemapSpecialDisplayName(
 {
    static char * localHost = nullptr;
    char * name;
+   size_t nameSize;
 
    _DtSvcProcessLock();
    if (localHost == nullptr)
@@ -206,9 +207,9 @@ RemapSpecialDisplayName(
    }
    _DtSvcProcessUnlock();
 
-   name = XtMalloc((Cardinal)(strlen(localHost) + strlen(dispInfo) + 1));
-   (void)strcpy(name, localHost);
-   (void)strcat(name, dispInfo);
+   nameSize = strlen(localHost) + strlen(dispInfo) + 1;
+   name = XtMalloc((Cardinal)nameSize);
+   (void)snprintf(name, nameSize, "%s%s", localHost, dispInfo);
    return(name);
 }
 

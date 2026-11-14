@@ -114,7 +114,7 @@ _DtStripSpaces(
    }
 
    /* Copy over the leading spaces */
-   strcpy(string, string + i);
+   memmove(string, string + i, strlen(string + i) + 1);
 
    /* Drop out, if the string is now empty */
    if ((i = strlen(string) - 1) < 0)

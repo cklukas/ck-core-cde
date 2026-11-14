@@ -149,7 +149,7 @@ _DtWsmChangeBackdrop (
 
 	pch = (char *) XtCalloc(len, sizeof(char));
 
-	sprintf (pch, "%s %s %lx %d", DTWM_REQ_CHANGE_BACKDROP, path,
+	snprintf (pch, len, "%s %s %lx %d", DTWM_REQ_CHANGE_BACKDROP, path,
 		    pixmap, imageType);
 
 	/*

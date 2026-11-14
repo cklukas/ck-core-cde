@@ -137,9 +137,8 @@ _DtWmRestartNoConfirm (Display *display, Window root)
      * name to the _DT_WM_REQUEST property
      */
 
-    strcpy (&buffer[0], DTWM_REQ_RESTART);
-    strcat (&buffer[0], " ");
-    strcat (&buffer[0], DTWM_REQP_NO_CONFIRM);
+    snprintf (&buffer[0], sizeof buffer, "%s %s", DTWM_REQ_RESTART,
+	      DTWM_REQP_NO_CONFIRM);
 
     /*
      * Get the workspace manager window

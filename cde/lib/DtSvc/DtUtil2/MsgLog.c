@@ -161,14 +161,22 @@ static char * get_file_name (
 {
 	char		*file;
 	va_list		args;
+	int		n;
 
 	file = malloc(MAXPATHLEN+1);
 	if (! file) return nullptr;
 
 	Va_start (args, format);
 
-	(void) vsprintf (file, format, args);
+	n = vsnprintf (file, MAXPATHLEN+1, format, args);
 	va_end (args);
+
+	if (n < 0 || n > MAXPATHLEN)
+	{
+	    /* the name is not a usable path */
+	    free(file);
+	    return (nullptr);
+	}
 
 	if ((*fp = fopen (file, type)) == nullptr)
         {

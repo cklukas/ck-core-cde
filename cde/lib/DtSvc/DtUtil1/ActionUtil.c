@@ -105,20 +105,10 @@ extern void _DtFreeRequest(ActionRequest *request );
  * path ends in "/" the last component of the path is returned as
  * the basename.
  ******************************************************************************/
-char *
-_DtBasename( const char *s ) 
+static char *
+BasenameInPlace( char *p )
 {
 	char *basep;
-	char buf[MAXPATHLEN + MAXHOSTNAMELEN + 1];
-	char *p = buf;
-
-
-        if (!s)
-		return nullptr;
-
-	/* Work on a local copy of the original string */
-	*p = '\0';
-	(void)strcpy(p,s);
 
 #ifdef _Dt_HOST_COLON_PATH_SUPPORT
 	/* Chop off the "host:" if necessary */
@@ -155,6 +145,22 @@ _DtBasename( const char *s )
 	basep++;
 	return XtNewString(basep);
 
+}
+
+char *
+_DtBasename( const char *s ) 
+{
+	char *copy;
+	char *basename;
+
+        if (!s)
+		return nullptr;
+
+	/* Work on a local copy of the original string */
+	copy = XtNewString(s);
+	basename = BasenameInPlace(copy);
+	XtFree(copy);
+	return basename;
 }
 
 
@@ -198,18 +204,11 @@ _DtPathname( const char *s)
  * may be modified to remove trailing slashes.  
  * The incoming string is assumed to be in : "[host:/]dir/file" format.
  ******************************************************************************/
-char *
-_DtDirname( const char *s)
+static char *
+DirnameInPlace( char *p )
 {
 	char *slashp;
 	char *dirp;
-	char buf[MAXPATHLEN + MAXHOSTNAMELEN + 1];
-	char *p = buf;;
-
-
-	/* Work on a local copy of the original string */
-	*p = '\0';
-	(void)strcpy(p,s);
 
 #ifdef _Dt_HOST_COLON_PATH_SUPPORT
 	/* Chop off the "host:" if necessary */
@@ -254,6 +253,19 @@ _DtDirname( const char *s)
 	return dirp;
 }
 
+char *
+_DtDirname( const char *s)
+{
+	char *copy;
+	char *dirname;
+
+	/* Work on a local copy of the original string */
+	copy = XtNewString(s);
+	dirname = DirnameInPlace(copy);
+	XtFree(copy);
+	return dirname;
+}
+
 /*****************************************************************************
  *
  * _DtHostString
@@ -279,25 +291,18 @@ _DtHostString( const char *s)
 {
 	char *slashp;
 	char *host;
-	char buf[MAXPATHLEN + MAXHOSTNAMELEN + 1];
-	char *p= buf;
 
 	if ( (slashp = DtStrchr((char *)s,'/')) == nullptr )
 		return nullptr;
 
-	/*
-	 * Make a local copy of the string to avoid problems modifying
-	 * "const" strings.
-	 */
-	*p = '\0';
-	(void) strcpy(p,s);
-
 	/* if ( (slashp > s) && (*(slashp -1) == ':' )) */
 	if ( (slashp > s) && (*DtPrevChar(s,slashp)  == ':' ))
 	{
-		/* *(p + (slashp - s - 1)) = NULL; */
-                *(p + (DtPrevChar(s,slashp) - s)) = '\0';
-		host = XtNewString(p);
+		size_t hostLen = (size_t)(DtPrevChar(s,slashp) - s);
+
+		host = XtMalloc(hostLen + 1);
+		memcpy(host, s, hostLen);
+		host[hostLen] = '\0';
 		return host;
 	}
 
@@ -359,7 +364,7 @@ _DtGetDisplayHostName( Display *dp)
 		 * display host name.
 		 */
 		
-		strcpy(tmpName,DisplayString(dp));
+		snprintf(tmpName,MAXHOSTNAMELEN + 5 + 1,"%s",DisplayString(dp));
 		if (( tmp = DtStrrchr(tmpName,':') ))
 		{
 			*tmp = '\0';
@@ -448,6 +453,21 @@ _DtGetLocalHostName( void )
  ******************************************************************************/
 
 
+/*
+ * Copy a host name into a buffer; False if it does not fit, in which case it
+ * cannot be a name of a host.
+ */
+static Boolean
+CopyHostName(char *dst, size_t size, const char *src)
+{
+	size_t len = strlen(src);
+
+	if ( len >= size )
+		return False;
+	memcpy(dst, src, len + 1);
+	return True;
+}
+
 int
 _DtIsSameHost(const char *host1, const char *host2)
 {
@@ -463,23 +483,33 @@ _DtIsSameHost(const char *host1, const char *host2)
 	if ( !host1 )
 	{
 		tp = _DtGetLocalHostName();
-		strcpy(hostName1,tp);
+		if ( !CopyHostName(hostName1,sizeof hostName1,tp) )
+		{
+			XtFree(tp);
+			return False;
+		}
 		XtFree(tp);
 	}
 	else
 	{
-		strcpy(hostName1,host1);
+		if ( !CopyHostName(hostName1,sizeof hostName1,host1) )
+			return False;
 	}
 
 	if ( !host2)
 	{
 		tp = _DtGetLocalHostName();
-		strcpy(hostName2,tp);
+		if ( !CopyHostName(hostName2,sizeof hostName2,tp) )
+		{
+			XtFree(tp);
+			return False;
+		}
 		XtFree(tp);
 	}
 	else
 	{
-		strcpy(hostName2,host2);
+		if ( !CopyHostName(hostName2,sizeof hostName2,host2) )
+			return False;
 	}
 
 	/*
@@ -507,7 +537,8 @@ _DtIsSameHost(const char *host1, const char *host2)
 	 * Save the data from gethostbyname() in "hostName1" so we can
 	 * call gethostbyname() again without losing it.
 	 */
-	strcpy(hostName1, host_ret->h_name);
+	if ( !CopyHostName(hostName1,sizeof hostName1,host_ret->h_name) )
+		return False;
 	if ( (tp = DtStrchr(hostName1,'.')) != nullptr )
 		*tp = '\0';
 
@@ -531,6 +562,20 @@ _DtIsSameHost(const char *host1, const char *host2)
 }
 
 
+/*
+ * "app*resource", for the resource lookups below; the result must be freed
+ * with XtFree.
+ */
+static char *
+MakeResourceString( const char *app, const char *resource )
+{
+   size_t size = strlen(_DtActNULL_GUARD(app)) + strlen(resource) + 2;
+   char *str = XtMalloc(size);
+
+   snprintf(str, size, "%s*%s", _DtActNULL_GUARD(app), resource);
+   return str;
+}
+
 /******************************************************************************
  *
  * _DtGetActionIconDefault - 
@@ -543,12 +588,9 @@ char *
 _DtGetActionIconDefault ( void )
 {
    static char *defaultActionIcon = nullptr;
-   char		nameBuf[_DtAct_MAX_BUF_SIZE];
-   char		classBuf[_DtAct_MAX_BUF_SIZE];
    XrmValue 	resource_value;
    XrmDatabase 	db;
    char 	*rep_type;
-   int		bytesNeeded;
    char	*name;
    char *class;
 
@@ -558,39 +600,20 @@ _DtGetActionIconDefault ( void )
 	return XtNewString(defaultActionIcon);
       }
 
-   bytesNeeded = strlen(DtACTION_ICON_RESOURCE_NAME) 
-                       + strlen(_DtApplicationName) + 4;
-   if ( bytesNeeded > _DtAct_MAX_BUF_SIZE )
-	name = XtMalloc(bytesNeeded);
-   else
-	name = nameBuf;
-
-   sprintf (name, "%s*%s",
-	_DtActNULL_GUARD( _DtApplicationName) , DtACTION_ICON_RESOURCE_NAME);
-
-
-   bytesNeeded = strlen(DtACTION_ICON_RESOURCE_CLASS) 
-                       + strlen(_DtApplicationClass) + 4;
-   if ( bytesNeeded > _DtAct_MAX_BUF_SIZE )
-	class = XtMalloc(bytesNeeded);
-   else
-	class = classBuf;
-   sprintf (class, "%s*%s", 
-	_DtActNULL_GUARD(_DtApplicationClass) , DtACTION_ICON_RESOURCE_CLASS);
+   name = MakeResourceString(_DtApplicationName, DtACTION_ICON_RESOURCE_NAME);
+   class = MakeResourceString(_DtApplicationClass, DtACTION_ICON_RESOURCE_CLASS);
 
    if(_DtDisplay)
         db = XtDatabase (_DtDisplay);
    else
 	db = 0;
-   if (db && XrmGetResource (db, nameBuf, classBuf, &rep_type, &resource_value))
+   if (db && XrmGetResource (db, name, class, &rep_type, &resource_value))
       defaultActionIcon = (char *) XtNewString (resource_value.addr);
    else
       defaultActionIcon = (char *) XtNewString (DtACTION_ICON_DEFAULT);
 
-   if ( name != nameBuf )
-	XtFree(name);
-   if ( class != classBuf )
-	XtFree(class);
+   XtFree(name);
+   XtFree(class);
 
    _DtSvcProcessUnlock();
    return XtNewString(defaultActionIcon);
@@ -613,13 +636,10 @@ char *
 _DtGetExecHostsDefault ( void )
 {   
    static char *executionHosts = nullptr;
-   char		nameBuf[_DtAct_MAX_BUF_SIZE];
-   char		classBuf[_DtAct_MAX_BUF_SIZE];
    XrmValue resource_value;
    XrmDatabase db;
    char *rep_type;
    char *name, *class;
-   int bytesNeeded;
 
    _DtSvcProcessLock();
    if ( executionHosts ) {
@@ -627,23 +647,8 @@ _DtGetExecHostsDefault ( void )
 	return XtNewString(executionHosts);
       }
 
-   bytesNeeded = strlen(DtEXEC_HOSTS_NAME) + strlen(_DtApplicationName) + 4;
-
-   if ( bytesNeeded > _DtAct_MAX_BUF_SIZE )
-	name = XtMalloc(bytesNeeded);
-   else
-	name = nameBuf;
-   sprintf (name, "%s*%s",
-	_DtActNULL_GUARD(_DtApplicationName), DtEXEC_HOSTS_NAME);
-
-  
-   bytesNeeded = strlen(DtEXEC_HOSTS_CLASS) + strlen(_DtApplicationClass) + 4;
-   if ( bytesNeeded > _DtAct_MAX_BUF_SIZE )
-	class = XtMalloc(bytesNeeded);
-   else
-	class = classBuf;
-   sprintf (class, "%s*%s",
-	_DtActNULL_GUARD(_DtApplicationClass), DtEXEC_HOSTS_CLASS);
+   name = MakeResourceString(_DtApplicationName, DtEXEC_HOSTS_NAME);
+   class = MakeResourceString(_DtApplicationClass, DtEXEC_HOSTS_CLASS);
 
    db = XtDatabase (_DtDisplay);
    if (db && XrmGetResource (db, name, class, &rep_type, &resource_value))
@@ -651,10 +656,8 @@ _DtGetExecHostsDefault ( void )
    else
       executionHosts = (char *) XtNewString (DtEXEC_HOSTS_DEFAULT);
 
-   if ( name != nameBuf )
-	   XtFree (name);
-   if ( class != classBuf )
-	   XtFree (class);
+   XtFree (name);
+   XtFree (class);
 
    _DtSvcProcessUnlock();
    return XtNewString(executionHosts);
@@ -673,11 +676,8 @@ char *_DtGetDtTmpDir(void)
 {
     static char *DtTmpDirPath = nullptr;
     char *dirBuf = nullptr;
-    char nameBuf[_DtAct_MAX_BUF_SIZE];
-    char classBuf[_DtAct_MAX_BUF_SIZE];
     char *name;
     char *class;
-    int bytesNeeded;
     char	*rep_type;
     XrmValue	resource_value;
     XrmDatabase	db;
@@ -692,28 +692,11 @@ char *_DtGetDtTmpDir(void)
      * Check if a resource has been set for the tmp dir location
      */
  
-    bytesNeeded = strlen(DtACTION_DTTMPDIR_RESOURCE_NAME)
-		   + strlen(_DtApplicationName) + 4;
-    if ( bytesNeeded > _DtAct_MAX_BUF_SIZE )
-	name = XtMalloc(bytesNeeded);
-    else
-        name = nameBuf;
-
-    sprintf (name, "%s*%s",
-        _DtActNULL_GUARD( _DtApplicationName) , DtACTION_DTTMPDIR_RESOURCE_NAME);
-
-
-    bytesNeeded = strlen(DtACTION_DTTMPDIR_RESOURCE_CLASS)
-                       + strlen(_DtApplicationClass) + 4;
-    if ( bytesNeeded > _DtAct_MAX_BUF_SIZE )
-        class = XtMalloc(bytesNeeded);
-    else
-        class = classBuf;
-    sprintf (class, "%s*%s",
-        _DtActNULL_GUARD(_DtApplicationClass) , DtACTION_DTTMPDIR_RESOURCE_CLASS);
+    name = MakeResourceString(_DtApplicationName, DtACTION_DTTMPDIR_RESOURCE_NAME);
+    class = MakeResourceString(_DtApplicationClass, DtACTION_DTTMPDIR_RESOURCE_CLASS);
 
     db = XtDatabase (_DtDisplay);
-    if (db && XrmGetResource (db, nameBuf, classBuf, &rep_type, &resource_value))
+    if (db && XrmGetResource (db, name, class, &rep_type, &resource_value))
       DtTmpDirPath = (char *) XtNewString (resource_value.addr);
     else
     {
@@ -724,6 +707,8 @@ char *_DtGetDtTmpDir(void)
       DtTmpDirPath = XtNewString(dirBuf);
       XtFree(dirBuf);
     }
+    XtFree(name);
+    XtFree(class);
     
     /*
      * Save a copy of the path for future reference
@@ -758,6 +743,7 @@ _DtActGenerateTmpFile(char *dir,char *format,mode_t mode,int *fd)
         int free_d = 0;
 	int countTrys = 0;	/* count of the number of tmp names tried */
         char nameBuf[MAXPATHLEN];
+        int nameLen;
         char *d = dir;
         char *f = format;
         char *base;
@@ -830,14 +816,16 @@ _DtActGenerateTmpFile(char *dir,char *format,mode_t mode,int *fd)
         do {
 
 	        _DtSvcProcessLock();
-		sprintf(nameBuf,"%lx_%d",nameCount++,pid);
+		snprintf(nameBuf,sizeof nameBuf,"%lx_%d",nameCount++,pid);
 	        _DtSvcProcessUnlock();
 		base = XtNewString(nameBuf);
 		/*
 		 * Convert the base name to the desired format
 		 */
-		sprintf(nameBuf,f,base);
+		nameLen = snprintf(nameBuf,sizeof nameBuf,f,base);
 		XtFree(base);
+		if ( nameLen < 0 || (size_t)nameLen >= sizeof nameBuf )
+			goto tooLong;
 
                 /*
                  * If the format string does not allow for variation
@@ -854,11 +842,13 @@ _DtActGenerateTmpFile(char *dir,char *format,mode_t mode,int *fd)
 		 */ 
                 /* if ( d[strlen(d)-1] != '/' ) */
                 if ( *DtPrevChar(d,d + strlen(d)) != '/' )
-			sprintf(nameBuf,"%s/%s",d,base);
+			nameLen = snprintf(nameBuf,sizeof nameBuf,"%s/%s",d,base);
                 else
-			sprintf(nameBuf,"%s%s",d,base);
+			nameLen = snprintf(nameBuf,sizeof nameBuf,"%s%s",d,base);
                 
 		XtFree(base);
+		if ( nameLen < 0 || (size_t)nameLen >= sizeof nameBuf )
+			goto tooLong;
 
                /*
 		* Check if such a file already exists.
@@ -880,6 +870,13 @@ _DtActGenerateTmpFile(char *dir,char *format,mode_t mode,int *fd)
          */
 
         return XtNewString(nameBuf);
+
+tooLong:
+	/* the name does not fit in a path */
+	if ( free_d )
+        	XtFree(d);
+	*fd = -1;
+	return nullptr;
 }
 
 /*******************************************************************************

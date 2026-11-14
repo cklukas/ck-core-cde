@@ -161,8 +161,8 @@ static char 	*errorExec,
  *
  ******************************************************************************/
 
-int
-_DtSPCSpawn( 
+static int
+SPCSpawn( 
 	char		*path, 
 	char		*cwd,
 	char		**args,
@@ -171,7 +171,8 @@ _DtSPCSpawn(
 	char		*execHost,
 	char		*contextHost,
 	char		*contextDir,
-	char		*errorMessage)
+	char		*errorMessage,
+	size_t		errorSize)
 {
 	int	retVal;
 
@@ -194,19 +195,19 @@ _DtSPCSpawn(
 		switch (DtSPCErrorNumber) 
 		{
 			case SPC_cannot_Chdir:
-	    			(void) sprintf (errorMessage, 
+	    			(void) snprintf (errorMessage, errorSize, 
 						errorChdir, 
 						contextDir, 
 						execHost);
 				break;
 			case SPC_Cannot_Fork:
-	    			(void) sprintf (errorMessage, 
+	    			(void) snprintf (errorMessage, errorSize, 
 						errorFork, 
 						execHost);
 				break;
 	 		case SPC_Env_Too_Big:
 			case SPC_Arg_Too_Long:
-	    			(void) sprintf (errorMessage, 
+	    			(void) snprintf (errorMessage, errorSize, 
 						errorLength, 
 						SPC_BUFSIZ);
 				break;
@@ -214,7 +215,7 @@ _DtSPCSpawn(
 				/*
 				 * SPC_Cannot_Exec
 				 */
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorSpawn,
 						execHost,
 						path);
@@ -246,11 +247,12 @@ _DtSPCSpawn(
  *	originally returned by DtSPCOpen.
  *
  ******************************************************************************/
-SPC_Channel_Ptr
-_DtSPCOpen(
+static SPC_Channel_Ptr
+SPCOpen(
 	char *hostname, 
 	int iomode, 
-	char *errorMessage)
+	char *errorMessage,
+	size_t errorSize)
 {
 	SPC_Channel_Ptr	chan;
 	_Xgetpwparams	pwd_buf;
@@ -274,19 +276,19 @@ _DtSPCOpen(
 		switch (DtSPCErrorNumber) 
 		{
 			case SPC_Unknown_Host:
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorUnknownHost,
 						hostname);
 				break;
 			case SPC_Bad_Connect:
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorBadConnect,
 						hostname,
 						SPC_SERVICE,
 						_cmdClientHost);
 				break;
 			case SPC_Bad_Service:
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorBadService,
 						SPC_SERVICE,
 						_cmdClientHost);
@@ -298,7 +300,7 @@ _DtSPCOpen(
 					username = nullptr;
 				else
 					username = pwd_ret->pw_name;
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorRegisterHandshake,
 						hostname,
 						username,
@@ -313,24 +315,24 @@ _DtSPCOpen(
 					username = nullptr;
 				else
 					username = pwd_ret->pw_name;
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorRegisterUsername,
 						hostname,
 						username);
 				break;
 			case SPC_Register_Netrc:
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorRegisterNetrc,
 						hostname);
 				break;
 			case SPC_Env_Too_Big:
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorEnvTooBig,
 						hostname,
 						SPC_BUFSIZ);
 				break;
 			case SPC_Connection_EOF:
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorBadConnect,
 						hostname,
 						SPC_SERVICE,
@@ -340,7 +342,7 @@ _DtSPCOpen(
 				/*
 				 * SPC_Register_Open:
 				 */
-				(void) sprintf (errorMessage, 
+				(void) snprintf (errorMessage, errorSize, 
 						errorRegisterOpen,
 						hostname);
       		}
@@ -357,6 +359,35 @@ _DtSPCOpen(
 	(void) _DtEnvControl (DT_ENV_RESTORE_POST_DT);
 	
 	return chan;
+}
+
+/*
+ * The exported entry points cannot be given the size of errorMessage; their
+ * callers pass a buffer of at least MAX_BUF_SIZE bytes.
+ */
+SPC_Channel_Ptr
+_DtSPCOpen(
+	char *hostname, 
+	int iomode, 
+	char *errorMessage)
+{
+	return SPCOpen(hostname, iomode, errorMessage, MAX_BUF_SIZE);
+}
+
+int
+_DtSPCSpawn( 
+	char		*path, 
+	char		*cwd,
+	char		**args,
+	char		**env,
+	SPC_Channel_Ptr	chan,
+	char		*execHost,
+	char		*contextHost,
+	char		*contextDir,
+	char		*errorMessage)
+{
+	return SPCSpawn(path, cwd, args, env, chan, execHost, contextHost,
+			contextDir, errorMessage, MAX_BUF_SIZE);
 }
 
 
@@ -461,6 +492,7 @@ ExecuteQueuedRequest (
 	unsigned long requestNum)
 {
    char			*errorMessage;
+   const size_t		errorSize = MAX_BUF_SIZE;
    Boolean 		success = True;
    Cmd_RequestQueue 	*prev  = nullptr;
    Cmd_RequestQueue 	*pNode = requestQueue;
@@ -490,7 +522,7 @@ ExecuteQueuedRequest (
    if (pNode == nullptr)
       return;
 
-   errorMessage = XtCalloc(MAX_BUF_SIZE, sizeof (char));
+   errorMessage = XtCalloc(errorSize, sizeof (char));
 
    /*
     *  Reopen SPC Channel
@@ -502,17 +534,17 @@ ExecuteQueuedRequest (
             | SPCIO_FORCE_CONTEXT );
 
    
-   if ((pNode->channel = (_DtSPCOpen(pNode->exec_host, 
+   if ((pNode->channel = (SPCOpen(pNode->exec_host, 
           iomode,
-	  errorMessage))) == SPC_ERROR) 
+	  errorMessage, errorSize))) == SPC_ERROR) 
       {
 	 success = False;
       }
 
    if ( success )
-       if ((_DtSPCSpawn(pNode->argv[0], pNode->context, pNode->argv, nullptr, 
+       if ((SPCSpawn(pNode->argv[0], pNode->context, pNode->argv, nullptr, 
 		    pNode->channel, pNode->exec_host, nullptr, nullptr,
-		    errorMessage)) == SPC_ERROR) 
+		    errorMessage, errorSize)) == SPC_ERROR) 
        {
 	  success = False;
 	  if (DtSPCErrorNumber != SPC_Arg_Too_Long)
@@ -525,7 +557,7 @@ ExecuteQueuedRequest (
       {
 	 CallbackData *data;
 	 data = (CallbackData *) pNode->success_data;
-	 (void) sprintf (errorMessage, successHost, 
+	 (void) snprintf (errorMessage, errorSize, successHost, 
 			 data->actionLabel, pNode->exec_host);
 	 _DtCmdLogErrorMessage (errorMessage);
       }
@@ -541,6 +573,8 @@ ExecuteQueuedRequest (
 	    int cmdlen,i;
 	    char *cmdp;	/* pointer to complete command string */
 	    char *tmp_message;
+	    size_t tmpSize;
+	    size_t cmdUsed;
 
 	    /*
 	     * The message should include all of the command because 
@@ -554,16 +588,18 @@ ExecuteQueuedRequest (
 	       cmdlen+=2; /* make room for a space + string terminator */
 	    }
 	 
-	    tmp_message = (char *) XtMalloc (strlen (errorSpawn) + 
-				             strlen (pNode->exec_host) +
-				             cmdlen + 4);
+	    tmpSize = strlen (errorSpawn) + strlen (pNode->exec_host) +
+		      cmdlen + 4;
+	    tmp_message = (char *) XtMalloc (tmpSize);
 	    cmdp = (char *) XtMalloc(cmdlen + 1);
+	    cmdUsed = 0;
 	    *cmdp = '\0';
 	    for (i = 0; pNode->argv[i]; i++) {
-	       strcat(cmdp,pNode->argv[i]);
-	       strcat(cmdp, " ");
+	       cmdUsed += snprintf(cmdp + cmdUsed, cmdlen + 1 - cmdUsed,
+				   "%s ", pNode->argv[i]);
 	    }
-	    (void) sprintf (tmp_message, errorSpawn, pNode->exec_host, cmdp);
+	    (void) snprintf (tmp_message, tmpSize, errorSpawn, pNode->exec_host,
+			     cmdp);
 	    _DtCmdLogErrorMessage (tmp_message);
 	    XtFree(cmdp);
 	    XtFree(tmp_message);
@@ -627,6 +663,7 @@ FreeRequest (Cmd_RequestQueue *pNode)
 int
 _DtCmdCommandInvokerExecute (
 	char *errorMessage,		/* MODIFIED */
+	size_t errorSize,		/* size of errorMessage */
 	DtSvcMsgContext replyContext,	/* OBSOLETE -- always NULL */
 	int  winMask,
 	char *contextHost,
@@ -669,7 +706,7 @@ _DtCmdCommandInvokerExecute (
    if ((windowType=
 	DtCmdGetWindowType(winMask))== -1) 
    {
-      (void) sprintf (errorMessage, errorRequest, toolRequest, 
+      (void) snprintf (errorMessage, errorSize, errorRequest, toolRequest, 
 		      DtTERMINAL, DtPERM_TERMINAL, DtOUTPUT_ONLY, 
 		      DtSHARED_OUTPUT, "" /* Obsolete shell window */,
                       DtNO_STDIO);
@@ -691,15 +728,17 @@ _DtCmdCommandInvokerExecute (
        * NO-STDIO || START-SESSION request.
        */
       
-      theCommand = XtMalloc( 
+      size_t theCommandSize = 
          + strlen (cmd_Resources.dtexecPath)
          + strlen(" -open ") + 4 /* waitTime len */
          + strlen(" -ttprocid ") + strlen(_DtActNULL_GUARD(procId))
          + strlen(_DtActNULL_GUARD(tmpFiles)) 
          + strlen (execString) 
-         + 5 /* for 2 quotes,2 blanks,null */);
+         + 5 /* for 2 quotes,2 blanks,null */;
 
-      sprintf(theCommand,"%s -open %d -ttprocid '%s' %s %s",
+      theCommand = XtMalloc(theCommandSize);
+
+      snprintf(theCommand,theCommandSize,"%s -open %d -ttprocid '%s' %s %s",
           cmd_Resources.dtexecPath,
           0 /* wait time zero for NO_STDIO */,
           _DtActNULL_GUARD(procId),
@@ -721,7 +760,7 @@ _DtCmdCommandInvokerExecute (
    {
       if (!(_DtCmdCheckForExecutable (cmd_Resources.dtexecPath))) 
       {
-	 (void) sprintf (errorMessage, cmd_Globals.error_subprocess,
+	 (void) snprintf (errorMessage, errorSize, cmd_Globals.error_subprocess,
 			 cmd_Resources.dtexecPath);
 	 XtFree ((char *) theCommand);
 	 return (_CMD_EXECUTE_FAILURE);
@@ -738,7 +777,7 @@ _DtCmdCommandInvokerExecute (
    {
       if (!(_DtCmdCheckForExecutable (cmd_Resources.localTerminal))) 
       {
-	 (void) sprintf (errorMessage, cmd_Globals.error_terminal, 
+	 (void) snprintf (errorMessage, errorSize, cmd_Globals.error_terminal, 
 			 cmd_Resources.localTerminal);
 	 XtFree ((char *) theCommand);
 	 return (_CMD_EXECUTE_FAILURE);
@@ -761,14 +800,15 @@ _DtCmdCommandInvokerExecute (
       char *netfile;
       char *argv[4];
       char *tmp;
+      size_t tmpSize;
 
       /* REMOTE Execution */
 
       ioMode = SPCIO_NOIO | SPCIO_SYNC_TERMINATOR | SPCIO_FORCE_CONTEXT;
 
-      if ((cmdChannel = (_DtSPCOpen(execHost, 
+      if ((cmdChannel = (SPCOpen(execHost, 
 			 ioMode, 
-			 errorMessage))) == SPC_ERROR) 
+			 errorMessage, errorSize))) == SPC_ERROR) 
       {
 	 Cmd_FreeAllocatedStringVector (commandArray);
 	 return (_CMD_EXECUTE_FAILURE);
@@ -785,14 +825,25 @@ _DtCmdCommandInvokerExecute (
 	 ((contextDir  == nullptr) ? (char *) getenv ("HOME") : contextDir));
 
       if (tt_pointer_error (netfile) != TT_OK) {
-	 (void) sprintf (errorMessage, cmd_Globals.error_directory_name_map,
+	 (void) snprintf (errorMessage, errorSize, cmd_Globals.error_directory_name_map,
 	    ((contextDir  == nullptr) ? (char *) getenv ("HOME") : contextDir),
 	    ((contextHost == nullptr) ? execHost : contextHost),
 	    tt_status_message (tt_pointer_error(netfile)));
 	 Cmd_FreeAllocatedStringVector (commandArray);
 	 return (_CMD_EXECUTE_FAILURE);
       }
-      (void) strcpy (context, netfile);
+      if (strlen (netfile) >= sizeof (context))
+      {
+	 (void) snprintf (errorMessage, errorSize,
+	    cmd_Globals.error_directory_name_map,
+	    ((contextDir  == nullptr) ? (char *) getenv ("HOME") : contextDir),
+	    ((contextHost == nullptr) ? execHost : contextHost),
+	    strerror (ENAMETOOLONG));
+	 tt_free (netfile);
+	 Cmd_FreeAllocatedStringVector (commandArray);
+	 return (_CMD_EXECUTE_FAILURE);
+      }
+      (void) memcpy (context, netfile, strlen (netfile) + 1);
       tt_free (netfile);
 
      /*
@@ -808,8 +859,9 @@ _DtCmdCommandInvokerExecute (
      argv[0] = cmd_Resources.dtexecPath;
      argv[1] = (char *) nullptr;
 
-     if ((_DtSPCSpawn(argv[0], context, argv, nullptr, cmdChannel,
-		      execHost, contextHost, contextDir, errorMessage)) 
+     if ((SPCSpawn(argv[0], context, argv, nullptr, cmdChannel,
+		      execHost, contextHost, contextDir, errorMessage,
+		      errorSize)) 
 	  == SPC_ERROR) 
      {
 	if (DtSPCErrorNumber != SPC_cannot_Chdir &&
@@ -822,7 +874,7 @@ _DtCmdCommandInvokerExecute (
 	    * error message returned by the Spawn function with
 	    * an appropriate message.
 	    */
-	   (void) sprintf (errorMessage, errorRemoteSubprocess, execHost, 
+	   (void) snprintf (errorMessage, errorSize, errorRemoteSubprocess, execHost, 
 			   cmd_Resources.dtexecPath);
 	DtSPCClose(cmdChannel);
 	Cmd_FreeAllocatedStringVector (commandArray);
@@ -837,9 +889,9 @@ _DtCmdCommandInvokerExecute (
       */
      _DtCmdStringToArrayOfStrings (execString, commandArray2);
 
-     tmp = (char *) XtMalloc (strlen (commandArray2[0]) +
-			     strlen ("whence ") + 2);
-     (void) sprintf (tmp, "whence %s", commandArray2[0]);
+     tmpSize = strlen (commandArray2[0]) + strlen ("whence ") + 2;
+     tmp = (char *) XtMalloc (tmpSize);
+     (void) snprintf (tmp, tmpSize, "whence %s", commandArray2[0]);
 
      _DtCmdFreeStringVector (commandArray2);
 
@@ -851,9 +903,9 @@ _DtCmdCommandInvokerExecute (
      /*
       * Reopen the channel
       */
-     if ((cmdChannel = (_DtSPCOpen(execHost, 
+     if ((cmdChannel = (SPCOpen(execHost, 
 			 ioMode, 
-			 errorMessage))) == SPC_ERROR) 
+			 errorMessage, errorSize))) == SPC_ERROR) 
       {
 	 Cmd_FreeAllocatedStringVector (commandArray);
 	 return (_CMD_EXECUTE_FAILURE);
@@ -870,18 +922,19 @@ _DtCmdCommandInvokerExecute (
       {
 	DtSPCClose(cmdChannel);
 	Cmd_FreeAllocatedStringVector (commandArray);
-	(void) strcpy (errorMessage, errorSpcTerminator);
+	(void) snprintf (errorMessage, errorSize, "%s", errorSpcTerminator);
 	XtFree ((char *) tmp);
 	_DtSvcProcessUnlock();
 	return (_CMD_EXECUTE_FAILURE);
       }
       
-      if ((_DtSPCSpawn(argv[0], context, argv, nullptr, cmdChannel,
-		      execHost, contextHost, contextDir, errorMessage)) 
+      if ((SPCSpawn(argv[0], context, argv, nullptr, cmdChannel,
+		      execHost, contextHost, contextDir, errorMessage,
+		      errorSize)) 
 	  == SPC_ERROR) 
       {
 	DtSPCClose(cmdChannel);
-	(void) sprintf (errorMessage, errorRemoteSubprocess, execHost,
+	(void) snprintf (errorMessage, errorSize, errorRemoteSubprocess, execHost,
                 argv[0]);
 	Cmd_FreeAllocatedStringVector (commandArray);
 	XtFree ((char *) tmp);
@@ -919,7 +972,7 @@ _DtCmdCommandInvokerExecute (
 
       if (!_DtCmdCheckForExecutable (commandArray2[0])) 
       {
-         (void) sprintf (errorMessage, errorExec, commandArray2[0]);
+         (void) snprintf (errorMessage, errorSize, errorExec, commandArray2[0]);
 	 Cmd_FreeAllocatedStringVector (commandArray);
 	 _DtCmdFreeStringVector (commandArray2);
 	 return (_CMD_EXECUTE_FAILURE);
@@ -939,7 +992,7 @@ _DtCmdCommandInvokerExecute (
       if (!_DtCmdValidDir (_cmdClientHost, contextDir, contextHost)) 
       {
 	 Cmd_FreeAllocatedStringVector (commandArray);
-	 (void) sprintf (errorMessage, errorChdir, contextDir, execHost);
+	 (void) snprintf (errorMessage, errorSize, errorChdir, contextDir, execHost);
 	 if(-1 == chdir (tmpDir)) {
             perror(strerror(errno));
          }
@@ -969,7 +1022,7 @@ _DtCmdCommandInvokerExecute (
 	 if(-1 == chdir (tmpDir)) {
 	     perror(strerror(errno)); 
          }
-         (void) sprintf(errorMessage, errorFork, execHost);
+         (void) snprintf (errorMessage, errorSize, errorFork, execHost);
          (void) _DtEnvControl (DT_ENV_RESTORE_POST_DT);
 	 return (_CMD_EXECUTE_FAILURE);
       }
@@ -1032,7 +1085,7 @@ _DtCmdCommandInvokerExecute (
 	  * to the terminal window if the request requires a
 	  * terminal.
 	  */
-	 (void) sprintf (errorMessage, errorExec, commandArray[0]);
+	 (void) snprintf (errorMessage, errorSize, errorExec, commandArray[0]);
 	 (void) printf ("%s\n", errorMessage);
 	 (void) _exit (1);
       }
@@ -1078,6 +1131,7 @@ CheckCommandTerminator(
    unsigned long requestNum = (unsigned long)(uintptr_t)terminate_data;
    Boolean xhostError;
    char errorMessage[MAX_BUF_SIZE];
+   const size_t errorSize = sizeof (errorMessage);
    Cmd_RequestQueue *prev  = nullptr;
    Cmd_RequestQueue *pNode = requestQueue;
 
@@ -1117,7 +1171,7 @@ CheckCommandTerminator(
    {
       if (pNode->failure_proc != nullptr)
       {
-	 (void) sprintf (errorMessage, errorSpawn, pNode->exec_host, 
+	 (void) snprintf (errorMessage, errorSize, errorSpawn, pNode->exec_host, 
 			 pNode->exec_string);
 	 if (cmd_Resources.executionHostLogging)
 	    _DtCmdLogErrorMessage (errorMessage);
@@ -1215,8 +1269,9 @@ _DtActionCommandInvoke(
 {
 	int status;
 	char errorMessage[MAX_BUF_SIZE * 2];
+	const size_t errorSize = sizeof (errorMessage);
 
-	status = _DtCmdCommandInvokerExecute (errorMessage, nullptr, 
+	status = _DtCmdCommandInvokerExecute (errorMessage, errorSize, nullptr, 
 			       wintype, 
 			       cwdHost, cwdDir, nullptr,
 			       termOpts, execHost, execString,
@@ -1230,7 +1285,7 @@ _DtActionCommandInvoke(
 		{
 			CallbackData *data;
 			data = (CallbackData *) success_data;
-			(void) sprintf (errorMessage, successHost, 
+			(void) snprintf (errorMessage, errorSize, successHost, 
 				data->actionLabel, execHost);
 			_DtCmdLogErrorMessage (errorMessage);
 		}

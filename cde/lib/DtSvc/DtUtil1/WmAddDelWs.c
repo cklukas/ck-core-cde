@@ -126,7 +126,7 @@ _DtWsmDeleteWorkspace (
     Tt_message	msg;
     Tt_status	status;
 
-    sprintf (pch, "0x%lx", aWs);
+    snprintf (pch, sizeof pch, "0x%lx", aWs);
     msg = tttk_message_create(0, TT_REQUEST, TT_SESSION, 0,
 	    "DtWorkspace_Delete", 0);
     status = tt_ptr_error(msg);

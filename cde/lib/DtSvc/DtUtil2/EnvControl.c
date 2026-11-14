@@ -192,7 +192,7 @@ makeDefaultIconPath(
 	char		*fmt = "%s/.dt/icons/%s:";
 	char		*homedir;
 	char		*outbuf;
-	int		bytes_needed, fmt_bytes, homedir_bytes;
+	size_t		bytes_needed, fmt_bytes, homedir_bytes, used;
 
 	bytes_needed = strlen(varname) + strlen(basedefault) + 2;
 
@@ -206,20 +206,14 @@ makeDefaultIconPath(
 	}
 
 	outbuf = XtMalloc(bytes_needed);
-	(void)sprintf(outbuf, "%s=", varname);
+	used = snprintf(outbuf, bytes_needed, "%s=", varname);
 	if (homedir != nullptr)
 	{
-	    char *temp = XtMalloc(bytes_needed);
-
 	    for ( ; *suffixes ; ++suffixes)
-	    {
-		(void)sprintf(temp, fmt, homedir, *suffixes);
-		(void)strcat(outbuf, temp);
-	    }
-
-	    if (temp) XtFree(temp);
+		used += snprintf(outbuf + used, bytes_needed - used, fmt,
+				 homedir, *suffixes);
 	}
-	(void)strcat(outbuf, basedefault);
+	snprintf(outbuf + used, bytes_needed - used, "%s", basedefault);
 
 	return outbuf;
 }
@@ -305,17 +299,18 @@ _DtEnvSessionManager(void)
 	            if (nullptr != session_manager && None != actual_format)
 		    {
 		        char *envstr;
-			envstr = (char*) malloc(
-						strlen(SESSION_MANAGER) +
-						strlen(session_manager) + 2);
+			size_t envsize = strlen(SESSION_MANAGER) +
+					 strlen(session_manager) + 2;
+
+			envstr = (char*) malloc(envsize);
 			if (nullptr == envstr)
 			{
 			    XtFree(session_manager);
 			    XCloseDisplay(display);
 			    return -1;
 			}
-			sprintf(
-			envstr, "%s=%s",
+			snprintf(
+			envstr, envsize, "%s=%s",
 				SESSION_MANAGER,
 				session_manager);
 			if (0 != putenv(envstr))
@@ -432,7 +427,7 @@ _DtEnvControl(
 			  strlen(BIN_PATH_ENVIRON) + strlen(BIN_PATH_STRING) +2;
 
 		        _postDtEnvironment.binPath = XtMalloc(bytes_needed);
-			sprintf(_postDtEnvironment.binPath,
+			snprintf(_postDtEnvironment.binPath, bytes_needed,
 				"%s=%s",
 				BIN_PATH_ENVIRON,
 				BIN_PATH_STRING);
@@ -446,7 +441,7 @@ _DtEnvControl(
 			  strlen(BIN_PATH_ENVIRON) + strlen(tempString) + 2;
 
 			_preDtEnvironment.binPath = XtMalloc(bytes_needed);
-			sprintf(_preDtEnvironment.binPath,
+			snprintf(_preDtEnvironment.binPath, bytes_needed,
 				"%s=%s",
 			    	BIN_PATH_ENVIRON,
 			    	tempString);
@@ -479,7 +474,7 @@ _DtEnvControl(
 				 * "/usr/bin/X11" in the new PATH 
 				 */
 				 *(ptr - 1) = '\0'; 
-				 sprintf(_postDtEnvironment.binPath,
+				 snprintf(_postDtEnvironment.binPath, bytes_needed,
 				   "%s=%s:%s:%s",
 				    BIN_PATH_ENVIRON,
 				    tempString,
@@ -492,7 +487,7 @@ _DtEnvControl(
 				 *  Turns out that "/usr/bin/X11"
 				 *  is at the front of the PATH, so...
 				 */
-				sprintf(_postDtEnvironment.binPath,
+				snprintf(_postDtEnvironment.binPath, bytes_needed,
 				    "%s=%s:%s",
 				    BIN_PATH_ENVIRON,
 				    BIN_PATH_STRING,
@@ -515,7 +510,7 @@ _DtEnvControl(
 				 */
 
 				 *(ptr - 1) = '\0'; 
-				 sprintf(_postDtEnvironment.binPath,
+				 snprintf(_postDtEnvironment.binPath, bytes_needed,
 				   "%s=%s:%s:%s",
 				    BIN_PATH_ENVIRON,
 				    tempString,
@@ -528,7 +523,7 @@ _DtEnvControl(
 				 *  Turns out that "/usr/bin"
 				 *  is at the front of the PATH, so...
 				 */
-				sprintf(_postDtEnvironment.binPath,
+				snprintf(_postDtEnvironment.binPath, bytes_needed,
 				    "%s=%s:%s",
 				    BIN_PATH_ENVIRON,
 				    BIN_PATH_STRING,
@@ -540,7 +535,7 @@ _DtEnvControl(
 			    /* 
 			     * Put our dt string on the front of the PATH 
 			     */
-			    sprintf(_postDtEnvironment.binPath,
+			    snprintf(_postDtEnvironment.binPath, bytes_needed,
 				"%s=%s:%s",
 				BIN_PATH_ENVIRON,
 				BIN_PATH_STRING,
@@ -561,7 +556,7 @@ _DtEnvControl(
 		      strlen(PM_PATH_ENVIRON) + strlen(tempString) + 2;
 
 		    _preDtEnvironment.pmPath = XtMalloc(bytes_needed);
-		    sprintf(_preDtEnvironment.pmPath,
+		    snprintf(_preDtEnvironment.pmPath, bytes_needed,
 			"%s=%s",
 			PM_PATH_ENVIRON,
 			tempString);
@@ -582,7 +577,7 @@ _DtEnvControl(
 		      strlen(BM_PATH_ENVIRON) + strlen(tempString) + 2;
 
 		    _preDtEnvironment.bmPath = XtMalloc(bytes_needed);
-		    sprintf(_preDtEnvironment.bmPath,
+		    snprintf(_preDtEnvironment.bmPath, bytes_needed,
 			"%s=%s",
 			BM_PATH_ENVIRON,
 			tempString);
@@ -605,7 +600,7 @@ _DtEnvControl(
 		      strlen(NLS_PATH_ENVIRON) + strlen(NLS_PATH_STRING) + 2;
 
 		    _postDtEnvironment.nlsPath = XtMalloc(bytes_needed);
-		    sprintf(_postDtEnvironment.nlsPath,
+		    snprintf(_postDtEnvironment.nlsPath, bytes_needed,
 			"%s=%s",
 			NLS_PATH_ENVIRON,
 			NLS_PATH_STRING);
@@ -619,7 +614,7 @@ _DtEnvControl(
 		      strlen(NLS_PATH_ENVIRON) + strlen(tempString) + 2;
 
 		    _preDtEnvironment.nlsPath = XtMalloc(bytes_needed);
-		    sprintf(_preDtEnvironment.nlsPath,
+		    snprintf(_preDtEnvironment.nlsPath, bytes_needed,
 			"%s=%s",
 			NLS_PATH_ENVIRON,
 			tempString);
@@ -633,7 +628,7 @@ _DtEnvControl(
 			strlen(NLS_PATH_STRING) + 3;
 
 		    _postDtEnvironment.nlsPath = XtMalloc(bytes_needed);
-		    sprintf(_postDtEnvironment.nlsPath,
+		    snprintf(_postDtEnvironment.nlsPath, bytes_needed,
 			"%s=%s:%s",
 			NLS_PATH_ENVIRON,
 			tempString,
@@ -652,7 +647,7 @@ _DtEnvControl(
 			strlen(SYSTEM_APPL_PATH_STRING) + 2;
 
 		    _postDtEnvironment.sysApplPath = XtMalloc(bytes_needed);
-		    sprintf(_postDtEnvironment.sysApplPath,
+		    snprintf(_postDtEnvironment.sysApplPath, bytes_needed,
 			"%s=%s",
 			SYSTEM_APPL_PATH_ENVIRON,
 			SYSTEM_APPL_PATH_STRING);
@@ -663,7 +658,7 @@ _DtEnvControl(
 		      strlen(SYSTEM_APPL_PATH_ENVIRON) + strlen(tempString) + 2;
 
 		    _preDtEnvironment.sysApplPath = XtMalloc(bytes_needed);
-		    sprintf(_preDtEnvironment.sysApplPath,
+		    snprintf(_preDtEnvironment.sysApplPath, bytes_needed,
 			"%s=%s",
 			SYSTEM_APPL_PATH_ENVIRON,
 			tempString);
@@ -674,7 +669,7 @@ _DtEnvControl(
 			strlen(SYSTEM_APPL_PATH_STRING) + 3;
 
 		    _postDtEnvironment.sysApplPath = XtMalloc(bytes_needed);
-		    sprintf(_postDtEnvironment.sysApplPath,
+		    snprintf(_postDtEnvironment.sysApplPath, bytes_needed,
 			"%s=%s:%s",
 			SYSTEM_APPL_PATH_ENVIRON,
 			tempString,
@@ -1068,20 +1063,34 @@ _AddToPath (
 	char * sDir)
 {
     char * sNew;
+    size_t pathLen = (sPath != nullptr) ? strlen(sPath) : 0;
+    size_t dirLen = strlen(sDir);
 
-    if (sPath != nullptr)
-    {
-	sNew = XtRealloc (sPath, strlen(sPath) + 1 + strlen(sDir) + 1);
-    }
-    else
-    {
-	sNew = XtMalloc (1 + strlen(sDir) + 1);
-    }
+    sNew = XtRealloc (sPath, pathLen + 1 + dirLen + 1);
+    if (sPath == nullptr)
+	sNew[0] = '\0';
 
-    strcat (sNew, ":");
-    strcat (sNew, sDir);
+    sNew[pathLen] = ':';
+    memcpy (sNew + pathLen + 1, sDir, dirLen + 1);
 
     return (sNew);
+}
+
+
+/*
+ * The "dir/%B.pm:dir/%B.bm:dir/%B" style entry for a backdrop directory;
+ * fmt takes the directory three times.  The result must be freed with XtFree.
+ */
+static char *
+formatBackdropEntry (
+	const char * fmt,
+	const char * sDir)
+{
+    int len = snprintf (nullptr, 0, fmt, sDir, sDir, sDir);
+    char * entry = XtMalloc ((size_t)len + 1);
+
+    snprintf (entry, (size_t)len + 1, fmt, sDir, sDir, sDir);
+    return (entry);
 }
 
 
@@ -1124,13 +1133,11 @@ _DtWsmSetBackdropSearchPath (
     char *sNext;
     char *bm_pm_fmt = "%s/%%B.bm:%s/%%B.pm:%s/%%B";  
     char *pm_bm_fmt = "%s/%%B.pm:%s/%%B.bm:%s/%%B";  
-    int fmtlen = strlen(pm_bm_fmt);
     int returnValue = DT_ENV_NO_OP;
-    int bytes_needed;
+    size_t bytes_needed;
     _Xstrtokparams strtok_buf;
 
     /* for creating the name=value string */
-    char postDtEnvironmentStringBuf[MAX_ENV_STRING]; 
     char *postDtEnvironmentString;
 
     if (backdropPath == nullptr) return (returnValue);
@@ -1170,25 +1177,13 @@ _DtWsmSetBackdropSearchPath (
 	/* process each directory individually */
 	while (sNext != nullptr)
 	{
-	    bytes_needed = (3 * (strlen(sNext) + fmtlen));
-	    if (bytes_needed >= MAX_ENV_STRING)
-	      postDtEnvironmentString = XtMalloc(bytes_needed);
-	    else
-	      postDtEnvironmentString = postDtEnvironmentStringBuf;
-
-	    if (useMultiColorIcons)
-	      sprintf(postDtEnvironmentString, pm_bm_fmt, sNext, sNext, sNext);
-	    else
-	      sprintf(postDtEnvironmentString, bm_pm_fmt, sNext, sNext, sNext);
+	    postDtEnvironmentString =
+	      formatBackdropEntry(useMultiColorIcons ? pm_bm_fmt : bm_pm_fmt, sNext);
 
 	    _postDtEnvironment.pmPath = 
 	      _AddToPath(_postDtEnvironment.pmPath, postDtEnvironmentString);
 
-	    if (postDtEnvironmentString != postDtEnvironmentStringBuf)
-	    {
-	        if (postDtEnvironmentString) XtFree(postDtEnvironmentString);
-		postDtEnvironmentString = nullptr;
-	    }
+	    XtFree(postDtEnvironmentString);
 
 	    /* get next directory */
 	    sNext = _XStrtok(nullptr, ":", strtok_buf);
@@ -1205,7 +1200,7 @@ _DtWsmSetBackdropSearchPath (
 	{
 	    bytes_needed = strlen(PM_PATH_ENVIRON) + strlen(sOldEnv) + 2;
 	    _preDtEnvironment.pmPath = XtMalloc(bytes_needed);
-	    sprintf(_preDtEnvironment.pmPath,"%s=%s", PM_PATH_ENVIRON, sOldEnv);
+	    snprintf(_preDtEnvironment.pmPath, bytes_needed,"%s=%s", PM_PATH_ENVIRON, sOldEnv);
 	}
 
 	/* make a copy that we can modify locally */
@@ -1221,7 +1216,7 @@ _DtWsmSetBackdropSearchPath (
 	 */
 	bytes_needed = strlen(PM_PATH_ENVIRON) + strlen(sOldEnv) + 2;
 	_postDtEnvironment.pmPath = XtMalloc(bytes_needed);
-	sprintf(_postDtEnvironment.pmPath, "%s=%s",  PM_PATH_ENVIRON, sOldEnv);
+	snprintf(_postDtEnvironment.pmPath, bytes_needed, "%s=%s",  PM_PATH_ENVIRON, sOldEnv);
 
 	/* get first directory */
 	sNext = _XStrtok(sBackDirs, ":", strtok_buf);
@@ -1229,25 +1224,13 @@ _DtWsmSetBackdropSearchPath (
 	/* process each directory individually */
 	while (sNext != nullptr)
 	{
-	    bytes_needed = (3 * (strlen(sNext) + fmtlen));
-	    if (bytes_needed >= MAX_ENV_STRING)
-	      postDtEnvironmentString = XtMalloc(bytes_needed);
-	    else
-	      postDtEnvironmentString = postDtEnvironmentStringBuf;
-
-	    if (useMultiColorIcons)
-	      sprintf(postDtEnvironmentString, pm_bm_fmt, sNext, sNext, sNext);
-	    else
-	      sprintf(postDtEnvironmentString, bm_pm_fmt, sNext, sNext, sNext);
+	    postDtEnvironmentString =
+	      formatBackdropEntry(useMultiColorIcons ? pm_bm_fmt : bm_pm_fmt, sNext);
 
 	    _postDtEnvironment.pmPath = 
 	      _AddToPath(_postDtEnvironment.pmPath, postDtEnvironmentString);
 
-	    if (postDtEnvironmentString != postDtEnvironmentStringBuf)
-	    {
-	        XtFree(postDtEnvironmentString);
-		postDtEnvironmentString = nullptr;
-	    }
+	    XtFree(postDtEnvironmentString);
 
 	    /* get next directory */
 	    sNext = _XStrtok(nullptr, ":", strtok_buf);
@@ -1295,22 +1278,13 @@ _DtWsmSetBackdropSearchPath (
 	/* process each directory individually */
 	while (sNext != nullptr)
 	{
-	    bytes_needed = (3 * (strlen(sNext) + fmtlen));
-	    if (bytes_needed >= MAX_ENV_STRING)
-	      postDtEnvironmentString = XtMalloc(bytes_needed);
-	    else
-	      postDtEnvironmentString = postDtEnvironmentStringBuf;
-
-	    sprintf(postDtEnvironmentString, bm_pm_fmt, sNext, sNext, sNext);
+	    postDtEnvironmentString =
+	      formatBackdropEntry(bm_pm_fmt, sNext);
 
 	    _postDtEnvironment.bmPath = 
 	      _AddToPath(_postDtEnvironment.bmPath, postDtEnvironmentString);
 
-	    if (postDtEnvironmentString != postDtEnvironmentStringBuf)
-	    {
-	        if (postDtEnvironmentString) XtFree(postDtEnvironmentString);
-		postDtEnvironmentString = nullptr;
-	    }
+	    XtFree(postDtEnvironmentString);
 
 	    /* get next directory */
 	    sNext = _XStrtok(nullptr, ":", strtok_buf);
@@ -1326,8 +1300,8 @@ _DtWsmSetBackdropSearchPath (
 	if (!_preDtEnvironment.bmPath)
 	{
 	    bytes_needed = strlen(BM_PATH_ENVIRON) + strlen(sOldEnv) + 2;
-	    _preDtEnvironment.pmPath = XtMalloc(bytes_needed);
-	    sprintf(_preDtEnvironment.pmPath,"%s=%s", BM_PATH_ENVIRON, sOldEnv);
+	    _preDtEnvironment.bmPath = XtMalloc(bytes_needed);
+	    snprintf(_preDtEnvironment.bmPath, bytes_needed,"%s=%s", BM_PATH_ENVIRON, sOldEnv);
 	}
 
 	/* make a copy that we can modify locally */
@@ -1343,7 +1317,7 @@ _DtWsmSetBackdropSearchPath (
 	 */
 	bytes_needed = strlen(BM_PATH_ENVIRON) + strlen(sOldEnv) + 2;
 	_postDtEnvironment.bmPath = XtMalloc(bytes_needed);
-	sprintf(_postDtEnvironment.bmPath, "%s=%s",  BM_PATH_ENVIRON, sOldEnv);
+	snprintf(_postDtEnvironment.bmPath, bytes_needed, "%s=%s",  BM_PATH_ENVIRON, sOldEnv);
 
 	/* get first directory */
 	sNext = _XStrtok(sBackDirs, ":", strtok_buf);
@@ -1351,22 +1325,13 @@ _DtWsmSetBackdropSearchPath (
 	/* process each directory individually */
 	while (sNext != nullptr)
 	{
-	    bytes_needed = (3 * (strlen(sNext) + fmtlen));
-	    if (bytes_needed >= MAX_ENV_STRING)
-	      postDtEnvironmentString = XtMalloc(bytes_needed);
-	    else
-	      postDtEnvironmentString = postDtEnvironmentStringBuf;
-
-	    sprintf(postDtEnvironmentString, bm_pm_fmt, sNext, sNext, sNext);
+	    postDtEnvironmentString =
+	      formatBackdropEntry(bm_pm_fmt, sNext);
 
 	    _postDtEnvironment.bmPath = 
 	      _AddToPath(_postDtEnvironment.bmPath, postDtEnvironmentString);
 
-	    if (postDtEnvironmentString != postDtEnvironmentStringBuf)
-	    {
-	        XtFree(postDtEnvironmentString);
-		postDtEnvironmentString = nullptr;
-	    }
+	    XtFree(postDtEnvironmentString);
 
 	    /* get next directory */
 	    sNext = _XStrtok(nullptr, ":", strtok_buf);

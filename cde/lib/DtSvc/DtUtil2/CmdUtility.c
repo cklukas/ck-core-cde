@@ -364,7 +364,7 @@ _DtCmdStringToArrayOfStrings(
    len=strlen(theString);
    for (position=0, i=0; (position <= len) && 
         (theString[position] != '\0'); ) {
-      (void) strcpy (tmp, "");
+      tmp[0] = '\0';
       GetWordWithQuotes (theString, tmp, &position);
       /* Check word to see if it contains only trailing blanks. */
       if (tmp[0] == '\0') 

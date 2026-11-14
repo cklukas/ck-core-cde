@@ -323,6 +323,7 @@ _DtExpandLang(
     char *tmpPtr, *tmpPtr1;
     char *newString;
     char *tokPtr;
+    size_t escLen;
 
     if (string == nullptr)
 	return (nullptr);
@@ -341,14 +342,16 @@ _DtExpandLang(
 
     newString =
 	(char *)XtCalloc(1, (strlen(string) + nColons + 1) * sizeof(char));
-    for (tmpPtr = string;
+    for (tmpPtr = string, escLen = 0;
 	 (tmpPtr1 = DtStrchr(tmpPtr, ':')) != (char *)nullptr;
 	 tmpPtr = tmpPtr1 + 1)
     {
-	strncat(newString, tmpPtr, tmpPtr1 - tmpPtr);
-	strcat(newString, "%:");
+	memcpy(newString + escLen, tmpPtr, tmpPtr1 - tmpPtr);
+	escLen += tmpPtr1 - tmpPtr;
+	memcpy(newString + escLen, "%:", 2);
+	escLen += 2;
     }
-    strcat(newString, tmpPtr);
+    memcpy(newString + escLen, tmpPtr, strlen(tmpPtr) + 1);
 
     __setupLangSubstitutions();
 
@@ -396,7 +399,7 @@ _DtExpandLang(
 
 	    if (pathLen > 0)
 		newPath[pathLen++] = ',';
-	    strcpy(&(newPath[pathLen]), modPath);
+	    memcpy(&(newPath[pathLen]), modPath, modLen + 1);
 	    pathLen += modLen;
 
 	    XtFree(origPath);
@@ -407,6 +410,23 @@ _DtExpandLang(
     XtFree(newString);
 
     return newPath;
+}
+
+
+/* "a/b" in newly allocated memory. */
+static char *
+JoinPath(
+        const char *a,
+        const char *b )
+{
+   size_t aLen = strlen(a);
+   size_t bLen = strlen(b);
+   char *joined = XtMalloc((Cardinal)(aLen + bLen + 2));
+
+   memcpy(joined, a, aLen);
+   joined[aLen] = '/';
+   memcpy(joined + aLen + 1, b, bLen + 1);
+   return joined;
 }
 
 
@@ -445,10 +465,7 @@ _DtIsDir(
    struct stat stat_buf;
    char *stat_name;
    
-   stat_name = XtMalloc ((Cardinal)(strlen(path) + strlen(name) + 2));
-   (void)strcpy (stat_name, path);
-   (void)strcat (stat_name, "/");
-   (void)strcat (stat_name, name);
+   stat_name = JoinPath (path, name);
    
    if(stat (stat_name, &stat_buf))
    {
@@ -626,7 +643,6 @@ _DtFindMatchingFiles(
    int num_found;	/* The number of files which have been found. */
    DIR *dirp;		/* Variables for walking through the directory
 			   	entries. */
-   char * next_file;
    struct dirent *dp = nullptr;
    char *file_suffix;
    int suffixLen, nameLen;
@@ -684,19 +700,10 @@ _DtFindMatchingFiles(
 	       }
 	       
 	       /* Get some memory and copy the filename to the array. */
-               files->dirs[num_found] = next_file = (char *) 
-                   XtMalloc((Cardinal)(strlen(dirs->dirs[nextIndex]) + 
-                             strlen (result->d_name) + 2));
-	       (void)strcpy(next_file, dirs->dirs[nextIndex]);
-	       (void)strcat(next_file, "/");
-	       (void)strcat(next_file, result->d_name);
-
-               files->paths[num_found] = next_file = (char *) 
-                   XtMalloc((Cardinal)(strlen(next_path) + 
-                             strlen (result->d_name) + 2));
-	       (void)strcpy(next_file, next_path);
-	       (void)strcat(next_file, "/");
-	       (void)strcat(next_file, result->d_name);
+               files->dirs[num_found] =
+                   JoinPath (dirs->dirs[nextIndex], result->d_name);
+               files->paths[num_found] =
+                   JoinPath (next_path, result->d_name);
 	
 	       num_found++;
 	       files_in_this_directory++;
@@ -858,9 +865,10 @@ _DtGetDatabaseDirPaths( void )
 		   (!is_multibyte || (mblen(*next_dir, MB_LEN_MAX) == 1)) &&
 #endif
 		   (**next_dir == '/')) {
-	         dir = XtMalloc ((Cardinal) (strlen (nwh_host) + 2 + 
-			                     strlen (*next_dir)));
-		 (void) sprintf (dir, "%s:%s", nwh_host, *next_dir);
+	         size_t dirSize = strlen (nwh_host) + 2 + strlen (*next_dir);
+
+	         dir = XtMalloc ((Cardinal) dirSize);
+		 (void) snprintf (dir, dirSize, "%s:%s", nwh_host, *next_dir);
               }
 	      else 
 	         dir = XtNewString(*next_dir);

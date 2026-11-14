@@ -77,6 +77,7 @@ _DtPrintDefaultErrorSafe(
     char buffer[BUFSIZ];
     char fpBuf[BUFSIZ];
     char *fp;
+    size_t fpSize;
     char mesg[BUFSIZ];
     char number[32];
     char *mtype = "XlibMessage";
@@ -101,12 +102,12 @@ _DtPrintDefaultErrorSafe(
 		dpy, mtype, "MajorCode", "Request Major code %d", mesg, BUFSIZ);
 
       if (strlen(mesg) < BUFSIZ-10)
-        fp = fpBuf;
+        fp = fpBuf, fpSize = sizeof fpBuf;
       else
-        fp = malloc(strlen(mesg) + 10);
+        fpSize = strlen(mesg) + 10, fp = malloc(fpSize);
       if (!fp) return (event->error_code);
 
-      (void) sprintf(fp, mesg, event->request_code);
+      (void) snprintf(fp, fpSize, mesg, event->request_code);
 
       _DTP_STRNCAT(msg, fp,     nbytes, event->error_code);
 
@@ -116,7 +117,7 @@ _DtPrintDefaultErrorSafe(
     {
       if (event->request_code < 128)
       {
-          sprintf(number, "%d", event->request_code);
+          snprintf(number, sizeof number, "%d", event->request_code);
           XGetErrorDatabaseText(dpy, "XRequest", number, "", buffer, BUFSIZ);
       }
       else
@@ -145,12 +146,12 @@ _DtPrintDefaultErrorSafe(
           XGetErrorDatabaseText(
 		dpy, mtype, "MinorCode", "Request Minor code %d", mesg, BUFSIZ);
           if (strlen(mesg) < BUFSIZ-10)
-            fp = fpBuf;
+            fp = fpBuf, fpSize = sizeof fpBuf;
           else
-            fp = malloc(strlen(mesg) + 10);
+            fpSize = strlen(mesg) + 10, fp = malloc(fpSize);
           if (!fp) return (event->error_code);
 
-          (void) sprintf(fp, mesg, event->minor_code);
+          (void) snprintf(fp, fpSize, mesg, event->minor_code);
          
           _DTP_STRNCAT(msg, fp,     nbytes, event->error_code);
 
@@ -159,12 +160,12 @@ _DtPrintDefaultErrorSafe(
           if (ext)
 	  {
               if (strlen(ext->name) < BUFSIZ-10)
-                fp = fpBuf;
+                fp = fpBuf, fpSize = sizeof fpBuf;
               else
-                fp = malloc(strlen(ext->name) + 10);
+                fpSize = strlen(ext->name) + 10, fp = malloc(fpSize);
               if (!fp) return (event->error_code);
 
-              sprintf(fp, "%s.%d", ext->name, event->minor_code);
+              snprintf(fp, fpSize, "%s.%d", ext->name, event->minor_code);
 
               XGetErrorDatabaseText(dpy, "XRequest", fp, "", buffer, BUFSIZ);
 
@@ -192,23 +193,23 @@ _DtPrintDefaultErrorSafe(
         if (buffer[0])
 	{
 	    if (strlen(buffer) < BUFSIZ-10)
-              sprintf(buffer,
+              snprintf(buffer, sizeof buffer,
 		"%s.%d",
 		ext->name,
 		event->error_code - ext->codes.first_error);
 	}
         else
-            strcpy(buffer, "Value");
+            snprintf(buffer, sizeof buffer, "Value");
         XGetErrorDatabaseText(dpy, mtype, buffer, "Value 0x%x", mesg, BUFSIZ);
         if (*mesg)
 	{
             if (strlen(mesg) < BUFSIZ-10)
-              fp = fpBuf;
+              fp = fpBuf, fpSize = sizeof fpBuf;
             else
-              fp = malloc(strlen(mesg) + 10);
+              fpSize = strlen(mesg) + 10, fp = malloc(fpSize);
             if (!fp) return (event->error_code);
 
-            (void) sprintf(fp, mesg, event->resourceid);
+            (void) snprintf(fp, fpSize, mesg, event->resourceid);
 
             _DTP_STRNCAT(msg, fp,     nbytes, event->error_code);
             _DTP_STRNCAT(msg, "\n  ", nbytes, event->error_code);
@@ -238,12 +239,12 @@ _DtPrintDefaultErrorSafe(
                                   mesg, BUFSIZ);
 
         if (strlen(mesg) < BUFSIZ-10)
-          fp = fpBuf;
+          fp = fpBuf, fpSize = sizeof fpBuf;
         else
-          fp = malloc(strlen(mesg) + 10);
+          fpSize = strlen(mesg) + 10, fp = malloc(fpSize);
         if (!fp) return (event->error_code);
 
-        (void) sprintf(fp, mesg, event->resourceid);
+        (void) snprintf(fp, fpSize, mesg, event->resourceid);
 
         _DTP_STRNCAT(msg, fp,     nbytes, event->error_code);
         _DTP_STRNCAT(msg, "\n  ", nbytes, event->error_code);
@@ -256,12 +257,12 @@ _DtPrintDefaultErrorSafe(
 	  dpy, mtype, "ErrorSerial", "Error Serial #%d", mesg, BUFSIZ);
 
         if (strlen(mesg) < BUFSIZ-10)
-          fp = fpBuf;
+          fp = fpBuf, fpSize = sizeof fpBuf;
         else
-          fp = malloc(strlen(mesg) + 10);
+          fpSize = strlen(mesg) + 10, fp = malloc(fpSize);
         if (!fp) return (event->error_code);
 
-        (void) sprintf(fp, mesg, event->serial);
+        (void) snprintf(fp, fpSize, mesg, event->serial);
 
         _DTP_STRNCAT(msg, fp,     nbytes, event->error_code);
         _DTP_STRNCAT(msg, "\n  ", nbytes, event->error_code);
@@ -274,12 +275,12 @@ _DtPrintDefaultErrorSafe(
 	  dpy, mtype, "CurrentSerial", "Current Serial #%d", mesg, BUFSIZ);
 
         if (strlen(mesg) < BUFSIZ-10)
-          fp = fpBuf;
+          fp = fpBuf, fpSize = sizeof fpBuf;
         else
-          fp = malloc(strlen(mesg) + 10);
+          fpSize = strlen(mesg) + 10, fp = malloc(fpSize);
         if (!fp) return (event->error_code);
 
-        (void) sprintf(fp, mesg, dpy->request);
+        (void) snprintf(fp, fpSize, mesg, dpy->request);
 
         _DTP_STRNCAT(msg, fp,     nbytes, event->error_code);
         _DTP_STRNCAT(msg, "\n  ", nbytes, event->error_code);

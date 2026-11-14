@@ -132,7 +132,7 @@ _DtWsmSetWorkspaceTitle (
     Tt_message	msg;
     char	pch[40];
 
-    sprintf (pch, "0x%lx", aWs);
+    snprintf (pch, sizeof pch, "0x%lx", aWs);
 
     msg = tttk_message_create(0, TT_REQUEST, TT_SESSION, 0,
 	    "DtWorkspace_Title_Set", 0);

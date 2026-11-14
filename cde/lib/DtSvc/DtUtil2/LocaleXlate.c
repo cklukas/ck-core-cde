@@ -401,9 +401,8 @@ int  _DtLcxOpenAllDbs(
    /* get host specifics and generate platform-specific lcx file name */
    uname(&names);
    len = MAXSHORTFNAMELEN - strlen(_DtLCX_DATABASE_TYPE);
-   strncpy(lcxfile,names.sysname,len);
-   lcxfile[len-1] = EOS;
-   strcat(lcxfile,_DtLCX_DATABASE_TYPE);       /* e.g. HP-UX.lcx */
+   snprintf(lcxfile,sizeof lcxfile,"%.*s%s",(int)(len-1),names.sysname,
+	    _DtLCX_DATABASE_TYPE);       /* e.g. HP-UX.lcx */
 
    /* get paths for LCX */
    paths = getenv(DTLCXSEARCHPATH);
@@ -415,6 +414,7 @@ int  _DtLcxOpenAllDbs(
    {
       const char *slash;
       char *end;
+      size_t dbPathsSize;
 
       /* no DTLCXSEARCHPATH; build a default path */
       GetHomeDirPath(homePath, MAXPATHLEN);
@@ -426,11 +426,12 @@ int  _DtLcxOpenAllDbs(
 	  *end   = EOS;
 	}
       if (end < homePath + MAXPATHLEN - strlen(DtLCX_USER_PATH) - 1)
-          strcat(homePath,DtLCX_USER_PATH);
+          snprintf(end,homePath + MAXPATHLEN - end,"%s",DtLCX_USER_PATH);
 
-      dbPaths = calloc((strlen(homePath)+strlen(DtLCX_INSTALL_AND_CONFIG_PATHS)+5), sizeof(char));
+      dbPathsSize = strlen(homePath)+strlen(DtLCX_INSTALL_AND_CONFIG_PATHS)+5;
+      dbPaths = calloc(dbPathsSize, sizeof(char));
       if (dbPaths) 
-         sprintf(dbPaths,"%s:%s",DtLCX_INSTALL_AND_CONFIG_PATHS,homePath);
+         snprintf(dbPaths,dbPathsSize,"%s:%s",DtLCX_INSTALL_AND_CONFIG_PATHS,homePath);
    }
 
    if (nullptr == dbPaths)
@@ -698,7 +699,7 @@ int _DtLcxXlateStdToOp(
 	if (nullptr == stdValue) return -1;   /* RETURN: out of memory */
 
         stdValue[0] = EOS;
-        strcpy(stdValue, stdLocale);
+        memcpy(stdValue, stdLocale, strlen(stdLocale) + 1);
     }
     else 
     {  
@@ -739,7 +740,8 @@ int _DtLcxXlateStdToOp(
 
        /* generate the std value string */
        stdValue[0] = EOS;
-       sprintf(stdValue,
+       snprintf(stdValue, (bytes_needed > DTLCXXLATE_STDTOOP_BUFSIZE) ?
+		(size_t)bytes_needed : sizeof stdValueBuf,
 		"%s%s%s%s%s", 
                 stdLangTerr, sepLC, stdCodeset, sepCM, stdModifier);
     }

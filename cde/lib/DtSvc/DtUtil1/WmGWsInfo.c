@@ -110,9 +110,7 @@ DtWsmGetWorkspaceInfo(
     iLen = strlen(pchName) + strlen (_XA_DT_WORKSPACE_INFO) + 4;
 
     pch = (char *) XtMalloc (iLen);
-    strcpy (pch, _XA_DT_WORKSPACE_INFO);
-    strcat (pch, "_");
-    strcat (pch, pchName);
+    snprintf (pch, iLen, "%s_%s", _XA_DT_WORKSPACE_INFO, pchName);
 
     aProperty = XInternAtom (display, pch, FALSE);
 

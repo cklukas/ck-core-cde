@@ -157,10 +157,11 @@ _DtSaverStart(
   char *saverAction,
   Widget wAction)
 {
-  static char envdata[(DT_SAVER_MAX_SCREENS * 12) + 20];
+  static char envdata[(DT_SAVER_MAX_SCREENS * 20) + 64];
   struct saver_state *state;
   struct saver_state *p;
   int i;
+  size_t used;
 
   _DtSvcProcessLock();
  /*
@@ -207,13 +208,11 @@ _DtSaverStart(
   * Set up environment. It will look like:
   *   DTSAVERINFO="<serial> <count> <win0> <win1> ... <winN>"
   */
-  sprintf(envdata, "DTSAVERINFO=%u %i %lx",
-          state->serial, count, XtWindow(drawArea[0]));
-  for (i = 1; i < count; i++)
-  {
-    char *pe = envdata + strlen(envdata);
-    sprintf(pe, " %lx", XtWindow(drawArea[i]));
-  }
+  used = snprintf(envdata, sizeof envdata, "DTSAVERINFO=%u %i %lx",
+                  state->serial, count, XtWindow(drawArea[0]));
+  for (i = 1; i < count && used < sizeof envdata; i++)
+    used += snprintf(envdata + used, sizeof envdata - used, " %lx",
+                     XtWindow(drawArea[i]));
 
 #if defined(__linux__) || defined(CSRG_BASED)
   putenv(envdata);

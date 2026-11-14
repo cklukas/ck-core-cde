@@ -844,14 +844,15 @@ write_db(DtDtsMMHeader *header, void *index, int size, const char *CacheFile)
 	int	fd;
 	mode_t	cmask = umask((mode_t)077);
 	char	*tmpfile;
+	size_t	tmpfile_size = sizeof(_DTDTSMMTEMPDIR) +
+	    sizeof(_DTDTSMMTEMPFILE) + 7;
 
-	if ((tmpfile = malloc(sizeof(_DTDTSMMTEMPDIR) +
-	    sizeof(_DTDTSMMTEMPFILE) + 7)) == nullptr) {
+	if ((tmpfile = malloc(tmpfile_size)) == nullptr) {
 		_DtSimpleError(DtProgName, DtError, nullptr, tmpfile, nullptr);
 		return 0;
 	}
 
-	sprintf(tmpfile, "%s/%sXXXXXX", _DTDTSMMTEMPDIR, _DTDTSMMTEMPFILE);
+	snprintf(tmpfile, tmpfile_size, "%s/%sXXXXXX", _DTDTSMMTEMPDIR, _DTDTSMMTEMPFILE);
 	fd = mkstemp(tmpfile);
 
 	umask(cmask);

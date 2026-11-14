@@ -247,7 +247,7 @@ dndFileConvert(
 	ConvertState *	cvtState = (ConvertState *)dtDragInfo->clientData;
 
 	*returnType 	= XA_NULL;
-	*returnValue	= (XtPointer)NULL;
+	*returnValue	= (XtPointer)nullptr;
 	*returnLength	= 0;
 	*returnFormat	= 8;
 
@@ -630,10 +630,12 @@ dndFileEncode(
 		char	*realPath;
 
 		if (getcwd(cwd,MAXPATHLEN) == nullptr) {
-			strcpy(cwd,"/");
+			memcpy(cwd,"/",2);
 		}
-		realPath = XtMalloc(strlen(cwd) + strlen(fileName) + 2);
-		sprintf(realPath,"%s/%s",cwd,fileName);
+		size_t realSize = strlen(cwd) + strlen(fileName) + 2;
+
+		realPath = XtMalloc(realSize);
+		snprintf(realPath,realSize,"%s/%s",cwd,fileName);
 		retFile = realPath;
 	} else {
 		retFile = XtNewString(fileName);

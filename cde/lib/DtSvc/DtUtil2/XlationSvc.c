@@ -243,6 +243,7 @@ char * ExpandPath (
 {  /* $CODE$ */
     char tmpPath[MAXPATHLEN + 2];
     char * pathName;
+    size_t pathSize;
     char * eos = nullptr;
     const char * slash = nullptr;
 
@@ -275,12 +276,12 @@ char * ExpandPath (
     }
 
     /* make a malloc'd copy of the path with room to grow */
-    pathName = calloc((strlen(filespec) + (eos-tmpPath) + 5), sizeof(char)); /* 5: arbitrary */
+    pathSize = strlen(filespec) + (eos-tmpPath) + 5; /* 5: arbitrary */
+    pathName = calloc(pathSize, sizeof(char));
     if (nullptr == pathName) return nullptr;		/* RETURN: error */
 
     /* build the absolute path */
-    strcpy(pathName,tmpPath);
-    strcat(pathName,filespec);
+    snprintf(pathName,pathSize,"%s%s",tmpPath,filespec);
 
     return pathName;                             /* RETURN: found */
 }  /* $END$ */
@@ -1517,7 +1518,7 @@ void DoCommonSrchDataPrep(
    srchData->platformStr = platform;
    srchData->platformQuark = (platform?XrmStringToQuark(platform):NULLQUARK);
    srchData->version = verNum;
-   sprintf(srchData->verStr,"%d",verNum);
+   snprintf(srchData->verStr,sizeof srchData->verStr,"%d",verNum);
    srchData->operStr = operation;
    srchData->operStrLen = strlen(operation);
    srchData->operQuark = (operation ? XrmStringToQuark(operation) : NULLQUARK);
@@ -1782,8 +1783,15 @@ int  _DtXlateOpenAllDbs(
        if (nullptr == separator) break;           /* BREAK */
        workLen = separator - workStart;  /* don't include +1 for EOS */
 
+       /* a path component with which the file name does not fit is skipped */
+       if ((size_t)workLen + 1 + strlen(databaseName) >= sizeof dbFile)
+       {
+          workStart = separator + 1;
+          continue;                               /* CONTINUE */
+       }
+
        /* copy over the path component */
-       strncpy(dbFile,workStart,workLen);
+       memcpy(dbFile,workStart,workLen);
        workStart = separator + 1;
 
        /* add a slash to end of path component, if needed */
@@ -1796,7 +1804,7 @@ int  _DtXlateOpenAllDbs(
        }
 
        /* append the filename and EOS */
-       strcpy(dbFile+workLen,databaseName);
+       memcpy(dbFile+workLen,databaseName,strlen(databaseName)+1);
 
 /*printf("Working on: %s\n", dbFile);  **DBG*/
 
@@ -2257,10 +2265,10 @@ int _DtXlateGetXlateEnv(
 #endif
 
 #if defined(__linux__) || defined(CSRG_BASED)
-      sprintf(buf,"%s%s%s", STR(OSMAJORVERSION), 
+      snprintf(buf,sizeof buf,"%s%s%s", STR(OSMAJORVERSION), 
                      nl_langinfo('.'), STR(OSMINORVERSION));
 #else
-      sprintf(buf,"%s%s%s", STR(OSMAJORVERSION), 
+      snprintf(buf,sizeof buf,"%s%s%s", STR(OSMAJORVERSION), 
                      nl_langinfo(RADIXCHAR), STR(OSMINORVERSION));
 #endif
 

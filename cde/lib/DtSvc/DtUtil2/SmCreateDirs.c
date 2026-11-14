@@ -382,7 +382,8 @@ GetDisplayName (
 	}
     }
     
-    strcat (hostName, tmpNumber);
+    snprintf (hostName + strlen (hostName),
+	      sizeof (hostName) - strlen (hostName), "%s", tmpNumber);
 
     returnPath = strdup (hostName);
 

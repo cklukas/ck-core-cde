@@ -1137,14 +1137,14 @@ _DtActMMParseArgTypesList(char *tlist, DtShmBoson **quarkAddr, int *countp)
 	int 		tcount;
 	DtShmBoson	*qp;
 	char 		**typeVec, **tvp;
-	char		buf[_DtAct_MAX_BUF_SIZE];
+	char		*buf;
 
 	_DtSvcProcessLock();
 	if ( !quark_for_wild_char )
 		quark_for_wild_char = _DtDtsMMStringToBoson(_DtACT_ANY);
 	_DtSvcProcessUnlock();
 
-	strcpy(buf,tlist);
+	buf = XtNewString(tlist);
 	tvp = typeVec = _DtVectorizeInPlace(buf,_DtACT_LIST_SEPARATOR_CHAR);
 
 	/*
@@ -1168,6 +1168,7 @@ _DtActMMParseArgTypesList(char *tlist, DtShmBoson **quarkAddr, int *countp)
 	 * use XtFree because it deal with free of a NULL string.
 	 */
 	XtFree((char *)typeVec);
+	XtFree(buf);
 	return  mask;
 }
 
@@ -1181,7 +1182,7 @@ _DtActMMParseArgTypesList(char *tlist, DtShmBoson **quarkAddr, int *countp)
 static unsigned long
 _DtActMMParseClassList(char *clist)
 {
-	char buf[_DtAct_MAX_BUF_SIZE];
+	char *buf;
 	char *bp;
 	char **classVec, **cvp;
 	unsigned long mask = 0;
@@ -1209,7 +1210,7 @@ _DtActMMParseClassList(char *clist)
 	 * Make a local copy of the class string.
 	 * Then vectorize it in place.
 	 */
-	strcpy(buf,clist);
+	buf = XtNewString(clist);
 	cvp = classVec = _DtVectorizeInPlace(buf,_DtACT_LIST_SEPARATOR_CHAR);
 	
 	for ( bp = *cvp; bp; bp = *cvp ) 
@@ -1218,6 +1219,7 @@ _DtActMMParseClassList(char *clist)
 		{
 			/* If its wild -- don't bother with any more parsing */
 			XtFree((char *)classVec);
+			XtFree(buf);
 			return SET_ARG_CLASS_WILD(mask);
 		}
 
@@ -1231,6 +1233,7 @@ _DtActMMParseClassList(char *clist)
 	}
 
 	XtFree((char *)classVec);
+	XtFree(buf);
 	myassert(mask != 0 );
 	return mask;
 }
@@ -1374,14 +1377,8 @@ _DtActMMGetCmdInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 	if (s)
 	  amtToAlloc += strlen(s) + 1;
 	tmp = XtMalloc(amtToAlloc);
-	strcpy(tmp, titleStr);
-	strcat(tmp, actp->label);
-        strcat(tmp, "\"");
-	if (s)
-	{
-		strcat(tmp, " ");
-		strcat(tmp, s);
-	}
+	snprintf(tmp, amtToAlloc, "%s%s\"%s%s", titleStr, actp->label,
+		 s ? " " : "", s ? s : "");
 	_DtDtsMMSafeFree(s);
 
 	ParseMessage(actp,tmp,&(actp->u.cmd.termOpts));
@@ -1487,7 +1484,7 @@ _DtActMMGetTtMsgInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 
 	for ( i=0; True; i++ )
 	{
-		sprintf(argNname,"%s%d%s",
+		snprintf(argNname,sizeof argNname,"%s%d%s",
 			 _DtACTION_TTN_ARG,i,_DtACTION_TTN_MODE);
 		if ( !(s = _DtActGetDtsMMField(actRecp,argNname)) )
 			break;	/* no more args */
@@ -1508,7 +1505,7 @@ _DtActMMGetTtMsgInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 		}
 
 		/* get tt_argn_vtype info */
-		sprintf(argNname,"%s%d%s",
+		snprintf(argNname,sizeof argNname,"%s%d%s",
 			 _DtACTION_TTN_ARG,i,_DtACTION_TTN_VTYPE);
 		actp->u.tt_msg.tt_argn_vtype = 
 			(parsedMsg *)XtRealloc(
@@ -1519,7 +1516,7 @@ _DtActMMGetTtMsgInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 		ParseMessage(actp,s,actp->u.tt_msg.tt_argn_vtype + i);
 
 		/* get tt_argn_value info */
-		sprintf(argNname,"%s%d%s",
+		snprintf(argNname,sizeof argNname,"%s%d%s",
 			 _DtACTION_TTN_ARG,i,_DtACTION_TTN_VALUE);
 		actp->u.tt_msg.tt_argn_value = 
 			(parsedMsg *)XtRealloc(
@@ -1530,7 +1527,7 @@ _DtActMMGetTtMsgInfo(DtDtsMMRecord *actRecp, ActionPtr actp)
 		ParseMessage(actp,s,actp->u.tt_msg.tt_argn_value + i);
 
 		/* get tt_argn_rep_type info */
-		sprintf(argNname,"%s%d%s",
+		snprintf(argNname,sizeof argNname,"%s%d%s",
 			 _DtACTION_TTN_ARG,i,_DtACTION_TTN_REP_TYPE);
 		actp->u.tt_msg.tt_argn_rep_type = 
 			(int *)XtRealloc(
@@ -1603,7 +1600,7 @@ _DtActDbGetDtNtfyInfo(
 
 	for ( i=0; True; i++ )
 	{
-		sprintf(argNval,"%s%d%s",
+		snprintf(argNval,sizeof argNval,"%s%d%s",
 			 _DtACTION_DTN_ARG,i,_DtACTION_DTN_VALUE);
 		if ( !(s = _DtActGetDtsDbField(actRecp,argNval)) )
 			break;	/* no more args */
@@ -1644,7 +1641,7 @@ _DtActDbGetDtReqInfo(
 
 	for ( i=0; True; i++ )
 	{
-		sprintf(argNval,"%s%d%s",
+		snprintf(argNval,sizeof argNval,"%s%d%s",
 			 _DtACTION_DTN_ARG,i,_DtACTION_DTN_VALUE);
 		if ( !(s = _DtActGetDtsDbField(actRecp,argNval)) )
 			break;	/* no more args */
@@ -1662,9 +1659,10 @@ _DtActDbGetDtReqInfo(
 static int
 _DtActMMCompareObjClassMask( unsigned long objClassMask, char *actClass)
 {
-	char	buf[_DtAct_MAX_BUF_SIZE];
+	char	*buf;
 	char	*bp;
 	char	**classVec, **cvp;
+	int	result = False;
 	
 
 	if ( ! DtStrchr(actClass, _DtACT_LIST_SEPARATOR_CHAR ) )
@@ -1698,46 +1696,47 @@ _DtActMMCompareObjClassMask( unsigned long objClassMask, char *actClass)
 	 * Make a local copy of the class string
 	 * Then vectorize it in place.
 	 */
-	strcpy(buf,actClass);
+	buf = XtNewString(actClass);
 	cvp = classVec = _DtVectorizeInPlace(buf,_DtACT_LIST_SEPARATOR_CHAR);
 	
 	for ( bp = *cvp; bp; bp = *cvp ) 
 	{
 		if ( !strcmp(actClass,_DtACT_ANY) )
 		{
-			XtFree((char *)classVec);
-			return True;
+			result = True;
+			break;
 		}
 
 		if ( !strcmp(bp,_DtACTION_FILE) )
 		{
 			if ( IS_ARG_CLASS_FILE(objClassMask) )
 			{
-				XtFree((char *)classVec);
-				return True;
+				result = True;
+				break;
 			}
 		}
 		else if ( !strcmp(bp,_DtACTION_BUFFER) )
 		{
 			if (IS_ARG_CLASS_BUFFER(objClassMask))
 			{
-				XtFree((char *)classVec);
-				return True;
+				result = True;
+				break;
 			}
 		}
 		else if ( !strcmp(bp,_DtACTION_STRING) )
 		{
 			if (IS_ARG_CLASS_STRING(objClassMask))
 			{
-				XtFree((char *)classVec);
-				return True;
+				result = True;
+				break;
 			}
 		}
 		cvp++;
 	}
 
 	XtFree((char *)classVec);
-	return False;
+	XtFree(buf);
+	return result;
 }
 
 static int
@@ -1761,7 +1760,7 @@ _DtActMMCompareMode( unsigned long objMask, char *actMode)
 static int
 _DtActMMCompareType( DtShmBoson reqType, char *actType)
 {
-	char buf[_DtAct_MAX_BUF_SIZE];
+	char *buf;
 	char *reqTypeStr = (char *)_DtDtsMMBosonToString(reqType);
 	char **typeVec;
 	char **tvp;
@@ -1786,7 +1785,7 @@ _DtActMMCompareType( DtShmBoson reqType, char *actType)
 	 * Make a local copy of the class string
 	 * Then vectorize it in place.
 	 */
-	strcpy(buf,actType);
+	buf = XtNewString(actType);
 	tvp = typeVec = _DtVectorizeInPlace(buf,_DtACT_LIST_SEPARATOR_CHAR);
 
 	for ( tp = *tvp; tp; tp = *tvp )
@@ -1794,10 +1793,13 @@ _DtActMMCompareType( DtShmBoson reqType, char *actType)
 		if ( !strcmp(tp,reqTypeStr) )
 		{
 			XtFree((char *)typeVec);
+			XtFree(buf);
 			return True;
 		}
 		tvp++;
 	}
+	XtFree((char *)typeVec);
+	XtFree(buf);
 	
 	return False;
 }

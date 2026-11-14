@@ -440,8 +440,10 @@ char *_DtEnv_tt_file_netfile(
 	/*
 	 * Return a tt_free-able copy of the answer.
 	 */
-	tmpStr = tt_malloc( strlen(fragList[hitIdx].pathFragMapped) + 1 );
-	strcpy( tmpStr, fragList[hitIdx].pathFragMapped );
+	size_t mappedSize = strlen(fragList[hitIdx].pathFragMapped) + 1;
+
+	tmpStr = tt_malloc( mappedSize );
+	memcpy( tmpStr, fragList[hitIdx].pathFragMapped, mappedSize );
 
 	_DtSvcProcessUnlock();
 	return(tmpStr);
@@ -501,8 +503,10 @@ char *_DtEnv_tt_host_netfile_file(
 	/*
 	 * Return a tt_free-able un-mapped copy.
 	 */
-	tmpStr = tt_malloc( strlen(filename) + 1 );
-	strcpy( tmpStr, filename );
+	size_t filenameSize = strlen(filename) + 1;
+
+	tmpStr = tt_malloc( filenameSize );
+	memcpy( tmpStr, filename, filenameSize );
 
 	_DtSvcProcessUnlock();
 	return(tmpStr);
@@ -698,8 +702,10 @@ char *_DtEnv_tt_host_netfile_file(
 	/*
 	 * Return a tt_free-able copy of the answer.
 	 */
-	tmpStr = tt_malloc( strlen(fragList[hitIdx].pathFragMapped) + 1 );
-	strcpy( tmpStr, fragList[hitIdx].pathFragMapped );
+	size_t mappedSize = strlen(fragList[hitIdx].pathFragMapped) + 1;
+
+	tmpStr = tt_malloc( mappedSize );
+	memcpy( tmpStr, fragList[hitIdx].pathFragMapped, mappedSize );
 
 	_DtSvcProcessUnlock();
 	return(tmpStr);
@@ -1095,8 +1101,7 @@ if ( !envVarCache->localEnvVarCopy ) {
     if ( !envVarCache->mappedEnvVarPtr ) {
 	goto fail;
     }
-    strcpy( envVarCache->mappedEnvVarPtr, envVar );
-    strcat( envVarCache->mappedEnvVarPtr, "=" );
+    snprintf( envVarCache->mappedEnvVarPtr, availEnvStrSize, "%s=", envVar );
 
     /*
      * Start mapping each path element.
@@ -1261,16 +1266,15 @@ if ( !envVarCache->localEnvVarCopy ) {
 	/*
 	 * Add the new path element.
 	 */
-	if ( i != 0 )
-	    strcat( envVarCache->mappedEnvVarPtr, separator );
+	{
+	    size_t used = strlen( envVarCache->mappedEnvVarPtr );
 
-	if (newPrePend)
-	    strcat( envVarCache->mappedEnvVarPtr, newPrePend );
-	else
-	    strcat( envVarCache->mappedEnvVarPtr, prePend );
-
-	if (postPend)
-	    strcat( envVarCache->mappedEnvVarPtr, postPend );
+	    snprintf( envVarCache->mappedEnvVarPtr + used,
+		      availEnvStrSize - used, "%s%s%s",
+		      ( i != 0 ) ? separator : "",
+		      newPrePend ? newPrePend : prePend,
+		      postPend ? postPend : "" );
+	}
 
 	freeAndNull( pathList[i] );		/* aka prePend */
 	ttfreeAndNull( newPrePend );
@@ -1301,8 +1305,6 @@ fail:
 static char *_DtEnvGetMapInformation( void )
 {
    char        *mapInfo;
-   char         nameBuf[_DtEnv_MAX_BUF_SIZE];
-   char         classBuf[_DtEnv_MAX_BUF_SIZE];
    XrmValue     resource_value;
    XrmDatabase  db;
    char         *rep_type;
@@ -1328,34 +1330,25 @@ static char *_DtEnvGetMapInformation( void )
     * Try to get map info from the resource database.
     */
    bytesNeeded = strlen(_DTENV_MAP_RESOURCE_NAME)
-                       + strlen(_DtApplicationName) + 4;
-   if ( bytesNeeded > _DtEnv_MAX_BUF_SIZE )
-        name = XtMalloc(bytesNeeded);
-   else
-        name = nameBuf;
-
-   sprintf (name, "%s*%s",
+                       + strlen(_DtEnv_NULL_GUARD(_DtApplicationName)) + 4;
+   name = XtMalloc(bytesNeeded);
+   snprintf (name, bytesNeeded, "%s*%s",
         _DtEnv_NULL_GUARD( _DtApplicationName) , _DTENV_MAP_RESOURCE_NAME);
 
    bytesNeeded = strlen(_DTENV_MAP_RESOURCE_CLASS)
-                       + strlen(_DtApplicationClass) + 4;
-   if ( bytesNeeded > _DtEnv_MAX_BUF_SIZE )
-        class = XtMalloc(bytesNeeded);
-   else
-        class = classBuf;
-   sprintf (class, "%s*%s",
+                       + strlen(_DtEnv_NULL_GUARD(_DtApplicationClass)) + 4;
+   class = XtMalloc(bytesNeeded);
+   snprintf (class, bytesNeeded, "%s*%s",
         _DtEnv_NULL_GUARD(_DtApplicationClass) , _DTENV_MAP_RESOURCE_CLASS);
 
    db = XtDatabase (_DtDisplay);
-   if (XrmGetResource (db, nameBuf, classBuf, &rep_type, &resource_value))
+   if (XrmGetResource (db, name, class, &rep_type, &resource_value))
       mapInfo = (char *) resource_value.addr;
    else
       mapInfo = (char *) nullptr;
 
-   if ( name != nameBuf )
-        XtFree(name);
-   if ( class != classBuf )
-        XtFree(class);
+   XtFree(name);
+   XtFree(class);
 
    if (mapInfo)
 	return( XtNewString( mapInfo ) );

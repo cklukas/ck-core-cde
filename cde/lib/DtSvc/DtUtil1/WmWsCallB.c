@@ -306,7 +306,7 @@ DtWsmAddWorkspaceModifiedCallback (
     tt_free( sessId );
 
     screen = XScreenNumberOfScreen(XtScreen(widget));
-    sprintf(sNum, "%d", screen);
+    snprintf(sNum, sizeof sNum, "%d", screen);
     sName = _DtWsmSelectionNameForScreen (screen);
 
     pCbCtx = (struct _DtWsmCBContext *)
@@ -455,7 +455,7 @@ _DtWsmSelectionNameForScreen (
 
     sName = (String) XtMalloc (strlen(DtWSM_TOOL_CLASS) + 4 + 1);
 
-    sprintf ((char *)sName, "%s_%d", DtWSM_TOOL_CLASS, (scr % 1000));
+    snprintf ((char *)sName, strlen(DtWSM_TOOL_CLASS) + 4 + 1, "%s_%d", DtWSM_TOOL_CLASS, (scr % 1000));
 
     return (sName);
 } /* END OF FUNCTION _DtWsmSelectionNameForScreen */

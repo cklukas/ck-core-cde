@@ -325,6 +325,11 @@ static char * GrowMsgBuffer(
                         char * buffer,
                         int *size,
                         int count) ;
+static char * AppendMsgBuffer( 
+                        char * buffer,
+                        int *size,
+                        const char *text,
+                        Boolean leadingSpace) ;
 static void CmdInvSuccessfulRequest( 
                         char *message,
                         void *data2) ;
@@ -854,16 +859,17 @@ _DtCreateErrorDialog(
    Status status;
    Boolean is_mapped = False;
    char *fmt;
+   size_t titleSize;
 
    fmt = XtNewString((char *)Dt11GETMESSAGE(2, 1, "%1$s%2$s%3$s"));
 
    /* Create the title string for the dialog */
-   title = (char *)XtMalloc((Cardinal)(strlen(PromptDialogTitle) + 
-                                       strlen(actionName) +
-                                       strlen(ErrorPostfix) +
-				       strlen(fmt) + 1));
+   titleSize = strlen(PromptDialogTitle) + strlen(actionName) +
+               strlen(ErrorPostfix) + strlen(fmt) + 1;
+   title = (char *)XtMalloc((Cardinal)titleSize);
 
-   (void)sprintf(title, fmt, PromptDialogTitle, actionName, ErrorPostfix);
+   (void)snprintf(title, titleSize, fmt, PromptDialogTitle, actionName,
+                  ErrorPostfix);
 
    XtFree(fmt);
 
@@ -895,7 +901,7 @@ _DtCreateErrorDialog(
    XtUnmanageChild(XmMessageBoxGetChild(dialog, XmDIALOG_HELP_BUTTON));
    XtUnmanageChild(XmMessageBoxGetChild(dialog, XmDIALOG_CANCEL_BUTTON));
    XtAddCallback(dialog, XmNokCallback, FreeErrorDialog,
-		 (XtPointer)NULL);
+		 (XtPointer)nullptr);
 
    /*
     * If the widget is not mapped, center this dialog.
@@ -1002,9 +1008,10 @@ MultiHostAccessError(
 
 {
    XmString msg;
-   char * buf = XtMalloc(strlen(MultiHostErrorMsg) + strlen(hostList) + 10);
+   size_t bufSize = strlen(MultiHostErrorMsg) + strlen(hostList) + 10;
+   char * buf = XtMalloc(bufSize);
 
-   sprintf(buf, MultiHostErrorMsg, hostList);
+   snprintf(buf, bufSize, MultiHostErrorMsg, hostList);
    msg = XmStringCreateLocalized(buf);
    _DtCreateErrorDialog(w, actionName, msg);
 
@@ -1071,7 +1078,7 @@ NoActionError(
    /* Construct the error message */
    if ((host == nullptr) && (dir == nullptr) && (file == nullptr) && (type == nullptr) )
    {
-      (void)sprintf(msgbuf,NoActionMsg2,actionName);
+      (void)snprintf(msgbuf,2*MAXPATHLEN,NoActionMsg2,actionName);
    }
    else if ( (type != nullptr ) && (file == nullptr) && (dir == nullptr))
    {
@@ -1079,33 +1086,24 @@ NoActionError(
        * We are dealing with a buffer object for which an action couldn't 
        * be located.
        */
-      (void)sprintf(msgbuf,NoActionMsg3,actionName,type);
+      (void)snprintf(msgbuf,2*MAXPATHLEN,NoActionMsg3,actionName,type);
    }
    else
    {
-      name = (char *)XtMalloc((Cardinal)((host ? strlen(host) : 0) +
-                                         (dir ? strlen(dir) : 0) +
-                                         (file ? strlen(file) : 0) + 10));
-      name[0] = '\0';
+      size_t nameSize = (host ? strlen(host) : 0) +
+                        (dir ? strlen(dir) : 0) +
+                        (file ? strlen(file) : 0) + 10;
+
+      name = (char *)XtMalloc((Cardinal)nameSize);
       
       /* Construct the file name */
-      if (host)
-      {
-         (void)strcat(name, host);
-         (void)strcat(name, ":");
-      }
+      snprintf(name, nameSize, "%s%s%s%s%s",
+               host ? host : "", host ? ":" : "",
+               dir ? dir : "",
+               (dir && strcmp(dir, "/") != 0) ? "/" : "",
+               file ? file : "");
 
-      if (dir)
-      {
-         (void)strcat(name, dir);
-         if (strcmp(dir, "/") != 0)
-            (void)strcat(name, "/");
-      }
-
-      if (file)
-         (void)strcat(name, file);
-
-      (void)sprintf(msgbuf,NoActionMsg,actionName,name,type);
+      (void)snprintf(msgbuf,2*MAXPATHLEN,NoActionMsg,actionName,name,type);
 
    }
    msg  = XmStringCreateLocalized(msgbuf);
@@ -1152,13 +1150,15 @@ NoToolTalkConnectionError(
 {
 	XmString msg;
 	char *errmsg, *statmsg;
+	size_t errSize;
                    
 	if (TT_OK == status)
 	  statmsg = "";
 	else
 	  statmsg = tt_status_message(status);
-	errmsg = XtMalloc(strlen(NoToolTalkConnMsg) + strlen(statmsg) + 2);
-	sprintf(errmsg, NoToolTalkConnMsg, statmsg);
+	errSize = strlen(NoToolTalkConnMsg) + strlen(statmsg) + 2;
+	errmsg = XtMalloc(errSize);
+	snprintf(errmsg, errSize, NoToolTalkConnMsg, statmsg);
 
 	msg = XmStringCreateLocalized(errmsg);
 	_DtCreateErrorDialog(w, actionName, msg);
@@ -1173,7 +1173,7 @@ TmpFileCreateError( Widget w, char *actionName, char *dirName)
         XmString    msg;
         char        *msgbuf = XtMalloc(_DtAct_MAX_BUF_SIZE);
         
-        sprintf(msgbuf,TmpFileCreateErrorMsg,_DtActNULL_GUARD(dirName),
+        snprintf(msgbuf,_DtAct_MAX_BUF_SIZE,TmpFileCreateErrorMsg,_DtActNULL_GUARD(dirName),
              actionName);
 
 	msg  = XmStringCreateLocalized(msgbuf);
@@ -1188,7 +1188,7 @@ TmpFileOpenError( Widget w, char *actionName, char *fileName)
         XmString    msg;
         char        *msgbuf = XtMalloc(_DtAct_MAX_BUF_SIZE);
         
-        sprintf(msgbuf,TmpFileOpenErrorMsg,_DtActNULL_GUARD(fileName),
+        snprintf(msgbuf,_DtAct_MAX_BUF_SIZE,TmpFileOpenErrorMsg,_DtActNULL_GUARD(fileName),
              actionName);
 
 	msg  = XmStringCreateLocalized(msgbuf);
@@ -1203,7 +1203,7 @@ TmpFileWriteError( Widget w, char *actionName, char *fileName)
         XmString    msg;
         char        *msgbuf = XtMalloc(_DtAct_MAX_BUF_SIZE);
         
-        sprintf(msgbuf,TmpFileWriteErrorMsg,_DtActNULL_GUARD(fileName),
+        snprintf(msgbuf,_DtAct_MAX_BUF_SIZE,TmpFileWriteErrorMsg,_DtActNULL_GUARD(fileName),
             actionName);
 
 	msg  = XmStringCreateLocalized(msgbuf);
@@ -1218,7 +1218,7 @@ UnSupportedObject( Widget w, char *actionName, int objClass)
         XmString    msg;
         char        *msgbuf = XtMalloc(_DtAct_MAX_BUF_SIZE);
         
-        sprintf(msgbuf,UnSupportedObjMsg,objClass,actionName);
+        snprintf(msgbuf,_DtAct_MAX_BUF_SIZE,UnSupportedObjMsg,objClass,actionName);
 
 	msg  = XmStringCreateLocalized(msgbuf);
         _DtCreateErrorDialog(w, actionName, msg);
@@ -1811,9 +1811,12 @@ ParseFileArgument(
       else
          tmpName=_DtFindCwd();
 		
-      tmpName=XtRealloc(tmpName,strlen(tmpName)+strlen(dirName) +2);
-      (void)strcat(tmpName,"/");
-      (void)strcat(tmpName,dirName);
+      size_t tmpLen = strlen(tmpName);
+      size_t dirLen = strlen(dirName);
+
+      tmpName=XtRealloc(tmpName,tmpLen+dirLen+2);
+      tmpName[tmpLen] = '/';
+      memcpy(tmpName+tmpLen+1,dirName,dirLen+1);
       XtFree(dirName);
       dirName=tmpName;
    }
@@ -1994,7 +1997,14 @@ LinkToTypeQuark(
       *resolvedPath=nullptr;
       return(-1);
    }
-   strcpy(file_name, path);
+   if (strlen(path) > MAXPATHLEN)
+   {
+      XtFree(path);
+      XtFree((char *)history);
+      *resolvedPath=nullptr;
+      return(-1);
+   }
+   memcpy(file_name, path, strlen(path) + 1);
    XtFree(path);
 
    while ((link_len = readlink(file_name, link_path, MAXPATHLEN)) > 0)
@@ -2006,11 +2016,13 @@ LinkToTypeQuark(
       {
          /* Relative paths are relative to the current directory */
          end = DtStrrchr(file_name, '/') + 1;
+         if ((size_t)(end - file_name) + link_len > MAXPATHLEN)
+            break;
          *end = '\0';
-         strcat(file_name, link_path);
+         memcpy(end, link_path, link_len + 1);
       }
       else
-         strcpy(file_name, link_path);
+         memcpy(file_name, link_path, link_len + 1);
 
       /* Check for a recursive loop; abort if found */
       for (i = 0; i < history_count; i++)
@@ -2018,7 +2030,8 @@ LinkToTypeQuark(
          if (strcmp(file_name, history[i]) == 0)
          {
             /* Drop back to last non-recursive portion of the path */
-            strcpy(file_name, history[history_count-1]);
+            memcpy(file_name, history[history_count-1],
+                   strlen(history[history_count-1]) + 1);
             for (i = 0; i < history_count; i++)
                XtFree(history[i]);
             XtFree((char *)history);
@@ -2502,17 +2515,23 @@ __ExtractCWD(
             *dirPtr = XtNewString(action->u.cmd.contextDir);
 	 else 
 	 {
-	    *dirPtr = XtMalloc((Cardinal)
-	       (strlen(request->dirNames[request->objects[0].u.file.dirIndex]) +
-		strlen(request->objects[0].u.file.baseFilename) + 2));
-	    strcpy(*dirPtr, 
-                   request->dirNames[request->objects[0].u.file.dirIndex]);
+	    const char *dirName =
+	       request->dirNames[request->objects[0].u.file.dirIndex];
+	    size_t dirLen = strlen(dirName);
+	    size_t baseLen = strlen(request->objects[0].u.file.baseFilename);
+
+	    *dirPtr = XtMalloc((Cardinal)(dirLen + baseLen + 2));
+	    memcpy(*dirPtr, dirName, dirLen + 1);
 
 	    DtLastChar(*dirPtr, &lastCh, &lastChLen);
 	    if ((lastChLen != 1) || (*lastCh != '/'))
-	       (void)strcat(*dirPtr, "/");
+	    {
+	       (*dirPtr)[dirLen++] = '/';
+	       (*dirPtr)[dirLen] = '\0';
+	    }
 
-	    (void)strcat(*dirPtr, request->objects[0].u.file.baseFilename);
+	    memcpy(*dirPtr + dirLen, request->objects[0].u.file.baseFilename,
+		   baseLen + 1);
 	 }
       }
       else
@@ -3209,9 +3228,8 @@ _DtCompileMessagePiece(
       /* Add any text preceding the keyword */
       if (segment->precedingText)
       {
-         compiledMsg = GrowMsgBuffer(compiledMsg, &compiledMsgSize, 
-                                 (int)strlen(segment->precedingText));
-         (void)strcat(compiledMsg, segment->precedingText);
+         compiledMsg = AppendMsgBuffer(compiledMsg, &compiledMsgSize, 
+                                 segment->precedingText, False);
       }
 
       /* Process the keyword */
@@ -3220,9 +3238,8 @@ _DtCompileMessagePiece(
          case LOCAL_HOST:
          {
             /* Add in the local host name */
-            compiledMsg = GrowMsgBuffer(compiledMsg, &compiledMsgSize, 
-                                      (int)strlen(localHostName));
-            (void)strcat(compiledMsg, localHostName);
+            compiledMsg = AppendMsgBuffer(compiledMsg, &compiledMsgSize, 
+                                      localHostName, False);
             break;
          }
 
@@ -3239,9 +3256,8 @@ _DtCompileMessagePiece(
             host = _DtHostString(fullPath);
 	    if (host)
 	    {
-	      compiledMsg = GrowMsgBuffer(compiledMsg, &compiledMsgSize,
-					  host ? (int)strlen(host) : 0);
-	      (void)strcat(compiledMsg, host);
+	      compiledMsg = AppendMsgBuffer(compiledMsg, &compiledMsgSize,
+					    host, False);
 	      XtFree(host);
 	    }
             XtFree(fullPath);
@@ -3253,9 +3269,8 @@ _DtCompileMessagePiece(
 	    /*
 	     * Use the displayHostName determined the first time thru
 	     */
-	    compiledMsg = GrowMsgBuffer(compiledMsg, &compiledMsgSize, 
-				  (int)strlen(displayHostName));
-	    (void)strcat(compiledMsg, displayHostName);
+	    compiledMsg = AppendMsgBuffer(compiledMsg, &compiledMsgSize, 
+				  displayHostName, False);
 	    break;
          }
 
@@ -3266,9 +3281,8 @@ _DtCompileMessagePiece(
 	     * display management.  (i.e. the host where the login client
 	     * is running.) 
              */
-	    compiledMsg = GrowMsgBuffer(compiledMsg, &compiledMsgSize, 
-				  (int)strlen(sessionHostName));
-	    (void)strcat(compiledMsg, sessionHostName);
+	    compiledMsg = AppendMsgBuffer(compiledMsg, &compiledMsgSize, 
+				  sessionHostName, False);
 	    break;
 
 	 }
@@ -3495,10 +3509,8 @@ InsertArgumentString(
                else
                   value = XtNewString(dataType);
 
-               *bufPtr = GrowMsgBuffer(*bufPtr, bufSizePtr, strlen(value) + 1);
-               if (addLeadingSpace)
-                  strcat(*bufPtr, " ");
-               strcat(*bufPtr, value);
+               *bufPtr = AppendMsgBuffer(*bufPtr, bufSizePtr, value,
+                                         addLeadingSpace);
                XtFree(value);
             }
             return(True);
@@ -3532,10 +3544,8 @@ InsertArgumentString(
             }
             *dst = '\0';
 
-            *bufPtr = GrowMsgBuffer(*bufPtr, bufSizePtr, strlen(escaped_path) + 1);
-            if (addLeadingSpace)
-               (void)strcat(*bufPtr, " ");
-            strcat(*bufPtr, escaped_path);
+            *bufPtr = AppendMsgBuffer(*bufPtr, bufSizePtr, escaped_path,
+                                      addLeadingSpace);
             XtFree(escaped_path);
             XtFree(path);
          }
@@ -3566,10 +3576,8 @@ InsertArgumentString(
                   return(False);
                }
 
-               *bufPtr = GrowMsgBuffer(*bufPtr, bufSizePtr, strlen(path) + 1);
-               if (addLeadingSpace)
-                  (void)strcat(*bufPtr, " ");
-               strcat(*bufPtr, path);
+               *bufPtr = AppendMsgBuffer(*bufPtr, bufSizePtr, path,
+                                         addLeadingSpace);
                XtFree(path);
             }
          }
@@ -3610,16 +3618,12 @@ InsertUnmappedArgumentString(
 
 {
    char * host = nullptr;
-   int size;
 
    /* No mapping is necessary here. */
    if (IS_FILE_OBJ(object->mask))
    {
-      size = strlen(object->u.file.origFilename) + 4;
-      *bufPtr = GrowMsgBuffer(*bufPtr, bufSizePtr, size);
-      if (addLeadingSpace)
-          (void)strcat(*bufPtr, " ");
-      strcat(*bufPtr, object->u.file.origFilename);
+      *bufPtr = AppendMsgBuffer(*bufPtr, bufSizePtr,
+                                object->u.file.origFilename, addLeadingSpace);
    }
  /* 
   * RWV: 
@@ -3660,6 +3664,28 @@ GrowMsgBuffer(
          buffer[0] = '\0';
    }
 
+   return(buffer);
+}
+
+/*
+ * Append text to the message buffer, preceded by a blank when asked.
+ */
+static char *
+AppendMsgBuffer(
+        char *buffer,
+        int *size,
+        const char *text,
+        Boolean leadingSpace )
+
+{
+   size_t len = strlen(text);
+   size_t used;
+
+   buffer = GrowMsgBuffer(buffer, size, (int)(len + (leadingSpace ? 1 : 0)));
+   used = strlen(buffer);
+   if (leadingSpace)
+      buffer[used++] = ' ';
+   memcpy(buffer + used, text, len + 1);
    return(buffer);
 }
 
@@ -4218,9 +4244,14 @@ CreatePromptDialog(
 
    /*  Create the shell, frame and form used for the dialog.  */
 
-   title = (char *)XtMalloc((Cardinal)
-           (strlen(PromptDialogTitle)+ strlen(request->clonedAction->label) + 1));
-   (void)sprintf(title, "%1$s%2$s", PromptDialogTitle, request->clonedAction->label);
+   {
+      size_t titleSize = strlen(PromptDialogTitle) +
+                         strlen(request->clonedAction->label) + 1;
+
+      title = (char *)XtMalloc((Cardinal)titleSize);
+      (void)snprintf(title, titleSize, "%1$s%2$s", PromptDialogTitle,
+                     request->clonedAction->label);
+   }
    n = 0;
    XtSetArg (args[n], XmNallowShellResize, True);		n++;
    XtSetArg (args[n], XmNtitle, title);		n++;
@@ -4661,11 +4692,15 @@ CreateContinueDialog(
 
    /* Create the error dialog */
    fmt = XtNewString((char *)Dt11GETMESSAGE(2, 2, "%1$s%2$s"));
-   title = (char *)XtMalloc((Cardinal)
-             (strlen(PromptDialogTitle) +
-	      strlen(request->clonedAction->label) +
-	      strlen(fmt) + 1));
-   (void)sprintf(title, fmt, PromptDialogTitle, request->clonedAction->label);
+   {
+      size_t titleSize = strlen(PromptDialogTitle) +
+                         strlen(request->clonedAction->label) +
+                         strlen(fmt) + 1;
+
+      title = (char *)XtMalloc((Cardinal)titleSize);
+      (void)snprintf(title, titleSize, fmt, PromptDialogTitle,
+                     request->clonedAction->label);
+   }
    label = XmStringCreateLocalized(ContinueMessage);
    XtFree(fmt);
 
@@ -4860,11 +4895,12 @@ ResolveCommandInvokerMessagePieces(
     */
    if ( request->termOpts )
    {
-         termOpts = XtMalloc( strlen(cmd->termOpts.compiledMessage) + 
-			strlen(request->termOpts) + 2 );
-	strcpy(termOpts,cmd->termOpts.compiledMessage);
-	strcat(termOpts," ");
-	strcat(termOpts,request->termOpts);
+         size_t termOptsSize = strlen(cmd->termOpts.compiledMessage) + 
+			strlen(request->termOpts) + 2;
+
+         termOpts = XtMalloc( termOptsSize );
+	snprintf(termOpts,termOptsSize,"%s %s",cmd->termOpts.compiledMessage,
+		 request->termOpts);
 	XtFree(cmd->termOpts.compiledMessage);
         cmd->termOpts.compiledMessage = termOpts;
    }
@@ -4886,16 +4922,13 @@ InitiateCommandInvokerRequest(
         String dir)
 
 {
-   char procIdBuf[_DtAct_MAX_BUF_SIZE];
-   char tmpFileBuf[_DtAct_MAX_BUF_SIZE];
+   char *procIdBuf;
    char *procId;		/* for dtexec command line */
    char *tmpFiles = nullptr;	/* for dtexec command line */
    _DtActInvRecT *invp;
    _DtActChildRecT *childp;
    CallbackData *data=(CallbackData *)XtMalloc((Cardinal)sizeof(CallbackData));
    ActionPtr action = request->clonedAction;
-
-   tmpFileBuf[0]='\0';	/* seed the buffer with a null string */
 
    /*
     * Generate the procId option string for dtexec
@@ -4923,19 +4956,22 @@ InitiateCommandInvokerRequest(
 	   procId = nullptr;
            break;
    }
-   /*
-    * The string generated for procId should never exceed the procId buf size. 
-    */
-   sprintf(procIdBuf,"%s_%d_%lu",
-       _DtActNULL_GUARD(procId),
-       (int) request->invocId,
-       request->childId );
+   {
+       int procIdLen = snprintf(nullptr, 0, "%s_%d_%lu",
+                                _DtActNULL_GUARD(procId),
+                                (int) request->invocId,
+                                request->childId );
 
-   myassert( strlen(procIdBuf) < sizeof(procIdBuf) );
+       procIdBuf = XtMalloc((Cardinal)procIdLen + 1);
+       snprintf(procIdBuf, (size_t)procIdLen + 1, "%s_%d_%lu",
+                _DtActNULL_GUARD(procId),
+                (int) request->invocId,
+                request->childId );
+   }
 
    if (procId)
        tt_free(procId);
-   procId = procIdBuf;	/* no need to malloc */
+   procId = procIdBuf;
    
    /*
     * Generate string of tmp file args  for dtexec.
@@ -4948,7 +4984,7 @@ InitiateCommandInvokerRequest(
         {
 	    int i;
             char *p;
-            int len = 0;
+            size_t len = 0;
 
 	    for(i = 0; i < childp->numObjects; i++)
 	    {
@@ -4959,30 +4995,17 @@ InitiateCommandInvokerRequest(
 		if ( !(p = invp->info[childp->argMap[i].argIdx].name) )
                     continue;	/* no tmp file name */
  
-		/* Add up the string length of the file name */
-                if((len += strlen(" -tmp ") + strlen(p)) < sizeof(tmpFileBuf))
                 {
-                    /* 
-                     * Use the automatic tmpFileBuf if possible
-                     */
-                    strcat(tmpFileBuf," -tmp ");
-                    strcat(tmpFileBuf,p);
-                } 
-                else
-                {
-                   /*
-                    * Malloc more space if necessary
-                    */
-                    XtFree(tmpFiles);
-                    tmpFiles = XtMalloc(len + 1);
-                    strcpy(tmpFiles,tmpFileBuf);
-                    strcpy(tmpFiles," -tmp ");
-                    strcpy(tmpFiles,p);
+                    static const char tmpOpt[] = " -tmp ";
+                    size_t optLen = sizeof(tmpOpt) - 1;
+                    size_t nameLen = strlen(p);
+
+                    tmpFiles = XtRealloc(tmpFiles, len + optLen + nameLen + 1);
+                    memcpy(tmpFiles + len, tmpOpt, optLen);
+                    memcpy(tmpFiles + len + optLen, p, nameLen + 1);
+                    len += optLen + nameLen;
                 }
-                
 	    }
-            if ( len > 0 && len <  sizeof(tmpFileBuf) )
-                tmpFiles = tmpFileBuf;
         }
         else
         {
@@ -5013,8 +5036,8 @@ InitiateCommandInvokerRequest(
 		SET_INV_CMD_QUEUED(invp->state);
 
 
-   if ( tmpFiles != tmpFileBuf )
-       XtFree(tmpFiles);
+   XtFree(tmpFiles);
+   XtFree(procIdBuf);
 }
 
 
@@ -5178,11 +5201,11 @@ AddFailedHostToList (
 
    if (curLen > 0)
    {
-      strcat(request->badHostList, ", ");
-      strcat(request->badHostList, badHost);
+      memcpy(request->badHostList + curLen, ", ", 2);
+      memcpy(request->badHostList + curLen + 2, badHost, strlen(badHost) + 1);
    }
    else
-      strcpy(request->badHostList, badHost);
+      memcpy(request->badHostList, badHost, strlen(badHost) + 1);
 }
 
 
@@ -5404,8 +5427,12 @@ _DtActMapFileName(
    
    buf[0]='\0';	/* empty string to start with */
 
+   /* A name that does not fit in buf cannot be mapped. */
+   if ( (dir ? strlen(dir) : 0) + (file ? strlen(file) : 0) + 2 > sizeof(buf) )
+       return nullptr;
+
    if ( dir )
-	   strcpy(buf,dir);
+	   memcpy(buf,dir,strlen(dir)+1);
    if ( file )
    {
 	/* check if there is already a '/' separator */
@@ -5413,9 +5440,9 @@ _DtActMapFileName(
        {
 	   DtLastChar(buf,&chp,&clen);
 	   if ( !( (clen == 1) && (*chp == '/')) )
-	       strcat(buf,"/");
+	       memcpy(buf+strlen(buf),"/",2);
        }
-       strcat(buf,file);
+       memcpy(buf+strlen(buf),file,strlen(file)+1);
    }
 
    /* We should have constructed a file name string now */

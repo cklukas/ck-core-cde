@@ -122,10 +122,10 @@ myDtChkpntMsgSend(char *message, char *type)
 
     /* Fill the message list. ("pname" and "window" were filled at init) */
     dtcp_msg.record.type = type;
-    sprintf(buf_msgcount, "%ld", msgcount);
+    snprintf(buf_msgcount, sizeof buf_msgcount, "%ld", msgcount);
     dtcp_msg.record.count   = buf_msgcount;	/* Running message count */
     gettimeofday(&time_val, &time_zone);
-    sprintf(buf_seconds,"%lf",time_val.tv_sec + (time_val.tv_usec/1000000.0 ));
+    snprintf(buf_seconds,sizeof buf_seconds,"%lf",time_val.tv_sec + (time_val.tv_usec/1000000.0 ));
     dtcp_msg.record.seconds = buf_seconds;	/* Info from gettimeofday()*/
     dtcp_msg.record.message = message;		/* Actual message string */
 
@@ -243,7 +243,7 @@ _DtPerfChkpntInit(Display      *display,
 	return(0);
     }
     for (i= 0; i < dtcp_info.maxprops; i++) {
-	sprintf(propname, "%s_%x", DT_PERF_CLIENT_CHKPNT_PROP, i);
+	snprintf(propname, sizeof propname, "%s_%x", DT_PERF_CLIENT_CHKPNT_PROP, i);
 	dtcp_info.aProperty[i]  = XInternAtom(dtcp_info.display,
 					    propname, False);
     }
@@ -273,9 +273,11 @@ _DtPerfChkpntInit(Display      *display,
 	char *array[2];
 	XTextProperty text_prop;
 
-	buffer = malloc(strlen(prog_name) + 8);
+	size_t bufsize = strlen(prog_name) + 8;
+
+	buffer = malloc(bufsize);
 	if (buffer) {
-	    sprintf(buffer, "DtPerf %s", prog_name);
+	    snprintf(buffer, bufsize, "DtPerf %s", prog_name);
 	    array[0] = buffer;
 	    array[1] = "";
 	    if (XStringListToTextProperty(array, 1, &text_prop)) {
@@ -292,7 +294,7 @@ _DtPerfChkpntInit(Display      *display,
      * Pre-fill the message structure entries for "pname" and "window"
      */
     dtcp_msg.record.pname  = prog_name;
-    sprintf(winstring, "%lx", (long) dtcp_info.window);
+    snprintf(winstring, sizeof winstring, "%lx", (long) dtcp_info.window);
     dtcp_msg.record.window = winstring;
 
     /*

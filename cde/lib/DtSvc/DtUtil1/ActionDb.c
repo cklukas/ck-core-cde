@@ -262,7 +262,15 @@ _DtActFieldBitLookup(char *name)
 		 * Add the prefix to disambiguate the field name for
 		 * the table lookup.
 		 */
-		np=strcat(dtnamebuf,np);
+		{
+			size_t used = strlen(dtnamebuf);
+			size_t len = strlen(np);
+
+			if (len >= sizeof(dtnamebuf) - used)
+				return 0;
+			memcpy(dtnamebuf + used, np, len + 1);
+			np = dtnamebuf;
+		}
 		
 
 	}
@@ -689,7 +697,7 @@ _DtActCheckRecord(
 			 * found. -- reject this record.
 			 */
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, invldField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, invldField, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_COMMAND );
 			return buf;
@@ -702,7 +710,7 @@ _DtActCheckRecord(
 		if ( !(mask & _ActDb_EXEC_STRING_SET) )
 		{
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, noExecString, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, noExecString, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_EXEC_STRING);
 			return buf;
@@ -727,7 +735,7 @@ _DtActCheckRecord(
 			 * found. -- reject this record.
 			 */
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, invldField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, invldField, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_MAP );
 			return buf;
@@ -738,7 +746,7 @@ _DtActCheckRecord(
 		if ( !(mask & _ActDb_MAP_ACTION_SET) )
 		{
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, missingField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, missingField, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_MAP_ACTION, _DtACTION_MAP);
 			return buf;
@@ -764,7 +772,7 @@ _DtActCheckRecord(
 			 * found. -- reject this record.
 			 */
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, invldField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, invldField, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_TT_MSG );
 			return buf;
@@ -776,7 +784,7 @@ _DtActCheckRecord(
 		if ( !(mask & _ActDb_TT_CLASS_SET) )
 		{
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, missingField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, missingField, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_TT_CLASS, _DtACTION_TT_MSG);
 			return buf;
@@ -784,7 +792,7 @@ _DtActCheckRecord(
 		if ( !(mask & _ActDb_TT_SCOPE_SET) )
 		{
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, missingField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, missingField, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_TT_SCOPE, _DtACTION_TT_MSG);
 			return buf;
@@ -792,7 +800,7 @@ _DtActCheckRecord(
 		if ( !(mask & _ActDb_TT_OPERATION_SET) )
 		{
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, missingField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, missingField, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_TT_OPERATION,
 					 _DtACTION_TT_MSG);
@@ -816,12 +824,12 @@ _DtActCheckRecord(
 				/*
 				 * Missing required arg mode
 				 */
-				sprintf(argModeString,"%s%s%s",
+				snprintf(argModeString,sizeof argModeString,"%s%s%s",
 					_DtACTION_TTN_ARG,
 					"n",
 					_DtACTION_TTN_MODE);
 				buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-				(void) sprintf (buf, missingField, 
+				(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, missingField, 
 					XrmQuarkToString(actp->recordName),
 					fileName, 
 					argModeString,
@@ -839,7 +847,7 @@ _DtActCheckRecord(
 			 */
 			for ( i = 0; True; i++ )
 			{
-				sprintf(argnFieldName,"%s%d%s",
+				snprintf(argnFieldName,sizeof argnFieldName,"%s%d%s",
 					 _DtACTION_TTN_ARG, i, _DtACTION_TTN_MODE);
 				if ( !(s = _DtDtsDbGetFieldByName(actp,
 						argnFieldName)) )
@@ -856,7 +864,7 @@ _DtActCheckRecord(
 					 * VTYPE is required for mode 
 					 * TT_IN/TT_INOUT 
 					*/
-					sprintf(argnFieldName,"%s%d%s",
+					snprintf(argnFieldName,sizeof argnFieldName,"%s%d%s",
 						 _DtACTION_TTN_ARG, i,
 						 _DtACTION_TTN_VTYPE);
 					if (!(s= _DtDtsDbGetFieldByName(actp,
@@ -866,8 +874,7 @@ _DtActCheckRecord(
 						 * Missing required field 
 						 */
 						buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-						(void) sprintf (buf, 
-							missingField,
+						(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, missingField,
 							XrmQuarkToString(actp->recordName),
 							fileName,
 							argnFieldName,
@@ -898,7 +905,7 @@ _DtActCheckRecord(
 			 * found. -- reject this record.
 			 */
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, invldField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, invldField, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_DT_REQUEST );
 			return buf;
@@ -921,7 +928,7 @@ _DtActCheckRecord(
 			 * found. -- reject this record.
 			 */
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, invldField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, invldField, 
 				XrmQuarkToString(actp->recordName),
 				fileName, _DtACTION_DT_NOTIFY );
 			return buf;
@@ -937,7 +944,7 @@ _DtActCheckRecord(
 		 * Throw out the whole record
 		 */
 		buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-		(void) sprintf (buf, unrecogType, _DtACTION_TYPE,
+		(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, unrecogType, _DtACTION_TYPE,
 			 actionType, fileName );
 		return buf;
 	}
@@ -1002,7 +1009,7 @@ _DtActionConverter(DtDtsDbField * fields,
 	{
 		
 		buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-		sprintf (buf, missingName, _DtACTION_NAME, fileName);
+		snprintf (buf, _DtAct_MAX_BUF_SIZE, missingName, _DtACTION_NAME, fileName);
 		_DtSimpleError(DtProgName,DtError, nullptr, "%s", buf);
 		XtFree(fileName);
 		XtFree(buf);
@@ -1013,7 +1020,7 @@ _DtActionConverter(DtDtsDbField * fields,
 	{
 		/* The record contains no fields */
 		buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-		(void) sprintf (buf, noFields, fields[0].fieldValue, fileName);
+		(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, noFields, fields[0].fieldValue, fileName);
 		_DtSimpleError(DtProgName,DtError, nullptr, "%s", buf);
 		XtFree(fileName);
 		XtFree(buf);
@@ -1093,7 +1100,7 @@ _DtActionConverter(DtDtsDbField * fields,
 			 * -- say "USER_".
 			 */
 			buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-			(void) sprintf (buf, unrecogField, 
+			(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, unrecogField, 
 					fields[0].fieldValue, 
 					fileName, 
 					XrmQuarkToString(fields[i].fieldName),
@@ -1134,7 +1141,7 @@ _DtActionConverter(DtDtsDbField * fields,
 				 * reject this record.
 				 */
 				buf = XtMalloc(_DtAct_MAX_BUF_SIZE);
-				(void) sprintf (buf,dupFields, fields[0].fieldValue, 
+				(void) snprintf (buf, _DtAct_MAX_BUF_SIZE, dupFields, fields[0].fieldValue, 
 						 fileName, 
 						 XrmQuarkToString(fields[i].fieldName));
 				_DtSimpleError(DtProgName,DtError, nullptr, "%s", buf);

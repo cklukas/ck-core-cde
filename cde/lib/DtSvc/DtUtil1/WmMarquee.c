@@ -174,7 +174,7 @@ _DtWsmAddMarqueeSelectionCallback (
     tt_free(sessId);
 
     screen = XScreenNumberOfScreen(XtScreen(widget));
-    sprintf(sNum, "%d", screen);
+    snprintf(sNum, sizeof sNum, "%d", screen);
     sName = _DtWsmSelectionNameForScreen (screen);
 
     pCbCtx = (struct _DtWsmCBContext *)
