@@ -107,7 +107,7 @@ MESSAGE(cerr, "new/delete test1");
 MESSAGE(cerr, "alloc done!");
  
    for ( i=NUMS-1; i>=0; i-- ) {
-       delete ptrs[i];
+       delete [] ptrs[i];
    }
 MESSAGE(cerr, "free done!");
 }
@@ -125,7 +125,7 @@ MESSAGE(cerr, "new/delete test2");
 
 
       for ( j=0; j<100; j++ ) {
-          delete ptrs[j];
+          delete [] ptrs[j];
       }
    }
 }
