@@ -4314,7 +4314,8 @@ ProcessMwmHints (ClientData *pCD)
  */
 void GetMaxInfo (ClientData *pCD, int *pX, int *pY, int *pWidth, int *pHeight)
 {
-    int x, y, width, height;
+    int x, y;
+    unsigned int width, height;
     WmHeadInfo_t *WmHI;
 
     if (pCD->maxConfig)

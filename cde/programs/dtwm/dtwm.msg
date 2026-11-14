@@ -387,8 +387,8 @@ $ YOU DON'T NEED TO LOCALIZE THIS SET.
 
 $set 60
 $    THIS COMMENT FOR DTWM TEAM ONLY -- WmResParse.c --
-$    Messages 1-39 and 41-42 are written to an error file.
-$    YOU DO NOT NEED TO LOCALIZE MESSAGES 1-39, 41-42.
+$    Messages 1-39 and 41-43 are written to an error file.
+$    YOU DO NOT NEED TO LOCALIZE MESSAGES 1-39, 41-43.
 $ 
 $    Message 40 allows you to alter the labels for the modifier
 $    keys on the menu accelerators. You may wish to localize
@@ -464,11 +464,12 @@ $quote "
 $quote
 
 $ 
-$    Messages 41-42 are written to an error file.
-$    YOU DO NOT NEED TO LOCALIZE MESSAGE 41-42.
+$    Messages 41-43 are written to an error file.
+$    YOU DO NOT NEED TO LOCALIZE MESSAGE 41-43.
 $ 
 41 Insufficient memory to get LANG environment variable.
 42 Insufficient memory for menu item label
+43 Could not run command %s
 
 $set 62
 $    THIS COMMENT FOR DTWM TEAM ONLY -- WmResource.c --

@@ -5470,7 +5470,15 @@ SystemCmd (char *pchCmd)
 
     (void) sigaction (SIGCHLD, &sa, &osa);
 
-    system (pchCmd);
+    if (system (pchCmd) == -1)
+    {
+	char msg[MAXWMPATH+1];
+
+	snprintf (msg, sizeof (msg),
+		  ((char *)GETMESSAGE(60, 43, "Could not run command %s")),
+		  pchCmd);
+	Warning (msg);
+    }
 
     (void) sigaction (SIGCHLD, &osa, (struct sigaction *) 0);
 }

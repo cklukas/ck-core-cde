@@ -3016,6 +3016,7 @@ InitParse (char          * file_name,
    char * baseName;
    char * tmpFile;
    DtDirPaths * dirPath;
+   Boolean symlinked;
 
 
    /* create directory for dir path */
@@ -3031,7 +3032,7 @@ InitParse (char          * file_name,
    baseName = strrchr(tmpName, '/');
    tmpFile = XtMalloc(strlen(tmpPath) + strlen(baseName) + 1);
    sprintf(tmpFile, "%s%s", tmpPath, baseName);
-   symlink(file_name, tmpFile);
+   symlinked = (symlink(file_name, tmpFile) == 0);
 
    hostName = XtMalloc((Cardinal)(MAXHOSTNAMELEN + 1));
    DtGetShortHostname (hostName, MAXHOSTNAMELEN + 1);
@@ -3048,7 +3049,9 @@ InitParse (char          * file_name,
    dirPath->paths[0] = tmpPath;
    dirPath->paths[1] = nullptr;
 
-   _DtDbRead (dirPath, FILE_TYPE_SUFFIX, control_record_descriptor, 2);
+   /* Without the link the directory holds no file to read. */
+   if (symlinked)
+      _DtDbRead (dirPath, FILE_TYPE_SUFFIX, control_record_descriptor, 2);
 
    control_element_value_found = False;
 

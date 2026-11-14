@@ -35,6 +35,26 @@
  */
 DtXineramaInfo_t *DtXI = nullptr;/* Xinerama data is static for life of X server */
 
+/*
+ * Fetch the metrics of head `id` into *hi.  Returns False if there is no such
+ * head.  DtXineramaInfo_t reports the origin as unsigned values holding the
+ * two's complement of a possibly negative origin, which the int members
+ * of WmHeadInfo_t take back.
+ */
+static Bool GetHeadMetrics(unsigned int id, WmHeadInfo_t *hi)
+{
+    unsigned int width, height, x_org, y_org;
+
+    if (!_DtXineramaGetScreen(DtXI, id, &width, &height, &x_org, &y_org))
+        return False;
+
+    hi->width = width;
+    hi->height = height;
+    hi->x_org = (int)x_org;
+    hi->y_org = (int)y_org;
+    return True;
+}
+
 
 /*************************************<->*************************************
  *
@@ -86,19 +106,11 @@ WmHeadInfo_t *GetHeadInfo(const ClientData *pcd) {
     }
 
     /*
-     * TODO
-     *
-     * DtXineramaInfo_t uses unsigned ints
-     * XineramaScreenInfo uses shorts(?)
-     * ClientData uses ints
-     * FrameToClient and friends use a mixture (!)
-     *
-     * Explicit casting would shut the compiler up, but wouldn't change the
-     * fundamental fact that we can't agree on coordinate types.
+     * DtXineramaInfo_t reports unsigned values, ClientData uses ints.
+     * GetHeadMetrics converts at this single point.
      */
     int idx = 0;
-    while (_DtXineramaGetScreen(DtXI, idx++,
-            &WmHI->width, &WmHI->height, &WmHI->x_org, &WmHI->y_org)) {
+    while (GetHeadMetrics(idx++, WmHI)) {
 
         if (pcd->clientX >= WmHI->x_org &&
             pcd->clientY >= WmHI->y_org &&
@@ -162,8 +174,7 @@ WmHeadInfo_t *GetHeadInfoById(int id) {
         return nullptr;
     }
 
-    if (_DtXineramaGetScreen(DtXI, id,
-            &WmHI->width, &WmHI->height, &WmHI->x_org, &WmHI->y_org))
+    if (GetHeadMetrics(id, WmHI))
         return WmHI;
 
     free(WmHI);

@@ -2078,8 +2078,8 @@ void SetupSystemModalState (ClientData *pCD)
     XWindowChanges windowChanges;
     unsigned int   width, height;
     unsigned int   x_hot, y_hot;
-    unsigned char *bits;
-    unsigned char *mask_bits;
+    char *bits;
+    char *mask_bits;
     WmScreenData *pSD;
     int scr;
 
@@ -2177,10 +2177,10 @@ void SetupSystemModalState (ClientData *pCD)
 	    windowAttributes.override_redirect = True;
 	    
 	    pixmap = XCreateBitmapFromData (DISPLAY, pSD->rootWindow, 
-					    (char *)bits, width, height);
+					    bits, width, height);
 	    
 	    maskPixmap = XCreateBitmapFromData (DISPLAY, pSD->rootWindow, 
-						(char *)mask_bits, width, height);
+						mask_bits, width, height);
 	    
 	    xcolors[0].pixel = BlackPixel (DISPLAY, pSD->screen);
 	    xcolors[1].pixel = WhitePixel (DISPLAY, pSD->screen);
