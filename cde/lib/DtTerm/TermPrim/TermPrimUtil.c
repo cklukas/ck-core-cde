@@ -538,7 +538,7 @@ _DtTermPrimCloseLog(Widget w)
 }
 
 void
-_DtTermPrimWriteLog(DtTermPrimitiveWidget tw, char *buffer, int cnt)
+_DtTermPrimWriteLog(DtTermPrimitiveWidget tw, const unsigned char *buffer, int cnt)
 {
     DtTermPrimData tpd = tw->term.tpd;
 
