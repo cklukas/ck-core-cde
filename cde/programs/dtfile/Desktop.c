@@ -2515,7 +2515,7 @@ InitializeDesktopGrid( int displayWidth, int displayHeight)
    int i,j,k;
 
    desktop_grid_size = desktop_data->numWorkspaces * numColumns * numRows;
-   desktop_grid = (Boolean *)XtCalloc(1, desktop_grid_size);
+   desktop_grid = (unsigned char *)XtCalloc(1, desktop_grid_size);
 
    for(i = 1; i <= desktop_data->numWorkspaces; i++)
    {
@@ -3656,7 +3656,8 @@ InitializeNewWorkspaces (
    /* now lets add more desktop grids for the new workspaces */
 
    desktop_grid_size = numInfo * numColumns * numRows;
-   desktop_grid = (Boolean *)XtRealloc((char *)desktop_grid,desktop_grid_size);
+   desktop_grid = (unsigned char *)XtRealloc((char *)desktop_grid,
+                                             desktop_grid_size);
    for(i = desktop_data->numWorkspaces; i < numInfo; i++)
    {
       for(j = 0; j < numColumns; j++)
