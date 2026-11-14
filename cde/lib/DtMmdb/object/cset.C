@@ -83,7 +83,7 @@ MESSAGE(cerr, "~cset() called.");
 debug(cerr, num_indices);
 */
 
-   delete indices;
+   delete [] indices;
 }
 
 handler* cset::get_component(int index) 
