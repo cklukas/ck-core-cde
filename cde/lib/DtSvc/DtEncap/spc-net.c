@@ -388,7 +388,7 @@ SPC_Connection_Ptr SPC_Init_Child(SPC_Connection_Ptr conn,
 SPC_Connection_Ptr SPC_Standalone_Daemon(SPC_Connection_Ptr conn)
 {
   struct sockaddr_in saddr, client_saddr;
-  int len=sizeof(client_saddr);
+  socklen_t len=sizeof(client_saddr);
   int server_bind_attempts      = MAX_SERVER_BIND_ATTEMPTS;
   int server_bind_pause         = SERVER_PAUSE_INTERVAL;
   int pid, from;
