@@ -56,7 +56,8 @@ Calendar *_DtCm_active_cal_list = nullptr;
 /******************************************************************************
  * forward declaration of static functions used within the file
  ******************************************************************************/
-static CSA_return_code _get_owner_from_old_cal(Calendar *cal, char *buf);
+static CSA_return_code _get_owner_from_old_cal(Calendar *cal, char *buf,
+					       size_t size);
 static CSA_return_code _get_calendar_owner(Calendar *cal, uint num_names,
 					char **names, CSA_attribute *attr);
 static CSA_return_code _get_calendar_name(Calendar *cal, CSA_attribute *attr);
@@ -299,7 +300,7 @@ _DtCm_list_old_cal_attr_names(
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	/* find out whether we know the owner of the calendar */
-	if ((stat = _get_owner_from_old_cal(cal, buf)) != CSA_SUCCESS) {
+	if ((stat = _get_owner_from_old_cal(cal, buf, sizeof buf)) != CSA_SUCCESS) {
 		_DtCm_free(names);
 		return (stat);
 	}
@@ -519,15 +520,15 @@ _DtCm_count_entry_in_list(caddr_t elist)
  * Otherwise, we don't know the owner.
  */
 static CSA_return_code
-_get_owner_from_old_cal(Calendar *cal, char *owner)
+_get_owner_from_old_cal(Calendar *cal, char *owner, size_t size)
 {
 	char		*calname;
 
 	if ((calname = _DtCmGetPrefix(cal->name, '@')) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	if (_DtCmIsUserName(calname) == B_TRUE)
-		strcpy(owner, calname);
+	if (strlen(calname) < size && _DtCmIsUserName(calname) == B_TRUE)
+		memcpy(owner, calname, strlen(calname) + 1);
 	else
 		*owner = '\0';
 
@@ -555,7 +556,7 @@ _get_calendar_owner(
 		owner = cal->attrs[CSA_CAL_ATTR_CALENDAR_OWNER_I].value->\
 			item.string_value;
 	} else {
-		if ((stat = _get_owner_from_old_cal(cal, buf)) != CSA_SUCCESS)
+		if ((stat = _get_owner_from_old_cal(cal, buf, sizeof buf)) != CSA_SUCCESS)
 			return (stat);
 		else if (*buf == '\0')
 			return (CSA_SUCCESS);

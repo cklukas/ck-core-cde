@@ -38,6 +38,14 @@
  * ISO 8601 times, ranges and durations.
  */
 
+/*
+ * The longest results of the conversions to strings, with the terminating
+ * NUL.  A buffer of this size is large enough for the result.
+ */
+#define _CSA_ISO8601_TICK_SIZE		17
+#define _CSA_ISO8601_RANGE_SIZE		34
+#define _CSA_ISO8601_DURATION_SIZE	16
+
 /* extern functions */
 extern int	_csa_iso8601_to_tick(char *, time_t *);
 extern int	_csa_tick_to_iso8601(time_t, char *);

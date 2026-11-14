@@ -428,6 +428,15 @@ eventtype4_to_attrs(Event_Type_4 tag, uint num_attrs, cms_attribute *attrs)
 	}
 }
 
+/* Append text to the string in buf; text that does not fit is cut. */
+static void
+append_text(char *buf, size_t size, const char *text)
+{
+	size_t used = strlen(buf);
+
+	snprintf(buf + used, size - used, "%s", text);
+}
+
 static CSA_return_code
 _RepeatInfoToRule(Appt_4 *a4, cms_attribute_value **attrval)
 {
@@ -487,21 +496,20 @@ _RepeatInfoToRule(Appt_4 *a4, cms_attribute_value **attrval)
 		break;
 	case daysOfWeek_4:
 		snprintf(buf, sizeof buf, "W1 #%d ", duration);
-		/* XXX strcat is unsafe here */
-		if (a4->period.nth & 0x1) strcat(buf, "SU ");
-		if (a4->period.nth & 0x2) strcat(buf, "MO ");
-		if (a4->period.nth & 0x4) strcat(buf, "TU ");
-		if (a4->period.nth & 0x8) strcat(buf, "WE ");
-		if (a4->period.nth & 0x10) strcat(buf, "TH ");
-		if (a4->period.nth & 0x20) strcat(buf, "FR ");
-		if (a4->period.nth & 0x40) strcat(buf, "SA ");
+		if (a4->period.nth & 0x1) append_text(buf, sizeof buf, "SU ");
+		if (a4->period.nth & 0x2) append_text(buf, sizeof buf, "MO ");
+		if (a4->period.nth & 0x4) append_text(buf, sizeof buf, "TU ");
+		if (a4->period.nth & 0x8) append_text(buf, sizeof buf, "WE ");
+		if (a4->period.nth & 0x10) append_text(buf, sizeof buf, "TH ");
+		if (a4->period.nth & 0x20) append_text(buf, sizeof buf, "FR ");
+		if (a4->period.nth & 0x40) append_text(buf, sizeof buf, "SA ");
 		break;
 	}
 
 	if (a4->period.enddate) {
 		if (_csa_tick_to_iso8601(a4->period.enddate, datestr))
 			return (CSA_E_INVALID_DATE_TIME);
-		strcat(buf, datestr);
+		append_text(buf, sizeof buf, datestr);
 	}
 
 	return (_DtCm_set_string_attrval(buf, attrval, CSA_VALUE_STRING));

@@ -214,7 +214,12 @@ _csa_tick_to_iso8601(time_t tick, char *buf_out)
 		time_str->tm_sec) < 0)
 		return (-1);
 
-    strcpy(buf_out, s);
+    /* years outside 0000 to 9999 do not fit the fixed width */
+    if (strlen(s) >= _CSA_ISO8601_TICK_SIZE) {
+	free(s);
+	return (-1);
+    }
+    memcpy(buf_out, s, strlen(s) + 1);
     free(s);
 
     return (0);
@@ -289,7 +294,7 @@ _csa_range_to_iso8601(time_t start, time_t end, char *buf)
         return (-1);
     }
     else {
-        strcpy(buf, s);
+        memcpy(buf, s, strlen(s) + 1);
         free(s);
         return(0);
     }
@@ -362,7 +367,7 @@ _csa_duration_to_iso8601(time_t sec, char *buf)
 	buf[0] = '\0';
 	return(-1);
     }
-    strcpy(buf, s);
+    memcpy(buf, s, strlen(s) + 1);
     free(s);
 
     return(0);

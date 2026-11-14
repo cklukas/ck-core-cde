@@ -159,8 +159,7 @@ _DtCmGetHostAtDomain(void)
 			snprintf(hostname, BUFSIZ, "%s.%s", host,
 				_DtCmGetLocalDomain(host));
 		else
-			/* XXX strcpy unsafe here */
-			strcpy(hostname, host);
+			snprintf(hostname, BUFSIZ, "%s", host);
 	}
 
 	return (hostname);
@@ -178,9 +177,9 @@ _DtCmGetUserName(void)
 	  known = B_TRUE;
 
 	  if ((pwd_ret = _XGetpwuid(geteuid(), pwd_buf)) == nullptr)
-	    strcpy(name, "nobody");
+	    snprintf(name, sizeof name, "%s", "nobody");
 	  else
-	    strcpy(name, pwd_ret->pw_name);
+	    snprintf(name, sizeof name, "%s", pwd_ret->pw_name);
         }
 
 	return name;
