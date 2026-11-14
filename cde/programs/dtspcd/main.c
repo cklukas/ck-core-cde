@@ -263,9 +263,11 @@ int main(int argc, XeString *argv)
 	(void) snprintf (tmp, sizeof(tmp), "%s=%s", MOUNT_POINT, argv[i]);
 	if (putenv (tmp) == 0) {
 	  SPC_Format_Log((XeString)"Mount point set to '%s'.", argv[i]);
-	  SPC_mount_point_env_var = (char *) malloc (strlen (tmp) + 1);
+	  size_t size = strlen (tmp) + 1;
+
+	  SPC_mount_point_env_var = (char *) malloc (size);
 	  if (SPC_mount_point_env_var != nullptr)
-	    (void) strcpy (SPC_mount_point_env_var, tmp);
+	    (void) memcpy (SPC_mount_point_env_var, tmp, size);
 	  else
 	    SPC_Format_Log((XeString)"Out of memory: the mount point of the daemon is not saved.");
 	}
@@ -346,10 +348,11 @@ int main(int argc, XeString *argv)
    */
   if (SPC_mount_point_env_var == nullptr)
     if ((pch = getenv (MOUNT_POINT)) != nullptr) {
-      SPC_mount_point_env_var = (char *) malloc (strlen (pch) + 
-						 strlen (MOUNT_POINT) + 2);
+      size_t size = strlen (pch) + strlen (MOUNT_POINT) + 2;
+
+      SPC_mount_point_env_var = (char *) malloc (size);
       if (SPC_mount_point_env_var != nullptr)
-	(void) sprintf (SPC_mount_point_env_var, "%s=%s", MOUNT_POINT, pch);
+	(void) snprintf (SPC_mount_point_env_var, size, "%s=%s", MOUNT_POINT, pch);
       else
 	SPC_Format_Log((XeString)"Out of memory: the mount point of the daemon is not saved.");
     }
@@ -437,6 +440,7 @@ int SPCD_Initialize(void)
 /*----------------------------------------------------------------------+*/
 {
   XeString sys_env_file = nullptr;
+  size_t env_file_size;
   
   /* Do initialization for SPC */
   if(SPC_Initialize()==SPC_ERROR)
@@ -455,10 +459,10 @@ int SPCD_Initialize(void)
   /*
    * First add the installed environment file.
    */
-  sys_env_file = (XeString) malloc (strlen(SPCD_ENV_INSTALL_DIRECTORY) +
-				    strlen(SPCD_ENV_FILE) + 3);
+  env_file_size = strlen(SPCD_ENV_INSTALL_DIRECTORY) + strlen(SPCD_ENV_FILE) + 3;
+  sys_env_file = (XeString) malloc (env_file_size);
   if (sys_env_file != nullptr) {
-    (void) sprintf (sys_env_file, "%s/%s",
+    (void) snprintf (sys_env_file, env_file_size, "%s/%s",
 		    SPCD_ENV_INSTALL_DIRECTORY,
 		    SPCD_ENV_FILE);
     default_environment=SPC_Add_Env_File(sys_env_file,default_environment);
@@ -468,10 +472,10 @@ int SPCD_Initialize(void)
    * Now add the configured environment file.
    */
   free (sys_env_file);
-  sys_env_file = (XeString) malloc (strlen(SPCD_ENV_CONFIG_DIRECTORY) +
-				    strlen(SPCD_ENV_FILE) + 3);
+  env_file_size = strlen(SPCD_ENV_CONFIG_DIRECTORY) + strlen(SPCD_ENV_FILE) + 3;
+  sys_env_file = (XeString) malloc (env_file_size);
   if (sys_env_file != nullptr) {
-    (void) sprintf (sys_env_file, "%s/%s",
+    (void) snprintf (sys_env_file, env_file_size, "%s/%s",
 		    SPCD_ENV_CONFIG_DIRECTORY,
 		    SPCD_ENV_FILE);
     default_environment=SPC_Add_Env_File(sys_env_file,default_environment);
@@ -1006,11 +1010,12 @@ Merge_Lang_Var(SPC_Channel_Ptr channel)
 	  (_DtLcxXlateStdToOp(db, platform, compVer, DtLCX_OPER_SETLOCALE,
 			      stdLang, nullptr, nullptr, nullptr, &myLang) == 0))
       {
-	if ((langBuf = (XeChar *)malloc((strlen(myLang) + 6)
-					* sizeof(XeChar)))
+	size_t langSize = strlen(myLang) + 6;
+
+	if ((langBuf = (XeChar *)malloc(langSize * sizeof(XeChar)))
 	    != (XeChar *)nullptr)
 	{
-	  sprintf(langBuf, "LANG=%s", myLang);
+	  snprintf(langBuf, langSize, "LANG=%s", myLang);
 	  channel->envp = SPC_Putenv(langBuf, channel->envp);
 	  free(langBuf);
 	}
