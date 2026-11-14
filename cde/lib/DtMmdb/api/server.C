@@ -74,8 +74,8 @@ server::~server()
 {
    delete infolibptr;
 
-   delete info_base_set_names;
-   delete info_base_list_names;
+   delete [] info_base_set_names;
+   delete [] info_base_list_names;
 }
 
 
