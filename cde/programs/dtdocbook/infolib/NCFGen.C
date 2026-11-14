@@ -154,7 +154,12 @@ buildNCF(BookCaseDB& db, const char *base_name, int compressed)
     handler *x = (base_ptr->get_obj_dict()).get_handler(
       form("%s.%s", base_name, "sgml.dict"));
     x->its_oid().asciiOut(str_buf);
-    memcpy(comp_agent, str_buf.str().c_str(), COMPRESSED_AGENT_SIZE);
+    const string agent_text = str_buf.str();
+    size_t agent_len = agent_text.size();
+    if ( agent_len > COMPRESSED_AGENT_SIZE ) {
+      agent_len = COMPRESSED_AGENT_SIZE;
+    }
+    memcpy(comp_agent, agent_text.data(), agent_len);
     
 
     while(cursor.next(STRING_CODE, &bookLocator,
