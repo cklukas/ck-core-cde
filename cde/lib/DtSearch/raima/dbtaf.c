@@ -52,6 +52,7 @@ static char VISTATAF[] = "vista.taf";
 
 /* Set database transaction activity file name/path
 */
+int
 d_dbtaf(const char *taf)
 {
    char dbtaf[FILENMLEN];

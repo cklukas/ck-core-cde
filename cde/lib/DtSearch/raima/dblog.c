@@ -49,6 +49,7 @@
 
 /* Set database log file name/path
 */
+int
 d_dblog(const char *log)
 {
    DB_ENTER(NO_DB_ID TASK_ID LOCK_SET(LOCK_NONE));

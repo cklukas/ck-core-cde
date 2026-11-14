@@ -190,16 +190,6 @@ int db_txtest = 0;          /* transaction commit failure testing flag */
 
 
 
-/* Internal function prototypes */
-static int bld_lock_tables(void);
-static int initses(void);
-static int lock_files(int, LOCK_REQUEST *);
-static int send_lock(void);
-static int send_free(void);
-static void reset_locks(void);
-static int recovery_check(void);
-
-
 /* Open db_VISTA database
 */
 int
