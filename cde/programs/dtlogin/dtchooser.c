@@ -110,7 +110,6 @@ extern void DoPing (Widget w, XtPointer client_data, XtPointer call_data);
  *
  ***************************************************************************/
 
-static SIGVAL syncTimeout( int arg ) ;
 static Widget InitToolKit( int argc, char **argv) ;
 void MakeRootCursor( void ) ;
 void MakeBackground( void ) ;

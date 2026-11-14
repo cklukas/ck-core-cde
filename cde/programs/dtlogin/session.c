@@ -61,6 +61,7 @@
 #endif /* _AIX */
 
 
+#include <Dt/DtSigP.h>
 #include <string.h>
 # include "dm.h"
 # include "vgmsg.h"
@@ -669,7 +670,7 @@ ManageSession( struct display *d )
 	 * We've changed dtlogin to pass HUP's down to the children
 	 * so ignore any HUP's once the client has started.
 	 */
-	signal(SIGHUP, SIG_IGN);
+	_DtSignal(SIGHUP, SIG_IGN);
 
 	/*
 	 * Wait for session to end; a request to terminate ends it.
@@ -681,7 +682,7 @@ ManageSession( struct display *d )
 	 * We've changed dtlogin to pass HUP's down to the children
 	 * so ignore any HUP's once the client has started.
 	 */
-	signal(SIGHUP, SIG_DFL);
+	_DtSignal(SIGHUP, SIG_DFL);
     } else {
 	LogError(ReadCatalog(
 	    MC_LOG_SET,MC_LOG_FAIL_START,MC_DEF_LOG_FAIL_START));
@@ -1242,7 +1243,7 @@ void
 SecureDisplay (struct display *d, Display *dpy)
 {
     Debug ("SecureDisplay():\n");
-    signal (SIGALRM, syncTimeout);
+    _DtSignal(SIGALRM, syncTimeout);
     if (sigsetjmp (syncJump, 1)) {
 	LogError(ReadCatalog(MC_LOG_SET,MC_LOG_NO_SECDPY,MC_DEF_LOG_NO_SECDPY),
 		   d->name);
@@ -1255,14 +1256,14 @@ SecureDisplay (struct display *d, Display *dpy)
 		       GrabModeAsync, CurrentTime) != GrabSuccess)
     {
 	alarm (0);
-	signal (SIGALRM, SIG_DFL);
+	_DtSignal(SIGALRM, SIG_DFL);
 	LogError(ReadCatalog(MC_LOG_SET,MC_LOG_NO_SECKEY,MC_DEF_LOG_NO_SECKEY),
 		  d->name);
 	SessionExit (d, RESERVER_DISPLAY);
     }
     Debug ("XGrabKeyboard() succeeded\n");
     alarm (0);
-    signal (SIGALRM, SIG_DFL);
+    _DtSignal(SIGALRM, SIG_DFL);
     pseudoReset (dpy);
     if (!d->grabServer)
     {
@@ -2485,7 +2486,7 @@ RunGreeter( struct display *d, struct greet_info *greet,
 		SessionExit(d, REMANAGE_DISPLAY);
 	    }
 	}
-        signal(SIGHUP, SIG_DFL);
+        _DtSignal(SIGHUP, SIG_DFL);
     }
 }
 

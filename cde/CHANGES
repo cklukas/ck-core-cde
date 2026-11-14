@@ -1,3 +1,14 @@
+2026-11-14
+- Signal dispositions. The remaining `signal()` calls of DtTerm, dtaction,
+  cmsd, dtfile, dtimsstart, dtlogin, dtstyle and the font editor use
+  `_DtSignal()`. The dtstyle SIGCHLD handler reaps every finished child
+  without blocking and keeps `errno`; the font editor handler only sets a
+  `sig_atomic_t` flag. The dtlogin greeter and chooser no longer limit
+  `XtInitialize()` and the server grab with SIGALRM and `siglongjmp()`: they
+  use `BoundedCall()`, which moved from `util.c` to the new `bounded.c` that
+  all three dtlogin programs link. `tests/check-x-timeouts.py` reads it from
+  there.
+
 2026-11-13
 - Unchecked memory allocations in the privileged and network-facing code. A
   failed `malloc()`, `calloc()` or `strdup()` is now reported through the

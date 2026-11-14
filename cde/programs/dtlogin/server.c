@@ -46,6 +46,7 @@
  * Author:  Keith Packard, MIT X Consortium
  */
 
+#include <Dt/DtSigP.h>
 #include <string.h>
 # include	<sys/types.h>
 # include	<sys/socket.h>
@@ -203,7 +204,7 @@ StartServerOnce( struct display *d )
 	 * it will notice that and send SIGUSR1
 	 * when ready
 	 */
-	signal (SIGUSR1, SIG_IGN);
+	_DtSignal(SIGUSR1, SIG_IGN);
 	(void) execve (argv[0], argv, env);
 	LogError(ReadCatalog(
 		MC_LOG_SET,MC_LOG_NO_EXESRV,MC_DEF_LOG_NO_EXESRV),argv[0]);

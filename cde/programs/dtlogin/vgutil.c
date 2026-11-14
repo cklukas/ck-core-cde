@@ -88,7 +88,6 @@
  *  Procedure declarations
  *
  ***************************************************************************/
-static SIGVAL syncTimeout( int arg ) ;
 
 /***************************************************************************
  *
@@ -889,14 +888,29 @@ ReadCatalogXms(int setn, int msgn, char *dflt)
  *  grab/release the server and keyboard
  ***************************************************************************/
 
-static sigjmp_buf	syncJump;
 static int	grabServer;		/* Boolean on grabbing server	   */
 static int	grabTimeout;		/* timeout to grab server	   */
 
-static SIGVAL
-syncTimeout( int arg )
+/* The grab runs in a helper thread so that the time it may take can be
+ * limited; a grab that does not finish owns the request until the process
+ * ends. */
+static struct {
+    Display	*dpy;
+    int		status;
+} grabRequest;
+
+static void *
+GrabJob( void *data )
 {
-    siglongjmp (syncJump, 1);
+    (void) data;
+    XGrabServer (grabRequest.dpy);
+    grabRequest.status = XGrabKeyboard (grabRequest.dpy,
+					DefaultRootWindow (grabRequest.dpy),
+					True,
+					GrabModeAsync,
+					GrabModeAsync,
+					CurrentTime);
+    return nullptr;
 }
 
 int 
@@ -904,7 +918,8 @@ SecureDisplay( void )
 {
     
     char *t;
-    
+    void *unused;
+    int status;
 
     /*
      *  get grab values from the environment...
@@ -917,29 +932,22 @@ SecureDisplay( void )
     /*
      *  grab server then the keyboard...
      */
-    signal (SIGALRM, syncTimeout);
-    if (sigsetjmp (syncJump, 1)) {
+    grabRequest.dpy = dpyinfo.dpy;
+    grabRequest.status = GrabSuccess;
+    status = BoundedCall((unsigned int) grabTimeout, GrabJob, nullptr, &unused);
+    if (status == 0) {
 	LogError(ReadCatalog(MC_LOG_SET,MC_LOG_NO_SECDPY,MC_DEF_LOG_NO_SECDPY),
 		   dpyinfo.name);
 	return(1);
     }
-    alarm ((unsigned int) grabTimeout);
-    XGrabServer (dpyinfo.dpy);
-    if (XGrabKeyboard (dpyinfo.dpy,
-    		       DefaultRootWindow (dpyinfo.dpy),
-		       True,
-		       GrabModeAsync,
-		       GrabModeAsync,
-		       CurrentTime) != GrabSuccess) {
-	alarm (0);
-	signal (SIGALRM, SIG_DFL);
+    if (status < 0)
+	GrabJob (nullptr);
+    if (grabRequest.status != GrabSuccess) {
 	LogError(ReadCatalog(MC_LOG_SET,MC_LOG_NO_SECKEY,MC_DEF_LOG_NO_SECKEY),
 		  dpyinfo.name);
 	return(1);
     }
 
-    alarm (0);
-    signal (SIGALRM, SIG_DFL);
 /*    pseudoReset (dpy);*/
 
     /*

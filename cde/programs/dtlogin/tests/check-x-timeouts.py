@@ -4,18 +4,19 @@
 Opening the display (WaitForServer), the pseudo reset of the server (pseudoReset), the ping of the
 server and the scan of the NLS directory (MakeLangList) used SIGALRM and jumped out of what they were
 doing when the time was up.  They now use a thread with a time limit (BoundedCall), a look at the
-descriptor, and a deadline between directory entries.  The production code of util.c, server.c and
+descriptor, and a deadline between directory entries.  The production code of bounded.c, util.c, server.c and
 reset.c is cut out and run under ASan and UBSan with an X library whose requests do not answer.
 Every scenario runs in a process of its own.  Set DTLOGIN_SOURCE to test another copy of the sources.
 """
-from scenarios import block, finish, read, run_all, until
+from scenarios import block, finish, read, run_all, source, until
 
 util = read("util.c")
+boundedc = read("bounded.c") if (source / "bounded.c").exists() else ""
 server = read("server.c")
 reset = read("reset.c")
-new = "BoundedCall" in util
+new = "BoundedCall" in boundedc
 
-bounded = (until(util, "struct bounded_call {", "#if !defined (ENABLE_DYNAMIC_LANGLIST)") if new else "")
+bounded = (boundedc[boundedc.index("struct bounded_call {"):] if new else "")
 lang_start = "/*\n * The scan of the NLS directory is given langListTimeout seconds." if new else "static sigjmp_buf\tlangJump;"
 lang_end = "#endif /* ENABLE_DYNAMIC_LANGLIST */"
 language = until(util, lang_start, lang_end)

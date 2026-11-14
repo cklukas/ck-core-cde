@@ -46,7 +46,7 @@ AM_CFLAGS = -DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\" \
 	    -DXDMDIR=\"$(XDMDIR)\" \
 	    -DKORNSHELL=$(KSH) -DUNIXCONN -DTCPCONN -DXDMCP
 
-dtlogin_SOURCES = access.c auth.c genauth.c daemon.c dm.c \
+dtlogin_SOURCES = bounded.c access.c auth.c genauth.c daemon.c dm.c \
                   dpylist.c error.c file.c mitauth.c protodpy.c policy.c \
                   reset.c server.c session.c socket.c util.c \
                   verify.c sysauth.c fontpath.c qualify.c choose.c netaddr.c \
@@ -71,10 +71,10 @@ libresource_a_CFLAGS = $(AM_CFLAGS) \
                  -DDEF_PM_SEARCH_PATH=\"$(DEF_PM_PATH)\" \
                  -DDEF_BM_SEARCH_PATH=\"$(DEF_BM_PATH)\"
 
-dtgreet_SOURCES = vgcallback.c vglogo.c vgmain.c vgutil.c vglang.c
+dtgreet_SOURCES = bounded.c vgcallback.c vglogo.c vgmain.c vgutil.c vglang.c
 
-dtchooser_SOURCES = chooser.c dtchooser.c vglogo.c vgutil.c vgcallback.c \
-		    vglang.c
+dtchooser_SOURCES = bounded.c chooser.c dtchooser.c vglogo.c vgutil.c \
+		    vgcallback.c vglang.c
 
 dtlogin_LDADD = libresource.a $(DTCLIENTLIBS) $(XDMCPLIB) \
 	$(XTOOLLIB) $(TIRPCLIB)

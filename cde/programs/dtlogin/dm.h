@@ -82,6 +82,8 @@
 # include	<X11/Xos.h>
 # include	<X11/Xmd.h>
 # include	<X11/Xauth.h>
+
+#include "bounded.h"
 # include	<X11/Xdmcp.h>
 
 # include <X11/Xresource.h>
@@ -897,7 +899,6 @@ extern int parseArgs(char ***argv, const char *string);
 /* Append one argument verbatim, including whitespace; same failure contract. */
 extern int appendArg(char ***argv, const char *word);
 extern void freeEnv(char **env);
-extern int BoundedCall(unsigned seconds, void *(*job)(void *), void *argument, void **result);
 extern char ** parseEnv(
 			char **e,
 			char *string) ;

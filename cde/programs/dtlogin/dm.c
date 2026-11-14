@@ -51,6 +51,7 @@
  * display manager
  */
 
+#include <Dt/DtSigP.h>
 #include <string.h>
 # include	<sys/types.h>
 # include	<sys/signal.h>
@@ -251,8 +252,8 @@ main( int argc, char **argv )
     init_session_id ();
     CreateWellKnownSockets ();
     parent_pid = getpid();		/* PID of parent dtlogin process */
-    (void) signal (SIGTERM, StopAll);
-    (void) signal (SIGINT, StopAll);
+    (void) _DtSignal(SIGTERM, StopAll);
+    (void) _DtSignal(SIGINT, StopAll);
 
     /*
      * Set pseudo-user to "nobody". Xserver will be run as that pseudo-user 
@@ -278,8 +279,8 @@ main( int argc, char **argv )
      *  (getpwnam()) disable SIGTERM and SIGINT.
      */
      
-    (void) signal (SIGTERM, StopAll);
-    (void) signal (SIGINT, StopAll);
+    (void) _DtSignal(SIGTERM, StopAll);
+    (void) _DtSignal(SIGINT, StopAll);
 #endif
 
 
@@ -298,9 +299,9 @@ main( int argc, char **argv )
 #endif /* ENABLE_DYNAMIC_LANGLIST */
     ScanServers ();
     StartDisplays ();
-    (void) signal (SIGHUP, RescanNotify);
+    (void) _DtSignal(SIGHUP, RescanNotify);
 #if !defined(SYSV) || defined(_AIX) || defined(__linux__)
-    (void) signal (SIGCHLD, ChildNotify);
+    (void) _DtSignal(SIGCHLD, ChildNotify);
 #endif
     while (AnyWellKnownSockets() || AnyDisplaysLeft ())
     {
@@ -334,9 +335,6 @@ static SIGVAL
 RescanNotify( int arg )
 {
     Rescan = 1;
-#if defined(SYSV) || defined(SVR4)
-    signal (SIGHUP, RescanNotify);
-#endif
 }
 
 static int 
@@ -527,7 +525,7 @@ StopAll( int arg )
 	 * dtlogin process before we got a chance to return from
 	 * fork() and remove this signal handler
 	 */
-	(void) signal (arg, SIG_DFL);		/* ensure no more handler */
+	(void) _DtSignal(arg, SIG_DFL);		/* ensure no more handler */
 	TerminateProcess (getpid(), arg);	/* and send signal again */
 	errno = saved_errno;
 	return;
@@ -535,11 +533,6 @@ StopAll( int arg )
 
     /* only a flag here: the main loop does the work (ShutdownManager) */
     StopRequested = 1;
-#if defined(SYSV) || defined(SVR4)
-    /* to avoid another one from killing us unceremoniously */
-    (void) signal (SIGTERM, StopAll);
-    (void) signal (SIGINT, StopAll);
-#endif
     errno = saved_errno;
 }
 
@@ -633,7 +626,7 @@ WaitForChild( void )
 		ProcessChildDeath(pid, status);
 
 	    ChildReady = 0;
-	    (void) signal (SIGCHLD, ChildNotify);
+	    (void) _DtSignal(SIGCHLD, ChildNotify);
 	    sleep(1);
 	}
     }
@@ -1107,11 +1100,11 @@ StartDisplay(
 #ifdef OSFDEBUG
 	if (!nofork_session) {
 	    CleanUpChild ();
-	    signal (SIGPIPE, SIG_IGN);
+	    _DtSignal(SIGPIPE, SIG_IGN);
 	}
 #else
 	CleanUpChild ();
-	signal (SIGPIPE, SIG_IGN);
+	_DtSignal(SIGPIPE, SIG_IGN);
 #endif
 
 	/* 

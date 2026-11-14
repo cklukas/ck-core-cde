@@ -120,7 +120,6 @@ extern int     password_length;  /* pswd string length */
  *
  ***************************************************************************/
 
-static SIGVAL syncTimeout( int arg ) ;
 static Widget InitToolKit( int argc, char **argv) ;
 static void MakeRootCursor( void ) ;
 static void MakeBackground( void ) ;
@@ -641,13 +640,22 @@ main( int argc, char **argv )
 
 #define MINTIMEOUT	20
 
-static sigjmp_buf	syncJump;
+/* The toolkit is started by a helper thread so that the time it may take can
+ * be limited; the arguments stay in static storage because a start that does
+ * not finish owns them until the process ends. */
+static struct {
+    int		argc;
+    char	**argv;
+    Widget	root;
+} toolkitStart;
 
-static SIGVAL
-syncTimeout( int arg )
-
+static void *
+StartToolKit( void *data )
 {
-    siglongjmp (syncJump, 1);
+    (void) data;
+    toolkitStart.root = XtInitialize("dtlogin", "Dtlogin", nullptr, 0,
+				     &toolkitStart.argc, toolkitStart.argv);
+    return nullptr;
 }
 
 
@@ -658,6 +666,8 @@ InitToolKit( int argc, char **argv )
     int		timeout;		/* timeout to initialize toolkit   */
     char	*t;
     Widget	root;
+    void	*unused;
+    int		status;
     
 #ifdef VG_TRACE
     vg_TRACE_EXECUTION("InitToolKit: enter ...");
@@ -672,22 +682,23 @@ InitToolKit( int argc, char **argv )
 
 
     /*
-     *  initialize the toolkit. Wrap a timer around it in case the server
-     *  is grabbed.
+     *  initialize the toolkit. Limit the time it may take in case the
+     *  server is grabbed.
      */
 
-    _DtSignal(SIGALRM, syncTimeout);
-    if (sigsetjmp (syncJump, 1)) {
+    toolkitStart.argc = argc;
+    toolkitStart.argv = argv;
+    toolkitStart.root = nullptr;
+    status = BoundedCall((unsigned) timeout, StartToolKit, nullptr, &unused);
+    if (status == 0) {
 	LogError(
 		ReadCatalog(MC_LOG_SET,MC_LOG_NO_DPYINIT,MC_DEF_LOG_NO_DPYINIT),
 		dpyinfo.name);
 	exit(NOTIFY_RESTART);
     }
-
-    alarm ((unsigned) timeout);
-
-    root = XtInitialize("dtlogin", "Dtlogin", nullptr, 0, 
-    			 &argc, argv);
+    if (status < 0)
+	StartToolKit(nullptr);
+    root = toolkitStart.root;
     terminateSignalId = XtAppAddSignal(XtWidgetToApplicationContext(root),
                                        TerminateSignalProc, nullptr);
     /* Disable Drag and Drop  RK 11.02.93 */
@@ -695,9 +706,6 @@ InitToolKit( int argc, char **argv )
                 XmNdragInitiatorProtocolStyle, XmDRAG_NONE,
                 nullptr);
  
-
-    alarm (0);
-    _DtSignal(SIGALRM, SIG_DFL);
 
     return(root);
 }

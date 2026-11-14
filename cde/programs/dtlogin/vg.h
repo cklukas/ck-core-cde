@@ -61,6 +61,7 @@ extern int errno;
 #include	<stdlib.h>
 #include	<Xm/Xm.h>
 #include	"vgproto.h"
+#include	"bounded.h"
 
 #ifdef USE_XINERAMA
 # include <Dt/DtXinerama.h>
