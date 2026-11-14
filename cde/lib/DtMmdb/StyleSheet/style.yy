@@ -604,7 +604,9 @@ feature		: feature_name_list OPER_modify rhs.gp
              }
 	  }
 
-	  $1->clearAndDestroy();
+	  while ( char* name = $1->removeFirst() ) {
+	     free(name);
+	  }
 	  delete $1 ;
 	  $$=f;
 	}
