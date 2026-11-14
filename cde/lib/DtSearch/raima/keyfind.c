@@ -119,14 +119,14 @@ static void chk_desc_key(int fld, FIELD_ENTRY *fld_ptr, const char *fldval, char
 	 switch ( kfld_ptr->fd_type ) {
 #ifndef	 NO_FLOAT
 	    case FLOAT:
-	       bytecpy(&fv, fptr, sizeof(float));
+	       memcpy(&fv, fptr, sizeof(float));
 	       fv = (float)0.0 - fv;
-	       bytecpy(fptr, &fv, sizeof(float));
+	       memcpy(fptr, &fv, sizeof(float));
 	       break;
 	    case DOUBLE:
-	       bytecpy(&dv, fptr, sizeof(double));
+	       memcpy(&dv, fptr, sizeof(double));
 	       dv = 0.0 - dv;
-	       bytecpy(fptr, &dv, sizeof(double));
+	       memcpy(fptr, &dv, sizeof(double));
 	       break;
 #endif
 	    case CHARACTER:
@@ -141,7 +141,7 @@ static void chk_desc_key(int fld, FIELD_ENTRY *fld_ptr, const char *fldval, char
 	 }
       }
       else
-	 bytecpy(tptr, fptr, kfld_ptr->fd_len);
+	 memcpy(tptr, fptr, kfld_ptr->fd_len);
    }
 }
 /* vpp -nOS2 -dUNIX -nBSD -nVANILLA_BSD -nVMS -nMEMLOCK -nWINDOWS -nFAR_ALLOC -f/usr/users/master/config/nonwin keyfind.c */

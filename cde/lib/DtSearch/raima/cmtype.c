@@ -73,7 +73,7 @@ d_cmtype(int set, int *cmtype, int dbn)
       RETURN( db_status );
 
    /* Fetch record type from record header */
-   bytecpy(&crt, mrec, sizeof(INT));
+   memcpy(&crt, mrec, sizeof(INT));
    *cmtype = (int)crt + RECMARK;
 
    RETURN( db_status );

@@ -79,7 +79,7 @@ int dbn
       RETURN( db_status );
 
    /* Copy record type from record */
-   bytecpy(&rt, crloc, sizeof(INT));
+   memcpy(&rt, crloc, sizeof(INT));
    rt &= ~RLBMASK; /* mask off rlb */
    rt += curr_db_table->rt_offset;
    rec_ptr = &record_table[rt];

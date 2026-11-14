@@ -155,7 +155,7 @@ int dbn
    if ( page == nullptr ) RETURN( dberr(S_NOMEMORY) );
 
    /*--------- Init PAGE 0 ---------*/
-   byteset(page, '\0', file_ptr->ft_pgsize);
+   memset(page, '\0', file_ptr->ft_pgsize);
    /**time(&page->pg0.cdate);***/
    page->pg0.cdate =		extern_timestamp;
    strcpy(page->pg0.vdb_id,	"db_VISTA Version ");
@@ -171,13 +171,13 @@ int dbn
       DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
 
       /*--------- Write KEY FILE PAGE 1 ---------*/
-      byteset(page, '\0', file_ptr->ft_pgsize);
+      memset(page, '\0', file_ptr->ft_pgsize);
       page->pg1.chg_date =	extern_timestamp;
       /* node 1, current # of filled slots */
-      bytecpy(page->pg1.init_int, nulls, sizeof(INT));
+      memcpy(page->pg1.init_int, nulls, sizeof(INT));
       /* node 1, NONE page pointer */
       addr =			-1;
-      bytecpy(page->pg1.init_addr, &addr, sizeof(F_ADDR));
+      memcpy(page->pg1.init_addr, &addr, sizeof(F_ADDR));
       DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
    }
    else {
@@ -198,26 +198,26 @@ int dbn
 	    DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
 
 	    /*--------- Write DATA FILE PAGE 1 for system record ---------*/
-	    byteset(page, '\0', file_ptr->ft_pgsize);
+	    memset(page, '\0', file_ptr->ft_pgsize);
 	    /* Data page header is current timestamp */
 	    /*****time(&page->pg1.chg_date);****/
 	    page->pg1.chg_date =	extern_timestamp;
 	    addr =		(((LONG) NUM2EXT(fno, ft_offset) & FILEMASK)
 					<< FILESHIFT) | 1;
 	    HTONL (addr);
-	    bytecpy(page->pg1.init_addr, &addr, sizeof(F_ADDR));
+	    memcpy(page->pg1.init_addr, &addr, sizeof(F_ADDR));
 
 	    /* Slot 1 (system record) header is recid, dba,
 	     * maybe two phony timestamps, no set ptrs or member ptrs.
 	     */
 	    rno =		htons (NUM2EXT(rec, rt_offset));
-	    bytecpy(page->pg1.init_int, &rno, sizeof(INT));
+	    memcpy(page->pg1.init_int, &rno, sizeof(INT));
 	    if ( rec_ptr->rt_flags & TIMESTAMPED ) {
 	       /* timestamp system record */
 	       ts =		1;
 	       HTONL (ts);
-	       bytecpy(page->pg1.init_crts, &ts, sizeof(ULONG));
-	       bytecpy(page->pg1.init_upts, &ts, sizeof(ULONG));
+	       memcpy(page->pg1.init_crts, &ts, sizeof(ULONG));
+	       memcpy(page->pg1.init_upts, &ts, sizeof(ULONG));
 	    }
 	    DB_WRITE(dbfile, (char *)page, (int)file_ptr->ft_pgsize);
 	    break;

@@ -80,7 +80,7 @@ int dbn      /* database number */
       RETURN( (db_status == S_INVOWN) ? dberr(S_SYSERR) : db_status );
 
    /* Copy total members from owner pointer */
-   bytecpy(&total, setp+SP_MEMBERS, sizeof(LONG));
+   memcpy(&total, setp+SP_MEMBERS, sizeof(LONG));
    *tot = total;
 
    RETURN( db_status = S_OKAY );

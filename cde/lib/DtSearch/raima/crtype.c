@@ -72,7 +72,7 @@ int dbn
       RETURN( db_status );
    
    /* Fetch record type from record header */
-   bytecpy(&crt, crloc, sizeof(INT));
+   memcpy(&crt, crloc, sizeof(INT));
    crt &= ~RLBMASK; /* mask off rlb */
    *crtype = (int)crt + RECMARK;
 

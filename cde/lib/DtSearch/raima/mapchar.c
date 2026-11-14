@@ -185,7 +185,7 @@ int ctbl_alloc(void)
 	   == nullptr ) return( dberr(S_NOMEMORY) );
 
    /* fill table with standard values */
-   byteset(db_global.country_tbl.ptr, '\0', 256*sizeof(CNTRY_TBL)+1);
+   memset(db_global.country_tbl.ptr, '\0', 256*sizeof(CNTRY_TBL)+1);
 
    return( db_status = S_OKAY );
 }

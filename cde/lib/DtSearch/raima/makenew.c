@@ -75,7 +75,7 @@ d_setkey(long field, const char *fldvalue, int dbn)
       if ( sk_ptr->ptr->sk_fld == fld ) {
          MEM_LOCK(&sk_ptr->ptr->sk_val);
 	 if ( fld_ptr->fd_type != CHARACTER || fld_ptr->fd_dim[1] )
-	    bytecpy( sk_ptr->ptr->sk_val.ptr, fldvalue, fld_ptr->fd_len );
+	    memcpy( sk_ptr->ptr->sk_val.ptr, fldvalue, fld_ptr->fd_len );
 	 else if ( fld_ptr->fd_dim[0] )
 	    strncpy( sk_ptr->ptr->sk_val.ptr, fldvalue, fld_ptr->fd_len );
 	 else
@@ -99,7 +99,7 @@ d_setkey(long field, const char *fldvalue, int dbn)
       RETURN( dberr( S_NOMEMORY ) );
 
    if ( fld_ptr->fd_type != CHARACTER || fld_ptr->fd_dim[1] )
-      bytecpy( sk_p.ptr->sk_val.ptr, fldvalue, fld_ptr->fd_len );
+      memcpy( sk_p.ptr->sk_val.ptr, fldvalue, fld_ptr->fd_len );
    else if ( fld_ptr->fd_dim[0] )
       strncpy( sk_p.ptr->sk_val.ptr, fldvalue, fld_ptr->fd_len );
    else
@@ -192,11 +192,11 @@ d_makenew(int nrec, int dbn)
       RETURN( db_status );
 
    /* zero fill the record */
-   byteset(ptr, 0, rec_ptr->rt_len);
+   memset(ptr, 0, rec_ptr->rt_len);
 
    /* place the record number and db_addr at the start of the record */
-   bytecpy( ptr, &recnum, sizeof(INT) );
-   bytecpy( ptr+sizeof(INT), &db_addr, DB_ADDR_SIZE);
+   memcpy( ptr, &recnum, sizeof(INT) );
+   memcpy( ptr+sizeof(INT), &db_addr, DB_ADDR_SIZE);
    /* for each keyed field, enter the key value into the key file */
    for (fld = rec_ptr->rt_fields, fldtot = fld + rec_ptr->rt_fdtot,
 						   fld_ptr = &field_table[fld];
@@ -218,7 +218,7 @@ d_makenew(int nrec, int dbn)
 		  RETURN( db_status = stat );
 	       }
 	       if ((fld_ptr->fd_type != CHARACTER) || fld_ptr->fd_dim[0] )
-		  bytecpy(ptr+fld_ptr->fd_ptr, sk_ptr->ptr->sk_val.ptr,
+		  memcpy(ptr+fld_ptr->fd_ptr, sk_ptr->ptr->sk_val.ptr,
 			  fld_ptr->fd_len);
 	       else
 		  strncpy(ptr + fld_ptr->fd_ptr, sk_ptr->ptr->sk_val.ptr,

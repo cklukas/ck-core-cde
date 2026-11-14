@@ -73,7 +73,7 @@ d_cotype(int set, int *cotype, int dbn)
       RETURN( db_status );
 
    /* Fetch record type from record header */
-   bytecpy(&crt, orec, sizeof(INT));
+   memcpy(&crt, orec, sizeof(INT));
    crt &= ~RLBMASK; /* mask off rlb */
    *cotype = (int)crt + RECMARK;
 

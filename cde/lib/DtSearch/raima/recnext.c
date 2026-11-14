@@ -99,7 +99,7 @@ d_recnext(int dbn)
 	    RETURN( db_status );
 
 	/* get the record type out of the record */
-	bytecpy( &rectype, recptr, sizeof(INT) );
+	memcpy( &rectype, recptr, sizeof(INT) );
 
 	++rno;
    } while ( rectype != RN_REF(rn_type) );

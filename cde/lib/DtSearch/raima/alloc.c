@@ -180,13 +180,13 @@ void ll_free(llist *ll)
       MEM_LOCK(curr);
       if ( curr->ptr == nullptr )
 	 break;
-      bytecpy(&next, &curr->ptr->next, sizeof(LL_P));
+      memcpy(&next, &curr->ptr->next, sizeof(LL_P));
       d_free((CHAR_P *)curr);
-      bytecpy(&free, &next, sizeof(LL_P));
+      memcpy(&free, &next, sizeof(LL_P));
       curr = &free;
    }
-   byteset(&ll->head, '\0', sizeof(LL_P));
-   byteset(&ll->tail, '\0', sizeof(LL_P));
+   memset(&ll->head, '\0', sizeof(LL_P));
+   memset(&ll->tail, '\0', sizeof(LL_P));
 }
 
 /* Finds the next element and returns its data
@@ -243,7 +243,7 @@ static int NewInit(LL_P *new)
    new->ptr = (ll_elem *)ALLOC(new, sizeof(ll_elem), "new");
    if ( new->ptr == nullptr )
       return( dberr(S_NOMEMORY) );
-   byteset(new->ptr, '\0', sizeof(ll_elem));
+   memset(new->ptr, '\0', sizeof(ll_elem));
    MEM_UNLOCK(new);
    return( db_status );
 }

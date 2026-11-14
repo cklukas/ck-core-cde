@@ -258,7 +258,7 @@ d_open(const char *dbnames, const char *opentype)
 */
 int taskinit(TASK *tsk)
 {
-   byteset(tsk, '\0', sizeof(TASK));
+   memset(tsk, '\0', sizeof(TASK));
    tsk->No_of_dbs = 1;
    tsk->Dboptions = DCHAINUSE;
    return( db_status );
@@ -470,9 +470,9 @@ unsigned old_size
    if ( Temp_table.ptr == nullptr ) {
       return( dberr(S_NOMEMORY) );
    }
-   byteset(&Temp_table.ptr[old_size], 0, new_size - old_size);
+   memset(&Temp_table.ptr[old_size], 0, new_size - old_size);
    if ( old_size ) {
-      bytecpy(Temp_table.ptr, table, old_size);
+      memcpy(Temp_table.ptr, table, old_size);
       MEM_UNLOCK(Table);
       FREE(Table);
    }

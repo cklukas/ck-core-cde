@@ -77,19 +77,19 @@ int dbn
       RETURN( db_status );
 
    /* copy record type from record */
-   bytecpy(&rt, crloc, sizeof(INT));
+   memcpy(&rt, crloc, sizeof(INT));
    if ( rt < 0 )
       RETURN( db_status = S_DELETED );
 
    rec_ptr = &record_table[NUM2INT(rt, rt_offset)];
 
    /* Copy db_addr from record and check with curr_rec */
-   bytecpy(&dba, crloc+sizeof(INT), DB_ADDR_SIZE);
+   memcpy(&dba, crloc+sizeof(INT), DB_ADDR_SIZE);
    if ( ADDRcmp(&dba, &curr_rec) != 0 )
       RETURN( dberr(S_INVADDR) );
 
    /* Copy data from crloc into rec */
-   bytecpy(rec, &crloc[rec_ptr->rt_data], rec_ptr->rt_len - rec_ptr->rt_data);
+   memcpy(rec, &crloc[rec_ptr->rt_data], rec_ptr->rt_len - rec_ptr->rt_data);
 
    RETURN( db_status = S_OKAY );
 }

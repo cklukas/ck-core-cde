@@ -76,7 +76,7 @@ d_findfm(int nset, int dbn)
       RETURN( db_status == S_INVOWN? dberr(S_SYSERR): db_status );
 
    /* extract address of first member */
-   bytecpy(&mem, setp+SP_FIRST, DB_ADDR_SIZE);
+   memcpy(&mem, setp+SP_FIRST, DB_ADDR_SIZE);
 
    /* set current record and member */
    curr_mem[set] = mem;

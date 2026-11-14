@@ -301,9 +301,9 @@ char *mem2  /* member record 2 */
    FIELD_ENTRY *fld_ptr;
 
    /* extract record numbers from record header */
-   bytecpy(&rn1, mem1, sizeof(INT));
+   memcpy(&rn1, mem1, sizeof(INT));
    rn1 &= ~RLBMASK; /* mask off rlb */
-   bytecpy(&rn2, mem2, sizeof(INT));
+   memcpy(&rn2, mem2, sizeof(INT));
    rn2 &= ~RLBMASK; /* mask off rlb */
    rn1 += curr_db_table->rt_offset;
    rn2 += curr_db_table->rt_offset;

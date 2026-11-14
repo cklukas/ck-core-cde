@@ -120,7 +120,7 @@ int d_recprev(int dbn)
       if (db_status != S_OKAY) RETURN( db_status );
 
       /* see if we've found a match */
-      bytecpy(&rectype, recptr, sizeof(INT));
+      memcpy(&rectype, recptr, sizeof(INT));
       rno--;
    } while ( rectype != RN_REF(rn_type) );
 

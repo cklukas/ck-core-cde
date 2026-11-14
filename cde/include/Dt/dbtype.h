@@ -39,9 +39,6 @@
  *              RN_REF
  *              TABLE_SIZE
  *              arraysize
- *              bytecmp
- *              bytecpy
- *              byteset
  *
  *   ORIGINS: 27,157
  *
@@ -471,10 +468,6 @@ typedef struct ren_entry {
    CHAR_P File_name;
    FILE_NO file_no;
 } REN_ENTRY;
-
-#define bytecpy(s1, s2, n) memcpy((char *)(s1), (char *)(s2), (unsigned)(n))
-#define bytecmp(s1, s2, n) memcmp((char *)(s1), (char *)(s2), (unsigned)(n))
-#define byteset(s, c, n) memset((char *)(s), (char)(c), (unsigned)(n))
 
 typedef struct MESSAGE_S {
 #ifdef GENERAL

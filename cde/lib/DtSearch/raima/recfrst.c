@@ -89,7 +89,7 @@ int dbn
 	 RETURN( db_status );
 
       /* get the record type out of the record */
-      bytecpy( &rectype, recptr, sizeof(INT) );
+      memcpy( &rectype, recptr, sizeof(INT) );
 
       ++rno;
    } while ( (int)rectype != rec );

@@ -196,7 +196,7 @@ const char *f2    /* pointer to field 2 */
    switch ( fld_ptr->fd_type ) {
       case CHARACTER:
 	 if ( fld_ptr->fd_dim[1] )
-	    return ( bytecmp(f1, f2, len) );
+	    return ( memcmp(f1, f2, len) );
 	 else if ( fld_ptr->fd_dim[0] )
 	 {
 	    if ( db_global.ctbl_activ )
@@ -209,14 +209,14 @@ const char *f2    /* pointer to field 2 */
       case REGINT:
 	 for ( result = elt = 0; result == 0 && elt < entries; ++elt ) {
 	    if ( fld_ptr->fd_flags & UNSIGNEDFLD ) {
-	       bytecpy(&ui1, f1+(elt*sizeof(int)), sizeof(int));
-	       bytecpy(&ui2, f2+(elt*sizeof(int)), sizeof(int));
+	       memcpy(&ui1, f1+(elt*sizeof(int)), sizeof(int));
+	       memcpy(&ui2, f2+(elt*sizeof(int)), sizeof(int));
 	       if ( ui1 < ui2 ) result = -1;
 	       else if ( ui1 > ui2 ) result =  1;
 	    }
 	    else {
-	       bytecpy(&i1, f1+(elt*sizeof(int)), sizeof(int));
-	       bytecpy(&i2, f2+(elt*sizeof(int)), sizeof(int));
+	       memcpy(&i1, f1+(elt*sizeof(int)), sizeof(int));
+	       memcpy(&i2, f2+(elt*sizeof(int)), sizeof(int));
 	       if ( i1 < i2 ) result = -1;
 	       else if ( i1 > i2 ) result =  1;
 	    }
@@ -225,14 +225,14 @@ const char *f2    /* pointer to field 2 */
       case LONGINT:
 	 for ( result = elt = 0; result == 0 && elt < entries; ++elt ) {
 	    if ( fld_ptr->fd_flags & UNSIGNEDFLD ) {
-	       bytecpy(&ul1, f1+(elt*sizeof(long)), sizeof(long));
-	       bytecpy(&ul2, f2+(elt*sizeof(long)), sizeof(long));
+	       memcpy(&ul1, f1+(elt*sizeof(long)), sizeof(long));
+	       memcpy(&ul2, f2+(elt*sizeof(long)), sizeof(long));
 	       if ( ul1 < ul2 ) result = -1;
 	       else if ( ul1 > ul2 ) result =  1;
 	    }
 	    else {
-	       bytecpy(&l1, f1+(elt*sizeof(long)), sizeof(long));
-	       bytecpy(&l2, f2+(elt*sizeof(long)), sizeof(long));
+	       memcpy(&l1, f1+(elt*sizeof(long)), sizeof(long));
+	       memcpy(&l2, f2+(elt*sizeof(long)), sizeof(long));
 	       if ( l1 < l2 ) result = -1;
 	       else if ( l1 > l2 ) result =  1;
 	    }
@@ -241,14 +241,14 @@ const char *f2    /* pointer to field 2 */
       case SHORTINT:
 	 for ( result = elt = 0; result == 0 && elt < entries; ++elt ) {
 	    if ( fld_ptr->fd_flags & UNSIGNEDFLD ) {
-	       bytecpy(&us1, f1+(elt*sizeof(short)), sizeof(short));
-	       bytecpy(&us2, f2+(elt*sizeof(short)), sizeof(short));
+	       memcpy(&us1, f1+(elt*sizeof(short)), sizeof(short));
+	       memcpy(&us2, f2+(elt*sizeof(short)), sizeof(short));
 	       if ( us1 < us2 ) result = -1;
 	       else if ( us1 > us2 ) result =  1;
 	    }
 	    else {
-	       bytecpy(&s1, f1+(elt*sizeof(short)), sizeof(short));
-	       bytecpy(&s2, f2+(elt*sizeof(short)), sizeof(short));
+	       memcpy(&s1, f1+(elt*sizeof(short)), sizeof(short));
+	       memcpy(&s2, f2+(elt*sizeof(short)), sizeof(short));
 	       if ( s1 < s2 ) result = -1;
 	       else if ( s1 > s2 ) result =  1;
 	    }
@@ -257,16 +257,16 @@ const char *f2    /* pointer to field 2 */
 #ifndef	 NO_FLOAT
       case FLOAT:
 	 for ( result = elt = 0; result == 0 && elt < entries; ++elt ) {
-	    bytecpy(&F1, f1+(elt*sizeof(float)), sizeof(float));
-	    bytecpy(&F2, f2+(elt*sizeof(float)), sizeof(float));
+	    memcpy(&F1, f1+(elt*sizeof(float)), sizeof(float));
+	    memcpy(&F2, f2+(elt*sizeof(float)), sizeof(float));
 	    if ( F1 < F2 )  result = -1;
 	    else if ( F1 > F2 )  result = 1;
 	 }
 	 break;
       case DOUBLE:
 	 for ( result = elt = 0; result == 0 && elt < entries; ++elt ) {
-	    bytecpy(&d1, f1+(elt*sizeof(double)), sizeof(double));
-	    bytecpy(&d2, f2+(elt*sizeof(double)), sizeof(double));
+	    memcpy(&d1, f1+(elt*sizeof(double)), sizeof(double));
+	    memcpy(&d2, f2+(elt*sizeof(double)), sizeof(double));
 	    if ( d1 < d2 )  result = -1;
 	    else if ( d1 > d2 )  result = 1;
 	 }
@@ -312,8 +312,8 @@ int INTcmp(const char *i1, const char *i2)
 {
    INT I1, I2;
 
-   bytecpy( &I1, i1, sizeof(INT) );
-   bytecpy( &I2, i2, sizeof(INT) );
+   memcpy( &I1, i1, sizeof(INT) );
+   memcpy( &I2, i2, sizeof(INT) );
    return( (int)( I1-I2 ) );
 }
 
@@ -326,8 +326,8 @@ int ADDRcmp(const DB_ADDR *d1, const DB_ADDR *d2)
    FILE_NO f1, f2;
    F_ADDR r1, r2;
 
-   bytecpy(&a1, d1, DB_ADDR_SIZE);
-   bytecpy(&a2, d2, DB_ADDR_SIZE);
+   memcpy(&a1, d1, DB_ADDR_SIZE);
+   memcpy(&a2, d2, DB_ADDR_SIZE);
 
    f1 = (FILE_NO)(FILEMASK & (a1 >> FILESHIFT));
    f2 = (FILE_NO)(FILEMASK & (a2 >> FILESHIFT));
@@ -353,7 +353,7 @@ null_dba(const char *db_addr)
 {
    DB_ADDR dba;
 
-   bytecpy( &dba, db_addr, DB_ADDR_SIZE );
+   memcpy( &dba, db_addr, DB_ADDR_SIZE );
    return( dba == NULL_DBA );
 }
 

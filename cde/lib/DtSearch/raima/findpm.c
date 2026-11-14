@@ -78,7 +78,7 @@ d_findpm(int nset, int dbn)
       RETURN( db_status );
 
    /* extract address of previous member */
-   bytecpy( &mem, memp+MP_PREV, DB_ADDR_SIZE);
+   memcpy( &mem, memp+MP_PREV, DB_ADDR_SIZE);
 
    /* set current record and member */
    *cm_ptr = mem;

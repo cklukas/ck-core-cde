@@ -75,7 +75,7 @@ d_findco(int nset, int dbn)
       RETURN( db_status );
 
    /* Extract the owner ptr from the member ptr */
-   bytecpy(&own, mem+MP_OWNER, DB_ADDR_SIZE);
+   memcpy(&own, mem+MP_OWNER, DB_ADDR_SIZE);
    if ( ! own )  /* Record not connected to set */
       RETURN( dberr( S_NOTCON ) );
 

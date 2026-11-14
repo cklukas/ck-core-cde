@@ -72,7 +72,7 @@ int dbn       /* database number */
    else if ( check_dba(*dba) == S_OKAY ) {
       /* get the record type */
       if ( dio_read( *dba, (char * *)&ptr , NOPGHOLD) ) RETURN( db_status );
-      bytecpy( &type, ptr, sizeof(INT) );
+      memcpy( &type, ptr, sizeof(INT) );
       type &= ~RLBMASK;
       type += curr_db_table->rt_offset;
 

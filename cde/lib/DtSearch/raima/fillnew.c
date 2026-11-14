@@ -110,13 +110,13 @@ int dbn       /* database number */
       RETURN( db_status );
 
    /* zero fill the record */
-   byteset(ptr, 0, rec_ptr->rt_len);
+   memset(ptr, 0, rec_ptr->rt_len);
 
    /* place the record number and db_addr at the start of the record */
-   bytecpy( ptr, &recnum, sizeof(INT) );
-   bytecpy( ptr+sizeof(INT), &db_addr, DB_ADDR_SIZE );
+   memcpy( ptr, &recnum, sizeof(INT) );
+   memcpy( ptr+sizeof(INT), &db_addr, DB_ADDR_SIZE );
    /* copy the record value into place */
-   bytecpy( ptr+rec_ptr->rt_data, recval, rec_ptr->rt_len-rec_ptr->rt_data );
+   memcpy( ptr+rec_ptr->rt_data, recval, rec_ptr->rt_len-rec_ptr->rt_data );
 
    /* for each keyed field, enter the key value into the key file */
    for (fld = rec_ptr->rt_fields, fldtot = fld + rec_ptr->rt_fdtot,

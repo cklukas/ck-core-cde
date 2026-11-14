@@ -115,7 +115,7 @@ int dbn				/* optional database number */
 	 RETURN( db_status );
       
       /* See if this record is of the type we're looking for */
-      bytecpy(&rectype, recptr, sizeof(INT));
+      memcpy(&rectype, recptr, sizeof(INT));
       rno--;
    } while ( (int)rectype != rec );
 

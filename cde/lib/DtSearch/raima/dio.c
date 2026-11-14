@@ -336,7 +336,7 @@ dio_init(void)
 #endif
    if ( !used_files || !dbpg_table || !db_lookup )
       return( dberr(S_NOMEMORY) );
-   byteset(used_files, 0, (size_ft + 1)*sizeof(*used_files));
+   memset(used_files, 0, (size_ft + 1)*sizeof(*used_files));
 
    last_dblu.file = -1;
    last_dblu.pageno = -1L;
@@ -747,7 +747,7 @@ dio_write(DB_ADDR dba, const char *recptr, int release)
 	 offset = file_ptr->ft_slsize*(int)(us1 - 1 - us2*file_ptr->ft_slots) +
 								     PGHDRSIZE;
 	 MEM_LOCK(&pg_ptr->Buff);
-	 bytecpy(&pg_ptr->buff[offset], recptr, file_ptr->ft_slsize);
+	 memcpy(&pg_ptr->buff[offset], recptr, file_ptr->ft_slsize);
 	 MEM_UNLOCK(&pg_ptr->Buff);
       }
       if ( ! pg_ptr->modified ) {
@@ -897,7 +897,7 @@ LOOKUP_ENTRY * *xlu_ptr /* pointer to lookup table slot for found page*/
          --lu_slot;
       }
       while (replu_ptr < lu_ptr) {
-	 bytecpy(replu_ptr, replu_ptr + 1, sizeof(*replu_ptr));
+	 memcpy(replu_ptr, replu_ptr + 1, sizeof(*replu_ptr));
          pg_table[replu_ptr->pg_slot].lu_slot = replu_ptr - lookup;
 	 ++replu_ptr;
       }
@@ -909,7 +909,7 @@ LOOKUP_ENTRY * *xlu_ptr /* pointer to lookup table slot for found page*/
          ++lu_slot;
       }
       while (replu_ptr > lu_ptr) {
-	 bytecpy(replu_ptr, replu_ptr - 1, sizeof(*replu_ptr));
+	 memcpy(replu_ptr, replu_ptr - 1, sizeof(*replu_ptr));
          pg_table[replu_ptr->pg_slot].lu_slot = replu_ptr - lookup;
 	 --replu_ptr;
       }
@@ -1016,7 +1016,7 @@ LOOKUP_ENTRY *lu_ptr  /* corresponding to pg_ptr */
       DB_LSEEK(desc, (off_t)addr, 0);
       MEM_LOCK(&pg_ptr->Buff);
       if ((r = DB_READ( desc, pg_ptr->buff, pgsize )) < pgsize) {
-	 byteset(&pg_ptr->buff[r], '\0', pgsize - r);
+	 memset(&pg_ptr->buff[r], '\0', pgsize - r);
 	 DB_LSEEK(desc, (off_t)addr, 0);
 	 if (DB_WRITE( desc, pg_ptr->buff, pgsize ) != pgsize) {
 	    /* clean up and return out of space */
@@ -1212,10 +1212,10 @@ F_ADDR *loc     /* pointer to allocated location */
 	    return( db_status );
 	/* Get the first key node on the delete chain.
 	 * (the external timestamp is sizeof(ULONG) = PGHDRSIZE bytes)
-	 ****** bytecpy(&pgzero_ptr->pz_dchain,
+	 ****** memcpy(&pgzero_ptr->pz_dchain,
 	 ****** ptr+sizeof(long)+sizeof(INT), sizeof(F_ADDR)); *********
 	 */
-	 bytecpy (&pgzero_ptr->pz_dchain,
+	 memcpy (&pgzero_ptr->pz_dchain,
 	    ptr + sizeof(LONG) + sizeof(INT), sizeof(F_ADDR));
       }
    }
@@ -1230,7 +1230,7 @@ F_ADDR *loc     /* pointer to allocated location */
 	 dba = ((NUM2EXT(fno, ft_offset) & FILEMASK) << FILESHIFT) | pg;
 	 if ( dio_read(dba, (char * *)&ptr, NOPGHOLD) != S_OKAY )
 	    return( db_status );
-	 bytecpy(&pgzero_ptr->pz_dchain, ptr+sizeof(INT), sizeof(F_ADDR));
+	 memcpy(&pgzero_ptr->pz_dchain, ptr+sizeof(INT), sizeof(F_ADDR));
       }
    }
    *loc = pg;
@@ -1272,10 +1272,10 @@ F_ADDR  loc   /* location to be freed */
        * of orphan ptr, bytes 6 - 9, not bytes 4 - 7
        * as printed in raima User Guide.
        * (the external timestamp is sizeof(ULONG) = PGHDRSIZE bytes).
-       ****** bytecpy(ptr+sizeof(long)+sizeof(INT),
+       ****** memcpy(ptr+sizeof(long)+sizeof(INT),
        ****** &pgzero_ptr->pz_dchain, sizeof(F_ADDR)); *********
        *****************************************/
-      bytecpy (ptr + sizeof(LONG) + sizeof(INT),
+      memcpy (ptr + sizeof(LONG) + sizeof(INT),
 	    &pgzero_ptr->pz_dchain, sizeof(F_ADDR));
       pgzero_ptr->pz_dchain = loc;
       dio_touch( loc );
@@ -1284,10 +1284,10 @@ F_ADDR  loc   /* location to be freed */
       dba = ((NUM2EXT(fno, ft_offset) & FILEMASK) << FILESHIFT) | loc;
       if ( dio_read( dba, (char * *)&ptr , NOPGHOLD) != S_OKAY )
 	 return( db_status );
-      bytecpy(&recnum, ptr, sizeof(INT));
+      memcpy(&recnum, ptr, sizeof(INT));
       recnum = ~recnum;  /* indicates deleted record */
-      bytecpy(ptr, &recnum, sizeof(INT));
-      bytecpy(ptr+sizeof(INT), &pgzero_ptr->pz_dchain, sizeof(F_ADDR));
+      memcpy(ptr, &recnum, sizeof(INT));
+      memcpy(ptr+sizeof(INT), &pgzero_ptr->pz_dchain, sizeof(F_ADDR));
       pgzero_ptr->pz_dchain = loc;
       if ( dio_write(dba, nullptr, NOPGFREE) != S_OKAY )
 	 return( db_status );

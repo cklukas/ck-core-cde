@@ -75,8 +75,8 @@ int d_rerdcurr(DB_ADDR **currbuff)
    DB_ENTER(NO_DB_ID TASK_ID LOCK_SET(SET_NOIO));
 
    *(cb_ptr = *currbuff) = curr_rec;
-   bytecpy(++cb_ptr, curr_own, size_st*sizeof(*cb_ptr));
-   bytecpy(cb_ptr += size_st, curr_mem, size_st*sizeof(*cb_ptr));
+   memcpy(++cb_ptr, curr_own, size_st*sizeof(*cb_ptr));
+   memcpy(cb_ptr += size_st, curr_mem, size_st*sizeof(*cb_ptr));
    MEM_UNLOCK(currbuff);
    RETURN( db_status = S_OKAY );
 }
@@ -94,8 +94,8 @@ d_wrcurr(DB_ADDR *currbuff)
 
    if ( (cb_ptr = currbuff) != nullptr) {
       curr_rec = *cb_ptr;
-      bytecpy(curr_own, ++cb_ptr, size_st*sizeof(*cb_ptr));
-      bytecpy(curr_mem, cb_ptr += size_st, size_st*sizeof(*cb_ptr));
+      memcpy(curr_own, ++cb_ptr, size_st*sizeof(*cb_ptr));
+      memcpy(curr_mem, cb_ptr += size_st, size_st*sizeof(*cb_ptr));
    }
    free(currbuff);
    RETURN( db_status = S_OKAY );

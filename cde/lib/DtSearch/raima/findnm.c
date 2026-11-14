@@ -78,7 +78,7 @@ d_findnm(int nset, int dbn)
       RETURN( db_status );
 
    /* extract address of next member */
-   bytecpy(&mem, memp+MP_NEXT, DB_ADDR_SIZE);
+   memcpy(&mem, memp+MP_NEXT, DB_ADDR_SIZE);
 
    /* set current record and member */
    *cm_ptr = mem;

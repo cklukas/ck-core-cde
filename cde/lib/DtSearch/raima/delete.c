@@ -71,7 +71,7 @@ d_delete(int dbn)
    /* get the record type of the current record */
    if ( dio_read( curr_rec, (char * *)&ptr , NOPGHOLD) != S_OKAY )
       RETURN( db_status );
-   bytecpy( &rt, ptr, sizeof(INT) );
+   memcpy( &rt, ptr, sizeof(INT) );
    if (rt < 0)
       RETURN( dberr(S_INVADDR) );
    rt &= ~RLBMASK; /* mask off rlb */
@@ -86,13 +86,13 @@ d_delete(int dbn)
    */
    for (st_lc = size_st, set_ptr = set_table; --st_lc >= 0; ++set_ptr) {
       if ((set_ptr->st_own_rt == rt) &&
-	  (bytecmp(ptr+set_ptr->st_own_ptr+SP_FIRST,&zap_dba,DB_ADDR_SIZE) != 0))
+	  (memcmp(ptr+set_ptr->st_own_ptr+SP_FIRST,&zap_dba,DB_ADDR_SIZE) != 0))
 	    RETURN( dberr( S_HASMEM ) );
    }
    /* scan the member list for sets which own this record */
    for (mt_lc = size_mt, mem_ptr = member_table; --mt_lc >= 0; ++mem_ptr) {
       if ((mem_ptr->mt_record == rt) &&
-	  (bytecmp(ptr+mem_ptr->mt_mem_ptr+MP_OWNER,&zap_dba,DB_ADDR_SIZE) != 0))
+	  (memcmp(ptr+mem_ptr->mt_mem_ptr+MP_OWNER,&zap_dba,DB_ADDR_SIZE) != 0))
 	    RETURN( dberr( S_ISMEM ) );
    }
    /* delete record */

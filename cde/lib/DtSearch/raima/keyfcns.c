@@ -194,7 +194,7 @@ key_open(void)
 		ALLOC(&ki_ptr->Node_path, l*sizeof(NODE_PATH), db_avname);
 	    if ( ! ki_ptr->node_path )
 	       return( dberr(S_NOMEMORY) );
-	    byteset(ki_ptr->node_path, 0, l*sizeof(NODE_PATH));
+	    memset(ki_ptr->node_path, 0, l*sizeof(NODE_PATH));
 	    MEM_UNLOCK(&ki_ptr->Node_path);
 	 }
       }
@@ -328,7 +328,7 @@ DB_ADDR *dba         /* database address of located key */
 	 match_lvl = curkey->level;
 
 	 /* save the key value */
-	 bytecpy(&key_type, node_slot_ptr, slot_len);
+	 memcpy(&key_type, node_slot_ptr, slot_len);
       }
       /* check for end of search */
       if ( child == NULL_NODE )
@@ -341,7 +341,7 @@ DB_ADDR *dba         /* database address of located key */
       curkey->lstat = KEYFOUND;
    }
    else if ( stat == S_OKAY ) {
-      bytecpy(&key_type, node_slot_ptr, slot_len);
+      memcpy(&key_type, node_slot_ptr, slot_len);
       db_status = S_OKAY;
       curkey->lstat = KEYFOUND;
    }
@@ -349,20 +349,20 @@ DB_ADDR *dba         /* database address of located key */
       /* key not found - save key at positioned slot */
       if ( np_ptr->slot > 0 )
 	 node_slot_ptr -= slot_len;
-      bytecpy(&key_type, node_slot_ptr, slot_len);
+      memcpy(&key_type, node_slot_ptr, slot_len);
       curkey->lstat = KEYNOTFOUND;
       db_status = S_NOTFOUND;
    }
    MEM_UNLOCK(&curkey->Node_path);
    MEM_LOCK(&curkey->Keyval);
    /* save key value and database address for possible repositioning */
-   bytecpy(curkey->keyval, key_type.ks.data, key_len);
+   memcpy(curkey->keyval, key_type.ks.data, key_len);
    MEM_UNLOCK(&curkey->Keyval);
-   bytecpy(&curkey->dba, key_type.kd + key_data + key_len, sizeof(DB_ADDR));
+   memcpy(&curkey->dba, key_type.kd + key_data + key_len, sizeof(DB_ADDR));
 
    /* return database address for d_keyfind */
    if ( *dba == NULL_DBA )
-      bytecpy(dba, &curkey->dba, sizeof(DB_ADDR));
+      memcpy(dba, &curkey->dba, sizeof(DB_ADDR));
 
    return( db_status );
 }
@@ -413,7 +413,7 @@ have_slot:
       slot_pos += slot_len;
    }
    /* return child pointer from located slot */
-   bytecpy(child, node_slot_ptr, sizeof(F_ADDR));
+   memcpy(child, node_slot_ptr, sizeof(F_ADDR));
 
    /* return slot number */
    *slotno = i;
@@ -445,7 +445,7 @@ DB_ADDR *dba      /* database address included in comparison if not null */
    if (((cmp = INTcmp((char *)&prefix, (char *)(slot + sizeof(F_ADDR)))) == 0) &&
        ((cmp = fldcmp(cfld_ptr, key_val, slot + key_data)) == 0) &&
        dba) {
-      bytecpy(&slot_dba, slot + key_data + key_len, sizeof(DB_ADDR));
+      memcpy(&slot_dba, slot + key_data + key_len, sizeof(DB_ADDR));
       cmp = ADDRcmp(dba, &slot_dba);
    }
 
@@ -491,7 +491,7 @@ DB_ADDR *dba   /* db address of scanned record */
       return( db_status );
    }
    node_slot_ptr = &node->slots[np_ptr->slot*slot_len];
-   bytecpy(&child, node_slot_ptr, sizeof(F_ADDR));
+   memcpy(&child, node_slot_ptr, sizeof(F_ADDR));
    if (child == NULL_NODE) {
       if (fcn == KEYPREV) {
 	 --np_ptr->slot;
@@ -533,7 +533,7 @@ DB_ADDR *dba   /* db address of scanned record */
 	 np_ptr->slot = node->used_slots;
 	 node_slot_ptr = &node->slots[np_ptr->slot*slot_len];
       }
-      bytecpy(&child, node_slot_ptr, sizeof(F_ADDR));
+      memcpy(&child, node_slot_ptr, sizeof(F_ADDR));
    } while ( child != NULL_NODE );
 
    if (np_ptr->slot == node->used_slots) {
@@ -541,7 +541,7 @@ DB_ADDR *dba   /* db address of scanned record */
       node_slot_ptr -= slot_len;
    }
 
-   bytecpy(&key_type, node_slot_ptr, slot_len);
+   memcpy(&key_type, node_slot_ptr, slot_len);
    if (key_type.ks.keyno == prefix)
       key_found(dba);
    else {
@@ -559,9 +559,9 @@ static void key_found(DB_ADDR *dba)
 {
    MEM_LOCK(&curkey->Keyval);
    /* save key value and database address for possible repositioning */
-   bytecpy(curkey->keyval, key_type.ks.data, key_len);
+   memcpy(curkey->keyval, key_type.ks.data, key_len);
    MEM_UNLOCK(&curkey->Keyval);
-   bytecpy(&curkey->dba, key_type.kd + key_data + key_len, sizeof(DB_ADDR));
+   memcpy(&curkey->dba, key_type.kd + key_data + key_len, sizeof(DB_ADDR));
 
    /* return found db addr */
    *dba = curkey->dba;
@@ -637,12 +637,12 @@ DB_ADDR *dba  /* to get dba of first or last key */
       if ( cmp == 0 ) {
 	 /* save matched level & key value */
 	 match_lvl = lvl;
-	 bytecpy(&key_type, node_slot_ptr, slot_len);
+	 memcpy(&key_type, node_slot_ptr, slot_len);
       }
       /* fetch appropriate child pointer */
       if (fcn == KEYLAST)
 	 node_slot_ptr += slot_len;
-      bytecpy(&pg, node_slot_ptr, sizeof(F_ADDR));
+      memcpy(&pg, node_slot_ptr, sizeof(F_ADDR));
 
       if ( pg == NULL_NODE ) break;
    }
@@ -682,7 +682,7 @@ DB_ADDR dba   /* record's database address */
       if ( (stat = expand(key_val, dba, NULL_NODE)) == S_OKAY ) {
 	 /* save key value and database address for possible repositioning */
          MEM_LOCK(&curkey->Keyval);
-	 bytecpy(curkey->keyval, key_val, key_len);
+	 memcpy(curkey->keyval, key_val, key_len);
          MEM_UNLOCK(&curkey->Keyval);
 	 curkey->dba = dba;
 
@@ -728,22 +728,22 @@ F_ADDR brother   /* page number of brother node */
    open_slots(node, slot_pos, 1);
 
    /* copy brother into opened slot's child pointer */
-   bytecpy(node_slot_ptr + slot_len, &brother, sizeof(F_ADDR));
+   memcpy(node_slot_ptr + slot_len, &brother, sizeof(F_ADDR));
    /* copy keyno into current slot */
-   bytecpy(node_slot_ptr + sizeof(F_ADDR), &prefix, sizeof(INT));
+   memcpy(node_slot_ptr + sizeof(F_ADDR), &prefix, sizeof(INT));
 
    node_slot_ptr += key_data;
    /* clear slot data area to zeros */
-   byteset(node_slot_ptr, 0, slot_len - key_data);
+   memset(node_slot_ptr, 0, slot_len - key_data);
 
    /* copy keyval into current slot */
    if ( cfld_ptr->fd_type == CHARACTER && cfld_ptr->fd_dim[1] == 0 )
       strncpy(node_slot_ptr, key_val, key_len);
    else
-      bytecpy(node_slot_ptr, key_val, key_len);
+      memcpy(node_slot_ptr, key_val, key_len);
 
    /* copy database address into current slot */
-   bytecpy(node_slot_ptr + key_len, &dba, sizeof(DB_ADDR));
+   memcpy(node_slot_ptr + key_len, &dba, sizeof(DB_ADDR));
 
    if ( node->used_slots == max_slots ) {
       if ( pg == ROOT_ADDR )
@@ -775,13 +775,13 @@ NODE *l_node  /* left node buffer */
 
    /* extract middle key */
    l_node_slot_ptr = &l_node->slots[mid_slot*slot_len];
-   bytecpy(&prefix, l_node_slot_ptr + sizeof(F_ADDR), sizeof(INT));
+   memcpy(&prefix, l_node_slot_ptr + sizeof(F_ADDR), sizeof(INT));
    keyno = prefix + curr_db_table->key_offset;
    fldno = key_info[keyno].fldno;
    cfld_ptr = &field_table[fldno];
    key_len = cfld_ptr->fd_len;
-   bytecpy(key_val, l_node_slot_ptr + key_data, key_len);
-   bytecpy(&dba, l_node_slot_ptr + key_data + key_len, sizeof(DB_ADDR));
+   memcpy(key_val, l_node_slot_ptr + key_data, key_len);
+   memcpy(&dba, l_node_slot_ptr + key_data + key_len, sizeof(DB_ADDR));
 
    /* divide left node */
    l_node->used_slots = mid_slot;
@@ -794,7 +794,7 @@ NODE *l_node  /* left node buffer */
    /* copy slots from left node at slot mid_slot+1 into right node */
    r_node->used_slots = max_slots - (mid_slot + 1);
    l_node_slot_ptr += slot_len;
-   bytecpy(r_node->slots, l_node_slot_ptr, NODE_WIDTH(r_node));
+   memcpy(r_node->slots, l_node_slot_ptr, NODE_WIDTH(r_node));
 
    dio_touch(l_pg);
    dio_touch(r_pg);
@@ -825,21 +825,21 @@ static int split_root(NODE *node)
    /* copy 0..max_slots/2-1 keys from root into left node */
    l_node->used_slots = mid_slot;
    slot_pos = mid_slot*slot_len;
-   bytecpy(l_node->slots, node->slots, NODE_WIDTH(l_node));
+   memcpy(l_node->slots, node->slots, NODE_WIDTH(l_node));
 
    /* copy max_slots/2+1..max_slots from root into right node */
    r_node->used_slots = max_slots - (mid_slot + 1);
    node_slot_ptr = &node->slots[slot_pos += slot_len];
-   bytecpy(r_node->slots, node_slot_ptr, NODE_WIDTH(r_node));
+   memcpy(r_node->slots, node_slot_ptr, NODE_WIDTH(r_node));
 
    /* copy mid_slot into slot[0] of root */
-   bytecpy(node->slots, node_slot_ptr - slot_len, slot_len);
+   memcpy(node->slots, node_slot_ptr - slot_len, slot_len);
 
    /* copy left page number into p[0] of root */
-   bytecpy(node->slots, &l_pg, sizeof(F_ADDR));
+   memcpy(node->slots, &l_pg, sizeof(F_ADDR));
 
    /* copy right page number into p[1] of root */
-   bytecpy(&node->slots[slot_len], &r_pg, sizeof(F_ADDR));
+   memcpy(&node->slots[slot_len], &r_pg, sizeof(F_ADDR));
 
    /* reset number of used slots in root */
    node->used_slots = 1;
@@ -868,7 +868,7 @@ key_delete(int fld, char const *key_val, DB_ADDR dba)
       if ( (stat = delete()) == S_OKAY ) {
 	 /* save key value and database address for possible repositioning */
          MEM_LOCK(&curkey->Keyval);
-	 bytecpy(curkey->keyval, key_val, key_len);
+	 memcpy(curkey->keyval, key_val, key_len);
          MEM_UNLOCK(&curkey->Keyval);
 	 curkey->dba = dba;
 
@@ -908,7 +908,7 @@ static int delete(void)
    /* copy pointer to right sub-tree */
    slot_pos = np_ptr->slot*slot_len;
    node_slot_ptr = &node->slots[slot_pos];
-   bytecpy(&r_pg, node_slot_ptr + slot_len, sizeof(F_ADDR));
+   memcpy(&r_pg, node_slot_ptr + slot_len, sizeof(F_ADDR));
 
    if ( r_pg != NULL_NODE ) {
       /* find leftmost descendent of right sub-tree */
@@ -922,13 +922,13 @@ static int delete(void)
 	 ++np_ptr;
 	 np_ptr->node = r_pg;
 	 np_ptr->slot = 0;
-	 bytecpy(&r_pg, r_node->slots, sizeof(F_ADDR));
+	 memcpy(&r_pg, r_node->slots, sizeof(F_ADDR));
       } while ( r_pg != NULL_NODE );
 
       /* copy key from leaf into node */
       node_slot_ptr += sizeof(F_ADDR);
       r_node_slot_ptr = &r_node->slots[sizeof(F_ADDR)];
-      bytecpy(node_slot_ptr, r_node_slot_ptr, slot_len - sizeof(F_ADDR));
+      memcpy(node_slot_ptr, r_node_slot_ptr, slot_len - sizeof(F_ADDR));
       dio_touch(pg);
 
       /* set up to delete key from leaf */
@@ -964,7 +964,7 @@ shrink: /* delete key from leaf (shrink node ) */
 
 	 /* read left node */
 	 p_node_slot_ptr = &p_node->slots[slot_pos];
-	 bytecpy(&l_pg, p_node_slot_ptr, sizeof(F_ADDR));
+	 memcpy(&l_pg, p_node_slot_ptr, sizeof(F_ADDR));
 	 if ( dio_get(l_pg, (char * *)&l_node, PGHOLD) != S_OKAY ) {
 	    MEM_UNLOCK(&curkey->Node_path);
 	    return( db_status );
@@ -977,7 +977,7 @@ shrink: /* delete key from leaf (shrink node ) */
 
 	 /* read right node */
 	 p_node_slot_ptr = &p_node->slots[slot_pos + slot_len];
-	 bytecpy(&r_pg, p_node_slot_ptr, sizeof(F_ADDR));
+	 memcpy(&r_pg, p_node_slot_ptr, sizeof(F_ADDR));
 	 if (dio_get(r_pg, (char * *)&r_node, PGHOLD) != S_OKAY) {
 	    MEM_UNLOCK(&curkey->Node_path);
 	    return( db_status );
@@ -989,14 +989,14 @@ shrink: /* delete key from leaf (shrink node ) */
 	    /* shrink down to root */
 	    /* copy right node data into root */
 	    p_node_slot_ptr = &p_node->slots[slot_len];
-	    bytecpy(p_node_slot_ptr, r_node->slots, NODE_WIDTH(r_node));
+	    memcpy(p_node_slot_ptr, r_node->slots, NODE_WIDTH(r_node));
 	    p_node->used_slots = r_node->used_slots + 1;
 	    r_node->used_slots = 0;
 	    dio_touch(r_pg);
 
 	    /* copy left node data into root */
 	    open_slots(p_node, 0, l_node->used_slots);
-	    bytecpy(p_node->slots, l_node->slots, NODE_WIDTH(l_node));
+	    memcpy(p_node->slots, l_node->slots, NODE_WIDTH(l_node));
 	    l_node->used_slots = 0;
 	    dio_touch(l_pg);
 
@@ -1014,12 +1014,12 @@ shrink: /* delete key from leaf (shrink node ) */
 	 /* move left node slots into right node */
 	 amt = NODE_WIDTH(l_node);
 	 r_node_slot_ptr = r_node->slots;
-	 bytecpy(r_node_slot_ptr, l_node->slots, amt);
+	 memcpy(r_node_slot_ptr, l_node->slots, amt);
 
 	 /* move parent slot data into right node */
 	 r_node_slot_ptr += amt;
 	 p_node_slot_ptr = &p_node->slots[slot_pos + sizeof(F_ADDR)];
-	 bytecpy(r_node_slot_ptr, p_node_slot_ptr, slot_len - sizeof(F_ADDR));
+	 memcpy(r_node_slot_ptr, p_node_slot_ptr, slot_len - sizeof(F_ADDR));
 
 	 dio_touch(r_pg);
 	 dio_touch(l_pg);
@@ -1044,18 +1044,18 @@ shrink: /* delete key from leaf (shrink node ) */
 	 /* move parent slot to end of left node */
 	 l_node_slot_ptr = &l_node->slots[NODE_WIDTH(l_node)];
 	 p_node_slot_ptr = &p_node->slots[slot_pos + sizeof(F_ADDR)];
-	 bytecpy(l_node_slot_ptr, p_node_slot_ptr, slot_len - sizeof(F_ADDR));
+	 memcpy(l_node_slot_ptr, p_node_slot_ptr, slot_len - sizeof(F_ADDR));
 
 	 ++l_node->used_slots;
 
 	 /* copy slot 0 child from right node to left node orphan */
 	 l_node_slot_ptr += slot_len - sizeof(F_ADDR);
 	 r_node_slot_ptr = r_node->slots;
-	 bytecpy(l_node_slot_ptr, r_node_slot_ptr, sizeof(F_ADDR));
+	 memcpy(l_node_slot_ptr, r_node_slot_ptr, sizeof(F_ADDR));
 
 	 /* move slot 0 of right node to parent */
 	 r_node_slot_ptr += sizeof(F_ADDR);
-	 bytecpy(p_node_slot_ptr, r_node_slot_ptr, slot_len - sizeof(F_ADDR));
+	 memcpy(p_node_slot_ptr, r_node_slot_ptr, slot_len - sizeof(F_ADDR));
 
 	 /* delete slot 0 from right node */
 	 close_slots(r_node, 0, 1);
@@ -1069,15 +1069,15 @@ shrink: /* delete key from leaf (shrink node ) */
 	 /* move parent slot to slot 0 of right node */
 	 r_node_slot_ptr = &r_node->slots[sizeof(F_ADDR)];
 	 p_node_slot_ptr = &p_node->slots[slot_pos + sizeof(F_ADDR)];
-	 bytecpy(r_node_slot_ptr, p_node_slot_ptr, slot_len - sizeof(F_ADDR));
+	 memcpy(r_node_slot_ptr, p_node_slot_ptr, slot_len - sizeof(F_ADDR));
 
 	 /* move end slot of left node to parent */
 	 l_node_slot_ptr = &l_node->slots[NODE_WIDTH(l_node) - slot_len];
-	 bytecpy(p_node_slot_ptr, l_node_slot_ptr, slot_len - sizeof(F_ADDR));
+	 memcpy(p_node_slot_ptr, l_node_slot_ptr, slot_len - sizeof(F_ADDR));
 
 	 /* move left orphan to child of slot 0 in right node */
 	 l_node_slot_ptr += slot_len - sizeof(F_ADDR);
-	 bytecpy(r_node->slots, l_node_slot_ptr, sizeof(F_ADDR));
+	 memcpy(r_node->slots, l_node_slot_ptr, sizeof(F_ADDR));
 
 	 /* delete end slot from left node */
 	 --l_node->used_slots;
@@ -1158,7 +1158,7 @@ d_keyread(char *key_val)
       RETURN( dberr(S_KEYSEQ) );
    }
    /* clear key area */
-   byteset(key_val, '\0', cfld_ptr->fd_len);
+   memset(key_val, '\0', cfld_ptr->fd_len);
 
    if ( cfld_ptr->fd_type == COMKEY ) {
       /* copy compound key fields */
@@ -1172,14 +1172,14 @@ d_keyread(char *key_val)
 	    switch ( fld_ptr->fd_type ) {
 #ifndef	 NO_FLOAT
 	       case FLOAT:
-		  bytecpy(&fv, fptr, sizeof(float));
+		  memcpy(&fv, fptr, sizeof(float));
 		  fv = (float)0.0 - fv;
-		  bytecpy(kptr, &fv, sizeof(float));
+		  memcpy(kptr, &fv, sizeof(float));
 		  break;
 	       case DOUBLE:
-		  bytecpy(&dv, fptr, sizeof(double));
+		  memcpy(&dv, fptr, sizeof(double));
 		  dv = 0.0 - dv;
-		  bytecpy(kptr, &dv, sizeof(double));
+		  memcpy(kptr, &dv, sizeof(double));
 		  break;
 #endif
 	       case CHARACTER:
@@ -1194,14 +1194,14 @@ d_keyread(char *key_val)
 	    }
 	 }
 	 else {
-	    bytecpy(kptr, fptr, fld_ptr->fd_len);
+	    memcpy(kptr, fptr, fld_ptr->fd_len);
 	 }
       }
    }
    else if ( cfld_ptr->fd_type == CHARACTER && cfld_ptr->fd_dim[1] == 0 )
       strncpy(key_val, key_type.ks.data, key_len);
    else
-      bytecpy(key_val, key_type.ks.data, key_len);
+      memcpy(key_val, key_type.ks.data, key_len);
 
    RETURN( db_status = S_OKAY );
 }
@@ -1229,7 +1229,7 @@ int cflag  /* TRUE to compliment compound descending keys */
 
    /* clear key area */
    fld_ptr = &field_table[fld];
-   byteset(key, '\0', fld_ptr->fd_len);
+   memset(key, '\0', fld_ptr->fd_len);
 
    /* create compound key value */
    rec -= record_table[fld_ptr->fd_rec].rt_data;
@@ -1244,14 +1244,14 @@ int cflag  /* TRUE to compliment compound descending keys */
 	 switch ( kfld_ptr->fd_type ) {
 #ifndef	 NO_FLOAT
 	    case FLOAT:
-	       bytecpy(&fv, fptr, sizeof(float));
+	       memcpy(&fv, fptr, sizeof(float));
 	       fv = (float)0.0 - fv;
-	       bytecpy(&key[key_ptr->kt_ptr], &fv, sizeof(float));
+	       memcpy(&key[key_ptr->kt_ptr], &fv, sizeof(float));
 	       break;
 	    case DOUBLE:
-	       bytecpy(&dv, fptr, sizeof(double));
+	       memcpy(&dv, fptr, sizeof(double));
 	       dv = 0.0 - dv;
-	       bytecpy(&key[key_ptr->kt_ptr], &dv, sizeof(double));
+	       memcpy(&key[key_ptr->kt_ptr], &dv, sizeof(double));
 	       break;
 #endif
 	    case CHARACTER:
@@ -1266,7 +1266,7 @@ int cflag  /* TRUE to compliment compound descending keys */
 	 }
       }
       else {
-	 bytecpy(&key[key_ptr->kt_ptr], fptr, kfld_ptr->fd_len);
+	 memcpy(&key[key_ptr->kt_ptr], fptr, kfld_ptr->fd_len);
       }
    }
    return( db_status = S_OKAY );

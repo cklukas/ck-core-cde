@@ -86,7 +86,7 @@ const char *data /* pointer to data area containing field contents */
    FIELD_ENTRY *sfld_ptr;
    RECORD_ENTRY *rec_ptr;
 
-   bytecpy(&rn, rec, sizeof(INT));
+   memcpy(&rn, rec, sizeof(INT));
    rn &= ~RLBMASK; /* mask off rlb */
    if ( rn != NUM2EXT(fld_ptr->fd_rec, rt_offset) )
       return( dberr(S_INVFLD) );
@@ -199,7 +199,7 @@ char *data /* pointer to data area to contain field contents */
    FIELD_ENTRY *kfld_ptr;
    KEY_ENTRY *key_ptr;
 
-   bytecpy(&rn, rec, sizeof(INT));
+   memcpy(&rn, rec, sizeof(INT));
    if ( rn < 0 )
       return( db_status = S_DELETED );
 
@@ -210,7 +210,7 @@ char *data /* pointer to data area to contain field contents */
 
    if ( fld_ptr->fd_type == KEY ) {
       /* clear compound key data area */
-      byteset(data, '\0', fld_ptr->fd_len);
+      memset(data, '\0', fld_ptr->fd_len);
 
       /* copy each field of compound key to data area */
       for (kt_lc = size_kt - fld_ptr->fd_ptr,
@@ -218,12 +218,12 @@ char *data /* pointer to data area to contain field contents */
 	   (--kt_lc >= 0) && (&field_table[key_ptr->kt_key] == fld_ptr);
 	   ++key_ptr) {
 	 kfld_ptr = &field_table[key_ptr->kt_field];
-	 bytecpy(data + key_ptr->kt_ptr, rec + kfld_ptr->fd_ptr,
+	 memcpy(data + key_ptr->kt_ptr, rec + kfld_ptr->fd_ptr,
 		 kfld_ptr->fd_len);
       }
    }
    else {
-      bytecpy(data, rec + fld_ptr->fd_ptr, fld_ptr->fd_len);
+      memcpy(data, rec + fld_ptr->fd_ptr, fld_ptr->fd_len);
    }
    return( db_status = S_OKAY );
 }
@@ -245,7 +245,7 @@ char *mem_addr /* pointer to member pointer */
 
    /* search member list of set for record */
    set_ptr = &set_table[set];
-   bytecpy(&rt, rec, sizeof(INT));
+   memcpy(&rt, rec, sizeof(INT));
    rt &= ~RLBMASK;
    for (mem = set_ptr->st_members, memtot = mem + set_ptr->st_memtot,
 						mem_ptr = &member_table[mem];
@@ -253,7 +253,7 @@ char *mem_addr /* pointer to member pointer */
 	++mem, ++mem_ptr) {
       if (NUM2EXT(mem_ptr->mt_record, rt_offset) == rt) {
 	 /* have found correct member record */
-	 bytecpy(mem_addr, rec + mem_ptr->mt_mem_ptr, MEMPSIZE);
+	 memcpy(mem_addr, rec + mem_ptr->mt_mem_ptr, MEMPSIZE);
 	 return( db_status = S_OKAY );
       }
    }
@@ -276,10 +276,10 @@ char *setptr  /* pointer to set pointer */
    SET_ENTRY *set_ptr;
 
    set_ptr = &set_table[set];
-   bytecpy(&rt, rec, sizeof(INT));
+   memcpy(&rt, rec, sizeof(INT));
    if (NUM2EXT(set_ptr->st_own_rt, rt_offset) == (rt & ~RLBMASK)) {
 	 len = SETPSIZE - sizeof(ULONG);
-      bytecpy(setptr, rec + set_ptr->st_own_ptr, len);
+      memcpy(setptr, rec + set_ptr->st_own_ptr, len);
       return( db_status = S_OKAY );
    }
    return( dberr(S_INVOWN) );
@@ -314,7 +314,7 @@ DB_ADDR *db_addr
    if (fldcmp(fld_ptr, fptr, data) == 0) 
       return( db_status );
 
-   bytecpy(&dba, db_addr, DB_ADDR_SIZE);
+   memcpy(&dba, db_addr, DB_ADDR_SIZE);
 
    /* if this is a key field, change the key file also */
    if ((fld_ptr->fd_key != NOKEY) &&
@@ -348,7 +348,7 @@ DB_ADDR *db_addr
    switch ( fld_ptr->fd_type ) {
       case CHARACTER:
 	 if ( fld_ptr->fd_dim[1] )
-	    bytecpy(fptr, data, fld_ptr->fd_len);
+	    memcpy(fptr, data, fld_ptr->fd_len);
 	 else if ( fld_ptr->fd_dim[0] )
 	    strncpy(fptr, data, fld_ptr->fd_len);
 	 else
@@ -371,7 +371,7 @@ DB_ADDR *db_addr
 	 }
 	 /* arrayed struct fall-thru to a full field copy */
       default:
-	 bytecpy(fptr, data, fld_ptr->fd_len);
+	 memcpy(fptr, data, fld_ptr->fd_len);
    }
    /* if this field is part of an ordered set, reconnect */
    if (fld_ptr->fd_flags & SORTFLD) {
@@ -385,7 +385,7 @@ DB_ADDR *db_addr
 	       mdba = *(cm_ptr = &curr_mem[sn]);
 
 	       /* set current owner and member to sorted set */
-	       bytecpy(co_ptr, memp+MP_OWNER, DB_ADDR_SIZE);
+	       memcpy(co_ptr, memp+MP_OWNER, DB_ADDR_SIZE);
 	       *cm_ptr = dba;
 
 	       /* calculate set constant */
@@ -427,7 +427,7 @@ char *mem_addr /* pointer to member pointer */
 
    /* search member list of set for record */
    set_ptr = &set_table[set];
-   bytecpy(&rt, rec, sizeof(INT));
+   memcpy(&rt, rec, sizeof(INT));
    rt &= ~RLBMASK;
    for (mem = set_ptr->st_members, memtot = mem + set_ptr->st_memtot,
 						mem_ptr = &member_table[mem];
@@ -435,7 +435,7 @@ char *mem_addr /* pointer to member pointer */
 	++mem, ++mem_ptr) {
       if (NUM2EXT(mem_ptr->mt_record, rt_offset) == rt) {
 	 /* have found correct member record */
-	 bytecpy(rec + mem_ptr->mt_mem_ptr, mem_addr, MEMPSIZE);
+	 memcpy(rec + mem_ptr->mt_mem_ptr, mem_addr, MEMPSIZE);
 	 return( db_status = S_OKAY );
       }
    }
@@ -458,10 +458,10 @@ char *setptr   /* pointer to set pointer */
    SET_ENTRY *set_ptr;
 
    set_ptr = &set_table[set];
-   bytecpy(&rt, rec, sizeof(INT));
+   memcpy(&rt, rec, sizeof(INT));
    if (NUM2EXT(set_ptr->st_own_rt, rt_offset) == (rt & ~RLBMASK)) {
 	 len = SETPSIZE - sizeof(ULONG);
-      bytecpy(rec + set_ptr->st_own_ptr, setptr, len);
+      memcpy(rec + set_ptr->st_own_ptr, setptr, len);
       return( db_status = S_OKAY );
    }
    else {
@@ -478,7 +478,7 @@ r_smem(DB_ADDR *db_addr, INT set)
    char mem[MEMPSIZE], *ptr;
    DB_ADDR dba;
 
-   bytecpy(&dba, db_addr, DB_ADDR_SIZE);
+   memcpy(&dba, db_addr, DB_ADDR_SIZE);
 
    /* make sure record is owned */
    if ((dio_read(dba, (char * *)&ptr, NOPGHOLD) != S_OKAY) ||
@@ -487,7 +487,7 @@ r_smem(DB_ADDR *db_addr, INT set)
 
    if ( null_dba( mem+MP_OWNER ) ) return( dberr( S_NOTCON ) );
 
-   bytecpy( &curr_own[set], mem+MP_OWNER, DB_ADDR_SIZE );
+   memcpy( &curr_own[set], mem+MP_OWNER, DB_ADDR_SIZE );
 
    /* ownership okay, set the member */
    curr_mem[set] = dba;
