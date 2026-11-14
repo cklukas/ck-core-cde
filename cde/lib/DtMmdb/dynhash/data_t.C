@@ -167,7 +167,7 @@ data_t& data_t::operator =(data_t& d)
         {
         unsigned int d_sz = strlen(d.key.str_key);
         if ( strlen(key.str_key) < d_sz ) {
-           delete key.str_key;
+           delete [] key.str_key;
            key.str_key = new char[d_sz+1];
         }
         *((char *) memcpy(key.str_key, d.key.str_key, d_sz) + d_sz) = '\0';
@@ -186,7 +186,7 @@ data_t::~data_t()
       case INT:
         break;
       case STRING:
-        delete key.str_key;
+        delete [] key.str_key;
         break;
       case VOID:
         break;
@@ -214,7 +214,7 @@ istream& operator >>(istream& i, data_t& d)
 // delete the string
 //////////////////////////
    if ( d.flag == data_t::STRING ) 
-      delete d.key.str_key;
+      delete [] d.key.str_key;
 
    d.flag = (data_t::flag_type)atoi(buf);
    d.dt = (voidPtr)(size_t)atoi(voidPtr_ptr);
