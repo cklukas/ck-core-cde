@@ -110,7 +110,7 @@ sorter::~sorter()
    for ( i=0; i<NUM_BUCKETS; delete v_bucket_array[i++] );
    delete [] v_bucket_array;
 
-   for ( i=0; i<v_no_unique_keys; delete v_unique_keys[i++] );
+   for ( i=0; i<v_no_unique_keys; delete [] v_unique_keys[i++] );
    delete [] v_unique_keys;
 }
 
@@ -170,7 +170,7 @@ void sorter::remove_keys(bucketPtr bkt, char* key, slist_void_ptr_cell* lp)
 //cerr <<  (char*)(next_lp -> void_ptr()) << "\n";
          llp -> v_succ = next_lp -> v_succ;
       
-         delete (char*)(next_lp -> void_ptr());
+         delete [] (char*)(next_lp -> void_ptr());
          delete next_lp;
 
          bkt -> v_no_keys --;
