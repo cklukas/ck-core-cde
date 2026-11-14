@@ -798,6 +798,11 @@ SetRestorePath(
     return(0);
 }
 
+/*
+ * Replaces the file name in the1stPath, a buffer of MAXPATHLEN + 1 bytes, by
+ * the first existing file of that name in the system directories.  A result
+ * that does not fit leaves the name as it is.
+ */
 void
 FixPath
     (
@@ -805,15 +810,20 @@ FixPath
     )
 {
     char * tempPath;
-    char * pathList = (char *)XtMalloc(strlen(SM_SYSTEM_PATH) +
-			 strlen(":" CDE_INSTALLATION_TOP "/config") + 1);
+    size_t pathListSize = strlen(SM_SYSTEM_PATH) +
+			 strlen(":" CDE_INSTALLATION_TOP "/config") + 1;
+    char * pathList = (char *)XtMalloc(pathListSize);
 
-    strcpy(pathList,SM_SYSTEM_PATH);
-    strcat(pathList,":" CDE_INSTALLATION_TOP "/config");
+    snprintf(pathList, pathListSize, "%s%s", SM_SYSTEM_PATH,
+	     ":" CDE_INSTALLATION_TOP "/config");
 
     tempPath = _DtQualifyWithFirst(the1stPath,pathList);
     if (tempPath != nullptr) {
-        strcpy(the1stPath,tempPath);
+        size_t length = strlen(tempPath);
+
+        if (length <= MAXPATHLEN) {
+            memcpy(the1stPath, tempPath, length + 1);
+        }
         free(tempPath);
     }
 
@@ -857,13 +867,14 @@ SetSysDefaults( void )
     String tmpString;
     char        *langSpec;
     char        *tempPath;
+    Boolean     fits;
 
     /*
      * No files exist for restoration - use the
      * system defaults
      */
-    strcpy(smGD.resourcePath, "");
-    strcpy(smGD.clientPath, "");
+    smGD.resourcePath[0] = 0;
+    smGD.clientPath[0] = 0;
     smGD.settingPath[0] = 0;
     smGD.sessionType = DEFAULT_SESSION;
     smGD.restoreSession = (char *) SM_SYSTEM_DIRECTORY;
@@ -871,21 +882,32 @@ SetSysDefaults( void )
     langSpec = getenv("LANG");
     if ((langSpec != nullptr) && (*langSpec != 0))
     {
-        strcat(smGD.clientPath, "/");
-        strncat(smGD.clientPath, langSpec, MAXPATHLEN-2);
-        smGD.clientPath[MAXPATHLEN-1] = 0;
+        fits = snprintf(smGD.clientPath, sizeof(smGD.clientPath), "/%s/%s",
+                        langSpec, SM_SYSTEM_CLIENT_FILE) <
+               (int) sizeof(smGD.clientPath);
     }
-    
-    strcat(smGD.clientPath, "/");
-    strcat(smGD.clientPath, SM_SYSTEM_CLIENT_FILE);
-   
-    FixPath(smGD.clientPath);
+    else
+    {
+        fits = snprintf(smGD.clientPath, sizeof(smGD.clientPath), "/%s",
+                        SM_SYSTEM_CLIENT_FILE) <
+               (int) sizeof(smGD.clientPath);
+    }
 
     /*
      * If the system files don't exist - we're in
-     * trouble - First try LANG location then default
+     * trouble - First try LANG location then default.  A LANG too long
+     * for the path counts as a location without files.
      */
-    status = stat(smGD.clientPath, &buf);
+    if (fits)
+    {
+        FixPath(smGD.clientPath);
+        status = stat(smGD.clientPath, &buf);
+    }
+    else
+    {
+        smGD.clientPath[0] = 0;
+        status = -1;
+    }
     if(status == -1)
     {
         if((langSpec == nullptr) || (*langSpec == 0))
@@ -898,8 +920,8 @@ SetSysDefaults( void )
         }
         else
         {
-            strcpy(smGD.clientPath, "/C/");
-            strcat(smGD.clientPath, SM_SYSTEM_CLIENT_FILE);
+            snprintf(smGD.clientPath, sizeof(smGD.clientPath), "/C/%s",
+                     SM_SYSTEM_CLIENT_FILE);
 
 	    FixPath(smGD.clientPath);
 

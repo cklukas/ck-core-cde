@@ -330,7 +330,7 @@ static void WaitWMTimeout( XtPointer , XtIntervalId *) ;
 static void FixEnvironmentData( void ) ;
 static void ResetScreenInfo(unsigned char **,
 			    int *, unsigned int	*,
-			    Boolean *, char *,
+			    Boolean *, char *, size_t,
 			    char *);
 static void RemoteRequestFailed(char *, void *);
 static void RemoteRequestSucceeded(char *, void *);
@@ -654,7 +654,7 @@ StartWM( void )
     
     if (goodWmStartup == False)
     {
-	sprintf(wmStartupErrorString, GETMESSAGE(16, 7,
+	snprintf(wmStartupErrorString, sizeof wmStartupErrorString, GETMESSAGE(16, 7,
           "The wmStartupCommand resource is set to:\n\n"
           "%s\n\n"
           "This file does not exist or is not executable.\n"
@@ -692,7 +692,7 @@ StartWM( void )
 				nullptr, nullptr, False, False, -1);
 	}
 	WaitForWM();
-	sprintf(localWmErrorString, GETMESSAGE(16, 9,
+	snprintf(localWmErrorString, sizeof localWmErrorString, GETMESSAGE(16, 9,
           "The following window manager did not start:\n\n"
           "      %s\n\n"
           "This message indicates you tried to start a\n"
@@ -1971,6 +1971,7 @@ RestoreClients( void )
     char *dispEnv, *dispSav, *dispEnvHelpview, *dispSavHelpview;
     unsigned char *hostPtr=nullptr, *cmdPtr=nullptr;
     unsigned char *remoteDisplay;
+    size_t remoteDisplaySize;
     char *displayName;
     char *envVal;
     unsigned char  tmpChar[35];
@@ -2021,9 +2022,11 @@ RestoreClients( void )
     dispEnv = getenv(DISPLAY_NAME);
     if(dispEnv != nullptr)
     {
-	dispSav = (char *) SM_MALLOC(((strlen(dispEnv) + 
-				       strlen(DISPLAY_NAME_EQUAL)) * sizeof(char) + 1));
-	sprintf(dispSav, "%s%s", DISPLAY_NAME_EQUAL, dispEnv);
+	size_t dispSavSize = (strlen(dispEnv) +
+			      strlen(DISPLAY_NAME_EQUAL)) * sizeof(char) + 1;
+
+	dispSav = (char *) SM_MALLOC(dispSavSize);
+	snprintf(dispSav, dispSavSize, "%s%s", DISPLAY_NAME_EQUAL, dispEnv);
     }
     else
     {
@@ -2034,8 +2037,9 @@ RestoreClients( void )
     /* a display without a name is an empty name, not a null pointer */
     displayName = XtNewString(smGD.display->display_name != nullptr ?
 			      smGD.display->display_name : "");
+    remoteDisplaySize = strlen(displayName) + 101;
     remoteDisplay = (unsigned char *)
-      SM_MALLOC(sizeof(unsigned char) * (strlen(displayName) + 101));
+      SM_MALLOC(sizeof(unsigned char) * remoteDisplaySize);
 
     /*
      * Create the display name for locally executing clients
@@ -2075,7 +2079,10 @@ RestoreClients( void )
      */
     if (dispPtr != nullptr)
     {
-	strcat((char *)remoteDisplay, (char *)dispPtr);
+	size_t used = strlen((char *)remoteDisplay);
+
+	snprintf((char *)remoteDisplay + used, remoteDisplaySize - used, "%s",
+		 dispPtr);
     }
 
     /*
@@ -2121,7 +2128,7 @@ RestoreClients( void )
 	    /*
 	     * Append number of hints to front of buffer
 	     */
-	    sprintf((char *)tmpChar, "%d", numHints[i]);
+	    snprintf((char *)tmpChar, sizeof tmpChar, "%u", numHints[i]);
 	    strncpy((char *)hintsBuf[i], (char *)tmpChar,
 		    strlen((char *)tmpChar));
 	    XChangeProperty(smGD.display, RootWindow(smGD.display, i),
@@ -2225,7 +2232,7 @@ RestoreClients( void )
 	    if(numClientsExec >= numCmd[i])
 	    {
 		ResetScreenInfo(cmdBuf, &i, actCmdSize, &clientsDone,
-				envVal, displayName);
+				envVal, BUFSIZ, displayName);
 		numClientsExec = 0;
 	    }
 	}
@@ -3333,6 +3340,7 @@ SetTemporaryDisplay (
 	int			screenNum)
 {
 	static char		* tmpDisplay = nullptr;
+	static size_t		tmpDisplaySize = 0;
 	static int		lastScreen = -1;
 	char			* pch;
 
@@ -3344,11 +3352,14 @@ SetTemporaryDisplay (
 
 		if ((dispEnv = getenv (DISPLAY_NAME)) == nullptr)
 			return;
-		savedDisplay = XtMalloc (strlen (DISPLAY_NAME_EQUAL) +
-					 strlen (dispEnv) + 2);
+		size_t		savedSize = strlen (DISPLAY_NAME_EQUAL) +
+					    strlen (dispEnv) + 2;
+
+		savedDisplay = XtMalloc (savedSize);
 		if (!savedDisplay)
 			return;
-		sprintf (savedDisplay, "%s%s", DISPLAY_NAME_EQUAL, dispEnv);
+		snprintf (savedDisplay, savedSize, "%s%s", DISPLAY_NAME_EQUAL,
+			  dispEnv);
 	}
 
 	if (lastScreen == screenNum && tmpDisplay != nullptr) {
@@ -3360,23 +3371,23 @@ SetTemporaryDisplay (
 	if (!tmpDisplay) {
 		if (!savedDisplay)
 			return;
-		tmpDisplay = XtMalloc (strlen (savedDisplay) + 4);
+		/* room for "." and the digits and sign of an int */
+		tmpDisplaySize = strlen (savedDisplay) + 14;
+		tmpDisplay = XtMalloc (tmpDisplaySize);
 		if (!tmpDisplay)
 			return;
-		strcpy (tmpDisplay, savedDisplay);
+		snprintf (tmpDisplay, tmpDisplaySize, "%s", savedDisplay);
 	}
 
 	if (pch = strrchr (tmpDisplay, ':')) {
-		char		*pch2, *pch3;
+		char		*pch2;
+		size_t		used;
 
 		if (pch2 = strchr (pch, '.'))
 			*pch2 = '\000';
-		pch3 = XtMalloc (strlen (tmpDisplay) + 4);
-		if (!pch3)
-			return;
-		sprintf (pch3, "%s.%d", tmpDisplay, screenNum);
-		strcpy (tmpDisplay, pch3);
-		XtFree ((char *) pch3);
+		used = strlen (tmpDisplay);
+		snprintf (tmpDisplay + used, tmpDisplaySize - used, ".%d",
+			  screenNum);
 
 		putenv (tmpDisplay);
 	}
@@ -3624,7 +3635,7 @@ StartRemoteClient (
 		cmdInvokerInitialized = True;
 	}
 
-	(void) strcpy (errorMessage, "");
+	errorMessage[0] = '\0';
 
 	channel = (SPC_Channel_Ptr) _DtSPCOpen (hostName, ioMode, errorMessage);
 	if (channel == SPC_ERROR) {
@@ -4034,6 +4045,7 @@ ResetScreenInfo(unsigned char **cmdBuf,
 		unsigned int	*cmdSize,
 		Boolean		*done,
 		char		*env,
+		size_t		envSize,
 		char		*displayName)
 {
     SM_FREE((char *) cmdBuf[*screen]);
@@ -4049,7 +4061,7 @@ ResetScreenInfo(unsigned char **cmdBuf,
     }
     else
     {
-	sprintf((char *)env,"%s%s%d", DISPLAY_NAME_EQUAL, displayName, *screen);
+	snprintf(env, envSize, "%s%s%d", DISPLAY_NAME_EQUAL, displayName, *screen);
 	putenv(env);
 	
 	linec = 0;
@@ -4088,6 +4100,7 @@ RemoteRequestFailed(char *message,
     static char *cmdBuf = nullptr;
     static char *tmpCmdBuf = nullptr;
     char *errorString = nullptr;
+    size_t errorSize;
     String tmpString;
 
     static int	cmdBufSize = 0;
@@ -4145,7 +4158,8 @@ RemoteRequestFailed(char *message,
 	}
     }
 
-    sprintf(cmdBuf, REMOTE_CMD_STRING, tmpReq->hostPtr, tmpReq->cmdPtr);
+    snprintf(cmdBuf, cmdBufSize, REMOTE_CMD_STRING, tmpReq->hostPtr,
+	     tmpReq->cmdPtr);
 
     /* 
      * save cmdBuf for error message, cmdBuf is changed
@@ -4153,7 +4167,7 @@ RemoteRequestFailed(char *message,
      */
     if (tmpCmdBuf != nullptr)
     {
-	strcpy(tmpCmdBuf,cmdBuf);
+	snprintf(tmpCmdBuf, cmdBufSize, "%s", cmdBuf);
     }
 
     CreateExecString(cmdBuf);
@@ -4167,12 +4181,11 @@ RemoteRequestFailed(char *message,
 	   tmpString = GETMESSAGE(16, 8, 
 "An attempt to restore the following\ncommand (using the DT remote execution process)\non host \"%s\" failed:\n\n      %s\n\nThe following execution string will be tried:\n\n   %s\n\n");
 	    
-           errorString = 
-		    (char *)SM_MALLOC((strlen(tmpString) + 
-				       strlen((char *)tmpReq->hostPtr) +
-				       strlen((char *)tmpReq->cmdPtr)  +
-				       strlen(tmpCmdBuf) + 1 ) * 
-				      sizeof(char));
+	   errorSize = (strlen(tmpString) + 
+			strlen((char *)tmpReq->hostPtr) +
+			strlen((char *)tmpReq->cmdPtr)  +
+			strlen(tmpCmdBuf) + 1 ) * sizeof(char);
+           errorString = (char *)SM_MALLOC(errorSize);
 		
 	   if(errorString == nullptr)
 	   {
@@ -4180,8 +4193,8 @@ RemoteRequestFailed(char *message,
 	   }
 	   else
 	   {
-		    sprintf(errorString, tmpString, tmpReq->hostPtr, 
-			    tmpReq->cmdPtr, tmpCmdBuf );
+		    snprintf(errorString, errorSize, tmpString,
+			     tmpReq->hostPtr, tmpReq->cmdPtr, tmpCmdBuf );
 		    PrintError(DtError, errorString);
 		    SM_FREE(errorString);
 	   }

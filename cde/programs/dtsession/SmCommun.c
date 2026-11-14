@@ -194,9 +194,11 @@ ProcessSaveSessionMessage (
 			pch1 = strdup ((char *) GETMESSAGE (40, 16,
 				"The Save_Session message contains the unrecognized argument '%s'."));
 			if (pch1) {
-				pch2 = XtMalloc (strlen (pch1)+strlen (type)+3);
+				size_t		size = strlen (pch1)+strlen (type)+3;
+
+				pch2 = XtMalloc (size);
 				if (pch2) {
-					(void) sprintf (pch2, pch1, type);
+					(void) snprintf (pch2, size, pch1, type);
 					DtMsgLogMessage (smGD.programName, 
 						DtMsgLogWarning, pch2);
 					free (pch1); free (pch2);
@@ -445,12 +447,14 @@ StartMsgServer(void)
 
     if (smGD.bmsDead) {
         char	*errfmt, *errmsg, *statmsg;
+	size_t	errsize;
 
 	errfmt = SmNewString((char *) GETMESSAGE (6, 1, 
 	  "Could not connect to ToolTalk message server:\n%sExiting ...\n"));
         statmsg = tt_status_message(status);
-        errmsg = XtMalloc(strlen(errfmt) + strlen(statmsg) + 2);
-        sprintf(errmsg, errfmt, statmsg);
+        errsize = strlen(errfmt) + strlen(statmsg) + 2;
+        errmsg = XtMalloc(errsize);
+        snprintf(errmsg, errsize, errfmt, statmsg);
 
 	PrintError(DtError, errmsg);
 	SM_FREE(errfmt);
@@ -733,7 +737,9 @@ ProcessClientMessage(
     */
     if(_DtGetSmState(smGD.display, smGD.topLevelWindow, &state) == Success)
     {
-      char *newRes = malloc(BUFSIZ);
+      /* four lines of at most "dtsession*", the extension, a name, a value */
+      size_t newResSize = 4 * (strlen(smGD.extensionSpec) + 64) + 1;
+      char *newRes = malloc(newResSize);
 
       if (newRes == nullptr)
         return;		/* the new values are not applied or saved */
@@ -755,7 +761,7 @@ ProcessClientMessage(
       if (flags & SM_STATE_CYCLETIMEOUT)
       {
         smSaverRes.cycleTimeout = state.smCycleTimeout;
-        sprintf(newRes+strlen(newRes), "dtsession*%scycleTimeout: %d\n",
+        snprintf(newRes+strlen(newRes), newResSize-strlen(newRes), "dtsession*%scycleTimeout: %d\n",
                 smGD.extensionSpec,
                 smSaverRes.cycleTimeout/60);
       }
@@ -763,7 +769,7 @@ ProcessClientMessage(
       if (flags & SM_STATE_LOCKTIMEOUT)
       {
         smSaverRes.lockTimeout = state.smLockTimeout;
-        sprintf(newRes+strlen(newRes), "dtsession*%slockTimeout: %d\n",
+        snprintf(newRes+strlen(newRes), newResSize-strlen(newRes), "dtsession*%slockTimeout: %d\n",
                 smGD.extensionSpec,
                 smSaverRes.lockTimeout/60);
       }
@@ -771,7 +777,7 @@ ProcessClientMessage(
       if (flags & SM_STATE_SAVERTIMEOUT)
       {
         smSaverRes.saverTimeout = state.smSaverTimeout;
-        sprintf(newRes+strlen(newRes), "dtsession*%ssaverTimeout: %d\n",
+        snprintf(newRes+strlen(newRes), newResSize-strlen(newRes), "dtsession*%ssaverTimeout: %d\n",
                 smGD.extensionSpec,
                 smSaverRes.saverTimeout/60);
       }
@@ -779,7 +785,7 @@ ProcessClientMessage(
       if (flags & SM_STATE_RANDOM)
       {
         smSaverRes.random = state.smRandom;
-        sprintf(newRes+strlen(newRes), "dtsession*%srandom: %s\n",
+        snprintf(newRes+strlen(newRes), newResSize-strlen(newRes), "dtsession*%srandom: %s\n",
                 smGD.extensionSpec,
                 smSaverRes.random ? "True\n" : "False\n");
       }
@@ -802,18 +808,20 @@ ProcessClientMessage(
     if(_DtGetSmSaver(smGD.display, smGD.topLevelWindow, &saver) == Success)
     {
       char *pRes;
+      size_t pResSize;
 
       SM_FREE(smGD.saverList);
       smGD.saverList = SmNewString(saver.saverList);
       SM_FREE(saver.saverList);
 
-      pRes = malloc(strlen("dtsession*saverList: ") +
-                    strlen(smGD.saverList) +
-                    strlen(smGD.extensionSpec) +
-                    2); /* for the '/n' and '/0' */
+      pResSize = strlen("dtsession*saverList: ") +
+                 strlen(smGD.saverList) +
+                 strlen(smGD.extensionSpec) +
+                 2; /* for the '/n' and '/0' */
+      pRes = malloc(pResSize);
       if (pRes)
       {
-        sprintf(pRes, "dtsession*%ssaverList: %s\n",
+        snprintf(pRes, pResSize, "dtsession*%ssaverList: %s\n",
                smGD.extensionSpec,
                smGD.saverList);
         _DtAddToResource(smGD.display, pRes);

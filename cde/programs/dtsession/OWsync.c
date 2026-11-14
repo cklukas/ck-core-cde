@@ -71,7 +71,7 @@ OWsyncColorResources(
 		return;
 	}
 
-	sprintf(colorRes,
+	snprintf(colorRes, sizeof colorRes,
 "*background:\t#%04X%04X%04X\n\
 *foreground:\t#%04X%04X%04X\n\
 OpenWindows.WindowColor:\t#%04X%04X%04X\n\
@@ -116,6 +116,13 @@ fprintf(stderr,"OWsyncColorResource: setting\n%s\n",colorRes);
 	_DtAddToResource(display, colorRes);
 }
 
+#define OW_LOCALE_FORMAT \
+"OpenWindows.BasicLocale:\t%s\n\
+OpenWindows.InputLang:\t%s\n\
+OpenWindows.DisplayLang:\t%s\n\
+OpenWindows.TimeFormat:\t%s\n\
+OpenWindows.NumericFormat:\t%s\n"
+
 /*
  * Sync OW locale resources with CDE's use of the LANG environment variable
  */
@@ -125,20 +132,18 @@ OWsyncLocaleResources(
 {
 	char	*localeRes;
 	char	*lang;
+	size_t	localeSize;
 
 	lang = getenv("LANG");
 	if (lang == nullptr || *lang == 0)
 		lang = "C";
 
-	localeRes = XtMalloc(BUFSIZ);
+	localeSize = snprintf(nullptr, 0, OW_LOCALE_FORMAT,
+			      lang, lang, lang, lang, lang) + 1;
+	localeRes = XtMalloc(localeSize);
 
-	sprintf(localeRes,
-"OpenWindows.BasicLocale:\t%s\n\
-OpenWindows.InputLang:\t%s\n\
-OpenWindows.DisplayLang:\t%s\n\
-OpenWindows.TimeFormat:\t%s\n\
-OpenWindows.NumericFormat:\t%s\n",
-		lang, lang, lang, lang, lang);
+	snprintf(localeRes, localeSize, OW_LOCALE_FORMAT,
+		 lang, lang, lang, lang, lang);
 
 #ifdef DEBUG
 fprintf(stderr,"OWsyncLocaleResource: setting\n%s\n",localeRes);

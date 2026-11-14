@@ -492,6 +492,7 @@ WaitTimeout(
         XtIntervalId *id )
 {
     String tmpString, tmpError;
+    size_t errorSize;
     char   *winName;
     Status success;
 
@@ -499,10 +500,11 @@ WaitTimeout(
     if (success && winName)
     {
 	tmpString = GETMESSAGE(20, 4, "Session restoration information not updated for client %s.  Invalid information may be saved.");
-	tmpError = SM_MALLOC(strlen(winName) + strlen(tmpString) + 5);
+	errorSize = strlen(winName) + strlen(tmpString) + 5;
+	tmpError = SM_MALLOC(errorSize);
 	if (tmpError)
 	{
-	    sprintf(tmpError, tmpString, winName);
+	    snprintf(tmpError, errorSize, tmpString, winName);
 	    PrintError(DtError, tmpError);
 	    SM_FREE(tmpError);
 	}

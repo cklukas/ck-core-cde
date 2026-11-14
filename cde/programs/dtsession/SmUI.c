@@ -1724,7 +1724,9 @@ UpdatePasswdField(
         int numChars )
 {
     int i, index;
-    char *passwdMessage = XtMalloc(numChars + 1);
+    /* the bar, the blanks, the indicator and the NUL */
+    size_t size = (numChars > 0 ? (size_t) numChars : 0) + 3;
+    char *passwdMessage = XtMalloc(size);
     XmString tmpString;
 
     if (!passwdMessage) {
@@ -1734,19 +1736,16 @@ UpdatePasswdField(
 
     if(numChars > 0)
     {
-	strcpy(passwdMessage, "|");
-	for(i = 1;i < numChars;i++)
-	{
-	    if(i==1)
-	    	strcpy(passwdMessage, "|");
-	    else
-	    	strcat(passwdMessage, " ");
-	}
-	strcat(passwdMessage, PASSWORD_INDICATOR);
+	size_t blanks = numChars > 2 ? (size_t) numChars - 2 : 0;
+
+	passwdMessage[0] = '|';
+	memset(passwdMessage + 1, ' ', blanks);
+	snprintf(passwdMessage + 1 + blanks, size - 1 - blanks, "%s",
+		 PASSWORD_INDICATOR);
     }
     else
     {
-	strcpy(passwdMessage, "|");
+	snprintf(passwdMessage, size, "|");
     }
 
     tmpString = XmStringCreateLocalized (passwdMessage);
@@ -1888,6 +1887,7 @@ ConfirmSessionCreation (
 	char		*pch1;
 	char		*pch2;
 	char		*pch3;
+	size_t		pch3Size;
 	Dimension	width, height;
 	Position	x, y;
 	XEvent		next;
@@ -1920,15 +1920,17 @@ ConfirmSessionCreation (
 		SM_EXIT(1);
 	}
 
-	pch3 = XtMalloc (strlen (pch1) +
-			     strlen (XDisplayName (getenv("DISPLAY"))) +
-			     strlen (pch2) +
-			     4);
+	pch3Size = strlen (pch1) +
+		   strlen (XDisplayName (getenv("DISPLAY"))) +
+		   strlen (pch2) +
+		   4;
+	pch3 = XtMalloc (pch3Size);
 	if (!pch3) {
 		PrintError(DtError, smNLS.cantMallocErrorString);
 		SM_EXIT(1);
 	}
-	(void) sprintf (pch3, pch2, pch1, XDisplayName (getenv("DISPLAY")));
+	(void) snprintf (pch3, pch3Size, pch2, pch1,
+			 XDisplayName (getenv("DISPLAY")));
 
 	/*
 	 * The X toolkit has not yet been initialized, so do it now.
@@ -2116,7 +2118,8 @@ PostXSMPFailureDialog (
 	Dimension	width, height;
 	Position	x, y;
 	XEvent		next;
-        int             len;
+        size_t          len;
+	size_t		errorFileSize, pch5Size;
 
 	pch1 = strdup ((char *) GETMESSAGE(40, 1,
 		"A session cannot be started because of the\nfollowing error:"));
@@ -2170,8 +2173,9 @@ PostXSMPFailureDialog (
 		SM_EXIT(1);
 	}
 
-	error_file = XtMalloc(MAXPATHLEN+1);
-	strcpy (error_file, "");
+	errorFileSize = MAXPATHLEN+1;
+	error_file = XtMalloc(errorFileSize);
+	error_file[0] = '\0';
 
         /* JET - VU#497553 */
 	if (check_errorlog)
@@ -2180,27 +2184,33 @@ PostXSMPFailureDialog (
 
 	    if (home = getenv ("HOME"))
 	      {
+		/* the two slashes and the NUL */
 		len = strlen(home) +
 		  strlen(DtPERSONAL_CONFIG_DIRECTORY) +
-		  strlen(DtERRORLOG_FILE);
+		  strlen(DtERRORLOG_FILE) + 3;
 
-		if (len > MAXPATHLEN)
-		  error_file = XtRealloc(error_file, len + 1);
+		if (len > errorFileSize)
+		  {
+		    error_file = XtRealloc(error_file, len);
+		    errorFileSize = len;
+		  }
 
-		sprintf (error_file, "%s/%s/%s", home,
-			 DtPERSONAL_CONFIG_DIRECTORY,
-			 DtERRORLOG_FILE);
+		snprintf (error_file, errorFileSize, "%s/%s/%s", home,
+			  DtPERSONAL_CONFIG_DIRECTORY,
+			  DtERRORLOG_FILE);
 	      }
 	  }
 
-	pch5 = XtMalloc (strlen (pch1) + strlen (pch2) + strlen (pch3) + strlen (pch4) +
-				strlen (error_file) + 15);
+	/* the five texts, 17 characters of layout and the NUL */
+	pch5Size = strlen (pch1) + strlen (pch2) + strlen (pch3) +
+		   strlen (pch4) + strlen (error_file) + 18;
+	pch5 = XtMalloc (pch5Size);
 	if (!pch5) {
 		PrintError(DtError, smNLS.cantMallocErrorString);
 		SM_EXIT(1);
 	}
-	(void) sprintf (pch5, "%s\n\n   %s\n\n%s\n\n   %s\n   %s\n",
-			pch1, pch2, pch3, pch4, error_file);
+	(void) snprintf (pch5, pch5Size, "%s\n\n   %s\n\n%s\n\n   %s\n   %s\n",
+			 pch1, pch2, pch3, pch4, error_file);
 
 	XtFree(error_file);
 
@@ -2418,6 +2428,7 @@ PostReasonsDialog (
 	char			* str1;
 	char			* str2;
 	char			* str3;
+	size_t			str2Size, str3Size;
 	int 			i;
 	int			len;
 	XEvent			next;
@@ -2432,23 +2443,24 @@ PostReasonsDialog (
 	for (i = 0, len = 0; i < numMsgs; i++)
 		len += strlen (message[i]);
 
-	str2 = XtMalloc (len + (numMsgs * 3) + 1);
+	str2Size = len + (numMsgs * 3) + 1;
+	str2 = XtMalloc (str2Size);
 	if (!str2) {
 		PrintError(DtError, smNLS.cantMallocErrorString);
 		SM_EXIT(1);
 	}
 	str2[0] = '\000';
-	for (i = 0; i < numMsgs; i++) {
-		strcat (str2, message[i]);
-		strcat (str2, "\n");
+	for (i = 0, len = 0; i < numMsgs; i++) {
+		len += snprintf (str2 + len, str2Size - len, "%s\n", message[i]);
 	}
 
-	str3 = XtMalloc (strlen (str1) + strlen (str2) + strlen (progName) + 4);
+	str3Size = strlen (str1) + strlen (str2) + strlen (progName) + 4;
+	str3 = XtMalloc (str3Size);
 	if (!str3) {
 		PrintError(DtError, smNLS.cantMallocErrorString);
 		SM_EXIT(1);
 	}
-	(void) sprintf (str3, str1, progName, str2);
+	(void) snprintf (str3, str3Size, str1, progName, str2);
 
 	DtMsgLogMessage (smGD.programName, DtMsgLogWarning, str3);
 

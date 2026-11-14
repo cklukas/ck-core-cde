@@ -99,9 +99,11 @@ SmXdefMerge(Display *display)
   if ((home = getenv("HOME")) == nullptr)
     home = "";
 
-  if( (xdefaults = (char *)malloc(strlen(home)+12)) != nullptr)  
+  size_t xdefaultsSize = strlen(home) + 12;
+
+  if( (xdefaults = (char *)malloc(xdefaultsSize)) != nullptr)  
   {
-    sprintf(xdefaults,"%s/%s",home,".Xdefaults");
+    snprintf(xdefaults, xdefaultsSize, "%s/%s", home, ".Xdefaults");
     if(access(xdefaults,R_OK) == 0)
     {
       FILE *fp;

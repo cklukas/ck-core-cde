@@ -52,6 +52,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdckdint.h>
 #include <dirent.h>
 #include <time.h>
 #include <sys/types.h>
@@ -183,8 +184,77 @@ SmKeyboardInfo		keyboardVals;
  * used as a buffer to write resources into
  * before they are written out
  */
-static int	resSize = 10000;
+static size_t	resSize = 10000;
 static char	*resSpec;
+
+/*
+ * Appends text to the resource line in resSpec and enlarges the buffer when
+ * the line does not fit.  Reports the error and returns False if it cannot.
+ */
+static Boolean
+AppendResSpec(const char *text)
+{
+    size_t	used = strlen(resSpec);
+    size_t	add = strlen(text);
+    size_t	needed, newSize;
+    char	*grown;
+
+    if (ckd_add(&needed, used, add) || ckd_add(&needed, needed, (size_t) 1))
+    {
+	PrintError(DtError, smNLS.cantMallocErrorString);
+	return(False);
+    }
+    if (needed > resSize)
+    {
+	if (ckd_add(&newSize, needed, (size_t) 5000))
+	{
+	    PrintError(DtError, smNLS.cantMallocErrorString);
+	    return(False);
+	}
+	grown = (char *) SM_REALLOC(resSpec, newSize * sizeof(char));
+	if (grown == nullptr)
+	{
+	    PrintErrnoError(DtError, smNLS.cantMallocErrorString);
+	    return(False);
+	}
+	resSpec = grown;
+	resSize = newSize;
+    }
+    memcpy(resSpec + used, text, add + 1);
+    return(True);
+}
+
+static Boolean
+AppendResSpecNumber(long value)
+{
+    char	digits[32];
+
+    snprintf(digits, sizeof digits, "%ld", value);
+    return(AppendResSpec(digits));
+}
+
+/*
+ * Starts the resource line "<class>*<name>:" in resSpec.
+ */
+static Boolean
+StartResSpec(const char *name)
+{
+    *resSpec = 0;
+    return(AppendResSpec(SM_RESOURCE_CLASS) && AppendResSpec("*") &&
+	   AppendResSpec(name) && AppendResSpec(":"));
+}
+
+/*
+ * Puts the resource "<class>*<name>:<value>" into the database.
+ */
+static void
+PutNumberResource(XrmDatabase *smBase, const char *name, long value)
+{
+    if (StartResSpec(name) && AppendResSpecNumber(value))
+    {
+	XrmPutLineResource(smBase, resSpec);
+    }
+}
 
 /*
  * Vars used to maintain state that is sent to the SaveState
@@ -439,7 +509,8 @@ PruneSessionDirectory (void)
 	tmpDir = (char*) XtMalloc(MAXPATHLEN + 1);
 	
 	dirPrefix = XtMalloc (strlen (smGD.restoreSession) + 2);
-	sprintf (dirPrefix, "%s.", smGD.restoreSession);
+	snprintf (dirPrefix, strlen (smGD.restoreSession) + 2, "%s.",
+		  smGD.restoreSession);
 	if (strlen (dirPrefix) > 5) {
 		dirPrefix[4] = '.';
 		dirPrefix[5] = '\000';
@@ -447,7 +518,9 @@ PruneSessionDirectory (void)
 
 	oldDir = XtMalloc (strlen (smGD.restoreSession) + 
 			   strlen (SM_OLD_EXTENSION) + 2);
-	sprintf (oldDir, "%s.%s", smGD.restoreSession, SM_OLD_EXTENSION);
+	snprintf (oldDir, strlen (smGD.restoreSession) +
+		  strlen (SM_OLD_EXTENSION) + 2, "%s.%s",
+		  smGD.restoreSession, SM_OLD_EXTENSION);
 
 	(void) time (&oldestTime);
 
@@ -463,7 +536,10 @@ PruneSessionDirectory (void)
 		    (strncmp  (dp->d_name, dirPrefix, strlen (dirPrefix))))
 			continue;
 
-		sprintf (tmpDir, "%s/%s", smGD.savePath, dp->d_name);
+		if ((size_t) snprintf (tmpDir, MAXPATHLEN + 1, "%s/%s",
+				       smGD.savePath, dp->d_name) >=
+		    MAXPATHLEN + 1)
+			continue;
 
                 if (((stat (tmpDir, &buf)) == 0) && S_ISDIR (buf.st_mode)) {
 			if (buf.st_mtime < oldestTime) {
@@ -472,7 +548,7 @@ PruneSessionDirectory (void)
 				 * it needs to be removed
 				 */
 				oldestTime = buf.st_mtime;
-				strcpy (oldestDir, tmpDir);
+				memcpy (oldestDir, tmpDir, strlen (tmpDir) + 1);
 			}
 			numDirs++;
 		}
@@ -510,9 +586,20 @@ PruneSessionDirectory (void)
 					       smGD.restoreSession);
 		if (tmpName == nullptr) {
 			PrintErrnoError(DtError, smNLS.cantCreateDirsString);
+		} else if ((size_t) snprintf (saveDir, MAXPATHLEN + 1, "%s/%s",
+					      smGD.savePath,
+					      smGD.restoreSession) >=
+			   MAXPATHLEN + 1 ||
+			   (size_t) snprintf (clientDB, 2 * MAXPATHLEN + 1,
+					      "%s/%s/%s", smGD.savePath,
+					      smGD.restoreSession,
+					      SM_CLIENT_FILE2) >=
+			   2 * MAXPATHLEN + 1) {
+			/* the session path does not fit: prune nothing */
+			PrintErrnoError(DtError, smNLS.cantCreateDirsString);
+			rmdir (tmpName);
+			free (tmpName);
 		} else {
-			sprintf (saveDir, "%s/%s", 
-				 smGD.savePath, smGD.restoreSession);
 			haveSession = (stat (saveDir, &buf) == 0);
 
 			if (haveSession &&
@@ -526,9 +613,6 @@ PruneSessionDirectory (void)
 				else
 					rmdir (tmpName);
 			} else {
-				sprintf (clientDB, "%s/%s/%s", smGD.savePath, 
-					 smGD.restoreSession, SM_CLIENT_FILE2);
-
 				ExecuteDiscardCommands (clientDB);
 
 				if (haveSession) {
@@ -555,20 +639,23 @@ PruneSessionDirectory (void)
 	if (smXSMP.saveState.shutdown && smGD.sessionType == CURRENT_SESSION &&
 	    smSettings.startState == DtSM_HOME_STATE) {
 
-		sprintf (tmpDir, "%s/%s", smGD.savePath, SM_HOME_DIRECTORY);
-
-                if (((stat (tmpDir, &buf)) == 0) && S_ISDIR (buf.st_mode)) {
-
-			sprintf (saveDir, "%s/%s", smGD.savePath, oldDir);
+		if ((size_t) snprintf (tmpDir, MAXPATHLEN + 1, "%s/%s",
+				       smGD.savePath, SM_HOME_DIRECTORY) <
+		    MAXPATHLEN + 1 &&
+		    ((stat (tmpDir, &buf)) == 0) && S_ISDIR (buf.st_mode) &&
+		    (size_t) snprintf (saveDir, MAXPATHLEN + 1, "%s/%s",
+				       smGD.savePath, oldDir) <
+		    MAXPATHLEN + 1) {
 
                 	if (((stat (saveDir, &buf)) == 0) && 
-					S_ISDIR (buf.st_mode)) {
+					S_ISDIR (buf.st_mode) &&
+			    (size_t) snprintf (oldestDir, MAXPATHLEN + 1,
+					       "%s/%s", smGD.savePath,
+					       SM_CURRENT_DIRECTORY) <
+			    MAXPATHLEN + 1) {
 
 				if (SmRemoveTree (saveDir) != 0)
 					PrintErrnoError(DtError, GETMESSAGE(4, 4, "Unable to remove session directory.  Make sure write permissions exist on $HOME/.dt directory.  Invalid session files will not be removed."));
-
-				sprintf (oldestDir, "%s/%s", smGD.savePath, 
-					SM_CURRENT_DIRECTORY);
 
 				MoveDirectory (oldestDir, saveDir, False);
 			}
@@ -602,8 +689,13 @@ WriteClientDatabase (void)
 	ClientDB		outputDB;
 
 	db = (char*) XtMalloc(MAXPATHLEN + 1);
-	(void) sprintf (db, "%s/%s/%s", smGD.savePath, smGD.restoreSession,
-			SM_CLIENT_FILE2);
+	if ((size_t) snprintf (db, MAXPATHLEN + 1, "%s/%s/%s", smGD.savePath,
+			       smGD.restoreSession, SM_CLIENT_FILE2) >=
+	    MAXPATHLEN + 1) {
+		PrintErrnoError(DtError, smNLS.cantCreateDirsString);
+		XtFree(db);
+		return (False);
+	}
 
 	if ((outputDB = OpenOutputClientDB (db, smXSMP.dbVersion,
 					    smXSMP.dbSessionId)) == nullptr) {
@@ -1145,7 +1237,7 @@ QueryServerSettings( void )
     int			numButton, numPaths;
     int			buttonSize = 128;
     XrmDatabase 	smBase = nullptr;
-    char		tmpChar[35];
+    Boolean		ok;
 
 
     buttonRet = (char *) SM_MALLOC(buttonSize * sizeof(char));
@@ -1250,48 +1342,24 @@ QueryServerSettings( void )
 	return(-1);
     }
     
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCnumKeyCode);
-    strcat(resSpec, ":");
-    sprintf(tmpChar,"%d", smSettings.numKeyCode);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource( &smBase, resSpec);
+    PutNumberResource(&smBase, SmCnumKeyCode, (long) smSettings.numKeyCode);
     
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCkeySymsPerKey);
-    strcat(resSpec, ":");
-    sprintf(tmpChar,"%d", smSettings.keySymPerCode);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource( &smBase, resSpec);
+    PutNumberResource(&smBase, SmCkeySymsPerKey, (long) smSettings.keySymPerCode);
 
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCkeySyms);
-    strcat(resSpec, ":");
     numLoops = smSettings.numKeyCode * smSettings.keySymPerCode;
-    sprintf(tmpChar,"%ld", tmpSyms[0]);
-    strcat(resSpec, tmpChar);
-    for(i = 1;i < numLoops;i++)
+    ok = StartResSpec(SmCkeySyms) && AppendResSpecNumber((long) tmpSyms[0]);
+    for(i = 1;ok && i < numLoops;i++)
     {
-	if((strlen(resSpec) + 5) >= resSize)
-	{
-	    resSize += 5000;
-	    resSpec = (char *) SM_REALLOC(resSpec, resSize * sizeof(char));
-	    if (resSpec==nullptr)
-	    {
-		SM_FREE((char *)tmpSyms);
-		if (fontPath)
-		    SM_FREE((char *)fontPath);
-		SM_FREE(buttonRet);
-		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-		return(-1);
-	    }
-	}
-	strcat(resSpec, ",");
-	sprintf(tmpChar,"%ld", tmpSyms[i]);
-	strcat(resSpec, tmpChar);
+	ok = AppendResSpec(",") && AppendResSpecNumber((long) tmpSyms[i]);
+    }
+    if (!ok)
+    {
+	SM_FREE((char *)tmpSyms);
+	if (fontPath)
+	    XFreeFontPath(fontPath);
+	SM_FREE(buttonRet);
+	XrmDestroyDatabase(smBase);
+	return(-1);
     }
     XrmPutLineResource( &smBase, resSpec);
 	
@@ -1314,43 +1382,25 @@ QueryServerSettings( void )
 	return(-1);
     }
 
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCmaxKeyPerMod);
-    strcat(resSpec, ":");
-    sprintf(tmpChar,"%d", modMap->max_keypermod);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource( &smBase, resSpec);
+    PutNumberResource(&smBase, SmCmaxKeyPerMod, (long) modMap->max_keypermod);
 
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCmodMap);
-    strcat(resSpec, ":");
     numLoops = (8 * modMap->max_keypermod) - 1;
-    for(i = 0;i <= numLoops;i++)
+    ok = StartResSpec(SmCmodMap);
+    for(i = 0;ok && i <= numLoops;i++)
     {
-	if((strlen(resSpec) + 9) >= resSize)
-	{
-	    resSize += 5000;
-	    resSpec = (char *) SM_REALLOC(resSpec, resSize * sizeof(char));
-	    if (resSpec==nullptr)
-	    {
-		SM_FREE((char *)tmpSyms);
-		XFreeModifiermap(modMap);
-		if (fontPath)
-		    XFreeFontPath(fontPath);
-		SM_FREE(buttonRet);
-		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-		return(-1);
-	    }
-	}
 	tmpMod = XKeycodeToKeysym(smGD.display, modMap->modifiermap[i], 0);
-	sprintf(tmpChar,"%ld", tmpMod);
-	strcat(resSpec, tmpChar);
-	if(i != numLoops)
-	{
-	    strcat(resSpec, ",");
-	}
+	ok = AppendResSpecNumber((long) tmpMod) &&
+	     (i == numLoops || AppendResSpec(","));
+    }
+    if (!ok)
+    {
+	SM_FREE((char *)tmpSyms);
+	XFreeModifiermap(modMap);
+	if (fontPath)
+	    XFreeFontPath(fontPath);
+	SM_FREE(buttonRet);
+	XrmDestroyDatabase(smBase);
+	return(-1);
     }
     XrmPutLineResource( &smBase, resSpec);
     
@@ -1412,7 +1462,7 @@ SaveCustomizeSettings( void )
     int			i,numPaths;
     char		**fontPath;
     XrmDatabase 	smBase = nullptr;
-    char		*tmpChar[20], *ptrRet = nullptr, *tmpKey;
+    char		*ptrRet = nullptr, *tmpKey;
     Status		newStat;
 	char		tmpMap[128];
 
@@ -1428,7 +1478,7 @@ SaveCustomizeSettings( void )
 	}
 	else
 	{
-	    sscanf(ptrRet, "%d %s %d %d %s",
+	    sscanf(ptrRet, "%d %127s %d %d %48s",
 		   &smToSet.numButton,
 		   tmpMap,
 		   &smSettings.accelNum,
@@ -1449,7 +1499,15 @@ SaveCustomizeSettings( void )
 	    /*
 	     * append a \n to dClickBuf because it was scanned out
 	     */
-	    strcat(smToSet.dClickBuf, "\n");
+	    {
+		size_t used = strlen(smToSet.dClickBuf);
+
+		if (used + 2 <= sizeof smToSet.dClickBuf)
+		{
+		    smToSet.dClickBuf[used] = '\n';
+		    smToSet.dClickBuf[used + 1] = 0;
+		}
+	    }
 	}
         if (ptrRet) XFree(ptrRet);
     }
@@ -1492,29 +1550,11 @@ SaveCustomizeSettings( void )
     
     if (smToSet.audioChange)
     {
-      strcpy(resSpec, SM_RESOURCE_CLASS);
-      strcat(resSpec, "*");
-      strcat(resSpec, SmCbellPercent);
-      strcat(resSpec, ":");
-      sprintf((char *)tmpChar,"%d",smSettings.kbdState.bell_percent);
-      strcat(resSpec, (char *)tmpChar);
-      XrmPutLineResource(&smBase, resSpec);
+      PutNumberResource(&smBase, SmCbellPercent, (long) smSettings.kbdState.bell_percent);
 
-      strcpy(resSpec, SM_RESOURCE_CLASS);
-      strcat(resSpec, "*");
-      strcat(resSpec, SmCbellPitch);
-      strcat(resSpec, ":");
-      sprintf((char *)tmpChar,"%d",smSettings.kbdState.bell_pitch);
-      strcat(resSpec, (char *)tmpChar);
-      XrmPutLineResource(&smBase, resSpec);
+      PutNumberResource(&smBase, SmCbellPitch, (long) smSettings.kbdState.bell_pitch);
 
-      strcpy(resSpec, SM_RESOURCE_CLASS);
-      strcat(resSpec, "*");
-      strcat(resSpec, SmCbellDuration);
-      strcat(resSpec, ":");
-      sprintf((char *)tmpChar,"%d",smSettings.kbdState.bell_duration);
-      strcat(resSpec, (char *)tmpChar);
-      XrmPutLineResource(&smBase, resSpec);
+      PutNumberResource(&smBase, SmCbellDuration, (long) smSettings.kbdState.bell_duration);
     }
 
     if(smCust.keyboardChange == True)
@@ -1534,21 +1574,9 @@ SaveCustomizeSettings( void )
 
     if(smToSet.keyboardChange == True)
     {
-      strcpy(resSpec, SM_RESOURCE_CLASS);
-      strcat(resSpec, "*");
-      strcat(resSpec, SmCkeyClick);
-      strcat(resSpec, ":");
-      sprintf((char *)tmpChar,"%d", smSettings.kbdState.key_click_percent);
-      strcat(resSpec, (char *)tmpChar);
-      XrmPutLineResource(&smBase, resSpec);
+      PutNumberResource(&smBase, SmCkeyClick, (long) smSettings.kbdState.key_click_percent);
 
-      strcpy(resSpec, SM_RESOURCE_CLASS);
-      strcat(resSpec, "*");
-      strcat(resSpec, SmCglobalRepeats);
-      strcat(resSpec, ":");
-      sprintf((char *)tmpChar,"%d", smSettings.kbdState.global_auto_repeat);
-      strcat(resSpec, (char *)tmpChar);
-      XrmPutLineResource(&smBase, resSpec);
+      PutNumberResource(&smBase, SmCglobalRepeats, (long) smSettings.kbdState.global_auto_repeat);
     }
 
 
@@ -1620,7 +1648,10 @@ OutputResource( void )
     char	 	*data = nullptr;
     XrmDatabase		db;
     Status		newStat;
-    char		*fontBuf = nullptr, *langPtr, tmpChar[20], *sessionRes;
+    char		*fontBuf = nullptr, *langPtr, *sessionRes;
+    Boolean		ok;
+    size_t		used;
+    int			written;
     float		fltYRes;
     int			intYRes;
     char                *preeditBuf = nullptr;
@@ -1634,34 +1665,32 @@ OutputResource( void )
      */
     *resSpec = 0;
     langPtr = getenv("LANG");
-    if((langPtr != nullptr) && (*langPtr != 0))
+    ok = AppendResSpec(SM_RESOURCE_NAME) && AppendResSpec("*") &&
+	 AppendResSpec(SmNsessionLang) && AppendResSpec(":");
+    if (ok)
     {
-	snprintf(resSpec, resSize, "%s*%s: %s\n", SM_RESOURCE_NAME, SmNsessionLang,
-		langPtr);
-    }
-    else
-    {
-	snprintf(resSpec, resSize, "%s*%s:   \n", SM_RESOURCE_NAME, SmNsessionLang);
+	if((langPtr != nullptr) && (*langPtr != 0))
+	{
+	    ok = AppendResSpec(" ") && AppendResSpec(langPtr) &&
+		 AppendResSpec("\n");
+	}
+	else
+	{
+	    ok = AppendResSpec("   \n");
+	}
     }
 
     fltYRes = ((float) DisplayHeight(smGD.display, 0) /
 	(float) DisplayHeightMM(smGD.display, 0)) * 1000;
     intYRes = fltYRes;
 
-    if(*resSpec == 0)
+    ok = ok && AppendResSpec(SM_RESOURCE_NAME) && AppendResSpec("*") &&
+	 AppendResSpec(SmNdisplayResolution) && AppendResSpec(":") &&
+	 AppendResSpecNumber((long) intYRes) && AppendResSpec("\n");
+    if (!ok)
     {
-	strcpy(resSpec, SM_RESOURCE_NAME);
+	return(-1);
     }
-    else
-    {
-	strcat(resSpec, SM_RESOURCE_NAME);
-    }
-    strcat(resSpec, "*");
-    strcat(resSpec, SmNdisplayResolution);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",intYRes);
-    strcat(resSpec, tmpChar);
-    strcat(resSpec, "\n");
     _DtAddToResource(smGD.display, resSpec);
     
     if(smCust.fontChange == True)
@@ -1693,13 +1722,20 @@ OutputResource( void )
 		    }
 		}
 
-		strcat(smGD.fontPath, "/");
-		strcat(smGD.fontPath, SM_FONT_FILE);
-		
-		strcat(smGD.fontPath, ".");
-		strcat(smGD.fontPath, sessionRes);
-		    
-		XrmPutFileDatabase(db, smGD.fontPath);    
+		used = strlen(smGD.fontPath);
+		written = snprintf(smGD.fontPath + used,
+				   sizeof smGD.fontPath - used, "/%s.%s",
+				   SM_FONT_FILE, sessionRes);
+		if (written < 0 ||
+		    (size_t) written >= sizeof smGD.fontPath - used)
+		{
+		    smGD.fontPath[used] = 0;
+		    PrintError(DtError, smNLS.cantCreateDirsString);
+		}
+		else
+		{
+		    XrmPutFileDatabase(db, smGD.fontPath);
+		}
 		XrmDestroyDatabase(db);
 	    }
 	    
@@ -1779,31 +1815,11 @@ static void
 PrintPointerControl(
         XrmDatabase *smBase)
 {
-    char tmpChar[20];
+    PutNumberResource(smBase, SmCaccelNum, (long) smSettings.accelNum);
     
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCaccelNum);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d", smSettings.accelNum);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCaccelDenom, (long) smSettings.accelDenom);
     
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCaccelDenom);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",smSettings.accelDenom);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
-    
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCthreshold);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",smSettings.threshold);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCthreshold, (long) smSettings.threshold);
 
     return;
 }
@@ -1838,27 +1854,13 @@ static void
 PrintSessionInfo(
         XrmDatabase *smBase)
 {
-    char tmpChar[20];
-
     /*
      * Write out the settings for logout confirmation and
      * the correct session to return to
      */
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCshutDownState);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",smSettings.confirmMode);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCshutDownState, (long) smSettings.confirmMode);
     
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCshutDownMode);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",smSettings.startState);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCshutDownMode, (long) smSettings.startState);
 
     return;
 }
@@ -1893,8 +1895,6 @@ PrintScreenSaver(
         XrmDatabase *smBase)
 {
     Status		newScreenStat;
-    char 		tmpChar[20];
-
     if(smCust.screenSavChange == True)
     {
 	newScreenStat = _DtGetSmScreen(smGD.display, smGD.topLevelWindow,
@@ -1909,37 +1909,13 @@ PrintScreenSaver(
 	}
     }
 
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCtimeout);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d", screenSaverVals.smTimeout);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCtimeout, (long) screenSaverVals.smTimeout);
     
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCinterval);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d", screenSaverVals.smInterval);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCinterval, (long) screenSaverVals.smInterval);
     
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCpreferBlank);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d", screenSaverVals.smPreferBlank);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCpreferBlank, (long) screenSaverVals.smPreferBlank);
     
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCallowExp);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d", screenSaverVals.smAllowExp);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCallowExp, (long) screenSaverVals.smAllowExp);
 
     return;
 }
@@ -1983,25 +1959,16 @@ PrintFontPaths(
     /* If no fp save req'd, just pretend we did it */
     if (smRes.saveFontPath == False) return 0;
 
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCfontPath);
-    strcat(resSpec, ":");
-    strcat(resSpec, *fontPath);
+    if (!StartResSpec(SmCfontPath) || !AppendResSpec(*fontPath))
+    {
+	return(-1);
+    }
     for(i = 1;i < numPaths;i++)
     {
-	if((strlen(resSpec) + strlen(fontPath[i]) + 1) >= resSize)
+	if (!AppendResSpec(",") || !AppendResSpec(fontPath[i]))
 	{
-	    resSize += 5000;
-	    resSpec = (char *) SM_REALLOC(resSpec, resSize * sizeof(char));
-	    if (resSpec==nullptr)
-	    {
-		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-		return(-1);
-	    }
+	    return(-1);
 	}
-	strcat(resSpec, ",");
-	strcat(resSpec, fontPath[i]);
     }
     XrmPutLineResource(smBase, resSpec);
 
@@ -2043,60 +2010,22 @@ PrintKeyboardControl(
     int		i,j;
     char	bitTest;
     Bool	firstRepeat = True;
-    char	tmpChar[20];
+    PutNumberResource(smBase, SmCkeyClick, (long) smSettings.kbdState.key_click_percent);
+
+    PutNumberResource(smBase, SmCbellPercent, (long) smSettings.kbdState.bell_percent);
+
+    PutNumberResource(smBase, SmCbellPitch, (long) smSettings.kbdState.bell_pitch);
+
+    PutNumberResource(smBase, SmCbellDuration, (long) smSettings.kbdState.bell_duration);
     
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCkeyClick);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",smSettings.kbdState.key_click_percent);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCledMask, (long) smSettings.kbdState.led_mask);
 
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCbellPercent);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",smSettings.kbdState.bell_percent);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
+    PutNumberResource(smBase, SmCglobalRepeats, (long) smSettings.kbdState.global_auto_repeat);
 
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCbellPitch);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",smSettings.kbdState.bell_pitch);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
-
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCbellDuration);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",smSettings.kbdState.bell_duration);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
-    
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCledMask);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%ld",smSettings.kbdState.led_mask);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
-
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCglobalRepeats);
-    strcat(resSpec, ":");
-    sprintf(tmpChar, "%d",smSettings.kbdState.global_auto_repeat);
-    strcat(resSpec, tmpChar);
-    XrmPutLineResource(smBase, resSpec);
-
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCautoRepeats);
-    strcat(resSpec, ":");
+    if (!StartResSpec(SmCautoRepeats))
+    {
+	return(-1);
+    }
 
     /*
      * Now write out which keys need to be auto repeated one at a time
@@ -2114,34 +2043,19 @@ PrintKeyboardControl(
 		    {
 			firstRepeat = False;
 		    }
-		    else
+		    else if (!AppendResSpec(","))
 		    {
-			strcat(resSpec, ",");
+			return(-1);
 		    }
-		    
-		    if((strlen(resSpec) + 5) >= resSize)
+
+		    if (!AppendResSpecNumber((long) ((8 * i) + j)))
 		    {
-			resSize += 5000;
-			resSpec = (char *) SM_REALLOC(resSpec,
-						   resSize * sizeof(char));
-			if (resSpec==nullptr)
-			{
-			    PrintErrnoError(DtError,
-					    smNLS.cantMallocErrorString);
-			    return(-1);
-			}
+			return(-1);
 		    }
-			
-		    sprintf(tmpChar, "%d", ((8 * i) + j));
-		    strcat(resSpec, tmpChar);
 		}
 		bitTest <<= 1;
 	    }
 	}
-    }
-    else
-    {
-	strcat(resSpec, "");
     }
     XrmPutLineResource(smBase, resSpec);
 
@@ -2186,32 +2100,19 @@ PrintPointerMapping(
         int numButton )
 {
     int		i, numLoops;
-    char	tmpChar[20];
-    
-    strcpy(resSpec, SM_RESOURCE_CLASS);
-    strcat(resSpec, "*");
-    strcat(resSpec, SmCbuttonMap);
-    strcat(resSpec, ":");
+
+    if (!StartResSpec(SmCbuttonMap))
+    {
+	return(-1);
+    }
 
     numLoops = numButton - 1;
     for(i = 0;i <= numLoops;i++)
     {
-	if((strlen(resSpec) + 5) >= resSize)
+	if (!AppendResSpecNumber((long) buttonRet[i]) ||
+	    (i != numLoops && !AppendResSpec(",")))
 	{
-	    resSize += 5000;
-	    resSpec = (char *) SM_REALLOC(resSpec, resSize * sizeof(char));
-	    if (resSpec==nullptr)
-	    {
-		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
-		return(-1);
-	    }
-	}
-	    
-	sprintf(tmpChar, "%d",buttonRet[i]);
-	strcat(resSpec, tmpChar);
-	if(i != numLoops)
-	{
-	    strcat(resSpec, ",");
+	    return(-1);
 	}
 	XrmPutLineResource(smBase, resSpec);
     }

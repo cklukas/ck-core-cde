@@ -289,7 +289,7 @@ InitializeDtcolor(
     if(colorSrv.TypeOfMonitor[0] != XmCO_BLACK_WHITE)
     {
        int chipnum = colorSrv.TypeOfMonitor[0] == XmCO_HIGH_COLOR ? 4 : 1;
-       sprintf(xrdb_string,
+       snprintf(xrdb_string, sizeof xrdb_string,
                    "*background: #%04X%04X%04X\n*foreground: #%04X%04X%04X\n",
                       colorSrv.pCurrentPalette[0]->color[chipnum].bg.red,
                       colorSrv.pCurrentPalette[0]->color[chipnum].bg.green,
@@ -306,12 +306,12 @@ InitializeDtcolor(
        if(strcmp(colorSrv.pCurrentPalette[0]->name, W_O_B) == 0 ||
           strcmp(colorSrv.pCurrentPalette[0]->name, B_ONLY) == 0)
        {
-          sprintf(xrdb_string,
+          snprintf(xrdb_string, sizeof xrdb_string,
                    "*background: #000000000000\n*foreground: #FFFFFFFFFFFF\n");
        }
        else
        {
-          sprintf(xrdb_string,
+          snprintf(xrdb_string, sizeof xrdb_string,
                    "*background: #FFFFFFFFFFFF\n*foreground: #000000000000\n");
        }
     }
@@ -623,8 +623,8 @@ CheckMonitor(
                *token1 = '\0';
            colorSrv.pCurrentPalette[screen_number]->name = 
                (char *)SRV_MALLOC(strlen(tmpPalette) + 1);
-           strcpy(colorSrv.pCurrentPalette[screen_number]->name,
-                  (char *) tmpPalette);
+           memcpy(colorSrv.pCurrentPalette[screen_number]->name, tmpPalette,
+                  strlen(tmpPalette) + 1);
            colorSrv.pCurrentPalette[screen_number]->converted = nullptr;
        }
 
@@ -676,7 +676,11 @@ convert_pixel_set(
   int i;
   char *converted;
   char *p;
+  char *end;
   int colormappingindex = 0;
+  /* the monitor type, and five pixel values with separators per color */
+  const size_t size = 2 * sizeof(int) + 2 +
+      NUM_OF_COLORS * 5 * (2 * sizeof(unsigned long) + 1) + 1;
 
   const int colormapping [4][XmCO_MAX_NUM_COLORS] = {
     {0, 1, 2, 3, 4, 5, 6, 7}, /* XmCO_HIGH_COLOR */
@@ -702,14 +706,15 @@ convert_pixel_set(
     case XmCO_BLACK_WHITE:  colormappingindex = 3; break;
   }
 
-  p = converted = (char *)SRV_MALLOC(400);
+  p = converted = (char *)SRV_MALLOC(size);
+  end = converted + size;
 
   /* lead the string with the type of monitor */
-  p += sprintf(p, "%x_", typeOfMonitor);
+  p += snprintf(p, end - p, "%x_", typeOfMonitor);
 
   for (i = 0; i < NUM_OF_COLORS; i++)
   {
-    p += sprintf (p, "%lx_%lx_%lx_%lx_%lx_",
+    p += snprintf (p, end - p, "%lx_%lx_%lx_%lx_%lx_",
                   color[colormapping[colormappingindex][i]].bg.pixel,
                   color[colormapping[colormappingindex][i]].fg.pixel,
                   color[colormapping[colormappingindex][i]].ts.pixel,
@@ -739,6 +744,7 @@ convert_selection(
   char pixels[50];
   int i, screen_number = 0;
   char *temp;
+  size_t tempSize;
   char *str_type_return;
   XrmValue value_return;
   XrmValue    cvt_value;
@@ -783,8 +789,10 @@ convert_selection(
     /* wants to know ColorUse, ShadowPixmaps, ForegroundColor,
        and DynamicColor */
      *type   = XA_STRING;
-     temp = (char *)SRV_MALLOC(20);
-     sprintf (temp, "%x_%x_%x_%x", colorSrv.TypeOfMonitor[screen_number],
+     /* four values of at most 2 * sizeof(int) digits and three separators */
+     tempSize = 4 * 2 * sizeof(int) + 3 + 1;
+     temp = (char *)SRV_MALLOC(tempSize);
+     snprintf (temp, tempSize, "%x_%x_%x_%x", colorSrv.TypeOfMonitor[screen_number],
                                 colorSrv.UsePixmaps[screen_number],
                                 colorSrv.FgColor[screen_number],
                                 colorSrv.DynamicColor[screen_number]);
@@ -1169,6 +1177,7 @@ AllocReadWrite(
         int numOfPixels )
 {
    char *tmpStr;
+   size_t tmpStrSize;
    unsigned long *pixels;
    unsigned long plane_mask;
    int status;
@@ -1189,8 +1198,9 @@ AllocReadWrite(
        numOfPixels = FindMaximumDefault(dpy, screen_number);
        if(numOfPixels == 0)
        {
-            tmpStr = (char *)SRV_MALLOC(strlen(MSG3) + 6);
-            sprintf(tmpStr,"%s%d", MSG3, screen_number);
+            tmpStrSize = strlen(MSG3) + 6;
+            tmpStr = (char *)SRV_MALLOC(tmpStrSize);
+            snprintf(tmpStr, tmpStrSize, "%s%d", MSG3, screen_number);
             _DtSimpleError(XmSCOLOR_SRV_NAME, DtWarning, nullptr, tmpStr, nullptr);
             SRV_FREE(tmpStr);
             return(False);
@@ -1454,14 +1464,16 @@ SetDefaults(
       if ((visual->class == GrayScale) || (visual->class == StaticGray))
       {
           pColorSrvRsrc.ColorPalette =
-                XtMalloc(strlen(DEFAULT_GRAYSCALE_PALETTE)+1);
-          strcpy(pColorSrvRsrc.ColorPalette, DEFAULT_GRAYSCALE_PALETTE);
+                XtMalloc(sizeof(DEFAULT_GRAYSCALE_PALETTE));
+          memcpy(pColorSrvRsrc.ColorPalette, DEFAULT_GRAYSCALE_PALETTE,
+                 sizeof(DEFAULT_GRAYSCALE_PALETTE));
       }
       else
       {
           pColorSrvRsrc.ColorPalette =
-                XtMalloc(strlen(DEFAULT_COLOR_PALETTE)+1);
-          strcpy(pColorSrvRsrc.ColorPalette, DEFAULT_COLOR_PALETTE);
+                XtMalloc(sizeof(DEFAULT_COLOR_PALETTE));
+          memcpy(pColorSrvRsrc.ColorPalette, DEFAULT_COLOR_PALETTE,
+                 sizeof(DEFAULT_COLOR_PALETTE));
       }
    }
 

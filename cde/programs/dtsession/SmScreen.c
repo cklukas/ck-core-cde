@@ -265,7 +265,7 @@ SmSaverParseSaverList(
      while(token != nullptr)
      {
        pstruct->saver[pstruct->count] = p;
-       strcpy(pstruct->saver[pstruct->count], token);
+       memcpy(pstruct->saver[pstruct->count], token, strlen(token) + 1);
        p += strlen(token) + 1;
        token = strtok(nullptr, tokenSep);
        pstruct->count++;
