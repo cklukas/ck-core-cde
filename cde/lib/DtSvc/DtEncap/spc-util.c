@@ -192,14 +192,21 @@ void SPC_Conditional_Packet_Handler(void      * UNUSED_PARM(client_data),
 }
 
 /*----------------------------------------------------------------------+*/
-int sprintf_len (XeString s, XeString format, ...)
+int sprintf_len (XeString s, size_t size, XeString format, ...)
 /*----------------------------------------------------------------------+*/
 {
   va_list ap;
+  int n;
 
+  if (s == nullptr || size == 0)
+    return(0);
+  *s = XeChar_NULL;
   va_start(ap, format);
-  if (s) *s = XeChar_NULL;
-  vsprintf(s, format, ap);
+  n = vsnprintf(s, size, format, ap);
+  va_end(ap);
+  if (n < 0)
+    *s = XeChar_NULL;
+  /* The text is cut to fit; the result is the length actually stored. */
   return(strlen(s));
 }
 
@@ -240,8 +247,8 @@ Boolean _path_search (XeString path, XeString filename, path_search_predicate p)
   XeString path_rest, next_colon=nullptr;
   XeChar buffer[MAXPATHLEN+1];
   XeChar path_component[MAXPATHLEN+1];
-  int path_component_len;
-  int filename_len;
+  size_t path_component_len;
+  size_t filename_len;
   int component_separator=(int)':';  /* this is here because strchr takes an in */
   
   if(!filename)
@@ -254,10 +261,9 @@ Boolean _path_search (XeString path, XeString filename, path_search_predicate p)
   if(!path)
     path=getenv("PATH");
 
-  for( (path_rest=path ,
-	next_colon=strchr(path_rest, component_separator));
-      path_rest && *path_rest;
-      next_colon=strchr(path_rest, component_separator)) {
+  path_rest = path;
+  while(path_rest && *path_rest) {
+    next_colon=strchr(path_rest, component_separator);
     
     /*
      ** Copy path component into buffer
@@ -265,18 +271,31 @@ Boolean _path_search (XeString path, XeString filename, path_search_predicate p)
     
     if(next_colon) { /* found colon */
       path_component_len = next_colon-path_rest;
-      strncpy(buffer, path_rest, path_component_len);
+    } else {         /* no colon */
+      path_component_len = strlen(path_rest);
+    }
+
+    if(path_component_len < sizeof buffer) {
+      memcpy(buffer, path_rest, path_component_len);
       buffer[path_component_len]='\0';
+    } else {
+      /* a component that cannot fit in a path is skipped */
+      buffer[0] = '\0';
+      path_component_len = sizeof buffer;
+    }
+
+    if(next_colon) {
       path_rest=next_colon+1;
       if(!*path_rest)
 	/* We've seen a ':' at the end of the string.  Make path_rest be "."
 	   next go-round */
 	path_rest=".";
-    } else {         /* no colon */
-      path_component_len = strlen(path_rest);
-      strcpy(buffer, path_rest);
+    } else {
       path_rest=nullptr;
     }
+
+    if(path_component_len >= sizeof buffer)
+      continue;
 
     /*
      ** if path component is NULL, use default ('.');
@@ -285,6 +304,7 @@ Boolean _path_search (XeString path, XeString filename, path_search_predicate p)
     if(!buffer[0]) {
       buffer[0] = '.';
       buffer[1] = '\0';
+      path_component_len = 1;
     }
     
     /*
@@ -292,10 +312,9 @@ Boolean _path_search (XeString path, XeString filename, path_search_predicate p)
      */
 
     if((path_component_len + filename_len + 1) < MAXPATHLEN) {
-      path_component[0]=0;
-      strcat(path_component, buffer);
-      strcat(buffer, "/");
-      strcat(buffer, filename);
+      memcpy(path_component, buffer, path_component_len + 1);
+      memcpy(buffer + path_component_len, "/", 1);
+      memcpy(buffer + path_component_len + 1, filename, filename_len + 1);
       
       /*
        ** Check this file.  If the predicate returns true, we return true.

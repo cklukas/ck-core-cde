@@ -181,9 +181,10 @@ SPC_Initialize(void)
   }
 
   if(home=getenv("HOME")) {
-    spc_user_environment_file=(XeString) XeMalloc(strlen(home)+
-		strlen(SPCD_ENV_HOME_DIRECTORY)+strlen(SPCD_ENV_FILE)+3);
-    sprintf(spc_user_environment_file, "%s/%s/%s", 
+    size_t size = strlen(home)+
+		strlen(SPCD_ENV_HOME_DIRECTORY)+strlen(SPCD_ENV_FILE)+3;
+    spc_user_environment_file=(XeString) XeMalloc(size);
+    snprintf(spc_user_environment_file, size, "%s/%s/%s", 
 	    home, SPCD_ENV_HOME_DIRECTORY, SPCD_ENV_FILE);
   }
   

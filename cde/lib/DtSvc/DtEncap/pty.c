@@ -156,6 +156,24 @@ static XeChar *hexdigits = "0123456789abcdef";
  * Routines for opening pty master/slave devices
  */
 
+/* Wire names live in PTY_NAMLEN byte buffers; getptypair() appends two
+   characters to a prefix. */
+_Static_assert(sizeof MPREFIX_1 + 2 <= PTY_NAMLEN, "pty prefix too long");
+_Static_assert(sizeof SPREFIX_1 + 2 <= PTY_NAMLEN, "pty prefix too long");
+_Static_assert(sizeof MPREFIX_2 + 2 <= PTY_NAMLEN, "pty prefix too long");
+_Static_assert(sizeof SPREFIX_2 + 2 <= PTY_NAMLEN, "pty prefix too long");
+
+/* Copy a device name into a wire name buffer; FALSE if it does not fit. */
+static int set_wire_name(XeString dest, const char *name)
+{
+  size_t len = strlen(name);
+
+  if (len >= PTY_NAMLEN)
+    return FALSE;
+  memcpy(dest, name, len + 1);
+  return TRUE;
+}
+
 #ifdef HAVE_PTMS
 
 /*----------------------------------------------------------------------+*/
@@ -165,7 +183,8 @@ static int getspec1170ptypair(Wire *wire)
   char *slaveName;
   struct sigaction newAction, oldAction;
 
-  strcpy(wire->master_name, MASTER_PATH);
+  if (!set_wire_name(wire->master_name, MASTER_PATH))
+    return FALSE;
 
   if ((wire->fd[MASTER_SIDE] = open(wire->master_name, O_RDWR)) < OK)
   {
@@ -203,7 +222,11 @@ static int getspec1170ptypair(Wire *wire)
   }
 
   /* we have opened a master with a slave we can access */
-  strcpy(wire->slave_name, slaveName);
+  if (!set_wire_name(wire->slave_name, slaveName))
+  {
+    close(wire->fd[MASTER_SIDE]);
+    return FALSE;
+  }
   return TRUE;
 }
 
@@ -288,13 +311,13 @@ static int initpty(Wire *wire)
 #endif
   {
     /* Start with convention 1 */
-    strcpy(wire->master_name, MPREFIX_1);
-    strcpy(wire->slave_name, SPREFIX_1);
+    set_wire_name(wire->master_name, MPREFIX_1);
+    set_wire_name(wire->slave_name, SPREFIX_1);
 
     if (!getptypair(wire)) {
       /* Cannot get that pair, so try convention 2 */
-      strcpy(wire->master_name, MPREFIX_2);
-      strcpy(wire->slave_name, SPREFIX_2);
+      set_wire_name(wire->master_name, MPREFIX_2);
+      set_wire_name(wire->slave_name, SPREFIX_2);
       if (!getptypair(wire)) {
 	/* No available pty's ?? */
 	wire->master_name[0] = wire->slave_name[0] = (XeChar)'\0';

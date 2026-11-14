@@ -174,27 +174,28 @@ static char * get_tmp_dir (
 	void)
 {
    char			*dir;
+   size_t		size;
    _Xgetpwparams	pwd_buf;
    struct passwd *	pwd_ret;
 
    if ((pwd_ret = _XGetpwuid(getuid(), pwd_buf)) == nullptr)
       return (nullptr);
 
-   dir = malloc (strlen (pwd_ret->pw_dir) +
-		 strlen (SPCD_ENV_HOME_DIRECTORY) + 8);
+   size = strlen (pwd_ret->pw_dir) + strlen (SPCD_ENV_HOME_DIRECTORY) + 8;
+   dir = malloc (size);
 
    if (!dir)
       return (nullptr);
 
-   (void) sprintf (dir, "%s/%s/tmp", pwd_ret->pw_dir, SPCD_ENV_HOME_DIRECTORY);
+   (void) snprintf (dir, size, "%s/%s/tmp", pwd_ret->pw_dir, SPCD_ENV_HOME_DIRECTORY);
    if (is_dir_usable (dir))
       return (dir);
 
-   (void) sprintf (dir, "%s/%s", pwd_ret->pw_dir, SPCD_ENV_HOME_DIRECTORY);
+   (void) snprintf (dir, size, "%s/%s", pwd_ret->pw_dir, SPCD_ENV_HOME_DIRECTORY);
    if (is_dir_usable (dir))
       return (dir);
 
-   (void) sprintf (dir, "%s", pwd_ret->pw_dir);
+   (void) snprintf (dir, size, "%s", pwd_ret->pw_dir);
    if (is_dir_usable (dir))
       return (dir);
 

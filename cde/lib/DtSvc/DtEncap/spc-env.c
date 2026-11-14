@@ -271,7 +271,7 @@ XeString *SPC_Create_Default_Envp(XeString *old_envp)
    *  Should we pick a default value for LANG (e.g. "C")?
    *  For now we ignore it if it is not already set.
    */
-  if ((envVar = getenv("LANG")) != (XeString)NULL)
+  if ((envVar = getenv("LANG")) != (XeString)nullptr)
   {
     XeChar *langBuf;
 
@@ -347,13 +347,15 @@ XeString *SPC_Fixup_Environment(XeString *envp,
       XeChar *dispBuf = nullptr;
       XeString screenptr;
       XeChar null=XeChar_NULL;
+      size_t dispSize;
 
-      dispBuf =
-	(XeChar*) malloc(MAXHOSTNAMELEN + sizeof((XeString)"DISPLAY=:0.0") + 1);
+      screenptr=strchr(disp, Colon);
+      dispSize = sizeof "DISPLAY=" + strlen(official_hostname) +
+		 strlen(screenptr ? screenptr : &null);
+      dispBuf = (XeChar*) malloc(dispSize);
       if (dispBuf)
       {
-          screenptr=strchr(disp, Colon);
-          sprintf(dispBuf, "DISPLAY=%s%s",
+          snprintf(dispBuf, dispSize, "DISPLAY=%s%s",
 	          official_hostname,
 	          screenptr ? screenptr : &null);
 
@@ -370,7 +372,7 @@ XeString *SPC_Fixup_Environment(XeString *envp,
       if ((langBuf = (XeChar *)malloc((strlen(myLang) + 6) * sizeof(XeChar)))
 		      != (XeChar *)nullptr)
       {
-        sprintf(langBuf, "LANG=%s", myLang);
+        snprintf(langBuf, strlen(myLang) + 6, "LANG=%s", myLang);
         envp = SPC_Putenv(langBuf, envp);
         free(langBuf);
       }

@@ -124,16 +124,29 @@ int main(void)
     resolve_variable_reference(&s);
     assert(strcmp(s, "CKT_D=/base/bar") == 0);
 
-    /*
-     * The working buffer cannot be allocated: the line is exported as it is,
-     * unexpanded, and nothing is written through a null pointer.
-     */
-    arm_malloc(1);
-    orig = s = own("CKT_E=$CKT_BASE/foo");
-    resolve_variable_reference(&s);
-    assert(malloc_calls == 1 && realloc_calls == 0);
-    assert(s == orig && strcmp(s, "CKT_E=$CKT_BASE/foo") == 0);
-    assert(strcmp(getenv("CKT_E"), "$CKT_BASE/foo") == 0);
+    /* A value longer than any fixed working buffer is expanded whole. */
+    {
+        char big[5001], name[301], expect[5100], line[400];
+
+        memset(big, 'x', sizeof big - 1);
+        big[sizeof big - 1] = '\0';
+        setenv("CKT_BIG", big, 1);
+        arm(0);
+        s = own("CKT_G=a$CKT_BIG$CKT_BASE");
+        resolve_variable_reference(&s);
+        snprintf(expect, sizeof expect, "CKT_G=a%s/base", big);
+        assert(strcmp(s, expect) == 0);
+        assert(realloc_calls == 2);
+
+        /* A name longer than the name buffer is left in place. */
+        memset(name, 'N', sizeof name - 1);
+        name[sizeof name - 1] = '\0';
+        snprintf(line, sizeof line, "CKT_H=$%s/x", name);
+        s = own(line);
+        resolve_variable_reference(&s);
+        assert(strcmp(s, line) == 0);
+        assert(realloc_calls == 2);
+    }
 
     /* A removal that cannot allocate its pattern leaves the variable alone. */
     setenv("CKT_F", "keep", 1);

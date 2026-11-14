@@ -118,16 +118,16 @@ Xe_new_symtab(unsigned int  hashsize)
     t->list     = (XeSymtabList *)XeMalloc( sizeof( XeSymtabList ) * hashsize );
    
     for (i = 0; i < hashsize; i++)
-	t->list[i] = (XeSymtabList)NULL;
+	t->list[i] = (XeSymtabList)nullptr;
 
     t->curr_list = XE_END_OF_HASH_TABLE;
     t->curr_hash = 0;
 
     Xe_set_sym_fns(t,
-		   (XeSymFn_cmp)NULL,
-		   (XeSymFn_init)NULL,
-		   (XeSymFn_clean)NULL,
-		   (XeSymFn_hash)NULL);
+		   (XeSymFn_cmp)nullptr,
+		   (XeSymFn_init)nullptr,
+		   (XeSymFn_clean)nullptr,
+		   (XeSymFn_hash)nullptr);
     
     /* If not a power of two, user better have a hash function   */
     /* that handles that.  Install hash function trap so that if */
@@ -220,8 +220,9 @@ make_sym(XeString name)
     XeSymbol sym = Xe_make_struct(_XeSymbol);
     
     /* XeMalloc ends the process when memory is exhausted, as for the struct. */
-    sym->name  = (XeString) XeMalloc( strlen( name ) + 1 );
-    strcpy( sym->name, name );
+    size_t name_size = strlen( name ) + 1;
+    sym->name  = (XeString) XeMalloc( name_size );
+    memcpy( sym->name, name, name_size );
     sym->value = (void*)nullptr;
     return sym;
 }
@@ -289,7 +290,7 @@ intern_something(XeSymTable   t,
    /* There was no match.  We need to create an entry in the hash table. */
    /* ------------------------------------------------------------------ */
    l = (XeSymtabList) XeMalloc( sizeof(struct _XeSymtabList) );
-   l->rest = (XeSymtabList)NULL;
+   l->rest = (XeSymtabList)nullptr;
    l->data_is_XeSymbol = is_XeSymbol;
    l->data_is_malloc_mem = FALSE;
    
@@ -364,7 +365,7 @@ XeSymbol
 Xe_intern(XeSymTable t, ConstXeString const name)
 /*------------------------------------------------------------------------+*/
 {
-    if (!name) return (XeSymbol)NULL;
+    if (!name) return (XeSymbol)nullptr;
 
     if (!t) t = Xe_default_symtab();
 
@@ -376,7 +377,7 @@ XeSymbol
 Xe_lookup(XeSymTable t, ConstXeString const name)
 /*------------------------------------------------------------------------+*/
 {
-    if (!name) return (XeSymbol)NULL;
+    if (!name) return (XeSymbol)nullptr;
 
     if (!t) t = Xe_default_symtab();
 

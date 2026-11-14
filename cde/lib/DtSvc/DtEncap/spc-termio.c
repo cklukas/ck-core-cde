@@ -398,7 +398,7 @@ static void
 
 	    XeAppendToStringBuffer(buff, cc_array->name);
 	    XeAppendToStringBuffer(buff, SPC_CC_SEP);
-	    sprintf(num, SPC_CC_FORMAT, index);
+	    snprintf(num, sizeof num, SPC_CC_FORMAT, index);
 	    XeAppendToStringBuffer(buff, num);
 	}
 	cc_array++;

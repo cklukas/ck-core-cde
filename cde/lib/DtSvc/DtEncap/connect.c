@@ -65,9 +65,10 @@ static XeString FindDomainHost (XeString host_spec);
 static XeString
 copy_host_name(XeString host_spec)
 {
-   XeString copy = (XeString) XeMalloc(strlen(host_spec) + 1);
+   size_t size = strlen(host_spec) + 1;
+   XeString copy = (XeString) XeMalloc(size);
 
-   strcpy(copy, host_spec);
+   memcpy(copy, host_spec, size);
    return copy;
 }
 static void UnParseFileString (XeString host, XeString path);
@@ -89,20 +90,22 @@ XeCreateContextString(XeString host,
    if ((strequal(directory, (XeString)"")) || (directory == nullptr)){
       if ((strequal(file, (XeString)"")) || (file == nullptr)){
          Xe_release_str(host);
-	 return((XeString) NULL);
+	 return((XeString) nullptr);
       } else {
-	 context_string = XeMalloc (strlen(host) + strlen(file) + 2);
-	 sprintf (context_string, "%s:%s", host, file);
+	 size_t size = strlen(host) + strlen(file) + 2;
+	 context_string = XeMalloc (size);
+	 snprintf (context_string, size, "%s:%s", host, file);
       }
    } else {
       if ((strequal(file, (XeString)"")) || (file == nullptr)){
-	 context_string = XeMalloc(strlen(host) + strlen(directory) + 2);
-	 sprintf (context_string, "%s:%s", host, directory);
+	 size_t size = strlen(host) + strlen(directory) + 2;
+	 context_string = XeMalloc(size);
+	 snprintf (context_string, size, "%s:%s", host, directory);
       }
       else {
-	 context_string = XeMalloc(strlen(host) + strlen(directory) + 
-			  strlen(file) + 3);
-	 sprintf (context_string, "%s:%s/%s", host, directory, file);
+	 size_t size = strlen(host) + strlen(directory) + strlen(file) + 3;
+	 context_string = XeMalloc(size);
+	 snprintf (context_string, size, "%s:%s/%s", host, directory, file);
       }
    }
    Xe_release_str(host);
@@ -197,9 +200,9 @@ FindDomainHost(XeString host_spec)
       GetDomainName(localhost, MAXHOSTNAMELEN);
       ptr = strstr(localhost, (XeString)"."); /* points to domain name if one exists */
       if (ptr) {
-	 host = Xe_make_ntype(strlen(host_spec)+strlen(ptr)+1, XeChar);
-	 strcpy(host, host_spec);
-	 strcat(host, ptr);
+	 size_t size = strlen(host_spec) + strlen(ptr) + 1;
+	 host = Xe_make_ntype(size, XeChar);
+	 snprintf(host, size, "%s%s", host_spec, ptr);
       }
       else
 	 host = copy_host_name(host_spec);
@@ -407,13 +410,29 @@ copying_putenv(char *env)
    _DtSvcProcessUnlock();
 }
 
+/* Publish PWD for later cache use; a path that cannot be read is skipped. */
+static void
+set_pwd_env(const char *path)
+{
+   size_t size;
+   char *env;
+
+   if (path == nullptr)
+      return;
+   size = strlen(path) + sizeof "PWD=";
+   env = XeMalloc(size);
+   snprintf(env, size, "PWD=%s", path);
+   copying_putenv(env);
+   XeFree(env);
+}
+
 /*------------------------------------------------------------------------+*/
 char *
 Xegetcwd(char *buf, int size)
 /*------------------------------------------------------------------------+*/
 {
    Boolean pwd_ok = FALSE;
-   char *env, *current_dir;
+   char *current_dir;
 
    if ((current_dir = getenv("PWD"))) { /* use PWD instead of slow call */
       int s1, s2;
@@ -442,10 +461,7 @@ Xegetcwd(char *buf, int size)
 
    if (!pwd_ok) {
       current_dir = getcwd(buf, size);
-      env = XeMalloc(MAXPATHLEN+10);
-      sprintf(env, "PWD=%s", buf);
-      copying_putenv(env);	/* set PWD if necessary for later cache use */
-      XeFree(env);
+      set_pwd_env(current_dir);	/* set PWD if necessary for later cache use */
    }
    return current_dir;
 }
@@ -457,25 +473,19 @@ Xechdir (const char *path)
 {
    int status;
    char *simple_path = nullptr;
-   char *env;
    char buf[MAXPATHLEN+10];
    if ((status = chdir(path))==0) {
-      env = XeMalloc(MAXPATHLEN+10);
 
       if (path[0] != '/') { /* relative path */
-	 path = getcwd(buf, sizeof buf);
-	 sprintf(env, "PWD=%s", path);
+	 set_pwd_env(getcwd(buf, sizeof buf));
       }
       else {
 	 char *canon_path = pathcollapse(path, nullptr, FALSE);
          /* absolute path */
-         sprintf(env, "PWD=%s", canon_path);
+         set_pwd_env(canon_path); /* update PWD if directory changed */
 	 /* note XeFree() not appropriate if Xemalloc not used */
          free(canon_path); 
       }
-      
-      copying_putenv(env); /* update PWD if directory changed */
-      XeFree(env);
    }
    return status;
 }

@@ -67,20 +67,12 @@ ExpandStringBuffer(XeStringBuffer buffer)
    int new_size = buffer->size + buffer->increment;
    XeString new_string = Xe_make_ntype(new_size, XeChar);
 
-#  if DEBUG >= 3
-      sprintf(debug_string, "expanding string buffer. current size is: %d", buffer->size);
-      print_debug_info(3, debug_string);
-#  endif
 
    memcpy(new_string, buffer->buffer, buffer->last_char + 1);
    XeFree(buffer->buffer);
    buffer->size = new_size;
    buffer->buffer = new_string;
    buffer->increment += (buffer->increment % EXPANSION_FACTOR);
-#  if DEBUG >= 3
-      sprintf(debug_string, "new size is: %d", buffer->size);
-      print_debug_info(4, debug_string);
-#  endif
    return(0);
 }
 
@@ -93,10 +85,6 @@ XeAppendToStringBuffer(XeStringBuffer buffer, XeString string)
    XeString buffer_position;  /* so operations are pointer based */
    int i;
    
-#  if DEBUG >= 5
-      sprintf(debug_string, "appending: \"%s\" to: \"%s\"", string, buffer->buffer);
-      print_debug_info(5, debug_string);
-#  endif
 
    if (!(string && string[0])) {
       return(0);
@@ -118,10 +106,6 @@ XeAppendToStringBuffer(XeStringBuffer buffer, XeString string)
    }
    buffer->buffer[i] = (XeChar)'\0';
    buffer->last_char = i;
-#  if DEBUG >= 5
-      sprintf(debug_string, "new string is: \"%s\"", buffer->buffer);
-      print_debug_info(6, debug_string);
-#  endif
    return(0);
 }
 

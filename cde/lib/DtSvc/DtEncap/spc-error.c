@@ -65,7 +65,7 @@ int spc_logfd = 0;
 
 /*------------------------------------------------------------------------+*/
 static XeString
-err_mnemonic(unsigned int errn, char *buff)
+err_mnemonic(unsigned int errn, char *buff, size_t size)
 /*------------------------------------------------------------------------+*/
 {
     /* Since there is currently no standard way to get an err number    */
@@ -135,9 +135,9 @@ err_mnemonic(unsigned int errn, char *buff)
     
 
     if (s)
-	sprintf(buff, "%s (%d)",s,errn);
+	snprintf(buff, size, "%s (%d)",s,errn);
     else
-	sprintf(buff, "(%d)",errn);
+	snprintf(buff, size, "(%d)",errn);
     
     return buff;
 }
@@ -155,7 +155,7 @@ XeString SPC_copy_string(XeString str)
   len=strlen(str);
 
   tmp_str=(XeString)XeMalloc(len+1);
-  strcpy(tmp_str, str);
+  memcpy(tmp_str, str, len+1);
   return(tmp_str);
 }
 
@@ -217,7 +217,7 @@ void SPC_Error (int error, ...)
 	XeString        errmsg;
 	unsigned int    errn = errno;
 
-	errname = err_mnemonic(errn, buff);
+	errname = err_mnemonic(errn, buff, sizeof buff);
 
 	if (!(errmsg = strerror(errn)))
 	   errmsg = (XeString) "unknown";
@@ -257,15 +257,18 @@ SPC_Make_Log_Filename(XeString name,
   /* first build the log file path */
   if (!name || !*name) {
     log_file_path = XeSBTempPath((XeString)"DTSPCD_log");
-    strcpy(spc_logfile, log_file_path);
+    name = log_file_path;
   }
-  else {
-    if (strlen(name) > MAXPATHLEN)
+  if (name == nullptr || strlen(name) > MAXPATHLEN) {
+    if (name != nullptr)
 	_DtSimpleError(XeProgName, XeInternalError, XeString_NULL, 
 		      (XeString)"String too long in DTSPCD_Make_Log_Filename()");
-    
-    strcpy(spc_logfile, name);
+    spc_logfile[0] = '\0';
+    if (log_file_path) XeFree(log_file_path);
+    _DtSvcProcessUnlock();
+    return FALSE;
   }
+  memcpy(spc_logfile, name, strlen(name) + 1);
 
   if (unique) {
     int fd;
@@ -283,7 +286,8 @@ SPC_Make_Log_Filename(XeString name,
       _DtSvcProcessUnlock();
       return FALSE;
     }
-    strcat(spc_logfile, TEMPLATE_EXTENSION);
+    memcpy(spc_logfile + strlen(spc_logfile), TEMPLATE_EXTENSION,
+	   strlen(TEMPLATE_EXTENSION) + 1);
 
     fd = mkstemp(spc_logfile);
     if (fd == -1) {

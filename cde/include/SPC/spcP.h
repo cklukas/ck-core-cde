@@ -545,7 +545,7 @@ int spc_dup2 (int from, int to);
 int SPC_fd_to_connector (SPC_Channel_Ptr channel, int fd);
 XeString *Alloc_Argv (int n);
 void SPC_Conditional_Packet_Handler (void * client_data, int *source, SPCInputId *id);
-int sprintf_len (XeString s, XeString format, ...);
+int sprintf_len (XeString s, size_t size, XeString format, ...);
 typedef Boolean (path_search_predicate)(XeString, XeString, XeString);
 Boolean path_search (XeString path, XeString filename, path_search_predicate p);
 

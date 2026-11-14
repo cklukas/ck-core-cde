@@ -48,15 +48,15 @@ XeSBTempPath(XeString suffix)
 {
     XeString dir   = (XeString) CDE_LOGFILES_TOP;
     XeString path;
+    size_t size;
 
     if (!suffix || !*suffix)
 	return strdup(dir);
 
-    path = (XeString)XeMalloc(strlen(dir) + strlen(suffix) + 2 );
+    size = strlen(dir) + strlen(suffix) + 2;
+    path = (XeString)XeMalloc(size);
 
-    strcpy(path, dir);
-    strcat(path, "/");
-    strcat(path, suffix);
+    snprintf(path, size, "%s/%s", dir, suffix);
 
     return path;
 }

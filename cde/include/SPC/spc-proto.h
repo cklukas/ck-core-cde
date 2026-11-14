@@ -132,11 +132,11 @@
 #define PDEND(_pdata) (PDRP(_pdata) + (_pdata)->len + 1)
 
 #define WRITE_INT(pdata, val)\
-  sprintf_len(PDRP(pdata), (XeString)"%x", val)
+  sprintf_len(PDRP(pdata), MAXPAYLOADLEN + 1, (XeString)"%x", val)
 #define READ_INT(pdata, val)    sscanf(PDRP(pdata),  (XeString)"%x", &val)
 
 #define WRITE_STRING(pdata, name)\
-  sprintf_len(PDRP(pdata), (XeString)"%s", name)
+  sprintf_len(PDRP(pdata), MAXPAYLOADLEN + 1, (XeString)"%s", name)
 #define READ_STRING_NO_COPY(pdata, name)   (name = PDRP(pdata))
 
 #define WRITE_ABORT             WRITE_INT
@@ -163,7 +163,7 @@
   sscan_register_data(PDRP(pdata), PDEND(pdata), &name, &passwd, &proto_rev, &hostinfo)
 
 #define WRITE_REPLY(pdata, val, err)\
-  sprintf_len(PDRP(pdata), (XeString)"%x %x", val, err)
+  sprintf_len(PDRP(pdata), MAXPAYLOADLEN + 1, (XeString)"%x %x", val, err)
 #define READ_REPLY(pdata, val, err)\
   sscanf(PDRP(pdata),  (XeString)"%x %x", &val, &err)
 
@@ -185,7 +185,7 @@
 			 &path, &dir, &argv, &envp, REQUEST_HEADER_LENGTH)
 
 #define WRITE_ENVIRON_RESET(pdata, numenv) \
-  sprintf_len(PDRP(pdata), (XeString)"%d ", numenv)
+  sprintf_len(PDRP(pdata), MAXPAYLOADLEN + 1, (XeString)"%d ", numenv)
 #define READ_ENVIRON_RESET(pdata, numenv) \
   sscanf(PDRP(pdata), (XeString)"%d ", &numenv)
 
@@ -194,7 +194,7 @@
 
 /* New B.00 protocol requests */
 #define WRITE_TERMIOS(pdata, connector, side, buffer) \
-  sprintf_len(PDRP(pdata), (XeString)"%d %d %s", connector, side, buffer)
+  sprintf_len(PDRP(pdata), MAXPAYLOADLEN + 1, (XeString)"%d %d %s", connector, side, buffer)
 /* READ_TERMIOS is SPC_Read_Termios_Request(): the encoded string has to be
    bounded by the caller's buffer, which a scanf format cannot express here. */
   
@@ -202,7 +202,7 @@
    REQUEST_HEADER_LENGTH */
 
 #define WRITE_HEADER(pdata, cid, type, len, seq) \
-  sprintf_len(pdata->data, (XeString)"%08x%02x%04x%04x", cid, type, len, seq)
+  sprintf_len(pdata->data, REQUEST_HEADER_LENGTH, (XeString)"%08x%02x%04x%04x", cid, type, len, seq)
 #define READ_HEADER(pdata, cid, type, len, seq) \
   sscanf(pdata->data, (XeString)"%8x%2x%4x%4x", cid, type, len, seq)
 

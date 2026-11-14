@@ -258,12 +258,17 @@ SPC_Connection_Ptr SPC_Make_Connection(XeString hostname)
     return(conn);
   
   /* Not found, so make one */
+
+  if(hostname && strlen(hostname) >= sizeof(conn->hostname)) {
+    SPC_Error(SPC_Arg_Too_Long, hostname, MAXHOSTNAMELEN);
+    return(SPC_ERROR);
+  }
   
   if((conn = SPC_Alloc_Connection())==SPC_ERROR)
     return(SPC_ERROR);
 
   if(hostname)
-    strcpy(conn->hostname, hostname);
+    memcpy(conn->hostname, hostname, strlen(hostname) + 1);
   
   SPC_Add_Connection(conn);
   return(conn);
@@ -1456,9 +1461,9 @@ int sprint_counted_string(XeString buf,
 #define ERRBUFLEN 100
   char errbuf[ERRBUFLEN];
 
-  len=sprintf_len(bufptr, (XeString)"%x ", count)+1;
+  len=snprintf(bufptr, (limit > 0) ? limit : 0, "%x ", count)+1;
   if(len>limit) {
-    sprintf(errbuf, "(%d chars), max. length is %d", len, orig_limit);
+    snprintf(errbuf, ERRBUFLEN, "(%d chars), max. length is %d", len, orig_limit);
     SPC_Error(SPC_Arg_Too_Long,
 	      bufptr,
 	      errbuf);
@@ -1474,13 +1479,13 @@ int sprint_counted_string(XeString buf,
       len = 1;
 
     if(len>limit) {
-      sprintf(errbuf, "(%d chars), max. length is %d", len, orig_limit);
+      snprintf(errbuf, ERRBUFLEN, "(%d chars), max. length is %d", len, orig_limit);
       SPC_Error(SPC_Arg_Too_Long,
 		*vect,
 		errbuf);
       return(SPC_ERROR);
     }
-    sprintf(bufptr, "%s", *vect ? *vect : "");
+    memcpy(bufptr, *vect ? *vect : "", len);
     bufptr += len;
     limit  -= len;
   }
@@ -1955,12 +1960,12 @@ XeString SPC_LocalHostinfo(void)
 		    strlen(name.release) +
 		    strlen(name.machine) + 4;
 	    s = (XeString) XeMalloc(s_len * sizeof(XeChar));
-	    sprintf(s, "%s:%s:%s:%s", name.nodename, name.sysname, name.release, name.machine);
+	    snprintf(s, s_len, "%s:%s:%s:%s", name.nodename, name.sysname, name.release, name.machine);
 	}
 	else {
 	    s_len = 4 * strlen(UNK_TOKEN) + 4;
 	    s = (XeString) XeMalloc(s_len * sizeof(XeChar));
-	    sprintf(s, "%s:%s:%s:%s", UNK_TOKEN, UNK_TOKEN, UNK_TOKEN, UNK_TOKEN);
+	    snprintf(s, s_len, "%s:%s:%s:%s", UNK_TOKEN, UNK_TOKEN, UNK_TOKEN, UNK_TOKEN);
 	}
     }
 
@@ -2275,8 +2280,8 @@ static int SPC_Send_B00_Spawn(SPC_Connection_Ptr connection,
     return(SPC_ERROR);
   }
 
-  sprintf(argv_buf, "%d", num_argv);
-  sprintf(envp_buf, "%d", num_envp);
+  snprintf(argv_buf, sizeof argv_buf, "%d", num_argv);
+  snprintf(envp_buf, sizeof envp_buf, "%d", num_envp);
   
   num_elts=0;
   merged_ptr[num_elts++] = path;

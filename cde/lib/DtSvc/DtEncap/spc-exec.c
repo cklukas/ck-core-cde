@@ -192,32 +192,30 @@ SPC_MakeSystemCommand(SPC_Channel_Ptr channel)
 
   argv=Alloc_Argv(4);
 
-  newargtwo[argtwolen]=0;
-
   /* copy path into newargtwo */
-  
-  strncat(newargtwo, channel->path, _POSIX_ARG_MAX-1);
-  strcat(newargtwo, (XeString)" ");
-  argtwolen=strlen(newargtwo);
+
+  tmplen=strlen(channel->path)+1;          /* Room for extra space */
+  if(tmplen>=_POSIX_ARG_MAX-1) {
+    SPC_Free_Envp(argv);
+    SPC_Error(SPC_Arg_Too_Long, channel->path, _POSIX_ARG_MAX);
+    return(SPC_ERROR);
+  }
+  memcpy(newargtwo, channel->path, tmplen-1);
+  newargtwo[tmplen-1]=' ';
+  newargtwo[tmplen]=0;
+  argtwolen=tmplen;
   
   /* copy argv into newargtwo */
   for(tmp_argv=channel->argv; tmp_argv && *tmp_argv; tmp_argv++) {
     tmplen=strlen(*tmp_argv)+1;              /* Room for extra space */
     if((tmplen+argtwolen)<_POSIX_ARG_MAX-1) {
-      strcat(newargtwo, *tmp_argv);
-      strcat(newargtwo, (XeString)" ");
+      memcpy(newargtwo+argtwolen, *tmp_argv, tmplen-1);
+      newargtwo[argtwolen+tmplen-1]=' ';
+      newargtwo[argtwolen+tmplen]=0;
       argtwolen += tmplen;
     } else {
-      XeChar *errbuf;
-
-      errbuf = malloc(sizeof(XeChar) * 100);
-      if (errbuf)
-      {
-        SPC_Free_Envp(argv);
-        sprintf(errbuf,"(%d chars), max. length is %d",tmplen,_POSIX_ARG_MAX);
-        SPC_Error(SPC_Arg_Too_Long, tmp_argv, _POSIX_ARG_MAX);
-	free(errbuf);
-      }
+      SPC_Free_Envp(argv);
+      SPC_Error(SPC_Arg_Too_Long, *tmp_argv, _POSIX_ARG_MAX);
       return(SPC_ERROR);
     }
   }
@@ -763,7 +761,9 @@ static char *get_path_from_context (
    if (context == nullptr)
       return (nullptr);
 
-   (void) strcpy (tmp, context);
+   if (strlen (context) >= sizeof tmp)
+      return (nullptr);
+   (void) memcpy (tmp, context, strlen (context) + 1);
    file = tmp;
 
    if ((pch = (char *) strchr (tmp, ':')) != nullptr) {
@@ -872,7 +872,7 @@ remove_variable(
    if (tmp_var == nullptr)
       /* The variable stays in the environment; the line is consumed. */
       return (0);
-   (void) sprintf (tmp_var, "%s=", pch);
+   (void) snprintf (tmp_var, strlen (pch) + 2, "%s=", pch);
    tmp_len = strlen (tmp_var);
 
    /*
@@ -947,7 +947,6 @@ resolve_variable_reference(
    int		len;
    int		found_brace;
    char		variable[256];
-   char		*buf = nullptr;
    char		*pbeg = *string;
    char		*string_start = *string;
 
@@ -956,13 +955,6 @@ resolve_variable_reference(
 
    pch = pbeg;
    
-   buf = malloc(2048);
-   if (buf == nullptr) {
-      /* Without room to rebuild the line, put it in as it is. */
-      (void) putenv (*string);
-      return;
-   }
-
    while (*pbeg) {
 
       /*
@@ -1071,7 +1063,14 @@ resolve_variable_reference(
        * get its value.  If the variable doesn't exist, leave its
        * name in the string.
        */
-      (void) strncpy (variable, var_start, n);
+      if ((size_t) n >= sizeof variable) {
+	 /*
+	  * No environment variable has a name this long.
+	  */
+	 pbeg = pch;
+	 continue;
+      }
+      (void) memcpy (variable, var_start, n);
       variable[n] = '\0';
 
       if ((value = getenv (variable)) == nullptr) {
@@ -1094,34 +1093,26 @@ resolve_variable_reference(
        * of 'value' and finally, the characters after the environment 
        * variable.
        */
-      if (string_end == string_start)
-	 /*
-	  * There is nothing to prepend before 'value'.
-	  */
-	 buf[0] = '\0';
-      else {
-	 (void) strncpy (buf, string_start, (string_end - string_start));
-	 buf[(string_end - string_start)] = '\0';
-      }
-      (void) strcat (buf, value);
-      len = strlen (buf);
-      if (*pch != '\0')
-	 (void) strcat (buf, pch);
-       
-      /*
-       * Now put 'buf' into 'string'.
-       */
       {
-	 char *grown = realloc (*string, strlen (buf) + 1);
+	 size_t head = (size_t) (string_end - string_start);
+	 size_t tail_off = (size_t) (pch - string_start);
+	 size_t tail_len = strlen (pch);
+	 size_t value_len = strlen (value);
+	 size_t old_size = tail_off + tail_len + 1;
+	 size_t new_size = head + value_len + tail_len + 1;
+	 char *grown = realloc (*string,
+				new_size > old_size ? new_size : old_size);
 
 	 if (grown == nullptr)
 	    /* Keep the value as it was: *string has not been changed. */
 	    break;
 	 *string = grown;
+	 (void) memmove (grown + head + value_len, grown + tail_off,
+			 tail_len + 1);
+	 (void) memcpy (grown + head, value, value_len);
+	 pch = grown + head + value_len;
+	 pbeg = pch;
       }
-      (void) strcpy (*string, buf);
-      pch = *string + len;
-      pbeg = pch;
    }
 
    /*
@@ -1129,5 +1120,4 @@ resolve_variable_reference(
     * be put in the environment.
     */
    (void) putenv (*string);
-   if (buf) free(buf);
 }
