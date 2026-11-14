@@ -6,7 +6,7 @@ TT_VERSION_DEFINE = -DTT_VERSION_STRING=\"$(TT_VERSION)\"
 noinst_LIBRARIES= libisam.a
 
 check_PROGRAMS = check-isam-datconv check-isam-files check-isam-long-width \
-		 check-isam-long-width-cxx
+		 check-isam-long-width-cxx check-isam-oom
 TESTS = $(check_PROGRAMS)
 
 check_isam_datconv_SOURCES = tests/check-isam-datconv.c
@@ -25,7 +25,14 @@ check_isam_long_width_cxx_SOURCES = tests/check-isam-long-width-cxx.cc
 check_isam_long_width_cxx_CPPFLAGS = -I$(srcdir) -I$(srcdir)/tests
 check_isam_long_width_cxx_LDADD = libisam.a
 
-EXTRA_DIST = tests/check-isam-long-width.c tests/check-isam-files.c
+# The allocation helpers of the library are replaced by a copy of isalloc.c
+# that can be made to fail.
+check_isam_oom_SOURCES = tests/check-isam-oom.c tests/isalloc-inject.c
+check_isam_oom_CPPFLAGS = -I$(srcdir)
+check_isam_oom_LDADD = libisam.a
+
+EXTRA_DIST = tests/check-isam-long-width.c tests/check-isam-files.c \
+	     tests/check-isam-oom.c tests/isalloc-inject.c
 
 libisam_a_CFLAGS = $(TT_VERSION_DEFINE)
 
