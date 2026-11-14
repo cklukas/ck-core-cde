@@ -60,7 +60,7 @@ const char *fnm   /* new file name */
    if ( dbopen ) RETURN( dberr(S_DBOPEN) );
 
    r.ptr = (REN_ENTRY *)ALLOC(&r, sizeof(REN_ENTRY), "r");
-   if ( r.ptr == NULL )
+   if ( r.ptr == nullptr )
       RETURN( dberr(S_NOMEMORY) );
    ll_access(&ren_list);
    if ( ll_append(&ren_list, (CHAR_P *)&r) != S_OKAY ) {
@@ -96,7 +96,7 @@ renfiles(void)
 
    if ( ll_access(&ren_list) ) {
       db_ptr = curr_db_table;		/* Have to save it because of macros */
-      while ((rp = (REN_ENTRY_P *)ll_next(&ren_list)) != NULL) {
+      while ((rp = (REN_ENTRY_P *)ll_next(&ren_list)) != nullptr) {
 	 MEM_LOCK(&rp->ptr->Ren_db_name);
 	 MEM_LOCK(&rp->ptr->File_name);
 	 for (dbt_lc = no_of_dbs, curr_db_table = db_table;

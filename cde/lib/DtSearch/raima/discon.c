@@ -74,8 +74,8 @@ int dbn   /* database number */
    MEM_PTR cmmp;          /* member's member pointer */
    MEM_PTR npmp;          /* next or previous member's member pointer */
    char *orec;            /* ptr to current owner record contents in cache */
-   char *mrec = NULL;     /* ptr to member record contents in cache */
-   char *nprec = NULL;    /* ptr to next or prev record contents in cache */
+   char *mrec = nullptr;     /* ptr to member record contents in cache */
+   char *nprec = nullptr;    /* ptr to next or prev record contents in cache */
    DB_ADDR mdba;          /* db address of member record */
    DB_ADDR npdba;         /* db address of next or previous member */
    int set;               /* set_table entry */
@@ -127,7 +127,7 @@ int dbn   /* database number */
 	 goto quit_a;
       npmp.prev = cmmp.prev;
       if ((r_pmem(set, nprec, (char *)&npmp) != S_OKAY) ||
-	  (dio_write(npdba, NULL, NOPGFREE) != S_OKAY))
+	  (dio_write(npdba, nullptr, NOPGFREE) != S_OKAY))
 	 goto quit_a;
    }
    if ( cmmp.prev == NULL_DBA )
@@ -141,7 +141,7 @@ int dbn   /* database number */
 	 goto quit_a;
       npmp.next = cmmp.next;
       if ((r_pmem(set, nprec, (char *)&npmp) != S_OKAY) ||
-	  (dio_write(npdba, NULL, NOPGFREE) != S_OKAY))
+	  (dio_write(npdba, nullptr, NOPGFREE) != S_OKAY))
 	 goto quit_a;
    }
    /* update membership count */
@@ -149,7 +149,7 @@ int dbn   /* database number */
 
    /* update owner record's set pointer */
    if ((r_pset(set, orec, (char *)&cosp) != S_OKAY) ||
-       (dio_write(*co_ptr, NULL, PGFREE) != S_OKAY))
+       (dio_write(*co_ptr, nullptr, PGFREE) != S_OKAY))
       RETURN( db_status );
 
    /* update current record and current member */
@@ -161,15 +161,15 @@ int dbn   /* database number */
    
    /* update member record */
    if ((r_pmem(set, mrec, (char *)&cmmp) != S_OKAY) ||
-       (dio_write(mdba, NULL, PGFREE) != S_OKAY))
+       (dio_write(mdba, nullptr, PGFREE) != S_OKAY))
       RETURN( db_status );
    RETURN( db_status = *cm_ptr ? S_OKAY : S_EOS );
 
 quit_a:
    stat = db_status;
-   dio_write(mdba, NULL, PGFREE);
+   dio_write(mdba, nullptr, PGFREE);
 quit_b:
-   dio_write(*co_ptr, NULL, PGFREE);
+   dio_write(*co_ptr, nullptr, PGFREE);
    RETURN( db_status = stat );
 }
 /* vpp -nOS2 -dUNIX -nBSD -nVANILLA_BSD -nVMS -nMEMLOCK -nWINDOWS -nFAR_ALLOC -f/usr/users/master/config/nonwin discon.c */

@@ -585,7 +585,7 @@ static int alloc_dict(void)
 								!= S_OKAY ) {
 	 return( db_status );
       }
-   } else set_table = NULL;
+   } else set_table = nullptr;
 
    /* allocate member_table */
    if ( size_mt ) {
@@ -595,7 +595,7 @@ static int alloc_dict(void)
 								!= S_OKAY ) {
 	 return( db_status );
       }
-   } else member_table = NULL;
+   } else member_table = nullptr;
 
    /* allocate sort_table */
    if ( size_srt ) {
@@ -605,7 +605,7 @@ static int alloc_dict(void)
 								!= S_OKAY ) {
 	 return( db_status );
       }
-   } else sort_table = NULL;
+   } else sort_table = nullptr;
 
    /* allocate key_table */
    if ( size_kt ) {
@@ -615,7 +615,7 @@ static int alloc_dict(void)
 								!= S_OKAY ) {
 	 return( db_status );
       }
-   } else key_table = NULL;
+   } else key_table = nullptr;
 
    return( db_status = S_OKAY );
 }
@@ -681,8 +681,8 @@ static int initcurr(void)
       }
    }
    else {
-      curr_own = NULL;
-      curr_mem = NULL;
+      curr_own = nullptr;
+      curr_mem = nullptr;
    }
    curr_db = 0;
    MEM_LOCK(&db_global.Db_table);

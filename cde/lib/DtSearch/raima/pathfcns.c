@@ -164,7 +164,7 @@ char *dbfpath	/* one element from DBFPATH, or NULL for no path */
 
    /* Add only the drive specification and directory component of the
       path supplied in dbname */
-   if ((dbname = remfile(dbname)) != NULL) {
+   if ((dbname = remfile(dbname)) != nullptr) {
       if (strlen(path_str) + strlen(dbname) >= FILENMLEN)
 	 return(db_status = S_NAMELEN);
       strcpy(filespec,dbname);		/* Copy to working space */
@@ -174,7 +174,7 @@ char *dbfpath	/* one element from DBFPATH, or NULL for no path */
    }
 
    /* Now add the path specification from DBFPATH, if defined */
-   if (dbfpath == NULL) return (db_status = S_OKAY);
+   if (dbfpath == nullptr) return (db_status = S_OKAY);
    i = strlen(dbfpath);			/* Make sure it ends with DIRCHAR */
    if (dbfpath[i-1] != DIRCHAR && dbfpath[i-1] != ';') {
       dbfpath[i++] = DIRCHAR;
@@ -209,12 +209,12 @@ int num			/* Element to extract (0 = first) */
    int i;
    char *save;
 
-   if (dbxpath == NULL) return (NULL);
-   if (dbxpath[0] == '\0') return (NULL);	/* NULL string? */
+   if (dbxpath == nullptr) return (nullptr);
+   if (dbxpath[0] == '\0') return (nullptr);	/* NULL string? */
    snprintf(element, sizeof(element), "%s", dbxpath);
 
    /* If there is only one element, always return that */
-   if (strchr(element,';') == NULL) {
+   if (strchr(element,';') == nullptr) {
       i = strlen(element);
       if (element[i-1] != DIRCHAR && element[i-1] != ':') {
 	 element[i++] = DIRCHAR;
@@ -226,9 +226,9 @@ int num			/* Element to extract (0 = first) */
    /* There are multiple elements - return the one requested */
    dbxpath = element - 1;
    for (i=0; i<num; i++)
-      if ((dbxpath = strchr(dbxpath+1,';')) == NULL) return (NULL);
+      if ((dbxpath = strchr(dbxpath+1,';')) == nullptr) return (nullptr);
    dbxpath++;
-   if ((save = strchr(dbxpath+1,';')) != NULL) *save = '\0';
+   if ((save = strchr(dbxpath+1,';')) != nullptr) *save = '\0';
    i = (dbxpath - (char *)element) + strlen((const char *)dbxpath);
    if (element[i-1] != DIRCHAR && element[i-1] != ':') {
       element[i++] = DIRCHAR;
@@ -250,7 +250,7 @@ char *path_str	/* path to test, NULL causes iabs to return FALSE */
 */
    char *path;			/* Points to path w/o drive spec */
 
-   if (path_str == NULL) return (FALSE);
+   if (path_str == nullptr) return (FALSE);
    path = remdrv(path_str);
    if (path[0] != DIRCHAR) return (FALSE);
    return (TRUE);
@@ -270,7 +270,7 @@ char *path_str		/* path to remove drive from */
 */
    char *path;			/* Return value */
 
-   if ((path = strrchr(path_str,':')) == NULL) return (path_str);
+   if ((path = strrchr(path_str,':')) == nullptr) return (path_str);
    return (path+1);
 }
 
@@ -292,10 +292,10 @@ char *path_str		/* Path to remove filename from */
 
    /* There is only a filename if string does not contain a DIRCHAR or
       ':' which separates drive spec from path. */
-   if (path_str == NULL) return (NULL);
+   if (path_str == nullptr) return (nullptr);
    snprintf(dirpath, sizeof(dirpath), "%s", path_str); /* Copy into output string */
-   if ((path_str = strrchr(dirpath,DIRCHAR)) == NULL)
-      if ((path_str = strrchr(dirpath,':')) == NULL) return (NULL);
+   if ((path_str = strrchr(dirpath,DIRCHAR)) == nullptr)
+      if ((path_str = strrchr(dirpath,':')) == nullptr) return (nullptr);
    path_str[1] = '\0';			/* Truncate string */
    return (dirpath);
 }

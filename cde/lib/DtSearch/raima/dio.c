@@ -301,7 +301,7 @@ dio_init(void)
 	 return( db_status );
       }
       if ( page_size > largest_page ) {
-	 if ( (tempbuff = ALLOC(&Tempbuff, page_size, "tempbuff")) == NULL )
+	 if ( (tempbuff = ALLOC(&Tempbuff, page_size, "tempbuff")) == nullptr )
 	    return( dberr(S_NOMEMORY) );
 	 largest_page = page_size;
       }
@@ -387,7 +387,7 @@ cache_init (int pg_cnt, LOOKUP_ENTRY *lu_ptr, PAGE_ENTRY * pg_ptr, int pgsize)
       pg_ptr->modified = FALSE;
       pg_ptr->holdcnt = 0;
       pg_ptr->buff = ALLOC(&pg_ptr->Buff, pgsize, db_avname);
-      if (pg_ptr->buff == NULL) {
+      if (pg_ptr->buff == nullptr) {
 #ifdef DEBUG_DIO
 	 if (debugging_dio_init) {
 		printf (__FILE__"428 cache_init: alloc failed pgsz=%d\n",
@@ -492,8 +492,8 @@ FILE_NO to_file    /* ..to (not thru) file "to_file" */
       else {
 	 if (s_file < e_file) {
 	    /* find range of pages to be cleared */
-	    dio_findpg(s_file, 0L, NULL, NULL, &lu_ptr);
-	    dio_findpg(e_file, 0L, NULL, NULL, &lu2_ptr);
+	    dio_findpg(s_file, 0L, nullptr, nullptr, &lu_ptr);
+	    dio_findpg(e_file, 0L, nullptr, nullptr, &lu2_ptr);
 
 	    last_dblu.file = -1;
 	    last_dblu.pageno = -1L;
@@ -571,7 +571,7 @@ int dio_flush(void)
 	fflush(stdout);
     }
 #endif
-   if ( dbpg_table == NULL ) return( db_status = S_OKAY );
+   if ( dbpg_table == nullptr ) return( db_status = S_OKAY );
 
    for (pgt_lc = db_pgtab_sz, pg_ptr = dbpg_table; --pgt_lc >= 0; ++pg_ptr) {
       if (!pg_ptr->modified) {
@@ -622,7 +622,7 @@ dio_get(F_ADDR page_no, char **page_ptr, int hold)
       if ( dio_pzread(working_file) != S_OKAY )
 	 RETURN( db_status );
 
-   if (dio_findpg(working_file, page_no, dbpg_table, &pg_ptr, NULL) == S_OKAY) {
+   if (dio_findpg(working_file, page_no, dbpg_table, &pg_ptr, nullptr) == S_OKAY) {
       MEM_LOCK(&pg_ptr->Buff);
       *page_ptr = pg_ptr->buff;
       pg_ptr->recently_used = TRUE;
@@ -651,7 +651,7 @@ dio_touch(F_ADDR page_no)
 {
    PAGE_ENTRY *pg_ptr;
 
-   if (dio_findpg(working_file, page_no, dbpg_table, &pg_ptr, NULL) == S_OKAY ) {
+   if (dio_findpg(working_file, page_no, dbpg_table, &pg_ptr, nullptr) == S_OKAY ) {
       pg_ptr->recently_used = TRUE;
       used_files[working_file] = TRUE;
       if ( ! pg_ptr->modified ) {
@@ -699,7 +699,7 @@ dio_read(DB_ADDR dba, char * *recptr, int hold)
 
    us1 = ADDRMASK & dba;
    us2 = (us1 - 1)/file_ptr->ft_slots;
-   if (dio_findpg(file, us2 + 1, dbpg_table, &pg_ptr, NULL) == S_OKAY ) {
+   if (dio_findpg(file, us2 + 1, dbpg_table, &pg_ptr, nullptr) == S_OKAY ) {
       pg_ptr->recently_used = TRUE;
       used_files[file] = TRUE;
       offset = file_ptr->ft_slsize*(int)(us1 - 1 - us2*file_ptr->ft_slots) +
@@ -740,10 +740,10 @@ dio_write(DB_ADDR dba, const char *recptr, int release)
    file_ptr = &file_table[file];
    us1 = ADDRMASK & dba;
    us2 = (us1 - 1)/file_ptr->ft_slots;
-   if (dio_findpg(file, us2 + 1, dbpg_table, &pg_ptr, NULL) == S_OKAY ) {
+   if (dio_findpg(file, us2 + 1, dbpg_table, &pg_ptr, nullptr) == S_OKAY ) {
       pg_ptr->recently_used = TRUE;
       used_files[file] = TRUE;
-      if ( recptr != NULL ) {
+      if ( recptr != nullptr ) {
 	 offset = file_ptr->ft_slsize*(int)(us1 - 1 - us2*file_ptr->ft_slots) +
 								     PGHDRSIZE;
 	 MEM_LOCK(&pg_ptr->Buff);
@@ -778,7 +778,7 @@ dio_release(DB_ADDR dba)
    us1 = ADDRMASK & dba;
    us2 = file_table[file].ft_slots;
    if (dio_findpg(file, ((us1 - 1)/us2) + 1, dbpg_table, &pg_ptr,
-		  NULL) == S_OKAY) {
+		  nullptr) == S_OKAY) {
       if (pg_ptr->holdcnt) {
 	 --pg_ptr->holdcnt;
 	 if ( !pg_ptr->holdcnt && !pg_ptr->modified )
@@ -814,7 +814,7 @@ LOOKUP_ENTRY * *xlu_ptr /* pointer to lookup table slot for found page*/
    long cmp = 0;
    int cnt;
    int lu_slot = 0, l, u;
-   LOOKUP_ENTRY *lu_ptr = NULL, *replu_ptr;
+   LOOKUP_ENTRY *lu_ptr = nullptr, *replu_ptr;
    PAGE_ENTRY *pg_ptr;
    int *lru_ptr;
    int pg_slot;
@@ -822,9 +822,9 @@ LOOKUP_ENTRY * *xlu_ptr /* pointer to lookup table slot for found page*/
 
    /* check if desired page was last one */
    if ((file == last_dblu.file) && (page == last_dblu.pageno)) {
-      if (xlu_ptr != NULL)
+      if (xlu_ptr != nullptr)
          *xlu_ptr = &db_lookup[last_dblu.slot];
-      if (xpg_ptr != NULL)
+      if (xpg_ptr != nullptr)
          *xpg_ptr = &dbpg_table[db_lookup[last_dblu.slot].pg_slot];
       return( db_status = S_OKAY );
    }
@@ -845,9 +845,9 @@ LOOKUP_ENTRY * *xlu_ptr /* pointer to lookup table slot for found page*/
             last_dblu.file = lu_ptr->file;
             last_dblu.pageno = lu_ptr->pageno;
             last_dblu.slot = lu_slot;
-         if (xlu_ptr != NULL)
+         if (xlu_ptr != nullptr)
             *xlu_ptr = lu_ptr;
-         if (xpg_ptr != NULL)
+         if (xpg_ptr != nullptr)
             *xpg_ptr = &pg_table[lu_ptr->pg_slot];
 	 return( db_status = S_OKAY );
       }
@@ -856,7 +856,7 @@ LOOKUP_ENTRY * *xlu_ptr /* pointer to lookup table slot for found page*/
       /* null page table indicates that only a lookup was desired */
       if (cmp > 0)
          ++lu_ptr;
-      if (xlu_ptr != NULL)
+      if (xlu_ptr != nullptr)
          *xlu_ptr = lu_ptr;
       return( db_status = S_NOTFOUND );
    }
@@ -919,9 +919,9 @@ LOOKUP_ENTRY * *xlu_ptr /* pointer to lookup table slot for found page*/
    lu_ptr->pageno = page;
    lu_ptr->pg_slot = pg_slot;
    pg_ptr->lu_slot = lu_slot;
-   if (xlu_ptr != NULL)
+   if (xlu_ptr != nullptr)
       *xlu_ptr = lu_ptr;
-   if (xpg_ptr != NULL)
+   if (xpg_ptr != nullptr)
       *xpg_ptr = pg_ptr;
    last_dblu.file = lu_ptr->file;
    last_dblu.pageno = lu_ptr->pageno;
@@ -1289,7 +1289,7 @@ F_ADDR  loc   /* location to be freed */
       bytecpy(ptr, &recnum, sizeof(INT));
       bytecpy(ptr+sizeof(INT), &pgzero_ptr->pz_dchain, sizeof(F_ADDR));
       pgzero_ptr->pz_dchain = loc;
-      if ( dio_write(dba, NULL, NOPGFREE) != S_OKAY )
+      if ( dio_write(dba, nullptr, NOPGFREE) != S_OKAY )
 	 return( db_status );
    }
    pgzero_ptr->pz_modified = TRUE;

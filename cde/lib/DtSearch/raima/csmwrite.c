@@ -95,7 +95,7 @@ int dbn     /* database number */
    /* Put data into record */
    if ( r_pfld(fld, fld_ptr, recp, data, cm_ptr) != S_OKAY )
       RETURN( db_status );
-   dio_write(*cm_ptr, NULL, PGFREE);
+   dio_write(*cm_ptr, nullptr, PGFREE);
    RETURN( db_status );
 }
 /* vpp -nOS2 -dUNIX -nBSD -nVANILLA_BSD -nVMS -nMEMLOCK -nWINDOWS -nFAR_ALLOC -f/usr/users/master/config/nonwin csmwrite.c */

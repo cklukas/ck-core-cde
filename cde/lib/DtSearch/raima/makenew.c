@@ -71,7 +71,7 @@ d_setkey(long field, const char *fldvalue, int dbn)
       RETURN( dberr(S_NOTKEY) );
 
    ll_access(&sk_list);
-   while ((sk_ptr = (SK_P *)ll_next(&sk_list)) != NULL) {
+   while ((sk_ptr = (SK_P *)ll_next(&sk_list)) != nullptr) {
       if ( sk_ptr->ptr->sk_fld == fld ) {
          MEM_LOCK(&sk_ptr->ptr->sk_val);
 	 if ( fld_ptr->fd_type != CHARACTER || fld_ptr->fd_dim[1] )
@@ -87,7 +87,7 @@ d_setkey(long field, const char *fldvalue, int dbn)
    }
    /* need to allocate a slot for a new fld */
    sk_p.ptr = (struct sk *)ALLOC(&sk_p, sizeof(struct sk), "sk_ptr->ptr");
-   if ( sk_p.ptr == NULL )
+   if ( sk_p.ptr == nullptr )
       RETURN( dberr( S_NOMEMORY ) );
    if ( ll_prepend(&sk_list, (CHAR_P *)&sk_p) != S_OKAY ) {
       RETURN( db_status );
@@ -95,7 +95,7 @@ d_setkey(long field, const char *fldvalue, int dbn)
    sk_p.ptr->sk_fld = fld;
    sk_p.ptr->sk_val.ptr = ALLOC(&sk_p.ptr->sk_val, fld_ptr->fd_len + 1, 
 				   "sk_p.ptr->sk_val.ptr");
-   if ( sk_p.ptr->sk_val.ptr == NULL )
+   if ( sk_p.ptr->sk_val.ptr == nullptr )
       RETURN( dberr( S_NOMEMORY ) );
 
    if ( fld_ptr->fd_type != CHARACTER || fld_ptr->fd_dim[1] )
@@ -119,7 +119,7 @@ int sk_free(void)
    SK_P *sk_ptr;
 
    ll_access(&sk_list);
-   while ((sk_ptr = (SK_P *)ll_next(&sk_list)) != NULL) {
+   while ((sk_ptr = (SK_P *)ll_next(&sk_list)) != nullptr) {
       MEM_UNLOCK(&sk_ptr->ptr->sk_val);
       FREE(&sk_ptr->ptr->sk_val);
    }
@@ -162,10 +162,10 @@ d_makenew(int nrec, int dbn)
       if ((fld_ptr->fd_key == UNIQUE) && !(fld_ptr->fd_flags & OPTKEYMASK)) {
 	 /* locate the key value in the set_key table */
 	 ll_access(&sk_list);
-	 while (((sk_ptr = (SK_P *)ll_next(&sk_list)) != NULL) &&
+	 while (((sk_ptr = (SK_P *)ll_next(&sk_list)) != nullptr) &&
 		(sk_ptr->ptr->sk_fld != fld))
 	    ;				/* NOP */
-	 if (sk_ptr == NULL) {
+	 if (sk_ptr == nullptr) {
 	    ll_deaccess(&sk_list);
 	    RETURN( dberr( S_KEYREQD ) );
 	 }
@@ -206,12 +206,12 @@ d_makenew(int nrec, int dbn)
 	 /* locate the key value in the set_key table */
          ll_access(&sk_list);
 	 sk_ptr = (SK_P *)ll_first(&sk_list);
-	 while (sk_ptr != NULL) {
+	 while (sk_ptr != nullptr) {
 	    if ( sk_ptr->ptr->sk_fld == fld ) {
 	       MEM_LOCK(&sk_ptr->ptr->sk_val);
 	       if ((stat = key_insert(fld, sk_ptr->ptr->sk_val.ptr, db_addr)) 
 								 != S_OKAY) {
-		  dio_write(db_addr, NULL, PGFREE);
+		  dio_write(db_addr, nullptr, PGFREE);
 		  r_delrec( nrec, db_addr );
 	          MEM_UNLOCK(&sk_ptr->ptr->sk_val);
 		  ll_deaccess(&sk_list);
@@ -229,10 +229,10 @@ d_makenew(int nrec, int dbn)
 	    sk_ptr = (SK_P *)ll_next(&sk_list);
 	 }
 	 ll_deaccess(&sk_list);
-	 if ( sk_ptr == NULL ) RETURN( dberr( S_KEYREQD ) );
+	 if ( sk_ptr == nullptr ) RETURN( dberr( S_KEYREQD ) );
       }
    }
-   if ( dio_write(db_addr, NULL, PGFREE) == S_OKAY ) {
+   if ( dio_write(db_addr, nullptr, PGFREE) == S_OKAY ) {
       curr_rec = db_addr;
    }
    RETURN( db_status );

@@ -315,7 +315,7 @@ DB_ADDR *dba         /* database address of located key */
 	 return( dberr( S_SYSERR ) );	/* non-root nodes can't be empty */
 
       /* search node for key */
-      stat = node_search(key_val, ((*dba == NULL_DBA) ? NULL : dba), node,
+      stat = node_search(key_val, ((*dba == NULL_DBA) ? nullptr : dba), node,
 			 &slot, &slot_pos, &child);
       np_ptr->slot = slot;
 
@@ -381,7 +381,7 @@ F_ADDR  *child   /* child ptr of located key */
 )
 {
    int cmp = 0, i = 0, l, u, slot_pos = 0;
-   char *node_slot_ptr = NULL;
+   char *node_slot_ptr = nullptr;
 
    /* perform binary search on node */
    l = 0;
@@ -506,7 +506,7 @@ DB_ADDR *dba   /* db address of scanned record */
 	    return( db_status = S_NOTFOUND );
 	 }
 	 --curkey->level;
-	 node_slot_ptr = NULL;
+	 node_slot_ptr = nullptr;
 	 if (dio_get((--np_ptr)->node, (char * *)&node,
 		     NOPGHOLD) != S_OKAY) {
 	    MEM_UNLOCK(&curkey->Node_path);
@@ -515,7 +515,7 @@ DB_ADDR *dba   /* db address of scanned record */
 	 if (fcn == KEYPREV)
 	    --np_ptr->slot;
       }
-      if (node_slot_ptr == NULL)
+      if (node_slot_ptr == nullptr)
 	 node_slot_ptr = &node->slots[np_ptr->slot*slot_len];
    }
    else do { /* move down to leaf node */

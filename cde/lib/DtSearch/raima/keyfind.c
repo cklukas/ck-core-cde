@@ -75,7 +75,7 @@ int dbn       /* database number */
        (key_init(fld) != S_OKAY))
       RETURN( db_status );
 
-   if ( fldval == NULL )
+   if ( fldval == nullptr )
       key_boundary(KEYFIND, &dba);
    else {
       /* locate record with specified key */

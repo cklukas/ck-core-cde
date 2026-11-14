@@ -107,9 +107,9 @@ char * d_alloc(unsigned b)
 */
 void d_free(CHAR_P *p)
 {
-   if ((p != NULL) && (p->ptr != NULL)) {
+   if ((p != nullptr) && (p->ptr != nullptr)) {
       I_FREE(p);
-      p->ptr = NULL;
+      p->ptr = nullptr;
    }
 }
 
@@ -120,8 +120,8 @@ static int NewInit(LL_P *);
 */
 BOOLEAN ll_access(llist *ll)
 {
-   ll->curr = NULL;
-   return( ll->head.ptr != NULL && ll->tail.ptr != NULL );
+   ll->curr = nullptr;
+   return( ll->head.ptr != nullptr && ll->tail.ptr != nullptr );
 }
 
 /* Appends item to list
@@ -134,7 +134,7 @@ int ll_append(llist *ll, CHAR_P *data)
    if ( NewInit(&item) != S_OKAY ) {
       return( db_status );
    }
-   if ( ll->head.ptr == NULL ) {
+   if ( ll->head.ptr == nullptr ) {
       /* Empty list */
       ll->head = ll->tail = item;
       ll->curr = (LL_P *)&ll->head;
@@ -160,8 +160,8 @@ int ll_append(llist *ll, CHAR_P *data)
 */
 CHAR_P *ll_first(llist *ll)
 {
-   if ( ll->head.ptr == NULL ) {
-      return( NULL );
+   if ( ll->head.ptr == nullptr ) {
+      return( nullptr );
    }
    CurrUnlock(ll);
    ll->curr = (LL_P *)&ll->head;
@@ -178,7 +178,7 @@ void ll_free(llist *ll)
    curr = (LL_P *)&ll->head;
    while ( TRUE ) {
       MEM_LOCK(curr);
-      if ( curr->ptr == NULL )
+      if ( curr->ptr == nullptr )
 	 break;
       bytecpy(&next, &curr->ptr->next, sizeof(LL_P));
       d_free((CHAR_P *)curr);
@@ -195,11 +195,11 @@ CHAR_P *ll_next(llist *ll)
 {
    LL_P *next;
 
-   if ( ll->curr == NULL ) {
+   if ( ll->curr == nullptr ) {
       return( ll_first(ll) );
    }
-   if ( ll->curr->ptr->next.ptr == NULL ) {
-      return( NULL );
+   if ( ll->curr->ptr->next.ptr == nullptr ) {
+      return( nullptr );
    }
    next = &ll->curr->ptr->next;
    CurrUnlock(ll);
@@ -217,7 +217,7 @@ int ll_prepend(llist *ll, CHAR_P *data)
    if ( NewInit(&item) != S_OKAY ) {
       return( db_status );
    }
-   if ( ll->head.ptr == NULL ) {
+   if ( ll->head.ptr == nullptr ) {
       /* Empty list */
       ll->head = ll->tail = item;
       ll->curr = (LL_P *)&ll->head;
@@ -241,7 +241,7 @@ int ll_prepend(llist *ll, CHAR_P *data)
 static int NewInit(LL_P *new)
 {
    new->ptr = (ll_elem *)ALLOC(new, sizeof(ll_elem), "new");
-   if ( new->ptr == NULL )
+   if ( new->ptr == nullptr )
       return( dberr(S_NOMEMORY) );
    byteset(new->ptr, '\0', sizeof(ll_elem));
    MEM_UNLOCK(new);

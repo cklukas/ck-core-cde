@@ -59,7 +59,7 @@ int dbn
 
    if ( ! dbopen ) RETURN( dberr(S_DBOPEN) );
 
-   if ( dba == NULL ) {
+   if ( dba == nullptr ) {
       curr_rec = NULL_DBA;
       db_status = S_OKAY;
    }

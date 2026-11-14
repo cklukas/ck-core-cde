@@ -143,7 +143,7 @@ int dbn
       }
    }
    /* write current record to page */
-   dio_write(curr_rec, NULL, PGFREE);
+   dio_write(curr_rec, nullptr, PGFREE);
    RETURN( db_status );
 }
 /* vpp -nOS2 -dUNIX -nBSD -nVANILLA_BSD -nVMS -nMEMLOCK -nWINDOWS -nFAR_ALLOC -f/usr/users/master/config/nonwin recwrite.c */

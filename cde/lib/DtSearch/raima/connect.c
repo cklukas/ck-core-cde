@@ -104,7 +104,7 @@ int dbn  /* Database number */
    if ( *(co_ptr = &curr_own[set]) == NULL_DBA )
       RETURN( dberr(S_NOCO) );
 
-   crec = orec = mrec = nrec = NULL;
+   crec = orec = mrec = nrec = nullptr;
 
    /* read current record */
    if ( dio_read( curr_rec, (char **)&crec, PGHOLD ) != S_OKAY )
@@ -249,7 +249,7 @@ inserted:
 	 record as modified
       */
       if (((stat = r_pmem(set, mrec, (char *)&cmmp)) != S_OKAY) ||
-	  ((stat = dio_write(mdba, NULL, PGFREE)) != S_OKAY))
+	  ((stat = dio_write(mdba, nullptr, PGFREE)) != S_OKAY))
 	 goto quit;
    }
    if ( nrec ) { 
@@ -257,16 +257,16 @@ inserted:
 	 as modified
       */
       if (((stat = r_pmem(set, nrec, (char *)&nmmp)) != S_OKAY) ||
-	  ((stat = dio_write(ndba, NULL, PGFREE)) != S_OKAY))
+	  ((stat = dio_write(ndba, nullptr, PGFREE)) != S_OKAY))
 	 goto quit;
    }
    /* put set pointer back into owner record and mark owner record as
       modified; put member pointer back into current record mark current
       record as modified */
    if (((stat = r_pset(set, orec, (char *)&cosp)) != S_OKAY) ||
-       ((stat = dio_write(*co_ptr, NULL, PGFREE)) != S_OKAY) ||
+       ((stat = dio_write(*co_ptr, nullptr, PGFREE)) != S_OKAY) ||
        ((stat = r_pmem(set, crec, (char *)&crmp)) != S_OKAY) ||
-       ((stat = dio_write(curr_rec, NULL, PGFREE)) != S_OKAY))
+       ((stat = dio_write(curr_rec, nullptr, PGFREE)) != S_OKAY))
       goto quit;
 
    /* set current member to current record */
@@ -309,19 +309,19 @@ char *mem2  /* member record 2 */
    rn2 += curr_db_table->rt_offset;
 
    /* locate member_table entries for these record types */
-   mt2 = mt1 = NULL;
+   mt2 = mt1 = nullptr;
    for (mem = set_ptr->st_members, memtot = mem + set_ptr->st_memtot,
 						      mt = &member_table[mem];
 	mem < memtot;
 	++mem, ++mt) {
       if ( mt->mt_record == rn1 ) {
 	 mt1 = mt;
-	 if (mt2 != NULL)
+	 if (mt2 != nullptr)
 	    break;
       }
       if ( mt->mt_record == rn2 ) {
 	 mt2 = mt;
-	 if (mt1 != NULL)
+	 if (mt1 != nullptr)
 	    break;
       }
    }

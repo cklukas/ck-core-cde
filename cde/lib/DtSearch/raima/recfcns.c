@@ -176,7 +176,7 @@ r_delrec(INT rt, DB_ADDR db_addr)
    }
    fno = NUM2INT((FILE_NO)((db_addr >> FILESHIFT) & FILEMASK), ft_offset);
    rno = ADDRMASK & db_addr;
-   dio_write(db_addr, NULL, PGFREE);
+   dio_write(db_addr, nullptr, PGFREE);
 
    /* place this record onto the delete chain */
    dio_pzdel(fno, rno);
@@ -303,7 +303,7 @@ DB_ADDR *db_addr
    char *fptr;
    const char *tfptr;
    int s, i, strfld;
-   FIELD_ENTRY *sfld_ptr = NULL;
+   FIELD_ENTRY *sfld_ptr = nullptr;
    SORT_ENTRY *srt_ptr;
    DB_ADDR *co_ptr, *cm_ptr;
 

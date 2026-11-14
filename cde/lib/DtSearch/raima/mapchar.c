@@ -182,7 +182,7 @@ int ctbl_alloc(void)
 {
    if ((db_global.country_tbl.ptr = (CNTRY_TBL *)
 	   ALLOC(&db_global.country_tbl,256*sizeof(CNTRY_TBL)+1,"country_tbl")) 
-	   == NULL ) return( dberr(S_NOMEMORY) );
+	   == nullptr ) return( dberr(S_NOMEMORY) );
 
    /* fill table with standard values */
    byteset(db_global.country_tbl.ptr, '\0', 256*sizeof(CNTRY_TBL)+1);

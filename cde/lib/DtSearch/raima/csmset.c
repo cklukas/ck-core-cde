@@ -67,7 +67,7 @@ int dbn       /* database number */
    if (nset_check(set, &set, (SET_ENTRY * *)&set_ptr) != S_OKAY)
       RETURN( db_status );
 
-   if ( dba == NULL ) {
+   if ( dba == nullptr ) {
       curr_mem[set] = NULL_DBA;
    }
    else if ( check_dba(*dba) == S_OKAY ) {

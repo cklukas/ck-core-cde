@@ -130,13 +130,13 @@ int dbn       /* database number */
 	    key_bldcom(fld, (char *)recval, ptr = key, TRUE);
 	 if ((stat = key_insert(fld, ptr, db_addr)) != S_OKAY) {
 	    r_delrec( nrec, db_addr );
-	    dio_write(db_addr, NULL, PGFREE);
+	    dio_write(db_addr, nullptr, PGFREE);
 	    RETURN( db_status = stat );
 	 }
       }
    }
    /* 'touch' page, do page's update housekeeping */
-   if ( dio_write(db_addr, NULL, PGFREE) == S_OKAY ) {
+   if ( dio_write(db_addr, nullptr, PGFREE) == S_OKAY ) {
       curr_rec = db_addr;
 
    }

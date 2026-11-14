@@ -289,17 +289,17 @@ initdbt(const char *dbnames)
 
    /* Now make sure there are the right # of elements in dbd/dbfpath */
    if (dbdpath[0]) {
-      if (get_element(dbdpath,no_of_dbs-1) == NULL) 	/* Not enuf? */
+      if (get_element(dbdpath,no_of_dbs-1) == nullptr) 	/* Not enuf? */
 	 return( dberr(S_BADBDPATH) );
-      if (strrchr(dbdpath,';') != NULL)		/* Is dbdpath single element */
-	 if (get_element(dbdpath,no_of_dbs) != NULL) 	/* Too many? */
+      if (strrchr(dbdpath,';') != nullptr)		/* Is dbdpath single element */
+	 if (get_element(dbdpath,no_of_dbs) != nullptr) 	/* Too many? */
 	    return( dberr(S_BADBDPATH) );
    }
    if (dbfpath[0]) {
-      if (get_element(dbfpath,no_of_dbs-1) == NULL)	/* Not enuf? */
+      if (get_element(dbfpath,no_of_dbs-1) == nullptr)	/* Not enuf? */
 	 return( dberr(S_BADBFPATH) );
-      if (strrchr(dbfpath,';') != NULL) {	/* Is dbfpath single element */
-	 if (get_element(dbfpath,no_of_dbs) != NULL)	/* Too many? */
+      if (strrchr(dbfpath,';') != nullptr) {	/* Is dbfpath single element */
+	 if (get_element(dbfpath,no_of_dbs) != nullptr)	/* Too many? */
 	    return( dberr(S_BADBFPATH) );
       }
    }
@@ -322,7 +322,7 @@ initdbt(const char *dbnames)
       for ( i = 0; *cp && *cp != ';'; ++cp, ++i )
 	 dbfile[i] = *cp;
       dbfile[i] = '\0';
-      if ( (ptr = strrchr(dbfile, DIRCHAR)) == NULL ) 
+      if ( (ptr = strrchr(dbfile, DIRCHAR)) == nullptr ) 
 	 ptr = strrchr(dbfile, ':');
       if ( ptr ) {
 	 if ( strlen(ptr+1) >= DBNMLEN ) RETURN( dberr(S_NAMELEN) );
@@ -467,7 +467,7 @@ unsigned old_size
    CHAR_P Temp_table;
 
    Temp_table.ptr = ALLOC(&Temp_table, new_size, varname);
-   if ( Temp_table.ptr == NULL ) {
+   if ( Temp_table.ptr == nullptr ) {
       return( dberr(S_NOMEMORY) );
    }
    byteset(&Temp_table.ptr[old_size], 0, new_size - old_size);

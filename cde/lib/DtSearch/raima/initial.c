@@ -152,7 +152,7 @@ int dbn
       RETURN( dberr(S_NOFILE) );
    
    page = (INIT_PAGE *)ALLOC(&Page, file_ptr->ft_pgsize, "page");
-   if ( page == NULL ) RETURN( dberr(S_NOMEMORY) );
+   if ( page == nullptr ) RETURN( dberr(S_NOMEMORY) );
 
    /*--------- Init PAGE 0 ---------*/
    byteset(page, '\0', file_ptr->ft_pgsize);

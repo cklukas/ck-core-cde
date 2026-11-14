@@ -90,7 +90,7 @@ int dbn     /* database number */
    /* put data into record and return */
    if ( r_pfld(fld, fld_ptr, crloc, data, &curr_rec) != S_OKAY )
       RETURN( db_status );
-   dio_write(curr_rec, NULL, PGFREE);
+   dio_write(curr_rec, nullptr, PGFREE);
    RETURN( db_status );
 }
 /* vpp -nOS2 -dUNIX -nBSD -nVANILLA_BSD -nVMS -nMEMLOCK -nWINDOWS -nFAR_ALLOC -f/usr/users/master/config/nonwin crwrite.c */
