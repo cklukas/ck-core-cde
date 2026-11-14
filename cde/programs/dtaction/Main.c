@@ -40,6 +40,7 @@
  ****************************************************************************
  ************************************<+>*************************************/
 
+#include <Dt/DtSigP.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <stddef.h>
@@ -284,7 +285,7 @@ main(
   
     XtSetLanguageProc(nullptr, nullptr, nullptr);
     _DtEnvControl(DT_ENV_SET);
-    (void) signal(SIGCHLD, SIG_IGN);
+    (void) _DtSignal(SIGCHLD, SIG_IGN);
 
     /*  Initialize the toolkit and open the display  */
     XtToolkitInitialize() ;
