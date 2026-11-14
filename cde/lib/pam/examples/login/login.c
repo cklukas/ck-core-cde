@@ -73,6 +73,7 @@ publication.
  *
  */
 
+#include <Dt/DtSigP.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <unistd.h>	/* For logfile locking */
@@ -422,8 +423,8 @@ main(int argc, char *argv[], char **renvp)
 	/*
 	 * Ignore SIGQUIT and SIGINT and set nice to 0
 	 */
-	(void) signal(SIGQUIT, SIG_IGN);
-	(void) signal(SIGINT, SIG_IGN);
+	(void) _DtSignal(SIGQUIT, SIG_IGN);
+	(void) _DtSignal(SIGINT, SIG_IGN);
 	(void) nice(0);
 
 	/*
@@ -589,8 +590,8 @@ main(int argc, char *argv[], char **renvp)
 	}
 	closelog();
 
-	(void) signal(SIGQUIT, SIG_DFL);
-	(void) signal(SIGINT, SIG_DFL);
+	(void) _DtSignal(SIGQUIT, SIG_DFL);
+	(void) _DtSignal(SIGINT, SIG_DFL);
 
 	/*
 	 * Display some useful information to the new user like the banner
