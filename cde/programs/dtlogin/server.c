@@ -319,7 +319,7 @@ static void
 GetRemoteAddress( struct display *d, int fd )
 {
     char    buf[512];
-    int	    len = sizeof (buf);
+    socklen_t len = sizeof (buf);
 
     if (d->peer)
 	free ((char *) d->peer);

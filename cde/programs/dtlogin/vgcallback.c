@@ -554,6 +554,9 @@ LayoutCB( Widget w, XtPointer client_data, XtPointer call_data )
     
     int dpwidth, dpheight;	/* JET - display w/h set according to */
     int xorg, yorg;		/* xinerama usage */
+#ifdef USE_XINERAMA
+    unsigned int scrwidth, scrheight, scrxorg, scryorg;
+#endif
 
     struct {			/* position, size of widgets (pixels)	   */
     int x, y;
@@ -585,9 +588,16 @@ LayoutCB( Widget w, XtPointer client_data, XtPointer call_data )
 
 #ifdef USE_XINERAMA
 				/* get info on the prefered screen */
-    if (!_DtXineramaGetScreen(dpyinfo.DtXineramaInfo, 
-                              appInfo.xineramaPreferredScreen,
-			      &dpwidth, &dpheight, &xorg, &yorg))
+    if (_DtXineramaGetScreen(dpyinfo.DtXineramaInfo, 
+                             appInfo.xineramaPreferredScreen,
+			     &scrwidth, &scrheight, &scrxorg, &scryorg))
+      {
+	dpwidth = scrwidth;
+	dpheight = scrheight;
+	xorg = (int)scrxorg;	/* a negative origin arrives as its two's complement */
+	yorg = (int)scryorg;
+      }
+    else
       {				/* no joy here either - setup for normal */
 	dpwidth = dpyinfo.width;
 	dpheight = dpyinfo.height;

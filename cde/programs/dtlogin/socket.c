@@ -231,7 +231,7 @@ DestroyChooserSocket (void)
 }
 
 int
-GetChooserAddr (char *addr, int *lenp)
+GetChooserAddr (unsigned char *addr, int *lenp)
 {
     struct sockaddr_un	un_addr;
     socklen_t		len;
