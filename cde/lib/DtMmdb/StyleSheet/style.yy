@@ -465,7 +465,7 @@ array_name : STRING
 	}
 	|
 	{
-          $$ = new unsigned char[1];
+          $$ = (unsigned char*)malloc(1);
           $$[0] = 0;
 	}
 	;
@@ -718,7 +718,7 @@ SGMLGI : SGMLGI_CONTENT
 SGMLGI_CONTENT : STRING OPER_period {enter_sgmlgi_context();} SGMLGI_STRING 
 	{
            int l = strlen((char*)$1) + strlen((char*)$4) + 2;
-           $$=new unsigned char[l];
+           $$=(unsigned char*)malloc(l);
            strcpy((char*)$$, (char*)$1);
            strcat((char*)$$, ".");
            strcat((char*)$$, (char*)$4);
@@ -728,7 +728,7 @@ SGMLGI_CONTENT : STRING OPER_period {enter_sgmlgi_context();} SGMLGI_STRING
 	| STRING OPER_period
 	{
            int l = strlen((char*)$1) + 2;
-           $$=new unsigned char[l];
+           $$=(unsigned char*)malloc(l);
            strcpy((char*)$$, (char*)$1);
            strcat((char*)$$, ".");
            free($1);
