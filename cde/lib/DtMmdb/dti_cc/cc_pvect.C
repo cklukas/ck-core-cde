@@ -47,7 +47,7 @@ pointer_vector<T>::pointer_vector(size_t n, T* t)
 template <class T> 
 pointer_vector<T>::~pointer_vector() 
 {
-   delete f_array;
+   delete [] f_array;
 }
 
 template <class T> 

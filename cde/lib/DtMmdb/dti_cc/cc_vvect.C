@@ -53,7 +53,7 @@ value_vector<T>::value_vector(size_t n, const T& t) :
 template <class T> 
 value_vector<T>::~value_vector()
 {
-   delete f_array;
+   delete [] f_array;
 }
 
 template <class T> 
