@@ -49,6 +49,7 @@
 /* include files                         */
 /*+++++++++++++++++++++++++++++++++++++++*/
 
+#include <Dt/DtSigP.h>
 #include "signal.h"
 #include <errno.h>
 #include <unistd.h>
@@ -622,11 +623,11 @@ malloc_trace(0);
       GetDefaultPal(style.shell);
     }
     
-    signal(SIGINT, ExitSignalHandler);
-    signal(SIGTERM, ExitSignalHandler);
+    _DtSignal(SIGINT, ExitSignalHandler);
+    _DtSignal(SIGTERM, ExitSignalHandler);
 
     /* to avoid defunct screen saver processes */    
-    signal(SIGCHLD, WaitChildDeath);
+    _DtSignal(SIGCHLD, WaitChildDeath);
 
     /* backdrop dialog  needs to know when the workspace changes to recolor 
        the bitmap displayed in the dialog */
@@ -1117,14 +1118,15 @@ ExitSignalHandler(int signal_number)
   errno = savedErrno;
 }
 
+/* Only async-signal-safe functions are called here. */
 static void
 WaitChildDeath(int signal_number)
 {
   int   stat_loc;
-  pid_t pid;
+  int   savedErrno = errno;
 
   (void) signal_number;
-  pid = wait(&stat_loc);
-  signal(SIGCHLD, WaitChildDeath);
-
+  while (waitpid(-1, &stat_loc, WNOHANG) > 0)
+    ;
+  errno = savedErrno;
 }

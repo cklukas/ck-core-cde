@@ -73,7 +73,7 @@ define = "#define CK_HAS_SIGNAL_PROC 1\n" if "ExitSignalProc" in text else ""
 if define:
     init = text.find("XtInitialize(argv[0]")
     reg = [m.start() for m in re.finditer(r"XtAppAddSignal\(XtWidgetToApplicationContext\(style\.shell\),\s*ExitSignalProc,", text)]
-    inst = [m.start() for m in re.finditer(r"signal\(SIG(?:INT|TERM), ExitSignalHandler\)", text)]
+    inst = [m.start() for m in re.finditer(r"_DtSignal\(SIG(?:INT|TERM), ExitSignalHandler\)", text)]
     if (text.count("XtInitialize(argv[0]") != 1 or len(reg) != 1 or reg[0] < init
             or len(inst) != 2 or min(inst) < reg[0]):
         sys.exit("ExitSignalProc must be registered once, after XtInitialize() and before the handlers are installed")
