@@ -230,10 +230,10 @@ init_dir(void)
 		if ((errno != ENOENT) || mkdir(dir, S_IRWXU|S_IRWXG|S_IRWXO))
 		{
 			if (errno == ENOENT)
-				sprintf(msgbuf, "%s: cannot create %s.\n%s: %s",
+				snprintf(msgbuf, sizeof msgbuf, "%s: cannot create %s.\n%s: %s",
 					pgname, dir, pgname, "System error");
 			else
-				sprintf(msgbuf, "%s: cannot access %s.\n%s: %s",
+				snprintf(msgbuf, sizeof msgbuf, "%s: cannot access %s.\n%s: %s",
 					pgname, dir, pgname, "System error");
 			perror (msgbuf);
 			exit (-1);
@@ -251,7 +251,7 @@ init_dir(void)
 
 		/* set directory permission to be "rwxrwsrwt" */
 		if (chmod(dir, mode)) {
-			sprintf(msgbuf, "%s: Permission on %s%s\n%s%s\n%s%s",
+			snprintf(msgbuf, sizeof msgbuf, "%s: Permission on %s%s\n%s%s\n%s%s",
 				pgname, dir,
 				" is wrong but cannot be corrected.", pgname,
 				": This might happen if you are mounting the directory.",
@@ -266,7 +266,7 @@ init_dir(void)
 	if (create_dir || info.st_uid!=daemon_uid || info.st_gid!=daemon_gid) {
 		/* set directory ownership to: owner = 1, group = 1 */
 		if (chown(dir, daemon_uid, daemon_gid)) {
-			sprintf(msgbuf, "%s: Ownership on %s%s\n%s%s\n%s%s",
+			snprintf(msgbuf, sizeof msgbuf, "%s: Ownership on %s%s\n%s%s\n%s%s",
 				pgname, dir,
 				" is wrong but cannot be corrected.", pgname,
 				": This might happen if you are mounting the directory.",
@@ -296,7 +296,7 @@ send_hup(void)
 	extern FILE *popen(const char *, const char *);
 	extern int pclose(FILE *);
 
-	sprintf(buf, "ps -e|grep rpc.cmsd|grep -v grep");
+	snprintf(buf, sizeof buf, "ps -e|grep rpc.cmsd|grep -v grep");
 
 	if ((fp = popen(buf, "r")) == nullptr) {
 		if (debug)

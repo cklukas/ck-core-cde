@@ -61,6 +61,18 @@ static _DtCmsRegistrationInfo * _DtCmsDoCallback(
 	int			version,
 	void			*args);
 
+/*
+ * Build the "calendar@host" name a callback reports.  Returns false when
+ * the name does not fit.
+ */
+static boolean_t
+calendar_at_host(char *buf, size_t size, const char *cal)
+{
+	int n = snprintf(buf, size, "%s@%s", cal, _DtCmGetLocalHost());
+
+	return (n >= 0 && (size_t)n < size);
+}
+
 /*****************************************************************************
  * extern functions
  *****************************************************************************/
@@ -375,7 +387,8 @@ _DtCmsDoOpenCalCallback(
 	if (rlist == nullptr)
 		return (rlist);
 
-	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
+	if (!calendar_at_host(calendar, sizeof calendar, cal))
+		return (rlist);
 	args.calendar = calendar;
 	args.user = user;
 	args.data.reason = CSA_CB_CALENDAR_LOGON;
@@ -398,7 +411,8 @@ _DtCmsDoRemoveCalCallback(
 	if (rlist == nullptr)
 		return (rlist);
 
-	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
+	if (!calendar_at_host(calendar, sizeof calendar, cal))
+		return (rlist);
 	args.calendar = calendar;
 	args.user = user;
 	args.data.reason = CSA_CB_CALENDAR_DELETED;
@@ -426,7 +440,8 @@ _DtCmsDoUpdateCalAttrsCallback(
 	if (rlist == nullptr)
 		return (rlist);
 
-	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
+	if (!calendar_at_host(calendar, sizeof calendar, cal))
+		return (rlist);
 
 	/* set up update info */
 	if (num_attrs > 0 &&
@@ -468,10 +483,11 @@ _DtCmsDoInsertEntryCallback(
 	if (rlist == nullptr)
 		return (rlist);
 
-	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
+	if (!calendar_at_host(calendar, sizeof calendar, cal))
+		return (rlist);
 
 	/* set up update info */
-	sprintf(buf, "%ld", id);
+	snprintf(buf, sizeof buf, "%ld", id);
 	adata.id = buf;
 	args.calendar = calendar;
 	args.user = source;
@@ -500,10 +516,11 @@ _DtCmsDoDeleteEntryCallback(
 	if (rlist == nullptr)
 		return (rlist);
 
-	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
+	if (!calendar_at_host(calendar, sizeof calendar, cal))
+		return (rlist);
 
 	/* set up update info */
-	sprintf(buf, "%ld", id);
+	snprintf(buf, sizeof buf, "%ld", id);
 	ddata.id = buf;
 	ddata.scope = scope;
 	ddata.time = time;
@@ -535,13 +552,14 @@ _DtCmsDoUpdateEntryCallback(
 	if (rlist == nullptr)
 		return (rlist);
 
-	sprintf(calendar, "%s@%s", cal, _DtCmGetLocalHost());
+	if (!calendar_at_host(calendar, sizeof calendar, cal))
+		return (rlist);
 
 	/* set up update info */
-	sprintf(obuf, "%ld", oldid);
+	snprintf(obuf, sizeof obuf, "%ld", oldid);
 	udata.oldid = obuf;
 	if (newid > 0)
-		sprintf(nbuf, "%ld", newid);
+		snprintf(nbuf, sizeof nbuf, "%ld", newid);
 	else
 		nbuf[0] = '\0';
 	udata.newid = nbuf;

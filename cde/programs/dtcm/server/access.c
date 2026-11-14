@@ -31,6 +31,7 @@
 
 #include <EUSCompat.h>
 #include <stdio.h>
+#include <stdckdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
@@ -176,12 +177,17 @@ _DtCmsGetClientInfo(struct svc_req *svcrq, char **source)
 			return (CSA_E_NO_AUTHORITY);
 		if ((name = get_uname (unix_cred->aup_uid)) == nullptr)
 			return (CSA_E_INSUFFICIENT_MEMORY);
-		if ((uname = malloc(strlen(name) +
-		    strlen(unix_cred->aup_machname) + 2)) == nullptr) {
+		size_t namelen = strlen(name);
+		size_t machlen = strlen(unix_cred->aup_machname);
+		size_t unamesize;
+		if (ckd_add(&unamesize, namelen, machlen) ||
+		    ckd_add(&unamesize, unamesize, 2) ||
+		    (uname = malloc(unamesize)) == nullptr) {
 			free(name);
 			return (CSA_E_INSUFFICIENT_MEMORY);
 		} else {
-			sprintf(uname, "%s@%s", name, unix_cred->aup_machname);
+			snprintf(uname, unamesize, "%s@%s", name,
+				unix_cred->aup_machname);
 			free(name);
 			free(client);
 			*source = client = uname;
@@ -454,7 +460,7 @@ get_uname(uid_t uid)
 	{
 		if ((pw = getpwuid (uid)) == nullptr) {
 			/* Can't map uid to name.  Don't cache the uid. */
-			sprintf (buff, "%ld", (long)uid);
+			snprintf (buff, sizeof buff, "%ld", (long)uid);
 			return (strdup(buff));
 		}
 

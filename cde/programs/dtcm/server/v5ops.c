@@ -31,6 +31,7 @@
 #include <EUSCompat.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdckdint.h>
 #include <string.h>
 #include <time.h>
 #include "v5ops.h"
@@ -313,26 +314,30 @@ _DtCmsUpdateDurationInRule(cms_entry *entry, uint remain)
 {
 	char			*newrule, *ptr;
 	char			buf[BUFSIZ];
+	size_t			size, len;
 	cms_attribute_value	*vptr;
 
 	vptr = entry->attrs[CSA_ENTRY_ATTR_RECURRENCE_RULE_I].value;
-	if ((newrule = malloc(strlen(vptr->item.string_value) + 20)) == nullptr)
+	/* the rule, a space, "#" and a number, a space, the terminator */
+	if (ckd_add(&size, strlen(vptr->item.string_value), (size_t)20) ||
+	    (newrule = malloc(size)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
-	sprintf(buf, "#%d", remain);
+	snprintf(buf, sizeof buf, "#%d", remain);
 	if (ptr = strchr(vptr->item.string_value, '#')) {
 		*ptr = '\0';
-		strcpy(newrule, vptr->item.string_value);
-		strcat(newrule, buf);
+		len = (size_t)snprintf(newrule, size, "%s%s",
+			vptr->item.string_value, buf);
 		if (ptr = strchr(ptr + 1, ' '))
-			strcat(newrule, ptr);
+			snprintf(newrule + len, size - len, "%s", ptr);
 	} else {
 		if (ptr = strchr(vptr->item.string_value, ' ')) {
 			*ptr = '\0';
-			sprintf(newrule, "%s %s %s", vptr->item.string_value,
-				buf, ptr+1);
+			snprintf(newrule, size, "%s %s %s",
+				vptr->item.string_value, buf, ptr+1);
 		} else
-			sprintf(newrule, "%s %s", vptr->item.string_value, buf);
+			snprintf(newrule, size, "%s %s",
+				vptr->item.string_value, buf);
 	}
 
 	free (vptr->item.string_value);
@@ -350,21 +355,24 @@ _DtCmsAddEndDateToRule(cms_attribute *attr, RepeatEvent *re, long time)
 {
 	char	*newrule, *ptr;
 	char	buf[20];
+	size_t	size;
 
 	if (_csa_tick_to_iso8601(time, buf))
 		return (CSA_E_INVALID_DATE_TIME);
 
-	if ((newrule = malloc(strlen(attr->value->item.string_value)+20))
-	    == nullptr)
+	/* the rule, a space, the date, the terminator */
+	if (ckd_add(&size, strlen(attr->value->item.string_value),
+	    (size_t)20) || (newrule = malloc(size)) == nullptr)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 
 	if (re->re_end_date == 0) {
-		sprintf(newrule, "%s %s", attr->value->item.string_value, buf);
+		snprintf(newrule, size, "%s %s",
+			attr->value->item.string_value, buf);
 	} else {
 		/* end date is always at the end of the rule */
-		strcpy(newrule, attr->value->item.string_value);
+		snprintf(newrule, size, "%s", attr->value->item.string_value);
 		ptr = strrchr(newrule, ' ');
-		sprintf(ptr, " %s", buf);
+		snprintf(ptr, size - (size_t)(ptr - newrule), " %s", buf);
 	}
 
 	free(attr->value->item.string_value);

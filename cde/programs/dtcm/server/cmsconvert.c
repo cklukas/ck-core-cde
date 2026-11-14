@@ -312,8 +312,13 @@ _DtCmsV4ReminderToReminderRef(
 			break;
 		}
 
-		sprintf(buf, "%ld:%s@%s", ids->id, calname,
-			_DtCmGetHostAtDomain());
+		if ((size_t)snprintf(buf, sizeof buf, "%ld:%s@%s", ids->id,
+		    calname, _DtCmGetHostAtDomain()) >= sizeof buf) {
+			free(rptr->reminder_name);
+			free(rptr);
+			stat = CSA_E_INVALID_PARAMETER;
+			break;
+		}
 
 		if ((rptr->entryid = strdup(buf)) == nullptr) {
 			free(rptr->reminder_name);
@@ -938,6 +943,7 @@ _Appt4ToCmsentryAttrs(
 	CSA_opaque_data		opq;
 	int			index, ntimes, count = 0;
 	char			*ptr1, *ptr2;
+	int			len;
 
 	if (num_attrs == nullptr || attrs_r == nullptr)
 		return (CSA_E_INVALID_PARAMETER);
@@ -962,12 +968,16 @@ _Appt4ToCmsentryAttrs(
 	ptr1 = strchr(calname, '@');
 	ptr2 = (ptr1 ? strchr(ptr1, '.') : nullptr);
 	if (ptr1) {
-		sprintf(buf, "%ld:%s%s%s", a4->appt_id.key, calname,
-			(ptr2 == nullptr ? "." : ""),
+		len = snprintf(buf, sizeof buf, "%ld:%s%s%s", a4->appt_id.key,
+			calname, (ptr2 == nullptr ? "." : ""),
 			(ptr2 == nullptr ? _DtCmGetLocalDomain(ptr1+1) : ""));
 	} else {
-		sprintf(buf, "%ld:%s@%s", a4->appt_id.key, calname,
-			_DtCmGetHostAtDomain());
+		len = snprintf(buf, sizeof buf, "%ld:%s@%s", a4->appt_id.key,
+			calname, _DtCmGetHostAtDomain());
+	}
+	if (len < 0 || (size_t)len >= sizeof buf) {
+		free(attrs);
+		return (CSA_E_INVALID_PARAMETER);
 	}
 	opq.size = strlen(buf);
 	opq.data = (unsigned char *)buf;
