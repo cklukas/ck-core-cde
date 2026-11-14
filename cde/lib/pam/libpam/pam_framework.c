@@ -384,6 +384,7 @@ pam_get_user(
 /*
  * Set module specific data
  */
+int
 pam_set_data(
 	pam_handle_t *pamh,		/* PAM handle */
 	const char *module_data_name,	/* unique module data name */

@@ -44,7 +44,7 @@ free_resp(int num_msg, struct pam_response *resp);
 
 int
 display_errmsg(
-	int (*conv_funp)(),
+	int (*conv_funp)(int, struct pam_message **, struct pam_response **, void *),
 	int num_msg,
 	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE],
 	void *conv_apdp
@@ -52,7 +52,7 @@ display_errmsg(
 
 int
 get_authtok(
-	int (*conv_funp)(),
+	int (*conv_funp)(int, struct pam_message **, struct pam_response **, void *),
 	int num_msg,
 	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE],
 	void *conv_apdp,

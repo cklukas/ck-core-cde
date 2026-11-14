@@ -50,13 +50,13 @@ static int	process_passwd(pam_handle_t *, char *, char *,
  */
 
 int
-update_authtok_file(pamh, field, data, unix_pwd, privileged, nowarn)
-	pam_handle_t *pamh;
-	char *field;
-	char *data[];
-	struct passwd *unix_pwd;
-	int privileged;
-	int nowarn;
+update_authtok_file(
+	pam_handle_t *pamh,
+	char *field,
+	char *data[],
+	struct passwd *unix_pwd,
+	int privileged,
+	int nowarn)
 {
 	char *prognamep;
 	char *usrname;
@@ -268,16 +268,15 @@ err:
  */
 
 static int
-update_spent(pamh, field, data, unix_pwd, unix_sp,
-		passwd_flag, privileged, nowarn)
-	pam_handle_t *pamh;
-	char *field;
-	char **data;
-	struct passwd *unix_pwd;
-	struct spwd *unix_sp;
-	int *passwd_flag;
-	int privileged;
-	int nowarn;
+update_spent(
+	pam_handle_t *pamh,
+	char *field,
+	char **data,
+	struct passwd *unix_pwd,
+	struct spwd *unix_sp,
+	int *passwd_flag,
+	int privileged,
+	int nowarn)
 {
 	char		*value;
 	char		*char_p;
@@ -508,12 +507,12 @@ update_spent(pamh, field, data, unix_pwd, unix_sp,
  * after shadow file.
  */
 static int
-process_passwd(pamh, prognamep, usrname, unix_pwd, nowarn)
-	pam_handle_t	*pamh;
-	char 		*prognamep;
-	char 		*usrname;
-	struct passwd	*unix_pwd;
-	int		nowarn;
+process_passwd(
+	pam_handle_t *pamh,
+	char *prognamep,
+	char *usrname,
+	struct passwd *unix_pwd,
+	int nowarn)
 {
 	FILE		*tpfp;	/* tmp passwd file pointer */
 	FILE		*pwfp;	/* passwd file pointer */

@@ -40,9 +40,7 @@
 #include "unix_headers.h"
 
 bool_t
-xdr_passwd(xdrs, pw)
-	XDR *xdrs;
-	struct passwd *pw;
+xdr_passwd(XDR *xdrs, struct passwd *pw)
 {
 	if (!xdr_wrapstring(xdrs, &pw->pw_name)) {
 		return (FALSE);
@@ -69,9 +67,7 @@ xdr_passwd(xdrs, pw)
 }
 
 bool_t
-xdr_yppasswd(xdrs, yppw)
-	XDR *xdrs;
-	struct yppasswd *yppw;
+xdr_yppasswd(XDR *xdrs, struct yppasswd *yppw)
 {
 	if (!xdr_wrapstring(xdrs, &yppw->oldpass)) {
 		return (FALSE);

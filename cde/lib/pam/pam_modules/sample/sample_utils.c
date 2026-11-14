@@ -48,9 +48,7 @@
  */
 
 void
-free_msg(num_msg, msg)
-	int num_msg;
-	struct pam_message *msg;
+free_msg(int num_msg, struct pam_message *msg)
 {
 	int 			i;
 	struct pam_message 	*m;
@@ -71,9 +69,7 @@ free_msg(num_msg, msg)
  */
 
 void
-free_resp(num_msg, resp)
-	int num_msg;
-	struct pam_response *resp;
+free_resp(int num_msg, struct pam_response *resp)
 {
 	int			i;
 	struct pam_response	*r;
@@ -95,11 +91,11 @@ free_resp(num_msg, resp)
  */
 
 int
-display_errmsg(conv_funp, num_msg, messages, conv_apdp)
-	int (*conv_funp)();
-	int num_msg;
-	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
-	void *conv_apdp;
+display_errmsg(
+	int (*conv_funp)(int, struct pam_message **, struct pam_response **, void *),
+	int num_msg,
+	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE],
+	void *conv_apdp)
 {
 	struct pam_message	*msg;
 	struct pam_message	*m;
@@ -149,12 +145,12 @@ display_errmsg(conv_funp, num_msg, messages, conv_apdp)
  */
 
 int
-get_authtok(conv_funp, num_msg, messages, conv_apdp, ret_respp)
-	int (*conv_funp)();
-	int num_msg;
-	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
-	void *conv_apdp;
-	struct pam_response	**ret_respp;
+get_authtok(
+	int (*conv_funp)(int, struct pam_message **, struct pam_response **, void *),
+	int num_msg,
+	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE],
+	void *conv_apdp,
+	struct pam_response **ret_respp)
 {
 	struct pam_message	*msg;
 	struct pam_message	*m;

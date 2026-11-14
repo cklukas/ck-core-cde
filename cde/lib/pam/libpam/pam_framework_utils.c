@@ -89,12 +89,12 @@ __pam_free_resp(int num_msg, struct pam_response *resp)
  */
 
 int
-__pam_display_msg(pamh, msg_style, num_msg, messages, conv_apdp)
-	pam_handle_t *pamh;
-	int msg_style;
-	int num_msg;
-	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
-	void *conv_apdp;
+__pam_display_msg(
+	pam_handle_t *pamh,
+	int msg_style,
+	int num_msg,
+	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE],
+	void *conv_apdp)
 {
 	struct pam_response	*ret_respp = NULL;
 
@@ -103,26 +103,26 @@ __pam_display_msg(pamh, msg_style, num_msg, messages, conv_apdp)
 }
 
 int
-__pam_get_input(pamh, msg_style, num_msg, messages, conv_apdp, ret_respp)
-	pam_handle_t *pamh;
-	int msg_style;
-	int num_msg;
-	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
-	void *conv_apdp;
-	struct pam_response	**ret_respp;
+__pam_get_input(
+	pam_handle_t *pamh,
+	int msg_style,
+	int num_msg,
+	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE],
+	void *conv_apdp,
+	struct pam_response **ret_respp)
 {
 	return (__pam_input_output(pamh, msg_style, num_msg, messages,
 		conv_apdp, ret_respp));
 }
 
 static int
-__pam_input_output(pamh, msg_style, num_msg, messages, conv_apdp, ret_respp)
-	pam_handle_t *pamh;
-	int msg_style;
-	int num_msg;
-	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
-	void *conv_apdp;
-	struct pam_response	**ret_respp;
+__pam_input_output(
+	pam_handle_t *pamh,
+	int msg_style,
+	int num_msg,
+	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE],
+	void *conv_apdp,
+	struct pam_response **ret_respp)
 {
 	struct pam_message	*msg;
 	struct pam_message	*m;

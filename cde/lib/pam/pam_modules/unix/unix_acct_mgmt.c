@@ -95,10 +95,7 @@ check_for_login_inactivity(
  */
 
 static int
-new_password_check(pwd, shpwd, flags)
-	struct 	passwd 	*pwd;
-	struct 	spwd 	*shpwd;
-	int 	flags;
+new_password_check(struct passwd *pwd, struct spwd *shpwd, int flags)
 {
 	int	now  = DAY_NOW;
 

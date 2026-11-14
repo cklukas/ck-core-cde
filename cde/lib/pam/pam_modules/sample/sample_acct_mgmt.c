@@ -34,7 +34,7 @@
 #include <security/pam_modules.h>
 #include <libintl.h>
 
-static parse_allow_name(char *, char *);
+static int parse_allow_name(char *, char *);
 
 /*
  * pam_sm_acct_mgmt	main account managment routine.

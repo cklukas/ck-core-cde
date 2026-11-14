@@ -48,8 +48,7 @@ static void pr_config(pam_handle_t *pamh);
  */
 #ifdef PAM_NIS
 static void
-nss_nis_passwd(p)
-	nss_db_params_t	*p;
+nss_nis_passwd(nss_db_params_t *p)
 {
 	p->name = NSS_DBNAM_PASSWD;
 	p->flags |= NSS_USE_DEFAULT_CONFIG;
@@ -57,8 +56,7 @@ nss_nis_passwd(p)
 }
 
 static void
-nss_nis_shadow(p)
-	nss_db_params_t	*p;
+nss_nis_shadow(nss_db_params_t *p)
 {
 	p->name = NSS_DBNAM_SHADOW;
 	p->config_name    = NSS_DBNAM_PASSWD;	/* Use config for "passwd" */
@@ -69,8 +67,7 @@ nss_nis_shadow(p)
 
 #ifdef PAM_NISPLUS
 static void
-nss_nisplus_passwd(p)
-	nss_db_params_t	*p;
+nss_nisplus_passwd(nss_db_params_t *p)
 {
 	p->name = NSS_DBNAM_PASSWD;
 	p->flags |= NSS_USE_DEFAULT_CONFIG;
@@ -78,8 +75,7 @@ nss_nisplus_passwd(p)
 }
 
 static void
-nss_nisplus_shadow(p)
-	nss_db_params_t	*p;
+nss_nisplus_shadow(nss_db_params_t *p)
 {
 	p->name = NSS_DBNAM_SHADOW;
 	p->config_name    = NSS_DBNAM_PASSWD;	/* Use config for "passwd" */
@@ -89,8 +85,7 @@ nss_nisplus_shadow(p)
 #endif /* PAM_NISPLUS */
 
 static char *
-gettok(nextpp)
-	char	**nextpp;
+gettok(char **nextpp)
 {
 	char	*p = *nextpp;
 	char	*q = p;
@@ -269,11 +264,7 @@ str2passwd(const char *instr, int lenstr, void *ent, char *buffer, int buflen)
 typedef const char *constp;
 
 static bool_t	/* 1 means success and more input, 0 means error or no more */
-getfield(nextp, limit, uns, valp)
-	constp		*nextp;
-	constp		limit;
-	int		uns;
-	void		*valp;
+getfield(constp *nextp, constp limit, int uns, void *valp)
 {
 	constp		p = *nextp;
 	char		*endfield;
@@ -333,12 +324,12 @@ getfield(nextp, limit, uns, valp)
  * need be. instring and buffer should be separate areas.
  */
 int
-str2spwd(instr, lenstr, ent, buffer, buflen)
-	const char	*instr;
-	int		lenstr;
-	void	*ent; /* really (struct spwd *) */
-	char	*buffer;
-	int	buflen;
+str2spwd(
+	const char *instr,
+	int lenstr,
+	void *ent,
+	char *buffer,
+	int buflen)
 {
 	struct spwd	*shadow	= (struct spwd *)ent;
 	const char	*p = instr, *limit;
@@ -420,9 +411,7 @@ static DEFINE_NSS_DB_ROOT(db_root);
 	NSS_XbyY_ALLOC(&buffer, sizeof (struct passwd), NSS_BUFLEN_PASSWD)
 
 struct passwd *
-getpwnam_from(name, rep)
-	const char	*name;
-	int		rep;
+getpwnam_from(const char *name, int rep)
 {
 	nss_XbyY_buf_t  *b = GETBUF();
 	nss_XbyY_args_t arg;
@@ -460,9 +449,7 @@ static DEFINE_NSS_DB_ROOT(spdb_root);
 	NSS_XbyY_ALLOC(&spbuf, sizeof (struct spwd), NSS_BUFLEN_SHADOW)
 
 struct spwd *
-getspnam_from(name, rep)
-	const char	*name;
-	int		rep;
+getspnam_from(const char *name, int rep)
 {
 	nss_XbyY_buf_t  *b = GETSPBUF();
 	nss_XbyY_args_t arg;
@@ -524,11 +511,7 @@ pr_config(pam_handle_t *pamh)
  *	   A warning is printed if this happens. Operation is continued.
  */
 int
-get_ns(pamh, o_rep, debug, nowarn)
-	pam_handle_t *pamh;
-	int		o_rep;
-	int debug;
-	int nowarn;
+get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 {
 #if (PAM_NIS || PAM_NISPLUS)
 	struct __nsw_switchconfig *conf = NULL;

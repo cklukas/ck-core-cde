@@ -95,6 +95,7 @@ pam_sm_authenticate(
 /*
  * dummy pam_sm_setcred - does nothing
  */
+int
 pam_sm_setcred(
 	pam_handle_t	*pamh,
 	int	flags,

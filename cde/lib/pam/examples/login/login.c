@@ -194,7 +194,7 @@ static int trys = 0;
  * Externs a plenty
  */
 extern	int	defopen(char *filename);
-extern	int	getsecretkey();
+extern	int	getsecretkey(const char *, char *, const char *);
 
 /*
  * BSM hooks
@@ -346,7 +346,7 @@ static	void	turn_on_logging(void);
 static	void	defaults(void);
 static	void	usage(void);
 static	void	process_rlogin(void);
-static	void	login_authenticate();
+static	void	login_authenticate(void);
 static	void	setup_credentials(void);
 static	void	adjust_nice(void);
 static	void	update_utmp_entry(int sublogin);
@@ -360,7 +360,7 @@ static 	void	chdir_to_dir_user(void);
 static	void	logindevperm(char *, uid_t, gid_t);
 static	void	dir_dev_acc(char *, uid_t, gid_t, mode_t, char *);
 static	void	check_log(void);
-static	void	validate_account();
+static	void	validate_account(void);
 static	void	doremoteterm(char *term);
 static	int	get_options(int argc, char *argv[]);
 static	void	uppercaseterm(char *strp);
@@ -816,7 +816,7 @@ login_conv(int num_msg, struct pam_message **msg,
  */
 
 static int
-verify_passwd()
+verify_passwd(void)
 {
 	int flags;
 	int error;
@@ -988,7 +988,7 @@ getargs(char *in_line)
  */
 
 static void
-get_user_name()
+get_user_name(void)
 {
 	FILE	*fp;
 	int gotname = 0;
@@ -1165,7 +1165,7 @@ uppercaseterm(char *strp)
 static void
 defaults(void)
 {
-	extern int defcntl();
+	extern int defcntl(int, int);
 	int  flags;
 	char *ptr;
 
@@ -1450,7 +1450,7 @@ process_rlogin(void)
  */
 
 static void
-validate_account()
+validate_account(void)
 {
 	int 	error;
 	int	n;
@@ -1576,7 +1576,7 @@ chdir_to_dir_user(void)
  */
 
 static void
-login_authenticate()
+login_authenticate(void)
 {
 	int cnt = 1;
 	char *user;

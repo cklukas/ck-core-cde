@@ -74,11 +74,11 @@ void		free_passwd_structs(struct passwd *, struct spwd *);
  */
 
 int
-establish_key(uid, password, reestablish, netnamebuf)
-	uid_t   uid;
-	char 	*password;
-	int	reestablish;
-	char    *netnamebuf;
+establish_key(
+	uid_t uid,
+	char *password,
+	int reestablish,
+	char *netnamebuf)
 {
 	char    netname[MAXNETNAMELEN+1];
 	struct 	key_netstarg netst;
@@ -161,18 +161,17 @@ establish_key(uid, password, reestablish, netnamebuf)
  */
 
 int
-ck_perm(pamh, repository, domain, pwd, shpwd, privileged, passwd_res, uid,
-	debug, nowarn)
-	pam_handle_t *pamh;
-	int	repository;
-	char *domain;
-	struct passwd **pwd;
-	struct spwd **shpwd;
-	int *privileged;
-	void **passwd_res;
-	uid_t uid;
-	int debug;
-	int nowarn;
+ck_perm(
+	pam_handle_t *pamh,
+	int repository,
+	char *domain,
+	struct passwd **pwd,
+	struct spwd **shpwd,
+	int *privileged,
+	void **passwd_res,
+	uid_t uid,
+	int debug,
+	int nowarn)
 {
 	FILE	*pwfp, *spfp;
 	char	messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
@@ -383,8 +382,7 @@ ck_perm(pamh, repository, domain, pwd, shpwd, privileged, passwd_res, uid,
  */
 
 char *
-attr_match(s1, s2)
-	char *s1, *s2;
+attr_match(char *s1, char *s2)
 {
 	while (*s1 == *s2++)
 		if (*s1++ == '=')
@@ -406,8 +404,7 @@ attr_match(s1, s2)
  */
 
 int
-attr_find(s1, s2)
-	char *s1, *s2[];
+attr_find(char *s1, char *s2[])
 {
 	int 	i;
 	char 	*sa, *sb;
@@ -432,8 +429,7 @@ attr_find(s1, s2)
  */
 
 void
-free_setattr(setattr)
-	char * setattr[];
+free_setattr(char *setattr[])
 {
 	int i;
 
@@ -450,11 +446,7 @@ free_setattr(setattr)
  */
 
 void
-setup_attr(dest_attr, k, attr, value)
-	char *dest_attr[];
-	int k;
-	char attr[];
-	char value[];
+setup_attr(char *dest_attr[], int k, char attr[], char value[])
 {
 	if (attr != NULL) {
 		dest_attr[k] = (char *)calloc(PAM_MAX_ATTR_SIZE, sizeof (char));
@@ -478,9 +470,7 @@ spskip(char *p)
 }
 
 void
-nisplus_populate_age(enobj, sp)
-	struct nis_object *enobj;
-	struct spwd *sp;
+nisplus_populate_age(struct nis_object *enobj, struct spwd *sp)
 {
 	char *oldage, *p, *end;
 	long x;
@@ -561,11 +551,11 @@ nisplus_populate_age(enobj, sp)
  *	The new login shell is then returned to calling function.
  */
 char *
-getloginshell(pamh, oldshell, privileged, nowarn)
-	pam_handle_t *pamh;
-	char *oldshell;
-	int privileged;
-	int nowarn;
+getloginshell(
+	pam_handle_t *pamh,
+	char *oldshell,
+	int privileged,
+	int nowarn)
 {
 	char newshell[PAM_MAX_MSG_SIZE];
 	char *cp, *valid, *getusershell();
@@ -673,10 +663,7 @@ getloginshell(pamh, oldshell, privileged, nowarn)
  * Get name.
  */
 char *
-getfingerinfo(pamh, old_gecos, nowarn)
-	pam_handle_t *pamh;
-	char	*old_gecos;
-	int nowarn;
+getfingerinfo(pam_handle_t *pamh, char *old_gecos, int nowarn)
 {
 	char 	new_gecos[PAM_MAX_MSG_SIZE];
 	char	messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
@@ -726,10 +713,7 @@ getfingerinfo(pamh, old_gecos, nowarn)
  * Get Home Dir.
  */
 char *
-gethomedir(pamh, olddir, nowarn)
-	pam_handle_t *pamh;
-	char *olddir;
-	int nowarn;
+gethomedir(pam_handle_t *pamh, char *olddir, int nowarn)
 {
 	char newdir[PAM_MAX_MSG_SIZE];
 	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];

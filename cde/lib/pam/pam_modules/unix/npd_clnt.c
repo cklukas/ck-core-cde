@@ -35,6 +35,7 @@
 #ifdef PAM_NISPLUS
 
 #include <syslog.h>
+#include <stdlib.h>
 #include <string.h>
 #include <shadow.h>
 #include <rpc/rpc.h>
@@ -49,13 +50,14 @@
 
 #define	_NPD_PASSMAXLEN	16
 
-extern int	pow();		/* from libmp.so (undocumented) */
-extern int	_mp_move();	/* from libmp.so (undocumented) */
-extern int	sdiv();		/* from libmp.so (undocumented) */
-extern bool_t	__npd_ecb_crypt();
-extern bool_t	__npd_cbc_crypt();
-extern void	*calloc();
-extern void	free();
+/* from libmp.so (undocumented) */
+extern int	pow(MINT *, MINT *, MINT *, MINT *);
+extern int	_mp_move(MINT *, MINT *);
+extern int	sdiv(MINT *, short, MINT *, short *);
+extern bool_t	__npd_ecb_crypt(unsigned long *, unsigned long *, des_block *,
+		    unsigned int, unsigned int, des_block *);
+extern bool_t	__npd_cbc_crypt(unsigned long *, char *, unsigned int,
+		    npd_newpass *, unsigned int, unsigned int, des_block *);
 
 /*
  * given the domain return the client handle to the rpc.nispasswdd
@@ -63,11 +65,11 @@ extern void	free();
  * returns TRUE on success and FALSE on failure.
  */
 bool_t
-npd_makeclnthandle(domain, clnt, srv_pubkey, keysize)
-char	*domain;
-CLIENT	**clnt;		/* returned */
-char	*srv_pubkey;	/* buf to hold the pubkey; returned */
-int	keysize;	/* size of buffer */
+npd_makeclnthandle(
+	char *domain,
+	CLIENT **clnt,
+	char *srv_pubkey,
+	int keysize)
 {
 	nis_server	**srvs;		/* servers that serve 'domain' */
 	nis_server	*master_srv;
@@ -149,10 +151,7 @@ int	keysize;	/* size of buffer */
  * returns TRUE on success and FALSE on failure.
  */
 bool_t
-__get_cmnkey(public, secret, deskey)
-char		*public;
-char		*secret;
-des_block	*deskey;
+__get_cmnkey(char *public, char *secret, des_block *deskey)
 {
 	MINT		*pub;
 	MINT		*sec;
@@ -209,17 +208,16 @@ static	struct	timeval	TIMEOUT = { 55, 0 };
  * the response; otherwise return an appropriate error code.
  */
 nispasswd_status
-nispasswd_auth(user, domain, oldpass, u_pubkey, deskey, clnt,
-			ident, randval, err)
-char		*user;		/* user name */
-char		*domain;	/* domain */
-char		*oldpass;	/* clear old password */
-unsigned char	*u_pubkey;	/* users' public key */
-des_block	*deskey;	/* the common DES key */
-CLIENT		*clnt;		/* client handle to rpc.nispasswdd */
-unsigned long	*ident;		/* ID, returned on first attempt */
-unsigned long	*randval;	/* R, returned on first attempt */
-int		*err;		/* error code, returned */
+nispasswd_auth(
+	char *user,
+	char *domain,
+	char *oldpass,
+	unsigned char *u_pubkey,
+	des_block *deskey,
+	CLIENT *clnt,
+	unsigned long *ident,
+	unsigned long *randval,
+	int *err)
 {
 	npd_request	req_arg;
 	nispasswd_authresult	res;
@@ -320,16 +318,16 @@ int		*err;		/* error code, returned */
  * clear.
  */
 int
-nispasswd_pass(clnt, ident, randval, deskey, newpass, gecos, shell, err, errlst)
-CLIENT		*clnt;		/* client handle to rpc.nispasswdd */
-unsigned long	ident;		/* ID */
-unsigned long	randval;	/* R */
-des_block	*deskey;	/* common DES key */
-char		*newpass;	/* clear new password */
-char		*gecos;		/* gecos */
-char		*shell;		/* shell */
-int		*err;		/* error code, returned */
-nispasswd_error	**errlst;	/* error list on partial success, returned */
+nispasswd_pass(
+	CLIENT *clnt,
+	unsigned long ident,
+	unsigned long randval,
+	des_block *deskey,
+	char *newpass,
+	char *gecos,
+	char *shell,
+	int *err,
+	nispasswd_error **errlst)
 {
 	npd_update	send_arg;
 	nispasswd_updresult	result;
@@ -415,8 +413,7 @@ nispasswd_error	**errlst;	/* error list on partial success, returned */
 }
 
 void
-__npd_free_errlist(list)
-nispasswd_error *list;
+__npd_free_errlist(nispasswd_error *list)
 {
 	nispasswd_error *p;
 

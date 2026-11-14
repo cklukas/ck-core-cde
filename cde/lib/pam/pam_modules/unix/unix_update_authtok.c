@@ -497,24 +497,22 @@ out:
  */
 
 static int
-verify_old_passwd(pamh, repository, real_rep, domain,
-	shpwd, opwbuf, orpcpw, curcryptsecret, privileged, cred_res,
-	uid, try_first_pass, use_first_pass, debug, nowarn)
-	pam_handle_t *pamh;
-	int repository;		/* repositories in nsswitch.conf */
-	int real_rep;		/* current repository trying to update passwd */
-	char *domain;		/* NIS+ domain */
-	struct spwd *shpwd;
-	char *opwbuf;		/* old password */
-	char *orpcpw;		/* old RPC password */
-	int privileged;		/* NIS+ privileged user? */
-	char *curcryptsecret;	/* old encrypted secret key */
-	void *cred_res;		/* cred entry nis_list result */
-	uid_t uid;
-	int *try_first_pass;
-	int *use_first_pass;
-	int debug;
-	int nowarn;
+verify_old_passwd(
+	pam_handle_t *pamh,
+	int repository,
+	int real_rep,
+	char *domain,
+	struct spwd *shpwd,
+	char *opwbuf,
+	char *orpcpw,
+	char *curcryptsecret,
+	int privileged,
+	void *cred_res,
+	uid_t uid,
+	int *try_first_pass,
+	int *use_first_pass,
+	int debug,
+	int nowarn)
 {
 	int		now;
 	int			done = 0;
@@ -870,11 +868,11 @@ aging:
  */
 
 static int
-turn_on_default_aging(pamh, repository, domain, debug)
-	pam_handle_t *pamh;
-	int repository;
-	char *domain;
-	int debug;
+turn_on_default_aging(
+	pam_handle_t *pamh,
+	int repository,
+	char *domain,
+	int debug)
 {
 	char			value[PAM_MAX_ATTR_SIZE];
 	char			*char_p;
@@ -967,18 +965,17 @@ turn_on_default_aging(pamh, repository, domain, debug)
  */
 
 static int
-get_newpasswd(pamh, pwbuf, re, opwbuf, privileged, uid,
-	try_first_pass, use_first_pass, debug, nowarn)
-	pam_handle_t *pamh;
-	char pwbuf[PAM_MAX_RESP_SIZE];	/* new password */
-	int re;			/* current repository trying to update passwd */
-	char *opwbuf;		/* old password */
-	int privileged;		/* NIS+ privileged user */
-	uid_t uid;		/* UID of user that invoked passwd cmd */
-	int try_first_pass;
-	int use_first_pass;
-	int debug;
-	int nowarn;
+get_newpasswd(
+	pam_handle_t *pamh,
+	char *pwbuf,
+	int re,
+	char *opwbuf,
+	int privileged,
+	uid_t uid,
+	int try_first_pass,
+	int use_first_pass,
+	int debug,
+	int nowarn)
 {
 
 	int		insist = 0; /* # times new passwd fails checks */
@@ -1353,8 +1350,7 @@ triviality_checks(pam_handle_t *pamh, uid_t uid,
  */
 
 static int
-circ(s, t)
-	char *s, *t;
+circ(char *s, char *t)
 {
 	char c, *p, *o, *r, buff[25], ubuff[25], pubuff[25];
 	int i, j, k, l, m;
@@ -1403,9 +1399,7 @@ circ(s, t)
  * verify that the given passwd decrypts the secret key
  */
 static bool_t
-verify_rpc_passwd(oldpass, curcryptsecret)
-	char *oldpass;
-	char *curcryptsecret;
+verify_rpc_passwd(char *oldpass, char *curcryptsecret)
 {
 	char oldsecret[HEXKEYBYTES + KEYCHECKSUMSIZE + 1];
 
@@ -1441,13 +1435,13 @@ verify_rpc_passwd(oldpass, curcryptsecret)
  *		Check cred_res for actual results.
  */
 static int
-get_nispluscred(pamh, nisdomain, prognamep, repository, nisplus_pwd, cred_res)
-	pam_handle_t	*pamh;
-	char		*nisdomain;
-	char 		*prognamep;
-	int		repository;
-	struct passwd	*nisplus_pwd;
-	nis_result	**cred_res;
+get_nispluscred(
+	pam_handle_t *pamh,
+	char *nisdomain,
+	char *prognamep,
+	int repository,
+	struct passwd *nisplus_pwd,
+	nis_result **cred_res)
 {
 	char		messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 	char		buf[NIS_MAXNAMELEN+1];

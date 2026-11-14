@@ -253,7 +253,7 @@ out:
 /*
  * Hex to binary conversion
  */
-static
+static int
 hex2bin(int len, char *hexnum, char *binnum)
 {
 	int i;
@@ -275,7 +275,7 @@ hex2bin(int len, char *hexnum, char *binnum)
 /*
  * Binary to hex conversion
  */
-static
+static int
 bin2hex(int len, unsigned char *binnum, char *hexnum)
 {
 	int i;
