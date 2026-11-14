@@ -138,7 +138,7 @@ _amrewcurr(Bytearray *isfhandle, char *record, int reclen,
 {
     Fcb			*fcb;
     Crp			*crp;
-    Bytearray		newcurpos;
+    Bytearray		newcurpos = _bytearr_getempty();
     int			err;
     char		oldrecord[ISMAXRECLEN];
     int			reclen2;
@@ -170,6 +170,15 @@ _amrewcurr(Bytearray *isfhandle, char *record, int reclen,
     }
 
     /*
+     * The new current record position starts as a copy of the old one.
+     */
+    newcurpos = _bytearr_dup(curpos);
+    if (newcurpos.data == nullptr) {
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
+    }
+
+    /*
      * Update information in FCB from CNTL page on the disk
      */
     (void)_isfcb_cntlpg_r2(fcb);
@@ -190,10 +199,8 @@ _amrewcurr(Bytearray *isfhandle, char *record, int reclen,
     /*
      * Update keys, set new key position.
      */
-    newcurpos = _bytearr_dup(curpos);
     if ((err = _changekeys2 (fcb, record, oldrecord, crp->recno, &newcurpos)) 
 	!= ISOK) {
-	_bytearr_free(&newcurpos);
 	_amseterrcode(errcode, err);	
 	goto ERROR;
     }
@@ -223,6 +230,7 @@ _amrewcurr(Bytearray *isfhandle, char *record, int reclen,
     return (ISOK);
 
  ERROR:
+    _bytearr_free(&newcurpos);
     _isdisk_rollback();
     _isdisk_inval();
 

@@ -82,6 +82,7 @@ _isapplmr(int isfd, char *buffer)
      */
     if ((fcb = _openfcb(&fab->isfhandle, &fab->errcode)) == nullptr) {
 	_isam_exithook();
+	_seterr_errcode(&fab->errcode);
 	return (ISERROR);
     }
 

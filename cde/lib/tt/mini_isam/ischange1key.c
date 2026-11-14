@@ -48,7 +48,8 @@ _change1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record,
 {
     char		keybuf1[MAXKEYSIZE];
     char		keybuf2[MAXKEYSIZE];
-    Btree		*btree;
+    Btree		btreebuf;
+    Btree		*btree = &btreebuf;
     char		*pkey;
 
     /*
@@ -76,7 +77,7 @@ _change1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record,
 	/*
 	 * Delete the old key entry from B tree.
 	 */
-	btree = _isbtree_create(fcb, pkeydesc2);
+	_isbtree_init(btree, fcb, pkeydesc2);
 	_isbtree_search(btree, keybuf1);
 
 	if (ALLOWS_DUPS2(pkeydesc2)) {
@@ -113,7 +114,7 @@ _change1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record,
 	 * Insert new key entry into B tree.
 	 */
 	
-	btree = _isbtree_create(fcb, pkeydesc2);
+	_isbtree_init(btree, fcb, pkeydesc2);
 	
 	if (ALLOWS_DUPS2(pkeydesc2)) {
 	    

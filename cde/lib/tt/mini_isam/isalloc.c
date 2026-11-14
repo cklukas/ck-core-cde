@@ -34,7 +34,8 @@
  *
  * Description:
  *	Functions that allocate and deallocate memory.
- *	All errors are treated as fatal.
+ *	An allocation that fails returns nullptr with errno set to ENOMEM;
+ *	the caller reports the failure through its own error convention.
  */
 
 #include "isam_impl.h"
@@ -44,62 +45,26 @@
 /*
  * _ismalloc(nbytes)
  *
- * Allocate nbytes.
+ * Allocate nbytes (at least one, so that a null result always means failure).
+ * Return nullptr if the memory is not available.
  */
 
 char *_ismalloc(size_t nbytes)
 {
-    char	*p;
-    
-    if ((p = (char *) malloc (nbytes)) == nullptr)
-	_isfatal_error("malloc() failed");
-
-    return (p);
+    return ((char *) malloc (nbytes != 0 ? nbytes : 1));
 }
-
-char *_isrealloc(char *oldaddr, size_t nbytes)
-{
-    char	*p;
-    
-    if ((p = (char *) realloc (oldaddr, nbytes)) == nullptr)
-	_isfatal_error("realloc() failed");
-
-    return (p);
-}
-
-/*
- * _isreallocarray(oldaddr, nmemb, size)
- *
- * Resize a block to hold nmemb elements of size bytes.  A size that
- * overflows is a fatal error.
- */
-
-char *_isreallocarray(char *oldaddr, size_t nmemb, size_t size)
-{
-    char	*p;
-
-    if ((p = (char *) reallocarray (oldaddr, nmemb, size)) == nullptr)
-	_isfatal_error("reallocarray() failed");
-
-    return (p);
-}
-
 
 /*
  * _isallocstring(str)
  *
  * Create a duplicate of string in dynamic memory.
+ * Return nullptr if the memory is not available.
  */
 
 char *
 _isallocstring(char *str)
 {
-    char	*p;
-
-    if ((p = strdup(str)) == nullptr) 
-	_isfatal_error("strdup() failed");
-
-    return (p);
+    return (strdup(str));
 }
 
 /*

@@ -106,6 +106,10 @@ iswrite(int isfd, char *record)
      * Call the Access Method
      */
     curpos = _bytearr_dup(&fab->curpos);
+    if (curpos.data == nullptr) {
+	_setiserrno2(ENOMEM, '9', '0');
+	return (ISERROR);
+    }
 
     if ((ret = _am_write(fab, record, reclen, &curpos, &recnum)) == ISOK) {
 	isrecnum = recnum;		     /* Set isrecnum */

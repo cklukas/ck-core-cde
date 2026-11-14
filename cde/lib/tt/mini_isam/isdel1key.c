@@ -44,7 +44,8 @@ void
 _del1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record, Recno recnum)
 {
     char		keybuf[MAXKEYSIZE];
-    Btree		*btree;
+    Btree		btreebuf;
+    Btree		*btree = &btreebuf;
     char		*pkey;
 
     /*
@@ -57,7 +58,7 @@ _del1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record, Recno recnum)
     _iskey_extract(pkeydesc2,record,keybuf);
     strecno(recnum, keybuf);
 
-    btree = _isbtree_create(fcb, pkeydesc2);
+    _isbtree_init(btree, fcb, pkeydesc2);
     _isbtree_search(btree, keybuf);
 
     if (ALLOWS_DUPS2(pkeydesc2)) {

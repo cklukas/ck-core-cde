@@ -48,6 +48,7 @@
 #include <setjmp.h>
 #include <string.h>
 #include <errno.h>
+#include <stddef.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
@@ -222,6 +223,33 @@ typedef struct lckfid {
     ino_t		inode;		     /* .rec file inode number */
 } Lckfid; 
 
+/* Maximum number of keys in one ISAM file; they all fit into the control page. */
+#define MAXNKEYS	17
+
+#define NPARTS2 (NPARTS+2)		     /* duplid and recno */
+
+/* 
+ * keydesc2 is the 'internal copy'of keydesc. 
+ * keydesc2 contains all information needed by internally by NetISAM,
+ * whereas keydesc conforms to the X/OPEN ISAM. 
+ */
+
+struct keypart2 {
+    u_short 	kp2_start;		     /* starting byte of key part */
+    short	kp2_leng;		     /* length in bytes */
+    short	kp2_type;		     /* type of key part */
+    u_short	kp2_offset;		     /* offset in key buffer */
+};
+
+typedef struct keydesc2 {
+    short 	k2_flags;		     /* flags */
+    short	k2_nparts;		     /* number of parts in key */
+    short	k2_len;			     /* length of the whole key */
+    Blkno	k2_rootnode;		     /* pointer to root node */
+    int		k2_keyid;		     /* Key identifier */
+    struct keypart2 k2_part[NPARTS2];	     /* each part */
+} Keydesc2;
+
 /* File Control Block */
 typedef struct fcb {
     char		*isfname;	     /* ISAM file name */
@@ -246,7 +274,7 @@ typedef struct fcb {
     Blkno		indfreelist;	     /* Head of freepage list of .ind */
 
     int			nkeys;		     /* Number of keys */
-    struct keydesc2	*keys;		     /* Key descriptors */
+    Keydesc2		keys[MAXNKEYS];	     /* Key descriptors, nkeys in use */
     long		varend;		     /* Offset of the last byte */
 					     /* in .var file */
     int                 lockfd;        /* lock file fd for locking .rec for 5.0 */
@@ -268,13 +296,6 @@ typedef struct crp {
 #define PHYS_ORDER   (-1)		     /* value for keyid when physical
 					      order is used*/
 
-/* 
- * keydesc2 is the 'internal copy'of keydesc. 
- * keydesc2 contains all information needed by internally by NetISAM,
- * whereas keydesc conforms to the X/OPEN ISAM. 
- */
-
-#define NPARTS2 (NPARTS+2)		     /* duplid and recno */
 #define DUPSMASK   001			     /* Mask to get ISDUPS/ISNODUPS */
 #define ISPRIMKEY	040		     /* this is primary key */
 #define ALLOWS_DUPS2(pkdesc2) (((pkdesc2)->k2_flags & DUPSMASK) == ISDUPS)
@@ -290,21 +311,6 @@ typedef struct crp {
 #define stdupser(n, b) stlong((long)(n), (b))
 #define lddupser(b)  ((int)ldlong(b))
 
-struct keypart2 {
-    u_short 	kp2_start;		     /* starting byte of key part */
-    short	kp2_leng;		     /* length in bytes */
-    short	kp2_type;		     /* type of key part */
-    u_short	kp2_offset;		     /* offset in key buffer */
-};
-
-typedef struct keydesc2 {
-    short 	k2_flags;		     /* flags */
-    short	k2_nparts;		     /* number of parts in key */
-    short	k2_len;			     /* length of the whole key */
-    Blkno	k2_rootnode;		     /* pointer to root node */
-    int		k2_keyid;		     /* Key identifier */
-    struct keypart2 k2_part[NPARTS2];	     /* each part */
-} Keydesc2;
 
 typedef unsigned long rel_addr;
 /* Double linked list element */
@@ -357,7 +363,7 @@ typedef struct maphdr {
 /* 
  * Macro to get pointer to structure if pointer to some element is known 
  */
-#define GETBASE(p,s,e) ((struct s *) ((char *)(p) - (char *)&((struct s *)0)->e))
+#define GETBASE(p,s,e) ((struct s *) ((char *)(p) - offsetof(struct s, e)))
 
 /* In memory sorting object */
 typedef struct issort {
@@ -596,7 +602,6 @@ struct export_opts {
 #define CP_KEYS_OFF	(CP_RESERVE_OFF+CP_RESERVE_LEN)
 
 #define MAXNKEYS2 ((ISCNTLSIZE - CP_KEYS_OFF) / K2_LEN)
-#define MAXNKEYS	17
 
 #if (MAXNKEYS2 < MAXNKEYS)
 Cause a compiler error here. There is not enought space in the control

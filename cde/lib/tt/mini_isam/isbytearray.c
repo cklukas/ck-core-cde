@@ -59,6 +59,9 @@ _bytearr_getempty(void)
  * bytearray = _bytearr_new(len, data)
  *
  * Create a byte array object.
+ * If memory is not available, the result is the empty byte array
+ * (data == nullptr); a byte array that was created successfully always
+ * has a non-null data pointer.
  */
 
 Bytearray
@@ -66,8 +69,10 @@ _bytearr_new(u_short len, char *data)
 {
     Bytearray		bytearray;
 
+    if ((bytearray.data = _ismalloc(len)) == nullptr)
+	return (_bytearr_getempty());
+
     bytearray.length = len;
-    bytearray.data = _ismalloc(len);
     memcpy( bytearray.data,data, (int)len);
     
     return (bytearray);
@@ -76,13 +81,28 @@ _bytearr_new(u_short len, char *data)
 /*
  * new = _bytearr_dup(old)
  *
- * Duplicate a byte array object.
+ * Duplicate a byte array object. See _bytearr_new() for the failure result.
  */
 
 Bytearray
 _bytearr_dup(Bytearray *old)
 {
     return (_bytearr_new(old->length, old->data));
+}
+
+/*
+ * _bytearr_adopt(barray, len, data)
+ *
+ * Free the buffer of barray and let it own the malloc()ed buffer data of
+ * len bytes instead.
+ */
+
+void
+_bytearr_adopt(Bytearray *barray, u_short len, char *data)
+{
+    _bytearr_free(barray);
+    barray->length = len;
+    barray->data = data;
 }
 
 /*

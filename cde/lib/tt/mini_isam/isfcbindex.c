@@ -96,12 +96,6 @@ _isfcb_altkeyadd(Fcb *fcb, Keydesc2 *keydesc2)
      */
     keydesc2->k2_keyid = ++fcb->lastkeyid;
 
-    /*
-     * Reallocate fcb->keys table.
-     */
-    fcb->keys = (Keydesc2 *) 
-	_isreallocarray((char *)fcb->keys, fcb->nkeys + 1, sizeof(Keydesc2));
-
     fcb->keys[fcb->nkeys] = *keydesc2;
 
     fcb->nkeys++;

@@ -45,7 +45,9 @@
 /* 
  * _issort_create() 
  *
- * Create a sorter
+ * Create a sorter.
+ * Return nullptr if the array of records is too large or the memory
+ * is not available.
  */
 
 Issort *
@@ -56,9 +58,10 @@ _issort_create(int reclen, int nrecs, int (*compfunc)(const void *, const void *
 
     if (ckd_mul(&arraysize, (size_t) reclen, (size_t) nrecs) ||
 	arraysize > UINT_MAX)
-	_isfatal_error("sort array too large");
+	return (nullptr);
 
-    p = (Issort *)_ismalloc(sizeof(*p));     /* Allocate new sorter */
+    if ((p = (Issort *)_ismalloc(sizeof(*p))) == nullptr)    /* Allocate new sorter */
+	return (nullptr);
     memset((char *)p, 0,sizeof(*p));
 
     p->ist_reclength = reclen;		     /* Record length in bytes */
@@ -68,8 +71,12 @@ _issort_create(int reclen, int nrecs, int (*compfunc)(const void *, const void *
     p->ist_currec = 0;			     /* Current position */
     p->ist_compf = compfunc;		     /* Comparison function */
 
-    p->ist_array = _ismalloc((unsigned) arraysize); /* Allocate array */
+					     /* Allocate array */
 					     /* for storing records */
+    if ((p->ist_array = _ismalloc(arraysize)) == nullptr) {
+	free((char *)p);
+	return (nullptr);
+    }
 
     return(p);
 }

@@ -71,8 +71,11 @@ isgetcurpos(int isfd, int *len, char **buf)
     }
 
     if (*buf == nullptr) {
+	if ((*buf = _ismalloc((unsigned int)total_len)) == nullptr) {
+	    _setiserrno2(ENOMEM, '9', '0');
+	    return (ISERROR);
+	}
 	*len = total_len;
-	*buf = _ismalloc((unsigned int)total_len);
     }
 
     memcpy(*buf, (char *) &total_len, sizeof(total_len));
@@ -92,6 +95,7 @@ issetcurpos(int isfd, char *buf)
 {
     Fab		*fab;
     u_short	len;
+    Bytearray	newcurpos;
 
     /*
      * Get File Access Block.
@@ -104,9 +108,14 @@ issetcurpos(int isfd, char *buf)
     memcpy((char *)&len, buf, sizeof(len));
     len -= sizeof (len);
 
-    _bytearr_free(&fab->curpos);
-    fab->curpos = _bytearr_new(len, buf + sizeof(len));
+    newcurpos = _bytearr_new(len, buf + sizeof(len));
+    if (newcurpos.data == nullptr) {
+	_setiserrno2(ENOMEM, '9', '0');
+	return (ISERROR);
+    }
 
+    _bytearr_free(&fab->curpos);
+    fab->curpos = newcurpos;
 
     return (ISOK);
 }

@@ -75,6 +75,7 @@ _ambuild(char *isfname, enum openmode, Bool varflag,
  *	EBADFILE ISAM file is corrupted or it is not an NetISAM file
  *	EFNAME	Invalid ISAM file name 
  *	ETOOMANY Too many ISAM file descriptors are in use (128 is the limit)
+ *	ENOMEM	Memory is not available
  *
  * The following error numbers are "borrowed" from UNIX.
  *	EACCES	UNIX file system protection denies creation of the file
@@ -200,9 +201,9 @@ _ambuild(char *isfname, enum openmode, Bool varflag,
     Fcb			*fcb = nullptr;
     Bytearray		*isfhandle2;
     Bytearray		isfhandle0 = _bytearr_getempty();
+    Bytearray		curpos0 = _bytearr_getempty();
     Keydesc2		keydesc2;
     int			err;
-    Crp			*crp;
 
     _isam_entryhook();
 
@@ -219,6 +220,10 @@ _ambuild(char *isfname, enum openmode, Bool varflag,
      * Make isfhandle0.
      */
     isfhandle0 = _makeisfhandle(isfname);
+    if (isfhandle0.data == nullptr) {
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
+    }
 
     /* 
      * Check that there is not entry with the same name in FCB cache. 
@@ -285,54 +290,27 @@ _ambuild(char *isfname, enum openmode, Bool varflag,
     /*
      * Initial current record position.
      */
-    if (FCB_NOPRIMARY_KEY(fcb)) {
-	/* Use physical order. */
-	crp = (Crp *) _ismalloc(sizeof(*crp));
-	memset ((char *) crp, 0, sizeof(*crp));
-
-	crp->keyid = PHYS_ORDER;
-	crp->flag = CRP_BEFOREANY;
-
-	curpos->length = sizeof(*crp);
-	curpos->data = (char *) crp;
-    }
-    else {
-	/* 
-	 * Use primary key order. 
-	 */
-
-	crp = (Crp *) _ismalloc((unsigned)(sizeof(*crp) + fcb->keys[0].k2_len));
-	memset((char *) crp, 0, (sizeof(*crp) + fcb->keys[0].k2_len)); 
-
-	crp->keyid = fcb->keys[0].k2_keyid;
-	crp->flag = CRP_BEFOREANY;
-
-	_iskey_fillmin(&fcb->keys[0], crp->key);
-
-	curpos->length = sizeof(*crp) + fcb->keys[0].k2_len;
-	curpos->data = (char *) crp;
-	
-	/*
-	 * Set full key length as the number of bytes to match in key comparison
-	 */
-	crp->matchkeylen = fcb->keys[0].k2_len - RECNOSIZE;
-	
-	if (ALLOWS_DUPS2(&fcb->keys[0]))
-	    crp->matchkeylen -= DUPIDSIZE;
+    if (_makeinitialcurpos(fcb, &curpos0) == ISERROR) {
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
     }
 
     _amseterrcode(errcode, ISOK);
 
     /*
+     * Insert new entry into FCB cache.
+     */
+    if (_mngfcb_insert(fcb, &isfhandle0) == ISERROR) {
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
+    }
+
+    /*
      * Register the number of UNIX fd consumed.
      */
     (void) _watchfd_incr(_isfcb_nfds(fcb));
-
-    /*
-     * Insert new entry into FCB cache.
-     */
-    _mngfcb_insert(fcb, &isfhandle0);
     *isfhandle = isfhandle0;
+    *curpos = curpos0;
 
     /* Commit all work in disk cache. */
     _issignals_mask();
@@ -359,6 +337,7 @@ _ambuild(char *isfname, enum openmode, Bool varflag,
     }
 
     _bytearr_free(&isfhandle0);
+    _bytearr_free(&curpos0);
 
     _isam_exithook();
     return (ISERROR);

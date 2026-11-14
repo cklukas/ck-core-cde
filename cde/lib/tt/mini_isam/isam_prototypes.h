@@ -36,8 +36,6 @@ int isaddprimary(int isfd, struct keydesc *keydesc);
 
 /* isalloc.c */
 char *_ismalloc(size_t nbytes);
-char *_isrealloc(char *oldaddr, size_t nbytes);
-char *_isreallocarray(char *oldaddr, size_t nmemb, size_t size);
 char *_isallocstring(char *str);
 void _isfreestring(char *str);
 
@@ -64,6 +62,7 @@ int _amopen(char *isfname, enum openmode openmode, Bool *varflag, int *minlen, i
 Fcb *_openfcb(Bytearray *isfhandle, struct errcode *errcode);
 char *_getisfname(Bytearray *isfhandle);
 Bytearray _makeisfhandle(char *isfname);
+int _makeinitialcurpos(Fcb *fcb, Bytearray *curpos);
 
 /* isamwrite.c */
 int _amwrite(Bytearray *isfhandle, char *record, int reclen, Bytearray *curpos, Recno *recnum, struct errcode *errcode);
@@ -87,7 +86,7 @@ void leftkey_up(Btree *btree, int level);
 void _isbtree_remove(Btree *btree);
 
 /* isbtree.c */
-Btree *_isbtree_create(Fcb *fcb, Keydesc2 *pkeydesc2);
+void _isbtree_init(Btree *btree, Fcb *fcb, Keydesc2 *pkeydesc2);
 void _isbtree_destroy(Btree *btree);
 void _isbtree_search(Btree *btree, char *key);
 char *_isbtree_current(Btree *btree);
@@ -100,6 +99,7 @@ int isbuild(char *isfname, int recordlength, struct keydesc *primkey, int mode);
 Bytearray _bytearr_getempty(void);
 Bytearray _bytearr_new(u_short len, char *data);
 Bytearray _bytearr_dup(Bytearray *old);
+void _bytearr_adopt(Bytearray *barray, u_short len, char *data);
 void _bytearr_free(Bytearray *barray);
 int _bytearr_cmp(Bytearray *l, Bytearray *r);
 
@@ -269,7 +269,7 @@ void _iskey_fillmax(struct keydesc2 *pkeydesc2, char *keybuf);
 void _iskey_fillmin(struct keydesc2 *pkeydesc2, char *keybuf);
 
 /* ismngfcb.c */
-void _mngfcb_insert(Fcb *fcb, Bytearray *isfhandle);
+int _mngfcb_insert(Fcb *fcb, Bytearray *isfhandle);
 Fcb *_mngfcb_find(Bytearray *isfhandle);
 void _mngfcb_delete(Bytearray *isfhandle);
 Bytearray *_mngfcb_victim(void);

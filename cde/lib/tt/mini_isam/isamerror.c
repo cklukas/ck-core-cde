@@ -71,6 +71,7 @@ static struct errstattab {
     { EACCES, 	'9', '0'},
     { EEXIST, 	'9', '0'},
     { ENOSPC, 	'9', '0'},
+    { ENOMEM,	'9', '0'},
 
     /* search sentinel */
     { ESENTINEL, '9', '0'}

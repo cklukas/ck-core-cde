@@ -57,6 +57,7 @@ static int _am_open(Fab *fab);
  *	EFNAME	Invalid ISAM file name 
  *	EFNAME	ISAM file does not exist
  *	ETOOMANY Too many ISAM file descriptors are in use (128 is the limit)
+ *	ENOMEM	Memory is not available
  *
  * The following error code is "borrowed" from UNIX:
  *	EACCES	UNIX file system protection denies access to the file:

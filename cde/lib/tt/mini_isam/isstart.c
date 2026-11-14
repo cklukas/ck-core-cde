@@ -166,7 +166,8 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
     int			matchkeylen;
     int			skipbytes;
     char		*pkey;
-    Btree		*btree = nullptr;
+    Btree		btreebuf = {0};
+    Btree		*btree = &btreebuf;
     int			reclen2;
     int			(*rec_read)(Fcb *, char *, Recno, int *);
 
@@ -196,7 +197,10 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	 * Allocate new current position structure.
 	 */
 	newcrpsize = sizeof(*newcrp);
-	newcrp = (Crp *) _ismalloc(sizeof(*newcrp));
+	if ((newcrp = (Crp *) _ismalloc(sizeof(*newcrp))) == nullptr) {
+	    _amseterrcode(errcode, ENOMEM);
+	    goto ERROR;
+	}
 	memset ((char *)newcrp, 0, sizeof(*newcrp));
 	newcrp->keyid = PHYS_ORDER;
 	
@@ -324,10 +328,10 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	*recnum = recnum2;
 
 	/*
-	 * Build new curpos, deallocate old curpos.
+	 * The new Crp becomes the curpos; the old curpos data is deallocated.
 	 */
-	_bytearr_free(curpos);
-	*curpos = _bytearr_new(sizeof(*newcrp), (char *)newcrp);
+	_bytearr_adopt(curpos, (u_short)newcrpsize, (char *)newcrp);
+	newcrp = nullptr;
 
     } /* physical order */
     else {
@@ -385,7 +389,10 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	 * Allocate new current record position.
 	 */
 	newcrpsize = sizeof(Crp) + pkeydesc2->k2_len;
-	newcrp = (Crp *) _ismalloc((unsigned)newcrpsize);
+	if ((newcrp = (Crp *) _ismalloc((unsigned)newcrpsize)) == nullptr) {
+	    _amseterrcode(errcode, ENOMEM);
+	    goto ERROR;
+	}
 	memset((char *)newcrp, 0, newcrpsize);
 
 	newcrp->keyid = pkeydesc2->k2_keyid; /* Key identifier in FCB */
@@ -394,7 +401,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	/*
 	 * Create B tree object.
 	 */
-	btree = _isbtree_create(fcb, pkeydesc2);
+	_isbtree_init(btree, fcb, pkeydesc2);
 
 	switch (readmode) {
 	case RM_EQUAL:
@@ -564,8 +571,8 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	/*
 	 * Build new curpos, deallocate old curpos data.
 	 */
-	_bytearr_free(curpos);
-	*curpos = _bytearr_new((u_short)newcrpsize, (char *)newcrp);
+	_bytearr_adopt(curpos, (u_short)newcrpsize, (char *)newcrp);
+	newcrp = nullptr;
 
 	_isbtree_destroy(btree);
     }
@@ -573,7 +580,6 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
     _amseterrcode(errcode, ISOK);
 
     /* Clean-up work. */
-    free(newcrp);
 
     _isdisk_commit();			     /* This will only check
 					      * that we unfixed all fixed
@@ -585,8 +591,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 
  ERROR:
 
-    if (btree != nullptr)
-	_isbtree_destroy(btree);
+    _isbtree_destroy(btree);
 
     /*
      * If error is EBADKEY, make the current position undefined.
@@ -600,13 +605,12 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
      * record position undefined.
      */
     if (errcode->iserrno == ENOREC && newcrp != nullptr) {
-	_bytearr_free(curpos);
-	*curpos = _bytearr_new((u_short)newcrpsize, (char *)newcrp);
+	_bytearr_adopt(curpos, (u_short)newcrpsize, (char *)newcrp);
+	newcrp = nullptr;
 	((Crp *)curpos->data)->flag = CRP_UNDEF;
     }
 
-    if (newcrp != nullptr)
-	free((char *)newcrp);
+    free((char *)newcrp);
     _isdisk_inval();
 
     _isam_exithook();

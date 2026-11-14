@@ -66,12 +66,14 @@ static int mrused_last = 0;			     /* stamp generator */
 
 
 /*
- * _mngfcb_insert(fcb, isfhandle)
+ * err = _mngfcb_insert(fcb, isfhandle)
  *
  * Insert new FCB entry.
+ *
+ * Return ISOK, or ISERROR (nothing inserted) if memory is not available.
  */
 
-void
+int
 _mngfcb_insert(Fcb *fcb, Bytearray *isfhandle)
 {
     int			hashval = _hashisfhandle(isfhandle);
@@ -96,8 +98,11 @@ _mngfcb_insert(Fcb *fcb, Bytearray *isfhandle)
      * Duplicate the file handle and mark the entry with the current stamp.
      */
     hashtable[ind].isfhandle = _bytearr_dup(isfhandle);
+    if (hashtable[ind].isfhandle.data == nullptr)
+	return (ISERROR);
     hashtable[ind].fcb = fcb;
     hashtable[ind].mrused = mrused_last++;
+    return (ISOK);
 }
 
 

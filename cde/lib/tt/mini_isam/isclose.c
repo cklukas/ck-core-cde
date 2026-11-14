@@ -71,6 +71,7 @@ isclose(int isfd)
      */
     if ((fcb = _openfcb(&fab->isfhandle, &fab->errcode)) == nullptr) {
 	_isam_exithook();
+	_seterr_errcode(&fab->errcode);
 	return (ISERROR);
     }
 

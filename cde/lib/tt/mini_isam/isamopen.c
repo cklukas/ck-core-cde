@@ -68,7 +68,7 @@ _amopen(char *isfname, enum openmode openmode, Bool *varflag,
 {
     Fcb			*fcb;
     Bytearray		isfhandle0;
-    Crp			*crp;
+    Bytearray		curpos0 = _bytearr_getempty();
 
 
     _isam_entryhook();
@@ -78,6 +78,10 @@ _amopen(char *isfname, enum openmode openmode, Bool *varflag,
      */
 
     isfhandle0 = _makeisfhandle(isfname);
+    if (isfhandle0.data == nullptr) {
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
+    }
 
     /*
      * Invalidate the FCB cache entry to avoid a problem found when using 
@@ -105,57 +109,28 @@ _amopen(char *isfname, enum openmode openmode, Bool *varflag,
     }
     
     /*
+     * Initial current record position.
+     */
+    if (_makeinitialcurpos(fcb, &curpos0) == ISERROR) {
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
+    }
+
+    /*
      * Fill output parameters. 
      */
     *minlen = fcb->minreclen;
     *maxlen = fcb->maxreclen;
     *varflag = fcb->varflag;
     *isfhandle = isfhandle0;
-
-    /*
-     * Initial current record position.
-     */
-    if (FCB_NOPRIMARY_KEY(fcb)) {
-	/* Use physical order. */
-	crp = (Crp *) _ismalloc(sizeof(*crp));
-	memset ((char *) crp, 0, sizeof(*crp));
-
-	crp->keyid = PHYS_ORDER;
-	crp->flag = CRP_BEFOREANY;
-
-	curpos->length = sizeof(*crp);
-	curpos->data = (char *) crp;
-    }
-    else {
-	/* 
-	 * Use primary key order. 
-	 */
-
-	crp = (Crp *) _ismalloc((unsigned)(sizeof(*crp) + fcb->keys[0].k2_len));
-	memset((char *) crp, 0, (sizeof(*crp) + fcb->keys[0].k2_len)); 
-
-	crp->keyid = fcb->keys[0].k2_keyid;
-	crp->flag = CRP_BEFOREANY;
-
-	_iskey_fillmin(&fcb->keys[0], crp->key);
-
-	curpos->length = sizeof(*crp) + fcb->keys[0].k2_len;
-	curpos->data = (char *) crp;
-	
-	/*
-	 * Set full key length as the number of bytes to match in key comparison
-	 */
-	crp->matchkeylen = fcb->keys[0].k2_len - RECNOSIZE;
-	
-	if (ALLOWS_DUPS2(&fcb->keys[0]))
-	    crp->matchkeylen -= DUPIDSIZE;
-    }
+    *curpos = curpos0;
 
     _isam_exithook();
     return (ISOK);
 
  ERROR:
     _bytearr_free(&isfhandle0);
+    _bytearr_free(&curpos0);
     _isam_exithook();
     return (ISERROR);
 }
@@ -216,18 +191,25 @@ _openfcb(Bytearray *isfhandle, struct errcode *errcode)
     /*
      * Read information from CNTL PAGE and store it in the FCB.
      */
-    if (_isfcb_cntlpg_r(fcb) == ISERROR)
-	_isfatal_error("_openfcb() cannot read CNTL PAGE");
+    if (_isfcb_cntlpg_r(fcb) == ISERROR) {
+	_amseterrcode(errcode, EBADFILE);
+	_isfcb_close(fcb);
+	return (nullptr);
+    }
+
+    /*
+     * Insert new entry into the FCB cache.
+     */
+    if (_mngfcb_insert(fcb, isfhandle) == ISERROR) {
+	_amseterrcode(errcode, ENOMEM);
+	_isfcb_close(fcb);
+	return (nullptr);
+    }
 
     /*
      * Register UNIX file descriptors consumed.
      */
     (void) _watchfd_incr(_isfcb_nfds(fcb));
-
-    /*
-     * Insert new entry into the FCB cache.
-     */
-    _mngfcb_insert(fcb, isfhandle); 
 
  out:
 
@@ -291,5 +273,56 @@ Bytearray
 _makeisfhandle(char *isfname)
 {
     return (_bytearr_new((u_short)(strlen(isfname) + 1), isfname));
+}
+
+/*
+ * err = _makeinitialcurpos(fcb, curpos)
+ *
+ * Create the current record position of a newly opened or built file:
+ * before the first record, in primary key order if the file has a primary
+ * key and in physical order otherwise.
+ *
+ * Return ISOK, or ISERROR (curpos unchanged) if memory is not available.
+ */
+
+int
+_makeinitialcurpos(Fcb *fcb, Bytearray *curpos)
+{
+    Crp			*crp;
+    size_t		size = sizeof(*crp);
+
+    if (!FCB_NOPRIMARY_KEY(fcb))
+	size += fcb->keys[0].k2_len;
+
+    if ((crp = (Crp *) _ismalloc(size)) == nullptr)
+	return (ISERROR);
+    memset((char *) crp, 0, size);
+
+    crp->flag = CRP_BEFOREANY;
+
+    if (FCB_NOPRIMARY_KEY(fcb)) {
+	/* Use physical order. */
+	crp->keyid = PHYS_ORDER;
+    }
+    else {
+	/* 
+	 * Use primary key order. 
+	 */
+	crp->keyid = fcb->keys[0].k2_keyid;
+
+	_iskey_fillmin(&fcb->keys[0], crp->key);
+
+	/*
+	 * Set full key length as the number of bytes to match in key comparison
+	 */
+	crp->matchkeylen = fcb->keys[0].k2_len - RECNOSIZE;
+	
+	if (ALLOWS_DUPS2(&fcb->keys[0]))
+	    crp->matchkeylen -= DUPIDSIZE;
+    }
+
+    curpos->length = size;
+    curpos->data = (char *) crp;
+    return (ISOK);
 }
 

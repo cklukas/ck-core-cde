@@ -46,7 +46,8 @@ int
 _add1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record, Recno recnum, char *newkey)
 {
     char		keybuf[MAXKEYSIZE];
-    Btree		*btree;
+    Btree		btreebuf;
+    Btree		*btree = &btreebuf;
     char		*pkey;
     
     /*
@@ -58,7 +59,7 @@ _add1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record, Recno recnum, char *newkey
     memset((char *)keybuf, 0, pkeydesc2->k2_len);
     _iskey_extract(pkeydesc2, record, keybuf);
     
-    btree = _isbtree_create(fcb, pkeydesc2);
+    _isbtree_init(btree, fcb, pkeydesc2);
     
     if (ALLOWS_DUPS2(pkeydesc2)) {
 	

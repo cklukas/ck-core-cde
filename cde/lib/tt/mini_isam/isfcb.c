@@ -127,10 +127,17 @@ _isfcb_create(char *isfname, int crdat, int crind, int crvar,
     /*
      * Allocate File Control Block.
      */
-    fcb = (Fcb *) _ismalloc(sizeof(*fcb));
+    if ((fcb = (Fcb *) _ismalloc(sizeof(*fcb))) == nullptr) {
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
+    }
     memset ((char *) fcb, 0, sizeof(*fcb));
 
-    fcb->isfname = _isallocstring(isfname);
+    if ((fcb->isfname = _isallocstring(isfname)) == nullptr) {
+	free((char *)fcb);
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
+    }
     fcb->rdonly = FALSE;
     fcb->datfd = dat_fd;	
     fcb->indfd = ind_fd;
@@ -141,7 +148,6 @@ _isfcb_create(char *isfname, int crdat, int crind, int crvar,
 
     /* Key descriptor */
     fcb->nkeys = 1;
-    fcb->keys = (Keydesc2 *) _ismalloc(sizeof(fcb->keys[0]));
     memset((char *)fcb->keys, 0, sizeof(fcb->keys[0]));
     
     return (fcb);
@@ -230,10 +236,17 @@ _isfcb_open(char *isfname, struct errcode *errcode)
     /*
      * Allocate File Control Block.
      */
-    fcb = (Fcb *) _ismalloc(sizeof(*fcb));
+    if ((fcb = (Fcb *) _ismalloc(sizeof(*fcb))) == nullptr) {
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
+    }
     memset ((char *) fcb, 0, sizeof(*fcb));
 
-    fcb->isfname = _isallocstring(isfname);
+    if ((fcb->isfname = _isallocstring(isfname)) == nullptr) {
+	free((char *)fcb);
+	_amseterrcode(errcode, ENOMEM);
+	goto ERROR;
+    }
     fcb->rdonly = rdonly;
     fcb->datfd = dat_fd;	
     fcb->indfd = ind_fd;
@@ -241,10 +254,19 @@ _isfcb_open(char *isfname, struct errcode *errcode)
 
     /* Key descriptor */
     fcb->nkeys = 1;
-    fcb->keys = (Keydesc2 *) _ismalloc(sizeof(fcb->keys[0]));
     memset((char *)fcb->keys, 0, sizeof(fcb->keys[0]));
 
     return (fcb);
+
+ ERROR:
+    if (dat_fd != -1)
+	(void) close(dat_fd);
+    if (ind_fd != -1)
+	(void) close(ind_fd);
+    if (var_fd != -1)
+	(void) close(var_fd);
+
+    return (nullptr);
 }
 
 /*
@@ -307,7 +329,6 @@ _isfcb_close(Fcb *fcb)
     (void) close(fcb->varfd);
 
     _isfreestring(fcb->isfname);
-    free((char *)fcb->keys);
     free((char *)fcb);
 }
 
@@ -467,7 +488,8 @@ _isfcb_cntlpg_w2(Fcb *fcb)
  * Read information from control page and store it in the FCB.
  * Note that the Control Page transfer bypasses the disk buffer manager.
  *
- * Return 0 if read was successful, return -1 if any error.
+ * Return 0 if read was successful, return -1 if the page holds an invalid
+ * number of keys (the FCB is then left unchanged).
  */
 
 int
@@ -476,6 +498,7 @@ _isfcb_cntlpg_r(Fcb *fcb)
     char	       	cntl_page[ISCNTLSIZE];
     int			dat_fd = fcb->datfd;
     int			i;
+    int			nkeys;
     
     /* 
      * Read the page from the disk.
@@ -483,6 +506,11 @@ _isfcb_cntlpg_r(Fcb *fcb)
     _isseekpg(dat_fd, ISCNTLPGOFF);
     _isreadpg(dat_fd, cntl_page);
     _isreadpg(dat_fd, cntl_page + ISPAGESIZE);
+
+    /* A key count the control page cannot hold means a corrupt file. */
+    nkeys = ldshort(cntl_page + CP_NKEYS_OFF);
+    if (nkeys < 1 || nkeys > MAXNKEYS)
+	return (ISERROR);
 
     /* block size */
     fcb->blocksize = ldshort(cntl_page + CP_BLOCKSIZE_OFF);
@@ -522,13 +550,11 @@ _isfcb_cntlpg_r(Fcb *fcb)
     fcb->varend = ldlong(cntl_page + CP_VAREND_OFF);
 
     /* Number of keys */
-    fcb->nkeys = ldshort(cntl_page + CP_NKEYS_OFF);
+    fcb->nkeys = nkeys;
 
     /*
      * Read key descriptors.
      */
-    fcb->keys = (Keydesc2 *) 
-	_isreallocarray((char *)fcb->keys, fcb->nkeys, sizeof(Keydesc2));
     memset((char *)fcb->keys, 0, sizeof(Keydesc2) * fcb->nkeys);
 
     for (i = 0; i < fcb->nkeys; i++) {

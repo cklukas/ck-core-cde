@@ -154,13 +154,13 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
     Recno		recnum2 = 0;
     int			err;
     Crp			*crp;
-    Btree		*btree = nullptr;
+    Btree		btreebuf = {0};
+    Btree		*btree = &btreebuf;
     Keydesc2		*pkeydesc2;
     char		keybuf1[MAXKEYSIZE], keybuf2[MAXKEYSIZE];
     char		*pkey = nullptr, *pkeynext;
     int			skipbytes;
     int			ret;
-    Bytearray		oldcurpos;
     int			(*rec_read)(Fcb *, char *, Recno, int *);
 
     _isam_entryhook();
@@ -179,11 +179,6 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
      * Update information in FCB from CNTL page on the disk
      */
     (void)_isfcb_cntlpg_r2(fcb);
-
-    /*
-     * Save the old record position.
-     */
-    oldcurpos = _bytearr_dup(curpos);
 
     /*
      * Get info from current record position structure.
@@ -412,7 +407,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	/*
 	 * Create B tree object.
 	 */
-	btree = _isbtree_create(fcb, pkeydesc2);
+	_isbtree_init(btree, fcb, pkeydesc2);
 
 	switch (readmode) {
 	case RM_EQUAL:
@@ -779,7 +774,6 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 					      * that we unfixed all fixed
 					      * buffers */
     _isdisk_inval();
-    _bytearr_free(&oldcurpos);
 
     _isam_exithook();
     return (ret);
@@ -790,8 +784,6 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 
     _isdisk_inval();
 
-    _bytearr_free(&oldcurpos);
-
     /*
      * If error is ENOREC,  set the current record position undefined.
      */
@@ -799,8 +791,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	((Crp *)curpos->data)->flag = CRP_UNDEF;
     }
 
-    if (btree != nullptr)
-	_isbtree_destroy(btree);
+    _isbtree_destroy(btree);
 
     _isam_exithook();
     return (ISERROR);

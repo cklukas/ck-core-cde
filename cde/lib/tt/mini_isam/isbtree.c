@@ -43,30 +43,27 @@
 
 
 /*
- * _isbtree_create()
+ * _isbtree_init(btree, fcb, pkeydesc2)
  *
- * Create a B-tree path object that will used in subsequent operations.
+ * Initialize a B-tree path object (owned by the caller) that will be used
+ * in subsequent operations.
  */
 
-Btree *
-    _isbtree_create(Fcb *fcb, Keydesc2 *pkeydesc2)
+void
+_isbtree_init(Btree *btree, Fcb *fcb, Keydesc2 *pkeydesc2)
 {
-    Btree	*p;
+    memset((char *)btree, 0, sizeof(*btree));
 
-    p = (Btree *) _ismalloc(sizeof(*p));
-    memset((char *)p, 0, sizeof(*p));
-
-    p->fcb = fcb;
-    p->keydesc2 = pkeydesc2;
-
-    return (p);
+    btree->fcb = fcb;
+    btree->keydesc2 = pkeydesc2;
 }
 
 
 /*
- * _isbtr_destroy()
+ * _isbtree_destroy()
  *
- * Destroy B-tree path object
+ * Release the buffers fixed by a B-tree path object. The object may be
+ * destroyed more than once.
  */
 
 void
@@ -77,7 +74,7 @@ _isbtree_destroy(Btree *btree)
     for (i = 0; i < btree->depth;i++) {
 	_isdisk_unfix(btree->bufhdr[i]);
     }
-    free((char *)btree);
+    btree->depth = 0;
 }
 
 

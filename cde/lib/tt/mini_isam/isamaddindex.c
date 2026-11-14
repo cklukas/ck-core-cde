@@ -307,6 +307,8 @@ _amaddprimary(Bytearray *isfhandle, struct keydesc *keydesc, struct errcode *err
  *
  * Read data file, extract key from record, sort keys, create index.
  * Check unique constraint, create duplicate serial numbers.
+ *
+ * Return ISOK, or an error number (EDUPL, ENOMEM).
  */
 
 int _create_index(Fcb *fcb, Keydesc2 *pkeydesc2)
@@ -335,7 +337,8 @@ int _create_index(Fcb *fcb, Keydesc2 *pkeydesc2)
     /* 
      * Create a sorter for this key descriptor. 
      */
-    srt = _issort_create(keylength, (int)fcb->nrecords, _iskeycmp);
+    if ((srt = _issort_create(keylength, (int)fcb->nrecords, _iskeycmp)) == nullptr)
+	return (ENOMEM);
 
     /* 
      * Read sequentially all records, extract keys, and
