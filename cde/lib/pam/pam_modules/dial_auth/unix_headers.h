@@ -70,6 +70,7 @@ publication.
 #include <sys/param.h>
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
+#include "../../libpam/pam_impl.h"
 #include <pwd.h>
 #include <shadow.h>
 #include <string.h>

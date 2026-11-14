@@ -32,6 +32,9 @@
 
 #pragma ident	"@(#)sample_utils.h	1.7	96/02/02 SMI"	/* PAM 2.6 */
 
+#include <security/pam_appl.h>
+#include "../../libpam/pam_impl.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

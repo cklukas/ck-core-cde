@@ -85,6 +85,8 @@ extern "C" {
 #include <time.h>
 #include <sys/fcntl.h>
 #include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include <crypt.h>
 
 #ifdef PAM_NISPLUS
@@ -181,11 +183,22 @@ extern int		ck_perm(pam_handle_t *, int,
 				char *, struct passwd **, struct spwd **,
 				int *, void **, uid_t, int, int);
 extern char		*attr_match(char *, char *);
+extern int		attr_find(char *, char *[]);
+extern void		setup_attr(char *[], int, char [], char []);
+extern void		free_setattr(char *[]);
 extern char		*getloginshell(pam_handle_t *, char *, int, int);
 extern char		*gethomedir(pam_handle_t *, char *, int);
 extern char		*getfingerinfo(pam_handle_t *, char *, int);
 extern char		*repository_to_string(int);
 extern void		free_passwd_structs(struct passwd *, struct spwd *);
+
+/* from unix_set_authtokattr.c */
+extern int		__set_authtoken_attr(pam_handle_t *, const char **,
+				int, const char *, int, const char **);
+
+/* from unix_update_authtok.c */
+extern int		__update_authtok(pam_handle_t *, int, int, char *,
+				int, const char **);
 
 /* from switch_utils.c */
 extern int		str2spwd(const char *, int, void *, char *, int);

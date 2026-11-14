@@ -80,9 +80,13 @@ pam_sec_login_free_context(
 
 		if (env) {
 			/* we MUST malloc this for the putenv to work! */
-			krb5_value = malloc(strlen(krb5)+1+strlen(env)+1);
+			int krb5_len = snprintf(nullptr, 0, "%s=%s", krb5, env);
+
+			krb5_value = (krb5_len < 0) ? nullptr :
+			    malloc(krb5_len + 1);
 			if (krb5_value)
-				sprintf(krb5_value, "%s=%s", krb5, env);
+				snprintf(krb5_value, krb5_len + 1, "%s=%s",
+				    krb5, env);
 		}
 
 		sec_login_release_context(login_context, st);

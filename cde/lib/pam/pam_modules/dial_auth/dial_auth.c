@@ -128,7 +128,7 @@ pam_sm_authenticate(
 	if (*p2 != '\0') {
 		strcpy(messages[0], PAM_MSG(pamh, 1, "Dialup Password: "));
 		num_msg = 1;
-		retcode = __pam_get_input(PAM_PROMPT_ECHO_OFF, pam_convp->conv,
+		retcode = __pam_get_input(pamh, PAM_PROMPT_ECHO_OFF,
 				num_msg, messages, nullptr, &ret_resp);
 		if (retcode != PAM_SUCCESS)
 			return (retcode);

@@ -29,6 +29,9 @@
 
 #ident  "@(#)sample_acct_mgmt.c 1.12     96/02/02 SMI"
 
+#include <string.h>
+#include <strings.h>
+#include <unistd.h>
 #include <syslog.h>
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>

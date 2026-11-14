@@ -50,6 +50,8 @@
 
 #define	_NPD_PASSMAXLEN	16
 
+extern void	__npd_free_errlist(nispasswd_error *);
+
 /* from libmp.so (undocumented) */
 extern int	pow(MINT *, MINT *, MINT *, MINT *);
 extern int	_mp_move(MINT *, MINT *);
@@ -395,6 +397,12 @@ nispasswd_pass(
 			if (errl->next != nullptr) {
 				p->next = (nispasswd_error *)
 					calloc(1, sizeof (nispasswd_error));
+				if (p->next == nullptr) {
+					__npd_free_errlist(*errlst);
+					*errlst = nullptr;
+					*err = NPD_SYSTEMERR;
+					return (NPD_FAILED);
+				}
 				p = p->next;
 			} else
 			p->next = (nispasswd_error *) nullptr;

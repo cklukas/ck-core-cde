@@ -29,6 +29,9 @@
 
 #ident  "@(#)dce_acct_mgmt.c 1.3     95/08/02 SMI"
 
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 #include <syslog.h>
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>

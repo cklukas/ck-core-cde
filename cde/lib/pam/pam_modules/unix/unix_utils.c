@@ -442,7 +442,9 @@ free_setattr(char *setattr[])
  * setup_attr():
  *	allocate memory and copy in attribute=value pair
  *	into the array of attribute=value pairs pointed to
- *	by "dest_attr"
+ *	by "dest_attr".  The result is truncated to PAM_MAX_ATTR_SIZE - 1
+ *	characters.  If memory is exhausted the slot stays nullptr, which
+ *	ends the list.
  */
 
 void
@@ -450,8 +452,13 @@ setup_attr(char *dest_attr[], int k, char attr[], char value[])
 {
 	if (attr != nullptr) {
 		dest_attr[k] = (char *)calloc(PAM_MAX_ATTR_SIZE, sizeof (char));
-		(void) strncpy(dest_attr[k], attr, PAM_MAX_ATTR_SIZE);
-		(void) strncat(dest_attr[k], value, PAM_MAX_ATTR_SIZE);
+		if (dest_attr[k] == nullptr) {
+			/* the list of attributes ends at this slot */
+			syslog(LOG_ERR, "setup_attr: out of memory");
+			return;
+		}
+		(void) snprintf(dest_attr[k], PAM_MAX_ATTR_SIZE, "%s%s",
+		    attr, value);
 	} else
 		dest_attr[k] = nullptr;
 }
@@ -490,47 +497,49 @@ nisplus_populate_age(struct nis_object *enobj, struct spwd *sp)
 	if ((p = ENTRY_VAL(enobj, 7)) == nullptr)
 		return;
 	oldage = strdup(p);
+	if (oldage == nullptr)
+		return;
 
 	p = oldage;
 
 	x = strtol(p, &end, 10);
 	if (end != memchr(p, ':', strlen(p)))
-		return;
+		goto out;
 	if (end != p)
 		sp->sp_lstchg = x;
 
 	p = spskip(p);
 	x = strtol(p, &end, 10);
 	if (end != memchr(p, ':', strlen(p)))
-		return;
+		goto out;
 	if (end != p)
 		sp->sp_min = x;
 
 	p = spskip(p);
 	x = strtol(p, &end, 10);
 	if (end != memchr(p, ':', strlen(p)))
-		return;
+		goto out;
 	if (end != p)
 		sp->sp_max = x;
 
 	p = spskip(p);
 	x = strtol(p, &end, 10);
 	if (end != memchr(p, ':', strlen(p)))
-		return;
+		goto out;
 	if (end != p)
 		sp->sp_warn = x;
 
 	p = spskip(p);
 	x = strtol(p, &end, 10);
 	if (end != memchr(p, ':', strlen(p)))
-		return;
+		goto out;
 	if (end != p)
 		sp->sp_inact = x;
 
 	p = spskip(p);
 	x = strtol(p, &end, 10);
 	if (end != memchr(p, ':', strlen(p)))
-		return;
+		goto out;
 	if (end != p)
 		sp->sp_expire = x;
 
@@ -538,10 +547,11 @@ nisplus_populate_age(struct nis_object *enobj, struct spwd *sp)
 	x = strtol(p, &end, 10);
 	if ((end != memchr(p, ':', strlen(p))) &&
 	    (end != memchr(p, '\n', strlen(p))))
-		return;
+		goto out;
 	if (end != p)
 		sp->sp_flag = x;
 
+out:
 	free(oldage);
 }
 #endif /* PAM_NISPLUS */

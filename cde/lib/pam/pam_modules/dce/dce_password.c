@@ -349,9 +349,11 @@ dce_changepw(
 	/* stash away the value of KRB5CCNAME, if there is one set */
 	env = getenv(krb5);
 	if (env) {
-		krb5_value = malloc(strlen(krb5)+1+strlen(env)+1);
+		int krb5_len = snprintf(nullptr, 0, "%s=%s", krb5, env);
+
+		krb5_value = (krb5_len < 0) ? nullptr : malloc(krb5_len + 1);
 		if (krb5_value)
-			sprintf(krb5_value, "%s=%s", krb5, env);
+			snprintf(krb5_value, krb5_len + 1, "%s=%s", krb5, env);
 		else {
 			status = sec_login_s_no_current_context;
 			goto out;

@@ -38,6 +38,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <stdckdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -1577,13 +1579,16 @@ get_pam_conf_entry(struct pam_fh *pam_fh, pamtab **pam)
 		 * prepend PAM_LIB_DIR (/usr/lib/security/).
 		 */
 		if (arg[0] != '/') {
-			if (((*pam)->module_path = (char *)
-				calloc(strlen(PAM_LIB_DIR) + strlen(arg) + 1,
-					sizeof (char))) == nullptr) {
-				syslog(LOG_ERR, "strdup: out of memory");
+			size_t path_size;
+
+			if (ckd_add(&path_size, strlen(PAM_LIB_DIR) + 1,
+			    strlen(arg)) ||
+			    ((*pam)->module_path = (char *)
+				calloc(path_size, sizeof (char))) == nullptr) {
+				syslog(LOG_ERR, "calloc: out of memory");
 				goto mal_formed;
 			}
-			sprintf((*pam)->module_path, "%s%s",
+			snprintf((*pam)->module_path, path_size, "%s%s",
 				PAM_LIB_DIR, arg);
 		} else {
 			(*pam)->module_path = strdup(arg);

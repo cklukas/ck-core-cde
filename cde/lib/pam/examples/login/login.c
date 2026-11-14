@@ -88,6 +88,7 @@ publication.
 #include <utmpx.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <time.h>
 #include <wait.h>
 #include <errno.h>
 #include <ctype.h>
@@ -370,6 +371,7 @@ static	void	check_for_root_user(void);
 static	void	check_for_dueling_unix(char inputline[]);
 static	void	get_user_name(void);
 static	void	login_exit(int exit_code);
+static	char	*dup_default(const char *value);
 static	int	logins_disabled(char *user_name);
 static	void	log_bad_attempts(void);
 
@@ -1178,25 +1180,25 @@ defaults(void)
 		defcntl(DC_SETFLAGS, flags);
 
 		if ((Console = defread("CONSOLE=")) != nullptr)
-			Console = strdup(Console);
+			Console = dup_default(Console);
 
 		if ((Altshell = defread("ALTSHELL=")) != nullptr)
-			Altshell = strdup(Altshell);
+			Altshell = dup_default(Altshell);
 
 		if ((Passreq = defread("PASSREQ=")) != nullptr)
-			Passreq = strdup(Passreq);
+			Passreq = dup_default(Passreq);
 
 		if ((Def_tz = defread("TIMEZONE=")) != nullptr)
-			Def_tz = strdup(Def_tz);
+			Def_tz = dup_default(Def_tz);
 
 		if ((Def_hertz = defread("HZ=")) != nullptr)
-			Def_hertz = strdup(Def_hertz);
+			Def_hertz = dup_default(Def_hertz);
 
 		if ((Def_path   = defread("PATH=")) != nullptr)
-			Def_path = strdup(Def_path);
+			Def_path = dup_default(Def_path);
 
 		if ((Def_supath = defread("SUPATH=")) != nullptr)
-			Def_supath = strdup(Def_supath);
+			Def_supath = dup_default(Def_supath);
 
 		if ((ptr = defread("ULIMIT=")) != nullptr)
 			Def_ulimit = atol(ptr);
@@ -2215,6 +2217,21 @@ login_exit(int exit_code)
 		pam_end(pamh, PAM_ABORT);
 	exit(exit_code);
 	/*NOTREACHED*/
+}
+
+/*
+ * Copy a value read from the defaults file; exits if memory is exhausted.
+ */
+static char *
+dup_default(const char *value)
+{
+	char *copy = strdup(value);
+
+	if (copy == nullptr) {
+		(void) printf("Strdup failed - out of swap space.\n");
+		login_exit(8);
+	}
+	return (copy);
 }
 
 /*

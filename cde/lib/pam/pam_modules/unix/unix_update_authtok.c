@@ -28,6 +28,7 @@
 
 #ident	"@(#)unix_update_authtok.c 1.29	96/02/02 SMI"
 
+#include <sys/wait.h>
 #include "unix_headers.h"
 
 #ifdef PAM_SECURE_RPC
