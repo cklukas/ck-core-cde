@@ -52,7 +52,7 @@ do_cred_warn(void *pamh)
 	sprintf(messages[0],
 	PAM_MSG(pamh, 30, "warning: Unable to obtain DCE credentials.\n"));
 
-	(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, NULL);
+	(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, nullptr);
 }
 
 /*
@@ -85,7 +85,7 @@ pam_sm_setcred(
 		syslog(LOG_DEBUG, "DCE pam_setcred");
 
 	if (pam_get_data(pamh, DCE_DATA, (void**)&dsd) != PAM_SUCCESS ||
-		dsd == NULL) {
+		dsd == nullptr) {
 		if (flags & PAM_DELETE_CRED) {
 			sec_login_handle_t context;
 

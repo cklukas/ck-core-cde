@@ -288,21 +288,21 @@ static	int	dosyslog = 0;
  * Default file toggles
  */
 static	char	*Pndefault	= "/etc/default/login";
-static	char	*Altshell	= NULL;
-static	char	*Console	= NULL;
-static	char	*Passreq	= NULL;
+static	char	*Altshell	= nullptr;
+static	char	*Console	= nullptr;
+static	char	*Passreq	= nullptr;
 #define	DEFUMASK	022
 static	mode_t	Umask		= DEFUMASK;
-static	char 	*Def_tz		= NULL;
-static	char 	*tmp_tz		= NULL;
-static	char 	*Def_hertz	= NULL;
+static	char 	*Def_tz		= nullptr;
+static	char 	*tmp_tz		= nullptr;
+static	char 	*Def_hertz	= nullptr;
 #define	SET_FSIZ	2			/* ulimit() command arg */
 static	long	Def_ulimit	= 0;
 #define	MAX_TIMEOUT	(15 * 60)
 #define	DEF_TIMEOUT	(5 * 60)
 static	unsigned Def_timeout	= DEF_TIMEOUT;
-static	char	*Def_path	= NULL;
-static	char	*Def_supath	= NULL;
+static	char	*Def_path	= nullptr;
+static	char	*Def_supath	= nullptr;
 #define	DEF_PATH	"/usr/bin:" 	/* same as PATH */
 #define	DEF_SUPATH	"/usr/sbin:/usr/bin" /* same as ROOTPATH */
 
@@ -310,8 +310,8 @@ static	char	*Def_supath	= NULL;
  * ttyprompt will point to the environment variable TTYPROMPT.
  * TTYPROMPT is set by ttymon if ttymon already wrote out the prompt.
  */
-static	char	*ttyprompt = NULL;
-static	char 	*ttyn = NULL;
+static	char	*ttyprompt = nullptr;
+static	char 	*ttyn = nullptr;
 static	struct	group	*grpstr;
 static	char	*ttygrp = "tty";
 static	char	*progname = PROG_NAME;
@@ -336,7 +336,7 @@ static	int	fflag;
 static int login_conv(int num_msg, struct pam_message **msg,
     struct pam_response **response, void *appdata_ptr);
 
-static struct pam_conv pam_conv = {login_conv, NULL};
+static struct pam_conv pam_conv = {login_conv, nullptr};
 static pam_handle_t *pamh;	/* Authentication handle */
 
 /*
@@ -440,9 +440,9 @@ main(int argc, char *argv[], char **renvp)
 	/*
 	 * if devicename is not passed as argument, call ttyname(0)
 	 */
-	if (ttyn == NULL) {
+	if (ttyn == nullptr) {
 		ttyn = ttyname(0);
-		if (ttyn == NULL)
+		if (ttyn == nullptr)
 			ttyn = "/dev/???";
 	}
 
@@ -516,7 +516,7 @@ main(int argc, char *argv[], char **renvp)
 		login_exit(1);
 
 	if (pwd->pw_uid == 0) {
-		if (Def_supath != NULL)
+		if (Def_supath != nullptr)
 			Def_path = Def_supath;
 		else
 			Def_path = DEF_SUPATH;
@@ -545,7 +545,7 @@ main(int argc, char *argv[], char **renvp)
 	 */
 	(void) chmod(ttyn, S_IRUSR|S_IWUSR|S_IWGRP);
 
-	if ((grpstr = getgrnam(ttygrp)) == NULL)
+	if ((grpstr = getgrnam(ttygrp)) == nullptr)
 		(void) chown(ttyn, pwd->pw_uid, pwd->pw_gid);
 	else
 		(void) chown(ttyn, pwd->pw_uid, grpstr->gr_gid);
@@ -726,7 +726,7 @@ login_conv(int num_msg, struct pam_message **msg,
 		return (PAM_CONV_ERR);
 
 	*response = calloc(num_msg, sizeof (struct pam_response));
-	if (*response == NULL)
+	if (*response == nullptr)
 		return (PAM_BUF_ERR);
 
 	k = num_msg;
@@ -738,9 +738,9 @@ login_conv(int num_msg, struct pam_message **msg,
 
 		case PAM_PROMPT_ECHO_OFF:
 			temp = getpass(m->msg);
-			if (temp != NULL) {
+			if (temp != nullptr) {
 				r->resp = strdup(temp);
-				if (r->resp == NULL) {
+				if (r->resp == nullptr) {
 					/* free responses */
 					r = *response;
 					for (i = 0; i < num_msg; i++, r++) {
@@ -748,7 +748,7 @@ login_conv(int num_msg, struct pam_message **msg,
 							free(r->resp);
 					}
 					free(*response);
-					*response = NULL;
+					*response = nullptr;
 					return (PAM_BUF_ERR);
 				}
 			}
@@ -758,10 +758,10 @@ login_conv(int num_msg, struct pam_message **msg,
 			break;
 
 		case PAM_PROMPT_ECHO_ON:
-			if (m->msg != NULL)
+			if (m->msg != nullptr)
 				(void) fputs(m->msg, stdout);
 			r->resp = calloc(1, PAM_MAX_RESP_SIZE);
-			if (r->resp == NULL) {
+			if (r->resp == nullptr) {
 				/* free responses */
 				r = *response;
 				for (i = 0; i < num_msg; i++, r++) {
@@ -769,12 +769,12 @@ login_conv(int num_msg, struct pam_message **msg,
 						free(r->resp);
 				}
 				free(*response);
-				*response = NULL;
+				*response = nullptr;
 				return (PAM_BUF_ERR);
 			}
 			if (fgets(r->resp, PAM_MAX_RESP_SIZE-1, stdin)) {
 				int len;
-				r->resp[PAM_MAX_RESP_SIZE-1] = NULL;
+				r->resp[PAM_MAX_RESP_SIZE-1] = '\0';
 				len = strlen(r->resp);
 				if (r->resp[len-1] == '\n')
 					r->resp[len-1] = '\0';
@@ -786,7 +786,7 @@ login_conv(int num_msg, struct pam_message **msg,
 			break;
 
 		case PAM_ERROR_MSG:
-			if (m->msg != NULL) {
+			if (m->msg != nullptr) {
 				(void) fputs(m->msg, stderr);
 				(void) fputs("\n", stderr);
 			}
@@ -794,7 +794,7 @@ login_conv(int num_msg, struct pam_message **msg,
 			r++;
 			break;
 		case PAM_TEXT_INFO:
-			if (m->msg != NULL) {
+			if (m->msg != nullptr) {
 				(void) fputs(m->msg, stdout);
 				(void) fputs("\n", stdout);
 			}
@@ -845,7 +845,7 @@ verify_passwd(void)
 		return (error);
 	}
 
-	if ((pwd = getpwnam(user_name)) == NULL) {
+	if ((pwd = getpwnam(user_name)) == nullptr) {
 		audit_login_bad_pw();
 		log_bad_attempts();
 		return (PAM_USER_UNKNOWN);
@@ -933,7 +933,7 @@ getargs(char *in_line)
 		*ptr++ = '\0';
 
 	for (answer = args; answer < &args[MAXARGS]; /* cstyle */)
-		*answer++ = (char *)NULL;
+		*answer++ = (char *)nullptr;
 
 	for (ptr = envbuf, answer = &args[0], state = WHITESPACE;
 		(c = getc(stdin)) != EOF; /* cstyle */) {
@@ -943,7 +943,7 @@ getargs(char *in_line)
 
 		case '\n':
 			if (ptr == &envbuf[0])
-				return ((char **)NULL);
+				return ((char **)nullptr);
 			return (&args[0]);
 
 		case ' ':
@@ -993,10 +993,10 @@ get_user_name(void)
 	FILE	*fp;
 	int gotname = 0;
 
-	if ((fp = fopen(ISSUEFILE, "r")) != NULL) {
+	if ((fp = fopen(ISSUEFILE, "r")) != nullptr) {
 		char    *ptr, buffer[BUFSIZ];
 		while ((ptr = fgets(buffer, sizeof (buffer),
-					fp)) != NULL) {
+					fp)) != nullptr) {
 			(void) fputs(ptr, stdout);
 		}
 		(void) fclose(fp);
@@ -1008,7 +1008,7 @@ get_user_name(void)
 	 * and let the module do the prompting.
 	 */
 
-	if ((ttyprompt == NULL) || (*ttyprompt == '\0'))
+	if ((ttyprompt == nullptr) || (*ttyprompt == '\0'))
 		(void) pam_set_item(pamh, PAM_USER_PROMPT, (void *)loginmsg);
 	else
 		(void) pam_set_item(pamh, PAM_USER_PROMPT, (void *)ttyprompt);
@@ -1043,7 +1043,7 @@ logins_disabled(char *user_name)
 	FILE	*nlfd;
 	int	c;
 	if (!EQN("root", user_name) &&
-			((nlfd = fopen(NOLOGIN, "r")) != (FILE *)NULL)) {
+			((nlfd = fopen(NOLOGIN, "r")) != (FILE *)nullptr)) {
 		while ((c = getc(nlfd)) != EOF)
 			putchar(c);
 		(void) fflush(stdout);
@@ -1063,7 +1063,7 @@ static void
 check_for_root_user(void)
 {
 	if (pwd->pw_uid == 0) {
-		if ((Console != NULL) && (strcmp(ttyn, Console) != 0)) {
+		if ((Console != nullptr) && (strcmp(ttyn, Console) != 0)) {
 			audit_login_not_console();
 			(void) printf("Not on system console\n");
 			login_exit(10);
@@ -1177,34 +1177,34 @@ defaults(void)
 		TURNOFF(flags, DC_CASE);
 		defcntl(DC_SETFLAGS, flags);
 
-		if ((Console = defread("CONSOLE=")) != NULL)
+		if ((Console = defread("CONSOLE=")) != nullptr)
 			Console = strdup(Console);
 
-		if ((Altshell = defread("ALTSHELL=")) != NULL)
+		if ((Altshell = defread("ALTSHELL=")) != nullptr)
 			Altshell = strdup(Altshell);
 
-		if ((Passreq = defread("PASSREQ=")) != NULL)
+		if ((Passreq = defread("PASSREQ=")) != nullptr)
 			Passreq = strdup(Passreq);
 
-		if ((Def_tz = defread("TIMEZONE=")) != NULL)
+		if ((Def_tz = defread("TIMEZONE=")) != nullptr)
 			Def_tz = strdup(Def_tz);
 
-		if ((Def_hertz = defread("HZ=")) != NULL)
+		if ((Def_hertz = defread("HZ=")) != nullptr)
 			Def_hertz = strdup(Def_hertz);
 
-		if ((Def_path   = defread("PATH=")) != NULL)
+		if ((Def_path   = defread("PATH=")) != nullptr)
 			Def_path = strdup(Def_path);
 
-		if ((Def_supath = defread("SUPATH=")) != NULL)
+		if ((Def_supath = defread("SUPATH=")) != nullptr)
 			Def_supath = strdup(Def_supath);
 
-		if ((ptr = defread("ULIMIT=")) != NULL)
+		if ((ptr = defread("ULIMIT=")) != nullptr)
 			Def_ulimit = atol(ptr);
 
-		if ((ptr = defread("TIMEOUT=")) != NULL)
+		if ((ptr = defread("TIMEOUT=")) != nullptr)
 			Def_timeout = (unsigned) atoi(ptr);
 
-		if ((ptr = defread("UMASK=")) != NULL) {
+		if ((ptr = defread("UMASK=")) != nullptr) {
 		        long long_umask;
 			if (sscanf(ptr, "%lo", &long_umask) != 1)
 				Umask = DEFUMASK;
@@ -1212,13 +1212,13 @@ defaults(void)
 				Umask = (mode_t) long_umask;
 		}
 
-		if ((ptr = defread("SLEEPTIME=")) != NULL)
+		if ((ptr = defread("SLEEPTIME=")) != nullptr)
 			Sleeptime = atoi(ptr);
 
-		if ((ptr = defread("SYSLOG=")) != NULL)
+		if ((ptr = defread("SYSLOG=")) != nullptr)
 			dosyslog = strcmp(ptr, "YES") == 0;
 
-		(void) defopen((char *)NULL);
+		(void) defopen((char *)nullptr);
 	}
 }
 
@@ -1308,12 +1308,12 @@ get_options(int argc, char *argv[])
 	 */
 	ttyprompt = getenv("TTYPROMPT");
 
-	if ((ttyprompt != NULL) && (*ttyprompt != '\0')) {
+	if ((ttyprompt != nullptr) && (*ttyprompt != '\0')) {
 		/*
 		 * if ttyprompt is set, there should be data on
 		 * the stream already.
 		 */
-		if ((envp = getargs(inputline)) != (char **)NULL) {
+		if ((envp = getargs(inputline)) != (char **)nullptr) {
 			uppercaseterm(*envp);
 			/*
 			 * don't get name if name passed as argument.
@@ -1417,7 +1417,7 @@ process_rlogin(void)
 		if (pam_set_item(pamh, PAM_USER, lusername) != PAM_SUCCESS)
 			login_exit(1);
 		pwd = getpwnam(lusername);
-		if (pwd == NULL) {
+		if (pwd == nullptr) {
 			pwd = &nouser;
 			doremoteterm(terminal);
 			return;
@@ -1460,7 +1460,7 @@ validate_account(void)
 
 	check_log();
 
-	if ((Passreq != NULL) && (!strcasecmp("YES", Passreq)))
+	if ((Passreq != nullptr) && (!strcasecmp("YES", Passreq)))
 		flag = PAM_DISALLOW_NULL_AUTHTOK;
 	else
 		flag = 0;
@@ -1613,9 +1613,9 @@ login_authenticate(void)
 		(void) printf(incorrectmsg);
 		user_name[0] = '\0';	/* is this needed? */
 		/* force name to be null in this case */
-		if (pam_set_item(pamh, PAM_USER, NULL) != PAM_SUCCESS)
+		if (pam_set_item(pamh, PAM_USER, nullptr) != PAM_SUCCESS)
 			login_exit(1);
-		if (pam_set_item(pamh, PAM_RUSER, NULL) != PAM_SUCCESS)
+		if (pam_set_item(pamh, PAM_RUSER, nullptr) != PAM_SUCCESS)
 			login_exit(1);
 	} while (cnt++ < MAXTRYS);
 
@@ -1792,7 +1792,7 @@ update_utmp_entry(int sublogin)
 	/* skip over "/dev/" */
 	ttyntail = basename(ttyn);
 
-	while ((u = getutxent()) != NULL) {
+	while ((u = getutxent()) != nullptr) {
 		if ((u->ut_type == INIT_PROCESS ||
 			u->ut_type == LOGIN_PROCESS ||
 			u->ut_type == USER_PROCESS) &&
@@ -1809,7 +1809,7 @@ update_utmp_entry(int sublogin)
 	}
 	endutxent();
 
-	if (u == (struct utmpx *)NULL) {
+	if (u == (struct utmpx *)nullptr) {
 		if (!sublogin) {
 			/*
 			 * no utmp entry already setup
@@ -1852,7 +1852,7 @@ process_chroot_logins(void)
 		 * knows that it is a sublogin.
 		 */
 		envinit[0] = SUBLOGIN;
-		envinit[1] = (char *)NULL;
+		envinit[1] = (char *)nullptr;
 		(void) printf("Subsystem root: %s\n", pwd->pw_dir);
 		(void) execle("/usr/bin/login", "login", (char *)0,
 			&envinit[0]);
@@ -1882,7 +1882,7 @@ establish_user_environment(char **renvp)
 		;
 	envinit = (char **) calloc(lenvp - environ + 10
 		+ MAXARGS, sizeof (char *));
-	if (envinit == NULL) {
+	if (envinit == nullptr) {
 		(void) printf("Calloc failed - out of swap space.\n");
 		login_exit(8);
 	}
@@ -1898,7 +1898,7 @@ establish_user_environment(char **renvp)
 	} else {
 		char *tp = getenv("TERM");
 
-		if ((tp != NULL) && (*tp != '\0'))
+		if ((tp != nullptr) && (*tp != '\0'))
 			ENVSTRNCAT(term, tp);
 	}
 
@@ -1925,22 +1925,22 @@ establish_user_environment(char **renvp)
 	 * file /etc/profile thus not sourcing /etc/TIMEZONE thus not
 	 * allowing an administrator to globally set TZ for all users
 	 */
-	if (Def_tz != NULL)	/* Is there a TZ from defaults/login? */
+	if (Def_tz != nullptr)	/* Is there a TZ from defaults/login? */
 		tmp_tz = Def_tz;
 
-	if ((Def_tz = getenv("TZ")) != NULL) {
+	if ((Def_tz = getenv("TZ")) != nullptr) {
 		ENVSTRNCAT(timez, Def_tz);
-	} else if (tmp_tz != NULL) {
+	} else if (tmp_tz != nullptr) {
 		Def_tz = tmp_tz;
 		ENVSTRNCAT(timez, Def_tz);
 	}
 
-	if (Def_hertz == NULL)
+	if (Def_hertz == nullptr)
 		(void) sprintf(hertz + strlen(hertz), "%u", HZ);
 	else
 		ENVSTRNCAT(hertz, Def_hertz);
 
-	if (Def_path == NULL)
+	if (Def_path == nullptr)
 		(void) strcat(path, DEF_PATH);
 	else
 		ENVSTRNCAT(path, Def_path);
@@ -1950,7 +1950,7 @@ establish_user_environment(char **renvp)
 	/*
 	 * Find the end of the basic environment
 	 */
-	for (basicenv = 0; envinit[basicenv] != NULL; basicenv++)
+	for (basicenv = 0; envinit[basicenv] != nullptr; basicenv++)
 		;
 
 	/*
@@ -1968,7 +1968,7 @@ establish_user_environment(char **renvp)
 			pwd->pw_shell = SHELL;
 		else
 			pwd->pw_shell = SHELL2;
-	} else if (Altshell != NULL && strcmp(Altshell, "YES") == 0) {
+	} else if (Altshell != nullptr && strcmp(Altshell, "YES") == 0) {
 		envinit[basicenv++] = shell;
 		ENVSTRNCAT(shell, pwd->pw_shell);
 	}
@@ -1982,7 +1982,7 @@ establish_user_environment(char **renvp)
 	 * Pick up locale environment variables, if any.
 	 */
 	lenvp = renvp;
-	while (*lenvp != NULL) {
+	while (*lenvp != nullptr) {
 		j = 0;
 		while (localeenv[j] != 0) {
 			/*
@@ -2012,7 +2012,7 @@ establish_user_environment(char **renvp)
 			/*
 			 * If this isn't 'xxx=yyy', skip it.  XXX
 			 */
-			if ((endptr = strchr(*lenvp, '=')) == NULL) {
+			if ((endptr = strchr(*lenvp, '=')) == nullptr) {
 				continue;
 			}
 			length = endptr + 1 - *lenvp;
@@ -2047,7 +2047,7 @@ establish_user_environment(char **renvp)
 		 * Scan each string provided.  If it doesn't have the
 		 * format xxx=yyy, then add the string "Ln=" to the beginning.
 		 */
-		if ((endptr = strchr(*envp, '=')) == NULL) {
+		if ((endptr = strchr(*envp, '=')) == nullptr) {
 			envinit[basicenv+k] = ptr;
 			(void) sprintf(ptr, "L%d=%s", l_index, *envp);
 
@@ -2099,14 +2099,14 @@ establish_user_environment(char **renvp)
 
 	krb5p = getenv("KRB5CCNAME");
 
-	if ((krb5p != NULL) && (*krb5p != '\0')) {
+	if ((krb5p != nullptr) && (*krb5p != '\0')) {
 		ENVSTRNCAT(krb5ccname, krb5p);
 		envinit[basicenv++] = krb5ccname;
 	}
 
 	krb4p = getenv("KRBTKFILE");
 
-	if ((krb4p != NULL) && (*krb4p != '\0')) {
+	if ((krb4p != nullptr) && (*krb4p != '\0')) {
 		ENVSTRNCAT(krb4ccname, krb4p);
 		envinit[basicenv++] = krb4ccname;
 	}
@@ -2189,9 +2189,9 @@ exec_the_shell(void)
 	 * is a shell proceedure or a command line with arguments.
 	 * If so, turn off the SHELL= environment variable.
 	 */
-	for (i = 0; envinit[i] != NULL; ++i) {
+	for (i = 0; envinit[i] != nullptr; ++i) {
 		if ((envinit[i] == shell) &&
-		    ((endptr = strchr(shell, '=')) != NULL))
+		    ((endptr = strchr(shell, '=')) != nullptr))
 			(*++endptr) = '\0';
 		}
 
@@ -2263,24 +2263,24 @@ logindevperm(char *ttyn, uid_t uid, gid_t gid)
 	size_t l;
 	int lineno;
 
-	if ((fp = fopen(permfile, "r")) == NULL)
+	if ((fp = fopen(permfile, "r")) == nullptr)
 		return;
 
 	lineno = 0;
-	while (fgets(line, MAX_LINELEN, fp) != NULL) {
+	while (fgets(line, MAX_LINELEN, fp) != nullptr) {
 		lineno++;
 
-		if ((ptr = strchr(line, '#')) != NULL)
+		if ((ptr = strchr(line, '#')) != nullptr)
 			*ptr = '\0';	/* handle comments */
 
-		if ((console = strtok(line, field_delims)) == NULL)
+		if ((console = strtok(line, field_delims)) == nullptr)
 			continue;	/* ignore blank lines */
 
 		if (strcmp(console, ttyn) != 0)
 			continue;	/* not our tty, skip */
 
-		mode_str = strtok((char *)NULL, field_delims);
-		if (mode_str == NULL) {
+		mode_str = strtok((char *)nullptr, field_delims);
+		if (mode_str == nullptr) {
 			(void) fprintf(stderr,
 			    "%s: line %d, invalid entry -- %s\n", permfile,
 			    lineno, line);
@@ -2296,8 +2296,8 @@ logindevperm(char *ttyn, uid_t uid, gid_t gid)
 			continue;
 		}
 
-		dev_list = strtok((char *)NULL, field_delims);
-		if (dev_list == NULL) {
+		dev_list = strtok((char *)nullptr, field_delims);
+		if (dev_list == nullptr) {
 			(void) fprintf(stderr,
 			    "%s: line %d, %s -- empty device list\n",
 			    permfile, lineno, console);
@@ -2305,7 +2305,7 @@ logindevperm(char *ttyn, uid_t uid, gid_t gid)
 		}
 
 		device = strtok(dev_list, ":");
-		while (device != NULL) {
+		while (device != nullptr) {
 			l = strlen(device);
 			ptr = &device[l - DIRWLDLEN];
 			if ((l > DIRWLDLEN) && (strcmp(ptr, DIRWILD) == 0)) {
@@ -2331,7 +2331,7 @@ logindevperm(char *ttyn, uid_t uid, gid_t gid)
 					}
 				}
 			}
-			device = strtok((char *)NULL, ":");
+			device = strtok((char *)nullptr, ":");
 		}
 	}
 	(void) fclose(fp);
@@ -2349,10 +2349,10 @@ dir_dev_acc(char *dir, uid_t uid, gid_t gid, mode_t mode, char *permfile)
 	char *name, path[MAX_LINELEN + MAXNAMELEN];
 
 	dirp = opendir(dir);
-	if (dirp == NULL)
+	if (dirp == nullptr)
 		return;
 
-	while ((direntp = readdir(dirp)) != NULL) {
+	while ((direntp = readdir(dirp)) != nullptr) {
 		name = direntp->d_name;
 		if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
 			continue;

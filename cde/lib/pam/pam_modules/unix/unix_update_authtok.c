@@ -85,11 +85,11 @@ __update_authtok(
 	time_t 		salt;
 	char 		saltc[2];	/* crypt() takes 2 char */
 					/* string as a salt */
-	char		*pw = NULL;	/* encrypted new password */
-	struct passwd	*pwd = NULL;
-	struct spwd	*shpwd = NULL;
-	char 		*usrname = NULL;
-	char 		*prognamep = NULL;
+	char		*pw = nullptr;	/* encrypted new password */
+	struct passwd	*pwd = nullptr;
+	struct spwd	*shpwd = nullptr;
+	char 		*usrname = nullptr;
+	char 		*prognamep = nullptr;
 	int		re;		/* single repository */
 	int		newpass = 0;	/* flag: user entered new passwd */
 	int		found_user = 0;	/* flag: user found in a repository */
@@ -105,9 +105,9 @@ __update_authtok(
 	int		use_first_pass = 0;
 #ifdef PAM_NISPLUS
 	nis_result	*passwd_res;
-	nis_result	*cred_res = NULL;	/* cred entry nis_list result */
+	nis_result	*cred_res = nullptr;	/* cred entry nis_list result */
 #else
-	void		*passwd_res = NULL, *cred_res = NULL;
+	void		*passwd_res = nullptr, *cred_res = nullptr;
 #endif
 
 /*
@@ -174,7 +174,7 @@ __update_authtok(
 
 #ifdef PAM_NISPLUS
 	/* nispasswd or -r nisplus */
-	if ((repository & PAM_REP_NISPLUS) && ((domain == NULL) ||
+	if ((repository & PAM_REP_NISPLUS) && ((domain == nullptr) ||
 	    (*domain == '\0')))
 		domain = nis_local_directory();
 #endif
@@ -206,7 +206,7 @@ __update_authtok(
 		 */
 		struct passwd pd;
 		char pwd_buf[1024];
-		if (getpwnam_r(usrname, &pd, pwd_buf, sizeof (pwd_buf)) == NULL)
+		if (getpwnam_r(usrname, &pd, pwd_buf, sizeof (pwd_buf)) == nullptr)
 			return (PAM_USER_UNKNOWN);
 		uid = pd.pw_uid;
 	}
@@ -261,7 +261,7 @@ __update_authtok(
 					(void) __pam_display_msg(
 						pamh,
 						PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				}
 				retcode = PAM_USER_UNKNOWN;
 				goto out;
@@ -298,7 +298,7 @@ __update_authtok(
 						(void) __pam_display_msg(
 							pamh,
 							PAM_ERROR_MSG, 1,
-							messages, NULL);
+							messages, nullptr);
 					}
 					goto out;
 				}
@@ -327,7 +327,7 @@ __update_authtok(
 			if (retcode != PAM_SUCCESS)
 				goto out;
 
-			if ((cred_res == NULL) ||
+			if ((cred_res == nullptr) ||
 			    (cred_res->status != NIS_SUCCESS)) {
 				if (IS_OPWCMD(repository)) {
 				    if (!nowarn) {
@@ -338,7 +338,7 @@ __update_authtok(
 					(void) __pam_display_msg(
 						pamh,
 						PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				    }
 				    retcode = PAM_PERM_DENIED;
 				    goto out;
@@ -346,7 +346,7 @@ __update_authtok(
 				/* continue even if there is no cred */
 			} else {
 			    if ((p = ENTRY_VAL(cred_res->objects.objects_val,
-							4)) == NULL) {
+							4)) == nullptr) {
 				(void) strncpy(curcryptsecret, NULLSTRING,
 					sizeof (curcryptsecret));
 			    } else {
@@ -408,7 +408,7 @@ __update_authtok(
 		/* update remote repositories first */
 		/* make sure user exists before we update the repository */
 #ifdef PAM_NIS
-		if (IS_NIS(re) && (pwd != NULL)) {
+		if (IS_NIS(re) && (pwd != nullptr)) {
 			retcode = update_authtok_nis(pamh,
 				"passwd", &pw, opwbuf, pwbuf,
 				pwd, privileged, nowarn);
@@ -424,7 +424,7 @@ __update_authtok(
 		 * nis+ update will choose different protocol depending
 		 * on the opwcmd flag.
 		 */
-		if (IS_NISPLUS(re) && (pwd != NULL)) {
+		if (IS_NISPLUS(re) && (pwd != nullptr)) {
 			/* nis+ needs clear versions of old/new passwds */
 			if (orpcpw[0] == '\0') {
 				if (strlen(opwbuf) + 1 <= PAM_MAX_RESP_SIZE) {
@@ -449,7 +449,7 @@ __update_authtok(
 		}
 #endif /* PAM_NISPLUS */
 
-		if (IS_FILES(re) && (pwd != NULL)) {
+		if (IS_FILES(re) && (pwd != nullptr)) {
 			retcode = update_authtok_file(pamh,
 				"passwd", &pw, pwd,
 				privileged, nowarn);
@@ -519,7 +519,7 @@ verify_old_passwd(
 	int			retcode;
 	char			*prognamep;
 	char 			messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
-	char			*pswd = NULL;	/* user input clear passwd */
+	char			*pswd = nullptr;	/* user input clear passwd */
 	char			*pw;		/* encrypted passwd */
 	pid_t			pid;
 	int			w;
@@ -527,7 +527,7 @@ verify_old_passwd(
 
 	/* Set if password already exists as pam handle item */
 	int			passwd_already_set = 0;
-	char			*saved_passwd = NULL;
+	char			*saved_passwd = nullptr;
 
 
 	if (debug) {
@@ -582,7 +582,7 @@ verify_old_passwd(
 		 * if it is incorrect before we return.
 		 */
 		pam_get_item(pamh, PAM_OLDAUTHTOK, (void **)&saved_passwd);
-		if (saved_passwd != NULL)
+		if (saved_passwd != nullptr)
 			passwd_already_set = 1;
 
 		/*
@@ -613,7 +613,7 @@ verify_old_passwd(
 					return (retcode);
 			}
 
-			if (pswd == NULL || pswd[0] == '\0') {
+			if (pswd == nullptr || pswd[0] == '\0') {
 				if (*try_first_pass) {
 					/*
 					 * This means that the module has
@@ -630,7 +630,7 @@ verify_old_passwd(
 					PAM_MSG(pamh, 65, "%s%s: Sorry."),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 
 				if (pswd)
 					free(pswd);
@@ -677,14 +677,14 @@ verify_old_passwd(
 						prognamep, UNIX_MSG);
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1, messages,
-						NULL);
+						nullptr);
 					*use_first_pass = 0;
 
 					/* clear bad passwd */
 					if (passwd_already_set == 0)
 						pam_set_item(pamh,
 							PAM_OLDAUTHTOK,
-							NULL);
+							nullptr);
 
 					return (PAM_PERM_DENIED);
 				}
@@ -697,7 +697,7 @@ verify_old_passwd(
 #ifdef PAM_NISPLUS
 		/* nispasswd or -r nisplus */
 		if ((privileged == 0) && IS_NISPLUS(repository) &&
-		    ((nis_result *)cred_res != NULL) &&
+		    ((nis_result *)cred_res != nullptr) &&
 		    ((nis_result *)cred_res)->status == NIS_SUCCESS) {
 		/*
 		 * At this point only check if the password matches the
@@ -710,12 +710,12 @@ verify_old_passwd(
 								== FALSE) {
 				/* failed to decrypt the secret key */
 				/* ask for Old secure RPC passwd */
-				char *tmpkeybuf = NULL;
+				char *tmpkeybuf = nullptr;
 
 				(void) sprintf(messages[0], PAM_MSG(pamh, 67,
 		    "This password differs from your secure RPC password."));
 				(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-					1, messages, NULL);
+					1, messages, nullptr);
 
 				if ((retcode = __pam_get_authtok(pamh,
 					PAM_PROMPT, 0, PASSWORD_LEN,
@@ -731,7 +731,7 @@ verify_old_passwd(
 "This password does not decrypt your secure RPC credentials. Try again:"));
 					(void) __pam_display_msg(
 						pamh, PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 
 					memset(tmpkeybuf, 0, strlen(tmpkeybuf));
 					free(tmpkeybuf);
@@ -751,7 +751,7 @@ verify_old_passwd(
 						(void) __pam_display_msg(
 						    pamh,
 						    PAM_ERROR_MSG, 1,
-						    messages, NULL);
+						    messages, nullptr);
 					    memset(tmpkeybuf, 0,
 						strlen(tmpkeybuf));
 					    free(tmpkeybuf);
@@ -792,7 +792,7 @@ aging:
 					(void) __pam_display_msg(
 						pamh,
 						PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				}
 				return (PAM_PERM_DENIED);
 			}
@@ -808,7 +808,7 @@ aging:
 						(void) __pam_display_msg(
 							pamh,
 							PAM_ERROR_MSG, 1,
-							messages, NULL);
+							messages, nullptr);
 					}
 					return (PAM_PERM_DENIED);
 				}
@@ -841,7 +841,7 @@ aging:
 						prognamep, UNIX_MSG);
 					(void) __pam_display_msg(
 						pamh, PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				}
 				return (PAM_SYSTEM_ERR);
 			case 0: /* child */
@@ -904,7 +904,7 @@ turn_on_default_aging(
 		warndate = WARNWEEKS * 7;
 	} else {
 		/* get minimum date before password can be changed */
-		if ((char_p = defread("MINWEEKS=")) == NULL)
+		if ((char_p = defread("MINWEEKS=")) == nullptr)
 			mindate = 7 * MINWEEKS;
 		else {
 			mindate = 7 * atoi(char_p);
@@ -913,7 +913,7 @@ turn_on_default_aging(
 		}
 
 		/* get warn date before password is expired */
-		if ((char_p = defread("WARNWEEKS=")) == NULL)
+		if ((char_p = defread("WARNWEEKS=")) == nullptr)
 			warndate = 7 * WARNWEEKS;
 		else {
 			warndate = 7 * atoi(char_p);
@@ -922,7 +922,7 @@ turn_on_default_aging(
 		}
 
 		/* get max date that password is valid */
-		if ((char_p = defread("MAXWEEKS=")) == NULL)
+		if ((char_p = defread("MAXWEEKS=")) == nullptr)
 			maxdate = 7 * MAXWEEKS;
 		else if ((maxdate = atoi(char_p)) == -1) {
 			mindate = -1;
@@ -933,7 +933,7 @@ turn_on_default_aging(
 				maxdate *= 7;
 
 		/* close defaults file */
-		defopen(NULL);
+		defopen(nullptr);
 	}
 
 	if (debug)
@@ -949,10 +949,10 @@ turn_on_default_aging(
 	setup_attr(set_attribute, k++, "AUTHTOK_MINAGE=", value);
 	(void) sprintf(value, "%d", warndate);
 	setup_attr(set_attribute, k++, "AUTHTOK_WARNDATE=", value);
-	setup_attr(set_attribute, k, NULL, NULL);
+	setup_attr(set_attribute, k, nullptr, nullptr);
 
 	retcode = __set_authtoken_attr(pamh, (const char **) &set_attribute[0],
-	    repository, domain, 0, NULL);
+	    repository, domain, 0, nullptr);
 	free_setattr(set_attribute);
 	return (retcode);
 }
@@ -989,7 +989,7 @@ get_newpasswd(
 
 	/* Set if password already exists as pam handle item */
 	int		passwd_already_set = 0;
-	char		*saved_passwd = NULL;
+	char		*saved_passwd = nullptr;
 
 	if (debug)
 		syslog(LOG_DEBUG,
@@ -1003,14 +1003,14 @@ get_newpasswd(
 		return (retcode);
 
 	pam_get_item(pamh, PAM_AUTHTOK, (void **)&saved_passwd);
-	if (saved_passwd != NULL)
+	if (saved_passwd != nullptr)
 		passwd_already_set = 1;
 
 	while (insist < MAX_CHANCES && count < MAX_CHANCES && !done) {
 
 		/* clear a bad "new password" if it was saved */
 		if (passwd_already_set == 0)
-			pam_set_item(pamh, PAM_AUTHTOK, NULL);
+			pam_set_item(pamh, PAM_AUTHTOK, nullptr);
 
 		/*
 		 * If use_first_pass failed, then return.
@@ -1045,7 +1045,7 @@ get_newpasswd(
 			}
 		}
 
-		if (pswd == NULL) {
+		if (pswd == nullptr) {
 			if (try_first_pass) {
 				/*
 				 * This means that the module has
@@ -1062,14 +1062,14 @@ get_newpasswd(
 				PAM_MSG(pamh, 65, "%s%s: Sorry."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 
 			if (pswd)
 				free(pswd);
 
 			/* clear a bad "new password" if it was saved */
 			if (passwd_already_set == 0)
-				pam_set_item(pamh, PAM_AUTHTOK, NULL);
+				pam_set_item(pamh, PAM_AUTHTOK, nullptr);
 			return (PAM_AUTHTOK_ERR);
 		} else {
 			memset(pwbuf, 0, PAM_MAX_RESP_SIZE);
@@ -1087,7 +1087,7 @@ get_newpasswd(
 			} else {
 				/* clear bad "new password" if saved */
 				if (passwd_already_set == 0)
-					pam_set_item(pamh, PAM_AUTHTOK, NULL);
+					pam_set_item(pamh, PAM_AUTHTOK, nullptr);
 				return (retcode);
 			}
 		}
@@ -1106,12 +1106,12 @@ get_newpasswd(
 			 * module in the stack (try/use_first_pass option).
 			 */
 			if ((retcode = __pam_get_authtok(pamh, PAM_HANDLE,
-				PAM_AUTHTOK, PASSWORD_LEN, NULL,
+				PAM_AUTHTOK, PASSWORD_LEN, nullptr,
 				&pswd)) != PAM_SUCCESS) {
 					/* clear bad "new password" if saved */
 					if (passwd_already_set == 0)
 						pam_set_item(pamh,
-							PAM_AUTHTOK, NULL);
+							PAM_AUTHTOK, nullptr);
 					return (retcode);
 			}
 		} else {
@@ -1122,7 +1122,7 @@ get_newpasswd(
 					/* clear bad "new password" if saved */
 					if (passwd_already_set == 0)
 						pam_set_item(pamh,
-							PAM_AUTHTOK, NULL);
+							PAM_AUTHTOK, nullptr);
 					return (retcode);
 			}
 		}
@@ -1137,10 +1137,10 @@ get_newpasswd(
 				    "%s%s: Too many tries; try again later"),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 				/* clear bad "new password" if saved */
 				if (passwd_already_set == 0)
-					pam_set_item(pamh, PAM_AUTHTOK, NULL);
+					pam_set_item(pamh, PAM_AUTHTOK, nullptr);
 				return (PAM_PERM_DENIED);
 			} else {
 				(void) sprintf(messages[0], PAM_MSG(pamh, 77,
@@ -1148,7 +1148,7 @@ get_newpasswd(
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(
 						pamh, PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 			}
 			/* audit_passwd_main9(); */
 			continue;
@@ -1170,10 +1170,10 @@ get_newpasswd(
 		    "%s%s: Too many failures - try later."),
 			prognamep, UNIX_MSG);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-			1, messages, NULL);
+			1, messages, nullptr);
 		/* clear bad "new password" if saved */
 		if (passwd_already_set == 0)
-			pam_set_item(pamh, PAM_AUTHTOK, NULL);
+			pam_set_item(pamh, PAM_AUTHTOK, nullptr);
 		return (PAM_PERM_DENIED);
 	}
 
@@ -1215,11 +1215,11 @@ triviality_checks(pam_handle_t *pamh, uid_t uid,
 	 */
 	if ((defopen(PWADMIN)) == 0) {
 		/* get minimum length of password */
-		if ((char_p = defread("PASSLENGTH=")) != NULL)
+		if ((char_p = defread("PASSLENGTH=")) != nullptr)
 			bare_minima = atoi(char_p);
 
 		/* close defaults file */
-		defopen(NULL);
+		defopen(nullptr);
 	}
 	if (bare_minima < MINLENGTH)
 		bare_minima = MINLENGTH;
@@ -1233,7 +1233,7 @@ triviality_checks(pam_handle_t *pamh, uid_t uid,
 		"%s%s: Password too short - must be at least %d characters."),
 				prognamep, UNIX_MSG, bare_minima);
 			retcode = __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 			if (retcode != PAM_SUCCESS) {
 				return (retcode);
 			}
@@ -1250,7 +1250,7 @@ triviality_checks(pam_handle_t *pamh, uid_t uid,
 		"%s%s: Password cannot be circular shift of logonid."),
 				prognamep, UNIX_MSG);
 			retcode = __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 			if (retcode != PAM_SUCCESS) {
 				return (retcode);
 			}
@@ -1302,7 +1302,7 @@ triviality_checks(pam_handle_t *pamh, uid_t uid,
 			    (void) sprintf(messages[2], PAM_MSG(pamh, 83,
 "one numeric or special character."));
 			    retcode = __pam_display_msg(pamh,
-				PAM_ERROR_MSG, 3, messages, NULL);
+				PAM_ERROR_MSG, 3, messages, nullptr);
 			    if (retcode != PAM_SUCCESS) {
 				return (retcode);
 			    }
@@ -1331,7 +1331,7 @@ triviality_checks(pam_handle_t *pamh, uid_t uid,
 			"%s%s: Passwords must differ by at least 3 positions"),
 				prognamep, UNIX_MSG);
 			    retcode = __pam_display_msg(pamh,
-				PAM_ERROR_MSG, 1, messages, NULL);
+				PAM_ERROR_MSG, 1, messages, nullptr);
 			    if (retcode != PAM_SUCCESS) {
 				return (retcode);
 			    }
@@ -1445,11 +1445,11 @@ get_nispluscred(
 {
 	char		messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 	char		buf[NIS_MAXNAMELEN+1];
-	struct nis_result *local_res = NULL;	/* cred local nis_list result */
+	struct nis_result *local_res = nullptr;	/* cred local nis_list result */
 	nis_name	cred_domain;
 	char		*local_cname;
 
-	if (nisplus_pwd == NULL) {
+	if (nisplus_pwd == nullptr) {
 		/* No NIS+ passwd entry, can't resolve credentials. */
 		return (PAM_SUCCESS);
 	}
@@ -1467,7 +1467,7 @@ get_nispluscred(
 	if ((50 + strlen(nisdomain) + PKTABLELEN) >
 	    (size_t) NIS_MAXNAMELEN) {
 		syslog(LOG_ERR, "%s: Name too long", prognamep);
-		*cred_res = NULL;
+		*cred_res = nullptr;
 		return (PAM_AUTHTOK_ERR);
 	}
 
@@ -1478,33 +1478,33 @@ get_nispluscred(
 
 	local_res = nis_list(buf,
 		USE_DGRAM+FOLLOW_LINKS+FOLLOW_PATH+MASTER_ONLY,
-		NULL, NULL);
-	if ((local_res == NULL) || (local_res->status != NIS_SUCCESS)) {
+		nullptr, nullptr);
+	if ((local_res == nullptr) || (local_res->status != NIS_SUCCESS)) {
 		nis_freeresult(local_res);
 		if (IS_OPWCMD(repository)) {
 			(void) sprintf(messages[0], PAM_MSG(pamh, 85,
 		"nispasswd: user must have LOCAL credential"));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
-			*cred_res = NULL;
+				1, messages, nullptr);
+			*cred_res = nullptr;
 			return (PAM_CRED_INSUFFICIENT);
 		}
-		*cred_res = NULL;
+		*cred_res = nullptr;
 		return (PAM_SUCCESS);
 	}
 
 	local_cname = ENTRY_VAL(NIS_RES_OBJECT(local_res), 0);
-	if (local_cname == NULL) {
+	if (local_cname == nullptr) {
 		nis_freeresult(local_res);
 		if (IS_OPWCMD(repository)) {
 			(void) sprintf(messages[0], PAM_MSG(pamh, 85,
 			    "%s: invalid LOCAL credential"), prognamep);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
-			*cred_res = NULL;
+				1, messages, nullptr);
+			*cred_res = nullptr;
 			return (PAM_CRED_ERR);
 		}
-		*cred_res = NULL;
+		*cred_res = nullptr;
 		return (PAM_SUCCESS);
 	}
 
@@ -1517,7 +1517,7 @@ get_nispluscred(
 	    + PKTABLELEN) > (size_t) NIS_MAXNAMELEN) {
 		syslog(LOG_ERR, "%s: Name too long", prognamep);
 		nis_freeresult(local_res);
-		*cred_res = NULL;
+		*cred_res = nullptr;
 		return (PAM_AUTHTOK_ERR);
 	}
 
@@ -1528,7 +1528,7 @@ get_nispluscred(
 
 	*cred_res = nis_list(buf,
 		USE_DGRAM+FOLLOW_LINKS+FOLLOW_PATH+MASTER_ONLY,
-		NULL, NULL);
+		nullptr, nullptr);
 
 	return (PAM_SUCCESS);
 }

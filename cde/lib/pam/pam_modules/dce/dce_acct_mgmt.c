@@ -92,7 +92,7 @@ pam_sm_acct_mgmt(
 	if (debug) syslog(LOG_DEBUG, "DCE pam_sm_acct_mgmt");
 
 	if (pam_get_data(pamh, DCE_DATA, (void**)&dsd) != PAM_SUCCESS ||
-		dsd == NULL) {
+		dsd == nullptr) {
 		return (PAM_AUTH_ERR);
 	}
 
@@ -185,7 +185,7 @@ do_warn(pam_handle_t *pamh, time_t cur, time_t t, char *desc)
 	} else {
 		return;
 	}
-	__pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, NULL);
+	__pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, nullptr);
 }
 
 
@@ -197,5 +197,5 @@ do_warn_passwd(pam_handle_t *pamh)
 	sprintf(messages[0],
 		PAM_MSG(pamh, 4, "Warning: Your DCE passwd has expired.\n"));
 
-	__pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, NULL);
+	__pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, nullptr);
 }

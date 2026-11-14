@@ -138,9 +138,9 @@ perform_passwd_aging_check(
 
 
 	if (defopen(LOGINADMIN) == 0) {
-		if ((ptr = defread("IDLEWEEKS=")) != NULL)
+		if ((ptr = defread("IDLEWEEKS=")) != nullptr)
 			Idleweeks = atoi(ptr);
-		(void) defopen(NULL);
+		(void) defopen(nullptr);
 	}
 
 	if ((shpwd.sp_lstchg == 0) ||
@@ -156,7 +156,7 @@ perform_passwd_aging_check(
 			    strcpy(messages[1], PAM_MSG(pamh, 21,
 			    "Please contact the system administrator"));
 			    __pam_display_msg(pamh, PAM_ERROR_MSG,
-				2, messages, NULL);
+				2, messages, nullptr);
 			}
 			return (PAM_AUTHTOK_EXPIRED);
 		} else {
@@ -192,7 +192,7 @@ warn_user_passwd_will_expire(
 		else
 			sprintf(messages[0], PAM_MSG(pamh, 24,
 			    "Your password will expire in %d days."), days);
-		__pam_display_msg(pamh, PAM_TEXT_INFO, 1, messages, NULL);
+		__pam_display_msg(pamh, PAM_TEXT_INFO, 1, messages, nullptr);
 	}
 }
 
@@ -238,7 +238,7 @@ pam_sm_acct_mgmt(
 							!= PAM_SUCCESS)
 		goto out;
 
-	if (user == NULL) {
+	if (user == nullptr) {
 		error = PAM_USER_UNKNOWN;
 		goto out;
 	}
@@ -246,20 +246,20 @@ pam_sm_acct_mgmt(
 	/*
 	 * Get the password and shadow password entries
 	 */
-	if (getpwnam_r(user, &pwd, pwd_buf, sizeof (pwd_buf)) == NULL ||
-	    getspnam_r(user, &shpwd, shpwd_buf, sizeof (shpwd_buf)) == NULL) {
+	if (getpwnam_r(user, &pwd, pwd_buf, sizeof (pwd_buf)) == nullptr ||
+	    getspnam_r(user, &shpwd, shpwd_buf, sizeof (shpwd_buf)) == nullptr) {
 		error = PAM_USER_UNKNOWN;
 		goto out;
 	}
 
-	if (shpwd.sp_pwdp != NULL && strcmp(shpwd.sp_pwdp, "*NP*") == 0) {
+	if (shpwd.sp_pwdp != nullptr && strcmp(shpwd.sp_pwdp, "*NP*") == 0) {
 		orig_uid = geteuid();
 		seteuid(pwd.pw_uid);
 		memset(pwd_buf, 0, sizeof (pwd_buf));
 		memset(shpwd_buf, 0, sizeof (shpwd_buf));
-		if (getpwnam_r(user, &pwd, pwd_buf, sizeof (pwd_buf)) == NULL ||
+		if (getpwnam_r(user, &pwd, pwd_buf, sizeof (pwd_buf)) == nullptr ||
 		    getspnam_r(user, &shpwd, shpwd_buf, sizeof (shpwd_buf))
-								== NULL) {
+								== nullptr) {
 			error = PAM_USER_UNKNOWN;
 			seteuid(orig_uid);
 			goto out;
@@ -318,7 +318,7 @@ out:
 	if (pam_get_data(pamh, UNIX_AUTHTOK_DATA, (void **)&status)
 							!= PAM_SUCCESS) {
 		if ((status = (unix_authtok_data *)calloc
-			(1, sizeof (unix_authtok_data))) == NULL) {
+			(1, sizeof (unix_authtok_data))) == nullptr) {
 			return (PAM_BUF_ERR);
 		}
 	}

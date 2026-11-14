@@ -65,7 +65,7 @@ update_authtok_nisplus(
 	int nowarn)
 {
 	char tmpcryptsecret[HEXKEYBYTES+KEYCHECKSUMSIZE+1];
-	char *newcryptsecret = NULL;
+	char *newcryptsecret = nullptr;
 	entry_col	ecol[8];
 	nis_object	*eobj;
 	nis_result	*mres;
@@ -77,7 +77,7 @@ update_authtok_nisplus(
 	int		rc = 0;
 	char 		messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 	int		failover = FALSE;
-	char		*gecos = NULL, *shell = NULL;
+	char		*gecos = nullptr, *shell = nullptr;
 	char		*prognamep;
 	char		*usrname;
 
@@ -108,7 +108,7 @@ update_authtok_nisplus(
 		 *	NPD wants only the domainname so strip off
 		 *	the org_dir portion of the passwd directory.
 		 */
-		if (passwd_res == NULL || passwd_res->status != NIS_SUCCESS) {
+		if (passwd_res == nullptr || passwd_res->status != NIS_SUCCESS) {
 			/*
 			 * CAVEAT:
 			 * Should never get here; ck_perm() should fail.
@@ -137,7 +137,7 @@ update_authtok_nisplus(
 				"NIS+ password information changed for %s"),
 				usrname);
 			(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-				1, messages, NULL);
+				1, messages, nullptr);
 
 			if (rc == PAM_SUCCESS) {
 				sprintf(messages[0], PAM_MSG(pamh, 109,
@@ -145,7 +145,7 @@ update_authtok_nisplus(
 					usrname);
 				(void) __pam_display_msg(
 					pamh, PAM_TEXT_INFO, 1,
-					messages, NULL);
+					messages, nullptr);
 			}
 			return (PAM_SUCCESS);
 		}
@@ -172,7 +172,7 @@ update_authtok_nisplus(
 		 * on top. At least the lstchg field needs to be changed.
 		 */
 		/* old protocol requires user credential info */
-		if (cred_res == NULL || cred_res->status != NIS_SUCCESS) {
+		if (cred_res == nullptr || cred_res->status != NIS_SUCCESS) {
 			syslog(LOG_ERR, "%s%s: %s", prognamep, NISPLUS_MSG,
 				"Failover: user credential is required.");
 			return (PAM_AUTHTOK_RECOVERY_ERR);
@@ -185,13 +185,13 @@ update_authtok_nisplus(
 
 		/* same user check? */
 		if ((!privileged) && (newcryptsecret = reencrypt_secret
-		    (tmpcryptsecret, oldrpc, new)) == NULL) {
+		    (tmpcryptsecret, oldrpc, new)) == nullptr) {
 			sprintf(messages[0], " ");
 			sprintf(messages[1], PAM_MSG(pamh, 110,
 				"Unable to reencrypt NIS+ credentials for %s;"),
 				usrname);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				2, messages, NULL);
+				2, messages, nullptr);
 			return (PAM_AUTHTOK_RECOVERY_ERR);
 		}
 
@@ -235,8 +235,8 @@ update_authtok_nisplus(
 		/*
 		 * build entry based on the one we got back from the server
 		 */
-		eobj = nis_clone_object(NIS_RES_OBJECT(passwd_res), NULL);
-		if (eobj == NULL) {
+		eobj = nis_clone_object(NIS_RES_OBJECT(passwd_res), nullptr);
+		if (eobj == nullptr) {
 			syslog(LOG_ERR, "%s%s: %s", prognamep, NISPLUS_MSG,
 				"clone object failed");
 			return (PAM_AUTHTOK_RECOVERY_ERR);
@@ -276,14 +276,14 @@ update_authtok_nisplus(
 				"%s%s: Password information update failed"),
 					prognamep, NISPLUS_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 
 				(void) nis_freeresult(mres);
 				return (PAM_AUTHTOK_RECOVERY_ERR);
 			}
 		}
 		/* set column stuff to NULL so that we can free eobj */
-		eobj->EN_data.en_cols.en_cols_val = NULL;
+		eobj->EN_data.en_cols.en_cols_val = nullptr;
 		eobj->EN_data.en_cols.en_cols_len = 0;
 		(void) nis_destroy_object(eobj);
 		(void) nis_freeresult(mres);
@@ -292,7 +292,7 @@ update_authtok_nisplus(
 			"NIS+ password information changed for %s"),
 			usrname);
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-			1, messages, NULL);
+			1, messages, nullptr);
 
 		if (privileged) {
 			sprintf(messages[0], " ");
@@ -314,7 +314,7 @@ update_authtok_nisplus(
 				usrname);
 			sprintf(messages[8], " ");
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				9, messages, NULL);
+				9, messages, nullptr);
 
 			return (PAM_SUCCESS);
 		}
@@ -324,8 +324,8 @@ update_authtok_nisplus(
 		ecol[4].ec_value.ec_value_val = newcryptsecret;
 		ecol[4].ec_value.ec_value_len = strlen(newcryptsecret) + 1;
 		ecol[4].ec_flags = EN_CRYPT|EN_MODIFIED;
-		eobj = nis_clone_object(NIS_RES_OBJECT(cred_res), NULL);
-		if (eobj == NULL) {
+		eobj = nis_clone_object(NIS_RES_OBJECT(cred_res), nullptr);
+		if (eobj == nullptr) {
 			syslog(LOG_ERR, "%s%s: %s", prognamep, NISPLUS_MSG,
 				"clone object failed");
 			return (PAM_AUTHTOK_RECOVERY_ERR);
@@ -388,7 +388,7 @@ update_authtok_nisplus(
 		"You must keylogin explicitly after your next login."));
 				sprintf(messages[7], "");
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				    8, messages, NULL);
+				    8, messages, nullptr);
 
 				return (PAM_AUTHTOK_RECOVERY_ERR);
 			}
@@ -401,13 +401,13 @@ update_authtok_nisplus(
 			sprintf(messages[2], PAM_MSG(pamh, 126,
 "Please notify your System Administrator."));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				3, messages, NULL);
+				3, messages, nullptr);
 
 			(void) nis_freeresult(mres);
 			return (PAM_AUTHTOK_RECOVERY_ERR);
 		}
 		/* set column stuff to NULL so that we can free eobj */
-		eobj->EN_data.en_cols.en_cols_val = NULL;
+		eobj->EN_data.en_cols.en_cols_val = nullptr;
 		eobj->EN_data.en_cols.en_cols_len = 0;
 		(void) nis_destroy_object(eobj);
 		(void) nis_freeresult(mres);
@@ -416,7 +416,7 @@ update_authtok_nisplus(
 			"NIS+ credential information changed for %s"),
 			usrname);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-			1, messages, NULL);
+			1, messages, nullptr);
 	} else
 		return (update_attr(pamh, field, data, usrname, 1, &shell,
 			&gecos, nisplus_pwd, failover, privileged,
@@ -437,8 +437,8 @@ talk_to_npd(pam_handle_t *pamh, char *field, char **data, char *domain,
 	char **shell, char **gecos,
 	nis_result *passwd_res, int debug, int nowarn)
 {
-	CLIENT		*clnt = NULL;
-	char		*old_passwd = NULL;
+	CLIENT		*clnt = nullptr;
+	char		*old_passwd = nullptr;
 	char		srv_pubkey[HEXKEYBYTES + 1];
 	char		u_pubkey[HEXKEYBYTES + 1];
 	char		u_seckey[HEXKEYBYTES + 1];
@@ -447,10 +447,10 @@ talk_to_npd(pam_handle_t *pamh, char *field, char **data, char *domain,
 	int 		error = 0, status, srv_keysize = HEXKEYBYTES + 1;
 	int		retcode = PAM_SYSTEM_ERR;
 	char		messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
-	nispasswd_error		*errlist = NULL;
-	nispasswd_error		*p = NULL;
+	nispasswd_error		*errlist = nullptr;
+	nispasswd_error		*p = nullptr;
 
-	if (user == NULL || domain == NULL || *domain == '\0') {
+	if (user == nullptr || domain == nullptr || *domain == '\0') {
 		retcode = PAM_AUTHTOK_RECOVERY_ERR;
 		goto out;
 	}
@@ -463,13 +463,13 @@ talk_to_npd(pam_handle_t *pamh, char *field, char **data, char *domain,
 	 * We don't want to prompt for user passwd which is sure not to be
 	 * used.
 	 */
-	retcode = update_attr(pamh, field, data, NULL, 0, NULL, NULL,
+	retcode = update_attr(pamh, field, data, nullptr, 0, nullptr, nullptr,
 			nisplus_pwd, failover, privileged,
 			passwd_res, nowarn);
 	if (retcode != PAM_SUCCESS)
 		goto out;
 
-	if (oldpass == NULL) {
+	if (oldpass == nullptr) {
 		/*
 		 * This is possible from unix_set_authtokattr().
 		 * Old passwd is required to change any attributes.
@@ -484,7 +484,7 @@ talk_to_npd(pam_handle_t *pamh, char *field, char **data, char *domain,
 			goto out;
 	} else {
 		old_passwd = strdup(oldpass);
-		if (old_passwd == NULL) {
+		if (old_passwd == nullptr) {
 			retcode = PAM_BUF_ERR;
 			goto out;
 		}
@@ -591,7 +591,7 @@ again:
 		sprintf(messages[0], PAM_MSG(pamh, 127,
 			"NIS+ Password incorrect: try again"));
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 1,
-		    messages, NULL);
+		    messages, nullptr);
 
 		retcode = __pam_get_authtok(pamh, PAM_PROMPT, 0, PASSWORD_LEN,
 			PAM_MSG(pamh, 63, "Enter login(NIS+) password: "),
@@ -607,7 +607,7 @@ again:
 			syslog(LOG_DEBUG,
 				"status=success; ident=%ld, randval=%ld",
 				ident, randval);
-		if (newpass == NULL) {
+		if (newpass == nullptr) {
 			/*
 			 * This is possible from unix_set_authtokattr().
 			 * Just use the same passwd so that we have a
@@ -625,7 +625,7 @@ again:
 				"NIS+ password information update failed \
 while talking to NIS+ passwd daemon"));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 			if (debug)
 				syslog(LOG_DEBUG, "error=%d", error);
 			retcode = PAM_AUTHTOK_RECOVERY_ERR;
@@ -638,25 +638,25 @@ while talking to NIS+ passwd daemon"));
 		if (status == NPD_PARTIALSUCCESS) {
 			syslog(LOG_ALERT,
 			"Password information is partially updated.");
-			for (p = errlist; p != NULL; p = p->next) {
+			for (p = errlist; p != nullptr; p = p->next) {
 				if (p->npd_field == NPD_GECOS) {
 					sprintf(messages[0], PAM_MSG(pamh, 129,
 	"GECOS information was not updated: check NIS+ permissions."));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				} else if (p->npd_field == NPD_SHELL) {
 					sprintf(messages[0], PAM_MSG(pamh, 130,
 	"SHELL information was not updated: check NIS+ permissions."));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				} else if (p->npd_field == NPD_SECRETKEY) {
 					sprintf(messages[0], PAM_MSG(pamh, 131,
 		"NIS+ Credential information was not updated."));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				}
 			}
 			/* check for collision with PAM_* return code */
@@ -709,12 +709,12 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 			nisplus_populate_age(NIS_RES_OBJECT(passwd_res), &sp);
 
 		(void) memset((char *)ecol, 0, sizeof (ecol));
-		while (*data != NULL) {
+		while (*data != nullptr) {
 			/* AUTHTOK_DEL: not applicable */
 
 			/* check attribute: AUTHTOK_LK */
 			if ((value = attr_match("AUTHTOK_LK", *data))
-								!= NULL) {
+								!= nullptr) {
 				/* new update protocol doesn't support this */
 				if (opwcmd == FALSE)
 					return (PAM_PERM_DENIED);
@@ -739,7 +739,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 
 			/* check attribute: AUTHTOK_EXP */
 			if ((value = attr_match("AUTHTOK_EXP", *data))
-			    != NULL) {
+			    != nullptr) {
 				/* new update protocol doesn't support this */
 				if (opwcmd == FALSE)
 					return (PAM_PERM_DENIED);
@@ -755,7 +755,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 
 			/* check attribute: AUTHTOK_MAXAGE */
 			if ((value = attr_match("AUTHTOK_MAXAGE", *data))
-			    != NULL) {
+			    != nullptr) {
 				/* new update protocol doesn't support this */
 				if (opwcmd == FALSE)
 					return (PAM_PERM_DENIED);
@@ -780,7 +780,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 
 			/* check attribute: AUTHTOK_MINAGE */
 			if ((value = attr_match("AUTHTOK_MINAGE", *data))
-			    != NULL) {
+			    != nullptr) {
 				/* new update protocol doesn't support this */
 				if (opwcmd == FALSE)
 					return (PAM_PERM_DENIED);
@@ -799,7 +799,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 
 			/* check attribute: AUTHTOK_WARNDATE */
 			if ((value = attr_match("AUTHTOK_WARNDATE", *data))
-			    != NULL) {
+			    != nullptr) {
 				/* new update protocol doesn't support this */
 				if (opwcmd == FALSE)
 					return (PAM_PERM_DENIED);
@@ -815,18 +815,18 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 			}
 
 			if ((value = attr_match("AUTHTOK_SHELL", *data))
-			    != NULL) {
+			    != nullptr) {
 				/* see if quick check */
-				if (usrname == NULL)
+				if (usrname == nullptr)
 					return (PAM_SUCCESS);
 
-				if (nisplus_pwd == NULL && opwcmd) {
+				if (nisplus_pwd == nullptr && opwcmd) {
 				    if (!nowarn) {
 					sprintf(messages[0], PAM_MSG(pamh, 132,
 					    "No NIS+ record"));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				    }
 				    return (PAM_AUTHTOK_RECOVERY_ERR);
 				}
@@ -843,7 +843,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 					    privileged, nowarn);
 
 				/* if NULL, shell unchanged */
-				if (newsh == NULL)
+				if (newsh == nullptr)
 					return (PAM_SUCCESS);
 
 				if (opwcmd || failover) {
@@ -858,26 +858,26 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 			}
 
 			if ((value = attr_match("AUTHTOK_HOMEDIR", *data))
-			    != NULL) {
+			    != nullptr) {
 				/* new update protocol doesn't support this */
 				if (opwcmd == FALSE)
 					return (PAM_PERM_DENIED);
 
 				/* home directory */
-				if (nisplus_pwd == NULL) {
+				if (nisplus_pwd == nullptr) {
 				    if (!nowarn) {
 					sprintf(messages[0], PAM_MSG(pamh, 132,
 					    "No NIS+ record"));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				    }
 				    return (PAM_AUTHTOK_RECOVERY_ERR);
 				}
 				newhome = gethomedir(pamh, nisplus_pwd->pw_dir,
 						nowarn);
 				/* if NULL, homedir unchanged */
-				if (newhome == NULL)
+				if (newhome == nullptr)
 					return (PAM_SUCCESS);
 				ecol[5].ec_value.ec_value_val = newhome;
 				ecol[5].ec_value.ec_value_len =
@@ -888,19 +888,19 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 			}
 
 			if ((value = attr_match("AUTHTOK_GECOS", *data))
-			    != NULL) {
+			    != nullptr) {
 				/* see if quick check */
-				if (usrname == NULL)
+				if (usrname == nullptr)
 					return (PAM_SUCCESS);
 
 				/* finger information */
-				if (nisplus_pwd == NULL && opwcmd) {
+				if (nisplus_pwd == nullptr && opwcmd) {
 				    if (!nowarn) {
 					sprintf(messages[0], PAM_MSG(pamh, 132,
 					    "No NIS+ record"));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 				    }
 				    return (PAM_AUTHTOK_RECOVERY_ERR);
 				}
@@ -912,7 +912,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 				}
 
 				/* if NULL, gecos unchanged */
-				if (newgecos == NULL)
+				if (newgecos == nullptr)
 					return (PAM_SUCCESS);
 
 				if (opwcmd || failover) {
@@ -928,7 +928,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 			}
 		} /* while */
 
-		if (usrname == NULL)
+		if (usrname == nullptr)
 			return (PAM_SUCCESS);
 
 		if (flag && opwcmd) {
@@ -958,8 +958,8 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 
 		if (opwcmd || failover) {
 			eobj = nis_clone_object(NIS_RES_OBJECT(passwd_res),
-			    NULL);
-			if (eobj == NULL) {
+			    nullptr);
+			if (eobj == nullptr) {
 				syslog(LOG_ERR, "NIS+ clone object failed");
 				return (PAM_AUTHTOK_RECOVERY_ERR);
 			}
@@ -984,7 +984,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 				sprintf(messages[0], PAM_MSG(pamh, 133,
 		"NIS+ password information update failed (update_attr)"));
 				(void) __pam_display_msg(pamh,
-					PAM_ERROR_MSG, 1, messages, NULL);
+					PAM_ERROR_MSG, 1, messages, nullptr);
 
 				return (PAM_AUTHTOK_RECOVERY_ERR);
 			}
@@ -993,7 +993,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 				"NIS+ password information changed for %s"),
 				usrname);
 			(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 	}
 	return (PAM_SUCCESS);
@@ -1010,17 +1010,17 @@ reencrypt_secret(char *oldsecret, char *oldpass, char *newpass)
 	static char crypt[HEXKEYBYTES + KEYCHECKSUMSIZE + 1];
 
 	if (xdecrypt(oldsecret, oldpass) == 0)
-		return (NULL); /* cbc_crypt failed */
+		return (nullptr); /* cbc_crypt failed */
 
 	if (memcmp(oldsecret, &(oldsecret[HEXKEYBYTES]), KEYCHECKSUMSIZE) != 0)
-		return (NULL); /* didn't really decrypt */
+		return (nullptr); /* didn't really decrypt */
 
 	(void) memcpy(crypt, oldsecret, HEXKEYBYTES);
 	(void) memcpy(crypt + HEXKEYBYTES, oldsecret, KEYCHECKSUMSIZE);
 	crypt[HEXKEYBYTES + KEYCHECKSUMSIZE] = 0;
 
 	if (xencrypt(crypt, newpass) == 0)
-		return (NULL); /* cbc_crypt encryption failed */
+		return (nullptr); /* cbc_crypt encryption failed */
 
 	return (crypt);
 }
@@ -1054,8 +1054,8 @@ revert2oldpasswd(char *usrname, nis_result *passwd_res)
 	/*
 	 * build entry based on the global "passwd_res"
 	 */
-	eobj = nis_clone_object(NIS_RES_OBJECT(passwd_res), NULL);
-	if (eobj == NULL)
+	eobj = nis_clone_object(NIS_RES_OBJECT(passwd_res), nullptr);
+	if (eobj == nullptr)
 		return (NIS_SYSTEMERROR);
 	eobj->EN_data.en_cols.en_cols_val = ecol;
 	eobj->EN_data.en_cols.en_cols_len = 8;

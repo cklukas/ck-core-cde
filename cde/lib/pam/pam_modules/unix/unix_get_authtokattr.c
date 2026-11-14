@@ -111,7 +111,7 @@ __get_authtoken_attr(
 		return (retcode);
 
 	if ((get_attributes = (char **)
-		calloc(PAM_MAX_NUM_ATTR, sizeof (char *))) == NULL)
+		calloc(PAM_MAX_NUM_ATTR, sizeof (char *))) == nullptr)
 		return (PAM_BUF_ERR);
 
 	/* repository must be specified in the command line. */
@@ -119,7 +119,7 @@ __get_authtoken_attr(
 		sprintf(messages[0], PAM_MSG(pamh, 40,
 	"You must specify repository when displaying passwd attributes"));
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 		return (PAM_AUTHTOK_ERR);
 	}
 
@@ -128,12 +128,12 @@ __get_authtoken_attr(
 		sprintf(messages[0], PAM_MSG(pamh, 41,
 		    "%s: System error: repository out of range"), prognamep);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 1,
-			messages, NULL);
+			messages, nullptr);
 		return (PAM_SYSTEM_ERR);
 	}
 
 #ifdef PAM_NISPLUS
-	if (usrname == NULL || *usrname == NULL) {
+	if (usrname == nullptr || *usrname == nullptr) {
 		/* print nis+ table */
 		/*
 		 * Cat the table using our private _np_getspent()
@@ -142,16 +142,16 @@ __get_authtoken_attr(
 			sprintf(messages[0], PAM_MSG(pamh, 42,
 				"Unable to retrieve username."));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 			return (PAM_AUTHTOK_RECOVERY_ERR);
 		}
 
 		(void) _np_setspent();
-		while ((psp = _np_getspent()) != NULL) {
+		while ((psp = _np_getspent()) != nullptr) {
 			found++;
 			sprintf(value, "%s  ", psp->sp_namp);
 
-			if (psp->sp_pwdp == NULL) {
+			if (psp->sp_pwdp == nullptr) {
 				sprintf(messages[0],
 					"%s NP  ", value);
 			} else if ((int)strlen(psp->sp_pwdp) < NUMCP) {
@@ -200,7 +200,7 @@ __get_authtoken_attr(
 				}
 			}
 			(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		(void) _np_endspent();
 
@@ -214,7 +214,7 @@ __get_authtoken_attr(
 	"%s: Unexpected failure. Password database unchanged."),
 				prognamep);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 			return (PAM_SYSTEM_ERR);
 		}
 		return (PAM_SUCCESS);
@@ -231,7 +231,7 @@ __get_authtoken_attr(
 	k = 0;
 
 	/* get attribute "AUTHTOK_STATUS" */
-	if (shpwd->sp_pwdp == NULL)
+	if (shpwd->sp_pwdp == nullptr)
 		(void) strcpy(value, "NP  ");
 	else if ((int)strlen(shpwd->sp_pwdp) < NUMCP)
 		(void) strcpy(value, "LK  ");
@@ -288,7 +288,7 @@ __get_authtoken_attr(
 		}
 	}
 	/* terminate with NULL */
-	setup_attr(get_attributes, k, NULL, NULL);
+	setup_attr(get_attributes, k, nullptr, nullptr);
 
 	*ga_getattr = &get_attributes[0];
 

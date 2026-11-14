@@ -149,7 +149,7 @@ pam_sm_authenticate(
 	}
 	num_msg = 1;
 	err = get_authtok(pam_convp->conv,
-				num_msg, messages, NULL, &ret_resp);
+				num_msg, messages, nullptr, &ret_resp);
 
 	if (err != PAM_SUCCESS) {
 		result = err;
@@ -158,7 +158,7 @@ pam_sm_authenticate(
 
 	password = ret_resp->resp;
 
-	if (password == NULL) {
+	if (password == nullptr) {
 		result = PAM_AUTH_ERR;
 		goto out;
 	}
@@ -167,7 +167,7 @@ pam_sm_authenticate(
 
 	if (strcmp(password, the_password) == 0) {
 		result = PAM_SUCCESS;
-		if (firstpass == NULL) {
+		if (firstpass == nullptr) {
 		/* this is the first password, stash it away */
 		pam_set_item(pamh, PAM_AUTHTOK, password);
 		}

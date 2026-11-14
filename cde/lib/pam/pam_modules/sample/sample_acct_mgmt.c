@@ -86,7 +86,7 @@ pam_sm_acct_mgmt(
 		uid_t uid;
 		uid = getuid();
 		pw = getpwuid(uid);
-		if (pw == NULL)
+		if (pw == nullptr)
 			return (PAM_SYSTEM_ERR);
 		user = pw->pw_name;
 	}

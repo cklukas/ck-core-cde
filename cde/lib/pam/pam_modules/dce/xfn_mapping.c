@@ -56,12 +56,12 @@ xfn_get_mapped_password(
 	int out_max)		/* buffer size of out */
 {
 
-	FN_status_t		*status = NULL;
-	FN_composite_name_t	*compname = NULL;
-	FN_ctx_t		*ctx = NULL;
-	FN_string_t		*str = NULL;
-	FN_attribute_t		*attr = NULL;
-	const FN_attrvalue_t	*attr_val = NULL;
+	FN_status_t		*status = nullptr;
+	FN_composite_name_t	*compname = nullptr;
+	FN_ctx_t		*ctx = nullptr;
+	FN_string_t		*str = nullptr;
+	FN_attribute_t		*attr = nullptr;
+	const FN_attrvalue_t	*attr_val = nullptr;
 	FN_identifier_t		attr_id;	/* attr identifier */
 	FN_identifier_t		attr_syn;	/* attr syntax */
 	char			hexpass[MAP_HEXLEN+1];
@@ -73,11 +73,11 @@ xfn_get_mapped_password(
 	pass[0] = '\0';
 
 	status = fn_status_create();	/* free status */
-	if (status == NULL)
+	if (status == nullptr)
 		goto out;
 
 	ctx = fn_ctx_handle_from_initial(status); /* free ctx */
-	if (ctx == NULL)
+	if (ctx == nullptr)
 		goto out;
 
 	attr_id.format = FN_ID_STRING;
@@ -91,19 +91,19 @@ xfn_get_mapped_password(
 
 	str = fn_string_from_str(
 			(unsigned char *)composed_user); /* free str */
-	if (str == NULL)
+	if (str == nullptr)
 		goto out;
 
 	compname = fn_composite_name_from_string(str);	/* free compname */
-	if (compname == NULL)
+	if (compname == nullptr)
 		goto out;
 
 	attr = fn_attr_get(ctx, compname, &attr_id, status); /* free attr */
-	if (attr == NULL)
+	if (attr == nullptr)
 		goto out;
 
 	attr_val = fn_attribute_first(attr, &pos); /* don't have to free */
-	if (attr_val == NULL)
+	if (attr_val == nullptr)
 		goto out;
 
 	if (attr_val->length  != MAP_HEXLEN)
@@ -157,12 +157,12 @@ xfn_update_mapped_password(
 	char *password)		/* un-encrypted target password */
 {
 
-	FN_status_t		*status = NULL;
-	FN_composite_name_t	*compname = NULL;
-	FN_ctx_t		*ctx = NULL;
-	FN_ref_t		*ref = NULL;
-	FN_string_t		*str = NULL;
-	FN_attribute_t		*attr = NULL;
+	FN_status_t		*status = nullptr;
+	FN_composite_name_t	*compname = nullptr;
+	FN_ctx_t		*ctx = nullptr;
+	FN_ref_t		*ref = nullptr;
+	FN_string_t		*str = nullptr;
+	FN_attribute_t		*attr = nullptr;
 	FN_identifier_t		attr_id;	/* attr identifier */
 	FN_identifier_t		attr_syn;	/* attr syntax */
 	FN_attrvalue_t		attr_val;
@@ -178,11 +178,11 @@ xfn_update_mapped_password(
 		goto out;
 
 	status = fn_status_create();	/* free status */
-	if (status == NULL)
+	if (status == nullptr)
 		goto out;
 
 	ctx = fn_ctx_handle_from_initial(status); /* free ctx */
-	if (ctx == NULL)
+	if (ctx == nullptr)
 		goto out;
 
 	attr_id.format = FN_ID_STRING;
@@ -202,15 +202,15 @@ xfn_update_mapped_password(
 	str = fn_string_from_str(
 			(unsigned char *)composed_user); /* free str */
 
-	if (str == NULL)
+	if (str == nullptr)
 		goto out;
 
 	compname = fn_composite_name_from_string(str);	/* free compname */
-	if (compname == NULL)
+	if (compname == nullptr)
 		goto out;
 
 	ref = fn_ctx_lookup(ctx, compname, status);
-	if (ref == NULL)
+	if (ref == nullptr)
 		goto out;
 
 	strcpy(pass, password);

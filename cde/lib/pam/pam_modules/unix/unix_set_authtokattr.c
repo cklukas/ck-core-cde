@@ -56,8 +56,8 @@ __set_authtoken_attr(
 	int		retcode;
 	char 		*usrname;
 	char 		*prognamep;
-	struct passwd	*pwd = NULL;
-	struct spwd	*shpwd = NULL;
+	struct passwd	*pwd = nullptr;
+	struct spwd	*shpwd = nullptr;
 	int		privileged = 0;
 	int		debug = 0;
 	int		nowarn = 0;
@@ -102,27 +102,27 @@ __set_authtoken_attr(
 	/* update authentication token file */
 	/* make sure the user exists before we update the repository */
 #ifdef PAM_NIS
-	if (IS_NIS(repository) && (pwd != NULL)) {
+	if (IS_NIS(repository) && (pwd != nullptr)) {
 		retcode = update_authtok_nis(pamh, "attr",
-		    (char **)sa_setattr, NULL, NULL, pwd,
+		    (char **)sa_setattr, nullptr, nullptr, pwd,
 		    privileged, nowarn);
 		free_passwd_structs(pwd, shpwd);
 		return (retcode);
 	} else
 #endif
 #ifdef PAM_NISPLUS
-	if (IS_NISPLUS(repository) && (pwd != NULL)) {
+	if (IS_NISPLUS(repository) && (pwd != nullptr)) {
 		/* nis+ needs clear versions of old and new passwds */
 		retcode = update_authtok_nisplus(pamh,
 		    (char *)domain, "attr", (char **)sa_setattr,
-		    NULL, NULL, NULL, IS_OPWCMD(repository) ? 1 : 0, pwd,
-		    NULL, privileged, (nis_result *)passwd_res, NULL,
+		    nullptr, nullptr, nullptr, IS_OPWCMD(repository) ? 1 : 0, pwd,
+		    nullptr, privileged, (nis_result *)passwd_res, nullptr,
 		    debug, nowarn);
 		free_passwd_structs(pwd, shpwd);
 		return (retcode);
 	} else
 #endif
-	if (IS_FILES(repository) && (pwd != NULL)) {
+	if (IS_FILES(repository) && (pwd != nullptr)) {
 		retcode = update_authtok_file(pamh, "attr",
 			(char **)sa_setattr, pwd,
 			privileged, nowarn);

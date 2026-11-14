@@ -75,7 +75,7 @@ pam_sec_login_free_context(
 {
 	if (pam_status == PAM_SUCCESS) {
 		static char *krb5 = "KRB5CCNAME";
-		char *krb5_value = NULL;
+		char *krb5_value = nullptr;
 		char *env = getenv(krb5);
 
 		if (env) {
@@ -108,7 +108,7 @@ get_pw_uid(char *user, uid_t *uid)
 	struct passwd sp;
 	char buffer[1024];
 
-	if (getpwnam_r(user, &sp, buffer, sizeof (buffer)) == NULL) {
+	if (getpwnam_r(user, &sp, buffer, sizeof (buffer)) == nullptr) {
 		return (0);
 	}
 

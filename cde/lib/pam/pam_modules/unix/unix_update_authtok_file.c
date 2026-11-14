@@ -92,7 +92,7 @@ update_authtok_file(
 			"%s%s: Password database busy. Try again later."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		return (PAM_AUTHTOK_LOCK_BUSY);
 	}
@@ -106,13 +106,13 @@ update_authtok_file(
 	}
 
 	(void) umask(S_IAMB & ~(buf.st_mode & S_IRUSR));
-	if ((tsfp = fopen(SHADTEMP, "w")) == NULL) {
+	if ((tsfp = fopen(SHADTEMP, "w")) == nullptr) {
 		if (!nowarn) {
 			sprintf(messages[0], PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		(void) ulckpwdf();
 		return (PAM_AUTHTOK_ERR);
@@ -122,11 +122,11 @@ update_authtok_file(
 	 *	copy passwd files to temps, replacing matching lines
 	 *	with new password attributes.
 	 */
-	if ((spfp = fopen(SHADOW, "r")) == NULL) {
+	if ((spfp = fopen(SHADOW, "r")) == nullptr) {
 		fclose(tsfp);
 		goto err;
 	}
-	while (fgetspent_r(spfp, &unix_sp, spbuf, sizeof (spbuf)) != NULL) {
+	while (fgetspent_r(spfp, &unix_sp, spbuf, sizeof (spbuf)) != nullptr) {
 		if (strcmp(unix_sp.sp_namp, usrname) == 0) {
 			found = 1;
 			retcode = update_spent(pamh, field, data,
@@ -154,7 +154,7 @@ update_authtok_file(
 		"%s%s: Unexpected failure. Password database unchanged."),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			}
 			fclose(tsfp);
 			fclose(spfp);
@@ -169,7 +169,7 @@ update_authtok_file(
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}
@@ -181,7 +181,7 @@ update_authtok_file(
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}
@@ -197,7 +197,7 @@ update_authtok_file(
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}
@@ -209,7 +209,7 @@ update_authtok_file(
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}
@@ -223,7 +223,7 @@ update_authtok_file(
 			"%s%s: Unexpected failure. Password database missing."),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			}
 			goto err;
 		}
@@ -232,7 +232,7 @@ update_authtok_file(
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}
@@ -244,7 +244,7 @@ update_authtok_file(
 			"%s%s: passwd successfully changed for %s"),
 			prognamep, UNIX_MSG, usrname);
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-				1, messages, NULL);
+				1, messages, nullptr);
 	}
 	return (PAM_SUCCESS);
 err:
@@ -290,11 +290,11 @@ update_spent(
 						/* user's password */
 
 	if (strcmp(field, "attr") == 0) {
-		while (*data != NULL) {
+		while (*data != nullptr) {
 			/* check attribute: AUTHTOK_DEL */
 			if ((value =
 				attr_match("AUTHTOK_DEL", *data))
-								!= NULL) {
+								!= nullptr) {
 				if (strcmp(value, "1") == 0) {
 
 					/* delete password */
@@ -319,7 +319,7 @@ update_spent(
 
 			/* check attribute: AUTHTOK_LK */
 			if ((value = attr_match("AUTHTOK_LK", *data))
-								!= NULL) {
+								!= nullptr) {
 				if (strcmp(value, "1") == 0) {
 					memset(unix_sp->sp_pwdp, 0,
 						strlen(unix_sp->sp_pwdp));
@@ -335,7 +335,7 @@ update_spent(
 
 			/* check attribute: AUTHTOK_EXP */
 			if ((value = attr_match("AUTHTOK_EXP", *data))
-								!= NULL) {
+								!= nullptr) {
 				if (strcmp(value, "1") == 0) {
 					/* expire password */
 					unix_sp->sp_lstchg = (long) 0;
@@ -346,7 +346,7 @@ update_spent(
 
 			/* check attribute: AUTHTOK_MAXAGE */
 			if ((value = attr_match("AUTHTOK_MAXAGE", *data))
-								!= NULL) {
+								!= nullptr) {
 				/* set max field */
 				maxdate = (int)strtol(value, &char_p, 10);
 				if ((attr_find("AUTHTOK_MINAGE", data_p) ==
@@ -373,7 +373,7 @@ update_spent(
 
 			/* check attribute: AUTHTOK_MINAGE */
 			if ((value = attr_match("AUTHTOK_MINAGE", *data))
-								!= NULL) {
+								!= nullptr) {
 				/* set min field */
 				mindate = (int)strtol(value, &char_p, 10);
 				if ((attr_find("AUTHTOK_MAXAGE", data_p) ==
@@ -389,7 +389,7 @@ update_spent(
 			/* check attribute: AUTHTOK_WARNDATE */
 			if ((value =
 				attr_match
-				("AUTHTOK_WARNDATE", *data)) != NULL) {
+				("AUTHTOK_WARNDATE", *data)) != nullptr) {
 				/* set warn field */
 				warndate = (int)strtol(value, &char_p, 10);
 				if (unix_sp->sp_max == -1 && warndate != -1) {
@@ -402,8 +402,8 @@ update_spent(
 
 			/* new shell */
 			if ((value = attr_match("AUTHTOK_SHELL", *data))
-			    != NULL) {
-				if (unix_pwd == NULL) {
+			    != nullptr) {
+				if (unix_pwd == nullptr) {
 					if (!nowarn) {
 					    sprintf(messages[0],
 					    PAM_MSG(pamh, 94,
@@ -411,7 +411,7 @@ update_spent(
 						UNIX_MSG);
 					    (void) __pam_display_msg(
 						pamh, PAM_ERROR_MSG,
-						1, messages, NULL);
+						1, messages, nullptr);
 					}
 					return (PAM_AUTHTOK_RECOVERY_ERR);
 				}
@@ -422,7 +422,7 @@ update_spent(
 				if (tmp_pwd_entry)
 					free(tmp_pwd_entry);
 				/* if NULL, shell unchanged */
-				if (unix_pwd->pw_shell == NULL)
+				if (unix_pwd->pw_shell == nullptr)
 					return (PAM_SUCCESS);
 				*passwd_flag = 1;
 				data++;
@@ -431,8 +431,8 @@ update_spent(
 
 			/* new homedir */
 			if ((value = attr_match("AUTHTOK_HOMEDIR", *data))
-			    != NULL) {
-				if (unix_pwd == NULL) {
+			    != nullptr) {
+				if (unix_pwd == nullptr) {
 					if (!nowarn) {
 					    sprintf(messages[0],
 					    PAM_MSG(pamh, 94,
@@ -440,7 +440,7 @@ update_spent(
 						UNIX_MSG);
 					    (void) __pam_display_msg(
 						pamh, PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 					}
 					return (PAM_AUTHTOK_RECOVERY_ERR);
 				}
@@ -451,7 +451,7 @@ update_spent(
 				if (tmp_pwd_entry)
 					free(tmp_pwd_entry);
 				/* if NULL, homedir unchanged */
-				if (unix_pwd->pw_dir == NULL)
+				if (unix_pwd->pw_dir == nullptr)
 					return (PAM_SUCCESS);
 				*passwd_flag = 1;
 				data++;
@@ -460,8 +460,8 @@ update_spent(
 
 			/* new gecos */
 			if ((value = attr_match("AUTHTOK_GECOS", *data))
-			    != NULL) {
-				if (unix_pwd == NULL) {
+			    != nullptr) {
+				if (unix_pwd == nullptr) {
 					if (!nowarn) {
 					    sprintf(messages[0],
 					    PAM_MSG(pamh, 94,
@@ -469,7 +469,7 @@ update_spent(
 						UNIX_MSG);
 					    (void) __pam_display_msg(
 						pamh, PAM_ERROR_MSG, 1,
-						messages, NULL);
+						messages, nullptr);
 					}
 					return (PAM_AUTHTOK_RECOVERY_ERR);
 				}
@@ -480,7 +480,7 @@ update_spent(
 				if (tmp_pwd_entry)
 					free(tmp_pwd_entry);
 				/* if NULL, gecos unchanged */
-				if (unix_pwd->pw_gecos == NULL)
+				if (unix_pwd->pw_gecos == nullptr)
 					return (PAM_SUCCESS);
 				*passwd_flag = 1;
 				data++;
@@ -529,30 +529,30 @@ process_passwd(
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		return (PAM_AUTHTOK_ERR);
 	}
 
 	(void) umask(S_IAMB & ~(stat_buf.st_mode & S_IRUSR));
-	if ((tpfp = fopen(PASSTEMP, "w")) == NULL) {
+	if ((tpfp = fopen(PASSTEMP, "w")) == nullptr) {
 		if (!nowarn) {
 			sprintf(messages[0], PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		return (PAM_AUTHTOK_ERR);
 	}
 
-	if ((pwfp = fopen(PASSWD, "r")) == NULL) {
+	if ((pwfp = fopen(PASSWD, "r")) == nullptr) {
 		fclose(tpfp);
 		goto err;
 	}
 
 
-	while ((unix_p = fgetpwent_r(pwfp, &unix_tmp, buf, 4*BUFSIZ)) != NULL) {
+	while ((unix_p = fgetpwent_r(pwfp, &unix_tmp, buf, 4*BUFSIZ)) != nullptr) {
 		if (strcmp(unix_p->pw_name, usrname) == 0) {
 			found = 1;
 			unix_p->pw_gecos = unix_pwd->pw_gecos;
@@ -565,7 +565,7 @@ process_passwd(
 		"%s%s: Unexpected failure. Password database unchanged."),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			}
 			fclose(tpfp);
 			fclose(pwfp);
@@ -581,7 +581,7 @@ process_passwd(
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}
@@ -593,7 +593,7 @@ process_passwd(
 		"%s%s: Unexpected failure. Password database unchanged."),
 			prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}
@@ -609,7 +609,7 @@ process_passwd(
 				"%s%s: %s"),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}
@@ -621,7 +621,7 @@ process_passwd(
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}
@@ -635,7 +635,7 @@ process_passwd(
 		"%s%s: Unexpected failure. Password database unchanged."),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			}
 			goto err;
 		}
@@ -644,7 +644,7 @@ process_passwd(
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		goto err;
 	}

@@ -42,7 +42,7 @@ pam_sm_authenticate(
 	int	argc,
 	const char	**argv)
 {
-	char *host = NULL, *lusername = NULL;
+	char *host = nullptr, *lusername = nullptr;
 	struct passwd pwd;
 	char pwd_buffer[1024];
 	int	is_superuser;
@@ -72,14 +72,14 @@ pam_sm_authenticate(
 	}
 
 	if (getpwnam_r(lusername, &pwd, pwd_buffer, sizeof (pwd_buffer))
-								== NULL)
+								== nullptr)
 		return (PAM_USER_UNKNOWN);
 
 	/*
 	 * RHOST may not be set due to unknown USER or reset by previous
 	 * authentication failure.
 	 */
-	if ((rusername == NULL) || (rusername[0] == '\0'))
+	if ((rusername == nullptr) || (rusername[0] == '\0'))
 		return (PAM_AUTH_ERR);
 
 	if (pwd.pw_uid == 0)

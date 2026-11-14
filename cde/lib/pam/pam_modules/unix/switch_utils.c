@@ -436,7 +436,7 @@ getpwnam_from(const char *name, int rep)
 		break;
 #endif
 	default:
-		return (NULL);
+		return (nullptr);
 	}
 
 	return (struct passwd *) NSS_XbyY_FINI(&arg);
@@ -473,7 +473,7 @@ getspnam_from(const char *name, int rep)
 		break;
 #endif
 	default:
-		return (NULL);
+		return (nullptr);
 	}
 	return (struct spwd *) NSS_XbyY_FINI(&arg);
 }
@@ -496,7 +496,7 @@ pr_config(pam_handle_t *pamh)
 	PAM_MSG(pamh, 8, "Please check your /etc/nsswitch.conf file"));
 
 	/* display the above 8 messages */
-	(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 8, messages, NULL);
+	(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 8, messages, nullptr);
 }
 
 /*
@@ -514,8 +514,8 @@ int
 get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 {
 #if (PAM_NIS || PAM_NISPLUS)
-	struct __nsw_switchconfig *conf = NULL;
-	struct __nsw_switchconfig *confcomp = NULL;
+	struct __nsw_switchconfig *conf = nullptr;
+	struct __nsw_switchconfig *confcomp = nullptr;
 	enum __nsw_parse_err pserr;
 	struct __nsw_lookup *lkp;
 	struct __nsw_lookup *lkp2;
@@ -527,12 +527,12 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 		return (o_rep);
 
 	conf = __nsw_getconfig("passwd", &pserr);
-	if (conf == NULL) {
+	if (conf == nullptr) {
 		if (!nowarn) {
 			sprintf(messages[0], PAM_MSG(pamh, 9,
 				"Can't find name service for passwd"));
 			__pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 
 		if (IS_NISPLUS(o_rep)) {
@@ -540,7 +540,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 			sprintf(messages[0], PAM_MSG(pamh, 10,
 				"You may not use nisplus repository"));
 			__pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		    }
 		    return (-1);
 		} else if (o_rep != PAM_REP_DEFAULT) {
@@ -585,7 +585,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 				    PAM_MSG(pamh, 11,
 	"Your specified repository is not defined in the nsswitch file!"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			    }
 			    return (o_rep);
 			}
@@ -593,7 +593,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 		} else if (strcmp(lkp->service_name, "compat") == 0) {
 			/* get passwd_compat */
 			confcomp = __nsw_getconfig("passwd_compat", &pserr);
-			if (confcomp == NULL) {
+			if (confcomp == nullptr) {
 				rep = PAM_REP_FILES | PAM_REP_NIS;
 				if (o_rep == PAM_REP_NISPLUS) {
 				    if (!nowarn) {
@@ -601,7 +601,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 						PAM_MSG(pamh, 11,
 	"Your specified repository is not defined in the nsswitch file!"));
 					__pam_display_msg(pamh, PAM_ERROR_MSG,
-						1, messages, NULL);
+						1, messages, nullptr);
 				    }
 				    return (o_rep);
 				} else if (o_rep != PAM_REP_DEFAULT)
@@ -620,7 +620,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 	"Your specified repository is not defined in the nsswitch file!"));
 						__pam_display_msg(pamh,
 							PAM_ERROR_MSG,
-							1, messages, NULL);
+							1, messages, nullptr);
 					    }
 					    return (o_rep);
 					} else if (o_rep != PAM_REP_DEFAULT)
@@ -655,7 +655,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 				    PAM_MSG(pamh, 11,
 	"Your specified repository is not defined in the nsswitch file!"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			    }
 			    return (o_rep);
 			} else if (o_rep != PAM_REP_DEFAULT)
@@ -670,7 +670,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 				    PAM_MSG(pamh, 11,
 	"Your specified repository is not defined in the nsswitch file!"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			    }
 			    return (o_rep);
 			} else if (o_rep != PAM_REP_DEFAULT)

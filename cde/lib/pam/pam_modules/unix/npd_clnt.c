@@ -74,9 +74,9 @@ npd_makeclnthandle(
 	nis_server	**srvs;		/* servers that serve 'domain' */
 	nis_server	*master_srv;
 	char		buf[NIS_MAXNAMELEN];
-	CLIENT		*tmpclnt = NULL;
+	CLIENT		*tmpclnt = nullptr;
 
-	if (domain == NULL || *domain == '\0')
+	if (domain == nullptr || *domain == '\0')
 		domain = nis_local_directory();
 
 	/* strlen("org_dir.") + null + "." = 10 */
@@ -87,7 +87,7 @@ npd_makeclnthandle(
 		(void) strcat(buf, ".");
 
 	srvs = nis_getservlist(buf);
-	if (srvs == NULL) {
+	if (srvs == nullptr) {
 		/* can't find any of the servers that serve this domain */
 		/* something is very wrong ! */
 		syslog(LOG_ERR,
@@ -134,7 +134,7 @@ npd_makeclnthandle(
 
 	/* done with server list */
 	(void) nis_freeservlist(srvs);
-	if (tmpclnt == NULL) {
+	if (tmpclnt == nullptr) {
 		/*
 		 * error syslog'd by nis_make_rpchandle()
 		 */
@@ -165,7 +165,7 @@ __get_cmnkey(char *public, char *secret, des_block *deskey)
 	pub = xtom(public);
 	sec = xtom(secret);
 
-	if ((pub == NULL) || (sec == NULL))
+	if ((pub == nullptr) || (sec == nullptr))
 		return (FALSE);
 
 	cmn = itom(0);
@@ -228,12 +228,12 @@ nispasswd_auth(
 	int		i;
 	char		*keystr = "DES";
 
-	if ((user == NULL || *user == '\0') ||
-		(domain == NULL || *domain == '\0') ||
-		(oldpass == NULL || *oldpass == '\0') ||
-		(u_pubkey == NULL || *u_pubkey == '\0') ||
-		(deskey == (des_block *) NULL) ||
-		(clnt == (CLIENT *) NULL)) {
+	if ((user == nullptr || *user == '\0') ||
+		(domain == nullptr || *domain == '\0') ||
+		(oldpass == nullptr || *oldpass == '\0') ||
+		(u_pubkey == nullptr || *u_pubkey == '\0') ||
+		(deskey == (des_block *) nullptr) ||
+		(clnt == (CLIENT *) nullptr)) {
 		*err = NPD_INVALIDARGS;
 		return (NPD_FAILED);
 	}
@@ -333,11 +333,11 @@ nispasswd_pass(
 	nispasswd_updresult	result;
 	npd_newpass	cryptbuf;
 	unsigned long	tmp_xrval;
-	nispasswd_error	*errl = NULL, *p;
+	nispasswd_error	*errl = nullptr, *p;
 
-	if ((clnt == (CLIENT *) NULL) ||
-		(deskey == (des_block *) NULL) ||
-		(newpass == NULL || *newpass == '\0')) {
+	if ((clnt == (CLIENT *) nullptr) ||
+		(deskey == (des_block *) nullptr) ||
+		(newpass == nullptr || *newpass == '\0')) {
 		*err = NPD_INVALIDARGS;
 		return (NPD_FAILED);
 	}
@@ -378,26 +378,26 @@ nispasswd_pass(
 	case NPD_PARTIALSUCCESS:
 		/* need to assign field/err code */
 		errl = &result.nispasswd_updresult_u.reason;
-		if (errl == (struct nispasswd_error *) NULL) {
+		if (errl == (struct nispasswd_error *) nullptr) {
 			*err = NPD_SYSTEMERR;
 			return (NPD_FAILED);
 		}
 		*errlst = (nispasswd_error *)
 				calloc(1, sizeof (nispasswd_error));
-		if (*errlst == (struct nispasswd_error *) NULL) {
+		if (*errlst == (struct nispasswd_error *) nullptr) {
 			*err = NPD_SYSTEMERR;
 			return (NPD_FAILED);
 		}
 
-		for (p = *errlst; errl != NULL; errl = errl->next) {
+		for (p = *errlst; errl != nullptr; errl = errl->next) {
 			p->npd_field = errl->npd_field;
 			p->npd_code = errl->npd_code;
-			if (errl->next != NULL) {
+			if (errl->next != nullptr) {
 				p->next = (nispasswd_error *)
 					calloc(1, sizeof (nispasswd_error));
 				p = p->next;
 			} else
-			p->next = (nispasswd_error *) NULL;
+			p->next = (nispasswd_error *) nullptr;
 		}
 		return (NPD_PARTIALSUCCESS);
 	case NPD_FAILED:
@@ -417,13 +417,13 @@ __npd_free_errlist(nispasswd_error *list)
 {
 	nispasswd_error *p;
 
-	if (list == NULL)
+	if (list == nullptr)
 		return;
-	for (; list != NULL; list = p) {
+	for (; list != nullptr; list = p) {
 		p = list->next;
 		free(list);
 	}
-	list = NULL;
+	list = nullptr;
 }
 #else
 #if defined(sun)

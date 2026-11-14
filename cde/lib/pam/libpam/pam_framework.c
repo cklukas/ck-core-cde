@@ -119,34 +119,34 @@ pam_start(
 			service, (user)?user:"no-user");
 
 	*pamh = (struct pam_handle *) calloc(1, sizeof (struct pam_handle));
-	if (*pamh == NULL)
+	if (*pamh == nullptr)
 		return (PAM_BUF_ERR);
 
 	if ((err = pam_set_item(*pamh, PAM_SERVICE, (void *)service))
 		    != PAM_SUCCESS) {
 		clean_up(*pamh);
-		*pamh = NULL;
+		*pamh = nullptr;
 		return (err);
 	}
 
 	if ((err = pam_set_item(*pamh, PAM_USER, (void *) user))
 			!= PAM_SUCCESS) {
 		clean_up(*pamh);
-		*pamh = NULL;
+		*pamh = nullptr;
 		return (err);
 	}
 
 	if ((err = pam_set_item(*pamh, PAM_CONV, (void *) pam_conv))
 	    != PAM_SUCCESS) {
 		clean_up(*pamh);
-		*pamh = NULL;
+		*pamh = nullptr;
 		return (err);
 	}
 
 	/* read all the entries from pam.conf */
 	if ((err = read_pam_conf (*pamh)) != PAM_SUCCESS) {
 		clean_up (*pamh);
-		*pamh = NULL;
+		*pamh = nullptr;
 		return (err);
 	}
 
@@ -166,7 +166,7 @@ pam_end(pam_handle_t *pamh, int pam_status)
 		syslog(LOG_DEBUG, "pam_end(): status = %s",
 			pam_strerror(pamh, pam_status));
 
-	if (pamh == NULL)
+	if (pamh == nullptr)
 		return (PAM_SYSTEM_ERR);
 
 	/* call the cleanup routines for module specific data */
@@ -181,7 +181,7 @@ pam_end(pam_handle_t *pamh, int pam_status)
 		free(p->module_data_name);
 		free(p);
 	}
-	pamh->ssd = NULL;
+	pamh->ssd = nullptr;
 
 	clean_up(pamh);
 
@@ -210,7 +210,7 @@ pam_set_item(
 	if (pam_debug)
 		syslog(LOG_DEBUG, "pam_set_item(%d)", item_type);
 
-	if (pamh == NULL)
+	if (pamh == nullptr)
 		return (PAM_SYSTEM_ERR);
 	/*
 	 * Check that item_type is within valid range
@@ -224,7 +224,7 @@ pam_set_item(
 	switch (item_type) {
 		case PAM_AUTHTOK:
 		case PAM_OLDAUTHTOK:
-			if (pip->pi_addr != NULL)
+			if (pip->pi_addr != nullptr)
 				memset(pip->pi_addr, 0, pip->pi_size);
 		case PAM_SERVICE:
 		case PAM_USER:
@@ -232,16 +232,16 @@ pam_set_item(
 		case PAM_RHOST:
 		case PAM_RUSER:
 		case PAM_USER_PROMPT:
-			if (pip->pi_addr != NULL) {
+			if (pip->pi_addr != nullptr) {
 				free(pip->pi_addr);
 			}
 
-			if (item == NULL) {
-				pip->pi_addr = NULL;
+			if (item == nullptr) {
+				pip->pi_addr = nullptr;
 				pip->pi_size = 0;
 			} else {
 				pip->pi_addr = strdup((char *)item);
-				if (pip->pi_addr == NULL) {
+				if (pip->pi_addr == nullptr) {
 					pip->pi_size = 0;
 					return (PAM_BUF_ERR);
 				}
@@ -249,12 +249,12 @@ pam_set_item(
 			}
 			break;
 		case PAM_CONV:
-			if (pip->pi_addr != NULL)
+			if (pip->pi_addr != nullptr)
 				free(pip->pi_addr);
 			size = sizeof (struct pam_conv);
-			if ((pip->pi_addr = (void *) calloc(1, size)) == NULL)
+			if ((pip->pi_addr = (void *) calloc(1, size)) == nullptr)
 				return (PAM_BUF_ERR);
-			if (item != NULL)
+			if (item != nullptr)
 				(void) memcpy(pip->pi_addr, item,
 						(unsigned int) size);
 			else
@@ -281,7 +281,7 @@ pam_get_item(
 {
 	struct pam_item *pip;
 
-	if (pamh == NULL)
+	if (pamh == nullptr)
 		return (PAM_SYSTEM_ERR);
 
 	if (item_type <= 0 || item_type >= PAM_MAX_ITEMS)
@@ -308,12 +308,12 @@ pam_get_user(
 	const char *prompt_override)	/* Prompt */
 {
 	int	status;
-	char	*prompt = NULL;
+	char	*prompt = nullptr;
 
 	struct pam_response *ret_resp = (struct pam_response *)0;
 	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 
-	if (pamh == NULL)
+	if (pamh == nullptr)
 		return (PAM_SYSTEM_ERR);
 
 	if ((status = pam_get_item(pamh, PAM_USER, (void **)user))
@@ -323,7 +323,7 @@ pam_get_user(
 
 	/* if the user is set, return it */
 
-	if (*user != NULL && *user[0] != '\0') {
+	if (*user != nullptr && *user[0] != '\0') {
 		return (PAM_SUCCESS);
 	}
 
@@ -332,7 +332,7 @@ pam_get_user(
 	 * else use PAM_USER_PROMPT.
 	 */
 
-	if (prompt_override != NULL) {
+	if (prompt_override != nullptr) {
 		prompt = (char *)prompt_override;
 	} else {
 		status = pam_get_item(pamh, PAM_USER_PROMPT, (void**)&prompt);
@@ -343,7 +343,7 @@ pam_get_user(
 
 	/* if the prompt is not set, use default */
 
-	if (prompt == NULL || prompt[0] == '\0') {
+	if (prompt == nullptr || prompt[0] == '\0') {
 		prompt = PAM_MSG(pamh, 32, "Please enter user name: ");
 	}
 
@@ -353,7 +353,7 @@ pam_get_user(
 
 	for (;;) {
 		status = __pam_get_input(pamh, PAM_PROMPT_ECHO_ON, 1,
-			messages, NULL, &ret_resp);
+			messages, nullptr, &ret_resp);
 
 		if (status != PAM_SUCCESS) {
 			return (status);
@@ -394,7 +394,7 @@ pam_set_data(
 {
 	struct pam_module_data *psd;
 
-	if (pamh == NULL || module_data_name == NULL)
+	if (pamh == nullptr || module_data_name == nullptr)
 		return (PAM_SYSTEM_ERR);
 
 	/* check if module data already exists */
@@ -412,11 +412,11 @@ pam_set_data(
 	}
 
 	psd = malloc(sizeof (struct pam_module_data));
-	if (psd == NULL)
+	if (psd == nullptr)
 		return (PAM_BUF_ERR);
 
 	psd->module_data_name = strdup(module_data_name);
-	if (psd->module_data_name == NULL) {
+	if (psd->module_data_name == nullptr) {
 		free(psd);
 		return (PAM_BUF_ERR);
 	}
@@ -441,7 +441,7 @@ pam_get_data(
 {
 	struct pam_module_data *psd;
 
-	if (pamh == NULL)
+	if (pamh == nullptr)
 		return (PAM_SYSTEM_ERR);
 
 	for (psd = pamh->ssd; psd; psd = psd->next) {
@@ -549,7 +549,7 @@ pam_authenticate(
 				    !required_module_failed) {
 					pam_set_item(pamh,
 							PAM_AUTHTOK,
-							NULL);
+							nullptr);
 					return (PAM_SUCCESS);
 				}
 				success = 1;
@@ -574,7 +574,7 @@ pam_authenticate(
 	}
 
 	/* this will memset the password memory to 0 */
-	pam_set_item(pamh, PAM_AUTHTOK, NULL);
+	pam_set_item(pamh, PAM_AUTHTOK, nullptr);
 
 	if (required_module_failed)
 		return (first_required_error);
@@ -956,9 +956,9 @@ pam_chauthtok(
 						 * passwd memory to 0 and return
 						 */
 						pam_set_item(pamh,
-							PAM_AUTHTOK, NULL);
+							PAM_AUTHTOK, nullptr);
 						pam_set_item(pamh,
-							PAM_OLDAUTHTOK, NULL);
+							PAM_OLDAUTHTOK, nullptr);
 						return (PAM_SUCCESS);
 					}
 				}
@@ -984,8 +984,8 @@ pam_chauthtok(
 	    } /* while */
 
 	    /* this will memset the password memory to 0 */
-	    pam_set_item(pamh, PAM_AUTHTOK, NULL);
-	    pam_set_item(pamh, PAM_OLDAUTHTOK, NULL);
+	    pam_set_item(pamh, PAM_AUTHTOK, nullptr);
+	    pam_set_item(pamh, PAM_OLDAUTHTOK, nullptr);
 
 	    if (required_module_failed)
 		return (first_required_error);
@@ -1038,12 +1038,12 @@ load_modules(pam_handle_t *pamh, int type, char *function_name)
 	struct password_module *passwdp;
 	int loading_functions = 0; /* are we currently loading functions? */
 
-	if ((pam_entry = pamh->pam_conf_info[type]) == NULL) {
+	if ((pam_entry = pamh->pam_conf_info[type]) == nullptr) {
 		syslog(LOG_ERR, "load_modules: no module present");
 		return (PAM_SYSTEM_ERR);
 	}
 
-	while (pam_entry != NULL) {
+	while (pam_entry != nullptr) {
 		if (pam_debug)
 			syslog(LOG_DEBUG, "load_modules: %s",
 				pam_entry->module_path);
@@ -1066,12 +1066,12 @@ load_modules(pam_handle_t *pamh, int type, char *function_name)
 			loading_functions = 1;
 			authp = (struct auth_module *)
 				calloc(1, sizeof (struct auth_module));
-			if (authp == NULL)
+			if (authp == nullptr)
 				return (PAM_BUF_ERR);
 
 			/* if open_module fails, continue */
 			if ((mh = open_module
-				(pam_entry->module_path)) == NULL)
+				(pam_entry->module_path)) == nullptr)
 				syslog(LOG_ERR,
 				"load_modules: can not open module %s",
 				pam_entry->module_path);
@@ -1108,12 +1108,12 @@ load_modules(pam_handle_t *pamh, int type, char *function_name)
 			loading_functions = 1;
 			accountp = (struct account_module *)
 				calloc(1, sizeof (struct account_module));
-			if (accountp == NULL)
+			if (accountp == nullptr)
 				return (PAM_BUF_ERR);
 
 			/* if open_module fails, continue */
 			if ((mh = open_module
-				(pam_entry->module_path)) == NULL)
+				(pam_entry->module_path)) == nullptr)
 				syslog(LOG_ERR,
 				"load_modules: can not open module %s",
 				pam_entry->module_path);
@@ -1143,12 +1143,12 @@ load_modules(pam_handle_t *pamh, int type, char *function_name)
 			loading_functions = 1;
 			sessionp = (struct session_module *)
 				calloc(1, sizeof (struct session_module));
-			if (sessionp == NULL)
+			if (sessionp == nullptr)
 				return (PAM_BUF_ERR);
 
 			/* if open_module fails, continue */
 			if ((mh = open_module
-				(pam_entry->module_path)) == NULL)
+				(pam_entry->module_path)) == nullptr)
 				syslog(LOG_ERR,
 				"load_modules: can not open module %s",
 				pam_entry->module_path);
@@ -1180,12 +1180,12 @@ load_modules(pam_handle_t *pamh, int type, char *function_name)
 			loading_functions = 1;
 			passwdp = (struct password_module *)
 				calloc(1, sizeof (struct password_module));
-			if (passwdp == NULL)
+			if (passwdp == nullptr)
 				return (PAM_BUF_ERR);
 
 			/* if open_module fails, continue */
 			if ((mh = open_module
-				(pam_entry->module_path)) == NULL)
+				(pam_entry->module_path)) == nullptr)
 				syslog(LOG_ERR,
 				"load_modules: can not open module %s",
 				pam_entry->module_path);
@@ -1233,7 +1233,7 @@ open_module(char *module_so)
 	if (stat(module_so, &stb) < 0) {
 		syslog(LOG_ALERT, "open_module: stat(%s) failed: %s",
 				module_so, strerror(errno));
-		return (NULL);
+		return (nullptr);
 	}
 
 	/*
@@ -1243,7 +1243,7 @@ open_module(char *module_so)
 		syslog(LOG_ALERT,
 			"open_module: Owner of the module %s is not root",
 			module_so);
-		return (NULL);
+		return (nullptr);
 	}
 
 	/*
@@ -1253,12 +1253,12 @@ open_module(char *module_so)
 		syslog(LOG_ALERT,
 			"open_module: module %s writable by group",
 			module_so);
-		return (NULL);
+		return (nullptr);
 	}
 	if (stb.st_mode&S_IWOTH) {
 		syslog(LOG_ALERT,
 			"open_module: module %s writable by world", module_so);
-		return (NULL);
+		return (nullptr);
 	}
 
 	/*
@@ -1268,13 +1268,13 @@ open_module(char *module_so)
 	lfd = (void *) dlopen(module_so, RTLD_LAZY);
 #endif /* sun */
 
-	if (lfd == NULL) {
+	if (lfd == nullptr) {
 		if (pam_debug) {
 			errmsg = (char *) strerror(errno);
 			syslog(LOG_DEBUG, "open_module: %s failed: %s",
 				module_so, errmsg);
 		}
-		return (NULL);
+		return (nullptr);
 	}
 
 	return (lfd);
@@ -1289,9 +1289,9 @@ static int
 load_function(void *lfd, char *name, pam_sm_func *func)
 {
 #endif
-	char *errmsg = NULL;
+	char *errmsg = nullptr;
 
-	if (lfd == NULL)
+	if (lfd == nullptr)
 		return (PAM_SYMBOL_ERR);
 
 	/*
@@ -1300,12 +1300,12 @@ load_function(void *lfd, char *name, pam_sm_func *func)
 	 */
 #ifdef sun
 	*func = (pam_sm_func)dlsym(lfd, name);
-	if (*func == NULL) {
+	if (*func == nullptr) {
 		if (pam_debug) {
 			errmsg = (char *) dlerror();
 			syslog(LOG_DEBUG,
 			"dlsym failed %s: error %s",
-			name, errmsg != NULL ? errmsg : "");
+			name, errmsg != nullptr ? errmsg : "");
 		}
 		return (PAM_SYMBOL_ERR);
 	}
@@ -1371,11 +1371,11 @@ open_pam_conf(struct pam_fh **pam_fh)
 	}
 
 	*pam_fh = calloc(1, sizeof (struct pam_fh));
-	if (*pam_fh == NULL)
+	if (*pam_fh == nullptr)
 		return (0);
 
 	(*pam_fh)->fconfig = fopen(PAM_CONFIG, "r");
-	return ((*pam_fh)->fconfig != NULL);
+	return ((*pam_fh)->fconfig != nullptr);
 }
 
 /*
@@ -1386,7 +1386,7 @@ static void
 close_pam_conf(struct pam_fh *pam_fh)
 {
 
-	if (pam_fh->fconfig == NULL) {
+	if (pam_fh->fconfig == nullptr) {
 		free(pam_fh);
 		return;
 	}
@@ -1403,10 +1403,10 @@ static int
 read_pam_conf(pam_handle_t *pamh)
 {
 
-	struct pam_fh *pam_fh = NULL;
-	pamtab *pamentp = NULL;
-	pamtab *pament_traverse = NULL;
-	pamtab *new_head = NULL;
+	struct pam_fh *pam_fh = nullptr;
+	pamtab *pamentp = nullptr;
+	pamtab *pament_traverse = nullptr;
+	pamtab *new_head = nullptr;
 	char *service;
 	int other_needed[PAM_NUM_MODULE_TYPES] = {1, 1, 1, 1};
 	int error;
@@ -1437,7 +1437,7 @@ read_pam_conf(pam_handle_t *pamh)
 			 */
 			new_head = pamh->pam_conf_info[pamentp->pam_type];
 			pament_traverse = new_head;
-			while (new_head != NULL &&
+			while (new_head != nullptr &&
 				!strcasecmp(new_head->pam_service, "other")) {
 				new_head = new_head->next;
 				free_pamconf(pament_traverse);
@@ -1455,21 +1455,21 @@ read_pam_conf(pam_handle_t *pamh)
 		    (other_needed[pamentp->pam_type] == 0 &&
 		    !strcasecmp(pamentp->pam_service, service))) {
 
-			pamentp->next = NULL;
-			if (pamh->pam_conf_info[pamentp->pam_type] == NULL) {
+			pamentp->next = nullptr;
+			if (pamh->pam_conf_info[pamentp->pam_type] == nullptr) {
 				pamh->pam_conf_info[pamentp->pam_type] =
 									pamentp;
 			} else {
 				pament_traverse =
 					pamh->pam_conf_info[pamentp->pam_type];
-				while (pament_traverse->next != NULL)
+				while (pament_traverse->next != nullptr)
 					pament_traverse = pament_traverse->next;
 				pament_traverse->next = pamentp;
 			}
 		} else
 			free_pamconf(pamentp);
 
-		pamentp = NULL;
+		pamentp = nullptr;
 	}
 
 	(void) close_pam_conf(pam_fh);
@@ -1494,7 +1494,7 @@ get_pam_conf_entry(struct pam_fh *pam_fh, pamtab **pam)
 	int		i;
 
 	while (1) {
-		if ((*pam = (pamtab *)calloc(1, sizeof (pamtab))) == NULL)
+		if ((*pam = (pamtab *)calloc(1, sizeof (pamtab))) == nullptr)
 			return (0);
 
 		cp = nextline(pam_fh);
@@ -1502,7 +1502,7 @@ get_pam_conf_entry(struct pam_fh *pam_fh, pamtab **pam)
 			goto mal_formed;
 
 		arg = read_next_token(&cp);
-		if (arg == NULL) {
+		if (arg == nullptr) {
 			syslog(LOG_CRIT,
 			"illegal entry in pam.conf: missing field: %s", cp);
 			free_pamconf (*pam);
@@ -1510,7 +1510,7 @@ get_pam_conf_entry(struct pam_fh *pam_fh, pamtab **pam)
 		}
 
 		(*pam)->pam_service = strdup(arg);
-		if ((*pam)->pam_service == NULL) {
+		if ((*pam)->pam_service == nullptr) {
 			syslog(LOG_ERR, "strdup: out of memory");
 			goto mal_formed;
 		}
@@ -1579,7 +1579,7 @@ get_pam_conf_entry(struct pam_fh *pam_fh, pamtab **pam)
 		if (arg[0] != '/') {
 			if (((*pam)->module_path = (char *)
 				calloc(strlen(PAM_LIB_DIR) + strlen(arg) + 1,
-					sizeof (char))) == NULL) {
+					sizeof (char))) == nullptr) {
 				syslog(LOG_ERR, "strdup: out of memory");
 				goto mal_formed;
 			}
@@ -1587,7 +1587,7 @@ get_pam_conf_entry(struct pam_fh *pam_fh, pamtab **pam)
 				PAM_LIB_DIR, arg);
 		} else {
 			(*pam)->module_path = strdup(arg);
-			if ((*pam)->module_path == NULL) {
+			if ((*pam)->module_path == nullptr) {
 				syslog(LOG_ERR, "strdup: out of memory");
 				goto mal_formed;
 			}
@@ -1595,7 +1595,7 @@ get_pam_conf_entry(struct pam_fh *pam_fh, pamtab **pam)
 
 		/* count the number of options first */
 		argc = 0;
-		if ((tmp = strdup(cp)) == NULL) {
+		if ((tmp = strdup(cp)) == nullptr) {
 			syslog(LOG_ERR, "strdup: out of memory");
 			goto mal_formed;
 		}
@@ -1609,7 +1609,7 @@ get_pam_conf_entry(struct pam_fh *pam_fh, pamtab **pam)
 		if (argc > 0) {
 			(*pam)->module_argv = (char **)
 					calloc(argc+1, sizeof (char *));
-			if ((*pam)->module_argv == NULL) {
+			if ((*pam)->module_argv == nullptr) {
 				syslog(LOG_ERR, "calloc: out of memory");
 				goto mal_formed;
 			}
@@ -1617,13 +1617,13 @@ get_pam_conf_entry(struct pam_fh *pam_fh, pamtab **pam)
 			for (arg = read_next_token(&cp); arg;
 				arg = read_next_token(&cp)) {
 				(*pam)->module_argv[i] = strdup(arg);
-				if ((*pam)->module_argv[i] == NULL) {
+				if ((*pam)->module_argv[i] == nullptr) {
 					syslog(LOG_ERR, "strdup failed");
 					goto mal_formed;
 				}
 				i++;
 			}
-			(*pam)->module_argv[argc] = NULL;
+			(*pam)->module_argv[argc] = nullptr;
 		}
 		(*pam)->module_argc = argc;
 		break;
@@ -1680,7 +1680,7 @@ nextline(struct pam_fh *pam_fh)
 		pam_fh->fconfig)) && (*(pam_fh->line) == '\n' ||
 		*(pam_fh->line) == '#'));
 
-	if (ll == NULL)
+	if (ll == nullptr)
 		return ((char *)0);
 	cp = strchr(pam_fh->line, '\n');
 	if (cp)
@@ -1708,7 +1708,7 @@ clean_up(pam_handle_t *pamh)
 	if (pamh) {
 		free_pam_conf_info(pamh);
 		for (i = 0; i < PAM_MAX_ITEMS; i++) {
-			if (pamh->ps_item[i].pi_addr != NULL)
+			if (pamh->ps_item[i].pi_addr != nullptr)
 				free(pamh->ps_item[i].pi_addr);
 		}
 		free(pamh);

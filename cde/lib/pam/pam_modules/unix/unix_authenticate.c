@@ -59,7 +59,7 @@ pam_sm_authenticate(
 	struct		passwd pwd; /* password structure */
 	char		shpwd_buf[1024];
 	char		pwd_buf[1024];
-	char 		*password = NULL;
+	char 		*password = nullptr;
 	char		*dummy_passwd = "no:password";
 	int		err = PAM_SUCCESS;
 	int		retcode;
@@ -91,7 +91,7 @@ pam_sm_authenticate(
 
 	if ((err = pam_get_item(pamh, PAM_SERVICE, (void **)&service))
 							!= PAM_SUCCESS ||
-	    (err = pam_get_user(pamh, &user, NULL)) != PAM_SUCCESS)
+	    (err = pam_get_user(pamh, &user, nullptr)) != PAM_SUCCESS)
 		return (err);
 
 	if (debug)
@@ -108,8 +108,8 @@ pam_sm_authenticate(
 	 */
 	memset(pwd_buf, 0, sizeof (pwd_buf));
 	memset(shpwd_buf, 0, sizeof (shpwd_buf));
-	if (getpwnam_r(user, &pwd, pwd_buf, sizeof (pwd_buf)) == NULL ||
-	    getspnam_r(user, &shpwd, shpwd_buf, sizeof (shpwd_buf)) == NULL) {
+	if (getpwnam_r(user, &pwd, pwd_buf, sizeof (pwd_buf)) == nullptr ||
+	    getspnam_r(user, &shpwd, shpwd_buf, sizeof (shpwd_buf)) == nullptr) {
 		err = PAM_USER_UNKNOWN;
 		/*
 		 * Mask unknown users.
@@ -136,7 +136,7 @@ pam_sm_authenticate(
 	}
 
 	if ((err = __pam_get_authtok(pamh, PAM_HANDLE, PAM_AUTHTOK,
-		PASSWORD_LEN, NULL, &password)) != PAM_SUCCESS)
+		PASSWORD_LEN, nullptr, &password)) != PAM_SUCCESS)
 		goto out;
 
 	if (try_first_pass) {
@@ -178,11 +178,11 @@ prompt:
 	/*
 	 * Get the password from the user
 	 */
-	if ((password != NULL && password[0] != '\0') || try_first_pass) {
+	if ((password != nullptr && password[0] != '\0') || try_first_pass) {
 		if (password) {
 			memset(password, 0, strlen(password));
 			free(password);
-			password = NULL;
+			password = nullptr;
 		}
 		if ((retcode = __pam_get_authtok(pamh, PAM_PROMPT,
 			PAM_AUTHTOK, PASSWORD_LEN,
@@ -196,7 +196,7 @@ prompt:
 		if (password) {
 			memset(password, 0, strlen(password));
 			free(password);
-			password = NULL;
+			password = nullptr;
 		}
 		if ((retcode = __pam_get_authtok(pamh, PAM_PROMPT,
 			PAM_AUTHTOK, PASSWORD_LEN,
@@ -225,7 +225,7 @@ post_prompt:
 	 * This code used to be in pam_setcred().
 	 */
 	uid = pwd.pw_uid;
-	if (password != NULL &&
+	if (password != nullptr &&
 	    password[0] != '\0' &&
 	    uid != 0) {
 		/*
@@ -243,7 +243,7 @@ post_prompt:
 							!= PAM_SUCCESS) {
 			if ((status = (unix_auth_data *)calloc
 						(1, sizeof (unix_auth_data)))
-							== NULL) {
+							== nullptr) {
 				err = PAM_BUF_ERR;
 				goto out;
 			}
@@ -279,7 +279,7 @@ attempt_authentication(char *user, char *password, char *enc_passwd,
 	uid_t	orig_uid;
 	int	err = 0;
 
-	if (password == NULL || password[0] == '\0') {
+	if (password == nullptr || password[0] == '\0') {
 		if (debug)
 			syslog(LOG_DEBUG,
 			"unix_auth: NULL passwd in attempt_authenticate()");
@@ -309,7 +309,7 @@ attempt_authentication(char *user, char *password, char *enc_passwd,
 		if (strcmp(enc_passwd, "*NP*") == 0) {
 #ifdef PAM_SECURE_RPC
 			estkey_stat = establish_key(uid,
-						password, 1, NULL);
+						password, 1, nullptr);
 			if (estkey_stat != ESTKEY_SUCCESS) {
 				/* Failed to establish secret key. */
 				switch (estkey_stat) {
@@ -339,9 +339,9 @@ credentials to login.", user);
 			memset(pwd_buf, 0, sizeof (pwd_buf));
 			memset(shpwd_buf, 0, sizeof (shpwd_buf));
 			if (getpwnam_r(user, &pwd, pwd_buf,
-					sizeof (pwd_buf)) == NULL ||
+					sizeof (pwd_buf)) == nullptr ||
 			    getspnam_r(user, &shpwd, shpwd_buf,
-					sizeof (shpwd_buf)) == NULL) {
+					sizeof (shpwd_buf)) == nullptr) {
 				seteuid(orig_uid);
 				return (PAM_USER_UNKNOWN);
 			}

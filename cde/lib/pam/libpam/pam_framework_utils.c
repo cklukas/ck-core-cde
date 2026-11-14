@@ -96,7 +96,7 @@ __pam_display_msg(
 	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE],
 	void *conv_apdp)
 {
-	struct pam_response	*ret_respp = NULL;
+	struct pam_response	*ret_respp = nullptr;
 
 	return (__pam_input_output(pamh, msg_style, num_msg, messages,
 		conv_apdp, &ret_respp));
@@ -136,7 +136,7 @@ __pam_input_output(
 		return (retcode);
 	}
 
-	if (pam_convp == NULL)
+	if (pam_convp == nullptr)
 		return (PAM_SYSTEM_ERR);
 
 	i = 0;
@@ -144,7 +144,7 @@ __pam_input_output(
 
 	msg = (struct pam_message *)calloc(num_msg,
 				sizeof (struct pam_message));
-	if (msg == NULL) {
+	if (msg == nullptr) {
 		return (PAM_BUF_ERR);
 	}
 	m = msg;
@@ -198,7 +198,7 @@ __pam_get_authtok(pam_handle_t *pamh, int source, int type, int len,
 {
 
 	int error = PAM_SYSTEM_ERR;
-	char *new_password = NULL;
+	char *new_password = nullptr;
 	struct pam_response *ret_resp = (struct pam_response *)0;
 	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 	char *backup_prompt = PAM_MSG(pamh, 31, "password: ");
@@ -209,12 +209,12 @@ __pam_get_authtok(pam_handle_t *pamh, int source, int type, int len,
 		return (PAM_BUF_ERR);
 	}
 
-	if ((*authtok = (char *)calloc(len + 1, sizeof (char))) == NULL) {
-		*authtok = NULL;
+	if ((*authtok = (char *)calloc(len + 1, sizeof (char))) == nullptr) {
+		*authtok = nullptr;
 		return (PAM_BUF_ERR);
 	}
 
-	if (prompt == NULL)
+	if (prompt == nullptr)
 		prompt = backup_prompt;
 
 	switch (source) {
@@ -229,13 +229,13 @@ __pam_get_authtok(pam_handle_t *pamh, int source, int type, int len,
 			if ((error = pam_get_item(pamh, type,
 				(void **)&new_password)) != PAM_SUCCESS) {
 				free(*authtok);
-				*authtok = NULL;
+				*authtok = nullptr;
 				return (error);
 			}
 
-			if (new_password == NULL || new_password[0] == '\0') {
+			if (new_password == nullptr || new_password[0] == '\0') {
 				free(*authtok);
-				*authtok = NULL;
+				*authtok = nullptr;
 			} else {
 				strncpy(*authtok, new_password, len);
 				(*authtok)[len] = '\0';
@@ -245,7 +245,7 @@ __pam_get_authtok(pam_handle_t *pamh, int source, int type, int len,
 			syslog(LOG_ERR,
 				"__pam_get_authtok() invalid type: %d", type);
 			free(*authtok);
-			*authtok = NULL;
+			*authtok = nullptr;
 			return (PAM_SYMBOL_ERR);
 		}
 		break;
@@ -258,16 +258,16 @@ __pam_get_authtok(pam_handle_t *pamh, int source, int type, int len,
 
 		strncpy(messages[0], prompt, sizeof (messages[0]));
 		if ((error = __pam_get_input(pamh, PAM_PROMPT_ECHO_OFF,
-			1, messages, NULL, &ret_resp)) != PAM_SUCCESS) {
+			1, messages, nullptr, &ret_resp)) != PAM_SUCCESS) {
 			free(*authtok);
-			*authtok = NULL;
+			*authtok = nullptr;
 			return (error);
 		}
 
 		/* save the new password if this item was NULL */
 		if (type) {
 			pam_get_item(pamh, type, (void **)&new_password);
-			if (new_password == NULL)
+			if (new_password == nullptr)
 				pam_set_item(pamh, type, ret_resp->resp);
 		}
 
@@ -280,7 +280,7 @@ __pam_get_authtok(pam_handle_t *pamh, int source, int type, int len,
 		syslog(LOG_ERR,
 			"__pam_get_authtok() invalid source: %d", source);
 		free(*authtok);
-		*authtok = NULL;
+		*authtok = nullptr;
 		return (PAM_SYMBOL_ERR);
 	}
 
@@ -336,9 +336,9 @@ __pam_thread_backup(char *msg)
 	}
 	xthread_get_specific(thread_key, (void **)&data_buffer);
 
-	if (data_buffer == (char *)NULL) {
+	if (data_buffer == (char *)nullptr) {
 		if ((data_buffer = (char *)calloc(PAM_MAX_MSG_SIZE,
-				sizeof (char))) == NULL) {
+				sizeof (char))) == nullptr) {
 
 			/* what else can i do? */
 			strncat(fallback_buff, msg, PAM_MAX_MSG_SIZE-1);
@@ -390,7 +390,7 @@ __pam_get_i18n_msg(
 	 * look for stored message file descriptor.
 	 */
 
-	if (pamh != NULL) {
+	if (pamh != nullptr) {
 	    _pam_msg_data *msg_data;
 	    int status = pam_get_data(pamh, filename, (void**) &msg_data);
 
@@ -406,7 +406,7 @@ __pam_get_i18n_msg(
 		msg = CATGETS(nlmsg_fd, set, n, s);
 
 		if ((msg_data = (_pam_msg_data *)
-		    calloc(1, sizeof (_pam_msg_data))) == NULL) {
+		    calloc(1, sizeof (_pam_msg_data))) == nullptr) {
 			output_msg = __pam_thread_backup(msg);
 			CATCLOSE(nlmsg_fd);
 			return (output_msg);
@@ -553,7 +553,7 @@ __setutmp_mgmt(
 
 	(void) time(&utmp.ut_tv.tv_sec);
 	utmp.ut_pid = getpid();
-	if (rhost != NULL && rhost[0] != '\0') {
+	if (rhost != nullptr && rhost[0] != '\0') {
 		(void) strcpy(utmp.ut_host, rhost);
 		tmplen = strlen(rhost) + 1;
 		if (tmplen < sizeof (utmp.ut_host))
@@ -578,7 +578,7 @@ __setutmp_mgmt(
 
 	utmp.ut_type = type;
 
-	if (id != NULL)
+	if (id != nullptr)
 		(void) memcpy(utmp.ut_id, id, sizeof (utmp.ut_id));
 
 	if ((flags & __NOLOG) == __NOLOG) {
@@ -594,18 +594,18 @@ __setutmp_mgmt(
 		 */
 
 		if (flags & __LOGIN) {
-		    while ((u = getutxent()) != NULL) {
+		    while ((u = getutxent()) != nullptr) {
 			if ((u->ut_type == INIT_PROCESS ||
 			    u->ut_type == LOGIN_PROCESS ||
 			    u->ut_type == USER_PROCESS) &&
-			    ((flags == __LOGIN && ttyn != NULL &&
+			    ((flags == __LOGIN && ttyn != nullptr &&
 					strncmp(u->ut_line, ttyntail,
 						sizeof (u->ut_line)) == 0) ||
 			    u->ut_pid == utmp.ut_pid)) {
 				if (ttyn)
 					SCPYN(utmp.ut_line,
 					    (ttyn + sizeof ("/dev/") - 1));
-				if (id == NULL) {
+				if (id == nullptr) {
 					(void) memcpy(utmp.ut_id, u->ut_id,
 						    sizeof (utmp.ut_id));
 				}
@@ -616,7 +616,7 @@ __setutmp_mgmt(
 		    endutxent();		/* Close utmp file */
 		}
 
-		if (u == (struct utmpx *)NULL) {
+		if (u == (struct utmpx *)nullptr) {
 			/* audit_login_main11(); */
 			if (flags & __UPDATE_ENTRY)
 				err =  __NOENTRY;
@@ -684,11 +684,11 @@ __reset_utmp_mgmt(
 			/* clear utmpx entry */
 		(void) memset((char *)&ut, 0, sizeof (ut));
 
-		if (id != NULL)
+		if (id != nullptr)
 			(void) memcpy(ut.ut_id, id, sizeof (ut.ut_id));
 
-		if (*ttyn != NULL && **ttyn != '\0') {
-			if (strstr(*ttyn, "/dev/") != NULL)
+		if (*ttyn != nullptr && **ttyn != '\0') {
+			if (strstr(*ttyn, "/dev/") != nullptr)
 			(void) strncpy(ut.ut_line, (*ttyn+sizeof ("/dev/")-1),
 							sizeof (ut.ut_line));
 			else
@@ -700,7 +700,7 @@ __reset_utmp_mgmt(
 		ut.ut_exit.e_termination = 0;
 		ut.ut_exit.e_exit = 0;
 		ut.ut_syslen = 1;
-		(void) gettimeofday(&ut.ut_tv, NULL);
+		(void) gettimeofday(&ut.ut_tv, nullptr);
 		updwtmpx(WTMPX_FILE, &ut);
 
 		return (PAM_SUCCESS);
@@ -716,17 +716,17 @@ __reset_utmp_mgmt(
 					return (0);
 				}
 				if ((*user = (char *) strdup(up->ut_user))
-							== NULL ||
+							== nullptr ||
 				    (*ttyn = (char *) strdup(up->ut_line))
-							== NULL ||
+							== nullptr ||
 				    (*rhost = (char *) strdup(up->ut_host))
-							== NULL ||)
+							== nullptr ||)
 					return (PAM_BUF_ERR);
 
 				up->ut_type = DEAD_PROCESS;
 				up->ut_exit.e_termination = status & 0xff;
 				up->ut_exit.e_exit = (status >> 8) & 0xff;
-				if (id != NULL)
+				if (id != nullptr)
 					(void) memcpy(up->ut_id, id,
 						sizeof (up->ut_id));
 				(void) time(&up->ut_tv.tv_sec);
@@ -744,7 +744,7 @@ __reset_utmp_mgmt(
 					 */
 					updwtmpx("wtmpx", up);
 				} else {
-					if (modutx(up) == NULL) {
+					if (modutx(up) == nullptr) {
 						syslog(LOG_INFO,
 							    "\tmodutx failed");
 						/*
@@ -820,7 +820,7 @@ __setproc_cred(
 	/* set the effective GID */
 	if (flags & __SETEGID) {
 		if (setegid(gid) == -1) {
-			sprintf(messages[0], PAM_MSG(NULL, 29,
+			sprintf(messages[0], PAM_MSG(nullptr, 29,
 				"pam_sm_setcred: %s\n"), strerror(errno));
 		return (__BAD_GID);
 		}
@@ -829,7 +829,7 @@ __setproc_cred(
 	/* set the real (and effective) GID */
 	if (flags & __SETGID) {
 		if (setgid(gid) == -1) {
-			sprintf(messages[0], PAM_MSG(NULL, 30,
+			sprintf(messages[0], PAM_MSG(nullptr, 30,
 				"setproc_cred: %s\n"), strerror(errno));
 			return (__BAD_GID);
 		}
@@ -842,7 +842,7 @@ __setproc_cred(
 		return (__INITGROUP_FAIL);
 	if (flags & __INITGROUPS) {
 		if (initgroups(user, gid) == -1) {
-			sprintf(messages[0], PAM_MSG(NULL, 29,
+			sprintf(messages[0], PAM_MSG(nullptr, 29,
 				"pam_sm_setcred: %s\n"), strerror(errno));
 			return (__INITGROUP_FAIL);
 		}
@@ -853,7 +853,7 @@ __setproc_cred(
 	 */
 	if (flags & __SETGROUPS) {
 		if (setgroups(ngroups, (gid_t *)grouplist) == -1) {
-			sprintf(messages[0], PAM_MSG(NULL, 29,
+			sprintf(messages[0], PAM_MSG(nullptr, 29,
 				"pam_sm_setcred: %s\n"), strerror(errno));
 			return (__SETGROUP_FAIL);
 		}
@@ -866,7 +866,7 @@ __setproc_cred(
 	/* set the effective UID */
 	if (flags & __SETEUID) {
 		if (seteuid(uid) == -1) {
-			sprintf(messages[0], PAM_MSG(NULL, 29
+			sprintf(messages[0], PAM_MSG(nullptr, 29
 				"pam_sm_setcred: %s\n"), strerror(errno));
 			return (__BAD_UID);
 		}
@@ -875,7 +875,7 @@ __setproc_cred(
 	/* set the real (and effective) UID */
 	if (flags & __SETUID) {
 		if (setuid(uid) == -1) {
-			sprintf(messages[0], PAM_MSG(NULL, 29,
+			sprintf(messages[0], PAM_MSG(nullptr, 29,
 				"pam_sm_setcred: %s\n"), strerror(errno));
 			return (__BAD_UID);
 		}

@@ -125,7 +125,7 @@ establish_key(
 
 	/* store with key service */
 
-	if ((netst.st_netname = strdup(netname)) == NULL) {
+	if ((netst.st_netname = strdup(netname)) == nullptr) {
 		(void) seteuid(orig_uid);
 		return (PAM_BUF_ERR);
 	}
@@ -196,30 +196,30 @@ ck_perm(
 							!= PAM_SUCCESS ||
 	    (retcode = pam_get_item(pamh, PAM_USER, (void **)&usrname))
 							!= PAM_SUCCESS) {
-		*pwd = NULL;  *shpwd = NULL;
+		*pwd = nullptr;  *shpwd = nullptr;
 		return (retcode);
 	}
 
 	if (repository == PAM_REP_FILES) {
-		if (((pwfp = fopen(PASSWD, "r")) == NULL) ||
-		    ((spfp = fopen(SHADOW, "r")) == NULL)) {
-			*pwd = NULL;  *shpwd = NULL;
+		if (((pwfp = fopen(PASSWD, "r")) == nullptr) ||
+		    ((spfp = fopen(SHADOW, "r")) == nullptr)) {
+			*pwd = nullptr;  *shpwd = nullptr;
 			syslog(LOG_ERR,
 				"ck_perm: can not open passwd/shadow file");
 			return (PAM_PERM_DENIED);
 		}
 		while ((local_pwdp = fgetpwent_r(pwfp, &local_pwd, pwdbuf,
-					sizeof (pwdbuf))) != NULL)
+					sizeof (pwdbuf))) != nullptr)
 			if (strcmp(local_pwd.pw_name, usrname) == 0)
 				break;
 		while ((local_shpwdp = fgetspent_r(spfp, &local_shpwd,
-				shpwdbuf, sizeof (shpwdbuf))) != NULL)
+				shpwdbuf, sizeof (shpwdbuf))) != nullptr)
 			if (strcmp(local_shpwd.sp_namp, usrname) == 0)
 				break;
 		(void) fclose(pwfp);
 		(void) fclose(spfp);
-		if (local_pwdp == NULL || local_shpwdp == NULL) {
-			*pwd = NULL;  *shpwd = NULL;
+		if (local_pwdp == nullptr || local_shpwdp == nullptr) {
+			*pwd = nullptr;  *shpwd = nullptr;
 			return (PAM_USER_UNKNOWN);
 		}
 
@@ -238,9 +238,9 @@ ck_perm(
 						prognamep, UNIX_MSG);
 					(void) __pam_display_msg(
 						pamh, PAM_ERROR_MSG, 2,
-						messages, NULL);
+						messages, nullptr);
 				}
-				*pwd = NULL;  *shpwd = NULL;
+				*pwd = nullptr;  *shpwd = nullptr;
 				return (PAM_PERM_DENIED);
 		}
 		return (copy_passwd_structs(pwd, local_pwdp,
@@ -253,7 +253,7 @@ ck_perm(
 		 * Special case root: don't bother to get root from nis(yp).
 		 */
 		if (strcmp(usrname, "root") == 0) {
-			*pwd = NULL;	*shpwd = NULL;
+			*pwd = nullptr;	*shpwd = nullptr;
 			return (PAM_USER_UNKNOWN);
 		}
 
@@ -262,7 +262,7 @@ ck_perm(
 		local_pwdp = getpwnam_from(usrname, PAM_REP_NIS);
 		local_shpwdp = getspnam_from(usrname, PAM_REP_NIS);
 
-		if (local_pwdp == NULL || local_shpwdp == NULL)
+		if (local_pwdp == nullptr || local_shpwdp == nullptr)
 			return (PAM_USER_UNKNOWN);
 
 		if (uid != local_pwdp->pw_uid) {
@@ -271,9 +271,9 @@ ck_perm(
 					"%s%s: Permission denied"), prognamep,
 					NIS_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			}
-			*pwd = NULL;	*shpwd = NULL;
+			*pwd = nullptr;	*shpwd = nullptr;
 			return (PAM_PERM_DENIED);
 		}
 		return (copy_passwd_structs(pwd, local_pwdp,
@@ -287,7 +287,7 @@ ck_perm(
 		 * Special case root: don't bother to get root from nis+.
 		 */
 		if (strcmp(usrname, "root") == 0) {
-			*pwd = NULL;	*shpwd = NULL;
+			*pwd = nullptr;	*shpwd = nullptr;
 			return (PAM_USER_UNKNOWN);
 		}
 
@@ -305,7 +305,7 @@ ck_perm(
 		local_shpwdp = getspnam_from(usrname, PAM_REP_NISPLUS);
 		local_pwdp = getpwnam_from(usrname, PAM_REP_NISPLUS);
 
-		if (local_pwdp == NULL || local_shpwdp == NULL)
+		if (local_pwdp == nullptr || local_shpwdp == nullptr)
 			return (PAM_USER_UNKNOWN);
 
 		/*
@@ -318,8 +318,8 @@ ck_perm(
 			sprintf(messages[0], PAM_MSG(pamh, 140,
 			    "%s%s: Permission denied"), prognamep, NISPLUS_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
-			*pwd = NULL;	*shpwd = NULL;
+				1, messages, nullptr);
+			*pwd = nullptr;	*shpwd = nullptr;
 			return (PAM_PERM_DENIED);
 		}
 
@@ -335,13 +335,13 @@ ck_perm(
 		 */
 		*passwd_res = (void *) nis_list(buf,
 			USE_DGRAM+FOLLOW_LINKS+FOLLOW_PATH+MASTER_ONLY,
-			NULL, NULL);
+			nullptr, nullptr);
 		if (((nis_result *)(*passwd_res))->status != NIS_SUCCESS) {
 			sprintf(messages[0], PAM_MSG(pamh, 140,
 			    "%s%s: Permission denied"), prognamep, NISPLUS_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
-			*pwd = NULL;	*shpwd = NULL;
+				1, messages, nullptr);
+			*pwd = nullptr;	*shpwd = nullptr;
 			return (PAM_PERM_DENIED);
 		}
 
@@ -365,9 +365,9 @@ ck_perm(
 		"%s%s: System error: repository out of range"),
 			prognamep, UNIX_MSG);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 1,
-			messages, NULL);
+			messages, nullptr);
 	}
-	*pwd = NULL;	*shpwd = NULL;
+	*pwd = nullptr;	*shpwd = nullptr;
 	return (PAM_PERM_DENIED);
 }
 
@@ -389,7 +389,7 @@ attr_match(char *s1, char *s2)
 		return (s2);
 	if (*s1 == '\0' && *(s2-1) == '=')
 		return (s2);
-	return (NULL);
+	return (nullptr);
 }
 
 /*
@@ -410,7 +410,7 @@ attr_find(char *s1, char *s2[])
 	char 	*sa, *sb;
 
 	i = 0;
-	while (s2[i] != NULL) {
+	while (s2[i] != nullptr) {
 		sa = s1;
 		sb = s2[i];
 		while (*sa++ == *sb++) {
@@ -433,7 +433,7 @@ free_setattr(char *setattr[])
 {
 	int i;
 
-	for (i = 0; setattr[i] != NULL; i++)
+	for (i = 0; setattr[i] != nullptr; i++)
 		free(setattr[i]);
 
 }
@@ -448,12 +448,12 @@ free_setattr(char *setattr[])
 void
 setup_attr(char *dest_attr[], int k, char attr[], char value[])
 {
-	if (attr != NULL) {
+	if (attr != nullptr) {
 		dest_attr[k] = (char *)calloc(PAM_MAX_ATTR_SIZE, sizeof (char));
 		(void) strncpy(dest_attr[k], attr, PAM_MAX_ATTR_SIZE);
 		(void) strncat(dest_attr[k], value, PAM_MAX_ATTR_SIZE);
 	} else
-		dest_attr[k] = NULL;
+		dest_attr[k] = nullptr;
 }
 
 #ifdef PAM_NISPLUS
@@ -487,7 +487,7 @@ nisplus_populate_age(struct nis_object *enobj, struct spwd *sp)
 	sp->sp_expire = -1;
 	sp->sp_flag = 0;
 
-	if ((p = ENTRY_VAL(enobj, 7)) == NULL)
+	if ((p = ENTRY_VAL(enobj, 7)) == nullptr)
 		return;
 	oldage = strdup(p);
 
@@ -572,24 +572,24 @@ getloginshell(
 			if (strcmp(oldshell, valid) == 0)
 				break;
 		mutex_unlock(&_priv_lock);
-		if (valid == NULL) {
+		if (valid == nullptr) {
 			if (!nowarn) {
 				sprintf(messages[0], PAM_MSG(pamh, 143,
 				    "Cannot change from restricted shell %s"),
 				    oldshell);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			}
-			return (NULL);
+			return (nullptr);
 		}
 	}
 	sprintf(messages[0],
 		PAM_MSG(pamh, 144, "Old shell: %s"), oldshell);
-	(void) __pam_display_msg(pamh, PAM_TEXT_INFO, 1, messages, NULL);
+	(void) __pam_display_msg(pamh, PAM_TEXT_INFO, 1, messages, nullptr);
 	sprintf(messages[0],
 		PAM_MSG(pamh, 145, "New shell: "));
 	(void) __pam_get_input(pamh, PAM_PROMPT_ECHO_ON,
-		1, messages, NULL, &ret_resp);
+		1, messages, nullptr, &ret_resp);
 	strncpy(newshell, ret_resp->resp, PAM_MAX_MSG_SIZE);
 	newshell[PAM_MAX_RESP_SIZE-1] = '\0';
 	__pam_free_resp(1, ret_resp);
@@ -602,9 +602,9 @@ getloginshell(
 			sprintf(messages[0], PAM_MSG(pamh, 146,
 				"Login shell unchanged."));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
-		return (NULL);
+		return (nullptr);
 	}
 	/*
 	 * XXX:
@@ -642,10 +642,10 @@ getloginshell(
 				"%s is unacceptable as a new shell"),
 				newshell);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		__pam_free_resp(1, ret_resp);
-		return (NULL);
+		return (nullptr);
 	}
 	if (access(newshell, X_OK) < 0) {
 		if (!nowarn) {
@@ -653,7 +653,7 @@ getloginshell(
 				"warning: %s is unavailable on this machine"),
 				newshell);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 	}
 	return (strdup(newshell));
@@ -677,7 +677,7 @@ getfingerinfo(pam_handle_t *pamh, char *old_gecos, int nowarn)
 		sprintf(messages[2], PAM_MSG(pamh, 151,
 			"To have a blank entry, type the word 'none'."));
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-			3, messages, NULL);
+			3, messages, nullptr);
 	}
 
 	/*
@@ -686,11 +686,11 @@ getfingerinfo(pam_handle_t *pamh, char *old_gecos, int nowarn)
 	do {
 		sprintf(messages[0], " ");
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO, 1,
-			messages, NULL);
+			messages, nullptr);
 		sprintf(messages[0], PAM_MSG(pamh, 152,
 			"Name [%s]: "), old_gecos);
 		(void) __pam_get_input(pamh, PAM_PROMPT_ECHO_ON,
-			1, messages, NULL, &ret_resp);
+			1, messages, nullptr, &ret_resp);
 		strncpy(new_gecos, ret_resp->resp, PAM_MAX_MSG_SIZE);
 		new_gecos[PAM_MAX_MSG_SIZE-1] = '\0';
 		__pam_free_resp(1, ret_resp);
@@ -702,9 +702,9 @@ getfingerinfo(pam_handle_t *pamh, char *old_gecos, int nowarn)
 			sprintf(messages[0], PAM_MSG(pamh, 153,
 				"Finger information unchanged."));
 			(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
-		return (NULL);
+		return (nullptr);
 	}
 	return (strdup(new_gecos));
 }
@@ -727,16 +727,16 @@ gethomedir(pam_handle_t *pamh, char *olddir, int nowarn)
 		sprintf(messages[2], PAM_MSG(pamh, 151,
 			"To have a blank entry, type the word 'none'."));
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-			3, messages, NULL);
+			3, messages, nullptr);
 	}
 	do {
 		sprintf(messages[0], " ");
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-				1, messages, NULL);
+				1, messages, nullptr);
 		sprintf(messages[0], PAM_MSG(pamh, 154,
 			"Home Directory [%s]: "), olddir);
 		(void) __pam_get_input(pamh, PAM_PROMPT_ECHO_ON,
-			1, messages, NULL, &ret_resp);
+			1, messages, nullptr, &ret_resp);
 		strncpy(newdir, ret_resp->resp, PAM_MAX_MSG_SIZE);
 		newdir[PAM_MAX_MSG_SIZE-1] = '\0';
 		__pam_free_resp(1, ret_resp);
@@ -748,9 +748,9 @@ gethomedir(pam_handle_t *pamh, char *olddir, int nowarn)
 			sprintf(messages[0], PAM_MSG(pamh, 155,
 				"Homedir information unchanged."));
 			(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
-		return (NULL);
+		return (nullptr);
 	}
 	return (strdup(newdir));
 }
@@ -800,7 +800,7 @@ illegal_input(pam_handle_t *pamh, char *input_str, int nowarn)
 			sprintf(messages[0], PAM_MSG(pamh, 156,
 				"':' is not allowed."));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		error_flag = 1;
 	}
@@ -811,7 +811,7 @@ illegal_input(pam_handle_t *pamh, char *input_str, int nowarn)
 			    "Maximum number of characters allowed is %d."),
 			    PAM_MAX_MSG_SIZE-2);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-				1, messages, NULL);
+				1, messages, nullptr);
 		}
 		error_flag = 1;
 	}
@@ -829,7 +829,7 @@ illegal_input(pam_handle_t *pamh, char *input_str, int nowarn)
 				sprintf(messages[0], PAM_MSG(pamh, 158,
 				    "Control characters are not allowed."));
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			}
 			error_flag = 1;
 			break;
@@ -897,14 +897,14 @@ copy_passwd_structs(struct passwd **pwd, struct passwd *local_pwd,
 
 	/* copy the passwd information */
 	if ((*pwd = (struct passwd *)
-		calloc(1, sizeof (struct passwd))) == NULL)
+		calloc(1, sizeof (struct passwd))) == nullptr)
 		return (PAM_BUF_ERR);
 	if (local_pwd->pw_name) {
-		if (((*pwd)->pw_name = strdup(local_pwd->pw_name)) == NULL)
+		if (((*pwd)->pw_name = strdup(local_pwd->pw_name)) == nullptr)
 			goto out;
 	}
 	if (local_pwd->pw_passwd) {
-		if (((*pwd)->pw_passwd = strdup(local_pwd->pw_passwd)) == NULL)
+		if (((*pwd)->pw_passwd = strdup(local_pwd->pw_passwd)) == nullptr)
 			goto out;
 	}
 
@@ -912,29 +912,29 @@ copy_passwd_structs(struct passwd **pwd, struct passwd *local_pwd,
 	(*pwd)->pw_gid = local_pwd->pw_gid;
 
 	if (local_pwd->pw_gecos) {
-		if (((*pwd)->pw_gecos = strdup(local_pwd->pw_gecos)) == NULL)
+		if (((*pwd)->pw_gecos = strdup(local_pwd->pw_gecos)) == nullptr)
 			goto out;
 	}
 	if (local_pwd->pw_dir) {
-		if (((*pwd)->pw_dir = strdup(local_pwd->pw_dir)) == NULL)
+		if (((*pwd)->pw_dir = strdup(local_pwd->pw_dir)) == nullptr)
 			goto out;
 	}
 	if (local_pwd->pw_shell) {
-		if (((*pwd)->pw_shell = strdup(local_pwd->pw_shell)) == NULL)
+		if (((*pwd)->pw_shell = strdup(local_pwd->pw_shell)) == nullptr)
 			goto out;
 	}
 
 	/* copy the shadow passwd information */
 	if ((*shpwd = (struct spwd *)
-		calloc(1, sizeof (struct spwd))) == NULL)
+		calloc(1, sizeof (struct spwd))) == nullptr)
 		goto out;
 	**shpwd = *local_shpwd;
 	if (local_shpwd->sp_namp) {
-		if (((*shpwd)->sp_namp = strdup(local_shpwd->sp_namp)) == NULL)
+		if (((*shpwd)->sp_namp = strdup(local_shpwd->sp_namp)) == nullptr)
 			goto out;
 	}
 	if (local_shpwd->sp_pwdp) {
-		if (((*shpwd)->sp_pwdp = strdup(local_shpwd->sp_pwdp)) == NULL)
+		if (((*shpwd)->sp_pwdp = strdup(local_shpwd->sp_pwdp)) == nullptr)
 			goto out;
 	}
 

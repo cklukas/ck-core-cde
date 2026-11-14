@@ -63,7 +63,7 @@ update_authtok_nis(
 	struct yppasswd		yppasswd;
 
 	/* initialize this */
-	yppasswd.oldpass = NULL;
+	yppasswd.oldpass = nullptr;
 
 	if ((retcode = pam_get_item(pamh, PAM_SERVICE, (void **)&prognamep))
 						!= PAM_SUCCESS ||
@@ -78,7 +78,7 @@ update_authtok_nis(
 		 * We are just preparing the passwd update packet here.
 		 */
 
-		if ((yppasswd.oldpass = strdup(old)) == NULL) {
+		if ((yppasswd.oldpass = strdup(old)) == nullptr) {
 			retcode = PAM_BUF_ERR;
 			goto out;
 		}
@@ -129,7 +129,7 @@ update_authtok_nis(
 		goto out;
 	}
 	client = clnt_create(master, YPPASSWDPROG, YPPASSWDVERS, "udp");
-	if (client == NULL) {
+	if (client == nullptr) {
 		syslog(LOG_ERR,
 			"%s%s: couldn't create client to YP master",
 			prognamep, NIS_MSG);
@@ -148,7 +148,7 @@ update_authtok_nis(
 			"%s%s: couldn't change passwd/attributes"),
 			prognamep, NIS_MSG);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-			1, messages, NULL);
+			1, messages, nullptr);
 
 		retcode = PAM_PERM_DENIED;
 		goto out;
@@ -159,7 +159,7 @@ update_authtok_nis(
 			"%s%s: Couldn't change passwd/attributes for %s"),
 			prognamep, NIS_MSG, usrname);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
-			1, messages, NULL);
+			1, messages, nullptr);
 
 		retcode = PAM_PERM_DENIED;
 		goto out;
@@ -169,7 +169,7 @@ update_authtok_nis(
 		"NIS(YP) passwd/attributes changed on %s"),
 		master);
 	(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
-		1, messages, NULL);
+		1, messages, nullptr);
 
 	reencrypt_secret(pamh, domain, old, new, nowarn);
 
@@ -191,25 +191,25 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 	char		*value;
 	char 		messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 
-	if (nis_pwd == NULL) {
+	if (nis_pwd == nullptr) {
 		if (!nowarn) {
 			pam_get_item(pamh, PAM_USER, (void **)&username);
 			sprintf(messages[0], PAM_MSG(pamh, 103,
 				"System error: no NIS passwd record for %s"),
 				username);
 			(void) __pam_display_msg(pamh,
-				PAM_ERROR_MSG, 1, messages, NULL);
+				PAM_ERROR_MSG, 1, messages, nullptr);
 		}
 		return (PAM_USER_UNKNOWN);
 	}
 
 	if (strcmp(field, "attr") == 0) {
 
-		while (*data != NULL) {
+		while (*data != nullptr) {
 			/* AUTHTOK_DEL: not applicable */
 
 			if ((value = attr_match("AUTHTOK_SHELL", *data))
-			    != NULL) {
+			    != nullptr) {
 				if (strcmp(value, "1") != 0) {
 					if (!nowarn) {
 					    sprintf(messages[0],
@@ -218,7 +218,7 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 					    value, NIS_MSG);
 					(void) __pam_display_msg(pamh,
 					    PAM_ERROR_MSG, 1,
-					    messages, NULL);
+					    messages, nullptr);
 					}
 					return (PAM_SYSTEM_ERR);
 				}
@@ -226,14 +226,14 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 				    getloginshell(pamh, nis_pwd->pw_shell,
 					privileged, nowarn);
 				/* if NULL, shell unchanged */
-				if (nis_pwd->pw_shell == NULL)
+				if (nis_pwd->pw_shell == nullptr)
 					return (-1);
 				data++;
 				continue;
 			}
 
 			if ((value = attr_match("AUTHTOK_HOMEDIR", *data))
-			    != NULL) {
+			    != nullptr) {
 				/* home directory */
 				if (strcmp(value, "1") != 0) {
 					if (!nowarn) {
@@ -244,21 +244,21 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 						(void) __pam_display_msg(
 							pamh,
 							PAM_ERROR_MSG, 1,
-							messages, NULL);
+							messages, nullptr);
 					}
 					return (PAM_SYSTEM_ERR);
 				}
 				nis_pwd->pw_dir =
 				    gethomedir(pamh, nis_pwd->pw_dir, nowarn);
 				/* if NULL, homedir unchanged */
-				if (nis_pwd->pw_dir == NULL)
+				if (nis_pwd->pw_dir == nullptr)
 					return (-1);
 				data++;
 				continue;
 			}
 
 			if ((value = attr_match("AUTHTOK_GECOS", *data))
-			    != NULL) {
+			    != nullptr) {
 				/* finger information */
 				if (strcmp(value, "1") != 0) {
 					if (!nowarn) {
@@ -268,7 +268,7 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 						(void) __pam_display_msg(
 							pamh,
 							PAM_ERROR_MSG, 1,
-							messages, NULL);
+							messages, nullptr);
 					}
 					return (PAM_SYSTEM_ERR);
 				}
@@ -276,7 +276,7 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 				    getfingerinfo(pamh, nis_pwd->pw_gecos,
 						nowarn);
 				/* if NULL, gecos unchanged */
-				if (nis_pwd->pw_gecos == NULL)
+				if (nis_pwd->pw_gecos == nullptr)
 					return (-1);
 				data++;
 				continue;
@@ -338,7 +338,7 @@ reencrypt_secret(pam_handle_t *pamh, char *domain, char *oldpass,
 	sprintf(messages[0], PAM_MSG(pamh, 107,
 		"%s: secret key reencrypted for %s on %s"),
 		NIS_MSG, who, master);
-	__pam_display_msg(pamh, PAM_TEXT_INFO, 1, messages, NULL);
+	__pam_display_msg(pamh, PAM_TEXT_INFO, 1, messages, nullptr);
 #else
 	return;
 #endif /* PAM_SECURE_RPC */

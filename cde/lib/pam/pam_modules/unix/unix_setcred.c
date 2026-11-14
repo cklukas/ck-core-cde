@@ -104,7 +104,7 @@ pam_sm_setcred(
 				sprintf(messages[2], PAM_MSG(pamh, 52,
 	"root may use keylogout -f to do this (at your own risk)!"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
-					3, messages, NULL);
+					3, messages, nullptr);
 			}
 			err = PAM_PERM_DENIED;
 			goto out;
@@ -117,7 +117,7 @@ pam_sm_setcred(
 				sprintf(messages[1], PAM_MSG(pamh, 54,
 					"Maybe the keyserver is down?"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
-					2, messages, NULL);
+					2, messages, nullptr);
 			}
 			err = PAM_AUTH_ERR;
 			goto out;
@@ -129,7 +129,7 @@ pam_sm_setcred(
 				sprintf(messages[0], PAM_MSG(pamh, 55,
 				"Warning: NFS credentials not destroyed"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
-					1, messages, NULL);
+					1, messages, nullptr);
 			}
 			err = PAM_AUTH_ERR;
 			goto out;
@@ -164,7 +164,7 @@ pam_sm_setcred(
 						__pam_display_msg(
 							pamh,
 							PAM_ERROR_MSG, 1,
-							messages, NULL);
+							messages, nullptr);
 					}
 				break;
 				case ESTKEY_CANTSETKEY:
@@ -176,7 +176,7 @@ pam_sm_setcred(
 						__pam_display_msg(
 							pamh,
 							PAM_ERROR_MSG, 1,
-							messages, NULL);
+							messages, nullptr);
 					}
 				break;
 				}

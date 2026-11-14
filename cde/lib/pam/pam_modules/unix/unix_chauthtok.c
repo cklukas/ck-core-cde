@@ -106,6 +106,6 @@ pam_sm_chauthtok(
 	 *	To obtain the domain name (passed as NULL), __update_authtok()
 	 *	will call: nis_local_directory();
 	 */
-	return (__update_authtok(pamh, flags, PAM_REP_DEFAULT, NULL,
+	return (__update_authtok(pamh, flags, PAM_REP_DEFAULT, nullptr,
 			argc, argv));
 }

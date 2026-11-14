@@ -67,7 +67,7 @@ pam_sm_authenticate(
 			syslog(LOG_DEBUG, "illegal option %s", argv[i]);
 	}
 
-	if ((retcode = pam_get_user(pamh, &user, NULL))
+	if ((retcode = pam_get_user(pamh, &user, nullptr))
 					!= PAM_SUCCESS ||
 	    (retcode = pam_get_item(pamh, PAM_TTY, (void **)&ttyn))
 					!= PAM_SUCCESS ||
@@ -81,14 +81,14 @@ pam_sm_authenticate(
 			user, ttyn);
 	}
 
-	if (getpwnam_r(user, &pwd, pwd_buffer, sizeof (pwd_buffer)) == NULL)
+	if (getpwnam_r(user, &pwd, pwd_buffer, sizeof (pwd_buffer)) == nullptr)
 		return (PAM_USER_UNKNOWN);
 
-	if ((fp = fopen(DIAL_FILE, "r")) == NULL) {
+	if ((fp = fopen(DIAL_FILE, "r")) == nullptr) {
 		return (PAM_SUCCESS);
 	}
 
-	while ((p1 = fgets(line, sizeof (line), fp)) != NULL) {
+	while ((p1 = fgets(line, sizeof (line), fp)) != nullptr) {
 		while (*p1 != '\n' && *p1 != ' ' && *p1 != '\t')
 			p1++;
 		*p1 = '\0';
@@ -98,13 +98,13 @@ pam_sm_authenticate(
 
 	(void) fclose(fp);
 
-	if (p1 == NULL || (fp = fopen(DPASS_FILE, "r")) == NULL)
+	if (p1 == nullptr || (fp = fopen(DPASS_FILE, "r")) == nullptr)
 		return (PAM_SUCCESS);
 
 	defpass[0] = '\0';
 	p2 = 0;
 
-	while ((p1 = fgets(line, sizeof (line)-1, fp)) != NULL) {
+	while ((p1 = fgets(line, sizeof (line)-1, fp)) != nullptr) {
 		while (*p1 && *p1 != ':')
 			p1++;
 		*p1++ = '\0';
@@ -112,7 +112,7 @@ pam_sm_authenticate(
 		while (*p1 && *p1 != ':')
 			p1++;
 		*p1 = '\0';
-		if (pwd.pw_shell != NULL && strcmp(pwd.pw_shell, line) == 0)
+		if (pwd.pw_shell != nullptr && strcmp(pwd.pw_shell, line) == 0)
 			break;
 
 		if (strcmp(SHELL, line) == 0)
@@ -129,7 +129,7 @@ pam_sm_authenticate(
 		strcpy(messages[0], PAM_MSG(pamh, 1, "Dialup Password: "));
 		num_msg = 1;
 		retcode = __pam_get_input(PAM_PROMPT_ECHO_OFF, pam_convp->conv,
-				num_msg, messages, NULL, &ret_resp);
+				num_msg, messages, nullptr, &ret_resp);
 		if (retcode != PAM_SUCCESS)
 			return (retcode);
 		password = ret_resp->resp;

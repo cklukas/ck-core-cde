@@ -103,9 +103,9 @@ pam_sm_authenticate(
 	int			use_mapped_pass = 0;
 #endif
 	int			i;
-	char			*firstpass = NULL, *password = NULL;
+	char			*firstpass = nullptr, *password = nullptr;
 	uid_t			pw_uid;
-	dce_module_data_t	*dsd = NULL;
+	dce_module_data_t	*dsd = nullptr;
 
 	for (i = 0; i < argc; i++) {
 		if (strcmp(argv[i], "debug") == 0)
@@ -144,12 +144,12 @@ pam_sm_authenticate(
 	if (debug)
 		syslog(LOG_DEBUG, "DCE pam_sm_authenticate");
 
-	err = pam_get_user(pamh, &user, NULL);
+	err = pam_get_user(pamh, &user, nullptr);
 
 	if (err != PAM_SUCCESS)
 		return (err);
 
-	if (user == NULL || !user[0])
+	if (user == nullptr || !user[0])
 		return (PAM_AUTH_ERR);
 
 	/* Don't bother to authenticate root in DCE */
@@ -165,10 +165,10 @@ pam_sm_authenticate(
 	}
 
 	if (pam_get_data(pamh, DCE_DATA, (void**)&dsd) != PAM_SUCCESS ||
-		dsd == NULL) {
+		dsd == nullptr) {
 
 		dsd = calloc(1, sizeof (dce_module_data_t));
-		if (dsd == NULL) {
+		if (dsd == nullptr) {
 			result = PAM_BUF_ERR;
 			goto out;
 		}
@@ -223,12 +223,12 @@ pam_sm_authenticate(
 		goto out;
 	}
 
-	if (firstpass != NULL && (ignore || invalid_user))
+	if (firstpass != nullptr && (ignore || invalid_user))
 		goto out;
 
 #ifdef XFN_MAPPING
 
-	if (firstpass == NULL) {
+	if (firstpass == nullptr) {
 		if (use_mapped_pass) goto out;
 	} else if (try_mapped_pass || use_mapped_pass) {
 		char dcepass[MAP_PASSLEN+1];
@@ -268,7 +268,7 @@ pam_sm_authenticate(
 	}
 #endif
 
-	if (firstpass == NULL) {
+	if (firstpass == nullptr) {
 		if (use_first_pass) goto out;
 	} else if (use_first_pass || try_first_pass) {
 
@@ -289,7 +289,7 @@ pam_sm_authenticate(
 	if (debug)
 		syslog(LOG_DEBUG, "DCE pam_sm_auth prompting for password");
 
-	if (firstpass == NULL &&
+	if (firstpass == nullptr &&
 			!(try_first_pass||try_mapped_pass||invalid_user))
 		(void) sprintf(messages[0], (const char *) PAM_MSG(pamh, 10,
 			"Password: "));
@@ -309,13 +309,13 @@ pam_sm_authenticate(
 		goto out;
 	}
 
-	if (password == NULL) {
+	if (password == nullptr) {
 		/* Need a password to proceed */
 		result = PAM_AUTH_ERR;
 		goto out;
 	}
 
-	if (firstpass == NULL) {
+	if (firstpass == nullptr) {
 		/* this is the first password, stash it away */
 		pam_set_item(pamh, PAM_AUTHTOK, password);
 	}
@@ -358,7 +358,7 @@ out:
 		result = PAM_IGNORE;
 	}
 
-	if (password != NULL)
+	if (password != nullptr)
 		memset(password, 0, strlen(password));
 
 	if (invalid_user)
@@ -384,11 +384,11 @@ attempt_dce_login(
 
 	/* have to strdup password because the call clears it */
 	passwd_rec.key.tagged_union.plain = (idl_char *) strdup(dce_pass);
-	if (passwd_rec.key.tagged_union.plain == NULL) {
+	if (passwd_rec.key.tagged_union.plain == nullptr) {
 		return (PAM_BUF_ERR);
 	}
 	passwd_rec.key.key_type = sec_passwd_plain;
-	passwd_rec.pepper = NULL;
+	passwd_rec.pepper = nullptr;
 	passwd_rec.version_number = sec_passwd_c_version_none;
 
 	login_valid = sec_login_valid_and_cert_ident(dsd->login_context,
@@ -406,7 +406,7 @@ attempt_dce_login(
 
 		sprintf(messages[0],
 		PAM_MSG(pamh, 12, "Error: Your DCE Account has expired.\n"));
-		__pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, NULL);
+		__pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, nullptr);
 	}
 
 	/* the call to sec_login_valid_and_cert_ident already zeros */

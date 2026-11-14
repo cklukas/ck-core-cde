@@ -69,7 +69,7 @@ pam_sm_open_session(
 		return (error);
 	}
 
-	if (getpwnam_r(user, &pwd, buffer, sizeof (buffer)) == NULL) {
+	if (getpwnam_r(user, &pwd, buffer, sizeof (buffer)) == nullptr) {
 		return (PAM_USER_UNKNOWN);
 	}
 

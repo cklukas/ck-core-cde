@@ -106,21 +106,21 @@ display_errmsg(
 
 	msg = (struct pam_message *)calloc(num_msg,
 					sizeof (struct pam_message));
-	if (msg == NULL) {
+	if (msg == nullptr) {
 		return (PAM_CONV_ERR);
 	}
 	m = msg;
 
 	i = 0;
 	k = num_msg;
-	resp = NULL;
+	resp = nullptr;
 	while (k--) {
 		/*
 		 * fill out the pam_message structure to display error message
 		 */
 		m->msg_style = PAM_ERROR_MSG;
 		m->msg = (char *)malloc(PAM_MAX_MSG_SIZE);
-		if (m->msg != NULL)
+		if (m->msg != nullptr)
 			(void) strcpy(m->msg, (const char *)messages[i]);
 		else
 			continue;
@@ -163,7 +163,7 @@ get_authtok(
 
 	msg = (struct pam_message *)calloc(num_msg,
 						sizeof (struct pam_message));
-	if (msg == NULL) {
+	if (msg == nullptr) {
 		return (PAM_CONV_ERR);
 	}
 	m = msg;
@@ -174,7 +174,7 @@ get_authtok(
 		 */
 		m->msg_style = PAM_PROMPT_ECHO_OFF;
 		m->msg = (char *)malloc(PAM_MAX_MSG_SIZE);
-		if (m->msg != NULL)
+		if (m->msg != nullptr)
 			(void) strcpy(m->msg, (char *)messages[i]);
 		else
 			continue;

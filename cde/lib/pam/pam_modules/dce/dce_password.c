@@ -75,11 +75,11 @@ pam_sm_chauthtok(
 {
 	char			*user;
 	int			err, result = PAM_AUTH_ERR;
-	char			*newpass = NULL, *vnewpass = NULL;
-	char			*oldpass = NULL;
+	char			*newpass = nullptr, *vnewpass = nullptr;
+	char			*oldpass = nullptr;
 	int			try_first_pass = 0;
 	int			use_first_pass = 0;
-	char			*firstpass = NULL;
+	char			*firstpass = nullptr;
 
 #ifdef XFN_MAPPING
 	int			try_mapped_pass = 0;
@@ -89,7 +89,7 @@ pam_sm_chauthtok(
 	int			i;
 	int			debug = 0;
 	uid_t			pw_uid;
-	dce_module_data_t	*dsd = NULL;
+	dce_module_data_t	*dsd = nullptr;
 	error_status_t		status;
 
 	if (debug)
@@ -119,7 +119,7 @@ pam_sm_chauthtok(
 
 		sec_rgy_handle_t	rh = sec_rgy_default_handle;
 
-		sec_rgy_site_open_update(NULL, &rh, &status);
+		sec_rgy_site_open_update(nullptr, &rh, &status);
 		if (status == error_status_ok) {
 			sec_rgy_site_close(rh, &status);
 			return (PAM_SUCCESS);
@@ -231,7 +231,7 @@ pam_sm_chauthtok(
 		oldpass = get_passwd(pamh, PAM_MSG(pamh, 20,
 						"Old DCE password: "));
 
-		if (oldpass == NULL || oldpass[0] == '\0') {
+		if (oldpass == nullptr || oldpass[0] == '\0') {
 			/* Need a password to proceed */
 			result = PAM_AUTHTOK_ERR;
 			goto out;
@@ -248,33 +248,33 @@ pam_sm_chauthtok(
 
 	/* prompt for both old and new passwords */
 
-	if (firstpass == NULL && !(try_first_pass||try_mapped_pass))
+	if (firstpass == nullptr && !(try_first_pass||try_mapped_pass))
 		oldpass = get_passwd(pamh, PAM_MSG(pamh, 20,
 						"Old DCE password: "));
 	else
 		oldpass = get_passwd(pamh, PAM_MSG(pamh, 20,
 						"Old DCE password: "));
 
-	if (oldpass == NULL || oldpass[0] == '\0') {
+	if (oldpass == nullptr || oldpass[0] == '\0') {
 		/* Need a password to proceed */
 		result = PAM_AUTHTOK_ERR;
 		goto out;
 	}
 
-	if (firstpass == NULL && !(try_first_pass||try_mapped_pass))
+	if (firstpass == nullptr && !(try_first_pass||try_mapped_pass))
 		newpass = get_passwd(pamh, PAM_MSG(pamh, 21,
 						"New DCE password: "));
 	else
 		newpass = get_passwd(pamh, PAM_MSG(pamh, 21,
 						"New DCE password: "));
 
-	if (newpass == NULL || newpass[0] == '\0') {
+	if (newpass == nullptr || newpass[0] == '\0') {
 		/* Need a password to proceed */
 		result = PAM_AUTHTOK_ERR;
 		goto out;
 	}
 
-	if (firstpass == NULL && !(try_first_pass||try_mapped_pass))
+	if (firstpass == nullptr && !(try_first_pass||try_mapped_pass))
 		vnewpass = get_passwd(pamh,
 					PAM_MSG(pamh, 22,
 					"Re-enter new DCE password: "));
@@ -283,7 +283,7 @@ pam_sm_chauthtok(
 					PAM_MSG(pamh, 22,
 					"Re-enter new DCE password: "));
 
-	if (vnewpass == NULL || vnewpass[0] == '\0') {
+	if (vnewpass == nullptr || vnewpass[0] == '\0') {
 		/* Need a password to proceed */
 		result = PAM_AUTHTOK_ERR;
 		goto out;
@@ -344,7 +344,7 @@ dce_changepw(
 	sec_login_auth_src_t	auth_src;
 	char			*env;
 	static char		 *krb5 = "KRB5CCNAME";
-	char			*krb5_value = NULL;
+	char			*krb5_value = nullptr;
 
 	/* stash away the value of KRB5CCNAME, if there is one set */
 	env = getenv(krb5);
@@ -370,13 +370,13 @@ dce_changepw(
 	/* have to strdup password because the call clears it */
 	passwd_rec.key.tagged_union.plain =
 			(idl_char *) strdup(old_pass);
-	if (passwd_rec.key.tagged_union.plain == NULL) {
+	if (passwd_rec.key.tagged_union.plain == nullptr) {
 		status = sec_login_s_no_current_context;
 		goto out;
 	}
 
 	passwd_rec.key.key_type = sec_passwd_plain;
-	passwd_rec.pepper = NULL;
+	passwd_rec.pepper = nullptr;
 	passwd_rec.version_number = sec_passwd_c_version_none;
 
 	login_valid = sec_login_validate_identity(login_context,
@@ -396,14 +396,14 @@ dce_changepw(
 	/* we are trying to change the password on. Lets talk to the */
 	/* registry... */
 
-	sec_rgy_site_open(NULL, &rgy_handle, &status);
+	sec_rgy_site_open(nullptr, &rgy_handle, &status);
 
 	if (status != error_status_ok) {
 		goto out;
 	}
 
 	caller_key.key.key_type = sec_passwd_plain;
-	caller_key.pepper = NULL;
+	caller_key.pepper = nullptr;
 	caller_key.version_number = sec_passwd_c_version_none;
 	caller_key.key.tagged_union.plain = (idl_char *) old_pass;
 
@@ -432,12 +432,12 @@ dce_changepw(
 		goto out;
 
 	caller_key.key.key_type = sec_passwd_plain;
-	caller_key.pepper = NULL;
+	caller_key.pepper = nullptr;
 	caller_key.version_number = sec_passwd_c_version_none;
 	caller_key.key.tagged_union.plain = (idl_char *) old_pass;
 
 	new_key.key.key_type = sec_passwd_plain;
-	new_key.pepper = NULL;
+	new_key.pepper = nullptr;
 	new_key.version_number = sec_passwd_c_version_none;
 	new_key.key.tagged_union.plain = (idl_char *) new_pass;
 
@@ -490,7 +490,7 @@ get_passwd(
 	err = __pam_get_authtok(pamh, PAM_PROMPT, 0, 256, prompt, &p);
 
 	if (err != PAM_SUCCESS) {
-		return (NULL);
+		return (nullptr);
 	}
 
 	return (p);
