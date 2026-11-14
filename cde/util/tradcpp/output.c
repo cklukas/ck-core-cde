@@ -48,13 +48,13 @@ static
 void
 output_open(void)
 {
-	if (mode.output_file == NULL) {
+	if (mode.output_file == nullptr) {
 		outputfd = STDOUT_FILENO;
 	} else {
 		outputfd = open(mode.output_file, O_WRONLY|O_CREAT|O_TRUNC,
 				0664);
 		if (outputfd < 0) {
-			complain(NULL, "%s: %s",
+			complain(nullptr, "%s: %s",
 				 mode.output_file, strerror(errno));
 			die();
 		}
@@ -81,12 +81,12 @@ dowrite(const char *buf, size_t len)
 	while (done < len) {
 		result = write(outputfd, buf+done, len-done);
 		if (result == -1) {
-			complain(NULL, "%s: write: %s",
+			complain(nullptr, "%s: write: %s",
 				 mode.output_file, strerror(errno));
 			complain_failed();
 			write_errors++;
 			if (write_errors > 5) {
-				complain(NULL, "%s: giving up",
+				complain(nullptr, "%s: giving up",
 					 mode.output_file);
 				die();
 			}
@@ -196,7 +196,7 @@ output(const struct place *p, const char *buf, size_t len)
 void
 output_eof(void)
 {
-	if (mode.output_file != NULL && outputfd >= 0) {
+	if (mode.output_file != nullptr && outputfd >= 0) {
 		close(outputfd);
 	}
 	outputfd = -1;

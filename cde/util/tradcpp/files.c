@@ -100,7 +100,7 @@ files_addquotepath(const char *dir, bool issystem)
 	struct incdir *id;
 
 	id = incdir_create(dir, issystem);
-	incdirarray_add(&quotepath, id, NULL);
+	incdirarray_add(&quotepath, id, nullptr);
 }
 
 void
@@ -109,7 +109,7 @@ files_addbracketpath(const char *dir, bool issystem)
 	struct incdir *id;
 
 	id = incdir_create(dir, issystem);
-	incdirarray_add(&bracketpath, id, NULL);
+	incdirarray_add(&bracketpath, id, nullptr);
 }
 
 ////////////////////////////////////////////////////////////
@@ -230,7 +230,7 @@ file_read(const struct placefile *pf, int fd, const char *name, bool toplevel)
 
 			if (result == -1) {
 				/* read error */
-				complain(NULL, "%s: %s",
+				complain(nullptr, "%s: %s",
 					 name, strerror(errno));
 				complain_fail();
 			} else if (result == 0 && bufend == linestart) {
@@ -322,7 +322,7 @@ mkfilename(struct place *place, const char *dir, const char *file)
 	char *ret;
 	bool needslash = false;
 
-	if (dir == NULL) {
+	if (dir == nullptr) {
 		dir = place_getparsedir(place);
 	}
 
@@ -353,7 +353,7 @@ file_tryopen(const char *file)
 	fd = open(file, O_RDONLY);
 	if (fd < 0) {
 		if (errno != ENOENT && errno != ENOTDIR) {
-			complain(NULL, "%s: %s", file, strerror(errno));
+			complain(nullptr, "%s: %s", file, strerror(errno));
 		}
 		return -1;
 	}
@@ -371,7 +371,7 @@ file_search(struct place *place, struct incdirarray *path, const char *name)
 	char *file;
 	int fd;
 
-	assert(place != NULL);
+	assert(place != nullptr);
 
 	if (name[0] == '/') {
 		fd = file_tryopen(name);
@@ -419,15 +419,15 @@ file_readabsolute(struct place *place, const char *name)
 	const struct placefile *pf;
 	int fd;
 
-	assert(place != NULL);
+	assert(place != nullptr);
 
-	if (name == NULL) {
+	if (name == nullptr) {
 		fd = STDIN_FILENO;
 		pf = place_addfile(place, "<standard-input>", false);
 	} else {
 		fd = file_tryopen(name);
 		if (fd < 0) {
-			complain(NULL, "%s: %s", name, strerror(errno));
+			complain(nullptr, "%s: %s", name, strerror(errno));
 			die();
 		}
 		pf = place_addfile(place, name, false);
@@ -435,7 +435,7 @@ file_readabsolute(struct place *place, const char *name)
 
 	file_read(pf, fd, name, true);
 
-	if (name != NULL) {
+	if (name != nullptr) {
 		close(fd);
 	}
 }

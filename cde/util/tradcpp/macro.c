@@ -311,7 +311,7 @@ macrotable_init(void)
 	macroarrayarray_init(&macros);
 	macroarrayarray_setsize(&macros, 4);
 	for (i=0; i<4; i++) {
-		macroarrayarray_set(&macros, i, NULL);
+		macroarrayarray_set(&macros, i, nullptr);
 	}
 	total_macros = 0;
 	hashmask = 0x3;
@@ -329,7 +329,7 @@ macrotable_cleanup(void)
 	numbuckets = macroarrayarray_num(&macros);
 	for (i=0; i<numbuckets; i++) {
 		bucket = macroarrayarray_get(&macros, i);
-		if (bucket != NULL) {
+		if (bucket != nullptr) {
 			macroarray_destroyall(bucket);
 			macroarray_destroy(bucket);
 		}
@@ -350,8 +350,8 @@ macrotable_findlen(const char *name, size_t len, bool remove_it)
 
 	hash = hashfunc(name, len);
 	bucket = macroarrayarray_get(&macros, hash & hashmask);
-	if (bucket == NULL) {
-		return NULL;
+	if (bucket == nullptr) {
+		return nullptr;
 	}
 	num = macroarray_num(bucket);
 	for (i=0; i<num; i++) {
@@ -372,7 +372,7 @@ macrotable_findlen(const char *name, size_t len, bool remove_it)
 			return m;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 static
@@ -401,26 +401,26 @@ macrotable_rehash(void)
 	hashmask = newmask;
 
 	for (i=0; i<numbuckets; i++) {
-		newbucket = NULL;
+		newbucket = nullptr;
 		oldbucket = macroarrayarray_get(&macros, i);
-		if (oldbucket == NULL) {
-			macroarrayarray_set(&macros, numbuckets + i, NULL);
+		if (oldbucket == nullptr) {
+			macroarrayarray_set(&macros, numbuckets + i, nullptr);
 			continue;
 		}
 		oldnum = macroarray_num(oldbucket);
 		for (j=0; j<oldnum; j++) {
 			m = macroarray_get(oldbucket, j);
 			if (m->hash & tossbit) {
-				if (newbucket == NULL) {
+				if (newbucket == nullptr) {
 					newbucket = macroarray_create();
 				}
-				macroarray_set(oldbucket, j, NULL);
-				macroarray_add(newbucket, m, NULL);
+				macroarray_set(oldbucket, j, nullptr);
+				macroarray_add(newbucket, m, nullptr);
 			}
 		}
 		for (j=k=0; j<oldnum; j++) {
 			m = macroarray_get(oldbucket, j);
-			if (m != NULL) {
+			if (m != nullptr) {
 				if (k < j) {
 					macroarray_set(oldbucket, k, m);
 				}
@@ -447,11 +447,11 @@ macrotable_add(struct macro *m)
 
 	hash = hashfunc(m->name, strlen(m->name));
 	bucket = macroarrayarray_get(&macros, hash & hashmask);
-	if (bucket == NULL) {
+	if (bucket == nullptr) {
 		bucket = macroarray_create();
 		macroarrayarray_set(&macros, hash & hashmask, bucket);
 	}
-	macroarray_add(bucket, m, NULL);
+	macroarray_add(bucket, m, nullptr);
 	total_macros++;
 }
 
@@ -484,7 +484,7 @@ macro_define_common_end(struct macro *m)
 	bool ok;
 
 	oldm = macrotable_find(m->name, false);
-	if (oldm != NULL) {
+	if (oldm != nullptr) {
 		ok = macro_eq(m, oldm);
 		if (ok) {
 			/* in traditional cpp this is silent */
@@ -520,7 +520,7 @@ macro_parse_parameters(struct macro *m, struct place *p, const char *params)
 	const char *s;
 	char *param;
 
-	while (params != NULL) {
+	while (params != nullptr) {
 		len = strspn(params, ws);
 		params += len;
 		place_addcolumns(p, len);
@@ -538,7 +538,7 @@ macro_parse_parameters(struct macro *m, struct place *p, const char *params)
 			complain(p, "Invalid macro parameter name %s", param);
 			complain_fail();
 		} else {
-			stringarray_add(&m->params, param, NULL);
+			stringarray_add(&m->params, param, nullptr);
 		}
 		params = s;
 		place_addcolumns(p, len);
@@ -583,10 +583,10 @@ macro_parse_expansion(struct macro *m, const char *buf)
 						buf + blockstart,
 						wordstart - blockstart);
 					expansionitemarray_add(&m->expansion,
-							       ei, NULL);
+							       ei, nullptr);
 				}
 				ei = expansionitem_create_param(param);
-				expansionitemarray_add(&m->expansion, ei,NULL);
+				expansionitemarray_add(&m->expansion, ei,nullptr);
 				blockstart = pos;
 				continue;
 			}
@@ -597,7 +597,7 @@ macro_parse_expansion(struct macro *m, const char *buf)
 	if (pos > blockstart) {
 		ei = expansionitem_create_stringlen(buf + blockstart,
 						    pos - blockstart);
-		expansionitemarray_add(&m->expansion, ei, NULL);
+		expansionitemarray_add(&m->expansion, ei, nullptr);
 	}
 }
 
@@ -610,7 +610,7 @@ macro_define_plain(struct place *p1, const char *macro,
 
 	m = macro_define_common_start(p1, macro, p2);
 	ei = expansionitem_create_string(expansion);
-	expansionitemarray_add(&m->expansion, ei, NULL);
+	expansionitemarray_add(&m->expansion, ei, nullptr);
 	macro_define_common_end(m);
 }
 
@@ -642,7 +642,7 @@ macro_define_magic(struct place *p, const char *macro)
 		assert(!strcmp(macro, "__LINE__"));
 		ei = expansionitem_create_line();
 	}
-	expansionitemarray_add(&m->expansion, ei, NULL);
+	expansionitemarray_add(&m->expansion, ei, nullptr);
 	macro_define_common_end(m);
 }
 
@@ -663,7 +663,7 @@ macro_isdefined(const char *macro)
 	struct macro *m;
 
 	m = macrotable_find(macro, false);
-	return m != NULL;
+	return m != nullptr;
 }
 
 ////////////////////////////////////////////////////////////
@@ -692,11 +692,11 @@ expstate_init(struct expstate *es, bool tobuf, bool honordefined)
 {
 	es->honordefined = honordefined;
 	es->state = ES_NORMAL;
-	es->curmacro = NULL;
+	es->curmacro = nullptr;
 	stringarray_init(&es->args);
 	es->argparens = 0;
 	es->tobuf = tobuf;
-	es->buf = NULL;
+	es->buf = nullptr;
 	es->bufpos = 0;
 	es->bufmax = 0;
 }
@@ -770,7 +770,7 @@ expand_newarg(struct expstate *es, const char *buf, size_t len)
 	char *text;
 
 	text = dostrndup(buf, len);
-	stringarray_add(&es->args, text, NULL);
+	stringarray_add(&es->args, text, nullptr);
 }
 
 static
@@ -809,7 +809,7 @@ expand_substitute(struct place *p, struct expstate *es)
 
 	if (numargs == 0 && numparams == 1) {
 		/* no arguments <=> one empty argument */
-		stringarray_add(&es->args, dostrdup(""), NULL);
+		stringarray_add(&es->args, dostrdup(""), nullptr);
 		numargs++;
 	}
 	if (numargs != numparams) {
@@ -818,7 +818,7 @@ expand_substitute(struct place *p, struct expstate *es)
 			 es->curmacro->name, numargs, numparams);
 		complain_fail();
 		while (numargs < numparams) {
-			stringarray_add(&es->args, dostrdup(""), NULL);
+			stringarray_add(&es->args, dostrdup(""), nullptr);
 			numargs++;
 		}
 	}
@@ -879,7 +879,7 @@ expand_domacro(struct expstate *es, struct place *p)
 	const char *name, *val;
 	char *newbuf, *newbuf2;
 
-	if (es->curmacro == NULL) {
+	if (es->curmacro == nullptr) {
 		/* defined() */
 		if (stringarray_num(&es->args) != 1) {
 			complain(p, "Too many arguments for defined()");
@@ -889,7 +889,7 @@ expand_domacro(struct expstate *es, struct place *p)
 		}
 		name = stringarray_get(&es->args, 0);
 		m = macrotable_find(name, false);
-		val = (m != NULL) ? "1" : "0";
+		val = (m != nullptr) ? "1" : "0";
 		debuglog(p, "defined(%s): %s", name, val); 
 		expand_send(es, p, val, 1);
 		expstate_destroyargs(es);
@@ -924,7 +924,7 @@ static
 void
 expand_missingargs(struct expstate *es, struct place *p, bool needspace)
 {
-	if (es->curmacro == NULL) {
+	if (es->curmacro == nullptr) {
 		/* defined */
 		expand_send(es, p, "defined", 7);
 		return;
@@ -970,12 +970,12 @@ expand_got_word(struct expstate *es, struct place *p,
 	    case ES_NORMAL:
 		if (es->honordefined &&
 		    len == 7 && !memcmp(buf, "defined", 7)) {
-			es->curmacro = NULL;
+			es->curmacro = nullptr;
 			es->state = ES_WANTLPAREN;
 			break;
 		}
 		m = macrotable_findlen(buf, len, false);
-		if (m == NULL || m->inuse) {
+		if (m == nullptr || m->inuse) {
 			expand_send(es, p, buf, len);
 		} else if (!m->hasparams) {
 			es->curmacro = m;
@@ -986,7 +986,7 @@ expand_got_word(struct expstate *es, struct place *p,
 		}
 		break;
 	    case ES_WANTLPAREN:
-		if (es->curmacro != NULL) {
+		if (es->curmacro != nullptr) {
 			expand_missingargs(es, p, true);
 			es->state = ES_NORMAL;
 			/* try again */
@@ -1146,7 +1146,7 @@ expand_got_eof(struct expstate *es, struct place *p)
 	}
 	expand_send_eof(es, p);
 	es->state = ES_NORMAL;
-	es->curmacro = NULL;
+	es->curmacro = nullptr;
 	es->argparens = 0;
 }
 
@@ -1254,7 +1254,7 @@ macroexpand(struct place *p, const char *buf, size_t len, bool honordefined)
 	es.buf = dorealloc(es.buf, es.bufmax, strlen(es.buf) + 1);
 
 	ret = es.buf;
-	es.buf = NULL;
+	es.buf = nullptr;
 	es.bufpos = es.bufmax = 0;
 
 	expstate_cleanup(&es);

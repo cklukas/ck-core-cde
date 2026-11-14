@@ -91,7 +91,7 @@ checkheaders(void *block, size_t len)
 	struct mallocheader *bothdr, *tophdr;
 	size_t roundedlen;
 
-	if (block == NULL) {
+	if (block == nullptr) {
 		assert(len == 0);
 		return block;
 	}
@@ -123,8 +123,8 @@ domalloc(size_t len)
 
 	blocklen = adjustsize(len);
 	ret = malloc(blocklen);
-	if (ret == NULL) {
-		complain(NULL, "Out of memory");
+	if (ret == nullptr) {
+		complain(nullptr, "Out of memory");
 		die();
 	}
 
@@ -142,8 +142,8 @@ dorealloc(void *ptr, size_t oldlen, size_t newlen)
 	newblocklen = adjustsize(newlen);
 
 	ret = realloc(blockptr, newblocklen);
-	if (ret == NULL) {
-		complain(NULL, "Out of memory");
+	if (ret == nullptr) {
+		complain(nullptr, "Out of memory");
 		die();
 	}
 

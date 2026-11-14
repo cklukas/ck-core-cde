@@ -436,9 +436,9 @@ tryreduce(void)
 		printtokens();
 #endif
 		num = tokenarray_num(&tokens);
-		t1 = (num >= 1) ? tokenarray_get(&tokens, num-1) : NULL;
-		t2 = (num >= 2) ? tokenarray_get(&tokens, num-2) : NULL;
-		t3 = (num >= 3) ? tokenarray_get(&tokens, num-3) : NULL;
+		t1 = (num >= 1) ? tokenarray_get(&tokens, num-1) : nullptr;
+		t2 = (num >= 2) ? tokenarray_get(&tokens, num-2) : nullptr;
+		t3 = (num >= 3) ? tokenarray_get(&tokens, num-3) : nullptr;
 
 		if (num >= 3 &&
 		    t3->tok == T_LPAREN &&
@@ -476,7 +476,7 @@ tryreduce(void)
 		}
 
 			
-		t4 = (num >= 4) ? tokenarray_get(&tokens, num-4) : NULL;
+		t4 = (num >= 4) ? tokenarray_get(&tokens, num-4) : nullptr;
 
 		if (num >= 4 &&
 		    t4->tok == T_VAL &&
@@ -495,8 +495,8 @@ tryreduce(void)
 			break;
 		}
 
-		t5 = (num >= 5) ? tokenarray_get(&tokens, num-5) : NULL;
-		t6 = (num >= 6) ? tokenarray_get(&tokens, num-6) : NULL;
+		t5 = (num >= 5) ? tokenarray_get(&tokens, num-5) : nullptr;
+		t6 = (num >= 6) ? tokenarray_get(&tokens, num-6) : nullptr;
 
 		if (num >= 6 &&
 		    t6->tok == T_VAL &&
@@ -599,7 +599,7 @@ token(struct place *p, enum tokens tok, int val)
 
 	t = token_create(p, tok, val);
 
-	tokenarray_add(&tokens, t, NULL);
+	tokenarray_add(&tokens, t, nullptr);
 	tryreduce();
 }
 

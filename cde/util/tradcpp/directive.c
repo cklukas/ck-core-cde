@@ -60,7 +60,7 @@ static
 void
 uncomment(char *buf)
 {
-	char *s, *t, *u = NULL;
+	char *s, *t, *u = nullptr;
 	bool incomment = false;
 	bool inesc = false;
 	bool inquote = false;
@@ -132,7 +132,7 @@ ifstate_create(struct ifstate *prev, struct place *p, bool startstate)
 
 	is = domalloc(sizeof(*is));
 	is->prev = prev;
-	if (p != NULL) {
+	if (p != nullptr) {
 		is->startplace = *p;
 	} else {
 		place_setbuiltin(&is->startplace, 1);
@@ -315,7 +315,7 @@ d_endif(struct lineplace *lp, struct place *p2, char *line)
 	(void)p2;
 	(void)line;
 
-	if (ifstate->prev == NULL) {
+	if (ifstate->prev == nullptr) {
 		complain(&lp->current, "Unmatched #endif");
 		complain_fail();
 	} else {
@@ -706,7 +706,7 @@ directive_gotline(struct lineplace *lp, char *line, size_t len)
 void
 directive_goteof(struct place *p)
 {
-	while (ifstate->prev != NULL) {
+	while (ifstate->prev != nullptr) {
 		complain(p, "Missing #endif");
 		complain(&ifstate->startplace, "...opened at this point");
 		complain_failed();
@@ -721,13 +721,13 @@ directive_goteof(struct place *p)
 void
 directive_init(void)
 {
-	ifstate = ifstate_create(NULL, NULL, true);
+	ifstate = ifstate_create(nullptr, nullptr, true);
 }
 
 void
 directive_cleanup(void)
 {
-	assert(ifstate->prev == NULL);
+	assert(ifstate->prev == nullptr);
 	ifstate_destroy(ifstate);
-	ifstate = NULL;
+	ifstate = nullptr;
 }

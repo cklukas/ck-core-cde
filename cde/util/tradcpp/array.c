@@ -54,7 +54,7 @@ void
 array_init(struct array *a)
 {
 	a->num = a->max = 0;
-	a->v = NULL;
+	a->v = nullptr;
 }
 
 void
@@ -63,7 +63,7 @@ array_cleanup(struct array *a)
 	arrayassert(a->num == 0);
 	dofree(a->v, a->max * sizeof(a->v[0]));
 #ifdef ARRAYS_CHECKED
-	a->v = NULL;
+	a->v = nullptr;
 #endif
 }
 

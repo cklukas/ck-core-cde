@@ -71,13 +71,13 @@ placefile_create(const struct place *from, const char *name,
 	pf->includedfrom = *from;
 
 	s = strrchr(name, '/');
-	len = (s == NULL) ? 0 : s - name;
+	len = (s == nullptr) ? 0 : s - name;
 	pf->dir = dostrndup(name, len);
 
 	pf->name = dostrdup(name);
 	pf->fromsystemdir = fromsystemdir;
 
-	if (from->file != NULL) {
+	if (from->file != nullptr) {
 		pf->depth = from->file->depth + 1;
 	} else {
 		pf->depth = 1;
@@ -98,7 +98,7 @@ DESTROYALL_ARRAY(placefile, );
 const char *
 place_getparsedir(const struct place *place)
 {
-	if (place->file == NULL) {
+	if (place->file == nullptr) {
 		return ".";
 	}
 	return place->file->dir;
@@ -119,7 +119,7 @@ placefile_find(const struct place *incfrom, const char *name)
 			return pf;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 void
@@ -132,10 +132,10 @@ place_changefile(struct place *p, const char *name)
 		return;
 	}
 	pf = placefile_find(&p->file->includedfrom, name);
-	if (pf == NULL) {
+	if (pf == nullptr) {
 		pf = placefile_create(&p->file->includedfrom, name,
 				      p->file->fromsystemdir);
-		placefilearray_add(&placefiles, pf, NULL);
+		placefilearray_add(&placefiles, pf, nullptr);
 	}
 	p->file = pf;
 }
@@ -146,7 +146,7 @@ place_addfile(const struct place *place, const char *file, bool issystem)
 	struct placefile *pf;
 
 	pf = placefile_create(place, file, issystem);
-	placefilearray_add(&placefiles, pf, NULL);
+	placefilearray_add(&placefiles, pf, nullptr);
 	if (pf->depth > 120) {
 		complain(place, "Maximum include nesting depth exceeded");
 		die();
@@ -161,7 +161,7 @@ void
 place_setnowhere(struct place *p)
 {
 	p->type = P_NOWHERE;
-	p->file = NULL;
+	p->file = nullptr;
 	p->line = 0;
 	p->column = 0;
 }
@@ -170,7 +170,7 @@ void
 place_setbuiltin(struct place *p, unsigned num)
 {
 	p->type = P_BUILTIN;
-	p->file = NULL;
+	p->file = nullptr;
 	p->line = num;
 	p->column = 1;
 }
@@ -179,7 +179,7 @@ void
 place_setcommandline(struct place *p, unsigned line, unsigned column)
 {
 	p->type = P_COMMANDLINE;
-	p->file = NULL;
+	p->file = nullptr;
 	p->line = line;
 	p->column = column;
 }
@@ -231,7 +231,7 @@ place_getname(const struct place *p)
 	    case P_FILE: return p->file->name;
 	}
 	assert(0);
-	return NULL;
+	return nullptr;
 }
 
 bool
@@ -264,7 +264,7 @@ place_printfrom(const struct place *p)
 {
 	const struct place *from;
 
-	if (p->file == NULL) {
+	if (p->file == nullptr) {
 		return;
 	}
 	from = &p->file->includedfrom;
@@ -289,7 +289,7 @@ complain(const struct place *p, const char *fmt, ...)
 {
 	va_list ap;
 
-	if (p != NULL) {
+	if (p != nullptr) {
 		place_printfrom(p);
 		fprintf(stderr, "%s:%u:%u: ", place_getname(p),
 			p->line, p->column);
@@ -320,9 +320,9 @@ complain_failed(void)
 void
 debuglog_open(const struct place *p, /*const*/ char *file)
 {
-	assert(debuglogfile == NULL);
+	assert(debuglogfile == nullptr);
 	debuglogfile = fopen(file, "w");
-	if (debuglogfile == NULL) {
+	if (debuglogfile == nullptr) {
 		complain(p, "%s: %s", file, strerror(errno));
 		die();
 	}
@@ -331,9 +331,9 @@ debuglog_open(const struct place *p, /*const*/ char *file)
 void
 debuglog_close(void)
 {
-	if (debuglogfile != NULL) {
+	if (debuglogfile != nullptr) {
 		fclose(debuglogfile);
-		debuglogfile = NULL;
+		debuglogfile = nullptr;
 	}
 }
 
@@ -342,7 +342,7 @@ debuglog(const struct place *p, const char *fmt, ...)
 {
 	va_list ap;
 
-	if (debuglogfile == NULL) {
+	if (debuglogfile == nullptr) {
 		return;
 	}
 
@@ -359,7 +359,7 @@ debuglog2(const struct place *p, const struct place *p2, const char *fmt, ...)
 {
 	va_list ap;
 
-	if (debuglogfile == NULL) {
+	if (debuglogfile == nullptr) {
 		return;
 	}
 

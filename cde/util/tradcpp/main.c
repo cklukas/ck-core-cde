@@ -57,15 +57,15 @@ struct mode mode = {
 	.output_linenumbers = true,
 	.output_cheaplinenumbers = false,
 	.output_retain_comments = false,
-	.output_file = NULL,
+	.output_file = nullptr,
 
 	.do_depend = false,
 	.depend_report_system = false,
 	.depend_assume_generated = false,
 	.depend_issue_fakerules = false,
 	.depend_quote_target = true,
-	.depend_target = NULL,
-	.depend_file = NULL,
+	.depend_target = nullptr,
+	.depend_file = nullptr,
 
 	.do_macrolist = false,
 	.macrolist_include_stddef = false,
@@ -132,7 +132,7 @@ commandline_macro_add(const struct place *p, const char *macro,
 	cm->macro = macro;
 	cm->expansion = expansion;
 
-	array_add(&commandline_macros, cm, NULL);
+	array_add(&commandline_macros, cm, nullptr);
 }
 
 static
@@ -143,12 +143,12 @@ commandline_def(const struct place *p, char *str)
 	char *val;
 
 	if (*str == '\0') {
-		complain(NULL, "-D: macro name expected");
+		complain(nullptr, "-D: macro name expected");
 		die();
 	}
 
 	val = strchr(str, '=');
-	if (val != NULL) {
+	if (val != nullptr) {
 		*val = '\0';
 		val++;
 	}
@@ -167,10 +167,10 @@ void
 commandline_undef(const struct place *p, char *str)
 {
 	if (*str == '\0') {
-		complain(NULL, "-U: macro name expected");
+		complain(nullptr, "-U: macro name expected");
 		die();
 	}
-	commandline_macro_add(p, str, p, NULL);
+	commandline_macro_add(p, str, p, nullptr);
 }
 
 static
@@ -183,7 +183,7 @@ apply_commandline_macros(void)
 	num = array_num(&commandline_macros);
 	for (i=0; i<num; i++) {
 		cm = array_get(&commandline_macros, i);
-		if (cm->expansion != NULL) {
+		if (cm->expansion != nullptr) {
 			macro_define_plain(&cm->where, cm->macro,
 					   &cm->where2, cm->expansion);
 		} else {
@@ -279,7 +279,7 @@ commandline_files_cleanup(void)
 	num = array_num(&commandline_files);
 	for (i=0; i<num; i++) {
 		cf = array_get(&commandline_files, i);
-		if (cf != NULL) {
+		if (cf != nullptr) {
 			dofree(cf, sizeof(*cf));
 		}
 	}
@@ -298,7 +298,7 @@ commandline_addfile(const struct place *p, char *name, bool suppress_output)
 	cf->where = *p;
 	cf->name = name;
 	cf->suppress_output = suppress_output;
-	array_add(&commandline_files, cf, NULL);
+	array_add(&commandline_files, cf, nullptr);
 }
 
 static
@@ -326,7 +326,7 @@ read_commandline_files(void)
 	num = array_num(&commandline_files);
 	for (i=0; i<num; i++) {
 		cf = array_get(&commandline_files, i);
-		array_set(&commandline_files, i, NULL);
+		array_set(&commandline_files, i, nullptr);
 		if (cf->suppress_output) {
 			save = mode.do_output;
 			mode.do_output = false;
@@ -387,10 +387,10 @@ void
 commandline_addincpath(struct stringarray *arr, char *s)
 {
 	if (*s == '\0') {
-		complain(NULL, "Empty include directory");
+		complain(nullptr, "Empty include directory");
 		die();
 	}
-	stringarray_add(arr, s, NULL);
+	stringarray_add(arr, s, nullptr);
 }
 
 static
@@ -438,7 +438,7 @@ loadincludepath(void)
 		dir = stringarray_get(&incpath_quote, i);
 		files_addquotepath(dir, false);
 	}
-	files_addquotepath(NULL, false);
+	files_addquotepath(nullptr, false);
 
 	num = stringarray_num(&incpath_user);
 	for (i=0; i<num; i++) {
@@ -448,7 +448,7 @@ loadincludepath(void)
 	}
 
 	if (mode.do_stdinc) {
-		if (sysroot != NULL) {
+		if (sysroot != nullptr) {
 			t = dostrdup3(sysroot, "/", CONFIG_LOCALINCLUDE);
 			freestringlater(t);
 			dir = t;
@@ -458,7 +458,7 @@ loadincludepath(void)
 		files_addquotepath(dir, true);
 		files_addbracketpath(dir, true);
 
-		if (sysroot != NULL) {
+		if (sysroot != nullptr) {
 			t = dostrdup3(sysroot, "/", CONFIG_SYSTEMINCLUDE);
 			freestringlater(t);
 			dir = t;
@@ -503,8 +503,8 @@ commandline_addincpath_user_withprefix(const struct place *p, char *dir)
 {
 	char *s;
 
-	if (commandline_prefix == NULL) {
-		complain(NULL, "-iprefix needed");
+	if (commandline_prefix == nullptr) {
+		complain(nullptr, "-iprefix needed");
 		die();
 	}
 	s = dostrdup3(commandline_prefix, "/", dir);
@@ -518,8 +518,8 @@ commandline_addincpath_late_withprefix(const struct place *p, char *dir)
 {
 	char *s;
 
-	if (commandline_prefix == NULL) {
-		complain(NULL, "-iprefix needed");
+	if (commandline_prefix == nullptr) {
+		complain(nullptr, "-iprefix needed");
 		die();
 	}
 	s = dostrdup3(commandline_prefix, "/", dir);
@@ -536,7 +536,7 @@ commandline_setstd(const struct place *p, char *std)
 	if (!strcmp(std, "krc")) {
 		return;
 	}
-	complain(NULL, "Standard %s not supported by this preprocessor", std);
+	complain(nullptr, "Standard %s not supported by this preprocessor", std);
 	die();
 }
 
@@ -549,7 +549,7 @@ commandline_setlang(const struct place *p, char *lang)
 	if (!strcmp(lang, "c") || !strcmp(lang, "assembler-with-cpp")) {
 		return;
 	}
-	complain(NULL, "Language %s not supported by this preprocessor", lang);
+	complain(nullptr, "Language %s not supported by this preprocessor", lang);
 	die();
 }
 
@@ -563,7 +563,7 @@ commandline_iremap(const struct place *p, char *str)
 	(void)p;
 	/* XXX */
 	(void)str;
-	complain(NULL, "-iremap not supported");
+	complain(nullptr, "-iremap not supported");
 	die();
 }
 
@@ -577,20 +577,20 @@ commandline_tabstop(const struct place *p, char *s)
 	(void)p;
 
 	t = strchr(s, '=');
-	if (t == NULL) {
+	if (t == nullptr) {
 		/* should not happen */
-		complain(NULL, "Invalid tabstop");
+		complain(nullptr, "Invalid tabstop");
 		die();
 	}
 	t++;
 	errno = 0;
 	val = strtoul(t, &t, 10);
 	if (errno || *t != '\0') {
-		complain(NULL, "Invalid tabstop");
+		complain(nullptr, "Invalid tabstop");
 		die();
 	}
 	if (val > 64) {
-		complain(NULL, "Preposterously large tabstop");
+		complain(nullptr, "Preposterously large tabstop");
 		die();
 	}
 	mode.input_tabstop = val;
@@ -934,8 +934,8 @@ check_arg_option(const char *opt, const struct place *argplace, char *arg)
 	for (i=0; i<num_arg_options; i++) {
 		r = strcmp(opt, arg_options[i].string);
 		if (r == 0) {
-			if (arg == NULL) {
-				complain(NULL,
+			if (arg == nullptr) {
+				complain(nullptr,
 					 "Option -%s requires an argument",
 					 opt);
 				die();
@@ -1035,7 +1035,7 @@ die(void)
 void
 freestringlater(char *s)
 {
-	stringarray_add(&freestrings, s, NULL);
+	stringarray_add(&freestrings, s, nullptr);
 }
 
 ////////////////////////////////////////////////////////////
@@ -1045,13 +1045,13 @@ int
 main(int argc, char *argv[])
 {
 	const char *progname;
-	const char *inputfile = NULL;
-	const char *outputfile = NULL;
+	const char *inputfile = nullptr;
+	const char *outputfile = nullptr;
 	struct place cmdplace;
 	int i;
 
 	progname = strrchr(argv[0], '/');
-	progname = progname == NULL ? argv[0] : progname + 1;
+	progname = progname == nullptr ? argv[0] : progname + 1;
 	complain_init(progname);
 
 	init();
@@ -1083,13 +1083,13 @@ main(int argc, char *argv[])
 	if (i < argc) {
 		inputfile = argv[i++];
 		if (!strcmp(inputfile, "-")) {
-			inputfile = NULL;
+			inputfile = nullptr;
 		}
 	}
 	if (i < argc) {
 		outputfile = argv[i++];
 		if (!strcmp(outputfile, "-")) {
-			outputfile = NULL;
+			outputfile = nullptr;
 		}
 	}
 	if (i < argc) {
