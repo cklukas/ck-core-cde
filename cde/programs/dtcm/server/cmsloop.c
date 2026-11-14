@@ -21,6 +21,7 @@
  * Floor, Boston, MA 02110-1301 USA
  */
 
+#include <Dt/DtSigP.h>
 #include <EUSCompat.h>
 #include <errno.h>
 #include <signal.h>
@@ -86,7 +87,7 @@ _DtCmsInstallSignalHandlers(void)
 
 	/* a client that disconnects before it gets its reply is not an error
 	 * of the daemon */
-	signal(SIGPIPE, SIG_IGN);
+	_DtSignal(SIGPIPE, SIG_IGN);
 
 	sigemptyset(&blocked);
 	sigaddset(&blocked, SIGALRM);
