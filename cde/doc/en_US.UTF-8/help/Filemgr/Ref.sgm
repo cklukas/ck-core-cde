@@ -94,12 +94,6 @@
 <ListItem Id="HFMGR.REF.item.21">
 <Para><XRef Linkend="FMCopyDirDialogStatusDE"></Para>
 </ListItem>
-<ListItem Id="HFMGR.REF.item.22">
-<Para><XRef Linkend="FMCopyWarnRenDialogDE"></Para>
-</ListItem>
-<ListItem Id="HFMGR.REF.item.23">
-<Para><XRef Linkend="FMCopyWarnMultiDialogDE"></Para>
-</ListItem>
 <ListItem Id="HFMGR.REF.item.24">
 <Para><XRef Linkend="FMNameChangeDialogDE"></Para>
 </ListItem>
