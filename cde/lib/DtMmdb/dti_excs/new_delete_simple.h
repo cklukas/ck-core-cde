@@ -39,7 +39,7 @@
 \
 void* class_name::operator new( size_t sz )\
 {\
-   return (void*)malloc(sz); \
+   return ::operator new(sz); \
 }\
 \
 void* class_name::operator new( size_t sz, void* ptr )\

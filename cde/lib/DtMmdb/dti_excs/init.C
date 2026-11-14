@@ -74,7 +74,7 @@ Exceptions::f_msg_memory_already_freed =
 
 void quit_exception()
 {
-   delete Unwind_Stack::g_stack;
+   delete [] Unwind_Stack::g_stack;
 }
 
 #endif
