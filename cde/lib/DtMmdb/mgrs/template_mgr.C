@@ -313,7 +313,7 @@ template_mgr_t::init_obj(abs_storage* store, mmdb_pos_t pos, root*& x)
    x = object_template -> cast_to( z + CLASS_CODE_BYTES );
 #else
    //char* p = g_memory_pool.alloc( object_template -> mem_sizeof());
-   char* p = new char[object_template -> mem_sizeof()];
+   char* p = static_cast<char*>(::operator new(object_template -> mem_sizeof()));
 
 //MESSAGE(cerr, "template mgr: init case(), new char array");
 //debug(cerr, (void*)p);
@@ -561,7 +561,7 @@ debug(cerr, CLASS_CODE_BYTES);
     int mem_obj_len = object_template -> mem_sizeof();
 
     //char* p = g_memory_pool.alloc(mem_obj_len);
-    char* p = new char[mem_obj_len];
+    char* p = static_cast<char*>(::operator new(mem_obj_len));
 
 //MESSAGE(cerr, "template mgr: create case(), new char array");
 //debug(cerr, (void*)p);
