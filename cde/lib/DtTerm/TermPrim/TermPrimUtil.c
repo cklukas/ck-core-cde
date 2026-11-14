@@ -30,6 +30,7 @@
  * (c) Copyright 1996 Hitachi.						*
  */
 
+#include <Dt/DtSigP.h>
 #include "TermHeader.h"
 #include "TermPrimOSDepI.h"
 #include "TermPrimP.h"
@@ -462,8 +463,8 @@ _DtTermPrimStartLog(Widget w)
             /*
             ** reset signals
             */
-            (void) signal(SIGHUP, SIG_DFL);
-            (void) signal(SIGCHLD, SIG_DFL);
+            (void) _DtSignal(SIGHUP, SIG_DFL);
+            (void) _DtSignal(SIGCHLD, SIG_DFL);
 #ifdef	BBA
 	    _bA_dump();
 #endif	/* BBA */
@@ -478,7 +479,7 @@ _DtTermPrimStartLog(Widget w)
         (void) close(p[0]);
         tpd->logStream = fdopen(p[1], "w");
 	(void) AddLogFileEntry(tpd->logStream);
-        (void) signal(SIGPIPE, SIG_IGN);
+        (void) _DtSignal(SIGPIPE, SIG_IGN);
     }
     else {
         if (access(tw->term.logFile, F_OK) == 0) {
