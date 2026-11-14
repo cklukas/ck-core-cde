@@ -480,7 +480,7 @@ main(int argc, char **argv)
 	struct group *gr;
 	struct rlimit rl;
 	struct sockaddr_in saddr;
-	int asize = sizeof (saddr);
+	socklen_t asize = sizeof (saddr);
 	SVCXPRT *tcp_transp = (SVCXPRT *)-1;
 	SVCXPRT *udp_transp = (SVCXPRT *)-1;
 	int	fd, error;

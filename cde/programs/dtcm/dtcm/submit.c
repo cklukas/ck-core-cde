@@ -253,7 +253,7 @@ formatMessage(char ** addrs, const char * subject, const char * body)
     int execver;
     int compver;
     int body_len;
-    char digest[16];
+    unsigned char digest[16];
     char mime_type[64];
     char tmpbuf[20];
     char *ret_locale = nullptr;

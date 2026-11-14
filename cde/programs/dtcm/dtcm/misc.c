@@ -520,11 +520,11 @@ create_repeat_scope_menu(Widget parent, XmString label,
 }
 
 static void
-fill_pixmap(XImage *xi, int w, int h, unsigned char *data)
+fill_pixmap(XImage *xi, int w, int h, void *data)
 {
         xi->width = w;
         xi->height = h;
-        xi->data = (char *) data;
+        xi->data = data;
         xi->xoffset = 0;
         xi->format = XYBitmap;
         xi->byte_order = MSBFirst;
