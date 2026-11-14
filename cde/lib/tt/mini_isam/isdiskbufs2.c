@@ -41,6 +41,7 @@
 /************************ NON MAPPED I/O version ***************************/
 
 #include "isam_impl.h"
+#include <stddef.h>
 
 #define ISMAXBUFFERS	200		     /* Use 20 buffers */
 #define ISHASHHDRS	256		     /* Must be a power of two */
@@ -69,6 +70,8 @@ static void _flush1buffer(Bufhdr *p);
 static void _makenodata(Bufhdr *p);
 
 Bufhdr bufhdrs [ISMAXBUFFERS];
+static _Alignas(max_align_t) char bufpages [ISMAXBUFFERS][ISPAGESIZE];
+					     /* Page of each buffer */
 struct dlink  hashhdrs [ISHASHHDRS];	     /* Heads of hashed lists */
 
 struct dlink  availlist;		     /* Available buffer list */
@@ -227,6 +230,8 @@ _isdisk_commit(void)
     Bufhdr *p;
     struct dlink	   *e;
     
+    _disk_init();
+
     while ((e = _isdln_first(pfixl)) != pfixl) {
 	p = GETBASE(e,bufhdr,isb_flist);  /* Get pointer to bufhdr */
 	assert(p->isb_flags & ISB_WFIXED);
@@ -240,6 +245,8 @@ _isdisk_rollback(void)
     Bufhdr 	*p;
     struct dlink	   *e;
     
+    _disk_init();
+
     while ((e = _isdln_first(pfixl)) != pfixl) {
 	p = GETBASE(e,bufhdr,isb_flist);  /* Get pointer to bufhdr */
 	assert(p->isb_flags & ISB_FIXED);
@@ -273,6 +280,8 @@ _isdisk_sync(void)
     Bufhdr *p;
     struct dlink	   *e;
     
+    _disk_init();
+
     while ((e = _isdln_first(pchangl)) != pchangl) {
 	p = GETBASE(e,bufhdr,isb_aclist);  /* Get pointer to bufhdr */
 	assert(p->isb_flags & ISB_CHANGE);
@@ -287,11 +296,7 @@ _isdisk_inval(void)
     Bufhdr *p;
     struct dlink	   *e;
     
-    /* ensure pavail is initialized before using it */
-
-    if (pavail->dln_forward == 0) {
-	    _isdln_makeempty(pavail);
-    }
+    _disk_init();
 
     e = pavail;
 
@@ -379,7 +384,7 @@ _disk_init(void)
     
     /* Link all buffers into pavail list. */
     for (i = 0; i < ISMAXBUFFERS; i++) {
-	bufhdrs[i].isb_buffer = _ismalloc(ISPAGESIZE);
+	bufhdrs[i].isb_buffer = bufpages[i];
 	_isdln_append(pavail,&bufhdrs[i].isb_aclist);
 	availn++;
     }
