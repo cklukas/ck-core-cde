@@ -71,15 +71,7 @@ void _isdln_base_remove (char *base, struct dlink *e)
 /* _isdln_base_first () - Return first element of the list -------------------*/
 struct dlink * _isdln_base_first(char *base, struct dlink *l)
 {
-	struct dlink *val = (struct dlink *)(base + l->dln_forward);
-
-	if (val == nullptr) {
-		if (nullptr == (struct dlink *)(base + l->dln_forward) &&
-		    nullptr == (struct dlink *)(base + l->dln_backward))
-			_isdln_base_makeempty(base, l);
-		val = l;
-	}
-	return(val);
+	return ((struct dlink *)(base + l->dln_forward));
 }
 
 /* _isdln_base_next () - Return next element in the list --------------------*/
@@ -97,12 +89,13 @@ struct dlink * _isdln_base_prev(char *base, struct dlink *l)
 /* _isdln_base_makeempty () - Make head of empty list -----------------------*/
 void _isdln_base_makeempty(char *base, struct dlink *l)
 {
-	l->dln_forward = l->dln_backward = (char *)l - base;
+	l->dln_forward = l->dln_backward = (rel_addr)((char *)l - base);
 }
 
 /* _isdln_base_isempty () - Test if list is empty---------------------------*/
 int _isdln_base_isempty(char *base, struct dlink *l)
 {
-	return (l->dln_forward == (char *)l - base &&
-		l->dln_backward == (char *)l - base);
+	rel_addr self = (rel_addr)((char *)l - base);
+
+	return (l->dln_forward == self && l->dln_backward == self);
 }

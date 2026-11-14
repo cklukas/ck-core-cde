@@ -46,7 +46,7 @@
 #include <sys/stat.h>
 
 static int
-_ambuild(char *isfname, enum openmode openmode, Bool varflag,
+_ambuild(char *isfname, enum openmode, Bool varflag,
          int minlen, int maxlen, struct keydesc *primkey,
          int owner, int group, int umask,
          Bytearray *isfhandle, Bytearray *curpos,
@@ -190,7 +190,7 @@ isbuild(char *isfname, int recordlength, struct keydesc *primkey, int mode)
 
 /* ARGSUSED */
 static int
-_ambuild(char *isfname, enum openmode openmode, Bool varflag,
+_ambuild(char *isfname, enum openmode, Bool varflag,
          int minlen, int maxlen, struct keydesc *primkey,
          int owner, int group, int umask,
          Bytearray *isfhandle, Bytearray *curpos,

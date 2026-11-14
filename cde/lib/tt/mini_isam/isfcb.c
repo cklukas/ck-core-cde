@@ -862,8 +862,8 @@ _check_isam_magic(Fcb *fcb)
 {
     char		magicbuffer[CP_MAGIC_LEN];
 
-    (void)lseek(fcb->datfd, 0L, 0);
-    if ((read(fcb->datfd, magicbuffer, CP_MAGIC_LEN) < CP_MAGIC_LEN) ||
+    if ((lseek(fcb->datfd, 0L, 0) != 0) ||
+	(read(fcb->datfd, magicbuffer, CP_MAGIC_LEN) < CP_MAGIC_LEN) ||
 	/* The following test for compatibilty with `SunISAM 1.0 Beta files. */
 	((strncmp(magicbuffer, "SunISAM", strlen(ISMAGIC)) != 0) &&
          (strncmp(magicbuffer, ISMAGIC, strlen(ISMAGIC))) != 0)) {
@@ -894,7 +894,8 @@ _open2_indfile(Fcb *fcb)
     snprintf(namebuf, sizeof(namebuf), "%s", fcb->isfname);
     _makeind_isfname(namebuf, sizeof(namebuf));
 
-    (void)fstat(fcb->datfd, &buf);
+    if (fstat(fcb->datfd, &buf) != 0)
+	return (ISERROR);
 
     openmode = (fcb->rdonly) ? O_RDONLY : O_RDWR;
 

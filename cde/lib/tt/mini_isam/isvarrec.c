@@ -487,7 +487,7 @@ long _istail_insert(Fcb *fcb, char *tailp, int taillen)
 /* Remove tail from .var file */
 
 /* ARGSUSED */
-Static void _istail_delete(Fcb *fcb, long offset)
+Static void _istail_delete(Fcb *, long)
 {
     /* 
      * Don't do anything in NetISAM 1.0. The tails are lost, the space

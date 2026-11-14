@@ -403,7 +403,7 @@ rp_readrecord_v(int datfd, int varfd, long offset, int minreclen, int maxreclen)
 }
 
 static int
-isnoprintf(const char *s, ...)
+isnoprintf(const char *, ...)
 {
     return(0);
 }

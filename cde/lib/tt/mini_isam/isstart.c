@@ -71,7 +71,6 @@ isstart(int isfd, struct keydesc *keydesc, int length, char *record,
         int mode)
 {
     Fab	*fab;
-    int			reclen;
     Recno		recnum;
     int			ret;
     enum readmode	readmode;
@@ -107,14 +106,10 @@ isstart(int isfd, struct keydesc *keydesc, int length, char *record,
      */
     if (readmode == RM_FIRST || readmode == RM_LAST || USE_PHYS_ORDER(keydesc)) {
 	precord = dummy_record;
-	reclen = 0;
     }
     else {
 	precord = record;
-	reclen = fab->minreclen;
     }
-    
-    reclen = fab->minreclen;
 	
     recnum = isrecnum;
 
