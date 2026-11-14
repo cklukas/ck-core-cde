@@ -53,6 +53,6 @@
 slist_char_ptr_cell::~slist_char_ptr_cell() 
 {
    if ( v_alloca == true ) {
-      delete (char*)data;
+      delete [] (char*)data;
    } 
 }

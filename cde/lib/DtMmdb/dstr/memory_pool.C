@@ -273,7 +273,7 @@ void memory_pool::free(char* str)
           x -> free(str);
       
    } else {
-       delete str;
+       delete [] str;
    }
 }
 
