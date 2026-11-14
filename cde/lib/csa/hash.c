@@ -100,7 +100,7 @@ Author:  Bart Smaalders 1/89
 #include <string.h>
 #include "hash.h"
 
-static int    hash_string(const char *s, int modulo);
+static int    hash_string(const unsigned char *s, int modulo);
 
 typedef struct hash_entry {
   struct hash_entry 
@@ -241,7 +241,7 @@ void _DtCmDestroyHash(
   free(tbl);
 }
 
-static int hash_string(const char *s, int modulo)
+static int hash_string(const unsigned char *s, int modulo)
 {
 	unsigned result = 0;
 	int i=1;
