@@ -177,7 +177,6 @@ _openfcb(Bytearray *isfhandle, struct errcode *errcode)
     Fcb			*fcb;
     Bytearray		*isfhandle2;
     char		errbuf[BUFSIZ];
-    char		*errmsg0;
 
     if ((fcb = _mngfcb_find(isfhandle)) != nullptr)
 	goto out;
@@ -237,30 +236,18 @@ _openfcb(Bytearray *isfhandle, struct errcode *errcode)
      * user errors such as removing .ind or .var files.
      */
     if (fcb->varflag==TRUE && fcb->varfd == -1) {
-	char *fmt = "%s.var has been removed";
-	if (strlen(fmt) + strlen(fcb->isfname) + 1 >= BUFSIZ)
-	  errmsg0 = (char*) malloc(strlen(fmt) + strlen(fcb->isfname) + 1);
-	else
-	  errmsg0 = errbuf;
-
-	(void)sprintf(errmsg0, fmt, fcb->isfname);
-	_isam_warning(errmsg0);
+	snprintf(errbuf, sizeof(errbuf), "%s.var has been removed",
+		 fcb->isfname);
+	_isam_warning(errbuf);
 	_amseterrcode(errcode, EBADFILE);
-	if (errmsg0 != errbuf) free(errmsg0);
 	goto err;
     }
 
     if ((fcb->nkeys > 1 || !FCB_NOPRIMARY_KEY(fcb)) && fcb->indfd == -1) {
-	char *fmt = "%s.ind has been removed";
-	if (strlen(fmt) + strlen(fcb->isfname) + 1 >= BUFSIZ)
-	  errmsg0 = (char*) malloc(strlen(fmt) + strlen(fcb->isfname) + 1);
-	else
-	  errmsg0 = errbuf;
-
-	(void)sprintf(errmsg0, fmt, fcb->isfname);
-	_isam_warning(errmsg0);
+	snprintf(errbuf, sizeof(errbuf), "%s.ind has been removed",
+		 fcb->isfname);
+	_isam_warning(errbuf);
 	_amseterrcode(errcode, EBADFILE);
-	if (errmsg0 != errbuf) free(errmsg0);
 	goto err;
     }
 

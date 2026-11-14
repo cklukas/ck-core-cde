@@ -528,8 +528,7 @@ _isfcb_cntlpg_r(Fcb *fcb)
      * Read key descriptors.
      */
     fcb->keys = (Keydesc2 *) 
-	_isrealloc((char *)fcb->keys,
-		   (unsigned) (sizeof(Keydesc2) * fcb->nkeys));
+	_isreallocarray((char *)fcb->keys, fcb->nkeys, sizeof(Keydesc2));
     memset((char *)fcb->keys, 0, sizeof(Keydesc2) * fcb->nkeys);
 
     for (i = 0; i < fcb->nkeys; i++) {
@@ -651,7 +650,7 @@ _create_datfile(char *isfname)
 	char	namebuf[MAXPATHLEN];
 
 	snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-	_makedat_isfname(namebuf);
+	_makedat_isfname(namebuf, sizeof(namebuf));
 	
 	fd = open (namebuf, O_CREAT | O_EXCL | O_RDWR, 0666);
 	if (fd > -1) {
@@ -677,7 +676,7 @@ _create_indfile(char *isfname)
 	char	namebuf[MAXPATHLEN];
 
 	snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-	_makeind_isfname(namebuf);
+	_makeind_isfname(namebuf, sizeof(namebuf));
 
 	fd = open (namebuf, O_CREAT | O_EXCL | O_RDWR, 0666);
 	if (fd > -1) {
@@ -703,7 +702,7 @@ _create_varfile(char *isfname)
 	char	namebuf[MAXPATHLEN];
 
 	snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-	_makevar_isfname(namebuf);
+	_makevar_isfname(namebuf, sizeof(namebuf));
 
 	fd = open (namebuf, O_CREAT | O_EXCL | O_RDWR, 0666);
 	if (fd > -1) {
@@ -729,7 +728,7 @@ _remove_datfile(char *isfname)
     char	namebuf[MAXPATHLEN];
 
     snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    _makedat_isfname(namebuf);
+    _makedat_isfname(namebuf, sizeof(namebuf));
 
     (void) unlink(namebuf);
 }
@@ -746,7 +745,7 @@ _remove_indfile(char *isfname)
     char	namebuf[MAXPATHLEN];
 
     snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    _makeind_isfname(namebuf);
+    _makeind_isfname(namebuf, sizeof(namebuf));
 
     (void) unlink(namebuf);
 }
@@ -763,7 +762,7 @@ _remove_varfile(char *isfname)
     char	namebuf[MAXPATHLEN];
 
     snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    _makevar_isfname(namebuf);
+    _makevar_isfname(namebuf, sizeof(namebuf));
 
     (void) unlink(namebuf);
 }
@@ -782,7 +781,7 @@ _open_datfile(char *isfname, Bool *rdonly)
     int		ret;
 
     snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    _makedat_isfname(namebuf);
+    _makedat_isfname(namebuf, sizeof(namebuf));
 
     if ((ret = open (namebuf, O_RDWR)) != -1) {
 	*rdonly = FALSE;
@@ -819,7 +818,7 @@ _open_indfile(char *isfname, Bool rdonly)
 	char	namebuf[MAXPATHLEN];
 
 	snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-	_makeind_isfname(namebuf);
+	_makeind_isfname(namebuf, sizeof(namebuf));
 
 	fd = open (namebuf, (rdonly==TRUE)?O_RDONLY:O_RDWR);
 	if (fd > -1) {
@@ -845,7 +844,7 @@ _open_varfile(char *isfname, Bool rdonly)
 	char	namebuf[MAXPATHLEN];
 
 	snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-	_makevar_isfname(namebuf);
+	_makevar_isfname(namebuf, sizeof(namebuf));
 
 	fd = open (namebuf, (rdonly==TRUE)?O_RDONLY:O_RDWR);
 	if (fd > -1) {
@@ -893,7 +892,7 @@ _open2_indfile(Fcb *fcb)
 	return (ISOK);
 
     snprintf(namebuf, sizeof(namebuf), "%s", fcb->isfname);
-    _makeind_isfname(namebuf);
+    _makeind_isfname(namebuf, sizeof(namebuf));
 
     (void)fstat(fcb->datfd, &buf);
 

@@ -35,12 +35,17 @@ isgarbage(char * isfname)
 {
 	char			isfname2[MAXPATHLEN];
 	int			isfd = -1, isfd2 = -1;
-	char			buffer[ISMAXRECLEN];
-	char			*recbuf = nullptr;
+	char			recbuf[ISMAXRECLEN];
+	char			recname[MAXPATHLEN];
 	struct dictinfo 	info;
 	struct keydesc		keybuf;
 	struct stat		statbuf;
 	int			count = 0,i;
+
+	if (!_isfname_valid(isfname)) {
+		_setiserrno2(EFNAME, '9', '0');
+		return (ISERROR);
+	}
 
 	snprintf(isfname2, sizeof(isfname2), "%s~", isfname);
 
@@ -52,13 +57,9 @@ isgarbage(char * isfname)
 		goto ERROR;
 	}
 
-	if (strlen(isfname) + 5 >= ISMAXRECLEN)
-	  recbuf = (char*) malloc(strlen(isfname) + 5);
-	else
-	  recbuf = buffer;
-
-	sprintf(recbuf, "%s.rec", isfname);
-	if (stat(recbuf, &statbuf) < 0) {
+	snprintf(recname, sizeof(recname), "%s", isfname);
+	_makedat_isfname(recname, sizeof(recname));
+	if (stat(recname, &statbuf) < 0) {
 		goto ERROR;
 	}
 
@@ -119,9 +120,6 @@ isgarbage(char * isfname)
 	if (isfd2 != -1) {
 		(void)isclose(isfd2);
 		(void)iserase(isfname2);
-	}
-	if ((recbuf != buffer) && (recbuf != nullptr)) {
-		free(recbuf);
 	}
 	return (ISERROR);
 }

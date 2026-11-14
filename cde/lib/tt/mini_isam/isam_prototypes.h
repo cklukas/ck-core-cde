@@ -35,8 +35,9 @@ int isaddindex(int isfd, struct keydesc *keydesc);
 int isaddprimary(int isfd, struct keydesc *keydesc);
 
 /* isalloc.c */
-char *_ismalloc(unsigned int nbytes);
-char *_isrealloc(char *oldaddr, unsigned int nbytes);
+char *_ismalloc(size_t nbytes);
+char *_isrealloc(char *oldaddr, size_t nbytes);
+char *_isreallocarray(char *oldaddr, size_t nmemb, size_t size);
 char *_isallocstring(char *str);
 void _isfreestring(char *str);
 
@@ -222,9 +223,10 @@ int _flrec_delete(Fcb *fcb, Recno recnum);
 int _flrec_wrrec(Fcb *fcb, char *record, Recno recnum, int reclen);
 
 /* isfname.c */
-void _makedat_isfname(char *isfname);
-void _makeind_isfname(char *isfname);
-void _makevar_isfname(char *isfname);
+Bool _isfname_valid(const char *isfname);
+void _makedat_isfname(char *isfname, size_t size);
+void _makeind_isfname(char *isfname, size_t size);
+void _makevar_isfname(char *isfname, size_t size);
 void _removelast(char *path);
 char *_lastelement(char *path);
 

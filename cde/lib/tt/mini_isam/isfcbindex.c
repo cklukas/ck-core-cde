@@ -100,8 +100,7 @@ _isfcb_altkeyadd(Fcb *fcb, Keydesc2 *keydesc2)
      * Reallocate fcb->keys table.
      */
     fcb->keys = (Keydesc2 *) 
-	_isrealloc((char *)fcb->keys, 
-		   (unsigned) (sizeof(Keydesc2) * (fcb->nkeys + 1)));
+	_isreallocarray((char *)fcb->keys, fcb->nkeys + 1, sizeof(Keydesc2));
 
     fcb->keys[fcb->nkeys] = *keydesc2;
 

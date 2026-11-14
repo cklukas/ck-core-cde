@@ -156,7 +156,7 @@ _unlink_datfile(char *isfname)
     char	namebuf[MAXPATHLEN];
 
     snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    _makedat_isfname(namebuf);
+    _makedat_isfname(namebuf, sizeof(namebuf));
 
     (void)unlink(namebuf);
 }
@@ -168,7 +168,7 @@ _unlink_indfile(char *isfname)
     char	namebuf[MAXPATHLEN];
 
     snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    _makeind_isfname(namebuf);
+    _makeind_isfname(namebuf, sizeof(namebuf));
 
     (void)unlink(namebuf);
 }
@@ -180,7 +180,7 @@ _unlink_varfile(char *isfname)
     char	namebuf[MAXPATHLEN];
 
     snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    _makevar_isfname(namebuf);
+    _makevar_isfname(namebuf, sizeof(namebuf));
 
     (void)unlink(namebuf);
 }

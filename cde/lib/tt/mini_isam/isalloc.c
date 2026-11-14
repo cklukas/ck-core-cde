@@ -47,7 +47,7 @@
  * Allocate nbytes.
  */
 
-char *_ismalloc(unsigned int nbytes)
+char *_ismalloc(size_t nbytes)
 {
     char	*p;
     
@@ -57,12 +57,29 @@ char *_ismalloc(unsigned int nbytes)
     return (p);
 }
 
-char *_isrealloc(char *oldaddr, unsigned int nbytes)
+char *_isrealloc(char *oldaddr, size_t nbytes)
 {
     char	*p;
     
     if ((p = (char *) realloc (oldaddr, nbytes)) == nullptr)
 	_isfatal_error("realloc() failed");
+
+    return (p);
+}
+
+/*
+ * _isreallocarray(oldaddr, nmemb, size)
+ *
+ * Resize a block to hold nmemb elements of size bytes.  A size that
+ * overflows is a fatal error.
+ */
+
+char *_isreallocarray(char *oldaddr, size_t nmemb, size_t size)
+{
+    char	*p;
+
+    if ((p = (char *) reallocarray (oldaddr, nmemb, size)) == nullptr)
+	_isfatal_error("reallocarray() failed");
 
     return (p);
 }

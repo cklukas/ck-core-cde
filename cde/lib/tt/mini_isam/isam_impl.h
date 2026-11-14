@@ -438,6 +438,12 @@ struct export_opts {
 
 
 
+/*
+ * Longest ISAM file name that still leaves room for a suffix (.rec, .ind,
+ * .var) and the backup marker (~) inside a MAXPATHLEN buffer.
+ */
+#define ISMAXFNAMELEN	(MAXPATHLEN - 8)
+
 #define DAT_SUFFIX	".rec"
 #define IND_SUFFIX	".ind"
 #define VAR_SUFFIX	".var"

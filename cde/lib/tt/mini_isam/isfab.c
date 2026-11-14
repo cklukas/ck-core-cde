@@ -57,14 +57,14 @@ _fab_new(char *isfname, enum openmode openmode, Bool varlen, int minreclen, int 
 {
     Fab	*fab;
 
+    if (!_isfname_valid(isfname)) {
+      _setiserrno2(EFNAME, '9', '0');
+      return (nullptr);
+    }
+
     /* Allocate memory for the fab object. */
     fab = (Fab *) _ismalloc(sizeof(*fab));
     memset((char *)fab, 0, sizeof(*fab));
-
-    if (fab == nullptr) {
-      iserrno = EFATAL;
-      return (nullptr);
-    }
 
     /* Set fields in the fab objects. */
     fab->openmode = openmode;
@@ -72,12 +72,6 @@ _fab_new(char *isfname, enum openmode openmode, Bool varlen, int minreclen, int 
     fab->minreclen = minreclen;
     fab->maxreclen = maxreclen;
     fab->isfname = _isallocstring(isfname);
-
-    if (fab->isfname == nullptr) {
-      free((char *)fab);
-      iserrno = EFATAL;
-      return (nullptr);
-    }
 
     return (fab);
 }

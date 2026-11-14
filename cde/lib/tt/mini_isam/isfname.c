@@ -41,17 +41,51 @@
 #include "isam_impl.h"
 
 /*
- * _makedat_isfname(isfname)
+ * _isfname_valid(isfname)
+ *
+ * Return TRUE if the ISAM file name is short enough for all file names
+ * derived from it to fit into a MAXPATHLEN buffer.
+ */
+
+Bool
+_isfname_valid(const char *isfname)
+{
+    return (strnlen(isfname, ISMAXFNAMELEN + 1) <= ISMAXFNAMELEN) ? TRUE : FALSE;
+}
+
+/*
+ * _append_suffix(path, size, suffix)
+ *
+ * Append suffix to the path held in a buffer of size bytes.  If the result
+ * would not fit, the path is emptied so that no file with a truncated
+ * name can be reached.
+ */
+
+static void
+_append_suffix(char *path, size_t size, const char *suffix)
+{
+    size_t	len = strlen(path);
+    size_t	suffixlen = strlen(suffix);
+
+    if (len + suffixlen >= size) {
+	path[0] = '\0';
+	return;
+    }
+    memcpy(path + len, suffix, suffixlen + 1);
+}
+
+/*
+ * _makedat_isfname(isfname, size)
  *
  * Return path to .rec file corresponding to the ISAM file isfname.
  * Conversion is done in place.
  */
 
 void
-_makedat_isfname(char *isfname)
+_makedat_isfname(char *isfname, size_t size)
 {
     /* Append .rec */
-    (void) strcat(isfname, DAT_SUFFIX);
+    _append_suffix(isfname, size, DAT_SUFFIX);
 }
 
 /*
@@ -62,10 +96,10 @@ _makedat_isfname(char *isfname)
  */
 
 void
-_makeind_isfname(char *isfname)
+_makeind_isfname(char *isfname, size_t size)
 {
     /* Append .ind */
-    (void) strcat(isfname, IND_SUFFIX);
+    _append_suffix(isfname, size, IND_SUFFIX);
 }
 
 /*
@@ -76,10 +110,10 @@ _makeind_isfname(char *isfname)
  */
 
 void
-_makevar_isfname(char *isfname)
+_makevar_isfname(char *isfname, size_t size)
 {
     /* Append .var */
-    (void) strcat(isfname, VAR_SUFFIX);
+    _append_suffix(isfname, size, VAR_SUFFIX);
 }
 
 
@@ -92,10 +126,10 @@ _makevar_isfname(char *isfname)
 void
 _removelast(char *path)
 {
-    char	*p;
+    size_t	len = strlen(path);
 
-    for (p = path + strlen(path); *--p != '/' && p >= path; ) 
-	*p = '\0';
+    while (len > 0 && path[len - 1] != '/')
+	path[--len] = '\0';
 }
 
 /*

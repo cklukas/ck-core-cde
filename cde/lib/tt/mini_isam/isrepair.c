@@ -79,8 +79,7 @@ int isrepair(char *isfname, int verbose)
   int	      minreclen, maxreclen;
   int	      nrecords_fromcntl;
   int	      varflag;
-  char	      nameBuf [MAXPATHLEN];
-  char	      *namebuf;
+  char	      namebuf[MAXPATHLEN];
   int	      isfd = -1;
   struct keydesc2	keydesc2;
   int	      i;
@@ -93,23 +92,22 @@ int isrepair(char *isfname, int verbose)
   int	      (*print)(const char *, ...);
   sigset_t    oldmask;
   sigset_t    allsignals;
-  char	      Buffer[BUFSIZ];
-  char	      *buffer = nullptr;
+  char	      buffer[MAXPATHLEN];
 
 
   print = verbose ? printf : isnoprintf;
   datfd = indfd = varfd = -1;
 
+  if (!_isfname_valid(isfname)) {
+    _setiserrno2(EFNAME, '9', '0');
+    return (ISERROR);
+  }
+
   /*
    * Open UNIX files.
    */
-  if (strlen(isfname) + 10 >= MAXPATHLEN)
-    namebuf = (char*) malloc(strlen(isfname) + 10);
-  else
-    namebuf = nameBuf;
-
-  (void)strcpy(namebuf, isfname);
-  _makedat_isfname(namebuf);
+  snprintf(namebuf, sizeof(namebuf), "%s", isfname);
+  _makedat_isfname(namebuf, sizeof(namebuf));
   datfd = open(namebuf, O_RDONLY);
   if (datfd > -1) {
     if(fcntl(datfd, F_SETFD, 1) == -1) {
@@ -118,8 +116,8 @@ int isrepair(char *isfname, int verbose)
     }
   }
 
-  (void)strcpy(namebuf, isfname);
-  _makeind_isfname(namebuf);
+  snprintf(namebuf, sizeof(namebuf), "%s", isfname);
+  _makeind_isfname(namebuf, sizeof(namebuf));
   indfd = open(namebuf, O_RDONLY);
   if (indfd > -1) {
     if(fcntl(indfd, F_SETFD, 1) == -1) {
@@ -128,8 +126,8 @@ int isrepair(char *isfname, int verbose)
     }
   }
 
-  (void)strcpy(namebuf, isfname);
-  _makevar_isfname(namebuf);
+  snprintf(namebuf, sizeof(namebuf), "%s", isfname);
+  _makevar_isfname(namebuf, sizeof(namebuf));
   varfd = open(namebuf, O_RDONLY);
   if (varfd > -1) {
     if(fcntl(varfd, F_SETFD, 1) == -1) {
@@ -176,7 +174,7 @@ int isrepair(char *isfname, int verbose)
   /*
    * Open output file. Use ~ as suffix.
    */
-  (void)sprintf(namebuf, "%s~", isfname);
+  snprintf(namebuf, sizeof(namebuf), "%s~", isfname);
   (void)print("Opening temporary ISAM file '%s'...\n",
 	      namebuf);
   isreclen = minreclen;
@@ -257,19 +255,14 @@ int isrepair(char *isfname, int verbose)
 	goto ERROR;
 	}
 	*/
-  if (strlen(isfname) + 5 >= MAXPATHLEN)
-    buffer = (char*) malloc(strlen(isfname) + 5);
-  else
-    buffer = Buffer;
-
-  (void)sprintf(buffer,"%s.rec", isfname);
+  snprintf(buffer, sizeof(buffer), "%s.rec", isfname);
   (void)unlink(buffer);
-  (void)sprintf(buffer,"%s.ind", isfname);
+  snprintf(buffer, sizeof(buffer), "%s.ind", isfname);
   (void)unlink(buffer);
-  (void)sprintf(buffer,"%s.var", isfname);
+  snprintf(buffer, sizeof(buffer), "%s.var", isfname);
   (void)unlink(buffer);
 
-  (void)sprintf(namebuf, "%s~", isfname);
+  snprintf(namebuf, sizeof(namebuf), "%s~", isfname);
   (void)print("Renaming ISAM file '%s' to '%s'...\n",
 	      namebuf, isfname);
   if (isrename(namebuf, isfname) != ISOK) {
@@ -318,7 +311,6 @@ int isrepair(char *isfname, int verbose)
   (void)sigprocmask(SIG_SETMASK, &oldmask, nullptr);
 
   print("...File repaired\n");
-  if (buffer != Buffer) free(buffer);
   return (ISOK);
 
  ERROR:
@@ -333,8 +325,6 @@ int isrepair(char *isfname, int verbose)
     close(varfd);
   }
   (void)isclose(isfd);
-  if (namebuf != nameBuf) free(namebuf);
-  if (buffer != Buffer) free(buffer);
 
   return (ISERROR);
 }

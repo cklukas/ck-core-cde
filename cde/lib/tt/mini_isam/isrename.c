@@ -42,9 +42,10 @@
 #include <sys/time.h>
 
 static void _removelast2(char *path);
-static void _rename_datfile(char *isfname, char *newname);
-static void _rename_indfile(char *isfname, char *newname);
-static void _rename_varfile(char *isfname, char *newname);
+static Bool _newfname(char *newbase, size_t size, const char *isfname,
+		      const char *newname);
+static void _rename_file(const char *isfname, const char *newbase,
+			 void (*makesuffix)(char *, size_t));
 static int _amrename(Bytearray *isfhandle, char *newname,
                      struct errcode *errcode);
 
@@ -75,8 +76,13 @@ isrename(char *oldname, char *newname)
     char	  	newdir [MAXPATHLEN];
     char		datfname[MAXPATHLEN];
 
+    if (!_isfname_valid(oldname) || !_isfname_valid(newname)) {
+	_setiserrno2(EFNAME, 9, 0);
+	return (ISERROR);
+    }
+
     /*
-     * Check that the odl and new filename are in the same directory.
+     * Check that the old and new filename are in the same directory.
      */
     snprintf(olddir, sizeof(olddir), "%s", oldname);
     _removelast2(olddir);
@@ -129,7 +135,7 @@ isrename(char *oldname, char *newname)
      */
 
     snprintf(datfname, sizeof(datfname), "%s", oldname);
-    _makedat_isfname(datfname);
+    _makedat_isfname(datfname, sizeof(datfname));
     (void)unlink(datfname);
 
     return (ISOK);			     /* Successful isrename() */
@@ -145,10 +151,10 @@ isrename(char *oldname, char *newname)
 Static void
 _removelast2(char *path)
 {
-    char	*p;
+    size_t	len = strlen(path);
 
-    for (p = path + strlen(path); *--p != '/' && p >= path; ) 
-	*p = '\0';
+    while (len > 0 && path[len - 1] != '/')
+	path[--len] = '\0';
 }
 
 /*
@@ -170,8 +176,14 @@ _amrename(Bytearray *isfhandle, char *newname, struct errcode *errcode)
 {
     Fcb			*fcb;
     char		*isfname = _getisfname(isfhandle);
+    char		newbase[MAXPATHLEN];
 
     _isam_entryhook();
+
+    if (!_newfname(newbase, sizeof(newbase), isfname, newname)) {
+	_amseterrcode(errcode, EFNAME);
+	goto ERROR;
+    }
 
     /*
      * Get FCB corresponding to the isfhandle handle.
@@ -190,9 +202,9 @@ _amrename(Bytearray *isfhandle, char *newname, struct errcode *errcode)
     /*
      * Rename all UNIX files.
      */
-    _rename_datfile(isfname, newname);
-    _rename_indfile(isfname, newname);
-    _rename_varfile(isfname, newname);
+    _rename_file(isfname, newbase, _makedat_isfname);
+    _rename_file(isfname, newbase, _makeind_isfname);
+    _rename_file(isfname, newbase, _makevar_isfname);
 
     _isam_exithook();
     return (ISOK);
@@ -204,87 +216,39 @@ _amrename(Bytearray *isfhandle, char *newname, struct errcode *errcode)
 }
 
 
-/* newname, with no prefix */
+/*
+ * _newfname(newbase, size, isfname, newname)
+ *
+ * Build the name of the renamed ISAM file: the directory of isfname
+ * followed by newname, which carries no directory.  Return FALSE if the
+ * result is not a valid ISAM file name.
+ */
+Static Bool
+_newfname(char *newbase, size_t size, const char *isfname, const char *newname)
+{
+    char	dir[MAXPATHLEN];
+    int		len;
+
+    snprintf(dir, sizeof(dir), "%s", isfname);
+    _removelast2(dir);
+    len = snprintf(newbase, size, "%s%s", dir, newname);
+
+    return (len >= 0 && (size_t)len < size && _isfname_valid(newbase));
+}
+
+/* Rename the file that the suffix function derives from the ISAM file name. */
 Static void
-_rename_datfile(char *isfname, char *newname)     
+_rename_file(const char *isfname, const char *newbase,
+	     void (*makesuffix)(char *, size_t))
 {
     char	namebuf[MAXPATHLEN];
     char	newbuf[MAXPATHLEN];
-    char	newbuftemp[sizeof(newbuf)];
 
     snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    snprintf(newbuf, sizeof(newbuf), "%s", isfname);
+    snprintf(newbuf, sizeof(newbuf), "%s", newbase);
+    makesuffix(namebuf, sizeof(namebuf));
+    makesuffix(newbuf, sizeof(newbuf));
 
-    /*
-     * Replace the last element of the old path with newname.
-     */
-    _removelast(newbuf);
-    if (strcmp(newbuf, "/") != 0) {
-        snprintf(newbuftemp, sizeof(newbuftemp),  "%s/", newbuf);
-        strcpy(newbuf, newbuftemp);
-    }
-    snprintf(newbuftemp, sizeof(newbuftemp), "%s%s", newbuf, newname);
-    strcpy(newbuf, newbuftemp);
-
-    _makedat_isfname(namebuf);
-    _makedat_isfname(newbuf);
-
+    /* A missing .ind or .var file is normal, so the result is not used. */
     (void)rename(namebuf, newbuf);
 }
-
-/* newname, with no prefix */
-Static void
-_rename_indfile(char *isfname, char *newname)     
-{
-    char	namebuf[MAXPATHLEN];
-    char	newbuf[MAXPATHLEN];
-    char	newbuftemp[MAXPATHLEN];
-
-    snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    snprintf(newbuf, sizeof(newbuf), "%s", isfname);
-
-    /*
-     * Replace the last element of the old path with newname.
-     */
-    _removelast(newbuf);
-    if (strcmp(newbuf, "/") != 0) {
-        snprintf(newbuftemp, sizeof(newbuftemp), "%s/", newbuf);
-        strcpy(newbuf, newbuftemp);
-    }
-    snprintf(newbuftemp, sizeof(newbuftemp), "%s%s", newbuf, newname);
-    strcpy(newbuf, newbuftemp);
-
-    _makeind_isfname(namebuf);
-    _makeind_isfname(newbuf);
-
-    (void)rename(namebuf, newbuf);
-}
-
-/* newname, with no prefix */
-Static void
-_rename_varfile(char *isfname, char *newname) 
-{
-    char	namebuf[MAXPATHLEN];
-    char	newbuf[MAXPATHLEN];
-    char	newbuftemp[MAXPATHLEN];
-
-    snprintf(namebuf, sizeof(namebuf), "%s", isfname);
-    snprintf(newbuf, sizeof(newbuf), "%s", isfname);
-
-    /*
-     * Replace the last element of the old path with newname.
-     */
-    _removelast(newbuf);
-    if (strcmp(newbuf, "/") != 0) {
-        snprintf(newbuftemp, sizeof(newbuftemp), "%s/", newbuf);
-        strcpy(newbuf, newbuftemp);
-    }
-    snprintf(newbuftemp, sizeof(newbuftemp), "%s%s", newbuf, newname);
-    strcpy(newbuf, newbuftemp);
-
-    _makevar_isfname(namebuf);
-    _makevar_isfname(newbuf);
-
-    (void)rename(namebuf, newbuf);
-}
-
