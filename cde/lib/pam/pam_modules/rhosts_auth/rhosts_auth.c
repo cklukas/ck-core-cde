@@ -38,7 +38,7 @@
 int
 pam_sm_authenticate(
 	pam_handle_t	*pamh,
-	int	flags,
+	[[maybe_unused]] int	flags,
 	int	argc,
 	const char	**argv)
 {
@@ -47,7 +47,6 @@ pam_sm_authenticate(
 	char pwd_buffer[1024];
 	int	is_superuser;
 	char	*rusername;
-	int	err;
 	int	i;
 	int	debug = 0;
 
@@ -97,10 +96,10 @@ pam_sm_authenticate(
  */
 int
 pam_sm_setcred(
-	pam_handle_t	*pamh,
-	int	flags,
-	int	argc,
-	const char	**argv)
+	[[maybe_unused]] pam_handle_t	*pamh,
+	[[maybe_unused]] int	flags,
+	[[maybe_unused]] int	argc,
+	[[maybe_unused]] const char	**argv)
 {
 	return (PAM_SUCCESS);
 }

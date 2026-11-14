@@ -39,7 +39,7 @@
 int
 pam_sm_open_session(
 	pam_handle_t	*pamh,
-	int	flags,
+	[[maybe_unused]] int	flags,
 	int	argc,
 	const char	**argv)
 {
@@ -50,7 +50,7 @@ pam_sm_open_session(
 	struct passwd pwd;
 	char	buffer[2048];
 	int	i;
-	int	debug = 0;
+	[[maybe_unused]] int	debug = 0;
 	long long	offset;
 
 	for (i = 0; i < argc; i++) {
@@ -96,7 +96,10 @@ pam_sm_open_session(
 			sizeof (newll.ll_line));
 		strncpy(newll.ll_host, rhost, sizeof (newll.ll_host));
 
-		(void) write(fdl, (char *)&newll, sizeof (newll));
+		if (write(fdl, (char *)&newll, sizeof (newll)) !=
+		    (ssize_t)sizeof (newll))
+			syslog(LOG_ERR, "unix_open_session: lastlog write: %s",
+			    strerror(errno));
 		(void) close(fdl);
 	}
 

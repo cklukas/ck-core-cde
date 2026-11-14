@@ -37,13 +37,13 @@
 
 int
 pam_sm_close_session(
-	pam_handle_t	*pamh,
-	int	flags,
+	[[maybe_unused]] pam_handle_t	*pamh,
+	[[maybe_unused]] int	flags,
 	int	argc,
 	const char	**argv)
 {
 	int	i;
-	int	debug = 0;
+	[[maybe_unused]] int	debug = 0;
 
 	for (i = 0; i < argc; i++) {
 		if (strcasecmp(argv[i], "debug") == 0)

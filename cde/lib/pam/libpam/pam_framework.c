@@ -351,7 +351,7 @@ pam_get_user(
 
 	/* prompt for the user */
 
-	strncpy(messages[0], prompt, sizeof (messages[0]));
+	snprintf(messages[0], sizeof (messages[0]), "%s", prompt);
 
 	for (;;) {
 		status = __pam_get_input(pamh, PAM_PROMPT_ECHO_ON, 1,

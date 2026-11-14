@@ -484,15 +484,15 @@ pr_config(pam_handle_t *pamh)
 {
 	char 		messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 
-	sprintf(messages[0], PAM_MSG(pamh, 1,
+	snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 1,
 	"Supported configurations for passwd management are as follows:"));
-	sprintf(messages[1], PAM_MSG(pamh, 2, "    passwd: files"));
-	sprintf(messages[2], PAM_MSG(pamh, 3, "    passwd: files nis"));
-	sprintf(messages[3], PAM_MSG(pamh, 4, "    passwd: files nisplus"));
-	sprintf(messages[4], PAM_MSG(pamh, 5, "    passwd: compat"));
-	sprintf(messages[5], PAM_MSG(pamh, 6, "    passwd: compat AND"));
-	sprintf(messages[6], PAM_MSG(pamh, 7, "    passwd_compat: nisplus"));
-	sprintf(messages[7],
+	snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 2, "    passwd: files"));
+	snprintf(messages[2], sizeof (messages[2]), PAM_MSG(pamh, 3, "    passwd: files nis"));
+	snprintf(messages[3], sizeof (messages[3]), PAM_MSG(pamh, 4, "    passwd: files nisplus"));
+	snprintf(messages[4], sizeof (messages[4]), PAM_MSG(pamh, 5, "    passwd: compat"));
+	snprintf(messages[5], sizeof (messages[5]), PAM_MSG(pamh, 6, "    passwd: compat AND"));
+	snprintf(messages[6], sizeof (messages[6]), PAM_MSG(pamh, 7, "    passwd_compat: nisplus"));
+	snprintf(messages[7], sizeof (messages[7]),
 	PAM_MSG(pamh, 8, "Please check your /etc/nsswitch.conf file"));
 
 	/* display the above 8 messages */
@@ -511,7 +511,11 @@ pr_config(pam_handle_t *pamh)
  *	   A warning is printed if this happens. Operation is continued.
  */
 int
-get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
+get_ns(
+	[[maybe_unused]] pam_handle_t *pamh,
+	[[maybe_unused]] int o_rep,
+	[[maybe_unused]] int debug,
+	[[maybe_unused]] int nowarn)
 {
 #if (PAM_NIS || PAM_NISPLUS)
 	struct __nsw_switchconfig *conf = nullptr;
@@ -529,7 +533,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 	conf = __nsw_getconfig("passwd", &pserr);
 	if (conf == nullptr) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 9,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 9,
 				"Can't find name service for passwd"));
 			__pam_display_msg(pamh, PAM_ERROR_MSG,
 				1, messages, nullptr);
@@ -537,7 +541,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 
 		if (IS_NISPLUS(o_rep)) {
 		    if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 10,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 10,
 				"You may not use nisplus repository"));
 			__pam_display_msg(pamh, PAM_ERROR_MSG,
 				1, messages, nullptr);
@@ -581,7 +585,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 			rep |= PAM_REP_FILES;
 			if (o_rep == PAM_REP_NIS || o_rep == PAM_REP_NISPLUS) {
 			    if (!nowarn) {
-				sprintf(messages[0],
+				snprintf(messages[0], sizeof (messages[0]),
 				    PAM_MSG(pamh, 11,
 	"Your specified repository is not defined in the nsswitch file!"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -597,7 +601,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 				rep = PAM_REP_FILES | PAM_REP_NIS;
 				if (o_rep == PAM_REP_NISPLUS) {
 				    if (!nowarn) {
-					sprintf(messages[0],
+					snprintf(messages[0], sizeof (messages[0]),
 						PAM_MSG(pamh, 11,
 	"Your specified repository is not defined in the nsswitch file!"));
 					__pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -615,7 +619,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 					rep = PAM_REP_FILES | PAM_REP_NISPLUS;
 					if (o_rep == PAM_REP_NIS) {
 					    if (!nowarn) {
-						sprintf(messages[0],
+						snprintf(messages[0], sizeof (messages[0]),
 						PAM_MSG(pamh, 11,
 	"Your specified repository is not defined in the nsswitch file!"));
 						__pam_display_msg(pamh,
@@ -651,7 +655,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 			rep |= PAM_REP_NIS;
 			if (o_rep == PAM_REP_NISPLUS) {
 			    if (!nowarn) {
-				sprintf(messages[0],
+				snprintf(messages[0], sizeof (messages[0]),
 				    PAM_MSG(pamh, 11,
 	"Your specified repository is not defined in the nsswitch file!"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -666,7 +670,7 @@ get_ns(pam_handle_t *pamh, int o_rep, int debug, int nowarn)
 			rep |= PAM_REP_NISPLUS;
 			if (o_rep == PAM_REP_NIS) {
 			    if (!nowarn) {
-				sprintf(messages[0],
+				snprintf(messages[0], sizeof (messages[0]),
 				    PAM_MSG(pamh, 11,
 	"Your specified repository is not defined in the nsswitch file!"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,

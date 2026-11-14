@@ -58,7 +58,8 @@ get_dce_error_message(
 	dce_error_inq_text(status, buffer, &s);
 
 	if (s)
-		sprintf((char *)buffer, "DCE error %u", status);
+		snprintf((char *)buffer, dce_c_error_string_len, "DCE error %u",
+		    status);
 
 	return (buffer);
 }

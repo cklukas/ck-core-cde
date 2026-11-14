@@ -49,7 +49,7 @@ do_cred_warn(void *pamh)
 {
 	char			messages[1][PAM_MAX_MSG_SIZE];
 
-	sprintf(messages[0],
+	snprintf(messages[0], sizeof (messages[0]),
 	PAM_MSG(pamh, 30, "warning: Unable to obtain DCE credentials.\n"));
 
 	(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, nullptr);
@@ -70,7 +70,6 @@ pam_sm_setcred(
 	int			i;
 	dce_module_data_t	*dsd;
 	error_status_t		st;
-	int			err;
 
 	for (i = 0; i < argc; i++) {
 		if (strcmp(argv[i], "debug") == 0)

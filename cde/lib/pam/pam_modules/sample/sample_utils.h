@@ -30,8 +30,6 @@
 #ifndef _TEST_UTILS_H
 #define	_TEST_UTILS_H
 
-#pragma ident	"@(#)sample_utils.h	1.7	96/02/02 SMI"	/* PAM 2.6 */
-
 #include <security/pam_appl.h>
 #include "../../libpam/pam_impl.h"
 

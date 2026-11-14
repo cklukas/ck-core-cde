@@ -256,7 +256,7 @@ __pam_get_authtok(pam_handle_t *pamh, int source, int type, int len,
 		 * if the that item is not already set.
 		 */
 
-		strncpy(messages[0], prompt, sizeof (messages[0]));
+		snprintf(messages[0], sizeof (messages[0]), "%s", prompt);
 		if ((error = __pam_get_input(pamh, PAM_PROMPT_ECHO_OFF,
 			1, messages, nullptr, &ret_resp)) != PAM_SUCCESS) {
 			free(*authtok);
@@ -298,9 +298,9 @@ typedef struct _pam_msg_data {
 
 static void
 __pam_msg_cleanup(
-	pam_handle_t *pamh,
+	[[maybe_unused]] pam_handle_t *pamh,
 	void *data,
-	int pam_status)
+	[[maybe_unused]] int pam_status)
 {
 	_pam_msg_data *msg_data = (_pam_msg_data *) data;
 
@@ -554,7 +554,7 @@ __setutmp_mgmt(
 	(void) time(&utmp.ut_tv.tv_sec);
 	utmp.ut_pid = getpid();
 	if (rhost != nullptr && rhost[0] != '\0') {
-		(void) strcpy(utmp.ut_host, rhost);
+		(void) snprintf(utmp.ut_host, sizeof (utmp.ut_host), "%s", rhost);
 		tmplen = strlen(rhost) + 1;
 		if (tmplen < sizeof (utmp.ut_host))
 			utmp.ut_syslen = tmplen;
@@ -565,7 +565,7 @@ __setutmp_mgmt(
 		utmp.ut_syslen = 0;
 	}
 
-	(void) strcpy(utmp.ut_user, user);
+	(void) snprintf(utmp.ut_user, sizeof (utmp.ut_user), "%s", user);
 	/*
 	 * Copy in the name of the tty minus the "/dev/" if a /dev/ is
 	 * in the path name.
@@ -820,7 +820,7 @@ __setproc_cred(
 	/* set the effective GID */
 	if (flags & __SETEGID) {
 		if (setegid(gid) == -1) {
-			sprintf(messages[0], PAM_MSG(nullptr, 29,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(nullptr, 29,
 				"pam_sm_setcred: %s\n"), strerror(errno));
 		return (__BAD_GID);
 		}
@@ -829,7 +829,7 @@ __setproc_cred(
 	/* set the real (and effective) GID */
 	if (flags & __SETGID) {
 		if (setgid(gid) == -1) {
-			sprintf(messages[0], PAM_MSG(nullptr, 30,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(nullptr, 30,
 				"setproc_cred: %s\n"), strerror(errno));
 			return (__BAD_GID);
 		}
@@ -842,7 +842,7 @@ __setproc_cred(
 		return (__INITGROUP_FAIL);
 	if (flags & __INITGROUPS) {
 		if (initgroups(user, gid) == -1) {
-			sprintf(messages[0], PAM_MSG(nullptr, 29,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(nullptr, 29,
 				"pam_sm_setcred: %s\n"), strerror(errno));
 			return (__INITGROUP_FAIL);
 		}
@@ -853,7 +853,7 @@ __setproc_cred(
 	 */
 	if (flags & __SETGROUPS) {
 		if (setgroups(ngroups, (gid_t *)grouplist) == -1) {
-			sprintf(messages[0], PAM_MSG(nullptr, 29,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(nullptr, 29,
 				"pam_sm_setcred: %s\n"), strerror(errno));
 			return (__SETGROUP_FAIL);
 		}
@@ -866,7 +866,7 @@ __setproc_cred(
 	/* set the effective UID */
 	if (flags & __SETEUID) {
 		if (seteuid(uid) == -1) {
-			sprintf(messages[0], PAM_MSG(nullptr, 29
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(nullptr, 29
 				"pam_sm_setcred: %s\n"), strerror(errno));
 			return (__BAD_UID);
 		}
@@ -875,7 +875,7 @@ __setproc_cred(
 	/* set the real (and effective) UID */
 	if (flags & __SETUID) {
 		if (setuid(uid) == -1) {
-			sprintf(messages[0], PAM_MSG(nullptr, 29,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(nullptr, 29,
 				"pam_sm_setcred: %s\n"), strerror(errno));
 			return (__BAD_UID);
 		}

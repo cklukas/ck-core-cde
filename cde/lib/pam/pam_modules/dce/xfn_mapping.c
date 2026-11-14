@@ -38,7 +38,7 @@
 
 #include "xfn_mapping.h"
 
-static char	hexval(char);
+static int	hexval(char);
 static int	hex2bin(int, char *, char *);
 static int	bin2hex(int, unsigned char *, char *);
 
@@ -48,7 +48,7 @@ static int	bin2hex(int, unsigned char *, char *);
 
 int
 xfn_get_mapped_password(
-	int flags,
+	[[maybe_unused]] int flags,
 	char *user,		/* xfn user */
 	char *xfn_attr,		/* xfn attribute that holds the target pass */
 	char *key,		/* key (password) encrypting target password */
@@ -63,7 +63,6 @@ xfn_get_mapped_password(
 	FN_attribute_t		*attr = nullptr;
 	const FN_attrvalue_t	*attr_val = nullptr;
 	FN_identifier_t		attr_id;	/* attr identifier */
-	FN_identifier_t		attr_syn;	/* attr syntax */
 	char			hexpass[MAP_HEXLEN+1];
 	char			pass[MAP_PASSLEN+1];
 	char			composed_user[128]; /* XXX 128? */
@@ -87,7 +86,7 @@ xfn_get_mapped_password(
 	if (strlen(user) > (sizeof (composed_user)-6))
 		goto out;
 
-	sprintf(composed_user, "user/%s", user);
+	snprintf(composed_user, sizeof (composed_user), "user/%s", user);
 
 	str = fn_string_from_str(
 			(unsigned char *)composed_user); /* free str */
@@ -119,10 +118,10 @@ xfn_get_mapped_password(
 	hex2bin(MAP_PASSLEN, hexpass, pass); /* we have the password!! */
 	memset(hexpass, 0, MAP_HEXLEN);
 
-	if (strlen(pass)+1 > out_max)
+	if (strlen(pass) + 1 > (size_t)out_max)
 		goto out;  /* sigh... */
 
-	strcpy(out, pass);
+	memcpy(out, pass, strlen(pass) + 1);
 	memset(pass, 0, strlen(pass));
 
 	result = 1;
@@ -150,7 +149,7 @@ out:
 
 int
 xfn_update_mapped_password(
-	int flags,		/* debug, etc */
+	[[maybe_unused]] int flags,		/* debug, etc */
 	char *user,		/* xfn user */
 	char *xfn_attr,		/* xfn attribute that holds the target pass */
 	char *key,		/* key (password) encrypting target password */
@@ -198,7 +197,7 @@ xfn_update_mapped_password(
 	if (strlen(user) > (sizeof (composed_user)-6))
 		goto out;
 
-	sprintf(composed_user, "user/%s", user);
+	snprintf(composed_user, sizeof (composed_user), "user/%s", user);
 	str = fn_string_from_str(
 			(unsigned char *)composed_user); /* free str */
 
@@ -213,7 +212,7 @@ xfn_update_mapped_password(
 	if (ref == nullptr)
 		goto out;
 
-	strcpy(pass, password);
+	snprintf(pass, sizeof (pass), "%s", password);
 	bin2hex(MAP_PASSLEN, (unsigned char *)pass, hexpass);
 	hexpass[MAP_HEXLEN] = '\0';
 
@@ -257,8 +256,8 @@ static int
 hex2bin(int len, char *hexnum, char *binnum)
 {
 	int i;
-	char v1;
-	char v2;
+	int v1;
+	int v2;
 
 	for (i = 0; i < len; i++) {
 		v1 = hexval(hexnum[2 * i]);
@@ -294,7 +293,7 @@ bin2hex(int len, unsigned char *binnum, char *hexnum)
 	return (1);
 }
 
-static char
+static int
 hexval(char c)
 {
 	if (c >= '0' && c <= '9') {

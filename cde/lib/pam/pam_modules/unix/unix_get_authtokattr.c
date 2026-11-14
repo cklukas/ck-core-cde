@@ -73,15 +73,15 @@ __get_authtoken_attr(
 	int		k;
 	char 			value[PAM_MAX_ATTR_SIZE];
 	int 			retcode;
+	[[maybe_unused]] int			found = 0;
+	[[maybe_unused]] struct spwd 		*psp;
+	[[maybe_unused]] struct tm		*tmp;
 	long 			lstchg;
 	char 			*usrname;
 	char 			*prognamep;
 	char			**get_attributes;
 	struct passwd		*pwd;
 	struct spwd		*shpwd;
-	int			found = 0;
-	struct spwd 		*psp;
-	struct tm		*tmp;
 	int			privileged = 0;
 	char 			messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 	int			debug = 0;
@@ -116,7 +116,7 @@ __get_authtoken_attr(
 
 	/* repository must be specified in the command line. */
 	if (repository == PAM_REP_DEFAULT) {
-		sprintf(messages[0], PAM_MSG(pamh, 40,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 40,
 	"You must specify repository when displaying passwd attributes"));
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 					1, messages, nullptr);
@@ -125,7 +125,7 @@ __get_authtoken_attr(
 
 	if (!IS_FILES(repository) && !IS_NIS(repository) &&
 	    !IS_NISPLUS(repository)) {
-		sprintf(messages[0], PAM_MSG(pamh, 41,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 41,
 		    "%s: System error: repository out of range"), prognamep);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 1,
 			messages, nullptr);
@@ -133,13 +133,13 @@ __get_authtoken_attr(
 	}
 
 #ifdef PAM_NISPLUS
-	if (usrname == nullptr || *usrname == nullptr) {
+	if (usrname == nullptr || *usrname == '\0') {
 		/* print nis+ table */
 		/*
 		 * Cat the table using our private _np_getspent()
 		 */
 		if (!IS_NISPLUS(repository)) {
-			sprintf(messages[0], PAM_MSG(pamh, 42,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 42,
 				"Unable to retrieve username."));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 				1, messages, nullptr);
@@ -149,53 +149,53 @@ __get_authtoken_attr(
 		(void) _np_setspent();
 		while ((psp = _np_getspent()) != nullptr) {
 			found++;
-			sprintf(value, "%s  ", psp->sp_namp);
+			snprintf(value, sizeof (value), "%s  ", psp->sp_namp);
 
 			if (psp->sp_pwdp == nullptr) {
-				sprintf(messages[0],
+				snprintf(messages[0], sizeof (messages[0]),
 					"%s NP  ", value);
 			} else if ((int)strlen(psp->sp_pwdp) < NUMCP) {
-				sprintf(messages[0],
+				snprintf(messages[0], sizeof (messages[0]),
 					"%s LK  ", value);
 			} else {
-				sprintf(messages[0],
+				snprintf(messages[0], sizeof (messages[0]),
 					"%s PS  ", value);
 			}
 
 			if (psp->sp_max != -1) {
 			  	_Xgtimeparams gmtime_buf;
-				strcpy(value, messages[0]);
+				snprintf(value, sizeof (value), "%s", messages[0]);
 				if (psp->sp_lstchg) {
 					lstchg = psp->sp_lstchg * DAY;
 					tmp = _XGmtime(&lstchg, gmtime_buf);
-					sprintf(messages[0],
+					snprintf(messages[0], sizeof (messages[0]),
 						"%s %.2d/%.2d/%.2d  ",
 						value,
 						(tmp->tm_mon + 1),
 						tmp->tm_mday, tmp->tm_year);
 				} else
-					sprintf(messages[0],
+					snprintf(messages[0], sizeof (messages[0]),
 					"%s 00/00/00  ",
 					value);
 
-				strcpy(value, messages[0]);
+				snprintf(value, sizeof (value), "%s", messages[0]);
 				if ((psp->sp_min >= 0) && (psp->sp_warn > 0)) {
-					sprintf(messages[0],
-						"%s %d  %d  %d ",
+					snprintf(messages[0], sizeof (messages[0]),
+						"%s %ld  %ld  %ld ",
 						value,
 						psp->sp_min, psp->sp_max,
 						psp->sp_warn);
 				} else if (psp->sp_min >= 0) {
-					sprintf(messages[0],
-						"%s %d  %d  ", value,
+					snprintf(messages[0], sizeof (messages[0]),
+						"%s %ld  %ld  ", value,
 						psp->sp_min, psp->sp_max);
 				} else if (psp->sp_warn > 0) {
-					sprintf(messages[0],
-						"%s    %d  %d ", value,
+					snprintf(messages[0], sizeof (messages[0]),
+						"%s    %ld  %ld ", value,
 						psp->sp_max, psp->sp_warn);
 				} else {
-					sprintf(messages[0],
-						"%s    %d  ",
+					snprintf(messages[0], sizeof (messages[0]),
+						"%s    %ld  ",
 						value, psp->sp_max);
 				}
 			}
@@ -209,7 +209,7 @@ __get_authtoken_attr(
 		 * return fatal error.
 		 */
 		if (found == 0) {
-			sprintf(messages[0],
+			snprintf(messages[0], sizeof (messages[0]),
 				PAM_MSG(pamh, 43,
 	"%s: Unexpected failure. Password database unchanged."),
 				prognamep);
@@ -232,11 +232,11 @@ __get_authtoken_attr(
 
 	/* get attribute "AUTHTOK_STATUS" */
 	if (shpwd->sp_pwdp == nullptr)
-		(void) strcpy(value, "NP  ");
+		(void) snprintf(value, sizeof (value), "%s", "NP  ");
 	else if ((int)strlen(shpwd->sp_pwdp) < NUMCP)
-		(void) strcpy(value, "LK  ");
+		(void) snprintf(value, sizeof (value), "%s", "LK  ");
 	else
-		(void) strcpy(value, "PS  ");
+		(void) snprintf(value, sizeof (value), "%s", "PS  ");
 	setup_attr(get_attributes, k++, "AUTHTOK_STATUS=", value);
 
 
@@ -244,9 +244,9 @@ __get_authtoken_attr(
 		/* get attribute "AUTHTOK_LASTCHANGE" */
 		if (shpwd->sp_lstchg) {
 			lstchg = shpwd->sp_lstchg * DAY;
-			sprintf(value, "%d", lstchg);
+			snprintf(value, sizeof (value), "%ld", lstchg);
 		} else {
-			sprintf(value, "%d", shpwd->sp_lstchg);
+			snprintf(value, sizeof (value), "%ld", shpwd->sp_lstchg);
 		}
 		setup_attr(get_attributes, k++,
 			"AUTHTOK_LASTCHANGE=", value);
@@ -254,33 +254,33 @@ __get_authtoken_attr(
 		/* get attribute "AUTHTOK_MINAGE"		*/
 		/* "AUTHTOK_MAXAGE", and "AUTHTOK_WARNDATE"	*/
 		if ((shpwd->sp_min >= 0) && (shpwd->sp_warn > 0)) {
-			sprintf(value, "%d", shpwd->sp_min);
+			snprintf(value, sizeof (value), "%ld", shpwd->sp_min);
 			setup_attr(get_attributes, k++,
 				"AUTHTOK_MINAGE=", value);
-			sprintf(value, "%d", shpwd->sp_max);
+			snprintf(value, sizeof (value), "%ld", shpwd->sp_max);
 			setup_attr(get_attributes, k++,
 				"AUTHTOK_MAXAGE=", value);
-			sprintf(value, "%d", shpwd->sp_warn);
+			snprintf(value, sizeof (value), "%ld", shpwd->sp_warn);
 			setup_attr(get_attributes, k++,
 				"AUTHTOK_WARNDATE=", value);
 		} else {
 			if (shpwd->sp_min >= 0) {
-				sprintf(value, "%d", shpwd->sp_min);
+				snprintf(value, sizeof (value), "%ld", shpwd->sp_min);
 				setup_attr(get_attributes, k++,
 					"AUTHTOK_MINAGE=", value);
-				sprintf(value, "%d", shpwd->sp_max);
+				snprintf(value, sizeof (value), "%ld", shpwd->sp_max);
 				setup_attr(get_attributes, k++,
 					"AUTHTOK_MAXAGE=", value);
 			} else {
 				if (shpwd->sp_warn > 0) {
-					sprintf(value, "%d", shpwd->sp_max);
+					snprintf(value, sizeof (value), "%ld", shpwd->sp_max);
 					setup_attr(get_attributes, k++,
 						"AUTHTOK_MAXAGE=", value);
-					sprintf(value, "%d", shpwd->sp_warn);
+					snprintf(value, sizeof (value), "%ld", shpwd->sp_warn);
 					setup_attr(get_attributes, k++,
 						"AUTHTOK_WARNDATE=", value);
 				} else {
-					sprintf(value, "%d", shpwd->sp_max);
+					snprintf(value, sizeof (value), "%ld", shpwd->sp_max);
 					setup_attr(get_attributes, k++,
 						"AUTHTOK_MAXAGE=", value);
 				}

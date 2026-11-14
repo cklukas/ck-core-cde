@@ -67,7 +67,7 @@ pam_sm_authenticate(
 	int		try_first_pass = 0;
 	int		use_first_pass = 0;
 	int		i;
-	uid_t		uid;
+	[[maybe_unused]] uid_t		uid;
 	char		*service, *user;
 #ifdef PAM_SECURE_RPC
 	unix_auth_data	*status;
@@ -249,7 +249,8 @@ post_prompt:
 			}
 		}
 		status->key_status = estkey_stat;
-		strcpy(status->netname, netname);
+		snprintf(status->netname, sizeof (status->netname), "%s",
+		    netname);
 		if (pam_set_data(pamh, UNIX_AUTH_DATA, status, unix_cleanup)
 						!= PAM_SUCCESS) {
 			err = PAM_SERVICE_ERR;
@@ -268,16 +269,21 @@ out:
 }
 
 static int
-attempt_authentication(char *user, char *password, char *enc_passwd,
-	uid_t uid, int flags, int debug)
+attempt_authentication(
+	[[maybe_unused]] char *user,
+	char *password,
+	char *enc_passwd,
+	[[maybe_unused]] uid_t uid,
+	int flags,
+	int debug)
 {
-	struct passwd pwd;
-	struct spwd shpwd;
-	char	shpwd_buf[1024];
-	char	pwd_buf[1024];
-	int	estkey_stat;
-	uid_t	orig_uid;
-	int	err = 0;
+	[[maybe_unused]] struct passwd pwd;
+	[[maybe_unused]] struct spwd shpwd;
+	[[maybe_unused]] char	shpwd_buf[1024];
+	[[maybe_unused]] char	pwd_buf[1024];
+	[[maybe_unused]] int	estkey_stat;
+	[[maybe_unused]] uid_t	orig_uid;
+	[[maybe_unused]] int	err = 0;
 
 	if (password == nullptr || password[0] == '\0') {
 		if (debug)
@@ -335,17 +341,28 @@ credentials to login.", user);
 			}
 
 			orig_uid = geteuid();
-			seteuid(uid);
+			if (seteuid(uid) != 0) {
+				syslog(LOG_ALERT,
+				    "unix_auth: seteuid(%ld) failed: %s",
+				    (long)uid, strerror(errno));
+				return (PAM_SYSTEM_ERR);
+			}
 			memset(pwd_buf, 0, sizeof (pwd_buf));
 			memset(shpwd_buf, 0, sizeof (shpwd_buf));
 			if (getpwnam_r(user, &pwd, pwd_buf,
 					sizeof (pwd_buf)) == nullptr ||
 			    getspnam_r(user, &shpwd, shpwd_buf,
 					sizeof (shpwd_buf)) == nullptr) {
-				seteuid(orig_uid);
+				if (seteuid(orig_uid) != 0)
+					return (PAM_SYSTEM_ERR);
 				return (PAM_USER_UNKNOWN);
 			}
-			seteuid(orig_uid);
+			if (seteuid(orig_uid) != 0) {
+				syslog(LOG_ALERT,
+				    "unix_auth: seteuid(%ld) failed: %s",
+				    (long)orig_uid, strerror(errno));
+				return (PAM_SYSTEM_ERR);
+			}
 
 			if ((shpwd.sp_pwdp != 0) &&
 			    (strcmp(shpwd.sp_pwdp, "*NP*") == 0)) {

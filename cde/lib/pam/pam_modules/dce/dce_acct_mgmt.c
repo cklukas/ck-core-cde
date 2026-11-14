@@ -74,8 +74,7 @@ pam_sm_acct_mgmt(
 	int			result = PAM_AUTH_ERR;
 	int			i, debug = 0;
 	int			warn = 1;
-	int			allow_expired_passwd = 0;
-	int			err;
+	[[maybe_unused]] int			allow_expired_passwd = 0;
 
 
 	for (i = 0; i < argc; i++) {
@@ -172,18 +171,18 @@ do_warn(pam_handle_t *pamh, time_t cur, time_t t, char *desc)
 		return; /* unlimited */
 
 	if (cur > t) {
-		sprintf(messages[0],
+		snprintf(messages[0], sizeof (messages[0]),
 		PAM_MSG(pamh, 1, "Warning: Your DCE %s has expired.\n"), desc);
 	} else if ((cur + SECS_PER_DAY) > t) {
 		int hours;
 
 		hours = (t - cur) / (SECS_PER_HOUR);
 		hours = hours ? hours : 1;
-		sprintf(messages[0], PAM_MSG(pamh, 2,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 2,
 		"Warning: Your DCE %s will expire within %d hour%s.\n"),
 			desc, hours, (hours == 1) ? "" : "s");
 	} else if ((cur + (2*SECS_PER_DAY)) > t) {
-		sprintf(messages[0], PAM_MSG(pamh, 3,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 3,
 		"Warning: Your DCE %s will expire in 2 days.\n"), desc);
 	} else {
 		return;
@@ -197,7 +196,7 @@ do_warn_passwd(pam_handle_t *pamh)
 {
 	char	messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 
-	sprintf(messages[0],
+	snprintf(messages[0], sizeof (messages[0]),
 		PAM_MSG(pamh, 4, "Warning: Your DCE passwd has expired.\n"));
 
 	__pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, nullptr);

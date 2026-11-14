@@ -88,8 +88,7 @@ pam_sm_authenticate(
 	int			err, result = PAM_AUTH_ERR;
 	char 			messages[1][PAM_MAX_MSG_SIZE];
 	error_status_t		st;
-	char			*defpass;
-	int 			num_msg = 0;
+	[[maybe_unused]] int 			num_msg = 0;
 	int			debug = 0;
 	int			warn = 1;
 	int			passwd_flag = 0;
@@ -291,10 +290,10 @@ pam_sm_authenticate(
 
 	if (firstpass == nullptr &&
 			!(try_first_pass||try_mapped_pass||invalid_user))
-		(void) sprintf(messages[0], (const char *) PAM_MSG(pamh, 10,
+		(void) snprintf(messages[0], sizeof (messages[0]), (const char *) PAM_MSG(pamh, 10,
 			"Password: "));
 	else
-		(void) sprintf(messages[0], (const char *) PAM_MSG(pamh, 11,
+		(void) snprintf(messages[0], sizeof (messages[0]), (const char *) PAM_MSG(pamh, 11,
 			"DCE Password: "));
 
 	num_msg = 1;
@@ -404,7 +403,7 @@ attempt_dce_login(
 	if (*st == sec_login_s_acct_invalid && dsd->warn) {
 		char messages[1][PAM_MAX_MSG_SIZE];
 
-		sprintf(messages[0],
+		snprintf(messages[0], sizeof (messages[0]),
 		PAM_MSG(pamh, 12, "Error: Your DCE Account has expired.\n"));
 		__pam_display_msg(pamh, PAM_ERROR_MSG, 1, messages, nullptr);
 	}
@@ -419,13 +418,12 @@ attempt_dce_login(
 
 void
 dce_cleanup(
-	pam_handle_t *pamh,
+	[[maybe_unused]] pam_handle_t *pamh,
 	void *data,
 	int pam_status)
 {
 	error_status_t	st;
 	dce_module_data_t *dsd = (dce_module_data_t *) data;
-	int status;
 
 	if (dsd->debug) {
 		syslog(LOG_DEBUG, "DCE dce_cleanup pam_sm_auth_status(%d)",

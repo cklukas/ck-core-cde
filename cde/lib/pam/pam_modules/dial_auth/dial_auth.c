@@ -40,7 +40,7 @@
 int
 pam_sm_authenticate(
 	pam_handle_t	*pamh,
-	int	flags,
+	[[maybe_unused]] int	flags,
 	int	argc,
 	const char	**argv)
 {
@@ -126,7 +126,7 @@ pam_sm_authenticate(
 		p2 = defpass;
 
 	if (*p2 != '\0') {
-		strcpy(messages[0], PAM_MSG(pamh, 1, "Dialup Password: "));
+		snprintf(messages[0], sizeof (messages[0]), "%s", PAM_MSG(pamh, 1, "Dialup Password: "));
 		num_msg = 1;
 		retcode = __pam_get_input(pamh, PAM_PROMPT_ECHO_OFF,
 				num_msg, messages, nullptr, &ret_resp);
@@ -153,10 +153,10 @@ pam_sm_authenticate(
  */
 int
 pam_sm_setcred(
-	pam_handle_t    *pamh,
-	int	flags,
-	int	argc,
-	const char    **argv)
+	[[maybe_unused]] pam_handle_t    *pamh,
+	[[maybe_unused]] int	flags,
+	[[maybe_unused]] int	argc,
+	[[maybe_unused]] const char    **argv)
 {
 	return (PAM_SUCCESS);
 }

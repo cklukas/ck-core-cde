@@ -29,8 +29,6 @@
 #ifndef	_UNIX_HEADERS_H
 #define	_UNIX_HEADERS_H
 
-#pragma ident	"@(#)unix_headers.h	1.61	96/02/02 SMI"	/* PAM 2.6 */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -114,7 +112,9 @@ extern "C" {
 #define	PWADMIN		"/etc/default/passwd"
 #define	LOGINADMIN	"/etc/default/login"
 #define	PASSWD		"/etc/passwd"
+#ifndef SHADOW
 #define	SHADOW		"/etc/shadow"
+#endif
 #define	UNIX_AUTH_DATA		"SUNW-UNIX-AUTH-DATA"
 #define	UNIX_AUTHTOK_DATA	"SUNW-UNIX-AUTHTOK-DATA"
 #define	UNIX_MSG		"(Unix)"

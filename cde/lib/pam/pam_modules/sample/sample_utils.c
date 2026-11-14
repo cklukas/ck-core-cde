@@ -121,7 +121,7 @@ display_errmsg(
 		m->msg_style = PAM_ERROR_MSG;
 		m->msg = (char *)malloc(PAM_MAX_MSG_SIZE);
 		if (m->msg != nullptr)
-			(void) strcpy(m->msg, (const char *)messages[i]);
+			(void) snprintf(m->msg, PAM_MAX_MSG_SIZE, "%s", (const char *)messages[i]);
 		else
 			continue;
 		m++;
@@ -175,7 +175,7 @@ get_authtok(
 		m->msg_style = PAM_PROMPT_ECHO_OFF;
 		m->msg = (char *)malloc(PAM_MAX_MSG_SIZE);
 		if (m->msg != nullptr)
-			(void) strcpy(m->msg, (char *)messages[i]);
+			(void) snprintf(m->msg, PAM_MAX_MSG_SIZE, "%s", (char *)messages[i]);
 		else
 			continue;
 		m++;

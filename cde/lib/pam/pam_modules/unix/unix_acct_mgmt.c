@@ -33,9 +33,9 @@
 
 static void
 unix_cleanup(
-	pam_handle_t *pamh,
+	[[maybe_unused]] pam_handle_t *pamh,
 	void *data,
-	int pam_status)
+	[[maybe_unused]] int pam_status)
 {
 	free((unix_authtok_data *)data);
 }
@@ -151,9 +151,9 @@ perform_passwd_aging_check(
 		    ((Idleweeks > 0) &&
 		    (now > (shpwd.sp_lstchg + (7 * Idleweeks))))) {
 			if (!(flags & PAM_SILENT)) {
-			    strcpy(messages[0], PAM_MSG(pamh, 20,
+			    snprintf(messages[0], sizeof (messages[0]), "%s", PAM_MSG(pamh, 20,
 			    "Your password has been expired for too long."));
-			    strcpy(messages[1], PAM_MSG(pamh, 21,
+			    snprintf(messages[1], sizeof (messages[1]), "%s", PAM_MSG(pamh, 21,
 			    "Please contact the system administrator"));
 			    __pam_display_msg(pamh, PAM_ERROR_MSG,
 				2, messages, nullptr);
@@ -184,13 +184,13 @@ warn_user_passwd_will_expire(
 	    (now + shpwd.sp_warn) >= (shpwd.sp_lstchg + shpwd.sp_max)) {
 		days = (shpwd.sp_lstchg + shpwd.sp_max) - now;
 		if (days <= 0)
-			sprintf(messages[0], PAM_MSG(pamh, 22,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 22,
 			    "Your password will expire within 24 hours."));
 		else if (days == 1)
-			sprintf(messages[0], PAM_MSG(pamh, 23,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 23,
 			    "Your password will expire in %d day."), days);
 		else
-			sprintf(messages[0], PAM_MSG(pamh, 24,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 24,
 			    "Your password will expire in %d days."), days);
 		__pam_display_msg(pamh, PAM_TEXT_INFO, 1, messages, nullptr);
 	}
@@ -216,8 +216,8 @@ pam_sm_acct_mgmt(
 	int 	error = PAM_ACCT_EXPIRED;
 	char    *user;
 	int	i;
-	int	debug = 0;
-	int	nowarn = 0;
+	[[maybe_unused]] int	debug = 0;
+	[[maybe_unused]] int	nowarn = 0;
 	uid_t	orig_uid;
 	unix_authtok_data *status;
 
@@ -254,17 +254,28 @@ pam_sm_acct_mgmt(
 
 	if (shpwd.sp_pwdp != nullptr && strcmp(shpwd.sp_pwdp, "*NP*") == 0) {
 		orig_uid = geteuid();
-		seteuid(pwd.pw_uid);
+		if (seteuid(pwd.pw_uid) != 0) {
+			syslog(LOG_ALERT, "unix_acct_mgmt: seteuid(%ld) failed: %s",
+			    (long)pwd.pw_uid, strerror(errno));
+			error = PAM_SYSTEM_ERR;
+			goto out;
+		}
 		memset(pwd_buf, 0, sizeof (pwd_buf));
 		memset(shpwd_buf, 0, sizeof (shpwd_buf));
 		if (getpwnam_r(user, &pwd, pwd_buf, sizeof (pwd_buf)) == nullptr ||
 		    getspnam_r(user, &shpwd, shpwd_buf, sizeof (shpwd_buf))
 								== nullptr) {
 			error = PAM_USER_UNKNOWN;
-			seteuid(orig_uid);
+			if (seteuid(orig_uid) != 0)
+				error = PAM_SYSTEM_ERR;
 			goto out;
 		}
-		seteuid(orig_uid);
+		if (seteuid(orig_uid) != 0) {
+			syslog(LOG_ALERT, "unix_acct_mgmt: seteuid(%ld) failed: %s",
+			    (long)orig_uid, strerror(errno));
+			error = PAM_SYSTEM_ERR;
+			goto out;
+		}
 	}
 
 	/*
@@ -287,7 +298,7 @@ pam_sm_acct_mgmt(
 	/*
 	 * Check to see if the user needs to change their password
 	 */
-	if (error = new_password_check(&pwd, &shpwd, flags)) {
+	if ((error = new_password_check(&pwd, &shpwd, flags))) {
 		goto out;
 	}
 

@@ -144,7 +144,7 @@ update_authtok_nis(
 		(char *)&yppasswd, xdr_int, (char *)&ok, timeout);
 	(void) clnt_destroy(client);
 	if (ans != RPC_SUCCESS) {
-		sprintf(messages[0], PAM_MSG(pamh, 100,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 100,
 			"%s%s: couldn't change passwd/attributes"),
 			prognamep, NIS_MSG);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -155,7 +155,7 @@ update_authtok_nis(
 	}
 
 	if (ok != 0) {
-		sprintf(messages[0], PAM_MSG(pamh, 101,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 101,
 			"%s%s: Couldn't change passwd/attributes for %s"),
 			prognamep, NIS_MSG, usrname);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -165,7 +165,7 @@ update_authtok_nis(
 		goto out;
 	}
 
-	sprintf(messages[0], PAM_MSG(pamh, 102,
+	snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 102,
 		"NIS(YP) passwd/attributes changed on %s"),
 		master);
 	(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
@@ -194,7 +194,7 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 	if (nis_pwd == nullptr) {
 		if (!nowarn) {
 			pam_get_item(pamh, PAM_USER, (void **)&username);
-			sprintf(messages[0], PAM_MSG(pamh, 103,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 103,
 				"System error: no NIS passwd record for %s"),
 				username);
 			(void) __pam_display_msg(pamh,
@@ -212,7 +212,7 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 			    != nullptr) {
 				if (strcmp(value, "1") != 0) {
 					if (!nowarn) {
-					    sprintf(messages[0],
+					    snprintf(messages[0], sizeof (messages[0]),
 					    PAM_MSG(pamh, 104,
 		    "%s: System error%s: shell is set illegally"),
 					    value, NIS_MSG);
@@ -237,7 +237,7 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 				/* home directory */
 				if (strcmp(value, "1") != 0) {
 					if (!nowarn) {
-						sprintf(messages[0],
+						snprintf(messages[0], sizeof (messages[0]),
 						PAM_MSG(pamh, 105,
 			"System error%s: homedir is set illegally."),
 						NIS_MSG);
@@ -262,7 +262,7 @@ update_nisattr(pam_handle_t *pamh, char *field, char **data,
 				/* finger information */
 				if (strcmp(value, "1") != 0) {
 					if (!nowarn) {
-						sprintf(messages[0],
+						snprintf(messages[0], sizeof (messages[0]),
 						PAM_MSG(pamh, 106,
 				"System error: gecos is set illegally."));
 						(void) __pam_display_msg(
@@ -325,7 +325,7 @@ reencrypt_secret(pam_handle_t *pamh, char *domain, char *oldpass,
 	(void) memcpy(crypt + HEXKEYBYTES, secret, KEYCHECKSUMSIZE);
 	crypt[HEXKEYBYTES + KEYCHECKSUMSIZE] = 0;
 	(void) xencrypt(crypt, newpass);
-	(void) sprintf(pkent, "%s:%s", public, crypt);
+	(void) snprintf(pkent, sizeof (pkent), "%s:%s", public, crypt);
 	if (yp_update(domain, PKMAP, YPOP_STORE,
 	    who, strlen(who), pkent, strlen(pkent)) != 0) {
 
@@ -335,7 +335,7 @@ reencrypt_secret(pam_handle_t *pamh, char *domain, char *oldpass,
 		master = "yp master";	/* should never happen */
 	}
 
-	sprintf(messages[0], PAM_MSG(pamh, 107,
+	snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 107,
 		"%s: secret key reencrypted for %s on %s"),
 		NIS_MSG, who, master);
 	__pam_display_msg(pamh, PAM_TEXT_INFO, 1, messages, nullptr);

@@ -88,7 +88,6 @@ pam_sm_chauthtok(
 #endif
 	int			i;
 	int			debug = 0;
-	uid_t			pw_uid;
 	dce_module_data_t	*dsd = nullptr;
 	error_status_t		status;
 
@@ -323,8 +322,8 @@ out:
 static int
 dce_changepw(
 	char *account_name,
-	char *old_pass,
-	char *new_pass)
+	[[maybe_unused]] char *old_pass,
+	[[maybe_unused]] char *new_pass)
 {
 	error_status_t		status;
 	sec_rgy_handle_t	rgy_handle = sec_rgy_default_handle;
@@ -411,7 +410,8 @@ dce_changepw(
 
 	sec_rgy_cursor_reset(&account_cursor);
 
-	strcpy((char *)name_key.pname, account_name);
+	snprintf((char *)name_key.pname, sizeof (name_key.pname), "%s",
+	    account_name);
 	name_key.gname[0] = '\0';
 	name_key.oname[0] = '\0';
 

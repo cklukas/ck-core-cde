@@ -143,18 +143,20 @@ static int	Sleeptime = SLEEPTIME;
 #define	LOGTRYS		10	/* depth of 'try' logging */
 
 /*
- * String manipulation macros: SCPYN, EQN and ENVSTRNCAT
+ * String manipulation macros: SCPYN, SCPYF, EQN and ENVSTRNCAT.
+ * SCPYN always terminates the copy, SCPYF fills a fixed-width field.
  */
-#define	SCPYN(a, b)	(void) strncpy(a, b, sizeof (a))
+#define	SCPYN(a, b)	(void) snprintf(a, sizeof (a), "%s", b)
+#define	SCPYF(a, b)	(void) strncpy(a, b, sizeof (a))
 #define	EQN(a, b)	(strncmp(a, b, sizeof (a)-1) == 0)
 #define	ENVSTRNCAT(to, from) {int deflen; deflen = strlen(to); \
-	(void) strncpy((to)+ deflen, (from), sizeof (to) - (1 + deflen)); }
+	(void) snprintf((to)+ deflen, sizeof (to) - deflen, "%s", (from)); }
 
 /*
  * Other macros
  */
 #define	NMAX	sizeof (utmp.ut_name)
-#define	HMAX	sizeof (utmp.ut_host)
+#define	HMAX	((int)sizeof (utmp.ut_host))
 #define	min(a, b)	(((a) < (b)) ? (a) : (b))
 
 /*
@@ -274,7 +276,11 @@ static	char	remote_host[HMAX];
 /*
  * Illegal passwd entries.
  */
-static	struct	passwd nouser = { "", "no:password", ~ROOTUID };
+static	struct	passwd nouser = {
+	.pw_name = "",
+	.pw_passwd = "no:password",
+	.pw_uid = ~ROOTUID
+};
 
 /*
  * Log file support
@@ -386,7 +392,7 @@ static	void	log_bad_attempts(void);
  *
  */
 
-void
+int
 main(int argc, char *argv[], char **renvp)
 {
 	int sublogin;
@@ -487,7 +493,7 @@ main(int argc, char *argv[], char **renvp)
 	 */
 	/* we are already authenticated. fill in what we must, then continue */
 	if (fflag) {
-		if (pwd = getpwnam(user_name))
+		if ((pwd = getpwnam(user_name)))
 			audit_login_save_pw(pwd);
 		else {
 			audit_login_bad_pw();
@@ -574,12 +580,13 @@ main(int argc, char *argv[], char **renvp)
 
 	establish_user_environment(renvp);
 
-	if (pwd->pw_uid == 0)
+	if (pwd->pw_uid == 0) {
 		if (remote_host[0] && dosyslog)
 			syslog(LOG_NOTICE, "ROOT LOGIN %s FROM %.*s",
 			    ttyn, HMAX, remote_host);
 		else if (dosyslog)
 			syslog(LOG_NOTICE, "ROOT LOGIN %s", ttyn);
+	}
 	closelog();
 
 	(void) signal(SIGQUIT, SIG_DFL);
@@ -620,7 +627,7 @@ main(int argc, char *argv[], char **renvp)
 
 /*ARGSUSED*/
 static void
-donothing(int sig)
+donothing([[maybe_unused]] int sig)
 {
 	if (pamh)
 		pam_end(pamh, PAM_ABORT);
@@ -717,7 +724,7 @@ turn_on_logging(void)
  */
 static int
 login_conv(int num_msg, struct pam_message **msg,
-    struct pam_response **response, void *appdata_ptr)
+    struct pam_response **response, [[maybe_unused]] void *appdata_ptr)
 {
 	struct pam_message	*m;
 	struct pam_response	*r;
@@ -820,7 +827,6 @@ login_conv(int num_msg, struct pam_message **msg,
 static int
 verify_passwd(void)
 {
-	int flags;
 	int error;
 	char *user;
 
@@ -993,7 +999,6 @@ static void
 get_user_name(void)
 {
 	FILE	*fp;
-	int gotname = 0;
 
 	if ((fp = fopen(ISSUEFILE, "r")) != nullptr) {
 		char    *ptr, buffer[BUFSIZ];
@@ -1324,8 +1329,8 @@ get_options(int argc, char *argv[])
 		}
 	} else if (optind < argc) {
 		SCPYN(user_name, argv[optind]);
-		(void) strcpy(inputline, user_name);
-		(void) strcat(inputline, "   \n");
+		(void) snprintf(inputline, sizeof (inputline), "%s   \n",
+		    user_name);
 		envp = &argv[optind+1];
 	}
 
@@ -1455,7 +1460,6 @@ static void
 validate_account(void)
 {
 	int 	error;
-	int	n;
 	int	flag;
 
 	(void) alarm(0);	/* give user time to come up with password */
@@ -1665,7 +1669,6 @@ static void
 setup_credentials(void)
 {
 	int 	error = 0;
-	int	flags;
 
 	/* set the real (and effective) GID */
 	if (setgid(pwd->pw_gid) == -1) {
@@ -1675,8 +1678,6 @@ setup_credentials(void)
 	/*
 	 * Initialize the supplementary group access list.
 	 */
-	if (!user_name)
-		login_exit(1);
 	if (initgroups(user_name, pwd->pw_gid) == -1) {
 		login_exit(1);
 	}
@@ -1750,7 +1751,7 @@ update_utmp_entry(int sublogin)
 	int	error;
 	static char	*errmsg	= "No utmpx entry. "
 		"You must exec \"login\" from the lowest level \"shell\".";
-	int	   tmplen;
+	size_t	   tmplen;
 	struct utmpx  *u = (struct utmpx *)0;
 	struct utmpx  utmp;
 	char	  *ttyntail;
@@ -1765,7 +1766,7 @@ update_utmp_entry(int sublogin)
 	 * exist.
 	 */
 
-	if (error = pam_open_session(pamh, 0) != PAM_SUCCESS) {
+	if ((error = pam_open_session(pamh, 0)) != PAM_SUCCESS) {
 		login_exit(1);
 	}
 
@@ -1779,7 +1780,7 @@ update_utmp_entry(int sublogin)
 	utmp.ut_pid = getpid();
 
 	if (rflag || hflag) {
-		SCPYN(utmp.ut_host, remote_host);
+		SCPYF(utmp.ut_host, remote_host);
 		tmplen = strlen(remote_host) + 1;
 		if (tmplen < sizeof (utmp.ut_host))
 			utmp.ut_syslen = tmplen;
@@ -1789,7 +1790,7 @@ update_utmp_entry(int sublogin)
 		utmp.ut_syslen = 0;
 	}
 
-	SCPYN(utmp.ut_user, user);
+	SCPYF(utmp.ut_user, user);
 
 	/* skip over "/dev/" */
 	ttyntail = basename(ttyn);
@@ -1801,7 +1802,7 @@ update_utmp_entry(int sublogin)
 			((sublogin && strncmp(u->ut_line, ttyntail,
 			sizeof (u->ut_line)) == 0) ||
 			u->ut_pid == utmp.ut_pid)) {
-			SCPYN(utmp.ut_line, (ttyn+sizeof ("/dev/")-1));
+			SCPYF(utmp.ut_line, (ttyn+sizeof ("/dev/")-1));
 			(void) memcpy(utmp.ut_id, u->ut_id,
 							sizeof (utmp.ut_id));
 			utmp.ut_type = USER_PROCESS;
@@ -1896,7 +1897,7 @@ establish_user_environment(char **renvp)
 	} else if (hflag) {
 		/* XXX: this causes an environment variable with the value */
 		/* "" to be created later on, because terminal is "". */
-		(void) strncpy(term, terminal, sizeof (term) - 1);
+		(void) snprintf(term, sizeof (term), "%s", terminal);
 	} else {
 		char *tp = getenv("TERM");
 
@@ -1938,12 +1939,14 @@ establish_user_environment(char **renvp)
 	}
 
 	if (Def_hertz == nullptr)
-		(void) sprintf(hertz + strlen(hertz), "%u", HZ);
+		(void) snprintf(hertz + strlen(hertz),
+			    sizeof (hertz) - strlen(hertz), "%u", HZ);
 	else
 		ENVSTRNCAT(hertz, Def_hertz);
 
 	if (Def_path == nullptr)
-		(void) strcat(path, DEF_PATH);
+		(void) snprintf(path + strlen(path), sizeof (path) - strlen(path),
+		    "%s", DEF_PATH);
 	else
 		ENVSTRNCAT(path, Def_path);
 
@@ -1977,7 +1980,8 @@ establish_user_environment(char **renvp)
 
 #ifndef	NO_MAIL
 	envinit[basicenv++] = mail;
-	(void) strcat(mail, pwd->pw_name);
+	(void) snprintf(mail + strlen(mail), sizeof (mail) - strlen(mail),
+	    "%s", pwd->pw_name);
 #endif
 
 	/*
@@ -2051,7 +2055,8 @@ establish_user_environment(char **renvp)
 		 */
 		if ((endptr = strchr(*envp, '=')) == nullptr) {
 			envinit[basicenv+k] = ptr;
-			(void) sprintf(ptr, "L%d=%s", l_index, *envp);
+			(void) snprintf(ptr, sizeof (envblk) - (ptr - envblk),
+			    "L%d=%s", l_index, *envp);
 
 			/*
 			 * Advance "ptr" to the beginning of the
@@ -2161,10 +2166,10 @@ display_last_login_time(void)
 		(void) printf("Last login: %.*s ", 24-5, ctime(&ll.ll_time));
 
 		if (*ll.ll_host != '\0')
-			(void) printf("from %.*s\n", sizeof (ll.ll_host),
+			(void) printf("from %.*s\n", (int)sizeof (ll.ll_host),
 					    ll.ll_host);
 		else
-			(void) printf("on %.*s\n", sizeof (ll.ll_line),
+			(void) printf("on %.*s\n", (int)sizeof (ll.ll_line),
 					    ll.ll_line);
 	}
 }
@@ -2179,7 +2184,8 @@ exec_the_shell(void)
 	char *endptr;
 	int i;
 
-	(void) strcat(minusnam, basename(pwd->pw_shell));
+	(void) snprintf(minusnam + strlen(minusnam),
+	    sizeof (minusnam) - strlen(minusnam), "%s", basename(pwd->pw_shell));
 
 	/*
 	 * Exec the shell
@@ -2374,7 +2380,7 @@ dir_dev_acc(char *dir, uid_t uid, gid_t gid, mode_t mode, char *permfile)
 		if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
 			continue;
 
-		(void) sprintf(path, "%s/%s", dir, name);
+		(void) snprintf(path, sizeof (path), "%s/%s", dir, name);
 		if (chown(path, uid, gid) == -1) {
 			if (errno != ENOENT) {
 				(void) fprintf(stderr, "%s: ", permfile);

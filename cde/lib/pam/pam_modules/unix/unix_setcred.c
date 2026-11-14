@@ -50,8 +50,8 @@ pam_sm_setcred(
 	int i;
 	int debug = 0;
 	int err = 0;
+	[[maybe_unused]] char	messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 	struct pam_conv	*pam_convp;
-	char	messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 #ifdef PAM_SECURE_RPC
 	unix_auth_data *status;
 	char secret[HEXKEYBYTES + 1];
@@ -97,11 +97,11 @@ pam_sm_setcred(
 		memset(secret, 0, sizeof (secret));
 		if (geteuid() == 0) {
 			if (!(flags & PAM_SILENT)) {
-				sprintf(messages[0], PAM_MSG(pamh, 50,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 50,
 	"removing root credentials would break the rpc services that"));
-				sprintf(messages[1], PAM_MSG(pamh, 51,
+				snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 51,
 	"use secure rpc on this host!"));
-				sprintf(messages[2], PAM_MSG(pamh, 52,
+				snprintf(messages[2], sizeof (messages[2]), PAM_MSG(pamh, 52,
 	"root may use keylogout -f to do this (at your own risk)!"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
 					3, messages, nullptr);
@@ -112,9 +112,9 @@ pam_sm_setcred(
 
 		if (key_setsecret(secret) < 0) {
 			if (!(flags & PAM_SILENT)) {
-				sprintf(messages[0], PAM_MSG(pamh, 53,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 53,
 					"Could not unset your secret key."));
-				sprintf(messages[1], PAM_MSG(pamh, 54,
+				snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 54,
 					"Maybe the keyserver is down?"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
 					2, messages, nullptr);
@@ -126,7 +126,7 @@ pam_sm_setcred(
 		nra.uid = getuid();		/* use the real uid */
 		if (_nfssys(NFS_REVAUTH, &nra) < 0) {
 			if (!(flags & PAM_SILENT)) {
-				sprintf(messages[0], PAM_MSG(pamh, 55,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 55,
 				"Warning: NFS credentials not destroyed"));
 				__pam_display_msg(pamh, PAM_ERROR_MSG,
 					1, messages, nullptr);
@@ -157,7 +157,7 @@ pam_sm_setcred(
 					break;
 				case ESTKEY_BADPASSWD:
 					if (!(flags & PAM_SILENT)) {
-						sprintf(messages[0],
+						snprintf(messages[0], sizeof (messages[0]),
 						PAM_MSG(pamh, 56,
 	"Password does not decrypt secret key for %s."),
 						status->netname);
@@ -169,7 +169,7 @@ pam_sm_setcred(
 				break;
 				case ESTKEY_CANTSETKEY:
 					if (!(flags & PAM_SILENT)) {
-						sprintf(messages[0],
+						snprintf(messages[0], sizeof (messages[0]),
 						PAM_MSG(pamh, 57,
 	"Could not set secret key for %s. The key server may be down."),
 						status->netname);

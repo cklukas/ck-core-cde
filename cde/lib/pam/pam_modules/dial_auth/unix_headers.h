@@ -29,8 +29,6 @@
 #ifndef	_UNIX_HEADERS_H
 #define	_UNIX_HEADERS_H
 
-#pragma ident	"@(#)unix_headers.h	1.6	96/02/02 SMI"	/* PAM 2.6 */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -106,7 +104,7 @@ publication.
 /*
  * String manipulation macros: SCPYN, EQN and ENVSTRNCAT
  */
-#define	SCPYN(a, b)	(void) strncpy(a, b, sizeof (a))
+#define	SCPYN(a, b)	(void) snprintf(a, sizeof (a), "%s", b)
 
 #ifdef __cplusplus
 }

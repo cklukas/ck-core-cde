@@ -133,14 +133,14 @@ update_authtok_nisplus(
 		}
 
 		if (rc == PAM_SUCCESS || rc == PAM_NISPLUS_PARTIAL_SUCCESS) {
-			sprintf(messages[0], PAM_MSG(pamh, 108,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 108,
 				"NIS+ password information changed for %s"),
 				usrname);
 			(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
 				1, messages, nullptr);
 
 			if (rc == PAM_SUCCESS) {
-				sprintf(messages[0], PAM_MSG(pamh, 109,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 109,
 				"NIS+ credential information changed for %s"),
 					usrname);
 				(void) __pam_display_msg(
@@ -186,8 +186,8 @@ update_authtok_nisplus(
 		/* same user check? */
 		if ((!privileged) && (newcryptsecret = reencrypt_secret
 		    (tmpcryptsecret, oldrpc, new)) == nullptr) {
-			sprintf(messages[0], " ");
-			sprintf(messages[1], PAM_MSG(pamh, 110,
+			snprintf(messages[0], sizeof (messages[0]), " ");
+			snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 110,
 				"Unable to reencrypt NIS+ credentials for %s;"),
 				usrname);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -211,7 +211,7 @@ update_authtok_nisplus(
 
 		/* prepare shadow column */
 		if (sp.sp_expire == -1) {
-			sprintf(shadow, "%ld:%ld:%ld:%ld:%ld::%lu",
+			snprintf(shadow, sizeof (shadow), "%ld:%ld:%ld:%ld:%ld::%lu",
 				sp.sp_lstchg,
 				sp.sp_min,
 				sp.sp_max,
@@ -219,7 +219,7 @@ update_authtok_nisplus(
 				sp.sp_inact,
 				sp.sp_flag);
 		} else {
-			sprintf(shadow, "%ld:%ld:%ld:%ld:%ld:%ld:%lu",
+			snprintf(shadow, sizeof (shadow), "%ld:%ld:%ld:%ld:%ld:%ld:%lu",
 				sp.sp_lstchg,
 				sp.sp_min,
 				sp.sp_max,
@@ -253,11 +253,12 @@ update_authtok_nisplus(
 				"NIS+ name too long");
 			return (PAM_BUF_ERR);
 		}
-		sprintf(mname, "[name=%s],%s.%s", usrname,
+		snprintf(mname, sizeof (mname), "[name=%s],%s.%s", usrname,
 		    NIS_RES_OBJECT(passwd_res)->zo_name,
 		    NIS_RES_OBJECT(passwd_res)->zo_domain);
 		if (mname[strlen(mname) - 1] != '.')
-			(void) strcat(mname, ".");
+			(void) snprintf(mname + strlen(mname), sizeof (mname) - strlen(mname),
+			    ".");
 		mres = nis_modify_entry(mname, eobj, 0);
 
 		/*
@@ -272,7 +273,7 @@ update_authtok_nisplus(
 			ecol[7].ec_flags = 0;
 			mres = nis_modify_entry(mname, eobj, 0);
 			if (mres->status != NIS_SUCCESS) {
-				sprintf(messages[0], PAM_MSG(pamh, 111,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 111,
 				"%s%s: Password information update failed"),
 					prognamep, NISPLUS_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -288,31 +289,31 @@ update_authtok_nisplus(
 		(void) nis_destroy_object(eobj);
 		(void) nis_freeresult(mres);
 
-		sprintf(messages[0], PAM_MSG(pamh, 112,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 112,
 			"NIS+ password information changed for %s"),
 			usrname);
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
 			1, messages, nullptr);
 
 		if (privileged) {
-			sprintf(messages[0], " ");
-			sprintf(messages[1], PAM_MSG(pamh, 113,
+			snprintf(messages[0], sizeof (messages[0]), " ");
+			snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 113,
 	"The NIS+ credential information for %s will not be changed."),
 			usrname);
-			sprintf(messages[2], PAM_MSG(pamh, 114,
+			snprintf(messages[2], sizeof (messages[2]), PAM_MSG(pamh, 114,
 	"User %s must do the following to update his/her"), usrname);
-			sprintf(messages[3], PAM_MSG(pamh, 115,
+			snprintf(messages[3], sizeof (messages[3]), PAM_MSG(pamh, 115,
 	"credential information:"));
-			sprintf(messages[4], PAM_MSG(pamh, 116,
+			snprintf(messages[4], sizeof (messages[4]), PAM_MSG(pamh, 116,
 	"Use NEW passwd for login and OLD passwd for keylogin."));
-			sprintf(messages[5], PAM_MSG(pamh, 117,
+			snprintf(messages[5], sizeof (messages[5]), PAM_MSG(pamh, 117,
 	"Use \"chkey -p\" to reencrypt the credentials with the"));
-			sprintf(messages[6], PAM_MSG(pamh, 118,
+			snprintf(messages[6], sizeof (messages[6]), PAM_MSG(pamh, 118,
 	"new login passwd."));
-			sprintf(messages[7], PAM_MSG(pamh, 119,
+			snprintf(messages[7], sizeof (messages[7]), PAM_MSG(pamh, 119,
 	"The user must keylogin explicitly after their next login."),
 				usrname);
-			sprintf(messages[8], " ");
+			snprintf(messages[8], sizeof (messages[8]), " ");
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 				9, messages, nullptr);
 
@@ -359,12 +360,13 @@ update_authtok_nisplus(
 				"NIS+ name too long");
 			return (PAM_BUF_ERR);
 		}
-		sprintf(mname, "[cname=%s,auth_type=DES],%s.%s",
+		snprintf(mname, sizeof (mname), "[cname=%s,auth_type=DES],%s.%s",
 		    ENTRY_VAL(NIS_RES_OBJECT(cred_res), 0),
 		    NIS_RES_OBJECT(cred_res)->zo_name,
 		    NIS_RES_OBJECT(cred_res)->zo_domain);
 		if (mname[strlen(mname) - 1] != '.')
-			(void) strcat(mname, ".");
+			(void) snprintf(mname + strlen(mname), sizeof (mname) - strlen(mname),
+			    ".");
 		mres = nis_modify_entry(mname, eobj, 0);
 		if (mres->status != NIS_SUCCESS) {
 
@@ -372,33 +374,33 @@ update_authtok_nisplus(
 			niserr = revert2oldpasswd(usrname, passwd_res);
 
 			if (niserr != NIS_SUCCESS) {
-				sprintf(messages[0], "");
-				sprintf(messages[1], PAM_MSG(pamh, 120,
+				snprintf(messages[0], sizeof (messages[0]), "");
+				snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 120,
 		"WARNING: Could not reencrypt NIS+ credentials for %s;"),
 				    usrname);
-				sprintf(messages[2], PAM_MSG(pamh, 121,
+				snprintf(messages[2], sizeof (messages[2]), PAM_MSG(pamh, 121,
 		"login and keylogin passwords differ."));
-				sprintf(messages[3], PAM_MSG(pamh, 122,
+				snprintf(messages[3], sizeof (messages[3]), PAM_MSG(pamh, 122,
 		"Use NEW passwd for login and OLD passwd for keylogin."));
-				sprintf(messages[4], PAM_MSG(pamh, 117,
+				snprintf(messages[4], sizeof (messages[4]), PAM_MSG(pamh, 117,
 		"Use \"chkey -p\" to reencrypt the credentials with the"));
-				sprintf(messages[5], PAM_MSG(pamh, 118,
+				snprintf(messages[5], sizeof (messages[5]), PAM_MSG(pamh, 118,
 		"new login passwd."));
-				sprintf(messages[6], PAM_MSG(pamh, 123,
+				snprintf(messages[6], sizeof (messages[6]), PAM_MSG(pamh, 123,
 		"You must keylogin explicitly after your next login."));
-				sprintf(messages[7], "");
+				snprintf(messages[7], sizeof (messages[7]), "");
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 				    8, messages, nullptr);
 
 				return (PAM_AUTHTOK_RECOVERY_ERR);
 			}
 
-			sprintf(messages[0], PAM_MSG(pamh, 124,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 124,
 "%s%s: couldn't change password for %s."),
 				prognamep, NISPLUS_MSG, usrname);
-			sprintf(messages[1], PAM_MSG(pamh, 125,
+			snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 125,
 "Reason: failed to update the cred table with reencrypted credentials."));
-			sprintf(messages[2], PAM_MSG(pamh, 126,
+			snprintf(messages[2], sizeof (messages[2]), PAM_MSG(pamh, 126,
 "Please notify your System Administrator."));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 				3, messages, nullptr);
@@ -412,7 +414,7 @@ update_authtok_nisplus(
 		(void) nis_destroy_object(eobj);
 		(void) nis_freeresult(mres);
 
-		sprintf(messages[0], PAM_MSG(pamh, 109,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 109,
 			"NIS+ credential information changed for %s"),
 			usrname);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -588,7 +590,7 @@ again:
 		}
 
 		/* wrong passwd: get auth token again */
-		sprintf(messages[0], PAM_MSG(pamh, 127,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 127,
 			"NIS+ Password incorrect: try again"));
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 1,
 		    messages, nullptr);
@@ -621,7 +623,7 @@ again:
 				newpass, *gecos, *shell, &error, &errlist);
 
 		if (status == NPD_FAILED) {
-			sprintf(messages[0], PAM_MSG(pamh, 128,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 128,
 				"NIS+ password information update failed \
 while talking to NIS+ passwd daemon"));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -640,19 +642,19 @@ while talking to NIS+ passwd daemon"));
 			"Password information is partially updated.");
 			for (p = errlist; p != nullptr; p = p->next) {
 				if (p->npd_field == NPD_GECOS) {
-					sprintf(messages[0], PAM_MSG(pamh, 129,
+					snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 129,
 	"GECOS information was not updated: check NIS+ permissions."));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
 						messages, nullptr);
 				} else if (p->npd_field == NPD_SHELL) {
-					sprintf(messages[0], PAM_MSG(pamh, 130,
+					snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 130,
 	"SHELL information was not updated: check NIS+ permissions."));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
 						messages, nullptr);
 				} else if (p->npd_field == NPD_SECRETKEY) {
-					sprintf(messages[0], PAM_MSG(pamh, 131,
+					snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 131,
 		"NIS+ Credential information was not updated."));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
@@ -822,7 +824,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 
 				if (nisplus_pwd == nullptr && opwcmd) {
 				    if (!nowarn) {
-					sprintf(messages[0], PAM_MSG(pamh, 132,
+					snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 132,
 					    "No NIS+ record"));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
@@ -866,7 +868,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 				/* home directory */
 				if (nisplus_pwd == nullptr) {
 				    if (!nowarn) {
-					sprintf(messages[0], PAM_MSG(pamh, 132,
+					snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 132,
 					    "No NIS+ record"));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
@@ -896,7 +898,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 				/* finger information */
 				if (nisplus_pwd == nullptr && opwcmd) {
 				    if (!nowarn) {
-					sprintf(messages[0], PAM_MSG(pamh, 132,
+					snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 132,
 					    "No NIS+ record"));
 					(void) __pam_display_msg(pamh,
 						PAM_ERROR_MSG, 1,
@@ -934,7 +936,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 		if (flag && opwcmd) {
 			/* prepare shadow column */
 			if (sp.sp_expire == -1) {
-				sprintf(shadow, "%ld:%ld:%ld:%ld:%ld::%lu",
+				snprintf(shadow, sizeof (shadow), "%ld:%ld:%ld:%ld:%ld::%lu",
 				    sp.sp_lstchg,
 				    sp.sp_min,
 				    sp.sp_max,
@@ -942,7 +944,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 				    sp.sp_inact,
 				    sp.sp_flag);
 			} else {
-				sprintf(shadow, "%ld:%ld:%ld:%ld:%ld:%ld:%lu",
+				snprintf(shadow, sizeof (shadow), "%ld:%ld:%ld:%ld:%ld:%ld:%lu",
 				    sp.sp_lstchg,
 				    sp.sp_min,
 				    sp.sp_max,
@@ -974,14 +976,15 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 				syslog(LOG_ERR, "NIS+ name too long");
 				return (PAM_BUF_ERR);
 			}
-			sprintf(mname, "[name=%s],%s.%s", usrname,
+			snprintf(mname, sizeof (mname), "[name=%s],%s.%s", usrname,
 				NIS_RES_OBJECT(passwd_res)->zo_name,
 				NIS_RES_OBJECT(passwd_res)->zo_domain);
 			if (mname[strlen(mname) - 1] != '.')
-				(void) strcat(mname, ".");
+				(void) snprintf(mname + strlen(mname), sizeof (mname) - strlen(mname),
+			    ".");
 			mres = nis_modify_entry(mname, eobj, 0);
 			if (mres->status != NIS_SUCCESS) {
-				sprintf(messages[0], PAM_MSG(pamh, 133,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 133,
 		"NIS+ password information update failed (update_attr)"));
 				(void) __pam_display_msg(pamh,
 					PAM_ERROR_MSG, 1, messages, nullptr);
@@ -989,7 +992,7 @@ update_attr(pam_handle_t *pamh, char *field, char **data, char *usrname,
 				return (PAM_AUTHTOK_RECOVERY_ERR);
 			}
 
-			sprintf(messages[0], PAM_MSG(pamh, 112,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 112,
 				"NIS+ password information changed for %s"),
 				usrname);
 			(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
@@ -1060,7 +1063,7 @@ revert2oldpasswd(char *usrname, nis_result *passwd_res)
 	eobj->EN_data.en_cols.en_cols_val = ecol;
 	eobj->EN_data.en_cols.en_cols_len = 8;
 
-	sprintf(mname, "[name=%s],%s.%s", usrname,
+	snprintf(mname, sizeof (mname), "[name=%s],%s.%s", usrname,
 		NIS_RES_OBJECT(passwd_res)->zo_name,
 		NIS_RES_OBJECT(passwd_res)->zo_domain);
 

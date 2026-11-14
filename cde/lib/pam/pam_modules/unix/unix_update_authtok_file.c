@@ -88,7 +88,7 @@ update_authtok_file(
 	/* lock the password file */
 	if (lckpwdf() != 0) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 90,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 90,
 			"%s%s: Password database busy. Try again later."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -108,7 +108,7 @@ update_authtok_file(
 	(void) umask(S_IAMB & ~(buf.st_mode & S_IRUSR));
 	if ((tsfp = fopen(SHADTEMP, "w")) == nullptr) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -150,7 +150,7 @@ update_authtok_file(
 		}
 		if (putspent(&unix_sp, tsfp) != 0) {
 			if (!nowarn) {
-				sprintf(messages[0], PAM_MSG(pamh, 91,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -165,7 +165,7 @@ update_authtok_file(
 
 	if ((fclose(tsfp)) || (fclose(spfp))) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -177,7 +177,7 @@ update_authtok_file(
 	/* Check if user name exists */
 	if (found == 0) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -193,7 +193,7 @@ update_authtok_file(
 	/* remove old shadow file */
 	if (unlink(OSHADOW) && access(OSHADOW, 0) == 0) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -205,7 +205,7 @@ update_authtok_file(
 	/* rename shadow file to old shadow file */
 	if (rename(SHADOW, OSHADOW) == -1) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -219,7 +219,7 @@ update_authtok_file(
 		(void) unlink(SHADOW);
 		if (link(OSHADOW, SHADOW)) {
 			if (!nowarn) {
-				sprintf(messages[0], PAM_MSG(pamh, 92,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 92,
 			"%s%s: Unexpected failure. Password database missing."),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -228,7 +228,7 @@ update_authtok_file(
 			goto err;
 		}
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -240,7 +240,7 @@ update_authtok_file(
 	(void) ulckpwdf();
 	memset(spbuf, 0, sizeof (spbuf));
 	if (strcmp(field, "passwd") == 0) {
-		sprintf(messages[0], PAM_MSG(pamh, 93,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 93,
 			"%s%s: passwd successfully changed for %s"),
 			prognamep, UNIX_MSG, usrname);
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
@@ -405,7 +405,7 @@ update_spent(
 			    != nullptr) {
 				if (unix_pwd == nullptr) {
 					if (!nowarn) {
-					    sprintf(messages[0],
+					    snprintf(messages[0], sizeof (messages[0]),
 					    PAM_MSG(pamh, 94,
 					    "%s: No local passwd record"),
 						UNIX_MSG);
@@ -434,7 +434,7 @@ update_spent(
 			    != nullptr) {
 				if (unix_pwd == nullptr) {
 					if (!nowarn) {
-					    sprintf(messages[0],
+					    snprintf(messages[0], sizeof (messages[0]),
 					    PAM_MSG(pamh, 94,
 					    "%s: No local passwd record"),
 						UNIX_MSG);
@@ -463,7 +463,7 @@ update_spent(
 			    != nullptr) {
 				if (unix_pwd == nullptr) {
 					if (!nowarn) {
-					    sprintf(messages[0],
+					    snprintf(messages[0], sizeof (messages[0]),
 					    PAM_MSG(pamh, 94,
 					    "%s: No local passwd record"),
 						UNIX_MSG);
@@ -525,7 +525,7 @@ process_passwd(
 
 	if (stat(PASSWD, &stat_buf) < 0) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -537,7 +537,7 @@ process_passwd(
 	(void) umask(S_IAMB & ~(stat_buf.st_mode & S_IRUSR));
 	if ((tpfp = fopen(PASSTEMP, "w")) == nullptr) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -561,7 +561,7 @@ process_passwd(
 		}
 		if (putpwent(unix_p, tpfp) != 0) {
 			if (!nowarn) {
-				sprintf(messages[0], PAM_MSG(pamh, 91,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -577,7 +577,7 @@ process_passwd(
 
 	if ((fclose(tpfp)) || (fclose(pwfp))) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -589,7 +589,7 @@ process_passwd(
 	/* Check if user name exists */
 	if (found == 0) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 			prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -605,7 +605,7 @@ process_passwd(
 	/* remove old passwd file */
 	if (unlink(OPASSWD) && access(OPASSWD, 0) == 0) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 				"%s%s: %s"),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -617,7 +617,7 @@ process_passwd(
 	/* rename password file to old password file */
 	if (rename(PASSWD, OPASSWD) == -1) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -631,7 +631,7 @@ process_passwd(
 		(void) unlink(PASSWD);
 		if (link(OPASSWD, PASSWD)) {
 			if (!nowarn) {
-				sprintf(messages[0], PAM_MSG(pamh, 91,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 					prognamep, UNIX_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -640,7 +640,7 @@ process_passwd(
 			goto err;
 		}
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 91,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 91,
 		"%s%s: Unexpected failure. Password database unchanged."),
 				prognamep, UNIX_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,

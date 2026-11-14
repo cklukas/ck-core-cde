@@ -84,9 +84,9 @@ npd_makeclnthandle(
 	/* strlen("org_dir.") + null + "." = 10 */
 	if ((strlen(domain) + 10) > (size_t) NIS_MAXNAMELEN)
 		return (FALSE);
-	(void) sprintf(buf, "org_dir.%s", domain);
+	(void) snprintf(buf, sizeof (buf), "org_dir.%s", domain);
 	if (buf[strlen(buf) - 1] != '.')
-		(void) strcat(buf, ".");
+		(void) snprintf(buf + strlen(buf), sizeof (buf) - strlen(buf), ".");
 
 	srvs = nis_getservlist(buf);
 	if (srvs == nullptr) {
@@ -113,7 +113,7 @@ npd_makeclnthandle(
 			(void) nis_freeservlist(srvs);
 			return (FALSE);
 		}
-		(void) strcpy(srv_pubkey, master_srv->pkey.n_bytes);
+		(void) snprintf(srv_pubkey, keysize, "%s", master_srv->pkey.n_bytes);
 		break;
 	case NIS_PK_NONE:
 	default:
@@ -247,7 +247,7 @@ nispasswd_auth(
 		*err = NPD_BUFTOOSMALL;
 		return (NPD_FAILED);
 	}
-	(void) strcpy((char *)xpass, oldpass);
+	(void) snprintf((char *)xpass, sizeof (xpass), "%s", oldpass);
 	for (i = strlen(oldpass); i < _NPD_PASSMAXLEN; i++)
 		xpass[i] = '\0';
 

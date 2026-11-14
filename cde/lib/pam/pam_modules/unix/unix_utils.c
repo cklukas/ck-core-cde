@@ -30,8 +30,10 @@
 
 #include "unix_headers.h"
 
+#ifdef PAM_NISPLUS
 static char *spskip(char *p);
-static int special_case(char *str, char *default_str);
+#endif
+static int special_case(char *str, size_t size, char *default_str);
 static int illegal_input(pam_handle_t *pamh, char *input_str, int nowarn);
 static int	copy_passwd_structs(struct passwd **, struct passwd *,
 			struct spwd **, struct spwd *);
@@ -111,7 +113,7 @@ establish_key(
 
 	if (netnamebuf) {
 		/* return copy of netname in caller's buffer */
-		(void) strcpy(netnamebuf, netname);
+		(void) snprintf(netnamebuf, MAXNETNAMELEN + 1, "%s", netname);
 	}
 
 	if (netst.st_priv_key[0] == 0) {
@@ -164,11 +166,11 @@ int
 ck_perm(
 	pam_handle_t *pamh,
 	int repository,
-	char *domain,
+	[[maybe_unused]] char *domain,
 	struct passwd **pwd,
 	struct spwd **shpwd,
-	int *privileged,
-	void **passwd_res,
+	[[maybe_unused]] int *privileged,
+	[[maybe_unused]] void **passwd_res,
 	uid_t uid,
 	int debug,
 	int nowarn)
@@ -230,10 +232,10 @@ ck_perm(
 			 * locally. Don't bother to continue.
 			 */
 				if (!nowarn) {
-					sprintf(messages[0], PAM_MSG(pamh, 140,
+					snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 140,
 					"%s%s: Permission denied"), prognamep,
 						UNIX_MSG);
-					sprintf(messages[1], PAM_MSG(pamh, 141,
+					snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 141,
 				"%s%s: Can't change local passwd file\n"),
 						prognamep, UNIX_MSG);
 					(void) __pam_display_msg(
@@ -267,7 +269,7 @@ ck_perm(
 
 		if (uid != local_pwdp->pw_uid) {
 			if (!nowarn) {
-				sprintf(messages[0], PAM_MSG(pamh, 140,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 140,
 					"%s%s: Permission denied"), prognamep,
 					NIS_MSG);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -299,8 +301,11 @@ ck_perm(
 		 * make any nis+ request. But don't give up the super
 		 * user power yet. It may be needed elsewhere.
 		 */
-		(void) setuid(0);	/* keep real user id as root */
-		(void) seteuid(uid);
+		if (setuid(0) != 0 || seteuid(uid) != 0) {
+			/* keep real user id as root */
+			*pwd = nullptr;	*shpwd = nullptr;
+			return (PAM_SYSTEM_ERR);
+		}
 
 		local_shpwdp = getspnam_from(usrname, PAM_REP_NISPLUS);
 		local_pwdp = getpwnam_from(usrname, PAM_REP_NISPLUS);
@@ -315,7 +320,7 @@ ck_perm(
 
 		if ((9 + strlen(usrname) + strlen(domain) + PASSTABLELEN) >
 		    (size_t) NIS_MAXNAMELEN) {
-			sprintf(messages[0], PAM_MSG(pamh, 140,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 140,
 			    "%s%s: Permission denied"), prognamep, NISPLUS_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 				1, messages, nullptr);
@@ -323,9 +328,9 @@ ck_perm(
 			return (PAM_PERM_DENIED);
 		}
 
-		sprintf(buf, "[name=%s],%s.%s", usrname, PASSTABLE, domain);
+		snprintf(buf, sizeof (buf), "[name=%s],%s.%s", usrname, PASSTABLE, domain);
 		if (buf[strlen(buf) - 1] != '.')
-			(void) strcat(buf, ".");
+			(void) snprintf(buf + strlen(buf), sizeof (buf) - strlen(buf), ".");
 
 		/*
 		 * We must use an authenticated handle to get the cred
@@ -337,7 +342,7 @@ ck_perm(
 			USE_DGRAM+FOLLOW_LINKS+FOLLOW_PATH+MASTER_ONLY,
 			nullptr, nullptr);
 		if (((nis_result *)(*passwd_res))->status != NIS_SUCCESS) {
-			sprintf(messages[0], PAM_MSG(pamh, 140,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 140,
 			    "%s%s: Permission denied"), prognamep, NISPLUS_MSG);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 				1, messages, nullptr);
@@ -361,7 +366,7 @@ ck_perm(
 #endif /* PAM_NISPLUS */
 
 	if (!nowarn) {
-		sprintf(messages[0], PAM_MSG(pamh, 142,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 142,
 		"%s%s: System error: repository out of range"),
 			prognamep, UNIX_MSG);
 		(void) __pam_display_msg(pamh, PAM_ERROR_MSG, 1,
@@ -568,7 +573,8 @@ getloginshell(
 	int nowarn)
 {
 	char newshell[PAM_MAX_MSG_SIZE];
-	char *cp, *valid, *getusershell();
+	char *cp, *valid;
+	bool shell_listed;
 	char messages[PAM_MAX_NUM_MSG][PAM_MAX_MSG_SIZE];
 	struct pam_response *ret_resp = (struct pam_response *)0;
 
@@ -584,7 +590,7 @@ getloginshell(
 		mutex_unlock(&_priv_lock);
 		if (valid == nullptr) {
 			if (!nowarn) {
-				sprintf(messages[0], PAM_MSG(pamh, 143,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 143,
 				    "Cannot change from restricted shell %s"),
 				    oldshell);
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -593,15 +599,14 @@ getloginshell(
 			return (nullptr);
 		}
 	}
-	sprintf(messages[0],
+	snprintf(messages[0], sizeof (messages[0]),
 		PAM_MSG(pamh, 144, "Old shell: %s"), oldshell);
 	(void) __pam_display_msg(pamh, PAM_TEXT_INFO, 1, messages, nullptr);
-	sprintf(messages[0],
+	snprintf(messages[0], sizeof (messages[0]),
 		PAM_MSG(pamh, 145, "New shell: "));
 	(void) __pam_get_input(pamh, PAM_PROMPT_ECHO_ON,
 		1, messages, nullptr, &ret_resp);
-	strncpy(newshell, ret_resp->resp, PAM_MAX_MSG_SIZE);
-	newshell[PAM_MAX_RESP_SIZE-1] = '\0';
+	snprintf(newshell, sizeof (newshell), "%s", ret_resp->resp);
 	__pam_free_resp(1, ret_resp);
 
 	cp = strchr(newshell, '\n');
@@ -609,7 +614,7 @@ getloginshell(
 		*cp = '\0';
 	if (newshell[0] == '\0' || (strcmp(newshell, oldshell) == 0)) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 146,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 146,
 				"Login shell unchanged."));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 				1, messages, nullptr);
@@ -624,6 +629,7 @@ getloginshell(
 	 */
 	mutex_lock(&_priv_lock);
 	setusershell();
+	shell_listed = privileged;
 	if (!privileged) {
 		for (valid = getusershell(); valid; valid = getusershell()) {
 			/*
@@ -639,27 +645,27 @@ getloginshell(
 					cp++;
 			}
 			if (strcmp(newshell, cp) == 0) {
-				strncpy(newshell, valid, strlen(valid));
+				snprintf(newshell, sizeof (newshell), "%s", valid);
+				shell_listed = true;
 				break;
 			}
 		}
 	}
 	mutex_unlock(&_priv_lock);
 
-	if (newshell == 0) {
+	if (!shell_listed) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 147,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 147,
 				"%s is unacceptable as a new shell"),
 				newshell);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 				1, messages, nullptr);
 		}
-		__pam_free_resp(1, ret_resp);
 		return (nullptr);
 	}
 	if (access(newshell, X_OK) < 0) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 148,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 148,
 				"warning: %s is unavailable on this machine"),
 				newshell);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -680,11 +686,11 @@ getfingerinfo(pam_handle_t *pamh, char *old_gecos, int nowarn)
 	struct pam_response *ret_resp = (struct pam_response *)0;
 
 	if (!nowarn) {
-		sprintf(messages[0], PAM_MSG(pamh, 149,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 149,
 			"Default values are printed inside of '[]'."));
-		sprintf(messages[1], PAM_MSG(pamh, 150,
+		snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 150,
 			"To accept the default, type <return>."));
-		sprintf(messages[2], PAM_MSG(pamh, 151,
+		snprintf(messages[2], sizeof (messages[2]), PAM_MSG(pamh, 151,
 			"To have a blank entry, type the word 'none'."));
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
 			3, messages, nullptr);
@@ -694,22 +700,21 @@ getfingerinfo(pam_handle_t *pamh, char *old_gecos, int nowarn)
 	 * Get name.
 	 */
 	do {
-		sprintf(messages[0], " ");
+		snprintf(messages[0], sizeof (messages[0]), " ");
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO, 1,
 			messages, nullptr);
-		sprintf(messages[0], PAM_MSG(pamh, 152,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 152,
 			"Name [%s]: "), old_gecos);
 		(void) __pam_get_input(pamh, PAM_PROMPT_ECHO_ON,
 			1, messages, nullptr, &ret_resp);
-		strncpy(new_gecos, ret_resp->resp, PAM_MAX_MSG_SIZE);
-		new_gecos[PAM_MAX_MSG_SIZE-1] = '\0';
+		snprintf(new_gecos, sizeof (new_gecos), "%s", ret_resp->resp);
 		__pam_free_resp(1, ret_resp);
-		if (special_case(new_gecos, old_gecos))
+		if (special_case(new_gecos, sizeof (new_gecos), old_gecos))
 			break;
 	} while (illegal_input(pamh, new_gecos, nowarn));
 	if (strcmp(new_gecos, old_gecos) == 0) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 153,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 153,
 				"Finger information unchanged."));
 			(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
 				1, messages, nullptr);
@@ -730,32 +735,31 @@ gethomedir(pam_handle_t *pamh, char *olddir, int nowarn)
 	struct pam_response *ret_resp = (struct pam_response *)0;
 
 	if (!nowarn) {
-		sprintf(messages[0], PAM_MSG(pamh, 149,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 149,
 			"Default values are printed inside of '[]'."));
-		sprintf(messages[1], PAM_MSG(pamh, 150,
+		snprintf(messages[1], sizeof (messages[1]), PAM_MSG(pamh, 150,
 			"To accept the default, type <return>."));
-		sprintf(messages[2], PAM_MSG(pamh, 151,
+		snprintf(messages[2], sizeof (messages[2]), PAM_MSG(pamh, 151,
 			"To have a blank entry, type the word 'none'."));
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
 			3, messages, nullptr);
 	}
 	do {
-		sprintf(messages[0], " ");
+		snprintf(messages[0], sizeof (messages[0]), " ");
 		(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
 				1, messages, nullptr);
-		sprintf(messages[0], PAM_MSG(pamh, 154,
+		snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 154,
 			"Home Directory [%s]: "), olddir);
 		(void) __pam_get_input(pamh, PAM_PROMPT_ECHO_ON,
 			1, messages, nullptr, &ret_resp);
-		strncpy(newdir, ret_resp->resp, PAM_MAX_MSG_SIZE);
-		newdir[PAM_MAX_MSG_SIZE-1] = '\0';
+		snprintf(newdir, sizeof (newdir), "%s", ret_resp->resp);
 		__pam_free_resp(1, ret_resp);
-		if (special_case(newdir, olddir))
+		if (special_case(newdir, sizeof (newdir), olddir))
 			break;
 	} while (illegal_input(pamh, newdir, nowarn));
 	if (strcmp(newdir, olddir) == 0) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 155,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 155,
 				"Homedir information unchanged."));
 			(void) __pam_display_msg(pamh, PAM_TEXT_INFO,
 				1, messages, nullptr);
@@ -807,7 +811,7 @@ illegal_input(pam_handle_t *pamh, char *input_str, int nowarn)
 
 	if (strchr(input_str, ':')) {
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 156,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 156,
 				"':' is not allowed."));
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 				1, messages, nullptr);
@@ -817,7 +821,7 @@ illegal_input(pam_handle_t *pamh, char *input_str, int nowarn)
 	if (input_str[length-1] != '\n') {
 		/* the newline and the '\0' eat up two characters */
 		if (!nowarn) {
-			sprintf(messages[0], PAM_MSG(pamh, 157,
+			snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 157,
 			    "Maximum number of characters allowed is %d."),
 			    PAM_MAX_MSG_SIZE-2);
 			(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
@@ -836,7 +840,7 @@ illegal_input(pam_handle_t *pamh, char *input_str, int nowarn)
 		/* 040 is ascii char "space" */
 		if ((int) *ptr < 040) {
 			if (!nowarn) {
-				sprintf(messages[0], PAM_MSG(pamh, 158,
+				snprintf(messages[0], sizeof (messages[0]), PAM_MSG(pamh, 158,
 				    "Control characters are not allowed."));
 				(void) __pam_display_msg(pamh, PAM_ERROR_MSG,
 					1, messages, nullptr);
@@ -857,7 +861,7 @@ illegal_input(pam_handle_t *pamh, char *input_str, int nowarn)
  *  in these two cases.
  */
 static int
-special_case(char *str, char *default_str)
+special_case(char *str, size_t size, char *default_str)
 {
 	static char word[] = "none\n";
 	char *ptr, *wordptr;
@@ -867,7 +871,7 @@ special_case(char *str, char *default_str)
 	 *  default string.
 	 */
 	if (*str == '\n') {
-		(void) strcpy(str, default_str);
+		(void) snprintf(str, size, "%s", default_str);
 		return (1);
 	}
 	/*

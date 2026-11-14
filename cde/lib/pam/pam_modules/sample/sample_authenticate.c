@@ -69,7 +69,7 @@
 int
 pam_sm_authenticate(
 	pam_handle_t		*pamh,
-	int 			flags,
+	[[maybe_unused]] int 			flags,
 	int			argc,
 	const char		**argv)
 {
@@ -90,7 +90,7 @@ pam_sm_authenticate(
 	if (debug)
 		syslog(LOG_DEBUG, "Sample Authentication\n");
 
-	strcpy(the_password, "test");
+	snprintf(the_password, sizeof (the_password), "%s", "test");
 
 	for (i = 0; i < argc; i++) {
 		if (strcmp(argv[i], "debug") == 0)
@@ -141,10 +141,10 @@ pam_sm_authenticate(
 	 * Get the password from the user
 	 */
 	if (firstpass) {
-		(void) sprintf(messages[0], (const char *) PAM_MSG(pamh, 1,
+		(void) snprintf(messages[0], sizeof (messages[0]), (const char *) PAM_MSG(pamh, 1,
 			"TEST Password: "));
 	} else {
-		(void) sprintf(messages[0], (const char *) PAM_MSG(pamh, 2,
+		(void) snprintf(messages[0], sizeof (messages[0]), (const char *) PAM_MSG(pamh, 2,
 			"Password: "));
 	}
 	num_msg = 1;

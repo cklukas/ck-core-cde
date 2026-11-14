@@ -60,8 +60,8 @@ pam_sm_acct_mgmt(
 	char	*user;
 	char	*pg;
 	int	i;
-	int	debug = 0;
-	int	nowarn = 0;
+	[[maybe_unused]] int	debug = 0;
+	[[maybe_unused]] int	nowarn = 0;
 	int	error = 0;
 
 	if (argc == 0)
