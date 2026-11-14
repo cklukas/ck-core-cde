@@ -110,6 +110,7 @@
  ****************************************************************************
  ************************************<+>*************************************/
 
+#include <Dt/DtSigP.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1058,7 +1059,7 @@ main(
    printf("  Start\n");
    gettimeofday(&update_time_ss, nullptr);
 #endif
-   (void) signal (SIGINT, Stop);
+   (void) _DtSignal(SIGINT, Stop);
 
    /* We don't want any zombie children, do we? */
 #if defined(CSRG_BASED)
@@ -1070,7 +1071,7 @@ main(
     /* error handling follows, none for now */
         ;
 #else
-   (void) signal (SIGCHLD, SIG_IGN);
+   (void) _DtSignal(SIGCHLD, SIG_IGN);
 #endif /* CSRG_BASED */
    XtSetLanguageProc( nullptr, nullptr, nullptr );
 

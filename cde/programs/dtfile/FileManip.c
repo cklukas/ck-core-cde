@@ -55,6 +55,7 @@
 #define _GNU_SOURCE 1
 #endif
 
+#include <Dt/DtSigP.h>
 #include <sys/types.h>
 
 #include <sys/stat.h>
@@ -974,18 +975,18 @@ FileManip(
    {
       if (mode == COPY_FILE  ||  mode == MERGE_DIR)
       {
-         oldInt = signal (SIGINT, SIG_IGN);
-         oldQuit = signal (SIGQUIT, SIG_IGN);
-         oldPipe = signal (SIGPIPE, SIG_IGN);
-         oldTerm = signal (SIGTERM, SIG_IGN);
+         oldInt = _DtSignal(SIGINT, SIG_IGN);
+         oldQuit = _DtSignal(SIGQUIT, SIG_IGN);
+         oldPipe = _DtSignal(SIGPIPE, SIG_IGN);
+         oldTerm = _DtSignal(SIGTERM, SIG_IGN);
 
          copy_dir_return = CopyDir(w, mode, from, to, isContainer, &s1,
                                    errorHandler, checkForBusyDir, type);
 
-         (void) signal (SIGINT, oldInt);
-         (void) signal (SIGQUIT, oldQuit);
-         (void) signal (SIGPIPE, oldPipe);
-         (void) signal (SIGTERM, oldTerm);
+         (void) _DtSignal(SIGINT, oldInt);
+         (void) _DtSignal(SIGQUIT, oldQuit);
+         (void) _DtSignal(SIGPIPE, oldPipe);
+         (void) _DtSignal(SIGTERM, oldTerm);
 
          return (copy_dir_return);
       }
@@ -1012,17 +1013,17 @@ FileManip(
          }
 
 
-         oldInt = signal (SIGINT, SIG_IGN);
-         oldQuit = signal (SIGQUIT, SIG_IGN);
-         oldPipe = signal (SIGPIPE, SIG_IGN);
-         oldTerm = signal (SIGTERM, SIG_IGN);
+         oldInt = _DtSignal(SIGINT, SIG_IGN);
+         oldQuit = _DtSignal(SIGQUIT, SIG_IGN);
+         oldPipe = _DtSignal(SIGPIPE, SIG_IGN);
+         oldTerm = _DtSignal(SIGTERM, SIG_IGN);
 
          move_dir_return = MoveDir(w, from, to, isContainer, &s1, errorHandler, type);
 
-         (void) signal (SIGINT, oldInt);
-         (void) signal (SIGQUIT, oldQuit);
-         (void) signal (SIGPIPE, oldPipe);
-         (void) signal (SIGTERM, oldTerm);
+         (void) _DtSignal(SIGINT, oldInt);
+         (void) _DtSignal(SIGQUIT, oldQuit);
+         (void) _DtSignal(SIGPIPE, oldPipe);
+         (void) _DtSignal(SIGTERM, oldTerm);
 
          return (move_dir_return);
       }
