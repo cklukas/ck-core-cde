@@ -239,13 +239,13 @@ var_assignment	: STRING OPER_assign rhs.gp
            Expression *x = new Expression(new ConstantNode($3));
 
            if ( gAutoNumberFP.accept((const char*)$1, x) ) {
-	         delete $1;
+	         free($1);
 	         delete x;
                  break;
            }
 
            gVariableTable -> enter( gSymTab -> intern((const char*)$1), x);
-	   delete $1;
+	   free($1);
 	}
 	;
 
@@ -274,13 +274,13 @@ string_list : string_list OPER_feature STRING
 
 	  $1->appendItem(gSymTab->intern(toUpperCase($3)));
 	  $$=$1;
-	  delete $3 ;
+	  free($3);
 	}
 	| STRING
 	{
 	  $$=new CompositeVariableNode;
           $$ -> appendItem(gSymTab->intern(toUpperCase($1)));
-	  delete $1;
+	  free($1);
 	}
 	;
 
@@ -299,7 +299,7 @@ attr	: OPER_attr SGMLGI
 	{
 	  $$=new
             SgmlAttributeNode(gSymTab->intern((const char*)$2));
-	  delete $2;
+	  free($2);
 	}
 	;
 
@@ -396,7 +396,7 @@ term	: BOOLVAL
 		new FeatureValueExpression(new Expression($1));
           FeatureValueDimension* x = 
              new FeatureValueDimension(fve, (const char*)$2);
-	  delete $2 ;
+	  free($2);
           $$=new ConstantNode(x);
 	}
 	| symbol
@@ -410,17 +410,17 @@ term	: BOOLVAL
 	| QUOTED_STRING
         {
           $$=new ConstantNode(new FeatureValueString((const char*)$1));
-	  delete $1 ;
+	  free($1);
         }
         | INTEGER UNIT_STRING
         {
           $$=new ConstantNode(new FeatureValueDimension(new FeatureValueInt($1), (const char*)$2));
-	  delete $2 ;
+	  free($2);
         }
         | REAL UNIT_STRING
         {
           $$=new ConstantNode(new FeatureValueDimension(new FeatureValueReal($1), (const char*)$2));
-	  delete $2 ;
+	  free($2);
         }
         | INTEGER
         {
@@ -447,7 +447,7 @@ array	: array_name ARRAYOPEN array_member_list ARRAYCLOSE
             (*x)[i++] = iter.key();
           }
 
-          delete $1;
+          free($1);
           delete $3;
 
           $$ = x;
@@ -455,7 +455,7 @@ array	: array_name ARRAYOPEN array_member_list ARRAYCLOSE
 	| array_name ARRAYOPEN ARRAYCLOSE
 	{
           $$ = new FeatureValueArray((const char*)$1, 0);
-          delete $1;
+          free($1);
 	}
 	;
 
@@ -667,7 +667,7 @@ path_term_list : path_term_list path_term
 path_term : SGMLGI path_selectorOPTL 
 	{
 	  $$=new PathTerm((const char*)$1, $2);
-          delete $1;
+          free($1);
 	}
 	| OPER_oneof 
 	{
@@ -722,8 +722,8 @@ SGMLGI_CONTENT : STRING OPER_period {enter_sgmlgi_context();} SGMLGI_STRING
            strcpy((char*)$$, (char*)$1);
            strcat((char*)$$, ".");
            strcat((char*)$$, (char*)$4);
-           delete $1;
-           delete $4;
+           free($1);
+           free($4);
 	}
 	| STRING OPER_period
 	{
@@ -731,7 +731,7 @@ SGMLGI_CONTENT : STRING OPER_period {enter_sgmlgi_context();} SGMLGI_STRING
            $$=new unsigned char[l];
            strcpy((char*)$$, (char*)$1);
            strcat((char*)$$, ".");
-           delete $1;
+           free($1);
 	}
 
 	| STRING
@@ -761,7 +761,7 @@ dimension : DIMENSION
 
           $$=new ConstantNode(new FeatureValueDimension(new FeatureValueReal(x), (const char*)&$1[i]));
 
-          delete $1;
+          free($1);
 	}
 
 STRING	: NORMAL_STRING
@@ -813,8 +813,8 @@ equality_expr	: OPER_attr SGMLGI OPER_equality QUOTED_STRING
 			( $3 == EQUAL ) ? PQEqual : PQNotEqual,
 			(const char*)$4
 				      );
-          delete $2;
-          delete $4;
+          free($2);
+          free($4);
 	}
 	| NORMAL_STRING OPER_equality POSITION_VALUE
 	{
@@ -832,7 +832,7 @@ equality_expr	: OPER_attr SGMLGI OPER_equality QUOTED_STRING
            } else
               throw(StyleSheetException());
 
-           delete $1;
+           free($1);
 	}
 	;
 

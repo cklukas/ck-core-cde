@@ -261,8 +261,8 @@ unit ([Ii][Nn]|[Ii][Nn][Cc][Hh]|[Pp][Cc]|[Pp][Ii][Cc][Aa]|[Pp][Tt]|[Pp][Oo][Ii][
 
 <quoted_string>\"	{
 
-		stylelval.charPtrData =
-			new unsigned char[qstring_buf_content_size+1];
+		stylelval.charPtrData = (unsigned char*)
+			malloc(qstring_buf_content_size+1);
 		memcpy( stylelval.charPtrData,
 			qstring_buf,
 			qstring_buf_content_size+1
