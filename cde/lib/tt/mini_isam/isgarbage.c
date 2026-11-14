@@ -36,7 +36,7 @@ isgarbage(char * isfname)
 	char			isfname2[MAXPATHLEN];
 	int			isfd = -1, isfd2 = -1;
 	char			buffer[ISMAXRECLEN];
-	char			*recbuf = NULL;
+	char			*recbuf = nullptr;
 	struct dictinfo 	info;
 	struct keydesc		keybuf;
 	struct stat		statbuf;
@@ -120,7 +120,7 @@ isgarbage(char * isfname)
 		(void)isclose(isfd2);
 		(void)iserase(isfname2);
 	}
-	if ((recbuf != buffer) && (recbuf != NULL)) {
+	if ((recbuf != buffer) && (recbuf != nullptr)) {
 		free(recbuf);
 	}
 	return (ISERROR);

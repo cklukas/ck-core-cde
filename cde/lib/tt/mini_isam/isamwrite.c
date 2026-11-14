@@ -67,7 +67,7 @@ int
 _amwrite(Bytearray *isfhandle, char *record, int reclen,
          Bytearray *curpos, Recno *recnum, struct errcode *errcode)
 {
-    Fcb			*fcb = NULL;
+    Fcb			*fcb = nullptr;
     Recno		recnum2;
     Crp 		*crp;
     int			err;
@@ -78,7 +78,7 @@ _amwrite(Bytearray *isfhandle, char *record, int reclen,
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }
@@ -167,7 +167,7 @@ int _addkeys (Fcb *fcb, char *record, Recno recnum)
 
     for (i = 0; i < nkeys; i++) {
 	if ((err = _add1key(fcb, fcb->keys + i, record, recnum, 
-			    (char*)NULL)) != ISOK)
+			    (char*)nullptr)) != ISOK)
 	    return (err);
     }
 
@@ -191,7 +191,7 @@ _addkeys2 (Fcb *fcb, char *record, Recno recnum, Bytearray *curpos)
 	keydesc2 = fcb->keys + i;
         if ((err =_add1key(fcb, keydesc2, record, recnum,
 			      (keydesc2->k2_keyid == keyid) ?
-			      crp->key : (char *) NULL)) != ISOK)
+			      crp->key : (char *) nullptr)) != ISOK)
 	    return (err);
     }
 

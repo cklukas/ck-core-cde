@@ -82,7 +82,7 @@ isrewcurr(int isfd, char *record)
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_setiserrno2(ENOTOPEN, '9', '0');
 	return (ISERROR);
     }
@@ -150,7 +150,7 @@ _amrewcurr(Bytearray *isfhandle, char *record, int reclen,
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }
@@ -204,7 +204,7 @@ _amrewcurr(Bytearray *isfhandle, char *record, int reclen,
     *recnum = crp->recno;	
     
     _bytearr_free(curpos);
-    crp = NULL;                 /* was aliased to freed curpos->data */
+    crp = nullptr;                 /* was aliased to freed curpos->data */
     *curpos = newcurpos;
 
     _amseterrcode(errcode, ISOK);
@@ -253,7 +253,7 @@ _changekeys2(Fcb *fcb, char *record, char *oldrecord,
 	keydesc2 = fcb->keys + i;
         if ((err =_change1key(fcb, keydesc2, record, oldrecord, recnum,
 			      (keydesc2->k2_keyid == keyid) ?
-			      crp->key : (char *) NULL)) != ISOK)
+			      crp->key : (char *) nullptr)) != ISOK)
 	    return (err);
     }
 

@@ -79,7 +79,7 @@ isrewrec(int isfd, long recnum, char *record)
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_setiserrno2(ENOTOPEN, '9', '0');
 	return (ISERROR);
     }
@@ -143,7 +143,7 @@ _amrewrec(Bytearray *isfhandle, char *record, int reclen, Recno recnum,
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }
@@ -215,7 +215,7 @@ _changekeys (Fcb *fcb, char *record, char *oldrecord, Recno recnum)
 
     for (i = 0; i < nkeys; i++) {
         if ((err =_change1key(fcb, fcb->keys + i, record, oldrecord, recnum,
-			      (char *)NULL)) 
+			      (char *)nullptr)) 
 	    != ISOK)
 	    return (err);
     }

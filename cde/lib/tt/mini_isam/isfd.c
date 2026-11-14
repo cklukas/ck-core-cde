@@ -57,7 +57,7 @@ _isfd_insert(Fab *fab)
     Isfd	i;
 
     for (i = 0; i < MAXISFD; i++) {
-	if (isfdtab[i] == NULL)		     /* Empty entry found */
+	if (isfdtab[i] == nullptr)		     /* Empty entry found */
 	    break;
     }
 
@@ -80,8 +80,8 @@ _isfd_insert(Fab *fab)
 Fab *
 _isfd_find(Isfd isfd)
 {
-    if (isfd < 0 || isfd >= MAXISFD || isfdtab[isfd] == NULL)
-	return (NULL);
+    if (isfd < 0 || isfd >= MAXISFD || isfdtab[isfd] == nullptr)
+	return (nullptr);
     else
 	return (isfdtab[isfd]);
 }
@@ -96,6 +96,6 @@ void
 _isfd_delete(Isfd isfd)
 {
     if (isfd >= 0 && isfd < MAXISFD)
-	isfdtab[isfd] = NULL;
+	isfdtab[isfd] = nullptr;
 }
 

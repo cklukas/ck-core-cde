@@ -72,7 +72,7 @@ isdelcurr(int isfd)
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_setiserrno2(ENOTOPEN, '9', '0');
 	return (ISERROR);
     }
@@ -114,7 +114,7 @@ static int
 _amdelcurr(Bytearray *isfhandle, Bytearray *curpos, Recno *recnum,
            struct errcode *errcode)
 {
-    Fcb			*fcb = NULL;
+    Fcb			*fcb = nullptr;
     Crp			*crp;
     char		recbuf[ISMAXRECLEN];
     int			reclen;
@@ -126,7 +126,7 @@ _amdelcurr(Bytearray *isfhandle, Bytearray *curpos, Recno *recnum,
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }

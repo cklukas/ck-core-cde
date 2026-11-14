@@ -90,7 +90,7 @@ void
 _issignals_unmask(void)
 {
     if (do_mask) {
-	(void)sigprocmask(SIG_SETMASK, &oldmask, NULL);
+	(void)sigprocmask(SIG_SETMASK, &oldmask, nullptr);
 	already_masked = 0;
     }
 }

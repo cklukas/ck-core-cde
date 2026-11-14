@@ -83,7 +83,7 @@ _amopen(char *isfname, enum openmode openmode, Bool *varflag,
      * Invalidate the FCB cache entry to avoid a problem found when using 
      * multiple servers.
      */
-    if ((fcb = _mngfcb_find(&isfhandle0)) != NULL) {
+    if ((fcb = _mngfcb_find(&isfhandle0)) != nullptr) {
 	(void) _watchfd_decr(_isfcb_nfds(fcb));
 	_isfcb_close(fcb);
 	_mngfcb_delete(&isfhandle0);
@@ -92,7 +92,7 @@ _amopen(char *isfname, enum openmode openmode, Bool *varflag,
     /*
      * Get the FCB that corresponds to the isfhandle handle.
      */
-    if ((fcb = _openfcb(&isfhandle0, errcode)) == NULL) {
+    if ((fcb = _openfcb(&isfhandle0, errcode)) == nullptr) {
 	goto ERROR;
     }
 
@@ -179,7 +179,7 @@ _openfcb(Bytearray *isfhandle, struct errcode *errcode)
     char		errbuf[BUFSIZ];
     char		*errmsg0;
 
-    if ((fcb = _mngfcb_find(isfhandle)) != NULL)
+    if ((fcb = _mngfcb_find(isfhandle)) != nullptr)
 	goto out;
 
     /*
@@ -189,7 +189,7 @@ _openfcb(Bytearray *isfhandle, struct errcode *errcode)
 	/*
 	 * Find victim (LRU FCB) and close it.
 	 */
-	if((isfhandle2 = _mngfcb_victim()) == NULL) 
+	if((isfhandle2 = _mngfcb_victim()) == nullptr) 
 	    _isfatal_error ("_openfcb() cannot find LRU victim");
 
 	fcb = _mngfcb_find(isfhandle2);
@@ -201,8 +201,8 @@ _openfcb(Bytearray *isfhandle, struct errcode *errcode)
     /*
      * Open files, create FCB block.
      */
-    if ((fcb = _isfcb_open(_getisfname(isfhandle), errcode)) == NULL) {
-	return (NULL);
+    if ((fcb = _isfcb_open(_getisfname(isfhandle), errcode)) == nullptr) {
+	return (nullptr);
     }
 
     /*
@@ -211,7 +211,7 @@ _openfcb(Bytearray *isfhandle, struct errcode *errcode)
     if (_check_isam_magic(fcb) != ISOK) {
 	_amseterrcode(errcode, EBADFILE);
 	_isfcb_close(fcb);
-	return (NULL);
+	return (nullptr);
     }
 
     /*
@@ -277,7 +277,7 @@ _openfcb(Bytearray *isfhandle, struct errcode *errcode)
     _isfcb_close(fcb);
     _mngfcb_delete(isfhandle);
 
-    return (NULL);
+    return (nullptr);
 
 }
 

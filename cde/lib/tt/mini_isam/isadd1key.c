@@ -73,7 +73,7 @@ _add1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record, Recno recnum, char *newkey
 	memcpy(keybuf + KEY_DUPS_OFF, (char *)ismaxlong, LONGSIZE);
 	_isbtree_search(btree, keybuf);
 	
-	if ((pkey = _isbtree_current(btree)) != NULL &&
+	if ((pkey = _isbtree_current(btree)) != nullptr &&
 	    memcmp(pkey + RECNOSIZE + DUPIDSIZE, 
 		   keybuf + RECNOSIZE + DUPIDSIZE,
 		   pkeydesc2->k2_len - RECNOSIZE - DUPIDSIZE) == 0) {
@@ -112,7 +112,7 @@ _add1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record, Recno recnum, char *newkey
 	memcpy( keybuf + KEY_RECNO_OFF,(char *)ismaxlong, LONGSIZE);
 	_isbtree_search (btree, keybuf);
 	
-	if ((pkey = _isbtree_current(btree)) != NULL &&
+	if ((pkey = _isbtree_current(btree)) != nullptr &&
 	    memcmp(pkey + RECNOSIZE, keybuf + RECNOSIZE,
 		   pkeydesc2->k2_len - RECNOSIZE) == 0) {
 	    _isbtree_destroy(btree);
@@ -127,7 +127,7 @@ _add1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record, Recno recnum, char *newkey
     /*
      * Return new key position.
      */
-    if (newkey != NULL)
+    if (newkey != nullptr)
 	memcpy( newkey,keybuf, pkeydesc2->k2_len);
 
     return (ISOK);

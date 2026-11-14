@@ -107,7 +107,7 @@ isrename(char *oldname, char *newname)
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_isfatal_error("isrename() cannot find FAB");
         _setiserrno2(EFATAL,'9','0');
         return (ISERROR);
@@ -176,7 +176,7 @@ _amrename(Bytearray *isfhandle, char *newname, struct errcode *errcode)
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	goto ERROR;
     }
 

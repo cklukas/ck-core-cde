@@ -58,7 +58,7 @@ struct hashtable {
     Fcb		*fcb;
     long	mrused;			     
 } hashtable [FCBHASHSIZE];
-#define unused(entry) ((entry).fcb == NULL)
+#define unused(entry) ((entry).fcb == nullptr)
 
 static int _hashisfhandle(Bytearray *isfhandle);
 
@@ -125,7 +125,7 @@ _mngfcb_find(Bytearray *isfhandle)
     }
 
     if (ntries == FCBHASHSIZE) {
-	return (NULL);			     /* Not found */
+	return (nullptr);			     /* Not found */
     } 
     else {
 
@@ -196,7 +196,7 @@ _mngfcb_victim(void)
 	    victim_time = hashtable[i].mrused;
 	}
     }
-    return ((victim_ind == -1) ? NULL : &hashtable[victim_ind].isfhandle);
+    return ((victim_ind == -1) ? nullptr : &hashtable[victim_ind].isfhandle);
 }
 
 

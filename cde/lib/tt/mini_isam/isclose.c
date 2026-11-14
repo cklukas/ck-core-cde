@@ -59,7 +59,7 @@ isclose(int isfd)
     Fab		*fab;
     Fcb         *fcb;
 
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_setiserrno2(ENOTOPEN, '9', '0');
 	return (ISERROR);
     }
@@ -69,7 +69,7 @@ isclose(int isfd)
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(&fab->isfhandle, &fab->errcode)) == NULL) {
+    if ((fcb = _openfcb(&fab->isfhandle, &fab->errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }

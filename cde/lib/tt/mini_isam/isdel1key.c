@@ -70,19 +70,19 @@ _del1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record, Recno recnum)
 	 * If too many duplicate entries exists, the performance will be
 	 * poor.
 	 */
-	while ((pkey = _isbtree_next(btree)) != NULL) {
+	while ((pkey = _isbtree_next(btree)) != nullptr) {
 	    if (ldrecno(pkey + KEY_RECNO_OFF) == recnum)
 		break;			     /* We found the entry */
 	}
 
-	if (pkey == NULL) 
+	if (pkey == nullptr) 
 	    _isfatal_error("_del1key() cannot find entry in B tree");
 
 	_isbtree_remove(btree);
     }
     else {
 
-	if ((pkey = _isbtree_current(btree)) == NULL ||
+	if ((pkey = _isbtree_current(btree)) == nullptr ||
 	    ldrecno(pkey + KEY_RECNO_OFF) != recnum)
 	    _isfatal_error("_del1key() cannot find entry in B tree");
 

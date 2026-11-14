@@ -58,7 +58,7 @@ _isbtree_insert(Btree *btree, char *key)
     char		keybuf[MAXKEYSIZE];
     int	i;
     Blkno		blkno;
-    char		*pkp = NULL, *pkp2, *pkp3;
+    char		*pkp = nullptr, *pkp2, *pkp3;
     Bufhdr		*kp2bhdr, *kp3bhdr;
     Blkno		blkno2, blkno3;
     int			level;

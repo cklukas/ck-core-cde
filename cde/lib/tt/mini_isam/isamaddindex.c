@@ -66,7 +66,7 @@ static void checkavailfd(void);
 int
 _amaddindex(Bytearray *isfhandle, struct keydesc *keydesc, struct errcode *errcode)
 {
-    Fcb			*fcb = NULL;
+    Fcb			*fcb = nullptr;
     Keydesc2		keydesc2;
     int			err;
 
@@ -81,7 +81,7 @@ _amaddindex(Bytearray *isfhandle, struct keydesc *keydesc, struct errcode *errco
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }
@@ -190,7 +190,7 @@ _amaddindex(Bytearray *isfhandle, struct keydesc *keydesc, struct errcode *errco
 int
 _amaddprimary(Bytearray *isfhandle, struct keydesc *keydesc, struct errcode *errcode)
 {
-    Fcb			*fcb = NULL;
+    Fcb			*fcb = nullptr;
     Keydesc2		keydesc2;
     int			err;
 
@@ -204,7 +204,7 @@ _amaddprimary(Bytearray *isfhandle, struct keydesc *keydesc, struct errcode *err
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }
@@ -327,7 +327,7 @@ int _create_index(Fcb *fcb, Keydesc2 *pkeydesc2)
      * in buildbtree() arithmetics. 
      */
     if (fcb->nrecords == 0L) {
-	pkeydesc2->k2_rootnode = _buildbtree(fcb, pkeydesc2, (Issort *) NULL);
+	pkeydesc2->k2_rootnode = _buildbtree(fcb, pkeydesc2, (Issort *) nullptr);
 	return (ISOK);
     }
 	
@@ -426,7 +426,7 @@ _attach_dups_serial(Issort *srt, Keydesc2 *pkeydesc2)
 {
     int			netkeylength = pkeydesc2->k2_len - RECNOSIZE - DUPIDSIZE;
     char		*curkey;
-    char		*lastkey = NULL;
+    char		*lastkey = nullptr;
     int			dup_serial = 1;
 
     _issort_rewind(srt);
@@ -535,14 +535,14 @@ _buildbtree(Fcb *fcb, Keydesc2 *pkeydesc2, Issort *srt)
     for (i = 0; i < depth ; i++) {
 	curindex[i] = ISPAGESIZE;	     /* Any big number will do */
 	one_more[i]++;
-	nodebuf[i] = NULL;
-	nodebufhd[i] = NULL;
+	nodebuf[i] = nullptr;
+	nodebufhd[i] = nullptr;
     }
 
     /*
      * Main loop.
      */
-    while ((keyp = _issort_read(srt)) != (char *) NULL) {
+    while ((keyp = _issort_read(srt)) != (char *) nullptr) {
 
 	if (curindex[0] >= keyspernode[0] + (one_more[0] > 0)) {
 
@@ -641,7 +641,7 @@ checkavailfd(void)
 	/*
 	 * Find victim (LRU FCB) and close it.
 	 */
-	if((isfhandle2 = _mngfcb_victim()) == NULL)
+	if((isfhandle2 = _mngfcb_victim()) == nullptr)
 	    _isfatal_error ("_openfcb() cannot find LRU victim");
 
 	fcb = _mngfcb_find(isfhandle2);

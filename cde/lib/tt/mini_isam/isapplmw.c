@@ -62,7 +62,7 @@ _isapplmw(int isfd, char *magicstring)
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_setiserrno2(ENOTOPEN, '9', '0');
 	return (ISERROR);
     }
@@ -88,7 +88,7 @@ _isapplmw(int isfd, char *magicstring)
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(&fab->isfhandle, &fab->errcode)) == NULL) {
+    if ((fcb = _openfcb(&fab->isfhandle, &fab->errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }

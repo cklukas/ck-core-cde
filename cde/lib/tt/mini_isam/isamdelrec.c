@@ -57,7 +57,7 @@
 int
 _amdelrec(Bytearray *isfhandle, Recno recnum, struct errcode *errcode)
 {
-    Fcb			*fcb = NULL;
+    Fcb			*fcb = nullptr;
     char		recbuf[ISMAXRECLEN];
     int			reclen;
     int			(*rec_read)(Fcb *, char *, Recno, int *);
@@ -68,7 +68,7 @@ _amdelrec(Bytearray *isfhandle, Recno recnum, struct errcode *errcode)
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }

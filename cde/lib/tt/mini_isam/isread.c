@@ -81,7 +81,7 @@ isread(int isfd, char *record, int mode)
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_setiserrno2(ENOTOPEN, '9', '0');
 	return (ISERROR);
     }
@@ -150,14 +150,14 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
         enum readmode readmode, Bytearray *curpos, Recno *recnum,
         struct errcode *errcode)
 {
-    Fcb			*fcb = NULL;
+    Fcb			*fcb = nullptr;
     Recno		recnum2 = 0;
     int			err;
     Crp			*crp;
-    Btree		*btree = NULL;
+    Btree		*btree = nullptr;
     Keydesc2		*pkeydesc2;
     char		keybuf1[MAXKEYSIZE], keybuf2[MAXKEYSIZE];
-    char		*pkey = NULL, *pkeynext;
+    char		*pkey = nullptr, *pkeynext;
     int			skipbytes;
     int			ret;
     Bytearray		oldcurpos;
@@ -168,7 +168,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }
@@ -394,7 +394,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	/*
 	 * Find key descriptor in FCB
 	 */
-	if ((pkeydesc2 = _isfcb_indfindkey(fcb, crp->keyid)) == NULL) {
+	if ((pkeydesc2 = _isfcb_indfindkey(fcb, crp->keyid)) == nullptr) {
 	    _amseterrcode(errcode, EBADKEY);
 	    goto ERROR;
 	}
@@ -434,7 +434,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_next(btree)) == NULL) {
+            if ((pkey = _isbtree_next(btree)) == nullptr) {
 		_amseterrcode(errcode, ENOREC);
 		goto ERROR;
 	    }
@@ -474,7 +474,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_next(btree)) == NULL) {
+            if ((pkey = _isbtree_next(btree)) == nullptr) {
 		_amseterrcode(errcode, ENOREC);
 		goto ERROR;
 	    }
@@ -507,7 +507,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_current(btree)) == NULL) {
+            if ((pkey = _isbtree_current(btree)) == nullptr) {
 		_amseterrcode(errcode, ENOREC);
 		goto ERROR;
 	    }
@@ -540,7 +540,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_current(btree)) == NULL) {
+            if ((pkey = _isbtree_current(btree)) == nullptr) {
 		_amseterrcode(errcode, ENOREC);
 		goto ERROR;
 	    }
@@ -567,7 +567,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 		_isbtree_search(btree, crp->key);
 		pkey = _isbtree_current(btree);
 
-		if (pkey == NULL || 
+		if (pkey == nullptr || 
 		    ldrecno(pkey + KEY_RECNO_OFF) != crp->recno) {
 		    _amseterrcode(errcode, ENOCURR);
 		    goto ERROR;
@@ -577,7 +577,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 		_isbtree_search(btree, crp->key);
 		pkey = _isbtree_next(btree);
 
-		if (pkey == NULL) {
+		if (pkey == nullptr) {
 		    _amseterrcode(errcode, EENDFILE);
 		    goto ERROR;
 		}
@@ -626,7 +626,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 		/* crp->flag == CRP_ON || crp->flag == CRP_BEFOREANY */
 		pkey = _isbtree_next(btree);
 
-	    if (pkey == NULL) {
+	    if (pkey == nullptr) {
 		_amseterrcode(errcode, EENDFILE);
 		goto ERROR;
 	    }
@@ -683,7 +683,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
         
 	    pkey = _isbtree_current(btree);
 
-	    if (pkey == NULL) {
+	    if (pkey == nullptr) {
 		_amseterrcode(errcode, EENDFILE);
 		goto ERROR;
 	    }
@@ -709,7 +709,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_next(btree)) == NULL) {
+            if ((pkey = _isbtree_next(btree)) == nullptr) {
 		_amseterrcode(errcode, EENDFILE);
 		goto ERROR;
 	    }
@@ -735,7 +735,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_current(btree)) == NULL) {
+            if ((pkey = _isbtree_current(btree)) == nullptr) {
 		_amseterrcode(errcode, EENDFILE);
 		goto ERROR;
 	    }
@@ -799,7 +799,7 @@ _amread(Bytearray *isfhandle, char *record, int *reclen,
 	((Crp *)curpos->data)->flag = CRP_UNDEF;
     }
 
-    if (btree != NULL)
+    if (btree != nullptr)
 	_isbtree_destroy(btree);
 
     _isam_exithook();

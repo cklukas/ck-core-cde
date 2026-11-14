@@ -50,7 +50,7 @@
 Bytearray 
 _bytearr_getempty(void)
 {
-    static Bytearray	empty_bytearray = { 0, NULL};
+    static Bytearray	empty_bytearray = { 0, nullptr};
 
     return (empty_bytearray);
 }

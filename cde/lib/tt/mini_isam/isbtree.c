@@ -146,7 +146,7 @@ _isbtree_current(Btree *btree)
 
     assert(btree->depth > 0);
     if ((curpos = btree->curpos[btree->depth - 1]) == -1)
-	return (NULL);
+	return (nullptr);
     else
 	return (btree->bufhdr[btree->depth - 1]->isb_buffer
 		+ BT_KEYS_OFF + curpos * btree->keydesc2->k2_len);
@@ -181,7 +181,7 @@ _isbtree_next(Btree *btree)
 
     if (level < 0) {
 	/* Logical end of the index file. No next record. */
-	return (NULL);
+	return (nullptr);
     }
 
     curpos = ++(btree->curpos[level]);

@@ -127,7 +127,7 @@ isbuild(char *isfname, int recordlength, struct keydesc *primkey, int mode)
 		   (Bool)((mode & ISLENMODE) == ISVARLEN),
 		   minreclen,
 		   recordlength);
-    if (fab == NULL) {
+    if (fab == nullptr) {
 	return (NOISFD);		     /* iserrno is set by fab_new */
     }
 
@@ -197,7 +197,7 @@ _ambuild(char *isfname, enum openmode openmode, Bool varflag,
          struct errcode *errcode)
     
 {
-    Fcb			*fcb = NULL;
+    Fcb			*fcb = nullptr;
     Bytearray		*isfhandle2;
     Bytearray		isfhandle0 = _bytearr_getempty();
     Keydesc2		keydesc2;
@@ -223,7 +223,7 @@ _ambuild(char *isfname, enum openmode openmode, Bool varflag,
     /* 
      * Check that there is not entry with the same name in FCB cache. 
      */
-    if ((fcb = _mngfcb_find(&isfhandle0)) != NULL) {
+    if ((fcb = _mngfcb_find(&isfhandle0)) != nullptr) {
 	fcb = _mngfcb_find(&isfhandle0);
 	(void) _watchfd_decr(_isfcb_nfds(fcb));
 	_isfcb_close(fcb);
@@ -237,7 +237,7 @@ _ambuild(char *isfname, enum openmode openmode, Bool varflag,
 	/*
 	 * Find victim (LRU FCB) and close it.
 	 */
-	if((isfhandle2 = _mngfcb_victim()) == NULL)
+	if((isfhandle2 = _mngfcb_victim()) == nullptr)
 	    _isfatal_error ("_openfcb() cannot find LRU victim");
 
 	fcb = _mngfcb_find(isfhandle2);
@@ -250,7 +250,7 @@ _ambuild(char *isfname, enum openmode openmode, Bool varflag,
      * Create UNIX files, return isfhandle and File Control Block (fcb).
      */
     if ((fcb = _isfcb_create(isfname, 1, (primkey->k_nparts != 0), (int)varflag, 
-			     owner, group, umask, errcode)) == NULL) {
+			     owner, group, umask, errcode)) == nullptr) {
 	goto ERROR;
     }
     
@@ -353,7 +353,7 @@ _ambuild(char *isfname, enum openmode openmode, Bool varflag,
     return (ISOK);
 
  ERROR:
-    if (fcb != NULL) {
+    if (fcb != nullptr) {
 	_isfcb_remove(fcb);
 	_isfcb_close(fcb);
     }

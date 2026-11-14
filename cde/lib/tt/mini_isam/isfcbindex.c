@@ -222,5 +222,5 @@ _isfcb_indfindkey(Fcb *fcb, int keyid)
 	    break;
     }  
     
-    return ((i == nkeys) ? NULL : keys + i);
+    return ((i == nkeys) ? nullptr : keys + i);
 }

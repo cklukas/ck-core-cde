@@ -163,7 +163,7 @@ _isfcb_create(char *isfname, int crdat, int crind, int crvar,
 
     (void) umask(oldumask);
 
-    return (NULL);
+    return (nullptr);
 }
 
 /*
@@ -213,7 +213,7 @@ _isfcb_open(char *isfname, struct errcode *errcode)
         if(dat_fd != -1) {
             close(dat_fd);
         }
-        return (NULL);
+        return (nullptr);
     }
 
     /*
@@ -299,8 +299,8 @@ _isfcb_remove(Fcb *fcb)
 void
 _isfcb_close(Fcb *fcb)
 {
-    assert (fcb != NULL);
-    assert (fcb->isfname != NULL);
+    assert (fcb != nullptr);
+    assert (fcb->isfname != nullptr);
 
     (void) close(fcb->datfd);
     (void) close(fcb->indfd);

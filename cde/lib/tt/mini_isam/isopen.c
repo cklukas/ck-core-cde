@@ -88,7 +88,7 @@ isopen(char *isfname, int mode)
 		   (Bool)((mode & ISLENMODE) == ISVARLEN),
 		   0,
 		   0);
-    if (fab == NULL) {
+    if (fab == nullptr) {
 	return (NOISFD);		     /* iserrno is set by fab_new */
     }
 

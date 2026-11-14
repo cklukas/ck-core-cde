@@ -111,7 +111,7 @@ _isdisk_fix(Fcb *fcb, int unixfd, Blkno blkno, int mode)
     hashl = (hashhdrs +__hashblkno(fcb,blkno));
     
     /* Try to find the page in buffer pool. */
-    if ((p = _findblock(fcb, unixfd, blkno)) == NULL) {
+    if ((p = _findblock(fcb, unixfd, blkno)) == nullptr) {
 	
 	/* Page is not in the pool - install it. */
 	if (mode != ISFIXNOREAD) {
@@ -122,13 +122,13 @@ _isdisk_fix(Fcb *fcb, int unixfd, Blkno blkno, int mode)
 	    _isreadpg(unixfd, p->isb_buffer);
 
 	    p->isb_flags = ISB_READ;
-	    p->isb_oldcopy = NULL;
+	    p->isb_oldcopy = nullptr;
 	    p->isb_fcb = fcb;
 	    p->isb_unixfd  = unixfd;
 	    p->isb_blkno = blkno;
 	}
 	else
-	    p = NULL;
+	    p = nullptr;
     }	
     
     if (p && (p->isb_flags & ISB_FIXED)==0) {
@@ -429,7 +429,7 @@ _findblock(Fcb *fcb, int unixfd, Blkno blkno)
 	}
     }
     
-    return (NULL);
+    return (nullptr);
 }
 
 /* _commit1buffer() - Commit changes to buffer */
@@ -462,7 +462,7 @@ _rollback1buffer(Bufhdr *p)
     /* go through _isdisk_unfix() */
     
     /* Re-install old copy if that exists. */
-    if ((p2 = p->isb_oldcopy) != NULL) {
+    if ((p2 = p->isb_oldcopy) != nullptr) {
 	if (p2->isb_flags & ISB_CHANGE) {
 	    _isdln_append(pchangl,&p2->isb_aclist);
 	}

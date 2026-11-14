@@ -51,7 +51,7 @@ char *_ismalloc(unsigned int nbytes)
 {
     char	*p;
     
-    if ((p = (char *) malloc (nbytes)) == NULL)
+    if ((p = (char *) malloc (nbytes)) == nullptr)
 	_isfatal_error("malloc() failed");
 
     return (p);
@@ -61,7 +61,7 @@ char *_isrealloc(char *oldaddr, unsigned int nbytes)
 {
     char	*p;
     
-    if ((p = (char *) realloc (oldaddr, nbytes)) == NULL)
+    if ((p = (char *) realloc (oldaddr, nbytes)) == nullptr)
 	_isfatal_error("realloc() failed");
 
     return (p);
@@ -79,7 +79,7 @@ _isallocstring(char *str)
 {
     char	*p;
 
-    if ((p = strdup(str)) == NULL) 
+    if ((p = strdup(str)) == nullptr) 
 	_isfatal_error("strdup() failed");
 
     return (p);
@@ -94,6 +94,6 @@ _isallocstring(char *str)
 void
 _isfreestring(char *str)
 {
-    assert(str != NULL);
+    assert(str != nullptr);
     free(str);
 }

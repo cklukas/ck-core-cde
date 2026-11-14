@@ -89,19 +89,19 @@ _change1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record,
 	     * If too many duplicate entries exists, the performance will be
 	     * poor.
 	     */
-	    while ((pkey = _isbtree_next(btree)) != NULL) {
+	    while ((pkey = _isbtree_next(btree)) != nullptr) {
 		if (ldrecno(pkey + KEY_RECNO_OFF) == recnum)
 		    break;			     /* We found the entry */
 	    }
 	    
-	    if (pkey == NULL) 
+	    if (pkey == nullptr) 
 		_isfatal_error("_del1key() cannot find entry in B tree");
 	    
 	    _isbtree_remove(btree);
 	}
 	else {
 	    
-	    if ((pkey = _isbtree_current(btree)) == NULL ||
+	    if ((pkey = _isbtree_current(btree)) == nullptr ||
 		ldrecno(pkey + KEY_RECNO_OFF) != recnum)
 		_isfatal_error("_del1key() cannot find entry in B tree");
 	    
@@ -128,7 +128,7 @@ _change1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record,
 	    memcpy( keybuf2 + KEY_DUPS_OFF,(char *)ismaxlong, LONGSIZE);
 	    _isbtree_search(btree, keybuf2);
 	    
-	    if ((pkey = _isbtree_current(btree)) != NULL &&
+	    if ((pkey = _isbtree_current(btree)) != nullptr &&
 		memcmp(pkey + RECNOSIZE + DUPIDSIZE, 
 		       keybuf2 + RECNOSIZE + DUPIDSIZE,
 		       pkeydesc2->k2_len - RECNOSIZE - DUPIDSIZE) == 0) {
@@ -170,7 +170,7 @@ _change1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record,
 	    memcpy( keybuf2 + KEY_RECNO_OFF,(char *)ismaxlong, LONGSIZE);
 	    _isbtree_search (btree, keybuf2);
 	    
-	    if ((pkey = _isbtree_current(btree)) != NULL &&
+	    if ((pkey = _isbtree_current(btree)) != nullptr &&
 		memcmp(pkey + RECNOSIZE, keybuf2 + RECNOSIZE,
 		       pkeydesc2->k2_len - RECNOSIZE) == 0) {
 		_isbtree_destroy(btree);
@@ -186,7 +186,7 @@ _change1key(Fcb *fcb, Keydesc2 *pkeydesc2, char *record,
     /*
      * Return new key position.
      */
-    if (newkey != NULL)
+    if (newkey != nullptr)
 	memcpy( newkey,keybuf2, pkeydesc2->k2_len);
 	
     return (ISOK);

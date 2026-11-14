@@ -59,7 +59,7 @@ _iskey_extract (Keydesc2 *pkeydesc2, char *recp, char *keyp)
      * XXX - This is a kludge to fix a problem with keys of an odd (ODD as
      * not even) length that are extended to the nearest multiple of 2.
      *
-     * It would be better to use bzero() here and not to call it in
+     * It would be better to use memset() here and not to call it in
      * add1key etc. But this change was done just during the FCS process
      * and may be robust even though it's not the cleanest thing under
      * the sun.

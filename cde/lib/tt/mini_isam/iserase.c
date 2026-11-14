@@ -79,7 +79,7 @@ iserase(char *isfname)
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_isfatal_error("iserase() cannot find FAB");
 	_setiserrno2(EFATAL, '9', '0');
 	return ISERROR;
@@ -122,7 +122,7 @@ _amerase(Bytearray *isfhandle, struct errcode *errcode)
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	goto ERROR;
     }
 

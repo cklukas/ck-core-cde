@@ -81,7 +81,7 @@ isstart(int isfd, struct keydesc *keydesc, int length, char *record,
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_setiserrno2(ENOTOPEN, '9', '0');
 	return (ISERROR);
     }
@@ -162,7 +162,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
     Fcb			*fcb;
     Recno		recnum2 = 0;
     int			err;
-    Crp			*newcrp = NULL;
+    Crp			*newcrp = nullptr;
     char		recbuf [ISMAXRECLEN];
     Keydesc2		keydesc2;
     Keydesc2		*pkeydesc2;
@@ -171,7 +171,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
     int			matchkeylen;
     int			skipbytes;
     char		*pkey;
-    Btree		*btree = NULL;
+    Btree		*btree = nullptr;
     int			reclen2;
     int			(*rec_read)(Fcb *, char *, Recno, int *);
 
@@ -180,7 +180,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
     /*
      * Get FCB corresponding to the isfhandle handle.
      */
-    if ((fcb = _openfcb(isfhandle, errcode)) == NULL) {
+    if ((fcb = _openfcb(isfhandle, errcode)) == nullptr) {
 	_isam_exithook();
 	return (ISERROR);
     }
@@ -355,7 +355,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	_iskey_xtoi (&keydesc2, keydesc);
 	
 	/* Find key decriptor in the FCB. */
-	if ((pkeydesc2 = _isfcb_findkey(fcb ,&keydesc2)) == NULL) {
+	if ((pkeydesc2 = _isfcb_findkey(fcb ,&keydesc2)) == nullptr) {
 	    _amseterrcode(errcode, EBADKEY);
 	    goto ERROR;
 	}
@@ -420,7 +420,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_next(btree)) == NULL) {
+            if ((pkey = _isbtree_next(btree)) == nullptr) {
 		_amseterrcode(errcode, ENOREC);
 		goto ERROR;
 	    }
@@ -454,7 +454,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_next(btree)) == NULL) {
+            if ((pkey = _isbtree_next(btree)) == nullptr) {
 		_amseterrcode(errcode, ENOREC);
 		goto ERROR;
 	    }
@@ -481,7 +481,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_current(btree)) == NULL) {
+            if ((pkey = _isbtree_current(btree)) == nullptr) {
 		_amseterrcode(errcode, ENOREC);
 		goto ERROR;
 	    }
@@ -508,7 +508,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_current(btree)) == NULL) {
+            if ((pkey = _isbtree_current(btree)) == nullptr) {
 		_amseterrcode(errcode, ENOREC);
 		goto ERROR;
 	    }
@@ -529,7 +529,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_next(btree)) == NULL) {
+            if ((pkey = _isbtree_next(btree)) == nullptr) {
 		newcrp->flag = CRP_AFTERANY;
 	    }
             else {
@@ -550,7 +550,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 	     */
             _isbtree_search(btree, keybuf1);
         
-            if ((pkey = _isbtree_current(btree)) == NULL) {
+            if ((pkey = _isbtree_current(btree)) == nullptr) {
 		newcrp->flag = CRP_BEFOREANY;
 	    }
 	    else {
@@ -590,7 +590,7 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
 
  ERROR:
 
-    if (btree != NULL)
+    if (btree != nullptr)
 	_isbtree_destroy(btree);
 
     /*
@@ -604,13 +604,13 @@ _amstart(Bytearray *isfhandle, char *record, enum readmode readmode,
      * If error is ENOREC, switch to the new key, but set the current
      * record position undefined.
      */
-    if (errcode->iserrno == ENOREC && newcrp != NULL) {
+    if (errcode->iserrno == ENOREC && newcrp != nullptr) {
 	_bytearr_free(curpos);
 	*curpos = _bytearr_new((u_short)newcrpsize, (char *)newcrp);
 	((Crp *)curpos->data)->flag = CRP_UNDEF;
     }
 
-    if (newcrp != NULL)
+    if (newcrp != nullptr)
 	free((char *)newcrp);
     _isdisk_inval();
 

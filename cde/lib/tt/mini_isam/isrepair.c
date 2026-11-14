@@ -94,7 +94,7 @@ int isrepair(char *isfname, int verbose)
   sigset_t    oldmask;
   sigset_t    allsignals;
   char	      Buffer[BUFSIZ];
-  char	      *buffer = NULL;
+  char	      *buffer = nullptr;
 
 
   print = verbose ? printf : isnoprintf;
@@ -211,7 +211,7 @@ int isrepair(char *isfname, int verbose)
       offset += minreclen + 1;
     }
 	
-    if (prec != NULL) {
+    if (prec != nullptr) {
       if (iswrrec(isfd, recnum, prec) == ISERROR) {
 	cmd_error("iswrrec", print);
 	goto ERROR;
@@ -315,7 +315,7 @@ int isrepair(char *isfname, int verbose)
     }
   }
   (void)isclose(isfd);
-  (void)sigprocmask(SIG_SETMASK, &oldmask, NULL);
+  (void)sigprocmask(SIG_SETMASK, &oldmask, nullptr);
 
   print("...File repaired\n");
   if (buffer != Buffer) free(buffer);
@@ -358,13 +358,13 @@ Static char *
 rp_readrecord_f(int datfd, long offset, int reclen)
 {
     if (lseek(datfd, offset, 0) != offset)
-	return ((char *) NULL);
+	return ((char *) nullptr);
 
     if (read(datfd, recordbuffer, reclen + 1) != (reclen + 1))
-	return ((char *) NULL);
+	return ((char *) nullptr);
 
     if (recordbuffer[0] == FL_RECDELETED)
-	return ((char *) NULL);
+	return ((char *) nullptr);
 
     return (recordbuffer + 1);
 }
@@ -378,13 +378,13 @@ rp_readrecord_v(int datfd, int varfd, long offset, int minreclen, int maxreclen)
     int		taillen;
     
     if (lseek(datfd, offset, 0) != offset)
-	return ((char *) NULL);
+	return ((char *) nullptr);
 
     if (read(datfd, recordbuffer, minreclen + LONGSIZE) != (minreclen + LONGSIZE))
-	return ((char *) NULL);
+	return ((char *) nullptr);
 
     if ((tailoff = ldlong(recordbuffer)) == VL_RECDELETED)
-	return ((char *) NULL);
+	return ((char *) nullptr);
 
     isreclen = minreclen;
 

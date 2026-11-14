@@ -58,19 +58,19 @@ isgetcurpos(int isfd, int *len, char **buf)
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_setiserrno2(ENOTOPEN, '9', '0');
 	return (ISERROR);
     }
 
     total_len = sizeof(total_len) + fab->curpos.length;
 
-    if (*buf != NULL && *len < (int)total_len) {	
+    if (*buf != nullptr && *len < (int)total_len) {	
 	_setiserrno2(E2BIG, '9', '0');
 	return (ISERROR);
     }
 
-    if (*buf == NULL) {
+    if (*buf == nullptr) {
 	*len = total_len;
 	*buf = _ismalloc((unsigned int)total_len);
     }
@@ -96,7 +96,7 @@ issetcurpos(int isfd, char *buf)
     /*
      * Get File Access Block.
      */
-    if ((fab = _isfd_find(isfd)) == NULL) {
+    if ((fab = _isfd_find(isfd)) == nullptr) {
 	_setiserrno2(ENOTOPEN, '9', '0');
 	return (ISERROR);
     }
