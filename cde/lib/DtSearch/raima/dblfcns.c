@@ -305,11 +305,10 @@ initdbt(const char *dbnames)
    }
 
    /* allocate db_table space */
-   /* Macro references must be on one line for some compilers */ 
-   if ((ALLOC_TABLE(&db_global.Db_table, no_of_dbs*sizeof(DB_ENTRY), 
-		    old_no_of_dbs*sizeof(DB_ENTRY), "db_table") != S_OKAY) ||
-       (ALLOC_TABLE(&db_global.Rn_table, no_of_dbs*sizeof(RN_ENTRY), 
-		    old_no_of_dbs*sizeof(RN_ENTRY), "rn_table") != S_OKAY)) {
+   if ((ALLOC_TABLE(&db_global.Db_table, no_of_dbs, old_no_of_dbs,
+		    sizeof(DB_ENTRY)) != S_OKAY) ||
+       (ALLOC_TABLE(&db_global.Rn_table, no_of_dbs, old_no_of_dbs,
+		    sizeof(RN_ENTRY)) != S_OKAY)) {
       return( db_status );
    }
 
@@ -460,19 +459,19 @@ void termfree(void)
 int alloc_table(
 CHAR_P *Table,
 #define table Table->ptr
-unsigned new_size,
-unsigned old_size
+size_t new_count,
+size_t old_count,
+size_t elem_size
 )
 {
    CHAR_P Temp_table;
 
-   Temp_table.ptr = ALLOC(&Temp_table, new_size, varname);
+   Temp_table.ptr = CALLOC(&Temp_table, new_count, elem_size, "table");
    if ( Temp_table.ptr == nullptr ) {
       return( dberr(S_NOMEMORY) );
    }
-   memset(&Temp_table.ptr[old_size], 0, new_size - old_size);
-   if ( old_size ) {
-      memcpy(Temp_table.ptr, table, old_size);
+   if ( old_count ) {
+      memcpy(Temp_table.ptr, table, (old_count < new_count ? old_count : new_count) * elem_size);
       MEM_UNLOCK(Table);
       FREE(Table);
    }

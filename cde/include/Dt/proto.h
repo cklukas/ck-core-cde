@@ -147,8 +147,8 @@ void dbautorec(void);
 /* From dblfcns.c: */
 int taskinit(TASK *);
 int initdbt(const char *);
-int alloc_table(CHAR_P *, unsigned, unsigned);
-#define ALLOC_TABLE(t, n, o, v)	alloc_table((CHAR_P *)(t), n, o)
+int alloc_table(CHAR_P *, size_t, size_t, size_t);
+#define ALLOC_TABLE(t, n, o, s)	alloc_table((CHAR_P *)(t), n, o, s)
 void termfree(void);
 
 /* From dio.c: */

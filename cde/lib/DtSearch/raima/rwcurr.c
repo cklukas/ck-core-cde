@@ -62,7 +62,7 @@ d_rdcurr(DB_ADDR **currbuff, int *currsize)
    DB_ENTER(NO_DB_ID TASK_ID LOCK_SET(SET_NOIO));
 
    cs = 2*size_st + 1;
-   *currbuff = (DB_ADDR *)ALLOC(nullptr, cs*sizeof(DB_ADDR), "currbuff");
+   *currbuff = (DB_ADDR *)CALLOC(nullptr, cs, sizeof(DB_ADDR), "currbuff");
    if ( *currbuff == nullptr ) RETURN( dberr(S_NOMEMORY) );
    *currsize = cs * sizeof(DB_ADDR);
    RETURN( d_rerdcurr(currbuff) );

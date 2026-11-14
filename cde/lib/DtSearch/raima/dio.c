@@ -316,17 +316,12 @@ dio_init(void)
       return( S_OKAY );
    } /* end if ( dbpg_table ) */
 
-   used_files =
-	/* Macro references must be on one line for some compilers */ 
-	(int *)ALLOC(&Used_files, (size_ft+1)*sizeof(int), "used_files");
-   db_lookup =
-	/* Macro references must be on one line for some compilers */ 
-	(LOOKUP_ENTRY *)
-	ALLOC(&Db_lookup, db_pgtab_sz*sizeof(LOOKUP_ENTRY), "db_lookup");
-   dbpg_table =
-	/* Macro references must be on one line for some compilers */ 
-	(PAGE_ENTRY *)
-	ALLOC(&Dbpg_table, db_pgtab_sz*sizeof(PAGE_ENTRY), "dbpg_table");
+   used_files = (int *)CALLOC(&Used_files, size_ft + 1, sizeof(int),
+			      "used_files");
+   db_lookup = (LOOKUP_ENTRY *)CALLOC(&Db_lookup, db_pgtab_sz,
+				      sizeof(LOOKUP_ENTRY), "db_lookup");
+   dbpg_table = (PAGE_ENTRY *)CALLOC(&Dbpg_table, db_pgtab_sz,
+				     sizeof(PAGE_ENTRY), "dbpg_table");
 #ifdef DEBUG_DIO
    if (debugging_dio_init) {
 	printf (__FILE__"345 dio_init: usedfls=%p lookup=%p pgtab=%p\n",
@@ -336,7 +331,6 @@ dio_init(void)
 #endif
    if ( !used_files || !dbpg_table || !db_lookup )
       return( dberr(S_NOMEMORY) );
-   memset(used_files, 0, (size_ft + 1)*sizeof(*used_files));
 
    last_dblu.file = -1;
    last_dblu.pageno = -1L;
@@ -1057,8 +1051,8 @@ static int dio_pzinit(void)
 #endif
 
    /* Macro references must be on one line for some compilers */ 
-   if (ALLOC_TABLE(&db_global.Pgzero, size_ft*sizeof(PGZERO), 
-		      old_size_ft*sizeof(PGZERO), "pgzero") != S_OKAY ) {
+   if (ALLOC_TABLE(&db_global.Pgzero, size_ft, old_size_ft,
+		   sizeof(PGZERO)) != S_OKAY ) {
 #ifdef DEBUG_DIO
 	if (debugging_dio_init) {
 	    printf (__FILE__"1444 pzinit: alloc_table failed, db_status=%d\n",

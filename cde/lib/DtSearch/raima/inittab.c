@@ -527,8 +527,6 @@ goodver:
 */
 static int alloc_dict(void)
 {
-   int old_size;
-   int new_size;
    int extra_file = 0;
    DB_ENTRY *db_ptr;
 
@@ -554,34 +552,26 @@ static int alloc_dict(void)
       old_size_rt = db_ptr->Size_rt + db_ptr->rt_offset;
    }
 
-   new_size = (size_ft + extra_file) * sizeof(FILE_ENTRY);
-   old_size = old_size_ft * sizeof(FILE_ENTRY);
-   if ( ALLOC_TABLE(&db_global.File_table, new_size, old_size, "file_table")
+   if ( ALLOC_TABLE(&db_global.File_table, (size_ft + extra_file), old_size_ft, sizeof(FILE_ENTRY))
 								!= S_OKAY ) {
       return( db_status );
    }
 
    /* allocate record_table */
-   new_size = size_rt * sizeof(RECORD_ENTRY);
-   old_size = old_size_rt * sizeof(RECORD_ENTRY);
-   if ( ALLOC_TABLE(&db_global.Record_table, new_size, old_size, "record_table")
+   if ( ALLOC_TABLE(&db_global.Record_table, size_rt, old_size_rt, sizeof(RECORD_ENTRY))
 								!= S_OKAY ) {
       return( db_status );
    }
 
    /* allocate field_table */
-   new_size = size_fd * sizeof(FIELD_ENTRY);
-   old_size = old_size_fd * sizeof(FIELD_ENTRY);
-   if ( ALLOC_TABLE(&db_global.Field_table, new_size, old_size, "field_table")
+   if ( ALLOC_TABLE(&db_global.Field_table, size_fd, old_size_fd, sizeof(FIELD_ENTRY))
    								!= S_OKAY ) {
       return( db_status );
    }
 
    /* allocate set table */
    if ( size_st ) {
-      new_size = size_st * sizeof(SET_ENTRY);
-      old_size = old_size_st * sizeof(SET_ENTRY);
-      if ( ALLOC_TABLE(&db_global.Set_table, new_size, old_size, "set_table")
+      if ( ALLOC_TABLE(&db_global.Set_table, size_st, old_size_st, sizeof(SET_ENTRY))
 								!= S_OKAY ) {
 	 return( db_status );
       }
@@ -589,9 +579,7 @@ static int alloc_dict(void)
 
    /* allocate member_table */
    if ( size_mt ) {
-      new_size = size_mt * sizeof(MEMBER_ENTRY);
-      old_size = old_size_mt * sizeof(MEMBER_ENTRY);
-      if ( ALLOC_TABLE(&db_global.Member_table, new_size, old_size, "member_table")
+      if ( ALLOC_TABLE(&db_global.Member_table, size_mt, old_size_mt, sizeof(MEMBER_ENTRY))
 								!= S_OKAY ) {
 	 return( db_status );
       }
@@ -599,9 +587,7 @@ static int alloc_dict(void)
 
    /* allocate sort_table */
    if ( size_srt ) {
-      new_size = size_srt * sizeof(SORT_ENTRY);
-      old_size = old_size_srt * sizeof(SORT_ENTRY);
-      if ( ALLOC_TABLE(&db_global.Sort_table, new_size, old_size, "sort_table")
+      if ( ALLOC_TABLE(&db_global.Sort_table, size_srt, old_size_srt, sizeof(SORT_ENTRY))
 								!= S_OKAY ) {
 	 return( db_status );
       }
@@ -609,9 +595,7 @@ static int alloc_dict(void)
 
    /* allocate key_table */
    if ( size_kt ) {
-      new_size = size_kt * sizeof(KEY_ENTRY);
-      old_size = old_size_kt * sizeof(KEY_ENTRY);
-      if ( ALLOC_TABLE(&db_global.Key_table, new_size, old_size, "key_table")
+      if ( ALLOC_TABLE(&db_global.Key_table, size_kt, old_size_kt, sizeof(KEY_ENTRY))
 								!= S_OKAY ) {
 	 return( db_status );
       }
@@ -629,8 +613,6 @@ static int initcurr(void)
    RECORD_ENTRY *rec_ptr;
    SET_ENTRY *set_ptr;
    DB_ADDR *co_ptr;
-   int old_size;
-   int new_size;
 
    /* Initialize current record and type */
    for (dbt_lc = no_of_dbs, curr_db_table = &db_table[old_no_of_dbs],
@@ -642,13 +624,11 @@ static int initcurr(void)
    }
 
    if ( size_st ) {
-      new_size = size_st * sizeof(DB_ADDR);
-      old_size = old_size_st * sizeof(DB_ADDR);
-      if ( ALLOC_TABLE(&db_global.Curr_own, new_size, old_size, "curr_own")
+      if ( ALLOC_TABLE(&db_global.Curr_own, size_st, old_size_st, sizeof(DB_ADDR))
 								!= S_OKAY ) {
 	 return( db_status );
       }
-      if ( ALLOC_TABLE(&db_global.Curr_mem, new_size, old_size, "curr_mem")
+      if ( ALLOC_TABLE(&db_global.Curr_mem, size_st, old_size_st, sizeof(DB_ADDR))
 								!= S_OKAY ) {
 	 return( db_status );
       }

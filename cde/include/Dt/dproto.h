@@ -176,8 +176,8 @@ int d_encode_dba(int, long, DB_ADDR *);
 #define d_memlock_group(lg)	S_OKAY
 #define d_memunlock(p)		/**/
 #define d_memunlock_group(lg)	/**/
-char * d_alloc(unsigned);		/* alloc.c */
-char * d_calloc(unsigned, unsigned);	/* alloc.c */
+char * d_alloc(size_t);		/* alloc.c */
+char * d_calloc(size_t, size_t);	/* alloc.c */
 void d_free(CHAR_P *);			/* alloc.c */
 
 #define dt_opentask(a) S_OKAY

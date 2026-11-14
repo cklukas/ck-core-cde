@@ -90,7 +90,7 @@
 
 /* Allocate and clear i*s bytes of memory
 */
-char * d_calloc(unsigned i, unsigned s)
+char * d_calloc(size_t i, size_t s)
 {
    return (I_CALLOC(cp, i, s));
 }
@@ -98,7 +98,7 @@ char * d_calloc(unsigned i, unsigned s)
 
 /* Allocate b bytes of memory
 */
-char * d_alloc(unsigned b)
+char * d_alloc(size_t b)
 {
    return (I_MALLOC(cp, b));
 }

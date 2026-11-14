@@ -163,10 +163,8 @@ key_open(void)
 	 ++no_of_keys;
    }
    if ( no_of_keys ) {
-      key_info =
-	/* Macro references must be on one line for some compilers */
-	(KEY_INFO *)
-	ALLOC(&db_global.Key_info, no_of_keys*sizeof(KEY_INFO), "key_info");
+      key_info = (KEY_INFO *)CALLOC(&db_global.Key_info, no_of_keys,
+				    sizeof(KEY_INFO), "key_info");
       if ( ! key_info )
 	 return( dberr(S_NOMEMORY) );
       for (i = 0, fld_ptr = &field_table[old_size_fd];
@@ -189,12 +187,11 @@ key_open(void)
 	    for (t = file_ptr->ft_slots, l = 1; t < MAXRECORDS; ++l)
 	       t *= file_ptr->ft_slots;
 	    ki_ptr->max_lvls = ++l;
-	    ki_ptr->node_path =
-		(NODE_PATH *)
-		ALLOC(&ki_ptr->Node_path, l*sizeof(NODE_PATH), db_avname);
+	    ki_ptr->node_path = (NODE_PATH *)CALLOC(&ki_ptr->Node_path, l,
+						    sizeof(NODE_PATH),
+						    db_avname);
 	    if ( ! ki_ptr->node_path )
 	       return( dberr(S_NOMEMORY) );
-	    memset(ki_ptr->node_path, 0, l*sizeof(NODE_PATH));
 	    MEM_UNLOCK(&ki_ptr->Node_path);
 	 }
       }

@@ -82,6 +82,7 @@
  * - Prefix all vista utility names with "dt...", also to deconfuse.
  *
  */
+#include <stddef.h>
 #include <limits.h>
 #include <stdint.h>
 
