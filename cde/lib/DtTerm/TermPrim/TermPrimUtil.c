@@ -415,7 +415,7 @@ _DtTermPrimStartLog(Widget w)
     if (!strcmp(tw->term.logFile + strlen(tw->term.logFile) - 6, "XXXXXX")) {
 	/* make a local copy in case we are going to change it... */
 	cp = XtMalloc(strlen(tw->term.logFile) + 1);
-	(void) strcpy(cp, tw->term.logFile);
+	(void) memcpy(cp, tw->term.logFile, strlen(tw->term.logFile) + 1);
 
         int logStream = mkstemp(cp);
 	if (logStream != -1) {

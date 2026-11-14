@@ -116,7 +116,7 @@ setDebugFlags(char *c1)
 
     /* don't destroy the original string... */
     c2 = malloc(strlen(c1) + 1);
-    (void) strcpy(c2, c1);
+    (void) memcpy(c2, c1, strlen(c1) + 1);
 
 
     argHead.next = (argArray *) 0;
@@ -331,7 +331,7 @@ timeStamp(char *msg)
 	char buffer[BUFSIZ];
 
 	if (!(c = getenv("timeStampFileName"))) {
-	    (void) sprintf(buffer, "timeStamp-%d", getpid());
+	    (void) snprintf(buffer, sizeof(buffer), "timeStamp-%d", getpid());
 	    c = buffer;
 	}
 
@@ -427,6 +427,7 @@ enumToName
 {
     int 		  i1;
     char		  buffer[BUFSIZ];
+    size_t		  len;
     static char		 *retBuffer = nullptr;
     char		 *newBuffer;
 
@@ -436,7 +437,8 @@ enumToName
 	}
     }
     snprintf(buffer, BUFSIZ, "Unknown Value %d", value);
-    newBuffer = realloc(retBuffer, strlen(buffer) + 1);
+    len = strlen(buffer) + 1;
+    newBuffer = realloc(retBuffer, len);
     if (nullptr == newBuffer) {
 	/* retBuffer, if any, is still valid; this is a debugging aid, so
 	 * name the value without its number
@@ -444,7 +446,7 @@ enumToName
 	return("Unknown Value");
     }
     retBuffer = newBuffer;
-    (void) strcpy(retBuffer, buffer);
+    (void) memcpy(retBuffer, buffer, len);
     return(retBuffer);
 }
 

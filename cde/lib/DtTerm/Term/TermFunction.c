@@ -1127,9 +1127,9 @@ void _DtTermSetCurrentWorkingDirectory(
     _DtTermWidgetToAppContext(w);
 
     _DtTermAppLock(app);
-    vtw->term.subprocessCWD =
-	    XtRealloc(vtw->term.subprocessCWD, strlen(cwd) + 1);
-    (void) strcpy(vtw->term.subprocessCWD, cwd);
+    size_t len = strlen(cwd) + 1;
+    vtw->term.subprocessCWD = XtRealloc(vtw->term.subprocessCWD, len);
+    (void) memcpy(vtw->term.subprocessCWD, cwd, len);
     _DtTermAppUnlock(app);
 }
 

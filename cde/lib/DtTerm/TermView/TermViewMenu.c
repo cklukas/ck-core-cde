@@ -338,7 +338,7 @@ mallocGETMESSAGE(int msgset, int msg, char *defaultString)
 
     c2 = GETMESSAGE(msgset, msg, defaultString);
     c1 = XtMalloc(strlen(c2) + 1);
-    (void) strcpy(c1, c2);
+    (void) memcpy(c1, c2, strlen(c2) + 1);
     return(c1);
 }
 
@@ -353,6 +353,7 @@ createSizeMenu
     Widget		  submenu;
     Widget		  button;
     long		  i1;
+    size_t		  len;
     char		 *c1;
     char		 *c2;
 #ifdef	NOTDEF
@@ -379,14 +380,15 @@ createSizeMenu
 	    XtCalloc((1 + tw->termview.sizeList.numSizes), sizeof(Widget));
 #endif	/* WINDOW_SIZE_TOGGLES */
     for (i1 = 0; i1 < tw->termview.sizeList.numSizes; i1++) {
+	len = 0;
 	*buffer = '\0';
 	if (tw->termview.sizeList.sizes[i1].columns > 0) {
-	    (void) sprintf(buffer + strlen(buffer), "%hd",
+	    len += snprintf(buffer + len, sizeof(buffer) - len, "%hd",
 		    tw->termview.sizeList.sizes[i1].columns);
 	}
-	(void) strcat(buffer, "x");
+	len += snprintf(buffer + len, sizeof(buffer) - len, "x");
 	if (tw->termview.sizeList.sizes[i1].rows > 0) {
-	    (void) sprintf(buffer + strlen(buffer), "%hd",
+	    (void) snprintf(buffer + len, sizeof(buffer) - len, "%hd",
 		    tw->termview.sizeList.sizes[i1].rows);
 	}
 #ifdef NOTDEF
@@ -470,6 +472,8 @@ createFontMenu
     char		  mnemonics[BUFSIZ];
     char		  buffer[BUFSIZ];
     char		  fontName[BUFSIZ];
+    size_t		  len;
+    Boolean		  entryTooLong;
     KeySym		  ks;
     int			  dpi;
     char		**fontNames;
@@ -501,8 +505,14 @@ createFontMenu
     fontArray = (fontArrayType *) XtCalloc(i1, sizeof(fontArrayType));
     for (i1 = 0, c1 = tw->termview.userFontList; *c1; ) {
 	/* copy over the userFontList up to the end, or a newline... */
+	entryTooLong = False;
 	for (c2 = buffer; *c1 && (*c1 != '\n'); ) {
-	    *c2++ = *c1++;
+	    if (c2 < buffer + sizeof(buffer) - 1) {
+		*c2++ = *c1++;
+	    } else {
+		entryTooLong = True;
+		c1++;
+	    }
 	}
 	/* null term the copy and skip over the newline... */
 	*c2++ = '\0';
@@ -511,12 +521,12 @@ createFontMenu
 	}
 
 	/* if this entry is empty, skip it... */
-	if (!*buffer) {
+	if (!*buffer || entryTooLong) {
 	    continue;
 	}
 
 	fontArray[i1].labelName = XtMalloc(strlen(buffer) + 1);
-	(void) strcpy(fontArray[i1].labelName, buffer);
+	(void) memcpy(fontArray[i1].labelName, buffer, strlen(buffer) + 1);
 	/* look for a separating '/'... */
 	if ((c2 = strchr(fontArray[i1].labelName, '/'))) {
 	    /* found, null it out... */
@@ -526,7 +536,8 @@ createFontMenu
 	} else {
 	    /* calculate the pixelsize for the font... */
 	    fontArray[i1].fontName = fontArray[i1].labelName;
-	    (void) strcpy(fontName, fontArray[i1].labelName);
+	    (void) memcpy(fontName, fontArray[i1].labelName,
+		    strlen(fontArray[i1].labelName) + 1);
 
 	    /* clear out the .labelName... */
 	    fontArray[i1].labelName = (char *) 0;
@@ -541,7 +552,9 @@ createFontMenu
 		if (fontName[strlen(fontName) - 1] == '-') {
 		    fontName[strlen(fontName) - 1] = '\0';
 		}
-		(void) strcat(fontName, (GETMESSAGE(NL_SETN_ViewMenu,4, "-iso8859-1")));
+		len = strlen(fontName);
+		(void) snprintf(fontName + len, sizeof(fontName) - len, "%s",
+			(GETMESSAGE(NL_SETN_ViewMenu,4, "-iso8859-1")));
 	    }
 	    if ((fontNames =
 		    XListFonts(XtDisplay(w), fontName, 1, &fontNameCount))) {
@@ -562,23 +575,24 @@ createFontMenu
 		    /* this was taken from the style manager... */
 		    if (dpi <= 72) {
 			/* whole points... */
-			(void) sprintf(fontName, (GETMESSAGE(NL_SETN_ViewMenu,5, "%d point")),
+			(void) snprintf(fontName, sizeof(fontName), (GETMESSAGE(NL_SETN_ViewMenu,5, "%d point")),
 				(int) (pointSize + 0.5));
 		    } else if (dpi <= 144) {
 			/* half points... */
-			(void) sprintf(fontName, (GETMESSAGE(NL_SETN_ViewMenu,6, "%.1f point")),
+			(void) snprintf(fontName, sizeof(fontName), (GETMESSAGE(NL_SETN_ViewMenu,6, "%.1f point")),
 				((int) (pointSize * 2.0 + 0.5)) / 2.0);
 		    } else if (dpi <= 720) {
 			/* tenth point... */
-			(void) sprintf(fontName, (GETMESSAGE(NL_SETN_ViewMenu,7, "%.1f point")),
+			(void) snprintf(fontName, sizeof(fontName), (GETMESSAGE(NL_SETN_ViewMenu,7, "%.1f point")),
 				((int) (pointSize * 10.0 + 0.5)) / 10.0);
 		    } else {
 			/* hundredth point... */
-			(void) sprintf(fontName, (GETMESSAGE(NL_SETN_ViewMenu,8, "%.2f point")),
+			(void) snprintf(fontName, sizeof(fontName), (GETMESSAGE(NL_SETN_ViewMenu,8, "%.2f point")),
 				((int) (pointSize * 100.0 + 0.5)) / 100.0);
 		    }
 		    fontArray[i1].labelName = XtMalloc(strlen(fontName) + 1);
-		    (void) strcpy(fontArray[i1].labelName, fontName);
+		    (void) memcpy(fontArray[i1].labelName, fontName,
+			    strlen(fontName) + 1);
 		}
 		/* free up the fontNames... */
 		(void) XFreeFontNames(fontNames);

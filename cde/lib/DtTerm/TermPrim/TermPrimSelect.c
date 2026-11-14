@@ -48,6 +48,7 @@
 #include <Xm/DropTrans.h>
 #include <Dt/Dnd.h>
 #include <string.h>
+#include <stdckdint.h>
 #include <ctype.h>
 #include <wctype.h>
 
@@ -1495,6 +1496,34 @@ _DtTermPrimSelectExtendEnd
     _DtTermPrimCursorOn(w);
 }
 
+/* Return an XtMalloc'd string that holds the strings of list one after
+ * the other.
+ */
+static char *
+joinTextList(char **list, int count)
+{
+    size_t size = 1;	/* 1: NUL */
+    size_t offset = 0;
+    char *joined;
+    int i;
+
+    for (i = 0; i < count; i++) {
+	if (ckd_add(&size, size, strlen(list[i]))) {
+	    XtErrorMsg("memory", "joinTextList", "XtToolkitError",
+		    "selection too long", nullptr, nullptr);
+	}
+    }
+    joined = XtMalloc(size);
+    for (i = 0; i < count; i++) {
+	size_t len = strlen(list[i]);
+
+	(void) memcpy(joined + offset, list[i], len);
+	offset += len;
+    }
+    joined[offset] = '\0';
+    return joined;
+}
+
 /*ARGSUSED*/
 static void
 doHandleTargets
@@ -1541,16 +1570,8 @@ doHandleTargets
         */
         if (numVals  && (status == Success || status > 0))
         { 
-            for (i = 0; i < numVals  ; i++)
-            {
-                 malloc_size += strlen(tmp_value[i]);
-            }
-            total_tmp_value = XtMalloc ((unsigned) malloc_size + 1);
-            total_tmp_value[0] = '\0';
-            for (i = 0; i < numVals  ; i++)
-            {
-                strcat(total_tmp_value, tmp_value[i]);
-            }
+            malloc_size = 1; /* total_tmp_value is to be freed */
+            total_tmp_value = joinTextList(tmp_value, numVals);
             block.ptr    = total_tmp_value;
             block.length = strlen(total_tmp_value);
             block.format = XmFMT_8_BIT;
@@ -3033,13 +3054,8 @@ _DtTermPrimSelectPasteClipboard
 
      /* if no conversions, num_vals doesn't change */
       if (num_vals && (status == Success || status > 0)) {
-	 for (i = 0; i < num_vals ; i++)
-	     malloc_size += strlen(tmp_value[i]);
-
-	 total_tmp_value = XtMalloc ((unsigned) malloc_size + 1);
-	 total_tmp_value[0] = '\0';
-	 for (i = 0; i < num_vals ; i++)
-	    strcat(total_tmp_value, tmp_value[i]);
+	 malloc_size = 1; /* total_tmp_value is to be freed */
+	 total_tmp_value = joinTextList(tmp_value, num_vals);
 	 block.ptr = total_tmp_value;
 	 block.length = strlen(total_tmp_value);
 	 block.format = XmFMT_8_BIT;

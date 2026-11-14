@@ -325,7 +325,7 @@ CursorBlinkCallback
 	    if (options->cursor.blinkRate.oldBlinkRate <= 0) {
 		options->cursor.blinkRate.oldBlinkRate = 250;
 	    }
-	    (void) sprintf(buffer, "%d",
+	    (void) snprintf(buffer, sizeof(buffer), "%d",
 		    options->cursor.blinkRate.oldBlinkRate);
 	    (void) XmTextFieldSetString(options->cursor.blinkRate.text, buffer);
 	}
@@ -410,14 +410,14 @@ UpdateGlobalOptionsDialog
 	if (options->cursor.blinkRate.oldBlinkRate <= 0) {
 	    (void) XmTextFieldSetString(options->cursor.blinkRate.text, "");
 	} else {
-	    (void) sprintf(buffer, "%d",
+	    (void) snprintf(buffer, sizeof(buffer), "%d",
 		    options->cursor.blinkRate.oldBlinkRate);
 	    (void) XmTextFieldSetString(options->cursor.blinkRate.text, buffer);
 	}
     } else {
 	(void) XtSetSensitive(options->cursor.blinkRate.label, True);
 	(void) XtSetSensitive(options->cursor.blinkRate.text, True);
-	(void) sprintf(buffer, "%d", blinkRate);
+	(void) snprintf(buffer, sizeof(buffer), "%d", blinkRate);
 	(void) XmTextFieldSetString(options->cursor.blinkRate.text, buffer);
 	if (blinkRate > 0) {
 	    options->cursor.blinkRate.oldBlinkRate = blinkRate;
@@ -461,7 +461,7 @@ UpdateGlobalOptionsDialog
 	(void) XtSetSensitive(options->bell.bellMarginDistance.label, False);
 	(void) XtSetSensitive(options->bell.bellMarginDistance.text, False);
     }
-    (void) sprintf(buffer, "%d", nMarginBell);
+    (void) snprintf(buffer, sizeof(buffer), "%d", nMarginBell);
     (void) XmTextFieldSetString(options->bell.bellMarginDistance.text, buffer);
 }
 

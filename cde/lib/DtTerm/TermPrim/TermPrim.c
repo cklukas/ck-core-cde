@@ -38,6 +38,7 @@ extern char * _DtTermPrimGetMessage( char *filename, int set, int n, char *s );
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdckdint.h>
 #include <X11/X.h>
 #include <X11/keysym.h>
 #include <Xm/MessageB.h>
@@ -1301,11 +1302,17 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
 	    Debug('f', fprintf(stderr, ">>generating bold fontset\n"));
 	    num_fonts = XFontsOfFontSet(tw->term.fontSet, &fonts, &fontNames);
 
-	    for (i = 0; i < num_fonts; ++i)
+	    for (i = 0; i < num_fonts; ++i) {
 		/* 2: COMMA and SPACE */
-		len += strlen(fontNames[i]) + boldLen + 2;
+		if (ckd_add(&len, len, strlen(fontNames[i])) ||
+			ckd_add(&len, len, boldLen + 2)) {
+		    len = 0;
+		    break;
+		}
+	    }
 
-	    boldFontNames = malloc(len);
+	    if (len != 0)
+		boldFontNames = malloc(len);
 	}
 
 	if (boldFontNames) {
@@ -1339,7 +1346,7 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
 		/* make boldFont bold by swapping the bold in for the
 		 * weight...
 		 */
-		(void) strcpy(c2, bold);
+		(void) memcpy(c2, bold, boldLen);
 		c2 += boldLen;
 
 		/* skip over the weight in the source... */
@@ -1395,42 +1402,45 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
 	    /* get the fontname associated with the font... */
 	    if (XGetFontProperty(tw->term.font, XA_FONT, &ret)) {
 		fontName = XGetAtomName(XtDisplay(w), ret);
-		/* copy over the first 3 fields... */
-		for (c1 = fontName, c2 = boldFontName, i2 = 0;
-			(i2 < 3) && *c1; i2++) {
-		    while (*c1 && (*c1 != '-')) {
-			*c2++ = *c1++;
-		    }
-		    if (!*c1) {
-			break;
-		    }
-		    /* copy over the '-'... */
-		    *c2++ = *c1++;
-		}
-		/* make boldFont bold by swapping the bold in for the
-		 * weight...
-		 */
-		(void) strcpy(c2, bold);
-		c2 += boldLen;
+		/* the bold name is at most the name plus the weight */
+		if (fontName && strlen(fontName) < sizeof(boldFontName) - boldLen) {
+			/* copy over the first 3 fields... */
+			for (c1 = fontName, c2 = boldFontName, i2 = 0;
+				(i2 < 3) && *c1; i2++) {
+			    while (*c1 && (*c1 != '-')) {
+				*c2++ = *c1++;
+			    }
+			    if (!*c1) {
+				break;
+			    }
+			    /* copy over the '-'... */
+			    *c2++ = *c1++;
+			}
+			/* make boldFont bold by swapping the bold in for the
+			 * weight...
+			 */
+			(void) memcpy(c2, bold, boldLen);
+			c2 += boldLen;
 
-		/* skip over the weight in the source... */
-		while (*c1 && (*c1 != '-')) {
-		    c1++;
-		}
+			/* skip over the weight in the source... */
+			while (*c1 && (*c1 != '-')) {
+			    c1++;
+			}
 
-		/* copy over the rest of the fontname... */
-		while (*c1) {
-		    *c2++ = *c1++;
-		}
+			/* copy over the rest of the fontname... */
+			while (*c1) {
+			    *c2++ = *c1++;
+			}
 
-		/* null term the string... */
-		*c2 = '\0';
+			/* null term the string... */
+			*c2 = '\0';
 
-		tw->term.boldFont = XLoadQueryFont(XtDisplay(w), boldFontName);
-		/* create a bold render font... */
-		if (tw->term.boldFont) {
-		    tpd->boldTermFont =
-			    _DtTermPrimRenderFontCreate(w, tw->term.boldFont);
+			tw->term.boldFont = XLoadQueryFont(XtDisplay(w), boldFontName);
+			/* create a bold render font... */
+			if (tw->term.boldFont) {
+			    tpd->boldTermFont =
+				    _DtTermPrimRenderFontCreate(w, tw->term.boldFont);
+			}
 		}
                 XFree(fontName) ;
 	    }
@@ -2406,6 +2416,25 @@ SetValues(Widget cur_w, Widget ref_w, Widget w, ArgList args,
     return(flag);
 }
 
+/* Return an XtMalloc'd "name=value" string; the name includes the "=". */
+static char *
+newEnvString(const char *name, const char *value)
+{
+    size_t nameLen = strlen(name);
+    size_t valueLen = strlen(value);
+    size_t size;
+    char *c;
+
+    if (ckd_add(&size, nameLen, valueLen) || ckd_add(&size, size, (size_t) 1)) {
+	XtErrorMsg("memory", "newEnvString", "XtToolkitError",
+		"environment string too long", nullptr, nullptr);
+    }
+    c = XtMalloc(size);
+    (void) memcpy(c, name, nameLen);
+    (void) memcpy(c + nameLen, value, valueLen + 1);
+    return c;
+}
+
 /*
 ** Input:
 **    oldEnv   - pointer to a null terminated list of env strings
@@ -2718,23 +2747,16 @@ Realize(Widget w, XtValueMask *p_valueMask, XSetWindowAttributes *attributes)
 
 	i1 = 0;
 #ifdef	SETENV_LINES_AND_COLS
-	(void) sprintf(buffer, "LINES=%d", tw->term.rows);
-	newEnvStrings[i1] = XtMalloc(strlen(buffer) + 1);
-	(void) strcpy(newEnvStrings[i1++], buffer);
+	(void) snprintf(buffer, sizeof(buffer), "%d", tw->term.rows);
+	newEnvStrings[i1++] = newEnvString("LINES=", buffer);
 
-	(void) sprintf(buffer, "COLUMNS=%d", tw->term.columns);
-	newEnvStrings[i1] = XtMalloc(strlen(buffer) + 1);
-	(void) strcpy(newEnvStrings[i1++], buffer);
+	(void) snprintf(buffer, sizeof(buffer), "%d", tw->term.columns);
+	newEnvStrings[i1++] = newEnvString("COLUMNS=", buffer);
 #endif	/* SETENV_LINES_AND_COLS */
 
 	if (tw->term.termName && *tw->term.termName)
 	{
-	    char *fmt = "TERM=%s";
-
-	    newEnvStrings[i1] =
-	      XtMalloc(strlen(tw->term.termName) + strlen(fmt) + 1);
-	    (void) sprintf(newEnvStrings[i1], fmt, tw->term.termName);
-	    i1++;
+	    newEnvStrings[i1++] = newEnvString("TERM=", tw->term.termName);
 	}
 	/* null term the list of new env strings... */
 	newEnvStrings[i1] = (char *) 0;
@@ -3958,13 +3980,7 @@ DtTermInitialize(void)
 void
 _DtTermPrimPutEnv(char *c1, char *c2)
 {
-    char buffer[BUFSIZ];
-    char *c;
-
-    snprintf(buffer, sizeof(buffer), "%s%s", c1, c2);
-    c = XtMalloc(strlen(buffer) + 1);
-    (void) strcpy(c, buffer);
-    (void) putenv(c);
+    (void) putenv(newEnvString(c1, c2));
 }
 
 

@@ -236,6 +236,7 @@ _DtTermPrimActionKeymap(Widget w, XEvent *event, String *params, Cardinal *num_p
     };
     char mapName[BUFSIZ];
     char mapClass[BUFSIZ];
+    size_t nameLen;
 
     if (*num_params != 1) {
 	return;
@@ -252,8 +253,12 @@ _DtTermPrimActionKeymap(Widget w, XEvent *event, String *params, Cardinal *num_p
 	return;
     }
 
-    (void) sprintf(mapName, "%sKeymap", params[0]);
-    (void) strcpy(mapClass, mapName);
+    nameLen = (size_t) snprintf(mapName, sizeof(mapName), "%sKeymap",
+	    params[0]);
+    if (nameLen >= sizeof(mapName)) {
+	return;
+    }
+    (void) memcpy(mapClass, mapName, nameLen + 1);
     mapClass[0] = toupper(mapClass[0]);
     (void) XtGetSubresources(w, (XtPointer) &keymap, mapName, mapClass,
 	    key_resources, XtNumber(key_resources), nullptr, (Cardinal) 0);

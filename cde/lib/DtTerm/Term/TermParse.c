@@ -189,8 +189,11 @@ sendEscSequence(Widget w, char *transmitString)
     DtTermData      td = tw->vt.td;
 
     if ( td->S8C1TMode ) {
-           char *cbuf =malloc(strlen(transmitString)+1);
-           strcpy(cbuf,transmitString) ;
+           size_t len = strlen(transmitString);
+           char *cbuf = malloc(len + 1);
+           if (cbuf == nullptr)
+               return;
+           memcpy(cbuf, transmitString, len + 1);
            cbuf[1] = 0x9B ;
            (void) _DtTermPrimSendInput(w, (unsigned char *) (cbuf+1),
                 strlen(cbuf+1));
@@ -250,7 +253,7 @@ _DtTermDeviceStatusAnsi(Widget w)     /* DSR CSIpn  */
                      col=LASTCOLUMN(tw) ;
        row = tw->term.tpd->cursorRow+BASE ;
        if (vtd->originMode==True) row -= TOPMARGIN(tw) ;
-       sprintf(buf,"\033[%d;%dR",row , col+BASE) ;
+       snprintf(buf, sizeof buf, "\033[%d;%dR",row , col+BASE) ;
        sendEscSequence(w,buf) ;
        break ;
   }
@@ -919,20 +922,20 @@ _DtTermDeviceAttributes(Widget w)    /* DA CSIpc */
     case 0:
          switch(vtw->vt.td->terminalId ) {
             case 100:
-                     sprintf(buf,"\033[?%d;%dc",1,2) ;
+                     snprintf(buf, sizeof buf, "\033[?%d;%dc",1,2) ;
                      break;
             case 101:
-                     sprintf(buf,"\033[?%d;%dc",1,0) ;
+                     snprintf(buf, sizeof buf, "\033[?%d;%dc",1,0) ;
                      break;
             case 102:
-                     sprintf(buf,"\033[?%dc",6) ;
+                     snprintf(buf, sizeof buf, "\033[?%dc",6) ;
                      break;
             case 220:
                 /*  class 2 terminal (62), 132 columns (1), printer port (2),
                  *  selective erase (6), DRCS (7), UDK (8), 
                  *  national replacement char sets
                  */
-                sprintf(buf,"\033[?%d;%d;%d;%d;%d;%d;%dc",62,1,2,6,7,8,9) ;
+                snprintf(buf, sizeof buf, "\033[?%d;%d;%d;%d;%d;%d;%dc",62,1,2,6,7,8,9) ;
                 break;
           }
         sendEscSequence(w,buf) ;
@@ -947,6 +950,7 @@ _DtTermChangeTextParam(Widget w)  /* xterm  CSIp;pcCtrl-G  */
   DtTermWidget tw = (DtTermWidget) w;
   Widget sw;
   int i ;
+  size_t cwdLen ;
   Arg arg[5];
   Debug('P', fprintf(stderr,">>In func _DtTermChangeTextParam\n")) ;
   context = GetParserContext(w) ;
@@ -971,10 +975,11 @@ _DtTermChangeTextParam(Widget w)  /* xterm  CSIp;pcCtrl-G  */
             XtSetValues(sw,arg,i) ;
             break;
     case 3: /* change current working directory */
+            cwdLen = strlen((char *) context->stringParms[0].str) + 1;
             tw->term.subprocessCWD = XtRealloc(tw->term.subprocessCWD,
-		    strlen((char *) context->stringParms[0].str) + 1);
-            (void) strcpy(tw->term.subprocessCWD,
-		    (char *) context->stringParms[0].str);
+		    cwdLen);
+            (void) memcpy(tw->term.subprocessCWD,
+		    (char *) context->stringParms[0].str, cwdLen);
             break;
    /*  These are handled by xterm but not by us.   
     case 46:  Change log file to context->stringParms[0] 
@@ -1021,7 +1026,7 @@ _DtTermRequestParam(Widget w) /* DECREQTPARM CSIpx */
         * 112, receive 9600 baud, 1 clock multiplier (?),
         * 0 STP flags (?)   These are from xterm file 'charproc.c'.
         */
-       sprintf(buf,"\033[%d;%d;%d;%d;%d;%d;%dx",row,1,1,112,112,1,0) ;
+       snprintf(buf, sizeof buf, "\033[%d;%d;%d;%d;%d;%d;%dx",row,1,1,112,112,1,0) ;
        sendEscSequence(w,buf) ; 
      }
 }
@@ -2089,6 +2094,7 @@ _DtTermParseSunMisc  /*  Misc sun esc seqs  */
   short   rows,columns;
   Dimension height,width;
   char *fmt,*s,*title,*icon;
+  size_t need;
   int xOffset;
   int yOffset;
   int widthOffset;
@@ -2147,41 +2153,51 @@ _DtTermParseSunMisc  /*  Misc sun esc seqs  */
 	(void) GetWindowOffsets(sw, &xOffset, &yOffset, &widthOffset,
 		&heightOffset);
         (void) XtVaGetValues(sw, XtNx, &x, XtNy, &y, nullptr);
-        (void) sprintf(buf, "\033[3;%d;%dt", x - xOffset, y - yOffset);
+        (void) snprintf(buf, sizeof buf, "\033[3;%d;%dt", x - xOffset, y - yOffset);
         (void) sendEscSequence(w, buf);
         break;
     case 14:
 	(void) GetWindowOffsets(sw, &xOffset, &yOffset, &widthOffset,
 		&heightOffset);
         (void) XtVaGetValues(sw, XtNheight, &height, XtNwidth, &width, nullptr);
-        (void) sprintf(buf,"\033[4;%d;%dt", height + heightOffset,
+        (void) snprintf(buf, sizeof buf, "\033[4;%d;%dt", height + heightOffset,
 		width + widthOffset);
         (void) sendEscSequence(w, buf);
         break;
     case 18:
         (void) XtVaGetValues(w, DtNrows, &rows, DtNcolumns, &columns, nullptr);
-        (void) sprintf(buf, "\033[8;%hd;%hdt", rows, columns);
+        (void) snprintf(buf, sizeof buf, "\033[8;%hd;%hdt", rows, columns);
         (void) sendEscSequence(w, buf);
         break;
     case 20:
       XtVaGetValues(sw,XmNiconName, &icon, nullptr);
       fmt = "\033]L%s\033\\";
-      if (strlen(icon) + strlen(fmt) + 1 >= sizeof(buf))
-	s = XtMalloc(strlen(icon) + strlen(fmt) + 1);
-      else 
+      if (icon == nullptr)
+	icon = "";
+      need = strlen(icon) + strlen(fmt) + 1;
+      if (need >= sizeof(buf)) {
+	s = XtMalloc(need);
+      } else {
 	s = buf;
-      sprintf(s, fmt, icon);
+	need = sizeof(buf);
+      }
+      snprintf(s, need, fmt, icon);
       sendEscSequence(w,s) ;
       if (s != buf) XtFree(s);
       break ;
     case 21:
       XtVaGetValues(sw,XmNtitle, &title, nullptr);
       fmt = "\033]l%s\033\\";
-      if (strlen(title) + strlen(fmt) + 1 >= sizeof(buf))
-	s = XtMalloc(strlen(title) + strlen(fmt) + 1);
-      else 
+      if (title == nullptr)
+	title = "";
+      need = strlen(title) + strlen(fmt) + 1;
+      if (need >= sizeof(buf)) {
+	s = XtMalloc(need);
+      } else {
 	s = buf;
-      sprintf(s, fmt, title);
+	need = sizeof(buf);
+      }
+      snprintf(s, need, fmt, title);
       sendEscSequence(w,s) ;
       if (s != buf) XtFree(s);
       break ;

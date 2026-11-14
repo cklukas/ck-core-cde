@@ -122,7 +122,7 @@ _DtTermPrimUtmpAddEntry
 
     /* fill in the structure... */
     utmpInfoTmp->utmpLine = (char *) XtMalloc(strlen(utmpLine) + 1);
-    (void) strcpy(utmpInfoTmp->utmpLine, utmpLine);
+    (void) memcpy(utmpInfoTmp->utmpLine, utmpLine, strlen(utmpLine) + 1);
 
     /* insert it after the head of the list...
      */
@@ -249,16 +249,16 @@ _DtTermPrimUtmpInit(Widget w)
 	    && (((pw_ret = _XGetpwnam(namebuf, pw_buf))) != nullptr) 
 	    && (pw_ret->pw_uid == getuid())) {
 	    userName = XtMalloc(strlen(namebuf) + 1);
-	    (void) strcpy(userName, namebuf);
+	    (void) memcpy(userName, namebuf, strlen(namebuf) + 1);
 	} else if (((pw_ret = _XGetpwuid(getuid(), pw_buf))) != nullptr) {
 	    userName = XtMalloc(strlen(pw_ret->pw_name) + 1);
-	    (void) strcpy(userName, pw_ret->pw_name);
+	    (void) memcpy(userName, pw_ret->pw_name, strlen(pw_ret->pw_name) + 1);
 	}
 #if defined(XTHREADS) && defined(XUSE_MTSAFE_API) && defined(AIXV3)
       }
       else {
 	userName = XtMalloc(strlen(c) + 1);
-	(void) strcpy(userName, c);
+	(void) memcpy(userName, c, strlen(c) + 1);
       }
 #endif
     }
@@ -271,7 +271,7 @@ _DtTermPrimUtmpInit(Widget w)
     if (!localHostname && !gethostname(buffer, sizeof(buffer)) &&
 	(name_ret = _XGethostbyname(buffer, name_buf)) != nullptr) {
 	localHostname = XtMalloc(strlen(buffer) + 1);
-	(void) strcpy(localHostname, buffer);
+	(void) memcpy(localHostname, buffer, strlen(buffer) + 1);
     }
 #endif	/* UT_ADDR */
     _DtTermProcessUnlock();
@@ -314,7 +314,7 @@ _DtTermPrimUtmpGetUtLine(int pty, char *ptyName)
     }
 
     c = XtMalloc(strlen(ptyName) + 1);
-    (void) strcpy(c, ptyName);
+    (void) memcpy(c, ptyName, strlen(ptyName) + 1);
 
     return(c);
 }

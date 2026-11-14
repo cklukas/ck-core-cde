@@ -120,8 +120,9 @@ _DtTermFunctionKeyStringStore(       /* store the label for the given key number
      }
     if (ukey == -1) return ;
     if (td->userKeyString[ukey])  XtFree((char *)td->userKeyString[ukey]) ;
-    td->userKeyString[ukey] = (unsigned char *) XtMalloc(strlen(string)+1) ;
-    strcpy((char *)td->userKeyString[ukey],string) ;
+    size_t len = strlen(string) + 1;
+    td->userKeyString[ukey] = (unsigned char *) XtMalloc(len) ;
+    memcpy((char *)td->userKeyString[ukey], string, len) ;
 }
 
 void

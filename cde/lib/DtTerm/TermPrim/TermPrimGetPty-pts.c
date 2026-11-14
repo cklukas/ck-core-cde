@@ -77,14 +77,15 @@ _DtTermPrimGetPty(char **ptySlave, char **ptyMaster)
         Debug('T', timeStamp("_DtTermPrimGetPty() unlockpt() finished"));
 
         /* get the pty slave name... */
-        if (c = ptsname(ptyFd)) {
-            *ptySlave = malloc(strlen(c) + 1);
-            (void) strcpy(*ptySlave, c);
-            return(ptyFd);
-        } else {
+        if ((c = ptsname(ptyFd)) == nullptr) {
             /* ptsname on the pty master failed.  This should not happen!... */
             (void) perror("ptsname");
             (void) close(ptyFd);
+        } else if ((*ptySlave = strdup(c)) == nullptr) {
+            (void) perror("strdup");
+            (void) close(ptyFd);
+        } else {
+            return(ptyFd);
         }
     } else {
         (void) perror("posix_openpt");

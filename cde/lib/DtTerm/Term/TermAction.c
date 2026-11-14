@@ -76,8 +76,9 @@ _DtTermWriteEscSeq(Widget w, char *transmitString)
 	(void) _DtTermPrimBell(w);
     } else 
         if ( td->S8C1TMode ) {
-           char *cbuf = XtMalloc(strlen(transmitString)+1);
-           strcpy(cbuf,transmitString) ;
+           size_t len = strlen(transmitString);
+           char *cbuf = XtMalloc(len + 1);
+           memcpy(cbuf, transmitString, len + 1);
            cbuf[1] = 0x9B ;
            (void) _DtTermPrimSendInput(w, (unsigned char *) (cbuf+1),
                 strlen(cbuf+1));

@@ -351,7 +351,7 @@ _DtTermPrimSubprocExec(Widget		  w,
 	     * destroy function...
 	     */
 	    defaultCmd = XtMalloc(strlen(c) + 1);
-	    (void) strcpy(defaultCmd, c);
+	    (void) memcpy(defaultCmd, c, strlen(c) + 1);
 	}
 
 	cmd = defaultCmd;
@@ -364,17 +364,13 @@ _DtTermPrimSubprocExec(Widget		  w,
 	 * also why we allocate an extra byte in argv[0]...
 	 */
 	argv[0] = XtMalloc(strlen(cmd) + 2);
-	*argv[0] = '\0';
 	if (loginShell) {
 	    /* pre-pend an '-' for loginShell... */
-	    (void) strcat(argv[0], "-");
-	    if ((c = strrchr(cmd, '/'))) {
-		strcat(argv[0], ++c);
-	    } else {
-		strcat(argv[0], cmd);
-	    }
+	    c = strrchr(cmd, '/');
+	    (void) snprintf(argv[0], strlen(cmd) + 2, "-%s",
+		    c ? c + 1 : cmd);
 	} else {
-	    (void) strcat(argv[0], cmd);
+	    (void) snprintf(argv[0], strlen(cmd) + 2, "%s", cmd);
 	}
 	/* null term the list... */
 	argv[1] = (char *) 0;
@@ -558,7 +554,7 @@ _DtTermPrimSubprocExec(Widget		  w,
 	*/
 	for (parent = w; !XtIsShell(parent); parent = XtParent(parent))
 	    ;
-	(void) sprintf(buffer, "%ld", XtWindow(parent));
+	(void) snprintf(buffer, sizeof(buffer), "%lu", (unsigned long) XtWindow(parent));
 	_DtTermPrimPutEnv("WINDOWID=", buffer);
 	_DtTermPrimPutEnv("DISPLAY=", XDisplayString(XtDisplay(w)));
 	if (((DtTermPrimitiveWidget)w)->term.emulationId) {

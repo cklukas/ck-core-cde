@@ -619,8 +619,9 @@ _DtTermPrimPtyInit
 	(void) dup(pty);
     }
 
-    sprintf(path, "%s%s", CSMAP_DIR, nl_langinfo(CODESET));
-    if(access(path, E_ACC|R_ACC) == 0)
+    if ((size_t) snprintf(path, sizeof(path), "%s%s", CSMAP_DIR,
+	    nl_langinfo(CODESET)) < sizeof(path) &&
+	    access(path, E_ACC|R_ACC) == 0)
     {
 	setcsmap(path);
     }

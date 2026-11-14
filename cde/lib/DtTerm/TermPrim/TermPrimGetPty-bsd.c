@@ -78,7 +78,7 @@ AddPtyInfo
 
     /* fill in the structure... */
     ptyInfoTmp->ptyName = (char *) XtMalloc(strlen(ptyName) + 1);
-    (void) strcpy(ptyInfoTmp->ptyName, ptyName);
+    (void) memcpy(ptyInfoTmp->ptyName, ptyName, strlen(ptyName) + 1);
 
     /* insert it after the head of the list...
      */
@@ -212,22 +212,29 @@ GetPty(char **ptySlave, char **ptyMaster)
 
     char *ttyDev = (char *) 0;
     char *ptyDev = (char *) 0;
+    size_t ttyDevSize = 0;
+    size_t ptyDevSize = 0;
 
     for (pty_dirs_ptr = pty_dirs;
 	    pty_dirs_ptr->pty_dir && pty_dirs_ptr->ptym_dir; pty_dirs_ptr++) {
-	char *newTtyDev = realloc(ttyDev,
-		(unsigned) (strlen(pty_dirs_ptr->pty_dir) + 8));
+	/* the directory, "/tty" or "/pty", three characters and the NUL */
+	size_t newTtyDevSize = strlen(pty_dirs_ptr->pty_dir) + 8;
+	size_t newPtyDevSize = strlen(pty_dirs_ptr->ptym_dir) + 8;
+	char *newTtyDev = realloc(ttyDev, newTtyDevSize);
 	char *newPtyDev;
 
 	/* a failed realloc() leaves the old block valid; keep each
 	 * pointer that was grown so that the error path frees it...
 	 */
-	if (newTtyDev)
+	if (newTtyDev) {
 	    ttyDev = newTtyDev;
-	newPtyDev = realloc(ptyDev,
-		(unsigned) (strlen(pty_dirs_ptr->ptym_dir) + 8));
-	if (newPtyDev)
+	    ttyDevSize = newTtyDevSize;
+	}
+	newPtyDev = realloc(ptyDev, newPtyDevSize);
+	if (newPtyDev) {
 	    ptyDev = newPtyDev;
+	    ptyDevSize = newPtyDevSize;
+	}
 	if (!newTtyDev || !newPtyDev) {
 	    (void) perror("malloc");
 	    free(ttyDev);
@@ -248,10 +255,10 @@ GetPty(char **ptySlave, char **ptyMaster)
 		    (first || !pty_dirs_ptr->fast) && *char_2; char_2++) {
 		for (char_3 = pty_dirs_ptr->char_3;
 			(first || !pty_dirs_ptr->fast); ) {
-		    (void) sprintf(ttyDev, char_3 ? "%s/tty%c%c%c" :
+		    (void) snprintf(ttyDev, ttyDevSize, char_3 ? "%s/tty%c%c%c" :
 			    "%s/tty%c%c", pty_dirs_ptr->pty_dir,
 			    *char_1, *char_2, char_3 ? *char_3 : 0);
-		    (void) sprintf(ptyDev, char_3 ? "%s/pty%c%c%c" :
+		    (void) snprintf(ptyDev, ptyDevSize, char_3 ? "%s/pty%c%c%c" :
 			    "%s/pty%c%c", pty_dirs_ptr->ptym_dir,
 			    *char_1, *char_2, char_3 ? *char_3 : 0);
 		    ptyFd = -1;
@@ -279,11 +286,12 @@ GetPty(char **ptySlave, char **ptyMaster)
 				/* if the name cannot be stored, keep the
 				 * name that was opened, which is valid...
 				 */
-				char *newTtyDev = realloc(ttyDev, strlen(c1) + 1);
+				size_t len = strlen(c1) + 1;
+				char *newTtyDev = realloc(ttyDev, len);
 
 				if (newTtyDev) {
 				    ttyDev = newTtyDev;
-				    (void) strcpy(ttyDev, c1);
+				    (void) memcpy(ttyDev, c1, len);
 				}
 			    }
 

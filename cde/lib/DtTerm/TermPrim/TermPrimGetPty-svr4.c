@@ -69,8 +69,7 @@ static int GetPty(char **ptySlave, char **ptyMaster)
     int ttyFd;
     extern char *ptsname(int fd);
 
-    *ptyMaster = malloc(strlen(PTY_CLONE_DEVICE) + 1);
-    (void) strcpy(*ptyMaster, PTY_CLONE_DEVICE);
+    *ptyMaster = strdup(PTY_CLONE_DEVICE);
 
     if (isDebugFSet('p', 10)) {
 #ifdef	BBA
@@ -199,8 +198,7 @@ ok:
 
 	/* get the pty slave name... */
 	if (c = ptsname(ptyFd)) {
-	    *ptySlave = malloc(strlen(c) + 1);
-	    (void) strcpy(*ptySlave, c);
+	    *ptySlave = strdup(c);
 #ifdef	NOTDEF
 	    {
 		int slaveFd;
@@ -209,7 +207,7 @@ ok:
 		if ((slaveFd = open(*ptySlave, O_RDWR, 0)) < 0) {
 		    (void) perror(*ptySlave);
 		    (void) fprintf(stderr, "it failed!\n");
-		    (void) sprintf(buffer, "ls -l %s", *ptySlave);
+		    (void) snprintf(buffer, sizeof(buffer), "ls -l %s", *ptySlave);
 		    (void) system(buffer);
 		} else {
 		    (void) close(slaveFd);

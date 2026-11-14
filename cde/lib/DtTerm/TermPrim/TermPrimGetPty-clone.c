@@ -51,8 +51,7 @@ GetPty(char **ptySlave, char **ptyMaster)
     int ptyFd;
     int ttyFd;
 
-    *ptyMaster = malloc(strlen(PTY_CLONE_DEVICE) + 1);
-    (void) strcpy(*ptyMaster, PTY_CLONE_DEVICE);
+    *ptyMaster = strdup(PTY_CLONE_DEVICE);
 
     if (isDebugFSet('p', 10)) {
 #ifdef	BBA
@@ -68,8 +67,7 @@ GetPty(char **ptySlave, char **ptyMaster)
 #else
 	if (c = _XTtyname(ptyFd, tty_buf)) {
 #endif
-	    *ptySlave = malloc(strlen(c) + 1);
-	    (void) strcpy(*ptySlave, c);
+	    *ptySlave = strdup(c);
 	    
 	    if ((ttyFd = open(*ptySlave, O_RDWR | O_NOCTTY, 0)) < 0) {
 		/* failure... */
