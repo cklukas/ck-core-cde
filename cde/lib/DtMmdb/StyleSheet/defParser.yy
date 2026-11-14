@@ -131,21 +131,21 @@ Def: 	CompositeDef
 CompositeDef	: Name FSOPEN DefList FSCLOSE
 	{
 	   $$= new FeatureDefComposite((char*)$1, $3);
-		delete $1;
+		delete [] $1;
 	}
 	;
 
 PrimitiveDef : Name COLON TypeValuesList SEMI_COLON
 	{
 	   $$= new FeatureDefPrimitive((char*)$1, $3);
-		delete $1;
+		delete [] $1;
 	}
 	;
 
 DefReference : Name SEMI_COLON
 	{
 	   $$= new FeatureDefReference((char*)$1);
-		delete $1;
+		delete [] $1;
 	}
 	;
 
@@ -176,12 +176,12 @@ TypeValuesList :   TypeValuesList COMMA TypeValues
 TypeValues :  TYPE OPER_parenopen ValueList OPER_parenclose
 	{
 		$$=new TypeValues((char*)$1, $3);
-		delete $1;
+		delete [] $1;
 	}
 	| TYPE
 	{
 		$$=new TypeValues((char*)$1, 0);
-		delete $1;
+		delete [] $1;
 	}
 	;
 
@@ -206,7 +206,7 @@ Value : INTEGER
 	| QUOTED_STRING
 	{
 	   $$=new FeatureValueString((char*)$1);
-           delete $1;
+           delete [] $1;
 	}
 	| REAL
 	{
