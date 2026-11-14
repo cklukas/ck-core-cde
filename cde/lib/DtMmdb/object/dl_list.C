@@ -70,7 +70,7 @@ MESSAGE(cerr, "in ~dl_list()");
 debug(cerr, v_num_indices);
 */
 
-   delete v_indices;
+   delete [] v_indices;
 }
 
 void dl_list::init_data_member(c_index_handlerPtr* index_arrray,
