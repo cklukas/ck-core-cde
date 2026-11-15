@@ -479,7 +479,7 @@ abobj_set_accelerator(
         objxm_obj_set_ui_arg(subObj, AB_ARG_STRING, XmNaccelerator, new_accel);
         /* REMIND: acceleratorText should be converted to different format */
         objxm_obj_set_ui_arg(subObj, AB_ARG_XMSTRING, XmNacceleratorText,
-                new_accel? (XtArgVal)XmStringCreateLocalized(accel) : (XtArgVal)NULL);
+                new_accel? (XtArgVal)XmStringCreateLocalized(accel) : 0);
 	obj_set_flag(subObj, AttrChangedFlag);
     }
 }
@@ -502,7 +502,7 @@ abobj_set_mnemonic(
 	subObj = objxm_comp_get_subobj(obj, AB_CFG_OBJECT_OBJ);
 
 	objxm_obj_set_ui_arg(subObj, AB_ARG_MNEMONIC, XmNmnemonic,
-		new_mnemonic? (XtArgVal)XStringToKeysym(new_mnemonic) : (XtArgVal)NULL);
+		new_mnemonic? (XtArgVal)XStringToKeysym(new_mnemonic) : 0);
 	obj_set_flag(subObj, AttrChangedFlag);
     }
 }
@@ -2194,7 +2194,7 @@ abobj_set_directory(
             obj_set_directory(obj, newval);
 
             objxm_obj_set_ui_arg(subObj, AB_ARG_XMSTRING, XmNdirectory,
-		newval? (XtArgVal)XmStringCreateLocalized(newval) : (XtArgVal)NULL);
+		newval? (XtArgVal)XmStringCreateLocalized(newval) : 0);
 
             obj_set_flag(subObj, AttrChangedFlag);
         }
@@ -2227,7 +2227,7 @@ abobj_set_filter_pattern(
             obj_set_filter_pattern(obj, newval);
 
 	    objxm_obj_set_ui_arg(subObj, AB_ARG_XMSTRING, XmNpattern,
-		newval? (XtArgVal)XmStringCreateLocalized(newval) : (XtArgVal)NULL);
+		newval? (XtArgVal)XmStringCreateLocalized(newval) : 0);
             obj_set_flag(subObj, AttrChangedFlag);
         }
     }
@@ -2259,7 +2259,7 @@ abobj_set_ok_label(
             obj_set_ok_label(obj, newval);
 
 	    objxm_obj_set_ui_arg(subObj, AB_ARG_XMSTRING, XmNokLabelString,
-                newval? (XtArgVal)XmStringCreateLocalized(newval) : (XtArgVal)NULL);
+                newval? (XtArgVal)XmStringCreateLocalized(newval) : 0);
             obj_set_flag(subObj, AttrChangedFlag);
         }
     }

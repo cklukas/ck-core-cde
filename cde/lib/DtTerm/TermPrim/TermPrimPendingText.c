@@ -76,7 +76,7 @@ mallocChunk(int len)
     newChunk = (PendingTextChunk) XtMalloc(sizeof(PendingTextChunkRec));
     if (!newChunk)
     {
-        return((PendingTextChunk) NULL);
+        return((PendingTextChunk) nullptr);
     }
 
     newChunk->buffLen = len;
@@ -84,7 +84,7 @@ mallocChunk(int len)
     if (!newChunk->buffer)
     {
         XtFree((char *) newChunk);
-        return((PendingTextChunk) NULL);
+        return((PendingTextChunk) nullptr);
     }
     
     /*
@@ -92,8 +92,8 @@ mallocChunk(int len)
     */
     newChunk->bufPtr = newChunk->buffer;
     newChunk->len   = 0;
-    newChunk->next  = (PendingTextChunk)NULL;
-    newChunk->prev  = (PendingTextChunk)NULL;
+    newChunk->next  = (PendingTextChunk)nullptr;
+    newChunk->prev  = (PendingTextChunk)nullptr;
     return(newChunk);
 }
 
@@ -140,7 +140,7 @@ _DtTermPrimPendingTextAppendChunk
     ** append the new chunk to the list...
     */
     list->free       = list->free->next;
-    newChunk->next   = (PendingTextChunk)NULL;
+    newChunk->next   = (PendingTextChunk)nullptr;
     list->tail->next = newChunk;
     list->tail       = newChunk;
     return(True);
@@ -152,7 +152,7 @@ _DtTermPrimPendingTextAppendChunk
     
     if (!newChunk)
     {
-        return((PendingTextChunk)NULL);
+        return((PendingTextChunk)nullptr);
     }
     newChunk->next = list->tail;
     newChunk->prev = list->tail->prev;

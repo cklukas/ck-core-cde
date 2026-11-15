@@ -961,7 +961,7 @@ static XtResource resources[] =
                 DtNbuttonFontList, DtCFontList, XmRFontList, sizeof(XmFontList),
                 XtOffsetOf(struct _XmBulletinBoardRec, 
 			   bulletin_board.button_font_list),
-                XmRFontList, (XtPointer) NULL
+                XmRFontList, (XtPointer) nullptr
         },
         {
 		DtNblinkRate, DtCBlinkRate, XmRInt, sizeof(int),
@@ -1021,7 +1021,7 @@ static XtResource resources[] =
                 DtNdialogTitle, DtCDialogTitle, XmRXmString, sizeof (XmString),
                 XtOffsetOf(struct _XmBulletinBoardRec, 
 			   bulletin_board.dialog_title),
-                XmRString, (XtPointer) NULL
+                XmRString, (XtPointer) nullptr
         },
         {
                 DtNeditable, DtCEditable, XmRBoolean, sizeof (Boolean),
@@ -1043,7 +1043,7 @@ static XtResource resources[] =
                 DtNfindChangeDialogTitle, DtCFindChangeDialogTitle, 
 		XmRXmString, sizeof (XmString),
                 XtOffset(DtEditorWidget, editor.searchStuff.fndChngTitle),
-                XmRString, (XtPointer) NULL
+                XmRString, (XtPointer) nullptr
         },
         {
                 DtNfindFieldLabel, DtCFindFieldLabel, 
@@ -1069,13 +1069,13 @@ static XtResource resources[] =
                 DtNformatSettingsDialogTitle, DtCFormatSettingsDialogTitle, 
 		XmRXmString, sizeof (XmString),
                 XtOffset(DtEditorWidget, editor.formatStuff.formatDialogTitle),
-                XmRString, (XtPointer) NULL
+                XmRString, (XtPointer) nullptr
         },
         {
                 DtNinformationDialogTitle, DtCInformationDialogTitle, 
 		XmRXmString, sizeof (XmString),
                 XtOffset(DtEditorWidget, editor.warningStuff.infoDialogTitle),
-                XmRString, (XtPointer) NULL
+                XmRString, (XtPointer) nullptr
         },
         {
                 DtNinsertLabel, DtCInsertLabel, XmRXmString, sizeof (XmString),
@@ -1092,7 +1092,7 @@ static XtResource resources[] =
                 DtNlabelFontList, DtCFontList, XmRFontList, sizeof(XmFontList),
                 XtOffsetOf(struct _XmBulletinBoardRec, 
 			   bulletin_board.label_font_list),
-                XmRFontList, (XtPointer) NULL
+                XmRFontList, (XtPointer) nullptr
         },
         {
                 DtNleftAlignToggleLabel, DtCLeftAlignToggleLabel, 
@@ -1180,7 +1180,7 @@ static XtResource resources[] =
                 DtNspellDialogTitle, DtCSpellDialogTitle, 
 		XmRXmString, sizeof (XmString),
                 XtOffset(DtEditorWidget, editor.searchStuff.spellTitle),
-                XmRString, (XtPointer) NULL
+                XmRString, (XtPointer) nullptr
         },
   	{
                 DtNspellFilter, DtCSpellFilter, XmRString, sizeof(XmRString),
@@ -1197,7 +1197,7 @@ static XtResource resources[] =
                 DtNtextDeselectCallback,
                 DtCCallback, XtRCallback, sizeof (XtCallbackList),
                 XtOffset (DtEditorWidget, editor.textDeselect),
-                XtRCallback, (XtPointer) NULL
+                XtRCallback, (XtPointer) nullptr
         },
         {
                 DtNtextForeground, DtCForeground, 
@@ -1209,20 +1209,20 @@ static XtResource resources[] =
                 DtNtextFontList, DtCFontList, XmRFontList, sizeof(XmFontList),
                 XtOffsetOf(struct _XmBulletinBoardRec, 
 			   bulletin_board.text_font_list),
-                XmRFontList, (XtPointer) NULL
+                XmRFontList, (XtPointer) nullptr
         },
         {
                 DtNtextSelectCallback,
                 DtCCallback, XtRCallback, sizeof (XtCallbackList),
                 XtOffset (DtEditorWidget, editor.textSelect),
-                XtRCallback, (XtPointer) NULL
+                XtRCallback, (XtPointer) nullptr
         },
         {
 		DtNtextTranslations, DtCTranslations,
 		XmRTranslationTable, sizeof (XtTranslations),
 		XtOffsetOf(struct _XmBulletinBoardRec, 
 			   bulletin_board.text_translations),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
         },
         {
                 DtNtopCharacter, DtCTopCharacter, 
@@ -1293,7 +1293,7 @@ dtEditorClassRec =
 		nullptr,				/* callback private	*/
 		XtInheritTranslations,		/* tm_table		*/
 		XtInheritQueryGeometry,		/* query_geometry	*/
-		(XtStringProc)NULL,		/* display_accelerator	*/
+		(XtStringProc)nullptr,		/* display_accelerator	*/
 		nullptr,				/* extension		*/
 	},
 
@@ -1336,7 +1336,7 @@ dtEditorClassRec =
 */
    {  
       FALSE,				/* always_install_accelerators */
-      (XmGeoCreateProc)NULL,			/* geo_matrix_create  */
+      (XmGeoCreateProc)nullptr,			/* geo_matrix_create  */
       XmInheritFocusMovedProc,			/* focus_moved_proc   */
       nullptr,					/* extension          */
    },
@@ -1486,7 +1486,7 @@ VariableInitialize(
    * Empty 'for' walks up the widget tree to find a shell.
    */
   for (thisParent = new->core.parent; 
-       thisParent != (Widget)NULL && XtIsShell(thisParent) == False;
+       thisParent != (Widget)nullptr && XtIsShell(thisParent) == False;
        thisParent = XtParent(thisParent));
   M_topLevelShell(new) = thisParent;
 
@@ -1502,13 +1502,13 @@ VariableInitialize(
   M_fontWidth(new) = -1;
 
   /* Initialize status line fields                                 */
-  M_status_statusArea(new) = (Widget)NULL;
-  M_status_messageText(new) = (Widget)NULL;
+  M_status_statusArea(new) = (Widget)nullptr;
+  M_status_messageText(new) = (Widget)nullptr;
   M_status_currentLine(new) = -1;
   M_status_lastLine(new) = -1;
 
   /* Initialize search function data                               */
-  M_search_dialog(new) = (Widget) NULL;
+  M_search_dialog(new) = (Widget) nullptr;
   M_search_dialogMode(new) = SPELL;
   M_search_string(new) = (char *)nullptr;
   M_replace_string(new) = (char *)nullptr;
@@ -1516,10 +1516,10 @@ VariableInitialize(
   M_misspelled_found(new) = False;
 
   /* Initialize format function data                               */
-  M_format_dialog(new) = (Widget)NULL;
+  M_format_dialog(new) = (Widget)nullptr;
 
   /* Initialize warning dialogs data                               */
-  M_gen_warning(new) = (Widget)NULL;
+  M_gen_warning(new) = (Widget)nullptr;
 
 } /* end VariableInitialize */
 
@@ -1556,22 +1556,22 @@ ValidateResources(
    * get their values from the message catalog.
    */
 
-  if (M_spellTitle(request) != (XmString) NULL)
+  if (M_spellTitle(request) != (XmString) nullptr)
     M_spellTitle(new) = XmStringCopy( M_spellTitle(request) );
   else
     M_spellTitle(new) = XmStringCreateLocalized(SPELL_TITLE);
 
-  if (M_fndChngTitle(request) != (XmString) NULL)
+  if (M_fndChngTitle(request) != (XmString) nullptr)
     M_fndChngTitle(new) = XmStringCopy( M_fndChngTitle(request) );
   else
     M_fndChngTitle(new) = XmStringCreateLocalized(FIND_TITLE);
 
-  if (E_format_dialogTitle(request) != (XmString) NULL)
+  if (E_format_dialogTitle(request) != (XmString) nullptr)
     E_format_dialogTitle(new) = XmStringCopy( E_format_dialogTitle(request) );
   else
     E_format_dialogTitle(new) = XmStringCreateLocalized(FORMAT_SETTINGS);
 
-  if (E_infoDialogTitle(request) != (XmString) NULL)
+  if (E_infoDialogTitle(request) != (XmString) nullptr)
     E_infoDialogTitle(new) = XmStringCopy( E_infoDialogTitle(request) );
   else
     E_infoDialogTitle(new) = XmStringCreateLocalized(INFO_TITLE);
@@ -1662,7 +1662,7 @@ CreateText(
 
    XtSetArg(al[ac], XmNeditable, M_editable(parent)); ac++;
   
-   if ( E_textFontList(parent) != (XmFontList) NULL) {
+   if ( E_textFontList(parent) != (XmFontList) nullptr) {
      XtSetArg (al[ac], XmNfontList, E_textFontList(parent));  ac++;
    }
 
@@ -1732,7 +1732,7 @@ CreateText(
 			XtParseTranslationTable(EditorTranslationTable));
 
    /* Add any translations set by the application. */
-   if ( E_textTranslations(parent) != (XtTranslations)NULL ) {
+   if ( E_textTranslations(parent) != (XtTranslations)nullptr ) {
      XtOverrideTranslations(text, E_textTranslations(parent));
    }
 
@@ -2028,13 +2028,13 @@ Destroy(
    if (M_spellFilter(editor))
       XtFree(M_spellFilter(editor));
 
-   if (M_spellTitle(editor) != (XmString)NULL)
+   if (M_spellTitle(editor) != (XmString)nullptr)
       XmStringFree(M_spellTitle(editor));
 
    if (E_misspelledListLabel(editor) != (XmString)DtUNSPECIFIED)
       XmStringFree(E_misspelledListLabel(editor));
 
-   if (M_fndChngTitle(editor) != (XmString)NULL)
+   if (M_fndChngTitle(editor) != (XmString)nullptr)
       XmStringFree(M_fndChngTitle(editor));
 
    if (E_findFieldLabel(editor) != (XmString)DtUNSPECIFIED)
@@ -2055,7 +2055,7 @@ Destroy(
    /*
     * Cleanup the Format Settings dialog
     */
-   if (E_format_dialogTitle(editor) != (XmString)NULL)
+   if (E_format_dialogTitle(editor) != (XmString)nullptr)
       XmStringFree(E_format_dialogTitle(editor));
 
    if (E_format_leftMarginFieldLabel(editor) != (XmString)DtUNSPECIFIED)
@@ -2085,7 +2085,7 @@ Destroy(
    /*
     * Cleanup the Information dialog
     */
-   if (E_infoDialogTitle(editor) != (XmString)NULL)
+   if (E_infoDialogTitle(editor) != (XmString)nullptr)
       XmStringFree(E_infoDialogTitle(editor));
 
    /*
@@ -2241,7 +2241,7 @@ SetValues(
     redisplay_flag = True;
   }
 
-  if ( M_status_statusArea(current) != (Widget)NULL ) {
+  if ( M_status_statusArea(current) != (Widget)nullptr ) {
 
     if (newLabelFontList == True) {
       XtSetArg (al[0], XmNfontList, E_labelFontList(request) );  
@@ -2278,7 +2278,7 @@ SetValues(
 
   /* Information dialog */
 
-  if ( M_gen_warning(current) != (Widget)NULL ) {
+  if ( M_gen_warning(current) != (Widget)nullptr ) {
 
     if ( newButtonFontList == True ) { 
       XtSetArg (al[0], XmNfontList, E_buttonFontList(request) );
@@ -2297,7 +2297,7 @@ SetValues(
   }
 
   /* Find/Change dialog */
-  if ( M_search_dialog(current) != (Widget)NULL ) 
+  if ( M_search_dialog(current) != (Widget)nullptr ) 
   {
     if ( newButtonFontList == True ) { 
       XtSetArg (al[0], XmNfontList, E_buttonFontList(request)); 
@@ -2339,7 +2339,7 @@ SetValues(
   }
 
   /* Format Settings dialog */
-  if ( M_format_dialog(current) != (Widget)NULL ) 
+  if ( M_format_dialog(current) != (Widget)nullptr ) 
   {
     if ( newButtonFontList == True ) { 
       XtSetArg (al[0], XmNfontList, E_buttonFontList(request)); 
@@ -2427,7 +2427,7 @@ SetValues(
 	/*
 	 * ...turn back on the Change To field in the Find/Change dialog
 	 */
-	if ( M_search_dialog(current) != (Widget)NULL ) {
+	if ( M_search_dialog(current) != (Widget)nullptr ) {
 	  XtSetSensitive(M_search_replaceLbl(current), True);
           XtSetSensitive(M_replaceText(current), True);
         }
@@ -2524,7 +2524,7 @@ _DtEditorGetCenterToggleLabel(
 
     if (E_format_centerToggleLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_format_centerToggleLabel(editor) );
-    else if (M_format_dialog(editor) != (Widget)NULL)
+    else if (M_format_dialog(editor) != (Widget)nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_format_center(editor), al, 1) ;
@@ -2556,7 +2556,7 @@ _DtEditorGetChangeAllButtonLabel(
 
     if (E_changeAllButtonLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_changeAllButtonLabel(editor) );
-    else if (M_search_dialog(editor) != (Widget) NULL)
+    else if (M_search_dialog(editor) != (Widget) nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_search_replaceAllBtn(editor), al, 1) ;
@@ -2588,7 +2588,7 @@ _DtEditorGetChangeButtonLabel(
 
     if (E_changeButtonLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_changeButtonLabel(editor) );
-    else if (M_search_dialog(editor) != (Widget) NULL)
+    else if (M_search_dialog(editor) != (Widget) nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_search_replaceBtn(editor), al, 1) ;
@@ -2620,7 +2620,7 @@ _DtEditorGetChangeFieldLabel(
 
     if (E_changeFieldLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_changeFieldLabel(editor) );
-    else if (M_search_dialog(editor) != (Widget) NULL)
+    else if (M_search_dialog(editor) != (Widget) nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_search_replaceLbl(editor), al, 1) ;
@@ -2669,7 +2669,7 @@ _DtEditorGetCurrentLineLabel(
 
     if (E_status_currentLineLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_status_currentLineLabel(editor) );
-    else if (M_status_statusArea(editor) != (Widget) NULL)
+    else if (M_status_statusArea(editor) != (Widget) nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_status_lineLabel(editor), al, 1) ;
@@ -2718,7 +2718,7 @@ _DtEditorGetFindButtonLabel(
 
     if (E_findButtonLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_findButtonLabel(editor) );
-    else if (M_search_dialog(editor) != (Widget) NULL)
+    else if (M_search_dialog(editor) != (Widget) nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_search_findBtn(editor), al, 1) ;
@@ -2750,7 +2750,7 @@ _DtEditorGetFindFieldLabel(
 
     if (E_findFieldLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_findFieldLabel(editor) );
-    else if (M_search_dialog(editor) != (Widget) NULL)
+    else if (M_search_dialog(editor) != (Widget) nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_search_findLbl(editor), al, 1) ;
@@ -2782,7 +2782,7 @@ _DtEditorGetFormatAllButtonLabel(
 
     if (E_format_formatAllButtonLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_format_formatAllButtonLabel(editor) );
-    else if (M_format_dialog(editor) != (Widget)NULL)
+    else if (M_format_dialog(editor) != (Widget)nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_format_all(editor), al, 1) ;
@@ -2814,7 +2814,7 @@ _DtEditorGetFormatParagraphButtonLabel(
 
     if(E_format_formatParagraphButtonLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_format_formatParagraphButtonLabel(editor) );
-    else if (M_format_dialog(editor) != (Widget)NULL)
+    else if (M_format_dialog(editor) != (Widget)nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_format_paragraph(editor), al, 1) ;
@@ -2846,7 +2846,7 @@ _DtEditorGetJustifyToggleLabel(
 
     if (E_format_justifyToggleLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_format_justifyToggleLabel(editor) );
-    else if (M_format_dialog(editor) != (Widget)NULL)
+    else if (M_format_dialog(editor) != (Widget)nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_format_bothJust(editor), al, 1) ;
@@ -2878,7 +2878,7 @@ _DtEditorGetLeftAlignToggleLabel(
 
     if (E_format_leftAlignToggleLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_format_leftAlignToggleLabel(editor) );
-    else if (M_format_dialog(editor) != (Widget)NULL)
+    else if (M_format_dialog(editor) != (Widget)nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_format_leftJust(editor), al, 1) ;
@@ -2910,7 +2910,7 @@ _DtEditorGetLeftMarginFieldLabel(
 
     if (E_format_leftMarginFieldLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_format_leftMarginFieldLabel(editor) );
-    else if (M_format_dialog(editor) != (Widget)NULL)
+    else if (M_format_dialog(editor) != (Widget)nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_format_leftLabel(editor), al, 1) ;
@@ -2959,7 +2959,7 @@ _DtEditorGetMisspelledListLabel(
 
     if (E_misspelledListLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_misspelledListLabel(editor) );
-    else if (M_search_dialog(editor) != (Widget) NULL)
+    else if (M_search_dialog(editor) != (Widget) nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_search_listLbl(editor), al, 1) ;
@@ -2991,7 +2991,7 @@ _DtEditorGetRightAlignToggleLabel(
 
     if (E_format_rightAlignToggleLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_format_rightAlignToggleLabel(editor) );
-    else if (M_format_dialog(editor) != (Widget)NULL)
+    else if (M_format_dialog(editor) != (Widget)nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_format_rightJust(editor), al, 1) ;
@@ -3023,7 +3023,7 @@ _DtEditorGetRightMarginFieldLabel(
 
     if (E_format_rightMarginFieldLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_format_rightMarginFieldLabel(editor) );
-    else if (M_format_dialog(editor) != (Widget)NULL)
+    else if (M_format_dialog(editor) != (Widget)nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_format_rightLabel(editor), al, 1) ;
@@ -3157,7 +3157,7 @@ _DtEditorGetLineCountLabel(
 
     if (E_status_totalLineCountLabel(editor) != (XmString) DtUNSPECIFIED)
       data = XmStringCopy( E_status_totalLineCountLabel(editor) );
-    else if (M_status_statusArea(editor) != (Widget) NULL)
+    else if (M_status_statusArea(editor) != (Widget) nullptr)
     { 
        XtSetArg( al[0], XmNlabelString, &data) ;
        XtGetValues( (Widget) M_status_totalLabel(editor), al, 1) ;
@@ -3482,7 +3482,7 @@ GoToLine(
 {
     DtEditorWidget editor = (DtEditorWidget)w;
 
-    if( M_status_statusArea(editor) != (Widget)NULL && 
+    if( M_status_statusArea(editor) != (Widget)nullptr && 
         XtIsManaged(M_status_statusArea(editor)) == True ) 
     {
 
@@ -4433,13 +4433,13 @@ SetInfoDialogTitle(
   /*
    * If the Information dialog has been created, change its title
    */
-  if( M_gen_warning(editor) != (Widget)NULL )
+  if( M_gen_warning(editor) != (Widget)nullptr )
   {
 
        /*
 	* Prepend the DialogTitle resource, if it has been set
 	*/
-       if( E_dialogTitle(editor) != (XmString)NULL ) {
+       if( E_dialogTitle(editor) != (XmString)nullptr ) {
          XmString titleStr;
 
 	 /*
@@ -4482,9 +4482,9 @@ _DtEditorWarning(
     tmpMess = strdup(mess);
 
     /* create the dialog if it is the first time */
-    if(M_gen_warning(editor) == (Widget) NULL) 
+    if(M_gen_warning(editor) == (Widget) nullptr) 
     {
-	XmString titleStr = (XmString) NULL;
+	XmString titleStr = (XmString) nullptr;
 	XmString okStr;
 
         ac = 0;
@@ -4494,7 +4494,7 @@ _DtEditorWarning(
         * DtNdialogTitle resource, if it is set
         */
 
-	if( E_dialogTitle(editor) != (XmString)NULL ) {
+	if( E_dialogTitle(editor) != (XmString)nullptr ) {
 	  
 	  /*
 	   * Add the "functional title" to the DialogTitle
@@ -4515,7 +4515,7 @@ _DtEditorWarning(
 				               M_topLevelShell(editor), "Warn",
 					       al, ac);
 
-	if (titleStr != (XmString) NULL)
+	if (titleStr != (XmString) nullptr)
 	  XmStringFree( titleStr );
 	XmStringFree(okStr);
 
@@ -4659,7 +4659,7 @@ UpdateOverstrikeIndicator(
      * Only change the overstrike indicator if the status line is visible
      */
     if ( M_status_showStatusLine(ew) == True &&
-	 M_status_overstrikeWidget(ew) != (Widget) NULL )
+	 M_status_overstrikeWidget(ew) != (Widget) nullptr )
     {
        ac=0;
 
@@ -4750,7 +4750,7 @@ SetStatusLine(
 
    if( statusLineOn == True )
    {
-     if( M_status_statusArea(ew) == (Widget)NULL )
+     if( M_status_statusArea(ew) == (Widget)nullptr )
 	M_status_statusArea(ew) = CreateStatusLine( ew ); 
 
      /*
@@ -4800,7 +4800,7 @@ SetStatusLine(
      /* 
       * Hide the status line
       */
-     if( M_status_statusArea(ew) != (Widget)NULL )
+     if( M_status_statusArea(ew) != (Widget)nullptr )
        XtUnmanageChild( M_status_statusArea(ew) );
 
    }
@@ -7029,7 +7029,7 @@ DoAdjust(
         * Set up 
         */
        _DtTurnOnHourGlass(M_topLevelShell(editor));
-       if (M_format_dialog(editor) != (Widget)NULL)
+       if (M_format_dialog(editor) != (Widget)nullptr)
          _DtTurnOnHourGlass(M_format_dialog(editor));
 
        memset(&adjRec, 0, sizeof(AdjRec));
@@ -7159,7 +7159,7 @@ DoAdjust(
         * Clean up
         */
        _DtTurnOffHourGlass(M_topLevelShell(editor));
-       if (M_format_dialog(editor) != (Widget)NULL)
+       if (M_format_dialog(editor) != (Widget)nullptr)
          _DtTurnOffHourGlass(M_format_dialog(editor));
 
     } /* end check for valid margins */ 
@@ -7252,13 +7252,13 @@ SetFormatDialogTitle(
   /*
    * If the Format Settings dialog has been created, change its title
    */
-  if( M_format_dialog(editor) != (Widget)NULL )
+  if( M_format_dialog(editor) != (Widget)nullptr )
   {
 
        /*
 	* Prepend the DialogTitle resource, if it has been set
 	*/
-       if( E_dialogTitle(editor) != (XmString)NULL ) {
+       if( E_dialogTitle(editor) != (XmString)nullptr ) {
          XmString titleStr;
 
 	 /*
@@ -7328,7 +7328,7 @@ CreateFormatDialog(
     Arg		al[15];        /* arg list */
     int ac;        /* arg count */
     Pixel	textBackground, textForeground;
-    XmString	tempString = (XmString)NULL;
+    XmString	tempString = (XmString)nullptr;
 
        /* 
         * Match the background & foreground colors of the edit window
@@ -7346,7 +7346,7 @@ CreateFormatDialog(
 	* First, create the dialog's title, prepending the 
 	* DtNdialogTitle resource, if it is set
 	*/
-       if( E_dialogTitle(editor) != (XmString)NULL ) {
+       if( E_dialogTitle(editor) != (XmString)nullptr ) {
 
          /*
 	  * Add the "functional title" to the DialogTitle
@@ -7368,7 +7368,7 @@ CreateFormatDialog(
        XtSetArg (al[ac], XmNnavigationType, XmTAB_GROUP); ac++;
        M_format_dialog(editor) = XmCreateFormDialog(
        				M_topLevelShell(editor), "ad_dial", al, ac);
-       if (tempString != (XmString)NULL)
+       if (tempString != (XmString)nullptr)
          XmStringFree( tempString );
 
        XtAddCallback(M_format_dialog(editor), XmNhelpCallback,
@@ -7759,7 +7759,7 @@ GetAdjustSettings(
 	DtEditorFormatSettings	*formatSettings)
 {
 
-    if( M_format_dialog(editor)!= (Widget)NULL ) {
+    if( M_format_dialog(editor)!= (Widget)nullptr ) {
 
       /*
        * Read the current alignment settings from the Format Settings
@@ -8115,7 +8115,7 @@ DtEditorGetMessageTextFieldID(
    /*
     * Create the status line if is does not exist
     */
-   if( M_status_statusArea(editor) == (Widget) NULL )
+   if( M_status_statusArea(editor) == (Widget) nullptr )
       M_status_statusArea(editor) = CreateStatusLine( editor ); 
 
    result = M_status_messageText(editor);
@@ -8326,7 +8326,7 @@ DtEditorInvokeFormatDialog(
   /* 
    * Create the dialog if it is the first time 
    */
-  if (M_format_dialog(editor) == (Widget)NULL) 
+  if (M_format_dialog(editor) == (Widget)nullptr) 
       CreateFormatDialog( editor );
 
   /*
@@ -8360,7 +8360,7 @@ DtEditorReset(
    * Reset the status line
    * Note, the current & total line displays are reset by DtEditorSetContents()
    */
-  if( M_status_statusArea(editor) != (Widget) NULL ) {
+  if( M_status_statusArea(editor) != (Widget) nullptr ) {
 
     XmTextFieldSetString( M_status_messageText(editor), "" );
 
@@ -8384,7 +8384,7 @@ DtEditorReset(
   /*
    * Reset the Format Settings dialog
    */
-  if (M_format_dialog(editor) != (Widget)NULL)
+  if (M_format_dialog(editor) != (Widget)nullptr)
     ResetFormatDialog(editor);  
  
   _DtAppUnlock(app);

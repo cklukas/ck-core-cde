@@ -490,7 +490,7 @@ Initialize(
    XtSetArg(wargs[0], XmNwidth, 1);
    XtSetArg(wargs[1], XmNheight, 1);
    XtSetArg(wargs[2], XmNuserData, NULL);
-   new->workArea.workArea_root =  (Widget) NULL;
+   new->workArea.workArea_root =  (Widget) nullptr;
    new->workArea.workArea_root = XtCreateWidget("root", xmPrimitiveWidgetClass,
                                                 (Widget)new, wargs, 3);
 }

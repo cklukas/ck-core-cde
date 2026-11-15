@@ -448,13 +448,13 @@ OpenInputClientDB(char *fileName,
     if ((fileName == (char *)nullptr) ||
 	((inputDB = (ClientDBRec *)XtMalloc(sizeof(ClientDBRec)))
 	 == (ClientDBRec *)nullptr))
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
 
     if ((inputDB->xrmDB = XrmGetFileDatabase(fileName))
-	== (XrmDatabase)NULL)
+	== (XrmDatabase)nullptr)
     {
 	XtFree((char *)inputDB);
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
     }
 
     inputDB->openForInput = True;
@@ -472,7 +472,7 @@ OpenInputClientDB(char *fileName,
     {
 	XrmDestroyDatabase(inputDB->xrmDB);
 	XtFree((char *)inputDB);
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
     }
 
     /* Allocate space for the client IDs and fill from database. */
@@ -484,7 +484,7 @@ OpenInputClientDB(char *fileName,
 	{
 	    XrmDestroyDatabase(inputDB->xrmDB);
 	    XtFree((char *)inputDB);
-	    return (ClientDB)NULL;
+	    return (ClientDB)nullptr;
 	}
 
 	tmpPtr = inputDB->XSMPClients;
@@ -495,7 +495,7 @@ OpenInputClientDB(char *fileName,
 	    XrmDestroyDatabase(inputDB->xrmDB);
 	    XtFree((char *)inputDB->XSMPClients);
 	    XtFree((char *)inputDB);
-	    return (ClientDB)NULL;
+	    return (ClientDB)nullptr;
 	}
     }
     if (inputDB->nProxyClients > 0)
@@ -507,7 +507,7 @@ OpenInputClientDB(char *fileName,
 	    XrmDestroyDatabase(inputDB->xrmDB);
 	    XtFree((char *)inputDB->XSMPClients);
 	    XtFree((char *)inputDB);
-	    return (ClientDB)NULL;
+	    return (ClientDB)nullptr;
 	}
 
 	tmpPtr = inputDB->proxyClients;
@@ -519,7 +519,7 @@ OpenInputClientDB(char *fileName,
 	    XtFree((char *)inputDB->XSMPClients);
 	    XtFree((char *)inputDB->proxyClients);
 	    XtFree((char *)inputDB);
-	    return (ClientDB)NULL;
+	    return (ClientDB)nullptr;
 	}
     }
 
@@ -539,7 +539,7 @@ OpenInputClientDB(char *fileName,
 	XtFree((char *)inputDB->XSMPClients);
 	XtFree((char *)inputDB->proxyClients);
 	XtFree((char *)inputDB);
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
     }
 
     return (ClientDB)inputDB;
@@ -562,9 +562,9 @@ OpenOutputClientDB(char *fileName,
 	(dtsessionID == (char *)nullptr) ||
 	((outputDB = (ClientDBRec *)XtCalloc(1, sizeof(ClientDBRec)))
 	 == (ClientDBRec *)nullptr))
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
 
-    outputDB->xrmDB = (XrmDatabase)NULL;
+    outputDB->xrmDB = (XrmDatabase)nullptr;
     outputDB->openForInput = False;
     outputDB->nextXSMPClientIndex = 0;
     outputDB->nextProxyClientIndex = 0;
@@ -577,14 +577,14 @@ OpenOutputClientDB(char *fileName,
     {
 	XtFree((char *)outputDB);
 	errno = ENAMETOOLONG;
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
     }
     if (((outputDB->xrmDBFileName = XtNewString(fileName)) == (char *)nullptr) ||
 	((outputDB->tmpDBFileName = XtMalloc(length + sizeof(suffix))) == nullptr))
     {
 	XtFree(outputDB->xrmDBFileName);
 	XtFree((char *)outputDB);
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
     }
 
     memcpy(outputDB->tmpDBFileName, fileName, length);
@@ -595,7 +595,7 @@ OpenOutputClientDB(char *fileName,
 	XtFree(outputDB->xrmDBFileName);
 	XtFree(outputDB->tmpDBFileName);
 	XtFree((char *)outputDB);
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
     }
 
     if ((outputDB->xrmDBFile = fdopen(fd, "w")) == nullptr)
@@ -607,7 +607,7 @@ OpenOutputClientDB(char *fileName,
 	XtFree(outputDB->tmpDBFileName);
 	XtFree((char *)outputDB);
 	errno = savedErrno;
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
     }
 
     /* Store version and session ID. */
@@ -618,7 +618,7 @@ OpenOutputClientDB(char *fileName,
 	savedErrno = errno;
 	CloseClientDB((ClientDB)outputDB, False);
 	errno = savedErrno;
-	return (ClientDB)NULL;
+	return (ClientDB)nullptr;
     }
 
     return (ClientDB)outputDB;
@@ -635,9 +635,9 @@ GetXSMPClientDBRec(ClientDB inputDBPtr)
 	(!inputDB->openForInput) ||
 	(inputDB->nextXSMPClientIndex >= inputDB->nXSMPClients) ||
 	((clientPtr = (XSMPClientDBRecPtr)XtMalloc(sizeof(XSMPClientDBRec)))
-	 == (XSMPClientDBRecPtr)NULL))
+	 == (XSMPClientDBRecPtr)nullptr))
     {
-	return (XSMPClientDBRecPtr)NULL;
+	return (XSMPClientDBRecPtr)nullptr;
     }
 
     clientID = inputDB->XSMPClients[inputDB->nextXSMPClientIndex];
@@ -674,7 +674,7 @@ GetXSMPClientDBRec(ClientDB inputDBPtr)
 	clientPtr->restartHint > SmRestartNever)
     {
 	FreeXSMPClientDBRec(clientPtr);
-	return (XSMPClientDBRecPtr)NULL;
+	return (XSMPClientDBRecPtr)nullptr;
     }
 
     clientPtr->next = (XSMPClientDBRec *)nullptr;
@@ -695,9 +695,9 @@ GetProxyClientDBRec(ClientDB inputDBPtr)
 	(!inputDB->openForInput) ||
 	(inputDB->nextProxyClientIndex >= inputDB->nProxyClients) ||
 	((clientPtr = (ProxyClientDBRecPtr)XtMalloc(sizeof(ProxyClientDBRec)))
-	 == (ProxyClientDBRecPtr)NULL))
+	 == (ProxyClientDBRecPtr)nullptr))
     {
-	return (ProxyClientDBRecPtr)NULL;
+	return (ProxyClientDBRecPtr)nullptr;
     }
 
     clientID = inputDB->proxyClients[inputDB->nextProxyClientIndex];
@@ -715,7 +715,7 @@ GetProxyClientDBRec(ClientDB inputDBPtr)
 			 &clientPtr->screenNum, 0) || clientPtr->screenNum < 0)
     {
 	FreeProxyClientDBRec(clientPtr);
-	return (ProxyClientDBRecPtr)NULL;
+	return (ProxyClientDBRecPtr)nullptr;
     }
 
     inputDB->nextProxyClientIndex++;
@@ -734,7 +734,7 @@ PutXSMPClientDBRec(ClientDB outputDBPtr,
 	return False;
     if (outputDB->writeFailed ||
 	outputDB->nextXSMPClientIndex == INT_MAX ||
-	(clientPtr == (XSMPClientDBRecPtr)NULL) ||
+	(clientPtr == (XSMPClientDBRecPtr)nullptr) ||
 	(clientPtr->clientId == (char *)nullptr))
 
     {
@@ -784,7 +784,7 @@ PutProxyClientDBRec(ClientDB outputDBPtr,
 	return False;
     if (outputDB->writeFailed ||
 	outputDB->nextProxyClientIndex == INT_MAX ||
-	(clientPtr == (ProxyClientDBRecPtr)NULL))
+	(clientPtr == (ProxyClientDBRecPtr)nullptr))
     {
 	outputDB->writeFailed = True;
 	return False;
@@ -865,7 +865,7 @@ CloseClientDB(ClientDB clientDBPtr, Boolean writeDB)
 void
 FreeXSMPClientDBRec(XSMPClientDBRecPtr clientPtr)
 {
-    if (clientPtr != (XSMPClientDBRecPtr)NULL)
+    if (clientPtr != (XSMPClientDBRecPtr)nullptr)
     {
 	XtFree(clientPtr->clientId);
 	XtFree(clientPtr->clientHost);
@@ -884,7 +884,7 @@ FreeXSMPClientDBRec(XSMPClientDBRecPtr clientPtr)
 void
 FreeProxyClientDBRec(ProxyClientDBRecPtr clientPtr)
 {
-    if (clientPtr != (ProxyClientDBRecPtr)NULL)
+    if (clientPtr != (ProxyClientDBRecPtr)nullptr)
     {
 	XtFree(clientPtr->clientHost);
 

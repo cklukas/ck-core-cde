@@ -240,7 +240,7 @@ IL_PRIVATE ilBool _ilSubsampleYCbCr (
         }
 
         /*  Init dstData, add subsample filter. */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = pDes;
     dstData.pFormat = pFormat;
     dstData.width = pInfo->width;
@@ -250,7 +250,7 @@ IL_PRIVATE ilBool _ilSubsampleYCbCr (
     dstData.pPalette = (unsigned short *)nullptr;
  
         /*  Demand constant strips, a multiple of maximum subsample (4). */
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.stripHeight = 8;                /* Arbitrary, but must be multiple of 4 */
     srcData.constantStrip = TRUE;
     srcData.minBufferHeight = 0;
@@ -290,7 +290,7 @@ typedef struct {
     /*  Pointer to "std" translation table: works for "std" YCbCr values -
         those in IL_DES_YCBCR.
     */
-static ilRGBTransPtr _ilStdYCbCrTransPtr = (ilRGBTransPtr)NULL;
+static ilRGBTransPtr _ilStdYCbCrTransPtr = (ilRGBTransPtr)nullptr;
 
 
     /*  --------------------------- ilDestroyTransTable --------------------- */
@@ -521,7 +521,7 @@ static ilRGBTransPtr ilGetYCbCrConvertTable (
         }
     else {
         isStd = FALSE;
-        pTrans = (ilRGBTransPtr)NULL;       /* allocate it below */
+        pTrans = (ilRGBTransPtr)nullptr;       /* allocate it below */
         }
 
         /*  Build translate tables.  First, from pg 3 of Appendix O of TIFF spec:
@@ -635,7 +635,7 @@ IL_PRIVATE ilBool _ilConvertYCbCrToRGB (
     destroyFunction = (pTrans == _ilStdYCbCrTransPtr) ? IL_NPF : ilDestroyTransTable;
 
         /*  Add element to the pipe, init private */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     *pDes = *IL_DES_RGB;
     dstData.pDes = pDes;
     dstData.pFormat = pFormat;
@@ -1026,7 +1026,7 @@ IL_PRIVATE ilBool _ilDitherYCbCr (
         /*  If mapImage given, validate it and point to its pixels.  If not given,
             pTranslate becomes null and will point to "identity" mapImage below.
         */
-    pTranslate = (ilPtr)NULL;
+    pTranslate = (ilPtr)nullptr;
     if (pData->mapImage) {
         ilImageInfo *pInfo;
         if (!ilQueryClientImage (pData->mapImage, &pInfo, 0)
@@ -1067,12 +1067,12 @@ IL_PRIVATE ilBool _ilDitherYCbCr (
         /*  Add element to the pipe, init private.  Accept strips as they are;
             presumably they will be even # lines because image is subsampled.
         */
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.stripHeight = pInfo->stripHeight;
     srcData.constantStrip = FALSE;
     srcData.minBufferHeight = 0;
 
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     des = *IL_DES_GRAY;
     des.type = pData->dstType;
     if (des.type == IL_PALETTE) {
@@ -1291,7 +1291,7 @@ IL_PRIVATE ilBool _ilConvertRGBToYCbCr (
     pDes->typeInfo.YCbCr.lumaBlue  = pNewDes->typeInfo.YCbCr.lumaBlue;
 
     *pFormat = *IL_FORMAT_3BYTE_PLANE;
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = pDes;
     dstData.pFormat = pFormat;
     dstData.width = pInfo->width;

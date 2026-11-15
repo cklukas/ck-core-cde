@@ -873,7 +873,7 @@ browser_bpress(
         if (bevent->state == 0 && bevent->button == 1)/* RUBBERBAND SELECT */
 	{
             if (ui_initiate_rubberband(widget, True, 
-			browser_rband, (XtPointer)NULL) == ERROR)
+			browser_rband, (XtPointer)nullptr) == ERROR)
             {
                 if (util_get_verbosity() > 0)
                     fprintf(stderr,"browser: couldn't begin rubberbanding\n");
@@ -885,7 +885,7 @@ browser_bpress(
 		 (bevent->button == 1 && (bevent->state & ShiftMask)))
 	{
             if (ui_initiate_rubberband(widget, True, 
-			browser_rband, (XtPointer)NULL) == ERROR)
+			browser_rband, (XtPointer)nullptr) == ERROR)
             {
                 if (util_get_verbosity() > 0)
                     fprintf(stderr,"browser: couldn't begin rubberbanding\n");
@@ -1375,7 +1375,7 @@ setup_callbacks(
      * Set callbacks
      */
     XtAddCallback(instance->menubar_items.Edit_item, XmNcascadingCallback, 
-		brws_edit_cascadeCB, (XtPointer)NULL);
+		brws_edit_cascadeCB, (XtPointer)nullptr);
     XtAddCallback(instance->menubar_items.View_item, XmNcascadingCallback, 
 		brws_view_cascadeCB, 
 		(XtPointer)instance->menubar_View_item_view_pulldown_items.Module_item);
@@ -1385,7 +1385,7 @@ setup_callbacks(
      */
     XtAddEventHandler(instance->detailed_drawarea, 
                 Button1MotionMask | Button2MotionMask, False,
-                brwsP_drawarea_button_drag, (XtPointer)NULL);
+                brwsP_drawarea_button_drag, (XtPointer)nullptr);
 
     brwsP_make_drawarea_snap(browser->module, instance->detailed_drawarea);
 }

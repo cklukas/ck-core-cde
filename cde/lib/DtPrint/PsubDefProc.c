@@ -231,7 +231,7 @@ BuildPrinterLists(
      * get the printer list for each valid Xp server
      */
     for(server_count = 0;
-	(String)NULL != server_list[server_count];
+	(String)nullptr != server_list[server_count];
 	server_count++);
     dpd->xp_server_list =
 	(String*)XtCalloc(server_count, sizeof(String));
@@ -358,7 +358,7 @@ BuildPrinterSelectionItems(
 	     * build a fully qualified X printer specifier
 	     */
 	    name = (dpd->printer_lists[i])[j].printer_name;
-	    (dpd->printer_lists[i])[j].printer_name = (String)NULL;
+	    (dpd->printer_lists[i])[j].printer_name = (String)nullptr;
 	    full_name =
 		_DtPrintCreateXPrinterSpecifier(name, server_name,
 						DtPRINT_NET_UNSPECIFIED,
@@ -368,15 +368,15 @@ BuildPrinterSelectionItems(
 	     * check to see if this should be the initially selected printer
 	     */
 	    if(dpd->selected_printer == 0
-	       && (String)NULL != initial_printer)
+	       && (String)nullptr != initial_printer)
 		if(strcmp(initial_printer, full_name) == 0)
 		    dpd->selected_printer = current_item + 1;
 	    /*
 	     * convert the printer description
 	     */
 	    desc = (dpd->printer_lists[i])[j].description;
-	    (dpd->printer_lists[i])[j].description = (String)NULL;
-	    if((String)NULL != desc && '\0' != *desc)
+	    (dpd->printer_lists[i])[j].description = (String)nullptr;
+	    if((String)nullptr != desc && '\0' != *desc)
 	    {
 		/*
 		 * chop the description after the 1st line
@@ -406,7 +406,7 @@ BuildPrinterSelectionItems(
 	    XtFree(desc);
 	    XtFree(full_name);
 	    items[current_item] =
-		XmStringGenerate((XtPointer)buf, (XmStringTag)NULL,
+		XmStringGenerate((XtPointer)buf, (XmStringTag)nullptr,
 				 XmMULTIBYTE_TEXT, tag);
 	}
     }
@@ -488,7 +488,7 @@ CompoundTextToString(
 		     Display* display,
 		     unsigned char* compound_text)
 {
-    String str = (String)NULL;
+    String str = (String)nullptr;
 
     if((unsigned char*)nullptr != compound_text)
     {
@@ -555,7 +555,7 @@ CreateFileSelectionBox(
 	XmCreateFileSelectionDialog(parent, "_PsubDefProcFileSelectionBox",
 				    args, n);
     XmStringFree(title_xmstr);
-    if(dpd->file_selection_box == (Widget)NULL)
+    if(dpd->file_selection_box == (Widget)nullptr)
 	return DtPRINT_FAILURE;
     /*
      * add callbacks
@@ -622,7 +622,7 @@ CreatePrinterInfoBox(
 	XmCreateInformationDialog(parent, "_PsubDefProcPrinterInfoBox",
 				  args, n);
     XmStringFree(title_xmstr);
-    if(dpd->printer_info_box == (Widget)NULL)
+    if(dpd->printer_info_box == (Widget)nullptr)
 	return DtPRINT_FAILURE;
     /*
      * add callbacks
@@ -807,7 +807,7 @@ CreatePrinterSelectionBox(
     XmStringFree(list_label);
     XmStringFree(info_label);
     XmStringFree(title_xmstr);
-    if(dpd->printer_selection_box == (Widget)NULL)
+    if(dpd->printer_selection_box == (Widget)nullptr)
 	return DtPRINT_FAILURE;
     /*
      * add callbacks
@@ -833,10 +833,10 @@ CreatePrinterSelectionBox(
      * unmanaged unwanted children
      */
     control = XtNameToWidget(dpd->printer_selection_box, "*Selection");
-    if(control != (Widget)NULL)
+    if(control != (Widget)nullptr)
 	XtUnmanageChild(control);
     control = XtNameToWidget(dpd->printer_selection_box, "*Text");
-    if(control != (Widget)NULL)
+    if(control != (Widget)nullptr)
 	XtUnmanageChild(control);
     /*
      * return
@@ -907,7 +907,7 @@ DtPrintDefProcDestroyCB(Widget w,
 			 ErrorMessageDestroyCB, (XtPointer)w);
 	XtDestroyWidget(dpd->error_message_box);
 	ErrorMessageDestroyCB(dpd->error_message_box,
-			      (XtPointer)w, (XtPointer)NULL);
+			      (XtPointer)w, (XtPointer)nullptr);
     }
     if(dpd->help_dialog)
     {
@@ -915,7 +915,7 @@ DtPrintDefProcDestroyCB(Widget w,
 			 HelpDialogDestroyCB, (XtPointer)w);
 	XtDestroyWidget(dpd->help_dialog);
 	HelpDialogDestroyCB(dpd->help_dialog,
-			    (XtPointer)w, (XtPointer)NULL);
+			    (XtPointer)w, (XtPointer)nullptr);
     }
     if(dpd->file_selection_box)
     {
@@ -923,7 +923,7 @@ DtPrintDefProcDestroyCB(Widget w,
 			 SelectFileDestroyCB, (XtPointer)w);
 	XtDestroyWidget(dpd->file_selection_box);
 	SelectFileDestroyCB(dpd->file_selection_box,
-			    (XtPointer)w, (XtPointer)NULL);
+			    (XtPointer)w, (XtPointer)nullptr);
     }
     if(dpd->printer_selection_box)
     {
@@ -931,7 +931,7 @@ DtPrintDefProcDestroyCB(Widget w,
 			 SelectPrinterDestroyCB, (XtPointer)w);
 	XtDestroyWidget(dpd->printer_selection_box);
 	SelectPrinterDestroyCB(dpd->printer_selection_box,
-			       (XtPointer)w, (XtPointer)NULL);
+			       (XtPointer)w, (XtPointer)nullptr);
     }
     if(dpd->printer_info_box)
     {
@@ -939,7 +939,7 @@ DtPrintDefProcDestroyCB(Widget w,
 			 PrinterInfoDestroyCB, (XtPointer)w);
 	XtDestroyWidget(dpd->printer_info_box);
 	PrinterInfoDestroyCB(dpd->printer_info_box,
-			     (XtPointer)w, (XtPointer)NULL);
+			     (XtPointer)w, (XtPointer)nullptr);
     }
     
 }
@@ -969,7 +969,7 @@ ErrorMessageDestroyCB(
 {
     DtPrintDefaultProcData* dpd = &PSUB_DefaultProcData(client_data);
     
-    dpd->error_message_box = (Widget)NULL;
+    dpd->error_message_box = (Widget)nullptr;
 }
 
 /*
@@ -1006,13 +1006,13 @@ FindSelectedPrinter(
        ||
        dpd->printer_lists == (DtPrintSelectPrinterList*)nullptr)
     {
-	return (String)NULL;
+	return (String)nullptr;
     }
     /*
      * find the printer list containing the selected printer
      */
     if(0 == dpd->selected_printer)
-	return (String)NULL;
+	return (String)nullptr;
     else
 	printer_index = dpd->selected_printer - 1;
     
@@ -1040,7 +1040,7 @@ FindSelectedPrinter(
 	    printer_list[printer_index - printer_count].printer_name_ct;
 	printer_name =
 	    CompoundTextToString(display, (unsigned char*)printer_name_ct);
-	if((String)NULL != printer_name)
+	if((String)nullptr != printer_name)
 	{
 	    printer_spec =
 		_DtPrintCreateXPrinterSpecifier(printer_name,
@@ -1051,7 +1051,7 @@ FindSelectedPrinter(
 	    return printer_spec;
 	}
     }
-    return (String)NULL;
+    return (String)nullptr;
 }
 
 /*
@@ -1109,7 +1109,7 @@ static Widget
 GetWMShellAncestor(Widget w)
 {
     Widget wmshell_ancestor = XtParent(w);
-    while(wmshell_ancestor != (Widget)NULL)
+    while(wmshell_ancestor != (Widget)nullptr)
     {
 	if(XtIsWMShell(wmshell_ancestor))
 	    break;
@@ -1144,7 +1144,7 @@ HelpDialogDestroyCB(
 {
     DtPrintDefaultProcData* dpd = &PSUB_DefaultProcData(client_data);
     
-    dpd->help_dialog = (Widget)NULL;
+    dpd->help_dialog = (Widget)nullptr;
 }
 
 /*
@@ -1255,7 +1255,7 @@ ParseFileNameSpec(const char* file_name,
      * find the last slash
      */
     ptr = DtStrrchr(pattern, '/');
-    if(ptr != (String)NULL)
+    if(ptr != (String)nullptr)
     {
 	/*
 	 * grab the name portion of the file name
@@ -1273,7 +1273,7 @@ ParseFileNameSpec(const char* file_name,
 	/*
 	 * no slash found; use the default pattern
 	 */
-	*pattern_xmstr = (XmString)NULL;
+	*pattern_xmstr = (XmString)nullptr;
 	*name_only = XtNewString(file_name);
     }
     XtFree(pattern);
@@ -1319,7 +1319,7 @@ PresentErrorDialog(
     va_list arg_marker;
     DtPrintDefaultProcData* dpd = &PSUB_DefaultProcData(w);
     Widget wmshell_ancestor;
-    WidgetList wmshell_ancestors_children = (WidgetList)NULL;
+    WidgetList wmshell_ancestors_children = (WidgetList)nullptr;
     
     wmshell_ancestor = GetWMShellAncestor(w);
 
@@ -1330,7 +1330,7 @@ PresentErrorDialog(
 	XtGetValues(wmshell_ancestor, args, n);
     }
 
-    if(dpd->error_message_box != (Widget)NULL)
+    if(dpd->error_message_box != (Widget)nullptr)
     {
 	/*
 	 * present only one message box
@@ -1344,7 +1344,7 @@ PresentErrorDialog(
      */
     message_len = strlen(message);
     va_start(arg_marker, message);
-    while((str_n = va_arg(arg_marker, String)) != (String)NULL)
+    while((str_n = va_arg(arg_marker, String)) != (String)nullptr)
     {
 	message_len += strlen(str_n);
     }
@@ -1412,10 +1412,10 @@ PresentErrorDialog(
 		
 		for(child = XmGetFocusWidget(w);
 		    child != wmshell_ancestor && child != name_w
-		    && child != (Widget)NULL;
+		    && child != (Widget)nullptr;
 		    child = XtParent(child));
 
-		if(child != name_w && child != (Widget)NULL)
+		if(child != name_w && child != (Widget)nullptr)
 		    XtManageChild(dpd->error_message_box);
 	    }
 	}
@@ -1448,7 +1448,7 @@ static void PresentHelp(
     
     wmshell_ancestor = GetWMShellAncestor(w);
 
-    if((Widget)NULL == dpd->help_dialog)
+    if((Widget)nullptr == dpd->help_dialog)
     {
 	Arg args[5];
 	Cardinal n;
@@ -1513,41 +1513,41 @@ PresentVerifyError(
 	PresentErrorDialog(w, INVALID_PRINTER_TITLE,
 			   PRINTER_MISSING_MESSAGE,
 			   printer_spec,
-			   (String)NULL);
+			   (String)nullptr);
 	break;
 
     case DtPRINT_NO_DEFAULT:
 	PresentErrorDialog(w, INVALID_PRINTER_TITLE,
 			   NO_DEFAULT_MESSAGE,
-			   (String)NULL);
+			   (String)nullptr);
 	break;
 
     case DtPRINT_NO_DEFAULT_DISPLAY:
 	PresentErrorDialog(w, INVALID_PRINTER_TITLE,
 			   NO_DEFAULT_DISPLAY_MESSAGE,
 			   printer_name,
-			   (String)NULL);
+			   (String)nullptr);
 	break;
 	
     case DtPRINT_NO_PRINTER:
 	PresentErrorDialog(w, INVALID_PRINTER_TITLE,
 			   INVALID_PRINTER_MESSAGE,
 			   printer_name, display_spec,
-			   (String)NULL);
+			   (String)nullptr);
 	break;
 
     case DtPRINT_NOT_XP_DISPLAY:
 	PresentErrorDialog(w, INVALID_PRINTER_TITLE,
 			   NOT_XP_DISPLAY_MESSAGE,
 			   display_spec,
-			   (String)NULL);
+			   (String)nullptr);
 	break;
 
     case DtPRINT_INVALID_DISPLAY:
 	PresentErrorDialog(w, INVALID_PRINTER_TITLE,
 			   INVALID_DISPLAY_MESSAGE,
 			   display_spec,
-			   (String)NULL);
+			   (String)nullptr);
 	break;
     }
     XtFree(printer_name);
@@ -1577,7 +1577,7 @@ PrinterInfoDestroyCB(
 {
     DtPrintDefaultProcData* dpd = &PSUB_DefaultProcData(client_data);
 
-    dpd->printer_info_box = (Widget)NULL;
+    dpd->printer_info_box = (Widget)nullptr;
 }
 
 /*
@@ -1624,7 +1624,7 @@ SelectFileDestroyCB(
 {
     DtPrintDefaultProcData* dpd = &PSUB_DefaultProcData(client_data);
 
-    dpd->file_selection_box = (Widget)NULL;
+    dpd->file_selection_box = (Widget)nullptr;
 }
 
 /*
@@ -1687,7 +1687,7 @@ SelectPrinterCB(
 	 * set the selected printer name in the PrintSetupBox
 	 */
 	printer_spec = FindSelectedPrinter(XtDisplay(psub), dpd);
-	if((String)NULL != printer_spec)
+	if((String)nullptr != printer_spec)
 	{
 	    XtVaSetValues(psub, DtNprinterName, printer_spec, nullptr);
 	    XtFree(printer_spec);
@@ -1701,7 +1701,7 @@ SelectPrinterCB(
 	 * deallocate and reset the lists
 	 */
 	FreeSelectPrinterData(dpd);
-	if(dpd->printer_list_box != (Widget)NULL)
+	if(dpd->printer_list_box != (Widget)nullptr)
 	    XmListDeleteAllItems(dpd->printer_list_box);
 	break;
     }
@@ -1729,8 +1729,8 @@ SelectPrinterDestroyCB(
 {
     DtPrintDefaultProcData* dpd = &PSUB_DefaultProcData(client_data);
 
-    dpd->printer_selection_box = (Widget)NULL;
-    dpd->printer_list_box = (Widget)NULL;
+    dpd->printer_selection_box = (Widget)nullptr;
+    dpd->printer_list_box = (Widget)nullptr;
     CloseSelectPrinterInfoConnection(dpd);
     FreeSelectPrinterData(dpd);
 }
@@ -1796,7 +1796,7 @@ SelectPrinterInfoCB(
 	String printer_spec;
 	
 	printer_spec = FindSelectedPrinter(XtDisplay(psub), dpd);
-	if((String)NULL != printer_spec)
+	if((String)nullptr != printer_spec)
 	{
 	    String new_printer_spec; /*
 				      * will always be set to NULL by
@@ -1881,7 +1881,7 @@ SelectPrinterItemCB(
 	 * update the default printer info dialog if it is visible
 	 */
 	if(dpd->printer_info_box && XtIsManaged(dpd->printer_info_box))
-	    SelectPrinterInfoCB(w, client_data, (XtPointer)NULL);
+	    SelectPrinterInfoCB(w, client_data, (XtPointer)nullptr);
     }
 }
 
@@ -1994,12 +1994,12 @@ _DtPrintDefProcInitialize(Widget w)
 {
     DtPrintDefaultProcData* dpd = &PSUB_DefaultProcData(w);
     
-    dpd->error_message_box = (Widget)NULL;
+    dpd->error_message_box = (Widget)nullptr;
     dpd->messages_hint = DtPRINT_HINT_MESSAGES_OK;
-    dpd->help_dialog = (Widget)NULL;
-    dpd->file_selection_box = (Widget)NULL;
-    dpd->printer_selection_box = (Widget)NULL;
-    dpd->printer_list_box = (Widget)NULL;
+    dpd->help_dialog = (Widget)nullptr;
+    dpd->file_selection_box = (Widget)nullptr;
+    dpd->printer_selection_box = (Widget)nullptr;
+    dpd->printer_list_box = (Widget)nullptr;
     dpd->xp_server_list = (String*)nullptr;
     dpd->xp_server_count = 0;
     dpd->printer_lists = (DtPrintSelectPrinterList*)nullptr;
@@ -2008,10 +2008,10 @@ _DtPrintDefProcInitialize(Widget w)
 #if 0 && defined(PRINTING_SUPPORTED)
     dpd->select_printer_info_context = (XPContext)None;
 #endif /* PRINTING_SUPPORTED */
-    dpd->printer_info_box = (Widget)NULL;
+    dpd->printer_info_box = (Widget)nullptr;
 
     XtAddCallback(w, XmNdestroyCallback,
-		  DtPrintDefProcDestroyCB, (XtPointer)NULL);
+		  DtPrintDefProcDestroyCB, (XtPointer)nullptr);
 }
 
 /*
@@ -2030,7 +2030,7 @@ void
 _DtPrintDefProcManageErrorBox(
 			      DtPrintDefaultProcData* dpd)
 {
-    if(dpd->error_message_box != (Widget)NULL)
+    if(dpd->error_message_box != (Widget)nullptr)
 	XtManageChild(dpd->error_message_box);
 }
 
@@ -2070,7 +2070,7 @@ _DtPrintSetupBoxXPrinterInfoProc(
     /*
      * if needed, create the printer information dialog
      */
-    if(dpd->printer_info_box == (Widget)NULL)
+    if(dpd->printer_info_box == (Widget)nullptr)
     {
 	XtEnum status = CreatePrinterInfoBox(wmshell_ancestor, w, dpd);
 	if(status != DtPRINT_SUCCESS)
@@ -2107,10 +2107,10 @@ _DtPrintSetupBoxXPrinterInfoProc(
 	attr_value =
 	    CompoundTextToString(XtDisplay(w), (unsigned char*)attr_value_ct);
 	XFree(attr_value_ct);
-	if((String)NULL != attr_value)
+	if((String)nullptr != attr_value)
 	{
-	    label = XmStringGenerate((XtPointer)attr_value, (XmStringTag)NULL,
-				     XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+	    label = XmStringGenerate((XtPointer)attr_value, (XmStringTag)nullptr,
+				     XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
 	    XtFree(attr_value);
 	    XtVaSetValues(ctl, XmNlabelString, label, nullptr);
 	    XmStringFree(label);
@@ -2146,7 +2146,7 @@ _DtPrintSetupBoxXPrinterInfoProc(
 				   XPDocAttr,
 				   "document-format");
 #endif /* PRINTING_SUPPORTED */
-    if((String)NULL != attr_value)
+    if((String)nullptr != attr_value)
     {
 	char* format_start;
 	format_start = strchr(attr_value, '{');
@@ -2181,10 +2181,10 @@ _DtPrintSetupBoxXPrinterInfoProc(
 	attr_value =
 	    CompoundTextToString(XtDisplay(w), (unsigned char*)attr_value_ct);
 	XFree(attr_value_ct);
-	if((String)NULL != attr_value)
+	if((String)nullptr != attr_value)
 	{
-	    label = XmStringGenerate((XtPointer)attr_value, (XmStringTag)NULL,
-				     XmCHARSET_TEXT, (XmStringTag)NULL);
+	    label = XmStringGenerate((XtPointer)attr_value, (XmStringTag)nullptr,
+				     XmCHARSET_TEXT, (XmStringTag)nullptr);
 	    XtFree(attr_value);
 	    XtVaSetValues(ctl, XmNlabelString, label, nullptr);
 	    XmStringFree(label);
@@ -2237,7 +2237,7 @@ _DtPrintSetupBoxSelectFileProc(
     /*
      * if needed, create the file selection dialog
      */
-    if(dpd->file_selection_box == (Widget)NULL)
+    if(dpd->file_selection_box == (Widget)nullptr)
     {
 	XtEnum status = CreateFileSelectionBox(wmshell_ancestor, w, dpd);
 	if(status != DtPRINT_SUCCESS)
@@ -2259,19 +2259,19 @@ _DtPrintSetupBoxSelectFileProc(
      * set the filter pattern in the file selection box
      */
     XtVaSetValues(dpd->file_selection_box, XmNpattern, pattern, nullptr);
-    if(pattern != (XmString)NULL)
+    if(pattern != (XmString)nullptr)
 	XmStringFree(pattern);
     /*
      * select the current file name in the file names list
      */
     file_list = XtNameToWidget(dpd->file_selection_box, "*ItemsList");
-    if(file_list != (Widget)NULL)
+    if(file_list != (Widget)nullptr)
     {
 	XmString file_name_xmstr;
 	int position;
 
 	text_field = XtNameToWidget(dpd->file_selection_box, "Text");
-	if(text_field != (Widget)NULL)
+	if(text_field != (Widget)nullptr)
 	{
 	    String dir_spec;
 	    /*
@@ -2358,14 +2358,14 @@ _DtPrintSetupBoxSelectXPrinterProc(
     {
 	PresentErrorDialog(w, PRLIST_ERROR_TITLE,
 			   NO_PRINTERS_MESSAGE,
-			   (String)NULL);
+			   (String)nullptr);
 	_DtTurnOffHourGlass(wmshell_ancestor);
 	return DtPRINT_FAILURE;
     }
     /*
      * create the dialog if it doesn't exist
      */
-    if(dpd->printer_selection_box == (Widget)NULL)
+    if(dpd->printer_selection_box == (Widget)nullptr)
     {
 	XtEnum status = CreatePrinterSelectionBox(wmshell_ancestor, w, dpd);
 	if(status != DtPRINT_SUCCESS)

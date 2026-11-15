@@ -110,7 +110,7 @@ WaitForClientMap( void )
 		      0,
 		      True,
 		      HandleClientMessage,
-		      (XtPointer) NULL);
+		      (XtPointer) nullptr);
     
     /*
      * Set a timer which stops the block on waiting for the
@@ -133,7 +133,7 @@ WaitForClientMap( void )
 		      0,
 		      True,
 		      HandleClientMessage,
-		      (XtPointer) NULL);
+		      (XtPointer) nullptr);
     return;
 }
 

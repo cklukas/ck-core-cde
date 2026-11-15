@@ -168,12 +168,12 @@ brwsP_orientation(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser           ab = NULL;
+    ABBrowser           ab = nullptr;
     BrowserProps        props;
     XmString            xmlabel;
     char		*str;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL);
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr);
 
     props = aob_browser_properties(ab->module);
 
@@ -188,7 +188,7 @@ brwsP_orientation(
         xmlabel = XmStringCreateLocalized(str);
     }
 
-    XtVaSetValues(widget, XmNlabelString, xmlabel, NULL);
+    XtVaSetValues(widget, XmNlabelString, xmlabel, nullptr);
 
     XmStringFree(xmlabel);
 
@@ -211,11 +211,11 @@ brwsP_obj_glyph(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser   ab = NULL;
-    char	*hide_str = NULL,
-		*show_str = NULL;
+    ABBrowser   ab = nullptr;
+    char	*hide_str = nullptr,
+		*show_str = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL);
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr);
 
     if (!ab || !ab->module)
         return;
@@ -246,11 +246,11 @@ brwsP_obj_class(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser   b = NULL;
-    char	*hide_str = NULL,
-		*show_str = NULL;
+    ABBrowser   b = nullptr;
+    char	*hide_str = nullptr,
+		*show_str = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &b, NULL);
+    XtVaGetValues(widget, XmNuserData, &b, nullptr);
 
     if (!b || !b->module)
         return;
@@ -281,11 +281,11 @@ brwsP_obj_name(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser   ab = NULL;
-    char	*hide_str = NULL,
-		*show_str = NULL;
+    ABBrowser   ab = nullptr;
+    char	*hide_str = nullptr,
+		*show_str = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL);
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr);
 
     if (!ab || !ab->module)
         return;
@@ -317,11 +317,11 @@ brwsP_find(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser           b = NULL;
+    ABBrowser           b = nullptr;
     Vwr                 v;
     BrowserUiObj        ui;
 
-    XtVaGetValues(widget, XmNuserData, &b, NULL);
+    XtVaGetValues(widget, XmNuserData, &b, nullptr);
     v = b->module;
 
     ui = aob_ui_from_browser(v);
@@ -439,10 +439,10 @@ brwsP_toplevel_repaint(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser   ab = NULL;
+    ABBrowser   ab = nullptr;
     Vwr         b;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL);
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr);
 
     b = aob_proj_or_module(ab, widget);
 
@@ -471,10 +471,10 @@ brwsP_detailed_repaint(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser   ab = NULL;
+    ABBrowser   ab = nullptr;
     Vwr         b;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL);
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr);
 
     b = aob_proj_or_module(ab, widget);
 
@@ -535,9 +535,9 @@ brwsP_collapse(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
     
     brwsP_collapse_selected(ab);
 
@@ -557,9 +557,9 @@ brwsP_expand(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
     
     brwsP_expand_selected(ab);
 
@@ -579,9 +579,9 @@ brwsP_expandAll(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser	ab = NULL;
+    ABBrowser	ab = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &ab, NULL); 
+    XtVaGetValues(widget, XmNuserData, &ab, nullptr); 
 
     brwsP_expand_collapsed(ab);
     
@@ -601,9 +601,9 @@ brwsP_tear_off(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABBrowser		b = NULL;
+    ABBrowser		b = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &b, NULL); 
+    XtVaGetValues(widget, XmNuserData, &b, nullptr); 
 
     brwsP_tear_off_selected(b);
 

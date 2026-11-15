@@ -102,7 +102,7 @@ typedef struct {
 static XtResource dropResources[] = {
       { DtNdropAnimateCallback, DtCDropAnimateCallback, 
 	XtRCallback, sizeof(XtCallbackList), Offset(dropAnimateCallback), 
-	XtRImmediate, (XtPointer)NULL },
+	XtRImmediate, (XtPointer)nullptr },
       { DtNpreserveRegistration, DtCPreserveRegistration, 
 	XtRBoolean, sizeof(Boolean), Offset(preserveRegistration), 
 	XtRImmediate, (XtPointer)True },
@@ -201,7 +201,7 @@ DtDndDropRegister(
          * Parse resources into dropResources
          */
 	XtGetSubresources(dropReceiver, &settings,
-				(String)NULL, (String)NULL,
+				(String)nullptr, (String)nullptr,
 				dropResources, XtNumber(dropResources),
 				argList, argCount);
 	/*

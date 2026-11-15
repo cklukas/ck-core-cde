@@ -120,14 +120,14 @@ _falrmDefaultInitParseInfo(XLCd lcd, XPointer *rm_state)
 
     state = (State) Xmalloc(sizeof(StateRec));
     if (state == nullptr)
-	return (XrmMethods) NULL;
+	return (XrmMethods) nullptr;
 
     state->lcd = lcd;
     state->conv = _fallcOpenConverter(lcd, XlcNMultiByte, lcd, XlcNChar);
     if (state->conv == nullptr) {
 	Xfree((char *) state);
 
-	return (XrmMethods) NULL;
+	return (XrmMethods) nullptr;
     }
 
     *rm_state = (XPointer) state;

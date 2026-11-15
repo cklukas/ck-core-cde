@@ -370,7 +370,7 @@ HelpOnItemCB(
             /* Display error dialog here, function call failed */
             break;
         case DtHELP_SELECT_VALID:
-            while (selWidget != (Widget)NULL)
+            while (selWidget != (Widget)nullptr)
             {
                 if ( (XtHasCallbacks(selWidget, XmNhelpCallback)
                       == XtCallbackHasSome) )

@@ -10,9 +10,10 @@ static FILE *Input(const char *bytes, size_t length)
 {
     const char *root = getenv("TMPDIR");
     assert(root && *root);
-    char *path = malloc(strlen(root) + sizeof("/trash-metadata-XXXXXX"));
+    size_t path_size = strlen(root) + sizeof("/trash-metadata-XXXXXX");
+    char *path = malloc(path_size);
     assert(path);
-    sprintf(path, "%s/trash-metadata-XXXXXX", root);
+    snprintf(path, path_size, "%s/trash-metadata-XXXXXX", root);
     int fd = mkstemp(path);
     assert(fd >= 0);
     FILE *stream = fdopen(fd, "w+");

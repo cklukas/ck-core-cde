@@ -166,7 +166,7 @@ DtViewClassRec dtViewClassRec =
 		nullptr,				/* class_initialize	*/
 		nullptr,				/* class_part_initialize*/
 		False,				/* class_inited		*/
-		(XtInitProc) NULL,		/* initialize		*/
+		(XtInitProc) nullptr,		/* initialize		*/
 		nullptr,				/* initialize_hook	*/
 		XtInheritRealize,		/* realize		*/
 		nullptr,				/* actions		*/
@@ -181,7 +181,7 @@ DtViewClassRec dtViewClassRec =
 		nullptr,			 	/* destroy		*/	
 		XtInheritResize,		/* resize		*/
 		XtInheritExpose,		/* expose		*/	
-		(XtSetValuesFunc) NULL,		/* set_values		*/	
+		(XtSetValuesFunc) nullptr,		/* set_values		*/	
 		nullptr,				/* set_values_hook	*/
 		XtInheritSetValuesAlmost,	/* set_values_almost	*/
 		nullptr,				/* get_values_hook	*/

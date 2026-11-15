@@ -166,15 +166,15 @@ IL_PRIVATE void _ilJPEGFreeTables (
     for (i = 0; i < 4; i++) {
         if (pData->QTables[i]) {
             IL_FREE (pData->QTables[i]);
-            pData->QTables[i] = (ilPtr)NULL;
+            pData->QTables[i] = (ilPtr)nullptr;
             }
         if (pData->DCTables[i]) {
             IL_FREE (pData->DCTables[i]);
-            pData->DCTables[i] = (ilPtr)NULL;
+            pData->DCTables[i] = (ilPtr)nullptr;
             }
         if (pData->ACTables[i]) {
             IL_FREE (pData->ACTables[i]);
-            pData->ACTables[i] = (ilPtr)NULL;
+            pData->ACTables[i] = (ilPtr)nullptr;
             }
         }
 }
@@ -197,7 +197,7 @@ static ilPtr _ilJPEGCopyHuffmanTable (
     for (i = 0, nBytes = 16; i < 16; i++)
         nBytes += pSrc[i];
     if (!(pDst = (ilPtr)IL_MALLOC (nBytes)))
-        return (ilPtr)NULL;
+        return (ilPtr)nullptr;
     memmove((char *)pDst, (char *)pSrc, nBytes);
     return pDst;
 }
@@ -270,7 +270,7 @@ IL_PRIVATE iljpgError _ilReallocJPEGEncode (
         pStream->pBuffer = (ilPtr)IL_MALLOC (offset + nBytes);
         }
     if (!pStream->pBuffer) {
-        pStream->pDst = pStream->pPastEndBuffer = (ilPtr)NULL;
+        pStream->pDst = pStream->pPastEndBuffer = (ilPtr)nullptr;
         return ILJPG_ERROR_ENCODE_MALLOC;
         }
 

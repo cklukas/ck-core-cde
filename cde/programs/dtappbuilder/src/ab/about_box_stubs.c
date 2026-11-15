@@ -391,7 +391,7 @@ set_by(
     XmString			label;
 
     label = XmStringCreateLocalized(by);
-    XtVaSetValues(widget,XmNlabelString,label, NULL);
+    XtVaSetValues(widget,XmNlabelString,label, nullptr);
     XmStringFree(label);
 }
 

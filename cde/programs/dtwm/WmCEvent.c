@@ -1570,7 +1570,7 @@ void HandleIconBoxButtonPress (ClientData *pCD, XButtonEvent *buttonEvent, Conte
     if ((wmGD.clickData.doubleClickContext == F_SUBCONTEXT_IB_IICON) ||
        (wmGD.clickData.doubleClickContext == F_SUBCONTEXT_IB_WICON))
     {
-	F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr);
+	F_Restore_And_Raise ((String)nullptr, pCD, (XEvent *)nullptr);
     }
     else if ((subContext == F_SUBCONTEXT_IB_IICON) ||
 	     (subContext == F_SUBCONTEXT_IB_WICON))
@@ -1884,7 +1884,7 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
 	{
 	    if (pCD->clientState == MINIMIZED_STATE)
 	    {
-		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr);
+		F_Restore_And_Raise ((String)nullptr, pCD, (XEvent *)nullptr);
 	    }
 	    else if (iconPressCD == pCD && iconPressWasActive &&
 		     (wmGD.keyboardFocus == pCD))
@@ -1894,7 +1894,7 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
 	    else
 	    {
 		Do_Focus_Key (pCD, buttonEvent->time, ALWAYS_SET_FOCUS);
-		F_Raise ((String)NULL, pCD, (XEvent *)nullptr);
+		F_Raise ((String)nullptr, pCD, (XEvent *)nullptr);
 	    }
 	    iconPressCD = nullptr;
 	    iconPressWasActive = False;
@@ -1925,7 +1925,7 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
         {
 	    if (pCD->clientState == MINIMIZED_STATE)
 	    {
-		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr);
+		F_Restore_And_Raise ((String)nullptr, pCD, (XEvent *)nullptr);
 	    }
 	    else if (iconPressCD == pCD && iconPressWasActive &&
 		     (wmGD.keyboardFocus == pCD))
@@ -1935,7 +1935,7 @@ void CheckButtonReleaseBuiltin (XButtonEvent *buttonEvent, Context context, Cont
 	    else
 	    {
 		Do_Focus_Key (pCD, buttonEvent->time, ALWAYS_SET_FOCUS);
-		F_Raise ((String)NULL, pCD, (XEvent *)nullptr);
+		F_Raise ((String)nullptr, pCD, (XEvent *)nullptr);
 	    }
 	    iconPressCD = nullptr;
 	    iconPressWasActive = False;

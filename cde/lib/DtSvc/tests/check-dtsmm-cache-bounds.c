@@ -473,11 +473,11 @@ int main(void)
 
 		assert(criteria && criteria->recordCount == 5);
 		assert(_DtDtsMMGet("ACTION") && _DtDtsMMGet("ACTION")->recordCount == 3);
-		assert(_DtDtsMMGet("nothing") == NULL);
+		assert(_DtDtsMMGet("nothing") == nullptr);
 		record = _DtDtsMMGetRecordByName(criteria, "c.h");
 		assert(record && record->fieldCount == 2);
 		assert(strcmp(_DtDtsMMGetFieldByName(record, "FIELD_1"), "value of 1 4 1") == 0);
-		assert(_DtDtsMMGetFieldByName(record, "FIELD_0") != NULL);
+		assert(_DtDtsMMGetFieldByName(record, "FIELD_0") != nullptr);
 		e = _DtDtsMMGetNoNameIndex(&n);
 		assert(n == 2 && e[0] == 2 && e[1] == 3);
 		e = _DtDtsMMGetBufferIndex(&n);
@@ -486,7 +486,7 @@ int main(void)
 		assert(e && *e < 0 && _DtDtsMMGetPtrSize(-*e) == 2);
 		e = (int *)_DtShmFindIntTabEntry(_DtDtsMMGetDCNameIndex(&n), _DtDtsMMStringToBoson("c.h"));
 		assert(e && *e == 4);
-		assert(_DtDtsMMBosonToString(head->files_offset) != NULL || 1);
+		assert(_DtDtsMMBosonToString(head->files_offset) != nullptr || 1);
 	}
 	_DtDtsMMUnLoad();
 	printf("valid cache: loaded and read in full\n");

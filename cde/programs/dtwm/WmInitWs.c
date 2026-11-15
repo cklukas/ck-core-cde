@@ -495,7 +495,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
     wmGD.statusColorServer = CSERVE_NOT_AVAILABLE;
 
     wmGD.display = (Display *)nullptr;
-    wmGD.topLevelW = (Widget)NULL;
+    wmGD.topLevelW = (Widget)nullptr;
 
     /*
      * Do X Tookit initialization:
@@ -765,7 +765,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
 			XmStringCreateLocalized(DEFAULT_CLIENT_TITLE);
 		    wmGD.iconDefaultTitle = 
 			XmStringCreateLocalized(DEFAULT_ICON_TITLE);
-		    wmGD.attributesWindow = (Window)NULL;
+		    wmGD.attributesWindow = None;
 		    wmGD.clickData.pCD = nullptr;
 		    wmGD.clickData.clickPending = False;
 		    wmGD.clickData.doubleClickPending = False;
@@ -1253,9 +1253,9 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->defaultSystemMenuUseBuiltin = TRUE;
     pSD->displayString = nullptr;
     pSD->acceleratorMenuCount = 0;
-    pSD->activeIconTextWin = (Window)NULL;
+    pSD->activeIconTextWin = None;
     pSD->focusPriority = 0;
-    pSD->inputScreenWindow = (Window)NULL;
+    pSD->inputScreenWindow = None;
     pSD->colormapFocus = nullptr;
     pSD->keySpecs = nullptr;
     pSD->screen = sNum;
@@ -1264,7 +1264,7 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->confirmboxW[CUSTOM_BEHAVIOR_ACTION] = nullptr;
     pSD->confirmboxW[RESTART_ACTION] = nullptr;
     pSD->confirmboxW[QUIT_MWM_ACTION] = nullptr;
-    pSD->feedbackWin = (Window)NULL;
+    pSD->feedbackWin = None;
     pSD->fbStyle = FB_OFF;
     pSD->fbWinWidth = 0;
     pSD->fbWinHeight = 0;
@@ -1295,7 +1295,7 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->actionNbr = -1;
     pSD->clientList = nullptr;
     pSD->lastClient = nullptr;
-    pSD->lastInstalledColormap = (Colormap)NULL;
+    pSD->lastInstalledColormap = None;
     pSD->shrinkWrapGC = nullptr;
     pSD->openIconFillGC = nullptr;
     pSD->openIconFillColor = 0;
@@ -1346,9 +1346,9 @@ InitWmScreen (WmScreenData *pSD, int sNum)
     pSD->remainingSessionItems = 0;
 
     pSD->cachedHelp = nullptr;
-    pSD->dtHelp.shell  = (Widget)NULL;
-    pSD->dtHelp.dialog = (Widget)NULL;
-    pSD->dtHelp.errorDialog = (Widget)NULL;
+    pSD->dtHelp.shell  = (Widget)nullptr;
+    pSD->dtHelp.dialog = (Widget)nullptr;
+    pSD->dtHelp.errorDialog = (Widget)nullptr;
     pSD->dtHelp.xPos = 0;
     pSD->dtHelp.yPos = 0;
     pSD->dtHelp.restored = False;

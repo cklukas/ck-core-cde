@@ -777,7 +777,7 @@ Boolean WmDispatchMenuEvent (XButtonEvent *event)
                  */
 		
                 UnpostMenu (pCD->systemMenuSpec);
-		F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr);
+		F_Restore_And_Raise ((String)nullptr, pCD, (XEvent *)nullptr);
 /*		F_Normalize_And_Raise ((String)NULL, pCD, (XEvent *)NULL);
 */                doXtDispatchEvent = False;
             }

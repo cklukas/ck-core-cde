@@ -148,13 +148,13 @@ static XtResource resources[] =
 {
     { XmNyear, XmCYear, XmRInt, sizeof(int),
         XtOffsetOf( struct _XmMonthPanelRec, month_panel.year),
-	XmRImmediate, (XtPointer)NULL },
+	XmRImmediate, (XtPointer)nullptr },
     { XmNmonth, XmCMonth, XmRInt, sizeof(int),
         XtOffsetOf( struct _XmMonthPanelRec, month_panel.month),
-	XmRImmediate, (XtPointer)NULL },
+	XmRImmediate, (XtPointer)nullptr },
     { XmNactivateCallback, XmCCallback, XmRCallback, sizeof(XtCallbackList),
         XtOffsetOf( struct _XmMonthPanelRec, month_panel.callback),
-        XmRImmediate, (XtPointer)NULL },
+        XmRImmediate, (XtPointer)nullptr },
     { XmNtitleFormat, XmCTitleFormat, XmRString, sizeof(char *),
 	XtOffsetOf( struct _XmMonthPanelRec, month_panel.title_format),
 	XtRString, (XtPointer)"%B %Y" },
@@ -312,7 +312,7 @@ Initialize( Widget rw, Widget nw, ArgList args, Cardinal *num_args )
 		XmCreatePushButtonGadget((Widget)new_w, "header", nullptr, 0);
 	   XtAddCallback(new_w->month_panel.header, XmNactivateCallback,
 		MonthCallback, nullptr);
-	   new_w->month_panel.separator = (Widget) NULL;
+	   new_w->month_panel.separator = (Widget) nullptr;
 	}
 	else {
 	   new_w->month_panel.header =

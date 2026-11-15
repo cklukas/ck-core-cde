@@ -721,7 +721,7 @@ paint_day(Calendar *c)
 	if (day_info->month_panels == (Widget *) nullptr)
 		(void)init_dayview(c);
 	paint_dayview(c, True, nullptr, True); 
-	calendar_select(c, hourSelect, (caddr_t)NULL);
+	calendar_select(c, hourSelect, (caddr_t)nullptr);
 }
 	
 /*
@@ -1017,7 +1017,7 @@ day_event(XEvent *event)
 				monthbox_deselect(c);
 				monthbox_xytodate(c, x, y);
 				paint_dayview(c, False, nullptr, True);
-				calendar_select(c, hourSelect, (caddr_t)NULL);
+				calendar_select(c, hourSelect, (caddr_t)nullptr);
 				monthbox_select(c);
 				j = day_xytoclock(c, xy.x, xy.y, date);
 				if (editor_showing(e)) {
@@ -1283,6 +1283,6 @@ day_btn_cb(Widget w, XtPointer client, XtPointer call)
                 c->view->date = monthdayyear(monthno, cbs->day, year);
 		gr_clear_area(c->xcontext, 0, 0, c->view->winw, c->view->winh);
 		paint_dayview(c, True, nullptr, False); 
-		calendar_select(c, hourSelect, (caddr_t)NULL);
+		calendar_select(c, hourSelect, (caddr_t)nullptr);
         }
 }

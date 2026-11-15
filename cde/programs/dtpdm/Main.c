@@ -71,17 +71,17 @@ typedef struct _PdmShell
 static XrmOptionDescRec PdmOptions[] =
 {
    { "-window", "parentWindowStr", XrmoptionSepArg, (caddr_t)0    },
-   { "-pdisplay", "printDisplaySpec", XrmoptionSepArg, (caddr_t)NULL },
+   { "-pdisplay", "printDisplaySpec", XrmoptionSepArg, (caddr_t)nullptr },
    { "-pcontext", "printContextStr", XrmoptionSepArg, (caddr_t)0 }
 };
 
 static XtResource PdmResources[] =
 {
     { "printDisplaySpec", "PrintDisplaySpec", XmRString, sizeof(String),
-      XtOffsetOf(PdmShell, print_display_spec), XmRImmediate, (XtPointer)NULL,
+      XtOffsetOf(PdmShell, print_display_spec), XmRImmediate, (XtPointer)nullptr,
     },
     { "printContextStr", "PrintContextStr", XmRString, sizeof(String),
-      XtOffsetOf(PdmShell, print_context_str), XmRImmediate, (XtPointer)NULL,
+      XtOffsetOf(PdmShell, print_context_str), XmRImmediate, (XtPointer)nullptr,
     }
 };
 
@@ -153,15 +153,15 @@ PdmShellCreate(PdmShell* me,
      * create the application context and open the video display
      */
     XtToolkitInitialize();
-    XtSetLanguageProc((XtAppContext)NULL, nullptr,
-		      (XtPointer)NULL);
+    XtSetLanguageProc((XtAppContext)nullptr, nullptr,
+		      (XtPointer)nullptr);
     me->app_context = XtCreateApplicationContext();
 
     XtAppSetFallbackResources(me->app_context, (String*)fallback_resources);
 
     me->display =
-	XtOpenDisplay(me->app_context, (String)NULL,
-		      (String)NULL, "Dtpdm",
+	XtOpenDisplay(me->app_context, (String)nullptr,
+		      (String)nullptr, "Dtpdm",
 		      PdmOptions, XtNumber(PdmOptions),
 		      argc_in_out, argv_in_out);
     if((Display*)nullptr == me->display)
@@ -415,7 +415,7 @@ int main(int argc, char* argv[])
      * signal the PDM is up following startup event processing
      */
     XtAppAddWorkProc(pdm_shell->app_context,
-		     PdmStartOkWorkProc, (XtPointer)NULL);
+		     PdmStartOkWorkProc, (XtPointer)nullptr);
     /*
      * main loop
      */

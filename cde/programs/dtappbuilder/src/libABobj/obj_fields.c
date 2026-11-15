@@ -941,7 +941,7 @@ obj_get_mnemonic(ABObj obj)
     {
         return (istr_string(obj->info.item.mnemonic));
     }
-    return ((STRING) NULL);
+    return ((STRING) nullptr);
 }
 
 int
@@ -2190,7 +2190,7 @@ obj_get_accelerator(ABObj obj)
     {
 	return (istr_string(obj->info.item.accelerator));
     }
-    return ((STRING) NULL);
+    return ((STRING) nullptr);
 }
 
 int

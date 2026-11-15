@@ -88,7 +88,7 @@ static ilError ilDecompLZWInit(
     )
 {
     ilDecompPrivPtr pPriv = (ilDecompPrivPtr)privateData;
-    pPriv->denodes = (ilDenodePtr)NULL;
+    pPriv->denodes = (ilDenodePtr)nullptr;
     pPriv->pString = (ilPtr)IL_MALLOC (MAX_NODES);
     if (!pPriv->pString) 
         return IL_ERROR_MALLOC;
@@ -96,7 +96,7 @@ static ilError ilDecompLZWInit(
     pPriv->denodes = (ilDenodePtr)IL_MALLOC (sizeof(ilDenodeRec) * MAX_NODES);
     if (!pPriv->denodes) {
         IL_FREE (pPriv->pString);
-        pPriv->pString = (ilPtr)NULL;
+        pPriv->pString = (ilPtr)nullptr;
         return IL_ERROR_MALLOC;
 	    }
 
@@ -439,7 +439,7 @@ IL_PRIVATE ilBool _ilDecompLZW (
     ilImageFormat       format;
     long                bytesPerRow [IL_MAX_SAMPLES];
 
-    dstdata.producerObject  =  (ilObject) NULL;
+    dstdata.producerObject  =  (ilObject) nullptr;
     des                     = *pimdes;
     des.compression         =  IL_UNCOMPRESSED;
     dstdata.pDes            =  &des;

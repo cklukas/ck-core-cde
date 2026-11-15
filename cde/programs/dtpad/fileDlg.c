@@ -909,7 +909,7 @@ AskIfSave(
     XmString tmpStr;
     Select *pSelect = &pPad->fileStuff.fileWidgets.select;
 
-    if (pSelect->save_warning == (Widget) NULL)
+    if (pSelect->save_warning == (Widget) nullptr)
 	CreateSaveWarning(pPad);
 
     if (pPad->ttQuitReq.contract && pPad->ttQuitReq.force) {

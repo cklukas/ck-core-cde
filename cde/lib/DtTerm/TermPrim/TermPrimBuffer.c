@@ -89,7 +89,7 @@ _DtTermPrimBufferCreateBuffer
         {
             free(newTL);
         }
-        return((TermBuffer)NULL);
+        return((TermBuffer)nullptr);
     }
 
     /*
@@ -103,7 +103,7 @@ _DtTermPrimBufferCreateBuffer
         /*
         ** clean up and leave if either of the previous malloc's failed.
         */
-        return((TermBuffer)NULL);
+        return((TermBuffer)nullptr);
     }
     /*
     ** initialize the tabs...
@@ -171,7 +171,7 @@ _DtTermPrimBufferCreateBuffer
         free(newTL);
         free(newTB);
         free(tabs);
-        return((TermBuffer)NULL);
+        return((TermBuffer)nullptr);
     }
 
     /*

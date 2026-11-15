@@ -595,7 +595,7 @@ ilBool                      all4Bit, all8Bit;
         /*  Update *pPipeDes, *pFormat and add filter or error.
             Update pInfo after successful add; pPipeDes and pFormat already updated.
         */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = pPipeDes;
     dstData.pFormat = pFormat;
     dstData.width = pInfo->width;

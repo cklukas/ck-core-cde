@@ -71,15 +71,15 @@ static void *ck_calloc(size_t n, size_t size)
 	int i;
 
 	if (ck_fail_at && ++ck_calls == ck_fail_at)
-		return NULL;
+		return nullptr;
 	p = calloc(n, size);
 	for (i = 0; p && i < CK_MAX_BLOCKS; i++)
-		if (ck_blocks[i] == NULL) {
+		if (ck_blocks[i] == nullptr) {
 			ck_blocks[i] = p;
 			ck_live++;
 			return p;
 		}
-	assert(p == NULL);
+	assert(p == nullptr);
 	return p;
 }
 
@@ -89,7 +89,7 @@ static void ck_free(void *p)
 
 	for (i = 0; p && i < CK_MAX_BLOCKS; i++)
 		if (ck_blocks[i] == p) {
-			ck_blocks[i] = NULL;
+			ck_blocks[i] = nullptr;
 			ck_live--;
 			break;
 		}
@@ -126,21 +126,21 @@ static void test_list(void)
 	/* every allocation of hc_create fails in turn: no result, no leak */
 	for (k = 1; k <= 2; k++) {
 		arm(k);
-		assert(hc_create(NULL, cmp) == NULL);
+		assert(hc_create(nullptr, cmp) == nullptr);
 		assert(ck_live == 0);
 	}
 	arm(0);
-	l = hc_create(NULL, cmp);
-	assert(l != NULL && ck_live == 2);
+	l = hc_create(nullptr, cmp);
+	assert(l != nullptr && ck_live == 2);
 
 	/* the node cannot be allocated: nothing is inserted */
 	arm(1);
-	assert(hc_insert(l, (caddr_t) 1, (caddr_t) 1, NULL, &node) == rb_nomem);
-	assert(node == NULL && l->root == NULL && ck_live == 2);
+	assert(hc_insert(l, (caddr_t) 1, (caddr_t) 1, nullptr, &node) == rb_nomem);
+	assert(node == nullptr && l->root == nullptr && ck_live == 2);
 
 	arm(0);
-	assert(hc_insert(l, (caddr_t) 1, (caddr_t) 1, NULL, &node) == rb_ok);
-	assert(node != NULL && l->root == node && ck_live == 3);
+	assert(hc_insert(l, (caddr_t) 1, (caddr_t) 1, nullptr, &node) == rb_ok);
+	assert(node != nullptr && l->root == node && ck_live == 3);
 }
 
 static void test_tree(void)
@@ -151,12 +151,12 @@ static void test_tree(void)
 	/* the five allocations of rb_create fail in turn: no result, no leak */
 	for (k = 1; k <= 5; k++) {
 		arm(k);
-		assert(rb_create(NULL, cmp) == NULL);
+		assert(rb_create(nullptr, cmp) == nullptr);
 		assert(ck_live == base);
 	}
 	arm(0);
-	t = rb_create(NULL, cmp);
-	assert(t != NULL && ck_live == base + 5);
+	t = rb_create(nullptr, cmp);
+	assert(t != nullptr && ck_live == base + 5);
 
 	/* the node of an insertion cannot be allocated */
 	arm(1);

@@ -113,7 +113,7 @@ ab_load_bil_file(
     ABProfiledIntervalRec	totalTime;
     ABProfiledIntervalRec	loadTime;
     ABProfiledIntervalRec	configTime;
-    XmString			xm_buf = (XmString) NULL;
+    XmString			xm_buf = (XmString) nullptr;
     int                 	NoWrite = 0;
     int          		len = 0;
     STRING       		errmsg = nullptr;
@@ -168,7 +168,7 @@ ab_load_bil_file(
 		    init_msg = CATGETS(Dtb_project_catd, 100, 38, "The following modules are read-only.\nIf you edit these modules, you\nwill not be able to save your edits.");
 
 		    /* If we have an old buffer lying around, free it */
-		    if (errmsg != (STRING) NULL) 
+		    if (errmsg != (STRING) nullptr) 
 		        util_free(errmsg);
  
 		    /* Now create a new buffer of the proper size */
@@ -300,7 +300,7 @@ ab_import_bil_file(
     {
 	if (ImportByCopy)
 	{
-	    obj_set_file(loaded_module, (String) NULL);
+	    obj_set_file(loaded_module, (String) nullptr);
 	}
 	else	/* Import by reference */
 	{
@@ -441,7 +441,7 @@ ab_check_and_open_bip(
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
     BOOL                read_OK, write_OK;
     int			iRet = 0;
-    XmString		xm_buf = (XmString) NULL;
+    XmString		xm_buf = (XmString) nullptr;
     DtbObjectHelpDataRec help_data_rec = {};
     DtbObjectHelpData   help_data = &help_data_rec;
 
@@ -538,7 +538,7 @@ ab_check_and_import_bil(
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
     ABObj       	project = proj_get_project();
     int			iRet = 0;
-    XmString		xm_buf = (XmString) NULL;
+    XmString		xm_buf = (XmString) nullptr;
     DtbObjectHelpDataRec help_data_rec = {};
     DtbObjectHelpData	help_data = &help_data_rec;
 

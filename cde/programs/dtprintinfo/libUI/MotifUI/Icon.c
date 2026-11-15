@@ -236,17 +236,17 @@ static XtResource resources[] =
     {
     XmNlabelString, XmCXmString, XmRXmString, sizeof(XmString),
     XtOffsetOf(struct _IconRec, icon.label), XmRImmediate,
-    (XtPointer) NULL
+    (XtPointer) nullptr
     },
     {
     GuiNtopLabelString, XmCXmString, XmRXmString, sizeof(XmString),
     XtOffsetOf(struct _IconRec, icon.top_label), XmRImmediate,
-    (XtPointer) NULL
+    (XtPointer) nullptr
     },
     {
     GuiNbottomLabelString, XmCXmString, XmRXmString, sizeof(XmString),
     XtOffsetOf(struct _IconRec, icon.bottom_label), XmRImmediate,
-    (XtPointer) NULL
+    (XtPointer) nullptr
     },
     {
     GuiNtextSelectColor, GuiCTextSelectColor, XmRPixel,
@@ -261,7 +261,7 @@ static XtResource resources[] =
     {
     XmNfontList, XmCFontList, XmRFontList, sizeof(XmFontList),
     XtOffsetOf(struct _IconRec, icon.font), XmRImmediate,
-    (XtPointer) NULL
+    (XtPointer) nullptr
     },
     {
     XmNlabelPixmap, XmCLabelPixmap, XmRPrimForegroundPixmap,
@@ -386,7 +386,7 @@ static XtResource resources[] =
     },
     {
     GuiNfields, GuiCFields, XmRPointer, sizeof(XtPointer),
-    XtOffsetOf(struct _IconRec,icon.fields), XmRImmediate, (XtPointer) NULL
+    XtOffsetOf(struct _IconRec,icon.fields), XmRImmediate, (XtPointer) nullptr
     }
 };
 

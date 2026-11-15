@@ -2085,7 +2085,7 @@ void _DtHelpDisplayDefinitionBox(
 
       /* Catch the close callback so we can destroy the widget */
       XtAddCallback((Widget)*definitionBox, DtNcloseCallback,
-                    CloseDefBoxCB, (XtPointer) NULL);
+                    CloseDefBoxCB, (XtPointer) nullptr);
 
 
       /* We do not want a print button for now so we unmap it */     

@@ -162,7 +162,7 @@ _XlcGetCTInfoFromEncoding(char *encoding, int length)
 	}
     }
 
-    return (CTInfo) NULL;
+    return (CTInfo) nullptr;
 }
 
 static unsigned int
@@ -343,17 +343,17 @@ _fallcAddCT(char *name, char *encoding)
 		return parse.ct_info->charset;
 	    break;
 	default:
-	    return (XlcCharSet) NULL;
+	    return (XlcCharSet) nullptr;
     }
 
     charset = _fallcCreateDefaultCharSet(name, encoding);
     if (charset == nullptr)
-	return (XlcCharSet) NULL;
+	return (XlcCharSet) nullptr;
     _fallcAddCharSet(charset);
 
     ct_info = (CTInfo) Xmalloc(sizeof(CTInfoRec));
     if (ct_info == nullptr)
-	return (XlcCharSet) NULL;
+	return (XlcCharSet) nullptr;
 
     ct_info->charset = charset;
     ct_info->encoding = charset->ct_sequence;
@@ -380,7 +380,7 @@ _XlcGetCTInfoFromCharSet(XlcCharSet charset)
 	if (ct_info->charset == charset)
 	    return ct_info;
 
-    return (CTInfo) NULL;
+    return (CTInfo) nullptr;
 }
 
 Bool
@@ -791,12 +791,12 @@ create_conv(XlcConvMethods methods)
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
     if (conv == nullptr)
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
 
     conv->state = (XPointer) Xmalloc(sizeof(StateRec));
     if (conv->state == nullptr) {
 	    close_converter(conv);
-	    return (XlcConv) NULL;
+	    return (XlcConv) nullptr;
     }
 
     conv->methods = methods;
@@ -857,13 +857,13 @@ open_cstostr(XLCd from_lcd, char *from_type, XLCd to_lcd, char *to_type)
 static void
 init_converter(void)
 {
-    _fallcSetConverter((XLCd) NULL, XlcNCompoundText, (XLCd) NULL, XlcNCharSet,
+    _fallcSetConverter((XLCd) nullptr, XlcNCompoundText, (XLCd) nullptr, XlcNCharSet,
 		     open_cttocs);
-    _fallcSetConverter((XLCd) NULL, XlcNString, (XLCd) NULL, XlcNCharSet,
+    _fallcSetConverter((XLCd) nullptr, XlcNString, (XLCd) nullptr, XlcNCharSet,
 		     open_strtocs);
 
-    _fallcSetConverter((XLCd) NULL, XlcNCharSet, (XLCd) NULL, XlcNCompoundText,
+    _fallcSetConverter((XLCd) nullptr, XlcNCharSet, (XLCd) nullptr, XlcNCompoundText,
 		     open_cstoct);
-    _fallcSetConverter((XLCd) NULL, XlcNCharSet, (XLCd) NULL, XlcNString,
+    _fallcSetConverter((XLCd) nullptr, XlcNCharSet, (XLCd) nullptr, XlcNString,
 		     open_cstostr);
 }

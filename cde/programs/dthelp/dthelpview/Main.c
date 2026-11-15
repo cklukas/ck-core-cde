@@ -134,25 +134,25 @@ static XtResource resources[] =
 
    {
      "helpVolume", "HelpVolume", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, helpVolume),XmRImmediate,(caddr_t) NULL,
+     XtOffset (ApplicationArgsPtr, helpVolume),XmRImmediate,(caddr_t) nullptr,
    },
 
    {
      "locationId", "LocationId", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, locationId), XmRImmediate, (caddr_t) NULL,
+     XtOffset (ApplicationArgsPtr, locationId), XmRImmediate, (caddr_t) nullptr,
    },
 
    {
      "file", "File", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, file), XmRImmediate, (caddr_t) NULL,
+     XtOffset (ApplicationArgsPtr, file), XmRImmediate, (caddr_t) nullptr,
    },
    {
      "manPage", "ManPage", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, manPage), XmRImmediate, (caddr_t) NULL,
+     XtOffset (ApplicationArgsPtr, manPage), XmRImmediate, (caddr_t) nullptr,
    },
    {
      "man", "Man", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, man), XmRImmediate, (caddr_t) NULL,
+     XtOffset (ApplicationArgsPtr, man), XmRImmediate, (caddr_t) nullptr,
    },
 
 };

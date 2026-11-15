@@ -1323,7 +1323,7 @@ static Window FindSomeReasonableClient(void)
     ClientData *pCD;
     ClientData *pcdLastFocus = (ClientData *) nullptr;
     ClientData *pcdFocus;
-    Window focusWindow = (Window) NULL;
+    Window focusWindow = None;
 
     /*
      * Scan through the list of clients to find a window to get the focus.
@@ -1374,7 +1374,7 @@ static Window FindSomeReasonableClient(void)
      * on any icon.
      */
 
-    if (focusWindow == (Window) NULL)
+    if (focusWindow == None)
     {
 	pNextEntry = ACTIVE_PSD->clientList;
 
@@ -1563,7 +1563,7 @@ void Do_Focus_Key (ClientData *pCD, Time focusTime, long flags)
 		/* find some reasonable client so that focus is not lost */
 
 		focusWindow = FindSomeReasonableClient();
-		if (focusWindow == (Window)NULL)
+		if (focusWindow == None)
 		{
 		    focusWindow = ACTIVE_PSD->wmWorkspaceWin;
 		}
@@ -4510,7 +4510,7 @@ Boolean F_Prev_Workspace (String args, ClientData *pCD, XEvent *event)
 
 Boolean F_Workspace_Presence (String args, ClientData *pCD, XEvent *event)
 {
-    Context wsContext = (Context)NULL;
+    Context wsContext = (Context)nullptr;
 
     if (pCD && (pCD->dtwmFunctions & DtWM_FUNCTION_OCCUPY_WS))
     {

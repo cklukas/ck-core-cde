@@ -1514,7 +1514,7 @@ static BOOL
 arg_has_default_value(ABObj obj, STRING argName)
 {
     WidgetClass		wClass = nullptr;
-    XtArgVal		resValue = (XtArgVal)NULL;
+    XtArgVal		resValue = 0;
     ABObj		compRoot = obj_get_root(obj);
 
     return FALSE;

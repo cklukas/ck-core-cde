@@ -233,7 +233,7 @@ Check disk space and/or permissions.";
     XtManageChild(err);
     XtSetMappedWhenManaged(err, True);
     XtAddCallback(err, XmNokCallback, DbCacheCreateErrorCallback,
-		  (XtPointer)NULL);
+		  (XtPointer)nullptr);
 
     XtAppMainLoop(XtWidgetToApplicationContext(err));
 }

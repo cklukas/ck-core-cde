@@ -617,7 +617,7 @@ GetCodeSetFromCharSet(XLCd lcd, XlcCharSet charset)
 		return *codeset;
     }
 
-    return (CodeSet) NULL;
+    return (CodeSet) nullptr;
 }
 
 
@@ -1346,7 +1346,7 @@ create_conv(XLCd lcd, XlcConvMethods methods)
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
     if (conv == nullptr)
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
 
     conv->methods = methods;
     conv->state = (XPointer) lcd;
@@ -1450,7 +1450,7 @@ _fallcSjisLoader(char *name)
 
     if ((_fallcCompareISOLatin1(XLC_PUBLIC_PART(lcd)->codeset, "sjis"))) {
 	_fallcDestroyLC(lcd);
-	return (XLCd) NULL;
+	return (XLCd) nullptr;
     }
 
     initCTptr(lcd);

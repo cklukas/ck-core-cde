@@ -984,7 +984,7 @@ SetFileIODialogInfo( void )
               snprintf(newName, sizeof(newName), "%s.m.pm", untitledStr);
           }
 	       /* Update the FSB */
-	       XmFileSelectionDoSearch(fileIODialog,(XmString)NULL);
+	       XmFileSelectionDoSearch(fileIODialog,(XmString)nullptr);
 
        }
        else { /* First time arownd */

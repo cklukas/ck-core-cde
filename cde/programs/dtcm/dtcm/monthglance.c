@@ -526,7 +526,7 @@ repaint_damaged_month(
         paint_daynames(c, rect);
         paint_grid(c, rect);
         paint_month(c, c->view->date, rect);
-        calendar_select(c, daySelect, (caddr_t)NULL);
+        calendar_select(c, daySelect, (caddr_t)nullptr);
 }
 
 extern void
@@ -643,7 +643,7 @@ month_event(XEvent *event)
                         if (j > 0) {
                                 c->view->olddate = c->view->date;
                                 c->view->date = j;
-                                calendar_select(c, daySelect, (caddr_t)NULL);
+                                calendar_select(c, daySelect, (caddr_t)nullptr);
                         }
                         lastcol=col;
                         lastrow=row;
@@ -662,7 +662,7 @@ month_event(XEvent *event)
 			if (j > 0) {
 			   c->view->olddate = c->view->date;
 			   c->view->date = j;
-			   calendar_select(c, daySelect, (caddr_t)NULL);
+			   calendar_select(c, daySelect, (caddr_t)nullptr);
 			}
 
 			if (editor_showing(e)) {

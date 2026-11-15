@@ -371,7 +371,7 @@ main(int argc, char **argv)
     }
     xtid = XtAppAddInput( g.context, xtkick_pipeG[0],
 			  (XtPointer) XtInputReadMask,
-			  xtkick_proc, (XtPointer) NULL );
+			  xtkick_proc, (XtPointer) nullptr );
 
     /*
      * Install signal handers.

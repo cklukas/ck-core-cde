@@ -546,7 +546,7 @@ ilDstElementData          dstdata;
 
     /*  Add a filter to do the scale, then init *pPriv.  */
 
-    dstdata.producerObject = (ilObject)NULL;
+    dstdata.producerObject = (ilObject)nullptr;
     dstdata.pDes           = (ilImageDes *) nullptr;
     dstdata.pFormat        = (ilImageFormat *) nullptr;
     dstdata.width          = dstWidth;

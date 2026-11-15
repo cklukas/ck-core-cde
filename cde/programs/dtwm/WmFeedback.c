@@ -2269,7 +2269,7 @@ void ConfirmAction (WmScreenData *pSD, int nbr)
         XtAddCallback (pSD->confirmboxW[nbr], XmNokCallback, 
 	    OkCB, (XtPointer)pSD);
         XtAddCallback (pSD->confirmboxW[nbr], XmNcancelCallback, 
-	    CancelCB, (XtPointer)NULL);
+	    CancelCB, (XtPointer)nullptr);
 
         XtUnmanageChild
 	    (XmMessageBoxGetChild (pSD->confirmboxW[nbr], 

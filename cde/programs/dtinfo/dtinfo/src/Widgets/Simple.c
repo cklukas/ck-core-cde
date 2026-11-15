@@ -80,7 +80,7 @@ static XtResource resources[] = {
   {XtNcursor, XtCCursor, XtRCursor, sizeof(Cursor),
      offset(cursor), XtRImmediate, (XtPointer) None},
   {XtNinsensitiveBorder, XtCInsensitive, XtRPixmap, sizeof(Pixmap),
-     offset(insensitive_border), XtRImmediate, (XtPointer) NULL},
+     offset(insensitive_border), XtRImmediate, (XtPointer) nullptr},
   {XtNpointerColor, XtCForeground, XtRPixel, sizeof(Pixel),
      offset(pointer_fg), XtRString, XtDefaultForeground},
   {XtNpointerColorBackground, XtCBackground, XtRPixel, sizeof(Pixel),

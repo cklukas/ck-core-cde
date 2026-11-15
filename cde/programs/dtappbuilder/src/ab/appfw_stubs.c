@@ -139,7 +139,7 @@ appfw_notify_new_project(
     ABObj	project
 )
 {
-    if (AB_appfw_dialog != NULL)
+    if (AB_appfw_dialog != nullptr)
    	appfw_editor_load(project);
 }
 
@@ -149,11 +149,11 @@ appfw_show_dialog(
 )
 {
     /* If there is no App Framework Editor, create it */
-    if (AB_appfw_dialog == (Widget)NULL)
+    if (AB_appfw_dialog == (Widget)nullptr)
     {
 	AB_appfw_dialog = appfw_editor_init(&dtb_appfw_dialog, dtb_get_toplevel_widget());
     }
-    if (AB_appfw_dialog != NULL)
+    if (AB_appfw_dialog != nullptr)
     {
 	appfw_editor_load(project);
 	ab_show_window(AB_appfw_dialog);
@@ -202,7 +202,7 @@ appfw_editor_init(
                 appfw_cgen->rootwin_opmenu, appfw_cgen->rootwin_opmenu_menu,
                 n, item, (XtPointer*)item_val,
                 appfw_cgen->rootwin_cb, True, /* Display module */
-                NULL, rootwin_test_func);
+                nullptr, rootwin_test_func);
 
 	/* Need to monitor any changes in the Primary MainWindow object */
     	obj_add_rename_callback(obj_renamedOCB, "APPFW");
@@ -287,13 +287,13 @@ appfw_editor_init(
 
 	/* Setup Ok, Apply, Reset, Cancel buttons */
 	XtVaSetValues(appfw_cgen->ok_button, XmNuserData, 
-			(XtArgVal)DISMISS, NULL);
+			(XtArgVal)DISMISS, nullptr);
 	XtVaSetValues(appfw_cgen->cancel_button, XmNuserData, 
-			(XtArgVal)DISMISS, NULL);
+			(XtArgVal)DISMISS, nullptr);
 	XtVaSetValues(appfw_cgen->apply_button, XmNuserData, 
-			(XtArgVal)NO_DISMISS, NULL);
+			(XtArgVal)NO_DISMISS, nullptr);
 	XtVaSetValues(appfw_cgen->reset_button, XmNuserData, 
-			(XtArgVal)NO_DISMISS, NULL);
+			(XtArgVal)NO_DISMISS, nullptr);
 
 	/* Setup dialog to participate in dtbuilder window
 	 * protocol
@@ -301,7 +301,7 @@ appfw_editor_init(
 	ab_register_window(appfw_cgen->dialog_shellform,
 		AB_WIN_DIALOG, WindowHidden, 
 		AB_toplevel, AB_WPOS_STACK_CENTER,
-		appfw_editor_prevent_closeCB, NULL);
+		appfw_editor_prevent_closeCB, nullptr);
 
         prop_changebars_cleared(afs->prop_sheet);
 
@@ -310,7 +310,7 @@ appfw_editor_init(
     else
     {
 	util_dprintf(3, "appfw_show_dialog: could not initialize Application Framework Editor\n");
-     	return NULL;
+     	return nullptr;
     }
 }
 
@@ -322,7 +322,7 @@ appfw_editor_load(
 {
     ABObj		rootwin;
  
-    if (project == NULL || !obj_is_project(project))
+    if (project == nullptr || !obj_is_project(project))
         return ERROR;
 
     /***************
@@ -382,7 +382,7 @@ appfw_editor_load_gencode(
 	BOOL			argIsResFile;
 	int			i = 0;
 
-	if (project != NULL)
+	if (project != nullptr)
 	{
 	    resArgClasses = obj_get_res_file_arg_classes(project);
 	}
@@ -413,7 +413,7 @@ appfw_editor_apply(
     ABObj	old_rootwin, rootwin;
     STRING	new_value;
 
-    if (project == NULL || !obj_is_project(project))
+    if (project == nullptr || !obj_is_project(project))
         return ERROR;
 
     /***************
@@ -449,12 +449,12 @@ appfw_editor_apply(
     	if (old_rootwin != rootwin)
     	{
             abobj_set_save_needed(project, True); 
-            if (old_rootwin != NULL)
+            if (old_rootwin != nullptr)
             	obj_set_class_name(old_rootwin, _topLevelShell);
  
             obj_set_root_window(project, rootwin);
  
-            if (rootwin != NULL)
+            if (rootwin != nullptr)
             	obj_set_class_name(rootwin, _applicationShell);
     	}
     }
@@ -609,7 +609,7 @@ obj_destroyedOCB(
         obj_get_root_window(project) == info->obj)
     {
     	/* Reset Primary MainWindow OptionMenu to display None */
-    	prop_obj_options_set_value(&(afs->rootwin), NULL, False);
+    	prop_obj_options_set_value(&(afs->rootwin), nullptr, False);
         /* Need to force the Project to save no Primary Window */ 
         abobj_set_save_needed(project, True); 
     }
@@ -651,10 +651,10 @@ appfw_editor_prevent_closeCB(
             answer = DTB_ANSWER_ACTION1;
     	else
     	{   
-	    DtbObjectHelpData	help_data = NULL;
+	    DtbObjectHelpData	help_data = nullptr;
 	    XmString		xm_buf;
-	    char		*msg = NULL,
-				*help_text = NULL;
+	    char		*msg = nullptr,
+				*help_text = nullptr;
 	    /*
 	     * Initialize warning message object if necessary
 	     */
@@ -667,14 +667,14 @@ appfw_editor_prevent_closeCB(
 
 	    xm_buf = XmStringCreateLocalized(CATGETS(Dtb_project_catd, 100, 248, "Properties for your project have been modified on the\nApplication Framework Editor but not Applied.\nApply Changes or Cancel Close operation."));
 
-	    help_data->help_volume = help_data->help_locationID = NULL;
+	    help_data->help_volume = help_data->help_locationID = nullptr;
 	    help_data->help_text = XtNewString(CATGETS(Dtb_project_catd, 100, 249, "Click Apply Changes to apply the changes \nand close the Application Framework Editor.\n\nClick Cancel if you don't want to apply the\nchanges and want the Application Framework\nEditor to remain displayed. You can then click\nReset to undo the changes before closing\nthe Application Framework Editor."));
 
 	    /*
 	     * Pop up warning message dialog
 	     */
 	    answer = dtb_show_modal_message(AB_appfw_dialog, &dtb_appfw_appfw_pending_msg,
-					xm_buf, help_data, NULL);
+					xm_buf, help_data, nullptr);
             /*
              * Free XmString, help text/struct
              */
@@ -990,7 +990,7 @@ appfw_applyCB(
 
     appfw_editor_apply(project);
 
-    XtVaGetValues(widget, XmNuserData, &dismiss, NULL);
+    XtVaGetValues(widget, XmNuserData, &dismiss, nullptr);
     if (dismiss)
 	ui_win_show(widget, False, XtGrabNone);
 
@@ -1018,7 +1018,7 @@ appfw_resetCB(
     
     appfw_editor_load(project);
 
-    XtVaGetValues(widget, XmNuserData, &dismiss, NULL);
+    XtVaGetValues(widget, XmNuserData, &dismiss, nullptr);
     if (dismiss)
 	ui_win_show(widget, False, XtGrabNone);
 
@@ -1041,10 +1041,10 @@ appfw_invoke_connCB(
     AB_WHEN     when = AB_WHEN_UNDEF;
 
     conn_set_source(proj_get_project());
-    conn_set_target(NULL);
-    XtVaGetValues(widget, XmNuserData, &when, NULL);     
+    conn_set_target(nullptr);
+    XtVaGetValues(widget, XmNuserData, &when, nullptr);     
     conn_override_default_when(when);
-    conn_popup_dialog(dtb_get_toplevel_widget(), (XtPointer)0, NULL);
+    conn_popup_dialog(dtb_get_toplevel_widget(), (XtPointer)0, nullptr);
     conn_reset_default_when();
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
@@ -1068,7 +1068,7 @@ appfw_register_save_btn(
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
-    XtVaSetValues(widget, XmNuserData, AB_WHEN_SESSION_SAVE, NULL);
+    XtVaSetValues(widget, XmNuserData, AB_WHEN_SESSION_SAVE, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -1088,7 +1088,7 @@ appfw_register_restore_btn(
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
-    XtVaSetValues(widget, XmNuserData, AB_WHEN_SESSION_RESTORE, NULL);
+    XtVaSetValues(widget, XmNuserData, AB_WHEN_SESSION_RESTORE, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -1108,7 +1108,7 @@ appfw_register_ttalk_btn(
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
-    XtVaSetValues(widget, XmNuserData, AB_WHEN_TOOLTALK_DO_COMMAND, NULL);
+    XtVaSetValues(widget, XmNuserData, AB_WHEN_TOOLTALK_DO_COMMAND, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }

@@ -1331,7 +1331,7 @@ OrientCtlSetSelectedItem(OrientCtl* me, int selected_item)
 static void
 OrientCtlUpdateIcon(OrientCtl* me)
 {
-    if(me->icon_label != (Widget)NULL)
+    if(me->icon_label != (Widget)nullptr)
 	XtVaSetValues(me->icon_label,
 		      XmNlabelPixmap,
 		      PdmPixmapListGetPixmap(me->pixmap_list,
@@ -1828,7 +1828,7 @@ PlexCtlSetSelectedItem(PlexCtl* me, int selected_item)
 static void
 PlexCtlUpdateIcon(PlexCtl* me)
 {
-    if(me->icon_label != (Widget)NULL)
+    if(me->icon_label != (Widget)nullptr)
 	XtVaSetValues(me->icon_label,
 		      XmNlabelPixmap,
 		      PdmPixmapListGetPixmap(*me->pixmap_list_ptr,
@@ -2330,7 +2330,7 @@ SizeCtlSetSizeLists(PdmOidList** oid_list,
     if(count == 0)
     {
 	*oid_list = (PdmOidList*)nullptr;
-	*xmstrs = (XmStringTable)NULL;
+	*xmstrs = (XmStringTable)nullptr;
     }
     else
     {	
@@ -2464,7 +2464,7 @@ SizeCtlCreateWindow(SizeCtl* me, Widget parent)
     Cardinal n;
     Widget control_manager;
     Widget hscroll;
-    XmString default_xmstr = (XmString)NULL;
+    XmString default_xmstr = (XmString)nullptr;
     /*
      * page size frame
      */
@@ -2524,7 +2524,7 @@ SizeCtlCreateWindow(SizeCtl* me, Widget parent)
     XtSetArg(args[n], XmNlistSizePolicy, XmCONSTANT); n++;
 
     me->list_box = XmCreateScrolledList(control_manager, "PageSizes", args, n);
-    if((XmString)NULL != default_xmstr) XmStringFree(default_xmstr);
+    if((XmString)nullptr != default_xmstr) XmStringFree(default_xmstr);
     XtAddCallback(me->list_box, XmNbrowseSelectionCallback,
 		  SizeCtlSelectCB, (XtPointer)me);
     /*
@@ -2958,7 +2958,7 @@ CreateOptionMenuPulldown(String pulldown_name,
 {
     Widget cascade_button;
     Widget button;
-    Widget initial_selected = (Widget)NULL;
+    Widget initial_selected = (Widget)nullptr;
     Widget pulldown;
     char button_name[48];
     int i;
@@ -3160,7 +3160,7 @@ PdmPixmapListDelete(PdmPixmapList* me)
 	int i;
 	for(i = 0; i < PdmPixmapListCount(me); i++)
 	{
-	    if(me->pixmap[i] != (Pixmap)NULL)
+	    if(me->pixmap[i] != None)
 	    {
 		if(me->stipple == None)
 		{
@@ -3337,9 +3337,9 @@ GetIconFileName(Widget w, String resource_name)
     res_struct.resource_size = sizeof(String);
     res_struct.resource_offset = 0;
     res_struct.default_type = XmRImmediate;
-    res_struct.default_addr = (XtPointer)NULL;
+    res_struct.default_addr = (XtPointer)nullptr;
     XtGetApplicationResources(w, (XtPointer)&icon_file_name,
-	 		      &res_struct, 1, (ArgList)NULL, 0);
+	 		      &res_struct, 1, (ArgList)nullptr, 0);
 
     return icon_file_name;
 }

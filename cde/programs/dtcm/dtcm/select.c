@@ -731,17 +731,17 @@ paint_selection(Calendar *c)
 
         switch ((Glance)c->view->glance) {
                 case monthGlance:
-                        calendar_select(c, daySelect, (caddr_t)NULL);
+                        calendar_select(c, daySelect, (caddr_t)nullptr);
                         break;
                 case dayGlance:
                         sel = (Selection *) c->view->current_selection;
                         sel->row = hour(c->view->date) - beg + 1;
-                        calendar_select(c, hourSelect, (caddr_t)NULL);
+                        calendar_select(c, hourSelect, (caddr_t)nullptr);
                         break;
                 case weekGlance:
                         sel = (Selection*)w->current_selection;
                         sel->row = hour(c->view->date) - beg;
-                        sel->col =  (d = dow(c->view->date)) == 0 ? 6 : --d;                        	calendar_select(c, weekdaySelect, (caddr_t)NULL);
+                        sel->col =  (d = dow(c->view->date)) == 0 ? 6 : --d;                        	calendar_select(c, weekdaySelect, (caddr_t)nullptr);
                         break;
                 case yearGlance:
                         mo = month(c->view->date);

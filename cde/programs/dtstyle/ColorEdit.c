@@ -389,7 +389,7 @@ CreateColorEditor(
 	edit.grabColor = XmCreatePushButtonGadget(sampleForm, "grabColor", args, n);
         widgetlist3[widget_count3++] = edit.grabColor;
 	XtAddCallback(edit.grabColor, XmNactivateCallback, 
-                      grabcolorCB, (XtPointer)NULL);	
+                      grabcolorCB, (XtPointer)nullptr);	
 	XmStringFree(string);
 
         /* Create frame for RGB/HSV scales */
@@ -1584,7 +1584,7 @@ dialogBoxCB(
           break;
          
       case HELP_BUTTON:
-        XtCallCallbacks(edit.DialogShell, XmNhelpCallback, (XtPointer)NULL);
+        XtCallCallbacks(edit.DialogShell, XmNhelpCallback, (XtPointer)nullptr);
 	break;
 
       default:

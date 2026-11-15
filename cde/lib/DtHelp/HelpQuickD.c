@@ -254,7 +254,7 @@ static XtResource resources[] = {
      {	DtNprinter, 
 	DtCPrinter, XmRString, sizeof (char*), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.print.printer), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
      {  DtNpaperSize,
@@ -266,31 +266,31 @@ static XtResource resources[] = {
      {	DtNhelpVolume, 
 	DtCHelpVolume, XmRString, sizeof (char*), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.display.helpVolume), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
       {	DtNmanPage, 
 	DtCManPage, XmRString, sizeof (char*), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.display.manPage), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
       {	DtNstringData, 
 	DtCStringData, XmRString, sizeof (char*), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.display.stringData), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
       {	DtNhelpFile, 
 	DtCHelpFile, XmRString, sizeof (char*), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.display.helpFile), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
       { DtNtopicTitle,
         DtCTopicTitle, XmRString, sizeof (char*),
         XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.display.topicTitleStr),
-        XmRImmediate, (XtPointer) NULL
+        XmRImmediate, (XtPointer) nullptr
       },
 
       {	DtNhelpType, 
@@ -308,13 +308,13 @@ static XtResource resources[] = {
       {	DtNhyperLinkCallback, 
 	DtCHyperLinkCallback, XmRCallback, sizeof (XtCallbackList), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.display.hyperLinkCallback), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
       {	DtNcloseCallback, 
 	DtCCloseCallback, XmRCallback, sizeof (XtCallbackList), 
 	XtOffset (DtHelpQuickDialogWidget, qhelp_dialog.qhelp.closeCallback), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       },
 
       {	DtNcloseLabelString,

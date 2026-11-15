@@ -222,7 +222,7 @@ _DtTermBufferCreateBuffer
 	if (!VALUE_LIST(newTB))
 	{
 	    _DtTermPrimBufferFreeBuffer(newTB);
-	    return((TermBuffer) NULL);
+	    return((TermBuffer) nullptr);
 	}
 
 	NUM_ENH_FIELDS(newTB) = NUM_ENHANCEMENT_FIELDS;
@@ -230,7 +230,7 @@ _DtTermBufferCreateBuffer
              lines < DT_LINES(newTB) + ROWS(newTB);
 	     lines++)
         {
-            DT_ENH(*lines) = (DtEnh) NULL;
+            DT_ENH(*lines) = (DtEnh) nullptr;
         }        
         DT_ENH_STATE(newTB)    = blankEnh;
         DT_ENH_DIRTY(newTB)    = 0;

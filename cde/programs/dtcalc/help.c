@@ -366,7 +366,7 @@ HelpRequestCB(Widget widget, XtPointer client_data, XtPointer call_data)
   Help(helpVolume, locationId);
   ignore_event = True;
   timerId = XtAppAddTimeOut (XtWidgetToApplicationContext (X->kframe), 300,
-                         TimerEvent, (XtPointer) NULL);
+                         TimerEvent, (XtPointer) nullptr);
 }
 
 void
@@ -375,7 +375,7 @@ HelpModeCB(Widget w, XtPointer client_data, XtPointer call_data)
   Widget widget;
   char *errorMsg, *tmp;
  
-  switch(DtHelpReturnSelectedWidgetId(X->mainWin, (Cursor)NULL, &widget))
+  switch(DtHelpReturnSelectedWidgetId(X->mainWin, None, &widget))
    {
       case DtHELP_SELECT_VALID:
 	while (!XtIsShell(widget))

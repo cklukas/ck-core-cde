@@ -2592,8 +2592,8 @@ termp_post_inst(
     OBJXM_CONFIG_TYPE ctype
 )
 {
-    ABObj	paneObj = (ABObj) NULL,
-		sbObj = (ABObj) NULL;
+    ABObj	paneObj = (ABObj) nullptr,
+		sbObj = (ABObj) nullptr;
 
     /* If Scrollable TermPane, hook up vertical scrollbar to Term widget */
     if (obj_has_vscrollbar(obj))

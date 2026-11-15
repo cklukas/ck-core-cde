@@ -222,7 +222,7 @@ static XmPartResource resources[] = {
 	sizeof (Widget),
 	DtOffset(submenu), 
 	XmRMenuWidget, 
-	(XtPointer) NULL
+	(XtPointer) nullptr
 	},
 	{	
 	DtNcascadePixmap, 
@@ -305,7 +305,7 @@ externaldef(xmmenubuttonclassrec)
 	menuButton_translations,		/* default translation table */
 	XtInheritQueryGeometry,			/* query geo proc */
 	nullptr,				        /* display accelerator*/
-	(XtPointer)NULL,			/* extension */
+	(XtPointer)nullptr,			/* extension */
 	},
 	{
 			/* Primitive Class record */
@@ -315,7 +315,7 @@ externaldef(xmmenubuttonclassrec)
 	ArmAndActivate,				/* arm & activate */
 	nullptr,					/* get resources */
 	0,					/* num get_resources */
-	(XtPointer)NULL,			/* extension */
+	(XtPointer)nullptr,			/* extension */
 	},
 	{			/* Label Class record */
 	XmInheritWidgetProc,			/* set override callback */
@@ -425,7 +425,7 @@ ArmAndActivate(
 {
 	DtMenuButtonWidget mb = (DtMenuButtonWidget) wid ;
 	
-	if(MB_SMENU(mb) == (Widget)NULL	||
+	if(MB_SMENU(mb) == (Widget)nullptr	||
 		event == (XEvent*) nullptr)
 		return;
 
@@ -450,7 +450,7 @@ Disarm(
 		MB_ARMED(mb) =  FALSE;
 	
 		if (pop_down == TRUE 	&& 
-			MB_SMENU(mb) != (Widget)NULL)
+			MB_SMENU(mb) != (Widget)nullptr)
 				XtUnmanageChild(MB_SMENU(mb));
 	
 		Draw3DShadows(mb);
@@ -490,7 +490,7 @@ Boolean *cont_to_dispatch)
 {
        DtMenuButtonWidget mb = (DtMenuButtonWidget) wid ;
         
-        if(MB_SMENU(mb) == (Widget)NULL                         ||
+        if(MB_SMENU(mb) == (Widget)nullptr                         ||
                 event->xany.type != ButtonPress                 ||
                 event->xbutton.time <= MB_LAST_TIMESTAMP(mb))
                         return;
@@ -519,7 +519,7 @@ Boolean *cont_to_dispatch)
 	DtMenuButtonWidget mb = (DtMenuButtonWidget) wid ;
 	
 
-	if(MB_SMENU(mb) == (Widget)NULL 			||
+	if(MB_SMENU(mb) == (Widget)nullptr 			||
 		event->xany.type != ButtonPress 		|| 
 		event->xbutton.time <= MB_LAST_TIMESTAMP(mb))
 			return;
@@ -585,7 +585,7 @@ Popup(
 	int dx = 0, dy = 0;
 	Screen *screen;
 
-	if((MB_SMENU(mb) == (Widget)NULL) 	|| 
+	if((MB_SMENU(mb) == (Widget)nullptr) 	|| 
 		(MB_POPPED_UP(mb) == TRUE))
 		return;
 	
@@ -749,7 +749,7 @@ Destroy(
 	
 	XtRemoveAllCallbacks ((Widget) mb, DtNcascadingCallback);
 	
-	if(submenu != (XmRowColumnWidget)NULL) {
+	if(submenu != (XmRowColumnWidget)nullptr) {
 		shell = XtParent((Widget)submenu);
 		XtRemoveCallback(shell, XtNpopupCallback,PopupCallback, (XtPointer)mb);
 		XtRemoveCallback(shell, XtNpopdownCallback, PopdownCallback,(XtPointer)mb);
@@ -769,7 +769,7 @@ static void
 Resize(
     Widget mb )
 {
-	if (mb != (Widget)NULL) {
+	if (mb != (Widget)nullptr) {
 		/* Label resize method lays out the label string */
 		XtWidgetProc resize;
 		_DtProcessLock();
@@ -801,7 +801,7 @@ SetValues(
 	unsigned char rowcol_type = 0;
 	Boolean menu_glyph_changed = FALSE;
 	
-	if (MB_SMENU(new_w) != (Widget)NULL) {
+	if (MB_SMENU(new_w) != (Widget)nullptr) {
 		XtVaGetValues(MB_SMENU(new_w), XmNrowColumnType, 
 					&rowcol_type, nullptr);
 		if(rowcol_type != XmMENU_POPUP) {
@@ -936,7 +936,7 @@ Initialize(
 	MB_ARMED(new_w) =  FALSE;
 	MB_POPPED_UP(new_w) = FALSE;
 	MB_LAST_TIMESTAMP(new_w) = 0;
-	MB_GC(new_w) = (GC)NULL;
+	MB_GC(new_w) = (GC)nullptr;
 	
 	if (req->core.width <= 0)
 		adjustWidth = TRUE;
@@ -950,7 +950,7 @@ Initialize(
 	
 	new_w->primitive.traversal_on = TRUE;
 	
-	if(MB_SMENU(new_w) != (Widget)NULL) {
+	if(MB_SMENU(new_w) != (Widget)nullptr) {
 		XtInsertEventHandler((Widget)new_w, ButtonPressMask,
                      False, PreMenuButtonHandler, MB_SMENU(new_w), XtListHead);
                 XtAddEventHandler((Widget)new_w, ButtonPressMask,
@@ -1025,9 +1025,9 @@ GetGC(
 	XGCValues values;
 	Pixel bg;
 
-	if(MB_GC(mb) != (GC)NULL) {
+	if(MB_GC(mb) != (GC)nullptr) {
 		XtReleaseGC((Widget)mb, MB_GC(mb));
-		MB_GC(mb) = (GC)NULL;
+		MB_GC(mb) = (GC)nullptr;
 	}
 
 	bg = mb->core.background_pixel;

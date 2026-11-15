@@ -180,14 +180,14 @@ IL_PRIVATE ilBool _ilDecompPackbits (
      || (!bitPerPixel && (pimformat->nBitsPerSample[0] != 8)))
         return ilDeclarePipeInvalid (pipe, IL_ERROR_IMAGE_TYPE);
 
-    dstdata.producerObject  =  (ilObject) NULL;
+    dstdata.producerObject  =  (ilObject) nullptr;
     des                     = *pimdes;
     des.compression         =  IL_UNCOMPRESSED;
     dstdata.pDes            =  &des;
     dstdata.width           =  pinfo->width;
     dstdata.height          =  pinfo->height;
     dstdata.pPalette        =  pinfo->pPalette;
-    dstdata.pCompData       =  (ilPtr)NULL;
+    dstdata.pCompData       =  (ilPtr)nullptr;
     dstdata.stripHeight     =  pinfo->stripHeight;
     dstdata.constantStrip   =  pinfo->constantStrip;
     dstdata.pFormat = (bitPerPixel) ? IL_FORMAT_BIT : IL_FORMAT_BYTE;

@@ -91,19 +91,19 @@ static DialogResource resources[] =
 {
    { "idString", XmRString, sizeof(String),
      XtOffset(HelpDataPtr, idString),
-     (caddr_t) NULL, _DtStringToString },
+     (caddr_t) nullptr, _DtStringToString },
 
    { "volString", XmRString, sizeof(String),
      XtOffset(HelpDataPtr, volString),
-     (caddr_t) NULL, _DtStringToString },
+     (caddr_t) nullptr, _DtStringToString },
 
    { "topicTitle", XmRString, sizeof(String),
      XtOffset(HelpDataPtr, topicTitle),
-     (caddr_t) NULL, _DtStringToString },
+     (caddr_t) nullptr, _DtStringToString },
 
    { "fileType", XmRString, sizeof(String),
      XtOffset(HelpDataPtr, fileType),
-     (caddr_t) NULL, _DtStringToString },
+     (caddr_t) nullptr, _DtStringToString },
 
    { "helpType", XmRInt, sizeof(int),
       XtOffset(HelpDataPtr, helpType),

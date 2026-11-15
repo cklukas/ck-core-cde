@@ -189,7 +189,7 @@ TTdt_message_acceptCB(
 		    pPad->ttQuitReq.silent = (Boolean) silent;
 		    pPad->ttQuitReq.force = (Boolean) force;
 		    pPad->ttQuitReq.operation2Quit = XtNewString(operation2Quit);
-		    FileExitCB( (Widget) NULL, (caddr_t) pPad, (caddr_t) NULL);
+		    FileExitCB( (Widget) nullptr, (caddr_t) pPad, (caddr_t) nullptr);
 		    tt_release(mark);
 		    return((Tt_message) 0);	/* handling Quit */
 		}

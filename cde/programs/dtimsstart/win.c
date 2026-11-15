@@ -77,17 +77,17 @@ static AppResRec	appres;
 
 static XtResource app_resources[] = {
     { "selectionHelpMsg", "SelectionHelpMsg", XtRString, sizeof(String),
-      XtOffset(AppResP, selectionHelpMsg), XtRString, (XtPointer)NULL },
+      XtOffset(AppResP, selectionHelpMsg), XtRString, (XtPointer)nullptr },
     { "modeHelpMsg", "ModeHelpMsg", XtRString, sizeof(String),
-      XtOffset(AppResP, modeHelpMsg), XtRString, (XtPointer)NULL },
+      XtOffset(AppResP, modeHelpMsg), XtRString, (XtPointer)nullptr },
     { "windowLocation", "WindowLocation", XtRString, sizeof(String),
-      XtOffset(AppResP, windowLocation), XtRString, (XtPointer)NULL },
+      XtOffset(AppResP, windowLocation), XtRString, (XtPointer)nullptr },
 };
 
 static XrmOptionDescRec	options[] = {
-    { "-geometry", "*XmDialogShell.geometry", XrmoptionSepArg, (XPointer) NULL },
-    { "-fn", "*fontList", XrmoptionSepArg, (XPointer) NULL },
-    { "-font", "*fontList", XrmoptionSepArg, (XPointer) NULL },
+    { "-geometry", "*XmDialogShell.geometry", XrmoptionSepArg, (XPointer) nullptr },
+    { "-fn", "*fontList", XrmoptionSepArg, (XPointer) nullptr },
+    { "-font", "*fontList", XrmoptionSepArg, (XPointer) nullptr },
 
 };
 
@@ -261,7 +261,7 @@ int	init_window_env(void)
 
     topW = XtAppInitialize(&app, DTIMS_CLASS,
 		options, XtNumber(options),
-		&Wargc, Wargv, fallbacks, (ArgList) NULL, (Cardinal) 0);
+		&Wargc, Wargv, fallbacks, (ArgList) nullptr, (Cardinal) 0);
 
     dpy = XtDisplay(topW);
     XtSetMappedWhenManaged(topW, False);

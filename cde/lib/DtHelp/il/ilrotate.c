@@ -811,7 +811,7 @@ unsigned int              rtype;
        }
 
 
-       dstdata.producerObject = (ilObject) NULL;
+       dstdata.producerObject = (ilObject) nullptr;
        dstdata.pDes           = (ilImageDes *) nullptr;
        dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.pPalette       = info.pPalette;

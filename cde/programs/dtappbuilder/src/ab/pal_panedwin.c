@@ -831,9 +831,9 @@ void
 abobj_make_panedwin(void)
 {
     ABObj         	project = proj_get_project();
-    ABObj         	obj = (ABObj) NULL;
-    ABObj         	pw_obj = (ABObj) NULL;
-    ABObj         	obj_parent = (ABObj) NULL;
+    ABObj         	obj = (ABObj) nullptr;
+    ABObj         	pw_obj = (ABObj) nullptr;
+    ABObj         	obj_parent = (ABObj) nullptr;
     ABSelectedRec 	sel;
     int		  	i, xpos = 0, ypos = 0;
     AB_ATTACH_TYPE	attach_type = AB_ATTACH_UNDEF,

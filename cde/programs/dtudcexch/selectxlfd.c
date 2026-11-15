@@ -182,7 +182,7 @@ FalFontID openfont(void)
     if ((fontid = FalOpenFont(fullPathName, protect_key, codeset))
 	== FAL_ERROR) {
 	fprintf(stderr, "FalOpenFont error\n");
-	return ((FalFontID) NULL);
+	return ((FalFontID) nullptr);
     }
     return (fontid);
 }

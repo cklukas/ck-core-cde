@@ -138,8 +138,8 @@ get_cached_msg_set(
     ABObj	obj
 )
 {
-    static ABObj	prev_obj = (ABObj)NULL;
-    static MsgSet	prev_msg_set = (MsgSet)NULL;
+    static ABObj	prev_obj = (ABObj)nullptr;
+    static MsgSet	prev_msg_set = (MsgSet)nullptr;
 
     MsgSet		msg_set;
 
@@ -157,7 +157,7 @@ get_cached_msg_set(
     }
     else
     {
-	static ABObj	prev_module = (ABObj)NULL;
+	static ABObj	prev_module = (ABObj)nullptr;
 	ABObj		module;
         char		*module_name;
         

@@ -48,7 +48,7 @@ typedef struct { buffered_data *dataptr; int request_type; } protocol_request;
 static int ck_blocked(void)
 {
     sigset_t cur;
-    sigprocmask(SIG_BLOCK, NULL, &cur);
+    sigprocmask(SIG_BLOCK, nullptr, &cur);
     return sigismember(&cur, SIGCHLD) == 1;
 }
 
@@ -89,7 +89,7 @@ static SPC_Channel_Ptr SPC_Find_PID(int pid)
 {
     for (int i = 0; i < 3; i++)
         if (ck_chan[i].pid == pid && pid != 0) return &ck_chan[i];
-    return NULL;
+    return nullptr;
 }
 
 static void ck_terminated(SPC_Channel_Ptr c, int pid, int type, int cause, void *d)
@@ -129,7 +129,7 @@ static void install(void)
     memset(&sa, 0, sizeof sa);
     sa.sa_handler = ck_handler;
     sigemptyset(&sa.sa_mask);
-    CHECK(sigaction(SIGCHLD, &sa, NULL) == 0);
+    CHECK(sigaction(SIGCHLD, &sa, nullptr) == 0);
 }
 
 static pid_t spawn(int code)
@@ -187,7 +187,7 @@ static void case_hook_null(void)
 {
     int probe = dup(0), after;
     close(probe);
-    SbAddInput_hookfn = NULL;
+    SbAddInput_hookfn = nullptr;
     errno = 0;
     CHECK(SPC_Child_Pipe_Open() == -1);
     CHECK(errno == EINVAL);
@@ -231,7 +231,7 @@ static void case_signal_to_loop(void)
     CHECK(ck_state_calls == 0);
     CHECK(ck_term_calls == 0);
 
-    ck_hook_cb(ck_hook_data, &ck_hook_fd, NULL);   /* what the loop does */
+    ck_hook_cb(ck_hook_data, &ck_hook_fd, nullptr);   /* what the loop does */
     CHECK(pending(SPC_child_pipe[0]) == 0);
     CHECK(ck_term_calls == 1 && ck_term_pids[0] == child);
     CHECK(ck_term_in_signal == 0 && ck_term_outside == 1);
@@ -240,7 +240,7 @@ static void case_signal_to_loop(void)
     CHECK(ck_pid_array[0] == SPCD_DEAD_PROCESS);
     CHECK(WIFEXITED(ck_chan[0].status) && WEXITSTATUS(ck_chan[0].status) == 7);
     CHECK(ck_status_calls == 1);
-    CHECK(waitpid(child, NULL, WNOHANG) == -1 && errno == ECHILD);   /* reaped */
+    CHECK(waitpid(child, nullptr, WNOHANG) == -1 && errno == ECHILD);   /* reaped */
 }
 
 static void case_two_children(void)
@@ -258,7 +258,7 @@ static void case_two_children(void)
     setup_channel(1, b);
     ck_pid_array[0] = a; ck_pid_array[1] = b; ck_pid_array[2] = 0;
 
-    ck_hook_cb(ck_hook_data, &ck_hook_fd, NULL);
+    ck_hook_cb(ck_hook_data, &ck_hook_fd, nullptr);
     CHECK(ck_term_calls == 2);
     CHECK((ck_term_pids[0] == a && ck_term_pids[1] == b) ||
           (ck_term_pids[0] == b && ck_term_pids[1] == a));
@@ -266,7 +266,7 @@ static void case_two_children(void)
     CHECK(WEXITSTATUS(ck_chan[0].status) == 3 && WEXITSTATUS(ck_chan[1].status) == 4);
     CHECK(ck_lock_in_signal == 0 && ck_term_in_signal == 0);
     CHECK(read(SPC_child_pipe[0], buf, sizeof buf) == -1);   /* drained */
-    CHECK(waitpid(-1, NULL, WNOHANG) == -1 && errno == ECHILD);
+    CHECK(waitpid(-1, nullptr, WNOHANG) == -1 && errno == ECHILD);
 }
 #else
 /* revision with the reaping handler: it must not do its work in the handler */
@@ -282,7 +282,7 @@ static void case_old_handler(void)
     setup_channel(0, child);
     ck_pid_array[0] = child; ck_pid_array[1] = 0;
     for (i = 0; i < 300 && ck_term_calls == 0; i++)
-        nanosleep(&ts, NULL);
+        nanosleep(&ts, nullptr);
     printf("handler ran: lock %d (in signal %d), state in signal %d, terminate %d (in signal %d)\n",
            ck_lock_calls, ck_lock_in_signal, ck_state_in_signal,
            ck_term_calls, ck_term_in_signal);

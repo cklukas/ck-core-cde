@@ -3130,7 +3130,7 @@ handle_auto_apply(
     }
     else
     {
-	XmString xm_buf = (XmString) NULL;
+	XmString xm_buf = (XmString) nullptr;
 	STRING   loadedObjName = obj_get_name(pstate->loaded_obj);
 
 	if (new_obj == nullptr)
@@ -4283,7 +4283,7 @@ menulist_buildCB(
     else /* No Menus - inactivate the item */
     {
         ui_set_active(menus_item, FALSE);
-        XtVaSetValues(submenu, XmNuserData, (XtArgVal)NULL, nullptr);
+        XtVaSetValues(submenu, XmNuserData, 0, nullptr);
     }
 }
 

@@ -357,7 +357,7 @@ static XmPartResource resources[] = {
     /* Common resources */
     {DtNactivateCallback, DtCCallback, XmRCallback, sizeof(XtCallbackList),
 	 DtOffset(activate_callback), XmRCallback, 
-	 (XtPointer)NULL},
+	 (XtPointer)nullptr},
     {DtNalignment, DtCAlignment, XmRAlignment, sizeof(unsigned char),
 	 DtOffset(alignment), XmRImmediate, 
 	 (XtPointer)DtALIGNMENT_BEGINNING},
@@ -378,7 +378,7 @@ static XmPartResource resources[] = {
 	 DtOffset(editable), XmRImmediate, (XtPointer)TRUE},
     {DtNfocusCallback, DtCCallback, XmRCallback, sizeof(XtCallbackList),
 	 DtOffset(focus_callback), XmRCallback, 
-	 (XtPointer)NULL},
+	 (XtPointer)nullptr},
     {DtNincrementValue, DtCIncrementValue, XmRInt, sizeof(int),
 	 DtOffset(numeric_increment), XmRImmediate, (XtPointer)1},
     {DtNinitialDelay, DtCInitialDelay, XmRInt, sizeof(unsigned int),
@@ -386,10 +386,10 @@ static XmPartResource resources[] = {
     {DtNnumValues, DtCNumValues, DtRNumValues, sizeof(int),
 	 DtOffset(item_count), XmRImmediate, (XtPointer)0},
     {DtNvalues, DtCItems, XmRXmStringTable, sizeof(XmStringTable),
-	 DtOffset(items), XmRImmediate, (XtPointer)NULL},
+	 DtOffset(items), XmRImmediate, (XtPointer)nullptr},
     {DtNlosingFocusCallback, DtCCallback, XmRCallback, sizeof(XtCallbackList),
 	 DtOffset(losing_focus_callback), XmRCallback, 
-	 (XtPointer)NULL},
+	 (XtPointer)nullptr},
     {DtNmarginHeight, DtCMarginHeight, XmRVerticalDimension, sizeof(Dimension),
 	 DtOffset(margin_height), XmRImmediate, (XtPointer)MARGIN},
     {DtNmarginWidth, DtCMarginWidth, XmRHorizontalDimension, sizeof(Dimension),
@@ -402,7 +402,7 @@ static XmPartResource resources[] = {
 	 DtOffset(minimum), XmRImmediate, (XtPointer)0},
     {DtNmodifyVerifyCallback, DtCCallback, XmRCallback, 
 	 sizeof(XtCallbackList), DtOffset(modify_verify_callback),
-	 XmRCallback, (XtPointer)NULL},
+	 XmRCallback, (XtPointer)nullptr},
     {DtNposition, DtCPosition, XmRInt, sizeof(int),
 	 DtOffset(position), XmRImmediate, (XtPointer)0},
     {DtNrecomputeSize, DtCRecomputeSize, XmRBoolean, sizeof(Boolean),
@@ -410,10 +410,10 @@ static XmPartResource resources[] = {
     {DtNrepeatDelay, DtCRepeatDelay, XmRInt, sizeof(unsigned int),
 	 DtOffset(repeat_delay), XmRImmediate, (XtPointer)200},
     {DtNtextField, DtCTextField, XmRWidget, sizeof(Widget),
-	 DtOffset(text), XmRImmediate, (XtPointer)NULL},
+	 DtOffset(text), XmRImmediate, (XtPointer)nullptr},
     {DtNvalueChangedCallback, DtCCallback, XmRCallback, 
 	 sizeof(XtCallbackList), DtOffset(value_changed_callback),
-	 XmRCallback, (XtPointer)NULL},
+	 XmRCallback, (XtPointer)nullptr},
     {DtNwrap, DtCWrap, XmRBoolean, sizeof(Boolean),
 	 DtOffset(wrap), XmRImmediate, (XtPointer)TRUE},
 };
@@ -436,26 +436,26 @@ static XmBaseClassExtRec baseClassExtRec = {
     NULLQUARK,
     XmBaseClassExtVersion,
     sizeof(XmBaseClassExtRec),
-    (XtInitProc)NULL,			/* InitializePrehook	*/
-    (XtSetValuesFunc)NULL,		/* SetValuesPrehook	*/
-    (XtInitProc)NULL,			/* InitializePosthook	*/
-    (XtSetValuesFunc)NULL,		/* SetValuesPosthook	*/
+    (XtInitProc)nullptr,			/* InitializePrehook	*/
+    (XtSetValuesFunc)nullptr,		/* SetValuesPrehook	*/
+    (XtInitProc)nullptr,			/* InitializePosthook	*/
+    (XtSetValuesFunc)nullptr,		/* SetValuesPosthook	*/
     nullptr,				/* secondaryObjectClass	*/
-    (XtInitProc)NULL,			/* secondaryCreate	*/
-    (XmGetSecResDataFunc)NULL, 		/* getSecRes data	*/
+    (XtInitProc)nullptr,			/* secondaryCreate	*/
+    (XmGetSecResDataFunc)nullptr, 		/* getSecRes data	*/
     { 0 },      			/* fastSubclass flags	*/
-    (XtArgsProc)NULL,			/* getValuesPrehook	*/
-    (XtArgsProc)NULL,			/* getValuesPosthook	*/
-    (XtWidgetClassProc)NULL,            /* classPartInitPrehook */
-    (XtWidgetClassProc)NULL,            /* classPartInitPosthook*/
+    (XtArgsProc)nullptr,			/* getValuesPrehook	*/
+    (XtArgsProc)nullptr,			/* getValuesPosthook	*/
+    (XtWidgetClassProc)nullptr,            /* classPartInitPrehook */
+    (XtWidgetClassProc)nullptr,            /* classPartInitPosthook*/
     nullptr,                               /* ext_resources        */
     nullptr,                               /* compiled_ext_resources*/
     0,                                  /* num_ext_resources    */
     FALSE,                              /* use_sub_resources    */
     WidgetNavigable,
 					/* widgetNavigable      */
-    (XmFocusChangeProc)NULL,            /* focusChange          */
-    (XmWrapperData)NULL			/* wrapperData 		*/
+    (XmFocusChangeProc)nullptr,            /* focusChange          */
+    (XmWrapperData)nullptr			/* wrapperData 		*/
 };
 
 /*
@@ -468,10 +468,10 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     (String)"DtSpinBox",			/* class_name         */    
     (Cardinal)sizeof(DtSpinBoxPart),		/* widget_size        */    
     ClassInitialize,				/* class_initialize   */
-    (XtWidgetClassProc)NULL,			/* class_part_init    */    
+    (XtWidgetClassProc)nullptr,			/* class_part_init    */    
     (XtEnum)FALSE,				/* class_inited       */    
     Initialize,					/* initialize         */
-    (XtArgsProc)NULL,				/* initialize_hook    */    
+    (XtArgsProc)nullptr,				/* initialize_hook    */    
     (XtRealizeProc)XtInheritRealize,		/* realize            */    
     (XtActionList)SpinBoxActionTable,		/* actions	      */    
     (Cardinal)XtNumber(SpinBoxActionTable),	/* num_actions        */    
@@ -486,12 +486,12 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     Resize,					/* resize             */
     Redisplay,					/* expose             */
     SetValues,					/* set_values         */
-    (XtArgsFunc)NULL,				/* set values hook    */    
+    (XtArgsFunc)nullptr,				/* set values hook    */    
     (XtAlmostProc)XtInheritSetValuesAlmost,	/* set values almost  */    
-    (XtArgsProc)NULL,				/* get values hook    */    
-    (XtAcceptFocusProc)NULL,			/* accept_focus       */    
+    (XtArgsProc)nullptr,				/* get values hook    */    
+    (XtAcceptFocusProc)nullptr,			/* accept_focus       */    
     (XtVersionType)XtVersionDontCheck,		/* Version            */    
-    (XtPointer)NULL,				/* PRIVATE cb list    */
+    (XtPointer)nullptr,				/* PRIVATE cb list    */
     (String)XtInheritTranslations,		/* tm_table           */
     (XtGeometryHandler)XtInheritQueryGeometry,	/* query_geom         */
     (XtStringProc)XtInheritDisplayAccelerator,	/* display_accelerator*/
@@ -502,16 +502,16 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     (XtWidgetProc)XtInheritChangeManaged,	/* change_managed     */     
     (XtWidgetProc)XtInheritInsertChild,		/* insert_child	      */     
     (XtWidgetProc)XtInheritDeleteChild,		/* delete_child	      */     
-    (XtPointer)NULL				/* extension	      */     
+    (XtPointer)nullptr				/* extension	      */     
     },
     {		/* constraint_class fields */
-    (XtResourceList)NULL,			/* resources	      */     
+    (XtResourceList)nullptr,			/* resources	      */     
     (Cardinal)0,				/* num_resources      */     
     (Cardinal)0,				/* constraint_size    */     
-    (XtInitProc)NULL,				/* initialize	      */     
-    (XtWidgetProc)NULL,				/* destroy	      */     
-    (XtSetValuesFunc)NULL,			/* set_values	      */     
-    (XtPointer)NULL				/* extension          */     
+    (XtInitProc)nullptr,				/* initialize	      */     
+    (XtWidgetProc)nullptr,				/* destroy	      */     
+    (XtSetValuesFunc)nullptr,			/* set_values	      */     
+    (XtPointer)nullptr				/* extension          */     
     },
     {		/* manager class     */
     (String)XtInheritTranslations,		/* translations       */     
@@ -520,7 +520,7 @@ externaldef(dtspinboxclassrec) DtSpinBoxClassRec dtSpinBoxClassRec =
     (XmSyntheticResource*)nullptr,			/* get_cont_resources */     
     (int)0,					/* num_get_cont_resources */ 
     (XmParentProcessProc)XmInheritParentProcess,/* parent_process     */     
-    (XtPointer)NULL				/* extension          */     
+    (XtPointer)nullptr				/* extension          */     
     },
     {		/* spin_box_class fields */     
     (Boolean)0,
@@ -593,8 +593,8 @@ Initialize(	Widget request_widget,
 
     widget_name = XtMalloc(strlen(XtName((Widget)new)) + 10);
 
-    Text(new) = (Widget)NULL;
-    Label(new) = (Widget)NULL;
+    Text(new) = (Widget)nullptr;
+    Label(new) = (Widget)nullptr;
     OldWidth(new) = 0;
     OldHeight(new) = 0;
     InitCb(new) = TRUE;
@@ -1130,7 +1130,7 @@ Destroy(Widget widget)
     if ((int)Timer(spin))
       {
 	XtRemoveTimeOut(Timer(spin));
-	Timer(spin) = (XtIntervalId)NULL;
+	Timer(spin) = 0;
       }
 
     if (ItemCount(spin)>0) {
@@ -2075,7 +2075,7 @@ timer_dispatch(	XtPointer client_data,
 {
     DtSpinBoxWidget spin_w = (DtSpinBoxWidget)client_data;
 
-    Timer(spin_w) = (XtIntervalId)NULL;
+    Timer(spin_w) = 0;
     InitCb(spin_w) = FALSE;
     if (WhichArrow(spin_w) == XmARROW_UP) {
 	if (Grabbed(spin_w)) {
@@ -2234,7 +2234,7 @@ FinishUpDown(	DtSpinBoxWidget spin,
     if (SendCallback(spin, last_event, FALSE, new_position,
 		     new_current, crossed) == FALSE) {
 	XtRemoveTimeOut(Timer(spin));
-	Timer(spin) = (XtIntervalId)NULL;
+	Timer(spin) = 0;
 	InitCb(spin) = TRUE;
 	return;
     }
@@ -2406,7 +2406,7 @@ disarm_cb(	Widget w,
     if ((int)Timer(spin)) {
 	InitCb(spin) = TRUE;
 	XtRemoveTimeOut(Timer(spin));
-	Timer(spin) = (XtIntervalId)NULL;
+	Timer(spin) = 0;
 	if (Grabbed(spin)) {
 	    XtRemoveGrab(w);
 	    Grabbed(spin) = FALSE;
@@ -2428,7 +2428,7 @@ grab_leave_cb(	Widget w,
 	 (!(event->xcrossing.state & Button1Mask)))) {
 	InitCb(spin) = TRUE;
 	XtRemoveTimeOut(Timer(spin));
-	Timer(spin) = (XtIntervalId)NULL;
+	Timer(spin) = 0;
 	if (Grabbed(spin)) {
 	    XtRemoveGrab(w);
 	    Grabbed(spin) = FALSE;

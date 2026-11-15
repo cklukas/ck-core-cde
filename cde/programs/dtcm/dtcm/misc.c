@@ -1252,7 +1252,7 @@ ComputeMaxWidth(
 	w[1] = w2;
 	w[2] = w3;
 	w[3] = w4;
-	w[4] = (Widget) NULL;
+	w[4] = (Widget) nullptr;
 
 	XtVaGetValues(w1,
 		XmNwidth,		&width1,
@@ -1311,7 +1311,7 @@ Dimension *dim,
     XtWidgetGeometry geo;
     unsigned char type;
 
-    *ret = (Widget)NULL;
+    *ret = (Widget)nullptr;
     *dim = (Dimension)0;
     if ( num > MAX_NUM )
 	return;	/* Do nothing */
@@ -1364,7 +1364,7 @@ Dimension *dim,
     XtWidgetGeometry geo;
     unsigned char type;
 
-    *ret = (Widget)NULL;
+    *ret = (Widget)nullptr;
     *dim = (Dimension)0;
     if ( num > MAX_NUM )
 	return;	/* Do nothing */
@@ -1435,7 +1435,7 @@ Dimension *dim,
     XtWidgetGeometry geo;
     unsigned char type;
 
-    *ret = (Widget)NULL;
+    *ret = (Widget)nullptr;
     *dim = (Dimension)0;
     if ( num > MAX_NUM )
 	return;	/* Do nothing */

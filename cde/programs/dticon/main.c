@@ -86,7 +86,7 @@ static XtResource resources[] = {
     XtOffset (ApplicationDataPtr, useBMS), XmRImmediate, (XtPointer)False,
   },
   {"session", "Session", XmRString, sizeof (char *),
-    XtOffset (ApplicationDataPtr, session), XmRImmediate, (XtPointer)NULL,
+    XtOffset (ApplicationDataPtr, session), XmRImmediate, (XtPointer)nullptr,
   },
   {"bmSuffix", "BmSuffix", XmRString, sizeof (char *),
     XtOffset (ApplicationDataPtr, bmSuffix), XmRImmediate, (XtPointer)".bm",

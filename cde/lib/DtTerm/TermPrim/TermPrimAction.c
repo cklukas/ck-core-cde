@@ -232,7 +232,7 @@ _DtTermPrimActionKeymap(Widget w, XEvent *event, String *params, Cardinal *num_p
     static XtTranslations original = (XtTranslations) 0;
     static XtResource key_resources[] = {
 	{XtNtranslations, XtCTranslations, XtRTranslationTable,
-		sizeof(XtTranslations), 0, XtRTranslationTable, (caddr_t) NULL}
+		sizeof(XtTranslations), 0, XtRTranslationTable, (caddr_t) nullptr}
     };
     char mapName[BUFSIZ];
     char mapClass[BUFSIZ];

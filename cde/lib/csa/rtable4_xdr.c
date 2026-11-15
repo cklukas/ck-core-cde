@@ -106,7 +106,7 @@ Tag_4_before(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Tag_4_list = {
 	sizeof (Tag_4), offsetof (Tag_4, next),
-	Tag_4_before, NULL, _DtCM_LIMIT_TAGS
+	Tag_4_before, nullptr, _DtCM_LIMIT_TAGS
 };
 
 /* codes the list that starts with objp */
@@ -140,7 +140,7 @@ Attribute_4_after(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Attribute_4_list = {
 	sizeof (Attribute_4), offsetof (Attribute_4, next),
-	NULL, Attribute_4_after, _DtCM_LIMIT_ATTRIBUTES
+	nullptr, Attribute_4_after, _DtCM_LIMIT_ATTRIBUTES
 };
 
 /* codes the list that starts with objp */
@@ -170,7 +170,7 @@ Except_4_before(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Except_4_list = {
 	sizeof (Except_4), offsetof (Except_4, next),
-	Except_4_before, NULL, _DtCM_LIMIT_ITEMS
+	Except_4_before, nullptr, _DtCM_LIMIT_ITEMS
 };
 
 /* codes the list that starts with objp */
@@ -210,7 +210,7 @@ Uid_4_before(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Uid_4_list = {
 	sizeof (Uid_4), offsetof (Uid_4, next),
-	Uid_4_before, NULL, _DtCM_LIMIT_ENTRIES
+	Uid_4_before, nullptr, _DtCM_LIMIT_ENTRIES
 };
 
 /* codes the list that starts with objp */
@@ -262,7 +262,7 @@ Appt_4_before(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Appt_4_list = {
 	sizeof (Appt_4), offsetof (Appt_4, next),
-	Appt_4_before, NULL, _DtCM_LIMIT_ENTRIES
+	Appt_4_before, nullptr, _DtCM_LIMIT_ENTRIES
 };
 
 /* codes the list that starts with objp */
@@ -342,7 +342,7 @@ Reminder_4_before(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Reminder_4_list = {
 	sizeof (Reminder_4), offsetof (Reminder_4, next),
-	Reminder_4_before, NULL, _DtCM_LIMIT_ENTRIES
+	Reminder_4_before, nullptr, _DtCM_LIMIT_ENTRIES
 };
 
 /* codes the list that starts with objp */
@@ -426,7 +426,7 @@ Access_Entry_4_before(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Access_Entry_4_list = {
 	sizeof (Access_Entry_4), offsetof (Access_Entry_4, next),
-	Access_Entry_4_before, NULL, _DtCM_LIMIT_ACCESS_ENTRIES
+	Access_Entry_4_before, nullptr, _DtCM_LIMIT_ACCESS_ENTRIES
 };
 
 /* codes the list that starts with objp */
@@ -460,7 +460,7 @@ Range_4_before(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Range_4_list = {
 	sizeof (Range_4), offsetof (Range_4, next),
-	Range_4_before, NULL, _DtCM_LIMIT_ITEMS
+	Range_4_before, nullptr, _DtCM_LIMIT_ITEMS
 };
 
 /* codes the list that starts with objp */
@@ -486,7 +486,7 @@ Keyrange_4_before(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Keyrange_4_list = {
 	sizeof (Keyrange_4), offsetof (Keyrange_4, next),
-	Keyrange_4_before, NULL, _DtCM_LIMIT_ITEMS
+	Keyrange_4_before, nullptr, _DtCM_LIMIT_ITEMS
 };
 
 /* codes the list that starts with objp */
@@ -510,7 +510,7 @@ Uidopt_4_before(XDR *xdrs, void *node)
 
 static const _DtCm_xdr_list_type Uidopt_4_list = {
 	sizeof (Uidopt_4), offsetof (Uidopt_4, next),
-	Uidopt_4_before, NULL, _DtCM_LIMIT_ITEMS
+	Uidopt_4_before, nullptr, _DtCM_LIMIT_ITEMS
 };
 
 /* codes the list that starts with objp */

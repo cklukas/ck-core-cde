@@ -121,7 +121,7 @@ ttalk_show_dialog(
     extern Widget	AB_toplevel;
 
     /* If there is no ToolTalk Editor, create it */
-    if (AB_ttalk_dialog == (Widget)NULL)
+    if (AB_ttalk_dialog == (Widget)nullptr)
     {
 	/* Create the dialog and set the global handle */
 	tooltalk_tooltalk_editor_clear(&tooltalk_tooltalk_editor);
@@ -140,10 +140,10 @@ ttalk_show_dialog(
         /* These will go away when connections work */
         {
            XtAddCallback(tooltalk_tooltalk_editor.ok_button,
-             XmNactivateCallback,ttalk_applyCB,(XtPointer)NULL);
+             XmNactivateCallback,ttalk_applyCB,(XtPointer)nullptr);
            XtAddCallback(tooltalk_tooltalk_editor.cancel_button,
              XmNactivateCallback,ttalk_cancelCB,
-	     (XtPointer)NULL); 
+	     (XtPointer)nullptr); 
         }
 	/* This will go away with inactive initial states work */
 	{

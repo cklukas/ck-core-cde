@@ -206,15 +206,15 @@ ui_popup_modal_message(
     UI_MODAL_ANSWER        answer;
     XtCallbackRec ok_callback[] = {
             {modal_dlgCB, (XtPointer) UI_ANSWER_OK},
-            {nullptr, (XtPointer) NULL}
+            {nullptr, (XtPointer) nullptr}
     };
     XtCallbackRec cancel_callback[] = { 
             {modal_dlgCB, (XtPointer) UI_ANSWER_CANCEL},
-            {nullptr, (XtPointer) NULL}
+            {nullptr, (XtPointer) nullptr}
     };
     XtCallbackRec help_callback[] = {
             {modal_dlgCB, (XtPointer) UI_ANSWER_HELP},
-            {nullptr, (XtPointer) NULL}
+            {nullptr, (XtPointer) nullptr}
     };
 
 
@@ -617,12 +617,12 @@ ui_popup_modal_prompt(
     Widget			modal_prompt = nullptr;
     
     XtCallbackRec ok_callback[] = {
-            {prompt_ok_modal_dlgCB, (XtPointer) NULL},
-            {nullptr, (XtPointer) NULL}
+            {prompt_ok_modal_dlgCB, (XtPointer) nullptr},
+            {nullptr, (XtPointer) nullptr}
     };   
     XtCallbackRec cancel_callback[] = {
-            {prompt_cancel_modal_dlgCB, (XtPointer) NULL},
-            {nullptr, (XtPointer) NULL}
+            {prompt_cancel_modal_dlgCB, (XtPointer) nullptr},
+            {nullptr, (XtPointer) nullptr}
     };
  
     modal_prompt = create_prompt_dlg(parent, title, label, ok_label, 

@@ -39,7 +39,7 @@ static int stub_setregid(gid_t r, gid_t e) { return step("setregid", r, e); }
 static int stub_setreuid(uid_t r, uid_t e) { return step("setreuid", r, e); }
 static int stub_initgroups(const char *u, gid_t g)
 {
-    return step(u != NULL && strcmp(u, "alice") == 0 ? "initgroups" : "initgroups-other", g, 0);
+    return step(u != nullptr && strcmp(u, "alice") == 0 ? "initgroups" : "initgroups-other", g, 0);
 }
 
 #define setgid stub_setgid
@@ -79,7 +79,7 @@ int main(void)
 {
     int rc;
 
-    rc = run("", NULL);
+    rc = run("", nullptr);
     expect("own ids", rc, 0, SET_GROUP SET_USER);
 
     rc = run("", "alice");

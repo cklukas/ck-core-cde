@@ -3874,7 +3874,7 @@ WaitForWM( void )
                       0,
                       True,
                       HandleWMClientMessage,
-                      (XtPointer) NULL);
+                      (XtPointer) nullptr);
 
     /*
      * Set a timer which stops the block on waiting for the
@@ -3895,7 +3895,7 @@ WaitForWM( void )
                       0,
                       True,
                       HandleWMClientMessage,
-                      (XtPointer) NULL);
+                      (XtPointer) nullptr);
 
     return;
 } /* END OF FUNCTION WaitForWM */

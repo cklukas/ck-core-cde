@@ -326,7 +326,7 @@ build_mainWindow(
     XtSetArg(args[n], XmNlabelString, labelString);  n++;
     WidgList[count++]= XmCreatePushButton(helpPulldown, "onItem", args, n );
     XtAddCallback(WidgList[count-1], XmNactivateCallback,
-        HelpModeCB, (XtPointer)NULL);
+        HelpModeCB, (XtPointer)nullptr);
     XmStringFree(labelString);
 
     n = 0;

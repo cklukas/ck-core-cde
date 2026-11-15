@@ -217,7 +217,7 @@ void PostManDialog(
    manText = XmCreateTextField(manForm, "man_text", args, n);
    XtManageChild (manText);  
    XtAddCallback(manText, XmNvalueChangedCallback, 
-                 ManTextUpdateCB,(XtPointer) NULL);
+                 ManTextUpdateCB,(XtPointer) nullptr);
  
    /*  Create a separator between the buttons  */
    n = 0;
@@ -270,7 +270,7 @@ void PostManDialog(
    XtManageChild (closeBtn);
 
    XtAddCallback(closeBtn, XmNactivateCallback, CloseAndExitCB,
-                 (XtPointer) NULL);
+                 (XtPointer) nullptr);
   	     
    XmStringFree (labelStr);
 

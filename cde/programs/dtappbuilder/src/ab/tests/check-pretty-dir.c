@@ -22,7 +22,7 @@ int main(void)
 {
     enum { SIZE = 16 };
     char *pretty = malloc(SIZE);          /* exact size: ASan sees a 1 byte overrun */
-    assert(pretty != NULL);
+    assert(pretty != nullptr);
 
     setenv("HOME", "/home/u", 1);
     relative_result = "abcdefghijklmnopqrstuvwxyz";     /* longer than the buffer */

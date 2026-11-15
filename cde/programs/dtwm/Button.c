@@ -134,19 +134,19 @@ static XtResource resources[] =
 		XmNsubpanel,
 		XmCSubpanel, XmRWidget, sizeof (Widget),
 		R_Offset (subpanel),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNpushFunction,
 		XmCPushFunction, XmRFunction, sizeof (XtPointer),
 		R_Offset (push_function),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNpushArgument,
 		XmCPushArgument, XmRPointer, sizeof (XtPointer),
 		R_Offset (push_argument),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNimageName,
@@ -159,7 +159,7 @@ static XtResource resources[] =
      		XmNcallback,
 		XmCCallback, XmRCallback, sizeof(XtCallbackList),
      		R_Offset (callback),
-     		XmRImmediate, (caddr_t) NULL
+     		XmRImmediate, (caddr_t) nullptr
    	},
 
 	{

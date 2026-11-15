@@ -344,7 +344,7 @@ root_into_project(
 
     if (uil_root == (sym_entry_type *)nullptr ||
 	uil_root->header.b_tag != sym_k_root_entry)
-	return((ABObjPtr)NULL);
+	return((ABObjPtr)nullptr);
     else
 	root_node = (sym_root_entry_type *)uil_root;
 
@@ -372,11 +372,11 @@ root_into_project(
 	    else
 	    {
 		obj_destroy(ab_module);
-		ret_val = (ABObjPtr)NULL;
+		ret_val = (ABObjPtr)nullptr;
 	    }
 	}
 	else
-	    ret_val = (ABObjPtr)NULL;
+	    ret_val = (ABObjPtr)nullptr;
     }
     return(ret_val);
 }
@@ -391,7 +391,7 @@ module_hdr_to_module(
 
     if (uil_module_hdr == (sym_entry_type *)nullptr ||
 	uil_module_hdr->header.b_tag != sym_k_module_entry)
-	return((ABObjPtr)NULL);
+	return((ABObjPtr)nullptr);
     else
 	module_node = (sym_module_entry_type *)uil_module_hdr;
 
@@ -440,7 +440,7 @@ sections_into_module(
 	if (next_node == (sym_entry_type *)nullptr ||
 	    next_node->header.b_tag != sym_k_section_entry)
 	{
-	    return((ABObjPtr)NULL);
+	    return((ABObjPtr)nullptr);
 	}
 	else
 	    section_node = (sym_section_entry_type *)next_node;
@@ -497,7 +497,7 @@ object_into_module(
     if (uil_section_entries == (sym_entry_type *)nullptr ||
 	uil_section_entries->header.b_tag != sym_k_section_entry)
     {
-	return((ABObjPtr)NULL);
+	return((ABObjPtr)nullptr);
     }
     else
 	section_node = (sym_section_entry_type *)uil_section_entries;
@@ -530,7 +530,7 @@ object_child_into_module(
 
     if (uil_section_entries == (sym_entry_type *)nullptr)
     {
-	return((ABObjPtr)NULL);
+	return((ABObjPtr)nullptr);
     }
 
     ret_val = ab_module;
@@ -550,7 +550,7 @@ object_child_into_module(
 	break;
       default:
 	obj_destroy(ab_module);
-	ret_val = (ABObjPtr)NULL;
+	ret_val = (ABObjPtr)nullptr;
     }
     return(ret_val);
 }
@@ -582,7 +582,7 @@ widget_into_module(
     if (ab_map_entry == (WidgetABObjMap *)nullptr)
 	return(nullptr);
 
-    if (ab_parent == (ABObj)NULL)
+    if (ab_parent == (ABObj)nullptr)
 	return(nullptr);
 
     ab_type = ab_map_entry->obj_type;
@@ -617,7 +617,7 @@ widget_into_module(
 		    uil_widget->az_callbacks) == nullptr)
 	{
 	    obj_destroy(ab_widget);
-	    return((ABObjPtr)NULL);
+	    return((ABObjPtr)nullptr);
 	}
 
     }
@@ -875,7 +875,7 @@ resource_value_for_uil_arg(
     sym_value_entry_type *resource_value =
 		(sym_value_entry_type *)uil_arg->az_arg_value;
 
-    XtPointer ret_val = (XtPointer)NULL;
+    XtPointer ret_val = (XtPointer)nullptr;
 
     *p_res_type = AB_ARG_VOID_PTR;
 
@@ -1297,7 +1297,7 @@ sym_stack_push(
      * Build new stack
      */
     new_stack = (UilSymStack)malloc(sizeof(UilSymStackStruct));
-    if (new_stack == (UilSymStack)NULL)
+    if (new_stack == (UilSymStack)nullptr)
     {
 	fprintf(stderr, "loaduil: malloc failed.\n");
 	exit(1);

@@ -2066,12 +2066,12 @@ create_conv(XLCd lcd, XlcConvMethods methods)
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
     if (conv == nullptr)
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
 
     conv->methods = (XlcConvMethods) Xmalloc(sizeof(XlcConvMethodsRec));
     if (conv->methods == nullptr){
 	close_converter(conv);
-        return (XlcConv) NULL;
+        return (XlcConv) nullptr;
     }
     *conv->methods = *methods;
     if (XLC_PUBLIC(lcd, is_state_depend))
@@ -2080,7 +2080,7 @@ create_conv(XLCd lcd, XlcConvMethods methods)
     conv->state = (XPointer) Xmalloc(sizeof(StateRec));
     if (conv->state == nullptr){
 	close_converter(conv);
-        return (XlcConv) NULL;
+        return (XlcConv) nullptr;
     }
     memset((char *) conv->state, 0, sizeof(StateRec));
 

@@ -69,33 +69,35 @@ analysis-depth notices and parse failures.
 
 A component is *audited* when a topic commit records a review of its complete
 input path, not when a compiler is quiet. Components marked "none recorded"
-have not had such a review. Fuzz targets exist for none of the components yet.
+have not had such a review. Ten libFuzzer targets under `cde/fuzz/` cover the
+highest-exposure network, session, window-property, database and help parsers
+and are replayed in CI via `python3 cde/fuzz/run-fuzz.py --all --replay`.
 
 | Component | Exposure | Prior hardening | Unique warnings | Defect-class | cppcheck errors | Fuzz targets |
 |---|---|---|---:|---:|---:|---|
-| `programs/dtappbuilder` | developer tool; mostly generated stubs | none recorded | 1,594 | 59 | 28 | none |
-| `programs/dtmail` | unprivileged mailer; set-group-id spool helper (`dtmailspool`); mail and MIME parsing | mail spool helper split from the mailer (2026-11-10), mailbox save and path handling, text made from a message, command-line and session input, ToolTalk request data, mail server clients, message/partial assembly, MIME and lock file text (2026-11-10) | 1,369 | 44 | 0 | none |
-| `programs/dtcm` | includes rpc.cmsd (RPC server run as root); calendar | rpc.cmsd request path (2026-11-04); signal handling, access checks, recurrence rules (2026-11-10) | 879 | 59 | 5 | none |
-| `programs/dtfile` | file operations; drag and drop | Trash, copy and transfer (2026-11-02, 2026-11-03) | 813 | 203 | 10 | none |
-| `programs/dthelp` | help compiler; SGML parser | none recorded | 644 | 64 | 4 | none |
-| `lib/DtSvc` | SPC protocol shared by dtspcd and its clients; data-type database | SPC wire layer and data-type lookup (Dts.c) (2026-11-04); data-type matching, database file reader, termios strings (2026-11-10); the rest not reviewed | 412 | 24 | 22 | none |
-| `programs/dtwm` | window manager; property and request readers | property and request readers (2026-11-02) | 410 | 22 | 42 | none |
-| `lib/tt` | ttsession and rpc.ttdbserverd (sockets, RPC) | ttsession request decoding, authentication levels, start environment; rpc.ttdbserverd request path (2026-11-04); environment of privileged processes, object property updates, notices (2026-11-10) | 394 | 242 | 1 | none |
-| `programs/dtsr` | local user program | damaged index (2026-11-10) | 370 | 3 | 0 | none |
+| `programs/dtappbuilder` | developer tool; mostly generated stubs | temporary files, checked allocations, browser null checks and codegen bounds (2026-11-12, 2026-11-14) | 1,594 | 59 | 28 | none |
+| `programs/dtmail` | unprivileged mailer; set-group-id spool helper (`dtmailspool`); mail and MIME parsing | mail spool helper split from the mailer (2026-11-10), mailbox save and path handling, text made from a message, command-line and session input, ToolTalk request data, mail server clients, message/partial assembly, MIME and lock file text (2026-11-10); signal handling, checked allocations and C++ allocator pairing (2026-11-13, 2026-11-14) | 1,369 | 44 | 0 | none |
+| `programs/dtcm` | includes rpc.cmsd (RPC server run as root); calendar | rpc.cmsd request path (2026-11-04); signal handling, access checks, recurrence rules (2026-11-10); `mkstemp` drop/load files, checked allocations, `XtNewString`/`XtFree` pairing and bounded string formatting (2026-11-12, 2026-11-14) | 879 | 59 | 5 | none |
+| `programs/dtfile` | file operations; drag and drop | Trash, copy and transfer (2026-11-02, 2026-11-03); `faccessat(AT_EACCESS)`, owner-before-mode attribute updates, signal dispositions and checked allocations (2026-11-13, 2026-11-14) | 813 | 203 | 10 | none |
+| `programs/dthelp` | help compiler; SGML parser | literal buffer bounds, checked allocations and `realloc` failure handling (2026-11-13, 2026-11-14) | 644 | 64 | 4 | none |
+| `lib/DtSvc` | SPC protocol shared by dtspcd and its clients; data-type database | SPC wire layer and data-type lookup (Dts.c) (2026-11-04); data-type matching, database file reader, termios strings (2026-11-10); `_DtSignal`, self-pipe `SIGCHLD`, `DtDbReader` and `DtsMM` cache bounds, checked allocations and bounded strings (2026-11-13, 2026-11-14) | 412 | 24 | 22 | `spc-proto`, `dtsvc-dbreader`, `dtsvc-mmcache` |
+| `programs/dtwm` | window manager; property and request readers | property and request readers (2026-11-02); `XtAppAddSignal` termination, session/resource parser bounds and checked allocations (2026-11-13, 2026-11-14) | 410 | 22 | 42 | `dtwm-property`, `dtwm-session` |
+| `lib/tt` | ttsession and rpc.ttdbserverd (sockets, RPC) | ttsession request decoding, authentication levels, start environment; rpc.ttdbserverd request path (2026-11-04); environment of privileged processes, object property updates, notices (2026-11-10); signal dispositions and `mini_isam` checked allocations (2026-11-13, 2026-11-14) | 394 | 242 | 1 | none |
+| `programs/dtsr` | local user program | damaged index (2026-11-10); async-signal-safe shutdown (2026-11-13) | 370 | 3 | 0 | none |
 | `programs/ttsnoop` | local user program | none recorded | 359 | 9 | 0 | none |
-| `programs/dtprintinfo` | local user program | none recorded | 345 | 20 | 0 | none |
-| `lib/DtSearch` | full-text search; vendored raima subtree excluded | damaged index (2026-11-10) | 285 | 12 | 5 | none |
-| `lib/DtTerm` | terminal emulation; escape-sequence parser | parser bounds (2026-11-02); setuid handling (2026-11-04) | 258 | 20 | 14 | none |
-| `lib/DtHelp` | help file and markup parsing | string handling (2026-11-02) | 248 | 73 | 34 | none |
-| `programs/dtstyle` | local user program | none recorded | 218 | 12 | 3 | none |
-| `lib/csa` | RPC interface of rpc.cmsd | request decoding used by rpc.cmsd (2026-11-04); limits and lists of the protocols (2026-11-10) | 189 | 8 | 0 | none |
-| `programs/dtlogin` | runs as root; XDMCP network service | environment and arguments (2026-11-02); XDMCP, authorization, signals (2026-11-04); chooser, displays, configuration files, expired passwords, session signals, greeter requests (2026-11-10) | 163 | 21 | 9 | none |
-| `programs/dtksh` | local user program | none recorded | 157 | 15 | 0 | none |
-| `programs/dtinfo` | information browser; C++ | none recorded | 154 | 30 | 7 | none |
-| `programs/dtsession` | session manager; screen lock checked through PAM; reads saved sessions; ICE and X clients | installed identity, screen lock, signals, session files and saves, client start, ICE authority, saved sessions and palettes, XSMP callbacks and client lifetimes, startup resources (2026-11-04) | 135 | 12 | 2 | none |
+| `programs/dtprintinfo` | local user program | `util/Privilege.h` privilege drop checks, checked allocations and C++ allocator pairing (2026-11-13, 2026-11-14) | 345 | 20 | 0 | none |
+| `lib/DtSearch` | full-text search; vendored raima subtree excluded | damaged index (2026-11-10); async-signal-safe `signal_abort` and checked allocations (2026-11-13, 2026-11-14) | 285 | 12 | 5 | none |
+| `lib/DtTerm` | terminal emulation; escape-sequence parser | parser bounds (2026-11-02); setuid handling (2026-11-04); `_DtSignal`, checked allocations and bounded string formatting (2026-11-14) | 258 | 20 | 14 | none |
+| `lib/DtHelp` | help file and markup parsing | string handling (2026-11-02); SDL parser bounds, stream EOF checks and `realloc` failure handling (2026-11-13, 2026-11-14) | 248 | 73 | 34 | `dthelp-sdl` |
+| `programs/dtstyle` | local user program | palette lookup null checks, `_DtSignal` and checked allocations (2026-11-13, 2026-11-14) | 218 | 12 | 3 | none |
+| `lib/csa` | RPC interface of rpc.cmsd | request decoding used by rpc.cmsd (2026-11-04); limits and lists of the protocols (2026-11-10); hash/name table checked allocations, ISO 8601 bounds and bounded strings (2026-11-13, 2026-11-14) | 189 | 8 | 0 | none |
+| `programs/dtlogin` | runs as root; XDMCP network service | environment and arguments (2026-11-02); XDMCP, authorization, signals (2026-11-04); chooser, displays, configuration files, expired passwords, session signals, greeter requests (2026-11-10); XDMCP forward port and `Xaccess` alias cycle bounds, `BoundedCall`, checked allocations and bounded strings (2026-11-13, 2026-11-14) | 163 | 21 | 9 | `dtlogin-xdmcp`, `dtlogin-xaccess` |
+| `programs/dtksh` | local user program | XDraw wrapper return values (2026-11-13) | 157 | 15 | 0 | none |
+| `programs/dtinfo` | information browser; C++ | `DtMmdb`/`dtinfo` `new[]`/`delete[]` and `malloc`/`free` pairing and checked allocations (2026-11-14) | 154 | 30 | 7 | none |
+| `programs/dtsession` | session manager; screen lock checked through PAM; reads saved sessions; ICE and X clients | installed identity, screen lock, signals, session files and saves, client start, ICE authority, saved sessions and palettes, XSMP callbacks and client lifetimes, startup resources (2026-11-04); `mkdtemp`, palette/client parser bounds, checked allocations and bounded strings (2026-11-12, 2026-11-14) | 135 | 12 | 2 | `dtsession-client`, `dtsession-palette` |
 | `programs/dtsearchpath` | dtappgather is always setuid root | none recorded | 46 | 0 | 0 | none |
-| `programs/dtspcd` | root daemon from inetd; network; parses requests before authentication | request handlers, registration and privilege drop (2026-11-04) | 6 | 3 | 1 | none |
-| `programs/dtexec` | launches user commands | discovery (2026-11-02) | 5 | 1 | 2 | none |
+| `programs/dtspcd` | root daemon from inetd; network; parses requests before authentication | request handlers, registration and privilege drop (2026-11-04); self-pipe signal loop, checked allocations and bounded strings (2026-11-13, 2026-11-14) | 6 | 3 | 1 | none |
+| `programs/dtexec` | launches user commands | discovery (2026-11-02); self-pipe signal loop (2026-11-13) | 5 | 1 | 2 | none |
 
 Components below 150 unique warnings are not listed; see the JSON record for
 all of them.
@@ -110,11 +112,10 @@ the generator.
 
 ## Known limits
 
-- The sanitized build compiles and links every program. Its documentation step
-  runs the `dtdocbook` information-library tools, which abort under
-  AddressSanitizer, so sanitizer lanes configure with `--disable-docs` until
-  that tool is fixed.
-- The check suite and the desktop smoke test have not yet been run under the
-  sanitizers; the baseline covers compilation and static analysis only.
+- The `sanitizers` CI job builds CK Core Motif and CK Core CDE with
+  `--enable-sanitizers` (AddressSanitizer and UndefinedBehaviorSanitizer) and
+  runs `make check`; the `fuzz-replay` CI job replays all 10 libFuzzer corpora
+  via `python3 cde/fuzz/run-fuzz.py --all --replay`.
+- The desktop smoke test has not yet been run under the sanitizers.
 - cppcheck ran with `--max-configs=1`, so code behind alternative `#ifdef`
   configurations is not analysed.

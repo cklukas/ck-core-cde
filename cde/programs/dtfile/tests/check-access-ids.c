@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     snprintf(missing, sizeof missing, "%s/access-ids-missing", argv[1]);
     unlink(missing);
     fp = fopen(file, "w");
-    if (fp == NULL)
+    if (fp == nullptr)
         return 2;
     fclose(fp);
     chmod(file, 0644);

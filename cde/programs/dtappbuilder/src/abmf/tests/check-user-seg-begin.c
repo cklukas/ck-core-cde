@@ -17,7 +17,7 @@ static long run(const char *content)
 {
     FILE *f = tmpfile();
     long r;
-    assert(f != NULL);
+    assert(f != nullptr);
     fputs(content, f);
     rewind(f);
     r = find_user_seg_begin(f);

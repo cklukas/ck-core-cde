@@ -252,7 +252,7 @@ ilImagePtr         pImage;
 
     pImage = (ilImagePtr)IL_MALLOC (sizeof (ilImageRec));
     if (!pImage)
-        return (ilImagePtr)NULL;                            /* EXIT */
+        return (ilImagePtr)nullptr;                            /* EXIT */
 
     pImage->des = *pDes;
     pImage->format = *pFormat;
@@ -427,13 +427,13 @@ ilPipePtr   pPipe;
 
     if (mustBeZero != 0) {
         context->error = IL_ERROR_PAR_NOT_ZERO;
-        return (ilPipe)NULL;
+        return (ilPipe)nullptr;
         }
 
     pPipe = (ilPipePtr)_ilCreateObject (context, IL_PIPE, ilDestroyPipeObject,
                                        sizeof (ilPipeRec));
     if (!pPipe)
-        return (ilPipe)NULL;
+        return (ilPipe)nullptr;
 
         /*  Declare pipe empty, set element and temp image lists to empty state.
             The rest of the pipe state must be set by ilAddPipeElement() on each element.
@@ -804,11 +804,11 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
     pPipe = (ilPipePtr)pipe;
     if (pPipe->o.p.objectType != IL_PIPE) {
         pPipe->o.p.context->error = IL_ERROR_OBJECT_TYPE;
-        return (ilPtr)NULL;                                 /* EXIT */
+        return (ilPtr)nullptr;                                 /* EXIT */
         }
     if (mustBeZero != 0) {
         ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_PAR_NOT_ZERO);
-        return (ilPtr)NULL;
+        return (ilPtr)nullptr;
         }
 
         /*  Validate elementType and pipe state: "empty" for producer, else "forming".
@@ -828,7 +828,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
         case IL_PRODUCER:
             if (pPipe->state != IL_PIPE_EMPTY) {
                 ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_PIPE_STATE);
-                return (ilPtr)NULL;
+                return (ilPtr)nullptr;
                 }
             newState = IL_PIPE_FORMING;
             break;
@@ -836,7 +836,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
         case IL_FILTER:
             if (pPipe->state != IL_PIPE_FORMING) {
                 ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_PIPE_STATE);
-                return (ilPtr)NULL;
+                return (ilPtr)nullptr;
                 }
             newState = IL_PIPE_FORMING;
             if (pSrcData && (pSrcData->minBufferHeight > 0))
@@ -854,7 +854,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
         case IL_CONSUMER:
             if (pPipe->state != IL_PIPE_FORMING) {
                 ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_PIPE_STATE);
-                return (ilPtr)NULL;
+                return (ilPtr)nullptr;
                 }
             newState = IL_PIPE_COMPLETE;
             if (pSrcData) {
@@ -881,16 +881,16 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
         case IL_HOOK:
             if ((pPipe->state == IL_PIPE_INVALID) || (pPipe->state == IL_PIPE_EXECUTING)) {
                 ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_PIPE_STATE);
-                return (ilPtr)NULL;
+                return (ilPtr)nullptr;
                 }
             if (ExecuteThree || ExecuteFour) {
                 ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_PAR_NOT_ZERO);
-                return (ilPtr)NULL;
+                return (ilPtr)nullptr;
                 }
             pElement = (ilElementPtr)IL_MALLOC_ZERO (sizeof(ilElementRec) + nBytesPrivate);
             if (!pElement) {
                 ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_MALLOC);
-                return (ilPtr)NULL;                                 /* EXIT */
+                return (ilPtr)nullptr;                                 /* EXIT */
                 }
             pElement->pPrev = pPipe->hookHead.pPrev;
             pElement->pNext = &pPipe->hookHead;
@@ -909,7 +909,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
 
         default:
             ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_ELEMENT_TYPE);
-            return (ilPtr)NULL;
+            return (ilPtr)nullptr;
             break;
         }   /* END switch elementType */
 
@@ -933,7 +933,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
                 constantStrip, pPipe->producerCode, 
                 &pPipe->image.info.stripHeight, &pPipe->image.info.constantStrip)) {
             ilDeclarePipeInvalid ((ilPipe)pPipe, pPipe->o.p.context->error);
-            return (ilPtr)NULL;
+            return (ilPtr)nullptr;
             }
         }
 
@@ -951,10 +951,10 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
     if (insertCopyFilter) {
         if (pPipe->image.des.compression == IL_UNCOMPRESSED) {
             if (!_ilInsertCopyFilter ((ilPipe)pPipe, pPipe->image.info.stripHeight))
-                return (ilPtr)NULL;
+                return (ilPtr)nullptr;
             }
         else if (!_ilInsertCompressedCopyFilter ((ilPipe)pPipe))
-            return (ilPtr)NULL;
+            return (ilPtr)nullptr;
         }
     else if ((elementType != IL_PRODUCER)
      && (pPipe->image.des.compression == IL_UNCOMPRESSED)
@@ -964,7 +964,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
                 constantStrip, IL_PIPE_NOT_IMAGE,
                 &pPipe->image.info.stripHeight, &pPipe->image.info.constantStrip)) {
                     ilDeclarePipeInvalid ((ilPipe)pPipe, pPipe->o.p.context->error);
-                    return (ilPtr)NULL;
+                    return (ilPtr)nullptr;
                     }
             }
 
@@ -972,7 +972,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
     pElement = (ilElementPtr)IL_MALLOC_ZERO (sizeof(ilElementRec) + nBytesPrivate);
     if (!pElement) {
         ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_MALLOC);
-        return (ilPtr)NULL;                                 /* EXIT */
+        return (ilPtr)nullptr;                                 /* EXIT */
         }
     pElement->pPrev = pPipe->elementHead.pPrev;
     pElement->pNext = &pPipe->elementHead;
@@ -1007,16 +1007,16 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
     if (elementType == IL_PRODUCER) {
         if (!pDstData || !pDstData->pDes || !pDstData->pFormat) {
             ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_PRODUCER_DATA);
-            return (ilPtr)NULL;                             /* EXIT */
+            return (ilPtr)nullptr;                             /* EXIT */
             }
         if ((pDstData->width <= 0) || (pDstData->height <= 0)) {
             ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_ZERO_SIZE_IMAGE);
-            return (ilPtr)NULL;                             /* EXIT */
+            return (ilPtr)nullptr;                             /* EXIT */
             }
         error = _ilValidateDesFormat (TRUE, pDstData->pDes, pDstData->pFormat);
         if (error) {
             ilDeclarePipeInvalid ((ilPipe)pPipe, error);
-            return (ilPtr)NULL;                            /* EXIT */
+            return (ilPtr)nullptr;                            /* EXIT */
             }
 
         pPipe->producerCode = IL_PIPE_NOT_IMAGE;    /* not a read from a (feed) image */
@@ -1062,7 +1062,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
                                        &pPipe->image.format);
             if (!pImage) {
                 ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_MALLOC);
-                return (ilPtr)NULL;                         /* EXIT */
+                return (ilPtr)nullptr;                         /* EXIT */
                 }
             pElement->exec.pSrcImage = &pImage->i;
             if (pSrcData && (pSrcData->minBufferHeight > srcBufferHeight))
@@ -1096,7 +1096,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
             const ilImageDes      *pDes;
             if ((pDstData->width <= 0) || (pDstData->height <= 0)) {
                 ilDeclarePipeInvalid ((ilPipe)pPipe, IL_ERROR_ZERO_SIZE_IMAGE);
-                return (ilPtr)NULL;                         /* EXIT */
+                return (ilPtr)nullptr;                         /* EXIT */
                 }
             pPipe->image.info.width = pDstData->width;
             pPipe->image.info.height = pDstData->height;
@@ -1120,7 +1120,7 @@ ilBool                  constantStrip, haveConsumerImage, insertCopyFilter;
                                              &pPipe->image.des, &pPipe->image.format);
                 if (error) {
                     ilDeclarePipeInvalid ((ilPipe)pPipe, error);
-                    return (ilPtr)NULL;                            /* EXIT */
+                    return (ilPtr)nullptr;                            /* EXIT */
                     }
                 }
             ilChangeStripHeight (pPipe);        /* reset (recommended) strip height */

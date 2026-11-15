@@ -348,7 +348,7 @@ caddr_t         UxGetContext( Widget wgt )
         caddr_t         context;
 
         if ( wgt == nullptr )
-                return ( (caddr_t) NULL );
+                return ( (caddr_t) nullptr );
 
         status = XFindContext( XtDisplay( UxTopLevel ),
                                (Window) wgt,
@@ -356,7 +356,7 @@ caddr_t         UxGetContext( Widget wgt )
                                &context );
 
         if ( status != 0 )
-                return  ( (caddr_t) NULL );
+                return  ( (caddr_t) nullptr );
 
         return ( context );
 }

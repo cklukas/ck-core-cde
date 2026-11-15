@@ -341,7 +341,7 @@ ShowChangeDirDialog(
 
    file_mgr_rec->menuStates &= ~CHANGEDIR;
 
-   _DtShowDialog (file_mgr_rec->shell, (Widget)NULL, (XtPointer)file_mgr_rec,
+   _DtShowDialog (file_mgr_rec->shell, (Widget)nullptr, (XtPointer)file_mgr_rec,
                file_mgr_data->change_dir,
 	       CurrentDirChange, (XtPointer)file_mgr_rec,
                CurrentDirClose, (XtPointer)file_mgr_rec, (char *)nullptr,

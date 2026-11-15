@@ -769,7 +769,7 @@ ShelfUpdateSlotWidgetWithData(
       XtVaSetValues(item,
                     XmNstring, label,
                     XmNalignment, icon_alignment,
-                    XmNimageName, (String)NULL,
+                    XmNimageName, (String)nullptr,
                     nullptr);
       XmStringFree(label);
       return;
@@ -791,7 +791,7 @@ ShelfUpdateSlotWidgetWithData(
       XtVaSetValues(item,
                     XmNstring, label,
                     XmNalignment, icon_alignment,
-                    XmNimageName, (String)NULL,
+                    XmNimageName, (String)nullptr,
                     nullptr);
       XmStringFree(label);
       return;
@@ -1338,7 +1338,7 @@ static DialogResource resources[] =
       (XtPointer) RANDOM_OFF, RandomToString },
 
    { "host", XmRString, sizeof(String),
-      XtOffset(FileMgrDataPtr, host), (XtPointer) NULL, _DtStringToString },
+      XtOffset(FileMgrDataPtr, host), (XtPointer) nullptr, _DtStringToString },
 
    { "current_directory", XmRString, sizeof(String),
       XtOffset(FileMgrDataPtr, current_directory),
@@ -1346,23 +1346,23 @@ static DialogResource resources[] =
 
    { "branch_list", BRANCH_LIST, sizeof(XtPointer),
       XtOffset(FileMgrDataPtr, branch_list),
-      (XtPointer) NULL, BranchListToString },
+      (XtPointer) nullptr, BranchListToString },
 
    { "restricted_directory", XmRString, sizeof(String),
       XtOffset(FileMgrDataPtr, restricted_directory),
-      (XtPointer) NULL, _DtStringToString },
+      (XtPointer) nullptr, _DtStringToString },
 
    { "title", XmRString, sizeof(String),
       XtOffset(FileMgrDataPtr, title),
-      (XtPointer) NULL, _DtStringToString },
+      (XtPointer) nullptr, _DtStringToString },
 
    { "helpVol", XmRString, sizeof(String),
       XtOffset(FileMgrDataPtr, helpVol),
-      (XtPointer) NULL, _DtStringToString },
+      (XtPointer) nullptr, _DtStringToString },
 
    { "selection_list", SELECTION_LIST, sizeof(XtPointer),
       XtOffset(FileMgrDataPtr, selection_list),
-      (XtPointer) NULL, SelectionListToString },
+      (XtPointer) nullptr, SelectionListToString },
 
    { "show_shelf", XmRBoolean, sizeof(Boolean),
       XtOffset(FileMgrDataPtr, show_shelf),
@@ -1933,10 +1933,10 @@ Create(
             go anywhere above their restricted directory */
          XtAddCallback (file_mgr_rec->current_directory_text,
                         XmNmodifyVerifyCallback, TextChange,
-                        (XtPointer)NULL );
+                        (XtPointer)nullptr );
          XtAddCallback (file_mgr_rec->current_directory_text,
                         XmNmotionVerifyCallback, TextChange,
-                        (XtPointer)NULL );
+                        (XtPointer)nullptr );
       }
 #endif
    }
@@ -2962,8 +2962,8 @@ SetValues(
    if (((DialogInstanceData *)
         (file_mgr_data->change_dir->data))->displayed == True)
    {
-      ShowChangeDirDialog ((Widget)NULL, (XtPointer)file_mgr_rec,
-			   (XtPointer)NULL);
+      ShowChangeDirDialog ((Widget)nullptr, (XtPointer)file_mgr_rec,
+			   (XtPointer)nullptr);
    }
    else
       file_mgr_rec->menuStates |= CHANGEDIR;
@@ -2972,8 +2972,8 @@ SetValues(
    if (((DialogInstanceData *)
         (file_mgr_data->preferences->data))->displayed == True)
    {
-      ShowPreferencesDialog ((Widget)NULL, (XtPointer)file_mgr_rec,
-			     (XtPointer)NULL);
+      ShowPreferencesDialog ((Widget)nullptr, (XtPointer)file_mgr_rec,
+			     (XtPointer)nullptr);
    }
    else
       file_mgr_rec->menuStates |= PREFERENCES;
@@ -2981,7 +2981,7 @@ SetValues(
    if (((DialogInstanceData *)
         (file_mgr_data->find->data))->displayed == True)
    {
-      ShowFindDialog ((Widget)NULL, (XtPointer)file_mgr_rec, (XtPointer)NULL);
+      ShowFindDialog ((Widget)nullptr, (XtPointer)file_mgr_rec, (XtPointer)nullptr);
    }
    else
       file_mgr_rec->menuStates |= FIND;
@@ -2990,7 +2990,7 @@ SetValues(
    if (((DialogInstanceData *)
         (file_mgr_data->filter_edit->data))->displayed == True)
    {
-      ShowFilterDialog ((Widget)NULL, (XtPointer)file_mgr_rec, (XtPointer)NULL);
+      ShowFilterDialog ((Widget)nullptr, (XtPointer)file_mgr_rec, (XtPointer)nullptr);
    }
    else
       file_mgr_rec->menuStates |= FILTER;
@@ -4126,7 +4126,7 @@ ShelfOpenNewView(FileMgrData *file_mgr_data, const char *path,
    {
       GetNewView((char *)target_host, (char *)path, nullptr, nullptr, 0);
    }
-   initiating_view = (XtPointer) NULL;
+   initiating_view = (XtPointer) nullptr;
 }
 
 static void
@@ -6327,7 +6327,7 @@ ShelfRebuild(
       label = XmStringCreateLocalized("");
       n = 0;
       XtSetArg (args[n], XmNstring, label);                 n++;
-      XtSetArg (args[n], XmNimageName, (String)NULL);       n++;
+      XtSetArg (args[n], XmNimageName, (String)nullptr);       n++;
       XtSetArg (args[n], XmNmaxPixmapWidth, shelf_icon_px); n++;
       XtSetArg (args[n], XmNmaxPixmapHeight, shelf_icon_px); n++;
       XtSetArg (args[n], XmNunderline, False);              n++;
@@ -9236,7 +9236,7 @@ RemoveIconInWorkspace(
         && strcmp( workspaceName, desktopWin->workspace_name ) == 0 )
     {
       RemoveDT( desktopWin->shell, (XtPointer) desktopWin,
-                (XtPointer)NULL );
+                (XtPointer)nullptr );
 
     }
   }
@@ -10172,7 +10172,7 @@ DoTheMove(
                    if (strcmp(workspace_name, desktopWin->workspace_name) == 0)
                    {
                      RemoveDT (desktopWin->shell, (XtPointer) desktopWin,
-                               (XtPointer)NULL);
+                               (XtPointer)nullptr);
                      XtFree(workspace_name);
                      workspace_name = nullptr;
                      break;

@@ -132,7 +132,7 @@ SaveMain(
     unsigned long leftover;
     WM_STATE * wm_state;
 
-    if(pPad->mainWindow != (Widget)NULL) 
+    if(pPad->mainWindow != (Widget)nullptr) 
     {
         XmVendorShellExtObject vendorExt;
         XmWidgetExtData        extData;

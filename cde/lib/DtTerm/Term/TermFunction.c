@@ -574,7 +574,7 @@ _DtTermFuncHardReset(Widget w, int count, FunctionSource functionSource)
     tpd->autoLineFeed=False ;
     vtw->term.jumpScroll = True ;
     /* auto key repeat is X server issue - do nothing here */
-    _DtTermFuncClearBuffer(w, 0, (FunctionSource) NULL ) ;
+    _DtTermFuncClearBuffer(w, 0, (FunctionSource) 0 ) ;
     _DtTermFunctionKeyClear(w) ;
 
     (void) _DtTermPrimSetCursorVisible(w, True);

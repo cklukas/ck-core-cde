@@ -540,7 +540,7 @@ ilPtr                   pCompData;
         if (!pCompData)
             return ilDeclarePipeInvalid (pipe, IL_ERROR_MALLOC);
         }
-    else pCompData = (ilPtr)NULL;
+    else pCompData = (ilPtr)nullptr;
 
         /*  Add a producer pipe element: output data is defined in *pFileImage. */
     dstData.producerObject = (ilObject)fileImage;

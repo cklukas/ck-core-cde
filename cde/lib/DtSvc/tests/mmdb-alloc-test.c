@@ -74,11 +74,12 @@ static DtShmProtoInttab _DtShmProtoInitInttab(int n)
     (void)n;
     return calloc(1, sizeof(Table));
 }
-static void _DtShmProtoAddInttab(DtShmProtoInttab t, int boson, int value)
+static int _DtShmProtoAddInttab(DtShmProtoInttab t, int boson, int value)
 {
     assert(t->n < 64);
     t->pairs[t->n].boson = boson;
     t->pairs[t->n++].value = value;
+    return 0;
 }
 static int _DtShmProtoSizeInttab(DtShmProtoInttab t) { return t->n * 2 * sizeof(int); }
 static void _DtShmProtoCopyInttab(DtShmProtoInttab t, void *space) { memcpy(space, t->pairs, t->n * sizeof(Pair)); }

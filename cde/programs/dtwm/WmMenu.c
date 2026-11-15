@@ -399,7 +399,7 @@ DuplicateMenuItems (MenuItem *menuItems)
 	}
 	
 	newMenuItem->labelType = curMenuItem->labelType;
-	if (curMenuItem->label != (String) NULL)
+	if (curMenuItem->label != (String) nullptr)
 	  newMenuItem->label = XtNewString(curMenuItem->label);
 	else
 	  newMenuItem->label = nullptr;
@@ -407,7 +407,7 @@ DuplicateMenuItems (MenuItem *menuItems)
 	newMenuItem->mnemonic = curMenuItem->mnemonic;
 	newMenuItem->accelState = curMenuItem->accelState;
 	newMenuItem->accelKeyCode = curMenuItem->accelKeyCode;
-	if (curMenuItem->accelText != (String) NULL)
+	if (curMenuItem->accelText != (String) nullptr)
 	  newMenuItem->accelText = XtNewString(curMenuItem->accelText);
 	else
 	  newMenuItem->accelText = nullptr;
@@ -427,7 +427,7 @@ DuplicateMenuItems (MenuItem *menuItems)
 	    || (curMenuItem->wmFunction == F_Action)
 	    )
 	  newMenuItem->wmFuncArgs = curMenuItem->wmFuncArgs;
-	else if (curMenuItem->wmFuncArgs != (String) NULL)
+	else if (curMenuItem->wmFuncArgs != (String) nullptr)
 	  newMenuItem->wmFuncArgs = XtNewString(curMenuItem->wmFuncArgs);
 	else
 	  newMenuItem->wmFuncArgs = nullptr;
@@ -486,7 +486,7 @@ DuplicateMenuSpec (MenuSpec *menuSpec)
     }
     newMenuSpec->name = XtNewString(menuSpec->name);
     newMenuSpec->currentContext = menuSpec->currentContext;
-    newMenuSpec->menuWidget = (Widget) NULL;
+    newMenuSpec->menuWidget = (Widget) nullptr;
     newMenuSpec->whichButton = menuSpec->whichButton;
     newMenuSpec->height = menuSpec->height;
     newMenuSpec->menuItems = DuplicateMenuItems(menuSpec->menuItems);
@@ -980,7 +980,7 @@ Widget CreateMenuWidget (WmScreenData *pSD,
 	    {
 		children[n] =
 		  XmCreateSeparatorGadget (menuW, SEPARATOR_NAME, 
-					   (ArgList)NULL, 0);
+					   (ArgList)nullptr, 0);
 		fUseTitleSep = FALSE;
 	    }
 	} /* F_Separator */
@@ -1767,7 +1767,7 @@ void FreeCustomMenuSpec (MenuSpec *menuSpec)
      *                   not get called, leaving MWM in a failure state.
      */
      if (wmGD.menuActive == menuSpec)
-       UnmapCallback((Widget)NULL, (caddr_t)NULL, (caddr_t)NULL);
+       UnmapCallback((Widget)nullptr, (caddr_t)nullptr, (caddr_t)nullptr);
     /*
      * End fix for CR 5450
      */

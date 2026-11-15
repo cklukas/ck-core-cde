@@ -160,7 +160,7 @@ XtCallbackProc HelpMapCB(
     XtSetArg(args[1], XmNy,  bestY);
     XtSetValues(w, args, 2);
 
-    return((XtCallbackProc) NULL);
+    return((XtCallbackProc) nullptr);
 
 }
 

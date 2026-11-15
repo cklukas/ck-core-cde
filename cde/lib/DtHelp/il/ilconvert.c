@@ -107,7 +107,7 @@ ilError                     error;
         /*  Add a filter, from in *pCvtData.  Only the des and format may change;
             other info (width, stripHeight, etc.) stays the same.
         */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = pCvtData->pDstDes;
     dstData.pFormat = pCvtData->pDstFormat;
     dstData.width = pInfo->width;
@@ -156,7 +156,7 @@ ilError                     error;
         /*  Add a filter, from in *pData.  Only the format may change;
             other info (des, width, stripHeight, etc.) stays the same.
         */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = (ilImageDes *)nullptr;
     dstData.pFormat = pNewFormat;
     dstData.width = pInfo->width;

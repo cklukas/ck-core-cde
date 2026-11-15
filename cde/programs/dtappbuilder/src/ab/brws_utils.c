@@ -155,7 +155,7 @@ get_browser_for_win(
 	cur_browser = cur_browser->next;
     }
 
-    return ((ABBrowser)NULL);
+    return ((ABBrowser)nullptr);
 }
 
 BOOL
@@ -348,7 +348,7 @@ browser_get_elm_shown
 
     props = aob_browser_properties(b);
 
-    return(props ? props->elements_shown : (unsigned long)NULL);
+    return(props ? props->elements_shown : 0UL);
 }
 
 /*
@@ -1664,8 +1664,8 @@ brws_center_on_obj(
         BrowserUiObj		ui;
         DtbBrwsMainwindowInfo	instance;
 	VNode		detailed_node;
-	Widget		vert_sb = (Widget)NULL;
-	Widget		horiz_sb = (Widget)NULL;
+	Widget		vert_sb = (Widget)nullptr;
+	Widget		horiz_sb = (Widget)nullptr;
 	int		x, y, value, size, increment, page, 
 			vert_max, horiz_max,
 			vert_min, horiz_min;

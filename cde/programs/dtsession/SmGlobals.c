@@ -190,7 +190,7 @@ static XtResource sessionResources[]=
 {
    {SmNwmStartup, SmCwmStartup, XtRString, sizeof(String),
         XtOffset(SessionResourcesPtr, wmStartup),
-        XtRImmediate, (XtPointer) NULL},
+        XtRImmediate, (XtPointer) nullptr},
    {SmNquerySettings, SmCquerySettings, XtRBoolean, sizeof(Boolean),
         XtOffset(SessionResourcesPtr, querySettings),
         XtRImmediate, (XtPointer) False},
@@ -199,7 +199,7 @@ static XtResource sessionResources[]=
         XtRImmediate, (XtPointer) 10},
    {SmNsessionVersion, SmCsessionVersion, XtRString, sizeof(String),
         XtOffset(SessionResourcesPtr, sessionVersion),
-        XtRImmediate, (XtPointer) NULL},
+        XtRImmediate, (XtPointer) nullptr},
    {SmNdisplayResolution, SmCdisplayResolution, XtRInt, sizeof(int),
         XtOffset(SessionResourcesPtr, displayResolution),
         XtRImmediate, (XtPointer) 0},
@@ -229,7 +229,7 @@ static XtResource sessionResources[]=
         XtRImmediate, (XtPointer) DEFAULT_NUM_SESSIONS_BACKED_UP},
    {SmNignoreEnvironment, SmCignoreEnvironment, XtRString, sizeof(String),
         XtOffset(SessionResourcesPtr, ignoreEnvironment),
-        XtRImmediate, (XtPointer) NULL},
+        XtRImmediate, (XtPointer) nullptr},
 #if defined(USE_XINERAMA)	/* JET - Xinerama */
    {SmNxineramaPreferredScreen, SmCxineramaPreferredScreen, XtRInt, sizeof(int),
         XtOffset(SessionResourcesPtr, xineramaPreferredScreen),

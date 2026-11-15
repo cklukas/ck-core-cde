@@ -122,7 +122,7 @@ ilFileImagePtr pFileImage, pAltFileImage, pFileImageTemp;
 
         /*  Make the list empty and declare it invalid.
         */
-    pFile->pFileImageHead = pFile->pFileImageTail = (ilFileImagePtr)NULL;
+    pFile->pFileImageHead = pFile->pFileImageTail = (ilFileImagePtr)nullptr;
     pFile->haveImageList = FALSE;
 }
 
@@ -161,11 +161,11 @@ ilBool         bigEndian;
     pFileImage = (ilFileImagePtr)fileImage;
     if (mustBeZero != 0) {
         pFileImage->context->error = IL_ERROR_PAR_NOT_ZERO;
-        return (ilPtr)NULL;                                     /* EXIT */
+        return (ilPtr)nullptr;                                     /* EXIT */
         }
     if (nTagsInit <= 0) {
         pFileImage->context->error = IL_OK;
-        return (ilPtr)NULL;                                     /* no tags; EXIT */
+        return (ilPtr)nullptr;                                     /* no tags; EXIT */
         }
 
     pFile = (ilFilePtr)pFileImage->p.file;
@@ -174,7 +174,7 @@ ilBool         bigEndian;
         /*  Allocate space and read in all the file tags to "*pFileTags".
             Flip the bytes of number, type and length, but not the data/offset.
         */
-    pTagAlloc = (ilPtr)NULL;                    /* in case of fatal error */
+    pTagAlloc = (ilPtr)nullptr;                    /* in case of fatal error */
     readSize = pFileImage->tagCount * IL_TAG_SIZE;
     pFileTags = (ilTIFFTagPtr)IL_MALLOC (readSize);
     if (!pFileTags)
@@ -253,7 +253,7 @@ ilBool         bigEndian;
     if (mallocSize == 0) {
         IL_FREE (pFileTags);
         pFileImage->context->error = IL_OK;
-        return (ilPtr)NULL;                                     /* EXIT */
+        return (ilPtr)nullptr;                                     /* EXIT */
         }
     pTagAlloc = (ilPtr)malloc (mallocSize);     /* caller uses free() to free this */
     if (!pTagAlloc)
@@ -274,7 +274,7 @@ ilBool         bigEndian;
             pTagData = (ilPtr)pTag + sizeof(ilFileTag);
 
             if (nItems == 0) {
-                pTag->pItems = (ilPtr)NULL;
+                pTag->pItems = (ilPtr)nullptr;
                 pTag = (ilFileTag *)pTagData;   /* point pTag to spot for next tag */
                 }
             else {
@@ -359,7 +359,7 @@ RFTFatalError:
     if (pTagAlloc)
         free (pTagAlloc);
     pFileImage->context->error = error;
-    return (ilPtr)NULL;                                         /* EXIT */
+    return (ilPtr)nullptr;                                         /* EXIT */
 }
 
 
@@ -376,7 +376,7 @@ static void ilAddImageToList (
     )
 {
     pFileImage->p.pNext = pFileImage->p.pPrev = 
-        pFileImage->p.pChild = pFileImage->p.pMask = (ilFileImage)NULL;
+        pFileImage->p.pChild = pFileImage->p.pMask = (ilFileImage)nullptr;
 
     switch (pFileImage->imageType) {
       case childImage:
@@ -404,7 +404,7 @@ static void ilAddImageToList (
             pPrevFileImage = pFile->pFileImageHead;
             if (!pPrevFileImage || (pFileImage->p.page <= pPrevFileImage->p.page)) {
                 pFileImage->p.pNext = (ilFileImage)pPrevFileImage;  /* add to front */
-                pFileImage->p.pPrev = (ilFileImage)NULL;
+                pFileImage->p.pPrev = (ilFileImage)nullptr;
                 pFile->pFileImageHead = pFileImage;
                 }
             else {      /* Add after pPrevFileImage w/ highest page # <= image's page # */
@@ -999,7 +999,7 @@ ilBool         bigEndian;
     pFile = (ilFilePtr)file;
     if (mustBeZero != 0) {
         pFile->o.p.context->error = IL_ERROR_PAR_NOT_ZERO;
-        return (ilFileImage)NULL;                               /* EXIT */
+        return (ilFileImage)nullptr;                               /* EXIT */
         }
     if (pFile->haveImageList) {
         pFile->o.p.context->error = IL_OK;
@@ -1021,7 +1021,7 @@ ilBool         bigEndian;
     if (fseek (pFile->stream, pFile->offset, 0)) {
 #endif /* DTLIB */
         pFile->o.p.context->error = IL_ERROR_FILE_IO;
-        return (ilFileImage)NULL;
+        return (ilFileImage)nullptr;
         }
 #ifdef DTLIB
     /* Used when this module is compiled by the DtHelp library build */
@@ -1030,7 +1030,7 @@ ilBool         bigEndian;
     if (!fread ((char *)&header, sizeof (header), 1, pFile->stream)) {
 #endif /* DTLIB */
         pFile->o.p.context->error = IL_ERROR_FILE_IO;
-        return (ilFileImage)NULL;
+        return (ilFileImage)nullptr;
         }
     IL_FLIP_LONG (pFile->bigEndian, header.IFDHeadOffset, IFDOffset);
 
@@ -1038,7 +1038,7 @@ ilBool         bigEndian;
     pFile->IFDTailPtrOffset = 4;            /* point to first IFD ptr in header */
     imageSequenceNumber = 0;
     bigEndian = pFile->bigEndian;
-    pPrevFileImage = (ilFileImagePtr)NULL;
+    pPrevFileImage = (ilFileImagePtr)nullptr;
 
         /*  Overview: read the tag count, allocate room for tags (pBeginTagBuffer) and
             read the unflipped tags into it.  Allocate space for converted tags 
@@ -1096,7 +1096,7 @@ LFIFatalError:
     ilFreeFileList (pFile);
     pFile->o.p.context->error = error;
     pFile->o.p.context->errorInfo = imageSequenceNumber;
-    return (ilFileImage)NULL;
+    return (ilFileImage)nullptr;
 }
 
 
@@ -1123,7 +1123,7 @@ ilTIFFHeader            header;
 
     if (mustBeZero != 0) {
         context->error = IL_ERROR_PAR_NOT_ZERO;
-        return (ilPipe)NULL;
+        return (ilPipe)nullptr;
         }
 
         /*  Read what should be a TIFF file header at "offset" within "file".
@@ -1137,7 +1137,7 @@ ilTIFFHeader            header;
     if (fseek (stream, offset, 0)) {       /* nonzero means error for fseek */
 #endif /* DTLIB */
         context->error = IL_ERROR_FILE_IO;
-        return (ilFile)NULL;
+        return (ilFile)nullptr;
         }
 #ifdef DTLIB
     /* Used when this module is compiled by the DtHelp library build */
@@ -1146,7 +1146,7 @@ ilTIFFHeader            header;
     if (!fread ((char *)&header, sizeof (header), 1, stream)) {
 #endif /* DTLIB */
         context->error = IL_ERROR_FILE_IO;
-        return (ilFile)NULL;
+        return (ilFile)nullptr;
         }
     if ((header.byteOrder[0] == 'M') && (header.byteOrder[1] == 'M'))
         bigEndian = TRUE;
@@ -1154,12 +1154,12 @@ ilTIFFHeader            header;
         bigEndian = FALSE;
     else {
         context->error = IL_ERROR_FILE_NOT_TIFF;
-        return (ilFile)NULL;
+        return (ilFile)nullptr;
         }
     if (!(bigEndian && (header.version[0] == 0) && (header.version[1] == 42))
      && !(!bigEndian && (header.version[0] == 42) && (header.version[1] == 0))) {
         context->error = IL_ERROR_FILE_NOT_TIFF;
-        return (ilFile)NULL;
+        return (ilFile)nullptr;
         }
 
         /*  File seems to be a valid TIFF file.  Create an ilFileRec object, init it
@@ -1168,12 +1168,12 @@ ilTIFFHeader            header;
     pFile = (ilFilePtr)_ilCreateObject (context, IL_FILE, ilDestroyTIFFFileObject,
                                        sizeof(ilFileRec));
     if (!pFile)
-        return (ilFile)NULL;                        /* context->error already set */
+        return (ilFile)nullptr;                        /* context->error already set */
 
     pFile->stream = stream;
     pFile->offset = offset;
     pFile->bigEndian = bigEndian;
-    pFile->pFileImageHead = pFile->pFileImageTail = (ilFileImagePtr)NULL;
+    pFile->pFileImageHead = pFile->pFileImageTail = (ilFileImagePtr)nullptr;
     pFile->haveImageList = FALSE;
 
     context->error = IL_OK;

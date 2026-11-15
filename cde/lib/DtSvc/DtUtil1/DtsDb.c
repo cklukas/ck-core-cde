@@ -504,7 +504,7 @@ _DtDtsDbAddRecord(DtDtsDbDatabase *db)
 	DtDtsDbRecord	*newrec;
 	int		rec = db->recordCount;
 
-	db->compare = (_DtDtsDbRecordCompare)NULL;
+	db->compare = (_DtDtsDbRecordCompare)nullptr;
 	if(rec%PADMEM == 0)
 	{
 		newlist = (DtDtsDbRecord **)calloc(rec+PADMEM,

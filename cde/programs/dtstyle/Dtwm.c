@@ -1295,7 +1295,7 @@ ButtonCB(
       break;
     
   case HELP_BUTTON:
-    XtCallCallbacks(style.dtwmDialog, XmNhelpCallback, (XtPointer)NULL);
+    XtCallCallbacks(style.dtwmDialog, XmNhelpCallback, (XtPointer)nullptr);
     break;
     
   default:

@@ -327,7 +327,7 @@ print_indented(
         obj_obj = objxm_comp_get_subobj(root_obj,AB_CFG_OBJECT_OBJ);
 	if(obj_obj == obj) {
 	    child_obj=objxm_comp_get_subobj(root_obj,AB_CFG_PARENT_OBJ);
-	    if(child_obj != (ABObj)NULL) {
+	    if(child_obj != (ABObj)nullptr) {
 	        indent(fp,DBLSP);
 	        fprintf(fp,"XmNsubMenuId = %s ; \n",obj_get_name(child_obj));
 	    }
@@ -575,7 +575,7 @@ output_ui_arg(FILE *fp, ABObj obj, Arg *arg)
 	    	(char *) istr_string((ISTRING)arg->value));
 	    break;
 	case AB_ARG_WIDGET:		/* istring (object name, not widget) */
-	    if( (module = obj_get_module(obj)) == (ABObj)NULL) {
+	    if( (module = obj_get_module(obj)) == (ABObj)nullptr) {
 	       fprintf(fp,"!Couldn't get module for arg %s\n",arg->name);
 	       break;
 	    }
@@ -589,7 +589,7 @@ output_ui_arg(FILE *fp, ABObj obj, Arg *arg)
 	       fprintf(fp,"!Couldn't get attach obj for %s\n", arg->name);
 	       break;
 	    }
-	    if(attachObj != (ABObj)NULL) {
+	    if(attachObj != (ABObj)nullptr) {
 	        indent(fp,DBLSP);
 	        fprintf(fp,"XmN%s = %s ;\n",arg->name,
 	    	suffixed(obj_get_name(attachObj)));

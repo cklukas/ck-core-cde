@@ -1904,7 +1904,7 @@ activate_ui(Props_pu *p, PaneType item_no)
 {
   Arg args[10];
   int nargs;
-  Widget optMenu = (Widget)NULL;
+  Widget optMenu = (Widget)nullptr;
   WidgetList children;
   int nChildren;
 
@@ -1912,7 +1912,7 @@ activate_ui(Props_pu *p, PaneType item_no)
   XtSetArg(args[nargs], XmNsubMenuId, &optMenu); nargs++;
   XtGetValues(p->category_menu, args, nargs);
 
-  if (optMenu != (Widget)NULL)
+  if (optMenu != (Widget)nullptr)
   {
     nargs = 0;
     XtSetArg(args[nargs], XmNchildren, &children); nargs++;
@@ -1942,7 +1942,7 @@ show_ui(Props_pu *p, PaneType item_no)
 	c = p->cal;
 	if (p_flush_changes(c) == False)
 	{
-	  Widget optMenu = (Widget)NULL;
+	  Widget optMenu = (Widget)nullptr;
 	  WidgetList children;
 	  int nChildren;
 

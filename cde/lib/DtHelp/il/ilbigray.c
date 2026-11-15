@@ -449,7 +449,7 @@ ilImageDes              des;
 
         /*  Add a filter to do the scale, then init *pPriv.
         */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     des = *IL_DES_GRAY;
     des.nLevelsPerSample[0] = nGrayLevels;
     dstData.pDes = &des;
@@ -518,7 +518,7 @@ ilDstElementData        dstData;
 
         /*  Add a filter to do the scale, then init *pPriv. 
         */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = (ilImageDes *)nullptr;
     dstData.pFormat = IL_FORMAT_BIT;
     dstData.width = dstWidth;

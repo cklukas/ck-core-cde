@@ -67,7 +67,7 @@ _falGetLCValues(XLCd lcd, ...)
     _fallcVaToArgList(var, num_args, &args);
     va_end(var);
 
-    if (args == (XlcArgList) NULL)
+    if (args == (XlcArgList) nullptr)
 	return (char *) nullptr;
 
     ret = (*methods->get_values)(lcd, args, num_args);
@@ -93,13 +93,13 @@ _fallcCreateLC(char *name, XLCdMethods methods)
 
     lcd = (*pub_methods->pub.create)(name, methods);
     if (lcd == nullptr)
-	return (XLCd) NULL;
+	return (XLCd) nullptr;
 
     if (lcd->core->name == nullptr) {
 	lcd->core->name = (char*) Xmalloc(strlen(name) + 1);
 	if (lcd->core->name == nullptr) {
 	        _fallcDestroyLC(lcd);
-		return (XLCd) NULL;
+		return (XLCd) nullptr;
 	}
 
 	strcpy(lcd->core->name, name);
@@ -110,7 +110,7 @@ _fallcCreateLC(char *name, XLCdMethods methods)
 
     if ((*pub_methods->pub.initialize)(lcd) == False) {
 	    _fallcDestroyLC(lcd);
-	    return (XLCd) NULL;
+	    return (XLCd) nullptr;
     }
 
     return lcd;

@@ -318,7 +318,7 @@ createPulldown(Widget parent, char *name, Arg *arglist, int argcnt)
     Widget w;
 
     w = XmCreatePulldownMenu(parent, name, arglist, argcnt);
-    (void) XtAddCallback(w, XmNmapCallback, setContext, (XtPointer) NULL);
+    (void) XtAddCallback(w, XmNmapCallback, setContext, (XtPointer) nullptr);
     return(w);
 }
 

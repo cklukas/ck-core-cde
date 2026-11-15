@@ -480,7 +480,7 @@ void MakeScrolledWindow (WmWorkspaceData *pWS, IconBoxData *pIBD)
 					(ArgList)setArgs, i);
 
     XtAddCallback(pIBD->scrolledWidget, XmNtraverseObscuredCallback,
-		  IconScrollVisibleCallback, (XtPointer)NULL);
+		  IconScrollVisibleCallback, (XtPointer)nullptr);
 
     XtAddEventHandler(pIBD->scrolledWidget, 
 			StructureNotifyMask, 
@@ -1855,7 +1855,7 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
         iconHeight = ICON_HEIGHT(pCD) 
 		+ (2 * IB_MARGIN_HEIGHT);
 
-        pIconInfo = InsertIconInfo  (pWsc->pIconBox, pCD, (Widget) NULL);
+        pIconInfo = InsertIconInfo  (pWsc->pIconBox, pCD, (Widget) nullptr);
 
 	if (pIconInfo)
 	{
@@ -1916,25 +1916,25 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
 
 	    XtAddCallback (iconWidget, XmNactivateCallback, 
 			   IconActivateCallback,
-			   (XtPointer)NULL);
+			   (XtPointer)nullptr);
 
 	    XtAddEventHandler(iconWidget, 
 			      SELECT_BUTTON_MOTION_MASK, 
 			      False, 
 			      HandleIconBoxButtonMotion,
-			      (XtPointer)NULL);
+			      (XtPointer)nullptr);
 
 	    XtAddEventHandler(iconWidget, 
 			      DMANIP_BUTTON_MOTION_MASK, 
 			      False, 
 			      HandleIconBoxButtonMotion,
-			      (XtPointer)NULL);
+			      (XtPointer)nullptr);
 
             XtAddEventHandler(iconWidget,
 			      KeyPressMask,
 			      False,
 			      HandleIconBoxIconKeyPress,
-			      (XtPointer)NULL);
+			      (XtPointer)nullptr);
 
 	    
 	    
@@ -1944,7 +1944,7 @@ Boolean InsertIconIntoBox (IconBoxData *pIBD, ClientData *pCD)
 			      FocusChangeMask, 
 			      False, 
 			      ChangeActiveIconboxIconText,
-			      (XtPointer)NULL);
+			      (XtPointer)nullptr);
 
 		if (pCD->pSD->activeLabelParent != pCD->pSD->rootWindow)
 		{
@@ -3210,7 +3210,7 @@ void IconActivateCallback (Widget w, XtPointer client_data, XtPointer call_data)
     if (!(XFindContext (DISPLAY, theIcon,
 			wmGD.windowContextType, (caddr_t *)&pCD)))
     {
-	F_Restore_And_Raise ((String)NULL, pCD, (XEvent *)nullptr );
+	F_Restore_And_Raise ((String)nullptr, pCD, (XEvent *)nullptr );
 /*	F_Normalize_And_Raise ((String)NULL, pCD, (XEvent *)NULL );
 */    }
 

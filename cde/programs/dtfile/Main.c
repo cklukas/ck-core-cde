@@ -711,17 +711,17 @@ static XtResource resources[] =
 {
    {
      "noView", "NoView", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, no_view), XmRImmediate, (XtPointer) NULL,
+     XtOffset (ApplicationArgsPtr, no_view), XmRImmediate, (XtPointer) nullptr,
    },
 
    {
      "session", "Session", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, session), XmRImmediate, (XtPointer) NULL,
+     XtOffset (ApplicationArgsPtr, session), XmRImmediate, (XtPointer) nullptr,
    },
 
    {
      "folder", "Folder", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, directories), XmRImmediate, (XtPointer) NULL,
+     XtOffset (ApplicationArgsPtr, directories), XmRImmediate, (XtPointer) nullptr,
    },
 
    {
@@ -771,17 +771,17 @@ static XtResource resources[] =
 
    {
      "restricted", "Restricted", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, restricted), XmRImmediate, (XtPointer) NULL,
+     XtOffset (ApplicationArgsPtr, restricted), XmRImmediate, (XtPointer) nullptr,
    },
 
    {
      "title", "Title", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, title), XmRImmediate, (XtPointer)NULL,
+     XtOffset (ApplicationArgsPtr, title), XmRImmediate, (XtPointer)nullptr,
    },
 
    {
      "help_volume", "Help_volume", XmRString, sizeof (char *),
-     XtOffset (ApplicationArgsPtr, help_volume), XmRImmediate, (XtPointer)NULL,
+     XtOffset (ApplicationArgsPtr, help_volume), XmRImmediate, (XtPointer)nullptr,
    },
 
    {
@@ -1142,7 +1142,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
 #ifdef HAVE_EDITRES
     XtAddEventHandler(toplevel, 0, True,
                       _XEditResCheckMessages,
-                      (XtPointer) NULL);
+                      (XtPointer) nullptr);
 #endif
 
    /* Initialize BMenu button binding */

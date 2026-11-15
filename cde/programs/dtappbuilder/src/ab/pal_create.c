@@ -368,7 +368,7 @@ create_obj_action(
     Display       *dpy;
     char          *errmsg = nullptr;
     BOOL	  ModuleCreated = FALSE;
-    XmString	  xm_buf = (XmString) NULL;
+    XmString	  xm_buf = (XmString) nullptr;
 
     dpy = XtDisplay(widget);
 
@@ -860,12 +860,12 @@ locate_obj_parent(
 {
     ABObj		project = proj_get_project();
     ABObj		module  = proj_get_cur_module();
-    ABObj		obj_parent = (ABObj) NULL;
+    ABObj		obj_parent = (ABObj) nullptr;
     Display     	*dpy = (Display *)XtDisplay(widget);
     int         	w_x, w_y;
     DTB_MODAL_ANSWER	answer = DTB_ANSWER_NONE;
-    STRING		errmsg = (STRING) NULL;
-    STRING		i18n_msg = (STRING) NULL;
+    STRING		errmsg = (STRING) nullptr;
+    STRING		i18n_msg = (STRING) nullptr;
 
     *ModuleCreated = FALSE;
 
@@ -931,7 +931,7 @@ locate_obj_parent(
 				"There is already a Menubar for this window.");
 
 			    /* If we have an old buffer lying around, free it */
-			    if (errmsg != (STRING) NULL) 
+			    if (errmsg != (STRING) nullptr) 
 				util_free(errmsg);
 
 			    errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
@@ -948,7 +948,7 @@ locate_obj_parent(
 			"Menubars must be dropped on a Main Window.");
 
                 /* If we have an old buffer lying around, free it */
-                if (errmsg != (STRING) NULL)
+                if (errmsg != (STRING) nullptr)
                     util_free(errmsg);
 
                 errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
@@ -968,7 +968,7 @@ locate_obj_parent(
 		i18n_msg = CATGETS(Dtb_project_catd, 100, 12,
 			"Containers must be dropped on\na Main Window or Custom Dialog."); 
 		/* If we have an old buffer lying around, free it */     
-		if (errmsg != (STRING) NULL)
+		if (errmsg != (STRING) nullptr)
 		    util_free(errmsg);
  
 		errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
@@ -1202,7 +1202,7 @@ locate_obj_parent(
 
                     /* If we have an old buffer lying around, free it */
  
-                    if (errmsg != (STRING) NULL)
+                    if (errmsg != (STRING) nullptr)
                         util_free(errmsg);
   
                     errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
@@ -1237,7 +1237,7 @@ locate_obj_parent(
 
                 /* If we have an old buffer lying around, free it */
  
-                if (errmsg != (STRING) NULL)
+                if (errmsg != (STRING) nullptr)
                     util_free(errmsg);
   
                 errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);
@@ -1255,7 +1255,7 @@ locate_obj_parent(
                 i18n_msg = CATGETS(Dtb_project_catd, 100, 14,
 			"Controls must be dropped on\na Control Pane or Group."); 
                 /* If we have an old buffer lying around, free it */
-                if (errmsg != (STRING) NULL) 
+                if (errmsg != (STRING) nullptr) 
                     util_free(errmsg); 
   
                 errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1); 
@@ -1270,7 +1270,7 @@ locate_obj_parent(
 			"Unknown object type.");
 
             /* If we have an old buffer lying around, free it */
-            if (errmsg != (STRING) NULL)
+            if (errmsg != (STRING) nullptr)
                     util_free(errmsg);
 
             errmsg = (STRING) util_malloc(strlen(i18n_msg) + 1);

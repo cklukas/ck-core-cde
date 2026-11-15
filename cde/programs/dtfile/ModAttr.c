@@ -149,19 +149,19 @@ static DialogResource resources[] =
 {
    { "host", XmRString, sizeof(String), 
      XtOffset(ModAttrDataPtr, host),
-     (XtPointer) NULL, _DtStringToString },
+     (XtPointer) nullptr, _DtStringToString },
 
    { "directory", XmRString, sizeof(String), 
      XtOffset(ModAttrDataPtr, directory),
-     (XtPointer) NULL, _DtStringToString },
+     (XtPointer) nullptr, _DtStringToString },
 
    { "name", XmRString, sizeof(String), 
      XtOffset(ModAttrDataPtr, name), 
-     (XtPointer) NULL, _DtStringToString },
+     (XtPointer) nullptr, _DtStringToString },
 
    { "link_name", XmRString, sizeof(String), 
      XtOffset(ModAttrDataPtr, link_name), 
-     (XtPointer) NULL, _DtStringToString },
+     (XtPointer) nullptr, _DtStringToString },
 
    { "access", XmRInt, sizeof(int), 
      XtOffset(ModAttrDataPtr, accessBits),

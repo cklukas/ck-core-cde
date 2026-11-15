@@ -511,7 +511,7 @@ static Widget BuildMenus(
   c[0] = fileBtn1 =
 	   XmCreatePushButtonGadget(menupane1,"fileBtn1", args, n);
    
-  XtAddCallback(fileBtn1, XmNactivateCallback, CloseCB,(XtPointer) NULL);
+  XtAddCallback(fileBtn1, XmNactivateCallback, CloseCB,(XtPointer) nullptr);
    
 
   XmStringFree(accText);
@@ -670,7 +670,7 @@ static void ManageButtonsCB(
             
 
             XtAddCallback(quickWidget, DtNcloseCallback,
-                          CloseAndDestroyCB, (XtPointer)NULL);
+                          CloseAndDestroyCB, (XtPointer)nullptr);
 
             /* Add the popup position callback to our main help dialog */
             XtAddCallback (XtParent(quickWidget), XmNpopupCallback,
@@ -797,7 +797,7 @@ static void Control1ButtonsCB(
                                                    DtHELP_QUICK_MORE_BUTTON);
 
             XtAddCallback(moreButton, XmNactivateCallback,
-                 DisplayMoreCB, (XtPointer)NULL);
+                 DisplayMoreCB, (XtPointer)nullptr);
   
  
           }

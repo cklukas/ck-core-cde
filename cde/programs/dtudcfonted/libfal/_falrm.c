@@ -472,7 +472,7 @@ static XrmDatabase NewDatabase(void)
     db = (XrmDatabase) Xmalloc(sizeof(XrmHashBucketRec));
     if (db) {
 	_XCreateMutex(&db->linfo);
-	db->table = (NTable)NULL;
+	db->table = (NTable)nullptr;
 	db->methods = _falrmInitParseInfo(&db->mbstate);
 	if (!db->methods)
 	    db->methods = (XrmMethods)&mb_methods;
@@ -1529,7 +1529,7 @@ XrmDatabase falrmGetFileDatabase(char *filename)
     char *str;
 
     if (!(str = ReadInFile(filename)))
-	return (XrmDatabase)NULL;
+	return (XrmDatabase)nullptr;
 
     db = NewDatabase();
     _XLockMutex(&db->linfo);
@@ -1914,7 +1914,7 @@ void falPrintTable(NTable table, FILE *file)
     EClosureRec closure;
     XrmQuark	empty = NULLQUARK;
 
-    closure.db = (XrmDatabase)NULL;
+    closure.db = (XrmDatabase)nullptr;
     closure.proc = DumpEntry;
     closure.closure = (XPointer)file;
     closure.bindings = bindings;
@@ -2131,7 +2131,7 @@ Bool falrmQGetSearchList(
 	}
 	_XUnlockMutex(&db->linfo);
     }
-    closure.list[closure.idx + 1] = (LTable)NULL;
+    closure.list[closure.idx + 1] = (LTable)nullptr;
     return True;
 }
 
@@ -2176,7 +2176,7 @@ Bool falrmQGetSearchResource(
 	flags |= 1;
     if (!flags) {
 	/* neither name nor class has ever been used to name a resource */
-	table = (LTable)NULL;
+	table = (LTable)nullptr;
     } else if (flags == 3) {
 	/* both name and class */
 	while (table = *list++) {
@@ -2215,7 +2215,7 @@ Bool falrmQGetSearchResource(
 	return True;
     }
     *pType = NULLQUARK;
-    pValue->addr = (XPointer)NULL;
+    pValue->addr = (XPointer)nullptr;
     pValue->size = 0;
     return False;
 
@@ -2406,7 +2406,7 @@ Bool falrmQGetResource(
 	_XUnlockMutex(&db->linfo);
     }
     *pType = NULLQUARK;
-    pValue->addr = (XPointer)NULL;
+    pValue->addr = (XPointer)nullptr;
     pValue->size = 0;
     return False;
 }

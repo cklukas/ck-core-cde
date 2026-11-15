@@ -1,3 +1,35 @@
+2026-11-15
+- C23 null pointer constants in pointer casts and integer resource values.
+  The remaining `NULL` occurrences across 301 C sources use `nullptr` for
+  pointer casts and initializers (such as `(String)nullptr`, `(char *)nullptr`,
+  and widget class method tables) and `None`, `NoSymbol`, or `0` where the
+  target type is an X11 resource ID (`Window`, `Pixmap`, `Atom`, `Cursor`,
+  `Font`, `Colormap`, `Drawable`), `KeySym`, or integer `XtArgVal` resource.
+  The standalone test runners (`check-addtores-alloc.py`, `check-mmdb-alloc.py`,
+  `check-name-table-alloc.py`, `check-temp-file-create.py`,
+  `check-trash-metadata.py`, `check-realloc-failures.py`,
+  `check-xaccess-alias-cycle.py`) and `cde/fuzz/run-fuzz.py` match the updated
+  function signatures and detect Homebrew X11 headers and libraries on macOS
+  when `/opt/X11` is absent or inaccessible.
+
+2026-11-14
+- Bounded string formatting and copying in privileged daemons and core
+  libraries. Unbounded `sprintf()`, `strcpy()` and `strcat()` calls are
+  replaced with `snprintf()`, `strlcpy()`, `strlcat()` or exact-length heap
+  buffers across `dtlogin`, `dtspcd`, `DtSvc` (`DtEncap`, `DtUtil1`,
+  `DtUtil2`), `libcsa`, `dtsession`, `dtcm` (`rpc.cmsd`), and `DtTerm`.
+- Checked heap allocations and C++ allocator pairing across libraries and
+  desktop programs. Unchecked `malloc()`, `calloc()`, `realloc()` and
+  `strdup()` calls now check for allocation failure and release partial state
+  across `DtSvc`, `DtHelp`, `DtTerm`, `DtWidget`, `DtSearch` (including
+  `raima`), `DtPrint`, `DtMmdb`, `libcsa`, `libtt` (including `mini_isam`),
+  `libpam`, `tradcpp`, `dtfile`, `dtwm`, `dtcm`, `dtmail`, `dtstyle`,
+  `dtprintinfo`, `dthelp`, `dtdocbook`, `dtinfo`, `dtcreate`, and
+  `dtappbuilder`. Mismatched `new[]`/`delete`, `malloc()`/`delete` and
+  `new`/`free()` pairs in `DtMmdb`, `dtdocbook`, `dtinfo`, `dtmail`, and
+  `dtprintinfo`, and `strdup()`/`XtFree()` pairs in the `dtcm` editor, now use
+  matching allocators and deallocators.
+
 2026-11-14
 - Signal dispositions. The remaining `signal()` calls of DtTerm, dtaction,
   cmsd, dtfile, dtimsstart, dtlogin, dtstyle and the font editor use

@@ -399,7 +399,7 @@ ilSrcElementData        srcData;
             function ilCopyImageExecute() does all necessary setup.  Specify src
             stripHeight of whole image, to do whole copy in one strip.
         */
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.stripHeight = height;
     srcData.constantStrip = FALSE;
     srcData.minBufferHeight = 0;
@@ -442,7 +442,7 @@ ilSrcElementData        srcData;
 ilThrottlePrivPtr  pPriv = nullptr;
 
     ilGetPipeInfo (pipe, FALSE, &info, (ilImageDes *)nullptr, (ilImageFormat *)nullptr);
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.stripHeight = info.stripHeight;
     srcData.constantStrip = FALSE;
     srcData.minBufferHeight = 0;

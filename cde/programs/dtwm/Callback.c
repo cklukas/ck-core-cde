@@ -865,7 +865,7 @@ SwitchButtonCB (Widget    w,
          XtSetArg (al[0], XmNuserData, &edit_switch_button);
          XtGetValues (box_data->switch_edit, al, 1);
          SwitchRenameCB (box_data->switch_edit, 
-                         (XtPointer) edit_switch_button, (XtPointer) NULL);
+                         (XtPointer) edit_switch_button, (XtPointer) nullptr);
 
          XmProcessTraversal (w, XmTRAVERSE_CURRENT);
       }
@@ -1407,7 +1407,7 @@ PushCB (Widget    w,
             XtSetArg (al[0], XmNuserData, &switch_button);
             XtGetValues (panel.box_data[i]->switch_edit, al, 1);
             SwitchRenameCB (panel.box_data[i]->switch_edit, 
-	                    (XtPointer) switch_button, (XtPointer) NULL);
+	                    (XtPointer) switch_button, (XtPointer) nullptr);
             XmProcessTraversal (w, XmTRAVERSE_CURRENT);
             break;
          }
@@ -1482,7 +1482,7 @@ PushCB (Widget    w,
             if (first)
             {
                ArrowCB (main_control_data->arrow,
-			(XtPointer)main_control_data, (XtPointer)NULL);
+			(XtPointer)main_control_data, (XtPointer)nullptr);
                first = False;
             }
             else
@@ -1752,7 +1752,7 @@ PushCB (Widget    w,
           (Boolean) (intptr_t) panel.element_values[PANEL_SUBPANEL_UNPOST].parsed_value &&
           subpanel_data->torn == False)
          ArrowCB (main_control_data->arrow,
-		  (XtPointer)main_control_data, (XtPointer)NULL);
+		  (XtPointer)main_control_data, (XtPointer)nullptr);
    }
 }
 
@@ -2604,7 +2604,7 @@ CustomizeDropCB (Widget    w,
 
    if (subpanel_data->torn == False)
       ArrowCB (main_control_data->arrow,
-	       (XtPointer)main_control_data, (XtPointer)NULL);
+	       (XtPointer)main_control_data, (XtPointer)nullptr);
 }
 
 

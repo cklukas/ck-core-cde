@@ -110,7 +110,7 @@ Pixmap MakeClientIconPixmap (
 	     &bitmapWidth, &bitmapHeight, &border, &depth))
     {
 	Warning (((char *)GETMESSAGE(38, 1, "Invalid icon bitmap")));
-	return ((Pixmap)NULL);
+	return (None);
     }
 
     if (ROOT_FOR_CLIENT(pCD) != root)
@@ -119,7 +119,7 @@ Pixmap MakeClientIconPixmap (
 	 * The bitmap was not made with usable parameters.
 	 */
 	Warning (((char *)GETMESSAGE(38, 9, "Icon bitmap cannot be used on this screen")));
-	return ((Pixmap)NULL);
+	return (None);
     }
 
     /*
@@ -222,7 +222,7 @@ Pixmap MakeNamedIconPixmap (ClientData *pCD, String iconName)
 			(sIconFileName == nullptr) ? iconName : sIconFileName);
 	   if (mask == XmUNSPECIFIED_PIXMAP) 
 	   {
-	       mask = (Pixmap) NULL;
+	       mask = None;
 	   }
 
 	   if (sIconFileName != nullptr)
@@ -254,14 +254,14 @@ Pixmap MakeNamedIconPixmap (ClientData *pCD, String iconName)
 
        if (sIconFileName != nullptr)
 	   XtFree (sIconFileName);
-	return ((Pixmap)NULL);
+	return (None);
     }
 
     /*
      * Color the bitmap, center it in a pixmap ....
      */
 
-    return (MakeCachedIconPixmap (pCD, bitmapIndex, (Pixmap)NULL));
+    return (MakeCachedIconPixmap (pCD, bitmapIndex, None));
 
 } /* END OF FUNCTION MakeNamedIconPixmap */
 
@@ -300,12 +300,12 @@ Pixmap MakeCachedIconPixmap (ClientData *pCD, int bitmapIndex, Pixmap mask)
 {
     BitmapCache  *bitmapc;
     PixmapCache  *pixmapc;
-    Pixmap        pixmap = (Pixmap)NULL;
+    Pixmap        pixmap = None;
     WmScreenData *pSD = PSD_FOR_CLIENT(pCD);
 
     if (bitmapIndex < 0)
     {
-	return ((Pixmap)NULL);
+	return (None);
     }
     bitmapc = &(pSD->bitmapCache[bitmapIndex]);
 
@@ -366,7 +366,7 @@ ScalePixmap(Display *display, Window root, Pixmap pixmap,
 
     if (!pixmap || scale <= 1 || width == 0 || height == 0)
     {
-        return (Pixmap)NULL;
+        return None;
     }
 
     scaledWidth = width * scale;
@@ -374,14 +374,14 @@ ScalePixmap(Display *display, Window root, Pixmap pixmap,
     scaledPixmap = XCreatePixmap(display, root, scaledWidth, scaledHeight, depth);
     if (!scaledPixmap)
     {
-        return (Pixmap)NULL;
+        return None;
     }
 
     image = XGetImage(display, pixmap, 0, 0, width, height, AllPlanes, ZPixmap);
     if (!image)
     {
         XFreePixmap(display, scaledPixmap);
-        return (Pixmap)NULL;
+        return None;
     }
 
     gcv.foreground = 0;
@@ -393,7 +393,7 @@ ScalePixmap(Display *display, Window root, Pixmap pixmap,
     {
         XDestroyImage(image);
         XFreePixmap(display, scaledPixmap);
-        return (Pixmap)NULL;
+        return None;
     }
 
     XFillRectangle(display, scaledPixmap, gc, 0, 0, scaledWidth, scaledHeight);
@@ -469,8 +469,8 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
     static RList *top_rects = nullptr;
     static RList *bot_rects = nullptr;
     WmScreenData	*pSD;
-    Pixmap       scaledBitmap = (Pixmap)NULL;
-    Pixmap       scaledMask = (Pixmap)NULL;
+    Pixmap       scaledBitmap = None;
+    Pixmap       scaledMask = None;
     Pixmap       bitmapToUse = bitmap;
     Pixmap       maskToUse = mask;
     unsigned int iconWidth = width;
@@ -487,7 +487,7 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
     {
 	/* Out of memory! */
 	Warning (((char *)GETMESSAGE(38, 3, "Insufficient memory to bevel icon image")));
-	return ((Pixmap)NULL);
+	return (None);
     }
 
     if ((bot_rects == nullptr) &&
@@ -496,7 +496,7 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
     {
 	/* Out of memory! */
 	Warning (((char *)GETMESSAGE(38, 4, "Insufficient memory to bevel icon image")));
-	return ((Pixmap)NULL);
+	return (None);
     }
 
     if (pCD)
@@ -532,14 +532,14 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
 	(iconHeight < pSD->iconImageMinimum.height))
     {
 	/* bitmap is too small */
-	return ((Pixmap)NULL);
+	return (None);
     }
 
     if (scale > 1)
     {
 	Pixmap tmpBitmap = ScalePixmap(DISPLAY, pSD->rootWindow, bitmap,
 				       iconWidth, iconHeight, depth, scale);
-	Pixmap tmpMask = (Pixmap)NULL;
+	Pixmap tmpMask = None;
 
 	if (mask)
 	{
@@ -552,7 +552,7 @@ Pixmap MakeIconPixmap (ClientData *pCD, Pixmap bitmap, Pixmap mask, unsigned int
 	    scaledBitmap = tmpBitmap;
 	    scaledMask = tmpMask;
 	    bitmapToUse = scaledBitmap;
-	    maskToUse = mask ? scaledMask : (Pixmap)NULL;
+	    maskToUse = mask ? scaledMask : None;
 	    drawWidth = iconWidth * scale;
 	    drawHeight = iconHeight * scale;
 	    copyWidth = drawWidth;
@@ -823,13 +823,13 @@ Pixmap MakeCachedLabelPixmap (WmScreenData *pSD, Widget menuW, int bitmapIndex)
     int           i;
     Arg           args[5];
     Pixel         fg, bg;
-    Pixmap        pixmap = (Pixmap)NULL;
+    Pixmap        pixmap = None;
     GC            gc;
     XGCValues     gcv;
 
     if (bitmapIndex < 0)
     {
-	return ((Pixmap)NULL);
+	return (None);
     }
     bitmapc = &(pSD->bitmapCache[bitmapIndex]);
 
@@ -1143,7 +1143,7 @@ char *BitmapPathName (char *string)
 
 	subs[0].substitution = "";
 	if ((retname = XtFindFile(fileName, subs, 0,
-				  (XtFilePredicate) NULL)) != nullptr) {
+				  (XtFilePredicate) nullptr)) != nullptr) {
 	  XtFree(retname);
 	  return (fileName);
 	}
@@ -1160,7 +1160,7 @@ char *BitmapPathName (char *string)
 	subs[0].substitution = string;
 	retname = XtResolvePathname(DISPLAY, "bitmaps", nullptr, nullptr,
 				    search_path, subs, XtNumber(subs), 
-					(XtFilePredicate)NULL);
+					(XtFilePredicate)nullptr);
 	XtFree(search_path);
 
 	if (!retname)

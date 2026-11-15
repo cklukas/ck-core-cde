@@ -103,7 +103,7 @@ static long	*tabkuten = nullptr;
 static long	*tabksc5601 = nullptr;
 static long	*tabgb = nullptr;
 
-static UtfData utfdata_list = (UtfData)NULL;
+static UtfData utfdata_list = (UtfData)nullptr;
 
 static XlcUTFDataRec default_utf_data[] =
 {
@@ -693,7 +693,7 @@ utftocs(
     char 	*bufptr;
     int		utf_len, buf_len;
     long	l;
-    XlcCharSet	tmpcharset = (XlcCharSet)NULL;
+    XlcCharSet	tmpcharset = (XlcCharSet)nullptr;
     UtfData	pdata = utfdata_list;
 
     if (from == nullptr || *from == nullptr)
@@ -804,7 +804,7 @@ ucstocs(
     wchar_t	*ucsptr;
     char 	*bufptr;
     int		ucs_len, buf_len;
-    XlcCharSet	tmpcharset = (XlcCharSet)NULL;
+    XlcCharSet	tmpcharset = (XlcCharSet)nullptr;
     UtfData	pdata = utfdata_list;
 
     if (from == nullptr || *from == nullptr)
@@ -1343,8 +1343,8 @@ create_conv(XLCd lcd, XlcConvMethods methods)
     XlcConv conv;
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
-    if (conv == (XlcConv) NULL)
-	return (XlcConv) NULL;
+    if (conv == (XlcConv) nullptr)
+	return (XlcConv) nullptr;
 
     conv->methods = methods;
 
@@ -1426,12 +1426,12 @@ _fallcUtfLoader(char *name)
     XLCd lcd;
 
     lcd = _fallcCreateLC(name, _fallcGenericMethods);
-    if (lcd == (XLCd) NULL)
+    if (lcd == (XLCd) nullptr)
 	return lcd;
 
     if ((_fallcCompareISOLatin1(XLC_PUBLIC_PART(lcd)->codeset, "utf"))) {
 	_fallcDestroyLC(lcd);
-	return (XLCd) NULL;
+	return (XLCd) nullptr;
     }
 
     _fallcSetConverter(lcd, XlcNMultiByte, lcd, XlcNCharSet, open_mbstocs);

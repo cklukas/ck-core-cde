@@ -2511,7 +2511,7 @@ InitiateIconDrag(
 
    if(desktopRec)
    {
-      initiating_view = (XtPointer) NULL;
+      initiating_view = (XtPointer) nullptr;
       widget_dragged = dragIcon;
    }
    else
@@ -2617,7 +2617,7 @@ InputForGadget (
 
    if (!gadget  ||  !XtIsSensitive ((Widget)gadget))
    {
-      return ((XmGadget) NULL);
+      return ((XmGadget) nullptr);
    }
 
    return (gadget);
@@ -3585,7 +3585,7 @@ CreateNameChangeDialog (
       }
    }
 
-   XtAddCallback (text, XmNdestroyCallback, DestroyIconName, (XtPointer)NULL);
+   XtAddCallback (text, XmNdestroyCallback, DestroyIconName, (XtPointer)nullptr);
 
    /* set up translations in main edit widget */
    XtOverrideTranslations(text, trans_table);
@@ -5474,7 +5474,7 @@ DropOnRootCB (
             root_y = start_y;
           }
         }
-        initiating_view = (XtPointer)NULL;
+        initiating_view = (XtPointer)nullptr;
       }
 
       _DtFreeDroppedFileInfo(numFiles, file_set, host_set);

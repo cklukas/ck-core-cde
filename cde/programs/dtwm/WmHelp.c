@@ -197,7 +197,7 @@ static void wmDtErrorDialogHide(
 
 
 static  DisplayTopicInfo displayTopicInfo;
-static  Widget      versionWidget = (Widget)NULL;
+static  Widget      versionWidget = (Widget)nullptr;
 
 #define  PT_IN_CHILD(X, Y, CHILD) \
          (((X) >=  (CHILD)->core.x) && \
@@ -457,7 +457,7 @@ void WmDtStringHelpCB (Widget theWidget,
 
 /*    WmDtDisplayTopic(theRealWidget, NULL, theHelpString, */
     WmDtDisplayTopic(pSD->screenTopLevelW1, nullptr, theHelpString, 
-		      DtHELP_TYPE_DYNAMIC_STRING, (Widget) NULL, True,
+		      DtHELP_TYPE_DYNAMIC_STRING, (Widget) nullptr, True,
 		      nullptr, 0, nullptr, False, nullptr);
 
 
@@ -512,7 +512,7 @@ void WmDtDisplayTopicHelp (Widget widget,
 
     WmDtDisplayTopic(pSD->screenTopLevelW1, 
 		      helpVolume, locationID,
-		      DtHELP_TYPE_TOPIC, (Widget) NULL, True,
+		      DtHELP_TYPE_TOPIC, (Widget) nullptr, True,
 		      nullptr, 0, nullptr, False, nullptr);
 }
 
@@ -935,7 +935,7 @@ static void WmDtProcessLinkCB (
         WmDtDisplayTopic (XtParent(w), hyperData->helpVolume,
 			   hyperData->locationId,
 			   /* DtHELP_LINK_JUMP_NEW */ DtHELP_TYPE_TOPIC,
-			   (Widget)NULL, False,
+			   (Widget)nullptr, False,
 			   nullptr, 0, nullptr, True, nullptr);
 	break;
 	
@@ -1170,7 +1170,7 @@ WmDtHelpMode (void)
     switch (iStatus)
     {
 	case DtHELP_SELECT_VALID:
-	    if (selectedWidget != (Widget) NULL)
+	    if (selectedWidget != (Widget) nullptr)
 	    {
 		do
 		{
@@ -1178,7 +1178,7 @@ WmDtHelpMode (void)
 			    XmNhelpCallback) == XtCallbackHasSome))
 		    {
 			XtCallCallbacks(selectedWidget, XmNhelpCallback, 
-			    (XtPointer)NULL);
+			    (XtPointer)nullptr);
 			return(True);
 		    }
 		    else
@@ -2733,7 +2733,7 @@ wmDtErrorDialog(
     if (pSD->dtHelp.errorDialog == nullptr)
     {
 #ifdef NO_MESSAGE_CATALOG
-	XmString tmpXmString = (XmString)NULL;
+	XmString tmpXmString = (XmString)nullptr;
 #endif
 
 	ac = 0;

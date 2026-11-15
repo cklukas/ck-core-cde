@@ -423,12 +423,12 @@ ilSrcElementData            srcData;
         /*  Add a filter to convert subsampled YCbCr to a dithered palette image.
             Force a single strip; image is at least 2 by 2 
         */
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.stripHeight = pInfo->height;
     srcData.constantStrip = TRUE;
     srcData.minBufferHeight = 0;
 
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = IL_DES_GRAY;             /* arbitrary; not really used */
     dstData.pFormat = IL_FORMAT_BYTE;
     dstData.width = pInfo->width;

@@ -545,7 +545,7 @@ ButtonCB(
           break;
 
       case HELP_BUTTON:
-          XtCallCallbacks(style.kbdDialog, XmNhelpCallback, (XtPointer)NULL);
+          XtCallCallbacks(style.kbdDialog, XmNhelpCallback, (XtPointer)nullptr);
 	  break;
 
       default:

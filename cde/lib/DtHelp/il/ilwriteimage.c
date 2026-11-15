@@ -119,7 +119,7 @@ ilError                 error;
     if (aborting) {
         if (!pImage->i.clientPixels && pImagePlane->pPixels) {
             IL_FREE (pImagePlane->pPixels);
-            pImagePlane->pPixels = (ilPtr)NULL;
+            pImagePlane->pPixels = (ilPtr)nullptr;
             pImagePlane->bufferSize = 0;
             }
         }
@@ -229,7 +229,7 @@ ilPtr                   pCompData;
         ilImageDes      tempDes;
         tempDes = *pImage->i.pDes;
         tempDes.compression = IL_UNCOMPRESSED;      /* ilConvert() error otherwise */
-        if (!ilConvert (pipe, &tempDes, (ilImageFormat *)nullptr, 0, (ilPtr)NULL))
+        if (!ilConvert (pipe, &tempDes, (ilImageFormat *)nullptr, 0, (ilPtr)nullptr))
             return FALSE;
         des.compression = IL_UNCOMPRESSED;          /* force recompress below */
         }
@@ -244,7 +244,7 @@ ilPtr                   pCompData;
          pCompData = (ilPtr)&pImage->des.compInfo.g4.flags;
     else if (pImage->des.compression == IL_JPEG)
          pCompData = (ilPtr)&pImage->des.compInfo.JPEG;
-    else pCompData = (ilPtr)NULL;
+    else pCompData = (ilPtr)nullptr;
 
     stripHeight = (pImage->pStripOffsets) ? pImage->stripHeight : 0;
     if (!ilCompress (pipe, pImage->des.compression, pCompData, stripHeight, 0))
@@ -275,7 +275,7 @@ ilPtr                   pCompData;
     if ((pImage->des.compression == IL_JPEG) 
      && (pImage->des.compInfo.JPEG.reserved & IL_JPEGM_RAW))
          pPriv->pCompData = info.pCompData;
-    else pPriv->pCompData = (ilPtr)NULL;
+    else pPriv->pCompData = (ilPtr)nullptr;
 
     pImage->o.refCount++;               /* see ilWriteImageDestroy() */
 

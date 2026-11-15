@@ -391,7 +391,7 @@ create_proj_ui_handles(
      */
     XtAddEventHandler(draw_area, 
                 Button1MotionMask | Button2MotionMask, False,
-                projP_drawarea_button_drag, (XtPointer)NULL);
+                projP_drawarea_button_drag, (XtPointer)nullptr);
 
     brwsP_make_drawarea_snap(v, draw_area);
 
@@ -1080,7 +1080,7 @@ import_uil(
     ABObjPtr    uil_interface;
  
     if ((uil_interface = abuil_get_uil_file(uil_file_name, project))
-            == (ABObjPtr) NULL)
+            == (ABObjPtr) nullptr)
     {
         fprintf(stderr, "Failed to import %s.\n", uil_file_name);
         return;
@@ -1105,8 +1105,8 @@ proj_open_proj_okCB(
 )
 {
     XmSelectionBoxCallbackStruct *selection_data = call_data;
-    STRING      	proj_filename = (STRING) NULL;
-    XmString		xm_buf = (XmString) NULL;
+    STRING      	proj_filename = (STRING) nullptr;
+    XmString		xm_buf = (XmString) nullptr;
     DtbObjectHelpData	help_data = nullptr;
 
     proj_filename = (STRING)objxm_xmstr_to_str(selection_data->value);
@@ -1174,8 +1174,8 @@ proj_import_okCB(
 )
 {
     XmSelectionBoxCallbackStruct *selection_data = call_data;
-    STRING 	file_name = (STRING) NULL;
-    XmString	xm_buf = (XmString) NULL;
+    STRING 	file_name = (STRING) nullptr;
+    XmString	xm_buf = (XmString) nullptr;
     BOOL	read_OK, write_OK;
     DtbObjectHelpData	help_data = nullptr;
 
@@ -1370,7 +1370,7 @@ project_bpress(
         if (bevent->state == 0 && bevent->button == 1)/* RUBBERBAND SELECT */
         {
             if (ui_initiate_rubberband(widget, True, 
-			project_rband, (XtPointer)NULL) == ERROR)
+			project_rband, (XtPointer)nullptr) == ERROR)
             {
                 if (util_get_verbosity() > 0)
                     fprintf(stderr,"project organizer: couldn't begin rubberbanding\n");
@@ -1382,7 +1382,7 @@ project_bpress(
                  (bevent->button == 1 && (bevent->state & ShiftMask)))
 	{
             if (ui_initiate_rubberband(widget, True, 
-			project_rband, (XtPointer)NULL) == ERROR)
+			project_rband, (XtPointer)nullptr) == ERROR)
             {
                 if (util_get_verbosity() > 0)
                     fprintf(stderr,"project organizer: couldn't begin rubberbanding\n");

@@ -18,11 +18,11 @@ static Tt_status tt_message_arg_ival(Tt_message m, int arg, int *v)
 int main(void)
 {
     stub_status = TT_OK;
-    assert(_DtAct_tt_message_arg_reptype(NULL, 0) == DtACT_TT_REP_INT);
+    assert(_DtAct_tt_message_arg_reptype(nullptr, 0) == DtACT_TT_REP_INT);
     stub_status = TT_ERR_NUM;
-    assert(_DtAct_tt_message_arg_reptype(NULL, 0) == DtACT_TT_REP_BUFFER);
+    assert(_DtAct_tt_message_arg_reptype(nullptr, 0) == DtACT_TT_REP_BUFFER);
     stub_status = TT_ERR_ARG;                 /* any other failure */
-    assert(_DtAct_tt_message_arg_reptype(NULL, 0) == DtACT_TT_REP_BUFFER);
+    assert(_DtAct_tt_message_arg_reptype(nullptr, 0) == DtACT_TT_REP_BUFFER);
     puts("tt reptype ok");
     return 0;
 }

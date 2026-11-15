@@ -58,7 +58,7 @@
 #include <ab_private/bil.h>
 #include "loadP.h"
 
-nl_catd	Dtb_project_catd = (nl_catd)NULL; /* normally, defined in dtcodegen */
+nl_catd	Dtb_project_catd = (nl_catd)nullptr; /* normally, defined in dtcodegen */
 
 typedef struct
 {

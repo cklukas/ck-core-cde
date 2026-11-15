@@ -40,12 +40,12 @@ static void *ck_track(void *p)
     int i;
 
     for (i = 0; p && i < CK_MAX_BLOCKS; i++)
-        if (ck_blocks[i] == NULL) {
+        if (ck_blocks[i] == nullptr) {
             ck_blocks[i] = p;
             ck_live++;
             return p;
         }
-    assert(p == NULL);
+    assert(p == nullptr);
     return p;
 }
 
@@ -54,9 +54,9 @@ static int ck_fails(void)
     return ck_fail_at && ++ck_calls == ck_fail_at;
 }
 
-static void *ck_malloc(size_t n) { return ck_fails() ? NULL : ck_track(malloc(n)); }
-static void *ck_calloc(size_t n, size_t s) { return ck_fails() ? NULL : ck_track(calloc(n, s)); }
-static char *ck_strdup(const char *s) { return ck_fails() ? NULL : ck_track(strdup(s)); }
+static void *ck_malloc(size_t n) { return ck_fails() ? nullptr : ck_track(malloc(n)); }
+static void *ck_calloc(size_t n, size_t s) { return ck_fails() ? nullptr : ck_track(calloc(n, s)); }
+static char *ck_strdup(const char *s) { return ck_fails() ? nullptr : ck_track(strdup(s)); }
 
 static void ck_free(void *p)
 {
@@ -64,7 +64,7 @@ static void ck_free(void *p)
 
     for (i = 0; p && i < CK_MAX_BLOCKS; i++)
         if (ck_blocks[i] == p) {
-            ck_blocks[i] = NULL;
+            ck_blocks[i] = nullptr;
             ck_live--;
             break;
         }
@@ -100,7 +100,7 @@ static void test_logfile(void)
     assert(sscan_logfile_data((XeString) logfile_old, (XeString) logfile_old + sizeof logfile_old,
                               &logfile, &proto_ver, &hostinfo) == TRUE);
     total = ck_calls;
-    assert(strcmp(logfile, "/tmp/log") == 0 && proto_ver == NULL);
+    assert(strcmp(logfile, "/tmp/log") == 0 && proto_ver == nullptr);
     assert(strcmp(hostinfo, "unknown") == 0);
     free(logfile);
     free(hostinfo);
@@ -116,7 +116,7 @@ static void test_logfile(void)
         if (k == total) {
             /* the copy of the default host information */
             assert(last_error == SPC_Out_Of_Memory);
-            assert(logfile == NULL && proto_ver == NULL);
+            assert(logfile == nullptr && proto_ver == nullptr);
         }
     }
 
@@ -139,7 +139,7 @@ static void test_register(void)
                                &user, &passwd, &proto_ver, &hostinfo) == TRUE);
     total = ck_calls;
     assert(strcmp(user, "user") == 0 && strcmp(passwd, "secret") == 0);
-    assert(proto_ver == NULL && strcmp(hostinfo, "unknown") == 0);
+    assert(proto_ver == nullptr && strcmp(hostinfo, "unknown") == 0);
     free(user); free(passwd); free(hostinfo);
     assert(ck_live == 0);
 
@@ -151,7 +151,7 @@ static void test_register(void)
         assert(ck_live == 0);
         if (k == total) {
             assert(last_error == SPC_Out_Of_Memory);
-            assert(user == NULL && passwd == NULL && proto_ver == NULL);
+            assert(user == nullptr && passwd == nullptr && proto_ver == nullptr);
         }
     }
 

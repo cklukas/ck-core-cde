@@ -16,11 +16,14 @@ With --source-revision REV: negative control; REV must FAIL the same test
 (exit status 0 means the failure was observed).
 """
 import argparse
+import atexit
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
 
 here = Path(__file__).resolve().parent
 root = here.parents[3]
@@ -32,8 +35,12 @@ ap.add_argument("--worktree", type=Path, default=root)
 ap.add_argument("--scratch", type=Path, default=None)
 args = ap.parse_args()
 
-scratch = args.scratch or args.worktree / "tests-scratch"
-scratch.mkdir(parents=True, exist_ok=True)
+if args.scratch:
+    scratch = args.scratch
+    scratch.mkdir(parents=True, exist_ok=True)
+else:
+    scratch = Path(tempfile.mkdtemp(prefix="name-table-alloc-", dir=os.environ.get("TMPDIR")))
+    atexit.register(shutil.rmtree, scratch, True)
 label = args.source_revision or "working tree"
 
 
@@ -58,14 +65,20 @@ def extract(text, name, start_anchor, end_anchor):
 
 # Each function ends at its closing brace in column 0.
 hash_text, name_text = source("hash.c"), source("nametbl.c")
+hash_string_anchor = (
+    "static int hash_string(const unsigned char *s, int modulo)\n{"
+    if "static int hash_string(const unsigned char *s, int modulo)\n{" in hash_text
+    else "static int hash_string(const char *s, int modulo)\n{"
+)
+hash_string_decl = hash_string_anchor.splitlines()[0] + ";\n"
 production = (
     extract(hash_text, "hash.c", "typedef struct hash_entry {", "} hash;") +
-    "static int hash_string(const char *s, int modulo);\n" +
+    hash_string_decl +
     extract(hash_text, "hash.c", "\nvoid * _DtCmMakeHash(int size)\n{", "\n}\n") +
     extract(hash_text, "hash.c", "\nvoid ** _DtCmGetHash(void * t,", "\n}\n") +
     extract(hash_text, "hash.c", "\nvoid ** _DtCmFindHash(void * t,", "\n}\n") +
     extract(hash_text, "hash.c", "\nvoid _DtCmDestroyHash(\n", "\n}\n") +
-    extract(hash_text, "hash.c", "static int hash_string(const char *s, int modulo)\n{", "\n}\n") +
+    extract(hash_text, "hash.c", hash_string_anchor, "\n}\n") +
     extract(name_text, "nametbl.c", "extern _DtCmNameTable *\n_DtCm_make_name_table(", "\n}\n") +
     extract(name_text, "nametbl.c", "extern void\n_DtCm_free_name_table(", "\n}\n") +
     extract(name_text, "nametbl.c", "extern CSA_return_code\n_DtCm_add_name_to_table(", "\n}\n") +

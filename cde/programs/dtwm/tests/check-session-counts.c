@@ -99,9 +99,9 @@ static void *XtMalloc(size_t n)
         printf("FAIL: allocation of %zu bytes requested\n", n);
         exit(4);
     }
-    if (fail_size && n == fail_size) return NULL;
+    if (fail_size && n == fail_size) return nullptr;
     if (n == sizeof(DynamicComponent) && fail_next_components > 0 &&
-        --fail_next_components == 0) return NULL;
+        --fail_next_components == 0) return nullptr;
     void *p = malloc(n); assert(p); ++live; return p;
 }
 static void *XtRealloc(char *p, size_t n)
@@ -130,7 +130,7 @@ static void ToggleDefaultControl(ControlData *p, SubpanelData *s, ControlData *c
 #define getpwuid stub_getpwuid
 static struct passwd *stub_getpwuid(uid_t u)
 { static struct passwd pw; (void)u;
-  if (!passwd_dir) return NULL;
+  if (!passwd_dir) return nullptr;
   pw.pw_dir = (char *)passwd_dir; return &pw; }
 
 /* Every fscanf of the reader is counted; a reader that does not stop at the

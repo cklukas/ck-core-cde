@@ -117,19 +117,19 @@ XtResource resources[] =
 {
    {
     "user", "User", XmRString, sizeof(char *),
-    XtOffsetOf(ApplArgs, user), XmRImmediate, (XtPointer) NULL,
+    XtOffsetOf(ApplArgs, user), XmRImmediate, (XtPointer) nullptr,
    },
    {
     "contextDir", "ContextDir", XmRString, sizeof(char *),
-    XtOffsetOf(ApplArgs, contextDir), XmRImmediate, (XtPointer) NULL,
+    XtOffsetOf(ApplArgs, contextDir), XmRImmediate, (XtPointer) nullptr,
    },
    {
     "execHost", "ExecHost", XmRString, sizeof(char *),
-    XtOffsetOf(ApplArgs, execHost), XmRImmediate, (XtPointer) NULL,
+    XtOffsetOf(ApplArgs, execHost), XmRImmediate, (XtPointer) nullptr,
    },
    {
     "termOpts", "TermParms", XmRString, sizeof(char *),
-    XtOffsetOf(ApplArgs, termOpts), XmRImmediate, (XtPointer) NULL,
+    XtOffsetOf(ApplArgs, termOpts), XmRImmediate, (XtPointer) nullptr,
    },
 };
 

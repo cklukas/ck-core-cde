@@ -390,7 +390,7 @@ prop_item_editor_clear(
 	}
 
         util_free(iobj_list);
-	XtVaSetValues(pis->item_list, XmNuserData, (XtArgVal)NULL, nullptr);
+	XtVaSetValues(pis->item_list, XmNuserData, 0, nullptr);
         XmListDeleteAllItems(pis->item_list);
     }
 

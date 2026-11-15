@@ -159,7 +159,7 @@ void mbox_receive( XpPdmServiceRec *rec, XEvent *report )
 	     */
 	    rec->mbox_flag = True;		/* all done */
 	    XDestroyWindow( rec->selection_display, rec->mbox_window );
-	    rec->mbox_window = (Window) NULL;
+	    rec->mbox_window = None;
 	    return;
 	}
 
@@ -226,7 +226,7 @@ void mbox_receive( XpPdmServiceRec *rec, XEvent *report )
 	    if (rec->cookie_state == 1) {
 		rec->mbox_flag = True;		/* all done */
 		XDestroyWindow( rec->selection_display, rec->mbox_window );
-		rec->mbox_window = (Window) NULL;
+		rec->mbox_window = None;
 		return;
 	    }
 	}

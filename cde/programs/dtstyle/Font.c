@@ -1207,7 +1207,7 @@ ButtonCB(
       break;
 
     case HELP_BUTTON:
-      XtCallCallbacks(style.fontDialog, XmNhelpCallback, (XtPointer)NULL);
+      XtCallCallbacks(style.fontDialog, XmNhelpCallback, (XtPointer)nullptr);
       break;
 
     default:

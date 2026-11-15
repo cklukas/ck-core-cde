@@ -2185,17 +2185,17 @@ abobj_paste(
 			newroot = nullptr,
 			parent;
     ABSelectedRec 	sel;
-    STRING		name = (STRING) NULL;
+    STRING		name = (STRING) nullptr;
     int		  	i = 0, j = 0;
     int			iRet = 0;
-    STRING		errmsg = (STRING) NULL;
-    STRING		i18n_msg = (STRING) NULL;
+    STRING		errmsg = (STRING) nullptr;
+    STRING		i18n_msg = (STRING) nullptr;
     char		Buf[MAXPATHLEN] = "";
     BOOL		Err = False;
     BOOL		CancelPaste = False;
     DTB_MODAL_ANSWER	answer = DTB_ANSWER_NONE;
-    ABObj		obj_parent = (ABObj) NULL;
-    XmString		xm_buf = (XmString) NULL;
+    ABObj		obj_parent = (ABObj) nullptr;
+    XmString		xm_buf = (XmString) nullptr;
 
     if (!project)
 	iRet = -1;

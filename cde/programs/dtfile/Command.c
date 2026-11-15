@@ -345,7 +345,7 @@ UpdateActionMenuPane(
          else
             XtAddCallback (action_pane->composite.children[count],
                            XmNactivateCallback, ActionCallback,
-                           (XtPointer)NULL);
+                           (XtPointer)nullptr);
       }
       XmStringFree (string);
       XtFree(action_label);
@@ -654,7 +654,7 @@ ProcessNewView (
             GetNewView (file_mgr_data->host, directory_name, nullptr, position, 0);
       }
 
-      initiating_view = (XtPointer) NULL;
+      initiating_view = (XtPointer) nullptr;
    }
 }
 

@@ -995,7 +995,7 @@ Merge_Lang_Var(SPC_Channel_Ptr channel)
   XeString stdLang;
 
   if ((stdLang = SPC_Getenv((XeString)"LANG", channel->envp))
-      != (XeString)NULL)
+      != (XeString)nullptr)
   {
     _DtXlateDb db = nullptr;
     char platform[_DtPLATFORM_MAX_LEN];

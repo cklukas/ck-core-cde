@@ -267,14 +267,14 @@ create_conv(XlcConvMethods methods)
 
     conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
     if (conv == nullptr)
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
 
     conv->state = nullptr;
 
     state = (State) Xmalloc(sizeof(StateRec));
     if (state == nullptr){
 	close_converter(conv);
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
     }
 
     state->GL_charset = state->charset = GL_charset;
@@ -340,7 +340,7 @@ _fallcDefaultLoader(char *name)
     XLCd lcd;
 
     if (strcmp(name, "C"))
-	return (XLCd) NULL;
+	return (XLCd) nullptr;
 
     lcd = _fallcCreateLC(name, _fallcPublicMethods);
 

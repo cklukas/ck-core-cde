@@ -98,7 +98,7 @@ get_converter(
 	prev = list;
     }
 
-    return (XlcConv) NULL;
+    return (XlcConv) nullptr;
 }
 
 Bool
@@ -258,18 +258,18 @@ open_indirect_converter(XLCd from_lcd, char *from, XLCd to_lcd, char *to)
 
     if (from_type == QCharSet || from_type == QChar || to_type == QCharSet ||
 	to_type == QChar)
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
 
     lc_conv = (XlcConv) Xmalloc(sizeof(XlcConvRec));
     if (lc_conv == nullptr)
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
 
     lc_conv->methods = &conv_methods;
 
     lc_conv->state = (XPointer) Xmalloc(sizeof(ConvRec));
     if (lc_conv->state == nullptr){
 	close_indirect_converter(lc_conv);
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
     }
 
     conv = (Conv) lc_conv->state;
@@ -278,12 +278,12 @@ open_indirect_converter(XLCd from_lcd, char *from, XLCd to_lcd, char *to)
     if (from_conv == nullptr)
 	from_conv = get_converter(from_lcd, from_type, from_lcd, QCharSet);
     if (from_conv == nullptr)
-	from_conv = get_converter((XLCd)NULL, from_type, (XLCd)NULL, QCharSet);
+	from_conv = get_converter((XLCd)nullptr, from_type, (XLCd)nullptr, QCharSet);
     if (from_conv == nullptr)
 	from_conv = get_converter(from_lcd, from_type, from_lcd, QChar);
     if (from_conv == nullptr){
 	close_indirect_converter(lc_conv);
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
     }
     conv->from_conv = from_conv;
 
@@ -291,10 +291,10 @@ open_indirect_converter(XLCd from_lcd, char *from, XLCd to_lcd, char *to)
     if (to_conv == nullptr)
 	to_conv = get_converter(to_lcd, QCharSet, to_lcd, to_type);
     if (to_conv == nullptr)
-	to_conv = get_converter((XLCd) NULL, QCharSet, (XLCd) NULL, to_type);
+	to_conv = get_converter((XLCd) nullptr, QCharSet, (XLCd) nullptr, to_type);
     if (to_conv == nullptr){
 	close_indirect_converter(lc_conv);
-	return (XlcConv) NULL;
+	return (XlcConv) nullptr;
     }
     conv->to_conv = to_conv;
 

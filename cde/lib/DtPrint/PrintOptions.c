@@ -182,7 +182,7 @@ _DtPrintCreateHdrFtrFrame(
           info->specs[i].data = spec_data[i];
 	else
 	  info->specs[i].data = (void*) nullptr;
-	info->specs[i].button = (Widget) NULL;
+	info->specs[i].button = (Widget) nullptr;
     }
 
 

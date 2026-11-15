@@ -43,7 +43,7 @@
 #include <bms/usersig.h>
 #include "DtSvcLock.h"
 
-static XeSymTable Xe_sig_table = (XeSymTable) NULL;
+static XeSymTable Xe_sig_table = (XeSymTable) nullptr;
 
 
 /*-------------------------------------------------------------------------+*/

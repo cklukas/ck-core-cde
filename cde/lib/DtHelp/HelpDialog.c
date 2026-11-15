@@ -308,7 +308,7 @@ static XtResource resources[] = {
      {	DtNprinter, 
 	DtCPrinter, XmRString, sizeof (char*), 
 	XtOffset (DtHelpDialogWidget, help_dialog.print.printer), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
      {	DtNpaperSize, 
@@ -326,7 +326,7 @@ static XtResource resources[] = {
      {	DtNhelpVolume, 
 	DtCHelpVolume, XmRString, sizeof (char*), 
 	XtOffset (DtHelpDialogWidget, help_dialog.display.helpVolume), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
      {   DtNoverrideFontList,
@@ -338,25 +338,25 @@ static XtResource resources[] = {
       {	DtNmanPage, 
 	DtCManPage, XmRString, sizeof (char*), 
 	XtOffset (DtHelpDialogWidget, help_dialog.display.manPage), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
       {	DtNstringData, 
 	DtCStringData, XmRString, sizeof (char*), 
 	XtOffset (DtHelpDialogWidget, help_dialog.display.stringData), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
       {	DtNhelpFile, 
 	DtCHelpFile, XmRString, sizeof (char*), 
 	XtOffset (DtHelpDialogWidget, help_dialog.display.helpFile), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
       {	DtNtopicTitle, 
 	DtCTopicTitle, XmRString, sizeof (char*), 
 	XtOffset (DtHelpDialogWidget, help_dialog.display.topicTitleStr), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
 
       {	DtNhelpOnHelpVolume, 
@@ -374,13 +374,13 @@ static XtResource resources[] = {
       {	DtNhyperLinkCallback, 
 	DtCHyperLinkCallback, XmRCallback, sizeof (XtCallbackList), 
 	XtOffset (DtHelpDialogWidget, help_dialog.display.hyperLinkCallback), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       }, 
     
       {	DtNcloseCallback, 
 	DtCCloseCallback, XmRCallback, sizeof (XtCallbackList), 
 	XtOffset (DtHelpDialogWidget, help_dialog.ghelp.closeCallback), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
       },
 
       { XmNnavigationType, XmCNavigationType, XmRNavigationType,
@@ -866,7 +866,7 @@ static void Initialize(
    * The test for NULL is a work-around for defect CDExc20246; but
    * the proper widget should be given to XmProcessTraversal() someday.
    */
-  if (hw->help_dialog.browser.pathArea != (Widget)NULL)
+  if (hw->help_dialog.browser.pathArea != (Widget)nullptr)
     XmProcessTraversal(hw->help_dialog.browser.pathArea, XmTRAVERSE_HOME);
 
   /* We build our display area last because we need the other UI 

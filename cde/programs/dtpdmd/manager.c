@@ -355,7 +355,7 @@ void mgr_launch_pdm( XpPdmServiceRec *rec )
 
     rec->message_xtid = XtAppAddInput( g.context, rec->message_pipe[0],
 			  (XtPointer) XtInputReadMask,
-			  message_pipe_handler, (XtPointer) NULL );
+			  message_pipe_handler, (XtPointer) nullptr );
 
     /*
      * See if a cookie file is needed.

@@ -92,47 +92,47 @@
  * Declarations of global widgets used by callbacks.
  */
 
-static Widget	src_menu	= NULL;
-static Widget	target_menu	= NULL;
-static Widget	when_menu	= NULL;
-static Widget	action_menu	= NULL;
-static Widget	view_menu	= NULL;
+static Widget	src_menu	= nullptr;
+static Widget	target_menu	= nullptr;
+static Widget	when_menu	= nullptr;
+static Widget	action_menu	= nullptr;
+static Widget	view_menu	= nullptr;
 
-static Widget	when_pulldown	= NULL;
-static Widget	action_pulldown	= NULL;
+static Widget	when_pulldown	= nullptr;
+static Widget	action_pulldown	= nullptr;
 
-static Widget	src_list	= NULL;
-static Widget	target_list	= NULL;
-static Widget	connection_list	= NULL;
+static Widget	src_list	= nullptr;
+static Widget	target_list	= nullptr;
+static Widget	connection_list	= nullptr;
 
-static Widget	arg_rowcol	= NULL;
-static Widget	arg_label	= NULL;
-static Widget	arg_field	= NULL;
+static Widget	arg_rowcol	= nullptr;
+static Widget	arg_label	= nullptr;
+static Widget	arg_field	= nullptr;
 
-static Widget	connect_button	= NULL;
-static Widget	change_button	= NULL;
-static Widget	cancel_button	= NULL;
-static Widget	delete_button	= NULL;
+static Widget	connect_button	= nullptr;
+static Widget	change_button	= nullptr;
+static Widget	cancel_button	= nullptr;
+static Widget	delete_button	= nullptr;
 
-static Widget	std_action_item = NULL;
-static Widget	call_function_item = NULL;
-static Widget	execute_code_item = NULL;
-static Widget	on_item_help_item = NULL;
-static Widget	help_volume_item = NULL;
+static Widget	std_action_item = nullptr;
+static Widget	call_function_item = nullptr;
+static Widget	execute_code_item = nullptr;
+static Widget	on_item_help_item = nullptr;
+static Widget	help_volume_item = nullptr;
 
-static Widget	location_rowcol	= NULL;
-static Widget	location_field	= NULL;
-static Widget	volume_rowcol	= NULL;
-static Widget	volume_field	= NULL;
-static Widget	action_type_opmenu = NULL;
+static Widget	location_rowcol	= nullptr;
+static Widget	location_field	= nullptr;
+static Widget	volume_rowcol	= nullptr;
+static Widget	volume_field	= nullptr;
+static Widget	action_type_opmenu = nullptr;
 
-static Widget	exec_code_dialog = NULL;
-static Widget	exec_code_textpane = NULL;
+static Widget	exec_code_dialog = nullptr;
+static Widget	exec_code_textpane = nullptr;
 
-static Widget	ConnP_view_source_obj = NULL; /* View:'s "Source Object" PushButton */
+static Widget	ConnP_view_source_obj = nullptr; /* View:'s "Source Object" PushButton */
 static long	ConnP_view_filter = -1;
 
-static STRING	CodeFragBuf = NULL;
+static STRING	CodeFragBuf = nullptr;
 static STRING	action_type_labels[ACTION_TYPE_NUM_VALUES];		
 
 static AB_WHEN		DefaultWhen = AB_WHEN_UNDEF;
@@ -301,7 +301,7 @@ conn_init(void)
 {
     conn_strings_init();
 
-    obj_add_destroy_callback(connP_update_on_obj_destroy, NULL);
+    obj_add_destroy_callback(connP_update_on_obj_destroy, nullptr);
 }
 
 extern void
@@ -313,7 +313,7 @@ conn_popup_dialog(
 {
     extern Widget	AB_toplevel;
 
-    if (AB_conn_dialog == (Widget)NULL)
+    if (AB_conn_dialog == (Widget)nullptr)
     {
 	dtbConnConnDialogInfo_clear(&dtb_conn_conn_dialog);
 	(void)dtb_conn_conn_dialog_initialize(&dtb_conn_conn_dialog,
@@ -335,8 +335,8 @@ conn_popup_dialog(
 	 * the Connections Editor, then the callback registration
 	 * may have to be done in conn_init().
 	 */
-	obj_add_rename_callback(connP_update_on_obj_rename, NULL);
-	obj_add_update_callback(connP_update_on_show_status, NULL);
+	obj_add_rename_callback(connP_update_on_obj_rename, nullptr);
+	obj_add_update_callback(connP_update_on_show_status, nullptr);
     }
     XtManageChild(AB_conn_dialog);
     ab_show_window(AB_conn_dialog);
@@ -353,7 +353,7 @@ init_exec_code_dialog(
 
     ab_register_window(exec_code_dialog, AB_WIN_DIALOG,
                 WindowHidden, AB_conn_dialog, AB_WPOS_STACK_CENTER,
-                NULL, NULL);
+                nullptr, nullptr);
 }
 
 static void
@@ -373,7 +373,7 @@ populate_src_menu(
 		xmPushButtonWidgetClass, widget,
 		XtVaTypedArg, XmNlabelString, XtRString,
 		    ConnP_conn_objs[i].label, strlen(ConnP_conn_objs[i].label)+1,
-		NULL);
+		nullptr);
 	XtAddCallback(w, XmNactivateCallback,
 			change_src_type,
 			(XtPointer)&(ConnP_conn_objs[i]));
@@ -391,7 +391,7 @@ populate_target_menu(
 
     for (i = 0; i < ConnP_num_conn_objs; i++)
     {
-	Widget	w = NULL;
+	Widget	w = nullptr;
 
         /* Application and Message objects can never be a 
 	 * target, so don't put them in the Target Object 
@@ -407,7 +407,7 @@ populate_target_menu(
 			XtVaTypedArg, XmNlabelString, XtRString,
 				ConnP_conn_objs[i].label,
 				strlen(ConnP_conn_objs[i].label)+1,
-				NULL);
+				nullptr);
 	    XtAddCallback(w, XmNactivateCallback,
 			change_target_type,
 			(XtPointer)&(ConnP_conn_objs[i]));
@@ -425,7 +425,7 @@ populate_when_menu(
     int		num_labels;
     int		i;
     char	**labels;
-    Widget	*w_list = NULL;
+    Widget	*w_list = nullptr;
 
     when_pulldown = widget;
 
@@ -441,12 +441,12 @@ populate_when_menu(
 		    xmPushButtonWidgetClass, when_pulldown,
 		    XtVaTypedArg, XmNlabelString, XtRString,
 			labels[i], strlen(labels[i])+1,
-		    NULL);
+		    nullptr);
 	    w_list[i] = w;
 	}
-	w_list[i] = NULL;
+	w_list[i] = nullptr;
     }
-    XtVaSetValues(when_pulldown, XmNuserData, (XtPointer)w_list, NULL);
+    XtVaSetValues(when_pulldown, XmNuserData, (XtPointer)w_list, nullptr);
     connP_ui_source_type_update(connP_get_source_type(),
 				connP_get_source_subtype());
 }
@@ -461,7 +461,7 @@ populate_action_menu(
     int		num_labels;
     int		i;
     char	**labels;
-    Widget	*w_list = NULL;
+    Widget	*w_list = nullptr;
 
     action_pulldown = widget;
 
@@ -477,14 +477,14 @@ populate_action_menu(
 		    xmPushButtonWidgetClass, action_pulldown,
 		    XtVaTypedArg, XmNlabelString, XtRString,
 			labels[i], strlen(labels[i])+1,
-		    NULL);
+		    nullptr);
 	    XtAddCallback(w, XmNactivateCallback,
-			  change_arg_sensitivity, (XtPointer)NULL);
+			  change_arg_sensitivity, (XtPointer)nullptr);
 	    w_list[i] = w;
 	}
-	w_list[i] = NULL;
+	w_list[i] = nullptr;
     }
-    XtVaSetValues(action_pulldown, XmNuserData, (XtPointer)w_list, NULL);
+    XtVaSetValues(action_pulldown, XmNuserData, (XtPointer)w_list, nullptr);
     connP_ui_target_type_update(connP_get_target_type(),
 				connP_get_target_subtype());
 }
@@ -504,7 +504,7 @@ populate_view_menu(
 	    xmPushButtonWidgetClass, widget,
 	    XtVaTypedArg, XmNlabelString, XtRString,
 		"Source Object", sizeof("Source Object"),
-	    NULL);
+	    nullptr);
     XtAddCallback(w, XmNactivateCallback, set_view_filter, (XtPointer)-1);
     ConnP_view_source_obj = w;
 
@@ -514,7 +514,7 @@ populate_view_menu(
 		xmPushButtonWidgetClass, widget,
 		XtVaTypedArg, XmNlabelString, XtRString,
 		   ConnP_conn_objs[i].label, strlen(ConnP_conn_objs[i].label)+1,
-		NULL);
+		nullptr);
 	XtAddCallback(w, XmNactivateCallback, set_view_filter, (XtPointer)i);
     }
 }
@@ -533,7 +533,7 @@ setup_source(
     XtVaSetValues(XmOptionButtonGadget(src_menu),
 	XtVaTypedArg, XmNlabelString, XtRString,
 	    ConnP_conn_objs[i].label, strlen(ConnP_conn_objs[i].label)+1,
-	NULL);
+	nullptr);
     populate_list(src_list, source, FALSE);
 }
 
@@ -551,7 +551,7 @@ setup_target(
     XtVaSetValues(XmOptionButtonGadget(target_menu),
 	XtVaTypedArg, XmNlabelString, XtRString,
 	    ConnP_conn_objs[i].label, strlen(ConnP_conn_objs[i].label)+1,
-	NULL);
+	nullptr);
     populate_list(target_list, target, FALSE);
 }
 
@@ -563,10 +563,10 @@ populate_list(
 )
 {
     ABObj	project = proj_get_project();
-    STRING	select_item = NULL;
+    STRING	select_item = nullptr;
     int		iRet = -1;
     
-    if (list == NULL || project == NULL)
+    if (list == nullptr || project == nullptr)
 	return;
 
     if (list == src_list)
@@ -589,7 +589,7 @@ populate_list(
     /* If cur_selection is NOT in the list, grey out the
      * the right controls.
      */
-    if ((iRet < 0) || (cur_selection == NULL))
+    if ((iRet < 0) || (cur_selection == nullptr))
     {
 	if (list == target_list)
 	{
@@ -621,7 +621,7 @@ src_list_test(
     {
 	ret = TRUE;
     }
-    else if ((mod != NULL) && obj_has_flag(mod, MappedFlag) 
+    else if ((mod != nullptr) && obj_has_flag(mod, MappedFlag) 
 	     && obj_is_defined(mod)) 
     {
 	if (connP_objtype_needs_subtype(cur_obj_type, cur_obj_subtype))
@@ -685,7 +685,7 @@ target_list_test(
     ABObj		mod = obj_get_module(test_obj);
     BOOL		ret = FALSE;
     
-    if ((mod != NULL) && obj_has_flag(mod, MappedFlag) 
+    if ((mod != nullptr) && obj_has_flag(mod, MappedFlag) 
 	&& obj_is_defined(mod)) 
     {
 	if (connP_objtype_needs_subtype(cur_obj_type, cur_obj_subtype))
@@ -743,25 +743,25 @@ populate_connection_list(
 )
 {
     ABObj		project = proj_get_project();
-    ABObj		obj = NULL, selected_conn = NULL;
+    ABObj		obj = nullptr, selected_conn = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		*obj_list = (ABObj *)NULL;
+    ABObj		*obj_list = (ABObj *)nullptr;
     int			count;
     
     XtSetSensitive(change_button, FALSE);
     XtSetSensitive(delete_button, FALSE);
 
-    if (connection_list == NULL || project == NULL)
+    if (connection_list == nullptr || project == nullptr)
 	return;
 
     /* Save the currently selected connection in the View list */
     selected_conn = get_cur_connection();
 
-    XtVaGetValues(connection_list, XmNuserData, (XtPointer)&obj_list, NULL);
-    if (obj_list != NULL)
+    XtVaGetValues(connection_list, XmNuserData, (XtPointer)&obj_list, nullptr);
+    if (obj_list != nullptr)
 	XtFree((char *)obj_list);
-    obj_list = (ABObj *)NULL;
-    XtVaSetValues(connection_list, XmNuserData, (XtPointer)obj_list, NULL);
+    obj_list = (ABObj *)nullptr;
+    XtVaSetValues(connection_list, XmNuserData, (XtPointer)obj_list, nullptr);
 
     XmListDeselectAllItems(connection_list);
     XmListDeleteAllItems(connection_list);
@@ -774,7 +774,7 @@ populate_connection_list(
 
     count = 0;
     for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-        (obj = trav_next(&trav)) != NULL; )
+        (obj = trav_next(&trav)) != nullptr; )
     {
 	if (!is_action_type(obj, ConnP_view_filter))
 	    continue;
@@ -793,12 +793,12 @@ populate_connection_list(
     }
 
     obj_list = (ABObj *)XtCalloc((count+1), sizeof(ABObj));
-    if (obj_list == (ABObj *)NULL)
+    if (obj_list == (ABObj *)nullptr)
 	return;
 
     count = 0;
     for (trav_open(&trav, project, AB_TRAV_ACTIONS);
-        (obj = trav_next(&trav)) != NULL; )
+        (obj = trav_next(&trav)) != nullptr; )
     {
 	XmString	xm_item_str;
 	
@@ -821,8 +821,8 @@ populate_connection_list(
 	}
     }
     trav_close(&trav);
-    obj_list[count] = (ABObj)NULL;
-    XtVaSetValues(connection_list, XmNuserData, (XtPointer)obj_list, NULL);
+    obj_list[count] = (ABObj)nullptr;
+    XtVaSetValues(connection_list, XmNuserData, (XtPointer)obj_list, nullptr);
 
 }
 
@@ -839,7 +839,7 @@ is_action_type(
     {
     	mod = obj_get_module(obj->info.action.from);
 
-    	if (mod == NULL || !obj_has_flag(mod, MappedFlag))
+    	if (mod == nullptr || !obj_has_flag(mod, MappedFlag))
 	    goto cret;
     }
 
@@ -869,17 +869,17 @@ change_src_type(
 {
     ConnObj	*objtype_desc = (ConnObj *)client_data;
 
-    if (objtype_desc == (ConnObj *)NULL)
+    if (objtype_desc == (ConnObj *)nullptr)
 	return;
 
     update_on_src_type_change(objtype_desc->obj_type,
                           objtype_desc->obj_subtype);
 
     /* Reset the current source to be NULL */
-    conn_set_source((ABObj) NULL);
+    conn_set_source((ABObj) nullptr);
 
     /* Reset the connections list */
-    connP_set_connection(NULL);
+    connP_set_connection(nullptr);
     populate_connection_list(connP_get_connection());
 
     /* Make When option menu inactive */
@@ -897,14 +897,14 @@ change_target_type(
 {
     ConnObj	*objtype_desc = (ConnObj *)client_data;
 
-    if (objtype_desc == (ConnObj *)NULL)
+    if (objtype_desc == (ConnObj *)nullptr)
 	return;
 
     update_on_target_type_change(objtype_desc->obj_type,
                           objtype_desc->obj_subtype);
 
     /* Reset the current target to be NULL */
-    conn_set_target((ABObj) NULL);
+    conn_set_target((ABObj) nullptr);
 
     /* Make action option menu and argument field inactive */
     set_ctrls_for_target(FALSE);
@@ -952,7 +952,7 @@ set_view_filter(
     if (ConnP_view_filter != (long)client_data)
     {
 	ConnP_view_filter = (long)client_data;
-	populate_connection_list(NULL);
+	populate_connection_list(nullptr);
     }
 }
 
@@ -967,9 +967,9 @@ update_cur_src(
 )
 {
     XmListCallbackStruct	*list_cl = (XmListCallbackStruct *)call_data;
-    ABObj                       module = (ABObj) NULL;
-    ABObj			selected_obj = (ABObj) NULL;
-    STRING			name = NULL;
+    ABObj                       module = (ABObj) nullptr;
+    ABObj			selected_obj = (ABObj) nullptr;
+    STRING			name = nullptr;
 
     if (list_cl->reason != XmCR_BROWSE_SELECT)
     {
@@ -979,7 +979,7 @@ update_cur_src(
     if (name = objxm_xmstr_to_str(list_cl->item))
     {
         abobj_moduled_name_extract(name, &module, &selected_obj);
- 	if (selected_obj == NULL)
+ 	if (selected_obj == nullptr)
 	    abobj_project_name_extract(name, &selected_obj);
         util_free(name);
 
@@ -1003,28 +1003,28 @@ update_cur_src(
 		    XtVaSetValues(XmOptionButtonGadget(when_menu),
                     XtVaTypedArg, XmNlabelString, XtRString,
                         ConnP_conn_whens[0].label,
-                        strlen(ConnP_conn_whens[0].label)+1, NULL);
+                        strlen(ConnP_conn_whens[0].label)+1, nullptr);
 	    	}
 	    	else if (obj_has_action2_button(selected_obj))
 	    	{
                     XtVaSetValues(XmOptionButtonGadget(when_menu),
                     XtVaTypedArg, XmNlabelString, XtRString,
                         ConnP_conn_whens[1].label,
-                        strlen(ConnP_conn_whens[1].label)+1, NULL);
+                        strlen(ConnP_conn_whens[1].label)+1, nullptr);
 	    	}
 	    	else if (obj_has_action3_button(selected_obj))
 	    	{
                     XtVaSetValues(XmOptionButtonGadget(when_menu),
                     XtVaTypedArg, XmNlabelString, XtRString,
                         ConnP_conn_whens[2].label,
-                        strlen(ConnP_conn_whens[2].label)+1, NULL);
+                        strlen(ConnP_conn_whens[2].label)+1, nullptr);
 	    	}
 	    	else if (obj_has_cancel_button(selected_obj))
 	    	{
                     XtVaSetValues(XmOptionButtonGadget(when_menu),
                     XtVaTypedArg, XmNlabelString, XtRString,
                         ConnP_conn_whens[3].label,
-                        strlen(ConnP_conn_whens[3].label)+1, NULL);
+                        strlen(ConnP_conn_whens[3].label)+1, nullptr);
 	    	}
 	    }
 
@@ -1042,14 +1042,14 @@ update_cur_src(
                     XtVaSetValues(XmOptionButtonGadget(when_menu),
                     XtVaTypedArg, XmNlabelString, XtRString,
                         ConnP_conn_whens[2].label,
-                        strlen(ConnP_conn_whens[2].label)+1, NULL);
+                        strlen(ConnP_conn_whens[2].label)+1, nullptr);
 	    	else
                     XtVaSetValues(XmOptionButtonGadget(when_menu),
                     XtVaTypedArg, XmNlabelString, XtRString,
                         ConnP_conn_whens[3].label,
-                        strlen(ConnP_conn_whens[3].label)+1, NULL);
+                        strlen(ConnP_conn_whens[3].label)+1, nullptr);
 	    }
-            connP_set_connection(NULL);
+            connP_set_connection(nullptr);
             populate_connection_list(connP_get_connection());
 
             set_ctrls_for_src(TRUE);
@@ -1070,9 +1070,9 @@ update_cur_target(
 )
 {
     XmListCallbackStruct	*list_cl = (XmListCallbackStruct *)call_data;
-    ABObj                       module = (ABObj) NULL;
-    ABObj                       selected_obj = (ABObj) NULL;
-    STRING                      name = NULL;
+    ABObj                       module = (ABObj) nullptr;
+    ABObj                       selected_obj = (ABObj) nullptr;
+    STRING                      name = nullptr;
     AB_WHEN             	g_when = AB_WHEN_UNDEF;
     AB_FUNC_TYPE        	g_func = AB_FUNC_UNDEF;
     AB_BUILTIN_ACTION   	g_act = AB_STDACT_UNDEF;
@@ -1119,25 +1119,25 @@ select_connection(
 )
 {
     XmListCallbackStruct	*list_cl = (XmListCallbackStruct *)call_data;
-    ABObj			*obj_list = (ABObj *)NULL;
-    ABObj			cur_action = NULL;
+    ABObj			*obj_list = (ABObj *)nullptr;
+    ABObj			cur_action = nullptr;
     AB_ACTION_INFO		*cur_info;
 
     if (list_cl->reason != XmCR_BROWSE_SELECT)
 	return;
 
-    XtVaGetValues(w, XmNuserData, &obj_list, NULL);
-    if (obj_list == NULL)
+    XtVaGetValues(w, XmNuserData, &obj_list, nullptr);
+    if (obj_list == nullptr)
 	return;
     if (list_cl->item_position > 0)
 	cur_action = obj_list[list_cl->item_position-1];
 
-    if (cur_action == NULL || !obj_is_action(cur_action))
+    if (cur_action == nullptr || !obj_is_action(cur_action))
 	return;
 
     cur_info = &(cur_action->info.action);
 
-    if (cur_info->from == NULL)
+    if (cur_info->from == nullptr)
 	return;
 
     XtSetSensitive(change_button, TRUE);
@@ -1177,7 +1177,7 @@ select_connection(
     switch (cur_info->func_type)
     {
       case AB_FUNC_BUILTIN:
-	if (cur_info->to == NULL)
+	if (cur_info->to == nullptr)
 	    return;
 	if (connP_get_target_type() != obj_get_type(cur_info->to))
 	{
@@ -1227,11 +1227,11 @@ select_connection(
 	    	/*
 	     	 * Populate arg entries
 	     	 */
-	    	if (istr_val != NULL)
+	    	if (istr_val != nullptr)
 		    XtVaSetValues(arg_field, XmNvalue,
-				istr_string(istr_val), NULL);
+				istr_string(istr_val), nullptr);
 	    	else
-		    XtVaSetValues(arg_field, XmNvalue, "", NULL);
+		    XtVaSetValues(arg_field, XmNvalue, "", nullptr);
 	    }
 	    break;
 
@@ -1241,7 +1241,7 @@ select_connection(
 	
 		*str_val = 0;
 		sprintf(str_val, "%d", cur_info->arg_value.ival);
-		XtVaSetValues(arg_field, XmNvalue, str_val, NULL);
+		XtVaSetValues(arg_field, XmNvalue, str_val, nullptr);
 	    }
 	    break;
 	}
@@ -1249,10 +1249,10 @@ select_connection(
 
       case AB_FUNC_USER_DEF:
       {
-	STRING		cur_func_name = NULL;
+	STRING		cur_func_name = nullptr;
 	STRING		func_name = obj_get_func_name(cur_action);
 
- 	XtVaGetValues(arg_field, XmNvalue, &cur_func_name, NULL);
+ 	XtVaGetValues(arg_field, XmNvalue, &cur_func_name, nullptr);
 
 	set_ctrls_for_target(TRUE);
 
@@ -1264,8 +1264,8 @@ select_connection(
 	}
 	if (strcmp(cur_func_name, func_name) != 0)
 	{
-	    if (func_name != (STRING) NULL)
-		XtVaSetValues(arg_field, XmNvalue, func_name, NULL);
+	    if (func_name != (STRING) nullptr)
+		XtVaSetValues(arg_field, XmNvalue, func_name, nullptr);
 	}
 	break;
       }
@@ -1284,8 +1284,8 @@ select_connection(
 	}
 	if (!util_strempty(code_frag))
 	{
-	    char	*newline = NULL;
-	    STRING	first_line = NULL;
+	    char	*newline = nullptr;
+	    STRING	first_line = nullptr;
 
             XmTextSetString(exec_code_textpane, code_frag);
 	    newline = strchr(code_frag, '\n');
@@ -1334,9 +1334,9 @@ select_connection(
 	    }
             set_access_help_vol_action_type();
 
-            if (help_loc != (STRING) NULL)
+            if (help_loc != (STRING) nullptr)
                 XmTextFieldSetString(location_field, help_loc);
-            if (help_vol != (STRING) NULL)
+            if (help_vol != (STRING) nullptr)
                 XmTextFieldSetString(volume_field, help_vol);
 	break;
       }
@@ -1351,12 +1351,12 @@ get_cur_when(
 )
 {
     Widget	label_wid = XmOptionButtonGadget(when_menu);
-    XmString	xm_when_label	= (XmString)NULL;
-    char	*when_label = NULL;
+    XmString	xm_when_label	= (XmString)nullptr;
+    char	*when_label = nullptr;
     int	i;
 
-    XtVaGetValues(label_wid, XmNlabelString, &xm_when_label, NULL);
-    if (xm_when_label != NULL) {
+    XtVaGetValues(label_wid, XmNlabelString, &xm_when_label, nullptr);
+    if (xm_when_label != nullptr) {
 	when_label = objxm_xmstr_to_str(xm_when_label);
 
 	for (i = 0; i < ConnP_num_conn_whens; i++) {
@@ -1380,12 +1380,12 @@ get_cur_act(
 )
 {
     Widget	label_wid = XmOptionButtonGadget(action_menu);
-    XmString	xm_act_label	= (XmString)NULL;
-    char	*act_label = NULL;
+    XmString	xm_act_label	= (XmString)nullptr;
+    char	*act_label = nullptr;
     int	i;
 
-    XtVaGetValues(label_wid, XmNlabelString, &xm_act_label, NULL);
-    if (xm_act_label != NULL) {
+    XtVaGetValues(label_wid, XmNlabelString, &xm_act_label, nullptr);
+    if (xm_act_label != nullptr) {
 	act_label = objxm_xmstr_to_str(xm_act_label);
 
 	for (i = 0; i < ConnP_num_conn_acts; i++) {
@@ -1421,7 +1421,7 @@ set_cur_when(
 	XtVaSetValues(XmOptionButtonGadget(when_menu),
 	    XtVaTypedArg, XmNlabelString, XtRString,
 		ConnP_conn_whens[i].label, strlen(ConnP_conn_whens[i].label)+1,
-	    NULL);
+	    nullptr);
     }
 
 }
@@ -1441,8 +1441,8 @@ set_cur_act(
 	XtVaSetValues(XmOptionButtonGadget(action_menu),
 	    XtVaTypedArg, XmNlabelString, XtRString,
 		ConnP_conn_acts[i].label, strlen(ConnP_conn_acts[i].label)+1,
-	    NULL);
-	change_arg_sensitivity(arg_field, (XtPointer)NULL, (XtPointer)NULL);
+	    nullptr);
+	change_arg_sensitivity(arg_field, (XtPointer)nullptr, (XtPointer)nullptr);
     }
 
 }
@@ -1453,27 +1453,27 @@ connP_ui_source_type_update(
     int			new_subtype
 )
 {
-    Widget	*w_list = NULL;
+    Widget	*w_list = nullptr;
     int		i;
     AB_WHEN             g_when = AB_WHEN_UNDEF;
     AB_FUNC_TYPE        g_func = AB_FUNC_UNDEF;
     AB_BUILTIN_ACTION   g_act = AB_STDACT_UNDEF;
 
-    if (when_pulldown == NULL)
+    if (when_pulldown == nullptr)
     {
 	return;
     }
 
     XtVaGetValues(when_pulldown,
 	    XmNuserData,	&w_list,
-	    NULL);
+	    nullptr);
 
-    if (w_list == NULL)
+    if (w_list == nullptr)
     {
 	return;
     }
 
-    for (i = 0; w_list[i] != NULL; i++)
+    for (i = 0; w_list[i] != nullptr; i++)
     {
 	XtUnmanageChild(w_list[i]);
     }
@@ -1490,20 +1490,20 @@ connP_ui_target_type_update(
     int			new_subtype
 )
 {
-    Widget	*w_list = NULL;
+    Widget	*w_list = nullptr;
     int		i;
 
-    if (action_pulldown == NULL)
+    if (action_pulldown == nullptr)
 	return;
 
     XtVaGetValues(action_pulldown,
 	    XmNuserData,	&w_list,
-	    NULL);
+	    nullptr);
 
-    if (w_list == NULL)
+    if (w_list == nullptr)
 	return;
 
-    for (i = 0; w_list[i] != NULL; i++)
+    for (i = 0; w_list[i] != nullptr; i++)
 	XtUnmanageChild(w_list[i]);
 
     for (i = 0; i < ConnP_num_conn_acts; i++)
@@ -1515,14 +1515,14 @@ get_cur_connection(
     void
 )
 {
-    XmString		*sel_items = NULL;
+    XmString		*sel_items = nullptr;
     int			sel_count = 0;
-    ABObj		*obj_list = (ABObj *) NULL;
+    ABObj		*obj_list = (ABObj *) nullptr;
     int			pos = 0;
-    ABObj		ab_action = NULL;
+    ABObj		ab_action = nullptr;
 
-    if (connection_list == NULL)
-	return(NULL);
+    if (connection_list == nullptr)
+	return(nullptr);
 
     /*
      * Look for selected connection
@@ -1531,17 +1531,17 @@ get_cur_connection(
 	    XmNselectedItemCount,	&sel_count,
 	    XmNselectedItems,		&sel_items,
 	    XmNuserData,		&obj_list,
-	NULL);
+	nullptr);
     
-    if (sel_count != 1 || obj_list == NULL)
+    if (sel_count != 1 || obj_list == nullptr)
     {
-	return(NULL);
+	return(nullptr);
     }
 
     pos = XmListItemPos(connection_list, sel_items[0]);
     if (pos <= 0)
     {
-	return(NULL);
+	return(nullptr);
     }
     ab_action = obj_list[pos-1];
     return(ab_action); 
@@ -1603,7 +1603,7 @@ set_standard_action_type(
 
     xm_label_str = XmStringCreateLocalized(CATGETS(Dtb_project_catd,
 100, 54, ARGUMENT_LABEL));
-    XtVaSetValues(arg_label, XmNlabelString, xm_label_str, NULL);
+    XtVaSetValues(arg_label, XmNlabelString, xm_label_str, nullptr);
     XmStringFree(xm_label_str);
 
     if (connP_conn_is_possible())
@@ -1633,7 +1633,7 @@ set_call_function_action_type(
 
     xm_label_str = XmStringCreateLocalized(CATGETS(Dtb_project_catd,
 			100, 55, FUNCTION_LABEL));
-    XtVaSetValues(arg_label, XmNlabelString, xm_label_str, NULL);
+    XtVaSetValues(arg_label, XmNlabelString, xm_label_str, nullptr);
     XmStringFree(xm_label_str);
 
     XtSetSensitive(arg_label, TRUE);
@@ -1666,7 +1666,7 @@ set_execute_code_action_type(
 
     xm_label_str = XmStringCreateLocalized(CATGETS(Dtb_project_catd,
 			100, 56, CODE_LABEL));
-    XtVaSetValues(arg_label, XmNlabelString, xm_label_str, NULL);
+    XtVaSetValues(arg_label, XmNlabelString, xm_label_str, nullptr);
     XmStringFree(xm_label_str);
 
     XtSetSensitive(arg_label, TRUE);
@@ -1747,21 +1747,21 @@ connP_update_on_obj_destroy(
     if (!obj_has_flag(project, BeingDestroyedFlag))
         connP_destroy_connections_for(obj);
 
-    if (AB_conn_dialog != (Widget)NULL)
+    if (AB_conn_dialog != (Widget)nullptr)
     {
         if (obj == connP_get_source())
 	{
-	    conn_set_source(NULL);
+	    conn_set_source(nullptr);
 	    set_ctrls_for_src(FALSE);
 	}
         if (obj == connP_get_target())
 	{
-	    conn_set_target(NULL);
+	    conn_set_target(nullptr);
 	    set_ctrls_for_target(FALSE);
 	}
    	if (connP_obj_part_of_conn(obj, connP_get_connection()))
 	{
-	    connP_set_connection(NULL);
+	    connP_set_connection(nullptr);
 	}
 
         /*
@@ -1792,7 +1792,7 @@ connP_update_on_obj_rename(
     ABObj       	module = obj_get_module(obj);
     int			iRet = 0;
 
-    if ((obj != NULL) && (AB_conn_dialog != (Widget)NULL))
+    if ((obj != nullptr) && (AB_conn_dialog != (Widget)nullptr))
     {
 	ab_type = obj_get_type(obj);
 	if ((ab_type != AB_TYPE_UNDEF) && (ab_type != AB_TYPE_UNKNOWN)
@@ -1826,14 +1826,14 @@ connP_update_on_show_status(
 )
 {
     ABObj	obj = info->obj;
-    ABObj	conn = NULL, cur_conn_src_mod = NULL;
-    ABObj	cur_conn_target_mod = NULL;
-    ABObj	src_mod = NULL, target_mod = NULL;
+    ABObj	conn = nullptr, cur_conn_src_mod = nullptr;
+    ABObj	cur_conn_target_mod = nullptr;
+    ABObj	src_mod = nullptr, target_mod = nullptr;
     int		iRet = 0;
 
     util_dprintf(3, "object updated: %s\n", obj_get_name(info->obj));
 
-    if ((obj != NULL) && (AB_conn_dialog != (Widget) NULL))
+    if ((obj != nullptr) && (AB_conn_dialog != (Widget) nullptr))
     {
 	/* Update the Source, Target, and Connections lists */
 
@@ -1847,13 +1847,13 @@ connP_update_on_show_status(
 	    src_mod = obj_get_module(connP_get_source());
 	    if (src_mod == obj)
 	    {
-		conn_set_source(NULL);
+		conn_set_source(nullptr);
 		set_ctrls_for_src(FALSE);
 	    }
 	    target_mod = obj_get_module(connP_get_target());
 	    if (target_mod == obj)
 	    {
-		conn_set_target(NULL);
+		conn_set_target(nullptr);
 		if (connP_get_action_type() == AB_FUNC_BUILTIN) 
 		    set_ctrls_for_target(FALSE);
 		else
@@ -1867,7 +1867,7 @@ connP_update_on_show_status(
 	    	if ((obj == cur_conn_src_mod) || 
 		    (obj == cur_conn_target_mod))
 		{
-		    connP_set_connection(NULL);
+		    connP_set_connection(nullptr);
 	  	}
 	    }
             if (connP_conn_is_possible())
@@ -1885,8 +1885,8 @@ BOOL
 connP_conn_is_possible(void)
 {
     BOOL        ConnIsPossible = FALSE;
-    ABObj	source = NULL,
-		target = NULL;
+    ABObj	source = nullptr,
+		target = nullptr;
  
     source = connP_get_source();
     target = connP_get_target();
@@ -1894,7 +1894,7 @@ connP_conn_is_possible(void)
     switch (connP_get_action_type())
     {
         case AB_FUNC_BUILTIN:
-            if ( (source != NULL) && (target != NULL) )
+            if ( (source != nullptr) && (target != nullptr) )
 	    {
 		/* If the source object is a message
 		 * but the message doesn't have an
@@ -1922,7 +1922,7 @@ connP_conn_is_possible(void)
 
         case AB_FUNC_USER_DEF:
         case AB_FUNC_CODE_FRAG:
-            if (source != NULL)
+            if (source != nullptr)
 	    {
                 if (obj_is_message(source))
                 {
@@ -1944,7 +1944,7 @@ connP_conn_is_possible(void)
 
         case AB_FUNC_ON_ITEM_HELP:
         case AB_FUNC_HELP_VOLUME:
-	    if ((source != NULL) && obj_is_menu_item(source))
+	    if ((source != nullptr) && obj_is_menu_item(source))
 	    {
 		ConnIsPossible = TRUE;
 	    }
@@ -2082,17 +2082,17 @@ connP_make_connection(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    char	*str_value = (char *)NULL;
-    ABObj	ab_action  = (ABObj)NULL;
+    char	*str_value = (char *)nullptr;
+    ABObj	ab_action  = (ABObj)nullptr;
     ABObj	c_source;
     ABObj	c_target;
     AB_WHEN     c_when;
     BOOL	is_cross_module = (BOOL)FALSE;
-    STRING	vol_value = NULL,
-		loc_value = NULL;
+    STRING	vol_value = nullptr,
+		loc_value = nullptr;
     BOOL        valid     = False;
 
-    if ((c_source = connP_get_source()) == NULL ||
+    if ((c_source = connP_get_source()) == nullptr ||
         connP_get_source_type() != obj_get_type(c_source))
         return;
 
@@ -2101,12 +2101,12 @@ connP_make_connection(
     switch (connP_get_action_type())
     {
       case AB_FUNC_BUILTIN:
-	if ((c_target = connP_get_target()) != NULL &&
+	if ((c_target = connP_get_target()) != nullptr &&
 	    connP_get_target_type() == obj_get_type(c_target))
 	{
 	    AB_BUILTIN_ACTION   c_act = (AB_BUILTIN_ACTION)get_cur_act();
 
-	    ab_action = obj_create(AB_TYPE_ACTION, NULL);
+	    ab_action = obj_create(AB_TYPE_ACTION, nullptr);
 
 	    switch (connP_action_needs_arg(c_act))
 	    {
@@ -2117,8 +2117,8 @@ connP_make_connection(
 		if (!verify_builtin_arg_string(c_act, c_target, arg_field))
 		    return;
 		  
-		XtVaGetValues(arg_field, XmNvalue, &str_value, NULL);
-		if (str_value != (char *)NULL)
+		XtVaGetValues(arg_field, XmNvalue, &str_value, nullptr);
+		if (str_value != (char *)nullptr)
 		    connP_set_conn_arg(ab_action, AB_ARG_STRING, str_value);
 		break;
 
@@ -2129,8 +2129,8 @@ connP_make_connection(
 		{
 		    return;	
 		}
-		XtVaGetValues(arg_field, XmNvalue, &str_value, NULL);
-		if (str_value != (char *)NULL)
+		XtVaGetValues(arg_field, XmNvalue, &str_value, nullptr);
+		if (str_value != (char *)nullptr)
 		    connP_set_conn_arg(ab_action, AB_ARG_INT, str_value);
 		break;
 
@@ -2157,10 +2157,10 @@ connP_make_connection(
 	/*
 	 * Populate function name
 	 */
-	XtVaGetValues(arg_field, XmNvalue, &str_value, NULL);
+	XtVaGetValues(arg_field, XmNvalue, &str_value, nullptr);
 	if (!util_strempty(str_value))
 	{
-	    ab_action = obj_create(AB_TYPE_ACTION, NULL);
+	    ab_action = obj_create(AB_TYPE_ACTION, nullptr);
 	    connP_make_user_def_conn(ab_action, c_source, c_when, str_value);
 
 	    /* Set SaveNeeded flag */ 
@@ -2171,7 +2171,7 @@ connP_make_connection(
 	{
 	    dtb_conn_no_func_msg_initialize(&dtb_conn_no_func_msg);
 	    (void)dtb_show_modal_message(dtb_get_toplevel_widget(),
-			&dtb_conn_no_func_msg, NULL, NULL, NULL);
+			&dtb_conn_no_func_msg, nullptr, nullptr, nullptr);
  	}
 	break;
 
@@ -2182,7 +2182,7 @@ connP_make_connection(
 	str_value = CodeFragBuf;
 	if (!util_strempty(str_value))
 	{
-	    ab_action = obj_create(AB_TYPE_ACTION, NULL);
+	    ab_action = obj_create(AB_TYPE_ACTION, nullptr);
 	    connP_make_code_frag_conn(ab_action, c_source, c_when, str_value);
 
 	    /* Set SaveNeeded flag */ 
@@ -2192,7 +2192,7 @@ connP_make_connection(
 	break;
 
       case AB_FUNC_ON_ITEM_HELP:
-	ab_action = obj_create(AB_TYPE_ACTION, NULL);
+	ab_action = obj_create(AB_TYPE_ACTION, nullptr);
 	connP_make_on_item_help_conn(ab_action, c_source, c_when);
 
         /* Set SaveNeeded flag */
@@ -2200,9 +2200,9 @@ connP_make_connection(
 	break;
 
       case AB_FUNC_HELP_VOLUME:
-	XtVaGetValues(volume_field, XmNvalue, &vol_value, NULL);
-	XtVaGetValues(location_field, XmNvalue, &loc_value, NULL);
-	ab_action = obj_create(AB_TYPE_ACTION, NULL);
+	XtVaGetValues(volume_field, XmNvalue, &vol_value, nullptr);
+	XtVaGetValues(location_field, XmNvalue, &loc_value, nullptr);
+	ab_action = obj_create(AB_TYPE_ACTION, nullptr);
 	connP_make_help_vol_conn(ab_action, c_source, 
 				c_when, vol_value, loc_value);
 
@@ -2211,7 +2211,7 @@ connP_make_connection(
 	break;
     }
 
-    if (ab_action != (ABObj)NULL)
+    if (ab_action != (ABObj)nullptr)
     {
 	if (is_cross_module)
 	{
@@ -2234,7 +2234,7 @@ connP_make_connection(
 	    ConnP_view_filter = -1;
 	    XtVaSetValues(view_menu,
 		XmNmenuHistory, ConnP_view_source_obj,
-		NULL);
+		nullptr);
 	}
 	populate_connection_list(connP_get_connection());
     }
@@ -2262,16 +2262,16 @@ connP_change_connection(
     ABObj		c_target;
     BOOL		is_changed;
     AB_FUNC_TYPE	cur_func_type;
-    char		*str_value = (char *)NULL;
-    STRING		loc_value = (STRING) NULL,
-    			vol_value = (STRING) NULL;
-    ISTRING		istr_value = (ISTRING)NULL,
-    			istr_loc_value = (ISTRING)NULL,
-    			istr_vol_value = (ISTRING)NULL;
+    char		*str_value = (char *)nullptr;
+    STRING		loc_value = (STRING) nullptr,
+    			vol_value = (STRING) nullptr;
+    ISTRING		istr_value = (ISTRING)nullptr,
+    			istr_loc_value = (ISTRING)nullptr,
+    			istr_vol_value = (ISTRING)nullptr;
 
-    if ((ab_action = get_cur_connection()) == NULL)
+    if ((ab_action = get_cur_connection()) == nullptr)
 	return;
-    if ((c_source = connP_get_source()) == NULL)
+    if ((c_source = connP_get_source()) == nullptr)
 	return;
     if (connP_get_source_type() != obj_get_type(c_source))
 	return;
@@ -2293,7 +2293,7 @@ connP_change_connection(
        **************************************************/
       case AB_FUNC_BUILTIN:
 	c_act = get_cur_act();
-	if ((c_target = connP_get_target()) == NULL ||
+	if ((c_target = connP_get_target()) == nullptr ||
 	    connP_get_target_type() != obj_get_type(c_target))
 	    return;
 
@@ -2325,7 +2325,7 @@ connP_change_connection(
 	   */
 	  case AB_FUNC_USER_DEF:
 	    is_changed = TRUE;
-	    if (ab_action->info.action.func_value.func_name != (ISTRING)NULL)
+	    if (ab_action->info.action.func_value.func_name != (ISTRING)nullptr)
 		istr_destroy(ab_action->info.action.func_value.func_name);
 	    connP_make_builtin_conn(ab_action, c_source, c_target, 
 			c_when, c_act);
@@ -2338,7 +2338,7 @@ connP_change_connection(
 	    is_changed = TRUE;
 	    XmTextFieldSetString(arg_field, "");
 	    XmTextSetString(exec_code_textpane, "");
-	    if (ab_action->info.action.func_value.code_frag != (ISTRING)NULL)
+	    if (ab_action->info.action.func_value.code_frag != (ISTRING)nullptr)
 		istr_destroy(ab_action->info.action.func_value.code_frag);
 	    connP_make_builtin_conn(ab_action, c_source, c_target, 
 			c_when, c_act);
@@ -2358,9 +2358,9 @@ connP_change_connection(
 	   */
           case AB_FUNC_HELP_VOLUME:
             is_changed = TRUE;
-            if (ab_action->info.action.location != (ISTRING)NULL)
+            if (ab_action->info.action.location != (ISTRING)nullptr)
 		istr_destroy(ab_action->info.action.location);
-            if (ab_action->info.action.volume_id != (ISTRING)NULL)
+            if (ab_action->info.action.volume_id != (ISTRING)nullptr)
 		istr_destroy(ab_action->info.action.volume_id);
             connP_make_builtin_conn(ab_action, c_source, c_target, 
 			c_when, c_act);   
@@ -2389,7 +2389,7 @@ connP_change_connection(
        **************************************************/
       case AB_FUNC_USER_DEF:
 	str_value = XmTextFieldGetString(arg_field);
-	if (str_value == (char *)NULL)
+	if (str_value == (char *)nullptr)
 	    return;
 
 	switch (ab_action->info.action.func_type)
@@ -2433,7 +2433,7 @@ connP_change_connection(
 	    is_changed = TRUE;
 	    XmTextFieldSetString(arg_field, "");
 	    XmTextSetString(exec_code_textpane, "");
-	    if (ab_action->info.action.func_value.code_frag != (ISTRING)NULL)
+	    if (ab_action->info.action.func_value.code_frag != (ISTRING)nullptr)
 		istr_destroy(ab_action->info.action.func_value.code_frag);
 	    connP_make_user_def_conn(ab_action, c_source, c_when, str_value);
             abobj_set_save_needed(obj_is_project(c_source)? c_source :
@@ -2455,9 +2455,9 @@ connP_change_connection(
            */
           case AB_FUNC_HELP_VOLUME:
             is_changed = TRUE;
-	    if (ab_action->info.action.location != (ISTRING) NULL)
+	    if (ab_action->info.action.location != (ISTRING) nullptr)
 		istr_destroy(ab_action->info.action.location);
-	    if (ab_action->info.action.volume_id != (ISTRING) NULL)
+	    if (ab_action->info.action.volume_id != (ISTRING) nullptr)
 		istr_destroy(ab_action->info.action.volume_id);
             connP_make_user_def_conn(ab_action, c_source, c_when, str_value);        
             abobj_set_save_needed(obj_is_project(c_source)? 
@@ -2476,7 +2476,7 @@ connP_change_connection(
        **************************************************/ 
       case AB_FUNC_CODE_FRAG:
 	str_value = CodeFragBuf;
-	if (str_value == (STRING) NULL)
+	if (str_value == (STRING) nullptr)
 	    return;
 
 	switch (ab_action->info.action.func_type)
@@ -2496,7 +2496,7 @@ connP_change_connection(
            * Execute Code.
            */
 	  case AB_FUNC_USER_DEF:
-	    if (ab_action->info.action.func_value.func_name != (ISTRING)NULL)
+	    if (ab_action->info.action.func_value.func_name != (ISTRING)nullptr)
 		istr_destroy(ab_action->info.action.func_value.func_name);
 	    is_changed = TRUE;
 	    connP_make_code_frag_conn(ab_action, c_source, c_when, str_value);
@@ -2540,9 +2540,9 @@ connP_change_connection(
            */
           case AB_FUNC_HELP_VOLUME:
             is_changed = TRUE;
-            if (ab_action->info.action.location != (ISTRING)NULL)
+            if (ab_action->info.action.location != (ISTRING)nullptr)
                 istr_destroy(ab_action->info.action.location);
-            if (ab_action->info.action.volume_id != (ISTRING)NULL)
+            if (ab_action->info.action.volume_id != (ISTRING)nullptr)
 		istr_destroy(ab_action->info.action.volume_id);
             connP_make_code_frag_conn(ab_action, c_source, c_when, str_value);
             abobj_set_save_needed(obj_is_project(c_source)? 
@@ -2580,7 +2580,7 @@ connP_change_connection(
 	   */
           case AB_FUNC_USER_DEF:
             is_changed = TRUE;
-	    if (ab_action->info.action.func_value.func_name != (ISTRING) NULL)
+	    if (ab_action->info.action.func_value.func_name != (ISTRING) nullptr)
 		istr_destroy(ab_action->info.action.func_value.func_name);
 	    connP_make_on_item_help_conn(ab_action, c_source, c_when);
 	    abobj_set_save_needed(obj_is_project(c_source)? c_source :
@@ -2605,7 +2605,7 @@ connP_change_connection(
 	   */
           case AB_FUNC_CODE_FRAG:
             is_changed = TRUE;
-            if (ab_action->info.action.func_value.code_frag != (ISTRING)NULL)
+            if (ab_action->info.action.func_value.code_frag != (ISTRING)nullptr)
 		istr_destroy(ab_action->info.action.func_value.code_frag);
 	    connP_make_on_item_help_conn(ab_action, c_source, c_when);
             abobj_set_save_needed(obj_is_project(c_source)? 
@@ -2619,9 +2619,9 @@ connP_change_connection(
            */
           case AB_FUNC_HELP_VOLUME:
             is_changed = TRUE;
-            if (ab_action->info.action.location != (ISTRING) NULL)
+            if (ab_action->info.action.location != (ISTRING) nullptr)
 		istr_destroy(ab_action->info.action.location);
-            if (ab_action->info.action.volume_id != (ISTRING) NULL)
+            if (ab_action->info.action.volume_id != (ISTRING) nullptr)
 		istr_destroy(ab_action->info.action.volume_id);
 	    connP_make_on_item_help_conn(ab_action, c_source, c_when);
             abobj_set_save_needed(obj_is_project(c_source)?
@@ -2639,7 +2639,7 @@ connP_change_connection(
       case AB_FUNC_HELP_VOLUME:
         loc_value = XmTextFieldGetString(location_field);
         vol_value = XmTextFieldGetString(volume_field);
-        if (loc_value == (STRING)NULL || (vol_value == (STRING)NULL))
+        if (loc_value == (STRING)nullptr || (vol_value == (STRING)nullptr))
             return;
 
         switch (ab_action->info.action.func_type)
@@ -2649,7 +2649,7 @@ connP_change_connection(
            */
           case AB_FUNC_USER_DEF:
             is_changed = TRUE;
-            if (ab_action->info.action.func_value.func_name != (ISTRING) NULL)
+            if (ab_action->info.action.func_value.func_name != (ISTRING) nullptr)
 		istr_destroy(ab_action->info.action.func_value.func_name);
             connP_make_help_vol_conn(ab_action, c_source, c_when,
 				vol_value, loc_value);
@@ -2676,7 +2676,7 @@ connP_change_connection(
            */
           case AB_FUNC_CODE_FRAG:
             is_changed = TRUE;
-            if (ab_action->info.action.func_value.code_frag != (ISTRING)NULL)
+            if (ab_action->info.action.func_value.code_frag != (ISTRING)nullptr)
 		istr_destroy(ab_action->info.action.func_value.code_frag);
             connP_make_help_vol_conn(ab_action, c_source, c_when,
                 		vol_value, loc_value);
@@ -2743,7 +2743,7 @@ connP_delete_connection(
     ABObj		ab_action;
     ABObj		source, target;
 
-    if ((ab_action = get_cur_connection()) == NULL)
+    if ((ab_action = get_cur_connection()) == nullptr)
 	return;
 
     source = ab_action->info.action.from;
@@ -2766,7 +2766,7 @@ connP_delete_connection(
     }
 
     obj_destroy(ab_action);
-    connP_set_connection(NULL);
+    connP_set_connection(nullptr);
     populate_connection_list(connP_get_connection());
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
@@ -2877,10 +2877,10 @@ connP_register_source_choices(
      * jit - Workaround for dtcodegen bug:
      *          does not set XmNsubMenuId if Option Menu has 0 items
      */
-    XtVaSetValues(widget, XmNsubMenuId, dtbSource->source_choices_menu, NULL);
+    XtVaSetValues(widget, XmNsubMenuId, dtbSource->source_choices_menu, nullptr);
 
     src_menu = dtbSource->source_choices;
-    populate_src_menu(dtbSource->source_choices_menu, NULL, NULL);
+    populate_src_menu(dtbSource->source_choices_menu, nullptr, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -2904,10 +2904,10 @@ connP_register_target_choices(
      * jit - Workaround for dtcodegen bug:
      *          does not set XmNsubMenuId if Option Menu has 0 items
      */
-    XtVaSetValues(widget, XmNsubMenuId, dtbSource->target_choices_menu, NULL);
+    XtVaSetValues(widget, XmNsubMenuId, dtbSource->target_choices_menu, nullptr);
 
     target_menu = dtbSource->target_choices;
-    populate_target_menu(dtbSource->target_choices_menu, NULL, NULL);
+    populate_target_menu(dtbSource->target_choices_menu, nullptr, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -2931,13 +2931,13 @@ connP_register_when_choices(
      * jit - Workaround for dtcodegen bug:
      *          does not set XmNsubMenuId if Option Menu has 0 items
      */
-    XtVaSetValues(widget, XmNsubMenuId, dtbSource->when_choices_menu, NULL);
+    XtVaSetValues(widget, XmNsubMenuId, dtbSource->when_choices_menu, nullptr);
 
     when_menu = dtbSource->when_choices;
-    populate_when_menu(dtbSource->when_choices_menu, NULL, NULL);
+    populate_when_menu(dtbSource->when_choices_menu, nullptr, nullptr);
     XtAddCallback(XtParent(dtbSource->when_choices_menu),
                 XmNpopupCallback, connP_update_when_menu,
-                (XtPointer) NULL);
+                (XtPointer) nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -2961,14 +2961,14 @@ connP_register_predef_act_choices(
      * jit - Workaround for dtcodegen bug:
      *          does not set XmNsubMenuId if Option Menu has 0 items
      */
-    XtVaSetValues(widget, XmNsubMenuId, dtbSource->predef_act_choices_menu, NULL)
+    XtVaSetValues(widget, XmNsubMenuId, dtbSource->predef_act_choices_menu, nullptr)
 ;
 
     action_menu = dtbSource->predef_act_choices;
-    populate_action_menu(dtbSource->predef_act_choices_menu, NULL, NULL);
+    populate_action_menu(dtbSource->predef_act_choices_menu, nullptr, nullptr);
     XtAddCallback(XtParent(dtbSource->predef_act_choices_menu),
                 XmNpopupCallback, connP_update_action_menu,
-                (XtPointer) NULL);
+                (XtPointer) nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -2992,10 +2992,10 @@ connP_register_view_choices(
      * jit - Workaround for dtcodegen bug:
      *          does not set XmNsubMenuId if Option Menu has 0 items
      */
-    XtVaSetValues(widget, XmNsubMenuId, dtbSource->view_choices_menu, NULL);
+    XtVaSetValues(widget, XmNsubMenuId, dtbSource->view_choices_menu, nullptr);
 
     view_menu = dtbSource->view_choices;
-    populate_view_menu(dtbSource->view_choices_menu, NULL, NULL);
+    populate_view_menu(dtbSource->view_choices_menu, nullptr, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -3017,7 +3017,7 @@ connP_register_source_list(
 
     src_list = dtbSource->source_list;
     XtAddCallback(dtbSource->source_list, XmNbrowseSelectionCallback,
-                  update_cur_src, NULL);
+                  update_cur_src, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -3039,7 +3039,7 @@ connP_register_target_list(
 
     target_list = dtbSource->target_list;
     XtAddCallback(dtbSource->target_list, XmNbrowseSelectionCallback,
-                  update_cur_target, NULL);
+                  update_cur_target, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -3061,7 +3061,7 @@ connP_register_conn_list(
 
     connection_list = dtbSource->conn_list;
     XtAddCallback(dtbSource->conn_list, XmNbrowseSelectionCallback,
-                  select_connection, NULL);
+                  select_connection, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -3275,8 +3275,8 @@ connP_register_action_type_opmenu(
     
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
     
-    XmString	xmstr = NULL;
-    STRING	label = NULL;
+    XmString	xmstr = nullptr;
+    STRING	label = nullptr;
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -3284,25 +3284,25 @@ connP_register_action_type_opmenu(
 
     action_type_opmenu = widget;
     
-    XtVaGetValues(std_action_item, XmNlabelString, &xmstr, NULL);
+    XtVaGetValues(std_action_item, XmNlabelString, &xmstr, nullptr);
     action_type_labels[ACTION_TYPE_PREDEFINED] = objxm_xmstr_to_str(xmstr);
-    xmstr = NULL;
+    xmstr = nullptr;
     
-    XtVaGetValues(call_function_item, XmNlabelString, &xmstr, NULL);
+    XtVaGetValues(call_function_item, XmNlabelString, &xmstr, nullptr);
     action_type_labels[ACTION_TYPE_CALLFUNC] = objxm_xmstr_to_str(xmstr);
-    xmstr = NULL;
+    xmstr = nullptr;
     
-    XtVaGetValues(execute_code_item, XmNlabelString, &xmstr, NULL);
+    XtVaGetValues(execute_code_item, XmNlabelString, &xmstr, nullptr);
     action_type_labels[ACTION_TYPE_EXECUTE_CODE] = objxm_xmstr_to_str(xmstr);
-    xmstr = NULL;
+    xmstr = nullptr;
 
-    XtVaGetValues(on_item_help_item, XmNlabelString, &xmstr, NULL);
+    XtVaGetValues(on_item_help_item, XmNlabelString, &xmstr, nullptr);
     action_type_labels[ACTION_TYPE_ON_ITEM_HELP] = objxm_xmstr_to_str(xmstr);
-    xmstr = NULL;
+    xmstr = nullptr;
 
-    XtVaGetValues(help_volume_item, XmNlabelString, &xmstr, NULL);
+    XtVaGetValues(help_volume_item, XmNlabelString, &xmstr, nullptr);
     action_type_labels[ACTION_TYPE_HELP_VOLUME] = objxm_xmstr_to_str(xmstr);
-    xmstr = NULL;
+    xmstr = nullptr;
 
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -3397,9 +3397,9 @@ connP_exec_code_okCB(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    STRING	code_frag = NULL;
-    STRING      first_line = NULL;
-    char        *newline = NULL;
+    STRING	code_frag = nullptr;
+    STRING      first_line = nullptr;
+    char        *newline = nullptr;
     DtbConnExecCodeDialogInfo	dtbSource =
 			(DtbConnExecCodeDialogInfo) clientData;
 
@@ -3433,7 +3433,7 @@ connP_exec_code_okCB(
 	if (code_frag)
 	    CodeFragBuf = XtNewString(code_frag);
 	else
-	    CodeFragBuf = NULL;
+	    CodeFragBuf = nullptr;
 	XmTextFieldSetString(arg_field, "");
     }
 
@@ -3453,9 +3453,9 @@ connP_exec_code_applyCB(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    STRING	code_frag = NULL;
-    STRING	first_line = NULL;
-    char        *newline = NULL;
+    STRING	code_frag = nullptr;
+    STRING	first_line = nullptr;
+    char        *newline = nullptr;
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -3487,7 +3487,7 @@ connP_exec_code_applyCB(
         if (code_frag)
             CodeFragBuf = XtNewString(code_frag);
         else 
-            CodeFragBuf = NULL; 
+            CodeFragBuf = nullptr; 
 	XmTextFieldSetString(arg_field, "");
     }
 
@@ -3557,7 +3557,7 @@ allow_show_help_connection(
     AB_OBJECT_TYPE      target_type;
     int                 src_subtype;
 
-    if( (src_obj == (ABObj)NULL) || (target_obj == (ABObj)NULL)) return(FALSE);
+    if( (src_obj == (ABObj)nullptr) || (target_obj == (ABObj)nullptr)) return(FALSE);
 
     src_type    = obj_get_type(src_obj);
     target_type = obj_get_type(target_obj);
@@ -3597,11 +3597,11 @@ connP_update_when_menu(
 )
 {
     ABObj       cur_obj = connP_get_source();
-    Widget      *w_list = NULL;
+    Widget      *w_list = nullptr;
 
-    XtVaGetValues(when_pulldown, XmNuserData, &w_list, NULL);
+    XtVaGetValues(when_pulldown, XmNuserData, &w_list, nullptr);
 
-    if (w_list == NULL)
+    if (w_list == nullptr)
     {
         return;
     }
@@ -3633,7 +3633,7 @@ connP_update_when_menu(
 	    break;
 
         case AB_TYPE_MESSAGE:
-            if (cur_obj != NULL)
+            if (cur_obj != nullptr)
             {
                 if (!obj_has_action1_button(cur_obj))
                    XtSetSensitive(w_list[ConnP_conn_whens[0].when_type-1],
@@ -3682,11 +3682,11 @@ connP_update_action_menu(
     ABObj		src_obj = connP_get_source();
     ABObj       	target_obj = connP_get_target();
     AB_OBJECT_TYPE      target_type = connP_get_target_type();
-    Widget      	*w_list = NULL;
+    Widget      	*w_list = nullptr;
 
-    XtVaGetValues(action_pulldown, XmNuserData, &w_list, NULL);
+    XtVaGetValues(action_pulldown, XmNuserData, &w_list, nullptr);
 
-    if (w_list == NULL)
+    if (w_list == nullptr)
         return;
 
     switch (target_type)
@@ -3747,7 +3747,7 @@ update_on_src_type_change(
     AB_FUNC_TYPE        g_func = AB_FUNC_UNDEF;
     AB_BUILTIN_ACTION   g_act = AB_STDACT_UNDEF;
     
-    if (obj_type == (AB_OBJECT_TYPE) NULL)
+    if (obj_type == (AB_OBJECT_TYPE) nullptr)
         return;
  
     /* Update the When option menu */
@@ -3799,7 +3799,7 @@ update_on_target_type_change(
     AB_FUNC_TYPE        g_func = AB_FUNC_UNDEF;
     AB_BUILTIN_ACTION   g_act = AB_STDACT_UNDEF;
     
-    if (obj_type == (AB_OBJECT_TYPE) NULL)
+    if (obj_type == (AB_OBJECT_TYPE) nullptr)
         return;
  
     /* Update the Action option menu */
@@ -3846,14 +3846,14 @@ update_conn_ed_controls(void)
     XtVaSetValues(XmOptionButtonGadget(src_menu),
         XtVaTypedArg, XmNlabelString, XtRString,
             ConnP_conn_objs[i].label, strlen(ConnP_conn_objs[i].label)+1,
-        NULL);
+        nullptr);
     update_on_src_type_change(source_type, source_subtype);
 
     /* Update the Target option menu */
     XtVaSetValues(XmOptionButtonGadget(target_menu),
         XtVaTypedArg, XmNlabelString, XtRString,
             ConnP_conn_objs[j].label, strlen(ConnP_conn_objs[j].label)+1,
-        NULL);
+        nullptr);
     update_on_target_type_change(target_type, target_subtype);
 
     if (connP_conn_is_possible())
@@ -3866,13 +3866,13 @@ static AB_FUNC_TYPE
 get_cur_func_type(void)
 {
     Widget      label_wid = XmOptionButtonGadget(action_type_opmenu);
-    XmString    xm_act_label    = (XmString)NULL;
-    char        *act_label = NULL;
+    XmString    xm_act_label    = (XmString)nullptr;
+    char        *act_label = nullptr;
     int        i = -1;
     AB_FUNC_TYPE	func_type = AB_FUNC_UNDEF;
  
-    XtVaGetValues(label_wid, XmNlabelString, &xm_act_label, NULL);
-    if (xm_act_label != NULL) {
+    XtVaGetValues(label_wid, XmNlabelString, &xm_act_label, nullptr);
+    if (xm_act_label != nullptr) {
 	act_label = objxm_xmstr_to_str(xm_act_label);
  
 	for (i = 0; i < ACTION_TYPE_NUM_VALUES; i++) {
@@ -3956,7 +3956,7 @@ set_ctrls_for_target(
 	    if (state)
 	    {
 		change_arg_sensitivity(arg_field, 
-			(XtPointer) NULL, (XtPointer) NULL);
+			(XtPointer) nullptr, (XtPointer) nullptr);
 	    }
 	    else
 	    {

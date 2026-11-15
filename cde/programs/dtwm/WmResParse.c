@@ -2479,7 +2479,7 @@ static MenuItem *ParseMenuItems (WmScreenData *pSD)
             continue;
 	}
 	menuItem->nextMenuItem = nullptr;
-	menuItem->wmFunction = (WmFunction)NULL;
+	menuItem->wmFunction = (WmFunction)nullptr;
 	menuItem->wmFuncArgs = nullptr;
 
 	{
@@ -2676,7 +2676,7 @@ static void ParseWmMnemonic (unsigned char **linePP, MenuItem *menuItem)
      * Skip leading white space.
      */
     ScanWhitespace (&lineP);
-    menuItem->mnemonic = (KeySym)NULL;
+    menuItem->mnemonic = NoSymbol;
 
     if (*lineP == '_')
     /* 
@@ -3537,7 +3537,7 @@ static void ParseButtonSet (WmScreenData *pSD, unsigned char *lineP)
             PWarning (((char *)GETMESSAGE(60, 22, "Insufficient memory for button specification")));
             continue;
 	}
-	buttonSpec->wmFunction = (WmFunction)NULL;
+	buttonSpec->wmFunction = (WmFunction)nullptr;
 	buttonSpec->wmFuncArgs = nullptr;
 	buttonSpec->nextButtonSpec = nullptr;
 
@@ -3943,7 +3943,7 @@ static void ParseKeySet (WmScreenData *pSD, unsigned char *lineP)
             continue;
 	}
 
-	keySpec->wmFunction = (WmFunction)NULL;
+	keySpec->wmFunction = (WmFunction)nullptr;
 	keySpec->wmFuncArgs = nullptr;
 	keySpec->nextKeySpec = nullptr;
 

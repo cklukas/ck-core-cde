@@ -249,7 +249,7 @@ static Boolean
 pd_set_report_type(Calendar *c, int reportType)
 {
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
-  Widget optionMenu = (Widget)NULL;
+  Widget optionMenu = (Widget)nullptr;
   Arg args[10];
   int nargs;
 
@@ -263,7 +263,7 @@ pd_set_report_type(Calendar *c, int reportType)
   XtSetArg(args[nargs], XmNsubMenuId, &optionMenu); nargs++;
   XtGetValues(pd->report_type_option, args, nargs);
 
-  if (optionMenu != (Widget)NULL)
+  if (optionMenu != (Widget)nullptr)
   {
     WidgetList optionChildren;
     int nChildren = 0;
@@ -881,7 +881,7 @@ createPrintShell(Calendar *c)
 #ifdef GR_DEBUG
   if (inDebugMode(c))
   {
-    if (pd->printShell != (Widget)NULL)
+    if (pd->printShell != (Widget)nullptr)
       XtDestroyWidget(pd->printShell);
 
     pd->printShell = XmCreateDialogShell(c->frame, "Print",
@@ -889,7 +889,7 @@ createPrintShell(Calendar *c)
   }
   else
 #endif
-  if (pd->printShell == (Widget)NULL)
+  if (pd->printShell == (Widget)nullptr)
   {
     pd->printShell =
       XmPrintSetup(pd->pdb,
@@ -958,7 +958,7 @@ create_print_dialog(Calendar *c)
 			print_setup_cb, (XtPointer)c);
 
 	  helpButton = XtNameToWidget(pd->pdb, "Help");
-	  if (helpButton != (Widget)NULL)
+	  if (helpButton != (Widget)nullptr)
 	    XtAddCallback(helpButton, XmNactivateCallback,
 			  help_cb, (XtPointer)PRINT_HELP_BUTTON);
 	  XtAddCallback(pd->pdb, XmNhelpCallback,
@@ -1055,7 +1055,7 @@ create_print_dialog(Calendar *c)
 	  pd->from_day = XmCreateTextField(pd->from_spin, "FromDay",
 					   args, nargs);
 	  XtAddCallback(pd->from_day, XmNvalueChangedCallback,
-			spin_field_changed_cb, (XtPointer)NULL);
+			spin_field_changed_cb, (XtPointer)nullptr);
 	  XtManageChild(pd->from_day);
 
 	  maxMonthLen = 0;
@@ -1075,7 +1075,7 @@ create_print_dialog(Calendar *c)
 	  pd->from_month = XmCreateTextField(pd->from_spin, "FromMonth",
 					     args, nargs);
 	  XtAddCallback(pd->from_month, XmNvalueChangedCallback,
-			spin_field_changed_cb, (XtPointer)NULL);
+			spin_field_changed_cb, (XtPointer)nullptr);
 	  XtManageChild(pd->from_month);
 
 	  nargs = 0;
@@ -1092,7 +1092,7 @@ create_print_dialog(Calendar *c)
 	  pd->from_year = XmCreateTextField(pd->from_spin, "FromYear",
 					    args, nargs);
 	  XtAddCallback(pd->from_year, XmNvalueChangedCallback,
-			spin_field_changed_cb, (XtPointer)NULL);
+			spin_field_changed_cb, (XtPointer)nullptr);
 	  XtManageChild(pd->from_year);
 	  XtManageChild(pd->from_spin);
 
@@ -1136,7 +1136,7 @@ create_print_dialog(Calendar *c)
 	  pd->to_day = XmCreateTextField(pd->to_spin, "ToDay",
 					   args, nargs);
 	  XtAddCallback(pd->to_day, XmNvalueChangedCallback,
-			spin_field_changed_cb, (XtPointer)NULL);
+			spin_field_changed_cb, (XtPointer)nullptr);
 	  XtManageChild(pd->to_day);
 
 	  nargs = 0;
@@ -1149,7 +1149,7 @@ create_print_dialog(Calendar *c)
 	  pd->to_month = XmCreateTextField(pd->to_spin, "ToMonth",
 					   args, nargs);
 	  XtAddCallback(pd->to_month, XmNvalueChangedCallback,
-			spin_field_changed_cb, (XtPointer)NULL);
+			spin_field_changed_cb, (XtPointer)nullptr);
 	  XtManageChild(pd->to_month);
 	  for (i = 0; i < 12; i++)
 	    XmStringFree(abbrevMonths[i]);
@@ -1168,7 +1168,7 @@ create_print_dialog(Calendar *c)
 	  pd->to_year = XmCreateTextField(pd->to_spin, "ToYear",
 					  args, nargs);
 	  XtAddCallback(pd->to_year, XmNvalueChangedCallback,
-			spin_field_changed_cb, (XtPointer)NULL);
+			spin_field_changed_cb, (XtPointer)nullptr);
 	  XtManageChild(pd->to_year);
 	  XtManageChild(pd->to_spin);
 
@@ -1205,7 +1205,7 @@ create_print_dialog(Calendar *c)
 
 	  pd->setupDataValid = False;
 	  clearSetupData(pd);
-	  pd->printShell = (Widget)NULL;
+	  pd->printShell = (Widget)nullptr;
 	  pd->badAllocError = False;
 	}
 
@@ -1300,10 +1300,10 @@ close_print_display_cb(Widget w, XtPointer uData, XtPointer cbData)
   if (pd != (_DtCmPrintData *)nullptr)
   {
     /* Destroy printShell associated with Display, if any. */
-    if (pd->printShell != (Widget)NULL)
+    if (pd->printShell != (Widget)nullptr)
     {
       XtDestroyWidget(pd->printShell);
-      pd->printShell = (Widget)NULL;
+      pd->printShell = (Widget)nullptr;
     }
 
     clearSetupData(pd);
@@ -1469,7 +1469,7 @@ print_report(Calendar *c)
   if (inDebugMode(c))
   {
     XtDestroyWidget(pd->printShell);
-    pd->printShell = (Widget)NULL;
+    pd->printShell = (Widget)nullptr;
   }
 #endif
 
@@ -1600,7 +1600,7 @@ pd_get_print_shell(Calendar *c)
   _DtCmPrintData *pd = (_DtCmPrintData *)c->print_data;
 
   if (pd == (_DtCmPrintData *)nullptr)
-    return (Widget)NULL;
+    return (Widget)nullptr;
 
   return pd->printShell;
 }
@@ -1610,7 +1610,7 @@ pd_get_print_display(Calendar *c)
 {
   Widget printShell = pd_get_print_shell(c);
 
-  if (printShell == (Widget)NULL)
+  if (printShell == (Widget)nullptr)
       return (Display *)nullptr;
 
   return XtDisplay(printShell);

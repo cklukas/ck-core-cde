@@ -173,7 +173,7 @@ static ResourceValue _psHdrFtrValues[] =
 };
 				    
 
-static Widget		_psDefaultPrintSetupDialog = (Widget) NULL;
+static Widget		_psDefaultPrintSetupDialog = (Widget) nullptr;
 static char		*_psDefaultMargin = PS_RESOURCE_VALUE_DFLT_MARGIN;
 
 static XtResource _psResources[] = {
@@ -253,7 +253,7 @@ PrintSetupCreate(
     pSetup->setupClosure = setupClosure;
     pSetup->pPad = pPad;
 
-    pSetup->dtprintSetup = (Widget) NULL;
+    pSetup->dtprintSetup = (Widget) nullptr;
     pSetup->widgets = (psWidgets *) nullptr;
 
     /*

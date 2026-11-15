@@ -418,7 +418,7 @@ static XtResource resources[] =
     {
 	DtNtermSlaveName, DtCTermSlaveName, XmRString, sizeof(char *),
 	XtOffsetOf(struct _DtTermViewRec, termview.ptySlaveName),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNrows, DtCRows, XmRShort, sizeof(short),
@@ -474,13 +474,13 @@ static XtResource resources[] =
 	DtNsubprocessTerminationCallback, DtCCallback, XmRCallback,
 	sizeof(XtCallbackList),
 	XtOffsetOf( struct _DtTermViewRec, termview.subprocessTerminationCallback),
-	XmRPointer, (XtPointer) NULL
+	XmRPointer, (XtPointer) nullptr
     },
     {
 	DtNnewCallback, DtCCallback, XmRCallback,
 	sizeof(XtCallbackList),
 	XtOffsetOf( struct _DtTermViewRec, termview.newCallback),
-	XmRPointer, (XtPointer) NULL
+	XmRPointer, (XtPointer) nullptr
     },
     {
 	DtNsubprocessPid, DtCSubprocessPid, XmRInt, sizeof(int),
@@ -501,12 +501,12 @@ static XtResource resources[] =
     {
 	DtNsubprocessCmd, DtCSubprocessCmd, XmRString, sizeof(char *),
 	XtOffsetOf( struct _DtTermViewRec, termview.subprocessCmd),
-	XtRImmediate, (XtPointer) NULL
+	XtRImmediate, (XtPointer) nullptr
     },
     {
 	DtNsubprocessArgv, DtCSubprocessArgv, XtRStringArray, sizeof(String *),
 	XtOffsetOf( struct _DtTermViewRec, termview.subprocessArgv),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNscrollBar, DtCScrollBar, XmRBoolean, sizeof(Boolean),
@@ -533,7 +533,7 @@ static XtResource resources[] =
 	DtNuserFont, DtCUserFont, XmRFontList,
 	sizeof(XmFontList),
 	XtOffsetOf( struct _DtTermViewRec, termview.fontList),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNuserFontList, DtCUserFontList, XmRString, sizeof(char *),
@@ -556,7 +556,7 @@ externaldef(termclassrec) DtTermViewClassRec dtTermViewClassRec =
 	/* class_part_init	*/	ClassPartInitialize,
 	/* class_inited		*/	FALSE,
 	/* initialize		*/	Initialize,
-	/* initialize_hook	*/	(XtArgsProc) NULL,
+	/* initialize_hook	*/	(XtArgsProc) nullptr,
 	/* realize		*/	Realize,
 	/* actions		*/	nullptr, /*actionsList,*/
 	/* num_actions		*/	0, /*XtNumber(actionsList),*/
@@ -571,16 +571,16 @@ externaldef(termclassrec) DtTermViewClassRec dtTermViewClassRec =
 	/* resize		*/	Resize,
 	/* expose		*/	Redisplay,
 	/* set_values		*/	SetValues,
-	/* set_values_hook	*/	(XtArgsFunc) NULL,
+	/* set_values_hook	*/	(XtArgsFunc) nullptr,
 	/* set_values_almost	*/	XtInheritSetValuesAlmost,
-	/* get_values_hook	*/	(XtArgsProc) NULL,
-	/* accept_focus		*/	(XtAcceptFocusProc) NULL,
+	/* get_values_hook	*/	(XtArgsProc) nullptr,
+	/* accept_focus		*/	(XtAcceptFocusProc) nullptr,
 	/* version		*/	XtVersion,
-	/* callback_private	*/	(XtPointer) NULL,
+	/* callback_private	*/	(XtPointer) nullptr,
 	/* tm_table		*/	XtInheritTranslations,
-	/* query_geometry	*/	(XtGeometryHandler) NULL,
-	/* display_accelerator	*/	(XtStringProc) NULL,
-	/* extension		*/	(XtPointer) NULL,
+	/* query_geometry	*/	(XtGeometryHandler) nullptr,
+	/* display_accelerator	*/	(XtStringProc) nullptr,
+	/* extension		*/	(XtPointer) nullptr,
     },
 
     /* composite class rec */
@@ -617,7 +617,7 @@ externaldef(termclassrec) DtTermViewClassRec dtTermViewClassRec =
     /* bulletin board class */
     {
         /* always_install_accelerators  */ FALSE,
-        /* geom_matrix_create           */ (XmGeoCreateProc) NULL,
+        /* geom_matrix_create           */ (XmGeoCreateProc) nullptr,
         /* focus_moved_proc             */ XmInheritFocusMovedProc,
         /* extension                    */ nullptr,
     },
@@ -1188,7 +1188,7 @@ Initialize(Widget rw, Widget w, Arg *args, Cardinal *num_args)
      */
     (void) XtAddEventHandler(w,
 	    (EventMask) EnterWindowMask | LeaveWindowMask,
-	    False, handleEnterLeaveEvents, (Opaque) NULL);
+	    False, handleEnterLeaveEvents, (Opaque) nullptr);
 
     /* Add a substructure notify handler so that the first time we are
      * mapped, we can save away our default size...

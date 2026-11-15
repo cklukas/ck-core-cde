@@ -190,13 +190,13 @@ projP_save_mod_proc(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    Vwr		v = NULL;
-    VNode	*selected_nodes = NULL;
+    Vwr		v = nullptr;
+    VNode	*selected_nodes = nullptr;
     VMethods	m;
     int		num_selected = 0,
 		i;
     AB_OBJ	*obj;
-    STRING	file = NULL;
+    STRING	file = nullptr;
     BOOL	read_OK = FALSE, write_OK = FALSE;
     int		rc = 0;
     char	mod_dir[MAXPATHLEN];
@@ -204,7 +204,7 @@ projP_save_mod_proc(
 
     *mod_dir = 0;
     *help_buf = 0;
-    XtVaGetValues(widget, XmNuserData, &v, NULL); 
+    XtVaGetValues(widget, XmNuserData, &v, nullptr); 
     
     if (!v)
 	return;
@@ -227,7 +227,7 @@ projP_save_mod_proc(
 
     file = obj_get_file(obj);
     /* The file has not been saved yet */
-    if (file == NULL)
+    if (file == nullptr)
     {
         projP_show_save_as_bil_chooser(AB_toplevel, obj);
     }
@@ -250,7 +250,7 @@ projP_save_mod_proc(
 		    abio_access_file(file, &read_OK, &write_OK);
 	    	    if (write_OK)
 	    	    {
-			rc = bil_save_tree(obj, file, NULL, 
+			rc = bil_save_tree(obj, file, nullptr, 
 				BIL_SAVE_FILE_PER_MODULE);
 			if (rc < 0)
 		 	{
@@ -270,7 +270,7 @@ projP_save_mod_proc(
 			    "The file %s is a read-only file.\nCannot save edits."), file);
 			util_set_help_data(CATGETS(Dtb_project_catd, 100, 81,
 				"The changes that were made cannot be saved\nbecause you do not have permission to write\nto the file."),
-				NULL, NULL);
+				nullptr, nullptr);
 			util_printf_err(Buf);
 	    	    }
 		}
@@ -280,7 +280,7 @@ projP_save_mod_proc(
 			"Cannot save module to \"%s\".\n\"%s\" does not have write permission."), mod_dir, mod_dir);
 		    sprintf(help_buf, CATGETS(Dtb_project_catd, 100, 82,
 			"You do not have permission to write to the\ndirectory \"%s\"."), mod_dir);
-		    util_set_help_data(help_buf, NULL, NULL);
+		    util_set_help_data(help_buf, nullptr, nullptr);
                     util_printf_err(Buf);
             	}
 	    }
@@ -312,14 +312,14 @@ projP_save_as_mod_proc(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    Vwr         v = NULL;
-    VNode       *selected_nodes = NULL;
+    Vwr         v = nullptr;
+    VNode       *selected_nodes = nullptr;
     VMethods    m;
     int         num_selected = 0,
                 i;
     AB_OBJ      *obj;
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL);
+    XtVaGetValues(widget, XmNuserData, &v, nullptr);
 
     if (!v)
         return;
@@ -359,8 +359,8 @@ projP_show_proc(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    Vwr         v = NULL;
-    VNode       *selected_nodes = NULL;
+    Vwr         v = nullptr;
+    VNode       *selected_nodes = nullptr;
     VMethods    m;
     int         num_selected = 0, i;
     ABObj       obj;
@@ -368,7 +368,7 @@ projP_show_proc(
     AB_TRAVERSAL trav;
     ABObj       winobj;
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL);
+    XtVaGetValues(widget, XmNuserData, &v, nullptr);
 
     if (!v)
         return;
@@ -401,7 +401,7 @@ projP_show_proc(
 	if (obj_has_flag(obj, MappedFlag))
 	{
 	    for (trav_open(&trav, obj, AB_TRAV_WINDOWS);
-		(winobj = trav_next(&trav)) != NULL; )
+		(winobj = trav_next(&trav)) != nullptr; )
 	    {
 		if (obj_has_flag(winobj, MappedFlag))
 		    ui_win_front(objxm_get_widget(winobj));
@@ -443,13 +443,13 @@ projP_hide_proc(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    Vwr         v = NULL;
-    VNode       *selected_nodes = NULL;
+    Vwr         v = nullptr;
+    VNode       *selected_nodes = nullptr;
     VMethods    m;
     int         num_selected = 0, i;
-    ABObj       obj = NULL;
+    ABObj       obj = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL);
+    XtVaGetValues(widget, XmNuserData, &v, nullptr);
 
     if (!v)
         return;
@@ -475,7 +475,7 @@ projP_hide_proc(
         }
 	if (obj == proj_get_cur_module())
 	{
-	    proj_set_cur_module(NULL);
+	    proj_set_cur_module(nullptr);
 	}
 	    
     }
@@ -496,8 +496,8 @@ projP_browse_proc(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    Vwr         v = NULL;
-    VNode       *selected_nodes = NULL;
+    Vwr         v = nullptr;
+    VNode       *selected_nodes = nullptr;
     VMethods    m;
     int         num_selected = 0,
                 i;
@@ -505,7 +505,7 @@ projP_browse_proc(
     AB_OBJ  	*module;
     Boolean	hidden_modules = False;
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL);
+    XtVaGetValues(widget, XmNuserData, &v, nullptr);
 
     if (!v)
         return;
@@ -565,7 +565,7 @@ projP_browse_proc(
     {
 	dtb_proj_brws_mod_msg_initialize(&dtb_proj_brws_mod_msg);
 	dtb_show_message(dtb_get_toplevel_widget(),
-		&dtb_proj_brws_mod_msg, NULL, NULL);
+		&dtb_proj_brws_mod_msg, nullptr, nullptr);
     }
 
     if (selected_nodes)
@@ -588,18 +588,18 @@ projP_remove_proc(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    Vwr         	v = NULL;
-    VNode       	*selected_nodes = NULL;
-    VMethods    	m = NULL;
+    Vwr         	v = nullptr;
+    VNode       	*selected_nodes = nullptr;
+    VMethods    	m = nullptr;
     int         	num_selected = 0, i, save_count = 0;
-    ABObj       	obj = NULL;
+    ABObj       	obj = nullptr;
     ABObj		proj = proj_get_project();
     DTB_MODAL_ANSWER	answer = DTB_ANSWER_NONE;
     int			len = 0;
-    STRING		init_msg = NULL;
-    STRING		wrnmsg = NULL;
+    STRING		init_msg = nullptr;
+    STRING		wrnmsg = nullptr;
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL);
+    XtVaGetValues(widget, XmNuserData, &v, nullptr);
 
     if (!v)
         return;
@@ -638,7 +638,7 @@ projP_remove_proc(
                         "The following module(s) have unsaved edits. Removing the\nmodule(s) from the project will discard your changes.\nPlease confirm.");
 
                 /* If we have an old buffer lying around, free it */
-                if (wrnmsg != (STRING) NULL)
+                if (wrnmsg != (STRING) nullptr)
                     util_free(wrnmsg);
  
                 /* Now create a new buffer of the proper size */
@@ -672,11 +672,11 @@ projP_remove_proc(
 
     if (!util_strempty(wrnmsg))
     {
-	XmString	xm_buf = NULL;
+	XmString	xm_buf = nullptr;
         xm_buf = XmStringCreateLocalized(wrnmsg);
 	dtb_proj_del_mod_msg_initialize(&dtb_proj_del_mod_msg);
 	answer = dtb_show_modal_message(XtParent(AB_proj_window),
-			&dtb_proj_del_mod_msg, xm_buf, NULL, NULL);
+			&dtb_proj_del_mod_msg, xm_buf, nullptr, nullptr);
         XmStringFree(xm_buf);
         util_free(wrnmsg);
     }
@@ -699,7 +699,7 @@ projP_remove_proc(
 	     * then set the new default module to NONE.
 	     */
 	    if (obj == proj_get_cur_module())
-		proj_set_cur_module(NULL);
+		proj_set_cur_module(nullptr);
 
 	    obj_destroy(obj);
 	}
@@ -726,10 +726,10 @@ projP_repaint(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    Vwr                 v = NULL;
+    Vwr                 v = nullptr;
     VMethods            m;
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL);
+    XtVaGetValues(widget, XmNuserData, &v, nullptr);
 
     m = v->methods;
 
@@ -754,7 +754,7 @@ projP_set_userdata(
     
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    XtVaSetValues(widget, XmNuserData, (XtPointer)Proj_viewer, NULL);
+    XtVaSetValues(widget, XmNuserData, (XtPointer)Proj_viewer, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -772,8 +772,8 @@ projP_export_mod_proc(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    Vwr         v = NULL;
-    VNode       *selected_nodes = NULL;
+    Vwr         v = nullptr;
+    VNode       *selected_nodes = nullptr;
     VMethods    m;
     int         num_selected = 0;
     ABObj       obj;
@@ -782,7 +782,7 @@ projP_export_mod_proc(
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
-    XtVaGetValues(widget, XmNuserData, &v, NULL);
+    XtVaGetValues(widget, XmNuserData, &v, nullptr);
 
     if (!v)                                       
         return;

@@ -425,7 +425,7 @@ objxm_get_num_args(
     ArgList args = arglist;
     int     n = 0;
 
-    for ( ; (args != (ArgList)NULL) && (args->name != nullptr);
+    for ( ; (args != (ArgList)nullptr) && (args->name != nullptr);
              args++, n++)
         ;
 
@@ -453,7 +453,7 @@ objxm_remove_arg(
     if (nargs > 0)
     {
         args = *p_arglist;
-        *p_arglist = (ArgList)NULL;
+        *p_arglist = (ArgList)nullptr;
         for (i = 0; i < nargs ; i++)
         {
             if (args[i].name && (strcmp(args[i].name, name) == 0))
@@ -1551,7 +1551,7 @@ objxmP_merge_arg(
 
     if ((nargs = objxm_get_num_args(*p_arglist)) == 0)
     {            /* first time ever */
-        result  = objxmP_merge_arglists(arg, 1, (ArgList)NULL, 0);
+        result  = objxmP_merge_arglists(arg, 1, (ArgList)nullptr, 0);
         *p_arglist = result;
     }
     else

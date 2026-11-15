@@ -68,7 +68,7 @@ get_font(
 	*type_return = XmFONT_IS_FONT;
 
 	if (!XmFontListInitFontContext(&fl_context, font_list))
-		return (XtPointer)NULL;
+		return (XtPointer)nullptr;
 
 	do {
 		fl_entry = XmFontListNextEntry(fl_context);
@@ -106,7 +106,7 @@ get_font(
 	XmFontListFreeFontContext(fl_context);
 
 	if (!found_font_set && !found_font_struct)
-		return (XtPointer)NULL;
+		return (XtPointer)nullptr;
 
 	return (XtPointer)font_to_use;
 }

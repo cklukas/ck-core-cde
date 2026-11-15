@@ -139,8 +139,8 @@ static Dimension wspCharWidth (
  * window is iconified, the title will be "Icon:  <iconName>",
  * otherwise the title wil be "Window: <windowName>
  */
-XmString windowLabelString = (XmString)NULL;
-XmString iconLabelString = (XmString)NULL;
+XmString windowLabelString = (XmString)nullptr;
+XmString iconLabelString = (XmString)nullptr;
 
 /*************************************<->*************************************
  *
@@ -685,15 +685,15 @@ wspCreateLabel(
     Arg setArgs[20];
     int i;
     Widget labelW;
-    XmString tmpXmString = (XmString)NULL;
+    XmString tmpXmString = (XmString)nullptr;
 
     i = 0;
 
     if (!strcmp((char *)pchName, "window"))
     {
-	if (windowLabelString != (XmString)NULL)
+	if (windowLabelString != (XmString)nullptr)
 	    XmStringFree(windowLabelString);
-	if (iconLabelString != (XmString)NULL)
+	if (iconLabelString != (XmString)nullptr)
 	    XmStringFree(iconLabelString);
 
 	windowLabelString = 
@@ -716,7 +716,7 @@ wspCreateLabel(
     labelW = XmCreateLabelGadget (mgrW, (char *)pchName, setArgs, i);
     XtManageChild (labelW);
 
-    if (tmpXmString != (XmString)NULL)
+    if (tmpXmString != (XmString)nullptr)
 	XmStringFree(tmpXmString);
 
     return (labelW);

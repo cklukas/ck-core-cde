@@ -539,7 +539,7 @@ unsigned int              rtype;
        if ((direction != IL_MIRRORX) && (direction != IL_MIRRORY))
             return ilDeclarePipeInvalid(pipe, IL_ERROR_INVALID_OPTION);
 
-       dstdata.producerObject = (ilObject) NULL;
+       dstdata.producerObject = (ilObject) nullptr;
        dstdata.pDes           = (ilImageDes *) nullptr;
        dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.pPalette       = info.pPalette;

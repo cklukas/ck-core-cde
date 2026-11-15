@@ -1310,7 +1310,7 @@ BoxCreate (void)
          /* Event handler for posting popup menu */
 
          XtAddEventHandler(box_data->left_control_form, ButtonPressMask, False,
-                           PostPopupMenu, (XtPointer) NULL);
+                           PostPopupMenu, (XtPointer) nullptr);
       }
 
       if (box_data->right_control_form != nullptr)
@@ -1325,7 +1325,7 @@ BoxCreate (void)
          /* Event handler for posting popup menu */
 
          XtAddEventHandler(box_data->right_control_form, ButtonPressMask,False,
-                           PostPopupMenu, (XtPointer) NULL);
+                           PostPopupMenu, (XtPointer) nullptr);
       }
    }
 
@@ -1363,7 +1363,7 @@ BoxCreate (void)
              XtAddEventHandler (box_data->switch_form, ButtonPressMask,
 			        False,
 				PostWorkspacePopupMenu,
-			        (XtPointer) NULL);
+			        (XtPointer) nullptr);
          }
       }
    }
@@ -1785,7 +1785,7 @@ ControlSetBehavior (ControlData * control_data,
 	     * Set fileName resource if specified; otherwise, leave
 	     * unset and it will default to the user's mail file.
 	     */
-	    if ((file_name != (String)NULL) &&
+	    if ((file_name != (String)nullptr) &&
 		(*file_name != '\0'))
 	    {
 		*expanded_file_name = (String)
@@ -2870,7 +2870,7 @@ SubpanelCreate (ControlData  * main_control_data,
    /* Event handler for posting popup menu */
 
    XtAddEventHandler (subpanel_data->form, ButtonPressMask, False,
-                      PostPopupMenu, (XtPointer) NULL);
+                      PostPopupMenu, (XtPointer) nullptr);
 
 
    /*  If the value for subpanel control install is true, create  */
@@ -3911,7 +3911,7 @@ DeleteSubpanelControl (SubpanelData * subpanel_data,
 
    if (subpanel_data->torn == False)
        ArrowCB (main_control_data->arrow,
-		(XtPointer)main_control_data, (XtPointer)NULL);
+		(XtPointer)main_control_data, (XtPointer)nullptr);
 
    /*  Set the XmNcancelButton resource to the default control  */
    /*  within the subpanel.                                     */

@@ -318,14 +318,14 @@ static XtResource resources[] =
 	{	DtNfileMgrRec,
 		DtCfileMgrRec, XmRString, sizeof (char *),
 		XtOffsetOf( struct _DtIconicPathRec, iconic_path.file_mgr_rec),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 
 	{	DtNcurrentDirectory,
 		DtCCurrentDirectory, XmRString, sizeof (char *),
 		XtOffsetOf( struct _DtIconicPathRec,
 		            iconic_path.current_directory),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 
 	{	DtNlargeIcons,

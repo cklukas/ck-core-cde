@@ -1231,7 +1231,7 @@ UpdateSubpanelControlMenu (SubpanelData * subpanel_data,
                             XmNactivateCallback);
 
       XtAddCallback (panel.popup_data->deinstall_item, XmNactivateCallback,
-                     DeleteControlCB, (XtPointer) NULL);
+                     DeleteControlCB, (XtPointer) nullptr);
 
       if ( control_data ==  subpanel_data->default_control)
          XtSetSensitive (panel.popup_data->toggle_item, False);
@@ -1409,7 +1409,7 @@ CreatePopupMenu (Widget w)
    popup_data->add_ws_item = nullptr;
 
    XtAddCallback (popup_data->popup, XmNmapCallback, PopupMenu,
-		  (XtPointer) NULL);
+		  (XtPointer) nullptr);
 
    popup_data->popup_title = children[child_num++] =
 		 XmCreateLabelGadget(popup_data->popup, "title", nullptr, 0);
@@ -1464,7 +1464,7 @@ CreatePopupMenu (Widget w)
    XmStringFree (label_string);
 
    XtAddCallback(children[child_num++], XmNactivateCallback, AddSubpanelCB,
-			(XtPointer)NULL);
+			(XtPointer)nullptr);
    popup_data->subpanel_add_state = True;
 
    popup_data->separator2 = children[child_num++] =
@@ -1941,7 +1941,7 @@ CreateWorkspacePopupMenu (Widget       w,
    XmStringFree (label_string);
 
    XtAddCallback(children[child_num++], XmNactivateCallback, AddWorkspaceCB,
-			(XtPointer)NULL);
+			(XtPointer)nullptr);
 
    label_string = XmStringCreateLocalized((FPGETMESSAGE(82, 25, "Delete")));
    XtSetArg (args[0], XmNlabelString, label_string);

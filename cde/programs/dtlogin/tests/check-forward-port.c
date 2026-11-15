@@ -71,11 +71,11 @@ int XdmcpReadARRAYofARRAY8(XdmcpBufferPtr b, ARRAYofARRAY8Ptr a)
         if (!XdmcpReadARRAY8(b, &a->data[i])) return 0;
     return 1;
 }
-void XdmcpDisposeARRAY8(ARRAY8Ptr a) { free(a->data); a->data = NULL; a->length = 0; }
+void XdmcpDisposeARRAY8(ARRAY8Ptr a) { free(a->data); a->data = nullptr; a->length = 0; }
 void XdmcpDisposeARRAYofARRAY8(ARRAYofARRAY8Ptr a)
 {
     for (int i = 0; i < a->length; i++) XdmcpDisposeARRAY8(&a->data[i]);
-    free(a->data); a->data = NULL; a->length = 0;
+    free(a->data); a->data = nullptr; a->length = 0;
 }
 
 static int replies;

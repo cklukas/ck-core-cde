@@ -169,7 +169,7 @@ FileOpenCB(
     /* ToolTalk media requests are replied to (and closed) in FileOpenOkCB */
     
     /* -----> set FSB title passed GetFileName */
-    if(pStuff->openTitle == (XmString)NULL) {
+    if(pStuff->openTitle == (XmString)nullptr) {
 	char buf[256];
 
 	strcpy(buf, DialogTitle(pPad));
@@ -198,7 +198,7 @@ FileIncludeCB(
     Editor *pPad = (Editor *)client_data;
     FileStuff *pStuff = &pPad->fileStuff;
 
-    if (pStuff->includeTitle == (XmString)NULL) {
+    if (pStuff->includeTitle == (XmString)nullptr) {
 	char buf[256];
 
 	strcpy(buf, DialogTitle(pPad));
@@ -430,9 +430,9 @@ FilePrintCB(
 
     /* -----> Load the action database */
     if (! ActionDBInitialized) {
-	StartDbUpdate( (XtPointer) NULL );
+	StartDbUpdate( (XtPointer) nullptr );
 	/* register interest in Action DB changes (for printing) */
-	DtDbReloadNotify( StartDbUpdate, (XtPointer) NULL );
+	DtDbReloadNotify( StartDbUpdate, (XtPointer) nullptr );
     }
 
     /* -----> Determine the name the user will see in the Print dialog */
@@ -738,7 +738,7 @@ FileExitWP(XtPointer client_data)
     SetWindowSize(pPad);
 
     /* -----> Clear director "seed" in SaveAs FSB */
-    if (pPad->fileStuff.fileWidgets.saveAs.saveAs_form != (Widget)NULL) {
+    if (pPad->fileStuff.fileWidgets.saveAs.saveAs_form != (Widget)nullptr) {
 	Widget textField = XmFileSelectionBoxGetChild(
 				pPad->fileStuff.fileWidgets.saveAs.saveAs_form,
 				XmDIALOG_TEXT);
@@ -880,7 +880,7 @@ oldFileExitCB(
     SetWindowSize(pPad);
 
     /* -----> Clear director "seed" in SaveAs FSB */
-    if (pPad->fileStuff.fileWidgets.saveAs.saveAs_form != (Widget)NULL) {
+    if (pPad->fileStuff.fileWidgets.saveAs.saveAs_form != (Widget)nullptr) {
 	Widget textField = XmFileSelectionBoxGetChild(
 				pPad->fileStuff.fileWidgets.saveAs.saveAs_form,
 				XmDIALOG_TEXT);

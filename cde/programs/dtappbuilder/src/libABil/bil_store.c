@@ -3110,7 +3110,7 @@ bil_save_tree(
 	    if ((old_file != nullptr) && !util_path_is_absolute(old_file))
 	    {
 		old_file_len = strlen(old_file);
-		old_file = (STRING) NULL;
+		old_file = (STRING) nullptr;
 		old_file = (STRING) util_malloc(old_file_len +
 				strlen(old_proj_dir) +2);
 		sprintf(old_file, "%s/%s", old_proj_dir, obj_get_file(root));

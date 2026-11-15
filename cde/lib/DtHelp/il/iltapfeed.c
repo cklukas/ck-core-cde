@@ -232,8 +232,8 @@ ilError                 error;
 ilTapPrivPtr   pPriv;
 
     context = pipe->context;
-    feedImage = (ilClientImage)NULL;
-    newPipe = (ilPipe)NULL;
+    feedImage = (ilClientImage)nullptr;
+    newPipe = (ilPipe)nullptr;
 
         /*  Get pipe info - must be IL_PIPE_FORMING or declare an error. */
     if (ilGetPipeInfo (pipe, FALSE, &info, &des, &format) != IL_PIPE_FORMING) {
@@ -252,7 +252,7 @@ ilTapPrivPtr   pPriv;
             format client images are supported.
         */
     if ((des.compression == IL_JPEG) && (des.compInfo.JPEG.reserved & IL_JPEGM_RAW)) {
-        if (!ilCompress (pipe, IL_JPEG, (ilPtr)NULL, 0, 0))
+        if (!ilCompress (pipe, IL_JPEG, (ilPtr)nullptr, 0, 0))
             goto tpError;
         }
 
@@ -280,7 +280,7 @@ ilTapPrivPtr   pPriv;
         /*  Add an element to the pipe to be tapped to feed the offshoot pipe; init *pPriv.
             Get a ptr into the feed image data structure, to make point to input image.
         */
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.stripHeight = info.stripHeight;         /* accept input strip height */
     srcData.constantStrip = FALSE;
     srcData.minBufferHeight = 0;
@@ -304,7 +304,7 @@ tpError:
     if (feedImage)
         ilDestroyObject (feedImage);
     ilDeclarePipeInvalid (pipe, error);
-    return (ilPipe)NULL;
+    return (ilPipe)nullptr;
 }
 
 

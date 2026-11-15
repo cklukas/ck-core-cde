@@ -76,14 +76,14 @@ ilObjectPtr    pObject;
     pObject = (ilObjectPtr)IL_MALLOC (sizeInBytes);
     if (!pObject) {
         pContext->p.error = IL_ERROR_MALLOC;
-        return (ilObjectPtr)NULL;
+        return (ilObjectPtr)nullptr;
         }
 
         /*  Fill in object header, init refCount to 1 => no one attached to it yet.
         */
     pObject->p.context = (ilContext)pContext;
     pObject->p.objectType = objectType;
-    pObject->p.pPrivate = (ilPtr)NULL;
+    pObject->p.pPrivate = (ilPtr)nullptr;
     pObject->Destroy = Destroy;
     pObject->refCount = 1;
 

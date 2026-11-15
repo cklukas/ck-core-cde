@@ -99,10 +99,10 @@ typedef struct {
 static XtResource dragResources[] = {
       { DtNdropOnRootCallback, DtCDropOnRootCallback, 
 	XtRCallback, sizeof(XtCallbackList), Offset(dropOnRootCallback), 
-	XtRImmediate, (XtPointer)NULL},
+	XtRImmediate, (XtPointer)nullptr},
       { DtNsourceIcon, DtCSourceIcon, 
 	XtRWidget, sizeof(Widget), Offset(sourceIcon), 
-	XtRImmediate, (XtPointer)NULL },
+	XtRImmediate, (XtPointer)nullptr },
       { DtNbufferIsText, DtCBufferIsText, 
 	XtRBoolean, sizeof(Boolean), Offset(bufferIsText), 
 	XtRImmediate, (XtPointer)False },
@@ -208,7 +208,7 @@ DtDndDragStart(
 	case DtDND_NOOP_TRANSFER:
 	default:
 		_DtSvcAppUnlock(app);
-		return (Widget)NULL;
+		return (Widget)nullptr;
 	}
 
 	/*
@@ -216,7 +216,7 @@ DtDndDragStart(
 	 */
 
 	XtGetSubresources(dragInitiator, &settings, 
-				(String)NULL, (String)NULL, 
+				(String)nullptr, (String)nullptr, 
 				dragResources, XtNumber(dragResources),
 				argList, argCount);
 
@@ -622,7 +622,7 @@ dndConvertProc(
 
 		*returnType 	= XA_NULL;
 		*returnFormat 	= 32;
-		*returnValue 	= (XtPointer) NULL;
+		*returnValue 	= (XtPointer) nullptr;
 		*returnLength 	= 0;
 
 		dndAppConvert(dragContext, DtCR_DND_CONVERT_DELETE,

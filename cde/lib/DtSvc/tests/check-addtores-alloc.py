@@ -13,11 +13,14 @@ With --source-revision REV: negative control; REV must FAIL the same test
 (exit status 0 means the failure was observed).
 """
 import argparse
+import atexit
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
 
 here = Path(__file__).resolve().parent
 root = here.parents[3]
@@ -29,8 +32,12 @@ ap.add_argument("--worktree", type=Path, default=root)
 ap.add_argument("--scratch", type=Path, default=None)
 args = ap.parse_args()
 
-scratch = args.scratch or args.worktree / "tests-scratch"
-scratch.mkdir(parents=True, exist_ok=True)
+if args.scratch:
+    scratch = args.scratch
+    scratch.mkdir(parents=True, exist_ok=True)
+else:
+    scratch = Path(tempfile.mkdtemp(prefix="addtores-alloc-", dir=os.environ.get("TMPDIR")))
+    atexit.register(shutil.rmtree, scratch, True)
 
 if args.source_revision:
     text = subprocess.run(["git", "-C", str(args.worktree), "show",
@@ -53,11 +60,14 @@ def extract(start_anchor, end_anchor, keep_start=0):
     return piece
 
 
+add_anchor = ("\nstatic int\n_DtAddEntry(\n"
+              if "\nstatic int\n_DtAddEntry(\n" in text
+              else "\nstatic void \n_DtAddEntry(\n")
 pieces = [extract("\ntypedef struct _Entry {", "} Entries;\n", keep_start=1),
           extract("\n#define INIT_ENTRY_SIZE", "\n", keep_start=1),
           extract("\nstatic Entries *\n_DtAllocEntries(", "\n}\n", keep_start=1),
           extract("\nstatic void\n_DtFreeEntries(", "\n}\n", keep_start=1),
-          extract("\nstatic void \n_DtAddEntry(\n", "\n}\n", keep_start=1)]
+          extract(add_anchor, "\n}\n", keep_start=1)]
 
 parts = (here / "addtores-alloc-test.c").read_text()
 prologue = parts.split("/* @@PROLOGUE@@ */")[1].split("/* @@BODY@@ */")[0]

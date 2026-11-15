@@ -566,13 +566,13 @@ font_init(void)
 	if (FalGetFontList(nullptr, FAL_FONT_MASK_DEFINED |
 			FAL_FONT_MASK_UNDEFINED, &fontlist) == FAL_ERROR) {
 		strcpy(err, FAL_ERROR_STR);
-		Error_message((Widget)NULL, err);
+		Error_message((Widget)nullptr, err);
 		return;
 	}
 	if(fontlist->num == 0) {
 	        FalFreeFontList(fontlist);
 		strcpy(err, resource.mn_no_font);
-		Error_message((Widget)NULL, err);
+		Error_message((Widget)nullptr, err);
 		return;
 	}
 	udc = (int *)XtCalloc(fontlist->num, sizeof(int));

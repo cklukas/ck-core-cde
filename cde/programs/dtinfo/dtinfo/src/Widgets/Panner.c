@@ -131,7 +131,7 @@ static XtResource resources[] = {
     { XtNresize, XtCResize, XtRBoolean, sizeof(Boolean),
 	poff(resize_to_pref), XtRImmediate, (XtPointer) TRUE },
     { XtNreportCallback, XtCReportCallback, XtRCallback, sizeof(XtPointer),
-	poff(report_callbacks), XtRCallback, (XtPointer) NULL },
+	poff(report_callbacks), XtRCallback, (XtPointer) nullptr },
     { XtNdefaultScale, XtCDefaultScale, XtRDimension, sizeof(Dimension),
 	poff(default_scale), XtRImmediate, (XtPointer) PANNER_DEFAULT_SCALE },
     { XtNrubberBand, XtCRubberBand, XtRBoolean, sizeof(Boolean),
@@ -159,7 +159,7 @@ static XtResource resources[] = {
     { XtNshadowThickness, XtCShadowThickness, XtRDimension, sizeof(Dimension),
 	poff(shadow_thickness), XtRImmediate, (XtPointer) 2 },
     { XtNbackgroundStipple, XtCBackgroundStipple, XtRString, sizeof(String),
-	poff(stipple_name), XtRImmediate, (XtPointer) NULL },
+	poff(stipple_name), XtRImmediate, (XtPointer) nullptr },
 #undef poff
 };
 
@@ -952,7 +952,7 @@ static void ActionNotify (Widget gw, XEvent *event /* unused */, String *params 
 	pw->panner.last_y != pw->panner.knob_y) {
 	XawPannerReport rep;
 
-	Redisplay (gw, (XEvent*) nullptr, (Region) NULL);
+	Redisplay (gw, (XEvent*) nullptr, (Region) nullptr);
 	rep.changed = (XawPRSliderX | XawPRSliderY);
 	rep.slider_x = pw->panner.slider_x;
 	rep.slider_y = pw->panner.slider_y;

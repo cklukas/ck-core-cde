@@ -144,65 +144,65 @@ static const long sync_notify_value = (long)0x45a55a54;
 static UiObjPixmap	object_pixmaps[] = 
 {
     /* { (AB_OBJECT_TYPE), (int), (char *), (Pixmap), u_int, u_int } */
-    {AB_TYPE_MODULE, AB_NO_SUBTYPE, "DtABmdl", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_MODULE, AB_NO_SUBTYPE, "DtABmdl", None, 0, 0},
 
-    {AB_TYPE_BASE_WINDOW, AB_NO_SUBTYPE, "DtABbw2", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_BASE_WINDOW, AB_NO_SUBTYPE, "DtABbw2", None, 0, 0},
 
-    {AB_TYPE_DIALOG, AB_NO_SUBTYPE, "DtABpuw2", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_DIALOG, AB_NO_SUBTYPE, "DtABpuw2", None, 0, 0},
 
-    {AB_TYPE_FILE_CHOOSER, AB_NO_SUBTYPE, "DtABfsb2", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_FILE_CHOOSER, AB_NO_SUBTYPE, "DtABfsb2", None, 0, 0},
 
-    {AB_TYPE_CONTAINER, AB_CONT_BUTTON_PANEL, "DtABcnt2", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_CONTAINER, AB_CONT_ABSOLUTE, "DtABcnt2", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_CONTAINER, AB_CONT_RELATIVE, "DtABcnt2", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_CONTAINER, AB_CONT_PANED, "DtABpnw", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_CONTAINER, AB_CONT_MENU_BAR, "DtABmbr", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_CONTAINER, AB_CONT_TOOL_BAR, "DtABcnt2", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_CONTAINER, AB_CONT_FOOTER, "DtABcnt2", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_CONTAINER, AB_CONT_GROUP, "DtABgrp", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_CONTAINER, AB_CONT_BUTTON_PANEL, "DtABcnt2", None, 0, 0},
+    {AB_TYPE_CONTAINER, AB_CONT_ABSOLUTE, "DtABcnt2", None, 0, 0},
+    {AB_TYPE_CONTAINER, AB_CONT_RELATIVE, "DtABcnt2", None, 0, 0},
+    {AB_TYPE_CONTAINER, AB_CONT_PANED, "DtABpnw", None, 0, 0},
+    {AB_TYPE_CONTAINER, AB_CONT_MENU_BAR, "DtABmbr", None, 0, 0},
+    {AB_TYPE_CONTAINER, AB_CONT_TOOL_BAR, "DtABcnt2", None, 0, 0},
+    {AB_TYPE_CONTAINER, AB_CONT_FOOTER, "DtABcnt2", None, 0, 0},
+    {AB_TYPE_CONTAINER, AB_CONT_GROUP, "DtABgrp", None, 0, 0},
 
-    {AB_TYPE_DRAWING_AREA, AB_NO_SUBTYPE, "DtABdrw2", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_DRAWING_AREA, AB_NO_SUBTYPE, "DtABdrw2", None, 0, 0},
 
-    {AB_TYPE_TEXT_PANE, AB_NO_SUBTYPE, "DtABtxp2", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_TEXT_PANE, AB_NO_SUBTYPE, "DtABtxp2", None, 0, 0},
 
-    {AB_TYPE_BUTTON, AB_BUT_PUSH, "DtABbtn", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_BUTTON, AB_BUT_DRAWN, "DtABbtn", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_BUTTON, AB_BUT_MENU, "DtABmbt", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_BUTTON, AB_BUT_PUSH, "DtABbtn", None, 0, 0},
+    {AB_TYPE_BUTTON, AB_BUT_DRAWN, "DtABbtn", None, 0, 0},
+    {AB_TYPE_BUTTON, AB_BUT_MENU, "DtABmbt", None, 0, 0},
 
-    {AB_TYPE_LIST, AB_NO_SUBTYPE, "DtABlst", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_LIST, AB_NO_SUBTYPE, "DtABlst", None, 0, 0},
 
-    {AB_TYPE_CHOICE, AB_CHOICE_OPTION_MENU, "DtABopm", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_CHOICE, AB_CHOICE_EXCLUSIVE, "DtABrad", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_CHOICE, AB_CHOICE_NONEXCLUSIVE, "DtABchk", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_CHOICE, AB_CHOICE_OPTION_MENU, "DtABopm", None, 0, 0},
+    {AB_TYPE_CHOICE, AB_CHOICE_EXCLUSIVE, "DtABrad", None, 0, 0},
+    {AB_TYPE_CHOICE, AB_CHOICE_NONEXCLUSIVE, "DtABchk", None, 0, 0},
 
-    {AB_TYPE_ITEM, AB_ITEM_FOR_MENU, "DtABcas", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_ITEM, AB_ITEM_FOR_MENUBAR, "DtABcas", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_ITEM, AB_ITEM_FOR_CHOICE, "DtABitm", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_ITEM, AB_ITEM_FOR_LIST, "DtABitm", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_ITEM, AB_ITEM_FOR_COMBO_BOX, "DtABitm", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_ITEM, AB_ITEM_FOR_SPIN_BOX, "DtABitm", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_ITEM, AB_ITEM_FOR_MENU, "DtABcas", None, 0, 0},
+    {AB_TYPE_ITEM, AB_ITEM_FOR_MENUBAR, "DtABcas", None, 0, 0},
+    {AB_TYPE_ITEM, AB_ITEM_FOR_CHOICE, "DtABitm", None, 0, 0},
+    {AB_TYPE_ITEM, AB_ITEM_FOR_LIST, "DtABitm", None, 0, 0},
+    {AB_TYPE_ITEM, AB_ITEM_FOR_COMBO_BOX, "DtABitm", None, 0, 0},
+    {AB_TYPE_ITEM, AB_ITEM_FOR_SPIN_BOX, "DtABitm", None, 0, 0},
 
-    {AB_TYPE_TEXT_FIELD, AB_NO_SUBTYPE, "DtABtxf", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_TEXT_FIELD, AB_NO_SUBTYPE, "DtABtxf", None, 0, 0},
 
-    {AB_TYPE_MENU, AB_MENU_PULLDOWN, "DtABpum", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_SCALE, AB_SCALE_SCALE, "DtABsld", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_SCALE, AB_SCALE_GAUGE, "DtABgau", (Pixmap)NULL, 0, 0}, 
-    {AB_TYPE_COMBO_BOX, AB_NO_SUBTYPE, "DtABcmb", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_SPIN_BOX, AB_NO_SUBTYPE, "DtABspb", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_TERM_PANE, AB_NO_SUBTYPE, "DtABtmp2", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_SEPARATOR, AB_NO_SUBTYPE, "DtABsep", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_LABEL, AB_NO_SUBTYPE, "DtABlbl", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_MENU, AB_MENU_PULLDOWN, "DtABpum", None, 0, 0},
+    {AB_TYPE_SCALE, AB_SCALE_SCALE, "DtABsld", None, 0, 0},
+    {AB_TYPE_SCALE, AB_SCALE_GAUGE, "DtABgau", None, 0, 0}, 
+    {AB_TYPE_COMBO_BOX, AB_NO_SUBTYPE, "DtABcmb", None, 0, 0},
+    {AB_TYPE_SPIN_BOX, AB_NO_SUBTYPE, "DtABspb", None, 0, 0},
+    {AB_TYPE_TERM_PANE, AB_NO_SUBTYPE, "DtABtmp2", None, 0, 0},
+    {AB_TYPE_SEPARATOR, AB_NO_SUBTYPE, "DtABsep", None, 0, 0},
+    {AB_TYPE_LABEL, AB_NO_SUBTYPE, "DtABlbl", None, 0, 0},
 
-    {AB_TYPE_MESSAGE, AB_MSG_ERROR, "DtABmbx", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_MESSAGE, AB_MSG_INFORMATION, "DtABmbx", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_MESSAGE, AB_MSG_QUESTION, "DtABmbx", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_MESSAGE, AB_MSG_WARNING, "DtABmbx", (Pixmap)NULL, 0, 0},
-    {AB_TYPE_MESSAGE, AB_MSG_WORKING, "DtABmbx", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_MESSAGE, AB_MSG_ERROR, "DtABmbx", None, 0, 0},
+    {AB_TYPE_MESSAGE, AB_MSG_INFORMATION, "DtABmbx", None, 0, 0},
+    {AB_TYPE_MESSAGE, AB_MSG_QUESTION, "DtABmbx", None, 0, 0},
+    {AB_TYPE_MESSAGE, AB_MSG_WARNING, "DtABmbx", None, 0, 0},
+    {AB_TYPE_MESSAGE, AB_MSG_WORKING, "DtABmbx", None, 0, 0},
 
-    {AB_TYPE_LAYERS, AB_NO_SUBTYPE, "DtABlyr", (Pixmap)NULL, 0, 0},
+    {AB_TYPE_LAYERS, AB_NO_SUBTYPE, "DtABlyr", None, 0, 0},
 
     /* The last entry has to be this !!*/
-    {AB_TYPE_UNKNOWN, AB_NO_SUBTYPE, (char *)nullptr, (Pixmap)NULL, 0, 0},
+    {AB_TYPE_UNKNOWN, AB_NO_SUBTYPE, (char *)nullptr, None, 0, 0},
 };
 
 /*

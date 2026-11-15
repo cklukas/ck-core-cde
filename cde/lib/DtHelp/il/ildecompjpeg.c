@@ -68,8 +68,8 @@ static ilError ilDecompInit (
     ilJPEGPrivPtr pPriv = (ilJPEGPrivPtr)privateData;
     pPriv->firstStrip = TRUE;
     pPriv->nLinesWritten = 0;
-    pPriv->pJPEGData = (iljpgDataPtr)NULL;
-    pPriv->pJPEGPriv = (iljpgPtr)NULL;
+    pPriv->pJPEGData = (iljpgDataPtr)nullptr;
+    pPriv->pJPEGPriv = (iljpgPtr)nullptr;
     return IL_OK;
 }
 
@@ -232,7 +232,7 @@ ilBool _ilDecompJPEG (
         /*  Define decompressed output from this filter: planar format unless
             a single component image (e.g. gray).
         */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     des = *pDes;
     des.compression = IL_UNCOMPRESSED;
     dstData.pDes = &des;
@@ -251,7 +251,7 @@ ilBool _ilDecompJPEG (
     dstData.width = pInfo->width;
     dstData.height = pInfo->height;
     dstData.pPalette = (unsigned short *)nullptr;
-    dstData.pCompData = (ilPtr)NULL;
+    dstData.pCompData = (ilPtr)nullptr;
 
         /*  Init iljpg package data */
     _ilJPEGDataIn (&des, pInfo->width, pInfo->height, &jpgData);

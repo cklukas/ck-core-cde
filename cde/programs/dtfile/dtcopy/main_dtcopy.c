@@ -172,10 +172,10 @@ static XtResource resources[] =
    /* source and target directories */
 
    { "source", "Source", XmRString, sizeof (char *),
-     XtOffset (AppArgsPtr, source_name), XmRImmediate, (XtPointer) NULL, },
+     XtOffset (AppArgsPtr, source_name), XmRImmediate, (XtPointer) nullptr, },
 
    { "target", "Target", XmRString, sizeof (char *),
-     XtOffset (AppArgsPtr, target_name), XmRImmediate, (XtPointer) NULL, },
+     XtOffset (AppArgsPtr, target_name), XmRImmediate, (XtPointer) nullptr, },
 
    /* SyncParams */
 
@@ -193,7 +193,7 @@ static XtResource resources[] =
      XtOffset (AppArgsPtr, sync.keepnew), XmRImmediate, (XtPointer) False, },
 
    { "keepOld", "KeepOld", XmRString, sizeof (char *),
-     XtOffset (AppArgsPtr, sync.keepold), XmRImmediate, (XtPointer) NULL, },
+     XtOffset (AppArgsPtr, sync.keepold), XmRImmediate, (XtPointer) nullptr, },
 
    { "dontDelete", "DontDelete", XmRBool, sizeof (int),
      XtOffset (AppArgsPtr, sync.dontdelete), XmRImmediate, (XtPointer) False, },

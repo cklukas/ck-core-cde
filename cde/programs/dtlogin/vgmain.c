@@ -1239,7 +1239,7 @@ MakeDialog( DialogType dtype )
      * SLS screen.
      */
 
-    if (matte != (Widget)NULL)
+    if (matte != (Widget)nullptr)
       tlev = matte;
     else
       tlev = table;
@@ -1293,7 +1293,7 @@ MakeDialog( DialogType dtype )
 	    xmstr = XmStringCreate("Cannot open copyright file '/etc/copyright'.",
 				XmFONTLIST_DEFAULT_TAG);
 	else {
-	    xmstr = (XmString) NULL;
+	    xmstr = (XmString) nullptr;
 	
 	    while (fgets(buffer, 128, fp) != nullptr) {
 		j = strlen(buffer);
@@ -1546,7 +1546,7 @@ MakeGreeting( void )
 	    NoMemoryRestart();
 
 	s = greetmsg;
-	xmstr = (XmString) NULL;
+	xmstr = (XmString) nullptr;
 
 	do {
 	    q = s;

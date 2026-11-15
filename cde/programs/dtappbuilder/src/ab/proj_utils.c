@@ -367,19 +367,19 @@ proj_show_save_proj_as_chooser(
     char		*title;
  
     XtCallbackRec ok_callback[] = {
-        {save_proj_as_okCB, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL}
+        {save_proj_as_okCB, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr}
     };
     XtCallbackRec cancel_callback[] = {
-        {proj_cancelCB, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL}
+        {proj_cancelCB, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr}
     };
 
     XtCallbackRec popdown_callback[] = {
-        {proj_unmap_chooserCB, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL}
+        {proj_unmap_chooserCB, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr}
     };
 
 
@@ -410,7 +410,7 @@ proj_show_save_proj_as_chooser(
         AB_generic_chooser = XmCreateFileSelectionDialog(
                 widget,
                 "AB_generic_chooser",
-                (ArgList) NULL,
+                (ArgList) nullptr,
                 (Cardinal) 0);
 
         info = (ChooserInfo) XtCalloc(1, sizeof(ChooserInfoRec));
@@ -516,7 +516,7 @@ save_proj_as_okCB(
     char		help_buf[MAXPATHLEN];
     int			iRet = 0; 
     ChooserInfo		chooserInfo = nullptr;
-    XmString            xm_buf = (XmString) NULL;
+    XmString            xm_buf = (XmString) nullptr;
     BOOL		read_OK = FALSE, write_OK = FALSE;
     DtbObjectHelpData	help_data = nullptr;
 
@@ -787,12 +787,12 @@ proj_show_name_dlg(
     Widget      parent
 )
 {
-    STRING              init_name = (STRING) NULL;
-    STRING              seln_str = (STRING) NULL;
+    STRING              init_name = (STRING) nullptr;
+    STRING              seln_str = (STRING) nullptr;
     UI_MODAL_ANSWER     answer = UI_ANSWER_NONE;
-    Widget              dlg = (Widget) NULL;
+    Widget              dlg = (Widget) nullptr;
     int                 i, num_cascades = 0;
-    WidgetList          cascades = (WidgetList) NULL;
+    WidgetList          cascades = (WidgetList) nullptr;
     DtbObjectHelpData   help_data = nullptr;
     ABObj		project = proj_get_project();
     STRING		dialog_title = nullptr;
@@ -892,23 +892,23 @@ proj_show_export_bil_chooser(
 )
 {
     Widget      	textf;
-    Widget		format_cbox = (Widget)NULL;
+    Widget		format_cbox = (Widget)nullptr;
     char        	init_name[MAXPATHLEN];
     ChooserInfo		info = nullptr;
     XmString		ok_label;
     char		*title;
 
     XtCallbackRec ok_callback[] = {
-        {export_bil_okCB, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL},
+        {export_bil_okCB, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr},
     };
     XtCallbackRec cancel_callback[] = {
-        {proj_cancelCB, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL}
+        {proj_cancelCB, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr}
     };
     XtCallbackRec popdown_callback[] = {
-        {proj_unmap_chooserCB, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL}
+        {proj_unmap_chooserCB, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr}
     };
 
     /* Create the file chooser if it hasn't already
@@ -920,7 +920,7 @@ proj_show_export_bil_chooser(
         AB_generic_chooser = XmCreateFileSelectionDialog(
                 widget,
                 "AB_generic_chooser",
-                (ArgList) NULL,
+                (ArgList) nullptr,
                 (Cardinal) 0);
 
         info = (ChooserInfo) XtCalloc(1, sizeof(ChooserInfoRec));
@@ -992,7 +992,7 @@ export_bil_okCB(
     XmSelectionBoxCallbackStruct *selection_data = call_data;
     STRING	fullpath = nullptr;
     ABObj	module_obj = (ABObj) client_data;
-    XmString	xm_buf = (XmString) NULL;
+    XmString	xm_buf = (XmString) nullptr;
     char        mod_name[MAXPATHLEN];
     char        mod_dir[MAXPATHLEN];
     BOOL        read_OK = FALSE, write_OK = FALSE;
@@ -1118,7 +1118,7 @@ proj_overwrite_existing_file(
 {
     BOOL	read_OK = FALSE, write_OK = FALSE;
     int		iRet = 0;
-    XmString	xm_buf = (XmString) NULL;
+    XmString	xm_buf = (XmString) nullptr;
 
     abio_access_file(file, &read_OK, &write_OK);
     if (!write_OK)
@@ -1191,7 +1191,7 @@ proj_save_needed(
     BOOL		projHasBeenSaved = (obj_get_file(project) != nullptr);
     BOOL		encapFile = FALSE;
     int			iRet = 0;
-    XmString		xm_buf = (XmString) NULL;
+    XmString		xm_buf = (XmString) nullptr;
     STRING		projName = obj_get_name(project);
     STRING		projFile = obj_get_file(project);
     char		proj_dir[MAXPATHLEN];
@@ -1416,7 +1416,7 @@ proj_save_exploded(
     ABObj               module;
     AB_TRAVERSAL        trav;
     int                 iRet = 0;
-    XmString            xm_buf = (XmString) NULL;
+    XmString            xm_buf = (XmString) nullptr;
     STRING              old_proj_dir = nullptr;
  
     *name = 0;
@@ -2086,7 +2086,7 @@ export_format_changed(
 		textf = nullptr;
     char        init_name[MAXPATHLEN];
     STRING	filename = nullptr;	
-    ABObj	module_obj = (ABObj) NULL;
+    ABObj	module_obj = (ABObj) nullptr;
  
     /* REMIND: Shouldn't this just be AB_generic_chooser? */
     fchooser = (Widget) clientData;
@@ -2125,10 +2125,10 @@ save_proj_as_bix(
 )
 {
     char                bix_file[MAXPATHLEN];
-    STRING              errmsg = (STRING) NULL;
+    STRING              errmsg = (STRING) nullptr;
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
     int			iRet = 0;
-    XmString		xm_buf = (XmString) NULL;
+    XmString		xm_buf = (XmString) nullptr;
 
     /* Set the busy cursor while writing the bix file to disk */
     ab_set_busy_cursor(TRUE);
@@ -2216,7 +2216,7 @@ export_uil_file(
     STRING		errmsg = nullptr;
     Boolean		retval = FALSE;
     DTB_MODAL_ANSWER	answer = DTB_ANSWER_NONE;
-    XmString            xm_buf = (XmString) NULL;
+    XmString            xm_buf = (XmString) nullptr;
 
     /* Set the busy cursor while writing the file to disk */
     ab_set_busy_cursor(TRUE);
@@ -2557,7 +2557,7 @@ proj_verify_name(
 )
 {
     Boolean	retval = TRUE;
-    XmString    xm_buf = (XmString) NULL;
+    XmString    xm_buf = (XmString) nullptr;
     ABObj	obj = nullptr;
 
     if (!ab_c_ident_is_ok(new_name))

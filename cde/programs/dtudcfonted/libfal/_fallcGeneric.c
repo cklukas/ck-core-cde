@@ -86,20 +86,20 @@ create(char *name, XLCdMethods methods)
 
     lcd = (XLCd) Xmalloc(sizeof(XLCdRec));
     if (lcd == nullptr)
-        return (XLCd) NULL;
+        return (XLCd) nullptr;
     memset((char *) lcd, 0, sizeof(XLCdRec));
 
     lcd->core = (XLCdCore) Xmalloc(sizeof(XLCdGenericRec));
     if (lcd->core == nullptr){
 	Xfree(lcd);
-	return (XLCd) NULL;
+	return (XLCd) nullptr;
     }
     memset((char *) lcd->core, 0, sizeof(XLCdGenericRec));
 
     new = (XLCdPublicMethods) Xmalloc(sizeof(XLCdPublicMethodsRec));
     if (new == nullptr){
 	Xfree(lcd);
-	return (XLCd) NULL;
+	return (XLCd) nullptr;
     }
     *new = *((XLCdPublicMethods) methods);
     lcd->methods = (XLCdMethods) new;

@@ -474,24 +474,24 @@ GetResource( char *name, char *class, int valueType, char **valuep,
 }
 
 XrmOptionDescRec configTable [] = {
-{"-server",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-udpPort",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-error",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-resources",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-session",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-debug",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-xrm",	nullptr,			XrmoptionSkipArg,	(caddr_t) NULL },
-{"-config",	".configFile",		XrmoptionSepArg,	(caddr_t) NULL }
+{"-server",	nullptr,			XrmoptionSkipArg,	(caddr_t) nullptr },
+{"-udpPort",	nullptr,			XrmoptionSkipArg,	(caddr_t) nullptr },
+{"-error",	nullptr,			XrmoptionSkipArg,	(caddr_t) nullptr },
+{"-resources",	nullptr,			XrmoptionSkipArg,	(caddr_t) nullptr },
+{"-session",	nullptr,			XrmoptionSkipArg,	(caddr_t) nullptr },
+{"-debug",	nullptr,			XrmoptionSkipArg,	(caddr_t) nullptr },
+{"-xrm",	nullptr,			XrmoptionSkipArg,	(caddr_t) nullptr },
+{"-config",	".configFile",		XrmoptionSepArg,	(caddr_t) nullptr }
 };
 
 XrmOptionDescRec optionTable [] = {
-{"-server",	".servers",		XrmoptionSepArg,	(caddr_t) NULL },
-{"-udpPort",	".requestPort",		XrmoptionSepArg,	(caddr_t) NULL },
-{"-error",	".errorLogFile",	XrmoptionSepArg,	(caddr_t) NULL },
-{"-resources",	"*resources",		XrmoptionSepArg,	(caddr_t) NULL },
-{"-session",	"*session",		XrmoptionSepArg,	(caddr_t) NULL },
-{"-debug",	"*debugLevel",		XrmoptionSepArg,	(caddr_t) NULL },
-{"-xrm",	nullptr,			XrmoptionResArg,	(caddr_t) NULL },
+{"-server",	".servers",		XrmoptionSepArg,	(caddr_t) nullptr },
+{"-udpPort",	".requestPort",		XrmoptionSepArg,	(caddr_t) nullptr },
+{"-error",	".errorLogFile",	XrmoptionSepArg,	(caddr_t) nullptr },
+{"-resources",	"*resources",		XrmoptionSepArg,	(caddr_t) nullptr },
+{"-session",	"*session",		XrmoptionSepArg,	(caddr_t) nullptr },
+{"-debug",	"*debugLevel",		XrmoptionSepArg,	(caddr_t) nullptr },
+{"-xrm",	nullptr,			XrmoptionResArg,	(caddr_t) nullptr },
 {"-daemon",	".daemonMode",		XrmoptionNoArg,		"true"         },
 {"-nodaemon",	".daemonMode",		XrmoptionNoArg,		"false"        },
 {"-quiet",	".quiet",		XrmoptionNoArg,		"true"        }

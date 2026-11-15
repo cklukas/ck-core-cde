@@ -149,7 +149,7 @@ _DtEditorSearch(
 	     * Set the dialog title.
 	     * If DtNdialogTitle has been set then prepend it. 
 	     */
-	    if ( E_dialogTitle(pPriv) != (XmString)NULL) {
+	    if ( E_dialogTitle(pPriv) != (XmString)nullptr) {
 
 	      XmString titleStr = XmStringConcat( E_dialogTitle(pPriv), 
 			 			  M_spellTitle(pPriv) );
@@ -208,7 +208,7 @@ _DtEditorSearch(
 	     * If DtNdialogTitle has been set then prepend it.
 	     */
             ac = 0;
-	    if ( E_dialogTitle(pPriv) != (XmString)NULL) {
+	    if ( E_dialogTitle(pPriv) != (XmString)nullptr) {
 	      XmString titleStr = XmStringConcat( E_dialogTitle(pPriv), 
 			 			  M_fndChngTitle(pPriv) );
 

@@ -152,7 +152,7 @@ brwsP_create_textf(
 		
         XtAddCallback(ui->textf, XmNactivateCallback,
                 browser_textf_activate,
-                (XtPointer)NULL);
+                (XtPointer)nullptr);
     }
 }
 

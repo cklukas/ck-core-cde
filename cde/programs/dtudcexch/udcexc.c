@@ -115,7 +115,7 @@ int main(int argc, char * argv[])
     _DtEnvControl(0);
     n = 0;
     toplevel = XtAppInitialize(&app_context, "UDCexchange",
-			       (XrmOptionDescList) NULL,
+			       (XrmOptionDescList) nullptr,
 			       0, (int *) &argc, argv, (String *) nullptr,
 			       args, n);
 

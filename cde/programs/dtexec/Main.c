@@ -1087,7 +1087,7 @@ void IdSelfToCallerRequest(void)
 
     procid = tt_default_procid();
 
-    msg = dtexec_tttk_message_create( (Tt_message) NULL, TT_REQUEST, TT_SESSION,
+    msg = dtexec_tttk_message_create( (Tt_message) nullptr, TT_REQUEST, TT_SESSION,
 				dtSvcProcIdG,
 				"_DtActDtexecID",
 				IdSelfToCallerReplyCB );
@@ -1166,7 +1166,7 @@ void DoneRequest(int doneCode)
 
 	procid = tt_default_procid();
 
-	msg = dtexec_tttk_message_create( (Tt_message) NULL,
+	msg = dtexec_tttk_message_create( (Tt_message) nullptr,
 				TT_REQUEST, TT_SESSION,
 				dtSvcProcIdG,
 				"_DtActDtexecDone",
@@ -1542,12 +1542,12 @@ SendActionIconCacheUpdateNotice(const char *childList)
               actionCommandG ? actionCommandG : "(null)",
               childList);
 
-    Tt_message msg = dtexec_tttk_message_create((Tt_message)NULL,
+    Tt_message msg = dtexec_tttk_message_create((Tt_message)nullptr,
                                                 TT_NOTICE,
                                                 TT_SESSION,
                                                 (const char *)nullptr,
                                                 ACTION_ICON_CACHE_UPDATE_OP,
-                                                (Tt_message_callback)NULL);
+                                                (Tt_message_callback)nullptr);
     if (tt_ptr_error(msg) != TT_OK)
         return;
 

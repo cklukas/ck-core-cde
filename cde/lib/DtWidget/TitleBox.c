@@ -226,7 +226,7 @@ static XtResource resources[] =
 	{
 		XmNfontList,
 		XmCFontList, XmRFontList, sizeof (XmFontList),
-		TB_Offset (font_list), XmRImmediate, (XtPointer) NULL
+		TB_Offset (font_list), XmRImmediate, (XtPointer) nullptr
 	}
 };
 
@@ -238,7 +238,7 @@ static XmSyntheticResource syn_resources[] =
 		XmNtitleString, sizeof (XmString),
 		TB_Offset (title_string),
 		GetTitleString,
-		(XmImportProc) NULL
+		(XmImportProc) nullptr
 	},
 	{
 		XmNmarginWidth, sizeof (Dimension),

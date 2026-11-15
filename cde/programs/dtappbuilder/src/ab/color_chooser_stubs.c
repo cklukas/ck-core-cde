@@ -126,7 +126,7 @@ char *Color[] = {
 	"Navy Blue", "Midnight Blue", "Dark Orchid", "Medium Orchid", "Orchid", 
 	"Magenta", "Violet", "Plum", "Thistle", "Blue Violet", 
 	"Slate Blue",
-	NULL
+	nullptr
 };
 
 static int Num_colors = -1;	/* Number of colors in our standard set */
@@ -160,12 +160,12 @@ display_color_chooser(void)
 
     XtVaSetValues(dtb_color_chooser_dialog.dialog_shellform,
 	XmNdialogStyle,		XmDIALOG_FULL_APPLICATION_MODAL,
-	NULL);
+	nullptr);
 
     /* Clear out place-holder name in color_name field */
     label = XmStringCreateLocalized("");
     XtVaSetValues(dtb_color_chooser_dialog.color_name, XmNlabelString,label,
-	NULL);
+	nullptr);
     XmStringFree(label);
 
     /* 
@@ -198,7 +198,7 @@ create_color_chooser(void)
     /* Clear out place-holder name in color_name field */
     label = XmStringCreateLocalized("");
     XtVaSetValues(dtb_color_chooser_dialog.color_name, XmNlabelString,label,
-	NULL);
+	nullptr);
     XmStringFree(label);
 
 }
@@ -228,7 +228,7 @@ create_color_palette(
     }
     else {
 	/* Count the number of colors in our list */
-	for(Num_colors=0;Color[Num_colors]!=(char *)NULL;Num_colors++);
+	for(Num_colors=0;Color[Num_colors]!=(char *)nullptr;Num_colors++);
 	Rows = (int) (0.5 + sqrt(((double)(3*Num_colors))/4.0));
 	Cols = (Num_colors+Rows-1)/Rows;
     }
@@ -251,14 +251,14 @@ create_color_palette(
 	XmNtopAttachment, XmATTACH_FORM,
 	XmNbottomOffset, 10,
 	XmNbottomAttachment, XmATTACH_FORM,
-	NULL);
+	nullptr);
 
     /* Create the dummy widget used to control color name-to-pixel caching */
     CacheAnchor = XtVaCreateWidget("CaChEaNcHoR",
 	xmLabelWidgetClass,
 	parent,
 	XmNlabelString,label,
-	NULL);
+	nullptr);
 
     for(i=0,Shown_colors=0;i<Num_colors;i++) {
 	/* See if we can allocate a color */
@@ -292,7 +292,7 @@ create_color_palette(
 	    XmNbottomAttachment,XmATTACH_POSITION,
 	    XmNbottomPosition,(r+1)*Cols,
 	    XmNuserData,i,		/* Save color index for later use */
-	    NULL);
+	    nullptr);
 	XtAddCallback(swatch,XmNactivateCallback,swatchCB,(XtPointer)0);
 	XtAddCallback(swatch,XmNresizeCallback,swatch_resizeCB,(XtPointer)0);
 	XtManageChild(swatch);
@@ -306,7 +306,7 @@ create_color_palette(
     }
     util_dprintf(2,"Got %d out of %d colors\n",Shown_colors,Num_colors);
     /* Clear out the storage location we use to hold the current color */
-    XtVaSetValues(dtb_color_chooser_dialog.color_name,XmNuserData,0,NULL);
+    XtVaSetValues(dtb_color_chooser_dialog.color_name,XmNuserData,0,nullptr);
 
     /* Make the swatch panel appear */
     XtManageChild(Panel);
@@ -314,7 +314,7 @@ create_color_palette(
     /* If we didn't get all the standard colors, explain it to the user */
     if(Shown_colors != Num_colors) {
 	dtb_color_chooser_message_initialize(&dtb_color_chooser_message);
-	dtb_show_message(parent,&dtb_color_chooser_message,NULL, NULL);
+	dtb_show_message(parent,&dtb_color_chooser_message,nullptr, nullptr);
     }
 }
 
@@ -330,7 +330,7 @@ swatchCB(
 	Widget old_color;
 
 	/* XtVaGetValues(w,XmNpositionIndex,&index,NULL); */
-	XtVaGetValues(w,XmNuserData,&index,NULL);
+	XtVaGetValues(w,XmNuserData,&index,nullptr);
 	util_dprintf(2,"Selection is color #%d, <%s>\n",index,Color[index]);
 
 	/*
@@ -339,22 +339,22 @@ swatchCB(
 	label = XmStringCreateLocalized(Color[index]);
 	XtVaSetValues(dtb_color_chooser_dialog.color_name,
 		XmNlabelString,label,
-		NULL);
+		nullptr);
 	XmStringFree(label);
 
 	/* Figure out which widget was the old color, and reset it */
 	XtVaGetValues(dtb_color_chooser_dialog.color_name,XmNuserData,
-		(XtPointer)&old_color,NULL);
+		(XtPointer)&old_color,nullptr);
 	if(old_color != 0) {
-	    XtVaSetValues(old_color,XmNshadowType,XmSHADOW_OUT,NULL);
+	    XtVaSetValues(old_color,XmNshadowType,XmSHADOW_OUT,nullptr);
 	}
 
 	/* Set the shadow on the new color choice */
-	XtVaSetValues(w,XmNshadowType,XmSHADOW_IN,NULL);
+	XtVaSetValues(w,XmNshadowType,XmSHADOW_IN,nullptr);
 
 	/* Save the new widget handle so we can reset it later */
 	XtVaSetValues(dtb_color_chooser_dialog.color_name,XmNuserData,
-		w,NULL);
+		w,nullptr);
 }
 
 
@@ -380,7 +380,7 @@ swatch_resizeCB(
 		XmNwidth,&wid,
 		XmNlabelPixmap,&tile,
 		XmNforeground,&color,
-		NULL);
+		nullptr);
 
     XFreePixmap(XtDisplay(AB_toplevel),tile);
 
@@ -398,7 +398,7 @@ swatch_resizeCB(
     
     XtVaSetValues(w,
 	XmNlabelPixmap,tile,
-	NULL);
+	nullptr);
 }
 
 void
@@ -433,7 +433,7 @@ update_color_palette(
 	xmLabelWidgetClass,
 	parent,
 	XmNlabelString,label,
-	NULL);
+	nullptr);
 
     for(i=0,Shown_colors=0;i<Num_colors;i++) {
 	/* See if we can allocate a color */
@@ -458,7 +458,7 @@ update_color_palette(
 	    /* Destroy old tile pixmap */
 	    XtVaGetValues(swatch,
 		XmNlabelPixmap,&oldtile,
-		NULL);
+		nullptr);
     	    XFreePixmap(XtDisplay(AB_toplevel),oldtile);
 	}
 	else {
@@ -466,7 +466,7 @@ update_color_palette(
 	    swatch = XtVaCreateWidget("swatch",
 		xmDrawnButtonWidgetClass,
 	    	Panel,
-		NULL);
+		nullptr);
 	    Swatch[Shown_colors] = swatch;
 	    util_dprintf(2,"creating swatch widget #%d for color #%d (%s)\n",
 		Shown_colors,i,Color[i]);
@@ -486,7 +486,7 @@ update_color_palette(
 	    XmNbottomAttachment,XmATTACH_POSITION,
 	    XmNbottomPosition,(r+1)*Cols,
 	    XmNuserData,i,		/* Save color index for later use */
-	    NULL);
+	    nullptr);
 	XtAddCallback(swatch,XmNactivateCallback,swatchCB,(XtPointer)0);
 	XtAddCallback(swatch,XmNresizeCallback,swatch_resizeCB,(XtPointer)0);
 	XtManageChild(swatch);
@@ -496,14 +496,14 @@ update_color_palette(
 	Shown_colors++;
     }
     /* Clear out the storage location we use to hold the current color */
-    XtVaSetValues(dtb_color_chooser_dialog.color_name,XmNuserData,0,NULL);
+    XtVaSetValues(dtb_color_chooser_dialog.color_name,XmNuserData,0,nullptr);
 
     /* Make the swatch panel appear */
     XtManageChild(Panel);
 
     /* If we didn't get all the standard colors, explain it to the user */
     if(Shown_colors != Num_colors) {
-	dtb_show_message(parent,&dtb_color_chooser_message,NULL,NULL);
+	dtb_show_message(parent,&dtb_color_chooser_message,nullptr,nullptr);
     }
 }
 
@@ -564,15 +564,15 @@ applyCB(
 
 	/* Find out which color was chosen */
 	XtVaGetValues(dtb_color_chooser_dialog.color_name,XmNuserData,
-		(XtPointer)&current_color,NULL);
+		(XtPointer)&current_color,nullptr);
 
 	if(current_color != 0) {
-	    XtVaGetValues(current_color,XmNuserData,&index,NULL);
+	    XtVaGetValues(current_color,XmNuserData,&index,nullptr);
 	    util_dprintf(2,"You picked \"%s\" (color #%d)\n",Color[index],index);
 	    Answer = index;
 
 	    /* Reset the shadow on the color choice */
-	    XtVaSetValues(current_color,XmNshadowType,XmSHADOW_OUT,NULL);
+	    XtVaSetValues(current_color,XmNshadowType,XmSHADOW_OUT,nullptr);
 
 	}
 	else {
@@ -581,12 +581,12 @@ applyCB(
 	}
 
 	/* Clear out color choice in chooser */
-	XtVaSetValues(dtb_color_chooser_dialog.color_name,XmNuserData,0,NULL);
+	XtVaSetValues(dtb_color_chooser_dialog.color_name,XmNuserData,0,nullptr);
 
 	label = XmStringCreateLocalized("None");
 	XtVaSetValues(dtb_color_chooser_dialog.color_name,
 		XmNlabelString,label,
-		NULL);
+		nullptr);
 	XmStringFree(label);
 	XtUnmanageChild(dtb_color_chooser_dialog.dialog_shellform);
 
@@ -612,18 +612,18 @@ cancelCB(
 
         /* Find out which color was chosen (if any) */
         XtVaGetValues(dtb_color_chooser_dialog.color_name,XmNuserData,
-                (XtPointer)&current_color,NULL);
+                (XtPointer)&current_color,nullptr);
 
         if(current_color != 0) {
             /* Reset the shadow on the color choice */
-            XtVaSetValues(current_color,XmNshadowType,XmSHADOW_OUT,NULL);
+            XtVaSetValues(current_color,XmNshadowType,XmSHADOW_OUT,nullptr);
         }
         util_dprintf(2,"Canceling color selection...\n");
         Answer = -1;
         label = XmStringCreateLocalized("None");
         XtVaSetValues(dtb_color_chooser_dialog.color_name,
                 XmNlabelString,label,
-                NULL);
+                nullptr);
         XmStringFree(label);
         XtUnmanageChild(dtb_color_chooser_dialog.dialog_shellform);
 

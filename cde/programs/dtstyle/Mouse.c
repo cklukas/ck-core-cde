@@ -444,7 +444,7 @@ AddTheme(char ***themes, Widget **items, int *count, int *capacity, const char *
     }
 
     (*themes)[*count] = XtNewString(theme);
-    (*items)[*count] = (Widget)NULL;
+    (*items)[*count] = (Widget)nullptr;
     (*count)++;
 }
 
@@ -1550,7 +1550,7 @@ build_mouseDialog( Widget shell )
 	char iconsDir[1024];
 	const char *home = getenv("HOME");
 	int i;
-	Widget history = (Widget)NULL;
+	Widget history = (Widget)nullptr;
 
 	AddTheme(&mouse.cursorThemes, &mouse.cursorThemeItems,
 		 &mouse.cursorThemeCount, &cap, "default");
@@ -2214,7 +2214,7 @@ _DtmapCB_mouseDialog(
     /* Xcursor controls */
     {
 	int i;
-	Widget history = (Widget)NULL;
+	Widget history = (Widget)nullptr;
 	int effectiveSize = GetEffectiveCursorSize();
 	char *effectiveTheme = GetEffectiveCursorTheme();
 
@@ -2886,7 +2886,7 @@ systemDefaultCB(
   /* reset cursor theme/size to defaults */
   {
       int i;
-      Widget history = (Widget)NULL;
+      Widget history = (Widget)nullptr;
       char cursorRes[256];
 
       mouse.cursorSize = 24;
@@ -3205,7 +3205,7 @@ ButtonCB(
 	 break;
 	 
        case HELP_BUTTON:
-	 XtCallCallbacks(style.mouseDialog, XmNhelpCallback, (XtPointer)NULL);
+	 XtCallCallbacks(style.mouseDialog, XmNhelpCallback, (XtPointer)nullptr);
 	 break;
 	 
        default:

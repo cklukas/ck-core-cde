@@ -471,7 +471,7 @@ static DtbClientSessionRestoreCB	dtb_client_session_restoreCB = nullptr;
 /*
  * Variable for storing top level widget
  */
-static Widget		dtb_project_toplevel_widget = (Widget)NULL;
+static Widget		dtb_project_toplevel_widget = (Widget)nullptr;
 
 /*
  * Variable for storing command used to invoke application
@@ -596,8 +596,8 @@ dtb_create_greyed_pixmap(
 
     dpy = XtDisplayOfObject(widget);
 
-    if(pixmap == XmUNSPECIFIED_PIXMAP || pixmap == (Pixmap)NULL) {
-	return((Pixmap)NULL);
+    if(pixmap == XmUNSPECIFIED_PIXMAP || pixmap == None) {
+	return(None);
     }
 
     XtVaGetValues(widget,
@@ -606,7 +606,7 @@ dtb_create_greyed_pixmap(
 
     /* Get width/height of source pixmap */
     if (!XGetGeometry(dpy,pixmap,&root,&x,&y,&width,&height,&bw,&depth)) {
-	    return((Pixmap)NULL);
+	    return(None);
     }
     gcv.foreground = background;
     gcv.fill_style = FillStippled;
@@ -1108,7 +1108,7 @@ dtb_help_dispatch(
     Arg             	wargs[10];
     char		buffer[100];
     Widget		back_button;
-    static Widget	Quick_help_dialog = (Widget)NULL;
+    static Widget	Quick_help_dialog = (Widget)nullptr;
     static Widget	MoreButton;
 
     /* 
@@ -1137,7 +1137,7 @@ dtb_help_dispatch(
     ** its internal stack mechanism takes repeated settings as separate items
     ** and updates the stack for each.)
     */
-    if(Quick_help_dialog == (Widget)NULL) {
+    if(Quick_help_dialog == (Widget)nullptr) {
         /* Create shared help dialog */
         i = 0;
 	XtSetArg(wargs[i],XmNtitle, "Application Help");            i++;
@@ -1249,7 +1249,7 @@ dtb_more_help_dispatch(
     Arg             	wargs[10];
     String		buffer, vol = nullptr, loc = nullptr;
     char		*cp;
-    static Widget	GeneralHelpDialog = (Widget) NULL;
+    static Widget	GeneralHelpDialog = (Widget) nullptr;
     Widget		help_dialog = (Widget)clientData;
     Widget		more_button;
 
@@ -1269,7 +1269,7 @@ dtb_more_help_dispatch(
 	loc = cp; 
     }
 
-    if(GeneralHelpDialog == (Widget)NULL) {
+    if(GeneralHelpDialog == (Widget)nullptr) {
 	/* Create General Help Dialog */
         i = 0;
 	XtSetArg(wargs[i],XmNtitle, "Application Help");        i++;
@@ -1304,16 +1304,16 @@ dtb_do_onitem_help(void)
 
     /* Call the DtHelp routine that supports interactive on-item help. */
     if(DtHelpReturnSelectedWidgetId(dtb_get_toplevel_widget(),
-	(Cursor)NULL,&target) != DtHELP_SELECT_VALID) return;
+	None,&target) != DtHELP_SELECT_VALID) return;
 	
     /*
     ** Starting at the target widget, wander up the widget tree looking
     ** for one that has an XmNhelpCallback, and call the first one we
     ** find.
     */
-    while(target != (Widget)NULL) {
+    while(target != (Widget)nullptr) {
 	if( XtHasCallbacks(target,XmNhelpCallback) == XtCallbackHasSome) {
-	    XtCallCallbacks(target,XmNhelpCallback,(XtPointer)NULL);
+	    XtCallCallbacks(target,XmNhelpCallback,(XtPointer)nullptr);
 	    return;
 	}
 	else {
@@ -1335,9 +1335,9 @@ dtb_show_help_volume_info(
 {
     int             	i;
     Arg             	wargs[10];
-    static Widget	GeneralHelpDialog = (Widget) NULL;
+    static Widget	GeneralHelpDialog = (Widget) nullptr;
     
-    if(GeneralHelpDialog == (Widget)NULL) {
+    if(GeneralHelpDialog == (Widget)nullptr) {
 	/* Create General Help Dialog */
         i = 0;
 	XtSetArg(wargs[i],XmNtitle, "Application Help");        i++;
@@ -1628,10 +1628,10 @@ dtb_create_message_dlg(
     DtbObjectHelpData	override_help
 )
 {
-    Widget      	msg_dlg = (Widget) NULL;
-    Widget      	shell = (Widget) NULL;
-    Widget      	button = (Widget) NULL;
-    Widget		action_button = (Widget) NULL;
+    Widget      	msg_dlg = (Widget) nullptr;
+    Widget      	shell = (Widget) nullptr;
+    Widget      	button = (Widget) nullptr;
+    Widget		action_button = (Widget) nullptr;
     unsigned char	default_btn = XmDIALOG_NONE;
     Arg         	arg[12];
     int         	n = 0;
@@ -1656,7 +1656,7 @@ dtb_create_message_dlg(
         button = XmMessageBoxGetChild(msg_dlg, XmDIALOG_HELP_BUTTON);
         XtUnmanageChild(button);
     }
-    if (mbr->action1_label == (XmString) NULL)
+    if (mbr->action1_label == (XmString) nullptr)
     {
         button = XmMessageBoxGetChild(msg_dlg, XmDIALOG_OK_BUTTON);
         XtUnmanageChild(button);
@@ -1666,7 +1666,7 @@ dtb_create_message_dlg(
         XtSetArg(arg[n], XmNokLabelString, mbr->action1_label); n++;
     }
     /* Create an extra button for the MessageBox */
-    if (mbr->action2_label != (XmString) NULL)
+    if (mbr->action2_label != (XmString) nullptr)
     {
 	button = XtVaCreateManagedWidget("action2_button",
 			xmPushButtonWidgetClass,
@@ -1676,7 +1676,7 @@ dtb_create_message_dlg(
 			nullptr);
     }
     /* Create an extra button for the MessageBox */
-    if (mbr->action3_label != (XmString) NULL)
+    if (mbr->action3_label != (XmString) nullptr)
     {
         button = XtVaCreateManagedWidget("action3_button",
                         xmPushButtonWidgetClass,
@@ -1689,16 +1689,16 @@ dtb_create_message_dlg(
     XtSetArg(arg[n], XmNdialogType,       mbr->type);            n++;
     XtSetValues(msg_dlg, arg, n);
 
-    if (override_msg != (XmString) NULL)
+    if (override_msg != (XmString) nullptr)
     {
 	XtVaSetValues(msg_dlg, XmNmessageString, override_msg, nullptr);
     }
-    else if (mbr->message != (XmString) NULL)
+    else if (mbr->message != (XmString) nullptr)
     {
 	XtVaSetValues(msg_dlg, XmNmessageString, mbr->message, nullptr);
     }
 
-    if (mbr->title != (XmString) NULL)
+    if (mbr->title != (XmString) nullptr)
     {
 	XtVaSetValues(msg_dlg, XmNdialogTitle, mbr->title, nullptr);
     }
@@ -1741,7 +1741,7 @@ dtb_create_message_dlg(
                                 DTB_ACTION3_BUTTON);
     }
 
-    if (action_button != (Widget) NULL)
+    if (action_button != (Widget) nullptr)
     {
 	XtVaSetValues(action_button, 
                         XmNdefaultButtonShadowThickness, 2,
@@ -1768,7 +1768,7 @@ destroyCB(
 {
     DtbObjectHelpData 	help_data = (DtbObjectHelpData)client_data;
 
-    if (help_data != (DtbObjectHelpData) NULL)
+    if (help_data != (DtbObjectHelpData) nullptr)
     {
 	if (help_data->help_text)
 	    XtFree((char *)help_data->help_text);
@@ -1825,11 +1825,11 @@ dtb_show_message(
     DtbObjectHelpData	override_help
 )
 {
-    DtbObjectHelpData	help_data_copy = (DtbObjectHelpData)NULL;
-    Widget      	msg_dlg = (Widget) NULL, 
-			action_btn = (Widget) NULL;
+    DtbObjectHelpData	help_data_copy = (DtbObjectHelpData)nullptr;
+    Widget      	msg_dlg = (Widget) nullptr, 
+			action_btn = (Widget) nullptr;
 
-    if (override_help != (DtbObjectHelpData) NULL)
+    if (override_help != (DtbObjectHelpData) nullptr)
     {
 	help_data_copy = (DtbObjectHelpData)XtMalloc(sizeof(DtbObjectHelpDataRec));
 
@@ -1847,7 +1847,7 @@ dtb_show_message(
     msg_dlg = dtb_create_message_dlg(parent, 
 		mbr, override_msg, help_data_copy);
 
-    if (msg_dlg == (Widget) NULL)
+    if (msg_dlg == (Widget) nullptr)
 	return;
 
     /* Add Callbacks if necessary */
@@ -1870,7 +1870,7 @@ dtb_show_message(
     }
     if (mbr->help_button)
     {
-	if (help_data_copy != (DtbObjectHelpData) NULL)
+	if (help_data_copy != (DtbObjectHelpData) nullptr)
 	{
             XtAddCallback(msg_dlg,
                         XmNhelpCallback, dtb_help_dispatch,
@@ -1904,21 +1904,21 @@ dtb_show_modal_message(
 )                                 
 {
     XtAppContext		app;
-    Widget			modal_dlg_pane = (Widget) NULL;
-    Widget			action2_button = (Widget) NULL;
-    Widget			action3_button = (Widget) NULL;
-    DtbObjectHelpData		help_data_copy = (DtbObjectHelpData)NULL;
+    Widget			modal_dlg_pane = (Widget) nullptr;
+    Widget			action2_button = (Widget) nullptr;
+    Widget			action3_button = (Widget) nullptr;
+    DtbObjectHelpData		help_data_copy = (DtbObjectHelpData)nullptr;
     DTB_MODAL_ANSWER		answer = DTB_ANSWER_NONE;
     XtCallbackRec ok_callback[] = {
             {modal_dlgCB, (XtPointer) DTB_ANSWER_ACTION1},
-            {nullptr, (XtPointer) NULL}
+            {nullptr, (XtPointer) nullptr}
     };
     XtCallbackRec cancel_callback[] = {
             {modal_dlgCB, (XtPointer) DTB_ANSWER_CANCEL},
-            {nullptr, (XtPointer) NULL}
+            {nullptr, (XtPointer) nullptr}
     };
 
-    if (override_help != (DtbObjectHelpData) NULL)
+    if (override_help != (DtbObjectHelpData) nullptr)
     {
 	help_data_copy = (DtbObjectHelpData)XtMalloc(sizeof(DtbObjectHelpDataRec));
 
@@ -1936,7 +1936,7 @@ dtb_show_modal_message(
     modal_dlg_pane = dtb_create_message_dlg(parent, mbr, 
 				override_msg, help_data_copy);
 
-    if (modal_dlg_pane == (Widget) NULL)
+    if (modal_dlg_pane == (Widget) nullptr)
 	return (answer);
  
     XtVaSetValues(modal_dlg_pane,
@@ -1948,7 +1948,7 @@ dtb_show_modal_message(
 
     action2_button = dtb_MessageBoxGetActionButton(modal_dlg_pane,
 				DTB_ACTION2_BUTTON);
-    if (action2_button != (Widget) NULL)
+    if (action2_button != (Widget) nullptr)
     {
 	XtVaSetValues(action2_button,
                         XmNuserData, (XtPointer) &answer,
@@ -1960,7 +1960,7 @@ dtb_show_modal_message(
 
     action3_button = dtb_MessageBoxGetActionButton(modal_dlg_pane,
                                 DTB_ACTION3_BUTTON);
-    if (action3_button != (Widget) NULL)
+    if (action3_button != (Widget) nullptr)
     {
         XtVaSetValues(action3_button,
                         XmNuserData, (XtPointer) &answer,
@@ -1972,7 +1972,7 @@ dtb_show_modal_message(
 
     if (mbr->help_button) 
     { 
-        if (help_data_copy != (DtbObjectHelpData) NULL)
+        if (help_data_copy != (DtbObjectHelpData) nullptr)
         {
             XtAddCallback(modal_dlg_pane, 
                         XmNhelpCallback, dtb_help_dispatch, 
@@ -2013,7 +2013,7 @@ modal_dlgCB(
 )
 {
     DTB_MODAL_ANSWER     op = (DTB_MODAL_ANSWER) client_data;
-    DTB_MODAL_ANSWER     *answerp = (DTB_MODAL_ANSWER) NULL;
+    DTB_MODAL_ANSWER     *answerp = nullptr;
  
     XtVaGetValues(widget, XmNuserData, &answerp, nullptr);
  
@@ -4333,7 +4333,7 @@ dtb_call_help_callback(
 {
 	Widget target = (Widget)clientData;
 
-	XtCallCallbacks(target,XmNhelpCallback,(XtPointer)NULL);
+	XtCallCallbacks(target,XmNhelpCallback,(XtPointer)nullptr);
 }
 
 static void     dtb_drag_button1_motion_handler(
@@ -4437,9 +4437,9 @@ dtb_popup_menu_register(Widget popupMenu, Widget parent)
         popupMenus[i].widget = parent;
         popupMenus[i].menu = popupMenu;
 	XtAddCallback(popupMenus[i].widget,
-	    XmNdestroyCallback, dtb_popup_menu_destroyCB, (XtPointer)NULL);
+	    XmNdestroyCallback, dtb_popup_menu_destroyCB, (XtPointer)nullptr);
 	XtAddCallback(popupMenus[i].menu,
-	    XmNdestroyCallback, dtb_popup_menu_destroyCB, (XtPointer)NULL);
+	    XmNdestroyCallback, dtb_popup_menu_destroyCB, (XtPointer)nullptr);
     }
 
     return 0;
@@ -4565,7 +4565,7 @@ dtb_drop_site_register(
                         DtbDropSiteHandle       *dropSiteHandleOut
 )
 {
-    DtbDropSite dropSite = (DtbDropSite)NULL;
+    DtbDropSite dropSite = (DtbDropSite)nullptr;
 
     if (   (callback != nullptr)
 	&& ((dropSite = (DtbDropSite)XtCalloc(1,sizeof(DtbDropSiteRec))) 

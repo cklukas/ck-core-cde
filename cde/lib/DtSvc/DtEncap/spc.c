@@ -512,7 +512,7 @@ XeSPCKillProcesses(int wait)
   SPC_Channel_Ptr spc;
 
   _DtSvcProcessLock();
-  for (spc = spc_activation_list; spc != (SPC_Channel_Ptr) NULL; spc = spc->next)
+  for (spc = spc_activation_list; spc != (SPC_Channel_Ptr) nullptr; spc = spc->next)
     XeSPCKillProcess(spc, wait);
   _DtSvcProcessUnlock();
 }
@@ -855,7 +855,7 @@ void XeSPCRestartCallbacks(void)
 
   while(channel) {
     if(channel->Input_Handler)
-      XeSPCAddInput(channel, (SbInputHandlerProc)NULL, nullptr);
+      XeSPCAddInput(channel, (SbInputHandlerProc)nullptr, nullptr);
     if(channel->Terminate_Handler)
       XeSPCRegisterTerminator(channel, nullptr, nullptr);
     channel=channel->next;

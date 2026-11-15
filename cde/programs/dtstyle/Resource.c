@@ -227,7 +227,7 @@ XtResource resources[] = {
   },
 
   {"session", "Session", XmRString, sizeof (char *),
-      XtOffset (ApplicationDataPtr, session), XmRImmediate, (XtPointer)NULL,
+      XtOffset (ApplicationDataPtr, session), XmRImmediate, (XtPointer)nullptr,
   },
   {"backdropDirectories", "BackdropDirectories", XmRString, sizeof(char *),
         XtOffset(ApplicationDataPtr, backdropDir), XmRString, nullptr 

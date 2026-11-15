@@ -122,7 +122,7 @@ falSetLocaleModifiers(const char   *modifiers)
 Bool
 falSupportsLocale(void)
 {
-    return _fallcCurrentLC() != (XLCd)NULL;
+    return _fallcCurrentLC() != (XLCd)nullptr;
 }
 
 Bool _fallcValidModSyntax(char *mods, char **valid_mods)
@@ -292,7 +292,7 @@ _falOpenLC(char *name)
 		lcd_list = cur;
 	    } else {
 		(*lcd->methods->close)(lcd);
-		lcd = (XLCd) NULL;
+		lcd = (XLCd) nullptr;
 	    }
 	    break;
 	}
@@ -341,8 +341,8 @@ _falrmInitParseInfo(XPointer *state)
 {
     XLCd lcd = _falOpenLC((char *) nullptr);
 
-    if (lcd == (XLCd) NULL)
-	return (XrmMethods) NULL;
+    if (lcd == (XLCd) nullptr)
+	return (XrmMethods) nullptr;
 
     return (*lcd->methods->init_parse_info)(lcd, state);
 }
@@ -488,7 +488,7 @@ _fallcVaToArgList(va_list var, int count, XlcArgList *args_ret)
     XlcArgList args;
 
     *args_ret = args = (XlcArgList) Xcalloc(count, sizeof(XlcArg));
-    if (args == (XlcArgList) NULL)
+    if (args == (XlcArgList) nullptr)
 	return;
 
     for ( ; count-- > 0; args++) {

@@ -277,16 +277,16 @@ static const char _false[] = "false";
 static XrmOptionDescRec optionDescList[] = {
 /* special (not end user) options...
  */
-{"-~",             "*debugLevel",       XrmoptionSepArg, (XtPointer) NULL},
-{"-debugLevel",    "*debugLevel",       XrmoptionSepArg, (XtPointer) NULL},
-{"-session",       "*session",		XrmoptionSepArg, (XtPointer) NULL},
+{"-~",             "*debugLevel",       XrmoptionSepArg, (XtPointer) nullptr},
+{"-debugLevel",    "*debugLevel",       XrmoptionSepArg, (XtPointer) nullptr},
+{"-session",       "*session",		XrmoptionSepArg, (XtPointer) nullptr},
 
 #ifdef	TERMINAL_SERVER
 /* server options...
  */
 {"-noBlocking",    "*blocking",		XrmoptionNoArg,  (XtPointer) _false},
 {"-server",        "*server",		XrmoptionNoArg,  (XtPointer) _true},
-{"-serverId",      "*serverId",		XrmoptionSepArg, (XtPointer) NULL},
+{"-serverId",      "*serverId",		XrmoptionSepArg, (XtPointer) nullptr},
 #endif	/* TERMINAL_SERVER */
 #ifdef	SUN_TERMINAL_SERVER
 {"-dtserver",      "*server",		XrmoptionNoArg,  (XtPointer) _true},
@@ -304,13 +304,13 @@ static XrmOptionDescRec optionDescList[] = {
 {"+bs",            "*backgroundIsSelect",
 					XrmoptionNoArg,  (XtPointer) _false},
 {"-C",             "*consoleMode",	XrmoptionNoArg,  (XtPointer) _true},
-{"-cc",            "*charClass",	XrmoptionSepArg, (XtPointer) NULL},
+{"-cc",            "*charClass",	XrmoptionSepArg, (XtPointer) nullptr},
 {"-cu",            "*curses",           XrmoptionNoArg,  (XtPointer) _true},
 {"+cu",            "*curses",           XrmoptionNoArg,  (XtPointer) _false},
 {"-e",             nullptr,		XrmoptionSkipLine,
-							 (XtPointer) NULL},
-{"-fb",            "*userBoldFont",	XrmoptionSepArg, (XtPointer) NULL},
-{"-fn",            "*userFont",		XrmoptionSepArg, (XtPointer) NULL},
+							 (XtPointer) nullptr},
+{"-fb",            "*userBoldFont",	XrmoptionSepArg, (XtPointer) nullptr},
+{"-fn",            "*userFont",		XrmoptionSepArg, (XtPointer) nullptr},
 {"+iconic",        ".iconic",           XrmoptionNoArg,  (XtPointer) _false},
 {"-j",             "*jumpScroll",	XrmoptionNoArg,  (XtPointer) _true},
 {"+j",             "*jumpScroll",       XrmoptionNoArg,  (XtPointer) _false},
@@ -318,16 +318,16 @@ static XrmOptionDescRec optionDescList[] = {
 {"+kshMode",       "*kshMode",		XrmoptionNoArg,  (XtPointer) _false},
 {"-l",             "*logging",		XrmoptionNoArg,  (XtPointer) _true},
 {"+l",             "*logging",		XrmoptionNoArg,  (XtPointer) _false},
-{"-lf",            "*logFile",		XrmoptionSepArg, (XtPointer) NULL},
+{"-lf",            "*logFile",		XrmoptionSepArg, (XtPointer) nullptr},
 {"-ls",            "*loginShell",	XrmoptionNoArg,  (XtPointer) _true},
 {"+ls",            "*loginShell",	XrmoptionNoArg,  (XtPointer) _false},
 {"-map",           "*mapOnOutput",	XrmoptionNoArg,  (XtPointer) _true},
 {"+map",           "*mapOnOutput",	XrmoptionNoArg,  (XtPointer) _false},
 {"-mb",            "*marginBell",	XrmoptionNoArg,  (XtPointer) _true},
 {"+mb",            "*marginBell",	XrmoptionNoArg,  (XtPointer) _false},
-{"-ms",            "*pointerColor",	XrmoptionSepArg, (XtPointer) NULL},
-{"-n",  	   "*iconName",		XrmoptionSepArg, (XtPointer) NULL},
-{"-nb",            "*nMarginBell",	XrmoptionSepArg, (XtPointer) NULL},
+{"-ms",            "*pointerColor",	XrmoptionSepArg, (XtPointer) nullptr},
+{"-n",  	   "*iconName",		XrmoptionSepArg, (XtPointer) nullptr},
+{"-nb",            "*nMarginBell",	XrmoptionSepArg, (XtPointer) nullptr},
 {"-rw",            "*reverseWrap",	XrmoptionNoArg,  (XtPointer) _true},
 {"+rw",            "*reverseWrap",	XrmoptionNoArg,  (XtPointer) _false},
 {"-sb",            "*scrollBar",        XrmoptionNoArg,  (XtPointer) _true},
@@ -338,10 +338,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"+si",            "*scrollTtyOutput",  XrmoptionNoArg,  (XtPointer) _false},
 {"-sk",            "*scrollKey",        XrmoptionNoArg,  (XtPointer) _true},
 {"+sk",            "*scrollKey",        XrmoptionNoArg,  (XtPointer) _false},
-{"-sl",            "*saveLines",	XrmoptionSepArg, (XtPointer) NULL},
-{"-ti",            "*termId",		XrmoptionSepArg, (XtPointer) NULL},
-{"-tm",            "*ttyModes",		XrmoptionSepArg, (XtPointer) NULL},
-{"-tn",            "*termName",		XrmoptionSepArg, (XtPointer) NULL},
+{"-sl",            "*saveLines",	XrmoptionSepArg, (XtPointer) nullptr},
+{"-ti",            "*termId",		XrmoptionSepArg, (XtPointer) nullptr},
+{"-tm",            "*ttyModes",		XrmoptionSepArg, (XtPointer) nullptr},
+{"-tn",            "*termName",		XrmoptionSepArg, (XtPointer) nullptr},
 {"-standAlone",    "*standAlone",	XrmoptionNoArg,	 (XtPointer) _true},
 {"-vb",            "*visualBell",	XrmoptionNoArg,  (XtPointer) _true},
 {"+vb",            "*visualBell",	XrmoptionNoArg,  (XtPointer) _false},
@@ -349,12 +349,12 @@ static XrmOptionDescRec optionDescList[] = {
  */
 {"-ah",            nullptr,		XrmoptionNoArg,  (XtPointer) _true},
 {"+ah",            nullptr,		XrmoptionNoArg,  (XtPointer) _false},
-{"-b",             nullptr,		XrmoptionSepArg, (XtPointer) NULL},
+{"-b",             nullptr,		XrmoptionSepArg, (XtPointer) nullptr},
 {"-cb",            nullptr,		XrmoptionNoArg,  (XtPointer) _true},
 {"+cb",            nullptr,		XrmoptionNoArg,  (XtPointer) _false},
 {"-cn",            nullptr,		XrmoptionNoArg,  (XtPointer) _true},
 {"+cn",            nullptr,		XrmoptionNoArg,  (XtPointer) _false},
-{"-cr",            nullptr,		XrmoptionSepArg, (XtPointer) NULL},
+{"-cr",            nullptr,		XrmoptionSepArg, (XtPointer) nullptr},
 {"-s",             nullptr,		XrmoptionNoArg,  (XtPointer) _true},
 {"+s",             nullptr,		XrmoptionNoArg,  (XtPointer) _false},
 {"-t",             nullptr,		XrmoptionNoArg,  (XtPointer) _true},
@@ -395,11 +395,11 @@ static XtResource applicationResources[] = {
 	    XtOffsetOf(TERMATTRS, server), XtRString, "false"},
 #endif	/* SUN_TERMINAL_SERVER */
     {XtNtitle, XtCTitle, XtRString, sizeof(char *),
-	XtOffsetOf(TERMATTRS, title), XtRString, (caddr_t) NULL},
+	XtOffsetOf(TERMATTRS, title), XtRString, (caddr_t) nullptr},
     {XtNiconName, XtCIconName, XtRString, sizeof(char *),
-	XtOffsetOf(TERMATTRS, icon_name), XtRString, (caddr_t) NULL},
+	XtOffsetOf(TERMATTRS, icon_name), XtRString, (caddr_t) nullptr},
     {"name", "Name", XtRString, sizeof(char *),
-	XtOffsetOf(TERMATTRS, dtterm_name), XtRString, (caddr_t) NULL},
+	XtOffsetOf(TERMATTRS, dtterm_name), XtRString, (caddr_t) nullptr},
 };
 
 extern String fallbackResources[];
@@ -1423,7 +1423,7 @@ main(int argc, char **argv)
     xa_WM_SAVE_YOURSELF = XInternAtom(XtDisplay(topLevel),
                                       "WM_SAVE_YOURSELF", False);
     XmAddWMProtocolCallback(topLevel, xa_WM_SAVE_YOURSELF,
-                           SaveSessionCB, (XtPointer)NULL);
+                           SaveSessionCB, (XtPointer)nullptr);
     
     i = 0;
     (void) XtSetArg(arglist[i], XmNmappedWhenManaged, False); i++;

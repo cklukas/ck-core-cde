@@ -537,7 +537,7 @@ ui_get_obj_at_point(
     {
 	Widget	win_wid = (Widget)ui_obj->ui_handle;
 
-	if ((win_wid != (Widget)NULL) && (XtWindow(win_wid) == window))
+	if ((win_wid != (Widget)nullptr) && (XtWindow(win_wid) == window))
 	    break;
     }
     trav_close(&trav);

@@ -3217,7 +3217,7 @@ abuilP_store_attr_in_abobj(
 			VAL_PROC_HANDLER handler =
 			    (VAL_PROC_HANDLER)maps[i].const_value;
 
-			if (handler != (VAL_PROC_HANDLER)NULL)
+			if (handler != (VAL_PROC_HANDLER)nullptr)
 			    ret_val = (*handler)(obj,
 						res_name, res_type, res_value);
 		    }
@@ -3307,7 +3307,7 @@ attach_context_init(
 {
     AttachmentContext	*attach_context = (AttachmentContext *)context;
     
-    attach_context->att_type = (ISTRING)NULL;
+    attach_context->att_type = (ISTRING)nullptr;
     attach_context->att_object = (ObjRef *)nullptr;
     attach_context->att_position = 0;
     attach_context->att_offset   = 0;
@@ -3366,7 +3366,7 @@ attach_context_store(
     att_off = attach_context->att_offset;
 
     /* If no attachment, just return */
-    if (attach_context->att_type == (ISTRING)NULL) return;
+    if (attach_context->att_type == (ISTRING)nullptr) return;
 
     /* Get attachment type string */
     attach_str = istr_string(attach_context->att_type);

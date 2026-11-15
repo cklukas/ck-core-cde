@@ -103,7 +103,7 @@ obj_set_arg(ABObj obj, AB_ARG_TYPE type, STRING name, void *value)
 	 */
 	if ((nargs = obj_get_num_args(obj)) == 0)
 	{			/* first time ever */
-		merged_list= MergeArgLists(&newarg, 1, (ABArgList)NULL, 0);
+		merged_list= MergeArgLists(&newarg, 1, (ABArgList)nullptr, 0);
 		obj->args = merged_list;
 	}
 	else
@@ -337,7 +337,7 @@ obj_remove_arg(ABObj obj, STRING name)
 	if (nargs > 0)
 	{
 		args = obj->args;
-		obj->args = (ABArgList)NULL;
+		obj->args = (ABArgList)nullptr;
 		for (i = 0; i < nargs ; i++)
 		{
 			if (args[i].name && (istr_equal(args[i].name, iname)))
@@ -365,7 +365,7 @@ obj_merge_arglist(ABObj obj, ABArg arg)
 
 	if ((nargs= obj_get_num_args(obj)) == 0)
 	{			/* first time ever */
-		result = MergeArgLists(arg, 1, (ABArgList)NULL, 0);
+		result = MergeArgLists(arg, 1, (ABArgList)nullptr, 0);
 		obj->args= result;
 	}
 	else
@@ -392,7 +392,7 @@ abo_merge_typed_args(ABObj obj, ABTypedArg arg)
 
 	if ((nargs= obj_get_num_typed_args(obj)) == 0)
 	{			/* first time ever */
-		result = MergeTypedArgLists(arg, 1, (ABTypedArgList) NULL, 0);
+		result = MergeTypedArgLists(arg, 1, (ABTypedArgList) nullptr, 0);
 		obj->typed_args = result;
 	}
 	else
@@ -415,7 +415,7 @@ obj_get_num_args(ABObj obj)
 	ABArgList args= obj->args;
 	int n = 0;
 
-        for ( ; (args != (ABArgList)NULL) && (args->name != nullptr);
+        for ( ; (args != (ABArgList)nullptr) && (args->name != nullptr);
              args++, n++)
 		;
 

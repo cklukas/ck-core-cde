@@ -60,7 +60,7 @@ STRING
 abmfP_get_action_name(ABObj action)
 {
     static char         name[256];
-    STRING		parent_name = (STRING) NULL;
+    STRING		parent_name = (STRING) nullptr;
     ABObj               from = nullptr, parent = nullptr;
     STRING		tmpName = nullptr;
     *name = 0;

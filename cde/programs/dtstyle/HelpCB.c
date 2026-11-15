@@ -201,7 +201,7 @@ HelpModeCB(
 {
    Widget widget;
 
-   switch(DtHelpReturnSelectedWidgetId(style.shell, (Cursor)NULL, &widget))
+   switch(DtHelpReturnSelectedWidgetId(style.shell, None, &widget))
    {
       /*
        * There are additional cases (e.g. user aborts request) but I
@@ -213,7 +213,7 @@ HelpModeCB(
           {
              if (XtHasCallbacks(widget, XmNhelpCallback) == XtCallbackHasSome)
              {
-                XtCallCallbacks(widget, XmNhelpCallback, (XtPointer)NULL);
+                XtCallCallbacks(widget, XmNhelpCallback, (XtPointer)nullptr);
                 return;
              }
              widget = XtParent(widget);

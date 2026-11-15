@@ -375,7 +375,7 @@ static ilError ilWriteJIFData (
             ((pPriv->fileImage.p.stripHeight + mcuHeight - 1) / mcuHeight);
         }
 
-    streamRec.pBuffer = streamRec.pDst = streamRec.pPastEndBuffer = (ilPtr)NULL;
+    streamRec.pBuffer = streamRec.pDst = streamRec.pPastEndBuffer = (ilPtr)nullptr;
     if (error = iljpgEncodeJIF (&streamRec, &data, &offsets))
         return error;
 
@@ -788,7 +788,7 @@ ilJPEGEncodeControl         jpegEncode;
                 }
             }
         if (mustConvert)
-            if (!ilConvert (pipe, pDes, pFormat, 0, (ilPtr)NULL))
+            if (!ilConvert (pipe, pDes, pFormat, 0, (ilPtr)nullptr))
                 return FALSE;
         break;
         }
@@ -815,7 +815,7 @@ ilJPEGEncodeControl         jpegEncode;
         ilGetPipeInfo (pipe, TRUE, pInfo, pDes, pFormat);   /* force decompression */
         if (pFormat->rowBitAlign != 8) {
             pFormat->rowBitAlign = 8;
-            if (!ilConvert (pipe, (ilImageDes *)nullptr, pFormat, 0, (ilPtr)NULL))
+            if (!ilConvert (pipe, (ilImageDes *)nullptr, pFormat, 0, (ilPtr)nullptr))
                 return FALSE;
             ilGetPipeInfo (pipe, FALSE, pInfo, pDes, pFormat);
             }
@@ -943,7 +943,7 @@ char                    versionName [VERSION_LENGTH];
       case IL_WRITE_MAIN:                       /* no parent, add as last image */
         writeMethod = mainImage;
         newSubFileType = 0;
-        fileImage = (ilFileImage)NULL;
+        fileImage = (ilFileImage)nullptr;
         break;
 
         /*  Transparency mask: error if no parent, or parent already has or is a mask, or
@@ -1226,7 +1226,7 @@ char                    versionName [VERSION_LENGTH];
             image is compressed - stripHeight was forced above by call to ilCompress().
             Use separate function for when writing JPEG.
         */
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.stripHeight = stripHeight;
     srcData.constantStrip = TRUE;
     srcData.minBufferHeight = 0;
@@ -1254,7 +1254,7 @@ char                    versionName [VERSION_LENGTH];
 
     pPriv->fileImage.p.file = (ilFile)pFile;
     pPriv->fileImage.p.pNext = pPriv->fileImage.p.pPrev = 
-        pPriv->fileImage.p.pChild = pPriv->fileImage.p.pMask = (ilFileImage)NULL;
+        pPriv->fileImage.p.pChild = pPriv->fileImage.p.pMask = (ilFileImage)nullptr;
     pPriv->fileImage.p.width = info.width;
     pPriv->fileImage.p.height = info.height;
     pPriv->fileImage.p.xRes = xRes;

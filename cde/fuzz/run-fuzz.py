@@ -48,8 +48,9 @@ MACOS_CLANG = "/opt/homebrew/opt/llvm/bin/clang"
 # Headers of XQuartz: Xlib, Xt, Xdmcp.  No Motif is needed by any target.  Other
 # hosts use the system paths (pkg-config, then the compiler's default
 # directories).  The environment variables XINCLUDE and XLIB override both.
-MACOS_XINCLUDE = "/opt/X11/include"
-MACOS_XLIB = "/opt/X11/lib"
+MACOS_XPREFIX = "/opt/X11" if os.access("/opt/X11/include/X11", os.R_OK) else "/opt/homebrew"
+MACOS_XINCLUDE = f"{MACOS_XPREFIX}/include"
+MACOS_XLIB = f"{MACOS_XPREFIX}/lib"
 # pkg-config modules that a target needs besides Xlib and Xt; a host without
 # them skips the target.
 TARGET_LIBS = {

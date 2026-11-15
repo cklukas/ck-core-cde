@@ -2444,8 +2444,8 @@ build_dtIconShell( void )
                         valueChangedCB_magMenu_20x_tb, nullptr);
 
 
-        XmMainWindowSetAreas( mainWindow, menu1, (Widget) NULL,
-                        (Widget) NULL, (Widget) NULL, mainForm );
+        XmMainWindowSetAreas( mainWindow, menu1, (Widget) nullptr,
+                        (Widget) nullptr, (Widget) nullptr, mainForm );
 
         return ( dtIconShell );
 }

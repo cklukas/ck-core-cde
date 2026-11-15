@@ -649,7 +649,7 @@ XtResource wmGlobalResources[] =
 	sizeof (String),
         XtOffsetOf(WmGlobalData, configFile),
 	XtRImmediate,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -659,7 +659,7 @@ XtResource wmGlobalResources[] =
 	sizeof (String),
         XtOffsetOf(WmGlobalData, cppCommand),
 	XtRImmediate,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -990,7 +990,7 @@ XtResource wmGlobalScreenResources[] =
 	sizeof (String),
         XtOffsetOf(WmGlobalData, screenList),
 	XtRImmediate,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {   WmNbackdropDirectories, 
@@ -1041,7 +1041,7 @@ XtResource wmStdGlobalResources[] =
 	sizeof (String),
         XtOffsetOf(WmGlobalData, configFile),
 	XtRImmediate,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1161,7 +1161,7 @@ XtResource wmScreenResources[] =
 	sizeof (String),
 	XtOffsetOf (WmScreenData, feedbackGeometry),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1291,7 +1291,7 @@ XtResource wmScreenResources[] =
 	sizeof (XmString),
 	XtOffsetOf (WmScreenData, iconBoxTitle),
 	XmRXmString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1371,7 +1371,7 @@ XtResource wmScreenResources[] =
 	sizeof (String),
 	XtOffsetOf (WmScreenData, subpanelResources),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1430,7 +1430,7 @@ XtResource wmScreenResources[] =
 	sizeof (String),
 	XtOffsetOf (WmScreenData, helpResources),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1440,7 +1440,7 @@ XtResource wmScreenResources[] =
 	sizeof (String),
 	XtOffsetOf (WmScreenData, initialWorkspace),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1450,7 +1450,7 @@ XtResource wmScreenResources[] =
 	sizeof (String),
         XtOffsetOf (WmScreenData, workspaceList),
 	XtRImmediate,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1570,7 +1570,7 @@ XtResource wmWorkspaceResources[] =
 	sizeof (String),
 	XtOffsetOf (WmWorkspaceData, iconBoxGeometry),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1580,7 +1580,7 @@ XtResource wmWorkspaceResources[] =
 	sizeof (XmString),
 	XtOffsetOf (WmWorkspaceData, title),
 	XmRXmString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     }
 
 };
@@ -1612,7 +1612,7 @@ XtResource wmStdWorkspaceResources[] =
 	sizeof (XmString),
 	XtOffsetOf (WmWorkspaceData, title),
 	XmRXmString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     }
 };
 
@@ -1675,7 +1675,7 @@ XtResource wmBackdropResources[] =
 	sizeof (String),
 	XtOffsetOf (BackdropData, image),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1716,7 +1716,7 @@ XtResource wmWsPresenceResources[] =
 	sizeof (XmString),
 	XtOffsetOf (WsPresenceData, title),
 	XmRXmString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     }
 };
 
@@ -1785,7 +1785,7 @@ XtResource wmClientResources[] =
 	sizeof (String),
 	XtOffsetOf (ClientData, iconImage),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -1948,7 +1948,7 @@ XtResource wmStdClientResources[] =
 	sizeof (String),
 	XtOffsetOf (ClientData, iconImage),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -2211,7 +2211,7 @@ XtResource wmAppearanceResources[] =
 	sizeof (String),
         XtOffsetOf (AppearanceData, bottomShadowPStr),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -2281,7 +2281,7 @@ XtResource wmAppearanceResources[] =
 	sizeof (String),
 	XtOffsetOf (AppearanceData, activeBottomShadowPStr),
 	XtRString,
-	(XtPointer)NULL
+	(XtPointer)nullptr
     },
 
     {
@@ -4416,12 +4416,12 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
 
 	if (pAData->backgroundPixmap == XmUNSPECIFIED_PIXMAP)
 	{
-	    pAData->backgroundPixmap = (Pixmap)NULL;
+	    pAData->backgroundPixmap = None;
 	}
     }
     else
     {
-	pAData->backgroundPixmap = (Pixmap)NULL;
+	pAData->backgroundPixmap = None;
     }
 
     /* top shadow pixmap */
@@ -4445,12 +4445,12 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
 
 	if (pAData->topShadowPixmap == XmUNSPECIFIED_PIXMAP)
 	{
-	    pAData->topShadowPixmap = (Pixmap)NULL;
+	    pAData->topShadowPixmap = None;
 	}
     }
     else
     {
-	pAData->topShadowPixmap = (Pixmap)NULL;
+	pAData->topShadowPixmap = None;
     }
 
 
@@ -4475,12 +4475,12 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
 
 	if (pAData->bottomShadowPixmap == XmUNSPECIFIED_PIXMAP)
 	{
-	    pAData->bottomShadowPixmap = (Pixmap)NULL;
+	    pAData->bottomShadowPixmap = None;
 	}
     }
     else
     {
-	pAData->bottomShadowPixmap = (Pixmap)NULL;
+	pAData->bottomShadowPixmap = None;
     }
 
     /* inactive appearance GC */
@@ -4522,12 +4522,12 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
 
 	if (pAData->activeBackgroundPixmap == XmUNSPECIFIED_PIXMAP)
 	{
-	    pAData->activeBackgroundPixmap = (Pixmap)NULL;
+	    pAData->activeBackgroundPixmap = None;
 	}
     }
     else
     {
-	pAData->activeBackgroundPixmap = (Pixmap)NULL;
+	pAData->activeBackgroundPixmap = None;
     }
 
     /* active top shadow pixmap */
@@ -4543,12 +4543,12 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
 
 	if (pAData->activeTopShadowPixmap == XmUNSPECIFIED_PIXMAP)
 	{
-	    pAData->activeTopShadowPixmap = (Pixmap)NULL;
+	    pAData->activeTopShadowPixmap = None;
 	}
     }
     else
     {
-	pAData->activeTopShadowPixmap = (Pixmap)NULL;
+	pAData->activeTopShadowPixmap = None;
     }
 
 
@@ -4565,12 +4565,12 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
 
 	if (pAData->activeBottomShadowPixmap == XmUNSPECIFIED_PIXMAP)
 	{
-	    pAData->activeBottomShadowPixmap = (Pixmap)NULL;
+	    pAData->activeBottomShadowPixmap = None;
 	}
     }
     else
     {
-	pAData->activeBottomShadowPixmap = (Pixmap)NULL;
+	pAData->activeBottomShadowPixmap = None;
     }
 
     /* inactive appearance GC */
@@ -5406,13 +5406,13 @@ ProcessClientResources (ClientData *pCD)
 
 	    if (pCD->iconImageBottomShadowPixmap == XmUNSPECIFIED_PIXMAP)
 	    {
-	        pCD->iconImageBottomShadowPixmap = (Pixmap)NULL;
+	        pCD->iconImageBottomShadowPixmap = None;
 	    }
 	}
     }
     else
     {
-	pCD->iconImageBottomShadowPixmap = (Pixmap)NULL;
+	pCD->iconImageBottomShadowPixmap = None;
     }
 
     if (pCD->iconImageTopShadowPStr)
@@ -5437,13 +5437,13 @@ ProcessClientResources (ClientData *pCD)
 
 	    if (pCD->iconImageTopShadowPixmap == XmUNSPECIFIED_PIXMAP)
 	    {
-	        pCD->iconImageTopShadowPixmap = (Pixmap)NULL;
+	        pCD->iconImageTopShadowPixmap = None;
 	    }
 	}
     }
     else
     {
-	pCD->iconImageTopShadowPixmap = (Pixmap)NULL;
+	pCD->iconImageTopShadowPixmap = None;
     }
 
     if ((pCD->internalBevel < MIN_INTERNAL_BEVEL)  || 
@@ -5493,13 +5493,13 @@ ProcessClientResources (ClientData *pCD)
 
 	        if (pCD->matteBottomShadowPixmap == XmUNSPECIFIED_PIXMAP)
 	        {
-	            pCD->matteBottomShadowPixmap = (Pixmap)NULL;
+	            pCD->matteBottomShadowPixmap = None;
 	        }
 	    }
         }
         else
         {
-	    pCD->matteBottomShadowPixmap = (Pixmap)NULL;
+	    pCD->matteBottomShadowPixmap = None;
         }
 
 	if (pCD->matteTopShadowPStr &&
@@ -5530,13 +5530,13 @@ ProcessClientResources (ClientData *pCD)
 
 	        if (pCD->matteTopShadowPixmap == XmUNSPECIFIED_PIXMAP)
 	        {
-	            pCD->matteTopShadowPixmap = (Pixmap)NULL;
+	            pCD->matteTopShadowPixmap = None;
 	        }
 	    }
         }
         else
         {
-	    pCD->matteTopShadowPixmap = (Pixmap)NULL;
+	    pCD->matteTopShadowPixmap = None;
         }
 
 

@@ -149,10 +149,10 @@ static char modename[1024];
 static char modeclass[1024];
 
 static XrmOptionDescRec genTable[] = {
-    {"-mode", ".mode", XrmoptionSepArg, (caddr_t) NULL},
+    {"-mode", ".mode", XrmoptionSepArg, (caddr_t) nullptr},
     {"-mono", ".mono", XrmoptionNoArg, (caddr_t) "on"},
     {"+mono", ".mono", XrmoptionNoArg, (caddr_t) "off"},
-    {"-nice", ".nice", XrmoptionSepArg, (caddr_t) NULL},
+    {"-nice", ".nice", XrmoptionSepArg, (caddr_t) nullptr},
     {"-create",  ".create", XrmoptionNoArg, (caddr_t) "on"},
 };
 #define genEntries (sizeof genTable / sizeof genTable[0])
@@ -163,20 +163,20 @@ static XrmOptionDescRec genTable[] = {
 /** be built on the fly.                                    **/
 /*************************************************************/
 static XrmOptionDescRec modeTable[] = {
-    {"-delay",      nullptr, XrmoptionSepArg, (caddr_t) NULL},
-    {"-batchcount", nullptr, XrmoptionSepArg, (caddr_t) NULL},
-    {"-saturation", nullptr, XrmoptionSepArg, (caddr_t) NULL},
+    {"-delay",      nullptr, XrmoptionSepArg, (caddr_t) nullptr},
+    {"-batchcount", nullptr, XrmoptionSepArg, (caddr_t) nullptr},
+    {"-saturation", nullptr, XrmoptionSepArg, (caddr_t) nullptr},
 };
 #define modeEntries (sizeof modeTable / sizeof modeTable[0])
 
 static XrmOptionDescRec cmdlineTable[] = {
-    {"-display", ".display", XrmoptionSepArg, (caddr_t) NULL},
-    {"-xrm",     nullptr,       XrmoptionResArg, (caddr_t) NULL},
+    {"-display", ".display", XrmoptionSepArg, (caddr_t) nullptr},
+    {"-xrm",     nullptr,       XrmoptionResArg, (caddr_t) nullptr},
 };
 #define cmdlineEntries (sizeof cmdlineTable / sizeof cmdlineTable[0])
 
 static XrmOptionDescRec nameTable[] = {
-    {"-name", ".name", XrmoptionSepArg, (caddr_t) NULL},
+    {"-name", ".name", XrmoptionSepArg, (caddr_t) nullptr},
 };
 
 

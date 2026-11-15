@@ -80,7 +80,7 @@ static ilError ilCompLZWInit (
     )
 {
     ilCompLZWPrivPtr pPriv = (ilCompLZWPrivPtr)privateData;
-    pPriv->ennodes = (ilEnnodePtr)NULL;
+    pPriv->ennodes = (ilEnnodePtr)nullptr;
     pPriv->pString = (ilPtr)IL_MALLOC (MAX_NODES);
     if (!pPriv->pString) 
         return IL_ERROR_MALLOC;
@@ -88,7 +88,7 @@ static ilError ilCompLZWInit (
     pPriv->ennodes = (ilEnnodePtr)IL_MALLOC (sizeof(ilEnnodeRec) * MAX_NODES);
     if (!pPriv->ennodes) {
         IL_FREE (pPriv->pString);
-        pPriv->pString = (ilPtr)NULL;
+        pPriv->pString = (ilPtr)nullptr;
         return IL_ERROR_MALLOC;
 	    }
     return IL_OK;
@@ -408,7 +408,7 @@ IL_PRIVATE ilBool _ilCompressLZW (
     format = *pFormat;
     if ((pDes->nSamplesPerPixel > 1) && (pFormat->sampleOrder != IL_SAMPLE_PIXELS)) {
         format.sampleOrder = IL_SAMPLE_PIXELS;
-        if (!ilConvert (pipe, (ilImageDes *)nullptr, &format, 0, (ilPtr)NULL))
+        if (!ilConvert (pipe, (ilImageDes *)nullptr, &format, 0, (ilPtr)nullptr))
             return FALSE;
         ilGetPipeInfo (pipe, FALSE, pInfo, &des, &format);
         }
@@ -416,7 +416,7 @@ IL_PRIVATE ilBool _ilCompressLZW (
         /*  Add pipe element: no change to des except now compressed; same format.
             NOTE: pSrcData->constantStrip should be TRUE, from ilCompress().
         */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     des.compression = IL_LZW;
     dstData.pDes = &des;
     dstData.pFormat = (ilImageFormat *)nullptr;
@@ -425,7 +425,7 @@ IL_PRIVATE ilBool _ilCompressLZW (
     dstData.stripHeight = pSrcData->stripHeight;
     dstData.constantStrip = pSrcData->constantStrip;
     dstData.pPalette = pInfo->pPalette;
-    dstData.pCompData = (ilPtr)NULL;
+    dstData.pCompData = (ilPtr)nullptr;
     pPriv = (ilCompLZWPrivPtr)ilAddPipeElement (pipe, IL_FILTER, sizeof (ilCompLZWPrivRec),
                 0, pSrcData, &dstData,
                 ilCompLZWInit, ilCompLZWCleanup, IL_NPF, ilCompLZWExecute, 0);

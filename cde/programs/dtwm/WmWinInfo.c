@@ -333,7 +333,7 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     pCD->clientEntry.prevSibling = nullptr;
     pCD->clientEntry.pCD = nullptr;
 
-    pCD->smClientID = (String)NULL;
+    pCD->smClientID = (String)nullptr;
 
     pCD->fullscreen = False;
     pCD->fullscreenAuto = True;
@@ -977,10 +977,10 @@ ProcessSmClientID (ClientData *pCD)
     unsigned long nitems, leftover;
     char *clientID;
 
-    if (pCD->smClientID != (String)NULL)
+    if (pCD->smClientID != (String)nullptr)
     {
 	XFree(pCD->smClientID);
-	pCD->smClientID = (String)NULL;
+	pCD->smClientID = (String)nullptr;
     }
 
     if ((XGetWindowProperty(DISPLAY, pCD->client, wmGD.xa_SM_CLIENT_ID,
@@ -1431,7 +1431,7 @@ ProcessWmHints (ClientData *pCD, Boolean firstTime)
 	        if (!pCD->iconWindow && (flags & IconPixmapHint))
 	        {
 		    iconMask = (flags & IconMaskHint) ?
-				pXWMHints->icon_mask : (Pixmap) NULL;
+				pXWMHints->icon_mask : None;
 	            /*
 	             * A client supplied icon window is NOT 
 		     * available so use the client supplied icon image.
@@ -1572,7 +1572,7 @@ ProcessWmHints (ClientData *pCD, Boolean firstTime)
              * now wants to supply an image.
              */
 	    iconMask = (flags & IconMaskHint)?
-                       pXWMHints->icon_mask : (Pixmap) NULL;
+                       pXWMHints->icon_mask : None;
 
 	    if ((iconPixmap = 
 		 MakeClientIconPixmap (pCD, pXWMHints->icon_pixmap, 
@@ -2369,7 +2369,7 @@ WmICCCMToXmString (XTextProperty *wmNameProp)
 
   if (wmNameProp->value == 0 || strlen((char *)wmNameProp->value) == 0)
     {
-      return (XmString)NULL;
+      return (XmString)nullptr;
     }
 
   if (((status = XmCvtTextPropertyToXmStringTable(DISPLAY, wmNameProp,

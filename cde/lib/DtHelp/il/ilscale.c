@@ -891,7 +891,7 @@ static unsigned long    defaultBitonalThreshold = 192;
 
                   /* if a palette image first convert to RGB */
                   if (imdes.type == IL_PALETTE) {
-                       if (!ilConvert (pipe, IL_DES_RGB, IL_FORMAT_3BYTE_PIXEL, 0, (ilPtr)NULL))
+                       if (!ilConvert (pipe, IL_DES_RGB, IL_FORMAT_3BYTE_PIXEL, 0, (ilPtr)nullptr))
                            return FALSE;
                        ilGetPipeInfo (pipe, FALSE, &info, &imdes, &imformat);
                   }
@@ -926,7 +926,7 @@ static unsigned long    defaultBitonalThreshold = 192;
 
 
 
-       dstdata.producerObject = (ilObject) NULL;
+       dstdata.producerObject = (ilObject) nullptr;
        dstdata.pDes           = (ilImageDes *) nullptr;
        dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.width          = dstWidth;

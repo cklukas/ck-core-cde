@@ -221,7 +221,7 @@ static void SetupHelpDialog(
 
           /* Catch the close callback so we can destroy the widget */
           XtAddCallback(*helpDialog, DtNcloseCallback,
-                      CloseOnHelpCB, (XtPointer) NULL);
+                      CloseOnHelpCB, (XtPointer) nullptr);
 
           /* Add the popup position callback to our history dialog */
           XtAddCallback (XtParent(*helpDialog), XmNpopupCallback,

@@ -75,7 +75,7 @@
 /*#include "Container.h"*/
 
 static  char *selected_icon_name = (char *)nullptr;
-static  Widget selected_icon = (Widget)NULL;
+static  Widget selected_icon = (Widget)nullptr;
 static  int icon_count = 0;
 char    *main_filter;
 char    *file_filter_global;
@@ -624,7 +624,7 @@ void apply_filter (char *filter)
      /******************************************************************/
      if (selected_icon) {
         _DtIconSetState(selected_icon, FALSE, FALSE);
-        selected_icon = (Widget)NULL;
+        selected_icon = (Widget)nullptr;
      }
      if (selected_icon_name) {
         XtFree(selected_icon_name);
@@ -748,7 +748,7 @@ void  update_container_contents (char *filter)
                             args, n);
           XtAddCallback((Widget) icons_in_container[lcv], XmNcallback,
                        selectionCB_icon_scrolled_container,
-                       (XtPointer) NULL);
+                       (XtPointer) nullptr);
 
 #ifdef DEBUG
        if (!icons_in_container[lcv])
@@ -1028,10 +1028,10 @@ void display_nofindicon_message (Widget parent)
 
   XtAddCallback( dialog, XmNokCallback,
           activateCB_NoFindIconDialog_ChangeNameButton,
-          (XtPointer) NULL );
+          (XtPointer) nullptr );
   XtAddCallback( dialog, XmNcancelCallback,
           activateCB_NoFindIconDialog_NameOKButton,
-          (XtPointer) NULL );
+          (XtPointer) nullptr );
 
   /*********  WARNING - this needs to be translated !!! ***********/
   strcpy(buffer, "There is no set of icons with that filename in the icon folders.\n");
@@ -1123,7 +1123,7 @@ Please enter a valid icon file name in the\n'Enter Icon Filename' field.");
        }
        selected_icon_name = (char *)nullptr;
        XtDestroyWidget (XtParent(icon_selection_dialog));
-       IconSelector = (Widget)NULL;
+       IconSelector = (Widget)nullptr;
        TurnOffHourGlassAllWindows();
 #else
        TurnOffHourGlassAllWindows();
@@ -1148,7 +1148,7 @@ Please enter a valid icon file name in the\n'Enter Icon Filename' field.");
       XtFree(selected_icon_name);
       selected_icon_name = (char *)nullptr;
       XtDestroyWidget (XtParent(icon_selection_dialog));
-      IconSelector = (Widget)NULL;
+      IconSelector = (Widget)nullptr;
       TurnOffHourGlassAllWindows();
 #else
       TurnOffHourGlassAllWindows();
@@ -1182,7 +1182,7 @@ static  void    activateCB_bottom_button2( Widget UxWidget,
 #ifdef _ICONSELECTOR_DESTROY_ENABLED
     free_container_contents ();
     XtDestroyWidget (XtParent(icon_selection_dialog));
-    IconSelector = (Widget)NULL;
+    IconSelector = (Widget)nullptr;
 #else
     UxPopdownInterface (IconSelector);
 #endif  /* _ICONSELECTOR_DESTROY_ENABLED */
@@ -1515,7 +1515,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
         nbutton++;
         XtAddCallback( bottom_button1, XmNactivateCallback,
                 activateCB_bottom_button1,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         UxPutContext( bottom_button1, (char *) UxIcon_selection_dialogContext );
 
@@ -1841,7 +1841,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
         UxPutContext( dir_scrolled_list, (char *) UxIcon_selection_dialogContext );
         calc_bottom_attachment (dir_scrolled_list,
                                (XtPointer) UxIcon_selection_dialogContext,
-                               (XtPointer) NULL);
+                               (XtPointer) nullptr);
         XtAddCallback( dir_scrolled_list, XmNdefaultActionCallback,
                 defaultActionCB_dir_scrolled_list,
                 (XtPointer) UxIcon_selection_dialogContext );
@@ -1876,7 +1876,7 @@ static Widget   _Uxbuild_icon_selection_dialog(void)
         UxPutContext( icon_scrolled_win, (char *) UxIcon_selection_dialogContext );
         calc_bottom_attachment (icon_scrolled_win,
                                (XtPointer) UxIcon_selection_dialogContext,
-                               (XtPointer) NULL);
+                               (XtPointer) nullptr);
 
         /* Creation of icon_scrolled_container */
         icon_scrolled_container = XtVaCreateManagedWidget( "icon_scrolled_container",

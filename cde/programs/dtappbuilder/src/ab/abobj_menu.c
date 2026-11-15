@@ -662,7 +662,7 @@ get_edit_menu_from_cache(
 	if (ab)
             for (i = 0; browser_menu_items[i].label != nullptr; i++)
 	    {
-		browser_menu_items[i].client_data = (XtPointer)NULL;
+		browser_menu_items[i].client_data = (XtPointer)nullptr;
 	    }
     }
 

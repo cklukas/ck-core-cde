@@ -114,8 +114,8 @@ unsigned int        displayWidth;       /* width of display in pixels */
 GC                  gc;                 /* GC to draw with */
 
 static XrmOptionDescRec optTable[] = {
-{"-font",	"*vfont",	XrmoptionSepArg,	(XtPointer) NULL},
-{"-fnt",	"*vfont",	XrmoptionSepArg,	(XtPointer) NULL},
+{"-font",	"*vfont",	XrmoptionSepArg,	(XtPointer) nullptr},
+{"-fnt",	"*vfont",	XrmoptionSepArg,	(XtPointer) nullptr},
 };
 static int noptTable = sizeof(optTable)/sizeof(optTable[0]);
 

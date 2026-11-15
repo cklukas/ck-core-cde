@@ -771,7 +771,7 @@ dtcalc_kpanel_create(Widget owner)
 #ifdef HAVE_EDITRES
     XtAddEventHandler(owner, 0, True,
                       _XEditResCheckMessages,
-                      (XtPointer) NULL);
+                      (XtPointer) nullptr);
 #endif
 
   if(application_args.menuBar)
@@ -1288,7 +1288,7 @@ create_cfframe(void)    /* Create auxiliary frame for CON/FUN key. */
   XtAddCallback(X->CFpi_butOK, XmNactivateCallback, write_cf_value,
                                                    (XtPointer) X->CFpi_butOK) ;
   XtAddCallback(X->CFpi_butClose, XmNactivateCallback, close_cf,
-                                                          (XtPointer) NULL) ;
+                                                          (XtPointer) nullptr) ;
 
   XtAddCallback(X->CFpi_cftext->textfield, XmNactivateCallback, move_cf,
                                                    (XtPointer) X->CFpi_butOK) ;
@@ -1298,9 +1298,9 @@ create_cfframe(void)    /* Create auxiliary frame for CON/FUN key. */
                                                    (XtPointer) X->CFpi_butOK) ;
 
   XtAddCallback(X->CFpi_cftext->textfield, XmNfocusCallback, FocusInCB,
-                                                   (XtPointer) NULL) ;
+                                                   (XtPointer) nullptr) ;
   XtAddCallback(X->CFpi_dtext->textfield, XmNactivateCallback, FocusInCB,
-                                                   (XtPointer) NULL) ;
+                                                   (XtPointer) nullptr) ;
   j = 0;
   XtSetArg (args[j], XmNcancelButton, X->CFpi_butClose); j++;
   XtSetValues (X->CFframe, args, j);
@@ -1674,9 +1674,9 @@ event_proc(Widget widget, XtPointer client_data, XEvent *event, Boolean *continu
      {
         if(v->cur_ch == KEY_EQ)
         {
-           XtCallCallbacks(X->CFpi_butOK, XmNarmCallback, (XtPointer) NULL);
+           XtCallCallbacks(X->CFpi_butOK, XmNarmCallback, (XtPointer) nullptr);
            XtCallCallbacks(X->CFpi_butOK, XmNactivateCallback,
-                                                            (XtPointer) NULL);
+                                                            (XtPointer) nullptr);
         }
         if(v->event_type == ARROW || v->event_type == TAB)
         {
@@ -1690,9 +1690,9 @@ event_proc(Widget widget, XtPointer client_data, XEvent *event, Boolean *continu
      {
         if(v->cur_ch == KEY_EQ)
         {
-           XtCallCallbacks(X->CFpi_butClose, XmNarmCallback, (XtPointer) NULL);
+           XtCallCallbacks(X->CFpi_butClose, XmNarmCallback, (XtPointer) nullptr);
            XtCallCallbacks(X->CFpi_butClose, XmNactivateCallback,
-                                                            (XtPointer) NULL);
+                                                            (XtPointer) nullptr);
         }
         if(v->event_type == ARROW || v->event_type == TAB)
         {
@@ -1706,7 +1706,7 @@ event_proc(Widget widget, XtPointer client_data, XEvent *event, Boolean *continu
      {
         if(v->cur_ch == KEY_EQ)
         {
-           XtCallCallbacks(X->CFpi_butHelp, XmNarmCallback, (XtPointer) NULL);
+           XtCallCallbacks(X->CFpi_butHelp, XmNarmCallback, (XtPointer) nullptr);
            XtCallCallbacks(X->CFpi_butHelp, XmNactivateCallback,
                                                    (XtPointer) HELP_CONSTANT);
         }
@@ -2391,7 +2391,7 @@ new_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
   XmProcessTraversal(X->CFpi_cftext->textfield, XmTRAVERSE_CURRENT);
   ignore_event = True;
   timerId = XtAppAddTimeOut (XtWidgetToApplicationContext (X->kframe), 300,
-                             TimerEvent, (XtPointer) NULL);
+                             TimerEvent, (XtPointer) nullptr);
 }
 
 
@@ -2633,7 +2633,7 @@ show_ascii_frame(void)      /* Display ASCII popup. */
                                                        show_ascii, nullptr) ;
       XtAddCallback(X->Api_butOK,  XmNactivateCallback, show_ascii, nullptr) ;
       XtAddCallback(X->Api_butClose, XmNactivateCallback, close_ascii,
-                                                          (XtPointer) NULL) ;
+                                                          (XtPointer) nullptr) ;
       XtAddCallback(X->Api_butHelp, XmNactivateCallback, HelpRequestCB,
                                                     (XtPointer) HELP_ASCII) ;
 
@@ -2651,7 +2651,7 @@ show_ascii_frame(void)      /* Display ASCII popup. */
   XmProcessTraversal(X->Api_text->textfield, XmTRAVERSE_CURRENT);
   ignore_event = True;
   timerId = XtAppAddTimeOut (XtWidgetToApplicationContext (X->kframe), 300,
-			     TimerEvent, (XtPointer) NULL);
+			     TimerEvent, (XtPointer) nullptr);
 }
 
 
@@ -2663,7 +2663,7 @@ start_tool(void)
   wm_state_atom = XmInternAtom (X->dpy, "WM_STATE", False);
 
   XmAddWMProtocols(X->kframe, &saveatom, 1) ;
-  XmAddWMProtocolCallback(X->kframe, saveatom, save_state, (XtPointer)NULL) ;
+  XmAddWMProtocolCallback(X->kframe, saveatom, save_state, (XtPointer)nullptr) ;
 
   v->started = 1 ;
   XSetErrorHandler(xerror_interpose) ;
@@ -3132,7 +3132,7 @@ update_cf_value(void)
 
   ignore_event = True;
   timerId = XtAppAddTimeOut (XtWidgetToApplicationContext (X->kframe), 300,
-			     TimerEvent, (XtPointer) NULL);
+			     TimerEvent, (XtPointer) nullptr);
 
 }
 
@@ -3365,7 +3365,7 @@ create_menu_bar(Widget parent)
    XtManageChild(child);
    XmStringFree(labelString);
    XtAddCallback(child, XmNactivateCallback, do_ascii_callback,
-                                                         (XtPointer)NULL);
+                                                         (XtPointer)nullptr);
 
   if(_DtNl_is_multibyte)
      XtSetSensitive(child, False);
@@ -3407,7 +3407,7 @@ create_menu_bar(Widget parent)
    XtManageChild(child);
    XmStringFree(labelString);
    XtAddCallback(child, XmNactivateCallback, do_frame_callback,
-                                                          (XtPointer) NULL);
+                                                          (XtPointer) nullptr);
 
    n = 0;
    mnemonic = GETMESSAGE(2, 17, "H");
@@ -3494,7 +3494,7 @@ create_menu_bar(Widget parent)
    XtSetArg(args[n], XmNlabelString, labelString);  n++;
    WidgList[count++]= XmCreatePushButton(helpPulldown, "onItem", args, n );
    XtAddCallback(WidgList[count-1], XmNactivateCallback,
-       HelpModeCB, (XtPointer)NULL);
+       HelpModeCB, (XtPointer)nullptr);
    XmStringFree(labelString);
    XtFree(mnemonic);
 
@@ -3583,7 +3583,7 @@ do_memory(Widget w, XtPointer client_data, XtPointer call_data)
   }
   ignore_event = True;
   timerId = XtAppAddTimeOut (XtWidgetToApplicationContext (X->kframe), 300,
-			     TimerEvent, (XtPointer) NULL);
+			     TimerEvent, (XtPointer) nullptr);
 }
 
 void
@@ -3688,7 +3688,7 @@ close_cf(Widget widget, XtPointer client_data, XtPointer call_data)
   XtUnmanageChild(X->CFframe) ;
   ignore_event = True;
   timerId = XtAppAddTimeOut (XtWidgetToApplicationContext (X->kframe), 300,
-			     TimerEvent, (XtPointer) NULL);
+			     TimerEvent, (XtPointer) nullptr);
 }
 
 void
@@ -3697,7 +3697,7 @@ close_ascii(Widget widget, XtPointer client_data, XtPointer call_data)
   XtUnmanageChild(X->Aframe) ;
   ignore_event = True;
   timerId = XtAppAddTimeOut (XtWidgetToApplicationContext (X->kframe), 300,
-			     TimerEvent, (XtPointer) NULL);
+			     TimerEvent, (XtPointer) nullptr);
 }
 
 void
@@ -3804,7 +3804,7 @@ create_popup(Widget parent)
 						      GETMESSAGE(2, 41, "A") ),
 					 nullptr);
   XtAddCallback(X->asciiConv, XmNactivateCallback, do_ascii_callback,
-                                                         (XtPointer)NULL);
+                                                         (XtPointer)nullptr);
 
   if(_DtNl_is_multibyte)
      XtSetSensitive(X->asciiConv, False);
@@ -3918,7 +3918,7 @@ create_popup(Widget parent)
                 nullptr);
 
   XtAddCallback(helpO, XmNactivateCallback,
-                 HelpModeCB, (XtPointer)NULL);
+                 HelpModeCB, (XtPointer)nullptr);
 
   XtCreateManagedWidget("separator", xmSeparatorWidgetClass,
                         dummyHelp2, nullptr, 0);
@@ -3980,9 +3980,9 @@ create_popup(Widget parent)
                                                       (XtPointer)(int)M_FUN);
 
   XtAddEventHandler(parent, ButtonPressMask, FALSE,
-                                     popupHandler, (XtPointer) NULL) ;
+                                     popupHandler, (XtPointer) nullptr) ;
   XtAddCallback(X->popupMenu, XmNmapCallback,map_popup,
-                                                      (XtPointer)NULL);
+                                                      (XtPointer)nullptr);
 }
 
 static void

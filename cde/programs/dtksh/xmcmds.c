@@ -2484,11 +2484,11 @@ do_XmMainWindowSetAreas(
    }
 
    XmMainWindowSetAreas(w[0]->w, 
-                        w[1] ? w[1]->w : (Widget)NULL, 
-                        w[2] ? w[2]->w : (Widget)NULL, 
-                        w[3] ? w[3]->w : (Widget)NULL,
-                        w[4] ? w[4]->w : (Widget)NULL, 
-                        w[5] ? w[5]->w : (Widget)NULL);
+                        w[1] ? w[1]->w : (Widget)nullptr, 
+                        w[2] ? w[2]->w : (Widget)nullptr, 
+                        w[3] ? w[3]->w : (Widget)nullptr,
+                        w[4] ? w[4]->w : (Widget)nullptr, 
+                        w[5] ? w[5]->w : (Widget)nullptr);
    return(0);
 }
 

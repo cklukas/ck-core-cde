@@ -181,16 +181,16 @@ PdmXpClose(PdmXp* me)
 	
 	for(i = 0; i < PDMXP_POOL_COUNT; i++)
 	{
-	    if(me->pool[i] != (XrmDatabase)NULL)
+	    if(me->pool[i] != (XrmDatabase)nullptr)
 	    {
 		XrmDestroyDatabase(me->pool[i]);
-		me->pool[i] = (XrmDatabase)NULL;
+		me->pool[i] = (XrmDatabase)nullptr;
 	    }
 	}
 	XCloseDisplay(me->display);
 	me->display = nullptr;
 #if 0 && defined(PRINTING_SUPPORTED)
-	me->context = (XPContext)NULL;
+	me->context = (XPContext)nullptr;
 #endif /* PRINTING_SUPPORTED */
     }
 }
@@ -231,13 +231,13 @@ PdmXpLoadPool(PdmXp* me, XPAttributes type)
 	i = PDMXP_SERVER;
 	break;
     default:
-	return (XrmDatabase)NULL;
+	return (XrmDatabase)nullptr;
 	break;
     }
     /*
      * get the attributes from the X print server
      */
-    if(me->pool[i] == (XrmDatabase)NULL)
+    if(me->pool[i] == (XrmDatabase)nullptr)
     {
 	XTextProperty text_prop;
 	char** list;
@@ -280,7 +280,7 @@ PdmXpGetQualifier(PdmXp* me)
     if(me->qualifier == (char*)nullptr)
     {
 #if 0 && defined(PRINTING_SUPPORTED)
-	if(PdmXpLoadPool(me, XPPrinterAttr) != (XrmDatabase)NULL)
+	if(PdmXpLoadPool(me, XPPrinterAttr) != (XrmDatabase)nullptr)
 	{
 	    char* str_type;
 	    XrmValue value;
@@ -398,7 +398,7 @@ PdmXpGetStringValue(PdmXp* me,
     XrmDatabase pool;
     
     pool = PdmXpLoadPool(me, type);
-    if(pool == (XrmDatabase)NULL)
+    if(pool == (XrmDatabase)nullptr)
 	return (const char*)nullptr;
 
     res_name = PdmXpBuildResourceName(me, id_att);
@@ -464,7 +464,7 @@ PdmXpSetStringValue(PdmXp* me,
     XrmDatabase pool;
     
     pool = PdmXpLoadPool(me, type);
-    if(pool == (XrmDatabase)NULL)
+    if(pool == (XrmDatabase)nullptr)
 	return;
 
     res_name = PdmXpBuildResourceName(me, id_att);
@@ -517,7 +517,7 @@ PdmXpUpdateAttributes(PdmXp* me)
 
 	for(i = 0; i < PDMXP_POOL_COUNT; i++)
 	{
-	    if(me->pool[i] != (XrmDatabase)NULL)
+	    if(me->pool[i] != (XrmDatabase)nullptr)
 	    {
 		switch(i)
 		{

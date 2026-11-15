@@ -388,14 +388,14 @@ static XtResource resources[] =
 	XmRCallback, sizeof(XtCallbackList), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.cancel_callback), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNclosePrintDisplayCallback, DtCClosePrintDisplayCallback,
 	XmRCallback, sizeof(XtCallbackList), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.close_display_callback), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNcopies, DtCCopies,
@@ -409,14 +409,14 @@ static XtResource resources[] =
 	XmRXmString, sizeof(XmString), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.description_string), 
-	XmRString, (XtPointer) NULL
+	XmRString, (XtPointer) nullptr
     },
     {
 	DtNfileName, DtCFileName,
 	XmRString, sizeof(String), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.file_name), 
-	XmRString, (XtPointer) NULL
+	XmRString, (XtPointer) nullptr
     },
     {
 	DtNminimizeButtons, DtCMinimizeButtons,
@@ -430,7 +430,7 @@ static XtResource resources[] =
 	XmRCallback, sizeof(XtCallbackList), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.print_callback), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNoptionCount, DtCOptionCount,
@@ -444,7 +444,7 @@ static XtResource resources[] =
 	XmRPointer, sizeof(XtPointer), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.options),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNprintDestination, DtCPrintDestination,
@@ -465,7 +465,7 @@ static XtResource resources[] =
 	XmRString, sizeof(String), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.printer_name), 
-	XmRString, (XtPointer) NULL
+	XmRString, (XtPointer) nullptr
     },
     {
 	DtNprintSetupMode, DtCPrintSetupMode,
@@ -493,7 +493,7 @@ static XtResource resources[] =
         XmRCallback, sizeof(XtCallbackList), 
 	XtOffsetOf(DtPrintSetupBoxRec,
 		   print_setup_box.setup_callback), 
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNverifyPrinterProc, DtCVerifyPrinterProc,
@@ -684,8 +684,8 @@ ClosePrintConnection(
      */
     if(update_gui)
     {
-	empty_label = XmStringGenerate((XtPointer)"", (XmStringTag)NULL,
-				       XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+	empty_label = XmStringGenerate((XtPointer)"", (XmStringTag)nullptr,
+				       XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
 	UpdateString(PSUB_Description((Widget)psub), 
 		     empty_label, PSUB_StringDirection((Widget)psub));
 	XmStringFree(empty_label);
@@ -713,7 +713,7 @@ ClosePrintConnection(
      */
 #if 0 && defined(PRINTING_SUPPORTED)
     XpDestroyContext(PSUB_Display(psub), PSUB_Context(psub));
-    PSUB_Context(psub) = (XPContext)NULL;
+    PSUB_Context(psub) = (XPContext)nullptr;
 #endif /* PRINTING_SUPPORTED */
     /*
      * close the print display
@@ -1134,8 +1134,8 @@ CreateButton(Widget parent,
     Widget w;
     XmTakesDefaultTrait trait_default ;
     
-    label_string = XmStringGenerate((XtPointer)label, (XmStringTag)NULL,
-				    XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+    label_string = XmStringGenerate((XtPointer)label, (XmStringTag)nullptr,
+				    XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
     w = XtVaCreateWidget(name,
 			 xmPushButtonWidgetClass,
 			 parent,
@@ -1174,8 +1174,8 @@ CreateButtonGadget(Widget parent,
     Widget w;
     XmTakesDefaultTrait trait_default ;
     
-    label_string = XmStringGenerate((XtPointer)label, (XmStringTag)NULL,
-				    XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+    label_string = XmStringGenerate((XtPointer)label, (XmStringTag)nullptr,
+				    XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
     w = XtVaCreateWidget(name,
 			 xmPushButtonGadgetClass,
 			 parent,
@@ -1213,8 +1213,8 @@ CreateLabelGadget(
     XmString label_string;
     Widget w;
     
-    label_string = XmStringGenerate((XtPointer)label, (XmStringTag)NULL,
-				    XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+    label_string = XmStringGenerate((XtPointer)label, (XmStringTag)nullptr,
+				    XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
     w = XtVaCreateWidget(name,
 			 xmLabelGadgetClass,
 			 parent,
@@ -1266,9 +1266,9 @@ CreateModalPrinterSpec(
     /*
      * check for NULL passed parms
      */
-    if(full_printer_name == (String)NULL)
+    if(full_printer_name == (String)nullptr)
     {
-	return (String)NULL;
+	return (String)nullptr;
     }
     /*
      * break the fully qualified printer name into printer and display
@@ -1571,10 +1571,10 @@ EstablishPrinter(
 	 * if there's a printer connection timer waiting, remove it
 	 * to avoid conflict
 	 */
-	if(PSUB_TimeoutId(psub) != (XtIntervalId)NULL)
+	if(PSUB_TimeoutId(psub) != 0)
 	{
 	    XtRemoveTimeOut(PSUB_TimeoutId(psub));
-	    PSUB_TimeoutId(psub) = (XtIntervalId)NULL;
+	    PSUB_TimeoutId(psub) = 0;
 	}
 	/*
 	 * call the verify printer proc for the new printer
@@ -1617,14 +1617,14 @@ EstablishPrinter(
 		    /*
 		     * get to the video app root shell 
 		     */
-		    while((Widget)NULL != video_widget)
+		    while((Widget)nullptr != video_widget)
 		    {
 			if(XtIsApplicationShell(video_widget))
 			    break;
 			else
 			    video_widget = XtParent(video_widget);
 		    }
-		    if((Widget)NULL == video_widget)
+		    if((Widget)nullptr == video_widget)
 			video_widget = (Widget)psub;
 		    /*
 		     * if not an applicationShell, argc/argv will stay
@@ -1721,7 +1721,7 @@ GetPrintAttributes(
     XTextProperty text_prop;
     char** list;
     int count;
-    XmString description = (XmString)NULL;
+    XmString description = (XmString)nullptr;
     char* ptr;
     /*
      * get the printer description, and set the description field
@@ -1747,7 +1747,7 @@ GetPrintAttributes(
 	{
 	    if(count > 0)
 	    {
-		if((String)NULL != list[0] && '\0' != *(list[0]))
+		if((String)nullptr != list[0] && '\0' != *(list[0]))
 		{
 		    /*
 		     * chop the description after the 1st line
@@ -1757,8 +1757,8 @@ GetPrintAttributes(
 			*ptr = '\0';
 		}
 		description =
-		    XmStringGenerate((XtPointer)list[0], (XmStringTag)NULL,
-				     XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+		    XmStringGenerate((XtPointer)list[0], (XmStringTag)nullptr,
+				     XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
 	    }
 	    XFreeStringList(list);    
 	}
@@ -1771,9 +1771,9 @@ GetPrintAttributes(
     /*
      * update the printer description
      */
-    if((XmString)NULL == description)
-	description = XmStringGenerate((XtPointer)"", (XmStringTag)NULL,
-				       XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+    if((XmString)nullptr == description)
+	description = XmStringGenerate((XtPointer)"", (XmStringTag)nullptr,
+				       XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
     UpdateString(PSUB_Description(psub), 
 		 description,
 		 PSUB_StringDirection(psub));
@@ -1863,7 +1863,7 @@ Initialize(
     /*
      * Validate the Print Setup Mode
      */
-    ValidatePrintSetupMode(new_w, (DtPrintSetupBoxWidget)NULL);
+    ValidatePrintSetupMode(new_w, (DtPrintSetupBoxWidget)nullptr);
     /*
      * set the Xp-mode default resource procedure if the resource is
      * unspecified
@@ -1898,12 +1898,12 @@ Initialize(
     /*
      * initialize internal data
      */
-    PSUB_ModalPrinterSpec(new_w) = (String)NULL;
+    PSUB_ModalPrinterSpec(new_w) = (String)nullptr;
     PSUB_Display(new_w) = (Display*)nullptr;
 #if 0 && defined(PRINTING_SUPPORTED)
-    PSUB_Context(new_w) = (XPContext)NULL;
+    PSUB_Context(new_w) = (XPContext)nullptr;
 #endif /* PRINTING_SUPPORTED */
-    PSUB_TimeoutId(new_w) = (XtIntervalId)NULL;
+    PSUB_TimeoutId(new_w) = 0;
     /*
      * retrieve the XpPrinterNameMode application resource for this
      * widget
@@ -1919,14 +1919,14 @@ Initialize(
 	res_struct.default_addr = (XtPointer)DtSHORT_NAME;
 	XtGetApplicationResources(nw,
 				  (XtPointer)&PSUB_XpPrinterNameMode(new_w),
-				  &res_struct, 1, (ArgList)NULL, 0);
+				  &res_struct, 1, (ArgList)nullptr, 0);
     }
     /*
      * Initialize work area children variables
      */
-    PSUB_TopWorkArea(new_w) = (Widget)NULL;
-    PSUB_BottomWorkArea(new_w) = (Widget)NULL;
-    ValidateWorkAreaLocation(new_w, (DtPrintSetupBoxWidget)NULL);
+    PSUB_TopWorkArea(new_w) = (Widget)nullptr;
+    PSUB_BottomWorkArea(new_w) = (Widget)nullptr;
+    ValidateWorkAreaLocation(new_w, (DtPrintSetupBoxWidget)nullptr);
     /*
      * Initialize default resource procedures private data
      */
@@ -1963,11 +1963,11 @@ Initialize(
     /*
      * Validate/update copies spin box
      */
-    SynthSetCopies(new_w, (DtPrintSetupBoxWidget)NULL);
+    SynthSetCopies(new_w, (DtPrintSetupBoxWidget)nullptr);
     /*
      * Update Printer Description
      */
-    if((XmString)NULL != PSUB_DescriptionString(new_w))
+    if((XmString)nullptr != PSUB_DescriptionString(new_w))
     {
 	UpdateString(PSUB_Description(new_w), 
 		     PSUB_DescriptionString(new_w),
@@ -1979,15 +1979,15 @@ Initialize(
      */
     SynthSetPrinterName(new_w,
 			XtNewString(PSUB_PrinterName(new_w)),
-			(String)NULL);
+			(String)nullptr);
     /*
      * Validate print destination / update print to file checkbox
      */
-    SynthSetPrintDestination(new_w, (DtPrintSetupBoxWidget)NULL);
+    SynthSetPrintDestination(new_w, (DtPrintSetupBoxWidget)nullptr);
     /*
      * Update the file name text box
      */
-    SynthSetFileName(new_w, (DtPrintSetupBoxWidget)NULL);
+    SynthSetFileName(new_w, (DtPrintSetupBoxWidget)nullptr);
     /*
      * specify the Print button as the default button
      */
@@ -2046,7 +2046,7 @@ InsertChild(
        && !XtIsShell(child)
        && !IsButton(child))
     {
-	if(PSUB_TopWorkArea(psub) == (Widget)NULL
+	if(PSUB_TopWorkArea(psub) == (Widget)nullptr
 	   &&
 	   (PSUB_WorkAreaLocation(psub) == DtWORK_AREA_TOP
 	    ||
@@ -2055,7 +2055,7 @@ InsertChild(
 	{
 	    PSUB_TopWorkArea(psub) = child;
 	}
-	else if(PSUB_BottomWorkArea(psub) == (Widget)NULL
+	else if(PSUB_BottomWorkArea(psub) == (Widget)nullptr
 		&&
 		(PSUB_WorkAreaLocation(psub) == DtWORK_AREA_BOTTOM
 		 ||
@@ -2514,7 +2514,7 @@ SetPrintAttributes(
     /*
      * Set the copy-count document attribute in the current context
      */
-    if((Widget)NULL != PSUB_CopiesSpinBox(psub))
+    if((Widget)nullptr != PSUB_CopiesSpinBox(psub))
     {
 	char str[48];
 	
@@ -2758,12 +2758,12 @@ static void SynthGetFileName(
      * set the file name widget instance value based on the File Name
      * text field value
      */
-    if(PSUB_FileNameText(psub) != (Widget)NULL)
+    if(PSUB_FileNameText(psub) != (Widget)nullptr)
 	XtVaGetValues((Widget)PSUB_FileNameText(psub),
 		      XmNvalue, &PSUB_FileName(psub),
 		      nullptr);
     else
-	PSUB_FileName(psub) = (String)NULL;
+	PSUB_FileName(psub) = (String)nullptr;
 }
 
 /*
@@ -2789,7 +2789,7 @@ SynthGetPrinterName(
     Boolean printer_spec_changed = False;
     String previous_modal_spec;
     
-    if(PSUB_PrinterNameText(psub) != (Widget)NULL)
+    if(PSUB_PrinterNameText(psub) != (Widget)nullptr)
     {	
 	/*
 	 * get the modal Printer Specifier from the Printer Name text
@@ -2805,9 +2805,9 @@ SynthGetPrinterName(
 	switch(PSUB_PrintSetupMode(psub))
 	{
 	case DtPRINT_SETUP_PLAIN:
-	    if((PSUB_ModalPrinterSpec(psub) == (String)NULL
+	    if((PSUB_ModalPrinterSpec(psub) == (String)nullptr
 		||
-		PSUB_PrinterName(psub) == (String)NULL))
+		PSUB_PrinterName(psub) == (String)nullptr))
 	    {
 		printer_spec_changed = True;
 	    }
@@ -2819,9 +2819,9 @@ SynthGetPrinterName(
 	    break;
 
 	case DtPRINT_SETUP_XP:
-	    if(PSUB_PrinterName(psub) == (String)NULL
+	    if(PSUB_PrinterName(psub) == (String)nullptr
 	       ||
-	       PSUB_ModalPrinterSpec(psub) == (String)NULL
+	       PSUB_ModalPrinterSpec(psub) == (String)nullptr
 	       ||
 	       (Display*)nullptr == PSUB_Display(psub)
 	       ||
@@ -2863,12 +2863,12 @@ SynthSetCopies(
     if(PSUB_Copies(new_w) < 1 || PSUB_Copies(new_w) > MAX_COPIES)
     {
 	XmeWarning((Widget)new_w, WARN_COPY_COUNT);
-	if(current == (DtPrintSetupBoxWidget)NULL)
+	if(current == (DtPrintSetupBoxWidget)nullptr)
 	    PSUB_Copies(new_w) = 1;
 	else
 	    PSUB_Copies(new_w) = PSUB_Copies(current);
     }
-    if(PSUB_CopiesSpinBox(new_w) != (Widget)NULL)
+    if(PSUB_CopiesSpinBox(new_w) != (Widget)nullptr)
 	XtVaSetValues(PSUB_CopiesSpinBox(new_w),
 		      XmNposition, PSUB_Copies(new_w),
 		      nullptr);
@@ -2895,7 +2895,7 @@ SynthSetFileName(
     /*
      * free the old file name
      */
-    if(current != (DtPrintSetupBoxWidget)NULL)
+    if(current != (DtPrintSetupBoxWidget)nullptr)
     {
 	XtFree(PSUB_FileName(current));
     }
@@ -2906,7 +2906,7 @@ SynthSetFileName(
     /*
      * update the file name text box
      */
-    if(PSUB_FileNameText(new_w) != (Widget)NULL)
+    if(PSUB_FileNameText(new_w) != (Widget)nullptr)
     {
 	XmTextPosition last_position;
 	XmTextFieldSetString(PSUB_FileNameText(new_w), PSUB_FileName(new_w));
@@ -2940,12 +2940,12 @@ SynthSetPrintDestination(
        PSUB_PrintDestination(new_w) != DtPRINT_TO_FILE)
     {
 	XmeWarning((Widget)new_w, WARN_PRINT_DESTINATION);
-	if(current == (DtPrintSetupBoxWidget)NULL)
+	if(current == (DtPrintSetupBoxWidget)nullptr)
 	    PSUB_PrintDestination(new_w) = DtPRINT_TO_PRINTER;
 	else
 	    PSUB_PrintDestination(new_w) = PSUB_PrintDestination(current);
     }
-    if((Widget)NULL != PSUB_DestinationRadioBox(new_w))
+    if((Widget)nullptr != PSUB_DestinationRadioBox(new_w))
     {
 	Widget button;
 	
@@ -3088,7 +3088,7 @@ UpdatePrinterNameCallback(
 {
     DtPrintSetupBoxWidget psub = (DtPrintSetupBoxWidget)client_data;
 
-    if(PSUB_TimeoutId(psub) != (XtIntervalId)NULL)
+    if(PSUB_TimeoutId(psub) != 0)
 	XtRemoveTimeOut(PSUB_TimeoutId(psub));
 
     PSUB_TimeoutId(psub) =
@@ -3126,7 +3126,7 @@ UpdatePrinterNameTimeoutProc(XtPointer client_data,
     /*
      * the timeout proc is only called once per XtAppAddTimeOut
      */
-    PSUB_TimeoutId(psub) = (XtIntervalId)NULL;
+    PSUB_TimeoutId(psub) = 0;
     /*
      * check to see if the printer name has changed (if so,
      * SynthGetPrinterName will close an existing print connection)
@@ -3190,7 +3190,7 @@ ValidatePrintSetupMode(
 		       DtPrintSetupBoxWidget new_w,
 		       DtPrintSetupBoxWidget current)
 {
-    if(current == (DtPrintSetupBoxWidget)NULL)
+    if(current == (DtPrintSetupBoxWidget)nullptr)
     {
 	switch(PSUB_PrintSetupMode(new_w))
 	{
@@ -3241,7 +3241,7 @@ ValidateWorkAreaLocation(
 	
     default:
 	XmeWarning((Widget)new_w, WARN_WORK_AREA_LOCATION);
-	if(current == (DtPrintSetupBoxWidget)NULL)
+	if(current == (DtPrintSetupBoxWidget)nullptr)
 	    PSUB_WorkAreaLocation(new_w) = WORK_AREA_DEFAULT;
 	else
 	    PSUB_WorkAreaLocation(new_w) = PSUB_WorkAreaLocation(current);
@@ -3503,8 +3503,8 @@ _DtPrintSetupBoxCreateDestinationRadioBox(DtPrintSetupBoxWidget psub)
 			 nullptr);
 
     label =
-	XmStringGenerate((XtPointer)PRINT_TO_PRINTER_LABEL, (XmStringTag)NULL,
-			 XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+	XmStringGenerate((XtPointer)PRINT_TO_PRINTER_LABEL, (XmStringTag)nullptr,
+			 XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
     button =
 	XtVaCreateManagedWidget("button_0",
 				xmToggleButtonWidgetClass,
@@ -3516,8 +3516,8 @@ _DtPrintSetupBoxCreateDestinationRadioBox(DtPrintSetupBoxWidget psub)
     XtAddCallback(button, XmNvalueChangedCallback,
 		  DestinationChangedCallback, (XtPointer)psub);
 
-    label = XmStringGenerate((XtPointer)PRINT_TO_FILE_LABEL, (XmStringTag)NULL,
-			     XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+    label = XmStringGenerate((XtPointer)PRINT_TO_FILE_LABEL, (XmStringTag)nullptr,
+			     XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
     button =
 	XtVaCreateManagedWidget("button_1",
 				xmToggleButtonWidgetClass,
@@ -3706,7 +3706,7 @@ _DtPrintSetupBoxCreatePrinterNameCombo(DtPrintSetupBoxWidget psub)
 	    /*
 	     * count the number of printer names in the returned list,
 	     */
-	    for(count = 0; printer_list[count] != (String)NULL; count++);
+	    for(count = 0; printer_list[count] != (String)nullptr; count++);
 	    if(count > 0)
 	    {
 		XmString* printer_xmstr_list;
@@ -3720,8 +3720,8 @@ _DtPrintSetupBoxCreatePrinterNameCombo(DtPrintSetupBoxWidget psub)
 		for(i = 0; i < count; i++)
 		    printer_xmstr_list[i] =
 			XmStringGenerate((XtPointer)printer_list[i],
-					 (XmStringTag)NULL,
-					 XmMULTIBYTE_TEXT, (XmStringTag)NULL);
+					 (XmStringTag)nullptr,
+					 XmMULTIBYTE_TEXT, (XmStringTag)nullptr);
 		/*
 		 * get the widget ID of the combo box list
 		 */
@@ -3974,7 +3974,7 @@ _DtPrintSetupBoxGeoMatrixCreate(
     /*
      * top work area + separator
      */
-    if(PSUB_TopWorkArea(psub) != (Widget)NULL)
+    if(PSUB_TopWorkArea(psub) != (Widget)nullptr)
     {
 	if(_XmGeoSetupKid(boxPtr, PSUB_TopWorkArea(psub)))
 	{
@@ -4125,7 +4125,7 @@ _DtPrintSetupBoxGeoMatrixCreate(
     /*
      * bottom work area + separator
      */
-    if(PSUB_BottomWorkArea(psub) != (Widget)NULL)
+    if(PSUB_BottomWorkArea(psub) != (Widget)nullptr)
     {
 	if(_XmGeoSetupKid(boxPtr, PSUB_BottomSeparator(psub)))
 	{
@@ -4257,7 +4257,7 @@ _DtPrintSetupBoxGetCopies(
     DtPrintSetupBoxWidget psub = (DtPrintSetupBoxWidget) wid ;
     int copies;
 
-    if(PSUB_CopiesSpinBox(psub) != (Widget)NULL)
+    if(PSUB_CopiesSpinBox(psub) != (Widget)nullptr)
     {	
 	XtVaGetValues(PSUB_CopiesSpinBox(psub),
 		      XmNposition, &copies,
@@ -4293,7 +4293,7 @@ _DtPrintSetupBoxGetDescription(
     DtPrintSetupBoxWidget psub = (DtPrintSetupBoxWidget) wid ;
     XmString data ;
 
-    if(PSUB_Description(psub) != (Widget)NULL)
+    if(PSUB_Description(psub) != (Widget)nullptr)
     {	
 	XtVaGetValues((Widget)PSUB_Description(psub),
 		      XmNlabelString, &data,
@@ -4302,7 +4302,7 @@ _DtPrintSetupBoxGetDescription(
     }
     else
     {
-	*value = (XtArgVal)NULL;
+	*value = 0;
     } 
 }
 
@@ -4471,9 +4471,9 @@ DtPrintCopySetupData(
        &&
        target != (DtPrintSetupData*)nullptr)
     {
-	if((source->printer_name == (String)NULL
+	if((source->printer_name == (String)nullptr
 	    ||
-	    target->printer_name == (String)NULL)
+	    target->printer_name == (String)nullptr)
 	   ? True
 	   : strcmp(source->printer_name, target->printer_name) != 0)
 	{
@@ -4488,9 +4488,9 @@ DtPrintCopySetupData(
 	target->destination = source->destination;
 	target->messages_hint = source->messages_hint;
 
-	if((source->dest_info == (String)NULL
+	if((source->dest_info == (String)nullptr
 	    ||
-	    target->dest_info == (String)NULL)
+	    target->dest_info == (String)nullptr)
 	   ? True
 	   : strcmp(source->dest_info, target->dest_info) != 0)
 	{
@@ -4563,7 +4563,7 @@ XtEnum DtPrintFillSetupData(
     if(print_data == (DtPrintSetupData*)nullptr)
 	return DtPRINT_BAD_PARM;
     
-    if(psub == (DtPrintSetupBoxWidget)NULL)
+    if(psub == (DtPrintSetupBoxWidget)nullptr)
     {
 	XtEnum status;
 	String new_printer_spec;
@@ -4590,7 +4590,7 @@ XtEnum DtPrintFillSetupData(
 	    print_data->print_context = new_context;
 #endif /* PRINTING_SUPPORTED */
 	}
-	if(new_printer_spec != (String)NULL)
+	if(new_printer_spec != (String)nullptr)
 	{
 	    XtFree(print_data->printer_name);
 	    print_data->printer_name = new_printer_spec;
@@ -4620,7 +4620,7 @@ XtEnum DtPrintFillSetupData(
 	 * check to see if the passed printer name is different than
 	 * the psub printer name
 	 */
-	if(print_data->printer_name != (String)NULL)
+	if(print_data->printer_name != (String)nullptr)
 	{
 	    if((PSUB_PrinterName(psub) == nullptr)
 	       ? True
@@ -4770,7 +4770,7 @@ DtPrintResetConnection(
     DtPrintSetupBoxWidget psub = (DtPrintSetupBoxWidget)w;
     _DtPrintWidgetToAppContext((Widget)psub);
 
-    if(psub == (DtPrintSetupBoxWidget)NULL)
+    if(psub == (DtPrintSetupBoxWidget)nullptr)
 	return DtPRINT_BAD_PARM;
 
     _DtPrintAppLock(app);
@@ -4795,7 +4795,7 @@ DtPrintResetConnection(
 	 */
 	PSUB_Display(psub) = (Display*)nullptr;
 #if 0 && defined(PRINTING_SUPPORTED)
-	PSUB_Context(psub) = (XPContext)NULL;
+	PSUB_Context(psub) = (XPContext)nullptr;
 #endif /* PRINTING_SUPPORTED */
 	break;
 	

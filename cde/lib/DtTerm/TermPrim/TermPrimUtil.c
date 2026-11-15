@@ -87,7 +87,7 @@ InitPointerBlank(Widget w)
 
     XFreePixmap(XtDisplay(w), noPointerBitmap);
     XtAddEventHandler((Widget)tw, PointerMotionMask, FALSE, PointerMoved, 
-                                       (XtPointer)NULL);
+                                       (XtPointer)nullptr);
 
     tpd->pointerFirst = False ;
 }

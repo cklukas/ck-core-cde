@@ -280,7 +280,7 @@ static XtResource resources[] =
     {
 	DtNtermSlaveName, DtCTermSlaveName, XmRString, sizeof(char *),
 	XtOffsetOf(struct _DtTermPrimitiveRec, term.ptySlaveName),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNsaveLines, DtCSaveLines, XmRString, sizeof(char *),
@@ -335,13 +335,13 @@ static XtResource resources[] =
 	DtNuserBoldFont, DtCUserBoldFont, XmRFontList,
 	sizeof(XmFontList),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.boldFontList),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNuserFont, DtCUserFont, XmRFontList,
 	sizeof(XmFontList),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.fontList),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	XmNhighlightThickness, XmCHighlightThickness, XmRHorizontalDimension,
@@ -379,30 +379,30 @@ static XtResource resources[] =
 	DtNsubprocessTerminationCallback, DtCCallback, XmRCallback,
 	sizeof(XtCallbackList),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.subprocessTerminationCallback),
-	XmRPointer, (XtPointer) NULL
+	XmRPointer, (XtPointer) nullptr
     },
     {
 	DtNstatusChangeCallback, DtCCallback, XmRCallback,
 	sizeof(XtCallbackList),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.statusChangeCallback),
-	XmRPointer, (XtPointer) NULL
+	XmRPointer, (XtPointer) nullptr
     },
     {
 	DtNoutputLogCallback, DtCCallback, XmRCallback,
 	sizeof(XtCallbackList),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.outputLogCallback),
-	XmRPointer, (XtPointer) NULL
+	XmRPointer, (XtPointer) nullptr
     },
     {
 	DtNinputVerifyCallback, DtCCallback, XmRCallback,
 	sizeof(XtCallbackList),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.inputVerifyCallback),
-	XmRPointer, (XtPointer) NULL
+	XmRPointer, (XtPointer) nullptr
     },
     {
 	DtNverticalScrollBar, DtCVerticalScrollBar, XmRWidget, sizeof(Widget),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.verticalScrollBar),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNsubprocessPid, DtCSubprocessPid, XmRInt, sizeof(int),
@@ -423,12 +423,12 @@ static XtResource resources[] =
     {
 	DtNsubprocessCmd, DtCSubprocessCmd, XmRString, sizeof(char *),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.subprocessCmd),
-	XtRImmediate, (XtPointer) NULL
+	XtRImmediate, (XtPointer) nullptr
     },
     {
 	DtNsubprocessArgv, DtCSubprocessArgv, XtRStringArray, sizeof(String *),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.subprocessArgv),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
     {
 	DtNemulationId, DtCEmulationId, XmRString, sizeof(char *),
@@ -448,12 +448,12 @@ static XtResource resources[] =
     {
 	DtNttyModes, DtCTtyModes, XmRString, sizeof(char *),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.ttyModes),
-	XtRImmediate, (XtPointer) NULL
+	XtRImmediate, (XtPointer) nullptr
     },
     {
 	DtNcsWidth, DtCCsWidth, XmRString, sizeof(char *),
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.csWidth),
-	XtRImmediate, (XtPointer) NULL
+	XtRImmediate, (XtPointer) nullptr
     },
     {
 	DtNkshMode, DtCKshMode, XmRBoolean, sizeof(Boolean),
@@ -503,7 +503,7 @@ static XtResource resources[] =
     {
 	DtNlogFile, DtCLogFile , XmRString, sizeof(char *),   
 	XtOffsetOf( struct _DtTermPrimitiveRec, term.logFile ),
-	XtRImmediate, (XtPointer) NULL
+	XtRImmediate, (XtPointer) nullptr
     },
     {
 	DtNlogInhibit, DtCLogInhibit , XmRBoolean, sizeof(Boolean), 
@@ -562,7 +562,7 @@ externaldef(termclassrec) DtTermPrimitiveClassRec dtTermPrimitiveClassRec =
 	/* class_part_init	*/	ClassPartInitialize,
 	/* class_inited		*/	FALSE,
 	/* initialize		*/	Initialize,
-	/* initialize_hook	*/	(XtArgsProc) NULL,
+	/* initialize_hook	*/	(XtArgsProc) nullptr,
 	/* realize		*/	Realize,
 	/* actions		*/	actionsList,
 	/* num_actions		*/	XtNumber(actionsList),
@@ -577,16 +577,16 @@ externaldef(termclassrec) DtTermPrimitiveClassRec dtTermPrimitiveClassRec =
 	/* resize		*/	Resize,
 	/* expose		*/	Redisplay,
 	/* set_values		*/	SetValues,
-	/* set_values_hook	*/	(XtArgsFunc) NULL,
+	/* set_values_hook	*/	(XtArgsFunc) nullptr,
 	/* set_values_almost	*/	XtInheritSetValuesAlmost,
-	/* get_values_hook	*/	(XtArgsProc) NULL,
-	/* accept_focus		*/	(XtAcceptFocusProc) NULL,
+	/* get_values_hook	*/	(XtArgsProc) nullptr,
+	/* accept_focus		*/	(XtAcceptFocusProc) nullptr,
 	/* version		*/	XtVersion,
-	/* callback_private	*/	(XtPointer) NULL,
+	/* callback_private	*/	(XtPointer) nullptr,
 	/* tm_table		*/	defaultTranslations,
-	/* query_geometry	*/	(XtGeometryHandler) NULL,
-	/* display_accelerator	*/	(XtStringProc) NULL,
-	/* extension		*/	(XtPointer) NULL,
+	/* query_geometry	*/	(XtGeometryHandler) nullptr,
+	/* display_accelerator	*/	(XtStringProc) nullptr,
+	/* extension		*/	(XtPointer) nullptr,
     },
 
     /* primitive class record */
@@ -597,7 +597,7 @@ externaldef(termclassrec) DtTermPrimitiveClassRec dtTermPrimitiveClassRec =
 	/* arm_and_activate		*/  nullptr,
 	/* get resources		*/  (XmSyntheticResource *) nullptr,
 	/* num get_resources		*/  0,
-	/* extension			*/  (XtPointer) NULL,
+	/* extension			*/  (XtPointer) nullptr,
     },
 
     /* term class record */
@@ -1525,13 +1525,13 @@ Initialize(Widget ref_w, Widget w, Arg *args, Cardinal *num_args)
 
     (void) XtAddEventHandler(w,
 	    (EventMask) KeyPressMask | KeyReleaseMask,
-	    False, handleKeyEvents, (Opaque) NULL);
+	    False, handleKeyEvents, (Opaque) nullptr);
     (void) XtAddEventHandler(w,
 	    (EventMask) ButtonPressMask | ButtonReleaseMask,
-	    False, handleButtonEvents, (Opaque) NULL);
+	    False, handleButtonEvents, (Opaque) nullptr);
     (void) XtAddEventHandler(w,
 	    (EventMask) 0,
-	    True, handleNonMaskableEvents, (Opaque) NULL);
+	    True, handleNonMaskableEvents, (Opaque) nullptr);
     { 
         Widget sw ;
 

@@ -357,7 +357,7 @@ IL_PRIVATE ilBool _ilFastUpsample (
         }
 
         /*  Add the pipe element: width / height scaled if double */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = pNewDes;
     dstData.pFormat = pFormat;
     dstData.width = pInfo->width << scaleFactor;
@@ -382,7 +382,7 @@ IL_PRIVATE ilBool _ilFastUpsample (
             of each strip, so should do min number of strips.  Could force no strips
             for better quality, but performance penalty probably not worth it.
         */
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.stripHeight = pInfo->stripHeight;
     srcData.constantStrip = FALSE;
     srcData.minBufferHeight = 0;
@@ -782,7 +782,7 @@ IL_PRIVATE ilBool _ilUpsampleYCbCr (
 
         /*  Must do "slow" upsample: init dstData for filter(s) to be added. */
     pipeDes = *pDes;
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = pDes;
     dstData.pFormat = pFormat;
     dstData.width = pInfo->width;
@@ -807,7 +807,7 @@ IL_PRIVATE ilBool _ilUpsampleYCbCr (
             break;
             }
         }
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.stripHeight = i;
     srcData.constantStrip = TRUE;
     srcData.minBufferHeight = 0;

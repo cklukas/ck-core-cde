@@ -193,9 +193,9 @@ smSaveYourselfCallback(Widget w, XtPointer clientData, XtPointer callData)
      *  Destroy old client database and save new one.
      */
     if ((newClientDB = SaveClientResourceDB())
-	!= (XrmDatabase)NULL)
+	!= (XrmDatabase)nullptr)
     {
-	if (wmGD.clientResourceDB != (XrmDatabase)NULL)
+	if (wmGD.clientResourceDB != (XrmDatabase)nullptr)
 	    XrmDestroyDatabase(wmGD.clientResourceDB);
 	wmGD.clientResourceDB = newClientDB;
 	smClientDBCheckpointed = True;
@@ -385,9 +385,9 @@ getXSMPResource(ClientData *pCD, int resourceFlag, char *fmtStr)
 static Boolean
 findXSMPClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 {
-    if (pCD->smClientID != (String)NULL)
+    if (pCD->smClientID != (String)nullptr)
     {
-	if (wmGD.clientResourceDB != (XrmDatabase)NULL)
+	if (wmGD.clientResourceDB != (XrmDatabase)nullptr)
 	{
 	    char *resourcePtr;
 
@@ -598,8 +598,8 @@ findProxyClientID(ClientData *pCD)
 static Boolean
 findProxyClientDBMatch(ClientData *pCD, char **workSpaceNamesP)
 {
-    if ((pCD->smClientID == (String)NULL) &&
-	(wmGD.clientResourceDB != (XrmDatabase)NULL) &&
+    if ((pCD->smClientID == (String)nullptr) &&
+	(wmGD.clientResourceDB != (XrmDatabase)nullptr) &&
 	(!smClientDBCheckpointed))
     {
 	char *proxyClientID;
@@ -903,9 +903,9 @@ void
 AddSMCallbacks(void)
 {
     XtAddCallback(wmGD.topLevelW, XtNsaveCallback,
-		  smSaveYourselfCallback, (XtPointer)NULL);
+		  smSaveYourselfCallback, (XtPointer)nullptr);
     XtAddCallback(wmGD.topLevelW, XtNdieCallback,
-		  smDieCallback, (XtPointer)NULL);
+		  smDieCallback, (XtPointer)nullptr);
 }
 
 /*
@@ -964,13 +964,13 @@ SaveClientResourceDB(void)
     /* appropriate resources for each. */
     buildDBFileName(dbFileName, True);
     if ((fp = fopen(dbFileName, "w")) == (FILE *)nullptr)
-	return (XrmDatabase)NULL;
+	return (XrmDatabase)nullptr;
 
     XtVaGetValues(wmGD.topLevelW,
 		  XtNsessionID, &mySessionID,
 		  nullptr);
     fprintf(fp, dbHeader, dtwmFileName, "dtwm Version XSMP1.0",
-	    (mySessionID != (String)NULL) ? mySessionID : "");
+	    (mySessionID != (String)nullptr) ? mySessionID : "");
 
     for (scr = 0; scr < wmGD.numScreens; scr++)
     {
@@ -986,7 +986,7 @@ SaveClientResourceDB(void)
 
 	    pCD = pCL->pCD;
 
-	    if (pCD->smClientID != (String)NULL)
+	    if (pCD->smClientID != (String)nullptr)
 	    {
 		saveXSMPClient(fp, pCD);
 	    }
@@ -1040,7 +1040,7 @@ GetSmClientIdClientList(ClientData ***clients, int *nClients)
 
 	    pCD = pCL->pCD;
 
-	    if (pCD->smClientID != (String)NULL)
+	    if (pCD->smClientID != (String)nullptr)
 	    {
 		/* addClientToList() reclaims memory on failure. */
 		if (!addClientToList(clients, nClients, pCD))
@@ -1071,10 +1071,10 @@ LoadClientIconPositions(ClientData *pCD)
     int i;
     char *resourcePtr;
 
-    if (wmGD.clientResourceDB == (XrmDatabase)NULL)
+    if (wmGD.clientResourceDB == (XrmDatabase)nullptr)
 	return;
 
-    if (pCD->smClientID != (String)NULL)
+    if (pCD->smClientID != (String)nullptr)
     {
 	for (i = 0; i < pCD->numInhabited; i++)
 	{

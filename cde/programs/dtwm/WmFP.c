@@ -644,7 +644,7 @@ WmPanelistWindowToSubpanel (Display *dpy, Window win)
    XtSetArg (al[ac], XmNnumChildren, &num_children);  ac++;
    XtGetValues (subpanel_shell, al, ac);
 
-   return ((num_children > 0) ? child_list[0] : (Widget)NULL);
+   return ((num_children > 0) ? child_list[0] : (Widget)nullptr);
 }
 
 

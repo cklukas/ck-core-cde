@@ -183,7 +183,7 @@ static XtResource resources[] =
 	{
 		XmNcallback,
 		XmCCallback, XmRCallback, sizeof (XtCallbackList),
-		DB_Offset (callback), XmRImmediate, (XtPointer) NULL
+		DB_Offset (callback), XmRImmediate, (XtPointer) nullptr
 	},
         {
 		XmNshadowThickness,

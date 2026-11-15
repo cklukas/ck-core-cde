@@ -1365,26 +1365,26 @@ write_msg_init_proc(GenCodeInfo genCodeInfo, ABObj parent)
 {
     int			return_value = 0;
     File                codeFile = genCodeInfo->code_file;
-    STRING              i18n_str = (STRING) NULL;
-    STRING              dialogType = (STRING) NULL;
-    STRING              default_btn = (STRING) NULL;
-    STRING              str = (STRING) NULL;
-    StringList          callback_funcs = (StringList) NULL;
-    STRING              callback_func = (STRING) NULL;
-    STRING              okCB = (STRING) NULL, 
-			action2CB = (STRING) NULL, 
-			action3CB = (STRING) NULL, 
-			cancelCB = (STRING) NULL;
+    STRING              i18n_str = (STRING) nullptr;
+    STRING              dialogType = (STRING) nullptr;
+    STRING              default_btn = (STRING) nullptr;
+    STRING              str = (STRING) nullptr;
+    StringList          callback_funcs = (StringList) nullptr;
+    STRING              callback_func = (STRING) nullptr;
+    STRING              okCB = (STRING) nullptr, 
+			action2CB = (STRING) nullptr, 
+			action3CB = (STRING) nullptr, 
+			cancelCB = (STRING) nullptr;
     AB_WHEN             when = AB_WHEN_UNDEF;
     int			i = 0;
-    STRING		help_text = (STRING) NULL,
-			help_volume = (STRING) NULL,
-			help_location = (STRING) NULL;
+    STRING		help_text = (STRING) nullptr,
+			help_volume = (STRING) nullptr,
+			help_location = (STRING) nullptr;
 
     abmfP_gencode_enter_func(genCodeInfo);
     genCodeInfo->cur_func.ip_obj = abmfP_obj_get_struct_obj(parent);
     genCodeInfo->cur_func.create_obj = abmfP_obj_get_struct_obj(parent);
-    abmfP_parent_param(genCodeInfo) = (ISTRING) NULL;
+    abmfP_parent_param(genCodeInfo) = (ISTRING) nullptr;
     abmfP_parent_param_has_value(genCodeInfo) = FALSE;
 
     abmfP_write_init_proc_begin(genCodeInfo, parent);

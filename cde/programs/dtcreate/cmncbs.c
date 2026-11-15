@@ -327,7 +327,7 @@ void DisplayHelpDialog(Widget wid, XtPointer client_data, XtPointer cbs)
       mainHelpDialog = DtCreateHelpDialog(parent, "mainHelpDialog", args, i);
       XtAddCallback(mainHelpDialog, DtNcloseCallback,
                 closeCB_mainHelpDialog,
-                (XtPointer)NULL);
+                (XtPointer)nullptr);
       XtManageChild(mainHelpDialog);
   } else {
      XtSetValues( mainHelpDialog, args, i );

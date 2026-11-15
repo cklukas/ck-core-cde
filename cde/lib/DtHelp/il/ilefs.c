@@ -118,7 +118,7 @@ ilEFSPrivatePtr    pPriv;
         pPriv = (ilEFSPrivatePtr)IL_MALLOC (sizeof (ilEFSPrivateRec));
         if (!pPriv) {
             context->error = IL_ERROR_MALLOC;
-            return (ilEFSPrivatePtr)NULL;
+            return (ilEFSPrivatePtr)nullptr;
             }
         ((ilContextPtr)context)->pAlloc[IL_CONTEXT_ALLOC_EFS] = (ilPtr)pPriv;
 
@@ -131,7 +131,7 @@ ilEFSPrivatePtr    pPriv;
             /*  Call to external lib(s) to callback and add each file type */
         if (!_ilefsInitStandardFiles (context)) {
             IL_FREE (pPriv);
-            return (ilEFSPrivatePtr)NULL;
+            return (ilEFSPrivatePtr)nullptr;
             }
         }
     return pPriv;
@@ -157,7 +157,7 @@ ilEFSFileTypePtr   pFileType;
             return pFileType;                   /* found, EXIT */
         pFileType = pFileType->h.pNext;
         }
-    return (ilEFSFileTypePtr)NULL;              /* not found, return null */
+    return (ilEFSFileTypePtr)nullptr;              /* not found, return null */
 }
 
 
@@ -232,7 +232,7 @@ unsigned long      openModes;
 
     if (pOptions) {
         context->error = IL_ERROR_PAR_NOT_ZERO;
-        return (ilEFSFileType)NULL;
+        return (ilEFSFileType)nullptr;
         }
 
         /*  Validate *pInfo: strings present, unused mask bits zero, functions right. */
@@ -264,12 +264,12 @@ unsigned long      openModes;
 
         /*  Init EFS file types if not already inited. */
     if (!(pPriv = ilInitEFS (context))) 
-        return (ilEFSFileType)NULL;
+        return (ilEFSFileType)nullptr;
 
         /*  Create a file type object, exit if failure. Set *pInfo into it. */
     pFileType = (ilEFSFileTypePtr)_ilCreateObject (context, IL_EFS_FILE_TYPE, 
                 ilDestroyFileType, sizeof (ilEFSFileTypeRec));
-    if (!pFileType) return (ilEFSFileType)NULL;
+    if (!pFileType) return (ilEFSFileType)nullptr;
     pFileType->info = *pInfo;
 
         /*  Search the active list for file type with same name.  If found, remove it
@@ -296,7 +296,7 @@ unsigned long      openModes;
         /*  goto point if invalid file type info: return error. */
 badFileTypeInfo:
     context->error = IL_ERROR_EFS_FILE_TYPE_INFO;
-    return (ilEFSFileType)NULL;
+    return (ilEFSFileType)nullptr;
 }
 
 
@@ -418,7 +418,7 @@ char                        extension [IL_EFS_MAX_EXTENSION_CHARS];
     context->error = IL_OK;
     if (pOptions) {
         context->error = IL_ERROR_PAR_NOT_ZERO;
-        return (ilEFSFileType)NULL;
+        return (ilEFSFileType)nullptr;
         }
     switch (openMode) {
       case IL_EFS_READ: 
@@ -428,24 +428,24 @@ char                        extension [IL_EFS_MAX_EXTENSION_CHARS];
           readOpen = FALSE; break;
       default:
         context->error = IL_ERROR_EFS_OPEN_MODE;
-        return (ilEFSFile)NULL;
+        return (ilEFSFile)nullptr;
         }
 
         /*  Init EFS file types if not already inited. */
     if (!(pPriv = ilInitEFS (context)))
-        return (ilEFSFile)NULL;
+        return (ilEFSFile)nullptr;
 
         /*  Add a file type object - goto openError to destroy it if an error later. */
     pFile = (ilEFSFilePtr)_ilCreateObject (context, IL_EFS_FILE, ilDestroyFile, 
                                           sizeof (ilEFSFileRec));
-    if (!pFile) return (ilEFSFile)NULL;
+    if (!pFile) return (ilEFSFile)nullptr;
 
         /*  Find pFileType for this file, searches enabled by mask in searchOptions.
             First try typeName, if non-null.  When found at any point: if openMode
             not supported, error - except for checking mode - else call Open() for
             the file type.  If it returns any error other than "not mine" abort.
         */
-    pFileType = (ilEFSFileTypePtr)NULL;
+    pFileType = (ilEFSFileTypePtr)nullptr;
     pListHead = (ilEFSFileTypePtr)&pPriv->fileTypeHead;
     if (typeName && (searchOptions & IL_EFS_BY_TYPE_NAME)) {
         pFileType = ilFindFileType (typeName, pListHead);
@@ -457,7 +457,7 @@ char                        extension [IL_EFS_MAX_EXTENSION_CHARS];
             pOpenPriv = (*pFileType->info.Open) (pFileType, fileName, openMode, &nPages);
             if (!pOpenPriv) {
                 if (context->error == IL_ERROR_EFS_NOT_MINE)
-                    pFileType = (ilEFSFileTypePtr)NULL;     /* try next search method */
+                    pFileType = (ilEFSFileTypePtr)nullptr;     /* try next search method */
                 else goto openError;
                 }
             pFile->info.howFound = IL_EFS_BY_CHECKING;
@@ -500,7 +500,7 @@ char                        extension [IL_EFS_MAX_EXTENSION_CHARS];
                 pOpenPriv = (*pFileType->info.Open) (pFileType, fileName, openMode, &nPages);
                 if (!pOpenPriv) {
                     if (context->error == IL_ERROR_EFS_NOT_MINE)
-                        pFileType = (ilEFSFileTypePtr)NULL;
+                        pFileType = (ilEFSFileTypePtr)nullptr;
                     else goto openError;
                     }
                 }
@@ -555,10 +555,10 @@ char                        extension [IL_EFS_MAX_EXTENSION_CHARS];
 openError:
 {   ilError     error;
     error = context->error;                 /* save error code */
-    pFile->info.fileType = (ilEFSFileType)NULL;
+    pFile->info.fileType = (ilEFSFileType)nullptr;
     ilDestroyObject ((ilObject)pFile);
     context->error = error;                 /* restore error code */
-    return (ilEFSFile)NULL;
+    return (ilEFSFile)nullptr;
 }
 }
 
@@ -738,7 +738,7 @@ ilEFSFilePtr       pFile;
         /*  If file type doesnt handle masks, ignore maskImage, else validate it */
     if (maskImage) {
         if (!(pFile->pFileType->info.attributes & IL_EFS_MASK_WRITES))
-            maskImage = (ilClientImage)NULL;
+            maskImage = (ilClientImage)nullptr;
         else {
             ilImageInfo            *pInfo;
             const ilImageDes    *pDes;

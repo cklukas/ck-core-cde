@@ -352,7 +352,7 @@ static XtResource resources[] =
 	{
 		XmNcallback,
 		XmCCallback, XmRCallback, sizeof (XtCallbackList),
-		I_Offset (callback), XmRImmediate, (XtPointer) NULL
+		I_Offset (callback), XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNfontList,
@@ -362,7 +362,7 @@ static XtResource resources[] =
 	{
 		XmNimageName,
 		XmCString, XmRString, sizeof (XmString),
-		I_Offset (image_name), XmRImmediate, (XtPointer) NULL
+		I_Offset (image_name), XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNpixmap,
@@ -411,7 +411,7 @@ static XtResource resources[] =
 	{
 		XmNdropCallback,
 		XmCDropCallback, XmRCallback, sizeof (XtCallbackList),
-		I_Offset (drop_callback), XmRImmediate, (XtPointer) NULL
+		I_Offset (drop_callback), XmRImmediate, (XtPointer) nullptr
 	}
 };
 
@@ -507,7 +507,7 @@ static XmSyntheticResource syn_resources[] =
 	{
 		XmNstring, sizeof (XmString),
 		I_Offset (string), GetString,
-		(XmImportProc) NULL
+		(XmImportProc) nullptr
 	},
 };
 
@@ -517,7 +517,7 @@ static XmSyntheticResource cache_syn_resources[] =
 	{
 		XmNspacing, sizeof (Dimension),
 		I_Cache_Offset (spacing), GetSpacing,
-		(XmImportProc) NULL
+		(XmImportProc) nullptr
 	},
 	{
 		XmNmarginWidth, sizeof (Dimension),
@@ -1882,7 +1882,7 @@ Initialize(
 	G_FontList (new) = XmFontListCopy (G_FontList (new));
 
 	if (G_String (new) == XmUNSPECIFIED_STRING)
-		G_String (new) = (_XmString) NULL;
+		G_String (new) = (_XmString) nullptr;
        
 	if (G_String (new))
 	{

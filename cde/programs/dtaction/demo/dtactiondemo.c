@@ -116,19 +116,19 @@ XtResource resources[] =
    },
    {
     "contextHost", "ContextHost", XmRString, sizeof(char *),
-    XtOffsetOf(ApplArgs, contextHost), XmRImmediate, (XtPointer) NULL,
+    XtOffsetOf(ApplArgs, contextHost), XmRImmediate, (XtPointer) nullptr,
    },
    {
     "contextDir", "ContextDir", XmRString, sizeof(char *),
-    XtOffsetOf(ApplArgs, contextDir), XmRImmediate, (XtPointer) NULL,
+    XtOffsetOf(ApplArgs, contextDir), XmRImmediate, (XtPointer) nullptr,
    },
    {
     "execHost", "ExecHost", XmRString, sizeof(char *),
-    XtOffsetOf(ApplArgs, execHost), XmRImmediate, (XtPointer) NULL,
+    XtOffsetOf(ApplArgs, execHost), XmRImmediate, (XtPointer) nullptr,
    },
    {
     "termParms", "TermParms", XmRString, sizeof(char *),
-    XtOffsetOf(ApplArgs, termParms), XmRImmediate, (XtPointer) NULL,
+    XtOffsetOf(ApplArgs, termParms), XmRImmediate, (XtPointer) nullptr,
    },
 };
 
@@ -184,7 +184,7 @@ main(
    (void) _DtSignal(SIGCLD, (void (*)())SIG_IGN);
    toplevel = XtAppInitialize(&appContext , "Dtaction", option_list, 
 	sizeof(option_list)/sizeof(XrmOptionDescRec), &argc, argv,
-	fallback_resources, (ArgList) NULL, (Cardinal) NULL);  
+	fallback_resources, (ArgList) nullptr, 0);  
   
     XtSetArg(args[n], XmNallowShellResize, True); n++;
     XtSetArg(args[n], XmNmappedWhenManaged, False); n++;

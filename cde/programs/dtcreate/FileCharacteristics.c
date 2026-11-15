@@ -735,7 +735,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         nullptr );
         XtAddCallback( FC_NameOrPathToggle, XmNvalueChangedCallback,
                 valueChangedCB_FC_NameOrPathToggle,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         /******************************************************************/
         /*                                                                */
@@ -1003,7 +1003,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         nullptr );
         XtAddCallback( FC_PermissionToggle, XmNvalueChangedCallback,
                 valueChangedCB_FC_PermissionToggle,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         /* Creation of FC_ContentsLabel */
         FC_ContentsLabel = XtVaCreateManagedWidget( "FC_ContentsLabel",
@@ -1052,7 +1052,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
                         nullptr );
         XtAddCallback( FC_ContentsToggle, XmNvalueChangedCallback,
                 valueChangedCB_FC_ContentsToggle,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         /* Creation of FC_ContentsPatternLabel */
         FC_ContentsPatternLabel = XtVaCreateManagedWidget( "FC_ContentsPatternLabel",
@@ -1241,7 +1241,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
         nbutton++;
         XtAddCallback( FC_OkButton, XmNactivateCallback,
                 activateCB_FC_OkButton,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         /* Creation of FC_CancelButton */
         FC_CancelButton = XtVaCreateManagedWidget( "FC_CancelButton",
@@ -1258,7 +1258,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
         nbutton++;
         XtAddCallback( FC_CancelButton, XmNactivateCallback,
                 activateCB_FC_CancelButton,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         /* Creation of FC_ClearButton */
         FC_ClearButton = XtVaCreateManagedWidget( "FC_ClearButton",
@@ -1275,7 +1275,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
         nbutton++;
         XtAddCallback( FC_ClearButton, XmNactivateCallback,
                 activateCB_FC_ClearButton,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         /* Creation of FC_HelpButton */
         FC_HelpButton = XtVaCreateManagedWidget( "FC_HelpButton",
@@ -1303,7 +1303,7 @@ static Widget   _Uxbuild_FileCharacteristics(void)
 
         XtAddCallback( FileCharacteristics, XmNdestroyCallback,
                 UxDestroyContextCB,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         if (bLowRes) {
            return ( FC_BigForm );

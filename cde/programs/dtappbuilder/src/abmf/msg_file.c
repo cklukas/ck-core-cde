@@ -199,7 +199,7 @@ MsgSet_destroy(
     MsgSet that
     )
 {
-    if (that == (MsgSet)NULL)
+    if (that == (MsgSet)nullptr)
         goto cret;
 
     if (that->is_generated && that->msgs != (Msg *)nullptr)
@@ -225,7 +225,7 @@ MsgSet_get_number(
 {
     int	ret_val = -1;
 
-    if (that == (MsgSet)NULL)
+    if (that == (MsgSet)nullptr)
         goto cret;
 
     ret_val = that->set_number;
@@ -285,14 +285,14 @@ MsgSet_sure_find_msg(	/* adds it, if not already there */
     int	ret_val = -1;
     Msg	msg;
 
-    if (that == (MsgSet)NULL)
+    if (that == (MsgSet)nullptr)
         goto cret;
 
     if ((ret_val = MsgSet_just_find_msg(that, string)) != -1)
         goto cret;
 
     if ((msg = msgSet_add_msg(that, string, nullptr,
-                              msgSet_max_msg_number(that)+1)) == (Msg)NULL)
+                              msgSet_max_msg_number(that)+1)) == (Msg)nullptr)
         goto cret;
     
     ret_val = msg_get_number(msg);
@@ -319,7 +319,7 @@ MsgSet_set_msg_is_referenced(
 {
     int	i;
 
-    if (that == (MsgSet)NULL)
+    if (that == (MsgSet)nullptr)
         goto cret;
     
     for (i = 0; i < that->num_msgs; i++)
@@ -371,7 +371,7 @@ MsgFile_create(
         == (MsgSet *)nullptr)
     {
         MsgFile_destroy(new_msg_file);
-        ret_val = (MsgFile)NULL;
+        ret_val = (MsgFile)nullptr;
         goto cret;
     }
 
@@ -384,16 +384,16 @@ MsgFile_create(
     if (msgFile_load(ret_val, file_name) == FALSE)
     {
         MsgFile_destroy(ret_val);
-        ret_val = (MsgFile)NULL;
+        ret_val = (MsgFile)nullptr;
     }
 
     snprintf(proj_name_suffixed, sizeof(proj_name_suffixed), "%s_project", project_name);
     
     if (MsgFile_sure_find_msg_set(new_msg_file, strdup(proj_name_suffixed))
-        == (MsgSet)NULL)
+        == (MsgSet)nullptr)
     {
         MsgFile_destroy(new_msg_file);
-        ret_val = (MsgFile)NULL;
+        ret_val = (MsgFile)nullptr;
         goto cret;
     }
     
@@ -407,7 +407,7 @@ MsgFile_destroy(
     MsgFile that
     )
 {
-    if (that == (MsgFile)NULL)
+    if (that == (MsgFile)nullptr)
         goto cret;
     
     if (that->msg_sets != (MsgSet *)nullptr)
@@ -442,7 +442,7 @@ MsgFile_save(
 
     *msgFileOutPtr = nullptr;
 
-    if (that == (MsgFile)NULL)
+    if (that == (MsgFile)nullptr)
     {
 	ret_val = ERR_CLIENT;
         goto cret;
@@ -545,10 +545,10 @@ MsgFile_just_find_msg_set(
     STRING	set_name
     )
 {
-    MsgSet		ret_val = (MsgSet)NULL;
+    MsgSet		ret_val = (MsgSet)nullptr;
     int	i;
 
-    if (that == (MsgFile)NULL)
+    if (that == (MsgFile)nullptr)
         goto cret;
     
     for (i = 0; i < that->num_msg_sets; i++)
@@ -582,12 +582,12 @@ MsgFile_sure_find_msg_set(	/* adds one, if not already there */
     char	*module_name
     )
 {
-    MsgSet	ret_val = (MsgSet)NULL;
+    MsgSet	ret_val = (MsgSet)nullptr;
 
-    if (that == (MsgFile)NULL)
+    if (that == (MsgFile)nullptr)
         goto cret;
 
-    if ((ret_val = MsgFile_just_find_msg_set(that, module_name)) != (MsgSet)NULL)
+    if ((ret_val = MsgFile_just_find_msg_set(that, module_name)) != (MsgSet)nullptr)
         goto cret;
 
     ret_val = msgFile_add_msg_set(that, module_name,
@@ -700,14 +700,14 @@ msgFile_read_msg_set(
                                 (is_generated)?bil_name:set_line_cmt,
                                 set_number,
                                 is_generated))
-             == (MsgSet)NULL)
+             == (MsgSet)nullptr)
             goto cret;
     }
     msg_set->set_comment = get_comment(that->fp);
     
     while (get_msg_and_comment(that->fp, &msg_num, &msg_str, &msg_cmt))
     {
-        if (msgSet_add_msg(msg_set, msg_str, msg_cmt, msg_num) == (Msg)NULL)
+        if (msgSet_add_msg(msg_set, msg_str, msg_cmt, msg_num) == (Msg)nullptr)
             goto cret;
     }
     
@@ -723,7 +723,7 @@ msgFile_get_msg_set_by_num(
     int		set_num
     )
 {
-    MsgSet		ret_val = (MsgSet)NULL;
+    MsgSet		ret_val = (MsgSet)nullptr;
     int	i;
 
     if (that == nullptr)
@@ -753,10 +753,10 @@ msgFile_add_msg_set(
     BOOL	is_generated
     )
 {
-    MsgSet	ret_val = (MsgSet)NULL;
+    MsgSet	ret_val = (MsgSet)nullptr;
     MsgSet	new_set;
 
-    if (that == (MsgFile)NULL)
+    if (that == (MsgFile)nullptr)
         goto cret;
 
     if (that->num_msg_sets == that->alloced_slots)
@@ -776,7 +776,7 @@ msgFile_add_msg_set(
     
     new_set = msgSet_create_new(set_num, module_name, nullptr, is_generated);
 
-    if (new_set == (MsgSet)NULL)
+    if (new_set == (MsgSet)nullptr)
         goto cret;
     
     that->msg_sets[that->num_msg_sets++] = ret_val = new_set;
@@ -853,7 +853,7 @@ msgSet_create_new(
             == (Msg *)nullptr)
         {
             MsgSet_destroy(new_msg_set);
-            ret_val = (MsgSet)NULL;
+            ret_val = (MsgSet)nullptr;
             goto cret;
         }
     }
@@ -872,7 +872,7 @@ msgSet_get_name(
 {
     char	*ret_val = (char *)nullptr;
 
-    if (that == (MsgSet)NULL)
+    if (that == (MsgSet)nullptr)
         goto cret;
 
     ret_val = that->set_name;
@@ -889,7 +889,7 @@ msgSet_is_generated(
 {
     BOOL	ret_val = FALSE;
 
-    if (that == (MsgSet)NULL)
+    if (that == (MsgSet)nullptr)
         goto cret;
 
     ret_val = that->is_generated;
@@ -908,7 +908,7 @@ msgSet_output(
     char	*set_name;
     int	i;
         
-    if (that == (MsgSet)NULL)
+    if (that == (MsgSet)nullptr)
         goto cret;
 
     set_name = msgSet_get_name(that);
@@ -963,10 +963,10 @@ msgSet_add_msg(
     int		msg_num
     )
 {
-    Msg	ret_val = (Msg)NULL;
+    Msg	ret_val = (Msg)nullptr;
     Msg	new_msg;
 
-    if (that == (MsgSet)NULL)
+    if (that == (MsgSet)nullptr)
         goto cret;
 
     if (that->num_msgs == that->alloced_slots)
@@ -986,7 +986,7 @@ msgSet_add_msg(
     
     new_msg = msg_create(string, comment, msg_num);
 
-    if (new_msg == (Msg)NULL)
+    if (new_msg == (Msg)nullptr)
         goto cret;
     
     that->msgs[that->num_msgs++] = ret_val = new_msg;
@@ -1027,7 +1027,7 @@ msg_create(
     int		number
     )
 {
-    Msg		ret_val = (Msg)NULL;
+    Msg		ret_val = (Msg)nullptr;
     MsgRec	*new_msg;
 
     if ((new_msg = (MsgRec *)malloc(sizeof(MsgRec))) == nullptr)
@@ -1050,7 +1050,7 @@ msg_destroy(
     Msg	that
     )
 {
-    if (that == (Msg)NULL)
+    if (that == (Msg)nullptr)
         goto cret;
 
     free((void *)that);
@@ -1098,7 +1098,7 @@ msg_set_is_referenced(
     BOOL	msg_is_referenced
 )
 {
-    if (that == (Msg)NULL)
+    if (that == (Msg)nullptr)
 	goto cret;
 
     if (util_xor(that->is_referenced, msg_is_referenced))
@@ -1117,7 +1117,7 @@ msg_is_referenced(
 {
     BOOL	ret_val = (BOOL)FALSE;
 
-    if (that == (Msg)NULL)
+    if (that == (Msg)nullptr)
 	goto cret;
 
     ret_val = that->is_referenced;

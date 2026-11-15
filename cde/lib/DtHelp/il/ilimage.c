@@ -370,7 +370,7 @@ ilYCbCrSampleInfo *pYCbCr;
             nBytesToAlloc = nBytesPerRow * allocHeight;
             }
         if (!nBytesToAlloc)
-            pPixels = (ilPtr)NULL;
+            pPixels = (ilPtr)nullptr;
         else {
             pPixels = (ilPtr)IL_MALLOC (nBytesToAlloc);
             if (!pPixels) {                     /* error; free those already created */
@@ -429,7 +429,7 @@ ilPtr                   pPixels;
         if (pImage->des.compression == IL_JPEG)
             _ilJPEGFreeTables ((ilJPEGData *)pImage->i.pCompData);
         IL_FREE (pImage->i.pCompData);
-        pImage->i.pCompData = (ilPtr)NULL;
+        pImage->i.pCompData = (ilPtr)nullptr;
         pImage->i.clientCompData = TRUE;
         }
 
@@ -498,24 +498,24 @@ ilError                 error;
 
     if (mustBeZero != 0) {
         context->error = IL_ERROR_PAR_NOT_ZERO;
-        return (ilInternalImage)NULL;
+        return (ilInternalImage)nullptr;
         }
 
         /*  Null (zero-sized) images not allowed; exit w/ error if so. */
     if ((width <= 0) || (height <= 0)) {
         context->error = IL_ERROR_ZERO_SIZE_IMAGE;
-        return (ilInternalImage)NULL;
+        return (ilInternalImage)nullptr;
         }
 
         /*  Validate pDes: don't allow user-defined types. */
     if ((context->error = _ilValidateDesFormat (FALSE, pDes, (ilImageFormat *)nullptr)))
-        return (ilInternalImage)NULL;
+        return (ilInternalImage)nullptr;
 
         /*  Create the object and add it to context. */
     pImage = (ilImagePtr)_ilCreateObject (context, IL_INTERNAL_IMAGE, ilDestroyImageObject,
                                          sizeof (ilImageRec));
     if (!pImage)
-        return (ilInternalImage)NULL;
+        return (ilInternalImage)nullptr;
 
         /*  Fill in the image structure, excluding object header (.o).
             Init the format to std format, based on image type, which is not private type.
@@ -555,7 +555,7 @@ ilError                 error;
 
       default:
         context->error = IL_ERROR_IMAGE_TYPE;
-        return (ilInternalImage)NULL; 
+        return (ilInternalImage)nullptr; 
         }
 
         /*  Init image data, allocate pixels if uncompressed */
@@ -567,7 +567,7 @@ ilError                 error;
     pImage->i.pFormat = &pImage->format;
     pImage->i.width = width;
     pImage->i.height = height;
-    pImage->i.pCompData = (ilPtr)NULL;
+    pImage->i.pCompData = (ilPtr)nullptr;
     pImage->i.clientCompData = TRUE;
     pImage->i.pPalette = (unsigned short *)nullptr;
     pImage->i.clientPalette = TRUE;
@@ -575,7 +575,7 @@ ilError                 error;
     if ((error = _ilMallocImagePixels (pImage))) {
         ilDestroyObject ((ilObject)pImage);
         context->error = error;
-        return (ilInternalImage)NULL;
+        return (ilInternalImage)nullptr;
         }
 
         /*  If a palette image, create an empty palette. */
@@ -585,7 +585,7 @@ ilError                 error;
         if (!pImage->i.pPalette) {
             ilDestroyObject ((ilObject)pImage);
             context->error = IL_ERROR_MALLOC;
-            return (ilInternalImage)NULL;
+            return (ilInternalImage)nullptr;
             }
         pImage->i.clientPalette = FALSE;
         }
@@ -597,7 +597,7 @@ ilError                 error;
         if (!(pImage->i.pCompData = (ilPtr)IL_MALLOC_ZERO (sizeof (ilJPEGData)))) {
             ilDestroyObject ((ilObject)pImage);
             context->error = IL_ERROR_MALLOC;
-            return (ilInternalImage)NULL;
+            return (ilInternalImage)nullptr;
             }
         pImage->i.clientCompData = FALSE;           /* IL must now destroy comp data */
         }
@@ -663,24 +663,24 @@ int                     plane, nPlanes;
 
     if (mustBeZero != 0) {
         context->error = IL_ERROR_PAR_NOT_ZERO;
-        return (ilClientImage)NULL;
+        return (ilClientImage)nullptr;
         }
 
         /*  Null (zero-sized) images not allowed; exit w/ error if so. */
     if ((pInfo->width <= 0) || (pInfo->height <= 0)) {
         context->error = IL_ERROR_ZERO_SIZE_IMAGE;
-        return (ilClientImage)NULL;
+        return (ilClientImage)nullptr;
         }
 
         /*  Validate pDes and pFormat: do allow user-defined types. */
     if ((context->error = _ilValidateDesFormat (TRUE, pInfo->pDes, pInfo->pFormat)))
-        return (ilClientImage)NULL;
+        return (ilClientImage)nullptr;
 
         /*  Create the object and add it to context. */
     pImage = (ilImagePtr)_ilCreateObject (context, IL_CLIENT_IMAGE, ilDestroyImageObject,
                                          sizeof (ilImageRec));
     if (!pImage)
-        return (ilClientImage)NULL;
+        return (ilClientImage)nullptr;
 
         /*  Fill in the image structure, excluding object header (.o).
             Copy caller's des, and if "raw" JPEG force to non-raw.  Client must be
@@ -701,7 +701,7 @@ int                     plane, nPlanes;
     pImage->i.height = pInfo->height;
     pImage->i.pPalette = (unsigned short *)nullptr;    /* assume no palette or comp data */
     pImage->i.clientPalette = TRUE;
-    pImage->i.pCompData = (ilPtr)NULL;
+    pImage->i.pCompData = (ilPtr)nullptr;
     pImage->i.clientCompData = TRUE;
     pImage->i.clientPixels = pInfo->clientPixels;
 
@@ -719,7 +719,7 @@ int                     plane, nPlanes;
             if (!pImage->i.pPalette) {
                 ilDestroyObject ((ilObject)pImage);
                 context->error = IL_ERROR_MALLOC;
-                return (ilClientImage)NULL;
+                return (ilClientImage)nullptr;
                 }
             pImage->i.clientPalette = FALSE;
             }
@@ -730,7 +730,7 @@ int                     plane, nPlanes;
     if ((pImage->des.compression != IL_UNCOMPRESSED) && (nPlanes > 1)) {
         ilDestroyObject ((ilObject)pImage);
         context->error = IL_ERROR_SAMPLE_ORDER;
-        return (ilClientImage)NULL;
+        return (ilClientImage)nullptr;
         }
 
         /*  If caller providing pixels (clientPixels == true), point to them,
@@ -744,7 +744,7 @@ int                     plane, nPlanes;
         if ((error = _ilMallocImagePixels (pImage))) {
             ilDestroyObject ((ilObject)pImage);
             context->error = error;
-            return (ilClientImage)NULL;
+            return (ilClientImage)nullptr;
             }
         }
 
@@ -756,7 +756,7 @@ int                     plane, nPlanes;
             error = context->error;
             ilDestroyObject ((ilObject)pImage);
             context->error = error;
-            return (ilClientImage)NULL;
+            return (ilClientImage)nullptr;
             }
         if (pInfo->clientPixels) {
             pImage->pStripOffsets[0] = 0;

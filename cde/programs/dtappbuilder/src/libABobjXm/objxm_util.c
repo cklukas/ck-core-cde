@@ -398,7 +398,7 @@ objxm_str_to_xmstr(
     XmString xmstr;
 
     if (util_strempty(string))
-        return((XmString)NULL);
+        return((XmString)nullptr);
 
     src.size = strlen(string) + 1;
     src.addr = (XPointer)string;
@@ -408,7 +408,7 @@ objxm_str_to_xmstr(
     if (XtConvertAndStore(widget, XtRString, &src, XmRXmString, &dst))
         return(xmstr);
     else
-        return((XmString)NULL);
+        return((XmString)nullptr);
 
 }
 

@@ -425,7 +425,7 @@ abmfP_get_window_parent(ABObj obj)
 	return abmfP_parent(obj);
     else if (abmfP_parent(obj))
 	return abmfP_get_window_parent(abmfP_parent(obj));
-    return ((ABObj) NULL);
+    return ((ABObj) nullptr);
 }
 
 
@@ -437,7 +437,7 @@ abmfP_get_window_pane(ABObj obj)
 {
     if (abmfP_parent(obj) == nullptr)
     {
-	return ((ABObj) NULL);
+	return ((ABObj) nullptr);
     }
     if (obj_is_top_level(obj))
 	return nullptr;
@@ -1469,7 +1469,7 @@ find_base_file_name(STRING path, int *startPtr, int *lenPtr)
 BOOL
 abmfP_proj_has_message(ABObj proj)
 {
-    ABObj       	obj = (ABObj) NULL;
+    ABObj       	obj = (ABObj) nullptr;
     AB_TRAVERSAL	trav;
     int			i = 0;
     BOOL		hasMsg = FALSE;

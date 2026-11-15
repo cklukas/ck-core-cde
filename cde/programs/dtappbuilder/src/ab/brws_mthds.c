@@ -1885,7 +1885,7 @@ get_toplevel_drawarea(
     instance = (DtbBrwsMainwindowInfo)ui->ip;
 
     return (instance ? (unsigned long)instance->toplevel_drawarea :
-		(unsigned long)NULL);
+		0UL);
 }
 
 static unsigned long
@@ -1907,7 +1907,7 @@ get_detailed_drawarea(
     instance = (DtbBrwsMainwindowInfo)(ui->ip);
 
     return (instance ? (unsigned long)instance->detailed_drawarea :
-		(unsigned long)NULL);
+		0UL);
 }
 
 static unsigned long
@@ -1930,7 +1930,7 @@ get_proj_drawarea(
 
     return (proj_d ?
 	(unsigned long)proj_d->module_drawarea
-	: (unsigned long)NULL);
+	: 0UL);
 }
 
 /*

@@ -582,7 +582,7 @@ custdlg_prop_apply(
     }
     if (prop_changed(pcs->win_parent.options.changebar))
     {
-	ABObj	win_parent = (ABObj) NULL;
+	ABObj	win_parent = (ABObj) nullptr;
 
 	win_parent = prop_obj_options_get_value(&(pcs->win_parent));
 	abobj_set_win_parent(pcs->current_obj, win_parent);

@@ -146,7 +146,7 @@ if (freeMask & IL_FREE_XCOLORS) {
         }
     if (pXWC->colorMapImage) {
         ilDestroyObject (pXWC->colorMapImage);
-        pXWC->colorMapImage = (ilClientImage)NULL;
+        pXWC->colorMapImage = (ilClientImage)nullptr;
         }
     }
 
@@ -166,7 +166,7 @@ if (freeMask & IL_FREE_XGRAYS) {
         }
     if (pXWC->grayMapImage) {
         ilDestroyObject (pXWC->grayMapImage);
-        pXWC->grayMapImage = (ilClientImage)NULL;
+        pXWC->grayMapImage = (ilClientImage)nullptr;
         }
     }
 }
@@ -262,7 +262,7 @@ ilImageInfo     imageInfo, *pImageInfo;
         pXWC->pColors = (XColor *)IL_MALLOC (pXWC->nColors * sizeof(XColor));
         if (!pXWC->pColors) {
             ilDestroyObject (pXWC->colorMapImage);
-            pXWC->colorMapImage = (ilClientImage)NULL;
+            pXWC->colorMapImage = (ilClientImage)nullptr;
             context->error = IL_ERROR_MALLOC;
             return FALSE;                               /* EXIT */
             }
@@ -343,7 +343,7 @@ double          spreadFactor;
     pXWC->pGrays = (XColor *)IL_MALLOC (pXWC->nGrays * sizeof(XColor));
     if (!pXWC->pGrays) {
         ilDestroyObject (pXWC->grayMapImage);
-        pXWC->colorMapImage = (ilClientImage)NULL;
+        pXWC->colorMapImage = (ilClientImage)nullptr;
         context->error = IL_ERROR_MALLOC;
         return FALSE;                               /* EXIT */
         }
@@ -428,7 +428,7 @@ ilContext       context;
     pXWC->pColors = (XColor *)IL_MALLOC_ZERO (pXWC->nColors * sizeof(XColor));
     if (!pXWC->pColors) {
         ilDestroyObject (pXWC->colorMapImage);
-        pXWC->colorMapImage = (ilClientImage)NULL;
+        pXWC->colorMapImage = (ilClientImage)nullptr;
         context->error = IL_ERROR_MALLOC;
         return FALSE;
         }
@@ -608,7 +608,7 @@ int                     notUsed;
 
     if ((mustBeZero1 != 0) || (mustBeZero2 != 0)) {
         context->error = IL_ERROR_PAR_NOT_ZERO;
-        return (ilXWC)NULL;                                 /* EXIT */
+        return (ilXWC)nullptr;                                 /* EXIT */
         }
 
         /*  A null visual or colormap means output will be to bitmap, else
@@ -624,7 +624,7 @@ int                     notUsed;
 				      &notUsed);
         if (!pVisualInfo) {
             context->error = IL_ERROR_X_RESOURCE;
-            return (ilXWC)NULL;                             /* EXIT */
+            return (ilXWC)nullptr;                             /* EXIT */
             }
         }
 
@@ -633,7 +633,7 @@ int                     notUsed;
     pXWC = (ilXWCPtr)_ilCreateObject (context, IL_XWC, ilDestroyXWC, 
 				      sizeof (ilXWCRec));
     if (!pXWC)
-        return (ilXWC)NULL;                                 /* EXIT */
+        return (ilXWC)nullptr;                                 /* EXIT */
 
     pXWC->i.display = display;
     pXWC->i.visual = visual;
@@ -645,10 +645,10 @@ int                     notUsed;
     pXWC->i.colormap = colormap;
     pXWC->pColors = (XColor *)nullptr;
     pXWC->nColors = 0;
-    pXWC->colorMapImage = (ilClientImage)NULL;
+    pXWC->colorMapImage = (ilClientImage)nullptr;
     pXWC->pGrays = (XColor *)nullptr;
     pXWC->nGrays = 0;
-    pXWC->grayMapImage = (ilClientImage)NULL;
+    pXWC->grayMapImage = (ilClientImage)nullptr;
     pXWC->i.ditherMethod = IL_AREA_DITHER;
     pXWC->i.rawMode = FALSE;
 
@@ -1073,13 +1073,13 @@ static unsigned int writeTypeTable [(IL_MAX_TYPE + 1) *
         if (writeType == IL_XWC_WRITE_COLOR_DITHER) {
             if (!pXWC->colorMapImage)
                 ilChangeXWC ((ilXWC)pXWC, IL_XWC_ALLOC_DITHER_COLORS, 
-			     (ilPtr)NULL);
+			     (ilPtr)nullptr);
             if (!pXWC->colorMapImage) 
                 writeType = IL_XWC_WRITE_GRAY;
             }
         if (writeType == IL_XWC_WRITE_GRAY) {
             if (!pXWC->grayMapImage)
-                ilChangeXWC ((ilXWC)pXWC, IL_XWC_ALLOC_GRAYS, (ilPtr)NULL);
+                ilChangeXWC ((ilXWC)pXWC, IL_XWC_ALLOC_GRAYS, (ilPtr)nullptr);
             if (!pXWC->grayMapImage) 
                 writeType = IL_XWC_WRITE_BITONAL;
             }
@@ -1162,7 +1162,7 @@ static unsigned int writeTypeTable [(IL_MAX_TYPE + 1) *
                 }
             else {
                 cvt.dstType = IL_PALETTE;
-                cvt.mapImage = (ilClientImage)NULL;
+                cvt.mapImage = (ilClientImage)nullptr;
                 }
             if (!ilConvert (pipe, IL_DES_PALETTE, IL_FORMAT_BYTE, 
 			    IL_CONVERT_TO_PALETTE, &cvt))
@@ -1249,7 +1249,7 @@ ilError                   (*executeFunction)( ilExecuteData *,
     if (pXWC->i.writeType == IL_XWC_WRITE_COLOR) {
         bufferSize = (info.width * 4) * info.stripHeight;
         if (bufferSize > MAX_IMAGE_BUFFER_SIZE) {
-            srcData.consumerImage = (ilObject)NULL;
+            srcData.consumerImage = (ilObject)nullptr;
             srcData.stripHeight = BEST_IMAGE_BUFFER_SIZE / (4 * info.width);
             if (srcData.stripHeight < 1)
                 srcData.stripHeight = 1;

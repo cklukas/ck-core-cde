@@ -205,7 +205,7 @@ _fallcwcstombs(XLCd lcd, char *str, wchar_t *wstr, int len)
 int
 _falmbtowc(wchar_t *wstr, char *str, int len)
 {
-    return _fallcmbtowc((XLCd) NULL, wstr, str, len);
+    return _fallcmbtowc((XLCd) nullptr, wstr, str, len);
 }
 
 int
@@ -217,19 +217,19 @@ _falmblen(char *str, int len)
 int
 _falwctomb(char *str, wchar_t wc)
 {
-    return _fallcwctomb((XLCd) NULL, str, wc);
+    return _fallcwctomb((XLCd) nullptr, str, wc);
 }
 
 int
 _falmbstowcs(wchar_t *wstr, char *str, int len)
 {
-    return _fallcmbstowcs((XLCd) NULL, wstr, str, len);
+    return _fallcmbstowcs((XLCd) nullptr, wstr, str, len);
 }
 
 int
 _falwcstombs(char *str, wchar_t *wstr, int len)
 {
-    return _fallcwcstombs((XLCd) NULL, str, wstr, len);
+    return _fallcwcstombs((XLCd) nullptr, str, wstr, len);
 }
 
 wchar_t *

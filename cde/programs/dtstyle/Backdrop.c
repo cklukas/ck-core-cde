@@ -534,7 +534,7 @@ CreateBackdropDialog(
     XtSetArg (args[n], XmNitems, listStrings);                    n++;
     XtSetArg (args[n], XmNitemCount, backdrops.numBitmaps);       n++;
     list = XmCreateScrolledList (mainForm, "bitmapList", args, n);
-    XtAddCallback (list, XmNbrowseSelectionCallback, ListCB, (XtPointer)NULL);
+    XtAddCallback (list, XmNbrowseSelectionCallback, ListCB, (XtPointer)nullptr);
     FreeListStrings (listStrings);            /* after list has copied */
 
     /* set up attachments for scrolled list itself */
@@ -1086,7 +1086,7 @@ ButtonCB(
           break;
 
       case B_HELP_BUTTON:
-          XtCallCallbacks(style.backdropDialog, XmNhelpCallback, (XtPointer)NULL);
+          XtCallCallbacks(style.backdropDialog, XmNhelpCallback, (XtPointer)nullptr);
           break;
 
       default:

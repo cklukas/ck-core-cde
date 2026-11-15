@@ -1209,7 +1209,7 @@ ilPtr              pCompData
 
 	/*  Validate image bits per pixel */
 	if (pimformat->nBitsPerSample[0] != 1)
-		if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BIT, 0, (ilPtr)NULL))
+		if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BIT, 0, (ilPtr)nullptr))
 			return FALSE;
 
 
@@ -1219,7 +1219,7 @@ ilPtr              pCompData
    ======================================================================== */
 
 	/* dstdata describes strips being output to next pipe element */
-	dstdata.producerObject  =  (ilObject) NULL;
+	dstdata.producerObject  =  (ilObject) nullptr;
 	pimdes->compression     =  IL_G3;
 	pimdes->compInfo.g3.flags = compData;
 	dstdata.pDes            =  pimdes;
@@ -1230,7 +1230,7 @@ ilPtr              pCompData
 	dstdata.constantStrip   =  pSrcData->constantStrip;
 	dstdata.pPalette        =  (unsigned short *)nullptr;
 
-	dstdata.pCompData       =  (ilPtr)NULL;    /* des.compInfo.g3.flags describes it */
+	dstdata.pCompData       =  (ilPtr)nullptr;    /* des.compInfo.g3.flags describes it */
 
 
 	/* ========================================================================
@@ -1691,7 +1691,7 @@ ilPtr              pCompData
 
 	/*  Validate image bits per pixel */
 	if (pimformat->nBitsPerSample[0] != 1)
-		if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BIT, 0, (ilPtr)NULL))
+		if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BIT, 0, (ilPtr)nullptr))
 			return FALSE;
 
 
@@ -1701,7 +1701,7 @@ ilPtr              pCompData
    ======================================================================== */
 
 	/* dstdata describes strips being output to next pipe element */
-	dstdata.producerObject  =  (ilObject) NULL;
+	dstdata.producerObject  =  (ilObject) nullptr;
     pimdes->compression     =  IL_G4;
     pimdes->compInfo.g4.flags = compData;
     dstdata.pDes            =  pimdes;
@@ -1711,7 +1711,7 @@ ilPtr              pCompData
 	dstdata.stripHeight     =  pSrcData->stripHeight;
 	dstdata.constantStrip   =  pSrcData->constantStrip;
 	dstdata.pPalette        =  (unsigned short *)nullptr;
-	dstdata.pCompData       =  (ilPtr)NULL;    /* des.compInfo.g4.flags describes it */
+	dstdata.pCompData       =  (ilPtr)nullptr;    /* des.compInfo.g4.flags describes it */
 
 
 	/* ========================================================================

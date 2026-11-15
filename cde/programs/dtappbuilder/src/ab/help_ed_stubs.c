@@ -86,24 +86,24 @@
  * Declarations of global widgets used by callbacks.
  */
 
-static Widget	HelpObjList    = (Widget) NULL;
-static Widget   HelpText       = (Widget) NULL;
-static Widget   HelpVolume     = (Widget) NULL;
-static Widget   HelpLocID      = (Widget) NULL;
-static Widget	HelpObjectMenu = (Widget) NULL;
+static Widget	HelpObjList    = (Widget) nullptr;
+static Widget   HelpText       = (Widget) nullptr;
+static Widget   HelpVolume     = (Widget) nullptr;
+static Widget   HelpLocID      = (Widget) nullptr;
+static Widget	HelpObjectMenu = (Widget) nullptr;
 
 /*
  * End declarations of global widgets
  */
 
-static ABObj		HelpObj	       = (ABObj) NULL;
+static ABObj		HelpObj	       = (ABObj) nullptr;
 
 typedef struct HELP_OBJ_TYPE_INFO_REC {
 	AB_OBJECT_TYPE	type;
 	int		subtype;
 } HelpObjTypeInfoRec;
 static HelpObjTypeInfoRec HelpObjTypeInfo = {
-	((AB_OBJECT_TYPE)NULL), 0,
+	((AB_OBJECT_TYPE)nullptr), 0,
 };
 
 typedef struct HELP_EDITOR_SETTINGS {
@@ -268,7 +268,7 @@ ab_popup_help(
     HelpEditorSettingsRec	*hes = &Help_Editor_Settings_Rec;
 
     /* If there is no help editor widget, create it */
-    if (AB_help_dialog == (Widget)NULL)
+    if (AB_help_dialog == (Widget)nullptr)
     {
 	/* Create help editor dialog */
 	dtbHelpEdHelpEditorInfo_clear(help_ed);
@@ -297,11 +297,11 @@ ab_popup_help(
          */  
         ab_register_window(AB_help_dialog, AB_WIN_DIALOG, 
 		WindowHidden, AB_toplevel, AB_WPOS_TILE_HORIZONTAL,
-		verify_closeCB, NULL);
+		verify_closeCB, nullptr);
 
 	/* Register Help Editor callbacks */
 	XtAddCallback(HelpObjList,XmNsingleSelectionCallback,
-		select_instanceCB, (XtPointer)NULL);
+		select_instanceCB, (XtPointer)nullptr);
 
 	/* Initialize settings data structure */
 	hes->prop_sheet = help_ed->text_panel;
@@ -322,7 +322,7 @@ ab_popup_help(
     ** selected object, so we just show what happens to be displayed in 
     ** the object type menu.
     */
-    if(HelpObj == NULL) {
+    if(HelpObj == nullptr) {
         PalEditableObjInfo *ed_obj_info;
 
 	/* See if there is a currently-selected object */
@@ -351,12 +351,12 @@ ab_popup_help(
 	}
     }
 
-    if(HelpObj != NULL) {
+    if(HelpObj != nullptr) {
     	/* 
     	 ** Having figured out what (if any) object type we should be targeting,
     	 ** we can initialize the list of objects.
     	 */
-    	if(HelpObjList != (Widget) NULL) {
+    	if(HelpObjList != (Widget) nullptr) {
             (void) abobj_list_load(HelpObjList,proj_get_project(),
                 help_list_test);
     	}
@@ -369,7 +369,7 @@ ab_popup_help(
     }
     else if (HelpObjTypeInfo.type == AB_TYPE_UNDEF)
 	/* Just load first Object type in List */
-	change_objtype(NULL, AB_TYPE_BUTTON, AB_NO_SUBTYPE);
+	change_objtype(nullptr, AB_TYPE_BUTTON, AB_NO_SUBTYPE);
 
     /* Now we can show what we've got */
     ab_show_window(AB_help_dialog);
@@ -400,12 +400,12 @@ ab_set_help_obj(
 )
 {
 	HelpObj = obj;
-	if(HelpObj != (ABObj) NULL) {
+	if(HelpObj != (ABObj) nullptr) {
 	    HelpObjTypeInfo.type    = obj_get_type(HelpObj);
 	    HelpObjTypeInfo.subtype = obj_get_subtype(HelpObj);
 	}
 	else {
-	    HelpObjTypeInfo.type = (AB_OBJECT_TYPE) NULL;
+	    HelpObjTypeInfo.type = (AB_OBJECT_TYPE) nullptr;
 	    HelpObjTypeInfo.subtype = AB_NO_SUBTYPE;
 	}
 }
@@ -455,7 +455,7 @@ select_instanceCB(
 	    ** load in a special way that allows the user to abort it
 	    ** if they so choose.  
 	    */
-	    if(HelpObj != NULL && 
+	    if(HelpObj != nullptr && 
 		prop_changebars_pending(hes->prop_sheet) == True) {
 		(void) do_auto_apply(widget, HelpObj, selected_obj);
 	    }
@@ -498,24 +498,24 @@ do_auto_apply(
 {
     DTB_MODAL_ANSWER	answer;
     char		buffer[256];
-    char		*old_name = NULL;
-    char		*new_name = NULL;
+    char		*old_name = nullptr;
+    char		*new_name = nullptr;
     BOOL		changing_objects = FALSE;
-    XmString		xm_buf = (XmString) NULL;
-    DtbObjectHelpData	help_data = NULL;
+    XmString		xm_buf = (XmString) nullptr;
+    DtbObjectHelpData	help_data = nullptr;
 
-    if(old_obj == (ABObj) NULL)
+    if(old_obj == (ABObj) nullptr)
 	return(DTB_ANSWER_CANCEL);
     else
 	old_name = abobj_get_moduled_name(old_obj);
 
-    if (new_obj == (ABObj) NULL)
+    if (new_obj == (ABObj) nullptr)
 	new_name = "";
     else
 	new_name = abobj_get_moduled_name(new_obj);
 
     /* Check for object change auto-apply vs. same object auto-apply */
-    if( (new_obj != (ABObj) NULL) && (new_obj != old_obj) ) 
+    if( (new_obj != (ABObj) nullptr) && (new_obj != old_obj) ) 
 	changing_objects = TRUE;
 
     if (dtb_app_resource_rec.implied_apply == True)
@@ -539,7 +539,7 @@ do_auto_apply(
     	}
     	else 
     	{
-	    if(new_obj != (ABObj) NULL) 
+	    if(new_obj != (ABObj) nullptr) 
 	    {
 		sprintf(buffer, CATGETS(Dtb_project_catd, 100, 32,
 		"Help properties for \"%s\"\n\
@@ -568,7 +568,7 @@ do_auto_apply(
     	xm_buf = XmStringCreateLocalized(buffer);
     	dtb_help_ed_wrn_msg_initialize(&dtb_help_ed_wrn_msg);
     	answer = dtb_show_modal_message(list, &dtb_help_ed_wrn_msg,
-		xm_buf, help_data, NULL);
+		xm_buf, help_data, nullptr);
 
     	util_free(help_data);
     	XmStringFree(xm_buf);
@@ -591,8 +591,8 @@ do_auto_apply(
 		break;
     }
 
-    if (old_obj != (ABObj)NULL) XtFree(old_name);
-    if (new_obj != (ABObj)NULL) XtFree(new_name);
+    if (old_obj != (ABObj)nullptr) XtFree(old_name);
+    if (new_obj != (ABObj)nullptr) XtFree(new_name);
 
     /* Pass along the answer in case the caller needs it */
     return (answer);
@@ -689,7 +689,7 @@ help_list_test(
 	obj_is_defined(test_obj) &&
 	(!obj_is_list_item(test_obj)) &&	/* no List Items */
 	/* (!obj_is_popup_win(test_obj)) &&	    no CustomDialogs */
-	(obj_get_module(test_obj) != NULL) && 
+	(obj_get_module(test_obj) != nullptr) && 
 	(obj_has_flag(test_obj, MappedFlag) || (obj_is_message(test_obj)))
        )
     {
@@ -754,9 +754,9 @@ object_was_deleted(
     **
     ** Otherwise, just delete it from the list.
     */
-    if((HelpObj != NULL) && (info->obj == HelpObj)) {
+    if((HelpObj != nullptr) && (info->obj == HelpObj)) {
 	clear_editor_fields();
-	HelpObj = (ABObj) NULL;
+	HelpObj = (ABObj) nullptr;
     }
 
     abobj_list_obj_destroyed(HelpObjList, info->obj, help_list_test);
@@ -794,7 +794,7 @@ help_test_enable(
     util_dprintf(2,"In help_test_enable()\n");
 
     /* Make sure we have an object to work with */
-    if(obj == (ABObj) NULL) return;
+    if(obj == (ABObj) nullptr) return;
 
     /* Make sure the object has help information to be enabled in test mode */
     if(obj_has_help_data(obj) == False) return;
@@ -805,7 +805,7 @@ help_test_enable(
     ** the help object is just the object itself.
     */
     help_obj = objxm_comp_get_subobj(obj,AB_CFG_HELP_OBJ);
-    if(help_obj == NULL) return;
+    if(help_obj == nullptr) return;
     
     /*
     util_dprintf(2,"    help activated on %s\n", abobj_get_moduled_name(obj));
@@ -820,7 +820,7 @@ help_test_enable(
     ** needs to have an activate callback to display the dialog's help
     */
     if(obj_is_popup_win(obj)) {
-	if( (help_btn=obj_get_help_act_button(obj)) != (ABObj)NULL) {
+	if( (help_btn=obj_get_help_act_button(obj)) != (ABObj)nullptr) {
 	    XtAddCallback((Widget)help_btn->ui_handle,XmNactivateCallback,
 		dtb_call_help_callback,help_obj->ui_handle);
 	}
@@ -837,7 +837,7 @@ help_test_disable(
     util_dprintf(2,"In help_test_disable()\n");
 
     /* Make sure we have an object to work with */
-    if(obj == (ABObj) NULL) return;
+    if(obj == (ABObj) nullptr) return;
 
     /* Make sure the object has help information to be enabled in test mode */
     if(obj_has_help_data(obj) == False) return;
@@ -847,7 +847,7 @@ help_test_disable(
     ** to which we should attach the help callback.  
     */
     help_obj = objxm_comp_get_subobj(obj,AB_CFG_HELP_OBJ);
-    if(help_obj == NULL) return;
+    if(help_obj == nullptr) return;
 
     /*
     util_dprintf(2,"    help deactivated on %s\n",abobj_get_moduled_name(obj));
@@ -861,7 +861,7 @@ help_test_disable(
     ** has an activate callback that needs to be removed
     */
     if(obj_is_popup_win(obj)) {
-	if( (help_btn=obj_get_help_act_button(obj)) != (ABObj)NULL) {
+	if( (help_btn=obj_get_help_act_button(obj)) != (ABObj)nullptr) {
 	    XtRemoveCallback((Widget)help_btn->ui_handle,XmNactivateCallback,
 		dtb_call_help_callback,help_obj->ui_handle);
 	}
@@ -882,7 +882,7 @@ help_dispatchCB(Widget widget, XtPointer clientData, XtPointer callData)
     char		buffer[100];
     extern Widget	AB_toplevel;
     Widget		back_button;
-    static Widget	Quick_help_dialog = (Widget)NULL;
+    static Widget	Quick_help_dialog = (Widget)nullptr;
     static Widget	MoreButton;
 
     util_dprintf(2,"In help_dispatchCB()\n");
@@ -918,7 +918,7 @@ help_dispatchCB(Widget widget, XtPointer clientData, XtPointer callData)
     ** its internal stack mechanism takes repeated settings as separate items
     ** and updates the stack for each.)
     */
-    if(Quick_help_dialog == (Widget)NULL) {
+    if(Quick_help_dialog == (Widget)nullptr) {
         /* Create shared help dialog */
         i = 0;
 	XtSetArg(wargs[i],XmNtitle, "Application Help");            i++;
@@ -967,7 +967,7 @@ help_dispatchCB(Widget widget, XtPointer clientData, XtPointer callData)
     	    DtNhelpType, DtHELP_TYPE_DYNAMIC_STRING,
             DtNhelpVolume,buffer,
             DtNstringData,help_text,
-	    NULL);
+	    nullptr);
     }
 
     /* Now display the help dialog */
@@ -994,11 +994,11 @@ help_test_onitem_help(void)
     AB_TRAVERSAL    trav;
 
     /* Call the DtHelp routine that supports interactive on-item help. */
-    if(DtHelpReturnSelectedWidgetId(AB_toplevel,(Cursor)NULL,&target)
+    if(DtHelpReturnSelectedWidgetId(AB_toplevel,None,&target)
         != DtHELP_SELECT_VALID) return;
 	
     /* Convert the widget returned by DtHelp into an (sub)object */
-    if( (obj = objxm_get_obj_from_widget(target)) == NULL) return;
+    if( (obj = objxm_get_obj_from_widget(target)) == nullptr) return;
 
     /* Make sure we have the root object for whatever the user selected */
     root_obj = obj_get_root(obj);
@@ -1010,11 +1010,11 @@ help_test_onitem_help(void)
     /* If this object has help, call the help callback on the help subobj */
     if(obj_has_help_data(obj) == True) {
 	help_obj = objxm_comp_get_subobj(root_obj,AB_CFG_HELP_OBJ);
-	if(help_obj != NULL) {
+	if(help_obj != nullptr) {
 	    obj_get_help_data(obj,&help_vol,&help_id,&help_text);
 	    util_dprintf(2,"Object help text:\n%s\n",help_text);
     	    XtCallCallbacks((Widget)help_obj->ui_handle,XmNhelpCallback,
-		(XtPointer)NULL);
+		(XtPointer)nullptr);
 	}
     }
     /* 
@@ -1030,17 +1030,17 @@ help_test_onitem_help(void)
     	trav_open_cond(&trav,obj,AB_TRAV_PARENTS,obj_has_help_data);
 	root_obj = trav_next(&trav);
 	trav_close(&trav);
-    	if(root_obj == (ABObj)NULL) {
+    	if(root_obj == (ABObj)nullptr) {
 		return;		/* No help to display! */
 	}
 	else {
 	    /* Found obj w/help.  Get help subobj & post help info */
 	    help_obj = objxm_comp_get_subobj(root_obj,AB_CFG_HELP_OBJ);
-	    if(help_obj != NULL) {
+	    if(help_obj != nullptr) {
 	        obj_get_help_data(obj,&help_vol,&help_id,&help_text);
 	        util_dprintf(2,"Object help text:\n%s\n",help_text);
     	        XtCallCallbacks((Widget)help_obj->ui_handle,XmNhelpCallback,
-		    (XtPointer)NULL);
+		    (XtPointer)nullptr);
 	    }
 	}
     }
@@ -1064,7 +1064,7 @@ verify_closeCB(
     ** If there are pending changes for the current object, handle the
     ** implied auto-apply.
     */
-    if(HelpObj != NULL && prop_changebars_pending(hes->prop_sheet) == True) 
+    if(HelpObj != nullptr && prop_changebars_pending(hes->prop_sheet) == True) 
     {
 	answer = do_auto_apply(widget, HelpObj, HelpObj);
 	if (answer == DTB_ANSWER_ACTION1) 
@@ -1105,9 +1105,9 @@ change_objtype(
     ** load in a special way that allows the user to abort it
     ** if they so choose.  
     */
-    if(HelpObj != NULL && prop_changebars_pending(hes->prop_sheet) == True) 
+    if(HelpObj != nullptr && prop_changebars_pending(hes->prop_sheet) == True) 
     {
-	answer = do_auto_apply(widget, HelpObj, (ABObj)NULL);
+	answer = do_auto_apply(widget, HelpObj, (ABObj)nullptr);
 	if (answer == DTB_ANSWER_CANCEL) 
 	{
 	    update_object_menu_from_obj(HelpObjectMenu,HelpObj);
@@ -1125,7 +1125,7 @@ change_objtype(
     clear_editor_fields();
 
     /* Update current-objecttype (from menu selection) & clear current object */
-    HelpObj = (ABObj)NULL;
+    HelpObj = (ABObj)nullptr;
     HelpObjTypeInfo.type    = newtype;
     HelpObjTypeInfo.subtype = newsubtype;
 
@@ -1135,7 +1135,7 @@ change_objtype(
     /* Select 1st item in the list (if there is one) and load its attributes */
     XtVaGetValues(HelpObjList,
     	XmNitemCount,&i,
-    	NULL);
+    	nullptr);
     if(i > 0) {
     	/* 
     	** This will call the item_selected callback for the list,
@@ -1153,15 +1153,15 @@ update_object_menu_from_obj(
     ABObj	obj
 )
 {
-    PalItemInfo*	palitem = (PalItemInfo*)NULL;
+    PalItemInfo*	palitem = (PalItemInfo*)nullptr;
     STRING		name;
     XmString		xmlabel;
     Widget		menu_selection;
 
-    if(obj == (ABObj)NULL) return;
+    if(obj == (ABObj)nullptr) return;
 
     /* Get palette item info for target object */
-    if( (palitem = pal_get_item_info(obj)) == (PalItemInfo*)NULL) return;
+    if( (palitem = pal_get_item_info(obj)) == (PalItemInfo*)nullptr) return;
 
     /* Get selection button gadget for specified option menu */
     menu_selection = XmOptionButtonGadget(menu);
@@ -1169,7 +1169,7 @@ update_object_menu_from_obj(
     xmlabel = XmStringCreateLocalized(palitem->name);
     XtVaSetValues(menu_selection,
 	XmNlabelString, xmlabel,
-	NULL);
+	nullptr);
     XmStringFree(xmlabel);
 }
 
@@ -1191,24 +1191,24 @@ find_toplevel_obj(void)
     ABObj		obj, bwobj, pwobj, fcobj;
     AB_TRAVERSAL	trav;
 
-    bwobj = pwobj = fcobj = (ABObj) NULL;
+    bwobj = pwobj = fcobj = (ABObj) nullptr;
 
     for(trav_open(&trav,proj_get_project(),AB_TRAV_WINDOWS);
-	(obj=trav_next(&trav)) != NULL; ) {
+	(obj=trav_next(&trav)) != nullptr; ) {
 
 	if(obj_is_base_win(obj))  {
 		bwobj = obj;
 		break;
 	}
-	if(obj_is_popup_win(obj)    && (pwobj == (ABObj)NULL) ) pwobj = obj;
-	if(obj_is_file_chooser(obj) && (fcobj == (ABObj)NULL) ) fcobj = obj;
+	if(obj_is_popup_win(obj)    && (pwobj == (ABObj)nullptr) ) pwobj = obj;
+	if(obj_is_file_chooser(obj) && (fcobj == (ABObj)nullptr) ) fcobj = obj;
     }
     trav_close(&trav);
 
-    if(bwobj != (ABObj)NULL) return(bwobj);
-    if(pwobj != (ABObj)NULL) return(pwobj);
-    if(fcobj != (ABObj)NULL) return(fcobj);
-    return((ABObj)NULL);
+    if(bwobj != (ABObj)nullptr) return(bwobj);
+    if(pwobj != (ABObj)nullptr) return(pwobj);
+    if(fcobj != (ABObj)nullptr) return(fcobj);
+    return((ABObj)nullptr);
 }
 /*
  * Declarations of global widgets used by callbacks.
@@ -1242,7 +1242,7 @@ help_okCB(
     HelpEditorSettingsRec       *hes = &Help_Editor_Settings_Rec;
 
     /* Set help attributes in object */
-    if(HelpObj != NULL) update_help_attrs(HelpObj);
+    if(HelpObj != nullptr) update_help_attrs(HelpObj);
 
     /* Reset changebars */
     prop_set_changebar(hes->text.changebar,PROP_CB_OFF);
@@ -1303,7 +1303,7 @@ help_applyCB(
     HelpEditorSettingsRec       *hes = &Help_Editor_Settings_Rec;
 
     /* Set help attributes in object */
-    if(HelpObj != NULL) update_help_attrs(HelpObj);
+    if(HelpObj != nullptr) update_help_attrs(HelpObj);
 
     /* Reset changebars */
     prop_set_changebar(hes->text.changebar,PROP_CB_OFF);
@@ -1331,7 +1331,7 @@ help_resetCB(
     ** Callback invoked when the user hits the Reset button on the Help Editor
     ** dialog.
     */
-    if(HelpObj != (ABObj)NULL) fetch_help_attrs(HelpObj);
+    if(HelpObj != (ABObj)nullptr) fetch_help_attrs(HelpObj);
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
@@ -1368,7 +1368,7 @@ help_back_hdlr(Widget widget, XtPointer clientData, XtPointer callData)
     XtVaGetValues(help_dialog,
 	DtNhelpVolume,&buffer,
 	DtNstringData,&text,
-	NULL);
+	nullptr);
 
     /* Get a handle to the "More..." button */
     more_button = DtHelpQuickDialogGetChild(help_dialog,
@@ -1378,7 +1378,7 @@ help_back_hdlr(Widget widget, XtPointer clientData, XtPointer callData)
     ** button if there isn't any help info, and enable it if there is.
     */
     if( buffer == 0 || (*buffer == 0) ||
-	(cp=strrchr(buffer,'/')) == (char *)NULL) {
+	(cp=strrchr(buffer,'/')) == (char *)nullptr) {
 		XtSetSensitive(more_button,False);
     }
     else {
@@ -1398,21 +1398,21 @@ more_help_dispatch(Widget widget, XtPointer clientData, XtPointer callData)
     Arg             	wargs[10];
     String		buffer, vol, loc;
     char		*cp;
-    static Widget	GeneralHelpDialog = (Widget) NULL;
+    static Widget	GeneralHelpDialog = (Widget) nullptr;
     Widget		help_dialog = (Widget)clientData;
     Widget		more_button;
 
     /* Fetch the saved volume/locationID information from the dialog widget */
     XtVaGetValues(help_dialog,
 	DtNhelpVolume,&buffer,
-	NULL);
+	nullptr);
 
     /* 
     ** Parse the combined volume/locationID string.  If that fails there
     ** must be no data, so don't bother displaying the GeneralHelpDialog.
     ** (We shouldn't be in this callback routine if that happens, though...)
     */
-    if( (cp=strrchr(buffer,'/')) != (char *)NULL) {
+    if( (cp=strrchr(buffer,'/')) != (char *)nullptr) {
 	*cp++ = 0;
 	vol = buffer;
 	loc = cp; 
@@ -1421,7 +1421,7 @@ more_help_dispatch(Widget widget, XtPointer clientData, XtPointer callData)
 	return;
     }
 
-    if(GeneralHelpDialog == (Widget)NULL) {
+    if(GeneralHelpDialog == (Widget)nullptr) {
 	/* Create General Help Dialog */
         i = 0;
 	XtSetArg(wargs[i],XmNtitle, "Application Help");        i++;

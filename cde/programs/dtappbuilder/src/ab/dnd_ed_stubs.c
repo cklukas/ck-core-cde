@@ -189,11 +189,11 @@ void
 dnd_ed_show_dialog(void)
 {
     /* If there is no DragAndDrop Editor, create it */
-    if (AB_dnd_dialog == (Widget)NULL)
+    if (AB_dnd_dialog == (Widget)nullptr)
     {
         AB_dnd_dialog = dnd_ed_editor_init(&dtb_dnd_ed_dialog, AB_toplevel);
     }
-    if (AB_dnd_dialog != NULL)
+    if (AB_dnd_dialog != nullptr)
 	ab_show_window(AB_dnd_dialog);
 
 }
@@ -217,7 +217,7 @@ dnd_ed_editor_init(
      * Create Dialog widgets...
      */
 
-    if (dnd_ed->dialog_shellform != NULL)
+    if (dnd_ed->dialog_shellform != nullptr)
     {
         return dnd_ed->dialog_shellform;
     }
@@ -226,7 +226,7 @@ dnd_ed_editor_init(
 #ifdef DEBUG
         util_dprintf(1,
 	    "dnd_ed_show_dialog: could not initialize Drag and Drop Editor\n"); 
-        return NULL;
+        return nullptr;
 #endif /* DEBUG */
     }
 
@@ -234,7 +234,7 @@ dnd_ed_editor_init(
     /* 
      * Hook widgets up to DragAndDrop Editor
      */
-    dds->curObj = NULL;
+    dds->curObj = nullptr;
     dds->objType = AB_TYPE_UNDEF;
     dds->objSubtype = 0;
     dds->propSheet = dnd_ed->attrs_ctrlpanel;
@@ -323,7 +323,7 @@ dnd_ed_editor_init(
     XtDestroyWidget(dnd_ed->objtype_opmenu_items.object_type_item);
     pal_add_editable_obj_menu_items(dnd_ed->objtype_opmenu_menu,
             dnd_change_objecttype_palCB, dnd_editable_obj_test);
-    XtVaGetValues(dds->objList, XmNitemCount,&n, NULL);
+    XtVaGetValues(dds->objList, XmNitemCount,&n, nullptr);
     if(n > 0) 
     {
     	XmListSelectPos(dds->objList,1,True);	/* invokes callbacks */
@@ -331,14 +331,14 @@ dnd_ed_editor_init(
 
     /* Register Dnd Editor callbacks */
     XtAddCallback(dds->objList, XmNsingleSelectionCallback,
-            dnd_select_instanceCB, (XtPointer)NULL);
+            dnd_select_instanceCB, (XtPointer)nullptr);
 
     /*
      * Setup dialog to participate in dtbuilder window protocol
      */
     ab_register_window(dnd_ed->dialog_shellform, AB_WIN_DIALOG, 
 		WindowHidden, AB_toplevel, AB_WPOS_TILE_HORIZONTAL,
-		dnd_prevent_closeCB, NULL);
+		dnd_prevent_closeCB, nullptr);
 
     dnd_turnoff_changebars();
 
@@ -408,9 +408,9 @@ change_objtype(
     ** load in a special way that allows the user to abort it
     ** if they so choose.  
     */
-    if((dds->curObj != NULL) && prop_changebars_pending(dds->propSheet))
+    if((dds->curObj != nullptr) && prop_changebars_pending(dds->propSheet))
     {
-	answer = do_auto_apply(widget, dds->curObj, (ABObj)NULL);
+	answer = do_auto_apply(widget, dds->curObj, (ABObj)nullptr);
 	if (answer == DTB_ANSWER_CANCEL) 
 	{
 	    update_objecttype_menu_from_obj(dds->objTypeMenu, dds->curObj);
@@ -428,7 +428,7 @@ change_objtype(
     clear_editor_fields();
 
     /* Update current-objecttype (from menu selection) & clear current object */
-    dds->curObj = (ABObj)NULL;
+    dds->curObj = (ABObj)nullptr;
     dds->objType = newtype;
     dds->objSubtype = newsubtype;
 
@@ -436,7 +436,7 @@ change_objtype(
     (void) abobj_list_load(dds->objList,proj_get_project(),dnd_list_test);
 
     /* Select 1st item in the list (if there is one) and load its attributes */
-    XtVaGetValues(dds->objList, XmNitemCount,&i, NULL);
+    XtVaGetValues(dds->objList, XmNitemCount,&i, nullptr);
     if(i > 0) {
     	/* 
     	** This will call the item_selected callback for the list,
@@ -459,22 +459,22 @@ update_objecttype_menu_from_obj(
     ABObj	obj
 )
 {
-    PalItemInfo*	palitem = (PalItemInfo*)NULL;
-    XmString		xmlabel = NULL;
-    Widget		menu_selection = NULL;
+    PalItemInfo*	palitem = (PalItemInfo*)nullptr;
+    XmString		xmlabel = nullptr;
+    Widget		menu_selection = nullptr;
 
-    if(obj == (ABObj)NULL) return;
+    if(obj == (ABObj)nullptr) return;
 
     /* Get palette item info for target object */
-    if( (palitem = pal_get_item_info(obj)) == (PalItemInfo*)NULL) return;
+    if( (palitem = pal_get_item_info(obj)) == (PalItemInfo*)nullptr) return;
 
     /* Get selection button gadget for specified option menu */
-    if((menu_selection = XmOptionButtonGadget(menu)) == NULL) return;
+    if((menu_selection = XmOptionButtonGadget(menu)) == nullptr) return;
 
     xmlabel = XmStringCreateLocalized(palitem->name);
     XtVaSetValues(menu_selection,
 	XmNlabelString, xmlabel,
-	NULL);
+	nullptr);
     XmStringFree(xmlabel);
 }
 
@@ -511,9 +511,9 @@ dnd_ed_editor_load(
 {
     DndEditorSettings	dds = &dndEdInfo;
  
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (dds->curObj != NULL)
+        if (dds->curObj != nullptr)
             obj = dds->curObj;
         else
             return ERROR;
@@ -564,22 +564,22 @@ dnd_select_instanceCB(
 )
 {
     XmListCallbackStruct *listdata = call_data;
-    ABObj        		module = NULL;
-    ABObj        		selected_obj = NULL;
-    STRING       		name = NULL;
+    ABObj        		module = nullptr;
+    ABObj        		selected_obj = nullptr;
+    STRING       		name = nullptr;
     DndEditorSettings		dds = &dndEdInfo;
 
     name = objxm_xmstr_to_str(listdata->item);
 
     if (   (listdata->selected_item_count == 0)
-	|| (name == NULL) )
+	|| (name == nullptr) )
     {
-	dndEdInfo.curObj = NULL;
+	dndEdInfo.curObj = nullptr;
 	check_active();
 	return;
     }
 
-    if (name != NULL)
+    if (name != nullptr)
     {
 	util_dprintf(2,"You selected <%s>\n",name);
         abobj_moduled_name_extract(name, &module, &selected_obj);
@@ -591,7 +591,7 @@ dnd_select_instanceCB(
 	    ** load in a special way that allows the user to abort it
 	    ** if they so choose.  
 	    */
-	    if((dds->curObj != NULL) && 
+	    if((dds->curObj != nullptr) && 
 		prop_changebars_pending(dds->propSheet) == True) {
 		(void) do_auto_apply(widget, dds->curObj, selected_obj);
 	    }
@@ -635,20 +635,20 @@ do_auto_apply(
     char		buffer[256];
     char		*old_name, *new_name;
     BOOL		changing_objects = FALSE;
-    XmString		xm_buf = (XmString) NULL;
+    XmString		xm_buf = (XmString) nullptr;
 
-    if(old_obj == (ABObj) NULL)
+    if(old_obj == (ABObj) nullptr)
 	return(DTB_ANSWER_CANCEL);
     else
 	old_name = abobj_get_moduled_name(old_obj);
 
-    if (new_obj == (ABObj) NULL)
+    if (new_obj == (ABObj) nullptr)
 	new_name = "";
     else
 	new_name = abobj_get_moduled_name(new_obj);
 
     /* Check for object change auto-apply vs. same object auto-apply */
-    if( (new_obj != (ABObj) NULL) && (new_obj != old_obj) ) 
+    if( (new_obj != (ABObj) nullptr) && (new_obj != old_obj) ) 
 	changing_objects = TRUE;
 
     if (dtb_app_resource_rec.implied_apply == True)
@@ -665,7 +665,7 @@ do_auto_apply(
     	}
     	else 
     	{
-	    if(new_obj != (ABObj) NULL) 
+	    if(new_obj != (ABObj) nullptr) 
 	    {
 		sprintf(buffer, CATGETS(Dtb_project_catd, 100, 32,
 		"Drag and drop properties for \"%s\"\n\
@@ -689,7 +689,7 @@ do_auto_apply(
     	xm_buf = XmStringCreateLocalized(buffer);
     	dtb_help_ed_wrn_msg_initialize(&dtb_help_ed_wrn_msg);
     	answer = dtb_show_modal_message(list, &dtb_help_ed_wrn_msg,
-		xm_buf, NULL, NULL);
+		xm_buf, nullptr, nullptr);
     	XmStringFree(xm_buf);
     }
 
@@ -710,8 +710,8 @@ do_auto_apply(
 		break;
     }
 
-    if (old_obj != (ABObj)NULL) XtFree(old_name);
-    if (new_obj != (ABObj)NULL) XtFree(new_name);
+    if (old_obj != (ABObj)nullptr) XtFree(old_name);
+    if (new_obj != (ABObj)nullptr) XtFree(new_name);
 
     /* Pass along the answer in case the caller needs it */
     return (answer);
@@ -767,7 +767,7 @@ dnd_list_test(
 	obj_is_defined(test_obj) &&
 	(!obj_is_list_item(test_obj)) &&	/* no List Items */
 	/* (!obj_is_popup_win(test_obj)) &&	    no CustomDialogs */
-	(obj_get_module(test_obj) != NULL) && 
+	(obj_get_module(test_obj) != nullptr) && 
 	(obj_has_flag(test_obj, MappedFlag) || (obj_is_message(test_obj)))
        )
     {
@@ -795,10 +795,10 @@ dnd_fetch_attrs(
 
     util_dprintf(2,"Load object dnd attributes into editor display fields\n");
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	clear_editor_fields();
-	dds->curObj = NULL;
+	dds->curObj = nullptr;
 	return;
     }
 
@@ -872,15 +872,15 @@ dnd_store_attrs(
 {
     DndEditorSettings 		dds = &dndEdInfo;
     BOOL			changesPending = FALSE;
-    STRING			dragIcon = NULL;
-    STRING			dragIconMask = NULL;
+    STRING			dragIcon = nullptr;
+    STRING			dragIconMask = nullptr;
     ABDndOpFlags		dragOps = 0;
     ABDndTypeFlags		dragType = 0;
     ABDndOpFlags		dropOps = 0;
     ABDndTypeFlags		dropTypes = 0;
     BOOL			dropOnChildren = FALSE;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
 	return ERR;
     }
@@ -1000,7 +1000,7 @@ dnd_prevent_closeCB(
     ** If there are pending changes for the current object, handle the
     ** implied auto-apply.
     */
-    if((dds->curObj != NULL) && prop_changebars_pending(dds->propSheet))
+    if((dds->curObj != nullptr) && prop_changebars_pending(dds->propSheet))
     {
 	answer = do_auto_apply(widget, dds->curObj, dds->curObj);
 	if (answer == DTB_ANSWER_ACTION1) 
@@ -1024,7 +1024,7 @@ check_active(void)
     DtbDndEdDialogInfo	dnd_ed = &dtb_dnd_ed_dialog;
     BOOL		sensitive = False;
 
-    if (dds->curObj != NULL)
+    if (dds->curObj != nullptr)
     {
 	XtSetSensitive(dnd_ed->drag_op_checkbox_rowcolumn, True);
 	sensitive = False;
@@ -1124,9 +1124,9 @@ dnd_obj_was_deleted(
     **
     ** Otherwise, just delete it from the list.
     */
-    if((dds->curObj != NULL) && (info->obj == dds->curObj)) {
+    if((dds->curObj != nullptr) && (info->obj == dds->curObj)) {
 	clear_editor_fields();
-	dds->curObj = (ABObj) NULL;
+	dds->curObj = (ABObj) nullptr;
     }
 
     abobj_list_obj_destroyed(dds->objList, info->obj, dnd_list_test);
@@ -1207,7 +1207,7 @@ dnd_resetCB(
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
-    if (dndEdInfo.curObj != NULL)
+    if (dndEdInfo.curObj != nullptr)
     {
         dnd_fetch_attrs(dndEdInfo.curObj);
     }
@@ -1243,14 +1243,14 @@ dnd_drag_connCB(
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
-    if (dndEdInfo.curObj != NULL)
+    if (dndEdInfo.curObj != nullptr)
     {
         conn_set_source(dndEdInfo.curObj);
-	conn_set_target(NULL);
+	conn_set_target(nullptr);
 
         conn_override_default_when(AB_WHEN_DRAGGED_FROM); 
         conn_override_default_action_type(AB_FUNC_USER_DEF); 
-	conn_popup_dialog(dtb_get_toplevel_widget(), (XtPointer)0, NULL);
+	conn_popup_dialog(dtb_get_toplevel_widget(), (XtPointer)0, nullptr);
         conn_reset_default_when();
         conn_reset_default_action_type();
     }
@@ -1269,14 +1269,14 @@ dnd_drop_connCB(
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
-    if (dndEdInfo.curObj != NULL) 
+    if (dndEdInfo.curObj != nullptr) 
     {
         conn_set_source(dndEdInfo.curObj);
-	conn_set_target(NULL);
+	conn_set_target(nullptr);
 
 	conn_override_default_when(AB_WHEN_DROPPED_ON);
         conn_override_default_action_type(AB_FUNC_USER_DEF); 
-	conn_popup_dialog(dtb_get_toplevel_widget(), (XtPointer)0, NULL);
+	conn_popup_dialog(dtb_get_toplevel_widget(), (XtPointer)0, nullptr);
 	conn_reset_default_when();
         conn_reset_default_action_type();
     }

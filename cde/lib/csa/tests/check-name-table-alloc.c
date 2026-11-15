@@ -39,12 +39,12 @@ static void *ck_track(void *p)
 	int i;
 
 	for (i = 0; p && i < CK_MAX_BLOCKS; i++)
-		if (ck_blocks[i] == NULL) {
+		if (ck_blocks[i] == nullptr) {
 			ck_blocks[i] = p;
 			ck_live++;
 			return p;
 		}
-	assert(p == NULL);
+	assert(p == nullptr);
 	return p;
 }
 
@@ -55,17 +55,17 @@ static int ck_fails(void)
 
 static void *ck_malloc(size_t n)
 {
-	return ck_fails() ? NULL : ck_track(malloc(n));
+	return ck_fails() ? nullptr : ck_track(malloc(n));
 }
 
 static void *ck_calloc(size_t n, size_t s)
 {
-	return ck_fails() ? NULL : ck_track(calloc(n, s));
+	return ck_fails() ? nullptr : ck_track(calloc(n, s));
 }
 
 static char *ck_strdup(const char *s)
 {
-	return ck_fails() ? NULL : ck_track(strdup(s));
+	return ck_fails() ? nullptr : ck_track(strdup(s));
 }
 
 static void ck_free(void *p)
@@ -74,7 +74,7 @@ static void ck_free(void *p)
 
 	for (i = 0; p && i < CK_MAX_BLOCKS; i++)
 		if (ck_blocks[i] == p) {
-			ck_blocks[i] = NULL;
+			ck_blocks[i] = nullptr;
 			ck_live--;
 			break;
 		}
@@ -87,9 +87,9 @@ static void *ck_reallocarray(void *old, size_t n, size_t s)
 	int i;
 
 	if (ck_fails())
-		return NULL;		/* the old block stays valid */
+		return nullptr;		/* the old block stays valid */
 	if (s && n > (size_t) -1 / s)
-		return NULL;
+		return nullptr;
 	p = realloc(old, n * s);
 	for (i = 0; p && old && i < CK_MAX_BLOCKS; i++)
 		if (ck_blocks[i] == old) {
@@ -112,7 +112,7 @@ static void arm(int fail_at)
 #define reallocarray ck_reallocarray
 
 /* @@BODY@@ */
-static char *names[] = { NULL, "alpha", "beta", "gamma" };
+static char *names[] = { nullptr, "alpha", "beta", "gamma" };
 
 static void test_hash(void)
 {
@@ -123,24 +123,24 @@ static void test_hash(void)
 	/* both allocations of the table fail in turn: no table, no leak */
 	for (k = 1; k <= 2; k++) {
 		arm(k);
-		assert(_DtCmMakeHash(7) == NULL);
+		assert(_DtCmMakeHash(7) == nullptr);
 		assert(ck_live == 0);
 	}
 	arm(0);
 	t = _DtCmMakeHash(7);
-	assert(t != NULL && ck_live == 2);
+	assert(t != nullptr && ck_live == 2);
 
 	/* the entry, then its copy of the key cannot be allocated */
 	for (k = 1; k <= 2; k++) {
 		arm(k);
-		assert(_DtCmGetHash(t, (const unsigned char *) "key") == NULL);
+		assert(_DtCmGetHash(t, (const unsigned char *) "key") == nullptr);
 		assert(ck_live == 2);
-		assert(_DtCmFindHash(t, (const unsigned char *) "key") == NULL);
+		assert(_DtCmFindHash(t, (const unsigned char *) "key") == nullptr);
 	}
 	arm(0);
 	slot = _DtCmGetHash(t, (const unsigned char *) "key");
-	assert(slot != NULL && *slot == NULL && ck_live == 4);
-	_DtCmDestroyHash(t, NULL, NULL);
+	assert(slot != nullptr && *slot == nullptr && ck_live == 4);
+	_DtCmDestroyHash(t, nullptr, nullptr);
 	assert(ck_live == 0);
 }
 
@@ -152,7 +152,7 @@ static void test_make_name_table(void)
 	/* count the allocations of a complete run */
 	arm(1000000);
 	t = _DtCm_make_name_table(3, names);
-	assert(t != NULL);
+	assert(t != nullptr);
 	total = ck_calls;
 	_DtCm_free_name_table(t);
 	assert(ck_live == 0);
@@ -160,7 +160,7 @@ static void test_make_name_table(void)
 	/* every one of them fails in turn: no table, no leak */
 	for (k = 1; k <= total; k++) {
 		arm(k);
-		assert(_DtCm_make_name_table(3, names) == NULL);
+		assert(_DtCm_make_name_table(3, names) == nullptr);
 		assert(ck_live == 0);
 	}
 }
@@ -172,7 +172,7 @@ static void test_add_name(void)
 
 	arm(0);
 	t = _DtCm_make_name_table(3, names);
-	assert(t != NULL);
+	assert(t != nullptr);
 
 	/* count the allocations of adding a new name */
 	arm(1000000);

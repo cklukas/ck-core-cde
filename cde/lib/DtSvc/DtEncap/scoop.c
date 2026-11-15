@@ -190,7 +190,7 @@ static void root_free (object *p)
 }
 
 struct root_class root_class_struct = {
-	(object_clasp) NULL,	/* root has no base class */
+	(object_clasp) nullptr,	/* root has no base class */
 	"root",			/* class name */
 	root_class_init,
 	sizeof (object),

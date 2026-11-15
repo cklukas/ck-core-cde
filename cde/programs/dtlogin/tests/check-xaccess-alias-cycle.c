@@ -48,7 +48,7 @@ static struct hostent *test_gethostbyname(const char *name)
 {
     static struct hostent h;
     static unsigned char address[4];
-    static char *list[2] = { (char *)address, NULL };
+    static char *list[2] = { (char *)address, nullptr };
     unsigned a, b, c, d;
 
     if (sscanf(name, "%u.%u.%u.%u", &a, &b, &c, &d) == 4) {
@@ -67,10 +67,10 @@ void LogError(unsigned char *fmt, ...) { (void)fmt; ++errors; }
 void LogOutOfMem(unsigned char *fmt, ...) { (void)fmt; }
 unsigned char *ReadCatalog(int set, int msg, char *def) { (void)set; (void)msg; return (unsigned char *)def; }
 char *localHostname(void) { return "thishost"; }
-char *NetworkAddressToHostname(CARD16 type, ARRAY8Ptr address) { (void)type; (void)address; return NULL; }
+char *NetworkAddressToHostname(CARD16 type, ARRAY8Ptr address) { (void)type; (void)address; return nullptr; }
 int addressEqual(XdmcpNetaddr a1, int len1, XdmcpNetaddr a2, int len2)
 { return len1 == len2 && memcmp(a1, a2, len1) == 0; }
-ARRAY8Ptr IndirectChoice(ARRAY8Ptr a, CARD16 t) { (void)a; (void)t; return NULL; }
+ARRAY8Ptr IndirectChoice(ARRAY8Ptr a, CARD16 t) { (void)a; (void)t; return nullptr; }
 
 static char seen[65536];
 static long calls;
@@ -97,7 +97,7 @@ static void load(const char *text)
     free(accessFile);
     accessFile = strdup(path);
     f = fopen(path, "w");
-    CHECK(f != NULL);
+    CHECK(f != nullptr);
     fputs(text, f);
     fclose(f);
     ScanAccessDatabase();
@@ -112,7 +112,7 @@ static ARRAY8 client = { 4, client_address };
 
 static void query(void)
 {
-    ForEachMatchingIndirectHost(&client, FamilyInternet, Record, NULL);
+    ForEachMatchingIndirectHost(&client, FamilyInternet, Record, nullptr);
 }
 
 static void acyclic(void)
@@ -198,7 +198,7 @@ static void chooser(void)
 
     clique_text(text, 1);
     load(text);
-    ForEachChooserHost(&client, FamilyInternet, Record, NULL);
+    ForEachChooserHost(&client, FamilyInternet, Record, nullptr);
     CHECK(calls > 0 && calls <= 4096);
 }
 

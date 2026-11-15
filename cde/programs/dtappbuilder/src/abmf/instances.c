@@ -2663,7 +2663,7 @@ write_help_setup_for_obj(GenCodeInfo genCodeInfo, ABObj	obj)
     if(obj_is_button(obj)) {
         /* Get dialog parent (if any) */
         win_parent = obj_get_parent_of_type(obj,AB_TYPE_DIALOG);
-        if(win_parent != (ABObj) NULL) {
+        if(win_parent != (ABObj) nullptr) {
 
            /* Find out which obj is the dialog's help button obj */
            help_btn = obj_get_help_act_button(win_parent);

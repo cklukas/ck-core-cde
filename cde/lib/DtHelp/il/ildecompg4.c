@@ -614,7 +614,7 @@ ilImageDes         *pimdes
 
 
 	/* dstdata describes strips being output to next pipe element */
-	dstdata.producerObject  =  (ilObject) NULL;
+	dstdata.producerObject  =  (ilObject) nullptr;
 	des                     = *pimdes;
 	des.compression         =  IL_UNCOMPRESSED;
 	des.compInfo.g4.flags   =  0;
@@ -628,7 +628,7 @@ ilImageDes         *pimdes
 	dstdata.stripHeight     =  pinfo->stripHeight;
 	dstdata.constantStrip   =  pinfo->constantStrip;
 
-	dstdata.pCompData       =  (ilPtr)NULL;
+	dstdata.pCompData       =  (ilPtr)nullptr;
 
 	pPriv = (ilDecompG3G4PrivPtr) ilAddPipeElement(pipe, IL_FILTER, 
 	    sizeof(ilDecompG3G4PrivRec), 0,

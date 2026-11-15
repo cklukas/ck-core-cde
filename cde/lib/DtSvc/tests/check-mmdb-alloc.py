@@ -12,11 +12,14 @@ With --source-revision REV: negative control; REV must FAIL the same test
 (exit status 0 means the failure was observed).
 """
 import argparse
+import atexit
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
 
 here = Path(__file__).resolve().parent
 root = here.parents[3]
@@ -28,8 +31,12 @@ ap.add_argument("--worktree", type=Path, default=root)
 ap.add_argument("--scratch", type=Path, default=None)
 args = ap.parse_args()
 
-scratch = args.scratch or args.worktree / "tests-scratch"
-scratch.mkdir(parents=True, exist_ok=True)
+if args.scratch:
+    scratch = args.scratch
+    scratch.mkdir(parents=True, exist_ok=True)
+else:
+    scratch = Path(tempfile.mkdtemp(prefix="mmdb-alloc-", dir=os.environ.get("TMPDIR")))
+    atexit.register(shutil.rmtree, scratch, True)
 
 if args.source_revision:
     text = subprocess.run(["git", "-C", str(args.worktree), "show",

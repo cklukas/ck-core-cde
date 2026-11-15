@@ -547,9 +547,9 @@ int                         RedMask, GreenMask, BlueMask;
     priv.visual = visual;
     priv.colormap = colormap;
     priv.pPalette = (unsigned short *)nullptr;
-    priv.grayMapImage = (ilClientImage)NULL;
+    priv.grayMapImage = (ilClientImage)nullptr;
     priv.isLongImage = FALSE;
-    priv.rgbMapImage = (ilClientImage)NULL;
+    priv.rgbMapImage = (ilClientImage)nullptr;
     priv.rect.x = priv.rect.y = 0;
     priv.rect.width = width;
     priv.rect.height = height;
@@ -814,7 +814,7 @@ int                         RedMask, GreenMask, BlueMask;
         */
     priv.copyPixmap = (Pixmap)0;
     priv.copyPixmapDepth = 0;
-    priv.copyGC = (GC)NULL;
+    priv.copyGC = (GC)nullptr;
     if (copyToPixmap) {
         XGCValues   values;
         values.subwindow_mode = IncludeInferiors;       /* get subwindow contents */
@@ -827,7 +827,7 @@ int                         RedMask, GreenMask, BlueMask;
         }
 
         /*  Add a producer element to read from the X drawable; copy priv into *pPriv. */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = &des;
     dstData.pFormat = &format;
     dstData.width = priv.rect.width;

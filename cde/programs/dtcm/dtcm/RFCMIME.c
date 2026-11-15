@@ -348,7 +348,7 @@ static void _converter_( iconv_t CD,
      * Need to place iconv state to the initial one by
      * setting inbuf to NULL of iconv().
      */
-    iconv( CD, (ICONV_INBUF_TYPE)NULL, 0, nullptr, 0 );
+    iconv( CD, (ICONV_INBUF_TYPE)nullptr, 0, nullptr, 0 );
     while( 1 ) {
 	/*
 	 * InBuf

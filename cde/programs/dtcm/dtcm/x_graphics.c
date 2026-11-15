@@ -626,7 +626,7 @@ x_print_string(CMGraphicsInfo *gInfo, char *str, int x, int y, int flags)
 {
   Widget w = gInfo->drawingArea;
   GC gc = gInfo->gc;
-  XmFontList fontList = (XmFontList)NULL;
+  XmFontList fontList = (XmFontList)nullptr;
   XmString xmString;
   Dimension textWd, textHt;
   int textX, textY;
@@ -933,9 +933,9 @@ x_load_font(CMGraphicsInfo *gInfo, CMFontInfo *fInfo, char *fontPattern)
   Widget w = gInfo->drawingArea;
   XrmValue fromValue;
   XrmValue toValue;
-  XmFontList fontList = (XmFontList)NULL;
+  XmFontList fontList = (XmFontList)nullptr;
 
-  if (fInfo->fontList != (XmFontList)NULL)
+  if (fInfo->fontList != (XmFontList)nullptr)
       return False;
 
   fromValue.addr = (XPointer)fontPattern;
@@ -998,7 +998,7 @@ cm_load_font(CMGraphicsInfo *gInfo, CMFontEnum fontEnum,
 
   fInfo = &(gInfo->fontInfo[gInfo->nFonts]);
   fInfo->fontEnum = fontEnum;
-  fInfo->fontList = (XmFontList)NULL;
+  fInfo->fontList = (XmFontList)nullptr;
 
   if (!x_load_font(gInfo, fInfo, fontPattern))
   {
@@ -1101,7 +1101,7 @@ cm_font_extents(CMGraphicsInfo *gInfo, CMFontInfo *fInfo, int *wd, int *ht)
       int thisWd, thisHt;
 
       while ((fontListEntry = XmFontListNextEntry(fontContext))
-	     != (XmFontListEntry)NULL)
+	     != (XmFontListEntry)nullptr)
       {
 	fontEntryFont = XmFontListEntryGetFont(fontListEntry, &fontType);
 	if (fontType == XmFONT_IS_FONT)
@@ -2232,7 +2232,7 @@ x_open_file(Calendar *c)
     getResources = False;
   }
 
-  if ((printShell = pd_get_print_shell(c)) == (Widget)NULL)
+  if ((printShell = pd_get_print_shell(c)) == (Widget)nullptr)
     return (void *)nullptr;
 
   if ((gInfo = (CMGraphicsInfo *)XtMalloc(sizeof(CMGraphicsInfo)))
@@ -2330,7 +2330,7 @@ x_open_file(Calendar *c)
 #ifdef GR_DEBUG
   if (inDebugMode(c))
     XtAddCallback(drawingArea, XmNinputCallback,
-		  tmpFn, (XtPointer)NULL);
+		  tmpFn, (XtPointer)nullptr);
 #endif
 
   gInfo->drawingArea = drawingArea;
@@ -2434,7 +2434,7 @@ x_init_printer(void *gInfoP, short orientation)
   if (inDebugMode(gInfo->c))
   {
     XtAddCallback(w, XmNexposeCallback,
-		  tmpFn, (XtPointer)NULL);
+		  tmpFn, (XtPointer)nullptr);
   }
   else
 #endif
@@ -2472,7 +2472,7 @@ x_init_printer(void *gInfoP, short orientation)
     tmpSpin(w);
 
     XtRemoveCallback(w, XmNexposeCallback,
-		     tmpFn, (XtPointer)NULL);
+		     tmpFn, (XtPointer)nullptr);
 
     /* Now that window is displayed, get its actual size, */
     /* since the Window Manager may have modified it. */

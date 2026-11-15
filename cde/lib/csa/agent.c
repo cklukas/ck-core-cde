@@ -735,7 +735,7 @@ _ProcessV1Callback(_CallbackInfo *ptr)
 				if (cal->do_reasons & cb->reason) {
 					cb->handler((CSA_session_handle)cal,
 						cal->do_reasons & cb->reason,
-						(CSA_buffer) NULL,
+						(CSA_buffer) nullptr,
 						cb->client_data,
 						(CSA_extension*) nullptr);
 				}

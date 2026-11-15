@@ -291,7 +291,7 @@ HelpRequestCB(
              mainHelpDialog = DtCreateHelpDialog(w, "mainHelpDialog", args, i);
              XtAddCallback(mainHelpDialog, DtNcloseCallback,
                        closeCB_mainHelpDialog,
-                       (XtPointer)NULL);
+                       (XtPointer)nullptr);
              XtManageChild(mainHelpDialog);
 	     XtSetArg(args[0],XmNuserData,mainHelpDialog);
 	     XtSetValues(w,args,1);

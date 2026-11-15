@@ -762,7 +762,7 @@ TranslationDragStart(
 	  return;
 	}
 
-	if (((entry = get_appt_struct(context)) == (CSA_entry_handle)NULL) ||
+	if (((entry = get_appt_struct(context)) == (CSA_entry_handle)0) ||
 	    ((apptstr = parse_appt_to_string(calendar->cal_handle,
 					     entry, p,
 					     calendar->general->version))

@@ -90,7 +90,7 @@ ilBool ilCompress (
         */
     if (dstStripHeight <= 0)
         dstStripHeight = ilRecommendedStripHeight (&des, &format, info.width, info.height);
-    srcData.consumerImage = (ilObject)NULL;
+    srcData.consumerImage = (ilObject)nullptr;
     srcData.minBufferHeight = 0;
     srcData.stripHeight = dstStripHeight;
     srcData.constantStrip = TRUE;

@@ -5591,7 +5591,7 @@ do_DtActionInvoke(
     */
    DtActionInvoke(w->w, argv[2], aap, aac, termParms, execHost, 
                   contextDir, useIndicator, nullptr,
-		  (XtPointer)NULL);
+		  (XtPointer)nullptr);
    UnlockKshFileDescriptors(lockedFds);
 
    XtFree((char *)aap);

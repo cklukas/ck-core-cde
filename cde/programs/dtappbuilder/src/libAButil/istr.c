@@ -1012,7 +1012,7 @@ istr_verify(ISTRING istringClientVal)
     int		istring= istrP_client_to_int(istringClientVal);
     int		return_value = 0;
 
-    if (istringClientVal == (ISTRING)NULL)
+    if (istringClientVal == (ISTRING)nullptr)
     {
 	return 0;	/* OK */
     }

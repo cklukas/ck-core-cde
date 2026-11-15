@@ -1034,7 +1034,7 @@ IL_PRIVATE ilBool _ilConvertRGBToPalette (
     int                     i, shifts[3] = { 0, 0, 0 }, nColors = 0;
     const unsigned short         *pMulTable[3] = { nullptr, nullptr, nullptr };      /* dither other than 484 only: pMul? */
     static ilConvertToPaletteInfo  defaultConvert = 
-                                  {IL_DIFFUSION, { 4, 8, 4 }, 8, IL_PALETTE, (ilObject)NULL};
+                                  {IL_DIFFUSION, { 4, 8, 4 }, 8, IL_PALETTE, (ilObject)nullptr};
 
 
         /*  Init to null those things freed by "cleanup" if error. */
@@ -1129,7 +1129,7 @@ IL_PRIVATE ilBool _ilConvertRGBToPalette (
         cleanupFunction = IL_NPF;
         diffusion = FALSE;
         chooseColors = TRUE;
-        srcData.consumerImage = (ilObject)NULL;
+        srcData.consumerImage = (ilObject)nullptr;
         srcData.stripHeight = pInfo->height;        /* need one strip = whole image */
         srcData.constantStrip = TRUE;
         srcData.minBufferHeight = 0;
@@ -1142,7 +1142,7 @@ IL_PRIVATE ilBool _ilConvertRGBToPalette (
         /*  If mapImage given, validate it and point to its pixels.  If not given,
             pTranslate becomes null and will point to "identity" mapImage below.
         */
-    pTranslate = (ilPtr)NULL;
+    pTranslate = (ilPtr)nullptr;
     if (pData->mapImage && !chooseColors) {
         ilImageInfo *pInfo;
         if (!ilQueryClientImage (pData->mapImage, &pInfo, 0)
@@ -1234,7 +1234,7 @@ IL_PRIVATE ilBool _ilConvertRGBToPalette (
             }
         }
     *pFormat = *IL_FORMAT_BYTE;
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes = pDes;
     dstData.pFormat = pFormat;
     dstData.width = pInfo->width;

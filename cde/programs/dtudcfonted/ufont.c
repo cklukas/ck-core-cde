@@ -340,7 +340,7 @@ OpenCB(Widget w, XtPointer client_data, XtPointer call_data)
     static NButton SaveReadBTN1 = NBUTTONS( is_save_read_btn1 );
     static NButton SaveReadBTN2 = NBUTTONS( is_save_read_btn2 );
 
-	if (QuitEditPtn((Widget)NULL, (caddr_t)NULL, (caddr_t)NULL)){
+	if (QuitEditPtn((Widget)nullptr, (caddr_t)nullptr, (caddr_t)nullptr)){
 	    FalCloseFont(font_id);
 	    editPtnW = nullptr;
 	    OtherFontSelect();
@@ -432,7 +432,7 @@ WPwriteSNF( int restart )
 
 	if (do_read){
 	    do_read = False;
-	    ContReadCB((Widget)NULL);
+	    ContReadCB((Widget)nullptr);
 	}
 	if (do_end){
 	    do_read = False;
@@ -1599,8 +1599,8 @@ xeg_init(void)
 
     xl.display    = nullptr;
     xl.root_winID = xl.edit_winID = xl.disp_winID = xl.list_winID =
-			(Window)NULL;
-    xl.borderGC   = xl.backGC = xl.rubGC = xl.dashGC = (GC)NULL;
+			None;
+    xl.borderGC   = xl.backGC = xl.rubGC = xl.dashGC = (GC)nullptr;
     xl.dispImage  = nullptr;
 
     dn.elem_w = dn.elem_h = (Dimension)0;
@@ -1611,12 +1611,12 @@ xeg_init(void)
     dn.disp_num = 0;
 
     for ( i=0 ; i<D_MAX ; i++ ) {
-	dl[i].disp_winID = (Window)NULL;
+	dl[i].disp_winID = None;
 	dl[i].dispImage = nullptr;
 	bitPtnClear( dl[i].ptn );
     }
     for ( i=0 ; i<EDLIST_MAX ; i++ ) {
-	dl_glyph[i].disp_winID = (Window)NULL;
+	dl_glyph[i].disp_winID = None;
 	dl_glyph[i].dispImage = nullptr;
 	bitPtnClear( dl_glyph[i].ptn );
 	sq_disp[i] = 0 ;
@@ -2454,7 +2454,7 @@ copyPatterns(
 
     ret = copySNF(s1_code, s2_code, &ptn, &num, err);
     if( ret == -1 ) {
-	Error_message2((Widget)NULL, err);
+	Error_message2((Widget)nullptr, err);
 	return;
     }
 

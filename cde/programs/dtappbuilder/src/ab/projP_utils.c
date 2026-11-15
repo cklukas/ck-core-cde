@@ -121,16 +121,16 @@ projP_show_save_as_bil_chooser(
     char		*title;
  
     XtCallbackRec ok_callback[] = {
-        {save_as_bil_okCB, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL}
+        {save_as_bil_okCB, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr}
     };
     XtCallbackRec cancel_callback[] = {
-        {proj_cancelCB, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL}
+        {proj_cancelCB, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr}
     };
     XtCallbackRec popdown_callback[] = {
-        {proj_unmap_chooserCB, (XtPointer) NULL},
-        {nullptr, (XtPointer) NULL}
+        {proj_unmap_chooserCB, (XtPointer) nullptr},
+        {nullptr, (XtPointer) nullptr}
     };
  
     /* Create the file chooser if it hasn't already
@@ -142,7 +142,7 @@ projP_show_save_as_bil_chooser(
         AB_generic_chooser = (Widget) XmCreateFileSelectionDialog(
                 widget,
                 "AB_generic_chooser",
-                (ArgList) NULL,
+                (ArgList) nullptr,
                 (Cardinal) 0);
 
         info = (ChooserInfo)XtCalloc(1, sizeof(ChooserInfoRec));
@@ -159,7 +159,7 @@ projP_show_save_as_bil_chooser(
     XtVaGetValues(AB_generic_chooser,
                         XmNuserData, &info,
                         nullptr);
-    info->child = (Widget) NULL;
+    info->child = (Widget) nullptr;
     info->chooser_type = AB_SAVE_MOD_AS_CHOOSER;
  
     /* Pass along the client_data to the okCallback */
@@ -214,7 +214,7 @@ save_as_bil_okCB(
     char		mod_name[MAXPATHLEN];
     char		mod_dir[MAXPATHLEN];
     ABObj               module_obj = (ABObj) client_data;
-    XmString            xm_buf = (XmString) NULL;
+    XmString            xm_buf = (XmString) nullptr;
     BOOL		read_OK = FALSE, write_OK = FALSE;
     int			iRet = 0;
     DtbObjectHelpData	help_data = nullptr;
@@ -311,7 +311,7 @@ projP_save_export_bil(
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
     BOOL		read_OK, write_OK;
     int			iRet = 0;
-    XmString		xm_buf = (XmString) NULL;
+    XmString		xm_buf = (XmString) nullptr;
 
     *new_filename = 0;
 

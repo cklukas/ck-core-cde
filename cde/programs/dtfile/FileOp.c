@@ -1689,7 +1689,7 @@ RemoveIconFromWorkspace( char * iconName,
       if( strcmp( workspace_name, desktopWin->workspace_name ) == 0 )
       {
         RemoveDT( desktopWin->shell, (XtPointer) desktopWin,
-                  (XtPointer)NULL );
+                  (XtPointer)nullptr );
       }
       else
       {

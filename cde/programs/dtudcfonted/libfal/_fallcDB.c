@@ -530,7 +530,7 @@ construct_name(char *name)
 static int
 store_to_database(Database *db)
 {
-    Database new = (Database)NULL;
+    Database new = (Database)nullptr;
     char name[BUFSIZE];
 
     while(1){
@@ -546,7 +546,7 @@ store_to_database(Database *db)
 	}
 
 	new = (Database)Xmalloc(sizeof(DatabaseRec));
-	if(new == (Database)NULL){
+	if(new == (Database)nullptr){
 	    break;
 	}
 	memset(new, 0, sizeof(DatabaseRec));
@@ -948,7 +948,7 @@ CountDatabase(Database db)
 static Database
 CreateDatabase(char *dbfile)
 {
-    Database db = (Database)NULL;
+    Database db = (Database)nullptr;
     FILE *fd;
     Line line;
     char *p;
@@ -994,7 +994,7 @@ CreateDatabase(char *dbfile)
 	fprintf(stderr, "database format error at line %d.\n", line.seq);
 #endif
 	DestroyDatabase(db);
-	db = (Database)NULL;
+	db = (Database)nullptr;
     }
 
     fclose(fd);
@@ -1027,7 +1027,7 @@ typedef	struct _XlcDatabaseListRec {
 } XlcDatabaseListRec, *XlcDatabaseList;
 
 /* database cache list (per file) */
-static XlcDatabaseList _db_list = (XlcDatabaseList)NULL;
+static XlcDatabaseList _db_list = (XlcDatabaseList)nullptr;
 
 /************************************************************************/
 /*	_fallcGetResource(lcd, category, class, value, count)		*/
@@ -1092,15 +1092,15 @@ _fallcDestroyLocaleDataBase(XLCd lcd)
     XlcDatabase lc_db = (XlcDatabase)XLC_PUBLIC(lcd, xlocale_db);
     XlcDatabaseList p, prev;
 
-    for(p = _db_list, prev = (XlcDatabaseList)NULL; p;
+    for(p = _db_list, prev = (XlcDatabaseList)nullptr; p;
 	prev = p, p = p->next){
 	if(p->lc_db == lc_db){
 	    if((-- p->ref_count) < 1){
-		if(p->lc_db != (XlcDatabase)NULL){
+		if(p->lc_db != (XlcDatabase)nullptr){
 		    Xfree((char *)p->lc_db);
 		}
 		DestroyDatabase(p->database);
-		if(prev == (XlcDatabaseList)NULL){
+		if(prev == (XlcDatabaseList)nullptr){
 		    _db_list = p->next;
 		}else{
 		    prev->next = p->next;
@@ -1110,7 +1110,7 @@ _fallcDestroyLocaleDataBase(XLCd lcd)
 	    break;
 	}
     }
-    XLC_PUBLIC(lcd, xlocale_db) = (XPointer)NULL;
+    XLC_PUBLIC(lcd, xlocale_db) = (XPointer)nullptr;
 }
 
 /************************************************************************/
@@ -1123,15 +1123,15 @@ XPointer
 _fallcCreateLocaleDataBase(XLCd lcd)
 {
     XlcDatabaseList list, new;
-    Database p, database = (Database)NULL;
-    XlcDatabase lc_db = (XlcDatabase)NULL;
+    Database p, database = (Database)nullptr;
+    XlcDatabase lc_db = (XlcDatabase)nullptr;
     XrmQuark name_q;
     char pathname[256], *name;
     int i, n;
 
     name = _fallcFileName(lcd, "locale");
     if(name == nullptr){
-	return (XPointer)NULL;
+	return (XPointer)nullptr;
     }
     strcpy(pathname, name);
     Xfree(name);
@@ -1145,17 +1145,17 @@ _fallcCreateLocaleDataBase(XLCd lcd)
     }
 
     database = CreateDatabase(pathname);
-    if(database == (Database)NULL){
-	return (XPointer)NULL;
+    if(database == (Database)nullptr){
+	return (XPointer)nullptr;
     }
     n = CountDatabase(database);
     lc_db = (XlcDatabase)Xcalloc((n + 1), sizeof(XlcDatabaseRec));
-    if(lc_db == (XlcDatabase)NULL){
+    if(lc_db == (XlcDatabase)nullptr){
 	DestroyDatabase(database);
-	if(lc_db != (XlcDatabase)NULL){
+	if(lc_db != (XlcDatabase)nullptr){
             Xfree((char *)lc_db);
 	}
-	return (XPointer)NULL;
+	return (XPointer)nullptr;
     }
     memset(lc_db, 0, sizeof(XlcDatabaseRec) * (n + 1));
     for(p = database, i = 0; p && i < n; p = p->next, ++i){
@@ -1165,12 +1165,12 @@ _fallcCreateLocaleDataBase(XLCd lcd)
     }
 
     new = (XlcDatabaseList)Xmalloc(sizeof(XlcDatabaseListRec));
-    if(new == (XlcDatabaseList)NULL){
+    if(new == (XlcDatabaseList)nullptr){
 	DestroyDatabase(database);
-	if(lc_db != (XlcDatabase)NULL){
+	if(lc_db != (XlcDatabase)nullptr){
             Xfree((char *)lc_db);
 	}
-        return (XPointer)NULL;
+        return (XPointer)nullptr;
     }
     new->name_q = name_q;
     new->lc_db = lc_db;

@@ -195,15 +195,15 @@ static XtResource resources[] =
 
   { XmNactivateCallback, XmCCallback, XmRCallback, sizeof(XtCallbackList),
     XtOffsetOf (struct _XyzTabButtonRec, tab.activate_callback),
-    XmRPointer, (XtPointer) NULL },
+    XmRPointer, (XtPointer) nullptr },
 
   { XmNarmCallback, XmCCallback, XmRCallback, sizeof(XtCallbackList),
     XtOffsetOf (struct _XyzTabButtonRec, tab.arm_callback),
-    XmRPointer, (XtPointer) NULL },
+    XmRPointer, (XtPointer) nullptr },
 
   { XmNdisarmCallback, XmCCallback, XmRCallback, sizeof(XtCallbackList),
     XtOffsetOf (struct _XyzTabButtonRec, tab.disarm_callback),
-    XmRPointer, (XtPointer) NULL },
+    XmRPointer, (XtPointer) nullptr },
 
   { XmNmultiClick, XmCMultiClick, XmRMultiClick, sizeof (unsigned char),
     XtOffsetOf (struct _XyzTabButtonRec, tab.multi_click),
@@ -327,7 +327,7 @@ Arm (Widget w, XEvent *event,  String *params, Cardinal *num_params)
 
   /* -------- Fake an expose to draw tab in armed state. -------- */
   internal_expose = True;
-  (*(XtClass(w)->core_class.expose)) (w, event, (Region) NULL);
+  (*(XtClass(w)->core_class.expose)) (w, event, (Region) nullptr);
 
   if (tabw->tab.arm_callback)
     {
@@ -399,7 +399,7 @@ ActivateCommon (Widget w, XEvent *event, String *params, Cardinal *num_params)
   tabw->tab.armed = False;
 
   internal_expose = True;
-  (*(XtClass(w))->core_class.expose) (w, event, (Region) NULL);
+  (*(XtClass(w))->core_class.expose) (w, event, (Region) nullptr);
   
   /* If the event was a button event, make sure it occurred within
      the tab.  (The user could have released outside the tab.) */
@@ -437,7 +437,7 @@ ArmAndActivate (Widget w, XEvent *event, String *params, Cardinal *num_params)
 
   tabw->tab.armed = True;
   internal_expose = True;
-  (*XtClass(w)->core_class.expose) (w, event, (Region) NULL);
+  (*XtClass(w)->core_class.expose) (w, event, (Region) nullptr);
   XFlush (XtDisplay (w));
 
   if (tabw->tab.arm_callback && !already_armed)
@@ -490,7 +490,7 @@ arm_timeout (XtPointer data, XtIntervalId *id)
   if (XtIsRealized (w) && XtIsManaged (w))
     {
       internal_expose = True;
-      (*XtClass(w)->core_class.expose)(w, nullptr, (Region) NULL);
+      (*XtClass(w)->core_class.expose)(w, nullptr, (Region) nullptr);
     }
 
   XFlush (XtDisplay (w));
@@ -509,7 +509,7 @@ Disarm (Widget w, XEvent *event, String *params, Cardinal *num_params)
     {
       tabw->tab.armed = False;
       internal_expose = True;
-      (*XtClass(w)->core_class.expose) (w, nullptr, (Region) NULL);
+      (*XtClass(w)->core_class.expose) (w, nullptr, (Region) nullptr);
     }
 
   if (tabw->tab.disarm_callback)
@@ -533,7 +533,7 @@ Enter (Widget w, XEvent *event, String *params, Cardinal *num_params)
   if (tabw->tab.armed)
     {
       internal_expose = True;
-      (*XtClass(w)->core_class.expose) (w, event, (Region) NULL);
+      (*XtClass(w)->core_class.expose) (w, event, (Region) nullptr);
     }
 }
 
@@ -551,7 +551,7 @@ Leave (Widget w, XEvent *event, String *params, Cardinal *num_params)
     {
       tabw->tab.armed = False;
       internal_expose = True;
-      (*XtClass(w)->core_class.expose) (w, event, (Region) NULL);
+      (*XtClass(w)->core_class.expose) (w, event, (Region) nullptr);
       tabw->tab.armed = True;
     }
 }

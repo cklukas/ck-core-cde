@@ -3967,7 +3967,7 @@ InputForGadget(
     widget = XmObjectAtPoint (wid, x, y);
 
     if (!widget  ||  !XtIsSensitive (widget))
-	return ((XmGadget) NULL);
+	return ((XmGadget) nullptr);
 
    return ((XmGadget) widget);
 }

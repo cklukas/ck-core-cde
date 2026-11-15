@@ -821,7 +821,7 @@ ActivateSingleSelect(
    /*  of the selected file.                                  */
 
    UpdateActionMenuPane ((XtPointer)file_mgr_data, file_mgr_rec, file_type, 
-                   NOT_DESKTOP, 0, (Widget)NULL, 
+                   NOT_DESKTOP, 0, (Widget)nullptr, 
                    file_mgr_data->selection_list[0]->file_data->physical_type);
 }
 
@@ -1196,7 +1196,7 @@ NewView(
    else
       GetNewView (file_mgr_data->host, file_mgr_data->current_directory, nullptr,
                   nullptr, 0);
-   initiating_view = (XtPointer) NULL;
+   initiating_view = (XtPointer) nullptr;
 }
 
 

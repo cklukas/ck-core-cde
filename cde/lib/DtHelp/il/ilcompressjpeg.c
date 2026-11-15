@@ -157,7 +157,7 @@ static ilBool ilJIFToRaw (
     if (!(pCompData = (ilJPEGData *)IL_MALLOC_ZERO (sizeof (ilJPEGData))))
         return ilDeclarePipeInvalid (pipe, IL_ERROR_MALLOC);
 
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     pDes->compInfo.JPEG.reserved |= IL_JPEGM_RAW;   /* now writing raw JPEG */
     dstData.pDes = pDes;
     dstData.pFormat = pFormat;
@@ -267,7 +267,7 @@ static ilError ilRawToJIFExecute (
             }
 
             /*  Write JIF to output stream, from IL's comp data */
-        if (error = iljpgEncodeJIF (&streamRec, &data, (iljpgJIFOffsetsPtr)NULL))
+        if (error = iljpgEncodeJIF (&streamRec, &data, (iljpgJIFOffsetsPtr)nullptr))
             return error;
         }
 
@@ -331,7 +331,7 @@ static ilBool ilRawToJIF (
     ilRawToJIFPrivPtr       pPriv;
     ilDstElementData        dstData;
 
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     pDes->compInfo.JPEG.reserved &= ~IL_JPEGM_RAW;  /* now writing JIF, not raw JPEG */
     dstData.pDes = pDes;
     dstData.pFormat = pFormat;
@@ -340,7 +340,7 @@ static ilBool ilRawToJIF (
     dstData.stripHeight = pInfo->height;            /* write one strip = whole image */
     dstData.constantStrip = TRUE;
     dstData.pPalette = (unsigned short *)nullptr;
-    dstData.pCompData = (ilPtr)NULL;
+    dstData.pCompData = (ilPtr)nullptr;
 
         /*  Add the filter.  "Hold dst" flag set because filter will write to
             output buffer, returning # lines = 0 until last strip written, after which
@@ -502,7 +502,7 @@ static ilPtr _ilScaleQTable (
     int            i, value;
 
     if (!(pTable = (ilPtr)IL_MALLOC (64)))
-        return (ilPtr)NULL;
+        return (ilPtr)nullptr;
 
         /*  Scale src to dst (pTable) by: dst = src * Qfactor / 50.
             I don't know where this came from, but it is how the old code worked.
@@ -615,13 +615,13 @@ IL_PRIVATE ilBool _ilCompressJPEG (
             }
         }
     if (mustConvert)
-        if (!ilConvert (pipe, pDes, pFormat, 0, (ilPtr)NULL))
+        if (!ilConvert (pipe, pDes, pFormat, 0, (ilPtr)nullptr))
             return FALSE;
 
         /*  Convert to planar format if more than 1 sample/pixel. */
     if ((pDes->nSamplesPerPixel > 1) && (pFormat->sampleOrder != IL_SAMPLE_PLANES)) {
         pFormat->sampleOrder = IL_SAMPLE_PLANES;
-        if (!ilConvert (pipe, (ilImageDes *)nullptr, pFormat, 0, (ilPtr)NULL))
+        if (!ilConvert (pipe, (ilImageDes *)nullptr, pFormat, 0, (ilPtr)nullptr))
             return FALSE;
         }
 
@@ -639,7 +639,7 @@ IL_PRIVATE ilBool _ilCompressJPEG (
         return ilDeclarePipeInvalid (pipe, IL_ERROR_MALLOC);
 
         /*  Add the pipe element */
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     pDes->compInfo.JPEG.reserved |= IL_JPEGM_RAW;   /* now writing raw JPEG */
     pDes->compression = IL_JPEG;
     dstData.pDes = pDes;

@@ -881,7 +881,7 @@ today_button(Widget w, XtPointer client_data, XtPointer cbs)
 			(void)prepare_to_paint_monthview(c, nullptr);
 			XtMapWidget(c->canvas);
 		}
-		calendar_select(c, daySelect, (caddr_t)NULL);
+		calendar_select(c, daySelect, (caddr_t)nullptr);
 		break;
 	case yearGlance:
 /*
@@ -913,7 +913,7 @@ today_button(Widget w, XtPointer client_data, XtPointer cbs)
 				monthbox_select(c);
 			}
 		}
-		calendar_select(c, hourSelect,(caddr_t)NULL);
+		calendar_select(c, hourSelect,(caddr_t)nullptr);
 		break;
 	default:
 		break;
@@ -1443,7 +1443,7 @@ make_help_menu(Calendar *c)
         XtSetArg(al[ac], XmNlabelString, about); ac++;
         w_about = XmCreatePushButtonGadget(help_menu, "about", al, ac);
         XtAddCallback(w_about, XmNactivateCallback, show_about, 
-			(XtPointer)NULL);
+			(XtPointer)nullptr);
         XtAddCallback(w_about, XmNactivateCallback, show_main_help, 
 			(XtPointer)HELP_ABOUTCALENDAR);
 
@@ -2449,7 +2449,7 @@ static XtResource resources[] = {
 /* default printer */
 	{ "__defaultPrinter", "__DefaultPrinter", XtRString, sizeof(String),
 	XtOffset(DtCmAppResourcesPtr, default_printer), XtRString,
-	(XtPointer)NULL},
+	(XtPointer)nullptr},
 /* label font */
 	{ "labelFont", "LabelFont", XmRFontList, sizeof(XmFontList),
 	XtOffset(DtCmAppResourcesPtr, labelfontlist), XtRString,

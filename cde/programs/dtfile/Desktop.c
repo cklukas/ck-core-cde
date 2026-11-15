@@ -1404,12 +1404,12 @@ DrawAInput (
       XtRemoveAllCallbacks(desktop_data->popupMenu->openFolder,
                                                       XmNactivateCallback);
       XtAddCallback(desktop_data->popupMenu->openFolder, XmNactivateCallback,
-                                         OpenFolder, (XtPointer) NULL);
+                                         OpenFolder, (XtPointer) nullptr);
 
       XtRemoveAllCallbacks(desktop_data->popupMenu->rename,
                                                          XmNactivateCallback);
       XtAddCallback(desktop_data->popupMenu->rename, XmNactivateCallback,
-                                         renameDT, (XtPointer) NULL);
+                                         renameDT, (XtPointer) nullptr);
 
       /* unsensitise the "Open Parent Folder" and "Rename" options */
       XtSetSensitive(desktop_data->popupMenu->openFolder, False);
@@ -1705,7 +1705,7 @@ OpenFolder (
    }
    else
    {
-      initiating_view = (XtPointer) NULL;
+      initiating_view = (XtPointer) nullptr;
 
       if(desktopWindow->restricted_directory != nullptr)
       {
@@ -2030,7 +2030,7 @@ ProcessNewViewDT (
                                     desktopWindow->file_name);
    DtEliminateDots (directory_name);
 
-   initiating_view = (XtPointer) NULL;
+   initiating_view = (XtPointer) nullptr;
    if(desktopWindow->restricted_directory == nullptr)
    {
       GetNewView (desktopWindow->host, directory_name, nullptr, nullptr, 0);
@@ -3264,7 +3264,7 @@ CreatePopupMenu (
                            XmCreatePopupMenu(drawA, "DTPopup", args, n);
 
    XtAddCallback (desktop_data->popupMenu->popup, XmNmapCallback,
-                                        popupMenu, (XtPointer) NULL);
+                                        popupMenu, (XtPointer) nullptr);
    XtAddCallback (desktop_data->popupMenu->popup, XmNhelpCallback,
                   DTHelpRequestCB,
                   HELP_DESKTOP_POPUP_MENU_STR);

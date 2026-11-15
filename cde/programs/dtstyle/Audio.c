@@ -626,7 +626,7 @@ ButtonCB(
           break;
 
       case HELP_BUTTON:
-          XtCallCallbacks(style.audioDialog, XmNhelpCallback, (XtPointer)NULL);
+          XtCallCallbacks(style.audioDialog, XmNhelpCallback, (XtPointer)nullptr);
 	  break;
 
       default:

@@ -391,7 +391,7 @@ static Widget   _Uxbuild_AddFiletype(void)
         nbutton++;
         XtAddCallback( AF_OkButton, XmNactivateCallback,
                 activateCB_AF_OkButton,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         /* Creation of AF_ApplyButton */
         AF_ApplyButton = XtVaCreateManagedWidget( "AF_ApplyButton",
@@ -408,7 +408,7 @@ static Widget   _Uxbuild_AddFiletype(void)
         nbutton++;
         XtAddCallback( AF_ApplyButton, XmNactivateCallback,
                 activateCB_AF_ApplyButton,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         /* Creation of AF_CancelButton */
         AF_CancelButton = XtVaCreateManagedWidget( "AF_CancelButton",
@@ -425,7 +425,7 @@ static Widget   _Uxbuild_AddFiletype(void)
         nbutton++;
         XtAddCallback( AF_CancelButton, XmNactivateCallback,
                 activateCB_AF_CancelButton,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
 
         /* Creation of AF_HelpButton */
         AF_HelpButton = XtVaCreateManagedWidget( "AF_HelpButton",
@@ -494,7 +494,7 @@ static Widget   _Uxbuild_AddFiletype(void)
                         nullptr );
         XtAddCallback( AF_IdCharacteristicsEdit, XmNactivateCallback,
                 activateCB_edit_id_characteristics,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
         XtRealizeWidget(AF_IdCharacteristicsEdit);
         XtVaGetValues(AF_IdCharacteristicsEdit, XmNwidth, &dim1, nullptr);
 
@@ -654,7 +654,7 @@ static Widget   _Uxbuild_AddFiletype(void)
         pIconData->size = Medium_Icon;
         XtAddCallback( AF_MED_IconGadget, XmNcallback,
                 activateCB_filetype_icon,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
         createCB_IconGadget(AF_MED_IconGadget, FALSE, Medium_Icon);
         last_filetype_pushed = AF_MED_IconGadget;
 
@@ -694,7 +694,7 @@ static Widget   _Uxbuild_AddFiletype(void)
         pIconData->size = Tiny_Icon;
         XtAddCallback( AF_TINY_IconGadget, XmNcallback,
                 activateCB_filetype_icon,
-                (XtPointer) NULL );
+                (XtPointer) nullptr );
         createCB_IconGadget(AF_TINY_IconGadget, FALSE, Tiny_Icon);
 
 	XmStringFree(emptyString);

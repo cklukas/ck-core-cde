@@ -151,7 +151,7 @@ ilImageFormat               imformat;
        return FALSE;
     }
 
-    dstData.producerObject = (ilObject)NULL;
+    dstData.producerObject = (ilObject)nullptr;
     dstData.pDes           = pPipedes;
     dstData.pFormat        = (ilImageFormat *)nullptr;
     dstData.width          = pInfo->width;

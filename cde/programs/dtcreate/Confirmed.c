@@ -74,7 +74,7 @@ void display_confirmed_message (Widget parent, char *message)
 
   XtAddCallback( Confirmed, XmNokCallback,
           activateCB_Confirmed_OkButton,
-          (XtPointer) NULL );
+          (XtPointer) nullptr );
 
   XtVaSetValues (Confirmed,
                  RES_CONVERT(XmNdialogTitle, GETMESSAGE(6, 41, "Create Action - Confirmation")),
@@ -130,7 +130,7 @@ void    saveCB_QuestionDialog(Widget UxWidget,
   /********************************************************************/
   /* Activate the save routine.                                       */
   /********************************************************************/
-  activateCB_CA_MB_FileSave((Widget)NULL, (XtPointer)NULL, (XtPointer)NULL);
+  activateCB_CA_MB_FileSave((Widget)nullptr, (XtPointer)nullptr, (XtPointer)nullptr);
 
 }
 
@@ -158,7 +158,7 @@ void display_question_message (Widget parent, char *message,
                    nullptr);
      XtAddCallback( QuestionDialog, XmNokCallback,
              cb_button1,
-             (XtPointer) NULL );
+             (XtPointer) nullptr );
   } else {
      XtUnmanageChild (tmpw);
   }
@@ -170,7 +170,7 @@ void display_question_message (Widget parent, char *message,
                    nullptr);
      XtAddCallback( QuestionDialog, XmNcancelCallback,
              cb_button2,
-             (XtPointer) NULL );
+             (XtPointer) nullptr );
   } else {
      XtUnmanageChild (tmpw);
   }
@@ -182,7 +182,7 @@ void display_question_message (Widget parent, char *message,
                    nullptr);
      XtAddCallback( QuestionDialog, XmNhelpCallback,
              cb_button3,
-             (XtPointer) NULL );
+             (XtPointer) nullptr );
   } else {
      XtUnmanageChild (tmpw);
   }

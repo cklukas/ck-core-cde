@@ -351,7 +351,7 @@ static void ClassInitialize (void)
 {
     XawInitializeWidgetSet();
     XtAddConverter (XtRString, XtRGravity, XmuCvtStringToGravity,
-		    (XtConvertArgList) NULL, (Cardinal) 0);
+		    (XtConvertArgList) nullptr, (Cardinal) 0);
 }
 
 
@@ -389,7 +389,7 @@ static void Initialize (Widget grequest, Widget gnew, ArgList args,
     /*
      * Create the hidden root widget.
      */
-    new->tree.tree_root = (Widget) NULL;
+    new->tree.tree_root = (Widget) nullptr;
     XtSetArg(root_args[0], XtNwidth, 1);
     XtSetArg(root_args[1], XtNheight, 1);
     new->tree.tree_root = XtCreateWidget ("root", widgetClass, gnew,

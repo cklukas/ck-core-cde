@@ -68,7 +68,7 @@ _fallcGetCSValues(XlcCharSet charset, ...)
     _fallcVaToArgList(var, num_args, &args);
     va_end(var);
 
-    if (args == (XlcArgList) NULL)
+    if (args == (XlcArgList) nullptr)
 	return (char *) nullptr;
 
     if (charset->get_values)
@@ -101,7 +101,7 @@ _fallcGetCharSet(char *name)
 	    return (XlcCharSet) list->charset;
     }
 
-    return (XlcCharSet) NULL;
+    return (XlcCharSet) nullptr;
 }
 
 Bool
@@ -155,13 +155,13 @@ _fallcCreateDefaultCharSet(char *name, char *ct_sequence)
 
     charset = (XlcCharSet) Xmalloc(sizeof(XlcCharSetRec));
     if (charset == nullptr)
-	return (XlcCharSet) NULL;
+	return (XlcCharSet) nullptr;
     memset((char *) charset, 0, sizeof(XlcCharSetRec));
 
     charset->name = (char *) Xmalloc(strlen(name) + strlen(ct_sequence) + 2);
     if (charset->name == nullptr) {
 	Xfree((char *) charset);
-	return (XlcCharSet) NULL;
+	return (XlcCharSet) nullptr;
     }
     strcpy(charset->name, name);
     charset->ct_sequence = charset->name + strlen(name) + 1;

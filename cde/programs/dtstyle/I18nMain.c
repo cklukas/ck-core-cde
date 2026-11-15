@@ -980,7 +980,7 @@ ButtonCB(
       break;
     
   case HELP_BUTTON:
-    XtCallCallbacks(style.i18nDialog, XmNhelpCallback, (XtPointer)NULL);
+    XtCallCallbacks(style.i18nDialog, XmNhelpCallback, (XtPointer)nullptr);
     break;
     
   default:

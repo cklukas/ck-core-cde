@@ -403,7 +403,7 @@ program(struct svc_req *rqstp, SVCXPRT *transp)
 
 	if (rqstp->rq_proc == NULLPROC) {
 		if (debug) fprintf(stderr, "rpc.cmsd: ping\n");
-		(void)svc_sendreply(transp, _DtCm_xdr_void, (caddr_t)NULL);
+		(void)svc_sendreply(transp, _DtCm_xdr_void, (caddr_t)nullptr);
 		return;
 	}
 

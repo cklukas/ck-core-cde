@@ -1224,9 +1224,9 @@ ab_exit_dtbuilder(void)
     static DTB_MODAL_ANSWER     answer;
     XtAppContext                app;
     static BOOL                 Up = False;
-    Widget                      dlg = (Widget) NULL;
-    Widget                      shell = (Widget) NULL;
-    Widget                      mbox = (Widget) NULL;
+    Widget                      dlg = (Widget) nullptr;
+    Widget                      shell = (Widget) nullptr;
+    Widget                      mbox = (Widget) nullptr;
     Arg                         args[10];
     int                         n = 0;
 
@@ -1244,7 +1244,7 @@ ab_exit_dtbuilder(void)
                 shell = XtCreatePopupShell("exit_dtbuilder",
                         topLevelShellWidgetClass,
                         dtb_get_toplevel_widget(),
-                        (ArgList) NULL, (Cardinal) 0);
+                        (ArgList) nullptr, (Cardinal) 0);
  
                 n = 0;
                 XtSetArg(args[n], XmNdialogType,
@@ -1266,7 +1266,7 @@ ab_exit_dtbuilder(void)
                 XtAddCallback(mbox, XmNcancelCallback, exit_mboxCB,
                         (XtPointer) DTB_ANSWER_CANCEL);
                 XtAddCallback(shell, XmNpopdownCallback, destroy_mboxCB,
-                        (XtPointer) NULL);
+                        (XtPointer) nullptr);
  
                 ui_add_window_close_callback(shell, mwm_close_mboxCB,
                         (XtPointer) &answer, XmDO_NOTHING);

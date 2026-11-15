@@ -515,7 +515,7 @@ void DisplayFile (
 
   /* Catch the close callback so we can destroy the widget */
   XtAddCallback(viewWidget, DtNcloseCallback,
-                CloseAndExitCB, (XtPointer) NULL);
+                CloseAndExitCB, (XtPointer) nullptr);
 
   /* We do not want a help button for now so we unmap it */     
   helpWidget = DtHelpQuickDialogGetChild (viewWidget,DtHELP_QUICK_HELP_BUTTON);
@@ -602,13 +602,13 @@ void DisplayMan (
       if (closeOption == EXIT_ON_CLOSE)
         {
           XtAddCallback(viewWidget, DtNcloseCallback,
-                       CloseAndExitCB, (XtPointer) NULL);
+                       CloseAndExitCB, (XtPointer) nullptr);
        
         }
       else
         {
            XtAddCallback(viewWidget, DtNcloseCallback,
-                    CloseQuickHelpCB, (XtPointer) NULL);
+                    CloseQuickHelpCB, (XtPointer) nullptr);
         }
 
       /* We do not want a help button for now so we unmap it */     

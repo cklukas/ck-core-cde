@@ -65,7 +65,7 @@
 static XtResource resources[] = {
 #define poff(field) XtOffsetOf(PortholeRec, porthole.field)
     { XtNreportCallback, XtCReportCallback, XtRCallback, sizeof(XtPointer),
-	poff(report_callbacks), XtRCallback, (XtPointer) NULL },
+	poff(report_callbacks), XtRCallback, (XtPointer) nullptr },
 #undef poff
 };
 
@@ -182,7 +182,7 @@ static Widget find_child (PortholeWidget pw)
 	if (XtIsManaged(*children)) return *children;
     }
 
-    return (Widget) NULL;
+    return (Widget) nullptr;
 }
 
 static void SendReport (PortholeWidget pw, unsigned int changed)

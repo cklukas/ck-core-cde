@@ -107,12 +107,12 @@ brwsP_create_find_box(
 			ok_label;
 
         XtCallbackRec	find_callback_list[] = {
-                {find_callback, (XtPointer) NULL},
-                {nullptr, (XtPointer) NULL}
+                {find_callback, (XtPointer) nullptr},
+                {nullptr, (XtPointer) nullptr}
             };
         XtCallbackRec	cancel_callback_list[] = {
-                {cancel_callback, (XtPointer) NULL},
-                {nullptr, (XtPointer) NULL}
+                {cancel_callback, (XtPointer) nullptr},
+                {nullptr, (XtPointer) nullptr}
             };
 	Arg		args[3];
 	int		num_args = 0;

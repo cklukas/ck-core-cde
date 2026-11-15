@@ -314,7 +314,7 @@ connP_set_termp_inactive(
     XtSetSensitive(widget, False);
 
     /* Make the cursor stop blinking. */
-    XtVaSetValues(widget, DtNblinkRate, 0, NULL);
+    XtVaSetValues(widget, DtNblinkRate, 0, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -331,20 +331,20 @@ connP_init_termp(
     
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    STRING                      shell = NULL;
+    STRING                      shell = nullptr;
 
     /*** DTB_USER_CODE_END   ^^^ Add C variables and code above ^^^ ***/
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
     /* Make the cursor stop blinking. */
-    XtVaSetValues(widget, DtNblinkRate, 0, NULL);
+    XtVaSetValues(widget, DtNblinkRate, 0, nullptr);
 
     /* Set the input term pane shell to be the same as the
      * user's $SHELL environment variable. 
      */
     shell = (STRING) getenv("SHELL");
-    XtVaSetValues(widget, DtNsubprocessCmd, shell, NULL);
+    XtVaSetValues(widget, DtNsubprocessCmd, shell, nullptr);
     
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -402,7 +402,7 @@ cgenP_show_cgen_optionsCB(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    if (AB_cgen_prop_dialog == (Widget) NULL)
+    if (AB_cgen_prop_dialog == (Widget) nullptr)
     {
 	/*
 	 * Module initialization
@@ -414,7 +414,7 @@ cgenP_show_cgen_optionsCB(
 	
 	XtVaSetValues(AB_cgen_prop_dialog,
 		      XmNuserData, dtb_cgen_props_cgen_props_dlg.module_list,
-		      NULL);
+		      nullptr);
 
         ab_register_window(AB_cgen_prop_dialog, AB_WIN_DIALOG, WindowHidden, 
                 XtParent(AB_cgen_win), AB_WPOS_TILE_HORIZONTAL,
@@ -448,7 +448,7 @@ cgenP_show_env_dlgCB(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    if (AB_cgen_env_dialog == (Widget) NULL)
+    if (AB_cgen_env_dialog == (Widget) nullptr)
     {
 	dtbCgenEnvDialogInfo_clear(&dtb_cgen_env_dialog);
         dtb_cgen_env_dialog_initialize(&dtb_cgen_env_dialog, AB_cgen_win);

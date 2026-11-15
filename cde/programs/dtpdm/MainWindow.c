@@ -120,7 +120,7 @@ PdmMainWinDelete(PdmMainWin* me)
     /*
      * destroy the help dialog
      */
-    if((Widget)NULL != me->help_dialog)
+    if((Widget)nullptr != me->help_dialog)
     {
 	XtDestroyWidget(me->help_dialog);
     }
@@ -438,7 +438,7 @@ PdmMainWinHelpCB(Widget w, XtPointer client_data, XtPointer call_data)
     /*
      * create the help dialog if needed
      */
-    if((Widget)NULL == me->help_dialog)
+    if((Widget)nullptr == me->help_dialog)
     {
 	me->help_dialog =
 	    DtCreateHelpDialog(XtParent(me->widget), "HelpDialog", nullptr, 0);
@@ -475,7 +475,7 @@ PdmMainWinHelpCB(Widget w, XtPointer client_data, XtPointer call_data)
 	resources[0].resource_offset =
 	    XtOffsetOf(struct _box_resources, help_volume);
 	resources[0].default_type = XmRImmediate;
-	resources[0].default_addr = (XtPointer)NULL;
+	resources[0].default_addr = (XtPointer)nullptr;
 	/*
 	 * initialize res struct for location id
 	 */
@@ -486,13 +486,13 @@ PdmMainWinHelpCB(Widget w, XtPointer client_data, XtPointer call_data)
 	resources[1].resource_offset =
 	    XtOffsetOf(struct _box_resources, location_id);
 	resources[1].default_type = XmRImmediate;
-	resources[1].default_addr = (XtPointer)NULL;
+	resources[1].default_addr = (XtPointer)nullptr;
 	/*
 	 * get the resource values for the current setup box widget
 	 */
 	XtGetApplicationResources(box->widget, (XtPointer)&box_resources,
 				  resources, XtNumber(resources),
-				  (ArgList)NULL, 0);
+				  (ArgList)nullptr, 0);
     }
     /*
      * set the help volume and location
@@ -525,7 +525,7 @@ static void
 PdmMainWinHelpDestroyCB(Widget w, XtPointer client_data, XtPointer call_data)
 {
     PdmMainWin* me = (PdmMainWin*)client_data;
-    me->help_dialog = (Widget)NULL;
+    me->help_dialog = (Widget)nullptr;
 }
 
 /*

@@ -196,25 +196,25 @@ static XtResource resources[] =
 		XmNpushFunction,
 		XmCPushFunction, XmRFunction, sizeof (XtPointer),
 		R_Offset (push_function),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNpushArgument,
 		XmCPushArgument, XmRPointer, sizeof (XtPointer),
 		R_Offset (push_argument),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNdropAction,
 		XmCDropAction, XmRString, sizeof (String),
 		R_Offset (drop_action),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		"pushAction",
 		"PushAction", XmRString, sizeof (String),
 		R_Offset (push_action),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNformat,
@@ -226,13 +226,13 @@ static XtResource resources[] =
                 XmNformatJP,
                 XmCFormatJP, XmRString, sizeof (String),
                 R_Offset (format_jp),
-                XmRImmediate, (XtPointer) NULL
+                XmRImmediate, (XtPointer) nullptr
         },
 	{
 		XmNsubpanel,
 		XmCSubpanel, XmRWidget, sizeof (Widget),
 		R_Offset (subpanel),
-		XmRImmediate, (XtPointer) NULL
+		XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNcontrolType,
@@ -243,12 +243,12 @@ static XtResource resources[] =
 	{
 		XmNfileName,
 		XmCString, XmRString, sizeof (XmString),
-		R_Offset (file_name), XmRImmediate, (XtPointer) NULL
+		R_Offset (file_name), XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNalternateImage,
 		XmCAlternateImage, XmRString, sizeof (String),
-		R_Offset (alt_image), XmRImmediate, (XtPointer) NULL
+		R_Offset (alt_image), XmRImmediate, (XtPointer) nullptr
 	},
 	{
 		XmNchime,
@@ -346,7 +346,7 @@ DtControlCacheObjClassRec dtControlCacheObjClassRec =
       /* default trans      */    nullptr,
       /* query geo proc     */    nullptr,
       /* display accelerator*/    nullptr,
-      /* extension record   */    (XtPointer)NULL,
+      /* extension record   */    (XtPointer)nullptr,
    },
 
    {

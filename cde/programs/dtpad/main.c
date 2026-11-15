@@ -229,10 +229,10 @@ static XtResource resources[] = {
       (XtPointer)DtDROP_FILES_AUTO,
   },
   {"workspaceList", "WorkspaceList", XmRString, sizeof(char *),
-      XtOffset(ApplicationDataPtr,workspaceList), XmRImmediate,(XtPointer)NULL,
+      XtOffset(ApplicationDataPtr,workspaceList), XmRImmediate,(XtPointer)nullptr,
   },
   {"session", "Session", XmRString, sizeof(char *),
-      XtOffset(ApplicationDataPtr,session), XmRImmediate, (XtPointer)NULL,
+      XtOffset(ApplicationDataPtr,session), XmRImmediate, (XtPointer)nullptr,
   },
 
   {"standAlone", "StandAlone", XmRBoolean, sizeof(Boolean),
@@ -259,8 +259,8 @@ static XrmOptionDescRec option_list[] =
    {"-noReadOnlyWarning", "readOnlyWarning", XrmoptionNoArg, (caddr_t)"FALSE"},
    {"-noNameChange", "nameChange", XrmoptionNoArg, (caddr_t)"FALSE"},
    {"-viewOnly", "viewOnly", XrmoptionNoArg, (caddr_t)"TRUE"},
-   {"-workspaceList", "workspaceList", XrmoptionSepArg, (caddr_t)NULL},
-   {"-session", "session", XrmoptionSepArg, (caddr_t)NULL},
+   {"-workspaceList", "workspaceList", XrmoptionSepArg, (caddr_t)nullptr},
+   {"-session", "session", XrmoptionSepArg, (caddr_t)nullptr},
 
    {"-standAlone", "standAlone", XrmoptionNoArg, (caddr_t)"TRUE"},
    {"-noBlocking", "blocking", XrmoptionNoArg, (caddr_t)"FALSE"},
@@ -349,8 +349,8 @@ main(
      * and message catalogs. */
     (void)_DtEnvControl(DT_ENV_SET);
 
-    (void) XtSetLanguageProc((XtAppContext)NULL, nullptr,
-			     (XtPointer)NULL);
+    (void) XtSetLanguageProc((XtAppContext)nullptr, nullptr,
+			     (XtPointer)nullptr);
 
     pArgc = argc;
     pArgv = argv;
@@ -924,7 +924,7 @@ SendMessageToServer(
 #ifdef HAVE_EDITRES
     XtAddEventHandler(topLevelWithWmCommand, 0, True,
                       _XEditResCheckMessages,
-                      (XtPointer) NULL);
+                      (XtPointer) nullptr);
 #endif
 
     status = TTstartDesktopMediaExchange(topLevelWithWmCommand, pPad);
@@ -1108,7 +1108,7 @@ RealizeNewPad(
      * work area of the main window (the main window command line area and
      * the horizontal/vertical scroll bars are not used) */
     XmMainWindowSetAreas(pPad->mainWindow, pPad->menu_bar,
-    		(Widget) NULL, (Widget) NULL, (Widget) NULL,
+    		(Widget) nullptr, (Widget) nullptr, (Widget) nullptr,
 		pPad->editor);
 
     /* Realize toplevel widgets. */
@@ -1609,7 +1609,7 @@ SetInitialMenuSensitivity(
      * DtNeditable resource. */
     XtSetSensitive(pPad->editStuff.widgets.undoBtn, editable);
     XtSetSensitive(pPad->editStuff.widgets.pasteBtn, editable);
-    if (pPad->editStuff.widgets.checkSpellingBtn != (Widget) NULL) {
+    if (pPad->editStuff.widgets.checkSpellingBtn != (Widget) nullptr) {
 	XtSetSensitive(pPad->editStuff.widgets.checkSpellingBtn, editable);
     }
     SetSelectionMenuItems(pPad, False);	/* set Cut, Copy, Clear & Delete */
@@ -1674,9 +1674,9 @@ SetStateFromResources(
     XmToggleButtonSetState(pWidg->statusLineBtn,
 				pPad->xrdb.statusLine, True);
 
-    if (pWidg->droppedFilesAutoBtn != (Widget)NULL &&
-        pWidg->droppedFilesPathsBtn != (Widget)NULL &&
-        pWidg->droppedFilesContentBtn != (Widget)NULL)
+    if (pWidg->droppedFilesAutoBtn != (Widget)nullptr &&
+        pWidg->droppedFilesPathsBtn != (Widget)nullptr &&
+        pWidg->droppedFilesContentBtn != (Widget)nullptr)
     {
         XmToggleButtonSetState(pWidg->droppedFilesAutoBtn, False, False);
         XmToggleButtonSetState(pWidg->droppedFilesPathsBtn, False, False);
@@ -1740,19 +1740,19 @@ UnmanageAllDialogs(
     /*
      * Unmanage all Modal dialogs that might possibly be up.
      */
-    if (pPad->fileStuff.fileWidgets.saveAs.alrdy_exist != (Widget)NULL &&
+    if (pPad->fileStuff.fileWidgets.saveAs.alrdy_exist != (Widget)nullptr &&
 	pPad->fileStuff.fileWidgets.saveAs.alrdy_exist->core.managed == True)
     {
         XtUnmanageChild(pPad->fileStuff.fileWidgets.saveAs.alrdy_exist);
     }
 
-    if (pPad->fileStuff.fileWidgets.select.save_warning != (Widget)NULL &&
+    if (pPad->fileStuff.fileWidgets.select.save_warning != (Widget)nullptr &&
 	pPad->fileStuff.fileWidgets.select.save_warning->core.managed == True)
     {
         XtUnmanageChild(pPad->fileStuff.fileWidgets.select.save_warning);
     }
 
-    if (pPad->fileStuff.fileWidgets.gen_warning != (Widget)NULL &&
+    if (pPad->fileStuff.fileWidgets.gen_warning != (Widget)nullptr &&
 	pPad->fileStuff.fileWidgets.gen_warning->core.managed == True)
     {
         XtUnmanageChild(pPad->fileStuff.fileWidgets.gen_warning);
@@ -1763,13 +1763,13 @@ UnmanageAllDialogs(
      * The Edit and Format menu dialogs are managed by the DtEditor widget.
      * XXX - unmanage print dialog too.
      */
-    if (pPad->fileStuff.fileWidgets.select.file_dialog != (Widget)NULL &&
+    if (pPad->fileStuff.fileWidgets.select.file_dialog != (Widget)nullptr &&
 	pPad->fileStuff.fileWidgets.select.file_dialog->core.managed == True)
     {
         XtUnmanageChild(pPad->fileStuff.fileWidgets.select.file_dialog);
     }
 
-    if (pPad->fileStuff.fileWidgets.saveAs.saveAs_form != (Widget)NULL &&
+    if (pPad->fileStuff.fileWidgets.saveAs.saveAs_form != (Widget)nullptr &&
 	pPad->fileStuff.fileWidgets.saveAs.saveAs_form->core.managed == True)
     {
         XtUnmanageChild(pPad->fileStuff.fileWidgets.saveAs.saveAs_form);
@@ -1778,14 +1778,14 @@ UnmanageAllDialogs(
     /*
      * Unmanage help if it's up.
      */
-    if (pPad->MainHelp != (Widget)NULL && pPad->MainHelp->core.managed == True)
+    if (pPad->MainHelp != (Widget)nullptr && pPad->MainHelp->core.managed == True)
     {
         XtUnmanageChild(pPad->MainHelp);
     }
     for (pHelp = pPad->pHelpCache; pHelp != (HelpStruct *)nullptr;
 	 pHelp = pHelp->pNext)
     {
-	if (pHelp->dialog != (Widget)NULL &&
+	if (pHelp->dialog != (Widget)nullptr &&
 	    pHelp->dialog->core.managed == True)
 	{
             XtUnmanageChild(pHelp->dialog);

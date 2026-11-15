@@ -72,7 +72,7 @@ main(
 
     ab_project = obj_create(AB_TYPE_PROJECT, nullptr);
     if ((ab_interface = abuil_get_uil_file(argv[1], ab_project))
-	    == (ABObjPtr) NULL)
+	    == (ABObjPtr) nullptr)
     {
 	fprintf(stderr, "test_loaduil: loaduil %s failed.\n", argv[1]);
 	exit(2);

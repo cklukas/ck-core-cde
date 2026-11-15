@@ -81,7 +81,7 @@ typedef struct  PANEDWIN_EDITOR_SETTINGS
 /*
  * Declarations of global widgets used by callbacks.
  */
-ABObj		current_pw_child = NULL;
+ABObj		current_pw_child = nullptr;
 /*
  * End declarations of global widgets
  */
@@ -165,7 +165,7 @@ panedwin_ed_show_dialog(
 )
 {
     /* If there is no Message Editor, create it */
-    if (AB_panedWinEd_dialog == (Widget)NULL)
+    if (AB_panedWinEd_dialog == (Widget)nullptr)
     {
         /* Create and manage the Paned Window Editor */
         AB_panedWinEd_dialog = 
@@ -175,7 +175,7 @@ panedwin_ed_show_dialog(
 	XtVaSetValues(XtParent(dtb_panedwin_ed_dialog.panelist_scrolledwin), 
 		XmNrightAttachment,	XmATTACH_FORM,
 		XmNrightOffset,		100,
-		NULL);
+		nullptr);
 
 	/* Add Update, Rename, and Destroy object callbacks */
         panedwinEdP_init();
@@ -186,23 +186,23 @@ panedwin_ed_show_dialog(
 	/* Add Callback to load panedWin object when selected from list */
 	XtAddCallback(dtb_panedwin_ed_dialog.objlist, 
 		XmNbrowseSelectionCallback,
-		pw_objlist_selectCB, (XtPointer)NULL);
+		pw_objlist_selectCB, (XtPointer)nullptr);
 
 	/* Add Callback to load panes when a paned window obj is
 	 * selected from list. */
 	XtAddCallback(dtb_panedwin_ed_dialog.panelist, 
 		XmNbrowseSelectionCallback,
-		pw_panelist_selectCB, (XtPointer)NULL);
+		pw_panelist_selectCB, (XtPointer)nullptr);
 
         /*
          * Setup dialog to participate in dtbuilder window protocol
          */
         ab_register_window(AB_panedWinEd_dialog, AB_WIN_DIALOG, 
 		WindowHidden, AB_toplevel, AB_WPOS_TILE_HORIZONTAL,
-		NULL, NULL);
+		nullptr, nullptr);
     }
 
-    if (AB_panedWinEd_dialog != NULL)
+    if (AB_panedWinEd_dialog != nullptr)
         XtManageChild(AB_panedWinEd_dialog);
 }
 
@@ -222,8 +222,8 @@ panedwin_editor_init(
     if (dtb_panedwin_ed_dialog_initialize(pw_cgen, parent) == 0)
     {
 	pws->prop_sheet = pw_cgen->attrs_ctrlpanel;
-        pws->current_pw_obj = NULL;
-        pws->current_pane_obj = NULL;
+        pws->current_pw_obj = nullptr;
+        pws->current_pane_obj = nullptr;
 
 	/* Name Field */
 	prop_field_init(&(pws->name), pw_cgen->name_field_label,
@@ -231,7 +231,7 @@ panedwin_editor_init(
 
 	/* Pane Geometry Setting */
         prop_geomfield_init(&(pws->geometry), pw_cgen->geo_label,
-                            NULL, NULL, NULL, NULL,
+                            nullptr, nullptr, nullptr, nullptr,
                             pw_cgen->width_field_label, pw_cgen->width_field,
                             pw_cgen->height_field_label, pw_cgen->height_field,
                             pw_cgen->geo_cb);
@@ -242,12 +242,12 @@ panedwin_editor_init(
 	ui_set_active(pw_cgen->height_field, False);
 
 	/* REMIND: Make geometry textfields read-only for now */
-	XtVaSetValues(pw_cgen->width_field, XmNeditable, False, NULL);
-	XtVaSetValues(pw_cgen->height_field, XmNeditable, False, NULL);
+	XtVaSetValues(pw_cgen->width_field, XmNeditable, False, nullptr);
+	XtVaSetValues(pw_cgen->height_field, XmNeditable, False, nullptr);
 
         /* Pane Minimum/Maximum Setting */
         prop_geomfield_init(&(pws->min_max_geo), pw_cgen->pane_height_lbl, 
-		NULL, NULL, NULL, NULL,
+		nullptr, nullptr, nullptr, nullptr,
 		pw_cgen->min_height_field_label, pw_cgen->min_height_field,
 		pw_cgen->max_height_field_label, pw_cgen->max_height_field,
 		pw_cgen->height_cb); 
@@ -262,7 +262,7 @@ panedwin_editor_init(
 	return (pw_cgen->dialog_shellform);
     }
     else
-	return NULL;
+	return nullptr;
 
 }  
 
@@ -289,8 +289,8 @@ panedwin_editor_clear(
     /* Clear pane information */
     panedwin_editor_clear_geom();
  
-    pws->current_pw_obj = NULL;
-    pws->current_pane_obj = NULL;
+    pws->current_pw_obj = nullptr;
+    pws->current_pane_obj = nullptr;
 
     turnoff_changebars();
 
@@ -328,9 +328,9 @@ panedwin_editor_load(
     PanedWinEditorSettingsRec   *pws = &pw_editor_settings_rec;
     int				width = 0, height = 0;
  
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (pws->current_pane_obj != NULL)
+        if (pws->current_pane_obj != nullptr)
             obj = pws->current_pane_obj;
         else
             return ERROR;
@@ -390,10 +390,10 @@ panedwin_editor_apply(
 	abobj_set_pane_max(pws->current_pane_obj, geom);
     }
 
-    if (pws->current_pw_obj != NULL)
+    if (pws->current_pw_obj != nullptr)
 	abobj_instantiate_changes(pws->current_pw_obj);
 
-    if (pws->current_pane_obj != NULL)
+    if (pws->current_pane_obj != nullptr)
 	abobj_instantiate_changes(pws->current_pane_obj);
 
     turnoff_changebars();
@@ -447,9 +447,9 @@ pw_objlist_selectCB(
     XmListCallbackStruct *listdata
 )
 {
-    ABObj               module = NULL;
-    ABObj               selected_obj = NULL;
-    STRING              name = NULL;
+    ABObj               module = nullptr;
+    ABObj               selected_obj = nullptr;
+    STRING              name = nullptr;
     Widget		panelist = dtb_panedwin_ed_dialog.panelist;
     PanedWinEditorSettingsRec   *pws = &pw_editor_settings_rec;
 
@@ -469,7 +469,7 @@ pw_objlist_selectCB(
         
 	    /* Populate the panes list in the editor */
 	    abobj_list_update(panelist, selected_obj, pw_child_test_func);
-	    XtVaSetValues(panelist, XmNuserData, module, NULL);
+	    XtVaSetValues(panelist, XmNuserData, module, nullptr);
 
 	    /* Load  Name of paned window object */
 	    prop_field_set_value(&(pws->name), 
@@ -488,15 +488,15 @@ pw_panelist_selectCB(
     XmListCallbackStruct *listdata
 )
 {
-    ABObj               module = NULL;
-    ABObj               selected_obj = NULL;
-    STRING              name = NULL;
+    ABObj               module = nullptr;
+    ABObj               selected_obj = nullptr;
+    STRING              name = nullptr;
 
     name = objxm_xmstr_to_str(listdata->item);
     if (name)
     {
-	XtVaGetValues(widget, XmNuserData, &module, NULL);
-	if (module != NULL)
+	XtVaGetValues(widget, XmNuserData, &module, nullptr);
+	if (module != nullptr)
 	{
             ui_set_active(dtb_panedwin_ed_dialog.width_field_label, True);
             ui_set_active(dtb_panedwin_ed_dialog.width_field, True);
@@ -526,7 +526,7 @@ pw_objlist_load(
     ABObj           proj = proj_get_project();
     int             num_items = 0;
  
-    if (proj == NULL || list == NULL)
+    if (proj == nullptr || list == nullptr)
         return;
  
     num_items = abobj_list_load(list, proj, pw_objlist_test_func);
@@ -541,9 +541,9 @@ pw_objlist_test_func(
     ABObj test_obj
 )
 {
-    ABObj       module = NULL;
+    ABObj       module = nullptr;
  
-    if ((module = obj_get_module(test_obj)) == NULL)
+    if ((module = obj_get_module(test_obj)) == nullptr)
         return(False);
  
     if (obj_is_paned_win(test_obj) &&
@@ -583,10 +583,10 @@ pw_child_test_func(
     ABObj test_obj
 )
 {
-    ABObj       module = NULL;
-    ABObj	parent = NULL;
+    ABObj       module = nullptr;
+    ABObj	parent = nullptr;
 
-    if ((module = obj_get_module(test_obj)) == NULL)
+    if ((module = obj_get_module(test_obj)) == nullptr)
         return(False);
 
     parent = obj_get_parent(test_obj);
@@ -612,7 +612,7 @@ pw_obj_updateOCB(
     Widget	list = dtb_panedwin_ed_dialog.objlist;
     int		ret = 0;
 
-    if (AB_panedWinEd_dialog != NULL)
+    if (AB_panedWinEd_dialog != nullptr)
     {
         if (!obj_is_project(info->obj) && !obj_is_module(info->obj)
 	    && !obj_is_paned_win(info->obj))
@@ -635,12 +635,12 @@ pw_obj_destroyedOCB(
 {
     Widget      list = dtb_panedwin_ed_dialog.objlist;
     Widget	panelist = dtb_panedwin_ed_dialog.panelist;
-    ABObj	parent = NULL;
-    STRING	name = NULL;
-    XmStringTable sel_item = NULL;
+    ABObj	parent = nullptr;
+    STRING	name = nullptr;
+    XmStringTable sel_item = nullptr;
     int         ret = 0;
                      
-    if (AB_panedWinEd_dialog != NULL)
+    if (AB_panedWinEd_dialog != nullptr)
     {
         if (!obj_is_project(info->obj) && !obj_is_paned_win(info->obj)
 	    && !obj_is_pane(info->obj) && !obj_is_layers(info->obj))
@@ -666,8 +666,8 @@ pw_obj_destroyedOCB(
 	    /* Clear out the paned window editor if the paned window
 	     * being destroyed is the one which is currently loaded.
 	     */
-	    XtVaGetValues(list, XmNselectedItems, &sel_item, NULL);
-	    if (sel_item != NULL)
+	    XtVaGetValues(list, XmNselectedItems, &sel_item, nullptr);
+	    if (sel_item != nullptr)
 	    {
 		name = abobj_get_moduled_name(info->obj);
 		if (strcmp(name, objxm_xmstr_to_str(sel_item[0])) == 0)
@@ -679,11 +679,11 @@ pw_obj_destroyedOCB(
 	else /* Object is a pane OR a layer */
 	{
 	    parent = obj_get_parent(info->obj);
-	    if ( ((parent = obj_get_parent(info->obj)) != NULL) &&
+	    if ( ((parent = obj_get_parent(info->obj)) != nullptr) &&
 		obj_is_paned_win(parent))
 	    {
-		XtVaGetValues(panelist, XmNselectedItems, &sel_item, NULL);
-		if (sel_item != NULL)
+		XtVaGetValues(panelist, XmNselectedItems, &sel_item, nullptr);
+		if (sel_item != nullptr)
 		{
                     name = abobj_get_moduled_name(info->obj);
                     if (strcmp(name, objxm_xmstr_to_str(sel_item[0])) == 0)
@@ -704,26 +704,26 @@ pw_obj_renamedOCB(
 {
     Widget      list = dtb_panedwin_ed_dialog.objlist;
     Widget      panelist = dtb_panedwin_ed_dialog.panelist;
-    ABObj       parent = NULL,
-                sel_module = NULL,
-                selected_obj = NULL;
-    XmStringTable sel_item = NULL;
-    STRING	mod_name = NULL;
+    ABObj       parent = nullptr,
+                sel_module = nullptr,
+                selected_obj = nullptr;
+    XmStringTable sel_item = nullptr;
+    STRING	mod_name = nullptr;
     int         ret = 0;
 
     if (!obj_is_module(info->obj) && !obj_is_paned_win(info->obj)
 	&& !obj_is_pane(info->obj) && !obj_is_layers(info->obj))
 	return 0;
 
-    if (AB_panedWinEd_dialog != NULL)
+    if (AB_panedWinEd_dialog != nullptr)
     {
 	if (obj_is_module(info->obj))
 	{
 	    mod_name = obj_get_name(info->obj);
-	    if (mod_name == NULL)
+	    if (mod_name == nullptr)
 		return -1;
      
-	    if (info->old_name != NULL)
+	    if (info->old_name != nullptr)
 	    {
 		/* Change the module prefix in the objlist */
 		abobj_list_obj_renamed(list, info->obj, 
@@ -741,7 +741,7 @@ pw_obj_renamedOCB(
              * the new name.  Otherwise let the pw_obj_updateOCB
              * handle adding a newly created panedWindow object.
              */
-            if (info->old_name != NULL)
+            if (info->old_name != nullptr)
             {  
                 ret = abobj_list_obj_renamed(list, info->obj,
                         istr_string(info->old_name), pw_objlist_test_func);
@@ -749,7 +749,7 @@ pw_obj_renamedOCB(
         }
 	else	/* obj is a pane OR a layer */
 	{
-	    if (info->old_name == NULL)
+	    if (info->old_name == nullptr)
 	    {
 		/* This is a new pane dropped on an existing
 		 * paned window object OR this is a new layer
@@ -757,10 +757,10 @@ pw_obj_renamedOCB(
 		 * obj's parent.
 		 */  
 		parent = obj_get_parent(info->obj);
-		if ( (parent != NULL) && obj_is_paned_win(parent) )
+		if ( (parent != nullptr) && obj_is_paned_win(parent) )
 		{
-		    XtVaGetValues(list, XmNselectedItems, &sel_item, NULL);
-		    if (sel_item != NULL)
+		    XtVaGetValues(list, XmNselectedItems, &sel_item, nullptr);
+		    if (sel_item != nullptr)
 		    {
 			abobj_moduled_name_extract(
 				objxm_xmstr_to_str(sel_item[0]),
@@ -792,14 +792,14 @@ pw_obj_reparentedOCB(
 {
     Widget      list = dtb_panedwin_ed_dialog.objlist;
     Widget	panelist = dtb_panedwin_ed_dialog.panelist;
-    ABObj	parent = NULL,
-		sel_module = NULL,
-		selected_obj = NULL;
-    XmStringTable sel_item = NULL;
-    STRING	name = NULL;
+    ABObj	parent = nullptr,
+		sel_module = nullptr,
+		selected_obj = nullptr;
+    XmStringTable sel_item = nullptr;
+    STRING	name = nullptr;
     int		ret = 0;
 
-    if (AB_panedWinEd_dialog != NULL)
+    if (AB_panedWinEd_dialog != nullptr)
     {
         if (!obj_is_pane(info->obj) && !obj_is_layers(info->obj))
             return 0;
@@ -811,7 +811,7 @@ pw_obj_reparentedOCB(
 	 * it to the pane list).
 	 */
 	parent = obj_get_parent(info->obj);
-	if (obj_get_name(info->obj) != NULL)
+	if (obj_get_name(info->obj) != nullptr)
 	{
 	    /* Either a new paned window obj was created (via
 	     * the "Make Paned Window" popup menu OR a paned
@@ -822,7 +822,7 @@ pw_obj_reparentedOCB(
 	     * need to update the panes list because that will happen
 	     * when the new paned window obj is selected. 
 	     */
-	    if ((info->old_parent != NULL) && 
+	    if ((info->old_parent != nullptr) && 
 		obj_is_paned_win(info->old_parent))
 	    {
 		if (current_pw_child == info->obj)

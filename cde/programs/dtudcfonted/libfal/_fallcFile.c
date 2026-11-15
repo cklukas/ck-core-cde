@@ -203,7 +203,7 @@ _fallcFileName(XLCd lcd, char *category)
     char *args[256];
     char *file_name = nullptr;
 
-    if(lcd == (XLCd)NULL){
+    if(lcd == (XLCd)nullptr){
 	return nullptr;
     }
 

@@ -288,7 +288,7 @@ DATA_OUT_PTR buf;
           (unsigned char) bg_color[0], (unsigned char) bg_color[1], (unsigned char) bg_color[2],
           &out_w, &out_h);
 
-       dstdata.producerObject = (ilObject) NULL;
+       dstdata.producerObject = (ilObject) nullptr;
        dstdata.pDes           = (ilImageDes *) nullptr;
        dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.pPalette       = info.pPalette;

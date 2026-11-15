@@ -251,19 +251,19 @@ get_when_attach_handler(AB_WHEN	when)
 {
     switch (when)
     {
-      case AB_WHEN_UNDEF:		return (INTERPRET_HANDLER)NULL;
+      case AB_WHEN_UNDEF:		return (INTERPRET_HANDLER)nullptr;
       case AB_WHEN_ACTIVATED:		return activate_attach_handler;
-      case AB_WHEN_AFTER_CREATED:	return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_DESTROYED:		return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_DROPPED_ON:		return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_DOUBLE_CLICKED_ON:	return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_ITEM_SELECTED:	return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_POPPED_DOWN:		return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_POPPED_UP:		return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_REPAINT_NEEDED:	return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_NUM_VALUES:		return (INTERPRET_HANDLER)NULL;
+      case AB_WHEN_AFTER_CREATED:	return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_DESTROYED:		return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_DROPPED_ON:		return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_DOUBLE_CLICKED_ON:	return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_ITEM_SELECTED:	return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_POPPED_DOWN:		return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_POPPED_UP:		return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_REPAINT_NEEDED:	return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_NUM_VALUES:		return (INTERPRET_HANDLER)nullptr;
     }
-    return (INTERPRET_HANDLER)NULL;
+    return (INTERPRET_HANDLER)nullptr;
 }
 
 static INTERPRET_HANDLER
@@ -271,19 +271,19 @@ get_when_detach_handler(AB_WHEN	when)
 {
     switch (when)
     {
-      case AB_WHEN_UNDEF:		return (INTERPRET_HANDLER)NULL;
+      case AB_WHEN_UNDEF:		return (INTERPRET_HANDLER)nullptr;
       case AB_WHEN_ACTIVATED:		return activate_detach_handler;
-      case AB_WHEN_AFTER_CREATED:	return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_DESTROYED:		return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_DROPPED_ON:		return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_DOUBLE_CLICKED_ON:	return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_ITEM_SELECTED:	return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_POPPED_DOWN:		return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_POPPED_UP:		return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_REPAINT_NEEDED:	return (INTERPRET_HANDLER)NULL;
-      case AB_WHEN_NUM_VALUES:		return (INTERPRET_HANDLER)NULL;
+      case AB_WHEN_AFTER_CREATED:	return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_DESTROYED:		return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_DROPPED_ON:		return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_DOUBLE_CLICKED_ON:	return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_ITEM_SELECTED:	return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_POPPED_DOWN:		return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_POPPED_UP:		return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_REPAINT_NEEDED:	return (INTERPRET_HANDLER)nullptr;
+      case AB_WHEN_NUM_VALUES:		return (INTERPRET_HANDLER)nullptr;
     }
-    return (INTERPRET_HANDLER)NULL;
+    return (INTERPRET_HANDLER)nullptr;
 }
 
 static ACTION_HANDLER
@@ -291,7 +291,7 @@ get_std_action_handler(AB_BUILTIN_ACTION std_act)
 {
     switch (std_act)
     {
-      case AB_STDACT_UNDEF:		return (ACTION_HANDLER)NULL;
+      case AB_STDACT_UNDEF:		return (ACTION_HANDLER)nullptr;
       case AB_STDACT_DISABLE:		return disable_action_handler;
       case AB_STDACT_ENABLE:		return enable_action_handler;
       case AB_STDACT_HIDE:		return hide_action_handler;
@@ -299,9 +299,9 @@ get_std_action_handler(AB_BUILTIN_ACTION std_act)
       case AB_STDACT_SET_TEXT:		return set_text_action_handler;
       case AB_STDACT_SET_VALUE:		return set_value_action_handler;
       case AB_STDACT_SHOW:		return show_action_handler;
-      case AB_BUILTIN_ACTION_NUM_VALUES:return (ACTION_HANDLER)NULL;
+      case AB_BUILTIN_ACTION_NUM_VALUES:return (ACTION_HANDLER)nullptr;
     }
-    return (ACTION_HANDLER)NULL;
+    return (ACTION_HANDLER)nullptr;
 }
 
 
@@ -1003,7 +1003,7 @@ get_action_handler(
     AB_ACTION_INFO	*notify_info
 )
 {
-    ACTION_HANDLER	handler = (ACTION_HANDLER)NULL;
+    ACTION_HANDLER	handler = (ACTION_HANDLER)nullptr;
 
     switch (notify_info->func_type)
     {
@@ -1358,7 +1358,7 @@ user_def_fn_handler(
     if (action_info->func_type != AB_FUNC_USER_DEF)
 	return;
 
-    if (action_info->func_value.func_name != (ISTRING)NULL)
+    if (action_info->func_value.func_name != (ISTRING)nullptr)
     printf("Call user-defined function: \"%s\"\n",
 		istr_string(action_info->func_value.func_name));
 }
@@ -1416,7 +1416,7 @@ show_help_action_handler(
 	help_obj = objxm_comp_get_subobj(c_to,AB_CFG_HELP_OBJ);
 	if(help_obj != nullptr) {
 		XtCallCallbacks(objxm_get_widget(help_obj),XmNhelpCallback,
-			(XtPointer)NULL);
+			(XtPointer)nullptr);
 	}
     }
 }
@@ -1586,7 +1586,7 @@ set_text_action_handler(
 
 	/* obtain the string */
 	txt_istr = action_info->arg_value.sval;
-	if (txt_istr != (ISTRING)NULL)
+	if (txt_istr != (ISTRING)nullptr)
 	    txt_str = istr_string(txt_istr);
 	else
 	    txt_str = Util_empty_string;
@@ -1647,7 +1647,7 @@ set_label_action_handler(
 
     /* obtain the label */
     lab_istr = action_info->arg_value.sval;
-    if (lab_istr != (ISTRING)NULL)
+    if (lab_istr != (ISTRING)nullptr)
 	lab_str = istr_string(lab_istr);
     else
 	lab_str = Util_empty_string;
@@ -1718,7 +1718,7 @@ get_menu_item_refs(
 	    /* Find our item by index in each tree rooted at a menu-reference */
 
 	    item_child = obj_get_item(child, item_index);
-	    if (item_child != (ABObj)NULL)
+	    if (item_child != (ABObj)nullptr)
 	    {
 		if (num_refs == list_size)
 		{

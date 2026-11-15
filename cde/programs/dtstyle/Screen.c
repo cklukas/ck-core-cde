@@ -738,7 +738,7 @@ build_screenDialog(
 	listStrings = MakeListStrings(savers.subList);
 	XmListAddItems (screen.saverList, listStrings, savers.saverCount, 0); 
 	XtAddCallback (screen.saverList, XmNmultipleSelectionCallback, 
-		       ListCB, (XtPointer)NULL);
+		       ListCB, (XtPointer)nullptr);
 	FreeListStrings (listStrings, savers.saverCount);        
 	
 	/* check the state to see which item(s) should be selected, if none are */
@@ -2600,7 +2600,7 @@ ButtonCB(
       
       
     case HELP_BUTTON:
-      XtCallCallbacks(style.screenDialog, XmNhelpCallback, (XtPointer)NULL);
+      XtCallCallbacks(style.screenDialog, XmNhelpCallback, (XtPointer)nullptr);
       break;
       
     default:
@@ -2835,7 +2835,7 @@ no_svr_ext_ButtonCB(
       
       
     case HELP_BUTTON:
-      XtCallCallbacks(style.screenDialog, XmNhelpCallback, (XtPointer)NULL);
+      XtCallCallbacks(style.screenDialog, XmNhelpCallback, (XtPointer)nullptr);
       break;
       
     default:

@@ -1099,9 +1099,9 @@ addPaletteCB(
         XmStringFree(string1);
 
         XtAddCallback(addDialog, XmNokCallback, addOkCB, 
-                                 (XtPointer) NULL);
+                                 (XtPointer) nullptr);
         XtAddCallback(addDialog, XmNcancelCallback, addCancelCB, 
-                                 (XtPointer) NULL);
+                                 (XtPointer) nullptr);
         XtAddCallback(addDialog, XmNhelpCallback,
             HelpRequestCB, (XtPointer)HELP_ADD_PALETTE_DIALOG);
 
@@ -1462,13 +1462,13 @@ dialogBoxCB(
 	XtUnmanageChild(edit.DialogShell);
       
       if ((addDialog != nullptr) && (XtIsManaged(addDialog)))
-	XtCallCallbacks(addDialog, XmNcancelCallback, (XtPointer)NULL);
+	XtCallCallbacks(addDialog, XmNcancelCallback, (XtPointer)nullptr);
       
       if ((deleteDialog != nullptr) && (XtIsManaged(deleteDialog)))
-	XtCallCallbacks(deleteDialog, XmNcancelCallback, (XtPointer)NULL);
+	XtCallCallbacks(deleteDialog, XmNcancelCallback, (XtPointer)nullptr);
       
       if ((colorUseDialog != nullptr) && (XtIsManaged(colorUseDialog)))
-	XtCallCallbacks(colorUseDialog, XmNcallback, (XtPointer)NULL);
+	XtCallCallbacks(colorUseDialog, XmNcallback, (XtPointer)nullptr);
       
       XtUnmanageChild(style.colorDialog);
       
@@ -1488,7 +1488,7 @@ dialogBoxCB(
       break;
       
     case HELP_BUTTON:
-      XtCallCallbacks(style.colorDialog, XmNhelpCallback, (XtPointer)NULL);
+      XtCallCallbacks(style.colorDialog, XmNhelpCallback, (XtPointer)nullptr);
       break;
       
     default:
@@ -1814,7 +1814,7 @@ colorUseExitCB(
     switch (cb->button_position)
     {
       case HELP_BUTTON:
-          XtCallCallbacks(colorUseDialog, XmNhelpCallback, (XtPointer)NULL);
+          XtCallCallbacks(colorUseDialog, XmNhelpCallback, (XtPointer)nullptr);
           break;
 
       case OK_BUTTON:
@@ -2842,7 +2842,7 @@ CreateBottomColor( void )
         XmStringFree(string);
         XtManageChild(colorDialog.addPaletteButton);
         XtAddCallback(colorDialog.addPaletteButton, XmNactivateCallback, addPaletteCB, 
-                            (XtPointer) NULL);
+                            (XtPointer) nullptr);
 
        /* Create Delete button */
         n = 0;
@@ -2858,7 +2858,7 @@ CreateBottomColor( void )
         XmStringFree(string);
         XtManageChild(colorDialog.deletePaletteButton);
         XtAddCallback(colorDialog.deletePaletteButton, XmNactivateCallback, deletePaletteCB,
-                               (XtPointer) NULL);
+                               (XtPointer) nullptr);
     }
     
 /*
@@ -2901,7 +2901,7 @@ CreateBottomColor( void )
         XmStringFree(string);
         XtManageChild(modifyColorButton);
         XtAddCallback(modifyColorButton, XmNactivateCallback, modifyColorCB, 
-                            (XtPointer) NULL);
+                            (XtPointer) nullptr);
     }
 /*
 **  Create a pushbutton for configuring DT colors

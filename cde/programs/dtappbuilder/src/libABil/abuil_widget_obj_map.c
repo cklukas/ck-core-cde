@@ -301,7 +301,7 @@ objp_type_button(
     ABObj	object
 )
 {
-    ABObj	ret_val = (ABObj)NULL;
+    ABObj	ret_val = (ABObj)nullptr;
 
     if (obj_is_container(parent) || obj_is_menu(parent))
     {
@@ -334,7 +334,7 @@ objp_type_choice(
     ABObj	object
 )
 {
-    ABObj	ret_val = (ABObj)NULL;
+    ABObj	ret_val = (ABObj)nullptr;
 
     if (obj_is_container(parent))
     {
@@ -441,7 +441,7 @@ childp_type_container(
     {
 	obj_set_type(child, AB_TYPE_ITEM);
 	obj_set_subtype(child, (int)AB_ITEM_FOR_MENUBAR);
-	if (obj_get_label(child) == (STRING)NULL)
+	if (obj_get_label(child) == (STRING)nullptr)
 	    obj_set_label(child, obj_get_name(child));
     }
     return(child);
@@ -515,7 +515,7 @@ objp_type_label(
     ABObj	object
 )
 {
-    ABObj	ret_val = (ABObj)NULL;
+    ABObj	ret_val = (ABObj)nullptr;
 
     if (obj_is_container(parent))
     {
@@ -547,7 +547,7 @@ objp_type_list(
     ABObj	object
 )
 {
-    ABObj	ret_val = (ABObj)NULL;
+    ABObj	ret_val = (ABObj)nullptr;
 
     if (obj_is_container(parent))
     {
@@ -596,7 +596,7 @@ childp_type_menu(
 {
     obj_set_type(child, AB_TYPE_ITEM);
     obj_set_subtype(child, AB_ITEM_FOR_MENU);
-    if (obj_get_label(child) == (STRING)NULL)
+    if (obj_get_label(child) == (STRING)nullptr)
 	obj_set_label(child, obj_get_name(child));
     return(child);
 }
@@ -611,7 +611,7 @@ objp_type_separator(
     ABObj	object
 )
 {
-    ABObj	ret_val = (ABObj)NULL;
+    ABObj	ret_val = (ABObj)nullptr;
 
     if (obj_is_container(parent))
     {
@@ -644,7 +644,7 @@ objp_type_scale(
     ABObj	object
 )
 {
-    ABObj	ret_val = (ABObj)NULL;
+    ABObj	ret_val = (ABObj)nullptr;
 
     if (obj_is_container(parent))
     {
@@ -676,7 +676,7 @@ objp_type_text_field(
     ABObj	object
 )
 {
-    ABObj	ret_val = (ABObj)NULL;
+    ABObj	ret_val = (ABObj)nullptr;
 
     if (obj_is_container(parent))
     {

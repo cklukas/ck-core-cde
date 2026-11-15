@@ -46,9 +46,12 @@ cc = shlex.split(os.environ.get("CC", "cc"))
 flags = ["-std=gnu23", "-w", "-D_DEFAULT_SOURCE", "-DUNIXCONN", "-DTCPCONN", "-DXDMCP", "-DHASXDMAUTH",
          "-DANSICPP", "-DNeedWidePrototypes=0", "-I", str(args.source.parents[1] / "include")]
 libs = ["-lXdmcp", "-lXau"]
-if sys.platform == "darwin":        # XQuartz
-    flags += ["-I/opt/X11/include"]
-    libs = ["-L/opt/X11/lib", "-Wl,-rpath,/opt/X11/lib"] + libs
+if sys.platform == "darwin":        # XQuartz or Homebrew X11
+    for prefix in ("/opt/X11", "/opt/homebrew", "/usr/local"):
+        if os.access(f"{prefix}/include/X11", os.R_OK):
+            flags += [f"-I{prefix}/include"]
+            libs = [f"-L{prefix}/lib", f"-Wl,-rpath,{prefix}/lib"] + libs
+            break
 env = dict(os.environ, ASAN_OPTIONS="detect_leaks=0:abort_on_error=0:symbolize=0",
            UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1")
 

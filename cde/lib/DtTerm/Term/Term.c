@@ -183,12 +183,12 @@ static XtResource resources[] =
 	DtNstatusChangeCallback, DtCCallback, XmRCallback,
 	sizeof(XtCallbackList),
 	XtOffsetOf( struct _DtTermRec, vt.statusChangeCallback),
-	XmRPointer, (XtPointer) NULL
+	XmRPointer, (XtPointer) nullptr
     },
     {
 	DtNverticalScrollBar, DtCVerticalScrollBar, XmRWidget, sizeof(Widget),
 	XtOffsetOf( struct _DtTermRec, vt.verticalScrollBar),
-	XmRImmediate, (XtPointer) NULL
+	XmRImmediate, (XtPointer) nullptr
     },
 #endif	/* DKS */
 };
@@ -413,7 +413,7 @@ externaldef(vtclassrec) DtTermClassRec dtTermClassRec =
 	/* class_part_init	*/	ClassPartInitialize,
 	/* class_inited		*/	FALSE,
 	/* initialize		*/	Initialize,
-	/* initialize_hook	*/	(XtArgsProc) NULL,
+	/* initialize_hook	*/	(XtArgsProc) nullptr,
 	/* realize		*/	XtInheritRealize,
 	/* actions		*/	actionsList,
 	/* num_actions		*/	XtNumber(actionsList),
@@ -428,16 +428,16 @@ externaldef(vtclassrec) DtTermClassRec dtTermClassRec =
 	/* resize		*/	XtInheritResize, /* Resize */
 	/* expose		*/	XtInheritExpose,
 	/* set_values		*/	SetValues,
-	/* set_values_hook	*/	(XtArgsFunc) NULL,
+	/* set_values_hook	*/	(XtArgsFunc) nullptr,
 	/* set_values_almost	*/	XtInheritSetValuesAlmost,
-	/* get_values_hook	*/	(XtArgsProc) NULL,
-	/* accept_focus		*/	(XtAcceptFocusProc) NULL,
+	/* get_values_hook	*/	(XtArgsProc) nullptr,
+	/* accept_focus		*/	(XtAcceptFocusProc) nullptr,
 	/* version		*/	XtVersion,
-	/* callback_private	*/	(XtPointer) NULL,
+	/* callback_private	*/	(XtPointer) nullptr,
 	/* tm_table		*/	defaultTranslations,
-	/* query_geometry	*/	(XtGeometryHandler) NULL,
-	/* display_accelerator	*/	(XtStringProc) NULL,
-	/* extension		*/	(XtPointer) NULL,
+	/* query_geometry	*/	(XtGeometryHandler) nullptr,
+	/* display_accelerator	*/	(XtStringProc) nullptr,
+	/* extension		*/	(XtPointer) nullptr,
     },
 
     /* primitive class rec */
@@ -448,7 +448,7 @@ externaldef(vtclassrec) DtTermClassRec dtTermClassRec =
 	/* arm_and_activate		*/  nullptr,
 	/* get resources		*/  (XmSyntheticResource *) GetResources,
 	/* num get_resources		*/  XtNumber(GetResources),
-	/* extension			*/  (XtPointer) NULL,
+	/* extension			*/  (XtPointer) nullptr,
     },
 
     /* term class record */

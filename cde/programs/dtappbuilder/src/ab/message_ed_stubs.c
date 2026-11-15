@@ -125,10 +125,10 @@ typedef enum {
  */
 
 MsgEditorSettingsRec 	msg_editor_settings_rec;
-ABObj			MessageModule	= (ABObj) NULL;
-static Widget   	MsgObjList	= (Widget) NULL;
-static Widget   	MsgModOpmenu	= (Widget) NULL;
-static Widget   	NoModulesItem	= (Widget) NULL;
+ABObj			MessageModule	= (ABObj) nullptr;
+static Widget   	MsgObjList	= (Widget) nullptr;
+static Widget   	MsgModOpmenu	= (Widget) nullptr;
+static Widget   	NoModulesItem	= (Widget) nullptr;
 
 /*
  * End declarations of global widgets
@@ -258,7 +258,7 @@ msgEd_show_dialog(void)
     ABObj	current_module = proj_get_cur_module();
 
     /* If there is no Message Editor, create it */
-    if (AB_msgEd_dialog == (Widget)NULL)
+    if (AB_msgEd_dialog == (Widget)nullptr)
     {
 	/* Create and manage the Message Editor */
         AB_msgEd_dialog = msg_editor_init(&dtb_message_ed_dialog, 
@@ -299,16 +299,16 @@ msgEd_show_dialog(void)
         XtVaSetValues(dtb_message_ed_dialog.dialog_form,
                 XmNresizePolicy,        XmRESIZE_ANY,
                 XmNallowResize,         True,
-                NULL);
+                nullptr);
         /*
          * Setup dialog to participate in dtbuilder window protocol
          */
         ab_register_window(AB_msgEd_dialog, AB_WIN_DIALOG, 
 		WindowHidden, AB_toplevel, AB_WPOS_TILE_HORIZONTAL,
-		msgEdP_prevent_closeCB, NULL);
+		msgEdP_prevent_closeCB, nullptr);
     }
 
-    if (AB_msgEd_dialog != NULL)
+    if (AB_msgEd_dialog != nullptr)
     {
 
 	/* If the message object that was last selected is in
@@ -377,7 +377,7 @@ msg_editor_init(
          * Hook widgets up to Message Editor
          */
         mes->prop_sheet = msg_cgen->ctrl_panel2;
-        mes->current_obj = NULL;
+        mes->current_obj = nullptr;
 
         /* Name */
         prop_field_init(&(mes->name), msg_cgen->name_field_label,
@@ -408,7 +408,7 @@ msg_editor_init(
 	 */
         for(i=0; i < n; i++)
             XtAddCallback(item[i], XmNactivateCallback,
-                        typeCB, (XtPointer)NULL);
+                        typeCB, (XtPointer)nullptr);
 
 	/* Message textpane label */
 	mes->msg_textp_label = msg_cgen->msg_textp_label;
@@ -429,10 +429,10 @@ msg_editor_init(
 	 * to NULL if the user specifies no button.
 	 */
         XtAddCallback(item[0], XmNvalueChangedCallback,
-                        buttonCB, (XtPointer)NULL);
+                        buttonCB, (XtPointer)nullptr);
  
         /* Action1 (OK) Button Label */
-	prop_field_init(&(mes->action1_label), NULL,
+	prop_field_init(&(mes->action1_label), nullptr,
 			msg_cgen->action1_field, msg_cgen->action1_cb);
  
         /* Action2 (Extra) Button */  
@@ -447,10 +447,10 @@ msg_editor_init(
 	 * to NULL if the user specifies no button.
 	 */
 	XtAddCallback(item[0], XmNvalueChangedCallback,
-                        buttonCB, (XtPointer)NULL);
+                        buttonCB, (XtPointer)nullptr);
  
         /* Action2 (Extra) Button Label */
-        prop_field_init(&(mes->action2_label), NULL,
+        prop_field_init(&(mes->action2_label), nullptr,
 			msg_cgen->action2_field, msg_cgen->action2_cb);
 
         /* Action3 (Extra) Button */
@@ -465,10 +465,10 @@ msg_editor_init(
 	 * to NULL if the user specifies no button.
 	 */
 	XtAddCallback(item[0], XmNvalueChangedCallback,
-                        buttonCB, (XtPointer)NULL);
+                        buttonCB, (XtPointer)nullptr);
  
         /* Action3 (Extra) Button Label */
-        prop_field_init(&(mes->action3_label), NULL,
+        prop_field_init(&(mes->action3_label), nullptr,
                         msg_cgen->action3_field, msg_cgen->action3_cb);
 
         /* Cancel Button */
@@ -517,7 +517,7 @@ msg_editor_init(
     else
     {
         util_dprintf(3, "msg_editor_init: could not initialize Message Editor\n");
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -527,7 +527,7 @@ msg_editor_clear(void)
     MsgEditorSettingsRec       *mes = &msg_editor_settings_rec;
     int				sel_pos = 0;
 
-    if (mes->current_obj == NULL)
+    if (mes->current_obj == nullptr)
         return OK;
 
     /* Clear Name */
@@ -576,7 +576,7 @@ msg_editor_clear(void)
     /* Clear Default Button */
     prop_options_set_value(&(mes->default_btn), (XtPointer)ACTION2_ITEM_KEY, False);
 
-    mes->current_obj = NULL;
+    mes->current_obj = nullptr;
  
     /* Check if a message object is selected in the list.
      * If so, deselect it, since we're clearing out all
@@ -608,9 +608,9 @@ msg_editor_load(
     AB_DEFAULT_BUTTON		button = AB_DEFAULT_BTN_UNDEF;
     MsgEditorSettingsRec    	*mes = &msg_editor_settings_rec;
 
-    if (obj == NULL)
+    if (obj == nullptr)
     {
-        if (mes->current_obj != NULL)
+        if (mes->current_obj != nullptr)
             obj = mes->current_obj;
         else
 	    return ERROR;
@@ -767,7 +767,7 @@ buttonCB(
     int			 button;
     MsgEditorSettingsRec *mes = &msg_editor_settings_rec;
  
-    XtVaGetValues(item, XmNuserData, &button, NULL);
+    XtVaGetValues(item, XmNuserData, &button, nullptr);
     if (state->set)
     {
         setup_btn_lbl_field(button, True);
@@ -820,10 +820,10 @@ typeCB(
 )
 {
     int                 	value;
-    STRING			label = NULL;
+    STRING			label = nullptr;
     MsgEditorSettingsRec	*mes = &msg_editor_settings_rec;
  
-    XtVaGetValues(item, XmNuserData, &value, NULL);
+    XtVaGetValues(item, XmNuserData, &value, nullptr);
 
     /* Change button labels to their default values, which
      * depend upon the type of messageBox that was chosen.
@@ -1201,13 +1201,13 @@ obj_updateOCB(
     ObjEvUpdateInfo     info
 )
 {
-    Widget      	item = NULL;
+    Widget      	item = nullptr;
     int			iRet = 0, numModItems = 0;
     AB_TRAVERSAL        trav;
-    ABObj               mod = NULL;
+    ABObj               mod = nullptr;
     ABObj		project = proj_get_project();
 
-    if (AB_msgEd_dialog != NULL)
+    if (AB_msgEd_dialog != nullptr)
     {
         if ( !obj_is_defined(info->obj) ||
 	     (!obj_is_project(info->obj) && 
@@ -1236,8 +1236,8 @@ obj_updateOCB(
 		}
 
 		iRet = update_mod_opmenu(MOD_ADD, obj_get_name(info->obj),
-					 NULL, &item, &numModItems);
-		if (item != NULL)
+					 nullptr, &item, &numModItems);
+		if (item != nullptr)
 		{
 		    XtAddCallback(item, XmNactivateCallback,
 			    change_msg_moduleCB, (XtPointer)info->obj);
@@ -1246,7 +1246,7 @@ obj_updateOCB(
 		     * created, or imported, then set it to be
 		     * the current message module.
 		     */
-		    if (MessageModule == NULL)
+		    if (MessageModule == nullptr)
 		    {
 			ui_optionmenu_change_label(MsgModOpmenu, 
 				obj_get_name(info->obj));
@@ -1257,7 +1257,7 @@ obj_updateOCB(
 	    else	/* Hidden Module */
 	    {
                 iRet = update_mod_opmenu(MOD_DELETE, obj_get_name(info->obj),
-                                         NULL, &item, &numModItems);
+                                         nullptr, &item, &numModItems);
                 /* Check if deleting the last module in the
                  * module optionmenu. 
                  */
@@ -1272,7 +1272,7 @@ obj_updateOCB(
                     XtManageChild(NoModulesItem);
 		    ui_optionmenu_change_label(MsgModOpmenu, 
 			msgEd_strings[MSG_ED_NO_MODULES_STR]);
-                    MessageModule = (ABObj) NULL;
+                    MessageModule = (ABObj) nullptr;
                 }
 		/* Check if deleting the current module. */
 		else if (MessageModule == info->obj)
@@ -1281,7 +1281,7 @@ obj_updateOCB(
                      * optionmenu the current Module.
                      */
                     for (trav_open(&trav, project, AB_TRAV_MODULES);
-                        (mod = trav_next(&trav)) != NULL; )
+                        (mod = trav_next(&trav)) != nullptr; )
                     {
 			if  ( obj_is_defined(mod) &&
                               obj_has_flag(mod, MappedFlag) &&
@@ -1299,7 +1299,7 @@ obj_updateOCB(
 	    }
 	}
 	/* Populate the Message Editor list with messages */
-	if (MsgObjList != NULL)
+	if (MsgObjList != nullptr)
 	{
 	    iRet = abobj_list_obj_updated(MsgObjList, info, 
 				objlist_test_func);
@@ -1318,12 +1318,12 @@ obj_destroyedOCB(
 )
 {
     int			iRet = 0, numModItems = 0;
-    Widget		item = NULL;
+    Widget		item = nullptr;
     AB_TRAVERSAL	trav;
-    ABObj		mod = NULL;
+    ABObj		mod = nullptr;
     ABObj		project = proj_get_project();
 
-    if (AB_msgEd_dialog != NULL)
+    if (AB_msgEd_dialog != nullptr)
     {
         if ( !obj_is_defined(info->obj) ||
 	     (!obj_is_project(info->obj) 
@@ -1343,13 +1343,13 @@ obj_destroyedOCB(
 	    ui_set_active(dtb_message_ed_dialog.ok_button, False);
 	    ui_set_active(dtb_message_ed_dialog.apply_button, False);
 	    ui_set_active(dtb_message_ed_dialog.reset_button, False);
-	    MessageModule = (ABObj) NULL;
+	    MessageModule = (ABObj) nullptr;
 	    XtManageChild(NoModulesItem);	
 	}
 	else if (obj_is_module(info->obj))
 	{
             iRet = update_mod_opmenu(MOD_DELETE, obj_get_name(info->obj),
-                                     NULL, &item, &numModItems);
+                                     nullptr, &item, &numModItems);
 	    /* Check if deleting the last module in the
 	     * module optionmenu.
 	     */
@@ -1364,7 +1364,7 @@ obj_destroyedOCB(
 		XtManageChild(NoModulesItem);
 		ui_optionmenu_change_label(MsgModOpmenu, 
 			msgEd_strings[MSG_ED_NO_MODULES_STR]);
-		MessageModule = (ABObj) NULL;
+		MessageModule = (ABObj) nullptr;
 	    }
 	    /* Check if deleting the current module. */
 	    else if (MessageModule == info->obj)
@@ -1373,7 +1373,7 @@ obj_destroyedOCB(
 		 * optionmenu the current Module.
 		 */
 		for (trav_open(&trav, project, AB_TRAV_MODULES);
-		    (mod = trav_next(&trav)) != NULL; )
+		    (mod = trav_next(&trav)) != nullptr; )
 		{
 		    if	( obj_is_defined(mod) &&
 			  obj_has_flag(mod, MappedFlag) &&
@@ -1404,11 +1404,11 @@ obj_renamedOCB(
     ObjEvAttChangeInfo    info
 )
 {
-    Widget      list = NULL, item = NULL; 
+    Widget      list = nullptr, item = nullptr; 
     int		iRet = 0, numModItems = 0;
-    STRING	mod_name = NULL;
+    STRING	mod_name = nullptr;
  
-    if (AB_msgEd_dialog != NULL) 
+    if (AB_msgEd_dialog != nullptr) 
     { 
         if ( !obj_is_defined(info->obj) ||
 	     (!obj_is_module(info->obj) && 
@@ -1421,12 +1421,12 @@ obj_renamedOCB(
         if (obj_is_module(info->obj))
 	{
             mod_name = obj_get_name(info->obj);
-            if (mod_name == NULL)
+            if (mod_name == nullptr)
 	    {
                 return -1;
 	    }
  
-            if (info->old_name != NULL)
+            if (info->old_name != nullptr)
 	    {
                 iRet = update_mod_opmenu(MOD_REPLACE, 
 					 istr_string(info->old_name),
@@ -1441,7 +1441,7 @@ obj_renamedOCB(
 	     * the new name.  Otherwise let the obj_updateCB
 	     * handle adding a newly created message object.
 	     */
-	    if (info->old_name != NULL)
+	    if (info->old_name != nullptr)
 	    {
 		iRet = abobj_list_obj_renamed(MsgObjList, info->obj, 
 			istr_string(info->old_name), objlist_test_func);
@@ -1464,7 +1464,7 @@ msgEdP_msgpane_init(
 
     /* Add Callback to load message object when selected from list */
     XtAddCallback(cgen->msg_list, XmNbrowseSelectionCallback,
-            objlist_selectCB, (XtPointer)NULL);
+            objlist_selectCB, (XtPointer)nullptr);
 
     return (numModItems);
 }
@@ -1475,14 +1475,14 @@ build_module_opmenu(
 )
 {
     AB_TRAVERSAL	trav;
-    ABObj		project, mod = NULL;
-    STRING		name = NULL;
-    Widget		item = NULL;
+    ABObj		project, mod = nullptr;
+    STRING		name = nullptr;
+    Widget		item = nullptr;
     int			i, numModItems = 0, iRet = 0;
 
     project = proj_get_project();
     for( (i = 0, trav_open(&trav, project, AB_TRAV_MODULES));
-         (mod = trav_next(&trav)) != NULL; i++)
+         (mod = trav_next(&trav)) != nullptr; i++)
     {
 	if (obj_has_flag(mod, MappedFlag) && obj_is_defined(mod))
 	{
@@ -1497,7 +1497,7 @@ build_module_opmenu(
 	    }
 
 	    name = obj_get_name(mod);
-	    iRet = update_mod_opmenu(MOD_ADD, name, NULL, &item, &numModItems);
+	    iRet = update_mod_opmenu(MOD_ADD, name, nullptr, &item, &numModItems);
 	    if (iRet != -1)
 	    {
 		XtAddCallback(item, XmNactivateCallback, 
@@ -1530,7 +1530,7 @@ objlist_selectCB(
     XmListCallbackStruct *listdata = call_data;
     ABObj               	module;
     ABObj               	selected_obj;
-    STRING              	name = NULL;
+    STRING              	name = nullptr;
     MsgEditorSettingsRec        *mes = &msg_editor_settings_rec;
  
     name = objxm_xmstr_to_str(listdata->item);
@@ -1545,7 +1545,7 @@ objlist_selectCB(
              * load in a special way that allows the user to abort
              * if they so choose.
              */
-            if ((mes->current_obj != NULL) &&
+            if ((mes->current_obj != nullptr) &&
                   prop_changebars_pending(mes->prop_sheet)) 
 	    {
                 (void) msgEdP_do_auto_apply(widget, 
@@ -1580,7 +1580,7 @@ objlist_load(
     ABObj           proj = proj_get_project();
     int             num_items = 0;
  
-    if (proj == NULL || list == NULL)
+    if (proj == nullptr || list == nullptr)
         return;
  
     num_items = abobj_list_load(list, proj, objlist_test_func);
@@ -1595,7 +1595,7 @@ objlist_test_func(
     ABObj test_obj
 )
 {
-    ABObj	module = NULL;
+    ABObj	module = nullptr;
     BOOL	should_add = FALSE;
 
     module = obj_get_module(test_obj);
@@ -1627,7 +1627,7 @@ verify_default_btn(void)
 			&dtb_message_ed_act1_def_btn_msg);
 		(void)dtb_show_modal_message(
 			mes->action1_button.checkbox,
-			&dtb_message_ed_act1_def_btn_msg,NULL,NULL,NULL);
+			&dtb_message_ed_act1_def_btn_msg,nullptr,nullptr,nullptr);
 		validButton = FALSE;
 	    }
 	    break;
@@ -1640,7 +1640,7 @@ verify_default_btn(void)
 			&dtb_message_ed_act2_def_btn_msg);
 		(void)dtb_show_modal_message(
 			mes->action2_button.checkbox,
-			&dtb_message_ed_act2_def_btn_msg,NULL,NULL,NULL);
+			&dtb_message_ed_act2_def_btn_msg,nullptr,nullptr,nullptr);
 		validButton = FALSE;
 	    }
 	    break;
@@ -1653,7 +1653,7 @@ verify_default_btn(void)
                         &dtb_message_ed_act3_def_btn_msg);
 		(void)dtb_show_modal_message(
 			mes->action3_button.checkbox,
-                        &dtb_message_ed_act3_def_btn_msg,NULL,NULL,NULL);
+                        &dtb_message_ed_act3_def_btn_msg,nullptr,nullptr,nullptr);
                 validButton = FALSE;
             }
             break;
@@ -1666,7 +1666,7 @@ verify_default_btn(void)
 			&dtb_message_ed_cancel_def_btn_msg);
 		(void)dtb_show_modal_message(
 			mes->cancel_button.checkbox,
-			&dtb_message_ed_cancel_def_btn_msg,NULL,NULL,NULL);
+			&dtb_message_ed_cancel_def_btn_msg,nullptr,nullptr,nullptr);
 		validButton = FALSE;
 	    }
 	    break;
@@ -1683,7 +1683,7 @@ verify_label(void)
 {
     MsgEditorSettingsRec *mes = &msg_editor_settings_rec;
     BOOL		 validLabel = TRUE;
-    STRING		 label = (STRING) NULL;
+    STRING		 label = (STRING) nullptr;
 
     if ( prop_checkbox_get_value(&(mes->action1_button),
                 ACTION1_ITEM_KEY) )
@@ -1694,7 +1694,7 @@ verify_label(void)
 	    dtb_message_ed_act1_lbl_msg_initialize(
 			&dtb_message_ed_act1_lbl_msg);
 	    (void)dtb_show_modal_message(mes->action1_label.field,
-			&dtb_message_ed_act1_lbl_msg, NULL, NULL,NULL);
+			&dtb_message_ed_act1_lbl_msg, nullptr, nullptr,nullptr);
 	    validLabel = FALSE;
 	}
     }
@@ -1708,7 +1708,7 @@ verify_label(void)
 	    dtb_message_ed_act2_lbl_msg_initialize(
 			&dtb_message_ed_act2_lbl_msg);
 	    (void)dtb_show_modal_message(mes->action2_label.field,
-			&dtb_message_ed_act2_lbl_msg, NULL, NULL,NULL);
+			&dtb_message_ed_act2_lbl_msg, nullptr, nullptr,nullptr);
 	    validLabel = FALSE;
 	}
     }
@@ -1723,7 +1723,7 @@ verify_label(void)
                         &dtb_message_ed_act3_lbl_msg);
 
 	    (void)dtb_show_modal_message(mes->action3_label.field,
-                        &dtb_message_ed_act3_lbl_msg, NULL, NULL,NULL);
+                        &dtb_message_ed_act3_lbl_msg, nullptr, nullptr,nullptr);
             validLabel = FALSE;
         }
     }
@@ -1751,7 +1751,7 @@ verify_buttons(void)
 	dtb_message_ed_no_btns_msg_initialize(
 		&dtb_message_ed_no_btns_msg);
 	(void)dtb_show_modal_message(AB_msgEd_dialog,
-                        &dtb_message_ed_no_btns_msg, NULL, NULL,NULL);
+                        &dtb_message_ed_no_btns_msg, nullptr, nullptr,nullptr);
 	hasButtons = FALSE;
     }
 
@@ -1795,9 +1795,9 @@ msgEdP_add_msgCB(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    ABObj			msg_obj = NULL;
+    ABObj			msg_obj = nullptr;
     MsgEditorSettingsRec        *mes = &msg_editor_settings_rec;
-    DtbMessageEdDialogInfo	cgen = NULL;
+    DtbMessageEdDialogInfo	cgen = nullptr;
     int				ret = 0;
     DTB_MODAL_ANSWER		answer = DTB_ANSWER_NONE;
 
@@ -1806,11 +1806,11 @@ msgEdP_add_msgCB(
      * load in a special way that allows the user to abort it
      * if they so choose.
      */  
-    if ((mes->current_obj != NULL) &&
+    if ((mes->current_obj != nullptr) &&
            prop_changebars_pending(mes->prop_sheet))
     {    
         answer = msgEdP_do_auto_apply(MsgObjList,
-                        mes->current_obj, (ABObj) NULL);
+                        mes->current_obj, (ABObj) nullptr);
 	if (answer == DTB_ANSWER_CANCEL)
 	    return;
     }
@@ -1875,19 +1875,19 @@ msgEdP_del_msgCB(
 {
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
-    DtbMessageEdDialogInfo	cgen = NULL;
-    Widget			list = NULL;
-    ABObj               	module = NULL;
-    ABObj               	selected_obj = NULL;
-    STRING              	name = NULL;
-    XmStringTable		selected_items = NULL;
+    DtbMessageEdDialogInfo	cgen = nullptr;
+    Widget			list = nullptr;
+    ABObj               	module = nullptr;
+    ABObj               	selected_obj = nullptr;
+    STRING              	name = nullptr;
+    XmStringTable		selected_items = nullptr;
     int				ret = 0;
     MsgEditorSettingsRec        *mes = &msg_editor_settings_rec;
 
     cgen = (DtbMessageEdDialogInfo) clientData;
     list = cgen->msg_list;
-    XtVaGetValues(list, XmNselectedItems, &selected_items, NULL);
-    if (selected_items == NULL)
+    XtVaGetValues(list, XmNselectedItems, &selected_items, nullptr);
+    if (selected_items == nullptr)
 	return;
 
     name = objxm_xmstr_to_str(selected_items[0]);
@@ -1900,7 +1900,7 @@ msgEdP_del_msgCB(
 	{
 	    obj_destroy(selected_obj);
 	}
-	mes->current_obj = NULL;
+	mes->current_obj = nullptr;
 	abobj_set_save_needed(MessageModule, TRUE);
     }
 
@@ -1923,7 +1923,7 @@ msgEdP_show_msgCB(
     DtbMessageDataRec		mbr;
     MsgEditorSettingsRec        *mes = &msg_editor_settings_rec;
     ABObj			project = obj_get_project(mes->current_obj);
-    STRING			str = (STRING) NULL;
+    STRING			str = (STRING) nullptr;
     DTB_BUTTON			default_btn = DTB_NONE;
     unsigned char		dialogType = 0;
 
@@ -1931,7 +1931,7 @@ msgEdP_show_msgCB(
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
-    if ((mes->current_obj == NULL) || 
+    if ((mes->current_obj == nullptr) || 
 	!obj_is_message(mes->current_obj))
     {
 	return;
@@ -1970,7 +1970,7 @@ msgEdP_show_msgCB(
     }
     else
     {
-	mbr.title = NULL;
+	mbr.title = nullptr;
     }
 
     /* Set message dialog message string */
@@ -1981,7 +1981,7 @@ msgEdP_show_msgCB(
     }
     else 
     {   
-        mbr.message = NULL; 
+        mbr.message = nullptr; 
     }    
 
     /* Set message dialog action1 button (OK) label */
@@ -1992,7 +1992,7 @@ msgEdP_show_msgCB(
     }
     else 
     {   
-        mbr.action1_label = NULL; 
+        mbr.action1_label = nullptr; 
     }    
 
     /* Set message dialog action2 button (extra) label */
@@ -2003,7 +2003,7 @@ msgEdP_show_msgCB(
     }
     else 
     {   
-        mbr.action2_label = NULL; 
+        mbr.action2_label = nullptr; 
     }    
 
     /* Set message dialog action3 button (extra) label */
@@ -2014,7 +2014,7 @@ msgEdP_show_msgCB(
     }
     else
     {
-        mbr.action3_label = NULL;
+        mbr.action3_label = nullptr;
     }
 
     /* Set message dialog cancel button */
@@ -2047,25 +2047,25 @@ msgEdP_show_msgCB(
     mbr.default_button = default_btn;
     
     /* Set all callbacks to NULL */
-    mbr.action1_callback = NULL;
-    mbr.action2_callback = NULL;
-    mbr.action3_callback = NULL;
-    mbr.cancel_callback = NULL;
+    mbr.action1_callback = nullptr;
+    mbr.action2_callback = nullptr;
+    mbr.action3_callback = nullptr;
+    mbr.cancel_callback = nullptr;
 
     /* Set Help Data to NULL */
-    mbr.help_data.help_text = NULL;
+    mbr.help_data.help_text = nullptr;
     mbr.help_data.help_volume = "";
     mbr.help_data.help_locationID = "";
 
     /* Popup the message dialog */
-    dtb_show_message(mes->prop_sheet, &mbr, NULL, NULL);
+    dtb_show_message(mes->prop_sheet, &mbr, nullptr, nullptr);
 
     /* Free data */
-    if (mbr.title != NULL) 	XmStringFree(mbr.title);
-    if (mbr.message != NULL) 	XmStringFree(mbr.message);
-    if (mbr.action1_label != NULL) XmStringFree(mbr.action1_label);
-    if (mbr.action2_label != NULL) XmStringFree(mbr.action2_label);
-    if (mbr.action3_label != NULL) XmStringFree(mbr.action3_label);
+    if (mbr.title != nullptr) 	XmStringFree(mbr.title);
+    if (mbr.message != nullptr) 	XmStringFree(mbr.message);
+    if (mbr.action1_label != nullptr) XmStringFree(mbr.action1_label);
+    if (mbr.action2_label != nullptr) XmStringFree(mbr.action2_label);
+    if (mbr.action3_label != nullptr) XmStringFree(mbr.action3_label);
 
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -2087,8 +2087,8 @@ msgEdP_show_connCB(
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
     conn_set_source(mes->current_obj);
-    conn_set_target(NULL);
-    conn_popup_dialog(widget, (XtPointer)0, NULL);
+    conn_set_target(nullptr);
+    conn_popup_dialog(widget, (XtPointer)0, nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -2110,7 +2110,7 @@ msgEdP_show_helpCB(
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
     ab_set_help_obj(mes->current_obj);
-    ab_popup_help(widget,(XtPointer)0,NULL);
+    ab_popup_help(widget,(XtPointer)0,nullptr);
 
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -2131,7 +2131,7 @@ msgEdP_resetCB(
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
-    if (mes->current_obj != NULL)
+    if (mes->current_obj != nullptr)
     {
 	msg_editor_load(mes->current_obj);
     }
@@ -2156,7 +2156,7 @@ msgEdP_okCB(
     
     /*** DTB_USER_CODE_START vvv Add C code below vvv ***/
 
-    if (mes->current_obj != NULL)
+    if (mes->current_obj != nullptr)
     {
 	ChangesApplied = apply_changes(mes->current_obj);
     }
@@ -2207,7 +2207,7 @@ apply_changes(
 )
 {
     MsgEditorSettingsRec       *mes = &msg_editor_settings_rec;
-    STRING                      value = NULL;
+    STRING                      value = nullptr;
     ABObj			module = obj_get_module(obj);
  
     if (!verify_name() || !verify_default_btn() 
@@ -2332,20 +2332,20 @@ msgEdP_do_auto_apply(
 {
     DTB_MODAL_ANSWER    answer = DTB_ANSWER_NONE;
     char                buffer[256];
-    STRING              old_name = NULL,
-                        new_name = NULL;
+    STRING              old_name = nullptr,
+                        new_name = nullptr;
     BOOL                ChangingObjects = FALSE,
                         ChangesApplied = FALSE;
-    XmString            xm_buf = (XmString) NULL;
-    DtbObjectHelpData   help_data = NULL;
+    XmString            xm_buf = (XmString) nullptr;
+    DtbObjectHelpData   help_data = nullptr;
 
     *buffer = 0;
-    if (old_obj == (ABObj) NULL)
+    if (old_obj == (ABObj) nullptr)
         return (DTB_ANSWER_CANCEL);
     else
         old_name = abobj_get_moduled_name(old_obj);
 
-    if (new_obj == (ABObj) NULL)
+    if (new_obj == (ABObj) nullptr)
         new_name = "";
     else
         new_name = abobj_get_moduled_name(new_obj);
@@ -2353,7 +2353,7 @@ msgEdP_do_auto_apply(
     /* Check for adding a new message auto-apply vs. 
      * same object auto-apply.
      */
-    if( (new_obj != (ABObj) NULL) && (new_obj != old_obj) )
+    if( (new_obj != (ABObj) nullptr) && (new_obj != old_obj) )
         ChangingObjects = TRUE;
 
     if (dtb_app_resource_rec.implied_apply == True)
@@ -2361,8 +2361,8 @@ msgEdP_do_auto_apply(
     else
     {
     	help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
-    	help_data->help_volume = NULL;
-    	help_data->help_locationID = NULL;
+    	help_data->help_volume = nullptr;
+    	help_data->help_locationID = nullptr;
  
     	if (ChangingObjects)
     	{
@@ -2375,7 +2375,7 @@ msgEdP_do_auto_apply(
     	}
     	else
     	{
-            if (new_obj != (ABObj) NULL)
+            if (new_obj != (ABObj) nullptr)
        	    {
 		sprintf(buffer, CATGETS(Dtb_project_catd, 100, 35,
                 "Properties for \"%s\" have been modified but not\
@@ -2400,7 +2400,7 @@ msgEdP_do_auto_apply(
     	xm_buf = XmStringCreateLocalized(buffer);
     	dtb_message_ed_wrn_msg_initialize(&dtb_message_ed_wrn_msg);
     	answer = dtb_show_modal_message(list, &dtb_message_ed_wrn_msg,
-                                    xm_buf, help_data, NULL);
+                                    xm_buf, help_data, nullptr);
     	XmStringFree(xm_buf);
     	util_free(help_data);
     }
@@ -2444,8 +2444,8 @@ msgEdP_do_auto_apply(
             break;
     }        
 
-    if (old_obj != (ABObj)NULL) XtFree(old_name);
-    if (new_obj != (ABObj)NULL) XtFree(new_name);
+    if (old_obj != (ABObj)nullptr) XtFree(old_name);
+    if (new_obj != (ABObj)nullptr) XtFree(new_name);
  
     /* Pass along the answer in case the caller needs it */
     return (answer);
@@ -2469,7 +2469,7 @@ msgEdP_prevent_closeCB(
      * If there are pending changes for the current object,
      * handle the implied auto-apply.
      */
-    if	( (mes->current_obj != NULL) &&
+    if	( (mes->current_obj != nullptr) &&
 	  prop_changebars_pending(mes->prop_sheet)
 	)
     {
@@ -2497,20 +2497,20 @@ update_mod_opmenu(
 )
 {
     static int	NumModItems = 0;
-    Widget	item = NULL;
+    Widget	item = nullptr;
     int		iRet = 0;
 
     switch (op)
     {
 	case MOD_ADD:
-	    if (item_str != NULL)
+	    if (item_str != nullptr)
 	    {
 		/* If the item is not already in the optionmenu, add it. */
 		item = ui_optionmenu_find_item( MsgModOpmenu, item_str);
-		if (item == NULL)
+		if (item == nullptr)
 		{
 		    item = ui_optionmenu_add_item(MsgModOpmenu, item_str);
-		    if (item != NULL)
+		    if (item != nullptr)
 			NumModItems++;
 		    else
 			iRet = -1;
@@ -2522,7 +2522,7 @@ update_mod_opmenu(
 	    }
 	break;
 	case MOD_DELETE: 
-	    if (item_str != NULL)
+	    if (item_str != nullptr)
 	    {
 		iRet = ui_optionmenu_delete_item(MsgModOpmenu, item_str);
 		if (iRet == 0) NumModItems--;
@@ -2533,7 +2533,7 @@ update_mod_opmenu(
 	    }
 	break;
 	case MOD_REPLACE:
- 	    if ((item_str != NULL) && (new_item_str != NULL))
+ 	    if ((item_str != nullptr) && (new_item_str != nullptr))
 	    {
 		item = ui_optionmenu_replace_item(MsgModOpmenu, 
 					item_str, new_item_str);

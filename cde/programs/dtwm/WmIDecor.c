@@ -86,7 +86,7 @@ static GC GetOpenIconFillGC (ClientData *pcd)
     if (pSD->pSecondaryPixelSet)
     {
 	color = pSD->pSecondaryPixelSet->sc;
-	pixmap = (Pixmap)NULL;
+	pixmap = None;
     }
 
     if (!pSD->openIconFillGC ||
@@ -106,7 +106,7 @@ static GC GetOpenIconFillGC (ClientData *pcd)
 	values.background = ICON_APPEARANCE(pcd).background;
 	pSD->openIconFillGC = XCreateGC (DISPLAY, pSD->rootWindow, mask, &values);
 
-	if (pixmap != (Pixmap)NULL)
+	if (pixmap != None)
 	{
 	    XSetTile (DISPLAY, pSD->openIconFillGC, pixmap);
 	    XSetFillStyle (DISPLAY, pSD->openIconFillGC, FillTiled);

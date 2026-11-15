@@ -232,12 +232,12 @@ IL_PRIVATE ilBool _ilCompressPackbits (
     else {
         bitPerPixel = FALSE;
         if (pimformat->nBitsPerSample[0] != 8)
-            if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BYTE, 0, (ilPtr)NULL))
+            if (!ilConvert (pipe, (ilImageDes *)nullptr, IL_FORMAT_BYTE, 0, (ilPtr)nullptr))
                 return FALSE;
         }
 
     /* dstdata describes strips being output to next pipe element */
-    dstdata.producerObject  =  (ilObject) NULL;
+    dstdata.producerObject  =  (ilObject) nullptr;
     des                     = *pimdes;
     des.compression         =  IL_PACKBITS;
     dstdata.pDes            =  &des;
@@ -247,7 +247,7 @@ IL_PRIVATE ilBool _ilCompressPackbits (
     dstdata.stripHeight     =  pSrcData->stripHeight;
     dstdata.constantStrip   =  pSrcData->constantStrip;
     dstdata.pPalette        =  pinfo->pPalette;
-    dstdata.pCompData       =  (ilPtr)NULL;
+    dstdata.pCompData       =  (ilPtr)nullptr;
 
 
 /* ========================================================================

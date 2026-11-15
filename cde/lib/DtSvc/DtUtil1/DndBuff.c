@@ -658,7 +658,7 @@ dndTextSelectionValueToBuffer(
 
 		(*buffers)[0].bp	= value;
 		(*buffers)[0].size	= *length;
-		(*buffers)[0].name 	= dataLabel ? dataLabel : (String)NULL;
+		(*buffers)[0].name 	= dataLabel ? dataLabel : (String)nullptr;
 
 		*returnValue		= value;
 		*returnLength		= *length;
@@ -673,7 +673,7 @@ dndTextSelectionValueToBuffer(
 	textLen = 0;
 	for (ii = 0; ii < *numBuffers; ii++) {
 		(*buffers)[ii].size 	= strlen(text[ii]);
-		(*buffers)[ii].name 	= (String)NULL;
+		(*buffers)[ii].name 	= (String)nullptr;
 		textLen += (*buffers)[ii].size+1;
 	}
 
@@ -721,7 +721,7 @@ dndSelectionValueToBuffer(
 
 		(*buffers)[0].bp	= dataValue;
 		(*buffers)[0].size	= dataLength;
-		(*buffers)[0].name	= (String)NULL;
+		(*buffers)[0].name	= (String)nullptr;
 
 		return;
 	}

@@ -728,7 +728,7 @@ InitXDMCP (char **argv)
 	++argv;
     }
     pingTry = 0;
-    PingHosts ((XtPointer)NULL, (XtIntervalId *)nullptr);
+    PingHosts ((XtPointer)nullptr, (XtIntervalId *)nullptr);
     return 1;
 }
 
@@ -899,7 +899,7 @@ DoPing (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     EmptyHostnames ();
     pingTry = 0;
-    PingHosts ((XtPointer)NULL, (XtIntervalId *)nullptr);
+    PingHosts ((XtPointer)nullptr, (XtIntervalId *)nullptr);
 }
 
 static XtActionsRec app_actions[] = {

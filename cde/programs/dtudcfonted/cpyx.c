@@ -548,13 +548,13 @@ font_init(void)
 	if (FalGetFontList(nullptr, FAL_FONT_MASK_DEFINED |
 			FAL_FONT_MASK_UNDEFINED, &fontlist) == FAL_ERROR) {
 		snprintf(err, sizeof(err), "%s", FAL_ERROR_STR);
-		Error_message((Widget)NULL, err);
+		Error_message((Widget)nullptr, err);
 		return;
 	}
 	if(fontlist->num == 0) {
 	        FalFreeFontList(fontlist);
 		snprintf(err, sizeof(err), "%s", resource.mn_no_font);
-		Error_message((Widget)NULL, err);
+		Error_message((Widget)nullptr, err);
 		return;
 	}
 	xlf = (XmString *)XtCalloc(fontlist->num, sizeof(XmString));
@@ -901,7 +901,7 @@ CreateCopyXLFD( Widget top )
 	XmStringFree(xms);
 
 	XtAddCallback(code, XmNactivateCallback,
-			(XtCallbackProc)code_input, (XtPointer)NULL);
+			(XtCallbackProc)code_input, (XtPointer)nullptr);
 
 	n = 0 ;
         XtSetArg(args[n], XmNorientation, XmHORIZONTAL) ;	n++ ;
@@ -933,7 +933,7 @@ CreateCopyXLFD( Widget top )
 	XmStringFree(xms);
 
 	XtAddCallback(code, XmNactivateCallback,
-			(XtCallbackProc)code_input2, (XtPointer)NULL);
+			(XtCallbackProc)code_input2, (XtPointer)nullptr);
 
 	return( cpyDialog ) ;
 }

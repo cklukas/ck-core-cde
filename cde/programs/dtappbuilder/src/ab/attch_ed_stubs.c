@@ -359,7 +359,7 @@ static BOOL		verify_one_attach(
 			    PropFieldSetting		position_setting
 			);
 
-static ABObj		attch_cur_parent = NULL;
+static ABObj		attch_cur_parent = nullptr;
 static AB_OBJECT_TYPE	cur_type = AB_TYPE_UNDEF;
 static int		cur_subtype;
 
@@ -381,10 +381,10 @@ attch_ed_get_parent(
     ABObj	tmp;
 
     if (!obj || !(obj_has_flag(obj, XmConfiguredFlag)))
-	return (NULL);
+	return (nullptr);
     
     if (!(tmp = obj_get_parent(obj)))
-	return (NULL);
+	return (nullptr);
     
     return(tmp);
     /*
@@ -412,13 +412,13 @@ attch_ed_show_dialog(
     /* 
      * If there is no Attachment Editor, create it 
      */
-    if (AB_attch_ed_dialog == (Widget)NULL)
+    if (AB_attch_ed_dialog == (Widget)nullptr)
     {
 	AB_attch_ed_dialog = attch_editor_props_init(&dtb_attch_ed_attch_ed_dialog, 
 				AB_toplevel);
     }
 
-    if (AB_attch_ed_dialog != NULL)
+    if (AB_attch_ed_dialog != nullptr)
     {
 	DTB_MODAL_ANSWER            answer = DTB_ANSWER_ACTION1;
 	PalEditableObjInfo	*ed_obj_info;
@@ -431,10 +431,10 @@ attch_ed_show_dialog(
 	    if (ed_obj_info = pal_get_editable_obj_info(cur_obj))
 	    {
 		if (!editable_obj_test(ed_obj_info))
-		    cur_obj = NULL; /* can't edit current obj */
+		    cur_obj = nullptr; /* can't edit current obj */
 	    }
 	    else
-		cur_obj = NULL;
+		cur_obj = nullptr;
 	}
 
         if (cur_obj && attch_edP_pending()) 
@@ -528,7 +528,7 @@ attch_editor_props_init(
 
 
 	XtAddCallback(attch_ed_cgen->objlist, XmNbrowseSelectionCallback,
-		    attch_objlist_selectCB, (XtPointer)NULL);
+		    attch_objlist_selectCB, (XtPointer)nullptr);
 
      	/* 
 	 * Hook widgets up to Attachment Editor
@@ -538,7 +538,7 @@ attch_editor_props_init(
 	*/
 	ats->prop_sheet = attch_ed_cgen->attach_grp;
 
-	ats->cur_object = (ABObj)NULL;
+	ats->cur_object = (ABObj)nullptr;
 
 	/********************** 
 	 * Top Attachments    *
@@ -563,7 +563,7 @@ attch_editor_props_init(
 
         item[n] = attch_ed_cgen->top_attach_items.bitmaps_attach_none_xbm_item;
         item_val[n] = ATTCH_ED_NONE; n++;
-        prop_options_init(&(ats->top_attach_type), NULL,
+        prop_options_init(&(ats->top_attach_type), nullptr,
                 attch_ed_cgen->top_attach, attch_ed_cgen->top_attach_menu,
                 n, item, (XtPointer*)item_val,
                 attch_ed_cgen->top_attach_cb);
@@ -602,7 +602,7 @@ attch_editor_props_init(
 
         item[n] = attch_ed_cgen->bottom_attach_items.bitmaps_attach_none_xbm_item;
         item_val[n] = ATTCH_ED_NONE; n++;
-        prop_options_init(&(ats->bottom_attach_type), NULL,
+        prop_options_init(&(ats->bottom_attach_type), nullptr,
                 attch_ed_cgen->bottom_attach, attch_ed_cgen->bottom_attach_menu,
                 n, item, (XtPointer*)item_val,
                 attch_ed_cgen->bottom_attach_cb);
@@ -641,7 +641,7 @@ attch_editor_props_init(
         item_val[n] = ATTCH_ED_CENTER_GRIDLINE; n++;
         item[n] = attch_ed_cgen->left_attach_items.bitmaps_attach_none_xbm_item;
         item_val[n] = ATTCH_ED_NONE; n++;
-        prop_options_init(&(ats->left_attach_type), NULL,
+        prop_options_init(&(ats->left_attach_type), nullptr,
                 attch_ed_cgen->left_attach, attch_ed_cgen->left_attach_menu,
                 n, item, (XtPointer*)item_val,
                 attch_ed_cgen->left_attach_cb);
@@ -680,7 +680,7 @@ attch_editor_props_init(
         item_val[n] = ATTCH_ED_CENTER_GRIDLINE; n++;
         item[n] = attch_ed_cgen->right_attach_items.bitmaps_attach_none_xbm_item;
         item_val[n] = ATTCH_ED_NONE; n++;
-        prop_options_init(&(ats->right_attach_type), NULL,
+        prop_options_init(&(ats->right_attach_type), nullptr,
                 attch_ed_cgen->right_attach, attch_ed_cgen->right_attach_menu,
                 n, item, (XtPointer*)item_val,
                 attch_ed_cgen->left_attach_cb);
@@ -704,7 +704,7 @@ attch_editor_props_init(
          */ 
         ab_register_window(attch_ed_cgen->attch_ed_dialog_shellform,
                 AB_WIN_DIALOG, WindowHidden, AB_toplevel, AB_WPOS_TILE_HORIZONTAL,
-		attch_edP_prevent_closeCB, NULL); 
+		attch_edP_prevent_closeCB, nullptr); 
 
         ret_value = dtb_attch_ed_attch_ed_dialog.attch_ed_dialog_shellform;
 
@@ -719,7 +719,7 @@ attch_editor_props_init(
     else
     {
 	util_dprintf(3, "attch_editor_props_init: could not initialize Attachment Editor\n");
-     	ret_value = NULL;
+     	ret_value = nullptr;
     }
 
     return(ret_value);
@@ -771,18 +771,18 @@ load_attch_obj(
 				cur_position = 1,
 				child_count = 0,
 				n = 0;
-    ABObj			top_obj = NULL,
-				bottom_obj = NULL,
-				left_obj = NULL,
-				right_obj = NULL,
-				*child_list = NULL;
+    ABObj			top_obj = nullptr,
+				bottom_obj = nullptr,
+				left_obj = nullptr,
+				right_obj = nullptr,
+				*child_list = nullptr;
  
-    if (object == NULL)
+    if (object == nullptr)
         return;
 
     if (!attch_ed_can_edit_attachments(object))
     {
-	ats->cur_object = NULL;
+	ats->cur_object = nullptr;
         attch_editor_activate(FALSE);
         return;
     }
@@ -934,7 +934,7 @@ create_children_list(
          */
         XtVaGetValues(attch_ed_cgen->childrenlist,
             XmNuserData,    &child_list,
-            NULL);
+            nullptr);
 
 	/*
 	 * List of child objects:
@@ -944,7 +944,7 @@ create_children_list(
         if (child_list)
         {
             util_free(child_list);
-            XtVaSetValues(attch_ed_cgen->childrenlist, XmNuserData, NULL, NULL);
+            XtVaSetValues(attch_ed_cgen->childrenlist, XmNuserData, nullptr, nullptr);
         }
 
 	/*
@@ -976,7 +976,7 @@ create_children_list(
 	 *	remember position of 'object' in list
 	 */
         for (i = 1, trav_open(&trav, parent, AB_TRAV_SALIENT_CHILDREN); 
-		(cur_child = trav_next(&trav)) != NULL; ++i)
+		(cur_child = trav_next(&trav)) != nullptr; ++i)
         {
 	    if (cur_child == obj)
 	    {
@@ -994,13 +994,13 @@ create_children_list(
 	/*
 	 * Store ABObj list on XmList object
 	 */
-        XtVaSetValues(attch_ed_cgen->childrenlist, XmNuserData, child_list, NULL);
+        XtVaSetValues(attch_ed_cgen->childrenlist, XmNuserData, child_list, nullptr);
 
 	/*
 	 * Register callback on list that will load selected object
 	 */
         XtAddCallback(attch_ed_cgen->childrenlist, XmNbrowseSelectionCallback, 
-		attch_ed_select_itemCB, (XtPointer)NULL);
+		attch_ed_select_itemCB, (XtPointer)nullptr);
     }
 }
 
@@ -1076,7 +1076,7 @@ select_objlist(
 )
 {
     DtbAttchEdAttchEdDialogInfo attch_ed_cgen = &dtb_attch_ed_attch_ed_dialog;
-    char			*modname = NULL;
+    char			*modname = nullptr;
 
     if (!obj)
 	return;
@@ -1100,9 +1100,9 @@ attch_editor_apply(
     ATTCH_ED_ATTACH_TYPE	attach_type = ATTCH_ED_NONE;
     int				offset = 0,
 				position = 0;
-    ABObj			obj = NULL;
+    ABObj			obj = nullptr;
 
-    if (object == NULL)
+    if (object == nullptr)
         return ERROR;
 
     if (!attch_ed_verify_props())
@@ -1250,7 +1250,7 @@ get_attach_info(
 
     *offset = 0;
     *position = 0;
-    *attach_obj = NULL;
+    *attach_obj = nullptr;
     switch (attachment->type)
     {
         case AB_ATTACH_POINT:
@@ -1378,14 +1378,14 @@ attch_ed_select_itemCB(
 {
     XmListCallbackStruct 	*listdata = (XmListCallbackStruct *)call_data;
     AttchEditorSettingsRec 	*ats = &attch_editor_settings_rec;
-    ABObj			*child_list = NULL,
-				new_obj = NULL;
+    ABObj			*child_list = nullptr,
+				new_obj = nullptr;
     int		 		num_items = 0, pos;
 
     XtVaGetValues(widget,
         XmNuserData,    &child_list,
 	XmNitemCount,   &num_items,
-        NULL);
+        nullptr);
     
     if (!child_list)
 	return;
@@ -1570,14 +1570,14 @@ create_obj_menu_dir(
 {
     DtbAttchEdAttchEdDialogInfo	attch_ed_cgen = &dtb_attch_ed_attch_ed_dialog;
     AttchEditorSettingsRec	*ats = &attch_editor_settings_rec;
-    PropOptionsSetting		option_setting = NULL;
-    Widget			label = NULL,
-    				optionbox = NULL,
-    				menu = NULL,
-    				changebar = NULL,
-    				*item = NULL;
+    PropOptionsSetting		option_setting = nullptr;
+    Widget			label = nullptr,
+    				optionbox = nullptr,
+    				menu = nullptr,
+    				changebar = nullptr,
+    				*item = nullptr;
     int				item_values = 0,
-    				*item_val = NULL, 
+    				*item_val = nullptr, 
 				n = 0;
 
     /*
@@ -1629,7 +1629,7 @@ create_obj_menu_dir(
 	return;
 
     populate_obj_menu(menu, object, dir, &item, (XtPointer **)&item_val, &n);
-    prop_options_init(option_setting, NULL,
+    prop_options_init(option_setting, nullptr,
                 optionbox, 
 		menu,
                 n, item, (XtPointer*)item_val,
@@ -1674,9 +1674,9 @@ populate_obj_menu(
     AB_TRAVERSAL	trav;
     ABObj		parent,
 			cur_obj;
-    Widget		*item_list = NULL;
+    Widget		*item_list = nullptr;
     WidgetList		menu_children;
-    XtPointer		*item_val_list = NULL;
+    XtPointer		*item_val_list = nullptr;
     int                 i, 
 			num_menu_children,
 			num_items_needed,
@@ -1744,7 +1744,7 @@ populate_obj_menu(
     XtVaGetValues(widget, 
 		XmNnumChildren, &num_menu_children, 
 		XmNchildren, &menu_children, 
-		NULL);
+		nullptr);
 
     if (num_items_needed > num_menu_children)
     {
@@ -1758,7 +1758,7 @@ populate_obj_menu(
 	    menu_item = XtVaCreateWidget("attach_obj_menu", 
 			xmPushButtonWidgetClass, 
 			widget, 
-			NULL);
+			nullptr);
 
             XtAddCallback(menu_item, XmNactivateCallback,
                         attach_obj_changed, (XtPointer)dir);
@@ -1770,14 +1770,14 @@ populate_obj_menu(
         XtVaGetValues(widget, 
 		XmNnumChildren, &num_menu_children, 
 		XmNchildren, &menu_children, 
-		NULL);
+		nullptr);
     }
     
     /*
      * Set the label of the menu items to be the names of the ABObj's
      */
     for (i = 0, trav_open(&trav, parent, AB_TRAV_SALIENT_CHILDREN); 
-	i < num_items_needed && (cur_obj = trav_next(&trav)) != NULL; )
+	i < num_items_needed && (cur_obj = trav_next(&trav)) != nullptr; )
     {
 	char	*label;
 
@@ -1805,7 +1805,7 @@ populate_obj_menu(
 	    XtVaSetValues(item_list[i], 
 			XtVaTypedArg, XmNlabelString, XtRString, 
 			label, strlen(label)+1,
-			NULL);
+			nullptr);
 
 	/*
 	 * Store ABObj ptr
@@ -1840,7 +1840,7 @@ populate_obj_menu(
 	    none_item = XtVaCreateWidget("attach_obj_menu", 
 			xmPushButtonWidgetClass, 
 			widget, 
-			NULL);
+			nullptr);
 	}
 	else
 	{
@@ -1850,8 +1850,8 @@ populate_obj_menu(
 	XtVaSetValues(none_item,
 			XtVaTypedArg, XmNlabelString, XtRString, 
 			"None", strlen("None")+1,
-			XmNuserData, NULL,
-			NULL);
+			XmNuserData, nullptr,
+			nullptr);
 
         XtManageChild(none_item);
     }
@@ -1875,7 +1875,7 @@ attch_objlist_test_func(
 
     module = obj_get_module(test_obj);
 
-    if ((module != NULL) &&
+    if ((module != nullptr) &&
             obj_is_salient_ui(test_obj) && 
 	    obj_has_flag(module, MappedFlag))
     {   
@@ -1976,7 +1976,7 @@ attch_ed_change_objecttype(
     AttchEditorSettingsRec 	*ats = &attch_editor_settings_rec;
     ABObj			proj = proj_get_project();
     int				num_items;
-    char			*modname = NULL;
+    char			*modname = nullptr;
     DTB_MODAL_ANSWER            answer = DTB_ANSWER_ACTION1;
 
     if (!proj || !attch_ed_cgen->objlist)
@@ -1985,7 +1985,7 @@ attch_ed_change_objecttype(
     if (attch_edP_pending()) 
     {
         answer = get_wrn_response(AB_attch_ed_dialog, ATTCH_ED_WRN_CHANGE_OBJTYPE,
-				NULL);
+				nullptr);
 
 	if (answer == DTB_ANSWER_CANCEL)
 	    update_obj_type(ats->cur_object);
@@ -1997,7 +1997,7 @@ attch_ed_change_objecttype(
     /*
      * Reset current object
      */
-    ats->cur_object = NULL;
+    ats->cur_object = nullptr;
 
     AttchEdObjTypeInfo.type = type;
     AttchEdObjTypeInfo.subtype = subtype;
@@ -2163,7 +2163,7 @@ handle_prop_sheet_obj_destroy(
 	 * Deleted last item
 	 * Reset current object and inactivate editor
 	 */
-	ats->cur_object = NULL;
+	ats->cur_object = nullptr;
 	attch_editor_activate(FALSE);
     }
     else if (obj == ats->cur_object)
@@ -2206,7 +2206,7 @@ handle_actual_obj_destroy(
     ABObj		obj,
 			refObj,
 			project;
-    void		*voidRefType = NULL;
+    void		*voidRefType = nullptr;
     AB_OBJ_REF_TYPE	refType = AB_REF_UNDEF;
     ABAttachment	*attachment;
     ATTCH_ED_ATTACH_TYPE	attach_type;
@@ -2354,7 +2354,7 @@ change_attype_from_sib_to_point(
 	if (attach_to_sib && (attach_to_sib != attach_obj))
 	    return;
 
-        convert_offset_position(obj, NULL, dir, ATTCH_ED_PARENT,
+        convert_offset_position(obj, nullptr, dir, ATTCH_ED_PARENT,
         		&offset, &position);
 	
         obj_set_attachment(obj, dir, AB_ATTACH_POINT, 
@@ -2372,7 +2372,7 @@ handle_actual_obj_reparent(
     ABObj		obj,
 			refObj,
 			parent;
-    void		*voidRefType = NULL;
+    void		*voidRefType = nullptr;
     AB_OBJ_REF_TYPE	refType = AB_REF_UNDEF;
     ABAttachment	*attachment;
     ATTCH_ED_ATTACH_TYPE	attach_type;
@@ -2392,7 +2392,7 @@ handle_actual_obj_reparent(
      * -> New object dragged off from palette
      * Don't need to worry about attachments here
      */
-    if (obj_get_name(obj) == NULL)
+    if (obj_get_name(obj) == nullptr)
 	return;
 
     /*
@@ -2409,10 +2409,10 @@ handle_actual_obj_reparent(
      * If there are any attachments from this object that involve 
      * sibling objects, change them to AB_ATTACH_POINT
      */
-    change_attype_from_sib_to_point(obj, NULL, AB_CP_NORTH, TRUE);
-    change_attype_from_sib_to_point(obj, NULL, AB_CP_SOUTH, TRUE);
-    change_attype_from_sib_to_point(obj, NULL, AB_CP_EAST, TRUE);
-    change_attype_from_sib_to_point(obj, NULL, AB_CP_WEST, TRUE);
+    change_attype_from_sib_to_point(obj, nullptr, AB_CP_NORTH, TRUE);
+    change_attype_from_sib_to_point(obj, nullptr, AB_CP_SOUTH, TRUE);
+    change_attype_from_sib_to_point(obj, nullptr, AB_CP_EAST, TRUE);
+    change_attype_from_sib_to_point(obj, nullptr, AB_CP_WEST, TRUE);
 
     /*
      * If there are attachments *to* this object, change them
@@ -2784,7 +2784,7 @@ convert_offset_position(
         XmNy,		&y,
         XmNwidth,	&width,
         XmNheight,	&height,
-        NULL);
+        nullptr);
 
     XtVaGetValues(parent_widget,
         XmNx,		&p_x,
@@ -2792,7 +2792,7 @@ convert_offset_position(
         XmNwidth,	&p_width,
         XmNheight,	&p_height,
         XmNfractionBase,&fraction_base,
-        NULL);
+        nullptr);
 
     if (attch_ed_need_obj_menu(attach_type))
     {
@@ -2809,7 +2809,7 @@ convert_offset_position(
             XmNy,		&s_y,
             XmNwidth,	&s_width,
             XmNheight,	&s_height,
-            NULL);
+            nullptr);
     }
 
     switch (dir)
@@ -2978,13 +2978,13 @@ change_attach_type(
     ABAttachment		*attachment;
     int				offset,
 				position;
-    ABObj			attach_obj = NULL;
-    PropOptionsSetting		objlist_setting = NULL;
-    PropFieldSetting		offset_setting = NULL,
-        			position_setting = NULL;
-    Widget			objlist_w = NULL,
-        			offset_w = NULL,
-        			position_w = NULL;
+    ABObj			attach_obj = nullptr;
+    PropOptionsSetting		objlist_setting = nullptr;
+    PropFieldSetting		offset_setting = nullptr,
+        			position_setting = nullptr;
+    Widget			objlist_w = nullptr,
+        			offset_w = nullptr,
+        			position_w = nullptr;
 
     /*
      * Based on 'dir', figure out which setting structures and
@@ -3093,16 +3093,16 @@ change_opp_attach_type(
     AttchEditorSettingsRec	*ats = &attch_editor_settings_rec;
     int				offset = 0,
 				position = 0;
-    ABObj			attach_obj = NULL;
+    ABObj			attach_obj = nullptr;
     AB_COMPASS_POINT		opp_dir = AB_CP_UNDEF;
     ATTCH_ED_ATTACH_TYPE	opp_attach_type;
-    PropOptionsSetting		opp_attach_type_setting = NULL,
-        			opp_objlist_setting = NULL;
-    PropFieldSetting		opp_offset_setting = NULL,
-        			opp_position_setting = NULL;
-    Widget			opp_objlist_w = NULL,
-        			opp_offset_w = NULL,
-        			opp_position_w = NULL;
+    PropOptionsSetting		opp_attach_type_setting = nullptr,
+        			opp_objlist_setting = nullptr;
+    PropFieldSetting		opp_offset_setting = nullptr,
+        			opp_position_setting = nullptr;
+    Widget			opp_objlist_w = nullptr,
+        			opp_offset_w = nullptr,
+        			opp_position_w = nullptr;
     BOOL			set_opp_attach = FALSE;
 
     /*
@@ -3283,16 +3283,16 @@ attach_obj_changed(
     DtbAttchEdAttchEdDialogInfo	attch_ed_cgen
 			    = &dtb_attch_ed_attch_ed_dialog;
     AttchEditorSettingsRec	*ats = &attch_editor_settings_rec;
-    PropFieldSetting		offset_setting = NULL,
+    PropFieldSetting		offset_setting = nullptr,
     				position_setting;
-    PropOptionsSetting		objlist_setting = NULL,
-    				attach_type_setting = NULL;
+    PropOptionsSetting		objlist_setting = nullptr,
+    				attach_type_setting = nullptr;
     AB_COMPASS_POINT		dir = (AB_COMPASS_POINT)client_data;
     ATTCH_ED_ATTACH_TYPE	attach_type = ATTCH_ED_NONE;
-    ABObj			attach_obj = NULL;
+    ABObj			attach_obj = nullptr;
     XtArgVal			value;
 
-    XtVaGetValues(widget, XmNuserData, &value, NULL);
+    XtVaGetValues(widget, XmNuserData, &value, nullptr);
     attach_obj = (ABObj)value;
 
     if (!attach_obj)
@@ -3466,7 +3466,7 @@ attch_edP_prevent_closeCB(
     if (attch_edP_pending()) 
     {
         answer = get_wrn_response(widget, 
-			ATTCH_ED_WRN_CLOSE, NULL);
+			ATTCH_ED_WRN_CLOSE, nullptr);
     }
 
     if (answer != DTB_ANSWER_ACTION1) 
@@ -3489,10 +3489,10 @@ get_wrn_response(
     AttchEditorSettingsRec	*ats = &attch_editor_settings_rec;
     DTB_MODAL_ANSWER		answer;
     XmString			xm_buf;
-    DtbObjectHelpData		help_data = NULL;
+    DtbObjectHelpData		help_data = nullptr;
     char			wrn_string[512],
-				*cur_name = NULL,
-				*new_name = NULL;
+				*cur_name = nullptr,
+				*new_name = nullptr;
 
     if (dtb_app_resource_rec.implied_apply == True)
         answer = DTB_ANSWER_ACTION1;
@@ -3515,7 +3515,7 @@ get_wrn_response(
     	}
 
     	help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
-    	help_data->help_text = help_data->help_volume = help_data->help_locationID = NULL;
+    	help_data->help_text = help_data->help_volume = help_data->help_locationID = nullptr;
 
     	/*
      	 * Determine message and help text for each
@@ -3565,7 +3565,7 @@ get_wrn_response(
     	dtb_attch_ed_wrn_msg_initialize(&dtb_attch_ed_wrn_msg);
 
     	answer = dtb_show_modal_message(w, &dtb_attch_ed_wrn_msg,
-				xm_buf, help_data, NULL);
+				xm_buf, help_data, nullptr);
     
     	XmStringFree(xm_buf);
 
@@ -3670,7 +3670,7 @@ attch_ed_verify_props(void)
     ATTCH_ED_ATTACH_TYPE	attach_type = ATTCH_ED_NONE;
     ABObj			parent;
 
-    if (ats->cur_object == NULL)
+    if (ats->cur_object == nullptr)
         return TRUE;
 
     /*
@@ -3742,14 +3742,14 @@ attch_ed_verify_props(void)
 	help_data = (DtbObjectHelpData) util_malloc(sizeof(DtbObjectHelpDataRec));
 	help_data->help_text = CATGETS(Dtb_project_catd, 100, 246,
 		"Group objects have attributes that determine what\nattachments their members will have, therefore setting\nattachments for group members is not allowed. This only\napplies to group objects that have layout type Vertical,\nHorizontal, or Row-column. Click Cancel or Reset to\nundo your changes on the Attachments Editor.");
-	help_data->help_volume = NULL;
-	help_data->help_locationID = NULL;
+	help_data->help_volume = nullptr;
+	help_data->help_locationID = nullptr;
 
 	/*
 	 * Show warning message dialog
 	 */
         answer = dtb_show_modal_message(AB_attch_ed_dialog, &dtb_attch_ed_grp_member_wrn, 
-			xm_buf, help_data, NULL);
+			xm_buf, help_data, nullptr);
 	
 	/*
 	 * Free message/format strings
@@ -3980,7 +3980,7 @@ top_attach_type_changed(
     ATTCH_ED_ATTACH_TYPE        attach_type = ATTCH_ED_NONE;
     XtArgVal                    value;
 
-    XtVaGetValues(widget, XmNuserData, &value, NULL);
+    XtVaGetValues(widget, XmNuserData, &value, nullptr);
     attach_type = (ATTCH_ED_ATTACH_TYPE)value;
 
     /*
@@ -4012,7 +4012,7 @@ right_attach_type_changed(
     ATTCH_ED_ATTACH_TYPE        attach_type = ATTCH_ED_NONE;
     XtArgVal                    value;
 
-    XtVaGetValues(widget, XmNuserData, &value, NULL);
+    XtVaGetValues(widget, XmNuserData, &value, nullptr);
     attach_type = (ATTCH_ED_ATTACH_TYPE)value;
 
     /*
@@ -4044,7 +4044,7 @@ bottom_attach_type_changed(
     ATTCH_ED_ATTACH_TYPE        attach_type = ATTCH_ED_NONE;
     XtArgVal                    value;
 
-    XtVaGetValues(widget, XmNuserData, &value, NULL);
+    XtVaGetValues(widget, XmNuserData, &value, nullptr);
     attach_type = (ATTCH_ED_ATTACH_TYPE)value;
 
     /*
@@ -4076,7 +4076,7 @@ left_attach_type_changed(
     ATTCH_ED_ATTACH_TYPE        attach_type = ATTCH_ED_NONE;
     XtArgVal                    value;
 
-    XtVaGetValues(widget, XmNuserData, &value, NULL);
+    XtVaGetValues(widget, XmNuserData, &value, nullptr);
     attach_type = (ATTCH_ED_ATTACH_TYPE)value;
 
     /*

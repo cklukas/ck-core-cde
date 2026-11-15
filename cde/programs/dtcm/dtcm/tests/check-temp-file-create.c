@@ -92,6 +92,8 @@ typedef int Boolean;
 #define False 0
 static Display *ck_display;
 #define XtDisplay(w) (ck_display)
+#define XtNewString(s) ((s) ? strdup(s) : nullptr)
+#define XtFree(p) free(p)
 
 #define DtDND_SUCCESS 0
 #define DtDND_FAILURE 1

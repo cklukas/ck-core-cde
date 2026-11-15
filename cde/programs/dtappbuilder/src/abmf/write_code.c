@@ -107,8 +107,8 @@ abmfP_gencode_construct(GenCodeInfo gen)
     gen->prototype_funcs = TRUE;
     gen->dumped_resources = AB_ARG_CLASS_FLAGS_NONE;
     gen->i18n_method = ABMF_I18N_NONE;
-    gen->msg_src_file_name = (STRING)NULL;
-    gen->msg_file_obj = (MsgFile)NULL;
+    gen->msg_src_file_name = (STRING)nullptr;
+    gen->msg_file_obj = (MsgFile)nullptr;
 
     /* init cur_func substructure */
     abmfP_gencode_enter_func(gen);

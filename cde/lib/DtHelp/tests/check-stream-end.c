@@ -46,7 +46,7 @@ int main(void)
     assert(_DtGrRead(out, 1, 4, &unknown) == 0);
     assert(_DtGrSeek(&unknown, 0, SEEK_SET) == -1);
     assert(_DtGrGetChar(&unknown) == EOF);
-    assert(_DtGrGetString(out, sizeof out, &unknown) == NULL);
+    assert(_DtGrGetString(out, sizeof out, &unknown) == nullptr);
 
     memset(&buf, 0, sizeof buf);
     buf.type = _DtGrBUFFER;
@@ -55,7 +55,7 @@ int main(void)
     buf.source.buffer.current = data;
     buf.source.buffer.end = data + 4;
     assert(_DtGrGetChar(&buf) == 'a');
-    assert(_DtGrGetString(out, sizeof out, &buf) != NULL);
+    assert(_DtGrGetString(out, sizeof out, &buf) != nullptr);
     assert(strcmp(out, "b\n") == 0);
     assert(_DtGrRead(out, 1, 2, &buf) == 2);
     assert(memcmp(out, "cd", 2) == 0);

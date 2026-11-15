@@ -77,9 +77,9 @@ CGenOptions	CodeGenOptions = {
 			CG_GEN_PROJ_FLAG, 
 			False, 
 			CG_VERBOSITY_NORMAL,
-			NULL, 
-			NULL, 
-			NULL};
+			nullptr, 
+			nullptr, 
+			nullptr};
 CG_GEN_FLAG	CodeGenCmd = CG_GEN_PROJ_FLAG;
 CG_VERBOSITY	CodeGenVerbosityLevel = CG_VERBOSITY_NORMAL;
 
@@ -91,7 +91,7 @@ cgenP_update_mod_listCB(
     XtPointer callData
 )
 {
-    STRING		    module_name = NULL;
+    STRING		    module_name = nullptr;
     int			    pos = 0;
     XmListCallbackStruct    *list_info = (XmListCallbackStruct *)callData;
 
@@ -102,7 +102,7 @@ cgenP_update_mod_listCB(
     if (XmListPosSelected(widget, pos))
     {
 	/* If it has been selected, add it to the module_list */
-	strlist_add_str(module_list, module_name, (void *)NULL);
+	strlist_add_str(module_list, module_name, (void *)nullptr);
      }
      else
      {
@@ -290,52 +290,52 @@ cgenP_reset_default_propsCB(
     DtbCgenPropsCgenPropsDlgInfo props_dlg =
                         (DtbCgenPropsCgenPropsDlgInfo)clientData;
     int			num_selected_mods = 0, i;
-    XmStringTable	gen_module_list   = NULL;
-    Widget              opmenu_label      = NULL;
-    XmString		lbl_str           = NULL;
+    XmStringTable	gen_module_list   = nullptr;
+    Widget              opmenu_label      = nullptr;
+    XmString		lbl_str           = nullptr;
     
 
     /* set the code generation flag */
     CodeGenCmd = CG_GEN_PROJ_FLAG;
     XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Entire_Project_item,
-	XmNset, True, NULL);
+	XmNset, True, nullptr);
     XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Main_Only_item, 
-	XmNset, False, NULL);
+	XmNset, False, nullptr);
     XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Specific_Modules_Only_item,
-	XmNset, False, NULL);
+	XmNset, False, nullptr);
     XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Specific_Modules_and_Main_item,
-	XmNset, False, NULL);
+	XmNset, False, nullptr);
 
     /* set the merge flag */
     XtVaSetValues(props_dlg->merge_checkbox_items.Don_t_Merge_item,
-		  XmNset, False, NULL);
+		  XmNset, False, nullptr);
 
     /* set the verbosity */
     CodeGenVerbosityLevel = CG_VERBOSITY_NORMAL;
     XtVaSetValues(props_dlg->verbosity_opmenu_items.Report_Normal_Messages_item,
-	XmNset, True, NULL);
+	XmNset, True, nullptr);
     XtVaSetValues(props_dlg->verbosity_opmenu_items.Be_Silent_item, 
-	XmNset, False, NULL);
+	XmNset, False, nullptr);
     XtVaSetValues(props_dlg->verbosity_opmenu_items.Be_Verbose_item, 
-	XmNset, False, NULL);
+	XmNset, False, nullptr);
     opmenu_label = XmOptionButtonGadget(props_dlg->verbosity_opmenu);
     XtVaGetValues(props_dlg->verbosity_opmenu_items.Report_Normal_Messages_item,
-	XmNlabelString, &lbl_str, NULL);
-    XtVaSetValues(opmenu_label, XmNlabelString, lbl_str, NULL);
+	XmNlabelString, &lbl_str, nullptr);
+    XtVaSetValues(opmenu_label, XmNlabelString, lbl_str, nullptr);
     
     /* deselect all in the module list */
     XmListDeselectAllItems(props_dlg->module_list);
-    if (module_list != NULL)
+    if (module_list != nullptr)
     {
 	strlist_destroy(module_list);
 	module_list = strlist_create();
     }
 
     /* clear the make args */
-    XmTextFieldSetString(props_dlg->make_textf, NULL);
+    XmTextFieldSetString(props_dlg->make_textf, nullptr);
 
     /* clear the run time args */
-    XmTextFieldSetString(props_dlg->run_time_textf, NULL);
+    XmTextFieldSetString(props_dlg->run_time_textf, nullptr);
     
     /* set the sensitivity */
     if (XtIsSensitive(props_dlg->module_list))
@@ -366,30 +366,30 @@ cgenP_apply_propsCB(
     int			num_selected_mods = 0;
     Widget		merge_toggle;
     Boolean		no_merge = False;
-    STRING		make_args = NULL;
-    STRING		run_args = NULL;
+    STRING		make_args = nullptr;
+    STRING		run_args = nullptr;
 
     
-    if (CodeGenOptions.make_args != NULL)
+    if (CodeGenOptions.make_args != nullptr)
     {
 	XtFree(CodeGenOptions.make_args);
-	CodeGenOptions.make_args = NULL;
+	CodeGenOptions.make_args = nullptr;
     }
 
-    if (CodeGenOptions.run_args != NULL)
+    if (CodeGenOptions.run_args != nullptr)
     {
 	XtFree(CodeGenOptions.run_args);
-	CodeGenOptions.run_args = NULL;
+	CodeGenOptions.run_args = nullptr;
     }
 
-    if (CodeGenOptions.module_list != NULL)
+    if (CodeGenOptions.module_list != nullptr)
     {
 	strlist_destroy(CodeGenOptions.module_list);
-	CodeGenOptions.module_list = NULL;
+	CodeGenOptions.module_list = nullptr;
     }
 
     merge_toggle = props_dlg->merge_checkbox_items.Don_t_Merge_item; 
-    XtVaGetValues(merge_toggle, XmNset, &no_merge, NULL);
+    XtVaGetValues(merge_toggle, XmNset, &no_merge, nullptr);
 
     CodeGenOptions.cmd_flag = CodeGenCmd;
     CodeGenOptions.no_merge = no_merge;
@@ -408,14 +408,14 @@ cgenP_apply_propsCB(
     {
 	XtVaGetValues(props_dlg->module_list,
 		XmNselectedItemCount, 	&num_selected_mods,
-		NULL);
+		nullptr);
 	if (num_selected_mods == 0)
 	{
 	    dtb_cgen_props_no_sel_mod_msg_initialize(
 		&dtb_cgen_props_no_sel_mod_msg);
 	    (void)dtb_show_modal_message(
 		dtb_cgen_props_cgen_props_dlg.cgen_props_dlg_shellform,
-		&dtb_cgen_props_no_sel_mod_msg, NULL, NULL,NULL);
+		&dtb_cgen_props_no_sel_mod_msg, nullptr, nullptr,nullptr);
 	}
 	else
 	{
@@ -458,33 +458,33 @@ cgenP_reset_propsCB(
     DtbCgenPropsCgenPropsDlgInfo props_dlg =
                         (DtbCgenPropsCgenPropsDlgInfo)clientData;
     int			num_selected_mods = 0, i, pos;
-    XmStringTable	gen_module_list = NULL;
-    XmString		mod = NULL;
-    Widget              opmenu_label = NULL;
-    XmString		lbl_str = NULL;
+    XmStringTable	gen_module_list = nullptr;
+    XmString		mod = nullptr;
+    Widget              opmenu_label = nullptr;
+    XmString		lbl_str = nullptr;
 
     /* undo the user's generate code modifications */
     switch (CodeGenCmd)
     {
 	case CG_GEN_PROJ_FLAG:
 	    XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Entire_Project_item,
-		XmNset, False, NULL);
+		XmNset, False, nullptr);
 	    break;
 
 	case CG_GEN_MAIN_FLAG:
 	    XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Main_Only_item, 
-		XmNset, False, NULL);
+		XmNset, False, nullptr);
 	    break;
 
 	case CG_GEN_SPECIFIC_FILES_FLAG:
 	    XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Specific_Modules_Only_item,
-		XmNset, False, NULL);
+		XmNset, False, nullptr);
 	    XmListDeselectAllItems(props_dlg->module_list);
 	    break;
 
 	case CG_GEN_SPECIFIC_FILES_AND_MAIN_FLAG:
 	    XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Specific_Modules_and_Main_item,
-		XmNset, False, NULL);
+		XmNset, False, nullptr);
 	    XmListDeselectAllItems(props_dlg->module_list);
 	    break;
 	
@@ -497,7 +497,7 @@ cgenP_reset_propsCB(
     {
 	case CG_GEN_PROJ_FLAG:
 	    XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Entire_Project_item,
-		XmNset, True, NULL);
+		XmNset, True, nullptr);
 	    CodeGenCmd = CG_GEN_PROJ_FLAG;
 	    if (XtIsSensitive(props_dlg->module_list))
 	    {
@@ -508,7 +508,7 @@ cgenP_reset_propsCB(
 
 	case CG_GEN_MAIN_FLAG:
 	    XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Main_Only_item, 
-			XmNset, True, NULL);
+			XmNset, True, nullptr);
 	    CodeGenCmd = CG_GEN_MAIN_FLAG;
 	    if (XtIsSensitive(props_dlg->module_list))
 	    {
@@ -519,16 +519,16 @@ cgenP_reset_propsCB(
 
 	case CG_GEN_SPECIFIC_FILES_FLAG:
 	    XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Specific_Modules_Only_item,
-		XmNset, True, NULL);
+		XmNset, True, nullptr);
 	    CodeGenCmd = CG_GEN_SPECIFIC_FILES_FLAG;
 	    /* Select items that should be selected */
-	    if (CodeGenOptions.module_list != NULL) 
+	    if (CodeGenOptions.module_list != nullptr) 
 	    {
 		XmListDeselectAllItems(props_dlg->module_list);
 		for (i=0; i<strlist_get_num_strs(CodeGenOptions.module_list); i++)
 		{
 		    mod = objxm_str_to_xmstr(props_dlg->module_list,
-			strlist_get_str(CodeGenOptions.module_list, i, (void **)NULL));
+			strlist_get_str(CodeGenOptions.module_list, i, (void **)nullptr));
 		    pos = XmListItemPos(props_dlg->module_list, mod);
     		    if (!XmListPosSelected(props_dlg->module_list, pos)) 
 		    {
@@ -546,16 +546,16 @@ cgenP_reset_propsCB(
 
 	case CG_GEN_SPECIFIC_FILES_AND_MAIN_FLAG:
 	    XtVaSetValues(props_dlg->cgen_flags_radiobox_items.Specific_Modules_and_Main_item,
-		XmNset, True, NULL);
+		XmNset, True, nullptr);
 	    CodeGenCmd = CG_GEN_SPECIFIC_FILES_AND_MAIN_FLAG;
 	    /* Select items that should be selected */
-	    if (CodeGenOptions.module_list != NULL) 
+	    if (CodeGenOptions.module_list != nullptr) 
 	    {
 		XmListDeselectAllItems(props_dlg->module_list);
 		for (i=0; i<strlist_get_num_strs(CodeGenOptions.module_list); i++)
 		{
 		    mod = objxm_str_to_xmstr(props_dlg->module_list,
-			strlist_get_str(CodeGenOptions.module_list, i, (void **)NULL));
+			strlist_get_str(CodeGenOptions.module_list, i, (void **)nullptr));
 		    pos = XmListItemPos(props_dlg->module_list, mod);
     		    if (!XmListPosSelected(props_dlg->module_list, pos)) 
 		    {
@@ -580,17 +580,17 @@ cgenP_reset_propsCB(
     {
 	case CG_VERBOSITY_NORMAL:
 	    XtVaSetValues(props_dlg->verbosity_opmenu_items.Report_Normal_Messages_item,
-		XmNset, False, NULL);
+		XmNset, False, nullptr);
 	    break;
 
 	case CG_VERBOSITY_SILENT:
 	    XtVaSetValues(props_dlg->verbosity_opmenu_items.Be_Silent_item, 
-			XmNset, False, NULL);
+			XmNset, False, nullptr);
 	    break;
 
 	case CG_VERBOSITY_VERBOSE:
 	    XtVaSetValues(props_dlg->verbosity_opmenu_items.Be_Verbose_item, 
-			XmNset, False, NULL);
+			XmNset, False, nullptr);
 	    break;
 
 	default:
@@ -603,37 +603,37 @@ cgenP_reset_propsCB(
 	case CG_VERBOSITY_NORMAL:
 	    CodeGenVerbosityLevel = CG_VERBOSITY_NORMAL;
 	    XtVaSetValues(props_dlg->verbosity_opmenu_items.Report_Normal_Messages_item,
-		XmNset, True, NULL);
+		XmNset, True, nullptr);
 
 	    /* set the option menu label string */
 	    opmenu_label = XmOptionButtonGadget(props_dlg->verbosity_opmenu);
 	    XtVaGetValues(props_dlg->verbosity_opmenu_items.Report_Normal_Messages_item,
-		XmNlabelString, &lbl_str, NULL);
-	    XtVaSetValues(opmenu_label, XmNlabelString, lbl_str, NULL);
+		XmNlabelString, &lbl_str, nullptr);
+	    XtVaSetValues(opmenu_label, XmNlabelString, lbl_str, nullptr);
 	    break;
 
 	case CG_VERBOSITY_SILENT:
 	    CodeGenVerbosityLevel = CG_VERBOSITY_SILENT;
 	    XtVaSetValues(props_dlg->verbosity_opmenu_items.Be_Silent_item, 
-		XmNset, True, NULL);
+		XmNset, True, nullptr);
 
 	    /* set the option menu label string */
 	    opmenu_label = XmOptionButtonGadget(props_dlg->verbosity_opmenu);
 	    XtVaGetValues(props_dlg->verbosity_opmenu_items.Be_Silent_item,
-		XmNlabelString, &lbl_str, NULL);
-	    XtVaSetValues(opmenu_label, XmNlabelString, lbl_str, NULL);
+		XmNlabelString, &lbl_str, nullptr);
+	    XtVaSetValues(opmenu_label, XmNlabelString, lbl_str, nullptr);
 	    break;
 
 	case CG_VERBOSITY_VERBOSE:
 	    CodeGenVerbosityLevel = CG_VERBOSITY_VERBOSE;
 	    XtVaSetValues(props_dlg->verbosity_opmenu_items.Be_Verbose_item, 
-		XmNset, True, NULL);
+		XmNset, True, nullptr);
 
 	    /* set the option menu label string */
 	    opmenu_label = XmOptionButtonGadget(props_dlg->verbosity_opmenu);
 	    XtVaGetValues(props_dlg->verbosity_opmenu_items.Be_Verbose_item,
-		XmNlabelString, &lbl_str, NULL);
-	    XtVaSetValues(opmenu_label, XmNlabelString, lbl_str, NULL);
+		XmNlabelString, &lbl_str, nullptr);
+	    XtVaSetValues(opmenu_label, XmNlabelString, lbl_str, nullptr);
 	    break;
 
 	default:
@@ -643,10 +643,10 @@ cgenP_reset_propsCB(
     /* reset the merge option */
     if (CodeGenOptions.no_merge)
 	XtVaSetValues(props_dlg->merge_checkbox_items.Don_t_Merge_item,
-			XmNset, True, NULL);
+			XmNset, True, nullptr);
     else
 	XtVaSetValues(props_dlg->merge_checkbox_items.Don_t_Merge_item,
-			XmNset, False, NULL);
+			XmNset, False, nullptr);
 
     /* reset the argument values */
     XmTextFieldSetString(props_dlg->make_textf, CodeGenOptions.make_args);
@@ -675,7 +675,7 @@ cgenP_add_update_list_cb(
      */
     XtAddCallback(dtbSource->module_list,
                 XmNmultipleSelectionCallback, cgenP_update_mod_listCB,
-                NULL); 
+                nullptr); 
 
     /* Initialize module_list global variable */
     module_list = strlist_create();

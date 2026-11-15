@@ -85,8 +85,9 @@ else:
            ["-lDtHelp", "-lDtSearch", "-lDtSvc", "-ltt", "-lDtXinerama", "-lXm", "-lXpm", "-lXt", "-lX11", "-lm"] + \
            shlex.split(os.environ.get("LDFLAGS", ""))
 includes = [f"-I{here}", f"-I{srcdir}", f"-I{args.worktree}/cde/include/Dt",
-            f"-I{args.worktree}/cde/include/DtI", f"-I{args.worktree}/cde/include",
-            "-I/opt/X11/include", "-I/opt/homebrew/include", "-I/usr/local/include"]
+            f"-I{args.worktree}/cde/include/DtI", f"-I{args.worktree}/cde/include"] + \
+           [f"-I{d}" for d in ("/opt/X11/include", "/opt/homebrew/include", "/usr/local/include")
+            if os.access(d, os.R_OK)]
 env = dict(os.environ, ASAN_OPTIONS="halt_on_error=1:abort_on_error=0:detect_leaks=0",
            UBSAN_OPTIONS="halt_on_error=1:print_stacktrace=1")
 

@@ -491,7 +491,7 @@ ConnP_conn_objs[] =
 	application_whens, XtNumber(application_whens),
 	AB_WHEN_SESSION_SAVE,
         (AB_BUILTIN_ACTION *) nullptr, (Cardinal) 0,
-	(AB_BUILTIN_ACTION) NULL			},
+	(AB_BUILTIN_ACTION) nullptr			},
     { AB_TYPE_BUTTON,	-1,		"Button",
 	button_whens, XtNumber(button_whens),
 	AB_WHEN_ACTIVATED,
@@ -556,7 +556,7 @@ ConnP_conn_objs[] =
 	menu_whens, XtNumber(menu_whens),
 	AB_WHEN_POPPED_UP,
 	(AB_BUILTIN_ACTION *) nullptr, (Cardinal) 0,
-	(AB_BUILTIN_ACTION) NULL			},
+	(AB_BUILTIN_ACTION) nullptr			},
     { AB_TYPE_ITEM,	(int)AB_ITEM_FOR_MENU, "Menu Item",
 	menuitem_whens, XtNumber(menuitem_whens),
 	AB_WHEN_ACTIVATED,
@@ -574,9 +574,9 @@ ConnP_conn_objs[] =
 	AB_STDACT_SET_LABEL				},
     { AB_TYPE_MESSAGE,	-1,	"Message",
 	message_whens, XtNumber(message_whens), 
-	(AB_WHEN) NULL,
+	(AB_WHEN) nullptr,
 	(AB_BUILTIN_ACTION *) nullptr, (Cardinal) 0,
-	(AB_BUILTIN_ACTION) NULL			},
+	(AB_BUILTIN_ACTION) nullptr			},
     { AB_TYPE_CONTAINER, AB_CONT_PANED,	"Paned Window", 
         panedwin_whens, XtNumber(panedwin_whens), 
 	AB_WHEN_AFTER_CREATED,
@@ -633,9 +633,9 @@ static int		cur_target_subtype	= -1;
 
 static AB_FUNC_TYPE	cur_action_type	= AB_FUNC_UNDEF;
 
-static ABObj	cur_source	= (ABObj)NULL;
-static ABObj	cur_target	= (ABObj)NULL;
-static ABObj	cur_action_obj	= (ABObj)NULL;
+static ABObj	cur_source	= (ABObj)nullptr;
+static ABObj	cur_target	= (ABObj)nullptr;
+static ABObj	cur_action_obj	= (ABObj)nullptr;
 
 
 static BOOL	is_descendant(
@@ -1142,7 +1142,7 @@ connP_guess_when_action(
 		ABObj	src_obj = connP_get_source();
 
 	    	*func_type = AB_FUNC_USER_DEF;
-	    	*act_ret = (AB_BUILTIN_ACTION) NULL;
+	    	*act_ret = (AB_BUILTIN_ACTION) nullptr;
 
 	    	if (obj_has_action1_button(src_obj))
 		    *when_ret = ConnP_conn_objs[i].when_list[0];	
@@ -1374,10 +1374,10 @@ connP_builtin_remove_arg(
     switch (arg_type)
     {
       case AB_ARG_STRING:
-	if (ACT(arg_value.sval) != (ISTRING)NULL)
+	if (ACT(arg_value.sval) != (ISTRING)nullptr)
 	{
 	    istr_destroy(ACT(arg_value.sval));
-	    ACT(arg_value.sval) = (ISTRING)NULL;
+	    ACT(arg_value.sval) = (ISTRING)nullptr;
 	}
     }
 }
@@ -1427,10 +1427,10 @@ connP_change_in_builtin(
 		if (arg_str != (char *)nullptr)
 		    istr_value = istr_create(arg_str);
 	    	else
-		    istr_value = (ISTRING)NULL;
+		    istr_value = (ISTRING)nullptr;
 	    	if (ACT(arg_value.sval) != istr_value)
 	    	{
-		    if (istr_value != (ISTRING)NULL)
+		    if (istr_value != (ISTRING)nullptr)
 			istr_destroy(istr_value);
 		    is_changed = TRUE;
 		    connP_builtin_remove_arg(ab_action);

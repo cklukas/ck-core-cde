@@ -138,7 +138,7 @@ ilCropCompPrivPtr       pPriv;
 
             /*  Add a "no dst" filter to crop only if some strips would be skipped */
         if ((topStrip > 0) || (bottomStrip < ((pInfo->height - 1) / stripHeight))) {
-            dstData.producerObject = (ilObject)NULL;
+            dstData.producerObject = (ilObject)nullptr;
             dstData.pDes = (ilImageDes *)nullptr;
             dstData.pFormat = (ilImageFormat *)nullptr;
             dstData.width = pInfo->width;           /* width is not cropped */
@@ -534,7 +534,7 @@ ilRect                  Srcrect, Dstrect;
        if(convert && !ilConvert(pipe, &imdes, &imformat, 0, nullptr))
            return FALSE;
 
-       dstdata.producerObject = (ilObject) NULL;
+       dstdata.producerObject = (ilObject) nullptr;
        dstdata.pDes           = (ilImageDes *) nullptr;
        dstdata.pFormat        = (ilImageFormat *) nullptr;
        dstdata.width          = Dstrect.width;

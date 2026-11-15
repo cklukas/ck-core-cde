@@ -428,7 +428,7 @@ extern caddr_t
 rb_lookup(Rb_tree *tree, caddr_t key)
 {
 	Private *private;
-	if (tree==nullptr) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)nullptr);
 	private = (Private *)tree->private;
 	private->key = key;
 	private->data = nullptr; /* might have been previously used */
@@ -452,7 +452,7 @@ extern caddr_t
 rb_lookup_smallest(Rb_tree *tree)
 {
 	Private *private;
-	if (tree==nullptr) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)nullptr);
 	private = (Private *)tree->private;
 	private->data = nullptr; /* might have been previously used */
 	doit (tree, lookup_smallest_callback);
@@ -479,7 +479,7 @@ extern caddr_t
 rb_lookup_next_larger(Rb_tree *tree, caddr_t key)
 {
 	Private *private;
-	if (tree==nullptr) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)nullptr);
 	private = (Private *) tree->private;
 	private->key = key;
 	private->data = nullptr; /* might have been previously used */
@@ -504,7 +504,7 @@ rb_lookup_largest(Rb_tree *tree)
 {
 	Private *private;
 
-	if (tree==nullptr) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)nullptr);
 	private = (Private *) tree->private;
 	private->data = nullptr; /* might have been previously used */
 	doit (tree, lookup_largest_callback);
@@ -532,7 +532,7 @@ extern caddr_t
 rb_lookup_next_smaller(Rb_tree *tree, caddr_t key)
 {
 	Private *private;
-	if (tree==nullptr) return((caddr_t)NULL);
+	if (tree==nullptr) return((caddr_t)nullptr);
 	private = (Private *) tree->private;
 	private->key = key;
 	private->data = nullptr; /* might have been previously used */

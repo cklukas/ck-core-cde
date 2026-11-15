@@ -35,6 +35,14 @@ static void *ck_realloc(void *p, size_t n)
     return realloc(p, n);
 }
 
+static void *ck_reallocarray(void *p, size_t nmemb, size_t size)
+{
+    size_t total;
+    if (__builtin_mul_overflow(nmemb, size, &total))
+        return nullptr;
+    return ck_realloc(p, total);
+}
+
 static void ck_free(void *p)
 {
     if (p)
@@ -42,6 +50,7 @@ static void ck_free(void *p)
     free(p);
 }
 #define realloc ck_realloc
+#define reallocarray ck_reallocarray
 #define free ck_free
 
 /* @@BODY@@ */

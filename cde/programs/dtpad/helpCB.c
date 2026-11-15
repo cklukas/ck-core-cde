@@ -450,7 +450,7 @@ HelpOnItemCB(
     Editor *pPad = (Editor *)client_data;
     Widget widget;
 
-   switch(DtHelpReturnSelectedWidgetId(pPad->app_shell, (Cursor)NULL, &widget))
+   switch(DtHelpReturnSelectedWidgetId(pPad->app_shell, None, &widget))
    {
 	/*
 	 * There are additional cases (e.g. user aborts request) but I

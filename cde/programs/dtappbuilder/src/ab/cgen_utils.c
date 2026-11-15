@@ -304,10 +304,10 @@ cgen_show_codegen_win(
     void
 )
 {
-    Widget shell = (Widget) NULL;
+    Widget shell = (Widget) nullptr;
     cgen_check_init();
 
-    if (AB_cgen_win == (Widget) NULL)
+    if (AB_cgen_win == (Widget) nullptr)
     {
 	/*
 	 * Module initialization
