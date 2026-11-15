@@ -44,27 +44,26 @@ TTFile::TTFile
     if ((status = tt_ptr_error(temp)) != TT_OK)
 	Throw (TT_Exception(temp));
 
-    contents = tt_netfile_file(temp);
+    char * netfile = tt_netfile_file(temp);
     tt_free(temp);
 
-    if ((status = tt_ptr_error(contents)) != TT_OK)
-	Throw (TT_Exception(contents));
+    if ((status = tt_ptr_error(netfile)) != TT_OK)
+	Throw (TT_Exception(netfile));
+
+    contents = new char [strlen(netfile) + 1];
+    strcpy(contents, netfile);
+    tt_free(netfile);
 }
 
 TTFile::TTFile
 	(
 	const TTFile & file
-	)
+	) : CString(file), status(file.status)
 {
-    contents = new char [file.length() + 1];
-    strcpy(contents,file.data());
-    status = file.status;
 }
 
 TTFile::~TTFile()
 {
-    if (contents)
-	tt_free(contents);
 }
 
 #ifndef HAS_EXCEPTIONS

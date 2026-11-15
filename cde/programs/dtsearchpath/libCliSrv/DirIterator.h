@@ -29,6 +29,9 @@
 ********************************************************************
 ****************************<+>*************************************/
 
+#ifndef _DIRITERATOR_H_
+#define _DIRITERATOR_H_
+
 #include "cstring.h"
 #include <dirent.h>
 
@@ -42,7 +45,7 @@ class DirectoryIterator {
   struct dirent * operator()();
   
   int bad()    { return state & bad_; }
-  int good()   { return state & good_; }
+  int good()   { return state == good_; }
   int done()   { return state & done_; }
 
  private:
@@ -51,3 +54,5 @@ class DirectoryIterator {
   DIR * theDir;
   int   state;
 };
+
+#endif

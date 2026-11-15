@@ -1,4 +1,23 @@
 2026-11-15
+- `dtsearchpath` and `dtappgather` privilege handling, path traversal and
+  allocator safety. `dtappgather` (installed setuid root) now rejects `.` and
+  `..` in `DTUSERSESSION` as well as values containing `/`, constructs the
+  `/var/dt/appconfig/appmanager` hierarchy from explicit directory prefixes
+  instead of stripping path components with `CString::replace()`, checks for
+  symbolic links before creating `/var/dt/tmp` and its session subdirectory,
+  uses `lchown()` in `changeOwnerGroup()` with a fallback to root when the
+  `bin` account or group is absent, and drops root privileges (`setgid()` and
+  `setuid()`, terminating the process on failure) before cleaning existing
+  session entries or running `LegacyCleanUp()`. In `libCliSrv` and `dtsp`,
+  `CTokenizedString::next()` no longer reads before the start of its heap
+  buffer when a token is empty or whitespace-only, `TTFile` copies the string
+  from `tt_netfile_file()` into `CString`-owned storage instead of freeing the
+  same pointer with both `tt_free()` and `delete[]`, `DirectoryIterator` and
+  `removeDeadLinks()` guard null `opendir()` handles, `removeFiles()` compiles
+  its regular expression once and releases it with `regfree()` (and removes the
+  Solaris `system("rm -f ...")` path), and `dtsearchpath -u` checks
+  `getpwnam()` for unknown accounts. Test:
+  `programs/dtsearchpath/tests/check-dtappgather.py`.
 - C23 null pointer constants in pointer casts and integer resource values.
   The remaining `NULL` occurrences across 301 C sources use `nullptr` for
   pointer casts and initializers (such as `(String)nullptr`, `(char *)nullptr`,

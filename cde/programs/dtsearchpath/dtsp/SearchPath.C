@@ -82,7 +82,7 @@ CString final_path;
 
     if (host) {
 	if (options->doingTooltalk()) {
-	    TTFile * file;
+	    TTFile * file = 0;
 	    Try {
 		file = new TTFile(*host,path);
 		if (!file->ttFileOpFailed())

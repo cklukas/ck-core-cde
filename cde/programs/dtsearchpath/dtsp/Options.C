@@ -80,8 +80,14 @@ CString Usage ("Usage: dtsearchpath [ -v | -T | -o | -a | -csh | -ksh ] "
 	    else if (strcmp(argv[i],"-u") == 0) {
 		flags |= 2;
 		if (++i < argc && argv[i][0] != '-') {
+		    delete user_id;
 		    user_id = new CString(argv[i]);
 		    struct passwd * pwd = getpwnam(user_id->data());
+		    if (pwd == 0) {
+			fprintf(stderr, "%s\n", Usage.data());
+			exit(1);
+		    }
+		    delete home_dir;
 		    home_dir = new CString(pwd->pw_dir);
 		}
 		else {
@@ -111,6 +117,7 @@ void Options::setUserID
 	const CString & login
 	)
 {
+    delete user_id;
     user_id = new CString(login);
 }
 
@@ -119,6 +126,7 @@ void Options::setAutoMountPoint
 	const CString & mountpoint
 	)
 {
+    delete automountpoint;
     if (mountpoint.isNull())
 	automountpoint = new CString("/tmp_mnt");
     else

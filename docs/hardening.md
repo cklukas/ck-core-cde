@@ -95,7 +95,7 @@ and are replayed in CI via `python3 cde/fuzz/run-fuzz.py --all --replay`.
 | `programs/dtksh` | local user program | XDraw wrapper return values (2026-11-13) | 157 | 15 | 0 | none |
 | `programs/dtinfo` | information browser; C++ | `DtMmdb`/`dtinfo` `new[]`/`delete[]` and `malloc`/`free` pairing and checked allocations (2026-11-14) | 154 | 30 | 7 | none |
 | `programs/dtsession` | session manager; screen lock checked through PAM; reads saved sessions; ICE and X clients | installed identity, screen lock, signals, session files and saves, client start, ICE authority, saved sessions and palettes, XSMP callbacks and client lifetimes, startup resources (2026-11-04); `mkdtemp`, palette/client parser bounds, checked allocations and bounded strings (2026-11-12, 2026-11-14) | 135 | 12 | 2 | `dtsession-client`, `dtsession-palette` |
-| `programs/dtsearchpath` | dtappgather is always setuid root | none recorded | 46 | 0 | 0 | none |
+| `programs/dtsearchpath` | dtappgather is always setuid root | `DTUSERSESSION` traversal, symlink and `lchown` checks, privilege-drop ordering before session cleanup, `CTokenizedString` bounds and `TTFile` allocator pairing (2026-11-15) | 46 | 0 | 0 | none |
 | `programs/dtspcd` | root daemon from inetd; network; parses requests before authentication | request handlers, registration and privilege drop (2026-11-04); self-pipe signal loop, checked allocations and bounded strings (2026-11-13, 2026-11-14) | 6 | 3 | 1 | none |
 | `programs/dtexec` | launches user commands | discovery (2026-11-02); self-pipe signal loop (2026-11-13) | 5 | 1 | 2 | none |
 

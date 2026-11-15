@@ -111,7 +111,9 @@ AppManagerDirectory::AppManagerDirectory
 
     CString userhostdir = user->UserHostDir();
 
-    if (userhostdir.isNull())
+    if (userhostdir.isNull() ||
+	userhostdir == "." ||
+	userhostdir == "..")
 	userhostdir = "generic-display-0";
 
     // else if dir is non-NULL and there is a / in DTUSERSESSION, 
@@ -127,10 +129,66 @@ AppManagerDirectory::AppManagerDirectory
     dirname_ = "/var/dt/appconfig/appmanager/";
     dirname_ += userhostdir;
 
-    if (user->OS()->isDirectory(dirname_) &&
-        0 == user->OS()->isLink(dirname_)) {
+    int existingDir = (user->OS()->isDirectory(dirname_) &&
+		       0 == user->OS()->isLink(dirname_));
 
+    if (existingDir) {
 	user->OS()->changeOwnerGroup(dirname_,"","");
+    }
+    else if (0 == user->OS()->isLink(dirname_)) {
+
+	// Make /var/dt/appconfig/appmanager directories if not present
+	// 
+	// Make user session subdirectory under /var/dt/appconfig/appmanager
+
+	CString varDir("/var");
+	CString dtDir("/var/dt");
+	CString appcfgDir("/var/dt/appconfig");
+	CString appmanDir("/var/dt/appconfig/appmanager");
+	if (!user->OS()->isDirectory(appmanDir)) {	// does appmanager exist?
+	    if (!user->OS()->isDirectory(appcfgDir)) {   // does appconfig exist?
+	        if (!user->OS()->isDirectory(dtDir)) {   // does dt exist?
+		    if (!user->OS()->isDirectory(varDir)) {  // does /var exist?
+			user->OS()->MakeDirectory(varDir,0755);
+			user->OS()->changeOwnerGroup(varDir,"root","bin");
+			user->OS()->changePermissions(varDir,0755);
+		    }
+		    user->OS()->MakeDirectory(dtDir,0755);
+		    user->OS()->changeOwnerGroup(dtDir,"root","bin");
+		    user->OS()->changePermissions(dtDir,0755);
+		}
+		user->OS()->MakeDirectory(appcfgDir,0755);
+		user->OS()->changeOwnerGroup(appcfgDir,"bin","bin");
+		user->OS()->changePermissions(appcfgDir,0755);
+	    }
+	    user->OS()->MakeDirectory(appmanDir,0755);
+	    user->OS()->changeOwnerGroup(appmanDir,"bin","bin");
+	    user->OS()->changePermissions(appmanDir,0755);
+	}
+	user->OS()->MakeDirectory(dirname_,0755);
+	user->OS()->changeOwnerGroup(dirname_,"","");
+    }
+
+    // Make /var/dt/tmp directory if not present
+
+    CString tmp("/var/dt/tmp/");
+    if (!user->OS()->isDirectory(tmp) && 0 == user->OS()->isLink(tmp)) {  // does tmp exist?
+	user->OS()->MakeDirectory(tmp,0755);
+	user->OS()->changeOwnerGroup(tmp,"root","bin");
+	user->OS()->changePermissions(tmp,0755);
+    }
+
+    tmp += userhostdir;
+    if (!user->OS()->isDirectory(tmp) && 0 == user->OS()->isLink(tmp)) {  // does tmp/$DTUSERSESSION exist?
+	user->OS()->MakeDirectory(tmp, 0755);
+	user->OS()->changeOwnerGroup(tmp,"","");
+	user->OS()->changePermissions(tmp,0755);
+    }
+
+    // Drop root privileges before touching user-owned session contents.
+    user->OS()->setUserId();
+
+    if (existingDir) {
 	user->OS()->changePermissions(dirname_,0755);
 #ifdef sun
 	user->OS()->removeFiles(dirname_, ".~*");
@@ -144,59 +202,6 @@ AppManagerDirectory::AppManagerDirectory
 #else
 	    user->OS()->removeFiles(dirname_,"[.]*");
 #endif
-    }
-    else {
-
-	// Make /var/dt/appconfig/appmanager directories if not present
-	// 
-	// Make user session subdirectory under /var/dt/appconfig/appmanager
-
-	CString dir(dirname_);
-	dir.replace("/" + userhostdir,"");
-	if (!user->OS()->isDirectory(dir)) {	// does appmanager exist?
-	    dir.replace("/appmanager","");
-	    if (!user->OS()->isDirectory(dir)) {   // does appconfig exist?
-		dir.replace("/appconfig","");
-	        if (!user->OS()->isDirectory(dir)) {   // does dt exist?
-		    dir.replace("/dt","");
-		    if (!user->OS()->isDirectory(dir)) {  // does /var exist?
-			user->OS()->MakeDirectory(dir,0755);
-			user->OS()->changeOwnerGroup(dir,"root","bin");
-			user->OS()->changePermissions(dir,0755);
-		    }
-		    dir += "/dt";
-		    user->OS()->MakeDirectory(dir,0755);
-		    user->OS()->changeOwnerGroup(dir,"root","bin");
-		    user->OS()->changePermissions(dir,0755);
-		}
-		dir += "/appconfig";
-		user->OS()->MakeDirectory(dir,0755);
-		user->OS()->changeOwnerGroup(dir,"bin","bin");
-		user->OS()->changePermissions(dir,0755);
-	    }
-	    dir += "/appmanager";
-	    user->OS()->MakeDirectory(dir,0755);
-	    user->OS()->changeOwnerGroup(dir,"bin","bin");
-	    user->OS()->changePermissions(dir,0755);
-	}
-	user->OS()->MakeDirectory(dirname_,0755);
-	user->OS()->changeOwnerGroup(dirname_,"","");
-    }
-
-    // Make /var/dt/tmp directory if not present
-
-    CString tmp("/var/dt/tmp/");
-    if (!user->OS()->isDirectory(tmp)) {  // does tmp exist?
-	user->OS()->MakeDirectory(tmp,0755);
-	user->OS()->changeOwnerGroup(tmp,"root","bin");
-	user->OS()->changePermissions(tmp,0755);
-    }
-
-    tmp += userhostdir;
-    if (!user->OS()->isDirectory(tmp)) {  // does tmp/$DTUSERSESSION exist?
-	user->OS()->MakeDirectory(tmp, 0755);
-	user->OS()->changeOwnerGroup(tmp,"","");
-	user->OS()->changePermissions(tmp,0755);
     }
 }
 
@@ -307,11 +312,12 @@ int main (int argc, char **argv)
 
     CDEEnvironment * user = new CDEEnvironment(0, os);
 
-    LegacyCleanUp(user);
-
     CString app(getenv("DTAPPSEARCHPATH"));
 
     AppManagerDirectory * appman = new AppManagerDirectory(user, app);
+
+    LegacyCleanUp(user);
+
     appman->TraversePath();
 
     user->OS()->changePermissions((*appman)(),0555);

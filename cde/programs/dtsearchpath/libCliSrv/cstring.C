@@ -86,11 +86,12 @@ char & CString::operator[]
 	int index
 	) const
 {
-    if (index < 0)
+    size_t len = contents ? strlen(contents) : 0;
+    if (len == 0 || index < 0)
 	return contents[0];
 
-    if (index > strlen(contents))
-	return contents[strlen(contents)-1];
+    if ((size_t)index >= len)
+	return contents[len - 1];
 
     return contents[index];
 }
@@ -138,9 +139,11 @@ CString & CString::operator=
 	const char * s
 	)
 {
+    const char * src = s ? s : "";
+    char * temp = new char [strlen(src) + 1];
+    strcpy(temp, src);
     delete [] contents;
-    contents = new char [strlen(s) + 1];
-    strcpy(contents,s);
+    contents = temp;
     return *this;
 }
 
@@ -471,17 +474,15 @@ CTokenizedString::CTokenizedString()
 CTokenizedString::CTokenizedString
 	(
 	const CTokenizedString & s
-	)
+	) : CString(s), finished(s.finished), cursor(0), delimiter(0)
 {
-  if (s != *this) {
+  if (s.cursor) {
     cursor = new char [strlen(s.cursor) + 1];
     strcpy(cursor,s.cursor);
+  }
+  if (s.delimiter) {
     delimiter = new char [strlen(s.delimiter) + 1];
     strcpy(delimiter,s.delimiter);
-    finished = s.finished;
-    skipWhiteSpace = s.skipWhiteSpace;
-    contents = new char [strlen(s.contents) + 1];
-    strcpy(contents,s.contents);
   }
 }
 
@@ -494,8 +495,9 @@ CTokenizedString::CTokenizedString
 {
     cursor = new char [s.length() + 1];
     strcpy(cursor,s.data());
-    delimiter = new char [strlen(d) + 1];
-    strcpy(delimiter,d);
+    const char * delim = d ? d : "";
+    delimiter = new char [strlen(delim) + 1];
+    strcpy(delimiter,delim);
     skipWhiteSpace = ws;
 }
 
@@ -535,7 +537,7 @@ int i;
 	// eliminate trailing white space
 
 	if (skipWhiteSpace) {
-	    for (p = q; isspace(*(p-1)); p--);
+	    for (p = q; p > cursor && isspace((unsigned char)*(p-1)); p--);
 	    *p = 0;
 	}
 	CString result(cursor);
@@ -543,7 +545,7 @@ int i;
 	// eliminate leading white space
 
 	if (skipWhiteSpace)
-	    for (; isspace(*(q+1)); q++);
+	    for (; *(q+1) && isspace((unsigned char)*(q+1)); q++);
 
 	char * temp = new char [strlen(q+1) + 1];
 	strcpy(temp,q+1);

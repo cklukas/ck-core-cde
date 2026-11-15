@@ -20,3 +20,8 @@ LOCAL_CPP_DEFINES = -DCDE_INSTALLATION_TOP=$(CDE_INSTALLATION_TOP)	\
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# $(LOCAL_CPP_DEFINES) $< > $@
 
+EXTRA_DIST = tests/check-dtappgather.py tests/check-dtappgather.C
+
+check-local:
+	CXX="$(CXX)" python3 $(srcdir)/tests/check-dtappgather.py
+

@@ -73,6 +73,8 @@ UnixEnvironment::UnixEnvironment()
 	manpath = "/usr/share/man:/usr/local/man";
 #elif defined(__NetBSD__)
 	manpath = "/usr/share/man:/usr/X11R6/man:/usr/X11R7/man:/usr/local/man:/usr/pkg/man";
+#else
+	manpath = "/usr/share/man:/usr/local/man";
 #endif
     else
 	manpath = temp;
@@ -110,7 +112,8 @@ int UnixEnvironment::FileExists
 {
 struct stat file;
 
-    if (stat((const char *)filename.data(),&file) == 0)
+    if (stat((const char *)filename.data(),&file) == 0 ||
+	lstat((const char *)filename.data(),&file) == 0)
 	return 1;
 
     return 0;
@@ -203,16 +206,30 @@ void UnixEnvironment::setUserId
 
     if (name && name[0]) {
 	struct passwd * pwent = getpwnam(name);
+	if (pwent == 0) {
+	    CString errorStr("setUserId: ");
+	    errorStr += name;
+	    errorStr += "| ";
+	    perror(errorStr.data());
+	    exit(1);
+	}
 	uid = pwent->pw_uid;
     }
-    else if (name == 0)
+    else if (name == 0) {
+	if (getegid() != gid_ && setgid(gid_) == -1) {
+	    perror("setUserId(setgid)| ");
+	    exit(1);
+	}
 	uid = uid_;
+    }
 
     if (setuid(uid) == -1) {
 	CString errorStr("setUserId: ");
-	errorStr += name;
+	if (name && name[0])
+	    errorStr += name;
 	errorStr += "| ";
 	perror(errorStr.data());
+	exit(1);
     }
 }
 
@@ -241,7 +258,7 @@ void UnixEnvironment::changeOwnerGroup
     if (owner) {
 	if (owner[0]) {
 	    struct passwd * pwent = getpwnam(owner);
-	    uid = pwent->pw_uid;
+	    uid = pwent ? pwent->pw_uid : 0;
 	}
 	else
 	    uid = getuid();
@@ -249,13 +266,13 @@ void UnixEnvironment::changeOwnerGroup
     if (group) {
 	if (group[0]) {
 	    struct group * grent = getgrnam(group);
-	    gid = grent->gr_gid;
+	    gid = grent ? grent->gr_gid : 0;
 	}
 	else
 	    gid = getgid();
     }
 
-    if (chown(filespec.data(),uid,gid) == -1) {
+    if (lchown(filespec.data(),uid,gid) == -1) {
 	CString errorStr("changeOwnerGroup: " + filespec + "| ");
 	perror(errorStr.data());
     }
@@ -285,26 +302,20 @@ void UnixEnvironment::removeFiles
 	const CString & filespec
 	)
 {
-#if defined(sun)
-char buffer[100];
-    sprintf(buffer,"rm -f %s/%s", dirspec.data(),filespec.data());
-    system(buffer);
-#else
+    regex_t re;
+    if (regcomp (&re, filespec.data(), 0) != 0)
+	return;
 
     DirectoryIterator dir(dirspec);
     struct dirent * direntry;
     while (direntry = dir()) {
-        /*# ifdef should_be_sun_but_this_dont_work*/
-	regex_t re;
-	regcomp (&re, filespec.data(), 0);
-	if (regexec (&re, direntry->d_name, 0, NULL, 0) == 0) {
-	    if (strcmp(direntry->d_name,".") == 0 ||
-		strcmp(direntry->d_name,"..") == 0)
-		continue;
+	if (strcmp(direntry->d_name,".") == 0 ||
+	    strcmp(direntry->d_name,"..") == 0)
+	    continue;
+	if (regexec (&re, direntry->d_name, 0, NULL, 0) == 0)
 	    removeFile(dirspec + "/" + direntry->d_name);
-	}
     }
-#endif
+    regfree (&re);
 }
 
 void UnixEnvironment::removeFile 
@@ -328,8 +339,13 @@ void UnixEnvironment::removeDeadLinks
 	)
 {
     DIR * dir = opendir(dirspec.data());
+    if (dir == 0)
+	return;
     struct dirent * direntry;
     while (direntry = readdir(dir)) {
+	if (strcmp(direntry->d_name,".") == 0 ||
+	    strcmp(direntry->d_name,"..") == 0)
+	    continue;
 	if (isLink(dirspec + "/" + direntry->d_name))
 	    if (!isFile(dirspec + "/" + direntry->d_name) &&
 		!isDirectory(dirspec + "/" + direntry->d_name))

@@ -44,11 +44,18 @@ DirectoryIterator::DirectoryIterator
 
 DirectoryIterator::~DirectoryIterator()
 {
-    closedir(theDir);
+    if (theDir)
+	closedir(theDir);
 }
 
 struct dirent * DirectoryIterator::operator()()
 {
+    if (theDir == 0) {
+	state = bad_;
+	return 0;
+    }
+
+    errno = 0;
     struct dirent * direntry = readdir(theDir);
 
     if (direntry == 0)

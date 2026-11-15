@@ -57,9 +57,9 @@ CString Usage ("Usage: dtappgather [ -v | -r ]");
     if (argc > 1) {
 	for (int i = 1; i < argc; i++) {
 	    if (strcmp(argv[i],"-v") == 0)
-		flags += 1;
+		flags |= 1;
 	    else if (strcmp(argv[i],"-r") == 0)
-		flags += 2;
+		flags |= 2;
 	    else {
 		fprintf(stderr,"%s\n",Usage.data());
 		exit (1);
