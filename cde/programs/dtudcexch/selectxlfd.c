@@ -236,7 +236,7 @@ void setexistcode(ListData *ld)
 
 char i2c(int num)
 {
-    char c;
+    char c = '\0';
 
     if ((0 <= num) && (num <= 9))
 	c = '0' + num;
@@ -260,7 +260,7 @@ char *i2s(int code)
     for (i = 0; ; i++) {
 	if (tmp < 16) {
 	    buf[i] = i2c(tmp);
-	    buf[i+1] = nullptr;
+	    buf[i+1] = '\0';
 	    break;
 	}
 	buf[i] = i2c(tmp % 16);
@@ -275,7 +275,7 @@ char *i2s(int code)
 	*cp = buf[i];
 	cp++;
     }
-    *cp = nullptr;
+    *cp = '\0';
     return (number);
 }
 

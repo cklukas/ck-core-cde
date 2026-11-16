@@ -4,7 +4,8 @@ CLEANFILES = DtFuncs.dtsh ksh-work/.built
 
 include $(srcdir)/ksh93.mk
 
-EXTRA_DIST = $(KSH93_TARBALL) prepare-ksh.py run-shell-tests.sh $(KSH93_PATCHES) $(KSH93_TEST_PATCHES) DtFuncs.sh widget-callback.dtsh dtksh.exp
+EXTRA_DIST = $(KSH93_TARBALL) prepare-ksh.py run-shell-tests.sh $(KSH93_PATCHES) $(KSH93_TEST_PATCHES) DtFuncs.sh widget-callback.dtsh dtksh.exp \
+	     tests/check-dtksh-hardening.py tests/check-dtksh-hardening.c
 noinst_HEADERS = XtCvtrs.h dtkcmds.h dtkcvt.h dtksh.h extra.h msgs.h widget.h \
                  xmcmds.h xmcvt.h xmksh.h xmwidgets.h
 
@@ -120,6 +121,7 @@ distclean-local:
 	rm -rf ksh-work
 
 check-local:
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtksh-hardening.py
 	$(abs_builddir)/dtksh-test -c true && \
 		$(abs_builddir)/$(KSH93SRC)/bin/package use "$(abs_builddir)/$(KSH93SRC)" \
 			sh "$(abs_srcdir)/run-shell-tests.sh" "$(abs_builddir)" \

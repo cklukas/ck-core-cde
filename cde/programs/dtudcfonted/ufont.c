@@ -763,7 +763,7 @@ EHeStaT_list( Widget widget, int select, XEvent *e )
 void
 CBeScro( Widget widget, caddr_t clientData, caddr_t callData )
 {
-    int		newl;
+    int		newl = 0;
     int         new_statloc;
     int         new_slct;
 
@@ -796,7 +796,7 @@ void
 EHeBulB_eMEv( Widget widget, caddr_t clientData, XEvent *e )
 {
     int		px, py;
-    int         downbutton;
+    int         downbutton = 0;
 
     if (edpane.pix_w * edpane.pix_h == 0 ) {
 	return;

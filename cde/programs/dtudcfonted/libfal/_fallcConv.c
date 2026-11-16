@@ -159,7 +159,7 @@ indirect_convert(
     Conv conv = (Conv) lc_conv->state;
     XlcConv from_conv = conv->from_conv;
     XlcConv to_conv = conv->to_conv;
-    XlcCharSet charset;
+    XlcCharSet charset = nullptr;
     char buf[BUFSIZ], *cs;
     XPointer tmp_args[1];
     int cs_left, ret, length, unconv_num = 0;
@@ -192,7 +192,8 @@ indirect_convert(
 	ret = (*to_conv->methods->convert)(to_conv, &cs, &cs_left, to, to_left,
 					   tmp_args, 1);
 	if (ret < 0) {
-	    unconv_num += length / charset->char_size;
+	    if (charset && charset->char_size > 0)
+		unconv_num += length / charset->char_size;
 	    continue;
 	}
 

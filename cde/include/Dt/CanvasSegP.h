@@ -429,7 +429,7 @@ typedef union _dtCvClientData {
 #define _DtCvIsSegInLine(x) \
 				((((x)->type) & _DtCvIN_LINE) ? 1 : 0)
 #define _DtCvIsSegNewLine(x) \
-				((((x)->type) & _DtCvNEW_LINE) ? 1 : 0)
+				(((x) && (((x)->type) & _DtCvNEW_LINE)) ? 1 : 0)
 #define _DtCvIsSegNonBreakingChar(x) \
 				((((x)->type) & _DtCvNON_BREAK) ? 1 : 0)
 #define _DtCvIsSegPageBreak(x) \

@@ -182,6 +182,10 @@ GetSharedMsg(
       case DT_BAD_PATTERN:
          msg = GETMESSAGE("The patterns parameter is invalid: %s");
          break;
+
+      default:
+         msg = GETMESSAGE("dtksh error");
+         break;
    }
    return(msg);
 }

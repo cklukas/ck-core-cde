@@ -59,16 +59,21 @@ IL_PRIVATE ilBool _ilReallocCompressedBuffer (
     )
 {
 ilImagePlaneInfo *pPlane;
+ilPtr             newPixels;
+unsigned long     newSize;
 
     pPlane = &pImage->plane[plane];
-    pPlane->bufferSize = minNewSize + 10000;  /* A GUESS - DO SOMETHING SMARTER !!!!! */
+    newSize = minNewSize + 10000;  /* A GUESS - DO SOMETHING SMARTER !!!!! */
 
-    if (!pPlane->pPixels) pPlane->pPixels = (ilPtr)IL_MALLOC (pPlane->bufferSize);
-    else pPlane->pPixels = (ilPtr)IL_REALLOC (pPlane->pPixels, pPlane->bufferSize);
-    if (!pPlane->pPixels) {
-        pPlane->bufferSize = 0;
+    if (!pPlane->pPixels)
+        newPixels = (ilPtr)IL_MALLOC (newSize);
+    else
+        newPixels = (ilPtr)IL_REALLOC (pPlane->pPixels, newSize);
+    if (!newPixels) {
         return FALSE;
         }
+    pPlane->pPixels = newPixels;
+    pPlane->bufferSize = newSize;
     return TRUE;
 }
 
@@ -97,13 +102,13 @@ static ilError ilCopyCompressedExecute (
 
         /*  Check for space in output buffer; realloc/malloc if not enough */
     if (requiredBufferSize > pDstPlane->bufferSize) {
-        pDstPlane->pPixels = (pDstPlane->pPixels) ? 
+        ilPtr newPixels = (pDstPlane->pPixels) ? 
             (ilPtr)IL_REALLOC (pDstPlane->pPixels, requiredBufferSize) :
             (ilPtr)IL_MALLOC (requiredBufferSize);
-        if (!pDstPlane->pPixels) {
-            pDstPlane->bufferSize = 0;
+        if (!newPixels) {
             return IL_ERROR_MALLOC;
             }
+        pDstPlane->pPixels = newPixels;
         pDstPlane->bufferSize = requiredBufferSize;
         }
 

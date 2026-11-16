@@ -801,8 +801,10 @@ static void PutEntry(
 	nprev = NodeBuckets(table); \
     } else { \
 	table->leaf = 1; \
-	if (!(nprev = (NTable *)Xmalloc(sizeof(VEntry *)))) \
+	if (!(nprev = (NTable *)Xmalloc(sizeof(VEntry *)))) { \
+	    Xfree((char *)table); \
 	    return; \
+	} \
 	((LTable)table)->buckets = (VEntry *)nprev; \
     } \
     *nprev = (NTable)NULL; \
@@ -942,15 +944,16 @@ static void PutEntry(
     if (q > maxResourceQuark) {
 	unsigned oldsize = (maxResourceQuark + 1) >> 3;
 	unsigned size = ((q | 0x7f) + 1) >> 3; /* reallocate in chunks */
-	if (resourceQuarks)
-	    resourceQuarks = (unsigned char *)Xrealloc((char *)resourceQuarks,
-						       size);
-	else
-	    resourceQuarks = (unsigned char *)Xmalloc(size);
-	if (resourceQuarks) {
+	unsigned char *newQuarks = resourceQuarks
+	    ? (unsigned char *)Xrealloc((char *)resourceQuarks, size)
+	    : (unsigned char *)Xmalloc(size);
+	if (newQuarks) {
+	    resourceQuarks = newQuarks;
 	    memset((char *)&resourceQuarks[oldsize], 0, size - oldsize);
 	    maxResourceQuark = (size << 3) - 1;
 	} else {
+	    Xfree((char *)resourceQuarks);
+	    resourceQuarks = nullptr;
 	    maxResourceQuark = -1;
 	}
     }

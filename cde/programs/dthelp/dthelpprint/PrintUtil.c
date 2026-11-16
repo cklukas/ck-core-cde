@@ -98,8 +98,8 @@ void PutOpt(
       char * value,
       Boolean optionHasValue)
 {       /*$CODE$*/
-   char * start;
-   char * fmt;
+   size_t cur_len;
+   size_t rem;
    
    /* check params */
    if (    option == nullptr 
@@ -108,10 +108,14 @@ void PutOpt(
             && (value == nullptr || value[0] == EOS) ) )
        return;						/* RETURN */
    
-   start = &cmdStr[strlen(cmdStr)];
-   if ( value == nullptr ) fmt = " %s";
-   else fmt = " %s '%s'";
-   sprintf(start,fmt,option,value);
+   cur_len = strlen(cmdStr);
+   if (cur_len >= MAX_COMMAND_LENGTH - 1)
+       return;
+   rem = MAX_COMMAND_LENGTH - cur_len;
+   if ( value == nullptr )
+       snprintf(cmdStr + cur_len, rem, " %s", option);
+   else
+       snprintf(cmdStr + cur_len, rem, " %s '%s'", option, value);
 } /*$END$*/
 
 
@@ -133,7 +137,7 @@ void _DtHPrGetPrOffsetArg(
    if ( options->outputFile && options->outputFile[0] != EOS )
       argStr[0] = EOS;
    else
-      sprintf(argStr,options->prOffsetArg, options->colsAdjLeftMargin);
+      snprintf(argStr, 30, options->prOffsetArg, options->colsAdjLeftMargin);
 } /*$END$*/
 
 
@@ -170,27 +174,46 @@ int _DtHPrGenFileOrPrint(
    /* put into specified output file?? */
    if (options->outputFile[0] != EOS) 
    { 
-      strcat(printCommand," ");
-      sprintf(&printCommand[strlen(printCommand)],
-                      options->redirectCmdAndArgs,
-                      options->outputFile );     /* file */
+      size_t cur_len = strlen(printCommand);
+      if (cur_len + 1 < MAX_COMMAND_LENGTH)
+      {
+         printCommand[cur_len++] = ' ';
+         printCommand[cur_len] = EOS;
+         snprintf(printCommand + cur_len, MAX_COMMAND_LENGTH - cur_len,
+                  options->redirectCmdAndArgs,
+                  options->outputFile );     /* file */
+      }
       if(options->debugHelpPrint) printf("%s\n",printCommand);
       return (system(printCommand));           /* RETURN */
    }
 
    /* put into private tmp file */
-   strcat(printCommand," ");
    tmpfile = _DtHPrCreateTmpFile(TMPFILE_PREFIX,TMPFILE_SUFFIX);
    if (nullptr == tmpfile)
       return -1;                               /* RETURN */
-   sprintf(&printCommand[strlen(printCommand)],
-                      options->redirectCmdAndArgs,
-                      tmpfile );                          /* file */
+   {
+      size_t cur_len = strlen(printCommand);
+      if (cur_len + 1 < MAX_COMMAND_LENGTH)
+      {
+         printCommand[cur_len++] = ' ';
+         printCommand[cur_len] = EOS;
+         snprintf(printCommand + cur_len, MAX_COMMAND_LENGTH - cur_len,
+                  options->redirectCmdAndArgs,
+                  tmpfile );                          /* file */
+      }
+   }
 
    if(options->debugHelpPrint) 
       printf("%s\n",printCommand);
 
-   strcat(printCommand,"\n");
+   {
+      size_t cur_len = strlen(printCommand);
+      if (cur_len + 1 < MAX_COMMAND_LENGTH)
+      {
+         printCommand[cur_len++] = '\n';
+         printCommand[cur_len] = EOS;
+      }
+   }
    if ( (status = system(printCommand))!= 0)
    {
       unlink(tmpfile);
@@ -201,19 +224,20 @@ int _DtHPrGenFileOrPrint(
    /* make sure there is a DISPLAY environment variable */
    {
        char *dispfmt = "DISPLAY=%s";
-       char *dispenv = malloc(strlen(dispfmt) + strlen(options->display) + 1);
+       size_t displen = strlen(dispfmt) + strlen(options->display) + 1;
+       char *dispenv = malloc(displen);
        if (nullptr == dispenv)
        {
           unlink(tmpfile);
           free(tmpfile);
           return -1;                           /* RETURN */
        }
-       sprintf(dispenv, dispfmt, options->display);
+       snprintf(dispenv, displen, dispfmt, options->display);
        putenv(dispenv);
    }
 
    /* put the shell print script in there */
-   sprintf(printCommand,"%s", options->shCommand);
+   snprintf(printCommand, MAX_COMMAND_LENGTH, "%s", options->shCommand);
 
    /* set all the options that are IPC to the print script */
    PutOpt(printCommand,OPT_LPDEST,options->printer,True);

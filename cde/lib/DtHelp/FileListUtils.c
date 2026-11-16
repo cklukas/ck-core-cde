@@ -658,9 +658,19 @@ int _DtHelpFileListScanPaths (
                                     compareFlags,sortFlags,scanProc,clientData);
 
                  /* add to list of scanned */
-                 scannedPaths = (char **) XtRealloc((char *)scannedPaths,
-                                        (scannedPathsCnt+1) * sizeof(char *) );
-                 scannedPaths[scannedPathsCnt++] = strdup(pathName);
+                 char *dupPath = strdup(pathName);
+                 if (dupPath != nullptr)
+                 {
+                    char **grownPaths = (char **) XtRealloc((char *)scannedPaths,
+                                           (scannedPathsCnt+1) * sizeof(char *) );
+                    if (grownPaths != nullptr)
+                    {
+                       scannedPaths = grownPaths;
+                       scannedPaths[scannedPathsCnt++] = dupPath;
+                    }
+                    else
+                       free(dupPath);
+                 }
               }  /* if haven' scanned already */
           }  /* if a directory */
 #if 0

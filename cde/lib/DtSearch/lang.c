@@ -268,9 +268,9 @@ static int euro_mbtowc (wchar_t *pwc, const char *p, const char *s)
 
     if (p < s) goto done;
 
-    if (*p >= 0 && *p <= 0x7F) {
+    if (((unsigned char)*p) <= 0x7F) {
 	len = 1;
-	*pwc = *p;
+	*pwc = (unsigned char)*p;
 	goto done;
     }
 
@@ -302,9 +302,9 @@ static int euro_readchar (READCFP cofunction, void *cofunction_arg, char *outp,
 {
     int len = 1;
 
-    *pwc = *outp = cofunction (cofunction_arg);
+    *pwc = (unsigned char)(*outp = cofunction (cofunction_arg));
 
-    if (*pwc >= 0 && *pwc <= 0x7F) goto done;
+    if (((unsigned long)*pwc) <= 0x7FUL) goto done;
 
     *(outp + len++) = cofunction (nullptr);
 
@@ -626,7 +626,7 @@ READ_ANOTHER_WORD:
 	    fprintf (aa_stderr, ", (TOO SHORT, min %d)\n", minwordsz);
 	if (add_msgs) {
 	    char	msgbuf [200];
-	    sprintf (msgbuf, CATGETS(dtsearch_catd, MS_lang, 17,
+	    snprintf (msgbuf, sizeof(msgbuf), CATGETS(dtsearch_catd, MS_lang, 17,
 		"%s '%s' is less than the\n"
 		"minimum word size of database '%s'.") ,
 		PROGNAME"543", parg->string, dblk->label);
@@ -643,7 +643,7 @@ READ_ANOTHER_WORD:
 		fprintf (aa_stderr, ", (STOP LIST)\n");
 	    if (add_msgs) {
 		char	msgbuf [200];
-		sprintf (msgbuf, CATGETS(dtsearch_catd, MS_lang, 19,
+		snprintf (msgbuf, sizeof(msgbuf), CATGETS(dtsearch_catd, MS_lang, 19,
 		    "%s The word '%s' is not indexed in database '%s'.") ,
 		    PROGNAME"558", parg->string, dblk->label);
 		DtSearchAddMessage (msgbuf);

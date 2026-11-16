@@ -45,3 +45,8 @@ libDtMmdb_la_LIBADD = HardCopy/libHardCopy.la \
 		      utility/libutility.la
 
 libDtMmdb_la_LDFLAGS = -version-info 2:1:0
+
+EXTRA_DIST = tests/check-dtmmdb-hardening.py tests/check-dtmmdb-hardening.C
+
+check-local:
+	CXX="$(CXX)" python3 $(srcdir)/tests/check-dtmmdb-hardening.py

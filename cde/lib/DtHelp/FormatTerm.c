@@ -315,39 +315,37 @@ TermStrDraw (
     if (wcStr == nullptr)
       {
 	pTerm->lines[y] = (wchar_t *) calloc((length + 1), sizeof(wchar_t));
-	if (pTerm->lines[y] != nullptr)
-	  {
-	    int i;
+	if (pTerm->lines[y] == nullptr)
+	    return;
 
-	    wcStr = pTerm->lines[y];
-	    _DtHelpProcessLock();
-	    for (i = 0; i < x; i++)
-		wcStr[i] = WcSpace;
-	    _DtHelpProcessUnlock();
-	    /*
-	     * this will leave a hole that will be plugged by the next 
-	     * mbstowc call.
-	     */
-	    wcStr[length] = 0;
-	    pTerm->wc_num[y] = length;
-	  }
+	wcStr = pTerm->lines[y];
+	_DtHelpProcessLock();
+	for (int i = 0; i < x; i++)
+	    wcStr[i] = WcSpace;
+	_DtHelpProcessUnlock();
+	/*
+	 * this will leave a hole that will be plugged by the next 
+	 * mbstowc call.
+	 */
+	wcStr[length] = 0;
+	pTerm->wc_num[y] = length;
       }
     else
       {
         if (length > pTerm->wc_num[y])
           {
-	    pTerm->lines[y] = (wchar_t *) reallocarray(wcStr, (length + 1), sizeof(wchar_t));
-	    if (pTerm->lines[y] != nullptr)
-	      {
-	        int i;
-	        wcStr = pTerm->lines[y];
-		_DtHelpProcessLock();
-	        for (i = pTerm->wc_num[y]; i < x; i++)
-		    wcStr[i] = WcSpace;
-		_DtHelpProcessUnlock();
-	        wcStr[length] = 0;
-	        pTerm->wc_num[y] = length;
-	      }
+	    wchar_t *grown = (wchar_t *) reallocarray(wcStr, (length + 1), sizeof(wchar_t));
+	    if (grown == nullptr)
+	        return;
+
+	    pTerm->lines[y] = grown;
+	    wcStr = grown;
+	    _DtHelpProcessLock();
+	    for (int i = pTerm->wc_num[y]; i < x; i++)
+		wcStr[i] = WcSpace;
+	    _DtHelpProcessUnlock();
+	    wcStr[length] = 0;
+	    pTerm->wc_num[y] = length;
           }
       }
 

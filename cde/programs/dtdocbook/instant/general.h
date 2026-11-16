@@ -269,9 +269,11 @@ def Element_t   *tclE;                  /* active element in Tcl call */
 	perror("Malloc failed -- out of memory.  Bailing out.");  exit(1); \
     } }
 #define Realloc(N,V,T)	\
-    { if (!((V) = (T *)realloc(V,(size_t)N*sizeof(T)))) { \
+    { T *_tmp = (T *)realloc((V), (size_t)(N) * sizeof(T)); \
+      if (!_tmp) { \
 	perror("Realloc failed -- out of memory.  Bailing out.");  exit(1); \
-    } }
+      } \
+      (V) = _tmp; }
 
 /*  similar to strcmp(), but check first chars first, for efficiency */
 #define StrEq(s1,s2)	(s1[0] == s2[0] && !strcmp(s1,s2))

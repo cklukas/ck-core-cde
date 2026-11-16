@@ -1283,12 +1283,10 @@ mbstocts(
 
     unconv_num += wcstocts(conv,
 		&buf_ptr2, &buf_left2, to, to_left, args, num_args);
-    if (unconv_num < 0){
-	if (buf)
-	    Xfree((char *)buf);
+    if (buf)
+	Xfree((char *)buf);
 
-	return unconv_num;
-    }
+    return unconv_num;
 }
 
 static int
@@ -1873,12 +1871,10 @@ ctstombs(
 
     unconv_num += wcstombs_org(conv,
 		&buf_ptr2, &buf_left2, to, to_left, args, num_args);
-    if (unconv_num < 0){
-        if (buf)
-            Xfree((char *)buf);
+    if (buf)
+        Xfree((char *)buf);
 
-        return unconv_num;
-    }
+    return unconv_num;
 }
 
 static int

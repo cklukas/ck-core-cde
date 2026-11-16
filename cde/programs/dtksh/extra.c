@@ -149,7 +149,7 @@ printerrf(
 	if (arg7 == nullptr)
 		arg7 = "";
 
-	sprintf(buf, fmt, arg0, arg1, arg2, arg3,arg4, arg5, arg6, arg7);
+	snprintf(buf, sizeof(buf), fmt, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
         if (cmd && (strlen(cmd) > 0))
 	   printf("%s: %s\n", cmd, buf);
         else
@@ -197,7 +197,10 @@ int *LockKshFileDescriptors(void)
          fdList[0] = fd;
          for (i = 1; i < 10; i++)
          {
-            if ((newfd = dup(fd)) < 10)
+            newfd = dup(fd);
+            if (newfd < 0)
+               break;
+            if (newfd < 10)
                fdList[i] = newfd;
             else
             {

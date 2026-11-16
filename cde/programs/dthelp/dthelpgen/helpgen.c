@@ -649,15 +649,14 @@ ScanDirectory (
 
     snprintf(fullName, sizeof(fullName), "%s%s", directory, SlashString);
     ptr = fullName + strlen (fullName);
+    size_t rem = sizeof(fullName) - (size_t)(ptr - fullName);
 
-    /*
-     * skip over the "." and ".." entries.
-     */
-    (void) readdir (pDir);
-    (void) readdir (pDir);
-    pDirent = readdir (pDir);
-    while (pDirent)
+    while ((pDirent = readdir (pDir)) != nullptr)
       {
+	if (strcmp(pDirent->d_name, ".") == 0 ||
+	    strcmp(pDirent->d_name, "..") == 0)
+	    continue;
+
 	ext = GetExtension (pDirent->d_name);
 	if (strcmp (ext, Family_ext) == 0)
 	  {
@@ -665,22 +664,22 @@ ScanDirectory (
 	      {
 		AddFamilyToList (pDirent->d_name);
 
-	        strcpy (ptr, pDirent->d_name);
-		FullFamilyName = (char **) _DtHelpCeAddPtrToArray(
+	        if (snprintf (ptr, rem, "%s", pDirent->d_name) < (int)rem)
+		    FullFamilyName = (char **) _DtHelpCeAddPtrToArray(
 					(void **)FullFamilyName,
 					strdup(fullName));
 	      }
 	  }
 	else if (strcmp(ext, Ext_Hv) == 0 || strcmp(ext, Ext_Sdl) == 0)
 	  {
-	    strcpy (ptr, pDirent->d_name);
-	    VolumeList  = (char **) _DtHelpCeAddPtrToArray((void **)VolumeList,
+	    if (snprintf (ptr, rem, "%s", pDirent->d_name) < (int)rem)
+	      {
+		VolumeList  = (char **) _DtHelpCeAddPtrToArray((void **)VolumeList,
 						strdup(pDirent->d_name));
-	    FullVolName = (char **) _DtHelpCeAddPtrToArray((void **)FullVolName,
+		FullVolName = (char **) _DtHelpCeAddPtrToArray((void **)FullVolName,
 						strdup(fullName));
+	      }
 	  }
-
-	pDirent = readdir (pDir);
       }
 
     closedir(pDir);
@@ -834,7 +833,10 @@ CheckTimeStamps (
 
 	value = _DtHelpCeGetResourceString(db, *dir_list,
 						"TimeStamp", "timeStamp");
+	if (value == nullptr)
+	    return 1;
 	timeVal = atol(value);
+	free(value);
 	if (timeVal != buf.st_mtime)
 	    return 1;
 
@@ -943,13 +945,13 @@ main(
     int      doGen    = 0;
 
     char     tmpVolume  [MAXPATHLEN + 2];
-    char     tmpVolumeTemp[sizeof(tmpVolume)];
+    char     tmpVolumeTemp[MAXPATHLEN * 2 + 4];
     char     tmpVolume2 [MAXPATHLEN + 2];
     char     tmpTopic   [MAXPATHLEN + 2];
     char     tmpHeader  [MAXPATHLEN + 2];
     char     headerName [MAXPATHLEN + 2];
     char     baseName   [MAXPATHLEN + 2];
-    char     baseNameTemp[sizeof(baseName)];
+    char     baseNameTemp[MAXPATHLEN * 2 + 4];
     char     tempName   [MAXPATHLEN + 2];
     char   **next;
     char    *charSet;
@@ -1060,7 +1062,7 @@ main(
 	    exit (1);
 	  }
         snprintf(baseNameTemp, sizeof(baseNameTemp), "%s/%s", baseName, App_args.dir);
-        strcpy(baseName, baseNameTemp);
+        snprintf(baseName, sizeof(baseName), "%s", baseNameTemp);
       }
     else
         snprintf(baseName, sizeof(baseName), "%s", App_args.dir);
@@ -1081,7 +1083,7 @@ main(
     snprintf(tmpVolume, sizeof(tmpVolume), "%s", ptr);
     if (tmpVolume[strlen (tmpVolume) - 1] != '/') {
         snprintf(tmpVolumeTemp, sizeof(tmpVolumeTemp), "%s%s", tmpVolume, SlashString);
-        strcpy(tmpVolume, tmpVolumeTemp);
+        snprintf(tmpVolume, sizeof(tmpVolume), "%s", tmpVolumeTemp);
     }
 
     free (ptr);
@@ -1175,15 +1177,13 @@ main(
 	  }
 
 	/*
-	 * point to the end of the string (past where the slash will go)
-	 */
-	endDir = tmpVolume + strlen(tmpVolume) + 2;
-
-	/*
 	 * append the rest of the directory spec that hasn't been checked.
 	 */
-	strcat (tmpVolume, tmpVolume2);
-	endDir = strchr (endDir, '/');
+	size_t cur_len = strlen(tmpVolume);
+	snprintf(tmpVolume + cur_len, sizeof(tmpVolume) - cur_len, "%s", tmpVolume2);
+	endDir = (tmpVolume[cur_len] != '\0')
+		     ? strchr (tmpVolume + cur_len + 1, '/')
+		     : nullptr;
       }
 
 
@@ -1191,15 +1191,13 @@ main(
      * get temporary files for the volume and topic file.
      */
     snprintf(tmpVolumeTemp, sizeof(tmpVolumeTemp), "%s%s", tmpVolume, App_args.file);
-    strcpy(tmpVolume, tmpVolumeTemp);
+    snprintf(tmpVolume, sizeof(tmpVolume), "%s", tmpVolumeTemp);
 
-    (void) strcpy (tmpHeader, tmpVolume);
-    (void) strcpy (tmpTopic, tmpVolume);
+    snprintf(tmpHeader, sizeof(tmpHeader), "%s00.ht", tmpVolume);
+    snprintf(tmpTopic, sizeof(tmpTopic), "%s01.ht", tmpVolume);
 
     snprintf(tmpVolumeTemp, sizeof(tmpVolumeTemp), "%s%s", tmpVolume, Ext_Hv);
-    strcpy(tmpVolume, tmpVolumeTemp);
-    (void) strcat (tmpHeader, "00.ht");
-    (void) strcat (tmpTopic , "01.ht");
+    snprintf(tmpVolume, sizeof(tmpVolume), "%s", tmpVolumeTemp);
 
     result = access (tmpVolume, F_OK);
 
@@ -1336,11 +1334,8 @@ main(
     /*
      * initialize the main topic
      */
-    strcpy (TopicName, App_args.file);
-    strcat (TopicName, "01.ht");
-
-    strcpy (headerName, App_args.file);
-    strcat (headerName, "00.ht");
+    snprintf (TopicName, sizeof(TopicName), "%s01.ht", App_args.file);
+    snprintf (headerName, sizeof(headerName), "%s00.ht", App_args.file);
 
     /*
      * The original dthelpgen extracts the CDE Standard name from

@@ -579,7 +579,11 @@ CanvasRenderer::_dofont(const FeatureSet &fs, Symbol** symbols)
 	    if (xlfd) {
 		slen = strlen(xlfd);
 		len = strlen(font);
-		xlfd = (char*)realloc(xlfd, slen + len + 3);
+		char *new_xlfd = (char*)realloc(xlfd, slen + len + 3);
+		if (new_xlfd == NULL) {
+		    continue;
+		}
+		xlfd = new_xlfd;
 		*((char *) memcpy(xlfd + slen, ",", 1) + 1) = '\0';
 		*((char *) memcpy(xlfd + slen + 1, font, len) + len) = '\0';
 	    }

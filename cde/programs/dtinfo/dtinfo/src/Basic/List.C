@@ -104,9 +104,12 @@ List::check_space (int num_additions)
 	    }
 	}
 
-      f_list_element =
+      FolioObject **new_elems =
 	(FolioObject **) realloc ((char *) f_list_element,
 				  sizeof (FolioObject *) * f_internal_length);
+      if (new_elems == NULL)
+	abort ();
+      f_list_element = new_elems;
     }
 }    
 

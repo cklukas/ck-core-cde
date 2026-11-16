@@ -421,7 +421,7 @@ PRINT_USAGE:
 	KEYFRST (PROGNAME"111", OR_OBJKEY, 0);
 	while (db_status == S_OKAY) {
 	    KEYREAD (PROGNAME"288", buf);
-	    (counters[buf[0]])++;
+	    (counters[(unsigned char)buf[0]])++;
 
 	    CRGET (PROGNAME"251", &dba, 0);
 	    if (maxdba < (dba & 0xffffff))

@@ -211,8 +211,8 @@ SaveMain(
     }
     if(pPad->fileStuff.fileName != (char *)nullptr)
     {
-	sprintf(bufr, "*mainWindow%d.fileName: %s\n", padNum, 
-		pPad->fileStuff.fileName);
+	snprintf(bufr, sizeof(bufr), "*mainWindow%d.fileName: %s\n", padNum, 
+		 pPad->fileStuff.fileName);
         WriteSessionText(fd, bufr);
     }
 }

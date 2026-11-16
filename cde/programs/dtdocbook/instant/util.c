@@ -836,7 +836,7 @@ int FPuts(
     if ((CheckOutputBuffer(sLength)) == 0)
 	return EOF; /* out of space and can't grow the buffer */
 
-    strncpy(outputBuffer.current, s, sLength);
+    memcpy(outputBuffer.current, s, (size_t)sLength + 1);
     outputBuffer.current += sLength;
 
     return sLength; /* arbitrary non-negative number */

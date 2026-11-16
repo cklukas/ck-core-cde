@@ -477,7 +477,9 @@ toolkit_initialize(
 	}
 
         lockedFds = LockKshFileDescriptors();
-        DtInitialize(XtDisplay(Toplevel), Toplevel, argv[4], argv[4]);
+        DtInitialize(XtDisplay(Toplevel), Toplevel,
+                     (argc > 4 && argv[4]) ? argv[4] : argv[2],
+                     (argc > 4 && argv[4]) ? argv[4] : argv[2]);
         UnlockKshFileDescriptors(lockedFds);
 
 	DtkshRegisterNamedIntConverters();
@@ -659,7 +661,7 @@ toolkit_initialize(
 
 	ksh_eval("unset DTKSH_ARGV");
 	for (i = 0; i < newargc; i++) {
-		sprintf(envbuf, "DTKSH_ARGV[%d]=%s", i, newargv[i]);
+		snprintf(envbuf, sizeof(envbuf), "DTKSH_ARGV[%d]=%s", i, newargv[i]);
 		env_set(envbuf);
 	}
 	return(0);
@@ -1359,8 +1361,8 @@ do_DtHelpReturnSelectedWidgetId(
    char *arg0 = argv[0];
    wtab_t * w;
    XmString string;
-   char * results = argv[1]; 
-   char * variable = argv[3]; 
+   char * results; 
+   char * variable; 
    XrmValue f, t;
    int res;
    classtab_t *ctab;
@@ -1376,6 +1378,8 @@ do_DtHelpReturnSelectedWidgetId(
       return(1);
    }
 
+   results = argv[1];
+   variable = argv[3];
    w = str_to_wtab(arg0, argv[2]);
    if (w == nullptr) {
         alt_env_set_var(variable, ""); 
@@ -1401,7 +1405,7 @@ do_DtHelpReturnSelectedWidgetId(
 
    w = ConvertWidgetToWtab(arg0, retWidget);
 
-   alt_env_set_var(variable,  w->widid); 
+   alt_env_set_var(variable, w ? w->widid : ""); 
    return(0);
 }
 
@@ -1479,7 +1483,7 @@ do_DtHelpQuickDialogGetChild(
    else 
    {
       errmsg = DtkStrDup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr,
+      printerrf(argv[0], errmsg, argv[3], nullptr, nullptr,
                 nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
@@ -1496,7 +1500,7 @@ do_DtHelpQuickDialogGetChild(
 
    w = ConvertWidgetToWtab(arg0, child);
 
-   alt_env_set_var(variable,  w->widid); 
+   alt_env_set_var(variable, w ? w->widid : ""); 
    return(0);
 }
 
@@ -2545,7 +2549,7 @@ GetMainWindowSeparator(
 
    w = ConvertWidgetToWtab(arg0, child);
 
-   alt_env_set_var(variable,  w->widid); 
+   alt_env_set_var(variable, w ? w->widid : ""); 
    return(0);
 }
 
@@ -3141,7 +3145,7 @@ do_XmCommandGetChild(
    else 
    {
       errmsg = DtkStrDup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr,
+      printerrf(argv[0], errmsg, argv[3], nullptr, nullptr,
                 nullptr, nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
@@ -3158,7 +3162,7 @@ do_XmCommandGetChild(
 
    w = ConvertWidgetToWtab(arg0, child);
 
-   alt_env_set_var(variable,  w->widid); 
+   alt_env_set_var(variable, w ? w->widid : ""); 
    return(0);
 }
 
@@ -3213,7 +3217,7 @@ do_XmMessageBoxGetChild(
    else 
    {
       errmsg = DtkStrDup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr,
+      printerrf(argv[0], errmsg, argv[3], nullptr, nullptr, nullptr,
                 nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
@@ -3230,7 +3234,7 @@ do_XmMessageBoxGetChild(
 
    w = ConvertWidgetToWtab(arg0, child);
 
-   alt_env_set_var(variable,  w->widid); 
+   alt_env_set_var(variable, w ? w->widid : ""); 
    return(0);
 }
 
@@ -3243,7 +3247,7 @@ do_XmFileSelectionBoxGetChild(
    char *arg0 = argv[0];
    wtab_t * w;
    XmString string;
-   char * variable = argv[1]; 
+   char * variable; 
    int childType;
    XrmValue f, t;
    Widget child;
@@ -3259,6 +3263,7 @@ do_XmFileSelectionBoxGetChild(
       return(1);
    }
 
+   variable = argv[1];
    w = str_to_wtab(arg0, argv[2]);
    if (w == nullptr) {
       alt_env_set_var(variable, ""); 
@@ -3285,7 +3290,7 @@ do_XmFileSelectionBoxGetChild(
    else 
    {
       errmsg = DtkStrDup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr,
+      printerrf(argv[0], errmsg, argv[3], nullptr, nullptr, nullptr,
                 nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
@@ -3302,7 +3307,7 @@ do_XmFileSelectionBoxGetChild(
 
    w = ConvertWidgetToWtab(arg0, child);
 
-   alt_env_set_var(variable,  w->widid); 
+   alt_env_set_var(variable, w ? w->widid : ""); 
    return(0);
 }
 
@@ -3315,7 +3320,7 @@ do_XmSelectionBoxGetChild(
    char *arg0 = argv[0];
    wtab_t * w;
    XmString string;
-   char * variable = argv[1]; 
+   char * variable; 
    int childType;
    XrmValue f, t;
    Widget child;
@@ -3331,6 +3336,7 @@ do_XmSelectionBoxGetChild(
       return(1);
    }
 
+   variable = argv[1];
    w = str_to_wtab(arg0, argv[2]);
    if (w == nullptr) {
       alt_env_set_var(variable, ""); 
@@ -3357,7 +3363,7 @@ do_XmSelectionBoxGetChild(
    else 
    {
       errmsg = DtkStrDup(GetSharedMsg(DT_UNKNOWN_CHILD_TYPE));
-      printerrf(argv[0], errmsg, argv[2], nullptr, nullptr, nullptr,
+      printerrf(argv[0], errmsg, argv[3], nullptr, nullptr, nullptr,
                 nullptr, nullptr, nullptr, nullptr);
       free(errmsg);
       alt_env_set_var(variable, ""); 
@@ -3374,7 +3380,7 @@ do_XmSelectionBoxGetChild(
 
    w = ConvertWidgetToWtab(arg0, child);
 
-   alt_env_set_var(variable,  w->widid); 
+   alt_env_set_var(variable, w ? w->widid : ""); 
    return(0);
 }
 
@@ -3395,7 +3401,7 @@ do_XmScaleGetValue(
 {
    char *arg0 = argv[0];
    wtab_t * w;
-   char * variable = argv[2]; 
+   char * variable; 
    char buf[25];
    int scaleValue;
    char * errmsg;
@@ -3409,6 +3415,7 @@ do_XmScaleGetValue(
       return(1);
    }
 
+   variable = argv[2];
    w = str_to_wtab(arg0, argv[1]);
    if (w == nullptr) 
    {
@@ -3835,9 +3842,9 @@ do_catopen(
 {
    int * lockedFds;
    char * arg0 = argv[0];
-   char * var = argv[1];
-   char * catName = argv[2];
-   char buf[10];
+   char * var;
+   char * catName;
+   char buf[32];
    char * altCatName;
    char * ptr;
    nl_catd nlmsg_fd = (nl_catd)-1;
@@ -3852,6 +3859,8 @@ do_catopen(
       return(1);
    }
 
+   var = argv[1];
+   catName = argv[2];
    lockedFds = LockKshFileDescriptors();
 
    if ((nlmsg_fd = catopen(catName, 0)) == (nl_catd)-1)
@@ -3890,7 +3899,7 @@ do_catopen(
    }
    UnlockKshFileDescriptors(lockedFds);
 
-   sprintf(buf, "%ld", (long)nlmsg_fd);
+   snprintf(buf, sizeof(buf), "%ld", (long)nlmsg_fd);
    alt_env_set_var(var,  buf);
    return(0);
 }
@@ -3901,9 +3910,9 @@ do_catclose(
         char **argv )
 {
    char * arg0 = argv[0];
-   char * catId = argv[1];
+   char * catId;
    nl_catd id;
-   long long_id;
+   long long_id = -1;
    char * errmsg;
 
    if (argc != 2)
@@ -3914,7 +3923,9 @@ do_catclose(
       return(1);
    }
 
-   sscanf(catId, "%ld", &long_id);
+   catId = argv[1];
+   if (sscanf(catId, "%ld", &long_id) != 1)
+      return(1);
    id = (nl_catd)long_id;
    catclose(id);
    return(0);
@@ -3926,16 +3937,16 @@ do_catgets(
         char **argv )
 {
    char * arg0 = argv[0];
-   char * variable = argv[1];
-   char * catId = argv[2];
-   char * setNum = argv[3];
-   char * msgNum = argv[4];
-   char * dftMsg = argv[5];
+   char * variable;
+   char * catId;
+   char * setNum;
+   char * msgNum;
+   char * dftMsg;
    char * msg;
    nl_catd id;
-   long long_id;
-   int setNumVal;
-   int msgNumVal;
+   long long_id = -1;
+   int setNumVal = 0;
+   int msgNumVal = 0;
    char * errmsg;
 
    if (argc != 6)
@@ -3947,10 +3958,21 @@ do_catgets(
       return(1);
    }
 
-   sscanf(catId, "%ld", &long_id);
+   variable = argv[1];
+   catId = argv[2];
+   setNum = argv[3];
+   msgNum = argv[4];
+   dftMsg = argv[5];
+
+   if (sscanf(catId, "%ld", &long_id) != 1)
+      long_id = -1;
    id = (nl_catd)long_id;
-   sscanf(setNum, "%d", &setNumVal);
-   sscanf(msgNum, "%d", &msgNumVal);
+   if (sscanf(setNum, "%d", &setNumVal) != 1 ||
+       sscanf(msgNum, "%d", &msgNumVal) != 1)
+   {
+      alt_env_set_var(variable, dftMsg);
+      return(1);
+   }
    msg = catgets(id, setNumVal, msgNumVal, dftMsg);
    alt_env_set_var(variable, msg);
    return(0);
@@ -5034,7 +5056,7 @@ GetSubWidget(
 
    w = ConvertWidgetToWtab(arg0, child);
 
-   alt_env_set_var(variable,  w->widid); 
+   alt_env_set_var(variable, w ? w->widid : ""); 
    return(0);
 }
 
@@ -5220,7 +5242,7 @@ _CreatePDMJobSetup(
 	char * errmsg;
 	WidgetClass wclass;
 
-	if (argc < 2) {
+	if (argc != 3) {
                 errmsg = DtkStrDup(GETMESSAGE(
                      "Usage: %s variable parent"));
 		printerrf(str_nill, errmsg, argv[0], nullptr,
@@ -5238,11 +5260,11 @@ _CreatePDMJobSetup(
 		return(1);
 	}
 	widget = func(pw->w);
-	wclass = XtClass(widget);
-	if ((class = str_to_class(arg0, wclass->core_class.class_name)) == nullptr) {
-		return(1);
-	}
 	if (widget != nullptr) {
+		wclass = XtClass(widget);
+		if ((class = str_to_class(arg0, wclass->core_class.class_name)) == nullptr) {
+			return(1);
+		}
 		/* Some of the XmCreate* functions return a widget
 		 * id whose parent is not necessarily the parent
 		 * passed in.  For example, DialogShell returns the
@@ -5263,7 +5285,7 @@ _CreatePDMJobSetup(
 	} else {
                 errmsg = DtkStrDup(GetSharedMsg(DT_WIDGET_CREATE_FAILED));
 		printerrf(argv[0], errmsg,
-                          wclass->core_class.class_name, nullptr, nullptr, nullptr,
+                          argv[1], nullptr, nullptr, nullptr,
 			nullptr, nullptr, nullptr, nullptr);
                 free(errmsg);
 		env_blank(argv[1]);

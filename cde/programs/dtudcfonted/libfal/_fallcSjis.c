@@ -492,7 +492,7 @@ sjis_mbstocs(
     XLCd lcd = (XLCd) conv->state;
     char *tmp_from, *tmp_to;
     int tmp_from_left, tmp_to_left;
-    XlcCharSet charset, tmp_charset;
+    XlcCharSet charset = nullptr, tmp_charset = nullptr;
     XPointer tmp_args[1];
     int unconv_num = 0, ret;
 

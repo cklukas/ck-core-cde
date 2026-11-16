@@ -52,9 +52,11 @@
 
 #define LANG_COMMON	"ja_JP.UTF-8"		/* default os language */
 
-#define XtsNewString(str) \
-    ((str) != NULL ? (char *)(memcpy(malloc((unsigned)strlen(str) + 1), \
-     str, (unsigned)strlen(str) + 1)) : NULL)
+static inline char *
+XtsNewString(const char *str)
+{
+    return (str != nullptr) ? strdup(str) : nullptr;
+}
 
 typedef enum
 {
@@ -1153,6 +1155,8 @@ parseArgs(int argc, char *argv[])
 		int j;
 
 		gStruct->libDesc = XtsNewString(argv[i]);
+		if (gStruct->libDesc == nullptr)
+		    die(-1, "%s: out of memory\n", EXEC_NAME);
 
 		/* Change TABs to SPACEs */
 		for (j = 0; gStruct->libDesc[j] != '\0'; j++)
@@ -2022,6 +2026,8 @@ replaceData(char *inData, char *replaceMe, char *replacement)
 
     newLen = strlen(inData) + (i * (strlen(replacement) - replaceMeLen));
     newData = calloc((newLen + 1), sizeof(char));
+    if (newData == nullptr)
+	dieRWD(-1, "%s: out of memory\n", EXEC_NAME);
     newData[0] = '\0';
     p = inData;
     while ((endP = strstr(p, replaceMe)) != (char *)nullptr)

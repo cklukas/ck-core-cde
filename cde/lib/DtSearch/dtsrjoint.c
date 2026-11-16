@@ -441,9 +441,9 @@ static DtSrResult *ditto_pop (DtSrResult ** lst)
  */
 static DtSrResult *ditto_split (DtSrResult * lst)
 {
-    DtSrResult     *tail = lst->link;
+    DtSrResult     *tail;
 
-    if (lst == nullptr || tail == nullptr)
+    if (lst == nullptr || (tail = lst->link) == nullptr)
 	return lst;
 
     /*
@@ -473,6 +473,11 @@ static DtSrResult *merge_by_prox (DtSrResult * l1, DtSrResult * l2)
     DtSrResult     *myqueue = nullptr;
     DtSrResult     *myend = nullptr;
     DtSrResult     *mynext;
+
+    if (l1 == nullptr)
+	return l2;
+    if (l2 == nullptr)
+	return l1;
 
     while ((l1 != nullptr) && (l2 != nullptr)) {
 	/*
@@ -517,6 +522,11 @@ static DtSrResult *merge_by_date (DtSrResult * l1, DtSrResult * l2)
     DtSrResult     *myqueue = nullptr;
     DtSrResult     *myend = nullptr;
     DtSrResult     *mynext;
+
+    if (l1 == nullptr)
+	return l2;
+    if (l2 == nullptr)
+	return l1;
 
     while ((l1 != nullptr) && (l2 != nullptr)) {
 	/*
@@ -583,6 +593,7 @@ static DtSrResult *ditto_sort (DtSrResult * lst)
 	    fprintf (aa_stderr, PROGNAME "525 Invalid Sort Type %d.\n",
 		ditsort_type);
 	    DtSearchExit (32);
+	    return nullptr;
     }
 }  /* ditto_sort() */
 

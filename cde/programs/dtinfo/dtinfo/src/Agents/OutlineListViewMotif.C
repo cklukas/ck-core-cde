@@ -237,7 +237,7 @@ OutlineListView::set_list (OutlineList *list, BitHandle handle)
 {
   // NOTE: Eventually it should be possible to set the list to NULL.
   if (f_list != NULL && f_list != list )
-    list->free_data_handle (f_data_handle);
+    f_list->free_data_handle (f_data_handle);
   f_list = list;
   if (list != NULL) {
     if (handle != 0)
@@ -247,7 +247,7 @@ OutlineListView::set_list (OutlineList *list, BitHandle handle)
   }
   // Determine the base level.
   f_base_level = 0;
-  if (list->length() > 0) {
+  if (list != NULL && list->length() > 0) {
       //  SWM -- need to change this so that when determining
       //  the base level, we check all of the roots...
       f_base_level = ((OutlineElement *)(*list)[0])->level();
@@ -1094,9 +1094,12 @@ OutlineListView::activate (WCallback *wcb)
   
   oe = item_at(lcs->item_position - 1) ;
 
+  if (oe == NULL) {
 #ifdef DEBUG
-  if( oe == NULL ) printf( "OLV::activate: NULL outline element pointer\n" ) ;
+    printf( "OLV::activate: NULL outline element pointer\n" ) ;
 #endif
+    return;
+  }
 
   if ( oe->has_children() )
     {

@@ -89,7 +89,7 @@ unsigned int width_ret, height_ret;
 extern GC scratch_gc;
 
 char  *tmpSave;            /* Save the file path being saved */
-char  dummy[256];           /* mask file for use in main */
+char  dummy[MAX_FNAME + 4]; /* mask file for use in main */
 extern int SaveMeNot;
 extern int SavedOnce;
 
@@ -385,10 +385,13 @@ Read_File(
   if (successFormat == FORMAT_XBM) {
 /*** does a suffix exist? ***/
     if (suffix) {
-      strncpy(dummy, fname, ((suffix-fname)-1));
-      dummy[(int) (suffix-fname)-1] = '\0';
-      strcat(dummy, "_m.");
-      strcat(dummy, suffix);
+      size_t base_len = (size_t)((suffix - fname) - 1);
+      if (base_len >= sizeof(dummy))
+        base_len = sizeof(dummy) - 1;
+      memcpy(dummy, fname, base_len);
+      dummy[base_len] = '\0';
+      if (base_len + 1 < sizeof(dummy))
+        snprintf(dummy + base_len, sizeof(dummy) - base_len, "_m.%s", suffix);
 #ifdef DEBUG
   if (debug) {
     stat_out("  full-filename = '%s'\n", fname);
@@ -547,10 +550,13 @@ Write_File(
   }
 /*** THIRD, construct the mask filename ***/
     if (suffix) {
-      strncpy(dummy, fname, ((suffix-fname)-1));
-      dummy[(int) (suffix-fname)-1] = '\0';
-      strcat(dummy, "_m.");
-      strcat(dummy, suffix);
+      size_t base_len = (size_t)((suffix - fname) - 1);
+      if (base_len >= sizeof(dummy))
+        base_len = sizeof(dummy) - 1;
+      memcpy(dummy, fname, base_len);
+      dummy[base_len] = '\0';
+      if (base_len + 1 < sizeof(dummy))
+        snprintf(dummy + base_len, sizeof(dummy) - base_len, "_m.%s", suffix);
     }
     else {
       snprintf(dummy, sizeof(dummy), "%s_m", fname);
@@ -996,9 +1002,7 @@ SetFileIODialogInfo( void )
 
     XSync(dpy, 0);
           /* rebuild last file name */
-          last_fname[0] = '\0';
-          strcpy(last_fname, dirStr);
-          strcat(last_fname, newName);
+          snprintf(last_fname, sizeof(last_fname), "%s%s", dirStr, newName);
        }
     }
     else { /* not untitled */
@@ -1020,7 +1024,9 @@ SetFileIODialogInfo( void )
 
              /* make and insert the directory name */
              ln = strlen(last_fname) - strlen(tmp1);
-             strncpy(dirStr, last_fname, ln);
+             if ((size_t)ln >= sizeof(dirStr))
+               ln = (int)sizeof(dirStr) - 1;
+             memcpy(dirStr, last_fname, (size_t)ln);
              dirStr[ln] = '\0';
 	 }
 	 else
@@ -1030,7 +1036,7 @@ SetFileIODialogInfo( void )
 	      * Set filename to be path name
 	      * Set directory name = "."
 	      */
-             strcpy(newName, last_fname);
+             snprintf(newName, sizeof(newName), "%s", last_fname);
              dirStr[0] = '.';
              dirStr[1] = '\0';
 	 }
@@ -1043,7 +1049,6 @@ SetFileIODialogInfo( void )
     }
      ln=0;
      /* set the Highlighted string */
-     newName[strlen(newName)+1] ='\0';
      tmp1 = strchr(newName, '.');
      if (tmp1 && tmp1[0]!='\0') ln = (int)strlen(tmp1);
      endSelect = strlen(newName)- ln;

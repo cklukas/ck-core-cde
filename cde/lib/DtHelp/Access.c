@@ -991,6 +991,8 @@ _DtHelpCeGetLangSubParts (
 		      }
 		    else
 		      {
+			if (subLang != nullptr)
+			    free (sLang);
 			errno = CEErrorMalloc;
 			return -1;
 		      }
@@ -1041,6 +1043,10 @@ _DtHelpCeGetLangSubParts (
 		sCode = strdup (ptr);
 		if (sCode == nullptr)
 		  {
+		    if (subLang != nullptr)
+			free (sLang);
+		    if (subTer != nullptr)
+			free (sTer);
 		    errno = CEErrorMalloc;
 		    return -1;
 		  }
@@ -1078,6 +1084,8 @@ _DtHelpCeGetLangSubParts (
 	    sTer = strdup (lang);
 	    if (sTer == nullptr)
 	      {
+		if (subLang != nullptr)
+		    free (sLang);
 		errno = CEErrorMalloc;
 		return -1;
 	      }
@@ -1240,13 +1248,13 @@ _DtHelpCeCompressPathname ( char	*basePath )
 	 * check for //
 	 */
 	if (char1 == True && ptr[1] == '/')
-	    strcpy (ptr, (ptr + 1));
+	    memmove (ptr, (ptr + 1), strlen (ptr + 1) + 1);
 
 	/*
 	 * check for /./
 	 */
 	else if (char2 == True && ptr[1] == '.' && ptr[2] == '/')
-	    strcpy (ptr, (ptr + 2));
+	    memmove (ptr, (ptr + 2), strlen (ptr + 2) + 1);
 
 	/*
 	 * check for /../
@@ -1258,13 +1266,13 @@ _DtHelpCeCompressPathname ( char	*basePath )
 	     * directory change.
 	     */
 	    if (prevPtr == nullptr)
-	        strcpy (ptr, (ptr + 3));
+	        memmove (ptr, (ptr + 3), strlen (ptr + 3) + 1);
 	    else
 	      {
 		/*
 		 * compress the /../
 		 */
-		strcpy (prevPtr, (ptr + 3));
+		memmove (prevPtr, (ptr + 3), strlen (ptr + 3) + 1);
 
 		/*
 		 * reset the current pointer
@@ -1376,14 +1384,24 @@ _DtHelpCeTracePathName (char *path)
 	if (getcwd (newPath, MAXPATHLEN) == nullptr)
 	    return nullptr;
 
-	strcat (newPath, "/");
+	size_t cwd_len = strlen (newPath);
+	if (cwd_len + 1 + strlen (path) >= sizeof (newPath))
+	  {
+	    errno = ENAMETOOLONG;
+	    return nullptr;
+	  }
+	newPath[cwd_len] = '/';
+	memcpy (newPath + cwd_len + 1, path, strlen (path) + 1);
       }
-
-    /*
-     * put the path in the working path buffer (or append it to
-     * the current working directory).
-     */
-    strcat (newPath, path);
+    else
+      {
+	if (strlen (path) >= sizeof (newPath))
+	  {
+	    errno = ENAMETOOLONG;
+	    return nullptr;
+	  }
+	memcpy (newPath, path, strlen (path) + 1);
+      }
 
     /*
      * Compress out the slashes and directory changes.
@@ -1454,7 +1472,14 @@ _DtHelpCeTracePathName (char *path)
 	     * being search with the new link path.
 	     */
 	    if (*linkPath == '/')
-		strcpy (newPath, linkPath);
+	      {
+		if (strlen (linkPath) + strlen (tempPath) >= sizeof (newPath))
+		  {
+		    errno = ENAMETOOLONG;
+		    return nullptr;
+		  }
+		snprintf (newPath, sizeof (newPath), "%s%s", linkPath, tempPath);
+	      }
 	    else
 	      {
 		/*
@@ -1462,13 +1487,17 @@ _DtHelpCeTracePathName (char *path)
 		 * prev is looking at the first character of this directory.
 		 * replace with the link.
 		 */
-		strcpy (prev, linkPath);
+		size_t prefix_len = (size_t)(prev - newPath);
+		size_t link_len = strlen (linkPath);
+		size_t tail_len = strlen (tempPath);
+		if (prefix_len + link_len + tail_len >= sizeof (newPath))
+		  {
+		    errno = ENAMETOOLONG;
+		    return nullptr;
+		  }
+		memcpy (prev, linkPath, link_len);
+		memcpy (prev + link_len, tempPath, tail_len + 1);
 	      }
-
-	    /*
-	     * now tack on the rest of the name
-	     */
-	    strcat (newPath, tempPath);
 
 	    /*
 	     * compress out the directory changes.
@@ -1537,10 +1566,24 @@ _DtHelpCeTraceFilenamePath (char *file_path)
 	if (getcwd(workName, MAXPATHLEN) == nullptr)
 	   return nullptr;
 
-	strcat(workName, "/");
+	size_t cwd_len = strlen(workName);
+	if (cwd_len + 1 + strlen(file_path) >= sizeof(workName))
+	  {
+	    errno = ENAMETOOLONG;
+	    return nullptr;
+	  }
+	workName[cwd_len] = '/';
+	memcpy(workName + cwd_len + 1, file_path, strlen(file_path) + 1);
       }
-
-    strcat (workName, file_path);
+    else
+      {
+	if (strlen(file_path) >= sizeof(workName))
+	  {
+	    errno = ENAMETOOLONG;
+	    return nullptr;
+	  }
+	memcpy(workName, file_path, strlen(file_path) + 1);
+      }
 
     do
       {
@@ -1585,7 +1628,12 @@ _DtHelpCeTraceFilenamePath (char *file_path)
 	 * onto the end of the new path.
 	 */
 	namePlace = newName + strlen (newName);
-	strcpy (namePlace, oldName);
+	if ((size_t)(namePlace - newName) + strlen (oldName) >= sizeof (newName))
+	  {
+	    errno = ENAMETOOLONG;
+	    return nullptr;
+	  }
+	memcpy (namePlace, oldName, strlen (oldName) + 1);
 
 	/*
 	 * See if the absolute path/filename is a symbolic link.
@@ -1606,20 +1654,26 @@ _DtHelpCeTraceFilenamePath (char *file_path)
 	     */
 	    linkName [result] = '\0';
 	    if (*linkName == '/')
-		strcpy (newName, linkName);
+		snprintf (newName, sizeof (newName), "%s", linkName);
 	    else
 	      {
 		/*
 		 * overwrite the filename with the link
 		 * but don't overwrite the slash.
 		 */
-		strcpy ((namePlace + 1), linkName);
+		size_t prefix_len = (size_t)((namePlace + 1) - newName);
+		if (prefix_len + (size_t)result >= sizeof (newName))
+		  {
+		    errno = ENAMETOOLONG;
+		    return nullptr;
+		  }
+		memcpy (namePlace + 1, linkName, (size_t)result + 1);
 	      }
 
 	    /*
 	     * make a copy of the new name to work on
 	     */
-	    strcpy (workName, newName);
+	    snprintf (workName, sizeof (workName), "%s", newName);
 	  }
       } while (!done);
 

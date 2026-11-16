@@ -949,7 +949,7 @@ void            write_2_dtbs_addr_file (void)
 	    "  but there are only %ld records in database!\n"
 	    "  (This may be a good candidate for the stoplist).\n"),
 	    PROGNAME"713",
-	    (long) got_word.or_hwordkey,
+	    got_word.or_hwordkey,
 	    (long) num_addrs_ii,
 	    (long) or_reccount);
 	DtSearchExit (68);
@@ -1774,8 +1774,8 @@ INVALID_FZK_FORMAT:
     printf (CATGETS(dtsearch_catd, MS_cborodin, 1225,
 	"%s: Pass 1 completed in %lum %lus, read %lu records.\n"
 	"  %s, parsed %lu words.\n"),
-	aa_argv0, elapsed / 60L, elapsed % 60L, record_count,
-	buf, num_of_diff_words);
+	aa_argv0, (unsigned long)(elapsed / 60L), (unsigned long)(elapsed % 60L),
+	(unsigned long)record_count, buf, (unsigned long)num_of_diff_words);
     if (record_count > batch_size) {
 	printf (CATGETS(dtsearch_catd, MS_cborodin, 33,
 	    "\n%s Number of incoming records exceeded %d.\n"
@@ -1814,7 +1814,8 @@ INVALID_FZK_FORMAT:
     elapsed = time (nullptr) - timestart;
     printf (CATGETS(dtsearch_catd, MS_cborodin, 1246,
 	"%s: Pass 2 completed in %lum %lus, updated %lu words.\n"),
-	aa_argv0, elapsed / 60L, elapsed % 60L, count_word_ii);
+	aa_argv0, (unsigned long)(elapsed / 60L), (unsigned long)(elapsed % 60L),
+	(unsigned long)count_word_ii);
     if (normal_retncode == 1)
 	printf (CATGETS(dtsearch_catd, MS_cborodin, 2,
 	    "%s: Warnings were detected.\n"), aa_argv0);

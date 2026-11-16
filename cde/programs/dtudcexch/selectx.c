@@ -272,7 +272,7 @@ void setexistcode(ListData *ld)
 
 char i2c(int num)
 {
-    char c;
+    char c = '\0';
 
     if ((0 <= num) && (num <= 9))
 	c = '0' + num;

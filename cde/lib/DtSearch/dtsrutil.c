@@ -133,7 +133,7 @@ void            print_dittolist (DtSrResult * dittolist, char *prefix)
 		objdate2tm (dit->objdate));
 	fprintf (aa_stderr,
 	    " dbn=%d dba=%d:%ld prox=%d sz=%ld date=%s key='%s'\n",
-	    dit->dbn, dit->dba >> 24, (long)dit->dba & 0xffffffL,
+	    dit->dbn, (int)(dit->dba >> 24), (long)dit->dba & 0xffffffL,
 	    dit->proximity, (long)dit->objsize,
 	    datebuf, dit->reckey);
 	if (dit->abstractp)

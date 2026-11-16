@@ -382,7 +382,8 @@ void GetSessionInfo( void )
     if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value))
     {
         if ( value.addr!=nullptr)
-            strcpy(sessiondata.workspaces, value.addr);
+            snprintf(sessiondata.workspaces, sizeof(sessiondata.workspaces),
+                     "%s", (char *)value.addr);
         else
             sessiondata.workspaces[0] = '\0';
     }
@@ -391,12 +392,13 @@ void GetSessionInfo( void )
     /* get file name               */
     /*******************************/
     xrm_name[0] = XrmStringToQuark ("file");
-    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value)) {
+    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value) &&
+        value.addr != nullptr) {
 #ifdef DEBUG
        printf("file to edit = '%s'\n", value.addr);
 #endif
-       pszFileToEdit = (char *)XtMalloc(strlen(value.addr) + 1);
-       strcpy(pszFileToEdit, value.addr);
+       pszFileToEdit = (char *)XtMalloc(strlen((char *)value.addr) + 1);
+       strcpy(pszFileToEdit, (char *)value.addr);
     }
 }
 /*****************************************************************************/
@@ -463,16 +465,19 @@ void SaveSession( void )
 #ifdef DEBUG
     printf("getting window property\n");
 #endif
+    wmState = nullptr;
     XGetWindowProperty (XtDisplay(CreateActionAppShell),
                         XtWindow(CreateActionAppShell), wmStateAtom, 0L,
                         (long)BUFSIZ, False, wmStateAtom, &actualType,
                         &actualFormat, &nitems, &leftover,
                         (unsigned char **) &wmState);
 
-    if (wmState->state == IconicState)
+    if (wmState != nullptr && wmState->state == IconicState)
         fprintf(fp, "*iconic: True\n");
     else
         fprintf(fp, "*iconic: False\n");
+    if (wmState != nullptr)
+        XFree((char *)wmState);
 
     fprintf(fp, "*expert: %s\n",
 	    XtIsManaged(XprtOptionForm) ? "True" : "False");
@@ -509,15 +514,22 @@ void SaveSession( void )
     				    XtWindow(CreateActionAppShell),
 				    &ws_presence, &num_workspaces) == Success)
     {
+	all_workspace_names[0] = '\0';
 	for (j = 0; j < num_workspaces; j++)
 	{
 	    workspace_name = XGetAtomName (display, ws_presence[j]);
+	    if (workspace_name == nullptr)
+		continue;
 	    if (j == 0)
-		(void) strcpy(all_workspace_names, workspace_name);
+		snprintf(all_workspace_names, sizeof(all_workspace_names),
+			 "%s", workspace_name);
 	    else
 	    {
-		(void) strcat(all_workspace_names, "*");
-		(void) strcat(all_workspace_names, workspace_name);
+		size_t cur_len = strlen(all_workspace_names);
+		if (cur_len + 1 < sizeof(all_workspace_names))
+		    snprintf(all_workspace_names + cur_len,
+			     sizeof(all_workspace_names) - cur_len,
+			     "*%s", workspace_name);
 	    }
 	    XFree ((char *) workspace_name);
 	}
@@ -635,7 +647,7 @@ void RemoveTmpIconFiles( void )
 {
   int       i;
   IconData  *pIconData;
-  char      maskFile[MAXFILENAME];
+  char      maskFile[MAXFILENAME + 4];
 
   for (i=0; i < ICON_NUMBER; i++) {
      if ( (IconDataList[i]->pmDirtyBit) &&
@@ -649,8 +661,7 @@ void RemoveTmpIconFiles( void )
         /* rather than a pixmap during the edit process, this will make */
         /* sure that file gets removed.  The chance of this occurring   */
         /* is very unlikely.                                            */
-        strcpy(maskFile, IconDataList[i]->pmFileName);
-        strcat(maskFile, "_m");
+        snprintf(maskFile, sizeof(maskFile), "%s_m", IconDataList[i]->pmFileName);
 
 #ifdef DEBUG
         printf("Remove maskFile = %s\n", maskFile); /* debug */
@@ -829,7 +840,7 @@ Tt_callback_action IconEdit_tt_handler( Tt_message m, Tt_pattern p )
   int             tmpfd = -1;
   Tt_state        mstate;
   char            *msgPtr, *fmtPtr, *errPtr;
-  char            tmpbuf[MAXBUFSIZE];
+  char            tmpbuf[MAXPATHLEN + 4];
   Boolean         tmpbufTruncated = False;
   char*           ttbuf;
   char*           op;
@@ -1301,7 +1312,7 @@ void UxDoEditPixmap(Widget wid, char *fname)
 		 msgPtr = "Could not read the entire file:";
 		 fmtPtr = "%s\n   %s";
 		 errPtr = XtMalloc((strlen(msgPtr) + strlen(fmtPtr) +
-				    strlen(fname) + 1) * sizeof(char));
+				    strlen(mname) + 1) * sizeof(char));
 		 sprintf(errPtr, fmtPtr, msgPtr, mname);
                  display_error_message(XtParent(wid), errPtr);
 		 XtFree(errPtr);
@@ -1426,10 +1437,12 @@ main(int argc, char *argv[])
             } else {
                if (argv[i][0] == '-') {
                   if (!strcmp(argv[i], "-s")) {
-                     i+=1;
-                     sessiondata.pszSessionFile = (char *)XtMalloc(strlen(argv[i]) + 1);
-                     strcpy(sessiondata.pszSessionFile, argv[i]);
-                     sessiondata.useSession = True;
+                     if (i + 1 < argc) {
+                        i+=1;
+                        sessiondata.pszSessionFile = (char *)XtMalloc(strlen(argv[i]) + 1);
+                        strcpy(sessiondata.pszSessionFile, argv[i]);
+                        sessiondata.useSession = True;
+                     }
                   } else {
                      i+=1;
                   }

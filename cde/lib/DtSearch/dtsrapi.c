@@ -344,7 +344,7 @@ int             DtSearchInit (
 {
     if (aa_is_initialized) {
 	sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_ausapi, 621,
-	    "%1$s %2%s has already been initialized."),
+	    "%1$s %2$s has already been initialized."),
 	    PROGNAME"621", PRODNAME);
 	DtSearchAddMessage (sprintbuf);
 	return DtSrFAIL;
@@ -363,7 +363,7 @@ int             DtSearchInit (
     sprintbuf = austext_malloc (SPRINTBUFSZ, PROGNAME "135", nullptr);
 
     /* Open msgs and help text catalogs. */
-    if (switches & (DtSrInNOLOCALE == 0)) {
+    if ((switches & DtSrInNOLOCALE) == 0) {
 	setlocale (LC_ALL, "");
 	dtsearch_catd = CATOPEN(FNAME_DTSRCAT, 0);
     }
@@ -477,7 +477,7 @@ int	DtSearchReinit (char ***dbnames, int *dbcount)
 		fflush (aa_stderr);
 	    }
 	    aa_reinit();
-	    /*  fall thru to OK... */
+	    /* fallthrough */
 
 	case OE_OK:
 	    *dbnames = ausapi_dbnamesv;
@@ -527,10 +527,10 @@ static int      both_valid_dates (char *date1, char *date2)
 {
     int             convert_error = FALSE;
 
-    if ((usrblk.objdate1 = DtSearchValidDateString (date1)) == -1L)
+    if ((usrblk.objdate1 = DtSearchValidDateString (date1)) == (DtSrObjdate)-1)
 	convert_error = TRUE;
 
-    if ((usrblk.objdate2 = DtSearchValidDateString (date2)) == -1L)
+    if ((usrblk.objdate2 = DtSearchValidDateString (date2)) == (DtSrObjdate)-1)
 	convert_error = TRUE;
 
     if (!convert_error &&
@@ -840,7 +840,7 @@ int             DtSearchHighlight (
     if (cleartext == nullptr || cleartext[0] == 0) {
 	sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_ausapi, 40,
 		"%1$s Null cleartext.  No highlighting performed."),
-	    PROGNAME "349 ", dbname);
+	    PROGNAME "349 ");
 	DtSearchAddMessage (sprintbuf);
 	return DtSrERROR;
     }

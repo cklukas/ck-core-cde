@@ -318,6 +318,9 @@ static int      build_tree (void)
 	 */
     }	/* end loop to find two lowest counts */
 
+    if (low0 < 0 || low1 < 0)
+	return FALSE;
+
     /* low0 and low1 now point to two lowest count nodes.
      * link in low0 and low1 to next available new node.
      */
@@ -474,7 +477,11 @@ static void     init_treebase (void)
 	/* discard this first line (don't need id stamp) */
 	while (fgets (filebuf, sizeof (filebuf) - 1, instream_huf)
 	    != nullptr) {
-	    i = atoi (strtok (filebuf, DELIMITERS));	/* char */
+	    char *tok_idx = strtok (filebuf, DELIMITERS);
+	    char *tok_cnt;
+	    if (tok_idx == nullptr)
+		continue;
+	    i = atoi (tok_idx);	/* char */
 	    if (i < 0 || i > 256) {
 		fprintf (stderr, CATGETS(dtsearch_catd, MS_huff, 33,
 		    "366 Invalid file format for %s.\n"),
@@ -483,8 +490,9 @@ static void     init_treebase (void)
 	    }
 	    strtok (nullptr, DELIMITERS);	/* skip over current huff
 					 * code */
-	    hctree1[i].count = (i == 256) ?
-		0L : atol (strtok (nullptr, DELIMITERS));
+	    tok_cnt = (i == 256) ? nullptr : strtok (nullptr, DELIMITERS);
+	    hctree1[i].count = (i == 256 || tok_cnt == nullptr) ?
+		0L : atol (tok_cnt);
 	    hctree1[i].bit = LAST_BIT;
 	    hctree1[i].father = -1;
 	    hctree1[i].son0 = -1;

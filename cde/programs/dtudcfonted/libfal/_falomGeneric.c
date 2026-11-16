@@ -649,9 +649,16 @@ static char
     fields[POINT_SIZE_FIELD - 1] = str_point;
 
     rotate_font[0] = '\0';
-    for(field_num = 0 ; field_num < CHARSET_ENCODING_FIELD &&
-			fields[field_num] ; field_num++) {
-	snprintf(rotate_font, sizeof(rotate_font), "%s-%s", rotate_font, fields[field_num]);
+    {
+	size_t rf_len = 0;
+	for(field_num = 0 ; field_num < CHARSET_ENCODING_FIELD &&
+			    fields[field_num] ; field_num++) {
+	    int n = snprintf(rotate_font + rf_len, sizeof(rotate_font) - rf_len,
+			     "-%s", fields[field_num]);
+	    if (n < 0 || (size_t)n >= sizeof(rotate_font) - rf_len)
+		break;
+	    rf_len += (size_t)n;
+	}
     }
 
     if(pattern)

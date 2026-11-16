@@ -83,7 +83,7 @@ iljpgError _iljpgEnDCTScale (
         Q table, as setup by _iljpgEnDCTInit().
     */
     ILJPG_PRIVATE_EXTERN
-_iljpgEnDCT (
+void _iljpgEnDCT (
     int        *pSrc,
     float      *pScale
     );

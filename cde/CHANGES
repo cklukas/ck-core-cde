@@ -1,4 +1,99 @@
 2026-11-16
+- Help subsystem (`lib/DtHelp` and `programs/dthelp`), `dtksh`, `DtSearch` and
+  `dtsr`, `DtMmdb` and `dtinfo`, and desktop client (`dtcreate`, `dtpad`,
+  `dticon`, `dtcalc`, `dtimsstart`) hardening.
+  - `lib/DtHelp` and `programs/dthelp`: `FormatUtil.c` checks `mblen()` `< 0`
+    before advancing multibyte cursors; `FormatCCDF.c` frees `titleChunks` via a
+    saved head pointer instead of incrementing the pointer passed to `free()`;
+    `FormatTerm.c` guards `checkPtr` before dereferencing `segPtr->handle`;
+    `FormatSDL.c`, `Graphics.c`, `HelpUtil.c`, `Access.c`, `AccessSDL.c`,
+    `FileUtils.c`, `FileListUtils.c`, `StringFuncs.c`, `Print.c` and
+    `GlobSearch.c` preserve existing buffers on `realloc()` failure, bound path
+    formatting with `snprintf()`, and check `getenv()` results; the image
+    library (`il/`) replaces negative signed shifts and `short` shift overflows
+    with unsigned masks in `ilint.h`, `iljpgint.h`, `iljpgencodeint.h`,
+    `ildither.c`, `ilefs.c`, `ilwriteimage.c` and `iljpgendct.c`, and preserves
+    buffers on `realloc()` failure in `iltiff.c`, `ilcomplzw.c`, `ilcodec.c` and
+    `ilutiljpeg.c`. In `programs/dthelp`, `canon1/helptag/xref.c` keeps `tex`
+    open across the `defxref` loop before closing it, `canon1/util/malloc.c`
+    formats `m_malftrace` before `free(block)`, `canon1/helptag/help.c` and
+    `pass1/helptag/help.c` free `charset` before `mb_free(&locale)`,
+    `dthelpgen/helpgen.c` fixes the `endDir` off-by-one read and bounds topic
+    paths, and `dthelpprint` (`PrintUtil.c`, `PrintTopics.c`, `Initialize.c`,
+    `PrintManStrFile.c`) replaces predictable `sprintf()` temporary filenames
+    with atomic `O_CREAT | O_EXCL` (`0600`) creation under a mode-`0700`
+    `$HOME/.dt/tmp` directory and bounds section-number and option buffers.
+    Test: `programs/dthelp/dthelpprint/tests/check-dthelpprint-hardening.py`.
+  - `dtksh`: `xmcvt.c` resets `separator` per item and reallocates `buf` before
+    appending `,` in `_CvtXmStringTableToString()`, bounds `errbuf` in
+    `DtkshCvtStringToNamedValue()`, and fixes `DtkshCvtStringToTtScope()` to
+    convert against `NI_TT_SCOPE` instead of calling itself recursively;
+    `dtkcvt.c` widens 64-bit `Window`, `Screen`, hex and integer conversion
+    buffers to 32 bytes, handles `sizeof(long)` values in
+    `DtkshCvtHexIntToString()` and `DtkshCvtIntToString()`, checks null callback
+    lists and bounds `|` concatenation in `DtkshCvtCallbackToString()`, and uses
+    static storage in `CvtStringToMWMValue()`; `widget.c` guards `TAB_EMPTY` and
+    null names in `DtkshNameToWidget()`, NUL-terminates `getname()`, and prints
+    `errmsg` with `"%s"`; `xmcmds.c` and `dtkcmds.c` check `argc` and widget
+    handles before dereferencing `argv[]` or `XtClass()`, stop `stdInputCB()` on
+    EOF, and use 64-bit `Atom` counts in `GetWorkspaceList()`. Test:
+    `programs/dtksh/tests/check-dtksh-hardening.py`.
+  - `lib/DtSearch` and `programs/dtsr`: `msgutil.c` fixes `split_llist()` base
+    cases (`lst == nullptr || lst->link == nullptr`), guards empty lists in
+    `merge_llist()`, and avoids reading `*(string - 1)` on an empty string in
+    `clean_wrap()`; `dtsrjoint.c` guards empty lists in `ditto_split()`,
+    `merge_by_prox()` and `merge_by_date()` and returns `nullptr` after
+    `DtSearchExit()` in `ditto_sort()`; `dtsrapi.c` compares
+    `DtSearchValidDateString()` against `(DtSrObjdate)-1` instead of `-1L` on
+    64-bit platforms; `fileman.c` clamps `hole_count` in `fread_d99_header()` to
+    `[0, NUM_HOLES]`; `ocf.c`, `hencode.c`, `lang.c`, `boolpars.c`, `hilite.c`,
+    `vestatis.c`, `dtsrutil.c`, `dtsearch.msg` and `programs/dtsr/*` bound path
+    and message formatting and guard null pointers. Test:
+    `lib/DtSearch/tests/check-dtsearch-hardening.py`.
+  - `lib/DtMmdb` and `programs/dtinfo`: `memory_pool.C` stores a
+    `chunk_manage_record_t` prefix for allocations outside `[4, MAX_CHUNK_SZ]`,
+    rounds pooled sizes with `ll4()`, and frees `MAX_CHUNK_SZ` pools in
+    `~memory_pool()`; `buffer.C` avoids offsetting already-aligned buffers in
+    `expand_chunk()` and preserves `v_aptr`/`v_eptr` via `ptrdiff_t` offsets;
+    `handler.C`, `data_t.C`, `token.ll` and `style.yy` guard null pointers and
+    buffer bounds; in `dtinfo`, `DtSR_SearchResultsEntry.C` fixes the
+    `overlay_proximity()` bitmask precedence bug (`(f_zone & (1U << uas_zone)) == 0`)
+    and rejects negative zone indices, `StyleSheetMgr.C` and
+    `OutlineListViewMotif.C` guard null pointers and free `f_list` handles, and
+    `FeatureSupport.C`, `cgmio.c`, `List.C`, `NodeViewInfo.C`, `ParseTree.C`,
+    `IcccmAgent.C`, `MapAgentMotif.C` and `TextTest.C` preserve pointers on
+    `realloc()` failure. Test: `lib/DtMmdb/tests/check-dtmmdb-hardening.py`.
+  - `dtcreate`, `dtpad`, `dticon`, `dtcalc` and `dtimsstart`: `dtcreate`
+    allocates `size + 1` bytes in `ParseAndUpdateID()`, bounds token copies in
+    `ProcessContents()`, sizes `errPtr` from `mname` in `UxDoEditPixmap()`, and
+    pairs `pszFile` with `XtFree()` in `WriteActionFile()`; `dtpad` bounds
+    `AddPound()` and `ExtractAndStoreDir()`, guards `localPath` and
+    `tt_message_context_val()` in `TTmedia_ptype_declareCB()`, and checks
+    `pJob->pShell` and `getpwuid()` in `printJob.c`; `dticon` fixes 1-byte heap
+    buffer overflows in `send_tt_saved()` and `SetFileIODialogInfo()` and widens
+    `MAX_FNAME` to 1024; `dtcalc` returns early on out-of-range button indices
+    in `process_item()`, initializes `next` in `get_options()`, and widens
+    resource/message buffers in `motif.c` and `ds_xlib.c`; `dtimsstart` guards
+    `!ent || !ims` in `parse_ims_list()`, bounds `~/` expansion in
+    `expand_string()`, and sizes `new_fname`/`save_path` for suffixes. Test:
+    `programs/dtcreate/tests/check-desktop-apps-hardening.py`.
+  - `dtdocbook`, `dtudcfonted`, `dtudcexch`, `dtexec`, `localized`, `dtpdm`,
+    `lib/DtWidget`, `lib/DtPrint` and `include/Dt`: `dtdocbook` replaces the
+    unchecked `XtsNewString` macro with a null-safe helper, checks `newData`
+    allocations in `replaceData()`, copies the terminating NUL in `FPuts()`, and
+    preserves pointers in `Realloc()`; `dtudcfonted` and `dtudcexch` allocate
+    `r_gpf->ptn` and `r_udc->ptn` on the heap instead of storing the address of
+    a local stack pointer in `mergePtn()` and `impMergePtn()`, initialize
+    `i2c()`, `charset`, `newl` and `downbutton` variables, return and free `buf`
+    on success in `mbstocts()` and `ctstombs()`, avoid overlapping `snprintf()`
+    in `get_rotate_fontname()`, and preserve buffers on `Xrealloc()` failure;
+    `dtexec` rejects negative `list->count` in `CommandListJoin()` and checks
+    `realloc()` in `ParseCommandLine()` and `main()`; `localized` widens the
+    `gencat` command buffer in `merge.c` and fixes `calloc()` argument order in
+    `mkcatdefs.c`; `DtWidget`, `DtPrint`, `dtpdm` and `CanvasSegP.h` store
+    `freopen()` results, initialize `XtGetApplicationResources` targets, and
+    guard null segment pointers in `_DtCvIsSegNewLine`. Test:
+    `programs/dtdocbook/infolib/tests/check-dtdocbook-udc-hardening.py`.
 - File Manager (`dtfile`) Storage Size hardlink deduplication and path-resolution
   hardening. `StorageSize` now deduplicates physical disk block accounting
   (`st_blocks * 512`) across hardlinked regular files using an open-addressed

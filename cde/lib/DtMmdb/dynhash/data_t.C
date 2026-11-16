@@ -204,6 +204,9 @@ istream& operator >>(istream& i, data_t& d)
    char* key_ptr = strchr(buf, '\t');
    char* voidPtr_ptr = strrchr(buf, '\t');
 
+   if ( !key_ptr || !voidPtr_ptr || key_ptr == voidPtr_ptr )
+      return i;
+
    *key_ptr = 0;
    *voidPtr_ptr = 0;
 

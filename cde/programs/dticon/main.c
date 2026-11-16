@@ -511,14 +511,19 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
         }
         else if (edit_notifier(nullptr, msg, 0))
         {
-           strcpy( msgID, tt_message_arg_val(msg, 1) );
+           char *arg_msg_id = tt_message_arg_val(msg, 1);
+           if (arg_msg_id != nullptr) {
+              snprintf(msgID, sizeof(msgID), "%s", arg_msg_id);
+           } else {
+              msgID[0] = '\0';
+           }
 
            if (file)
            {
                    /*
                     * Icon data is in a file
                    */
-                   strcpy(start_file, file);
+                   snprintf(start_file, 256, "%s", file);
            }
            else
            {
@@ -564,13 +569,17 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
                 {
                    /* Format XBM */
                    /* assume two buffers.... */
-                   tmp = strchr((char *)buf, ';');
-                   tmp ++;
-                   tmplen=blen - strlen(tmp);
+                   tmp = buf ? strchr((char *)buf, ';') : nullptr;
+                   if (tmp != nullptr) {
+                      tmp ++;
+                      tmplen = blen - strlen(tmp);
+                   } else {
+                      tmplen = blen;
+                   }
 
                      /* read XBM file first*/
                      /* Grab the first buffer. */
-                     if ((wlen =
+                     if (buf && (wlen =
                                    write(tt_tmpfile_fd,
                                          buf, tmplen)) == tmplen)
                      {
@@ -580,34 +589,40 @@ if (tt_message_status(msg) == TT_WRN_START_MESSAGE) tt_message_reply(msg);
                      }
                      else
                      {
+                             (void) close(tt_tmpfile_fd);
                              tt_message_fail(msg);
                             edit_notifier(nullptr, 0, 1);
                      }
 
                    /* Try to find the second buffer. */
-                   tmp ++;
-                   if(tmp) tmp1=strchr(tmp, ';');
+                   if (tmp) {
+                      tmp ++;
+                      tmp1 = strchr(tmp, ';');
+                   } else {
+                      tmp1 = nullptr;
+                   }
 
                    if (tmp1)
                    {
                       /* we have a mask */
                       /* construct the name of the mask file */
-                      strcpy(mask_file, start_file);
-                      strcat(mask_file, "_m\0");
+                      snprintf(mask_file, sizeof(mask_file), "%s_m", start_file);
                       tt_tmpMaskfile_fd =
                             open(mask_file,
                             O_CREAT | O_WRONLY | O_NDELAY,
                             0666);
                       /* Read the mask fro the seconf buffer. */
-                      if (tt_tmpMaskfile_fd && (wlen =
+                      if (tt_tmpMaskfile_fd != -1 && (wlen =
                       write(tt_tmpMaskfile_fd,
-                            tmp, strlen(tmp))) == strlen(tmp))
+                            tmp, strlen(tmp))) == (int)strlen(tmp))
                       {
                          (void) close(tt_tmpMaskfile_fd);
                          param_flag[AUTO_FILE] = True;
                          argsNeedProcessed = True;
                       }
                       else {
+                              if (tt_tmpMaskfile_fd != -1)
+                                 (void) close(tt_tmpMaskfile_fd);
                               tt_message_fail(msg);
                               edit_notifier(nullptr, 0, 1);
                            }
@@ -712,7 +727,13 @@ send_tt_saved(void)
 
         /* Read the base file regardless of format */
         fd = open(last_fname, O_RDONLY | O_NDELAY);
+        if (fd == -1) {
+           tt_message_destroy(msg);
+           tt_release(mark);
+           return;
+        }
         len = lseek(fd, 0, SEEK_END);
+        if (len < 0) len = 0;
         (void) lseek(fd, 0, SEEK_SET);
         Fbuffer = XtMalloc(len + 1);
         if ((rlen = read(fd, Fbuffer, len)) != len)
@@ -725,11 +746,12 @@ send_tt_saved(void)
 
         rlen = 0;
         /* Handle the XBM format */
-        if( (fileFormat != FORMAT_XPM) && (stat(dummy, &statbuf) == 0) )
+        if( (fileFormat != FORMAT_XPM) && (stat(dummy, &statbuf) == 0) &&
+            ((fdm = open(dummy, O_RDONLY | O_NDELAY)) != -1) )
         {
            /* Read the mask file if one exists */
-           fdm = open(dummy, O_RDONLY | O_NDELAY);
            Mlen = lseek(fdm, 0, SEEK_END);
+           if (Mlen < 0) Mlen = 0;
            (void) lseek(fdm, 0, SEEK_SET);
            Mbuffer = XtMalloc(Mlen + 1);
            if ((rlen = read(fdm, Mbuffer, Mlen)) != Mlen)
@@ -743,11 +765,12 @@ send_tt_saved(void)
            Mbuffer[Mlen] ='\0';
 
            /* Double buffer the base and mask */
-           buffer = XtMalloc(strlen(Fbuffer)+strlen(Mbuffer)+1);
-           strcpy(buffer, Fbuffer);
-           buffer[strlen(Fbuffer)] ='\0';
-           strcat(buffer, Mbuffer);
-           buffer[strlen(Fbuffer)+strlen(Mbuffer)+1] ='\0';
+           size_t f_len = strlen(Fbuffer);
+           size_t m_len = strlen(Mbuffer);
+           buffer = XtMalloc(f_len + m_len + 1);
+           memcpy(buffer, Fbuffer, f_len);
+           memcpy(buffer + f_len, Mbuffer, m_len);
+           buffer[f_len + m_len] = '\0';
            XtFree(Mbuffer);
         }
         else
@@ -755,7 +778,7 @@ send_tt_saved(void)
            /* No mask/bm just pass the pm file */
              buffer = XtMalloc(len + 1);
              strcpy(buffer, Fbuffer);
-             buffer[len+1] ='\0';
+             buffer[len] = '\0';
         }
 
         tt_message_barg_add(msg, TT_IN, tt_message_arg_type(local_msg, 0),

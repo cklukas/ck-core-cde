@@ -3767,7 +3767,7 @@ stdCB(
       }
       else if (strcmp(cdata->cbname, XmNhelpCallback) == 0)
          discipline = &dftDiscipline;
-      else
+      else if (cdata->w != nullptr && cdata->w->w != nullptr)
       {
          class = XtClass(cdata->w->w);
          while (class)
@@ -3894,7 +3894,8 @@ stdInputCB(
       {
          /* Force one call with the data, and a 2nd with the EOF */
          inp->lnbuf[inp->lnend] = '\0';
-         ProcessInput(inp, *source, *id, False);
+         if (ProcessInput(inp, *source, *id, False))
+            return;
       }
       inp->lastCharIsBackslash = False;
       inp->lineWasTouched = False;
@@ -3913,7 +3914,9 @@ stdInputCB(
    for (i = 0; i < n; ) 
    {
 #ifdef NLS16
-      len = mblen(buf+i, MB_CUR_MAX);
+      len = mblen(buf+i, n - i);
+      if (len <= 0)
+         len = 1;
 #else
       len = 1;
 #endif
@@ -4649,12 +4652,23 @@ do_DtShellIsIconified(
    wmStateAtom = XmInternAtom (XtDisplay(w->w), "WM_STATE", False);
 
    /*  Getting the WM_STATE property to see if iconified or not */
-   XGetWindowProperty(XtDisplay(w->w), XtWindow (w->w),
-                       wmStateAtom, 0L, (long) LINESIZE, False,
-                       wmStateAtom, &actual_type, &actual_format,
-                       &nitems, &leftover, (unsigned char **) &wm_state);
+   wm_state = nullptr;
+   if (XGetWindowProperty(XtDisplay(w->w), XtWindow (w->w),
+                          wmStateAtom, 0L, (long) LINESIZE, False,
+                          wmStateAtom, &actual_type, &actual_format,
+                          &nitems, &leftover, (unsigned char **) &wm_state) != Success ||
+       wm_state == nullptr)
+   {
+      if (wm_state != nullptr)
+         XFree((char *)wm_state);
+      return (1);
+   }
 
-   return (wm_state->state != IconicState);
+   {
+      int not_iconified = (wm_state->state != IconicState);
+      XFree((char *)wm_state);
+      return not_iconified;
+   }
 }
 
 int
@@ -4734,9 +4748,13 @@ do_DtSetIconifyHint(
    {
      /* Remove the iconify hint from the current shell */
      wmhints = XGetWMHints(XtDisplay(w->w), XtWindow(w->w));
-     wmhints->flags |= IconWindowHint;
-     wmhints->initial_state = NormalState;
-     XSetWMHints(XtDisplay(w->w), XtWindow(w->w), wmhints);
+     if (wmhints != nullptr)
+     {
+        wmhints->flags |= IconWindowHint;
+        wmhints->initial_state = NormalState;
+        XSetWMHints(XtDisplay(w->w), XtWindow(w->w), wmhints);
+        XFree(wmhints);
+     }
    }
 
    return(0);
@@ -4911,12 +4929,13 @@ GetWorkspaceList(
    char * p;
    Display * display;
    Window root;
-   unsigned long numWS;
-   Atom * wsList;
+   unsigned long numWS = 0;
+   int numWSInt = 0;
+   Atom * wsList = nullptr;
    char * buf;
    char atom[128];
    int result;
-   int i;
+   unsigned long i;
    char * errmsg;
 
    if (argc != 4) 
@@ -4950,7 +4969,10 @@ GetWorkspaceList(
    if (getOccupied)
       result = DtWsmGetWorkspacesOccupied(display, root, &wsList, &numWS);
    else
-      result = DtWsmGetWorkspaceList(display, root, &wsList, (int *)&numWS);
+   {
+      result = DtWsmGetWorkspaceList(display, root, &wsList, &numWSInt);
+      numWS = (numWSInt > 0) ? (unsigned long)numWSInt : 0;
+   }
 
    if (result == Success)
    {
@@ -7602,7 +7624,7 @@ ProcessHyperType(
    np2 = GetNameValuePair(name);
 
    f.addr = (caddr_t)&hyperType;
-   f.size = sizeof(long);
+   f.size = sizeof(int);
    t.addr = nullptr;
    t.size = 0;
    XtConvert(Toplevel, "HelpHyperType", &f, XtRString, &t);
@@ -7612,7 +7634,7 @@ ProcessHyperType(
    else
       value = str_nill;
 
-   strcpy(buf, value);
+   snprintf(buf, sizeof(buf), "%s", value);
    nv_putval(np2, buf, NV_RDONLY);
 
    if (name = strtok(nullptr, "."))
@@ -7870,7 +7892,9 @@ ProcessCallbackEvent(
          if (strcmp(name, "TYPE") == 0)
          {
             fval.addr = (caddr_t)&(event->type);
-            fval.size = sizeof(long);
+            fval.size = sizeof(int);
+            tval.addr = nullptr;
+            tval.size = 0;
             XtConvert(Toplevel, "XE_EventType", &fval, XtRString, &tval);
             if (tval.size != 0) 
                ptr = (char *)(tval.addr);
@@ -7919,6 +7943,8 @@ ProcessCallbackEvent(
                                          ((char *)event+table[j].valueOffset));
                               fval.size = sizeof(long);
                            }
+                           tval.addr = nullptr;
+                           tval.size = 0;
                            XtConvert(Toplevel, table[j].representation,
                                      &fval, XtRString, &tval);
                            if (tval.size != 0) 
@@ -9106,9 +9132,9 @@ textCreateDisc2(
                   wcBuf[i] = cbData->text->wcsptr[i];
                wcBuf[i] = 0;
 
-               mbBufSize = ((cbData->text->length + 1) * sizeof(wchar_t));
+               mbBufSize = ((cbData->text->length + 1) * MB_CUR_MAX) + 1;
                mbBuf = XtMalloc(mbBufSize);
-               count = wcstombs(mbBuf, wcBuf, mbBufSize - sizeof(wchar_t));
+               count = (int)wcstombs(mbBuf, wcBuf, mbBufSize - 1);
                if (count >= 0)
                {
                   mbBuf[count] = '\0';

@@ -335,12 +335,13 @@ static void     user_args_processor (int argc, char **argv)
 	argptr = argv[0];
 	if (argptr[0] != '-')
 	    break;
-	switch (tolower (argptr[1])) {
+	switch (tolower ((unsigned char)argptr[1])) {
 	    case 'r':
 		if (strcmp (argptr, "-russell") == 0)	/* backdoor debug */
 		    debug_mode = TRUE;
 		else
 		    goto UNKNOWN_ARG;
+		break;
 
 	    case 'm':
 		fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_dtsrclean, 301,
@@ -349,7 +350,7 @@ static void     user_args_processor (int argc, char **argv)
 		break;
 
 	    case 'o':
-		i = tolower (argptr[2]);
+		i = tolower ((unsigned char)argptr[2]);
 		if (i == 'n')
 		    overlay_no = TRUE;
 		else if (i == 'y')
@@ -388,11 +389,14 @@ static void     user_args_processor (int argc, char **argv)
 		break;
 
 	    case 'c':
-		tempsize = atol (argptr + 2);
-		if (tempsize < 0L)
+	    {
+		long parsed_corruption = atol (argptr + 2);
+		if (parsed_corruption < 0L)
 		    goto INVALID_ARG;
+		tempsize = (size_t)parsed_corruption;
 		max_corruption = tempsize;
 		break;
+	    }
 
 	UNKNOWN_ARG:
 	    default:
@@ -611,14 +615,14 @@ void            read_d2x (struct or_hwordrec * glob_word, long field)
 static void     write_d2x (struct or_hwordrec * glob_word, long field)
 {
     if (field == OR_SWORDKEY) {
-	snprintf(d21new.or_swordkey, 16, "%s", glob_word->or_hwordkey);
+	snprintf(d21new.or_swordkey, sizeof(d21new.or_swordkey), "%.15s", glob_word->or_hwordkey);
 	d21new.or_swoffset =	htonl (glob_word->or_hwoffset);
 	d21new.or_swfree =	htonl (glob_word->or_hwfree);
 	d21new.or_swaddrs =	htonl (glob_word->or_hwaddrs);
 	RECWRITE (PROGNAME "102", &d21new, 0);
     }
     else if (field == OR_LWORDKEY) {
-	snprintf(d22new.or_lwordkey, 40, "%s", glob_word->or_hwordkey);
+	snprintf(d22new.or_lwordkey, sizeof(d22new.or_lwordkey), "%.39s", glob_word->or_hwordkey);
 	d22new.or_lwoffset =	htonl (glob_word->or_hwoffset);
 	d22new.or_lwfree =	htonl (glob_word->or_hwfree);
 	d22new.or_lwaddrs =	htonl (glob_word->or_hwaddrs);

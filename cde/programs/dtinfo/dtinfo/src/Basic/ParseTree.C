@@ -435,9 +435,11 @@ PText::insert_chars (int where, char *text, int length)
       // keep doubling until we have enough space
       while (new_len > f_symbol_space)
 	f_symbol_space *= 2;
-      // NOTE: check malloc result
-      f_symbol = (char *) realloc ((char *) f_symbol,
-				   sizeof (char) * (f_symbol_space + 1));
+      char *new_symbol = (char *) realloc ((char *) f_symbol,
+					   sizeof (char) * (f_symbol_space + 1));
+      if (new_symbol == NULL)
+	return;
+      f_symbol = new_symbol;
     }
 
   /* -------- make room for new stuff -------- */
@@ -592,12 +594,26 @@ PRoot::generate ()
 	{
 	  if (pos >= f_space)
 	    {
-	      f_space *= 2;
-	      f_char_of = (char *)
-		realloc ((char *) f_char_of, sizeof(char) * (f_space + 1));
-	      f_node_of_real = (PNode **)
+	      int next_space = f_space * 2;
+	      char *new_char_of = (char *)
+		realloc ((char *) f_char_of, sizeof(char) * (next_space + 1));
+	      PNode **new_node_of_real = (PNode **)
 		realloc ((char *) f_node_of_real,
-			 sizeof(PNode *) * (f_space + 2));
+			 sizeof(PNode *) * (next_space + 2));
+	      if (new_char_of == NULL || new_node_of_real == NULL)
+		{
+		  if (new_char_of != NULL)
+		    f_char_of = new_char_of;
+		  if (new_node_of_real != NULL)
+		    {
+		      f_node_of_real = new_node_of_real;
+		      f_node_of = f_node_of_real + 1;
+		    }
+		  break;
+		}
+	      f_space = next_space;
+	      f_char_of = new_char_of;
+	      f_node_of_real = new_node_of_real;
 	      f_node_of = f_node_of_real + 1;
 	    }
 	  f_char_of[pos] = *s;

@@ -662,17 +662,18 @@ ushort WriteActionFile(ActionData *pAD)
   /* Open action file for writing.                                           */
   /***************************************************************************/
   if (pszFile == nullptr || (fp = fopen(pszFile, "w")) == nullptr) {
+    const char *failFile = pszFile ? pszFile : "";
 #ifdef DEBUG
     printf("Can not open file.\n"); /* debug */
 #endif
     msgPtr = GETMESSAGE(5, 55, "Could not create the following file:");
     fmtPtr = "%s\n   %s";
     errPtr = XtCalloc((strlen(msgPtr) + strlen(fmtPtr) +
-		       strlen(pszFile) + 1), sizeof(char));
-    sprintf(errPtr, fmtPtr, msgPtr, pszFile);
+		       strlen(failFile) + 1), sizeof(char));
+    sprintf(errPtr, fmtPtr, msgPtr, failFile);
     display_error_message(CreateActionAppShell, errPtr);
     XtFree(errPtr);
-    XtFree(pszFile);
+    if (pszFile) XtFree(pszFile);
     return(1);
   }
 #ifdef DEBUG
@@ -702,6 +703,7 @@ ushort WriteActionFile(ActionData *pAD)
 
   fclose(fp);
   chmod(pszFile, 0755);
+  XtFree(pszFile);
   return(0);
 }
 

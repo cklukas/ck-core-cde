@@ -206,7 +206,7 @@ void fix_chunk_pool::free(char* x)
 ///////////////////////////////////////////////////
 
 memory_pool::memory_pool(int x) : 
-max_alloc_size_from_pool(x), vm_pool_vector(MAX_CHUNK_SZ)
+max_alloc_size_from_pool(x), vm_pool_vector(MAX_CHUNK_SZ + 1)
 {
 //MESSAGE(cerr, "memory_pool cstr");
 //debug(cerr, int(this));
@@ -216,7 +216,7 @@ int g_memory_size = 0;
 
 memory_pool::~memory_pool()
 {
-   for ( int i=4; i<MAX_CHUNK_SZ; i++ ) {
+   for ( int i=4; i<=MAX_CHUNK_SZ; i++ ) {
       delete (fix_chunk_pool*)vm_pool_vector[i];
    }
 //cerr << "g_memory_size = " << g_memory_size << "\n";
@@ -234,30 +234,44 @@ debug(cerr, sz);
 
 //g_memory_size += sz;
 
-   if ( INRANGE(sz, 4, MAX_CHUNK_SZ) ) {
+   size_t pool_sz = (sz > 0 && sz <= MAX_CHUNK_SZ) ? (size_t)ll4((int)sz) : sz;
+
+   if ( INRANGE(pool_sz, 4, MAX_CHUNK_SZ) ) {
 
        fix_chunk_pool *x = 
-          (fix_chunk_pool*)vm_pool_vector[sz];
+          (fix_chunk_pool*)vm_pool_vector[pool_sz];
 
        if ( x == 0 ) {
 //MESSAGE(cerr, "calling new fix_chunk_pool");
-          x = new fix_chunk_pool(sz);
-          vm_pool_vector.insert(x, sz);
+          x = new fix_chunk_pool((int)pool_sz);
+          vm_pool_vector.insert(x, (int)pool_sz);
        }
        
        return x -> alloc();
       
    } else {
-       return new char[sz];
+       char* raw = new char[sizeof(chunk_manage_record_t) + sz];
+       chunk_manage_record_t* hdr = (chunk_manage_record_t*)raw;
+       hdr -> chunk_carrier_ptr = 0;
+       return raw + sizeof(chunk_manage_record_t);
    }
 //MESSAGE(cerr, "=======");
 }
 
 void memory_pool::free(char* str)
 {
-   int sz = ((chunk_manage_record_t*)
-      (str - sizeof(chunk_manage_record_t))) ->
-          chunk_carrier_ptr -> chunk_sz;
+   if ( str == 0 )
+       return;
+
+   chunk_manage_record_t* hdr = (chunk_manage_record_t*)
+      (str - sizeof(chunk_manage_record_t));
+
+   if ( hdr -> chunk_carrier_ptr == 0 ) {
+       delete [] (char*)hdr;
+       return;
+   }
+
+   int sz = hdr -> chunk_carrier_ptr -> chunk_sz;
 
    if ( INRANGE(sz, 4, MAX_CHUNK_SZ) ) {
 
@@ -273,7 +287,7 @@ void memory_pool::free(char* str)
           x -> free(str);
       
    } else {
-       delete [] str;
+       delete [] (char*)hdr;
    }
 }
 

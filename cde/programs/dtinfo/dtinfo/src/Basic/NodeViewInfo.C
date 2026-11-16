@@ -532,21 +532,26 @@ highlight_search_hit(_DtCvSegment* seg, unsigned int vcc, unsigned int vlen)
 		    wchar_t* dst = (wchar_t*)seg->handle.string.string;
 		    int dlen = wcslen(dst);
 		    int slen = wcslen(src);
-		    seg->handle.string.string = (void*)
-			realloc(seg->handle.string.string,
-					sizeof(wchar_t) * (dlen + slen + 1));
-		    dst = (wchar_t*)seg->handle.string.string;
-		    wcscat(dst, src);
+		    void* new_str = realloc(seg->handle.string.string,
+					    sizeof(wchar_t) * (dlen + slen + 1));
+		    if (new_str != NULL) {
+			seg->handle.string.string = new_str;
+			dst = (wchar_t*)seg->handle.string.string;
+			wcscat(dst, src);
+		    }
 		}
 		else {
 		    char* src = (char*)sibling->handle.string.string;
 		    char* dst = (char*)seg->handle.string.string;
 		    int dlen = strlen(dst);
 		    int slen = strlen(src);
-		    seg->handle.string.string = (void*)
-			realloc(seg->handle.string.string, dlen + slen + 1);
-		    dst = (char*)seg->handle.string.string;
-		    strcat(dst, src);
+		    void* new_str = realloc(seg->handle.string.string,
+					    dlen + slen + 1);
+		    if (new_str != NULL) {
+			seg->handle.string.string = new_str;
+			dst = (char*)seg->handle.string.string;
+			strcat(dst, src);
+		    }
 		}
 		DtCvStrVcLenSync(seg);
 

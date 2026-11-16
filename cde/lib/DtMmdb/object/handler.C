@@ -150,7 +150,8 @@ debug(cerr, obj_id);
 // this init_object block is only called once for the operator->().
 // Subsequent calls will bypass it as obj_ptr is not 0.
 ///////////////////////////////////////////////////////////////////
-         obj_id.become(obj_ptr -> my_oid());
+         if ( obj_ptr != 0 )
+            obj_id.become(obj_ptr -> my_oid());
 
       } 
    }

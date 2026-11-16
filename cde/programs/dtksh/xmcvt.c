@@ -173,8 +173,12 @@ _CvtXmStringTableToString(
    for (i = 0; i < itemCount; i++)
    {
       if (i > 0)
+      {
+         buf = XtRealloc(buf, strlen(buf) + 3);
          strcat(buf, ",");
+      }
 
+      separator = FALSE;
       XmStringInitContext(&context, stringtable[i]);
       while (!separator) 
       {
@@ -339,6 +343,11 @@ DtkshCvtStringToNamedValue(
         char * errmsg;
 
 	value = (String)fval->addr;
+	if (fval->size <= 0 || value == nullptr) {
+		toval->addr = nullptr;
+		toval->size = 0;
+		return;
+	}
 
 	if (*nargs != 1) {
 		toval->addr = nullptr;
@@ -357,8 +366,9 @@ DtkshCvtStringToNamedValue(
 	}
 	errmsg =DtkStrDup(GETMESSAGE(
              "DtkshCvtStringToNamedValue: Unable to convert the string '%s'"));
-        errbuf = XtMalloc(strlen(errmsg) + strlen(value) + 10);
-        sprintf(errbuf, errmsg, value);
+        size_t errsize = strlen(errmsg) + strlen(value) + 10;
+        errbuf = XtMalloc(errsize);
+        snprintf(errbuf, errsize, errmsg, value);
 	XtWarning(errbuf);
         free(errmsg);
         XtFree(errbuf);
@@ -1478,11 +1488,17 @@ DtkshCvtStringToTtScope(
    XrmValue cval[1], fval;
    Cardinal nargs;
 
+   if (pString == nullptr)
+   {
+      pToVal->addr = nullptr;
+      pToVal->size = 0;
+      return;
+   }
    fval.addr = (caddr_t)pString;
-   fval.size = strlen(pString);
+   fval.size = strlen(pString) + 1;
    nargs = 1;
-   cval[0].size = sizeof(NI_TT_OP);
-   cval[0].addr = (caddr_t)NI_TT_OP;
-   DtkshCvtNamedValueToString(cval, &nargs, &fval, pToVal);
+   cval[0].size = sizeof(NI_TT_SCOPE);
+   cval[0].addr = (caddr_t)NI_TT_SCOPE;
+   DtkshCvtStringToNamedValue(cval, &nargs, &fval, pToVal);
    return;
 }

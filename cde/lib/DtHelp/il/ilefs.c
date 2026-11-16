@@ -354,8 +354,8 @@ ilEFSFileType     *pfileType;
         /*  Malloc space for returned file types - use malloc(); caller uses free().
             If no file types, still malloc something to return non-null ptr.
         */
-    pfileType = (ilEFSFileType *)calloc((nFileTypes > 0) ? 
-                                          nFileTypes, sizeof (ilEFSFileType) : 4);
+    pfileType = (ilEFSFileType *)calloc((nFileTypes > 0) ? nFileTypes : 1,
+                                        sizeof (ilEFSFileType));
     if (!pfileType) {
         context->error = IL_ERROR_MALLOC;
         return FALSE;

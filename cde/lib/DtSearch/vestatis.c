@@ -761,7 +761,7 @@ void            init_memory (void)
     mem_start = (char *) malloc (MEMORY_SIZE);
     if (mem_start == nullptr) {
 	fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_vestatis, 310,
-	    "%s Out of Memory.  Need %ld bytes.\n"), PROGNAME "310", MEMORY_SIZE);
+	    "%s Out of Memory.  Need %ld bytes.\n"), PROGNAME "310", (long)MEMORY_SIZE);
 	OE_flags |= OE_PERMERR;
 	usrblk.retncode = OE_ABORT;
 	release_shm_mem ();
@@ -1009,8 +1009,8 @@ void            load_ditto_str (void)
 	if (db_status < 0) {
 	    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_vestatis, 437,
 		"%s: db_status = %d, dba = %d:%ld (x'%08.8lx'), vistano = %d\n"),
-		PROGNAME "437", db_status, (dba1 & 0xff000000) >> 24,
-		dba1 & 0xffffff, dba1, saveusr.vistano);
+		PROGNAME "437", db_status, (int)((dba1 & 0xff000000) >> 24),
+		(long)(dba1 & 0xffffff), (unsigned long)dba1, saveusr.vistano);
 	    OE_flags |= OE_PERMERR;
 	    usrblk.retncode = OE_ABORT;
 	    release_shm_mem ();
@@ -1020,8 +1020,8 @@ void            load_ditto_str (void)
 	if (db_status < 0) {
 	    fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_vestatis, 437,
 		    "%s: db_status = %d, dba = %d:%ld (x'%08.8lx'), vistano = %d\n"),
-		PROGNAME "437", db_status, (dba1 & 0xff000000) >> 24,
-		dba1 & 0xffffff, dba1, saveusr.vistano);
+		PROGNAME "437", db_status, (int)((dba1 & 0xff000000) >> 24),
+		(long)(dba1 & 0xffffff), (unsigned long)dba1, saveusr.vistano);
 	    OE_flags |= OE_PERMERR;
 	    usrblk.retncode = OE_ABORT;
 	    release_shm_mem ();
@@ -1150,7 +1150,7 @@ void            load_ditto_str (void)
     if (num_hits >= maxhits) {
 	if (!(usrblk.flags & USR_NO_INFOMSGS)) {
 	    sprintf (vestat_msgbuf, CATGETS(dtsearch_catd, MS_vestatis, 421,
-		"$s Total Number Hits = %ld. Discarded hits beyond maximum number specified."),
+		"%s Total Number Hits = %ld. Discarded hits beyond maximum number specified."),
 		PROGNAME "421", (long)num_hits);
 	    DtSearchAddMessage (vestat_msgbuf);
 	}

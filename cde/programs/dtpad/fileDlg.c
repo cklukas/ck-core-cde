@@ -407,18 +407,24 @@ ExtractAndStoreDir(
     pFirstSlash = MbStrchr(fileName, '/');
     if(type == OPEN) {
        if (pFirstSlash != (char *)nullptr) {
+	   size_t len;
 	   pLastSlash = MbStrrchr(fileName, '/');
-	   strncpy(pPad->fileStuff.pathDir, pFirstSlash,
-		   pLastSlash - pFirstSlash + 1);
-	   pPad->fileStuff.pathDir[pLastSlash - pFirstSlash + 1] = '\0';
+	   len = (size_t)(pLastSlash - pFirstSlash) + 1;
+	   if (len >= sizeof(pPad->fileStuff.pathDir))
+	       len = sizeof(pPad->fileStuff.pathDir) - 1;
+	   memcpy(pPad->fileStuff.pathDir, pFirstSlash, len);
+	   pPad->fileStuff.pathDir[len] = '\0';
        }
     }
     else {
        if (pFirstSlash != (char *)nullptr) {
+	   size_t len;
 	   pLastSlash = MbStrrchr(fileName, '/');
-	   strncpy(pPad->fileStuff.includePathDir, pFirstSlash,
-		   pLastSlash - pFirstSlash + 1);
-	   pPad->fileStuff.includePathDir[pLastSlash - pFirstSlash + 1] = '\0';
+	   len = (size_t)(pLastSlash - pFirstSlash) + 1;
+	   if (len >= sizeof(pPad->fileStuff.includePathDir))
+	       len = sizeof(pPad->fileStuff.includePathDir) - 1;
+	   memcpy(pPad->fileStuff.includePathDir, pFirstSlash, len);
+	   pPad->fileStuff.includePathDir[len] = '\0';
            if(pPad->fileStuff.lastIncludeName != nullptr)
               XtFree(pPad->fileStuff.lastIncludeName);
            pLastSlash++;
@@ -633,8 +639,8 @@ CreateSaveWarning(
      *        button labels */
     tmpStr1 = XmStringCreateLocalized(((char *)GETMESSAGE(5, 14, "No")));
     tmpStr2 = XmStringCreateLocalized(((char *)GETMESSAGE(5, 15, "Yes")));
-    strcpy(buf, DialogTitle(pPad));
-    strcat(buf, (char *)GETMESSAGE(5, 16, "Save?"));
+    snprintf(buf, sizeof(buf), "%s%s", DialogTitle(pPad),
+             (char *)GETMESSAGE(5, 16, "Save?"));
     tmpStr3 = XmStringCreateLocalized(buf);
     tmpStr4 = XmStringCreateLocalized(((char *)GETMESSAGE(2, 1, "Help")));
     tmpStr5 = XmStringCreateLocalized((String) _DtCancelString);
@@ -879,12 +885,12 @@ PostSaveError(
 
     /* -----> format and display error messages containing the
      *        file name and reason why the save failed */
-    sprintf(errorMsg,
-	    (char *) GETMESSAGE(5, 30, "Unable to save %1$s.\n%2$s"),
-	    saveName,
-	    errorReason);
+    snprintf(errorMsg, sizeof(errorMsg),
+	     (char *) GETMESSAGE(5, 30, "Unable to save %1$s.\n%2$s"),
+	     saveName,
+	     errorReason);
     Warning(pPad, errorMsg, XmDIALOG_ERROR);
-    free(errorReason);
+    XtFree(errorReason);
 
     if (pPad->fileStuff.pendingFileFunc == FileExitCB) {
 	TTfailPendingQuit(pPad);

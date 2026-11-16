@@ -196,7 +196,7 @@ static int      segregate_dicname (char *string)
      * or to the beginning of string.
      */
     for (ptr = dicpath + strlen (dicpath) - 1; ptr >= dicpath; ptr--)
-	if (!isalnum (*ptr)) {
+	if (!isalnum ((unsigned char)*ptr)) {
 	    ptr++;
 	    break;
 	}
@@ -258,7 +258,7 @@ PRINT_USAGE:
 	    continue;
 	}
 
-	argptr[1] = tolower (argptr[1]);
+	argptr[1] = tolower ((unsigned char)argptr[1]);
 	switch (argptr[1]) {
 	    case 'd':	/* (D)ictionary */
 		/* May include both dicname and dicpath */
@@ -1096,7 +1096,7 @@ int             main (int argc, char *argv[])
 	    discard_to_ETX (&parg);
 	    continue;
 	}
-	if (!isalnum (db_key[0])) {
+	if (!isalnum ((unsigned char)db_key[0])) {
 	    normal_exitcode = EXIT_WARNING;
 	    TERMINATE_LINE
 	    printf (CATGETS(dtsearch_catd, MS_cravel, 927,

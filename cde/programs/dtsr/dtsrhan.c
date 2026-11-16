@@ -1128,7 +1128,7 @@ BAD_IMAGE:
 		    printf ( CATGETS(dtsearch_catd, MS_chandel, 36,
 			"Error line %d: image mode must be 'all' or "
 			"'none' -'%s' not recognized.\n") ,
-			NULLORSTR(tok));
+			line_num, NULLORSTR(tok));
 		    bad_profile = TRUE;
 		}
 		imageflag = imagemode;
@@ -1139,7 +1139,7 @@ BAD_IMAGE:
 		if (tok == nullptr)
 		    goto BAD_TEXT;
 		for (i = 0; i < strlen (tok); i++)
-		    tok[i] = tolower (tok[i]);
+		    tok[i] = tolower ((unsigned char)tok[i]);
 		if (strcmp (tok, "all") == 0)
 		    textmode = INCLUDE;
 		else if (strcmp (tok, "none") == 0)
@@ -1148,7 +1148,8 @@ BAD_IMAGE:
 BAD_TEXT:
 		    printf ( CATGETS(dtsearch_catd, MS_chandel, 37,
 			"Error line %d: text mode must be 'all' or "
-			"'none' - '%s' not recognized.\n") , NULLORSTR(tok));
+			"'none' - '%s' not recognized.\n") ,
+			line_num, NULLORSTR(tok));
 		    bad_profile = TRUE;
 		}
 		textflag = textmode;
@@ -1990,7 +1991,7 @@ void	process_record (void)
 	    rec_count, record_head->text);
     } else if (discard && meaningless && warnings) {
 	printf ( CATGETS(dtsearch_catd, MS_chandel, 69,
-		"Warning - record #ld deemed meaningless, discarding...\n"
+		"Warning - record #%ld deemed meaningless, discarding...\n"
 		"  record began: %.60s\n") ,
 	    rec_count, record_head->text);
     } else {

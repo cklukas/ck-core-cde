@@ -181,8 +181,10 @@ int linecount = 1;
 	}
 
 [a-zA-Z0-9_\-.$]+ 	{
-         if ( replace_string[0] != 0 && yytext[0] == '$' ) {
-            strcpy(replace_string + replace_string_len, (char*)yytext+1);
+         if ( replace_string[0] != 0 && yytext[0] == '$' &&
+              replace_string_len >= 0 && replace_string_len < PATHSIZ ) {
+            snprintf(replace_string + replace_string_len,
+                     PATHSIZ - replace_string_len, "%s", (char*)yytext + 1);
 	    schemalval.string = replace_string;
          } else
 	    schemalval.string = (char*)yytext;

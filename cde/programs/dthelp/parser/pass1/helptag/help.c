@@ -123,7 +123,8 @@ if ( *(m_argv[0]) == '/' )
 else
     {
     /* not fully specified, check each component of path for ourself */
-    snprintf(patbuf, sizeof(patbuf), "%s", getenv("PATH"));
+    const char *env_path = getenv("PATH");
+    snprintf(patbuf, sizeof(patbuf), "%s", env_path ? env_path : "");
     path = patbuf;
     cp = path;
 
@@ -134,9 +135,8 @@ else
 	quit++;
 	else
 	*cp = '\0';
-	snprintf(buf, sizeof(buf), "%s/%s", path, m_argv[0]);
-
-	if (access(buf, 1) == 0)
+	if (snprintf(buf, sizeof(buf), "%s/%s", path, m_argv[0]) < (int)sizeof(buf) &&
+	    access(buf, 1) == 0)
 	    {
 	    install = (char*) m_malloc(strlen(path) + 1,
 				       "installation directory");
@@ -386,9 +386,10 @@ if ( *fnp == CSEP )
 else
     {
     f = popen("/bin/pwd", "r");
-    if (fscanf(f, "%s", gp) != 1)
+    if (!f || fscanf(f, "%s", gp) != 1)
 	*gp = '\0';
-    pclose(f);
+    if (f)
+	pclose(f);
     if (strlen(gp) >= (size_t) roomleft)
 	{
 	m_mberr1("Internal error: possible stray pointer in getqualified(): %s",
@@ -1465,9 +1466,9 @@ if (*stdCharset)
     helpcharset = MakeWideCharString(stdCharset);
 helplang = MakeWideCharString(stdLang);
 
-mb_free(&locale);
 if (charset && (charset != (dotPtr+1)))
     mb_free(&charset);
+mb_free(&locale);
 }
 
 

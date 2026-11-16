@@ -335,7 +335,7 @@ ilSrcElementData        srcData;
     context = pipe->context;
     if (pipe->objectType != IL_PIPE) {
         context->error = IL_ERROR_OBJECT_TYPE;
-        return;
+        return FALSE;
         }
 
     if ((pImage->o.p.objectType != IL_INTERNAL_IMAGE) 

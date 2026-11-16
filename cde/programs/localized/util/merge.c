@@ -241,14 +241,14 @@ int get_char (void)
  */
 void cat_open (void)
 {
-    char line[PATH_MAX];
+    char line[(2 * PATH_MAX) + 16];
 
     unlink(pFilename);
     unlink(dFilename);
 
     if(pfile != nullptr)
     {
-        snprintf(line, PATH_MAX, "gencat %s %s", pFilename, pfile);
+        snprintf(line, sizeof(line), "gencat %s %s", pFilename, pfile);
         if ( system(line) != 0 )
 	{
            fatal("primary .tmsg file would not gencat\n",0,9);
@@ -259,7 +259,7 @@ void cat_open (void)
 
     if(dfile != nullptr)
     {
-        snprintf(line, PATH_MAX, "gencat %s %s", dFilename, dfile);
+        snprintf(line, sizeof(line), "gencat %s %s", dFilename, dfile);
         if ( system(line) != 0 )
 	{
            fatal("default .tmsg file would not gencat\n",0,9);

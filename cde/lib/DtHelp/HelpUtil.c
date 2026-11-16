@@ -438,16 +438,20 @@ CreateExecErrorDlg(
              "For security reasons, automatic command execution is turned off.\n"
              "The command is:  %s");
    }
-   fullmsg = (char *) malloc(strlen(msg)+strlen(cmdStr)+30);
-   if (fullmsg) 
    {
-      if (condition == MISMATCHING_HOME_DIRS)
-         sprintf(fullmsg, msg, current_hd, cmdStr);
-      else
-         sprintf(fullmsg,msg,cmdStr);
+      size_t fullmsg_size = strlen(msg) + strlen(cmdStr) +
+                            (current_hd ? strlen(current_hd) : 0) + 32;
+      fullmsg = (char *) malloc(fullmsg_size);
+      if (fullmsg) 
+      {
+         if (condition == MISMATCHING_HOME_DIRS)
+            snprintf(fullmsg, fullmsg_size, msg, current_hd ? current_hd : "", cmdStr);
+         else
+            snprintf(fullmsg, fullmsg_size, msg, cmdStr);
+      }
+      else 
+         fullmsg = msg;
    }
-   else 
-      fullmsg = msg;
 
    /* create an error dialog, but don't manage it yet */
    msgDlg = CreateErrorDialog(XtParent(helpWidget),fullmsg);
@@ -621,17 +625,23 @@ Boolean _DtHelpFilterExecCmdStr(
       char * reptype;
       char *rsrc_name, *rsrc_class;
 
-      rsrc_name = XtMalloc(200);
-      rsrc_class = XtMalloc(200);
-
       XtGetApplicationNameAndClass(dpy,&appname,&appclass);
+
+      size_t max_app_len = strlen(appclass) > strlen(appname)
+                              ? strlen(appclass)
+                              : strlen(appname);
+      size_t rsrc_size = max_app_len + strlen(RC_execAlias) + strlen(token) + 4;
+      if (rsrc_size < 200)
+         rsrc_size = 200;
+      rsrc_name = XtMalloc(rsrc_size);
+      rsrc_class = XtMalloc(rsrc_size);
 
       /* query the application's database for the alias command */
       /* build alias resource class and resource */
       /* e.g. App.executionAlias.<alias> */
-      sprintf(rsrc_name,"%s.%s.%s",appclass, RN_execAlias,token);
+      snprintf(rsrc_name, rsrc_size, "%s.%s.%s", appclass, RN_execAlias, token);
       /* e.g. App.ExecutionAlias.<alias> */
-      sprintf(rsrc_class,"%s.%s.%s",appclass, RC_execAlias,token);
+      snprintf(rsrc_class, rsrc_size, "%s.%s.%s", appclass, RC_execAlias, token);
 
       /* Get alias command */
       if (XrmGetResource(appDb,rsrc_name,rsrc_class,&reptype,&value) == True)
@@ -639,9 +649,9 @@ Boolean _DtHelpFilterExecCmdStr(
 
       /* build alias resource name and resource */
       /* e.g. app.executionAlias.<alias> */
-      sprintf(rsrc_name,"%s.%s.%s",appname, RN_execAlias,token);
+      snprintf(rsrc_name, rsrc_size, "%s.%s.%s", appname, RN_execAlias, token);
       /* e.g. app.ExecutionAlias.<alias> */
-      sprintf(rsrc_class,"%s.%s.%s",appname, RC_execAlias,token);
+      snprintf(rsrc_class, rsrc_size, "%s.%s.%s", appname, RC_execAlias, token);
 
       /* Get alias command and override class with instance, if defined */
       if (XrmGetResource(appDb,rsrc_name,rsrc_class,&reptype,&value) == True)
@@ -923,19 +933,19 @@ int _DtHelpFilterExecCmd(
    /* We put an activate callback on the DontExecute and ExecuteAnyway buttons 
       and wait until a button is pressed.  */
    noexecBtn = XmMessageBoxGetChild (msgDlg, XmDIALOG_CANCEL_BUTTON);
-   XtAddCallback(noexecBtn, XmNactivateCallback, 
-                             IdentifyActivatedBtnCB, (XtPointer) &msgDlgCBStruct);
-
    execBtn = XmMessageBoxGetChild (msgDlg, XmDIALOG_OK_BUTTON);
    XtManageChild (execBtn);           /* re-manage the button */
-   XtAddCallback(execBtn, XmNactivateCallback, 
-                             IdentifyActivatedBtnCB, (XtPointer) &msgDlgCBStruct);
-   
+
    /* fill out the CB information structure used by IdentifyActivatedBtnCB */
    msgDlgCBStruct.msgDlg = msgDlg;
    msgDlgCBStruct.okBtn = execBtn;
    msgDlgCBStruct.cancelBtn = noexecBtn;
    msgDlgCBStruct.activatedBtnId = -1;
+
+   XtAddCallback(noexecBtn, XmNactivateCallback, 
+                             IdentifyActivatedBtnCB, (XtPointer) &msgDlgCBStruct);
+   XtAddCallback(execBtn, XmNactivateCallback, 
+                             IdentifyActivatedBtnCB, (XtPointer) &msgDlgCBStruct);
 
    /* Display message dialog */
    XtManageChild (msgDlg);
@@ -1167,7 +1177,7 @@ static Widget  LocateWidgetId(
     Cursor           cursorIn)
 {
     static Cursor    DfltOnItemCursor = 0;
-    Widget           widget;
+    Widget           widget = nullptr;
     Widget           child;
     CompositeWidget  comp_widget;
     int              status;

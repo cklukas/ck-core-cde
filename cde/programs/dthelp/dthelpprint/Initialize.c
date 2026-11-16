@@ -45,6 +45,8 @@ $COPYRIGHT$:
 #include <sys/param.h> /* MAXPATHLEN */
 #include <sys/stat.h>  /* mkdir */
 #include <sys/types.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #include "StringFuncsI.h"
 
@@ -72,7 +74,7 @@ $COPYRIGHT$:
 #define EMPTY_STR     s_EmptyStr
 #define DIR_SLASH_STR s_DirSlashStr
 
-#define RSRCSPECLEN   100
+#define RSRCSPECLEN   256
 
 #define INSET    5       /* message catalog set */
 
@@ -797,11 +799,11 @@ static float dphm = 300.*2540.;
    int  (*stricmp)(const char *,const char *);
    char *name;
    char name_prefix[RSRCSPECLEN];
-   char name_prefix_temp[sizeof(name_prefix)];
+   char name_prefix_temp[RSRCSPECLEN * 2];
    char class_prefix[RSRCSPECLEN];
-   char class_prefix_temp[sizeof(class_prefix)];
-   char resource_name[RSRCSPECLEN];
-   char resource_class[RSRCSPECLEN];
+   char class_prefix_temp[RSRCSPECLEN * 2];
+   char resource_name[RSRCSPECLEN * 2];
+   char resource_class[RSRCSPECLEN * 2];
    char *str_type[20];
    XrmValue value;
    int papersize = -1;
@@ -829,19 +831,17 @@ static float dphm = 300.*2540.;
    if (name[0] != EOS)
    {
       snprintf(name_prefix_temp, sizeof(name_prefix_temp), "%s%s%s", name_prefix, DOT_STR, name);    /* e.g. dthelpprint.printer.<name> */
-      strcpy(name_prefix, name_prefix_temp);
+      snprintf(name_prefix, sizeof(name_prefix), "%s", name_prefix_temp);
       snprintf(class_prefix_temp, sizeof(class_prefix_temp), "%s%s%s", class_prefix, DOT_STR, name); /* e.g. Dthelpprint.Printer.<name> */
-      strcpy(class_prefix, class_prefix_temp);
+      snprintf(class_prefix, sizeof(class_prefix), "%s", class_prefix_temp);
    }
    
    /**************************/
    /*	Get explicit width   */
    /**************************/
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_colsWidth); 
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_colsWidth);
                         /* e.g. dthelpprint.printer{.<name>}.colsWidth */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_colsWidth);
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_colsWidth);
                         /* e.g. Dthelpprint.Printer{.<name>}.ColsWidth */
    
    if (XrmGetResource(appDB, resource_name, resource_class,
@@ -855,11 +855,9 @@ static float dphm = 300.*2540.;
    /**************************/
    /*	Get explicit height  */
    /**************************/
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_rowsHeight); 
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_rowsHeight);
                          /* e.g. dthelpprint.printer{.<name>}.rowsHeight */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_rowsHeight);
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_rowsHeight);
                          /* e.g. Dthelpprint.Printer{.<name>}.RowsHeight */
    
    if (XrmGetResource(appDB, resource_name, resource_class, 
@@ -873,11 +871,9 @@ static float dphm = 300.*2540.;
    /**********************************************************/
    /* get the paper size (will provide default height/width) */
    /**********************************************************/
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_paperSize);  
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_paperSize);
                          /* e.g. dthelpprint.printer{.<name>}.paperSize */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_paperSize); 
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_paperSize);
                          /* e.g. Dthelpprint.Printer{.<name>}.PaperSize */
    
 #if defined(_AIX)
@@ -925,11 +921,9 @@ static float dphm = 300.*2540.;
    /****************/
    /* Left margins */
    /****************/
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_colsLeftMargin);     
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_colsLeftMargin);
                          /* e.g. dthelpprint.printer{.<name>}.colsLeftMargin */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_colsLeftMargin);    
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_colsLeftMargin);
                          /* e.g. Dthelpprint.Printer{.<name>}.ColsLeftMargin */
    
    /* get the value */
@@ -951,11 +945,9 @@ static float dphm = 300.*2540.;
    /*****************/
    /* Right margins */
    /*****************/
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_colsRightMargin);     
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_colsRightMargin);
                          /* e.g. dthelpprint.printer{.<name>}.colsRightMargin */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_colsRightMargin);    
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_colsRightMargin);
                          /* e.g. Dthelpprint.Printer{.<name>}.ColsRightMargin */
    
    /* get the value */
@@ -977,11 +969,9 @@ static float dphm = 300.*2540.;
    /***************/
    /* Top Margin */
    /*****************/
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_rowsTopMargin);     
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_rowsTopMargin);
                          /* e.g. dthelpprint.printer{.<name>}.rowsTopMargin */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_rowsTopMargin);    
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_rowsTopMargin);
                          /* e.g. Dthelpprint.Printer{.<name>}.RowsTopMargin */
    
    /* get the value */
@@ -1003,11 +993,9 @@ static float dphm = 300.*2540.;
    /*****************/
    /* Bottom Margin */
    /*****************/
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_rowsBottomMargin);     
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_rowsBottomMargin);
                        /* e.g. dthelpprint.printer{.<name>}.rowsBottommargin */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_rowsBottomMargin);    
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_rowsBottomMargin);
                        /* e.g. Dthelpprint.Printer{.<name>}.RowsBottommargin */
    
    /* get the value */
@@ -1214,18 +1202,16 @@ void _DtHPrBuildResourceDb(
    /** now create a baseline appDB with a few minimal resources in it **/
 
    /* Set name and class initial values */
-   strcpy(name_prefix, invocationName);                  /* e.g. dthelpprint */
-   strcpy(class_prefix, HELPPRINT_APPLICATION_CLASS);    /* e.g. Dthelpprint */
+   snprintf(name_prefix, sizeof(name_prefix), "%s", invocationName);                  /* e.g. dthelpprint */
+   snprintf(class_prefix, sizeof(class_prefix), "%s", HELPPRINT_APPLICATION_CLASS);    /* e.g. Dthelpprint */
 
    /* get DB values */
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_rsrcclass);   /* e.g. dthelpprint.class */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_rsrcclass);  /* e.g. Dthelpprint.Class */
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_rsrcclass);   /* e.g. dthelpprint.class */
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_rsrcclass);  /* e.g. Dthelpprint.Class */
    if (XrmGetResource(commandLineDB, resource_name, resource_class, 
 		      str_type, &value) == True)
    {
-      strcpy(class_prefix, value.addr);
+      snprintf(class_prefix, sizeof(class_prefix), "%s", value.addr);
    }
    else 
    {
@@ -1236,10 +1222,8 @@ void _DtHPrBuildResourceDb(
    XrmPutResource(appDB, RN_appclass, nullptr, &value);
    XrmPutResource(appDB, RC_appclass, nullptr, &value);
    
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_rsrcname);    /* e.g. dthelpprint.name */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_rsrcname);   /* e.g. Dthelpprint.Name */
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_rsrcname);    /* e.g. dthelpprint.name */
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_rsrcname);   /* e.g. Dthelpprint.Name */
    if (invocationName != nullptr)      /* always true */
    {
       value.size = strlen(invocationName)+1;
@@ -1252,7 +1236,7 @@ void _DtHPrBuildResourceDb(
    else if( XrmGetResource((XrmDatabase)commandLineDB, resource_name, 
 		      resource_class, str_type, &value) == True)
    {
-      strcpy(name_prefix, value.addr);
+      snprintf(name_prefix, sizeof(name_prefix), "%s", value.addr);
    }
    else 
    {
@@ -1260,7 +1244,7 @@ void _DtHPrBuildResourceDb(
       value.addr = HELPPRINT_APPLICATION_NAME;           /* i.e. dthelpprint */
       XrmPutResource(appDB, RN_appname, nullptr, &value);
       XrmPutResource(appDB, RC_appname, nullptr, &value);
-      strcpy(name_prefix, value.addr);
+      snprintf(name_prefix, sizeof(name_prefix), "%s", value.addr);
    }
    
    
@@ -1271,10 +1255,8 @@ void _DtHPrBuildResourceDb(
       i = strlen(tmp_string);
       value.addr = tmp_string;
       value.size = i+1;
-      strcpy(resource_name, name_prefix);
-      strcat(resource_name, RN_display);   /* e.g. dthelpprint.display */
-      strcpy(resource_class, class_prefix);
-      strcat(resource_class, RC_display);  /* e.g. Dthelpprint.Display */
+      snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_display);   /* e.g. dthelpprint.display */
+      snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_display);  /* e.g. Dthelpprint.Display */
       XrmPutResource(appDB, resource_name, nullptr, &value);
       XrmPutResource(appDB, resource_class, nullptr, &value);
    }
@@ -1284,10 +1266,8 @@ void _DtHPrBuildResourceDb(
       i = strlen(tmp_string);
       value.addr = tmp_string;
       value.size = i+1;
-      strcpy(resource_name, name_prefix);
-      strcat(resource_name, RN_printer);    /* e.g. dthelpprint.printer */
-      strcpy(resource_class, class_prefix);
-      strcat(resource_class, RC_printer);    /* e.g. Dthelpprint.Printer */
+      snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_printer);    /* e.g. dthelpprint.printer */
+      snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_printer);    /* e.g. Dthelpprint.Printer */
       XrmPutResource(appDB, resource_name, nullptr, &value);
       XrmPutResource(appDB, resource_class, nullptr, &value);
    }
@@ -1316,23 +1296,21 @@ void _DtHPrBuildResourceDb(
    */
 
    /* Overlay the central Dt app-defaults */
-   (void) strcpy(filename, DTAPPDEFAULTS_DIR);
-   strcat(filename, class_prefix);/*eg. /usr/dt/app-defaults/C/Dthelpprint*/
+   snprintf(filename, sizeof(filename), "%s%s", DTAPPDEFAULTS_DIR, class_prefix);
    appClassDB = XrmGetFileDatabase(filename);
    if (appClassDB != nullptr)
       (void) XrmMergeDatabases(appClassDB, appDB);
    
    /* Overlay the central X app-defaults (if exists) */
-   (void) strcpy(filename, XAPPDEFAULTS_DIR);
-   strcat(filename, class_prefix);/*eg. /usr/lib/X11/app-defaults/Dthelpprint*/
+   snprintf(filename, sizeof(filename), "%s%s", XAPPDEFAULTS_DIR, class_prefix);
    appClassDB = XrmGetFileDatabase(filename);
    if (appClassDB != nullptr)
       (void) XrmMergeDatabases(appClassDB, appDB);
    
    /* Overlay the user class resources  */
    GetHomeDir(filename);
-   strcat(filename, DIR_SLASH_STR);
-   strcat(filename, class_prefix);          /* e.g. $HOME/Dthelpprint */
+   size_t home_len = strlen(filename);
+   snprintf(filename + home_len, sizeof(filename) - home_len, "%s%s", DIR_SLASH_STR, class_prefix);
    appUserDB = XrmGetFileDatabase(filename);
    if (appUserDB != nullptr)
       (void) XrmMergeDatabases(appUserDB, appDB);
@@ -1340,10 +1318,8 @@ void _DtHPrBuildResourceDb(
    /** to get the display's resources, we need to open the display first **/
    /* to get the display name, we first look in the commandLineDB,
       and if not found there, in the appDB loaded thus far. */
-   strcpy(resource_name, name_prefix);
-   strcat(resource_name, RN_display);   /* e.g. dthelpprint.display */
-   strcpy(resource_class, class_prefix);
-   strcat(resource_class, RC_display);  /* e.g. Dthelpprint.Display */
+   snprintf(resource_name, sizeof(resource_name), "%s%s", name_prefix, RN_display);   /* e.g. dthelpprint.display */
+   snprintf(resource_class, sizeof(resource_class), "%s%s", class_prefix, RC_display);  /* e.g. Dthelpprint.Display */
    if (   XrmGetResource((XrmDatabase)commandLineDB, resource_name, 
 		      resource_class, str_type, &value) == True
        || XrmGetResource((XrmDatabase)*appDB, resource_name, 
@@ -1369,7 +1345,8 @@ void _DtHPrBuildResourceDb(
       {
          filename[0] = EOS;
          (void) GetHomeDir (filename);
-         (void) strcat (filename, XDEFAULTS_FILE);  /* e.g. $HOME/.Xdefaults */
+         size_t hlen = strlen(filename);
+         snprintf(filename + hlen, sizeof(filename) - hlen, "%s", XDEFAULTS_FILE);
          dispDB = XrmGetFileDatabase (filename);
       }
       if (dispDB != nullptr)
@@ -1387,9 +1364,11 @@ void _DtHPrBuildResourceDb(
       int len;
       filename[0] = EOS;
       (void) GetHomeDir (filename);
-      (void) strcat (filename, XDEFAULTS_HOST_FILE);
+      len = (int)strlen(filename);
+      snprintf(filename + len, sizeof(filename) - (size_t)len, "%s", XDEFAULTS_HOST_FILE);
       len = strlen (filename);
-      (void) _XGetHostname (filename+len, 1024-len);
+      if (len < 1024)
+         (void) _XGetHostname (filename+len, 1024-len);
       environment = filename;               /* e.g. $HOME/.Xdefaults-<host> */
    }
    envDB = XrmGetFileDatabase (environment);
@@ -1508,8 +1487,11 @@ char * _DtHPrCreateTmpFile(
    if (nullptr == suffix) suffix = EMPTY_STR;
 
    GetHomeDir(dirname);
-   tmppath = dirname + strlen(dirname) + 1;
-   strcat(dirname, TMP_DIR_STR);
+   size_t home_len = strlen(dirname);
+   if (home_len + strlen(TMP_DIR_STR) >= sizeof(dirname))
+      return nullptr;
+   tmppath = dirname + home_len + 1;
+   snprintf(dirname + home_len, sizeof(dirname) - home_len, "%s", TMP_DIR_STR);
 
    /* create the directory */
    for ( tmppath = strchr(tmppath,DIR_SLASH);
@@ -1517,25 +1499,38 @@ char * _DtHPrCreateTmpFile(
          tmppath = strchr(++tmppath,DIR_SLASH) )
    {
       *tmppath = EOS;
-      mkdir(dirname,0777);
+      mkdir(dirname,0700);
       *tmppath = DIR_SLASH;
    }
-   mkdir(dirname,0777);
+   mkdir(dirname,0700);
 
-#define FILENAMELEN 25
-   /* generate the new tmp file */
-   newtmpfile=calloc((strlen(dirname) + FILENAMELEN + 2), sizeof(char));
+#define FILENAMELEN 64
+   /* generate the new tmp file atomically with O_CREAT|O_EXCL */
+   size_t alloc_len = strlen(dirname) + strlen(prefix) + strlen(suffix) + FILENAMELEN + 2;
+   newtmpfile = calloc(alloc_len, sizeof(char));
    if (nullptr == newtmpfile)
    {
       fprintf(stderr, "%s", _DTGETMESSAGE(INSET,45,
                      "Error: Unable to allocate memory for temporary file\n"));
-   }
-   else
-   {
-      sprintf(newtmpfile, _DTGETMESSAGE(INSET,50,"%1$s/%2$s%3$d_%4$d%5$s"), 
-		dirname, prefix, getpid(), filecnt++, suffix );
+      return nullptr;
    }
 
-   return newtmpfile;
+   for (int attempt = 0; attempt < 256; ++attempt)
+   {
+      snprintf(newtmpfile, alloc_len,
+               _DTGETMESSAGE(INSET,50,"%1$s/%2$s%3$d_%4$d%5$s"),
+               dirname, prefix, (int)getpid(), filecnt++, suffix);
+      int fd = open(newtmpfile, O_CREAT | O_EXCL | O_RDWR, 0600);
+      if (fd >= 0)
+      {
+         close(fd);
+         return newtmpfile;
+      }
+      if (errno != EEXIST)
+         break;
+   }
+
+   free(newtmpfile);
+   return nullptr;
 }       /*$END$*/
 

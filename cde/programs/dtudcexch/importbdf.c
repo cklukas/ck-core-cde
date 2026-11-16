@@ -575,10 +575,15 @@ int	*bdf_codelist
 
 		msize = ( r_udc->bdf_width + 7 ) / 8 * r_udc->bdf_height;
 
-		if ( ( ptn = (char *)malloc( msize ) ) == nullptr ) {
+		if ( ( r_udc->ptn = (char **)calloc( 1, sizeof(char *) ) ) == nullptr ) {
 			return	MALLOC_ERROR;
 		}
-		r_udc->ptn = &ptn;
+		if ( ( ptn = (char *)malloc( msize ) ) == nullptr ) {
+			free( r_udc->ptn );
+			r_udc->ptn = nullptr;
+			return	MALLOC_ERROR;
+		}
+		r_udc->ptn[0] = ptn;
 
 	} else {
 		r_udc->zoomf = 0;

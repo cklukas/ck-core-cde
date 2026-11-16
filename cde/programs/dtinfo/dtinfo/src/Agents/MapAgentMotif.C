@@ -150,10 +150,16 @@ MapButton::MapButton (WComposite &parent,
   // Add to the list so that we can manage 'em all at once. 
   if (f_num_kids + 1 > f_kids_size)
     {
-      f_kids_size *= 2;
-      f_kids = (Widget *) realloc (f_kids, sizeof (Widget) * f_kids_size);
+      int next_size = f_kids_size * 2;
+      Widget *new_kids = (Widget *) realloc (f_kids, sizeof (Widget) * next_size);
+      if (new_kids != NULL)
+	{
+	  f_kids = new_kids;
+	  f_kids_size = next_size;
+	}
     }
-  f_kids[f_num_kids++] = (Widget) f_form;
+  if (f_num_kids < f_kids_size)
+    f_kids[f_num_kids++] = (Widget) f_form;
   ON_DEBUG (printf ("Form managed = %d\n", XtIsManaged (f_form)));
     
   if (ancestor != NULL)

@@ -96,10 +96,10 @@ DtSR_SearchResultsEntry::matches() const
 int
 DtSR_SearchResultsEntry::unset_proximity(DtSR_SearchZones::uas_zones uas_zone)
 {
-    if (uas_zone > UAS_SearchZones::uas_all) { // range error
+    if (uas_zone < 0 || uas_zone > UAS_SearchZones::uas_all) { // range error
 	return Beyond_Range;
     }
-    f_zone &= ~(0x01<<uas_zone);
+    f_zone &= ~(1U << uas_zone);
     return f_proximity[uas_zone] = 0;
 }
 
@@ -107,14 +107,14 @@ int
 DtSR_SearchResultsEntry::set_proximity(DtSR_SearchZones::uas_zones uas_zone,
 					int proximity)
 {
-    if (uas_zone > UAS_SearchZones::uas_all) { // range error
+    if (uas_zone < 0 || uas_zone > UAS_SearchZones::uas_all) { // range error
 	return Beyond_Range;
     }
-    else if (f_zone & 0x01<<uas_zone) { // already set, reject
+    else if (f_zone & (1U << uas_zone)) { // already set, reject
 	return Conflict;
     }
 
-    f_zone |= 0x01<<uas_zone;
+    f_zone |= (1U << uas_zone);
 
     return f_proximity[uas_zone] = proximity;
 }
@@ -123,10 +123,10 @@ int
 DtSR_SearchResultsEntry::overlay_proximity(DtSR_SearchZones::uas_zones uas_zone,
 						int proximity)
 {
-    if (uas_zone > UAS_SearchZones::uas_all) // range error
+    if (uas_zone < 0 || uas_zone > UAS_SearchZones::uas_all) // range error
 	return Beyond_Range;
 
-    if (f_zone & (0x01<<uas_zone == 0))
+    if ((f_zone & (1U << uas_zone)) == 0)
 	return set_proximity(uas_zone, proximity);
 
     return f_proximity[uas_zone] = (f_proximity[uas_zone] + proximity) / 2;
@@ -135,10 +135,10 @@ DtSR_SearchResultsEntry::overlay_proximity(DtSR_SearchZones::uas_zones uas_zone,
 int
 DtSR_SearchResultsEntry::get_proximity(DtSR_SearchZones::uas_zones uas_zone) const
 {
-    if (uas_zone > UAS_SearchZones::uas_all) { // range error
+    if (uas_zone < 0 || uas_zone > UAS_SearchZones::uas_all) { // range error
 	return Beyond_Range;
     }
-    else if ((f_zone & 0x01<<uas_zone) == 0) { // proximity not set yet
+    else if ((f_zone & (1U << uas_zone)) == 0) { // proximity not set yet
 	return Unspecified;
     }
 

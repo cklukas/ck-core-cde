@@ -875,7 +875,7 @@ EMPTY_QUERY:
 	return FALSE;
     }
     for  (cptr = usrblk.query;  *cptr;  cptr++) {
-	if ((ascii_charmap[*cptr] & WHITESPACE) == 0)
+	if ((ascii_charmap[(unsigned char)*cptr] & WHITESPACE) == 0)
 	    break;
     }
     if (*cptr == 0)
@@ -907,19 +907,23 @@ EMPTY_QUERY:
 	fflush (aa_stderr);
     }
 
-    if (yyparse() != 0)
-	return FALSE;
+    {
+	int parse_rc = yyparse();
 
-    /* Free entire remaining ttlist.  Only you
-     * can prevent forest fires and memory leaks.
-     */
-    tt = ttlist;
-    while (tt) {
-	ttnext = tt->next;
-	free (tt);
-	tt = ttnext;
+	/* Free entire remaining ttlist.  Only you
+	 * can prevent forest fires and memory leaks.
+	 */
+	tt = ttlist;
+	while (tt) {
+	    ttnext = tt->next;
+	    free (tt);
+	    tt = ttnext;
+	}
+	ttlist = nullptr;
+
+	if (parse_rc != 0)
+	    return FALSE;
     }
-    ttlist = nullptr;
 
     if (debugging_boolpars || (usrblk.debug & USRDBG_SRCHCMPL)) {
 	print_stems (saveusr.stemcount, saveusr.stems,

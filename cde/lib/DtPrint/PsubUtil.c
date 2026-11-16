@@ -539,7 +539,7 @@ String
 _DtPrintGetDefaultXPrinterName(
 			       Widget w)
 {
-    String default_printer;
+    String default_printer = (String)nullptr;
 
     if((Widget)nullptr == w)
     {
@@ -602,7 +602,7 @@ _DtPrintGetXpPrinterList(
 			 Widget w)
 {
     XtResource res_struct;
-    String xp_printer_list;
+    String xp_printer_list = (String)nullptr;
     /*
      * initialize the resource structure
      */
@@ -663,7 +663,7 @@ _DtPrintGetXpServerList(
 			Widget w)
 {
     XtResource res_struct;
-    String xp_server_list;
+    String xp_server_list = (String)nullptr;
     int error_base;
     int event_base;
     String* server_list;

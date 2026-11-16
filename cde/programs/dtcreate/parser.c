@@ -749,6 +749,9 @@ GetKeywordValuePairs(char *s, int *id, int table)
            if( (temp4 = (char *)realloc(args[0],strlen(args[0])+strlen(args[1])+2) ) == nullptr )
            {
                 printf("Cannot Allocate memory\n");
+                free(args[0]);
+                free(args[1]);
+                free(args);
                 return nullptr;
            }
            args[0] = temp4;
@@ -765,6 +768,8 @@ GetKeywordValuePairs(char *s, int *id, int table)
            if( (temp4 = (char *)realloc(fline,flinesize+strlen(args[0])+1)) == nullptr)
            {
                 printf("Cannot Allocate memory\n");
+                free(args[0]);
+                free(args);
                 return nullptr;
            }
           strcat(temp4,args[0]);
@@ -1010,8 +1015,11 @@ char    *s1,*tmp,*s2,buf[10],*cts;
         while( *s1 && !isspace(*s1) && *s1 != '\n') s1++;
         if((s1-cts) > 0)
         {
-           strncpy(buf,cts,(s1-cts));
-           buf[s1-cts]='\0';
+           size_t toklen = (size_t)(s1 - cts);
+           if (toklen >= sizeof(buf))
+              toklen = sizeof(buf) - 1;
+           memcpy(buf, cts, toklen);
+           buf[toklen] = '\0';
            pFtD->sStart=atoi(buf);
         }
         while( *s1 && isspace(*s1) )  s1++;
@@ -1025,8 +1033,11 @@ char    *s1,*tmp,*s2,buf[10],*cts;
         while( *tmp && !isspace(*tmp) && *tmp != '\n') tmp++;
         if((tmp-s1) > 0)
         {
-           strncpy(buf,s1,(tmp-s1));
-           buf[tmp-s1]='\0';
+           size_t toklen = (size_t)(tmp - s1);
+           if (toklen >= sizeof(buf))
+              toklen = sizeof(buf) - 1;
+           memcpy(buf, s1, toklen);
+           buf[toklen] = '\0';
            if ( !strcmp(buf,"byte") )
                pFtD->fsFlags|=CA_FT_CNTBYTE;
            else if ( !strcmp(buf,"string") )

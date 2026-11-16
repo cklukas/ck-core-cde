@@ -48,14 +48,26 @@ main(int argc, char** argv)
 
     int size = 256;
     patterns = (char*) malloc(size);
+    if (patterns == NULL)
+	return 1;
     *patterns = '\0';
     int npat = argc - 1, i;
     for (i = 1; i <= npat; i++) {
-	if (strlen(patterns) + strlen(argv[i]) + 2 > size) { // 2 = '\n'+'\0'
-	    size += 256;
-	    patterns = (char*) realloc(patterns, size);
+	size_t cur_len = strlen(patterns);
+	size_t arg_len = strlen(argv[i]);
+	if (cur_len + arg_len + 2 > (size_t)size) { // 2 = '\n'+'\0'
+	    int next_size = size;
+	    while (cur_len + arg_len + 2 > (size_t)next_size)
+		next_size += 256;
+	    char* new_patterns = (char*) realloc(patterns, next_size);
+	    if (new_patterns == NULL) {
+		free(patterns);
+		return 1;
+	    }
+	    patterns = new_patterns;
+	    size = next_size;
 	}
-	snprintf(patterns, size, "%s%s\n", patterns, argv[i]);
+	snprintf(patterns + cur_len, size - cur_len, "%s\n", argv[i]);
     }
 
     ostringstream text;

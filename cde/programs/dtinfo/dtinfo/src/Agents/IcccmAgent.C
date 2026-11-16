@@ -157,15 +157,20 @@ IcccmAgent::value_handler(Widget w, XtPointer ia, Atom *selection,
         int count, len, slen;
         XmbTextPropertyToTextList(XtDisplay(w), &prop, &string_list, &count);
         char *mbs = strdup("");
-        for (int i=0; i<count; i++) {
+        for (int i=0; mbs != NULL && i<count; i++) {
             slen = strlen(mbs);
             len = strlen(string_list[i]);
-            mbs = (char*)realloc(mbs, slen + len + 1);
-            *((char *) memcpy(mbs, string_list[i], len) + len) = '\0';
+            char *new_mbs = (char*)realloc(mbs, slen + len + 1);
+            if (new_mbs == NULL)
+                break;
+            mbs = new_mbs;
+            *((char *) memcpy(mbs + slen, string_list[i], len) + len) = '\0';
         }
-        XwcFreeStringList((wchar_t**)string_list);
-        (((IcccmAgent*)ia)->*f_string_handler)(mbs, strlen(mbs));
-        free((void*)mbs);
+        XFreeStringList(string_list);
+        if (mbs != NULL) {
+            (((IcccmAgent*)ia)->*f_string_handler)(mbs, strlen(mbs));
+            free((void*)mbs);
+        }
     }
     else {
 #ifdef DEBUG

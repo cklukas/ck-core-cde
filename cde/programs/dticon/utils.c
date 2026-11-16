@@ -2085,25 +2085,19 @@ ParseAppArgs(
         switch (cmd_arg[1])
         {
             case 'f':
-              if (++i < num) {
-                if (strncpy(start_file, cmd[i], 255)) {
-                  param_flag[AUTO_FILE] = True;
-                  argsNeedProcessed = True;
-                }
-                else
-                  Abort(GETSTR(10,52, "Invalid use of the '-f' parameter"));
+              if (++i < num && cmd[i] != nullptr) {
+                snprintf(start_file, 256, "%s", cmd[i]);
+                param_flag[AUTO_FILE] = True;
+                argsNeedProcessed = True;
               }
               else
                 Abort(GETSTR(10,52, "Invalid use of the '-f' parameter"));
               continue;
-            case 'x': if (++i < num)
+            case 'x': if (++i < num && cmd[i] != nullptr)
               {
-                if (strcpy(start_size, cmd[i])) {
-                  param_flag[AUTO_SIZE] = True;
-                  argsNeedProcessed = True;
-                }
-                else
-                  Abort(GETSTR(10,54, "Invalid use of the '-x' parameter"));
+                snprintf(start_size, 256, "%s", cmd[i]);
+                param_flag[AUTO_SIZE] = True;
+                argsNeedProcessed = True;
               }
               else
                 Abort(GETSTR(10,54, "Invalid use of the '-x' parameter"));
@@ -2303,10 +2297,10 @@ SaveSession( void )
     char *tmpStr, *tmpStr2;
     Position x,y;
     Dimension width, height;
-    char bufr[1024];        /* make bigger if needed */
+    char bufr[2048];        /* make bigger if needed */
     XmVendorShellExtObject  vendorExt;
     XmWidgetExtData         extData;
-    WM_STATE *wmState;
+    WM_STATE *wmState = nullptr;
     Atom wmStateAtom, actualType;
     int actualFormat;
     unsigned long nitems, leftover;
@@ -2342,10 +2336,12 @@ SaveSession( void )
                         &actualFormat, &nitems, &leftover,
                         (unsigned char **) &wmState);
 
-    if (wmState->state == IconicState)
+    if (wmState != nullptr && wmState->state == IconicState)
         sprintf(bufr, "*iconic: True\n");
     else
         sprintf(bufr, "*iconic: False\n");
+    if (wmState != nullptr)
+        XFree((char *)wmState);
     WriteSessionText(fd, bufr);
 
     /*** Get and write out the geometry info for our Window ***/
@@ -2504,9 +2500,10 @@ GetSessionInfo( void )
 
     /* get file name */
     xrm_name[0] = XrmStringToQuark ("file");
-    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value))
+    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value) &&
+        value.addr != nullptr)
     {
-        strncpy(start_file, value.addr, 255);
+        snprintf(start_file, 256, "%s", (char *)value.addr);
     }
     else
         start_file[0] = '\0';

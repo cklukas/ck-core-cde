@@ -721,9 +721,9 @@ SGMLGI_CONTENT : STRING OPER_period {enter_sgmlgi_context();} SGMLGI_STRING
 	{
            int l = strlen((char*)$1) + strlen((char*)$4) + 2;
            $$=(unsigned char*)malloc(l);
-           strcpy((char*)$$, (char*)$1);
-           strcat((char*)$$, ".");
-           strcat((char*)$$, (char*)$4);
+           if ($$ != 0) {
+               snprintf((char*)$$, l, "%s.%s", (char*)$1, (char*)$4);
+           }
            free($1);
            free($4);
 	}
@@ -731,8 +731,9 @@ SGMLGI_CONTENT : STRING OPER_period {enter_sgmlgi_context();} SGMLGI_STRING
 	{
            int l = strlen((char*)$1) + 2;
            $$=(unsigned char*)malloc(l);
-           strcpy((char*)$$, (char*)$1);
-           strcat((char*)$$, ".");
+           if ($$ != 0) {
+               snprintf((char*)$$, l, "%s.", (char*)$1);
+           }
            free($1);
 	}
 

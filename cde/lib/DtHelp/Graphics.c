@@ -999,21 +999,28 @@ Do_Direct(
 		  {
 		    if (pixI >= pixMax)
 		      {
+			Pixel *grownOld;
+			Pixel *grownNew;
 			pixMax += 128;
-			oldPixels = (Pixel *) reallocarray((void *) oldPixels, pixMax, sizeof (Pixel));
-			newPixels = (Pixel *) reallocarray((void *) newPixels, pixMax, sizeof (Pixel));
+			grownOld = (Pixel *) reallocarray((void *) oldPixels, pixMax, sizeof (Pixel));
+			if (grownOld != nullptr)
+			    oldPixels = grownOld;
+			grownNew = (Pixel *) reallocarray((void *) newPixels, pixMax, sizeof (Pixel));
+			if (grownNew != nullptr)
+			    newPixels = grownNew;
 
 			/*
 			 * check the realloc
 			 */
-			if (oldPixels == nullptr || newPixels == nullptr)
+			if (grownOld == nullptr || grownNew == nullptr)
 			  {
 			    if (oldPixels)
 				free (oldPixels);
 
 			    if (newPixels)
 			      {
-				XFreeColors(dpy, colormap, newPixels, pixI, 0);
+				if (pixI > 0)
+				    XFreeColors(dpy, colormap, newPixels, pixI, 0);
 				free (newPixels);
 			      }
 
@@ -1031,11 +1038,11 @@ Do_Direct(
     if (color.flags)
       {
 	result = GR_SUCCESS;
-        if (pixI < pixMax)
+        if (pixI < pixMax && pixI > 0)
 	  {
-	    newPixels = (Pixel *) reallocarray((void *) newPixels, pixI, sizeof (Pixel));
-	    if (newPixels == nullptr)
-	        result = GR_ALLOC_ERR;
+	    Pixel *shrunk = (Pixel *) reallocarray((void *) newPixels, pixI, sizeof (Pixel));
+	    if (shrunk != nullptr)
+	        newPixels = shrunk;
 	  }
 
 	free (oldPixels);
@@ -1719,7 +1726,7 @@ myXpmReadFileToPixmap(
      * BlackPixel and WhitePixel fill colormap entries 0 and 1.  But
      * since this is the 99.9% case, we'll go with it.
      */
-    if (image->depth == 1 && BlackPixelOfScreen(screen) != 1L)
+    if (image && image->depth == 1 && BlackPixelOfScreen(screen) != 1L)
 	switchFlag = 1;
 
     /*
@@ -2764,7 +2771,7 @@ int _DtGrOpenFile(
     }
 
     /* Open the file */
-    stream->source.file.fileptr = fopen(fname,"r");
+    stream->source.file.fileptr = (fname != nullptr) ? fopen(fname,"r") : nullptr;
     if (stream->source.file.fileptr == nullptr)
     {
         /* Failure, couldn't open the file */

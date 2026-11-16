@@ -808,7 +808,7 @@ $set 17
 115 "No shared memory available"
 310 "%1$s Out of Memory.  Need %2$ld bytes.\n"
 314 "Out of Memory.\n"
-421 "Total Number Hits = %1$ld. Discarded hits beyond maximum number specified."
+421 "%1$s Total Number Hits = %2$ld. Discarded hits beyond maximum number specified."
 $ Msg 437 should not be translated.
 437 "%1$s db_status = %2$d, dba = %3$d:%4$ld (x'%5$08.8lx'), vistano = %6$d.\n"
 504 "Cannot allocate cur_ditto.\n"

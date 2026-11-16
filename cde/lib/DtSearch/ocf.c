@@ -681,8 +681,8 @@ static int      add_a_keytype (char ktchar)
     }
 
     /* Make sure ktchar is alphanumeric */
-    if ( (ascii_charmap[ktchar] & (CONSONANT | VOWEL | NUMERAL)) == 0) {
-	if (!isprint (ktchar))
+    if ( (ascii_charmap[(unsigned char)ktchar] & (CONSONANT | VOWEL | NUMERAL)) == 0) {
+	if (!isprint ((unsigned char)ktchar))
 	    ktchar = '?';
 	sprintf (sprintbufp,
 	    CATGETS(dtsearch_catd, MS_loadocf, 684,
@@ -719,7 +719,7 @@ static int      add_a_keytype (char ktchar)
 	CATGETS(dtsearch_catd, MS_loadocf, 457, "'%c' Records"), ktchar);
 
     /* Warn about inaccessible lowercase ktchars */
-    if ( ((ascii_charmap[ktchar] & 0xff) != ktchar) && OE_uppercase_keys ) {
+    if ( ((ascii_charmap[(unsigned char)ktchar] & 0xff) != (unsigned char)ktchar) && OE_uppercase_keys ) {
 	sprintf (sprintbufp,
 	    CATGETS(dtsearch_catd, MS_loadocf, 1011,
 	    "%s %s: Database '%s': Records with lowercase\n"
@@ -851,7 +851,10 @@ static int      ocfopen (char *prefix, char *fname, FILE ** stream)
 
     strncpy (fullname, prefix, sizeof (fullname));
     fullname[sizeof (fullname) - 2] = 0;
-    strcpy (ensure_end_slash (fullname), fname);
+    {
+	char *endp = ensure_end_slash (fullname);
+	snprintf (endp, sizeof (fullname) - (size_t)(endp - fullname), "%s", fname ? fname : "");
+    }
 
 
 GOT_FULLNAME:
@@ -1155,8 +1158,10 @@ OCFOPEN_OK:
 	DtSearchAddMessage (sprintbufp);
 	fatal_error = TRUE;
     }
-    else
-	for (db = usrblk.dblist; db != nullptr; db = db->link) {
+    else {
+	DBLK *next_db;
+	for (db = usrblk.dblist; db != nullptr; db = next_db) {
+	    next_db = db->link;
 	    if (db->ktcount <= 0) {
 		sprintf (sprintbufp, CATGETS(dtsearch_catd, MS_loadocf, 986,
 		    "%s %s: KEYTYPES missing for database '%s'."),
@@ -1167,6 +1172,7 @@ OCFOPEN_OK:
 		fatal_error = TRUE;
 	    }
 	}
+    }
 
 #ifdef DEBUG_OEF
     dumpoef ("AFTER");

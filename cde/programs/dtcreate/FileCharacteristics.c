@@ -317,9 +317,9 @@ void ParseAndUpdateID(FiletypeData *pFtD)
   /* Allocate buffer and fill with ID info.                                 */
   /**************************************************************************/
   if (size > 0) {
-    ptr = XtMalloc(size);
+    ptr = XtMalloc(size + 1);
     if (ptr) {
-       memset(ptr, 0, size);
+       memset(ptr, 0, size + 1);
        if (pFtD->pszPattern) {
 	  strcat(ptr, GETMESSAGE(9, 20, "Name Pattern:"));
 	  strcat(ptr, " ");

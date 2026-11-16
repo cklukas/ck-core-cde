@@ -258,21 +258,23 @@ IL_PRIVATE iljpgError _ilReallocJPEGEncode (
 {
     long           offset;
 
+    ilPtr          newBuffer;
+
         /*  Allocate space so exactly "nBytes" more bytes will fit in output buffer.
             There are "offset" bytes in the buffer now so allocate offset + nBytes.
         */
     if (pStream->pBuffer) {
         offset = pStream->pDst - pStream->pBuffer;
-        pStream->pBuffer = (ilPtr)IL_REALLOC (pStream->pBuffer, offset + nBytes);
+        newBuffer = (ilPtr)IL_REALLOC (pStream->pBuffer, offset + nBytes);
         }
     else {
         offset = 0;                         /* no buffer yet; allocate one */
-        pStream->pBuffer = (ilPtr)IL_MALLOC (offset + nBytes);
+        newBuffer = (ilPtr)IL_MALLOC (offset + nBytes);
         }
-    if (!pStream->pBuffer) {
-        pStream->pDst = pStream->pPastEndBuffer = (ilPtr)nullptr;
+    if (!newBuffer) {
         return ILJPG_ERROR_ENCODE_MALLOC;
         }
+    pStream->pBuffer = newBuffer;
 
         /*  Successful realloc: set end of buffer to pBuffer + new size; set pDst
             to pBuffer + offset and return success.

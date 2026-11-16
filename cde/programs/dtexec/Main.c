@@ -846,12 +846,16 @@ ParseCommandLine(
 	    }
 	}
 	else if ( ! strcmp(argv[0] , "-tmp") ) {
+	    char **newTmpFiles;
 	    argc--; argv++;
 	    if ( argc == 0 ) Help( argv2 );
+	    newTmpFiles = (char **) realloc( (char *) tmpFilesG,
+					     (size_t)(tmpFileCntG + 1) * sizeof(char *) );
+	    if (newTmpFiles == nullptr)
+		_exit(1);
+	    tmpFilesG = newTmpFiles;
+	    tmpFilesG[tmpFileCntG] = argv[0];
 	    tmpFileCntG++;
-	    tmpFilesG = (char **) realloc( (char *) tmpFilesG,
-						tmpFileCntG * sizeof(char *) );
-	    tmpFilesG[tmpFileCntG-1] = argv[0];
 	}
 	else if ( ! strncmp(argv[0], "-h", 2) ) {
 	    Help( argv2 );
@@ -1302,7 +1306,7 @@ CommandListAdd(CommandList *list, const char *value)
 static char *
 CommandListJoin(const CommandList *list)
 {
-    if (!list || list->count == 0)
+    if (!list || list->count <= 0)
         return nullptr;
 
     size_t total = 0;
@@ -1918,12 +1922,18 @@ main (
 			     * Grow buffer to hold entire error stream.
 			     */
 			    firstPass = 0;
-			    if (tmpBuffer == nullptr)
-				tmpBuffer = (char *) malloc(
-						tmpi + 1);
-			    else
-				tmpBuffer = (char *) realloc( tmpBuffer,
-						errorBytes + tmpi + 1);
+			    {
+				char *newBuffer = (tmpBuffer == nullptr)
+				    ? (char *) malloc(tmpi + 1)
+				    : (char *) realloc(tmpBuffer,
+						       errorBytes + tmpi + 1);
+				if (newBuffer == nullptr) {
+				    free(tmpBuffer);
+				    tmpBuffer = nullptr;
+				    break;
+				}
+				tmpBuffer = newBuffer;
+			    }
 			    /*
 			     * Drain error pipe.
 			     */

@@ -471,8 +471,9 @@ _DtHelpCeGetNxtBuf(
 	return -1;
       }
 
-    (void ) strcpy (dst, (*src));
-    leftOver = strlen (dst);
+    leftOver = strlen (*src);
+    if (*src != dst)
+	memmove (dst, *src, (size_t)leftOver + 1);
 
     result = _DtHelpCeReadBuf (file, &(dst[leftOver]), (max_size - leftOver));
 
@@ -704,13 +705,13 @@ _DtHelpAllocateSegments (
     /*
      * allocate the block of segments
      */
-    newSeg = (_DtCvSegment *) calloc (sizeof(_DtCvSegment), malloc_size);
+    newSeg = (_DtCvSegment *) calloc (malloc_size, sizeof(_DtCvSegment));
     if (nullptr != newSeg)
       {
 	/*
 	 * now allocate the same number of private information structures
 	 */
-	p = (FrmtPrivateInfo *) calloc (sizeof(FrmtPrivateInfo), malloc_size);
+	p = (FrmtPrivateInfo *) calloc (malloc_size, sizeof(FrmtPrivateInfo));
 	if (nullptr != p)
 	  {
 	    /*

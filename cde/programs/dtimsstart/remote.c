@@ -412,11 +412,9 @@ static int	parse_ims_list(char *ptr, ImsList *list)
 	    else if (strncmp(bp, "ne", 2) == 0)	list->num_ent = atoi(vp);
 	    else if (strncmp(bp, "df", 2) == 0)	def_name = vp;
 	    else if (strncmp(bp, "sm", 2) == 0)	list->def_selmode = atoi(vp);
-#ifdef	DEBUG
-	    else if (!ent) {
-		DPR(("parse_ims_list(): ImsEnt: list->elist[%d]=%%x\n", num_ent, ent));
+	    else if (!ent || !ims) {
+		DPR(("parse_ims_list(): ImsEnt: list->elist[%d]=%p\n", num_ent, ent));
 	    }
-#endif
 		/* ent */
 	    else if (strncmp(bp, "nm", 2) == 0)	{ RENEWSTR(ent->name, vp); }
 	    else if (strncmp(bp, "lb", 2) == 0)	{ RENEWSTR(ent->label, vp); }

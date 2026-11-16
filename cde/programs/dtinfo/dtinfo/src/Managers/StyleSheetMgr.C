@@ -137,6 +137,7 @@ StyleSheetMgr::initOnlineStyleSheet (UAS_Pointer<UAS_Common> &doc) {
     }
     if (onlineSS == 0) {
 	//  SWM -- THROW EXCEPTION HERE OR USE A DEFAULT SS.
+	return;
     }
     if ((fLastSS == onlineSS) &&
 	(fLastSS->style_sheet_type() == onlineSS->style_sheet_type())) {
@@ -195,6 +196,7 @@ StyleSheetMgr::initPrintStyleSheet (UAS_Pointer<UAS_Common> &doc) {
     }
     if (printSS == 0) {
 	//  SWM -- THROW EXCEPTION HERE OR USE A DEFAULT SS.
+	return;
     }
     if ((fLastSS == printSS) &&
 	(fLastSS->style_sheet_type() == printSS->style_sheet_type())) {

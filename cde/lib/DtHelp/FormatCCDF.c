@@ -112,7 +112,7 @@ extern char *_DtHelpGetLocale(void);
 
 #define	IsTypeHyperText(x)	(((x) & _DtCvHYPER_TEXT) ? 1 : 0)
 #define	IsTypeNewLine(x)	(((x) & _DtCvNEW_LINE) ? 1 : 0)
-#define	NextAvailSeg(x)		(NULL != x.list ? &(x.list[x.cnt]) : NULL)
+#define	NextAvailSeg(x)		(&((x).list[(x).cnt]))
 
 /******************************************************************************
  * Private structures
@@ -640,7 +640,8 @@ static	int
 CheckSegList (
     FormatVariables	*cur_vars )
 {
-    if (cur_vars->my_list.cnt >= cur_vars->my_list.max)
+    if (nullptr == cur_vars->my_list.list ||
+	cur_vars->my_list.cnt >= cur_vars->my_list.max)
       {
 	cur_vars->my_list.list = AllocateSegments (cur_vars->my_list.list,
 				cur_vars->my_list.max,
@@ -783,7 +784,7 @@ CheckList (
     /*
      * is it larger than the current max?
      */
-    if (count > seg_list->max)
+    if (nullptr == seg_list->list || count > seg_list->max)
       {
 	/*
 	 * grow the list by the indicated amount.
@@ -851,8 +852,12 @@ SegmentSave (
     int			 linkspec)
 {
     int		  result = 0;
-    _DtCvSegment *pSeg   = NextAvailSeg(cur_vars->my_list);
+    _DtCvSegment *pSeg;
 
+    if (nullptr == cur_vars->my_list.list)
+	return -1;
+
+    pSeg          = NextAvailSeg(cur_vars->my_list);
     pSeg->type     = _DtCvSetTypeToNoop(seg_type);
     pSeg->link_idx = linkspec;
 
@@ -1452,7 +1457,7 @@ SaveNewLine(
      * check to see if there is any segments. If not create a new one
      * with the type NOOP.
      */
-    else if (0 == cur_vars->my_list.cnt)
+    else if (0 == cur_vars->my_list.cnt || nullptr == cur_vars->my_list.list)
 	result = SaveStringAsSegments (cur_vars, _DtCvSetTypeToNewLine(_DtCvNOOP),
 					font_attr, link_spec);
     /*
@@ -1869,7 +1874,8 @@ GetParagraphParameters(
     /*
      * initialize string variables if valid addresses
      */
-    *ret_label   = nullptr;
+    if (ret_label != nullptr)
+	*ret_label = nullptr;
     *file_name   = nullptr;
     *glink       = nullptr;
     *description = nullptr;
@@ -1979,7 +1985,8 @@ GetParagraphParameters(
 			result = GetStringParameter(cur_vars, _DtCvTRUE,
 				_DtCvTRUE, _DtCvFALSE, _DtCvFALSE, &tmpString);
 
-			if (-1 != result && _DtCvToLower (*tmpString) == 'r')
+			if (-1 != result && tmpString != nullptr &&
+			    _DtCvToLower (*tmpString) == 'r')
 			    *gpos = _DtCvJUSTIFY_RIGHT;
 
 			if (tmpString)
@@ -4122,8 +4129,12 @@ Format(
     /*
      * set up the formatting variable structure
      */
+    readBuf[0] = '\0';
     if (InitStructure (cur_vars, ui_info, readBuf, BUFF_SIZE) == -1)
+      {
+	free(topicHandle);
 	return -1;
+      }
 
     /*
      * read the first buffer's worth of the topic.
@@ -4131,7 +4142,12 @@ Format(
     cur_vars->rd_flag = _DtHelpCeReadBuf (cur_vars->my_file, cur_vars->rd_buf,
 						cur_vars->rd_size);
     if (cur_vars->rd_flag == -1)
+      {
+	_DtHelpDestroyLinks (cur_vars->my_links);
+	cur_vars->my_links = nullptr;
+	free(topicHandle);
 	return -1;
+      }
 
     /*
      * The first command in the buffer MUST be the <TOPIC> command.
@@ -4140,7 +4156,12 @@ Format(
     if (_DtHelpCeGetCcdfTopicCmd (((void *) nullptr), cur_vars->my_file,
 			cur_vars->rd_buf, &(cur_vars->rd_ptr),
 			cur_vars->rd_size, 1, &charSet) == -1)
+      {
+	_DtHelpDestroyLinks (cur_vars->my_links);
+	cur_vars->my_links = nullptr;
+	free(topicHandle);
 	return -1;
+      }
 
     /*
      * change the character set to the returned character set
@@ -4152,6 +4173,9 @@ Format(
 					&(_DtHelpFontHintsCharSet(fontAttrs))) == -1)
       {
 	free(charSet);
+	_DtHelpDestroyLinks (cur_vars->my_links);
+	cur_vars->my_links = nullptr;
+	free(topicHandle);
 	return -1;
       }
 
@@ -4174,6 +4198,9 @@ Format(
 	    free(_DtHelpFontHintsCharSet(fontAttrs));
 	    free(charSet);
 	  }
+	_DtHelpDestroyLinks (cur_vars->my_links);
+	cur_vars->my_links = nullptr;
+	free(topicHandle);
 	return -1;
       }
 
@@ -4188,6 +4215,12 @@ Format(
 	    free(_DtHelpFontHintsCharSet(fontAttrs));
 	    free(charSet);
 	  }
+	_DtHelpFreeSegments(cur_vars->my_list.list, _DtCvFALSE,
+			    ui_info->destroy_region, ui_info->client_data);
+	cur_vars->my_list.list = nullptr;
+	_DtHelpDestroyLinks (cur_vars->my_links);
+	cur_vars->my_links = nullptr;
+	free(topicHandle);
 	return -1;
       }
 
@@ -4575,10 +4608,21 @@ FormatCCDFTitle(
 			/*
 			 * need to add a space to one of these strings.
 			 */
+			char *grownStr;
 			len += 3;
-			_DtCvStringOfStringSeg(list) = (char *) reallocarray((void *) _DtCvStringOfStringSeg(list), len, sizeof(char *));
-			if (nullptr == _DtCvStringOfStringSeg(list))
+			grownStr = (char *) reallocarray((void *) _DtCvStringOfStringSeg(list), len, sizeof(char));
+			if (nullptr == grownStr)
+			  {
+			    _DtHelpCeBufFileClose (cur_vars->my_file, True);
+			    if (nullptr != charSet)
+			      {
+				free(_DtHelpFontHintsLang(fontAttrs));
+				free(_DtHelpFontHintsCharSet(fontAttrs));
+				free(charSet);
+			      }
 			    return -1;
+			  }
+			_DtCvStringOfStringSeg(list) = grownStr;
 
 			strPtr = (char *) _DtCvStrPtr(
 						_DtCvStringOfStringSeg(list),
@@ -5289,6 +5333,7 @@ _DtHelpCeGetCcdfTitleChunks(
 
     _DtHelpCeCopyDefFontAttrList (&fontAttrs);
     myVars = DefVars;
+    readBuf[0] = '\0';
     if (InitStructure (&myVars, ui_info, readBuf, BUFF_SIZE) == -1)
       {
 	_DtHelpCeUnlockVolume(lockInfo);
@@ -5389,16 +5434,14 @@ _DtHelpCeGetCcdfTitleChunks(
 	    /*
 	     * format the location id
 	     */
-	    strcpy (idStr, "...(");
-	    strcat (idStr, loc_id);
-	    strcat (idStr, ")...");
-	
+	    snprintf(idStr, idLen, "...(%s)...", loc_id);
+
 	    /*
 	     * format the language and codeset
 	     */
-	    strcpy(buf, _DtHelpFontHintsLang(fontAttrs));
-	    strcat(buf, ".");
-	    strcpy(buf, _DtHelpFontHintsCharSet(fontAttrs));
+	    snprintf(buf, sizeof(buf), "%s.%s",
+		     _DtHelpFontHintsLang(fontAttrs) ? _DtHelpFontHintsLang(fontAttrs) : "",
+		     _DtHelpFontHintsCharSet(fontAttrs) ? _DtHelpFontHintsCharSet(fontAttrs) : "");
 
 	    /*
 	     * creat a chunk table

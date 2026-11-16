@@ -3328,7 +3328,7 @@ SetListBoxSelection(Widget list_box, int position)
 static String
 GetIconFileName(Widget w, String resource_name)
 {
-    String icon_file_name;
+    String icon_file_name = (String)nullptr;
     XtResource res_struct;
 
     res_struct.resource_name = resource_name;

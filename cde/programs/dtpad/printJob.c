@@ -442,6 +442,8 @@ _pjCreatePrintShell(PrintJob *pJob)
 		"Print",
 		nullptr, 0);
 
+    if (pJob->pShell == nullptr) return;
+
     XtAddCallback(
                 pJob->pShell,
                 XmNpageSetupCallback,
@@ -784,12 +786,15 @@ _pjGetPageHeaderString(PrintJob *pJob, PrintStringTypeEnum type)
              */
             {
 		struct passwd	*pw;
+		const char	*user_name;
 
                 format = GETMESSAGE(14, 11, "Document For:  %s");
 		pw = getpwuid(getuid());
-	        buf = (char *) malloc(strlen(format) + strlen(pw->pw_name) + 1);
+		user_name = (pw != nullptr && pw->pw_name != nullptr) ?
+		    pw->pw_name : "";
+	        buf = (char *) malloc(strlen(format) + strlen(user_name) + 1);
 	        if (buf != (char *) nullptr)
-	          sprintf(buf, format, pw->pw_name);
+	          sprintf(buf, format, user_name);
             }
             break;
         default:

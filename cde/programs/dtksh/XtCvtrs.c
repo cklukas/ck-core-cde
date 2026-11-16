@@ -121,11 +121,11 @@ DtkshCvtStringToPixel(
     colormap = *((Colormap *) args[1].addr);
 
     if (DtCompareISOLatin1(str, XtDefaultBackground)) {
-        *closure_ret = False;
+        *closure_ret = nullptr;
         done(Pixel, WhitePixelOfScreen(screen));
     }
     if (DtCompareISOLatin1(str, XtDefaultForeground)) {
-        *closure_ret = False;
+        *closure_ret = nullptr;
         done(Pixel, BlackPixelOfScreen(screen));
     }
 
@@ -151,16 +151,17 @@ DtkshCvtStringToPixel(
 
 	       errmsg = GETMESSAGE(
                         "DtkshCvtStringToPixel: The color '%s' is not defined");
-               errbuf = XtMalloc(strlen(errmsg) + strlen(str) + 10);
-               sprintf(errbuf, errmsg, str);
+               size_t errsize = strlen(errmsg) + strlen(str) + 10;
+               errbuf = XtMalloc(errsize);
+               snprintf(errbuf, errsize, errmsg, str);
 	       XtWarning(errbuf);
                XtFree(errbuf);
-	       *closure_ret = False;
+	       *closure_ret = nullptr;
 	       return False;
             }
             else
             {
-	       *closure_ret = False;
+	       *closure_ret = nullptr;
                done(Pixel, pixelValue);
             }
 	}

@@ -16,3 +16,9 @@ endif
 
 dthelpprint_SOURCES = Main.c Initialize.c PrintUtil.c PrintTopics.c \
 		      PrintManStrFile.c
+
+EXTRA_DIST = tests/check-dthelpprint-hardening.py \
+	     tests/check-dthelpprint-hardening.c
+
+check-local:
+	CC="$(CC)" $(PYTHON3) $(srcdir)/tests/check-dthelpprint-hardening.py

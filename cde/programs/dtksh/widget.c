@@ -325,7 +325,8 @@ DtkshNameToWidget(
 	if (s == nullptr || *s == '\0')
 		return(nullptr);
 
-	if (W == nullptr || W[0] == nullptr) {
+	if (W == nullptr || W[0] == nullptr || W[0]->type == TAB_EMPTY ||
+	    W[0]->wname == nullptr) {
 		errhdr = DtkStrDup(GetSharedMsg(DT_WARNING));
                 errmsg = DtkStrDup(GetSharedMsg(DT_TK_NOT_INIT));
 		printerr(errhdr, errmsg, nullptr);
@@ -727,17 +728,21 @@ getname(
 	 * list of parents, filling in the names backwards in the
 	 * buffer, then returns a pointer to the start of the name
 	 */
-	p = &buf[max];	/* that's right, buf[max] not buf[max-1] */
-	for ( ; w; w = w->parent) {
-		if (p - (len = strlen(w->wname)) < buf+3) {	/* overflow! */
+	p = &buf[max - 1];
+	*p = '\0';
+	for ( ; w && w->wname; w = w->parent) {
+		len = strlen(w->wname);
+		if ((p - buf) < len + 3) {	/* overflow! */
 			p--;
 			*p = '*';
 			return(p);
 		}
-		p -= len+1;
-		strcpy(p, w->wname);
-		if (p + len != buf + max - 1)
-			p[len] = '.';
+		if (p != &buf[max - 1]) {
+			p--;
+			*p = '.';
+		}
+		p -= len;
+		memcpy(p, w->wname, len);
 	}
 	return(p);
 }
@@ -767,7 +772,7 @@ pr_widinfo(
 	realized = XtIsRealized(w->w) ? realizedStr : str_nill;
 	managed = XtIsManaged(w->w) ? managedStr : str_nill;
 	sensitive = XtIsSensitive(w->w) ? sensitiveStr : str_nill;
-	sprintf(statbuf, "%s%s%s", realized, managed, sensitive);
+	snprintf(statbuf, sizeof(statbuf), "%s%s%s", realized, managed, sensitive);
 
 	printf(errmsg,
 		w->envar,
@@ -785,7 +790,7 @@ pr_widheader( void )
 
    errmsg = DtkStrDup(GETMESSAGE(
             "ENV VARIABLE    HANDLE PARENT CLASS              STATUS NAME\n"));
-   printf(errmsg);
+   printf("%s", errmsg);
    free(errmsg);
 }
 

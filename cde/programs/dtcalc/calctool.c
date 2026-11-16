@@ -504,6 +504,7 @@ get_options(int argc, char *argv[])
   char *msg;
   int i, len;
 
+  next[0] = '\0';
   INC ;
   while (argc > 0)
     {
@@ -681,7 +682,7 @@ getparam(char *s, char *argv[], char *errmes)
 {
   char *msg;
 
-  if (*argv != nullptr && argv[0][0] != '-') strcpy(s, *argv) ;
+  if (*argv != nullptr && argv[0][0] != '-') snprintf(s, MAXLINE, "%s", *argv) ;
   else
     { 
       msg = (char *) XtMalloc(strlen(mess[(int) MESS_PARAM]) + 
@@ -769,8 +770,8 @@ get_rcfile(char *name)
               }  
             else if (isval == 'f')
               {
-                sscanf(&line[3], "%s", tmp) ;
-                strcpy(v->fun_vals[i], convert(tmp)) ;
+                sscanf(&line[3], "%511s", tmp) ;
+                snprintf(v->fun_vals[i], MAXLINE, "%s", convert(tmp)) ;
               }  
             else if (isval == 'r')
               {  
@@ -786,13 +787,14 @@ get_rcfile(char *name)
                   line[strlen(line)-1] = '\0' ;
                   if (isval == 'c')
                     {
-                      strcpy(tmp, make_number(v->MPcon_vals[i], TRUE)) ;
-                      sprintf(v->con_names[i], "%1d: %s [%s]",
-                              i, tmp, &line[n]) ;
+                      snprintf(tmp, sizeof(tmp), "%s",
+                               make_number(v->MPcon_vals[i], TRUE)) ;
+                      snprintf(v->con_names[i], MAXLINE, "%1d: %s [%s]",
+                               i, tmp, &line[n]) ;
                     }
                   else
-                    sprintf(v->fun_names[i], "%1d: %s [%s]",
-                            i, tmp, &line[n]) ;
+                    snprintf(v->fun_names[i], MAXLINE, "%1d: %s [%s]",
+                             i, tmp, &line[n]) ;
                   break ;
                 }
           }
@@ -808,7 +810,7 @@ get_str_resource(enum res_type rtype, char *strval)
   int i, len ;
 
   if ((val = get_resource(rtype)) == nullptr) return(0) ;
-  strcpy(strval, val) ;
+  snprintf(strval, MAXLINE, "%s", val) ;
   len = strlen(strval) ;
   if(rtype != R_TRIG && rtype != R_DISPLAY)
   {
@@ -1434,6 +1436,7 @@ process_item(int n)
     {
       beep() ;
       v->error = TRUE;
+      return ;
     }
 
   v->current = buttons[n].value ;
@@ -1539,10 +1542,10 @@ void
 process_str(char *str, enum menu_type mtype)
 {
   int i, len ;
-  char save[80];
+  char save[MAXLINE];
 
   len = strlen(str) ;
-  strcpy(save, v->display) ;
+  snprintf(save, sizeof(save), "%s", v->display) ;
   strcpy(v->display, " ") ;
   set_item(DISPLAYITEM, v->display);
   for (i = 0 ; i < len; i++)
@@ -1598,10 +1601,10 @@ read_rcfiles(void)   /* Read .dtcalcrc's from home and current directories. */
 
   for (n = 0; n < MAXREGS; n++)
     {
-      strcpy(tmp, make_number(v->MPcon_vals[n], FALSE)) ;
-      sprintf(name, "%1d: %s [%s]", n, tmp, v->con_names[n]) ;
+      snprintf(tmp, sizeof(tmp), "%s", make_number(v->MPcon_vals[n], FALSE)) ;
+      snprintf(name, sizeof(name), "%1d: %s [%s]", n, tmp, v->con_names[n]) ;
 
-      strcpy(v->con_names[n], name) ;
+      snprintf(v->con_names[n], MAXLINE, "%s", name) ;
       strcpy(v->fun_vals[n], "") ;    /* Initially empty function strings. */
     }
 
@@ -1613,8 +1616,11 @@ read_rcfiles(void)   /* Read .dtcalcrc's from home and current directories. */
   snprintf(name, MAXPATHLEN, "%s/%s", home, RCNAME) ;
   get_rcfile(name) ;      /* Read .dtcalcrc from users home directory. */
  
-  snprintf(name, MAXPATHLEN, "%s/%s", getcwd(pathname, MAXPATHLEN+1), RCNAME) ;
-  get_rcfile(name) ;      /* Read .dtcalcrc file from current directory. */
+  if (getcwd(pathname, MAXPATHLEN) != nullptr)
+    {
+      snprintf(name, MAXPATHLEN, "%s/%s", pathname, RCNAME) ;
+      get_rcfile(name) ;      /* Read .dtcalcrc file from current directory. */
+    }
 }
 
 
@@ -1654,16 +1660,19 @@ write_rcfile(enum menu_type mtype, int exists, int cfno, char *val, char *commen
   struct passwd *entry ;        /* The user's /etc/passwd entry. */
 
   rcexists = 0 ;
-  sprintf(rcname, "%s/%s", getcwd(pathname, MAXPATHLEN), RCNAME) ;
-  if (access(rcname, F_OK) == 0) rcexists = 1 ;
-  else
+  if (getcwd(pathname, MAXPATHLEN) != nullptr)
+    {
+      snprintf(rcname, sizeof(rcname), "%s/%s", pathname, RCNAME) ;
+      if (access(rcname, F_OK) == 0) rcexists = 1 ;
+    }
+  if (!rcexists)
     { 
       if ((home = getenv("HOME")) == nullptr)
         {
           if ((entry = getpwuid(getuid())) == nullptr) return ;
           home = entry->pw_dir ;
         }
-      sprintf(rcname, "%s/%s", home, RCNAME) ;
+      snprintf(rcname, sizeof(rcname), "%s/%s", home, RCNAME) ;
       if (access(rcname, F_OK) == 0) rcexists = 1 ;
     }
   strcpy(tmp_filename, "/tmp/.dtcalcrcXXXXXX") ;
@@ -1675,10 +1684,9 @@ write_rcfile(enum menu_type mtype, int exists, int cfno, char *val, char *commen
     return ;
   }
 
-  if (rcexists)
+  if (rcexists && (rcfd = fopen(rcname, "r")) != nullptr)
     {
-      rcfd = fopen(rcname, "r") ;
-      sprintf(sval, " %1d", cfno) ;
+      snprintf(sval, sizeof(sval), " %1d", cfno) ;
       while (fgets(str, MAXLINE, rcfd))
         {
           if (exists)
@@ -1714,10 +1722,12 @@ write_rcfile(enum menu_type mtype, int exists, int cfno, char *val, char *commen
       default: break;
     }
   unlink(rcname) ;
-  rcfd = fopen(rcname, "w") ;
-  rewind(tmpfd) ;
-  while (fgets(str, MAXLINE, tmpfd)) fprintf(rcfd, "%s", str) ;
-  fclose(rcfd) ;
+  if ((rcfd = fopen(rcname, "w")) != nullptr)
+    {
+      rewind(tmpfd) ;
+      while (fgets(str, MAXLINE, tmpfd)) fprintf(rcfd, "%s", str) ;
+      fclose(rcfd) ;
+    }
   fclose(tmpfd);
   unlink(tmp_filename) ;
 }

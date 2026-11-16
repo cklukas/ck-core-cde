@@ -1814,7 +1814,7 @@ ProcessMotifSelection(Widget W)
         }
 
         index = get_index(v->cur_ch);
-        key = buttons[index].value;
+        key = (index >= 0 && index < TITEMS) ? buttons[index].value : 0;
 
         /* ------------------------------------------------------------ */
         /*  Append an extra character to be handled by do_delete func.  */
@@ -3182,7 +3182,7 @@ win_display(enum fcp_type fcptype, int state)
 void
 write_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
 {
-  char message[MAXLINE] ;
+  char message[MAXLINE * 2 + 4] ;
   char str[MAXLINE] ;          /* Temporary buffer for various strings. */
   Widget focus_widget;
   Arg args[1];
@@ -3216,9 +3216,9 @@ write_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
   if ((strcmp(X->cfval, "") == 0) || X->cfval[0] < '0' || X->cfval[0] > '9' ||
                                      X->cfno < 0 || X->cfno > 9)
     {
-      snprintf(str, MAXLINE, "%s", (X->CFtype == M_CON) ? vstrs[(int) V_LCON]
+      snprintf(str, sizeof(str), "%s", (X->CFtype == M_CON) ? vstrs[(int) V_LCON]
                                    : vstrs[(int) V_LFUN]) ;
-      snprintf(message, MAXLINE, "%s\n%s", str, vstrs[(int) V_RANGE]) ;
+      snprintf(message, sizeof(message), "%s\n%s", str, vstrs[(int) V_RANGE]) ;
       do_continue_notice(X->CFframe, message) ;
       return ;
     }
@@ -3235,10 +3235,10 @@ write_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
     }
   if (X->cfexists)
     {
-      snprintf(str, MAXLINE, mess[(int) MESS_CON],
+      snprintf(str, sizeof(str), mess[(int) MESS_CON],
                    (X->CFtype == M_CON) ? vstrs[(int) V_UCON]
                                         : vstrs[(int) V_UFUN], X->cfno) ;
-      snprintf(message, MAXLINE, "%s\n%s", str, vstrs[(int) V_OWRITE]) ;
+      snprintf(message, sizeof(message), "%s\n%s", str, vstrs[(int) V_OWRITE]) ;
       XtUnmanageChild(X->CFframe) ;
       do_confirm_notice(X->CFframe, message) ;
     }
@@ -4169,7 +4169,7 @@ SaveSession(char *path, char *file_name)
    int  actual_format;
    unsigned long nitems;
    unsigned long leftover;
-   WM_STATE * wm_state;
+   WM_STATE * wm_state = nullptr;
 
    char tempStr[50];
    Position x, y;
@@ -4203,10 +4203,12 @@ SaveSession(char *path, char *file_name)
                              &nitems, &leftover, (unsigned char **) &wm_state);
 
    /* Write out if iconified our not */
-   if (wm_state->state == IconicState)
+   if (wm_state != nullptr && wm_state->state == IconicState)
         put_resource(R_ICON,     set_bool(True)) ;
    else
         put_resource(R_ICON,     set_bool(False)) ;
+   if (wm_state != nullptr)
+        XFree((char *)wm_state);
 
    /* does it have a menubar or not */
    if ( application_args.menuBar )
@@ -4491,10 +4493,12 @@ setCalcHints(void)
    {
      /* Remove the iconify hint from the current shell */
      wmhints = XGetWMHints(X->dpy, XtWindow(X->kframe));
-     wmhints->flags |= IconWindowHint;
-     wmhints->initial_state = NormalState;
-     XSetWMHints(X->dpy, XtWindow(X->kframe), wmhints);
-     XFree(wmhints);
+     if (wmhints != nullptr) {
+        wmhints->flags |= IconWindowHint;
+        wmhints->initial_state = NormalState;
+        XSetWMHints(X->dpy, XtWindow(X->kframe), wmhints);
+        XFree(wmhints);
+     }
    }
 
    if (v->workspaces)

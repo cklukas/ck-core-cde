@@ -66,8 +66,8 @@ static char
 mbchar(XPointer state, char *str, int *lenp)
 {
     XlcConv conv = ((State) state)->conv;
-    XlcCharSet charset;
-    char *from, *to, buf[BUFSIZ];
+    XlcCharSet charset = nullptr;
+    char *from, *to, buf[BUFSIZ] = {0};
     int from_left, to_left;
     XPointer args[1];
 

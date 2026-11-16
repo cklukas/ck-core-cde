@@ -271,14 +271,14 @@ struct dirent **build_dirent_list (char *filter, int *filecount)
 int new_name_select (struct dirent *dir_entry, char *pszdir_name)
 {
   struct stat stat_buffer;
-  char        filename[256];
+  char        filename[MAXPATHLEN];
 
   /***********************************************************************/
   /* This will only filter the icons of the filter size which by default */
   /* is medium icons.                                                    */
   /***********************************************************************/
   if (strstr(dir_entry->d_name, file_filter_global)) {
-     sprintf(filename, "%s%s", pszdir_name, dir_entry->d_name);
+     snprintf(filename, sizeof(filename), "%s%s", pszdir_name, dir_entry->d_name);
      if (!stat(filename, &stat_buffer)) {
         if ( (S_ISREG(stat_buffer.st_mode)) ||
              (S_ISLNK(stat_buffer.st_mode)) ) {
@@ -702,7 +702,8 @@ void  update_container_contents (char *filter)
 
   path = strcpy (path, filter);
   pathend = strrchr (path, '/');
-  pathend[1] = '\0';
+  if (pathend)
+     pathend[1] = '\0';
 
   /******************************************************************/
   /* Get number of icon files and list of file names                */

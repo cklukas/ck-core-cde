@@ -276,7 +276,8 @@ TTmedia_ptype_declareCB(
     if (file) {
       char *pathEnd;
 
-      if (MbStrrchr(localPath, '/') != (char *)nullptr) {
+      if (localPath != (char *)nullptr &&
+          MbStrrchr(localPath, '/') != (char *)nullptr) {
 	char *dir; DIR *pDir;
 
 	dir = (char *) XtMalloc(strlen(localPath) + 1);
@@ -321,12 +322,14 @@ TTmedia_ptype_declareCB(
     if (tt_message_contexts_count(m)) {
 
       /*----> a session file, want to restore a session */
-      if (*(context = tt_message_context_val(m, "SESSION"))) {
+      if ((context = tt_message_context_val(m, "SESSION")) != (char *)nullptr &&
+          *context) {
          pPad->xrdb.session = XtNewString(context);
       }
       else {
          /* -----> non text editor specific resource  */
-         if (*(context = tt_message_context_val(m, "GEOMETRY"))) {
+         if ((context = tt_message_context_val(m, "GEOMETRY")) != (char *)nullptr &&
+             *context) {
 	   pPad->geometry = XtNewString(context);
          }
    
@@ -396,7 +399,8 @@ TTmedia_ptype_declareCB(
          }
    
          /* -----> client/server control options */
-         if (*(context = tt_message_context_val(m, "BLOCKING"))) {
+         if ((context = tt_message_context_val(m, "BLOCKING")) != (char *)nullptr &&
+             *context) {
 	   pPad->xrdb.blocking = True;
 	   pPad->blockChannel = XtNewString(context);
          }

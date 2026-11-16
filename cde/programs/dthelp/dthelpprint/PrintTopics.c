@@ -417,7 +417,17 @@ int TocNewEntry(
       TocEntry * parent, * entry;
 
       if ( TocFindSortedEntry(toc,locationId,&parent,&entry) == 0 )
+      {
+         free(new->locationId);
+         free(new);
          return -2;                        /* RETURN: duplicate entry */
+      }
+      if (parent == nullptr)
+      {
+         free(new->locationId);
+         free(new);
+         return -1;
+      }
       /* insert into the btree (not balanced) */
       if( _DtHelpCeStrCaseCmp(locationId,parent->locationId) < 0 )
          parent->leftLoc = new;
@@ -516,8 +526,8 @@ int IconvFile(
        goto cleanup;
    }
 
-   sprintf(buf,options->iconvCmdAndArgs,
-                 loc[FROM_CODESET],loc[TO_CODESET],*srcFile, destFile);
+   snprintf(buf, sizeof(buf), options->iconvCmdAndArgs,
+                  loc[FROM_CODESET],loc[TO_CODESET],*srcFile, destFile);
 
    /* do the conversion */
    if(options->debugHelpPrint) printf("%s\n",buf);
@@ -917,7 +927,8 @@ char * SectNumStr(
   char *   sectStr,
   char *          buf)
 {       /*$CODE$*/
-    char partial[5];
+    char partial[32];
+    size_t max_len = MAXSECTS * 4 + 4;
 
      /* recall: if sectNums[0] == 0, then no section number is defined
         and none should be printed; try sectStr as alternate. */
@@ -927,15 +938,20 @@ char * SectNumStr(
     if (sectNums && sectNums[0] != 0 )
     {
        int sect;
+       size_t cur_len = 0;
        for ( sect = 1; sectNums[sect] != 0; sect++ )
        {
-          sprintf(partial, "%d.", sectNums[sect]);
-          strcat(buf,partial);
+          snprintf(partial, sizeof(partial), "%d.", sectNums[sect]);
+          size_t plen = strlen(partial);
+          if (cur_len + plen >= max_len)
+             break;
+          memcpy(buf + cur_len, partial, plen + 1);
+          cur_len += plen;
        } 
     }
     else  /* if no section number, take the section string, if avail */
     {
-       if (sectStr) strcpy(buf,sectStr);
+       if (sectStr) snprintf(buf, max_len + 1, "%s", sectStr);
        else buf[0] = EOS;
     }
     return buf;
@@ -1245,9 +1261,11 @@ void GenHeadFootFormatStr(
        /* look for the symbol string */
        while ( (substr = strstr(lowLevelFormatStr,sym->symbol)) != nullptr )
        {  /* and replace it with the argref */
+          size_t arglen = strlen(sym->argref);
+          size_t symlen = strlen(sym->symbol);
           unused = False;
-          strcpy(substr, sym->argref);
-          strcpy(substr + strlen(sym->argref), substr + strlen(sym->symbol));
+          memcpy(substr, sym->argref, arglen);
+          memmove(substr + arglen, substr + symlen, strlen(substr + symlen) + 1);
        }
        /* if unused, add to unused list */
        if (unused) strcat(unusedSyms,sym->argref);
@@ -1380,7 +1398,7 @@ int PrintHeadFootStr(
     /* IMPT: the order of these arguments MUST match the argument numbers
        given in the definition of the g_HeadFootSymsList variable. */
     /* print the first set */
-    sprintf(buf, formattedStr,
+    snprintf(buf, sizeof(buf), formattedStr,
                state->hffArgs.todaysDate,state->hffArgs.volumeTitle,
                state->hffArgs.topicTitle, (int) state->curPageNumber,
                state->hffArgs.volumeDate, sectNumStr,
@@ -1391,13 +1409,14 @@ int PrintHeadFootStr(
     if(nullptr == formattedStr) return 0;            /* RETURN */
 
     /* print the second set */
-    sprintf(buf, formattedStr,
+    snprintf(buf, sizeof(buf), formattedStr,
         MAXVOLTITLEWIDTH - state->hffArgs.volumeTitleColsWidth, (int) ' ',
         MAXTOPICTITLEWIDTH - state->hffArgs.topicTitleColsWidth, (int) ' ',
         MAXPAGENUMWIDTH - state->hffArgs.pageNumColsWidth, (int) ' ',
         MAXSECTNUMWIDTH - state->hffArgs.sectNumColsWidth, (int) ' ',
         &lastValid);
-    buf[lastValid] = EOS;	/* truncate unused args */
+    if (lastValid >= 0 && lastValid < (int)sizeof(buf))
+       buf[lastValid] = EOS;	/* truncate unused args */
     free(formattedStr);
 
     /*** output the str ***/
@@ -2157,26 +2176,33 @@ int ProcessToc(
        /* set max length of title and calc num blanks needed */
        lhsWidth = strlen(sectNumStr) + 1;   /* 1=blank after sect num */
        titlelen = strlen(title);
+       int maxTitleCols = options->colsTextWidth - lhsWidth;
+       if (maxTitleCols < 1)
+          maxTitleCols = 1;
        wctitle = calloc((titlelen+1), sizeof(wchar_t));
        /* truncate the title using wchar_t */
        if(wctitle)
        {
           /* convert title to wchar_t and get num chars */
-          mbstowcs(wctitle,title,titlelen+1);
-          titlelen = wcslen(wctitle);
-          /* truncate the title to fit on the line */
-          if (titlelen > options->colsTextWidth - lhsWidth)
+          size_t conv = mbstowcs(wctitle,title,titlelen+1);
+          if (conv != (size_t)-1)
           {
-             wctitle[options->colsTextWidth - lhsWidth - 1] = EOS;
              titlelen = wcslen(wctitle);
+             /* truncate the title to fit on the line */
+             if (titlelen > maxTitleCols)
+             {
+                wctitle[maxTitleCols - 1] = EOS;
+                titlelen = wcslen(wctitle);
+             }
+             if (title != EMPTY_STR)
+                wcstombs(title,wctitle,strlen(title)+1);
           }
-          wcstombs(title,wctitle,titlelen+1);
           free(wctitle);
        }
        /* truncate the title assuming single-byte */
-       else if (titlelen > options->colsTextWidth - lhsWidth)
+       else if (title != EMPTY_STR && titlelen > maxTitleCols)
        { 
-          title[options->colsTextWidth - lhsWidth - 1] = EOS;
+          title[maxTitleCols - 1] = EOS;
           titlelen = strlen(title);
        }
        lhsWidth += titlelen;
@@ -2525,12 +2551,13 @@ int DoHelpTopicsProcessing(
    *ret_resultsFile = _DtHPrCreateTmpFile(TMPFILE_PREFIX,TMPFILE_SUFFIX);
    if (nullptr == *ret_resultsFile) { ret = -1; goto cleanup; } /* RETURN: error */
 
-   buf = calloc(3000, sizeof(char));
+   size_t buf_cap = 3000;
+   buf = calloc(buf_cap, sizeof(char));
    if (nullptr == buf) { ret = -3; goto cleanup; }      /* RETURN: error */
 
    /* cat together the part files that got created in the array order */
    /* separate them with a file containing only a page break */
-   strcpy(buf,"cat ");
+   snprintf(buf, buf_cap, "cat ");
    start = buf + strlen(buf);
    next = start;
    for (i=0; i<NUMPARTS; i++)
@@ -2540,10 +2567,10 @@ int DoHelpTopicsProcessing(
         /* if at least one file in cat list, separate from it with a pgbrk */
         if (start != next && pgbrkFile)
         {
-           sprintf(next,"%s ", pgbrkFile);
+           snprintf(next, buf_cap - (size_t)(next - buf), "%s ", pgbrkFile);
            next += strlen(next);
         }
-        sprintf(next,"%s ", partFiles[i]);
+        snprintf(next, buf_cap - (size_t)(next - buf), "%s ", partFiles[i]);
         next += strlen(next);
         validFile = True;
      }
@@ -2552,9 +2579,10 @@ int DoHelpTopicsProcessing(
    if (validFile)
    {
       int rv;
-      sprintf(next,"> %s", *ret_resultsFile);
+      snprintf(next, buf_cap - (size_t)(next - buf), "> %s", *ret_resultsFile);
       if(options->debugHelpPrint) printf("%s\n",buf);
       rv = system(buf);
+      (void)rv;
    }
    free(buf);
    ret = 0;
@@ -2723,7 +2751,7 @@ int _DtHPrPrintHelpTopic(
    
 
    /** generate the file **/
-   sprintf(printCommand,"cat %s",tmpFile);
+   snprintf(printCommand, MAX_COMMAND_LENGTH, "cat %s", tmpFile);
 
    status = _DtHPrGenFileOrPrint(options,"Help Topic(s)",printCommand);
 

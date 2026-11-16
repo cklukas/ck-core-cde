@@ -613,9 +613,8 @@ void _DtHelpUpdatePrintDialog(
          titleStr = _DTGETMESSAGE(PRSET, 52,"Help File");
          break;
       case DtHELP_TYPE_MAN_PAGE:
-         /* assumption: buf won't overflow */
-         sprintf(buf,"%s%s", _DTGETMESSAGE(PRSET, 53,"Manual Page: "),
-                 display->manPage);
+         snprintf(buf, sizeof(buf), "%s%s", _DTGETMESSAGE(PRSET, 53,"Manual Page: "),
+                  display->manPage ? display->manPage : "");
          titleStr = buf;
          break;
       default:

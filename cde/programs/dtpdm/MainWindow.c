@@ -434,7 +434,7 @@ PdmMainWinHelpCB(Widget w, XtPointer client_data, XtPointer call_data)
     {
 	String help_volume;
 	String location_id;
-    } box_resources;
+    } box_resources = { (String)nullptr, (String)nullptr };
     /*
      * create the help dialog if needed
      */

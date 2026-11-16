@@ -135,17 +135,21 @@ int  *num_codeset)
             ptr = (char *)strchr(buf,(int)':');
             *ptr = 0;
             if(!_fallcCompareISOLatin1(charset_str,buf)){
+                int *tmp_ret;
                 num_ret += 1;
                 if(num_ret == 1){
-                    ret = (int *)Xmalloc(sizeof(int));
+                    tmp_ret = (int *)Xmalloc(sizeof(int));
                 } else {
-		    ret =
+		    tmp_ret =
                         (int *)Xrealloc(ret,num_ret*sizeof(int));
                 }
-                if(ret == nullptr){
+                if(tmp_ret == nullptr){
+		    if (ret != nullptr)
+			Xfree(ret);
 		    fal_utyerrno = 0x03 ;
                     return(FAL_ERROR);
                 }
+                ret = tmp_ret;
 		ret[num_ret-1]=num;
                 break ;
             }
@@ -623,7 +627,7 @@ int 		*num_gi)
     int      i,j;
     char tmp[256],charsetname[256],src[10];
     XlcConv     conv;
-    XlcCharSet  charset;
+    XlcCharSet  charset = nullptr;
     XPointer args[2];
     unsigned long glyph,vglyph;
 

@@ -238,8 +238,12 @@ _DtHelpFileTraceLinks (
            /* get last slash in the current file path */
            if(_DtHelpCeStrrchr(filePath,DirSlashStr,MB_CUR_MAX,&slash) == 0)
            { /* there is a path component in filePath; use it with linkPath */
-              strcpy(++slash,linkPath);
-              strcpy(linkPath,filePath);       /* leave result in linkPath */
+              size_t prefix_len = (size_t)((slash + 1) - filePath);
+              size_t link_len = strlen(linkPath);
+              if (prefix_len + link_len >= MAXPATHLEN + 2)
+                 return False;
+              memcpy(slash + 1, linkPath, link_len + 1);
+              memcpy(linkPath, filePath, prefix_len + link_len + 1); /* leave result in linkPath */
            }
         } /* if path is relative */
         /* printf("traced to: %s\n", linkPath);  ** DBG */
@@ -428,23 +432,47 @@ char * _DtHelpFileLocate (
          && *filespec == '/')  			/* and its a / */
     {
        /* _DtHelpFileTraceToFile() needs a malloc'd string */
-       /* 10: leaves room for add'l suffixes */
-       pathName = MyMalloc(sizeof(char) * (strlen(filespec)+10)); 
-       pathName = strcpy(pathName,filespec);
+       size_t max_suf_len = 0;
+       for ( pSuffix = suffixList; nullptr != *pSuffix; pSuffix++ )
+       {
+          size_t slen = strlen(*pSuffix);
+          if (slen > max_suf_len)
+             max_suf_len = slen;
+       }
+       pathName = MyMalloc(sizeof(char) * (strlen(filespec) + max_suf_len + 10));
+       if (nullptr == pathName)
+          return nullptr;
+       strcpy(pathName,filespec);
        _DtHelpCeCompressPathname(pathName); /* compress out relative paths */
        if ( _DtHelpFileTraceToFile(&pathName,accessMode,&foundPath) )
           return foundPath;                         /* RETURN */
 
        /* test all suffixes */
-       eos = pathName + strlen(pathName);
+       char *basePath = strdup(pathName);
+       if (nullptr == basePath)
+       {
+          MyFree(pathName);
+          return nullptr;
+       }
+       size_t baseLen = strlen(basePath);
        for ( pSuffix = suffixList; nullptr != *pSuffix; pSuffix++ )
        {
-          strcpy(eos,(char *) *pSuffix);
+          size_t sufLen = strlen(*pSuffix);
+          char *cand = MyRealloc(pathName, baseLen + sufLen + 2);
+          if (nullptr == cand)
+             break;
+          pathName = cand;
+          memcpy(pathName, basePath, baseLen);
+          memcpy(pathName + baseLen, *pSuffix, sufLen + 1);
           /*recall: _DtHelpFileTraceToFile() requires pathName to be malloc'd*/
           if ( _DtHelpFileTraceToFile(&pathName,accessMode,&foundPath) )
+          {
+             free(basePath);
              return foundPath;                           /* RETURN: found */
+          }
        } /* for all suffixes */
 
+       free(basePath);
        MyFree(pathName);
     }
 
@@ -484,14 +512,30 @@ char * _DtHelpFileLocate (
           return foundPath;                             /* RETURN: found */
 
        /* test all suffixes */
-       eos = pathName + strlen(pathName);
+       char *basePath = strdup(pathName);
+       if (nullptr == basePath)
+       {
+          MyFree(pathName);
+          return nullptr;
+       }
+       size_t baseLen = strlen(basePath);
        for ( pSuffix = suffixList; nullptr != *pSuffix; pSuffix++ )
        {
-         strcpy(eos,(char *) *pSuffix);
+         size_t sufLen = strlen(*pSuffix);
+         char *cand = MyRealloc(pathName, baseLen + sufLen + 2);
+         if (nullptr == cand)
+            break;
+         pathName = cand;
+         memcpy(pathName, basePath, baseLen);
+         memcpy(pathName + baseLen, *pSuffix, sufLen + 1);
          /* recall: _DtHelpFileTraceToFile() requires pathName to be malloc'd */
          if ( _DtHelpFileTraceToFile(&pathName,accessMode,&foundPath) )
+         {
+            free(basePath);
             return foundPath;                           /* RETURN: found */
+         }
        } /* for all suffixes */
+       free(basePath);
        MyFree(pathName);
        return nullptr;					/* RETURN: error */
     }  /* filespec is a relative path or search cur dir */

@@ -98,7 +98,7 @@ DtkshCvtWindowToString(
         XrmValuePtr fval,
         XrmValuePtr toval )
 {
-   static char result[16];
+   static char result[32];
    Window window;
    char * errmsg;
 
@@ -114,9 +114,9 @@ DtkshCvtWindowToString(
    }
    window = ((Window *)(fval->addr))[0];
    if (window == None)
-      sprintf(result, "None");
+      snprintf(result, sizeof(result), "None");
    else
-      sprintf(result, "0x%x", window);
+      snprintf(result, sizeof(result), "0x%lx", (unsigned long)window);
    toval->addr = result;
    toval->size = strlen(result)+1;
 }
@@ -128,7 +128,7 @@ DtkshCvtScreenToString(
         XrmValuePtr fval,
         XrmValuePtr toval )
 {
-   static char result[16];
+   static char result[32];
    Screen * screen;
    char * errmsg;
 
@@ -143,7 +143,7 @@ DtkshCvtScreenToString(
       return;
    }
    screen = ((Screen **)(fval->addr))[0];
-   sprintf(result, "0x%lx", (unsigned long)screen);
+   snprintf(result, sizeof(result), "0x%lx", (unsigned long)screen);
    toval->addr = result;
    toval->size = strlen(result)+1;
 }
@@ -218,7 +218,7 @@ DtkshCvtHexIntToString(
         XrmValuePtr fval,
         XrmValuePtr toval )
 {
-   static char result[16];
+   static char result[32];
    char * errmsg;
 
    if (fval->size != sizeof(long) && fval->size != sizeof(int) && 
@@ -233,13 +233,13 @@ DtkshCvtHexIntToString(
       return;
    }
    if (fval->size == sizeof(long))
-      sprintf(result, "0x%lx", ((long *)(fval->addr))[0]);
+      snprintf(result, sizeof(result), "0x%lx", (unsigned long)((long *)(fval->addr))[0]);
    else if (fval->size == sizeof(int))
-      sprintf(result, "0x%x", ((int *)(fval->addr))[0]);
+      snprintf(result, sizeof(result), "0x%x", (unsigned int)((int *)(fval->addr))[0]);
    else if (fval->size == sizeof(short))
-      sprintf(result, "0x%x", (int)(((short *)(fval->addr))[0]));
+      snprintf(result, sizeof(result), "0x%x", (unsigned int)(unsigned short)(((short *)(fval->addr))[0]));
    else if (fval->size == sizeof(char))
-      sprintf(result, "0x%x", (int)(((char *)(fval->addr))[0]));
+      snprintf(result, sizeof(result), "0x%x", (unsigned int)(unsigned char)(((char *)(fval->addr))[0]));
    toval->addr = result;
    toval->size = strlen(result)+1;
 }
@@ -251,10 +251,11 @@ DtkshCvtIntToString(
         XrmValuePtr fval,
         XrmValuePtr toval )
 {
-   static char result[16];
+   static char result[32];
    char * errmsg;
 
-   if (fval->size != sizeof(int) && fval->size != sizeof(short)) 
+   if (fval->size != sizeof(long) && fval->size != sizeof(int) &&
+       fval->size != sizeof(short)) 
    {
       errmsg = DtkStrDup(GETMESSAGE(
              "DtkshCvtIntToString: The 'from' value is an invalid size"));
@@ -264,10 +265,12 @@ DtkshCvtIntToString(
       toval->size = 0;
       return;
    }
-   if (fval->size == sizeof(int))
-      sprintf(result, "%d", ((int *)(fval->addr))[0]);
+   if (fval->size == sizeof(long))
+      snprintf(result, sizeof(result), "%ld", ((long *)(fval->addr))[0]);
+   else if (fval->size == sizeof(int))
+      snprintf(result, sizeof(result), "%d", ((int *)(fval->addr))[0]);
    else
-      sprintf(result, "%d", (int)(((short *)(fval->addr))[0]));
+      snprintf(result, sizeof(result), "%d", (int)(((short *)(fval->addr))[0]));
    toval->addr = result;
    toval->size = strlen(result)+1;
 }
@@ -388,7 +391,7 @@ DtkshCvtStringToWidget(
 
       errmsg = DtkStrDup(GETMESSAGE(
                "DtkshCvtStringToWidget: Unable to find a widget named '%s'"));
-      sprintf(errbuf, errmsg, wname);
+      snprintf(errbuf, sizeof(errbuf), errmsg, wname);
       XtWarning(errbuf);
       free(errmsg);
    }
@@ -458,7 +461,7 @@ DtkshCvtCallbackToString(
       toval->size = 0;
       return;
    }
-   if (fval->addr == nullptr) 
+   if (fval->addr == nullptr || ((XtCallbackList *)(fval->addr))[0] == nullptr) 
    {
       toval->addr = ": ;";
       toval->size = 1;
@@ -471,8 +474,13 @@ DtkshCvtCallbackToString(
       if (cb->callback == stdCB)
       {
          dtksh_client_data_t *cdata = (dtksh_client_data_t *)cb->closure;
+         size_t cmd_len = (cdata && cdata->ksh_cmd) ? strlen((String)cdata->ksh_cmd) : 0;
+         size_t need = cmd_len + (count > 0 ? 2 : 1);
 
-         if (p + strlen((String)cdata->ksh_cmd) + 1 - buf > sizeof(buf)) 
+         if (cdata == nullptr || cdata->ksh_cmd == nullptr)
+            continue;
+
+         if ((size_t)(p - buf) + need > sizeof(buf)) 
          {
             errmsg = DtkStrDup(GetSharedMsg(DT_CONV_BUF_OVFL));
             XtWarning(errmsg);
@@ -480,9 +488,9 @@ DtkshCvtCallbackToString(
             break;
          }
          if (count > 0)
-            p += sprintf(p, "|%s", (String)cdata->ksh_cmd);
+            p += snprintf(p, sizeof(buf) - (size_t)(p - buf), "|%s", (String)cdata->ksh_cmd);
          else
-            p += sprintf(p, "%s", (String)cdata->ksh_cmd);
+            p += snprintf(p, sizeof(buf) - (size_t)(p - buf), "%s", (String)cdata->ksh_cmd);
          count++;
       }
    }
@@ -755,7 +763,7 @@ CvtStringToMWMValue(
         XrmValuePtr toval,
         XtPointer data )
 {
-   static long value;
+   static int value;
    int i;
    char * ptr;
    char * valueString;
@@ -772,7 +780,7 @@ CvtStringToMWMValue(
    ptr = valueString = DtkStrDup(fval->addr);
 
    /*  Skip any leading whitespace.  */
-   while (isspace(*ptr) && (*ptr != '\0'))
+   while (isspace((unsigned char)*ptr) && (*ptr != '\0'))
       ptr++;
 
    /* Integer values, especially -1, are also supported */
@@ -979,7 +987,8 @@ DtkshCvtStringToPrintSetupProc(
 	extern char *DTKSHConversionResource;
 	ProcInfo_t *pinfo;
 
-	if (w != nullptr) {
+	if (w != nullptr && fval->size > 0 && fval->addr != nullptr &&
+	    DTKSHConversionResource != nullptr) {
 		if (w->info == nullptr) {
 			w->info = (XtPointer)XtMalloc(sizeof(ProcInfo_t));
 			memset(w->info, '\0', sizeof(ProcInfo_t));

@@ -106,6 +106,14 @@ int	fread_d99_header (FILE_HEADER *flh, FILE *fp)
 	return FALSE;
     NTOHL (flh->hole_count[0]);
     NTOHL (flh->hole_count[1]);
+    if (flh->hole_count[0] < 0)
+	flh->hole_count[0] = 0;
+    else if (flh->hole_count[0] > NUM_HOLES)
+	flh->hole_count[0] = NUM_HOLES;
+    if (flh->hole_count[1] < 0)
+	flh->hole_count[1] = 0;
+    else if (flh->hole_count[1] > NUM_HOLES)
+	flh->hole_count[1] = NUM_HOLES;
     for (i = 0; i < NUM_HOLES; i++) {
 	NTOHL (flh->hole_array[0][i].hole_size);
 	NTOHL (flh->hole_array[0][i].offset);

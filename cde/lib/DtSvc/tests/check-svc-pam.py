@@ -525,7 +525,7 @@ with tempfile.TemporaryDirectory(prefix="dtsvc-pam-", dir=os.environ.get("TMPDIR
     work = Path(work)
     (work / "include" / "security").mkdir(parents=True)
     (work / "include" / "security" / "pam_appl.h").write_text(PAM_HEADER)
-    c = work / "svcpam.c"
+    c = work / "svcpam-harness.c"
     c.write_text(harness)
     binary = work / "svcpam"
     build = cc + ["-std=gnu23", "-O1", "-g", "-fsanitize=address,undefined", "-fno-sanitize-recover=all",

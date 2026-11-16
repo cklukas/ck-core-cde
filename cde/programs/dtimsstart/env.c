@@ -91,8 +91,7 @@ int	get_user_environ(void)
     }
 
     if ((p = Opt.DisplayName) && *p) {
-	strcpy(buf, "DISPLAY=");
-	strcat(buf, p);
+	snprintf(buf, sizeof(buf), "DISPLAY=%s", p);
 	putenv(XtNewString(buf));
     } else
 	p = getenv("DISPLAY");
@@ -116,7 +115,7 @@ int	get_user_environ(void)
       {
 	struct passwd *pw;
 	pw = getpwuid(getuid());
-	p = pw->pw_name;
+	p = (pw && pw->pw_name) ? pw->pw_name : "";
       }
     
     uenv->username = NEWSTR(p);
@@ -141,11 +140,14 @@ int	expand_string(char *in_str, char *out_str, int out_len, ImsConf *ims)
     CmdConf	*conf = &Conf;
 
     p = in_str; q = out_str;
-    if (*p == '~' && p[1] == '/') {
-	q = strcpyx(q, uenv->homedir);
-	*q++ = '/';
-	p += 2;
-	out_len -= q - out_str;
+    if (*p == '~' && p[1] == '/' && uenv->homedir) {
+	int hlen = (int)strlen(uenv->homedir);
+	if (hlen + 1 < out_len) {
+	    q = strcpyx(q, uenv->homedir);
+	    *q++ = '/';
+	    p += 2;
+	    out_len -= q - out_str;
+	}
     }
     while (*p && out_len > 0) {
 	ep = nullptr;
@@ -173,7 +175,7 @@ int	expand_string(char *in_str, char *out_str, int out_len, ImsConf *ims)
 		case 'N':	if (ims && (ep = ims->servername2)) break;
 		case 'n':	if (ims) ep = ims->servername; break;
 		case 'c':	if (ims) ep = ims->classname; break;
-		case 's':	sprintf(str, "%ld", (long) uenv->screen_num); 
+		case 's':	snprintf(str, sizeof(str), "%ld", (long) uenv->screen_num); 
 		                if (str[0] != '\0')  ep = str;
 		                break;
 		case 'r':	ep = userSel.hostname; break;
@@ -342,6 +344,8 @@ int	put_new_environ(OutEnv *oenv)
 	    for (ep = oenv->set; ep->name; ep++) {
 		if (!(vp = ep->value) && (vp = strchr(ep->name, '=')))
 		    *vp++ = '\0';
+		if (!vp)
+		    vp = "";
 		sprintf(bp, "setenv %s '%s';\n", ep->name, vp);
 		bp += strlen(bp);
 	    }
@@ -360,6 +364,8 @@ int	put_new_environ(OutEnv *oenv)
 	    for (ep = oenv->set; ep->name; ep++) {
 		if (!(vp = ep->value) && (vp = strchr(ep->name, '=')))
 		    *vp++ = '\0';
+		if (!vp)
+		    vp = "";
 		sprintf(bp, "%s='%s';\n", ep->name, vp);
 		bp += strlen(bp);
 	    }

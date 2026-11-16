@@ -7119,7 +7119,8 @@ DoAdjust(
 
             fixLeftMarginAndNewlines( editor, adjRec.infp, leftMargin, 
 				      rightMargin, (int)start, (int)end );
-            if (freopen(nullptr, "r", adjRec.infp) == nullptr) {
+            adjRec.infp = freopen(nullptr, "r", adjRec.infp);
+            if (adjRec.infp == nullptr) {
               /*
                * A failed freopen() has closed the stream, so there is
                * nothing to format.

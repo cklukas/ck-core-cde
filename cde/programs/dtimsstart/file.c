@@ -96,8 +96,8 @@ int	init_log_file(char *org_path, int check_size)
 
 	    /* rename log file if its size is larger than MAX_LOGSIZE (20 KB) */
 	if (check_size && stb.st_size > MAX_LOGSIZE) {
-	    char	save_path[MAXPATHLEN], *bp;
-	    bp = strcpyx(save_path, path); strcpyx(bp, ".old");
+	    char	save_path[MAXPATHLEN + 8];
+	    snprintf(save_path, sizeof(save_path), "%s.old", path);
 	    if (rename(path, save_path) == 0) {
 	    	log_exists = False;
 		DPR(("init_log_file(): %s renamed.\n", path));
@@ -364,7 +364,8 @@ int	read_imsconf(ImsConf *conf, char *ims_name, char *ims_fname)
 
     if (!ims_fname)	ims_fname = ims_name;
     len = expand_string("%I/", path, MAXPATHLEN, 0);
-    strcpyx(path + len, ims_fname);
+    if (len < MAXPATHLEN)
+	snprintf(path + len, MAXPATHLEN - len, "%s", ims_fname ? ims_fname : "");
 
     DPR3(("read_imsconf(%s): path=%s\n", ims_name, path));
 
@@ -497,7 +498,8 @@ int	read_localeconf(ImsList *list, char *locale_name)
     if (!locale_name || !*locale_name) {
 	locale_name = uenv->real_locale ? uenv->real_locale : uenv->locale;
     }
-    strcpyx(path + len, locale_name);
+    if (len < MAXPATHLEN)
+	snprintf(path + len, MAXPATHLEN - len, "%s", locale_name ? locale_name : "");
 
     DPR3(("read_localeconf(%s): path=%s\n", locale_name, path));
 
@@ -893,7 +895,7 @@ int	set_select_mode(int cur_mode, int new_mode)
 	fclose(fp);
     } else {
 	FILE	*new_fp;
-	char	new_fname[MAXPATHLEN];
+	char	new_fname[MAXPATHLEN + 8];
 	char	line_buf[BUFSIZ];
 	char	*lp, *valp;
 	int	n, line_num, mode_line;
@@ -967,7 +969,11 @@ static int	user_selection_fname(char *buf, int buf_len, int dpy_specific)
 	len = expand_string(dpy_specific ? "%S/%d/" : "%S/", buf, buf_len, 0);
 
 	/* Add the CDE-generic locale name */
-	strcpy(buf + len, real_done ? uenv->real_locale : uenv->CDE_locale);
+	{
+	    const char *loc = real_done ? uenv->real_locale : uenv->CDE_locale;
+	    if (len < buf_len)
+		snprintf(buf + len, buf_len - len, "%s", loc ? loc : "");
+	}
 	buf[buf_len-1] = 0;
     }
 

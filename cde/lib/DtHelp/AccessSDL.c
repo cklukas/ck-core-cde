@@ -1393,10 +1393,19 @@ _DtHelpCeGetSdlDocStamp(
 	*ret_time = timestamp;
 
     if (result == 0 && (docId == nullptr || timestamp == nullptr)) {
+	if (ret_doc != nullptr)
+	    *ret_doc = nullptr;
+	if (ret_time != nullptr)
+	    *ret_time = nullptr;
 	free(docId);     /* Incase only one of them is NULL */
 	free(timestamp); /*  " */
 	return -1;
     }
+
+    if (ret_doc == nullptr)
+	free(docId);
+    if (ret_time == nullptr)
+	free(timestamp);
 
     return result;
 }

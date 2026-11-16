@@ -716,7 +716,7 @@ static int HitNameDisplay (
            tmpStr = contractPrefix;
         else                         /* topics not displayed */
            tmpStr = expandPrefix;
-        sprintf(buf, "%s%3d  ", tmpStr, hit->topicCnt); /* 4d too spacy */
+        snprintf(buf, sizeof(buf), "%s%3d  ", tmpStr, hit->topicCnt); /* 4d too spacy */
         tmpStr = buf;
      }
      LoadPrefixFont(hw);
@@ -1421,7 +1421,7 @@ static void  VolNameDisplay(
    if (vol->hitCnt <= 0) tmpStr = (char *)_DTGETMESSAGE (GSSET, 25," ");
    else if (vol->hitsDisplayed) tmpStr = (char *)_DTGETMESSAGE (GSSET, 27,"-");
    else tmpStr = (char *)_DTGETMESSAGE (GSSET, 26,"+");   /* >0 hits */
-   sprintf(buf, "%s%3d ", tmpStr, vol->hitCnt);  /* 4d too spacy */
+   snprintf(buf, sizeof(buf), "%s%3d ", tmpStr, vol->hitCnt);  /* 4d too spacy */
 
    LoadPrefixFont(hw);
    prefixString = XmStringGenerate(buf, s_PrefixFontListTag,
@@ -2245,14 +2245,14 @@ static void StatusLabelUpdate(
    {
    case SCANNING_STATUS:
        labelMsg = (char *)_DTGETMESSAGE(GSSET, 17,"Scanning for volumes... Found %d");
-       sprintf(buf,labelMsg,intArg);
+       snprintf(buf, sizeof(buf), labelMsg, intArg);
        labelMsg = buf;
        break;                                              /* BREAK */
    case WORKING_STATUS:
        labelMsg = (char *)_DTGETMESSAGE(GSSET, 18,
                                   "Searching... Volumes remaining: %d");
        /* we need +1 because of when this message is used */
-       sprintf(buf,labelMsg,hw->help_dialog.srch.volLeftCnt + 1);
+       snprintf(buf, sizeof(buf), labelMsg, hw->help_dialog.srch.volLeftCnt + 1);
        labelMsg = buf;
        break;                                              /* BREAK */
    case SEARCH_RESULTS_STATUS:
@@ -2303,7 +2303,8 @@ static void StatusLabelUpdate(
           else
           {
              labelMsg = (char *)_DTGETMESSAGE(GSSET, 21,"Entries with \"%s\"");
-             sprintf(buf,labelMsg,hw->help_dialog.srch.rawWordStr);
+             snprintf(buf, sizeof(buf), labelMsg,
+                      hw->help_dialog.srch.rawWordStr ? hw->help_dialog.srch.rawWordStr : "");
              labelMsg = buf;
 
           }
@@ -2857,7 +2858,7 @@ static void SearchVolume(
      curVol->topicSearchInProgress = True;
 
      /* Update the search status string */
-     sprintf(buf,(char *)_DTGETMESSAGE(GSSET,18,
+     snprintf(buf, sizeof(buf), (char *)_DTGETMESSAGE(GSSET,18,
                                 "Searching... Volumes remaining: %d"),
                  hw->help_dialog.srch.volLeftCnt);
      labelString = XmStringCreateLocalized(buf);

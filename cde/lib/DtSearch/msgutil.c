@@ -238,7 +238,7 @@ LLIST          *cutnode_llist (LLIST * node, LLIST ** llistp)
 static LLIST   *split_llist (LLIST * lst)
 {
     LLIST          *tail;
-    if (lst == nullptr || lst->link)
+    if (lst == nullptr || lst->link == nullptr)
 	return lst;
 
     tail = lst->link;
@@ -265,6 +265,11 @@ static LLIST   *merge_llist (LLIST * l1, LLIST * l2)
     LLIST          *myqueue = nullptr;
     LLIST          *myend = nullptr;
     LLIST          *mynext;
+
+    if (l1 == nullptr)
+	return l2;
+    if (l2 == nullptr)
+	return l1;
 
     while ((l1 != nullptr) && (l2 != nullptr)) {
 	/*
@@ -394,7 +399,7 @@ int             clean_wrap (char *string, int wraplen)
 
 	/* Otherwise back up to the first whitespace before last word */
 	for (nlptr = breakptr - 1;  nlptr > string;  nlptr--)
-	    if (ascii_charmap[*nlptr] & WHITESPACE) {
+	    if (ascii_charmap[(unsigned char)*nlptr] & WHITESPACE) {
 		*nlptr = '\n';
 		string = ++nlptr;
 		goto LINE_DONE;
@@ -411,6 +416,8 @@ LINE_DONE:
     }
 
     /* Done wrapping.  now just count remaining lines in string. */
+    if (*string == '\0' && linecount == 0)
+	return 1;
     while (*string != 0)
 	if (*string++ == '\n')
 	    linecount++;

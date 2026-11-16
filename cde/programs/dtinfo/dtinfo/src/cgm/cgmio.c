@@ -196,12 +196,16 @@ unsigned char *get_b_cmd(struct cmd_info_s *cmd_ptr, _DtGrStream *stream)
       data_left = (mem_ptr[cmd_ptr->p_len] >> 7) & 1;
       /* do we have enough room ? */
       if ((cmd_ptr->p_len + new_len) > mem_allocated) {
-	if (!(mem_ptr = (unsigned char *)
-	      realloc(mem_ptr, 	mem_allocated = cmd_ptr->p_len + new_len))) {
+	int next_alloc = cmd_ptr->p_len + new_len;
+	unsigned char *new_mem = (unsigned char *)realloc(mem_ptr, next_alloc);
+	if (!new_mem) {
 	  burp(stderr, "couldn't get %d bytes in get_b_cmd\n",
-	       mem_allocated);
+	       next_alloc);
 	  return(nullptr);
-	} else if (io_debug)
+	}
+	mem_ptr = new_mem;
+	mem_allocated = next_alloc;
+	if (io_debug)
 	  burp(stderr, "increasing to %d bytes allocated\n", mem_allocated);
       }
       /* get the bytes needed */

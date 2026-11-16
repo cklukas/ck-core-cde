@@ -126,16 +126,22 @@ void            gen_vec (char *fname_huffcode_tab)
      */
     while (fgets (tab_filebuf, sizeof (tab_filebuf) - 1, tab_stream)
 	!= nullptr) {
-	i = atoi (_XStrtok (tab_filebuf, DELIMITERS, strtok_buf)); /* char */
+	char *tok_idx = _XStrtok (tab_filebuf, DELIMITERS, strtok_buf);
+	char *tok_code = tok_idx ? _XStrtok (nullptr, DELIMITERS, strtok_buf) : nullptr;
+	if (tok_idx == nullptr || tok_code == nullptr)
+	    continue;
+	i = atoi (tok_idx); /* char */
+	if (i < 0 || i > 256)
+	    continue;
 	/* read current huff code */
-	strcpy (temp, _XStrtok (nullptr, DELIMITERS, strtok_buf));
+	snprintf (temp, sizeof(temp), "%s", tok_code);
 	if (temp[0] == ' ') {
 	    /* Empty huffcode associated with LITERAL CODE.
 	     * Either this is literal char itself and literal
 	     * encodeing has been turned off, or this char is
 	     * so rare that it is coded using the literal char.
 	     */
-	    if (i == 256)
+	    if (i == 256 || huff_code[LITERAL_NUM] == nullptr)
 		continue;
 
 	    /* current character has LITERAL CODE */
@@ -155,14 +161,14 @@ void            gen_vec (char *fname_huffcode_tab)
 	    }
 	    temp[*(code_length + LITERAL_NUM) + 8] = '\0';
 	    huff_code[i] =
-		(char *) malloc (*(code_length + i) + 1);
+		(char *) austext_malloc (*(code_length + i) + 1, PROGNAME "158", nullptr);
 	    strcpy (huff_code[i], temp);
 	}
 	else {
 	    /* regular HUFFMAN code */
 	    *(code_length + i) = strlen (temp);
 	    huff_code[i] =
-		(char *) malloc (*(code_length + i) + 1);
+		(char *) austext_malloc (*(code_length + i) + 1, PROGNAME "165", nullptr);
 	    strcpy (huff_code[i], temp);
 	}
     }
@@ -230,7 +236,7 @@ int             process_char (UCHAR ch, char *bitstr)
 		convert_str_2_char (&coded_char);
 		bitstr[total_num_chars - 1] = coded_char;
 		num_of_bits_in_code -= 8;
-		strcpy (temp_code, &temp_code[8]);
+		memmove (temp_code, &temp_code[8], strlen (&temp_code[8]) + 1);
 	    }
 	}	/* end of bit_pos == 0 loop */
 	else {
@@ -254,7 +260,7 @@ int             process_char (UCHAR ch, char *bitstr)
 		convert_str_2_char (&coded_char);
 		bitstr[total_num_chars - 1] = coded_char;
 		num_of_bits_in_code -= bits_left;
-		strcpy (temp_code, &huff_code[i][bits_left]);
+		strcpy (temp_code, &huff_code[i][(unsigned char)bits_left]);
 		bit_pos = 0;
 	    }
 	}	/* end of else loop */

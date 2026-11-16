@@ -149,12 +149,19 @@ long	hilite_cleartext (int parse_type, char *stems, int stemcount)
 		hitwords = calloc(hitwords_size, sizeof(DtSrHitword) + 16);
 	    }
 	    else {
+		DtSrHitword *grown;
 		hitwords_size += hitwords_size >> 1;	/* 1.5 times */
 		if (debugging_hilite || (usrblk.debug & USRDBG_RETRVL))
 		    fprintf (aa_stderr,
 			PROGNAME"098 realloc for %zu hitwords.\n",
 			hitwords_size);
-		hitwords = reallocarray(hitwords, hitwords_size, sizeof(DtSrHitword) + 16);
+		grown = reallocarray(hitwords, hitwords_size, sizeof(DtSrHitword) + 16);
+		if (!grown) {
+		    free(hitwords);
+		    hitwords = nullptr;
+		} else {
+		    hitwords = grown;
+		}
 	    }
 	}
 	if (!hitwords) {

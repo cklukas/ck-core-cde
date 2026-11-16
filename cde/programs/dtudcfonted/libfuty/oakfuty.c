@@ -1363,8 +1363,8 @@ get_cmd_path(char *path, char *cmd)
 
 		if ( stat( cmd_path, &st ) == 0 ) {
 		    if( st.st_mode & S_IFREG ) {
-			cmd_path = realloc( cmd_path, strlen( cmd_path ) + 1 );
-			return	cmd_path;
+			char *shrunk = realloc( cmd_path, strlen( cmd_path ) + 1 );
+			return shrunk ? shrunk : cmd_path;
 		    }
 		}
 		FreeString( cmd_path ) ;
@@ -1375,8 +1375,8 @@ get_cmd_path(char *path, char *cmd)
 	AddString( cmd_path, cmd, nullptr ) ;
 	if ( stat( cmd_path, &st ) == 0 ) {
 	    if( st.st_mode & S_IFREG ) {
-		cmd_path = realloc( cmd_path, strlen( cmd_path ) + 1 );
-		return	cmd_path;
+		char *shrunk = realloc( cmd_path, strlen( cmd_path ) + 1 );
+		return shrunk ? shrunk : cmd_path;
 	    }
 	}
 	free( cmd_path );

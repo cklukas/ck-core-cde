@@ -436,7 +436,7 @@ static void fwfwddct_8x8 (
         into the same matrix.  "pScale" must point to the 64 float scaled/clipped 
         Q table, as setup by _iljpgEnDCTInit().
     */
-ILJPG_PRIVATE _iljpgEnDCT (
+ILJPG_PRIVATE void _iljpgEnDCT (
     int        *pSrc,
     float      *pScale
     )

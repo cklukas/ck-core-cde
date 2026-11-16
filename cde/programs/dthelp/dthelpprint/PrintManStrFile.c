@@ -112,11 +112,11 @@ int _DtHPrPrintStringData(
    
    /** generate the command **/
    _DtHPrGetPrOffsetArg(options,prOffsetArg);
-   sprintf(cmdFormat, "%s %s|%s %s|%s %s %s", /* echo | fold | pr */
+   snprintf(cmdFormat, sizeof(cmdFormat), "%s %s|%s %s|%s %s %s", /* echo | fold | pr */
              options->echoCommand, options->echoArgs,
              options->foldCommand, options->foldArgs,
              options->prCommand, prOffsetArg, options->prArgs);
-   sprintf(printCommand, cmdFormat,
+   snprintf(printCommand, MAX_COMMAND_LENGTH, cmdFormat,
              options->stringData,                            /* echo */
              options->colsTextWidth, EMPTY_STR,		     /* fold */
              options->topicTitle, options->rowsHeight, EMPTY_STR); /* pr */
@@ -172,11 +172,11 @@ int _DtHPrPrintDynamicStringData(
    
    /** generate the command **/
    _DtHPrGetPrOffsetArg(options,prOffsetArg);
-    sprintf(cmdFormat, "%s %s|%s %s|%s %s %s", /* echo | fold | pr */
+    snprintf(cmdFormat, sizeof(cmdFormat), "%s %s|%s %s|%s %s %s", /* echo | fold | pr */
              options->echoCommand, options->echoArgs,
              options->foldCommand, options->foldArgs,
              options->prCommand, prOffsetArg, options->prArgs);
-    sprintf(printCommand, cmdFormat,
+    snprintf(printCommand, MAX_COMMAND_LENGTH, cmdFormat,
              options->stringData,                            /* echo */
              options->colsTextWidth, EMPTY_STR,		     /* fold */
              options->topicTitle, options->rowsHeight, EMPTY_STR); /* pr */
@@ -287,10 +287,10 @@ int _DtHPrPrintHelpFile(
    
    /** generate the command **/
    _DtHPrGetPrOffsetArg(options,prOffsetArg);
-    sprintf(cmdFormat, "%s %s|%s %s %s", /* fold | pr */
+    snprintf(cmdFormat, sizeof(cmdFormat), "%s %s|%s %s %s", /* fold | pr */
              options->foldCommand, options->foldArgs,
              options->prCommand, prOffsetArg, options->prArgs);
-    sprintf(printCommand, cmdFormat,
+    snprintf(printCommand, MAX_COMMAND_LENGTH, cmdFormat,
              options->colsTextWidth, options->helpFile,	     /* fold */
              options->topicTitle, options->rowsHeight, EMPTY_STR); /* pr */
 

@@ -141,22 +141,25 @@ int buffer::expand_chunk(const int newsz)
    char* x = ::new char [void_ptr_size+newsz];
 
    int delta = int(void_ptr_size - long(x) % void_ptr_size);
-   x += delta ;
+   if (delta != void_ptr_size)
+      x += delta;
+   else
+      delta = 0;
 
    memcpy(x, v_base, cursz);
 
    memset(x+cursz, char(0), newsz - cursz);
 
-   v_aptr -= long(v_base);
-   v_eptr -= long(v_base);
+   ptrdiff_t aptr_off = v_aptr - v_base;
+   ptrdiff_t eptr_off = v_eptr - v_base;
 
    //free((char*)(v_base-v_align_offset));
    delete [] (char*)(v_base-v_align_offset);
    v_align_offset = delta;
 
    v_base = x;
-   v_aptr += long(v_base);
-   v_eptr += long(v_base);
+   v_aptr = v_base + aptr_off;
+   v_eptr = v_base + eptr_off;
    v_bufsz = newsz;
 
    return 0;

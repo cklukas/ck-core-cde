@@ -706,7 +706,7 @@ static void     deleter (char *infname)
     "-> If any users are still accessing the affected database(s).\n"
     "-> If any database files have not been backed up.\n\n"
     "If you are sure you are ready to start deleting, enter 'y' now... ") ,
-	    infname, OE_prodname);
+	    infname);
 
 	if(nullptr == fgets (buf, sizeof(buf)-1, stdin)) {
 		fprintf(stderr, "no input\n");
@@ -847,13 +847,13 @@ int             main (int argc, char *argv[])
     if (argc < 2) {
 BAD_ARGS:
 	fprintf (aa_stderr, CATGETS(dtsearch_catd, MS_tomita, 30,
-	    "\nUSAGE: %s [options]\n"
-	    "  -i    Input file name.  If not specified, defaults to %s.\n"
+	    "\nUSAGE: %1$s [options]\n"
+	    "  -i    Input file name.  If not specified, defaults to %2$s.\n"
 	    "  -d[v] Print debug statements.\n"
 	    "        -dv turns on verbose (record-by-record) debugging.\n"
 	    "  -t<N> Max desired number of seconds of run time.\n"
 	    "        Ctrl-C/Break will also stop deletion at next record.\n"
-	    "  -n<N> Change number of records in a batch from %d to <N>.\n"
+	    "  -n<N> Change number of records in a batch from %5$d to <N>.\n"
 	    "  -y    Automatically answers 'yes' to Delete mode confirm prompt.\n"
 	    "  -d    trace deletion operations.\n") ,
 	    aa_argv0, FNAME_DISCARD_DATA,

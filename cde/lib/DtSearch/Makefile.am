@@ -18,11 +18,13 @@ check_dtsearch_layout_cxx_CPPFLAGS = $(DT_INCDIR) -I$(top_srcdir)/include \
 				     -I$(srcdir)/tests
 
 EXTRA_DIST = tests/check-dtsearch-layout.c \
-	     tests/check-signal-abort.py tests/check-signal-abort.c
+	     tests/check-signal-abort.py tests/check-signal-abort.c \
+	     tests/check-dtsearch-hardening.py tests/check-dtsearch-hardening.c
 
 # The handler of the abort signals extracted and run under the sanitizers
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-signal-abort.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtsearch-hardening.py
 CLEANFILES = boolyac.h boolyac.c
 AM_YFLAGS = -d
 

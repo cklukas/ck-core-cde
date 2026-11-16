@@ -232,7 +232,8 @@ LoadFile(
 	if (pPad->fileStuff.fileName && *pPad->fileStuff.fileName) {
 	    char *lastSlash;
 
-	    strcpy(pPad->fileStuff.pathDir, pPad->fileStuff.fileName);
+	    snprintf(pPad->fileStuff.pathDir, sizeof(pPad->fileStuff.pathDir),
+		     "%s", pPad->fileStuff.fileName);
 	    if ((lastSlash = MbStrrchr(pPad->fileStuff.pathDir, '/')) != 
 		                                             (char *)nullptr) {
 	       *(lastSlash + 1) = (char)'\0';
@@ -298,23 +299,32 @@ AddPound(
 
     if (nameBuf != (char *)nullptr && nameBuf[0] != (char) '\0') {
         char *baseName;
-	strcpy(tempBuf, nameBuf);
+        size_t rlen;
+	snprintf(tempBuf, sizeof(tempBuf), "%s", nameBuf);
         baseName = MbStrrchr(tempBuf, '/');
 	if (baseName != (char *)nullptr) {
-		strncpy(returnBuf, tempBuf, (baseName - tempBuf) + 1);
-		returnBuf[(baseName - tempBuf) + 1] = (char)'\0';
+		size_t dirLen = (size_t)(baseName - tempBuf) + 1;
+		if (dirLen >= sizeof(returnBuf))
+		    dirLen = sizeof(returnBuf) - 1;
+		memcpy(returnBuf, tempBuf, dirLen);
+		returnBuf[dirLen] = (char)'\0';
 		baseName++;
-		strcat(returnBuf, "#");
-		strcat(returnBuf, baseName);
-	        if (returnBuf[strlen(returnBuf) - 1] != (char)'#')
-		    strcat(returnBuf, "#");
+		if (dirLen + 1 < sizeof(returnBuf))
+		    snprintf(returnBuf + dirLen, sizeof(returnBuf) - dirLen,
+			     "#%s", baseName);
 	} else {
-	    snprintf(returnBuf, sizeof(returnBuf), "#%s", tempBuf);
-	    if(strlen(returnBuf) && returnBuf[strlen(returnBuf) - 1] != (char)'#')
-		strcat(returnBuf, "#");
+	    snprintf(returnBuf, sizeof(returnBuf), "#%.*s",
+		     (int)(sizeof(returnBuf) - 2), tempBuf);
+	}
+	rlen = strlen(returnBuf);
+	if (rlen > 0 && returnBuf[rlen - 1] != (char)'#' &&
+	    rlen + 1 < sizeof(returnBuf)) {
+	    returnBuf[rlen] = (char)'#';
+	    returnBuf[rlen + 1] = (char)'\0';
 	}
     } else {
-	sprintf(returnBuf, "#%s#", GETMESSAGE(5, 21, "UNTITLED"));
+	snprintf(returnBuf, sizeof(returnBuf), "#%s#",
+		 GETMESSAGE(5, 21, "UNTITLED"));
     }
     return returnBuf;
 }

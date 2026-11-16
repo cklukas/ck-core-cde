@@ -88,7 +88,7 @@ char *
 ds_get_resource(XrmDatabase rDB, char *appname, char *resource)                          
 {
   char app[MAXLINE], res[MAXLINE] ;
-  char cstr[MAXLINE], nstr[MAXLINE] ;
+  char cstr[MAXLINE * 2 + 2], nstr[MAXLINE * 2 + 2] ;
   char *str_type[20] ;
   XrmValue value ;
 
@@ -142,6 +142,7 @@ ds_load_resources(Display *display)
 
   rDB  = nullptr ;
   home = getenv("HOME") ;
+  if (home == nullptr) home = "" ;
   XrmInitialize() ;
 
 /* Merge server defaults, created by xrdb. If nor defined, use ~/.Xdefaults. */
@@ -163,7 +164,11 @@ ds_load_resources(Display *display)
     {
       snprintf(name, sizeof(name), "%s/.Xdefaults-", home) ;
       len = strlen(name) ;
-      gethostname(name+len, 1024-len) ;
+      if (len + 1 < (int)sizeof(name))
+        {
+          gethostname(name + len, sizeof(name) - len - 1) ;
+          name[sizeof(name) - 1] = '\0' ;
+        }
       db = XrmGetFileDatabase(name) ;
     }
   else db = XrmGetFileDatabase(ptr) ;
@@ -206,7 +211,7 @@ ds_load_resources(Display *display)
 void
 ds_put_resource(XrmDatabase *rDB, char *appname, char *rstr, char *rval)
 {
-  char app[MAXLINE], resource[MAXLINE] ;
+  char app[MAXLINE], resource[MAXLINE * 2 + 2] ;
 
   snprintf(app, sizeof(app), "%s", appname) ;
   if (isupper(app[0])) app[0] = tolower(app[0]) ;

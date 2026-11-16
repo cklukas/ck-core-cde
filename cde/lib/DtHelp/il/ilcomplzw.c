@@ -292,7 +292,7 @@ static ilError ilCompLZWExecute (
     ilImagePlaneInfo       *pPlane;
     ilError                 error;
     ilPtr                   string;
-    unsigned int            currentNode, stringCount, codeIndex, lastNode;
+    unsigned int            currentNode = 0, stringCount, codeIndex, lastNode = 0;
 
 
     pPriv = (ilCompLZWPrivPtr)pData->pPrivate;

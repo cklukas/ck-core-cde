@@ -2,10 +2,12 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtcreate
 
-EXTRA_DIST = tests/check-icon-temp-file-create.py tests/check-icon-temp-file-create.c
+EXTRA_DIST = tests/check-icon-temp-file-create.py tests/check-icon-temp-file-create.c \
+             tests/check-desktop-apps-hardening.py tests/check-desktop-apps-hardening.c
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-icon-temp-file-create.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-desktop-apps-hardening.py
 
 dtcreate_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB)
 

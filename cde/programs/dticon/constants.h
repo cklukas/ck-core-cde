@@ -92,7 +92,7 @@ typedef struct {
 #define MAX_ICON_HEIGHT  256
 
 /* Maximum icon demensions */
-#define MAX_FNAME        256
+#define MAX_FNAME        1024
 
 #define min(a, b)	((a < b) ? a : b)
 #define max(a, b)	((a > b) ? a : b)

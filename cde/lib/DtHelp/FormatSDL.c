@@ -3978,15 +3978,17 @@ ResolveSnref(
     else if (_DtCvTRUE == my_struct->save_snref)
       {
 	int count = my_struct->snref_cnt;
+	UnresSnref *new_snrefs;
 
 	if (nullptr == my_struct->un_snrefs)
-	    my_struct->un_snrefs = (UnresSnref *) malloc (sizeof(UnresSnref));
+	    new_snrefs = (UnresSnref *) malloc (sizeof(UnresSnref));
 	else
-	    my_struct->un_snrefs = (UnresSnref *) realloc (
+	    new_snrefs = (UnresSnref *) realloc (
 					(void *) my_struct->un_snrefs,
 					(sizeof(UnresSnref) * (count + 1)));
-	if (nullptr != my_struct->un_snrefs)
+	if (nullptr != new_snrefs)
 	  {
+	    my_struct->un_snrefs = new_snrefs;
 	    my_struct->un_snrefs[count].id       = snref_id;
 	    my_struct->un_snrefs[count].seg      = snref;
 	    my_struct->un_snrefs[count].cur_link = my_struct->cur_link;
@@ -4140,17 +4142,22 @@ FreeFontInfo(
 {
     if (my_struct->free_cnt >= my_struct->free_max)
       {
-	my_struct->free_max += GROW_SIZE;
-	if (nullptr != my_struct->free_fonts)
-            my_struct->free_fonts = (_DtHelpFontHints **) realloc (
-			my_struct->free_fonts,
-			sizeof(_DtHelpFontHints *) * my_struct->free_max);
-	else
-            my_struct->free_fonts = (_DtHelpFontHints **) malloc (
-			sizeof(_DtHelpFontHints *) * my_struct->free_max);
+	int new_max = my_struct->free_max + GROW_SIZE;
+	_DtHelpFontHints **new_fonts;
 
-        if (nullptr == my_struct->free_fonts)
+	if (nullptr != my_struct->free_fonts)
+            new_fonts = (_DtHelpFontHints **) realloc (
+			my_struct->free_fonts,
+			sizeof(_DtHelpFontHints *) * new_max);
+	else
+            new_fonts = (_DtHelpFontHints **) malloc (
+			sizeof(_DtHelpFontHints *) * new_max);
+
+        if (nullptr == new_fonts)
 	    return -1;
+
+	my_struct->free_fonts = new_fonts;
+	my_struct->free_max = new_max;
       }
 
     my_struct->free_fonts[my_struct->free_cnt++] = my_struct->my_fonts;
@@ -6447,14 +6454,15 @@ MarkFound(
 			_DtCvIsSegRegChar(pSeg) && !(_DtCvIsSegNewLine(pSeg)))
 	  {
 	    char *strPtr;
+	    char *grown;
 	    int   len = _DtCvStrLen(_DtCvStringOfStringSeg(pSeg), 0);
 
-	    _DtCvStringOfStringSeg(pSeg) = (char *) realloc(
-					_DtCvStringOfStringSeg(pSeg), len+2);
-	    if (_DtCvStringOfStringSeg(pSeg) == nullptr)
+	    grown = (char *) realloc(_DtCvStringOfStringSeg(pSeg), len+2);
+	    if (grown == nullptr)
 		return -1;
+	    _DtCvStringOfStringSeg(pSeg) = grown;
 
-	     strPtr   = (char *) _DtCvStrPtr(_DtCvStringOfStringSeg(pSeg),
+	    strPtr    = (char *) _DtCvStrPtr(_DtCvStringOfStringSeg(pSeg),
 								0, len);
 	    *strPtr++ = ' ';
 	    *strPtr   = '\0';
@@ -8205,7 +8213,11 @@ ResolveSpcInfo(
 							ElCharSet(my_struct);
 
 		if (-1 == _DtHelpDupFontHints(&(spcInfo->spc_fonts)))
+		  {
+		    free(spcInfo);
+		    free(pReg);
 		    return -1;
+		  }
 	      }
 
 	    /*
