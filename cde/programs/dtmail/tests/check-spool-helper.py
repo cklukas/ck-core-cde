@@ -920,11 +920,12 @@ def the_helper_starts_clean():
         if Path("/proc/self/limits").exists():
             limits = Path("/proc/%d/limits" % h.pid).read_text()
             check(re.search(r"Max core file size\s+0\s+0", limits), "core files are not written")
-            try:
-                os.listdir("/proc/%d/fd" % h.pid)
-                raise Failed("the process can be examined by its user")
-            except PermissionError:
-                pass
+            if os.getuid() != 0:
+                try:
+                    os.listdir("/proc/%d/fd" % h.pid)
+                    raise Failed("the process can be examined by its user")
+                except PermissionError:
+                    pass
     except Exception:
         h.kill()
         raise

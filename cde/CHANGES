@@ -1,4 +1,8 @@
 2026-11-16
+- Guard `/proc/<pid>/fd` `PermissionError` assertion in
+  `programs/dtmail/tests/check-spool-helper.py` (`the_helper_starts_clean`) when
+  running as UID `0` inside `CLONE_NEWUSER` sandboxes (`CAP_SYS_PTRACE` /
+  `CAP_DAC_READ_SEARCH`).
 - Integrate CK Core Motif ABI 9 appearance profiles (`classic`, `modern_light`,
   `modern_dark`, `high_contrast`) across `dtsession`, `dtwm`, `dtstyle`,
   `dtfile`, `libDtWidget`, and built-in desktop palettes (`ModernLight.dp`,
