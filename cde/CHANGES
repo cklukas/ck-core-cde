@@ -1,4 +1,7 @@
 2026-11-16
+- Handle single-UID `CLONE_NEWUSER` sandboxes (`chown()` `EINVAL`) and
+  120-byte ISAM key-length bounds in `lib/tt/bin/ttdbserverd/tests` and
+  `programs/dtmail/tests/check-spool-helper.py`.
 - Probe-execute `-fsanitize=address,undefined` across all Python test harnesses
   and `cde/fuzz/run-fuzz.py`, fall back to `-fsanitize=undefined` on 39-bit VA
   ARM64 kernels (`CONFIG_ARM64_VA_BITS_39=y` on rpi4 `rpt-rpi-v8`), and advance

@@ -632,7 +632,10 @@ def a_mailbox_of_another_user_is_refused():
     box.write_bytes(b"From a@b Mon Nov  9 10:00:00 2026\n\nmine?\n")
     os.chmod(box, 0o666)
     if os.getuid() == 0:
-        os.chown(box, other.pw_uid, other.pw_gid)
+        try:
+            os.chown(box, other.pw_uid, other.pw_gid)
+        except OSError:
+            raise Skipped("cannot chown to another user in this user namespace")
     else:
         check(sudo("chown", "%d" % other.pw_uid, str(box)).returncode == 0, "sudo chown")
     h = Helper(binaries["helper"])

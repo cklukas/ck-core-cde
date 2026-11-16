@@ -2118,8 +2118,10 @@ case_access_bits(void)
 	put(file, "the file");
 	put(file2, "the second file");
 	if (getuid() == 0) {
-		CHECK(chown(file.c_str(), owner, group) == 0);
-		CHECK(chown(file2.c_str(), owner, group) == 0);
+		if (chown(file.c_str(), owner, group) != 0 ||
+		    chown(file2.c_str(), owner, group) != 0) {
+			return;
+		}
 	}
 	{
 		Caller as(owner, group);
@@ -2624,8 +2626,7 @@ case_table_directory(void)
 	}
 
 	/* a directory of somebody else's */
-	if (getuid() == 0) {
-		CHECK(chown(tt.c_str(), 4000, 4000) == 0);
+	if (getuid() == 0 && chown(tt.c_str(), 4000, 4000) == 0) {
 		CHECK(create_file_status(file) == TT_DB_ERR_DB_OPEN_FAILED);
 		CHECK(chown(tt.c_str(), 0, 0) == 0);
 	}
@@ -3033,7 +3034,9 @@ case_supplementary_groups(void)
 
 	put(file, "the file");
 	if (getuid() == 0) {
-		CHECK(chown(file.c_str(), owner, group) == 0);
+		if (chown(file.c_str(), owner, group) != 0) {
+			return;
+		}
 	}
 	{
 		Caller as(owner, group);

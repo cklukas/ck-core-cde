@@ -67,8 +67,13 @@ libs = shlex.split(os.environ.get("TTDB_LIBS", ""))
 jobs = int(os.environ.get("TTDB_TEST_JOBS", "2"))
 
 # The flags carry include and library paths relative to the build directory.
+# ToolTalk's ISAM file_table key limit is 120 bytes ("localhost:" + path), so
+# shorten the base directory when TMPDIR is deeply nested on non-macOS runners.
 builddir = Path.cwd()
-work = Path(tempfile.mkdtemp(prefix="ttdb-requests-", dir=os.environ.get("TMPDIR")))
+_tmpdir = os.environ.get("TMPDIR")
+if sys.platform != "darwin" and _tmpdir and len(_tmpdir) > 36 and Path("/tmp").is_dir() and os.access("/tmp", os.W_OK):
+    _tmpdir = "/tmp"
+work = Path(tempfile.mkdtemp(prefix="ttdb-", dir=_tmpdir))
 
 sanitize = [f"-fsanitize={_CK_SANITIZE_LIST}", "-fno-omit-frame-pointer"]
 if any(a.startswith("-fsanitize") for a in compile_cmd):
