@@ -13,10 +13,38 @@ import sys
 import tempfile
 from pathlib import Path
 
+def _ck_sanitize_list() -> str:
+    import os, shlex, subprocess, tempfile
+    override = os.environ.get("CK_SANITIZE_LIST", "").strip()
+    if override:
+        return override
+    for var in ("CC", "CXX", "CLANG", "TT_COMPILE", "CSA_COMPILE", "CMSD_COMPILE",
+                "SPC_COMPILE", "DTSVC_COMPILE", "DTSR_COMPILE", "DTMAIL_CC",
+                "DTMAIL_COMPILE", "DIRSELECT_CC"):
+        val = os.environ.get(var, "").strip()
+        if val:
+            cc = shlex.split(val)[:1]
+            break
+    else:
+        cc = ["cc"]
+    with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as d:
+        src, exe = os.path.join(d, "p.c"), os.path.join(d, "p")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write("int main(void) { return 0; }\n")
+        for s in ("address,undefined", "undefined"):
+            r = subprocess.run(cc + [f"-fsanitize={s}", src, "-o", exe], capture_output=True)
+            if r.returncode == 0 and subprocess.run([exe], capture_output=True).returncode == 0:
+                return s
+    return "undefined"
+
+
+_CK_SANITIZE_LIST = _ck_sanitize_list()
+
+
 src = Path(sys.argv[1]).resolve()
 cc = os.environ.get("DIRSELECT_CC", "cc")
 flags = ["-std=c23", "-g", "-O1", "-Wall", "-Wextra", "-Werror",
-         "-fsanitize=address,undefined", "-fno-sanitize-recover=all"]
+         f"-fsanitize={_CK_SANITIZE_LIST}", "-fno-sanitize-recover=all"]
 
 with tempfile.TemporaryDirectory(prefix="dirselect-") as tmp:
     exe = Path(tmp) / "dirselect-test"

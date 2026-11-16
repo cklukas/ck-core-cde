@@ -28,6 +28,34 @@ import subprocess
 import sys
 import tempfile
 
+def _ck_sanitize_list() -> str:
+    import os, shlex, subprocess, tempfile
+    override = os.environ.get("CK_SANITIZE_LIST", "").strip()
+    if override:
+        return override
+    for var in ("CC", "CXX", "CLANG", "TT_COMPILE", "CSA_COMPILE", "CMSD_COMPILE",
+                "SPC_COMPILE", "DTSVC_COMPILE", "DTSR_COMPILE", "DTMAIL_CC",
+                "DTMAIL_COMPILE", "DIRSELECT_CC"):
+        val = os.environ.get(var, "").strip()
+        if val:
+            cc = shlex.split(val)[:1]
+            break
+    else:
+        cc = ["cc"]
+    with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as d:
+        src, exe = os.path.join(d, "p.c"), os.path.join(d, "p")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write("int main(void) { return 0; }\n")
+        for s in ("address,undefined", "undefined"):
+            r = subprocess.run(cc + [f"-fsanitize={s}", src, "-o", exe], capture_output=True)
+            if r.returncode == 0 and subprocess.run([exe], capture_output=True).returncode == 0:
+                return s
+    return "undefined"
+
+
+_CK_SANITIZE_LIST = _ck_sanitize_list()
+
+
 source = Path(os.environ.get("DTSESSION_SOURCE") or Path(__file__).resolve().parents[1])
 main_c = (source / "SmMain.c").read_text()
 ui_c = (source / "SmUI.c").read_text()
@@ -345,7 +373,7 @@ with tempfile.TemporaryDirectory(prefix="dtsession-signals-", dir=os.environ.get
     c.write_text(harness)
     binary = work / "signals"
     define = ["-DWATCHED"] if "StopPipeFailed" in main_c else []
-    build = cc + ["-std=gnu23", "-D_GNU_SOURCE", "-O1", "-g", "-fsanitize=address,undefined", "-fno-sanitize-recover=all",
+    build = cc + ["-std=gnu23", "-D_GNU_SOURCE", "-O1", "-g", f"-fsanitize={_CK_SANITIZE_LIST}", "-fno-sanitize-recover=all",
                   "-fno-omit-frame-pointer", "-w"] + define + [str(c), "-o", str(binary)]
     compiled = subprocess.run(build, capture_output=True, text=True)
     if compiled.returncode:

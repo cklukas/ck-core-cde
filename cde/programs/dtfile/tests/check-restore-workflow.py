@@ -18,6 +18,34 @@ import sys
 import tempfile
 import time
 
+def _ck_sanitize_list() -> str:
+    import os, shlex, subprocess, tempfile
+    override = os.environ.get("CK_SANITIZE_LIST", "").strip()
+    if override:
+        return override
+    for var in ("CC", "CXX", "CLANG", "TT_COMPILE", "CSA_COMPILE", "CMSD_COMPILE",
+                "SPC_COMPILE", "DTSVC_COMPILE", "DTSR_COMPILE", "DTMAIL_CC",
+                "DTMAIL_COMPILE", "DIRSELECT_CC"):
+        val = os.environ.get(var, "").strip()
+        if val:
+            cc = shlex.split(val)[:1]
+            break
+    else:
+        cc = ["cc"]
+    with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as d:
+        src, exe = os.path.join(d, "p.c"), os.path.join(d, "p")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write("int main(void) { return 0; }\n")
+        for s in ("address,undefined", "undefined"):
+            r = subprocess.run(cc + [f"-fsanitize={s}", src, "-o", exe], capture_output=True)
+            if r.returncode == 0 and subprocess.run([exe], capture_output=True).returncode == 0:
+                return s
+    return "undefined"
+
+
+_CK_SANITIZE_LIST = _ck_sanitize_list()
+
+
 CASES = (
     "resolve-error", "resolve-null", "restore-parents", "restore-relative", "restore-host", "known-dnd",
     "known-dnd-trailing", "known-dnd-relative", "known-dnd-host", "known-dnd-occupied",
@@ -60,7 +88,7 @@ def main(argv=None):
     parser.add_argument("--case", action="append", choices=CASES + BASELINE_CASES)
     parser.add_argument("--baseline-control", action="store_true",
                         help="execute only old worker/callback/object ABI with explicit narrow coverage")
-    parser.add_argument("--sanitizers", default="address,undefined")
+    parser.add_argument("--sanitizers", default=_CK_SANITIZE_LIST)
     args = parser.parse_args(argv)
     source = args.module_source.resolve()
     if args.work_dir is None:

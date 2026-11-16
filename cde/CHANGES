@@ -1,4 +1,10 @@
 2026-11-16
+- Probe-execute `-fsanitize=address,undefined` across all Python test harnesses
+  and `cde/fuzz/run-fuzz.py`, fall back to `-fsanitize=undefined` on 39-bit VA
+  ARM64 kernels (`CONFIG_ARM64_VA_BITS_39=y` on rpi4 `rpt-rpi-v8`), and advance
+  the CK Core Motif pin to `0509cc8cdfa319e53b817367c5c9633d15b30f05` (Phase 2
+  WP-46..50 complete). Also export `CC`/`CXX` and include `/usr/sbin` in `PATH`
+  in `scripts/run-rpi4-c23-lane.sh`.
 - Fix `d_fillnew()` heap-buffer-overflow in `lib/DtSearch/raima/fillnew.c` and
   disable `-fsanitize=vptr` in C++ `--enable-sanitizers` builds so C programs
   link cleanly against `libtt` and `libDtMmdb` on Clang.

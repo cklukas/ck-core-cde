@@ -3,6 +3,34 @@
 import argparse, hashlib, json, os, re, subprocess, sys, time
 from pathlib import Path
 
+def _ck_sanitize_list() -> str:
+    import os, shlex, subprocess, tempfile
+    override = os.environ.get("CK_SANITIZE_LIST", "").strip()
+    if override:
+        return override
+    for var in ("CC", "CXX", "CLANG", "TT_COMPILE", "CSA_COMPILE", "CMSD_COMPILE",
+                "SPC_COMPILE", "DTSVC_COMPILE", "DTSR_COMPILE", "DTMAIL_CC",
+                "DTMAIL_COMPILE", "DIRSELECT_CC"):
+        val = os.environ.get(var, "").strip()
+        if val:
+            cc = shlex.split(val)[:1]
+            break
+    else:
+        cc = ["cc"]
+    with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as d:
+        src, exe = os.path.join(d, "p.c"), os.path.join(d, "p")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write("int main(void) { return 0; }\n")
+        for s in ("address,undefined", "undefined"):
+            r = subprocess.run(cc + [f"-fsanitize={s}", src, "-o", exe], capture_output=True)
+            if r.returncode == 0 and subprocess.run([exe], capture_output=True).returncode == 0:
+                return s
+    return "undefined"
+
+
+_CK_SANITIZE_LIST = _ck_sanitize_list()
+
+
 CASES=("pack-valid","pack-overflow","pack-filedata-valid",
        "pack-filedata-null","pack-filedata-overflow","stat-failed","stat-link",
        "decode-valid","decode-negative",
@@ -50,7 +78,7 @@ def main():
     parser.add_argument("--module-source",type=Path)
     parser.add_argument("--work-dir",type=Path)
     parser.add_argument("--case",choices=CASES)
-    parser.add_argument("--sanitizers",default="address,undefined")
+    parser.add_argument("--sanitizers",default=_CK_SANITIZE_LIST)
     parser.add_argument("--baseline-control",action="store_true",
                         help="prove the legacy decoder fails on a negative field length")
     args=parser.parse_args()

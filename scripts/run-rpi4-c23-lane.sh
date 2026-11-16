@@ -115,7 +115,9 @@ done
 test -e "$motif_prefix/lib/libXm.so.9"
 test -x "$motif_prefix/bin/uil"
 
-export PATH="$motif_prefix/bin:$PATH"
+export PATH="$motif_prefix/bin:/usr/sbin:$PATH"
+export CC="$cc"
+export CXX="$cxx"
 export CPPFLAGS="-I$motif_prefix/include $(pkg-config --cflags xft)"
 export LDFLAGS="-L$motif_prefix/lib -Wl,-rpath,$motif_prefix/lib"
 export LD_LIBRARY_PATH="$motif_prefix/lib"

@@ -32,7 +32,7 @@ it to `-Werror=<class>` in `cde/m4/ck_hardening.m4`.
 ## Baseline 2026-11-04 and 2026-11-16 defect-class burndown
 
 GCC 14.2 on Debian 13 arm64, `-O2 -g0`, `--enable-hardening`, six jobs, against
-CK Core Motif 20a1461b1 (2026-11-04 baseline) and CK Core Motif 50cb5503d
+CK Core Motif 20a1461b1 (2026-11-04 baseline) and CK Core Motif 0509cc8cd
 (2026-11-16 defect-class burndown) built with the same profile. The
 machine-readable starting record is
 `validation/2026-11-04-hardening-baseline.json`.

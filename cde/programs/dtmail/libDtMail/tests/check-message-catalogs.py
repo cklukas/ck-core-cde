@@ -55,6 +55,34 @@ import subprocess
 import sys
 import tempfile
 
+def _ck_sanitize_list() -> str:
+    import os, shlex, subprocess, tempfile
+    override = os.environ.get("CK_SANITIZE_LIST", "").strip()
+    if override:
+        return override
+    for var in ("CC", "CXX", "CLANG", "TT_COMPILE", "CSA_COMPILE", "CMSD_COMPILE",
+                "SPC_COMPILE", "DTSVC_COMPILE", "DTSR_COMPILE", "DTMAIL_CC",
+                "DTMAIL_COMPILE", "DIRSELECT_CC"):
+        val = os.environ.get(var, "").strip()
+        if val:
+            cc = shlex.split(val)[:1]
+            break
+    else:
+        cc = ["cc"]
+    with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as d:
+        src, exe = os.path.join(d, "p.c"), os.path.join(d, "p")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write("int main(void) { return 0; }\n")
+        for s in ("address,undefined", "undefined"):
+            r = subprocess.run(cc + [f"-fsanitize={s}", src, "-o", exe], capture_output=True)
+            if r.returncode == 0 and subprocess.run([exe], capture_output=True).returncode == 0:
+                return s
+    return "undefined"
+
+
+_CK_SANITIZE_LIST = _ck_sanitize_list()
+
+
 srcdir = Path(sys.argv[1]).resolve()
 archive = Path(sys.argv[2]).resolve()
 root = Path(os.environ["DTMAIL_CATALOG_ROOT"]).resolve() if os.environ.get("DTMAIL_CATALOG_ROOT") else srcdir.parents[2]
@@ -67,7 +95,7 @@ link_cmd = shlex.split(os.environ["DTMAIL_LINK"])
 libs = shlex.split(os.environ.get("DTMAIL_LIBS", ""))
 builddir = Path.cwd()
 work = Path(tempfile.mkdtemp(prefix="dtmail-catalogs-", dir=os.environ.get("TMPDIR")))
-sanitize = ["-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-fno-omit-frame-pointer", "-g"]
+sanitize = [f"-fsanitize={_CK_SANITIZE_LIST}", "-fno-sanitize-recover=undefined", "-fno-omit-frame-pointer", "-g"]
 
 ERROR_HEADER = dtmail / "include" / "DtMail" / "DtMailError.hh"
 ERROR_TABLE = dtmail / "libDtMail" / "Common" / "DtMailError.C"

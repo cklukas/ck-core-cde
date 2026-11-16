@@ -11,6 +11,34 @@ import subprocess
 import time
 from datetime import datetime, timezone
 
+def _ck_sanitize_list() -> str:
+    import os, shlex, subprocess, tempfile
+    override = os.environ.get("CK_SANITIZE_LIST", "").strip()
+    if override:
+        return override
+    for var in ("CC", "CXX", "CLANG", "TT_COMPILE", "CSA_COMPILE", "CMSD_COMPILE",
+                "SPC_COMPILE", "DTSVC_COMPILE", "DTSR_COMPILE", "DTMAIL_CC",
+                "DTMAIL_COMPILE", "DIRSELECT_CC"):
+        val = os.environ.get(var, "").strip()
+        if val:
+            cc = shlex.split(val)[:1]
+            break
+    else:
+        cc = ["cc"]
+    with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as d:
+        src, exe = os.path.join(d, "p.c"), os.path.join(d, "p")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write("int main(void) { return 0; }\n")
+        for s in ("address,undefined", "undefined"):
+            r = subprocess.run(cc + [f"-fsanitize={s}", src, "-o", exe], capture_output=True)
+            if r.returncode == 0 and subprocess.run([exe], capture_output=True).returncode == 0:
+                return s
+    return "undefined"
+
+
+_CK_SANITIZE_LIST = _ck_sanitize_list()
+
+
 CASES = ("success", "null", "pipe-fault", "pipe-eintr", "getfd-fault",
          "getfd-eintr", "setfd-fault", "setfd-eintr", "close-eintr",
          "write-success", "write-null", "write-eintr", "write-short",
@@ -26,7 +54,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--module-source", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--work-dir", type=Path, required=True)
-    parser.add_argument("--sanitizers", default="address,undefined")
+    parser.add_argument("--sanitizers", default=_CK_SANITIZE_LIST)
     args = parser.parse_args()
     source, work = args.module_source.resolve(), args.work_dir.resolve()
     if work.exists(): parser.error("--work-dir must be new")
