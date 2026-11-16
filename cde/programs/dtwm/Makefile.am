@@ -3,7 +3,7 @@ MAINTAINERCLEANFILES = Makefile.in
 bin_PROGRAMS = dtwm dtfplist
 
 if BUILD_DTWM_WAYLAND
-bin_PROGRAMS += dtwm-wayland
+bin_PROGRAMS += dtwm-wayland dtwm-panel
 endif
 
 EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
@@ -85,6 +85,17 @@ dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNST
                         -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\"
 dtwm_wayland_CFLAGS = $(WAYLAND_COMP_CFLAGS)
 dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS)
+
+dtwm_panel_SOURCES = wayland/WmFpWayland.c \
+                     Button.c        Callback.c      Clock.c \
+                     DataBaseLoad.c  PanelS.c        Parse.c \
+                     PopupMenu.c     Session.c       UI.c \
+                     WmFP.c          WmParse.c
+dtwm_panel_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)
+dtwm_panel_LDADD = $(DTCLIENTLIBS) $(XTOOLLIB) $(XCURSORLIB)
+if SOLARIS
+dtwm_panel_LDADD += -lintl -lresolv
+endif
 endif
 
 AM_CPPFLAGS = -DLARGECURSORS -DR2_COMPAT -DOPAQUE -DSHAPE -DUNMAP_ON_RESTART \

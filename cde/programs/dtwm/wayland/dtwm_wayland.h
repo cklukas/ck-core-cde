@@ -158,6 +158,8 @@ struct DtwmView {
     bool active;
     bool maximized;
     bool minimized;
+    bool is_panel;          /* Genuine CDE Front Panel (DtWM_BEHAVIOR_PANEL) */
+    bool is_subpanel;       /* Genuine CDE Subpanel (DtWM_BEHAVIOR_SUBPANEL) */
     bool is_desktop_pin;    /* dtfile Desktop.c pinned workspace object */
     bool is_swallowed;      /* Front Panel TYPE client swallowed window */
     uint32_t workspace_mask;
@@ -271,15 +273,18 @@ struct DtwmServer {
     uint32_t next_ws_serial;
     DtwmWorkspace workspaces[DTWM_MAX_WORKSPACES];
 
-    /* Docked CDE Front Panel & TYPE client swallowing */
+    /* Docked genuine CDE Front Panel (dtwm-panel) & TYPE client swallowing */
     bool show_front_panel;
     bool show_open_window_icons;
     bool large_icons;
+    bool panel_user_moved;
+    pid_t panel_pid;
+    DtwmView *panel_view;
     int panel_x, panel_y, panel_w, panel_h;
     int clock_slot_x, clock_slot_y, clock_slot_w, clock_slot_h;
     char swallow_client_name[64];
+    char exe_dir[1024];
     DtwmView *swallowed_clock_view;
-    struct wlr_scene_buffer *panel_buf;
 
     /* XWayland CDE Workspace Manager (_MOTIF_WM_INFO / _DT_WORKSPACE_*) XCB bridge */
     xcb_connection_t *xcb_conn;
@@ -287,6 +292,7 @@ struct DtwmServer {
     xcb_window_t xcb_wm_win;
     struct wl_event_source *xcb_event_source;
     xcb_atom_t atom_mwm_info;
+    xcb_atom_t atom_dt_wm_hints;
     xcb_atom_t atom_ws_list;
     xcb_atom_t atom_ws_current;
     xcb_atom_t atom_ws_hints;
@@ -352,6 +358,8 @@ struct DtwmServer {
 
     struct wl_event_source *sigint_source;
     struct wl_event_source *sigterm_source;
+    struct wl_event_source *status_fallback_timer;
+    bool status_written;
     const char *wayland_socket;
     const char *status_file;
 };
@@ -391,7 +399,8 @@ void dtwm_set_workspace_backdrop(DtwmServer *server, uint32_t ws_idx, const char
 void dtwm_update_output_backdrop(DtwmOutput *output);
 void dtwm_update_all_backdrops(DtwmServer *server);
 void dtwm_update_front_panel(DtwmServer *server);
-bool dtwm_front_panel_click(DtwmServer *server, double lx, double ly, uint32_t button);
+void dtwm_begin_move_panel(DtwmServer *server);
+void dtwm_notify_panel_mapped(DtwmServer *server);
 void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, struct wlr_box *out_box);
 
 /* cde_icons.c */

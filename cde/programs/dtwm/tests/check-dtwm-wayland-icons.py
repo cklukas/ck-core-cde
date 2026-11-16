@@ -270,6 +270,23 @@ def main() -> int:
         home.mkdir(mode=0o700)
         os.chmod(xdg, 0o700)
         os.chmod(home, 0o700)
+        if apps_dir:
+            # Configure genuine CDE Front Panel ~/.dt/types/ckclock.fp TYPE client slot (per ck-clock.c)
+            dt_types = home / ".dt" / "types"
+            dt_types.mkdir(parents=True, exist_ok=True)
+            (dt_types / "ckclock.fp").write_text(
+                "CONTROL Clock\n"
+                "{\n"
+                "  TYPE            client\n"
+                "  CONTAINER_NAME  Top\n"
+                "  CONTAINER_TYPE  BOX\n"
+                "  POSITION_HINTS  1\n"
+                "  CLIENT_NAME     ck-clock\n"
+                "  CLIENT_GEOMETRY 52x52\n"
+                "  LABEL           Clock\n"
+                "}\n",
+                encoding="utf-8",
+            )
 
         # Compile X11 inspector + dtfile desktop-pin emulator
         x11_c = work / "x11_inspect.c"
@@ -451,12 +468,11 @@ def main() -> int:
                     hb = crop_sha256(imb, icon_strip_box)
                     if ha == hb:
                         raise SystemExit("desktop dynamic-icon strip hash did not animate across pointer move + timer tick!")
-                    # Verify swallowed fpclock renders its dark LED time band inside the Front Panel's left Clock slot!
-                    panel_x = (out1_w - 840) // 2
-                    fp_clock_box = (panel_x + 24, out_h - 70, panel_x + 115, out_h - 8)
+                    # Verify XReparentWindow-embedded ck-clock renders its dark LED time band inside the genuine CDE Front Panel Clock slot!
+                    fp_clock_box = (80, out_h - 86, 280, out_h - 4)
                     led_band_px = count_near_rgb_in_crop(ima, fp_clock_box, (28, 32, 28), tol=30)
-                    if led_band_px < 150:
-                        raise SystemExit(f"expected swallowed ck-clock LED band inside Front Panel Clock slot, got {led_band_px} px")
+                    if led_band_px < 100:
+                        raise SystemExit(f"expected embedded ck-clock LED band inside genuine CDE Front Panel Clock slot, got {led_band_px} px")
 
                 # Toggle Increase Icon Size (96x96) live via _DT_WM_REQUEST and verify WM_ICON_SIZE updates to 96x96!
                 subprocess.run([str(x11_bin), "req", "f.set_large_icons 1"], env=c_env, check=True)

@@ -278,7 +278,7 @@ void dtwm_view_insets(const DtwmView *view, int *left, int *top, int *right, int
             return;
         }
     }
-    int b = view->decorated ? DTWM_BORDER_WIDTH : 0;
+    int b = view->decorated ? (view->is_panel ? 4 : DTWM_BORDER_WIDTH) : 0;
     int t = (view->decorated && view->has_title) ? DTWM_TITLE_HEIGHT : 0;
     *left = b;
     *right = b;
@@ -369,7 +369,18 @@ void dtwm_view_update_frame(DtwmView *view) {
         return;
     }
 
+    static const DtwmColorSet classic_panel_border = {
+        .bg = {0.929, 0.659, 0.439, 1.0},            /* Default.dp #EDA870 */
+        .fg = {1.000, 1.000, 1.000, 1.0},
+        .top_shadow = {0.976, 0.843, 0.725, 1.0},
+        .bottom_shadow = {0.490, 0.345, 0.227, 1.0},
+    };
     const DtwmColorSet *cs = view->active ? &view->server->palette.active : &view->server->palette.inactive;
+    if (view->is_panel) {
+        cs = (view->server->palette.profile == DTWM_PROFILE_CLASSIC)
+                 ? &classic_panel_border
+                 : &view->server->palette.inactive;
+    }
 
     /* 1. Fill frame background */
     set_rgba(cr, cs->bg);
@@ -380,12 +391,13 @@ void dtwm_view_update_frame(DtwmView *view) {
     draw_bevel(cr, 0, 0, outer_w, outer_h, 2.0, cs->top_shadow, cs->bottom_shadow);
 
     /* 3. Inner sunken 1px bevel framing the titlebar + client area */
+    int b_in = left > 1 ? (left - 1) : 1;
     draw_bevel(
         cr,
-        DTWM_BORDER_WIDTH - 1,
-        DTWM_BORDER_WIDTH - 1,
-        outer_w - 2 * (DTWM_BORDER_WIDTH - 1),
-        outer_h - 2 * (DTWM_BORDER_WIDTH - 1),
+        b_in,
+        b_in,
+        outer_w - 2 * b_in,
+        outer_h - 2 * b_in,
         1.0,
         cs->bottom_shadow,
         cs->top_shadow
@@ -642,7 +654,8 @@ struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int
     int count = 0;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
-        if (dtwm_view_visible_on_current_ws(v) && !v->is_swallowed && !v->is_desktop_pin) {
+        if (dtwm_view_visible_on_current_ws(v) && !v->is_swallowed && !v->is_desktop_pin &&
+            !v->is_panel && !v->is_subpanel) {
             count++;
         }
     }
@@ -677,7 +690,8 @@ struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int
     int idx = 0;
     double y = 36;
     wl_list_for_each(v, &server->views, link) {
-        if (!dtwm_view_visible_on_current_ws(v) || v->is_swallowed || v->is_desktop_pin) {
+        if (!dtwm_view_visible_on_current_ws(v) || v->is_swallowed || v->is_desktop_pin ||
+            v->is_panel || v->is_subpanel) {
             continue;
         }
         bool sel = (idx == (server->switcher_index % count));

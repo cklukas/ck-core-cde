@@ -575,7 +575,8 @@ static void refresh_xwayland_wm_hints(DtwmView *view, bool check_initial_iconic)
 /* --- Desktop Icon Classification, Layout & Rendering --- */
 static bool should_show_desktop_icon(const DtwmView *view) {
     if (!view || !view->mapped) return false;
-    if (view->is_desktop_pin || view->is_swallowed) return false;
+    if (view->is_desktop_pin || view->is_swallowed || view->is_subpanel) return false;
+    if (view->is_panel && !view->minimized) return false;
     if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
         view->xwayland_surface->override_redirect) {
         return false;
@@ -816,10 +817,6 @@ static bool matches_swallow_clock(
     if (!server->show_front_panel || server->swallowed_clock_view != nullptr) {
         return false;
     }
-    if (strcasecmp(inst, "ck-clock") == 0 || strcasecmp(inst, "fpclock") == 0 ||
-        strcasecmp(inst, "dtclock") == 0) {
-        return true;
-    }
     if (server->swallow_client_name[0] != '\0') {
         if (strcasecmp(inst, server->swallow_client_name) == 0 ||
             strcasecmp(cls, server->swallow_client_name) == 0) {
@@ -891,6 +888,39 @@ void dtwm_icons_reposition_swallowed(DtwmServer *server) {
     );
 }
 
+static bool matches_panel_embedded_client_prop(DtwmServer *server, const char *inst, const char *cls) {
+    if (!server->panel_view || !server->panel_view->xwayland_surface || !server->xcb_conn) {
+        return false;
+    }
+    xcb_atom_t prop = intern_atom_icons(server->xcb_conn, "_DT_PANEL_EMBEDDED_CLIENTS");
+    if (prop == XCB_ATOM_NONE) return false;
+    xcb_get_property_cookie_t ck = xcb_get_property(
+        server->xcb_conn, 0, server->panel_view->xwayland_surface->window_id,
+        prop, XCB_ATOM_STRING, 0, 256
+    );
+    xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+    if (!rep) return false;
+    bool hit = false;
+    int len = xcb_get_property_value_length(rep);
+    if (len > 0) {
+        const char *p = (const char *)xcb_get_property_value(rep);
+        int off = 0;
+        while (off < len) {
+            size_t sl = strnlen(p + off, (size_t)(len - off));
+            if (sl > 0) {
+                if ((inst && strncasecmp(inst, p + off, sl) == 0 && inst[sl] == '\0') ||
+                    (cls && strncasecmp(cls, p + off, sl) == 0 && cls[sl] == '\0')) {
+                    hit = true;
+                    break;
+                }
+            }
+            off += (int)sl + 1;
+        }
+    }
+    free(rep);
+    return hit;
+}
+
 bool dtwm_icons_classify_xwayland_map(DtwmView *view) {
     if (!view || view->kind != DTWM_VIEW_XWAYLAND || !view->xwayland_surface) return false;
     DtwmServer *server = view->server;
@@ -898,6 +928,15 @@ bool dtwm_icons_classify_xwayland_map(DtwmView *view) {
 
     char inst[128] = {0}, cls[128] = {0};
     read_xcb_wm_class_sync(server, xs, inst, sizeof(inst), cls, sizeof(cls));
+
+    if (matches_panel_embedded_client_prop(server, inst, cls)) {
+        /* Genuine dtwm-panel will XReparentWindow this TYPE client into its DtControl slot */
+        view->is_swallowed = true;
+        view->decorated = false;
+        view->has_title = false;
+        view->has_resize_handles = false;
+        return true;
+    }
 
     if (matches_swallow_clock(server, xs, inst, cls)) {
         view->is_swallowed = true;

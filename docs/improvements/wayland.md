@@ -70,11 +70,15 @@ Wayland and XWayland clients:
 - Native Wayland `ext-workspace-v1` server global (`ext_workspace_manager_v1`)
   advertising workspace groups, coordinates, active state, and atomic commit
   activation/creation/removal;
-- Docked interactive 3D-beveled CDE Front Panel on the primary output with
-  clickable 2x2 workspace buttons, `Ctrl+Alt+1..8` and `Ctrl+Alt+Left/Right`
-  shortcuts, and bottom strut reservation (`DTWM_PANEL_STRUT`) respected by
-  maximized and edge-snapped windows (`--no-panel` and `--greeter` hide the
-  panel when needed).
+- Hosts the **genuine CDE Front Panel** (`dtwm-panel`, built directly from
+  `dtwm`'s `WmFP.c`, `UI.c`, `DataBaseLoad.c`, `Clock.c`, `Button.c`,
+  `Callback.c`, `PanelS.c`, `PopupMenu.c`, and `Session.c`) on the primary
+  output with full `.fp` database loading (`/usr/dt/appconfig/types/C/dtwm.fp`
+  and `~/.dt/types/*.fp`), slide-up subpanels (`DtWM_BEHAVIOR_SUBPANEL`),
+  `DtActionInvoke` controls, `Ctrl+Alt+1..8` and `Ctrl+Alt+Left/Right`
+  shortcuts, and bottom strut reservation (`dtwm_get_usable_output_box`)
+  respected by maximized and edge-snapped windows (`--no-panel` and `--greeter`
+  hide the panel when needed).
 
 ## Open-window desktop icons, live dynamic icons, and Front Panel swallowing
 
@@ -100,11 +104,12 @@ contracts to Wayland without requiring application code changes:
   (`NormalState` / `IconicState`) and `_NET_WM_ICON_GEOMETRY`, and synchronizes
   the XWayland root pointer whenever the cursor moves across native Wayland
   surfaces, the Front Panel, or the desktop background;
-- **`dtfile` pinned desktop icons and Front Panel `TYPE client` swallowing:**
+- **`dtfile` pinned desktop icons and Front Panel `TYPE client` embedding:**
   Places `dtfile` `Desktop.c` workspace objects in `desktop_icon_tree` below
-  normal application windows without duplicate open-window icons, and swallows
-  embedded Front Panel clients (`ck-clock`, `fpclock`, `dtclock`, or `--swallow
-  NAME`) directly into the Front Panel's recessed Clock slot.
+  normal application windows without duplicate open-window icons, and embeds
+  `.fp` `TYPE client` controls (such as `CLIENT_NAME ck-clock` in
+  `~/.dt/types/ckclock.fp`) directly inside `dtwm-panel` via `XReparentWindow`
+  (with `--swallow NAME` retained as an explicit compositor override).
 
 ## Readiness reporting and automated verification
 

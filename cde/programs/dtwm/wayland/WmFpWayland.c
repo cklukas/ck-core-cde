@@ -1,0 +1,875 @@
+/*
+ * CDE - Common Desktop Environment
+ *
+ * wayland/WmFpWayland.c: Hosts the genuine CDE Front Panel (WmFP.c, UI.c,
+ * DataBaseLoad.c, Callback.c, Button.c, Clock.c, PanelS.c, PopupMenu.c,
+ * Session.c) on rootless XWayland under dtwm-wayland.
+ */
+
+#include "WmGlobal.h"
+#include "WmPanelP.h"
+#include "PanelSP.h"
+#include "DataBaseLoad.h"
+#include "UI.h"
+#include "WmFunction.h"
+#include "WmHelp.h"
+#include "WmManage.h"
+#include "WmResParse.h"
+#include "WmWinInfo.h"
+#define DTWM_NEED_FNTPL
+#include "WmIBitmap.h"
+
+#include <Dt/Action.h>
+#include <Dt/Control.h>
+#include <Dt/DbReader.h>
+#include <Dt/Dt.h>
+#include <Dt/DtP.h>
+#include <Dt/EnvControlP.h>
+#include <Dt/MacrosP.h>
+#include <Dt/Message.h>
+#include <Dt/MsgLog.h>
+#include <Dt/Wsm.h>
+#include <Dt/WsmP.h>
+
+#include <Xm/AtomMgr.h>
+#include <Xm/ColorObjP.h>
+#include <Xm/MenuShell.h>
+#include <Xm/MessageB.h>
+#include <Xm/PushBG.h>
+#include <Xm/RowColumn.h>
+#include <Xm/SeparatoG.h>
+#include <Xm/Xm.h>
+
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
+#include <X11/Xresource.h>
+#include <X11/Xutil.h>
+
+#include <ctype.h>
+#include <limits.h>
+#include <locale.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+/* Global Workspace Manager state referenced by the genuine Front Panel code */
+WmGlobalData wmGD;
+static WmScreenData g_fpScreen;
+static ClientData g_panelClientData;
+static Window g_colorSrvWin = None;
+static Window g_mwmWin = None;
+static Atom g_atomWsCurrent = None;
+static Atom g_atomWsList = None;
+static Atom g_atomWmRequest = None;
+static Widget g_fpPopupMenu = nullptr;
+
+extern void WorkspaceModifyCB(Widget, Atom, int, XtPointer);
+
+/* --- Append _DT_WM_REQUEST command to dtwm-wayland's WSM window --- */
+static Window find_mwm_window(Display *dpy) {
+    Window root = DefaultRootWindow(dpy);
+    Atom mwm_info = XInternAtom(dpy, "_MOTIF_WM_INFO", True);
+    if (mwm_info == None) return None;
+    Atom actual = None;
+    int fmt = 0;
+    unsigned long nitems = 0, after = 0;
+    unsigned char *data = nullptr;
+    Window win = None;
+    if (XGetWindowProperty(
+            dpy, root, mwm_info, 0, 2, False, mwm_info,
+            &actual, &fmt, &nitems, &after, &data
+        ) == Success && data) {
+        if (fmt == 32 && nitems >= 2) {
+            const long *vals = (const long *)data;
+            win = (Window)vals[1];
+        }
+        XFree(data);
+    }
+    return win;
+}
+
+static void send_dt_wm_request(Display *dpy, const char *req) {
+    if (!dpy || !req || !req[0]) return;
+    if (g_mwmWin == None) {
+        g_mwmWin = find_mwm_window(dpy);
+    }
+    if (g_mwmWin == None) return;
+    if (g_atomWmRequest == None) {
+        g_atomWmRequest = XInternAtom(dpy, "_DT_WM_REQUEST", False);
+    }
+    XChangeProperty(
+        dpy, g_mwmWin, g_atomWmRequest, XA_STRING, 8, PropModeAppend,
+        (const unsigned char *)req, (int)strlen(req) + 1
+    );
+    XFlush(dpy);
+}
+
+static Pixel alloc_rgb16(Display *dpy, Colormap cmap, unsigned short r, unsigned short g, unsigned short b) {
+    XColor xc = {.red = r, .green = g, .blue = b, .flags = DoRed | DoGreen | DoBlue};
+    if (XAllocColor(dpy, cmap, &xc)) {
+        return xc.pixel;
+    }
+    return BlackPixel(dpy, DefaultScreen(dpy));
+}
+
+static unsigned short clamp_u16(int v) {
+    if (v < 0) return 0;
+    if (v > 65535) return 65535;
+    return (unsigned short)v;
+}
+
+/* --- Standalone CDE 8-Color-Set Server Bootstrap (when dtsession is absent) ---
+ * Must use pure Xlib only (no Xm* calls!) so XmDisplay / XmColorObj is NOT
+ * instantiated until AFTER CUSTOMIZE_DATA:0 and PIXEL_SET_PROP are published!
+ */
+static void bootstrap_color_server_if_needed(Display *dpy, unsigned char profile) {
+    char cust_name[64];
+    int scr_num = DefaultScreen(dpy);
+    snprintf(cust_name, sizeof(cust_name), "%s%d", XmSCUSTOMIZE_DATA, scr_num);
+    Atom cust_atom = XInternAtom(dpy, cust_name, False);
+    if (XGetSelectionOwner(dpy, cust_atom) != None) {
+        /* dtsession Color Server is already active on this display */
+        return;
+    }
+
+    static const char *const classic_bgs[8] = {
+        "#ed00a8007000", "#9900991b99fe", "#89559808aa00", "#68006f008200",
+        "#c600b2d2a87e", "#49009200a700", "#b70087008d00", "#938eab73bf00",
+    };
+    static const char *const modern_light_bgs[8] = {
+        "#5b008400b800", "#9a00a300b000", "#7e008e00a400", "#3d0046005400",
+        "#c800cc00d400", "#52007a009400", "#8c009600a600", "#7c008c00a200",
+    };
+    static const char *const modern_dark_bgs[8] = {
+        "#280039005200", "#250027002b00", "#1b0022002c00", "#170018001b00",
+        "#200021002400", "#28002a002d00", "#1f0029003700", "#250027002b00",
+    };
+    static const char *const high_contrast_bgs[8] = {
+        "#ff00ff000000", "#000000000000", "#000000000000", "#000000000000",
+        "#000000000000", "#000000000000", "#000000000000", "#000000000000",
+    };
+
+    const char *const *bgs = classic_bgs;
+    if (profile == XmAPPEARANCE_MODERN_LIGHT) bgs = modern_light_bgs;
+    else if (profile == XmAPPEARANCE_MODERN_DARK) bgs = modern_dark_bgs;
+    else if (profile == XmAPPEARANCE_HIGH_CONTRAST) bgs = high_contrast_bgs;
+
+    Screen *screen = ScreenOfDisplay(dpy, scr_num);
+    Colormap cmap = DefaultColormapOfScreen(screen);
+    XmPixelSet psets[XmCO_MAX_NUM_COLORS];
+
+    for (int i = 0; i < XmCO_MAX_NUM_COLORS; ++i) {
+        XColor exact = {0}, def = {0};
+        if (!XParseColor(dpy, cmap, bgs[i], &exact) || !XAllocColor(dpy, cmap, &exact)) {
+            def.pixel = WhitePixelOfScreen(screen);
+            exact.red = exact.green = exact.blue = 45000;
+        } else {
+            def = exact;
+        }
+        psets[i].bg = def.pixel;
+
+        /* Compute Motif-standard luminance fg, top_shadow, bottom_shadow, select_color */
+        int lum = (30 * (int)exact.red + 59 * (int)exact.green + 11 * (int)exact.blue) / 100;
+        psets[i].fg = (lum > 34000) ? BlackPixelOfScreen(screen) : WhitePixelOfScreen(screen);
+        psets[i].ts = alloc_rgb16(
+            dpy, cmap,
+            clamp_u16((int)exact.red + (65535 - (int)exact.red) * 45 / 100),
+            clamp_u16((int)exact.green + (65535 - (int)exact.green) * 45 / 100),
+            clamp_u16((int)exact.blue + (65535 - (int)exact.blue) * 45 / 100)
+        );
+        psets[i].bs = alloc_rgb16(
+            dpy, cmap,
+            clamp_u16((int)exact.red * 48 / 100),
+            clamp_u16((int)exact.green * 48 / 100),
+            clamp_u16((int)exact.blue * 48 / 100)
+        );
+        psets[i].sc = alloc_rgb16(
+            dpy, cmap,
+            clamp_u16((int)exact.red * 85 / 100),
+            clamp_u16((int)exact.green * 85 / 100),
+            clamp_u16((int)exact.blue * 85 / 100)
+        );
+        if (profile == XmAPPEARANCE_HIGH_CONTRAST) {
+            psets[i].fg = (i == 0) ? BlackPixelOfScreen(screen) : WhitePixelOfScreen(screen);
+            psets[i].ts = WhitePixelOfScreen(screen);
+        }
+    }
+
+    char buf[2048];
+    int pos = snprintf(buf, sizeof(buf), "%x_", XmCO_HIGH_COLOR);
+    for (int i = 0; i < XmCO_MAX_NUM_COLORS; ++i) {
+        pos += snprintf(
+            buf + pos, sizeof(buf) - (size_t)pos, "%lx_%lx_%lx_%lx_%lx_",
+            (unsigned long)psets[i].bg,
+            (unsigned long)psets[i].fg,
+            (unsigned long)psets[i].ts,
+            (unsigned long)psets[i].bs,
+            (unsigned long)psets[i].sc
+        );
+    }
+    buf[pos++] = XmPIXEL_SET_PROP_VERSION;
+    buf[pos] = '\0';
+
+    g_colorSrvWin = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), -200, -200, 1, 1, 0, 0, 0);
+    Atom pixel_set_prop = XInternAtom(dpy, XmSPIXEL_SET_PROP, False);
+    XChangeProperty(
+        dpy, g_colorSrvWin, pixel_set_prop, XA_STRING, 8, PropModeReplace,
+        (const unsigned char *)buf, pos
+    );
+    XSetSelectionOwner(dpy, cust_atom, g_colorSrvWin, CurrentTime);
+    XFlush(dpy);
+}
+
+/* --- Discover appconfig search paths for both installed (/usr/dt) and build-tree runs --- */
+static void ensure_cde_search_paths(const char *argv0) {
+    struct stat st;
+    if (getenv("DTDATABASESEARCHPATH") && getenv("XMICONSEARCHPATH")) {
+        return;
+    }
+
+    char stage_appconfig[PATH_MAX] = {0};
+    const char *appcfg = CDE_INSTALLATION_TOP "/appconfig";
+
+    if (stat(CDE_INSTALLATION_TOP "/appconfig/types/C/dtwm.fp", &st) != 0 && argv0) {
+        char resolved[PATH_MAX];
+        if (realpath(argv0, resolved)) {
+            /* Check <root>/cde-build/programs/dtwm/dtwm-panel -> <root>/cde-stage/usr/dt/appconfig */
+            char *slash = strrchr(resolved, '/');
+            if (slash) {
+                *slash = '\0';
+                static const char *const rels[2] = {"../../..", "../../../.."};
+                for (int r = 0; r < 2; ++r) {
+                    snprintf(
+                        stage_appconfig, sizeof(stage_appconfig),
+                        "%s/%s/cde-stage" CDE_INSTALLATION_TOP "/appconfig", resolved, rels[r]
+                    );
+                    if (stat(stage_appconfig, &st) == 0 && S_ISDIR(st.st_mode)) {
+                        appcfg = stage_appconfig;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    const char *home = getenv("HOME");
+    if (!getenv("DTDATABASESEARCHPATH")) {
+        char dbpath[PATH_MAX * 2];
+        if (home && home[0]) {
+            snprintf(
+                dbpath, sizeof(dbpath),
+                "%s/.dt/types,%s/types/%%L,%s/types/C",
+                home, appcfg, appcfg
+            );
+        } else {
+            snprintf(dbpath, sizeof(dbpath), "%s/types/%%L,%s/types/C", appcfg, appcfg);
+        }
+        setenv("DTDATABASESEARCHPATH", dbpath, 1);
+    }
+
+    if (!getenv("XMICONSEARCHPATH")) {
+        char icpath[PATH_MAX * 3];
+        if (home && home[0]) {
+            snprintf(
+                icpath, sizeof(icpath),
+                "%s/.dt/icons/%%B%%M.pm:%s/.dt/icons/%%B%%M.bm:"
+                "%s/icons/%%L/%%B%%M.pm:%s/icons/%%L/%%B%%M.bm:"
+                "%s/icons/C/%%B%%M.pm:%s/icons/C/%%B%%M.bm",
+                home, home, appcfg, appcfg, appcfg, appcfg
+            );
+        } else {
+            snprintf(
+                icpath, sizeof(icpath),
+                "%s/icons/%%L/%%B%%M.pm:%s/icons/%%L/%%B%%M.bm:"
+                "%s/icons/C/%%B%%M.pm:%s/icons/C/%%B%%M.bm",
+                appcfg, appcfg, appcfg, appcfg
+            );
+        }
+        setenv("XMICONSEARCHPATH", icpath, 1);
+    }
+
+    if (!getenv("XMICONBMSEARCHPATH")) {
+        char bmpath[PATH_MAX * 3];
+        snprintf(
+            bmpath, sizeof(bmpath),
+            "%s/icons/%%L/%%B%%M.bm:%s/icons/C/%%B%%M.bm:"
+            "%s/icons/%%L/%%B%%M.pm:%s/icons/C/%%B%%M.pm",
+            appcfg, appcfg, appcfg, appcfg
+        );
+        setenv("XMICONBMSEARCHPATH", bmpath, 1);
+    }
+}
+
+/* --- Register shell windows in wmGD.windowContextType for CallWmFunction --- */
+static ClientData *ensure_shell_context(Widget shell, long behaviors) {
+    if (!shell || !XtIsRealized(shell)) return nullptr;
+    Display *dpy = XtDisplay(shell);
+    Window win = XtWindow(shell);
+    ClientData *existing = nullptr;
+    if (XFindContext(dpy, win, wmGD.windowContextType, (XPointer *)&existing) == 0 && existing) {
+        existing->dtwmBehaviors = behaviors;
+        return existing;
+    }
+    ClientData *pcd = (ClientData *)XtCalloc(1, sizeof(ClientData));
+    pcd->client = win;
+    pcd->pSD = &g_fpScreen;
+    pcd->dtwmBehaviors = behaviors;
+    pcd->clientFunctions = MWM_FUNC_ALL;
+    XSaveContext(dpy, win, wmGD.windowContextType, (XPointer)pcd);
+    return pcd;
+}
+
+static void register_all_subpanel_contexts(void) {
+    if (!panel.shell) return;
+    CompositeWidget cw;
+    Widget *widget_list = M_PopupList(panel.shell);
+    for (int i = 0; i < M_NumPopups(panel.shell); ++i) {
+        cw = (CompositeWidget)widget_list[i];
+        if (XtIsRealized((Widget)cw)) {
+            ensure_shell_context((Widget)cw, DtWM_BEHAVIOR_PANEL | DtWM_BEHAVIOR_SUBPANEL);
+        }
+    }
+    for (int i = 0; i < panel.box_data_count; ++i) {
+        BoxData *bd = panel.box_data[i];
+        if (!bd) continue;
+        for (int j = 0; j < bd->control_data_count; ++j) {
+            ControlData *cd = bd->control_data[j];
+            if (cd && cd->subpanel_data && cd->subpanel_data->shell &&
+                XtIsRealized(cd->subpanel_data->shell)) {
+                ensure_shell_context(
+                    cd->subpanel_data->shell, DtWM_BEHAVIOR_PANEL | DtWM_BEHAVIOR_SUBPANEL
+                );
+            }
+        }
+    }
+}
+
+/* --- TYPE client X11 Window Embedding (e.g. ck-clock via .dt/types/.fp) --- */
+static void publish_embedded_client_names(Display *dpy) {
+    if (!panel.shell || !XtIsRealized(panel.shell)) return;
+    Atom prop = XInternAtom(dpy, "_DT_PANEL_EMBEDDED_CLIENTS", False);
+    char buf[1024];
+    int pos = 0;
+    WmFpEmbeddedClientList list = (WmFpEmbeddedClientList)panel.embedded_client_list;
+    for (int i = 0; i < panel.embedded_client_count; ++i) {
+        if (list[i].pchResName && list[i].pchResName[0]) {
+            int n = snprintf(buf + pos, sizeof(buf) - (size_t)pos, "%s", list[i].pchResName);
+            if (pos + n + 1 < (int)sizeof(buf)) {
+                pos += n + 1;
+            }
+        }
+    }
+    if (pos > 0) {
+        XChangeProperty(
+            dpy, XtWindow(panel.shell), prop, XA_STRING, 8, PropModeReplace,
+            (const unsigned char *)buf, pos
+        );
+    }
+}
+
+static bool try_embed_x11_window(Display *dpy, Window win) {
+    if (win == None || panel.embedded_client_count <= 0) return false;
+    if (panel.shell && XtIsRealized(panel.shell) && win == XtWindow(panel.shell)) return false;
+
+    XClassHint ch = {nullptr, nullptr};
+    if (!XGetClassHint(dpy, win, &ch)) {
+        return false;
+    }
+
+    bool matched = false;
+    WmFpEmbeddedClientList list = (WmFpEmbeddedClientList)panel.embedded_client_list;
+    for (int i = 0; i < panel.embedded_client_count; ++i) {
+        WmFpEmbeddedClientData *ecd = &list[i];
+        if (!ecd->pchResName || ecd->pCD != nullptr || ecd->winParent == None) {
+            continue;
+        }
+        if ((ch.res_name && strcmp(ch.res_name, ecd->pchResName) == 0) ||
+            (ch.res_class && strcmp(ch.res_class, ecd->pchResName) == 0)) {
+            ClientData *pcd = (ClientData *)XtCalloc(1, sizeof(ClientData));
+            pcd->client = win;
+            pcd->pSD = &g_fpScreen;
+            pcd->pECD = (struct _WmFpEmbeddedClientData *)ecd;
+            ecd->pCD = pcd;
+
+            unsigned int w = ecd->width > 8 ? (unsigned int)ecd->width : 48u;
+            unsigned int h = ecd->height > 8 ? (unsigned int)ecd->height : 48u;
+            XUnmapWindow(dpy, win);
+            XSetWindowBorderWidth(dpy, win, 0);
+            XResizeWindow(dpy, win, w, h);
+            XReparentWindow(dpy, win, ecd->winParent, ecd->x, ecd->y);
+            XMapWindow(dpy, win);
+            XFlush(dpy);
+            matched = true;
+            break;
+        }
+    }
+
+    if (ch.res_name) XFree(ch.res_name);
+    if (ch.res_class) XFree(ch.res_class);
+    return matched;
+}
+
+static void scan_existing_embedded_clients(Display *dpy) {
+    if (panel.embedded_client_count <= 0) return;
+    Window root_ret = None, parent_ret = None, *children = nullptr;
+    unsigned int nchildren = 0;
+    if (XQueryTree(dpy, DefaultRootWindow(dpy), &root_ret, &parent_ret, &children, &nchildren) && children) {
+        for (unsigned int i = 0; i < nchildren; ++i) {
+            try_embed_x11_window(dpy, children[i]);
+        }
+        XFree(children);
+    }
+}
+
+/* --- WM Bridge Functions Called by Genuine Front Panel Sources --- */
+
+Boolean F_Action(String actionName, ClientData *pCD, XEvent *event) {
+    (void)pCD;
+    (void)event;
+    if (!actionName || !panel.shell) return False;
+    DtActionInvoke(panel.shell, actionName, nullptr, 0, nullptr, nullptr, nullptr, 1, nullptr, nullptr);
+    return True;
+}
+
+Boolean F_Kill(String args, ClientData *pCD, XEvent *event) {
+    (void)args;
+    (void)event;
+    if (!pCD) return False;
+    if (pCD->dtwmBehaviors & DtWM_BEHAVIOR_SUBPANEL) {
+        Widget sub_shell = XtWindowToWidget(wmGD.display, pCD->client);
+        if (sub_shell) {
+            XtUnmanageChild(sub_shell);
+            return True;
+        }
+    }
+    return False;
+}
+
+Boolean F_Minimize(String args, ClientData *pCD, XEvent *event) {
+    (void)args;
+    (void)pCD;
+    (void)event;
+    if (panel.shell && XtIsRealized(panel.shell)) {
+        XIconifyWindow(wmGD.display, XtWindow(panel.shell), DefaultScreen(wmGD.display));
+    }
+    return True;
+}
+
+Boolean F_Move(String args, ClientData *pCD, XEvent *event) {
+    (void)args;
+    (void)pCD;
+    (void)event;
+    send_dt_wm_request(wmGD.display, "f.move_panel");
+    return True;
+}
+
+Boolean F_Raise(String args, ClientData *pCD, XEvent *event) {
+    (void)args;
+    (void)event;
+    if (pCD && pCD->client != None) {
+        XRaiseWindow(wmGD.display, pCD->client);
+    }
+    return True;
+}
+
+static void fp_menu_minimize_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)client_data;
+    (void)call_data;
+    F_Minimize(nullptr, &g_panelClientData, nullptr);
+}
+
+static void fp_menu_exit_cb(Widget w, XtPointer client_data, XtPointer call_data) {
+    (void)w;
+    (void)client_data;
+    (void)call_data;
+    DtActionInvoke(panel.shell, "ExitSession", nullptr, 0, nullptr, nullptr, nullptr, 1, nullptr, nullptr);
+}
+
+Boolean F_Post_FpMenu(String args, ClientData *pCD, XEvent *event) {
+    (void)args;
+    (void)pCD;
+    if (!panel.shell) return False;
+    if (!g_fpPopupMenu) {
+        g_fpPopupMenu = XmCreatePopupMenu(panel.shell, "fpSystemMenu", nullptr, 0);
+        Widget btn_min = XtVaCreateManagedWidget("Minimize", xmPushButtonGadgetClass, g_fpPopupMenu, nullptr);
+        XtAddCallback(btn_min, XmNactivateCallback, fp_menu_minimize_cb, nullptr);
+        XtVaCreateManagedWidget("sep", xmSeparatorGadgetClass, g_fpPopupMenu, nullptr);
+        Widget btn_exit = XtVaCreateManagedWidget("Log Out...", xmPushButtonGadgetClass, g_fpPopupMenu, nullptr);
+        XtAddCallback(btn_exit, XmNactivateCallback, fp_menu_exit_cb, nullptr);
+    }
+    if (event && (event->type == ButtonPress || event->type == ButtonRelease)) {
+        XmMenuPosition(g_fpPopupMenu, (XButtonPressedEvent *)event);
+    }
+    XtManageChild(g_fpPopupMenu);
+    return True;
+}
+
+Boolean F_Push_Recall(String args, ClientData *pCD, XEvent *event) {
+    (void)pCD;
+    (void)event;
+    if (!args || !panel.shell) return False;
+    WmPushRecallArg *prp = (WmPushRecallArg *)args;
+    WmFpPushRecallClientList pr_list = (WmFpPushRecallClientList)panel.push_recall_list;
+    if (prp->ixReg >= 0 && prp->ixReg < panel.push_recall_count && pr_list) {
+        const char *res_name = pr_list[prp->ixReg].pchResName;
+        if (res_name && res_name[0]) {
+            /* Ask dtwm-wayland to focus/restore an existing instance if running */
+            Window root_ret = None, parent_ret = None, *children = nullptr;
+            unsigned int nchildren = 0;
+            bool found = false;
+            if (XQueryTree(wmGD.display, DefaultRootWindow(wmGD.display), &root_ret, &parent_ret, &children, &nchildren) && children) {
+                for (unsigned int i = 0; i < nchildren; ++i) {
+                    XClassHint ch = {nullptr, nullptr};
+                    if (XGetClassHint(wmGD.display, children[i], &ch)) {
+                        XWindowAttributes wattr;
+                        bool match = (ch.res_name && strcasecmp(ch.res_name, res_name) == 0) ||
+                                     (ch.res_class && strcasecmp(ch.res_class, res_name) == 0);
+                        if (ch.res_name) XFree(ch.res_name);
+                        if (ch.res_class) XFree(ch.res_class);
+                        if (match && XGetWindowAttributes(wmGD.display, children[i], &wattr)) {
+                            XMapRaised(wmGD.display, children[i]);
+                            XSetInputFocus(wmGD.display, children[i], RevertToPointerRoot, CurrentTime);
+                            XFlush(wmGD.display);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                XFree(children);
+            }
+            if (found) return True;
+        }
+    }
+
+    if (prp->wmFunc == F_Action && prp->pArgs) {
+        WmActionArg *ap = (WmActionArg *)prp->pArgs;
+        if (ap->actionName && ap->actionName[0]) {
+            DtActionInvoke(
+                panel.shell, ap->actionName, ap->aap, ap->numArgs,
+                nullptr, nullptr, nullptr, 1, nullptr, nullptr
+            );
+            return True;
+        }
+    }
+    return False;
+}
+
+int ParseWmFunction(unsigned char **linePP, unsigned int res_spec, WmFunction *pWmFunction) {
+    (void)linePP;
+    (void)res_spec;
+    if (pWmFunction) {
+        *pWmFunction = F_Action;
+    }
+    return 0;
+}
+
+Boolean ParseWmFunctionArg(
+    unsigned char **linePP,
+    int ix,
+    WmFunction wmFunc,
+    String *pArg,
+    String sClientName,
+    String sTitle
+) {
+    (void)ix;
+    (void)sClientName;
+    (void)sTitle;
+    if (!pArg) return False;
+    *pArg = nullptr;
+    if (wmFunc != F_Action || !linePP || !*linePP) return False;
+
+    const char *src = (const char *)*linePP;
+    while (*src && isspace((unsigned char)*src)) src++;
+    if (!*src) return False;
+
+    /* Split optional file argument if present */
+    const char *sp = src;
+    while (*sp && !isspace((unsigned char)*sp)) sp++;
+    size_t act_len = (size_t)(sp - src);
+    while (*sp && isspace((unsigned char)*sp)) sp++;
+
+    WmActionArg *ap = (WmActionArg *)XtCalloc(1, sizeof(WmActionArg));
+    ap->actionName = XtMalloc((Cardinal)(act_len + 1));
+    memcpy(ap->actionName, src, act_len);
+    ap->actionName[act_len] = '\0';
+
+    if (*sp) {
+        ap->numArgs = 1;
+        ap->aap = (DtActionArg *)XtCalloc(1, sizeof(DtActionArg));
+        ap->aap[0].argClass = DtACTION_FILE;
+        ap->aap[0].u.file.name = XtNewString(sp);
+    }
+
+    *pArg = (String)ap;
+    return True;
+}
+
+void RegisterLauncherWindow(WmScreenData *pSD, Window win) {
+    (void)pSD;
+    (void)win;
+    ensure_shell_context(panel.shell, DtWM_BEHAVIOR_PANEL);
+    register_all_subpanel_contexts();
+}
+
+Boolean ReparentEmbeddedClient(
+    WmFpEmbeddedClientData *pECD,
+    Widget newControl,
+    Window newWin,
+    int x,
+    int y,
+    unsigned int width,
+    unsigned int height
+) {
+    if (!pECD) return False;
+    pECD->wControl = newControl;
+    pECD->winParent = newWin;
+    pECD->x = x;
+    pECD->y = y;
+    pECD->width = width;
+    pECD->height = height;
+    if (pECD->pCD && pECD->pCD->client != None && newWin != None) {
+        XReparentWindow(wmGD.display, pECD->pCD->client, newWin, x, y);
+        XResizeWindow(wmGD.display, pECD->pCD->client, width > 8 ? width : 48, height > 8 ? height : 48);
+        XMapWindow(wmGD.display, pECD->pCD->client);
+        return True;
+    }
+    return False;
+}
+
+void UnManageWindow(ClientData *pCD) {
+    if (!pCD || pCD->client == None) return;
+    XReparentWindow(wmGD.display, pCD->client, DefaultRootWindow(wmGD.display), 60, 60);
+    if (pCD->pECD) {
+        ((WmFpEmbeddedClientData *)pCD->pECD)->pCD = nullptr;
+    }
+    XtFree((char *)pCD);
+}
+
+Boolean WmDtHelpMode(void) {
+    if (panel.shell) {
+        DtActionInvoke(panel.shell, "Dthelpview", nullptr, 0, nullptr, nullptr, nullptr, 1, nullptr, nullptr);
+    }
+    return True;
+}
+
+void WmDtDisplayTopicHelp(Widget widget, char *helpVolume, char *locationID) {
+    (void)widget;
+    (void)locationID;
+    if (panel.shell && helpVolume) {
+        DtActionArg arg = {0};
+        arg.argClass = DtACTION_FILE;
+        arg.u.file.name = helpVolume;
+        DtActionInvoke(panel.shell, "Dthelpview", &arg, 1, nullptr, nullptr, nullptr, 1, nullptr, nullptr);
+    }
+}
+
+void WmDtDisplayStringHelp(Widget widget, char *helpString) {
+    Widget parent = widget ? widget : panel.shell;
+    if (!parent || !helpString) return;
+    XmString msg = XmStringCreateLocalized(helpString);
+    Arg al[2];
+    XtSetArg(al[0], XmNmessageString, msg);
+    Widget dlg = XmCreateInformationDialog(parent, "fpHelpDialog", al, 1);
+    XmStringFree(msg);
+    XtManageChild(dlg);
+}
+
+/* --- PropertyNotify Bridge for Workspace Switching When ttsession Is Absent --- */
+static SwitchData *find_panel_switch_data(void) {
+    for (int i = 0; i < panel.box_data_count; ++i) {
+        if (panel.box_data[i] && panel.box_data[i]->switch_data) {
+            return panel.box_data[i]->switch_data;
+        }
+    }
+    return nullptr;
+}
+
+static void sync_panel_workspaces_from_x11(Display *dpy, Atom changed_atom) {
+    SwitchData *sw = find_panel_switch_data();
+    if (!sw || !panel.shell) return;
+    Window root = DefaultRootWindow(dpy);
+
+    if (changed_atom == g_atomWsList) {
+        Atom *new_atoms = nullptr;
+        int new_count = 0;
+        if (DtWsmGetWorkspaceList(dpy, root, &new_atoms, &new_count) == Success && new_atoms) {
+            if (new_count > sw->switch_count) {
+                /* Added workspace is the one not in sw->atom_names */
+                for (int i = 0; i < new_count; ++i) {
+                    bool seen = false;
+                    for (int j = 0; j < sw->switch_count; ++j) {
+                        if (sw->atom_names[j] == new_atoms[i]) {
+                            seen = true;
+                            break;
+                        }
+                    }
+                    if (!seen) {
+                        WorkspaceModifyCB(panel.shell, new_atoms[i], DtWSM_REASON_ADD, (XtPointer)sw);
+                    }
+                }
+            } else if (new_count < sw->switch_count) {
+                for (int j = 0; j < sw->switch_count; ++j) {
+                    bool still_there = false;
+                    for (int i = 0; i < new_count; ++i) {
+                        if (sw->atom_names[j] == new_atoms[i]) {
+                            still_there = true;
+                            break;
+                        }
+                    }
+                    if (!still_there) {
+                        WorkspaceModifyCB(panel.shell, sw->atom_names[j], DtWSM_REASON_DELETE, (XtPointer)sw);
+                        break;
+                    }
+                }
+            }
+            XFree(new_atoms);
+        }
+        return;
+    }
+
+    if (changed_atom == g_atomWsCurrent) {
+        Atom cur = None;
+        if (DtWsmGetCurrentWorkspace(dpy, root, &cur) == Success && cur != None) {
+            if (sw->active_switch < 0 || sw->active_switch >= sw->switch_count ||
+                sw->atom_names[sw->active_switch] != cur) {
+                WorkspaceModifyCB(panel.shell, cur, DtWSM_REASON_CURRENT, (XtPointer)sw);
+            }
+        }
+        return;
+    }
+
+    /* Check _DT_WORKSPACE_INFO_<ws> title updates */
+    char *aname = XGetAtomName(dpy, changed_atom);
+    if (aname) {
+        if (strncmp(aname, "_DT_WORKSPACE_INFO_", 19) == 0) {
+            Atom ws_atom = XInternAtom(dpy, aname + 19, True);
+            if (ws_atom != None) {
+                WorkspaceModifyCB(panel.shell, ws_atom, DtWSM_REASON_TITLE, (XtPointer)sw);
+            }
+        }
+        XFree(aname);
+    }
+}
+
+static unsigned char parse_profile_arg(const char *s) {
+    if (!s) return XmAPPEARANCE_CLASSIC;
+    if (strcasecmp(s, "modern_light") == 0 || strcasecmp(s, "modern-light") == 0) {
+        return XmAPPEARANCE_MODERN_LIGHT;
+    }
+    if (strcasecmp(s, "modern_dark") == 0 || strcasecmp(s, "modern-dark") == 0) {
+        return XmAPPEARANCE_MODERN_DARK;
+    }
+    if (strcasecmp(s, "high_contrast") == 0 || strcasecmp(s, "high-contrast") == 0) {
+        return XmAPPEARANCE_HIGH_CONTRAST;
+    }
+    return XmAPPEARANCE_CLASSIC;
+}
+
+static int ignore_x_err(Display *dpy, XErrorEvent *ev) {
+    (void)dpy;
+    (void)ev;
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    unsigned char profile = XmAPPEARANCE_CLASSIC;
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "--appearance-profile") == 0 && i + 1 < argc) {
+            profile = parse_profile_arg(argv[++i]);
+        }
+    }
+
+    setlocale(LC_ALL, "");
+    XtSetLanguageProc(nullptr, nullptr, nullptr);
+    XSetErrorHandler(ignore_x_err);
+    ensure_cde_search_paths(argv[0]);
+
+    XtToolkitInitialize();
+    wmGD.mwmAppContext = XtCreateApplicationContext();
+    Display *dpy = XtOpenDisplay(wmGD.mwmAppContext, nullptr, "dtwm", "Dtwm", nullptr, 0, &argc, argv);
+    if (!dpy) {
+        fprintf(stderr, "dtwm-panel: failed to open X11 display\n");
+        return 1;
+    }
+
+    bootstrap_color_server_if_needed(dpy, profile);
+
+    Widget topShell = XtVaAppCreateShell(
+        "dtwm", "Dtwm", applicationShellWidgetClass, dpy,
+        XmNmappedWhenManaged, False,
+        XmNwidth, 1,
+        XmNheight, 1,
+        nullptr
+    );
+
+    if (!DtAppInitialize(wmGD.mwmAppContext, dpy, topShell, "dtwm", "Dtwm")) {
+        fprintf(stderr, "dtwm-panel: DtAppInitialize failed\n");
+        return 1;
+    }
+    DtDbLoad();
+
+    memset(&g_fpScreen, 0, sizeof(g_fpScreen));
+    g_fpScreen.screen = DefaultScreen(dpy);
+    g_fpScreen.rootWindow = DefaultRootWindow(dpy);
+    g_fpScreen.screenTopLevelW1 = topShell;
+    g_fpScreen.managed = True;
+
+    wmGD.display = dpy;
+    wmGD.mwmName = "dtwm";
+    wmGD.bMenuButton = Button3;
+    wmGD.moveThreshold = 4;
+    wmGD.numScreens = 1;
+    wmGD.Screens = &g_fpScreen;
+    wmGD.dtSD = &g_fpScreen;
+    wmGD.useFrontPanel = True;
+    wmGD.appearanceProfile = profile;
+    wmGD.dpiScale = 1.0;
+    wmGD.windowContextType = XUniqueContext();
+
+    g_fpScreen.wPanelist = WmPanelistAllocate(topShell, (XtPointer)&wmGD, (XtPointer)&g_fpScreen);
+    if (!g_fpScreen.wPanelist || !panel.shell) {
+        fprintf(stderr, "dtwm-panel: FrontPanelReadDatabases found no PANEL definition\n");
+        return 1;
+    }
+
+    Pixmap iconBitmap = XCreateBitmapFromData(
+        dpy, g_fpScreen.rootWindow, (char *)fntpl_i_bm_bits, fntpl_i_bm_width, fntpl_i_bm_height
+    );
+    if (iconBitmap != None) {
+        XtVaSetValues(panel.shell, XmNiconPixmap, iconBitmap, nullptr);
+    }
+
+    WmPanelistShow(g_fpScreen.wPanelist);
+    ensure_shell_context(panel.shell, DtWM_BEHAVIOR_PANEL);
+    register_all_subpanel_contexts();
+    publish_embedded_client_names(dpy);
+
+    /* Watch _DT_WORKSPACE_* on mwm_win and MapNotify on root for TYPE client windows */
+    g_mwmWin = find_mwm_window(dpy);
+    g_atomWsCurrent = XInternAtom(dpy, "_DT_WORKSPACE_CURRENT", False);
+    g_atomWsList = XInternAtom(dpy, "_DT_WORKSPACE_LIST", False);
+    if (g_mwmWin != None) {
+        XSelectInput(dpy, g_mwmWin, PropertyChangeMask);
+    }
+    XSelectInput(dpy, g_fpScreen.rootWindow, SubstructureNotifyMask);
+    scan_existing_embedded_clients(dpy);
+
+    for (;;) {
+        XEvent ev;
+        XtAppNextEvent(wmGD.mwmAppContext, &ev);
+        if (ev.type == PropertyNotify && ev.xproperty.window == g_mwmWin &&
+            ev.xproperty.state == PropertyNewValue) {
+            sync_panel_workspaces_from_x11(dpy, ev.xproperty.atom);
+        } else if (ev.type == MapNotify && ev.xmap.event == g_fpScreen.rootWindow) {
+            register_all_subpanel_contexts();
+            try_embed_x11_window(dpy, ev.xmap.window);
+        }
+        XtDispatchEvent(&ev);
+    }
+    return 0;
+}

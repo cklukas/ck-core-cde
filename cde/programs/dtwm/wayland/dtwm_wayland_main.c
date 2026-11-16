@@ -8,6 +8,7 @@
 #include "dtwm_wayland.h"
 
 #include <getopt.h>
+#include <limits.h>
 #include <linux/input-event-codes.h>
 #include <signal.h>
 #include <stdio.h>
@@ -463,11 +464,16 @@ static void update_snap_preview(DtwmServer *server, DtwmSnapZone zone, const str
     }
 }
 
+static bool view_is_normal_app(const DtwmView *v) {
+    return dtwm_view_visible_on_current_ws(v) &&
+           !v->is_swallowed && !v->is_desktop_pin && !v->is_panel && !v->is_subpanel;
+}
+
 static void show_or_cycle_task_switcher(DtwmServer *server) {
     int count = 0;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
-        if (dtwm_view_visible_on_current_ws(v)) count++;
+        if (view_is_normal_app(v)) count++;
     }
     if (count == 0) {
         return;
@@ -503,13 +509,13 @@ static void hide_task_switcher(DtwmServer *server, bool activate_selected) {
         int count = 0;
         DtwmView *v;
         wl_list_for_each(v, &server->views, link) {
-            if (dtwm_view_visible_on_current_ws(v)) count++;
+            if (view_is_normal_app(v)) count++;
         }
         if (count > 0) {
             int target = server->switcher_index % count;
             int idx = 0;
             wl_list_for_each(v, &server->views, link) {
-                if (!dtwm_view_visible_on_current_ws(v)) continue;
+                if (!view_is_normal_app(v)) continue;
                 if (idx == target) {
                     chosen = v;
                     break;
@@ -589,6 +595,12 @@ static void process_cursor_move(DtwmServer *server) {
     v->y = ny;
     wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
     sync_xwayland_client_pos(v);
+    if (v->is_panel) {
+        server->panel_user_moved = true;
+        server->panel_x = v->x;
+        server->panel_y = v->y;
+        return;
+    }
 
     struct wlr_box sbox = {0};
     DtwmSnapZone zone = compute_snap_zone(server, server->cursor->x, server->cursor->y, &sbox);
@@ -733,10 +745,6 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         } else {
             close_window_menu(server);
         }
-        return;
-    }
-
-    if (dtwm_front_panel_click(server, server->cursor->x, server->cursor->y, ev->button)) {
         return;
     }
 
@@ -1132,8 +1140,7 @@ static void place_initial_view(DtwmView *view) {
     int idx = 0;
     DtwmView *it;
     wl_list_for_each(it, &server->views, link) {
-        if (it != view && dtwm_view_visible_on_current_ws(it) &&
-            !it->is_swallowed && !it->is_desktop_pin) {
+        if (it != view && view_is_normal_app(it)) {
             idx++;
         }
     }
@@ -1503,6 +1510,30 @@ static void apply_xwayland_decorations(DtwmView *view) {
     view->has_max_btn = !no_title;
 }
 
+void dtwm_begin_move_panel(DtwmServer *server) {
+    if (!server || !server->panel_view || !server->panel_view->mapped) return;
+    begin_interactive(server->panel_view, DTWM_CURSOR_MOVE, 0);
+}
+
+static uint32_t read_dt_wm_behaviors_sync(DtwmServer *server, xcb_window_t win) {
+    if (!server->xcb_conn || server->atom_dt_wm_hints == XCB_ATOM_NONE) return 0;
+    xcb_get_property_cookie_t ck = xcb_get_property(
+        server->xcb_conn, 0, win, server->atom_dt_wm_hints, server->atom_dt_wm_hints, 0, 8
+    );
+    xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+    if (!rep) return 0;
+    uint32_t behaviors = 0;
+    if (rep->format == 32 && xcb_get_property_value_length(rep) >= 12) {
+        const uint32_t *vals = (const uint32_t *)xcb_get_property_value(rep);
+        /* DtWmHints: [0]=flags (DtWM_HINTS_BEHAVIORS=2), [1]=functions, [2]=behaviors */
+        if (vals[0] & 2u) {
+            behaviors = vals[2];
+        }
+    }
+    free(rep);
+    return behaviors;
+}
+
 static void xwayland_map(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, map);
@@ -1519,6 +1550,64 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
         );
         view->frame_tree->node.data = view;
         wlr_scene_node_set_position(&view->frame_tree->node, xs->x, xs->y);
+        return;
+    }
+
+    uint32_t dt_behaviors = read_dt_wm_behaviors_sync(view->server, xs->window_id);
+    if (dt_behaviors & (1u << 2)) {
+        /* Genuine CDE Subpanel (DtWM_BEHAVIOR_SUBPANEL) */
+        view->is_subpanel = true;
+        view->decorated = true;
+        view->has_title = true;
+        view->has_resize_handles = false;
+        view->has_menu_btn = true;
+        view->has_min_btn = false;
+        view->has_max_btn = false;
+        view->workspace_mask = (1u << DTWM_MAX_WORKSPACES) - 1u;
+
+        view->frame_tree = wlr_scene_tree_create(view->server->layer_top_tree);
+        view->frame_tree->node.data = view;
+        view->frame_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
+        view->content_tree = wlr_scene_subsurface_tree_create(view->frame_tree, xs->surface);
+        view->content_tree->node.data = view;
+
+        int outer_w = 0, outer_h = 0;
+        dtwm_view_outer_size(view, &outer_w, &outer_h);
+        view->x = xs->x;
+        int py = (view->server->panel_h > 0) ? view->server->panel_y : 640;
+        view->y = py - outer_h;
+        if (view->y < 0) view->y = 0;
+        wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
+        dtwm_workspaces_on_xwayland_view_map(view);
+        dtwm_icons_on_view_map(view);
+        sync_xwayland_client_pos(view);
+        dtwm_view_update_frame(view);
+        focus_view(view->server, view, xs->surface);
+        return;
+    }
+    if (dt_behaviors & (1u << 1)) {
+        /* Genuine CDE Main Front Panel (DtWM_BEHAVIOR_PANEL) */
+        view->is_panel = true;
+        view->decorated = true;
+        view->has_title = false;
+        view->has_resize_handles = false;
+        view->has_menu_btn = false;
+        view->has_min_btn = false;
+        view->has_max_btn = false;
+        view->workspace_mask = (1u << DTWM_MAX_WORKSPACES) - 1u;
+        view->server->panel_view = view;
+
+        view->frame_tree = wlr_scene_tree_create(view->server->layer_top_tree);
+        view->frame_tree->node.data = view;
+        view->frame_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
+        view->content_tree = wlr_scene_subsurface_tree_create(view->frame_tree, xs->surface);
+        view->content_tree->node.data = view;
+
+        dtwm_workspaces_on_xwayland_view_map(view);
+        dtwm_icons_on_view_map(view);
+        dtwm_update_front_panel(view->server);
+        dtwm_icons_relayout(view->server);
+        dtwm_notify_panel_mapped(view->server);
         return;
     }
 
@@ -1563,6 +1652,11 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
         clear_active_focus(view->server);
     }
     view->mapped = false;
+    if (view == view->server->panel_view) {
+        view->server->panel_view = nullptr;
+    }
+    view->is_panel = false;
+    view->is_subpanel = false;
     view->is_desktop_pin = false;
     view->is_swallowed = false;
     dtwm_icons_on_view_unmap_or_destroy(view, false);
@@ -1654,7 +1748,7 @@ static void xwayland_set_title(struct wl_listener *listener, void *data) {
 static void xwayland_set_decorations(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, set_decorations);
-    if (view->is_swallowed || view->is_desktop_pin) return;
+    if (view->is_swallowed || view->is_desktop_pin || view->is_panel || view->is_subpanel) return;
     apply_xwayland_decorations(view);
     if (view->mapped) {
         sync_xwayland_client_pos(view);
@@ -1726,9 +1820,14 @@ static void handle_new_xwayland_surface(struct wl_listener *listener, void *data
 }
 
 static void write_status_file(DtwmServer *server) {
-    if (!server->status_file || !server->wayland_socket) {
+    if (server->status_written) {
         return;
     }
+    if (!server->status_file || !server->wayland_socket) {
+        server->status_written = true;
+        return;
+    }
+    server->status_written = true;
     char tmp_path[1024];
     snprintf(tmp_path, sizeof(tmp_path), "%s.tmp.%d", server->status_file, (int)getpid());
     FILE *fp = fopen(tmp_path, "w");
@@ -1742,6 +1841,21 @@ static void write_status_file(DtwmServer *server) {
     fprintf(fp, "PID=%d\n", (int)getpid());
     fclose(fp);
     rename(tmp_path, server->status_file);
+}
+
+static int handle_status_fallback_timer(void *data) {
+    DtwmServer *server = data;
+    write_status_file(server);
+    return 0;
+}
+
+void dtwm_notify_panel_mapped(DtwmServer *server) {
+    if (!server) return;
+    if (server->status_fallback_timer) {
+        wl_event_source_remove(server->status_fallback_timer);
+        server->status_fallback_timer = nullptr;
+    }
+    write_status_file(server);
 }
 
 static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
@@ -1762,7 +1876,15 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
     }
     dtwm_workspaces_on_xwayland_ready(server);
     dtwm_icons_on_xwayland_ready(server);
-    write_status_file(server);
+    if (server->show_front_panel && server->panel_pid > 0 && !server->status_written) {
+        struct wl_event_loop *loop = wl_display_get_event_loop(server->wl_display);
+        server->status_fallback_timer = wl_event_loop_add_timer(
+            loop, handle_status_fallback_timer, server
+        );
+        wl_event_source_timer_update(server->status_fallback_timer, 3500);
+    } else {
+        write_status_file(server);
+    }
 }
 
 static int handle_signal_quit(int sig_num, void *data) {
@@ -1824,6 +1946,16 @@ int main(int argc, char **argv) {
 
     DtwmServer server = {0};
     server.status_file = status_file;
+    {
+        char resolved[PATH_MAX];
+        if (argv[0] && realpath(argv[0], resolved)) {
+            char *slash = strrchr(resolved, '/');
+            if (slash) {
+                *slash = '\0';
+                snprintf(server.exe_dir, sizeof(server.exe_dir), "%s", resolved);
+            }
+        }
+    }
     dtwm_palette_init_default(&server.palette);
     wl_list_init(&server.outputs);
     wl_list_init(&server.views);
@@ -2007,6 +2139,7 @@ int main(int argc, char **argv) {
 
     wl_display_run(server.wl_display);
 
+    if (server.status_fallback_timer) wl_event_source_remove(server.status_fallback_timer);
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);
     dtwm_icons_finish(&server);

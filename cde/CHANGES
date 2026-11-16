@@ -1,4 +1,20 @@
 2026-11-16
+- Replace the synthetic Cairo panel in `dtwm-wayland` with the genuine CDE
+  Front Panel (`dtwm-panel`) built from `dtwm`'s original Motif/`DtWidget`
+  Front Panel implementation (`WmFP.c`, `UI.c`, `DataBaseLoad.c`, `Clock.c`,
+  `Button.c`, `Callback.c`, `PanelS.c`, `PopupMenu.c`, `Session.c`, and
+  `WmParse.c`).
+  - `cde/programs/dtwm/wayland/WmFpWayland.c` and `Makefile.am`: build
+    `dtwm-panel` loading standard `.fp` databases (`dtwm.fp` and
+    `~/.dt/types/*.fp`), bootstrapping the 8-color-set CDE Color Server when
+    `dtsession` is not yet active, synchronizing `_DT_WORKSPACE_*` changes, and
+    embedding `TYPE client` controls (such as `ck-clock`) via
+    `XReparentWindow`.
+  - `cde/programs/dtwm/wayland/` (`cde_workspace.c`, `cde_bevel.c`,
+    `cde_icons.c`, `dtwm_wayland_main.c`, `dtwm_wayland.h`): remove all custom
+    Cairo panel rendering, spawn and dock `dtwm-panel` via `_DT_WM_HINTS`
+    (`DtWM_BEHAVIOR_PANEL` / `DtWM_BEHAVIOR_SUBPANEL`), and compute the bottom
+    maximize/snap strut from the real panel's geometry.
 - Merge upstream `master` (`a6029287e`) and adopt CK Core Motif ABI 9
   `d85fb6604a827a7ebfcdcadcbac4525dccc684d7` on the `x11_wayland` branch,
   harmonizing `dtwm-wayland` and Ubuntu `.deb` packaging with the four desktop

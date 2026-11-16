@@ -11,10 +11,13 @@
 #include <ctype.h>
 #include <linux/input-event-codes.h>
 #include <math.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <xcb/xcb.h>
 
@@ -513,7 +516,7 @@ static struct wlr_output *get_panel_output(DtwmServer *server) {
     return out;
 }
 
-/* --- Usable Output Box & Docked Interactive CDE Front Panel --- */
+/* --- Usable Output Box & Docked Genuine CDE Front Panel (dtwm-panel) --- */
 void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, struct wlr_box *out_box) {
     struct wlr_output *out = wlr_output_layout_output_at(server->output_layout, ref_x, ref_y);
     if (!out) {
@@ -524,279 +527,122 @@ void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, 
     } else {
         *out_box = (struct wlr_box){.x = 0, .y = 0, .width = 1280, .height = 900};
     }
-    if (server->show_front_panel && out == get_panel_output(server) &&
-        out_box->height > DTWM_PANEL_STRUT + 160) {
-        out_box->height -= DTWM_PANEL_STRUT;
+    int strut = (server->panel_view && server->panel_view->mapped && !server->panel_view->minimized &&
+                 server->panel_h > 0)
+                    ? (server->panel_h + 2)
+                    : (server->show_front_panel ? DTWM_PANEL_STRUT : 0);
+    if (server->show_front_panel && strut > 0 && out == get_panel_output(server) &&
+        out_box->height > strut + 160) {
+        out_box->height -= strut;
     }
-}
-
-static void panel_ws_grid_metrics(
-    const DtwmServer *server,
-    int *out_well_x,
-    int *out_well_y,
-    int *out_well_w,
-    int *out_well_h,
-    int *out_cols,
-    int *out_rows
-) {
-    int well_w = 248;
-    int well_h = server->panel_h - 16;
-    int well_x = (server->panel_w - well_w) / 2;
-    int well_y = 8;
-    int rows = 2;
-    int cols = (int)((server->num_workspaces + 1) / 2);
-    if (cols < 1) cols = 1;
-    *out_well_x = well_x;
-    *out_well_y = well_y;
-    *out_well_w = well_w;
-    *out_well_h = well_h;
-    *out_cols = cols;
-    *out_rows = rows;
-}
-
-static void draw_launcher_glyph(cairo_t *cr, int kind, double x, double y, double w, double h, const DtwmColorSet *cs) {
-    double cx = x + w * 0.5;
-    double cy = y + h * 0.5 - 3.0;
-    cairo_save(cr);
-    cairo_set_line_width(cr, 1.6);
-    switch (kind) {
-    case 0: /* Clock */
-        cairo_set_source_rgba(cr, 0.94, 0.95, 0.97, 1.0);
-        cairo_arc(cr, cx, cy, 13.0, 0, 2 * M_PI);
-        cairo_fill_preserve(cr);
-        cairo_set_source_rgba(cr, cs->bottom_shadow.r, cs->bottom_shadow.g, cs->bottom_shadow.b, 1.0);
-        cairo_stroke(cr);
-        cairo_move_to(cr, cx, cy);
-        cairo_line_to(cr, cx, cy - 8.0);
-        cairo_move_to(cr, cx, cy);
-        cairo_line_to(cr, cx + 6.5, cy + 2.5);
-        cairo_stroke(cr);
-        break;
-    case 1: /* File Manager folder */
-        cairo_set_source_rgba(cr, 0.87, 0.74, 0.42, 1.0);
-        cairo_rectangle(cr, cx - 13, cy - 7, 26, 17);
-        cairo_fill_preserve(cr);
-        cairo_set_source_rgba(cr, 0.25, 0.20, 0.12, 1.0);
-        cairo_stroke(cr);
-        cairo_set_source_rgba(cr, 0.93, 0.82, 0.52, 1.0);
-        cairo_rectangle(cr, cx - 13, cy - 11, 11, 4);
-        cairo_fill(cr);
-        break;
-    case 2: /* Terminal monitor */
-        cairo_set_source_rgba(cr, 0.14, 0.18, 0.22, 1.0);
-        cairo_rectangle(cr, cx - 13, cy - 10, 26, 18);
-        cairo_fill(cr);
-        dtwm_draw_bevel(cr, cx - 14, cy - 11, 28, 20, 1.5, cs->bottom_shadow, cs->top_shadow);
-        cairo_set_source_rgba(cr, 0.45, 0.92, 0.55, 1.0);
-        cairo_move_to(cr, cx - 9, cy - 4);
-        cairo_line_to(cr, cx - 5, cy - 1);
-        cairo_line_to(cr, cx - 9, cy + 2);
-        cairo_move_to(cr, cx - 3, cy + 2);
-        cairo_line_to(cr, cx + 4, cy + 2);
-        cairo_stroke(cr);
-        break;
-    case 3: /* Text Editor pad */
-        cairo_set_source_rgba(cr, 0.96, 0.96, 0.92, 1.0);
-        cairo_rectangle(cr, cx - 11, cy - 11, 22, 22);
-        cairo_fill_preserve(cr);
-        cairo_set_source_rgba(cr, 0.25, 0.27, 0.32, 1.0);
-        cairo_stroke(cr);
-        for (int r = -6; r <= 6; r += 4) {
-            cairo_move_to(cr, cx - 7, cy + r);
-            cairo_line_to(cr, cx + 7, cy + r);
-        }
-        cairo_stroke(cr);
-        break;
-    case 4: /* Style Manager palette */
-        cairo_set_source_rgba(cr, 0.82, 0.34, 0.22, 1.0);
-        cairo_rectangle(cr, cx - 12, cy - 9, 11, 8);
-        cairo_fill(cr);
-        cairo_set_source_rgba(cr, 0.28, 0.56, 0.68, 1.0);
-        cairo_rectangle(cr, cx + 1, cy - 9, 11, 8);
-        cairo_fill(cr);
-        cairo_set_source_rgba(cr, 0.36, 0.64, 0.44, 1.0);
-        cairo_rectangle(cr, cx - 12, cy + 1, 11, 8);
-        cairo_fill(cr);
-        cairo_set_source_rgba(cr, 0.84, 0.68, 0.32, 1.0);
-        cairo_rectangle(cr, cx + 1, cy + 1, 11, 8);
-        cairo_fill(cr);
-        break;
-    case 5: /* Calculator */
-        cairo_set_source_rgba(cr, 0.32, 0.35, 0.42, 1.0);
-        cairo_rectangle(cr, cx - 10, cy - 11, 20, 22);
-        cairo_fill(cr);
-        cairo_set_source_rgba(cr, 0.76, 0.88, 0.74, 1.0);
-        cairo_rectangle(cr, cx - 7, cy - 8, 14, 5);
-        cairo_fill(cr);
-        break;
-    }
-    cairo_restore(cr);
 }
 
 void dtwm_update_front_panel(DtwmServer *server) {
-    if (!server || !server->panel_buf) return;
-    if (!server->show_front_panel || wl_list_empty(&server->outputs)) {
-        wlr_scene_buffer_set_buffer(server->panel_buf, nullptr);
-        wlr_scene_node_set_enabled(
-            &server->panel_buf->node, false
-        );
+    if (!server) return;
+    DtwmView *pv = server->panel_view;
+    if (!pv || !pv->mapped || !pv->xwayland_surface) {
+        return;
+    }
+    if (!server->show_front_panel) {
+        if (pv->frame_tree) {
+            wlr_scene_node_set_enabled(&pv->frame_tree->node, false);
+        }
         return;
     }
 
-    struct wlr_output *panel_out = get_panel_output(server);
-    if (!panel_out) return;
-    struct wlr_box obox;
-    wlr_output_layout_get_box(server->output_layout, panel_out, &obox);
-    if (obox.width <= 0 || obox.height <= 0) return;
+    int outer_w = 0, outer_h = 0;
+    dtwm_view_outer_size(pv, &outer_w, &outer_h);
+    int l, t, r, b;
+    dtwm_view_insets(pv, &l, &t, &r, &b);
 
-    server->panel_w = (obox.width - 32 < DTWM_PANEL_WIDTH) ? (obox.width - 32) : DTWM_PANEL_WIDTH;
-    if (server->panel_w < 420) server->panel_w = 420;
-    server->panel_h = DTWM_PANEL_HEIGHT;
-    server->panel_x = obox.x + (obox.width - server->panel_w) / 2;
-    server->panel_y = obox.y + obox.height - server->panel_h - 2;
-
-    cairo_t *cr = nullptr;
-    cairo_surface_t *surf = nullptr;
-    struct wlr_buffer *buf = dtwm_cairo_buffer_begin(server->panel_w, server->panel_h, &cr, &surf);
-    if (!buf) return;
-
-    const DtwmColorSet *cs = &server->palette.inactive;
-    int pw = server->panel_w;
-    int ph = server->panel_h;
-
-    /* Main 3D raised CDE Front Panel chassis */
-    cairo_set_source_rgba(cr, cs->bg.r, cs->bg.g, cs->bg.b, 1.0);
-    cairo_rectangle(cr, 0, 0, pw, ph);
-    cairo_fill(cr);
-    dtwm_draw_bevel(cr, 0, 0, pw, ph, 2.5, cs->top_shadow, cs->bottom_shadow);
-    dtwm_draw_bevel(cr, 4, 4, pw - 8, ph - 8, 1.0, cs->bottom_shadow, cs->top_shadow);
-
-    /* Left & right CDE grip handles */
-    dtwm_draw_bevel(cr, 7, 8, 12, ph - 16, 1.5, cs->top_shadow, cs->bottom_shadow);
-    dtwm_draw_bevel(cr, pw - 19, 8, 12, ph - 16, 1.5, cs->top_shadow, cs->bottom_shadow);
-
-    int well_x, well_y, well_w, well_h, cols, rows;
-    panel_ws_grid_metrics(server, &well_x, &well_y, &well_w, &well_h, &cols, &rows);
-
-    /* Left 3 launcher cells (Clock, Files, Terminal) */
-    const char *left_labels[3] = {"Clock", "Files", "Term"};
-    int left_area_x = 24;
-    int left_area_w = well_x - left_area_x - 38;
-    int cell_w = left_area_w / 3;
-    for (int i = 0; i < 3; ++i) {
-        int cx = left_area_x + i * cell_w + 2;
-        int cw = cell_w - 4;
-        if (i == 0 && server->swallowed_clock_view != nullptr) {
-            /* Recessed 3D slot hosting swallowed TYPE client (ck-clock) */
-            dtwm_draw_bevel(cr, cx, 8, cw, ph - 16, 2.0, cs->bottom_shadow, cs->top_shadow);
-        } else {
-            dtwm_draw_bevel(cr, cx, 8, cw, ph - 16, 1.5, cs->top_shadow, cs->bottom_shadow);
-            draw_launcher_glyph(cr, i, cx, 8, cw, ph - 22, cs);
-            dtwm_draw_label(cr, left_labels[i], cx, ph - 22, cw, 14, cs->fg, true, false);
+    if (!server->panel_user_moved) {
+        struct wlr_output *panel_out = get_panel_output(server);
+        if (panel_out) {
+            struct wlr_box obox;
+            wlr_output_layout_get_box(server->output_layout, panel_out, &obox);
+            if (obox.width > 0 && obox.height > 0) {
+                pv->x = obox.x + (obox.width - outer_w) / 2;
+                pv->y = obox.y + obox.height - outer_h;
+            }
         }
     }
 
-    /* Lock (top) and Busy/Info mini-buttons beside central workspace well */
-    int lock_x = well_x - 32;
-    dtwm_draw_bevel(cr, lock_x, 9, 26, 26, 1.5, cs->top_shadow, cs->bottom_shadow);
-    dtwm_draw_label(cr, "L", lock_x, 9, 26, 26, cs->fg, true, true);
-    dtwm_draw_bevel(cr, lock_x, 39, 26, 26, 1.5, cs->top_shadow, cs->bottom_shadow);
-    dtwm_draw_label(cr, "?", lock_x, 39, 26, 26, cs->fg, true, true);
+    server->panel_x = pv->x;
+    server->panel_y = pv->y;
+    server->panel_w = outer_w;
+    server->panel_h = outer_h;
 
-    /* Central recessed workspace switcher box */
-    cairo_set_source_rgba(cr, cs->bg.r * 0.88, cs->bg.g * 0.88, cs->bg.b * 0.88, 1.0);
-    cairo_rectangle(cr, well_x, well_y, well_w, well_h);
-    cairo_fill(cr);
-    dtwm_draw_bevel(cr, well_x, well_y, well_w, well_h, 2.0, cs->bottom_shadow, cs->top_shadow);
-
-    int pad = 4;
-    int btn_w = (well_w - pad * (cols + 1)) / cols;
-    int btn_h = (well_h - pad * (rows + 1)) / rows;
-    for (uint32_t i = 0; i < server->num_workspaces; ++i) {
-        int r = (int)(i / (uint32_t)cols);
-        int c = (int)(i % (uint32_t)cols);
-        int bx = well_x + pad + c * (btn_w + pad);
-        int by = well_y + pad + r * (btn_h + pad);
-        const DtwmWorkspace *ws = &server->workspaces[i];
-        bool cur = (i == server->current_workspace);
-
-        const DtwmColorSet *bcs = &ws->colors;
-        cairo_set_source_rgba(
-            cr,
-            cur ? bcs->bg.r : (bcs->bg.r * 0.78 + cs->bg.r * 0.22),
-            cur ? bcs->bg.g : (bcs->bg.g * 0.78 + cs->bg.g * 0.22),
-            cur ? bcs->bg.b : (bcs->bg.b * 0.78 + cs->bg.b * 0.22),
-            1.0
-        );
-        cairo_rectangle(cr, bx, by, btn_w, btn_h);
-        cairo_fill(cr);
-        if (cur) {
-            /* Sunken/latched 3D bevel for active workspace button */
-            dtwm_draw_bevel(cr, bx, by, btn_w, btn_h, 2.0, bcs->bottom_shadow, bcs->top_shadow);
-        } else {
-            /* Raised 3D bevel for inactive workspace button */
-            dtwm_draw_bevel(cr, bx, by, btn_w, btn_h, 2.0, bcs->top_shadow, bcs->bottom_shadow);
-        }
-        dtwm_draw_label(cr, ws->title, bx + 2, by, btn_w - 4, btn_h, bcs->fg, true, cur);
+    if (pv->frame_tree) {
+        wlr_scene_node_set_position(&pv->frame_tree->node, pv->x, pv->y);
+        wlr_scene_node_set_enabled(&pv->frame_tree->node, !pv->minimized);
     }
-
-    /* Exit mini-button on right side of workspace well */
-    int exit_x = well_x + well_w + 6;
-    dtwm_draw_bevel(cr, exit_x, 9, 26, 56, 1.5, cs->top_shadow, cs->bottom_shadow);
-    DtwmRgba exit_fg = (server->palette.profile == DTWM_PROFILE_CLASSIC)
-                           ? (DtwmRgba){0.14, 0.24, 0.34, 1.0}
-                           : cs->fg;
-    dtwm_draw_label(cr, "E", exit_x, 9, 26, 56, exit_fg, true, true);
-
-    /* Right 3 launcher cells (Editor, Style, Calc) */
-    const char *right_labels[3] = {"Edit", "Style", "Calc"};
-    int right_area_x = exit_x + 32;
-    int right_area_w = (pw - 24) - right_area_x;
-    int rcell_w = right_area_w / 3;
-    for (int i = 0; i < 3; ++i) {
-        int cx = right_area_x + i * rcell_w + 2;
-        int cw = rcell_w - 4;
-        dtwm_draw_bevel(cr, cx, 8, cw, ph - 16, 1.5, cs->top_shadow, cs->bottom_shadow);
-        draw_launcher_glyph(cr, 3 + i, cx, 8, cw, ph - 22, cs);
-        dtwm_draw_label(cr, right_labels[i], cx, ph - 22, cw, 14, cs->fg, true, false);
-    }
-
-    dtwm_cairo_buffer_finish(cr, surf);
-    wlr_scene_buffer_set_buffer(server->panel_buf, buf);
-    wlr_scene_node_set_position(&server->panel_buf->node, server->panel_x, server->panel_y);
-    wlr_scene_node_set_enabled(&server->panel_buf->node, true);
-    wlr_buffer_drop(buf);
+    wlr_xwayland_surface_configure(
+        pv->xwayland_surface,
+        (int16_t)(pv->x + l),
+        (int16_t)(pv->y + t),
+        (uint16_t)pv->client_w,
+        (uint16_t)pv->client_h
+    );
+    dtwm_view_update_frame(pv);
     dtwm_icons_reposition_swallowed(server);
 }
 
-bool dtwm_front_panel_click(DtwmServer *server, double lx, double ly, uint32_t button) {
-    if (!server || !server->show_front_panel) return false;
-    int rx = (int)lx - server->panel_x;
-    int ry = (int)ly - server->panel_y;
-    if (rx < 0 || ry < 0 || rx >= server->panel_w || ry >= server->panel_h) {
-        return false;
+static const char *profile_cli_name(DtwmAppearanceProfile prof) {
+    switch (prof) {
+    case DTWM_PROFILE_MODERN_LIGHT:  return "modern_light";
+    case DTWM_PROFILE_MODERN_DARK:   return "modern_dark";
+    case DTWM_PROFILE_HIGH_CONTRAST: return "high_contrast";
+    case DTWM_PROFILE_CLASSIC:
+    default:                         return "classic";
     }
-    if (button != BTN_LEFT) {
-        return true;
-    }
+}
 
-    int well_x, well_y, well_w, well_h, cols, rows;
-    panel_ws_grid_metrics(server, &well_x, &well_y, &well_w, &well_h, &cols, &rows);
-    int pad = 4;
-    int btn_w = (well_w - pad * (cols + 1)) / cols;
-    int btn_h = (well_h - pad * (rows + 1)) / rows;
+static void spawn_genuine_front_panel(DtwmServer *server) {
+    if (!server || !server->show_front_panel || server->panel_pid > 0) return;
+    if (!server->xwayland || !server->xwayland->display_name) return;
 
-    for (uint32_t i = 0; i < server->num_workspaces; ++i) {
-        int r = (int)(i / (uint32_t)cols);
-        int c = (int)(i % (uint32_t)cols);
-        int bx = well_x + pad + c * (btn_w + pad);
-        int by = well_y + pad + r * (btn_h + pad);
-        if (rx >= bx && rx < bx + btn_w && ry >= by && ry < by + btn_h) {
-            dtwm_switch_workspace(server, i);
-            return true;
+    char cand1[1152] = {0};
+    const char *panel_bin = nullptr;
+    struct stat st;
+    if (server->exe_dir[0] != '\0') {
+        snprintf(cand1, sizeof(cand1), "%s/dtwm-panel", server->exe_dir);
+        if (stat(cand1, &st) == 0 && (st.st_mode & S_IXUSR)) {
+            panel_bin = cand1;
         }
     }
-    return true;
+    if (!panel_bin && stat(CDE_INSTALLATION_TOP "/bin/dtwm-panel", &st) == 0 &&
+        (st.st_mode & S_IXUSR)) {
+        panel_bin = CDE_INSTALLATION_TOP "/bin/dtwm-panel";
+    }
+    if (!panel_bin) {
+        /* Fallback: write status file immediately if dtwm-panel binary is absent */
+        dtwm_notify_panel_mapped(server);
+        return;
+    }
+
+    const char *prof_str = profile_cli_name(server->palette.profile);
+    pid_t pid = fork();
+    if (pid == 0) {
+        /* Unmask signals blocked by wl_event_loop_add_signal in parent */
+        sigset_t empty_mask;
+        sigemptyset(&empty_mask);
+        sigprocmask(SIG_SETMASK, &empty_mask, nullptr);
+        setenv("DISPLAY", server->xwayland->display_name, 1);
+        if (server->wayland_socket) {
+            setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
+        }
+        char *const args[] = {
+            (char *)panel_bin,
+            (char *)"--appearance-profile",
+            (char *)prof_str,
+            nullptr,
+        };
+        execv(panel_bin, args);
+        _exit(127);
+    }
+    if (pid > 0) {
+        server->panel_pid = pid;
+    }
 }
 
 /* --- Workspace Occupancy & Switching --- */
@@ -868,7 +714,9 @@ void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx) {
     if (!server->focused_view) {
         DtwmView *cand;
         wl_list_for_each(cand, &server->views, link) {
-            if (dtwm_view_visible_on_current_ws(cand) && !cand->is_swallowed && !cand->is_desktop_pin) {
+            if (dtwm_view_visible_on_current_ws(cand) &&
+                !cand->is_swallowed && !cand->is_desktop_pin &&
+                !cand->is_panel && !cand->is_subpanel) {
                 cand->active = true;
                 server->focused_view = cand;
                 struct wlr_surface *surf = nullptr;
@@ -1246,6 +1094,10 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         dtwm_server_apply_appearance_profile(server, dtwm_parse_appearance_profile(arg));
         return;
     }
+    if (strncmp(cmd, "f.move_panel", 12) == 0) {
+        dtwm_begin_move_panel(server);
+        return;
+    }
 }
 
 void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProfile profile) {
@@ -1392,6 +1244,7 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
     server->xcb_root = screen->root;
 
     server->atom_mwm_info = intern_atom_sync(server->xcb_conn, "_MOTIF_WM_INFO");
+    server->atom_dt_wm_hints = intern_atom_sync(server->xcb_conn, "_DT_WM_HINTS");
     server->atom_ws_list = intern_atom_sync(server->xcb_conn, "_DT_WORKSPACE_LIST");
     server->atom_ws_current = intern_atom_sync(server->xcb_conn, "_DT_WORKSPACE_CURRENT");
     server->atom_ws_hints = intern_atom_sync(server->xcb_conn, "_DT_WORKSPACE_HINTS");
@@ -1437,6 +1290,8 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
     server->xcb_event_source = wl_event_loop_add_fd(
         loop, xfd, WL_EVENT_READABLE, handle_xcb_event_fd, server
     );
+
+    spawn_genuine_front_panel(server);
 }
 
 void dtwm_workspaces_on_xwayland_view_map(DtwmView *view) {
@@ -1728,15 +1583,18 @@ void dtwm_workspaces_init(DtwmServer *server) {
     }
     server->palette.desktop_bg = server->workspaces[0].colors.bg;
 
-    server->panel_buf = wlr_scene_buffer_create(server->layer_top_tree, nullptr);
-    wlr_scene_node_set_enabled(&server->panel_buf->node, false);
-
     server->ext_ws_global = wl_global_create(
         server->wl_display, &ext_workspace_manager_v1_interface, 1, server, bind_ext_ws_manager
     );
 }
 
 void dtwm_workspaces_finish(DtwmServer *server) {
+    if (server->panel_pid > 0) {
+        kill(server->panel_pid, SIGTERM);
+        int status = 0;
+        waitpid(server->panel_pid, &status, 0);
+        server->panel_pid = 0;
+    }
     if (server->xcb_event_source) {
         wl_event_source_remove(server->xcb_event_source);
         server->xcb_event_source = nullptr;
