@@ -46,6 +46,7 @@ else:
                        "    return 1;\n}\n")
 
 harness = r'''
+#include <Dt/DtSigP.h>
 #include "dm.h"
 #include "vgmsg.h"
 #include "vgproto.h"

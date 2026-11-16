@@ -694,7 +694,7 @@ int	is_concordable (char *word, int *charmap)
 /* Queues an out-of-memory message for a failed allocation of 'size'
  * bytes at 'location', to be returned with the caller's failure status.
  */
-static void	add_nomem_message (const char *location, size_t size)
+void	_DtSearchAddNoMemMessage (const char *location, size_t size)
 {
     char	msgbuf [256];
 
@@ -702,7 +702,22 @@ static void	add_nomem_message (const char *location, size_t size)
 	"*** %sOut of Memory at %s asking for %lu bytes! ***\n"),
 	(aa_argv0 != nullptr)? aa_argv0 : "", location, (unsigned long) size);
     DtSearchAddMessage (msgbuf);
+}
+
+static void	add_nomem_message (const char *location, size_t size)
+{
+    _DtSearchAddNoMemMessage (location, size);
 }  /* add_nomem_message() */
+
+static void	add_file_err_message (const char *loc, const char *fname, int err)
+{
+    char	msgbuf [1024];
+
+    snprintf (msgbuf, sizeof(msgbuf),
+	CATGETS(dtsearch_catd, MS_misc, 362, "%s: %s: %s."),
+	loc, fname, strerror(err));
+    DtSearchAddMessage (msgbuf);
+}
 
 
 /************************************************/
@@ -945,7 +960,6 @@ static int	load_include_list (DBLK *dblk, DBLK *dblist)
     int		i;
     int		filename_was_null = (dblk->fname_inc == nullptr);
     DBLK	*db;
-    char	sprintbuf [512];
 
     dblk->inclist = nullptr;	/* just to be sure */
     
@@ -1019,10 +1033,7 @@ static int	load_include_list (DBLK *dblk, DBLK *dblist)
 		return TRUE;
 	    }
 	    else {
-		sprintf (sprintbuf,
-		    CATGETS(dtsearch_catd, MS_misc, 362, "%s: %s: %s."),
-		    PROGNAME"1218", dblk->fname_inc, strerror(ENOENT));
-		DtSearchAddMessage (sprintbuf);
+		add_file_err_message (PROGNAME"1218", dblk->fname_inc, ENOENT);
 		return FALSE;
 	    }
 	    
@@ -1049,7 +1060,6 @@ static int	load_stop_list (DBLK *dblk, DBLK *dblist)
 {
     int		i;
     DBLK	*db;
-    char	sprintbuf [_POSIX_PATH_MAX + 512];
     struct stat	statbuf;
 
     dblk->stoplist = nullptr;	/* just to be sure */
@@ -1115,10 +1125,7 @@ static int	load_stop_list (DBLK *dblk, DBLK *dblist)
     /* Stop lists are mandatory--a missing stoplist is fatal. */
     i = load_wordtree (&dblk->stoplist, dblk, dblk->fname_stp, TRUE);
     if (i == 1) {
-	sprintf (sprintbuf,
-	    CATGETS(dtsearch_catd, MS_misc, 362, "%s: %s: %s"),
-	    PROGNAME"1270", dblk->fname_stp, strerror(ENOENT));
-	DtSearchAddMessage (sprintbuf);
+	add_file_err_message (PROGNAME"1270", dblk->fname_stp, ENOENT);
     }
     return (i == 0);
 } /* load_stop_list() */
@@ -1136,7 +1143,7 @@ static int	load_stop_list (DBLK *dblk, DBLK *dblist)
 static void	free_paice_rules (PRULE ***rules_table_ptr)
 {
     int		i;
-    PRULE	*p, **linkp;
+    PRULE	*p, *next;
     PRULE	**rules_table;
 
     if (*rules_table_ptr == nullptr)
@@ -1147,12 +1154,12 @@ static void	free_paice_rules (PRULE ***rules_table_ptr)
 	    continue;
 	p = rules_table[i];
 	while (p) {
-	    linkp = &p->link;
+	    next = p->link;
 	    free (p->suffix);
 	    if (p->apndstr)
 		free (p->apndstr);
 	    free (p);
-	    p = *linkp;
+	    p = next;
 	}
     }
     free (rules_table);

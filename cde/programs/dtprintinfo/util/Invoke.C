@@ -57,10 +57,10 @@ Invoke::Invoke(const char *command,   // Command to Run
    pid_t c_pid;                        // child's pid 
    pid_t w;                            // temp vars 
    int out_num,err_num;                // # of chars read 
-   char *out_tmp, *err_tmp = NULL;     // temp buffer ptrs
+   char *out_tmp = NULL, *err_tmp = NULL;     // temp buffer ptrs
    char *out_end = NULL, *err_end = NULL; // ptr to end of buffer
-   int outb_size,errb_size;            // buffer size 
-   int out_count, err_count;           // # of buffers allocated 
+   int outb_size = 0, errb_size = 0;      // buffer size 
+   int out_count = 0, err_count = 0;      // # of buffers allocated 
    int trap_out,trap_err;              // flags; if >0, trap output 
    fd_set rdmask;                      // for select system call 
    fd_set wrmask;                      // for select system call 

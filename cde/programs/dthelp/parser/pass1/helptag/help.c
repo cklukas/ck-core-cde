@@ -647,7 +647,7 @@ int	 count, metaCount;
 char	*item_id;
 char	 label_id[SDLNAMESIZ+10];
 int	 listtype;
-char	*type;
+char	*type = nullptr;
 char	*loose;
 char	*first;
 LOGICAL  isBullet, isLoose, isFirst;
@@ -793,7 +793,7 @@ if (listtype == ORDER)
 	    "%s%s-%s\">\n<P>%s%c",
 	    first,
 	    loose,
-	    type,
+	    type ? type : "",
 	    orderString, 
 	    lastlist->lastlist->punct == DOTPUNCT ? '.' : ')' );
     if (id)
@@ -1767,7 +1767,7 @@ M_WCHAR *p;
 M_WCHAR  dterm[MAXTERM+1];
 M_WCHAR  wnl, wsp;
 char     buffer[BIGBUF];
-int	 idn;
+int	 idn = 0;
 
 if (!(m_mblevel("HEAD")       ||
       m_mblevel("EXAMPLESEG") ||
@@ -2373,8 +2373,10 @@ char   **tossline = toss;
 /* or at least that all extensions are 3 character plus a dot   */
 
 fileleng = w_strlen(inputname);
+if (fileleng < 4)
+    return;
 mb_inputname = mb_malloc(fileleng + 1);
-wcstombs(mb_inputname, inputname, fileleng);
+wcstombs(mb_inputname, inputname, (size_t)fileleng);
 strcpy(mb_inputname + fileleng - 4, ".tss");
 
 thispath = path;

@@ -186,12 +186,10 @@ public:
   T* key() const
     { 
       CC_Link<T> *link_item = (CC_Link<T> *) CC_List_Iterator_base::item();
-      if ( link_item ) {
-	return ( link_item->f_element );
+      if ( !link_item ) {
+	throw(ccException());
       }
-      else { 
-	return(NULL);
-      }
+      return ( link_item->f_element );
     }
 
   T *operator()()

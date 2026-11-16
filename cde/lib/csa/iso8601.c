@@ -47,12 +47,12 @@
 static void
 set_timezone(char *tzname)
 {
-        static char tzenv[BUFSIZ];
+        static char tzenv[BUFSIZ + 4];
  
         if (tzname==nullptr)
                 (void) putenv("TZ");
         else {
-                snprintf(tzenv, sizeof tzenv, "TZ=%s", tzname);
+                snprintf(tzenv, sizeof tzenv, "TZ=%.*s", BUFSIZ - 1, tzname);
                 (void) putenv(tzenv);
         }
         tzset();
@@ -135,8 +135,7 @@ _csa_iso8601_to_tick(char *buf, time_t *tick_out)
 	time_str.tm_isdst	= -1;
 
 	if (getenv("TZ")) {
-		strncpy(tz_orig, getenv("TZ"), sizeof(tz_orig));
-		tz_orig[sizeof(tz_orig)-1] = '\0';
+		snprintf(tz_orig, sizeof(tz_orig), "%s", getenv("TZ"));
 		orig_tzset = B_TRUE;
 	}
 
@@ -181,8 +180,7 @@ _csa_tick_to_iso8601(time_t tick, char *buf_out)
 #if !defined(__linux__) && !defined(CSRG_BASED)
 
 	if (getenv("TZ")) {
-		strncpy(tz_orig, getenv("TZ"), sizeof(tz_orig));
-		tz_orig[sizeof(tz_orig)-1] = '\0';
+		snprintf(tz_orig, sizeof(tz_orig), "%s", getenv("TZ"));
 		orig_tzset = B_TRUE;
 	}
 

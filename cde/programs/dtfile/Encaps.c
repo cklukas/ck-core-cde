@@ -2506,6 +2506,8 @@ static Boolean GetXineramaScreenDimensions(
 	while (w && !XtIsShell(w))
             w=XtParent (w);
 
+	if (!w) return False;
+
 	wx=XtX(w);
 	wy=XtY(w);
 

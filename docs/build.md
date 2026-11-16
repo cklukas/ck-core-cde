@@ -115,8 +115,14 @@ lists), `-fstack-protector-strong` and, when the build is optimized,
 `-D_FORTIFY_SOURCE=3`. Each flag is probed, so a compiler that lacks one skips
 it. The switch also stops adding `-Wno-format-truncation`, `-Wno-write-strings`
 and `-Wno-unused-result`, so truncation, string-constant and ignored-result
-defects are reported. Build with at least `-O1`; `-Wnull-dereference` finds most
-with `-O2`.
+defects are reported, and promotes the twelve zeroed memory-safety, lifetime
+and error-handling defect classes (`-Werror=return-type`,
+`-Werror=use-after-free`, `-Werror=free-nonheap-object`, `-Werror=restrict`,
+`-Werror=format-overflow`, `-Werror=stringop-overflow`,
+`-Werror=stringop-truncation`, `-Werror=maybe-uninitialized`,
+`-Werror=array-bounds`, `-Werror=unused-result`, `-Werror=format-truncation`,
+`-Werror=null-dereference`) to compile errors. Build with at least `-O1`;
+`-Wnull-dereference` finds most with `-O2`.
 
 `--enable-sanitizers[=LIST]` compiles and links with `-fsanitize=LIST` (default
 `address,undefined`) and `-fno-omit-frame-pointer`. Configure fails when the
@@ -127,10 +133,9 @@ Motif with the same switch and list, and build CDE against that prefix. Set
 `ASAN_OPTIONS=detect_leaks=0` while building, because generator programs run
 during the build.
 
-Neither switch adds `-Werror`. Record warning counts per component and warning
-class before and after a change instead of treating the profile as a pass/fail
-gate. The [hardening baseline and audit ledger](hardening.md) holds the current
-counts and the tool that compares a build with them.
+Remaining warning classes are tracked per component and warning class before and
+after a change. The [hardening baseline and audit ledger](hardening.md) holds
+the current counts and the tool that compares a build with them.
 
 ## C23 build contract
 

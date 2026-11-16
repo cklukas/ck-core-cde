@@ -83,6 +83,7 @@ def extract_paths(source, work):
                    ("MAX_PATH", "BLOCK_SIZE", "MOVE_FILE", "COPY_FILE", "LINK_FILE", "MERGE_DIR")]
     definitions += [lexical["constant"](text["FileMgr.h"], n) for n in
                     ("NOT_DESKTOP", "DESKTOP", "TRASH_DIRECTORY")]
+    definitions.append("#include <signal.h>\n#ifndef _DtSignal\n#define _DtSignal signal\n#endif")
     (work / "filemanip-path-definitions.inc").write_text("\n".join(definitions)+"\n")
     (work / "SharedMsgs.h").write_bytes(raw["SharedMsgs.h"])
     bodies, records = [], []

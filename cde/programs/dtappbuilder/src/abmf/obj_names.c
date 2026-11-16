@@ -149,9 +149,9 @@ abmfP_get_c_name_global(ABObj obj)
 
     if (substructName != nullptr)
     {
-	snprintf(name, sizeof(name), "%s.%s.%s", structName, substructName, fieldName);
+	snprintf(name, sizeof(name), "%.1024s.%.1024s.%.1024s", structName, substructName, fieldName);
     } else {
-	snprintf(name, sizeof(name), "%s.%s", structName, fieldName);
+	snprintf(name, sizeof(name), "%.2000s.%.2000s", structName, fieldName);
     }
     return name;
 }
@@ -729,8 +729,8 @@ abmfP_get_c_substruct_ptr_type_name(ABObj obj)
 	 * to static data this cannot be one snprintf() */
 	snprintf(ptrTypeNameTmp, sizeof(ptrTypeNameTmp), "%s%s",
 	         typePrefixString, abmfP_capitalize_first_char(obj_get_name(module)));
-	snprintf(ptrTypeName, sizeof(ptrTypeName), "%s%sItems",
-	         ptrTypeNameTmp, abmfP_capitalize_first_char(varName));
+	snprintf(ptrTypeName, sizeof(ptrTypeName), "%.*s%.256sItems",
+	         (int)(sizeof(ptrTypeName) - 264), ptrTypeNameTmp, abmfP_capitalize_first_char(varName));
 	cvt_ident_to_type(ptrTypeName);
     }
 
@@ -1011,17 +1011,22 @@ STRING
 abmfP_get_exe_file_name(ABObj obj)
 {
     ABObj	project = obj_get_project(obj);
+    CGenProjData projData;
     assert((project != nullptr) && (obj_is_project(project)));
 
-    if (mfobj_get_proj_data(project)->exe_name == nullptr)
+    projData = mfobj_get_proj_data(project);
+    if (projData == nullptr)
+	return nullptr;
+
+    if (projData->exe_name == nullptr)
     {
 	char	exe_name[1024];
 	*exe_name = 0;
 	cvt_type_to_ident(obj_get_name(project), exe_name, 1024);
-        mfobj_get_proj_data(project)->exe_name  = istr_create(exe_name);
+        projData->exe_name = istr_create(exe_name);
     }
 
-    return istr_string(mfobj_get_proj_data(project)->exe_name);
+    return istr_string_safe(projData->exe_name);
 }
 
 
@@ -1285,7 +1290,8 @@ abmfP_get_msg_clear_proc_name(ABObj msgObj)
 {
     static char name[MAX_NAME_SIZE];
 
-    snprintf(name, sizeof(name), "%s_initialize", abmfP_get_c_struct_global_name(msgObj));
+    snprintf(name, sizeof(name), "%.*s_initialize",
+             (int)(sizeof(name) - 12), abmfP_get_c_struct_global_name(msgObj));
 
     return_c_ident(name);
 }

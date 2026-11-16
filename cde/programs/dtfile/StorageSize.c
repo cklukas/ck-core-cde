@@ -657,14 +657,7 @@ StorageSizeTimer(XtPointer client_data, XtIntervalId *id)
     snprintf(human_storage, sizeof(human_storage), "%.1f %s", storage, units[index]);
 
     FormatThousands(data->total_size, size_sep, sizeof(size_sep));
-    snprintf(size_bytes, sizeof(size_bytes), byte_format, size_sep);
-    snprintf(size_value, sizeof(size_value), "%s %s", human_size, size_bytes);
-    SetLabelText(data->size_value_label, size_value);
-
     FormatThousands(data->total_blocks, storage_sep, sizeof(storage_sep));
-    snprintf(storage_bytes, sizeof(storage_bytes), byte_format, storage_sep);
-    snprintf(storage_value, sizeof(storage_value), "%s %s", human_storage, storage_bytes);
-    SetLabelText(data->storage_value_label, storage_value);
 
     double metadata = (double)data->metadata_size;
     int metadata_index = 0;
@@ -675,7 +668,16 @@ StorageSizeTimer(XtPointer client_data, XtIntervalId *id)
     }
     snprintf(metadata_human, sizeof(metadata_human), "%.1f %s", metadata, units[metadata_index]);
     FormatThousands(data->metadata_size, metadata_sep, sizeof(metadata_sep));
-    snprintf(metadata_bytes, sizeof(metadata_bytes), byte_format, metadata_sep);
+    {
+        char * const byte_bufs[3] = { size_bytes, storage_bytes, metadata_bytes };
+        const char * const sep_bufs[3] = { size_sep, storage_sep, metadata_sep };
+        for (int bi = 0; bi < 3; ++bi)
+            snprintf(byte_bufs[bi], sizeof(size_bytes), byte_format, sep_bufs[bi]);
+    }
+    snprintf(size_value, sizeof(size_value), "%s %s", human_size, size_bytes);
+    SetLabelText(data->size_value_label, size_value);
+    snprintf(storage_value, sizeof(storage_value), "%s %s", human_storage, storage_bytes);
+    SetLabelText(data->storage_value_label, storage_value);
     snprintf(metadata_value, sizeof(metadata_value), "%s %s", metadata_human, metadata_bytes);
     SetLabelText(data->metadata_value_label, metadata_value);
 

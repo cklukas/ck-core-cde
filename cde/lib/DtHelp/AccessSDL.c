@@ -977,7 +977,7 @@ _DtHelpCeGetSdlHomeTopicId (
     _DtCvSegment *idSegs;
     CESDLVolume  *sdlVol  =  _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol->sdl_info != nullptr)
+    if (sdlVol != nullptr && sdlVol->sdl_info != nullptr)
       {
 	/*
 	 * Was the first page topic declared in the header?
@@ -1143,7 +1143,8 @@ _DtHelpCeGetSdlIdPath(
     if (_DtHelpCeGetSdlVolIds(volume, -1, &idSegs) != 0)
 	return 0;
 
-    if (_SdlVolumeMinorNumber(_DtHelpCeGetSdlVolumePtr(volume)) >= SDL_DTD_1_1)
+    if (_DtHelpCeGetSdlVolumePtr(volume) != nullptr &&
+        _SdlVolumeMinorNumber(_DtHelpCeGetSdlVolumePtr(volume)) >= SDL_DTD_1_1)
 	hiddenNo = 0;
 
     return (MapPath(&idSegs, targetEl, -1, 0, hiddenNo, ret_ids));
@@ -1173,8 +1174,12 @@ _DtHelpCeMapSdlIdToSegment(
     _DtCvSegment   *idSegs;
     char	   *idString;
     char	    resStr[128] = "SDL-RESERVED-";
+    CESDLVolume    *sdlVol = _DtHelpCeGetSdlVolumePtr(volume);
 
-    minorNo = _SdlVolumeMinorNumber(_DtHelpCeGetSdlVolumePtr(volume));
+    if (sdlVol == nullptr)
+	return nullptr;
+
+    minorNo = _SdlVolumeMinorNumber(sdlVol);
 
     if (*target_id == '_')
       {
@@ -1277,7 +1282,7 @@ _DtHelpCeGetSdlVolCharSet(
     const char	   *charSet = IsoString;
     CESDLVolume    *sdlVol  =  _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol->sdl_info != nullptr &&
+    if (sdlVol != nullptr && sdlVol->sdl_info != nullptr &&
 			nullptr != _SdlDocInfoPtrLanguage(sdlVol->sdl_info))
 	charSet = _SdlDocInfoPtrCharSet(sdlVol->sdl_info);
 
@@ -1303,7 +1308,7 @@ _DtHelpCeGetSdlVolLanguage(
     char	   *language = "C";
     CESDLVolume    *sdlVol  =  _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol->sdl_info != nullptr &&
+    if (sdlVol != nullptr && sdlVol->sdl_info != nullptr &&
 			nullptr != _SdlDocInfoPtrLanguage(sdlVol->sdl_info))
 	language = _SdlDocInfoPtrLanguage(sdlVol->sdl_info);
 
@@ -1373,7 +1378,7 @@ _DtHelpCeGetSdlDocStamp(
     char	   *timestamp = nullptr;
     CESDLVolume    *sdlVol    =  _DtHelpCeGetSdlVolumePtr(volume);
 
-    if (sdlVol->sdl_info != nullptr)
+    if (sdlVol != nullptr && sdlVol->sdl_info != nullptr)
       {
 	result = 0;
 	if (nullptr != _SdlDocInfoPtrDocId(sdlVol->sdl_info))

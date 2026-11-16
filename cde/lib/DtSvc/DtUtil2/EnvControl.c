@@ -327,6 +327,7 @@ _DtEnvSessionManager(void)
 	    XCloseDisplay(display);
 	}
     }
+    return 0;
 }
 
 /*****************************<->*************************************

@@ -597,8 +597,8 @@ test_ttsession_drops_privileges(void)
   setup();
   install_fake("ttsession");
   use_fakes_from_casedir();
-  chown(casedir.c_str(), ruid, rgid);
-  chown(path_of("ttsession").c_str(), ruid, rgid);
+  (void)!chown(casedir.c_str(), ruid, rgid);
+  (void)!chown(path_of("ttsession").c_str(), ruid, rgid);
   /* the ids of a set-user-ID program: real user, effective root */
   if(setresgid(rgid, 0, 0) != 0 || setresuid(ruid, 0, 0) != 0) {
     perror("setresuid");

@@ -158,8 +158,8 @@ void disk_hash::clean()
 Boolean disk_hash::rehash(data_t& w)
 {
 //MESSAGE(cerr, "REHASH:");
-   char tmp_name[PATHSIZ];
-   snprintf(tmp_name, sizeof(tmp_name), "%s.tmp", key_store -> my_name());
+   char tmp_name[PATHSIZ + 8];
+   snprintf(tmp_name, sizeof(tmp_name), "%.*s.tmp", PATHSIZ - 1, key_store -> my_name());
 
    fstream pool(form("%s/%s", key_store -> my_path(), tmp_name),
                 ios::in | ios::out

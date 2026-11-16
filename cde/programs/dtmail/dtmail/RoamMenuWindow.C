@@ -5451,12 +5451,12 @@ Widget parent=NULL;
   if(!compose)
   {
     RoamMenuWindow * self = (RoamMenuWindow *)client_data;
-    parent = self->GetMainWin();
+    if (self) parent = self->GetMainWin();
   }
   else
   {
     SendMsgDialog * self = (SendMsgDialog *)client_data;
-    parent = self->GetMainWin();
+    if (self) parent = self->GetMainWin();
   }
     if(!parent)
             parent = theApplication->baseWidget();

@@ -275,7 +275,7 @@ Read_File(
     {
       Process_Clear();
       Process_Resize();
-      snprintf(last_fname, sizeof(last_fname), "%s", fname);
+      snprintf(last_fname, sizeof(last_fname), "%.*s", (int)(sizeof(last_fname) - 1), fname);
       ChangeTitle();
       successFormat = FORMAT_NONE;
       return True;
@@ -419,7 +419,7 @@ Read_File(
       mask_ret = 0;
    }
 
-  snprintf(last_fname, sizeof(last_fname), "%s", fname);
+  snprintf(last_fname, sizeof(last_fname), "%.*s", (int)(sizeof(last_fname) - 1), fname);
   ChangeTitle();
 
 #ifdef DEBUG
@@ -496,7 +496,7 @@ Write_File(
     base_name = (base_name ? base_name + 1 : fname);
   }
 
-  snprintf(last_fname, sizeof(last_fname), "%s", fname);
+  snprintf(last_fname, sizeof(last_fname), "%.*s", (int)(sizeof(last_fname) - 1), fname);
   ChangeTitle();
 
 #ifdef DEBUG
@@ -551,15 +551,14 @@ Write_File(
 /*** THIRD, construct the mask filename ***/
     if (suffix) {
       size_t base_len = (size_t)((suffix - fname) - 1);
-      if (base_len >= sizeof(dummy))
-        base_len = sizeof(dummy) - 1;
+      if (base_len + 8 >= sizeof(dummy))
+        base_len = sizeof(dummy) - 8;
       memcpy(dummy, fname, base_len);
       dummy[base_len] = '\0';
-      if (base_len + 1 < sizeof(dummy))
-        snprintf(dummy + base_len, sizeof(dummy) - base_len, "_m.%s", suffix);
+      snprintf(dummy + base_len, sizeof(dummy) - base_len, "_m.%.*s", 4, suffix);
     }
     else {
-      snprintf(dummy, sizeof(dummy), "%s_m", fname);
+      snprintf(dummy, sizeof(dummy), "%.*s_m", (int)(sizeof(dummy) - 3), fname);
     }
 /*** FOURTH, construct XImages for the shape and mask bitmaps ***/
     mask_needed = False;

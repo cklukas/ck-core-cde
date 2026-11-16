@@ -1541,7 +1541,7 @@ doHandleTargets
     DtTermPrimitiveWidget   tw         = (DtTermPrimitiveWidget)w;
     XTextProperty           tmpProp;
     XmTextBlockRec          block;
-    int                     i, status;
+    int                     status;
     int                     malloc_size=0 , numVals ;
     char                   *total_tmp_value ;
     char                  **tmp_value ;
@@ -3010,7 +3010,6 @@ _DtTermPrimSelectPasteClipboard
       int num_vals;
       char **tmp_value;
       char * total_tmp_value = nullptr;
-      int i;
 
       status = XmClipboardInquireLength(display, window, "STRING", &length);
 

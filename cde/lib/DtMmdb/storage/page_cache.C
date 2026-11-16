@@ -242,6 +242,8 @@ MESSAGE(cerr, "new a page");
          throw(stringException("corrupted store"));
 
       p = (lru_page*)f_replace_policy(ind, ACTIVE);
+      if ( p == 0 )
+         throw(stringException("corrupted store"));
 
       int pid = p -> page_id();
       page_rep key(pid, 0);

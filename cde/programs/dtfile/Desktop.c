@@ -1069,6 +1069,13 @@ LoadDesktopInfo(
 
    bufferSize = 2*MAX_PATH + 370;
    message = (char *)XtMalloc(bufferSize);
+   if (message == nullptr)
+   {
+      XtFree(fileName);
+      fileName = nullptr;
+      fclose(fptr);
+      return;
+   }
 
    /* read the data for each Window, then popup that window */
    for (i = count; i < numWindows + count; i++)
@@ -2303,9 +2310,10 @@ IsAFileOnDesktop2(
           }
           else
           {
-            newLen = strlen(filesOnDesktop) + strlen(filename1) + 6;
+            size_t curLen = strlen(filesOnDesktop);
+            newLen = curLen + strlen(filename1) + 6;
             filesOnDesktop = (char *)XtRealloc(filesOnDesktop, newLen);
-            sprintf(filesOnDesktop, "%s   %s\n", filesOnDesktop, filename1);
+            snprintf(filesOnDesktop + curLen, newLen - curLen, "   %s\n", filename1);
           }
           *number += 1;
           break;

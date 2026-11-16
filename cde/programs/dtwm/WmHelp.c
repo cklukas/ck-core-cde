@@ -1316,10 +1316,7 @@ WmDtDisplayTopic (
 
 {
     Arg	 	setArgs[10]; 
-    Arg	 	smallArgs[2];	
-    ArgList  argsNew;
     int         n;
-    int         ac;
     Widget      helpWidget;
     Widget      shellWidget;
     char *      helpTitle;

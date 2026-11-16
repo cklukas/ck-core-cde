@@ -420,7 +420,7 @@ brws_select
         BrowserProps	prop = 
 		aob_browser_properties(selected_nodes->browser);
 
-	if (prop->active)
+	if (prop && prop->active)
 	    select_node(selected_nodes);
 
 	selected_nodes = selected_nodes->next;
@@ -470,7 +470,7 @@ brws_deselect
         BrowserProps	prop = 
 		aob_browser_properties(selected_nodes->browser);
 
-	if (prop->active)
+	if (prop && prop->active)
 	    deselect_node(selected_nodes);
 
 	selected_nodes = selected_nodes->next;
@@ -505,7 +505,7 @@ brws_toggle_select
         BrowserProps	prop = 
 		aob_browser_properties(selected_nodes->browser);
 
-	if (prop->active)
+	if (prop && prop->active)
 	    toggle_select_node(selected_nodes);
 
 	selected_nodes = selected_nodes->next;

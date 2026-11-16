@@ -139,6 +139,7 @@ ReadTransSpec(
 	}
 
 	/* Isolate field value */
+	fn = buf;		/* fn is name of the field, cp the value. */
 	if ((cp=strchr(buf, ':'))) {
 	    cp++;				/* point past colon */
 	    while (*cp && IsWhite(*cp)) cp++;	/* point to content */
@@ -148,7 +149,6 @@ ReadTransSpec(
 		"Trans spec error, missing colon (skipping line):\n  %s\n", fn);
 	    continue;
 	}
-	fn = buf;		/* fn is name of the field, cp the value. */
 
 	/* Check field names in order that they're likely to occur. */
 	if (!strncmp("GI:",          fn, 3)) {

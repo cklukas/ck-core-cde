@@ -101,6 +101,8 @@ def run_in(scratch: Path):
         f"-I{args.worktree / 'cde/lib'}",
         f"-I{args.worktree / 'cde/include'}",
     ]
+    if Path("/usr/include/tirpc").is_dir():
+        includes.append("-I/usr/include/tirpc")
     subprocess.run(
         cxx + includes + [
             "-O1", "-g", "-w",

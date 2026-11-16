@@ -4143,7 +4143,7 @@ Format(
 						cur_vars->rd_size);
     if (cur_vars->rd_flag == -1)
       {
-	_DtHelpDestroyLinks (cur_vars->my_links);
+	_DtLinkDbDestroy (cur_vars->my_links);
 	cur_vars->my_links = nullptr;
 	free(topicHandle);
 	return -1;
@@ -4157,7 +4157,7 @@ Format(
 			cur_vars->rd_buf, &(cur_vars->rd_ptr),
 			cur_vars->rd_size, 1, &charSet) == -1)
       {
-	_DtHelpDestroyLinks (cur_vars->my_links);
+	_DtLinkDbDestroy (cur_vars->my_links);
 	cur_vars->my_links = nullptr;
 	free(topicHandle);
 	return -1;
@@ -4173,7 +4173,7 @@ Format(
 					&(_DtHelpFontHintsCharSet(fontAttrs))) == -1)
       {
 	free(charSet);
-	_DtHelpDestroyLinks (cur_vars->my_links);
+	_DtLinkDbDestroy (cur_vars->my_links);
 	cur_vars->my_links = nullptr;
 	free(topicHandle);
 	return -1;
@@ -4198,7 +4198,7 @@ Format(
 	    free(_DtHelpFontHintsCharSet(fontAttrs));
 	    free(charSet);
 	  }
-	_DtHelpDestroyLinks (cur_vars->my_links);
+	_DtLinkDbDestroy (cur_vars->my_links);
 	cur_vars->my_links = nullptr;
 	free(topicHandle);
 	return -1;
@@ -4218,7 +4218,7 @@ Format(
 	_DtHelpFreeSegments(cur_vars->my_list.list, _DtCvFALSE,
 			    ui_info->destroy_region, ui_info->client_data);
 	cur_vars->my_list.list = nullptr;
-	_DtHelpDestroyLinks (cur_vars->my_links);
+	_DtLinkDbDestroy (cur_vars->my_links);
 	cur_vars->my_links = nullptr;
 	free(topicHandle);
 	return -1;

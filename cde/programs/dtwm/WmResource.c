@@ -188,7 +188,6 @@ void InitBuiltinSystemMenu(void)
     char *RemString = nullptr;
     char *CloString = nullptr;
     char dsm[2048];
-    char dsmtemp[sizeof(dsm)];
     Boolean gotItAll;
     gotItAll = True;
     if(gotItAll)
@@ -400,12 +399,14 @@ void InitBuiltinSystemMenu(void)
                  SizString, MinString, MaxString, LowString);
 	if (DtwmBehavior)
 	{
-	    snprintf(dsmtemp, sizeof(dsmtemp), "%s%s\n%s\n%s\n%s\n no-label  f.separator\n",
-	             dsm, RenString, OcpString, OcaString, RemString);
-	    strcpy(dsm, dsmtemp);
+	    size_t dlen = strlen(dsm);
+	    snprintf(dsm + dlen, sizeof(dsm) - dlen, "%s\n%s\n%s\n%s\n no-label  f.separator\n",
+	             RenString, OcpString, OcaString, RemString);
 	}
-        snprintf(dsmtemp, sizeof(dsmtemp), "%s%s\n}", dsm, CloString);
-        strcpy(dsm, dsmtemp);
+	{
+	    size_t dlen = strlen(dsm);
+	    snprintf(dsm + dlen, sizeof(dsm) - dlen, "%s\n}", CloString);
+	}
 	
 	if ((builtinSystemMenu =
 	     (char *)XtMalloc ((unsigned int) (strlen(dsm) + 1))) == nullptr)

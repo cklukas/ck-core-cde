@@ -2643,9 +2643,9 @@ RemoveClientFromWsList(
         ClientData *pCD )
 
 {
-    int src, dest;
+    unsigned int src, dest;
 
-    for (dest = 0; dest < pWS->numClients; dest++)
+    for (dest = 0; dest < (unsigned int)pWS->numClients; dest++)
     {
 	if (pWS->ppClients[dest] == pCD)
 	{
@@ -2653,12 +2653,12 @@ RemoveClientFromWsList(
 	}
     }
 
-    if (dest >= pWS->numClients)
+    if (dest >= (unsigned int)pWS->numClients)
     {
 	return;
     }
 
-    for (src = dest+1; src < pWS->numClients; src++, dest++)
+    for (src = dest+1; src < (unsigned int)pWS->numClients; src++, dest++)
     {
 	pWS->ppClients[dest] = pWS->ppClients[src];
     }

@@ -201,7 +201,7 @@ prompt_for_insert(Props *p) {
 		}
 	}
 
-	snprintf(buf, sizeof(buf), "%s %s", date_str, cm_start);
+	snprintf(buf, sizeof(buf), "%.*s %s", (int)(sizeof(buf) - sizeof(cm_start) - 2), date_str, cm_start);
 	next = (int) cm_getdate(buf, nullptr);
         next = next + hrsec;
 

@@ -2721,10 +2721,10 @@ get_editor_vals_from_ui(Props_pu *pu, Props *p) {
 				hr += 12;
 		} else if (hr == 12)
 			hr = 0;
-		strncpy(buf, &pu->ep_dssw.start_val.val[3], 2);
+		memcpy(buf, &pu->ep_dssw.start_val.val[3], 2);
 		buf[2] = '\0';
 	} else {
-		strncpy(buf, &pu->ep_dssw.start_val.val[2], 2);
+		memcpy(buf, &pu->ep_dssw.start_val.val[2], 2);
 		buf[2] = '\0';
 	}
 	min = atoi(buf) % 60;

@@ -330,7 +330,7 @@ abmfP_find_callback_scope(ABObj obj, STRING callbackName)
 	}
 	trav_close(&trav);
 
-	if (scopeObj == nullptr)
+	if (scopeObj == nullptr && mfobj_get_proj_data(objProject) != nullptr)
 	{
 	   callbackList = mfobj_get_proj_data(objProject)->callbacks;
 	   if (strlist_str_exists(callbackList, callbackName))

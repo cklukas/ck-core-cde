@@ -4500,7 +4500,7 @@ Boolean F_Prev_Workspace (String args, ClientData *pCD, XEvent *event)
 
 Boolean F_Workspace_Presence (String args, ClientData *pCD, XEvent *event)
 {
-    Context wsContext = (Context)nullptr;
+    Context wsContext = 0;
 
     if (pCD && (pCD->dtwmFunctions & DtWM_FUNCTION_OCCUPY_WS))
     {

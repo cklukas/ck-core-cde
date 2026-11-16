@@ -8,10 +8,6 @@ template <class K, class V> CC_Boolean kv_pair<K, V>::f_needRemove = FALSE;
 template <class K, class V>
 kv_pair<K, V>::~kv_pair()
 {
-   if ( f_needRemove == TRUE ) {
-      delete f_key;
-      delete f_value;
-   }
 }
 
 #ifdef DEBUG
@@ -73,23 +69,24 @@ hashTable<K,V>::~hashTable()
 template <class K, class V>
 void hashTable<K,V>::clearAndDestroy()
 {
-   kv_pair<K, V>::f_needRemove = TRUE;
-
    CC_TPtrSlist<kv_pair<K, V> >* b = 0;
 
    for (size_t i=0; i<f_buckets.length(); i++ ) {
 
      b = f_buckets[i];
      if ( b ) {
-        b -> clearAndDestroy();
+        kv_pair<K, V>* r = 0;
+        while ( (r = b -> removeFirst()) ) {
+           delete r -> f_key;
+           delete r -> f_value;
+           delete r;
+        }
         delete b;
         f_buckets[i] = 0;
      }
    }
 
    f_items = 0;
-
-   kv_pair<K, V>::f_needRemove = FALSE;
 }
 
 template <class K, class V>
@@ -114,7 +111,9 @@ kv_pair<K, V>* hashTable<K,V>::_find(const K* k) const
 
    kv_pair<K, V> key((K*)k);
 
-   return b -> find(&key);
+   kv_pair<K, V>* res = b -> find(&key);
+   key.f_key = 0;
+   return res;
 }
 
 template <class K, class V>
@@ -167,6 +166,7 @@ K* hashTable<K,V>::remove(const K* k)
 
    kv_pair<K, V> key((K*)k, 0);
    kv_pair<K, V>* result = b -> remove(&key);
+   key.f_key = 0;
 
    if ( result == 0 )
      return 0;

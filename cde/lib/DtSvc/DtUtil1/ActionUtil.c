@@ -1485,6 +1485,8 @@ unsigned long _DtActEvalChildren(DtActionInvocationID id)
 
 	invRec = _DtActFindInvRec( id );
 	myassert(invRec);
+	if ( invRec == nullptr )
+	    return 0;
 
 	if ( IS_INV_FINISHED(invRec->state) ) { 
 	    /*

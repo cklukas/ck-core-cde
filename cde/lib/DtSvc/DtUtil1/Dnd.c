@@ -172,6 +172,10 @@ _DtDndCreateExportTransfer(
 	transfer = (DtDndTransfer *)XtMalloc(sizeof(DtDndTransfer));
 
 	transfer->methods = dndGetTransferMethods(dpy,dtDragInfo->protocol);
+	if (transfer->methods == nullptr) {
+		XtFree((char *)transfer);
+		return nullptr;
+	}
 
 	(*transfer->methods->getExportTargets)(dtDragInfo,
 			&(transfer->targets), &(transfer->numTargets));
@@ -214,8 +218,10 @@ _DtDndCreateImportTransfers(
 			transfer = &transfers[jj++];
 			transfer->methods = 
 				dndGetTransferMethods(dpy,dndProtocolList[ii]);
-			(*transfer->methods->getImportTargets)(dtDropInfo,
-				&(transfer->targets), &(transfer->numTargets));
+			if (transfer->methods != nullptr) {
+				(*transfer->methods->getImportTargets)(dtDropInfo,
+					&(transfer->targets), &(transfer->numTargets));
+			}
 		}
 	}
 

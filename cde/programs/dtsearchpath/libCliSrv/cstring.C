@@ -467,14 +467,14 @@ int CString::isNull() const
 
 
 CTokenizedString::CTokenizedString()
-	: CString(""), finished(0), cursor(0), delimiter(0)
+	: CString(""), cursor(0), delimiter(0), finished(0)
 {}
 
 
 CTokenizedString::CTokenizedString
 	(
 	const CTokenizedString & s
-	) : CString(s), finished(s.finished), cursor(0), delimiter(0)
+	) : CString(s), cursor(0), delimiter(0), finished(s.finished)
 {
   if (s.cursor) {
     cursor = new char [strlen(s.cursor) + 1];

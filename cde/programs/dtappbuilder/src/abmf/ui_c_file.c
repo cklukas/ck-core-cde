@@ -603,16 +603,18 @@ obj_should_be_managed_when_initialized(ABObj obj)
 	return FALSE;
     }
 
+    ABObj	parentObj = (obj != nullptr) ? abmfP_parent(obj) : nullptr;
+
     /*
      * Shells are not managed (Xt error!)
      * The top composite in a dialog is not managed, so that the dialog
      *     will not become visible until needed.
      */
     if (    ObjWClassIsShellSubclass(obj)
-	|| (   (abmfP_parent(obj) != nullptr) 
-	    && (((abmfP_parent(obj))->type == AB_TYPE_DIALOG)
-		|| ((abmfP_parent(obj))->type == AB_TYPE_FILE_CHOOSER))
-	    && (ObjWClassIsDialogShell(abmfP_parent(obj)))) )
+	|| (   (parentObj != nullptr) 
+	    && ((parentObj->type == AB_TYPE_DIALOG)
+		|| (parentObj->type == AB_TYPE_FILE_CHOOSER))
+	    && (ObjWClassIsDialogShell(parentObj))) )
     {
 	return FALSE;
     }

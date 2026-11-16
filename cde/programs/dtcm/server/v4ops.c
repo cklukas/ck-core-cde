@@ -710,7 +710,7 @@ _DtCmsLookupRangeV4(
 	void		*result_slot;
 	int		tmp_tick, endtick;
 	Id_4		lo_key;
-	int		n;
+	int		n = 0;
 	List_node	*p_lnode;
 	time_t		hi_tick, lo_tick;
 	int		tick;

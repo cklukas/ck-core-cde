@@ -2212,15 +2212,15 @@ int _DtXlateGetXlateEnv(
    /* then look up version number of execution host */
    if (ret_AppExecEnvVersion) 
    {
-      char version[sizeof(names.release)+sizeof(names.version)-1];
+      char version[sizeof(names.release)+sizeof(names.version)];
       char * stdVer = nullptr;
       int  verNum = MATCHALL_VER;
 
       /* cat release version and do a translation on it to a std value */
       /* then convert the std value to a integer */
-      strncpy(version,names.release,sizeof(names.release)-1);
-      version[sizeof(names.release)-1] = EOS;
-      strncat(version,names.version,sizeof(names.version)-1);
+      snprintf(version, sizeof(version), "%.*s%.*s",
+               (int)(sizeof(names.release) - 1), names.release,
+               (int)(sizeof(names.version) - 1), names.version);
       ret = _DtXlateOpToStdValue(db,names.sysname,0,
                    _DtXLATE_OPER_VERSION,version,&stdVer,nullptr);
       if (ret == 0)

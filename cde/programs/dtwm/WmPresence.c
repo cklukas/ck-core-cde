@@ -459,7 +459,8 @@ wspCreateWidgets(
     {
         rval = ((pPres->workspaceListW =
 		wspCreateWorkspaceList (pPres->formW, pPres, pSD)) != nullptr);
-        pPres->workspaceScrolledListW = XtParent (pPres->workspaceListW);
+        if (rval)
+            pPres->workspaceScrolledListW = XtParent (pPres->workspaceListW);
     }
 
     if (rval)

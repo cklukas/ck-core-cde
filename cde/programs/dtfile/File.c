@@ -5423,6 +5423,7 @@ DropOnRootCB (
       else /* it was dropped on the root window so lets process it */
       {
         int EndIndex = desktop_data->numIconsUsed;
+        file_mgr_rec = (FileMgrRec *)file_mgr_data->file_mgr_rec;
 
         for(i = 0; i < numFiles; i++)
         {

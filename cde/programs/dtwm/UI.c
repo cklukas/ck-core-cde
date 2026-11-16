@@ -3360,12 +3360,15 @@ AddSubpanel (ControlData * control_data)
    vHints.behaviors = DtWM_BEHAVIOR_PANEL | DtWM_BEHAVIOR_SUBPANEL;
    vHints.attachWindow = XtWindow (panel.shell);
 
-   XtSetArg (al[0], XmNtransientFor, panel.shell);
-   XtSetValues (subpanel_data->shell, al, 1);
+   if (subpanel_data)
+   {
+      XtSetArg (al[0], XmNtransientFor, panel.shell);
+      XtSetValues (subpanel_data->shell, al, 1);
 
-   XtRealizeWidget (subpanel_data->form);
-   _DtWsmSetDtWmHints (XtDisplay (panel.shell), 
-                      XtWindow (subpanel_data->shell), &vHints);
+      XtRealizeWidget (subpanel_data->form);
+      _DtWsmSetDtWmHints (XtDisplay (panel.shell), 
+                         XtWindow (subpanel_data->shell), &vHints);
+   }
 
    WriteSubpanelComponentFile(control_data->subpanel_data);
 }

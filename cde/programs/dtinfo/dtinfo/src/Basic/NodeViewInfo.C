@@ -803,18 +803,23 @@ NodeViewInfo::adjust_current_search_hit(trav_dir_t dir)
 {
     trav_status_t status = SUCCESS;
 
+    sr_DtCvSegment *first_hit = f_hits.first();
+    sr_DtCvSegment *last_hit = f_hits.last();
+    if (!first_hit || !last_hit || !f_current_hit)
+	return NOT_MOVED;
+
     CC_TPtrDlistIterator<sr_DtCvSegment> iter(f_hits);
 
     for (++iter; *iter.key() != *f_current_hit;)
 	++iter;
 
     if (dir == PREV) {
-	if (*iter.key() != *f_hits.first())
+	if (*iter.key() != *first_hit)
 	    --iter;
     }
     else {
 	assert( dir == NEXT );
-	if (*iter.key() != *f_hits.last())
+	if (*iter.key() != *last_hit)
 	    ++iter;
     }
 
@@ -825,11 +830,11 @@ NodeViewInfo::adjust_current_search_hit(trav_dir_t dir)
 	f_current_hit->hitseg->type |=  _DtCvAPP_FLAG2;
 
 	if (dir == PREV) {
-	    if (*f_current_hit == *f_hits.first())
+	    if (*f_current_hit == *first_hit)
 		status = REACH_LIMIT;
 	}
 	else
-	    if (*f_current_hit == *f_hits.last())
+	    if (*f_current_hit == *last_hit)
 		status = REACH_LIMIT;
     }
     else

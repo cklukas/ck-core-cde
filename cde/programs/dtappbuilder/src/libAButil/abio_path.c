@@ -333,6 +333,8 @@ expand_path(char *nm, char *buf)
 				if (*++nm)
 					nm++;
 			}
+			else
+				s = "";
 		}
 		else
 		{	/* ~user/filename */

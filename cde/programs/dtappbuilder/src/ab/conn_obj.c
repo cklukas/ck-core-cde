@@ -491,7 +491,7 @@ ConnP_conn_objs[] =
 	application_whens, XtNumber(application_whens),
 	AB_WHEN_SESSION_SAVE,
         (AB_BUILTIN_ACTION *) nullptr, (Cardinal) 0,
-	(AB_BUILTIN_ACTION) nullptr			},
+	(AB_BUILTIN_ACTION) 0			},
     { AB_TYPE_BUTTON,	-1,		"Button",
 	button_whens, XtNumber(button_whens),
 	AB_WHEN_ACTIVATED,
@@ -556,7 +556,7 @@ ConnP_conn_objs[] =
 	menu_whens, XtNumber(menu_whens),
 	AB_WHEN_POPPED_UP,
 	(AB_BUILTIN_ACTION *) nullptr, (Cardinal) 0,
-	(AB_BUILTIN_ACTION) nullptr			},
+	(AB_BUILTIN_ACTION) 0			},
     { AB_TYPE_ITEM,	(int)AB_ITEM_FOR_MENU, "Menu Item",
 	menuitem_whens, XtNumber(menuitem_whens),
 	AB_WHEN_ACTIVATED,
@@ -574,9 +574,9 @@ ConnP_conn_objs[] =
 	AB_STDACT_SET_LABEL				},
     { AB_TYPE_MESSAGE,	-1,	"Message",
 	message_whens, XtNumber(message_whens), 
-	(AB_WHEN) nullptr,
+	(AB_WHEN) 0,
 	(AB_BUILTIN_ACTION *) nullptr, (Cardinal) 0,
-	(AB_BUILTIN_ACTION) nullptr			},
+	(AB_BUILTIN_ACTION) 0			},
     { AB_TYPE_CONTAINER, AB_CONT_PANED,	"Paned Window", 
         panedwin_whens, XtNumber(panedwin_whens), 
 	AB_WHEN_AFTER_CREATED,
@@ -1142,7 +1142,7 @@ connP_guess_when_action(
 		ABObj	src_obj = connP_get_source();
 
 	    	*func_type = AB_FUNC_USER_DEF;
-	    	*act_ret = (AB_BUILTIN_ACTION) nullptr;
+	    	*act_ret = (AB_BUILTIN_ACTION) 0;
 
 	    	if (obj_has_action1_button(src_obj))
 		    *when_ret = ConnP_conn_objs[i].when_list[0];	

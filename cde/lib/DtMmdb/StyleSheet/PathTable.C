@@ -471,7 +471,8 @@ PathTable::~PathTable()
 
 LetterType PathTable::findIndex(SSPath& p)
 {
-  return (LetterType) ((p.last() -> symbol()).id());
+  PathTerm* last = p.last();
+  return last ? (LetterType) ((last -> symbol()).id()) : 0;
 }
 
 void PathTable::initLastSymIndex()

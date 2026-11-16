@@ -714,6 +714,7 @@ DmxPrintOptions::isValidMarginSpec(PropUiItem* pui, void* data)
 	  CATGETS(DT_catd, 26, 3, "Bottom Margin specifier is invalid:  ");
 	break;
       case DTPRINT_OPTION_MARGIN_LEFT:
+      default:
         i18nMsg =
 	  CATGETS(DT_catd, 26, 4, "Left Margin specifier is invalid:  ");
 	break;

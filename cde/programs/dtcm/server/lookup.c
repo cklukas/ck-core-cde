@@ -453,7 +453,7 @@ _AddToLinkedEntries(
 	if (sort == B_FALSE) {
 		/* just add to the end of the list */
 
-		if ((*head) == nullptr)
+		if ((*head) == nullptr || (*tail) == nullptr)
 			*head = newptr;
 		else
 			(*tail)->next = newptr;

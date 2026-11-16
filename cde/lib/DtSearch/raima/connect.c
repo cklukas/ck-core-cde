@@ -325,6 +325,8 @@ char *mem2  /* member record 2 */
 	    break;
       }
    }
+   if (mt1 == nullptr || mt2 == nullptr)
+      return (dberr(S_SYSERR));
    /* set maxflds to number of sort fields in set (min(mt1,mt2)) */
    maxflds = (mt1->mt_totsf <= mt2->mt_totsf) ? mt1->mt_totsf : mt2->mt_totsf;
    

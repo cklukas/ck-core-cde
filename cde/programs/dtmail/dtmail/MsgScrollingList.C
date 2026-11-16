@@ -1207,6 +1207,10 @@ MsgScrollingList::display_message(
 
         MsgStruct *ms;
     	ms = get_message_struct(_displayed_item_position);
+	if (ms == nullptr) {
+	    mbox->clearMessageSummary(info);
+	    return;
+	}
 
 	XmString complete_header;
 	complete_header = formatHeader(

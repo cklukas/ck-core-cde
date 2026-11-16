@@ -182,7 +182,7 @@ determine_libs(AbmfLibs libs, ABObj project, AB_OS_TYPE osType)
     int			return_value = 0;
     CGenProjData 	projData = mfobj_get_proj_data(project);
 
-    if (projData->has_ui_obj)
+    if (projData != nullptr && projData->has_ui_obj)
     {
 	lib_add(libs, LibDtWidget, ABMF_LIB_APPEND, ABMF_LIB_REJECT_DUP);
 	lib_add(libs, LibDtHelp, ABMF_LIB_APPEND, ABMF_LIB_REJECT_DUP);
@@ -196,7 +196,7 @@ determine_libs(AbmfLibs libs, ABObj project, AB_OS_TYPE osType)
 	lib_add(libs, LibXp, ABMF_LIB_APPEND, ABMF_LIB_REJECT_DUP);
     }
 
-    if (projData->has_terminal)
+    if (projData != nullptr && projData->has_terminal)
     {
 	lib_add(libs, LibDtHelp, ABMF_LIB_PREPEND, ABMF_LIB_REJECT_DUP);
 	lib_add(libs, LibDtTerm, ABMF_LIB_PREPEND, ABMF_LIB_REJECT_DUP);

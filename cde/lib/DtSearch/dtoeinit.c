@@ -261,13 +261,10 @@ INIT_FAILED:
 	 * database name.  Then increment pointers and continue. 
 	 */
 	if (db->label == nullptr || db->label[0] == 0) {
+	    extern void _DtSearchAddNoMemMessage(const char *, size_t);
 	    char *label = strdup (db->name);
 	    if (label == nullptr) {
-		sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_misc, 3,
-		    "*** %sOut of Memory at %s asking for %lu bytes! ***\n"),
-		    (aa_argv0 != nullptr)? aa_argv0 : "", PROGNAME"267",
-		    (unsigned long) strlen (db->name) + 1);
-		DtSearchAddMessage (sprintbuf);
+		_DtSearchAddNoMemMessage (PROGNAME"267", strlen (db->name) + 1);
 		goto DELETE_DB;
 	    }
 	    db->label = label;

@@ -2086,7 +2086,7 @@ ParseAppArgs(
         {
             case 'f':
               if (++i < num && cmd[i] != nullptr) {
-                snprintf(start_file, 256, "%s", cmd[i]);
+                snprintf(start_file, sizeof(start_file), "%s", cmd[i]);
                 param_flag[AUTO_FILE] = True;
                 argsNeedProcessed = True;
               }
@@ -2095,7 +2095,7 @@ ParseAppArgs(
               continue;
             case 'x': if (++i < num && cmd[i] != nullptr)
               {
-                snprintf(start_size, 256, "%s", cmd[i]);
+                snprintf(start_size, sizeof(start_size), "%s", cmd[i]);
                 param_flag[AUTO_SIZE] = True;
                 argsNeedProcessed = True;
               }

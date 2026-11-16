@@ -316,7 +316,7 @@ debug(cerr, int(this));
 
   while ( ind != 0 ) {
      lru_page *p= (lru_page*)(f_global_pcache.f_replace_policy)(ind, ACTIVE);
-     if  ( p -> f_store == this ) 
+     if  ( p && p -> f_store == this ) 
         sync( p );
      f_global_pcache.f_replace_policy.next(ind);
    }
@@ -1265,7 +1265,7 @@ void page_storage::roll_back()
         lru_page *p = (lru_page*)
 		(f_global_pcache.f_replace_policy)(ind, ACTIVE);
 
-        if ( p -> f_store == this )
+        if ( p && p -> f_store == this )
            p -> dirty = false;
         f_global_pcache.f_replace_policy.next(ind);
       }

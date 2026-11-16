@@ -1101,13 +1101,10 @@ format_dir_name_for_user(
         else
         {
             /* relative to home (but avoid "~/." if actually in home dir)*/
-	    strcpy(pretty_dir, "~");
             if (!util_streq(home_relative, "."))
-            {
-                strcat(pretty_dir, "/");
-                strncat(pretty_dir, home_relative, pretty_dir_size-3);
-            }
-            pretty_dir[pretty_dir_size-1]= 0;
+                snprintf(pretty_dir, pretty_dir_size, "~/%s", home_relative);
+            else
+                snprintf(pretty_dir, pretty_dir_size, "~");
         }    
     }    
     else

@@ -93,7 +93,8 @@ ShelfConfigPath(void)
    if (home_dir == nullptr || *home_dir == '\0')
       home_dir = ShelfGetHomePath();
 
-   snprintf(config_path, sizeof(config_path), "%s/.dt/%s",
+   snprintf(config_path, sizeof(config_path), "%.*s/.dt/%s",
+            (int)(sizeof(config_path) - sizeof(SHELF_FILE_NAME) - 8),
             home_dir, SHELF_FILE_NAME);
    return config_path;
 }
@@ -108,7 +109,7 @@ ShelfEnsureConfigDir(void)
    if (home_dir == nullptr || *home_dir == '\0')
       home_dir = ShelfGetHomePath();
 
-   snprintf(path, sizeof(path), "%s/.dt", home_dir);
+   snprintf(path, sizeof(path), "%.*s/.dt", (int)(sizeof(path) - 6), home_dir);
    if (mkdir(path, 0700) != 0 && errno != EEXIST)
       return;
 }

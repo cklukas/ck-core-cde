@@ -945,13 +945,11 @@ main(
     int      doGen    = 0;
 
     char     tmpVolume  [MAXPATHLEN + 2];
-    char     tmpVolumeTemp[MAXPATHLEN * 2 + 4];
     char     tmpVolume2 [MAXPATHLEN + 2];
     char     tmpTopic   [MAXPATHLEN + 2];
     char     tmpHeader  [MAXPATHLEN + 2];
     char     headerName [MAXPATHLEN + 2];
     char     baseName   [MAXPATHLEN + 2];
-    char     baseNameTemp[MAXPATHLEN * 2 + 4];
     char     tempName   [MAXPATHLEN + 2];
     char   **next;
     char    *charSet;
@@ -1061,8 +1059,8 @@ main(
 				myName, errno);
 	    exit (1);
 	  }
-        snprintf(baseNameTemp, sizeof(baseNameTemp), "%s/%s", baseName, App_args.dir);
-        snprintf(baseName, sizeof(baseName), "%s", baseNameTemp);
+	size_t bn_len = strlen(baseName);
+	snprintf(baseName + bn_len, sizeof(baseName) - bn_len, "/%s", App_args.dir);
       }
     else
         snprintf(baseName, sizeof(baseName), "%s", App_args.dir);
@@ -1082,8 +1080,8 @@ main(
 
     snprintf(tmpVolume, sizeof(tmpVolume), "%s", ptr);
     if (tmpVolume[strlen (tmpVolume) - 1] != '/') {
-        snprintf(tmpVolumeTemp, sizeof(tmpVolumeTemp), "%s%s", tmpVolume, SlashString);
-        snprintf(tmpVolume, sizeof(tmpVolume), "%s", tmpVolumeTemp);
+        size_t tv_len = strlen(tmpVolume);
+        snprintf(tmpVolume + tv_len, sizeof(tmpVolume) - tv_len, "%s", SlashString);
     }
 
     free (ptr);
@@ -1190,14 +1188,18 @@ main(
     /*
      * get temporary files for the volume and topic file.
      */
-    snprintf(tmpVolumeTemp, sizeof(tmpVolumeTemp), "%s%s", tmpVolume, App_args.file);
-    snprintf(tmpVolume, sizeof(tmpVolume), "%s", tmpVolumeTemp);
+    {
+	size_t tv_len = strlen(tmpVolume);
+	snprintf(tmpVolume + tv_len, sizeof(tmpVolume) - tv_len, "%s", App_args.file);
+    }
 
     snprintf(tmpHeader, sizeof(tmpHeader), "%s00.ht", tmpVolume);
     snprintf(tmpTopic, sizeof(tmpTopic), "%s01.ht", tmpVolume);
 
-    snprintf(tmpVolumeTemp, sizeof(tmpVolumeTemp), "%s%s", tmpVolume, Ext_Hv);
-    snprintf(tmpVolume, sizeof(tmpVolume), "%s", tmpVolumeTemp);
+    {
+	size_t tv_len = strlen(tmpVolume);
+	snprintf(tmpVolume + tv_len, sizeof(tmpVolume) - tv_len, "%s", Ext_Hv);
+    }
 
     result = access (tmpVolume, F_OK);
 

@@ -3993,8 +3993,10 @@ decoded:
      }
      else
      {
-       buf = XtRealloc(buf,strlen(buf)+strlen(file_error)+3);
-       sprintf(buf,"%s%s\n",buf,file_error);
+       size_t curLen = strlen(buf);
+       size_t addLen = strlen(file_error);
+       buf = XtRealloc(buf, curLen + addLen + 3);
+       snprintf(buf + curLen, addLen + 3, "%s\n", file_error);
      }
      XtFree(file_error);
    }
@@ -4007,8 +4009,10 @@ decoded:
      }
      else
      {
-       buf = XtRealloc(buf,strlen(buf)+strlen(no_file_error)+3);
-       sprintf(buf,"%s%s\n",buf,no_file_error);
+       size_t curLen = strlen(buf);
+       size_t addLen = strlen(no_file_error);
+       buf = XtRealloc(buf, curLen + addLen + 3);
+       snprintf(buf + curLen, addLen + 3, "%s\n", no_file_error);
      }
      XtFree(no_file_error);
    }
@@ -4021,8 +4025,10 @@ decoded:
      }
      else
      {
-       buf = XtRealloc(buf,strlen(buf)+strlen(sacred_error)+3);
-       sprintf(buf,"%s%s\n",buf,sacred_error);
+       size_t curLen = strlen(buf);
+       size_t addLen = strlen(sacred_error);
+       buf = XtRealloc(buf, curLen + addLen + 3);
+       snprintf(buf + curLen, addLen + 3, "%s\n", sacred_error);
      }
      XtFree(sacred_error);
    }

@@ -63,7 +63,7 @@ _DtTtChooserSet(
     char *okString    = NULL;
     char *title       = NULL;
     char *valueLabel  = NULL;
-    char *valuesLabel;
+    const char *valuesLabel = "";
     switch (choice) {
 	case _DtTtChooserNone:
 	    return;

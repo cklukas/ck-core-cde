@@ -751,7 +751,7 @@ GetKeywordValuePairs(char *s, int *id, int table)
                 printf("Cannot Allocate memory\n");
                 free(args[0]);
                 free(args[1]);
-                free(args);
+                args[0] = args[1] = nullptr;
                 return nullptr;
            }
            args[0] = temp4;
@@ -769,7 +769,7 @@ GetKeywordValuePairs(char *s, int *id, int table)
            {
                 printf("Cannot Allocate memory\n");
                 free(args[0]);
-                free(args);
+                args[0] = nullptr;
                 return nullptr;
            }
           strcat(temp4,args[0]);
@@ -886,8 +886,12 @@ int  done=FALSE, argfound=FALSE,promptfound=FALSE;
                                strncmp(argbuf,"%Args%",6) &&
                                strncmp(argbuf,"%Args\"",6)   )
                       {
-                           strncat(exec_args[0],argbuf,strlen(argbuf)-1);
-                           exec_args[0][strlen(exec_args[0])] = '\0';
+                           size_t alen = strlen(argbuf);
+                           if (alen > 1) {
+                               size_t elen = strlen(exec_args[0]);
+                               memcpy(exec_args[0] + elen, argbuf, alen - 1);
+                               exec_args[0][elen + alen - 1] = '\0';
+                           }
                            s1=s2;
                            continue;
                       }

@@ -1184,7 +1184,7 @@ USAGE: %1$s [options]\n\
         -dv turns on verbose (record-by-record) debugging.\n\
   -t<N> Maximum desired number of seconds of run time.\n\
         Ctrl-C/Break will also stop deletion at next record.\n\
-  -n<N> Change number of records in a batch from %5$d to <N>.\n\
+  -n<N> Change number of records in a batch from %3$d to <N>.\n\
   -y    Automatically answers 'yes' to Delete mode confirm prompt.\n\
   -d    trace deletion operations.\n"
 

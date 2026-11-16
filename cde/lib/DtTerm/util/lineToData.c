@@ -125,7 +125,7 @@ main(int argc, char **argv)
 	}
 
 	/* back up buffer... */
-	(void) strncpy(orig, buffer, BUFSIZ - 1);
+	(void) snprintf(orig, sizeof(orig), "%s", buffer);
 
 	bufPtr = buffer;
 

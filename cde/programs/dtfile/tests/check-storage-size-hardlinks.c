@@ -162,7 +162,7 @@ test_hardlink_block_dedup_synthetic(void)
 static void
 test_hardlink_directory_traversal(const char *scratch_dir)
 {
-    char test_root[PATH_MAX];
+    char test_root[PATH_MAX - 64];
     snprintf(test_root, sizeof(test_root), "%s/scan_tree", scratch_dir);
     mkdir(test_root, 0700);
 

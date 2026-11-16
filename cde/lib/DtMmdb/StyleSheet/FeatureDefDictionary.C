@@ -263,8 +263,9 @@ const FeatureDef* FeatureDefComposite::getComponentDef(const char* nm) const
       if ( def )
          return def;
       else {
-         if ( f_components -> first() -> type() == WILDCARD )
-            return f_components -> first();
+         FeatureDef* first_def = f_components -> first();
+         if ( first_def && first_def -> type() == WILDCARD )
+            return first_def;
          else
             return 0;
       }

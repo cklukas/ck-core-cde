@@ -528,7 +528,7 @@ RoamMenuWindow::smpSaveSessionLocal(void)
     Atom	*ws_presence = NULL;
     char	*workspace_name=NULL;
     unsigned long num_workspaces = 0;
-    char	*all_workspace_names;
+    char	*all_workspace_names = nullptr;
     char	*mailboxname;
     
     if (fp == NULL)
@@ -576,7 +576,7 @@ RoamMenuWindow::smpSaveSessionLocal(void)
     (void) fprintf(
 		fp, "RoamMenu %s %s %d %d %d %d %d\n",
 		mailboxname,
-		all_workspace_names, initialstate,
+		all_workspace_names ? all_workspace_names : "", initialstate,
 		(int)_x, (int)_y, 
 		(int)_width, (int)_height);
 
@@ -767,7 +767,7 @@ SendMsgDialog::smpSaveSessionLocal(void)
     Atom	*ws_presence = NULL;
     char	*workspace_name = NULL;
     unsigned long num_workspaces = 0;
-    char	*all_workspace_names;
+    char	*all_workspace_names = nullptr;
     char	*save_filename;
     int j;
 
@@ -831,7 +831,7 @@ SendMsgDialog::smpSaveSessionLocal(void)
     (void) fprintf(
 		fp,"SendMsg %s %s %d %d %d %d %d\n",
 		save_filename,
-		all_workspace_names, initialstate,
+		all_workspace_names ? all_workspace_names : "", initialstate,
 		(int)x, (int)y, 
 		(int)width, (int)height);
 

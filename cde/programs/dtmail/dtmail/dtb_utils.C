@@ -2820,11 +2820,11 @@ determine_exe_dir(
 
 	if (path_prefix != NULL)
 	{
-	    char *abs_exe_dir = new char[MAXPATHLEN+1];
+	    char *abs_exe_dir = new char[MAXPATHLEN * 2 + 2];
 	    if (strcmp(buf, ".") != 0) {
-		snprintf(abs_exe_dir, MAXPATHLEN+1, "%s/%s", path_prefix, buf);
+		snprintf(abs_exe_dir, MAXPATHLEN * 2 + 2, "%s/%s", path_prefix, buf);
 	    } else {
-		snprintf(abs_exe_dir, MAXPATHLEN+1, "%s", path_prefix);
+		snprintf(abs_exe_dir, MAXPATHLEN * 2 + 2, "%s", path_prefix);
 	    }
 	    strcpy(buf, abs_exe_dir);
 	    delete [] abs_exe_dir;

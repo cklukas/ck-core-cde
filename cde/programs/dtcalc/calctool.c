@@ -789,11 +789,11 @@ get_rcfile(char *name)
                     {
                       snprintf(tmp, sizeof(tmp), "%s",
                                make_number(v->MPcon_vals[i], TRUE)) ;
-                      snprintf(v->con_names[i], MAXLINE, "%1d: %s [%s]",
+                      snprintf(v->con_names[i], MAXLINE, "%1d: %.64s [%.128s]",
                                i, tmp, &line[n]) ;
                     }
                   else
-                    snprintf(v->fun_names[i], MAXLINE, "%1d: %s [%s]",
+                    snprintf(v->fun_names[i], MAXLINE, "%1d: %.64s [%.128s]",
                              i, tmp, &line[n]) ;
                   break ;
                 }
@@ -1602,9 +1602,9 @@ read_rcfiles(void)   /* Read .dtcalcrc's from home and current directories. */
   for (n = 0; n < MAXREGS; n++)
     {
       snprintf(tmp, sizeof(tmp), "%s", make_number(v->MPcon_vals[n], FALSE)) ;
-      snprintf(name, sizeof(name), "%1d: %s [%s]", n, tmp, v->con_names[n]) ;
+      snprintf(name, sizeof(name), "%1d: %.64s [%.128s]", n, tmp, v->con_names[n]) ;
 
-      snprintf(v->con_names[n], MAXLINE, "%s", name) ;
+      snprintf(v->con_names[n], MAXLINE, "%.*s", MAXLINE - 1, name) ;
       strcpy(v->fun_vals[n], "") ;    /* Initially empty function strings. */
     }
 
@@ -1618,7 +1618,7 @@ read_rcfiles(void)   /* Read .dtcalcrc's from home and current directories. */
  
   if (getcwd(pathname, MAXPATHLEN) != nullptr)
     {
-      snprintf(name, MAXPATHLEN, "%s/%s", pathname, RCNAME) ;
+      snprintf(name, MAXPATHLEN, "%.*s/%s", (int)(MAXPATHLEN - sizeof(RCNAME) - 2), pathname, RCNAME) ;
       get_rcfile(name) ;      /* Read .dtcalcrc file from current directory. */
     }
 }
@@ -1662,7 +1662,7 @@ write_rcfile(enum menu_type mtype, int exists, int cfno, char *val, char *commen
   rcexists = 0 ;
   if (getcwd(pathname, MAXPATHLEN) != nullptr)
     {
-      snprintf(rcname, sizeof(rcname), "%s/%s", pathname, RCNAME) ;
+      snprintf(rcname, sizeof(rcname), "%.*s/%s", (int)(sizeof(rcname) - sizeof(RCNAME) - 2), pathname, RCNAME) ;
       if (access(rcname, F_OK) == 0) rcexists = 1 ;
     }
   if (!rcexists)

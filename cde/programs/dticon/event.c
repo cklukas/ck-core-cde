@@ -137,7 +137,7 @@ ProcessTabletEvent(
   Dimension db_width, db_height;
 #endif
   int x, y, width, height, i, n, xGrid, yGrid;
-  char tmpstr[20];
+  char tmpstr[32];
   XmString str;
 
   if (num_params == 3)

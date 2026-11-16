@@ -809,18 +809,20 @@ tooltalk_msg_handler(
 	        roamwin->manage();
 	    }
 
-	    MsgHandlerDoneCbData *cbData;
-	    
-	    cbData = (MsgHandlerDoneCbData*)
-			XtMalloc(sizeof(MsgHandlerDoneCbData));
-	    cbData->msg = msg;
-	    cbData->roamApp = roamapp;
-	    cbData->roamWin = NULL;
-	    XtAddCallback(roamwin->GetMainWin(),
-			XtNdestroyCallback,
-			tooltalk_msg_handler_done_cb,
-			(XtPointer) cbData);
-            roamapp->registerPendingTask();
+	    if (roamwin != NULL) {
+		MsgHandlerDoneCbData *cbData;
+
+		cbData = (MsgHandlerDoneCbData*)
+			    XtMalloc(sizeof(MsgHandlerDoneCbData));
+		cbData->msg = msg;
+		cbData->roamApp = roamapp;
+		cbData->roamWin = NULL;
+		XtAddCallback(roamwin->GetMainWin(),
+			    XtNdestroyCallback,
+			    tooltalk_msg_handler_done_cb,
+			    (XtPointer) cbData);
+		roamapp->registerPendingTask();
+	    }
 
 	    // Set this to True so Self_destruct()
 	    // would not be started by Compose.
@@ -2015,41 +2017,42 @@ char *formatPropPair(char * key, const void * data)
     char *formatted_str = NULL;
     char *white_space = NULL;
     int i, num_spaces = 0;
-    int key_len = strlen(key);
-    int m_size;
+    size_t key_len = strlen(key);
 
     if (data == NULL)
 	data = (void *)"";
+
+    size_t data_len = strlen((const char *)data);
 
     // figure out whitespace for formatting
     // assume 13 for normal sized alias name
 
     if(key_len < 13)  // need to add spaces
       {
-	num_spaces = 13 - key_len;
+	num_spaces = 13 - (int)key_len;
 
 	white_space = (char *)malloc(num_spaces + 1);
-	strcpy(white_space, "\0");
-
 	for(i = 0; i < num_spaces; i++)
-	  strcat(white_space, " ");
+	  white_space[i] = ' ';
+	white_space[num_spaces] = '\0';
 
-	m_size = key_len + strlen((char *)white_space)
-		 + strlen((char *)data) + strlen(" = ") + 1;
-	formatted_str = (char *)malloc(m_size);
-
-	sprintf(formatted_str, "%s%s = %s",key, white_space, (const char *) data);
+	size_t alloc_size = key_len + (size_t)num_spaces + data_len + 4;
+	formatted_str = (char *)malloc(alloc_size);
+	memcpy(formatted_str, key, key_len);
+	memcpy(formatted_str + key_len, white_space, (size_t)num_spaces);
+	memcpy(formatted_str + key_len + num_spaces, " = ", 3);
+	memcpy(formatted_str + key_len + num_spaces + 3, data, data_len + 1);
+	free(white_space);
 
       }
     else
       {
 		/* make an alias string */
-	formatted_str = (char *)malloc(key_len + strlen((const char *)data) + 2);
-    
-	m_size = key_len + strlen((const char *)data) + strlen(" = ") + 1;
-	formatted_str = (char *)malloc(m_size);
-
-	sprintf(formatted_str, "%s = %s",key, (const char *) data);
+	size_t alloc_size = key_len + data_len + 4;
+	formatted_str = (char *)malloc(alloc_size);
+	memcpy(formatted_str, key, key_len);
+	memcpy(formatted_str + key_len, " = ", 3);
+	memcpy(formatted_str + key_len + 3, data, data_len + 1);
 
       }
     

@@ -165,7 +165,7 @@ paint_dayview_appts(Calendar *c, Paint_cache *cache, int a_total, void *rect)
 	XFontSetExtents fontextents2;
 	Props *p = (Props*)c->properties;
 	Boolean am = True;
-	char buf[5], *appt_str;
+	char buf[16], *appt_str;
 	int pfy, curr_line, maxlines;
 	Lines *lines = nullptr, *headlines = nullptr;
 	DisplayType disp_t;

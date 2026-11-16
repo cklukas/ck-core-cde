@@ -280,9 +280,9 @@ SetSaveAsLabelAndDialog(
 	}
 	ac = 0;
 	XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-	XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+	XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
 	XtSetValues(pPad->fileStuff.fileWidgets.saveAsBtn, al, ac);
-	free(mnemonic);
+	XtFree(mnemonic);
 	XmStringFree(tmpStr);
     }
 
@@ -338,11 +338,11 @@ CreateHelpMenu(
     ac = 0;
     XtSetArg (al[ac], XmNsubMenuId, help_pane);  ac++;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     cascade = XmCreateCascadeButtonGadget(pPad->menu_bar, "Help", al, ac);
     XtAddCallback(cascade, XmNhelpCallback,HelpHelpCB, pPad);
     XtManageChild(cascade);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     ac = 0;
@@ -354,11 +354,11 @@ CreateHelpMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 84, "Overview")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++]= XmCreatePushButtonGadget(help_pane, "overview", al, ac );
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   HelpOverviewCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> craete Separator */
@@ -370,11 +370,11 @@ CreateHelpMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 86, "Tasks")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++]= XmCreatePushButtonGadget(help_pane, "tasks", al, ac );
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   HelpTasksCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Table of Contents" push button */
@@ -382,11 +382,11 @@ CreateHelpMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 88, "Table of Contents")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++]= XmCreatePushButtonGadget(help_pane, "TOC", al, ac );
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   HelpTOCCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Reference" push button */
@@ -394,11 +394,11 @@ CreateHelpMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 90, "Reference")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++]= XmCreatePushButtonGadget(help_pane, "reference", al, ac );
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   HelpReferenceCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "On Item" push button */
@@ -406,11 +406,11 @@ CreateHelpMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 92, "On Item")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++]= XmCreatePushButtonGadget(help_pane, "onItem", al, ac );
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   HelpOnItemCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create Separator*/
@@ -422,11 +422,11 @@ CreateHelpMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 94, "Using Help")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++]= XmCreatePushButtonGadget(help_pane, "usingHelp", al, ac );
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   HelpUsingHelpCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create Separator */
@@ -438,11 +438,11 @@ CreateHelpMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 96, "About Text Editor")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++]= XmCreatePushButtonGadget(help_pane, "about", al, ac );
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   HelpAboutCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     XtManageChildren(WidgList, count);
@@ -484,13 +484,13 @@ CreateFileMenu(
     ac = 0;
     XtSetArg (al[ac], XmNsubMenuId, file_pane);  ac++;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     cascade = XmCreateCascadeButtonGadget (pPad->menu_bar, "File", al, ac);
     XtAddCallback (cascade, XmNcascadingCallback, 
 		   FileCascadingCB, (XtPointer) pPad);
     XtAddCallback(cascade, XmNhelpCallback, HelpFileCB, pPad);
     XtManageChild (cascade);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "New" push button */
@@ -498,12 +498,12 @@ CreateFileMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 18, "New")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "new", al, ac);
     pWidg->newBtn = WidgList[count-1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   FileNewCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Open..." push button */
@@ -511,12 +511,12 @@ CreateFileMenu(
     tmpStr=XmStringCreateLocalized(((char *)GETMESSAGE(11, 20, "Open...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "open", al, ac);
     pWidg->openBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   FileOpenCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Include..." push button */
@@ -524,12 +524,12 @@ CreateFileMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 22, "Include...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "include", al, ac);
     pWidg->includeBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   FileIncludeCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create save/print separator */
@@ -545,12 +545,12 @@ CreateFileMenu(
     pPad->fileStuff.saveNeededBtnLabel = 
       XmStringCreateLocalized(((char *)GETMESSAGE(11, 73, "Save (needed)")));
     ac = 0;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "save", al, ac);
     pWidg->saveBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   FileSaveCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
 
     /* -----> create "Save As..." push button
      *        (its label/mnemonic are set later in SetSaveAsLabelAndDialog()
@@ -566,12 +566,12 @@ CreateFileMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 28, "Print...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "print", al, ac);
     pWidg->printBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   FileXpPrintCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create close/exit separator */
@@ -583,13 +583,13 @@ CreateFileMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 30, "Close")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget (file_pane, "close", al, ac);
     pPad->ExitWid = WidgList[count-1];
     pWidg->exitBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   FileExitCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> manage the all "File" menu buttons */
@@ -634,11 +634,11 @@ CreateEditMenu(
     ac = 0;
     XtSetArg(al[ac], XmNsubMenuId, edit_pane); ac++;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     cascade= XmCreateCascadeButtonGadget(pPad->menu_bar, "Edit", al, ac);
     XtAddCallback(cascade, XmNhelpCallback,HelpEditCB, pPad);
     XtManageChild(cascade);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Undo" push button */
@@ -646,12 +646,12 @@ CreateEditMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 34, "Undo")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget(edit_pane, "undo", al, ac);
     pWidg->undoBtn = WidgList[count - 1];
     XtAddCallback(WidgList[count-1], XmNactivateCallback, 
 		  EditUndoCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create undo separator */
@@ -663,12 +663,12 @@ CreateEditMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 36, "Cut")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget(edit_pane, "cut", al, ac);
     pWidg->cutBtn = WidgList[count - 1];
     XtAddCallback(WidgList[count-1], XmNactivateCallback, 
 		  EditCutCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Copy" push button */
@@ -676,12 +676,12 @@ CreateEditMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 38, "Copy")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget(edit_pane, "copy", al, ac);
     pWidg->copyBtn = WidgList[count - 1];
     XtAddCallback(WidgList[count-1], XmNactivateCallback, 
 		  EditCopyCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Paste" push button */
@@ -689,12 +689,12 @@ CreateEditMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 40, "Paste")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget(edit_pane, "paste", al, ac);
     pWidg->pasteBtn = WidgList[count - 1];
     XtAddCallback(WidgList[count-1], XmNactivateCallback, 
 		  EditPasteCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Clear" push button */
@@ -702,12 +702,12 @@ CreateEditMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 42, "Clear")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget(edit_pane, "clear", al, ac);
     pWidg->clearBtn = WidgList[count - 1];
     XtAddCallback(WidgList[count-1], XmNactivateCallback, 
 		  EditClearCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Delete" push button */
@@ -715,12 +715,12 @@ CreateEditMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 44,"Delete")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget (edit_pane, "delete", al, ac);
     pWidg->deleteBtn = WidgList[count - 1];
     XtAddCallback(WidgList[count-1], XmNactivateCallback, 
 		  EditDeleteCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> XXX - create "Select All" push button */
@@ -728,12 +728,12 @@ CreateEditMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 102, "Select All")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget(edit_pane, "selectAll", al, ac);
     pWidg->selectAllBtn = WidgList[count - 1];
     XtAddCallback(WidgList[count-1], XmNactivateCallback, 
 		  SelectAllCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create find/change separator */
@@ -745,13 +745,13 @@ CreateEditMenu(
     tmpStr =XmStringCreateLocalized(((char *)GETMESSAGE(11, 104,"Find/Change...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = 
 		XmCreatePushButtonGadget(edit_pane, "findChange", al, ac);
     pWidg->findChangeBtn = WidgList[count - 1];
     XtAddCallback(WidgList[count-1], XmNactivateCallback, 
 		  FindChangeCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Check Spelling" push button  */
@@ -759,13 +759,13 @@ CreateEditMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 106, "Check Spelling...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget(edit_pane, "checkSpelling", 
 						     al, ac);
     pWidg->checkSpellingBtn = WidgList[count - 1];
     XtAddCallback(WidgList[count-1], XmNactivateCallback, 
 		      CheckSpellingCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> manage all the "Edit" menu buttons */
@@ -801,12 +801,12 @@ CreateFormatMenu(
     ac = 0;
     XtSetArg (al[ac], XmNsubMenuId, format_pane);  ac++;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     cascade= XmCreateCascadeButtonGadget (pPad->menu_bar, "format", al, ac);
     XtAddCallback(cascade, XmNhelpCallback,HelpFormatCB, pPad);
     pPad->formatStuff.widgets.formatBtn = cascade;
     XtManageChild (cascade);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Settings..." button */
@@ -814,12 +814,12 @@ CreateFormatMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 54, "Settings...")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] =
                    XmCreatePushButtonGadget (format_pane, "settings", al, ac);
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   FormatCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Paragraph" button */
@@ -827,12 +827,12 @@ CreateFormatMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 56, "Paragraph")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] =
                   XmCreatePushButtonGadget (format_pane, "paragraph", al, ac);
     XtAddCallback (WidgList[count-1], XmNactivateCallback,
 		   FormatParaCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "All" button */
@@ -840,11 +840,11 @@ CreateFormatMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 58, "All")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreatePushButtonGadget (format_pane, "all", al, ac);
     XtAddCallback (WidgList[count-1], XmNactivateCallback, 
 		   FormatAllCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> manage the all "Format" menu buttons */
@@ -882,12 +882,12 @@ CreateOptionsMenu(
     ac = 0;
     XtSetArg(al[ac], XmNsubMenuId, options_pane);  ac++;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     cascade= XmCreateCascadeButtonGadget (pPad->menu_bar, "options", al, ac);
     XtAddCallback(cascade, XmNhelpCallback,HelpOptionsCB, pPad);
     pPad->optionsStuff.widgets.optionsBtn = cascade;
     XtManageChild (cascade);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Overstrike" toggle button */
@@ -895,14 +895,14 @@ CreateOptionsMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 62, "Overstrike")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     XtSetArg(al[ac], XmNvisibleWhenOff, True); ac++;
     XtSetArg(al[ac], XmNset, pPad->xrdb.overstrike); ac++;
     WidgList[count++] = XmCreateToggleButton (options_pane, "overstrike", al, ac);
     pWidg->overstrikeBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNvalueChangedCallback, 
 		   OverstrikeCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Wrap To Fit" toggle button */
@@ -910,14 +910,14 @@ CreateOptionsMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 112, "Wrap To Fit")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     XtSetArg(al[ac], XmNvisibleWhenOff, True); ac++;
     XtSetArg(al[ac], XmNset, pPad->xrdb.wordWrap); ac++;
     WidgList[count++] = XmCreateToggleButton (options_pane, "wordWrap", al, ac);
     pWidg->wordWrapBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNvalueChangedCallback, 
 		   WordWrapCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Status Line" toggle button */
@@ -925,14 +925,14 @@ CreateOptionsMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 66, "Status Line")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     XtSetArg(al[ac], XmNvisibleWhenOff, True); ac++;
     XtSetArg(al[ac], XmNset, pPad->xrdb.statusLine); ac++;
     WidgList[count++] = XmCreateToggleButton (options_pane, "statusLine", al, ac);
     pWidg->statusLineBtn = WidgList[count - 1];
     XtAddCallback (WidgList[count-1], XmNvalueChangedCallback, 
 		   StatusLineCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Dropped Files" submenu */
@@ -949,10 +949,10 @@ CreateOptionsMenu(
     ac = 0;
     XtSetArg(al[ac], XmNsubMenuId, dropped_pane);  ac++;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     WidgList[count++] = XmCreateCascadeButtonGadget(options_pane, "droppedFiles", al, ac);
     pWidg->droppedFilesBtn = WidgList[count - 1];
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     /* -----> create "Dropped Files" radio options */
@@ -960,42 +960,42 @@ CreateOptionsMenu(
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 117, "Automatic")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     XtSetArg(al[ac], XmNvisibleWhenOff, True); ac++;
     XtSetArg(al[ac], XmNset, (pPad->xrdb.droppedFilesMode == DtDROP_FILES_AUTO)); ac++;
     dropped_widgets[0] = XmCreateToggleButtonGadget(dropped_pane, "droppedAuto", al, ac);
     pWidg->droppedFilesAutoBtn = dropped_widgets[0];
     XtAddCallback(dropped_widgets[0], XmNvalueChangedCallback,
                   DroppedFilesModeCB, (XtPointer)pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     mnemonic = XtNewString(((char *)GETMESSAGE(11, 118, "P")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 119, "Insert Paths")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     XtSetArg(al[ac], XmNvisibleWhenOff, True); ac++;
     XtSetArg(al[ac], XmNset, (pPad->xrdb.droppedFilesMode == DtDROP_FILES_PATHS)); ac++;
     dropped_widgets[1] = XmCreateToggleButtonGadget(dropped_pane, "droppedPaths", al, ac);
     pWidg->droppedFilesPathsBtn = dropped_widgets[1];
     XtAddCallback(dropped_widgets[1], XmNvalueChangedCallback,
                   DroppedFilesModeCB, (XtPointer)pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     mnemonic = XtNewString(((char *)GETMESSAGE(11, 120, "C")));
     tmpStr = XmStringCreateLocalized(((char *)GETMESSAGE(11, 121, "Insert Content")));
     ac = 0;
     XtSetArg(al[ac], XmNlabelString, tmpStr); ac++;
-    XtSetArg(al[ac], XmNmnemonic, mnemonic[0]); ac++;
+    XtSetArg(al[ac], XmNmnemonic, mnemonic ? mnemonic[0] : '\0'); ac++;
     XtSetArg(al[ac], XmNvisibleWhenOff, True); ac++;
     XtSetArg(al[ac], XmNset, (pPad->xrdb.droppedFilesMode == DtDROP_FILES_CONTENT)); ac++;
     dropped_widgets[2] = XmCreateToggleButtonGadget(dropped_pane, "droppedContent", al, ac);
     pWidg->droppedFilesContentBtn = dropped_widgets[2];
     XtAddCallback(dropped_widgets[2], XmNvalueChangedCallback,
                   DroppedFilesModeCB, (XtPointer)pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     XtManageChildren(dropped_widgets, 3);
@@ -1285,7 +1285,7 @@ CreatePopupMenu( Editor *pPad )
     XtSetArg(al[ac], XmNsubMenuId, fileMenu); ac++;
     XtSetArg(al[ac], XmNmnemonic, mnemonic); ac++;
     popupBtns[i++] = XmCreateCascadeButtonGadget(pPad->popup, "File", al, ac);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
 
     mnemonic = XtNewString(((char *)GETMESSAGE(11, 17, "N")));
@@ -1297,7 +1297,7 @@ CreatePopupMenu( Editor *pPad )
     XtAddCallback(button, XmNactivateCallback, callback, callData);
     XtAddCallback (popupBtns[i], XmNactivateCallback, 
 		   FileNewCB, (XtPointer) pPad);
-    free(mnemonic);
+    XtFree(mnemonic);
     XmStringFree(tmpStr);
     i++;
 

@@ -561,7 +561,7 @@ util_derive_name_from_path(
             name = fullpath;
  
         len = strlen(name) - (AB_EXT_LENGTH + 1);
-        strncpy(objname, name, len);
+        memcpy(objname, name, len);
         objname[len] = '\0';
     }
     else
@@ -594,7 +594,7 @@ util_check_name(
     if ( util_file_name_has_ab_extension(name) )
     {
 	len = strlen(name) - (AB_EXT_LENGTH + 1);
-	strncpy(new_name, name, len);
+	memcpy(new_name, name, len);
 	new_name[len] = '\0'; 
     }
     else

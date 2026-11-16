@@ -73,13 +73,7 @@ def extract_function(text: str, signature: str) -> str:
 def main() -> int:
     here = Path(__file__).resolve().parent
     dtwm_dir = here.parent
-    repo_root = subprocess.run(
-        ["git", "-C", str(here), "rev-parse", "--show-toplevel"],
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
-    repo_root = Path(repo_root)
+    repo_root = here.parents[3]
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

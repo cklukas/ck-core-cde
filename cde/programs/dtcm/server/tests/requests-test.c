@@ -600,7 +600,8 @@ static void case_log_appointment_fields(void)
 
 static void case_log_access_list(void)
 {
-  char path[PATH_MAX + 64], *text, *who = repeat('w', 6000), *expected;
+  char path[PATH_MAX + 64], *text, *who = repeat('w', 6000);
+  char expected[6100];
   int fd;
   Access_Entry_4 second = { "second", access_read_4, nullptr };
   Access_Entry_4 first;
@@ -614,17 +615,16 @@ static void case_log_access_list(void)
   close(fd);
 
   text = slurp(path);
-  expected = malloc(6100);
-  sprintf(expected, "(access read \"%s\" \"second\" )\n", who);
+  snprintf(expected, sizeof(expected), "(access read \"%s\" \"second\" )\n", who);
   CHECK(text != nullptr && strcmp(text, expected) == 0);
   free(text);
-  free(expected);
   free(who);
 }
 
 static void case_log_entry_table(void)
 {
-  char path[PATH_MAX + 64], *text, *name = repeat('n', 6000), *expected;
+  char path[PATH_MAX + 64], *text, *name = repeat('n', 6000);
+  char expected[6200];
   char *names[3];
   int types[3], fd;
 
@@ -640,13 +640,11 @@ static void case_log_entry_table(void)
   close(fd);
 
   text = slurp(path);
-  expected = malloc(6200);
-  sprintf(expected,
-	  "(entrytable (1 \"%s\" \"5:string\")\n(2 \"short\" \"4:uint32\")\n)\n",
-	  name);
+  snprintf(expected, sizeof(expected),
+	   "(entrytable (1 \"%s\" \"5:string\")\n(2 \"short\" \"4:uint32\")\n)\n",
+	   name);
   CHECK(text != nullptr && strcmp(text, expected) == 0);
   free(text);
-  free(expected);
   free(name);
 }
 

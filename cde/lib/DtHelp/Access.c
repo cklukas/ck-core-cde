@@ -1473,12 +1473,15 @@ _DtHelpCeTracePathName (char *path)
 	     */
 	    if (*linkPath == '/')
 	      {
-		if (strlen (linkPath) + strlen (tempPath) >= sizeof (newPath))
+		size_t link_len = strlen (linkPath);
+		size_t tail_len = strlen (tempPath);
+		if (link_len + tail_len >= sizeof (newPath))
 		  {
 		    errno = ENAMETOOLONG;
 		    return nullptr;
 		  }
-		snprintf (newPath, sizeof (newPath), "%s%s", linkPath, tempPath);
+		memcpy (newPath, linkPath, link_len);
+		memcpy (newPath + link_len, tempPath, tail_len + 1);
 	      }
 	    else
 	      {

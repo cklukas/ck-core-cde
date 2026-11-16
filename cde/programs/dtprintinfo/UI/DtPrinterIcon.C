@@ -281,7 +281,7 @@ char *DtPrinterIcon::CreateActionFile()
       snprintf(filename, MAXPATHLEN, "/etc/dt/appconfig/types/%s", lang);
       if (stat(filename, &statbuff) < 0)
        {
-         snprintf(buf, MAXPATHLEN, "/bin/mkdir -p %s", filename);
+         snprintf(buf, MAXPATHLEN, "/bin/mkdir -p %.*s", MAXPATHLEN - 16, filename);
          if (system(buf) != 0)
           {
             // the file or directory is created below; its error is reported there

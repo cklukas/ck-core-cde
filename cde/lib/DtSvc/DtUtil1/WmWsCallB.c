@@ -452,10 +452,11 @@ _DtWsmSelectionNameForScreen (
 	int			scr)
 {
     String sName;
+    size_t sz = strlen(DtWSM_TOOL_CLASS) + 16;
 
-    sName = (String) XtMalloc (strlen(DtWSM_TOOL_CLASS) + 4 + 1);
+    sName = (String) XtMalloc (sz);
 
-    snprintf ((char *)sName, strlen(DtWSM_TOOL_CLASS) + 4 + 1, "%s_%d", DtWSM_TOOL_CLASS, (scr % 1000));
+    snprintf ((char *)sName, sz, "%s_%d", DtWSM_TOOL_CLASS, (scr % 1000));
 
     return (sName);
 } /* END OF FUNCTION _DtWsmSelectionNameForScreen */

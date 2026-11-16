@@ -156,11 +156,15 @@ char *dbfpath	/* one element from DBFPATH, or NULL for no path */
    /* Add only the drive specification and directory component of the
       path supplied in dbname */
    if ((dbname = remfile(dbname)) != nullptr) {
-      if (strlen(path_str) + strlen(dbname) >= FILENMLEN)
+      size_t db_len = strlen(dbname);
+      const char *rem = remdrv(path_str);
+      size_t rem_len = strlen(rem);
+      if (db_len + rem_len >= FILENMLEN)
 	 return(db_status = S_NAMELEN);
       /* Construct dbname + schema and place it in the o/p string */
-      snprintf(filespec, sizeof(filespec), "%s%s", dbname, remdrv(path_str));
-      memcpy(path_str, filespec, strlen(filespec) + 1);
+      memcpy(filespec, dbname, db_len);
+      memcpy(filespec + db_len, rem, rem_len + 1);
+      memcpy(path_str, filespec, db_len + rem_len + 1);
       if (isabs(dbname)) return (db_status = S_OKAY);
    }
 

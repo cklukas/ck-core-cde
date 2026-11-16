@@ -799,9 +799,11 @@ write_project_files(
 
     sprintf(headerFileName, "%s.h", obj_get_name(project));
     strcpy(headerDefineName, abmfP_get_define_from_file_name(headerFileName));
-    snprintf(headerBakFileName, sizeof(headerBakFileName), "%s.BAK", headerFileName);
+    snprintf(headerBakFileName, sizeof(headerBakFileName), "%.*s.BAK",
+             (int)(sizeof(headerBakFileName) - 5), headerFileName);
     sprintf(stubsFileName, "%s.c", obj_get_name(project));
-    snprintf(stubsBakFileName, sizeof(stubsBakFileName), "%s.BAK", stubsFileName);
+    snprintf(stubsBakFileName, sizeof(stubsBakFileName), "%.*s.BAK",
+             (int)(sizeof(stubsBakFileName) - 5), stubsFileName);
 
 
     /***** PROJECT HEADER FILE *****/

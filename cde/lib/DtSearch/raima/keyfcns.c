@@ -378,7 +378,7 @@ F_ADDR  *child   /* child ptr of located key */
 )
 {
    int cmp = 0, i = 0, l, u, slot_pos = 0;
-   char *node_slot_ptr = nullptr;
+   char *node_slot_ptr = &node->slots[0];
 
    /* perform binary search on node */
    l = 0;

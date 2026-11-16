@@ -144,6 +144,8 @@ def main() -> int:
             "Dt/HelpDialog.h",
         ):
             (inc_dir / ui_hdr).write_text("/* stub */\n")
+        for src_file in ("DtTt.h", "DtTt.C"):
+            shutil.copy2(ttsnoop_dir / src_file, inc_dir / src_file)
 
         bin_path = scratch_root / "check-ttsnoop"
         compile_cmd = [
@@ -156,6 +158,7 @@ def main() -> int:
             f"-I{inc_dir}",
             f"-I{ttsnoop_dir}",
             f"-I{repo_root / 'cde/include'}",
+            *(["-I/usr/include/tirpc"] if pathlib.Path("/usr/include/tirpc").is_dir() else []),
             str(test_src),
             "-o",
             str(bin_path),

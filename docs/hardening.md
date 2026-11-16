@@ -25,42 +25,44 @@ scripts/warning-baseline.py compare make.log baseline.json --depth 2 --strip "$P
 
 `compare` fails when any component and class has more warnings than the
 baseline, so the baseline is a ratchet: counts may only fall. The `list` mode
-prints the individual warnings of chosen classes for triage. Warnings are not
-promoted to errors; a class becomes `-Werror` for a component once its count
-reaches zero.
+prints the individual warnings of chosen classes for triage. Once a defect
+warning class reaches zero across the entire tree, `--enable-hardening` promotes
+it to `-Werror=<class>` in `cde/m4/ck_hardening.m4`.
 
-## Baseline 2026-11-04
+## Baseline 2026-11-04 and 2026-11-16 defect-class burndown
 
 GCC 14.2 on Debian 13 arm64, `-O2 -g0`, `--enable-hardening`, six jobs, against
-CK Core Motif 20a1461b1 built with the same profile. The
-build took 384 seconds. The machine-readable
-record is
+CK Core Motif 20a1461b1 (2026-11-04 baseline) and CK Core Motif 2d362d5d4
+(2026-11-16 defect-class burndown) built with the same profile. The
+machine-readable starting record is
 `validation/2026-11-04-hardening-baseline.json`.
 
-The build reports 10,354 unique warnings.
-1,126 of them belong to classes that
-point at memory-safety, lifetime or error-handling defects; the rest are style
-and signedness classes such as unused variables, `-Wformat-nonliteral`,
-`-Wwrite-strings` and `-Wsign-compare`.
+The 2026-11-04 baseline reported 10,354 unique warnings, with 1,126 in defect
+classes pointing at memory-safety, lifetime or error-handling defects. After the
+2026-11-16 burndown, all twelve memory-safety, lifetime, uninitialized-read,
+bounds, truncation and ignored-result classes reached zero across the entire
+tree and are enforced with `-Werror=...` under `--enable-hardening`; total
+unique warnings dropped to 9,094 and remaining defect-class warnings dropped to
+368 (confined to the four cast and control-flow style classes).
 
-| Warning class | Unique warnings |
-|---|---:|
-| `-Wunused-result` | 389 |
-| `-Wcast-function-type` | 221 |
-| `-Wnull-dereference` | 116 |
-| `-Wimplicit-fallthrough` | 108 |
-| `-Wmisleading-indentation` | 106 |
-| `-Wformat-truncation` | 52 |
-| `-Wreturn-type` | 36 |
-| `-Wmaybe-uninitialized` | 21 |
-| `-Waddress` | 21 |
-| `-Wstringop-truncation` | 17 |
-| `-Wuse-after-free` | 13 |
-| `-Wstringop-overflow` | 9 |
-| `-Wformat-overflow` | 8 |
-| `-Warray-bounds` | 6 |
-| `-Wrestrict` | 2 |
-| `-Wfree-nonheap-object` | 1 |
+| Warning class | 2026-11-04 baseline | 2026-11-16 count | `--enable-hardening` gate |
+|---|---:|---:|---|
+| `-Wunused-result` | 389 | 0 | `-Werror=unused-result` |
+| `-Wcast-function-type` | 221 | 148 | ratchet |
+| `-Wnull-dereference` | 116 | 0 | `-Werror=null-dereference` |
+| `-Wimplicit-fallthrough` | 108 | 98 | ratchet |
+| `-Wmisleading-indentation` | 106 | 104 | ratchet |
+| `-Wformat-truncation` | 52 | 0 | `-Werror=format-truncation` |
+| `-Wreturn-type` | 36 | 0 | `-Werror=return-type` |
+| `-Wmaybe-uninitialized` | 21 | 0 | `-Werror=maybe-uninitialized` |
+| `-Waddress` | 21 | 18 | ratchet |
+| `-Wstringop-truncation` | 17 | 0 | `-Werror=stringop-truncation` |
+| `-Wuse-after-free` | 13 | 0 | `-Werror=use-after-free` |
+| `-Wstringop-overflow` | 9 | 0 | `-Werror=stringop-overflow` |
+| `-Wformat-overflow` | 8 | 0 | `-Werror=format-overflow` |
+| `-Warray-bounds` | 6 | 0 | `-Werror=array-bounds` |
+| `-Wrestrict` | 2 | 0 | `-Werror=restrict` |
+| `-Wfree-nonheap-object` | 1 | 0 | `-Werror=free-nonheap-object` |
 
 cppcheck reports 1,380 messages in product code (239 errors, 969 warnings, 167 portability). The error identifiers are `memleakOnRealloc` 73, `uninitvar` 69, `memleak` 19, `missingReturn` 16, `legacyUninitvar` 15, `nullPointerArithmeticOutOfMemory` 11, `shiftTooManyBitsSigned` 10, `nullPointer` 9. Test and demo directories are excluded, as are cppcheck's own
 analysis-depth notices and parse failures.

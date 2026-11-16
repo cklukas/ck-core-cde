@@ -2491,10 +2491,18 @@ RegisterPushRecallClients (
 	}
     }
 
-    if (i < wmGD.numScreens)
+    if (i < wmGD.numScreens && pSD != nullptr)
     {
 	pSD->pPRCD = (struct _WmFpPushRecallClientData *) pPRCD;
 	pSD->numPushRecallClients = count;
+
+	for (i = 0; i < pSD->numPushRecallClients ; i++, pPRCD++)
+	{
+	    /*
+	     * Initialize data in each slot
+	     */
+	    pPRCD->tvTimeout.tv_sec = 0;
+	}
     }
 #ifdef DEBUG
     else
@@ -2502,14 +2510,6 @@ RegisterPushRecallClients (
 	fprintf (stderr, "Couldn't match wPanelist to screen data\n");
     }
 #endif /* DEBUG */
-
-    for (i = 0; i < pSD->numPushRecallClients ; i++, pPRCD++)
-    {
-	/*
-	 * Initialize data in each slot
-	 */
-	pPRCD->tvTimeout.tv_sec = 0;
-    }
 
 } /* END OF FUNCTION RegisterPushRecallClients */
 

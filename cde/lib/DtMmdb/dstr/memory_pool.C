@@ -49,6 +49,7 @@
 
 
 #include "dstr/memory_pool.h"
+#include <new>
 
 #define NUM_CHUNKS 50
 
@@ -90,9 +91,7 @@ dlist* chunk_carrier::init_ptrs()
    for ( int i=0; i<max_chunks; i++ ) {
 
       chunk_manage_record_t* x = 
-        (chunk_manage_record_t*)(carrier_ptr + offset);
-
-      x -> chunk_carrier_ptr = this;
+        new (carrier_ptr + offset) chunk_manage_record_t(this);
 
       w -> insert_as_tail(x);
 
@@ -251,8 +250,7 @@ debug(cerr, sz);
       
    } else {
        char* raw = new char[sizeof(chunk_manage_record_t) + sz];
-       chunk_manage_record_t* hdr = (chunk_manage_record_t*)raw;
-       hdr -> chunk_carrier_ptr = 0;
+       (void) new (raw) chunk_manage_record_t(0);
        return raw + sizeof(chunk_manage_record_t);
    }
 //MESSAGE(cerr, "=======");

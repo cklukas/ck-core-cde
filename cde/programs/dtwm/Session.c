@@ -863,10 +863,8 @@ SessionDeleteAll(void)
    DIR *dir;
    struct dirent *entry;          /* directory entry */
    char srcname[MAX_PATH];
-   int srclen;
    const char * home_dir;
    char * fp_dir;
-   int i;
 
 
    /*  Get the home directory used to build the path to the session file.  */

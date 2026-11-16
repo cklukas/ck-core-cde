@@ -1456,7 +1456,7 @@ replace_string_shorter(STRING buf, STRING subStr, STRING replaceStr)
 	memmove(subStrPtr+replaceStrLen, 
 		subStrPtr+subStrLen,
 		((int)(bufEnd - (subStrPtr+subStrLen))) + 1);
-	strncpy(subStrPtr, replaceStr, replaceStrLen);	/* no NULL! */
+	memcpy(subStrPtr, replaceStr, replaceStrLen);	/* no NULL! */
 	bufPtr = subStrPtr+replaceStrLen;
 	bufEnd -= replaceDiffLen;
 	++numReplaced;
@@ -1917,13 +1917,17 @@ abmfP_prepare_tree(ABObj project)
 		if (obj_is_intra_module(obj) &&
 		    !obj_is_project(obj_get_from(obj)))
 		{
-		    strlist_add_str(mfobj_get_module_data(module)->callbacks, 
-			funcName, (void *)obj);
+		    CGenModuleData modData = mfobj_get_module_data(module);
+		    if (modData != nullptr)
+			strlist_add_str(modData->callbacks, 
+			    funcName, (void *)obj);
 		}
 		else
 		{
-		    strlist_add_str(mfobj_get_proj_data(project)->callbacks,
-			funcName, (void *)obj);
+		    CGenProjData projData = mfobj_get_proj_data(project);
+		    if (projData != nullptr)
+			strlist_add_str(projData->callbacks,
+			    funcName, (void *)obj);
 
 		    if (obj_is_project(obj_get_from(obj)))
 		    	mfobj_set_flags(obj, CGenFlagWriteDefToProjFile);
@@ -1942,9 +1946,9 @@ abmfP_prepare_tree(ABObj project)
 		     */
 		    int		str_index = 0;
 		    ABObj	originalConn = nullptr;
-		    StringList	moduleCallbacks = 
-				    mfobj_get_module_data(callbackScopeObj)
-					->callbacks;
+		    CGenModuleData scopeModData = mfobj_get_module_data(callbackScopeObj);
+		    CGenProjData projData = mfobj_get_proj_data(project);
+		    StringList	moduleCallbacks = scopeModData ? scopeModData->callbacks : nullptr;
 
 		    str_index = 
 			strlist_get_str_index(moduleCallbacks, funcName);
@@ -1956,9 +1960,10 @@ abmfP_prepare_tree(ABObj project)
 				CGenFlagWriteDefToProjFile);
 		    }
 		    strlist_remove_index(moduleCallbacks, str_index);
-		    strlist_add_str(
-			mfobj_get_proj_data(project)->callbacks,
-			funcName, (void *)originalConn);
+		    if (projData != nullptr)
+			strlist_add_str(
+			    projData->callbacks,
+			    funcName, (void *)originalConn);
 		    mfobj_set_flags(obj, CGenFlagWriteDefToProjFile);
 		}
 
@@ -1977,8 +1982,8 @@ abmfP_prepare_tree(ABObj project)
 	    {
 		obj->type = AB_TYPE_LABEL;
 		parent = abmfP_parent(obj);
-		if (   obj_is_menu(parent)
-		    || obj_is_menu_ref(parent))
+		if (parent != nullptr &&
+		    (obj_is_menu(parent) || obj_is_menu_ref(parent)))
 		{
 		    obj->part_of = abmfP_parent(obj);
 		    parent->part_of = parent;
@@ -1991,13 +1996,19 @@ abmfP_prepare_tree(ABObj project)
 		obj_set_class_name(obj, istr_string(abmfP_xmMenuShell));
 	    }
 	} /* obj_get_write_me() */
-	if ((!(mfobj_get_proj_data(project)->has_ui_obj)) && obj_is_ui(obj))
 	{
-	    mfobj_get_proj_data(project)->has_ui_obj = TRUE;
-	}
-	if (obj_get_type(obj) == AB_TYPE_TERM_PANE)
-	{
-	    mfobj_get_proj_data(project)->has_terminal = TRUE;
+	    CGenProjData projData = mfobj_get_proj_data(project);
+	    if (projData != nullptr)
+	    {
+		if ((!(projData->has_ui_obj)) && obj_is_ui(obj))
+		{
+		    projData->has_ui_obj = TRUE;
+		}
+		if (obj_get_type(obj) == AB_TYPE_TERM_PANE)
+		{
+		    projData->has_terminal = TRUE;
+		}
+	    }
 	}
     } /* trav modules */
     trav_close(&allTrav);
@@ -2135,7 +2146,8 @@ abmfP_create_obj_data_for_module(ABObj objInModule)
     {
 	return -1;
     }
-    mfobj_get_module_data(module)->children_data = objData;
+    if (mfobj_get_module_data(module) != nullptr)
+	mfobj_get_module_data(module)->children_data = objData;
 
     return 0;
 }

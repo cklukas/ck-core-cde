@@ -172,7 +172,8 @@ def extract(source, work, include_workers=True):
     ]
     definitions += re.findall(r"(?m)^#define[ \t]+PIPEMSG_\w+[ \t]+[^\r\n]+", text["FileOp.c"])
     definitions += [structure(text["Common.h"], "BufferInfo"),
-                    structure(text["FileOp.c"], "DirUpdate")]
+                    structure(text["FileOp.c"], "DirUpdate"),
+                    "#include <signal.h>\n#ifndef _DtSignal\n#define _DtSignal signal\n#endif"]
     (work / "transfer-definitions.inc").write_text("\n\n".join(definitions) + "\n")
 
     functions = [("FileManip.c", name) for name in

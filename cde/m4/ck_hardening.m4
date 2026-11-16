@@ -60,6 +60,18 @@ AC_DEFUN([CK_HARDENING_INIT],
    _CK_HARDENING_FLAG([-Wno-unused-parameter], [ck_hardening_flags])
    _CK_HARDENING_FLAG([-Wformat=2], [ck_hardening_flags])
    _CK_HARDENING_FLAG([-Wnull-dereference], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=return-type], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=use-after-free], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=free-nonheap-object], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=restrict], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=format-overflow], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=stringop-overflow], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=stringop-truncation], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=maybe-uninitialized], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=array-bounds], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=unused-result], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=format-truncation], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=null-dereference], [ck_hardening_flags])
    _CK_HARDENING_FLAG([-fstack-protector-strong], [ck_hardening_flags])
    AS_CASE([" $CFLAGS "],
      [*" -O1 "*|*" -O2 "*|*" -O3 "*|*" -Os "*|*" -Og "*|*" -Ofast "*],

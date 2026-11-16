@@ -652,7 +652,7 @@ cm_tty_lookup(nl_catd catd, CSA_session_handle target, int version, char *date, 
 				format_time(end_tick, dt, end_buf);
 			else
 				*end_buf = '\0';
-			snprintf(buf, sizeof(buf), "%s%c%7s ", start_buf,
+			snprintf(buf, sizeof(buf), "%.64s%c%7.64s ", start_buf,
 				(*end_buf ? '-' : ' '), end_buf);
 		}
 

@@ -2777,6 +2777,7 @@ destroy_links_to_file(STRING fileName)
     }
 
     closedir(dir);
+    dir = nullptr;
 
     /*
      * We've built a list of all filenames in the current directory that

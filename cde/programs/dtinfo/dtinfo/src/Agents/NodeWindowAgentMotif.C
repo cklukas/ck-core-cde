@@ -5229,7 +5229,8 @@ NodeWindowAgent::detach(UAS_Pointer<Graphic> &gr)
 
   SegClientData* pSCD = (SegClientData*)(grseg->client_use);
   UAS_Pointer<Graphic> curr_gr = (Graphic*)pSCD->GraphicHandle();
-  curr_gr->set_detached(TRUE);
+  if ((Graphic*)curr_gr != NULL)
+    curr_gr->set_detached(TRUE);
   //curr_gr->set_agent(gr->get_agent());
   
 }
@@ -5246,7 +5247,8 @@ NodeWindowAgent::reattach(UAS_Pointer<Graphic> &gr)
 
   SegClientData* pSCD = (SegClientData*)(grseg->client_use);
   UAS_Pointer<Graphic> nodeview_gr = (Graphic*)pSCD->GraphicHandle();
-  nodeview_gr->set_detached(FALSE);
+  if ((Graphic*)nodeview_gr != NULL)
+    nodeview_gr->set_detached(FALSE);
   //curr_gr->set_agent(gr->get_agent());
   //replace (gr);
   replace (nodeview_gr);

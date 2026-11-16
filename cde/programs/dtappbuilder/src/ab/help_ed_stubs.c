@@ -103,7 +103,7 @@ typedef struct HELP_OBJ_TYPE_INFO_REC {
 	int		subtype;
 } HelpObjTypeInfoRec;
 static HelpObjTypeInfoRec HelpObjTypeInfo = {
-	((AB_OBJECT_TYPE)nullptr), 0,
+	((AB_OBJECT_TYPE)0), 0,
 };
 
 typedef struct HELP_EDITOR_SETTINGS {
@@ -405,7 +405,7 @@ ab_set_help_obj(
 	    HelpObjTypeInfo.subtype = obj_get_subtype(HelpObj);
 	}
 	else {
-	    HelpObjTypeInfo.type = (AB_OBJECT_TYPE) nullptr;
+	    HelpObjTypeInfo.type = (AB_OBJECT_TYPE) 0;
 	    HelpObjTypeInfo.subtype = AB_NO_SUBTYPE;
 	}
 }

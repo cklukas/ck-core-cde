@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <new>
 #include <vector>
 
 using namespace std;
@@ -122,8 +123,7 @@ public:
         int offset = 0;
         for (int i = 0; i < max_chunks; i++) {
             chunk_manage_record_t *x =
-                (chunk_manage_record_t *)(carrier_ptr + offset);
-            x->chunk_carrier_ptr = this;
+                new (carrier_ptr + offset) chunk_manage_record_t(this);
             w->insert_as_tail(x);
             offset += (chunk_sz + (int)sizeof(chunk_manage_record_t));
         }

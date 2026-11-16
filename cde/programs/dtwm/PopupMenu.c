@@ -1351,7 +1351,8 @@ PopupMenu (Widget    w,
 
       UpdateMainControlMenu (control_data);
 
-      if (control_data->subpanel_data != nullptr &&			
+      if (control_data != nullptr &&
+          control_data->subpanel_data != nullptr &&			
           control_data != control_data->subpanel_data->default_control)
       {
          subpanel_data = control_data->subpanel_data;

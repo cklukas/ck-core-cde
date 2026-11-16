@@ -191,13 +191,10 @@ BAD_INPUT:
     lastlink = dblist;
     while (db != nullptr) {
 	if (db->path == nullptr) {
+	    extern void _DtSearchAddNoMemMessage(const char *, size_t);
 	    db->path = strdup ("");
 	    if (db->path == nullptr) {
-		sprintf (sprintbuf, CATGETS(dtsearch_catd, MS_misc, 3,
-		    "*** %sOut of Memory at %s asking for %lu bytes! ***\n"),
-		    (aa_argv0 != nullptr)? aa_argv0 : "", PROGNAME "130",
-		    (unsigned long) 1);
-		DtSearchAddMessage (sprintbuf);
+		_DtSearchAddNoMemMessage (PROGNAME "130", 1);
 		goto DELETE_DB;
 	    }
 	}

@@ -161,7 +161,7 @@ ABObjList	abmfP_find_refs_to(ABObj obj);
  * can avoid the function call, first (which is most of the time).
  */
 #define abmfP_parent(obj) \
-	((obj)->parent == NULL? \
+	(((obj) == NULL || (obj)->parent == NULL)? \
 	    NULL \
 	: \
 	    obj_has_flag((obj)->parent, NoCodeGenFlag)? \

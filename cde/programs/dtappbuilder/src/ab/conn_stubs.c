@@ -3747,7 +3747,7 @@ update_on_src_type_change(
     AB_FUNC_TYPE        g_func = AB_FUNC_UNDEF;
     AB_BUILTIN_ACTION   g_act = AB_STDACT_UNDEF;
     
-    if (obj_type == (AB_OBJECT_TYPE) nullptr)
+    if (obj_type == (AB_OBJECT_TYPE) 0)
         return;
  
     /* Update the When option menu */
@@ -3799,7 +3799,7 @@ update_on_target_type_change(
     AB_FUNC_TYPE        g_func = AB_FUNC_UNDEF;
     AB_BUILTIN_ACTION   g_act = AB_STDACT_UNDEF;
     
-    if (obj_type == (AB_OBJECT_TYPE) nullptr)
+    if (obj_type == (AB_OBJECT_TYPE) 0)
         return;
  
     /* Update the Action option menu */

@@ -1,4 +1,47 @@
 2026-11-16
+- Defect-class warning burndown, `--enable-hardening` `-Werror` promotion, and
+  CK Core Motif `2d362d5d4508cf66a38da9eb430942cdbdc79099` pin update.
+  - `.ckgit/motif-revision` and `.ckgit/ci.yml`: advance the pinned CK Core
+    Motif ABI 9 toolkit revision to `2d362d5d4508cf66a38da9eb430942cdbdc79099`.
+  - `cde/m4/ck_hardening.m4`: promote all twelve zeroed memory-safety, lifetime,
+    uninitialized-read, bounds, truncation and ignored-result warning classes to
+    compile errors under `--enable-hardening`: `-Werror=return-type`,
+    `-Werror=use-after-free`, `-Werror=free-nonheap-object`, `-Werror=restrict`,
+    `-Werror=format-overflow`, `-Werror=stringop-overflow`,
+    `-Werror=stringop-truncation`, `-Werror=maybe-uninitialized`,
+    `-Werror=array-bounds`, `-Werror=unused-result`,
+    `-Werror=format-truncation`, and `-Werror=null-dereference`.
+  - Lifetime and deallocation fixes (`-Wfree-nonheap-object`, `-Wuse-after-free`,
+    `-fsanitize=vptr`): `dtcreate/parser.c` clears `args[0]` and `args[1]`
+    without passing the static `args` array to `free()`;
+    `lib/DtMmdb/dti_cc/cc_hdict.C` moves key/value deletion into
+    `hashTable<K,V>::clearAndDestroy()` so stack `kv_pair` probes in `remove()`
+    and `findValue()` do not `delete` caller-owned keys;
+    `lib/DtMmdb/dstr/memory_pool.C` constructs `chunk_manage_record_t` headers
+    with placement `new` so polymorphic `dlist_cell` vptrs are initialized;
+    `lib/DtSearch/lang.c` advances `linkp` through the surviving link in
+    `free_paice_rules()` instead of reading `p` after `free(p)`; and
+    `dtappbuilder/src/ab/cgen_utils.c` removes the duplicate `closedir(dir)`.
+  - Bounds, overlap, truncation and null-dereference fixes (`-Wrestrict`,
+    `-Wstringop-overflow`, `-Wstringop-truncation`, `-Wformat-overflow`,
+    `-Wformat-truncation`, `-Warray-bounds`, `-Wmaybe-uninitialized`,
+    `-Wnull-dereference`, `-Wreturn-type`, `-Wunused-result`): fix overlapping
+    `sprintf(buf, "%s...", buf, ...)` appends in `dtfile/Desktop.c` and
+    `dtfile/Trash.c`; bound `start_size` formatting in `dticon/utils.c`;
+    initialize `file_mgr_rec` in `dtfile/File.c:DropOnRoot()`; guard null
+    `XtNewString()` mnemonics in `dtpad/dtpad.c`, null action paths in
+    `lib/DtSvc/DtUtil1/ActionUtil.c`, and null attribute strings in
+    `lib/DtHelp/AccessSDL.c`; fix the skipped `%3$`/`%4$` positional format
+    specifier (`%5$d` -> `%3$d`) in `programs/dtsr/tomita.c` and
+    `lib/DtSearch/dtsearch.msg` that aborted `dtsrdelete` under
+    `-D_FORTIFY_SOURCE=3`; replace bounded string copies, `snprintf()` calls
+    and unchecked `write()`/`fread()`/`fgets()`/`fscanf()`/`chdir()`/`system()`/`dup()`/`pipe()`/`chown()`/`ftruncate()`/`mkstemp()`
+    calls across `lib/DtHelp`, `lib/DtSearch`, `lib/DtSvc`, `lib/DtTerm`,
+    `lib/DtWidget`, `lib/DtPrint`, `lib/DtMmdb`, `lib/csa`, `lib/tt`, `dtfile`,
+    `dtmail`, `dtcm`, `dtlogin`, `dtsession`, `dtwm`, `dtstyle`, `dtpad`,
+    `dticon`, `dtcreate`, `dtcalc`, `dtksh`, `dthelp`, `dtinfo`, `dtprintinfo`,
+    `dtappbuilder`, `dtdocbook`, `dtspcd`, `dtpdmd`, `dtpdm`, `dtsr`,
+    `dtimsstart`, `dtudcfonted`, `dtudcexch`, `ttsnoop`, and `util/tradcpp`.
 - Help subsystem (`lib/DtHelp` and `programs/dthelp`), `dtksh`, `DtSearch` and
   `dtsr`, `DtMmdb` and `dtinfo`, and desktop client (`dtcreate`, `dtpad`,
   `dticon`, `dtcalc`, `dtimsstart`) hardening.

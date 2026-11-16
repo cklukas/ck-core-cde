@@ -2648,7 +2648,7 @@ SaveSession(
    static char * name_list[] = { DTFILE_CLASS_NAME, nullptr, nullptr, nullptr,
                                  nullptr, nullptr};
    char view_number[12];
-   char number[5];
+   char number[16];
    char workspaceNumber[11];
    int fd;
    Atom * ws_presence = nullptr;
