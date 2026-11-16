@@ -29,7 +29,7 @@ ancestor chain while leaving the production refusal of unsafe shared temporary
 storage intact. The fixture is removed when the lane exits.
 
 Documentation builds use published ckdocs `master` revision
-`7e3ee5eb57a2cef2e07f9e9fe5c4e2822502d322` on both GitHub and rpi4. A push to
+`fbe21b49d6c5d5afebffa3d3de745351e07c6b5e` (v0.11.0) on both GitHub and rpi4. A push to
 `master` publishes the verified site to GitHub Pages and the rpi4 Pages service.
 
 Pull requests build the same documentation without deploying it.

@@ -3,8 +3,8 @@ on:
   branches: [master]
 sisters:
   - name: ck-git-hosting
-    # ckdocs v0.10.1
-    ref: 7e3ee5eb57a2cef2e07f9e9fe5c4e2822502d322
+    # ckdocs v0.11.0
+    ref: fbe21b49d6c5d5afebffa3d3de745351e07c6b5e
   - name: ck-core-motif
     ref: 2d362d5d4508cf66a38da9eb430942cdbdc79099
   - name: ck-core-fs-lib

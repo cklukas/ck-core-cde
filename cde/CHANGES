@@ -1,4 +1,6 @@
 2026-11-16
+- ci: build GitHub Pages and rpi4 documentation with ckdocs v0.11.0
+  (`fbe21b49d6c5d5afebffa3d3de745351e07c6b5e`).
 - Defect-class warning burndown, `--enable-hardening` `-Werror` promotion, and
   CK Core Motif `2d362d5d4508cf66a38da9eb430942cdbdc79099` pin update.
   - `.ckgit/motif-revision` and `.ckgit/ci.yml`: advance the pinned CK Core
