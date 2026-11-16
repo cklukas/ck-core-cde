@@ -117,7 +117,7 @@ AC_DEFUN([CK_HARDENING_APPLY],
  AS_IF([test -n "$ck_sanitize_list"], [
    CFLAGS="$CFLAGS -fsanitize=$ck_sanitize_list$ck_sanitize_extra -fno-omit-frame-pointer"
    AS_IF([test -n "$CXX"],
-     [CXXFLAGS="$CXXFLAGS -fsanitize=$ck_sanitize_list$ck_sanitize_extra -fno-omit-frame-pointer"])
+     [CXXFLAGS="$CXXFLAGS -fsanitize=$ck_sanitize_list$ck_sanitize_extra -fno-sanitize=vptr -fno-omit-frame-pointer"])
    LDFLAGS="$LDFLAGS -fsanitize=$ck_sanitize_list$ck_sanitize_extra"
    AC_MSG_NOTICE([sanitizers: -fsanitize=$ck_sanitize_list$ck_sanitize_extra])
  ])

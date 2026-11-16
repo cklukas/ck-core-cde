@@ -1,4 +1,15 @@
 2026-11-16
+- Fix `d_fillnew()` heap-buffer-overflow in `lib/DtSearch/raima/fillnew.c` and
+  disable `-fsanitize=vptr` in C++ `--enable-sanitizers` builds so C programs
+  link cleanly against `libtt` and `libDtMmdb` on Clang.
+  - `lib/DtSearch/raima/fillnew.c`: check `fld < size_fd` before dereferencing
+    `fld_ptr->fd_type == COMKEY` in both field loops of `d_fillnew()` so
+    creating a record of the final table entry does not read one element past
+    `field_table`.
+  - `cde/m4/ck_hardening.m4`: add `-fno-sanitize=vptr` to `CXXFLAGS` under
+    `--enable-sanitizers` so C executables linked with `$CC` against C++
+    libraries (`libtt`, `libDtMmdb`) do not fail with unresolved C++ RTTI/vptr
+    UBSan symbols on Clang.
 - Fix Paice stemmer global-buffer-underflow in `lib/DtSearch/lang.c`,
   `dlp_smart_ptr` downcast UB in `lib/DtMmdb/oliasdb/dlp_hd.C`, and Clang
   sanitizer build/test flags in `configure.ac`, `m4/ck_hardening.m4`, and CI.

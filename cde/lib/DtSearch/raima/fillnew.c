@@ -81,7 +81,7 @@ int dbn       /* database number */
    db_addr = curr_rec;
    for (fld = rec_ptr->rt_fields, fldtot = fld + rec_ptr->rt_fdtot,
 						   fld_ptr = &field_table[fld];
-	(fld < fldtot) || (fld_ptr->fd_type == COMKEY);
+	(fld < size_fd) && ((fld < fldtot) || (fld_ptr->fd_type == COMKEY));
 	++fld, ++fld_ptr) {
       if ((fld_ptr->fd_key == UNIQUE) && !(fld_ptr->fd_flags & OPTKEYMASK)) {
 	 if (fld_ptr->fd_type != COMKEY)
@@ -121,7 +121,7 @@ int dbn       /* database number */
    /* for each keyed field, enter the key value into the key file */
    for (fld = rec_ptr->rt_fields, fldtot = fld + rec_ptr->rt_fdtot,
 						   fld_ptr = &field_table[fld];
-	(fld < fldtot) || (fld_ptr->fd_type == COMKEY);
+	(fld < size_fd) && ((fld < fldtot) || (fld_ptr->fd_type == COMKEY));
 	++fld, ++fld_ptr) {
       if ((fld_ptr->fd_key != 'n') && !(fld_ptr->fd_flags & OPTKEYMASK)) {
 	 if ( fld_ptr->fd_type != COMKEY )
