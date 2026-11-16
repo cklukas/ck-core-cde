@@ -1776,6 +1776,7 @@ int main(int argc, char **argv) {
     const char *startup_cmd = nullptr;
     const char *status_file = nullptr;
     const char *swallow_client = nullptr;
+    const char *profile_arg = nullptr;
     bool greeter_mode = false;
     bool no_panel = false;
     bool no_open_icons = false;
@@ -1785,6 +1786,7 @@ int main(int argc, char **argv) {
         {"startup", required_argument, nullptr, 's'},
         {"status-file", required_argument, nullptr, 'f'},
         {"swallow", required_argument, nullptr, 'w'},
+        {"appearance-profile", required_argument, nullptr, 'A'},
         {"session", no_argument, nullptr, 'S'},
         {"greeter", no_argument, nullptr, 'g'},
         {"no-panel", no_argument, nullptr, 'P'},
@@ -1794,11 +1796,12 @@ int main(int argc, char **argv) {
         {nullptr, 0, nullptr, 0},
     };
     int opt;
-    while ((opt = getopt_long(argc, argv, "s:f:w:SgPILh", long_opts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "s:f:w:A:SgPILh", long_opts, nullptr)) != -1) {
         switch (opt) {
         case 's': startup_cmd = optarg; break;
         case 'f': status_file = optarg; break;
         case 'w': swallow_client = optarg; break;
+        case 'A': profile_arg = optarg; break;
         case 'S': break;
         case 'g': greeter_mode = true; break;
         case 'P': no_panel = true; break;
@@ -1807,7 +1810,8 @@ int main(int argc, char **argv) {
         case 'h':
             printf(
                 "Usage: %s [--session] [--greeter] [--no-panel] [--no-open-window-icons] "
-                "[--large-icons] [--swallow NAME] [--status-file PATH] [--startup CMD]\n",
+                "[--large-icons] [--appearance-profile NAME] [--swallow NAME] "
+                "[--status-file PATH] [--startup CMD]\n",
                 argv[0]
             );
             return 0;
@@ -1900,6 +1904,9 @@ int main(int argc, char **argv) {
     }
     if (swallow_client && swallow_client[0]) {
         snprintf(server.swallow_client_name, sizeof(server.swallow_client_name), "%s", swallow_client);
+    }
+    if (profile_arg && profile_arg[0]) {
+        dtwm_server_apply_appearance_profile(&server, dtwm_parse_appearance_profile(profile_arg));
     }
 
     server.new_output.notify = handle_new_output;

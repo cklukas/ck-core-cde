@@ -551,6 +551,20 @@ Initialize (DtPanelShellWidget panel_shell)
 		break;
    }
 
+   if (wmGD.appearanceProfile != XmAPPEARANCE_CLASSIC)
+   {
+      extern XmRenderTable _XmAppearanceCreateRenderTable (
+          Widget widget, unsigned char role, double scale);
+      double scale = (wmGD.dpiScale > 0.0) ? wmGD.dpiScale : 1.0;
+      XmRenderTable modern_rt = _XmAppearanceCreateRenderTable (
+          (Widget)panel_shell, XmAPPEARANCE_ROLE_NORMAL, scale);
+      if (modern_rt != nullptr)
+      {
+         panel.font_list = modern_rt;
+         panel.date_font_list = modern_rt;
+      }
+   }
+
    /* initialize popup_data to NULL */
    panel.popup_data = nullptr; 
 
@@ -913,6 +927,9 @@ BoxCreate (void)
 
          XtSetArg (al[ac], XmNbackground, panel.primary_pixel_set->bg);	ac++;
          XtSetArg (al[ac], XmNforeground, panel.primary_pixel_set->fg);	ac++;
+         XtSetArg (al[ac], XmNtopShadowColor, panel.primary_pixel_set->ts); ac++;
+         XtSetArg (al[ac], XmNbottomShadowColor, panel.primary_pixel_set->bs); ac++;
+         XtSetArg (al[ac], XmNselectColor, panel.primary_pixel_set->sc); ac++;
 
          box_data->switch_form =  
 	    XmCreateForm (box_data->form, "switch", al, ac);
@@ -1150,6 +1167,9 @@ BoxCreate (void)
 
             XtSetArg (al[ac], XmNbackground, panel.primary_pixel_set->bg); ac++;
             XtSetArg (al[ac], XmNforeground, panel.primary_pixel_set->fg); ac++;
+            XtSetArg (al[ac], XmNtopShadowColor, panel.primary_pixel_set->ts); ac++;
+            XtSetArg (al[ac], XmNbottomShadowColor, panel.primary_pixel_set->bs); ac++;
+            XtSetArg (al[ac], XmNselectColor, panel.primary_pixel_set->sc); ac++;
 
             box_data->left_control_form = 
                XmCreateForm (box_data->form, "left_control_form", al, ac);
@@ -1194,6 +1214,9 @@ BoxCreate (void)
 
             XtSetArg (al[ac], XmNbackground, panel.primary_pixel_set->bg); ac++;
             XtSetArg (al[ac], XmNforeground, panel.primary_pixel_set->fg); ac++;
+            XtSetArg (al[ac], XmNtopShadowColor, panel.primary_pixel_set->ts); ac++;
+            XtSetArg (al[ac], XmNbottomShadowColor, panel.primary_pixel_set->bs); ac++;
+            XtSetArg (al[ac], XmNselectColor, panel.primary_pixel_set->sc); ac++;
 
             box_data->left_control_form =
 	       XmCreateForm (box_data->form, "left_control_form", al, ac);
@@ -1246,6 +1269,9 @@ BoxCreate (void)
 
             XtSetArg (al[ac], XmNbackground, panel.primary_pixel_set->bg); ac++;
             XtSetArg (al[ac], XmNforeground, panel.primary_pixel_set->fg); ac++;
+            XtSetArg (al[ac], XmNtopShadowColor, panel.primary_pixel_set->ts); ac++;
+            XtSetArg (al[ac], XmNbottomShadowColor, panel.primary_pixel_set->bs); ac++;
+            XtSetArg (al[ac], XmNselectColor, panel.primary_pixel_set->sc); ac++;
 
             box_data->right_control_form = 
                XmCreateForm (box_data->form, "right_control_form", al, ac);
@@ -1292,6 +1318,9 @@ BoxCreate (void)
 
          XtSetArg (al[ac], XmNbackground, panel.primary_pixel_set->bg);	ac++;
          XtSetArg (al[ac], XmNforeground, panel.primary_pixel_set->fg);	ac++;
+         XtSetArg (al[ac], XmNtopShadowColor, panel.primary_pixel_set->ts); ac++;
+         XtSetArg (al[ac], XmNbottomShadowColor, panel.primary_pixel_set->bs); ac++;
+         XtSetArg (al[ac], XmNselectColor, panel.primary_pixel_set->sc); ac++;
 
          box_data->left_control_form = 
             XmCreateForm (box_data->form, "left_control_form", al, ac);

@@ -1036,6 +1036,9 @@ if (((G_PixmapForeground (g) == WhitePixelOfScreen (XtScreen (g))) &&
     ((G_PixmapForeground (g) == BlackPixelOfScreen (XtScreen (g))) &&
      (G_PixmapBackground (g) == WhitePixelOfScreen (XtScreen (g)))))
     values.foreground = G_PixmapBackground (g);
+else if (G_PixmapForeground (g) != G_ArmColor (g) &&
+         G_PixmapForeground (g) != G_PixmapBackground (g))
+    values.foreground = G_PixmapForeground (g);
 else
     values.foreground = mw->manager.top_shadow_color;
 values.fill_style = FillSolid;

@@ -18,8 +18,12 @@ framing or interaction rules.
 `_MOTIF_WM_HINTS` decoration flags for rootless `Xwayland` clients:
 
 - Mitered 3D top- and bottom-shadow bevel borders (`cde_bevel.c`) match `dtwm`'s
-  `BevelRectangle` geometry, using active CDE Crimson and inactive CDE Slate
-  color sets;
+  `BevelRectangle` geometry across all four CK Core Motif ABI 9 appearance
+  profiles (`classic`, `modern_light`, `modern_dark`, and `high_contrast`,
+  harmonized with `ModernLight.dp`, `ModernDark.dp`, and `HighContrast.dp`),
+  switchable at launch via `--appearance-profile PROFILE` or live via X11
+  `RESOURCE_MANAGER` `*appearanceProfile:` updates and `_DT_WM_REQUEST`
+  (`f.set_appearance_profile PROFILE`);
 - Corner resize-handle grooves (`NW`, `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`), the
   left MWM Window Menu button (`Restore`, `Move`, `Size`, `Minimize`, `Maximize`,
   `Lower`, `Close`), centered embossed title bar, and Minimize/Maximize buttons

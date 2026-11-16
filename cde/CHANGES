@@ -1,4 +1,17 @@
 2026-11-16
+- Merge upstream `master` (`a6029287e`) and adopt CK Core Motif ABI 9
+  `d85fb6604a827a7ebfcdcadcbac4525dccc684d7` on the `x11_wayland` branch,
+  harmonizing `dtwm-wayland` and Ubuntu `.deb` packaging with the four desktop
+  appearance profiles (`classic`, `modern_light`, `modern_dark`, and
+  `high_contrast`).
+  - `cde/programs/dtwm/wayland/` (`dtwm_wayland.h`, `cde_bevel.c`,
+    `cde_workspace.c`, `dtwm_wayland_main.c`): support `--appearance-profile`,
+    live XWayland `RESOURCE_MANAGER` `*appearanceProfile:` watching, and
+    `_DT_WM_REQUEST` `f.set_appearance_profile` across window frames, workspace
+    backdrops, desktop icons, and the Front Panel.
+  - `scripts/build-ubuntu-debs.py` and `.ckgit/motif-revision`: pin Motif
+    `d85fb6604a827a7ebfcdcadcbac4525dccc684d7` and verify
+    `{ModernLight,ModernDark,HighContrast}.dp` installation in `ck-core-cde`.
 - Add open-window and minimized desktop icons, live dynamic icon streaming,
   `ck-eyes` global cursor synchronization, `dtfile` pinned desktop object
   layering, and Front Panel `TYPE client` window swallowing (`WP-04`) to
@@ -81,6 +94,39 @@
     Lima configuration and dual-output headless `wlroots` + rootless `Xwayland`
     build/smoke runner verifying `/proc/<pid>/maps` `libXm.so.9` provenance and
     `zwlr_screencopy_manager_v1` frame capture.
+- Integrate CK Core Motif ABI 9 appearance profiles (`classic`, `modern_light`,
+  `modern_dark`, `high_contrast`) across `dtsession`, `dtwm`, `dtstyle`,
+  `dtfile`, `libDtWidget`, and built-in desktop palettes (`ModernLight.dp`,
+  `ModernDark.dp`, `HighContrast.dp`), capture 1280x900 live session
+  screenshots across all four profiles, add tabbed multi-theme screenshot views
+  (`::: tabs`) to `docs/desktop.md`, and advance the CK Core Motif pin to
+  `d85fb6604a827a7ebfcdcadcbac4525dccc684d7`.
+  - `programs/dtfile/FileMgr.c`, `programs/dtfile/ChangeDirP.c`, and
+    `programs/dtfile/File.c`: preserve modern scrollbar arrow/slider foreground
+    colors (`XmNforeground`), draw the current directory path bar and folder
+    labels with `XmRenderTable` / `XmStringDrawImage` when `XmFONT_IS_XFT` is
+    active, render a rounded indented frame around the current directory path
+    bar under modern profiles, and allow file-view icons to inherit the active
+    profile's Xft render table.
+  - `programs/dtwm/UI.c`, `programs/dtwm/Clock.c`, `programs/dtwm/WmCDecor.c`,
+    `programs/dtwm/WmIDecor.c`, `programs/dtwm/WmGraphics.c`,
+    `programs/dtwm/WmResource.c`, and `lib/DtWidget/Control.c`: propagate the
+    Front Panel primary pixel set's shadow/select colors to `switch_form` and
+    control forms, select a high-contrast clock hand color from
+    `G_PixmapForeground`, preserve classic 3D beveled window frame decorations
+    with Xft title/icon typography, size desktop icon label boxes to the Xft
+    render table extents and reset the `iconGC` clip mask after `XmStringDraw`,
+    write active Color Server window-frame colors in `WriteOutXrmColors()`
+    across all profiles, and restrict embossed white drop-shadow text to white
+    foregrounds.
+  - `programs/dtsession/SrvPalette.c` and `programs/dtstyle/ColorMain.c`: keep
+    `Default.dp` as the default `modern_light` palette so standard CDE window
+    and control colors remain active while `modern_dark` and `high_contrast`
+    select `ModernDark.dp` and `HighContrast.dp`.
+- Probe `rpcinfo -p 127.0.0.1` in `lib/tt/bin/ttsession/tests` and
+  `lib/tt/bin/tests/check-tools.py` so ToolTalk preflight checks skip cleanly
+  when IPv4 loopback port 111 is unreachable inside `CLONE_NEWNET` sandboxes
+  that still bind `/run/rpcbind.sock`.
 - Handle single-UID `CLONE_NEWUSER` sandboxes (`chown()` `EINVAL`) and
   120-byte ISAM key-length bounds in `lib/tt/bin/ttdbserverd/tests` and
   `programs/dtmail/tests/check-spool-helper.py`.

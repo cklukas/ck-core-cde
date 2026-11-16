@@ -14,7 +14,7 @@ integrated changes matter more than staying on the upstream feature set.
 
 | Area | CK Core CDE improvement | Practical result |
 | --- | --- | --- |
-| [Toolkit](improvements/toolkit.md) | Builds and tests CDE with the latest CK Core Motif ABI 9 as one matched native stack. | Desktop and toolkit improvements arrive together. |
+| [Toolkit](improvements/toolkit.md) | Builds and tests CDE with the latest CK Core Motif ABI 9 as one matched native stack, with integrated support for `classic`, `modern_light`, `modern_dark`, and `high_contrast` appearance profiles across `dtsession`, `dtwm`, and `dtstyle`. | Desktop and toolkit improvements arrive together, with classic CDE and modern vector/Xft themes selectable from Style Manager or `.Xdefaults`. |
 | [Window state](improvements/window-state.md) | Optional desktop icons represent open windows, distinguish active state and repaint client-supplied live icon pixmaps. | Open windows, keyboard focus and compact application state remain visible at a glance. |
 | [Window management](improvements/window-management.md) | Task switching, snap feedback, open-window icons, Shift grid movement, desktop-click defocus and title-bar double-click maximize are integrated in dtwm. | Everyday window navigation gains familiar, visible interactions without replacing the CDE window manager. |
 | [Wayland compositor](improvements/wayland.md) | `dtwm-wayland` (`wlroots-0.19`) frames both native Wayland `xdg-shell` clients and rootless `Xwayland` Motif clients in server-side 3D CDE bevels with snap preview, Shift-grid alignment and `Alt+Tab` task switching. | CDE runs natively as a Wayland desktop session while keeping classic X11/XLibre `dtwm` intact. |

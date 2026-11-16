@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 typedef struct {
     struct wlr_buffer base;
@@ -154,28 +155,120 @@ static void draw_groove_line_h(
     cairo_fill(cr);
 }
 
+DtwmAppearanceProfile dtwm_parse_appearance_profile(const char *name) {
+    if (!name || !name[0]) return DTWM_PROFILE_CLASSIC;
+    while (*name == ' ' || *name == '\t' || *name == '"' || *name == '\'') name++;
+    if (strncasecmp(name, "modern_light", 12) == 0 || strncasecmp(name, "modern-light", 12) == 0 ||
+        strncasecmp(name, "ModernLight", 11) == 0) {
+        return DTWM_PROFILE_MODERN_LIGHT;
+    }
+    if (strncasecmp(name, "modern_dark", 11) == 0 || strncasecmp(name, "modern-dark", 11) == 0 ||
+        strncasecmp(name, "ModernDark", 10) == 0) {
+        return DTWM_PROFILE_MODERN_DARK;
+    }
+    if (strncasecmp(name, "high_contrast", 13) == 0 || strncasecmp(name, "high-contrast", 13) == 0 ||
+        strncasecmp(name, "HighContrast", 12) == 0) {
+        return DTWM_PROFILE_HIGH_CONTRAST;
+    }
+    return DTWM_PROFILE_CLASSIC;
+}
+
+void dtwm_palette_init_profile(DtwmPalette *pal, DtwmAppearanceProfile profile) {
+    pal->profile = profile;
+    switch (profile) {
+    case DTWM_PROFILE_MODERN_LIGHT:
+        /* Matches cde/programs/palettes/ModernLight.dp (#5b84b8 / #9aa3b0 / #c8ccd4) */
+        pal->active = (DtwmColorSet){
+            .bg = {0.357, 0.518, 0.722, 1.0},            /* #5B84B8 */
+            .fg = {1.000, 1.000, 1.000, 1.0},
+            .top_shadow = {0.612, 0.729, 0.875, 1.0},
+            .bottom_shadow = {0.188, 0.286, 0.420, 1.0},
+        };
+        pal->inactive = (DtwmColorSet){
+            .bg = {0.604, 0.639, 0.690, 1.0},            /* #9AA3B0 */
+            .fg = {0.106, 0.133, 0.173, 1.0},
+            .top_shadow = {0.824, 0.847, 0.882, 1.0},
+            .bottom_shadow = {0.337, 0.373, 0.424, 1.0},
+        };
+        pal->menu = (DtwmColorSet){
+            .bg = {0.784, 0.800, 0.831, 1.0},            /* #C8CCD4 */
+            .fg = {0.090, 0.114, 0.149, 1.0},
+            .top_shadow = {0.925, 0.937, 0.957, 1.0},
+            .bottom_shadow = {0.435, 0.463, 0.514, 1.0},
+        };
+        pal->desktop_bg = (DtwmRgba){0.494, 0.557, 0.643, 1.0}; /* #7E8EA4 */
+        return;
+
+    case DTWM_PROFILE_MODERN_DARK:
+        /* Matches cde/programs/palettes/ModernDark.dp (#283952 / #25272b / #1b222c) */
+        pal->active = (DtwmColorSet){
+            .bg = {0.157, 0.224, 0.322, 1.0},            /* #283952 */
+            .fg = {0.949, 0.965, 0.988, 1.0},
+            .top_shadow = {0.310, 0.404, 0.537, 1.0},
+            .bottom_shadow = {0.075, 0.110, 0.165, 1.0},
+        };
+        pal->inactive = (DtwmColorSet){
+            .bg = {0.145, 0.153, 0.169, 1.0},            /* #25272B */
+            .fg = {0.847, 0.867, 0.898, 1.0},
+            .top_shadow = {0.278, 0.294, 0.325, 1.0},
+            .bottom_shadow = {0.067, 0.071, 0.082, 1.0},
+        };
+        pal->menu = (DtwmColorSet){
+            .bg = {0.125, 0.129, 0.141, 1.0},            /* #202124 */
+            .fg = {0.910, 0.925, 0.949, 1.0},
+            .top_shadow = {0.267, 0.278, 0.306, 1.0},
+            .bottom_shadow = {0.055, 0.059, 0.067, 1.0},
+        };
+        pal->desktop_bg = (DtwmRgba){0.106, 0.133, 0.173, 1.0}; /* #1B222C */
+        return;
+
+    case DTWM_PROFILE_HIGH_CONTRAST:
+        /* Matches cde/programs/palettes/HighContrast.dp (#ffff00 active / #000000 surfaces) */
+        pal->active = (DtwmColorSet){
+            .bg = {1.000, 1.000, 0.000, 1.0},            /* #FFFF00 */
+            .fg = {0.000, 0.000, 0.000, 1.0},            /* #000000 */
+            .top_shadow = {1.000, 1.000, 1.000, 1.0},
+            .bottom_shadow = {0.600, 0.600, 0.000, 1.0},
+        };
+        pal->inactive = (DtwmColorSet){
+            .bg = {0.000, 0.000, 0.000, 1.0},            /* #000000 */
+            .fg = {1.000, 1.000, 1.000, 1.0},            /* #FFFFFF */
+            .top_shadow = {1.000, 1.000, 1.000, 1.0},
+            .bottom_shadow = {0.800, 0.800, 0.800, 1.0},
+        };
+        pal->menu = pal->inactive;
+        pal->desktop_bg = (DtwmRgba){0.000, 0.000, 0.000, 1.0};
+        return;
+
+    case DTWM_PROFILE_CLASSIC:
+    default:
+        /* Classic CDE Default Crimson active window frame + Slate inactive frame */
+        pal->active = (DtwmColorSet){
+            .bg = {0.698, 0.302, 0.478, 1.0},            /* #B24D7A */
+            .fg = {1.000, 1.000, 1.000, 1.0},            /* #FFFFFF */
+            .top_shadow = {0.886, 0.608, 0.745, 1.0},    /* #E29BBE */
+            .bottom_shadow = {0.357, 0.137, 0.235, 1.0}, /* #5B233C */
+        };
+        pal->inactive = (DtwmColorSet){
+            .bg = {0.682, 0.698, 0.765, 1.0},            /* #AEB2C3 */
+            .fg = {0.090, 0.100, 0.130, 1.0},            /* #171A21 */
+            .top_shadow = {0.878, 0.890, 0.933, 1.0},    /* #E0E3EE */
+            .bottom_shadow = {0.345, 0.357, 0.408, 1.0}, /* #585B68 */
+        };
+        pal->menu = (DtwmColorSet){
+            .bg = {0.682, 0.698, 0.765, 1.0},
+            .fg = {0.070, 0.080, 0.110, 1.0},
+            .top_shadow = {0.878, 0.890, 0.933, 1.0},
+            .bottom_shadow = {0.345, 0.357, 0.408, 1.0},
+        };
+        /* Classic CDE Teal/Slate backdrop */
+        pal->desktop_bg = (DtwmRgba){0.235, 0.388, 0.463, 1.0}; /* #3C6376 */
+        return;
+    }
+}
+
 void dtwm_palette_init_default(DtwmPalette *pal) {
-    /* Classic CDE Default Crimson active window frame + Slate inactive frame */
-    pal->active = (DtwmColorSet){
-        .bg = {0.698, 0.302, 0.478, 1.0},            /* #B24D7A */
-        .fg = {1.000, 1.000, 1.000, 1.0},            /* #FFFFFF */
-        .top_shadow = {0.886, 0.608, 0.745, 1.0},    /* #E29BBE */
-        .bottom_shadow = {0.357, 0.137, 0.235, 1.0}, /* #5B233C */
-    };
-    pal->inactive = (DtwmColorSet){
-        .bg = {0.682, 0.698, 0.765, 1.0},            /* #AEB2C3 */
-        .fg = {0.090, 0.100, 0.130, 1.0},            /* #171A21 */
-        .top_shadow = {0.878, 0.890, 0.933, 1.0},    /* #E0E3EE */
-        .bottom_shadow = {0.345, 0.357, 0.408, 1.0}, /* #585B68 */
-    };
-    pal->menu = (DtwmColorSet){
-        .bg = {0.682, 0.698, 0.765, 1.0},
-        .fg = {0.070, 0.080, 0.110, 1.0},
-        .top_shadow = {0.878, 0.890, 0.933, 1.0},
-        .bottom_shadow = {0.345, 0.357, 0.408, 1.0},
-    };
-    /* Classic CDE Teal/Slate backdrop */
-    pal->desktop_bg = (DtwmRgba){0.235, 0.388, 0.463, 1.0}; /* #3C6376 */
+    dtwm_palette_init_profile(pal, DTWM_PROFILE_CLASSIC);
 }
 
 void dtwm_view_insets(const DtwmView *view, int *left, int *top, int *right, int *bottom) {

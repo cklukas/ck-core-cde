@@ -473,6 +473,22 @@ ParsePaletteInfo(
                                 &(new_palette->color[num_of_colors].sc),
                                 &(new_palette->color[num_of_colors].ts),
                                 &(new_palette->color[num_of_colors].bs));
+      if (strcmp(new_palette->name, "HighContrast") == 0 &&
+          tmp_color.red == 0 && tmp_color.green == 0 && tmp_color.blue == 0)
+      {
+         new_palette->color[num_of_colors].fg.red = 65535;
+         new_palette->color[num_of_colors].fg.green = 65535;
+         new_palette->color[num_of_colors].fg.blue = 65535;
+         new_palette->color[num_of_colors].ts.red = 65535;
+         new_palette->color[num_of_colors].ts.green = 65535;
+         new_palette->color[num_of_colors].ts.blue = 65535;
+         new_palette->color[num_of_colors].bs.red = 65535;
+         new_palette->color[num_of_colors].bs.green = 65535;
+         new_palette->color[num_of_colors].bs.blue = 65535;
+         new_palette->color[num_of_colors].sc.red = 0;
+         new_palette->color[num_of_colors].sc.green = 0;
+         new_palette->color[num_of_colors].sc.blue = 65535;
+      }
 
       if(colorSrv.TypeOfMonitor[screen_num] == XmCO_BLACK_WHITE)
           InitializeBW(tmp_color.red, num_of_colors, new_palette);

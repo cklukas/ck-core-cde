@@ -53,6 +53,7 @@
 
 #include <Xm/Xm.h>
 #include <Xm/XmP.h>
+#include <Xm/Appearance.h>
 #include <Xm/Form.h>
 #include <Xm/Frame.h>
 #include <Xm/Label.h>
@@ -98,6 +99,40 @@
 /* Local #defines                        */
 /*+++++++++++++++++++++++++++++++++++++++*/
 #define DEFAULT_PALETTE    "Default"
+
+static XmAppearanceProfile
+DtstyleProfileForPaletteName(const char *name)
+{
+    if (name == nullptr)
+        return XmAPPEARANCE_CLASSIC;
+    if (strcmp(name, "ModernLight") == 0 ||
+        strcmp(name, "ModernLight.dp") == 0)
+        return XmAPPEARANCE_MODERN_LIGHT;
+    if (strcmp(name, "ModernDark") == 0 ||
+        strcmp(name, "ModernDark.dp") == 0)
+        return XmAPPEARANCE_MODERN_DARK;
+    if (strcmp(name, "HighContrast") == 0 ||
+        strcmp(name, "HighContrast.dp") == 0)
+        return XmAPPEARANCE_HIGH_CONTRAST;
+    return XmAPPEARANCE_CLASSIC;
+}
+
+static const char *
+DtstyleProfileNameString(XmAppearanceProfile profile)
+{
+    switch (profile)
+    {
+        case XmAPPEARANCE_MODERN_LIGHT:
+            return "modern_light";
+        case XmAPPEARANCE_MODERN_DARK:
+            return "modern_dark";
+        case XmAPPEARANCE_HIGH_CONTRAST:
+            return "high_contrast";
+        case XmAPPEARANCE_CLASSIC:
+        default:
+            return "classic";
+    }
+}
 #define TYPE_OF_MONITOR  "Type Of Monitor" /* also in dtsession/SrvPalette.c */
 
 #define BORDER_WIDTH                3
@@ -845,6 +880,10 @@ selectPaletteCB(
 	    XtSetArg (args[n], XmNtitleString, string); n++;
 	    XtSetValues (colorDialog.buttonsTB, args, n);
             XmStringFree(string);
+
+            (void)XmApplyAppearanceProfile(
+                style.display,
+                DtstyleProfileForPaletteName(pCurrentPalette->name));
 
             if (style.dynamicColor)
 	        ReColorPalette();
@@ -2262,6 +2301,9 @@ RestoreOrgPalette( void )
 
       XmListSelectPos (paletteList, OrgPalette.item_position, TRUE);
       XmListSetBottomPos(paletteList, OrgPalette.item_position);
+      (void)XmApplyAppearanceProfile(
+          style.display,
+          DtstyleProfileForPaletteName(defaultName));
 
    }
 }
@@ -2271,8 +2313,10 @@ void
 {
   int      i;
    char     temp[XmCO_MAX_NUM_COLORS][60];
-   char     xrdb_string[100];
+   char     xrdb_string[256];
    XColor   saved_color[2] = { { 0, 0, 0 }, { 0, 0, 0 } };
+   XmAppearanceProfile profile =
+       DtstyleProfileForPaletteName(pCurrentPalette->name);
    
    for(i = 0; i < XmCO_MAX_NUM_COLORS; i++)
      {
@@ -2298,13 +2342,17 @@ void
    /* update the resource manager property with the palette resource */
    if (TypeOfMonitor == XmCO_BLACK_WHITE)
       {
-      sprintf(xrdb_string, "*%d*MonochromePalette: %s%s\n",
-                style.screenNum, pCurrentPalette->name, PALETTE_SUFFIX);
+      snprintf(xrdb_string, sizeof(xrdb_string),
+               "*%d*MonochromePalette: %s%s\n*appearanceProfile: %s\n",
+               style.screenNum, pCurrentPalette->name, PALETTE_SUFFIX,
+               DtstyleProfileNameString(profile));
       }
     else
       {
-      sprintf(xrdb_string, "*%d*ColorPalette: %s%s\n",
-                style.screenNum, pCurrentPalette->name, PALETTE_SUFFIX);
+      snprintf(xrdb_string, sizeof(xrdb_string),
+               "*%d*ColorPalette: %s%s\n*appearanceProfile: %s\n",
+               style.screenNum, pCurrentPalette->name, PALETTE_SUFFIX,
+               DtstyleProfileNameString(profile));
       }
    _DtAddToResource(style.display, xrdb_string);
    
@@ -2321,15 +2369,31 @@ void
        OWsyncColorResources(style.display, TypeOfMonitor, 
 		pCurrentPalette->color);
 #else
-       int chipnum = TypeOfMonitor == XmCO_HIGH_COLOR ? 4 : 1;
-       sprintf(xrdb_string, 
-	       "*background: #%04X%04X%04X\n*foreground: #%04X%04X%04X\n",
-	       pCurrentPalette->color[chipnum].bg.red, 
-	       pCurrentPalette->color[chipnum].bg.green, 
-	       pCurrentPalette->color[chipnum].bg.blue,
-	       pCurrentPalette->color[chipnum].fg.red, 
-	       pCurrentPalette->color[chipnum].fg.green, 
-	       pCurrentPalette->color[chipnum].fg.blue);
+       if (profile != XmAPPEARANCE_CLASSIC)
+       {
+           int textchip = (TypeOfMonitor == XmCO_HIGH_COLOR ||
+                           TypeOfMonitor == XmCO_MEDIUM_COLOR) ? 3 : 0;
+           snprintf(xrdb_string, sizeof(xrdb_string),
+                    "*DtTerm*background: #%04X%04X%04X\n*DtTerm*foreground: #%04X%04X%04X\n",
+                    pCurrentPalette->color[textchip].bg.red,
+                    pCurrentPalette->color[textchip].bg.green,
+                    pCurrentPalette->color[textchip].bg.blue,
+                    pCurrentPalette->color[textchip].fg.red,
+                    pCurrentPalette->color[textchip].fg.green,
+                    pCurrentPalette->color[textchip].fg.blue);
+       }
+       else
+       {
+           int chipnum = TypeOfMonitor == XmCO_HIGH_COLOR ? 4 : 1;
+           snprintf(xrdb_string, sizeof(xrdb_string),
+                    "*background: #%04X%04X%04X\n*foreground: #%04X%04X%04X\n",
+                    pCurrentPalette->color[chipnum].bg.red, 
+                    pCurrentPalette->color[chipnum].bg.green, 
+                    pCurrentPalette->color[chipnum].bg.blue,
+                    pCurrentPalette->color[chipnum].fg.red, 
+                    pCurrentPalette->color[chipnum].fg.green, 
+                    pCurrentPalette->color[chipnum].fg.blue);
+       }
        _DtAddToResource(style.display, xrdb_string);
 #endif
    }

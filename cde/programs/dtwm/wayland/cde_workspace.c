@@ -49,8 +49,34 @@ static void xcb_sync_wm_properties(DtwmServer *server);
 static void xcb_sync_view_presence(DtwmView *view);
 static void ext_ws_broadcast_sync(DtwmServer *server);
 
-/* --- Default Per-Workspace CDE Color Sets & Backdrops --- */
-static DtwmColorSet make_ws_colorset(uint32_t idx) {
+/* --- Default Per-Workspace CDE Color Sets & Backdrops (Profile-Aware) --- */
+static DtwmColorSet make_ws_colorset(DtwmAppearanceProfile profile, uint32_t idx) {
+    if (profile == DTWM_PROFILE_MODERN_LIGHT) {
+        static const DtwmColorSet ml[4] = {
+            {.bg = {0.494, 0.557, 0.643, 1.0}, .fg = {0.96, 0.97, 0.99, 1.0}, .top_shadow = {0.72, 0.77, 0.84, 1.0}, .bottom_shadow = {0.28, 0.33, 0.40, 1.0}},
+            {.bg = {0.322, 0.478, 0.580, 1.0}, .fg = {0.96, 0.98, 0.99, 1.0}, .top_shadow = {0.56, 0.70, 0.79, 1.0}, .bottom_shadow = {0.16, 0.26, 0.33, 1.0}},
+            {.bg = {0.549, 0.588, 0.651, 1.0}, .fg = {0.10, 0.13, 0.17, 1.0}, .top_shadow = {0.77, 0.80, 0.85, 1.0}, .bottom_shadow = {0.31, 0.35, 0.41, 1.0}},
+            {.bg = {0.486, 0.549, 0.635, 1.0}, .fg = {0.96, 0.97, 0.99, 1.0}, .top_shadow = {0.71, 0.76, 0.83, 1.0}, .bottom_shadow = {0.27, 0.32, 0.39, 1.0}},
+        };
+        return ml[idx % 4];
+    }
+    if (profile == DTWM_PROFILE_MODERN_DARK) {
+        static const DtwmColorSet md[4] = {
+            {.bg = {0.106, 0.133, 0.173, 1.0}, .fg = {0.92, 0.94, 0.97, 1.0}, .top_shadow = {0.23, 0.28, 0.35, 1.0}, .bottom_shadow = {0.05, 0.06, 0.09, 1.0}},
+            {.bg = {0.157, 0.165, 0.176, 1.0}, .fg = {0.92, 0.93, 0.95, 1.0}, .top_shadow = {0.29, 0.30, 0.32, 1.0}, .bottom_shadow = {0.07, 0.08, 0.09, 1.0}},
+            {.bg = {0.122, 0.161, 0.216, 1.0}, .fg = {0.92, 0.95, 0.98, 1.0}, .top_shadow = {0.25, 0.31, 0.40, 1.0}, .bottom_shadow = {0.06, 0.08, 0.11, 1.0}},
+            {.bg = {0.145, 0.153, 0.169, 1.0}, .fg = {0.92, 0.93, 0.95, 1.0}, .top_shadow = {0.28, 0.29, 0.32, 1.0}, .bottom_shadow = {0.07, 0.07, 0.08, 1.0}},
+        };
+        return md[idx % 4];
+    }
+    if (profile == DTWM_PROFILE_HIGH_CONTRAST) {
+        return (DtwmColorSet){
+            .bg = {0.0, 0.0, 0.0, 1.0},
+            .fg = {1.0, 1.0, 1.0, 1.0},
+            .top_shadow = {1.0, 1.0, 1.0, 1.0},
+            .bottom_shadow = {0.8, 0.8, 0.8, 1.0},
+        };
+    }
     static const DtwmColorSet sets[4] = {
         /* Workspace 0 ("One"): Classic CDE Teal/Slate + SkyDark */
         {
@@ -717,7 +743,10 @@ void dtwm_update_front_panel(DtwmServer *server) {
     /* Exit mini-button on right side of workspace well */
     int exit_x = well_x + well_w + 6;
     dtwm_draw_bevel(cr, exit_x, 9, 26, 56, 1.5, cs->top_shadow, cs->bottom_shadow);
-    dtwm_draw_label(cr, "E", exit_x, 9, 26, 56, (DtwmRgba){0.14, 0.24, 0.34, 1.0}, true, true);
+    DtwmRgba exit_fg = (server->palette.profile == DTWM_PROFILE_CLASSIC)
+                           ? (DtwmRgba){0.14, 0.24, 0.34, 1.0}
+                           : cs->fg;
+    dtwm_draw_label(cr, "E", exit_x, 9, 26, 56, exit_fg, true, true);
 
     /* Right 3 launcher cells (Editor, Style, Calc) */
     const char *right_labels[3] = {"Edit", "Style", "Calc"};
@@ -1054,7 +1083,7 @@ int dtwm_add_workspace(DtwmServer *server, const char *title) {
     snprintf(ws->backdrop_name, sizeof(ws->backdrop_name), "RicePaper");
     ws->color_set_id = (int)(idx % 8) + 1;
     ws->image_type = 0;
-    ws->colors = make_ws_colorset(idx);
+    ws->colors = make_ws_colorset(server->palette.profile, idx);
 
     ensure_ws_xcb_atoms(server, ws);
     /* Propagate occupy-all views onto the newly created workspace */
@@ -1211,6 +1240,35 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         }
         return;
     }
+    if (strncmp(cmd, "f.set_appearance_profile", 24) == 0) {
+        const char *arg = cmd + 24;
+        while (*arg && isspace((unsigned char)*arg)) arg++;
+        dtwm_server_apply_appearance_profile(server, dtwm_parse_appearance_profile(arg));
+        return;
+    }
+}
+
+void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProfile profile) {
+    if (!server) return;
+    dtwm_palette_init_profile(&server->palette, profile);
+    for (uint32_t i = 0; i < server->num_workspaces; ++i) {
+        server->workspaces[i].colors = make_ws_colorset(profile, i);
+        if (profile == DTWM_PROFILE_HIGH_CONTRAST) {
+            snprintf(server->workspaces[i].backdrop_name, sizeof(server->workspaces[i].backdrop_name), "NoBackdrop");
+        }
+    }
+    server->palette.desktop_bg = server->workspaces[server->current_workspace].colors.bg;
+
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped) {
+            dtwm_view_update_frame(v);
+        }
+    }
+    dtwm_update_all_backdrops(server);
+    dtwm_update_front_panel(server);
+    dtwm_icons_relayout(server);
+    xcb_sync_wm_properties(server);
 }
 
 static void xcb_drain_dt_wm_requests(DtwmServer *server) {
@@ -1258,6 +1316,30 @@ static DtwmView *find_xwayland_view_by_win(DtwmServer *server, xcb_window_t win)
     return nullptr;
 }
 
+static void sync_xcb_resource_manager_profile(DtwmServer *server) {
+    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return;
+    xcb_get_property_cookie_t ck = xcb_get_property(
+        server->xcb_conn, 0, server->xcb_root, XCB_ATOM_RESOURCE_MANAGER, XCB_ATOM_STRING, 0, 8192
+    );
+    xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+    if (!rep) return;
+    int len = xcb_get_property_value_length(rep);
+    if (len > 0) {
+        char *txt = calloc((size_t)len + 1, 1);
+        if (txt) {
+            memcpy(txt, xcb_get_property_value(rep), (size_t)len);
+            const char *hit = strstr(txt, "appearanceProfile:");
+            if (hit) {
+                dtwm_server_apply_appearance_profile(
+                    server, dtwm_parse_appearance_profile(hit + strlen("appearanceProfile:"))
+                );
+            }
+            free(txt);
+        }
+    }
+    free(rep);
+}
+
 static int handle_xcb_event_fd(int fd, uint32_t mask, void *data) {
     (void)fd;
     (void)mask;
@@ -1273,6 +1355,10 @@ static int handle_xcb_event_fd(int fd, uint32_t mask, void *data) {
                 pev->atom == server->atom_wm_request &&
                 pev->state == XCB_PROPERTY_NEW_VALUE) {
                 xcb_drain_dt_wm_requests(server);
+            } else if (pev->window == server->xcb_root &&
+                       pev->atom == XCB_ATOM_RESOURCE_MANAGER &&
+                       pev->state == XCB_PROPERTY_NEW_VALUE) {
+                sync_xcb_resource_manager_profile(server);
             } else if (pev->atom == server->atom_ws_hints &&
                        pev->state == XCB_PROPERTY_NEW_VALUE) {
                 DtwmView *v = find_xwayland_view_by_win(server, pev->window);
@@ -1340,6 +1426,10 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
         mwm_info
     );
 
+    /* Watch RESOURCE_MANAGER on root so xrdb/dtstyle *appearanceProfile updates apply live */
+    uint32_t root_mask = XCB_EVENT_MASK_PROPERTY_CHANGE;
+    xcb_change_window_attributes(server->xcb_conn, server->xcb_root, XCB_CW_EVENT_MASK, &root_mask);
+    sync_xcb_resource_manager_profile(server);
     xcb_sync_wm_properties(server);
 
     struct wl_event_loop *loop = wl_display_get_event_loop(server->wl_display);
@@ -1634,7 +1724,7 @@ void dtwm_workspaces_init(DtwmServer *server) {
         snprintf(ws->backdrop_name, sizeof(ws->backdrop_name), "%s", default_backdrops[i]);
         ws->color_set_id = (int)i + 1;
         ws->image_type = 0;
-        ws->colors = make_ws_colorset(i);
+        ws->colors = make_ws_colorset(server->palette.profile, i);
     }
     server->palette.desktop_bg = server->workspaces[0].colors.bg;
 

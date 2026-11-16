@@ -136,8 +136,9 @@ check("tt_type_comp passes more options than a fixed command line holds",
 # ---- tttar -----------------------------------------------------------------
 def session_started():
     """A process-tree ttsession for tttar; returns (process, session id) or None."""
-    if subprocess.run(["rpcinfo", "-p"], stdout=subprocess.DEVNULL,
-                      stderr=subprocess.DEVNULL).returncode != 0:
+    if shutil.which("rpcinfo") is None or subprocess.run(
+        ["rpcinfo", "-p", "127.0.0.1"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    ).returncode != 0:
         return None                 # nothing to register the session with
     out = work / "ttsession.out"
     proc = subprocess.Popen([str(ttsession), "-S", "-p"], stdout=out.open("w"),

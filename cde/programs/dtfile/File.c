@@ -154,6 +154,7 @@
 
 #include <Xm/XmP.h>
 #include <Xm/Xm.h>
+#include <Xm/Appearance.h>
 #include <Xm/BulletinB.h>
 #include <Xm/MwmUtil.h>
 #include <X11/ShellP.h>
@@ -6140,9 +6141,17 @@ UpdateOneFileIcon(
    else
    {
       /* create a new or duplicate an existing widget */
-      XtSetArg (args[n], XmNshadowThickness, 2);             n++;
-      XtSetArg (args[n], XmNdropSiteOperations, XmDROP_NOOP);n++;
-      XtSetArg (args[n], XmNfontList, user_font);            n++;
+      {
+         XmAppearanceProfile icon_profile = XmAPPEARANCE_CLASSIC;
+         (void)XmGetAppearanceProfile(XtDisplay((Widget)file_window), &icon_profile);
+         XtSetArg (args[n], XmNshadowThickness,
+                   icon_profile == XmAPPEARANCE_CLASSIC ? 2 : 1); n++;
+         XtSetArg (args[n], XmNdropSiteOperations, XmDROP_NOOP); n++;
+         if (icon_profile == XmAPPEARANCE_CLASSIC)
+         {
+            XtSetArg (args[n], XmNfontList, user_font); n++;
+         }
+      }
       if( keybdFocusPolicy == XmEXPLICIT)
       {
          XtSetArg (args[n], XmNtraversalOn, True);           n++;

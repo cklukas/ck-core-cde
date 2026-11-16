@@ -306,6 +306,19 @@ def main() -> int:
                     break
 
         env = os.environ.copy()
+        ld_parts = []
+        build_root = comp_bin.resolve().parents[3]
+        for cand_lib in (
+            build_root / "motif-prefix" / "lib",
+            build_root / "cde-stage" / "usr" / "dt" / "lib",
+            build_root / "fs-prefix" / "lib",
+        ):
+            if cand_lib.is_dir():
+                ld_parts.append(str(cand_lib))
+        if env.get("LD_LIBRARY_PATH"):
+            ld_parts.append(env["LD_LIBRARY_PATH"])
+        if ld_parts:
+            env["LD_LIBRARY_PATH"] = ":".join(ld_parts)
         env.update({
             "HOME": str(home),
             "XDG_RUNTIME_DIR": str(xdg),

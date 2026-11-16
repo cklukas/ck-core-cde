@@ -1136,6 +1136,7 @@ void WmDrawXmString (Display *dpy, Window w, XmFontList xmfontlist,
 	XmStringDraw (dpy, w, xmfontlist, xmstring, gc, x, y, width, 
 		      alignment, XmSTRING_DIRECTION_L_TO_R, pbox);
     }
+    XSetClipMask (dpy, gc, None);
 } /* END OF FUNCTION WmDrawXmString */
 
 /*************************************<->*************************************

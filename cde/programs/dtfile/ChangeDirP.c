@@ -63,6 +63,7 @@
 #include <time.h>
 #include <Xm/Xm.h>
 #include <Xm/XmP.h>
+#include <Xm/Appearance.h>
 #include <Xm/DrawP.h>
 #undef USE_XFT
 #include <Xm/TextFP.h>
@@ -1280,11 +1281,25 @@ DrawCurrentDirectory(
        font_yoffset = -(extents->max_logical_extent.y);
        font_height = extents->max_logical_extent.height;
    }
-   else
+   else if (file_mgr_data->cd_fonttype == XmFONT_IS_FONT &&
+            file_mgr_data->cd_font != nullptr)
    {
        font_yoffset = file_mgr_data->cd_font->ascent;
        font_height = file_mgr_data->cd_font->ascent +
                        file_mgr_data->cd_font->descent;
+   }
+   else
+   {
+       int r_height = 0, r_ascent = 0, r_descent = 0;
+       XmRenderTableGetDefaultFontExtents(file_mgr_data->cd_fontlist,
+                                          &r_height, &r_ascent, &r_descent);
+       if (r_height <= 0)
+       {
+           r_height = 16;
+           r_ascent = 12;
+       }
+       font_yoffset = (r_ascent > 0) ? r_ascent : r_height;
+       font_height = r_height;
    }
    top_margin = (height > (Dimension)font_height)? (Dimension)(height - font_height + 1)/(Dimension)2: 0;
    left_margin = highlight + shadow + margin;
@@ -1392,12 +1407,44 @@ DrawCurrentDirectory(
       int shadow_height = height - 2*highlight;
       XmTextFieldWidget tf =
              (XmTextFieldWidget)file_mgr_rec->current_directory_text;
+      XmAppearanceProfile profile = XmAPPEARANCE_CLASSIC;
 
-      XmeDrawShadows(XtDisplay(w), XtWindow(w),
-                     tf->primitive.top_shadow_GC,
-                     tf->primitive.bottom_shadow_GC,
-                     highlight, highlight, shadow_width, shadow_height,
-                     shadow, XmSHADOW_IN);
+      (void)XmGetAppearanceProfile(XtDisplay(w), &profile);
+      if ((profile == XmAPPEARANCE_MODERN_LIGHT ||
+           profile == XmAPPEARANCE_MODERN_DARK) &&
+          shadow_width >= 8 && shadow_height >= 8)
+      {
+         short rx = (short)highlight;
+         short ry = (short)highlight;
+         unsigned short rw = (unsigned short)(width - 2 * highlight);
+         unsigned short rh = (unsigned short)shadow_height;
+         XRectangle dark_rects[8] = {
+            { (short)(rx + 2), ry, (unsigned short)(rw - 4), 1 },
+            { (short)(rx + 2), (short)(ry + rh - 1), (unsigned short)(rw - 4), 1 },
+            { rx, (short)(ry + 2), 1, (unsigned short)(rh - 4) },
+            { (short)(rx + rw - 1), (short)(ry + 2), 1, (unsigned short)(rh - 4) },
+            { (short)(rx + 1), (short)(ry + 1), 1, 1 },
+            { (short)(rx + rw - 2), (short)(ry + 1), 1, 1 },
+            { (short)(rx + 1), (short)(ry + rh - 2), 1, 1 },
+            { (short)(rx + rw - 2), (short)(ry + rh - 2), 1, 1 }
+         };
+         XRectangle light_rects[2] = {
+            { (short)(rx + 2), (short)(ry + rh - 2), (unsigned short)(rw - 4), 1 },
+            { (short)(rx + rw - 2), (short)(ry + 2), 1, (unsigned short)(rh - 4) }
+         };
+         XFillRectangles(XtDisplay(w), XtWindow(w),
+                         tf->primitive.bottom_shadow_GC, dark_rects, 8);
+         XFillRectangles(XtDisplay(w), XtWindow(w),
+                         tf->primitive.top_shadow_GC, light_rects, 2);
+      }
+      else
+      {
+         XmeDrawShadows(XtDisplay(w), XtWindow(w),
+                        tf->primitive.top_shadow_GC,
+                        tf->primitive.bottom_shadow_GC,
+                        highlight, highlight, shadow_width, shadow_height,
+                        shadow, XmSHADOW_IN);
+      }
    }
 }
 
@@ -1719,8 +1766,27 @@ get_textwidth( FileMgrData *fmd,
             w = XmbTextEscapement(fmd->cd_fontset, str, len);
             break;
         case XmFONT_IS_FONT:
-            w = XTextWidth(fmd->cd_font, str, len);
+            if (fmd->cd_font != nullptr)
+                w = XTextWidth(fmd->cd_font, str, len);
+            break;
         default:
+            if (fmd->cd_fontlist != nullptr && str != nullptr && len > 0)
+            {
+                char *tmp = XtMalloc((Cardinal)len + 1);
+                if (tmp != nullptr)
+                {
+                    XmString xmstr;
+                    memcpy(tmp, str, (size_t)len);
+                    tmp[len] = '\0';
+                    xmstr = XmStringCreateLocalized(tmp);
+                    XtFree(tmp);
+                    if (xmstr != nullptr)
+                    {
+                        w = (int)XmStringWidth(fmd->cd_fontlist, xmstr);
+                        XmStringFree(xmstr);
+                    }
+                }
+            }
             break;
     }
     return(w);
@@ -1742,8 +1808,40 @@ draw_imagestring( Display *display,
                                bytes);
             break;
         case XmFONT_IS_FONT:
-            XDrawImageString(display, d, gc, x, y, text, bytes);
+            if (fmd->cd_font != nullptr)
+                XDrawImageString(display, d, gc, x, y, text, bytes);
+            break;
         default:
+            if (fmd->cd_fontlist != nullptr && text != nullptr && bytes > 0)
+            {
+                char *tmp = XtMalloc((Cardinal)bytes + 1);
+                if (tmp != nullptr)
+                {
+                    XmString xmstr;
+                    int r_height = 0, r_ascent = 0, r_descent = 0;
+                    int top_y = y;
+                    XmRenderTableGetDefaultFontExtents(fmd->cd_fontlist,
+                                                       &r_height, &r_ascent,
+                                                       &r_descent);
+                    if (r_height > 0)
+                    {
+                        top_y = y - ((r_ascent > 0) ? r_ascent : r_height);
+                    }
+                    memcpy(tmp, text, (size_t)bytes);
+                    tmp[bytes] = '\0';
+                    xmstr = XmStringCreateLocalized(tmp);
+                    XtFree(tmp);
+                    if (xmstr != nullptr)
+                    {
+                        Dimension str_w = XmStringWidth(fmd->cd_fontlist, xmstr);
+                        XmStringDrawImage(display, d, fmd->cd_fontlist, xmstr,
+                                          gc, (Position)x, (Position)top_y,
+                                          str_w, XmALIGNMENT_BEGINNING,
+                                          XmSTRING_DIRECTION_L_TO_R, nullptr);
+                        XmStringFree(xmstr);
+                    }
+                }
+            }
             break;
     }
 }

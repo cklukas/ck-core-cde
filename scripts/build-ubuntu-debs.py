@@ -291,6 +291,9 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     shutil.copytree(cde_stage, r_cde, symlinks=True)
     for la in r_cde.rglob("*.la"):
         la.unlink()
+    for req_pal in ("ModernLight.dp", "ModernDark.dp", "HighContrast.dp"):
+        if not (r_cde / "usr" / "dt" / "palettes" / req_pal).is_file():
+            raise SystemExit(f"error: expected built-in appearance palette missing from stage: {req_pal}")
 
     # Split dtlogin binaries and /etc/pam.d/dtlogin into ck-core-dtlogin
     (r_dtlogin / "usr" / "dt" / "bin").mkdir(parents=True, exist_ok=True)

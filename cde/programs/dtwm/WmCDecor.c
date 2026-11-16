@@ -40,6 +40,7 @@
 
 #include <X11/cursorfont.h>
 #include <Xm/Xm.h>
+#include <Xm/XmP.h>
 
 
 
@@ -1269,7 +1270,7 @@ void DrawWindowTitle (ClientData *pcd, Boolean eraseFirst)
 	fontList = CLIENT_APPEARANCE(pcd).fontList;
     }
 
-    if (eraseFirst)
+    if (eraseFirst || wmGD.appearanceProfile != XmAPPEARANCE_CLASSIC)
     {
 	XClearArea (DISPLAY, win, textBox.x, textBox.y, 
 		(unsigned int) textBox.width, (unsigned int) textBox.height, 

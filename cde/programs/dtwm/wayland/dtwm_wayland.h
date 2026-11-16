@@ -76,11 +76,19 @@ typedef struct {
     DtwmRgba bottom_shadow;
 } DtwmColorSet;
 
+typedef enum {
+    DTWM_PROFILE_CLASSIC = 0,
+    DTWM_PROFILE_MODERN_LIGHT = 1,
+    DTWM_PROFILE_MODERN_DARK = 2,
+    DTWM_PROFILE_HIGH_CONTRAST = 3,
+} DtwmAppearanceProfile;
+
 typedef struct {
     DtwmColorSet active;
     DtwmColorSet inactive;
     DtwmColorSet menu;
     DtwmRgba desktop_bg;
+    DtwmAppearanceProfile profile;
 } DtwmPalette;
 
 typedef enum {
@@ -354,6 +362,9 @@ void dtwm_cairo_buffer_finish(cairo_t *cr, cairo_surface_t *surf);
 void dtwm_draw_bevel(cairo_t *cr, double x, double y, double w, double h, double t, DtwmRgba tl_col, DtwmRgba br_col);
 void dtwm_draw_label(cairo_t *cr, const char *text, double x, double y, double w, double h, DtwmRgba fg, bool centered, bool bold);
 void dtwm_palette_init_default(DtwmPalette *pal);
+DtwmAppearanceProfile dtwm_parse_appearance_profile(const char *name);
+void dtwm_palette_init_profile(DtwmPalette *pal, DtwmAppearanceProfile profile);
+void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProfile profile);
 void dtwm_view_insets(const DtwmView *view, int *left, int *top, int *right, int *bottom);
 void dtwm_view_outer_size(const DtwmView *view, int *out_w, int *out_h);
 const char *dtwm_view_title(const DtwmView *view);

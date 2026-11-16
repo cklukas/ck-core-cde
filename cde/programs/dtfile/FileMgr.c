@@ -110,6 +110,7 @@
 #include <ctype.h>
 
 #include <Xm/XmP.h>
+#include <Xm/Appearance.h>
 #include <Xm/CascadeB.h>
 #include <Xm/DrawingA.h>
 #include <Xm/DrawingAP.h>
@@ -1886,9 +1887,16 @@ Create(
           extents = XExtentsOfFontSet((XFontSet)entry_font);
           font_height = extents->max_logical_extent.height;
       }
-      else {
+      else if (type == XmFONT_IS_FONT && entry_font != nullptr) {
           font_height = ((XFontStruct *)entry_font)->ascent +
                  ((XFontStruct *)entry_font)->descent;
+      }
+      else {
+          int r_height = 0, r_ascent = 0, r_descent = 0;
+          XmRenderTableGetDefaultFontExtents(font_list, &r_height, &r_ascent, &r_descent);
+          if (r_height <= 0)
+              r_height = 16;
+          font_height = r_height;
       }
       curdir_height = font_height + 2*(highlight_thickness + shadow_thickness);
 
@@ -1993,10 +2001,18 @@ Create(
    XtSetArg (args[1], XmNverticalScrollBar, &(file_mgr_rec->vertical_scroll_bar));
    XtGetValues (file_mgr_rec->scroll_window, args, 2);
 
-   XtSetArg (args[0], XmNforeground, background);
-   XtSetArg (args[1], XmNtraversalOn, True);
-   XtSetValues (file_mgr_rec->horizontal_scroll_bar, args, 2);
-   XtSetValues (file_mgr_rec->vertical_scroll_bar, args, 2);
+   {
+      XmAppearanceProfile sb_profile = XmAPPEARANCE_CLASSIC;
+      n = 0;
+      (void)XmGetAppearanceProfile(XtDisplay(mainWidget), &sb_profile);
+      if (sb_profile == XmAPPEARANCE_CLASSIC)
+      {
+         XtSetArg (args[n], XmNforeground, background); n++;
+      }
+      XtSetArg (args[n], XmNtraversalOn, True); n++;
+      XtSetValues (file_mgr_rec->horizontal_scroll_bar, args, n);
+      XtSetValues (file_mgr_rec->vertical_scroll_bar, args, n);
+   }
 
 
    /*  Add an event handler to catch resizes occurring on the scrolled  */
@@ -2266,6 +2282,7 @@ GetDefaultValues( void )
    file_mgr_data->cd_inited = False;
    file_mgr_data->cd_font = nullptr;
    file_mgr_data->cd_fontset = nullptr;
+   file_mgr_data->cd_fontlist = nullptr;
    file_mgr_data->cd_normal_gc = 0;
    file_mgr_data->cd_select_gc = 0;
    file_mgr_data->cd_select = nullptr;
@@ -2494,6 +2511,7 @@ GetResourceValues(
    file_mgr_data->cd_inited = False;
    file_mgr_data->cd_font = nullptr;
    file_mgr_data->cd_fontset = nullptr;
+   file_mgr_data->cd_fontlist = nullptr;
    file_mgr_data->cd_normal_gc = 0;
    file_mgr_data->cd_select_gc = 0;
    file_mgr_data->cd_select = nullptr;
@@ -2781,6 +2799,7 @@ SetValues(
    if (file_mgr_data->cd_inited == False)
    {
       file_mgr_data->cd_inited = True;
+      file_mgr_data->cd_fontlist = font_list;
 
       entry_font = XmFontListEntryGetFont(FontListDefaultEntry(font_list), &type);
       if(type == XmFONT_IS_FONTSET) {
@@ -2788,11 +2807,16 @@ SetValues(
           file_mgr_data->cd_fonttype = XmFONT_IS_FONTSET;
           gc_mask = GCForeground | GCBackground;
       }
-      else {
+      else if (type == XmFONT_IS_FONT && entry_font != nullptr) {
           file_mgr_data->cd_font = (XFontStruct *)entry_font;
           file_mgr_data->cd_fonttype = XmFONT_IS_FONT;
           gc_values.font = ((XFontStruct *)entry_font)->fid;
           gc_mask = GCForeground | GCBackground | GCFont;
+      }
+      else {
+          file_mgr_data->cd_font = nullptr;
+          file_mgr_data->cd_fonttype = type;
+          gc_mask = GCForeground | GCBackground;
       }
 
       gc_values.foreground = foreground;
@@ -6163,6 +6187,8 @@ ShelfRebuild(
       shelf_slot_margin_h = 4;
 
    shelf_icon_size = ShelfGetIconSize(file_mgr_data, &shelf_icon_px);
+   if (file_mgr_rec->status_line != nullptr)
+      XtVaGetValues(file_mgr_rec->status_line, XmNfontList, &font_list, nullptr);
    entry = FontListDefaultEntry(font_list);
    if (entry)
    {
@@ -6172,10 +6198,17 @@ ShelfRebuild(
          XFontSetExtents *extents = XExtentsOfFontSet((XFontSet)entry_font);
          font_height = extents->max_logical_extent.height;
       }
-      else
+      else if (type == XmFONT_IS_FONT && entry_font != nullptr)
       {
          font_height = ((XFontStruct *)entry_font)->ascent +
             ((XFontStruct *)entry_font)->descent;
+      }
+      else
+      {
+         int r_height = 0, r_ascent = 0, r_descent = 0;
+         XmRenderTableGetDefaultFontExtents(font_list, &r_height, &r_ascent, &r_descent);
+         if (r_height > 0)
+            font_height = r_height;
       }
    }
    if (font_height <= 0)
