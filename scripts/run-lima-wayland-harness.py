@@ -196,23 +196,61 @@ def sync_git_checkout(src_repo: Path, dst_dir: Path, rev: str, *, include_worktr
     if marker.is_file() and marker.read_text(encoding="utf-8").strip() == stamp:
         return stamp
 
-    # If base revision matches and only the worktree diff changed, update only touched files
-    # so Automake/Make preserves timestamps on all untouched sources!
-    if dst_dir.is_dir() and marker.is_file() and marker.read_text(encoding="utf-8").strip().startswith(rev):
-        changed = subprocess.check_output(
-            ["git", "-c", "safe.directory=*", "-C", str(src_repo), "diff", "--name-only", "HEAD"],
-            text=True,
-        ).splitlines()
-        for rel in changed:
-            sfile = src_repo / rel
-            dfile = dst_dir / rel
-            if sfile.is_file():
-                dfile.parent.mkdir(parents=True, exist_ok=True)
-                data = sfile.read_bytes()
-                if not dfile.is_file() or dfile.read_bytes() != data:
-                    dfile.write_bytes(data)
-        marker.write_text(stamp + "\n", encoding="utf-8")
-        return stamp
+    # Incremental update across commits on the same repo: only touch files that changed
+    # between the previous synced commit and `rev` (plus any uncommitted worktree edits),
+    # preserving timestamps on all untouched files for fast incremental Make builds.
+    if dst_dir.is_dir() and marker.is_file():
+        old_stamp = marker.read_text(encoding="utf-8").strip()
+        old_rev = old_stamp.split(":", 1)[0]
+        if git_object_exists(src_repo, old_rev):
+            changed = set(
+                subprocess.check_output(
+                    ["git", "-c", "safe.directory=*", "-C", str(src_repo), "diff", "--name-only", old_rev, rev],
+                    text=True,
+                ).splitlines()
+            )
+            if include_worktree_diff:
+                changed.update(
+                    subprocess.check_output(
+                        ["git", "-c", "safe.directory=*", "-C", str(src_repo), "diff", "--name-only", "HEAD"],
+                        text=True,
+                    ).splitlines()
+                )
+                untracked = subprocess.check_output(
+                    ["git", "-c", "safe.directory=*", "-C", str(src_repo), "ls-files", "--others", "--exclude-standard"],
+                    text=True,
+                ).splitlines()
+                changed.update(untracked)
+            for rel in sorted(changed):
+                if include_worktree_diff:
+                    sfile = src_repo / rel
+                    if sfile.is_file():
+                        dfile = dst_dir / rel
+                        dfile.parent.mkdir(parents=True, exist_ok=True)
+                        data = sfile.read_bytes()
+                        if not dfile.is_file() or dfile.read_bytes() != data:
+                            dfile.write_bytes(data)
+                            shutil.copymode(sfile, dfile)
+                    elif (dst_dir / rel).exists():
+                        (dst_dir / rel).unlink()
+                else:
+                    check = subprocess.run(
+                        ["git", "-c", "safe.directory=*", "-C", str(src_repo), "cat-file", "-e", f"{rev}:{rel}"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    dfile = dst_dir / rel
+                    if check.returncode == 0:
+                        data = subprocess.check_output(
+                            ["git", "-c", "safe.directory=*", "-C", str(src_repo), "show", f"{rev}:{rel}"]
+                        )
+                        dfile.parent.mkdir(parents=True, exist_ok=True)
+                        if not dfile.is_file() or dfile.read_bytes() != data:
+                            dfile.write_bytes(data)
+                    elif dfile.exists():
+                        dfile.unlink()
+            marker.write_text(stamp + "\n", encoding="utf-8")
+            return stamp
 
     if dst_dir.exists():
         shutil.rmtree(dst_dir)

@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ]; then
+    . /usr/share/debconf/confmodule
+    DEFAULT_DISPLAY_MANAGER_FILE=/etc/X11/default-display-manager
+    DAEMON=/usr/dt/bin/dtlogin
+
+    db_get shared/default-x-display-manager || RET=""
+    if [ "$RET" = "ck-core-dtlogin" ] || [ ! -e "$DEFAULT_DISPLAY_MANAGER_FILE" ]; then
+        mkdir -p /etc/X11
+        printf '%s\n' "$DAEMON" > "$DEFAULT_DISPLAY_MANAGER_FILE"
+        if [ -d /etc/systemd/system ]; then
+            ln -sf /lib/systemd/system/dtlogin.service /etc/systemd/system/display-manager.service
+        fi
+    fi
+    db_stop || true
+fi
+
+exit 0

@@ -1,71 +1,83 @@
-Source: cde-desktop
+Source: ck-core-cde
 Section: x11
 Priority: optional
-Maintainer: TheSelousScout <nicetrynsa@protonmail.ch>
-Build-Depends: debhelper (>= 10),
+Maintainer: CK Core Project <cklukas@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13),
+               autoconf,
                automake,
-               python3,
-               patch,
-               curl,
-               libxt-dev,
-               libxmu-dev,
-               libxinerama-dev,
-               libxpm-dev,
-               libmrm4,
-               libmotif-dev,
-               libxaw7-dev,
-               libx11-dev,
-               libxss-dev,
-               libtirpc-dev,
-               libutempter-dev,
-               libpam-dev,
-               x11-xserver-utils,
-               libjpeg62-dev,
-               libssl-dev,
-               tcl-dev,
-               ksh,
-               m4,
-               ncompress,
-               xfonts-100dpi,
-               xfonts-100dpi-transcoded,
-               rpcbind,
+               libtool,
+               pkg-config,
+               clang,
                bison,
-               libbison-dev,
-               xbitmaps
-Standards-Version: 4.1.2
-Homepage: https://sourceforge.net/projects/cdesktopenv/
-#Vcs-Git: https://anonscm.debian.org/git/collab-maint/cde-desktop.git
-#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/cde-desktop.git
+               flex,
+               gawk,
+               gettext,
+               locales,
+               m4,
+               ksh93u+m | ksh,
+               ncompress,
+               opensp,
+               rpcsvc-proto,
+               tcl-dev,
+               x11-xserver-utils,
+               xfonts-utils,
+               xbitmaps,
+               libx11-dev,
+               libxt-dev,
+               libxext-dev,
+               libxmu-dev,
+               libxpm-dev,
+               libxau-dev,
+               libxdmcp-dev,
+               libxinerama-dev,
+               libxrender-dev,
+               libxcursor-dev,
+               libxss-dev,
+               libxaw7-dev,
+               libxft-dev,
+               libice-dev,
+               libsm-dev,
+               libjpeg-dev,
+               liblmdb-dev,
+               libtirpc-dev,
+               libpam0g-dev,
+               libutempter-dev,
+               ck-core-motif9 (>= 2.4.0),
+               ck-core-fs-lib (>= 0.3.0)
+Standards-Version: 4.7.0
+Homepage: https://github.com/cklukas/ck-core-cde
+Rules-Requires-Root: fakeroot
 
-Package: cde-desktop
+Package: ck-core-cde
 Architecture: any
-Depends: libxt6,
-         libxmu6,
-         libxinerama1,
-         libxpm4,
-         libmrm4,
-         libxaw7,
-         libx11-6,
-         libxss1,
-         libtirpc1,
-         libutempter,
-         libpam,
-         x11-xserver-utils,
-         libjpeg62,
-         libuil4,
-         tcl,
-         ksh,
-         m4,
-         ncompress,
+Depends: ck-core-motif9 (>= 2.4.0),
+         ck-core-fs-lib (>= 0.3.0),
+         ksh93u+m | ksh,
          rpcbind,
-         bison,
-         xbitmaps,
+         x11-xserver-utils,
+         xfonts-base,
+         xwayland | xserver-xorg-core,
          ${shlibs:Depends},
          ${misc:Depends}
-Recommends: xfonts-100dpi,
-            xfonts-100dpi-transcoded
-Description: CDE - Common Desktop Environment
- The Common Desktop Environment, the classic UNIX desktop. The Common Desktop
- Environment was created by a collaboration of Sun, HP, IBM, DEC, SCO, Fujitsu
- and Hitachi. Used on a selection of commercial UNIXs, it is now available as
- open-source software.
+Recommends: ck-core-apps,
+            xfonts-100dpi,
+            xserver-xorg
+Conflicts: cde-desktop
+Replaces: cde-desktop
+Description: CK Core Common Desktop Environment (X11/XLibre and Wayland)
+ Modernized, C23-hardened Common Desktop Environment built as a matched native
+ cohort with CK Core Motif ABI 9 and ck-core-fs-lib. Provides both classic
+ X11/XLibre (/usr/share/xsessions/cde.desktop) and Wayland
+ (/usr/share/wayland-sessions/cde-wayland.desktop) desktop sessions.
+
+Package: ck-core-dtlogin
+Architecture: any
+Depends: ck-core-cde (= ${binary:Version}),
+         debconf (>= 0.5) | debconf-2.0,
+         ${shlibs:Depends},
+         ${misc:Depends}
+Provides: x-display-manager
+Description: CK Core CDE graphical login and display manager
+ Provides dtlogin, dtgreet, PAM systemd-logind integration, and Debian/Ubuntu
+ default-display-manager debconf registration for launching Wayland and
+ X11/XLibre desktop sessions.

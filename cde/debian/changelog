@@ -1,5 +1,10 @@
-cde-desktop (2.3.0-1) UNRELEASED; urgency=medium
+ck-core-cde (2.5.3-1) resolute; urgency=medium
 
-  * Initial release (Closes: #689098)
+  * Modernize Debian/Ubuntu packaging for CK Core CDE 2.5.3 against matched
+    CK Core Motif ABI 9 (`ck-core-motif9`) and `ck-core-fs-lib` (>= 0.3.0).
+  * Split `ck-core-dtlogin` with `shared/default-x-display-manager` debconf
+    and `pam_systemd.so` session integration.
+  * Install `/usr/share/xsessions/cde.desktop` and
+    `/usr/share/wayland-sessions/cde-wayland.desktop`.
 
- -- TheSelousScout <nicetrynsa@protonmail.ch>  Tue, 10 Apr 2018 22:23:02 -0700
+ -- CK Core Project <cklukas@users.noreply.github.com>  Mon, 16 Nov 2026 20:50:00 +0100

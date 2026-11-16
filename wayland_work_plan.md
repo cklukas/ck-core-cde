@@ -31,7 +31,7 @@ Deliver a first-class, `apt`-installable **CK Core CDE Wayland Desktop Session**
   - Provide `scripts/run-lima-wayland-harness.py` that builds CK Core Motif (ABI 9) + `ck-core-fs-lib` + CK Core CDE + `ck-core-apps` on VM-local storage (`-j6`), boots a dual-output headless `wlroots` + rootless `Xwayland` session, launches freshly built CDE and `ck-core-apps` clients, verifies `/proc/<pid>/maps` `libXm.so.9` provenance, captures dual-output PNG frames via `zwlr_screencopy_manager_v1` (`grim`), and writes `receipt.json`.
 - **Acceptance gate**: Harness runs cleanly from macOS with `TMPDIR`/`LIMA_HOME` under `/Volumes/S8T/tmp`, builds the matched native C23 stack, passes headless dual-output Wayland + XWayland smoke checks, and emits a verified receipt.
 
-### [ ] WP-01 — Modern Ubuntu/Debian `.deb` Packaging (`apt install ck-core-cde`)
+### [x] WP-01 — Modern Ubuntu/Debian `.deb` Packaging (`apt install ck-core-cde`)
 - **Repos**: `ck-core-motif`, `ck-core-cde` (`cde/debian/`), `ck-core-apps`
 - **Scope**:
   - Replace legacy `cde/debian/` metadata with clean Debian/Ubuntu packaging producing `ck-core-motif9`, `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` without colliding with system `libxm4`.

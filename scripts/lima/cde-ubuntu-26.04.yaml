@@ -44,7 +44,7 @@ provision:
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
     apt-get install -y --no-install-recommends \
-      build-essential clang lld llvm cmake ninja-build meson pkg-config \
+      build-essential clang libclang-rt-dev lld llvm cmake ninja-build meson pkg-config \
       autoconf automake libtool bison byacc flex m4 gawk gettext locales \
       python3 python3-pil git curl ca-certificates file binutils patchelf fakeroot \
       libx11-dev libxt-dev libxext-dev libxmu-dev libxpm-dev libxau-dev \

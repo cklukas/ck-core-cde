@@ -1,4 +1,17 @@
 2026-11-16
+- Modernize Debian/Ubuntu `.deb` packaging (`WP-01`) for the matched CK Core
+  cohort (`ck-core-motif9`, `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`,
+  and `ck-core-apps`) on the `x11_wayland` branch.
+  - `cde/programs/dtlogin/config/dtlogin.src`: add `-session optional pam_systemd.so`
+    so `systemd-logind` registers local Wayland and X11 login sessions cleanly on
+    Ubuntu and Debian while remaining optional on non-systemd platforms.
+  - `cde/debian/` and `scripts/build-ubuntu-debs.py`: replace obsolete Imake
+    debhelper stubs with `/usr/dt`-scoped ABI 9 packaging (`RUNPATH=/usr/dt/lib`,
+    coexisting cleanly with system `libxm4`), `shared/default-x-display-manager`
+    `debconf` scripts, `/lib/systemd/system/dtlogin.service`,
+    `/usr/share/xsessions/cde.desktop`,
+    `/usr/share/wayland-sessions/cde-wayland.desktop`, `/usr/dt/bin/Xsession.wayland`,
+    and local APT repository generation + `apt-get install` verification.
 - Add the Ubuntu 26.04 LTS Lima Wayland qualification harness (`WP-00`), fix
   the `glibc 2.43` C23 `strstr` macro redeclaration in `dthelp`'s `htag2`
   translator, and advance `.ckgit/motif-revision` to

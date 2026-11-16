@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-16",
+  "work_package": "WP-01",
+  "branch": "x11_wayland",
+  "topic": "Modern Ubuntu/Debian .deb cohort packaging and APT repository verification",
+  "host": "Ubuntu 26.04.1 LTS arm64 (Lima vz guest on Apple M1 Max)",
+  "packages": {
+    "ck-core-motif9": {
+      "filename": "ck-core-motif9_2.4.0-1_arm64.deb",
+      "size_bytes": 4849948,
+      "sha256": "7b9b8d30e85a6906970bf44d7013ab8797ed19f4a988e696461b3a5a95515272"
+    },
+    "ck-core-fs-lib": {
+      "filename": "ck-core-fs-lib_0.3.0-1_arm64.deb",
+      "size_bytes": 16205688,
+      "sha256": "defadf77c5055700187d8f558ffcd6fcda9bc23caa54c42b8ff5d607d9a1b105"
+    },
+    "ck-core-cde": {
+      "filename": "ck-core-cde_2.5.3-1_arm64.deb",
+      "size_bytes": 31838468,
+      "sha256": "375dfe2f6e56ae537738b1fe5be83a6fff008825dbd79afc7f4e939710f8eb91"
+    },
+    "ck-core-dtlogin": {
+      "filename": "ck-core-dtlogin_2.5.3-1_arm64.deb",
+      "size_bytes": 298056,
+      "sha256": "6c641690237e747b2bebba83e73990784e3a370e974e36e63dbd696496e91f4e"
+    },
+    "ck-core-apps": {
+      "filename": "ck-core-apps_1.0.0-1_arm64.deb",
+      "size_bytes": 173500,
+      "sha256": "8d4cf0b075ecc09bcc1ac993caac9ba2b8da25a6d71f4d93d4a93577dc9bf47f"
+    }
+  },
+  "verification": {
+    "apt_install_from_local_repo": "pass (ck-core-cde ck-core-apps ck-core-dtlogin libxm4)",
+    "coexists_with_ubuntu_libxm4": true,
+    "runtime_maps_without_ld_library_path": {
+      "dtpad": "/usr/dt/lib/libXm.so.9.0.0",
+      "ck-clock": "/usr/dt/lib/libXm.so.9.0.0"
+    },
+    "dtlogin_sanitizer_suite": "pass (all 12 test suites)"
+  }
+}

@@ -1,19 +1,16 @@
 #!/usr/bin/make -f
-#export DH_VERBOSE = 1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
 	dh $@
 
-#make clean cleans everything except the doc directory for some reason
-override_dh_auto_clean:
-	$(MAKE) clean
-	$(MAKE) clean.doc
+override_dh_auto_configure:
+	./autogen.sh
+	PKG_CONFIG_PATH=/usr/dt/lib/pkgconfig \
+	CPPFLAGS="$(CPPFLAGS) -I/usr/dt/include $$(pkg-config --cflags xft)" \
+	LDFLAGS="$(LDFLAGS) -L/usr/dt/lib -Wl,-rpath,/usr/dt/lib" \
+	./configure --prefix=/usr/dt --with-ck-core-fs CC=clang CXX=clang++
 
-#make World needs to be called, not just make
 override_dh_auto_build:
-	$(MAKE) World
-
-#make install is broken, so we use the install script instead
-override_dh_auto_install:
-	sudo ./admin/IntegTools/dbTools/installCDE -s . -destDir \
-	./debian/cde-desktop
+	$(MAKE) -j1 -C programs/dtksh prepare-ksh
+	dh_auto_build --max-parallel=6

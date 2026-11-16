@@ -731,3 +731,22 @@ compositor with rootless `Xwayland`, launches both native Wayland and Motif/CDE
 clients, checks `/proc/<pid>/maps` so every Motif process maps the recorded
 `libXm.so.9` prefix, drives virtual pointer input, captures output PNG frames
 through `zwlr_screencopy_manager_v1`, and writes `receipt.json`.
+
+## Ubuntu and Debian `.deb` cohort packaging
+
+`scripts/build-ubuntu-debs.py` packages the matched native cohort into five
+Debian/Ubuntu archives (`ck-core-motif9`, `ck-core-fs-lib`, `ck-core-cde`,
+`ck-core-dtlogin`, and `ck-core-apps`) along with `Packages`, `Packages.gz`, and
+`Release` repository metadata:
+
+```sh
+python3 scripts/build-ubuntu-debs.py --task-root "$TASK_ROOT" --verify-install
+```
+
+All runtime libraries and executables install beneath `/usr/dt` with
+`RUNPATH=/usr/dt/lib` and `/etc/ld.so.conf.d/ck-core-cde.conf`, avoiding file or
+SONAME collisions with system `libxm4`. `ck-core-cde` registers both
+`/usr/share/xsessions/cde.desktop` and
+`/usr/share/wayland-sessions/cde-wayland.desktop`, while `ck-core-dtlogin`
+provides `/lib/systemd/system/dtlogin.service`, `pam_systemd.so` session hooks,
+and `shared/default-x-display-manager` `debconf` integration.

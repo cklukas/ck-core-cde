@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=CDE (Wayland)
+Comment=CK Core Common Desktop Environment on Wayland
+Exec=/usr/dt/bin/Xsession.wayland
+TryExec=/usr/dt/bin/Xsession.wayland
+DesktopNames=CDE
+Type=Application
+Keywords=CDE;Motif;Desktop;Wayland;

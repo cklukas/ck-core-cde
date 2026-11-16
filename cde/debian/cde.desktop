@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=CDE (X11 / XLibre)
+Comment=CK Core Common Desktop Environment on X11 / XLibre
+Exec=/usr/dt/bin/Xsession
+TryExec=/usr/dt/bin/Xsession
+DesktopNames=CDE
+Type=Application
+Keywords=CDE;Motif;Desktop;X11;XLibre;
