@@ -65,6 +65,7 @@ static char rcsid[] =
 #include <ctype.h>
 
 #include <X11/Xatom.h>
+#include <Xm/Appearance.h>
 #include "Srv.h"
 #include "SrvFile_io.h"
 #include "SrvPalette.h"
@@ -79,6 +80,9 @@ static char rcsid[] =
 #define SRVBUFSIZE              1024
 #define DEFAULT_COLOR_PALETTE "Default.dp"
 #define DEFAULT_GRAYSCALE_PALETTE "GrayScale.dp"
+#define MODERN_LIGHT_PALETTE "ModernLight.dp"
+#define MODERN_DARK_PALETTE "ModernDark.dp"
+#define HIGH_CONTRAST_PALETTE "HighContrast.dp"
 
 #define DtRColorUse         "ColorUse"
 #define DtRForegroundColor  "ForegroundColor"
@@ -232,6 +236,69 @@ static void SetDefaults(
 static void _DtCacheProperties(
 			Display *dpy,
 			Window Win) ;
+
+static Boolean
+ProfileFromPaletteName(
+        const char *palette_name,
+        XmAppearanceProfile *profile_return)
+{
+    if (palette_name == nullptr || profile_return == nullptr)
+        return False;
+    if (strcmp(palette_name, "ModernLight") == 0 ||
+        strcmp(palette_name, MODERN_LIGHT_PALETTE) == 0)
+    {
+        *profile_return = XmAPPEARANCE_MODERN_LIGHT;
+        return True;
+    }
+    if (strcmp(palette_name, "ModernDark") == 0 ||
+        strcmp(palette_name, MODERN_DARK_PALETTE) == 0)
+    {
+        *profile_return = XmAPPEARANCE_MODERN_DARK;
+        return True;
+    }
+    if (strcmp(palette_name, "HighContrast") == 0 ||
+        strcmp(palette_name, HIGH_CONTRAST_PALETTE) == 0)
+    {
+        *profile_return = XmAPPEARANCE_HIGH_CONTRAST;
+        return True;
+    }
+    return False;
+}
+
+static const char *
+ProfileNameString(
+        XmAppearanceProfile profile)
+{
+    switch (profile)
+    {
+        case XmAPPEARANCE_MODERN_LIGHT:
+            return "modern_light";
+        case XmAPPEARANCE_MODERN_DARK:
+            return "modern_dark";
+        case XmAPPEARANCE_HIGH_CONTRAST:
+            return "high_contrast";
+        case XmAPPEARANCE_CLASSIC:
+        default:
+            return "classic";
+    }
+}
+
+static const char *
+DefaultPaletteForProfile(
+        XmAppearanceProfile profile)
+{
+    switch (profile)
+    {
+        case XmAPPEARANCE_MODERN_DARK:
+            return MODERN_DARK_PALETTE;
+        case XmAPPEARANCE_HIGH_CONTRAST:
+            return HIGH_CONTRAST_PALETTE;
+        case XmAPPEARANCE_MODERN_LIGHT:
+        case XmAPPEARANCE_CLASSIC:
+        default:
+            return DEFAULT_COLOR_PALETTE;
+    }
+}
 /********    End Static Function Declarations    ********/
 
 #define MSG1  ((char *)GETMESSAGE(26, 1, "Color Server Warning: couldn't get ownership of the selection: "))
@@ -251,7 +318,8 @@ InitializeDtcolor(
         short sessionType )
 {
     int status, screen_number;
-    char xrdb_string[100];
+    char xrdb_string[256];
+    XmAppearanceProfile profile = XmAPPEARANCE_CLASSIC;
 
   /* find out what type of monitor(s?) is being used */
     status = CheckMonitor(dpy);
@@ -274,6 +342,23 @@ InitializeDtcolor(
        return(-1);
     }
 
+    _DtCacheProperties(dpy, XtWindow(shell[0])) ;
+
+    (void)XmGetAppearanceProfile(dpy, &profile);
+    if (profile == XmAPPEARANCE_CLASSIC &&
+        colorSrv.pCurrentPalette[0] != nullptr)
+    {
+        (void)ProfileFromPaletteName(colorSrv.pCurrentPalette[0]->name, &profile);
+    }
+
+    if (profile != XmAPPEARANCE_CLASSIC)
+    {
+        snprintf(xrdb_string, sizeof xrdb_string,
+                 "*appearanceProfile: %s\n",
+                 ProfileNameString(profile));
+        _DtAddToResource(dpy, xrdb_string);
+    }
+
     /* don't set resources if writeXrdbColors == false */
     if (!pColorSrvRsrc.WriteXrdbColors)
 	return(0);
@@ -283,10 +368,24 @@ InitializeDtcolor(
 			colorSrv.pCurrentPalette[0]->color);
     OWsyncLocaleResources(dpy);
 #else
-   /* Set the *background: resource
-       What gets set depends on what type of monitor */
-     /* For XmCO_HIGH_COLOR the default primary colorset is 4, else 1 */
-    if(colorSrv.TypeOfMonitor[0] != XmCO_BLACK_WHITE)
+    if (profile != XmAPPEARANCE_CLASSIC)
+    {
+       /* When a modern Motif appearance profile is active, avoid writing
+        * wildcard *background and *foreground strings into RESOURCE_MANAGER
+        * because explicit Xrm strings override libXm's per-widget modern
+        * palette. Scope terminal canvas colors to DtTerm instead. */
+       int textchip = (colorSrv.TypeOfMonitor[0] == XmCO_HIGH_COLOR ||
+                       colorSrv.TypeOfMonitor[0] == XmCO_MEDIUM_COLOR) ? 3 : 0;
+       snprintf(xrdb_string, sizeof xrdb_string,
+                "*DtTerm*background: #%04X%04X%04X\n*DtTerm*foreground: #%04X%04X%04X\n",
+                colorSrv.pCurrentPalette[0]->color[textchip].bg.red,
+                colorSrv.pCurrentPalette[0]->color[textchip].bg.green,
+                colorSrv.pCurrentPalette[0]->color[textchip].bg.blue,
+                colorSrv.pCurrentPalette[0]->color[textchip].fg.red,
+                colorSrv.pCurrentPalette[0]->color[textchip].fg.green,
+                colorSrv.pCurrentPalette[0]->color[textchip].fg.blue);
+    }
+    else if(colorSrv.TypeOfMonitor[0] != XmCO_BLACK_WHITE)
     {
        int chipnum = colorSrv.TypeOfMonitor[0] == XmCO_HIGH_COLOR ? 4 : 1;
        snprintf(xrdb_string, sizeof xrdb_string,
@@ -318,8 +417,6 @@ InitializeDtcolor(
     /* go merge the xrdb_string into the xrdb */
     _DtAddToResource(dpy, xrdb_string);
 #endif
-
-    _DtCacheProperties(dpy, XtWindow(shell[0])) ;
 
     return(0);
 }
@@ -1470,10 +1567,14 @@ SetDefaults(
       }
       else
       {
-          pColorSrvRsrc.ColorPalette =
-                XtMalloc(sizeof(DEFAULT_COLOR_PALETTE));
-          memcpy(pColorSrvRsrc.ColorPalette, DEFAULT_COLOR_PALETTE,
-                 sizeof(DEFAULT_COLOR_PALETTE));
+          XmAppearanceProfile profile = XmAPPEARANCE_CLASSIC;
+          const char *def_palette;
+          size_t def_len;
+          (void)XmGetAppearanceProfile(dpy, &profile);
+          def_palette = DefaultPaletteForProfile(profile);
+          def_len = strlen(def_palette) + 1;
+          pColorSrvRsrc.ColorPalette = XtMalloc(def_len);
+          memcpy(pColorSrvRsrc.ColorPalette, def_palette, def_len);
       }
    }
 

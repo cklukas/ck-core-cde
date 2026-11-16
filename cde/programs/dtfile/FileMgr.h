@@ -281,6 +281,7 @@ typedef struct
    Boolean       cd_inited;
    XFontStruct * cd_font;
    XFontSet      cd_fontset;
+   XmFontList    cd_fontlist;
    XmFontType    cd_fonttype;
    GC            cd_normal_gc;
    GC            cd_select_gc;

@@ -182,6 +182,8 @@ XParseColor(Display dpy, Colormap cmap, const char *spec, XColor *out)
     if (!spec || spec[0] != '#')
         return 0;
     memset(out, 0, sizeof(*out));
+    if (strcmp(spec, "#000000000000") == 0)
+        return 1;
     out->red = 0x1111;
     out->green = 0x2222;
     out->blue = 0x3333;
@@ -395,6 +397,18 @@ main(void)
     free(exact_buf);
     if (pal.num_of_colors < 2) {
         fprintf(stderr, "FAIL: ReadInInfo parsed %d colors\n", pal.num_of_colors);
+        return 1;
+    }
+
+    /* 3b. ReadInInfo HighContrast pure-black colorsets get white borders and blue select */
+    const char *hc_lines = "#ff00ff000000\n#000000000000\n";
+    palette hc_pal;
+    memset(&hc_pal, 0, sizeof(hc_pal));
+    hc_pal.name = "HighContrast";
+    ReadInInfo((char *)hc_lines, (int)strlen(hc_lines), &hc_pal);
+    if (hc_pal.color[1].fg.red != 65535 || hc_pal.color[1].ts.red != 65535 ||
+        hc_pal.color[1].bs.red != 65535 || hc_pal.color[1].sc.blue != 65535) {
+        fprintf(stderr, "FAIL: HighContrast palette borders/foreground not high-contrast\n");
         return 1;
     }
 

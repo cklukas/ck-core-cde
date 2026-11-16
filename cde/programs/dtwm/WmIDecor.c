@@ -1455,6 +1455,7 @@ void DrawIconTitle (ClientData *pcd)
 		      ICON_DISPLAY_TITLE(pcd), iconGC,
 		      textBox.x, textBox.y, textBox.width,
 		      alignment, XmSTRING_DIRECTION_L_TO_R, &textBox);
+	XSetClipMask (DISPLAY, iconGC, None);
     }
 
 } /* END OF FUNCTION DrawIconTitle */
@@ -1559,6 +1560,7 @@ void RedisplayIconTitle (ClientData *pcd)
 			  textBox.x, textBox.y, textBox.width,
 			  alignment, XmSTRING_DIRECTION_L_TO_R,
 			  &textBox);
+	    XSetClipMask (DISPLAY, iconGC, None);
 	}
 
 	/* 

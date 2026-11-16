@@ -54,3 +54,6 @@ Palettes*Urchin.desc: %|nls-29-|
 Palettes*Wheat.desc: %|nls-30-|
 Palettes*White.desc: %|nls-31-|
 Palettes*WhiteBlack.desc: %|nls-32-|
+Palettes*HighContrast.desc: HighContrast
+Palettes*ModernDark.desc: ModernDark
+Palettes*ModernLight.desc: ModernLight

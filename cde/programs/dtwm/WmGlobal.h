@@ -57,7 +57,11 @@
 #include <X11/StringDefs.h>
 #include <Xm/MwmUtil.h>
 #include <Xm/Xm.h>
+#include <Xm/Appearance.h>
 #include <Xm/ColorObjP.h>
+
+extern Dimension _XmDpiScaleDimension(double scale, Dimension base);
+extern XmRenderTable _XmAppearanceCreateRenderTable(Widget widget, unsigned char role, double scale);
 #include <Dt/Service.h>
 #include <Dt/Wsm.h>
 #include <Dt/WsmP.h>
@@ -2188,6 +2192,9 @@ typedef struct _WmGlobalData
 
     int numMouseButtons;		/* num of mouse buttons available */
     unsigned int bMenuButton;		/* BMenu binding (button/state) */
+    XmAppearanceProfile appearanceProfile;
+    XmAppearanceDensity appearanceDensity;
+    double dpiScale;
 #if defined(sun) && defined(ALLPLANES)
     Bool	allplanes;		/* is SUN_ALLPLANES available? */
 #endif /* defined(sun) && defined(ALLPLANES) */

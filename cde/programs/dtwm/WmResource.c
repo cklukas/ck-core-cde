@@ -69,8 +69,12 @@
 /*
  * Function Declarations:
  */
+extern XmRenderTable _XmAppearanceCreateRenderTable (Widget widget,
+    unsigned char role, double scale);
+
 XmColorData *_WmGetDefaultColors (Screen *, Colormap, String);
 
+void _WmFontListDefault (Widget widget, int offset, XrmValue *value);
 void _WmTopShadowPixmapDefault (Widget widget, int offset, XrmValue *value);
 void _WmIconImageFDefault (Widget widget, int offset, XrmValue *value);
 void _WmIconImageBDefault (Widget widget, int offset, XrmValue *value);
@@ -2161,8 +2165,8 @@ XtResource wmAppearanceResources[] =
 	XmRFontList,
 	sizeof (XmFontList),
 	XtOffsetOf (AppearanceData, fontList),
-	XtRString,
-	"fixed"
+	XtRCallProc,
+	(XtPointer)_WmFontListDefault
     },
 
     {
@@ -2515,9 +2519,80 @@ _WmMatteTSPDefault (Widget widget, int offset, XrmValue *value)
  * 
  *************************************<->***********************************/
 
+static Boolean
+_WmResolveHexPixel (Widget widget, const char *spec, Pixel *pixelReturn)
+{
+    Display *dpy;
+    Screen *scr;
+    Colormap cmap;
+    XColor exact, screenColor;
+
+    if (widget == nullptr || spec == nullptr || pixelReturn == nullptr)
+	return False;
+    dpy = XtDisplay (widget);
+    scr = XtScreen (widget);
+    cmap = widget->core.colormap ? widget->core.colormap
+				 : DefaultColormapOfScreen (scr);
+    if (!XAllocNamedColor (dpy, cmap, spec, &screenColor, &exact))
+	return False;
+    *pixelReturn = screenColor.pixel;
+    return True;
+}
+
+void
+_WmFontListDefault (Widget widget, int offset, XrmValue *value)
+{
+    static XmRenderTable renderTable = nullptr;
+    XmFontListEntry entry = nullptr;
+    double scale = 1.0;
+
+    (void)offset;
+    renderTable = nullptr;
+    if (widget != nullptr && wmGD.appearanceProfile != XmAPPEARANCE_CLASSIC)
+    {
+	scale = (wmGD.dpiScale > 0.0) ? wmGD.dpiScale : 1.0;
+	renderTable = _XmAppearanceCreateRenderTable (
+	    widget, XmAPPEARANCE_ROLE_SECTION, scale);
+    }
+    if (renderTable == nullptr && widget != nullptr)
+    {
+	entry = XmFontListEntryLoad (XtDisplay (widget), "fixed",
+				     XmFONT_IS_FONT, XmFONTLIST_DEFAULT_TAG);
+	if (entry != nullptr)
+	{
+	    renderTable = XmFontListAppendEntry (nullptr, entry);
+	    XmFontListEntryFree (&entry);
+	}
+    }
+
+    value->addr = (XPointer)&renderTable;
+    value->size = sizeof (XmRenderTable);
+} /* END OF FUNCTION _WmFontListDefault */
+
 void 
 _WmBackgroundDefault (Widget widget, int offset, XrmValue *value)
 {
+    static Pixel modernBg;
+    Boolean isFeedback = (pResSD != nullptr &&
+			  _pAppearanceData == &(pResSD->feedbackAppearance));
+
+    (void)offset;
+    if (!Monochrome (XtScreen (widget)))
+    {
+	const char *spec = nullptr;
+	if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_LIGHT)
+	    spec = isFeedback ? "#f1f2f4" : "#e2e6eb";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_DARK)
+	    spec = isFeedback ? "#303134" : "#26282c";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_HIGH_CONTRAST)
+	    spec = "#000000";
+	if (spec != nullptr && _WmResolveHexPixel (widget, spec, &modernBg))
+	{
+	    value->addr = (char *)&modernBg;
+	    value->size = sizeof (Pixel);
+	    return;
+	}
+    }
     _WmGetDynamicDefault (widget, WmBGC, _defaultBackground, 0, value);
 
 } /* END OF FUNCTION _WmBackgroundDefault */
@@ -2526,6 +2601,25 @@ _WmBackgroundDefault (Widget widget, int offset, XrmValue *value)
 void 
 _WmForegroundDefault (Widget widget, int offset, XrmValue *value)
 {
+    static Pixel modernFg;
+
+    (void)offset;
+    if (!Monochrome (XtScreen (widget)))
+    {
+	const char *spec = nullptr;
+	if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_LIGHT)
+	    spec = "#3c4043";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_DARK)
+	    spec = "#bdc1c6";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_HIGH_CONTRAST)
+	    spec = "#ffffff";
+	if (spec != nullptr && _WmResolveHexPixel (widget, spec, &modernFg))
+	{
+	    value->addr = (char *)&modernFg;
+	    value->size = sizeof (Pixel);
+	    return;
+	}
+    }
     _WmGetDynamicDefault (widget, WmFGC, 0, _pAppearanceData->background,
 	value);
 
@@ -2537,6 +2631,14 @@ _WmBackgroundPixmapDefault (Widget widget, int offset, XrmValue *value)
 {
     static String string;
 
+
+    if (wmGD.appearanceProfile != XmAPPEARANCE_CLASSIC)
+    {
+	string = nullptr;
+	value->addr = (char *)string;
+	value->size = sizeof (String);
+	return;
+    }
 
     if ((Monochrome (XtScreen (widget))) ||
 	(_pAppearanceData->topShadowColor == _pAppearanceData->background))
@@ -2557,6 +2659,25 @@ _WmBackgroundPixmapDefault (Widget widget, int offset, XrmValue *value)
 void 
 _WmBottomShadowColorDefault (Widget widget, int offset, XrmValue *value)
 {
+    static Pixel modernBs;
+
+    (void)offset;
+    if (!Monochrome (XtScreen (widget)))
+    {
+	const char *spec = nullptr;
+	if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_LIGHT)
+	    spec = "#80868b";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_DARK)
+	    spec = "#5f6368";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_HIGH_CONTRAST)
+	    spec = "#ffffff";
+	if (spec != nullptr && _WmResolveHexPixel (widget, spec, &modernBs))
+	{
+	    value->addr = (char *)&modernBs;
+	    value->size = sizeof (Pixel);
+	    return;
+	}
+    }
     _WmGetDynamicDefault (widget, WmBSC, 0, _pAppearanceData->background,
 	value);
 
@@ -2566,6 +2687,25 @@ _WmBottomShadowColorDefault (Widget widget, int offset, XrmValue *value)
 void 
 _WmTopShadowColorDefault (Widget widget, int offset, XrmValue *value)
 {
+    static Pixel modernTs;
+
+    (void)offset;
+    if (!Monochrome (XtScreen (widget)))
+    {
+	const char *spec = nullptr;
+	if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_LIGHT)
+	    spec = "#80868b";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_DARK)
+	    spec = "#5f6368";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_HIGH_CONTRAST)
+	    spec = "#ffffff";
+	if (spec != nullptr && _WmResolveHexPixel (widget, spec, &modernTs))
+	{
+	    value->addr = (char *)&modernTs;
+	    value->size = sizeof (Pixel);
+	    return;
+	}
+    }
     _WmGetDynamicDefault (widget, WmTSC, 0, _pAppearanceData->background,
 	value);
 
@@ -2577,6 +2717,14 @@ _WmTopShadowPixmapDefault (Widget widget, int offset, XrmValue *value)
 {
     static String string;
 
+
+    if (wmGD.appearanceProfile != XmAPPEARANCE_CLASSIC)
+    {
+	string = nullptr;
+	value->addr = (char *)string;
+	value->size = sizeof (String);
+	return;
+    }
 
     if ((Monochrome (XtScreen (widget))) ||
 	(_pAppearanceData->topShadowColor == _pAppearanceData->background))
@@ -2604,6 +2752,25 @@ _WmTopShadowPixmapDefault (Widget widget, int offset, XrmValue *value)
 void 
 _WmABackgroundDefault (Widget widget, int offset, XrmValue *value)
 {
+    static Pixel modernABg;
+
+    (void)offset;
+    if (!Monochrome (XtScreen (widget)))
+    {
+	const char *spec = nullptr;
+	if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_LIGHT)
+	    spec = "#dae7f9";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_DARK)
+	    spec = "#283952";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_HIGH_CONTRAST)
+	    spec = "#ffff00";
+	if (spec != nullptr && _WmResolveHexPixel (widget, spec, &modernABg))
+	{
+	    value->addr = (char *)&modernABg;
+	    value->size = sizeof (Pixel);
+	    return;
+	}
+    }
     _WmGetDynamicDefault (widget, WmBGC, _defaultActiveBackground, 0, value);
 
 } /* END OF FUNCTION _WmABackgroundDefault */
@@ -2612,6 +2779,25 @@ _WmABackgroundDefault (Widget widget, int offset, XrmValue *value)
 void 
 _WmAForegroundDefault (Widget widget, int offset, XrmValue *value)
 {
+    static Pixel modernAFg;
+
+    (void)offset;
+    if (!Monochrome (XtScreen (widget)))
+    {
+	const char *spec = nullptr;
+	if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_LIGHT)
+	    spec = "#17202c";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_DARK)
+	    spec = "#f1f3f4";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_HIGH_CONTRAST)
+	    spec = "#000000";
+	if (spec != nullptr && _WmResolveHexPixel (widget, spec, &modernAFg))
+	{
+	    value->addr = (char *)&modernAFg;
+	    value->size = sizeof (Pixel);
+	    return;
+	}
+    }
     _WmGetDynamicDefault (widget, WmFGC, 0, _pAppearanceData->activeBackground,
 	value);
 
@@ -2622,6 +2808,14 @@ _WmABackgroundPixmapDefault (Widget widget, int offset, XrmValue *value)
 {
     static String string;
 
+
+    if (wmGD.appearanceProfile != XmAPPEARANCE_CLASSIC)
+    {
+	string = nullptr;
+	value->addr = (char *)string;
+	value->size = sizeof (String);
+	return;
+    }
 
     if ((Monochrome (XtScreen (widget))) ||
 	(_pAppearanceData->activeTopShadowColor ==
@@ -2642,6 +2836,25 @@ _WmABackgroundPixmapDefault (Widget widget, int offset, XrmValue *value)
 void 
 _WmABottomShadowColorDefault (Widget widget, int offset, XrmValue *value)
 {
+    static Pixel modernABs;
+
+    (void)offset;
+    if (!Monochrome (XtScreen (widget)))
+    {
+	const char *spec = nullptr;
+	if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_LIGHT)
+	    spec = "#80868b";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_DARK)
+	    spec = "#5f6368";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_HIGH_CONTRAST)
+	    spec = "#ffff00";
+	if (spec != nullptr && _WmResolveHexPixel (widget, spec, &modernABs))
+	{
+	    value->addr = (char *)&modernABs;
+	    value->size = sizeof (Pixel);
+	    return;
+	}
+    }
     _WmGetDynamicDefault (widget, WmBSC, 0, _pAppearanceData->activeBackground,
 	value);
 
@@ -2651,6 +2864,25 @@ _WmABottomShadowColorDefault (Widget widget, int offset, XrmValue *value)
 void 
 _WmATopShadowColorDefault (Widget widget, int offset, XrmValue *value)
 {
+    static Pixel modernATs;
+
+    (void)offset;
+    if (!Monochrome (XtScreen (widget)))
+    {
+	const char *spec = nullptr;
+	if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_LIGHT)
+	    spec = "#80868b";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_MODERN_DARK)
+	    spec = "#5f6368";
+	else if (wmGD.appearanceProfile == XmAPPEARANCE_HIGH_CONTRAST)
+	    spec = "#ffff00";
+	if (spec != nullptr && _WmResolveHexPixel (widget, spec, &modernATs))
+	{
+	    value->addr = (char *)&modernATs;
+	    value->size = sizeof (Pixel);
+	    return;
+	}
+    }
     _WmGetDynamicDefault (widget, WmTSC, 0, _pAppearanceData->activeBackground,
 	value);
 
@@ -2661,6 +2893,14 @@ void
 _WmATopShadowPixmapDefault (Widget widget, int offset, XrmValue *value)
 {
     static String string;
+
+    if (wmGD.appearanceProfile != XmAPPEARANCE_CLASSIC)
+    {
+	string = nullptr;
+	value->addr = (char *)string;
+	value->size = sizeof (String);
+	return;
+    }
 
     if ((Monochrome (XtScreen (widget))) ||
 	(_pAppearanceData->activeTopShadowColor ==
@@ -3037,6 +3277,23 @@ _WmSecondariesOnTopDefault (Widget widget, int offset, XrmValue *value)
 void 
 ProcessWmResources (void)
 {
+    wmGD.appearanceProfile = XmAPPEARANCE_CLASSIC;
+    wmGD.appearanceDensity = XmAPPEARANCE_DENSITY_COMFORTABLE;
+    wmGD.dpiScale = 1.0;
+    if (DISPLAY != nullptr)
+    {
+	(void)XmGetAppearanceProfile (DISPLAY, &wmGD.appearanceProfile);
+	(void)XmGetAppearanceDensity (DISPLAY, &wmGD.appearanceDensity);
+    }
+    if (wmGD.topLevelW != nullptr)
+    {
+	Dimension sp = 0;
+	if (XmGetAppearanceSpacing (DISPLAY, XmAPPEARANCE_SPACING_MEDIUM, &sp) &&
+	    sp >= 12)
+	{
+	    wmGD.dpiScale = (double)sp / 12.0;
+	}
+    }
 
     /*
      * Process the mwm general appearance and behavior resources.  Retrieve
@@ -4349,49 +4606,74 @@ void
 MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean makeActiveResources)
 {
     Pixel foreground;
+    int extHeight = 0, extAscent = 0, extDescent = 0;
+
+    if (wmGD.appearanceProfile != XmAPPEARANCE_CLASSIC &&
+	pSD != nullptr && pSD->screenTopLevelW != nullptr)
+    {
+	double scale = (wmGD.dpiScale > 0.0) ? wmGD.dpiScale : 1.0;
+	XmRenderTable modernTable = _XmAppearanceCreateRenderTable (
+	    pSD->screenTopLevelW, XmAPPEARANCE_ROLE_NORMAL, scale);
+	if (modernTable != nullptr)
+	{
+	    pAData->fontList = modernTable;
+	}
+    }
 
     /*
      * Extract a font from the font list.
      */
+    XmRenderTableGetDefaultFontExtents (
+	pAData->fontList, &extHeight, &extAscent, &extDescent);
 
-    if (! XmeRenderTableGetDefaultFont(pAData->fontList, &(pAData->font)))
+    if (! XmeRenderTableGetDefaultFont(pAData->fontList, &(pAData->font)) &&
+	extHeight <= 0)
     {
-#if 0
-        /* This always prints garbage on failure, which seems to
-         * always happen at least 1-3 times on startup.
-         */
-	sprintf((char *)wmGD.tmpBuffer,
-                ((char *)GETMESSAGE(62, 23, "failed to load font: %.100s\0")), (char*) pAData->fontList);
-#endif
 	Warning("XmeRenderTableGetDefaultFont() failed, trying a fixed font");
 
 #if defined(CSRG_BASED) || defined(__linux__)
-	/* HACK to try get _some_ font anyway (fontList seems to end
-	 * up as an empty list on some modern systems; investigate) */
 	pAData->font = XLoadQueryFont(wmGD.display, "fixed");
 	if (pAData->font == nullptr)
 	{
 	  ExitWM(WM_ERROR_EXIT_VALUE);
 	}
-	/* try to get right title hight using XExtentsOfFontSet: on UTF-8
-	 * locales XmeRenderTableGetDefaultFont does not return anything
-	 * when font is a compound fontset*/
 	if (!FallbackMakeTitleHeight(pAData))
 	{
-	  /* failed to get height from fontList - falling back to fixed */
 	  pAData->titleHeight = (pAData->font)->ascent + (pAData->font)->descent
 	    + WM_TITLE_BAR_PADDING;
 	}
 #else
 	ExitWM(WM_ERROR_EXIT_VALUE);
 #endif
-    } else {
-	/* got default font successfully, hack was not needed */
-	/*
-	 *  Calculate title bar's height (using selected font) and store it in pAData.
-	 */
-	pAData->titleHeight = (pAData->font)->ascent + (pAData->font)->descent
-	+ WM_TITLE_BAR_PADDING;
+    }
+    else
+    {
+	if (pAData->font == nullptr)
+	{
+	    pAData->font = XLoadQueryFont (DISPLAY, "fixed");
+	    if (pAData->font != nullptr && extHeight > 0)
+	    {
+		pAData->font->ascent =
+		    (extAscent > 0) ? extAscent : (extHeight - extDescent);
+		pAData->font->descent =
+		    (extHeight > pAData->font->ascent)
+		    ? (extHeight - pAData->font->ascent)
+		    : extDescent;
+	    }
+	}
+	if (extHeight > 0)
+	{
+	    pAData->titleHeight = extHeight + WM_TITLE_BAR_PADDING;
+	}
+	else if (pAData->font != nullptr)
+	{
+	    pAData->titleHeight = (pAData->font)->ascent +
+		(pAData->font)->descent + WM_TITLE_BAR_PADDING;
+	}
+	else
+	{
+	    pAData->titleHeight = 16 + WM_TITLE_BAR_PADDING;
+	}
     }
 
 
@@ -4838,7 +5120,7 @@ ProcessScreenResources (WmScreenData *pSD, unsigned char *screenName)
 	    pSD->frameBorderWidth = (int) (avg_res * 1.7);
 
 	    /* limit size because big borders look ugly */
-            if (wmGD.frameStyle == WmSLAB)
+	    if (wmGD.frameStyle == WmSLAB)
 	    {
 		if (pSD->frameBorderWidth > 4) pSD->frameBorderWidth = 4;
 	    }

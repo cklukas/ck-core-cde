@@ -1562,7 +1562,8 @@ Draw(
 	    }
 	  else
 	    {
-	      if (G_UseEmbossedText (g))
+	      if (G_UseEmbossedText (g) &&
+		  G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)))
 		XmStringDraw (d, drawable, G_FontList (g), G_String (g),
 			      G_BottomShadowGC (g), x + s_x + 1, y + s_y + 1,
 			      clip.width, XmALIGNMENT_BEGINNING,
@@ -1623,7 +1624,8 @@ Draw(
 	    }
 	  else
 	    {
-	      if (G_UseEmbossedText (g))
+	      if (G_UseEmbossedText (g) &&
+		  G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)))
 		XmStringDraw (d, drawable, G_FontList (g), G_String (g),
 			      G_BottomShadowGC (g), x + s_x + 1, y + s_y + 1,
 			      clip.width, XmALIGNMENT_BEGINNING,
@@ -1826,7 +1828,8 @@ UpdateGCs(
     values.font = font->fid;
   }
 
-  if (G_UseEmbossedText (g))
+  if (G_UseEmbossedText (g) &&
+      G_Foreground (g) == WhitePixelOfScreen (XtScreen (g)))
     values.foreground = WhitePixelOfScreen (XtScreen (g));
   else
     values.foreground = G_Foreground (g);

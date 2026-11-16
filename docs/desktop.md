@@ -1,48 +1,104 @@
 ---
-title: The desktop and its tools
-description: Screenshots from a CK Core CDE session running with CK Core Motif.
+title: Desktop Screenshots
+description: Actual screenshots from a live CK Core CDE session across Classic, Modern Light, Modern Dark, and High Contrast Motif appearance profiles.
 ---
 
-# The desktop and its tools
+# Desktop Screenshots
 
-These screenshots come from a clean CDE session launched through
-`/usr/dt/bin/Xsession` on Debian ARM64. The smoke test creates a private home,
-starts a 1280 by 900 X server, waits for the CDE Front Panel, and opens the
-installed Style Manager, Terminal, and File Manager.
+These screenshots come from a real CK Core CDE session launched with
+`/usr/dt/bin/Xsession` on ARM64 Linux (`1280x900`, 24-bit color) against the
+matched CK Core Motif ABI 9 (`libXm.so.9`) stack. Each scene is captured across
+all four built-in Motif appearance profiles (`Classic`, `Modern Light`,
+`Modern Dark`, and `High Contrast`) so the classic CDE baseline and the modern
+vector/Xft appearance profiles can be compared side by side.
 
-The capture records the executable and mapped `libXm.so.9` path for every
-running CDE process. This verifies that the session shown here uses the CK Core
-Motif revision recorded with the images.
+## Desktop and Front Panel
 
-## Default desktop
+The default session starts `dtsession` and `dtwm`, displaying the CDE workspace
+backdrop and the Front Panel with its workspace switcher, clock, mailer,
+terminal, file manager, text editor, and style manager controls. In the modern
+appearance profiles, `dtsession` selects the matching desktop palette
+(`Default.dp` for `modern_light`, `ModernDark.dp` for `modern_dark`, or
+`HighContrast.dp` for `high_contrast`) and `dtwm` renders the Front Panel
+workspace switcher with Xft typography.
 
-![The default CDE desktop with the Front Panel and four workspaces](images/default-desktop.png)
+::: tabs
+== Classic
+![CK Core CDE default desktop and Front Panel (Classic)](images/default-desktop.png)
+== Modern Light
+![CK Core CDE default desktop and Front Panel (Modern Light)](images/default-desktop-modern-light.png)
+== Modern Dark
+![CK Core CDE default desktop and Front Panel (Modern Dark)](images/default-desktop-modern-dark.png)
+== High Contrast
+![CK Core CDE default desktop and Front Panel (High Contrast)](images/default-desktop-high-contrast.png)
+:::
 
 ## Style Manager
 
-![CDE Style Manager running on the desktop](images/style-manager.png)
+`dtstyle` opens from the session and manages desktop color palettes, fonts,
+backdrops, keyboard, mouse, beep, screen, window, and startup settings. Selecting
+`ModernLight`, `ModernDark`, `HighContrast`, or any classic palette in the Color
+dialog previews the corresponding Motif appearance profile live via
+`XmApplyAppearanceProfile()` and persists both `ColorPalette` and
+`*appearanceProfile` in `RESOURCE_MANAGER`.
+
+::: tabs
+== Classic
+![CK Core CDE Style Manager in the running session (Classic)](images/style-manager.png)
+== Modern Light
+![CK Core CDE Style Manager in the running session (Modern Light)](images/style-manager-modern-light.png)
+== Modern Dark
+![CK Core CDE Style Manager in the running session (Modern Dark)](images/style-manager-modern-dark.png)
+== High Contrast
+![CK Core CDE Style Manager in the running session (High Contrast)](images/style-manager-high-contrast.png)
+:::
 
 ## Terminal
 
-The smoke test enters a command through the visible Terminal window and checks
-the file produced by that command before capturing the screen.
+`dtterm` runs inside the session, accepts keyboard input, and executes a shell
+command in the user's home directory before this capture is taken. Under modern
+appearance profiles, `dtwm` preserves CDE's classic 3D beveled window
+decorations while rendering anti-aliased Xft titlebar and icon labels, and
+`dtsession` scopes the palette's text colorset to `*DtTerm*background` and
+`*DtTerm*foreground`.
 
-![CDE Terminal running on the desktop](images/terminal.png)
+::: tabs
+== Classic
+![CK Core CDE Terminal Emulator running a command in the session (Classic)](images/terminal.png)
+== Modern Light
+![CK Core CDE Terminal Emulator running a command in the session (Modern Light)](images/terminal-modern-light.png)
+== Modern Dark
+![CK Core CDE Terminal Emulator running a command in the session (Modern Dark)](images/terminal-modern-dark.png)
+== High Contrast
+![CK Core CDE Terminal Emulator running a command in the session (High Contrast)](images/terminal-high-contrast.png)
+:::
 
 ## File Manager
 
-The File Manager opens the staged `/usr/dt` installation used by the session.
+`dtfile` opens `/usr/dt` inside the same session, showing the installed CDE
+tree with menu bar, path header, icon view, and status line styled by the active
+appearance profile.
 
-![CDE File Manager browsing the installed desktop](images/file-manager.png)
+::: tabs
+== Classic
+![CK Core CDE File Manager viewing /usr/dt (Classic)](images/file-manager.png)
+== Modern Light
+![CK Core CDE File Manager viewing /usr/dt (Modern Light)](images/file-manager-modern-light.png)
+== Modern Dark
+![CK Core CDE File Manager viewing /usr/dt (Modern Dark)](images/file-manager-modern-dark.png)
+== High Contrast
+![CK Core CDE File Manager viewing /usr/dt (High Contrast)](images/file-manager-high-contrast.png)
+:::
 
-## Capture provenance
+## Capture Provenance
 
-The current images were generated by the uConsole smoke test from the clean
-Clang C23 build at commit
-`bf34747220640d77ebaaad8eb62296ad089d4bc6`, after the complete check suite and
-Xvfb widget callback test passed. The session uses CK Core Motif commit
-`20a1461b155009c271ad7f9876c5ec4b8bbf9573`. The adjacent
-[process and mapped-library record](images/smoke-test-processes.txt),
-[Motif source revision](images/motif-revision.txt), and
-[Motif library checksum](images/motif.sha256) are the retained runtime
-evidence.
+The screenshots are captured from a real `/usr/dt/bin/Xsession` session across
+all four profiles (`classic`, `modern_light`, `modern_dark`, `high_contrast`)
+from:
+
+- CK Core Motif revision
+  [`d85fb6604a827a7ebfcdcadcbac4525dccc684d7`](images/motif-revision.txt)
+- `libXm.so.9.0.0` SHA-256 recorded in [`motif.sha256`](images/motif.sha256)
+- `/proc/<pid>/exe` and `/proc/<pid>/maps` verification recorded in
+  [`smoke-test-processes.txt`](images/smoke-test-processes.txt) for
+  `dtsession`, `dtwm`, `dtstyle`, `dtterm`, and `dtfile`
