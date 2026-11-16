@@ -145,6 +145,7 @@ static void clear_active_focus(DtwmServer *server) {
             wlr_xwayland_surface_activate(prev->xwayland_surface, false);
         }
         dtwm_view_update_frame(prev);
+        dtwm_icons_update_view(prev);
     }
     wlr_seat_keyboard_notify_clear_focus(server->seat);
 }
@@ -163,6 +164,9 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
     if (view->minimized) {
         view_set_minimized(view, false);
     }
+    if (view->is_swallowed) {
+        return;
+    }
 
     DtwmView *prev = server->focused_view;
     if (prev && prev != view) {
@@ -173,14 +177,17 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
             wlr_xwayland_surface_activate(prev->xwayland_surface, false);
         }
         dtwm_view_update_frame(prev);
+        dtwm_icons_update_view(prev);
     }
 
-    /* Raise in Z-order and move to head of server->views MRU list */
-    if (view->frame_tree) {
+    /* Raise in Z-order and move to head of server->views MRU list (keep desktop pins in desktop_icon_tree) */
+    if (view->frame_tree && !view->is_desktop_pin) {
         wlr_scene_node_raise_to_top(&view->frame_tree->node);
     }
-    wl_list_remove(&view->link);
-    wl_list_insert(&server->views, &view->link);
+    if (!view->is_desktop_pin) {
+        wl_list_remove(&view->link);
+        wl_list_insert(&server->views, &view->link);
+    }
 
     server->focused_view = view;
     view->active = true;
@@ -188,9 +195,12 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
         wlr_xdg_toplevel_set_activated(view->xdg_toplevel, true);
     } else if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
         wlr_xwayland_surface_activate(view->xwayland_surface, true);
-        wlr_xwayland_surface_restack(view->xwayland_surface, nullptr, XCB_STACK_MODE_ABOVE);
+        if (!view->is_desktop_pin) {
+            wlr_xwayland_surface_restack(view->xwayland_surface, nullptr, XCB_STACK_MODE_ABOVE);
+        }
     }
     dtwm_view_update_frame(view);
+    dtwm_icons_update_view(view);
 
     struct wlr_keyboard *kbd = wlr_seat_get_keyboard(server->seat);
     if (kbd) {
@@ -251,13 +261,16 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
     }
     if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
         wlr_xwayland_surface_set_minimized(view->xwayland_surface, minimized);
+        dtwm_icons_set_wm_state(view);
     }
+    dtwm_icons_relayout(view->server);
     if (minimized && view->server->focused_view == view) {
         clear_active_focus(view->server);
         /* Focus next visible view on current workspace if any */
         DtwmView *cand;
         wl_list_for_each(cand, &view->server->views, link) {
-            if (cand != view && dtwm_view_visible_on_current_ws(cand)) {
+            if (cand != view && dtwm_view_visible_on_current_ws(cand) &&
+                !cand->is_swallowed && !cand->is_desktop_pin) {
                 focus_view(view->server, cand, nullptr);
                 break;
             }
@@ -659,6 +672,7 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
         wlr_seat_pointer_notify_enter(server->seat, surface, sx, sy);
         wlr_seat_pointer_notify_motion(server->seat, time_msec, sx, sy);
     }
+    dtwm_icons_sync_xwayland_pointer(server, server->cursor->x, server->cursor->y, surface);
 }
 
 static void handle_cursor_motion(struct wl_listener *listener, void *data) {
@@ -732,6 +746,15 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     DtwmView *view = desktop_view_at(server, server->cursor->x, server->cursor->y, &surface, &sx, &sy, &part);
 
     if (!view && !surface) {
+        DtwmView *icon_v = dtwm_icons_view_at(server, server->cursor->x, server->cursor->y);
+        if (icon_v) {
+            if (ev->button == BTN_LEFT) {
+                focus_view(server, icon_v, nullptr);
+            } else if (ev->button == BTN_RIGHT) {
+                open_window_menu(server, icon_v, (int)server->cursor->x, (int)server->cursor->y);
+            }
+            return;
+        }
         /* Clicking empty CDE desktop clears active window focus */
         clear_active_focus(server);
         return;
@@ -1098,6 +1121,7 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
 
     dtwm_update_output_backdrop(output);
     dtwm_update_front_panel(server);
+    dtwm_icons_relayout(server);
 
     wlr_xcursor_manager_load(server->cursor_mgr, wlr_output->scale);
 }
@@ -1108,7 +1132,10 @@ static void place_initial_view(DtwmView *view) {
     int idx = 0;
     DtwmView *it;
     wl_list_for_each(it, &server->views, link) {
-        if (it != view && dtwm_view_visible_on_current_ws(it)) idx++;
+        if (it != view && dtwm_view_visible_on_current_ws(it) &&
+            !it->is_swallowed && !it->is_desktop_pin) {
+            idx++;
+        }
     }
     struct wlr_box obox;
     dtwm_get_usable_output_box(server, server->cursor->x, server->cursor->y, &obox);
@@ -1130,6 +1157,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     place_initial_view(view);
     wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     dtwm_view_update_frame(view);
+    dtwm_icons_on_view_map(view);
     if (dtwm_view_visible_on_current_ws(view)) {
         focus_view(view->server, view, view->xdg_toplevel->base->surface);
     }
@@ -1150,6 +1178,7 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     }
     view->mapped = false;
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
+    dtwm_icons_on_view_unmap_or_destroy(view, false);
 }
 
 static void xdg_toplevel_commit(struct wl_listener *listener, void *data) {
@@ -1183,6 +1212,7 @@ static void xdg_toplevel_set_title(struct wl_listener *listener, void *data) {
     DtwmView *view = wl_container_of(listener, view, set_title);
     if (view->mapped) {
         dtwm_view_update_frame(view);
+        dtwm_icons_update_view(view);
     }
 }
 
@@ -1216,11 +1246,12 @@ static void xdg_toplevel_request_minimize(struct wl_listener *listener, void *da
 static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, destroy);
-    if (view == view->server->focused_view) {
-        view->server->focused_view = nullptr;
+    DtwmServer *server = view->server;
+    if (view == server->focused_view) {
+        server->focused_view = nullptr;
     }
-    if (view == view->server->menu_target) {
-        close_window_menu(view->server);
+    if (view == server->menu_target) {
+        close_window_menu(server);
     }
     wl_list_remove(&view->map.link);
     wl_list_remove(&view->unmap.link);
@@ -1232,6 +1263,7 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->request_minimize.link);
     wl_list_remove(&view->set_title.link);
     wl_list_remove(&view->link);
+    dtwm_icons_on_view_unmap_or_destroy(view, true);
     if (view->frame_tree) {
         wlr_scene_node_destroy(&view->frame_tree->node);
     }
@@ -1490,6 +1522,10 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
         return;
     }
 
+    if (dtwm_icons_classify_xwayland_map(view)) {
+        return;
+    }
+
     view->frame_tree = wlr_scene_tree_create(view->server->workspace_tree);
     view->frame_tree->node.data = view;
     view->frame_buf = wlr_scene_buffer_create(view->frame_tree, nullptr);
@@ -1504,6 +1540,7 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
     }
     wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
     dtwm_workspaces_on_xwayland_view_map(view);
+    dtwm_icons_on_view_map(view);
     wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     sync_xwayland_client_pos(view);
     dtwm_view_update_frame(view);
@@ -1526,6 +1563,9 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
         clear_active_focus(view->server);
     }
     view->mapped = false;
+    view->is_desktop_pin = false;
+    view->is_swallowed = false;
+    dtwm_icons_on_view_unmap_or_destroy(view, false);
     if (view->frame_tree) {
         wlr_scene_node_destroy(&view->frame_tree->node);
         view->frame_tree = nullptr;
@@ -1555,7 +1595,11 @@ static void xwayland_request_configure(struct wl_listener *listener, void *data)
     struct wlr_xwayland_surface_configure_event *ev = data;
     struct wlr_xwayland_surface *xs = view->xwayland_surface;
 
-    if (!view->mapped || xs->override_redirect) {
+    if (!view->mapped || xs->override_redirect || view->is_swallowed) {
+        if (view->is_swallowed) {
+            dtwm_icons_reposition_swallowed(view->server);
+            return;
+        }
         wlr_xwayland_surface_configure(xs, ev->x, ev->y, ev->width, ev->height);
         if (view->mapped && xs->override_redirect && view->frame_tree) {
             wlr_scene_node_set_position(&view->frame_tree->node, ev->x, ev->y);
@@ -1603,12 +1647,14 @@ static void xwayland_set_title(struct wl_listener *listener, void *data) {
     DtwmView *view = wl_container_of(listener, view, set_title);
     if (view->mapped) {
         dtwm_view_update_frame(view);
+        dtwm_icons_update_view(view);
     }
 }
 
 static void xwayland_set_decorations(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, set_decorations);
+    if (view->is_swallowed || view->is_desktop_pin) return;
     apply_xwayland_decorations(view);
     if (view->mapped) {
         sync_xwayland_client_pos(view);
@@ -1619,11 +1665,12 @@ static void xwayland_set_decorations(struct wl_listener *listener, void *data) {
 static void xwayland_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, destroy);
-    if (view == view->server->focused_view) {
-        view->server->focused_view = nullptr;
+    DtwmServer *server = view->server;
+    if (view == server->focused_view) {
+        server->focused_view = nullptr;
     }
-    if (view == view->server->menu_target) {
-        close_window_menu(view->server);
+    if (view == server->menu_target) {
+        close_window_menu(server);
     }
     wl_list_remove(&view->associate.link);
     wl_list_remove(&view->dissociate.link);
@@ -1636,6 +1683,7 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->set_decorations.link);
     wl_list_remove(&view->destroy.link);
     wl_list_remove(&view->link);
+    dtwm_icons_on_view_unmap_or_destroy(view, true);
     if (view->frame_tree) {
         wlr_scene_node_destroy(&view->frame_tree->node);
     }
@@ -1713,6 +1761,7 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
         );
     }
     dtwm_workspaces_on_xwayland_ready(server);
+    dtwm_icons_on_xwayland_ready(server);
     write_status_file(server);
 }
 
@@ -1726,28 +1775,41 @@ static int handle_signal_quit(int sig_num, void *data) {
 int main(int argc, char **argv) {
     const char *startup_cmd = nullptr;
     const char *status_file = nullptr;
+    const char *swallow_client = nullptr;
     bool greeter_mode = false;
     bool no_panel = false;
+    bool no_open_icons = false;
+    bool large_icons = false;
 
     static const struct option long_opts[] = {
         {"startup", required_argument, nullptr, 's'},
         {"status-file", required_argument, nullptr, 'f'},
+        {"swallow", required_argument, nullptr, 'w'},
         {"session", no_argument, nullptr, 'S'},
         {"greeter", no_argument, nullptr, 'g'},
         {"no-panel", no_argument, nullptr, 'P'},
+        {"no-open-window-icons", no_argument, nullptr, 'I'},
+        {"large-icons", no_argument, nullptr, 'L'},
         {"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0},
     };
     int opt;
-    while ((opt = getopt_long(argc, argv, "s:f:SgPh", long_opts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "s:f:w:SgPILh", long_opts, nullptr)) != -1) {
         switch (opt) {
         case 's': startup_cmd = optarg; break;
         case 'f': status_file = optarg; break;
+        case 'w': swallow_client = optarg; break;
         case 'S': break;
         case 'g': greeter_mode = true; break;
         case 'P': no_panel = true; break;
+        case 'I': no_open_icons = true; break;
+        case 'L': large_icons = true; break;
         case 'h':
-            printf("Usage: %s [--session] [--greeter] [--no-panel] [--status-file PATH] [--startup CMD]\n", argv[0]);
+            printf(
+                "Usage: %s [--session] [--greeter] [--no-panel] [--no-open-window-icons] "
+                "[--large-icons] [--swallow NAME] [--status-file PATH] [--startup CMD]\n",
+                argv[0]
+            );
             return 0;
         default:
             return 2;
@@ -1809,9 +1871,11 @@ int main(int argc, char **argv) {
     server.bg_tree = wlr_scene_tree_create(&server.scene->tree);
     server.layer_bg_tree = wlr_scene_tree_create(&server.scene->tree);
     server.layer_bottom_tree = wlr_scene_tree_create(&server.scene->tree);
+    server.desktop_icon_tree = wlr_scene_tree_create(&server.scene->tree);
     server.workspace_tree = wlr_scene_tree_create(&server.scene->tree);
     server.unmanaged_xwayland_tree = wlr_scene_tree_create(&server.scene->tree);
     server.layer_top_tree = wlr_scene_tree_create(&server.scene->tree);
+    server.panel_swallow_tree = wlr_scene_tree_create(&server.scene->tree);
     server.popup_tree = wlr_scene_tree_create(&server.scene->tree);
     server.overlay_tree = wlr_scene_tree_create(&server.scene->tree);
     server.layer_overlay_tree = wlr_scene_tree_create(&server.scene->tree);
@@ -1824,8 +1888,18 @@ int main(int argc, char **argv) {
     wlr_scene_node_set_enabled(&server.switcher_buf->node, false);
 
     dtwm_workspaces_init(&server);
+    dtwm_icons_init(&server);
     if (greeter_mode || no_panel) {
         server.show_front_panel = false;
+    }
+    if (greeter_mode || no_open_icons) {
+        server.show_open_window_icons = false;
+    }
+    if (large_icons) {
+        server.large_icons = true;
+    }
+    if (swallow_client && swallow_client[0]) {
+        snprintf(server.swallow_client_name, sizeof(server.swallow_client_name), "%s", swallow_client);
     }
 
     server.new_output.notify = handle_new_output;
@@ -1928,6 +2002,7 @@ int main(int argc, char **argv) {
 
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);
+    dtwm_icons_finish(&server);
     dtwm_workspaces_finish(&server);
     if (server.xwayland) wlr_xwayland_destroy(server.xwayland);
     wl_display_destroy_clients(server.wl_display);

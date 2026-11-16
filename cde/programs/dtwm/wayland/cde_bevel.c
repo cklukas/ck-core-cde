@@ -549,7 +549,7 @@ struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int
     int count = 0;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
-        if (dtwm_view_visible_on_current_ws(v)) {
+        if (dtwm_view_visible_on_current_ws(v) && !v->is_swallowed && !v->is_desktop_pin) {
             count++;
         }
     }
@@ -584,7 +584,7 @@ struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int
     int idx = 0;
     double y = 36;
     wl_list_for_each(v, &server->views, link) {
-        if (!dtwm_view_visible_on_current_ws(v)) {
+        if (!dtwm_view_visible_on_current_ws(v) || v->is_swallowed || v->is_desktop_pin) {
             continue;
         }
         bool sel = (idx == (server->switcher_index % count));

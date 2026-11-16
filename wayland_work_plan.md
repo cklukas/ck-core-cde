@@ -52,7 +52,7 @@ Deliver a first-class, `apt`-installable **CK Core CDE Wayland Desktop Session**
   - Render palette-recolored per-workspace CDE backdrops (`WmBackdrop.c`) and dock Front Panel (`WmFP.c`) + subpanels with strut geometry respected by maximized Wayland and XWayland windows.
 - **Acceptance gate**: Automated test exercises Front Panel workspace switching, *Occupy Workspace...*, and `DtWsmChangeBackdrop` across mixed Wayland/XWayland clients.
 
-### [ ] WP-04 — Open-Window Desktop Icons, Live Dynamic Icons, `ck-eyes` & Panel Swallowing
+### [x] WP-04 — Open-Window Desktop Icons, Live Dynamic Icons, `ck-eyes` & Panel Swallowing
 - **Repos**: `ck-core-cde` (`cde/programs/dtwm/`, `cde/programs/dtfile/`), `ck-core-apps`
 - **Scope**:
   - Implement `Dtwm*showOpenWindowIcons`, active-focus markers, `WM_ICON_SIZE` (`32/64` and `48/96`), live `WM_HINTS.icon_pixmap` / `xdg-toplevel-icon-v1` streaming (`ck-clock`, `ck-load`, `ck-coins`, `ck-browser`, `ck-plasma-1`), virtual root cursor + icon geometry sync for `ck-eyes`, `dtfile` pinned desktop icons, and Front Panel `TYPE client` swallowing (`ck-clock`).

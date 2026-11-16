@@ -72,6 +72,36 @@ Wayland and XWayland clients:
   maximized and edge-snapped windows (`--no-panel` and `--greeter` hide the
   panel when needed).
 
+## Open-window desktop icons, live dynamic icons, and Front Panel swallowing
+
+`cde_icons.c` brings CK Core CDE's desktop icon and Front Panel embedding
+contracts to Wayland without requiring application code changes:
+
+- **Open-window and minimized desktop icons (`Dtwm*showOpenWindowIcons`):**
+  Publishes `_DT_WM_SETTINGS_V1` (`DT_WM_SETTINGS_V1_SHOW_OPEN_WINDOW_ICONS`) on
+  both the workspace-manager window and the XWayland root window, renders
+  active-focus Crimson and inactive Slate 3D bevel icon tiles in
+  `desktop_icon_tree`, and restores or focuses windows when their desktop icon
+  is clicked (`--no-open-window-icons` disables open-window icons);
+- **Normal (`48×48`) and increased (`96×96`) `WM_ICON_SIZE`:** Publishes
+  `WM_ICON_SIZE` on the XWayland root window and supports live switching via
+  `--large-icons` or `_DT_WM_REQUEST` (`f.set_large_icons 0|1`,
+  `f.set_open_window_icons 0|1`);
+- **Live dynamic icons across XWayland and Wayland:** Streams XWayland
+  `WM_HINTS` `IconPixmapHint` and 1-bit `IconMaskHint` shape masks (`ck-clock`,
+  `ck-load`, `ck-eyes`, `ck-coins`, `ck-plasma-1`, `ck-browser`) via XCB image
+  capture, and implements the native Wayland `xdg-toplevel-icon-v1` server
+  global (`xdg_toplevel_icon_manager_v1`) for `wl_shm` client icons;
+- **Global cursor tracking for `ck-eyes`:** Publishes per-window `WM_STATE`
+  (`NormalState` / `IconicState`) and `_NET_WM_ICON_GEOMETRY`, and synchronizes
+  the XWayland root pointer whenever the cursor moves across native Wayland
+  surfaces, the Front Panel, or the desktop background;
+- **`dtfile` pinned desktop icons and Front Panel `TYPE client` swallowing:**
+  Places `dtfile` `Desktop.c` workspace objects in `desktop_icon_tree` below
+  normal application windows without duplicate open-window icons, and swallows
+  embedded Front Panel clients (`ck-clock`, `fpclock`, `dtclock`, or `--swallow
+  NAME`) directly into the Front Panel's recessed Clock slot.
+
 ## Readiness reporting and automated verification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`

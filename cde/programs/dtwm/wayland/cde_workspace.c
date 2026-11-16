@@ -660,9 +660,14 @@ void dtwm_update_front_panel(DtwmServer *server) {
     for (int i = 0; i < 3; ++i) {
         int cx = left_area_x + i * cell_w + 2;
         int cw = cell_w - 4;
-        dtwm_draw_bevel(cr, cx, 8, cw, ph - 16, 1.5, cs->top_shadow, cs->bottom_shadow);
-        draw_launcher_glyph(cr, i, cx, 8, cw, ph - 22, cs);
-        dtwm_draw_label(cr, left_labels[i], cx, ph - 22, cw, 14, cs->fg, true, false);
+        if (i == 0 && server->swallowed_clock_view != nullptr) {
+            /* Recessed 3D slot hosting swallowed TYPE client (ck-clock) */
+            dtwm_draw_bevel(cr, cx, 8, cw, ph - 16, 2.0, cs->bottom_shadow, cs->top_shadow);
+        } else {
+            dtwm_draw_bevel(cr, cx, 8, cw, ph - 16, 1.5, cs->top_shadow, cs->bottom_shadow);
+            draw_launcher_glyph(cr, i, cx, 8, cw, ph - 22, cs);
+            dtwm_draw_label(cr, left_labels[i], cx, ph - 22, cw, 14, cs->fg, true, false);
+        }
     }
 
     /* Lock (top) and Busy/Info mini-buttons beside central workspace well */
@@ -732,6 +737,7 @@ void dtwm_update_front_panel(DtwmServer *server) {
     wlr_scene_node_set_position(&server->panel_buf->node, server->panel_x, server->panel_y);
     wlr_scene_node_set_enabled(&server->panel_buf->node, true);
     wlr_buffer_drop(buf);
+    dtwm_icons_reposition_swallowed(server);
 }
 
 bool dtwm_front_panel_click(DtwmServer *server, double lx, double ly, uint32_t button) {
@@ -802,6 +808,7 @@ void dtwm_view_set_workspace_mask(DtwmView *view, uint32_t mask) {
         wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     }
     xcb_sync_view_presence(view);
+    dtwm_icons_relayout(server);
 }
 
 void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx) {
@@ -832,7 +839,7 @@ void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx) {
     if (!server->focused_view) {
         DtwmView *cand;
         wl_list_for_each(cand, &server->views, link) {
-            if (dtwm_view_visible_on_current_ws(cand)) {
+            if (dtwm_view_visible_on_current_ws(cand) && !cand->is_swallowed && !cand->is_desktop_pin) {
                 cand->active = true;
                 server->focused_view = cand;
                 struct wlr_surface *surf = nullptr;
@@ -863,6 +870,7 @@ void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx) {
 
     dtwm_update_all_backdrops(server);
     dtwm_update_front_panel(server);
+    dtwm_icons_relayout(server);
     xcb_sync_wm_properties(server);
     ext_ws_broadcast_sync(server);
 }
@@ -1187,6 +1195,21 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         if (idx >= 0 && *p) {
             dtwm_rename_workspace(server, (uint32_t)idx, p);
         }
+        return;
+    }
+    if (strncmp(cmd, "f.set_open_window_icons", 23) == 0) {
+        int val = 1;
+        if (sscanf(cmd + 23, "%d", &val) == 1) {
+            dtwm_icons_set_open_window_icons(server, val != 0);
+        }
+        return;
+    }
+    if (strncmp(cmd, "f.set_large_icons", 17) == 0) {
+        int val = 0;
+        if (sscanf(cmd + 17, "%d", &val) == 1) {
+            dtwm_icons_set_large_icons(server, val != 0);
+        }
+        return;
     }
 }
 
@@ -1256,6 +1279,8 @@ static int handle_xcb_event_fd(int fd, uint32_t mask, void *data) {
                 if (v) {
                     xcb_apply_client_ws_hints(v);
                 }
+            } else if (pev->state == XCB_PROPERTY_NEW_VALUE) {
+                dtwm_icons_on_xcb_property(server, pev->window, pev->atom);
             }
         }
         free(ev);

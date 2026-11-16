@@ -150,7 +150,15 @@ struct DtwmView {
     bool active;
     bool maximized;
     bool minimized;
+    bool is_desktop_pin;    /* dtfile Desktop.c pinned workspace object */
+    bool is_swallowed;      /* Front Panel TYPE client swallowed window */
     uint32_t workspace_mask;
+
+    /* Desktop icon state (open-window icon + minimized icon + live pixmap) */
+    struct wlr_scene_buffer *desktop_icon_buf;
+    cairo_surface_t *icon_surface;
+    int icon_x, icon_y, icon_w, icon_h;
+    int icon_box_w, icon_box_h;
 
     /* Decoration flags (honoring xdg-decoration + _MOTIF_WM_HINTS) */
     bool decorated;
@@ -224,9 +232,11 @@ struct DtwmServer {
     struct wlr_scene_tree *bg_tree;
     struct wlr_scene_tree *layer_bg_tree;
     struct wlr_scene_tree *layer_bottom_tree;
+    struct wlr_scene_tree *desktop_icon_tree;
     struct wlr_scene_tree *workspace_tree;
     struct wlr_scene_tree *unmanaged_xwayland_tree;
     struct wlr_scene_tree *layer_top_tree;
+    struct wlr_scene_tree *panel_swallow_tree;
     struct wlr_scene_tree *popup_tree;
     struct wlr_scene_tree *overlay_tree;
     struct wlr_scene_tree *layer_overlay_tree;
@@ -253,9 +263,14 @@ struct DtwmServer {
     uint32_t next_ws_serial;
     DtwmWorkspace workspaces[DTWM_MAX_WORKSPACES];
 
-    /* Docked CDE Front Panel */
+    /* Docked CDE Front Panel & TYPE client swallowing */
     bool show_front_panel;
+    bool show_open_window_icons;
+    bool large_icons;
     int panel_x, panel_y, panel_w, panel_h;
+    int clock_slot_x, clock_slot_y, clock_slot_w, clock_slot_h;
+    char swallow_client_name[64];
+    DtwmView *swallowed_clock_view;
     struct wlr_scene_buffer *panel_buf;
 
     /* XWayland CDE Workspace Manager (_MOTIF_WM_INFO / _DT_WORKSPACE_*) XCB bridge */
@@ -270,10 +285,14 @@ struct DtwmServer {
     xcb_atom_t atom_ws_presence;
     xcb_atom_t atom_wm_request;
     xcb_atom_t atom_ws_all;
+    xcb_atom_t atom_wm_settings_v1;
+    xcb_atom_t atom_wm_state;
+    xcb_atom_t atom_net_wm_icon_geom;
 
-    /* Native Wayland ext-workspace-v1 protocol */
+    /* Native Wayland ext-workspace-v1 & xdg-toplevel-icon-v1 protocols */
     struct wl_global *ext_ws_global;
     struct wl_list ext_ws_managers;
+    struct wl_global *toplevel_icon_global;
 
     /* Interactive move / resize / snap state */
     DtwmCursorMode cursor_mode;
@@ -363,5 +382,22 @@ void dtwm_update_all_backdrops(DtwmServer *server);
 void dtwm_update_front_panel(DtwmServer *server);
 bool dtwm_front_panel_click(DtwmServer *server, double lx, double ly, uint32_t button);
 void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, struct wlr_box *out_box);
+
+/* cde_icons.c */
+void dtwm_icons_init(DtwmServer *server);
+void dtwm_icons_finish(DtwmServer *server);
+void dtwm_icons_on_xwayland_ready(DtwmServer *server);
+bool dtwm_icons_classify_xwayland_map(DtwmView *view);
+void dtwm_icons_on_view_map(DtwmView *view);
+void dtwm_icons_on_view_unmap_or_destroy(DtwmView *view, bool destroying);
+void dtwm_icons_on_xcb_property(DtwmServer *server, xcb_window_t win, xcb_atom_t atom);
+void dtwm_icons_set_wm_state(DtwmView *view);
+void dtwm_icons_relayout(DtwmServer *server);
+void dtwm_icons_update_view(DtwmView *view);
+DtwmView *dtwm_icons_view_at(DtwmServer *server, double lx, double ly);
+void dtwm_icons_set_open_window_icons(DtwmServer *server, bool enabled);
+void dtwm_icons_set_large_icons(DtwmServer *server, bool large);
+void dtwm_icons_sync_xwayland_pointer(DtwmServer *server, double lx, double ly, struct wlr_surface *focused_surf);
+void dtwm_icons_reposition_swallowed(DtwmServer *server);
 
 #endif /* DTWM_WAYLAND_H */
