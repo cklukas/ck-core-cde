@@ -707,3 +707,27 @@ not cast through unspecified-argument function-pointer aliases. Rebuilding
 consumer against the actual private DtHelp declarations. The DtInfo launcher
 registers its action-completion callback and timeout routine through their
 native CDE and Xt contracts without function-pointer casts.
+
+## Ubuntu 26.04 LTS Lima Wayland harness
+
+On Apple Silicon macOS hosts with Lima (`vmType: vz`), `scripts/lima/cde-ubuntu-26.04.yaml`
+and `scripts/run-lima-wayland-harness.py` provision an isolated ARM64 Ubuntu 26.04 LTS
+qualification guest and build the matched CK Core Motif ABI 9, `ck-core-fs-lib`,
+CK Core CDE, and `ck-core-apps` stack on guest-local storage (capped at six
+parallel jobs). All macOS temporary paths, `LIMA_HOME`, and `XDG_CACHE_HOME`
+must reside beneath `/Volumes/S8T/tmp`:
+
+```sh
+export TASK_ROOT=/Volumes/S8T/tmp/cde-wayland-task
+export TMPDIR="$TASK_ROOT/tmp"
+export LIMA_HOME="$TASK_ROOT/lima"
+export XDG_CACHE_HOME="$TASK_ROOT/cache"
+limactl start --tty=false --name=cde-ubuntu2604 scripts/lima/cde-ubuntu-26.04.yaml
+python3 scripts/run-lima-wayland-harness.py --task-root "$TASK_ROOT"
+```
+
+After staging the build, the runner starts a dual-output headless `wlroots`
+compositor with rootless `Xwayland`, launches both native Wayland and Motif/CDE
+clients, checks `/proc/<pid>/maps` so every Motif process maps the recorded
+`libXm.so.9` prefix, drives virtual pointer input, captures output PNG frames
+through `zwlr_screencopy_manager_v1`, and writes `receipt.json`.

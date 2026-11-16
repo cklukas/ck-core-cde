@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-16",
+  "work_package": "WP-00",
+  "branch": "x11_wayland",
+  "topic": "Ubuntu 26.04 LTS Lima Wayland qualification harness and glibc 2.43 C23 strstr fix",
+  "host": "Apple M1 Max macOS, Lima 2.2.1 (vz), guest Ubuntu 26.04.1 LTS arm64 (Linux 7.0.0-34-generic, glibc 2.43, clang 21)",
+  "revisions": {
+    "ck_core_cde_base": "118aced84d816c4cb8e7bcc44a0486f655f3bf41",
+    "ck_core_motif": "703101cea3db5f9fe5722c43bdb016d098d13804",
+    "ck_core_fs_lib": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+    "ck_core_apps": "fe10f0ee455fdf59fe922e8940e854a166ee07f3"
+  },
+  "artifacts": {
+    "libXm_so_9_sha256": "db5ec3ebc22c2d84b9405f836775bdf68ad4cabe33ab2d18cc9d183b94bfd108",
+    "dtwm_sha256": "090cb22b62bbd99c644c8f54de0a2ce50da17f27553ac6b315474e2ea4645b9f",
+    "ck_eyes_sha256": "bd5d50cc33ea778724e85ad960e0e89068a2e117fbe7e0c7676ee389986024a4",
+    "wayland_dual_output_png_sha256": "f5f2bd07edc700dab63023f1d789a8d9e40e1702f02c9928c26d3bcb4f45c420"
+  },
+  "findings_resolved": [
+    "cde/programs/dthelp/parser/pass2/htag2/fproto.h manually redeclared char *strstr(const char *, const char *), which fails under glibc 2.43 C23 __glibc_const_generic _Generic macro expansion; replaced with #include <string.h>."
+  ],
+  "findings_noted_for_c23_strict_lane": [
+    "Under -Werror=incompatible-pointer-types on glibc 2.43, C23 const-preserving strstr/strchr diagnostics trigger in legacy callers such as cde/util/tradcpp/macro.c:1232 (assigning strstr(const char *, ...) to char *)."
+  ],
+  "verification": {
+    "dtksh_check_widget_xvfb": "pass (0.44s)",
+    "headless_wayland_dual_output_smoke": "pass (3.85s, HEADLESS-1 + HEADLESS-2, 2560x720, foot + dtcalc + dtpad + ck-clock + ck-eyes)",
+    "verified_libXm_so_9_maps": [
+      "dtcalc",
+      "dtpad",
+      "ck-clock",
+      "ck-eyes"
+    ]
+  }
+}

@@ -1,4 +1,18 @@
 2026-11-16
+- Add the Ubuntu 26.04 LTS Lima Wayland qualification harness (`WP-00`), fix
+  the `glibc 2.43` C23 `strstr` macro redeclaration in `dthelp`'s `htag2`
+  translator, and advance `.ckgit/motif-revision` to
+  `703101cea3db5f9fe5722c43bdb016d098d13804` on the `x11_wayland` branch.
+  - `cde/programs/dthelp/parser/pass2/htag2/fproto.h`: replace the legacy
+    manual `char *strstr(const char *, const char *)` declaration with
+    `#include <string.h>` so C23 builds succeed under `glibc 2.43`'s
+    qualifier-preserving `_Generic` `strstr` macro on Ubuntu 26.04 LTS.
+  - `scripts/lima/cde-ubuntu-26.04.yaml`,
+    `scripts/run-lima-wayland-harness.py`, `wayland_work_plan.md`, and
+    `docs/build.md`: add the reproducible Apple Silicon `vz` Ubuntu 26.04 LTS
+    Lima configuration and dual-output headless `wlroots` + rootless `Xwayland`
+    build/smoke runner verifying `/proc/<pid>/maps` `libXm.so.9` provenance and
+    `zwlr_screencopy_manager_v1` frame capture.
 - Handle single-UID `CLONE_NEWUSER` sandboxes (`chown()` `EINVAL`) and
   120-byte ISAM key-length bounds in `lib/tt/bin/ttdbserverd/tests` and
   `programs/dtmail/tests/check-spool-helper.py`.

@@ -31,7 +31,7 @@ void setopt(char *string, LOGICAL filelenonly);
 
 LOGICAL setvalopt(int thisopt, char *string, LOGICAL filelenonly);
 
-char *strstr(const char *s1, const char *s2);
+#include <string.h>
 
 char *MakeMByteString(const M_WCHAR *from);
 

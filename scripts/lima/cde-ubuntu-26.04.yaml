@@ -1,0 +1,62 @@
+# Lima ARM64 Ubuntu 26.04 LTS qualification VM for CK Core CDE & Wayland.
+#
+# Always launch with LIMA_HOME and XDG_CACHE_HOME set beneath /Volumes/S8T/tmp
+# (or /Volumes/PRO-BLADE/tmp if /Volumes/S8T is unavailable), e.g.:
+#   export TASK_ROOT=/Volumes/S8T/tmp/cde-wayland-<task>
+#   export TMPDIR=$TASK_ROOT/tmp
+#   export LIMA_HOME=$TASK_ROOT/lima
+#   export XDG_CACHE_HOME=$TASK_ROOT/cache
+#   limactl start --tty=false --name=cde-ubuntu2604 scripts/lima/cde-ubuntu-26.04.yaml
+
+minimumLimaVersion: 2.0.0
+
+base:
+- template:_images/ubuntu-26.04
+
+vmType: vz
+os: Linux
+arch: aarch64
+cpus: 6
+memory: "6GiB"
+disk: "60GiB"
+mountType: virtiofs
+
+containerd:
+  system: false
+  user: false
+
+mounts:
+- location: "/Volumes/PRO-BLADE/git"
+  mountPoint: "/Volumes/PRO-BLADE/git"
+  writable: false
+- location: "/Volumes/S8T/tmp"
+  mountPoint: "/Volumes/S8T/tmp"
+  writable: true
+
+video:
+  display: "none"
+
+provision:
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y --no-install-recommends \
+      build-essential clang lld llvm cmake ninja-build meson pkg-config \
+      autoconf automake libtool bison byacc flex m4 gawk gettext locales \
+      python3 python3-pil git curl ca-certificates file binutils patchelf fakeroot \
+      libx11-dev libxt-dev libxext-dev libxmu-dev libxpm-dev libxau-dev \
+      libxdmcp-dev libxinerama-dev libxrandr-dev libxrender-dev libxcursor-dev \
+      libxfixes-dev libxss-dev libxaw7-dev libxft-dev libice-dev libsm-dev \
+      libfontconfig1-dev libfreetype-dev libharfbuzz-dev libicu-dev \
+      librsvg2-dev libdbus-1-dev libjpeg-dev libpng-dev liblmdb-dev \
+      libtirpc-dev libpam0g-dev libutempter-dev tcl-dev ksh93u+m \
+      x11-xserver-utils x11-utils xfonts-utils xfonts-base xfonts-100dpi xbitmaps \
+      ncompress opensp rpcsvc-proto rpcbind ncurses-bin xvfb \
+      libcairo2-dev libasound2-dev libcurl4-openssl-dev \
+      libwayland-dev libwayland-bin wayland-protocols libwlroots-0.19-dev \
+      xwayland libseat-dev libinput-dev libxkbcommon-dev libdrm-dev \
+      libgbm-dev libegl-dev libgles-dev libpixman-1-dev \
+      labwc grim wlrctl wayvnc foot
