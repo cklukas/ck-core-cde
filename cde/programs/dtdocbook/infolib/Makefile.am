@@ -7,7 +7,7 @@ EXTRA_DIST = tests/check-posix-error-msg.py tests/check-posix-error-msg.cc \
 	tests/check-dtdocbook-udc-hardening.py tests/check-dtdocbook-udc-hardening.c
 
 check-local:
-	CC="$(CC)" python3 $(srcdir)/tests/check-posix-error-msg.py
+	CXX="$(CXX)" CC="$(CC)" python3 $(srcdir)/tests/check-posix-error-msg.py
 	CXX="$(CXX)" python3 $(srcdir)/tests/check-sgmlname-growth.py --scratch check-sgmlname-growth.tmp
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtdocbook-udc-hardening.py
 

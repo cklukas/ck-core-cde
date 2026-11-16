@@ -56,6 +56,9 @@ else:
     if r.returncode:
         print("the compiler has no sanitizers: checking results only")
         sanitize = []
+    elif subprocess.run(compile_cmd + sanitize + ["-fno-sanitize=function", "-o", str(work / "probe"), str(probe)],
+                        cwd=builddir, text=True, capture_output=True).returncode == 0:
+        sanitize.append("-fno-sanitize=function")
 
 
 def run(cmd, **kw):

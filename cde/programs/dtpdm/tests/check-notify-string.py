@@ -65,7 +65,7 @@ tag = "control" if args.source_revision else "fixed"
 is_cxx = "check-notify-string.cc".endswith(".cc")
 c, binary = scratch / f"check-notify-string-{tag}{'.cc' if is_cxx else '.c'}", scratch / f"check-notify-string-{tag}"
 c.write_text(prologue + production + "\n" + body)
-compile_run = subprocess.run(shlex.split(os.environ.get("CC", "cc")) +
+compile_run = subprocess.run(shlex.split(os.environ.get("CXX", "c++") if is_cxx else os.environ.get("CC", "cc")) +
                (["-x", "c++", "-std=gnu++23"] if is_cxx else ["-std=gnu23"]) + ["-O2", "-Wall", "-Werror=return-type", "-Wno-unused-function",
                 "-Wno-unused-variable", "-Wno-deprecated-declarations", "-Wno-unused-value",
                 "-Wno-unused-but-set-variable", "-Wno-format-security",

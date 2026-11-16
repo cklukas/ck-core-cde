@@ -71,6 +71,8 @@ if subprocess.run(["rpcinfo", "-p"], stdout=subprocess.DEVNULL,
     finish()
 
 sanitize = ["-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
+if "clang" in Path(compile_cmd[0]).name:
+    sanitize.append("-fno-sanitize=function")
 if any(a.startswith("-fsanitize") for a in compile_cmd):
     sanitize = []                    # the build already carries them
 extra = ["-DTT_IMPRINT_TEST_OLD_CALL"] if old_call else []

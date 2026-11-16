@@ -85,6 +85,7 @@ AC_DEFUN([CK_HARDENING_INIT],
  ])
 
  ck_sanitize_list=
+ ck_sanitize_extra=
  AS_CASE([$enable_sanitizers],
    [no], [],
    [yes], [ck_sanitize_list=address,undefined],
@@ -99,6 +100,9 @@ AC_DEFUN([CK_HARDENING_INIT],
      [AC_MSG_RESULT([yes])],
      [AC_MSG_RESULT([no])
       AC_MSG_ERROR([the C compiler cannot build and link with -fsanitize=$ck_sanitize_list])])
+   CFLAGS="$ck_save_CFLAGS -fsanitize=$ck_sanitize_list -fno-sanitize=function -Werror"
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
+     [ck_sanitize_extra=" -fno-sanitize=function"], [])
    CFLAGS=$ck_save_CFLAGS
    LDFLAGS=$ck_save_LDFLAGS
  ])
@@ -111,10 +115,10 @@ AC_DEFUN([CK_HARDENING_APPLY],
    AC_MSG_NOTICE([hardening flags:$ck_hardening_flags])
  ])
  AS_IF([test -n "$ck_sanitize_list"], [
-   CFLAGS="$CFLAGS -fsanitize=$ck_sanitize_list -fno-omit-frame-pointer"
+   CFLAGS="$CFLAGS -fsanitize=$ck_sanitize_list$ck_sanitize_extra -fno-omit-frame-pointer"
    AS_IF([test -n "$CXX"],
-     [CXXFLAGS="$CXXFLAGS -fsanitize=$ck_sanitize_list -fno-omit-frame-pointer"])
-   LDFLAGS="$LDFLAGS -fsanitize=$ck_sanitize_list"
-   AC_MSG_NOTICE([sanitizers: -fsanitize=$ck_sanitize_list])
+     [CXXFLAGS="$CXXFLAGS -fsanitize=$ck_sanitize_list$ck_sanitize_extra -fno-omit-frame-pointer"])
+   LDFLAGS="$LDFLAGS -fsanitize=$ck_sanitize_list$ck_sanitize_extra"
+   AC_MSG_NOTICE([sanitizers: -fsanitize=$ck_sanitize_list$ck_sanitize_extra])
  ])
 ])

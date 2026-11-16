@@ -55,6 +55,7 @@ def main() -> int:
     dtsrjoint_src = read_source(repo_root, "cde/lib/DtSearch/dtsrjoint.c", args.source_revision)
     dtsrapi_src = read_source(repo_root, "cde/lib/DtSearch/dtsrapi.c", args.source_revision)
     fileman_src = read_source(repo_root, "cde/lib/DtSearch/fileman.c", args.source_revision)
+    lang_src = read_source(repo_root, "cde/lib/DtSearch/lang.c", args.source_revision)
 
     extracted = "\n".join(
         [
@@ -69,6 +70,7 @@ def main() -> int:
             extract_function(dtsrjoint_src, "static DtSrResult *ditto_sort (DtSrResult * lst)", "}  /* ditto_sort() */"),
             extract_function(dtsrapi_src, "static int      both_valid_dates (char *date1, char *date2)", "}  /* both_valid_dates() */"),
             extract_function(fileman_src, "int\tfread_d99_header (FILE_HEADER *flh, FILE *fp)", "}  /* fread_d99_header() */"),
+            extract_function(lang_src, "static int\tis_matching_rule (PRULE *rule)", "}  /* is_matching_rule() */"),
         ]
     )
 

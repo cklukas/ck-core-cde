@@ -13,8 +13,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 #include <arpa/inet.h>
 
+typedef unsigned char UCHAR;
 typedef int32_t DtSrINT32;
 typedef uint32_t DtSrUINT32;
 typedef int16_t DtSrINT16;
@@ -75,6 +77,34 @@ static USRBLK usrblk;
 static char sprintbuf[512];
 static int dtsearch_catd = 0;
 #define MS_ausapi 1
+
+#define VOWEL 0x02
+#define IS_VOWEL(c) ((paice_charmap[(UCHAR)(c)] & VOWEL) != 0)
+typedef struct prule_t {
+    struct prule_t *link;
+    UCHAR *suffix;
+    UCHAR suflen;
+    char must_be_intact;
+    UCHAR remove_count;
+    UCHAR aplen;
+    UCHAR *apndstr;
+    char is_last_rule;
+} PRULE;
+static int debugging_paice = FALSE;
+static int paice_charmap_buf[256];
+static int *paice_charmap = paice_charmap_buf;
+static char paicebuf[136];
+static int paicelen = 0;
+static int paicewcsl = 0;
+static int word_is_intact = TRUE;
+static int
+euro_mbtowc(wchar_t *pwc, const char *p, const char *s)
+{
+    if (p < s)
+        return -1;
+    *pwc = (unsigned char)*p;
+    return 1;
+}
 
 static void
 DtSearchExit(int code)
@@ -214,6 +244,25 @@ test_fread_d99_header_bounds(void)
     assert(out.hole_count[1] == 0);
 }
 
+static void
+test_paice_is_matching_rule_underflow(void)
+{
+    paice_charmap['A'] = VOWEL;
+    paice_charmap['E'] = VOWEL;
+    strcpy(paicebuf, "ABE");
+    paicelen = 3;
+    paicewcsl = 3;
+    word_is_intact = TRUE;
+
+    /* Reversed suffix "EBAX" has length 4 > paicelen (3), with first 3 chars matching "ABE" backwards */
+    PRULE rule;
+    memset(&rule, 0, sizeof(rule));
+    rule.suffix = (UCHAR *)"EBAX";
+    rule.suflen = 4;
+    rule.remove_count = 2;
+    assert(is_matching_rule(&rule) == FALSE);
+}
+
 int
 main(void)
 {
@@ -223,6 +272,7 @@ main(void)
     test_ditto_sort();
     test_both_valid_dates();
     test_fread_d99_header_bounds();
+    test_paice_is_matching_rule_underflow();
     printf("check-dtsearch-hardening: all tests passed\n");
     return 0;
 }

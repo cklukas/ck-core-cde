@@ -1450,6 +1450,11 @@ static int	is_matching_rule (PRULE *rule)
      * Skip rule if it doesn't match current paicebuf's ending chars.
      */
     j = rule->suflen;
+    if (j > paicelen) {
+	if (debugging_paice)
+	    fputs ("no match...\n", aa_stderr);
+	return FALSE;
+    }
     ptr = paicebuf + paicelen - 1;
     for (i = 0; i < j; i++) {
 	if (*((rule->suffix) + i) != *ptr) {
@@ -1568,6 +1573,8 @@ static char	*paice_stemmer (char *wordin, DBLK *dblk)
     for (;;) { /*-------- Main Stemming Loop ---------*/
 
 	paicelen = strlen (paicebuf);
+	if (paicelen == 0)
+	    break;
 	paicewcsl = mbstowcs (nullptr, paicebuf, 0);
 	len = euro_mbtowc (&finalwc, paicebuf + paicelen - 1, paicebuf);
 

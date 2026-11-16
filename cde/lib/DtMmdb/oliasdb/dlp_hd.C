@@ -209,10 +209,8 @@ dlp_smart_ptr* dlp_smart_ptr::prev()
       return 0;
    else {
 
-      dl_list_cell_handler* cell_hd = (dl_list_cell_handler*)this;
-
-      dlp_smart_ptr* back_cell_hd = (dlp_smart_ptr*)
-          new smart_ptr(cell_hd->its_store(), back_cell_oid); 
+      dlp_smart_ptr* back_cell_hd =
+          new dlp_smart_ptr(*this, back_cell_oid); 
 
       if ( back_cell_hd -> node_id().icode() == 0 ) {
          delete back_cell_hd;
@@ -230,10 +228,8 @@ dlp_smart_ptr* dlp_smart_ptr::next()
       return 0;
    else {
 
-      dl_list_cell_handler* cell_hd = (dl_list_cell_handler*)this;
-
-      dlp_smart_ptr* next_cell_hd = (dlp_smart_ptr*)
-          new smart_ptr(cell_hd->its_store(), next_cell_oid);
+      dlp_smart_ptr* next_cell_hd =
+          new dlp_smart_ptr(*this, next_cell_oid);
 
       if ( next_cell_hd -> node_id().icode() == 0 ) {
          delete next_cell_hd;

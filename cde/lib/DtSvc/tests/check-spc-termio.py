@@ -29,7 +29,7 @@ link_cmd = shlex.split(os.environ["DTSVC_LINK"])
 libs = shlex.split(os.environ.get("DTSVC_LIBS", ""))
 builddir = Path.cwd()
 work = Path(tempfile.mkdtemp(prefix="spc-termio-", dir=os.environ.get("TMPDIR")))
-sanitize = [] if any(a.startswith("-fsanitize") for a in compile_cmd) else ["-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
+sanitize = [] if any(a.startswith("-fsanitize") for a in compile_cmd) else ["-fsanitize=address,undefined", "-fno-omit-frame-pointer"] + (["-fno-sanitize=function"] if "clang" in Path(compile_cmd[0]).name else [])
 
 
 def run(cmd, **kw):

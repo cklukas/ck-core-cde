@@ -1,4 +1,23 @@
 2026-11-16
+- Fix Paice stemmer global-buffer-underflow in `lib/DtSearch/lang.c`,
+  `dlp_smart_ptr` downcast UB in `lib/DtMmdb/oliasdb/dlp_hd.C`, and Clang
+  sanitizer build/test flags in `configure.ac`, `m4/ck_hardening.m4`, and CI.
+  - `lib/DtSearch/lang.c`: reject suffix rules longer than the current word
+    (`rule->suflen > paicelen`) in `is_matching_rule()` and guard empty stems in
+    `paice_stemmer()` so backward suffix comparisons never read before
+    `paicebuf[0]` (`lib/DtSearch/tests/check-dtsearch-hardening.py`).
+  - `lib/DtMmdb/oliasdb/dlp_hd.C`: construct `dlp_smart_ptr` instances via
+    `new dlp_smart_ptr(*this, ...)` in `dlp_smart_ptr::prev()` and `next()`
+    instead of downcasting a base `new smart_ptr(...)`.
+  - `cde/configure.ac` and `cde/m4/ck_hardening.m4`: include
+    `-fsanitize=$ck_sanitize_list` when probing `XmToolkitABI` in `-lXm` so
+    Clang `--enable-sanitizers` builds link against sanitized `libXm.so`, and
+    append `-fno-sanitize=function` when accepted by the compiler.
+  - `programs/dtspcd/Makefile.am`, `programs/dthelp/dthelpprint/Makefile.am`,
+    `programs/dtdocbook/infolib/Makefile.am`, `programs/dtpdm/Makefile.am`, and
+    `.github/workflows/build.yml`: pass `CC`/`CXX` to Python test harnesses and
+    disable Clang `-fsanitize=function` false positives on `xdrproc_t` and Xt
+    callbacks.
 - Complete the 16-class `--enable-hardening` `-Werror` burndown (`-Werror=address`,
   `-Werror=implicit-fallthrough`, `-Werror=misleading-indentation`,
   `-Werror=cast-function-type`), resolve remaining `cppcheck` product-code

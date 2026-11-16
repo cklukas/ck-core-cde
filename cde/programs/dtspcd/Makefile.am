@@ -30,7 +30,7 @@ check-local:
 	SPC_LINK='$(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS)' \
 	SPC_LIBS='$(dtspcd_LDADD) $(LIBS)' \
 	python3 $(srcdir)/tests/check-requests.py $(srcdir)
-	python3 $(srcdir)/tests/check-env-file-alloc.py
+	CC="$(CC)" python3 $(srcdir)/tests/check-env-file-alloc.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-exit-timer-signal.py
 
 DEF_SYSTEM_PATH = "/bin:/usr/bin"

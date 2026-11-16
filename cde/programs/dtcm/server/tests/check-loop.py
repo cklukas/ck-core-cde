@@ -28,6 +28,8 @@ builddir = Path.cwd()
 work = Path(tempfile.mkdtemp(prefix="cmsd-loop-", dir=os.environ.get("TMPDIR")))
 
 sanitize = ["-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
+if "clang" in Path(compile_cmd[0]).name:
+    sanitize.append("-fno-sanitize=function")
 if any(a.startswith("-fsanitize") for a in compile_cmd):
     sanitize = []
 

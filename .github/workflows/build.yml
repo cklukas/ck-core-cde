@@ -104,6 +104,10 @@ jobs:
           set -eu
           mkdir "$RUNNER_TEMP/cde-tests"
           export TMPDIR="$RUNNER_TEMP/cde-tests"
+          export CC='${{ matrix.cc }}'
+          export CXX='${{ matrix.cxx }}'
+          printf '%s\n' 'function:*' > "$RUNNER_TEMP/ubsan.supp"
+          export UBSAN_OPTIONS="print_stacktrace=1:suppressions=$RUNNER_TEMP/ubsan.supp"
           xinerama_probe="$RUNNER_TEMP/cde-xinerama-probe"
           printf '%s\n' \
             'char XineramaQueryScreens(void);' \
@@ -147,6 +151,9 @@ jobs:
           set -eu
           strict_cflags='-O1 -g0 -std=c23 -Werror=strict-prototypes -Werror=old-style-definition -Werror=cast-function-type -Werror=incompatible-pointer-types -Werror=implicit-function-declaration ${{ matrix.clang_cast_policy }}'
           export TMPDIR="$RUNNER_TEMP/cde-tests"
+          export CC='${{ matrix.cc }}'
+          export CXX='${{ matrix.cxx }}'
+          export UBSAN_OPTIONS="print_stacktrace=1:suppressions=$RUNNER_TEMP/ubsan.supp"
           fs_prefix="$RUNNER_TEMP/filesystem"
           private_fixture="$(mktemp -d "$HOME/.cde-sync-test.XXXXXXXX")"
           trap 'rm -rf "$private_fixture"' EXIT
@@ -273,6 +280,8 @@ jobs:
           logs="$RUNNER_TEMP/sanitizer-logs"
           mkdir "$RUNNER_TEMP/cde-tests"
           export TMPDIR="$RUNNER_TEMP/cde-tests"
+          export CC='${{ matrix.cc }}'
+          export CXX='${{ matrix.cxx }}'
           prefix="$RUNNER_TEMP/motif"
           export PATH="$prefix/bin:/usr/sbin:$PATH"
           export CPPFLAGS="-I$prefix/include $(pkg-config --cflags xft)"

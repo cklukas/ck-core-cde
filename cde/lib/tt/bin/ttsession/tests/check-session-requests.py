@@ -85,6 +85,8 @@ if shutil.which("rpcinfo") is None or subprocess.run(
     finish()
 
 sanitize = ["-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
+if "clang" in Path(compile_cmd[0]).name:
+    sanitize.append("-fno-sanitize=function")
 if any(a.startswith("-fsanitize") for a in compile_cmd):
     sanitize = []                    # the build already carries them
 extra = ["-DTT_SESSION_REQUESTS_OLD_JOIN"] if old_join else []

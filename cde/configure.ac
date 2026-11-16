@@ -683,9 +683,17 @@ AC_CHECK_LIB(ICE, IceCloseConnection, [XTOOLLIB="-lICE ${XTOOLLIB}"], ,
                   [${EXTRA_INCS} ${EXTRA_LIBS}])
 AC_CHECK_LIB(SM, SmcOpenConnection, [XTOOLLIB="-lSM ${XTOOLLIB}"], ,
                  [${EXTRA_INCS} ${EXTRA_LIBS}])
+ck_save_CFLAGS_xm=$CFLAGS
+ck_save_LDFLAGS_xm=$LDFLAGS
+AS_IF([test -n "$ck_sanitize_list"], [
+  CFLAGS="$CFLAGS -fsanitize=$ck_sanitize_list$ck_sanitize_extra"
+  LDFLAGS="$LDFLAGS -fsanitize=$ck_sanitize_list$ck_sanitize_extra"
+])
 AC_CHECK_LIB(Xm, XmToolkitABI, [XTOOLLIB="-lXm ${XTOOLLIB}"],
              [AC_MSG_ERROR([CK Core Motif is required. Set CPPFLAGS and LDFLAGS to its installed include and library directories.])],
                  [${EXTRA_INCS} ${EXTRA_LIBS}])
+CFLAGS=$ck_save_CFLAGS_xm
+LDFLAGS=$ck_save_LDFLAGS_xm
 XTOOLLIB="${EXTRA_INCS} ${EXTRA_LIBS} ${X_EXTRA_LIBS} ${XTOOLLIB}"
 AC_SUBST([XTOOLLIB])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <Xm/Xm.h>
