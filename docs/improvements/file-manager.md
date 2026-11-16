@@ -112,7 +112,17 @@ shelf at its selected icon size; startup never reads an uninitialized view.
 - extra-large presentation and additional Icon Editor zoom levels are
   available;
 - icon and shelf layouts account for labels and center their content; and
-- a Storage Size dialog reports detailed use for a selected object.
+- a Storage Size dialog reports detailed use for a selected object, counting
+  apparent byte size across every regular filename while deduplicating physical
+  disk blocks (`st_blocks * 512`) per unique `(st_dev, st_ino)` inode and
+  reporting unique hardlinked inodes alongside their additional directory names
+  (`Hardlinked files: N (M additional names)`).
+
+Path input resolution (`_DtPathFromInput`) expands `$VAR` and `${VAR}`
+environment references directly in process without invoking `/bin/sh`, and
+parent-directory (`_DtPName`), path-join (`_DtBuildPath`) and symbolic-link
+resolution (`_DtFollowLink`, `_DtResolveAppManPath`) enforce `MAXPATHLEN`
+bounds and handle relative links without directory separators.
 
 ![File Manager Set View Options dialog showing Shelf, extra-large icons, image rendering and centered labels](../images/features/file-manager-options.png)
 

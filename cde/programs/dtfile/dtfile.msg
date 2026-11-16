@@ -1814,6 +1814,10 @@ $ Message 24 is the label for the virtual filesystem entries count
 24 Virtual filesystem entries:
 $ Message 25 is the label for the metadata size row
 25 Metadata size (dirs/special/symlinks):
+$ Message 26 is the label for the hardlinked files row
+26 Hardlinked files:
+$ Message 27 formats unique hardlinked inode count and duplicate names
+27 %lu (%lu additional names)
 
 $set 40
 $ ****** Shelf ********

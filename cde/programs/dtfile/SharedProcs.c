@@ -376,7 +376,10 @@ _DtPName(
    static char pnam[MAXPATHLEN];
    static char dot[] = ".";
 
-   strcpy(pnam, name);
+   if (name == nullptr)
+      return dot;
+
+   snprintf(pnam, sizeof(pnam), "%s", name);
    q = strrchr(pnam, '/');
 
    if (q == nullptr)
@@ -417,12 +420,15 @@ _DtFollowLink (
    char ** history;
    int i;
 
+   if (path == nullptr)
+      return nullptr;
+
    /* Used to check for symbolic link loops */
    history_count = 0;
    history_size = 100;
    history = (char **)XtCalloc(history_size, sizeof(char *));
 
-   strcpy(file, path);
+   snprintf(file, sizeof(file), "%s", path);
 
    while ((link_len = readlink(file, link_path, MAXPATHLEN - 1)) > 0)
    {
@@ -432,12 +438,26 @@ _DtFollowLink (
       if (link_path[0] != '/')
       {
          /* Relative paths are relative to the current directory */
-         end = strrchr(file, '/') + 1;
-         *end = '\0';
-         strcat(file, link_path);
+         end = strrchr(file, '/');
+         if (end != nullptr)
+         {
+            size_t prefix_len = (size_t)(end - file) + 1;
+            if (prefix_len + (size_t)link_len >= sizeof(file))
+            {
+               for (i = 0; i < history_count; i++)
+                  XtFree(history[i]);
+               XtFree((char *)history);
+               return nullptr;
+            }
+            memcpy(file + prefix_len, link_path, (size_t)link_len + 1);
+         }
+         else
+         {
+            snprintf(file, sizeof(file), "%s", link_path);
+         }
       }
       else
-         strcpy(file, link_path);
+         snprintf(file, sizeof(file), "%s", link_path);
 
       /* Check for a recursive loop; abort if found */
       for (i = 0; i < history_count; i++)
@@ -821,19 +841,22 @@ _DtBuildPath(
         char         *fileName)
 
 {
+  if (path == nullptr)
+    return;
+
   if (directory)
   {
     if (fileName)
-      sprintf(path, "%s/%s", directory, fileName);
+      snprintf(path, MAXPATHLEN, "%s/%s", directory, fileName);
     else
-      sprintf(path, "%s", directory);
+      snprintf(path, MAXPATHLEN, "%s", directory);
   }
   else
   {
     if (fileName)
-      sprintf(path, "%s", fileName);
+      snprintf(path, MAXPATHLEN, "%s", fileName);
     else
-      sprintf(path, "%s", "");
+      path[0] = '\0';
   }
 }
 
@@ -1862,6 +1885,106 @@ _DtFreeDroppedFileInfo(
 }
 
 
+static char *
+_DtExpandPathEnvVars(
+        const char *input)
+{
+   const char *p;
+   size_t cap;
+   size_t len = 0;
+   char *out;
+
+   if (input == nullptr)
+      return nullptr;
+
+   if (strchr(input, '$') == nullptr)
+      return XtNewString(input);
+
+   cap = strlen(input) + 64;
+   out = (char *)XtMalloc(cap);
+   out[0] = '\0';
+
+   p = input;
+   while (*p != '\0')
+   {
+      if (*p == '$')
+      {
+         const char *var_start = nullptr;
+         size_t var_len = 0;
+         const char *next_p = p + 1;
+
+         if (*next_p == '{')
+         {
+            const char *close_brace = strchr(next_p + 1, '}');
+            if (close_brace != nullptr && close_brace > next_p + 1)
+            {
+               var_start = next_p + 1;
+               var_len = (size_t)(close_brace - var_start);
+               next_p = close_brace + 1;
+            }
+         }
+         else if (isalpha((unsigned char)*next_p) || *next_p == '_')
+         {
+            var_start = next_p;
+            while (isalnum((unsigned char)*next_p) || *next_p == '_')
+               next_p++;
+            var_len = (size_t)(next_p - var_start);
+         }
+
+         if (var_start != nullptr && var_len > 0)
+         {
+            char name_buf[256];
+            char *heap_name = nullptr;
+            const char *var_name;
+            const char *val;
+
+            if (var_len < sizeof(name_buf))
+            {
+               memcpy(name_buf, var_start, var_len);
+               name_buf[var_len] = '\0';
+               var_name = name_buf;
+            }
+            else
+            {
+               heap_name = (char *)XtMalloc(var_len + 1);
+               memcpy(heap_name, var_start, var_len);
+               heap_name[var_len] = '\0';
+               var_name = heap_name;
+            }
+
+            val = getenv(var_name);
+            if (heap_name != nullptr)
+               XtFree(heap_name);
+
+            if (val != nullptr && *val != '\0')
+            {
+               size_t val_len = strlen(val);
+               if (len + val_len + 1 > cap)
+               {
+                  cap = (len + val_len + 64) * 2;
+                  out = (char *)XtRealloc(out, cap);
+               }
+               memcpy(out + len, val, val_len);
+               len += val_len;
+               out[len] = '\0';
+            }
+            p = next_p;
+            continue;
+         }
+      }
+
+      if (len + 2 > cap)
+      {
+         cap = (cap + 64) * 2;
+         out = (char *)XtRealloc(out, cap);
+      }
+      out[len++] = *p++;
+      out[len] = '\0';
+   }
+
+   return out;
+}
+
 /*
  * This is a generic function for resolving a cannonical path from user input.
  */
@@ -1889,57 +2012,19 @@ _DtPathFromInput(
    /* Strip any spaces from name -- input is overwritten */
    path = (char *) _DtStripSpaces(path);
 
-   /* Resolve, if there're any, environment variables */
+   /* Resolve, if there're any, environment variables without invoking a shell */
+   if (path != nullptr && strchr(path, '$') != nullptr)
    {
-      FILE *pfp = nullptr;
-      char command[MAXPATHLEN];
-
-      memset(command, 0, sizeof(command));
-      sprintf(command,"echo %s",path);
-
-      if((pfp=popen(command,"r")) != nullptr)
+      char *expanded = _DtExpandPathEnvVars(path);
+      if (expanded != nullptr)
       {
-	  int read_ok = 1;
-
-          if (nullptr == (fgets(command,MAXPATHLEN,pfp))) 
-	  {
-	      /*
-	       * Try a few more reads and if the read still fails, 
-	       * just use the path as is.
-	       */
-	      int i;
-	      for (i=0; i < 5; i++) 
-	      {
-	 	  sleep (1);
- 		  if (nullptr != (fgets(command,MAXPATHLEN,pfp))) 
-		      break;
-              }
-	     if (i >= 5)
-		 read_ok = 0;
-	 }
-
-	 if (read_ok)
-	 {
-             int slen = strlen(command);
-             /* need to remove the trailing newline safely*/
-             if (slen >= 1)
-                 command[slen-1] = '\0';
-
-             XtFree(path);
-             path = XtNewString(command);
-             pclose(pfp);
-             pfp = nullptr;
-	 }
-      }
-      if (pfp)
-      {
-          pclose(pfp);
-          pfp = nullptr;
+         XtFree(path);
+         tmp_path = path = expanded;
       }
    }
 
    /* Resolve '~' -- new memory is allocated, old memory is freed */
-   if (*path == '~')
+   if (path && *path == '~')
       path = _DtChangeTildeToHome(path);
 
    /* If current dir provided, check for relative path */
@@ -1986,10 +2071,13 @@ _DtPathFromInput(
                                        &tt_status);
       XtFree(path);
 
-      /* Strip off trailing '/' */
-      dir_len = strlen(true_path);
-      if (dir_len > 1 && *(true_path + dir_len - 1) == '/')
-         *(true_path + dir_len - 1) = '\0';
+      if (true_path != nullptr)
+      {
+         /* Strip off trailing '/' */
+         dir_len = strlen(true_path);
+         if (dir_len > 1 && *(true_path + dir_len - 1) == '/')
+            *(true_path + dir_len - 1) = '\0';
+      }
    }
    else
    {
@@ -2127,7 +2215,7 @@ _DtResolveAppManPath(
          char *path,
          char *restricted_dir )
 {
-   if (strlen(path) > strlen(restricted_dir))
+   if (path && restricted_dir && strlen(path) > strlen(restricted_dir))
    {
       char *linkDir, *ptr, *tmpPath;
 
@@ -2138,6 +2226,11 @@ _DtResolveAppManPath(
          *ptr = '\0';
          linkDir = _DtFollowLink(path);
          *ptr = '/';
+         if (linkDir == nullptr)
+         {
+            XtFree(path);
+            return nullptr;
+         }
          tmpPath = XtMalloc(strlen(linkDir) + strlen(ptr) + 1);
          sprintf(tmpPath, "%s%s", linkDir, ptr);
          XtFree(path);
@@ -2147,7 +2240,7 @@ _DtResolveAppManPath(
       {
          linkDir = _DtFollowLink(path);
          XtFree(path);
-         path = XtNewString(linkDir);
+         path = linkDir ? XtNewString(linkDir) : nullptr;
       }
    }
 

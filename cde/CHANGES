@@ -1,3 +1,60 @@
+2026-11-16
+- File Manager (`dtfile`) Storage Size hardlink deduplication and path-resolution
+  hardening. `StorageSize` now deduplicates physical disk block accounting
+  (`st_blocks * 512`) across hardlinked regular files using an open-addressed
+  `(st_dev, st_ino)` hash set while retaining apparent byte size across every
+  directory entry, tracks `hardlink_name_count`, `hardlink_unique_inode_count`
+  and `hardlink_extra_name_count`, and displays a `Hardlinked files:` summary
+  row (`%lu (%lu additional names)`) in the Storage Size dialog. In
+  `SharedProcs.c`, `_DtPathFromInput()` now expands `$VAR` and `${VAR}`
+  environment references directly in process via `_DtExpandPathEnvVars()`
+  instead of passing user-supplied path text to `popen("echo ...")`, and
+  `_DtPName()`, `_DtBuildPath()`, `_DtFollowLink()` and `_DtResolveAppManPath()`
+  guard null inputs, relative links without `/` and `MAXPATHLEN` buffer bounds.
+  Test: `programs/dtfile/tests/check-storage-size-hardlinks.py`.
+- Input-path, parser and bounds hardening across `ttsnoop`, `dtappbuilder`,
+  `dtstyle`, `dtprintinfo` and `dtwm`.
+  - `ttsnoop` and `dtappbuilder`: `dtb_ttsnoop_ttsnoop_win_initialize()` in
+    `ttsnoop.C.src` and `abmf/lib_func_strings.c` (`lib_funcs.c`) now check
+    `num_elements * element_size` for overflow before `calloc()` and guard
+    `fopen()` before `fclose()`; `DtTt.C` replaces fixed `char buf[1024]`
+    `ostrstream` formatting with dynamic `std::ostringstream`, supplies mode
+    `0600` to `open(..., O_CREAT)`, checks `mkstemp()` and unlinks temporary
+    files; `ttsnoop` fixes missing `break` statements in `argChooser_stubs.C.src`
+    and `ttChooser_stubs.C.src`, calls `tt_message_reject()` in `msgReject()`,
+    passes a persistent `strdup()` buffer to `putenv()`, and accepts the `-m`
+    option argument in `getopt()`. Test:
+    `programs/ttsnoop/tests/check-ttsnoop.py`.
+  - `dtstyle`: `ColorFile.c` initializes `ReadInInfo()` buffers, bounds header
+    parsing, and advances `tmp_palette->next` only on the non-deleting branch of
+    `CheckForDeletedFile()`; `I18nEnv.c` bounds `ReadPipe()` accumulation,
+    null-terminates `GetImsList()` entries, and releases `pipe_buf` on error;
+    `ColorMain.c`, `ColorEdit.c`, `Backdrop.c`, `SaveRestore.c`, `I18nMain.c`,
+    `Dtwm.c`, `Startup.c`, `Audio.c`, `Keyboard.c`, `Font.c`, `Screen.c` and
+    `Mouse.c` replace unbounded `sprintf()`, `strcpy()` and `strcat()` calls
+    with bounded `snprintf()`. Test:
+    `programs/dtstyle/tests/check-dtstyle-hardening.py`.
+  - `dtprintinfo`: `ParseJobs.C` creates temporary parser output files with
+    `mkstemp()` under `$TMPDIR` instead of `tempnam()`, checks `Fork()` errors,
+    and bounds ` strtok()` copies into job fields; `Invoke.C` closes pipes on
+    failure and reaps child processes with `waitpid()`; `Queue.C`, `PrintJob.C`,
+    `PrintSubSys.C`, `Process.C`, `MotifThread.C`, `MotifUI.C`, `Application.C`,
+    `BaseUI.C`, `DtPrintinfo.C`, `DtApp.C`, `DtPrinterIcon.C`, `DtPrtProps.C`,
+    `DtPrtJobIcon.C` and `DtFindSet.C` replace fixed-buffer and unbounded
+    `sprintf()`, `strcpy()` and `strcat()` formatting with exact-sized heap
+    buffers and `snprintf()`. Test:
+    `programs/dtprintinfo/tests/check-dtprintinfo-hardening.py`.
+  - `dtwm`: `WmParse.c` bounds environment-variable name extraction and checks
+    `Realloc()` failure in `_DtWmParseFilenameExpand()`; `WmResParse.c` bounds
+    session workspace and hex/octal/decimal token copies and checks `Realloc()`
+    in `ParseBtnEvent()`; `DataBaseLoad.c` preserves the existing buffer when
+    `Realloc()` fails and fixes duplicate-entry index updates in
+    `EliminateEntries()` and `ResolveDuplicates()`; `WmWrkspace.c`,
+    `WmResource.c`, `Session.c`, `WmFunction.c`, `WmIPC.c`, `WmHelp.c`,
+    `WmProperty.c`, `WmBackdrop.c`, `WmImage.c` and `WmWinInfo.c` bound string
+    formatting and check `Realloc()` results. Test:
+    `programs/dtwm/tests/check-dtwm-hardening.py`.
+
 2026-11-15
 - `dtsearchpath` and `dtappgather` privilege handling, path traversal and
   allocator safety. `dtappgather` (installed setuid root) now rejects `.` and

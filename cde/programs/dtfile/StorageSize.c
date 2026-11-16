@@ -39,7 +39,12 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+#include <sys/param.h>
+#include <sys/mount.h>
+#else
 #include <sys/statfs.h>
+#endif
 #include <dirent.h>
 
 #ifdef __linux__
@@ -67,6 +72,12 @@ typedef struct DirStackEntry {
 } DirStackEntry;
 
 typedef struct {
+    dev_t dev;
+    ino_t ino;
+    Boolean occupied;
+} SeenInodeEntry;
+
+typedef struct {
     Widget form;
     Widget dialog_shell;
     Widget status_label;
@@ -76,6 +87,8 @@ typedef struct {
     Widget storage_value_label;
     Widget files_desc_label;
     Widget files_value_label;
+    Widget hardlinks_desc_label;
+    Widget hardlinks_value_label;
     Widget dirs_desc_label;
     Widget dirs_value_label;
     Widget permission_desc_label;
@@ -103,6 +116,9 @@ typedef struct {
     unsigned long long total_size;
     unsigned long long total_blocks;
     unsigned long regular_file_count;
+    unsigned long hardlink_name_count;
+    unsigned long hardlink_unique_inode_count;
+    unsigned long hardlink_extra_name_count;
     unsigned long dir_count;
     unsigned long permission_denied_dir_count;
     unsigned long virtual_entry_count;
@@ -112,6 +128,9 @@ typedef struct {
     unsigned long long regular_blocks;
     unsigned long long metadata_size;
     unsigned long long metadata_blocks;
+    SeenInodeEntry *seen_inodes;
+    size_t seen_inode_capacity;
+    size_t seen_inode_count;
 } StorageSizeData;
 
 static void StorageSizeTimer(XtPointer client_data, XtIntervalId *);
@@ -127,6 +146,10 @@ static Widget CreateInfoRow(Widget parent, Widget prev_row, const char *row_name
                             int desc_right_pos, int value_left_pos, int top_offset,
                             Widget *desc_label, Widget *value_label);
 static void FormatThousands(unsigned long long value, char *buf, size_t bufsize);
+static size_t StorageSizeHashInode(dev_t dev, ino_t ino);
+static Boolean StorageSizeSeenInode(const StorageSizeData *data, dev_t dev, ino_t ino);
+static void StorageSizeMarkSeenInode(StorageSizeData *data, dev_t dev, ino_t ino);
+static void StorageSizeFreeSeenInodes(StorageSizeData *data);
 static void StorageSizeAddEntrySize(StorageSizeData *data, const struct stat *st, Boolean metadata);
 static void SetLabelText(Widget widget, const char *text);
 static void StorageSizeUpdateButton(StorageSizeData *data);
@@ -210,6 +233,91 @@ FormatThousands(unsigned long long value, char *buf, size_t bufsize)
     buf[copy_len] = '\0';
 }
 
+static size_t
+StorageSizeHashInode(dev_t dev, ino_t ino)
+{
+    unsigned long long key = ((unsigned long long)dev << 32) ^ (unsigned long long)ino;
+    key ^= key >> 33;
+    key *= 0xff51afd7ed558ccdULL;
+    key ^= key >> 33;
+    key *= 0xc4ceb9fe1a85ec53ULL;
+    key ^= key >> 33;
+    return (size_t)key;
+}
+
+static Boolean
+StorageSizeSeenInode(const StorageSizeData *data, dev_t dev, ino_t ino)
+{
+    if (!data->seen_inodes || data->seen_inode_capacity == 0)
+        return False;
+
+    size_t mask = data->seen_inode_capacity - 1;
+    size_t idx = StorageSizeHashInode(dev, ino) & mask;
+    for (size_t step = 0; step < data->seen_inode_capacity; ++step)
+    {
+        const SeenInodeEntry *entry = &data->seen_inodes[idx];
+        if (!entry->occupied)
+            return False;
+        if (entry->dev == dev && entry->ino == ino)
+            return True;
+        idx = (idx + 1) & mask;
+    }
+    return False;
+}
+
+static void
+StorageSizeMarkSeenInode(StorageSizeData *data, dev_t dev, ino_t ino)
+{
+    if (data->seen_inode_capacity == 0 ||
+        (data->seen_inode_count + 1) * 10 >= data->seen_inode_capacity * 7)
+    {
+        size_t new_cap = data->seen_inode_capacity ? data->seen_inode_capacity * 2 : 256;
+        SeenInodeEntry *new_table = (SeenInodeEntry *)XtCalloc(new_cap, sizeof(SeenInodeEntry));
+        if (!new_table)
+            return;
+        size_t new_mask = new_cap - 1;
+        for (size_t i = 0; i < data->seen_inode_capacity; ++i)
+        {
+            if (data->seen_inodes[i].occupied)
+            {
+                size_t idx = StorageSizeHashInode(data->seen_inodes[i].dev,
+                                                  data->seen_inodes[i].ino) & new_mask;
+                while (new_table[idx].occupied)
+                    idx = (idx + 1) & new_mask;
+                new_table[idx] = data->seen_inodes[i];
+            }
+        }
+        XtFree((char *)data->seen_inodes);
+        data->seen_inodes = new_table;
+        data->seen_inode_capacity = new_cap;
+    }
+
+    size_t mask = data->seen_inode_capacity - 1;
+    size_t idx = StorageSizeHashInode(dev, ino) & mask;
+    while (data->seen_inodes[idx].occupied)
+    {
+        if (data->seen_inodes[idx].dev == dev && data->seen_inodes[idx].ino == ino)
+            return;
+        idx = (idx + 1) & mask;
+    }
+    data->seen_inodes[idx].dev = dev;
+    data->seen_inodes[idx].ino = ino;
+    data->seen_inodes[idx].occupied = True;
+    data->seen_inode_count++;
+}
+
+static void
+StorageSizeFreeSeenInodes(StorageSizeData *data)
+{
+    if (data->seen_inodes)
+    {
+        XtFree((char *)data->seen_inodes);
+        data->seen_inodes = nullptr;
+    }
+    data->seen_inode_capacity = 0;
+    data->seen_inode_count = 0;
+}
+
 static void
 StorageSizeAddEntrySize(StorageSizeData *data, const struct stat *st, Boolean metadata)
 {
@@ -222,10 +330,26 @@ StorageSizeAddEntrySize(StorageSizeData *data, const struct stat *st, Boolean me
     }
     else
     {
+        /* Apparent size: count every regular filename. */
         data->total_size += size;
-        data->total_blocks += blocks;
         data->regular_size += size;
-        data->regular_blocks += blocks;
+
+        if (st->st_nlink > 1)
+            data->hardlink_name_count++;
+
+        /* Actual disk usage: count once per (st_dev, st_ino). */
+        if (!StorageSizeSeenInode(data, st->st_dev, st->st_ino))
+        {
+            StorageSizeMarkSeenInode(data, st->st_dev, st->st_ino);
+            data->total_blocks += blocks;
+            data->regular_blocks += blocks;
+            if (st->st_nlink > 1)
+                data->hardlink_unique_inode_count++;
+        }
+        else if (st->st_nlink > 1)
+        {
+            data->hardlink_extra_name_count++;
+        }
     }
 }
 
@@ -558,6 +682,13 @@ StorageSizeTimer(XtPointer client_data, XtIntervalId *id)
     snprintf(file_value, sizeof(file_value), "%lu", data->regular_file_count);
     SetLabelText(data->files_value_label, file_value);
 
+    char hardlink_value[128];
+    snprintf(hardlink_value, sizeof(hardlink_value),
+             GETMESSAGE(35, 27, "%lu (%lu additional names)"),
+             data->hardlink_unique_inode_count,
+             data->hardlink_extra_name_count);
+    SetLabelText(data->hardlinks_value_label, hardlink_value);
+
     snprintf(dir_value, sizeof(dir_value), "%lu", data->dir_count);
     SetLabelText(data->dirs_value_label, dir_value);
 
@@ -642,6 +773,7 @@ StorageSizeClose(StorageSizeData *data)
     }
 
     StorageSizeFreeStack(data);
+    StorageSizeFreeSeenInodes(data);
 
     if (data->dialog_shell)
     {
@@ -845,6 +977,13 @@ ShowStorageSizeDialog(Widget w, XtPointer client_data, XtPointer call_data)
                              desc_right_pos, value_left_pos, row_spacing,
                              &data->files_desc_label, &data->files_value_label);
     SetLabelText(data->files_desc_label, GETMESSAGE(35, 16, "Files:"));
+    prev_row = row_form;
+
+    row_form = CreateInfoRow(info_form, prev_row, "storageSizeHardlinksRow",
+                             "storageSizeHardlinksDesc", "storageSizeHardlinksValue",
+                             desc_right_pos, value_left_pos, row_spacing,
+                             &data->hardlinks_desc_label, &data->hardlinks_value_label);
+    SetLabelText(data->hardlinks_desc_label, GETMESSAGE(35, 26, "Hardlinked files:"));
     prev_row = row_form;
 
     row_form = CreateInfoRow(info_form, prev_row, "storageSizeDirsRow",
