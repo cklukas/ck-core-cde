@@ -75,6 +75,20 @@ removed in them. The tools no longer define globals of the library's names:
 `dtsrhan` had a `shutdown_now` of its own next to the library's, and `dtsrdbrec`
 a second `print_dbrec`, so that a program and the library used two of them.
 
+Additional parser, list-sort and date-packing bounds are enforced across
+`lib/DtSearch` and `programs/dtsr`:
+
+- `split_llist`, `merge_llist`, `sort_llist` and `Austext_dittosort` handle
+  empty and single-element lists without null dereferences, and `clean_wrap`
+  guards empty lines before examining trailing bytes;
+- `objdate2tm`, `tm2objdate` and `is_objdate` validate month, day, hour and
+  minute bitfields using unsigned 64-bit shifts so 64-bit `DtSrObjdate` values
+  cannot trigger signed-shift undefined behavior;
+- `fread_d99_header` clamps `hole_count` to `MAX_KT_HOLES`, `hilite_cleartext`
+  checks the `malloc` return of its stem-type array, and `ocf`, `boolpars`,
+  `huffcode`, `dtsrclean`, `dtsrkdump`, `dtsrhan`, `tomita`, `dtsrindex` and
+  `dtsrload` bound path, token and frequency-table indices.
+
 ## Checks
 
 `make -C lib/DtSearch check` builds a program as C and as C++ that asserts the
@@ -96,3 +110,9 @@ The same test checks that no tool defines a global that `libDtSearch` defines
 file are all ones after `dtsrdelete`, and that a statistical query on a copy of
 the database in which one address was changed to an object that does not exist
 ends with the error above and is followed by a correct query.
+
+`python3 cde/lib/DtSearch/tests/check-dtsearch-hardening.py` compiles and runs a
+standalone AddressSanitizer and UndefinedBehaviorSanitizer harness covering
+`split_llist`/`sort_llist`, `Austext_dittosort`, `clean_wrap`, 64-bit
+`DtSrObjdate` round-tripping and validation, and `.d99` header `hole_count`
+clamping.

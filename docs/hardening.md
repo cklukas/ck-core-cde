@@ -99,8 +99,14 @@ and are replayed in CI via `python3 cde/fuzz/run-fuzz.py --all --replay`.
 | `programs/dtspcd` | root daemon from inetd; network; parses requests before authentication | request handlers, registration and privilege drop (2026-11-04); self-pipe signal loop, checked allocations and bounded strings (2026-11-13, 2026-11-14) | 6 | 3 | 1 | none |
 | `programs/dtexec` | launches user commands | discovery (2026-11-02); self-pipe signal loop (2026-11-13); `CommandListJoin` negative-count guard and checked `realloc` in `ParseCommandLine` and error-pipe drain (2026-11-16) | 5 | 1 | 2 | none |
 
-Components below 150 unique warnings are not listed; see the JSON record for
-all of them.
+Components below 150 unique warnings are recorded in the JSON baseline; the
+following smaller libraries and desktop utilities have also been audited and
+covered by sanitizer regressions (2026-11-16):
+
+- **`lib/DtMmdb`**: `memory_pool` large-allocation header and `ll4` alignment, `buffer::expand_chunk` power-of-two capacity and pointer-offset restoration, `compression`/`trie` checked allocations, `char_stack`/`void_ptr_stack` underflow guards, and `atomic_lock` bounds (`cde/lib/DtMmdb/tests/check-dtmmdb-hardening.py`).
+- **`lib/DtWidget` & `lib/DtPrint`**: `ComboBox`, `SpinBox` and `Editor`/`SearchCalls` bounds and null checks, and `PsubUtil` printer list parsing (`cde/programs/dtcreate/tests/check-desktop-apps-hardening.py`).
+- **`programs/dtcreate`, `programs/dtpad`, `programs/dticon`, `programs/dtcalc`, `programs/dtimsstart`**: `parser.c` buffer bounds and `cmncbs.c` `mkstemp` creation (`dtcreate`), `fileIo.c` `mkstemp` panic-save and bounded `ttMsgSupport.c` formatting (`dtpad`), `ProcessToolTalkMediaMessage` path copy bounds and `utils.c` `DontCare` fallback (`dticon`), `calctool.c` `get_label` clamping and `ds_popup.c` bounds (`dtcalc`), and `remote.c`/`env.c`/`start.c`/`file.c`/`action.c`/`select.c` bounds (`dtimsstart`) (`cde/programs/dtcreate/tests/check-desktop-apps-hardening.py`).
+- **`programs/dtdocbook`, `programs/dtudcfonted`, `programs/dtudcexch`, `programs/dtpdm`, `programs/localized/util`**: `infolib` `EmptyDir` traversal guard and `NCFGen` field widths (`dtdocbook`), `addcpf`/`ufont`/`importbdf` bounds (`dtudcfonted`, `dtudcexch`), `PdmOidStrs` and `Main.c` argv bounds (`dtpdm`), and `merge.c` checked allocations (`localized/util`) (`cde/programs/dtdocbook/infolib/tests/check-dtdocbook-udc-hardening.py`).
 
 ## Excluded from mechanical rewrites
 

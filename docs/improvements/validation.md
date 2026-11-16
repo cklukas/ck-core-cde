@@ -122,6 +122,23 @@ reader and recursive top-level-window lookup with controlled Xlib replies.
 It checks property formats, counts, truncation, command validity, native-long
 WM state storage and Xlib buffer ownership, including empty child lists.
 
+Additional standalone AddressSanitizer and UndefinedBehaviorSanitizer harnesses
+exercise component parsers, privilege boundaries, temporary-file creation and
+path-expansion helpers without requiring a live X server:
+
+- `python3 cde/programs/dtsearchpath/tests/check-dtappgather.py`: `DTUSERSESSION` validation, `dtappgather` privilege drop and symlink refusal, and `CTokenizedString` bounds;
+- `python3 cde/programs/dtfile/tests/check-storage-size-hardlinks.py`: `(st_dev, st_ino)` hardlink deduplication in `StorageSize`, `DtEliminateDots`, `DtCreateDirs`, and `_DtPathFromInput` `$VAR`/`${VAR}` expansion;
+- `python3 cde/programs/ttsnoop/tests/check-ttsnoop.py`: `DtTt` stream output bounds, `O_CREAT` file mode and temp-file cleanup, `putenv` lifetime and callback switch breaks;
+- `python3 cde/programs/dtstyle/tests/check-dtstyle-hardening.py`: `ColorFile` list-unlink and `ReadInInfo` bounds, `I18nEnv` pipe accumulation, and `GetImsList` bounds;
+- `python3 cde/programs/dtprintinfo/tests/check-dtprintinfo-hardening.py`: `ParseJobs` `mkstemp` creation, bounded parser tokens, and child reaping in `Invoke`;
+- `python3 cde/programs/dtwm/tests/check-dtwm-hardening.py`: `WmParse`/`WmResParse` environment expansion and `DataBaseLoad` duplicate elimination;
+- `python3 cde/programs/dthelp/dthelpprint/tests/check-dthelpprint-hardening.py`: `O_CREAT | O_EXCL` (`0600`) temp-file creation in `_DtHelpCeCreateTmpFile` and `FormatUtil` `mblen` error handling;
+- `python3 cde/programs/dtksh/tests/check-dtksh-hardening.py`: `DtkshCvtStringToTtScope`, `DtkshNameToWidget`, and 64-bit hex/integer converters;
+- `python3 cde/lib/DtSearch/tests/check-dtsearch-hardening.py`: `llist`/`dittosort`, `clean_wrap`, 64-bit `DtSrObjdate`, and `.d99` `hole_count` clamping;
+- `python3 cde/lib/DtMmdb/tests/check-dtmmdb-hardening.py`: `memory_pool` large-block header and `ll4` alignment, `buffer::expand_chunk` pointer-offset arithmetic, and `DtSR_SearchResultsEntry::overlay_proximity`;
+- `python3 cde/programs/dtcreate/tests/check-desktop-apps-hardening.py`: `dtcreate` `parser.c` and `mkstemp`, `dtpad` `mkstemp` panic-save, `dticon` ToolTalk path bounds, `dtcalc` `get_label`, and `dtimsstart` bounds;
+- `python3 cde/programs/dtdocbook/infolib/tests/check-dtdocbook-udc-hardening.py`: `dtdocbook` `EmptyDir` traversal guard, `dtudcfonted`/`dtudcexch` BDF/XLFD bounds, `dtexec` `CommandListJoin`, and `dtpdm` `PdmOidStrs`.
+
 ## Desktop smoke test
 
 The native `cde/programs/dtwm/tests/property-client.c` fixture can additionally
