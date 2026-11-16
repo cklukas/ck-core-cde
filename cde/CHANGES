@@ -1,4 +1,21 @@
 2026-11-16
+- Add the `dtwm-wayland` (`wlroots-0.19`) compositor core (`WP-02`) with
+  server-side 3D CDE bevel decorations and rootless `Xwayland` integration on
+  the `x11_wayland` branch.
+  - `cde/configure.ac` and `cde/programs/dtwm/Makefile.am`: add `--enable-wayland`
+    (`default=auto`) building `dtwm-wayland` alongside classic X11 `dtwm` and
+    generating `xdg-shell` and `wlr-layer-shell-unstable-v1` protocol headers via
+    `wayland-scanner`.
+  - `cde/programs/dtwm/wayland/` (`dtwm_wayland.h`, `cde_bevel.c`,
+    `dtwm_wayland_main.c`): implement server-side 3D mitered CDE bevel window
+    frames, corner resize handles, MWM system/minimize/maximize buttons, window
+    menu popup, half/quadrant snap preview, `Shift`-grid alignment, `Alt+Tab`
+    task switcher, desktop-click defocus, `wlr-layer-shell-v1`,
+    `zwlr_screencopy_manager_v1`, virtual pointer/keyboard protocols, and
+    rootless `Xwayland` honoring `_MOTIF_WM_HINTS`.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland.py` and
+    `docs/improvements/wayland.md`: add dual-protocol Wayland + XWayland bevel
+    and focus regression coverage and document `dtwm-wayland`.
 - Modernize Debian/Ubuntu `.deb` packaging (`WP-01`) for the matched CK Core
   cohort (`ck-core-motif9`, `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`,
   and `ck-core-apps`) on the `x11_wayland` branch.

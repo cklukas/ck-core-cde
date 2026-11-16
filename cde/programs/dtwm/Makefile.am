@@ -2,12 +2,18 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = dtwm dtfplist
 
+if BUILD_DTWM_WAYLAND
+bin_PROGRAMS += dtwm-wayland
+endif
+
 EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-desktop-requests.py tests/check-session-word-width.py tests/check-session-word-width.c \
              tests/check-config-temp-file.py tests/check-config-temp-file.c \
              tests/check-session-counts.py tests/check-session-counts.c \
              tests/check-quit-signal.py tests/check-quit-signal.c \
-             tests/check-dtwm-hardening.py tests/check-dtwm-hardening.c
+             tests/check-dtwm-hardening.py tests/check-dtwm-hardening.c \
+             tests/check-dtwm-wayland.py \
+             wayland/protocols/wlr-layer-shell-unstable-v1.xml
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-property-readers.py
@@ -17,12 +23,37 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-config-temp-file.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-quit-signal.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-hardening.py
+if BUILD_DTWM_WAYLAND
+	python3 $(srcdir)/tests/check-dtwm-wayland.py --compositor ./dtwm-wayland
+endif
 
 configdir = $(CDE_INSTALLATION_TOP)/config/C
 dist_config_DATA = sys.dtwmrc
 
 BUILT_SOURCES = sys.dtwmrc Dtwm.defs
 CLEANFILES = sys.dtwmrc Dtwm.defs
+
+if BUILD_DTWM_WAYLAND
+WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h wayland/wlr-layer-shell-unstable-v1-protocol.h
+BUILT_SOURCES += $(WAYLAND_GEN_HDRS)
+CLEANFILES += $(WAYLAND_GEN_HDRS)
+
+wayland/xdg-shell-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/stable/xdg-shell/xdg-shell.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/wlr-layer-shell-unstable-v1-protocol.h: $(srcdir)/wayland/protocols/wlr-layer-shell-unstable-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
+                       wayland/cde_bevel.c \
+                       wayland/dtwm_wayland_main.c
+nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS)
+dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1
+dtwm_wayland_CFLAGS = $(WAYLAND_COMP_CFLAGS)
+dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS)
+endif
 
 AM_CPPFLAGS = -DLARGECURSORS -DR2_COMPAT -DOPAQUE -DSHAPE -DUNMAP_ON_RESTART \
 	      -DBATCH_DRAG_REQUESTS -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" \

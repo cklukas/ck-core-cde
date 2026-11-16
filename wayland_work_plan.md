@@ -38,7 +38,7 @@ Deliver a first-class, `apt`-installable **CK Core CDE Wayland Desktop Session**
   - Ship `/usr/share/xsessions/cde.desktop`, `/usr/share/wayland-sessions/cde-wayland.desktop`, `/etc/pam.d/{dtsession,dtlogin}` (with `pam_systemd.so`), and `debconf` `shared/default-x-display-manager`.
 - **Acceptance gate**: `apt install ./ck-core-*.deb` succeeds on clean Ubuntu 26.04 LTS with zero broken dependencies and launches a verified CDE session.
 
-### [ ] WP-02 — `dtwm-wayland` Compositor Core, Server-Side CDE Bevel Frames & Rootless XWayland
+### [x] WP-02 — `dtwm-wayland` Compositor Core, Server-Side CDE Bevel Frames & Rootless XWayland
 - **Repos**: `ck-core-cde` (`cde/programs/dtwm/`)
 - **Scope**:
   - Implement `wlroots` C23 compositor backend supporting DRM/KMS (`libseat`), nested Wayland, and headless backends, plus `xdg-shell`, `xdg-decoration-unstable-v1` (server-side CDE bevel frames), `zwlr_layer_shell_v1`, `zwlr_screencopy_manager_v1`, and rootless `wlr_xwayland`.

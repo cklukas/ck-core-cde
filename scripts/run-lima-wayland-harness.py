@@ -494,10 +494,16 @@ def guest_run(args: argparse.Namespace) -> int:
     x11_unix_dir = Path("/tmp/.X11-unix")
     pre_existing_x = set(x11_unix_dir.glob("X*")) if x11_unix_dir.exists() else set()
 
+    status_file = run_root / "compositor.status"
+    comp_bin = shutil.which(args.compositor) or args.compositor
+    comp_cmd = [comp_bin]
+    if "dtwm-wayland" in Path(comp_bin).name:
+        comp_cmd.extend(["--status-file", str(status_file)])
+
     t_smoke = time.monotonic()
     comp_log = (output_dir / "wayland-compositor.log").open("w", encoding="utf-8")
     comp_proc = subprocess.Popen(
-        shutil.which(args.compositor) and [args.compositor] or ["labwc"],
+        comp_cmd,
         env=wl_env,
         stdout=comp_log,
         stderr=subprocess.STDOUT,
@@ -513,14 +519,25 @@ def guest_run(args: argparse.Namespace) -> int:
         while time.monotonic() < deadline:
             if comp_proc.poll() is not None:
                 raise SystemExit(f"compositor exited prematurely with {comp_proc.returncode}")
-            wl_candidates = sorted(xdg_runtime.glob("wayland-*"))
-            wl_candidates = [p for p in wl_candidates if not p.name.endswith(".lock")]
-            new_x = sorted((set(x11_unix_dir.glob("X*")) if x11_unix_dir.exists() else set()) - pre_existing_x)
-            if wl_candidates and new_x:
-                wayland_sock = wl_candidates[0].name
-                x11_sock = ":" + new_x[-1].name[1:]
-                break
-            time.sleep(0.2)
+            if status_file.is_file():
+                kv = dict(
+                    ln.split("=", 1)
+                    for ln in status_file.read_text(encoding="utf-8").splitlines()
+                    if "=" in ln
+                )
+                wayland_sock = kv.get("WAYLAND_DISPLAY")
+                x11_sock = kv.get("DISPLAY")
+                if wayland_sock and x11_sock:
+                    break
+            else:
+                wl_candidates = sorted(xdg_runtime.glob("wayland-*"))
+                wl_candidates = [p for p in wl_candidates if not p.name.endswith(".lock")]
+                new_x = sorted((set(x11_unix_dir.glob("X*")) if x11_unix_dir.exists() else set()) - pre_existing_x)
+                if wl_candidates and new_x:
+                    wayland_sock = wl_candidates[0].name
+                    x11_sock = ":" + new_x[-1].name[1:]
+                    break
+            time.sleep(0.1)
 
         if not wayland_sock or not x11_sock:
             raise SystemExit(f"timed out waiting for WAYLAND_DISPLAY ({wayland_sock}) / XWayland DISPLAY ({x11_sock})")
@@ -643,7 +660,7 @@ def main() -> int:
     ap.add_argument("--apps-repo", default="/Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/ck-core-apps-wt")
     ap.add_argument("--guest-build-root", default="/var/tmp/ck-wayland-build/wp00")
     ap.add_argument("--output-dir", default="", help="Durable receipt & screenshot output directory")
-    ap.add_argument("--compositor", default="labwc", help="Wayland compositor binary for headless smoke run")
+    ap.add_argument("--compositor", default="/var/tmp/ck-wayland-build/wp00/cde-stage/usr/dt/bin/dtwm-wayland", help="Wayland compositor binary for headless smoke run")
     ap.add_argument("--jobs", type=int, default=MAX_JOBS, help="Max parallel jobs (capped at 6)")
     ap.add_argument("--skip-cde-check", action="store_true", help="Skip Xvfb dtksh widget check")
     args = ap.parse_args()

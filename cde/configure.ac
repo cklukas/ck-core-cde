@@ -735,6 +735,38 @@ dnl Figure out TCL
 SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
 
+dnl Optional Wayland compositor (dtwm-wayland) built on wlroots-0.19
+AC_ARG_ENABLE([wayland],
+  [AS_HELP_STRING([--enable-wayland],
+    [build dtwm-wayland compositor using wlroots-0.19 (default=auto)])],
+  [], [enable_wayland=auto])
+
+build_dtwm_wayland=no
+WAYLAND_COMP_CFLAGS=""
+WAYLAND_COMP_LIBS=""
+WAYLAND_PROTOCOLS_DATADIR=""
+AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
+
+AS_IF([test "x$enable_wayland" != "xno"], [
+  AS_IF([test -n "$PKG_CONFIG" && test -n "$WAYLAND_SCANNER" && \
+         $PKG_CONFIG --exists wayland-protocols wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm], [
+    WAYLAND_PROTOCOLS_DATADIR=`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`
+    WAYLAND_COMP_CFLAGS=`$PKG_CONFIG --cflags wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm`
+    WAYLAND_COMP_LIBS=`$PKG_CONFIG --libs wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm`
+    build_dtwm_wayland=yes
+  ], [
+    AS_IF([test "x$enable_wayland" = "xyes"], [
+      AC_MSG_ERROR([--enable-wayland requires wayland-scanner, wayland-protocols, wlroots-0.19, wayland-server, xkbcommon, cairo, pangocairo, pixman-1, libdrm, xcb, and xcb-icccm])
+    ])
+  ])
+])
+
+AM_CONDITIONAL([BUILD_DTWM_WAYLAND], [test "x$build_dtwm_wayland" = "xyes"])
+AC_SUBST([WAYLAND_SCANNER])
+AC_SUBST([WAYLAND_PROTOCOLS_DATADIR])
+AC_SUBST([WAYLAND_COMP_CFLAGS])
+AC_SUBST([WAYLAND_COMP_LIBS])
+
 dnl check MISSING_PROGS - error out here if there's stuff in it.
 
 if test -n "$MISSING_PROGS"; then
