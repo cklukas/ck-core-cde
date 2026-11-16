@@ -172,7 +172,9 @@ GetUserEnv(
     char buf[BUFSIZ], *p;
 
     /* get the host name */
-    gethostname(buf, BUFSIZ);
+    buf[0] = '\0';
+    gethostname(buf, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
     uenv->localhostname = XtNewString(buf);
 
     /* get the user name */
@@ -180,7 +182,7 @@ GetUserEnv(
       struct passwd *pw;
 
       pw = getpwuid(getuid());
-      p = pw->pw_name;
+      p = pw ? pw->pw_name : "unknown";
     }
     
     uenv->username = XtNewString(p);
@@ -242,21 +244,19 @@ GetUserIMSelectionFile(
     FILE	*fp = nullptr;
 
     ret = GetUserFileName(env);
-    
-	if (ret == NoError) {
-		/* Look if this file is readable */
-		if ((fp = fopen(env->file_sel->fname, "r")) == nullptr) {
-			env->file_sel->start_mode = -1;
-			return ErrNoSelectionFile;
-		}
-	}
+    if (ret != NoError)
+	return ret;
+
+    /* Look if this file is readable */
+    if ((fp = fopen(env->file_sel->fname, "r")) == nullptr) {
+	env->file_sel->start_mode = -1;
+	return ErrNoSelectionFile;
+    }
 
     start_tag_line(env->file_sel->fname);
     ret = ReadImSelectionFile(env->file_sel, fp);
 
-    if(fp) {
-        fclose(fp);
-    }
+    fclose(fp);
 
     return ret;
 }
@@ -268,7 +268,6 @@ GetUserFileName(
 {
     int                status, ret = NoError;
     char               *path, *tmp_path;
-    int                len = 0;
     struct stat        buf;
 
     /* The user IMS Selection File should be of the following form:
@@ -276,29 +275,30 @@ GetUserFileName(
      */
 
     path = (char *) XtCalloc((MAXPATHLEN + 1), sizeof(char));
-
-    strcpy(path, env->user_env->homedir);
-    strcat(path, DtUSER_IMSFS_DIR);
+    snprintf(path, MAXPATHLEN + 1, "%s%s",
+             env->user_env->homedir ? env->user_env->homedir : "",
+             DtUSER_IMSFS_DIR);
 
     /* Look if there is a display specific directory */
 
     tmp_path = (char *) XtCalloc((MAXPATHLEN + 1), sizeof(char));
-    
-    strcpy(tmp_path, path);
-    strcat(tmp_path, "/");
-    strcat(tmp_path, env->user_env->displayname);
+    snprintf(tmp_path, MAXPATHLEN + 1, "%s/%s",
+             path,
+             env->user_env->displayname ? env->user_env->displayname : "");
 
     if ((status = stat (tmp_path, &buf)) == 0) {
-	strcat(path, "/");
-	strcat(path, env->user_env->displayname);
+	snprintf(path, MAXPATHLEN + 1, "%s", tmp_path);
     }
 
     XtFree(tmp_path);
 
     /* Now add the CDE-specific locale name */
 
-    strcat(path, "/");
-    strcat(path, env->user_env->CDE_locale);
+    size_t used = strlen(path);
+    if (used < MAXPATHLEN) {
+	snprintf(path + used, MAXPATHLEN + 1 - used, "/%s",
+	         env->user_env->CDE_locale ? env->user_env->CDE_locale : "");
+    }
 
     env->file_sel->fname = path;
 
@@ -404,9 +404,19 @@ GetImsList(
     if ((ret = stat ("/usr/dt/bin/dtimsstart", &buf)) != NoError) {
 	return ErrNoDtimsstart;
     }
-    
-    sprintf(pipe_command, "/usr/dt/bin/dtimsstart -listname -hostname %s", 
-	    hostname);
+
+    if (!hostname || !*hostname)
+	return ErrUnknownHost;
+    for (const unsigned char *hp = (const unsigned char *)hostname; *hp; hp++) {
+	if (!isalnum(*hp) && *hp != '.' && *hp != '-' && *hp != '_' && *hp != ':')
+	    return ErrUnknownHost;
+    }
+
+    int cmd_len = snprintf(pipe_command, sizeof(pipe_command),
+                           "/usr/dt/bin/dtimsstart -listname -hostname %s",
+                           hostname);
+    if (cmd_len < 0 || (size_t)cmd_len >= sizeof(pipe_command))
+	return ErrUnknownHost;
 
     if (fp = popen(pipe_command, "r")) {
 
@@ -470,9 +480,10 @@ ReadPipe (
     nbytes = read (*fd, buf, 512);
 
     if (nbytes > 0) {
-	savebuf = XtRealloc(savebuf, savebuf_bytes + nbytes);
+	savebuf = XtRealloc(savebuf, savebuf_bytes + nbytes + 1);
 	memcpy(savebuf+savebuf_bytes, buf, nbytes);
 	savebuf_bytes += nbytes ;
+	savebuf[savebuf_bytes] = '\0';
     } else {
 	if (savebuf)
 	    *(savebuf + savebuf_bytes)  = '\0';
@@ -546,17 +557,28 @@ ProcessBuf(
 	/* Mark begin of im filename */
 	filename = savebuf ;
 	/* Go to the end of it */
-	while (!isspace(*savebuf++)) ;
-	/* We're on the first space, mark the end of the im filename,
+	while (*savebuf && !isspace((unsigned char)*savebuf))
+	    savebuf++;
+	/* We're on the first space (or NUL), mark the end of the im filename,
 	 * don't forget to count the ')' if inactive. */
-	*(savebuf - ims_ent->inactive - 1) = '\0';
+	{
+	    char *endp = savebuf - ims_ent->inactive;
+	    if (endp < filename)
+		endp = filename;
+	    if (*savebuf)
+		*savebuf++ = '\0';
+	    *endp = '\0';
+	}
 
 	/* Mark the beginning of the im name */
 	label = savebuf ;
-	while (*savebuf != '\n') savebuf++ ;
+	while (*savebuf && *savebuf != '\n')
+	    savebuf++ ;
 	/* mark the end */
-	*savebuf = '\0';
-	savebuf++;
+	if (*savebuf == '\n') {
+	    *savebuf = '\0';
+	    savebuf++;
+	}
 
 	/* copy the string data here. it's gonna be freed after that */
 	ims_ent->im_name = XtNewString(filename) ;

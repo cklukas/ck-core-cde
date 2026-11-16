@@ -489,11 +489,20 @@ CreateWorkspace(
      */
     if (pSD->numWsDataAllocated <= pSD->numWorkspaces)
     {
-	iActiveWS = (pSD->pActiveWS - pSD->pWS) / sizeof (WmWorkspaceData);
+	int iLastWS = (pSD->pLastWS && pSD->pWS)
+			  ? (int)(pSD->pLastWS - pSD->pWS)
+			  : -1;
+	iActiveWS = (pSD->pActiveWS && pSD->pWS)
+			? (int)(pSD->pActiveWS - pSD->pWS)
+			: 0;
 	pSD->numWsDataAllocated += WS_ALLOC_AMOUNT;
 	pSD->pWS = (WmWorkspaceData *) XtRealloc ((char *)pSD->pWS,
 		    pSD->numWsDataAllocated * sizeof(WmWorkspaceData));
 	pSD->pActiveWS = &(pSD->pWS[iActiveWS]);
+	if (iLastWS >= 0)
+	{
+	    pSD->pLastWS = &(pSD->pWS[iLastWS]);
+	}
     }
 
     /*
@@ -1274,7 +1283,10 @@ FindWsNameInCommand(
 		/* 
 		 * found "-xrm", now look at resource spec
 		 */
-		pch0 = (unsigned char *) strdup (argv[i+1]);
+		/* strip off quotes ,
+		 * separate two halve of resource spec
+		 */
+		pch0 = (unsigned char *) XtNewString (argv[i+1]);
 		if (!pch0)
 		{
 		    Warning (((char *)GETMESSAGE(76, 7, "Insufficient memory")));
@@ -1282,13 +1294,10 @@ FindWsNameInCommand(
 		}
 		pch = pch0;
 
-		/* strip off quotes ,
-		 * separate two halve of resource spec
-		 */
 		pchRes = GetSmartString (&pch);
 		pchValue = pch;
 
-		if ((*pchRes) && (*pch))
+		if ((pchRes && *pchRes) && (pch && *pch))
 		{
 		    /* Erase colon at end of resource name */
 
@@ -2644,6 +2653,11 @@ RemoveClientFromWsList(
 	}
     }
 
+    if (dest >= pWS->numClients)
+    {
+	return;
+    }
+
     for (src = dest+1; src < pWS->numClients; src++, dest++)
     {
 	pWS->ppClients[dest] = pWS->ppClients[src];
@@ -3434,8 +3448,8 @@ SaveWorkspaceResources(
 	res_class = DT_WM_RESOURCE_CLASS;
     }
 
-    strcpy(screenName, "*");
-    strcat(screenName,XtName (pWS->pSD->screenTopLevelW)); 
+    snprintf(screenName, sizeof(screenName), "*%s",
+             XtName (pWS->pSD->screenTopLevelW)); 
 
     /* construct and write out the resources specification */
 
@@ -3452,7 +3466,7 @@ SaveWorkspaceResources(
 		XtRealloc (buffer, bufferLength * sizeof(char));
 	}
 
-	sprintf (buffer, "%s%s*%s*%s*%s:  %s\n", res_class,
+	snprintf (buffer, bufferLength, "%s%s*%s*%s*%s:  %s\n", res_class,
 		screenName, pWS->name, 
 		WmNbackdrop, WmNimage, pWS->backdrop.image);
 
@@ -3472,7 +3486,7 @@ SaveWorkspaceResources(
 		XtRealloc (buffer, bufferLength * sizeof(char));
 	}
 
-	sprintf (buffer, "%s%s*%s*%s*%s:  %d\n", res_class,
+	snprintf (buffer, bufferLength, "%s%s*%s*%s*%s:  %d\n", res_class,
 		screenName, pWS->name,
 		WmNbackdrop, WmNimageType, pWS->backdrop.imageType);
 
@@ -3496,7 +3510,7 @@ SaveWorkspaceResources(
 		XtRealloc (buffer, bufferLength * sizeof(char));
 	}
 
-	sprintf (buffer, "%s%s*%s*%s:  %s\n", res_class,
+	snprintf (buffer, bufferLength, "%s%s*%s*%s:  %s\n", res_class,
 		screenName, pWS->name, 
 		WmNtitle, asciiName);
 
@@ -3518,7 +3532,7 @@ SaveWorkspaceResources(
 		XtRealloc (buffer, bufferLength * sizeof(char));
 	}
 
-	sprintf (buffer, "%s%s*%s:  %s\n", res_class,
+	snprintf (buffer, bufferLength, "%s%s*%s:  %s\n", res_class,
 		screenName, 
 		WmNinitialWorkspace, pWS->name);
 
@@ -3530,29 +3544,51 @@ SaveWorkspaceResources(
     {
 	WmWorkspaceData *pWSi;
 	char *pchQname;
+	char *wsListBuf;
+	size_t wsListCap = MAXWMPATH + 1;
+	size_t wsListLen = 0;
 	int i;
 
 	pWSi = pWS->pSD->pWS;
+	wsListBuf = XtMalloc (wsListCap);
+	wsListBuf[0] = '\0';
 
-	pchQname = (char *) _DtWmParseMakeQuotedString (
-					(unsigned char *)pWSi->name);
-	strcpy ((char *)wmGD.tmpBuffer, pchQname);
-	XtFree (pchQname);
-	pWSi++;
-
-
-	for (i=1; i<pWS->pSD->numWorkspaces; i++, pWSi++)
+	for (i = 0; i < pWS->pSD->numWorkspaces; i++, pWSi++)
 	{
-	    strcat ((char *)wmGD.tmpBuffer, " ");
 	    pchQname = (char *) _DtWmParseMakeQuotedString (
 					(unsigned char *)pWSi->name);
-	    strcat ((char *)wmGD.tmpBuffer, pchQname);
-	    XtFree (pchQname);
+	    if (pchQname)
+	    {
+		size_t qLen = strlen (pchQname);
+		size_t needed = wsListLen + (i > 0 ? 1 : 0) + qLen + 1;
+		if (needed > wsListCap)
+		{
+		    wsListCap = needed + MAXWMPATH;
+		    wsListBuf = XtRealloc (wsListBuf, wsListCap);
+		}
+		if (i > 0)
+		{
+		    wsListBuf[wsListLen++] = ' ';
+		}
+		memcpy (wsListBuf + wsListLen, pchQname, qLen + 1);
+		wsListLen += qLen;
+		XtFree (pchQname);
+	    }
 	}
 
-	sprintf (buffer, "%s%s*%s:  %s\n", res_class,
+	iLen = strlen (res_class) + strlen (screenName) +
+	       strlen (WmNworkspaceList) + wsListLen + 14;
+	if (iLen > bufferLength)
+	{
+	    bufferLength += iLen;
+	    buffer = (char *)
+		XtRealloc (buffer, bufferLength * sizeof(char));
+	}
+
+	snprintf (buffer, bufferLength, "%s%s*%s:  %s\n", res_class,
 		screenName, 
-		WmNworkspaceList, wmGD.tmpBuffer);
+		WmNworkspaceList, wsListBuf);
+	XtFree (wsListBuf);
 
 	AddStringToResourceData (buffer, &data, &cum_len);
     }

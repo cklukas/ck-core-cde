@@ -1216,6 +1216,10 @@ void ParseSessionClientState (WmScreenData *pSD, int count,
 
 
 {
+    if (string == nullptr)
+    {
+	return;
+    }
 
     if(!strcmp((char *)string, "NormalState"))
     {
@@ -1252,6 +1256,11 @@ void ParseSessionGeometry (WmScreenData *pSD, int count,
     int mask /* = 0 */;
     int X, Y, width, height;
     X = Y = width = height = 0;
+
+    if (string == nullptr)
+    {
+	return;
+    }
     
     /*
      *  XParseGeometry
@@ -1304,6 +1313,10 @@ void ParseSessionWorkspaces (WmScreenData *pSD,  int count,
 			     unsigned char *string)
 
 {
+    if (string == nullptr)
+    {
+        return;
+    }
 
     /*
      * Allocate space for the workspaces string
@@ -1348,8 +1361,18 @@ void ParseSessionCommand (WmScreenData *pSD,  int count,
     int  iSizeArgv;
     
     unsigned char *string;
+
+    if (commandString == nullptr || *commandString == nullptr)
+    {
+        return;
+    }
     
     argv = (unsigned char **) XtMalloc (ARG_AMT * sizeof(char *));
+    if (argv == nullptr)
+    {
+        Warning (((char *)GETMESSAGE(60, 3, "Insufficient memory for commandArgv array")));
+        return;
+    }
     iSizeArgv = ARG_AMT;
     
     while ((string = GetSmartSMString (commandString)) != nullptr)
@@ -1367,7 +1390,12 @@ void ParseSessionCommand (WmScreenData *pSD,  int count,
 		   XtRealloc ((char *)argv, (iSizeArgv * sizeof(char *)));
 	}
     }
-    if ((pSD->pDtSessionItems[count].commandArgv =
+    if (argc == 0)
+    {
+        pSD->pDtSessionItems[count].commandArgc = 0;
+        pSD->pDtSessionItems[count].commandArgv = nullptr;
+    }
+    else if ((pSD->pDtSessionItems[count].commandArgv =
          (char **)XtMalloc ((argc) * sizeof(char * ))) == nullptr)
     {
         /*
@@ -1423,6 +1451,10 @@ void ParseSessionHost (WmScreenData *pSD,  int count,
 			     unsigned char *string)
 
 {
+    if (string == nullptr)
+    {
+        return;
+    }
 
     /*
      * Allocate space for the workspaces string
@@ -1881,13 +1913,16 @@ FILE *FopenConfigFile (void)
         if ((wmGD.configFile[0] == '~') && (wmGD.configFile[1] == '/'))
 	/* handle "~/..." */
 	{
-	    strcpy (cfileName, homeDir);
 	    if (LANG != nullptr)
 	    {
-		strncat(cfileName, "/", MAXWMPATH-strlen(cfileName));
-		strncat(cfileName, LANG, MAXWMPATH-strlen(cfileName));
+		snprintf(cfileName, sizeof(cfileName), "%s/%s%s",
+			 homeDir, LANG, &(wmGD.configFile[1]));
 	    }
-	    strncat(cfileName, &(wmGD.configFile[1]), MAXWMPATH-strlen(cfileName));
+	    else
+	    {
+		snprintf(cfileName, sizeof(cfileName), "%s%s",
+			 homeDir, &(wmGD.configFile[1]));
+	    }
 	    if ((fileP = fopen (cfileName, "r")) != nullptr)
 	    {
 		if (LANG != nullptr) { 
@@ -1900,9 +1935,8 @@ FILE *FopenConfigFile (void)
 		/* 
 		 * Just try $HOME/.mwmrc
 		 */
-		strcpy (cfileName, homeDir);
-		strncat(cfileName, &(wmGD.configFile[1]), 
-			MAXWMPATH-strlen(cfileName));
+		snprintf(cfileName, sizeof(cfileName), "%s%s",
+			 homeDir, &(wmGD.configFile[1]));
 		if ((fileP = fopen (cfileName, "r")) != nullptr)
 		{
 		  if (LANG != nullptr) {
@@ -1921,9 +1955,9 @@ FILE *FopenConfigFile (void)
 
             pch = (char *) GetNetworkFileName (wmGD.configFile);
 
-	    if ((fileP = fopen (pch, "r")) != nullptr)
+	    if (pch != nullptr && (fileP = fopen (pch, "r")) != nullptr)
 	    {
-	        strncpy (cfileName, pch, MAXWMPATH);
+	        snprintf (cfileName, sizeof(cfileName), "%s", pch);
 	    }
 	    XtFree (pch);
   
@@ -1940,7 +1974,7 @@ FILE *FopenConfigFile (void)
 	  }
 	  else if ((fileP == nullptr) && stackPushed)
 	  {
-		strcpy (cfileName, wmGD.configFile);
+		snprintf (cfileName, sizeof(cfileName), "%s", wmGD.configFile);
 	  }
 	}
     }
@@ -1956,8 +1990,6 @@ FILE *FopenConfigFile (void)
 #define HOME_MWMRC "/.mwmrc"
 #define SLASH_MWMRC "/system.mwmrc"
 
-    strcpy (cfileName, homeDir);
-
     if (MwmBehavior)
     {
 	/*
@@ -1969,10 +2001,14 @@ FILE *FopenConfigFile (void)
 	 */
 	if (LANG != nullptr)
 	{
-	    strncat(cfileName, "/", MAXWMPATH-strlen(cfileName));
-	    strncat(cfileName, LANG, MAXWMPATH-strlen(cfileName));
+	    snprintf(cfileName, sizeof(cfileName), "%s/%s%s",
+		     homeDir, LANG, HOME_MWMRC);
 	}
-	strncat(cfileName, HOME_MWMRC, MAXWMPATH - strlen(cfileName));
+	else
+	{
+	    snprintf(cfileName, sizeof(cfileName), "%s%s",
+		     homeDir, HOME_MWMRC);
+	}
     }
     else
     {
@@ -1985,13 +2021,16 @@ FILE *FopenConfigFile (void)
 	 *  Looking for $HOME/.dt/dtwmrc
 	 *
 	 */
-	strncat(cfileName, "/.dt/", MAXWMPATH-strlen(cfileName));
-
 	if (LANG != nullptr)
 	{
-	    strncat(cfileName, LANG, MAXWMPATH-strlen(cfileName));
+	    snprintf(cfileName, sizeof(cfileName), "%s/.dt/%s%s",
+		     homeDir, LANG, LANG_DT_WMRC);
 	}
-	strncat(cfileName, LANG_DT_WMRC, MAXWMPATH - strlen(cfileName));
+	else
+	{
+	    snprintf(cfileName, sizeof(cfileName), "%s/.dt/%s",
+		     homeDir, LANG_DT_WMRC);
+	}
     }
     if ((fileP = fopen (cfileName, "r")) != nullptr)
     {
@@ -2005,20 +2044,19 @@ FILE *FopenConfigFile (void)
 	/* 
 	 * Just try $HOME/.mwmrc
 	 */
-	strcpy (cfileName, homeDir);
 	if (MwmBehavior)
 	{
 	    /* 
 	     * Just try $HOME/.mwmrc
 	     */
-	    strncat(cfileName, HOME_MWMRC, MAXWMPATH - strlen(cfileName));
+	    snprintf(cfileName, sizeof(cfileName), "%s%s", homeDir, HOME_MWMRC);
 	}
 	else
 	{
 	    /* 
 	     * Just try $HOME/.dt/dtwmrc
 	     */
-	    strncat(cfileName, HOME_DT_WMRC, MAXWMPATH - strlen(cfileName));
+	    snprintf(cfileName, sizeof(cfileName), "%s%s", homeDir, HOME_DT_WMRC);
 	}
 	if ((fileP = fopen (cfileName, "r")) != nullptr)
 	{
@@ -2039,23 +2077,27 @@ FILE *FopenConfigFile (void)
     /* 
      * No home-based config file. Try the admin directory.
      */
-    strcpy(cfileName, DTADMINDIR);
-    strncat(cfileName, RC_CONFIG_SUBDIR, MAXWMPATH-strlen(cfileName));
-    strncat(cfileName, LANG, MAXWMPATH-strlen(cfileName));
-    strncat(cfileName, SLASH_DT_WMRC, MAXWMPATH - strlen(cfileName));
-
-    if (((fileP = fopen (cfileName, "r")) == nullptr) && LANG && *LANG)
+    if (LANG && *LANG)
     {
-	/* Try it with no LANG */
-	strcpy(cfileName, DTADMINDIR);
-	strncat(cfileName, RC_CONFIG_SUBDIR, MAXWMPATH-strlen(cfileName));
-	strncat(cfileName, SLASH_DT_WMRC, MAXWMPATH - strlen(cfileName));
+	snprintf(cfileName, sizeof(cfileName), "%s%s%s%s",
+		 DTADMINDIR, RC_CONFIG_SUBDIR, LANG, SLASH_DT_WMRC);
+	fileP = fopen (cfileName, "r");
     }
 
-    if ((fileP = fopen (cfileName, "r")) != nullptr)
+    if (fileP == nullptr)
     {
-      XtFree(LANG);
-      LANG = nullptr;
+	/* Try it with no LANG */
+	snprintf(cfileName, sizeof(cfileName), "%s%s%s",
+		 DTADMINDIR, RC_CONFIG_SUBDIR, SLASH_DT_WMRC);
+	fileP = fopen (cfileName, "r");
+    }
+
+    if (fileP != nullptr)
+    {
+      if (LANG != nullptr) {
+          XtFree(LANG);
+          LANG = nullptr;
+      }
     }
   }
 
@@ -2069,17 +2111,13 @@ FILE *FopenConfigFile (void)
     {
 	if (MwmBehavior)
 	{
-	    strcpy(cfileName, LIBDIR);
-	    strncat(cfileName, "/", MAXWMPATH-strlen(cfileName));
-	    strncat(cfileName, LANG, MAXWMPATH-strlen(cfileName));
-	    strncat(cfileName, SLASH_MWMRC, MAXWMPATH - strlen(cfileName));
+	    snprintf(cfileName, sizeof(cfileName), "%s/%s%s",
+		     LIBDIR, LANG, SLASH_MWMRC);
 	}
 	else
 	{
-	    strcpy(cfileName, DTLIBDIR);
-	    strncat(cfileName, RC_CONFIG_SUBDIR, MAXWMPATH-strlen(cfileName));
-	    strncat(cfileName, LANG, MAXWMPATH-strlen(cfileName));
-	    strncat(cfileName, SLASH_DT_WMRC, MAXWMPATH - strlen(cfileName));
+	    snprintf(cfileName, sizeof(cfileName), "%s%s%s%s",
+		     DTLIBDIR, RC_CONFIG_SUBDIR, LANG, SLASH_DT_WMRC);
 	}
 	if ((fileP = fopen (cfileName, "r")) != nullptr)
 	{
@@ -2092,16 +2130,13 @@ FILE *FopenConfigFile (void)
     {
     if (MwmBehavior)
     {
-	strcpy(cfileName, LIBDIR);
-	strncat(cfileName, SLASH_MWMRC, MAXWMPATH - strlen(cfileName));
+	snprintf(cfileName, sizeof(cfileName), "%s%s", LIBDIR, SLASH_MWMRC);
 	fileP = fopen (cfileName, "r");
     }
     else
     {
-	strcpy(cfileName, DTLIBDIR);
-	strncat(cfileName, RC_DEFAULT_CONFIG_SUBDIR, 
-					MAXWMPATH - strlen(cfileName));
-	strncat(cfileName, SLASH_DT_WMRC, MAXWMPATH - strlen(cfileName));
+	snprintf(cfileName, sizeof(cfileName), "%s%s%s",
+		 DTLIBDIR, RC_DEFAULT_CONFIG_SUBDIR, SLASH_DT_WMRC);
 	fileP = fopen (cfileName, "r");
     }
     }
@@ -2115,11 +2150,11 @@ FILE *FopenConfigFile (void)
 	 * handle "<host>:<path>" form of file name
 	 */
 	pch = (char *) GetNetworkFileName (cfileName);
-	if ((fileP = fopen (cfileName, "r")) != nullptr)
+	if (pch != nullptr && (fileP = fopen (pch, "r")) != nullptr)
 	{
-	    strncpy (cfileName, pch, MAXWMPATH);
-	    XtFree (pch);
+	    snprintf (cfileName, sizeof(cfileName), "%s", pch);
 	}
+	XtFree (pch);
 
 	/*
 	 * Either not "<host>:<path>" form or there was a
@@ -4090,7 +4125,8 @@ Boolean ParseBtnEvent (unsigned char  **linePP,
      * The following is a fix for an X11 deficiency in regards to 
      * modifiers in grabs.
      */
-    if (*eventType == ButtonRelease)
+    if ((*eventType == ButtonRelease) &&
+        (*button < XtNumber(buttonModifierMasks)))
     {
 	/* the button that is going up will always be in the modifiers... */
 	*state |= buttonModifierMasks[*button];
@@ -4605,6 +4641,11 @@ static unsigned int StrToNum(unsigned char *str)
     unsigned char c;
     unsigned int  val = 0;
 
+    if (str == nullptr || *str == '\0')
+    {
+	return ((unsigned int)-1);
+    }
+
     if (*str == '0')
     {
 	str++;
@@ -4660,6 +4701,11 @@ static unsigned int StrToHex(unsigned char *str)
     unsigned char c;
     unsigned int  val = 0;
 
+    if (str == nullptr || *str == '\0')
+    {
+	return ((unsigned int)-1);
+    }
+
     while ((c = *str) != '\0')
     {
 	if ('0' <= c && c <= '9')
@@ -4712,6 +4758,11 @@ static unsigned int StrToOct(unsigned char *str)
 {
     unsigned char c;
     unsigned int  val = 0;
+
+    if (str == nullptr)
+    {
+	return ((unsigned int)-1);
+    }
 
     while ((c = *str) != '\0')
     {
@@ -4803,26 +4854,26 @@ PWarning (char *message)
     sMessage = XtNewString ((String) message);
     if (cfileP != nullptr)
     {
-	if (pConfigStackTop->fileName)
+	if (pConfigStackTop && pConfigStackTop->fileName)
 	{
 	    pchFile = pConfigStackTop->fileName;
 	}
 	else 
 	{
-	    pchFile = wmGD.configFile;
+	    pchFile = wmGD.configFile ? wmGD.configFile : "";
 	}
 
-        sprintf (pch, pWarningStringFile,
+        snprintf (pch, sizeof(pch), pWarningStringFile,
                      GETMESSAGE(20,1,"Workspace Manager"), 
 		     sMessage, linec, pchFile);
     }
     else
     {
-        sprintf (pch, pWarningStringLine,
+        snprintf (pch, sizeof(pch), pWarningStringLine,
                      GETMESSAGE(20,1,"Workspace Manager"), 
 		     sMessage, linec);
     }
-    _DtSimpleError (wmGD.mwmName, DtIgnore, nullptr, pch, nullptr);
+    _DtSimpleError (wmGD.mwmName, DtIgnore, nullptr, "%s", pch);
     XtFree (sMessage);
 
 
@@ -5272,9 +5323,7 @@ void ProcessMotifBindings (void)
      *  Look in the user's home directory for .motifbind
      */
 
-    strcpy (fileName, homeDir);
-    strncat(fileName, "/", MAXWMPATH-strlen(fileName));
-    strncat(fileName, MOTIF_BINDINGS_FILE, MAXWMPATH-strlen(fileName));
+    snprintf (fileName, sizeof(fileName), "%s/%s", homeDir, MOTIF_BINDINGS_FILE);
 
     XDeleteProperty (DISPLAY, RootWindow (DISPLAY, 0),
 		XInternAtom (DISPLAY, "_MOTIF_BINDINGS", False));
@@ -5512,21 +5561,15 @@ SystemCmd (char *pchCmd)
 void
 DeleteTempConfigFileIfAny (void)
 {
-    char pchCmd[MAXWMPATH+1];
-
     if (pConfigStackTop->tempName)
     {
-	strcpy (pchCmd, "/bin/rm ");
-	strcat (pchCmd, pConfigStackTop->tempName);
-	SystemCmd (pchCmd);
+	(void) unlink (pConfigStackTop->tempName);
 	XtFree ((char *) pConfigStackTop->tempName);
 	pConfigStackTop->tempName = nullptr;
     }
     if (pConfigStackTop->cppName)
     {
-	strcpy (pchCmd, "/bin/rm ");
-	strcat (pchCmd, pConfigStackTop->cppName);
-	SystemCmd (pchCmd);
+	(void) unlink (pConfigStackTop->cppName);
 	XtFree ((char *) pConfigStackTop->cppName);
 	pConfigStackTop->cppName = nullptr;
     }
@@ -5610,10 +5653,13 @@ static void ParseIncludeSet (WmScreenData *pSD, unsigned char *lineP)
 	    break;
         }
 	pchName = _DtWmParseFilenameExpand (string);
-	if (pchName && ConfigStackPush (pchName))
+	if (pchName)
 	{
-	    ProcessWmFile (pSD, True /* nested */);
-	    ConfigStackPop ();
+	    if (ConfigStackPush (pchName))
+	    {
+		ProcessWmFile (pSD, True /* nested */);
+		ConfigStackPop ();
+	    }
 	    XtFree ((char *) pchName);
 	}
 
@@ -5664,7 +5710,7 @@ static void ConfigStackInit (char *pchFileName)
     }
     else
     {
-	sprintf ((char *)wmGD.tmpBuffer,
+	snprintf ((char *)wmGD.tmpBuffer, sizeof(wmGD.tmpBuffer),
 	    (char *)GETMESSAGE(60,36,"Insufficient memory to process included file: %s"), 
 	    pchFileName);
 	Warning ((char *)wmGD.tmpBuffer);
@@ -5736,7 +5782,7 @@ ConfigStackPush (unsigned char *pchFileName)
     }
     else
     {
-	sprintf ((char *)wmGD.tmpBuffer,
+	snprintf ((char *)wmGD.tmpBuffer, sizeof(wmGD.tmpBuffer),
 	    (char *)GETMESSAGE(60,36,"Insufficient memory to process included file: %s"), 
 	    pchFileName);
 	Warning ((char *)wmGD.tmpBuffer);
@@ -5775,7 +5821,6 @@ ConfigStackPush (unsigned char *pchFileName)
 static void ConfigStackPop (void)
 {
     ConfigFileStackEntry *pPrev;
-    char pchCmd[MAXWMPATH+1];
 
     if (pConfigStackTop != pConfigStack)
     {
@@ -5788,9 +5833,7 @@ static void ConfigStackPop (void)
 	}
 	if (pConfigStackTop->cppName)
 	{
-	    strcpy (pchCmd, "/bin/rm "); 
-	    strcat (pchCmd, pConfigStackTop->cppName); 
-	    SystemCmd (pchCmd);
+	    (void) unlink (pConfigStackTop->cppName);
 	    XtFree ((char *) pConfigStackTop->cppName);
 	    pConfigStackTop->cppName = nullptr;
 	}
@@ -5821,7 +5864,7 @@ static void ConfigStackPop (void)
 	{
 	    char msg[MAXWMPATH+1];
 
-	    sprintf(msg, ((char *)GETMESSAGE(60, 39, 
+	    snprintf(msg, sizeof(msg), ((char *)GETMESSAGE(60, 39, 
 			    "Could not reopen configuration file %s")),
 		pPrev->fileName);
 	    Warning (msg);
@@ -5948,6 +5991,10 @@ Boolean ParseWmFuncActionArg (unsigned char **linePP,
     else
     /* NULL string argument */
     {
+        if (pAP)
+        {
+            XtFree ((char *) pAP);
+        }
         *pArgs = nullptr;
     }
 
@@ -5984,7 +6031,6 @@ static void
 PreprocessConfigFile (void)
 {
 #define CPP_NAME_TEMPLATE	"/dwmXXXXXX"
-    char pchCmd[MAXWMPATH+1];
 
     if (wmGD.cppCommand && *wmGD.cppCommand)
     {
@@ -5999,6 +6045,8 @@ PreprocessConfigFile (void)
 	if (pConfigStackTop->cppName)
 	{
 	    int fd;
+	    size_t cmdLen;
+	    char *pchCmd;
 
 	    strcpy (pConfigStackTop->cppName, P_tmpdir);
 	    strcat (pConfigStackTop->cppName, CPP_NAME_TEMPLATE);
@@ -6015,17 +6063,24 @@ PreprocessConfigFile (void)
 	    /*
 	     * Build up the command line.
 	     */
-	    strcpy (pchCmd, wmGD.cppCommand);
-	    strcat (pchCmd, " ");
-	    strcat (pchCmd, pConfigStackTop->fileName);
-	    strcat (pchCmd, " ");
-	    strcat (pchCmd, pConfigStackTop->cppName);
+	    cmdLen = strlen (wmGD.cppCommand) + 1 +
+		     strlen (pConfigStackTop->fileName ? pConfigStackTop->fileName : "") + 1 +
+		     strlen (pConfigStackTop->cppName) + 1;
+	    pchCmd = XtMalloc (cmdLen);
+	    if (pchCmd)
+	    {
+		snprintf (pchCmd, cmdLen, "%s %s %s",
+			  wmGD.cppCommand,
+			  pConfigStackTop->fileName ? pConfigStackTop->fileName : "",
+			  pConfigStackTop->cppName);
 
-	    /*
-	     * Run the config file through the converter program
-	     * and send the output to a temp file. 
-	     */
-	    SystemCmd (pchCmd);
+		/*
+		 * Run the config file through the converter program
+		 * and send the output to a temp file. 
+		 */
+		SystemCmd (pchCmd);
+		XtFree (pchCmd);
+	    }
 	}
     }
 }

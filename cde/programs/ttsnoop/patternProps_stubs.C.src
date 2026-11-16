@@ -88,12 +88,16 @@ _DtTtPatternWidgetUpdate(
 	Tt_pattern			pat
 )
 {
-	char *printout = tt_pattern_print( pat ); // XXX when to free?
+	char *printout = tt_pattern_print( pat );
 	Tt_status status = tt_ptr_error( printout );
+	Boolean freePrintout = (! tt_is_err( status ) && (printout != 0));
 	if (tt_is_err( status )) {
 		printout = tt_status_message( status );
 	}
 	XtVaSetValues( instance->patternText, XmNvalue, printout, NULL );
+	if (freePrintout) {
+		tt_free( printout );
+	}
 
 	_DtTtPatternSetUpdating( pat, True );
 
@@ -369,7 +373,7 @@ DtTtPatternWidgetCreate(
 	}
 
 	std::ostringstream labelStream;
-	labelStream << "Tt_pattern " << (void *)pat << ends;
+	labelStream << "Tt_pattern " << (void *)pat;
 	XtVaSetValues( instance->patternProps,
 		       XmNtitle, labelStream.str().c_str(),
 		       NULL );

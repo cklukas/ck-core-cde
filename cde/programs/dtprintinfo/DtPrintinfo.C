@@ -80,13 +80,14 @@ int main(int argc, char **argv)
       dtprintinfo_cat = (nl_catd) -1;
    }
 
-   if (!STRCMP(argv[1], "-help"))
+   if (argc > 1 && !STRCMP(argv[1], "-help"))
     {
-      char *output;
-      char *cmd = new char [strlen(LIST_QUEUES) + 30];
-      sprintf(cmd, "%s | awk '{print \"\\t\", $1}'", LIST_QUEUES);
+      char *output = NULL;
+      size_t cmd_cap = strlen(LIST_QUEUES) + 32;
+      char *cmd = new char [cmd_cap];
+      snprintf(cmd, cmd_cap, "%s | awk '{print \"\\t\", $1}'", LIST_QUEUES);
       Invoke *_thread = new Invoke(cmd, &output);
-      printf(MESSAGE(CommandLineHelpL), output);
+      printf(MESSAGE(CommandLineHelpL), output ? output : "");
       printf("\n");
       free(output);
       delete [] cmd;
@@ -99,7 +100,7 @@ int main(int argc, char **argv)
       progname++;
    else
       progname = argv[0];
-   if (!STRCMP(argv[1], "-populate"))
+   if (argc > 1 && !STRCMP(argv[1], "-populate"))
     {
       if (getuid() != 0)
        {

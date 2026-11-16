@@ -754,7 +754,7 @@ BaseUI *BaseUI::_FindBy(char *pattern, int depth, int *n_matches,
       if (n_matches)
          *n_matches = 0;
       if (matches)
-         matches = NULL;
+         *matches = NULL;
       return NULL;
     }
    BaseUI **_matches = NULL;

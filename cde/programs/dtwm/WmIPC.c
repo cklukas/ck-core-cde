@@ -977,7 +977,7 @@ ToolTalkError(Widget parent, char *errfmt, Tt_status status)
     XtManageChild(dialog);
     XtRealizeWidget(dialogShell);
 
-    _DtSimpleError("Dtwm", DtFatalError, nullptr, errmsg);
+    _DtSimpleError("Dtwm", DtFatalError, nullptr, "%s", errmsg);
 
     XtFree(errmsg);
     XmStringFree(xms_ok);

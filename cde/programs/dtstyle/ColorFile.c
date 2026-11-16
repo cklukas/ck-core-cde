@@ -225,22 +225,27 @@ ReadPalette(
       _DtSimpleErrnoError (progName, DtWarning, nullptr, tmpStr, nullptr);
       XtFree(tmpStr);
       XtFree(filename);
+      XtFree((char *)new_palette);
       return;
    }
    else 
    {
     /* determine number of bytes in the name of the palette */
-       i = strlen(in_filename) - strlen(PALETTE_SUFFIX);
+      p = strstr (in_filename, PALETTE_SUFFIX);
+      if (p)
+          i = (int)(p - in_filename);
+      else
+          i = (int)strlen(in_filename);
 
     /* allocate enough space for the name */
       new_palette->name = (char *)XtMalloc(i + 1);
 
     /* load the filename into the name element */
-      p = strstr (in_filename, PALETTE_SUFFIX);
+      memcpy(new_palette->name, in_filename, (size_t)i);
+      new_palette->name[i] = '\0';
       if(p) {
           *p = '\0';
       }
-      strcpy(new_palette->name, in_filename);
 
 /* 
 ** Now we have a name lets check to see if it is already in the linked
@@ -316,13 +321,19 @@ ReadPalette(
 	  new_palette->num_of_colors = 0;
 
 	  nbytes = read(fd, buf, BUFSIZE);
-	  if( nbytes == BUFSIZE || nbytes == 0)
+	  if( nbytes == BUFSIZE || nbytes <= 0)
 	  {
 	     tmpStr = (char *)XtMalloc(strlen(ERR5) + strlen(filename) + 1);
 	     sprintf(tmpStr, ERR5, filename);
 	     _DtSimpleError (progName, DtWarning, nullptr, tmpStr, nullptr);
 	     XtFree(filename);
 	     XtFree(tmpStr);
+	     if (!modify)
+	     {
+	        XtFree(new_palette->name);
+	        XtFree(new_palette->directory);
+	        XtFree((char *)new_palette);
+	     }
 	     close(fd);
 	     return;
 	  }
@@ -430,11 +441,7 @@ WriteOutPalette(
    strcat(filename, PALETTE_SUFFIX);
 
    /* open the file for writing */
-#if defined(__linux__)
-   if( (fd = open( filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) == -1)
-#else
-   if( (fd = open( filename, O_RDWR | O_CREAT)) == -1)
-#endif
+   if( (fd = open( filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR)) == -1)
    {
        tmpStr = (char *)XtMalloc(strlen(ERR4) + strlen(filename) + 1);
        sprintf (tmpStr, ERR4, filename);
@@ -471,6 +478,7 @@ WriteOutPalette(
            if(-1 == write(fd, temp, strlen(temp))) {
 		   perror(strerror(errno));
 		   XtFree(temp);
+		   XtFree(filename);
 		   close(fd);
 		   return(-1);
 	   }
@@ -668,12 +676,17 @@ AddHomePath( void )
        result = mkdir(home_palette_dir, 511);
        if(result == -1)
        {
-           tmpStr = (char *)XtMalloc(strlen(ERR3) + 
+           tmpStr = (char *)XtMalloc(strlen(ERR4) + 
                 strlen(home_palette_dir) +1);
            sprintf(tmpStr, ERR4, home_palette_dir);
            _DtSimpleError (progName, DtWarning, nullptr, tmpStr, nullptr);
            XtFree(tmpStr);
        }
+   }
+   else
+   {
+       closedir(dirp);
+       dirp = nullptr;
    }
                                          
   /* store the directory in the palette_dirs structure */
@@ -758,27 +771,33 @@ CheckForDeletedFile(
         struct dirent *file_descpt )
 {
    char *filename;
-   int i;
+   size_t name_len, suffix_len, copy_len = 0;
    palette *tmp_palette;
 
   /* alloc enough space for the name of the ~ file  */
-   filename = (char *)XtMalloc(strlen (file_descpt->d_name) + 1);
+   name_len = strlen (file_descpt->d_name);
+   suffix_len = strlen(PALETTE_SUFFIX) + 1;
+   filename = (char *)XtMalloc(name_len + 1);
 
   /* copy the name into filename taking out the ~ */
-   for(i=0; i < strlen (file_descpt->d_name) - (strlen(PALETTE_SUFFIX) + 1); i++)
-      filename[i] = file_descpt->d_name[i+1];
-   filename[i] = '\0';
+   if (name_len > suffix_len)
+   {
+      copy_len = name_len - suffix_len;
+      memcpy(filename, file_descpt->d_name + 1, copy_len);
+   }
+   filename[copy_len] = '\0';
 
   /* now go see if the filename is in the palette link list */
    tmp_palette = pHeadPalette;
-   while(tmp_palette->next != nullptr )
+   while(tmp_palette != nullptr && tmp_palette->next != nullptr )
      if(strcmp(tmp_palette->name, filename)) 
         tmp_palette = tmp_palette->next;
      else
         tmp_palette = RemovePaletteFromList(tmp_palette);
 
    /* check the last palette */
-   if(tmp_palette->next == nullptr && (strcmp(tmp_palette->name, filename) == 0))
+   if(tmp_palette != nullptr && tmp_palette->next == nullptr &&
+      (strcmp(tmp_palette->name, filename) == 0))
       (void) RemovePaletteFromList(tmp_palette);
 
    XtFree(filename);
@@ -807,15 +826,23 @@ ReadInInfo(
        count = 0;
    
      /* read in a background color */
-       while( buf[buf_count] != '\012' && buf[buf_count] != ':' )
-          tmpbuf[count++] = buf[buf_count++];
+       while( buf_count < nbytes &&
+              buf[buf_count] != '\012' &&
+              buf[buf_count] != ':' &&
+              buf[buf_count] != '\0' )
+       {
+          if (count < (int)sizeof(tmpbuf) - 1)
+             tmpbuf[count++] = buf[buf_count];
+          buf_count++;
+       }
        tmpbuf[count] = '\0';
 
      /* temporary for now until all palettes are updated not to use : */
-       if(buf[buf_count] == ':')
-          while(buf[buf_count] != '\012')
+       if(buf_count < nbytes && buf[buf_count] == ':')
+          while(buf_count < nbytes && buf[buf_count] != '\012' && buf[buf_count] != '\0')
              buf_count++;
-       buf_count++;
+       if(buf_count < nbytes)
+          buf_count++;
    
       /* Parse the background color */
        result = XParseColor(style.display, style.colormap, tmpbuf, &tmp_color);
@@ -1076,12 +1103,15 @@ RemovePaletteFromList( palette *tmp_palette )
      /* make sure the item_positions are correct*/
    count = 1;
    tmp_palette = pHeadPalette;
-   while(tmp_palette->next != nullptr )
+   if (tmp_palette != nullptr)
    {
-      tmp_palette->item_position = count++;
-      tmp_palette = tmp_palette->next;
+      while(tmp_palette->next != nullptr )
+      {
+         tmp_palette->item_position = count++;
+         tmp_palette = tmp_palette->next;
+      }
+      tmp_palette->item_position = count;
    }
-   tmp_palette->item_position = count;
 
   /* decrease the number of palettes */
    NumOfPalettes--;
@@ -1112,11 +1142,7 @@ CheckFileType( void )
    strcat(tmpfile1, DT_PAL_DIR);
    strcat(tmpfile1, filename1);
 
-#if defined(__linux__)
    if( (fd = open( tmpfile1, O_CREAT, S_IRUSR | S_IWUSR)) == -1)
-#else
-   if( (fd = open( tmpfile1, O_CREAT)) == -1)
-#endif
    {
         style. longfilename = False;
         XtFree(tmpfile1);
@@ -1132,11 +1158,7 @@ CheckFileType( void )
    strcat(tmpfile2, DT_PAL_DIR);
    strcat(tmpfile2, filename2);
 
-#if defined(__linux__)
    if( (fd1 = open(tmpfile2, O_CREAT | O_EXCL, S_IRUSR | S_IWUSR)) == -1)
-#else
-   if( (fd1 = open(tmpfile2, O_CREAT | O_EXCL)) == -1)
-#endif
    {
        style.longfilename = False; 
    }
@@ -1210,9 +1232,10 @@ ReadPaletteLoop(
 
       while( file_descpt != nullptr)
       {
+         char *suffix = DtStrrchr(file_descpt->d_name, '.');
        /* check for a valid palette file */
-         if(!(strncmp(PALETTE_SUFFIX, DtStrrchr(file_descpt->d_name, '.'),
-	                                  strlen(PALETTE_SUFFIX)))) 
+         if(suffix != nullptr &&
+            !(strncmp(PALETTE_SUFFIX, suffix, strlen(PALETTE_SUFFIX)))) 
          {
 /*
 ** A file in the users home palette directory which begins with a ~

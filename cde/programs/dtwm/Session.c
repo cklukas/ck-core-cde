@@ -883,13 +883,10 @@ SessionDeleteAll(void)
    dir = opendir(fp_dir);
 
    if (dir == nullptr)
-     return;
-
-  /* prepare source name */
-   strcpy(srcname, fp_dir);
-   srclen = strlen(fp_dir);
-   if (srcname[srclen - 1] != '/')
-     srcname[srclen++] = '/';
+   {
+      XtFree(fp_dir);
+      return;
+   }
 
   /*  Loop through all the files in the fp_dyamic directory and
    *  remove them.
@@ -899,10 +896,11 @@ SessionDeleteAll(void)
    {
       if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
          continue;
-      strcpy(srcname + srclen, entry->d_name);
-      remove (srcname);
+      if (snprintf(srcname, sizeof(srcname), "%s/%s", fp_dir, entry->d_name) < (int)sizeof(srcname))
+         remove (srcname);
    }
    
    closedir(dir);
+   XtFree(fp_dir);
 }
 

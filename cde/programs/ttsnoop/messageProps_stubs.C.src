@@ -132,12 +132,16 @@ _DtTtMessageWidgetUpdate(
 	_DtTtMessageUpdateLevel		level
 )
 {
-	char *printout = tt_message_print( msg ); // XXX when to free?
+	char *printout = tt_message_print( msg );
 	Tt_status status = tt_ptr_error( printout );
+	Boolean freePrintout = (! tt_is_err( status ) && (printout != 0));
 	if (tt_is_err( status )) {
 		printout = tt_status_message( status );
 	}
 	XtVaSetValues( instance->messageText, XmNvalue, printout, NULL );
+	if (freePrintout) {
+		tt_free( printout );
+	}
 	if (level == _DtTtMessageRePrint) {
 		return;
 	}
@@ -367,6 +371,12 @@ _DtTtMessageUpdate(
 		}
 		_DtArgChooserSet( _DtArgChooseMessageArgSet, msg, arg,
 				  mode, noValue, vtype, val, ival );
+		if (vtype != 0) {
+			tt_free( vtype );
+		}
+		if (val != 0) {
+			tt_free( val );
+		}
 		} return;
 	    default:
 		return;
@@ -1151,9 +1161,9 @@ msgReject(
     if (msg == 0) {
 	    return;
     }
-    Tt_status status = tt_message_send_on_exit( msg );
+    Tt_status status = tt_message_reject( msg );
     DtTtSetLabel( instance->messageFooterLabel,
-		  "tt_message_send_on_exit()", status );
+		  "tt_message_reject()", status );
     _DtTtMessageWidgetUpdate( instance, msg, _DtTtMessageFullUpdate );
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -1412,12 +1422,18 @@ msgGenAction(
 	    return;
     }
     char *op = tt_message_op( msg );
-    action << "ACTION Send_" << op << "\n{\n\tLABEL\tSend_" << op << "\n";
+    if (tt_is_err( tt_ptr_error( op ))) {
+	    op = 0;
+    }
+    const char *opStr = (op != 0) ? op : "op";
+    action << "ACTION Send_" << opStr << "\n{\n\tLABEL\tSend_" << opStr << "\n";
     action << "\tTYPE\tTT_MSG\n";
     action << "\tTT_CLASS\t" << tt_message_class( msg ) << "\n";
     action << "\tTT_SCOPE\t" << tt_message_scope( msg ) << "\n";
-    action << "\tTT_OPERATION\t" << op << "\n";
-    tt_free( op );
+    action << "\tTT_OPERATION\t" << opStr << "\n";
+    if (op != 0) {
+	    tt_free( op );
+    }
     char *file = tt_message_file( msg );
     Tt_status status = tt_ptr_error( file );
     if ((! tt_is_err( status )) && (file != 0)) {
@@ -1425,11 +1441,17 @@ msgGenAction(
 	    tt_free( file );
     }
     int args = tt_message_args_count( msg );
+    if (tt_is_err( tt_int_error( args ))) {
+	    args = 0;
+    }
     for (int arg = 0; arg < args; arg++) {
 	    action << "\tTT_ARG" << arg << "_MODE\t";
 	    action << tt_message_arg_mode( msg, arg ) << "\n";
 	    char *vtype = tt_message_arg_type( msg, arg );
-	    action << "\tTT_ARG" << arg << "_VTYPE\t" << vtype << "\n";
+	    if (! tt_is_err( tt_ptr_error( vtype )) && (vtype != 0)) {
+		    action << "\tTT_ARG" << arg << "_VTYPE\t" << vtype << "\n";
+		    tt_free( vtype );
+	    }
 	    int ival;
 	    status = tt_message_arg_ival( msg, arg, &ival );
 	    switch (status) {
@@ -1447,6 +1469,8 @@ msgGenAction(
 		    }
 		    action << "\tTT_ARG" << arg << "_VALUE\t" << val << "\n";
 		    tt_free( val );
+		    break;
+		default:
 		    break;
 	    }
     }
@@ -1480,12 +1504,16 @@ msgGenC(
 	code << "#include <Tt/tt_c.h>\n";
 	code << "#include <Tt/tttk.h>\n";
 	char *op = tt_message_op( msg );
+	if (tt_is_err( tt_ptr_error( op ))) {
+		op = 0;
+	}
+	const char *opIdent = (op != 0) ? op : "op";
 	if (tt_message_class( msg ) != TT_NOTICE) {
-		code << "\nTt_callback_action\nprocess_" << op << "_reply(";
+		code << "\nTt_callback_action\nprocess_" << opIdent << "_reply(";
 		code << " Tt_message msg, Tt_message pat );\n";
 	}
 	code << "\nTt_message\n";
-	code << "create_" << op << "(\n";
+	code << "create_" << opIdent << "(\n";
 	code << "\tTt_message context\n)\n{\n";
 	code << "\tTt_message msg;\n";
 	code << "\tmsg = tttk_message_create( context";
@@ -1500,8 +1528,12 @@ msgGenC(
 		break;
 	    case TT_HANDLER:
 		handler = tt_message_handler( msg );
-		code << "\"" << handler << "\",\n";
-		tt_free( handler );
+		if (! tt_is_err( tt_ptr_error( handler )) && (handler != 0)) {
+			code << "\"" << handler << "\",\n";
+			tt_free( handler );
+		} else {
+			code << "(char *)0,\n";
+		}
 		break;
 	}
 	if (op == 0) {
@@ -1513,7 +1545,7 @@ msgGenC(
 	if (tt_message_class( msg ) == TT_NOTICE) {
 		code << "0 ";
 	} else {
-		code << "\n\t\t\tprocess_" << op << "_reply ";
+		code << "\n\t\t\tprocess_" << opIdent << "_reply ";
 	}
 	code << ");\n";
 	switch (address) {
@@ -1532,6 +1564,9 @@ msgGenC(
 	for (int arg = 0; arg < args; arg++) {
 		Tt_mode mode = tt_message_arg_mode( msg, arg );
 		char *vtype = tt_message_arg_type( msg, arg );
+		if (tt_is_err( tt_ptr_error( vtype )) || (vtype == 0)) {
+			continue;
+		}
 		int ival;
 		Tt_status status = tt_message_arg_ival( msg, arg, &ival );
 		switch (status) {
@@ -1542,6 +1577,9 @@ msgGenC(
 			break;
 		    case TT_ERR_NUM:
 			val = tt_message_arg_val( msg, arg );
+			if (tt_is_err( tt_ptr_error( val ))) {
+				val = 0;
+			}
 			code << "\ttt_message_arg_add( msg, " << mode << ", ";
 			code << '"' << vtype << "\", ";
 			if (val == 0) {
@@ -1550,7 +1588,11 @@ msgGenC(
 				code << "\"" << val << "\"";
 			}
 			code << ");\n";
-			tt_free( val );
+			if (val != 0) {
+				tt_free( val );
+			}
+			break;
+		    default:
 			break;
 		}
 		tt_free( vtype );
@@ -1563,7 +1605,7 @@ msgGenC(
 	code << "}\n";
 	if (tt_message_class( msg ) != TT_NOTICE) {
 		code << "\nstatic Tt_callback_action\n";
-		code << "process_" << op << "_reply(\n";
+		code << "process_" << opIdent << "_reply(\n";
 		code << "\tTt_message msg,\n";
 		code << "\tTt_message pat\n";
 		code << ")\n{\n";
@@ -1595,7 +1637,9 @@ msgGenC(
 		code << "\treturn TT_CALLBACK_PROCESSED;\n";
 		code << "}\n";
 	}
-	tt_free( op );
+	if (op != 0) {
+		tt_free( op );
+	}
 	// XtVaSetValues( instance->messageText, XmNvalue, code.str().c_str(), 0 );
 	_DtOpen( instance->messageFooterLabel, (void *)code.str().c_str(),
 		 code.str().size(), "msgC" );
@@ -1910,8 +1954,12 @@ genObserver(
 	    break;
     }
     char *op = tt_message_op( msg );
-    ptype << op << "(\n";
-    tt_free( op );
+    if (! tt_is_err( tt_ptr_error( op )) && (op != 0)) {
+	    ptype << op << "(\n";
+	    tt_free( op );
+    } else {
+	    ptype << "op(\n";
+    }
     int args = tt_message_args_count( msg );
     if (tt_is_err( tt_int_error( args ))) {
 	    args = 0;
@@ -1925,7 +1973,12 @@ genObserver(
 		case TT_INOUT:	ptype << "inout"; break;
 	    }
 	    char *vtype = tt_message_arg_type( msg, arg );
-	    ptype << " " << vtype << "\targ" << arg;
+	    if (! tt_is_err( tt_ptr_error( vtype )) && (vtype != 0)) {
+		    ptype << " " << vtype << "\targ" << arg;
+		    tt_free( vtype );
+	    } else {
+		    ptype << " void\targ" << arg;
+	    }
 	    if (arg < args - 1) {
 		    ptype << ",";
 	    }
@@ -2108,6 +2161,12 @@ setArg(
     }
     _DtArgChooserSet( _DtArgChooseMessageArgSet, msg, arg, mode, noValue,
 		      vtype, val, ival );
+    if (vtype != 0) {
+	    tt_free( vtype );
+    }
+    if (val != 0) {
+	    tt_free( val );
+    }
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
 
@@ -2201,8 +2260,11 @@ msgSetObject(
     if ((msg == 0) || _DtTtMessageUpdating( msg )) {
 	    return;
     }
-    _DtStringChooserSet( _DtStringChooseMessageObject, msg,
-			 tt_message_object( msg ));
+    char *object = tt_message_object( msg );
+    _DtStringChooserSet( _DtStringChooseMessageObject, msg, object );
+    if (! tt_is_err( tt_ptr_error( object )) && (object != 0)) {
+	    tt_free( object );
+    }
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
 
@@ -2224,8 +2286,11 @@ msgSetOtype(
     if ((msg == 0) || _DtTtMessageUpdating( msg )) {
 	    return;
     }
-    _DtStringChooserSet( _DtStringChooseMessageOtype, msg,
-			 tt_message_otype( msg ));
+    char *otype = tt_message_otype( msg );
+    _DtStringChooserSet( _DtStringChooseMessageOtype, msg, otype );
+    if (! tt_is_err( tt_ptr_error( otype )) && (otype != 0)) {
+	    tt_free( otype );
+    }
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
 
@@ -2247,8 +2312,11 @@ msgSetHandlerPtype(
     if ((msg == 0) || _DtTtMessageUpdating( msg )) {
 	    return;
     }
-    _DtStringChooserSet( _DtStringChooseMessageHandlerPtype, msg,
-			 tt_message_handler_ptype( msg ));
+    char *ptype = tt_message_handler_ptype( msg );
+    _DtStringChooserSet( _DtStringChooseMessageHandlerPtype, msg, ptype );
+    if (! tt_is_err( tt_ptr_error( ptype )) && (ptype != 0)) {
+	    tt_free( ptype );
+    }
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
 
@@ -2270,8 +2338,11 @@ msgSetSenderPtype(
     if ((msg == 0) || _DtTtMessageUpdating( msg )) {
 	    return;
     }
-    _DtStringChooserSet( _DtStringChooseMessageSenderPtype, msg,
-			 tt_message_sender_ptype( msg ));
+    char *ptype = tt_message_sender_ptype( msg );
+    _DtStringChooserSet( _DtStringChooseMessageSenderPtype, msg, ptype );
+    if (! tt_is_err( tt_ptr_error( ptype )) && (ptype != 0)) {
+	    tt_free( ptype );
+    }
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
 
@@ -2337,8 +2408,7 @@ chooseHandler(
     if ((msg == 0) || _DtTtMessageUpdating( msg )) {
 	    return;
     }
-    _DtStringChooserSet( _DtStringChooseMessageStatusString, msg,
-			 tt_message_status_string( msg ));
+    _DtTtChooserSet( _DtTtChooserMessageHandlerSet, msg );
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
 
@@ -2360,8 +2430,12 @@ msgSetStatusString(
     if ((msg == 0) || _DtTtMessageUpdating( msg )) {
 	    return;
     }
+    char *statusString = tt_message_status_string( msg );
     _DtStringChooserSet( _DtStringChooseMessageStatusString, msg,
-			 tt_message_object( msg ));
+			 statusString );
+    if (! tt_is_err( tt_ptr_error( statusString )) && (statusString != 0)) {
+	    tt_free( statusString );
+    }
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
 

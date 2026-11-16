@@ -53,8 +53,10 @@ operator<<(
 )
 {
 	char *string = tt_status_string( status2Print );
-	sink << string;
-	tt_free( string );
+	if (string != 0) {
+		sink << string;
+		tt_free( string );
+	}
 	return sink;
 }
 
@@ -183,7 +185,10 @@ tt_message_copy(
 	}
 	for (int context = 0; context < contexts; context++) {
 		char *slot = tt_message_context_slotname( msg1, context );
-		int ival;
+		if ((slot == 0) || tt_is_err( tt_ptr_error( slot ))) {
+			continue;
+		}
+		int ival = 0;
 		status = tt_message_context_ival( msg1, slot, &ival );
 		switch (status) {
 			unsigned char *bval;
@@ -192,9 +197,14 @@ tt_message_copy(
 			tt_message_icontext_set( msg2, slot, ival );
 			break;
 		    case TT_ERR_NUM:
-			tt_message_context_bval( msg1, slot, &bval, &len );
-			tt_message_bcontext_set( msg2, slot, bval, len );
-			tt_free( (caddr_t)bval );
+			bval = 0;
+			len = 0;
+			if (tt_message_context_bval( msg1, slot, &bval, &len ) == TT_OK) {
+				tt_message_bcontext_set( msg2, slot, bval, len );
+				tt_free( (caddr_t)bval );
+			}
+			break;
+		    default:
 			break;
 		}
 		tt_free( slot );
@@ -208,7 +218,10 @@ tt_message_copy(
 	for (int arg = 0; arg < args; arg++) {
 		Tt_mode mode = tt_message_arg_mode( msg1, arg );
 		char *vtype = tt_message_arg_type( msg1, arg );
-		int ival;
+		if ((vtype == 0) || tt_is_err( tt_ptr_error( vtype ))) {
+			continue;
+		}
+		int ival = 0;
 		status = tt_message_arg_ival( msg1, arg, &ival );
 		switch (status) {
 			unsigned char *bval;
@@ -217,9 +230,14 @@ tt_message_copy(
 			tt_message_iarg_add( msg2, mode, vtype, ival );
 			break;
 		    case TT_ERR_NUM:
-			tt_message_arg_bval( msg1, arg, &bval, &len );
-			tt_message_barg_add( msg2, mode, vtype, bval, len );
-			tt_free( (caddr_t)bval );
+			bval = 0;
+			len = 0;
+			if (tt_message_arg_bval( msg1, arg, &bval, &len ) == TT_OK) {
+				tt_message_barg_add( msg2, mode, vtype, bval, len );
+				tt_free( (caddr_t)bval );
+			}
+			break;
+		    default:
 			break;
 		}
 		tt_free( vtype );
@@ -370,6 +388,7 @@ tttk_message_create(
 		break;
 	    case TTDT_GET_GEOMETRY:
 		mode = TT_OUT;
+		// fall through
 	    case TTDT_SET_GEOMETRY:
                 tt_message_arg_add( msg, mode, Tttk_width, 0 );
                 tt_message_arg_add( msg, mode, Tttk_height, 0 );
@@ -413,6 +432,7 @@ tt_procid_fd(
 	int val2return = tt_fd();
 	if (! tt_is_err( tt_ptr_error( defaultProcid ))) {
 		tt_default_procid_set( defaultProcid );
+		tt_free( defaultProcid );
 	}
 	return val2return;
 }

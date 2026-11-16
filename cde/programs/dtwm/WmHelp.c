@@ -658,8 +658,14 @@ static void WmDtCloseHelpCB (
 
     XtPopdown (XtParent(helpDialog));
 
-    pTemp->inUseFlag  = FALSE;
-    pSD->cachedHelp->hLink  = False;    
+    if (pTemp != nullptr)
+    {
+	pTemp->inUseFlag  = FALSE;
+    }
+    if (pSD->cachedHelp != nullptr)
+    {
+	pSD->cachedHelp->hLink  = False;
+    }
 
     /* Re-Assign our pTemp to point to our head so we can see 
      * if we have any in-use help dialog in our list.
@@ -1329,13 +1335,6 @@ WmDtDisplayTopic (
 
 
     pPanelist = (WmPanelistObject) pSD->wPanelist;
-    
-    if (argCount)
-    {
-	/*argsNew = (ArgList) XtMalloc( sizeof( Arg) * (argCount + 1)) ;*/
-	argsNew = (ArgList) XtCalloc((argCount), sizeof( Arg)) ;
-	memcpy( argsNew, argList, (sizeof( Arg) * argCount)) ;
-    }
 
     shellWidget = parent;
     while (!(XtIsSubclass(shellWidget, shellWidgetClass)))
@@ -2116,16 +2115,16 @@ SaveHelpResources(
         res_class = DT_WM_RESOURCE_CLASS;
     }
 
-    sprintf (screenName, "%d", pSD->screen);
+    snprintf (screenName, sizeof(screenName), "%d", pSD->screen);
 
-    sprintf (buffer, "%s*%s*%s:  \\n ", res_class,  screenName, 
+    snprintf (buffer, sizeof(buffer), "%s*%s*%s:  \\n ", res_class, screenName, 
 	     WmNhelpResources);
     AddStringToResourceData (buffer, &data, &cum_len);
 
     if (pHelp->onScreen)
     {
-	sprintf (dialogName, "wsHelp");
-	sprintf (buffer, "%s*onScreen: True\\n ", dialogName);
+	snprintf (dialogName, sizeof(dialogName), "wsHelp");
+	snprintf (buffer, sizeof(buffer), "%s*onScreen: True\\n ", dialogName);
 	AddStringToResourceData (buffer, &data, &cum_len);
 
 	ac = 0; 
@@ -2150,19 +2149,19 @@ SaveHelpResources(
 	XtSetArg(getArgs[ac], DtNtopicTitle, &topicTitle);   ac++;
 	XtGetValues(pSD->dtHelp.dialog, getArgs, ac);
 
-	sprintf (buffer, "%s*x: %d \\n ", dialogName, xLoc);
+	snprintf (buffer, sizeof(buffer), "%s*x: %d \\n ", dialogName, xLoc);
 	AddStringToResourceData (buffer, &data, &cum_len);
-	sprintf (buffer, "%s*y: %d \\n ", dialogName, yLoc);
+	snprintf (buffer, sizeof(buffer), "%s*y: %d \\n ", dialogName, yLoc);
 	AddStringToResourceData (buffer, &data, &cum_len);
-	sprintf (buffer, "%s*columns: %d \\n ", dialogName, columns);
+	snprintf (buffer, sizeof(buffer), "%s*columns: %d \\n ", dialogName, columns);
 	AddStringToResourceData (buffer, &data, &cum_len);
-	sprintf (buffer, "%s*rows: %d \\n ", dialogName, rows);
+	snprintf (buffer, sizeof(buffer), "%s*rows: %d \\n ", dialogName, rows);
 	AddStringToResourceData (buffer, &data, &cum_len);
-	sprintf (buffer, "%s*helpType: %d \\n ", dialogName, helpType);
+	snprintf (buffer, sizeof(buffer), "%s*helpType: %d \\n ", dialogName, helpType);
 	AddStringToResourceData (buffer, &data, &cum_len);
-	sprintf (buffer, "%s*vPCount: %d \\n ", dialogName, vPCount);
+	snprintf (buffer, sizeof(buffer), "%s*vPCount: %d \\n ", dialogName, vPCount);
 	AddStringToResourceData (buffer, &data, &cum_len);
-	sprintf (buffer, "%s*tTitle: %s\\n ", dialogName, topicTitle);
+	snprintf (buffer, sizeof(buffer), "%s*tTitle: %s\\n ", dialogName, topicTitle ? topicTitle : "");
 	AddStringToResourceData (buffer, &data, &cum_len);
 
 	ac = 0;
@@ -2172,9 +2171,9 @@ SaveHelpResources(
 	    XtSetArg (getArgs[ac],DtNhelpVolume, &helpVolume); ac++; 
 	    XtSetArg (getArgs[ac], DtNlocationId, &locationId); ac++;
 	    XtGetValues(pSD->dtHelp.dialog, getArgs, ac);
-	    sprintf (buffer, "%s*helpVolume: %s\\n ", dialogName, helpVolume);
+	    snprintf (buffer, sizeof(buffer), "%s*helpVolume: %s\\n ", dialogName, helpVolume ? helpVolume : "");
 	    AddStringToResourceData (buffer, &data, &cum_len);
-	    sprintf (buffer, "%s*locationId: %s\\n ", dialogName, locationId);
+	    snprintf (buffer, sizeof(buffer), "%s*locationId: %s\\n ", dialogName, locationId ? locationId : "");
 	    AddStringToResourceData (buffer, &data, &cum_len);
 
 	    break;
@@ -2182,7 +2181,7 @@ SaveHelpResources(
 	  case DtHELP_TYPE_DYNAMIC_STRING:
 	    XtSetArg (getArgs[ac], DtNstringData, &stringData); ac++;
 	    XtGetValues(pSD->dtHelp.dialog, getArgs, ac);
-	    sprintf (buffer, "%s*stringData: %s\\n ", dialogName, stringData);
+	    snprintf (buffer, sizeof(buffer), "%s*stringData: %s\\n ", dialogName, stringData ? stringData : "");
 	    AddStringToResourceData (buffer, &data, &cum_len);
 
 	    break;
@@ -2207,8 +2206,8 @@ SaveHelpResources(
 	if (!XFindContext (DISPLAY, wmGroupWindow,
 			   wmGD.windowContextType, (caddr_t *)&pCD))
 	{
-	    sprintf (buffer, "%s*windowGroup: %s\\n ", dialogName, 
-		     pCD->clientName);
+	    snprintf (buffer, sizeof(buffer), "%s*windowGroup: %s\\n ", dialogName, 
+		     pCD->clientName ? pCD->clientName : "");
 	    AddStringToResourceData (buffer, &data, &cum_len);
 
 	    if ((!strcmp(pCD->clientName, pSD->iconBoxName)) &&
@@ -2216,10 +2215,10 @@ SaveHelpResources(
 	    {
 		wsName = XGetAtomName(DISPLAY,
 				      pCD->pWsList[pCD->currentWsc].wsID);
-		sprintf (buffer, "%s*wsName: %s\\n ", dialogName, 
-			 wsName);
+		snprintf (buffer, sizeof(buffer), "%s*wsName: %s\\n ", dialogName, 
+			 wsName ? wsName : "");
 		AddStringToResourceData (buffer, &data, &cum_len);
-		XFree(wsName);
+		if (wsName) XFree(wsName);
 	    }
 	}
 
@@ -2243,7 +2242,7 @@ SaveHelpResources(
 	    else
 	    {
 		cachedCount++;		
-		sprintf (dialogName,  "oWsHelp%d",cachedCount);
+		snprintf (dialogName, sizeof(dialogName), "oWsHelp%d", cachedCount);
 
 		ac = 0; 
 		XtSetArg(getArgs[ac], XmNx, &xLoc);   ac++;
@@ -2274,19 +2273,19 @@ SaveHelpResources(
 		XtSetArg(getArgs[ac], DtNtopicTitle, &topicTitle);   ac++;
 		XtGetValues(pTemp->helpDialog, getArgs, ac);
 
-		sprintf (buffer, "%s*x: %d \\n ", dialogName, xLoc);
+		snprintf (buffer, sizeof(buffer), "%s*x: %d \\n ", dialogName, xLoc);
 		AddStringToResourceData (buffer, &data, &cum_len);
-		sprintf (buffer, "%s*y: %d \\n ", dialogName, yLoc);
+		snprintf (buffer, sizeof(buffer), "%s*y: %d \\n ", dialogName, yLoc);
 		AddStringToResourceData (buffer, &data, &cum_len);
-		sprintf (buffer, "%s*columns: %d \\n ", dialogName, columns);
+		snprintf (buffer, sizeof(buffer), "%s*columns: %d \\n ", dialogName, columns);
 		AddStringToResourceData (buffer, &data, &cum_len);
-		sprintf (buffer, "%s*rows: %d \\n ", dialogName, rows);
+		snprintf (buffer, sizeof(buffer), "%s*rows: %d \\n ", dialogName, rows);
 		AddStringToResourceData (buffer, &data, &cum_len);
-		sprintf (buffer, "%s*helpType: %d \\n ", dialogName, helpType);
+		snprintf (buffer, sizeof(buffer), "%s*helpType: %d \\n ", dialogName, helpType);
 		AddStringToResourceData (buffer, &data, &cum_len);
-		sprintf (buffer, "%s*vPCount: %d \\n ", dialogName, vPCount);
+		snprintf (buffer, sizeof(buffer), "%s*vPCount: %d \\n ", dialogName, vPCount);
 		AddStringToResourceData (buffer, &data, &cum_len);
-		sprintf (buffer, "%s*tTitle: %s\\n ", dialogName, topicTitle);
+		snprintf (buffer, sizeof(buffer), "%s*tTitle: %s\\n ", dialogName, topicTitle ? topicTitle : "");
 		AddStringToResourceData (buffer, &data, &cum_len);
 
 		ac = 0;
@@ -2296,11 +2295,11 @@ SaveHelpResources(
 		    XtSetArg (getArgs[ac],DtNhelpVolume, &helpVolume); ac++; 
 		    XtSetArg (getArgs[ac], DtNlocationId, &locationId); ac++;
 		    XtGetValues(pTemp->helpDialog, getArgs, ac);
-		    sprintf (buffer, "%s*helpVolume: %s\\n ", 
-			     dialogName, helpVolume);
+		    snprintf (buffer, sizeof(buffer), "%s*helpVolume: %s\\n ", 
+			     dialogName, helpVolume ? helpVolume : "");
 		    AddStringToResourceData (buffer, &data, &cum_len);
-		    sprintf (buffer, "%s*locationId: %s\\n ", 
-			     dialogName, locationId);
+		    snprintf (buffer, sizeof(buffer), "%s*locationId: %s\\n ", 
+			     dialogName, locationId ? locationId : "");
 		    AddStringToResourceData (buffer, &data, &cum_len);
 
 		    break;
@@ -2308,8 +2307,8 @@ SaveHelpResources(
 		  case DtHELP_TYPE_DYNAMIC_STRING:
 		    XtSetArg (getArgs[ac], DtNstringData, &stringData); ac++;
 		    XtGetValues(pTemp->helpDialog, getArgs, ac);
-		    sprintf (buffer, "%s*stringData: %s\\n ", 
-			     dialogName, stringData);
+		    snprintf (buffer, sizeof(buffer), "%s*stringData: %s\\n ", 
+			     dialogName, stringData ? stringData : "");
 		    AddStringToResourceData (buffer, &data, &cum_len);
 
 		    break;
@@ -2329,8 +2328,9 @@ SaveHelpResources(
 
 		if (pCDforHelp)
 		{
+		    size_t wsLen = 0;
 		    thisCnt = 0;
-		    sprintf(workspaces, "%s", "");
+		    workspaces[0] = '\0';
 		    for (wsCnt = 0; wsCnt < pSD->numWorkspaces;
 			 wsCnt++)
 		    {
@@ -2340,20 +2340,27 @@ SaveHelpResources(
 
 			if (ClientInWorkspace (pWS, pCDforHelp))
 			{
+			    int n;
 			    if (thisCnt == 0)
 			    {
-				strcpy(workspaces, pSD->pWS[wsCnt].name); 
-
+				n = snprintf(workspaces, sizeof(workspaces), "%s",
+					     pSD->pWS[wsCnt].name);
+				if (n > 0)
+				    wsLen = (size_t)n < sizeof(workspaces) ? (size_t)n : sizeof(workspaces) - 1;
 			    }
-			    else
+			    else if (wsLen + 1 < sizeof(workspaces))
 			    {
-				strcat(workspaces, "*");
-				strcat(workspaces, pSD->pWS[wsCnt].name);
+				n = snprintf(workspaces + wsLen, sizeof(workspaces) - wsLen,
+					     "*%s", pSD->pWS[wsCnt].name);
+				if (n > 0)
+				    wsLen = (wsLen + (size_t)n < sizeof(workspaces))
+						? (wsLen + (size_t)n)
+						: (sizeof(workspaces) - 1);
 			    }
 			    thisCnt++;
 			}
 		    }
-		    sprintf (buffer, "%s*workspaces: %s\\n ", dialogName, 
+		    snprintf (buffer, sizeof(buffer), "%s*workspaces: %s\\n ", dialogName, 
 			     workspaces);
 		    AddStringToResourceData (buffer, &data, &cum_len);
 		}
@@ -2362,7 +2369,7 @@ SaveHelpResources(
 	} /* While */
 	if (cachedCount)
 	{
-	    sprintf (buffer, "cachedHelp*cachedCount: %d\\n ",  cachedCount);
+	    snprintf (buffer, sizeof(buffer), "cachedHelp*cachedCount: %d\\n ", cachedCount);
 	    AddStringToResourceData (buffer, &data, &cum_len);
 	}
     }

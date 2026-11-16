@@ -106,10 +106,15 @@ saveSessionCB(
   GetSessionSaveMode(&data);
 
   /* if the property is "home" don't save dtstyle */
-  if(strcmp((char *)data, "home") == 0)
+  if (data != nullptr)
   {
-     XSetCommand(style.display, XtWindow(w), nullptr, 0);
-     return;
+     Boolean is_home = (strcmp((char *)data, "home") == 0);
+     XFree(data);
+     if (is_home)
+     {
+        XSetCommand(style.display, XtWindow(w), nullptr, 0);
+        return;
+     }
   }
 
   /* Xt may not pass a widget as advertised */

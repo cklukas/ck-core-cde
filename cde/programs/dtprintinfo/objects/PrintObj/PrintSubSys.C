@@ -63,12 +63,12 @@ PrintSubSystem::~PrintSubSystem()
 
 void PrintSubSystem::InitChildren()
 {
-   char *std_out;
+   char *std_out = NULL;
    if (RunCommand(LIST_QUEUES, &std_out))
     {
       Error("InitChildren method could not list queues.");
     }
-   else
+   else if (std_out)
     {
       char *queue = strtok(std_out, " \n");
       while (queue && *queue)

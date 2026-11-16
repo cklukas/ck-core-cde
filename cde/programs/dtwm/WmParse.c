@@ -1101,7 +1101,7 @@ _DtWmParseNextChar (
 
     if (pWmPB &&
 	pWmPB->pchNext &&
-	(chlen = mblen((char *)pWmPB->pchNext, MB_CUR_MAX) > 0))
+	((chlen = mblen((char *)pWmPB->pchNext, MB_CUR_MAX)) > 0))
     {
 	pch = (pWmPB->pchNext += chlen);
     }
@@ -1318,8 +1318,17 @@ _DtWmParseFilenameExpand (
 			       '\0'
 			     };
 
+    if (!pchFilename)
+    {
+	return (nullptr);
+    }
+
     len = strlen ((char *)pchFilename);
     pchNew = (unsigned char *) XtMalloc (1+len);
+    if (pchNew)
+    {
+	pchNew[0] = '\0';
+    }
     pchO = pchFilename;
     chSave = '\0';
     ix = 0;
@@ -1337,6 +1346,15 @@ _DtWmParseFilenameExpand (
 	    /* copy up to environment character */
 	    if (n) 
 	    {
+		if (ix + n > len)
+		{
+		    len = ix + n;
+		    pchNew = (unsigned char *) XtRealloc ((char *)pchNew, 1+len);
+		    if (!pchNew)
+		    {
+			break;
+		    }
+		}
 		memcpy (&pchNew[ix], pchO, n);
 		ix += n;
 	    }
@@ -1367,17 +1385,22 @@ _DtWmParseFilenameExpand (
 		/* This environment variable is the last thing on
 		 * the line. Signal all done.
 		 */
-		n = strlen ((char *) pchO);
-		pchO += n;
+		n = 1 + strlen ((char *) pchEnv0);
+		pchO = pchEnv0 + strlen ((char *) pchEnv0);
 	    }
 
 	    pchEnv = (unsigned char *) getenv ((char *)pchEnv0);
+	    if (chSave)
+	    {
+		*pchO = chSave;
+		chSave = '\0';
+	    }
 	    if (pchEnv) 
 	    {
 	        nx = strlen ((char *) pchEnv);
-	        if (nx > n)
+	        if (ix + nx + (int)strlen((char *)pchO) > len)
 	        {
-		    len += nx - n;
+		    len = ix + nx + strlen((char *)pchO);
 		    pchNew = (unsigned char *) 
 			XtRealloc ((char *)pchNew, 1+len);
 		}
@@ -1388,15 +1411,10 @@ _DtWmParseFilenameExpand (
 		}
 		else 
 		{
-		    continue;
+		    break;
 		}
 	    }
 
-	    if (chSave)
-	    {
-		*pchO = chSave;
-		chSave = '\0';
-	    }
 	    /* keep a kosher string */
 	    pchNew[ix] = '\0';
 	}
@@ -1404,11 +1422,21 @@ _DtWmParseFilenameExpand (
 	{
 	    /* copy the rest of the string */
 	    n = strlen ((char *) pchO);
+	    if (ix + n > len)
+	    {
+		len = ix + n;
+		pchNew = (unsigned char *) XtRealloc ((char *)pchNew, 1+len);
+		if (!pchNew)
+		{
+		    break;
+		}
+	    }
 	    memcpy (&pchNew[ix], pchO, n);
+	    ix += n;
 	    pchO += n;
 
 	    /* remember the NULL! (a famous battle cry) */
-	    pchNew[ix + n] = '\0';
+	    pchNew[ix] = '\0';
 	}
     }
 

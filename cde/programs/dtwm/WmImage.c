@@ -1113,7 +1113,7 @@ char *BitmapPathName (char *string)
      * Handle "~/.." 
      */
     {
-	snprintf(fileName, MAXWMPATH, "%s%s", homeDir, &(string[1]));
+	snprintf(fileName, sizeof(fileName), "%s%s", homeDir, &(string[1]));
 	return (fileName);
     }
 
@@ -1130,14 +1130,12 @@ char *BitmapPathName (char *string)
 	if ((wmGD.bitmapDirectory[0] == '~') &&
 	    (wmGD.bitmapDirectory[1] == '/'))
 	{
-	    strcpy (fileName, homeDir);
-            strncat (fileName, &wmGD.bitmapDirectory[1],
-		     MAXWMPATH - strlen (fileName));
+	    snprintf(fileName, sizeof(fileName), "%s%s/%s",
+		     homeDir, &wmGD.bitmapDirectory[1], string);
 	} else {
-	    snprintf(fileName, sizeof(fileName), "%s", wmGD.bitmapDirectory);
+	    snprintf(fileName, sizeof(fileName), "%s/%s",
+		     wmGD.bitmapDirectory, string);
 	}
-        strncat (fileName, "/", MAXWMPATH - strlen (fileName));
-        strncat (fileName, string, MAXWMPATH - strlen (fileName));
 
 /* Test file for existence. */
 
@@ -1166,7 +1164,7 @@ char *BitmapPathName (char *string)
 	if (!retname)
 	  return (string);
 
-	strncpy(fileName, retname, MAXWMPATH);
+	snprintf(fileName, sizeof(fileName), "%s", retname);
 	XtFree(retname);
 	return (fileName);
     }

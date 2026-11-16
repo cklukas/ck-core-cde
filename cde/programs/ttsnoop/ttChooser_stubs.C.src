@@ -213,7 +213,6 @@ _DtTtChooserSet(
     std::ostringstream valuesStream;
     valuesStream << itemCount << " " << valuesLabel;
     if (itemCount != 1) valuesStream << "s";
-    valuesStream << ends;
     DtTtSetLabel( instance->chooserList_label, valuesStream.str().c_str() );
 
     // Remember dialog mode, entity
@@ -312,9 +311,11 @@ choiceSelected(
     void *entity = DtTtNth( type, info->item_position - 1 );
     std::ostringstream entityName;
     if (isString) {
-	    entityName << (char *)entity << ends;
+	    if (entity != 0) {
+		    entityName << (char *)entity;
+	    }
     } else {
-	    entityName << entity << ends;
+	    entityName << entity;
     }
     XmTextFieldSetString( instance->chooserText, const_cast<char *>(entityName.str().c_str()) );
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
@@ -462,7 +463,7 @@ choiceOkayed(
 		    _DtTtChooserSet( _DtTtChooserPatternDestroy );
 	    }
 	    break;
-	case _DtTtChooserDtSessionQuit:
+	case _DtTtChooserDtSessionQuit: {
 	    if (text == 0) {
 		    return;
 	    }
@@ -470,19 +471,22 @@ choiceOkayed(
 	    sscanf( text, "%p", &pval );
 	    pats = (Tt_pattern *) (intptr_t) pval;
 	    if (DtTtIndex( DTTT_DTSESSION, pats ) < 0) {
+		    XtFree( text );
 		    return;
 	    }
-	    text = (char *)tt_pattern_user( *pats, _DtTtPatsNameKey );
-	    if (tt_is_err( tt_ptr_error( text )) || text == 0) {
+	    char *sessName = (char *)tt_pattern_user( *pats, _DtTtPatsNameKey );
+	    if (tt_is_err( tt_ptr_error( sessName )) || sessName == 0) {
+		    XtFree( text );
 		    return;
 	    }
-	    status = ttdt_session_quit( text, pats, 1 );
+	    status = ttdt_session_quit( sessName, pats, 1 );
+	    tt_free( sessName );
 	    DtTtSetLabel( label, "ttdt_session_quit()", status );
 	    if (status == TT_OK) {
 		    DtTtDestroyed( DTTT_DTSESSION, pats );
 	    }
 	    XtUnmanageChild( instance->chooser_shellform );
-	    break;
+	    } break;
 	case _DtTtChooserDtFileDeleted:
 	case _DtTtChooserDtFileModified:
 	case _DtTtChooserDtFileReverted:
@@ -496,9 +500,14 @@ choiceOkayed(
 	    sscanf( text, "%p", &pval );
 	    pats = (Tt_pattern *) (intptr_t) pval;
 	    if (DtTtIndex( DTTT_DTFILE, pats ) < 0) {
+		    XtFree( text );
 		    return;
 	    }
 	    switch ((_DtTtChooserAction)choice) {
+		case _DtTtChooserDtFileDeleted:
+		    status = ttdt_file_event( 0, TTDT_DELETED, pats, 1 );
+		    func = "ttdt_file_event(,TTDT_DELETED)";
+		    break;
 		case _DtTtChooserDtFileModified:
 		    status = ttdt_file_event( 0, TTDT_MODIFIED, pats, 1 );
 		    func = "ttdt_file_event(,TTDT_MODIFIED)";
@@ -506,6 +515,10 @@ choiceOkayed(
 		case _DtTtChooserDtFileReverted:
 		    status = ttdt_file_event( 0, TTDT_REVERTED, pats, 1 );
 		    func = "ttdt_file_event(,TTDT_REVERTED)";
+		    break;
+		case _DtTtChooserDtFileMoved:
+		    status = ttdt_file_event( 0, TTDT_MOVED, pats, 1 );
+		    func = "ttdt_file_event(,TTDT_MOVED)";
 		    break;
 		case _DtTtChooserDtFileSaved:
 		    status = ttdt_file_event( 0, TTDT_SAVED, pats, 1 );
@@ -518,9 +531,12 @@ choiceOkayed(
 			    DtTtDestroyed( DTTT_DTFILE, pats );
 		    }
 		    break;
+		default:
+		    break;
 	    }
 	    DtTtSetLabel( label, func, status );
 	    XtUnmanageChild( instance->chooser_shellform );
+	    break;
 	case _DtTtChooserProcidSetDefault:
 	    status = tt_default_procid_set( text );
 	    DtTtSetLabel( label, "tt_default_procid_set()", status );
@@ -529,6 +545,7 @@ choiceOkayed(
 	case _DtTtChooserProcidSuspend:
 	    ival = DtTtIndex( DTTT_PROCID, text );
 	    if (ival < 0) {
+		    XtFree( text );
 		    return;
 	    }
 	    id = (XtInputId)DtTtNthClientDatum( DTTT_PROCID, ival );
@@ -541,15 +558,18 @@ choiceOkayed(
 	case _DtTtChooserProcidResume:
 	    ival = DtTtIndex( DTTT_PROCID, text );
 	    if (ival < 0) {
+		    XtFree( text );
 		    return;
 	    }
 	    fd = tt_procid_fd( text );
 	    if (tt_is_err( tt_int_error( fd ))) {
+		    XtFree( text );
 		    return;
 	    }
+	    procid = (char *)DtTtNth( DTTT_PROCID, ival );
 	    id = XtAppAddInput( XtWidgetToApplicationContext( label ),
 			        fd, (XtPointer)XtInputReadMask,
-			        tttk_Xt_input_handler, text );
+			        tttk_Xt_input_handler, procid );
 	    DtTtSetLabel( label, "XtAppAddInput()", (int)id );
 	    if (id != 0) {
 		    DtTtNthClientDatumSet( DTTT_PROCID, ival, (void *)id );
@@ -561,6 +581,7 @@ choiceOkayed(
 	    DtTtSetLabel( label, "ttdt_close()", status );
 	    ival = DtTtIndex( DTTT_PROCID, text );
 	    if (ival < 0) {
+		    XtFree( text );
 		    return;
 	    }
 	    id = (XtInputId)DtTtNthClientDatum( DTTT_PROCID, ival );
@@ -570,6 +591,9 @@ choiceOkayed(
 	    DtTtDestroyed( DTTT_PROCID, text );
 	    XtUnmanageChild( instance->chooser_shellform );
 	    break;
+    }
+    if (text != 0) {
+	    XtFree( text );
     }
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
@@ -601,6 +625,7 @@ ttChooserHelp(
 	    op = XmTextFieldGetString( instance->chooserText );
 	    if (op != 0) {
 		    _DtMan( label, op );
+		    XtFree( op );
 	    }
 	    if (choice == _DtTtChooserMessageOpSet) {
 		    _DtMan( label, "tt_message_op_set" );

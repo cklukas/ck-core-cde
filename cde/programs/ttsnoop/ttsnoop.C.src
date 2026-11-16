@@ -242,7 +242,12 @@ snoopIt(
 	}
 	char timeBuf[ 16 ];
 	time_t now = time( 0 );
-	strftime( timeBuf, sizeof( timeBuf ), "%T", localtime( &now ));
+	struct tm *tmNow = localtime( &now );
+	if (tmNow != 0) {
+		strftime( timeBuf, sizeof( timeBuf ), "%T", tmNow );
+	} else {
+		timeBuf[0] = '\0';
+	}
 	snoopStream << timeBuf << " (" << callBackType << ")" << callBack;
 	snoopStream << "( " << "(Tt_message)" << (void *)msg << ", ";
 	if (printPat) {
@@ -412,7 +417,7 @@ main(int argc, char **argv)
     */
     Boolean committed2Snooping = False;
     int c;
-    while ((c = getopt(argc, argv, "?F:<:v:nNe:TuS:Xw:l:o:O:")) != -1) {
+    while ((c = getopt(argc, argv, "?F:<:v:m:nNe:TuS:Xw:l:o:O:")) != -1) {
 	    switch (c) {
 		case 'F':
 		    if (! optImmediateSnooping) {
@@ -577,7 +582,6 @@ main(int argc, char **argv)
 			        argv[i] );
 		    tttraceCmd << " " << argv[i];
 	    }
-	    tttraceCmd << ends;
 	    listAppend( snoopedArgs, snoopedArgsCount, char *, 0 );
     }
 
@@ -689,7 +693,7 @@ main(int argc, char **argv)
     snoopStream.open( snoopFile, ios::app );
     std::ostringstream envStr;
     envStr << "TT_TRACE_SCRIPT=> ";
-    envStr << traceFile << ends;
+    envStr << traceFile;
     traceScript = envStr.str();
     if (optImmediateTracing) {
 	    turnOnTracing( 0, 0, 0 );

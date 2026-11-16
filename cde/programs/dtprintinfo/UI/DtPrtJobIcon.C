@@ -60,7 +60,7 @@ DtPrtJobIcon::DtPrtJobIcon(DtMainW *mainW, AnyUI *parent, PrintJob *job,
    mainw = mainW;
    mainw->RegisterPopup(this);
    ApplicationData = job;
-   strcpy(job_number, job->AttributeValue((char *)JOB_NUMBER));
+   snprintf(job_number, sizeof(job_number), "%s", job->AttributeValue((char *)JOB_NUMBER));
    print_job = job;
    props = NULL;
 }

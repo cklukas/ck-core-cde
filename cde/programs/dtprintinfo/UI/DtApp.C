@@ -66,7 +66,7 @@ extern "C" { extern int seteuid(uid_t); }
 // For Dialog Titles
 #define TITLE(message, app_name) \
    char title[BUFSIZ]; \
-   sprintf(title, message, app_name)
+   snprintf(title, sizeof(title), message, app_name)
 
 const char *PROPERTY = "Properties";
 const char *HELP = "Help";
@@ -84,7 +84,7 @@ DtApp::DtApp(char *progname, int *argc, char **argv) :
    save_state = false;
    connect_timeout = 15;
    old_dbsearchpath = NULL;
-   uid_t old_uid;
+   uid_t old_uid = getuid();
    single_printer = NULL;
    app_mode = SINGLE_PRINTER;
    char *app_name = MESSAGE(ApplicationName2L);
@@ -94,7 +94,7 @@ DtApp::DtApp(char *progname, int *argc, char **argv) :
    if (!home || *home == '\0')
     {
      struct passwd *pwInfo = getpwuid(getuid());
-     home = strdup(pwInfo->pw_dir);
+     home = strdup((pwInfo && pwInfo->pw_dir) ? pwInfo->pw_dir : "/");
     }
    else
      home = strdup(home);
@@ -128,12 +128,12 @@ DtApp::DtApp(char *progname, int *argc, char **argv) :
          pid = procs->Parent(pid);
          c = procs->Command(pid);
          old_uid = procs->UID(pid);
-	 if (!strncmp(c, "dtaction", 8))
+	 if (c && !strncmp(c, "dtaction", 8))
 	  {
             pid = procs->Parent(pid);
             c = procs->Command(pid);
             old_uid = procs->UID(pid);
-            if (!strncmp(c, "dtexec", 6))
+            if (c && !strncmp(c, "dtexec", 6))
 	     {
                pid = procs->Parent(pid);
                c = procs->Command(pid);
@@ -171,7 +171,7 @@ DtApp::DtApp(char *progname, int *argc, char **argv) :
        }
       else
        {
-         buf = new char[strlen(DBSearchPath) + strlen(lang) + 50];
+         buf = new char[strlen(lang) + 50];
          sprintf(buf, "DTDATABASESEARCHPATH=/etc/dt/appconfig/types/%s", lang);
        }
       putenv(buf);
@@ -337,18 +337,20 @@ void DtApp::SaveYourSelf()
     {
       int i;
       DtPrinterIcon **queues;
-      char *attribute = (char*) malloc(100);
       queues = (DtPrinterIcon **) window->container->Children();
       for (i = 0; i < window->container->NumChildren(); i++)
        {
+         const char *qname = queues[i]->QueueObj()->Name();
+         size_t attr_cap = strlen(qname) + 16;
+         char *attribute = (char*) malloc(attr_cap);
 	 value = queues[i]->Visible() ? (char *)"1" : (char *)"0";
-	 sprintf(attribute, "%s.Visible", queues[i]->QueueObj()->Name());
+	 snprintf(attribute, attr_cap, "%s.Visible", qname);
 	 Save(attribute, value);
 	 value = queues[i]->Open() ? (char *)"1" : (char *)"0";
-	 sprintf(attribute, "%s.Open", queues[i]->QueueObj()->Name());
+	 snprintf(attribute, attr_cap, "%s.Open", qname);
 	 Save(attribute, value);
+         free(attribute);
        }
-      free(attribute);
     }
 }
 
@@ -371,13 +373,15 @@ void DtApp::UpdateStatusLine()
 {
    char *message;
    char *msg2;
+   size_t message_cap = 512;
+   size_t msg2_cap = 256;
 
-   message = (char*) malloc(200);
-   msg2 = (char*) malloc(100);
+   message = (char*) malloc(message_cap);
+   msg2 = (char*) malloc(msg2_cap);
 
    if (app_mode == CONFIG_PRINTERS)
     {
-      sprintf(message, MESSAGE(EditLangL), lang);
+      snprintf(message, message_cap, MESSAGE(EditLangL), lang);
       window->status_line->Name(message);
     }
    else if (app_mode == SINGLE_PRINTER)
@@ -411,8 +415,8 @@ void DtApp::UpdateStatusLine()
                window->status_line->Name(details);
 	    else
 	     {
-               sprintf(msg2, MESSAGE(JobsL), rc->NumChildren());
-               sprintf(message, "%s  %s", details, msg2);
+               snprintf(msg2, msg2_cap, MESSAGE(JobsL), rc->NumChildren());
+               snprintf(message, message_cap, "%s  %s", details, msg2);
                window->status_line->Name(message);
 	     }
           }
@@ -429,11 +433,11 @@ void DtApp::UpdateStatusLine()
       for (i = 0; i < window->container->NumChildren(); i++)
          if (children[i]->Visible() == false)
 	    n_visible++;
-      sprintf(msg2, MESSAGE(PrintersHiddenL), 
-	      window->container->NumChildren(), n_visible);
+      snprintf(msg2, msg2_cap, MESSAGE(PrintersHiddenL), 
+	       window->container->NumChildren(), n_visible);
       if (window->setPrefD->ShowOnlyMyJobs())
        {
-         sprintf(message, "%s  %s", msg2, MESSAGE(ShowingMyJobsL));
+         snprintf(message, message_cap, "%s  %s", msg2, MESSAGE(ShowingMyJobsL));
          window->status_line->Name(message);
        }
       else
@@ -553,9 +557,10 @@ void DtApp::OpenClose(BaseUI *obj)
     {
       printer_icon = (DtPrinterIcon *)obj;
       queue = printer_icon->QueueObj();
-      char *s = new char[strlen(queue->Name()) + STRLEN(old_dbsearchpath) + 90];
-      sprintf(s, "env DTDATABASESEARCHPATH=%s /usr/dt/bin/dtaction %s_Print &",
-	      (old_dbsearchpath ? "" : old_dbsearchpath), queue->Name());
+      size_t s_cap = strlen(queue->Name()) + STRLEN(old_dbsearchpath) + 90;
+      char *s = new char[s_cap];
+      snprintf(s, s_cap, "env DTDATABASESEARCHPATH=%s /usr/dt/bin/dtaction %s_Print &",
+	       (old_dbsearchpath ? old_dbsearchpath : ""), queue->Name());
       window->WorkingCursor(true);
       window->AddTimeOut(TurnOffHourGlass, NULL, 5000);
       Invoke *_thread = new Invoke(s, NULL, NULL, old_uid);
@@ -576,10 +581,11 @@ void DtApp::OpenClose(BaseUI *obj)
    rc = printer_icon->JobContainer();
    if (obj->Open() == true)
     {
-      char *message = new char[100];
+      size_t msg_cap = strlen(MESSAGE(UpdatingL)) + strlen(obj->Name()) + 16;
+      char *message = new char[msg_cap];
       boolean prev_open = false;
 
-      sprintf(message, MESSAGE(UpdatingL), obj->Name());
+      snprintf(message, msg_cap, MESSAGE(UpdatingL), obj->Name());
       if (!rc)
        {
          rc = printer_icon->CreateContainer();
@@ -606,6 +612,7 @@ void DtApp::OpenClose(BaseUI *obj)
 		}
                printer_icon->UpdateExpand();
 	       rc->Thread(sockfd, RemoteStatusCB, 512);
+               delete [] message;
 	       return;
 	     }
 	    else
@@ -816,10 +823,12 @@ void DtApp::ActionCB(BaseUI *obj, char *actionReferenceName)
       int save_id = obj->UniqueID();
       if (!strcmp(actionReferenceName, CANCEL_PRINT_JOB))
        {
-	 char *title = new char[100];
-	 sprintf(title, MESSAGE(CancelTitleL), window->Name(), obj->Name());
-	 char *message = new char[100];
-	 sprintf(message, MESSAGE(CancelQuestionL), obj->Name());
+         size_t title_cap = strlen(MESSAGE(CancelTitleL)) + strlen(window->Name()) + strlen(obj->Name()) + 16;
+	 char *title = new char[title_cap];
+	 snprintf(title, title_cap, MESSAGE(CancelTitleL), window->Name(), obj->Name());
+         size_t msg_cap = strlen(MESSAGE(CancelQuestionL)) + strlen(obj->Name()) + 16;
+	 char *message = new char[msg_cap];
+	 snprintf(message, msg_cap, MESSAGE(CancelQuestionL), obj->Name());
 	 Dialog *confirm = new Dialog(window, title, message, QUESTION, 
 				      MESSAGE(YesL), MESSAGE(NoL));
 	 confirm->Visible(true);
@@ -985,23 +994,23 @@ char *DtApp::GetBottomString(BaseObj *job, boolean need_details)
    if (window->setPrefD->ShowOnlyMyJobs())
     {
       if (need_details)
-         sprintf(string, "%s\n%s\n%s\n%s",
-	         job->AttributeValue((char *)JOB_SIZE),
-	         job->AttributeValue((char *)JOB_NUMBER),
-	         job->AttributeValue((char *)TIME_SUBMITTED),
-	         job->AttributeValue((char *)DATE_SUBMITTED));
+         snprintf(string, sizeof(string), "%s\n%s\n%s\n%s",
+	          job->AttributeValue((char *)JOB_SIZE),
+	          job->AttributeValue((char *)JOB_NUMBER),
+	          job->AttributeValue((char *)TIME_SUBMITTED),
+	          job->AttributeValue((char *)DATE_SUBMITTED));
       else
          return NULL;
     }
    else
     {
       if (need_details)
-         sprintf(string, "%s\n%s\n%s\n%s\n%s",
-	         job->AttributeValue((char *)OWNER),
-	         job->AttributeValue((char *)JOB_SIZE),
-	         job->AttributeValue((char *)JOB_NUMBER),
-	         job->AttributeValue((char *)TIME_SUBMITTED),
-	         job->AttributeValue((char *)DATE_SUBMITTED));
+         snprintf(string, sizeof(string), "%s\n%s\n%s\n%s\n%s",
+	          job->AttributeValue((char *)OWNER),
+	          job->AttributeValue((char *)JOB_SIZE),
+	          job->AttributeValue((char *)JOB_NUMBER),
+	          job->AttributeValue((char *)TIME_SUBMITTED),
+	          job->AttributeValue((char *)DATE_SUBMITTED));
       else
          snprintf(string, sizeof(string), "%s", job->AttributeValue((char *)OWNER));
     }
@@ -1265,24 +1274,26 @@ void DtApp::RestoreApp()
     {
       int i;
       DtPrinterIcon **queues;
-      char *attribute = new char[100];
       queues = (DtPrinterIcon **) window->container->Children();
       for (i = 0; i < window->container->NumChildren(); i++)
        {
-	 sprintf(attribute, "%s.Visible", queues[i]->QueueObj()->Name());
+         const char *qname = queues[i]->QueueObj()->Name();
+         size_t attr_cap = strlen(qname) + 16;
+         char *attribute = new char[attr_cap];
+	 snprintf(attribute, attr_cap, "%s.Visible", qname);
          value = Restore(attribute);
 	 if (!STRCMP(value, "0"))
 	    queues[i]->Visible(false);
 	 else
 	  {
-	    sprintf(attribute, "%s.Open", queues[i]->QueueObj()->Name());
+	    snprintf(attribute, attr_cap, "%s.Open", qname);
             value = Restore(attribute);
 	    if (!STRCMP(value, "1"))
 	       queues[i]->Open(true);
 	  }
+         delete [] attribute;
        }
       UpdateStatusLine();
-      delete [] attribute;
     }
    else
     {
@@ -1359,15 +1370,18 @@ void DtApp::UpdateQueues()
 #else
 	 char *cmd = "env LANG=C lpstat -d | awk '$1 != \"no\" {print $NF}'";
 #endif
-	 char *output;
+	 char *output = NULL;
 	 Invoke *_thread = new Invoke(cmd, &output);
-	 strtok(output, "\n");
-         for (j = 0; j < n_queues; j++)
-            if (!STRCMP(output, queues[j]->Name()))
-	     {
-	       found = j;
-	       break;
-	     }
+         if (output)
+          {
+            strtok(output, "\n");
+            for (j = 0; j < n_queues; j++)
+               if (!STRCMP(output, queues[j]->Name()))
+                {
+                  found = j;
+                  break;
+                }
+          }
 	 delete _thread;
 	 free(output);
        }

@@ -3028,11 +3028,13 @@ ButtonCB(
 	 mouse.dclickChanged = False;
 
 	 if (mouse.btn2Changed)
-	   if(mouse.function == TRANSFER)
-	     sprintf(enableBtn1Res, enableBtn1TransferString, "button2_transfer");
-	   else
-	     sprintf(enableBtn1Res, enableBtn1TransferString, "True");
-	   _DtAddToResource(style.display,enableBtn1Res);
+	   {
+	     if(mouse.function == TRANSFER)
+	       sprintf(enableBtn1Res, enableBtn1TransferString, "button2_transfer");
+	     else
+	       sprintf(enableBtn1Res, enableBtn1TransferString, "True");
+	     _DtAddToResource(style.display,enableBtn1Res);
+	   }
 
 	 /* Cursor theme/size */
 	 {
@@ -3247,9 +3249,9 @@ restoreMouse(
     }
 
     xrm_name [1] = XrmStringToQuark ("ismapped");
-    XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value);
-    /* Are we supposed to be mapped? */
-    if (strcmp(value.addr, "True") == 0) 
+    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value) &&
+        value.addr != nullptr &&
+        strcmp(value.addr, "True") == 0) 
       popup_mouseBB(shell);
 }
 

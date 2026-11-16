@@ -104,6 +104,7 @@ void MotifThread::CreateThread(MotifUI *_obj, const char *cmd, int _pid,
       else if (pid == -1)
        {
          close(m_stdout[0]);
+         close(m_stdout[1]);
          output = strdup(strerror(errno));
          status = -1;
          Halt();
@@ -120,7 +121,7 @@ void MotifThread::CreateThread(MotifUI *_obj, const char *cmd, int _pid,
     }
    fcntl(fd, F_SETFL, O_NDELAY);
 
-   len = buf_len;
+   len = buf_len - 1;
    ctr = 1;
    output = (char *)malloc(buf_len);
    out1 = output;
@@ -144,8 +145,11 @@ void MotifThread::Halt()
 {
    if (out1)
       *out1 = '\0';
-   close(fd);
-   fd = -1;
+   if (fd >= 0)
+    {
+      close(fd);
+      fd = -1;
+    }
    if (pid != -1)
     {
       pid_t w;
@@ -162,16 +166,23 @@ void MotifThread::GetOutput()
    int n = read(fd, out1, len);
    if (n == len)
     {
-      len = buf_len;
+      size_t used = (size_t)(out1 - output) + (size_t)n;
       ctr++;
-      output = (char *)realloc(output, (ctr * len)); 
-      out1 = output + ((ctr - 1) * len);
-      out2 = out1 + len - 1;
+      char *next_output = (char *)realloc(output, (ctr * buf_len));
+      if (!next_output)
+       {
+         Halt();
+         return;
+       }
+      output = next_output;
+      out1 = output + used;
+      out2 = output + (ctr * buf_len) - 1;
+      len = (int)(out2 - out1);
     }
    else if (n > 0)
     {
       out1 += n;
-      len = out2 - out1 + 1;
+      len = (int)(out2 - out1);
     }
    else
      Halt();

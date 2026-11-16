@@ -391,23 +391,18 @@ Boolean F_Lower (String args, ClientData *pCD, XEvent *event)
 	/* process family stacking stuff */
 	else if (*string)
 	{
-	    unsigned int  slen, len, index;
+	    String token;
 
-	    slen = strlen(args) - 2;		/* subtract '\n' and NULL */
-	    for (index = 0; index < slen; string = &args[index+1])
+	    while ((token = (String) GetString ((unsigned char **) &string)) != nullptr)
 	    {
-		if ((string = (String) GetString ((unsigned char **) &string)) == nullptr)
-		   break;
-		len = strlen(string);
-		if (!strcmp(string,"within"))
+		if (!strcmp(token,"within"))
 		{
 		    flags |= STACK_WITHIN_FAMILY;
 		}
-		else if (!strcmp(string,"freeFamily"))
+		else if (!strcmp(token,"freeFamily"))
 		{
 		    flags |= STACK_FREE_FAMILY;
 		}
-		index += len;
 	    }
 	    if (ClientInWorkspace (pWS, pCD))
 	    {
@@ -3610,23 +3605,18 @@ Boolean F_Raise (String args, ClientData *pCD, XEvent *event)
 	/* process family stacking stuff */
 	else if (*string)
 	{
-	    unsigned int  slen, len, index;
+	    String token;
 
-	    slen = strlen(args) - 2;		/* subtract '\n' and NULL */
-	    for (index = 0; index < slen; string = &args[index+1])
+	    while ((token = (String) GetString ((unsigned char **) &string)) != nullptr)
 	    {
-		if ((string = (String) GetString ((unsigned char **) &string)) == nullptr)
-		   break;
-		len = strlen(string);
-		if (!strcmp(string,"within"))
+		if (!strcmp(token,"within"))
 		{
 		    flags |= STACK_WITHIN_FAMILY;
 		}
-		else if (!strcmp(string,"freeFamily"))
+		else if (!strcmp(token,"freeFamily"))
 		{
 		    flags |= STACK_FREE_FAMILY;
 		}
-		index += len;
 	    }
 	    if (ClientInWorkspace (pWS, pCD))
 	    {

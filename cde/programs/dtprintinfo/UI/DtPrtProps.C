@@ -229,7 +229,7 @@ void DtPrtProps::Apply()
    buf = new char [buf_len];
    FILE *fp_src, *fp_dest;
    char *filename = printer->CreateActionFile();
-   sprintf(buf, "%s.%ld", filename, (long)getpid());
+   snprintf(buf, buf_len, "%s.%ld", filename, (long)getpid());
    if (fp_dest = fopen(buf, "w"))
     {
       if (fp_src = fopen(filename, "r"))
@@ -247,15 +247,16 @@ void DtPrtProps::Apply()
           }
          fclose(fp_src);
        }
+      fclose(fp_dest);
+      snprintf(buf, buf_len, "%s.%ld", filename, (long)getpid());
+      rename(buf, filename);
     }
-   fclose(fp_dest);
-   sprintf(buf, "%s.%ld", filename, (long)getpid());
-   rename(buf, filename);
    DtActionInvoke(((AnyUI *)mainw->Parent())->BaseWidget(), "ReloadActions",
                   NULL, 0, NULL, NULL, NULL, True, NULL, NULL);
    delete [] buf;
    mainw->WorkingCursor(false);
    mainw->status_line->Name(save_msg);
+   free(save_msg);
 }
 
 void DtPrtProps::CloseCB()
@@ -329,9 +330,10 @@ void DtPrtProps::FindSetCB(void *data)
    DtPrtProps *obj = (DtPrtProps *)data;
    if (!obj->mainw->findSetD)
     {
-      char *name = new char [strlen(obj->mainw->Name()) +
-			     strlen(MESSAGE(FindSetTitleL))];
-      sprintf(name, MESSAGE(FindSetTitleL), obj->mainw->Name());
+      size_t name_cap = strlen(obj->mainw->Name()) +
+                        strlen(MESSAGE(FindSetTitleL)) + 1;
+      char *name = new char [name_cap];
+      snprintf(name, name_cap, MESSAGE(FindSetTitleL), obj->mainw->Name());
       obj->mainw->findSetD = new DtFindSet(obj->mainw, name,
 					   &DtPrtProps::CallerCB);
       delete [] name;

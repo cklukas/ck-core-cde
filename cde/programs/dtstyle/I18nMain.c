@@ -283,7 +283,9 @@ SetImsToggleList(I18nEnv *env)
 		 env->ims_sel->ims_list[i].im_name); n++;
 
 	/* Need to default to the file_sel->im_name, if in the list */
-	if (strcmp(env->file_sel->im_name, 
+	if (env->file_sel->im_name &&
+	    env->ims_sel->ims_list[i].im_name &&
+	    strcmp(env->file_sel->im_name, 
 		   env->ims_sel->ims_list[i].im_name) == 0) {
 	    found = TRUE;
 	    XtSetArg(args[n], XmNset, True); n++;
@@ -1027,15 +1029,18 @@ SaveSelectedValues(
 	i18n.preeditSavedNum = num_preedit;
 
 	for (i = 0; i < num_preedit; i++) {
+	    size_t prev_len = preeditStr ? strlen(preeditStr) : 0;
 	    /* get the text of the XmString */
 	    tmpStr = XmStringUnparse(list_preedit[i], nullptr, XmCHARSET_TEXT, 
 				     XmCHARSET_TEXT, nullptr, 0, XmOUTPUT_ALL);
+	    if (!tmpStr)
+		continue;
 	    /* realloc mallocs the first time */
 	    preeditStr = XtRealloc(preeditStr, 
-				   strlen(preeditStr) + strlen(tmpStr) + 2);
+				   prev_len + strlen(tmpStr) + 2);
 
 	    /* insert the comma before the second, third. etc */
-	    if (i != 0) {
+	    if (prev_len != 0) {
 		strcat(preeditStr, ",");
 		strcat(preeditStr, tmpStr);
 	    }
@@ -1048,7 +1053,8 @@ SaveSelectedValues(
 	/* if writeXrdbImmediate true write to Xrdb else send to 
 	   session mgr */
 
-	sprintf(preeditTypeRes, "*preeditType: %s\n", preeditStr);
+	snprintf(preeditTypeRes, sizeof(preeditTypeRes),
+		 "*preeditType: %s\n", preeditStr ? preeditStr : "");
 
 	XtFree(preeditStr);
 
@@ -1152,9 +1158,9 @@ restoreI18n(
     }
 
     xrm_name [1] = XrmStringToQuark ("ismapped");
-    XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value);
-    /* Are we supposed to be mapped? */
-    if (strcmp(value.addr, "True") == 0) 
+    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value) &&
+        value.addr != nullptr &&
+        strcmp(value.addr, "True") == 0) 
       popup_i18nBB(shell);
 }
 
@@ -1325,6 +1331,7 @@ _DtI18nErrorDialog(
 	break;
     case ErrRemoteFailed:
 	err_str = GETMESSAGE(19, 38, "Remote execution failed on\n the selected host.");
+	break;
 
         /* Pipe */
     case ErrNoPopen:
@@ -1430,6 +1437,7 @@ MoveUpCB(
 	    /* preeditType has changed */
 	    i18n.preeditHasChanged = True;
 	}
+	XtFree((char *)position_list);
     }
 }
 
@@ -1490,6 +1498,7 @@ MoveDownCB(
 	    /* preeditType has changed */
 	    i18n.preeditHasChanged = True;
 	}
+	XtFree((char *)position_list);
     }
 
 }

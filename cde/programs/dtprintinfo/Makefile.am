@@ -80,9 +80,11 @@ dtprintinfo_cat.h: $(srcdir)/dtprintinfo.msg.src
 	$(RM) dtprintinfo_cat.h
 	$(AWK) -f $(srcdir)/msg.awk $(srcdir)/dtprintinfo.msg.src > dtprintinfo_cat.h
 
-# The changes of the user ID are tested against a fake kernel.
-EXTRA_DIST = tests/check-privilege.py tests/check-privilege.c
+# The changes of the user ID and input-path bounds are tested under sanitizers.
+EXTRA_DIST = tests/check-privilege.py tests/check-privilege.c \
+	tests/check-dtprintinfo-hardening.py tests/check-dtprintinfo-hardening.C
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-privilege.py
+	CXX="$(CXX)" python3 $(srcdir)/tests/check-dtprintinfo-hardening.py
 

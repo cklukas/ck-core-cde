@@ -208,6 +208,7 @@ Application::~Application()
    delete [] attributes;
    delete [] values;
    delete [] new_display;
+   free(session_path);
 }
 
 boolean Application::SetName(char *name)
@@ -338,12 +339,13 @@ char *Application::Restore(char *attribute)
        {
          char *name = SessionFile();
          char *path = SessionPath();
-         session_path = new char[strlen(path) + strlen(name) + 2];
-         sprintf(session_path, "%s/%s", path, name);
-	 session_file = strdup(session_path);
+         size_t path_cap = strlen(path) + strlen(name) + 2;
+         session_path = (char *)malloc(path_cap);
+         snprintf(session_path, path_cap, "%s/%s", path, name);
+	 session_file = session_path;
        }
       struct stat statbuff;
-      if (stat(session_path, &statbuff) != -1)
+      if (stat(session_path, &statbuff) != -1 && statbuff.st_size >= 0)
        {
 	 FILE *fp1;
 	 if (fp1 = fopen(session_path, "r"))
@@ -365,13 +367,14 @@ char *Application::Restore(char *attribute)
             values = new char*[n_attrs];
 	    s = strtok(session_info, "\n");
 	    int i = 0;
-            while (s && *s)
+            while (i < n_attrs && s && *s)
 	     {
 	       attributes[i] = s;
 	       values[i] = strtok(NULL, "\n");
 	       s = strtok(NULL, "\n");
 	       i++;
 	     }
+            n_attrs = i;
 	  }
        }
       if (!session_info)

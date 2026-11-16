@@ -537,7 +537,7 @@ ProcessBackdropResources(
 		{
 		    char msg[MAXWMPATH+1];
 
-		    sprintf ((char *)msg, 
+		    snprintf (msg, sizeof(msg), 
 		        ((char *)GETMESSAGE(6, 3, "Unable to get image %s for workspace %s.")),
 			pWS->backdrop.image, pWS->name);
 
@@ -731,7 +731,7 @@ SetNewBackdrop(
     if ((pWS->backdrop.flags & BACKDROP_IMAGE_ALLOCED) &&
 	(pWS->backdrop.image))
     {
-	free (pWS->backdrop.image);
+	XtFree (pWS->backdrop.image);
     }
 	
     pWS->backdrop.imagePixmap = pixmap;

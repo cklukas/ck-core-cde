@@ -109,12 +109,14 @@ DtTtCreated(
 		if (! listAppend( dtTtProcids, dtTtProcidsCount, const char *,
 				  proc ))
 		{
+			free( proc );
 			return TT_ERR_NOMEM;
 		}
 		dtTtProcidsCount--; // shared by both lists
 		if (! listAppend( dtTtProcidClientDatums, dtTtProcidsCount,
 				  const void *, clientData ))
 		{
+			free( proc );
 			return TT_ERR_NOMEM;
 		}
 		break;
@@ -341,7 +343,7 @@ DtTtIndex(
 		return -1;
 	}
 
-        return 0;
+        return -1;
 }
 
 Tt_status
@@ -366,6 +368,7 @@ DtTtDestroyed(
 		if (i < 0) {
 			return TT_WRN_NOTFOUND;
 		}
+		free( (void *)dtTtProcids[i] );
 		for (j = i; j < dtTtProcidsCount - 1; j++) {
 			dtTtProcids[j] = dtTtProcids[j+1];
 		}
@@ -455,7 +458,8 @@ DtTtSetLabel(
     if (labelWidget == 0) {
 	    return TT_OK;
     }
-    XmString labelXmString = XmStringCreateLocalized( (String)string );
+    XmString labelXmString = XmStringCreateLocalized(
+	    (String)(string ? string : "") );
     XtVaSetValues( labelWidget, XmNlabelString, labelXmString, NULL );
     XmStringFree( labelXmString );
     return TT_OK;
@@ -470,7 +474,7 @@ DtTtSetLabel(
 {
     Tt_status status = tt_ptr_error( val );
     std::ostringstream errStream;
-    errStream << func << " = " << val << " (" << status << ")" << ends;
+    errStream << (func ? func : "") << " = " << val << " (" << status << ")";
     DtTtSetLabel( labelWidget, errStream.str().c_str() );
     return status;
 }
@@ -483,7 +487,7 @@ DtTtSetLabel(
 )
 {
     std::ostringstream errStream;
-    errStream << func << " = " << status << ends;
+    errStream << (func ? func : "") << " = " << status;
     DtTtSetLabel( labelWidget, errStream.str().c_str() );
     return status;
 }
@@ -496,7 +500,7 @@ DtTtSetLabel(
 )
 {
     std::ostringstream errStream;
-    errStream << func << " = " << returnVal << ends;
+    errStream << (func ? func : "") << " = " << returnVal;
     DtTtSetLabel( labelWidget,
                   const_cast<char *>(errStream.str().c_str()) );
     return returnVal;
@@ -519,11 +523,10 @@ _DtTtChoices(
 		itemStream << (void *)pPats[ i ];
 		char *name = (char *)
 			tt_pattern_user( *pPats[ i ], _DtTtPatsNameKey );
-		if (! tt_is_err( tt_ptr_error( name ))) {
+		if ((name != 0) && ! tt_is_err( tt_ptr_error( name ))) {
 			itemStream << " " << name;
 			tt_free( name );
 		}
-		itemStream << ends;
 		items[ i ] =
                     XmStringCreateLocalized(const_cast<char *>(itemStream.str().c_str()));
 	}
@@ -569,11 +572,10 @@ _DtTtChoices(
 				tt_free( op );
 			}
 			char *id = tt_message_id( dtTtMessages[ i ] );
-			if (! tt_is_err( tt_ptr_error( id ))) {
+			if (id && ! tt_is_err( tt_ptr_error( id ))) {
 				itemStream << " " << id;
 				tt_free( id );
 			}
-			itemStream << ends;
 			items[ i ] =
                             XmStringCreateLocalized(const_cast<char *>(itemStream.str().c_str()));
 		}
@@ -587,7 +589,7 @@ _DtTtChoices(
 		*itemCount = dtTtPatternsCount;
 		for (i = 0; i < dtTtPatternsCount; i++) {
 			std::ostringstream itemStream;
-			itemStream << (void *)dtTtPatterns[ i ] << ends;
+			itemStream << (void *)dtTtPatterns[ i ];
 			items[ i ] = XmStringCreateLocalized(
                             const_cast<char *>(itemStream.str().c_str()) );
 		}
@@ -655,6 +657,25 @@ _DtCreateTemporaryFile(
     return fd;
 }
 
+std::string
+DtTtShellQuote(
+	const char *	arg
+)
+{
+    std::string quoted("'");
+    if (arg != 0) {
+	for (const char *p = arg; *p != '\0'; ++p) {
+	    if (*p == '\'') {
+		quoted += "'\\''";
+	    } else {
+		quoted += *p;
+	    }
+	}
+    }
+    quoted += '\'';
+    return quoted;
+}
+
 void
 _DtOpen(
 	Widget		label,
@@ -671,11 +692,11 @@ _DtOpen(
     close(fd);
 
     std::ostringstream cmdStream;
-    cmdStream << cmd << " > " << file << ends;
+    cmdStream << cmd << " > " << DtTtShellQuote(file);
     int sysStat = system( cmdStream.str().c_str() );
     if (! WIFEXITED( sysStat )) {
 	    std::ostringstream func;
-	    func << "system( \"" << cmdStream.str() << "\" )" << ends;
+	    func << "system( \"" << cmdStream.str() << "\" )";
 	    DtTtSetLabel( label, func.str().c_str(), sysStat );
 	    unlink(file);
 	    free(file);
@@ -698,13 +719,14 @@ _DtOpen(
 )
 {
     std::ostringstream labelStream;
-    labelStream << "dtaction Open " << file << ends;
+    labelStream << "dtaction Open " << (file ? file : "");
     DtTtSetLabel( label, labelStream.str().c_str() );
 
+    std::string quotedFile = DtTtShellQuote(file);
     std::ostringstream cmd;
-    cmd << "( unset TT_TRACE_SCRIPT; if dtaction Open " << file
-	<< "; then :; else textedit " << file << "; fi; sleep 600; rm -f "
-	<< file << " ) &" << ends;
+    cmd << "( unset TT_TRACE_SCRIPT; if dtaction Open " << quotedFile
+	<< "; then :; else textedit " << quotedFile << "; fi; sleep 600; rm -f "
+	<< quotedFile << " ) &";
     int status = system( cmd.str().c_str() );
     (void) status;	// the command runs in the background; no result to use
 }
@@ -759,13 +781,17 @@ _DtMan(
 	const char *	topic
 )
 {
+    if ((topic == 0) || (*topic == '\0')) {
+	return;
+    }
     std::ostringstream labelStream;
-    labelStream << "dtaction Dtmanpageview " << topic << ends;
+    labelStream << "dtaction Dtmanpageview " << topic;
     DtTtSetLabel( label, labelStream.str().c_str() );
 
+    std::string quotedTopic = DtTtShellQuote(topic);
     std::ostringstream cmd;
-    cmd << "unset TT_TRACE_SCRIPT; if dtaction Dtmanpageview " << topic
-	<< "; then :; else cmdtool -c man " << topic << "; fi &" << ends;
+    cmd << "unset TT_TRACE_SCRIPT; if dtaction Dtmanpageview " << quotedTopic
+	<< "; then :; else cmdtool -c man " << quotedTopic << "; fi &";
     int status = system( cmd.str().c_str() );
     (void) status;	// the command runs in the background; no result to use
 }
@@ -788,12 +814,15 @@ _DtHelped(
 	Widget helpDialog
 )
 {
-	char *topics;
+	char *topics = 0;
 	XtVaGetValues( helpDialog, DtNstringData, &topics, NULL );
 	if (! _DtCanHelp( topics )) {
 		return False;
 	}
 	char *newTopics = strdup( topics );
+	if (newTopics == 0) {
+		return False;
+	}
 	const char *whiteSpace = "(12345689) \t:-,.*\n";
 	const char *topic = strtok( newTopics, whiteSpace );
 	while (topic != 0) {

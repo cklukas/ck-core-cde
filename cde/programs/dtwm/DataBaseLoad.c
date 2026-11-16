@@ -703,7 +703,7 @@ _DtPerfChkpntMsgSend("End   Front panel database read");
      InitializeField (switch1->element_values, SWITCH_NUMBER_OF_ROWS, switch_parse_functions);
      InitializeField (switch1->element_values, SWITCH_HELP_STRING, switch_parse_functions);
      InitializeField (switch1->element_values, SWITCH_HELP_TOPIC, switch_parse_functions);
-     InitializeField (switch1->element_values, SWITCH_HELP_STRING, switch_parse_functions);
+     InitializeField (switch1->element_values, SWITCH_HELP_VOLUME, switch_parse_functions);
    }
 
    XtFree ((char *) switch_data);
@@ -1762,11 +1762,10 @@ EliminateEntries (RecordData * record_data,
    if (end + 1 < *record_count)
    {
       memmove((void *) &record_data[start], (void *) &record_data[end+1],
-              (size_t) ((*record_count - end) * sizeof(RecordData)));
+              (size_t) ((*record_count - end - 1) * sizeof(RecordData)));
    }
 
-
-   *i += (end - start) + 1;
+   (void) i;
    *count = *record_count -= (end - start) + 1;
 }
 
@@ -1816,14 +1815,14 @@ ResolveDuplicates (RecordData * record_data,
       locked = (Boolean) (intptr_t) (element_values[lock_type].parsed_value);
       if (locked)
       {
+         start_index = last_index = i;
          i--;
          if (i < 0) break;
-         start_index = last_index = i;
          element_values = record_data[i].element_values;
          if (ANY_CONTAINER_TYPE == container_type)
          {
             while ((strcmp((char *) (element_values[name_type].parsed_value),
-                           cont_name) == 0))
+                           record_name) == 0))
             {
                last_index = i;
                i--;
@@ -1897,11 +1896,8 @@ ResolveDuplicates (RecordData * record_data,
 				start_index, &i, &count, record_type);
             else
             {
-               int diff = start_index - lock_index;
 	       EliminateEntries(record_data, record_count, lock_index + 1,
 				start_index, &i, &count, record_type);
-               lock_index += diff;
-               last_index += diff;
                if (lock_index != last_index)
 	          EliminateEntries(record_data, record_count, last_index,
 				   lock_index - 1, &i, &count, record_type);
@@ -3030,8 +3026,16 @@ InitParse (char          * file_name,
 
    tmpName = XtNewString(file_name);
    baseName = strrchr(tmpName, '/');
-   tmpFile = XtMalloc(strlen(tmpPath) + strlen(baseName) + 1);
-   sprintf(tmpFile, "%s%s", tmpPath, baseName);
+   if (baseName != nullptr)
+   {
+      tmpFile = XtMalloc(strlen(tmpPath) + strlen(baseName) + 1);
+      sprintf(tmpFile, "%s%s", tmpPath, baseName);
+   }
+   else
+   {
+      tmpFile = XtMalloc(strlen(tmpPath) + strlen(tmpName) + 2);
+      sprintf(tmpFile, "%s/%s", tmpPath, tmpName);
+   }
    symlinked = (symlink(file_name, tmpFile) == 0);
 
    hostName = XtMalloc((Cardinal)(MAXHOSTNAMELEN + 1));

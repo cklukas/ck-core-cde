@@ -136,25 +136,35 @@ Queue::~Queue()
 
 void Queue::LoadAttributes(int /*n_attrs*/, Attribute **attrs)
 {
-   char *command = new char[500];
-   sprintf(command, GET_ATTRS, Name());
-   char *output;
+   size_t cmd_cap = strlen(GET_ATTRS) + strlen(Name()) + 16;
+   char *command = new char[cmd_cap];
+   snprintf(command, cmd_cap, GET_ATTRS, Name());
+   char *output = NULL;
    RunCommand(command, &output);
    delete [] command;
 
-   char *s = output, *s1;
+   char *s = output, *s1 = NULL;
    char *dollar[3];
    int i;
    for (i = 0; i < 3; i++)
     {
+      if (!s)
+       {
+         dollar[i] = (char *)"";
+         continue;
+       }
       if (s1 = strchr(s, ':'))
          *s1++ = '\0';
       else if (s1 = strchr(s, '\n'))
          *s1++ = '\0';
+      else
+         s1 = NULL;
       dollar[i] = s;
       s = s1;
     }
    i = 0;
+   free(attrs[i]->Value);
+   free(attrs[i]->DisplayValue);
    attrs[i]->Value = strdup(Name());
    attrs[i]->DisplayValue = strdup(Name());
    i++;
@@ -169,12 +179,15 @@ void Queue::LoadAttributes(int /*n_attrs*/, Attribute **attrs)
 	 sprintf(local_devices[0], "%s:%s", Name(), dollar[0]);
 #endif
 	 is_remote = true;
-	 char *new_value = new char [strlen(MESSAGE(PrinterOnServerL)) + 
-				     strlen(dollar[1]) + strlen(dollar[2])];
+         size_t val_cap = strlen(MESSAGE(PrinterOnServerL)) +
+                          strlen(dollar[1]) + strlen(dollar[2]) + 1;
+	 char *new_value = new char [val_cap];
          remote_server = strdup(dollar[1]);
          remote_printer = strdup(dollar[2]);
-	 sprintf(new_value, MESSAGE(PrinterOnServerL), remote_printer, 
-		 remote_server);
+	 snprintf(new_value, val_cap, MESSAGE(PrinterOnServerL), remote_printer, 
+		  remote_server);
+         free(attrs[i]->Value);
+         free(attrs[i]->DisplayValue);
          attrs[i]->Value = strdup(new_value);
          attrs[i]->DisplayValue = strdup(new_value);
 	 delete [] new_value;
@@ -185,7 +198,7 @@ void Queue::LoadAttributes(int /*n_attrs*/, Attribute **attrs)
 	 if (strchr(dollar[0], ',')) // AIX can have multiple devices per queue
 	  {
             DeleteAttribute(QUEUE_DEVICE);
-	    char *device = new char [strlen(MESSAGE(DeviceNL)) + 4];
+	    char *device = new char [strlen(MESSAGE(DeviceNL)) + 16];
 	    s = dollar[0];
             while (s && *s)
              {
@@ -224,6 +237,8 @@ void Queue::LoadAttributes(int /*n_attrs*/, Attribute **attrs)
 	    sprintf(local_devices[0], "%s:%s", Name(), dollar[0]);
 
 #endif
+            free(attrs[i]->Value);
+            free(attrs[i]->DisplayValue);
             attrs[i]->Value = strdup(dollar[0]);
             attrs[i]->DisplayValue = strdup(dollar[0]);
 	  }
@@ -238,7 +253,7 @@ char *Queue::Device(int index)
 {
    if (_loaded_attributes == false)
       ReadAttributes();
-   if (index >= 0 && index <= n_devices)
+   if (index >= 0 && index < n_devices)
       return local_devices[index];
    else
       return NULL;
@@ -257,12 +272,13 @@ int Queue::Start(BaseObj *obj, char **output, BaseObj * /*requestor*/)
 {
    Queue *queue = (Queue *)obj;
    int rc;
-   char *command = new char[100];
+   size_t cmd_cap = strlen(START_QUEUE_CMD) + strlen(queue->Name()) + 16;
+   char *command = new char[cmd_cap];
 
 #ifdef aix
    if (queue->n_devices > 1)
     {
-      sprintf(command, START_QUEUE_CMD, "$d");
+      snprintf(command, cmd_cap, START_QUEUE_CMD, "$d");
       int i, len;
       len = 30 + strlen(command) + queue->n_devices;
       for (i = 0; i < queue->n_devices; i++)
@@ -283,7 +299,7 @@ int Queue::Start(BaseObj *obj, char **output, BaseObj * /*requestor*/)
    else
 #endif
     {
-      sprintf(command, START_QUEUE_CMD, queue->Name());
+      snprintf(command, cmd_cap, START_QUEUE_CMD, queue->Name());
       rc = queue->RunCommand(command, NULL, output);
     }
     delete [] command;
@@ -293,13 +309,14 @@ int Queue::Start(BaseObj *obj, char **output, BaseObj * /*requestor*/)
 int Queue::Stop(BaseObj *obj, char **output, BaseObj * /*requestor*/)
 {
    Queue *queue = (Queue *)obj;
-   char *command = new char[100];
+   size_t cmd_cap = strlen(STOP_QUEUE_CMD) + strlen(queue->Name()) + 16;
+   char *command = new char[cmd_cap];
    int rc;
 
 #ifdef aix
    if (queue->n_devices > 1)
     {
-      sprintf(command, STOP_QUEUE_CMD, "$d");
+      snprintf(command, cmd_cap, STOP_QUEUE_CMD, "$d");
       int i, len;
       len = 30 + strlen(command) + queue->n_devices;
       for (i = 0; i < queue->n_devices; i++)
@@ -320,7 +337,7 @@ int Queue::Stop(BaseObj *obj, char **output, BaseObj * /*requestor*/)
    else
 #endif
     {
-        snprintf(command, 100, STOP_QUEUE_CMD, queue->Name());
+      snprintf(command, cmd_cap, STOP_QUEUE_CMD, queue->Name());
       rc = queue->RunCommand(command, NULL, output);
     }
     delete [] command;
@@ -331,10 +348,11 @@ int Queue::Stop(BaseObj *obj, char **output, BaseObj * /*requestor*/)
 int Queue::StartPrint(BaseObj *obj, char **output, BaseObj * /*requestor*/)
 {
    Queue *queue = (Queue *)obj;
-   char *command = new char[100];
+   size_t cmd_cap = strlen(START_PRINTING_CMD) + strlen(queue->Name()) + 16;
+   char *command = new char[cmd_cap];
    int rc;
 
-   sprintf(command, STOP_PRINTING_CMD, queue->Name());
+   snprintf(command, cmd_cap, START_PRINTING_CMD, queue->Name());
    rc = queue->RunCommand(command, NULL, output);
    delete [] command;
    return rc;
@@ -343,10 +361,11 @@ int Queue::StartPrint(BaseObj *obj, char **output, BaseObj * /*requestor*/)
 int Queue::StopPrint(BaseObj *obj, char **output, BaseObj * /*requestor*/)
 {
    Queue *queue = (Queue *)obj;
-   char *command = new char[100];
+   size_t cmd_cap = strlen(STOP_PRINTING_CMD) + strlen(queue->Name()) + 16;
+   char *command = new char[cmd_cap];
    int rc;
 
-   sprintf(command, STOP_PRINTING_CMD, queue->Name());
+   snprintf(command, cmd_cap, STOP_PRINTING_CMD, queue->Name());
    rc = queue->RunCommand(command, NULL, output);
    delete [] command;
    return rc;
@@ -396,8 +415,11 @@ void Queue::ProcessJobs(char *jobs)
 
 void Queue::ParseOutput(char *job_list, int n_jobs)
 {
+   if (!job_list || n_jobs <= 0)
+      return;
    int i;
    char *printer = DtStrtok(job_list, "|");
+   (void)printer;
    for (i = 0; i < n_jobs; i++)
     {
       char *JobName = DtStrtok(NULL, "|");
@@ -406,8 +428,11 @@ void Queue::ParseOutput(char *job_list, int n_jobs)
       char *Date = DtStrtok(NULL, "|");
       char *Time = DtStrtok(NULL, "|");
       char *tmp = DtStrtok(NULL, "\n");
-      char *Size = new char [strlen(tmp) + strlen(MESSAGE(BytesL)) + 2];
-      sprintf(Size, "%s %s", tmp, MESSAGE(BytesL));
+      if (!JobName || !JobNumber || !Owner || !Date || !Time || !tmp)
+         break;
+      size_t size_cap = strlen(tmp) + strlen(MESSAGE(BytesL)) + 2;
+      char *Size = new char [size_cap];
+      snprintf(Size, size_cap, "%s %s", tmp, MESSAGE(BytesL));
 
       new PrintJob(this, JobName, JobNumber, Owner, Date, Time, Size);
       delete [] Size;

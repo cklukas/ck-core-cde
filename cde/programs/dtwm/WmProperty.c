@@ -1334,7 +1334,7 @@ SetWorkspaceInfoProperty (WmWorkspaceData *pWS)
     int i, ix;
     Status status;
     XTextProperty tp;
-#define WIP_NUMBER_SIZE		16
+#define WIP_NUMBER_SIZE		32
 
     /*
      * Construct our property name
@@ -1372,27 +1372,27 @@ SetWorkspaceInfoProperty (WmWorkspaceData *pWS)
 
     /*  Pixel set id */
     ix = (i * WIP_NUMBER_SIZE);
-    sprintf (&pch[ix], "%d", pWS->backdrop.colorSet);
+    snprintf (&pch[ix], WIP_NUMBER_SIZE, "%d", pWS->backdrop.colorSet);
     ppchList[i++] = &pch[ix];
 
     /* backdrop background */
     ix = (i * WIP_NUMBER_SIZE);
-    sprintf (&pch[ix], "0x%lx", pWS->backdrop.background);
+    snprintf (&pch[ix], WIP_NUMBER_SIZE, "0x%lx", pWS->backdrop.background);
     ppchList[i++] = &pch[ix];
 
     /* backdrop foreground */
     ix = (i * WIP_NUMBER_SIZE);
-    sprintf (&pch[ix], "0x%lx", pWS->backdrop.foreground);
+    snprintf (&pch[ix], WIP_NUMBER_SIZE, "0x%lx", pWS->backdrop.foreground);
     ppchList[i++] = &pch[ix];
 
     /* backdrop name */
     ix = (i * WIP_NUMBER_SIZE);
-    sprintf (&pch[ix], "0x%lx", pWS->backdrop.nameAtom);
+    snprintf (&pch[ix], WIP_NUMBER_SIZE, "0x%lx", pWS->backdrop.nameAtom);
     ppchList[i++] = &pch[ix];
 
     /* backdrop type */
     ix = (i * WIP_NUMBER_SIZE);
-    sprintf (&pch[ix], "%d", pWS->backdrop.imageType);
+    snprintf (&pch[ix], WIP_NUMBER_SIZE, "%d", pWS->backdrop.imageType);
     ppchList[i++] = &pch[ix];
 
     /* number of backdrop windows */
@@ -1403,7 +1403,7 @@ SetWorkspaceInfoProperty (WmWorkspaceData *pWS)
     }
     else
     {
-	sprintf (&pch[ix], "%d", count);
+	snprintf (&pch[ix], WIP_NUMBER_SIZE, "%d", count);
     }
     ppchList[i++] = &pch[ix];
 
@@ -1413,7 +1413,7 @@ SetWorkspaceInfoProperty (WmWorkspaceData *pWS)
      * (NULL written if zero)
      */
     ix = (i * WIP_NUMBER_SIZE);
-    sprintf (&pch[ix], "0x%lx", pWS->backdrop.window);
+    snprintf (&pch[ix], WIP_NUMBER_SIZE, "0x%lx", pWS->backdrop.window);
     ppchList[i++] = &pch[ix];
 
     /*

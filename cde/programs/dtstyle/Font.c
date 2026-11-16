@@ -1037,7 +1037,7 @@ ButtonCB(
                or an "=". 
             */ 
             len = strcspn(chosenStr, ":=");
-            fntsetstr = (char *) XtCalloc(1, len + 1);
+            fntsetstr = (char *) XtCalloc(1, len + 4);
             memcpy(fntsetstr, chosenStr, len);
 
             /* 
@@ -1067,8 +1067,7 @@ ButtonCB(
 	      from the first entry, then wildcard its charset fields
 	     */
 	    len = strlen(fntsetstr);
-	    if (style.xrdb.fontChoice[font.selectedFontIndex].userStr[len] 
-		!= ':') {
+	    if (chosenStr[len] != ':') {
 		str = strchr(fntsetstr, '-');
 		for (n = 1; n < 13 && str; n++)
 		    str = strchr(str + 1, '-');
@@ -1789,9 +1788,9 @@ restoreFonts(
     }
 
     xrm_name [1] = XrmStringToQuark ("ismapped");
-    XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value);
-    /* Are we supposed to be mapped? */
-    if (strcmp(value.addr, "True") == 0) 
+    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value) &&
+        value.addr != nullptr &&
+        strcmp(value.addr, "True") == 0) 
       popup_fontBB(shell);
 }
 
@@ -1837,9 +1836,9 @@ saveFonts(
         x -= vendorExt->vendor.xOffset;
         y -= vendorExt->vendor.yOffset;
 
-        snprintf(bufr, sizeof(style.tmpBigStr), "*Fonts.x: %d\n", x);
+        snprintf(bufr, sizeof(bufr), "*Fonts.x: %d\n", x);
         WRITE_STR2FD(fd, bufr);
-        snprintf(bufr, sizeof(style.tmpBigStr), "*Fonts.y: %d\n", y);
+        snprintf(bufr, sizeof(bufr), "*Fonts.y: %d\n", y);
         WRITE_STR2FD(fd, bufr);
     }
 }

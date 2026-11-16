@@ -3970,15 +3970,10 @@ WriteOutXrmColors (WmScreenData *pSD)
 String
 ResCat (String s1, String s2, String s3, String s4)
 {
-
-
-    int count;
-
-    Boolean useResourceClass = True;
+    size_t len = 0;
+    size_t cap = sizeof (wmGD.tmpBuffer);
 
     wmGD.tmpBuffer[0] = '\0';
-
-    count = MAXBUF - 1;
 
     if (s1)
     {
@@ -3995,37 +3990,38 @@ ResCat (String s1, String s2, String s3, String s4)
 	 *
 	 */
 	{
-		useResourceClass = False;
 	}
 	else if (!strcmp (s1, DT_WM_RESOURCE_CLASS))
 	{
-		useResourceClass = False;
 	}
 	else
 	{
-	    strncat((char *)wmGD.tmpBuffer, s1, count);
-	    count -= strlen(s1);
+	    int n = snprintf ((char *)wmGD.tmpBuffer, cap, "%s", s1);
+	    if (n > 0)
+	    {
+		len = (size_t)n < cap ? (size_t)n : cap - 1;
+	    }
 	}
 
-	if (s2 && (count > 0))
+	if (s2 && (len + 1 < cap))
 	{
-	    strncat ((char *)wmGD.tmpBuffer, "*", count);
-	    count -= 1;
-	    strncat ((char *)wmGD.tmpBuffer, s2, count);
-	    count -= strlen (s2);
-
-	    if (s3 && (count > 0))
+	    int n = snprintf ((char *)wmGD.tmpBuffer + len, cap - len, "*%s", s2);
+	    if (n > 0)
 	    {
-		strncat ((char *)wmGD.tmpBuffer, "*", count);
-		count -= 1;
-		strncat ((char *)wmGD.tmpBuffer, s3, count);
-		count -= strlen (s3);
+		len = (len + (size_t)n < cap) ? (len + (size_t)n) : (cap - 1);
+	    }
 
-		if (s4)
+	    if (s3 && (len + 1 < cap))
+	    {
+		n = snprintf ((char *)wmGD.tmpBuffer + len, cap - len, "*%s", s3);
+		if (n > 0)
 		{
-		    strncat ((char *)wmGD.tmpBuffer, "*", count);
-		    count -= 1;
-		    strncat ((char *)wmGD.tmpBuffer, s4, count);
+		    len = (len + (size_t)n < cap) ? (len + (size_t)n) : (cap - 1);
+		}
+
+		if (s4 && (len + 1 < cap))
+		{
+		    (void) snprintf ((char *)wmGD.tmpBuffer + len, cap - len, "*%s", s4);
 		}
 	    }
 	}
@@ -5174,14 +5170,6 @@ ProcessWorkspaceResources (WmWorkspaceData *pWS)
 	*/
 	pWS->title = XmStringCopy(pWS->title);
 
-    }
-
-    /*
-     * Dup iconbox geometry, it may be free'd later on.
-     */
-    if (pWS->iconBoxGeometry)
-    {
-	pWS->iconBoxGeometry = XtNewString (pWS->iconBoxGeometry);
     }
 
     /*

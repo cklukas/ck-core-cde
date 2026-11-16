@@ -67,7 +67,8 @@ DtPrinterIcon::DtPrinterIcon(DtMainW *mainW, AnyUI *parent, Queue *que,
    if (app_mode == INITIALIZE_PRINTERS)
       return;
 
-   char *buf = new char[sizeof(DtPrinterIcon::homeDir) + 32];
+   size_t buf_cap = sizeof(DtPrinterIcon::homeDir) + strlen(que->Name()) + 64;
+   char *buf = new char[buf_cap];
    struct stat statbuff;
    if (*homeDir == '\0')
     {
@@ -76,22 +77,22 @@ DtPrinterIcon::DtPrinterIcon(DtMainW *mainW, AnyUI *parent, Queue *que,
       if (home == NULL || strlen(home) == 0)
        {
          pwInfo = getpwuid(getuid());
-         home = pwInfo->pw_dir;
+         home = (pwInfo && pwInfo->pw_dir) ? pwInfo->pw_dir : (char *)"/";
        }
-      strcpy(homeDir, home);
-      sprintf(buf, "%s/%s", homeDir, PRINTERS_PERSONAL_DIR);
+      snprintf(homeDir, sizeof(homeDir), "%s", home);
+      snprintf(buf, buf_cap, "%s/%s", homeDir, PRINTERS_PERSONAL_DIR);
       if (stat(buf, &statbuff) < 0)
        {
-         sprintf(buf, "mkdir -p %s/%s", homeDir, PRINTERS_PERSONAL_DIR);
+         snprintf(buf, buf_cap, "mkdir -p %s/%s", homeDir, PRINTERS_PERSONAL_DIR);
          if (system(buf) != 0)
           {
             // the file or directory is created below; its error is reported there
           }
        }
-      sprintf(buf, "%s/.dt/types", homeDir);
+      snprintf(buf, buf_cap, "%s/.dt/types", homeDir);
       if (stat(buf, &statbuff) < 0)
        {
-         sprintf(buf, "mkdir -p %s/.dt/types", homeDir);
+         snprintf(buf, buf_cap, "mkdir -p %s/.dt/types", homeDir);
          if (system(buf) != 0)
           {
             // the file or directory is created below; its error is reported there
@@ -99,14 +100,15 @@ DtPrinterIcon::DtPrinterIcon(DtMainW *mainW, AnyUI *parent, Queue *que,
        }
       DtDbReloadNotify(&DtPrinterIcon::ReloadNotifyCB, this);
     }
-   sprintf(buf, "%s/%s/%s_Print", homeDir, PRINTERS_PERSONAL_DIR,
-	   queue->Name());
+   snprintf(buf, buf_cap, "%s/%s/%s_Print", homeDir, PRINTERS_PERSONAL_DIR,
+	    queue->Name());
    if (stat(buf, &statbuff) < 0)
     {
       int fd = creat(buf, 0755);
-      close(fd);
+      if (fd >= 0)
+         close(fd);
     }
-   else if (statbuff.st_mode != 0755)
+   else if ((statbuff.st_mode & 0777) != 0755)
       chmod(buf, 0755);
    mainw = mainW;
    props = NULL;
@@ -179,7 +181,7 @@ char *DtPrinterIcon::Description()
 {
    static char buf[200];
 
-   sprintf(buf, "%s_Print", queue->Name());
+   snprintf(buf, sizeof(buf), "%s_Print", queue->Name());
    char *desc = DtActionDescription(buf);
    return (desc ? desc : (char *)"");
 }
@@ -369,29 +371,36 @@ void DtPrinterIcon::DndCB(BaseUI *obj, char **value, int * /*len*/,
    char *old_LPDEST = NULL;
    ap[0].argClass = DtACTION_FILE;
 
-   char *buf = new char[100];
+   const char *env_lpdest = getenv("LPDEST");
+   size_t buf_cap = strlen(printer->queue->Name()) +
+                    (env_lpdest ? strlen(env_lpdest) : 0) + 100;
+   char *buf = new char[buf_cap];
    switch (dndProtocol)
    {
    case FILENAME_TRANSFER: // Dropping an Object on a printer
       ap[0].u.file.name = *value;
       if (printer->PrintActionExists())
-         sprintf(buf, "%s_Print", printer->queue->Name());
+         snprintf(buf, buf_cap, "%s_Print", printer->queue->Name());
       else
        {
-	 if (old_LPDEST = STRDUP(getenv("LPDEST")))
+	 if (old_LPDEST = STRDUP(env_lpdest))
 	  {
-            sprintf(buf, "LPDEST=%s", printer->queue->Name());
-	    putenv(buf);
+            size_t put_cap = strlen(printer->queue->Name()) + 16;
+            char *put_buf = new char[put_cap];
+            snprintf(put_buf, put_cap, "LPDEST=%s", printer->queue->Name());
+	    putenv(put_buf);
 	  }
-         strcpy(buf, "Print");
+         snprintf(buf, buf_cap, "%s", "Print");
        }
 
       DtActionInvoke(((AnyUI *)printer->mainw->Parent())->BaseWidget(), buf, ap,
 		     1, NULL, NULL, NULL, True, NULL, NULL);
       if (old_LPDEST)
        {
-	 sprintf(buf, "LPDEST=%s", old_LPDEST);
-	 putenv(buf);
+         size_t put_cap = strlen(old_LPDEST) + 16;
+         char *put_buf = new char[put_cap];
+	 snprintf(put_buf, put_cap, "LPDEST=%s", old_LPDEST);
+	 putenv(put_buf);
 	 free(old_LPDEST);
        }
       break;
@@ -406,22 +415,30 @@ void DtPrinterIcon::DndCB(BaseUI *obj, char **value, int * /*len*/,
 	 if (stat(*value, &statbuff) < 0)
 	  {
 	    int fd = creat(*value, 0755);
-	    close(fd);
+            if (fd >= 0)
+	       close(fd);
 	  }
        }
       else
 	 *value = NULL;
       break;
    case DROP_ON_ROOT:
+      if (*value)
       {
       char *x = *value;
       char *y = strchr(x, '\n');
-      *y++ = '\0';
-      char *filename = strchr(y, '\n');
-      *filename++ = '\0';
-      char *work_space = strchr(filename, '\n');
-      if (work_space)
-         *work_space++ = '\0';
+      if (y)
+       {
+         *y++ = '\0';
+         char *filename = strchr(y, '\n');
+         if (filename)
+          {
+            *filename++ = '\0';
+            char *work_space = strchr(filename, '\n');
+            if (work_space)
+               *work_space++ = '\0';
+          }
+       }
       }
       break;
    case TEXT_TRANSFER:
@@ -468,8 +485,10 @@ void DtPrinterIcon::UpdateExpand()
 
 void DtPrinterIcon::Update()
 {
-   char *cmd = new char[200];
-   sprintf(cmd, GET_QUEUE_STATUS, queue->Name());
+   size_t cmd_cap = strlen(GET_QUEUE_STATUS) + strlen(GET_DEVICE_STATUS) +
+                    strlen(queue->Name()) + 64;
+   char *cmd = new char[cmd_cap];
+   snprintf(cmd, cmd_cap, GET_QUEUE_STATUS, queue->Name());
    Invoke *_thread = new Invoke(cmd);
    PrintQueueUp(_thread->status ? false : true);
    delete _thread;
@@ -477,7 +496,15 @@ void DtPrinterIcon::Update()
    int i;
    for (i = 0; i < n_devices; i++)
     {
-      sprintf(cmd, GET_DEVICE_STATUS, queue->Device(i));
+      const char *dev = queue->Device(i);
+      size_t dev_cap = strlen(GET_DEVICE_STATUS) + (dev ? strlen(dev) : 0) + 32;
+      if (dev_cap > cmd_cap)
+       {
+         delete [] cmd;
+         cmd_cap = dev_cap;
+         cmd = new char[cmd_cap];
+       }
+      snprintf(cmd, cmd_cap, GET_DEVICE_STATUS, dev ? dev : "");
       _thread = new Invoke(cmd);
       PrintDeviceUp(_thread->status ? false : true, i);
       delete _thread;
@@ -488,13 +515,13 @@ void DtPrinterIcon::Update()
       PrintDeviceUp(_print_queue_up);
    else
     {
-      sprintf(cmd, GET_DEVICE_STATUS, queue->Name());
+      snprintf(cmd, cmd_cap, GET_DEVICE_STATUS, queue->Name());
       _thread = new Invoke(cmd);
       PrintDeviceUp(_thread->status ? false : true);
       delete _thread;
     }
 #else
-   sprintf(cmd, GET_DEVICE_STATUS, queue->Name());
+   snprintf(cmd, cmd_cap, GET_DEVICE_STATUS, queue->Name());
    _thread = new Invoke(cmd);
    PrintDeviceUp(_thread->status ? false : true);
    delete _thread;

@@ -684,7 +684,7 @@ InitializePaletteList(
       
       /* if the item is the same as the default name provided by the
 	 color Server, save it */
-      if(!save.restoreFlag || defaultName_restore == nullptr) {
+      if(!save.restoreFlag || defaultName_restore[0] == '\0') {
 	if (!(strcmp(loop_palette->name, defaultName)))
 	  loop_palette2 = loop_palette;
       }
@@ -1953,7 +1953,7 @@ _DtmapCB_colorUse(
                                  &str_type_return, &value_return))
     {
         /* make local copy of string */
-        string = (char *) XtMalloc( value_return.size );
+        string = (char *) XtMalloc( strlen(value_return.addr) + 1 );
         strcpy (string, value_return.addr);
 
         if (strcmp(string, HIGH_COLOR_STR) == 0)
@@ -2407,16 +2407,20 @@ restoreColor(
 
     /* get selected palette */
     xrm_name [1] = XrmStringToQuark ("selected_palette");
-    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value)){
-       strcpy(defaultName_restore, value.addr);
+    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value) &&
+        value.addr != nullptr){
+       snprintf(defaultName_restore, sizeof(defaultName_restore), "%s", value.addr);
     }
     else
        defaultName_restore[0] = 0;
 
     /* get selected button */
     xrm_name [1] = XrmStringToQuark ("selected_button");
-    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value)){
-      selected_button = atoi((char *)value.addr);
+    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value) &&
+        value.addr != nullptr){
+      int btn = atoi((char *)value.addr);
+      if (btn >= 0 && btn < XmCO_MAX_NUM_COLORS)
+          selected_button = btn;
     }
 
    /* need to have some variables initialized before creating the
@@ -2426,9 +2430,9 @@ restoreColor(
     GetDefaultPal(shell);
 
     xrm_name [1] = XrmStringToQuark ("ismapped");
-    XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value);
-    /* Are we supposed to be mapped? */
-    if (strcmp(value.addr, "True") == 0) {
+    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value) &&
+        value.addr != nullptr &&
+        strcmp(value.addr, "True") == 0) {
       save.restoreFlag = True;
       Customize(shell);
     }
@@ -2633,7 +2637,7 @@ GetDefaultPal(
                                      &str_type_return, &value_return))
     {
         /* copy string to defaultName */
-        defaultName = (char *) XtMalloc( value_return.size );
+        defaultName = (char *) XtMalloc( strlen(value_return.addr) + 1 );
         strcpy (defaultName, value_return.addr);
         p = strstr (defaultName, PALETTE_SUFFIX);
         if (p) *p = '\0';
@@ -2641,7 +2645,7 @@ GetDefaultPal(
     else
     {
         /* set defaultName to default palette */
-        defaultName = (char *) XtMalloc( strlen(DEFAULT_PALETTE));
+        defaultName = (char *) XtMalloc( strlen(DEFAULT_PALETTE) + 1 );
         strcpy (defaultName, DEFAULT_PALETTE);
     }
 }

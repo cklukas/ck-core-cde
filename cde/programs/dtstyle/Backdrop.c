@@ -775,7 +775,7 @@ ReadBitmapDirectory(
     }
     
     /* create string to contain complete path */
-    statPath = (char *) XtMalloc(strlen(dir) + MAX_STR_LEN + 2);
+    statPath = (char *) XtMalloc(strlen(dir) + MAXPATHLEN + 2);
     strcpy (statPath, dir);
     strcat (statPath, "/");
     pStatPath = statPath + strlen(statPath);
@@ -785,7 +785,7 @@ ReadBitmapDirectory(
     while (filep != nullptr)
     {
         /* append filename to stat path */
-        strcpy (pStatPath, filep->d_name);
+        snprintf (pStatPath, MAXPATHLEN + 1, "%s", filep->d_name);
 
         /* stat the file */
         if ((stat_result = stat (statPath, &stat_buf)) != 0)
@@ -957,7 +957,7 @@ MakeListStrings( void )
 	    if (XrmGetResource (bd_DB, name_str, class_str, &str_type_return, &value_return))
 	      {
 		/* make copy of resource value */
-		backdrops.bitmapDescs[i] = (char *) XtMalloc(value_return.size + 1);
+		backdrops.bitmapDescs[i] = (char *) XtMalloc(strlen(value_return.addr) + 1);
 		strcpy (backdrops.bitmapDescs[i], value_return.addr);
 	      }    
 	    else
@@ -965,6 +965,8 @@ MakeListStrings( void )
 		backdrops.bitmapDescs[i] = (char *) XtMalloc(strlen(backdrops.bitmapNames[i]) + 1);
 		strcpy(backdrops.bitmapDescs[i], backdrops.bitmapNames[i]);
 	      }
+	    XtFree(name_str);
+	    XtFree(class_str);
 	  }
 	else
 	  {	  
@@ -1187,9 +1189,9 @@ FreeAll( void )
     for (i = 0; i < backdrops.numBitmaps; i++) {
         if (backdrops.bitmaps[i]) 
             XFreePixmap (style.display, backdrops.bitmaps[i]);
-    if (backdrops.numBitmaps)
-        XtFree((char *)backdrops.bitmaps);  
     }
+    if (backdrops.numBitmaps)
+        XtFree((char *)backdrops.bitmaps);
 
     /* destory widgets (via first parent) */
     XtDestroyWidget (XtParent(style.backdropDialog));
@@ -1266,9 +1268,9 @@ restoreBackdrop(
     }
 
     xrm_name [1] = XrmStringToQuark ("ismapped");
-    XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value);
-    /* Are we supposed to be mapped? */
-    if (strcmp(value.addr, "True") == 0)
+    if (XrmQGetResource (db, xrm_name, xrm_name, &rep_type, &value) &&
+        value.addr != nullptr &&
+        strcmp(value.addr, "True") == 0)
         BackdropDialog(shell);
 }
 

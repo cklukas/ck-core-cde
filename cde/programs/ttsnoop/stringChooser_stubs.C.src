@@ -283,19 +283,24 @@ stringOkayed(
 	    DtTtSetLabel( label, "tt_ptype_exists()", status );
 	    break;
 	case _DtStringChooseSystem:
-	    ival = system( string );
+	    ival = (string != 0) ? system( string ) : 0;
 	    DtTtSetLabel( label, "system()", ival );
 	    break;
-	case _DtStringChoosePutenv:
-	    ival = putenv( string );
+	case _DtStringChoosePutenv: {
+	    char *envCopy = (string != 0) ? strdup( string ) : 0;
+	    ival = (envCopy != 0) ? putenv( envCopy ) : -1;
+	    if ((ival != 0) && (envCopy != 0)) {
+		    free( envCopy );
+	    }
 	    DtTtSetLabel( label, "putenv()", ival );
-	    break;
+	    } break;
 	case _DtStringChooseNetfile2File:
 	    file = tt_netfile_file( string );
 	    DtTtSetLabel( label, "tt_netfile_file()", file );
-	    if (! tt_is_err( tt_ptr_error( file ))) {
-		    snoopStream << "tt_netfile_file( \"" << string
+	    if ((file != 0) && ! tt_is_err( tt_ptr_error( file ))) {
+		    snoopStream << "tt_netfile_file( \"" << (string ? string : "")
 			    << "\" ) = \"" << file << "\"" << endl;
+		    tt_free( file );
 	    }
 	    break;
 	default:

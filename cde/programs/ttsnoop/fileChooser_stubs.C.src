@@ -137,6 +137,9 @@ _DtFileChooserSet(
 	XtVaSetValues( instance->fchooser_shell, XmNtitle, title, NULL );
 
 	// Remember dialog mode, entity
+	XtPointer oldInfo = 0;
+	XtVaGetValues( instance->fchooser, XmNuserData, &oldInfo, NULL );
+	delete (FileChooserInfo *)oldInfo;
 	FileChooserInfo *info = new FileChooserInfo;
 	info->choice = choice;
 	info->entity = entity;
@@ -205,17 +208,21 @@ fileOkayed(
 	    abort();
 	    return;
     }
-    if ((path != 0) && (path[0] == '\0')) {
+    char *rawPath = path;
+    if (path[0] == '\0') {
 	    path = 0;
     }
-    XtPointer xtPtr;
+    XtPointer xtPtr = 0;
     XtVaGetValues( instance->fchooser, XmNuserData, &xtPtr, NULL );
     FileChooserInfo *info = (FileChooserInfo *)xtPtr;
+    if (info == 0) {
+	    XtFree( rawPath );
+	    return;
+    }
     Widget label = dtb_ttsnoop_ttsnoop_win.ttsnoopWin_label;
     std::ostringstream script;
     switch (info->choice) {
 	    Tt_pattern *pats;
-	    Tt_message msg;
 	    Tt_status status;
 	    int ival;
 	    char *sess, *val;
@@ -275,22 +282,26 @@ fileOkayed(
 	case _DtFileChooseNetfile:
 	    val = tt_file_netfile( path );
 	    DtTtSetLabel( label, "tt_file_netfile()", val );
-	    if (! tt_is_err( tt_ptr_error( val ))) {
-		    snoopStream << "tt_file_netfile( \"" << val
+	    if ((val != 0) && ! tt_is_err( tt_ptr_error( val ))) {
+		    snoopStream << "tt_file_netfile( \"" << (path ? path : "")
 			    << "\" ) = \"" << val << "\"" << endl;
+		    tt_free( val );
 	    }
 	    break;
 	case _DtFileChooseChdir:
-	    ival = chdir( path );
+	    ival = (path != 0) ? chdir( path ) : -1;
 	    DtTtSetLabel( label, "chdir()", ival );
 	    break;
 	case _DtFileChooseTypesLoad:
+	    if (path == 0) {
+		    break;
+	    }
 	    //
 	    // Validate types file, with tt_type_comp -p
 	    // (A corrupt file could crash ttsession.)
 	    //
-	    script << "numChars=`tt_type_comp -p \"" << path;
-	    script << "\" | wc -c`; if [ $numChars = 0 ]; "
+	    script << "numChars=`tt_type_comp -p " << DtTtShellQuote( path );
+	    script << " | wc -c`; if [ $numChars = 0 ]; "
 		      "then exit 1; else exit 0; fi" << endl;
 	    ival = system( script.str().c_str() );
 	    if (! WIFEXITED( ival )) {
@@ -301,7 +312,7 @@ fileOkayed(
 	    if (WEXITSTATUS( ival ) != 0) {
 		    std::ostringstream diagnosis;
 		    diagnosis << "tt_type_comp -p: syntax error in "
-			    << path << ends;
+			    << path;
 		    DtTtSetLabel( label, diagnosis.str().c_str() );
 		    break;
 	    }
@@ -313,6 +324,7 @@ fileOkayed(
 	default:
 	    break;
     }
+    XtFree( rawPath );
     XtUnmanageChild( instance->fchooser_shell );
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }

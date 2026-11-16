@@ -1224,7 +1224,7 @@ dtb_help_back_hdlr(
     ** Parse the combined volume/locationID string.  Disable the "More..."
     ** button if there isn't any help info, and enable it if there is.
     */
-    if( buffer == 0 || (*buffer == nullptr) ||
+    if( buffer == 0 || (*buffer == 0) ||
 	(cp=strrchr(buffer,'/')) == (char *)nullptr) {
 		XtSetSensitive(more_button,False);
     }
@@ -1864,7 +1864,8 @@ dtb_show_message(
     }
     if (mbr->action3_callback != nullptr)
     {
-        action_btn = dtb_MessageBoxGetActionButton(msg_dlg, DTB_ACTION3_BUTTON);        if (action_btn != nullptr)
+        action_btn = dtb_MessageBoxGetActionButton(msg_dlg, DTB_ACTION3_BUTTON);
+        if (action_btn != nullptr)
             XtAddCallback(action_btn, XmNactivateCallback,
                           mbr->action3_callback, nullptr);
     }

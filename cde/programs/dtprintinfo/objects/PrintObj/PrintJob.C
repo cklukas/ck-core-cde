@@ -115,13 +115,18 @@ PrintJob::~PrintJob()
 
 int PrintJob::CancelJob(BaseObj *obj, char **output, BaseObj * /*requestor*/)
 {
-   static char command[256];
    PrintJob *me = (PrintJob *) obj;
+   const char *qname = (me->Parent() && me->Parent()->Name()) ? me->Parent()->Name() : "";
+   const char *jnum = me->_jobNumber ? me->_jobNumber : "";
+   size_t cmd_cap = strlen(qname) + strlen(jnum) + 32;
+   char *command = new char[cmd_cap];
 
 #ifdef aix
-   sprintf(command, "enq -P%s -x%s", me->Parent()->Name(), me->_jobNumber);
+   snprintf(command, cmd_cap, "enq -P%s -x%s", qname, jnum);
 #else
-   sprintf(command, "cancel %s-%s", me->Parent()->Name(), me->_jobNumber);
+   snprintf(command, cmd_cap, "cancel %s-%s", qname, jnum);
 #endif
-   return me->RunCommand(command, NULL, output);
+   int rc = me->RunCommand(command, NULL, output);
+   delete [] command;
+   return rc;
 }

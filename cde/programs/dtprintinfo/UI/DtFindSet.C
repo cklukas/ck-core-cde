@@ -148,7 +148,7 @@ DtFindSet::~DtFindSet()
    int i;
    for (i = 0; i < n_dirs; i++)
     {
-      delete dirs[i];
+      free(dirs[i]);
       delete filenames[i];
     }
    delete []dirs;
@@ -271,7 +271,8 @@ void DtFindSet::ComboBoxCB(ComboBoxObj *obj, char *dir, int position)
 
    FileNames filenames;
    int i;
-   char *buf = new char[400]; // This allows for a directory len of 240 bytes
+   size_t buf_cap = (dir ? strlen(dir) : 0) + 512;
+   char *buf = new char[buf_cap];
 
    findSet->PointerShape(HOUR_GLASS_CURSOR);
    findSet->icons->BeginUpdate();
@@ -286,15 +287,15 @@ void DtFindSet::ComboBoxCB(ComboBoxObj *obj, char *dir, int position)
    filenames = findSet->filenames[position - 1];
    if (filenames->read_it)
     {
-      sprintf(buf, "cd %s 2> /dev/null ; "
+      snprintf(buf, buf_cap, "cd %s 2> /dev/null ; "
 		   "/bin/ls -1 | grep '\\.l\\.pm$' | "
 		   "sed 's/\\.l\\.pm//g' | "
 		   "while read file ; do "
                      "if [ -f $file.m.pm -a -f $file.t.pm ] ; "
 			"then echo $file ; fi ; "
-                   "done", dir);
+                   "done", dir ? dir : ".");
 
-      char *output;
+      char *output = NULL;
       Invoke *_thread = new Invoke(buf, &output);
       char *s, *s1 = output;
       s = s1;
@@ -315,10 +316,17 @@ void DtFindSet::ComboBoxCB(ComboBoxObj *obj, char *dir, int position)
             *s++ = '\0';
 	    if (!(i % 10))
 	     {
-               sprintf(buf, MESSAGE(LoadingIconsL), i, filenames->n_icons);
+               snprintf(buf, buf_cap, MESSAGE(LoadingIconsL), i, filenames->n_icons);
                findSet->icons->UpdateMessage(buf);
 	     }
-	    sprintf(buf, "%s/%s", dir, s1);
+            size_t path_cap = (dir ? strlen(dir) : 0) + strlen(s1) + 16;
+            if (path_cap > buf_cap)
+             {
+               delete [] buf;
+               buf_cap = path_cap;
+               buf = new char[buf_cap];
+             }
+	    snprintf(buf, buf_cap, "%s/%s", dir ? dir : ".", s1);
             filenames->icons[i] = new FindSetIcon(findSet->icons, s1, buf);
 	  }
        }
@@ -334,7 +342,7 @@ void DtFindSet::ComboBoxCB(ComboBoxObj *obj, char *dir, int position)
     }
    findSet->PointerShape(LEFT_SLANTED_ARROW_CURSOR);
    findSet->icons->EndUpdate();
-   sprintf(buf, MESSAGE(IconTitleL), filenames->n_icons);
+   snprintf(buf, buf_cap, MESSAGE(IconTitleL), filenames->n_icons);
    findSet->icon_label->Name(buf);
    if (filenames->n_icons)
       findSet->empty->Visible(false);

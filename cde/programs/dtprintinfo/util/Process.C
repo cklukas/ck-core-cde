@@ -36,6 +36,7 @@
 
 Process::Process()
 {
+   procs = NULL;
 #ifdef aix
    (void)Invoke("ps -e -F \"pid ppid uid command\"", &procs);
 #elif defined(__FreeBSD__)
@@ -46,13 +47,23 @@ Process::Process()
 #endif
    pprocs = (char **)malloc(sizeof(char *));
    NumProcs = 0;
-   strtok(procs, "\n");
-   while(pprocs[NumProcs] = strtok(NULL, "\n"))
+   if (procs)
     {
-      NumProcs++;
-      pprocs = (char **)realloc(pprocs, sizeof(char *) * (NumProcs + 1));
+      if (strtok(procs, "\n") != NULL)
+       {
+         while ((pprocs[NumProcs] = strtok(NULL, "\n")) != NULL)
+          {
+            NumProcs++;
+            pprocs = (char **)realloc(pprocs, sizeof(char *) * (NumProcs + 1));
+          }
+       }
     }
+   pprocs[NumProcs] = NULL;
    last_pid = -1;
+   last_proc = NULL;
+   pid = -1;
+   ppid = -1;
+   uid = (uid_t)-1;
 }
 
 Process::~Process()
@@ -67,11 +78,12 @@ char *Process::GetByPid(pid_t _pid)
 
    if (last_pid == _pid)
       return last_proc;
-   if (_pid)
+   if (_pid > 0)
       for (i = 0; i < NumProcs; i++)
        {
-	 long long_pid, long_ppid, long_uid;
-	 sscanf(pprocs[i], "%ld %ld %ld", &long_pid, &long_ppid, &long_uid);
+	 long long_pid = -1, long_ppid = -1, long_uid = -1;
+	 if (sscanf(pprocs[i], "%ld %ld %ld", &long_pid, &long_ppid, &long_uid) != 3)
+            continue;
 	 pid = (pid_t)long_pid;
 	 ppid = (pid_t)long_ppid;
 	 uid = (uid_t)long_uid;
@@ -113,17 +125,17 @@ char *Process::Command(pid_t _pid)
       // Find first field
       for (s = proc; *s == ' '; s++)
 	 ;
-      for ( ; *s != ' '; s++)
+      for ( ; *s && *s != ' '; s++)
 	 ;
       // Find second field
       for ( ; *s == ' '; s++)
 	 ;
-      for ( ; *s != ' '; s++)
+      for ( ; *s && *s != ' '; s++)
 	 ;
       // Find third field
       for ( ; *s == ' '; s++)
 	 ;
-      for ( ; *s != ' '; s++)
+      for ( ; *s && *s != ' '; s++)
 	 ;
       // Find fourth field
       for ( ; *s == ' '; s++)

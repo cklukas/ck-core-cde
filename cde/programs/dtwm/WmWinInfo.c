@@ -2376,19 +2376,25 @@ WmICCCMToXmString (XTextProperty *wmNameProp)
 						  &xmsTable, &nStrings))
        != Success) || (nStrings <= 0))
   {
+      char *atomName = nullptr;
+
       switch (status)
       {
       case XConverterNotFound:
-	  sprintf(msg, GETMESSAGE (70,5,
+	  atomName = XGetAtomName (DISPLAY, wmNameProp->encoding);
+	  snprintf(msg, sizeof(msg), GETMESSAGE (70,5,
 		    "Window manager cannot convert property %.100s as clientTitle/iconTitle: XmbTextPropertyToTextList"), 
-		  XGetAtomName (DISPLAY,wmNameProp->encoding));
+		  atomName ? atomName : "");
+	  if (atomName) XFree(atomName);
 	  Warning(msg);
 	  break;
 
       case XNoMemory:
-	  sprintf(msg, GETMESSAGE (70, 6, 
+	  atomName = XGetAtomName(DISPLAY, wmNameProp->encoding);
+	  snprintf(msg, sizeof(msg), GETMESSAGE (70, 6, 
 		    "insufficient memory to convert property %.100s as clientTitle/iconTitle: XmbTextPropertyToTextList"),
-		  XGetAtomName(DISPLAY,wmNameProp->encoding));
+		  atomName ? atomName : "");
+	  if (atomName) XFree(atomName);
 	  Warning(msg);
 	  break;
 
@@ -2396,14 +2402,17 @@ WmICCCMToXmString (XTextProperty *wmNameProp)
 	  if ((wmNameProp->encoding == XA_STRING) ||
 	      (wmNameProp->encoding == wmGD.xa_COMPOUND_TEXT))
 	  {
-	      sprintf(msg, LOCALE_MSG, setlocale(LC_ALL, nullptr));
+	      const char *loc = setlocale(LC_ALL, nullptr);
+	      snprintf(msg, sizeof(msg), LOCALE_MSG, loc ? loc : "");
 	  }
 	  else
 	  {
 	      /* Atom was neither STRING nor COMPOUND_TEXT */
-	      sprintf(msg, GETMESSAGE(70, 8, 
+	      atomName = XGetAtomName(DISPLAY, wmNameProp->encoding);
+	      snprintf(msg, sizeof(msg), GETMESSAGE(70, 8, 
 			"Window manager received unknown property as clientTitle/iconTitle: %.100s. Property ignored."),
-		      XGetAtomName(DISPLAY, wmNameProp->encoding));
+		      atomName ? atomName : "");
+	      if (atomName) XFree(atomName);
 	  }
 	  Warning(msg);
 	  break;

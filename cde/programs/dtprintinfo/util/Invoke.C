@@ -98,17 +98,19 @@ Invoke::Invoke(const char *command,   // Command to Run
       if (pipe(m_stderr) < 0)
        {
          if (trap_out)
+          {
             close(m_stdout[0]);
+            close(m_stdout[1]);
+          }
          status = -1;
          return;
        }
     }
-   if (trap_err)
-      Nfdsmsgs = m_stderr[0] + 1;
-   else if (trap_out)
+   Nfdsmsgs = 0;
+   if (trap_out && m_stdout[0] + 1 > Nfdsmsgs)
       Nfdsmsgs = m_stdout[0] + 1;
-   else
-      Nfdsmsgs = 0;
+   if (trap_err && m_stderr[0] + 1 > Nfdsmsgs)
+      Nfdsmsgs = m_stderr[0] + 1;
 
    // ignore these signals
    memset(&action, '\0', sizeof (struct sigaction));
@@ -148,15 +150,24 @@ Invoke::Invoke(const char *command,   // Command to Run
       // start the program 
       execlp(KORNSHELL, "ksh", "-c", command, (char *) 0);
 
-      exit(-1);
+      _exit(-1);
     }
    else if (c_pid == -1)
     {
+      sigaction(SIGINT, &oldsigint_act, NULL);
+      sigaction(SIGQUIT, &oldsigquit_act, NULL);
+
       if (trap_err)
+       {
          close(m_stderr[0]);
+         close(m_stderr[1]);
+       }
 
       if (trap_out)
+       {
          close(m_stdout[0]);
+         close(m_stdout[1]);
+       }
 
       status = -1;
       return;
@@ -206,7 +217,7 @@ Invoke::Invoke(const char *command,   // Command to Run
       out_tmp = *out_ptr;
       out_end = *out_ptr + BUFFER_SIZE - 1;
       out_count = 1;
-      outb_size = BUFFER_SIZE;
+      outb_size = BUFFER_SIZE - 1;
     }
 
    if (trap_err)
@@ -222,11 +233,10 @@ Invoke::Invoke(const char *command,   // Command to Run
          return;
        }
 
-      *err_ptr = (char *) malloc(BUFFER_SIZE);
       err_tmp = *err_ptr;
       err_end = *err_ptr + BUFFER_SIZE - 1;
       err_count = 1;
-      errb_size = BUFFER_SIZE;
+      errb_size = BUFFER_SIZE - 1;
     }
 
    while (trap_out || trap_err)
@@ -282,9 +292,10 @@ Invoke::Invoke(const char *command,   // Command to Run
          else if (out_num == outb_size)
           {
             // filled up a buffer; allocate another one
+            size_t used = (size_t)(out_tmp - *out_ptr) + (size_t)out_num;
             out_count++;
-            *out_ptr = (char *)realloc(*out_ptr, (out_count * BUFFER_SIZE));
-            if (*out_ptr == NULL)
+            char *next_out = (char *)realloc(*out_ptr, (out_count * BUFFER_SIZE));
+            if (next_out == NULL)
              {
                close(m_stdout[0]);
                if (trap_err)
@@ -292,16 +303,16 @@ Invoke::Invoke(const char *command,   // Command to Run
                status = -1;
                return;
              }
-
-            out_tmp = *out_ptr + ((out_count - 1) * BUFFER_SIZE);
-            out_end = out_tmp + BUFFER_SIZE - 1;
-            outb_size = BUFFER_SIZE;
+            *out_ptr = next_out;
+            out_tmp = *out_ptr + used;
+            out_end = *out_ptr + (out_count * BUFFER_SIZE) - 1;
+            outb_size = (int)(out_end - out_tmp);
 	  }
          else if (out_num > 0)
           {
             // read less than a full buffer; reset amount to read next
             out_tmp += out_num;
-            outb_size = out_end - out_tmp + 1;
+            outb_size = (int)(out_end - out_tmp);
             outb_size = (outb_size > 0) ? outb_size : 0;
           }
        } // if trap_out
@@ -330,9 +341,10 @@ Invoke::Invoke(const char *command,   // Command to Run
          else if (err_num == errb_size)
           {
             // filled up a buffer; allocate another one
+            size_t used = (size_t)(err_tmp - *err_ptr) + (size_t)err_num;
             err_count++;
-            *err_ptr = (char *)realloc(*err_ptr, (err_count * BUFFER_SIZE));
-            if (*err_ptr == NULL)
+            char *next_err = (char *)realloc(*err_ptr, (err_count * BUFFER_SIZE));
+            if (next_err == NULL)
              {
                close(m_stderr[0]);
                if (trap_out)
@@ -340,16 +352,16 @@ Invoke::Invoke(const char *command,   // Command to Run
                status = -1;
                return;
              }
-
-            err_tmp = *err_ptr + ((err_count - 1) * BUFFER_SIZE);
-            err_end = err_tmp + BUFFER_SIZE - 1;
-            errb_size = BUFFER_SIZE;
+            *err_ptr = next_err;
+            err_tmp = *err_ptr + used;
+            err_end = *err_ptr + (err_count * BUFFER_SIZE) - 1;
+            errb_size = (int)(err_end - err_tmp);
           }
          else if (err_num > 0)
           {
             // read less than a full buffer; reset amount to read next
             err_tmp += err_num;
-            errb_size = err_end - err_tmp + 1;
+            errb_size = (int)(err_end - err_tmp);
             errb_size = (errb_size > 0) ? errb_size : 0;
           }
        } // if trap_err

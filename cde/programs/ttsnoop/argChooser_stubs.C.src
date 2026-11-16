@@ -430,7 +430,6 @@ argOkayed(
     }
 
     switch (choice) {
-	    Tt_status status;
 	case _DtArgChooseMessageArgAdd:
 	case _DtArgChooseMessageIArgAdd:
 	case _DtArgChooseMessageArgSet:
@@ -438,6 +437,7 @@ argOkayed(
 	case _DtArgChooseMessageContextSet:
 	case _DtArgChooseMessageIContextSet:
 	    _DtTtMessageUpdate( msg, choice, nth, mode, vtype, val, ival );
+	    break;
 	case _DtArgChoosePatternArgAdd:
 	case _DtArgChoosePatternIArgAdd:
 	case _DtArgChoosePatternContextAdd:

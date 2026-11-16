@@ -343,9 +343,10 @@ void MotifUI::SetDefaultResources(const Widget,
    i = 0;
    while (resources[i])
     {
-      char *buf = new char[1000];
+      size_t buf_cap = strlen(_name) + strlen(resources[i]) + 1;
+      char *buf = new char[buf_cap];
 
-      sprintf(buf, "%s%s", _name, resources[i]);
+      snprintf(buf, buf_cap, "%s%s", _name, resources[i]);
       XrmPutLineResource(&rdb, buf);
       i++;
 
@@ -363,8 +364,8 @@ void MotifUI::NotifyDelete(BaseUI *obj)
    MotifUI *p = (MotifUI *) obj;
    if (p->_w)
     {
-      XtRemoveCallback(_w, XmNdestroyCallback, &MotifUI::WidgetDestroyCB, 
-		       (XtPointer) this);
+      XtRemoveCallback(p->_w, XmNdestroyCallback, &MotifUI::WidgetDestroyCB, 
+		       (XtPointer) p);
       XtDestroyWidget(p->_w);
       p->_w = NULL;
     }

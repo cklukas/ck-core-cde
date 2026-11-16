@@ -28,6 +28,7 @@
 #ifndef DTTT_H
 #define DTTT_H
 
+#include <string>
 #include <Tt/tttk.h>
 #include "tt_c++.h"
 #include "ttChooser_ui.h"
@@ -145,11 +146,11 @@ typedef void		(*DtTtMessageUpdateCallback)(
 			);
 
 /*
- * Returns elem2Append on success, 0 on failure
+ * Returns 1 on success, 0 on failure
  */
 #define listAppend( list, listCount, type, elem2Append )		\
 	(  listGrow( (void **)&list, listCount, sizeof( type ) )	\
-	 ? (list[ listCount - 1 ] = elem2Append)			\
+	 ? ((list[ listCount - 1 ] = (elem2Append)), 1)			\
 	 : 0 )
 
 int			listGrow(
@@ -359,6 +360,9 @@ void			_DtTtMessageUpdate(
 int			_DtCreateTemporaryFile(
 				const char *		prefix,
 				char **			path
+			);
+std::string		DtTtShellQuote(
+				const char *		arg
 			);
 void			_DtOpen(
 				Widget			label,

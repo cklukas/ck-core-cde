@@ -93,7 +93,8 @@ fork_tttrace(
     tttraceCmd << globalSaveLines;
     tttraceCmd << " -title tttrace -geometry 120x24 -e tttrace &";
     DtTtSetLabel( instance->ttsnoopWin_label, "tttrace" );
-    system( tttraceCmd.str().c_str() );
+    int status = system( tttraceCmd.str().c_str() );
+    (void) status;
     /*** DTB_USER_CODE_END   ^^^ Add C code above ^^^ ***/
 }
 
@@ -670,7 +671,8 @@ libcPause(
     script << "CONT; then ";
     // After confirmation, invoke kill(1)
     script << "kill -CONT " << getpid() << "; fi)&";
-    system( script.str().c_str() );
+    int status = system( script.str().c_str() );
+    (void) status;
 
     // Run the event loop a few laps, to paint the footer
     tttk_block_while( XtWidgetToApplicationContext( widget ), 0, 50 );
@@ -1336,7 +1338,7 @@ toggleSnooping(
 	    snoopPatIsRegistered = ! snoopPatIsRegistered;
     }
     std::ostringstream stream;
-    stream << func << (void *)snoopPat << ")" << ends;
+    stream << func << (void *)snoopPat << ")";
     DtTtSetLabel( instance->ttsnoopWin_label, stream.str().c_str(), status );
     DtTtSetLabel( instance->menubar_Snoop_item_Snoop_menu_items.Off_item,
 		  snoopPatIsRegistered ? "Off" : "On" );
