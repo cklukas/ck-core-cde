@@ -214,7 +214,7 @@ static void view_set_maximized(DtwmView *view, bool maximized) {
         view->has_saved_geom = true;
 
         struct wlr_box obox;
-        get_primary_output_box(view->server, view->x + 32, view->y + 32, &obox);
+        dtwm_get_usable_output_box(view->server, view->x + 32, view->y + 32, &obox);
         view->maximized = true;
         int l, t, r, b;
         dtwm_view_insets(view, &l, &t, &r, &b);
@@ -247,17 +247,17 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
     }
     view->minimized = minimized;
     if (view->frame_tree) {
-        wlr_scene_node_set_enabled(&view->frame_tree->node, !minimized && view->mapped);
+        wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     }
     if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
         wlr_xwayland_surface_set_minimized(view->xwayland_surface, minimized);
     }
     if (minimized && view->server->focused_view == view) {
         clear_active_focus(view->server);
-        /* Focus next visible view if any */
+        /* Focus next visible view on current workspace if any */
         DtwmView *cand;
         wl_list_for_each(cand, &view->server->views, link) {
-            if (cand != view && cand->mapped && !cand->minimized) {
+            if (cand != view && dtwm_view_visible_on_current_ws(cand)) {
                 focus_view(view->server, cand, nullptr);
                 break;
             }
@@ -379,7 +379,16 @@ static void execute_menu_action(DtwmServer *server, int idx) {
             wlr_scene_node_lower_to_bottom(&v->frame_tree->node);
         }
         break;
-    case 6: /* Close */
+    case 6: { /* Occupy All Workspaces / Unoccupy Other Workspaces */
+        uint32_t all_mask = (1u << server->num_workspaces) - 1u;
+        if ((v->workspace_mask & all_mask) == all_mask) {
+            dtwm_view_set_workspace_mask(v, 1u << server->current_workspace);
+        } else {
+            dtwm_view_set_workspace_mask(v, all_mask);
+        }
+        break;
+    }
+    case 7: /* Close */
         view_close(v);
         break;
     default:
@@ -390,7 +399,7 @@ static void execute_menu_action(DtwmServer *server, int idx) {
 /* --- Snap Preview & Task Switcher --- */
 static DtwmSnapZone compute_snap_zone(DtwmServer *server, double cx, double cy, struct wlr_box *snap_box) {
     struct wlr_box obox;
-    get_primary_output_box(server, cx, cy, &obox);
+    dtwm_get_usable_output_box(server, cx, cy, &obox);
     bool left = (cx - obox.x) < DTWM_SNAP_THRESHOLD;
     bool right = (obox.x + obox.width - cx) < DTWM_SNAP_THRESHOLD;
     bool top = (cy - obox.y) < DTWM_SNAP_THRESHOLD;
@@ -445,7 +454,7 @@ static void show_or_cycle_task_switcher(DtwmServer *server) {
     int count = 0;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
-        if (v->mapped) count++;
+        if (dtwm_view_visible_on_current_ws(v)) count++;
     }
     if (count == 0) {
         return;
@@ -481,13 +490,13 @@ static void hide_task_switcher(DtwmServer *server, bool activate_selected) {
         int count = 0;
         DtwmView *v;
         wl_list_for_each(v, &server->views, link) {
-            if (v->mapped) count++;
+            if (dtwm_view_visible_on_current_ws(v)) count++;
         }
         if (count > 0) {
             int target = server->switcher_index % count;
             int idx = 0;
             wl_list_for_each(v, &server->views, link) {
-                if (!v->mapped) continue;
+                if (!dtwm_view_visible_on_current_ws(v)) continue;
                 if (idx == target) {
                     chosen = v;
                     break;
@@ -713,6 +722,10 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         return;
     }
 
+    if (dtwm_front_panel_click(server, server->cursor->x, server->cursor->y, ev->button)) {
+        return;
+    }
+
     double sx = 0, sy = 0;
     struct wlr_surface *surface = nullptr;
     DtwmFramePart part = DTWM_PART_NONE;
@@ -803,6 +816,25 @@ static void handle_keyboard_modifiers(struct wl_listener *listener, void *data) 
 }
 
 static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_keysym_t sym) {
+    if ((mods & WLR_MODIFIER_CTRL) && (mods & WLR_MODIFIER_ALT)) {
+        if (sym >= XKB_KEY_1 && sym <= XKB_KEY_8) {
+            uint32_t ws = (uint32_t)(sym - XKB_KEY_1);
+            if (ws < server->num_workspaces) {
+                dtwm_switch_workspace(server, ws);
+            }
+            return true;
+        }
+        if (sym == XKB_KEY_Right && server->num_workspaces > 1) {
+            dtwm_switch_workspace(server, (server->current_workspace + 1) % server->num_workspaces);
+            return true;
+        }
+        if (sym == XKB_KEY_Left && server->num_workspaces > 1) {
+            dtwm_switch_workspace(
+                server, (server->current_workspace + server->num_workspaces - 1) % server->num_workspaces
+            );
+            return true;
+        }
+    }
     if ((mods & WLR_MODIFIER_ALT) && (sym == XKB_KEY_Tab || sym == XKB_KEY_ISO_Left_Tab)) {
         show_or_cycle_task_switcher(server);
         return true;
@@ -1003,14 +1035,19 @@ static void handle_output_request_state(struct wl_listener *listener, void *data
 static void handle_output_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmOutput *output = wl_container_of(listener, output, destroy);
+    DtwmServer *server = output->server;
     wl_list_remove(&output->frame.link);
     wl_list_remove(&output->request_state.link);
     wl_list_remove(&output->destroy.link);
     wl_list_remove(&output->link);
+    if (output->backdrop_buf) {
+        wlr_scene_node_destroy(&output->backdrop_buf->node);
+    }
     if (output->bg_rect) {
         wlr_scene_node_destroy(&output->bg_rect->node);
     }
     free(output);
+    dtwm_update_front_panel(server);
 }
 
 static void handle_new_output(struct wl_listener *listener, void *data) {
@@ -1042,7 +1079,7 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     output->destroy.notify = handle_output_destroy;
     wl_signal_add(&wlr_output->events.destroy, &output->destroy);
 
-    wl_list_insert(&server->outputs, &output->link);
+    wl_list_insert(server->outputs.prev, &output->link);
 
     struct wlr_output_layout_output *l_output = wlr_output_layout_add_auto(server->output_layout, wlr_output);
     struct wlr_scene_output *scene_output = wlr_scene_output_create(server->scene, wlr_output);
@@ -1059,6 +1096,9 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     output->bg_rect = wlr_scene_rect_create(server->bg_tree, obox.width, obox.height, bg);
     wlr_scene_node_set_position(&output->bg_rect->node, obox.x, obox.y);
 
+    dtwm_update_output_backdrop(output);
+    dtwm_update_front_panel(server);
+
     wlr_xcursor_manager_load(server->cursor_mgr, wlr_output->scale);
 }
 
@@ -1068,10 +1108,10 @@ static void place_initial_view(DtwmView *view) {
     int idx = 0;
     DtwmView *it;
     wl_list_for_each(it, &server->views, link) {
-        if (it != view && it->mapped) idx++;
+        if (it != view && dtwm_view_visible_on_current_ws(it)) idx++;
     }
     struct wlr_box obox;
-    get_primary_output_box(server, server->cursor->x, server->cursor->y, &obox);
+    dtwm_get_usable_output_box(server, server->cursor->x, server->cursor->y, &obox);
     view->x = obox.x + 48 + (idx % 6) * 36;
     view->y = obox.y + 40 + (idx % 6) * 32;
     if (view->frame_tree) {
@@ -1088,9 +1128,11 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     view->client_w = geo.width > 0 ? geo.width : view->xdg_toplevel->base->surface->current.width;
     view->client_h = geo.height > 0 ? geo.height : view->xdg_toplevel->base->surface->current.height;
     place_initial_view(view);
-    wlr_scene_node_set_enabled(&view->frame_tree->node, true);
+    wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     dtwm_view_update_frame(view);
-    focus_view(view->server, view, view->xdg_toplevel->base->surface);
+    if (dtwm_view_visible_on_current_ws(view)) {
+        focus_view(view->server, view, view->xdg_toplevel->base->surface);
+    }
 }
 
 static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
@@ -1461,9 +1503,13 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
         place_initial_view(view);
     }
     wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
+    dtwm_workspaces_on_xwayland_view_map(view);
+    wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     sync_xwayland_client_pos(view);
     dtwm_view_update_frame(view);
-    focus_view(view->server, view, xs->surface);
+    if (dtwm_view_visible_on_current_ws(view)) {
+        focus_view(view->server, view, xs->surface);
+    }
 }
 
 static void xwayland_unmap(struct wl_listener *listener, void *data) {
@@ -1666,6 +1712,7 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
             (int32_t)xcur->images[0]->hotspot_y
         );
     }
+    dtwm_workspaces_on_xwayland_ready(server);
     write_status_file(server);
 }
 
@@ -1680,30 +1727,32 @@ int main(int argc, char **argv) {
     const char *startup_cmd = nullptr;
     const char *status_file = nullptr;
     bool greeter_mode = false;
+    bool no_panel = false;
 
     static const struct option long_opts[] = {
         {"startup", required_argument, nullptr, 's'},
         {"status-file", required_argument, nullptr, 'f'},
         {"session", no_argument, nullptr, 'S'},
         {"greeter", no_argument, nullptr, 'g'},
+        {"no-panel", no_argument, nullptr, 'P'},
         {"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0},
     };
     int opt;
-    while ((opt = getopt_long(argc, argv, "s:f:Sgh", long_opts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "s:f:SgPh", long_opts, nullptr)) != -1) {
         switch (opt) {
         case 's': startup_cmd = optarg; break;
         case 'f': status_file = optarg; break;
         case 'S': break;
         case 'g': greeter_mode = true; break;
+        case 'P': no_panel = true; break;
         case 'h':
-            printf("Usage: %s [--session] [--greeter] [--status-file PATH] [--startup CMD]\n", argv[0]);
+            printf("Usage: %s [--session] [--greeter] [--no-panel] [--status-file PATH] [--startup CMD]\n", argv[0]);
             return 0;
         default:
             return 2;
         }
     }
-    (void)greeter_mode;
 
     wlr_log_init(WLR_INFO, nullptr);
 
@@ -1773,6 +1822,11 @@ int main(int argc, char **argv) {
     wlr_scene_node_set_enabled(&server.menu_buf->node, false);
     server.switcher_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
     wlr_scene_node_set_enabled(&server.switcher_buf->node, false);
+
+    dtwm_workspaces_init(&server);
+    if (greeter_mode || no_panel) {
+        server.show_front_panel = false;
+    }
 
     server.new_output.notify = handle_new_output;
     wl_signal_add(&server.backend->events.new_output, &server.new_output);
@@ -1874,6 +1928,7 @@ int main(int argc, char **argv) {
 
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);
+    dtwm_workspaces_finish(&server);
     if (server.xwayland) wlr_xwayland_destroy(server.xwayland);
     wl_display_destroy_clients(server.wl_display);
     wlr_scene_node_destroy(&server.scene->tree.node);

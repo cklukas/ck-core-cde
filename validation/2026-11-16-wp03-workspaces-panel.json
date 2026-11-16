@@ -1,0 +1,23 @@
+{
+  "work_package": "WP-03",
+  "date": "2026-11-16",
+  "branch": "x11_wayland",
+  "motif_revision": "703101cea3db5f9fe5722c43bdb016d098d13804",
+  "fs_lib_revision": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+  "environment": {
+    "vm": "cde-ubuntu2604",
+    "os": "Ubuntu 26.04.1 LTS (aarch64)",
+    "kernel": "7.0.0-34-generic",
+    "compiler": "Ubuntu clang 21.1.8 (-std=c23)",
+    "wlroots": "0.19"
+  },
+  "artifacts": {
+    "libDtSvc.so.2.1.0_sha256": "da5d55079ba34e22d0313b703969954a6255dc6dc5027a84b266496e481b6cf4",
+    "dtwm-wayland_sha256": "d6a0d5f9f6078050055e9af4d12762c6ab3ddad2570a9679b88c26f5bac45d10"
+  },
+  "checks": [
+    "make -C programs/dtwm check (all 9 suites passed)",
+    "check-dtwm-wayland.py: crimson=10294px, slate=54227px, unfocused=0px",
+    "check-dtwm-wayland-workspaces.py: libDtSvc WSM query/OccupyAll/SetCurrent/ChangeBackdrop/Add/Rename/Delete + Front Panel click switch + ext-workspace-v1 activate + maximize strut=(174, 178, 195)"
+  ]
+}

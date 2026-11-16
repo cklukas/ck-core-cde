@@ -42,6 +42,36 @@ framing or interaction rules.
   switcher, and `Alt+Space` opens the window menu;
 - Clicking the desktop background clears active-window focus.
 
+## CDE workspaces, per-workspace backdrops, and Front Panel
+
+`cde_workspace.c` implements CDE's multi-workspace desktop model across both
+Wayland and XWayland clients:
+
+- Four default workspaces (`ws0` = *One*, `ws1` = *Two*, `ws2` = *Three*,
+  `ws3` = *Four*) with dynamic workspace creation, renaming, and deletion up to
+  eight workspaces, per-window occupancy bitmasks, and the *Occupy All
+  Workspaces* / *Unoccupy Other Workspaces* action in the CDE Window Menu;
+- Per-workspace CDE `.pm` (XPM) and `.bm` (XBM) backdrop rendering
+  (`InlayPlain`, `SkyDark`, `Pebbles`, `Paver`, `BrickWall`, and `/usr/dt/backdrops`
+  assets) recolored dynamically to each workspace's CDE color set in tiled,
+  centered, or scaled mode;
+- Full XWayland `libDtSvc` Workspace Manager property bridge publishing
+  `_MOTIF_WM_INFO`, `_DT_WORKSPACE_LIST`, `_DT_WORKSPACE_CURRENT`,
+  `_DT_WORKSPACE_INFO_<ws>`, and per-window `_DT_WORKSPACE_PRESENCE`, honoring
+  client `_DT_WORKSPACE_HINTS` (`DtWsmSetWorkspacesOccupied`,
+  `DtWsmOccupyAllWorkspaces`), and servicing `_DT_WM_REQUEST` commands
+  (`f.change_backdrop`, `f.goto_workspace`, `f.add_workspace`,
+  `f.delete_workspace`, `f.set_workspace_title`), with `libDtSvc` falling back
+  cleanly to `_DT_WM_REQUEST` when `ttsession` is not active;
+- Native Wayland `ext-workspace-v1` server global (`ext_workspace_manager_v1`)
+  advertising workspace groups, coordinates, active state, and atomic commit
+  activation/creation/removal;
+- Docked interactive 3D-beveled CDE Front Panel on the primary output with
+  clickable 2x2 workspace buttons, `Ctrl+Alt+1..8` and `Ctrl+Alt+Left/Right`
+  shortcuts, and bottom strut reservation (`DTWM_PANEL_STRUT`) respected by
+  maximized and edge-snapped windows (`--no-panel` and `--greeter` hide the
+  panel when needed).
+
 ## Readiness reporting and automated verification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`

@@ -57,10 +57,13 @@
 #define DTWM_GRID_SIZE 16
 #define DTWM_SNAP_THRESHOLD 24
 #define DTWM_MAX_WORKSPACES 8
-#define DTWM_MENU_ITEM_COUNT 7
-#define DTWM_MENU_WIDTH 196
+#define DTWM_MENU_ITEM_COUNT 8
+#define DTWM_MENU_WIDTH 216
 #define DTWM_MENU_ITEM_H 24
 #define DTWM_MENU_PAD 4
+#define DTWM_PANEL_WIDTH 840
+#define DTWM_PANEL_HEIGHT 74
+#define DTWM_PANEL_STRUT 76
 
 typedef struct {
     double r, g, b, a;
@@ -175,10 +178,23 @@ struct DtwmView {
 };
 
 typedef struct {
+    char id_name[32];        /* "ws0", "ws1", ... */
+    char title[64];          /* "One", "Two", ... */
+    char backdrop_name[512]; /* "SkyDark", "Pebbles", or explicit path */
+    int color_set_id;
+    int image_type;          /* 0=tiled, 1=center, 2=scaled */
+    DtwmColorSet colors;
+    xcb_atom_t x11_atom;
+    xcb_atom_t info_atom;
+    xcb_atom_t backdrop_atom;
+} DtwmWorkspace;
+
+typedef struct {
     struct wl_list link;
     DtwmServer *server;
     struct wlr_output *wlr_output;
     struct wlr_scene_rect *bg_rect;
+    struct wlr_scene_buffer *backdrop_buf;
     struct wl_listener frame;
     struct wl_listener request_state;
     struct wl_listener destroy;
@@ -233,6 +249,31 @@ struct DtwmServer {
     DtwmPalette palette;
     DtwmView *focused_view;
     uint32_t current_workspace;
+    uint32_t num_workspaces;
+    uint32_t next_ws_serial;
+    DtwmWorkspace workspaces[DTWM_MAX_WORKSPACES];
+
+    /* Docked CDE Front Panel */
+    bool show_front_panel;
+    int panel_x, panel_y, panel_w, panel_h;
+    struct wlr_scene_buffer *panel_buf;
+
+    /* XWayland CDE Workspace Manager (_MOTIF_WM_INFO / _DT_WORKSPACE_*) XCB bridge */
+    xcb_connection_t *xcb_conn;
+    xcb_window_t xcb_root;
+    xcb_window_t xcb_wm_win;
+    struct wl_event_source *xcb_event_source;
+    xcb_atom_t atom_mwm_info;
+    xcb_atom_t atom_ws_list;
+    xcb_atom_t atom_ws_current;
+    xcb_atom_t atom_ws_hints;
+    xcb_atom_t atom_ws_presence;
+    xcb_atom_t atom_wm_request;
+    xcb_atom_t atom_ws_all;
+
+    /* Native Wayland ext-workspace-v1 protocol */
+    struct wl_global *ext_ws_global;
+    struct wl_list ext_ws_managers;
 
     /* Interactive move / resize / snap state */
     DtwmCursorMode cursor_mode;
@@ -289,6 +330,10 @@ struct DtwmServer {
 };
 
 /* cde_bevel.c */
+struct wlr_buffer *dtwm_cairo_buffer_begin(int width, int height, cairo_t **out_cr, cairo_surface_t **out_surf);
+void dtwm_cairo_buffer_finish(cairo_t *cr, cairo_surface_t *surf);
+void dtwm_draw_bevel(cairo_t *cr, double x, double y, double w, double h, double t, DtwmRgba tl_col, DtwmRgba br_col);
+void dtwm_draw_label(cairo_t *cr, const char *text, double x, double y, double w, double h, DtwmRgba fg, bool centered, bool bold);
 void dtwm_palette_init_default(DtwmPalette *pal);
 void dtwm_view_insets(const DtwmView *view, int *left, int *top, int *right, int *bottom);
 void dtwm_view_outer_size(const DtwmView *view, int *out_w, int *out_h);
@@ -300,5 +345,23 @@ uint32_t dtwm_part_to_wlr_edges(DtwmFramePart part);
 struct wlr_buffer *dtwm_render_window_menu(const DtwmPalette *pal, const DtwmView *view, int hover_idx, int *out_w, int *out_h);
 struct wlr_buffer *dtwm_render_snap_preview(const DtwmPalette *pal, int w, int h);
 struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int *out_h);
+
+/* cde_workspace.c */
+bool dtwm_view_visible_on_current_ws(const DtwmView *view);
+void dtwm_workspaces_init(DtwmServer *server);
+void dtwm_workspaces_finish(DtwmServer *server);
+void dtwm_workspaces_on_xwayland_ready(DtwmServer *server);
+void dtwm_workspaces_on_xwayland_view_map(DtwmView *view);
+void dtwm_view_set_workspace_mask(DtwmView *view, uint32_t mask);
+void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx);
+int dtwm_add_workspace(DtwmServer *server, const char *title);
+bool dtwm_delete_workspace(DtwmServer *server, uint32_t ws_idx);
+void dtwm_rename_workspace(DtwmServer *server, uint32_t ws_idx, const char *title);
+void dtwm_set_workspace_backdrop(DtwmServer *server, uint32_t ws_idx, const char *path, int image_type);
+void dtwm_update_output_backdrop(DtwmOutput *output);
+void dtwm_update_all_backdrops(DtwmServer *server);
+void dtwm_update_front_panel(DtwmServer *server);
+bool dtwm_front_panel_click(DtwmServer *server, double lx, double ly, uint32_t button);
+void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, struct wlr_box *out_box);
 
 #endif /* DTWM_WAYLAND_H */

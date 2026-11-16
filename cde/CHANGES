@@ -1,4 +1,24 @@
 2026-11-16
+- Implement CDE multi-workspace management, palette-tinted XPM/XBM backdrops,
+  `libDtSvc` / `ext-workspace-v1` protocol bridges, and the docked interactive
+  CDE Front Panel (`WP-03`) in `dtwm-wayland` on the `x11_wayland` branch.
+  - `cde/programs/dtwm/wayland/cde_workspace.c`, `cde_bevel.c`,
+    `dtwm_wayland_main.c`, and `dtwm_wayland.h`: add four default workspaces
+    (*One*..*Four*) with dynamic add/rename/delete, per-window occupancy
+    bitmasks, *Occupy All Workspaces* window-menu toggle, `Ctrl+Alt+1..8` and
+    `Ctrl+Alt+Left/Right` shortcuts, symbolic-color XPM/XBM backdrop rendering,
+    the docked 3D-beveled CDE Front Panel with bottom maximize/snap strut
+    reservation, XWayland `_MOTIF_WM_INFO` / `_DT_WORKSPACE_*` /
+    `_DT_WM_REQUEST` synchronization, and the native Wayland `ext-workspace-v1`
+    protocol server.
+  - `cde/lib/DtSvc/DtUtil1/` (`WmSetWs.c`, `WmAddDelWs.c`, `WmSetTitle.c`): fall
+    back to appending `f.goto_workspace`, `f.add_workspace`,
+    `f.delete_workspace`, and `f.set_workspace_title` to `_DT_WM_REQUEST` on the
+    workspace manager window when ToolTalk (`ttsession`) is unavailable.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland-workspaces.py` and
+    `docs/improvements/wayland.md`: verify `libDtSvc` WSM queries and mutations,
+    Front Panel pointer switching, XPM/XBM backdrop changes, `ext-workspace-v1`
+    activation, and Front Panel maximize strut preservation.
 - Add the `dtwm-wayland` (`wlroots-0.19`) compositor core (`WP-02`) with
   server-side 3D CDE bevel decorations and rootless `Xwayland` integration on
   the `x11_wayland` branch.

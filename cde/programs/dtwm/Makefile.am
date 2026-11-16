@@ -12,7 +12,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-session-counts.py tests/check-session-counts.c \
              tests/check-quit-signal.py tests/check-quit-signal.c \
              tests/check-dtwm-hardening.py tests/check-dtwm-hardening.c \
-             tests/check-dtwm-wayland.py \
+             tests/check-dtwm-wayland.py tests/check-dtwm-wayland-workspaces.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml
 
 check-local:
@@ -25,6 +25,7 @@ check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-hardening.py
 if BUILD_DTWM_WAYLAND
 	python3 $(srcdir)/tests/check-dtwm-wayland.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-workspaces.py --compositor ./dtwm-wayland
 endif
 
 configdir = $(CDE_INSTALLATION_TOP)/config/C
@@ -34,9 +35,12 @@ BUILT_SOURCES = sys.dtwmrc Dtwm.defs
 CLEANFILES = sys.dtwmrc Dtwm.defs
 
 if BUILD_DTWM_WAYLAND
-WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h wayland/wlr-layer-shell-unstable-v1-protocol.h
-BUILT_SOURCES += $(WAYLAND_GEN_HDRS)
-CLEANFILES += $(WAYLAND_GEN_HDRS)
+WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h \
+                   wayland/wlr-layer-shell-unstable-v1-protocol.h \
+                   wayland/ext-workspace-v1-protocol.h
+WAYLAND_GEN_SRCS = wayland/ext-workspace-v1-protocol.c
+BUILT_SOURCES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
+CLEANFILES += $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 
 wayland/xdg-shell-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/stable/xdg-shell/xdg-shell.xml
 	@$(MKDIR_P) wayland
@@ -46,11 +50,21 @@ wayland/wlr-layer-shell-unstable-v1-protocol.h: $(srcdir)/wayland/protocols/wlr-
 	@$(MKDIR_P) wayland
 	$(WAYLAND_SCANNER) server-header $< $@
 
+wayland/ext-workspace-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-workspace/ext-workspace-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/ext-workspace-v1-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-workspace/ext-workspace-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) private-code $< $@
+
 dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_bevel.c \
+                       wayland/cde_workspace.c \
                        wayland/dtwm_wayland_main.c
-nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS)
-dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1
+nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
+dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1 \
+                        -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\"
 dtwm_wayland_CFLAGS = $(WAYLAND_COMP_CFLAGS)
 dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS)
 endif

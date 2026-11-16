@@ -48,10 +48,28 @@
 #include <Dt/WsmP.h> 
 #include <Dt/WsmM.h>
 #include <Dt/Service.h>
+#include <X11/Xatom.h>
 #include <Xm/Xm.h>
 #include <Xm/AtomMgr.h>
 #include <Tt/tttk.h>
 #include "DtSvcLock.h"
+
+static int
+_DtWsmAppendWmRequest(Widget widget, const char *req)
+{
+    if (!widget || !req)
+        return dtmsg_FAIL;
+    Display *dpy = XtDisplay(widget);
+    Window root = RootWindowOfScreen(XtScreen(widget));
+    Window wmWindow = None;
+    if (_DtGetMwmWindow(dpy, root, &wmWindow) != Success || wmWindow == None)
+        return dtmsg_FAIL;
+    Atom prop = XmInternAtom(dpy, _XA_DT_WM_REQUEST, False);
+    XChangeProperty(dpy, wmWindow, prop, XA_STRING, 8, PropModeAppend,
+                    (const unsigned char *)req, (int)strlen(req) + 1);
+    XFlush(dpy);
+    return dtmsg_SUCCESS;
+}
 
 /*************************************<->*************************************
  *
@@ -98,8 +116,11 @@ DtWsmSetCurrentWorkspace (
 	    "DtWorkspace_SetCurrent", 0);
     status = tt_ptr_error(msg);
     if (status != TT_OK) {
+	char req[96];
+	snprintf(req, sizeof req, "f.goto_workspace %s", pch);
+	int fb = _DtWsmAppendWmRequest(widget, req);
 	_DtSvcAppUnlock(app);
-	return dtmsg_FAIL;
+	return fb;
     }
     status = tt_message_arg_add(msg, TT_IN, "integer", nullptr);
     if (status != TT_OK) {
@@ -124,8 +145,12 @@ DtWsmSetCurrentWorkspace (
     }
     status = tt_message_send(msg);
     if (status != TT_OK) {
+	tt_message_destroy(msg);
+	char req[96];
+	snprintf(req, sizeof req, "f.goto_workspace %s", pch);
+	int fb = _DtWsmAppendWmRequest(widget, req);
 	_DtSvcAppUnlock(app);
-	return dtmsg_FAIL;
+	return fb;
     }
 
     _DtSvcAppUnlock(app);

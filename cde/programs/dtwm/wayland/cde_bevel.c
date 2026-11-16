@@ -68,6 +68,28 @@ static DtwmCairoBuffer *dtwm_cairo_buffer_create(int width, int height, cairo_t 
     return buf;
 }
 
+struct wlr_buffer *dtwm_cairo_buffer_begin(
+    int width, int height, cairo_t **out_cr, cairo_surface_t **out_surf
+) {
+    DtwmCairoBuffer *buf = dtwm_cairo_buffer_create(width, height, out_cr);
+    if (!buf) {
+        return nullptr;
+    }
+    if (out_surf) {
+        *out_surf = buf->surface;
+    }
+    return &buf->base;
+}
+
+void dtwm_cairo_buffer_finish(cairo_t *cr, cairo_surface_t *surf) {
+    if (surf) {
+        cairo_surface_flush(surf);
+    }
+    if (cr) {
+        cairo_destroy(cr);
+    }
+}
+
 static inline void set_rgba(cairo_t *cr, DtwmRgba c) {
     cairo_set_source_rgba(cr, c.r, c.g, c.b, c.a);
 }
@@ -102,6 +124,12 @@ static void draw_bevel(
     cairo_line_to(cr, x + w - t, y + t);
     cairo_close_path(cr);
     cairo_fill(cr);
+}
+
+void dtwm_draw_bevel(
+    cairo_t *cr, double x, double y, double w, double h, double t, DtwmRgba tl_col, DtwmRgba br_col
+) {
+    draw_bevel(cr, x, y, w, h, t, tl_col, br_col);
 }
 
 static void draw_groove_line_v(
@@ -217,6 +245,12 @@ static void draw_pango_label(
 
     pango_font_description_free(desc);
     g_object_unref(layout);
+}
+
+void dtwm_draw_label(
+    cairo_t *cr, const char *text, double x, double y, double w, double h, DtwmRgba fg, bool centered, bool bold
+) {
+    draw_pango_label(cr, text, x, y, w, h, fg, centered, bold);
 }
 
 void dtwm_view_update_frame(DtwmView *view) {
@@ -439,13 +473,19 @@ uint32_t dtwm_part_to_wlr_edges(DtwmFramePart part) {
 struct wlr_buffer *dtwm_render_window_menu(
     const DtwmPalette *pal, const DtwmView *view, int hover_idx, int *out_w, int *out_h
 ) {
-    static const char *const items[DTWM_MENU_ITEM_COUNT] = {
+    uint32_t all_mask = 0xFu;
+    if (view && view->server && view->server->num_workspaces > 0) {
+        all_mask = (1u << view->server->num_workspaces) - 1u;
+    }
+    bool occupies_all = view && ((view->workspace_mask & all_mask) == all_mask);
+    const char *items[DTWM_MENU_ITEM_COUNT] = {
         "Restore",
         "Move",
         "Size",
         "Minimize",
         "Maximize",
         "Lower",
+        occupies_all ? "Unoccupy Other Workspaces" : "Occupy All Workspaces",
         "Close          Alt+F4",
     };
     int w = DTWM_MENU_WIDTH;
@@ -509,7 +549,7 @@ struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int
     int count = 0;
     DtwmView *v;
     wl_list_for_each(v, &server->views, link) {
-        if (v->mapped) {
+        if (dtwm_view_visible_on_current_ws(v)) {
             count++;
         }
     }
@@ -544,7 +584,7 @@ struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int
     int idx = 0;
     double y = 36;
     wl_list_for_each(v, &server->views, link) {
-        if (!v->mapped) {
+        if (!dtwm_view_visible_on_current_ws(v)) {
             continue;
         }
         bool sel = (idx == (server->switcher_index % count));

@@ -45,7 +45,7 @@ Deliver a first-class, `apt`-installable **CK Core CDE Wayland Desktop Session**
   - Render pixel-identical 3D CDE window frames, titlebars, MWM buttons, resize handles, Shift-grid alignment, double-click maximize, half/quadrant snap feedback, and keyboard task switcher (`Dtwm*showTaskSwitcher`) for both native Wayland and XWayland windows.
 - **Acceptance gate**: Automated headless multi-window test verifies identical CDE frames, focus, snap preview, task switcher, and window menu actions across native Wayland and Motif clients under ASan/UBSan.
 
-### [ ] WP-03 — CDE Workspaces, Per-Workspace Backdrops & Front Panel Integration
+### [x] WP-03 — CDE Workspaces, Per-Workspace Backdrops & Front Panel Integration
 - **Repos**: `ck-core-cde` (`cde/programs/dtwm/`, `cde/lib/DtSvc/DtUtil1/`)
 - **Scope**:
   - Implement CDE's workspace model (4 default workspaces, dynamic add/rename/delete, workspace occupancy bitmasks) bridged across `_DT_WORKSPACE_*` / `_DT_WM_REQUEST` XWayland atoms and `ext-workspace-v1` / `zck_cde_workspace_v1`.
