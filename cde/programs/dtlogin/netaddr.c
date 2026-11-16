@@ -235,13 +235,17 @@ addressEqual (XdmcpNetaddr a1, int len1, XdmcpNetaddr a2, int len2)
     }
     part1 = NetaddrPort(a1, &partlen1);
     part2 = NetaddrPort(a2, &partlen2);
-    if (partlen1 != partlen2 || memcmp(part1, part2, partlen1) != 0)
+    if (partlen1 != partlen2 ||
+	(partlen1 > 0 && (part1 == nullptr || part2 == nullptr ||
+			  memcmp(part1, part2, partlen1) != 0)))
     {
 	return FALSE;
     }
     part1 = NetaddrAddress(a1, &partlen1);
     part2 = NetaddrAddress(a2, &partlen2);
-    if (partlen1 != partlen2 || memcmp(part1, part2, partlen1) != 0)
+    if (partlen1 != partlen2 ||
+	(partlen1 > 0 && (part1 == nullptr || part2 == nullptr ||
+			  memcmp(part1, part2, partlen1) != 0)))
     {
 	return FALSE;
     }

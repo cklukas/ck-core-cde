@@ -2048,12 +2048,12 @@ void _DtHelpSetupDisplayType(
             if (updateType == DtHISTORY_AND_JUMP)
               _DtHelpUpdateJumpList(hw->help_dialog.display.manPage,
                                  DtHELP_TYPE_MAN_PAGE, (Widget)hw);
-    
-              _DtHelpUpdateHistoryList(hw->help_dialog.display.manPage,
-                               DtHELP_TYPE_MAN_PAGE, TRUE, (Widget)hw);
-              _DtHelpDisplayAreaSetList (hw->help_dialog.help.pDisplayArea,
-                                      topicHandle, FALSE, 
-                                      hw->help_dialog.backtr.scrollPosition);
+
+            _DtHelpUpdateHistoryList(hw->help_dialog.display.manPage,
+                             DtHELP_TYPE_MAN_PAGE, TRUE, (Widget)hw);
+            _DtHelpDisplayAreaSetList (hw->help_dialog.help.pDisplayArea,
+                                    topicHandle, FALSE, 
+                                    hw->help_dialog.backtr.scrollPosition);
           }
         else
           {

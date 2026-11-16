@@ -9460,8 +9460,8 @@ CheckMoveType(
            }
            else
            {
-             from = (char *)XtMalloc(strlen(ptr) + 1);
-             strcpy(from, ptr);
+             from = (char *)XtMalloc(strlen(file_set[0]) + 1);
+             strcpy(from, file_set[0]);
              filename = XtNewString("");
            }
          }
@@ -9546,8 +9546,8 @@ CheckMoveType(
                 }
                 else
                 {
-                  from = (char *)XtMalloc(strlen(ptr) + 1);
-                  strcpy(from, ptr);
+                  from = (char *)XtMalloc(strlen(file_set[i]) + 1);
+                  strcpy(from, file_set[i]);
                 }
 
                 if( strcmp( to, from ) == 0 )

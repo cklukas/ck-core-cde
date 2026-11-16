@@ -43,6 +43,7 @@
 class WWL;
 class WCallback;
 class WObject;
+class WTimeOut;
 typedef void (WWL::* WWL_FUN) (WCallback*);
 
 class WWL {
@@ -55,6 +56,19 @@ public:
 	void		AddCb (WCallback *);
 	Boolean		RemoveCb (WCallback *);
 	void		removeCallbacks();
+
+	template <typename T, void (T::*Fn)()>
+	void _wwl_thunk0 (WCallback *)
+		{ (reinterpret_cast<T *>(this)->*Fn)(); }
+	template <typename T, void (T::*Fn)(WCallback *)>
+	void _wwl_thunk1 (WCallback *wcb)
+		{ (reinterpret_cast<T *>(this)->*Fn)(wcb); }
+	template <typename T, void (T::*Fn)()>
+	void _wwl_timeout_thunk0 (WTimeOut *)
+		{ (reinterpret_cast<T *>(this)->*Fn)(); }
+	template <typename T, void (T::*Fn)(WTimeOut *)>
+	void _wwl_timeout_thunk1 (WTimeOut *wto)
+		{ (reinterpret_cast<T *>(this)->*Fn)(wto); }
 private:
 
 	virtual void __dummy();
@@ -64,6 +78,20 @@ private:
 	   that virtuals can be called and only generates code to
 	   call non-virtual memebers. */
 };
+
+template <typename FnType, FnType Fn>
+struct _WWL_Fun_Select;
+
+template <typename T, void (T::*Fn)()>
+struct _WWL_Fun_Select<void (T::*)(), Fn> {
+	static WWL_FUN get() { return &WWL::_wwl_thunk0<T, Fn>; }
+};
+template <typename T, void (T::*Fn)(WCallback *)>
+struct _WWL_Fun_Select<void (T::*)(WCallback *), Fn> {
+	static WWL_FUN get() { return &WWL::_wwl_thunk1<T, Fn>; }
+};
+
+#define WWL_FUN_OF(fn) (_WWL_Fun_Select<decltype(fn), (fn)>::get())
 
 class WCallback {
 protected:

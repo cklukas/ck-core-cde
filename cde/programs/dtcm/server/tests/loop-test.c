@@ -94,13 +94,21 @@ static void work(void)
   busy = 0;
 }
 
+static bool_t
+loop_xdr_void(XDR *xdrs, void *p)
+{
+  (void)xdrs;
+  (void)p;
+  return xdr_void();
+}
+
 static void dispatch(struct svc_req *rq, SVCXPRT *transp)
 {
   unsigned count;
 
   switch(rq->rq_proc) {
   case NULLPROC:
-    svc_sendreply(transp, (xdrproc_t)xdr_void, nullptr);
+    svc_sendreply(transp, (xdrproc_t)loop_xdr_void, nullptr);
     break;
   case PROC_WORK:
     work();
@@ -166,7 +174,7 @@ static int call_server(unsigned short port, unsigned proc, int n)
   for(i = 0; i < n; i++) {
     unsigned reply = 0;
 
-    if(clnt_call(client, proc, (xdrproc_t)xdr_void, nullptr,
+    if(clnt_call(client, proc, (xdrproc_t)loop_xdr_void, nullptr,
 		 (xdrproc_t)xdr_u_int, (char *)&reply, total) != RPC_SUCCESS)
       failed++;
   }

@@ -153,7 +153,11 @@ static double b_ieee(unsigned char **dat_ptr, rp_type *prec)
   unsigned long big_part, small_part;
   /* use table for both speed and safety */
   if (shift_table[0] == 0) {
-    for (i=0; i<TABLESIZE; ++i) shift_table[i] = 1.0 / (1 << i);
+    double scale = 1.0;
+    for (i=0; i<TABLESIZE; ++i) {
+      shift_table[i] = scale;
+      scale *= 0.5;
+    }
   }
 
   /* this is basically copied from the IEEE spec */
@@ -384,7 +388,7 @@ static Pixel getPixel(cgm_s_type *cgm_s, int iColrs[3])
       return ((dColrs[0] + dColrs[1] + dColrs[2]) > 0.9) ? blackPixel :
 	whitePixel;
     }
-    /* else fall thru to the pseudo colour visual for XAllocColor */
+    /* fall through */
   case 3: /* PseudoColor */
     /* just ask for closest colour */
     inColr.red = (unsigned short) (dColrs[0] * COLCONV + 0.4999);
@@ -1036,6 +1040,7 @@ static int polymarker(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_
     case 3: /* asterisk, use fallthru */
       XDrawLine(display, P, markGC, x - size, y, x + size, y);
       XDrawLine(display, P, markGC, x, y - size, x, y + size);
+      /* fall through */
     case 5: /* cross */
       XDrawLine(display, P, markGC, x - asize, y - asize, x + asize, y + asize);
       XDrawLine(display, P, markGC, x - asize, y + asize, x + asize, y - asize);
@@ -1091,6 +1096,7 @@ static int text(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_type *
   /* now the string */
   if (!b_str(&dat_ptr, &(newPtr->text))) {
     burp(stderr, "couldn't get text string\n");
+    free(newPtr);
     return(0);
   }
   /* append it to our pointer */
@@ -1128,6 +1134,7 @@ static int restext(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_typ
   /* now the string */
   if (!b_str(&dat_ptr, &(newPtr->text))) {
     burp(stderr, "couldn't get text string\n");
+    free(newPtr);
     return(0);
   }
   /* append it to our pointer */
@@ -1157,6 +1164,7 @@ static int apptext(unsigned char *dat_ptr, struct cmd_info_s *cmd_ptr, cgm_s_typ
   /* now the string */
   if (!b_str(&dat_ptr, &(newPtr->text))) {
     burp(stderr, "couldn't get text string\n");
+    free(newPtr);
     return(0);
   }
   /* append it to our pointer */
@@ -1257,12 +1265,9 @@ case 24: out = (((UINT)ptr[0]) << 16)\
  + (((UINT)ptr[1]) << 8) + ptr[2]; ptr += 3; break;\
 case 16: out = (((UINT)ptr[0]) << 8) + ptr[1]; ptr += 2; break;\
 case 8: out = *ptr++; break;\
-case 4: if(!(temp=(((done + 1) * prec) % 8))) out = *ptr++ & 15; \
-else out = (*ptr >> temp) & 15; break;\
-case 2: if(!(temp=(((done + 1) * prec) % 8))) out = *ptr++ & 3; \
-else out = (*ptr >> (8 - temp)) & 3; break;\
-case 1: if(!(temp=(((done + 1) * prec) % 8))) out = *ptr++ & 1; \
-else out = (*ptr >> (8 - temp)) & 1; break;}
+case 4: if(!(temp=(((done + 1) * prec) % 8))) { out = *ptr++ & 15; } else { out = (*ptr >> temp) & 15; } break;\
+case 2: if(!(temp=(((done + 1) * prec) % 8))) { out = *ptr++ & 3; } else { out = (*ptr >> (8 - temp)) & 3; } break;\
+case 1: if(!(temp=(((done + 1) * prec) % 8))) { out = *ptr++ & 1; } else { out = (*ptr >> (8 - temp)) & 1; } break;}
 /* get a packed list */
 static void getListPixels(unsigned char *datPtr, cgm_s_type *cgm_s,
 			  int nx, int ny, int prec, Pixel *retPtr)

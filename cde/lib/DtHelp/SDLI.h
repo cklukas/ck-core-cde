@@ -514,11 +514,11 @@ enum	SdlAttrValue
 		(((unsigned)1L) << ((value) % SDL_MASK_SIZE))) ? True : False)
 
 #define	SDLMaskValue1(value) \
-	(((value) < SDL_MASK_SIZE ? ((unsigned)1L) : 0) \
+	(((value) < SDL_MASK_SIZE ? 1UL : 0UL) \
 						<< ((value) % SDL_MASK_SIZE))
 
 #define	SDLMaskValue2(value) \
-	(((value) < SDL_MASK_SIZE ? 0: ((unsigned)1L)) \
+	(((value) < SDL_MASK_SIZE ? 0UL : 1UL) \
 						<< ((value) % SDL_MASK_SIZE))
 
 #define	SDLClearAllBits	{ 0, 0 }

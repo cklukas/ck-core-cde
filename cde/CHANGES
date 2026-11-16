@@ -1,4 +1,59 @@
 2026-11-16
+- Complete the 16-class `--enable-hardening` `-Werror` burndown (`-Werror=address`,
+  `-Werror=implicit-fallthrough`, `-Werror=misleading-indentation`,
+  `-Werror=cast-function-type`), resolve remaining `cppcheck` product-code
+  errors, and advance the CK Core Motif pin to
+  `50cb5503d75360e15964575710eebee917e9a907`.
+  - `.ckgit/motif-revision` and `.ckgit/ci.yml`: advance the pinned CK Core
+    Motif ABI 9 toolkit revision to `50cb5503d75360e15964575710eebee917e9a907`.
+  - `cde/m4/ck_hardening.m4`: promote the remaining four tracked baseline
+    warning classes to compile errors under `--enable-hardening`:
+    `-Werror=address`, `-Werror=implicit-fallthrough`,
+    `-Werror=misleading-indentation`, and `-Werror=cast-function-type` (all 16
+    tracked baseline defect classes are now at 0 warnings and enforced with
+    `-Werror=...`).
+  - Function-pointer cast and address-comparison fixes (`-Wcast-function-type`,
+    `-Waddress`): `lib/tt/bin/ttdbserverd/db_server_svc.C` dispatches RPC
+    service routines through typed `_Tt_svc_thunk` (`TT_SVC_LOCAL`) templates
+    and `_tt_xdr_void(XDR *, void *)`; `lib/tt` (`db_server_clnt.C`,
+    `mp_c_procid.C`, `mp_session.C`, `mp_rpc_implement.C`, `mp_s_message.C`)
+    replaces `(xdrproc_t)xdr_void` casts with `_tt_xdr_void`; `dtinfo` WWL and
+    `FolioObject` callback macros (`WCallback.h`, `WTimeOut.h`,
+    `FolioObject.hh`, `create_macros.hh`) invoke 0-arg and 2-arg member
+    functions through typed C++ member-function thunk templates (`WWL_FUN_OF`,
+    `WTIMEOUT_FUN_OF`, `FOLIO_HANDLER_OF`) instead of casting pointer-to-member
+    functions; `dtmail/MotifApp/MenuBar.C` and `dtmail/dtmail/RoamCmds.C`
+    replace string-literal address comparisons with `strcmp()`; and
+    `dtimsstart/ximsfunc.h` and `dtstyle/Mouse.c` remove array-address tautologies.
+  - Control-flow and switch-fallthrough fixes (`-Wmisleading-indentation`,
+    `-Wimplicit-fallthrough`): fix `dtcodegen` (`abmf/ui_c_file.c`) emitted
+    indentation after `return -1;` in generated `*_ui.c` sources; add missing
+    loop braces around internal whitespace normalization in
+    `dthelp/parser/{canon1,pass1,pass2}/parser/param.c`; add missing braces
+    around `PULLDOWN_ACCELERATORS` cascade-button creation in
+    `lib/DtTerm/TermView/TermViewMenu.c` and error-dump logging in
+    `dtmail/libDtMail/RFC/RFCMailBox.C`; add missing `break` statements in
+    `dtprintinfo/libUI/MotifUI/Button.C` (arrow button directions),
+    `dtwm/WmEvent.c` (`PullExposureEvents` `Expose` case),
+    `dtmail/MotifApp/Help.C` (`DtEDITOR_HELP_STATUS_OVERSTRIKE`),
+    `lib/DtTerm/Term/TermFunction.c` (`eraseFromCol0`),
+    `lib/DtMmdb/api/info_lib.C` (`getInfobaseByComponent` `LOC` case),
+    `lib/tt/lib/util/tt_tracefile_parse.C` (`_TT_TRACE_FUNCTIONS`),
+    `lib/tt/lib/mp/mp_c_session.C` (X11 session ping recovery), and
+    `dtappbuilder/src/libABil/bil_store.c` (`AB_BIL_INITIAL_VALUE`); and
+    annotate intentional switch fallthroughs across 51 files.
+  - Static-analysis (`cppcheck`) defect fixes: fix null-pointer dereferences on
+    slash-less paths in `dtfile/FileMgr.c` and null `memcmp` arguments in
+    `dtlogin/netaddr.c:addressEqual()`; fix `%511s` `sscanf` overflow into
+    `tmp[256]` in `dtcalc/calctool.c` and uninitialized error-message arguments
+    in `dtcalc/motif.c` and `dtfile/dtcopy/sharedFuncs.c`; replace undefined
+    32-bit `1 << i` shifts (`i = 0..127`) in `dtinfo/src/cgm/cgmcmds.c` and
+    signed shift operands in `lib/DtHelp/SDLI.h`; free leaked `partialText`
+    records on `b_str()` failure in `cgmcmds.c`; preserve buffers on `realloc()`
+    failure in `dtwm/WmXSMP.c`, `dtappbuilder/src/abmf/msg_file.c`, and
+    `dtappbuilder/src/libABobj/test.c`; pair `va_start()` with `va_end()` in
+    `dtappbuilder/src/abmf/write_c.c`; and guard `rpcinfo` availability in
+    `lib/tt/bin/ttsession/tests` and `.github/workflows/build.yml`.
 - ci: build GitHub Pages and rpi4 documentation with ckdocs v0.11.0
   (`fbe21b49d6c5d5afebffa3d3de745351e07c6b5e`).
 - Defect-class warning burndown, `--enable-hardening` `-Werror` promotion, and

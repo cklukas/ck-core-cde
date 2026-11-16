@@ -353,6 +353,7 @@ ilError                 error;
     switch (pPipe->state) {
       case IL_PIPE_EXECUTING:       /* executing: must abort, fall thru to complete */
         error = ilCleanupRunningPipe (pPipe, TRUE);
+        /* fall through */
 
       case IL_PIPE_COMPLETE:        /* elements but no buffers allocated */
       case IL_PIPE_FORMING:         /* forming is same as complete */
@@ -393,9 +394,11 @@ ilError                 error;
         for (i = 0; i < pPipe->nDestroyObjects; i++)
             ilDestroyObject (pPipe->destroyObjects[i]);
         pPipe->nDestroyObjects = 0;
+        /* fall through */
 
       case IL_PIPE_INVALID:         /* pipe already empty; change state */
         pPipe->state = IL_PIPE_EMPTY;
+        /* fall through */
 
       case IL_PIPE_EMPTY:           /* pipe in desired state */
         break;
@@ -1260,6 +1263,7 @@ ilError                 error;
         pPipe->execStack[0] = pExecHead->pNext;
         pPipe->state = IL_PIPE_EXECUTING;
         pPipe->lastStrip = FALSE;
+        /* fall through */
 
             /*  Pipe being executed, possibly first time. Execute nStrips strips (or all
                 if !nStrips). dstLine for each element is "srcLine" of next element.

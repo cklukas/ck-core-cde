@@ -607,8 +607,11 @@ print_sizeof(void)
 static int
 add_to_array(ABObj obj)
 {
+    ABObj *grown = (ABObj *)realloc(objArray, (objArraySize + 1) * sizeof(ABObj));
+    if (grown == nullptr)
+	return -1;
+    objArray = grown;
     ++objArraySize;
-    objArray= (ABObj *)realloc(objArray, objArraySize * sizeof(ABObj));
     objArray[objArraySize-1]= obj;
     return 0;
 }

@@ -283,7 +283,7 @@ _DtGlobalSetMenuSensitivity(
 
 {
    Arg menuPaneArgs[1];
-   Widget mbar;
+   Widget mbar = nullptr;
    XmMenuShellWidget mshell = (XmMenuShellWidget) w;
    MenuDataProc getMenuData = *(MenuDataProc *)client_data;
    XtPointer mainRecord;
@@ -336,7 +336,7 @@ _DtGlobalRestoreMenuSensitivity(
         XtPointer call_data )
 
 {
-   Widget mbar;
+   Widget mbar = nullptr;
    XmMenuShellWidget mshell = (XmMenuShellWidget) w;
    MenuDataProc getMenuData = *(MenuDataProc *)client_data;
    XtPointer mainRecord;

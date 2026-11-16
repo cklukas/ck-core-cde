@@ -2153,8 +2153,8 @@ void PutBoxInIconBox (ClientData *pCD, int *px, int *py, unsigned int *width, un
 
     int i;
     Arg getArgs[3];
-    Dimension bBoardWidth;
-    Dimension bBoardHeight;
+    Dimension bBoardWidth = 0;
+    Dimension bBoardHeight = 0;
 
     int clipWidth;
     int clipHeight;

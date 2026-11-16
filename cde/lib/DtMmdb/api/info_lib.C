@@ -579,6 +579,7 @@ info_lib::getInfobaseByComponent(const char *locator_string, enum TestSelector s
             }
    
            }
+           break;
           case GRA:
    	   {
             graphic_smart_ptr graphic(ib, locator_string);

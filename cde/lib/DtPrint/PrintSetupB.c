@@ -1669,9 +1669,7 @@ EstablishPrinter(
 	{
 	    PSUB_VerifyPrinterState(psub) = DtPRINT_VERIFIED;
 	}
-	/*
-	 * no break
-	 */
+	/* fall through */
 	
     case DtPRINT_VERIFIED:
 	/*

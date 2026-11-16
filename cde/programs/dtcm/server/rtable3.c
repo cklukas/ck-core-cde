@@ -99,7 +99,10 @@ _DtCm_rtable_lookup_3_svc (Table_Args_3 *args, struct svc_req *svcrq)
 	Table_Args_4 *newargs;
 	Table_Res_4 *newres;
 
-	if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+	if (res!=nullptr) {
+		xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+		res = nullptr;
+	}
 
 	newargs = _DtCm_tableargs3_to_tableargs4(args);
 	if(newargs) {
@@ -120,7 +123,10 @@ _DtCm_rtable_lookup_next_larger_3_svc(Table_Args_3 *args, struct svc_req *svcrq)
 	Table_Args_4 *newargs;   
 	Table_Res_4 *newres; 
  
-	if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+	if (res!=nullptr) {
+		xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+		res = nullptr;
+	}
  
 	newargs = _DtCm_tableargs3_to_tableargs4(args);
 	if(newargs) {
@@ -141,7 +147,10 @@ _DtCm_rtable_lookup_next_smaller_3_svc(Table_Args_3 *args, struct svc_req *svcrq
 	Table_Args_4 *newargs;    
 	Table_Res_4 *newres; 
   
-	if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+	if (res!=nullptr) {
+		xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+		res = nullptr;
+	}
 
 	newargs = _DtCm_tableargs3_to_tableargs4(args);
 	if(newargs) {
@@ -162,7 +171,10 @@ _DtCm_rtable_lookup_range_3_svc(Table_Args_3 *args, struct svc_req *svcrq)
         Table_Args_4 *newargs;     
         Table_Res_4 *newres; 
    
-        if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+        if (res!=nullptr) {
+                xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+                res = nullptr;
+        }
 
         newargs = _DtCm_tableargs3_to_tableargs4(args); 
         if(newargs) {
@@ -183,7 +195,10 @@ _DtCm_rtable_abbreviated_lookup_range_3_svc(Table_Args_3 *args, struct svc_req *
         Table_Args_4 *newargs;      
         Table_Res_4 *newres; 
 
-        if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+        if (res!=nullptr) {
+                xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+                res = nullptr;
+        }
 
         newargs = _DtCm_tableargs3_to_tableargs4(args);  
         if(newargs) {
@@ -204,7 +219,10 @@ _DtCm_rtable_insert_3_svc(Table_Args_3 *args, struct svc_req *svcrq)
         Table_Args_4 *newargs;
         Table_Res_4 *newres;
 
-        if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+        if (res!=nullptr) {
+                xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+                res = nullptr;
+        }
 
         newargs = _DtCm_tableargs3_to_tableargs4(args);
         if(newargs) {
@@ -225,7 +243,10 @@ _DtCm_rtable_delete_3_svc(Table_Args_3 *args, struct svc_req *svcrq)
         Table_Args_4 *newargs;
         Table_Res_4 *newres; 
 
-        if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+        if (res!=nullptr) {
+                xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+                res = nullptr;
+        }
 
 	newargs = _DtCm_tabledelargs3_to_tabledelargs4(args, do_all_4);
         if(newargs) {
@@ -246,7 +267,10 @@ _DtCm_rtable_delete_instance_3_svc(Table_Args_3 *args, struct svc_req *svcrq)
         Table_Args_4 *newargs;  
         Table_Res_4 *newres;  
 
-        if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+        if (res!=nullptr) {
+                xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+                res = nullptr;
+        }
 
 	newargs = _DtCm_tabledelargs3_to_tabledelargs4(args, do_one_4);
         if(newargs) {
@@ -267,7 +291,10 @@ _DtCm_rtable_change_3_svc(Table_Args_3 *args, struct svc_req *svcrq)
         Table_Args_4 *newargs; 
         Table_Res_4 *newres;  
 
-        if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+        if (res!=nullptr) {
+                xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+                res = nullptr;
+        }
 
         newargs = _DtCm_tableargs3_to_tableargs4(args);
         if(newargs) {
@@ -289,7 +316,10 @@ _DtCm_rtable_change_instance_3_svc(Table_Args_3 *args, struct svc_req *svcrq)
         Table_Args_4 *newargs;   
         Table_Res_4 *newres;  
 
-        if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+        if (res!=nullptr) {
+                xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+                res = nullptr;
+        }
 
         newargs = _DtCm_tableargs3_to_tableargs4(args);
         if(newargs) {
@@ -311,7 +341,10 @@ _DtCm_rtable_lookup_next_reminder_3_svc(Table_Args_3 *args, struct svc_req *svcr
         Table_Args_4 *newargs;    
         Table_Res_4 *newres;   
 
-        if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+        if (res!=nullptr) {
+                xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+                res = nullptr;
+        }
 
         newargs = _DtCm_tableargs3_to_tableargs4(args);
         if(newargs) {
@@ -451,7 +484,10 @@ _DtCm_rtable_get_access_3_svc(Access_Args_3 *args, struct svc_req *svcrq)
         Access_Args_4 *newargs;
         Access_Args_4 *newres;
 
-	if (res!=nullptr) xdr_free(DTCM_XDR_PROC(_DtCm_xdr_Access_Args_3), (char*)res); res = nullptr;
+	if (res!=nullptr) {
+		xdr_free(DTCM_XDR_PROC(_DtCm_xdr_Access_Args_3), (char*)res);
+		res = nullptr;
+	}
 
         newargs = _DtCm_accargs3_to_accargs4(args);
         if(newargs) {
@@ -471,7 +507,10 @@ _DtCm_rtable_abbreviated_lookup_key_range_3_svc(Table_Args_3 *args, struct svc_r
         Table_Args_4 *newargs;   
         Table_Res_4 *newres;  
 
-	if (res!=nullptr) xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res); res = nullptr;
+	if (res!=nullptr) {
+		xdr_free (DTCM_XDR_PROC(_DtCm_xdr_Table_Res_3), (char*)res);
+		res = nullptr;
+	}
 
         newargs = _DtCm_tableargs3_to_tableargs4(args);
         if(newargs) {

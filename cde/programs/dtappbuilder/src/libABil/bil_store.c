@@ -319,6 +319,7 @@ attr_is_undef(
 		if (type == AB_TYPE_TEXT_FIELD || 
 		    type == AB_TYPE_TEXT_PANE) 
 		   return (util_strempty(obj_get_initial_value_string(obj)));
+	    break;
 	}
 
         case AB_BIL_TO: 

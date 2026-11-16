@@ -122,6 +122,7 @@ SetupPty(char *ptySlave, int ptyFd)
 {
     (void) chown(ptySlave, getuid(), getgid());
     (void) chmod(ptySlave, 0622);
+    return(0);
 }
     
 int

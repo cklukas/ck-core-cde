@@ -394,7 +394,7 @@ init()
 	_proc_host_ipaddr = _proc_host->addr();
 		
 	status = _default_session->call(TT_RPC_ALLOC_PROCID_KEY,
-					(xdrproc_t)xdr_void, 0,
+					(xdrproc_t)_tt_xdr_void, 0,
 					(xdrproc_t)tt_xdr_string,
 					(char *)&_id);
 		
@@ -725,7 +725,7 @@ update_message(const _Tt_c_message_ptr &msg, Tt_state newstate)
 		rstatus = default_session()->call(TT_RPC_UPDATE_MSG_2,
 						 (xdrproc_t)tt_xdr_update_args,
 						 (char *)&args,
-						 (xdrproc_t)xdr_void,
+						 (xdrproc_t)_tt_xdr_void,
 						 (char *)0);
 		if (clr_obs) {
 			// clear the handler procid if it was just set

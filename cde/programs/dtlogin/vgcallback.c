@@ -1168,7 +1168,7 @@ RequestCB(
         int *source,
         XtInputId *id)
 {
-  char buf[REQUEST_LIM_MAXLEN];
+  char buf[REQUEST_LIM_MAXLEN] = {0};
   RequestHeader *phdr = (RequestHeader *)buf;
 
 #ifdef VG_TRACE

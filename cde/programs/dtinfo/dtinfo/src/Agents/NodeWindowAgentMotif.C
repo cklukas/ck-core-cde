@@ -197,11 +197,11 @@ using namespace std;
 #endif
 
 #define ON_ACTIVATE(WOBJ,FUNC) \
-  (WOBJ).SetActivateCallback (this, (WWL_FUN) &CLASS::FUNC)
+  (WOBJ).SetActivateCallback (this, WWL_FUN_OF(&CLASS::FUNC))
 #define ON_ARM(WOBJ,FUNC) \
-  (WOBJ).SetArmCallback (this, (WWL_FUN) &CLASS::FUNC)
+  (WOBJ).SetArmCallback (this, WWL_FUN_OF(&CLASS::FUNC))
 #define ON_DISARM(WOBJ,FUNC) \
-  (WOBJ).SetDisarmCallback (this, (WWL_FUN) &CLASS::FUNC)
+  (WOBJ).SetDisarmCallback (this, WWL_FUN_OF(&CLASS::FUNC))
 
 #define f_node_ptr f_node_view_info->node_ptr()
   
@@ -985,7 +985,7 @@ NodeWindowAgent::create_ui()
 
   f_wm_delete_callback = 
       new WCallback (*f_shell, window_system().WM_DELETE_WINDOW(),
-		     this, (WWL_FUN) &NodeWindowAgent::dismiss);
+		     this, WWL_FUN_OF(&NodeWindowAgent::dismiss));
 
   WindowGeometry wg = pref_mgr().get_geometry (PrefMgr::BrowseGeometry);
   f_shell->Set(WArgList(XmNwidth, wg.width, XmNheight, wg.height, NULL));

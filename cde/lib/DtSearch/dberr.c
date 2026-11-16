@@ -145,7 +145,7 @@ void            dbautorec (void)
  */
 char           *vista_msg (char *location)
 {
-    int             i;
+    int             i = 0;
     char           *defaultmsg;
     char           *msgtarg;
 

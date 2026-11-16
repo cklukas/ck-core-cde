@@ -182,7 +182,7 @@ void IconObj::CreateIconObj(MotifUI *parent, char *name, char * /*category*/,
            sprintf(s, "%s %s", name, details);
 	else
            strcpy(s, name);
-	// no break
+	/* fall through */
      case SMALL_ICON:
         alignment = XmALIGNMENT_BEGINNING;
         pixmapPlacement = GuiPIXMAP_LEFT;
@@ -515,7 +515,7 @@ boolean IconObj::SetIcon(IconStyle style)
 	break;
      case DETAILS:
 	SetDetail();
-	// no break
+	/* fall through */
      case SMALL_ICON:
      case TINY_ICON:
         alignment = XmALIGNMENT_BEGINNING;

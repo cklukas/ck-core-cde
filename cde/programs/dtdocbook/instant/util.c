@@ -737,7 +737,8 @@ int Putc(
 	    case '\\':
 		*pc++ = '\\';
 	}
-	for (j = 0; j < i; ++j) *pc++ = argBuf[j]; i = 0;
+	for (j = 0; j < i; ++j) *pc++ = argBuf[j];
+	i = 0;
 	*pc++ = '"';
 	*pc++ = 0;
 	tcl_enc = Tcl_GetEncoding(nullptr, nullptr);

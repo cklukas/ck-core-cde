@@ -344,11 +344,14 @@ void	ximsMain(void)
 	case State_Init_Done:		if (Verbose > 1)
 					    put_xims_log("Started.", 0, 0, 0);
 					ximsSelect();
+					/* fall through */
 
 	case State_Select_Done:
 	case State_Select_Canceled:	ximsStart();
+					/* fall through */
 
 	case State_Start_Done:		ximsWait();
+					/* fall through */
 
 	case State_Init_Err:
 	case State_Select_Err:
@@ -358,9 +361,11 @@ void	ximsMain(void)
 			    LastErrMsg = OpErrCode;
 			    put_xims_errmsg(OpErrCode, 0, 0, 0);
 			}
+			/* fall through */
 
 	case State_Wait_Done:
 					ximsFinish();
+					/* fall through */
 
 	case State_Finish:
 			if (WaitingDialogReply) {
@@ -368,6 +373,7 @@ void	ximsMain(void)
 			    xevent_loop();	/* never returns */
 			    WaitingDialogReply = False;	/* if failed */
 			}
+			/* fall through */
 
 	case State_Finish_Defered:
 			if (OpState == State_Finish_Defered) {

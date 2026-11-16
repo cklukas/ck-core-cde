@@ -2756,8 +2756,10 @@ UpdateDimensionArrays(
       {
 	case _DtCvJUSTIFY_RIGHT_MARGIN:
 		j++;
+		/* fall through */
 	case _DtCvJUSTIFY_CENTER:
 		j++;
+		/* fall through */
 	case _DtCvJUSTIFY_LEFT_MARGIN:
 		if (vOrient == _DtCvJUSTIFY_BOTTOM)
 		    i = DIMS_BOTTOM;
@@ -2784,6 +2786,7 @@ UpdateDimensionArrays(
 	case _DtCvJUSTIFY_RIGHT:
 		j = DIMS_RIGHT;
 		marginPtr = max_right;
+		/* fall through */
 
 	case _DtCvJUSTIFY_LEFT_CORNER:
 	case _DtCvJUSTIFY_LEFT:
@@ -3072,9 +3075,11 @@ AdjustHeadPosition(
 	case _DtCvJUSTIFY_RIGHT_MARGIN:
 		divisor = 1;
 		j++;
+		/* fall through */
 	case _DtCvJUSTIFY_CENTER:
 		adjustX = (block_width - headWidth) / divisor;
 		j++;
+		/* fall through */
 	case _DtCvJUSTIFY_LEFT_MARGIN:
 		adjustX += left_margin;
 		if (vOrient == _DtCvJUSTIFY_BOTTOM)
@@ -3087,6 +3092,7 @@ AdjustHeadPosition(
 	case _DtCvJUSTIFY_RIGHT_CORNER:
 		adjustX = block_width + left_margin;
 		j       = DIMS_RIGHT;
+		/* fall through */
 
 	case _DtCvJUSTIFY_LEFT_CORNER:
 		if (vOrient == _DtCvJUSTIFY_BOTTOM)
@@ -3099,6 +3105,7 @@ AdjustHeadPosition(
 	case _DtCvJUSTIFY_RIGHT:
 		adjustX = block_width + left_margin;
 		j = DIMS_RIGHT;
+		/* fall through */
 
 	case _DtCvJUSTIFY_LEFT:
 		if (vOrient != _DtCvJUSTIFY_TOP)
@@ -3496,6 +3503,7 @@ DrawBorders(
 					|| brdr == _DtCvBORDER_BOTTOM_LEFT
 					|| brdr == _DtCvBORDER_BOTTOM_RIGHT)
 			    break;
+			/* fall through */
     
 	    case _DtCvBORDER_TOP:
 	    case _DtCvBORDER_TOP_LEFT:
@@ -3518,6 +3526,7 @@ DrawBorders(
 			 * border.
 			 */
 			bot_y += line_width;
+			/* fall through */
 
 	    case _DtCvBORDER_VERT:
 	    case _DtCvBORDER_LEFT:
@@ -3529,6 +3538,7 @@ DrawBorders(
 					|| brdr == _DtCvBORDER_TOP_LEFT
 					|| brdr == _DtCvBORDER_BOTTOM_LEFT)
 			    break;
+			/* fall through */
     
 	    case _DtCvBORDER_BOTTOM_RIGHT:
 			/*
@@ -3538,6 +3548,7 @@ DrawBorders(
 			 */
 			if (brdr == _DtCvBORDER_BOTTOM_RIGHT)
 			    bot_y += line_width;
+			/* fall through */
 
 	    case _DtCvBORDER_RIGHT:
 	    case _DtCvBORDER_TOP_RIGHT:

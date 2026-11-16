@@ -375,7 +375,7 @@ ActionCallback(
    DialogData   * dialog_data;
    FileMgrData  * file_mgr_data;
    FileViewData  * file_view_data;
-   char * command;
+   char * command = nullptr;
    Arg args[1];
    Widget mbar;
    Boolean popup = False;
@@ -411,6 +411,8 @@ ActionCallback(
 
    XtSetArg (args[0], XmNuserData, (XtPointer) &command);
    XtGetValues (w, args, 1);
+   if (command == nullptr)
+      return;
 
    if(strcmp(command, openNewView) == 0)
    {

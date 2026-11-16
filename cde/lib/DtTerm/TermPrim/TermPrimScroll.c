@@ -86,6 +86,7 @@ waitOnCopyArea(Widget w)
 		/* more to come... */
 		break;
 	    }
+	    /* fall through */
 
 	case NoExpose:
 	    /* we are done... */
@@ -920,9 +921,10 @@ _DtTermPrimScrollCompleteIfNecessary(Widget w, short scrollTopRow,
     if (tw->term.jumpScroll) {
 	maxJumpScrollLines = tpd->scrollBottomRow - tpd->scrollTopRow + 1;
 	if ((lines + tpd->scroll.jump.scrollLines > maxJumpScrollLines) ||
-		(lines + tpd->scroll.jump.scrollLines < -maxJumpScrollLines))
+		(lines + tpd->scroll.jump.scrollLines < -maxJumpScrollLines)) {
 	    (void) _DtTermPrimScrollComplete(w, True);
-	    return;
+	}
+	return;
     } else {
 	if (!tw->term.jumpScroll && tpd->scroll.nojump.pendingScroll) {
 	    (void) _DtTermPrimScrollComplete(w, True);

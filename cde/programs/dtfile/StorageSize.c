@@ -621,8 +621,8 @@ StorageSizeTimer(XtPointer client_data, XtIntervalId *id)
     char human_storage[64];
     char size_value[256];
     char storage_value[256];
-    char size_bytes[64];
-    char storage_bytes[64];
+    char size_bytes[64] = "";
+    char storage_bytes[64] = "";
     char size_sep[64];
     char storage_sep[64];
     char file_value[32];
@@ -630,7 +630,7 @@ StorageSizeTimer(XtPointer client_data, XtIntervalId *id)
     char permission_value[32];
     char virtual_value[64];
     char metadata_value[256];
-    char metadata_bytes[64];
+    char metadata_bytes[64] = "";
     char metadata_sep[64];
     char metadata_human[64];
     char symlink_value[64];

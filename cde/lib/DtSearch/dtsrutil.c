@@ -185,6 +185,7 @@ char           *get_hitlist_text (int maxlen)
     text = austext_malloc (mallocsz, PROGNAME "103", nullptr);
 
 /* Loop thru ditto list, creating text out of hitlist */
+    sofar = 0;
     targ = text;
     for (dit = usrblk.dittolist; dit != nullptr; dit = dit->link) {
 	if (maxlen == 0) {

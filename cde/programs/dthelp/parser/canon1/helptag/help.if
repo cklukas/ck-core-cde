@@ -1006,17 +1006,25 @@ static char ident6[]="@(#) (c) Copyright 1993, 1994 Unix System Labs, Inc., a su
 
 	    /* strip trailing spaces */
 	    mb_nospace1 = mb_sort;
-	    while (*mb_nospace1++); --mb_nospace1; /* end of string */
+	    while (*mb_nospace1++)
+		;
+	    --mb_nospace1; /* end of string */
 	    while (*--mb_nospace1 == ' ') *mb_nospace1 = '\0';
 	    mb_nospace2 = mb_sub;
-	    while (*mb_nospace2++); --mb_nospace2; /* end of string */
+	    while (*mb_nospace2++)
+		;
+	    --mb_nospace2; /* end of string */
 	    while (*--mb_nospace2 == ' ') *mb_nospace2 = '\0';
 
 	    /* strip leading spaces */
 	    mb_nospace1 = mb_sort;
-	    while (*mb_nospace1++ == ' '); --mb_nospace1;
+	    while (*mb_nospace1++ == ' ')
+		;
+	    --mb_nospace1;
 	    mb_nospace2 = mb_sub;
-	    while (*mb_nospace2++ == ' '); --mb_nospace2;
+	    while (*mb_nospace2++ == ' ')
+		;
+	    --mb_nospace2;
 
 	    fprintf(indexfp, "%s, %s", mb_nospace1, mb_nospace2);
 	    m_free(mb_sub,"multi-byte string");
@@ -1025,12 +1033,16 @@ static char ident6[]="@(#) (c) Copyright 1993, 1994 Unix System Labs, Inc., a su
 	    { /* plain sort */
 	    /* strip trailing spaces */
 	    mb_nospace1 = mb_sort;
-	    while (*mb_nospace1++); --mb_nospace1; /* end of string */
+	    while (*mb_nospace1++)
+		;
+	    --mb_nospace1; /* end of string */
 	    while (*--mb_nospace1 == ' ') *mb_nospace1 = '\0';
 
 	    /* strip leading spaces */
 	    mb_nospace1 = mb_sort;
-	    while (*mb_nospace1++ == ' '); --mb_nospace1;
+	    while (*mb_nospace1++ == ' ')
+		;
+	    --mb_nospace1;
 
 	    fprintf(indexfp, "%s", mb_nospace1);
 	    }
@@ -1052,17 +1064,25 @@ static char ident6[]="@(#) (c) Copyright 1993, 1994 Unix System Labs, Inc., a su
 
 	    /* strip trailing spaces */
 	    mb_nospace1 = mb_print;
-	    while (*mb_nospace1++); --mb_nospace1; /* end of string */
+	    while (*mb_nospace1++)
+		;
+	    --mb_nospace1; /* end of string */
 	    while (*--mb_nospace1 == ' ') *mb_nospace1 = '\0';
 	    mb_nospace2 = mb_sub;
-	    while (*mb_nospace2++); --mb_nospace2; /* end of string */
+	    while (*mb_nospace2++)
+		;
+	    --mb_nospace2; /* end of string */
 	    while (*--mb_nospace2 == ' ') *mb_nospace2 = '\0';
 
 	    /* strip leading spaces */
 	    mb_nospace1 = mb_print;
-	    while (*mb_nospace1++ == ' '); --mb_nospace1;
+	    while (*mb_nospace1++ == ' ')
+		;
+	    --mb_nospace1;
 	    mb_nospace2 = mb_sub;
-	    while (*mb_nospace2++ == ' '); --mb_nospace2;
+	    while (*mb_nospace2++ == ' ')
+		;
+	    --mb_nospace2;
 
 	    fprintf(indexfp, "%s, %s", mb_nospace1, mb_nospace2);
 	    m_free(mb_sub,"multi-byte string");
@@ -1071,12 +1091,16 @@ static char ident6[]="@(#) (c) Copyright 1993, 1994 Unix System Labs, Inc., a su
 	    { /* plain print */
 	    /* strip trailing spaces */
 	    mb_nospace1 = mb_print;
-	    while (*mb_nospace1++); --mb_nospace1; /* end of string */
+	    while (*mb_nospace1++)
+		;
+	    --mb_nospace1; /* end of string */
 	    while (*--mb_nospace1 == ' ') *mb_nospace1 = '\0';
 
 	    /* strip leading spaces */
 	    mb_nospace1 = mb_print;
-	    while (*mb_nospace1++ == ' '); --mb_nospace1;
+	    while (*mb_nospace1++ == ' ')
+		;
+	    --mb_nospace1;
 
 	    fprintf(indexfp, "%s", mb_nospace1);
 	    }
@@ -1095,17 +1119,25 @@ static char ident6[]="@(#) (c) Copyright 1993, 1994 Unix System Labs, Inc., a su
 
 	/* strip trailing spaces */
 	mb_nospace1 = mb_print;
-	while (*mb_nospace1++); --mb_nospace1; /* end of string */
+	while (*mb_nospace1++)
+		;
+	--mb_nospace1; /* end of string */
 	while (*--mb_nospace1 == ' ') *mb_nospace1 = '\0';
 	mb_nospace2 = mb_subprint;
-	while (*mb_nospace2++); --mb_nospace2; /* end of string */
+	while (*mb_nospace2++)
+		;
+	--mb_nospace2; /* end of string */
 	while (*--mb_nospace2 == ' ') *mb_nospace2 = '\0';
 
 	/* strip leading spaces */
 	mb_nospace1 = mb_print;
-	while (*mb_nospace1++ == ' '); --mb_nospace1;
+	while (*mb_nospace1++ == ' ')
+		;
+	--mb_nospace1;
 	mb_nospace2 = mb_subprint;
-	while (*mb_nospace2++ == ' '); --mb_nospace2;
+	while (*mb_nospace2++ == ' ')
+		;
+	--mb_nospace2;
 
 	fprintf(indexfp, "%s, %s", mb_nospace1, mb_nospace2);
 	m_free(mb_subprint,"multi-byte string");
@@ -1114,12 +1146,16 @@ static char ident6[]="@(#) (c) Copyright 1993, 1994 Unix System Labs, Inc., a su
 	{
 	/* strip trailing spaces */
 	mb_nospace1 = mb_print;
-	while (*mb_nospace1++); --mb_nospace1; /* end of string */
+	while (*mb_nospace1++)
+		;
+	--mb_nospace1; /* end of string */
 	while (*--mb_nospace1 == ' ') *mb_nospace1 = '\0';
 
 	/* strip leading spaces */
 	mb_nospace1 = mb_print;
-	while (*mb_nospace1++ == ' '); --mb_nospace1;
+	while (*mb_nospace1++ == ' ')
+		;
+	--mb_nospace1;
 
 	fprintf(indexfp, "%s", mb_nospace1);
 	}

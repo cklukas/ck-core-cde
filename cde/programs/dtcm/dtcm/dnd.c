@@ -372,7 +372,7 @@ schedule_appt(Calendar *c, Dtcm_appointment *a) {
 		set_message(c->message_text, "");
 		if ( rc == 2)
 			return 0;
-			return -1;
+		return -1;
 	}
 	} else {
 	if (!t->frame)

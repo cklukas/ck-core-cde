@@ -516,7 +516,11 @@ fillClientIDProc(XrmDatabase *clientDB, XrmBindingList bindingList,
 
     if (i < 0 || nList < 2) return TRUE;
 
-    *pClientIDList = realloc(*pClientIDList, nList * sizeof(char *));
+    {
+	char **grown = realloc(*pClientIDList, nList * sizeof(char *));
+	if (!grown) return TRUE;
+	*pClientIDList = grown;
+    }
     clientIDList = i + *pClientIDList;
     clientIDList[0] = clientID;
     clientIDList[1] = nullptr;

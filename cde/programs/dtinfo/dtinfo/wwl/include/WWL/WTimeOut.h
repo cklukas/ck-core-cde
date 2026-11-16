@@ -73,4 +73,18 @@ inline	void		Obj (WWL *o)		{ object = o; }
 inline	XtPointer	ClientData()		{ return client_data; }
 };
 
+template <typename FnType, FnType Fn>
+struct _WWL_TimeOut_Select;
+
+template <typename T, void (T::*Fn)()>
+struct _WWL_TimeOut_Select<void (T::*)(), Fn> {
+	static WTimeOutFunc get() { return &WWL::_wwl_timeout_thunk0<T, Fn>; }
+};
+template <typename T, void (T::*Fn)(WTimeOut *)>
+struct _WWL_TimeOut_Select<void (T::*)(WTimeOut *), Fn> {
+	static WTimeOutFunc get() { return &WWL::_wwl_timeout_thunk1<T, Fn>; }
+};
+
+#define WTIMEOUT_FUN_OF(fn) (_WWL_TimeOut_Select<decltype(fn), (fn)>::get())
+
 #endif

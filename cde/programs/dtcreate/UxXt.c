@@ -465,7 +465,7 @@ CREATION:       Visual Edge Software            March 31, 1993
 static Pixmap    ConvertPixmap( char *file_name, int depth )
 {
         XrmValue fg_from, fg_to, bg_from, bg_to;
-        Pixel fg, bg;
+        Pixel fg = 0, bg = 0;
 
         fg_from.size = strlen(XtDefaultForeground);
         fg_from.addr = XtDefaultForeground;

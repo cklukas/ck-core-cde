@@ -47,6 +47,12 @@
 static const struct timeval TIMEOUT = { 120, 0 };
 static clnt_stat rpc_result;
 
+static bool_t
+_tt_xdr_void(XDR *, void *)
+{
+	return xdr_void();
+}
+
 clnt_stat _tt_get_rpc_result(void)
 {
 	return rpc_result;
@@ -59,7 +65,7 @@ _tt_get_min_auth_level_1(void *argp, CLIENT *clnt)
 
 	memset((void *)&res, '\0', sizeof(res));
 	clnt_stat result = clnt_call(clnt, TT_GET_MIN_AUTH_LEVEL,
-				     (xdrproc_t) xdr_void, (caddr_t) argp,
+				     (xdrproc_t) _tt_xdr_void, (caddr_t) argp,
 				     (xdrproc_t) xdr_tt_auth_level_results,
 				     (caddr_t) &res, TIMEOUT);
 	if (result != RPC_SUCCESS) {
@@ -697,7 +703,7 @@ _tt_garbage_collect_1(void * /*NOTUSED*/, CLIENT *clnt)
 	static	_tt_garbage_collect_results	res;
 
 	clnt_call(clnt, TT_GARBAGE_COLLECT,
-				     (xdrproc_t) xdr_void, (caddr_t) NULL,
+				     (xdrproc_t) _tt_xdr_void, (caddr_t) NULL,
 				     (xdrproc_t) xdr_tt_garbage_collect_results,
 				     (caddr_t) &res,
 				     TIMEOUT);

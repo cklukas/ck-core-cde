@@ -162,12 +162,12 @@ abmfP_write_c_func_decl(
      * Count pairs of strings
      */
     num_params= 0;
-    va_start_params();
     while (   (va_arg(params, STRING) != nullptr) 
 	   && (va_arg(params, STRING) != nullptr))
     {
 	++num_params;
     }
+    va_end(params);
 
     list_params= (num_params > 1);
 
@@ -228,10 +228,10 @@ abmfP_write_c_func_decl(
 	    abio_outdent(file);
 	    abio_puts(file, "\n");
 	}
+	va_end(params);
     }
     abio_puts(file, ");\n");
 
-    va_end(params);
     return 0;
 #undef va_start_params
 }
@@ -249,8 +249,6 @@ abmfP_write_c_func_begin(
 #define va_start_params() (va_start(params, func_name))
     va_list	params;
     File	file= genCodeInfo->code_file;
-
-    va_start_params();
 
     abio_set_indent(file, 0);
     if (is_static)

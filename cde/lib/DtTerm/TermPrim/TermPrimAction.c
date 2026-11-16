@@ -253,6 +253,7 @@ _DtTermPrimActionKeymap(Widget w, XEvent *event, String *params, Cardinal *num_p
 	return;
     }
 
+    keymap = (XtTranslations) nullptr;
     nameLen = (size_t) snprintf(mapName, sizeof(mapName), "%sKeymap",
 	    params[0]);
     if (nameLen >= sizeof(mapName)) {

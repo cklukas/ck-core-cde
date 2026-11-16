@@ -480,6 +480,7 @@ ilThrottlePrivPtr  pPriv = nullptr;
 
             /*  Copy feed image data to buffer, fall thru to add throttle */
         _ilInsertCopyFilter (pipe, info.stripHeight);
+        /* fall through */
 
 
         /*  If not constant strips are not required, simple, else tougher:

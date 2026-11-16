@@ -1276,8 +1276,15 @@ nl_dup(
 	len = strlen(trav);
 	cur_len += len+offs;
 
-	if ((dup_str = (char *)realloc(dup_str, cur_len)) == nullptr)
-	    goto cret;
+	{
+	    char *grown = (char *)realloc(dup_str, cur_len);
+	    if (grown == nullptr)
+	    {
+		free(dup_str);
+		goto cret;
+	    }
+	    dup_str = grown;
+	}
 
 	if (cur_len == len+offs)
 	    strcpy(dup_str, start);
@@ -1400,8 +1407,16 @@ get_comment(
         }
 
         cur_len += new_len+1;
-        if ((cmt_str = (char *)realloc(cmt_str, cur_len)) == nullptr)
-            goto cret;
+        {
+            char *grown = (char *)realloc(cmt_str, cur_len);
+            if (grown == nullptr)
+            {
+                free(cmt_str);
+                free(buf);
+                goto cret;
+            }
+            cmt_str = grown;
+        }
 
         if (cur_len == new_len+1)
             strcpy(cmt_str, buf);
@@ -1584,16 +1599,26 @@ jump_backslash_gets(
     {
         int	len;
         
-        if (fgets(tmp, BUFSIZ, fp) == nullptr)
+        if ( fgets(tmp, BUFSIZ, fp) == nullptr)
+        {
+            free(new_str);
             goto cret;
+        }
 
         len = strlen(tmp);
     
         if (len < 2 || tmp[len-2] != '\\')
             done = (BOOL)TRUE;
         cur_len += len+1;
-        if ((new_str = (char *) realloc(new_str, cur_len)) == nullptr)
-            goto cret;
+        {
+            char *grown = (char *) realloc(new_str, cur_len);
+            if (grown == nullptr)
+            {
+                free(new_str);
+                goto cret;
+            }
+            new_str = grown;
+        }
 
         if (cur_len == len+1)
             strcpy(new_str, tmp);

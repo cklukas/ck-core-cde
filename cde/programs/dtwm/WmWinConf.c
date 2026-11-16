@@ -189,7 +189,7 @@ void GetClipDimensions (ClientData *pCD, Boolean fromRoot)
 
     int i;
     Arg getArgs[5];
-    Position tmpX, tmpY;
+    Position tmpX = 0, tmpY = 0;
 
     i=0;
     XtSetArg (getArgs[i], XmNwidth, (XtArgVal) &clipWidth ); i++;

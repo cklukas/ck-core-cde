@@ -124,14 +124,14 @@ void Button::CreateButton(MotifUI *parent, char *name, char * /*category*/,
                                    GuiNsuperNode, super_node, NULL);
    else
     {
-      int dir;
+      int dir = XmARROW_RIGHT;
 
       switch (button_type)
        {
-	case UP_ARROW_BUTTON: dir = XmARROW_UP;
-	case DOWN_ARROW_BUTTON: dir = XmARROW_DOWN;
-        case LEFT_ARROW_BUTTON: dir = XmARROW_LEFT;
-        case RIGHT_ARROW_BUTTON: dir = XmARROW_RIGHT;
+	case UP_ARROW_BUTTON: dir = XmARROW_UP; break;
+	case DOWN_ARROW_BUTTON: dir = XmARROW_DOWN; break;
+        case LEFT_ARROW_BUTTON: dir = XmARROW_LEFT; break;
+        case RIGHT_ARROW_BUTTON: dir = XmARROW_RIGHT; break;
        }
       _w = XtVaCreateManagedWidget("arrow", xmArrowButtonWidgetClass, parentW, 
 				   XmNmultiClick, XmMULTICLICK_DISCARD,

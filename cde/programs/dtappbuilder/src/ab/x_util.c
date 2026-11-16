@@ -511,7 +511,7 @@ x_contrast_color(
     XrmValue    src, dst;
     float       intensity;
     unsigned int    bg_pixel;
-    XColor    bg_color;
+    XColor    bg_color = {0};
 
     XtVaGetValues(widget, XtNbackground, &bg_pixel, nullptr);
 
@@ -757,8 +757,8 @@ x_create_cursor(
 {
     Pixmap	curs_pix;
     Cursor	cursor;
-    XColor	fg_color;
-    XColor	bg_color;
+    XColor	fg_color = {0};
+    XColor	bg_color = {0};
 
     curs_pix = XCreateBitmapFromData(XtDisplay(widget), root_win, (char*)bits,
 				     width, height);

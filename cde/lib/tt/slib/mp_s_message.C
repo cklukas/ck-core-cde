@@ -337,7 +337,7 @@ report_state_change()
 			(void)_session->call(TT_RPC_HUPDATE_MSG,
 					     (xdrproc_t)tt_xdr_update_args,
 					     (char *)&args,
-					     (xdrproc_t)xdr_void,
+					     (xdrproc_t)_tt_xdr_void,
 					     (char *)0);
 		}
 	}
@@ -482,7 +482,7 @@ set_return_sender_flags()
 	      case TT_OBJECT:
 		// scope can change for these messages
 		_ptr_guards |= _TT_MSK_SCOPE;
-		// fall into
+		/* fall through */
 	      case TT_PROCEDURE:
 		// don't send default TT_DISCARD reliability
 		SET_PTR_GUARD(_reliability != TT_DISCARD, _TT_MSK_RELIABILITY);
@@ -1453,7 +1453,7 @@ hdispatch()
 		Tt_status status = rs->call(TT_RPC_HDISPATCH,
 					    (xdrproc_t)tt_xdr_message,
 					    (char *)&m,
-					    (xdrproc_t)xdr_void,
+					    (xdrproc_t)_tt_xdr_void,
 					    (char *)0);
 		if (status == TT_OK) {
 			//

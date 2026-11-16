@@ -1931,7 +1931,7 @@ DTActionCallback (
      XtPointer call_data)
 {
    DesktopRec *desktopWindow;
-   char *command;
+   char *command = nullptr;
    Arg args[1];
 
    desktopWindow = (DesktopRec *) client_data;
@@ -4130,7 +4130,7 @@ WorkSpaceRemoved (
 		      desktop_data->workspaceData[new_index]->
 	 	       selectedDTWindows[k] = desktop_data->
 			  workspaceData[new_index]-> selectedDTWindows[k+1];
-		      desktop_data->workspaceData[new_index]->files_selected--;
+		    desktop_data->workspaceData[new_index]->files_selected--;
 		    break;
 		  }
                }

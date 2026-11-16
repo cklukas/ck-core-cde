@@ -839,7 +839,7 @@ objxm_comp_set_icon_args(
 {
     ABObj       shobj; /* Shell SubObj */
     STRING	icon, mask, icon_label;
-    Pixmap	icon_pm, mask_pm;
+    Pixmap	icon_pm = 0, mask_pm = 0;
     int		status = OK;
 
     if (!obj_is_base_win(obj))

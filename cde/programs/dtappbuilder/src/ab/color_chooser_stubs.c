@@ -327,7 +327,7 @@ swatchCB(
 {
 	int index;
 	XmString label;
-	Widget old_color;
+	Widget old_color = nullptr;
 
 	/* XtVaGetValues(w,XmNpositionIndex,&index,NULL); */
 	XtVaGetValues(w,XmNuserData,&index,nullptr);
@@ -559,7 +559,7 @@ applyCB(
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
 	int index;
-	Widget current_color;
+	Widget current_color = nullptr;
 	XmString label;
 
 	/* Find out which color was chosen */
@@ -607,7 +607,7 @@ cancelCB(
     /*** DTB_USER_CODE_START vvv Add C variables and code below vvv ***/
 
         short index;
-        Widget current_color;
+        Widget current_color = nullptr;
         XmString label;
 
         /* Find out which color was chosen (if any) */

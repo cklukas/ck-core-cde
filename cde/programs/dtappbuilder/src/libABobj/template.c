@@ -88,7 +88,7 @@ foo_func(
     char	*foo_char
 )
 {
-
+    return 0;
 }
 
 static int
@@ -97,6 +97,6 @@ foo_me(
     char	*foo_char
 )
 {
-
+    return 0;
 }
 

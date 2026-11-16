@@ -721,8 +721,8 @@ Check(char *spth, char *dpth, int mode)
     if (lstat (spth, &sbuf) < 0)
     {
         tmpStr = (GETMESSAGE(4,9, "Cannot open %s"));
-        msg = XtMalloc(strlen(tmpStr)+strlen(filename)+1);
-        sprintf(msg,tmpStr,filename);
+        msg = XtMalloc(strlen(tmpStr)+strlen(spth)+1);
+        sprintf(msg,tmpStr,spth);
         _DtMessageDialog (G_toplevel, title, msg, 0, FALSE, nullptr,
                           CloseTopLevel, nullptr, nullptr, False, ERROR_DIALOG);
         XtFree(msg);

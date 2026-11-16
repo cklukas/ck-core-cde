@@ -96,6 +96,24 @@ Tt_message		_ttdt_contract_cb(
 				void	       *clientCB,
 				void	       *clientData
 			);
+Tt_message		_ttdt_Geometry_out_cb(
+				Tt_message	msg,
+				Tt_pattern	pat,
+				void	       *clientCB,
+				void	       *clientData
+			);
+Tt_message		_ttdt_Iconified_out_cb(
+				Tt_message	msg,
+				Tt_pattern	pat,
+				void	       *clientCB,
+				void	       *clientData
+			);
+Tt_message		_ttdt_XInfo_out_cb(
+				Tt_message	msg,
+				Tt_pattern	pat,
+				void	       *clientCB,
+				void	       *clientData
+			);
 Tt_pattern		_ttdt_pat(
 				Tttk_op			op,
 				_TtDtMessageCB		internalCB,

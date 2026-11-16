@@ -773,7 +773,7 @@ _DtCm_rtable_change_4_svc(Table_Args_4 *args, struct svc_req *svcrq)
 	Appt_4			*newa, *olda;
 	Appt_4			tmpappt;
 	Options_4		option;
-	cms_entry		*entry, *oldentry, *newentry = nullptr;
+	cms_entry		*entry, *oldentry = nullptr, *newentry = nullptr;
 	cms_key			key;
 
 	if (debug)

@@ -98,7 +98,7 @@ int BookmarkEdit::g_modified_count = 0;
 
 #define THIS_CLASS BookmarkEdit
 #define ON_ACTIVATE(WOBJ,FUNC) \
-  (WOBJ).SetActivateCallback (this, (WWL_FUN) &THIS_CLASS::FUNC)
+  (WOBJ).SetActivateCallback (this, WWL_FUN_OF(&THIS_CLASS::FUNC))
 #if defined(__STDC__)
 #define BUTTON(PARENT,NAME) \
   WXmPushButtonGadget NAME (PARENT, #NAME, WAutoManage); \
@@ -252,7 +252,7 @@ BookmarkEdit::create_ui()
   help_agent().add_activate_help (help, (char*)"bookmark_edit_help");
   f_wm_delete_callback =
     new WCallback (*f_shell, window_system().WM_DELETE_WINDOW(),
-                   this, (WWL_FUN) &BookmarkEdit::cancel);
+                   this, WWL_FUN_OF(&BookmarkEdit::cancel));
 
   WXmSeparatorGadget   separator   (form,     "separator",   WAutoManage);
 

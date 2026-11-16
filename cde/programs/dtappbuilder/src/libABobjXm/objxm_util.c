@@ -395,7 +395,7 @@ objxm_str_to_xmstr(
 )
 {
     XrmValue src, dst;
-    XmString xmstr;
+    XmString xmstr = nullptr;
 
     if (util_strempty(string))
         return((XmString)nullptr);

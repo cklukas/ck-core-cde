@@ -5771,6 +5771,7 @@ DoLine (FormatData	*data,
 			case WEOF:
 				if (incp == in_line)	/* nothing read yet */
 					return (False);
+				/* fall through */
 
 			case L'\0':			/* fall through	 */
 			case L'\n':			/* end of line	 */

@@ -952,7 +952,7 @@ write_obj_create_proc(GenCodeInfo genCodeInfo, ABObj obj)
 
     if (abmfP_obj_needs_centering_handler(obj))
     {
-        abio_printf(genCodeInfo->code_file, "\t%s(%s, %s);\n",
+        abio_printf(genCodeInfo->code_file, "%s(%s, %s);\n",
 		abmfP_lib_center->name,
 		abmfP_get_c_name(genCodeInfo, obj),
 		abmfP_obj_get_centering_type(obj));

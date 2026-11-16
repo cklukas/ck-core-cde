@@ -316,7 +316,7 @@ ping()
 	// us anything that the TT_RPC_VRFY_SESSION call doesn't.
 
 	is_live = call((int)TT_RPC_VRFY_SESSION,
-		       (xdrproc_t)xdr_void, 0,
+		       (xdrproc_t)_tt_xdr_void, 0,
 		       (xdrproc_t)tt_xdr_string,
 		       (char *)&sid);
 

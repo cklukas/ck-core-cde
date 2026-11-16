@@ -48,8 +48,9 @@ def check(name, ok, detail=""):
             print("      " + line)
 
 
-if subprocess.run(["rpcinfo", "-p"], stdout=subprocess.DEVNULL,
-                  stderr=subprocess.DEVNULL).returncode != 0:
+if shutil.which("rpcinfo") is None or subprocess.run(
+    ["rpcinfo", "-p"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+).returncode != 0:
     print("skip  no portmapper to register a session with")
     finish()
 

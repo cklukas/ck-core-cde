@@ -194,13 +194,14 @@ void m_parupper(int par, M_WCHAR *string)
         for (p = string; *p ; p++)
           if (! m_whitespace(*p)) break ;
         w_strcpy(string, p) ;
-        for (p = string, i = 0 ; *p ; p++, i++)
+        for (p = string, i = 0 ; *p ; p++, i++) {
           *p = m_ctupper(*p) ;
           if (m_whitespace(*p)) {
             *p = M_SPACE ;
             for (q = p + 1 ; m_whitespace(*q); q++) ;
             w_strcpy(p + 1, q) ;
             }
+          }
         if (i && m_whitespace(string[i - 1])) string[i - 1] = M_EOS ;
         return ;
       default:

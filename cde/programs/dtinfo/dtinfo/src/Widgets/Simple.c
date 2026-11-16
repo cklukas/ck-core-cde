@@ -222,7 +222,7 @@ ConvertCursor(Widget w)
 {
     SimpleWidget simple = (SimpleWidget) w;
     XrmValue from, to;
-    Cursor cursor;
+    Cursor cursor = None;
    
     if (simple->simple.cursor_name == nullptr)
 	return;

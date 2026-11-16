@@ -807,8 +807,8 @@ pw_obj_reparentedOCB(
 		pws = &(prop_pw_settings_rec[i]);
 		if (pws->current_pane_obj == info->obj)
 		    panedwin_prop_clear_geom((AB_PROP_TYPE) i);
-		    ret = abobj_list_obj_reparented(pws->panelist, info,
-				pw_child_test_func);
+		ret = abobj_list_obj_reparented(pws->panelist, info,
+			    pw_child_test_func);
 	    }
 	}
     }

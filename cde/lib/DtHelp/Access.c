@@ -805,7 +805,7 @@ _DtHelpCeExpandPathname (
 
 		default:
 			i = 0;
-			while (i < MY_NUM && mySubs && mySubs[i].match != *spec)
+			while (i < MY_NUM && mySubs[i].match != *spec)
 			    i++;
 
 			if (i < MY_NUM)
@@ -1051,11 +1051,6 @@ _DtHelpCeGetLangSubParts (
 		    return -1;
 		  }
 	      }
-	    /*
-	     * don't save the code set, but make sure we mark as found
-	     */
-	    else
-		sCode = ptr;
 	 }
        /*
 	* didn't find a code set, so save the current info.

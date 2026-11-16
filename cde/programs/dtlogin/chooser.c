@@ -497,7 +497,7 @@ ReceivePacket (XtPointer closure, int *source, XtInputId *id)
     ARRAY8	    hostname;
     ARRAY8	    status;
     int		    saveHostname = 0;
-    struct sockaddr addr;
+    struct sockaddr addr = {0};
     int		    addrlen;
 
     addrlen = sizeof (addr);

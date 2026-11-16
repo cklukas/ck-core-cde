@@ -936,7 +936,7 @@ LibraryAgent::create_ui()
 
   f_wm_delete_callback =
     new WCallback (f_shell, window_system().WM_DELETE_WINDOW(),
-		   this, (WWL_FUN) &LibraryAgent::close_window);
+		   this, WWL_FUN_OF(&LibraryAgent::close_window));
 }
 
 //////////////////////////////////////////////////////////////////

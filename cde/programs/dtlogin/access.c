@@ -311,6 +311,7 @@ ReadWord(
 	    }
 	    while ((c = getc (file)) != EOF && c != '\n')
 		;
+	    /* fall through */
 	case '\n':
 	case EOF:
 	    if (c == EOF || (EOFatEOL && !quoted))
@@ -322,6 +323,7 @@ ReadWord(
 		nextIsEOF = TRUE;
 		return wordBuffer;
 	    }
+	    /* fall through */
 	case ' ':
 	case '\t':
 	    if (wordp != wordBuffer)
@@ -337,6 +339,7 @@ ReadWord(
 		quoted = TRUE;
 		continue;
 	    }
+	    /* fall through */
 	default:
 	    wordp = AddWordCharacter (wordp, c);
 	    break;

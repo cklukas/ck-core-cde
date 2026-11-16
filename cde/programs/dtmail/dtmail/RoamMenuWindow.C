@@ -5460,7 +5460,7 @@ Widget parent=NULL;
   }
     if(!parent)
             parent = theApplication->baseWidget();
-    	    DtMailGenDialog *genDialog = new DtMailGenDialog("Dialog",parent,XmDIALOG_FULL_APPLICATION_MODAL);
+    DtMailGenDialog *genDialog = new DtMailGenDialog("Dialog",parent,XmDIALOG_FULL_APPLICATION_MODAL);
 
             char *errMsg = (char *) XtCalloc(1,10240+strlen(fsname));
 

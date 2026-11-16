@@ -241,7 +241,7 @@ MarkIcon::single_click(XEvent *event)
       int delay = XtGetMultiClickTime (XtDisplay (widget)) + 30;
       g_timeout =
         new WTimeOut (window_system().app_context(), delay, this,
-		  (WTimeOutFunc) &MarkIcon::select_mark_timeout);
+		  WTIMEOUT_FUN_OF(&MarkIcon::select_mark_timeout));
     }
 }
 
@@ -503,7 +503,7 @@ MarkIcon::activate (WCallback *wcb)
 	  int delay = XtGetMultiClickTime (XtDisplay (widget)) + 2000;
 	  g_timeout =
 	    new WTimeOut (window_system().app_context(), delay, this,
-			  (WTimeOutFunc) &MarkIcon::select_mark_timeout);
+			  WTIMEOUT_FUN_OF(&MarkIcon::select_mark_timeout));
 		
 	}
       else if (pbcs->click_count == 2)

@@ -623,6 +623,7 @@ get_options(int argc, char *argv[])
                             application_args.menuBar = False;
                             break ;
                          }
+                         /* fall through */
               case 't' : if(strcmp(&argv[0][1], "trig") == 0)
                          {
                             INC ;
@@ -657,6 +658,7 @@ get_options(int argc, char *argv[])
                               }
                             break ;
                          }
+                         /* fall through */
               case 's' : if(strcmp(&argv[0][1], "session") == 0)
                          {
                             INC ;
@@ -664,6 +666,7 @@ get_options(int argc, char *argv[])
                             application_args.session = XtNewString(next);
                             break ;
                          }
+                         /* fall through */
               case '?' :
               case 'v' : usage(v->progname) ;
                          break ;
@@ -770,7 +773,7 @@ get_rcfile(char *name)
               }  
             else if (isval == 'f')
               {
-                sscanf(&line[3], "%511s", tmp) ;
+                sscanf(&line[3], "%255s", tmp) ;
                 snprintf(v->fun_vals[i], MAXLINE, "%s", convert(tmp)) ;
               }  
             else if (isval == 'r')
@@ -1582,6 +1585,7 @@ process_str(char *str, enum menu_type mtype)
                  beep();
                  break;
               }
+              /* fall through */
            default:
               process_item(get_index(str[i])) ;
         }

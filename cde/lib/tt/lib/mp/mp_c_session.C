@@ -132,12 +132,10 @@ c_init()
 					}
 				}
 			}
-			else {
-				// If we\'re here, a session was found but could
-				// not be pinged.  Force re-initialization.
-				_address_string = (char *) 0;
-				break;
-			}
+			// If we're here, a session was found but could
+			// not be pinged.  Force re-initialization.
+			_address_string = (char *) 0;
+			break;
 		    case TT_ERR_ACCESS:
 		    case TT_ERR_NO_MATCH:
 			// Can't recover from these

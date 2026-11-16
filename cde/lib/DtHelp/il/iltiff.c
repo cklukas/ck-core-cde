@@ -689,6 +689,7 @@ ilYCbCrInfo                *pYCbCr = nullptr;     /* null if not YCbCr ; else ->
                 */
               case 2: 
                 group3CompData = 0;     /* "TIFF" G3 - default options, set to 0 */
+                /* fall through */
               case 3:                   /* "true" G3 */
                 pFileImage->p.des.compression = IL_G3;
                 pFileImage->p.des.compInfo.g3.flags = group3CompData;

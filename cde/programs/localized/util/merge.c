@@ -196,9 +196,9 @@ void process_message (void)
     while (c = get_char (), c != '-')
         switch (c)
         {
-        case EOF: fatal ("Unterminated NLS sequence.\n", crt_line[2]-1, 2);
-        case '\n': fatal ("Unterminated NLS sequence.\n", crt_line[2]-1, 2);
-        default:  fatal ("Bad character in NLS sequence.\n", crt_line[2], 2);
+        case EOF: fatal ("Unterminated NLS sequence.\n", crt_line[2]-1, 2); break;
+        case '\n': fatal ("Unterminated NLS sequence.\n", crt_line[2]-1, 2); break;
+        default:  fatal ("Bad character in NLS sequence.\n", crt_line[2], 2); break;
         case '0': m = m * 10 + 0; break;
         case '1': m = m * 10 + 1; break;
         case '2': m = m * 10 + 2; break;

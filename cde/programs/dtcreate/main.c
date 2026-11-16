@@ -1323,8 +1323,8 @@ void UxDoEditPixmap(Widget wid, char *fname)
                  return;
               }
            }
-           if (fd1 > -1) close(fd1); fd1 = -1;
-           if (fd2 > -1) close(fd2); fd2 = -1;
+           if (fd1 > -1) { close(fd1); fd1 = -1; }
+           if (fd2 > -1) { close(fd2); fd2 = -1; }
 
 #ifdef DEBUG
            printf("final buffer = '%s'\n", buffer); /* debug */

@@ -189,22 +189,22 @@ MenuBar::createPulldown (
 			// On Item help for them.
 
 			helpId = XtName(*cascade);
-			if (helpId == "Mailbox") {
+			if (helpId && strcmp(helpId, "Mailbox") == 0) {
 				XtAddCallback(*cascade, XmNhelpCallback, 
 				HelpCB, (void *)DTMAILCONTAINERMENUID);
-			} else if (helpId == "Edit") {
+			} else if (helpId && strcmp(helpId, "Edit") == 0) {
 				XtAddCallback(*cascade, XmNhelpCallback, 
 					HelpCB, (void *)DTMAILEDITMENUID);
-			} else if (helpId == "Message") {
+			} else if (helpId && strcmp(helpId, "Message") == 0) {
 				XtAddCallback(*cascade, XmNhelpCallback, 
 					HelpCB, (void *)DTMAILMESSAGEMENUID);
-			} else if (helpId == "Attachments") {
+			} else if (helpId && strcmp(helpId, "Attachments") == 0) {
 				XtAddCallback(*cascade, XmNhelpCallback, 
 					HelpCB, (void *)DTMAILATTACHMENUID);
-			} else if (helpId == "View") {
+			} else if (helpId && strcmp(helpId, "View") == 0) {
 				XtAddCallback(*cascade, XmNhelpCallback, 
 					HelpCB, (void *)DTMAILVIEWMENUID);
-			} else if (helpId == "Compose") {
+			} else if (helpId && strcmp(helpId, "Compose") == 0) {
 				XtAddCallback(*cascade, XmNhelpCallback, 
 					HelpCB, (void *)DTMAILCOMPOSEMENUID);
 			}
@@ -321,22 +321,22 @@ MenuBar::createPulldown (
 		// On Item help for them.
 
 		helpId = XtName(cascade);
-		if (helpId == "Mailbox") {
+		if (helpId && strcmp(helpId, "Mailbox") == 0) {
 			XtAddCallback(cascade, XmNhelpCallback, 
 				HelpCB, (void *)DTMAILCONTAINERMENUID);
-		} else if (helpId == "Edit") {
+		} else if (helpId && strcmp(helpId, "Edit") == 0) {
 			XtAddCallback(cascade, XmNhelpCallback, 
 				HelpCB, (void *)DTMAILEDITMENUID);
-		} else if (helpId == "Message") {
+		} else if (helpId && strcmp(helpId, "Message") == 0) {
 			XtAddCallback(cascade, XmNhelpCallback, 
 				HelpCB, (void *)DTMAILMESSAGEMENUID);
-		} else if (helpId == "Attachments") {
+		} else if (helpId && strcmp(helpId, "Attachments") == 0) {
 			XtAddCallback(cascade, XmNhelpCallback, 
 				HelpCB, (void *)DTMAILATTACHMENUID);
-		} else if (helpId == "View") {
+		} else if (helpId && strcmp(helpId, "View") == 0) {
 			XtAddCallback(cascade, XmNhelpCallback, 
 				HelpCB, (void *)DTMAILVIEWMENUID);
-		} else if (helpId == "Compose") {
+		} else if (helpId && strcmp(helpId, "Compose") == 0) {
 			XtAddCallback(cascade, XmNhelpCallback, 
 				HelpCB, (void *)DTMAILCOMPOSEMENUID);
 		}

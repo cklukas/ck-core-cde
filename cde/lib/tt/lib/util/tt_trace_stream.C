@@ -147,6 +147,7 @@ operator <<(
 		break;
 	    case TT_HANDLED:
 		conjunction = " result: ";
+		/* fall through */
 	    case TT_REJECTED:
 	    case TT_FAILED:
 		if (! msg.handler().is_null()) {

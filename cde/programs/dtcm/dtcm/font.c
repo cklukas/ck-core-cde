@@ -241,7 +241,7 @@ load_app_font(
 	int		 nnames;
 	XrmValue	 in_font;
 	XrmValue	 out_fontlist;
-	XmFontList	 font_list;
+	XmFontList	 font_list = nullptr;
 	Atom		 pixel_atom = XmInternAtom(dpy, "PIXEL_SIZE", FALSE);
 
 	/* First get the pixel size from the User Font */

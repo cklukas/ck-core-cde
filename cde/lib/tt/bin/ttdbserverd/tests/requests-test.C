@@ -1318,7 +1318,7 @@ case_credentials_per_request(void)
 		Reply r = rpc(TT_GET_FILE_PARTITION,
 			      encode((xdrproc_t)xdr_wrapstring, &path));
 		CHECK(answered(r));
-		r = rpc(TT_GET_MIN_AUTH_LEVEL, encode((xdrproc_t)xdr_void, NULL));
+		r = rpc(TT_GET_MIN_AUTH_LEVEL, encode((xdrproc_t)_tt_xdr_void, NULL));
 		CHECK(answered(r));
 	}
 }

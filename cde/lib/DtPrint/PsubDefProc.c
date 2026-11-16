@@ -1692,9 +1692,7 @@ SelectPrinterCB(
 	    XtVaSetValues(psub, DtNprinterName, printer_spec, nullptr);
 	    XtFree(printer_spec);
 	}
-	/*
-	 * no break
-	 */
+	/* fall through */
 
     case XmCR_CANCEL:
 	/*

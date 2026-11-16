@@ -668,10 +668,10 @@ GetResources(int argc, char *argv[])
 	switch (argv[0][1]) {
 	case 'r':
 	    DumpResources();
-	    /* NOTREACHED */
+	    break;
 	default:
 	    Syntax(*argv);
-	    /* NOTREACHED */
+	    break;
 	}
     }
 

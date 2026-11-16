@@ -919,10 +919,12 @@ int SPC_Write_Protocol_Request (SPC_Connection_Ptr connection,
 
   case APPLICATION_DATA:
     prot_name=(XeString)"  <-- APPLICATION_DATA";
+    /* fall through */
     
   case APPLICATION_STDOUT:
     if(!prot_name)
       prot_name=(XeString)"  <-- APPLICATION_STDOUT";
+    /* fall through */
     
   case APPLICATION_STDERR:
     {

@@ -221,6 +221,7 @@ get_token(const _Tt_trace_tokens prev,
 				return _TT_TRACE_UNKNOWN;
 			}
 		}
+		/* fall through */
 	    case _TT_TRACE_ATTRIBUTES:
 		return allnone_check(value);
 	    case _TT_TRACE_STATES:
@@ -360,6 +361,7 @@ put_value(_Tt_trace_parser* tp,
 			tp->add_function(value);
 			break;
 		}
+		break;
 	    case _TT_TRACE_ATTRIBUTES:
 		tp->set_attributes(token);
 		break;

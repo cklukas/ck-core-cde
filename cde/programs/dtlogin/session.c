@@ -1799,6 +1799,7 @@ AbortClient( int pid )
 	    case EPERM:
 		LogError(ReadCatalog(
 			MC_LOG_SET,MC_LOG_NO_KILLCL,MC_DEF_LOG_NO_KILLCL));
+		/* fall through */
 	    case EINVAL:
 	    case ESRCH:
 		return 0;
@@ -2456,14 +2457,17 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	    case NOTIFY_ABORT:
 		Debug ("Greeter Xlib error or SIGTERM\n");
 		SessionExit(d, OPENFAILED_DISPLAY);
+		break;
 
 	    case NOTIFY_RESTART:
 	    	Debug ("Greeter requested RESTART_DISPLAY\n");
 		SessionExit(d, RESERVER_DISPLAY);
+		break;
 
 	    case NOTIFY_ABORT_DISPLAY:
 		Debug ("Greeter requested UNMANAGE_DISPLAY\n");
 		SessionExit(d, UNMANAGE_DISPLAY);
+		break;
 
 	    case NOTIFY_NO_WINDOWS:
 	        Debug ("Greeter requested NO_WINDOWS mode\n");
@@ -2500,6 +2504,7 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	    case waitCompose (SIGTERM,0,0):
 		Debug ("Greeter exited on SIGTERM\n");
 		SessionExit(d, OPENFAILED_DISPLAY);
+		break;
 
 	    default:
 		Debug ("Greeter returned unknown status %d\n", 

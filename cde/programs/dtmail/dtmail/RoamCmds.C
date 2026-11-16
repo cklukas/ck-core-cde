@@ -2814,7 +2814,7 @@ EditCutCmd::EditCutCmd(
     editor = w->get_editor()->textEditor();
 
     // className() is a virtual method
-    if (w->className() == "SendMsgDialog") {
+    if (strcmp(w->className(), "SendMsgDialog") == 0) {
 	_compose_dialog = (SendMsgDialog *)w;
     }
     else {
@@ -2845,7 +2845,7 @@ EditCopyCmd::EditCopyCmd(
     editor = w->get_editor()->textEditor();
     
     // className() is a virtual method
-    if (w->className() == "SendMsgDialog") {
+    if (strcmp(w->className(), "SendMsgDialog") == 0) {
 	_compose_dialog = (SendMsgDialog *)w;
     }
     else {

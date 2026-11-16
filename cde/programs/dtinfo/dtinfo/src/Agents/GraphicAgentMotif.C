@@ -243,7 +243,7 @@ GraphicAgent::create_ui()
 
   // just use "delete_response" instead
   // add a destroy callback to nuke the agent when widget is destroyed.
-  f_shell.SetDestroyCallback (this, (WWL_FUN) &GraphicAgent::ui_destroyed);
+  f_shell.SetDestroyCallback (this, WWL_FUN_OF(&GraphicAgent::ui_destroyed));
 
   DECL  (WXmForm,           form,         f_shell,      "form"         );
   DECLMC(WXmMenuBar,        menu_bar,     form,         "menu_bar"     );

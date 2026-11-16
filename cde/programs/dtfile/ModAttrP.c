@@ -333,8 +333,8 @@ AttrChangePipeCB(
    AttrChangeCBData *cb_data = (AttrChangeCBData *)client_data;
    short pipe_msg;
    char *title, *err_msg, *err_arg;
-   long modify_time;
-   int i, n, rc;
+   long modify_time = 0;
+   int i, n, rc = -1;
    Boolean malformed = False;
 
    /* read the msg from the pipe */

@@ -4884,6 +4884,7 @@ while ((c = getopt(m_argc, m_argv, "cdhot")) != -1)
 	    break;
 	case 'h':
 	    Help();
+	    break;
 	case 'o':
 	    optimizeFlag = TRUE;
 	    break;

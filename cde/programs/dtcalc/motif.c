@@ -3633,8 +3633,8 @@ read_resources(void)    /* Read all possible resources from the database. */
      v->dtype = (enum base_type) 2 ;
   else
   {
-     msg = (char *) XtMalloc(strlen( opts[(int) O_DISPLAY]) + strlen(str) + 3);
-     sprintf(msg, opts[(int) O_DISPLAY], str);
+     msg = (char *) XtMalloc(strlen( opts[(int) O_DISPLAY]) + strlen(application_args.display) + 3);
+     sprintf(msg, opts[(int) O_DISPLAY], application_args.display);
      _DtSimpleError (v->appname, DtWarning, nullptr, msg);
      XtFree(msg);
      v->dtype = (enum base_type) 1;
@@ -3649,8 +3649,8 @@ read_resources(void)    /* Read all possible resources from the database. */
      v->modetype = (enum base_type) 1 ;
   else
   {
-     msg = (char *) XtMalloc(strlen( opts[(int) O_MODE]) + strlen(str) + 3);
-     sprintf(msg, opts[(int) O_MODE], str);
+     msg = (char *) XtMalloc(strlen( opts[(int) O_MODE]) + strlen(application_args.mode) + 3);
+     sprintf(msg, opts[(int) O_MODE], application_args.mode);
      _DtSimpleError (v->appname, DtWarning, nullptr, msg);
      XtFree(msg);
      v->modetype = (enum base_type) 2;
@@ -3668,8 +3668,8 @@ read_resources(void)    /* Read all possible resources from the database. */
      v->ttype = (enum base_type) 1 ;
   else
   {
-     msg = (char *) XtMalloc(strlen( opts[(int) O_TRIG]) + strlen(str) + 3);
-     sprintf(msg, opts[(int) O_TRIG], str);
+     msg = (char *) XtMalloc(strlen( opts[(int) O_TRIG]) + strlen(application_args.trigType) + 3);
+     sprintf(msg, opts[(int) O_TRIG], application_args.trigType);
      _DtSimpleError (v->appname, DtWarning, nullptr, msg);
      XtFree(msg);
      v->ttype = (enum base_type) 0;

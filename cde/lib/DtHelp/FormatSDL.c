@@ -5848,6 +5848,7 @@ ParseElementEnd(
 
 		case SdlElementLink:
 		    CompressLinkSeg(my_struct->seg_list);
+		    /* fall through */
 
 		case SdlElementKey:
 		case SdlElementSphrase:

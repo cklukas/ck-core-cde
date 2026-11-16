@@ -72,7 +72,7 @@ BookTab::BookTab (const WComposite &parent)
 {
   widget = XyzCreateTabButton (parent, "tab", NULL, 0);
 
-  SetActivateCallback (this, (WWL_FUN) &BookTab::activate);
+  SetActivateCallback (this, WWL_FUN_OF(&BookTab::activate));
 }
 #endif
 
@@ -84,7 +84,7 @@ BookTab::BookTab (NodeWindowAgent *nwa,
 {
   widget = XyzCreateTabButton (parent, "tab", NULL, 0);
 
-  SetActivateCallback (this, (WWL_FUN) &BookTab::activate);
+  SetActivateCallback (this, WWL_FUN_OF(&BookTab::activate));
 
   set_tab (tab_ptr);
 }

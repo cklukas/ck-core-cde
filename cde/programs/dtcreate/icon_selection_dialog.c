@@ -1983,8 +1983,8 @@ Widget  create_icon_selection_dialog(swidget    _UxUxParent,
 
         switch (numberOfTopButtons){
                 case 0 : XtUnmanageChild (top_button_form); break;
-                case 1 : XtUnmanageChild (top_button2);
-                case 2 : XtUnmanageChild (top_button3);
+                case 1 : XtUnmanageChild (top_button2); /* fall through */
+                case 2 : XtUnmanageChild (top_button3); break;
         };
 
         if (numberOfBottomButtons == 3)

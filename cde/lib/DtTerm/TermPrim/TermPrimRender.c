@@ -1078,6 +1078,7 @@ _DtTermPrimInsertText(Widget w, unsigned char *buffer, int length)
                 ** treat null character same as any other character...
                 */
                 mbLen = 1;
+                /* fall through */
               default:
                 i   += mbLen;
                 pmb += mbLen;
@@ -1103,6 +1104,7 @@ _DtTermPrimInsertText(Widget w, unsigned char *buffer, int length)
                 ** treat null character same as any other character...
                 */
                 mbLen = 1;
+                /* fall through */
               default:
                 i   ++;
                 pmb += mbLen;

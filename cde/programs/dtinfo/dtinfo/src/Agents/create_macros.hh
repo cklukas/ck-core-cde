@@ -32,9 +32,9 @@
 #define ASSNM(TYPE,VAR,PARENT,NAME) VAR = TYPE (PARENT, NAME, WAutoManage)
 
 #define SET_CALLBACK(WOBJ,CBACK,FUNC) \
-  (WOBJ).CONCAT3(Set,CBACK,Callback) (this, (WWL_FUN) &CLASS::FUNC)
+  (WOBJ).CONCAT3(Set,CBACK,Callback) (this, WWL_FUN_OF(&CLASS::FUNC))
 #define SET_CALLBACK_D(WOBJ,CBACK,FUNC,DATA) \
-  (WOBJ).CONCAT3(Set,CBACK,Callback) (this, (WWL_FUN) &CLASS::FUNC, \
+  (WOBJ).CONCAT3(Set,CBACK,Callback) (this, WWL_FUN_OF(&CLASS::FUNC), \
 				      (void *) DATA)
 
 #define ON_ACTIVATE(WOBJ,FUNC) SET_CALLBACK(WOBJ,Activate,FUNC)

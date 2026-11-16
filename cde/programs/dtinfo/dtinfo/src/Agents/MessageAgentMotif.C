@@ -108,7 +108,7 @@ MessageAgent::create_ui(Widget parent)
   f_dialog->SetCancelCallback (this,
 			    (WWL_FUN) &MessageAgent::cancelOperation);
   shell.SetPopdownCallback (this,
-			     (WWL_FUN) &MessageAgent::pop_down);
+			     WWL_FUN_OF(&MessageAgent::pop_down));
 
   //  help_agent().add_activate_help (f_dialog->HelpPB, "quitbox_help");
   f_dialog->HelpPB().Unmanage();

@@ -50,6 +50,7 @@
 #define MP_SESSION_H
 #include "tt_options.h"
 #include "util/tt_host_utils.h"
+#include "util/tt_xdr_utils.h"
 #include "mp/mp_auth.h"
 #include "mp/mp_global.h"
 #include "mp/mp_mp.h"

@@ -85,6 +85,19 @@ public: // functions
 
   virtual const char *display_as();
 
+  template <typename T, void (T::*Fn)()>
+  void _folio_thunk0 (FolioObject *, u_int, void *, void *)
+    { (reinterpret_cast<T *>(this)->*Fn)(); }
+  template <typename T, typename P1, void (T::*Fn)(P1 *, u_int)>
+  void _folio_thunk2 (FolioObject *obj, u_int ntype, void *, void *)
+    { (reinterpret_cast<T *>(this)->*Fn)((P1 *)obj, ntype); }
+  template <typename T, typename P1, typename P3, void (T::*Fn)(P1 *, u_int, P3 *)>
+  void _folio_thunk3 (FolioObject *obj, u_int ntype, void *ndata, void *)
+    { (reinterpret_cast<T *>(this)->*Fn)((P1 *)obj, ntype, (P3 *)ndata); }
+  template <typename T, typename P1, typename P3, typename P4, void (T::*Fn)(P1 *, u_int, P3 *, P4 *)>
+  void _folio_thunk4 (FolioObject *obj, u_int ntype, void *ndata, void *cdata)
+    { (reinterpret_cast<T *>(this)->*Fn)((P1 *)obj, ntype, (P3 *)ndata, (P4 *)cdata); }
+
 #define AddDependent(CB, TYPE) \
   add_dependent (this, (notify_handler_t)CB, TYPE)
 #define AddDependentd(CB, TYPE, DATA) \
@@ -115,9 +128,9 @@ public: // functions
   void release_depend_on_list();
 
 #define Observe(TARG, TYPE, CB) \
-  observe (this, TARG, (notify_handler_t) CB, TYPE)
+  observe (this, TARG, FOLIO_HANDLER_OF(CB), TYPE)
 #define Observed(TARG, TYPE, CB, DATA) \
-  observe (this, TARG, (notify_handler_t) CB, TYPE, DATA)
+  observe (this, TARG, FOLIO_HANDLER_OF(CB), TYPE, DATA)
 
 #if defined(SC3) || defined(__SunOS)
   void observe (FolioObject *real_this, FolioObject *target,
@@ -155,3 +168,25 @@ protected: // variables
   Dependent     *f_dependents;
   DependOnList  *f_depend_on_list;
 };
+
+template <typename FnType, FnType Fn>
+struct _Folio_Handler_Select;
+
+template <typename T, void (T::*Fn)()>
+struct _Folio_Handler_Select<void (T::*)(), Fn> {
+  static notify_handler_t get() { return &FolioObject::_folio_thunk0<T, Fn>; }
+};
+template <typename T, typename P1, void (T::*Fn)(P1 *, u_int)>
+struct _Folio_Handler_Select<void (T::*)(P1 *, u_int), Fn> {
+  static notify_handler_t get() { return &FolioObject::_folio_thunk2<T, P1, Fn>; }
+};
+template <typename T, typename P1, typename P3, void (T::*Fn)(P1 *, u_int, P3 *)>
+struct _Folio_Handler_Select<void (T::*)(P1 *, u_int, P3 *), Fn> {
+  static notify_handler_t get() { return &FolioObject::_folio_thunk3<T, P1, P3, Fn>; }
+};
+template <typename T, typename P1, typename P3, typename P4, void (T::*Fn)(P1 *, u_int, P3 *, P4 *)>
+struct _Folio_Handler_Select<void (T::*)(P1 *, u_int, P3 *, P4 *), Fn> {
+  static notify_handler_t get() { return &FolioObject::_folio_thunk4<T, P1, P3, P4, Fn>; }
+};
+
+#define FOLIO_HANDLER_OF(CB) (_Folio_Handler_Select<decltype(CB), (CB)>::get())

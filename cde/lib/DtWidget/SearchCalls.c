@@ -735,6 +735,7 @@ DtEditorChange(
 	   if ( returnVal == False)
 	     break;
         }
+        /* fall through */
 
         case DtEDITOR_CURRENT_SELECTION:
         {

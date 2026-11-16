@@ -72,6 +72,10 @@ AC_DEFUN([CK_HARDENING_INIT],
    _CK_HARDENING_FLAG([-Werror=unused-result], [ck_hardening_flags])
    _CK_HARDENING_FLAG([-Werror=format-truncation], [ck_hardening_flags])
    _CK_HARDENING_FLAG([-Werror=null-dereference], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=address], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=implicit-fallthrough], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=misleading-indentation], [ck_hardening_flags])
+   _CK_HARDENING_FLAG([-Werror=cast-function-type], [ck_hardening_flags])
    _CK_HARDENING_FLAG([-fstack-protector-strong], [ck_hardening_flags])
    AS_CASE([" $CFLAGS "],
      [*" -O1 "*|*" -O2 "*|*" -O3 "*|*" -Os "*|*" -Og "*|*" -Ofast "*],

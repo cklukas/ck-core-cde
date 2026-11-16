@@ -2671,7 +2671,7 @@ name_list(type_info_t *linfo, DtDtsMMDatabase	*db, DtDtsMMRecord *rec_ptr)
 					linfo->name_type = 2;
 					break;
 				}
-				/* other wise */
+				/* fall through */
 			case	2:
 				/* use the ambigous list */
 				linfo->name_prev = 
@@ -2683,6 +2683,7 @@ name_list(type_info_t *linfo, DtDtsMMDatabase	*db, DtDtsMMRecord *rec_ptr)
 				linfo->name_prev = (int *)
 					_DtDtsMMGetBufferIndex(&linfo->name_count);
 				linfo->name_type = 3;
+				/* fall through */
 
 			default:
 				return(0);

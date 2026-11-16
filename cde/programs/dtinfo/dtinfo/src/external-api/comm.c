@@ -73,6 +73,10 @@ encode_display_event (OliasDisplayEvent *event,
   *length = 1 + strlen (event->infobase) + strlen (event->locator) + 2;
   /* Xt will free this memory. */
   *value = (XtPointer) malloc (*length);
+  if (*value == nullptr) {
+    *length = 0;
+    return;
+  }
   stream = (unsigned char *)*value;
   *format = 8;
 

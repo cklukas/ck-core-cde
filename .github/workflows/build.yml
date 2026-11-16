@@ -77,7 +77,7 @@ jobs:
             libdbus-1-dev libharfbuzz-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
             librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
             libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
-            m4 ncompress opensp pkg-config python3 rpcsvc-proto tcl-dev x11-xserver-utils \
+            m4 ncompress opensp pkg-config python3 rpcbind rpcsvc-proto tcl-dev x11-xserver-utils \
             xbitmaps xfonts-utils curl patch xvfb xauth
       - name: Build CK Core Motif ABI 9
         run: |
@@ -111,7 +111,7 @@ jobs:
             > "$xinerama_probe.c"
           '${{ matrix.cc }}' "$xinerama_probe.c" -lXinerama -o "$xinerama_probe"
           prefix="$RUNNER_TEMP/motif"
-          export PATH="$prefix/bin:$PATH"
+          export PATH="$prefix/bin:/usr/sbin:$PATH"
           export CPPFLAGS="-I$prefix/include $(pkg-config --cflags xft)"
           export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
           export LD_LIBRARY_PATH="$prefix/lib"
@@ -159,7 +159,7 @@ jobs:
           cmake --build "$RUNNER_TEMP/filesystem-build" --parallel 4
           cmake --install "$RUNNER_TEMP/filesystem-build"
           prefix="$RUNNER_TEMP/motif"
-          export PATH="$prefix/bin:$PATH"
+          export PATH="$prefix/bin:/usr/sbin:$PATH"
           export CPPFLAGS="-I$prefix/include $(pkg-config --cflags xft)"
           export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
           export LD_LIBRARY_PATH="$prefix/lib:$fs_prefix/lib"
@@ -229,7 +229,7 @@ jobs:
             libclang-rt-19-dev libdbus-1-dev libharfbuzz-dev libicu-dev libjpeg-dev liblmdb-dev libpam0g-dev libpng-dev \
             librsvg2-dev libssl-dev libtirpc-dev libtool libutempter-dev libxaw7-dev \
             libxft-dev libxinerama-dev libxmu-dev libxpm-dev libxrender-dev libxss-dev \
-            llvm-19 m4 ncompress opensp pkg-config python3 rpcsvc-proto tcl-dev x11-xserver-utils \
+            llvm-19 m4 ncompress opensp pkg-config python3 rpcbind rpcsvc-proto tcl-dev x11-xserver-utils \
             xbitmaps xfonts-utils curl patch xvfb xauth
       - name: Configure the sanitizer runtime
         run: |
@@ -274,7 +274,7 @@ jobs:
           mkdir "$RUNNER_TEMP/cde-tests"
           export TMPDIR="$RUNNER_TEMP/cde-tests"
           prefix="$RUNNER_TEMP/motif"
-          export PATH="$prefix/bin:$PATH"
+          export PATH="$prefix/bin:/usr/sbin:$PATH"
           export CPPFLAGS="-I$prefix/include $(pkg-config --cflags xft)"
           export LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib"
           export LD_LIBRARY_PATH="$prefix/lib"

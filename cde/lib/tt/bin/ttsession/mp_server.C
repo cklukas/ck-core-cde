@@ -1009,7 +1009,7 @@ sig_handler(int sig)
 
 			exit(0);
 		}
-		// The child ttsession falls through to clean itself up
+		/* fall through */
 	      case SIGINT:
 		// the main loop does it (see end_session): a handler cannot
 		// release what the session holds or take it out of the

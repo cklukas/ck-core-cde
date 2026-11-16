@@ -479,6 +479,27 @@ main(int argc, char** argv, char **envp)
 *  _tt_dbserver_prog_1 - the rpc db server program
 */
 
+#ifndef _TT_XDR_VOID_DEFINED
+#define _TT_XDR_VOID_DEFINED
+static inline bool_t
+_tt_xdr_void(XDR *, void *)
+{
+	return xdr_void();
+}
+#endif
+
+template <typename FnType, FnType Fn>
+struct _Tt_svc_thunk;
+
+template <typename Res, typename Arg, Res *(*Fn)(Arg *, SVCXPRT *)>
+struct _Tt_svc_thunk<Res *(*)(Arg *, SVCXPRT *), Fn> {
+	static char *call(caddr_t argp, SVCXPRT *transp) {
+		return (char *)Fn((Arg *)argp, transp);
+	}
+};
+
+#define TT_SVC_LOCAL(fn) (&_Tt_svc_thunk<decltype(&(fn)), &(fn)>::call)
+
 static void
 _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 {
@@ -518,8 +539,8 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 		_tt_file_netfile_args _tt_netfile_file_1_arg;
 	} argument;
 	char *result;
-	bool_t (*xdr_argument)(), (*xdr_result)();
-	char *(*local)();
+	xdrproc_t xdr_argument, xdr_result;
+	char *(*local)(caddr_t, SVCXPRT *);
 	
 	struct authunix_parms *unix_cred;
 #if defined(OPT_SECURE_RPC)
@@ -532,7 +553,7 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 	
 	LOCK_RPC();
 	if (rqstp->rq_proc == NULLPROC) {
-		(void)svc_sendreply(transp, (xdrproc_t)xdr_void, (caddr_t)NULL);
+		(void)svc_sendreply(transp, (xdrproc_t)_tt_xdr_void, (caddr_t)NULL);
 		UNLOCK_RPC();
 		return;
 	} else if ((rqstp->rq_proc != TT_GET_MIN_AUTH_LEVEL) &&
@@ -597,260 +618,260 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 	switch (rqstp->rq_proc) {
 	    case TT_GET_MIN_AUTH_LEVEL:
 		TTDB_DEBUG_SYSLOG("TT_GET_MIN_AUTH_LEVEL");
-		xdr_argument = (bool_t (*)()) xdr_void;
-		xdr_result = (bool_t (*)()) xdr_tt_auth_level_results;
-		local = (char *(*)()) _tt_get_min_auth_level_1;
+		xdr_argument = (xdrproc_t) _tt_xdr_void;
+		xdr_result = (xdrproc_t) xdr_tt_auth_level_results;
+		local = TT_SVC_LOCAL(_tt_get_min_auth_level_1);
 		break;
 		
 	    case TT_GET_FILE_PARTITION:
 		TTDB_DEBUG_SYSLOG("TT_GET_FILE_PARTITION");
-		xdr_argument = (bool_t (*)()) xdr_tt_file_name;
-		xdr_result = (bool_t (*)()) xdr_tt_file_partition_results;
-		local = (char *(*)()) _tt_get_file_partition_1;
+		xdr_argument = (xdrproc_t) xdr_tt_file_name;
+		xdr_result = (xdrproc_t) xdr_tt_file_partition_results;
+		local = TT_SVC_LOCAL(_tt_get_file_partition_1);
 		break;
 		
 	    case TT_CREATE_FILE:
 		TTDB_DEBUG_SYSLOG("TT_CREATE_FILE");
-		xdr_argument = (bool_t (*)()) xdr_tt_create_file_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_cache_results;
-		local = (char *(*)()) _tt_create_file_1;
+		xdr_argument = (xdrproc_t) xdr_tt_create_file_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_cache_results;
+		local = TT_SVC_LOCAL(_tt_create_file_1);
 		break;
 		
 	    case TT_CREATE_OBJ:
 		TTDB_DEBUG_SYSLOG("TT_CREATE_OBJ");
-		xdr_argument = (bool_t (*)()) xdr_tt_create_obj_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_cache_results;
-		local = (char *(*)()) _tt_create_obj_1;
+		xdr_argument = (xdrproc_t) xdr_tt_create_obj_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_cache_results;
+		local = TT_SVC_LOCAL(_tt_create_obj_1);
 		break;
 		
 	    case TT_REMOVE_FILE:
 		TTDB_DEBUG_SYSLOG("TT_REMOVE_FILE");
-		xdr_argument = (bool_t (*)()) xdr_tt_remove_file_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_results;
-		local = (char *(*)()) _tt_remove_file_1;
+		xdr_argument = (xdrproc_t) xdr_tt_remove_file_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_results;
+		local = TT_SVC_LOCAL(_tt_remove_file_1);
 		break;
 		
 	    case TT_REMOVE_OBJ:
 		TTDB_DEBUG_SYSLOG("TT_REMOVE_OBJ");
-		xdr_argument = (bool_t (*)()) xdr_tt_remove_obj_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_results;
-		local = (char *(*)()) _tt_remove_obj_1;
+		xdr_argument = (xdrproc_t) xdr_tt_remove_obj_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_results;
+		local = TT_SVC_LOCAL(_tt_remove_obj_1);
 		break;
 		
 	    case TT_MOVE_FILE:
 		TTDB_DEBUG_SYSLOG("TT_MOVE_FILE");
-		xdr_argument = (bool_t (*)()) xdr_tt_move_file_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_results;
-		local = (char *(*)()) _tt_move_file_1;
+		xdr_argument = (xdrproc_t) xdr_tt_move_file_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_results;
+		local = TT_SVC_LOCAL(_tt_move_file_1);
 		break;
 		
 	    case TT_SET_FILE_PROPS:
 		TTDB_DEBUG_SYSLOG("TT_SET_FILE_PROPS");
-		xdr_argument = (bool_t (*)()) xdr_tt_set_file_props_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_cache_results;
-		local = (char *(*)()) _tt_set_file_props_1;
+		xdr_argument = (xdrproc_t) xdr_tt_set_file_props_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_cache_results;
+		local = TT_SVC_LOCAL(_tt_set_file_props_1);
 		break;
 		
 	    case TT_SET_FILE_PROP:
 		TTDB_DEBUG_SYSLOG("TT_SET_FILE_PROP");
-		xdr_argument = (bool_t (*)()) xdr_tt_set_file_prop_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_cache_results;
-		local = (char *(*)()) _tt_set_file_prop_1;
+		xdr_argument = (xdrproc_t) xdr_tt_set_file_prop_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_cache_results;
+		local = TT_SVC_LOCAL(_tt_set_file_prop_1);
 		break;
 	    case TT_ADD_FILE_PROP:
 		TTDB_DEBUG_SYSLOG("TT_ADD_FILE_PROP");
-		xdr_argument = (bool_t (*)()) xdr_tt_add_file_prop_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_cache_results;
-		local = (char *(*)()) _tt_add_file_prop_1;
+		xdr_argument = (xdrproc_t) xdr_tt_add_file_prop_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_cache_results;
+		local = TT_SVC_LOCAL(_tt_add_file_prop_1);
 		break;
 		
 	    case TT_DELETE_FILE_PROP:
 		TTDB_DEBUG_SYSLOG("TT_DELETE_FILE_PROP");
-		xdr_argument = (bool_t (*)()) xdr_tt_del_file_prop_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_cache_results;
-		local = (char *(*)()) _tt_delete_file_prop_1;
+		xdr_argument = (xdrproc_t) xdr_tt_del_file_prop_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_cache_results;
+		local = TT_SVC_LOCAL(_tt_delete_file_prop_1);
 		break;
 		
 	    case TT_GET_FILE_PROP:
 		TTDB_DEBUG_SYSLOG("TT_GET_FILE_PROP");
-		xdr_argument = (bool_t (*)()) xdr_tt_get_file_prop_args;
-		xdr_result = (bool_t (*)()) xdr_tt_file_prop_results;
-		local = (char *(*)()) _tt_get_file_prop_1;
+		xdr_argument = (xdrproc_t) xdr_tt_get_file_prop_args;
+		xdr_result = (xdrproc_t) xdr_tt_file_prop_results;
+		local = TT_SVC_LOCAL(_tt_get_file_prop_1);
 		break;
 		
 	    case TT_GET_FILE_PROPS:
 		TTDB_DEBUG_SYSLOG("TT_GET_FILE_PROPS");
-		xdr_argument = (bool_t (*)()) xdr_tt_get_file_props_args;
-		xdr_result = (bool_t (*)()) xdr_tt_file_props_results;
-		local = (char *(*)()) _tt_get_file_props_1;
+		xdr_argument = (xdrproc_t) xdr_tt_get_file_props_args;
+		xdr_result = (xdrproc_t) xdr_tt_file_props_results;
+		local = TT_SVC_LOCAL(_tt_get_file_props_1);
 		break;
 		
 	    case TT_GET_FILE_OBJS:
 		TTDB_DEBUG_SYSLOG("TT_GET_FILE_OBJS");
-		xdr_argument = (bool_t (*)()) xdr_tt_get_file_objs_args;
-		xdr_result = (bool_t (*)()) xdr_tt_file_objs_results;
-		local = (char *(*)()) _tt_get_file_objs_1;
+		xdr_argument = (xdrproc_t) xdr_tt_get_file_objs_args;
+		xdr_result = (xdrproc_t) xdr_tt_file_objs_results;
+		local = TT_SVC_LOCAL(_tt_get_file_objs_1);
 		break;
 		
 	    case TT_SET_FILE_ACCESS:
 		TTDB_DEBUG_SYSLOG("TT_SET_FILE_ACCESS");
-		xdr_argument = (bool_t (*)()) xdr_tt_set_file_access_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_results;
-		local = (char *(*)()) _tt_set_file_access_1;
+		xdr_argument = (xdrproc_t) xdr_tt_set_file_access_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_results;
+		local = TT_SVC_LOCAL(_tt_set_file_access_1);
 		break;
 		
 	    case TT_GET_FILE_ACCESS:
 		TTDB_DEBUG_SYSLOG("TT_GET_FILE_ACCESS");
-		xdr_argument = (bool_t (*)()) xdr_tt_get_file_access_args;
-		xdr_result = (bool_t (*)()) xdr_tt_file_access_results;
-		local = (char *(*)()) _tt_get_file_access_1;
+		xdr_argument = (xdrproc_t) xdr_tt_get_file_access_args;
+		xdr_result = (xdrproc_t) xdr_tt_file_access_results;
+		local = TT_SVC_LOCAL(_tt_get_file_access_1);
 		break;
 		
 	    case TT_SET_OBJ_PROPS:
 		TTDB_DEBUG_SYSLOG("TT_SET_OBJ_PROPS");
-		xdr_argument = (bool_t (*)()) xdr_tt_set_obj_props_args;
-		xdr_result = (bool_t (*)()) xdr_tt_obj_props_results;
-		local = (char *(*)()) _tt_set_obj_props_1;
+		xdr_argument = (xdrproc_t) xdr_tt_set_obj_props_args;
+		xdr_result = (xdrproc_t) xdr_tt_obj_props_results;
+		local = TT_SVC_LOCAL(_tt_set_obj_props_1);
 		break;
 		
 	    case TT_SET_OBJ_PROP:
 		TTDB_DEBUG_SYSLOG("TT_SET_OBJ_PROP");
-		xdr_argument = (bool_t (*)()) xdr_tt_set_obj_prop_args;
-		xdr_result = (bool_t (*)()) xdr_tt_obj_props_results;
-		local = (char *(*)()) _tt_set_obj_prop_1;
+		xdr_argument = (xdrproc_t) xdr_tt_set_obj_prop_args;
+		xdr_result = (xdrproc_t) xdr_tt_obj_props_results;
+		local = TT_SVC_LOCAL(_tt_set_obj_prop_1);
 		break;
 		
 	    case TT_ADD_OBJ_PROP:
 		TTDB_DEBUG_SYSLOG("TT_ADD_OBJ_PROP");
-		xdr_argument = (bool_t (*)()) xdr_tt_add_obj_prop_args;
-		xdr_result = (bool_t (*)()) xdr_tt_obj_props_results;
-		local = (char *(*)()) _tt_add_obj_prop_1;
+		xdr_argument = (xdrproc_t) xdr_tt_add_obj_prop_args;
+		xdr_result = (xdrproc_t) xdr_tt_obj_props_results;
+		local = TT_SVC_LOCAL(_tt_add_obj_prop_1);
 		break;
 		
 	    case TT_DELETE_OBJ_PROP:
 		TTDB_DEBUG_SYSLOG("TT_DELETE_OBJ_PROP");
-		xdr_argument = (bool_t (*)()) xdr_tt_del_obj_prop_args;
-		xdr_result = (bool_t (*)()) xdr_tt_obj_props_results;
-		local = (char *(*)()) _tt_delete_obj_prop_1;
+		xdr_argument = (xdrproc_t) xdr_tt_del_obj_prop_args;
+		xdr_result = (xdrproc_t) xdr_tt_obj_props_results;
+		local = TT_SVC_LOCAL(_tt_delete_obj_prop_1);
 		break;
 		
 	    case TT_GET_OBJ_PROP:
 		TTDB_DEBUG_SYSLOG("TT_GET_OBJ_PROP");
-		xdr_argument = (bool_t (*)()) xdr_tt_get_obj_prop_args;
-		xdr_result = (bool_t (*)()) xdr_tt_obj_prop_results;
-		local = (char *(*)()) _tt_get_obj_prop_1;
+		xdr_argument = (xdrproc_t) xdr_tt_get_obj_prop_args;
+		xdr_result = (xdrproc_t) xdr_tt_obj_prop_results;
+		local = TT_SVC_LOCAL(_tt_get_obj_prop_1);
 		break;
 		
 	    case TT_GET_OBJ_PROPS:
 		TTDB_DEBUG_SYSLOG("TT_GET_OBJ_PROPS");
-		xdr_argument = (bool_t (*)()) xdr_tt_get_obj_props_args;
-		xdr_result = (bool_t (*)()) xdr_tt_obj_props_results;
-		local = (char *(*)()) _tt_get_obj_props_1;
+		xdr_argument = (xdrproc_t) xdr_tt_get_obj_props_args;
+		xdr_result = (xdrproc_t) xdr_tt_obj_props_results;
+		local = TT_SVC_LOCAL(_tt_get_obj_props_1);
 		break;
 		
 	    case TT_SET_OBJ_TYPE:
 		TTDB_DEBUG_SYSLOG("TT_SET_OBJ_TYPE");
-		xdr_argument = (bool_t (*)()) xdr_tt_set_obj_type_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_results;
-		local = (char *(*)()) _tt_set_obj_type_1;
+		xdr_argument = (xdrproc_t) xdr_tt_set_obj_type_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_results;
+		local = TT_SVC_LOCAL(_tt_set_obj_type_1);
 		break;
 		
 	    case TT_GET_OBJ_TYPE:
 		TTDB_DEBUG_SYSLOG("TT_GET_OBJ_TYPE");
-		xdr_argument = (bool_t (*)()) xdr_tt_objid_name;
-		xdr_result = (bool_t (*)()) xdr_tt_obj_type_results;
-		local = (char *(*)()) _tt_get_obj_type_1;
+		xdr_argument = (xdrproc_t) xdr_tt_objid_name;
+		xdr_result = (xdrproc_t) xdr_tt_obj_type_results;
+		local = TT_SVC_LOCAL(_tt_get_obj_type_1);
 		break;
 		
 	    case TT_SET_OBJ_FILE:
 		TTDB_DEBUG_SYSLOG("TT_SET_OBJ_FILE");
-		xdr_argument = (bool_t (*)()) xdr_tt_set_obj_file_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_results;
-		local = (char *(*)()) _tt_set_obj_file_1;
+		xdr_argument = (xdrproc_t) xdr_tt_set_obj_file_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_results;
+		local = TT_SVC_LOCAL(_tt_set_obj_file_1);
 		break;
 		
 	    case TT_GET_OBJ_FILE:
 		TTDB_DEBUG_SYSLOG("TT_GET_OBJ_FILE");
-		xdr_argument = (bool_t (*)()) xdr_tt_get_obj_file_args;
-		xdr_result = (bool_t (*)()) xdr_tt_obj_file_results;
-		local = (char *(*)()) _tt_get_obj_file_1;
+		xdr_argument = (xdrproc_t) xdr_tt_get_obj_file_args;
+		xdr_result = (xdrproc_t) xdr_tt_obj_file_results;
+		local = TT_SVC_LOCAL(_tt_get_obj_file_1);
 		break;
 		
 	    case TT_SET_OBJ_ACCESS:
 		TTDB_DEBUG_SYSLOG("TT_SET_OBJ_ACCESS");
-		xdr_argument = (bool_t (*)()) xdr_tt_set_obj_access_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_results;
-		local = (char *(*)()) _tt_set_obj_access_1;
+		xdr_argument = (xdrproc_t) xdr_tt_set_obj_access_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_results;
+		local = TT_SVC_LOCAL(_tt_set_obj_access_1);
 		break;
 		
 	    case TT_GET_OBJ_ACCESS:
 		TTDB_DEBUG_SYSLOG("TT_GET_OBJ_ACCESS");
-		xdr_argument = (bool_t (*)()) xdr_tt_get_obj_access_args;
-		xdr_result = (bool_t (*)()) xdr_tt_obj_access_results;
-		local = (char *(*)()) _tt_get_obj_access_1;
+		xdr_argument = (xdrproc_t) xdr_tt_get_obj_access_args;
+		xdr_result = (xdrproc_t) xdr_tt_obj_access_results;
+		local = TT_SVC_LOCAL(_tt_get_obj_access_1);
 		break;
 		
 	    case TT_IS_FILE_IN_DB:
 		TTDB_DEBUG_SYSLOG("TT_IS_FILE_IN_DB");
-		xdr_argument = (bool_t (*)()) xdr_tt_is_file_in_db_args;
-		xdr_result = (bool_t (*)()) xdr_tt_is_file_in_db_results;
-		local = (char *(*)()) _tt_is_file_in_db_1;
+		xdr_argument = (xdrproc_t) xdr_tt_is_file_in_db_args;
+		xdr_result = (xdrproc_t) xdr_tt_is_file_in_db_results;
+		local = TT_SVC_LOCAL(_tt_is_file_in_db_1);
 		break;
 		
 	    case TT_IS_OBJ_IN_DB:
 		TTDB_DEBUG_SYSLOG("TT_IS_OBJ_IN_DB");
-		xdr_argument = (bool_t (*)()) xdr_tt_is_obj_in_db_args;
-		xdr_result = (bool_t (*)()) xdr_tt_is_obj_in_db_results;
-		local = (char *(*)()) _tt_is_obj_in_db_1;
+		xdr_argument = (xdrproc_t) xdr_tt_is_obj_in_db_args;
+		xdr_result = (xdrproc_t) xdr_tt_is_obj_in_db_results;
+		local = TT_SVC_LOCAL(_tt_is_obj_in_db_1);
 		break;
 		
 	    case TT_QUEUE_MESSAGE:
 		TTDB_DEBUG_SYSLOG("TT_QUEUE_MESSAGE");
-		xdr_argument = (bool_t (*)()) xdr_tt_queue_msg_args;
-		xdr_result = (bool_t (*)()) xdr_tt_db_results;
-		local = (char *(*)()) _tt_queue_message_1;
+		xdr_argument = (xdrproc_t) xdr_tt_queue_msg_args;
+		xdr_result = (xdrproc_t) xdr_tt_db_results;
+		local = TT_SVC_LOCAL(_tt_queue_message_1);
 		break;
 		
 	    case TT_DEQUEUE_MESSAGES:
 		TTDB_DEBUG_SYSLOG("TT_DEQUEUE_MESSAGES");
-		xdr_argument = (bool_t (*)()) xdr_tt_dequeue_msgs_args;
-		xdr_result = (bool_t (*)()) xdr_tt_dequeue_msgs_results;
-		local = (char *(*)()) _tt_dequeue_messages_1;
+		xdr_argument = (xdrproc_t) xdr_tt_dequeue_msgs_args;
+		xdr_result = (xdrproc_t) xdr_tt_dequeue_msgs_results;
+		local = TT_SVC_LOCAL(_tt_dequeue_messages_1);
 		break;
 		
 	    case TTDB_FILE_NETFILE:
 		TTDB_DEBUG_SYSLOG("TTDB_FILE_NETFILE");
-		xdr_argument = (bool_t (*)()) xdr_tt_file_netfile_args;
-		xdr_result = (bool_t (*)()) xdr_tt_file_netfile_results;
-		local = (char *(*)()) _tt_file_netfile_1;
+		xdr_argument = (xdrproc_t) xdr_tt_file_netfile_args;
+		xdr_result = (xdrproc_t) xdr_tt_file_netfile_results;
+		local = TT_SVC_LOCAL(_tt_file_netfile_1);
 		break;
 		
 	    case TTDB_NETFILE_FILE:
 		TTDB_DEBUG_SYSLOG("TTDB_NETFILE_FILE");
-		xdr_argument = (bool_t (*)()) xdr_tt_file_netfile_args;
-		xdr_result = (bool_t (*)()) xdr_tt_file_netfile_results;
-		local = (char *(*)()) _tt_netfile_file_1;
+		xdr_argument = (xdrproc_t) xdr_tt_file_netfile_args;
+		xdr_result = (xdrproc_t) xdr_tt_file_netfile_results;
+		local = TT_SVC_LOCAL(_tt_netfile_file_1);
 		break;
 
 	    case TT_GET_ALL_SESSIONS:
 		TTDB_DEBUG_SYSLOG("TT_GET_ALL_SESSIONS");
-		xdr_argument = (bool_t (*)())xdr_tt_get_all_sessions_args;
-		xdr_result = (bool_t (*)())xdr_tt_get_all_sessions_results;
-		local = (char *(*)()) _tt_get_all_sessions_1;
+		xdr_argument = (xdrproc_t) xdr_tt_get_all_sessions_args;
+		xdr_result = (xdrproc_t) xdr_tt_get_all_sessions_results;
+		local = TT_SVC_LOCAL(_tt_get_all_sessions_1);
 		break;
 
 	    case TT_GARBAGE_COLLECT:
 		TTDB_DEBUG_SYSLOG("TT_GARBAGE_COLLECT");
-		xdr_argument = (bool_t (*)())xdr_void;
-		xdr_result = (bool_t (*)())xdr_tt_garbage_collect_results;
-		local = (char *(*)()) _tt_garbage_collect_1;
+		xdr_argument = (xdrproc_t) _tt_xdr_void;
+		xdr_result = (xdrproc_t) xdr_tt_garbage_collect_results;
+		local = TT_SVC_LOCAL(_tt_garbage_collect_1);
 		break;
 
 	    case TT_DELETE_SESSION:
 		TTDB_DEBUG_SYSLOG("TT_DELETE_SESSION");
-		xdr_argument = (bool_t (*)())xdr_tt_delete_session_args;
-		xdr_result = (bool_t (*)())xdr_tt_delete_session_results;
-		local = (char *(*)()) _tt_delete_session_1;
+		xdr_argument = (xdrproc_t) xdr_tt_delete_session_args;
+		xdr_result = (xdrproc_t) xdr_tt_delete_session_results;
+		local = TT_SVC_LOCAL(_tt_delete_session_1);
 		break;
 
 	    default:
@@ -859,7 +880,7 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 		return;
 	}
 	/* get the input arguments */
-	xdrproc_t arg_proc = (xdrproc_t)xdr_argument;
+	xdrproc_t arg_proc = xdr_argument;
 	memset((char *)&argument, 0, sizeof(argument));
 	if (!svc_getargs(transp, arg_proc, (caddr_t)&argument)) {
 		svcerr_decode(transp);
@@ -868,8 +889,7 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 		UNLOCK_RPC();
 		return;
 	}
-	char *(*local_t)(caddr_t, SVCXPRT *) = (char *(*)(caddr_t, SVCXPRT *))
-		local;
+	char *(*local_t)(caddr_t, SVCXPRT *) = local;
 	
 	/* Check global message queue unlock flag */
 	if (msg_q_unlock_flag == TRUE) {
@@ -890,7 +910,7 @@ _tt_dbserver_prog_1(struct svc_req *rqstp, SVCXPRT *transp)
 	
 	/* return the results to client */
 	if ((result != NULL) && !svc_sendreply(transp,
-					       (xdrproc_t)xdr_result,
+					       xdr_result,
 					       (caddr_t)result)) {
 		svcerr_systemerr(transp);
 	}

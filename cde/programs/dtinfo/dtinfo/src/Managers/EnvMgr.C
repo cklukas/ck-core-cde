@@ -490,8 +490,8 @@ EnvMgr::echoEnvState()
 // Function to pass to the XtResolvePathname call in place of
 // the default predicate, which does not allow for directories.
 //
-static bool
-isDir(char* dirname)
+static Boolean
+isDir(String dirname)
 {
   struct stat status;
 
@@ -499,7 +499,7 @@ isDir(char* dirname)
   if(access(dirname, R_OK) == 0)
   {
     stat(dirname, &status);
-    return (S_ISDIR(status.st_mode));
+    return (S_ISDIR(status.st_mode) ? True : False);
   }
  else
     return False;

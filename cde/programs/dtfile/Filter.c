@@ -923,7 +923,8 @@ SetValues(
       if (pixmapData)
         XtSetArg (args[n], XmNimageName, pixmapData->iconFileName);
       else
-        XtSetArg (args[n], XmNimageName, NULL);                         n++;
+        XtSetArg (args[n], XmNimageName, NULL);
+      n++;
       XtSetArg (args[n], XmNunderline, False);                          n++;
 
       XtSetArg (args[n], XmNpixmapPosition, XmPIXMAP_TOP);              n++;

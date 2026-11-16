@@ -2657,6 +2657,7 @@ void PullExposureEvents (void)
 	{
 	    dispatchEvent = WmDispatchClientEvent (&event);
 	}
+	break;
        default:
 	dispatchEvent = True;
       }

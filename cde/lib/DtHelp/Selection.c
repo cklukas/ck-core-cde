@@ -1339,6 +1339,7 @@ _DtCanvasProcessSelection (
 	case _DtCvSELECTION_CLEAR:
 		CheckAndSwitchPoints(&(canvas->select_start),
 							&(canvas->select_end));
+		/* fall through */
 
 	case _DtCvSELECTION_START:
 		_DtCvDrawAreaWithFlags(canvas, canvas->select_start,

@@ -2120,7 +2120,7 @@ handleNonMaskableEvents(Widget w, XtPointer eventData, XEvent *event,
 	DKS*/
 	if (event->xgraphicsexpose.count > 0)
 	    break;
-	/* else fall through to noexpose... */
+	/* fall through */
 
     case NoExpose:
 	/* clear the scroll flag... */

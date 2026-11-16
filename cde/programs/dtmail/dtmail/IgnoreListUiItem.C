@@ -303,7 +303,7 @@ void IgnoreListUiItem::handleChangeButtonPress()
 			    pos_list[0],
 			    TRUE);
 	  }
- 	props_changed = TRUE;
+      props_changed = TRUE;
     }
 }
 ///////////////////////////////////////////////////////////

@@ -428,6 +428,11 @@ genDialogOtherCallback( int *data )
 {
     *data=3;
 }
+
+static void
+genDialogHelpCallback( void * )
+{
+}
 // post_and_return takes a helpId, which is a string that is used to
 // reference the related help in the Mailer help volume.  The helpId
 // is passed to post(), which will attach help to the help button in
@@ -463,7 +468,7 @@ DtMailGenDialog::post_and_return(char *helpId)
 		   ( DialogCallback ) &genDialogOKCallback,
 		   ( DialogCallback ) &genDialogCancelCallback,
 		   ( DialogCallback ) NULL,
-		   ( DialogCallback ) &HelpErrorCB,
+		   &genDialogHelpCallback,
 		   helpId
 		   );
     } else {
@@ -520,7 +525,7 @@ DtMailGenDialog::post_and_return(
 			       ( DialogCallback ) &genDialogOKCallback,
 			       ( DialogCallback ) NULL,
 			       ( DialogCallback ) NULL,
-			       ( DialogCallback ) &HelpErrorCB,
+			       &genDialogHelpCallback,
 			       helpId
 			       );
     } else {
@@ -579,7 +584,7 @@ DtMailGenDialog::post_and_return(
 			       ( DialogCallback ) &genDialogOKCallback,
 			       ( DialogCallback ) &genDialogCancelCallback,
 			       ( DialogCallback ) NULL,
-			       ( DialogCallback ) &HelpErrorCB,
+			       &genDialogHelpCallback,
 			       helpId
 			       );
     } else {
@@ -662,7 +667,7 @@ DtMailGenDialog::post_and_return(
                    ( DialogCallback ) &genDialogOKCallback,
                    ( DialogCallback ) &genDialogCancelCallback,
                    ( DialogCallback ) &genDialogOtherCallback,
-		   ( DialogCallback ) &HelpErrorCB,
+		   &genDialogHelpCallback,
                    helpId
                    );
     } else {

@@ -115,14 +115,14 @@ lists), `-fstack-protector-strong` and, when the build is optimized,
 `-D_FORTIFY_SOURCE=3`. Each flag is probed, so a compiler that lacks one skips
 it. The switch also stops adding `-Wno-format-truncation`, `-Wno-write-strings`
 and `-Wno-unused-result`, so truncation, string-constant and ignored-result
-defects are reported, and promotes the twelve zeroed memory-safety, lifetime
-and error-handling defect classes (`-Werror=return-type`,
-`-Werror=use-after-free`, `-Werror=free-nonheap-object`, `-Werror=restrict`,
-`-Werror=format-overflow`, `-Werror=stringop-overflow`,
+defects are reported, and promotes all sixteen zeroed defect classes
+(`-Werror=return-type`, `-Werror=use-after-free`, `-Werror=free-nonheap-object`,
+`-Werror=restrict`, `-Werror=format-overflow`, `-Werror=stringop-overflow`,
 `-Werror=stringop-truncation`, `-Werror=maybe-uninitialized`,
 `-Werror=array-bounds`, `-Werror=unused-result`, `-Werror=format-truncation`,
-`-Werror=null-dereference`) to compile errors. Build with at least `-O1`;
-`-Wnull-dereference` finds most with `-O2`.
+`-Werror=null-dereference`, `-Werror=address`, `-Werror=implicit-fallthrough`,
+`-Werror=misleading-indentation`, `-Werror=cast-function-type`) to compile
+errors. Build with at least `-O1`; `-Wnull-dereference` finds most with `-O2`.
 
 `--enable-sanitizers[=LIST]` compiles and links with `-fsanitize=LIST` (default
 `address,undefined`) and `-fno-omit-frame-pointer`. Configure fails when the

@@ -118,6 +118,7 @@ static void InstantTitleButtonCB(Widget w, XtPointer client_data,
     switch (cb->button_position) {
 	case 1:
 	    InstantTitleSetTitle(pITD);
+	    /* fall through */
 
 	case 2:
 	    InstantTitleHideDialog(pITD->pCDforClient);

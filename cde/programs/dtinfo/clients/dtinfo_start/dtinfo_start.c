@@ -312,6 +312,7 @@ ActionDoneCallback (
 			XtAppAddTimeOut(app_context, 10 * time_out, 
 					Exit,
 	      				nullptr);
+			break;
 
         	case DtACTION_INVOKED:
 		case DtACTION_FAILED:

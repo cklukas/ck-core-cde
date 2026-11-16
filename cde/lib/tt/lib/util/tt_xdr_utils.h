@@ -38,6 +38,15 @@
 
 unsigned long	_tt_xdr_sizeof(xdrproc_t f, void *data);
 
+#ifndef _TT_XDR_VOID_DEFINED
+#define _TT_XDR_VOID_DEFINED
+static inline bool_t
+_tt_xdr_void(XDR *, void *)
+{
+	return xdr_void();
+}
+#endif
+
 // The encoding of a pointer may say that it is null (_Tt_new_ptr::xdr),
 // and decoding it then leaves the pointer null.  An xdr function whose
 // structure cannot do without the object uses this to reject such an

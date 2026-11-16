@@ -282,6 +282,7 @@ _ttdt_contract_cb(
 			return 0;
 		    case TTDT_PAUSE:
 			sensitive = False;
+			/* fall through */
 		    case TTDT_RESUME:
 			if (CALLXT(XtIsSensitive)( widget ) == sensitive) {
 				tt_message_status_set(msg,TT_DESKTOP_EALREADY);
@@ -327,6 +328,7 @@ _ttdt_pat(
 	switch (op) {
 	    case TTDT_SET_XINFO:
 		mode = TT_IN;
+		/* fall through */
 	    case TTDT_GET_XINFO:
 		status = tt_pattern_arg_add( pat, mode, Tttk_string, 0 );
 		if (status != TT_OK) {
@@ -343,6 +345,7 @@ _ttdt_pat(
 		break;
 	    case TTDT_SET_GEOMETRY:
 		mode = TT_INOUT;
+		/* fall through */
 	    case TTDT_GET_GEOMETRY:
 		status = tt_pattern_arg_add( pat, mode, Tttk_width, 0 );
 		if (status != TT_OK) {
@@ -363,6 +366,7 @@ _ttdt_pat(
 		break;
 	    case TTDT_SET_ICONIFIED:
 		mode = TT_IN;
+		/* fall through */
 	    case TTDT_GET_ICONIFIED:
 		status = tt_pattern_arg_add( pat, mode, Tttk_boolean, 0 );
 		if (status != TT_OK) {
@@ -381,6 +385,7 @@ _ttdt_pat(
 		break;
 	    case TTDT_STATUS:
 		mode = TT_IN;
+		/* fall through */
 	    case TTDT_GET_STATUS:
 		status = tt_pattern_arg_add( pat, mode, Tttk_string, 0 );
 		if (status != TT_OK) {
@@ -765,7 +770,7 @@ ttdt_Set_Geometry(
 // Parse {GS}et_Geometry request, pass it to user callback,
 // and optionally fill in and send the reply.
 //
-static Tt_message
+Tt_message
 _ttdt_Geometry_out_cb(
 	Tt_message	msg,
 	Tt_pattern	pat,
@@ -779,6 +784,10 @@ _ttdt_Geometry_out_cb(
 	int xOffset = _tttk_message_arg_ival( msg, 2, INT_MAX );
 	int yOffset = _tttk_message_arg_ival( msg, 3, INT_MAX );
 	Ttdt_Geometry_out_cb _cb = (Ttdt_Geometry_out_cb)clientCB;
+	if (_cb == 0) {
+		fuse = (caddr_t)0;
+		return msg;
+	}
 	Tt_message contract = _tttk_pattern_contract( pat );
 	msg = (*_cb)( msg, clientData, contract, &width, &height, &xOffset,
 		      &yOffset );
@@ -880,7 +889,7 @@ _ttdt_do_wm_state(
 		} else {
 			CALLX11(XRaiseWindow)( dpy, win ); // or XMapRaised?
 		}
-		// Fall through, to see if it worked
+		/* fall through */
 	    case TTDT_GET_ICONIFIED:
 		iconic = _ttdt_is_iconic( widget );
 		if (   (op == TTDT_SET_ICONIFIED)
@@ -900,7 +909,7 @@ _ttdt_do_wm_state(
 					attribs.screen );
 			CALLX11(XWithdrawWindow)( dpy, win, screen );
 		}
-		// Fall through, to see if it worked
+		/* fall through */
 	    case TTDT_GET_MAPPED:
 		CALLX11(XGetWindowAttributes)( dpy, win, &attribs );
 		mapped = attribs.map_state != IsUnmapped;
@@ -1013,7 +1022,7 @@ ttdt_Set_Iconified(
 // Parse {GS}et_Iconified request, pass it to user callback,
 // and optionally fill in and send the reply.
 //
-static Tt_message
+Tt_message
 _ttdt_Iconified_out_cb(
 	Tt_message	msg,
 	Tt_pattern	pat,
@@ -1024,6 +1033,10 @@ _ttdt_Iconified_out_cb(
 	_TttkItem2Free fuse = msg;
 	int iconified = _tttk_message_arg_ival( msg, 0, 0 );
 	Ttdt_Iconified_out_cb _cb = (Ttdt_Iconified_out_cb)clientCB;
+	if (_cb == 0) {
+		fuse = (caddr_t)0;
+		return msg;
+	}
 	msg = (*_cb)( msg, clientData, _tttk_pattern_contract( pat ),
 		      &iconified );
 	Tt_status status = tt_ptr_error( msg );
@@ -1326,7 +1339,7 @@ ttdt_Set_XInfo(
 // Parse {GS}et_XInfo request, pass it to user callback,
 // and optionally fill in and send the reply.
 //
-static Tt_message
+Tt_message
 _ttdt_XInfo_out_cb(
 	Tt_message	msg,
 	Tt_pattern	pat,
@@ -1360,6 +1373,11 @@ _ttdt_XInfo_out_cb(
 	tt_free( _visual );
 	int depth = _tttk_message_arg_ival( msg, 2, 1 );
 	Ttdt_XInfo_out_cb _cb = (Ttdt_XInfo_out_cb)clientCB;
+	if (_cb == 0) {
+		tt_free( display );
+		fuse = (caddr_t)0;
+		return msg;
+	}
 	msg = (*_cb)( msg, clientData, _tttk_pattern_contract( pat ),
 		      &display, &visual, &depth );
 	Tt_status status = tt_ptr_error( msg );

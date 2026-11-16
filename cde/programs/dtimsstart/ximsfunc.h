@@ -197,6 +197,11 @@ extern void pr_brk(char *msg);
 #define	CLR(p, st)		memset((void *) p, 0, sizeof(st))
 #define	COPY(d, s, n, st)	memcpy((void *)(d), (void *)(s), (n) * sizeof(st))
 
+static inline const char *_xims_nonempty(const char *s)
+{
+    return (s && *s) ? s : NULL;
+}
+
 # ifdef	DEBUG_MEM
 void	*_mp_;
 
@@ -204,16 +209,16 @@ void	*_mp_;
     print_msg("ALLOC(%d, " #st "): _mp_=%p sz=%d\n", n, _mp_, sizeof(st)), (st *) _mp_)
 #define	REALLOC(p, n, st)	( _mp = XtRealloc((char *) (p), (n) * sizeof(st)), \
     print_msg("REALLOC(%p, %d, " #st "): _mp_=%p\n", p, n, _mp_), (st *) _mp_)
-#define	NEWSTR(s)		(_mp_ = (s) && *(s) ? XtNewString(s) : NULL, \
+#define	NEWSTR(s)		(_mp_ = _xims_nonempty(s) ? XtNewString(s) : NULL, \
     print_msg("NEWSTR(%s): _mp_=%p\n", s, _mp_), (char *) _mp_)
 #define	FREE(p)			(print_msg("FREE(%p)\n", p), XtFree((char *) p), (p) = 0)
-#define	RENEWSTR(p, s)		(_mp_ = (s) && *(s) ? XtNewString(s) : NULL, \
+#define	RENEWSTR(p, s)		(_mp_ = _xims_nonempty(s) ? XtNewString(s) : NULL, \
     print_msg("RENEWSTR(" #p "): %p(%s) => %p(%s)\n", p, p, _mp_, s), \
     XtFree((char *) p), (p) = (char *) _mp_)
 # else	/* DEBUG_MEM */
 #define	ALLOC(n, st)		(st *) XtCalloc(n, sizeof(st))
 #define	REALLOC(p, n, st)	(st *) XtRealloc((char *) (p), (n) * sizeof(st))
-#define	NEWSTR(s)		((s) && *(s)) ? XtNewString(s) : NULL
+#define	NEWSTR(s)		(_xims_nonempty(s) ? XtNewString(s) : NULL)
 #define	FREE(p)			XtFree((char *) p), (p) = 0
 #define	RENEWSTR(p, s)		XtFree((char *) p), (p) = NEWSTR(s)
 # endif	/* DEBUG_MEM */
@@ -230,9 +235,16 @@ void	*_mp_;
 #define	is_white(c)		((c) == ' ' || (c) == '\t' || (c) == '\n')
 #define	skip_white(p)		while (is_white(*(p)))	(p)++
 #define	next_field(p)	\
-	for ((p)++; *(p) && !is_white(*(p)); (p)++) ; skip_white(p)
+	do { \
+		for ((p)++; *(p) && !is_white(*(p)); (p)++) ; \
+		skip_white(p); \
+	} while (0)
 #define	cut_field(p)	\
-	for ((p)++; *(p) && !is_white(*(p)); (p)++) ; *(p)++ = 0; skip_white(p)
+	do { \
+		for ((p)++; *(p) && !is_white(*(p)); (p)++) ; \
+		*(p)++ = 0; \
+		skip_white(p); \
+	} while (0)
 
 	/* misc */
 #define Max(a, b)	((a) < (b) ? (b) : (a))

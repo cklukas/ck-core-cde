@@ -221,25 +221,25 @@ pats_create(
 		tt_pattern_session_add( pats[i], sess );
 		tt_pattern_register( pats[i] );
 	} else {
-		pats[++i] = ttdt_Get_Geometry_pat( TT_HANDLE, contract,
-				(Ttdt_Geometry_out_cb)cb, clientData, 1 );
-		pats[++i] = ttdt_Set_Geometry_pat( TT_HANDLE, contract,
-				(Ttdt_Geometry_out_cb)cb, clientData, 1 );
-		pats[++i] = ttdt_Get_Iconified_pat( TT_HANDLE, contract,
-				(Ttdt_Iconified_out_cb)cb, clientData, 0 );
+		pats[++i] = _ttdt_pat(TTDT_GET_GEOMETRY, _ttdt_Geometry_out_cb,
+				TT_HANDLE, contract, (void *)cb, clientData, 1 );
+		pats[++i] = _ttdt_pat(TTDT_SET_GEOMETRY, _ttdt_Geometry_out_cb,
+				TT_HANDLE, contract, (void *)cb, clientData, 1 );
+		pats[++i] = _ttdt_pat(TTDT_GET_ICONIFIED, _ttdt_Iconified_out_cb,
+				TT_HANDLE, contract, (void *)cb, clientData, 0 );
 		tt_pattern_op_add( pats[i], _ttDtOp( TTDT_GET_MAPPED ) );
 		tt_pattern_session_add( pats[i], sess );
 		tt_pattern_register( pats[i] );
-		pats[++i] = ttdt_Set_Iconified_pat( TT_HANDLE, contract,
-				(Ttdt_Iconified_out_cb)cb, clientData, 0 );
+		pats[++i] = _ttdt_pat(TTDT_SET_ICONIFIED, _ttdt_Iconified_out_cb,
+				TT_HANDLE, contract, (void *)cb, clientData, 0 );
 		tt_pattern_op_add( pats[i], _ttDtOp( TTDT_SET_MAPPED ) );
 		tt_pattern_session_add( pats[i], sess );
 		tt_pattern_register( pats[i] );
-		pats[++i] = ttdt_Get_XInfo_pat(	TT_HANDLE, contract,
-				(Ttdt_XInfo_out_cb)cb, clientData, 1 );
+		pats[++i] = _ttdt_pat(TTDT_GET_XINFO, _ttdt_XInfo_out_cb,
+				TT_HANDLE, contract, (void *)cb, clientData, 1 );
 		if ((requests & TTDT_SESSION_SET_XINFO) != 0) {
-			pats[++i] = ttdt_Set_XInfo_pat(	TT_HANDLE, contract,
-					(Ttdt_XInfo_out_cb)cb, clientData, 1 );
+			pats[++i] = _ttdt_pat(TTDT_SET_XINFO, _ttdt_XInfo_out_cb,
+					TT_HANDLE, contract, (void *)cb, clientData, 1 );
 		}
 		pats[++i] = _ttdt_pat(TTDT_RAISE, _ttdt_contract_cb, TT_HANDLE,
 				contract, (void *)cb, clientData, 0 );

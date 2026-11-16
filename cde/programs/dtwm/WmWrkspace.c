@@ -3410,13 +3410,13 @@ SaveWorkspaceResources(
     char screenName[1024];
     char tmpScreenName[10];
 
-    Position clientX;
-    Position clientY;
+    Position clientX = 0;
+    Position clientY = 0;
     Dimension clientWidth;
     Dimension clientHeight;
     int xoff, yoff;
     WmPanelistObject  pPanelist = (WmPanelistObject) pWS->pSD->wPanelist;
-    ClientData *pCD_Panel ;
+    ClientData *pCD_Panel = nullptr;
     char tmpBuffer[MAXWMPATH+1];
     int iLen;
 

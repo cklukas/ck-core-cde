@@ -352,7 +352,7 @@ _tt_service_rpc(svc_req *rqstp, SVCXPRT *transp)
 	
 	switch (rqstp->rq_proc) {
 	    case NULLPROC:
-		(void)svc_sendreply(transp, (xdrproc_t)xdr_void, 0);
+		(void)svc_sendreply(transp, (xdrproc_t)_tt_xdr_void, 0);
 		break;
 	    case TT_RPC_VRFY_SESSION:
 		_tt_rpc_vrfy_session(transp);
@@ -1252,7 +1252,7 @@ _tt_rpc_alloc_procid_key(SVCXPRT *transp)
 {
 	_Tt_string		result;
 
-	if (! _tt_svc_getargs(transp,(xdrproc_t)xdr_void,0)) {
+	if (! _tt_svc_getargs(transp,(xdrproc_t)_tt_xdr_void,0)) {
 		svcerr_decode(transp);
 		return;
 	}
@@ -1291,7 +1291,7 @@ _tt_rpc_vrfy_session(SVCXPRT *transp)
 {
 	_Tt_string		id;
 
-	if (! _tt_svc_getargs(transp, (xdrproc_t)xdr_void, 0)) {
+	if (! _tt_svc_getargs(transp, (xdrproc_t)_tt_xdr_void, 0)) {
 		svcerr_decode(transp);
 		return;
 	}

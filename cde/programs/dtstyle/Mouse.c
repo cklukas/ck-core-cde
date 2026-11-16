@@ -373,7 +373,7 @@ EnsureXcursorPath(void)
 	candidates[candCount++] = XtNewString(temp);
     }
 
-    candidates[candCount++] = "/usr/share/icons";
+    candidates[candCount++] = XtNewString("/usr/share/icons");
 
     for (int i = 0; i < candCount; i++)
     {
@@ -398,7 +398,7 @@ EnsureXcursorPath(void)
 
     for (int i = 0; i < candCount; i++)
     {
-	if (candidates[i] && candidates[i] != "/usr/share/icons")
+	if (candidates[i])
 	    XtFree((char *)candidates[i]);
     }
 
@@ -466,7 +466,7 @@ ScanThemeDir(const char *baseDir, char ***themes, Widget **items, int *count, in
 	char path[1024];
 	char cursorsPath[1060];
 
-	if (!entry->d_name || entry->d_name[0] == '.')
+	if (entry->d_name[0] == '\0' || entry->d_name[0] == '.')
 	    continue;
 
 	snprintf(path, sizeof(path), "%s/%s", baseDir, entry->d_name);

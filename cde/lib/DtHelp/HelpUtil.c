@@ -940,6 +940,7 @@ int _DtHelpFilterExecCmd(
    msgDlgCBStruct.msgDlg = msgDlg;
    msgDlgCBStruct.okBtn = execBtn;
    msgDlgCBStruct.cancelBtn = noexecBtn;
+   msgDlgCBStruct.helpBtn = nullptr;
    msgDlgCBStruct.activatedBtnId = -1;
 
    XtAddCallback(noexecBtn, XmNactivateCallback, 
@@ -1323,6 +1324,7 @@ static Widget  LocateWidgetId(
                     *statusRet = DtHELP_SELECT_ABORT;
                     return(nullptr);
 		  }
+                /* fall through */
             default:
                   XtDispatchEvent(&event);
       }

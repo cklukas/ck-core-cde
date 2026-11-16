@@ -257,10 +257,10 @@ ttdt_subcontract_manage(
 		pats[1] = ttdt_Get_XInfo_pat( TT_HANDLE, subcontract,
 				_ttdt_do_Get_XInfo, shell, 1 );
 	} else {
-		pats[0] = ttdt_Get_Geometry_pat( TT_HANDLE, subcontract,
-				(Ttdt_Geometry_out_cb)cb, clientData, 1 );
-		pats[1] = ttdt_Get_XInfo_pat(	TT_HANDLE, subcontract,
-				(Ttdt_XInfo_out_cb)cb, clientData, 1 );
+		pats[0] = _ttdt_pat( TTDT_GET_GEOMETRY, _ttdt_Geometry_out_cb,
+				TT_HANDLE, subcontract, (void *)cb, clientData, 1 );
+		pats[1] = _ttdt_pat( TTDT_GET_XINFO, _ttdt_XInfo_out_cb,
+				TT_HANDLE, subcontract, (void *)cb, clientData, 1 );
 	}
 	pats[2] = _ttdt_pat(	TTDT_STATUS, _ttdt_contract_cb, TT_OBSERVE,
 				subcontract, (void *)cb, clientData, 1 );
