@@ -736,8 +736,9 @@ through `zwlr_screencopy_manager_v1`, and writes `receipt.json`.
 
 `scripts/build-ubuntu-debs.py` packages the matched native cohort into five
 Debian/Ubuntu archives (`ck-core-motif9`, `ck-core-fs-lib`, `ck-core-cde`,
-`ck-core-dtlogin`, and `ck-core-apps`) along with `Packages`, `Packages.gz`, and
-`Release` repository metadata:
+`ck-core-dtlogin`, and `ck-core-apps`) along with GPG-signed APT repository
+metadata (`Packages`, `Packages.gz`, `Release`, `Release.gpg`, `InRelease`, and
+`ck-core-archive-keyring.asc`):
 
 ```sh
 python3 scripts/build-ubuntu-debs.py --task-root "$TASK_ROOT" --verify-install
@@ -745,8 +746,20 @@ python3 scripts/build-ubuntu-debs.py --task-root "$TASK_ROOT" --verify-install
 
 All runtime libraries and executables install beneath `/usr/dt` with
 `RUNPATH=/usr/dt/lib` and `/etc/ld.so.conf.d/ck-core-cde.conf`, avoiding file or
-SONAME collisions with system `libxm4`. `ck-core-cde` registers both
-`/usr/share/xsessions/cde.desktop` and
-`/usr/share/wayland-sessions/cde-wayland.desktop`, while `ck-core-dtlogin`
-provides `/lib/systemd/system/dtlogin.service`, `pam_systemd.so` session hooks,
-and `shared/default-x-display-manager` `debconf` integration.
+SONAME collisions with system `libxm4`. `ck-core-cde` ships `dtwm-wayland`,
+`dtwm-panel`, `/usr/dt/bin/Xsession.wayland`, `/usr/share/xsessions/cde.desktop`,
+and `/usr/share/wayland-sessions/cde-wayland.desktop`, while `ck-core-dtlogin`
+provides `/lib/systemd/system/dtlogin.service`, the unprivileged `_dtgreeter`
+account and `/etc/pam.d/dtlogin-greeter` PAM `greeter` stack, `pam_systemd.so`
+session hooks, and `shared/default-x-display-manager` `debconf` integration.
+
+To install from a generated local or published APT repository on Ubuntu LTS:
+
+```sh
+sudo install -d -m 0755 /etc/apt/keyrings
+sudo install -m 0644 ck-core-archive-keyring.asc /etc/apt/keyrings/ck-core-archive-keyring.asc
+echo "deb [signed-by=/etc/apt/keyrings/ck-core-archive-keyring.asc] file:/path/to/repo ./" \
+  | sudo tee /etc/apt/sources.list.d/ck-core.list
+sudo apt-get update
+sudo apt-get install ck-core-cde ck-core-apps ck-core-dtlogin
+```

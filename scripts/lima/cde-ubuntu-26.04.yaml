@@ -47,6 +47,7 @@ provision:
       build-essential clang libclang-rt-dev lld llvm cmake ninja-build meson pkg-config \
       autoconf automake libtool bison byacc flex m4 gawk gettext locales \
       python3 python3-pil git curl ca-certificates file binutils patchelf fakeroot \
+      dpkg-dev gnupg lintian \
       libx11-dev libxt-dev libxext-dev libxmu-dev libxpm-dev libxau-dev \
       libxdmcp-dev libxinerama-dev libxrandr-dev libxrender-dev libxcursor-dev \
       libxfixes-dev libxss-dev libxaw7-dev libxft-dev libice-dev libsm-dev \
@@ -60,3 +61,8 @@ provision:
       xwayland libseat-dev libinput-dev libxkbcommon-dev libdrm-dev \
       libgbm-dev libegl-dev libgles-dev libpixman-1-dev \
       labwc grim wlrctl wayvnc foot
+    # Ensure hostname resolves via IPv4 loopback so ToolTalk (libtt / ttsession)
+    # TI-RPC loopback binds cleanly instead of hitting nss-myhostname link-local IPv6.
+    if ! grep -Eq "^[[:space:]]*127\\.0\\.1\\.1[[:space:]]+$(hostname)(\$|[[:space:]])" /etc/hosts; then
+      sed -i "1a 127.0.1.1\t$(hostname)" /etc/hosts
+    fi

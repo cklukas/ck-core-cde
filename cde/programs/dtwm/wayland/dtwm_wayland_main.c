@@ -2327,17 +2327,17 @@ int main(int argc, char **argv) {
         setenv("DISPLAY", server.xwayland->display_name, 1);
     }
 
+    int exit_code = 0;
     const char *socket = wl_display_add_socket_auto(server.wl_display);
     if (!socket) {
-        wlr_backend_destroy(server.backend);
-        return 1;
+        exit_code = 1;
+        goto cleanup;
     }
     server.wayland_socket = socket;
 
     if (!wlr_backend_start(server.backend)) {
-        wlr_backend_destroy(server.backend);
-        wl_display_destroy(server.wl_display);
-        return 1;
+        exit_code = 1;
+        goto cleanup;
     }
 
     setenv("WAYLAND_DISPLAY", socket, 1);
@@ -2360,6 +2360,7 @@ int main(int argc, char **argv) {
 
     wl_display_run(server.wl_display);
 
+cleanup:
     if (server.status_fallback_timer) wl_event_source_remove(server.status_fallback_timer);
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);
@@ -2398,5 +2399,5 @@ int main(int argc, char **argv) {
     wlr_renderer_destroy(server.renderer);
     wlr_backend_destroy(server.backend);
     wl_display_destroy(server.wl_display);
-    return 0;
+    return exit_code;
 }

@@ -1,4 +1,20 @@
 2026-11-17
+- Qualify the complete Wayland + X11/XLibre desktop stack and signed Ubuntu
+  26.04.1 LTS APT repository (`WP-08`) on the `x11_wayland` branch, pinning CK
+  Core Motif ABI 9 `a2f4a3b8428d40853342de301169ed6a904bd868`.
+  - `scripts/build-ubuntu-debs.py`, `scripts/run-lima-wayland-harness.py`,
+    `scripts/lima/cde-ubuntu-26.04.yaml`, and `.ckgit/motif-revision`: add GPG
+    `Release.gpg` / `InRelease` / `ck-core-archive-keyring.asc` signing and
+    `[signed-by=...]` APT installation verification alongside Ubuntu's `libxm4`,
+    record `motif-revision.txt`, `motif.sha256`, and `proc-maps-provenance.json`,
+    verify both installed `CDE (Wayland)` and `CDE (X11 / XLibre)` `/usr/dt`
+    desktops without `LD_LIBRARY_PATH` via `/usr/bin/ck-grab`, normalize Lima
+    hostname loopback resolution for ToolTalk (`ttsession`), and strip Ubuntu
+    `0002` `umask` group-write bits on temporary ancestor directories.
+  - `cde/programs/dtwm/wayland/dtwm_wayland_main.c`, `docs/build.md`, and
+    `docs/improvements/wayland.md`: unify early-error Wayland listener teardown
+    and document signed APT repository installation and full-stack Wayland +
+    X11/XLibre qualification.
 - Add Wayland local-seat display management, unprivileged `_dtgreeter` PAM
   greeter sessions, FreeDesktop `.desktop` session discovery, and Wayland/X11
   seat handoff (`WP-07`) to `dtlogin` on the `x11_wayland` branch.

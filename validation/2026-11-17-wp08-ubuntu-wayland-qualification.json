@@ -1,0 +1,73 @@
+{
+  "work_package": "WP-08",
+  "date": "2026-11-17",
+  "branch": "x11_wayland",
+  "revisions": {
+    "ck_core_motif": "a2f4a3b8428d40853342de301169ed6a904bd868",
+    "ck_core_fs_lib": "39725163e43530b9ae35e9fed55f4fedb4d759b6",
+    "ck_core_apps": "8c3b11c5326d9a93a80a43cb6fb8ebd78404de40"
+  },
+  "guest_vm": {
+    "name": "cde-ubuntu2604",
+    "os": "Ubuntu 26.04.1 LTS (aarch64, Linux 7.0.0-34-generic, glibc 2.43)",
+    "compiler": "clang 21"
+  },
+  "full_suite_checks": {
+    "ck_core_motif_make_check": "PASS (make -j6 check + run-xdnd-interop-wp50.py + check-xlibre-lifetime.py)",
+    "ck_core_apps_tests": "PASS (motif_abi_check + ck_load_icon_label_state_test)",
+    "ck_core_cde_full_make_check": "PASS (top-level make -j6 check across util, lib, programs, doc, examples/dtdnd)",
+    "ckdocs_strict_all_repos": "PASS (ck-core-motif: 1890 pages, ck-core-apps: 20 pages, ck-core-cde: 26 pages)"
+  },
+  "signed_apt_repository": {
+    "architecture": "arm64",
+    "signed_by_keyring": "ck-core-archive-keyring.asc",
+    "release_signatures": ["Release.gpg", "InRelease"],
+    "libXm_so_9_sha256": "eae935cdbae1ab993e36891e70639697cabbbc23cb74bb7f642ab60b5827b3ec",
+    "packages": {
+      "ck-core-motif9": {
+        "filename": "ck-core-motif9_2.4.0-1_arm64.deb",
+        "size_bytes": 5912424,
+        "sha256": "774f1ea71a8641a9151d87f964c96a4fcce48c80efa4e5d26348e5b5ba7ebd13"
+      },
+      "ck-core-fs-lib": {
+        "filename": "ck-core-fs-lib_0.3.0-1_arm64.deb",
+        "size_bytes": 16203608,
+        "sha256": "349acec8ec1f4e3c46e3abf2f1dec3547cd0c7a957f64b4f751a230716963a51"
+      },
+      "ck-core-cde": {
+        "filename": "ck-core-cde_2.5.3-1_arm64.deb",
+        "size_bytes": 32023620,
+        "sha256": "0eb4316723cf72d36a33baf398b26f1361e831c92f2dd277e18ecedd55029e87"
+      },
+      "ck-core-dtlogin": {
+        "filename": "ck-core-dtlogin_2.5.3-1_arm64.deb",
+        "size_bytes": 320976,
+        "sha256": "2324afe76865877d1c9422eccc4f1b70adbc37cbfe89504eb3e7fc26b379dc26"
+      },
+      "ck-core-apps": {
+        "filename": "ck-core-apps_1.0.0-1_arm64.deb",
+        "size_bytes": 241044,
+        "sha256": "ae52cfa64c6fbeddd856db8b08210c15c3ad8f40cdc23ef0e80f8fddfad1f64c"
+      }
+    }
+  },
+  "installed_desktop_verification": {
+    "coexists_with_ubuntu_libxm4": true,
+    "without_ld_library_path": true,
+    "wayland_session_maps": {
+      "dtpad": "/usr/dt/lib/libXm.so.9.0.0",
+      "dtterm": "/usr/dt/lib/libXm.so.9.0.0",
+      "ck-clock": "/usr/dt/lib/libXm.so.9.0.0",
+      "ck-calc": "/usr/dt/lib/libXm.so.9.0.0"
+    },
+    "x11_session_maps": {
+      "dtwm": "/usr/dt/lib/libXm.so.9.0.0",
+      "dtpad": "/usr/dt/lib/libXm.so.9.0.0",
+      "dtterm": "/usr/dt/lib/libXm.so.9.0.0",
+      "ck-calc": "/usr/dt/lib/libXm.so.9.0.0"
+    },
+    "wayland_screenshot_sha256": "e04c2878b90d276ca83e851001928539565a00302ef64a84897731244f91c475",
+    "x11_screenshot_sha256": "a938c02e9e6711849dedb953091d682455cdbb3e06d2b8c1a6ce6377aedbe3bc",
+    "leaked_processes": 0
+  }
+}

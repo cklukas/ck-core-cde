@@ -58,7 +58,7 @@ def verify_mac_temp_root(p: Path) -> None:
 def host_dispatch(args: argparse.Namespace) -> int:
     task_root = Path(args.task_root).resolve()
     verify_mac_temp_root(task_root)
-    out_dir = Path(args.output_dir).resolve() if args.output_dir else (task_root / "receipts" / "wp01-apt-repo")
+    out_dir = Path(args.output_dir).resolve() if args.output_dir else (task_root / "receipts" / "wp08-apt-repo")
     verify_mac_temp_root(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -84,6 +84,8 @@ def host_dispatch(args: argparse.Namespace) -> int:
     ]
     if args.verify_install:
         cmd.append("--verify-install")
+    if args.skip_harness_sync:
+        cmd.append("--skip-harness-sync")
     return subprocess.call(cmd, env=env)
 
 
@@ -185,22 +187,23 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Ensure incremental build is completely fresh (including dtlogin.src update)
-    harness = cde_repo / "scripts" / "run-lima-wayland-harness.py"
-    subprocess.run(
-        [
-            "python3",
-            str(harness),
-            "--in-guest",
-            "--cde-repo",
-            str(cde_repo),
-            "--guest-build-root",
-            str(build_root),
-            "--output-dir",
-            str(out_dir / "harness-sync"),
-            "--skip-cde-check",
-        ],
-        check=True,
-    )
+    if not args.skip_harness_sync:
+        harness = cde_repo / "scripts" / "run-lima-wayland-harness.py"
+        subprocess.run(
+            [
+                "python3",
+                str(harness),
+                "--in-guest",
+                "--cde-repo",
+                str(cde_repo),
+                "--guest-build-root",
+                str(build_root),
+                "--output-dir",
+                str(out_dir / "harness-sync"),
+                "--skip-cde-check",
+            ],
+            check=True,
+        )
 
     arch = subprocess.check_output(["dpkg", "--print-architecture"], text=True).strip()
     multiarch = subprocess.check_output(["dpkg-architecture", "-qDEB_HOST_MULTIARCH"], text=True).strip()
@@ -432,7 +435,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     build_deb(r_apps, deb_apps)
     built_debs["ck-core-apps"] = deb_apps
 
-    # Generate APT repository metadata (Packages, Packages.gz, Release)
+    # Generate signed APT repository metadata (Packages, Packages.gz, Release, Release.gpg, InRelease)
     pkgs_raw = subprocess.check_output(["dpkg-scanpackages", "--multiversion", "."], cwd=out_dir)
     (out_dir / "Packages").write_bytes(pkgs_raw)
     with gzip.open(out_dir / "Packages.gz", "wb") as gz:
@@ -453,6 +456,45 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     )
     (out_dir / "Release").write_text(release_txt, encoding="utf-8")
 
+    # Sign APT Release metadata with GPG (producing Release.gpg, InRelease, ck-core-archive-keyring.asc)
+    gpg_home = deb_work / "gnupg"
+    gpg_home.mkdir(parents=True, mode=0o700)
+    os.chmod(gpg_home, 0o700)
+    gpg_env = {**os.environ, "GNUPGHOME": str(gpg_home)}
+    key_spec = (
+        "%echo Generating CK Core APT signing key\n"
+        "Key-Type: RSA\n"
+        "Key-Length: 3072\n"
+        "Name-Real: CK Core APT Archive\n"
+        "Name-Email: apt@ck-core.local\n"
+        "Expire-Date: 0\n"
+        "%no-protection\n"
+        "%commit\n"
+    )
+    subprocess.run(["gpg", "--batch", "--generate-key"], input=key_spec, text=True, env=gpg_env, check=True)
+    for old_sig in (out_dir / "Release.gpg", out_dir / "InRelease", out_dir / "ck-core-archive-keyring.asc"):
+        if old_sig.exists():
+            old_sig.unlink()
+    subprocess.run(
+        ["gpg", "--batch", "--yes", "--armor", "--detach-sign", "-o", str(out_dir / "Release.gpg"), str(out_dir / "Release")],
+        env=gpg_env,
+        check=True,
+    )
+    subprocess.run(
+        ["gpg", "--batch", "--yes", "--clearsign", "-o", str(out_dir / "InRelease"), str(out_dir / "Release")],
+        env=gpg_env,
+        check=True,
+    )
+    keyring_asc = subprocess.check_output(["gpg", "--batch", "--armor", "--export", "apt@ck-core.local"], env=gpg_env)
+    (out_dir / "ck-core-archive-keyring.asc").write_bytes(keyring_asc)
+
+    # Record Motif & CDE provenance files alongside the APT repo and screenshots
+    motif_pin = (cde_repo / ".ckgit" / "motif-revision").read_text(encoding="utf-8").strip()
+    libxm_real = (motif_pfx / "lib" / "libXm.so.9").resolve()
+    libxm_sha = sha256_file(libxm_real)
+    (out_dir / "motif-revision.txt").write_text(f"{motif_pin}\n", encoding="utf-8")
+    (out_dir / "motif.sha256").write_text(f"{libxm_sha}  /usr/dt/lib/{libxm_real.name}\n", encoding="utf-8")
+
     verification: dict[str, object] = {"verified_install": False}
 
     if args.verify_install:
@@ -467,10 +509,14 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
                 os.chmod(guest_repo / item.name, 0o644)
 
         list_file = Path("/etc/apt/sources.list.d/ck-core-verify.list")
+        keyring_dst = Path("/etc/apt/keyrings/ck-core-archive-keyring.asc")
         try:
+            subprocess.run(["sudo", "mkdir", "-p", "/etc/apt/keyrings"], check=True)
+            subprocess.run(["sudo", "cp", str(out_dir / "ck-core-archive-keyring.asc"), str(keyring_dst)], check=True)
+            subprocess.run(["sudo", "chmod", "0644", str(keyring_dst)], check=True)
             subprocess.run(
                 ["sudo", "tee", str(list_file)],
-                input=f"deb [trusted=yes] file:{guest_repo} ./\n",
+                input=f"deb [signed-by={keyring_dst}] file:{guest_repo} ./\n",
                 text=True,
                 stdout=subprocess.DEVNULL,
                 check=True,
@@ -492,81 +538,136 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
                 check=True,
             )
 
-            # Verify installed files & pam_systemd presence
+            # Verify installed files, Wayland binaries, _dtgreeter user, and pam_systemd presence
             for must_exist in [
                 Path("/usr/dt/lib/libXm.so.9"),
                 Path("/usr/dt/bin/dtwm"),
+                Path("/usr/dt/bin/dtwm-wayland"),
+                Path("/usr/dt/bin/dtwm-panel"),
                 Path("/usr/dt/bin/dtsession"),
                 Path("/usr/dt/bin/dtlogin"),
+                Path("/usr/dt/bin/dtgreet"),
                 Path("/usr/dt/bin/Xsession.wayland"),
                 Path("/usr/share/xsessions/cde.desktop"),
                 Path("/usr/share/wayland-sessions/cde-wayland.desktop"),
                 Path("/lib/systemd/system/dtlogin.service"),
                 Path("/etc/pam.d/dtlogin"),
+                Path("/etc/pam.d/dtlogin-greeter"),
                 Path("/etc/pam.d/dtsession"),
                 Path("/usr/bin/ck-clock"),
+                Path("/usr/bin/ck-grab"),
             ]:
                 if not must_exist.exists():
                     raise SystemExit(f"missing installed path: {must_exist}")
+
+            if subprocess.run(["id", "-u", "_dtgreeter"], capture_output=True).returncode != 0:
+                raise SystemExit("_dtgreeter system user was not created by ck-core-dtlogin.postinst")
 
             pam_txt = Path("/etc/pam.d/dtlogin").read_text(encoding="utf-8")
             if "pam_systemd.so" not in pam_txt:
                 raise SystemExit("/etc/pam.d/dtlogin is missing pam_systemd.so")
 
-            # Launch installed /usr/dt/bin/dtpad and /usr/bin/ck-clock WITHOUT LD_LIBRARY_PATH
-            # under headless Wayland + XWayland to prove /usr/dt/lib/libXm.so.9 loads cleanly alongside Ubuntu's libxm4!
+            # 1) Boot installed CDE (Wayland) desktop session WITHOUT LD_LIBRARY_PATH, verify libXm.so.9 maps,
+            #    and capture full desktop via installed /usr/bin/ck-grab --capture --full-screen!
             v_root = Path("/var/tmp/ck-deb-runtime-check")
             shutil.rmtree(v_root, ignore_errors=True)
             xdg_d = v_root / "xdg"
             home_d = v_root / "home"
+            dt_types = home_d / ".dt" / "types"
             xdg_d.mkdir(parents=True, mode=0o700)
-            home_d.mkdir(parents=True, mode=0o700)
+            dt_types.mkdir(parents=True, mode=0o755)
             os.chmod(xdg_d, 0o700)
-            os.chmod(home_d, 0o700)
-            (home_d / ".config" / "labwc").mkdir(parents=True)
-            (home_d / ".config" / "labwc" / "rc.xml").write_text(
-                '<?xml version="1.0"?>\n<labwc_config><core><xwayland>yes</xwayland></core></labwc_config>\n',
+            (dt_types / "ckclock.fp").write_text(
+                "CONTROL Clock\n{\n  TYPE client\n  CONTAINER_NAME Top\n  CONTAINER_TYPE BOX\n"
+                "  POSITION_HINTS 1\n  CLIENT_NAME ck-clock\n  CLIENT_GEOMETRY 52x52\n  LABEL Clock\n}\n",
                 encoding="utf-8",
             )
-            clean_env = {
+            sample_doc = v_root / "wayland-notes.txt"
+            sample_doc.write_text(
+                "CK Core CDE 2.5.3 + Motif ABI 9\n"
+                "Installed from signed Ubuntu 26.04 LTS APT repository\n"
+                "Coexisting with system libxm4 under /usr/dt\n",
+                encoding="utf-8",
+            )
+            cur_user = os.environ.get("USER", "klukas")
+            cde_common_env = {
                 "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/dt/bin",
                 "HOME": str(home_d),
+                "USER": cur_user,
+                "LOGNAME": cur_user,
+                "SHELL": "/bin/sh",
+                "TERM": "xterm-256color",
+                "LANG": "C",
+                "DTDATABASESEARCHPATH": f"{home_d}/.dt/types,/usr/dt/appconfig/types/C",
+                "XMICONSEARCHPATH": f"{home_d}/.dt/icons/%B%M.pm:/usr/dt/appconfig/icons/C/%B%M.pm:/usr/dt/appconfig/icons/C/%B%M.bm",
+                "XMICONBMSEARCHPATH": "/usr/dt/appconfig/icons/C/%B%M.bm:/usr/dt/appconfig/icons/C/%B%M.pm",
+                "XFILESEARCHPATH": "/usr/dt/app-defaults/%L/%N:/usr/dt/app-defaults/C/%N",
+                "CDE_BACKDROP_DIR": "/usr/dt/backdrops",
+            }
+            clean_env = {
+                **cde_common_env,
                 "XDG_RUNTIME_DIR": str(xdg_d),
-                "LANG": "C.UTF-8",
                 "WLR_BACKENDS": "headless",
                 "WLR_HEADLESS_OUTPUTS": "1",
                 "WLR_RENDERER": "pixman",
                 "WLR_LIBINPUT_NO_DEVICES": "1",
             }
-            pre_x = set(Path("/tmp/.X11-unix").glob("X*")) if Path("/tmp/.X11-unix").exists() else set()
-            comp = subprocess.Popen(["labwc"], env=clean_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            wl_status = v_root / "dtwm-wayland.status"
+            comp = subprocess.Popen(
+                ["/usr/dt/bin/dtwm-wayland", "--status-file", str(wl_status)],
+                env=clean_env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
             procs = [comp]
-            mapped_installed: dict[str, str] = {}
+            mapped_wayland: dict[str, str] = {}
+            mapped_x11: dict[str, str] = {}
+            wl_shot = out_dir / "wp08-cde-wayland-desktop.png"
+            x11_shot = out_dir / "wp08-cde-x11-desktop.png"
             try:
                 wl_s, x_s = None, None
-                for _ in range(75):
-                    wls = [p for p in xdg_d.glob("wayland-*") if not p.name.endswith(".lock")]
-                    nxs = sorted((set(Path("/tmp/.X11-unix").glob("X*")) if Path("/tmp/.X11-unix").exists() else set()) - pre_x)
-                    if wls and nxs:
-                        wl_s = wls[0].name
-                        x_s = ":" + nxs[-1].name[1:]
-                        break
-                    time.sleep(0.2)
+                for _ in range(80):
+                    if wl_status.is_file():
+                        kv = dict(ln.split("=", 1) for ln in wl_status.read_text().splitlines() if "=" in ln)
+                        wl_s, x_s = kv.get("WAYLAND_DISPLAY"), kv.get("DISPLAY")
+                        if wl_s and x_s:
+                            break
+                    time.sleep(0.15)
                 if not wl_s or not x_s:
-                    raise SystemExit("Wayland/XWayland failed to start during .deb verification")
+                    raise SystemExit("Installed /usr/dt/bin/dtwm-wayland failed to start")
+
+                # Wait briefly for genuine dtwm-panel to map its ~/.dt/types/ckclock.fp slot
+                time.sleep(1.5)
                 c_env = {**clean_env, "WAYLAND_DISPLAY": wl_s, "DISPLAY": x_s}
-                p_pad = subprocess.Popen(["/usr/dt/bin/dtpad", "-standAlone"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-                p_clk = subprocess.Popen(["/usr/bin/ck-clock"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-                procs.extend([p_pad, p_clk])
-                time.sleep(2.0)
-                for label, proc in [("dtpad", p_pad), ("ck-clock", p_clk)]:
+                p_clk_fp = subprocess.Popen(["/usr/bin/ck-clock", "-geometry", "52x52"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                p_pad = subprocess.Popen(["/usr/dt/bin/dtpad", "-standAlone", "-xrm", "*rows: 9", "-xrm", "*columns: 46", "-geometry", "+36+32", str(sample_doc)], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                p_term = subprocess.Popen(["/usr/dt/bin/dtterm", "-geometry", "58x12+460+36"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                p_calc = subprocess.Popen(["/usr/bin/ck-calc", "-geometry", "+970+36"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                p_foot = subprocess.Popen(
+                    ["/usr/bin/foot", "--title=Wayland foot (native xdg_toplevel)", "-w", "460x200", "sh", "-c", "uname -srmo; echo WAYLAND_DISPLAY=$WAYLAND_DISPLAY; sleep 30"],
+                    env=c_env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
+                procs.extend([p_clk_fp, p_pad, p_term, p_calc, p_foot])
+                time.sleep(2.5)
+
+                for label, proc in [("dtpad", p_pad), ("dtterm", p_term), ("ck-clock", p_clk_fp), ("ck-calc", p_calc)]:
                     if proc.poll() is not None:
-                        raise SystemExit(f"installed {label} exited with {proc.returncode}")
+                        raise SystemExit(f"installed Wayland {label} exited with {proc.returncode}")
                     maps = Path(f"/proc/{proc.pid}/maps").read_text(encoding="utf-8", errors="replace")
                     xm_lines = [ln.split()[-1] for ln in maps.splitlines() if "libXm.so" in ln]
                     if not xm_lines or not xm_lines[0].startswith("/usr/dt/lib/libXm.so.9"):
-                        raise SystemExit(f"{label} mapped unexpected libXm: {xm_lines}")
-                    mapped_installed[label] = xm_lines[0]
+                        raise SystemExit(f"Wayland {label} mapped unexpected libXm: {xm_lines}")
+                    mapped_wayland[label] = xm_lines[0]
+
+                subprocess.run(
+                    ["/usr/bin/ck-grab", "--full-screen", "--capture", str(wl_shot)],
+                    env=c_env,
+                    check=True,
+                )
             finally:
                 for pr in reversed(procs):
                     if pr.poll() is None:
@@ -581,12 +682,84 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
                             os.killpg(pr.pid, 9)
                         except ProcessLookupError:
                             pass
+
+            # 2) Boot installed CDE (X11 / XLibre) desktop session under Xvfb WITHOUT LD_LIBRARY_PATH,
+            #    verify libXm.so.9 maps on dtwm + clients, and capture via /usr/bin/ck-grab --capture --full-screen!
+            x11_dpy = ":29"
+            xvfb = subprocess.Popen(
+                ["Xvfb", x11_dpy, "-screen", "0", "1280x900x24", "-nolisten", "tcp"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            x11_procs = [xvfb]
+            try:
+                time.sleep(0.8)
+                x11_env = {
+                    **cde_common_env,
+                    "DISPLAY": x11_dpy,
+                }
+                subprocess.run(["xsetroot", "-solid", "#3c586e"], env=x11_env, check=False)
+                p_dtwm = subprocess.Popen(["/usr/dt/bin/dtwm"], env=x11_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                x11_procs.append(p_dtwm)
+                time.sleep(2.5)
+                p_xclk = subprocess.Popen(["/usr/bin/ck-clock", "-geometry", "52x52"], env=x11_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                p_xpad = subprocess.Popen(["/usr/dt/bin/dtpad", "-standAlone", "-xrm", "*rows: 9", "-xrm", "*columns: 46", "-geometry", "+36+32", str(sample_doc)], env=x11_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                p_xterm = subprocess.Popen(["/usr/dt/bin/dtterm", "-geometry", "58x12+460+36"], env=x11_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                p_xcalc = subprocess.Popen(["/usr/bin/ck-calc", "-geometry", "+970+36"], env=x11_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                x11_procs.extend([p_xclk, p_xpad, p_xterm, p_xcalc])
+                time.sleep(2.5)
+
+                for label, proc in [("dtwm", p_dtwm), ("dtpad", p_xpad), ("dtterm", p_xterm), ("ck-calc", p_xcalc)]:
+                    if proc.poll() is not None:
+                        raise SystemExit(f"installed X11 {label} exited with {proc.returncode}")
+                    maps = Path(f"/proc/{proc.pid}/maps").read_text(encoding="utf-8", errors="replace")
+                    xm_lines = [ln.split()[-1] for ln in maps.splitlines() if "libXm.so" in ln]
+                    if not xm_lines or not xm_lines[0].startswith("/usr/dt/lib/libXm.so.9"):
+                        raise SystemExit(f"X11 {label} mapped unexpected libXm: {xm_lines}")
+                    mapped_x11[label] = xm_lines[0]
+
+                subprocess.run(
+                    ["/usr/bin/ck-grab", "--full-screen", "--capture", str(x11_shot)],
+                    env=x11_env,
+                    check=True,
+                )
+            finally:
+                for pr in reversed(x11_procs):
+                    if pr.poll() is None:
+                        try:
+                            os.killpg(pr.pid, 15)
+                        except ProcessLookupError:
+                            pass
+                time.sleep(0.4)
+                for pr in reversed(x11_procs):
+                    if pr.poll() is None:
+                        try:
+                            os.killpg(pr.pid, 9)
+                        except ProcessLookupError:
+                            pass
                 shutil.rmtree(v_root, ignore_errors=True)
+
+            prov_data = {
+                "motif_revision": motif_pin,
+                "libXm_sha256": libxm_sha,
+                "wayland_maps": mapped_wayland,
+                "x11_maps": mapped_x11,
+                "wayland_screenshot": wl_shot.name,
+                "wayland_screenshot_sha256": sha256_file(wl_shot),
+                "x11_screenshot": x11_shot.name,
+                "x11_screenshot_sha256": sha256_file(x11_shot),
+            }
+            (out_dir / "proc-maps-provenance.json").write_text(json.dumps(prov_data, indent=2) + "\n", encoding="utf-8")
 
             verification = {
                 "verified_install": True,
+                "signed_apt_repo_verified": True,
                 "coexists_with_ubuntu_libxm4": True,
-                "no_ld_library_path_maps": mapped_installed,
+                "wayland_session_maps": mapped_wayland,
+                "x11_session_maps": mapped_x11,
+                "wayland_screenshot_sha256": prov_data["wayland_screenshot_sha256"],
+                "x11_screenshot_sha256": prov_data["x11_screenshot_sha256"],
             }
         finally:
             subprocess.run(
@@ -605,7 +778,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
                 ],
                 check=False,
             )
-            subprocess.run(["sudo", "rm", "-f", str(list_file)], check=False)
+            subprocess.run(["sudo", "rm", "-f", str(list_file), str(keyring_dst)], check=False)
             shutil.rmtree(guest_repo, ignore_errors=True)
 
     shutil.rmtree(deb_work, ignore_errors=True)
@@ -619,7 +792,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     subprocess.run(["make", "-j4", "-C", str(build_root / "cde-build" / "programs" / "dtlogin"), "check"], env=dtl_env, check=True)
 
     receipt = {
-        "work_package": "WP-01",
+        "work_package": "WP-08",
         "started_utc": started_utc,
         "finished_utc": utc_now(),
         "elapsed_s": round(time.monotonic() - t0, 2),
@@ -650,6 +823,7 @@ def main() -> int:
     ap.add_argument("--guest-build-root", default="/var/tmp/ck-wayland-build/wp00")
     ap.add_argument("--output-dir", default="")
     ap.add_argument("--verify-install", action="store_true", help="Test real `apt-get install` + coexistence with libxm4")
+    ap.add_argument("--skip-harness-sync", action="store_true", help="Reuse existing staged build root without re-running harness")
     args = ap.parse_args()
     if args.in_guest:
         return guest_build_and_verify(args)

@@ -303,6 +303,16 @@ def guest_run(args: argparse.Namespace) -> int:
     locale_dir = build_root / "locale"
     for d in (build_root, tmp_dir, locale_dir):
         d.mkdir(parents=True, exist_ok=True)
+    # Strip group/other write bits created under Ubuntu's 0002 umask so dtfile's
+    # private-storage ancestor verification and unprivileged _dtgreeter both succeed.
+    cur_anc = build_root
+    while str(cur_anc) not in ("/", "/var", "/var/tmp", "/tmp"):
+        try:
+            os.chmod(cur_anc, 0o755)
+        except OSError:
+            pass
+        cur_anc = cur_anc.parent
+    os.chmod(tmp_dir, 0o755)
 
     if not (locale_dir / "en_US.UTF-8").exists():
         run_checked(["localedef", "-i", "en_US", "-f", "UTF-8", str(locale_dir / "en_US.UTF-8")])

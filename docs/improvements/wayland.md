@@ -198,11 +198,31 @@ lock, and Style Manager controls natively with Wayland:
   a dedicated seat X11 server for X11 sessions and respawns `dtgreet` cleanly on
   logout.
 
-## Readiness reporting and automated verification
+## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`
 atomically once both the Wayland socket and rootless `Xwayland` are ready.
-`programs/dtwm/tests/check-dtwm-wayland.py` boots a dual-output headless
-`dtwm-wayland` instance, maps both a native Wayland client and an X11 client,
-and verifies active Crimson bevels, inactive Slate bevels, desktop-click
-defocus, and refocusing via `zwlr_screencopy_manager_v1` captures.
+
+- **Focused Wayland regression suite (`programs/dtwm` and `programs/dtlogin`):**
+  `check-dtwm-wayland.py` (`WP-02` bevels, move/resize, grid/snap, `Alt+Tab`,
+  cohort appearance profiles), `check-dtwm-wayland-ws.py` (`WP-03` workspaces,
+  backdrops, `libDtSvc`, `ext-workspace-v1`, genuine `dtwm-panel`),
+  `check-dtwm-wayland-icons.py` (`WP-04` open-window icons, `48`/`96`
+  `WM_ICON_SIZE`, live XWayland & `xdg-toplevel-icon-v1` icons, `dtfile` pins,
+  `ck-clock` Front Panel embedding), `check-dtwm-wayland-wp05.py` (`WP-05`
+  bidirectional Motif XDND v5 ↔ Wayland `wl_data_device`, `ck-grab` screencopy,
+  per-output mixed-DPI reflow), `check-dtwm-wayland-wp06.py` (`WP-06`
+  `ext-session-lock-v1`, `ext-idle-notify-v1`, `dtsession --wayland`, `dtstyle`
+  IPC), and `check-wayland-dtlogin.py` (`WP-07` `_dtgreeter`, `.desktop`
+  session discovery, Wayland/X11 seat handoff) run automatically under
+  `make check`.
+- **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
+  `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,
+  `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` into a
+  GPG-signed APT repository (`Release.gpg`, `InRelease`,
+  `ck-core-archive-keyring.asc`), installs them via
+  `[signed-by=/etc/apt/keyrings/ck-core-archive-keyring.asc]` alongside Ubuntu's
+  system `libxm4`, boots both the installed `CDE (Wayland)` and
+  `CDE (X11 / XLibre)` desktops without `LD_LIBRARY_PATH`, verifies `/proc/<pid>/maps`
+  against `/usr/dt/lib/libXm.so.9`, and captures full-desktop verification
+  screenshots via `/usr/bin/ck-grab`.
