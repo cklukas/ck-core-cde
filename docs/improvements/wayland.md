@@ -142,6 +142,36 @@ across native Wayland and XWayland clients simultaneously:
   Wayland clients, triggering crisp live Motif shell reflow when windows move
   across mixed-DPI monitors (`96`, `144`, `192`, ...).
 
+## `dtsession` Wayland session startup, `ext-session-lock-v1`, and `dtstyle` hardware IPC
+
+`dtsession --wayland` (invoked by `/usr/dt/bin/Xsession.wayland`),
+`cde_session_lock.c`, and `dtstyle` integrate CDE's session lifecycle, screen
+lock, and Style Manager controls natively with Wayland:
+
+- **`dtsession --wayland` session bootstrap:** Starts `dtwm-wayland` if
+  `WAYLAND_DISPLAY` is not yet active, ensures `ttsession -s` is running with
+  `_SUN_TT_SESSION` mirrored into `TT_SESSION` for both Wayland and XWayland
+  clients, loads `xrdb` resources and the CDE Color Server (`InitializeDtcolor`),
+  skips X11 `dtwm` fork while keeping XSMP and session restore active, and
+  terminates a managed `dtwm-wayland` instance cleanly on logout;
+- **`ext-session-lock-v1` and `ext-idle-notify-v1` screen lock:**
+  `dtwm-wayland` implements `ext_session_lock_manager_v1` and
+  `ext_idle_notifier_v1`, disabling all non-lock desktop/application/overlay
+  scene trees while locked so `zwlr_screencopy_manager_v1` and keyboard/pointer
+  shortcuts cannot leak a single pixel or event to underlying windows, covering
+  hotplugged monitors on their first frame, keeping all outputs locked and
+  black if a lock client crashes without `unlock_and_destroy()`, and hosting
+  `dtsession`'s genuine Motif padlock PAM dialog (`SmLock.c` + `SmPam.c`,
+  verified by `_DT_SM_WINDOW_INFO` client-ID ownership) in `lock_dialog_tree`;
+- **`dtstyle` Wayland hardware and input IPC:** When `WAYLAND_DISPLAY` is set,
+  `dtstyle` (`Protocol.c`) forwards Mouse acceleration/threshold and
+  left-handedness (`f.set_pointer_accel`, `f.set_left_handed`), Keyboard
+  auto-repeat and XKB layout (`f.set_key_repeat`, `f.set_xkb_layout`), Audio
+  bell parameters (`f.set_bell`), and Screen blanker/lock timeouts
+  (`f.set_saver_timeout`) to `dtwm-wayland`, which applies `libinput` and
+  `wlr_keyboard` settings live and publishes `_DT_WAYLAND_INPUT_STATE` on the
+  XWayland root window.
+
 ## Readiness reporting and automated verification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`

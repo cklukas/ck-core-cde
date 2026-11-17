@@ -1023,6 +1023,7 @@ static int find_ws_by_name_or_title(const DtwmServer *server, const char *tok) {
 static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
     while (*cmd && isspace((unsigned char)*cmd)) cmd++;
     if (!*cmd) return;
+    if (dtwm_hw_handle_wm_request(server, cmd)) return;
 
     if (strncmp(cmd, "f.change_backdrop", 17) == 0 && isspace((unsigned char)cmd[17])) {
         char path[512] = {0};

@@ -575,7 +575,7 @@ static void refresh_xwayland_wm_hints(DtwmView *view, bool check_initial_iconic)
 /* --- Desktop Icon Classification, Layout & Rendering --- */
 static bool should_show_desktop_icon(const DtwmView *view) {
     if (!view || !view->mapped) return false;
-    if (view->is_desktop_pin || view->is_swallowed || view->is_subpanel) return false;
+    if (view->is_desktop_pin || view->is_swallowed || view->is_subpanel || view->is_lock_dialog) return false;
     if (view->is_panel && !view->minimized) return false;
     if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
         view->xwayland_surface->override_redirect) {

@@ -77,6 +77,7 @@
 #include "SmLock.h"
 #include "SmPam.h"
 #include "SmScreen.h"
+#include "SmWayland.h"
 
 /*
  * Variables global to this module only
@@ -430,7 +431,18 @@ LockDisplay(
     {
        for(i = (smGD.numSavedScreens - 1);i >= 0;i--)
        {
+          XtRealizeWidget(smDD.coverDialog[i]);
+          SmWaylandMarkLockWindow(smGD.display, XtWindow(smDD.coverDialog[i]));
           XtPopup(smDD.coverDialog[i], XtGrabNone);
+       }
+    }
+    else if (smDD.lockDialog != nullptr)
+    {
+       Widget lockShell = XtParent(smDD.lockDialog);
+       if (lockShell != nullptr)
+       {
+          XtRealizeWidget(lockShell);
+          SmWaylandMarkLockWindow(smGD.display, XtWindow(lockShell));
        }
     }
 
@@ -444,6 +456,11 @@ LockDisplay(
     /** wait 90 seconds for lock dialog to come up **/
     lockTimeId = XtAppAddTimeOut(smGD.appCon,
                                  90000, LockAttemptFailed, lockDlg);
+    if (SmWaylandActive())
+    {
+        Boolean dummy = True;
+        FinishLocking(grabWidget, nullptr, nullptr, &dummy);
+    }
     return;
 }
 
@@ -527,6 +544,21 @@ FinishLocking(Widget		wid,
                             == GrabSuccess);
         }
 
+
+	if (SmWaylandActive())
+	{
+	    Boolean wlLocked = SmWaylandAcquireSessionLock();
+	    if (wlLocked == False)
+	    {
+		kbdGrabbed = False;
+		pointerGrabbed = False;
+	    }
+	    else
+	    {
+		kbdGrabbed = True;
+		pointerGrabbed = True;
+	    }
+	}
 
 	/*
 	 * If the grab failed - try 3 more times and give up
@@ -1123,6 +1155,11 @@ UnlockDisplay(
     if(kbdGrabbed == True)
     {
 	XtUngrabKeyboard(grabWidget, CurrentTime);
+    }
+
+    if (SmWaylandActive())
+    {
+	SmWaylandReleaseSessionLock();
     }
     
 #ifdef USE_HP_SPECIFIC_XLIB

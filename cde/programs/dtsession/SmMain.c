@@ -85,6 +85,7 @@
 #include "SmProtocol.h"
 #include "SmXSMP.h"
 #include "SmPriv.h"
+#include "SmWayland.h"
 
 /*
  * Internal Functions
@@ -146,6 +147,7 @@ main (int argc, char **argv)
      * (the locale, the toolkit) comes before it.
      */
     SmPrivDropInstalledIdentity();
+    SmWaylandPreInit(&argc, argv);
 
     setlocale( LC_ALL, "" );
     XtSetLanguageProc( nullptr, nullptr, nullptr );
@@ -361,7 +363,7 @@ main (int argc, char **argv)
 
     if(tmp != 0)
     {
-	smGD.lockOnTimeoutStatus = False;
+	smGD.lockOnTimeoutStatus = SmWaylandInitXtIntegration(smGD.appCon, smGD.display);
 	XaSmScreenSaveRet = None;
 #if defined (USE_X11SSEXT)
 	smGD.ssEventType = None;
@@ -369,10 +371,16 @@ main (int argc, char **argv)
     }
     else
     {
+	(void) SmWaylandInitXtIntegration(smGD.appCon, smGD.display);
 	smGD.lockOnTimeoutStatus = True;
     }
 
     InitSMGlobals();
+    if (SmWaylandActive())
+    {
+	int idle_sec = (smSaverRes.saverTimeout > 0) ? smSaverRes.saverTimeout : smSaverRes.lockTimeout;
+	SmWaylandUpdateIdleTimeout(idle_sec);
+    }
 
     /*
      * Say now, in the error log, if the display cannot be locked, instead of

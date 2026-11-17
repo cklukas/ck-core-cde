@@ -1,4 +1,25 @@
 2026-11-17
+- Add `dtsession --wayland` session bootstrap, `ext-session-lock-v1` and
+  `ext-idle-notify-v1` screen locking, and `dtstyle` Wayland hardware/input IPC
+  (`WP-06`) on the `x11_wayland` branch.
+  - `cde/programs/dtwm/wayland/cde_session_lock.c`, `dtwm_wayland_main.c`,
+    `cde_workspace.c`, `cde_icons.c`, `dtwm_wayland.h`, `Makefile.am`, and
+    `cde/configure.ac`: implement `ext_session_lock_manager_v1` (scene-graph
+    isolation preventing screencopy/shortcut leakage, immediate hotplug output
+    coverage, dead-locker failsafe, and verified `_DT_SM_WINDOW_INFO` elevation
+    for `dtsession`'s Motif PAM lock dialog), `ext_idle_notifier_v1`, and live
+    `libinput`/`wlr_keyboard` `_DT_WM_REQUEST` handlers (`f.set_pointer_accel`,
+    `f.set_left_handed`, `f.set_key_repeat`, `f.set_xkb_layout`, `f.set_bell`,
+    `f.set_saver_timeout`) with `_DT_WAYLAND_INPUT_STATE` reporting.
+  - `cde/programs/dtsession/` (`SmWayland.c`, `SmWayland.h`, `SmMain.c`,
+    `SmGlobals.c`, `SmRestore.c`, `SmCommun.c`, `SmLock.c`, `Makefile.am`) and
+    `cde/programs/dtstyle/Protocol.c`: add `--wayland` compositor/ToolTalk
+    bootstrap, `ext-session-lock-v1` + `ext-idle-notify-v1` integration with
+    `SmPam.c` PAM unlock, and `dtstyle` Wayland hardware settings forwarding.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland-wp06.py` and
+    `docs/improvements/wayland.md`: verify idle auto-lock, zero screencopy/input
+    leakage, 3-monitor hotplug coverage while locked, dead-locker SIGKILL
+    failsafe, clean unlock restoration, and `dtstyle` IPC.
 - Add bidirectional Motif XDND v5 ↔ Wayland `wl_data_device` drag-and-drop,
   `_DT_ACTIVE_WINDOW_BOX` support for `ck-grab` Wayland screencopy, and
   per-output XLibre RandR `DPI` + `wp_fractional_scale_v1` mixed-DPI scaling

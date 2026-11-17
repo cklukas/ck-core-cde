@@ -1,0 +1,37 @@
+{
+  "work_package": "WP-06",
+  "date": "2026-11-17",
+  "branch": "x11_wayland",
+  "host_vm": {
+    "lima_instance": "cde-ubuntu2604",
+    "os": "Ubuntu 26.04.1 LTS (aarch64)",
+    "kernel": "7.0.0-34-generic",
+    "compiler": "clang 21"
+  },
+  "revisions": {
+    "ck_core_motif": "e3380b74552f10678b8fc1f295e558c085b2d7bd",
+    "ck_core_apps": "8c3b11c5326d9a93a80a43cb6fb8ebd78404de40"
+  },
+  "artifacts": {
+    "dtwm_wayland_sha256": "82fb480776ea79ae1082dddd10b16c001d302bc6dba5f83a3320d978a101b34c",
+    "dtsession_sha256": "bdff4845c1db454d506fb8d36b396de4c19a5c170823912194cf8977533cb1c9",
+    "dtstyle_sha256": "056f67813dbaf667b27d92656c0ca9cde4338ed18cc35e4b6189f252c25e72eb"
+  },
+  "checks": [
+    {
+      "repo": "ck-core-cde",
+      "command": "make -j4 -C programs/dtsession check",
+      "result": "PASS (all 16 suites including PAM lock, privilege drop, debug-code guard, XSMP, signals)"
+    },
+    {
+      "repo": "ck-core-cde",
+      "command": "make -j4 -C programs/dtstyle check",
+      "result": "PASS (all 5 suites)"
+    },
+    {
+      "repo": "ck-core-cde",
+      "command": "make -j4 -C programs/dtwm check",
+      "result": "PASS (all 12 X11 + Wayland suites including check-dtwm-wayland-wp06.py)"
+    }
+  ]
+}

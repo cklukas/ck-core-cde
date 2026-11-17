@@ -162,6 +162,7 @@ struct DtwmView {
     bool is_subpanel;       /* Genuine CDE Subpanel (DtWM_BEHAVIOR_SUBPANEL) */
     bool is_desktop_pin;    /* dtfile Desktop.c pinned workspace object */
     bool is_swallowed;      /* Front Panel TYPE client swallowed window */
+    bool is_lock_dialog;    /* dtsession PAM lock dialog / cover shell */
     uint32_t workspace_mask;
 
     /* Desktop icon state (open-window icon + minimized icon + live pixmap) */
@@ -214,6 +215,7 @@ typedef struct {
     uint32_t output_idx;
     int dpi;
     struct wlr_scene_rect *bg_rect;
+    struct wlr_scene_rect *lock_bg_rect;
     struct wlr_scene_buffer *backdrop_buf;
     struct wl_listener frame;
     struct wl_listener request_state;
@@ -252,11 +254,35 @@ struct DtwmServer {
     struct wlr_scene_tree *popup_tree;
     struct wlr_scene_tree *overlay_tree;
     struct wlr_scene_tree *layer_overlay_tree;
+    struct wlr_scene_tree *lock_tree;
+    struct wlr_scene_tree *lock_cover_tree;
+    struct wlr_scene_tree *lock_dialog_tree;
 
     struct wlr_xdg_shell *xdg_shell;
     struct wlr_xdg_decoration_manager_v1 *xdg_decoration_mgr;
     struct wlr_layer_shell_v1 *layer_shell;
     struct wlr_xwayland *xwayland;
+    struct wlr_session_lock_manager_v1 *session_lock_mgr;
+    struct wlr_idle_notifier_v1 *idle_notifier;
+    struct wl_listener new_session_lock;
+    bool session_locked;
+
+    /* Hardware / dtstyle IPC state */
+    double ptr_accel_speed;
+    int ptr_accel_thresh;
+    bool left_handed;
+    bool key_repeat_enabled;
+    int key_repeat_delay;
+    int key_repeat_rate;
+    char xkb_layout[64];
+    int bell_percent;
+    int bell_pitch;
+    int bell_duration;
+    int saver_timeout_sec;
+    int lock_timeout_sec;
+    xcb_atom_t atom_session_lock_dlg;
+    xcb_atom_t atom_dt_sm_win_info;
+    xcb_atom_t atom_wayland_input_state;
 
     struct wlr_cursor *cursor;
     struct wlr_xcursor_manager *cursor_mgr;
@@ -442,5 +468,20 @@ void dtwm_xdnd_finish(void);
 bool dtwm_xdnd_handle_xcb_event(DtwmServer *server, xcb_generic_event_t *ev);
 void dtwm_xdnd_on_button_state(DtwmServer *server, uint32_t button, bool pressed);
 void dtwm_xdnd_on_cursor_motion(DtwmServer *server, struct wlr_surface *surface, double sx, double sy, uint32_t time_msec);
+
+/* cde_session_lock.c */
+void dtwm_lock_init(DtwmServer *server);
+void dtwm_lock_finish(DtwmServer *server);
+void dtwm_lock_on_xwayland_ready(DtwmServer *server);
+void dtwm_lock_sync_outputs(DtwmServer *server);
+void dtwm_lock_notify_activity(DtwmServer *server);
+bool dtwm_lock_is_sm_lock_window(DtwmServer *server, xcb_window_t win);
+void dtwm_lock_focus_surface(DtwmServer *server, struct wlr_surface *surf);
+struct wlr_surface *dtwm_lock_surface_at(DtwmServer *server, double lx, double ly, double *sx, double *sy);
+void dtwm_hw_apply_input_device(DtwmServer *server, struct wlr_input_device *dev);
+void dtwm_hw_apply_keyboard_defaults(DtwmServer *server, struct wlr_keyboard *wlr_kbd);
+bool dtwm_hw_handle_wm_request(DtwmServer *server, const char *cmd);
+void dtwm_hw_publish_state(DtwmServer *server);
+void dtwm_restore_view_focus(DtwmServer *server, DtwmView *view);
 
 #endif /* DTWM_WAYLAND_H */

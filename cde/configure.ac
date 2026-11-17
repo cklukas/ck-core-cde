@@ -744,19 +744,23 @@ AC_ARG_ENABLE([wayland],
 build_dtwm_wayland=no
 WAYLAND_COMP_CFLAGS=""
 WAYLAND_COMP_LIBS=""
+WAYLAND_CLIENT_CFLAGS=""
+WAYLAND_CLIENT_LIBS=""
 WAYLAND_PROTOCOLS_DATADIR=""
 AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
 
 AS_IF([test "x$enable_wayland" != "xno"], [
   AS_IF([test -n "$PKG_CONFIG" && test -n "$WAYLAND_SCANNER" && \
-         $PKG_CONFIG --exists wayland-protocols wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes], [
+         $PKG_CONFIG --exists wayland-protocols wayland-client libinput wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes], [
     WAYLAND_PROTOCOLS_DATADIR=`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`
-    WAYLAND_COMP_CFLAGS=`$PKG_CONFIG --cflags wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes`
-    WAYLAND_COMP_LIBS=`$PKG_CONFIG --libs wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes`
+    WAYLAND_COMP_CFLAGS=`$PKG_CONFIG --cflags wlroots-0.19 wayland-server libinput xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes`
+    WAYLAND_COMP_LIBS=`$PKG_CONFIG --libs wlroots-0.19 wayland-server libinput xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes`
+    WAYLAND_CLIENT_CFLAGS=`$PKG_CONFIG --cflags wayland-client`
+    WAYLAND_CLIENT_LIBS=`$PKG_CONFIG --libs wayland-client`
     build_dtwm_wayland=yes
   ], [
     AS_IF([test "x$enable_wayland" = "xyes"], [
-      AC_MSG_ERROR([--enable-wayland requires wayland-scanner, wayland-protocols, wlroots-0.19, wayland-server, xkbcommon, cairo, pangocairo, pixman-1, libdrm, xcb, xcb-icccm, xcb-randr, and xcb-xfixes])
+      AC_MSG_ERROR([--enable-wayland requires wayland-scanner, wayland-protocols, wayland-client, libinput, wlroots-0.19, wayland-server, xkbcommon, cairo, pangocairo, pixman-1, libdrm, xcb, xcb-icccm, xcb-randr, and xcb-xfixes])
     ])
   ])
 ])
@@ -766,6 +770,8 @@ AC_SUBST([WAYLAND_SCANNER])
 AC_SUBST([WAYLAND_PROTOCOLS_DATADIR])
 AC_SUBST([WAYLAND_COMP_CFLAGS])
 AC_SUBST([WAYLAND_COMP_LIBS])
+AC_SUBST([WAYLAND_CLIENT_CFLAGS])
+AC_SUBST([WAYLAND_CLIENT_LIBS])
 
 dnl check MISSING_PROGS - error out here if there's stuff in it.
 
