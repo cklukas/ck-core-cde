@@ -1793,6 +1793,8 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
         clear_active_focus(view->server);
     }
     view->mapped = false;
+    view->has_pending_geom = false;
+    view->pending_pos_set = false;
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
     dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, false);
@@ -2217,9 +2219,14 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
     struct wlr_xwayland_surface *xs = view->xwayland_surface;
     view->mapped = true;
 
+    bool had_pending_pos = view->pending_pos_set;
     apply_xwayland_decorations(view);
-    view->client_w = xs->width > 0 ? xs->width : 320;
-    view->client_h = xs->height > 0 ? xs->height : 240;
+    if (!view->has_pending_geom || view->client_w <= 0 || view->client_h <= 0) {
+        view->client_w = xs->width > 0 ? xs->width : 320;
+        view->client_h = xs->height > 0 ? xs->height : 240;
+    }
+    view->has_pending_geom = false;
+    view->pending_pos_set = false;
 
     if (dtwm_lock_is_sm_lock_window(view->server, xs->window_id)) {
         view->is_lock_dialog = true;
@@ -2342,6 +2349,8 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
             view->x = xs->x;
             view->y = xs->y;
         }
+    } else if (had_pending_pos) {
+        /* Keep view->x / view->y recorded from pre-map ConfigureRequest */
     } else if (xs->x != 0 || xs->y != 0) {
         view->x = xs->x;
         view->y = xs->y;
@@ -2376,6 +2385,8 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
         clear_active_focus(view->server);
     }
     view->mapped = false;
+    view->has_pending_geom = false;
+    view->pending_pos_set = false;
     if (view == view->server->panel_view) {
         view->server->panel_view = nullptr;
     }
@@ -2431,10 +2442,48 @@ static void xwayland_request_configure(struct wl_listener *listener, void *data)
             dtwm_icons_reposition_swallowed(view->server);
             return;
         }
-        wlr_xwayland_surface_configure(xs, ev->x, ev->y, ev->width, ev->height);
-        if (view->mapped && xs->override_redirect && view->frame_tree) {
-            wlr_scene_node_set_position(&view->frame_tree->node, ev->x, ev->y);
+        if (xs->override_redirect) {
+            int16_t nx = (ev->mask & XCB_CONFIG_WINDOW_X) ? ev->x : xs->x;
+            int16_t ny = (ev->mask & XCB_CONFIG_WINDOW_Y) ? ev->y : xs->y;
+            uint16_t nw = (ev->mask & XCB_CONFIG_WINDOW_WIDTH)
+                              ? ev->width
+                              : (xs->width > 0 ? xs->width : 1);
+            uint16_t nh = (ev->mask & XCB_CONFIG_WINDOW_HEIGHT)
+                              ? ev->height
+                              : (xs->height > 0 ? xs->height : 1);
+            wlr_xwayland_surface_configure(xs, nx, ny, nw, nh);
+            if (view->mapped && view->frame_tree) {
+                wlr_scene_node_set_position(&view->frame_tree->node, nx, ny);
+            }
+            return;
         }
+        int nx = (ev->mask & XCB_CONFIG_WINDOW_X)
+                     ? ev->x
+                     : (view->pending_pos_set ? view->x : xs->x);
+        int ny = (ev->mask & XCB_CONFIG_WINDOW_Y)
+                     ? ev->y
+                     : (view->pending_pos_set ? view->y : xs->y);
+        uint16_t nw = (ev->mask & XCB_CONFIG_WINDOW_WIDTH)
+                          ? ev->width
+                          : (uint16_t)((view->has_pending_geom && view->client_w > 0)
+                                           ? view->client_w
+                                           : (xs->width > 0 ? xs->width : 1));
+        uint16_t nh = (ev->mask & XCB_CONFIG_WINDOW_HEIGHT)
+                          ? ev->height
+                          : (uint16_t)((view->has_pending_geom && view->client_h > 0)
+                                           ? view->client_h
+                                           : (xs->height > 0 ? xs->height : 1));
+        if (ev->mask & (XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y)) {
+            view->x = nx;
+            view->y = ny;
+            view->pending_pos_set = true;
+        }
+        if (ev->mask & (XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT)) {
+            view->client_w = nw;
+            view->client_h = nh;
+            view->has_pending_geom = true;
+        }
+        wlr_xwayland_surface_configure(xs, (int16_t)nx, (int16_t)ny, nw, nh);
         return;
     }
     int l, t, r, b;

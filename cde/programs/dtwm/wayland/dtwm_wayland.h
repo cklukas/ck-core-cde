@@ -156,6 +156,8 @@ struct DtwmView {
     int client_w, client_h;
     int saved_x, saved_y, saved_w, saved_h;
     bool has_saved_geom;
+    bool has_pending_geom;
+    bool pending_pos_set;
 
     bool mapped;
     bool active;

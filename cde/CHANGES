@@ -1,4 +1,16 @@
 2026-11-17
+- Fix squashed/overlapping `Style Manager - Keyboard` (and sister `dtstyle`
+  dialogs) and wire live Wayland keyboard auto-repeat toggling
+  (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtstyle/Keyboard.c`): honor `ev->mask` (`X`, `Y`, `WIDTH`,
+  `HEIGHT`) and preserve pending pre-map `ConfigureRequest` dimensions across
+  pipelined `XConfigureWindow` resize + `putDialog` move requests in
+  `xwayland_request_configure` / `xwayland_map` instead of overwriting the
+  client's requested size with stale initial X11 geometry, apply `Keyboard.c`
+  `XmForm` attachments prior to managing `keyboardForm`, clamp
+  `key_click_percent` to `[0, 100]`, and synchronize **Auto Repeat** live with
+  `_DT_WAYLAND_INPUT_STATE` / `f.set_key_repeat` on Wayland.
 - Fix missing `DTHELPSEARCHPATH` inheritance for ToolTalk-launched Help clients
   (`dtpad -server`, etc.) and `XFontSet` / `wchar_t` bullet rendering (`•` ->
   `·` instead of `â¢` or `"`) in `DtHelp` (`cde/lib/DtHelp/XInterface.c`,
