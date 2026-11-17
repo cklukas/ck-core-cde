@@ -233,6 +233,25 @@ StartServer( struct display *d )
     int	ret = FALSE;
 
 #ifdef DTLOGIN_WAYLAND_SEAT
+    if (!d->isWaylandSeat && d->displayType.location == Local &&
+        d->argv && d->argv[0] && access(d->argv[0], X_OK) != 0 &&
+        access(CDE_INSTALLATION_TOP "/bin/dtwm-wayland", X_OK) == 0) {
+	LogError((unsigned char *)"dtlogin: X server %s not present for %s; switching local seat to Wayland greeter (%s/bin/dtwm-wayland --greeter)\n",
+	         d->argv[0], d->name, CDE_INSTALLATION_TOP);
+	for (char **p = d->argv; *p; ++p) {
+	    free(*p);
+	}
+	free(d->argv);
+	d->argv = calloc(3, sizeof(char *));
+	if (d->argv) {
+	    d->argv[0] = strdup(CDE_INSTALLATION_TOP "/bin/dtwm-wayland");
+	    d->argv[1] = strdup("--greeter");
+	    d->isWaylandSeat = 1;
+	    d->authorize = FALSE;
+	    free(d->greeterUser);
+	    d->greeterUser = strdup("_dtgreeter");
+	}
+    }
     if (d->isWaylandSeat)
 	return DtloginStartWaylandGreeter (d);
 #endif

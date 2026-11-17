@@ -1,4 +1,9 @@
 2026-11-17
+- Automatically promote local `dtlogin` seats (`cde/programs/dtlogin/server.c`)
+  from missing `/usr/bin/X` entries in default `Xservers` to the native Wayland
+  greeter (`dtwm-wayland --greeter`) on Wayland-only installations without
+  `xserver-xorg` instead of printing `"The X-server can not be started on
+  display :0..."`.
 - Fix an XWayland `set_hints` listener container-offset bug in `dtwm-wayland`
   (`cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
   `cde/debian/Xsession.wayland`,
