@@ -1,4 +1,7 @@
 2026-11-16
+- Update `scripts/build-docs.sh` smoke check to match the `Desktop Screenshots`
+  heading in `docs/desktop.md` so the multi-theme documentation site deploys in
+  CI.
 - Guard `__sanitizer_get_current_allocated_bytes` with `__SANITIZE_ADDRESS__` /
   `__has_feature(address_sanitizer)` in `programs/dtlogin/tests/check-xdmcp.py`,
   `programs/dtlogin/tests/check-displays.py`, and
