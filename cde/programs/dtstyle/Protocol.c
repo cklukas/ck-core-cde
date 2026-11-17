@@ -112,14 +112,36 @@ static Atom     xaDtSmPreeditInfo;
 /* local function definitions */
 static void SmRestoreDefault(Atom);
 
-static Boolean
+Boolean
 DtstyleWaylandActive(void)
 {
     const char *wl = getenv("WAYLAND_DISPLAY");
-    return (wl != nullptr && *wl != '\0') ? True : False;
+    if (wl != nullptr && *wl != '\0')
+        return True;
+    if (style.display && style.root != None)
+    {
+        Atom wl_atom = XInternAtom(style.display, "_DT_WAYLAND_OUTPUTS", True);
+        if (wl_atom != None)
+        {
+            Atom actual_type = None;
+            int actual_format = 0;
+            unsigned long nitems = 0, bytes_after = 0;
+            unsigned char *prop = nullptr;
+            if (XGetWindowProperty(style.display, style.root, wl_atom, 0, 1, False,
+                                   AnyPropertyType, &actual_type, &actual_format,
+                                   &nitems, &bytes_after, &prop) == Success)
+            {
+                if (prop)
+                    XFree(prop);
+                if (actual_type != None)
+                    return True;
+            }
+        }
+    }
+    return False;
 }
 
-static void
+void
 DtstyleSendWaylandRequest(const char *cmd)
 {
     if (!cmd || !*cmd || !style.display || !DtstyleWaylandActive())

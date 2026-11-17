@@ -27,6 +27,7 @@ if [ -x /usr/dt/bin/dtsearchpath ]; then
     eval "$(/usr/dt/bin/dtsearchpath -ksh 2>/dev/null)" || true
     set -u
 fi
+export XBMLANGPATH="${XBMLANGPATH:-${HOME:+$HOME/.dt/icons/%B%M.bm:$HOME/.dt/icons/%B:}/usr/dt/appconfig/icons/%L/%B%M.bm:/usr/dt/appconfig/icons/%L/%B:/usr/dt/appconfig/icons/C/%B%M.bm:/usr/dt/appconfig/icons/C/%B}"
 
 # Synchronize CDE IMS selection (~/.dt/ims/*) or installed Wayland IME (fcitx5 / ibus)
 # so native Wayland zwp_text_input_v3 clients and Motif XWayland XmIm clients share one daemon.

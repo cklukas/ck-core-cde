@@ -1,4 +1,21 @@
 2026-11-17
+- Fix `Style Manager - Mouse` double-click test reactivity, cut-off
+  **Handedness** / **Button 2** controls, clipped **Cursor Theme** / **Preview**
+  sections, and `0`-timestamp virtual-pointer multi-clicks on Wayland
+  (`cde/programs/dtstyle/Mouse.c`, `cde/programs/dtstyle/Main.c`,
+  `cde/programs/dtstyle/Protocol.c`, `cde/programs/dtstyle/Protocol.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/debian/Xsession.wayland`): synthesize monotonic timestamps in
+  `dtwm-wayland` when `zwlr_virtual_pointer_v1` / `wayvnc` events arrive with
+  `time_msec == 0`, add `CDE_INSTALLATION_TOP/appconfig/icons/C` and
+  `XBMLANGPATH` fallbacks for `Dtms3B.bm` / `Dtms2B.bm`, make the entire
+  **Test Double-Click** box (both mouse graphic and label) toggle high-contrast
+  highlight on every double-click, chain `Mouse.c` form controls top-to-bottom
+  before mapping so nothing overlaps or clips, and apply Wayland pointer
+  acceleration, handedness, multi-click time, and `Xcursor.theme` /
+  `Xcursor.size` live without restarting the workspace manager.
 - Wire `Style Manager - Window` (`Dtwm*moveOpaque` **"Show Contents During
   Move"** and related window behavior toggles) to apply live in `dtwm-wayland`
   and fix bottom clipping in the `Style Manager - Window` dialog

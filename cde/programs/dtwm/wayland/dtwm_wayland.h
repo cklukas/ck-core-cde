@@ -388,9 +388,12 @@ struct DtwmServer {
     struct wlr_box anim_to_box;
     int anim_step;
 
-    /* Double-click titlebar detection */
+    /* Double-click titlebar detection & live XCursor theme/size */
+    uint32_t double_click_ms;
     uint32_t last_title_click_ms;
     DtwmView *last_title_click_view;
+    char cursor_theme[128];
+    int cursor_size;
 
     /* CDE Window Menu overlay */
     bool menu_visible;
@@ -481,6 +484,7 @@ void dtwm_set_output_dpi(DtwmServer *server, uint32_t output_idx, int dpi);
 void dtwm_publish_active_window_box(DtwmServer *server);
 void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, struct wlr_box *out_box);
 void dtwm_reflow_views_for_outputs(DtwmServer *server);
+void dtwm_reload_cursor_theme(DtwmServer *server, const char *theme, int size);
 
 /* cde_icons.c */
 void dtwm_icons_init(DtwmServer *server);

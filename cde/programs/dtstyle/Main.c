@@ -469,9 +469,13 @@ putDialog(
     myHeight = XtHeight(dialog);
     myWidth = XtWidth(dialog);
 
-    if ((newY = pY - myHeight +5) < 0) 
+    if ((newY = pY - myHeight +5) < 32) 
         newY = pY + pHeight;
-    newX = pX + pWidth/2 - myWidth/2;
+    if (newY < 32)
+        newY = 32;
+    newX = pX + (Position)pWidth/2 - (Position)myWidth/2;
+    if (newX < 12)
+        newX = 12;
 
     n = 0;
     XtSetArg(args[n], XmNx, newX); n++;

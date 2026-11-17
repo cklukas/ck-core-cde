@@ -1554,7 +1554,11 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
             memcpy(txt, xcb_get_property_value(rep), (size_t)len);
             const char *last_prof = nullptr;
             const char *last_pal = nullptr;
+            char xcursor_theme[128] = {0};
+            int xcursor_size = server->cursor_size > 0 ? server->cursor_size : 24;
+            bool cursor_changed = false;
             bool has_auto_raise = false;
+            snprintf(xcursor_theme, sizeof(xcursor_theme), "%s", server->cursor_theme);
 
             char *saveptr = nullptr;
             for (char *line = strtok_r(txt, "\r\n", &saveptr); line;
@@ -1593,7 +1597,29 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
                     dtwm_icons_set_open_window_icons(
                         server, parse_xrdb_bool(val, server->show_open_window_icons)
                     );
+                } else if (xrdb_key_matches(line, klen, "multiClickTime")) {
+                    int ms = atoi(val);
+                    if (ms >= 100 && ms <= 2000) {
+                        server->double_click_ms = (uint32_t)ms;
+                    }
+                } else if (xrdb_key_matches(line, klen, "Xcursor.theme")) {
+                    size_t n = 0;
+                    while (val[n] && !isspace((unsigned char)val[n]) && n + 1 < sizeof(xcursor_theme)) {
+                        xcursor_theme[n] = val[n];
+                        n++;
+                    }
+                    xcursor_theme[n] = '\0';
+                    cursor_changed = true;
+                } else if (xrdb_key_matches(line, klen, "Xcursor.size")) {
+                    int sz = atoi(val);
+                    if (sz >= 12 && sz <= 128) {
+                        xcursor_size = sz;
+                        cursor_changed = true;
+                    }
                 }
+            }
+            if (cursor_changed) {
+                dtwm_reload_cursor_theme(server, xcursor_theme, xcursor_size);
             }
             if (last_prof) {
                 dtwm_server_apply_appearance_profile(server, dtwm_parse_appearance_profile(last_prof));

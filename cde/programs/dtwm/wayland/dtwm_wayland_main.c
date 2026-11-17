@@ -57,6 +57,13 @@ static void view_set_minimized(DtwmView *view, bool minimized);
 static void view_close(DtwmView *view);
 static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int client_h);
 
+static uint32_t dtwm_now_msec(void) {
+    struct timespec ts = {0};
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    uint32_t ms = (uint32_t)((uint64_t)ts.tv_sec * 1000ULL + (uint64_t)(ts.tv_nsec / 1000000L));
+    return ms ? ms : 1u;
+}
+
 static int align_to_grid(int v) {
     int rem = v % DTWM_GRID_SIZE;
     if (rem < 0) {
@@ -443,9 +450,7 @@ void dtwm_view_close(DtwmView *view) {
     view_close(view);
 }
 
-void dtwm_reflow_views_for_outputs(DtwmServer *server) {
-    if (!server) return;
-
+static float server_max_output_scale(DtwmServer *server) {
     float max_scale = 1.0f;
     DtwmOutput *out;
     wl_list_for_each(out, &server->outputs, link) {
@@ -453,6 +458,40 @@ void dtwm_reflow_views_for_outputs(DtwmServer *server) {
             max_scale = out->wlr_output->scale;
         }
     }
+    return max_scale;
+}
+
+void dtwm_reload_cursor_theme(DtwmServer *server, const char *theme, int size) {
+    if (!server) return;
+    if (size < 12) size = 24;
+    if (size > 128) size = 128;
+    const char *eff_theme = (theme && theme[0] && strcmp(theme, "default") != 0) ? theme : "";
+    if (server->cursor_mgr && server->cursor_size == size &&
+        strcmp(server->cursor_theme, eff_theme) == 0) {
+        wlr_xcursor_manager_load(server->cursor_mgr, ceilf(server_max_output_scale(server)));
+        return;
+    }
+    snprintf(server->cursor_theme, sizeof(server->cursor_theme), "%s", eff_theme);
+    server->cursor_size = size;
+    struct wlr_xcursor_manager *old_mgr = server->cursor_mgr;
+    server->cursor_mgr = wlr_xcursor_manager_create(
+        eff_theme[0] ? eff_theme : nullptr, (uint32_t)size
+    );
+    if (server->cursor_mgr) {
+        wlr_xcursor_manager_load(server->cursor_mgr, ceilf(server_max_output_scale(server)));
+        if (server->cursor) {
+            wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, "default");
+        }
+    }
+    if (old_mgr) {
+        wlr_xcursor_manager_destroy(old_mgr);
+    }
+}
+
+void dtwm_reflow_views_for_outputs(DtwmServer *server) {
+    if (!server) return;
+
+    float max_scale = server_max_output_scale(server);
     if (server->cursor_mgr) {
         wlr_xcursor_manager_load(server->cursor_mgr, ceilf(max_scale));
     }
@@ -1069,20 +1108,23 @@ void dtwm_recheck_cursor_focus(DtwmServer *server) {
 static void handle_cursor_motion(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, cursor_motion);
     struct wlr_pointer_motion_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
     wlr_cursor_move(server->cursor, &ev->pointer->base, ev->delta_x, ev->delta_y);
-    process_cursor_motion(server, ev->time_msec);
+    process_cursor_motion(server, t_ms);
 }
 
 static void handle_cursor_motion_absolute(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, cursor_motion_absolute);
     struct wlr_pointer_motion_absolute_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
     wlr_cursor_warp_absolute(server->cursor, &ev->pointer->base, ev->x, ev->y);
-    process_cursor_motion(server, ev->time_msec);
+    process_cursor_motion(server, t_ms);
 }
 
 static void handle_cursor_button(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, cursor_button);
     struct wlr_pointer_button_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
     dtwm_lock_notify_activity(server);
 
     uint32_t btn = ev->button;
@@ -1100,7 +1142,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
             dtwm_lock_focus_surface(server, lsurf);
             wlr_seat_pointer_notify_enter(server->seat, lsurf, lsx, lsy);
         }
-        wlr_seat_pointer_notify_button(server->seat, ev->time_msec, btn, ev->state);
+        wlr_seat_pointer_notify_button(server->seat, t_ms, btn, ev->state);
         return;
     }
 
@@ -1150,7 +1192,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
             update_snap_preview(server, DTWM_SNAP_NONE, nullptr);
             return;
         }
-        wlr_seat_pointer_notify_button(server->seat, ev->time_msec, btn, ev->state);
+        wlr_seat_pointer_notify_button(server->seat, t_ms, btn, ev->state);
         return;
     }
 
@@ -1225,12 +1267,13 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
                     return;
                 case DTWM_PART_TITLE:
                     if (view->has_max_btn && server->last_title_click_view == view &&
-                        (ev->time_msec - server->last_title_click_ms) <= 400) {
+                        (t_ms - server->last_title_click_ms) <=
+                            (server->double_click_ms > 0 ? server->double_click_ms : 500u)) {
                         server->last_title_click_view = nullptr;
                         view_set_maximized(view, !view->maximized);
                     } else {
                         server->last_title_click_view = view;
-                        server->last_title_click_ms = ev->time_msec;
+                        server->last_title_click_ms = t_ms;
                         begin_interactive(view, DTWM_CURSOR_MOVE, 0);
                     }
                     return;
@@ -1246,15 +1289,16 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         }
     }
 
-    wlr_seat_pointer_notify_button(server->seat, ev->time_msec, btn, ev->state);
+    wlr_seat_pointer_notify_button(server->seat, t_ms, btn, ev->state);
 }
 
 static void handle_cursor_axis(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, cursor_axis);
     struct wlr_pointer_axis_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
     dtwm_lock_notify_activity(server);
     wlr_seat_pointer_notify_axis(
-        server->seat, ev->time_msec, ev->orientation, ev->delta,
+        server->seat, t_ms, ev->orientation, ev->delta,
         ev->delta_discrete, ev->source, ev->relative_direction
     );
 }
@@ -1369,11 +1413,12 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
     DtwmKeyboard *kb = wl_container_of(listener, kb, key);
     DtwmServer *server = kb->server;
     struct wlr_keyboard_key_event *ev = data;
+    uint32_t t_ms = ev->time_msec ? ev->time_msec : dtwm_now_msec();
     dtwm_lock_notify_activity(server);
 
     if (server->session_locked || server->greeter_mode) {
         wlr_seat_set_keyboard(server->seat, kb->wlr_keyboard);
-        wlr_seat_keyboard_notify_key(server->seat, ev->time_msec, ev->keycode, ev->state);
+        wlr_seat_keyboard_notify_key(server->seat, t_ms, ev->keycode, ev->state);
         return;
     }
 
@@ -1394,7 +1439,7 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
     if (!handled) {
         wlr_seat_set_keyboard(server->seat, kb->wlr_keyboard);
         if (!dtwm_ime_forward_key(server, kb->wlr_keyboard, ev)) {
-            wlr_seat_keyboard_notify_key(server->seat, ev->time_msec, ev->keycode, ev->state);
+            wlr_seat_keyboard_notify_key(server->seat, t_ms, ev->keycode, ev->state);
         }
     }
 }
@@ -2825,6 +2870,8 @@ int main(int argc, char **argv) {
     server.allow_primary_on_top = false;
     server.animate_minimize = true;
     server.show_task_switcher = true;
+    server.double_click_ms = 500;
+    server.cursor_size = 24;
 
     dtwm_workspaces_init(&server);
     dtwm_icons_init(&server);
