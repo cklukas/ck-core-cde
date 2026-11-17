@@ -1,4 +1,9 @@
 2026-11-16
+- Guard `__sanitizer_get_current_allocated_bytes` with `__SANITIZE_ADDRESS__` /
+  `__has_feature(address_sanitizer)` in `programs/dtlogin/tests/check-xdmcp.py`,
+  `programs/dtlogin/tests/check-displays.py`, and
+  `programs/dtlogin/tests/check-config.py` so UBSan-only builds on 39-bit VA
+  ARM64 kernels link cleanly, and pin `.ckgit/ci.yml` to `runs_on: primary`.
 - Guard `/proc/<pid>/fd` `PermissionError`, `RLIMIT_FSIZE` (`SIGXFSZ` / `EFBIG`),
   `initgroups` `EPERM` (`/proc/self/setgroups == "deny"`), and UID-`0`
   `seteuid` restore assertions in `programs/dtmail/tests/check-spool-helper.py`,

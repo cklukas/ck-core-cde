@@ -75,7 +75,11 @@ harness = r'''
 #include <netdb.h>
 
 /* heap bytes in use, from the sanitizer runtime (gcc ships no header for it) */
+#if defined(__SANITIZE_ADDRESS__) || (defined(__has_feature) && __has_feature(address_sanitizer))
 extern size_t __sanitizer_get_current_allocated_bytes(void);
+#else
+static inline size_t __sanitizer_get_current_allocated_bytes(void) { return 0; }
+#endif
 extern int mode_popen_fails;
 extern const char *uptime_output;
 extern int used_tmpnam, used_system, used_popen;

@@ -30,7 +30,11 @@ harness = r'''
 #include <sys/mman.h>
 #include <arpa/inet.h>
 
+#if defined(__SANITIZE_ADDRESS__) || (defined(__has_feature) && __has_feature(address_sanitizer))
 extern size_t __sanitizer_get_current_allocated_bytes(void);
+#else
+static inline size_t __sanitizer_get_current_allocated_bytes(void) { return 0; }
+#endif
 extern int fail_size, live_maps, stopped, started, failed_sent, refused_sent, disposed;
 extern struct protoDisplay *current_pdpy;
 extern struct display *displays;
