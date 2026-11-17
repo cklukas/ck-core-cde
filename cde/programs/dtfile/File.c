@@ -6682,12 +6682,17 @@ GetIconLayoutParms(
       ld->margin = ld->highlight + shadowThickness + marginWidth;
 
       if (g->icon.pixmap_width < maxWidth)
-         ld->spacing = ld->spacing - (maxWidth - g->icon.pixmap_width);
+      {
+         Dimension diff = maxWidth - g->icon.pixmap_width;
+         ld->spacing = (ld->spacing > diff) ? (Dimension)(ld->spacing - diff) : 0;
+      }
 
-      ld->width = ((Widget)g)->core.width +
-                                     ld->pixmap_width  - g->icon.pixmap_width;
-      ld->height = ((Widget)g)->core.height +
-                                     ld->pixmap_height - g->icon.pixmap_height;
+      ld->width = (((Widget)g)->core.width + ld->pixmap_width > g->icon.pixmap_width)
+                     ? (Dimension)(((Widget)g)->core.width + ld->pixmap_width - g->icon.pixmap_width)
+                     : ld->pixmap_width;
+      ld->height = (((Widget)g)->core.height + ld->pixmap_height > g->icon.pixmap_height)
+                     ? (Dimension)(((Widget)g)->core.height + ld->pixmap_height - g->icon.pixmap_height)
+                     : ld->pixmap_height;
 
       if (ld->pixmap_position == XmPIXMAP_TOP)
       {
@@ -7731,8 +7736,8 @@ DisplayWorkProc(
    int n;
    Boolean commit_updates = False;
 
-   int n1 = 1;
-   int n2 = 1;
+   int n1 = 32;
+   int n2 = 64;
 
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
    if (dialog_data == nullptr)

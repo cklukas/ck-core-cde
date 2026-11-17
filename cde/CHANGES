@@ -1,4 +1,16 @@
 2026-11-17
+- Fix `dtfile` Shelf icon labels disappearing on window resize and single-row
+  icon overlap when resizing large directories such as `/bin`
+  (`cde/programs/dtfile/FileMgr.h`, `cde/programs/dtfile/FileMgr.c`,
+  `cde/programs/dtfile/File.c`, `cde/programs/dtfile/IconWindow.c`): store
+  `shelf_row_height`, `shelf_slot_width`, `shelf_slot_height`, and
+  `shelf_icon_px` per `FileMgrRec` window instead of in process-global statics
+  that secondary views (`Application Manager`, `Trash`, or uninitialized
+  placeholders) overwrote to `47` px and caused `ShelfEnforceSizeEH` to clip
+  shelf labels on `ConfigureNotify`, disable `XmNadjustLast` / baseline margin
+  mutation on `shelf_row` and trigger a clean `XClearArea` expose on resize, and
+  fix an unsigned `Dimension` underflow on `ld->spacing` in `GetIconLayoutParms`
+  along with `file_window` resize redrawing.
 - Fix Motif menu-bar drag pulldown offset on Wayland when dragging a held mouse
   button across adjacent `XmMenuBar` cascade buttons (`File` <-> `Panel`)
   (`cde/programs/dtwm/wayland/dtwm_wayland.h`,

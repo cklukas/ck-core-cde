@@ -220,6 +220,11 @@ FileWindowResizeCallback(
          file_mgr_data = (FileMgrData *) dialog_data->data;
 
          LayoutFileIcons (file_mgr_rec, file_mgr_data, False, False);
+         if (file_mgr_rec->file_window && XtIsRealized(file_mgr_rec->file_window))
+         {
+            XClearArea(XtDisplay(file_mgr_rec->file_window),
+                       XtWindow(file_mgr_rec->file_window), 0, 0, 0, 0, True);
+         }
       }
    }
 }
