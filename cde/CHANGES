@@ -1,3 +1,26 @@
+2026-11-18
+- Add desktop right-click **Workspace Menu** (`DtRootMenu`) across both Wayland
+  (`dtwm-wayland`) and X11 (`dtwm`) (`cde/programs/dtwm/wayland/cde_bevel.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`, `cde/programs/dtwm/WmResource.c`,
+  `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/localized/C/config/sys.dtwmrc.tmsg`,
+  `cde/programs/types/miscActions.dt.src`, `cde/programs/dtstyle/Main.c`,
+  `docs/improvements/wayland.md`):
+  - Provide grouped 3D-beveled **Workspace Menu** items combining classic CDE
+    workspace controls with everyday desktop actions: *Open Terminal*, *Open
+    File Manager*, *Application Manager* (`Dtappmgr`), *Change Backdrop...*
+    (`DtstyleBackdrop` / `dtstyle -backdrop`), *Display Settings...*
+    (`DtstyleDisplay` / `dtstyle -monitors`), *Style Manager...* (raising an
+    existing `dtstyle` window when already running instead of reporting a lock
+    error), *Clean Up Icons*, *Shuffle Up*, *Shuffle Down*, *Minimize/Restore
+    Front Panel*, *Refresh*, *Lock Screen* (`LockDisplay`), and *Log Out...*
+    (`ExitSession`), supporting click-to-post, press-drag-release, output-edge
+    clamping, and `Up`/`Down`/`Enter`/`Esc` navigation.
+  - Stop `cde/programs/dtwm/Makefile.am` from installing the unmerged
+    `%|nls-...|` `sys.dtwmrc` template over `programs/localized/C/config`'s
+    merged `/usr/dt/config/C/sys.dtwmrc`.
+
 2026-11-17
 - Match `dtwm-wayland` titlebar Maximize, Minimize, and Window Menu button
   glyph proportions to classic X11 `dtwm`

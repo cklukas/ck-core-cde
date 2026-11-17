@@ -61,6 +61,9 @@
 #define DTWM_MENU_WIDTH 216
 #define DTWM_MENU_ITEM_H 24
 #define DTWM_MENU_PAD 4
+#define DTWM_ROOT_MENU_ITEM_COUNT 13
+#define DTWM_ROOT_MENU_WIDTH 236
+#define DTWM_ROOT_MENU_HEADER_H 26
 #define DTWM_PANEL_WIDTH 840
 #define DTWM_PANEL_HEIGHT 74
 #define DTWM_PANEL_STRUT 76
@@ -399,11 +402,16 @@ struct DtwmServer {
     char cursor_theme[128];
     int cursor_size;
 
-    /* CDE Window Menu overlay */
+    /* CDE Window Menu & Desktop Workspace Menu overlay */
     bool menu_visible;
+    bool menu_is_root;
     DtwmView *menu_target;
     int menu_x, menu_y;
+    int menu_w, menu_h;
     int menu_hover_idx;
+    uint32_t menu_open_ms;
+    double menu_open_x, menu_open_y;
+    bool menu_drag_moved;
     struct wlr_scene_buffer *menu_buf;
 
     /* CDE Keyboard Task Switcher overlay */
@@ -462,6 +470,15 @@ DtwmFramePart dtwm_frame_hit_test(const DtwmView *view, int local_x, int local_y
 uint32_t dtwm_part_to_wlr_edges(DtwmFramePart part);
 
 struct wlr_buffer *dtwm_render_window_menu(const DtwmPalette *pal, const DtwmView *view, int hover_idx, int *out_w, int *out_h);
+struct wlr_buffer *dtwm_render_root_menu(
+    const DtwmPalette *pal,
+    bool panel_minimized,
+    bool has_panel,
+    int hover_idx,
+    int *out_w,
+    int *out_h
+);
+int dtwm_root_menu_item_at(int rx, int ry, int menu_w, int menu_h);
 struct wlr_buffer *dtwm_render_snap_preview(const DtwmPalette *pal, int w, int h);
 struct wlr_buffer *dtwm_render_wireframe_outline(int w, int h);
 struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int *out_h);

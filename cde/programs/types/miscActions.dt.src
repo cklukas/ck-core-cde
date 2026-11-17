@@ -323,4 +323,15 @@ ACTION DtstyleDisplay
         DESCRIPTION     Open the Style Manager Display and Multi-Monitor Arrangement dialog.
 }
 
+ACTION DtstyleBackdrop
+{
+        LABEL           Backdrop Settings
+        ICON            Fpstyle
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     dtstyle -backdrop
+        DESCRIPTION     Open the Style Manager Backdrop dialog.
+}
+
 XCOMM ######################## EOF ############################################

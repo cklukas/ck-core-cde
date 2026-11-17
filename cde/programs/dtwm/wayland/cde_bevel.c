@@ -634,6 +634,99 @@ struct wlr_buffer *dtwm_render_window_menu(
     return &buf->base;
 }
 
+static bool root_menu_has_separator_before(int idx) {
+    return (idx == 3 || idx == 6 || idx == 11);
+}
+
+int dtwm_root_menu_item_at(int rx, int ry, int menu_w, int menu_h) {
+    if (rx < 0 || ry < 0 || rx >= menu_w || ry >= menu_h) {
+        return -1;
+    }
+    int y = DTWM_MENU_PAD + DTWM_ROOT_MENU_HEADER_H + 8;
+    for (int i = 0; i < DTWM_ROOT_MENU_ITEM_COUNT; ++i) {
+        if (root_menu_has_separator_before(i)) {
+            y += 6;
+        }
+        if (ry >= y && ry < y + DTWM_MENU_ITEM_H) {
+            return i;
+        }
+        y += DTWM_MENU_ITEM_H;
+    }
+    return -1;
+}
+
+struct wlr_buffer *dtwm_render_root_menu(
+    const DtwmPalette *pal,
+    bool panel_minimized,
+    bool has_panel,
+    int hover_idx,
+    int *out_w,
+    int *out_h
+) {
+    const char *items[DTWM_ROOT_MENU_ITEM_COUNT] = {
+        "Open Terminal",
+        "Open File Manager",
+        "Application Manager",
+        "Change Backdrop...",
+        "Display Settings...",
+        "Style Manager...",
+        "Clean Up Icons",
+        "Shuffle Up",
+        "Shuffle Down",
+        panel_minimized ? "Restore Front Panel" : "Minimize Front Panel",
+        "Refresh",
+        "Lock Screen",
+        "Log Out...",
+    };
+
+    int w = DTWM_ROOT_MENU_WIDTH;
+    int h = DTWM_MENU_PAD + DTWM_ROOT_MENU_HEADER_H + 8 +
+            DTWM_ROOT_MENU_ITEM_COUNT * DTWM_MENU_ITEM_H + 3 * 6 + DTWM_MENU_PAD;
+    *out_w = w;
+    *out_h = h;
+
+    cairo_t *cr = nullptr;
+    DtwmCairoBuffer *buf = dtwm_cairo_buffer_create(w, h, &cr);
+    if (!buf) {
+        return nullptr;
+    }
+
+    const DtwmColorSet *cs = &pal->menu;
+    set_rgba(cr, cs->bg);
+    cairo_rectangle(cr, 0, 0, w, h);
+    cairo_fill(cr);
+    draw_bevel(cr, 0, 0, w, h, 2.0, cs->top_shadow, cs->bottom_shadow);
+
+    /* Classic CDE DtRootMenu f.title header + iconic double etched separator */
+    double y = DTWM_MENU_PAD;
+    draw_pango_label(cr, "Workspace Menu", 8, y, w - 16, DTWM_ROOT_MENU_HEADER_H, cs->fg, true, true);
+    y += DTWM_ROOT_MENU_HEADER_H;
+    draw_groove_line_h(cr, 4, w - 4, y + 1, cs->bottom_shadow, cs->top_shadow);
+    draw_groove_line_h(cr, 4, w - 4, y + 4, cs->bottom_shadow, cs->top_shadow);
+    y += 8;
+
+    for (int i = 0; i < DTWM_ROOT_MENU_ITEM_COUNT; ++i) {
+        if (root_menu_has_separator_before(i)) {
+            draw_groove_line_h(cr, 4, w - 4, y + 2, cs->bottom_shadow, cs->top_shadow);
+            y += 6;
+        }
+        bool enabled = true;
+        if (i == 9 && !has_panel) {
+            enabled = false;
+        }
+        if (i == hover_idx && enabled) {
+            draw_bevel(cr, 3, y, w - 6, DTWM_MENU_ITEM_H, 2.0, cs->top_shadow, cs->bottom_shadow);
+        }
+        DtwmRgba fg = enabled ? cs->fg : cs->bottom_shadow;
+        draw_pango_label(cr, items[i], 10, y, w - 20, DTWM_MENU_ITEM_H, fg, false, false);
+        y += DTWM_MENU_ITEM_H;
+    }
+
+    cairo_surface_flush(buf->surface);
+    cairo_destroy(cr);
+    return &buf->base;
+}
+
 struct wlr_buffer *dtwm_render_snap_preview(const DtwmPalette *pal, int w, int h) {
     cairo_t *cr = nullptr;
     DtwmCairoBuffer *buf = dtwm_cairo_buffer_create(w, h, &cr);

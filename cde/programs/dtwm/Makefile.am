@@ -40,8 +40,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp11.py --compositor ./dtwm-wayland
 endif
 
-configdir = $(CDE_INSTALLATION_TOP)/config/C
-dist_config_DATA = sys.dtwmrc
+noinst_DATA = sys.dtwmrc Dtwm.defs
 
 BUILT_SOURCES = sys.dtwmrc Dtwm.defs
 CLEANFILES = sys.dtwmrc Dtwm.defs

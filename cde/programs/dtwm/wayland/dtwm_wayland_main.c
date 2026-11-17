@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -542,15 +543,46 @@ void dtwm_reflow_views_for_outputs(DtwmServer *server) {
     dtwm_publish_active_window_box(server);
 }
 
-/* --- CDE Window Menu Overlay --- */
+/* --- CDE Window Menu & Desktop Workspace Menu Overlay --- */
+static void clamp_menu_to_output(DtwmServer *server, int mw, int mh) {
+    struct wlr_box obox = {0};
+    get_primary_output_box(server, server->menu_x, server->menu_y, &obox);
+    if (obox.width > 0 && obox.height > 0) {
+        if (server->menu_x + mw > obox.x + obox.width - 2) {
+            server->menu_x = obox.x + obox.width - mw - 2;
+        }
+        if (server->menu_x < obox.x + 2) {
+            server->menu_x = obox.x + 2;
+        }
+        if (server->menu_y + mh > obox.y + obox.height - 2) {
+            server->menu_y = obox.y + obox.height - mh - 2;
+        }
+        if (server->menu_y < obox.y + 2) {
+            server->menu_y = obox.y + 2;
+        }
+    }
+}
+
 static void update_window_menu_buffer(DtwmServer *server) {
     if (!server->menu_visible || !server->menu_buf) {
         return;
     }
     int mw = 0, mh = 0;
-    struct wlr_buffer *buf = dtwm_render_window_menu(
-        &server->palette, server->menu_target, server->menu_hover_idx, &mw, &mh
-    );
+    struct wlr_buffer *buf = nullptr;
+    if (server->menu_is_root) {
+        bool has_panel = (server->panel_view != nullptr && server->panel_view->mapped);
+        bool panel_min = (has_panel && server->panel_view->minimized);
+        buf = dtwm_render_root_menu(
+            &server->palette, panel_min, has_panel, server->menu_hover_idx, &mw, &mh
+        );
+    } else {
+        buf = dtwm_render_window_menu(
+            &server->palette, server->menu_target, server->menu_hover_idx, &mw, &mh
+        );
+    }
+    server->menu_w = mw;
+    server->menu_h = mh;
+    clamp_menu_to_output(server, mw, mh);
     if (buf) {
         wlr_scene_buffer_set_buffer(server->menu_buf, buf);
         wlr_buffer_drop(buf);
@@ -561,17 +593,38 @@ static void update_window_menu_buffer(DtwmServer *server) {
 
 static void open_window_menu(DtwmServer *server, DtwmView *view, int x, int y) {
     server->menu_visible = true;
+    server->menu_is_root = false;
     server->menu_target = view;
     server->menu_x = x;
     server->menu_y = y;
     server->menu_hover_idx = -1;
+    server->menu_open_ms = 0;
+    server->menu_open_x = server->cursor ? server->cursor->x : x;
+    server->menu_open_y = server->cursor ? server->cursor->y : y;
+    server->menu_drag_moved = false;
+    update_window_menu_buffer(server);
+}
+
+static void open_root_menu(DtwmServer *server, int x, int y, uint32_t t_ms) {
+    server->menu_visible = true;
+    server->menu_is_root = true;
+    server->menu_target = nullptr;
+    server->menu_x = x;
+    server->menu_y = y;
+    server->menu_hover_idx = -1;
+    server->menu_open_ms = t_ms;
+    server->menu_open_x = server->cursor ? server->cursor->x : x;
+    server->menu_open_y = server->cursor ? server->cursor->y : y;
+    server->menu_drag_moved = false;
     update_window_menu_buffer(server);
 }
 
 static void close_window_menu(DtwmServer *server) {
     server->menu_visible = false;
+    server->menu_is_root = false;
     server->menu_target = nullptr;
     server->menu_hover_idx = -1;
+    server->menu_drag_moved = false;
     if (server->menu_buf) {
         wlr_scene_buffer_set_buffer(server->menu_buf, nullptr);
         wlr_scene_node_set_enabled(&server->menu_buf->node, false);
@@ -581,6 +634,9 @@ static void close_window_menu(DtwmServer *server) {
 static int menu_item_at(DtwmServer *server, double lx, double ly) {
     int rx = (int)lx - server->menu_x;
     int ry = (int)ly - server->menu_y;
+    if (server->menu_is_root) {
+        return dtwm_root_menu_item_at(rx, ry, server->menu_w, server->menu_h);
+    }
     int mh = DTWM_MENU_PAD * 2 + DTWM_MENU_ITEM_COUNT * DTWM_MENU_ITEM_H + 6;
     if (rx < 0 || ry < 0 || rx >= DTWM_MENU_WIDTH || ry >= mh) {
         return -1;
@@ -651,9 +707,170 @@ static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edge
     server->resize_edges = edges;
 }
 
+static bool view_is_normal_app(const DtwmView *v);
+
+static void spawn_desktop_command(DtwmServer *server, const char *prog, const char *arg1) {
+    if (!server || !prog || !prog[0]) {
+        return;
+    }
+    pid_t pid = fork();
+    if (pid < 0) {
+        return;
+    }
+    if (pid == 0) {
+        /* Double-fork so init reaps the grandchild without interfering with wlr_xwayland */
+        sigset_t empty_mask;
+        sigemptyset(&empty_mask);
+        sigprocmask(SIG_SETMASK, &empty_mask, nullptr);
+        setsid();
+        pid_t gpid = fork();
+        if (gpid != 0) {
+            _exit(0);
+        }
+        if (server->xwayland && server->xwayland->display_name) {
+            setenv("DISPLAY", server->xwayland->display_name, 1);
+        }
+        if (server->wayland_socket) {
+            setenv("WAYLAND_DISPLAY", server->wayland_socket, 1);
+        }
+        const char *home = getenv("HOME");
+        if (home && home[0]) {
+            (void)chdir(home);
+        }
+        char *args[3] = {(char *)prog, (char *)arg1, nullptr};
+        execv(prog, args);
+        _exit(127);
+    }
+    (void)waitpid(pid, nullptr, 0);
+}
+
+static void shuffle_workspace_up(DtwmServer *server) {
+    if (!server || !server->workspace_tree) {
+        return;
+    }
+    struct wlr_scene_node *node;
+    wl_list_for_each(node, &server->workspace_tree->children, link) {
+        DtwmView *v = node->data;
+        if (v && view_is_normal_app(v)) {
+            focus_view(server, v, nullptr);
+            return;
+        }
+    }
+}
+
+static void shuffle_workspace_down(DtwmServer *server) {
+    if (!server || !server->workspace_tree) {
+        return;
+    }
+    DtwmView *top_v = nullptr;
+    struct wlr_scene_node *node;
+    wl_list_for_each_reverse(node, &server->workspace_tree->children, link) {
+        DtwmView *v = node->data;
+        if (v && view_is_normal_app(v)) {
+            top_v = v;
+            break;
+        }
+    }
+    if (!top_v) {
+        return;
+    }
+    if (top_v->frame_tree) {
+        wlr_scene_node_lower_to_bottom(&top_v->frame_tree->node);
+    }
+    if (top_v->kind == DTWM_VIEW_XWAYLAND && top_v->xwayland_surface) {
+        wlr_xwayland_surface_restack(top_v->xwayland_surface, nullptr, XCB_STACK_MODE_BELOW);
+    }
+    DtwmView *next_top = nullptr;
+    wl_list_for_each_reverse(node, &server->workspace_tree->children, link) {
+        DtwmView *v = node->data;
+        if (v && view_is_normal_app(v)) {
+            next_top = v;
+            break;
+        }
+    }
+    if (next_top && next_top != top_v) {
+        focus_view_ex(server, next_top, nullptr, false);
+    }
+}
+
+static void refresh_workspace_desktop(DtwmServer *server) {
+    if (!server) {
+        return;
+    }
+    dtwm_update_all_backdrops(server);
+    dtwm_icons_relayout(server);
+    dtwm_update_front_panel(server);
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && v->decorated) {
+            dtwm_view_update_frame(v);
+        }
+    }
+    DtwmOutput *out;
+    wl_list_for_each(out, &server->outputs, link) {
+        if (out->wlr_output) {
+            wlr_output_schedule_frame(out->wlr_output);
+        }
+    }
+}
+
+static void execute_root_menu_action(DtwmServer *server, int idx) {
+    switch (idx) {
+    case 0: /* Open Terminal */
+        spawn_desktop_command(server, CDE_INSTALLATION_TOP "/bin/dtterm", nullptr);
+        break;
+    case 1: /* Open File Manager */
+        spawn_desktop_command(server, CDE_INSTALLATION_TOP "/bin/dtfile", nullptr);
+        break;
+    case 2: /* Application Manager */
+        spawn_desktop_command(server, CDE_INSTALLATION_TOP "/bin/dtaction", "Dtappmgr");
+        break;
+    case 3: /* Change Backdrop... */
+        spawn_desktop_command(server, CDE_INSTALLATION_TOP "/bin/dtstyle", "-backdrop");
+        break;
+    case 4: /* Display Settings... */
+        spawn_desktop_command(server, CDE_INSTALLATION_TOP "/bin/dtstyle", "-monitors");
+        break;
+    case 5: /* Style Manager... */
+        spawn_desktop_command(server, CDE_INSTALLATION_TOP "/bin/dtstyle", nullptr);
+        break;
+    case 6: /* Clean Up Icons */
+        dtwm_icons_relayout(server);
+        break;
+    case 7: /* Shuffle Up */
+        shuffle_workspace_up(server);
+        break;
+    case 8: /* Shuffle Down */
+        shuffle_workspace_down(server);
+        break;
+    case 9: /* Minimize / Restore Front Panel */
+        if (server->panel_view && server->panel_view->mapped) {
+            view_set_minimized(server->panel_view, !server->panel_view->minimized);
+            dtwm_update_front_panel(server);
+        }
+        break;
+    case 10: /* Refresh */
+        refresh_workspace_desktop(server);
+        break;
+    case 11: /* Lock Screen */
+        spawn_desktop_command(server, CDE_INSTALLATION_TOP "/bin/dtaction", "LockDisplay");
+        break;
+    case 12: /* Log Out... */
+        spawn_desktop_command(server, CDE_INSTALLATION_TOP "/bin/dtaction", "ExitSession");
+        break;
+    default:
+        break;
+    }
+}
+
 static void execute_menu_action(DtwmServer *server, int idx) {
+    bool is_root = server->menu_is_root;
     DtwmView *v = server->menu_target;
     close_window_menu(server);
+    if (is_root) {
+        execute_root_menu_action(server, idx);
+        return;
+    }
     if (!v) {
         return;
     }
@@ -1059,6 +1276,11 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
         );
     }
     if (server->menu_visible) {
+        double dx = server->cursor->x - server->menu_open_x;
+        double dy = server->cursor->y - server->menu_open_y;
+        if (dx * dx + dy * dy >= 16.0) {
+            server->menu_drag_moved = true;
+        }
         int idx = menu_item_at(server, server->cursor->x, server->cursor->y);
         if (idx != server->menu_hover_idx) {
             server->menu_hover_idx = idx;
@@ -1160,6 +1382,18 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     }
 
     if (ev->state == WL_POINTER_BUTTON_STATE_RELEASED) {
+        if (server->menu_visible) {
+            /* Support classic Motif/CDE press-drag-release on popup menus while keeping
+             * a stationary right-click posted for click-to-select interaction. */
+            if (server->menu_drag_moved) {
+                int idx = menu_item_at(server, server->cursor->x, server->cursor->y);
+                if (idx >= 0) {
+                    execute_menu_action(server, idx);
+                }
+                server->menu_drag_moved = false;
+            }
+            return;
+        }
         if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH && server->grab_ignore_next_release) {
             server->grab_ignore_next_release = false;
             return;
@@ -1238,15 +1472,18 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     if (!view && !surface) {
         DtwmView *icon_v = dtwm_icons_view_at(server, server->cursor->x, server->cursor->y);
         if (icon_v) {
-            if (ev->button == BTN_LEFT) {
+            if (btn == BTN_LEFT) {
                 focus_view(server, icon_v, nullptr);
-            } else if (ev->button == BTN_RIGHT) {
+            } else if (btn == BTN_RIGHT) {
                 open_window_menu(server, icon_v, (int)server->cursor->x, (int)server->cursor->y);
             }
             return;
         }
-        /* Clicking empty CDE desktop clears active window focus */
+        /* Clicking empty CDE desktop clears active window focus; right-click opens Workspace Menu */
         clear_active_focus(server);
+        if (btn == BTN_RIGHT && !server->greeter_mode && !server->session_locked) {
+            open_root_menu(server, (int)server->cursor->x, (int)server->cursor->y, t_ms);
+        }
         return;
     }
 
@@ -1260,11 +1497,11 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         );
 
         if (part != DTWM_PART_CLIENT) {
-            if (ev->button == BTN_RIGHT && (part == DTWM_PART_TITLE || part == DTWM_PART_BTN_MENU)) {
+            if (btn == BTN_RIGHT && !view->is_panel && !server->greeter_mode) {
                 open_window_menu(server, view, (int)server->cursor->x, (int)server->cursor->y);
                 return;
             }
-            if (ev->button == BTN_LEFT) {
+            if (btn == BTN_LEFT) {
                 switch (part) {
                 case DTWM_PART_BTN_MENU: {
                     int l, t, r, b;
@@ -1412,6 +1649,24 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
         }
         if (server->switcher_visible) {
             hide_task_switcher(server, false);
+            return true;
+        }
+    }
+    if (server->menu_visible) {
+        int max_items = server->menu_is_root ? DTWM_ROOT_MENU_ITEM_COUNT : DTWM_MENU_ITEM_COUNT;
+        if (sym == XKB_KEY_Down) {
+            server->menu_hover_idx = (server->menu_hover_idx + 1) % max_items;
+            update_window_menu_buffer(server);
+            return true;
+        }
+        if (sym == XKB_KEY_Up) {
+            server->menu_hover_idx =
+                (server->menu_hover_idx <= 0) ? (max_items - 1) : (server->menu_hover_idx - 1);
+            update_window_menu_buffer(server);
+            return true;
+        }
+        if ((sym == XKB_KEY_Return || sym == XKB_KEY_KP_Enter) && server->menu_hover_idx >= 0) {
+            execute_menu_action(server, server->menu_hover_idx);
             return true;
         }
     }

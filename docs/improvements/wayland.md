@@ -44,7 +44,15 @@ framing or interaction rules.
   placement and commits on release;
 - Pressing `Alt+Tab` opens and cycles the centered 3D-beveled keyboard task
   switcher, and `Alt+Space` opens the window menu;
-- Clicking the desktop background clears active-window focus.
+- Left-clicking the desktop background clears active-window focus, while
+  right-clicking opens the 3D-beveled **Workspace Menu** (supporting both
+  click-to-post and Motif press-drag-release, plus `Up`/`Down`/`Enter`/`Esc`
+  keyboard navigation) with matching actions across Wayland (`dtwm-wayland`) and
+  X11 (`dtwm` `DtRootMenu`): *Open Terminal*, *Open File Manager*, *Application
+  Manager*, *Change Backdrop...* (`dtstyle -backdrop`), *Display Settings...*
+  (`dtstyle -monitors`), *Style Manager...*, *Clean Up Icons*, *Shuffle Up*,
+  *Shuffle Down*, *Minimize/Restore Front Panel*, *Refresh*, *Lock Screen*, and
+  *Log Out...*.
 
 ## CDE workspaces, per-workspace backdrops, and Front Panel
 

@@ -90,6 +90,7 @@
 #include "Protocol.h"
 #include "SaveRestore.h"
 #include "ColorPalette.h"
+#include "Backdrop.h"
 
 void loadDatabase(void); // ColorMain.c
 void ListenForWorkspaceChange(void); // Protocol.c
@@ -311,12 +312,30 @@ ErrDialog(
 
 
 
+static const char *s_startupDialogName = nullptr;
+
+static void
+openStartupDialogByName(Widget shell, const char *name)
+{
+    if (!shell || !style.display)
+        return;
+    if (XtIsRealized(shell))
+        XMapRaised(style.display, XtWindow(shell));
+    if (!name || name[0] == '\0' || strncmp(name, "Main", 4) == 0)
+        return;
+    if (strncmp(name, "Display", 7) == 0) {
+        extern void popup_displayBB(Widget);
+        popup_displayBB(shell);
+    } else if (strncmp(name, "Backdrop", 8) == 0) {
+        BackdropDialog(shell);
+    }
+}
+
 static void
 openDisplayDeferredCB(XtPointer client_data, XtIntervalId *id)
 {
     (void)id;
-    extern void popup_displayBB(Widget);
-    popup_displayBB((Widget)client_data);
+    openStartupDialogByName((Widget)client_data, s_startupDialogName);
 }
 
 static void
@@ -336,10 +355,7 @@ openDialogPropEH(Widget w, XtPointer client_data, XEvent *ev, Boolean *cont)
     unsigned char *data = nullptr;
     if (XGetWindowProperty(style.display, XtWindow(style.shell), open_a, 0, 16, True,
                            XA_STRING, &act_t, &act_f, &nitems, &rem, &data) == Success && data) {
-        if (strncmp((const char *)data, "Display", 7) == 0) {
-            extern void popup_displayBB(Widget);
-            popup_displayBB(style.shell);
-        }
+        openStartupDialogByName(style.shell, (const char *)data);
         XFree(data);
     }
 }
@@ -526,6 +542,13 @@ malloc_trace(0);
                 strcmp(argv[ai], "-monitors") == 0 ||
                 strcmp(argv[ai], "--monitors") == 0) {
                 openDisplayDialogOnStart = True;
+                s_startupDialogName = "Display";
+                continue;
+            }
+            if (strcmp(argv[ai], "-backdrop") == 0 ||
+                strcmp(argv[ai], "--backdrop") == 0) {
+                openDisplayDialogOnStart = True;
+                s_startupDialogName = "Backdrop";
                 continue;
             }
             argv[out_argc++] = argv[ai];
@@ -591,7 +614,7 @@ malloc_trace(0);
 
     if (_DtGetLock (style.display, STYLE_LOCK) == 0)
     {
-        if (openDisplayDialogOnStart) {
+        {
             Atom win_a = XInternAtom(style.display, "_DTSTYLE_SHELL_WIN", True);
             Atom open_a = XInternAtom(style.display, "_DTSTYLE_OPEN_DIALOG", False);
             Atom act_t = None;
@@ -603,7 +626,7 @@ malloc_trace(0);
                                    XA_WINDOW, &act_t, &act_f, &nitems, &rem, &pdata) == Success &&
                 pdata && nitems >= 1) {
                 Window target_w = *(Window *)pdata;
-                const char dlg_name[] = "Display";
+                const char *dlg_name = s_startupDialogName ? s_startupDialogName : "Main";
                 XChangeProperty(style.display, target_w, open_a, XA_STRING, 8,
                                 PropModeReplace, (const unsigned char *)dlg_name,
                                 (int)strlen(dlg_name));
