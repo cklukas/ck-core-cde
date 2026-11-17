@@ -749,14 +749,14 @@ AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
 
 AS_IF([test "x$enable_wayland" != "xno"], [
   AS_IF([test -n "$PKG_CONFIG" && test -n "$WAYLAND_SCANNER" && \
-         $PKG_CONFIG --exists wayland-protocols wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm], [
+         $PKG_CONFIG --exists wayland-protocols wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes], [
     WAYLAND_PROTOCOLS_DATADIR=`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`
-    WAYLAND_COMP_CFLAGS=`$PKG_CONFIG --cflags wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm`
-    WAYLAND_COMP_LIBS=`$PKG_CONFIG --libs wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm`
+    WAYLAND_COMP_CFLAGS=`$PKG_CONFIG --cflags wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes`
+    WAYLAND_COMP_LIBS=`$PKG_CONFIG --libs wlroots-0.19 wayland-server xkbcommon cairo pangocairo pixman-1 libdrm xcb xcb-icccm xcb-randr xcb-xfixes`
     build_dtwm_wayland=yes
   ], [
     AS_IF([test "x$enable_wayland" = "xyes"], [
-      AC_MSG_ERROR([--enable-wayland requires wayland-scanner, wayland-protocols, wlroots-0.19, wayland-server, xkbcommon, cairo, pangocairo, pixman-1, libdrm, xcb, and xcb-icccm])
+      AC_MSG_ERROR([--enable-wayland requires wayland-scanner, wayland-protocols, wlroots-0.19, wayland-server, xkbcommon, cairo, pangocairo, pixman-1, libdrm, xcb, xcb-icccm, xcb-randr, and xcb-xfixes])
     ])
   ])
 ])

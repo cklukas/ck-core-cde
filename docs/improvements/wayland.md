@@ -111,6 +111,37 @@ contracts to Wayland without requiring application code changes:
   `~/.dt/types/ckclock.fp`) directly inside `dtwm-panel` via `XReparentWindow`
   (with `--swallow NAME` retained as an explicit compositor override).
 
+## Cross-protocol drag-and-drop, `ck-grab` screencopy, and mixed-DPI scaling
+
+`dtwm-wayland` pairs with CK Core Motif ABI 9 (`libXm.so.9`) and `ck-grab` so
+clipboard/drag-and-drop, screenshots, and mixed-DPI multi-monitor setups work
+across native Wayland and XWayland clients simultaneously:
+
+- **Bidirectional Motif XDND v5 ↔ Wayland `wl_data_device` drag-and-drop:**
+  Native Wayland drags (`wl_data_device.start_drag`) render `wlr_scene_drag_icon`
+  surfaces in `overlay_tree` and bridge automatically to Motif `XmDropSite`
+  targets via `wlroots`'s XDND v5 forwarder, while `cde_xdnd_bridge.c` watches
+  `XdndSelection` via XFixes on `dtwm-wayland`'s XCB connection and promotes
+  active Motif `XmDragStart` drags into a `wlr_drag` (`text/uri-list`,
+  `UTF8_STRING`, `text/plain;charset=utf-8`) the moment the pointer enters a
+  native Wayland surface — preserving native X11-to-X11 Motif drags untouched
+  over XWayland surfaces;
+- **`ck-grab` Wayland screencopy (`zwlr_screencopy_manager_v1`):**
+  `dtwm-wayland` publishes `_DT_ACTIVE_WINDOW_BOX` (`outer_x`, `outer_y`,
+  `outer_w`, `outer_h`, `client_x`, `client_y`, `client_w`, `client_h`) on the
+  XWayland root window whenever focus or geometry changes so `ck-grab` captures
+  active native Wayland windows (with or without their server-side CDE 3D bevel
+  frames), arbitrary desktop regions, and stitched multi-output full-screen
+  desktops;
+- **Per-output XLibre RandR `DPI` and `wp_fractional_scale_v1`:**
+  `dtwm-wayland` opts rootless `Xwayland` into CK Core Motif's per-output RandR
+  observer via `_MOTIF_RANDR_OUTPUT_DPI` (`CARDINAL = 1`) and publishes each
+  output's `DPI` (`INTEGER`, format 32, configurable at startup with
+  `--output-dpi INDEX=DPI` or live via `_DT_WM_REQUEST`
+  `f.set_output_dpi INDEX DPI`) alongside `wp_fractional_scale_v1` for native
+  Wayland clients, triggering crisp live Motif shell reflow when windows move
+  across mixed-DPI monitors (`96`, `144`, `192`, ...).
+
 ## Readiness reporting and automated verification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`

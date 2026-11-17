@@ -13,7 +13,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-quit-signal.py tests/check-quit-signal.c \
              tests/check-dtwm-hardening.py tests/check-dtwm-hardening.c \
              tests/check-dtwm-wayland.py tests/check-dtwm-wayland-workspaces.py \
-             tests/check-dtwm-wayland-icons.py \
+             tests/check-dtwm-wayland-icons.py tests/check-dtwm-wayland-wp05.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml
 
 check-local:
@@ -28,6 +28,7 @@ if BUILD_DTWM_WAYLAND
 	python3 $(srcdir)/tests/check-dtwm-wayland.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-workspaces.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-icons.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp05.py --compositor ./dtwm-wayland
 endif
 
 configdir = $(CDE_INSTALLATION_TOP)/config/C
@@ -79,12 +80,13 @@ dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_bevel.c \
                        wayland/cde_workspace.c \
                        wayland/cde_icons.c \
+                       wayland/cde_xdnd_bridge.c \
                        wayland/dtwm_wayland_main.c
 nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1 \
                         -DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\"
 dtwm_wayland_CFLAGS = $(WAYLAND_COMP_CFLAGS)
-dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS)
+dtwm_wayland_LDADD = $(WAYLAND_COMP_LIBS) -lxcb-randr -lxcb-xfixes
 
 dtwm_panel_SOURCES = wayland/WmFpWayland.c \
                      Button.c        Callback.c      Clock.c \

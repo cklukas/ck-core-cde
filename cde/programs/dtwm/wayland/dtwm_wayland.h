@@ -211,6 +211,8 @@ typedef struct {
     struct wl_list link;
     DtwmServer *server;
     struct wlr_output *wlr_output;
+    uint32_t output_idx;
+    int dpi;
     struct wlr_scene_rect *bg_rect;
     struct wlr_scene_buffer *backdrop_buf;
     struct wl_listener frame;
@@ -302,6 +304,13 @@ struct DtwmServer {
     xcb_atom_t atom_wm_settings_v1;
     xcb_atom_t atom_wm_state;
     xcb_atom_t atom_net_wm_icon_geom;
+    xcb_atom_t atom_active_win_box;
+    xcb_atom_t atom_randr_dpi_opt_in;
+    xcb_atom_t atom_dpi;
+    int initial_output_dpi[16];
+    uint32_t next_output_idx;
+    struct wlr_scene_tree *drag_icon_tree;
+    struct wl_listener drag_destroy;
 
     /* Native Wayland ext-workspace-v1 & xdg-toplevel-icon-v1 protocols */
     struct wl_global *ext_ws_global;
@@ -355,6 +364,9 @@ struct DtwmServer {
     struct wl_listener request_set_selection;
     struct wl_listener request_set_primary_selection;
     struct wl_listener request_start_drag;
+    struct wl_listener start_drag;
+    int pointer_buttons_down;
+    uint32_t last_pointer_button;
 
     struct wl_event_source *sigint_source;
     struct wl_event_source *sigterm_source;
@@ -401,6 +413,9 @@ void dtwm_update_all_backdrops(DtwmServer *server);
 void dtwm_update_front_panel(DtwmServer *server);
 void dtwm_begin_move_panel(DtwmServer *server);
 void dtwm_notify_panel_mapped(DtwmServer *server);
+void dtwm_sync_xwayland_randr_dpi(DtwmServer *server);
+void dtwm_set_output_dpi(DtwmServer *server, uint32_t output_idx, int dpi);
+void dtwm_publish_active_window_box(DtwmServer *server);
 void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, struct wlr_box *out_box);
 
 /* cde_icons.c */
@@ -419,5 +434,13 @@ void dtwm_icons_set_open_window_icons(DtwmServer *server, bool enabled);
 void dtwm_icons_set_large_icons(DtwmServer *server, bool large);
 void dtwm_icons_sync_xwayland_pointer(DtwmServer *server, double lx, double ly, struct wlr_surface *focused_surf);
 void dtwm_icons_reposition_swallowed(DtwmServer *server);
+void dtwm_recheck_cursor_focus(DtwmServer *server);
+
+/* cde_xdnd_bridge.c */
+void dtwm_xdnd_on_xwayland_ready(DtwmServer *server);
+void dtwm_xdnd_finish(void);
+bool dtwm_xdnd_handle_xcb_event(DtwmServer *server, xcb_generic_event_t *ev);
+void dtwm_xdnd_on_button_state(DtwmServer *server, uint32_t button, bool pressed);
+void dtwm_xdnd_on_cursor_motion(DtwmServer *server, struct wlr_surface *surface, double sx, double sy, uint32_t time_msec);
 
 #endif /* DTWM_WAYLAND_H */

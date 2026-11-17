@@ -1,0 +1,43 @@
+{
+  "work_package": "WP-05",
+  "date": "2026-11-17",
+  "branch": "x11_wayland",
+  "host_vm": {
+    "lima_instance": "cde-ubuntu2604",
+    "os": "Ubuntu 26.04.1 LTS (aarch64)",
+    "kernel": "7.0.0-34-generic",
+    "compiler": "clang 21"
+  },
+  "revisions": {
+    "ck_core_motif": "e3380b74552f10678b8fc1f295e558c085b2d7bd",
+    "ck_core_apps": "8c3b11c5326d9a93a80a43cb6fb8ebd78404de40"
+  },
+  "artifacts": {
+    "dtwm_wayland_sha256": "5b0c4d88b6b8f17f6c926241328ce509e0e791386c654acb52990a9dc14a2069",
+    "dtwm_panel_sha256": "03168c5310be7e0edc2ef185bbccc2f6609da0e1bc1de2a43ddef9a2b85e074b",
+    "ck_grab_window_capture": "wp05-ck-grab-window.png (252x216, crimson=6699px)",
+    "ck_grab_fullscreen_capture": "wp05-ck-grab-fullscreen.png (2560x900)"
+  },
+  "checks": [
+    {
+      "repo": "ck-core-motif",
+      "command": "python3 tests/automated/run-xdnd-interop-wp50.py --prefix /var/tmp/ck-wayland-build/wp00/motif-prefix --out $TMPDIR/wp50-out",
+      "result": "PASS"
+    },
+    {
+      "repo": "ck-core-motif",
+      "command": "python3 tests/automated/check-xlibre-lifetime.py",
+      "result": "PASS"
+    },
+    {
+      "repo": "ck-core-apps",
+      "command": "make -j6 check",
+      "result": "PASS"
+    },
+    {
+      "repo": "ck-core-cde",
+      "command": "make -j4 -C programs/dtwm check",
+      "result": "PASS (all 11 X11 + Wayland suites including check-dtwm-wayland-wp05.py)"
+    }
+  ]
+}

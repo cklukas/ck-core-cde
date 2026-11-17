@@ -1,3 +1,22 @@
+2026-11-17
+- Add bidirectional Motif XDND v5 ↔ Wayland `wl_data_device` drag-and-drop,
+  `_DT_ACTIVE_WINDOW_BOX` support for `ck-grab` Wayland screencopy, and
+  per-output XLibre RandR `DPI` + `wp_fractional_scale_v1` mixed-DPI scaling
+  (`WP-05`) to `dtwm-wayland` on the `x11_wayland` branch, pinning CK Core
+  Motif ABI 9 `e3380b74552f10678b8fc1f295e558c085b2d7bd`.
+  - `cde/programs/dtwm/wayland/cde_xdnd_bridge.c`, `cde_workspace.c`,
+    `dtwm_wayland_main.c`, `dtwm_wayland.h`, `Makefile.am`, and
+    `cde/configure.ac`: render Wayland `wlr_drag` icons, bridge X11/Motif
+    `XdndSelection` drags into Wayland `wlr_drag` sessions upon entering native
+    Wayland surfaces while keeping X11-to-X11 Motif drags intact, publish
+    `_DT_ACTIVE_WINDOW_BOX` for `ck-grab`, and publish `_MOTIF_RANDR_OUTPUT_DPI`
+    plus per-output RandR `DPI` (`--output-dpi INDEX=DPI`, `f.set_output_dpi`)
+    and `wp_fractional_scale_v1`.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland-wp05.py` and
+    `docs/improvements/wayland.md`: verify Wayland ↔ Motif XDND v5 in both
+    directions, `ck-grab --window --include-frame` and `--full-screen` on
+    Wayland, and `96 ↔ 192 ↔ 144` live Motif shell DPI reflow.
+
 2026-11-16
 - Replace the synthetic Cairo panel in `dtwm-wayland` with the genuine CDE
   Front Panel (`dtwm-panel`) built from `dtwm`'s original Motif/`DtWidget`

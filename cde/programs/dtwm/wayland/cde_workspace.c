@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <xcb/randr.h>
 #include <xcb/xcb.h>
 
 /* --- CDE WSM Wire Constants (matching <Dt/WsmP.h>) --- */
@@ -1098,6 +1099,192 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         dtwm_begin_move_panel(server);
         return;
     }
+    if (strncmp(cmd, "f.set_output_dpi", 16) == 0) {
+        unsigned int out_idx = 0;
+        int dpi_val = 96;
+        if (sscanf(cmd + 16, "%u %d", &out_idx, &dpi_val) == 2) {
+            dtwm_set_output_dpi(server, (uint32_t)out_idx, dpi_val);
+        }
+        return;
+    }
+    if (strncmp(cmd, "f.move_active_to", 16) == 0) {
+        int nx = 0, ny = 0;
+        if (sscanf(cmd + 16, "%d %d", &nx, &ny) == 2 && server->focused_view) {
+            DtwmView *v = server->focused_view;
+            v->x = nx;
+            v->y = ny;
+            if (v->frame_tree) {
+                wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
+            }
+            if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface) {
+                int l, t, r, b;
+                dtwm_view_insets(v, &l, &t, &r, &b);
+                wlr_xwayland_surface_configure(
+                    v->xwayland_surface,
+                    (int16_t)(v->x + l),
+                    (int16_t)(v->y + t),
+                    (uint16_t)v->client_w,
+                    (uint16_t)v->client_h
+                );
+            }
+            dtwm_publish_active_window_box(server);
+            dtwm_sync_xwayland_randr_dpi(server);
+        }
+        return;
+    }
+}
+
+void dtwm_publish_active_window_box(DtwmServer *server) {
+    if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE ||
+        server->atom_active_win_box == XCB_ATOM_NONE) {
+        return;
+    }
+    DtwmView *v = server->focused_view;
+    if (!v || !v->mapped || v->is_panel || v->is_desktop_pin || v->is_swallowed) {
+        xcb_delete_property(server->xcb_conn, server->xcb_root, server->atom_active_win_box);
+        xcb_flush(server->xcb_conn);
+        return;
+    }
+    int l, t, r, b, outer_w, outer_h;
+    dtwm_view_insets(v, &l, &t, &r, &b);
+    dtwm_view_outer_size(v, &outer_w, &outer_h);
+    uint32_t box[8] = {
+        (uint32_t)v->x,
+        (uint32_t)v->y,
+        (uint32_t)(outer_w > 0 ? outer_w : 1),
+        (uint32_t)(outer_h > 0 ? outer_h : 1),
+        (uint32_t)(v->x + l),
+        (uint32_t)(v->y + t),
+        (uint32_t)(v->client_w > 0 ? v->client_w : 1),
+        (uint32_t)(v->client_h > 0 ? v->client_h : 1),
+    };
+    xcb_change_property(
+        server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+        server->atom_active_win_box, XCB_ATOM_CARDINAL, 32, 8, box
+    );
+    xcb_flush(server->xcb_conn);
+}
+
+static void notify_wayland_fractional_scale_for_outputs(DtwmServer *server) {
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (!v->mapped || v->kind != DTWM_VIEW_XDG || !v->xdg_toplevel) continue;
+        double cx = (double)v->x + (double)v->client_w * 0.5;
+        double cy = (double)v->y + (double)v->client_h * 0.5;
+        struct wlr_output *wo = wlr_output_layout_output_at(server->output_layout, cx, cy);
+        int dpi = 96;
+        if (wo) {
+            DtwmOutput *dout;
+            wl_list_for_each(dout, &server->outputs, link) {
+                if (dout->wlr_output == wo && dout->dpi > 0) {
+                    dpi = dout->dpi;
+                    break;
+                }
+            }
+        }
+        wlr_fractional_scale_v1_notify_scale(v->xdg_toplevel->base->surface, (double)dpi / 96.0);
+    }
+}
+
+void dtwm_sync_xwayland_randr_dpi(DtwmServer *server) {
+    if (!server) return;
+    notify_wayland_fractional_scale_for_outputs(server);
+    if (!server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE ||
+        server->atom_dpi == XCB_ATOM_NONE) {
+        return;
+    }
+
+    /* Opt XWayland into CK Core Motif's per-output RandR DPI observer */
+    if (server->atom_randr_dpi_opt_in != XCB_ATOM_NONE) {
+        uint32_t opt_in = 1u;
+        xcb_change_property(
+            server->xcb_conn, XCB_PROP_MODE_REPLACE, server->xcb_root,
+            server->atom_randr_dpi_opt_in, XCB_ATOM_CARDINAL, 32, 1, &opt_in
+        );
+    }
+
+    xcb_randr_get_screen_resources_current_cookie_t rck =
+        xcb_randr_get_screen_resources_current(server->xcb_conn, server->xcb_root);
+    xcb_randr_get_screen_resources_current_reply_t *rrep =
+        xcb_randr_get_screen_resources_current_reply(server->xcb_conn, rck, nullptr);
+    if (!rrep) {
+        xcb_flush(server->xcb_conn);
+        return;
+    }
+
+    int nout = xcb_randr_get_screen_resources_current_outputs_length(rrep);
+    xcb_randr_output_t *routs = xcb_randr_get_screen_resources_current_outputs(rrep);
+
+    for (int i = 0; i < nout; ++i) {
+        int matched_dpi = 96;
+        bool matched = false;
+
+        xcb_randr_get_output_info_cookie_t ock =
+            xcb_randr_get_output_info(server->xcb_conn, routs[i], rrep->config_timestamp);
+        xcb_randr_get_output_info_reply_t *orep =
+            xcb_randr_get_output_info_reply(server->xcb_conn, ock, nullptr);
+        if (orep) {
+            if (orep->crtc != XCB_NONE) {
+                xcb_randr_get_crtc_info_cookie_t cck =
+                    xcb_randr_get_crtc_info(server->xcb_conn, orep->crtc, rrep->config_timestamp);
+                xcb_randr_get_crtc_info_reply_t *crep =
+                    xcb_randr_get_crtc_info_reply(server->xcb_conn, cck, nullptr);
+                if (crep) {
+                    DtwmOutput *dout;
+                    wl_list_for_each(dout, &server->outputs, link) {
+                        struct wlr_box obox;
+                        wlr_output_layout_get_box(server->output_layout, dout->wlr_output, &obox);
+                        if (obox.x == crep->x && obox.y == crep->y) {
+                            matched_dpi = dout->dpi > 0 ? dout->dpi : 96;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    free(crep);
+                }
+            }
+            free(orep);
+        }
+
+        if (!matched) {
+            DtwmOutput *dout;
+            wl_list_for_each(dout, &server->outputs, link) {
+                if ((int)dout->output_idx == i) {
+                    matched_dpi = dout->dpi > 0 ? dout->dpi : 96;
+                    break;
+                }
+            }
+        }
+
+        int32_t dpi_i32 = (matched_dpi >= 1 && matched_dpi <= 4096) ? matched_dpi : 96;
+        xcb_randr_change_output_property(
+            server->xcb_conn,
+            routs[i],
+            server->atom_dpi,
+            XCB_ATOM_INTEGER,
+            32,
+            XCB_PROP_MODE_REPLACE,
+            1,
+            &dpi_i32
+        );
+    }
+
+    free(rrep);
+    xcb_flush(server->xcb_conn);
+}
+
+void dtwm_set_output_dpi(DtwmServer *server, uint32_t output_idx, int dpi) {
+    if (!server || dpi < 1 || dpi > 4096) return;
+    if (output_idx < 16) {
+        server->initial_output_dpi[output_idx] = dpi;
+    }
+    DtwmOutput *dout;
+    wl_list_for_each(dout, &server->outputs, link) {
+        if (dout->output_idx == output_idx) {
+            dout->dpi = dpi;
+        }
+    }
+    dtwm_sync_xwayland_randr_dpi(server);
 }
 
 void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProfile profile) {
@@ -1200,6 +1387,10 @@ static int handle_xcb_event_fd(int fd, uint32_t mask, void *data) {
 
     xcb_generic_event_t *ev;
     while ((ev = xcb_poll_for_event(server->xcb_conn)) != nullptr) {
+        if (dtwm_xdnd_handle_xcb_event(server, ev)) {
+            free(ev);
+            continue;
+        }
         uint8_t rt = ev->response_type & ~0x80u;
         if (rt == XCB_PROPERTY_NOTIFY) {
             xcb_property_notify_event_t *pev = (xcb_property_notify_event_t *)ev;
@@ -1245,6 +1436,9 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
 
     server->atom_mwm_info = intern_atom_sync(server->xcb_conn, "_MOTIF_WM_INFO");
     server->atom_dt_wm_hints = intern_atom_sync(server->xcb_conn, "_DT_WM_HINTS");
+    server->atom_active_win_box = intern_atom_sync(server->xcb_conn, "_DT_ACTIVE_WINDOW_BOX");
+    server->atom_randr_dpi_opt_in = intern_atom_sync(server->xcb_conn, "_MOTIF_RANDR_OUTPUT_DPI");
+    server->atom_dpi = intern_atom_sync(server->xcb_conn, "DPI");
     server->atom_ws_list = intern_atom_sync(server->xcb_conn, "_DT_WORKSPACE_LIST");
     server->atom_ws_current = intern_atom_sync(server->xcb_conn, "_DT_WORKSPACE_CURRENT");
     server->atom_ws_hints = intern_atom_sync(server->xcb_conn, "_DT_WORKSPACE_HINTS");
@@ -1284,6 +1478,8 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
     xcb_change_window_attributes(server->xcb_conn, server->xcb_root, XCB_CW_EVENT_MASK, &root_mask);
     sync_xcb_resource_manager_profile(server);
     xcb_sync_wm_properties(server);
+    dtwm_sync_xwayland_randr_dpi(server);
+    dtwm_publish_active_window_box(server);
 
     struct wl_event_loop *loop = wl_display_get_event_loop(server->wl_display);
     int xfd = xcb_get_file_descriptor(server->xcb_conn);
