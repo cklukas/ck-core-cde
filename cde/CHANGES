@@ -1,4 +1,12 @@
 2026-11-17
+- Fix intermittent solid black rectangles over `dtfile` Shelf icon labels when
+  opening or refreshing secondary File Manager windows
+  (`cde/programs/dtfile/FileMgr.c`, `cde/programs/dtfile/File.c`): read Shelf
+  item background, foreground, and shadow colors directly from `shelf_row`
+  instead of `file_mgr_data->layout_data` (which is zero-initialized (`0`/`0`
+  black) by `_UpdateFileIcons` before `LayoutFileIcons` runs, causing
+  `XmStringDrawImage` to paint black text over a solid black label box), and
+  populate `layout_data` colors immediately upon allocation.
 - Fix Front Panel workspace switch buttons (`One`, `Two`, `Three`, `Four`)
   staying depressed without switching workspaces on Wayland when `ttsession` is
   running (`cde/programs/dtwm/wayland/WmFpWayland.c`,

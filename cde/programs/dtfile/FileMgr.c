@@ -6238,40 +6238,24 @@ ShelfRebuild(
                  XmNresizeWidth, False,
                  nullptr);
 
-   layout_data = (IconLayoutData *)file_mgr_data->layout_data;
-   if (layout_data)
+   (void)layout_data;
+   XtVaGetValues(row,
+                 XmNbackground, &bg,
+                 XmNforeground, &fg,
+                 XmNtopShadowColor, &top_shadow,
+                 XmNbottomShadowColor, &bottom_shadow,
+                 XmNcolormap, &colormap,
+                 nullptr);
+   if (bg == fg && colormap != 0)
    {
-      bg = layout_data->background;
-      fg = layout_data->foreground;
-      pix_bg = layout_data->pixmap_back;
-      pix_fg = layout_data->pixmap_fore;
-      ShelfLog("ShelfRebuild: layout colors bg=%lu fg=%lu pix_bg=%lu pix_fg=%lu\n",
-               (unsigned long)bg, (unsigned long)fg,
-               (unsigned long)pix_bg, (unsigned long)pix_fg);
+      XmGetColors(XtScreen(file_mgr_rec->shelf_frame), colormap, bg,
+                  &fg, &top_shadow, &bottom_shadow, &select);
    }
-   else
-   {
-      XtVaGetValues(file_mgr_rec->shelf_frame,
-                    XmNbackground, &bg,
-                    XmNforeground, &fg,
-                    XmNcolormap, &colormap,
-                    nullptr);
-      if (colormap != 0)
-      {
-         XmGetColors(XtScreen(file_mgr_rec->shelf_frame), colormap, bg,
-                     &fg, &top_shadow, &bottom_shadow, &select);
-         pix_bg = bg;
-         pix_fg = fg;
-         ShelfLog("ShelfRebuild: default colors bg=%lu fg=%lu pix_bg=%lu pix_fg=%lu\n",
-                  (unsigned long)bg, (unsigned long)fg,
-                  (unsigned long)pix_bg, (unsigned long)pix_fg);
-      }
-      else
-      {
-         pix_bg = bg;
-         pix_fg = fg;
-      }
-   }
+   pix_bg = top_shadow;
+   pix_fg = bottom_shadow;
+   ShelfLog("ShelfRebuild: shelf colors bg=%lu fg=%lu pix_bg=%lu pix_fg=%lu\n",
+            (unsigned long)bg, (unsigned long)fg,
+            (unsigned long)pix_bg, (unsigned long)pix_fg);
 
    {
       Dimension sw = 0, sh = 0;
