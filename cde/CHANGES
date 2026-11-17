@@ -1,4 +1,15 @@
 2026-11-17
+- Add live CDE `.dp` color palette and theme switching in `dtstyle`,
+  `dtsession`, `dtwm-panel`, and `dtwm-wayland`
+  (`cde/programs/dtstyle/ColorMain.c`, `cde/programs/dtsession/SrvPalette.c`,
+  `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`): answer `PIXEL_SET` and
+  `Type Of Monitor` selection requests in `dtwm-panel`'s standalone Color
+  Server fallback, parse arbitrary 8-color `.dp` palettes (`f.set_palette` and
+  `RESOURCE_MANAGER` `ColorPalette:`) in `dtwm-wayland` to re-color window
+  frames and workspace backdrops immediately on selection, and update
+  `Customize Data:0`'s `PIXEL_SET_PROP` + reload `dtwm-panel` on **OK** so
+  palettes apply live on TrueColor Wayland displays without logging out.
 - Fix CDE Help UTF-8 text encoding (`Â©` -> `©`), XWayland `-dt-interface` /
   `-dt-application` font-alias registration, and out-of-tree Help graphics
   installation (`cde/lib/DtHelp/XInterface.c`,

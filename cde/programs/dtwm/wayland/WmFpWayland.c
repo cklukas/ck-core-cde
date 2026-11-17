@@ -61,6 +61,8 @@ WmGlobalData wmGD;
 static WmScreenData g_fpScreen;
 static ClientData g_panelClientData;
 static Window g_colorSrvWin = None;
+static char g_colorSrvPixelSet[2048];
+static char g_colorSrvTypeMon[64];
 static Window g_mwmWin = None;
 static Atom g_atomWsCurrent = None;
 static Atom g_atomWsList = None;
@@ -211,6 +213,12 @@ static void bootstrap_color_server_if_needed(Display *dpy, unsigned char profile
             (unsigned long)psets[i].sc
         );
     }
+    buf[pos] = '\0';
+    memcpy(g_colorSrvPixelSet, buf, (size_t)pos);
+    g_colorSrvPixelSet[pos] = '\0';
+    snprintf(g_colorSrvTypeMon, sizeof(g_colorSrvTypeMon), "%x_%x_%x_%x",
+             XmCO_HIGH_COLOR, 0, 0, 0);
+
     buf[pos++] = XmPIXEL_SET_PROP_VERSION;
     buf[pos] = '\0';
 
@@ -907,12 +915,31 @@ int main(int argc, char **argv) {
             try_embed_x11_window(dpy, ev.xmap.window);
         } else if (ev.type == SelectionRequest && g_colorSrvWin != None &&
                    ev.xselectionrequest.owner == g_colorSrvWin) {
+            Atom prop_out = None;
+            Atom req_prop = ev.xselectionrequest.property != None
+                                ? ev.xselectionrequest.property
+                                : ev.xselectionrequest.target;
+            Atom a_pixel_set = XInternAtom(dpy, XmSPIXEL_SET, False);
+            Atom a_type_mon = XInternAtom(dpy, "Type Of Monitor", False);
+            if (ev.xselectionrequest.target == a_pixel_set && g_colorSrvPixelSet[0]) {
+                XChangeProperty(
+                    dpy, ev.xselectionrequest.requestor, req_prop, XA_STRING, 8, PropModeReplace,
+                    (const unsigned char *)g_colorSrvPixelSet, (int)strlen(g_colorSrvPixelSet)
+                );
+                prop_out = req_prop;
+            } else if (ev.xselectionrequest.target == a_type_mon && g_colorSrvTypeMon[0]) {
+                XChangeProperty(
+                    dpy, ev.xselectionrequest.requestor, req_prop, XA_STRING, 8, PropModeReplace,
+                    (const unsigned char *)g_colorSrvTypeMon, (int)strlen(g_colorSrvTypeMon)
+                );
+                prop_out = req_prop;
+            }
             XSelectionEvent reply = {
                 .type = SelectionNotify,
                 .requestor = ev.xselectionrequest.requestor,
                 .selection = ev.xselectionrequest.selection,
                 .target = ev.xselectionrequest.target,
-                .property = None,
+                .property = prop_out,
                 .time = ev.xselectionrequest.time,
             };
             XSendEvent(dpy, reply.requestor, False, 0, (XEvent *)&reply);

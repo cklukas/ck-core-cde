@@ -133,6 +133,97 @@ DtstyleProfileNameString(XmAppearanceProfile profile)
             return "classic";
     }
 }
+
+static Boolean
+DtstyleIsWaylandSession(void)
+{
+    if (!style.display) return False;
+    Atom a = XInternAtom(style.display, "_DT_WAYLAND_OUTPUTS", True);
+    if (a == None) return False;
+    Atom act_t = None;
+    int act_f = 0;
+    unsigned long nitems = 0, rem = 0;
+    unsigned char *data = nullptr;
+    Boolean ok = False;
+    if (XGetWindowProperty(style.display, style.root, a, 0, 8, False,
+                           AnyPropertyType, &act_t, &act_f, &nitems, &rem,
+                           &data) == Success && data) {
+        ok = (nitems > 0) ? True : False;
+        XFree(data);
+    }
+    return ok;
+}
+
+static void
+DtstyleSendWaylandWmRequest(const char *cmd)
+{
+    if (!style.display || !cmd || !cmd[0]) return;
+    Atom mwm_info = XInternAtom(style.display, "_MOTIF_WM_INFO", True);
+    if (mwm_info == None) return;
+    Atom act_t = None;
+    int act_f = 0;
+    unsigned long nitems = 0, rem = 0;
+    unsigned char *prop = nullptr;
+    if (XGetWindowProperty(style.display, style.root, mwm_info, 0, 2, False,
+                           AnyPropertyType, &act_t, &act_f, &nitems, &rem,
+                           &prop) != Success || !prop || nitems < 2) {
+        if (prop) XFree(prop);
+        return;
+    }
+    Window wm_win = (Window)((unsigned long *)prop)[1];
+    XFree(prop);
+    if (wm_win == None) return;
+    Atom req_atom = XInternAtom(style.display, "_DT_WM_REQUEST", False);
+    XChangeProperty(style.display, wm_win, req_atom, XA_STRING, 8,
+                    PropModeAppend, (const unsigned char *)cmd,
+                    (int)strlen(cmd) + 1);
+    XFlush(style.display);
+}
+
+static void
+DtstylePublishLivePixelSet(const palette *pal)
+{
+    if (!style.display || !pal) return;
+    char cust_name[64];
+    snprintf(cust_name, sizeof(cust_name), "%s%d", XmSCUSTOMIZE_DATA, style.screenNum);
+    Atom cust_atom = XInternAtom(style.display, cust_name, True);
+    if (cust_atom == None) return;
+    Window owner = XGetSelectionOwner(style.display, cust_atom);
+    if (owner == None) return;
+
+    static const int cmap_idx[4][XmCO_MAX_NUM_COLORS] = {
+        {0, 1, 2, 3, 4, 5, 6, 7},
+        {0, 1, 2, 3, 1, 1, 2, 1},
+        {0, 1, 1, 1, 1, 1, 1, 1},
+        {0, 1, 1, 1, 1, 1, 1, 1},
+    };
+    int midx = 0;
+    if (TypeOfMonitor == XmCO_MEDIUM_COLOR) midx = 1;
+    else if (TypeOfMonitor == XmCO_LOW_COLOR) midx = 2;
+    else if (TypeOfMonitor == XmCO_BLACK_WHITE) midx = 3;
+
+    char buf[2048];
+    int pos = snprintf(buf, sizeof(buf), "%x_", TypeOfMonitor);
+    for (int i = 0; i < XmCO_MAX_NUM_COLORS; ++i) {
+        const ColorSet *cs = &pal->color[cmap_idx[midx][i]];
+        pos += snprintf(
+            buf + pos, sizeof(buf) - (size_t)pos, "%lx_%lx_%lx_%lx_%lx_",
+            (unsigned long)cs->bg.pixel,
+            (unsigned long)cs->fg.pixel,
+            (unsigned long)cs->ts.pixel,
+            (unsigned long)cs->bs.pixel,
+            (unsigned long)cs->sc.pixel
+        );
+    }
+    if (pos + 2 < (int)sizeof(buf)) {
+        buf[pos++] = XmPIXEL_SET_PROP_VERSION;
+        buf[pos] = '\0';
+        Atom pset_atom = XInternAtom(style.display, XmSPIXEL_SET_PROP, False);
+        XChangeProperty(style.display, owner, pset_atom, XA_STRING, 8,
+                        PropModeReplace, (const unsigned char *)buf, pos);
+        XFlush(style.display);
+    }
+}
 #define TYPE_OF_MONITOR  "Type Of Monitor" /* also in dtsession/SrvPalette.c */
 
 #define BORDER_WIDTH                3
@@ -884,6 +975,11 @@ selectPaletteCB(
             (void)XmApplyAppearanceProfile(
                 style.display,
                 DtstyleProfileForPaletteName(pCurrentPalette->name));
+            if (DtstyleIsWaylandSession() && pCurrentPalette->name) {
+                char wcmd[192];
+                snprintf(wcmd, sizeof(wcmd), "f.set_palette %s", pCurrentPalette->name);
+                DtstyleSendWaylandWmRequest(wcmd);
+            }
 
             if (style.dynamicColor)
 	        ReColorPalette();
@@ -891,8 +987,8 @@ selectPaletteCB(
             {     
                if (TypeOfMonitor != XmCO_BLACK_WHITE)
                {
-			     /* PUT DIALOG saying can't dynamically change */
-                 if(First)
+			     /* PUT DIALOG saying can't dynamically change (only on X11; Wayland applies live) */
+                 if(First && !DtstyleIsWaylandSession())
                  {
                     InfoDialog(NEXT_SESSION, style.colorDialog, False);
                     First = False;
@@ -2304,6 +2400,11 @@ RestoreOrgPalette( void )
       (void)XmApplyAppearanceProfile(
           style.display,
           DtstyleProfileForPaletteName(defaultName));
+      if (DtstyleIsWaylandSession() && defaultName) {
+          char wcmd[192];
+          snprintf(wcmd, sizeof(wcmd), "f.set_palette %s", defaultName);
+          DtstyleSendWaylandWmRequest(wcmd);
+      }
 
    }
 }
@@ -2396,6 +2497,16 @@ void
        }
        _DtAddToResource(style.display, xrdb_string);
 #endif
+   }
+
+   if (!style.dynamicColor && pCurrentPalette != nullptr) {
+       DtstylePublishLivePixelSet(pCurrentPalette);
+       if (DtstyleIsWaylandSession() && pCurrentPalette->name) {
+           char wcmd[192];
+           snprintf(wcmd, sizeof(wcmd), "f.set_palette %s", pCurrentPalette->name);
+           DtstyleSendWaylandWmRequest(wcmd);
+           DtstyleSendWaylandWmRequest("f.restart -noconfirm");
+       }
    }
 }
  

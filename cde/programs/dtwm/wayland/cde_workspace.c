@@ -1028,6 +1028,8 @@ static int find_ws_by_name_or_title(const DtwmServer *server, const char *tok) {
     return -1;
 }
 
+static bool dtwm_server_apply_palette_file(DtwmServer *server, const char *raw_name);
+
 static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
     while (*cmd && isspace((unsigned char)*cmd)) cmd++;
     if (!*cmd) return;
@@ -1103,6 +1105,12 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         const char *arg = cmd + 24;
         while (*arg && isspace((unsigned char)*arg)) arg++;
         dtwm_server_apply_appearance_profile(server, dtwm_parse_appearance_profile(arg));
+        return;
+    }
+    if (strncmp(cmd, "f.set_palette", 13) == 0) {
+        const char *arg = cmd + 13;
+        while (*arg && isspace((unsigned char)*arg)) arg++;
+        dtwm_server_apply_palette_file(server, arg);
         return;
     }
     if (strncmp(cmd, "f.move_panel", 12) == 0) {
@@ -1317,6 +1325,121 @@ void dtwm_set_output_dpi(DtwmServer *server, uint32_t output_idx, int dpi) {
     dtwm_output_mgmt_sync(server);
 }
 
+static bool parse_dp_hex_color(const char *line, DtwmRgba *out_rgb) {
+    if (!line || !out_rgb) return false;
+    while (*line && isspace((unsigned char)*line)) line++;
+    if (*line != '#') return false;
+    line++;
+    size_t n = 0;
+    while (isxdigit((unsigned char)line[n])) n++;
+    unsigned int r = 0, g = 0, b = 0;
+    double denom = 255.0;
+    if (n >= 12) {
+        if (sscanf(line, "%4x%4x%4x", &r, &g, &b) != 3) return false;
+        denom = 65535.0;
+    } else if (n >= 6) {
+        if (sscanf(line, "%2x%2x%2x", &r, &g, &b) != 3) return false;
+        denom = 255.0;
+    } else {
+        return false;
+    }
+    *out_rgb = (DtwmRgba){(double)r / denom, (double)g / denom, (double)b / denom, 1.0};
+    return true;
+}
+
+static DtwmColorSet build_colorset_from_bg(DtwmRgba bg) {
+    double lum = 0.299 * bg.r + 0.587 * bg.g + 0.114 * bg.b;
+    DtwmRgba fg = (lum > 0.52) ? (DtwmRgba){0.0, 0.0, 0.0, 1.0} : (DtwmRgba){1.0, 1.0, 1.0, 1.0};
+    DtwmRgba ts = {
+        fmin(1.0, bg.r + (1.0 - bg.r) * 0.45),
+        fmin(1.0, bg.g + (1.0 - bg.g) * 0.45),
+        fmin(1.0, bg.b + (1.0 - bg.b) * 0.45),
+        1.0,
+    };
+    DtwmRgba bs = {bg.r * 0.48, bg.g * 0.48, bg.b * 0.48, 1.0};
+    return (DtwmColorSet){.bg = bg, .fg = fg, .top_shadow = ts, .bottom_shadow = bs};
+}
+
+static bool dtwm_server_apply_palette_file(DtwmServer *server, const char *raw_name) {
+    if (!server || !raw_name) return false;
+    while (*raw_name && (isspace((unsigned char)*raw_name) || *raw_name == '"' || *raw_name == '\'')) {
+        raw_name++;
+    }
+    char name[128] = {0};
+    size_t o = 0;
+    while (raw_name[o] && !isspace((unsigned char)raw_name[o]) && raw_name[o] != '"' &&
+           raw_name[o] != '\'' && o + 1 < sizeof(name)) {
+        name[o] = raw_name[o];
+        o++;
+    }
+    name[o] = '\0';
+    if (o == 0) return false;
+    size_t nlen = strlen(name);
+    if (nlen > 3 && strcasecmp(name + nlen - 3, ".dp") == 0) {
+        name[nlen - 3] = '\0';
+    }
+
+    DtwmAppearanceProfile prof = dtwm_parse_appearance_profile(name);
+    if (prof != DTWM_PROFILE_CLASSIC) {
+        dtwm_server_apply_appearance_profile(server, prof);
+        return true;
+    }
+
+    const char *home = getenv("HOME");
+    char cand[3][512];
+    int ncand = 0;
+    if (home && home[0]) {
+        snprintf(cand[ncand++], sizeof(cand[0]), "%s/.dt/palettes/%s.dp", home, name);
+    }
+    snprintf(cand[ncand++], sizeof(cand[0]), "/etc/dt/palettes/%s.dp", name);
+    snprintf(cand[ncand++], sizeof(cand[0]), CDE_INSTALLATION_TOP "/palettes/%s.dp", name);
+
+    FILE *fp = nullptr;
+    for (int i = 0; i < ncand && !fp; ++i) {
+        fp = fopen(cand[i], "r");
+    }
+    if (!fp) return false;
+
+    DtwmColorSet sets[8];
+    int count = 0;
+    char line[256];
+    while (count < 8 && fgets(line, sizeof(line), fp)) {
+        DtwmRgba bg;
+        if (parse_dp_hex_color(line, &bg)) {
+            sets[count++] = build_colorset_from_bg(bg);
+        }
+    }
+    fclose(fp);
+    if (count < 2) return false;
+    while (count < 8) {
+        sets[count] = sets[count % 2];
+        count++;
+    }
+
+    server->palette.profile = DTWM_PROFILE_CLASSIC;
+    server->palette.active = sets[0];
+    server->palette.inactive = sets[1];
+    server->palette.menu = sets[4];
+
+    static const int ws_cs_map[4] = {2, 7, 5, 6};
+    for (uint32_t i = 0; i < server->num_workspaces; ++i) {
+        server->workspaces[i].colors = sets[ws_cs_map[i % 4]];
+    }
+    server->palette.desktop_bg = server->workspaces[server->current_workspace].colors.bg;
+
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped) {
+            dtwm_view_update_frame(v);
+        }
+    }
+    dtwm_update_all_backdrops(server);
+    dtwm_update_front_panel(server);
+    dtwm_icons_relayout(server);
+    xcb_sync_wm_properties(server);
+    return true;
+}
+
 void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProfile profile) {
     if (!server) return;
     dtwm_palette_init_profile(&server->palette, profile);
@@ -1402,6 +1525,10 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
                 dtwm_server_apply_appearance_profile(
                     server, dtwm_parse_appearance_profile(hit + strlen("appearanceProfile:"))
                 );
+            }
+            const char *pal_hit = strstr(txt, "ColorPalette:");
+            if (pal_hit) {
+                dtwm_server_apply_palette_file(server, pal_hit + strlen("ColorPalette:"));
             }
             free(txt);
         }
