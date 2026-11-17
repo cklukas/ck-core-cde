@@ -33,6 +33,10 @@
  * This file contains the main program for: dtinfo_start
  */
 
+#ifndef CDE_INSTALLATION_TOP
+#define CDE_INSTALLATION_TOP "/usr/dt"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -128,6 +132,13 @@ main (
 	Tt_status		status;
   
 	XtSetLanguageProc (nullptr, nullptr, nullptr);
+
+	if (!getenv ("DTDATABASESEARCHPATH") || !getenv ("DTDATABASESEARCHPATH")[0]) {
+		setenv (
+			"DTDATABASESEARCHPATH",
+			CDE_INSTALLATION_TOP "/appconfig/types/%L," CDE_INSTALLATION_TOP "/appconfig/types/C",
+			1);
+	}
 
 	_DtEnvControl (DT_ENV_SET);
 
@@ -462,16 +473,21 @@ ReceiveMessage (
 	/*
 	 * Check for an info lib
 	 */
+	if (!getenv ("DTINFOLIBSEARCHPATH") || !getenv ("DTINFOLIBSEARCHPATH")[0]) {
+		setenv (
+			"DTINFOLIBSEARCHPATH",
+			CDE_INSTALLATION_TOP "/infolib/%L/%I.dti:" CDE_INSTALLATION_TOP "/infolib/C/%I.dti",
+			1);
+	}
 	info_lib = tt_message_file (message);
-	if ((tt_ptr_error (info_lib) != TT_OK) || info_lib == nullptr) {
+	if ((tt_ptr_error (info_lib) != TT_OK) || info_lib == nullptr || info_lib[0] == '\0') {
 		/*
-		 * Use DTINFOLIBDEFAULT if it is defined
+		 * Use DTINFOLIBDEFAULT if it is defined, else default to "cde"
 		 */
-		if ((info_lib = getenv ("DTINFOLIBDEFAULT")) == nullptr) {
-			DtMsgLogMessage (prog_name, DtMsgLogError, 
-				(char *) GETMESSAGE (SET_NUM, 10, "An InfoLib was not provided in the '%s' message\nand the environment variable DTINFOLIBDEFAULT was not defined."),
-				op_name);
-			exit (1);
+		info_lib = getenv ("DTINFOLIBDEFAULT");
+		if (info_lib == nullptr || info_lib[0] == '\0') {
+			setenv ("DTINFOLIBDEFAULT", "cde", 1);
+			info_lib = "cde";
 		}
 	}
 

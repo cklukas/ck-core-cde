@@ -1,4 +1,19 @@
 2026-11-17
+- Fix `Action: Information Manager [Error]` (`TT_ERR_PROCID`) when clicking the
+  Front Panel book **`i`** (`InfoManager` / `DtLoadInfoLib`) control on Wayland
+  (`cde/lib/DtSvc/DtUtil2/SvcTT.c`, `cde/lib/DtSvc/DtUtil1/ActionTt.c`,
+  `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtinfo/clients/dtinfo_start/dtinfo_start.c`,
+  `cde/programs/dtsession/SmWayland.c`): initialize ToolTalk in
+  `InitiateTtRequest` before dispatching `TYPE TT_MSG` actions, synchronize
+  `_DtSvcInitToolTalk` with the root window `_SUN_TT_SESSION` / `TT_SESSION`
+  property via `tt_default_session_set` and retry once on `TT_ERR_PROCID` /
+  `TT_ERR_NOMP` so `ttsession` restarts self-heal cleanly, launch `ttsession -s`
+  with `DTINFOLIBDEFAULT=cde` and `DTINFOLIBSEARCHPATH` (`.../%I.dti`) before
+  `DtAppInitialize` in `dtwm-panel` and `dtsession --wayland`, and add default
+  `DTDATABASESEARCHPATH`, `DTINFOLIBSEARCHPATH`, and `DTINFOLIBDEFAULT=cde`
+  fallbacks in `dtinfo_start` so `DtInfo_LoadInfoLib` always opens
+  `Dtinfo: Infolib Book List` cleanly instead of exiting mid-request.
 - Fix intermittent solid black rectangles over `dtfile` Shelf icon labels when
   opening or refreshing secondary File Manager windows
   (`cde/programs/dtfile/FileMgr.c`, `cde/programs/dtfile/File.c`): read Shelf

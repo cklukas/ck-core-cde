@@ -289,6 +289,19 @@ static void ensure_ttsession_started(void) {
         if (val) XFree(val);
         val = nullptr;
         /* Start ttsession -s so ToolTalk notices (DtActivity_Lock, ExitSession) work */
+        if (!getenv("DTDATABASESEARCHPATH") || !getenv("DTDATABASESEARCHPATH")[0]) {
+            setenv("DTDATABASESEARCHPATH",
+                   CDE_INSTALLATION_TOP "/appconfig/types/%L," CDE_INSTALLATION_TOP "/appconfig/types/C",
+                   1);
+        }
+        if (!getenv("DTINFOLIBSEARCHPATH") || !getenv("DTINFOLIBSEARCHPATH")[0]) {
+            setenv("DTINFOLIBSEARCHPATH",
+                   CDE_INSTALLATION_TOP "/infolib/%L/%I.dti:" CDE_INSTALLATION_TOP "/infolib/C/%I.dti",
+                   1);
+        }
+        if (!getenv("DTINFOLIBDEFAULT") || !getenv("DTINFOLIBDEFAULT")[0]) {
+            setenv("DTINFOLIBDEFAULT", "cde", 1);
+        }
         const char *tt_bin = CDE_INSTALLATION_TOP "/bin/ttsession";
         if (access(tt_bin, X_OK) == 0) {
             pid_t pid = fork();

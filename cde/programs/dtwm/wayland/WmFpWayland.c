@@ -28,6 +28,7 @@
 #include <Dt/MacrosP.h>
 #include <Dt/Message.h>
 #include <Dt/MsgLog.h>
+#include <Dt/SvcTT.h>
 #include <Dt/Wsm.h>
 #include <Dt/WsmM.h>
 #include <Dt/WsmP.h>
@@ -56,6 +57,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 /* Global Workspace Manager state referenced by the genuine Front Panel code */
@@ -73,6 +75,8 @@ static Widget g_fpPopupMenu = nullptr;
 static Widget g_topShell = nullptr;
 static bool g_ttWsmRegistered = false;
 static int g_ttRetryCount = 0;
+static Atom g_atomSunTtSession = None;
+static Atom g_atomTtSession = None;
 
 extern void WorkspaceModifyCB(Widget, Atom, int, XtPointer);
 
@@ -325,6 +329,65 @@ static void ensure_cde_search_paths(const char *argv0) {
             appcfg, appcfg, appcfg, appcfg
         );
         setenv("XMICONBMSEARCHPATH", bmpath, 1);
+    }
+
+    if (!getenv("DTINFOLIBSEARCHPATH")) {
+        setenv(
+            "DTINFOLIBSEARCHPATH",
+            CDE_INSTALLATION_TOP "/infolib/%L/%I.dti:" CDE_INSTALLATION_TOP "/infolib/C/%I.dti",
+            1
+        );
+    }
+    if (!getenv("DTINFOLIBDEFAULT")) {
+        setenv("DTINFOLIBDEFAULT", "cde", 1);
+    }
+}
+
+static void ensure_ttsession_running(Display *dpy) {
+    if (!dpy) return;
+    if (getenv("TT_SESSION") && getenv("TT_SESSION")[0]) return;
+
+    Window root = DefaultRootWindow(dpy);
+    const char *prop_names[2] = {"_SUN_TT_SESSION", "TT_SESSION"};
+    for (int i = 0; i < 2; ++i) {
+        Atom a = XInternAtom(dpy, prop_names[i], True);
+        if (a == None) continue;
+        Atom actual = None;
+        int fmt = 0;
+        unsigned long nitems = 0, after = 0;
+        unsigned char *data = nullptr;
+        if (XGetWindowProperty(
+                dpy, root, a, 0, 64, False, AnyPropertyType,
+                &actual, &fmt, &nitems, &after, &data
+            ) == Success && data) {
+            bool non_empty = (nitems > 0 && data[0] != '\0');
+            XFree(data);
+            if (non_empty) {
+                return;
+            }
+        }
+    }
+
+    const char *tt_bin = CDE_INSTALLATION_TOP "/bin/ttsession";
+    struct stat st;
+    if (stat(tt_bin, &st) != 0 || !(st.st_mode & S_IXUSR)) {
+        return;
+    }
+
+    const char *dpy_str = DisplayString(dpy);
+    pid_t pid = fork();
+    if (pid == 0) {
+        if (dpy_str && dpy_str[0]) {
+            setenv("DISPLAY", dpy_str, 1);
+        }
+        char *const args[] = {(char *)tt_bin, (char *)"-s", nullptr};
+        execv(tt_bin, args);
+        _exit(127);
+    }
+    if (pid > 0) {
+        int status = 0;
+        (void)waitpid(pid, &status, 0);
+        XSync(dpy, False);
     }
 }
 
@@ -816,21 +879,8 @@ static void register_wayland_wsm_tooltalk_handlers(Widget topShell) {
     if (g_ttWsmRegistered || !topShell) {
         return;
     }
-    char *proc_id = tt_default_procid();
-    if (tt_ptr_error(proc_id) != TT_OK || !proc_id) {
-        proc_id = tt_open();
-        if (tt_ptr_error(proc_id) != TT_OK || !proc_id) {
-            return;
-        }
-        int ttfd = tt_fd();
-        if (tt_int_error(ttfd) == TT_OK && ttfd >= 0) {
-            XtAppAddInput(
-                XtWidgetToApplicationContext(topShell), ttfd,
-                (XtPointer)XtInputReadMask, tttk_Xt_input_handler, proc_id
-            );
-        }
-    } else {
-        tt_free(proc_id);
+    if (_DtSvcInitToolTalk(topShell) != TT_OK) {
+        return;
     }
 
     char *sess = tt_default_session();
@@ -1011,6 +1061,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    ensure_ttsession_running(dpy);
     bootstrap_color_server_if_needed(dpy, profile);
 
     Widget topShell = XtVaAppCreateShell(
@@ -1072,6 +1123,8 @@ int main(int argc, char **argv) {
     g_mwmWin = find_mwm_window(dpy);
     g_atomWsCurrent = XInternAtom(dpy, "_DT_WORKSPACE_CURRENT", False);
     g_atomWsList = XInternAtom(dpy, "_DT_WORKSPACE_LIST", False);
+    g_atomSunTtSession = XInternAtom(dpy, "_SUN_TT_SESSION", False);
+    g_atomTtSession = XInternAtom(dpy, "TT_SESSION", False);
     if (g_mwmWin != None) {
         XSelectInput(dpy, g_mwmWin, PropertyChangeMask);
     }
@@ -1081,10 +1134,16 @@ int main(int argc, char **argv) {
     while (!XtAppGetExitFlag(wmGD.mwmAppContext)) {
         XEvent ev;
         XtAppNextEvent(wmGD.mwmAppContext, &ev);
-        if (!g_ttWsmRegistered && ev.type == PropertyNotify &&
+        if (ev.type == PropertyNotify &&
             ev.xproperty.window == g_fpScreen.rootWindow &&
             ev.xproperty.state == PropertyNewValue) {
-            register_wayland_wsm_tooltalk_handlers(topShell);
+            if (g_ttWsmRegistered &&
+                (ev.xproperty.atom == g_atomSunTtSession || ev.xproperty.atom == g_atomTtSession)) {
+                g_ttWsmRegistered = false;
+            }
+            if (!g_ttWsmRegistered) {
+                register_wayland_wsm_tooltalk_handlers(topShell);
+            }
         }
         if (ev.type == PropertyNotify && ev.xproperty.window == g_mwmWin &&
             ev.xproperty.state == PropertyNewValue) {
