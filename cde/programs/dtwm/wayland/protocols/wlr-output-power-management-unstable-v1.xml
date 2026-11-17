@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="wlr_output_power_management_unstable_v1">
+  <copyright>
+    Copyright © 2019 Purism SPC
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+  </copyright>
+
+  <interface name="zwlr_output_power_manager_v1" version="1">
+    <request name="get_output_power">
+      <arg name="id" type="new_id" interface="zwlr_output_power_v1"/>
+      <arg name="output" type="object" interface="wl_output"/>
+    </request>
+    <request name="destroy" type="destructor"/>
+  </interface>
+
+  <interface name="zwlr_output_power_v1" version="1">
+    <enum name="mode">
+      <entry name="off" value="0"/>
+      <entry name="on" value="1"/>
+    </enum>
+    <enum name="error">
+      <entry name="invalid_mode" value="1"/>
+    </enum>
+    <request name="set_mode">
+      <arg name="mode" type="uint" enum="mode"/>
+    </request>
+    <event name="mode">
+      <arg name="mode" type="uint" enum="mode"/>
+    </event>
+    <event name="failed"/>
+    <request name="destroy" type="destructor"/>
+  </interface>
+</protocol>

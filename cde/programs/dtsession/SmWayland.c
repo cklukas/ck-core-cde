@@ -396,8 +396,28 @@ static void spawn_compositor_if_needed(void) {
                 setenv("WAYLAND_DISPLAY", got_wl, 1);
                 setenv("DISPLAY", got_x, 1);
                 setenv("XDG_SESSION_TYPE", "wayland", 1);
+                if (!getenv("XDG_CURRENT_DESKTOP")) {
+                    setenv("XDG_CURRENT_DESKTOP", "CDE", 1);
+                }
                 unlink(g_smwl.status_path);
                 g_smwl.status_path[0] = '\0';
+                /* Publish live WAYLAND_DISPLAY / DISPLAY to D-Bus & systemd user activation
+                 * so xdg-desktop-portal / xdg-desktop-portal-wlr (WebRTC screen sharing)
+                 * and ck-status --daemon connect to the active Wayland & XWayland sockets. */
+                if (fork() == 0) {
+                    execl(
+                        "/bin/sh", "sh", "-c",
+                        "if command -v dbus-update-activation-environment >/dev/null 2>&1; then "
+                        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || "
+                        "dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || true; "
+                        "fi; "
+                        "if command -v ck-status >/dev/null 2>&1; then "
+                        "ck-status --daemon >/dev/null 2>&1 & "
+                        "fi",
+                        (char *)nullptr
+                    );
+                    _exit(0);
+                }
                 break;
             }
         }

@@ -225,6 +225,29 @@ panel instrumentation:
   signal bars, Bluetooth + notification/`StatusNotifier` lamp, and a 5-segment
   battery/AC fuel gauge, with live `f.restart` reload support in `dtwm-wayland`.
 
+## Graphical multi-monitor arrangement & WebRTC desktop portals (`WP-10`)
+
+- **Style Manager *Monitors* (`Display.c`):** `dtstyle` includes a dedicated
+  **Monitors** component (`dtstyle -display_dialog` / `-monitors`) with an
+  interactive 3D-beveled monitor-arrangement canvas (click to select, drag with
+  automatic neighbor edge-snapping, *Side-by-Side* / *Stack Vertically* /
+  *Mirror (0,0)* presets, output enable/disable, mode resolution, rotation
+  `0°`/`90°`/`180°`/`270°`, and per-output HiDPI scale `100%`–`200%`). On
+  Wayland it reads `_DT_WAYLAND_OUTPUTS` and applies live changes via
+  `f.set_output_layout`; on X11/XLibre it drives `libXrandr`
+  (`XRRGetScreenResourcesCurrent` / `XRRSetCrtcConfig` and per-output `DPI`).
+- **Standard Wayland output & portal protocols (`cde_output_mgmt.c`):**
+  `dtwm-wayland` exposes `zwlr_output_manager_v1` (enabling `wlr-randr` and
+  `kanshi`), `zwlr_output_power_manager_v1`, `zxdg_output_manager_v1`,
+  `zwlr_export_dmabuf_manager_v1`, `ext_image_copy_capture_manager_v1` +
+  `ext_output_image_capture_source_manager_v1`, and
+  `zwlr_foreign_toplevel_manager_v1`.
+- **Packaged XDG Desktop Portals (`cde-portals.conf`):** `ck-core-cde` installs
+  `/usr/share/xdg-desktop-portal/cde-portals.conf` routing `ScreenCast` and
+  `Screenshot` to `wlr` (`xdg-desktop-portal-wlr` + PipeWire) and synchronizes
+  `WAYLAND_DISPLAY`, `DISPLAY`, `XDG_CURRENT_DESKTOP`, and `XDG_SESSION_TYPE`
+  into the D-Bus/systemd user activation environment at session startup.
+
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`
@@ -241,11 +264,13 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   per-output mixed-DPI reflow), `check-dtwm-wayland-wp06.py` (`WP-06`
   `ext-session-lock-v1`, `ext-idle-notify-v1`, `dtsession --wayland`, `dtstyle`
   IPC), `check-wayland-dtlogin.py` (`WP-07` `_dtgreeter`, `.desktop`
-  session discovery, Wayland/X11 seat handoff), and
+  session discovery, Wayland/X11 seat handoff),
   `check-dtwm-wayland-wp09.py` (`WP-09` central Switch notification lamp,
   `SystemSubpanel` + `Copy To Main Panel` persistence, live `ck-status-gauge`
-  embedding, `StatusNotifier` tray, and toast banner) run automatically under
-  `make check`.
+  embedding, `StatusNotifier` tray, and toast banner), and
+  `check-dtwm-wayland-wp10.py` (`WP-10` `wlr-randr`, `dtstyle` *Display &
+  Monitors*, `zwlr_foreign_toplevel_manager_v1`, `ext-image-copy-capture-v1`,
+  and `xdg-desktop-portal-wlr`) run automatically under `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,
   `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` into a

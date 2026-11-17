@@ -15,7 +15,10 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland.py tests/check-dtwm-wayland-workspaces.py \
              tests/check-dtwm-wayland-icons.py tests/check-dtwm-wayland-wp05.py \
              tests/check-dtwm-wayland-wp06.py tests/check-dtwm-wayland-wp09.py \
-             wayland/protocols/wlr-layer-shell-unstable-v1.xml
+             tests/check-dtwm-wayland-wp10.py \
+             wayland/protocols/wlr-layer-shell-unstable-v1.xml \
+             wayland/protocols/wlr-output-power-management-unstable-v1.xml \
+             wayland/protocols/wlr-foreign-toplevel-management-unstable-v1.xml
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-property-readers.py
@@ -32,6 +35,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp05.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp06.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp09.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp10.py --compositor ./dtwm-wayland
 endif
 
 configdir = $(CDE_INSTALLATION_TOP)/config/C
@@ -43,6 +47,8 @@ CLEANFILES = sys.dtwmrc Dtwm.defs
 if BUILD_DTWM_WAYLAND
 WAYLAND_GEN_HDRS = wayland/xdg-shell-protocol.h \
                    wayland/wlr-layer-shell-unstable-v1-protocol.h \
+                   wayland/wlr-output-power-management-unstable-v1-protocol.h \
+                   wayland/ext-image-copy-capture-v1-protocol.h \
                    wayland/ext-workspace-v1-protocol.h \
                    wayland/xdg-toplevel-icon-v1-protocol.h
 WAYLAND_GEN_SRCS = wayland/xdg-shell-protocol.c \
@@ -60,6 +66,14 @@ wayland/xdg-shell-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/stable/xdg-shell/xdg-
 	$(WAYLAND_SCANNER) private-code $< $@
 
 wayland/wlr-layer-shell-unstable-v1-protocol.h: $(srcdir)/wayland/protocols/wlr-layer-shell-unstable-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/wlr-output-power-management-unstable-v1-protocol.h: $(srcdir)/wayland/protocols/wlr-output-power-management-unstable-v1.xml
+	@$(MKDIR_P) wayland
+	$(WAYLAND_SCANNER) server-header $< $@
+
+wayland/ext-image-copy-capture-v1-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/staging/ext-image-copy-capture/ext-image-copy-capture-v1.xml
 	@$(MKDIR_P) wayland
 	$(WAYLAND_SCANNER) server-header $< $@
 
@@ -85,6 +99,7 @@ dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_icons.c \
                        wayland/cde_xdnd_bridge.c \
                        wayland/cde_session_lock.c \
+                       wayland/cde_output_mgmt.c \
                        wayland/dtwm_wayland_main.c
 nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1 \

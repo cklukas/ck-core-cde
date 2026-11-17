@@ -131,6 +131,7 @@ typedef enum {
 
 typedef struct DtwmServer DtwmServer;
 typedef struct DtwmView DtwmView;
+typedef struct DtwmForeignToplevel DtwmForeignToplevel;
 
 struct DtwmView {
     struct wl_list link; /* DtwmServer.views */
@@ -139,6 +140,7 @@ struct DtwmView {
 
     struct wlr_xdg_toplevel *xdg_toplevel;
     struct wlr_xwayland_surface *xwayland_surface;
+    DtwmForeignToplevel *foreign_toplevel;
 
     /* Scene nodes:
      * frame_tree sits at (x, y) in workspace coordinates.
@@ -284,6 +286,16 @@ struct DtwmServer {
     xcb_atom_t atom_session_lock_dlg;
     xcb_atom_t atom_dt_sm_win_info;
     xcb_atom_t atom_wayland_input_state;
+    xcb_atom_t atom_wayland_outputs;
+
+    /* Output management, portals & foreign-toplevel globals (WP-10) */
+    struct wlr_output_manager_v1 *output_mgr;
+    struct wlr_output_power_manager_v1 *output_power_mgr;
+    struct wlr_export_dmabuf_manager_v1 *export_dmabuf_mgr;
+    struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel_mgr;
+    struct wl_listener output_mgr_apply;
+    struct wl_listener output_mgr_test;
+    struct wl_listener output_power_set_mode;
 
     struct wlr_cursor *cursor;
     struct wlr_xcursor_manager *cursor_mgr;
@@ -485,5 +497,17 @@ void dtwm_hw_apply_keyboard_defaults(DtwmServer *server, struct wlr_keyboard *wl
 bool dtwm_hw_handle_wm_request(DtwmServer *server, const char *cmd);
 void dtwm_hw_publish_state(DtwmServer *server);
 void dtwm_restore_view_focus(DtwmServer *server, DtwmView *view);
+void dtwm_view_set_maximized(DtwmView *view, bool maximized);
+void dtwm_view_set_minimized(DtwmView *view, bool minimized);
+void dtwm_view_close(DtwmView *view);
+
+/* cde_output_mgmt.c */
+void dtwm_output_mgmt_init(DtwmServer *server);
+void dtwm_output_mgmt_finish(DtwmServer *server);
+void dtwm_output_mgmt_sync(DtwmServer *server);
+void dtwm_output_mgmt_publish_x11(DtwmServer *server);
+bool dtwm_output_mgmt_handle_wm_request(DtwmServer *server, const char *cmd);
+void dtwm_foreign_toplevel_sync(DtwmView *view);
+void dtwm_foreign_toplevel_destroy(DtwmView *view);
 
 #endif /* DTWM_WAYLAND_H */

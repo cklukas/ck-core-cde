@@ -905,6 +905,19 @@ int main(int argc, char **argv) {
         } else if (ev.type == MapNotify && ev.xmap.event == g_fpScreen.rootWindow) {
             register_all_subpanel_contexts();
             try_embed_x11_window(dpy, ev.xmap.window);
+        } else if (ev.type == SelectionRequest && g_colorSrvWin != None &&
+                   ev.xselectionrequest.owner == g_colorSrvWin) {
+            XSelectionEvent reply = {
+                .type = SelectionNotify,
+                .requestor = ev.xselectionrequest.requestor,
+                .selection = ev.xselectionrequest.selection,
+                .target = ev.xselectionrequest.target,
+                .property = None,
+                .time = ev.xselectionrequest.time,
+            };
+            XSendEvent(dpy, reply.requestor, False, 0, (XEvent *)&reply);
+            XFlush(dpy);
+            continue;
         }
         XtDispatchEvent(&ev);
     }

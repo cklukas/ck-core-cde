@@ -1024,6 +1024,7 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
     while (*cmd && isspace((unsigned char)*cmd)) cmd++;
     if (!*cmd) return;
     if (dtwm_hw_handle_wm_request(server, cmd)) return;
+    if (dtwm_output_mgmt_handle_wm_request(server, cmd)) return;
 
     if (strncmp(cmd, "f.change_backdrop", 17) == 0 && isspace((unsigned char)cmd[17])) {
         char path[512] = {0};
@@ -1297,6 +1298,7 @@ void dtwm_set_output_dpi(DtwmServer *server, uint32_t output_idx, int dpi) {
         }
     }
     dtwm_sync_xwayland_randr_dpi(server);
+    dtwm_output_mgmt_sync(server);
 }
 
 void dtwm_server_apply_appearance_profile(DtwmServer *server, DtwmAppearanceProfile profile) {

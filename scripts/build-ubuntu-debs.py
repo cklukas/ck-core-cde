@@ -310,11 +310,14 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
         shutil.move(str(pam_dtlogin), str(r_dtlogin / "etc" / "pam.d" / "dtlogin"))
 
     deb_meta = cde_repo / "cde" / "debian"
-    # Session .desktop entries and Wayland Xsession entry point
+    # Session .desktop entries, XDG Desktop Portal config, and Wayland Xsession entry point
     (r_cde / "usr" / "share" / "xsessions").mkdir(parents=True, exist_ok=True)
     (r_cde / "usr" / "share" / "wayland-sessions").mkdir(parents=True, exist_ok=True)
+    (r_cde / "usr" / "share" / "xdg-desktop-portal").mkdir(parents=True, exist_ok=True)
     shutil.copy2(deb_meta / "cde.desktop", r_cde / "usr" / "share" / "xsessions" / "cde.desktop")
     shutil.copy2(deb_meta / "cde-wayland.desktop", r_cde / "usr" / "share" / "wayland-sessions" / "cde-wayland.desktop")
+    if (deb_meta / "cde-portals.conf").is_file():
+        shutil.copy2(deb_meta / "cde-portals.conf", r_cde / "usr" / "share" / "xdg-desktop-portal" / "cde-portals.conf")
     shutil.copy2(deb_meta / "Xsession.wayland", r_cde / "usr" / "dt" / "bin" / "Xsession.wayland")
     os.chmod(r_cde / "usr" / "dt" / "bin" / "Xsession.wayland", 0o755)
 
@@ -346,7 +349,7 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
             "Architecture": arch,
             "Installed-Size": str(installed_size_kb(r_cde)),
             "Depends": ", ".join(dict.fromkeys(cde_deps)),
-            "Recommends": "ck-core-apps, xfonts-100dpi",
+            "Recommends": "ck-core-apps, xdg-desktop-portal, xdg-desktop-portal-wlr, pipewire, wlr-randr, libnotify-bin, xfonts-100dpi",
             "Conflicts": "cde-desktop",
             "Replaces": "cde-desktop",
             "Maintainer": "CK Core Project <cklukas@users.noreply.github.com>",

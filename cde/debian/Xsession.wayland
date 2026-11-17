@@ -17,15 +17,11 @@ if [ -x /usr/dt/bin/dtsearchpath ]; then
     eval "$(/usr/dt/bin/dtsearchpath -ksh 2>/dev/null)" || true
 fi
 
-if command -v ck-status >/dev/null 2>&1; then
-    ck-status --daemon >/dev/null 2>&1 &
-fi
-
 if [ -x /usr/dt/bin/dtwm-wayland ]; then
     if [ -x /usr/dt/bin/dtsession ] && /usr/dt/bin/dtsession --help 2>&1 | grep -q -- '--wayland'; then
         exec /usr/dt/bin/dtsession --wayland
     fi
-    exec /usr/dt/bin/dtwm-wayland --session
+    exec /usr/dt/bin/dtwm-wayland --session --startup 'if command -v dbus-update-activation-environment >/dev/null 2>&1; then dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || true; fi; command -v ck-status >/dev/null 2>&1 && ck-status --daemon >/dev/null 2>&1 &'
 fi
 
 echo "Xsession.wayland: /usr/dt/bin/dtwm-wayland is not yet installed" >&2

@@ -80,6 +80,7 @@
 #include "Mouse.h"
 #include "Audio.h"
 #include "Screen.h"
+#include "Display.h"
 #include "Dtwm.h"
 #include "Startup.h"
 #include "I18nMain.h"
@@ -530,6 +531,13 @@ ProcessComponentList(
           helpTag = HELP_SCREEN_BUTTON;
       }
 
+      else if (strcmp(string, DISPLAY_COMP) == 0)
+      {
+          cmp_string = CMPSTR("Monitors");
+          dtIcon = _DtGetIconFileName(style.screen, DISPLAY_ICON, nullptr, nullptr, 0);
+          helpTag = HELP_SCREEN_BUTTON;
+      }
+
       else if (strcmp(string, DTWM) == 0)
       {
           cmp_string = CMPSTR(GETMESSAGE(4, 38, "Window"));
@@ -621,6 +629,11 @@ callCancels( void )
 	 XtCallCallbacks(style.screenDialog, XmNcallback, &CancelBut);
      }
 
+     if(style.displayDialog != nullptr && XtIsManaged(style.displayDialog)) {
+	 CancelBut.button_position = 3; /* BTN_CANCEL in Display.c (OK, Apply, Cancel, Help) */
+	 XtCallCallbacks(style.displayDialog, XmNcallback, &CancelBut);
+     }
+
      if(style.startupDialog != nullptr && XtIsManaged(style.startupDialog)) {
 	 CancelBut.button_position = CANCEL_BUTTON;
 	 XtCallCallbacks(style.startupDialog, XmNcallback, &CancelBut);
@@ -697,6 +710,9 @@ activateCB(
             
   else if (strcmp(cd, SCREEN) == 0)
     popup_screenBB(style.shell);
+
+  else if (strcmp(cd, DISPLAY_COMP) == 0)
+    popup_displayBB(style.shell);
   
   else if (strcmp(cd, DTWM) == 0)
     popup_dtwmBB(style.shell);

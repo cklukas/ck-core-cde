@@ -60,6 +60,11 @@ Depends: ck-core-motif9 (>= 2.4.0),
          ${shlibs:Depends},
          ${misc:Depends}
 Recommends: ck-core-apps,
+            libnotify-bin,
+            pipewire,
+            wlr-randr,
+            xdg-desktop-portal,
+            xdg-desktop-portal-wlr,
             xfonts-100dpi,
             xserver-xorg
 Conflicts: cde-desktop

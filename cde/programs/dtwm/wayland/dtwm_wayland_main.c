@@ -150,6 +150,7 @@ static void clear_active_focus(DtwmServer *server) {
         }
         dtwm_view_update_frame(prev);
         dtwm_icons_update_view(prev);
+        dtwm_foreign_toplevel_sync(prev);
     }
     wlr_seat_keyboard_notify_clear_focus(server->seat);
     dtwm_publish_active_window_box(server);
@@ -190,6 +191,7 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
         }
         dtwm_view_update_frame(prev);
         dtwm_icons_update_view(prev);
+        dtwm_foreign_toplevel_sync(prev);
     }
 
     /* Raise in Z-order and move to head of server->views MRU list (keep desktop pins in desktop_icon_tree) */
@@ -222,6 +224,7 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
     }
     dtwm_view_update_frame(view);
     dtwm_icons_update_view(view);
+    dtwm_foreign_toplevel_sync(view);
     dtwm_publish_active_window_box(server);
 
     struct wlr_keyboard *kbd = wlr_seat_get_keyboard(server->seat);
@@ -271,6 +274,7 @@ static void view_set_maximized(DtwmView *view, bool maximized) {
             dtwm_view_update_frame(view);
         }
     }
+    dtwm_foreign_toplevel_sync(view);
 }
 
 static void view_set_minimized(DtwmView *view, bool minimized) {
@@ -286,6 +290,7 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
         dtwm_icons_set_wm_state(view);
     }
     dtwm_icons_relayout(view->server);
+    dtwm_foreign_toplevel_sync(view);
     if (minimized && view->server->focused_view == view) {
         clear_active_focus(view->server);
         /* Focus next visible view on current workspace if any */
@@ -309,6 +314,18 @@ static void view_close(DtwmView *view) {
     } else if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
         wlr_xwayland_surface_close(view->xwayland_surface);
     }
+}
+
+void dtwm_view_set_maximized(DtwmView *view, bool maximized) {
+    if (view) view_set_maximized(view, maximized);
+}
+
+void dtwm_view_set_minimized(DtwmView *view, bool minimized) {
+    if (view) view_set_minimized(view, minimized);
+}
+
+void dtwm_view_close(DtwmView *view) {
+    view_close(view);
 }
 
 /* --- CDE Window Menu Overlay --- */
@@ -1221,6 +1238,7 @@ static void handle_output_destroy(struct wl_listener *listener, void *data) {
     }
     free(output);
     dtwm_update_front_panel(server);
+    dtwm_output_mgmt_sync(server);
 }
 
 static void handle_new_output(struct wl_listener *listener, void *data) {
@@ -1256,9 +1274,24 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     output->destroy.notify = handle_output_destroy;
     wl_signal_add(&wlr_output->events.destroy, &output->destroy);
 
+    int next_x = 0;
+    {
+        DtwmOutput *prev_out;
+        wl_list_for_each(prev_out, &server->outputs, link) {
+            if (prev_out->wlr_output && prev_out->wlr_output->enabled) {
+                struct wlr_box pbox = {0};
+                wlr_output_layout_get_box(server->output_layout, prev_out->wlr_output, &pbox);
+                if (pbox.x + pbox.width > next_x) {
+                    next_x = pbox.x + pbox.width;
+                }
+            }
+        }
+    }
+
     wl_list_insert(server->outputs.prev, &output->link);
 
-    struct wlr_output_layout_output *l_output = wlr_output_layout_add_auto(server->output_layout, wlr_output);
+    struct wlr_output_layout_output *l_output =
+        wlr_output_layout_add(server->output_layout, wlr_output, next_x, 0);
     struct wlr_scene_output *scene_output = wlr_scene_output_create(server->scene, wlr_output);
     wlr_scene_output_layout_add_output(server->scene_layout, l_output, scene_output);
 
@@ -1278,6 +1311,7 @@ static void handle_new_output(struct wl_listener *listener, void *data) {
     dtwm_icons_relayout(server);
     dtwm_sync_xwayland_randr_dpi(server);
     dtwm_lock_sync_outputs(server);
+    dtwm_output_mgmt_sync(server);
 
     wlr_xcursor_manager_load(server->cursor_mgr, wlr_output->scale);
 }
@@ -1313,6 +1347,7 @@ static void xdg_toplevel_map(struct wl_listener *listener, void *data) {
     wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     dtwm_view_update_frame(view);
     dtwm_icons_on_view_map(view);
+    dtwm_foreign_toplevel_sync(view);
     if (dtwm_view_visible_on_current_ws(view)) {
         focus_view(view->server, view, view->xdg_toplevel->base->surface);
     }
@@ -1333,6 +1368,7 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     }
     view->mapped = false;
     wlr_scene_node_set_enabled(&view->frame_tree->node, false);
+    dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, false);
 }
 
@@ -1371,6 +1407,7 @@ static void xdg_toplevel_set_title(struct wl_listener *listener, void *data) {
     if (view->mapped) {
         dtwm_view_update_frame(view);
         dtwm_icons_update_view(view);
+        dtwm_foreign_toplevel_sync(view);
     }
 }
 
@@ -1421,6 +1458,7 @@ static void xdg_toplevel_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->request_minimize.link);
     wl_list_remove(&view->set_title.link);
     wl_list_remove(&view->link);
+    dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, true);
     if (view->frame_tree) {
         wlr_scene_node_destroy(&view->frame_tree->node);
@@ -1823,6 +1861,7 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
     wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
     sync_xwayland_client_pos(view);
     dtwm_view_update_frame(view);
+    dtwm_foreign_toplevel_sync(view);
     if (dtwm_view_visible_on_current_ws(view)) {
         focus_view(view->server, view, xs->surface);
     }
@@ -1849,6 +1888,7 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
     view->is_subpanel = false;
     view->is_desktop_pin = false;
     view->is_swallowed = false;
+    dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, false);
     if (view->frame_tree) {
         wlr_scene_node_destroy(&view->frame_tree->node);
@@ -1932,6 +1972,7 @@ static void xwayland_set_title(struct wl_listener *listener, void *data) {
     if (view->mapped) {
         dtwm_view_update_frame(view);
         dtwm_icons_update_view(view);
+        dtwm_foreign_toplevel_sync(view);
     }
 }
 
@@ -1967,6 +2008,7 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->set_decorations.link);
     wl_list_remove(&view->destroy.link);
     wl_list_remove(&view->link);
+    dtwm_foreign_toplevel_destroy(view);
     dtwm_icons_on_view_unmap_or_destroy(view, true);
     if (view->frame_tree) {
         wlr_scene_node_destroy(&view->frame_tree->node);
@@ -2068,6 +2110,7 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
     dtwm_icons_on_xwayland_ready(server);
     dtwm_xdnd_on_xwayland_ready(server);
     dtwm_lock_on_xwayland_ready(server);
+    dtwm_output_mgmt_publish_x11(server);
     if (server->greeter_mode && server->xcb_conn) {
         /* Grant local root (dtlogin session manager, xrdb, dtgreet) access via
          * ServerInterpreted SI:localuser:root without opening XWayland to other users. */
@@ -2243,6 +2286,7 @@ int main(int argc, char **argv) {
     dtwm_workspaces_init(&server);
     dtwm_icons_init(&server);
     dtwm_lock_init(&server);
+    dtwm_output_mgmt_init(&server);
     server.greeter_mode = greeter_mode;
     if (greeter_mode || no_panel) {
         server.show_front_panel = false;
@@ -2364,6 +2408,7 @@ cleanup:
     if (server.status_fallback_timer) wl_event_source_remove(server.status_fallback_timer);
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);
+    dtwm_output_mgmt_finish(&server);
     dtwm_lock_finish(&server);
     dtwm_xdnd_finish();
     dtwm_icons_finish(&server);
