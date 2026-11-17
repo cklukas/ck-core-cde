@@ -1,4 +1,13 @@
 2026-11-17
+- Fix Motif menu-bar drag pulldown offset on Wayland when dragging a held mouse
+  button across adjacent `XmMenuBar` cascade buttons (`File` <-> `Panel`)
+  (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`): handle XWayland
+  `set_geometry` (`ConfigureNotify`) and `set_override_redirect` signals on
+  already-mapped `override_redirect` surfaces so Motif's shared `XmMenuShell`
+  (`PopupSharedMenuShell`) immediately updates its scene-tree `(x, y)` position
+  and stacking order as it moves between cascade buttons, and keep forwarding
+  client-relative pointer motion while a button grab is held outside a surface.
 - Fix `Style Manager - Mouse` double-click test reactivity, cut-off
   **Handedness** / **Button 2** controls, clipped **Cursor Theme** / **Preview**
   sections, and `0`-timestamp virtual-pointer multi-clicks on Wayland

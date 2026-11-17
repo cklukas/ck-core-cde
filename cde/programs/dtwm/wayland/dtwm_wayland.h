@@ -198,6 +198,8 @@ struct DtwmView {
     struct wl_listener set_title;
     struct wl_listener set_decorations;
     struct wl_listener set_hints;
+    struct wl_listener set_geometry;
+    struct wl_listener set_override_redirect;
 };
 
 typedef struct {

@@ -1091,6 +1091,19 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
         wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, view ? cursor_name_for_part(part) : "default");
         if (server->seat->drag != nullptr || server->pointer_buttons_down == 0) {
             wlr_seat_pointer_notify_clear_focus(server->seat);
+        } else if (server->seat->pointer_state.focused_surface) {
+            struct wlr_surface *fsurf = server->seat->pointer_state.focused_surface;
+            DtwmView *fv;
+            wl_list_for_each(fv, &server->views, link) {
+                if (fv->mapped && view_wlr_surface(fv) == fsurf) {
+                    int fl = 0, ft = 0, fr = 0, fb = 0;
+                    dtwm_view_insets(fv, &fl, &ft, &fr, &fb);
+                    double fsx = server->cursor->x - (double)(fv->x + fl);
+                    double fsy = server->cursor->y - (double)(fv->y + ft);
+                    wlr_seat_pointer_notify_motion(server->seat, time_msec, fsx, fsy);
+                    break;
+                }
+            }
         }
     } else {
         dtwm_xdnd_on_cursor_motion(server, surface, sx, sy, time_msec);
@@ -1102,7 +1115,7 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
 
 void dtwm_recheck_cursor_focus(DtwmServer *server) {
     if (!server) return;
-    process_cursor_motion(server, 0);
+    process_cursor_motion(server, dtwm_now_msec());
 }
 
 static void handle_cursor_motion(struct wl_listener *listener, void *data) {
@@ -2230,11 +2243,16 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
     }
 
     if (xs->override_redirect) {
+        view->x = xs->x;
+        view->y = xs->y;
+        view->client_w = xs->width > 0 ? xs->width : 1;
+        view->client_h = xs->height > 0 ? xs->height : 1;
         view->frame_tree = wlr_scene_subsurface_tree_create(
             view->server->unmanaged_xwayland_tree, xs->surface
         );
         view->frame_tree->node.data = view;
         wlr_scene_node_set_position(&view->frame_tree->node, xs->x, xs->y);
+        wlr_scene_node_raise_to_top(&view->frame_tree->node);
         return;
     }
 
@@ -2488,6 +2506,41 @@ static void xwayland_set_hints(struct wl_listener *listener, void *data) {
     }
 }
 
+static void xwayland_set_geometry(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmView *view = wl_container_of(listener, view, set_geometry);
+    struct wlr_xwayland_surface *xs = view->xwayland_surface;
+    if (!xs) {
+        return;
+    }
+    if (xs->override_redirect || view->is_lock_dialog) {
+        view->x = xs->x;
+        view->y = xs->y;
+        if (xs->width > 0) view->client_w = xs->width;
+        if (xs->height > 0) view->client_h = xs->height;
+        if (view->mapped && view->frame_tree) {
+            wlr_scene_node_set_position(&view->frame_tree->node, xs->x, xs->y);
+            if (xs->override_redirect && !view->is_lock_dialog) {
+                wlr_scene_node_raise_to_top(&view->frame_tree->node);
+            }
+        }
+    }
+}
+
+static void xwayland_set_override_redirect(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmView *view = wl_container_of(listener, view, set_override_redirect);
+    struct wlr_xwayland_surface *xs = view->xwayland_surface;
+    if (!xs) {
+        return;
+    }
+    apply_xwayland_decorations(view);
+    if (view->mapped && xs->surface) {
+        xwayland_unmap(&view->unmap, nullptr);
+        xwayland_map(&view->map, nullptr);
+    }
+}
+
 static void xwayland_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, destroy);
@@ -2523,6 +2576,8 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->set_title.link);
     wl_list_remove(&view->set_decorations.link);
     wl_list_remove(&view->set_hints.link);
+    wl_list_remove(&view->set_geometry.link);
+    wl_list_remove(&view->set_override_redirect.link);
     wl_list_remove(&view->destroy.link);
     wl_list_remove(&view->link);
     dtwm_foreign_toplevel_destroy(view);
@@ -2566,6 +2621,10 @@ static void handle_new_xwayland_surface(struct wl_listener *listener, void *data
     wl_signal_add(&xs->events.set_decorations, &view->set_decorations);
     view->set_hints.notify = xwayland_set_hints;
     wl_signal_add(&xs->events.set_hints, &view->set_hints);
+    view->set_geometry.notify = xwayland_set_geometry;
+    wl_signal_add(&xs->events.set_geometry, &view->set_geometry);
+    view->set_override_redirect.notify = xwayland_set_override_redirect;
+    wl_signal_add(&xs->events.set_override_redirect, &view->set_override_redirect);
     view->destroy.notify = xwayland_destroy;
     wl_signal_add(&xs->events.destroy, &view->destroy);
 
