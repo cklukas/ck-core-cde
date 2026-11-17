@@ -132,6 +132,7 @@ typedef enum {
 typedef struct DtwmServer DtwmServer;
 typedef struct DtwmView DtwmView;
 typedef struct DtwmForeignToplevel DtwmForeignToplevel;
+typedef struct DtwmImeState DtwmImeState;
 
 struct DtwmView {
     struct wl_list link; /* DtwmServer.views */
@@ -288,11 +289,12 @@ struct DtwmServer {
     xcb_atom_t atom_wayland_input_state;
     xcb_atom_t atom_wayland_outputs;
 
-    /* Output management, portals & foreign-toplevel globals (WP-10) */
+    /* Output management, portals, foreign-toplevel & CJK IME globals (WP-10 / WP-11) */
     struct wlr_output_manager_v1 *output_mgr;
     struct wlr_output_power_manager_v1 *output_power_mgr;
     struct wlr_export_dmabuf_manager_v1 *export_dmabuf_mgr;
     struct wlr_foreign_toplevel_manager_v1 *foreign_toplevel_mgr;
+    DtwmImeState *ime;
     struct wl_listener output_mgr_apply;
     struct wl_listener output_mgr_test;
     struct wl_listener output_power_set_mode;
@@ -509,5 +511,18 @@ void dtwm_output_mgmt_publish_x11(DtwmServer *server);
 bool dtwm_output_mgmt_handle_wm_request(DtwmServer *server, const char *cmd);
 void dtwm_foreign_toplevel_sync(DtwmView *view);
 void dtwm_foreign_toplevel_destroy(DtwmView *view);
+
+/* cde_ime.c */
+void dtwm_ime_init(DtwmServer *server);
+void dtwm_ime_finish(DtwmServer *server);
+void dtwm_ime_set_focus(DtwmServer *server, struct wlr_surface *surface);
+void dtwm_ime_set_keyboard(DtwmServer *server, struct wlr_keyboard *wlr_kbd);
+void dtwm_ime_on_session_lock_changed(DtwmServer *server, bool locked);
+bool dtwm_ime_forward_key(
+    DtwmServer *server,
+    struct wlr_keyboard *wlr_kbd,
+    const struct wlr_keyboard_key_event *ev
+);
+bool dtwm_ime_forward_modifiers(DtwmServer *server, struct wlr_keyboard *wlr_kbd);
 
 #endif /* DTWM_WAYLAND_H */

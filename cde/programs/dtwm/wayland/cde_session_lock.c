@@ -216,6 +216,7 @@ static void handle_lock_unlock(struct wl_listener *listener, void *data) {
     if (server->focused_view && server->focused_view->mapped) {
         dtwm_restore_view_focus(server, server->focused_view);
     }
+    dtwm_ime_on_session_lock_changed(server, false);
 }
 
 static void handle_lock_destroy(struct wl_listener *listener, void *data) {
@@ -246,6 +247,7 @@ static void handle_lock_destroy(struct wl_listener *listener, void *data) {
         dtwm_lock_sync_outputs(server);
         wlr_seat_keyboard_notify_clear_focus(server->seat);
         wlr_seat_pointer_notify_clear_focus(server->seat);
+        dtwm_ime_on_session_lock_changed(server, true);
         dtwm_hw_publish_state(server);
     }
 }
@@ -287,6 +289,7 @@ static void handle_new_session_lock(struct wl_listener *listener, void *data) {
     dtwm_lock_sync_outputs(server);
     wlr_seat_keyboard_notify_clear_focus(server->seat);
     wlr_seat_pointer_notify_clear_focus(server->seat);
+    dtwm_ime_on_session_lock_changed(server, true);
 
     wlr_session_lock_v1_send_locked(lock);
     focus_best_lock_surface(server);

@@ -399,18 +399,32 @@ static void spawn_compositor_if_needed(void) {
                 if (!getenv("XDG_CURRENT_DESKTOP")) {
                     setenv("XDG_CURRENT_DESKTOP", "CDE", 1);
                 }
+                if (!getenv("XMODIFIERS")) {
+                    if (access("/usr/bin/fcitx5", X_OK) == 0) {
+                        setenv("XMODIFIERS", "@im=fcitx", 1);
+                        if (!getenv("CDE_WAYLAND_IMS")) setenv("CDE_WAYLAND_IMS", "fcitx5", 1);
+                    } else if (access("/usr/bin/ibus-daemon", X_OK) == 0) {
+                        setenv("XMODIFIERS", "@im=ibus", 1);
+                        if (!getenv("CDE_WAYLAND_IMS")) setenv("CDE_WAYLAND_IMS", "ibus", 1);
+                    }
+                }
                 unlink(g_smwl.status_path);
                 g_smwl.status_path[0] = '\0';
                 /* Publish live WAYLAND_DISPLAY / DISPLAY to D-Bus & systemd user activation
-                 * so xdg-desktop-portal / xdg-desktop-portal-wlr (WebRTC screen sharing)
-                 * and ck-status --daemon connect to the active Wayland & XWayland sockets. */
+                 * so xdg-desktop-portal / xdg-desktop-portal-wlr (WebRTC screen sharing),
+                 * Wayland/XIM Input Methods (fcitx5 / ibus), and ck-status --daemon connect
+                 * to the active Wayland & XWayland sockets. */
                 if (fork() == 0) {
                     execl(
                         "/bin/sh", "sh", "-c",
                         "if command -v dbus-update-activation-environment >/dev/null 2>&1; then "
-                        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || "
-                        "dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || true; "
+                        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE >/dev/null 2>&1 || "
+                        "dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE >/dev/null 2>&1 || true; "
                         "fi; "
+                        "case \"${CDE_WAYLAND_IMS:-}\" in "
+                        "fcitx5|fcitx) command -v fcitx5 >/dev/null 2>&1 && fcitx5 -d >/dev/null 2>&1 & ;; "
+                        "ibus) command -v ibus-daemon >/dev/null 2>&1 && ibus-daemon -drx >/dev/null 2>&1 & ;; "
+                        "esac; "
                         "if command -v ck-status >/dev/null 2>&1; then "
                         "ck-status --daemon >/dev/null 2>&1 & "
                         "fi",

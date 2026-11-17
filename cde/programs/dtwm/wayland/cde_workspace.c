@@ -711,6 +711,7 @@ void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx) {
         }
         dtwm_view_update_frame(prev);
         wlr_seat_keyboard_notify_clear_focus(server->seat);
+        dtwm_ime_set_focus(server, nullptr);
     }
     if (!server->focused_view) {
         DtwmView *cand;
@@ -740,6 +741,7 @@ void dtwm_switch_workspace(DtwmServer *server, uint32_t ws_idx) {
                     } else {
                         wlr_seat_keyboard_notify_enter(server->seat, surf, nullptr, 0, nullptr);
                     }
+                    dtwm_ime_set_focus(server, surf);
                 }
                 break;
             }

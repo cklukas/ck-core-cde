@@ -1,4 +1,24 @@
 2026-11-17
+- Add native Wayland CJK Input Method support (`zwp_text_input_v3`,
+  `zwp_input_method_v2`, `zwp_input_method_keyboard_grab_v2`, and
+  `zwp_input_popup_surface_v2` candidate popups), `dtstyle` Linux `fcitx5`/`ibus`
+  discovery, and refreshed Ubuntu 26.04.1 LTS APT repository qualification
+  (`WP-11`) on the `x11_wayland` branch.
+  - `cde/programs/dtwm/wayland/` (`cde_ime.c`, `dtwm_wayland.h`,
+    `dtwm_wayland_main.c`, `cde_workspace.c`, `cde_session_lock.c`,
+    `protocols/input-method-unstable-v2.xml`) and `cde/programs/dtwm/Makefile.am`:
+    bridge `wlr_text_input_manager_v3` and `wlr_input_method_manager_v2` with
+    workarea-clamped CJK candidate popups, IME virtual-keyboard loop protection,
+    and strict `ext-session-lock-v1` lock-screen isolation.
+  - `cde/programs/dtstyle/I18nEnv.c`, `cde/programs/dtsession/SmWayland.c`,
+    `cde/debian/Xsession.wayland`, `cde/debian/control`,
+    `scripts/build-ubuntu-debs.py`, `scripts/lima/cde-ubuntu-26.04.yaml`,
+    `cde/programs/dtwm/tests/check-dtwm-wayland-wp11.py`, and
+    `docs/improvements/wayland.md`: discover `fcitx5` and `ibus-daemon` on local
+    Linux workstations in `dtstyle`, synchronize `XMODIFIERS` / `GTK_IM_MODULE` /
+    `QT_IM_MODULE` across Wayland and XWayland (`XmIm`), and verify preedit,
+    candidate popup geometry, UTF-8 commit, and lock-screen isolation under
+    `make check`.
 - Add graphical multi-monitor arrangement (`dtstyle` `Display`), Wayland output
   management (`zwlr_output_manager_v1`), foreign-toplevel management, and
   WebRTC XDG Desktop Portal integration (`WP-10`) on the `x11_wayland` branch.

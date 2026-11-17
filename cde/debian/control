@@ -67,6 +67,8 @@ Recommends: ck-core-apps,
             xdg-desktop-portal-wlr,
             xfonts-100dpi,
             xserver-xorg
+Suggests: fcitx5 | ibus,
+          fonts-noto-cjk
 Conflicts: cde-desktop
 Replaces: cde-desktop
 Description: CK Core Common Desktop Environment (X11/XLibre and Wayland)

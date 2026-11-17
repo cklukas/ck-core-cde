@@ -15,10 +15,11 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-wayland.py tests/check-dtwm-wayland-workspaces.py \
              tests/check-dtwm-wayland-icons.py tests/check-dtwm-wayland-wp05.py \
              tests/check-dtwm-wayland-wp06.py tests/check-dtwm-wayland-wp09.py \
-             tests/check-dtwm-wayland-wp10.py \
+             tests/check-dtwm-wayland-wp10.py tests/check-dtwm-wayland-wp11.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml \
              wayland/protocols/wlr-output-power-management-unstable-v1.xml \
-             wayland/protocols/wlr-foreign-toplevel-management-unstable-v1.xml
+             wayland/protocols/wlr-foreign-toplevel-management-unstable-v1.xml \
+             wayland/protocols/input-method-unstable-v2.xml
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-property-readers.py
@@ -36,6 +37,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp06.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp09.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp10.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp11.py --compositor ./dtwm-wayland
 endif
 
 configdir = $(CDE_INSTALLATION_TOP)/config/C
@@ -100,6 +102,7 @@ dtwm_wayland_SOURCES = wayland/dtwm_wayland.h \
                        wayland/cde_xdnd_bridge.c \
                        wayland/cde_session_lock.c \
                        wayland/cde_output_mgmt.c \
+                       wayland/cde_ime.c \
                        wayland/dtwm_wayland_main.c
 nodist_dtwm_wayland_SOURCES = $(WAYLAND_GEN_HDRS) $(WAYLAND_GEN_SRCS)
 dtwm_wayland_CPPFLAGS = -I$(builddir)/wayland -I$(srcdir)/wayland -DWLR_USE_UNSTABLE=1 \

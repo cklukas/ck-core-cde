@@ -10,18 +10,45 @@ export XFILESEARCHPATH="${XFILESEARCHPATH:-/usr/dt/app-defaults/%L/%N:/usr/dt/ap
 export CDE_BACKDROP_DIR="${CDE_BACKDROP_DIR:-/usr/dt/backdrops}"
 
 if [ -n "${HOME:-}" ]; then
-    mkdir -p "$HOME/.dt/types" "$HOME/.dt/sessions" "$HOME/.dt/appmanager" "$HOME/.dt/icons" 2>/dev/null || true
+    mkdir -p "$HOME/.dt/types" "$HOME/.dt/sessions" "$HOME/.dt/appmanager" "$HOME/.dt/icons" "$HOME/.dt/ims" 2>/dev/null || true
 fi
 export DTUSERSESSION="${USER:-$(id -un)}-wayland"
 if [ -x /usr/dt/bin/dtsearchpath ]; then
     eval "$(/usr/dt/bin/dtsearchpath -ksh 2>/dev/null)" || true
 fi
 
+# Synchronize CDE IMS selection (~/.dt/ims/*) or installed Wayland IME (fcitx5 / ibus)
+# so native Wayland zwp_text_input_v3 clients and Motif XWayland XmIm clients share one daemon.
+CDE_IMS_CHOICE=""
+if [ -n "${HOME:-}" ] && [ -d "$HOME/.dt/ims" ]; then
+    CDE_IMS_CHOICE="$(awk '/^@ims:/{print $2; exit}' "$HOME/.dt/ims/"* 2>/dev/null || true)"
+fi
+if [ -z "$CDE_IMS_CHOICE" ]; then
+    if [ -x /usr/bin/fcitx5 ]; then
+        CDE_IMS_CHOICE="fcitx5"
+    elif [ -x /usr/bin/ibus-daemon ]; then
+        CDE_IMS_CHOICE="ibus"
+    fi
+fi
+export CDE_WAYLAND_IMS="$CDE_IMS_CHOICE"
+case "$CDE_IMS_CHOICE" in
+    fcitx5|fcitx)
+        export XMODIFIERS="${XMODIFIERS:-@im=fcitx}"
+        export GTK_IM_MODULE="${GTK_IM_MODULE:-wayland}"
+        export QT_IM_MODULE="${QT_IM_MODULE:-wayland}"
+        ;;
+    ibus)
+        export XMODIFIERS="${XMODIFIERS:-@im=ibus}"
+        export GTK_IM_MODULE="${GTK_IM_MODULE:-ibus}"
+        export QT_IM_MODULE="${QT_IM_MODULE:-ibus}"
+        ;;
+esac
+
 if [ -x /usr/dt/bin/dtwm-wayland ]; then
     if [ -x /usr/dt/bin/dtsession ] && /usr/dt/bin/dtsession --help 2>&1 | grep -q -- '--wayland'; then
         exec /usr/dt/bin/dtsession --wayland
     fi
-    exec /usr/dt/bin/dtwm-wayland --session --startup 'if command -v dbus-update-activation-environment >/dev/null 2>&1; then dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE >/dev/null 2>&1 || true; fi; command -v ck-status >/dev/null 2>&1 && ck-status --daemon >/dev/null 2>&1 &'
+    exec /usr/dt/bin/dtwm-wayland --session --startup 'if command -v dbus-update-activation-environment >/dev/null 2>&1; then dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE >/dev/null 2>&1 || dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XMODIFIERS GTK_IM_MODULE QT_IM_MODULE >/dev/null 2>&1 || true; fi; case "${CDE_WAYLAND_IMS:-}" in fcitx5|fcitx) command -v fcitx5 >/dev/null 2>&1 && fcitx5 -d >/dev/null 2>&1 & ;; ibus) command -v ibus-daemon >/dev/null 2>&1 && ibus-daemon -drx >/dev/null 2>&1 & ;; esac; command -v ck-status >/dev/null 2>&1 && ck-status --daemon >/dev/null 2>&1 &'
 fi
 
 echo "Xsession.wayland: /usr/dt/bin/dtwm-wayland is not yet installed" >&2

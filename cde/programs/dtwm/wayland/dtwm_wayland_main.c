@@ -135,6 +135,7 @@ static void view_apply_geometry(DtwmView *view, int x, int y, int client_w, int 
     dtwm_view_update_frame(view);
     if (view == view->server->focused_view) {
         dtwm_publish_active_window_box(view->server);
+        dtwm_ime_set_focus(view->server, view_wlr_surface(view));
     }
 }
 
@@ -153,6 +154,7 @@ static void clear_active_focus(DtwmServer *server) {
         dtwm_foreign_toplevel_sync(prev);
     }
     wlr_seat_keyboard_notify_clear_focus(server->seat);
+    dtwm_ime_set_focus(server, nullptr);
     dtwm_publish_active_window_box(server);
 }
 
@@ -235,6 +237,7 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
     } else {
         wlr_seat_keyboard_notify_enter(server->seat, surface, nullptr, 0, nullptr);
     }
+    dtwm_ime_set_focus(server, surface);
 }
 
 static void view_set_maximized(DtwmView *view, bool maximized) {
@@ -933,7 +936,9 @@ static void handle_keyboard_modifiers(struct wl_listener *listener, void *data) 
     DtwmKeyboard *kb = wl_container_of(listener, kb, modifiers);
     dtwm_lock_notify_activity(kb->server);
     wlr_seat_set_keyboard(kb->server->seat, kb->wlr_keyboard);
-    wlr_seat_keyboard_notify_modifiers(kb->server->seat, &kb->wlr_keyboard->modifiers);
+    if (!dtwm_ime_forward_modifiers(kb->server, kb->wlr_keyboard)) {
+        wlr_seat_keyboard_notify_modifiers(kb->server->seat, &kb->wlr_keyboard->modifiers);
+    }
 
     if (!kb->server->session_locked && kb->server->switcher_visible) {
         uint32_t mods = wlr_keyboard_get_modifiers(kb->wlr_keyboard);
@@ -1031,7 +1036,9 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
     }
     if (!handled) {
         wlr_seat_set_keyboard(server->seat, kb->wlr_keyboard);
-        wlr_seat_keyboard_notify_key(server->seat, ev->time_msec, ev->keycode, ev->state);
+        if (!dtwm_ime_forward_key(server, kb->wlr_keyboard, ev)) {
+            wlr_seat_keyboard_notify_key(server->seat, ev->time_msec, ev->keycode, ev->state);
+        }
     }
 }
 
@@ -1040,6 +1047,7 @@ static void handle_keyboard_keymap(struct wl_listener *listener, void *data) {
     DtwmKeyboard *kb = wl_container_of(listener, kb, keymap);
     DtwmServer *server = kb->server;
     wlr_seat_set_keyboard(server->seat, kb->wlr_keyboard);
+    dtwm_ime_set_keyboard(server, kb->wlr_keyboard);
     if (!server->session_locked && server->focused_view) {
         struct wlr_surface *fs = view_wlr_surface(server->focused_view);
         if (fs) {
@@ -1085,6 +1093,7 @@ static void server_add_keyboard(DtwmServer *server, struct wlr_keyboard *wlr_kbd
 
     if (wlr_kbd->keymap) {
         wlr_seat_set_keyboard(server->seat, wlr_kbd);
+        dtwm_ime_set_keyboard(server, wlr_kbd);
     }
     wl_list_insert(&server->keyboards, &kb->link);
     if (!server->session_locked && server->focused_view && wlr_kbd->keymap) {
@@ -2287,6 +2296,7 @@ int main(int argc, char **argv) {
     dtwm_icons_init(&server);
     dtwm_lock_init(&server);
     dtwm_output_mgmt_init(&server);
+    dtwm_ime_init(&server);
     server.greeter_mode = greeter_mode;
     if (greeter_mode || no_panel) {
         server.show_front_panel = false;
@@ -2408,6 +2418,7 @@ cleanup:
     if (server.status_fallback_timer) wl_event_source_remove(server.status_fallback_timer);
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);
+    dtwm_ime_finish(&server);
     dtwm_output_mgmt_finish(&server);
     dtwm_lock_finish(&server);
     dtwm_xdnd_finish();

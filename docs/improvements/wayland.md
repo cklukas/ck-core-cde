@@ -248,6 +248,31 @@ panel instrumentation:
   `WAYLAND_DISPLAY`, `DISPLAY`, `XDG_CURRENT_DESKTOP`, and `XDG_SESSION_TYPE`
   into the D-Bus/systemd user activation environment at session startup.
 
+## Native Wayland CJK Input Method framework (`WP-11`)
+
+- **Compositor IME relay (`cde_ime.c`):** `dtwm-wayland` advertises
+  `zwp_text_input_manager_v3` and `zwp_input_method_manager_v2` via
+  `wlroots-0.19`, forwarding `enable`/`disable`, `surrounding_text`,
+  `content_type`, `text_change_cause`, `preedit_string`, `commit_string`, and
+  `delete_surrounding_text` between focused Wayland editors/browsers and modern
+  IME daemons (`fcitx5`, `ibus`).
+- **Keyboard grab & CJK candidate popups:** `zwp_input_method_keyboard_grab_v2`
+  intercepts hardware keystrokes for kana/romaji/pinyin conversion while
+  allowing synthetic keys emitted by the IME daemon's own
+  `zwp_virtual_keyboard_v1` to pass directly to the client without feedback
+  loops. `zwp_input_popup_surface_v2` candidate windows are anchored automatically
+  below the client's `cursor_rectangle` (`popup_tree`) and clamped to the usable
+  monitor workarea above the docked Front Panel.
+- **Session-lock isolation & `dtstyle` Internationalization (`I18nEnv.c`):**
+  Acquiring `ext-session-lock-v1` immediately deactivates `zwp_input_method_v2`,
+  sends `leave` to `zwp_text_input_v3`, hides candidate popups, and bypasses
+  `keyboard_grab` so lock-screen password entry is never exposed to third-party
+  IME daemons. On local Linux workstations, `dtstyle`'s **Internationalization**
+  dialog (`I18nEnv.c`) discovers installed `fcitx5` and `ibus-daemon` backends
+  alongside `dtimsstart`, and `Xsession.wayland` / `dtsession --wayland`
+  synchronize `XMODIFIERS`, `GTK_IM_MODULE`, and `QT_IM_MODULE` so native Wayland
+  and Motif XWayland (`XmIm`) applications share the same IME daemon.
+
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`
@@ -267,10 +292,13 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   session discovery, Wayland/X11 seat handoff),
   `check-dtwm-wayland-wp09.py` (`WP-09` central Switch notification lamp,
   `SystemSubpanel` + `Copy To Main Panel` persistence, live `ck-status-gauge`
-  embedding, `StatusNotifier` tray, and toast banner), and
+  embedding, `StatusNotifier` tray, and toast banner),
   `check-dtwm-wayland-wp10.py` (`WP-10` `wlr-randr`, `dtstyle` *Display &
   Monitors*, `zwlr_foreign_toplevel_manager_v1`, `ext-image-copy-capture-v1`,
-  and `xdg-desktop-portal-wlr`) run automatically under `make check`.
+  and `xdg-desktop-portal-wlr`), and `check-dtwm-wayland-wp11.py` (`WP-11`
+  `zwp_text_input_v3`, `zwp_input_method_v2`, `zwp_input_popup_surface_v2` CJK
+  candidate popups, `keyboard_grab`, and `ext-session-lock-v1` isolation) run
+  automatically under `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,
   `ck-core-fs-lib`, `ck-core-cde`, `ck-core-dtlogin`, and `ck-core-apps` into a
