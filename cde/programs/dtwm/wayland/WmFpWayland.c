@@ -391,6 +391,27 @@ static void ensure_cde_search_paths(const char *argv0) {
         setenv("XMICONBMSEARCHPATH", bmpath, 1);
     }
 
+    if (!getenv("DTHELPSEARCHPATH") || !getenv("DTHELPSEARCHPATH")[0]) {
+        char helppath[PATH_MAX * 4];
+        if (home && home[0]) {
+            snprintf(
+                helppath, sizeof(helppath),
+                "%s/.dt/help/%%H:%s/.dt/help/%%H.sdl:%s/.dt/help/%%H.hv:"
+                "%s/help/%%L/%%H:%s/help/%%L/%%H.sdl:%s/help/%%L/%%H.hv:"
+                "%s/help/C/%%H:%s/help/C/%%H.sdl:%s/help/C/%%H.hv",
+                home, home, home, appcfg, appcfg, appcfg, appcfg, appcfg, appcfg
+            );
+        } else {
+            snprintf(
+                helppath, sizeof(helppath),
+                "%s/help/%%L/%%H:%s/help/%%L/%%H.sdl:%s/help/%%L/%%H.hv:"
+                "%s/help/C/%%H:%s/help/C/%%H.sdl:%s/help/C/%%H.hv",
+                appcfg, appcfg, appcfg, appcfg, appcfg, appcfg
+            );
+        }
+        setenv("DTHELPSEARCHPATH", helppath, 1);
+    }
+
     if (!getenv("DTINFOLIBSEARCHPATH")) {
         setenv(
             "DTINFOLIBSEARCHPATH",

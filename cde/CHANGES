@@ -1,4 +1,15 @@
 2026-11-17
+- Fix missing `DTHELPSEARCHPATH` inheritance for ToolTalk-launched Help clients
+  (`dtpad -server`, etc.) and `XFontSet` / `wchar_t` bullet rendering (`•` ->
+  `·` instead of `â¢` or `"`) in `DtHelp` (`cde/lib/DtHelp/XInterface.c`,
+  `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtsession/SmWayland.c`): initialize `DTHELPSEARCHPATH` in
+  `dtwm-panel` and `dtsession --wayland` before spawning `ttsession`, preserve
+  `DT-SYMBOL-1` when Help font overrides are active, and normalize Unicode
+  general punctuation (`U+2013`–`U+2026`, mapping `U+2022` bullet to `U+00B7`
+  middle dot `·`) in both `XFontSet` (`XwcDrawString` / `XmbDrawString` /
+  `Xutf8DrawString` and text escapement) and `XFontStruct` paths when the font
+  set lacks `ISO10646-1` subfonts.
 - Populate Application Manager (`/var/dt/appconfig/appmanager/$DTUSERSESSION`)
   automatically on Wayland session startup (`cde/debian/Xsession.wayland`,
   `cde/programs/dtsession/SmWayland.c`, `cde/programs/dtwm/wayland/WmFpWayland.c`):

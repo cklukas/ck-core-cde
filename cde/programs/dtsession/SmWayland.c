@@ -296,6 +296,16 @@ static void ensure_ttsession_started(void) {
                    CDE_INSTALLATION_TOP "/appconfig/types/%L," CDE_INSTALLATION_TOP "/appconfig/types/C",
                    1);
         }
+        if (!getenv("DTHELPSEARCHPATH") || !getenv("DTHELPSEARCHPATH")[0]) {
+            setenv("DTHELPSEARCHPATH",
+                   CDE_INSTALLATION_TOP "/appconfig/help/%L/%H:"
+                   CDE_INSTALLATION_TOP "/appconfig/help/%L/%H.sdl:"
+                   CDE_INSTALLATION_TOP "/appconfig/help/%L/%H.hv:"
+                   CDE_INSTALLATION_TOP "/appconfig/help/C/%H:"
+                   CDE_INSTALLATION_TOP "/appconfig/help/C/%H.sdl:"
+                   CDE_INSTALLATION_TOP "/appconfig/help/C/%H.hv",
+                   1);
+        }
         if (!getenv("DTINFOLIBSEARCHPATH") || !getenv("DTINFOLIBSEARCHPATH")[0]) {
             setenv("DTINFOLIBSEARCHPATH",
                    CDE_INSTALLATION_TOP "/infolib/%L/%I.dti:" CDE_INSTALLATION_TOP "/infolib/C/%I.dti",
