@@ -513,6 +513,8 @@ static void case_become_user(void)
 
   CHECK(me != nullptr);
   snprintf(name, sizeof(name), "%s", me->pw_name);
+  if(geteuid() == 0 && initgroups(name, getgid()) == -1 && errno == EPERM)
+    return; /* unprivileged CLONE_NEWUSER with /proc/self/setgroups == "deny" */
   CHECK(Become_User(name, getuid(), getgid()) == TRUE);
   if(geteuid() != 0) {
     /* only root may become someone else: this must be refused, not ignored */

@@ -239,12 +239,25 @@ static int a_fifo_is_not_waited_for() {
 static int a_file_too_large_is_refused() {
     DtMailBuffer b; char *owned = NULL;
     std::string path = home + "/huge";
+    signal(SIGXFSZ, SIG_IGN);
     int fd = open(path.c_str(), O_WRONLY | O_CREAT, 0600);
-    CHECK(fd >= 0 && ftruncate(fd, 1L << 40) == 0);                                  /* sparse */
-    close(fd);
-    CHECK(!tooltalk_mail_data(NULL, 0, path.c_str(), &b, &owned) && owned == NULL);
-    CHECK(ftruncate(open(path.c_str(), O_WRONLY), TOOLTALK_MAIL_MAX + 1) == 0);
-    CHECK(!tooltalk_mail_data(NULL, 0, path.c_str(), &b, &owned) && owned == NULL);
+    CHECK(fd >= 0);
+    if (ftruncate(fd, 1L << 40) == 0) {                                                /* sparse */
+        close(fd);
+        CHECK(!tooltalk_mail_data(NULL, 0, path.c_str(), &b, &owned) && owned == NULL);
+    } else {
+        CHECK(errno == EFBIG);
+        close(fd);
+    }
+    fd = open(path.c_str(), O_WRONLY);
+    CHECK(fd >= 0);
+    if (ftruncate(fd, TOOLTALK_MAIL_MAX + 1) == 0) {
+        close(fd);
+        CHECK(!tooltalk_mail_data(NULL, 0, path.c_str(), &b, &owned) && owned == NULL);
+    } else {
+        CHECK(errno == EFBIG);
+        close(fd);
+    }
     return 0;
 }
 '''

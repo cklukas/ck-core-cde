@@ -132,7 +132,7 @@ static int test_seteuid(uid_t uid)
 {
   if(neuid_calls < MAX_EUID_CALLS)
     euid_calls[neuid_calls++] = uid;
-  if(fail_restore && uid != 0) {
+  if(fail_restore && (uid != 0 || neuid_calls >= 2)) {
     errno = EPERM;
     return(-1);
   }

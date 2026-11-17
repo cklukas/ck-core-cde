@@ -1,8 +1,11 @@
 2026-11-16
-- Guard `/proc/<pid>/fd` `PermissionError` assertion in
-  `programs/dtmail/tests/check-spool-helper.py` (`the_helper_starts_clean`) when
-  running as UID `0` inside `CLONE_NEWUSER` sandboxes (`CAP_SYS_PTRACE` /
-  `CAP_DAC_READ_SEARCH`).
+- Guard `/proc/<pid>/fd` `PermissionError`, `RLIMIT_FSIZE` (`SIGXFSZ` / `EFBIG`),
+  `initgroups` `EPERM` (`/proc/self/setgroups == "deny"`), and UID-`0`
+  `seteuid` restore assertions in `programs/dtmail/tests/check-spool-helper.py`,
+  `programs/dtmail/tests/check-tooltalk-handlers.py`,
+  `programs/dtspcd/tests/requests-test.c`, and
+  `programs/dtcm/server/tests/requests-test.c` when running inside
+  `CLONE_NEWUSER` sandboxes.
 - Integrate CK Core Motif ABI 9 appearance profiles (`classic`, `modern_light`,
   `modern_dark`, `high_contrast`) across `dtsession`, `dtwm`, `dtstyle`,
   `dtfile`, `libDtWidget`, and built-in desktop palettes (`ModernLight.dp`,
