@@ -1,4 +1,13 @@
 2026-11-17
+- Fix Front Panel workspace switch buttons (`One`, `Two`, `Three`, `Four`)
+  staying depressed without switching workspaces on Wayland when `ttsession` is
+  running (`cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/Callback.c`): register `TT_HANDLE` ToolTalk handlers in
+  `dtwm-panel` (with startup retry once `dtsession` launches `ttsession`) for
+  `DtWorkspace_SetCurrent`, `DtWorkspace_Title_Set`, `DtWorkspace_Add`,
+  `DtWorkspace_Delete`, `DtPanel_Restore`, and `GetWsmClients` bridging to
+  `dtwm-wayland` `_DT_WM_REQUEST`, broadcast `DtWorkspace_Modified` notices on
+  `_DT_WORKSPACE_*` changes, and clear all non-active toggle buttons on switch.
 - Fix `dtfile` Shelf icon labels disappearing on window resize and single-row
   icon overlap when resizing large directories such as `/bin`
   (`cde/programs/dtfile/FileMgr.h`, `cde/programs/dtfile/FileMgr.c`,

@@ -591,8 +591,16 @@ WorkspaceModifyCB (Widget    w,
       {
          int    switch_count;
 	 Atom * atom_names;
+         int    existing_idx;
 
-         
+         for (existing_idx = 0; existing_idx < switch_data->switch_count; existing_idx++)
+         {
+            if (switch_data->atom_names[existing_idx] == atom_name)
+               break;
+         }
+         if (existing_idx < switch_data->switch_count)
+            break;
+
          /*  Cancel workspace renaming  */
 
          if (XtIsManaged (box_data->switch_edit))
@@ -777,7 +785,7 @@ WorkspaceModifyCB (Widget    w,
 
       case DtWSM_REASON_CURRENT:
       {
-         int i;
+         int i, j;
 	 Arg al[2];
    
          for (i = 0; i < switch_data->switch_count; i++)
@@ -788,9 +796,11 @@ WorkspaceModifyCB (Widget    w,
 	       XtSetArg (al[1], XmNtitle, switch_data->switch_names[i]);
 	       XtSetValues (panel.shell, al, 2);
 
-               _DtIconSetState (switch_data->buttons[switch_data->active_switch], False, False);
                switch_data->active_switch = i;
-               _DtIconSetState (switch_data->buttons[switch_data->active_switch], True, False);
+               for (j = 0; j < switch_data->switch_count; j++)
+               {
+                  _DtIconSetState (switch_data->buttons[j], (j == i), False);
+               }
                break;
             }
          }
@@ -888,7 +898,11 @@ SwitchButtonCB (Widget    w,
          }
       }
 
-      _DtIconSetState (old_switch_button, False, False);
+      for (i = 0; i < switch_data->switch_count; i++)
+      {
+         _DtIconSetState (switch_data->buttons[i],
+                          (switch_data->buttons[i] == switch_button), False);
+      }
    }
    else
    {
