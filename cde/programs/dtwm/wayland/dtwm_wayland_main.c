@@ -1973,6 +1973,12 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
 static void xwayland_associate(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, associate);
+    if (!wl_list_empty(&view->map.link)) {
+        wl_list_remove(&view->map.link);
+    }
+    if (!wl_list_empty(&view->unmap.link)) {
+        wl_list_remove(&view->unmap.link);
+    }
     view->map.notify = xwayland_map;
     wl_signal_add(&view->xwayland_surface->surface->events.map, &view->map);
     view->unmap.notify = xwayland_unmap;
@@ -1982,8 +1988,14 @@ static void xwayland_associate(struct wl_listener *listener, void *data) {
 static void xwayland_dissociate(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, dissociate);
-    wl_list_remove(&view->map.link);
-    wl_list_remove(&view->unmap.link);
+    if (!wl_list_empty(&view->map.link)) {
+        wl_list_remove(&view->map.link);
+        wl_list_init(&view->map.link);
+    }
+    if (!wl_list_empty(&view->unmap.link)) {
+        wl_list_remove(&view->unmap.link);
+        wl_list_init(&view->unmap.link);
+    }
 }
 
 static void xwayland_request_configure(struct wl_listener *listener, void *data) {
@@ -2059,15 +2071,42 @@ static void xwayland_set_decorations(struct wl_listener *listener, void *data) {
     }
 }
 
+static void xwayland_set_hints(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmView *view = wl_container_of(listener, view, set_hints);
+    if (view->is_swallowed || view->is_desktop_pin || view->is_panel || view->is_subpanel) return;
+    apply_xwayland_decorations(view);
+    if (view->mapped) {
+        sync_xwayland_client_pos(view);
+        dtwm_view_update_frame(view);
+        dtwm_icons_update_view(view);
+    }
+}
+
 static void xwayland_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, destroy);
     DtwmServer *server = view->server;
+    if (view == server->grabbed_view) {
+        server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
+        server->grabbed_view = nullptr;
+    }
     if (view == server->focused_view) {
         server->focused_view = nullptr;
     }
+    if (view == server->panel_view) {
+        server->panel_view = nullptr;
+    }
     if (view == server->menu_target) {
         close_window_menu(server);
+    }
+    if (!wl_list_empty(&view->map.link)) {
+        wl_list_remove(&view->map.link);
+        wl_list_init(&view->map.link);
+    }
+    if (!wl_list_empty(&view->unmap.link)) {
+        wl_list_remove(&view->unmap.link);
+        wl_list_init(&view->unmap.link);
     }
     wl_list_remove(&view->associate.link);
     wl_list_remove(&view->dissociate.link);
@@ -2098,6 +2137,8 @@ static void handle_new_xwayland_surface(struct wl_listener *listener, void *data
     view->kind = DTWM_VIEW_XWAYLAND;
     view->xwayland_surface = xs;
     view->workspace_mask = 1u << server->current_workspace;
+    wl_list_init(&view->map.link);
+    wl_list_init(&view->unmap.link);
     apply_xwayland_decorations(view);
 
     view->associate.notify = xwayland_associate;
@@ -2118,7 +2159,7 @@ static void handle_new_xwayland_surface(struct wl_listener *listener, void *data
     wl_signal_add(&xs->events.set_title, &view->set_title);
     view->set_decorations.notify = xwayland_set_decorations;
     wl_signal_add(&xs->events.set_decorations, &view->set_decorations);
-    view->set_hints.notify = xwayland_set_decorations;
+    view->set_hints.notify = xwayland_set_hints;
     wl_signal_add(&xs->events.set_hints, &view->set_hints);
     view->destroy.notify = xwayland_destroy;
     wl_signal_add(&xs->events.destroy, &view->destroy);
@@ -2484,18 +2525,19 @@ cleanup:
     if (server.status_fallback_timer) wl_event_source_remove(server.status_fallback_timer);
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);
+    if (server.xwayland) {
+        wl_list_remove(&server.new_xwayland_surface.link);
+        wl_list_remove(&server.xwayland_ready.link);
+        wlr_xwayland_destroy(server.xwayland);
+        server.xwayland = nullptr;
+    }
+    wl_display_destroy_clients(server.wl_display);
     dtwm_ime_finish(&server);
     dtwm_output_mgmt_finish(&server);
     dtwm_lock_finish(&server);
     dtwm_xdnd_finish();
     dtwm_icons_finish(&server);
     dtwm_workspaces_finish(&server);
-    if (server.xwayland) {
-        wl_list_remove(&server.new_xwayland_surface.link);
-        wl_list_remove(&server.xwayland_ready.link);
-        wlr_xwayland_destroy(server.xwayland);
-    }
-    wl_display_destroy_clients(server.wl_display);
     wl_list_remove(&server.cursor_motion.link);
     wl_list_remove(&server.cursor_motion_absolute.link);
     wl_list_remove(&server.cursor_button.link);
@@ -2514,12 +2556,12 @@ cleanup:
     wl_list_remove(&server.new_xdg_popup.link);
     wl_list_remove(&server.new_xdg_decoration.link);
     wl_list_remove(&server.new_layer_surface.link);
+    wlr_backend_destroy(server.backend);
     wlr_scene_node_destroy(&server.scene->tree.node);
     wlr_xcursor_manager_destroy(server.cursor_mgr);
     wlr_cursor_destroy(server.cursor);
     wlr_allocator_destroy(server.allocator);
     wlr_renderer_destroy(server.renderer);
-    wlr_backend_destroy(server.backend);
     wl_display_destroy(server.wl_display);
     return exit_code;
 }

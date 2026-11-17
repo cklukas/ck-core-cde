@@ -3,6 +3,8 @@
 set -eu
 
 export PATH="/usr/dt/bin:$PATH"
+# Never inherit a stale parent WAYLAND_DISPLAY / DISPLAY into the root session compositor
+unset WAYLAND_DISPLAY DISPLAY
 export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-CDE}"
 export XDG_SESSION_DESKTOP="${XDG_SESSION_DESKTOP:-cde-wayland}"
 export XDG_SESSION_TYPE="wayland"

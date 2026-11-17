@@ -284,12 +284,17 @@ def main() -> int:
             if not wl_s or not x_s:
                 raise SystemExit("dtwm-wayland failed to start")
 
-            c_env = {**env, "WAYLAND_DISPLAY": wl_s, "DISPLAY": x_s}
+            c_env = {
+                **env,
+                "WAYLAND_DISPLAY": wl_s,
+                "DISPLAY": x_s,
+                "PATH": f"{ck_status_bin.parent}:{env.get('PATH', '/usr/bin:/bin')}",
+            }
             time.sleep(1.2)
 
-            # Launch ck-status console (on Power tab first, then Notifications) + embedded --gauge + SNI tray app
+            # Launch ck-status --daemon (unmapped, just like real SmWayland session) + embedded --gauge + SNI tray app
             p_status = subprocess.Popen(
-                [str(ck_status_bin), "--tab", "notifications", "-geometry", "+44+36"],
+                [str(ck_status_bin), "--daemon", "-geometry", "+44+36"],
                 env=c_env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -344,18 +349,39 @@ def main() -> int:
             if not unread_p.is_file() or unread_p.stat().st_size == 0:
                 raise SystemExit("expected ~/.dt/notifications.unread to be populated after notify-send")
 
-            # Find Front Panel window geometry and post System & Hardware subpanel above Style!
+            # Find Front Panel window geometry and embedded ck-status-gauge coordinates!
             tree_out = subprocess.check_output([str(insp_bin)], env=c_env, text=True)
-            gauge_embedded = any(
-                "ck-status-gauge" in ln and "depth=1 " not in ln
-                for ln in tree_out.splitlines()
-            )
-            if not gauge_embedded:
-                raise SystemExit(f"expected ck-status-gauge reparented inside Front Panel:\n{tree_out}")
 
             def parse_win_line(line: str) -> dict[str, int]:
                 after = line.split('res="', 1)[1].split('"', 1)[1]
                 return {k: int(v) for k, v in (tok.split("=", 1) for tok in after.split() if "=" in tok)}
+
+            gauge_box: dict[str, int] | None = None
+            for ln in tree_out.splitlines():
+                if 'res="ck-status-gauge"' in ln and "depth=1 " not in ln:
+                    gauge_box = parse_win_line(ln)
+                    break
+            if not gauge_box:
+                raise SystemExit(f"expected ck-status-gauge reparented inside Front Panel:\n{tree_out}")
+
+            # Regression test: click all 4 regions of the embedded ck-status-gauge (starting with
+            # top-left Wi-Fi/Network quadrant while ck-status --daemon is unmapped after XSetWMHints!)
+            gx, gy = gauge_box["x"], gauge_box["y"]
+            gw, gh = max(gauge_box.get("w", 54), 20), max(gauge_box.get("h", 48), 20)
+            for q_x, q_y in (
+                (gx + gw // 4, gy + gh // 4),          # Top-left: Wi-Fi / Network
+                (gx + (gw * 5) // 8, gy + gh // 4),    # Top-right left: Bluetooth
+                (gx + gw // 2, gy + (gh * 3) // 4),    # Bottom: Power / Battery
+                (gx + (gw * 7) // 8, gy + gh // 4),    # Top-right right: Notifications & Tray
+            ):
+                pointer_click(c_env, q_x, q_y, "left")
+                time.sleep(0.35)
+                if comp.poll() is not None:
+                    raise SystemExit(f"dtwm-wayland crashed (rc={comp.returncode}) when clicking ck-status-gauge at ({q_x},{q_y})")
+
+            tree_after_gauge = subprocess.check_output([str(insp_bin)], env=c_env, text=True)
+            if not any('name="System Status & Notifications"' in ln for ln in tree_after_gauge.splitlines()):
+                raise SystemExit(f"expected System Status & Notifications window mapped after clicking gauge:\n{tree_after_gauge}")
 
             fp_x, fp_y, fp_w, fp_h = 140, 816, 1000, 82
             for ln in tree_out.splitlines():

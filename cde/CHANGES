@@ -1,4 +1,16 @@
 2026-11-17
+- Fix an XWayland `set_hints` listener container-offset bug in `dtwm-wayland`
+  (`cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/debian/Xsession.wayland`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp09.py`) where wiring
+  `xs->events.set_hints` directly to `xwayland_set_decorations` resolved
+  `wl_container_of(..., set_decorations)` instead of `set_hints`, corrupting
+  `view->map.notify` when an unmapped X11 client such as `ck-status --daemon` or
+  `dtfile` updated `WM_HINTS` before mapping; also harden `map`/`unmap` listener
+  initialization and `SIGTERM` shutdown teardown ordering, clear inherited
+  `WAYLAND_DISPLAY`/`DISPLAY` in `Xsession.wayland`, refresh live `WM_HINTS`
+  icon pixmaps in `xwayland_set_hints`, and add automated 4-quadrant Front Panel
+  gauge click coverage in `check-dtwm-wayland-wp09.py`.
 - Honor full 5-field `_MOTIF_WM_HINTS` (`MWM_DECOR_ALL` / `MWM_FUNC_ALL`
   bit-subtraction semantics for `MWM_DECOR_RESIZEH`, `MWM_DECOR_MAXIMIZE`,
   `MWM_DECOR_MINIMIZE`, and `MWM_DECOR_MENU`) and fixed-size `WM_NORMAL_HINTS`
