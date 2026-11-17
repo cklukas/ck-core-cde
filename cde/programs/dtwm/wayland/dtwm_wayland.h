@@ -461,6 +461,7 @@ void dtwm_sync_xwayland_randr_dpi(DtwmServer *server);
 void dtwm_set_output_dpi(DtwmServer *server, uint32_t output_idx, int dpi);
 void dtwm_publish_active_window_box(DtwmServer *server);
 void dtwm_get_usable_output_box(DtwmServer *server, double ref_x, double ref_y, struct wlr_box *out_box);
+void dtwm_reflow_views_for_outputs(DtwmServer *server);
 
 /* cde_icons.c */
 void dtwm_icons_init(DtwmServer *server);

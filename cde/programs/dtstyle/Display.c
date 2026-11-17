@@ -131,11 +131,21 @@ static const char *const k_dpi_labels[5] = {
 };
 
 static int effective_w(const DispOutputInfo *o) {
-    return (o->rotation == 90 || o->rotation == 270) ? o->height : o->width;
+    int rw = (o->rotation == 90 || o->rotation == 270) ? o->height : o->width;
+    if (g_disp.is_wayland && o->dpi > 0) {
+        double sc = (double)o->dpi / 96.0;
+        if (sc > 0.25) rw = (int)lround((double)rw / sc);
+    }
+    return rw > 0 ? rw : 1;
 }
 
 static int effective_h(const DispOutputInfo *o) {
-    return (o->rotation == 90 || o->rotation == 270) ? o->width : o->height;
+    int rh = (o->rotation == 90 || o->rotation == 270) ? o->width : o->height;
+    if (g_disp.is_wayland && o->dpi > 0) {
+        double sc = (double)o->dpi / 96.0;
+        if (sc > 0.25) rh = (int)lround((double)rh / sc);
+    }
+    return rh > 0 ? rh : 1;
 }
 
 static void add_unique_mode(DispOutputInfo *o, int w, int h) {

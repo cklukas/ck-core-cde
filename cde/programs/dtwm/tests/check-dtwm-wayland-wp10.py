@@ -337,16 +337,27 @@ def main() -> int:
                 if im.size != (1280, 900):
                     raise SystemExit(f"unexpected HEADLESS-2 screenshot size: {im.size}")
 
-            # 3. Verify live dtstyle IPC rotation (90 deg) + custom mode (1440x900 -> 900x1440 logical!)
+            # 3. Verify live dtstyle IPC rotation (90 deg) + custom mode (1440x900 @ 96 DPI -> 900x1440 logical!)
             subprocess.run(
-                [str(xprop_bin), "f.set_output_layout HEADLESS-1 1 1280 0 1440x900 90 144"],
+                [str(xprop_bin), "f.set_output_layout HEADLESS-1 1 1280 0 1440x900 90 96"],
                 env=c_env,
                 check=True,
             )
             time.sleep(0.3)
             probe_rot = subprocess.check_output([str(probe_bin)], env=c_env, text=True)
             if "900x1440" not in probe_rot:
-                raise SystemExit(f"expected rotated 900x1440 logical size on HEADLESS-2:\n{probe_rot}")
+                raise SystemExit(f"expected rotated 900x1440 logical size on HEADLESS-1:\n{probe_rot}")
+
+            # 3b. Verify live 200% (192 DPI) Wayland output scale (1440x900 @ 90 deg @ 192 DPI -> 450x720 logical!)
+            subprocess.run(
+                [str(xprop_bin), "f.set_output_layout HEADLESS-1 1 1280 0 1440x900 90 192"],
+                env=c_env,
+                check=True,
+            )
+            time.sleep(0.3)
+            probe_scaled = subprocess.check_output([str(probe_bin)], env=c_env, text=True)
+            if "450x720" not in probe_scaled:
+                raise SystemExit(f"expected 200% scaled 450x720 logical size on HEADLESS-1:\n{probe_scaled}")
 
             # 4. Verify xdg-desktop-portal-wlr connects to dtwm-wayland + PipeWire and registers D-Bus portal backend
             wlr_portal_paths = (

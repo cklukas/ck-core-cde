@@ -145,6 +145,7 @@ static void after_outputs_reconfigured(DtwmServer *server) {
     dtwm_update_all_backdrops(server);
     dtwm_update_front_panel(server);
     dtwm_icons_relayout(server);
+    dtwm_reflow_views_for_outputs(server);
     dtwm_sync_xwayland_randr_dpi(server);
     dtwm_lock_sync_outputs(server);
     dtwm_output_mgmt_sync(server);
@@ -188,7 +189,8 @@ void dtwm_output_mgmt_publish_x11(DtwmServer *server) {
         }
         /* Include current mode + standard workstation/laptop resolutions for virtual/headless outputs */
         static const char *const std_modes[] = {
-            "1280x900", "1920x1080", "1600x900", "1440x900", "1280x800", "1024x768", "2560x1440"
+            "3840x2400", "2560x1600", "2560x1440", "1920x1200", "1920x1080",
+            "1600x900", "1440x900", "1280x900", "1280x800", "1024x768"
         };
         char cur_tok[32];
         snprintf(cur_tok, sizeof(cur_tok), "%dx%d", mode_w, mode_h);
@@ -306,9 +308,10 @@ static void apply_or_test_output_config(
                 wlr_output_state_set_custom_mode(&st, cw, ch, 60000);
             }
             wlr_output_state_set_transform(&st, head->state.transform);
-            /* Keep wlr_output scale at 1.0 so XWayland renders unscaled physical pixels
-             * while CK Core Motif + wp_fractional_scale_v1 receive exact per-output DPI. */
-            wlr_output_state_set_scale(&st, 1.0f);
+            float req_scale = (head->state.scale >= 0.5f && head->state.scale <= 4.0f)
+                                  ? head->state.scale
+                                  : 1.0f;
+            wlr_output_state_set_scale(&st, req_scale);
         }
 
         if (test_only) {
@@ -442,7 +445,10 @@ bool dtwm_output_mgmt_handle_wm_request(DtwmServer *server, const char *cmd) {
                 wlr_output_state_set_custom_mode(&st, w, h, 60000);
             }
             wlr_output_state_set_transform(&st, degrees_to_transform(rot));
-            wlr_output_state_set_scale(&st, 1.0f);
+            float req_scale = (dpi >= 72 && dpi <= 384) ? ((float)dpi / 96.0f) : 1.0f;
+            if (req_scale < 0.5f) req_scale = 0.5f;
+            if (req_scale > 4.0f) req_scale = 4.0f;
+            wlr_output_state_set_scale(&st, req_scale);
         }
 
         if (wlr_output_commit_state(wo, &st)) {

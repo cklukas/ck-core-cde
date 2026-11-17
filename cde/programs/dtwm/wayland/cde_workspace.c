@@ -497,6 +497,7 @@ void dtwm_update_output_backdrop(DtwmOutput *output) {
     dtwm_cairo_buffer_finish(cr, surf);
 
     wlr_scene_buffer_set_buffer(output->backdrop_buf, buf);
+    wlr_scene_buffer_set_dest_size(output->backdrop_buf, obox.width, obox.height);
     wlr_scene_node_set_enabled(&output->backdrop_buf->node, true);
     wlr_buffer_drop(buf);
 }
@@ -556,14 +557,19 @@ void dtwm_update_front_panel(DtwmServer *server) {
     int l, t, r, b;
     dtwm_view_insets(pv, &l, &t, &r, &b);
 
-    if (!server->panel_user_moved) {
-        struct wlr_output *panel_out = get_panel_output(server);
-        if (panel_out) {
-            struct wlr_box obox;
-            wlr_output_layout_get_box(server->output_layout, panel_out, &obox);
-            if (obox.width > 0 && obox.height > 0) {
+    struct wlr_output *panel_out = get_panel_output(server);
+    if (panel_out) {
+        struct wlr_box obox;
+        wlr_output_layout_get_box(server->output_layout, panel_out, &obox);
+        if (obox.width > 0 && obox.height > 0) {
+            if (!server->panel_user_moved) {
                 pv->x = obox.x + (obox.width - outer_w) / 2;
                 pv->y = obox.y + obox.height - outer_h;
+            } else {
+                if (pv->x + outer_w > obox.x + obox.width) pv->x = obox.x + obox.width - outer_w;
+                if (pv->x < obox.x) pv->x = obox.x;
+                if (pv->y + outer_h > obox.y + obox.height) pv->y = obox.y + obox.height - outer_h;
+                if (pv->y < obox.y) pv->y = obox.y;
             }
         }
     }
@@ -1232,6 +1238,7 @@ void dtwm_sync_xwayland_randr_dpi(DtwmServer *server) {
 
     for (int i = 0; i < nout; ++i) {
         int matched_dpi = 96;
+        float matched_scale = 1.0f;
         bool matched = false;
 
         xcb_randr_get_output_info_cookie_t ock =
@@ -1251,6 +1258,9 @@ void dtwm_sync_xwayland_randr_dpi(DtwmServer *server) {
                         wlr_output_layout_get_box(server->output_layout, dout->wlr_output, &obox);
                         if (obox.x == crep->x && obox.y == crep->y) {
                             matched_dpi = dout->dpi > 0 ? dout->dpi : 96;
+                            matched_scale = (dout->wlr_output && dout->wlr_output->scale > 0.25f)
+                                                ? dout->wlr_output->scale
+                                                : 1.0f;
                             matched = true;
                             break;
                         }
@@ -1266,12 +1276,16 @@ void dtwm_sync_xwayland_randr_dpi(DtwmServer *server) {
             wl_list_for_each(dout, &server->outputs, link) {
                 if ((int)dout->output_idx == i) {
                     matched_dpi = dout->dpi > 0 ? dout->dpi : 96;
+                    matched_scale = (dout->wlr_output && dout->wlr_output->scale > 0.25f)
+                                        ? dout->wlr_output->scale
+                                        : 1.0f;
                     break;
                 }
             }
         }
 
-        int32_t dpi_i32 = (matched_dpi >= 1 && matched_dpi <= 4096) ? matched_dpi : 96;
+        int logical_dpi = (int)lround((double)matched_dpi / (double)matched_scale);
+        int32_t dpi_i32 = (logical_dpi >= 1 && logical_dpi <= 4096) ? logical_dpi : 96;
         xcb_randr_change_output_property(
             server->xcb_conn,
             routs[i],

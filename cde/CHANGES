@@ -1,4 +1,15 @@
 2026-11-17
+- Apply live Wayland compositor output scaling (`wlr_output_state_set_scale`)
+  immediately when changing **Scale** (`100%`–`200%`, `96`–`192 DPI`) in
+  `dtstyle` **Display & Monitors** or `wlr-randr --scale`
+  (`cde/programs/dtwm/wayland/cde_output_mgmt.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtstyle/Display.c`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp10.py`), while normalizing
+  XWayland RandR output DPI by `wlr_output->scale` to prevent `4×` double
+  scaling, reloading XCursor sizes, and clamping open windows and the Front
+  Panel into the resized logical workarea.
 - Automatically promote local `dtlogin` seats (`cde/programs/dtlogin/server.c`)
   from missing `/usr/bin/X` entries in default `Xservers` to the native Wayland
   greeter (`dtwm-wayland --greeter`) on Wayland-only installations without

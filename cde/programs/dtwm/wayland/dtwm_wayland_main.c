@@ -332,6 +332,66 @@ void dtwm_view_close(DtwmView *view) {
     view_close(view);
 }
 
+void dtwm_reflow_views_for_outputs(DtwmServer *server) {
+    if (!server) return;
+
+    float max_scale = 1.0f;
+    DtwmOutput *out;
+    wl_list_for_each(out, &server->outputs, link) {
+        if (out->wlr_output && out->wlr_output->enabled && out->wlr_output->scale > max_scale) {
+            max_scale = out->wlr_output->scale;
+        }
+    }
+    if (server->cursor_mgr) {
+        wlr_xcursor_manager_load(server->cursor_mgr, ceilf(max_scale));
+    }
+
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (!v->mapped || v->is_panel || v->is_subpanel || v->is_desktop_pin ||
+            v->is_swallowed || v->is_lock_dialog) {
+            continue;
+        }
+        if (v->kind == DTWM_VIEW_XWAYLAND && v->xwayland_surface && v->xwayland_surface->override_redirect) {
+            continue;
+        }
+        int outer_w = 0, outer_h = 0, l = 0, t = 0, r = 0, b = 0;
+        dtwm_view_outer_size(v, &outer_w, &outer_h);
+        dtwm_view_insets(v, &l, &t, &r, &b);
+        struct wlr_box ubox;
+        dtwm_get_usable_output_box(server, (double)v->x + outer_w * 0.5, (double)v->y + outer_h * 0.5, &ubox);
+        if (ubox.width <= 0 || ubox.height <= 0) continue;
+
+        if (v->maximized) {
+            int cw = ubox.width - l - r;
+            int ch = ubox.height - t - b;
+            if (cw < 64) cw = 64;
+            if (ch < 64) ch = 64;
+            view_apply_geometry(v, ubox.x, ubox.y, cw, ch);
+            continue;
+        }
+
+        int nx = v->x;
+        int ny = v->y;
+        if (nx + outer_w > ubox.x + ubox.width) {
+            nx = ubox.x + ubox.width - outer_w;
+        }
+        if (nx < ubox.x) {
+            nx = ubox.x;
+        }
+        if (ny + outer_h > ubox.y + ubox.height) {
+            ny = ubox.y + ubox.height - outer_h;
+        }
+        if (ny < ubox.y) {
+            ny = ubox.y;
+        }
+        if (nx != v->x || ny != v->y) {
+            view_apply_geometry(v, nx, ny, v->client_w, v->client_h);
+        }
+    }
+    dtwm_publish_active_window_box(server);
+}
+
 /* --- CDE Window Menu Overlay --- */
 static void update_window_menu_buffer(DtwmServer *server) {
     if (!server->menu_visible || !server->menu_buf) {
