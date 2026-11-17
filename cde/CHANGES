@@ -1,4 +1,16 @@
 2026-11-17
+- Fix CDE Help UTF-8 text encoding (`Â©` -> `©`), XWayland `-dt-interface` /
+  `-dt-application` font-alias registration, and out-of-tree Help graphics
+  installation (`cde/lib/DtHelp/XInterface.c`,
+  `cde/programs/fontaliases/Makefile.am`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/debian/Xsession.wayland`, `cde/doc/common/help/sdl-data.am`): install
+  `fonts.alias` as a regular file beside `fonts.dir` in
+  `/usr/dt/share/cde/fontaliases`, append that font directory to `Xwayland` via
+  XCB on startup, default `Xsession.wayland` from `C`/`POSIX` to `en_US.UTF-8`
+  (`C.UTF-8`), add `Xutf8DrawString` / Latin-1 fallback in `libDtHelp` when
+  `MB_CUR_MAX == 1`, and resolve `$(srcdir)` in `sdl-data.am` so Help graphics
+  install in out-of-tree builds.
 - Apply live Wayland compositor output scaling (`wlr_output_state_set_scale`)
   immediately when changing **Scale** (`100%`–`200%`, `96`–`192 DPI`) in
   `dtstyle` **Display & Monitors** or `wlr-randr --scale`

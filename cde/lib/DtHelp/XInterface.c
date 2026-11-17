@@ -733,6 +733,71 @@ DrawSearchTraversal(DtHelpDispAreaStruct* pDAS,
  * Purpose:	Renders an text string to the specified drawable.
  *
  *****************************************************************************/
+static const char *
+DtHelpUtf8ToLatin1Fallback(const char *src, int len, char *sbuf, size_t sbuf_sz,
+                           char **heap_out, int *out_len)
+{
+    *heap_out = nullptr;
+    if (!src || len <= 0) {
+        *out_len = 0;
+        return src ? src : "";
+    }
+    bool has_high = false;
+    for (int i = 0; i < len; ++i) {
+        if ((unsigned char)src[i] >= 0x80u) {
+            has_high = true;
+            break;
+        }
+    }
+    if (!has_high) {
+        *out_len = len;
+        return src;
+    }
+
+    size_t cap = (size_t)len * 3u + 1u;
+    char *dst = (cap <= sbuf_sz) ? sbuf : (char *)malloc(cap);
+    if (!dst) {
+        *out_len = len;
+        return src;
+    }
+    if (dst != sbuf) {
+        *heap_out = dst;
+    }
+
+    int o = 0;
+    for (int i = 0; i < len; ) {
+        unsigned char b0 = (unsigned char)src[i];
+        if (b0 < 0x80u) {
+            dst[o++] = (char)b0;
+            i += 1;
+        } else if ((b0 == 0xC2u || b0 == 0xC3u) && i + 1 < len &&
+                   ((unsigned char)src[i + 1] & 0xC0u) == 0x80u) {
+            unsigned int cp = ((unsigned int)(b0 & 0x1Fu) << 6) |
+                              (unsigned int)((unsigned char)src[i + 1] & 0x3Fu);
+            dst[o++] = (char)(unsigned char)cp;
+            i += 2;
+        } else if (b0 == 0xE2u && i + 2 < len &&
+                   ((unsigned char)src[i + 1] & 0xC0u) == 0x80u &&
+                   ((unsigned char)src[i + 2] & 0xC0u) == 0x80u) {
+            unsigned int cp = ((unsigned int)(b0 & 0x0Fu) << 12) |
+                              ((unsigned int)((unsigned char)src[i + 1] & 0x3Fu) << 6) |
+                              (unsigned int)((unsigned char)src[i + 2] & 0x3Fu);
+            if (cp == 0x2013u || cp == 0x2014u) dst[o++] = '-';
+            else if (cp == 0x2018u || cp == 0x2019u) dst[o++] = '\'';
+            else if (cp == 0x201Cu || cp == 0x201Du) dst[o++] = '"';
+            else if (cp == 0x2022u) dst[o++] = '*';
+            else if (cp == 0x2026u) { dst[o++] = '.'; dst[o++] = '.'; dst[o++] = '.'; }
+            else dst[o++] = '?';
+            i += 3;
+        } else {
+            dst[o++] = (char)b0;
+            i += 1;
+        }
+    }
+    *out_len = o;
+    return dst;
+}
+
 static void
 MyDrawString (
     Display	*dpy,
@@ -773,23 +838,38 @@ MyDrawString (
 	     * have to use XmbDrawString here instead of XDrawString
 	     * because we need to use a font set to render the string.
 	     */
+#ifdef X_HAVE_UTF8_STRING
+	    if (MB_CUR_MAX == 1) {
+		if (image)
+		    Xutf8DrawImageString (dpy, d, mySet, gc, x, y, (const char *)string, length);
+		else
+		    Xutf8DrawString (dpy, d, mySet, gc, x, y, (const char *)string, length);
+	    } else
+#endif
 	    if (image)
-		XmbDrawImageString (dpy, d, mySet, gc, x, y, string, length);
+		XmbDrawImageString (dpy, d, mySet, gc, x, y, (const char *)string, length);
 	    else
-		XmbDrawString (dpy, d, mySet, gc, x, y, string, length);
+		XmbDrawString (dpy, d, mySet, gc, x, y, (const char *)string, length);
 	}
       }
     else
       {
 	XFontStruct  *myFont;
+	char sbuf[512];
+	char *heap_buf = nullptr;
+	int draw_len = length;
+	const char *draw_str = DtHelpUtf8ToLatin1Fallback(
+	    (const char *)string, length, sbuf, sizeof(sbuf), &heap_buf, &draw_len
+	);
 
 	myFont = __DtHelpFontStructGet(font_info, font_index);
 	XSetFont (dpy, gc, myFont->fid);
 
 	if (image)
-	    XDrawImageString (dpy, d, gc, x, y, string, length);
+	    XDrawImageString (dpy, d, gc, x, y, draw_str, draw_len);
 	else
-	    XDrawString (dpy, d, gc, x, y, string, length);
+	    XDrawString (dpy, d, gc, x, y, draw_str, draw_len);
+	free(heap_buf);
       }
 }
 
@@ -2983,18 +3063,35 @@ _DtHelpDAGetStrWidth (
     font_index = (long) strInfo->font_ptr;
     if (font_index < 0)
       {
-	if (0 == strInfo->wc)
-	length = XmbTextEscapement(
+	if (0 == strInfo->wc) {
+#ifdef X_HAVE_UTF8_STRING
+	    if (MB_CUR_MAX == 1)
+		length = Xutf8TextEscapement(
 			__DtHelpFontSetGet(pDAS->font_info, font_index),
 				(char *) strInfo->string, strInfo->byte_len);
-    else
+	    else
+#endif
+		length = XmbTextEscapement(
+			__DtHelpFontSetGet(pDAS->font_info, font_index),
+				(char *) strInfo->string, strInfo->byte_len);
+	} else
 	    length = XwcTextEscapement(
 			__DtHelpFontSetGet(pDAS->font_info, font_index),
 				(wchar_t *) strInfo->string, strInfo->byte_len);
       }
     else
+      {
+	char sbuf[512];
+	char *heap_buf = nullptr;
+	int draw_len = strInfo->byte_len;
+	const char *draw_str = DtHelpUtf8ToLatin1Fallback(
+	    (const char *)strInfo->string, strInfo->byte_len,
+	    sbuf, sizeof(sbuf), &heap_buf, &draw_len
+	);
         length = XTextWidth(__DtHelpFontStructGet(pDAS->font_info, font_index),
-				(char *) strInfo->string, strInfo->byte_len);
+				draw_str, draw_len);
+	free(heap_buf);
+      }
 
    return ((_DtCvUnit) length);
 }

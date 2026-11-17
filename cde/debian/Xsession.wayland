@@ -8,6 +8,13 @@ unset WAYLAND_DISPLAY DISPLAY
 export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-CDE}"
 export XDG_SESSION_DESKTOP="${XDG_SESSION_DESKTOP:-cde-wayland}"
 export XDG_SESSION_TYPE="wayland"
+if [ -z "${LANG:-}" ] || [ "${LANG}" = "C" ] || [ "${LANG}" = "POSIX" ]; then
+    if command -v locale >/dev/null 2>&1 && locale -a 2>/dev/null | grep -qi '^en_US\.utf-\?8$'; then
+        export LANG="en_US.UTF-8"
+    else
+        export LANG="C.UTF-8"
+    fi
+fi
 export XFILESEARCHPATH="${XFILESEARCHPATH:-/usr/dt/app-defaults/%L/%N:/usr/dt/app-defaults/C/%N}"
 export CDE_BACKDROP_DIR="${CDE_BACKDROP_DIR:-/usr/dt/backdrops}"
 
@@ -16,7 +23,9 @@ if [ -n "${HOME:-}" ]; then
 fi
 export DTUSERSESSION="${USER:-$(id -un)}-wayland"
 if [ -x /usr/dt/bin/dtsearchpath ]; then
+    set +u
     eval "$(/usr/dt/bin/dtsearchpath -ksh 2>/dev/null)" || true
+    set -u
 fi
 
 # Synchronize CDE IMS selection (~/.dt/ims/*) or installed Wayland IME (fcitx5 / ibus)

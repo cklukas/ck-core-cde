@@ -2266,6 +2266,60 @@ void dtwm_notify_panel_mapped(DtwmServer *server) {
     write_status_file(server);
 }
 
+static void register_cde_xwayland_font_path(DtwmServer *server) {
+    if (!server || !server->xcb_conn) return;
+    const char *alias_dir = CDE_INSTALLATION_TOP "/share/cde/fontaliases";
+    char dir_file[512];
+    snprintf(dir_file, sizeof(dir_file), "%s/fonts.dir", alias_dir);
+    if (access(dir_file, R_OK) != 0) return;
+
+    xcb_get_font_path_cookie_t gck = xcb_get_font_path(server->xcb_conn);
+    xcb_get_font_path_reply_t *rep = xcb_get_font_path_reply(server->xcb_conn, gck, nullptr);
+    if (!rep) return;
+
+    size_t add_len = strlen(alias_dir);
+    if (add_len == 0 || add_len > 255) {
+        free(rep);
+        return;
+    }
+
+    int qty = xcb_get_font_path_path_length(rep);
+    xcb_str_iterator_t it = xcb_get_font_path_path_iterator(rep);
+    size_t total_bytes = 0;
+    for (; it.rem > 0; xcb_str_next(&it)) {
+        int slen = xcb_str_name_length(it.data);
+        const char *sname = xcb_str_name(it.data);
+        if ((size_t)slen == add_len && memcmp(sname, alias_dir, add_len) == 0) {
+            free(rep);
+            return;
+        }
+        total_bytes += 1u + (size_t)slen;
+    }
+
+    size_t new_bytes = total_bytes + 1u + add_len;
+    uint8_t *buf = calloc(1, new_bytes);
+    if (buf) {
+        size_t pos = 0;
+        it = xcb_get_font_path_path_iterator(rep);
+        for (; it.rem > 0; xcb_str_next(&it)) {
+            uint8_t slen = (uint8_t)xcb_str_name_length(it.data);
+            buf[pos++] = slen;
+            memcpy(buf + pos, xcb_str_name(it.data), slen);
+            pos += slen;
+        }
+        buf[pos++] = (uint8_t)add_len;
+        memcpy(buf + pos, alias_dir, add_len);
+        pos += add_len;
+
+        xcb_void_cookie_t sck = xcb_set_font_path_checked(
+            server->xcb_conn, (uint16_t)(qty + 1), (const xcb_str_t *)buf
+        );
+        free(xcb_request_check(server->xcb_conn, sck));
+        free(buf);
+    }
+    free(rep);
+}
+
 static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmServer *server = wl_container_of(listener, server, xwayland_ready);
@@ -2283,6 +2337,7 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
         );
     }
     dtwm_workspaces_on_xwayland_ready(server);
+    register_cde_xwayland_font_path(server);
     dtwm_icons_on_xwayland_ready(server);
     dtwm_xdnd_on_xwayland_ready(server);
     dtwm_lock_on_xwayland_ready(server);
