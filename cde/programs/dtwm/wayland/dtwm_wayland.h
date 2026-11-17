@@ -322,6 +322,12 @@ struct DtwmServer {
     bool show_front_panel;
     bool show_open_window_icons;
     bool large_icons;
+    bool move_opaque;
+    bool focus_follows_mouse;
+    bool focus_auto_raise;
+    bool allow_primary_on_top;
+    bool animate_minimize;
+    bool show_task_switcher;
     bool panel_user_moved;
     pid_t panel_pid;
     DtwmView *panel_view;
@@ -361,14 +367,26 @@ struct DtwmServer {
     struct wl_list ext_ws_managers;
     struct wl_global *toplevel_icon_global;
 
-    /* Interactive move / resize / snap state */
+    /* Interactive move / resize / snap / wireframe state */
     DtwmCursorMode cursor_mode;
     DtwmView *grabbed_view;
     double grab_x, grab_y;
     struct wlr_box grab_orig_box;
+    struct wlr_box pending_grab_box;
     uint32_t resize_edges;
     DtwmSnapZone active_snap;
     struct wlr_scene_buffer *snap_preview_buf;
+    bool wireframe_active;
+    bool grab_ignore_next_release;
+    int wireframe_w, wireframe_h;
+    struct wlr_scene_buffer *wireframe_buf;
+
+    /* Minimize / restore wireframe zoom animation */
+    struct wl_event_source *anim_timer;
+    struct wlr_scene_buffer *anim_buf;
+    struct wlr_box anim_from_box;
+    struct wlr_box anim_to_box;
+    int anim_step;
 
     /* Double-click titlebar detection */
     uint32_t last_title_click_ms;
@@ -438,6 +456,7 @@ uint32_t dtwm_part_to_wlr_edges(DtwmFramePart part);
 
 struct wlr_buffer *dtwm_render_window_menu(const DtwmPalette *pal, const DtwmView *view, int hover_idx, int *out_w, int *out_h);
 struct wlr_buffer *dtwm_render_snap_preview(const DtwmPalette *pal, int w, int h);
+struct wlr_buffer *dtwm_render_wireframe_outline(int w, int h);
 struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int *out_h);
 
 /* cde_workspace.c */

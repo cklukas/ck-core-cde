@@ -49,6 +49,8 @@ typedef struct {
 
 static void close_window_menu(DtwmServer *server);
 static void hide_task_switcher(DtwmServer *server, bool activate_selected);
+static void hide_wireframe_outline(DtwmServer *server);
+static void focus_view_ex(DtwmServer *server, DtwmView *view, struct wlr_surface *surface, bool raise_window);
 static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *surface);
 static void view_set_maximized(DtwmView *view, bool maximized);
 static void view_set_minimized(DtwmView *view, bool minimized);
@@ -159,7 +161,37 @@ static void clear_active_focus(DtwmServer *server) {
     dtwm_publish_active_window_box(server);
 }
 
-static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *surface) {
+static void raise_transient_children_above(DtwmServer *server, DtwmView *parent) {
+    if (!server || !parent || server->allow_primary_on_top) {
+        return;
+    }
+    DtwmView *cand;
+    wl_list_for_each(cand, &server->views, link) {
+        if (cand == parent || !cand->mapped || !dtwm_view_visible_on_current_ws(cand)) {
+            continue;
+        }
+        bool is_child = false;
+        if (parent->kind == DTWM_VIEW_XWAYLAND && cand->kind == DTWM_VIEW_XWAYLAND &&
+            parent->xwayland_surface && cand->xwayland_surface &&
+            cand->xwayland_surface->parent == parent->xwayland_surface) {
+            is_child = true;
+        } else if (parent->kind == DTWM_VIEW_XDG && cand->kind == DTWM_VIEW_XDG &&
+                   parent->xdg_toplevel && cand->xdg_toplevel &&
+                   cand->xdg_toplevel->parent == parent->xdg_toplevel) {
+            is_child = true;
+        }
+        if (is_child && cand->frame_tree) {
+            wlr_scene_node_raise_to_top(&cand->frame_tree->node);
+            if (cand->kind == DTWM_VIEW_XWAYLAND && cand->xwayland_surface) {
+                wlr_xwayland_surface_restack(cand->xwayland_surface, nullptr, XCB_STACK_MODE_ABOVE);
+            }
+        }
+    }
+}
+
+static void focus_view_ex(
+    DtwmServer *server, DtwmView *view, struct wlr_surface *surface, bool raise_window
+) {
     if (server->session_locked && (!view || !view->is_lock_dialog)) {
         return;
     }
@@ -197,8 +229,8 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
         dtwm_foreign_toplevel_sync(prev);
     }
 
-    /* Raise in Z-order and move to head of server->views MRU list (keep desktop pins in desktop_icon_tree) */
-    if (view->frame_tree && !view->is_desktop_pin) {
+    /* Raise in Z-order when requested and move to head of server->views MRU list */
+    if (raise_window && view->frame_tree && !view->is_desktop_pin) {
         wlr_scene_node_raise_to_top(&view->frame_tree->node);
     }
     if (!view->is_desktop_pin) {
@@ -212,7 +244,7 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
         wlr_xdg_toplevel_set_activated(view->xdg_toplevel, true);
     } else if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface) {
         wlr_xwayland_surface_activate(view->xwayland_surface, true);
-        if (!view->is_desktop_pin) {
+        if (raise_window && !view->is_desktop_pin) {
             wlr_xwayland_surface_restack(view->xwayland_surface, nullptr, XCB_STACK_MODE_ABOVE);
         }
         if (server->greeter_mode && server->xcb_conn) {
@@ -224,6 +256,9 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
             );
             xcb_flush(server->xcb_conn);
         }
+    }
+    if (raise_window && !view->is_desktop_pin) {
+        raise_transient_children_above(server, view);
     }
     dtwm_view_update_frame(view);
     dtwm_icons_update_view(view);
@@ -239,6 +274,10 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
         wlr_seat_keyboard_notify_enter(server->seat, surface, nullptr, 0, nullptr);
     }
     dtwm_ime_set_focus(server, surface);
+}
+
+static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *surface) {
+    focus_view_ex(server, view, surface, true);
 }
 
 static void view_set_maximized(DtwmView *view, bool maximized) {
@@ -281,10 +320,65 @@ static void view_set_maximized(DtwmView *view, bool maximized) {
     dtwm_foreign_toplevel_sync(view);
 }
 
+static int handle_anim_timer(void *data) {
+    DtwmServer *server = data;
+    if (!server || !server->anim_buf) {
+        return 0;
+    }
+    const int total_steps = 4;
+    if (server->anim_step <= 0 || server->anim_step > total_steps) {
+        wlr_scene_buffer_set_buffer(server->anim_buf, nullptr);
+        wlr_scene_node_set_enabled(&server->anim_buf->node, false);
+        server->anim_step = 0;
+        return 0;
+    }
+    double t = (double)server->anim_step / (double)(total_steps + 1);
+    int x = (int)(server->anim_from_box.x + (server->anim_to_box.x - server->anim_from_box.x) * t);
+    int y = (int)(server->anim_from_box.y + (server->anim_to_box.y - server->anim_from_box.y) * t);
+    int w = (int)(server->anim_from_box.width + (server->anim_to_box.width - server->anim_from_box.width) * t);
+    int h = (int)(server->anim_from_box.height + (server->anim_to_box.height - server->anim_from_box.height) * t);
+    struct wlr_buffer *buf = dtwm_render_wireframe_outline(w, h);
+    if (buf) {
+        wlr_scene_buffer_set_buffer(server->anim_buf, buf);
+        wlr_buffer_drop(buf);
+        wlr_scene_node_set_position(&server->anim_buf->node, x, y);
+        wlr_scene_node_set_enabled(&server->anim_buf->node, true);
+    }
+    server->anim_step++;
+    if (server->anim_timer) {
+        wl_event_source_timer_update(server->anim_timer, 18);
+    }
+    return 0;
+}
+
+static void start_minimize_restore_anim(
+    DtwmServer *server, struct wlr_box from_box, struct wlr_box to_box
+) {
+    if (!server || !server->animate_minimize || server->greeter_mode || !server->anim_timer ||
+        !server->anim_buf) {
+        return;
+    }
+    server->anim_from_box = from_box;
+    server->anim_to_box = to_box;
+    server->anim_step = 1;
+    handle_anim_timer(server);
+}
+
 static void view_set_minimized(DtwmView *view, bool minimized) {
     if (view->minimized == minimized) {
         return;
     }
+    DtwmServer *server = view->server;
+    int ow = 0, oh = 0;
+    dtwm_view_outer_size(view, &ow, &oh);
+    struct wlr_box win_box = {.x = view->x, .y = view->y, .width = ow, .height = oh};
+    struct wlr_box pre_icon_box = {
+        .x = view->icon_x,
+        .y = view->icon_y,
+        .width = view->icon_box_w > 0 ? view->icon_box_w : 56,
+        .height = view->icon_box_h > 0 ? view->icon_box_h : 56,
+    };
+
     view->minimized = minimized;
     if (view->frame_tree) {
         wlr_scene_node_set_enabled(&view->frame_tree->node, dtwm_view_visible_on_current_ws(view));
@@ -293,16 +387,33 @@ static void view_set_minimized(DtwmView *view, bool minimized) {
         wlr_xwayland_surface_set_minimized(view->xwayland_surface, minimized);
         dtwm_icons_set_wm_state(view);
     }
-    dtwm_icons_relayout(view->server);
+    dtwm_icons_relayout(server);
     dtwm_foreign_toplevel_sync(view);
-    if (minimized && view->server->focused_view == view) {
-        clear_active_focus(view->server);
+
+    if (view->mapped && server->animate_minimize) {
+        struct wlr_box icon_box = minimized
+            ? (struct wlr_box){
+                  .x = view->icon_x,
+                  .y = view->icon_y,
+                  .width = view->icon_box_w > 0 ? view->icon_box_w : 56,
+                  .height = view->icon_box_h > 0 ? view->icon_box_h : 56,
+              }
+            : pre_icon_box;
+        if (icon_box.x > 0 || icon_box.y > 0) {
+            start_minimize_restore_anim(
+                server, minimized ? win_box : icon_box, minimized ? icon_box : win_box
+            );
+        }
+    }
+
+    if (minimized && server->focused_view == view) {
+        clear_active_focus(server);
         /* Focus next visible view on current workspace if any */
         DtwmView *cand;
-        wl_list_for_each(cand, &view->server->views, link) {
+        wl_list_for_each(cand, &server->views, link) {
             if (cand != view && dtwm_view_visible_on_current_ws(cand) &&
                 !cand->is_swallowed && !cand->is_desktop_pin) {
-                focus_view(view->server, cand, nullptr);
+                focus_view(server, cand, nullptr);
                 break;
             }
         }
@@ -448,9 +559,44 @@ static int menu_item_at(DtwmServer *server, double lx, double ly) {
     return -1;
 }
 
+static void show_wireframe_outline(DtwmServer *server, int x, int y, int outer_w, int outer_h) {
+    if (!server || !server->wireframe_buf) {
+        return;
+    }
+    if (outer_w < 16) outer_w = 16;
+    if (outer_h < 16) outer_h = 16;
+    if (!server->wireframe_active || outer_w != server->wireframe_w || outer_h != server->wireframe_h) {
+        struct wlr_buffer *buf = dtwm_render_wireframe_outline(outer_w, outer_h);
+        if (!buf) {
+            return;
+        }
+        wlr_scene_buffer_set_buffer(server->wireframe_buf, buf);
+        wlr_buffer_drop(buf);
+        server->wireframe_w = outer_w;
+        server->wireframe_h = outer_h;
+    }
+    server->wireframe_active = true;
+    wlr_scene_node_set_position(&server->wireframe_buf->node, x, y);
+    wlr_scene_node_set_enabled(&server->wireframe_buf->node, true);
+}
+
+static void hide_wireframe_outline(DtwmServer *server) {
+    if (!server) {
+        return;
+    }
+    server->wireframe_active = false;
+    server->wireframe_w = 0;
+    server->wireframe_h = 0;
+    if (server->wireframe_buf) {
+        wlr_scene_buffer_set_buffer(server->wireframe_buf, nullptr);
+        wlr_scene_node_set_enabled(&server->wireframe_buf->node, false);
+    }
+}
+
 static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edges) {
     DtwmServer *server = view->server;
     close_window_menu(server);
+    hide_wireframe_outline(server);
     server->grabbed_view = view;
     server->cursor_mode = mode;
     server->grab_x = server->cursor->x;
@@ -461,6 +607,8 @@ static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edge
         .width = view->client_w,
         .height = view->client_h,
     };
+    server->pending_grab_box = server->grab_orig_box;
+    server->grab_ignore_next_release = false;
     server->resize_edges = edges;
 }
 
@@ -478,9 +626,21 @@ static void execute_menu_action(DtwmServer *server, int idx) {
         break;
     case 1: /* Move */
         begin_interactive(v, DTWM_CURSOR_MOVE, 0);
+        server->grab_ignore_next_release = (server->pointer_buttons_down > 0);
+        if (!server->move_opaque && !v->is_panel) {
+            int ow = 0, oh = 0;
+            dtwm_view_outer_size(v, &ow, &oh);
+            show_wireframe_outline(server, v->x, v->y, ow, oh);
+        }
         break;
     case 2: /* Size */
         begin_interactive(v, DTWM_CURSOR_RESIZE, WLR_EDGE_BOTTOM | WLR_EDGE_RIGHT);
+        server->grab_ignore_next_release = (server->pointer_buttons_down > 0);
+        if (!server->move_opaque) {
+            int ow = 0, oh = 0;
+            dtwm_view_outer_size(v, &ow, &oh);
+            show_wireframe_outline(server, v->x, v->y, ow, oh);
+        }
         break;
     case 3: /* Minimize */
         view_set_minimized(v, true);
@@ -575,6 +735,33 @@ static bool view_is_normal_app(const DtwmView *v) {
 void dtwm_restore_view_focus(DtwmServer *server, DtwmView *view) {
     if (!server || !view || !view->mapped) return;
     focus_view(server, view, nullptr);
+}
+
+static void cycle_focus_without_osd(DtwmServer *server) {
+    DtwmView *first = nullptr;
+    DtwmView *after_focused = nullptr;
+    bool seen_focused = false;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (!view_is_normal_app(v)) {
+            continue;
+        }
+        if (!first) {
+            first = v;
+        }
+        if (v == server->focused_view) {
+            seen_focused = true;
+            continue;
+        }
+        if (seen_focused) {
+            after_focused = v;
+            break;
+        }
+    }
+    DtwmView *chosen = after_focused ? after_focused : first;
+    if (chosen) {
+        focus_view_ex(server, chosen, nullptr, server->focus_auto_raise);
+    }
 }
 
 static void show_or_cycle_task_switcher(DtwmServer *server) {
@@ -690,6 +877,8 @@ static void process_cursor_move(DtwmServer *server) {
         view_set_maximized(v, false);
         server->grab_orig_box.x = (int)server->cursor->x - v->client_w / 2;
         server->grab_orig_box.y = (int)server->cursor->y - 12;
+        server->grab_orig_box.width = v->client_w;
+        server->grab_orig_box.height = v->client_h;
         server->grab_x = server->cursor->x;
         server->grab_y = server->cursor->y;
     }
@@ -699,12 +888,12 @@ static void process_cursor_move(DtwmServer *server) {
         nx = align_to_grid(nx);
         ny = align_to_grid(ny);
     }
-    v->x = nx;
-    v->y = ny;
-    wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
-    sync_xwayland_client_pos(v);
-    dtwm_publish_active_window_box(server);
     if (v->is_panel) {
+        v->x = nx;
+        v->y = ny;
+        wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
+        sync_xwayland_client_pos(v);
+        dtwm_publish_active_window_box(server);
         server->panel_user_moved = true;
         server->panel_x = v->x;
         server->panel_y = v->y;
@@ -714,6 +903,26 @@ static void process_cursor_move(DtwmServer *server) {
     struct wlr_box sbox = {0};
     DtwmSnapZone zone = compute_snap_zone(server, server->cursor->x, server->cursor->y, &sbox);
     update_snap_preview(server, zone, &sbox);
+
+    if (!server->move_opaque) {
+        int ow = 0, oh = 0;
+        dtwm_view_outer_size(v, &ow, &oh);
+        server->pending_grab_box = (struct wlr_box){
+            .x = nx,
+            .y = ny,
+            .width = v->client_w,
+            .height = v->client_h,
+        };
+        show_wireframe_outline(server, nx, ny, ow, oh);
+        return;
+    }
+
+    hide_wireframe_outline(server);
+    v->x = nx;
+    v->y = ny;
+    wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
+    sync_xwayland_client_pos(v);
+    dtwm_publish_active_window_box(server);
 }
 
 static void process_cursor_resize(DtwmServer *server) {
@@ -730,20 +939,47 @@ static void process_cursor_resize(DtwmServer *server) {
     if (server->resize_edges & WLR_EDGE_TOP) {
         new_y += (int)dy;
         new_h -= (int)dy;
+        if (new_h < 48) {
+            new_y = server->grab_orig_box.y + server->grab_orig_box.height - 48;
+            new_h = 48;
+        }
     } else if (server->resize_edges & WLR_EDGE_BOTTOM) {
         new_h += (int)dy;
+        if (new_h < 48) new_h = 48;
     }
     if (server->resize_edges & WLR_EDGE_LEFT) {
         new_x += (int)dx;
         new_w -= (int)dx;
+        if (new_w < 64) {
+            new_x = server->grab_orig_box.x + server->grab_orig_box.width - 64;
+            new_w = 64;
+        }
     } else if (server->resize_edges & WLR_EDGE_RIGHT) {
         new_w += (int)dx;
+        if (new_w < 64) new_w = 64;
     }
 
     if (shift_is_held(server)) {
         new_w = align_to_grid(new_w);
         new_h = align_to_grid(new_h);
+        if (new_w < 64) new_w = 64;
+        if (new_h < 48) new_h = 48;
     }
+
+    if (!server->move_opaque) {
+        int l = 0, t = 0, r = 0, b = 0;
+        dtwm_view_insets(v, &l, &t, &r, &b);
+        server->pending_grab_box = (struct wlr_box){
+            .x = new_x,
+            .y = new_y,
+            .width = new_w,
+            .height = new_h,
+        };
+        show_wireframe_outline(server, new_x, new_y, new_w + l + r, new_h + t + b);
+        return;
+    }
+
+    hide_wireframe_outline(server);
     view_apply_geometry(v, new_x, new_y, new_w, new_h);
 }
 
@@ -807,6 +1043,11 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
     DtwmFramePart part = DTWM_PART_NONE;
     DtwmView *view = desktop_view_at(server, server->cursor->x, server->cursor->y, &surface, &sx, &sy, &part);
 
+    if (server->focus_follows_mouse && server->pointer_buttons_down == 0 && !server->switcher_visible &&
+        view && view != server->focused_view && view_is_normal_app(view)) {
+        focus_view_ex(server, view, surface, server->focus_auto_raise);
+    }
+
     if (!surface) {
         wlr_cursor_set_xcursor(server->cursor, server->cursor_mgr, view ? cursor_name_for_part(part) : "default");
         if (server->seat->drag != nullptr || server->pointer_buttons_down == 0) {
@@ -864,21 +1105,44 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     }
 
     if (ev->state == WL_POINTER_BUTTON_STATE_RELEASED) {
-        if (server->cursor_mode == DTWM_CURSOR_MOVE && server->grabbed_view && server->active_snap != DTWM_SNAP_NONE) {
-            struct wlr_box sbox = {0};
-            DtwmSnapZone z = compute_snap_zone(server, server->cursor->x, server->cursor->y, &sbox);
-            update_snap_preview(server, DTWM_SNAP_NONE, nullptr);
-            if (z != DTWM_SNAP_NONE) {
+        if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH && server->grab_ignore_next_release) {
+            server->grab_ignore_next_release = false;
+            return;
+        }
+        bool had_wireframe = server->wireframe_active;
+        struct wlr_box pending = server->pending_grab_box;
+        hide_wireframe_outline(server);
+
+        if (server->cursor_mode == DTWM_CURSOR_MOVE && server->grabbed_view) {
+            if (server->active_snap != DTWM_SNAP_NONE) {
+                struct wlr_box sbox = {0};
+                DtwmSnapZone z = compute_snap_zone(server, server->cursor->x, server->cursor->y, &sbox);
+                update_snap_preview(server, DTWM_SNAP_NONE, nullptr);
+                if (z != DTWM_SNAP_NONE) {
+                    DtwmView *v = server->grabbed_view;
+                    v->saved_x = server->grab_orig_box.x;
+                    v->saved_y = server->grab_orig_box.y;
+                    v->saved_w = server->grab_orig_box.width;
+                    v->saved_h = server->grab_orig_box.height;
+                    v->has_saved_geom = true;
+                    int l, t, r, b;
+                    dtwm_view_insets(v, &l, &t, &r, &b);
+                    view_apply_geometry(v, sbox.x, sbox.y, sbox.width - l - r, sbox.height - t - b);
+                }
+            } else if (had_wireframe) {
                 DtwmView *v = server->grabbed_view;
-                v->saved_x = server->grab_orig_box.x;
-                v->saved_y = server->grab_orig_box.y;
-                v->saved_w = server->grab_orig_box.width;
-                v->saved_h = server->grab_orig_box.height;
-                v->has_saved_geom = true;
-                int l, t, r, b;
-                dtwm_view_insets(v, &l, &t, &r, &b);
-                view_apply_geometry(v, sbox.x, sbox.y, sbox.width - l - r, sbox.height - t - b);
+                v->x = pending.x;
+                v->y = pending.y;
+                if (v->frame_tree) {
+                    wlr_scene_node_set_position(&v->frame_tree->node, v->x, v->y);
+                }
+                sync_xwayland_client_pos(v);
+                dtwm_publish_active_window_box(server);
             }
+        } else if (server->cursor_mode == DTWM_CURSOR_RESIZE && server->grabbed_view && had_wireframe) {
+            view_apply_geometry(
+                server->grabbed_view, pending.x, pending.y, pending.width, pending.height
+            );
         }
         if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
             server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
@@ -891,6 +1155,11 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     }
 
     /* Button press */
+    if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
+        /* Clicking while in Window Menu Move/Size mode commits on the subsequent release */
+        server->grab_ignore_next_release = false;
+        return;
+    }
     if (server->switcher_visible) {
         hide_task_switcher(server, true);
         return;
@@ -928,7 +1197,12 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
 
     if (view && !(view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
                   view->xwayland_surface->override_redirect)) {
-        focus_view(server, view, surface);
+        focus_view_ex(
+            server,
+            view,
+            surface,
+            (part == DTWM_PART_CLIENT) ? server->focus_auto_raise : true
+        );
 
         if (part != DTWM_PART_CLIENT) {
             if (ev->button == BTN_RIGHT && (part == DTWM_PART_TITLE || part == DTWM_PART_BTN_MENU)) {
@@ -1030,7 +1304,11 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
         }
     }
     if ((mods & WLR_MODIFIER_ALT) && (sym == XKB_KEY_Tab || sym == XKB_KEY_ISO_Left_Tab)) {
-        show_or_cycle_task_switcher(server);
+        if (server->show_task_switcher) {
+            show_or_cycle_task_switcher(server);
+        } else {
+            cycle_focus_without_osd(server);
+        }
         return true;
     }
     if ((mods & WLR_MODIFIER_ALT) && sym == XKB_KEY_F4) {
@@ -1053,6 +1331,24 @@ static bool handle_compositor_keybinding(DtwmServer *server, uint32_t mods, xkb_
         return true;
     }
     if (sym == XKB_KEY_Escape) {
+        if (server->cursor_mode != DTWM_CURSOR_PASSTHROUGH) {
+            DtwmView *gv = server->grabbed_view;
+            bool was_opaque = server->move_opaque || (gv && gv->is_panel);
+            hide_wireframe_outline(server);
+            update_snap_preview(server, DTWM_SNAP_NONE, nullptr);
+            if (gv && was_opaque) {
+                view_apply_geometry(
+                    gv,
+                    server->grab_orig_box.x,
+                    server->grab_orig_box.y,
+                    server->grab_orig_box.width,
+                    server->grab_orig_box.height
+                );
+            }
+            server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
+            server->grabbed_view = nullptr;
+            return true;
+        }
         if (server->menu_visible) {
             close_window_menu(server);
             return true;
@@ -1427,6 +1723,8 @@ static void xdg_toplevel_unmap(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, unmap);
     if (view == view->server->grabbed_view) {
+        hide_wireframe_outline(view->server);
+        update_snap_preview(view->server, DTWM_SNAP_NONE, nullptr);
         view->server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
         view->server->grabbed_view = nullptr;
     }
@@ -2003,6 +2301,8 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmView *view = wl_container_of(listener, view, unmap);
     if (view == view->server->grabbed_view) {
+        hide_wireframe_outline(view->server);
+        update_snap_preview(view->server, DTWM_SNAP_NONE, nullptr);
         view->server->cursor_mode = DTWM_CURSOR_PASSTHROUGH;
         view->server->grabbed_view = nullptr;
     }
@@ -2509,10 +2809,22 @@ int main(int argc, char **argv) {
 
     server.snap_preview_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
     wlr_scene_node_set_enabled(&server.snap_preview_buf->node, false);
+    server.wireframe_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
+    wlr_scene_node_set_enabled(&server.wireframe_buf->node, false);
+    server.anim_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
+    wlr_scene_node_set_enabled(&server.anim_buf->node, false);
+    server.anim_timer = wl_event_loop_add_timer(ev_loop, handle_anim_timer, &server);
     server.menu_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
     wlr_scene_node_set_enabled(&server.menu_buf->node, false);
     server.switcher_buf = wlr_scene_buffer_create(server.overlay_tree, nullptr);
     wlr_scene_node_set_enabled(&server.switcher_buf->node, false);
+
+    server.move_opaque = true;
+    server.focus_follows_mouse = false;
+    server.focus_auto_raise = true;
+    server.allow_primary_on_top = false;
+    server.animate_minimize = true;
+    server.show_task_switcher = true;
 
     dtwm_workspaces_init(&server);
     dtwm_icons_init(&server);
@@ -2637,6 +2949,7 @@ int main(int argc, char **argv) {
     wl_display_run(server.wl_display);
 
 cleanup:
+    if (server.anim_timer) wl_event_source_remove(server.anim_timer);
     if (server.status_fallback_timer) wl_event_source_remove(server.status_fallback_timer);
     if (server.sigint_source) wl_event_source_remove(server.sigint_source);
     if (server.sigterm_source) wl_event_source_remove(server.sigterm_source);

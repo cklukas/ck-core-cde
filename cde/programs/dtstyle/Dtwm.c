@@ -167,7 +167,48 @@ typedef struct {
 static Dtwm dtwm;
 static saveRestore save = {FALSE, 0, };
 
-static char dtwmRes[512]="";
+static char dtwmRes[1024]="";
+
+static Boolean
+is_wayland_dtwm_session(void)
+{
+    Atom wl_atom;
+    Atom actual_type = None;
+    int actual_format = 0;
+    unsigned long nitems = 0, bytes_after = 0;
+    unsigned char *prop = nullptr;
+
+    if (!style.display || style.root == None)
+        return False;
+    wl_atom = XInternAtom(style.display, "_DT_WAYLAND_OUTPUTS", True);
+    if (wl_atom == None)
+        return False;
+    if (XGetWindowProperty(style.display, style.root, wl_atom, 0, 1, False,
+                           AnyPropertyType, &actual_type, &actual_format,
+                           &nitems, &bytes_after, &prop) != Success)
+        return False;
+    if (prop)
+        XFree(prop);
+    return (actual_type != None) ? True : False;
+}
+
+static void
+commit_orig_dtwm_values(void)
+{
+    char *gapStr = XmTextFieldGetString(dtwm.iconGapText);
+    dtwm.origKeyboardFocusPolicy = XmToggleButtonGadgetGetState(dtwm.explicitTG);
+    dtwm.origFocusAutoRaise = XmToggleButtonGadgetGetState(dtwm.autoRaiseTG);
+    dtwm.origSecStack = !XmToggleButtonGadgetGetState(dtwm.secStackTG);
+    dtwm.origMoveOpaque = XmToggleButtonGadgetGetState(dtwm.moveOpaqueTG);
+    dtwm.origAnimateMinimize = XmToggleButtonGadgetGetState(dtwm.animateMinimizeTG);
+    dtwm.origShowTaskSwitcher = XmToggleButtonGadgetGetState(dtwm.showTaskSwitcherTG);
+    dtwm.origUseIconBox = XmToggleButtonGadgetGetState(dtwm.iconBoxTG);
+    dtwm.origIncreaseIconSize = XmToggleButtonGadgetGetState(dtwm.increaseIconSizeTG);
+    dtwm.origShowOpenIcons = XmToggleButtonGadgetGetState(dtwm.showOpenIconsTG);
+    dtwm.origIconPlacementMargin = atoi(gapStr ? gapStr : "0");
+    if (gapStr)
+        XtFree(gapStr);
+}
 
 static char *icon[] = {
     "iconTL",
@@ -208,6 +249,7 @@ popup_dtwmBB(
     }
     else 
     {
+        getDtwmValues();
         XtManageChild(style.dtwmDialog);
         raiseWindow(XtWindow(XtParent(style.dtwmDialog)));
     }
@@ -406,9 +448,8 @@ getDtwmValues(void)
     }
     else /* MoveOpaque not specified */
     {
-        /* set the Dtwm default value: False */
-
-        dtwm.origMoveOpaque =  False; 
+        /* Wayland compositor defaults to smooth opaque moves; X11 defaults to wireframe */
+        dtwm.origMoveOpaque = is_wayland_dtwm_session() ? True : False;
         XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, 
                 dtwm.origMoveOpaque, True);
     }
@@ -795,16 +836,11 @@ build_dtwmDlg(
     XtManageChild(dtwm.iconGapText);
     XtManageChild(dtwm.iconGapLabel);
 
-    XtAddCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, nullptr);
     XtAddCallback(style.dtwmDialog, XmNmapCallback, _DtmapCB_dtwmDlg, shell);
     XtAddCallback(style.dtwmDialog, XmNcallback, ButtonCB, nullptr);
     XtAddCallback(dtwm.systemDefault, XmNactivateCallback, systemDefaultCB, nullptr);
 
-    XtManageChild(form);
-    XtManageChildren(widgetList1,count); 
-
-    XtManageChild(windowFocusForm);
-    XtManageChild(iconPlacementForm);
+    formLayoutCB(style.dtwmDialog, nullptr, nullptr);
 
     XtManageChild(dtwm.focusPolicyRC);
     XtManageChild(dtwm.pointerTG);
@@ -823,6 +859,11 @@ build_dtwmDlg(
     XtManageChild(dtwm.increaseIconSizeTG);
     XtManageChild(dtwm.showOpenIconsTG);
     XtManageChild(dtwm.iconGapLabel);
+
+    XtManageChild(windowFocusForm);
+    XtManageChild(iconPlacementForm);
+    XtManageChildren(widgetList1,count); 
+    XtManageChild(form);
 
     return(style.dtwmDialog);
 }
@@ -965,7 +1006,7 @@ formLayoutCB(
     XtSetArg(args[n], XmNtopAttachment,      XmATTACH_WIDGET);       n++;
     XtSetArg(args[n], XmNtopWidget,          dtwm.animateMinimizeTG); n++;
     XtSetArg(args[n], XmNtopOffset,          style.verticalSpacing-3); n++;
-    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_NONE);         n++;
+    XtSetArg(args[n], XmNbottomAttachment,   XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNbottomOffset,       style.verticalSpacing); n++;
     XtSetArg(args[n], XmNleftAttachment,     XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNleftOffset,         0);  n++;
@@ -1019,8 +1060,6 @@ formLayoutCB(
     XtSetArg(args[n], XmNrightAttachment,    XmATTACH_FORM);         n++;
     XtSetArg(args[n], XmNrightOffset,        0);  n++;
     XtSetValues (dtwm.iconGapLabel, args, n);
-
-    XtRemoveCallback(style.dtwmDialog, XmNmapCallback, formLayoutCB, nullptr);
 }
 
 /*+++++++++++++++++++++++++++++++++++++++*/
@@ -1072,8 +1111,8 @@ systemDefaultCB(
     XmToggleButtonGadgetSetState (dtwm.secStackTG, False, True); 
 #endif
 
-    /* OpaqueMove:  False */
-    XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, False, True); 
+    /* OpaqueMove: True on Wayland, False on classic X11 */
+    XmToggleButtonGadgetSetState (dtwm.moveOpaqueTG, is_wayland_dtwm_session() ? True : False, True); 
 
     /* AnimateMinimizeRestore:  True */
     XmToggleButtonGadgetSetState (dtwm.animateMinimizeTG, True, True);
@@ -1112,6 +1151,7 @@ ButtonCB(
     case OK_BUTTON:
       
       XtUnmanageChild (w);
+      dtwmRes[0] = '\0';
       
       /* create the Dtwm resource specs for xrdb */
       
@@ -1223,6 +1263,14 @@ ButtonCB(
       
       if (changeFlag)
 	{
+	  if (is_wayland_dtwm_session())
+	    {
+	      /* dtwm-wayland applies RESOURCE_MANAGER changes live without restarting */
+	      commit_orig_dtwm_values();
+	      _DtAddToResource(style.display, dtwmRes);
+	      XFlush(style.display);
+	      break;
+	    }
 	  if (dtwm.warnDialog == nullptr)
 	    {
 	      n = 0;
@@ -1510,14 +1558,7 @@ okWarnCB(
         XtPointer client_data,
         XtPointer call_data )
 {
-  dtwm.origKeyboardFocusPolicy = XmToggleButtonGadgetGetState (dtwm.explicitTG);
-  dtwm.origFocusAutoRaise = XmToggleButtonGadgetGetState (dtwm.autoRaiseTG);
-  dtwm.origSecStack = !XmToggleButtonGadgetGetState (dtwm.secStackTG);
-  dtwm.origMoveOpaque = XmToggleButtonGadgetGetState (dtwm.moveOpaqueTG);
-  dtwm.origAnimateMinimize = XmToggleButtonGadgetGetState (dtwm.animateMinimizeTG);
-  dtwm.origShowTaskSwitcher = XmToggleButtonGadgetGetState (dtwm.showTaskSwitcherTG);
-  dtwm.origUseIconBox = XmToggleButtonGadgetGetState (dtwm.iconBoxTG);
-  
+  commit_orig_dtwm_values();
 
   /* write out resources to xrdb */
   _DtAddToResource(style.display, dtwmRes);

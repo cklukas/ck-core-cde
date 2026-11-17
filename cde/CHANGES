@@ -1,4 +1,20 @@
 2026-11-17
+- Wire `Style Manager - Window` (`Dtwm*moveOpaque` **"Show Contents During
+  Move"** and related window behavior toggles) to apply live in `dtwm-wayland`
+  and fix bottom clipping in the `Style Manager - Window` dialog
+  (`cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/cde_bevel.c`,
+  `cde/programs/dtwm/wayland/cde_workspace.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtstyle/Dtwm.c`): render the classic CDE 3×3 rubberband
+  wireframe outline during interactive move and resize when `moveOpaque` is
+  unchecked (committing geometry on button release), apply `keyboardFocusPolicy`
+  (`pointer`/`explicit`), `focusAutoRaise`, `secondariesOnTop`,
+  `animateMinimizeRestore`, `showTaskSwitcher`, `doubleIconSize`, and
+  `showOpenWindowIcons` live from `RESOURCE_MANAGER` without a workspace-manager
+  restart prompt, and attach `showTaskSwitcherTG` to the bottom of
+  `windowFocusForm` so all toggles and the **Window Icons** section remain
+  visible.
 - Add live CDE `.dp` color palette and theme switching in `dtstyle`,
   `dtsession`, `dtwm-panel`, and `dtwm-wayland`
   (`cde/programs/dtstyle/ColorMain.c`, `cde/programs/dtsession/SrvPalette.c`,

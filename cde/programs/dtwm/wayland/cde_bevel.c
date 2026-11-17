@@ -650,6 +650,75 @@ struct wlr_buffer *dtwm_render_snap_preview(const DtwmPalette *pal, int w, int h
     return &buf->base;
 }
 
+struct wlr_buffer *dtwm_render_wireframe_outline(int w, int h) {
+    if (w < 16) w = 16;
+    if (h < 16) h = 16;
+    if (w > 8192) w = 8192;
+    if (h > 8192) h = 8192;
+
+    cairo_t *cr = nullptr;
+    DtwmCairoBuffer *buf = dtwm_cairo_buffer_create(w, h, &cr);
+    if (!buf) {
+        return nullptr;
+    }
+
+    cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+    cairo_restore(cr);
+
+    /* Classic CDE / Motif 3x3 rubberband outline (WmFeedback.c DrawOutline),
+     * rendered with high-contrast dark halo + bright core so it remains crisp
+     * over both dark and light application surfaces without X11 GXxor. */
+    double x1 = floor((double)w / 3.0) + 0.5;
+    double x2 = floor((2.0 * (double)w) / 3.0) + 0.5;
+    double y1 = floor((double)h / 3.0) + 0.5;
+    double y2 = floor((2.0 * (double)h) / 3.0) + 0.5;
+
+    cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+
+    /* Dark outer/inner contrast backing */
+    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.88);
+    cairo_set_line_width(cr, 3.0);
+    cairo_rectangle(cr, 1.5, 1.5, (double)w - 3.0, (double)h - 3.0);
+    cairo_stroke(cr);
+
+    if (w >= 48 && h >= 48) {
+        cairo_set_line_width(cr, 3.0);
+        cairo_move_to(cr, x1, 2.0);
+        cairo_line_to(cr, x1, (double)h - 2.0);
+        cairo_move_to(cr, x2, 2.0);
+        cairo_line_to(cr, x2, (double)h - 2.0);
+        cairo_move_to(cr, 2.0, y1);
+        cairo_line_to(cr, (double)w - 2.0, y1);
+        cairo_move_to(cr, 2.0, y2);
+        cairo_line_to(cr, (double)w - 2.0, y2);
+        cairo_stroke(cr);
+    }
+
+    /* Bright white/silver core lines */
+    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.96);
+    cairo_set_line_width(cr, 1.0);
+    cairo_rectangle(cr, 1.5, 1.5, (double)w - 3.0, (double)h - 3.0);
+    cairo_stroke(cr);
+
+    if (w >= 48 && h >= 48) {
+        cairo_move_to(cr, x1, 2.0);
+        cairo_line_to(cr, x1, (double)h - 2.0);
+        cairo_move_to(cr, x2, 2.0);
+        cairo_line_to(cr, x2, (double)h - 2.0);
+        cairo_move_to(cr, 2.0, y1);
+        cairo_line_to(cr, (double)w - 2.0, y1);
+        cairo_move_to(cr, 2.0, y2);
+        cairo_line_to(cr, (double)w - 2.0, y2);
+        cairo_stroke(cr);
+    }
+
+    cairo_surface_flush(buf->surface);
+    cairo_destroy(cr);
+    return &buf->base;
+}
+
 struct wlr_buffer *dtwm_render_task_switcher(DtwmServer *server, int *out_w, int *out_h) {
     int count = 0;
     DtwmView *v;

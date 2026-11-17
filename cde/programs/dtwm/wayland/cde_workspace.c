@@ -1508,10 +1508,42 @@ static DtwmView *find_xwayland_view_by_win(DtwmServer *server, xcb_window_t win)
     return nullptr;
 }
 
+static bool xrdb_key_matches(const char *lhs, size_t lhs_len, const char *suffix) {
+    while (lhs_len > 0 && isspace((unsigned char)lhs[lhs_len - 1])) {
+        lhs_len--;
+    }
+    size_t slen = strlen(suffix);
+    if (lhs_len < slen) {
+        return false;
+    }
+    if (strncasecmp(lhs + (lhs_len - slen), suffix, slen) != 0) {
+        return false;
+    }
+    if (lhs_len == slen) {
+        return true;
+    }
+    char sep = lhs[lhs_len - slen - 1];
+    return sep == '.' || sep == '*' || isspace((unsigned char)sep);
+}
+
+static bool parse_xrdb_bool(const char *val, bool fallback) {
+    if (!val) return fallback;
+    while (*val && isspace((unsigned char)*val)) val++;
+    if (strncasecmp(val, "true", 4) == 0 || strncasecmp(val, "on", 2) == 0 ||
+        strncasecmp(val, "yes", 3) == 0 || val[0] == '1') {
+        return true;
+    }
+    if (strncasecmp(val, "false", 5) == 0 || strncasecmp(val, "off", 3) == 0 ||
+        strncasecmp(val, "no", 2) == 0 || val[0] == '0') {
+        return false;
+    }
+    return fallback;
+}
+
 static void sync_xcb_resource_manager_profile(DtwmServer *server) {
     if (!server || !server->xcb_conn || server->xcb_root == XCB_WINDOW_NONE) return;
     xcb_get_property_cookie_t ck = xcb_get_property(
-        server->xcb_conn, 0, server->xcb_root, XCB_ATOM_RESOURCE_MANAGER, XCB_ATOM_STRING, 0, 8192
+        server->xcb_conn, 0, server->xcb_root, XCB_ATOM_RESOURCE_MANAGER, XCB_ATOM_STRING, 0, 16384
     );
     xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
     if (!rep) return;
@@ -1520,15 +1552,54 @@ static void sync_xcb_resource_manager_profile(DtwmServer *server) {
         char *txt = calloc((size_t)len + 1, 1);
         if (txt) {
             memcpy(txt, xcb_get_property_value(rep), (size_t)len);
-            const char *hit = strstr(txt, "appearanceProfile:");
-            if (hit) {
-                dtwm_server_apply_appearance_profile(
-                    server, dtwm_parse_appearance_profile(hit + strlen("appearanceProfile:"))
-                );
+            const char *last_prof = nullptr;
+            const char *last_pal = nullptr;
+            bool has_auto_raise = false;
+
+            char *saveptr = nullptr;
+            for (char *line = strtok_r(txt, "\r\n", &saveptr); line;
+                 line = strtok_r(nullptr, "\r\n", &saveptr)) {
+                while (*line && isspace((unsigned char)*line)) line++;
+                if (*line == '\0' || *line == '!') continue;
+                char *colon = strchr(line, ':');
+                if (!colon) continue;
+                size_t klen = (size_t)(colon - line);
+                const char *val = colon + 1;
+                while (*val && isspace((unsigned char)*val)) val++;
+
+                if (xrdb_key_matches(line, klen, "appearanceProfile")) {
+                    last_prof = val;
+                } else if (xrdb_key_matches(line, klen, "ColorPalette")) {
+                    last_pal = val;
+                } else if (xrdb_key_matches(line, klen, "moveOpaque")) {
+                    server->move_opaque = parse_xrdb_bool(val, server->move_opaque);
+                } else if (xrdb_key_matches(line, klen, "keyboardFocusPolicy")) {
+                    server->focus_follows_mouse = (strncasecmp(val, "pointer", 7) == 0);
+                    if (!has_auto_raise) {
+                        server->focus_auto_raise = !server->focus_follows_mouse;
+                    }
+                } else if (xrdb_key_matches(line, klen, "focusAutoRaise")) {
+                    server->focus_auto_raise = parse_xrdb_bool(val, server->focus_auto_raise);
+                    has_auto_raise = true;
+                } else if (xrdb_key_matches(line, klen, "secondariesOnTop")) {
+                    server->allow_primary_on_top = !parse_xrdb_bool(val, true);
+                } else if (xrdb_key_matches(line, klen, "animateMinimizeRestore")) {
+                    server->animate_minimize = parse_xrdb_bool(val, server->animate_minimize);
+                } else if (xrdb_key_matches(line, klen, "showTaskSwitcher")) {
+                    server->show_task_switcher = parse_xrdb_bool(val, server->show_task_switcher);
+                } else if (xrdb_key_matches(line, klen, "doubleIconSize")) {
+                    dtwm_icons_set_large_icons(server, parse_xrdb_bool(val, server->large_icons));
+                } else if (xrdb_key_matches(line, klen, "showOpenWindowIcons")) {
+                    dtwm_icons_set_open_window_icons(
+                        server, parse_xrdb_bool(val, server->show_open_window_icons)
+                    );
+                }
             }
-            const char *pal_hit = strstr(txt, "ColorPalette:");
-            if (pal_hit) {
-                dtwm_server_apply_palette_file(server, pal_hit + strlen("ColorPalette:"));
+            if (last_prof) {
+                dtwm_server_apply_appearance_profile(server, dtwm_parse_appearance_profile(last_prof));
+            }
+            if (last_pal) {
+                dtwm_server_apply_palette_file(server, last_pal);
             }
             free(txt);
         }
