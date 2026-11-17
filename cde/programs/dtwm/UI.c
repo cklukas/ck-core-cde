@@ -1802,6 +1802,7 @@ ControlSetBehavior (ControlData * control_data,
             *expanded_file_name = (String) _DtWmParseFilenameExpand ((unsigned char*) file_name);
 
             XtSetArg (al[*ac], XmNfileName, *expanded_file_name);    (*ac)++;
+	    XtSetArg (al[*ac], XmNmonitorTime, 1500);                (*ac)++;
 	    XtSetArg (al[*ac], XmNcontrolType, XmCONTROL_MONITOR);  (*ac)++;
 	 }
          else if ((intptr_t) control_data->element_values[CONTROL_MONITOR_TYPE].parsed_value == MONITOR_MAIL)
@@ -2306,13 +2307,22 @@ SwitchCreate (BoxData * box_data)
          XmStringFree (icon_label);
 
       if (icon_name != nullptr)
+      {
          XtFree(icon_name);
+         icon_name = nullptr;
+      }
 
       if (alt_icon_name != nullptr)
+      {
          XtFree(alt_icon_name);
+         alt_icon_name = nullptr;
+      }
 
       if (exp_file_name != nullptr)
+      {
          XtFree(exp_file_name);
+         exp_file_name = nullptr;
+      }
 
       if (i % 2)
          prev_right = control_data->icon;

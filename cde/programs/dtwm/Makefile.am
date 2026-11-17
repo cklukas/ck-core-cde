@@ -14,7 +14,7 @@ EXTRA_DIST = tests/check-property-readers.py tests/property-client.c \
              tests/check-dtwm-hardening.py tests/check-dtwm-hardening.c \
              tests/check-dtwm-wayland.py tests/check-dtwm-wayland-workspaces.py \
              tests/check-dtwm-wayland-icons.py tests/check-dtwm-wayland-wp05.py \
-             tests/check-dtwm-wayland-wp06.py \
+             tests/check-dtwm-wayland-wp06.py tests/check-dtwm-wayland-wp09.py \
              wayland/protocols/wlr-layer-shell-unstable-v1.xml
 
 check-local:
@@ -31,6 +31,7 @@ if BUILD_DTWM_WAYLAND
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-icons.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp05.py --compositor ./dtwm-wayland
 	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp06.py --compositor ./dtwm-wayland
+	CC="$(CC)" python3 $(srcdir)/tests/check-dtwm-wayland-wp09.py --compositor ./dtwm-wayland
 endif
 
 configdir = $(CDE_INSTALLATION_TOP)/config/C

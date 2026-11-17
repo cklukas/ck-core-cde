@@ -1,4 +1,30 @@
 2026-11-17
+- Integrate workstation and laptop hardware status, FreeDesktop notifications,
+  `StatusNotifier` tray actions, and persistent Front Panel customization
+  (`WP-09`) on the `x11_wayland` branch.
+  - `cde/programs/types/dtwm.fp.src`, `cde/programs/types/miscActions.dt.src`,
+    and `cde/programs/icons/` (`Fpnotif*.pm`, `Fpstatus*.pm`, `Fppower*.pm`,
+    `Fpnet*.pm`, `Fpbt*.pm`, `Fpdisp*.pm`, `DtDisplay.pm`, `Makefile.am`):
+    wire `CONTROL Notifications` (`MONITOR_TYPE file` on
+    `$HOME/.dt/notifications.unread`) into `Switch` `POSITION_HINTS 3`, add
+    `SUBPANEL SystemSubpanel` (*"System & Hardware"*) above `Style` with
+    `CkStatus`, `CkNotify`, `CkPower`, `CkNetwork`, `CkBluetooth`, `CkMixer`,
+    and `DtstyleDisplay` actions, and install 20 symbolic-color CDE pixmaps.
+  - `cde/programs/dtwm/UI.c`, `PopupMenu.c`, `wayland/WmFpWayland.c`,
+    `wayland/cde_workspace.c`, and `cde/debian/Xsession.wayland`: fix a latent
+    `SwitchCreate` pointer-reset double-free when a `SWITCH` control specifies
+    `FILE_NAME`, poll `MONITOR_FILE` controls at `1500 ms` so indicator lamps
+    react promptly, save `~/.dt/sessions/dtwmfp.session` immediately on
+    `Copy To Main Panel` and `dtwm-panel` `SIGTERM`/`SIGINT`, refresh live
+    `TYPE client` gadget coordinates on `MapNotify` embedding, support
+    `f.restart` Front Panel reload in `dtwm-wayland`, and auto-start
+    `ck-status --daemon` in `Xsession.wayland`.
+  - `cde/programs/dtwm/tests/check-dtwm-wayland-wp09.py`,
+    `cde/programs/dtwm/Makefile.am`, `scripts/run-lima-wayland-harness.py`,
+    `scripts/lima/cde-ubuntu-26.04.yaml`, and `docs/improvements/wayland.md`:
+    verify live toast notifications, Switch lamp signaling, `StatusNotifier`
+    tray hosting, embedded `ck-status-gauge`, and `Copy To Main Panel`
+    persistence under `make check`.
 - Qualify the complete Wayland + X11/XLibre desktop stack and signed Ubuntu
   26.04.1 LTS APT repository (`WP-08`) on the `x11_wayland` branch, pinning CK
   Core Motif ABI 9 `a2f4a3b8428d40853342de301169ed6a904bd868`.

@@ -198,6 +198,33 @@ lock, and Style Manager controls natively with Wayland:
   a dedicated seat X11 server for X11 sessions and respawns `dtgreet` cleanly on
   logout.
 
+## Workstation & laptop status, desktop notifications, and Front Panel integration (`WP-09`)
+
+`CDE (Wayland)` and `CDE (X11 / XLibre)` share a native Motif workstation and
+laptop status architecture designed in the style of classic SunSoft and IBM CDE
+panel instrumentation:
+
+- **Central Switch Notification Lamp (`dtwm.fp`):** Slot 3 (`POSITION_HINTS 3`,
+  below `Lock`) of the central workspace Switch hosts `CONTROL Notifications`
+  (`MONITOR_TYPE file`, polling `$HOME/.dt/notifications.unread` every `1.5 s`
+  with symbolic-color `Fpnotif` / `FpnotifA` pixmaps). Incoming FreeDesktop
+  notifications (`org.freedesktop.Notifications`) display a 3D-beveled CDE toast
+  banner above the Front Panel and light the Switch indicator lamp; clicking the
+  bell opens `ck-status --tab notifications` (`CkNotify`).
+- **Slide-Up *System & Hardware* Subpanel (`SystemSubpanel`):** Positioned above
+  `Desktop Style` (`Style`), providing one-click access to *System Status &
+  Tray* (`CkStatus`), *Power & Battery* (`CkPower`), *Network & Wi-Fi*
+  (`CkNetwork`), *Bluetooth* (`CkBluetooth`), *Audio Mixer* (`CkMixer`), and
+  *Monitors & Display* (`DtstyleDisplay`). Right-clicking any subpanel item and
+  choosing **Copy To Main Panel** immediately updates the main Front Panel and
+  persists `~/.dt/sessions/dtwmfp.session` (saved both on customization and on
+  `dtwm-panel` `SIGTERM`/`SIGINT` shutdown).
+- **Live 4-Quadrant Status Gauge (`ck-status --gauge`):** Can be pinned into
+  `CONTROL Blank2` (`POSITION_HINTS 8`, `~/.dt/types/ckstatus_gauge.fp`) as a
+  live `54×48` `TYPE client` (`ck-status-gauge`) panel instrument showing Wi-Fi
+  signal bars, Bluetooth + notification/`StatusNotifier` lamp, and a 5-segment
+  battery/AC fuel gauge, with live `f.restart` reload support in `dtwm-wayland`.
+
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`
@@ -213,8 +240,11 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   bidirectional Motif XDND v5 ↔ Wayland `wl_data_device`, `ck-grab` screencopy,
   per-output mixed-DPI reflow), `check-dtwm-wayland-wp06.py` (`WP-06`
   `ext-session-lock-v1`, `ext-idle-notify-v1`, `dtsession --wayland`, `dtstyle`
-  IPC), and `check-wayland-dtlogin.py` (`WP-07` `_dtgreeter`, `.desktop`
-  session discovery, Wayland/X11 seat handoff) run automatically under
+  IPC), `check-wayland-dtlogin.py` (`WP-07` `_dtgreeter`, `.desktop`
+  session discovery, Wayland/X11 seat handoff), and
+  `check-dtwm-wayland-wp09.py` (`WP-09` central Switch notification lamp,
+  `SystemSubpanel` + `Copy To Main Panel` persistence, live `ck-status-gauge`
+  embedding, `StatusNotifier` tray, and toast banner) run automatically under
   `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,

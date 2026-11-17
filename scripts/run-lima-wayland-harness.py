@@ -34,6 +34,7 @@ APPS_NON_CEF_TARGETS = [
     "ck-calc",
     "ck-character-map",
     "ck-grab",
+    "ck-status",
     "ck-eyes",
     "ck-coins",
     "ck-nibbles",

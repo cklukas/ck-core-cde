@@ -242,4 +242,85 @@ ACTION Passwd
         DESCRIPTION     %|nls-25036-#The#|
 }
 
+XCOMM #####
+XCOMM CK Core Workstation & Laptop System Status Actions
+XCOMM #####
+
+ACTION CkStatus
+{
+        LABEL           System Status
+        ICON            Fpstatus
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-status --tab overview
+        DESCRIPTION     Open the CK Core System Status, Notifications, and Tray console.
+}
+
+ACTION CkNotify
+{
+        LABEL           Notifications & Tray
+        ICON            Fpnotif
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-status --tab notifications
+        DESCRIPTION     Open Desktop Notifications and StatusNotifier System Tray.
+}
+
+ACTION CkPower
+{
+        LABEL           Power & Battery
+        ICON            Fppower
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-status --tab power
+        DESCRIPTION     Open Laptop Battery and Workstation Power Status.
+}
+
+ACTION CkNetwork
+{
+        LABEL           Network & Wi-Fi
+        ICON            Fpnet
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-status --tab network
+        DESCRIPTION     Open Network, IPv4/IPv6, and Wi-Fi Status.
+}
+
+ACTION CkBluetooth
+{
+        LABEL           Bluetooth
+        ICON            Fpbt
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-status --tab bluetooth
+        DESCRIPTION     Open Bluetooth Adapter and Device Controls.
+}
+
+ACTION CkMixer
+{
+        LABEL           Audio Mixer
+        ICON            Dtaudio
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     ck-mixer
+        DESCRIPTION     Open the CK Core Audio Volume Mixer.
+}
+
+ACTION DtstyleDisplay
+{
+        LABEL           Monitors & Display
+        ICON            Fpdisp
+        ARG_COUNT       0
+        TYPE            COMMAND
+        WINDOW_TYPE     NO_STDIO
+        EXEC_STRING     dtstyle -display_dialog
+        DESCRIPTION     Open the Style Manager Display and Multi-Monitor Arrangement dialog.
+}
+
 XCOMM ######################## EOF ############################################

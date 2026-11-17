@@ -1100,6 +1100,17 @@ static void handle_dt_wm_request_item(DtwmServer *server, const char *cmd) {
         dtwm_begin_move_panel(server);
         return;
     }
+    if (strncmp(cmd, "f.restart", 9) == 0) {
+        if (server->panel_pid > 0) {
+            kill(server->panel_pid, SIGTERM);
+            int wstatus = 0;
+            waitpid(server->panel_pid, &wstatus, 0);
+            server->panel_pid = 0;
+            server->panel_view = nullptr;
+        }
+        spawn_genuine_front_panel(server);
+        return;
+    }
     if (strncmp(cmd, "f.set_output_dpi", 16) == 0) {
         unsigned int out_idx = 0;
         int dpi_val = 96;

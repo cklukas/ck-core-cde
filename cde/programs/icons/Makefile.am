@@ -848,4 +848,14 @@ Dtmanpg.m.bm                    xpdf.t.pm \
 Dtmanpg.m_m.bm                  xv.l.pm \
 Dtmanpg.m.pm                    xv.m.pm \
 Dtmanpg.t.bm                    xv.t.pm \
-Dtmanpg.t_m.bm
+Dtmanpg.t_m.bm                  DtDisplay.pm \
+Fpbt.l.pm                       Fpbt.m.pm \
+Fpbt.t.pm                       Fpdisp.l.pm \
+Fpdisp.m.pm                     Fpdisp.t.pm \
+Fpnet.l.pm                      Fpnet.m.pm \
+Fpnet.t.pm                      Fpnotif.s.pm \
+Fpnotif.t.pm                    FpnotifA.s.pm \
+FpnotifA.t.pm                   Fppower.l.pm \
+Fppower.m.pm                    Fppower.t.pm \
+Fpstatus.l.pm                   Fpstatus.m.pm \
+Fpstatus.t.pm

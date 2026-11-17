@@ -60,6 +60,7 @@ provision:
       libwayland-dev libwayland-bin wayland-protocols libwlroots-0.19-dev \
       xwayland libseat-dev libinput-dev libxkbcommon-dev libdrm-dev \
       libgbm-dev libegl-dev libgles-dev libpixman-1-dev \
+      dbus-x11 libnotify-bin wlr-randr pipewire xdg-desktop-portal xdg-desktop-portal-wlr \
       labwc grim wlrctl wayvnc foot
     # Ensure hostname resolves via IPv4 loopback so ToolTalk (libtt / ttsession)
     # TI-RPC loopback binds cleanly instead of hitting nss-myhostname link-local IPv6.

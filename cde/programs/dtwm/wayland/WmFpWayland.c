@@ -257,6 +257,17 @@ static void ensure_cde_search_paths(const char *argv0) {
     }
 
     const char *home = getenv("HOME");
+    if (home && home[0]) {
+        char dt_dir[PATH_MAX], sess_dir[PATH_MAX], types_dir[PATH_MAX], dyn_dir[PATH_MAX];
+        snprintf(dt_dir, sizeof(dt_dir), "%s/.dt", home);
+        snprintf(sess_dir, sizeof(sess_dir), "%s/.dt/sessions", home);
+        snprintf(types_dir, sizeof(types_dir), "%s/.dt/types", home);
+        snprintf(dyn_dir, sizeof(dyn_dir), "%s/.dt/types/fp_dynamic", home);
+        mkdir(dt_dir, 0755);
+        mkdir(sess_dir, 0755);
+        mkdir(types_dir, 0755);
+        mkdir(dyn_dir, 0755);
+    }
     if (!getenv("DTDATABASESEARCHPATH")) {
         char dbpath[PATH_MAX * 2];
         if (home && home[0]) {
@@ -395,6 +406,13 @@ static bool try_embed_x11_window(Display *dpy, Window win) {
             pcd->pECD = (struct _WmFpEmbeddedClientData *)ecd;
             ecd->pCD = pcd;
 
+            if (ecd->wControl != nullptr) {
+                ecd->winParent = XtWindow(XtParent(ecd->wControl));
+                ecd->x = XtX(ecd->wControl) + 3;
+                ecd->y = XtY(ecd->wControl) + 3;
+                if (XtWidth(ecd->wControl) > 6) ecd->width = XtWidth(ecd->wControl) - 6;
+                if (XtHeight(ecd->wControl) > 6) ecd->height = XtHeight(ecd->wControl) - 6;
+            }
             unsigned int w = ecd->width > 8 ? (unsigned int)ecd->width : 48u;
             unsigned int h = ecd->height > 8 ? (unsigned int)ecd->height : 48u;
             XUnmapWindow(dpy, win);
@@ -770,6 +788,22 @@ static unsigned char parse_profile_arg(const char *s) {
     return XmAPPEARANCE_CLASSIC;
 }
 
+static XtSignalId g_sigId = 0;
+
+static void handle_term_sig(int sig) {
+    (void)sig;
+    if (g_sigId) {
+        XtNoticeSignal(g_sigId);
+    }
+}
+
+static void on_xt_term_signal(XtPointer client_data, XtSignalId *id) {
+    (void)client_data;
+    (void)id;
+    WmFrontPanelSessionSaveData();
+    exit(0);
+}
+
 static int ignore_x_err(Display *dpy, XErrorEvent *ev) {
     (void)dpy;
     (void)ev;
@@ -791,6 +825,9 @@ int main(int argc, char **argv) {
 
     XtToolkitInitialize();
     wmGD.mwmAppContext = XtCreateApplicationContext();
+    g_sigId = XtAppAddSignal(wmGD.mwmAppContext, on_xt_term_signal, nullptr);
+    signal(SIGTERM, handle_term_sig);
+    signal(SIGINT, handle_term_sig);
     Display *dpy = XtOpenDisplay(wmGD.mwmAppContext, nullptr, "dtwm", "Dtwm", nullptr, 0, &argc, argv);
     if (!dpy) {
         fprintf(stderr, "dtwm-panel: failed to open X11 display\n");
@@ -859,7 +896,7 @@ int main(int argc, char **argv) {
     XSelectInput(dpy, g_fpScreen.rootWindow, SubstructureNotifyMask);
     scan_existing_embedded_clients(dpy);
 
-    for (;;) {
+    while (!XtAppGetExitFlag(wmGD.mwmAppContext)) {
         XEvent ev;
         XtAppNextEvent(wmGD.mwmAppContext, &ev);
         if (ev.type == PropertyNotify && ev.xproperty.window == g_mwmWin &&
@@ -871,5 +908,6 @@ int main(int argc, char **argv) {
         }
         XtDispatchEvent(&ev);
     }
+    WmFrontPanelSessionSaveData();
     return 0;
 }
