@@ -1,4 +1,12 @@
 2026-11-17
+- Match `dtwm-wayland` titlebar Maximize, Minimize, and Window Menu button
+  glyph proportions to classic X11 `dtwm`
+  (`cde/programs/dtwm/wayland/cde_bevel.c`): size the Maximize button inner
+  bevel square to `th - 8` (`4px` inset from the button edges, matching
+  `WmCDecor.c:BevelMaximizeButton` instead of a fixed `10x10` box) and invert
+  the inner square when maximized, center a `4x4` Minimize bevel square
+  (`BevelMinimizeButton`), and use `4px` horizontal inset on the Window Menu
+  bar (`BevelSystemButton`).
 - Fix squashed/overlapping `Style Manager - Keyboard` (and sister `dtstyle`
   dialogs) and wire live Wayland keyboard auto-repeat toggling
   (`cde/programs/dtwm/wayland/dtwm_wayland.h`,

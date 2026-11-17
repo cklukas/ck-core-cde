@@ -431,40 +431,40 @@ void dtwm_view_update_frame(DtwmView *view) {
         double title_x = tx;
         double title_w = tw;
 
-        /* Left Window Menu Button [ - ] */
+        /* Left Window Menu Button [ - ] (matches WmCDecor.c BevelSystemButton) */
         if (view->has_menu_btn && title_w >= btn_w * 2) {
             draw_bevel(cr, tx, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
-            /* Recessed horizontal bar glyph */
-            double gx = tx + 5.0;
+            double gx = tx + 4.0;
             double gy = ty + floor((th - 4.0) * 0.5);
-            double gw = btn_w - 10.0;
+            double gw = btn_w - 8.0;
             draw_bevel(cr, gx, gy, gw, 4.0, 1.0, cs->top_shadow, cs->bottom_shadow);
             title_x += btn_w;
             title_w -= btn_w;
         }
 
-        /* Right Maximize Button [ □ ] */
+        /* Right Maximize Button [ □ ] (matches WmCDecor.c BevelMaximizeButton:
+         * 4px inset from button edges -> (th - 8) inner square, inverted when maximized) */
         double right_edge = tx + tw;
         if (view->has_max_btn && title_w >= btn_w * 2) {
             right_edge -= btn_w;
             title_w -= btn_w;
-            if (view->maximized) {
-                draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->bottom_shadow, cs->top_shadow);
-            } else {
-                draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
-            }
-            double sq = 10.0;
+            draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
+            double sq = (th > 12.0) ? (th - 8.0) : 4.0;
             double sx = right_edge + floor((btn_w - sq) * 0.5);
             double sy = ty + floor((th - sq) * 0.5);
-            draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->top_shadow, cs->bottom_shadow);
+            if (view->maximized) {
+                draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->bottom_shadow, cs->top_shadow);
+            } else {
+                draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->top_shadow, cs->bottom_shadow);
+            }
         }
 
-        /* Minimize Button [ . ] */
+        /* Minimize Button [ . ] (matches WmCDecor.c BevelMinimizeButton: 4x4 centered) */
         if (view->has_min_btn && title_w >= btn_w * 1.5) {
             right_edge -= btn_w;
             title_w -= btn_w;
             draw_bevel(cr, right_edge, ty, btn_w, th, 1.0, cs->top_shadow, cs->bottom_shadow);
-            double sq = 5.0;
+            double sq = 4.0;
             double sx = right_edge + floor((btn_w - sq) * 0.5);
             double sy = ty + floor((th - sq) * 0.5);
             draw_bevel(cr, sx, sy, sq, sq, 1.0, cs->top_shadow, cs->bottom_shadow);
