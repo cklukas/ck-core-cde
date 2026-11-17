@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include <wlr/util/log.h>
+#include <xcb/xcb_icccm.h>
 #include <xkbcommon/xkbcommon.h>
 
 typedef struct {
@@ -889,7 +890,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
                     view_set_maximized(view, !view->maximized);
                     return;
                 case DTWM_PART_TITLE:
-                    if (server->last_title_click_view == view &&
+                    if (view->has_max_btn && server->last_title_click_view == view &&
                         (ev->time_msec - server->last_title_click_ms) <= 400) {
                         server->last_title_click_view = nullptr;
                         view_set_maximized(view, !view->maximized);
@@ -1689,13 +1690,16 @@ static void handle_new_layer_surface(struct wl_listener *listener, void *data) {
     wl_signal_add(&wlr_ls->events.destroy, &ls->destroy);
 }
 
-/* --- Rootless XWayland Integration (Honoring _MOTIF_WM_HINTS) --- */
+/* --- Rootless XWayland Integration (Honoring _MOTIF_WM_HINTS & WM_NORMAL_HINTS) --- */
 static void apply_xwayland_decorations(DtwmView *view) {
     struct wlr_xwayland_surface *xs = view->xwayland_surface;
     if (!xs || xs->override_redirect) {
         view->decorated = false;
         view->has_title = false;
         view->has_resize_handles = false;
+        view->has_menu_btn = false;
+        view->has_min_btn = false;
+        view->has_max_btn = false;
         return;
     }
     bool no_border = (xs->decorations & WLR_XWAYLAND_SURFACE_DECORATIONS_NO_BORDER) != 0;
@@ -1706,6 +1710,65 @@ static void apply_xwayland_decorations(DtwmView *view) {
     view->has_menu_btn = !no_title;
     view->has_min_btn = !no_title;
     view->has_max_btn = !no_title;
+
+    /* Honor full 5-field _MOTIF_WM_HINTS (MWM_DECOR_ALL / MWM_FUNC_ALL subtraction semantics) */
+    DtwmServer *server = view->server;
+    if (server && server->xcb_conn && server->atom_mwm_hints != XCB_ATOM_NONE &&
+        xs->window_id != XCB_WINDOW_NONE) {
+        xcb_get_property_cookie_t ck = xcb_get_property(
+            server->xcb_conn, 0, xs->window_id, server->atom_mwm_hints, XCB_GET_PROPERTY_TYPE_ANY, 0, 5
+        );
+        xcb_get_property_reply_t *rep = xcb_get_property_reply(server->xcb_conn, ck, nullptr);
+        if (rep) {
+            if (rep->format == 32 && xcb_get_property_value_length(rep) >= 12) {
+                const uint32_t *h = (const uint32_t *)xcb_get_property_value(rep);
+                uint32_t flags = h[0];
+                uint32_t funcs = h[1];
+                uint32_t decor = h[2];
+
+                if (flags & 0x02u /* MWM_HINTS_DECORATIONS */) {
+                    const uint32_t all_d = 0x02u | 0x04u | 0x08u | 0x10u | 0x20u | 0x40u;
+                    uint32_t eff_d = (decor & 0x01u /* MWM_DECOR_ALL */)
+                                         ? (all_d & ~(decor & ~0x01u))
+                                         : decor;
+                    view->decorated = (eff_d != 0);
+                    view->has_title = (eff_d & 0x08u /* MWM_DECOR_TITLE */) != 0;
+                    view->has_resize_handles = (eff_d & 0x04u /* MWM_DECOR_RESIZEH */) != 0;
+                    view->has_menu_btn = view->has_title && ((eff_d & 0x10u /* MWM_DECOR_MENU */) != 0);
+                    view->has_min_btn = view->has_title && ((eff_d & 0x20u /* MWM_DECOR_MINIMIZE */) != 0);
+                    view->has_max_btn = view->has_title && ((eff_d & 0x40u /* MWM_DECOR_MAXIMIZE */) != 0);
+                }
+                if (flags & 0x01u /* MWM_HINTS_FUNCTIONS */) {
+                    const uint32_t all_f = 0x02u | 0x04u | 0x08u | 0x10u | 0x20u;
+                    uint32_t eff_f = (funcs & 0x01u /* MWM_FUNC_ALL */)
+                                         ? (all_f & ~(funcs & ~0x01u))
+                                         : funcs;
+                    if (!(eff_f & 0x02u /* MWM_FUNC_RESIZE */)) {
+                        view->has_resize_handles = false;
+                    }
+                    if (!(eff_f & 0x08u /* MWM_FUNC_MINIMIZE */)) {
+                        view->has_min_btn = false;
+                    }
+                    if (!(eff_f & 0x10u /* MWM_FUNC_MAXIMIZE */)) {
+                        view->has_max_btn = false;
+                    }
+                }
+            }
+            free(rep);
+        }
+    }
+
+    /* Also suppress resize handles & maximize button on fixed-size WM_NORMAL_HINTS windows */
+    if (xs->size_hints) {
+        const uint32_t min_max = (uint32_t)(XCB_ICCCM_SIZE_HINT_P_MIN_SIZE | XCB_ICCCM_SIZE_HINT_P_MAX_SIZE);
+        if ((xs->size_hints->flags & min_max) == min_max &&
+            xs->size_hints->min_width > 0 && xs->size_hints->min_height > 0 &&
+            xs->size_hints->min_width == xs->size_hints->max_width &&
+            xs->size_hints->min_height == xs->size_hints->max_height) {
+            view->has_resize_handles = false;
+            view->has_max_btn = false;
+        }
+    }
 }
 
 void dtwm_begin_move_panel(DtwmServer *server) {
@@ -2015,6 +2078,7 @@ static void xwayland_destroy(struct wl_listener *listener, void *data) {
     wl_list_remove(&view->request_minimize.link);
     wl_list_remove(&view->set_title.link);
     wl_list_remove(&view->set_decorations.link);
+    wl_list_remove(&view->set_hints.link);
     wl_list_remove(&view->destroy.link);
     wl_list_remove(&view->link);
     dtwm_foreign_toplevel_destroy(view);
@@ -2054,6 +2118,8 @@ static void handle_new_xwayland_surface(struct wl_listener *listener, void *data
     wl_signal_add(&xs->events.set_title, &view->set_title);
     view->set_decorations.notify = xwayland_set_decorations;
     wl_signal_add(&xs->events.set_decorations, &view->set_decorations);
+    view->set_hints.notify = xwayland_set_decorations;
+    wl_signal_add(&xs->events.set_hints, &view->set_hints);
     view->destroy.notify = xwayland_destroy;
     wl_signal_add(&xs->events.destroy, &view->destroy);
 

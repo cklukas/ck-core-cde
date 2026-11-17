@@ -5,7 +5,7 @@
   "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-34-generic, clang 21, wlroots 0.19)",
   "motif_revision": "a2f4a3b8428d40853342de301169ed6a904bd868",
   "libXm_so_9_sha256": "eae935cdbae1ab993e36891e70639697cabbbc23cb74bb7f642ab60b5827b3ec",
-  "apps_revision": "eac8a976dfb726c899e8fe9bf762ae0e939fde72",
+  "apps_revision": "04ea7f2ee6f34f3eb5c6f4c3f9e3e767a4e8061e",
   "features_verified": [
     "zwp_text_input_manager_v3 + zwp_input_method_manager_v2 CJK IME relay in dtwm-wayland (cde_ime.c)",
     "zwp_input_method_keyboard_grab_v2 hardware/virtual key routing with hotplug keymap sync and IME virtual-keyboard feedback-loop prevention",
@@ -22,11 +22,11 @@
     "ckdocs build --config ckdocs.yml --out /Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/tmp/ckdocs-site --clean --strict"
   ],
   "apt_packages": {
-    "ck-core-motif9_2.4.0-1_arm64.deb": "266d11f5f1734f064afe78f4c9cd8bdd8cbb6464a1d88e09c28c73b329247c4d",
-    "ck-core-fs-lib_0.3.0-1_arm64.deb": "217905e8a6dd0fb9b487be31958aab0d47c04bef3ec3967fc7185adf6c43e33b",
-    "ck-core-cde_2.5.3-1_arm64.deb": "5ef8f2f61271cb62ee18e4db708e665cbf0f35500d8fbf2a7aa5a3b98f7783ad",
-    "ck-core-dtlogin_2.5.3-1_arm64.deb": "79654bd0af3e866948083d3b53b6106bacdbfb5d352237e609c65b1140458975",
-    "ck-core-apps_1.0.0-1_arm64.deb": "7aec55a11a25df4c8c3096119c1db08b7e4e860c1cfc7519280b568dd5de7e75"
+    "ck-core-motif9_2.4.0-1_arm64.deb": "a2583d9858f8d2afd2fc2ff94a55a770c3e7842202e3f2ded430d075ac675593",
+    "ck-core-fs-lib_0.3.0-1_arm64.deb": "d56f1aeb0d5c824750d442e15a178dd7a82be3c880d41cf0476213cf3062c2ee",
+    "ck-core-cde_2.5.3-1_arm64.deb": "23e51e7c2e5dc883f986965a3b9477ce3af2c2944bdec48be4331b10a207eb56",
+    "ck-core-dtlogin_2.5.3-1_arm64.deb": "e71120e748ade756ece6538a992fa97babbb42a88207cb4460bee8fb9d8b93f4",
+    "ck-core-apps_1.0.0-1_arm64.deb": "328b5acdb73223542d8273c8956cb6b4d00d16c4365b2c71d24b3bfb522b661a"
   },
   "screenshots": {
     "wp11_cjk_preedit_popup": "/Volumes/S8T/tmp/cde-wayland-wp00-9a09ad77/receipts/wp11/wp11-wayland-cjk-ime.png",

@@ -303,7 +303,23 @@ def main() -> int:
                 start_new_session=True,
             )
             procs.extend([p_status, p_gauge])
-            time.sleep(1.5)
+            # Wait deterministically until ck-status claims org.freedesktop.Notifications on D-Bus
+            for _ in range(80):
+                if p_status.poll() is not None:
+                    raise SystemExit(f"ck-status exited early with {p_status.returncode}")
+                r = subprocess.run(
+                    [
+                        "dbus-send", "--session", "--dest=org.freedesktop.DBus",
+                        "--type=method_call", "--print-reply", "/org/freedesktop/DBus",
+                        "org.freedesktop.DBus.NameHasOwner", "string:org.freedesktop.Notifications",
+                    ],
+                    env=c_env,
+                    capture_output=True,
+                    text=True,
+                )
+                if "boolean true" in r.stdout:
+                    break
+                time.sleep(0.1)
 
             p_sni = subprocess.Popen([str(sni_bin)], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
             procs.append(p_sni)

@@ -1,4 +1,10 @@
 2026-11-17
+- Honor full 5-field `_MOTIF_WM_HINTS` (`MWM_DECOR_ALL` / `MWM_FUNC_ALL`
+  bit-subtraction semantics for `MWM_DECOR_RESIZEH`, `MWM_DECOR_MAXIMIZE`,
+  `MWM_DECOR_MINIMIZE`, and `MWM_DECOR_MENU`) and fixed-size `WM_NORMAL_HINTS`
+  (`PMinSize == PMaxSize`) in `dtwm-wayland` (`dtwm_wayland_main.c`,
+  `cde_workspace.c`, `dtwm_wayland.h`) so non-resizable Motif tools such as
+  `ck-calc` omit corner resize handles and maximize buttons just like X11 `dtwm`.
 - Add native Wayland CJK Input Method support (`zwp_text_input_v3`,
   `zwp_input_method_v2`, `zwp_input_method_keyboard_grab_v2`, and
   `zwp_input_popup_surface_v2` candidate popups), `dtstyle` Linux `fcitx5`/`ibus`

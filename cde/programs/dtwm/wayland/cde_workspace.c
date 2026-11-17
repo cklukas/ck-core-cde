@@ -1451,6 +1451,7 @@ void dtwm_workspaces_on_xwayland_ready(DtwmServer *server) {
     server->xcb_root = screen->root;
 
     server->atom_mwm_info = intern_atom_sync(server->xcb_conn, "_MOTIF_WM_INFO");
+    server->atom_mwm_hints = intern_atom_sync(server->xcb_conn, "_MOTIF_WM_HINTS");
     server->atom_dt_wm_hints = intern_atom_sync(server->xcb_conn, "_DT_WM_HINTS");
     server->atom_active_win_box = intern_atom_sync(server->xcb_conn, "_DT_ACTIVE_WINDOW_BOX");
     server->atom_randr_dpi_opt_in = intern_atom_sync(server->xcb_conn, "_MOTIF_RANDR_OUTPUT_DPI");

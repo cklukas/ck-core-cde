@@ -197,6 +197,7 @@ struct DtwmView {
     struct wl_listener request_configure;
     struct wl_listener set_title;
     struct wl_listener set_decorations;
+    struct wl_listener set_hints;
 };
 
 typedef struct {
@@ -336,6 +337,7 @@ struct DtwmServer {
     xcb_window_t xcb_wm_win;
     struct wl_event_source *xcb_event_source;
     xcb_atom_t atom_mwm_info;
+    xcb_atom_t atom_mwm_hints;
     xcb_atom_t atom_dt_wm_hints;
     xcb_atom_t atom_ws_list;
     xcb_atom_t atom_ws_current;
