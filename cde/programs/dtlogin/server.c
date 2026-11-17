@@ -58,6 +58,9 @@
 # include	<pwd.h>
 # include	"dm.h"
 # include	"vgmsg.h"
+#ifdef DTLOGIN_WAYLAND_SEAT
+# include	"wayland_seat.h"
+#endif
 
 static volatile sig_atomic_t receivedUsr1;	/* SIGUSR1: the server is ready */
 static volatile sig_atomic_t pauseTimedOut;	/* SIGALRM: the pause is over */
@@ -228,6 +231,11 @@ StartServer( struct display *d )
 {
     int	i;
     int	ret = FALSE;
+
+#ifdef DTLOGIN_WAYLAND_SEAT
+    if (d->isWaylandSeat)
+	return DtloginStartWaylandGreeter (d);
+#endif
 
     i = 0;
     while (d->serverAttempts == 0 || i < d->serverAttempts)

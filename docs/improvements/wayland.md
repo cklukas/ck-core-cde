@@ -172,6 +172,32 @@ lock, and Style Manager controls natively with Wayland:
   `wlr_keyboard` settings live and publishes `_DT_WAYLAND_INPUT_STATE` on the
   XWayland root window.
 
+## Wayland-capable `dtlogin` display manager (`WP-07`)
+
+`dtlogin` supports local Wayland seats alongside classic X11 `local` /
+`local_uid` and `XDMCP` configurations:
+
+- **`wayland` and `wayland_uid` display types in `Xservers`**: configuring a
+  seat entry such as `:0 Local wayland@tty1 /usr/dt/bin/dtwm-wayland --greeter`
+  runs an unprivileged `_dtgreeter` PAM `greeter` session (`dtlogin-greeter` /
+  `pam_systemd.so class=greeter`), starting `dtwm-wayland --greeter` with
+  `SI:localuser:root` XWayland authorization so the genuine Motif `dtgreet`
+  greeter maps frameless at `(0, 0)` with compositor WM shortcuts disabled.
+- **Dynamic FreeDesktop session menu**: `dtlogin` scans
+  `/usr/share/wayland-sessions/*.desktop` and `/usr/share/xsessions/*.desktop`,
+  populating `dtgreet`'s **Options → Session** menu with **CDE (Wayland)** first
+  and **CDE (X11 / XLibre)** second followed by any additional installed
+  Wayland and X11 sessions (filtering `Hidden`, `NoDisplay`, and missing
+  `TryExec` targets and disambiguating duplicate names).
+- **Clean VT/seat handoff and PAM session environment**: once PAM verification
+  and any expired-password conversation (`SvcPam.c`) succeed, `dtlogin`
+  terminates the greeter compositor to release `libseat`/DRM master, exports
+  `XDG_SESSION_TYPE`, `XDG_SEAT`, `XDG_VTNR`, and `XDG_CURRENT_DESKTOP` into PAM
+  (`_DtSvcPamPutenv`) and copies `pam_getenvlist` (`_DtSvcPamGetenvlist`) into
+  the user session environment, then starts either the chosen Wayland session or
+  a dedicated seat X11 server for X11 sessions and respawns `dtgreet` cleanly on
+  logout.
+
 ## Readiness reporting and automated verification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`

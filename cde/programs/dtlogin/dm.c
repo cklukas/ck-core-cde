@@ -140,6 +140,10 @@ static int parent_pid = -1;	/* PID of parent dtlogin process */
 void init_session_id(void); // xdmcp.c
 void RunChooser(struct display  *d); // RunChooser.c
 
+#ifdef DTLOGIN_WAYLAND_SEAT
+#include "wayland_seat.h"
+#endif
+
 
 /***************************************************************************/
 
@@ -832,6 +836,11 @@ ProcessChildDeath( int pid, waitType status )
 		d->status = notRunning;
 		break;
 	    case running:
+		if (d->isWaylandSeat && d->pid != -1)
+		{
+		    Debug ("Wayland greeter server exited during seat handoff on %s\n", d->name);
+		    break;
+		}
 		Debug ("Server for display %s terminated unexpectedly, status %d\n", d->name, waitVal (status));
 		LogError ((unsigned char *)"Server for display %s terminated unexpectedly %d\n",
 			   d->name, waitVal(status) );
@@ -977,7 +986,7 @@ StartDisplay(
 	 * certainly notice when they exit
 	 */
 	d->pingInterval = 0;
-    	if (d->authorize)
+    	if (d->authorize && !d->isWaylandSeat)
     	{
 	    Debug ("SetLocalAuthorization %s, auth %s\n",
                     d->name, d->authNames);
@@ -1126,7 +1135,12 @@ StartDisplay(
 	}
 
 	
-	SetAuthorization (d);
+#ifdef DTLOGIN_WAYLAND_SEAT
+	if (d->isWaylandSeat)
+	    DtloginPrepareWaylandGreeterChild (d);
+#endif
+	if (!d->isWaylandSeat)
+	    SetAuthorization (d);
 
 	/*
 	 * do process accounting...

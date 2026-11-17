@@ -2,6 +2,18 @@
 set -e
 
 if [ "$1" = "configure" ]; then
+    if ! id -u _dtgreeter >/dev/null 2>&1; then
+        useradd --system --user-group --home-dir /var/dt --no-create-home \
+            --shell /usr/sbin/nologin _dtgreeter || true
+    fi
+    for grp in video render input; do
+        if getent group "$grp" >/dev/null 2>&1; then
+            usermod -a -G "$grp" _dtgreeter >/dev/null 2>&1 || true
+        fi
+    done
+    mkdir -p /var/dt /run/dtlogin
+    chmod 0755 /var/dt /run/dtlogin
+
     . /usr/share/debconf/confmodule
     DEFAULT_DISPLAY_MANAGER_FILE=/etc/X11/default-display-manager
     DAEMON=/usr/dt/bin/dtlogin

@@ -1,0 +1,28 @@
+{
+  "work_package": "WP-07",
+  "date": "2026-11-17",
+  "branch": "x11_wayland",
+  "motif_revision": "e3380b74552f10678b8fc1f295e558c085b2d7bd",
+  "guest_vm": {
+    "name": "cde-ubuntu2604",
+    "os": "Ubuntu 26.04.1 LTS (aarch64)",
+    "compiler": "clang 21"
+  },
+  "checks": {
+    "libDtSvc_suite": "PASS (15/15 including check-svc-pam.py 20/20 scenarios)",
+    "dtwm_suite": "PASS (12/12 including all 5 dtwm-wayland integration suites)",
+    "dtlogin_suite": "PASS (17/17 including check-wayland-dtlogin.py ASan/UBSan + live daemon)"
+  },
+  "live_daemon_receipt": {
+    "greeter_user": "_dtgreeter",
+    "greeter_uid": 999,
+    "test_uid": 1000,
+    "greeter_cycles": [623778, 624115, 624504],
+    "dtgreet_pids": [623790, 624127, 624516],
+    "dtgreet_libXm_mapped": true,
+    "wayland_session_type": "wayland",
+    "x11_session_type": "x11",
+    "leaked_processes": 0,
+    "greeter_screenshot_sha256": "abcfdf8899cb955973ff9b94b834fb2bf981711f074c144c5ed26c002ed410d6"
+  }
+}

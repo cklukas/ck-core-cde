@@ -360,6 +360,9 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
     built_debs["ck-core-cde"] = deb_cde
 
     # Finish ck-core-dtlogin
+    (r_dtlogin / "etc" / "pam.d").mkdir(parents=True, exist_ok=True)
+    if (deb_meta / "dtlogin-greeter.pam").is_file():
+        shutil.copy2(deb_meta / "dtlogin-greeter.pam", r_dtlogin / "etc" / "pam.d" / "dtlogin-greeter")
     (r_dtlogin / "lib" / "systemd" / "system").mkdir(parents=True, exist_ok=True)
     shutil.copy2(deb_meta / "dtlogin.service", r_dtlogin / "lib" / "systemd" / "system" / "dtlogin.service")
     dtl_needed = rewrite_rpath_and_collect_needed(r_dtlogin)

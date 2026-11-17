@@ -88,7 +88,7 @@ static int PamStart(const char *service_name, const char *user,
 
     if (!display_name) goto done;
 
-    if (display_name[0] == ':') {
+    if (display_name[0] == ':' || strchr(display_name, ':') == nullptr) {
 	status = pam_set_item(pamh, PAM_TTY, display_name);
 	goto done;
     }
@@ -215,6 +215,32 @@ int _DtSvcPamSetcred(const char *service_name, const char *user,
 	return status;
 
     return pam_setcred(pamh, PAM_ESTABLISH_CRED);
+}
+
+/**
+ * @brief Export a variable into the active PAM environment (for pam_systemd).
+ */
+int _DtSvcPamPutenv(const char *service_name, const char *user,
+		    const char *display_name, const char *name_value)
+{
+    int status;
+
+    if (!name_value) return PAM_BUF_ERR;
+
+    if ((status = PamStart(service_name, user, display_name)) != PAM_SUCCESS)
+	return status;
+
+    return pam_putenv(pamh, name_value);
+}
+
+/**
+ * @brief Return a newly allocated copy of the PAM session environment list,
+ *        or nullptr if no PAM handle is active.
+ */
+char **_DtSvcPamGetenvlist(void)
+{
+    if (!pamh) return nullptr;
+    return pam_getenvlist(pamh);
 }
 
 /**

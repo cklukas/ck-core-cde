@@ -226,6 +226,7 @@ typedef struct {
     struct wl_list link;
     DtwmServer *server;
     struct wlr_keyboard *wlr_keyboard;
+    struct wl_listener keymap;
     struct wl_listener modifiers;
     struct wl_listener key;
     struct wl_listener destroy;
@@ -302,6 +303,7 @@ struct DtwmServer {
     DtwmWorkspace workspaces[DTWM_MAX_WORKSPACES];
 
     /* Docked genuine CDE Front Panel (dtwm-panel) & TYPE client swallowing */
+    bool greeter_mode;
     bool show_front_panel;
     bool show_open_window_icons;
     bool large_icons;

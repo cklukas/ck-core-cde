@@ -537,7 +537,8 @@ int main(int argc, char **argv) {
     Atom req_a = XInternAtom(dpy, "_DT_WM_REQUEST", False);
     XChangeProperty(dpy, wm_win, req_a, XA_STRING, 8, PropModeAppend,
                     (const unsigned char *)argv[1], (int)strlen(argv[1]) + 1);
-    XFlush(dpy);
+    XSync(dpy, False);
+    XCloseDisplay(dpy);
     return 0;
 }
 """

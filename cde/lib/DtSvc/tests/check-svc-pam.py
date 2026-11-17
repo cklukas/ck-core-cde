@@ -89,6 +89,8 @@ int pam_setcred(pam_handle_t *, int);
 int pam_open_session(pam_handle_t *, int);
 int pam_close_session(pam_handle_t *, int);
 int pam_chauthtok(pam_handle_t *, int);
+int pam_putenv(pam_handle_t *, const char *);
+char **pam_getenvlist(pam_handle_t *);
 #endif
 """
 
@@ -117,7 +119,14 @@ static char *counted_strdup(const char *s)
 
 static int (*login_conv_ptr)(int, const struct pam_message **, struct pam_response **, void *);
 /* the stand-in for the PAM library: handles that remember their items */
-struct pam_handle { int live; char service[64], user[64], tty[64], rhost[64]; const struct pam_conv *conv; struct pam_conv conv_copy; };
+struct pam_handle {
+    int live;
+    char service[64], user[64], tty[64], rhost[64];
+    char env[8][128];
+    int nenv;
+    const struct pam_conv *conv;
+    struct pam_conv conv_copy;
+};
 #define MAX_HANDLES 16
 static struct pam_handle handles[MAX_HANDLES];
 static int nhandles, starts, ends, live_handles;
@@ -251,6 +260,23 @@ int pam_acct_mgmt(pam_handle_t *h, int flags) { (void) h; (void) flags; pam.acct
 int pam_setcred(pam_handle_t *h, int flags) { (void) h; (void) flags; note('c'); return pam.session_status; }
 int pam_open_session(pam_handle_t *h, int flags) { (void) h; (void) flags; note('o'); return pam.session_status; }
 int pam_close_session(pam_handle_t *h, int flags) { (void) h; (void) flags; note('x'); return pam.session_status; }
+int pam_putenv(pam_handle_t *h, const char *nv)
+{
+    if (!h || !nv) return PAM_BUF_ERR;
+    if (h->nenv < 8) snprintf(h->env[h->nenv++], sizeof h->env[0], "%s", nv);
+    return PAM_SUCCESS;
+}
+char **pam_getenvlist(pam_handle_t *h)
+{
+    char **list;
+    int i;
+    if (!h) return NULL;
+    list = (calloc)(h->nenv + 1, sizeof(char *));
+    if (!list) return NULL;
+    for (i = 0; i < h->nenv; i++) list[i] = (strdup)(h->env[i]);
+    list[h->nenv] = NULL;
+    return list;
+}
 
 #include "SvcPam.c"
 __attribute__((constructor)) static void find_login_conv(void) { login_conv_ptr = pam_conv.conv; }
@@ -510,7 +536,28 @@ static int password_change_without_a_login_starts_a_handle(void)
     return 0;
 }
 
+static int session_environment_and_local_tty_names(void)
+{
+    char **env;
+    int i;
+    begin();
+    CHECK(_DtSvcPamGetenvlist() == NULL);
+    CHECK(_DtSvcPamPutenv("dtlogin", "alice", "tty1", NULL) == PAM_BUF_ERR);
+    CHECK(_DtSvcPamPutenv("dtlogin", "alice", "tty1", "XDG_SESSION_TYPE=wayland") == PAM_SUCCESS);
+    CHECK(_DtSvcPamPutenv("dtlogin", "alice", "tty1", "XDG_SEAT=seat0") == PAM_SUCCESS);
+    CHECK(!strcmp(handles[0].tty, "tty1") && handles[0].rhost[0] == '\0');
+    CHECK(_DtSvcPamOpenSession("dtlogin", "alice", "tty1") == PAM_SUCCESS);
+    env = _DtSvcPamGetenvlist();
+    CHECK(env != NULL && env[0] != NULL && env[1] != NULL && env[2] == NULL);
+    CHECK(!strcmp(env[0], "XDG_SESSION_TYPE=wayland"));
+    CHECK(!strcmp(env[1], "XDG_SEAT=seat0"));
+    for (i = 0; env[i]; i++) free(env[i]);
+    free(env);
+    return 0;
+}
+
 static struct { const char *name; int (*run)(void); } scenarios[] = {
+    {"session_environment_and_local_tty_names", session_environment_and_local_tty_names},
     {"password_change_puts_the_questions_to_the_caller", password_change_puts_the_questions_to_the_caller},
     {"password_change_gives_the_login_conversation_back", password_change_gives_the_login_conversation_back},
     {"password_change_that_fails", password_change_that_fails},

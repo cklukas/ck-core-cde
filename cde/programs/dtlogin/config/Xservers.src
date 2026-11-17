@@ -54,6 +54,8 @@ XCOMM
 XCOMM <HostName>:0 <class> local@console           /usr/openwin/bin/X :0 <options>
 XCOMM <HostName>:1 <class> local@none              /usr/openwin/bin/X :1 <options>
 XCOMM <HostName>:0 <class> local_uid@console <uid> /usr/openwin/bin/X :0 <options>
+XCOMM <HostName>:0 <class> wayland@tty1            CDE_INSTALLATION_TOP/bin/dtwm-wayland --greeter
+XCOMM <HostName>:0 <class> wayland_uid@tty1  <uid> CDE_INSTALLATION_TOP/bin/dtwm-wayland --greeter
 XCOMM  XTermName:0 <class> foreign
 XCOMM
 XCOMM     A "*" in the first field of the entry for a local server 

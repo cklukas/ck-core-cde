@@ -1,4 +1,30 @@
 2026-11-17
+- Add Wayland local-seat display management, unprivileged `_dtgreeter` PAM
+  greeter sessions, FreeDesktop `.desktop` session discovery, and Wayland/X11
+  seat handoff (`WP-07`) to `dtlogin` on the `x11_wayland` branch.
+  - `cde/programs/dtlogin/` (`wayland_seat.c`, `wayland_seat.h`, `dm.h`,
+    `dpylist.c`, `file.c`, `dm.c`, `server.c`, `session.c`, `verify.c`,
+    `Makefile.am`, `config/Xservers.src`), `cde/lib/DtSvc/DtUtil2/SvcPam.c`,
+    `cde/include/Dt/SvcPam.h`, and `cde/debian/` (`dtlogin-greeter.pam`,
+    `ck-core-dtlogin.postinst`): add `wayland` and `wayland_uid` local-seat
+    display types, unprivileged `_dtgreeter` PAM `greeter` session startup
+    hosting `dtwm-wayland --greeter` + genuine Motif `dtgreet`, dynamic
+    `/usr/share/wayland-sessions` and `/usr/share/xsessions` `.desktop` menu
+    population ordering `CDE (Wayland)` and `CDE (X11 / XLibre)` first,
+    `_DtSvcPamPutenv` / `_DtSvcPamGetenvlist` PAM session environment
+    propagation, and clean greeter-to-session seat handoff for both Wayland and
+    X11 user sessions.
+  - `cde/programs/dtwm/wayland/dtwm_wayland_main.c` and `dtwm_wayland.h`: frame
+    `dtgreet`'s full-screen `login_shell` frameless at `(0, 0)` with WM hotkeys
+    disabled and `SI:localuser:root` XWayland access in `--greeter` mode, avoid
+    activating `override_redirect` Motif popup/pulldown menus on button press,
+    propagate `wlr_keyboard` keymap events for virtual keyboards, and detach
+    listeners cleanly on shutdown.
+  - `cde/programs/dtlogin/tests/check-wayland-dtlogin.py`,
+    `cde/lib/DtSvc/tests/check-svc-pam.py`, `cde/lib/DtSvc/tests/dts-buffers.c`,
+    and `docs/improvements/wayland.md`: verify ASan/UBSan config and `.desktop`
+    discovery plus live Ubuntu VM `dtlogin` Wayland and X11 login/logout cycles
+    with zero leaked processes.
 - Add `dtsession --wayland` session bootstrap, `ext-session-lock-v1` and
   `ext-idle-notify-v1` screen locking, and `dtstyle` Wayland hardware/input IPC
   (`WP-06`) on the `x11_wayland` branch.

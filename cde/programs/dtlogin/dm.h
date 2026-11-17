@@ -368,6 +368,15 @@ struct display {
 	char		*verifyName;	/* default, Kerberos, AFS, B1  */
         char            *pmSearchPath;  /* motif pixmap search path */
         char            *bmSearchPath;  /* motif bitmap search path */
+	int		isWaylandSeat;	/* local Wayland seat display class */
+	int		waylandSessionActive; /* 1 when active session uses Wayland */
+	int		seatXserverPid;	/* X11 server PID started on Wayland seat */
+	char		*greeterUser;	/* unprivileged greeter account (_dtgreeter) */
+	char		*waylandSocket;	/* greeter WAYLAND_DISPLAY */
+	char		*xwaylandDisplay; /* greeter XWayland DISPLAY */
+	char		*waylandRuntimeDir; /* 0700 greeter runtime directory */
+	char		*seatConfigName; /* configured seat display name */
+	char		*defaultWaylandSession; /* default session Exec token */
 };
 
 #define PROTO_TIMEOUT	(30 * 60)   /* 30 minutes should be long enough */

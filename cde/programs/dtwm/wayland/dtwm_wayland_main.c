@@ -175,6 +175,10 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
     if (view->is_swallowed) {
         return;
     }
+    if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
+        view->xwayland_surface->override_redirect) {
+        return;
+    }
 
     DtwmView *prev = server->focused_view;
     if (prev && prev != view) {
@@ -205,6 +209,15 @@ static void focus_view(DtwmServer *server, DtwmView *view, struct wlr_surface *s
         wlr_xwayland_surface_activate(view->xwayland_surface, true);
         if (!view->is_desktop_pin) {
             wlr_xwayland_surface_restack(view->xwayland_surface, nullptr, XCB_STACK_MODE_ABOVE);
+        }
+        if (server->greeter_mode && server->xcb_conn) {
+            xcb_set_input_focus(
+                server->xcb_conn,
+                XCB_INPUT_FOCUS_POINTER_ROOT,
+                view->xwayland_surface->window_id,
+                XCB_CURRENT_TIME
+            );
+            xcb_flush(server->xcb_conn);
         }
     }
     dtwm_view_update_frame(view);
@@ -832,7 +845,8 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
         return;
     }
 
-    if (view) {
+    if (view && !(view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
+                  view->xwayland_surface->override_redirect)) {
         focus_view(server, view, surface);
 
         if (part != DTWM_PART_CLIENT) {
@@ -978,7 +992,7 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
     struct wlr_keyboard_key_event *ev = data;
     dtwm_lock_notify_activity(server);
 
-    if (server->session_locked) {
+    if (server->session_locked || server->greeter_mode) {
         wlr_seat_set_keyboard(server->seat, kb->wlr_keyboard);
         wlr_seat_keyboard_notify_key(server->seat, ev->time_msec, ev->keycode, ev->state);
         return;
@@ -1004,9 +1018,29 @@ static void handle_keyboard_key(struct wl_listener *listener, void *data) {
     }
 }
 
+static void handle_keyboard_keymap(struct wl_listener *listener, void *data) {
+    (void)data;
+    DtwmKeyboard *kb = wl_container_of(listener, kb, keymap);
+    DtwmServer *server = kb->server;
+    wlr_seat_set_keyboard(server->seat, kb->wlr_keyboard);
+    if (!server->session_locked && server->focused_view) {
+        struct wlr_surface *fs = view_wlr_surface(server->focused_view);
+        if (fs) {
+            wlr_seat_keyboard_notify_enter(
+                server->seat,
+                fs,
+                kb->wlr_keyboard->keycodes,
+                kb->wlr_keyboard->num_keycodes,
+                &kb->wlr_keyboard->modifiers
+            );
+        }
+    }
+}
+
 static void handle_keyboard_destroy(struct wl_listener *listener, void *data) {
     (void)data;
     DtwmKeyboard *kb = wl_container_of(listener, kb, destroy);
+    wl_list_remove(&kb->keymap.link);
     wl_list_remove(&kb->modifiers.link);
     wl_list_remove(&kb->key.link);
     wl_list_remove(&kb->destroy.link);
@@ -1014,13 +1048,17 @@ static void handle_keyboard_destroy(struct wl_listener *listener, void *data) {
     free(kb);
 }
 
-static void server_add_keyboard(DtwmServer *server, struct wlr_keyboard *wlr_kbd) {
+static void server_add_keyboard(DtwmServer *server, struct wlr_keyboard *wlr_kbd, bool is_virtual) {
     DtwmKeyboard *kb = calloc(1, sizeof(*kb));
     if (!kb) return;
     kb->server = server;
     kb->wlr_keyboard = wlr_kbd;
-    dtwm_hw_apply_keyboard_defaults(server, wlr_kbd);
+    if (!is_virtual) {
+        dtwm_hw_apply_keyboard_defaults(server, wlr_kbd);
+    }
 
+    kb->keymap.notify = handle_keyboard_keymap;
+    wl_signal_add(&wlr_kbd->events.keymap, &kb->keymap);
     kb->modifiers.notify = handle_keyboard_modifiers;
     wl_signal_add(&wlr_kbd->events.modifiers, &kb->modifiers);
     kb->key.notify = handle_keyboard_key;
@@ -1028,15 +1066,22 @@ static void server_add_keyboard(DtwmServer *server, struct wlr_keyboard *wlr_kbd
     kb->destroy.notify = handle_keyboard_destroy;
     wl_signal_add(&wlr_kbd->base.events.destroy, &kb->destroy);
 
-    wlr_seat_set_keyboard(server->seat, wlr_kbd);
+    if (wlr_kbd->keymap) {
+        wlr_seat_set_keyboard(server->seat, wlr_kbd);
+    }
     wl_list_insert(&server->keyboards, &kb->link);
+    if (!server->session_locked && server->focused_view && wlr_kbd->keymap) {
+        struct wlr_surface *fs = view_wlr_surface(server->focused_view);
+        if (fs) {
+            wlr_seat_keyboard_notify_enter(
+                server->seat, fs, wlr_kbd->keycodes, wlr_kbd->num_keycodes, &wlr_kbd->modifiers
+            );
+        }
+    }
 }
 
 static void update_seat_capabilities(DtwmServer *server) {
-    uint32_t caps = WL_SEAT_CAPABILITY_POINTER;
-    if (!wl_list_empty(&server->keyboards)) {
-        caps |= WL_SEAT_CAPABILITY_KEYBOARD;
-    }
+    uint32_t caps = WL_SEAT_CAPABILITY_POINTER | WL_SEAT_CAPABILITY_KEYBOARD;
     wlr_seat_set_capabilities(server->seat, caps);
 }
 
@@ -1045,7 +1090,7 @@ static void handle_new_input(struct wl_listener *listener, void *data) {
     struct wlr_input_device *dev = data;
     switch (dev->type) {
     case WLR_INPUT_DEVICE_KEYBOARD:
-        server_add_keyboard(server, wlr_keyboard_from_input_device(dev));
+        server_add_keyboard(server, wlr_keyboard_from_input_device(dev), false);
         break;
     case WLR_INPUT_DEVICE_POINTER:
         wlr_cursor_attach_input_device(server->cursor, dev);
@@ -1070,7 +1115,7 @@ static void handle_new_virtual_pointer(struct wl_listener *listener, void *data)
 static void handle_new_virtual_keyboard(struct wl_listener *listener, void *data) {
     DtwmServer *server = wl_container_of(listener, server, new_virtual_keyboard);
     struct wlr_virtual_keyboard_v1 *vkbd = data;
-    server_add_keyboard(server, &vkbd->keyboard);
+    server_add_keyboard(server, &vkbd->keyboard, true);
     update_seat_capabilities(server);
 }
 
@@ -1748,7 +1793,25 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
     view->content_tree = wlr_scene_subsurface_tree_create(view->frame_tree, xs->surface);
     view->content_tree->node.data = view;
 
-    if (xs->x != 0 || xs->y != 0) {
+    if (view->server->greeter_mode) {
+        struct wlr_box obox = {0};
+        wlr_output_layout_get_box(view->server->output_layout, nullptr, &obox);
+        if (obox.width > 0 && obox.height > 0 &&
+            view->client_w >= obox.width && view->client_h >= obox.height) {
+            /* dtgreet's full-screen login_shell maps frameless at (0, 0) */
+            view->decorated = false;
+            view->has_title = false;
+            view->has_resize_handles = false;
+            view->has_menu_btn = false;
+            view->has_min_btn = false;
+            view->has_max_btn = false;
+            view->x = 0;
+            view->y = 0;
+        } else {
+            view->x = xs->x;
+            view->y = xs->y;
+        }
+    } else if (xs->x != 0 || xs->y != 0) {
         view->x = xs->x;
         view->y = xs->y;
     } else {
@@ -2005,6 +2068,19 @@ static void handle_xwayland_ready(struct wl_listener *listener, void *data) {
     dtwm_icons_on_xwayland_ready(server);
     dtwm_xdnd_on_xwayland_ready(server);
     dtwm_lock_on_xwayland_ready(server);
+    if (server->greeter_mode && server->xcb_conn) {
+        /* Grant local root (dtlogin session manager, xrdb, dtgreet) access via
+         * ServerInterpreted SI:localuser:root without opening XWayland to other users. */
+        static const char si_root[] = "localuser\0root";
+        xcb_void_cookie_t hck = xcb_change_hosts_checked(
+            server->xcb_conn,
+            XCB_HOST_MODE_INSERT,
+            5 /* XCB_FAMILY_SERVER_INTERPRETED */,
+            (uint16_t)(sizeof(si_root) - 1),
+            (const uint8_t *)si_root
+        );
+        free(xcb_request_check(server->xcb_conn, hck));
+    }
     if (server->show_front_panel && server->panel_pid > 0 && !server->status_written) {
         struct wl_event_loop *loop = wl_display_get_event_loop(server->wl_display);
         server->status_fallback_timer = wl_event_loop_add_timer(
@@ -2150,9 +2226,9 @@ int main(int argc, char **argv) {
     server.layer_bottom_tree = wlr_scene_tree_create(&server.scene->tree);
     server.desktop_icon_tree = wlr_scene_tree_create(&server.scene->tree);
     server.workspace_tree = wlr_scene_tree_create(&server.scene->tree);
-    server.unmanaged_xwayland_tree = wlr_scene_tree_create(&server.scene->tree);
     server.layer_top_tree = wlr_scene_tree_create(&server.scene->tree);
     server.panel_swallow_tree = wlr_scene_tree_create(&server.scene->tree);
+    server.unmanaged_xwayland_tree = wlr_scene_tree_create(&server.scene->tree);
     server.popup_tree = wlr_scene_tree_create(&server.scene->tree);
     server.overlay_tree = wlr_scene_tree_create(&server.scene->tree);
     server.layer_overlay_tree = wlr_scene_tree_create(&server.scene->tree);
@@ -2167,6 +2243,7 @@ int main(int argc, char **argv) {
     dtwm_workspaces_init(&server);
     dtwm_icons_init(&server);
     dtwm_lock_init(&server);
+    server.greeter_mode = greeter_mode;
     if (greeter_mode || no_panel) {
         server.show_front_panel = false;
     }
@@ -2217,7 +2294,7 @@ int main(int argc, char **argv) {
     wl_signal_add(&server.cursor->events.frame, &server.cursor_frame);
 
     server.seat = wlr_seat_create(server.wl_display, "seat0");
-    wlr_seat_set_capabilities(server.seat, WL_SEAT_CAPABILITY_POINTER);
+    wlr_seat_set_capabilities(server.seat, WL_SEAT_CAPABILITY_POINTER | WL_SEAT_CAPABILITY_KEYBOARD);
 
     server.new_input.notify = handle_new_input;
     wl_signal_add(&server.backend->events.new_input, &server.new_input);
@@ -2296,6 +2373,24 @@ int main(int argc, char **argv) {
         wlr_xwayland_destroy(server.xwayland);
     }
     wl_display_destroy_clients(server.wl_display);
+    wl_list_remove(&server.cursor_motion.link);
+    wl_list_remove(&server.cursor_motion_absolute.link);
+    wl_list_remove(&server.cursor_button.link);
+    wl_list_remove(&server.cursor_axis.link);
+    wl_list_remove(&server.cursor_frame.link);
+    wl_list_remove(&server.request_cursor.link);
+    wl_list_remove(&server.request_set_selection.link);
+    wl_list_remove(&server.request_set_primary_selection.link);
+    wl_list_remove(&server.request_start_drag.link);
+    wl_list_remove(&server.start_drag.link);
+    wl_list_remove(&server.new_virtual_pointer.link);
+    wl_list_remove(&server.new_virtual_keyboard.link);
+    wl_list_remove(&server.new_input.link);
+    wl_list_remove(&server.new_output.link);
+    wl_list_remove(&server.new_xdg_toplevel.link);
+    wl_list_remove(&server.new_xdg_popup.link);
+    wl_list_remove(&server.new_xdg_decoration.link);
+    wl_list_remove(&server.new_layer_surface.link);
     wlr_scene_node_destroy(&server.scene->tree.node);
     wlr_xcursor_manager_destroy(server.cursor_mgr);
     wlr_cursor_destroy(server.cursor);
