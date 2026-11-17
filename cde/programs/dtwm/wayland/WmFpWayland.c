@@ -49,8 +49,10 @@
 #include <X11/Xutil.h>
 
 #include <ctype.h>
+#include <dirent.h>
 #include <limits.h>
 #include <locale.h>
+#include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -242,12 +244,36 @@ static void bootstrap_color_server_if_needed(Display *dpy, unsigned char profile
 }
 
 /* --- Discover appconfig search paths for both installed (/usr/dt) and build-tree runs --- */
-static void ensure_cde_search_paths(const char *argv0) {
-    struct stat st;
-    if (getenv("DTDATABASESEARCHPATH") && getenv("XMICONSEARCHPATH")) {
+static void ensure_appmanager_gathered(void) {
+    const char *usess = getenv("DTUSERSESSION");
+    if (!usess || !usess[0] || strchr(usess, '/')) {
         return;
     }
+    char check_path[PATH_MAX];
+    snprintf(
+        check_path, sizeof(check_path),
+        "/var/dt/appconfig/appmanager/%s/Desktop_Apps", usess
+    );
+    struct stat st;
+    if (stat(check_path, &st) == 0) {
+        return;
+    }
+    const char *gather_bin = CDE_INSTALLATION_TOP "/bin/dtappgather";
+    if (access(gather_bin, X_OK) != 0) {
+        return;
+    }
+    pid_t pid = fork();
+    if (pid == 0) {
+        execl(gather_bin, "dtappgather", (char *)nullptr);
+        _exit(127);
+    } else if (pid > 0) {
+        int status = 0;
+        (void)waitpid(pid, &status, 0);
+    }
+}
 
+static void ensure_cde_search_paths(const char *argv0) {
+    struct stat st;
     char stage_appconfig[PATH_MAX] = {0};
     const char *appcfg = CDE_INSTALLATION_TOP "/appconfig";
 
@@ -275,15 +301,49 @@ static void ensure_cde_search_paths(const char *argv0) {
 
     const char *home = getenv("HOME");
     if (home && home[0]) {
-        char dt_dir[PATH_MAX], sess_dir[PATH_MAX], types_dir[PATH_MAX], dyn_dir[PATH_MAX];
+        char dt_dir[PATH_MAX], sess_dir[PATH_MAX], types_dir[PATH_MAX], dyn_dir[PATH_MAX], app_dir[PATH_MAX];
         snprintf(dt_dir, sizeof(dt_dir), "%s/.dt", home);
         snprintf(sess_dir, sizeof(sess_dir), "%s/.dt/sessions", home);
         snprintf(types_dir, sizeof(types_dir), "%s/.dt/types", home);
         snprintf(dyn_dir, sizeof(dyn_dir), "%s/.dt/types/fp_dynamic", home);
+        snprintf(app_dir, sizeof(app_dir), "%s/.dt/appmanager", home);
         mkdir(dt_dir, 0755);
         mkdir(sess_dir, 0755);
         mkdir(types_dir, 0755);
         mkdir(dyn_dir, 0755);
+        mkdir(app_dir, 0755);
+    }
+
+    if (!getenv("DTUSERSESSION") || !getenv("DTUSERSESSION")[0]) {
+        const char *u = getenv("USER");
+        if (!u || !u[0]) u = getenv("LOGNAME");
+        struct passwd *pw = (!u || !u[0]) ? getpwuid(getuid()) : nullptr;
+        if (pw && pw->pw_name && pw->pw_name[0]) u = pw->pw_name;
+        if (!u || !u[0]) u = "user";
+        char usess[256];
+        snprintf(usess, sizeof(usess), "%s-wayland", u);
+        for (char *p = usess; *p; ++p) {
+            if (*p == '/') *p = '_';
+        }
+        setenv("DTUSERSESSION", usess, 1);
+    }
+
+    if (!getenv("DTAPPSEARCHPATH") || !getenv("DTAPPSEARCHPATH")[0]) {
+        char apppath[PATH_MAX * 2];
+        if (home && home[0]) {
+            snprintf(
+                apppath, sizeof(apppath),
+                "%s/.dt/appmanager:%s/appmanager/%%L:%s/appmanager/C",
+                home, appcfg, appcfg
+            );
+        } else {
+            snprintf(
+                apppath, sizeof(apppath),
+                "%s/appmanager/%%L:%s/appmanager/C",
+                appcfg, appcfg
+            );
+        }
+        setenv("DTAPPSEARCHPATH", apppath, 1);
     }
     if (!getenv("DTDATABASESEARCHPATH")) {
         char dbpath[PATH_MAX * 2];
@@ -341,6 +401,8 @@ static void ensure_cde_search_paths(const char *argv0) {
     if (!getenv("DTINFOLIBDEFAULT")) {
         setenv("DTINFOLIBDEFAULT", "cde", 1);
     }
+
+    ensure_appmanager_gathered();
 }
 
 static void ensure_ttsession_running(Display *dpy) {

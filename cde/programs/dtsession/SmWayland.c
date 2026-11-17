@@ -12,6 +12,8 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <pwd.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -452,6 +454,61 @@ static void spawn_compositor_if_needed(void) {
     }
 }
 
+static void ensure_appmanager_gathered_wl(void) {
+    const char *home = getenv("HOME");
+    if (!getenv("DTUSERSESSION") || !getenv("DTUSERSESSION")[0]) {
+        const char *u = getenv("USER");
+        if (!u || !u[0]) u = getenv("LOGNAME");
+        struct passwd *pw = (!u || !u[0]) ? getpwuid(getuid()) : nullptr;
+        if (pw && pw->pw_name && pw->pw_name[0]) u = pw->pw_name;
+        if (!u || !u[0]) u = "user";
+        char usess[256];
+        snprintf(usess, sizeof(usess), "%s-wayland", u);
+        for (char *p = usess; *p; ++p) {
+            if (*p == '/') *p = '_';
+        }
+        setenv("DTUSERSESSION", usess, 1);
+    }
+    if (!getenv("DTAPPSEARCHPATH") || !getenv("DTAPPSEARCHPATH")[0]) {
+        char apppath[PATH_MAX * 2];
+        if (home && home[0]) {
+            snprintf(apppath, sizeof(apppath),
+                     "%s/.dt/appmanager:" CDE_INSTALLATION_TOP "/appconfig/appmanager/%%L:"
+                     CDE_INSTALLATION_TOP "/appconfig/appmanager/C",
+                     home);
+        } else {
+            snprintf(apppath, sizeof(apppath),
+                     CDE_INSTALLATION_TOP "/appconfig/appmanager/%%L:"
+                     CDE_INSTALLATION_TOP "/appconfig/appmanager/C");
+        }
+        setenv("DTAPPSEARCHPATH", apppath, 1);
+    }
+    const char *usess = getenv("DTUSERSESSION");
+    if (!usess || !usess[0] || strchr(usess, '/')) {
+        return;
+    }
+    char check_path[PATH_MAX];
+    snprintf(check_path, sizeof(check_path),
+             "/var/dt/appconfig/appmanager/%s/Desktop_Apps", usess);
+    struct stat st;
+    if (stat(check_path, &st) == 0) {
+        return;
+    }
+    const char *gather_bin = CDE_INSTALLATION_TOP "/bin/dtappgather";
+    if (access(gather_bin, X_OK) != 0) {
+        return;
+    }
+    pid_t pid = fork();
+    if (pid == 0) {
+        (void)setgid(getgid());
+        execl(gather_bin, "dtappgather", (char *)nullptr);
+        _exit(127);
+    } else if (pid > 0) {
+        int status = 0;
+        (void)waitpid(pid, &status, 0);
+    }
+}
+
 void SmWaylandPreInit(int *argc, char **argv) {
     if (!argc || !argv) return;
     int out = 1;
@@ -475,6 +532,7 @@ void SmWaylandPreInit(int *argc, char **argv) {
     const char *wl_env = getenv("WAYLAND_DISPLAY");
     if (req_wayland || (wl_env && *wl_env)) {
         g_smwl.wayland_mode = True;
+        ensure_appmanager_gathered_wl();
         if (req_wayland) {
             spawn_compositor_if_needed();
         }

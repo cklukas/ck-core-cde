@@ -1,4 +1,14 @@
 2026-11-17
+- Populate Application Manager (`/var/dt/appconfig/appmanager/$DTUSERSESSION`)
+  automatically on Wayland session startup (`cde/debian/Xsession.wayland`,
+  `cde/programs/dtsession/SmWayland.c`, `cde/programs/dtwm/wayland/WmFpWayland.c`):
+  ensure `DTUSERSESSION` and `DTAPPSEARCHPATH` are initialized without skipping
+  when `DTDATABASESEARCHPATH` is already set, and run `/usr/dt/bin/dtappgather`
+  during `Xsession.wayland`, `dtsession --wayland`, and `dtwm-panel` startup so
+  clicking the **Application Manager** Front Panel icon immediately displays all
+  installed CDE and desktop application groups (`Desktop_Apps`, `Desktop_Tools`,
+  `Information`, `Office`, `Internet`, `Graphics`, `Games`, `Education`,
+  `Media_Tools`, `System`, `Tex`) instead of an empty directory.
 - Fix `Action: Information Manager [Error]` (`TT_ERR_PROCID`) when clicking the
   Front Panel book **`i`** (`InfoManager` / `DtLoadInfoLib`) control on Wayland
   (`cde/lib/DtSvc/DtUtil2/SvcTT.c`, `cde/lib/DtSvc/DtUtil1/ActionTt.c`,

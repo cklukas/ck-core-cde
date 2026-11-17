@@ -27,6 +27,9 @@ if [ -x /usr/dt/bin/dtsearchpath ]; then
     eval "$(/usr/dt/bin/dtsearchpath -ksh 2>/dev/null)" || true
     set -u
 fi
+if [ -x /usr/dt/bin/dtappgather ]; then
+    /usr/dt/bin/dtappgather >/dev/null 2>&1 || true
+fi
 export XBMLANGPATH="${XBMLANGPATH:-${HOME:+$HOME/.dt/icons/%B%M.bm:$HOME/.dt/icons/%B:}/usr/dt/appconfig/icons/%L/%B%M.bm:/usr/dt/appconfig/icons/%L/%B:/usr/dt/appconfig/icons/C/%B%M.bm:/usr/dt/appconfig/icons/C/%B}"
 
 # Synchronize CDE IMS selection (~/.dt/ims/*) or installed Wayland IME (fcitx5 / ibus)
