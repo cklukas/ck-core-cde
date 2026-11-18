@@ -189,7 +189,7 @@ flowchart TD
   - **Built-in BlueZ Pairing Agent (`org.bluez.Agent1`) & Media Transport:** Implement `org.bluez.Agent1` inside `ck-status` (*Bluetooth* tab) supporting live device discovery, PIN/passkey confirmation dialogs, `Pair`, `Trust`, and `RemoveDevice`, plus optional MPRIS (`org.mpris.MediaPlayer2`) active track/play-pause controls.
 - **Parallel Wayland + X11 Acceptance Gate**: Automated virtual-PipeWire and D-Bus mock tests run under both headless Wayland and Xvfb X11 sessions, verifying sink/source/profile switching, mic controls, `AddAndActivateConnection2` Wi-Fi setup, and `org.bluez.Agent1` pairing round-trips.
 
-### [ ] WP-16 — `dtfile` Removable Media (`UDisks2`), Network Shares (`GVFS`), Archives & `FileManager1` Service
+### [x] WP-16 — `dtfile` Removable Media (`UDisks2`), Network Shares (`GVFS`), Archives & `FileManager1` Service
 - **Closes**: `GAP-FILES-01`, `GAP-FILES-02`, `GAP-FILES-05`
 - **Repos**: `ck-core-cde` (`cde/programs/dtfile/`), `ck-core-fs-lib`
 - **Dual Wayland + X11 Scope** *(100% shared across Wayland and X11)*:

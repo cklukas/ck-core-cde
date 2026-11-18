@@ -221,6 +221,8 @@
 #include "SharedMsgs.h"
 #include "StorageSize.h"
 #include "OpenWith.h"
+#include "Archive.h"
+#include "Thumbnails.h"
 #include "IconicPath.h"
 
 extern Widget _DtDuplicateIcon ( Widget, Widget, XmString, String, XtPointer, Boolean );
@@ -4985,6 +4987,16 @@ FmPopup (
                          XmNactivateCallback, OpenWithPopupCB,
                          (XtPointer) fileViewData);
 
+           XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_EXTRACT_HERE],
+                                XmNactivateCallback);
+           XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_EXTRACT_TO],
+                                XmNactivateCallback);
+           XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_COMPRESS],
+                                XmNactivateCallback);
+           XtAddCallback(fileMgrPopup.objPopup[BTN_COMPRESS],
+                         XmNactivateCallback, CompressPopupCB,
+                         (XtPointer) fileViewData);
+
            XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_PUTON],
                                 XmNactivateCallback);
            XtAddCallback(fileMgrPopup.objPopup[BTN_PUTON], XmNactivateCallback,
@@ -5012,6 +5024,9 @@ FmPopup (
 
            XtSetSensitive(fileMgrPopup.objPopup[BTN_STORAGE_SIZE], False);
            XtSetSensitive(fileMgrPopup.objPopup[BTN_OPEN_WITH], !file_mgr_data->toolbox);
+           XtSetSensitive(fileMgrPopup.objPopup[BTN_EXTRACT_HERE], False);
+           XtSetSensitive(fileMgrPopup.objPopup[BTN_EXTRACT_TO], False);
+           XtSetSensitive(fileMgrPopup.objPopup[BTN_COMPRESS], !file_mgr_data->toolbox);
 
            XtSetSensitive(fileMgrPopup.objPopup[BTN_HELP], False);
            XtSetSensitive(fileMgrPopup.objPopup[BTN_ADD_TO_SHELF], True);
@@ -5077,6 +5092,45 @@ FmPopup (
          else
          {
             XtSetSensitive(fileMgrPopup.objPopup[BTN_OPEN_WITH], False);
+         }
+
+         XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_EXTRACT_HERE],
+                              XmNactivateCallback);
+         XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_EXTRACT_TO],
+                              XmNactivateCallback);
+         if (!file_mgr_data->toolbox &&
+             fileViewData->file_data->physical_type != DtDIRECTORY &&
+             DtfileIsArchiveFile(fileViewData->file_data->file_name))
+         {
+            XtAddCallback(fileMgrPopup.objPopup[BTN_EXTRACT_HERE],
+                          XmNactivateCallback, ExtractHerePopupCB,
+                          (XtPointer) fileViewData);
+            XtAddCallback(fileMgrPopup.objPopup[BTN_EXTRACT_TO],
+                          XmNactivateCallback, ExtractToPopupCB,
+                          (XtPointer) fileViewData);
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_EXTRACT_HERE], True);
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_EXTRACT_TO], True);
+         }
+         else
+         {
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_EXTRACT_HERE], False);
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_EXTRACT_TO], False);
+         }
+
+         XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_COMPRESS],
+                              XmNactivateCallback);
+         if (!file_mgr_data->toolbox &&
+             strcmp(fileViewData->file_data->file_name, ".") != 0 &&
+             strcmp(fileViewData->file_data->file_name, "..") != 0)
+         {
+            XtAddCallback(fileMgrPopup.objPopup[BTN_COMPRESS],
+                          XmNactivateCallback, CompressPopupCB,
+                          (XtPointer) fileViewData);
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_COMPRESS], True);
+         }
+         else
+         {
+            XtSetSensitive(fileMgrPopup.objPopup[BTN_COMPRESS], False);
          }
 
             XtRemoveAllCallbacks(fileMgrPopup.objPopup[BTN_PUTON],
@@ -5987,16 +6041,20 @@ UpdateOneFileIcon(
         is_instance_icon = True;
    }
 
-   /* Optionally treat .pm/.bm as image icons (instance icons). */
+   char *thumb_image_owned = nullptr;
+
+   /* Optionally treat .pm/.bm/.png or FreeDesktop shared thumbnails as instance icons. */
    if (full_path)
    {
       unsigned int iw = 0, ih = 0;
-      if (DtfileShouldRenderImageIcon(full_path,
-                                      file_mgr_data->render_image_icons,
-                                      &iw, &ih))
+      int thumb_icon_sz = (file_mgr_data->view == BY_NAME_AND_EXTRA_LARGE_ICON) ? EXTRA_LARGE :
+                          (file_mgr_data->view == BY_NAME_AND_ICON) ? LARGE : SMALL;
+      thumb_image_owned = DtfileResolveImageOrThumbnail(
+         full_path, file_mgr_data->render_image_icons, thumb_icon_sz, &iw, &ih);
+      if (thumb_image_owned != nullptr)
       {
          is_instance_icon = True;
-         effective_image_name = full_path;
+         effective_image_name = thumb_image_owned;
       }
    }
 
@@ -6236,6 +6294,7 @@ UpdateOneFileIcon(
                                 (Widget) file_window,
                                 (DtIconGadget) icon_widget,
                                 pixmapData);
+   XtFree(thumb_image_owned);
 
 #ifdef _SHOW_LINK
    if (file_view_data->file_data->link != 0)

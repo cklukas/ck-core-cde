@@ -1,4 +1,53 @@
 2026-11-18
+- Deliver **WP-16 — `dtfile` Removable Media (`UDisks2`), Network Shares (`GVFS`),
+  Built-in Archives, Shared FreeDesktop Thumbnails, Live XDG Trash &
+  `org.freedesktop.FileManager1`** across both `CDE (Wayland)` and
+  `CDE (X11 / XLibre)` (`cde/programs/dtfile/Devices.h`,
+  `cde/programs/dtfile/Devices.c`, `cde/programs/dtfile/Archive.h`,
+  `cde/programs/dtfile/Archive.c`, `cde/programs/dtfile/Thumbnails.h`,
+  `cde/programs/dtfile/Thumbnails.c`, `cde/programs/dtfile/XdgTrashSync.h`,
+  `cde/programs/dtfile/XdgTrashSync.c`,
+  `cde/programs/dtfile/FileManagerService.h`,
+  `cde/programs/dtfile/FileManagerService.c`,
+  `cde/programs/dtfile/org.freedesktop.FileManager1.service.cpp`,
+  `cde/programs/dtfile/FileMgr.h`, `cde/programs/dtfile/Main.h`,
+  `cde/programs/dtfile/Main.c`, `cde/programs/dtfile/Menu.c`,
+  `cde/programs/dtfile/File.c`, `cde/programs/dtfile/FileMgr.c`,
+  `cde/programs/dtfile/IconicPath.c`, `cde/programs/dtfile/Shelf.c`,
+  `cde/programs/dtfile/Mounts.c`, `cde/programs/dtfile/Trash.c`,
+  `cde/programs/dtfile/Makefile.am`,
+  `cde/programs/dtfile/tests/check-archive-safety.py`,
+  `cde/programs/dtwm/Makefile.am`,
+  `cde/programs/dtwm/tests/check-dtwm-wayland-wp16.py`, `cde/debian/control`,
+  `docs/improvements/file-manager.md`, `docs/improvements/wayland.md`):
+  - Subscribe to `org.freedesktop.UDisks2` (`Devices.c`), dynamically surfacing
+    hotplugged USB/SD/MMC drives and encrypted `crypto_LUKS` volumes in
+    `dtfile`'s Shelf and **View → Mounts & Devices...** with Motif passphrase
+    unlock (`Encrypted.Unlock` → `Filesystem.Mount`, zeroing passphrase buffers
+    immediately) and safe *Unmount* / *Eject / Power Off* (`Filesystem.Unmount`,
+    `Encrypted.Lock`, `Drive.Eject`, `Drive.PowerOff`).
+  - Add **File → Connect to Server...** (`smb://`, `sftp://`, `davs://`,
+    `nfs://`) spawning `gio mount` directly via `fork`/`execvp` and watch
+    `/run/user/$UID/gvfs` via `inotify` so remote shares and hotplugged MTP/PTP
+    phones appear automatically with one-click *Disconnect / Unmount*.
+  - Add built-in **Extract Here**, **Extract To...**, and **Compress...**
+    actions (`Archive.c`, `libarchive`) supporting `.zip`, `.tar.gz`/`.tgz`,
+    `.tar.xz`/`.txz`, `.tar.zst`/`.tzst`, `.tar.bz2`, `.tar`, and `.7z`, using
+    two-pass preflight validation plus `openat`/`mkdirat`/`symlinkat`/`linkat`
+    with `O_NOFOLLOW` to block Zip-Slip and symlink/hardlink escapes
+    (`check-archive-safety.py`).
+  - Resolve shared FreeDesktop thumbnails (`Thumbnails.c`,
+    `$XDG_CACHE_HOME/thumbnails/{large,normal}/<md5(URI)>.png`) and direct `.png`
+    previews via `libXm.so.9` when `renderImageIcons` is enabled.
+  - Upgrade XDG Trash integration (`XdgTrashSync.c` + `Trash.c`) to live
+    bidirectional `inotify` synchronization across `$XDG_DATA_HOME/Trash`,
+    `~/.dt/Trash`, and per-mount `<mount>/.Trash-$UID` (`O(1)` same-filesystem
+    `rename()`).
+  - Register `org.freedesktop.FileManager1` on `/org/freedesktop/FileManager1`
+    (`ShowFolders`, `ShowItems`, `ShowItemProperties`, `Hostname`) plus
+    `org.freedesktop.FileManager1.service`, and verify all six capabilities in
+    parallel across headless `dtwm-wayland` and `Xvfb` + X11 `dtwm`
+    (`check-dtwm-wayland-wp16.py`).
 - Deliver **WP-14 — Polkit Authentication Agent (`ck-polkit-agent`), PAM Keyring
   Auto-Unlock & Interactive `ck-grab` Region/Clipboard Capture** across both
   `CDE (Wayland)` and `CDE (X11 / XLibre)`

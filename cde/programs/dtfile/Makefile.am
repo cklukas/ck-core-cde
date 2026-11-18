@@ -27,12 +27,14 @@ EXTRA_DIST = tests/check-trash-writer.py tests/check-trash-metadata.py \
              tests/check-sync-retry-ui.py SyncFeature.h.in \
              tests/check-stop-signal.py tests/check-stop-signal.c \
              tests/check-access-ids.py tests/check-access-ids.c \
-             tests/check-storage-size-hardlinks.py tests/check-storage-size-hardlinks.c
+             tests/check-storage-size-hardlinks.py tests/check-storage-size-hardlinks.c \
+             tests/check-archive-safety.py org.freedesktop.FileManager1.service.cpp
 
 check-local:
 	CC="$(CC)" python3 $(srcdir)/tests/check-stop-signal.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-access-ids.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-storage-size-hardlinks.py
+	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-archive-safety.py --module-source "$(abs_srcdir)"
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-writer.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-metadata.py
 	CC="$(CC)" python3 $(srcdir)/tests/check-trash-info.py
@@ -81,8 +83,11 @@ if HAVE_CK_CORE_FS
 	CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" python3 $(srcdir)/tests/check-sync-controller.py
 endif
 
-BUILT_SOURCES = dtfile.config dtfile_error SyncFeature.h
-CLEANFILES = dtfile.config dtfile_error
+BUILT_SOURCES = dtfile.config dtfile_error SyncFeature.h org.freedesktop.FileManager1.service
+CLEANFILES = dtfile.config dtfile_error org.freedesktop.FileManager1.service
+
+dbusservicedir = $(datadir)/dbus-1/services
+dbusservice_DATA = org.freedesktop.FileManager1.service
 
 dist_config_DATA = dtfile.config
 
@@ -91,13 +96,15 @@ dist_bin_SCRIPTS = dtfile_error dterror.ds
 dtfile_CPPFLAGS = -I./dtcopy -I$(srcdir)/dtcopy \
 		-DSHAPE -D_ILS_MACROS -DSUN_PERF \
 		-DCDE_INSTALLATION_TOP=\"$(CDE_INSTALLATION_TOP)\" \
-		-DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\"
+		-DCDE_CONFIGURATION_TOP=\"$(CDE_CONFIGURATION_TOP)\" \
+		$(shell $(PKG_CONFIG) --cflags dbus-1 libarchive 2>/dev/null)
 
 nodist_dtfile_SOURCES = SyncFeature.h
 
 dtfile_LDADD = dtcopy/sharedFuncs.o \
 	dtcopy/fsrtns.o \
-	$(DTCLIENTLIBS) $(TIRPCLIB) $(XTOOLLIB) 
+	$(DTCLIENTLIBS) $(TIRPCLIB) $(XTOOLLIB) \
+	-ldbus-1 -larchive
 
 if OPENBSD
 dtfile_CPPFLAGS += -DFILE_MAP_OPTIMIZE
@@ -123,7 +130,10 @@ dtfile_SOURCES = ChangeDir.c     ChangeDirP.c    Command.c       Common.c \
 		 ModAttr.c       ModAttrP.c      MultiView.c     OverWrite.c \
 		 Prefs.c         PrefsP.c        SharedMsgs.c    SharedProcs.c \
 		 ToolTalk.c      Trash.c         TrashMetadata.c TrashMetadata.h XdgTrashInfo.c XdgTrashInfo.h Utils.c fsDialog.c \
-		 StorageSize.c   OpenWith.c      OpenWith.h
+		 StorageSize.c   OpenWith.c      OpenWith.h \
+		 Thumbnails.c    Thumbnails.h    Archive.c       Archive.h \
+		 FileManagerService.c FileManagerService.h \
+		 XdgTrashSync.c  XdgTrashSync.h  Devices.c       Devices.h
 
 # Mind the quoting here...
 SCRIPTFLAGS = -DSHAPE -D_ILS_MACROS -DSUN_PERF \
@@ -141,3 +151,7 @@ dtfile_error: dtfile_error.cpp
 dterror.ds: dterror.src
 	$(RM) $@
 	$(GENCPP) -P -DXCOMM=# $(SCRIPTFLAGS) $<  > $@
+
+org.freedesktop.FileManager1.service: org.freedesktop.FileManager1.service.cpp
+	$(RM) $@
+	$(GENCPP) -P -DXCOMM=# $(SCRIPTFLAGS) $< > $@

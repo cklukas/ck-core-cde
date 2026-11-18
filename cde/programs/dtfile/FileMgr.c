@@ -171,6 +171,9 @@
 #include "SharedMsgs.h"
 #include "IconicPath.h"
 #include "Shelf.h"
+#include "Thumbnails.h"
+#include "Archive.h"
+#include "Devices.h"
 #include "DtSvcInternal.h"
 
 #include <stdarg.h>
@@ -368,6 +371,9 @@ static void ShelfPopupDataFree(ShelfPopupData *data);
 static void ShelfItemPopup(
                         ShelfItemData *item_data,
                         XButtonEvent *button_event );
+static void ShelfPopupMountCB(Widget w, XtPointer client_data, XtPointer call_data);
+static void ShelfPopupUnmountCB(Widget w, XtPointer client_data, XtPointer call_data);
+static void ShelfPopupEjectCB(Widget w, XtPointer client_data, XtPointer call_data);
 static void ShelfItemActivate(
                         ShelfItemData *item_data );
 static void ShelfItemDefaultAction(
@@ -794,9 +800,12 @@ ShelfUpdateSlotWidgetWithData(
       return;
    }
 
+   const char *dev_icon_fallback = nullptr;
+   char *shelf_thumb_owned = nullptr;
+
    if (slot == 0)
       label_text = XtNewString("Home");
-   else
+   else if (!DtfileDevicesDescribeShelfSlot(path, &label_text, &dev_icon_fallback))
    {
       const char *base = strrchr(path, '/');
       if (base && *(base + 1) != '\0')
@@ -815,12 +824,13 @@ ShelfUpdateSlotWidgetWithData(
    XtFree(label_text);
    label_text = nullptr;
 
-   resolved_path = ShelfResolvePath(file_mgr_data, path, &resolved_host);
+   if (!DtfileDevicesIsSyntheticPath(path))
+      resolved_path = ShelfResolvePath(file_mgr_data, path, &resolved_host);
    if (resolved_path)
    {
-      if (DtfileShouldRenderImageIcon(resolved_path,
-                                      file_mgr_data->render_image_icons,
-                                      &img_w, &img_h))
+      shelf_thumb_owned = DtfileResolveImageOrThumbnail(
+         resolved_path, file_mgr_data->render_image_icons, shelf_icon_size, &img_w, &img_h);
+      if (shelf_thumb_owned != nullptr)
          render_image = True;
    }
    if (item_data)
@@ -835,11 +845,12 @@ ShelfUpdateSlotWidgetWithData(
          item_data->is_execute = True;
       }
    }
-   pixmapData = ShelfGetPixmapData(file_mgr_rec, file_mgr_data,
-                                   resolved_path, shelf_icon_size,
-                                   &data_type);
-   if (render_image)
-      icon_name = resolved_path;
+   if (resolved_path && !dev_icon_fallback)
+      pixmapData = ShelfGetPixmapData(file_mgr_rec, file_mgr_data,
+                                      resolved_path, shelf_icon_size,
+                                      &data_type);
+   if (render_image && shelf_thumb_owned)
+      icon_name = shelf_thumb_owned;
    else if (pixmapData && pixmapData->iconFileName && *pixmapData->iconFileName)
       icon_name = pixmapData->iconFileName;
 
@@ -847,7 +858,9 @@ ShelfUpdateSlotWidgetWithData(
    {
       const char *fallback;
       int dt_size;
-      if (data_type && strcmp(data_type, LT_DIRECTORY) == 0)
+      if (dev_icon_fallback)
+         fallback = dev_icon_fallback;
+      else if (data_type && strcmp(data_type, LT_DIRECTORY) == 0)
          fallback = "DtdirB";
       else
          fallback = "Dtdeflt";
@@ -861,6 +874,7 @@ ShelfUpdateSlotWidgetWithData(
 
    if (icon_name)
       icon_name_dup = XtNewString(icon_name);
+   XtFree(shelf_thumb_owned);
 
    if (item_data->path)
       XtFree(item_data->path);
@@ -4285,6 +4299,33 @@ ShelfPopupEnsureMenu(FileMgrRec *file_mgr_rec)
                  (XtPointer)file_mgr_rec);
    XtManageChild(item);
 
+   item = XmCreateSeparatorGadget(menu, "shelfDeviceSep", nullptr, 0);
+   XtManageChild(item);
+
+   label = XmStringCreateLocalized("Mount / Unlock...");
+   item = XmCreatePushButtonGadget(menu, "shelfMount", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
+   XmStringFree(label);
+   XtAddCallback(item, XmNactivateCallback, ShelfPopupMountCB,
+                 (XtPointer)file_mgr_rec);
+   XtManageChild(item);
+
+   label = XmStringCreateLocalized("Unmount");
+   item = XmCreatePushButtonGadget(menu, "shelfUnmount", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
+   XmStringFree(label);
+   XtAddCallback(item, XmNactivateCallback, ShelfPopupUnmountCB,
+                 (XtPointer)file_mgr_rec);
+   XtManageChild(item);
+
+   label = XmStringCreateLocalized("Eject / Safely Remove");
+   item = XmCreatePushButtonGadget(menu, "shelfEject", nullptr, 0);
+   XtVaSetValues(item, XmNlabelString, label, nullptr);
+   XmStringFree(label);
+   XtAddCallback(item, XmNactivateCallback, ShelfPopupEjectCB,
+                 (XtPointer)file_mgr_rec);
+   XtManageChild(item);
+
    file_mgr_rec->shelf_popup = menu;
 }
 
@@ -4297,6 +4338,9 @@ ShelfPopupUpdate(FileMgrRec *file_mgr_rec, ShelfPopupData *data)
    Boolean is_dir;
    XmString label;
    const char *name = "";
+   DtfileDeviceEntry dev_ent;
+   Boolean has_dev = False;
+   char *dev_lbl = nullptr;
 
    if (file_mgr_rec == nullptr || file_mgr_rec->shelf_popup == nullptr)
       return;
@@ -4304,21 +4348,31 @@ ShelfPopupUpdate(FileMgrRec *file_mgr_rec, ShelfPopupData *data)
    menu = file_mgr_rec->shelf_popup;
    is_dir = (data != nullptr && data->is_dir);
    can_remove = (data != nullptr && data->slot != 0);
+   if (data && data->path)
+      has_dev = DtfileDevicesLookupByPath(data->path, &dev_ent);
 
    child = XtNameToWidget(menu, "shelfName");
    if (child)
    {
       if (data && data->path)
       {
-         const char *base = strrchr(data->path, '/');
-         if (base && *(base + 1) != '\0')
-            name = base + 1;
+         if (DtfileDevicesDescribeShelfSlot(data->path, &dev_lbl, nullptr) && dev_lbl)
+         {
+            name = dev_lbl;
+         }
          else
-            name = data->path;
+         {
+            const char *base = strrchr(data->path, '/');
+            if (base && *(base + 1) != '\0')
+               name = base + 1;
+            else
+               name = data->path;
+         }
       }
       label = XmStringCreateLocalized((char *)name);
       XtVaSetValues(child, XmNlabelString, label, nullptr);
       XmStringFree(label);
+      XtFree(dev_lbl);
    }
 
    child = XtNameToWidget(menu, "shelfRun");
@@ -4340,6 +4394,59 @@ ShelfPopupUpdate(FileMgrRec *file_mgr_rec, ShelfPopupData *data)
    child = XtNameToWidget(menu, "shelfRemove");
    if (child)
       XtSetSensitive(child, can_remove);
+
+   child = XtNameToWidget(menu, "shelfDeviceSep");
+   if (child)
+   {
+      if (has_dev) XtManageChild(child); else XtUnmanageChild(child);
+   }
+   child = XtNameToWidget(menu, "shelfMount");
+   if (child)
+   {
+      if (has_dev && dev_ent.can_mount)
+      {
+         XmString ml = XmStringCreateLocalized(
+            dev_ent.is_luks_locked ? "Unlock Encrypted Volume..." : "Mount Volume");
+         XtVaSetValues(child, XmNlabelString, ml, nullptr);
+         XmStringFree(ml);
+         XtSetSensitive(child, True);
+         XtManageChild(child);
+      }
+      else
+      {
+         XtUnmanageChild(child);
+      }
+   }
+   child = XtNameToWidget(menu, "shelfUnmount");
+   if (child)
+   {
+      if (has_dev && dev_ent.can_unmount)
+      {
+         XmString ul = XmStringCreateLocalized(
+            dev_ent.is_gvfs ? "Disconnect Share" : "Unmount");
+         XtVaSetValues(child, XmNlabelString, ul, nullptr);
+         XmStringFree(ul);
+         XtSetSensitive(child, True);
+         XtManageChild(child);
+      }
+      else
+      {
+         XtUnmanageChild(child);
+      }
+   }
+   child = XtNameToWidget(menu, "shelfEject");
+   if (child)
+   {
+      if (has_dev && dev_ent.can_eject)
+      {
+         XtSetSensitive(child, True);
+         XtManageChild(child);
+      }
+      else
+      {
+         XtUnmanageChild(child);
+      }
+   }
 }
 
 static FileViewData *
@@ -5208,6 +5315,53 @@ ShelfPopupLinkCB(
 }
 
 static void
+ShelfPopupMountCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
+{
+   FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
+   ShelfPopupData *data = ShelfPopupDataGet(file_mgr_rec);
+   (void)w;
+   (void)call_data;
+   if (data == nullptr || data->path == nullptr)
+      return;
+   (void)DtfileDevicesActivatePath(file_mgr_rec, data->file_mgr_data, data->path);
+}
+
+static void
+ShelfPopupUnmountCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
+{
+   FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
+   ShelfPopupData *data = ShelfPopupDataGet(file_mgr_rec);
+   (void)w;
+   (void)call_data;
+   if (data == nullptr || data->path == nullptr)
+      return;
+   DtfileDevicesUnmountOrEject(file_mgr_rec ? file_mgr_rec->shell : nullptr,
+                               data->file_mgr_data, data->path, False);
+}
+
+static void
+ShelfPopupEjectCB(
+        Widget w,
+        XtPointer client_data,
+        XtPointer call_data)
+{
+   FileMgrRec *file_mgr_rec = (FileMgrRec *)client_data;
+   ShelfPopupData *data = ShelfPopupDataGet(file_mgr_rec);
+   (void)w;
+   (void)call_data;
+   if (data == nullptr || data->path == nullptr)
+      return;
+   DtfileDevicesUnmountOrEject(file_mgr_rec ? file_mgr_rec->shell : nullptr,
+                               data->file_mgr_data, data->path, True);
+}
+
+static void
 ShelfPopupPopdownCB(
         Widget w,
         XtPointer client_data,
@@ -5674,6 +5828,9 @@ ShelfItemActivate(
    if (file_mgr_data == nullptr)
       return;
 
+   if (DtfileDevicesActivatePath(file_mgr_rec, file_mgr_data, item_data->path))
+      return;
+
    resolved_path = ShelfResolvePath(file_mgr_data, item_data->path, &resolved_host);
    if (resolved_path == nullptr)
    {
@@ -5773,6 +5930,9 @@ ShelfItemDefaultAction(
       return;
    file_mgr_data = (FileMgrData *) dialog_data->data;
    if (file_mgr_data == nullptr)
+      return;
+
+   if (DtfileDevicesActivatePath(file_mgr_rec, file_mgr_data, item_data->path))
       return;
 
    resolved_path = ShelfResolvePath(file_mgr_data, item_data->path, &resolved_host);
@@ -10031,6 +10191,39 @@ CreateFmPopup (Widget w)
                                   HelpRequestCB,
                                   HELP_POPUP_MENU_STR);
 
+   XmStringFree (label_string);
+
+   /* Create 'Extract Here' option -- object popup */
+   label_string = XmStringCreateLocalized ("Extract Here");
+   XtSetArg (args[0], XmNlabelString, label_string);
+   XtSetArg (args[1], XmNmnemonic, 'E');
+   fileMgrPopup.objPopup[BTN_EXTRACT_HERE] = popupBtns[i] =
+          XmCreatePushButtonGadget (fileMgrPopup.menu, "extractHerePopup", args, 2);
+   XtAddCallback (popupBtns[i++], XmNhelpCallback,
+                                  HelpRequestCB,
+                                  HELP_POPUP_MENU_STR);
+   XmStringFree (label_string);
+
+   /* Create 'Extract To...' option -- object popup */
+   label_string = XmStringCreateLocalized ("Extract To...");
+   XtSetArg (args[0], XmNlabelString, label_string);
+   XtSetArg (args[1], XmNmnemonic, 'x');
+   fileMgrPopup.objPopup[BTN_EXTRACT_TO] = popupBtns[i] =
+          XmCreatePushButtonGadget (fileMgrPopup.menu, "extractToPopup", args, 2);
+   XtAddCallback (popupBtns[i++], XmNhelpCallback,
+                                  HelpRequestCB,
+                                  HELP_POPUP_MENU_STR);
+   XmStringFree (label_string);
+
+   /* Create 'Compress...' option -- object popup */
+   label_string = XmStringCreateLocalized ("Compress...");
+   XtSetArg (args[0], XmNlabelString, label_string);
+   XtSetArg (args[1], XmNmnemonic, 'z');
+   fileMgrPopup.objPopup[BTN_COMPRESS] = popupBtns[i] =
+          XmCreatePushButtonGadget (fileMgrPopup.menu, "compressPopup", args, 2);
+   XtAddCallback (popupBtns[i++], XmNhelpCallback,
+                                  HelpRequestCB,
+                                  HELP_POPUP_MENU_STR);
    XmStringFree (label_string);
 
 

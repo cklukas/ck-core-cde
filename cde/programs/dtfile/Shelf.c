@@ -20,6 +20,7 @@
 #include "Desktop.h"
 #include "Main.h"
 #include "Shelf.h"
+#include "Devices.h"
 
 #define SHELF_FILE_NAME ".dtfile_shelf"
 
@@ -138,6 +139,19 @@ ShelfAddSlot(int slot, const char *path)
 }
 
 static Boolean
+ShelfIsKernelPseudoPath(const char *path)
+{
+   if (path == nullptr || *path == '\0')
+      return False;
+
+   return (strncmp(path, "/proc/", 6) == 0 || strcmp(path, "/proc") == 0 ||
+           strncmp(path, "/sys/", 5) == 0  || strcmp(path, "/sys") == 0 ||
+           strncmp(path, "/dev/", 5) == 0  || strcmp(path, "/dev") == 0 ||
+           strncmp(path, "/run/credentials/", 17) == 0 ||
+           strncmp(path, "/snap/", 6) == 0);
+}
+
+static Boolean
 ShelfIsLocalFsType(const char *fs_type)
 {
    if (fs_type == nullptr || *fs_type == '\0')
@@ -148,7 +162,10 @@ ShelfIsLocalFsType(const char *fs_type)
        strcmp(fs_type, "smbfs") == 0 ||
        strcmp(fs_type, "cifs") == 0 ||
        strcmp(fs_type, "sshfs") == 0 ||
-       strcmp(fs_type, "fuse.sshfs") == 0)
+       strcmp(fs_type, "fuse.sshfs") == 0 ||
+       strcmp(fs_type, "fuse.gvfsd-fuse") == 0 ||
+       strcmp(fs_type, "portal") == 0 ||
+       strcmp(fs_type, "fuse.portal") == 0)
       return False;
 
    if (strcmp(fs_type, "proc") == 0 ||
@@ -156,9 +173,25 @@ ShelfIsLocalFsType(const char *fs_type)
        strcmp(fs_type, "devtmpfs") == 0 ||
        strcmp(fs_type, "devpts") == 0 ||
        strcmp(fs_type, "tmpfs") == 0 ||
+       strcmp(fs_type, "ramfs") == 0 ||
        strcmp(fs_type, "cgroup") == 0 ||
        strcmp(fs_type, "cgroup2") == 0 ||
-       strcmp(fs_type, "overlay") == 0)
+       strcmp(fs_type, "overlay") == 0 ||
+       strcmp(fs_type, "autofs") == 0 ||
+       strcmp(fs_type, "binfmt_misc") == 0 ||
+       strcmp(fs_type, "mqueue") == 0 ||
+       strcmp(fs_type, "hugetlbfs") == 0 ||
+       strcmp(fs_type, "securityfs") == 0 ||
+       strcmp(fs_type, "debugfs") == 0 ||
+       strcmp(fs_type, "tracefs") == 0 ||
+       strcmp(fs_type, "configfs") == 0 ||
+       strcmp(fs_type, "fusectl") == 0 ||
+       strcmp(fs_type, "pstore") == 0 ||
+       strcmp(fs_type, "efivarfs") == 0 ||
+       strcmp(fs_type, "bpf") == 0 ||
+       strcmp(fs_type, "nsfs") == 0 ||
+       strcmp(fs_type, "rpc_pipefs") == 0 ||
+       strcmp(fs_type, "squashfs") == 0)
       return False;
 
    return True;
@@ -184,10 +217,12 @@ ShelfRemoveMissingMounts(void)
 
    for (i = 0; i < shelf_slot_count; i++)
    {
-      if (shelf_slots[i].path == nullptr || shelf_slots[i].slot == 0)
+      if (shelf_slots[i].path == nullptr || shelf_slots[i].slot == 0 ||
+          DtfileDevicesIsSyntheticPath(shelf_slots[i].path))
          continue;
 
-      if (stat(shelf_slots[i].path, &st) != 0)
+      if (ShelfIsKernelPseudoPath(shelf_slots[i].path) ||
+          stat(shelf_slots[i].path, &st) != 0)
       {
          XtFree(shelf_slots[i].path);
          shelf_slots[i].path = nullptr;
@@ -211,7 +246,9 @@ ShelfSave(void)
    fprintf(fp, "SHELFv1\n");
    for (i = 0; i < shelf_slot_count; i++)
    {
-      if (shelf_slots[i].path)
+      if (shelf_slots[i].path &&
+          !DtfileDevicesIsSyntheticPath(shelf_slots[i].path) &&
+          !DtfileDevicesIsGvfsPath(shelf_slots[i].path))
          fprintf(fp, "SLOT %d %s\n", shelf_slots[i].slot, shelf_slots[i].path);
    }
    for (i = 0; i < ignored_mount_count; i++)
@@ -274,7 +311,7 @@ ShelfLoad(void)
             continue;
          while (*path == ' ')
             path++;
-         if (*path == '\0')
+         if (*path == '\0' || ShelfIsKernelPseudoPath(path))
             continue;
          ShelfAddSlot(slot, path);
          continue;
@@ -341,7 +378,7 @@ ShelfLoadMounts(void)
       if (!ShelfIsLocalFsType(ent->mnt_type))
          continue;
 
-      if (ShelfHasPrefix(ent->mnt_dir, "/sys/") ||
+      if (ShelfIsKernelPseudoPath(ent->mnt_dir) ||
           ShelfHasPrefix(ent->mnt_dir, "/boot/"))
       {
          ShelfIgnoreMount(ent->mnt_dir);

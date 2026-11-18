@@ -1,0 +1,43 @@
+{
+  "work_package": "WP-16",
+  "date": "2026-11-18",
+  "branch": "x11_wayland",
+  "host_vm": "cde-ubuntu2604 (Ubuntu 26.04.1 LTS aarch64, Linux 7.0.0-34-generic, clang 21, wlroots 0.19, libarchive 3.8.5, dbus 1.16)",
+  "motif_revision": "bd8043040a5257ac02a46c6ecf6cc711e9c099a0",
+  "build_timing": {
+    "cde_dtfile_elapsed_seconds": 2,
+    "build_started_at": "2026-11-18T15:35:05+01:00",
+    "build_completed_at": "2026-11-18T15:35:06+01:00",
+    "mode": "incremental (-j4) in /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtfile"
+  },
+  "installed_sha256": {
+    "/usr/dt/bin/dtfile": "d3130e2089be11ca3ab6babc0d0a96972752755ca98b4782239dcb7bb80c1e56",
+    "/usr/share/dbus-1/services/org.freedesktop.FileManager1.service": "9c0c80ec06e0604bf3f0542c8a2c8832d255e57557a999117dc86c19ef418f38"
+  },
+  "runtime_provenance": {
+    "live_dtfile_pid": 245351,
+    "exe": "/usr/dt/bin/dtfile",
+    "mapped_libraries": [
+      "/var/tmp/ck-wayland-build/wp00/motif-prefix/lib/libXm.so.9.0.0",
+      "/usr/lib/aarch64-linux-gnu/libarchive.so.13.8.5",
+      "/usr/lib/aarch64-linux-gnu/libdbus-1.so.3.38.3"
+    ]
+  },
+  "features_verified": [
+    "Removable USB/SD & encrypted crypto_LUKS volumes via org.freedesktop.UDisks2 (Devices.c): dynamic Shelf & View -> Mounts & Devices... population, deferred signal-driven hotplug rescan, Motif LUKS passphrase unlock modal (wrong-passphrase retry + valid-passphrase Encrypted.Unlock -> Filesystem.Mount with immediate passphrase zeroing), and safe Unmount / Encrypted.Lock / Drive.Eject / Drive.PowerOff",
+    "Network shares & MTP/PTP phones via GVFS (Devices.c): File -> Connect to Server... dialog (smb://, sftp://, davs://, nfs://) spawning gio mount via fork/execvp, live inotify monitoring of /run/user/$UID/gvfs for SMB/SFTP/WebDAV/NFS shares and MTP phones, Disconnect / Unmount (gio mount -u), and Linux kernel pseudo-filesystem filtering in Shelf.c / Mounts.c",
+    "Built-in archive actions (Archive.c, Selected + right-click popup): Extract Here, Extract To..., and Compress... across .zip, .tar.gz/.tgz, .tar.xz/.txz, .tar.zst/.tzst, .tar.bz2, .tar, and .7z via libarchive (thread-scoped C.UTF-8 locale for lossless UTF-8 filenames) with two-pass preflight + descriptor-relative openat/mkdirat/symlinkat/linkat O_NOFOLLOW Zip-Slip & symlink-escape rejection",
+    "Shared FreeDesktop thumbnails (Thumbnails.c): $XDG_CACHE_HOME/thumbnails/{large,normal}/<md5(URI)>.png lookup (GLib + RFC-3986 file:// URI encodings, Thumb::MTime / mtime freshness check) and direct .png icon rendering via libXm.so.9 when renderImageIcons is enabled",
+    "Live bidirectional XDG Trash + per-mount .Trash-$UID (XdgTrashSync.c + Trash.c): inotify watches on $XDG_DATA_HOME/Trash/{files,info}, ~/.dt/Trash, and <mount>/.Trash-$UID/{files,info} with non-destructive external add/prune reconciliation and O(1) same-filesystem rename() on removable mounts",
+    "Session D-Bus org.freedesktop.FileManager1 service (FileManagerService.c + org.freedesktop.FileManager1.service): ShowFolders, ShowItems (_NET_ACTIVE_WINDOW raise + FileMgrData icon highlight), ShowItemProperties, and Hostname"
+  ],
+  "commands": [
+    "python3 cde/programs/dtwm/tests/check-dtwm-wayland-wp16.py --compositor ./dtwm-wayland (parallel Wayland + X11 Xvfb lanes: Run #1 12.33s PASS [wl 11.61s, x11 11.58s]; Run #2 10.10s PASS [wl 9.53s, x11 9.53s])",
+    "make -C /var/tmp/ck-wayland-build/wp00/cde-build/programs/dtfile check -j4 (19/19 suites PASS including check-archive-safety.py, check-trash-writer.py, check-trash-info.py, check-restore-workflow.py, check-trash-permissions.py, check-transfer-completion.py, and check-sync-controller.py)",
+    "ckdocs check --config ckdocs.yml --strict (Checked 26 page(s): nothing to report)"
+  ],
+  "screenshots": {
+    "live_wayland_dtfile_gvfs_and_clean_shelf": "wp16_live_final_shelf_clean.png"
+  },
+  "result": "pass"
+}

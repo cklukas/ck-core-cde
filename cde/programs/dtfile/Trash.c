@@ -158,6 +158,7 @@
 #include "dtcopy/fsrtns.h"
 #include "TrashMetadata.h"
 #include "XdgTrashInfo.h"
+#include "XdgTrashSync.h"
 
 #define AdditionalHeader (GETMESSAGE(27,98, "(Plus %d additional object(s))"))
 
@@ -538,8 +539,6 @@ InitializeTrash( Boolean enableVerifyPrompt )
 
   /* load and verify existence for files previously left in the trash can */
   TrashInitialized = ReadTrashList( );
-  if (TrashInitialized)
-    (void)ImportXdgTrashHome();
   return( TrashInitialized );
 }
 
@@ -588,9 +587,7 @@ TrashCreateDialog(
    /* build up directory set for trash directory */
    FileMgrBuildDirectories (file_mgr_data, home_host_name, trash_dir);
 
-   if (xdgTrashTimer == 0)
-     xdgTrashTimer = XtAppAddTimeOut(XtWidgetToApplicationContext(toplevel),
-                                     10000, XdgTrashTimerCB, nullptr);
+   DtfileXdgTrashSyncInit(toplevel, trash_dir);
 
    TrashMaybeStartRecSizeScan();
 
@@ -3642,11 +3639,16 @@ MoveToTrashProcess(
       } /* end if do_verify_checks */
 
 
-      to = CreateTrashFilename(baseName, TRUE);
+      to = nullptr;
+      success = DtfileXdgTrashMoveItem(path, baseName, trash_dir, &to);
+      if (!success)
+      {
+         to = CreateTrashFilename(baseName, TRUE);
 
-      /* move file to the trash directory */
-      success = FileManip((Widget) (intptr_t) pipe_fd, MOVE_FILE, path, to, TRUE,
-                          FileOpError, True, TRASH_DIRECTORY);
+         /* move file to the trash directory */
+         success = FileManip((Widget) (intptr_t) pipe_fd, MOVE_FILE, path, to, TRUE,
+                             FileOpError, True, TRASH_DIRECTORY);
+      }
       if (success)
       {
          pipe_msg = PIPEMSG_DONE;
@@ -5769,4 +5771,108 @@ RestoreVerifyCancel(
   Widget mbox = (Widget)client_data;
   (void)w; (void)call_data;
   XtDestroyWidget(XtParent(mbox));
+}
+
+int
+DtfileTrashBackendCount(void)
+{
+   return numTrashItems;
+}
+
+Boolean
+DtfileTrashBackendGet(
+        int index,
+        const char **int_new_out,
+        const char **int_orig_out,
+        const char **filename_out)
+{
+   if (index < 0 || index >= numTrashItems)
+      return False;
+   if (int_new_out) *int_new_out = trashCan[index].intNew;
+   if (int_orig_out) *int_orig_out = trashCan[index].intOrig;
+   if (filename_out) *filename_out = trashCan[index].filename;
+   return True;
+}
+
+void
+DtfileTrashBackendUpdatePayload(int index, const char *new_payload_path)
+{
+   if (index < 0 || index >= numTrashItems || !new_payload_path)
+      return;
+   XtFree(trashCan[index].intNew);
+   trashCan[index].intNew = XtNewString((char *)new_payload_path);
+}
+
+Boolean
+DtfileTrashBackendAddExternal(
+        const char *payload_path,
+        const char *orig_path,
+        const char *dt_leaf,
+        const char *deletion_date)
+{
+   if (!payload_path || !orig_path || !dt_leaf)
+      return False;
+   if (numTrashItems >= trashListSize)
+   {
+      trashListSize += 10;
+      trashCan = (TrashEntry *)XtRealloc((char *)trashCan,
+                                         sizeof(TrashEntry) * trashListSize);
+   }
+   trashCan[numTrashItems].problem = False;
+   trashCan[numTrashItems].intNew = XtNewString((char *)payload_path);
+   trashCan[numTrashItems].intOrig = XtNewString((char *)orig_path);
+   trashCan[numTrashItems].external = XtNewString((char *)orig_path);
+   trashCan[numTrashItems].filename = XtNewString((char *)dt_leaf);
+   trashCan[numTrashItems].deletionDate =
+      deletion_date ? XtNewString((char *)deletion_date) : nullptr;
+   trashCan[numTrashItems].recSize = 0;
+   trashCan[numTrashItems].recSizeValid = False;
+   numTrashItems++;
+   return True;
+}
+
+void
+DtfileTrashBackendRemoveAt(int index)
+{
+   int k;
+   if (index < 0 || index >= numTrashItems)
+      return;
+   XtFree(trashCan[index].intNew);
+   XtFree(trashCan[index].intOrig);
+   XtFree(trashCan[index].external);
+   XtFree(trashCan[index].filename);
+   XtFree(trashCan[index].deletionDate);
+   for (k = index; k < numTrashItems - 1; k++)
+      trashCan[k] = trashCan[k + 1];
+   numTrashItems--;
+}
+
+void
+DtfileTrashBackendCommit(Boolean refresh_view)
+{
+   (void)WriteTrashEntries();
+   TrashUpdateWindowIcon();
+   if (refresh_view && trashFileMgrData)
+   {
+      UpdateDirectory(nullptr, trashFileMgrData->host,
+                      trashFileMgrData->current_directory);
+      if (trashDialogPosted)
+         TrashMaybeStartRecSizeScan();
+   }
+}
+
+void
+DtfileTrashBackendMovePaths(const char *const *paths, int count)
+{
+   int i;
+   char **list;
+   String del_date;
+   if (!paths || !RestoreCountValid(count) || !TrashInitialized)
+      return;
+   list = (char **)XtCalloc((Cardinal)count, sizeof(char *));
+   for (i = 0; i < count; ++i)
+      list[i] = XtNewString((char *)paths[i]);
+   del_date = CurrentDeletionDate();
+   MoveToTrash(list, count, False, 0, del_date);
+   XtFree(del_date);
 }

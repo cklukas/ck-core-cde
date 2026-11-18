@@ -173,6 +173,8 @@
 #include "Encaps.h"
 #include "FileProcess.h"
 #include "SharedProcs.h"
+#include "Devices.h"
+#include "FileManagerService.h"
 
 #include <Tt/tttk.h>
 
@@ -1832,6 +1834,8 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    gettimeofday(&update_time_s, nullptr);
 #endif
    (void) InitializeToolTalkSession( toplevel, ttFd );
+   DtfileDevicesInit( toplevel );
+   DtfileFileManagerServiceInit( toplevel );
 #ifdef DT_PERFORMANCE
    gettimeofday(&update_time_f, nullptr);
    if (update_time_s.tv_usec > update_time_f.tv_usec) {

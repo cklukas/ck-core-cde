@@ -376,6 +376,27 @@ clipboard screenshots:
   `XGrabPointer` rubber-band overlay on X11) and publishing cropped `image/png`
   directly to `zwlr_data_control_manager_v1` / `CLIPBOARD`.
 
+## `dtfile` removable media (`UDisks2`), network shares (`GVFS`), archives, thumbnails, live XDG Trash, and `FileManager1` (`WP-16`)
+
+`dtfile` delivers shared desktop storage, archive, thumbnail, trash, and D-Bus
+file-manager services across both `CDE (Wayland)` and `CDE (X11 / XLibre)` (see
+[File Manager improvements](file-manager.md)):
+
+- **`UDisks2` USB/SD & LUKS volumes + `GVFS` shares & MTP phones (`Devices.c`):**
+  Dynamically populates `dtfile`'s Shelf and **View → Mounts & Devices...** with
+  hotplugged USB/SD drives, Motif passphrase-unlocked `crypto_LUKS` volumes,
+  **File → Connect to Server...** (`smb://`, `sftp://`, `davs://`, `nfs://`),
+  and `/run/user/$UID/gvfs` MTP/PTP phones, with safe *Unmount* and *Eject /
+  Power Off*.
+- **Built-in `libarchive` actions, shared thumbnails, live XDG Trash &
+  `org.freedesktop.FileManager1`:** Adds **Extract Here**, **Extract To...**, and
+  **Compress...** (`.zip`, `.tar.gz`, `.tar.xz`, `.tar.zst`, `.7z`) with
+  two-pass `openat(..., O_NOFOLLOW)` Zip-Slip rejection; resolves
+  `$XDG_CACHE_HOME/thumbnails/{large,normal}` previews; synchronizes
+  `$XDG_DATA_HOME/Trash` and per-mount `<mount>/.Trash-$UID` live in both
+  directions via `inotify`; and serves `org.freedesktop.FileManager1`
+  (`ShowFolders`, `ShowItems`, `ShowItemProperties`).
+
 ## Readiness reporting, Ubuntu LTS APT packaging, and automated qualification
 
 Passing `--status-file PATH` writes `WAYLAND_DISPLAY`, `DISPLAY`, and `PID`
@@ -410,11 +431,17 @@ atomically once both the Wayland socket and rootless `Xwayland` are ready.
   X11 `Xvfb` verification of `XF86Audio*` / `XF86MonBrightness*` 5% floor /
   MPRIS keys + non-focus-stealing 3D bevel OSD, `dtstyle` touchpad settings +
   3-finger workspace swipe, and `cde-color-sync` portal / `XSETTINGS` / GTK3-4
-  dark-light sync), and `check-dtwm-wayland-wp14.py` (`WP-14` parallel dual
+  dark-light sync), `check-dtwm-wayland-wp14.py` (`WP-14` parallel dual
   Wayland + X11 `Xvfb` verification of `ck-polkit-agent` `libXm.so.9` +
   `PR_SET_DUMPABLE=0` password retry/elevation/cancellation, `gnome-keyring-daemon`
   + `secret-tool` auto-unlock round-trip, and `ck-grab --region --clipboard` +
-  `--paste-png` pixel-accurate crop/clipboard transfer) run automatically under
+  `--paste-png` pixel-accurate crop/clipboard transfer), and
+  `check-dtwm-wayland-wp16.py` (`WP-16` parallel dual Wayland + X11 `Xvfb`
+  verification of `dtfile` `libXm.so.9` `UDisks2` LUKS unlock/hotplug/eject,
+  `GVFS` *Connect to Server* + MTP phone `inotify` discovery, 5-format archive
+  round-trips + Zip-Slip rejection, FreeDesktop thumbnail resolution,
+  `org.freedesktop.FileManager1` window raise + selection, and live
+  bidirectional `inotify` XDG + `.Trash-$UID` Trash) run automatically under
   `make check`.
 - **Signed Ubuntu LTS `.deb` and APT repository qualification (`WP-08`):**
   `scripts/build-ubuntu-debs.py --verify-install` packages `ck-core-motif9`,

@@ -105,15 +105,17 @@
 #include "Shelf.h"
 #include "Mounts.h"
 #include "OpenWith.h"
+#include "Archive.h"
+#include "Devices.h"
 
 #include <stdarg.h>
 
 #define INDICATOR_TIME 12
 
 #if defined(ADD_SHOW_TRASH)
-static int menuItemCount = 55;
+static int menuItemCount = 60;
 #else
-static int menuItemCount = 54;
+static int menuItemCount = 59;
 #endif
 #if DTFILE_SYNC_FEATURE_ENABLED
 static Widget * synchronizeFoldersBtn = nullptr;
@@ -294,6 +296,13 @@ CreateMenu(
       mainMenu[j].name = "addToShelf";
       mainMenu[j++].activateCallback = AddToShelfMenuCB;
 
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].label = XtNewString("Connect to Server...");
+      mainMenu[j].mnemonic = XtNewString("S");
+      mainMenu[j].helpData = HELP_FILE_MENU_STR;
+      mainMenu[j].name = "connectServer";
+      mainMenu[j++].activateCallback = ShowConnectServerDialog;
+
       findBtn = &(mainMenu[j].widget);
       mainMenu[j].type = MENU_BUTTON;
       mainMenu[j].maskBit = FIND;
@@ -470,6 +479,34 @@ CreateMenu(
       mainMenu[j++].helpCallback = nullptr;
 
       mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].maskBit = EXTRACT_ARCHIVE;
+      mainMenu[j].label = XtNewString("Extract Here");
+      mainMenu[j].mnemonic = XtNewString("E");
+      mainMenu[j].helpData = HELP_SELECTED_MENU_STR;
+      mainMenu[j].name = "extractHere";
+      mainMenu[j++].activateCallback = ExtractHereMenuCB;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].maskBit = EXTRACT_ARCHIVE;
+      mainMenu[j].label = XtNewString("Extract To...");
+      mainMenu[j].mnemonic = XtNewString("x");
+      mainMenu[j].helpData = HELP_SELECTED_MENU_STR;
+      mainMenu[j].name = "extractTo";
+      mainMenu[j++].activateCallback = ExtractToMenuCB;
+
+      mainMenu[j].type = MENU_BUTTON;
+      mainMenu[j].maskBit = COMPRESS_FILES;
+      mainMenu[j].label = XtNewString("Compress...");
+      mainMenu[j].mnemonic = XtNewString("z");
+      mainMenu[j].helpData = HELP_SELECTED_MENU_STR;
+      mainMenu[j].name = "compress";
+      mainMenu[j++].activateCallback = CompressMenuCB;
+
+      mainMenu[j].type = MENU_SEPARATOR;
+      mainMenu[j].name = "separator";
+      mainMenu[j++].helpCallback = nullptr;
+
+      mainMenu[j].type = MENU_BUTTON;
       mainMenu[j].label = GETMESSAGE(20, 48, "Select All");
       mainMenu[j].label = XtNewString(mainMenu[j].label);
       mainMenu[j].mnemonic = GETMESSAGE(20, 51, "S");
@@ -539,7 +576,7 @@ CreateMenu(
       mainMenu[j++].activateCallback = ShowPreferencesDialog;
 
       mainMenu[j].type = MENU_BUTTON;
-      mainMenu[j].label = GETMESSAGE(20, 202, "Mounts...");
+      mainMenu[j].label = GETMESSAGE(20, 202, "Mounts & Devices...");
       mainMenu[j].label = XtNewString(mainMenu[j].label);
       mainMenu[j].mnemonic = GETMESSAGE(20, 203, "M");
       mainMenu[j].mnemonic = XtNewString(mainMenu[j].mnemonic);
@@ -808,15 +845,22 @@ ActivateSingleSelect(
        || (strcmp(file_mgr_data->selection_list[0]->file_data->file_name, "." ) == 0 ) )
    {
      file_mgr_rec->menuStates |= TRASH | MODIFY | PUT_ON_DESKTOP;
-     file_mgr_rec->menuStates &= ~(RENAME | OPEN_WITH);
+     file_mgr_rec->menuStates &= ~(RENAME | OPEN_WITH | EXTRACT_ARCHIVE | COMPRESS_FILES);
    }
    else if (file_mgr_data->selection_list[0]->file_data->physical_type == DtDIRECTORY)
    {
-     file_mgr_rec->menuStates |= RENAME | TRASH | MODIFY | PUT_ON_DESKTOP;
-     file_mgr_rec->menuStates &= ~OPEN_WITH;
+     file_mgr_rec->menuStates |= RENAME | TRASH | MODIFY | PUT_ON_DESKTOP | COMPRESS_FILES;
+     file_mgr_rec->menuStates &= ~(OPEN_WITH | EXTRACT_ARCHIVE);
    }
    else
-     file_mgr_rec->menuStates |= RENAME | TRASH | MODIFY | PUT_ON_DESKTOP | OPEN_WITH;
+   {
+     file_mgr_rec->menuStates |= RENAME | TRASH | MODIFY | PUT_ON_DESKTOP | OPEN_WITH | COMPRESS_FILES;
+     if (!file_mgr_data->toolbox &&
+         DtfileIsArchiveFile(file_mgr_data->selection_list[0]->file_data->file_name))
+       file_mgr_rec->menuStates |= EXTRACT_ARCHIVE;
+     else
+       file_mgr_rec->menuStates &= ~EXTRACT_ARCHIVE;
+   }
 
    if ((strcmp(file_type, LT_BROKEN_LINK) != 0)
        && (strcmp(file_type, LT_RECURSIVE_LINK) != 0)
@@ -869,9 +913,9 @@ void
 ActivateMultipleSelect(
         FileMgrRec *file_mgr_rec )
 {
-   file_mgr_rec->menuStates |= TRASH | PUT_ON_DESKTOP | OPEN_WITH;
+   file_mgr_rec->menuStates |= TRASH | PUT_ON_DESKTOP | OPEN_WITH | COMPRESS_FILES;
    file_mgr_rec->menuStates &= ~(RENAME | MOVE | DUPLICATE | LINK |
-                                 MODIFY);
+                                 MODIFY | EXTRACT_ARCHIVE);
 
    UnmanageAllActionItems (file_mgr_rec);
 }
@@ -892,7 +936,8 @@ ActivateNoSelect(
         FileMgrRec *file_mgr_rec )
 {
    file_mgr_rec->menuStates &= ~(RENAME | MOVE | DUPLICATE | LINK | TRASH |
-                                 MODIFY | PUT_ON_DESKTOP | OPEN_WITH);
+                                 MODIFY | PUT_ON_DESKTOP | OPEN_WITH |
+                                 EXTRACT_ARCHIVE | COMPRESS_FILES);
 
    UnmanageAllActionItems (file_mgr_rec);
 }

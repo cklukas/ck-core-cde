@@ -93,6 +93,7 @@
 #include "FileMgr.h"
 #include "Main.h"
 #include "ChangeDir.h"
+#include "Thumbnails.h"
 #include "Prefs.h"
 #include "IconicPathP.h"
 
@@ -588,6 +589,8 @@ GetFilePixmapData(
    if (icon_size != LARGE && icon_size != SMALL && icon_size != EXTRA_LARGE)
       icon_size = SMALL;
 
+   char *resolved_thumb = nullptr;
+
    {
       const char *fname = strrchr(full_path, '/');
       if (fname && *(fname + 1) != '\0')
@@ -600,9 +603,9 @@ GetFilePixmapData(
          if (fn_len >= 3)
             ext = fname + fn_len - 3;
       }
-      if (DtfileShouldRenderImageIcon(full_path,
-                                      file_mgr_data->render_image_icons,
-                                      &iw, &ih))
+      resolved_thumb = DtfileResolveImageOrThumbnail(
+         full_path, file_mgr_data->render_image_icons, icon_size, &iw, &ih);
+      if (resolved_thumb != nullptr)
       {
          render_image = True;
          IconicPathDebug("GetFilePixmapData: render_image=%d ext=%s size=%ux%u\n",
@@ -618,9 +621,10 @@ GetFilePixmapData(
 
    if (image_name_out)
    {
-      if (render_image)
+      if (render_image && resolved_thumb)
       {
-         *image_name_out = XtNewString(full_path);
+         *image_name_out = resolved_thumb;
+         resolved_thumb = nullptr;
          IconicPathDebug("GetFilePixmapData: using image_name=%s\n",
                          *image_name_out ? *image_name_out : "(null)");
       }
@@ -631,6 +635,7 @@ GetFilePixmapData(
                          *image_name_out ? *image_name_out : "(null)");
       }
    }
+   XtFree(resolved_thumb);
 
    XtFree(full_name);
    XtFree(full_path);

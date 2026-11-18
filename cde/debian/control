@@ -42,6 +42,8 @@ Build-Depends: debhelper-compat (= 13),
                libtirpc-dev,
                libpam0g-dev,
                libutempter-dev,
+               libarchive-dev,
+               libdbus-1-dev,
                ck-core-motif9 (>= 2.4.0),
                ck-core-fs-lib (>= 0.3.0)
 Standards-Version: 4.7.0
@@ -59,18 +61,25 @@ Depends: ck-core-motif9 (>= 2.4.0),
          xwayland | xserver-xorg-core,
          ${shlibs:Depends},
          ${misc:Depends}
-Recommends: ck-core-apps,
+Recommends: 7zip,
+            ck-core-apps,
             gnome-keyring,
+            gvfs,
+            gvfs-backends,
+            gvfs-fuse,
             libnotify-bin,
             libpam-gnome-keyring,
             pipewire,
             pkexec,
             polkitd,
+            udisks2,
+            unzip,
             wlr-randr,
             xdg-desktop-portal,
             xdg-desktop-portal-wlr,
             xfonts-100dpi,
-            xserver-xorg
+            xserver-xorg,
+            zip
 Suggests: fcitx5 | ibus,
           fonts-noto-cjk
 Conflicts: cde-desktop

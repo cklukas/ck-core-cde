@@ -149,5 +149,58 @@ File actions also accept filenames containing quotes and backslashes.
   `.mkv`, `.webm`), `AUDIO_MODERN` (`.mp3`, `.flac`, `.ogg`, `.opus`, `.m4a`),
   and `OFFICE_DOC` (`.odt`, `.ods`, `.odp`, `.docx`, `.xlsx`, `.pptx`).
 
+## Removable media (`UDisks2`), network shares (`GVFS`), built-in archives, shared thumbnails, live XDG Trash, and `FileManager1` (`WP-16`)
+
+`dtfile` shares a unified removable-device, network-mount, archive, thumbnail,
+trash, and session D-Bus layer across both `CDE (Wayland)` and `CDE (X11 /
+XLibre)`:
+
+- **Removable USB/SD & encrypted LUKS volumes (`Devices.c`):** Subscribes to
+  `org.freedesktop.UDisks2` (`ObjectManager` + live `InterfacesAdded`,
+  `InterfacesRemoved`, and `PropertiesChanged` signals), dynamically surfacing
+  hotplugged USB/SD/MMC drives and encrypted `crypto_LUKS` volumes in `dtfile`'s
+  Shelf and **View → Mounts & Devices...**. Activating a locked LUKS volume
+  opens a Motif passphrase dialog (`Encrypted.Unlock` followed by
+  `Filesystem.Mount`, zeroing passphrase buffers immediately after marshalling),
+  and right-clicking or using *Mounts & Devices...* supports **Unmount** and
+  safe **Eject / Power Off Drive** (`Filesystem.Unmount`, `Encrypted.Lock`,
+  `Drive.Eject`, and `Drive.PowerOff`).
+- **Network shares & MTP/PTP mobile devices (`GVFS`):** **File → Connect to
+  Server...** mounts `smb://`, `sftp://`, `davs://`, and `nfs://` shares via
+  `gio mount` (`fork`/`execvp`, never `/bin/sh`) and watches
+  `/run/user/$UID/gvfs` via `inotify` so remote shares and hotplugged MTP/PTP
+  phones appear automatically in the Shelf and *Mounts & Devices...* with
+  one-click **Disconnect / Unmount** (`gio mount -u`).
+- **Built-in archive actions & Zip-Slip defense (`Archive.c`):** **Selected**
+  and right-click object popup menus provide **Extract Here**, **Extract To...**,
+  and **Compress...** supporting `.zip`, `.tar.gz`/`.tgz`, `.tar.xz`/`.txz`,
+  `.tar.zst`/`.tzst`, `.tar.bz2`, `.tar`, and `.7z` via `libarchive` (preserving
+  UTF-8 filenames via thread-scoped `C.UTF-8` `uselocale()`). Extraction
+  validates every archive entry in a preflight pass—rejecting absolute paths,
+  `..` traversal, NUL/control bytes, device/FIFO special nodes, and symlink or
+  hardlink target escapes—and materializes entries into a sibling staging
+  directory strictly via descriptor-relative `openat`/`mkdirat`/`symlinkat`/
+  `linkat` with `O_NOFOLLOW`.
+- **Shared FreeDesktop thumbnails (`Thumbnails.c`):** When `renderImageIcons` is
+  enabled (`Dtfile*renderImageIcons: True`), `dtfile` resolves cached PNG
+  previews from `$XDG_CACHE_HOME/thumbnails/{large,normal}/<md5(URI)>.png`
+  (checking both GLib `g_filename_to_uri` and strict RFC-3986 `file://` URI
+  encodings and validating `Thumb::MTime` / mtime freshness) for PDFs, videos,
+  SVGs, WebP, and office documents, alongside direct `.png` previews loaded via
+  `libXm.so.9`.
+- **Live bidirectional XDG Trash & per-mount `.Trash-$UID` (`XdgTrashSync.c`):**
+  Watches `$XDG_DATA_HOME/Trash/{files,info}`, `~/.dt/Trash`, and active
+  `<mount>/.Trash-$UID/{files,info}` directories via `inotify`, synchronizing
+  items trashed or restored by external GTK/Qt/CLI applications live and
+  non-destructively in both directions while trashing files on external USB/SD
+  mounts in `O(1)` on the same filesystem (`<mount>/.Trash-$UID`).
+- **`org.freedesktop.FileManager1` D-Bus service (`FileManagerService.c`):**
+  Registers `org.freedesktop.FileManager1` on `/org/freedesktop/FileManager1`
+  (with `/usr/share/dbus-1/services/org.freedesktop.FileManager1.service`
+  auto-activation), implementing `ShowFolders`, `ShowItems` (raising/activating
+  the target `dtfile` window and highlighting the requested files),
+  `ShowItemProperties` (opening CDE's Permissions/Properties dialog), and
+  `Hostname`.
+
 The [desktop gallery](../desktop.md#file-manager) shows File Manager browsing
 the staged CDE installation.
