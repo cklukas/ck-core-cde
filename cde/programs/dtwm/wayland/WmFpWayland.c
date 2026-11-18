@@ -79,8 +79,12 @@ static bool g_ttWsmRegistered = false;
 static int g_ttRetryCount = 0;
 static Atom g_atomSunTtSession = None;
 static Atom g_atomTtSession = None;
+static Atom g_atomTrashWin = None;
+static Atom g_atomSubpanelTorn = None;
+static Window g_watchedTrashWin = None;
 
 extern void WorkspaceModifyCB(Widget, Atom, int, XtPointer);
+extern void SubpanelUnmapCB(Widget, XtPointer, XtPointer);
 
 /* --- Append _DT_WM_REQUEST command to dtwm-wayland's WSM window --- */
 static Window find_mwm_window(Display *dpy) {
@@ -513,6 +517,10 @@ static void register_all_subpanel_contexts(void) {
                 ensure_shell_context(
                     cd->subpanel_data->shell, DtWM_BEHAVIOR_PANEL | DtWM_BEHAVIOR_SUBPANEL
                 );
+                XSelectInput(
+                    wmGD.display, XtWindow(cd->subpanel_data->shell),
+                    StructureNotifyMask | PropertyChangeMask
+                );
             }
         }
     }
@@ -619,6 +627,23 @@ Boolean F_Kill(String args, ClientData *pCD, XEvent *event) {
     if (pCD->dtwmBehaviors & DtWM_BEHAVIOR_SUBPANEL) {
         Widget sub_shell = XtWindowToWidget(wmGD.display, pCD->client);
         if (sub_shell) {
+            /* Unmanage the XmForm child (matching X11 SlideSubpanelBackIn) so
+             * XmNunmapCallback -> SubpanelUnmapCB resets the arrow to Fpup! */
+            for (int i = 0; i < panel.box_data_count; ++i) {
+                BoxData *bd = panel.box_data[i];
+                if (!bd) continue;
+                for (int j = 0; j < bd->control_data_count; ++j) {
+                    ControlData *cd = bd->control_data[j];
+                    if (cd && cd->subpanel_data && cd->subpanel_data->shell == sub_shell) {
+                        if (cd->subpanel_data->form && XtIsManaged(cd->subpanel_data->form)) {
+                            XtUnmanageChild(cd->subpanel_data->form);
+                        } else {
+                            SubpanelUnmapCB(cd->subpanel_data->form, (XtPointer)cd, nullptr);
+                        }
+                        return True;
+                    }
+                }
+            }
             XtUnmanageChild(sub_shell);
             return True;
         }
@@ -1114,6 +1139,59 @@ static void on_xt_term_signal(XtPointer client_data, XtSignalId *id) {
     exit(0);
 }
 
+static void watch_trash_window_events(Display *dpy) {
+    if (!dpy || g_atomTrashWin == None) return;
+    Atom actual = None;
+    int fmt = 0;
+    unsigned long nitems = 0, after = 0;
+    unsigned char *data = nullptr;
+    Window twin = None;
+    if (XGetWindowProperty(
+            dpy, g_fpScreen.rootWindow, g_atomTrashWin, 0, 1, False, XA_WINDOW,
+            &actual, &fmt, &nitems, &after, &data
+        ) == Success && data) {
+        if (fmt == 32 && nitems >= 1) {
+            twin = *(Window *)data;
+        }
+        XFree(data);
+    }
+    if (twin != None && twin != g_watchedTrashWin) {
+        g_watchedTrashWin = twin;
+        XSelectInput(dpy, twin, StructureNotifyMask | PropertyChangeMask);
+    } else if (twin == None) {
+        g_watchedTrashWin = None;
+    }
+    WmFpUpdateTrashOpenIcon(dpy);
+}
+
+static void handle_subpanel_x11_event(Display *dpy, const XEvent *ev) {
+    if (!dpy || !ev || !panel.shell) return;
+    for (int i = 0; i < panel.box_data_count; ++i) {
+        BoxData *bd = panel.box_data[i];
+        if (!bd) continue;
+        for (int j = 0; j < bd->control_data_count; ++j) {
+            ControlData *cd = bd->control_data[j];
+            if (!cd || !cd->subpanel_data || !cd->subpanel_data->shell ||
+                !XtIsRealized(cd->subpanel_data->shell)) {
+                continue;
+            }
+            Window swin = XtWindow(cd->subpanel_data->shell);
+            if (ev->type == UnmapNotify && ev->xunmap.window == swin) {
+                if (cd->subpanel_data->form && XtIsManaged(cd->subpanel_data->form)) {
+                    XtUnmanageChild(cd->subpanel_data->form);
+                }
+                return;
+            }
+            if (ev->type == PropertyNotify && ev->xproperty.window == swin &&
+                ev->xproperty.atom == g_atomSubpanelTorn &&
+                ev->xproperty.state == PropertyNewValue) {
+                cd->subpanel_data->torn = True;
+                return;
+            }
+        }
+    }
+}
+
 static int ignore_x_err(Display *dpy, XErrorEvent *ev) {
     (void)dpy;
     (void)ev;
@@ -1208,11 +1286,14 @@ int main(int argc, char **argv) {
     g_atomWsList = XInternAtom(dpy, "_DT_WORKSPACE_LIST", False);
     g_atomSunTtSession = XInternAtom(dpy, "_SUN_TT_SESSION", False);
     g_atomTtSession = XInternAtom(dpy, "TT_SESSION", False);
+    g_atomTrashWin = XInternAtom(dpy, "_DT_TRASH_WINDOW", False);
+    g_atomSubpanelTorn = XInternAtom(dpy, "_DT_SUBPANEL_TORN_OFF", False);
     if (g_mwmWin != None) {
         XSelectInput(dpy, g_mwmWin, PropertyChangeMask);
     }
     XSelectInput(dpy, g_fpScreen.rootWindow, SubstructureNotifyMask | PropertyChangeMask);
     scan_existing_embedded_clients(dpy);
+    watch_trash_window_events(dpy);
 
     while (!XtAppGetExitFlag(wmGD.mwmAppContext)) {
         XEvent ev;
@@ -1220,6 +1301,9 @@ int main(int argc, char **argv) {
         if (ev.type == PropertyNotify &&
             ev.xproperty.window == g_fpScreen.rootWindow &&
             ev.xproperty.state == PropertyNewValue) {
+            if (ev.xproperty.atom == g_atomTrashWin) {
+                watch_trash_window_events(dpy);
+            }
             if (g_ttWsmRegistered &&
                 (ev.xproperty.atom == g_atomSunTtSession || ev.xproperty.atom == g_atomTtSession)) {
                 g_ttWsmRegistered = false;
@@ -1228,12 +1312,20 @@ int main(int argc, char **argv) {
                 register_wayland_wsm_tooltalk_handlers(topShell);
             }
         }
+        if (ev.type == PropertyNotify && g_watchedTrashWin != None &&
+            ev.xproperty.window == g_watchedTrashWin) {
+            WmFpUpdateTrashOpenIcon(dpy);
+        }
+        handle_subpanel_x11_event(dpy, &ev);
         if (ev.type == PropertyNotify && ev.xproperty.window == g_mwmWin &&
             ev.xproperty.state == PropertyNewValue) {
             sync_panel_workspaces_from_x11(dpy, ev.xproperty.atom);
         } else if (ev.type == MapNotify && ev.xmap.event == g_fpScreen.rootWindow) {
             register_all_subpanel_contexts();
             try_embed_x11_window(dpy, ev.xmap.window);
+            WmFpUpdateTrashOpenIcon(dpy);
+        } else if (ev.type == UnmapNotify && ev.xunmap.event == g_fpScreen.rootWindow) {
+            WmFpUpdateTrashOpenIcon(dpy);
         } else if (ev.type == SelectionRequest && g_colorSrvWin != None &&
                    ev.xselectionrequest.owner == g_colorSrvWin) {
             Atom prop_out = None;

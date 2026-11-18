@@ -168,6 +168,7 @@ struct DtwmView {
     bool minimized;
     bool is_panel;          /* Genuine CDE Front Panel (DtWM_BEHAVIOR_PANEL) */
     bool is_subpanel;       /* Genuine CDE Subpanel (DtWM_BEHAVIOR_SUBPANEL) */
+    bool subpanel_torn_off; /* Subpanel torn off / dragged away into a Tool Window */
     bool is_desktop_pin;    /* dtfile Desktop.c pinned workspace object */
     bool is_swallowed;      /* Front Panel TYPE client swallowed window */
     bool is_lock_dialog;    /* dtsession PAM lock dialog / cover shell */
@@ -377,6 +378,8 @@ struct DtwmServer {
     /* Interactive move / resize / snap / wireframe state */
     DtwmCursorMode cursor_mode;
     DtwmView *grabbed_view;
+    DtwmView *subpanel_drag_candidate;
+    double subpanel_drag_start_x, subpanel_drag_start_y;
     double grab_x, grab_y;
     struct wlr_box grab_orig_box;
     struct wlr_box pending_grab_box;

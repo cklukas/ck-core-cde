@@ -1,4 +1,31 @@
 2026-11-18
+- Refine Front Panel default clock, workspace rename geometry, notification bell
+  icon, docked/torn-off subpanels, and open-Trash indicator across Wayland and
+  X11 (`cde/programs/dtwm/Callback.c`, `cde/programs/dtwm/UI.c`,
+  `cde/programs/dtwm/UI.h`, `cde/programs/dtwm/WmEvent.c`,
+  `cde/programs/dtwm/WmWinState.c`, `cde/programs/dtwm/wayland/WmFpWayland.c`,
+  `cde/programs/dtwm/wayland/cde_bevel.c`,
+  `cde/programs/dtwm/wayland/dtwm_wayland.h`,
+  `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,
+  `cde/programs/dtfile/Trash.c`, `cde/programs/icons/Fpnotif*.pm`,
+  `scripts/build-ubuntu-debs.py`, `docs/improvements/wayland.md`):
+  - Keep the classic CDE analog `Clock` control as the default Front Panel clock
+    instead of overriding `CONTROL Clock` with `ckclock.fp` by default.
+  - Constrain the inline workspace-rename `XmTextField` (`SwitchRenameLabel`) to
+    the exact bounds, shadow thickness, margins, and color set of the active
+    workspace toggle button without overhanging neighboring buttons, and allow
+    first-click activation before `time_stamp` is initialized.
+  - Replace the flat white `Fpnotif` / `FpnotifA` triangles on the Workspace
+    Switch with period-correct 3D-shaded metallic CDE bell pixmaps matching
+    `Fplock`.
+  - Unmanage `subpanel_data->form` in `WmFpWayland.c:F_Kill` and on X11
+    `UnmapNotify` so `SubpanelUnmapCB` reliably resets closed subpanel arrows to
+    upward (`Fpup`) while open subpanels display downward (`Fpdown`), and open
+    subpanels docked and frameless above the Front Panel until dragged/torn off
+    into a titled tool window (`_DT_SUBPANEL_TORN_OFF`).
+  - Publish `_DT_TRASH_WINDOW` from `dtfile`'s Trash Can window and switch the
+    Front Panel `Trash` control icon to the open-lid `Fptrsh5` pixmap whenever
+    the Trash Can window is open and viewable.
 - Add desktop right-click **Workspace Menu** (`DtRootMenu`) across both Wayland
   (`dtwm-wayland`) and X11 (`dtwm`) (`cde/programs/dtwm/wayland/cde_bevel.c`,
   `cde/programs/dtwm/wayland/dtwm_wayland_main.c`,

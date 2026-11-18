@@ -112,12 +112,18 @@ contracts to Wayland without requiring application code changes:
   (`NormalState` / `IconicState`) and `_NET_WM_ICON_GEOMETRY`, and synchronizes
   the XWayland root pointer whenever the cursor moves across native Wayland
   surfaces, the Front Panel, or the desktop background;
-- **`dtfile` pinned desktop icons and Front Panel `TYPE client` embedding:**
+- **`dtfile` pinned desktop icons and genuine Front Panel / Subpanel UX:**
   Places `dtfile` `Desktop.c` workspace objects in `desktop_icon_tree` below
-  normal application windows without duplicate open-window icons, and embeds
-  `.fp` `TYPE client` controls (such as `CLIENT_NAME ck-clock` in
-  `~/.dt/types/ckclock.fp`) directly inside `dtwm-panel` via `XReparentWindow`
-  (with `--swallow NAME` retained as an explicit compositor override).
+  normal application windows without duplicate open-window icons, keeps the
+  classic CDE analog `Clock` as the default Front Panel clock, tracks open
+  `Trash` window state (`_DT_TRASH_WINDOW` / `Fptrsh5`), constrains inline
+  workspace rename editing to the exact toggle button geometry, and opens
+  subpanels docked and frameless (`Fpup` closed / `Fpdown` open) until dragged
+  away into a titled tool window (`_DT_SUBPANEL_TORN_OFF`). Optional `.fp`
+  `TYPE client` controls (such as `CLIENT_NAME ck-clock` in
+  `~/.dt/types/ckclock.fp`) embed directly inside `dtwm-panel` via
+  `XReparentWindow` (with `--swallow NAME` retained as an explicit compositor
+  override).
 
 ## Cross-protocol drag-and-drop, `ck-grab` screencopy, and mixed-DPI scaling
 

@@ -707,6 +707,50 @@ static void begin_interactive(DtwmView *view, DtwmCursorMode mode, uint32_t edge
     server->resize_edges = edges;
 }
 
+static void sync_xwayland_client_pos(DtwmView *view);
+
+static void promote_subpanel_to_tool_window(DtwmView *view) {
+    if (!view || !view->is_subpanel || view->subpanel_torn_off) {
+        return;
+    }
+    view->subpanel_torn_off = true;
+    view->has_title = true;
+    view->has_menu_btn = true;
+    view->y -= DTWM_TITLE_HEIGHT;
+    if (view->y < 0) view->y = 0;
+    if (view->frame_tree) {
+        wlr_scene_node_set_position(&view->frame_tree->node, view->x, view->y);
+    }
+    sync_xwayland_client_pos(view);
+    dtwm_view_update_frame(view);
+
+    if (view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface && view->server->xcb_conn) {
+        xcb_connection_t *conn = view->server->xcb_conn;
+        const char *aname = "_DT_SUBPANEL_TORN_OFF";
+        xcb_intern_atom_cookie_t ck = xcb_intern_atom(conn, 0, (uint16_t)strlen(aname), aname);
+        xcb_intern_atom_reply_t *rep = xcb_intern_atom_reply(conn, ck, nullptr);
+        if (rep && rep->atom != XCB_ATOM_NONE) {
+            uint32_t one = 1;
+            xcb_change_property(
+                conn, XCB_PROP_MODE_REPLACE, view->xwayland_surface->window_id,
+                rep->atom, XCB_ATOM_CARDINAL, 32, 1, &one
+            );
+            xcb_flush(conn);
+        }
+        free(rep);
+    }
+}
+
+static void close_docked_subpanels(DtwmServer *server) {
+    if (!server) return;
+    DtwmView *v;
+    wl_list_for_each(v, &server->views, link) {
+        if (v->mapped && v->is_subpanel && !v->subpanel_torn_off) {
+            view_close(v);
+        }
+    }
+}
+
 static bool view_is_normal_app(const DtwmView *v);
 
 static void spawn_desktop_command(DtwmServer *server, const char *prog, const char *arg1) {
@@ -1299,6 +1343,29 @@ static void process_cursor_motion(DtwmServer *server, uint32_t time_msec) {
         return;
     }
 
+    if (server->subpanel_drag_candidate) {
+        DtwmView *sp = server->subpanel_drag_candidate;
+        if (!sp->mapped || !sp->is_subpanel || sp->subpanel_torn_off) {
+            server->subpanel_drag_candidate = nullptr;
+        } else {
+            double dx = server->cursor->x - server->subpanel_drag_start_x;
+            double dy = server->cursor->y - server->subpanel_drag_start_y;
+            if (dx * dx + dy * dy >= 64.0) {
+                server->subpanel_drag_candidate = nullptr;
+                /* Disarm any armed gadget inside the subpanel before tearing off */
+                wlr_seat_pointer_notify_motion(server->seat, time_msec, -200.0, -200.0);
+                wlr_seat_pointer_notify_button(
+                    server->seat, time_msec, BTN_LEFT, WL_POINTER_BUTTON_STATE_RELEASED
+                );
+                wlr_seat_pointer_notify_clear_focus(server->seat);
+                promote_subpanel_to_tool_window(sp);
+                begin_interactive(sp, DTWM_CURSOR_MOVE, 0);
+                process_cursor_move(server);
+                return;
+            }
+        }
+    }
+
     double sx = 0, sy = 0;
     struct wlr_surface *surface = nullptr;
     DtwmFramePart part = DTWM_PART_NONE;
@@ -1382,6 +1449,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     }
 
     if (ev->state == WL_POINTER_BUTTON_STATE_RELEASED) {
+        server->subpanel_drag_candidate = nullptr;
         if (server->menu_visible) {
             /* Support classic Motif/CDE press-drag-release on popup menus while keeping
              * a stationary right-click posted for click-to-select interaction. */
@@ -1470,6 +1538,7 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
     DtwmView *view = desktop_view_at(server, server->cursor->x, server->cursor->y, &surface, &sx, &sy, &part);
 
     if (!view && !surface) {
+        close_docked_subpanels(server);
         DtwmView *icon_v = dtwm_icons_view_at(server, server->cursor->x, server->cursor->y);
         if (icon_v) {
             if (btn == BTN_LEFT) {
@@ -1489,12 +1558,26 @@ static void handle_cursor_button(struct wl_listener *listener, void *data) {
 
     if (view && !(view->kind == DTWM_VIEW_XWAYLAND && view->xwayland_surface &&
                   view->xwayland_surface->override_redirect)) {
+        if (!view->is_panel && !view->is_subpanel) {
+            close_docked_subpanels(server);
+        }
         focus_view_ex(
             server,
             view,
             surface,
             (part == DTWM_PART_CLIENT) ? server->focus_auto_raise : true
         );
+
+        if (view->is_subpanel && !view->subpanel_torn_off && btn == BTN_LEFT) {
+            if (part != DTWM_PART_CLIENT) {
+                promote_subpanel_to_tool_window(view);
+                begin_interactive(view, DTWM_CURSOR_MOVE, 0);
+                return;
+            }
+            server->subpanel_drag_candidate = view;
+            server->subpanel_drag_start_x = server->cursor->x;
+            server->subpanel_drag_start_y = server->cursor->y;
+        }
 
         if (part != DTWM_PART_CLIENT) {
             if (btn == BTN_RIGHT && !view->is_panel && !server->greeter_mode) {
@@ -2520,12 +2603,14 @@ static void xwayland_map(struct wl_listener *listener, void *data) {
 
     uint32_t dt_behaviors = read_dt_wm_behaviors_sync(view->server, xs->window_id);
     if (dt_behaviors & (1u << 2)) {
-        /* Genuine CDE Subpanel (DtWM_BEHAVIOR_SUBPANEL) */
+        /* Genuine CDE Subpanel (DtWM_BEHAVIOR_SUBPANEL): starts docked & frameless
+         * flush above the Front Panel, promoting to a Tool Window only when torn off! */
         view->is_subpanel = true;
+        view->subpanel_torn_off = false;
         view->decorated = true;
-        view->has_title = true;
+        view->has_title = false;
         view->has_resize_handles = false;
-        view->has_menu_btn = true;
+        view->has_menu_btn = false;
         view->has_min_btn = false;
         view->has_max_btn = false;
         view->workspace_mask = (1u << DTWM_MAX_WORKSPACES) - 1u;
@@ -2645,8 +2730,12 @@ static void xwayland_unmap(struct wl_listener *listener, void *data) {
     if (view == view->server->panel_view) {
         view->server->panel_view = nullptr;
     }
+    if (view == view->server->subpanel_drag_candidate) {
+        view->server->subpanel_drag_candidate = nullptr;
+    }
     view->is_panel = false;
     view->is_subpanel = false;
+    view->subpanel_torn_off = false;
     view->is_desktop_pin = false;
     view->is_swallowed = false;
     dtwm_foreign_toplevel_destroy(view);

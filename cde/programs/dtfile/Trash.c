@@ -1788,6 +1788,20 @@ CreateTrashMenu(
  *
  ************************************************************************/
 
+static void
+TrashPublishWindowProperty(Boolean is_open)
+{
+   if (trashShell == nullptr || !XtIsRealized(trashShell))
+      return;
+   Display *dpy = XtDisplay(trashShell);
+   Window root = DefaultRootWindow(dpy);
+   Atom prop = XInternAtom(dpy, "_DT_TRASH_WINDOW", False);
+   Window val = is_open ? XtWindow(trashShell) : None;
+   XChangeProperty(dpy, root, prop, XA_WINDOW, 32, PropModeReplace,
+                   (const unsigned char *)&val, 1);
+   XFlush(dpy);
+}
+
 void
 TrashDisplayHandler(
    Tt_message msg)
@@ -1893,6 +1907,7 @@ TrashDisplayHandler(
    }
 
    trashDialogPosted = True;
+   TrashPublishWindowProperty(True);
 }
 
 
@@ -3245,6 +3260,7 @@ CloseTrash(
    }
 
    trashDialogPosted = False;
+   TrashPublishWindowProperty(False);
 }
 
 

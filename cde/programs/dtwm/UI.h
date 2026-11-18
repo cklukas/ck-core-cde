@@ -74,6 +74,7 @@ extern void DeleteSubpanelControl(SubpanelData *subpanel, ControlData *control_d
 extern void DeleteSubpanel(ControlData *control_data);
 extern void UpdateSwitchGeometry (BoxData * box_data);
 extern void FrontPanelCreate (Widget toplevel);
+extern void WmFpUpdateTrashOpenIcon (Display * dpy);
 
 
 #endif /* _ui_h */

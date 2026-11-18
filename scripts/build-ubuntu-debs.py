@@ -581,11 +581,6 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
             xdg_d.mkdir(parents=True, mode=0o700)
             dt_types.mkdir(parents=True, mode=0o755)
             os.chmod(xdg_d, 0o700)
-            (dt_types / "ckclock.fp").write_text(
-                "CONTROL Clock\n{\n  TYPE client\n  CONTAINER_NAME Top\n  CONTAINER_TYPE BOX\n"
-                "  POSITION_HINTS 1\n  CLIENT_NAME ck-clock\n  CLIENT_GEOMETRY 52x52\n  LABEL Clock\n}\n",
-                encoding="utf-8",
-            )
             sample_doc = v_root / "wayland-notes.txt"
             sample_doc.write_text(
                 "CK Core CDE 2.5.3 + Motif ABI 9\n"
@@ -641,10 +636,9 @@ def guest_build_and_verify(args: argparse.Namespace) -> int:
                 if not wl_s or not x_s:
                     raise SystemExit("Installed /usr/dt/bin/dtwm-wayland failed to start")
 
-                # Wait briefly for genuine dtwm-panel to map its ~/.dt/types/ckclock.fp slot
+                # Wait briefly for genuine dtwm-panel to map its default CDE Front Panel controls
                 time.sleep(1.5)
                 c_env = {**clean_env, "WAYLAND_DISPLAY": wl_s, "DISPLAY": x_s}
-                p_clk_fp = subprocess.Popen(["/usr/bin/ck-clock", "-geometry", "52x52"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
                 p_pad = subprocess.Popen(["/usr/dt/bin/dtpad", "-standAlone", "-xrm", "*rows: 9", "-xrm", "*columns: 46", "-geometry", "+36+32", str(sample_doc)], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
                 p_term = subprocess.Popen(["/usr/dt/bin/dtterm", "-geometry", "58x12+460+36"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
                 p_calc = subprocess.Popen(["/usr/bin/ck-calc", "-geometry", "+970+36"], env=c_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)

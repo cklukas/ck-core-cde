@@ -376,7 +376,7 @@ void dtwm_view_update_frame(DtwmView *view) {
         .bottom_shadow = {0.490, 0.345, 0.227, 1.0},
     };
     const DtwmColorSet *cs = view->active ? &view->server->palette.active : &view->server->palette.inactive;
-    if (view->is_panel) {
+    if (view->is_panel || (view->is_subpanel && !view->subpanel_torn_off)) {
         cs = (view->server->palette.profile == DTWM_PROFILE_CLASSIC)
                  ? &classic_panel_border
                  : &view->server->palette.inactive;

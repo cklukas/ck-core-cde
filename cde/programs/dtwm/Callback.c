@@ -212,6 +212,30 @@ ArrowCB (Widget    w,
    
    if (!XtIsManaged (subpanel_data->shell))
    {
+      /* Unpost any other open docked (non-torn) subpanel so its arrow returns to UP */
+      for (int bi = 0; bi < panel.box_data_count; bi++)
+      {
+         BoxData *bd = panel.box_data[bi];
+         if (bd == nullptr) continue;
+         for (int cj = 0; cj < bd->control_data_count; cj++)
+         {
+            ControlData *other_cd = bd->control_data[cj];
+            if (other_cd != nullptr && other_cd != control_data &&
+                other_cd->subpanel_data != nullptr &&
+                other_cd->subpanel_data->shell != nullptr &&
+                XtIsManaged (other_cd->subpanel_data->shell) &&
+                !other_cd->subpanel_data->torn)
+            {
+               CallWmFunction (F_Kill, nullptr, other_cd->subpanel_data->shell, nullptr);
+               if (other_cd->subpanel_data->form != nullptr &&
+                   XtIsManaged (other_cd->subpanel_data->form))
+               {
+                  XtUnmanageChild (other_cd->subpanel_data->form);
+               }
+            }
+         }
+      }
+
       Position x = XtX (control_data->arrow);
       Position y = XtY (control_data->arrow);
 
@@ -236,6 +260,10 @@ ArrowCB (Widget    w,
       /*  Execute the window manager function to unpost the subpanel  */
 
       CallWmFunction (F_Kill, nullptr, subpanel_data->shell, nullptr);
+      if (subpanel_data->form != nullptr && XtIsManaged (subpanel_data->form))
+      {
+         XtUnmanageChild (subpanel_data->form);
+      }
    }
 }
 
@@ -910,10 +938,11 @@ SwitchButtonCB (Widget    w,
 
       if (event->xany.type == ButtonRelease)
       {
-         if ((event->xbutton.time - switch_data->time_stamp) >
-             XtGetMultiClickTime(XtDisplay(panel.shell)))
+         if (switch_data->time_stamp == 0 ||
+             (event->xbutton.time - switch_data->time_stamp) >
+             (Time)XtGetMultiClickTime(XtDisplay(panel.shell)))
          {
-            switch_data->time_stamp = event->xbutton.time;
+            switch_data->time_stamp = event->xbutton.time ? event->xbutton.time : 1;
             SwitchRenameLabel (w, box_data);
          }
       }
@@ -955,6 +984,7 @@ SwitchRenameCancel (Widget      w,
    /*  Remove the callbacks to eliminate double processing  */
 
    XtRemoveAllCallbacks (w, XmNactivateCallback);
+   XtRemoveAllCallbacks (w, XmNlosingFocusCallback);
 
 
    /*  Unmanage the text widget, set the traversal to the button and exit  */
@@ -998,6 +1028,8 @@ SwitchRenameCB (Widget    w,
    /*  Remove the callbacks to eliminate double processing  */
 
    XtRemoveCallback (w, XmNactivateCallback, 
+                     SwitchRenameCB, (XtPointer) client_data);
+   XtRemoveCallback (w, XmNlosingFocusCallback, 
                      SwitchRenameCB, (XtPointer) client_data);
 
 
@@ -1118,8 +1150,14 @@ SwitchRenameLabel (Widget    switch_button,
    Position   toggle_y;
    Dimension  toggle_width;
    Dimension  toggle_height;
+   Dimension  toggle_shadow = 2;
+   Dimension  toggle_highlight = 1;
+   Dimension  toggle_margin_w = 4;
    XmFontList toggle_font_list;
-   Pixel      toggle_background;
+   Pixel      toggle_background = 0;
+   Pixel      toggle_foreground = 0;
+   Pixel      toggle_top_shadow = 0;
+   Pixel      toggle_bottom_shadow = 0;
 
    Position  switch_rc_x;
    Position  switch_rc_y;
@@ -1129,7 +1167,7 @@ SwitchRenameLabel (Widget    switch_button,
    XtTranslations trans_table;
 
    int    ac;
-   Arg    al[15];
+   Arg    al[28];
 
 
    /*  Add the additional actions needed by the panel and  */
@@ -1145,13 +1183,20 @@ SwitchRenameLabel (Widget    switch_button,
    }
 
 
-   /*  Extract the label and toggle position  */
+   /*  Extract the label, colors, shadow/highlight metrics, and toggle position  */
 
    ac = 0;
    XtSetArg (al[ac], XmNx, &toggle_x);   ac++;
    XtSetArg (al[ac], XmNy, &toggle_y);   ac++;
    XtSetArg (al[ac], XmNwidth, &toggle_width);   ac++;
    XtSetArg (al[ac], XmNheight, &toggle_height);   ac++;
+   XtSetArg (al[ac], XmNshadowThickness, &toggle_shadow);   ac++;
+   XtSetArg (al[ac], XmNhighlightThickness, &toggle_highlight);   ac++;
+   XtSetArg (al[ac], XmNmarginWidth, &toggle_margin_w);   ac++;
+   XtSetArg (al[ac], XmNbackground, &toggle_background);   ac++;
+   XtSetArg (al[ac], XmNforeground, &toggle_foreground);   ac++;
+   XtSetArg (al[ac], XmNpixmapBackground, &toggle_top_shadow);   ac++;
+   XtSetArg (al[ac], XmNpixmapForeground, &toggle_bottom_shadow);   ac++;
    XtSetArg (al[ac], XmNstring, &toggle_string);   ac++;
    XtSetArg (al[ac], XmNfontList, &toggle_font_list);   ac++;
    XtGetValues (switch_button, al, ac);
@@ -1171,18 +1216,43 @@ SwitchRenameLabel (Widget    switch_button,
 				    XmCHARSET_TEXT, XmCHARSET_TEXT))
        != (char *)nullptr)
    {
+      int edit_x = (int)switch_rc_x + (int)toggle_x + (int)toggle_highlight;
+      int edit_y = (int)switch_rc_y + (int)toggle_y + (int)toggle_highlight;
+      Dimension edit_w = (toggle_width > 2 * toggle_highlight)
+                            ? (Dimension)(toggle_width - 2 * toggle_highlight)
+                            : toggle_width;
+      Dimension edit_h = (toggle_height > 2 * toggle_highlight)
+                            ? (Dimension)(toggle_height - 2 * toggle_highlight)
+                            : toggle_height;
 
-      /*  Set the switch editing field to the new resource set  */
+      /*  Match the exact active workspace button bounds, bevels, and palette  */
+
+      XtRemoveAllCallbacks (switch_edit, XmNactivateCallback);
+      XtRemoveAllCallbacks (switch_edit, XmNlosingFocusCallback);
 
       ac = 0;
-      XtSetArg (al[ac], XmNleftOffset, toggle_x + switch_rc_x);   ac++;
       XtSetArg (al[ac], XmNleftAttachment, XmATTACH_FORM);   ac++;
-      XtSetArg (al[ac], XmNtopOffset, toggle_y + switch_rc_y);   ac++;
+      XtSetArg (al[ac], XmNleftOffset, edit_x);   ac++;
+      XtSetArg (al[ac], XmNrightAttachment, XmATTACH_OPPOSITE_FORM);   ac++;
+      XtSetArg (al[ac], XmNrightOffset, -(edit_x + (int)edit_w));   ac++;
       XtSetArg (al[ac], XmNtopAttachment, XmATTACH_FORM);   ac++;
-      XtSetArg (al[ac], XmNmarginWidth, 4);   ac++;
+      XtSetArg (al[ac], XmNtopOffset, edit_y);   ac++;
+      XtSetArg (al[ac], XmNbottomAttachment, XmATTACH_OPPOSITE_FORM);   ac++;
+      XtSetArg (al[ac], XmNbottomOffset, -(edit_y + (int)edit_h));   ac++;
+      XtSetArg (al[ac], XmNwidth, edit_w);   ac++;
+      XtSetArg (al[ac], XmNheight, edit_h);   ac++;
+      XtSetArg (al[ac], XmNcolumns, 1);   ac++;
+      XtSetArg (al[ac], XmNresizeWidth, False);   ac++;
+      XtSetArg (al[ac], XmNborderWidth, 0);   ac++;
+      XtSetArg (al[ac], XmNhighlightThickness, 0);   ac++;
+      XtSetArg (al[ac], XmNshadowThickness, toggle_shadow);   ac++;
+      XtSetArg (al[ac], XmNmarginWidth, toggle_margin_w);   ac++;
       XtSetArg (al[ac], XmNmarginHeight, 0);   ac++;
+      XtSetArg (al[ac], XmNbackground, toggle_background);   ac++;
+      XtSetArg (al[ac], XmNforeground, toggle_foreground);   ac++;
+      XtSetArg (al[ac], XmNtopShadowColor, toggle_top_shadow);   ac++;
+      XtSetArg (al[ac], XmNbottomShadowColor, toggle_bottom_shadow);   ac++;
       XtSetArg (al[ac], XmNfontList, toggle_font_list);   ac++;
-      XtSetArg (al[ac], XmNhighlightThickness, 1);   ac++;
       XtSetArg (al[ac], XmNvalue, edit_string);   ac++;
       XtSetArg (al[ac], XmNuserData, switch_button);   ac++;
 
@@ -1190,27 +1260,12 @@ SwitchRenameLabel (Widget    switch_button,
 
       XtFree(edit_string);
 
-	      ac = 0;
-	      XtSetArg (al[ac], XmNcursorPosition, 
-	                XmTextFieldGetLastPosition (switch_edit));   ac++;
-	      /* Keep the edit field compact for short labels. */
-	      {
-	         Dimension text_width = 0, text_height = 0;
-	         Dimension pad = 12;
-	         Dimension desired_width = toggle_width;
-	         if (toggle_string && toggle_font_list)
-		 {
-		    XmStringExtent(toggle_font_list, toggle_string, &text_width, &text_height);
-		    desired_width = text_width + pad;
-		    if (desired_width > toggle_width)
-		       desired_width = toggle_width;
-		    if (desired_width < 20)
-		       desired_width = 20;
-		 }
-	         XtSetArg (al[ac], XmNwidth, desired_width);   ac++;
-	      }
-	      XtSetArg (al[ac], XmNheight, toggle_height);   ac++;
-	      XtSetValues (switch_edit, al, ac);
+      ac = 0;
+      XtSetArg (al[ac], XmNcursorPosition, 
+                XmTextFieldGetLastPosition (switch_edit));   ac++;
+      XtSetArg (al[ac], XmNwidth, edit_w);   ac++;
+      XtSetArg (al[ac], XmNheight, edit_h);   ac++;
+      XtSetValues (switch_edit, al, ac);
 
 
       /*  Add the callbacks for the text input processing  */
@@ -1219,6 +1274,7 @@ SwitchRenameLabel (Widget    switch_button,
                      SwitchRenameCB, (XtPointer) switch_button);
 
       XtManageChild (switch_edit);
+      XtConfigureWidget (switch_edit, (Position)edit_x, (Position)edit_y, edit_w, edit_h, 0);
 
       XRaiseWindow (XtDisplay (switch_edit), XtWindow (switch_edit));
       XSetInputFocus (XtDisplay (switch_edit), XtWindow (panel.shell),
